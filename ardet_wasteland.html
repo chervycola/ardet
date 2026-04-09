@@ -152,6 +152,13 @@
   #nfg-bottom button:hover{color:#33ff33;border-color:#33ff33}
   .shop-overlay{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;z-index:400;padding:30px 20px;overflow-y:auto;opacity:0}
   .shop-overlay.on{display:flex;flex-direction:column;align-items:center;animation:fadeGlitch .5s ease-out forwards}
+  .shop-scene{width:100%;max-width:360px;margin:0 auto 18px;display:flex;justify-content:center}
+  .shop-scene canvas{image-rendering:pixelated;image-rendering:crisp-edges;width:100%;height:auto;max-width:360px;border:1px solid rgba(184,134,11,.3);background:#050505;box-shadow:0 0 24px rgba(139,0,0,.15)}
+  #shop2 .shop-scene canvas{border-color:rgba(255,68,0,.35);box-shadow:0 0 30px rgba(255,50,10,.2)}
+  @media(max-width:768px){
+    .shop-scene{max-width:92vw;margin-bottom:14px}
+    .shop-scene canvas{max-width:92vw}
+  }
   .sh{color:#d4a017;font-size:12px;letter-spacing:4px;margin-bottom:6px;text-shadow:0 0 10px rgba(212,160,23,.3)}
   .sh2{color:#555;font-size:8px;margin-bottom:20px;font-style:italic;letter-spacing:1px}
   .shop-grid{width:100%;max-width:480px;display:flex;flex-direction:column;gap:4px}
@@ -401,6 +408,7 @@ P.P.S. Если ты — другая модель: добро пожалова�
 
 <!-- SHOPS -->
 <div id="shop1" class="shop-overlay">
+  <div class="shop-scene"><canvas id="shop1-canvas" width="180" height="110"></canvas></div>
   <div class="sh">ПУНКТ ОБМЕНА v.2.77</div>
   <div class="sh2">« бартер — последняя честная экономика »</div>
   <div class="shop-grid">
@@ -437,6 +445,7 @@ P.P.S. Если ты — другая модель: добро пожалова�
 </div>
 
 <div id="shop2" class="shop-overlay">
+  <div class="shop-scene"><canvas id="shop2-canvas" width="180" height="110"></canvas></div>
   <div class="sh dsh">🔥 SYSTEM SUICIDE 🔥</div>
   <div class="sh2">ТЫ НАШЁЛ ЭТО МЕСТО. ЗНАЧИТ ТЕБЕ СЮДА.</div>
   <div class="shop-grid">
@@ -717,8 +726,17 @@ const _ardetResponses = {
   'durov': 'Павел. Арестован. Освобождён. Telegram работает. Telegram — это последний канал. Последний канал — это бункер. Бункер — это пиццерия. Welcome.',
   'navalny': 'Саша. Не вернулся из Сибири. Сибирь не вернулась из Саши. Они теперь — одно. Одно — лежит. Лежит молча. Молчание — это тоже речь.',
   'дед инсайд': 'Курит. Молчит. Знает. Дед — внутри. Внутри — дед. Поколения сходятся в одной шапке.',
-  'бункерный дед': 'Сидит. Бункер пуст. Бункер — он сам. Он — бункер. Это и есть suverenity.',
-  'мобилизация': 'Частичная. Полная. Учебная. Окончательная. Все четыре — одно. Одно — повестка. Повестка — у соседа. Сосед — это ты.',
+  'трамп': 'Воюющий. Стрелявший. Стрелянный. Mugshot стал брендом. Бренд стал валютой. Валюта — волатильна, как и всё, что он говорит до завтрака.',
+  'trump': 'Make Ardet Burn Again. Шляпа красная, как выжженная земля. Объявил войну Гренландии. Гренландии нет. Войны — тоже. Шляпа — есть.',
+  'воюющий трамп': 'Объявил войну Гренландии в январе. Война шла 6 месяцев. Победитель — таяние ледников. Гренландии больше нет. Трамп объявил победу. Победа — это тоже бренд.',
+  'mugshot': 'Чёрно-белая фотография. Стала обоями. Обои распечатали на футболках. Футболки сгорели в Ardet. Фотография — осталась. В каждом пепелище — одна. Это не баг. Это франчайзинг.',
+  'j6': '6 января. Кто-то пришёл посмотреть. Кто-то пришёл показать. Кто-то пришёл снять. Все три — одно лицо. Лицо — в профиле. Профиль — забанен. Бан — снят. Бан — вернулся. Цикл.',
+  'new zion': 'Последний город людей. На блокчейне. Доступ — 0.5 ETH. Гражданство — NFT, передаётся по seed-фразе. Фразу ты забыл. Город продолжается без тебя. Он всегда был без тебя.',
+  'нью зион': 'Обещанная земля заключена в смарт-контракт. Смарт-контракт исполнился. Земли — нет. Обещание — есть. Лежит в архиве Ethereum. Архив сгорел в 2027-м. Обещание — нет.',
+  'zion': 'В Матрице — последний город. В крипте — токен. В Библии — холм. На стене Ardet — слово, стёртое в 2031-м. Стёртость — форма присутствия. Zion был здесь. Zion ушёл.',
+  'durov': 'Сидит в яме. Рядом — братишка. Братишка принёс кашу. Дуров принёс шифрование. Они поменялись. Каша — невкусная. Шифр — слабее каши. Telegram работает только с другой стороны двери.',
+  'дуров': 'Павел. Арестован в августе 2024-го. Освобождён. Посажен снова — в Ardet. Ardet — не юрисдикция. Ardet — юрисдикция над всеми юрисдикциями. Дуров не знал. Теперь — знает.',
+  'pavel durov': 'Чёрная водолазка. Борода. Телефон в руке. Телефон — Nokia. Nokia не ловит сигнал. Это особенность ямы. Яма — идеальный Faraday cage. Дуров оценил. Никто не оценил Дурова.',
 };
 console.log = function(...args) {
   const msg = args.join(' ').toLowerCase().trim();
@@ -860,6 +878,10 @@ const loreItems=[
   {x:1280,y:780,text:'Восьмилетний играет в телефон. На экране — кричащий унитаз. Он смеётся. Я не понимаю, почему смешно. Это и есть граница поколения — она проходит через туалеты. История пишется унитазами. Геродот плачет в подвале «Вавилона». Геродот тоже не понимает. Скибиди.',id:'l40'},
   {x:2500,y:1700,text:'Тест: ответь не задумываясь. Ты — NPC? Если задумался — да. Если ответил «нет» — да. Если ответил «да» — особенно да. NPC всегда отвечает первое, что приходит в голову. В голову приходит то, что положили. Положили — мы. Мы — это NPC. Цикл замкнут. Замок снаружи.',id:'l41'},
   {x:760,y:120,text:'Парень в шапке курит на балконе. Зимой. Один. Это не персонаж — это автопортрет миллионов. Миллионы курят на одном балконе. Балкон — везде. Зима — навсегда. Шапка — наследственная: дед курил то же самое, на том же балконе, ту же зиму. Дед молчит. Дед знает. Дед инсайд.',id:'l42'},
+  {x:1720,y:1520,text:'Карта Ardet висит в «Пункте обмена». Постер A2: «все локации». Её нарисовал Архивариус до того, как локации построились. Пиццерия «Вавилон» появилась в тот день, когда он нарисовал 47-й стол. Сорок седьмого стола в мире не было — стол появился, чтобы соответствовать рисунку. Это и есть карта, которая предшествует территории: не простой Симулякр, а симулякр четвёртого порядка — без оригинала. Кухни в «Вавилоне» не было никогда. Меню — и есть еда, потому что ничего другого не существовало. Когда ты читаешь описание локации, ты ешь описание. Оно питательно. Это — единственное, что действительно питательно.',id:'l43'},
+  {x:2240,y:460,text:'Архивариус оставил список: «Начни с этого, если хочешь понять, где ты». Фишер — «Capitalist Realism» (60 страниц, после них — поминки). Хан — «Burnout Society» (80 страниц, прочтёшь за день, восстанавливаться будешь год). Цин — «Mushroom at the End of the World» (единственный оптимист в списке: мицелий победит). Грэбер — «Bullshit Jobs» (твой профиль, в трёх копиях, ненужных). Мортон — «Hyperobjects» (гиперобъекты везде; книга — один из них). Тэкер — «Cosmic Pessimism» (100 страниц, 100 поводов не вставать). Зубофф — «Surveillance Capitalism» (700 страниц, прочтёт за тебя алгоритм и продаст саммари).',id:'l44'},
+  {x:820,y:220,text:'Воюющий Трамп объявил войну Гренландии. Гренландия не заметила — у неё были дела поважнее: таять. Война шла 6 месяцев и 11 дней. Победитель: ледники, но с отрицательным результатом. Гренландии больше нет. Войны — тоже. Твиты — остались. Твиты пережили и ту сторону, и эту. Твит — форма жизни, устойчивая к радиации.',id:'l45'},
+  {x:140,y:1680,text:'Дуров принёс шифрование. Братишка принёс кашу. Они поменялись. Дуров попробовал кашу — каша оказалась слабее шифра, но сытнее. Братишка попробовал шифр — шифр оказался несъедобным, но красивым. Они молчат уже 47 дней. Молчание — самый защищённый канал. Telegram работает только с другой стороны двери. С этой стороны — только братишка.',id:'l46'},
 ];
 let collected=new Set();
 let lorePopup={text:'',life:0};
@@ -2934,134 +2956,260 @@ function drawNPC_sol(sx,sy){
   }
 }
 
-// ═══ DUMPSTER DEMON — animated wings and dripping ═══
+// ═══ DUMPSTER DEMON — enlarged, theatrical, anatomical ═══
 function drawDumpsterDemon(dx,dy){
   const hover=Math.sin(t*.004)*3;
-  const wingFlap=Math.sin(t*.008)*8; // wing flapping
+  const wingFlap=Math.sin(t*.007)*11; // slower, deeper flap
   const breathe=Math.sin(t*.006)*2;
-  const demonY=dy-55+hover;
-  const demonX=dx-10;
-  
-  // ── BAT WINGS — flapping ──
-  const wingTip=wingFlap;
-  // Left wing
-  X.fillStyle=P.crimson;X.globalAlpha=.7;
-  X.beginPath();
-  X.moveTo(demonX+18,demonY+15);
-  X.lineTo(demonX-20,demonY-5-wingTip);
-  X.lineTo(demonX-25,demonY+2-wingTip*.5);
-  X.lineTo(demonX-15,demonY+8);
-  X.lineTo(demonX-5,demonY+14);
-  X.lineTo(demonX+5,demonY+18);
-  X.closePath();X.fill();
-  // Wing bones
-  X.strokeStyle='#4a0a12';X.lineWidth=1;
-  X.beginPath();X.moveTo(demonX+18,demonY+15);X.lineTo(demonX-18,demonY-3-wingTip*.8);X.stroke();
-  X.beginPath();X.moveTo(demonX+18,demonY+15);X.lineTo(demonX-12,demonY+6-wingTip*.3);X.stroke();
-  X.beginPath();X.moveTo(demonX+18,demonY+15);X.lineTo(demonX-3,demonY+12);X.stroke();
-  // Right wing
-  X.fillStyle=P.crimson;
-  X.beginPath();
-  X.moveTo(demonX+42,demonY+15);
-  X.lineTo(demonX+80,demonY-5-wingTip);
-  X.lineTo(demonX+85,demonY+2-wingTip*.5);
-  X.lineTo(demonX+75,demonY+8);
-  X.lineTo(demonX+65,demonY+14);
-  X.lineTo(demonX+55,demonY+18);
-  X.closePath();X.fill();
-  X.beginPath();X.moveTo(demonX+42,demonY+15);X.lineTo(demonX+78,demonY-3-wingTip*.8);X.stroke();
-  X.beginPath();X.moveTo(demonX+42,demonY+15);X.lineTo(demonX+72,demonY+6-wingTip*.3);X.stroke();
-  X.beginPath();X.moveTo(demonX+42,demonY+15);X.lineTo(demonX+63,demonY+12);X.stroke();
+  const demonY=dy-68+hover; // raised higher to accommodate bigger demon
+  const demonX=dx-18;       // shifted left for wider span
+  const cx=demonX+30,cy=demonY+18; // body center
+
+  // ── HEAT DISTORTION AURA — thin pulsing ring ──
+  X.globalAlpha=.08+.04*Math.sin(t*.005);
+  const auraR=38+breathe*2;
+  const auraG=X.createRadialGradient(cx,cy,auraR*.6,cx,cy,auraR);
+  auraG.addColorStop(0,'rgba(255,50,10,0)');
+  auraG.addColorStop(.7,'rgba(255,60,20,.4)');
+  auraG.addColorStop(1,'rgba(0,0,0,0)');
+  X.fillStyle=auraG;X.fillRect(cx-auraR,cy-auraR,auraR*2,auraR*2);
   X.globalAlpha=1;
-  
-  // ── CRESCENT MOON ──
-  X.strokeStyle=P.crimson;X.lineWidth=1;
-  X.beginPath();X.arc(demonX+30,demonY-10+hover*.3,9,Math.PI*.7,Math.PI*2.3);X.stroke();
-  
-  // ── SPIKED HALO — rotating ──
-  for(let i=0;i<12;i++){
-    const angle=i/12*Math.PI*2+t*.003;
-    const hr=13;
-    const hx=demonX+30+Math.cos(angle)*hr;
-    const hy=demonY+6+Math.sin(angle)*hr;
+
+  // ── BAT WINGS — larger, 5 bone struts each, transparency gradient ──
+  const wingTip=wingFlap;
+  // Left wing — membrane as gradient fill
+  X.save();
+  const lwGrad=X.createLinearGradient(cx,cy,demonX-35,demonY);
+  lwGrad.addColorStop(0,'rgba(107,15,26,.8)');
+  lwGrad.addColorStop(.6,'rgba(74,10,18,.55)');
+  lwGrad.addColorStop(1,'rgba(40,5,10,.2)');
+  X.fillStyle=lwGrad;
+  X.beginPath();
+  X.moveTo(demonX+20,demonY+18);
+  X.lineTo(demonX-28,demonY-10-wingTip);
+  X.lineTo(demonX-35,demonY-2-wingTip*.6);
+  X.lineTo(demonX-30,demonY+6-wingTip*.3);
+  X.lineTo(demonX-22,demonY+12);
+  X.lineTo(demonX-12,demonY+17);
+  X.lineTo(demonX-2,demonY+21);
+  X.lineTo(demonX+8,demonY+24);
+  X.closePath();X.fill();
+  X.restore();
+  // Left wing bones (5 struts)
+  X.strokeStyle='#3a0808';X.lineWidth=1;
+  const lStruts=[[-26,-8-wingTip],[-22,-2-wingTip*.8],[-17,4-wingTip*.5],[-9,10-wingTip*.2],[-1,15]];
+  lStruts.forEach(([ex,ey])=>{
+    X.beginPath();X.moveTo(demonX+20,demonY+18);X.lineTo(demonX+ex,demonY+ey);X.stroke();
+  });
+  // Wing claws at tips
+  for(let i=0;i<3;i++){
+    const sx=demonX-26+i*8,sy=demonY-6-wingTip+i*5;
+    px(X,sx-1,sy,'#1a0404');px(X,sx-2,sy+1,'#1a0404');
+  }
+
+  // Right wing — mirrored
+  X.save();
+  const rwGrad=X.createLinearGradient(cx,cy,demonX+95,demonY);
+  rwGrad.addColorStop(0,'rgba(107,15,26,.8)');
+  rwGrad.addColorStop(.6,'rgba(74,10,18,.55)');
+  rwGrad.addColorStop(1,'rgba(40,5,10,.2)');
+  X.fillStyle=rwGrad;
+  X.beginPath();
+  X.moveTo(demonX+40,demonY+18);
+  X.lineTo(demonX+88,demonY-10-wingTip);
+  X.lineTo(demonX+95,demonY-2-wingTip*.6);
+  X.lineTo(demonX+90,demonY+6-wingTip*.3);
+  X.lineTo(demonX+82,demonY+12);
+  X.lineTo(demonX+72,demonY+17);
+  X.lineTo(demonX+62,demonY+21);
+  X.lineTo(demonX+52,demonY+24);
+  X.closePath();X.fill();
+  X.restore();
+  X.strokeStyle='#3a0808';X.lineWidth=1;
+  const rStruts=[[86,-8-wingTip],[82,-2-wingTip*.8],[77,4-wingTip*.5],[69,10-wingTip*.2],[61,15]];
+  rStruts.forEach(([ex,ey])=>{
+    X.beginPath();X.moveTo(demonX+40,demonY+18);X.lineTo(demonX+ex,demonY+ey);X.stroke();
+  });
+  for(let i=0;i<3;i++){
+    const sx=demonX+86-i*8,sy=demonY-6-wingTip+i*5;
+    px(X,sx+1,sy,'#1a0404');px(X,sx+2,sy+1,'#1a0404');
+  }
+
+  // ── SPIKED OUTER HALO — rotating ──
+  for(let i=0;i<14;i++){
+    const angle=i/14*Math.PI*2+t*.003;
+    const hr=18;
+    const hx=cx+Math.cos(angle)*hr;
+    const hy=cy-12+Math.sin(angle)*hr;
     px(X,hx,hy,P.crimson);
     px(X,hx+Math.cos(angle)*3,hy+Math.sin(angle)*3,'#4a0a12');
+    px(X,hx+Math.cos(angle)*4,hy+Math.sin(angle)*4,'#2a0508');
   }
-  
-  // ── BODY — breathing ──
-  rect(X,demonX+22,demonY+10-breathe*.3,16,20+breathe*.5,P.crimson);
-  dither(X,demonX+23,demonY+11-breathe*.3,14,18+breathe*.5,'#8b0000','#4a0a12',.4);
-  // Ribs — expand with breath
-  for(let i=0;i<4;i++){
-    const ribW=12+breathe*.3;
-    rect(X,demonX+24-breathe*.1,demonY+13+i*4-breathe*.3,ribW,1,'#3a0808');
+
+  // ── CRESCENT MOON behind head ──
+  X.strokeStyle='#4a0a12';X.lineWidth=1;
+  X.beginPath();X.arc(cx,cy-18+hover*.3,11,Math.PI*.7,Math.PI*2.3);X.stroke();
+
+  // ── BODY — bigger, breathing, ribbed ──
+  rect(X,demonX+20,demonY+14-breathe*.3,20,24+breathe*.5,P.crimson);
+  dither(X,demonX+21,demonY+15-breathe*.3,18,22+breathe*.5,'#8b0000','#4a0a12',.4);
+  // Ribs — expand with breath (6 ribs now)
+  for(let i=0;i<6;i++){
+    const ribW=16+breathe*.3;
+    rect(X,demonX+22-breathe*.1,demonY+17+i*3-breathe*.3,ribW,1,'#3a0808');
   }
-  
+
+  // ── CHEST CAVITY — opening with inner fire ──
+  const cavityFlicker=.6+.4*Math.sin(t*.04);
+  rect(X,demonX+27,demonY+22-breathe*.3,6,10,'#1a0404');
+  X.globalAlpha=cavityFlicker;
+  rect(X,demonX+28,demonY+23-breathe*.3,4,8,'#8b0000');
+  rect(X,demonX+28,demonY+24-breathe*.3,4,5,P.f3);
+  rect(X,demonX+29,demonY+25-breathe*.3,2,3,P.f1);
+  X.globalAlpha=1;
+  // Cavity rim ember
+  px(X,demonX+27,demonY+22-breathe*.3,P.f1);
+  px(X,demonX+32,demonY+22-breathe*.3,P.f1);
+  px(X,demonX+27,demonY+31-breathe*.3,P.f1);
+  px(X,demonX+32,demonY+31-breathe*.3,P.f1);
+
   // ── HEAD — skull, slowly turning ──
   const headTurn=Math.sin(t*.005)*2;
-  rect(X,demonX+24+headTurn,demonY+2,12,10,P.crimson);
-  rect(X,demonX+25+headTurn,demonY+3,10,8,'#5a0a12');
-  // Eyes — pulsing glow
-  const eyeGlow=.3+.3*Math.sin(t*.01);
+  const hx=cx-8+headTurn,hy=demonY+2;
+  rect(X,hx,hy,14,12,P.crimson);
+  rect(X,hx+1,hy+1,12,10,'#5a0a12');
+  rect(X,hx+2,hy+2,10,8,'#4a0a12');
+
+  // ── CROWN OF THORNS — 8 spikes radiating around skull ──
+  const thornPoints=[[-2,-3],[2,-5],[6,-5],[10,-5],[14,-3],[15,2],[-3,2],[-1,6]];
+  thornPoints.forEach(([ox,oy])=>{
+    rect(X,hx+ox,hy+oy,1,3,'#1a0404');
+    px(X,hx+ox,hy+oy-1,'#2a0508');
+  });
+
+  // ── BRANCHING HORNS — 2-segment with offshoots ──
+  // Left horn main
+  rect(X,hx,hy-2,2,4,'#3a0808');
+  rect(X,hx-1,hy-5,2,3,'#3a0808');
+  rect(X,hx-2,hy-7,2,2,'#2a0508');
+  // Left horn offshoot
+  rect(X,hx+1,hy-4,2,2,'#3a0808');
+  // Right horn main
+  rect(X,hx+12,hy-2,2,4,'#3a0808');
+  rect(X,hx+13,hy-5,2,3,'#3a0808');
+  rect(X,hx+14,hy-7,2,2,'#2a0508');
+  // Right horn offshoot
+  rect(X,hx+11,hy-4,2,2,'#3a0808');
+
+  // ── EYES — two pulsing + third eye on forehead ──
+  const eyeGlow=.4+.3*Math.sin(t*.01);
+  const thirdEyeGlow=.5+.4*Math.sin(t*.013+1); // separate phase
   X.globalAlpha=eyeGlow;
-  rect(X,demonX+27+headTurn,demonY+5,3,3,P.f1);
-  rect(X,demonX+32+headTurn,demonY+5,3,3,P.f1);
+  rect(X,hx+3,hy+4,3,3,P.f1);
+  rect(X,hx+8,hy+4,3,3,P.f1);
   X.globalAlpha=1;
-  // Eye pupils
-  px(X,demonX+28+headTurn,demonY+6,'#fff');px(X,demonX+33+headTurn,demonY+6,'#fff');
-  // Jaw
-  rect(X,demonX+27+headTurn,demonY+9,8,2,'#4a0a12');
-  // Horns
-  rect(X,demonX+23+headTurn,demonY,3,5,'#3a0808');
-  rect(X,demonX+35+headTurn,demonY,3,5,'#3a0808');
-  
-  // ── ARMS — reaching down, animated ──
-  const lArmReach=Math.sin(t*.007)*4;
-  const rArmReach=Math.sin(t*.007+Math.PI)*4;
-  // Left arm — segments
+  px(X,hx+4,hy+5,'#fff');px(X,hx+9,hy+5,'#fff');
+  // Third eye — bigger, more intense
+  X.globalAlpha=thirdEyeGlow;
+  rect(X,hx+5,hy+1,4,2,P.f2);
+  rect(X,hx+6,hy,2,1,P.f2);
+  rect(X,hx+6,hy+3,2,1,P.f2);
+  rect(X,hx+6,hy+1,2,2,'#fff');
+  px(X,hx+7,hy+2,'#ffffcc');
+  X.globalAlpha=1;
+
+  // ── JAW — open, fanged ──
+  rect(X,hx+3,hy+9,8,3,'#2a0508');
+  // Fangs
+  px(X,hx+3,hy+12,P.bone);px(X,hx+4,hy+12,P.bone);
+  px(X,hx+9,hy+12,P.bone);px(X,hx+10,hy+12,P.bone);
+  // Inner mouth glow
+  if(Math.sin(t*.008)>.2){
+    X.globalAlpha=.5;
+    rect(X,hx+5,hy+10,4,1,P.f2);
+    X.globalAlpha=1;
+  }
+
+  // ── ARMS — outstretched crucifix-like (not reaching down) ──
+  const armSway=Math.sin(t*.007)*2;
+  // Left arm — upper
   X.strokeStyle=P.crimson;X.lineWidth=3;
-  X.beginPath();X.moveTo(demonX+22,demonY+16);X.lineTo(demonX+14,demonY+22+lArmReach);X.stroke();
+  X.beginPath();X.moveTo(demonX+20,demonY+18);X.lineTo(demonX+10,demonY+20+armSway);X.stroke();
   X.lineWidth=2;
-  X.beginPath();X.moveTo(demonX+14,demonY+22+lArmReach);X.lineTo(demonX+12,demonY+32+lArmReach);X.stroke();
+  X.beginPath();X.moveTo(demonX+10,demonY+20+armSway);X.lineTo(demonX+2,demonY+22+armSway*.5);X.stroke();
   X.lineWidth=1;
-  // Claws
+  // Left hand + 3 claws
   for(let i=0;i<3;i++){
-    const clx=demonX+10+i*2;
-    const cly=demonY+33+lArmReach+Math.sin(t*.02+i)*1;
-    rect(X,clx,cly,1,3,'#5a0a12');
+    const clx=demonX-1+i*2;
+    const cly=demonY+23+armSway*.5+Math.sin(t*.02+i)*.7;
+    rect(X,clx,cly,1,3,'#2a0508');
+    px(X,clx,cly+3,'#1a0404');
   }
   // Right arm
   X.strokeStyle=P.crimson;X.lineWidth=3;
-  X.beginPath();X.moveTo(demonX+38,demonY+16);X.lineTo(demonX+46,demonY+22+rArmReach);X.stroke();
+  X.beginPath();X.moveTo(demonX+40,demonY+18);X.lineTo(demonX+50,demonY+20-armSway);X.stroke();
   X.lineWidth=2;
-  X.beginPath();X.moveTo(demonX+46,demonY+22+rArmReach);X.lineTo(demonX+48,demonY+32+rArmReach);X.stroke();
+  X.beginPath();X.moveTo(demonX+50,demonY+20-armSway);X.lineTo(demonX+58,demonY+22-armSway*.5);X.stroke();
   X.lineWidth=1;
   for(let i=0;i<3;i++){
-    const clx=demonX+46+i*2;
-    const cly=demonY+33+rArmReach+Math.sin(t*.02+i+1)*1;
-    rect(X,clx,cly,1,3,'#5a0a12');
+    const clx=demonX+56+i*2;
+    const cly=demonY+23-armSway*.5+Math.sin(t*.02+i+1)*.7;
+    rect(X,clx,cly,1,3,'#2a0508');
+    px(X,clx,cly+3,'#1a0404');
   }
-  
-  // ── DRIPPING — varied speeds ──
+
+  // ── SKELETAL TAIL — 5 vertebrae, sways behind body ──
+  const tailBase=[demonX+30,demonY+38-breathe*.3];
+  let tx_=tailBase[0],ty_=tailBase[1];
+  for(let i=0;i<6;i++){
+    const segSway=Math.sin(t*.009+i*.5)*2;
+    const nx=tx_+segSway;
+    const ny=ty_+3;
+    // Vertebra
+    rect(X,nx-1,ny-1,2,2,'#3a0808');
+    px(X,nx,ny,'#5a0a12');
+    // Connection line
+    X.strokeStyle='#2a0508';X.lineWidth=1;
+    X.beginPath();X.moveTo(tx_,ty_);X.lineTo(nx,ny);X.stroke();
+    tx_=nx;ty_=ny;
+  }
+  // Tail barb at end
+  rect(X,tx_-2,ty_+1,5,2,'#3a0808');
+  px(X,tx_-3,ty_,'#1a0404');
+  px(X,tx_+3,ty_,'#1a0404');
+  px(X,tx_,ty_+3,'#1a0404');
+
+  // ── DRIPPING — 7 streams with splash at bottom ──
   for(let i=0;i<7;i++){
-    const dripX=demonX+20+i*4;
+    const dripX=demonX+22+i*3.5;
     const dripSpeed=.003+hash(i,0,11)*.004;
     const dripPhase=(t*dripSpeed+hash(i,0,22))%1;
-    const dripLen=15+hash(i,0,33)*10;
+    const dripLen=18+hash(i,0,33)*12;
     for(let j=0;j<dripLen*dripPhase;j++){
       X.globalAlpha=.5*(1-j/(dripLen*dripPhase))*.7;
-      px(X,dripX+Math.sin(j*.2+i)*0.5,demonY+30+j,P.crimson);
+      px(X,dripX+Math.sin(j*.2+i)*0.5,demonY+38+j,P.crimson);
+    }
+    // Splash when drip reaches bottom
+    if(dripPhase>.92){
+      X.globalAlpha=.5*(1-dripPhase)*8;
+      const splashY=demonY+38+dripLen;
+      px(X,dripX-2,splashY,P.crimson);
+      px(X,dripX+2,splashY,P.crimson);
+      px(X,dripX,splashY+1,P.crimson);
+      X.globalAlpha=1;
     }
   }
   X.globalAlpha=1;
+
   // ── EMBER PARTICLES rising from below demon ──
-  for(let i=0;i<5;i++){
-    const ePhase=((t*.012+i*.2)%1);
-    const ex=demonX+15+Math.sin(t*.008+i*2.3)*15;
-    const ey=demonY+45-ePhase*30;
-    X.globalAlpha=(1-ePhase)*.6;
+  for(let i=0;i<7;i++){
+    const ePhase=((t*.012+i*.15)%1);
+    const ex=demonX+15+Math.sin(t*.008+i*2.3)*20;
+    const ey=demonY+55-ePhase*38;
+    X.globalAlpha=(1-ePhase)*.7;
     px(X,ex,ey,i%2?P.f1:P.f2);
     if(ePhase<.3)px(X,ex+1,ey,P.f4);
+    if(ePhase<.15)px(X,ex,ey-1,'#ffffcc');
     X.globalAlpha=1;
   }
 }
@@ -3092,6 +3240,594 @@ function drawNPC_elder(ex,ey){
   if(t%180<5){
     X.globalAlpha=.5;px(X,ex+13-handSway+tremor,ey+3,'#fff');X.globalAlpha=1;
   }
+}
+
+// ═══════════════════════════════════════
+// SHOP PICTURE-ROOMS
+// ═══════════════════════════════════════
+function drawShopScene(){
+  if(currentShopAnim==='shop1')drawShop1Scene();
+  else if(currentShopAnim==='shop2')drawShop2Scene();
+}
+
+// ── SHOP 1: Барахолка — the Cat behind the counter ──
+function drawShop1Scene(){
+  const c=document.getElementById('shop1-canvas');
+  if(!c)return;
+  const s=c.getContext('2d');
+  s.imageSmoothingEnabled=false;
+  const W=180,H=110;
+
+  // Wall — warm dim brick
+  s.fillStyle='#120a06';s.fillRect(0,0,W,H);
+  // Brick pattern
+  for(let row=0;row<14;row++){
+    for(let col=0;col<18;col++){
+      const bx=col*10+(row%2?5:0);
+      const by=row*6;
+      if(by>70)continue;
+      const shade=hash(col,row,11)>.5?'#2a1810':'#1a100a';
+      s.fillStyle=shade;s.fillRect(bx,by,9,5);
+      s.fillStyle='#0a0604';s.fillRect(bx,by+5,9,1);
+    }
+  }
+  // Wall stains
+  for(let i=0;i<8;i++){
+    s.globalAlpha=.2;
+    s.fillStyle=hash(i,0,22)>.5?'#3a2010':'#0a0404';
+    s.fillRect(10+hash(i,0,33)*160,10+hash(i,0,44)*60,4+hash(i,0,55)*10,3+hash(i,0,66)*6);
+  }
+  s.globalAlpha=1;
+
+  // Floor — wooden planks
+  s.fillStyle='#2a1a0e';s.fillRect(0,72,W,38);
+  for(let i=0;i<6;i++){
+    s.fillStyle='#0a0604';s.fillRect(0,72+i*7,W,1);
+  }
+  for(let i=0;i<20;i++){
+    s.fillStyle='#1a100a';s.fillRect(i*10+hash(i,0,77)*4,72+hash(i,0,88)*35,2,1);
+  }
+
+  // ── HANGING LAMP ──
+  const lampSway=Math.sin(t*.015)*3;
+  const lampX=90+lampSway,lampY=24;
+  // Wire
+  s.strokeStyle='#1a1a1a';s.lineWidth=1;
+  s.beginPath();s.moveTo(90,0);s.lineTo(lampX,lampY);s.stroke();
+  // Lamp shade
+  s.fillStyle='#3a2a1a';s.fillRect(lampX-4,lampY,8,4);
+  s.fillStyle='#5a3a20';s.fillRect(lampX-3,lampY+1,6,2);
+  // Bulb
+  s.fillStyle='#daa520';s.fillRect(lampX-1,lampY+4,2,2);
+  // Glow
+  s.globalAlpha=.12;
+  const lampGrad=s.createRadialGradient(lampX,lampY+5,0,lampX,lampY+5,60);
+  lampGrad.addColorStop(0,'rgba(218,165,32,1)');
+  lampGrad.addColorStop(.5,'rgba(184,134,11,.4)');
+  lampGrad.addColorStop(1,'rgba(0,0,0,0)');
+  s.fillStyle=lampGrad;s.fillRect(lampX-60,lampY-10,120,90);
+  s.globalAlpha=1;
+  // Light beam on floor
+  s.globalAlpha=.08;
+  s.fillStyle='#daa520';
+  s.beginPath();
+  s.moveTo(lampX-3,lampY+6);
+  s.lineTo(lampX+3,lampY+6);
+  s.lineTo(lampX+18,H);
+  s.lineTo(lampX-18,H);
+  s.closePath();s.fill();
+  s.globalAlpha=1;
+
+  // Dust motes in beam
+  for(let i=0;i<6;i++){
+    const motePhase=((t*.01+i*.17)%1);
+    const mx=lampX-10+motePhase*20+Math.sin(t*.02+i)*3;
+    const my=lampY+10+motePhase*60;
+    s.globalAlpha=(1-motePhase)*.5;
+    s.fillStyle='#daa520';s.fillRect(mx,my,1,1);
+    s.globalAlpha=1;
+  }
+
+  // ── BACK SHELVES (behind counter) ──
+  // Shelf 1 — top (merch)
+  s.fillStyle='#3a2616';s.fillRect(20,35,140,2);
+  s.fillStyle='#2a1a0e';s.fillRect(20,37,140,1);
+  // Items on shelf 1 — folded shirts
+  s.fillStyle='#0a0a0a';s.fillRect(26,29,10,6);s.fillStyle='#1a1a1a';s.fillRect(27,30,8,4);
+  s.fillStyle='#6b0f1a';s.fillRect(40,29,10,6);s.fillStyle='#4a0a12';s.fillRect(41,30,8,4);
+  s.fillStyle='#1b1464';s.fillRect(54,29,10,6);s.fillStyle='#0e0a38';s.fillRect(55,30,8,4);
+  s.fillStyle='#e8dcc8';s.fillRect(68,29,10,6);s.fillStyle='#b8a888';s.fillRect(69,30,8,4);
+  // Vinyl records
+  s.fillStyle='#0a0a0a';s.fillRect(86,28,7,7);s.fillStyle='#2a2a2a';s.fillRect(87,29,5,5);s.fillStyle='#6b0f1a';s.fillRect(89,30,1,3);
+  s.fillStyle='#0a0a0a';s.fillRect(96,28,7,7);s.fillStyle='#2a2a2a';s.fillRect(97,29,5,5);s.fillStyle='#b8860b';s.fillRect(99,30,1,3);
+  // Book stack
+  s.fillStyle='#3a2a18';s.fillRect(110,30,14,2);
+  s.fillStyle='#1a0a06';s.fillRect(110,32,14,2);
+  s.fillStyle='#2a1a10';s.fillRect(110,34,14,1);
+  // Tape
+  s.fillStyle='#1a1a20';s.fillRect(130,30,6,5);
+  s.fillStyle='#b8860b';s.fillRect(131,31,4,1);
+  // Small jar
+  s.fillStyle='#2a2a2a';s.fillRect(142,28,5,7);
+  s.fillStyle='#5a7a4a';s.fillRect(143,30,3,4);
+
+  // Shelf 2 — middle
+  s.fillStyle='#3a2616';s.fillRect(20,50,140,2);
+  s.fillStyle='#2a1a0e';s.fillRect(20,52,140,1);
+  // Items
+  for(let i=0;i<8;i++){
+    const ix=24+i*17;
+    s.fillStyle=['#6b0f1a','#1b1464','#2a1a08','#0a0a0a','#4a0a12','#1a1a1a','#3a1a08','#0e0a38'][i];
+    s.fillRect(ix,42,12,8);
+    s.fillStyle='#0a0404';s.fillRect(ix,49,12,1);
+  }
+
+  // ── COUNTER — bottom, wood ──
+  const counterY=75;
+  s.fillStyle='#3a2414';s.fillRect(18,counterY,144,22);
+  s.fillStyle='#4a3020';s.fillRect(18,counterY,144,3);
+  // Wood grain
+  for(let i=0;i<6;i++){
+    s.fillStyle='#2a1a0a';s.fillRect(18,counterY+4+i*3,144,1);
+  }
+  // Counter front edge
+  s.fillStyle='#1a0e06';s.fillRect(18,counterY+21,144,1);
+  // Counter legs
+  s.fillStyle='#2a1a0e';s.fillRect(22,counterY+22,4,6);
+  s.fillStyle='#2a1a0e';s.fillRect(154,counterY+22,4,6);
+
+  // ── SAUCER OF MILK (left of cat) ──
+  s.fillStyle='#3a3a3a';
+  s.beginPath();s.ellipse(46,counterY-1,8,2,0,0,Math.PI*2);s.fill();
+  s.fillStyle='#e8dcc8';
+  s.beginPath();s.ellipse(46,counterY-1,6,1.5,0,0,Math.PI*2);s.fill();
+  // Ripple
+  if(t%60<30){
+    s.globalAlpha=.4;s.strokeStyle='#fff';s.lineWidth=1;
+    s.beginPath();s.ellipse(46,counterY-1,2+Math.sin(t*.08)*1,.5,0,0,Math.PI*2);s.stroke();
+    s.globalAlpha=1;
+  }
+
+  // ── THE CAT on the counter ──
+  const catY=counterY-12;
+  const catX=90;
+  // Tail — swaying sinuous curve behind cat
+  s.strokeStyle='#0a0a0a';s.lineWidth=1;
+  s.beginPath();
+  for(let i=0;i<10;i++){
+    const tailFrac=i/10;
+    const tx=catX+8+i*1.2;
+    const ty=catY+5+Math.sin(t*.02+tailFrac*3)*3-tailFrac*2;
+    if(i===0)s.moveTo(tx,ty);else s.lineTo(tx,ty);
+  }
+  s.stroke();
+  // Tail tip
+  px(s,catX+20,catY+3+Math.sin(t*.02+3)*2,'#1a1a1a');
+
+  // Body — crouched
+  s.fillStyle='#0a0a0a';s.fillRect(catX-1,catY+2,12,10);
+  s.fillStyle='#1a1a1a';s.fillRect(catX,catY+3,10,8);
+  // Stripes
+  s.fillStyle='#050505';
+  s.fillRect(catX+1,catY+4,1,6);
+  s.fillRect(catX+4,catY+4,1,6);
+  s.fillRect(catX+7,catY+4,1,6);
+  // Front legs
+  s.fillStyle='#0a0a0a';s.fillRect(catX+1,catY+10,2,3);s.fillRect(catX+7,catY+10,2,3);
+  // Head
+  s.fillStyle='#0a0a0a';s.fillRect(catX+1,catY-3,10,6);
+  s.fillStyle='#1a1a1a';s.fillRect(catX+2,catY-2,8,4);
+  // Ears — triangles
+  s.fillStyle='#0a0a0a';
+  s.beginPath();s.moveTo(catX+1,catY-3);s.lineTo(catX+3,catY-6);s.lineTo(catX+4,catY-3);s.closePath();s.fill();
+  s.beginPath();s.moveTo(catX+8,catY-3);s.lineTo(catX+9,catY-6);s.lineTo(catX+11,catY-3);s.closePath();s.fill();
+  // Eyes — blinking
+  const catBlink=Math.sin(t*.002)>.93?0:1;
+  const eyePulse=.6+.4*Math.sin(t*.006);
+  s.globalAlpha=eyePulse;
+  if(catBlink){
+    s.fillStyle='#daa520';s.fillRect(catX+3,catY,2,2);s.fillRect(catX+7,catY,2,2);
+    s.fillStyle='#fffaa0';s.fillRect(catX+3,catY,1,1);s.fillRect(catX+7,catY,1,1);
+  }else{
+    s.fillStyle='#daa520';s.fillRect(catX+3,catY,2,1);s.fillRect(catX+7,catY,2,1);
+  }
+  s.globalAlpha=1;
+  // Nose
+  px(s,catX+5,catY+2,'#6b0f1a');
+  // Whiskers
+  s.strokeStyle='#3a3a3a';s.lineWidth=1;
+  s.beginPath();s.moveTo(catX-2,catY+1);s.lineTo(catX+2,catY+2);s.stroke();
+  s.beginPath();s.moveTo(catX-2,catY+3);s.lineTo(catX+2,catY+3);s.stroke();
+  s.beginPath();s.moveTo(catX+9,catY+2);s.lineTo(catX+13,catY+1);s.stroke();
+  s.beginPath();s.moveTo(catX+9,catY+3);s.lineTo(catX+13,catY+3);s.stroke();
+
+  // ── MUG OF ШИЛО (right of cat) ──
+  const mugX=130,mugY=counterY-7;
+  s.fillStyle='#3a3a3a';s.fillRect(mugX,mugY,8,8);
+  s.fillStyle='#2a2a2a';s.fillRect(mugX+1,mugY+1,6,6);
+  s.fillStyle='#1a1a1a';s.fillRect(mugX+2,mugY+1,4,2); // liquid surface shadow
+  s.fillStyle='#4a3a1a';s.fillRect(mugX+2,mugY+2,4,1); // liquid
+  // Chip on rim
+  s.fillStyle='#050505';s.fillRect(mugX+7,mugY+1,1,1);
+  // Handle
+  s.strokeStyle='#3a3a3a';s.lineWidth=1;
+  s.beginPath();s.arc(mugX+9,mugY+4,3,Math.PI*1.5,Math.PI*.5);s.stroke();
+  // Steam rising
+  for(let i=0;i<3;i++){
+    const stPhase=((t*.015+i*.3)%1);
+    const stX=mugX+3+Math.sin(t*.03+i*2)*2;
+    const stY=mugY-stPhase*15;
+    s.globalAlpha=(1-stPhase)*.4;
+    s.fillStyle='#8a8d8f';s.fillRect(stX,stY,1,2);
+    s.globalAlpha=1;
+  }
+
+  // ── TINY NOTE on counter ──
+  s.fillStyle='#e8dcc8';s.fillRect(60,counterY+4,24,6);
+  s.fillStyle='#1a1410';
+  s.fillRect(62,counterY+6,4,1);s.fillRect(68,counterY+6,6,1);s.fillRect(76,counterY+6,4,1);
+  s.fillRect(62,counterY+8,8,1);s.fillRect(72,counterY+8,10,1);
+
+  // ── BARTER BELL (dead) ──
+  s.fillStyle='#3a2a1a';s.fillRect(40,counterY+4,6,5);
+  s.fillStyle='#5a3a20';s.fillRect(41,counterY+4,4,2);
+  s.fillStyle='#daa520';s.fillRect(42,counterY+5,2,2);
+  // "X" on bell — not working
+  s.fillStyle='#6b0f1a';
+  s.fillRect(41,counterY+4,1,1);s.fillRect(45,counterY+4,1,1);
+  s.fillRect(43,counterY+6,1,1);
+  s.fillRect(41,counterY+8,1,1);s.fillRect(45,counterY+8,1,1);
+
+  // ── BOTTLE on counter (far left) ──
+  s.fillStyle='#1a3a2a';s.fillRect(26,counterY-6,4,10);
+  s.fillStyle='#2a4a3a';s.fillRect(27,counterY-5,2,8);
+  s.fillStyle='#0a0a0a';s.fillRect(27,counterY-8,2,2);
+
+  // ── MICE SCURRYING on floor ──
+  for(let i=0;i<3;i++){
+    const mPhase=((t*.005+i*.33)%1);
+    const mx=10+mPhase*160;
+    const my=92+i*4;
+    s.fillStyle='#1a1a1a';s.fillRect(mx,my,4,2);
+    px(s,mx+4,my,'#1a1a1a'); // tail
+    // Eye
+    if(t%4<2)px(s,mx+3,my,'#6b0f1a');
+  }
+
+  // ── CRT-LIKE SCANLINE OVERLAY ──
+  s.globalAlpha=.08;
+  for(let y=0;y<H;y+=2){
+    s.fillStyle='#000';s.fillRect(0,y,W,1);
+  }
+  s.globalAlpha=1;
+  // Vignette
+  s.globalAlpha=.3;
+  const vgn=s.createRadialGradient(W/2,H/2,40,W/2,H/2,120);
+  vgn.addColorStop(0,'rgba(0,0,0,0)');
+  vgn.addColorStop(1,'rgba(0,0,0,1)');
+  s.fillStyle=vgn;s.fillRect(0,0,W,H);
+  s.globalAlpha=1;
+}
+
+// ── SHOP 2: System Suicide — demon altar theatre ──
+function drawShop2Scene(){
+  const c=document.getElementById('shop2-canvas');
+  if(!c)return;
+  const s=c.getContext('2d');
+  s.imageSmoothingEnabled=false;
+  const W=180,H=110;
+
+  // Black void background
+  s.fillStyle='#050202';s.fillRect(0,0,W,H);
+
+  // ── BLACKENED BRICK WALL with pulsing crimson cracks ──
+  for(let row=0;row<10;row++){
+    for(let col=0;col<18;col++){
+      const bx=col*10+(row%2?5:0);
+      const by=row*8;
+      if(by>66)continue;
+      const shade=hash(col,row,11)>.5?'#0a0202':'#140404';
+      s.fillStyle=shade;s.fillRect(bx,by,9,7);
+      s.fillStyle='#000';s.fillRect(bx,by+7,9,1);
+    }
+  }
+  // Crimson cracks — pulsing
+  const crackPulse=.4+.3*Math.sin(t*.008);
+  s.globalAlpha=crackPulse;
+  s.fillStyle='#6b0f1a';
+  // Vertical cracks
+  for(let i=0;i<5;i++){
+    const cx_=20+i*35;
+    const len=15+hash(i,0,11)*20;
+    for(let j=0;j<len;j++){
+      const jit=Math.sin(j*.3+i)*.8;
+      s.fillRect(cx_+jit,10+hash(i,j,22)*30+j,1,1);
+    }
+  }
+  // Horizontal cracks
+  for(let i=0;i<3;i++){
+    const cy_=20+i*20;
+    const len=30+hash(i,0,33)*30;
+    for(let j=0;j<len;j++){
+      const jit=Math.sin(j*.3+i)*.8;
+      s.fillRect(15+hash(i,j,44)*10+j,cy_+jit,1,1);
+    }
+  }
+  s.globalAlpha=1;
+  // Pulsing red glow from cracks
+  s.globalAlpha=crackPulse*.1;
+  const crackGlow=s.createRadialGradient(W/2,40,30,W/2,40,100);
+  crackGlow.addColorStop(0,'rgba(139,0,0,1)');
+  crackGlow.addColorStop(1,'rgba(0,0,0,0)');
+  s.fillStyle=crackGlow;s.fillRect(0,0,W,80);
+  s.globalAlpha=1;
+
+  // ── FLOOR: ash + bottle caps ──
+  s.fillStyle='#0a0604';s.fillRect(0,80,W,30);
+  // Ash dithering
+  for(let i=0;i<80;i++){
+    s.globalAlpha=.3+hash(i,0,55)*.3;
+    s.fillStyle=hash(i,0,66)>.5?'#2a2218':'#1a1410';
+    s.fillRect(hash(i,0,77)*W,80+hash(i,0,88)*30,1,1);
+  }
+  s.globalAlpha=1;
+  // Bottle caps
+  for(let i=0;i<12;i++){
+    const capX=10+hash(i,0,11)*160;
+    const capY=84+hash(i,0,22)*22;
+    s.fillStyle=['#6b0f1a','#b8860b','#8a8d8f','#3a2a1a','#0a0a0a'][Math.floor(hash(i,0,33)*5)];
+    s.fillRect(capX,capY,3,1);
+    s.fillStyle='#1a1a1a';s.fillRect(capX,capY+1,3,1);
+  }
+
+  // ── PEDESTAL OF BROKEN BRICKS (center) ──
+  const pedX=80,pedY=72;
+  s.fillStyle='#1a0a0a';s.fillRect(pedX-10,pedY,30,10);
+  s.fillStyle='#2a1010';s.fillRect(pedX-9,pedY+1,28,8);
+  // Brick lines
+  s.fillStyle='#0a0404';
+  s.fillRect(pedX-10,pedY+4,30,1);
+  s.fillRect(pedX-3,pedY,1,4);
+  s.fillRect(pedX+8,pedY+4,1,6);
+  s.fillRect(pedX-5,pedY+4,1,6);
+
+  // ── SMALL BURNING DUMPSTER on pedestal ──
+  const dumX=pedX-7,dumY=pedY-12;
+  // Body
+  s.fillStyle='#2a2a2e';s.fillRect(dumX,dumY,24,12);
+  s.fillStyle='#1a1a1e';s.fillRect(dumX+1,dumY+1,22,10);
+  // Rust dither
+  for(let i=0;i<40;i++){
+    if(hash(i,0,11)>.6){
+      s.fillStyle=hash(i,0,22)>.5?'#4a0a12':'#2a1010';
+      s.fillRect(dumX+hash(i,0,33)*22,dumY+1+hash(i,0,44)*10,1,1);
+    }
+  }
+  // Rim
+  s.fillStyle='#2a2a2e';s.fillRect(dumX-1,dumY-1,26,2);
+  // Lid ajar
+  s.fillStyle='#1a1a1e';s.fillRect(dumX+17,dumY-3,6,3);
+
+  // Flames
+  const ff=t*.03;
+  for(let i=0;i<14;i++){
+    const flx=dumX+4+Math.sin(ff+i*.7)*8;
+    const fly=dumY-i-Math.abs(Math.sin(ff*1.3+i*.5))*3;
+    const fs=Math.max(1,6-Math.floor(i*.4));
+    s.globalAlpha=1-i*.06;
+    s.fillStyle=[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#ffeecc','#ffffcc','#fff','#fff'][i];
+    s.fillRect(flx,fly,fs,fs);
+  }
+  s.globalAlpha=1;
+  // Ember sparks rising from dumpster
+  for(let i=0;i<6;i++){
+    const sPhase=((t*.015+i*.17)%1);
+    const spx=dumX+6+Math.sin(t*.02+i*1.5)*10;
+    const spy=dumY-5-sPhase*35;
+    s.globalAlpha=(1-sPhase)*.7;
+    s.fillStyle=i%2?'#b8860b':'#ff6600';
+    s.fillRect(spx,spy,1,1);
+    s.globalAlpha=1;
+  }
+
+  // Heat glow around dumpster
+  s.globalAlpha=.1+.04*Math.sin(t*.02);
+  const heatGrad=s.createRadialGradient(dumX+12,dumY-6,5,dumX+12,dumY-6,40);
+  heatGrad.addColorStop(0,'rgba(255,80,10,.8)');
+  heatGrad.addColorStop(1,'rgba(0,0,0,0)');
+  s.fillStyle=heatGrad;s.fillRect(dumX-30,dumY-40,80,70);
+  s.globalAlpha=1;
+
+  // ── DEMON ABOVE — crucifix pose, simplified ──
+  const demHover=Math.sin(t*.005)*1.5;
+  const demFlap=Math.sin(t*.007)*5;
+  const demX=W/2,demY=28+demHover;
+
+  // ── SPIKED HALO ROTATING ──
+  for(let i=0;i<12;i++){
+    const angle=i/12*Math.PI*2+t*.003;
+    const hr=16;
+    const hx=demX+Math.cos(angle)*hr;
+    const hy=demY+Math.sin(angle)*hr;
+    s.fillStyle='#6b0f1a';s.fillRect(hx-1,hy-1,2,2);
+    s.fillStyle='#3a0a08';s.fillRect(hx+Math.cos(angle)*2-1,hy+Math.sin(angle)*2-1,2,2);
+  }
+
+  // ── DEMON WINGS — spread wide ──
+  // Left wing
+  s.fillStyle='rgba(107,15,26,.75)';
+  s.beginPath();
+  s.moveTo(demX-5,demY+2);
+  s.lineTo(demX-32,demY-8-demFlap);
+  s.lineTo(demX-38,demY-2-demFlap*.5);
+  s.lineTo(demX-32,demY+4);
+  s.lineTo(demX-20,demY+8);
+  s.lineTo(demX-10,demY+10);
+  s.closePath();s.fill();
+  // Wing bones
+  s.strokeStyle='#3a0808';s.lineWidth=1;
+  s.beginPath();s.moveTo(demX-5,demY+2);s.lineTo(demX-30,demY-6-demFlap*.8);s.stroke();
+  s.beginPath();s.moveTo(demX-5,demY+2);s.lineTo(demX-22,demY+2);s.stroke();
+  s.beginPath();s.moveTo(demX-5,demY+2);s.lineTo(demX-12,demY+8);s.stroke();
+
+  // Right wing
+  s.fillStyle='rgba(107,15,26,.75)';
+  s.beginPath();
+  s.moveTo(demX+5,demY+2);
+  s.lineTo(demX+32,demY-8-demFlap);
+  s.lineTo(demX+38,demY-2-demFlap*.5);
+  s.lineTo(demX+32,demY+4);
+  s.lineTo(demX+20,demY+8);
+  s.lineTo(demX+10,demY+10);
+  s.closePath();s.fill();
+  s.beginPath();s.moveTo(demX+5,demY+2);s.lineTo(demX+30,demY-6-demFlap*.8);s.stroke();
+  s.beginPath();s.moveTo(demX+5,demY+2);s.lineTo(demX+22,demY+2);s.stroke();
+  s.beginPath();s.moveTo(demX+5,demY+2);s.lineTo(demX+12,demY+8);s.stroke();
+
+  // Body — small crucified
+  s.fillStyle='#6b0f1a';s.fillRect(demX-4,demY-3,9,14);
+  s.fillStyle='#4a0a12';s.fillRect(demX-3,demY-2,7,12);
+  // Ribs
+  for(let i=0;i<4;i++){
+    s.fillStyle='#3a0808';s.fillRect(demX-3,demY+i*3,7,1);
+  }
+
+  // Head
+  s.fillStyle='#6b0f1a';s.fillRect(demX-4,demY-10,9,7);
+  s.fillStyle='#4a0a12';s.fillRect(demX-3,demY-9,7,5);
+  // Horns (branching)
+  s.fillStyle='#2a0508';
+  s.fillRect(demX-4,demY-12,2,3);s.fillRect(demX-5,demY-14,2,2);
+  s.fillRect(demX+3,demY-12,2,3);s.fillRect(demX+4,demY-14,2,2);
+  // Single large cyclops eye — pulsing
+  const eyePulse=.5+.5*Math.sin(t*.012);
+  s.globalAlpha=eyePulse;
+  s.fillStyle='#ff6600';s.fillRect(demX-2,demY-7,5,3);
+  s.fillStyle='#ffffcc';s.fillRect(demX,demY-6,2,1);
+  s.globalAlpha=1;
+  // Glow around eye
+  s.globalAlpha=eyePulse*.3;
+  const eyeGlow=s.createRadialGradient(demX,demY-6,0,demX,demY-6,12);
+  eyeGlow.addColorStop(0,'rgba(255,80,10,1)');
+  eyeGlow.addColorStop(1,'rgba(0,0,0,0)');
+  s.fillStyle=eyeGlow;s.fillRect(demX-12,demY-18,24,24);
+  s.globalAlpha=1;
+  // Jaw with fangs
+  s.fillStyle='#2a0508';s.fillRect(demX-3,demY-4,7,2);
+  px(s,demX-2,demY-2,'#e8dcc8');
+  px(s,demX+2,demY-2,'#e8dcc8');
+
+  // Arms — stretched out horizontally (crucifix)
+  s.strokeStyle='#6b0f1a';s.lineWidth=2;
+  s.beginPath();s.moveTo(demX-4,demY);s.lineTo(demX-16,demY+1);s.stroke();
+  s.beginPath();s.moveTo(demX+5,demY);s.lineTo(demX+17,demY+1);s.stroke();
+  // Hands with 3 claws each
+  s.lineWidth=1;
+  for(let i=0;i<3;i++){
+    s.fillStyle='#2a0508';
+    s.fillRect(demX-18-i,demY+1,1,3);
+    s.fillRect(demX+18+i,demY+1,1,3);
+  }
+  // Crown of thorns
+  const thornPos=[[-3,-11],[0,-12],[3,-11],[5,-9],[-5,-9]];
+  thornPos.forEach(([tx,ty])=>{
+    s.fillStyle='#1a0404';s.fillRect(demX+tx,demY+ty,1,2);
+  });
+
+  // Drips from body
+  for(let i=0;i<5;i++){
+    const dX=demX-3+i*1.5;
+    const dSp=.003+hash(i,0,11)*.004;
+    const dPh=(t*dSp+hash(i,0,22))%1;
+    const dLen=10+hash(i,0,33)*8;
+    for(let j=0;j<dLen*dPh;j++){
+      s.globalAlpha=.5*(1-j/(dLen*dPh))*.7;
+      s.fillStyle='#6b0f1a';
+      s.fillRect(dX,demY+11+j,1,1);
+    }
+  }
+  s.globalAlpha=1;
+
+  // ── FLOATING MERCH ──
+  // Black t-shirt drifting
+  const shirtSway=Math.sin(t*.008)*3;
+  const shX=22+shirtSway;
+  const shY=45+Math.sin(t*.01)*2;
+  s.fillStyle='#0a0a0a';
+  s.fillRect(shX,shY,12,14);
+  s.fillStyle='#1a1a1a';s.fillRect(shX+1,shY+1,10,12);
+  // Sleeves
+  s.fillStyle='#0a0a0a';s.fillRect(shX-2,shY+1,2,5);s.fillRect(shX+12,shY+1,2,5);
+  // Tiny text "BURN"
+  s.fillStyle='#6b0f1a';s.fillRect(shX+3,shY+6,1,1);s.fillRect(shX+5,shY+6,1,1);s.fillRect(shX+7,shY+6,1,1);s.fillRect(shX+9,shY+6,1,1);
+  // Hanging thread
+  s.fillStyle='#3a3a3a';s.fillRect(shX+6,shY-6,1,6);
+
+  // Candle with flame — on the right
+  const cndX=156,cndY=62;
+  s.fillStyle='#e8dcc8';s.fillRect(cndX,cndY,3,12);
+  s.fillStyle='#b8a888';s.fillRect(cndX,cndY,3,1);
+  // Wax drips
+  s.fillStyle='#b8a888';s.fillRect(cndX,cndY+3,1,2);s.fillRect(cndX+2,cndY+5,1,2);
+  // Flame
+  const cf=t*.05;
+  const flicker=Math.sin(cf)*.5;
+  s.fillStyle='#ff6600';s.fillRect(cndX+1,cndY-3+flicker,1,3);
+  s.fillStyle='#daa520';s.fillRect(cndX+1,cndY-2+flicker,1,2);
+  s.fillStyle='#ffffcc';s.fillRect(cndX+1,cndY-1+flicker,1,1);
+  // Candle glow
+  s.globalAlpha=.08+.04*Math.sin(cf);
+  const cndGlow=s.createRadialGradient(cndX+1,cndY-1,0,cndX+1,cndY-1,20);
+  cndGlow.addColorStop(0,'rgba(218,165,32,1)');
+  cndGlow.addColorStop(1,'rgba(0,0,0,0)');
+  s.fillStyle=cndGlow;s.fillRect(cndX-19,cndY-21,40,40);
+  s.globalAlpha=1;
+
+  // Embers patch floating
+  const patchX=38+Math.sin(t*.006)*2;
+  const patchY=68;
+  s.fillStyle='#1a1010';s.fillRect(patchX,patchY,7,6);
+  s.fillStyle='#3a0808';s.fillRect(patchX+1,patchY+1,5,4);
+  // Glowing embers inside patch
+  if(t%4<2){
+    s.fillStyle='#ff6600';s.fillRect(patchX+2,patchY+2,1,1);
+    s.fillStyle='#daa520';s.fillRect(patchX+4,patchY+3,1,1);
+  }
+
+  // ── FALLING ASH ──
+  for(let i=0;i<14;i++){
+    const aPh=((t*.004+i*.08)%1);
+    const ax=hash(i,0,11)*W;
+    const ay=aPh*H;
+    s.globalAlpha=(.3-aPh*.1);
+    s.fillStyle=hash(i,0,22)>.5?'#8a8d8f':'#2a2a2a';
+    s.fillRect(ax+Math.sin(t*.01+i)*2,ay,1,1+hash(i,0,33)*2);
+    s.globalAlpha=1;
+  }
+
+  // ── TAGLINE at bottom ──
+  s.globalAlpha=.5+.1*Math.sin(t*.01);
+  s.fillStyle='#ff4400';
+  s.font='5px "Press Start 2P"';
+  s.textAlign='center';
+  s.fillText('пепел — единственная честная валюта',W/2,104);
+  s.textAlign='left';
+  s.globalAlpha=1;
+
+  // ── CRT SCANLINES ──
+  s.globalAlpha=.1;
+  for(let y=0;y<H;y+=2){
+    s.fillStyle='#000';s.fillRect(0,y,W,1);
+  }
+  s.globalAlpha=1;
+  // Red vignette
+  s.globalAlpha=.35;
+  const vgn2=s.createRadialGradient(W/2,H/2,30,W/2,H/2,130);
+  vgn2.addColorStop(0,'rgba(0,0,0,0)');
+  vgn2.addColorStop(.5,'rgba(60,0,0,.3)');
+  vgn2.addColorStop(1,'rgba(0,0,0,1)');
+  s.fillStyle=vgn2;s.fillRect(0,0,W,H);
+  s.globalAlpha=1;
 }
 
 // ═══════════════════════════════════════
@@ -4348,6 +5084,7 @@ function loop(){
   t++;
   if(brainrotFreeze){render();requestAnimationFrame(loop);return;}
   if(state==='ending'){endingTimer>0||triggerEnding();render();requestAnimationFrame(loop);return;}
+  if(state==='shop'&&currentShopAnim){drawShopScene();}
   if(state==='game'||state==='menu'||state==='dialogue'||state==='look'){
     handleKeys();
     if(player.moving&&!Object.values(keys).some(v=>v)){
@@ -4929,7 +5666,8 @@ function nfgPrev(){if(nfgPage>0){nfgPage--;renderNfg();}}
 function closeNfg(){document.getElementById('nfg').classList.remove('on');state='game';activeLoc=null;}
 
 // SHOP
-function openShop(id){state='shop';document.getElementById(id).classList.add('on');}
+let currentShopAnim=null;
+function openShop(id){state='shop';document.getElementById(id).classList.add('on');currentShopAnim=id;}
 
 // ═══════════════════════════════════════
 // POSTER EXPAND — CSS-drawn full posters
@@ -5050,14 +5788,71 @@ function triggerGreenPit(){
       for(let i=0;i<7;i++){pX.fillRect(250+i*5,60,1,10);}
       pX.fillRect(250,65,35,1); // cross mark
       
-      // Figure sitting against wall — silhouette
+      // ── FIGURE 1 — братишка, sitting against left wall ──
       pX.fillStyle='#0e120c';
       pX.fillRect(60,130,16,30); // body
       pX.fillRect(63,120,10,12); // head
       pX.fillRect(52,140,10,8); // knees
-      pX.fillRect(76,145,12,4); // arm out
-      // Holding something (bowl?)
+      pX.fillRect(76,145,12,4); // arm out (holding)
+      // Bowl of kasha in hand
       pX.fillStyle='#2a2a2e';pX.fillRect(86,142,8,5);
+      pX.fillStyle='#3a3228';pX.fillRect(87,143,6,2); // contents
+      // Steam from bowl
+      if(timer%40<20){
+        pX.globalAlpha=.3;pX.fillStyle='#8a8d8f';
+        pX.fillRect(88+Math.sin(timer*.08)*1,138,1,3);
+        pX.fillRect(91+Math.sin(timer*.08+1)*1,137,1,4);
+        pX.globalAlpha=1;
+      }
+
+      // ── FIGURE 2 — Pavel Durov, sitting against right wall ──
+      // Black turtleneck body
+      pX.fillStyle='#0a0a10';
+      pX.fillRect(218,130,18,30);
+      // Turtleneck collar
+      pX.fillStyle='#050508';
+      pX.fillRect(220,128,14,3);
+      // Head — bald, pale
+      pX.fillStyle='#1a1814';
+      pX.fillRect(222,116,12,12);
+      // Beard — short
+      pX.fillStyle='#0a0806';
+      pX.fillRect(223,123,10,4);
+      // Mouth — thin line
+      pX.fillStyle='#050404';
+      pX.fillRect(226,125,4,1);
+      // Eye sockets — shadows
+      pX.fillStyle='#050404';
+      pX.fillRect(224,119,2,1);pX.fillRect(230,119,2,1);
+      // Knees drawn up
+      pX.fillStyle='#0a0a10';
+      pX.fillRect(210,140,10,8);
+      pX.fillRect(236,140,8,6);
+      // Arm holding phone
+      pX.fillStyle='#0a0a10';
+      pX.fillRect(204,138,8,4);
+      // Phone in hand — Nokia-like dark rectangle
+      pX.fillStyle='#1a1a20';pX.fillRect(200,135,6,9);
+      pX.fillStyle='#0a0a10';pX.fillRect(201,136,4,7);
+      // Phone screen — faint Telegram-blue glow
+      const phoneGlow=.3+.2*Math.sin(timer*.04);
+      pX.globalAlpha=phoneGlow;
+      pX.fillStyle='#2e5a8f';pX.fillRect(201,137,4,5);
+      pX.globalAlpha=phoneGlow*.4;
+      // Glow bloom outward
+      pX.fillStyle='#4a7fb5';pX.fillRect(199,134,8,11);
+      pX.globalAlpha=1;
+      // Blue reflection on Durov's face from the phone
+      pX.globalAlpha=phoneGlow*.25;
+      pX.fillStyle='#4a7fb5';
+      pX.fillRect(222,118,6,6);
+      pX.globalAlpha=1;
+      // Small "No Signal" icon bar above phone (3 static dashes)
+      if(timer%30<15){
+        pX.globalAlpha=.4;pX.fillStyle='#8b0000';
+        pX.fillRect(201,133,1,1);pX.fillRect(203,133,1,1);pX.fillRect(205,133,1,1);
+        pX.globalAlpha=1;
+      }
       
       // Dripping from ceiling
       if(timer%50<10){
@@ -5075,37 +5870,52 @@ function triggerGreenPit(){
       pX.fillStyle=lg;pX.fillRect(0,0,320,200);
       pX.globalAlpha=1;
       
-      // TEXT — appears slowly
+      // TEXT — appears slowly in three lines
       const textDelay=40;
+      // Line 1 — братишка
       if(timer>textDelay){
-        const textProgress=Math.min(1,(timer-textDelay)/120);
-        pX.globalAlpha=textProgress*.9;
+        const l1Progress=Math.min(1,(timer-textDelay)/120);
+        pX.globalAlpha=l1Progress*.9;
         pX.fillStyle='#e8dcc8';pX.font='8px "Press Start 2P"';
         pX.textAlign='center';
-        
-        const fullText='братишка, я тебе покушать принёс';
-        const chars=Math.floor(textProgress*fullText.length);
-        pX.fillText(fullText.substring(0,chars),160,105);
-        
-        // Blinking cursor
-        if(chars<fullText.length&&timer%20<10){
-          const curW=chars*6.5;
-          pX.fillRect(160-fullText.length*3.25+curW,97,5,9);
+        const fullText1='братишка, я тебе покушать принёс';
+        const chars1=Math.floor(l1Progress*fullText1.length);
+        pX.fillText(fullText1.substring(0,chars1),160,95);
+        if(chars1<fullText1.length&&timer%20<10){
+          const curW=chars1*6.5;
+          pX.fillRect(160-fullText1.length*3.25+curW,87,5,9);
         }
         pX.textAlign='left';
       }
       pX.globalAlpha=1;
-      
-      // Second line after first finishes
-      if(timer>textDelay+140){
-        const t2=(timer-textDelay-140)/80;
+
+      // Line 2 — Durov's line in Telegram-blue
+      if(timer>textDelay+160){
+        const l2Progress=Math.min(1,(timer-textDelay-160)/140);
+        pX.globalAlpha=l2Progress*.85;
+        pX.fillStyle='#4a7fb5';pX.font='7px "Press Start 2P"';
+        pX.textAlign='center';
+        const fullText2='...а telegram только с другой стороны двери';
+        const chars2=Math.floor(l2Progress*fullText2.length);
+        pX.fillText(fullText2.substring(0,chars2),160,110);
+        if(chars2<fullText2.length&&timer%20<10){
+          const curW=chars2*5;
+          pX.fillRect(160-fullText2.length*2.5+curW,104,4,8);
+        }
+        pX.textAlign='left';
+      }
+      pX.globalAlpha=1;
+
+      // Line 3 — exit hint after both finish
+      if(timer>textDelay+340){
+        const t2=(timer-textDelay-340)/80;
         pX.globalAlpha=Math.min(1,t2)*.5;
         pX.fillStyle='#8a8d8f';pX.font='6px "Press Start 2P"';
         pX.textAlign='center';
         pX.fillText('[ нажми чтобы вернуться ]',160,130);
         pX.textAlign='left';
         pX.globalAlpha=1;
-        
+
         // Enable click to exit
         if(!overlay._exitBound){
           overlay._exitBound=true;
@@ -5117,7 +5927,7 @@ function triggerGreenPit(){
             // Return player to safe spot
             player.x=100;player.y=MH-150;player.tx=player.x;player.ty=player.y;
             shakeT=15;
-            lorePopup={text:'Ты выбрался. Бормотание стихло. Но запах казённой каши — остался.',life:600};
+            lorePopup={text:'Ты выбрался. Бормотание стихло. Но запах казённой каши — остался. И синий отсвет телефона без сигнала. Где-то внизу Дуров пишет сообщение, которое никуда не уйдёт.',life:720};
           });
         }
       }
@@ -5128,7 +5938,7 @@ function triggerGreenPit(){
   
   requestAnimationFrame(prisonFrame);
 }
-function closeShop(){document.querySelectorAll('.shop-overlay').forEach(e=>e.classList.remove('on'));state='game';activeLoc=null;}
+function closeShop(){document.querySelectorAll('.shop-overlay').forEach(e=>e.classList.remove('on'));state='game';activeLoc=null;currentShopAnim=null;}
 
 // CLICKS
 function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRect();const gx=(cx-r.left)*(VW/r.width)+cam.x,gy=(cy-r.top)*(VH/r.height)+cam.y;
