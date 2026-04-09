@@ -1746,6 +1746,291 @@ function buildTerrain(){
     if(hash(i,0,33)>.5)px(TX,cx_,cy_-1,P.gold);
   }
 
+  // ═══════════════════════════════════════════════════
+  // DENSITY PASS — micro-POIs scattered between locations
+  // so zones feel populated, walks feel busier
+  // ═══════════════════════════════════════════════════
+
+  // ── 1. CRATES & BOXES (scattered cargo) ──
+  const crates=[
+    [420,680],[580,780],[720,1050],[880,850],[1100,1120],[1250,850],
+    [1420,1100],[1580,780],[1700,1050],[1850,880],[2020,750],[2180,1100],
+    [2350,650],[2500,900],[2680,1200],[2800,950],
+    [200,1100],[340,1350],[480,1480],[650,1600],[920,1550],
+    [150,650],[260,820],[380,950],
+  ];
+  crates.forEach(([cx_,cy_],i)=>{
+    const cw=6+Math.floor(hash(i,0,11)*4);
+    const ch=5+Math.floor(hash(i,0,22)*3);
+    // Crate body
+    rect(TX,cx_,cy_,cw,ch,P.dwood);
+    rect(TX,cx_+1,cy_+1,cw-2,ch-2,P.wood);
+    // Plank lines
+    rect(TX,cx_,cy_+Math.floor(ch/2),cw,1,'#1a0e06');
+    rect(TX,cx_+Math.floor(cw/2),cy_,1,ch,'#1a0e06');
+    // Nails
+    px(TX,cx_,cy_,P.ash);
+    px(TX,cx_+cw-1,cy_,P.ash);
+    px(TX,cx_,cy_+ch-1,P.ash);
+    px(TX,cx_+cw-1,cy_+ch-1,P.ash);
+    // Occasional stamp (red mark)
+    if(hash(i,0,33)>.6){
+      px(TX,cx_+2,cy_+1,P.crimson);
+      px(TX,cx_+3,cy_+1,P.crimson);
+    }
+    // Moss on some
+    if(hash(i,0,44)>.7){
+      px(TX,cx_,cy_-1,P.dtoxic);
+      px(TX,cx_+1,cy_-1,P.dtoxic);
+    }
+  });
+
+  // ── 2. ROAD SIGNS (lean-overs with fragments of text) ──
+  const signs=[
+    [550,720,'ВОСТОК'],[850,620,'ПЛОЩАДЬ'],[1180,900,'ВЫХОД'],
+    [1450,1050,'ТУПИК'],[1720,680,'→'],[2050,620,'[стёрто]'],
+    [2420,1180,'X'],[2650,800,'СВОБОДА'],[350,850,'ЗАПАД'],
+    [180,1250,'ВНИЗ'],[720,1350,'НАЗАД'],
+  ];
+  signs.forEach(([sx,sy,txt],i)=>{
+    // Post
+    const lean=hash(i,0,11)>.5?1:-1;
+    rect(TX,sx,sy,1,14,P.dwood);
+    rect(TX,sx+lean,sy-2,1,16,P.dwood);
+    // Sign board
+    rect(TX,sx-4,sy-4,12,5,P.dwood);
+    rect(TX,sx-3,sy-3,10,3,P.wood);
+    // Fake pixel-text (just dots simulating lettering)
+    for(let j=0;j<txt.length&&j<5;j++){
+      px(TX,sx-2+j*2,sy-2,'#1a0e06');
+      if(hash(i,j,22)>.5)px(TX,sx-2+j*2,sy-1,'#1a0e06');
+    }
+    // Rust stains
+    px(TX,sx,sy+5,P.rust);
+    px(TX,sx,sy+10,P.drust);
+  });
+
+  // ── 3. ABANDONED CAMPFIRES (cold, ash rings) ──
+  const coldFires=[
+    [420,930],[780,1180],[1250,680],[1580,980],[1950,820],[2280,1050],
+    [2680,750],[300,1050],[620,1420],[1080,1480],[1440,1350],
+  ];
+  coldFires.forEach(([cfx,cfy],i)=>{
+    // Stone ring
+    for(let j=0;j<8;j++){
+      const a=j/8*Math.PI*2;
+      const sx=cfx+Math.cos(a)*5;
+      const sy=cfy+Math.sin(a)*3;
+      rect(TX,sx,sy,2,2,P.stone);
+      px(TX,sx+1,sy,P.lstone);
+    }
+    // Ash inside
+    dither(TX,cfx-3,cfy-1,7,3,P.ash,'#1a1410',.5);
+    // Charred logs
+    rect(TX,cfx-2,cfy,4,1,'#1a0a04');
+    rect(TX,cfx-1,cfy-1,3,1,'#0a0404');
+    // Bone or can nearby
+    if(hash(i,0,11)>.5){
+      px(TX,cfx+6,cfy+1,P.bone);
+      px(TX,cfx+7,cfy+1,P.bone);
+    }else{
+      rect(TX,cfx+6,cfy+1,2,2,P.dgrey);
+    }
+  });
+
+  // ── 4. SMALL SHRINES (candles + bones on a flat stone) ──
+  const shrines=[
+    [380,780],[1180,1180],[1680,850],[2180,950],[2550,1350],
+    [720,1200],[150,900],
+  ];
+  shrines.forEach(([shx,shy],i)=>{
+    // Flat stone slab
+    rect(TX,shx-4,shy,10,3,P.lstone);
+    rect(TX,shx-4,shy+3,10,1,P.dstone);
+    // Candles stubs
+    rect(TX,shx-2,shy-3,1,3,P.bone);
+    rect(TX,shx,shy-4,1,4,P.bone);
+    rect(TX,shx+2,shy-3,1,3,P.bone);
+    // Tiny flames frozen
+    px(TX,shx-2,shy-4,P.damber);
+    px(TX,shx,shy-5,P.damber);
+    px(TX,shx+2,shy-4,P.damber);
+    // Tiny offerings — bones
+    px(TX,shx+3,shy+1,P.bone);
+    px(TX,shx-3,shy+1,P.bone);
+    // A small cup
+    rect(TX,shx+1,shy+1,2,1,P.dgrey);
+    // Moss around base
+    if(hash(i,0,11)>.5){
+      rect(TX,shx-5,shy+3,2,1,P.dtoxic);
+    }
+  });
+
+  // ── 5. GRAFFITI TAGS on random walls/ground (colored pixel blobs) ──
+  for(let i=0;i<35;i++){
+    const gx=200+hash(i,0,11)*2600;
+    const gy=400+hash(i,0,22)*1200;
+    // Skip if in water zones
+    if(gy>1350&&gy<1550)continue;
+    const gcol=['#6b0f1a','#b8860b','#1b1464','#0a0a0a','#8b0000','#4a7fb5'][Math.floor(hash(i,0,33)*6)];
+    // Tag shape
+    for(let j=0;j<4;j++){
+      const px_=gx+hash(i,j,44)*8;
+      const py_=gy+hash(i,j,55)*4;
+      rect(TX,px_,py_,1+hash(i,j,66)*2,1,gcol);
+    }
+    // Occasional "А" or cross mark
+    if(hash(i,0,77)>.8){
+      rect(TX,gx-1,gy-2,3,1,gcol);
+      rect(TX,gx,gy-1,1,1,gcol);
+    }
+  }
+
+  // ── 6. SCATTERED BRICKS (fallen from nowhere) ──
+  for(let i=0;i<50;i++){
+    const bx=180+hash(i,0,11)*2700;
+    const by=400+hash(i,0,22)*1250;
+    if(by>1320&&by<1560)continue;
+    rect(TX,bx,by,4,2,P.rust);
+    rect(TX,bx+1,by,2,2,P.drust);
+    // Sometimes 2 together
+    if(hash(i,0,33)>.6){
+      rect(TX,bx+5,by-1,4,2,P.rust);
+    }
+  }
+
+  // ── 7. BROKEN WINE/VODKA BOTTLES (glass glint) ──
+  for(let i=0;i<28;i++){
+    const bx=200+hash(i,0,11)*2700;
+    const by=420+hash(i,0,22)*1200;
+    if(by>1320&&by<1560)continue;
+    const bcol=['#1a3a2a','#2a1a08','#1a2018','#3a3a3a','#0a0a0a'][Math.floor(hash(i,0,33)*5)];
+    // Bottle body fragment
+    rect(TX,bx,by,3,4,bcol);
+    rect(TX,bx+1,by+1,1,2,'#050505');
+    // Glass shards
+    px(TX,bx-1,by+3,P.lgrey);
+    px(TX,bx+4,by+2,P.lgrey);
+    px(TX,bx+2,by+5,P.ash);
+  }
+
+  // ── 8. TATTERED CLOTHING (fabric scraps fluttering on ground) ──
+  for(let i=0;i<24;i++){
+    const cx_=220+hash(i,0,11)*2600;
+    const cy_=440+hash(i,0,22)*1180;
+    if(cy_>1320&&cy_<1560)continue;
+    const ccol=['#6b0f1a','#1b1464','#3a2a18','#0a0a0a','#b8a888','#4a0a12'][Math.floor(hash(i,0,33)*6)];
+    // Cloth shape
+    rect(TX,cx_,cy_,4,2,ccol);
+    rect(TX,cx_+1,cy_+2,3,1,ccol);
+    // Tears
+    px(TX,cx_+3,cy_,P.d1);
+    px(TX,cx_-1,cy_+1,P.d1);
+  }
+
+  // ── 9. PAPER LEAFLETS & TORN POSTERS on ground ──
+  for(let i=0;i<30;i++){
+    const px_=240+hash(i,0,11)*2600;
+    const py_=460+hash(i,0,22)*1150;
+    if(py_>1320&&py_<1560)continue;
+    // Paper
+    rect(TX,px_,py_,3,4,P.parchment);
+    rect(TX,px_+1,py_+1,2,2,P.dbone);
+    // Text simulation
+    rect(TX,px_,py_+1,3,1,'#3a2a18');
+    px(TX,px_+1,py_+3,'#3a2a18');
+  }
+
+  // ── 10. FOOTPRINTS (small trails) ──
+  for(let i=0;i<20;i++){
+    const startX=300+hash(i,0,11)*2500;
+    const startY=500+hash(i,0,22)*1100;
+    if(startY>1320&&startY<1560)continue;
+    const angle=hash(i,0,33)*Math.PI*2;
+    for(let step=0;step<5;step++){
+      const fx=startX+Math.cos(angle)*step*4;
+      const fy=startY+Math.sin(angle)*step*4;
+      rect(TX,fx,fy,2,1,'#0a0604');
+      rect(TX,fx+(step%2?2:-2),fy+2,2,1,'#0a0604');
+    }
+  }
+
+  // ── 11. POOLS OF DRIED BLOOD ──
+  for(let i=0;i<18;i++){
+    const bx=260+hash(i,0,11)*2500;
+    const by=480+hash(i,0,22)*1100;
+    if(by>1320&&by<1560)continue;
+    // Main stain
+    rect(TX,bx,by,4,2,'#3a0608');
+    rect(TX,bx+1,by+1,3,1,'#1a0404');
+    // Splatter
+    px(TX,bx-2,by-1,'#3a0608');
+    px(TX,bx+5,by,'#3a0608');
+    px(TX,bx+3,by+3,'#1a0404');
+  }
+
+  // ── 12. LARGER CRACKS radiating in asphalt/earth ──
+  for(let i=0;i<25;i++){
+    const cx_=300+hash(i,0,11)*2500;
+    const cy_=450+hash(i,0,22)*1200;
+    if(cy_>1320&&cy_<1560)continue;
+    const angle=hash(i,0,33)*Math.PI*2;
+    const clen=6+hash(i,0,44)*10;
+    for(let j=0;j<clen;j++){
+      const fx=cx_+Math.cos(angle)*j;
+      const fy=cy_+Math.sin(angle)*j;
+      rect(TX,fx,fy,1,1,'#020202');
+    }
+    // Branching crack
+    if(hash(i,0,55)>.5){
+      const branchA=angle+Math.PI/3;
+      for(let j=0;j<clen*.5;j++){
+        rect(TX,cx_+Math.cos(branchA)*j,cy_+Math.sin(branchA)*j,1,1,'#020202');
+      }
+    }
+  }
+
+  // ── 13. SMALL CLUSTERS OF MUTANT FLOWERS (toxic blooms) ──
+  const flowers=[
+    [340,620],[820,880],[1260,750],[1540,950],[1820,1080],[2180,680],
+    [2480,900],[2720,1100],[440,1080],[680,1280],[1080,1350],[1440,1250],
+  ];
+  flowers.forEach(([fx,fy],i)=>{
+    // Stem
+    rect(TX,fx,fy,1,4,P.dtoxic);
+    // Bloom
+    rect(TX,fx-1,fy-1,3,2,hash(i,0,11)>.5?P.sunflower:P.crimson);
+    px(TX,fx,fy-1,P.gold);
+    // Leaves
+    px(TX,fx-1,fy+1,P.toxic);
+    px(TX,fx+1,fy+2,P.toxic);
+  });
+
+  // ── 14. BURNT BOOKS / PAPERS ──
+  for(let i=0;i<15;i++){
+    const bx=320+hash(i,0,11)*2400;
+    const by=500+hash(i,0,22)*1000;
+    if(by>1320&&by<1560)continue;
+    // Burnt book
+    rect(TX,bx,by,5,4,'#1a0a04');
+    rect(TX,bx+1,by+1,3,2,'#2a1a08');
+    // Curled pages
+    px(TX,bx,by,'#0a0404');
+    px(TX,bx+4,by,'#0a0404');
+    px(TX,bx,by+3,'#0a0404');
+    px(TX,bx+4,by+3,'#0a0404');
+    // Spine glint
+    if(hash(i,0,33)>.6)px(TX,bx+2,by+1,P.damber);
+  }
+
+  // ── 15. TINY BELLS/CHIMES hanging from tree branches ──
+  for(let i=0;i<12;i++){
+    const bx=150+hash(i,0,11)*300; // only in forest zone
+    const by=200+hash(i,0,22)*250;
+    rect(TX,bx,by,1,2,'#1a1410');
+    px(TX,bx,by+2,P.gold);
+  }
+
   terrainReady=true;
 }
 
@@ -1914,11 +2199,144 @@ const locDraw={
     X.globalAlpha=1;
   },
   tent(x,y){
-    rect(X,x+8,y+10,2,40,P.wood);rect(X,x+50,y+16,2,34,P.wood);
-    X.fillStyle=P.dwood;X.beginPath();X.moveTo(x+2,y+22);X.lineTo(x+30,y+2);X.lineTo(x+58,y+24);X.lineTo(x+56,y+27);X.lineTo(x+30,y+10);X.lineTo(x+4,y+25);X.fill();
-    dither(X,x+12,y+8,30,10,'#3a4a3a',P.dwood,.4);
-    drawNPC_elder(x+22,y+24);
-    rect(X,x+40,y+38,2,3,P.f1);px(X,x+40,y+36,P.f2);
+    // ═══ TENT OF THE ELDER — ritual space ═══
+    // Shadow
+    X.globalAlpha=.3;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+30,y+52,34,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── FOUR SUPPORT POLES ──
+    rect(X,x+6,y+8,3,44,P.wood);rect(X,x+7,y+9,1,42,P.lwood);
+    rect(X,x+50,y+14,3,38,P.wood);rect(X,x+51,y+15,1,36,P.lwood);
+    // Back poles (shorter, for perspective)
+    rect(X,x+14,y+4,2,46,P.dwood);
+    rect(X,x+44,y+8,2,42,P.dwood);
+
+    // ── TENT CANVAS — layered, with sag ──
+    const sag=Math.sin(t*.003)*.5;
+    X.fillStyle=P.dwood;
+    X.beginPath();
+    X.moveTo(x+2,y+24+sag);
+    X.lineTo(x+18,y+4);
+    X.lineTo(x+38,y+2);
+    X.lineTo(x+58,y+26+sag);
+    X.lineTo(x+56,y+30);
+    X.lineTo(x+38,y+10);
+    X.lineTo(x+18,y+12);
+    X.lineTo(x+4,y+27);
+    X.closePath();X.fill();
+    // Canvas texture — dithered
+    dither(X,x+10,y+6,36,18,'#3a3a28','#2a2618',.4);
+    // Patches — slightly different color squares
+    rect(X,x+18,y+8,5,4,'#4a3a28');
+    rect(X,x+32,y+12,4,4,'#3a2a18');
+    rect(X,x+42,y+6,4,5,'#3a3020');
+    // Seams (dark stitching lines)
+    X.strokeStyle='#1a0e06';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+20,y+6);X.lineTo(x+20,y+24);X.stroke();
+    X.beginPath();X.moveTo(x+38,y+4);X.lineTo(x+38,y+22);X.stroke();
+
+    // ── TENT OPENING — triangular flap pulled aside ──
+    X.fillStyle='#0a0604';
+    X.beginPath();
+    X.moveTo(x+22,y+24);
+    X.lineTo(x+32,y+10);
+    X.lineTo(x+40,y+24);
+    X.lineTo(x+38,y+36);
+    X.lineTo(x+24,y+36);
+    X.closePath();X.fill();
+    // Inner warm glow from candles
+    const glowPulse=.6+.2*Math.sin(t*.008);
+    X.globalAlpha=glowPulse*.2;
+    const tentGlow=X.createRadialGradient(x+31,y+28,0,x+31,y+28,14);
+    tentGlow.addColorStop(0,'rgba(218,165,32,1)');
+    tentGlow.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=tentGlow;X.fillRect(x+18,y+14,26,28);
+    X.globalAlpha=1;
+
+    // ── INSCRIBED SYMBOLS on poles ──
+    X.fillStyle='#6b0f1a';
+    // Left pole — small crescent
+    rect(X,x+5,y+20,1,1,'#6b0f1a');rect(X,x+5,y+22,1,1,'#6b0f1a');
+    rect(X,x+4,y+21,1,1,'#6b0f1a');
+    // Right pole — triangle
+    rect(X,x+52,y+22,1,1,'#6b0f1a');
+    rect(X,x+51,y+23,3,1,'#6b0f1a');
+
+    // ── ROPE TIES from poles to ground ──
+    X.strokeStyle='#3a2a18';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+7,y+50);X.lineTo(x-2,y+56);X.stroke();
+    px(X,x-2,y+56,P.ash);
+    X.beginPath();X.moveTo(x+52,y+50);X.lineTo(x+62,y+56);X.stroke();
+    px(X,x+62,y+56,P.ash);
+
+    // ── WIND CHIMES hanging from roof ──
+    for(let i=0;i<4;i++){
+      const wcSway=Math.sin(t*.02+i*.7)*1.5;
+      const wcX=x+24+i*4+wcSway;
+      const wcY=y+2;
+      rect(X,wcX,wcY,1,3+i%2,P.ash);
+      if(i%2)px(X,wcX,wcY+3,P.gold);
+    }
+    // Hanging string
+    X.strokeStyle='#1a1410';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+22,y+1);X.lineTo(x+40,y+1);X.stroke();
+
+    // ── ELDER inside the tent ──
+    drawNPC_elder(x+25,y+24);
+
+    // ── CANDLES in front of elder ──
+    // Left candle
+    rect(X,x+18,y+38,2,4,P.bone);
+    const fl1=Math.sin(t*.04)*.5;
+    px(X,x+18+fl1,y+36,P.f2);
+    px(X,x+19+fl1,y+35,P.f1);
+    // Right candle
+    rect(X,x+40,y+38,2,4,P.bone);
+    const fl2=Math.sin(t*.04+1.3)*.5;
+    px(X,x+40+fl2,y+36,P.f2);
+    px(X,x+41+fl2,y+35,P.f1);
+    // Tall center candle
+    rect(X,x+30,y+34,2,6,P.bone);
+    const fl3=Math.sin(t*.05+2)*.7;
+    px(X,x+30+fl3,y+32,P.f2);
+    px(X,x+31+fl3,y+31,P.f1);
+    px(X,x+30+fl3,y+30,'#ffffcc');
+
+    // ── INCENSE BOWL on right with smoke ──
+    rect(X,x+44,y+40,5,2,P.dgrey);
+    rect(X,x+45,y+41,3,1,P.ash);
+    // Smoke wisps rising
+    for(let i=0;i<3;i++){
+      const smPhase=((t*.012+i*.33)%1);
+      const smX=x+46+Math.sin(t*.02+i*1.5)*2;
+      const smY=y+38-smPhase*20;
+      X.globalAlpha=(1-smPhase)*.35;
+      rect(X,smX,smY,1,1+i,'#6a5a4a');
+      X.globalAlpha=1;
+    }
+
+    // ── BOOKS STACKED on left ──
+    rect(X,x+10,y+42,6,2,'#2a1a08');
+    rect(X,x+10,y+44,6,2,'#4a1a0a');
+    rect(X,x+10,y+46,6,2,'#1b1464');
+    rect(X,x+10,y+48,6,2,'#3a2a18');
+    // Gold lettering on spines
+    px(X,x+12,y+43,P.gold);
+    px(X,x+13,y+45,P.gold);
+    px(X,x+12,y+47,P.gold);
+
+    // ── CATS SAUCER at entrance ──
+    rect(X,x+32,y+44,5,1,P.dstone);
+    rect(X,x+33,y+43,3,1,P.dbone); // milk
+
+    // ── EMBERS scattered on the ground ──
+    for(let i=0;i<3;i++){
+      if(hash(i,Math.floor(t*.01),99)>.6){
+        X.globalAlpha=.5+hash(i,0,11)*.3;
+        px(X,x+20+i*10,y+50,P.f1);
+        X.globalAlpha=1;
+      }
+    }
   },
   graffiti(x,y){
     rect(X,x,y,55,40,P.stone);rect(X,x+1,y+1,53,38,P.dstone);
@@ -2190,18 +2608,128 @@ const locDraw={
     rect(X,x+20,y+30,10,1,P.lgrey);
   },
   crypt(x,y){
-    // Stone entrance
-    rect(X,x,y+10,35,25,P.stone);rect(X,x+2,y+12,31,21,'#0a0808');
-    // Steps down
-    for(let i=0;i<5;i++)rect(X,x+5,y+16+i*3,25,2,`rgb(${35-i*6},${35-i*6},${40-i*6})`);
-    // Frame
-    rect(X,x+3,y+8,3,28,P.stone);rect(X,x+30,y+8,3,28,P.stone);
-    rect(X,x+3,y+8,30,3,P.stone);
-    // Iron gate (ajar)
-    rect(X,x+5,y+12,2,22,P.dgrey);
-    for(let i=0;i<4;i++)rect(X,x+5,y+14+i*5,12,1,P.dgrey);
-    // Cold air effect
-    if(t%30<15){X.globalAlpha=.08;rect(X,x+8,y+18,20,3,'#aaccff');X.globalAlpha=1;}
+    // ═══ CRYPT — DANTE'S NINE CIRCLES ═══
+    // Shadow on ground
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+18,y+38,20,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── ENTRANCE — carved stone arch ──
+    // Arch sides
+    rect(X,x+1,y+4,4,32,P.stone);
+    rect(X,x+31,y+4,4,32,P.stone);
+    // Arch top — curved via multiple rects
+    rect(X,x+5,y+2,26,3,P.stone);
+    rect(X,x+7,y,22,2,P.stone);
+    // Stone texture
+    for(let i=0;i<8;i++){
+      const sx=x+2+hash(i,0,11)*32;
+      const sy=y+5+hash(i,0,22)*30;
+      rect(X,sx,sy,1,1,'#1a1a20');
+    }
+    // Moss at base
+    rect(X,x+2,y+35,4,2,P.dtoxic);
+    rect(X,x+30,y+35,4,2,P.dtoxic);
+    px(X,x+3,y+34,P.toxic);
+
+    // ── KEYSTONE with inscription ──
+    rect(X,x+16,y,4,4,P.lstone);
+    px(X,x+17,y+1,'#0a0a0e');
+    px(X,x+18,y+2,'#0a0a0e');
+
+    // ── IRON GATE (ajar, swinging slightly) ──
+    const gateSwing=Math.sin(t*.004)*.5;
+    rect(X,x+5+gateSwing,y+4,2,32,P.dgrey);
+    // Gate bars
+    for(let i=0;i<5;i++){
+      rect(X,x+6+gateSwing,y+6+i*6,10,1,P.dgrey);
+    }
+    for(let i=0;i<3;i++){
+      rect(X,x+7+i*4+gateSwing,y+4,1,30,P.dgrey);
+    }
+    // Gate hinge
+    px(X,x+5+gateSwing,y+4,P.ash);
+    px(X,x+5+gateSwing,y+35,P.ash);
+
+    // ── DESCENDING STEPS — 9 visible, receding into darkness ──
+    for(let i=0;i<9;i++){
+      const stepShade=Math.max(2,26-i*3);
+      const stepWidth=24-i*1.5;
+      const stepX=x+6+i*.7;
+      const stepY=y+8+i*3;
+      rect(X,stepX,stepY,stepWidth,2,`rgb(${stepShade},${stepShade},${stepShade+2})`);
+      rect(X,stepX,stepY+2,stepWidth,1,'#020202');
+    }
+
+    // Deep darkness beyond
+    X.globalAlpha=.95;
+    X.fillStyle='#020204';
+    X.fillRect(x+12,y+30,16,8);
+    X.globalAlpha=1;
+
+    // ── NUMBERED CIRCLES (small Roman numerals on steps, barely visible) ──
+    X.fillStyle='#3a3a42';
+    // I — first step
+    px(X,x+14,y+9,'#4a4a50');
+    // II — second
+    px(X,x+14,y+12,'#4a4a50');px(X,x+15,y+12,'#4a4a50');
+    // Rest fade into darkness
+    X.globalAlpha=.4;
+    px(X,x+14,y+15,'#3a3a42');px(X,x+15,y+15,'#3a3a42');px(X,x+16,y+15,'#3a3a42');
+    X.globalAlpha=.25;
+    px(X,x+15,y+18,'#2a2a32');
+    X.globalAlpha=1;
+
+    // ── COLD AIR / FOG POURING OUT ──
+    for(let i=0;i<4;i++){
+      const fogPhase=((t*.008+i*.25)%1);
+      const fogY=y+12+fogPhase*18;
+      const fogX=x+10+Math.sin(t*.01+i)*3;
+      X.globalAlpha=(1-fogPhase)*.25;
+      rect(X,fogX,fogY,8+i,2,'#5a7a9a');
+      X.globalAlpha=1;
+    }
+    // Extra cold breath at step level
+    if(t%40<20){
+      X.globalAlpha=.1;
+      rect(X,x+8,y+14,20,3,'#aaccff');
+      X.globalAlpha=1;
+    }
+
+    // ── WARNING PLAQUE on left ──
+    rect(X,x-6,y+12,6,8,P.stone);
+    rect(X,x-5,y+13,4,6,P.dstone);
+    // Faint text (scratches)
+    px(X,x-4,y+14,'#0a0a0e');
+    px(X,x-3,y+14,'#0a0a0e');
+    px(X,x-4,y+16,'#0a0a0e');
+    px(X,x-4,y+18,'#0a0a0e');
+    px(X,x-3,y+18,'#0a0a0e');
+
+    // ── BONES scattered at entrance ──
+    rect(X,x+25,y+36,3,1,P.bone);
+    px(X,x+27,y+35,P.bone);
+    rect(X,x+8,y+37,2,1,P.dbone);
+
+    // ── FALLEN ROMAN NUMERAL "IX" near entrance ──
+    X.fillStyle='#3a3a42';
+    rect(X,x+36,y+34,1,3,'#3a3a42');
+    rect(X,x+38,y+34,1,3,'#3a3a42');
+    rect(X,x+40,y+34,3,1,'#3a3a42');
+    rect(X,x+40,y+36,3,1,'#3a3a42');
+
+    // ── TORCH flickering beside gate ──
+    rect(X,x-2,y+8,2,12,P.dwood);
+    const trFlick=Math.sin(t*.06)*.5;
+    px(X,x-1+trFlick,y+6,P.f2);
+    px(X,x-1+trFlick,y+5,P.f1);
+    px(X,x-1+trFlick,y+4,'#ffffcc');
+    // Torch glow
+    X.globalAlpha=.15+.05*Math.sin(t*.03);
+    const tGlow=X.createRadialGradient(x-1,y+6,0,x-1,y+6,16);
+    tGlow.addColorStop(0,'rgba(255,100,20,1)');
+    tGlow.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=tGlow;X.fillRect(x-17,y-10,32,32);
+    X.globalAlpha=1;
   },
   dumpster(x,y){
     // DEMON hovering above
@@ -2406,16 +2934,169 @@ const locDraw={
     }
   },
   ruins(x,y){
-    // Flickering light in one window (someone home?)
+    // ═══ APARTMENT BLOCK #7 — KHRUSHCHYOVKA RUIN ═══
+    // Shadow
+    X.globalAlpha=.3;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+42,y+62,48,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── MAIN BUILDING — 9 stories tall, concrete panels ──
+    const bldW=85,bldH=60;
+    // Base structure
+    rect(X,x,y,bldW,bldH,P.dgrey);
+    rect(X,x+1,y+1,bldW-2,bldH-2,P.dstone);
+    // Weathering
+    dither(X,x+2,y+2,bldW-4,bldH-4,P.stone,P.dstone,.25);
+    // Concrete panel seams (Soviet panel-building style)
+    for(let row=0;row<9;row++){
+      rect(X,x,y+row*6+5,bldW,1,'#0a0a0e');
+    }
+    for(let col=0;col<5;col++){
+      rect(X,x+col*17,y,1,bldH,'#0a0a0e');
+    }
+
+    // ── WINDOWS — 9 floors × 5 columns = 45 windows ──
+    for(let row=0;row<9;row++){
+      for(let col=0;col<5;col++){
+        const wx=x+3+col*17;
+        const wy=y+2+row*6;
+        // Most windows — dark
+        rect(X,wx,wy,11,3,'#040408');
+        // Cracked glass detail
+        if(hash(col,row,11)>.7){
+          rect(X,wx+2,wy,1,3,'#1a1a22');
+          rect(X,wx+6,wy+1,1,2,'#1a1a22');
+        }
+        // Window frames
+        rect(X,wx,wy,1,3,P.dstone);
+        rect(X,wx+10,wy,1,3,P.dstone);
+        rect(X,wx+5,wy,1,3,P.dstone); // vertical divider
+      }
+    }
+
+    // ── THE APARTMENT #42 — third floor, right window — LIT ──
+    // It's row 2 (0-indexed), col 3 — "third floor, right window"
+    const apt42X=x+3+3*17,apt42Y=y+2+2*6;
     const windowOn=Math.sin(t*.003)>.2;
     if(windowOn){
-      X.globalAlpha=.15+.05*Math.sin(t*.01);
-      rect(X,x+36,y+22,6,6,P.amber);
+      // Warm amber interior glow
+      X.globalAlpha=.6+.15*Math.sin(t*.01);
+      rect(X,apt42X+1,apt42Y,9,3,'#2a1a08');
+      rect(X,apt42X+2,apt42Y,7,3,P.amber);
+      X.globalAlpha=1;
+      // Inner silhouette — a table with a thermometer on it
+      X.fillStyle='#1a1008';
+      rect(X,apt42X+3,apt42Y+1,2,2); // small table/thermometer
+      // Thermometer red bulb visible
+      px(X,apt42X+4,apt42Y+2,'#8b0000');
+      // Lamp glow bleeding through
+      X.globalAlpha=.08+.03*Math.sin(t*.01);
+      const wg=X.createRadialGradient(apt42X+5,apt42Y+2,0,apt42X+5,apt42Y+2,16);
+      wg.addColorStop(0,'rgba(218,165,32,1)');
+      wg.addColorStop(1,'rgba(0,0,0,0)');
+      X.fillStyle=wg;X.fillRect(apt42X-11,apt42Y-14,32,32);
       X.globalAlpha=1;
     }
-    // Curtain fluttering
-    const cFlut=Math.sin(t*.015)*2;
-    rect(X,x+37,y+23,1+cFlut,4,P.dbone);
+    // Curtain on window 42 — yellowed, fluttering
+    const cFlut=Math.sin(t*.015)*1.5;
+    rect(X,apt42X+1+cFlut,apt42Y,2,3,'#b8a888');
+
+    // Small "42" sign scratched into wall next to window
+    X.fillStyle='#1a0a06';
+    rect(X,apt42X-2,apt42Y+4,1,1);rect(X,apt42X-1,apt42Y+4,1,1);rect(X,apt42X-2,apt42Y+5,1,1);
+    rect(X,apt42X,apt42Y+4,1,1);rect(X,apt42X+1,apt42Y+4,1,1);
+
+    // ── APARTMENT #13 — ground floor, left — door with 20 locks ──
+    const apt13X=x+2,apt13Y=y+bldH-12;
+    rect(X,apt13X,apt13Y,10,12,'#1a0e06');
+    rect(X,apt13X+1,apt13Y+1,8,10,'#0a0604');
+    // 20 tiny lock dots on the door (cluster pattern)
+    for(let i=0;i<20;i++){
+      const lx=apt13X+2+(i%4)*2;
+      const ly=apt13Y+2+Math.floor(i/4)*2;
+      px(X,lx,ly,P.ash);
+    }
+    // Door handle
+    px(X,apt13X+8,apt13Y+6,P.amber);
+
+    // ── COLLAPSED TOP-LEFT CORNER — two floors gone ──
+    // Cut a chunk out via darker rect and rubble
+    X.fillStyle='#0a0a0e';
+    X.beginPath();
+    X.moveTo(x,y);
+    X.lineTo(x+25,y);
+    X.lineTo(x+30,y+8);
+    X.lineTo(x+20,y+14);
+    X.lineTo(x,y+8);
+    X.closePath();X.fill();
+    // Exposed rebar
+    for(let i=0;i<4;i++){
+      rect(X,x+8+i*3,y+8-i*2,1,4+i,P.rust);
+    }
+    // Rubble at base
+    for(let i=0;i<8;i++){
+      rect(X,x-4+hash(i,0,11)*40,y+bldH+1+hash(i,0,22)*4,3,2,hash(i,0,33)>.5?P.dgrey:P.dstone);
+    }
+
+    // ── ROOF ANTENNA (TV style, bent) ──
+    rect(X,x+40,y-8,1,8,P.dgrey);
+    rect(X,x+36,y-6,9,1,P.dgrey);
+    rect(X,x+37,y-4,7,1,P.dgrey);
+    // Bent element
+    rect(X,x+41,y-8,3,1,P.dgrey);
+    // Wires dangling
+    px(X,x+40,y-2,P.dgrey);
+    px(X,x+39,y-1,P.dgrey);
+
+    // ── BALCONY ruins on two floors ──
+    // Floor 5 balcony — broken
+    rect(X,x+34,y+30,14,1,P.dgrey);
+    rect(X,x+34,y+31,1,3,P.dgrey);
+    rect(X,x+47,y+31,1,3,P.dgrey);
+    // Balcony railing with gaps
+    rect(X,x+36,y+30,1,2,P.dgrey);
+    rect(X,x+40,y+30,1,2,P.dgrey);
+    rect(X,x+44,y+30,1,2,P.dgrey);
+    // Hanging laundry (tattered)
+    const laundrySway=Math.sin(t*.015)*1;
+    rect(X,x+38+laundrySway,y+32,3,3,'#6b0f1a');
+    rect(X,x+42+laundrySway*.5,y+32,2,2,'#1b1464');
+
+    // Floor 7 balcony — partially collapsed
+    rect(X,x+17,y+18,14,1,P.dgrey);
+    rect(X,x+17,y+19,1,3,P.dgrey);
+    // Balcony railing remnants
+    rect(X,x+19,y+18,1,2,P.dgrey);
+    rect(X,x+23,y+18,1,2,P.dgrey);
+
+    // ── VINES climbing up left wall ──
+    for(let i=0;i<8;i++){
+      const vx=x-1+Math.sin(i*.4)*2;
+      const vy=y+bldH-i*7;
+      rect(X,vx,vy,2,3,P.dtoxic);
+      if(i%2)px(X,vx+1,vy-1,P.toxic);
+    }
+
+    // ── GRAFFITI on ground floor wall ──
+    X.fillStyle='#6b0f1a';
+    rect(X,x+55,y+52,3,1); // fragment 1
+    rect(X,x+58,y+53,2,1);
+    rect(X,x+62,y+52,4,1);
+    rect(X,x+55,y+54,1,1);rect(X,x+57,y+54,1,1);rect(X,x+63,y+54,1,1);
+
+    // ── BROKEN LAMPPOST in front ──
+    rect(X,x+72,y+40,1,22,P.dgrey);
+    // Lamp bent
+    rect(X,x+72,y+38,4,1,P.dgrey);
+    rect(X,x+75,y+36,2,3,P.dgrey);
+    // Broken glass
+    px(X,x+76,y+38,P.lgrey);
+    px(X,x+75,y+39,P.lgrey);
+
+    // ── OCCASIONAL BIRD on antenna ──
+    if(t%200<20){
+      rect(X,x+40,y-9,2,1,'#0a0a0a');
+      px(X,x+42,y-9,'#0a0a0a');
+    }
   },
   pipeline(x,y){
     // Dripping animation
@@ -2431,24 +3112,148 @@ const locDraw={
     X.globalAlpha=1;
   },
   watchtower(x,y){
-    // Tower legs
-    rect(X,x+2,y+15,3,45,P.wood);rect(X,x+25,y+15,3,45,P.wood);
-    rect(X,x+4,y+30,20,2,P.wood); // crossbrace
-    rect(X,x+4,y+45,20,2,P.wood);
-    // Platform
-    rect(X,x-2,y+10,34,6,P.dwood);rect(X,x,y+12,30,4,P.wood);
-    // Railing
-    rect(X,x-2,y+4,2,8,P.wood);rect(X,x+30,y+4,2,8,P.wood);
-    rect(X,x-2,y+4,34,2,P.wood);
-    // Binoculars
-    rect(X,x+12,y+6,6,3,P.dgrey);rect(X,x+10,y+7,3,2,P.ash);rect(X,x+17,y+7,3,2,P.ash);
-    // Animated lens glint
-    if(t%60<5){
-      X.globalAlpha=.4;px(X,x+11,y+7,'#fff');X.globalAlpha=1;
+    // ═══ WATCHTOWER — THE ARCHIVIST'S POST ═══
+    // Shadow on ground
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+15,y+62,22,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── FOUR TOWER LEGS (perspective) ──
+    // Front legs
+    rect(X,x+1,y+15,3,47,P.wood);
+    rect(X,x+2,y+16,1,45,P.lwood);
+    rect(X,x+26,y+15,3,47,P.wood);
+    rect(X,x+27,y+16,1,45,P.lwood);
+    // Back legs (thinner, darker for depth)
+    rect(X,x+5,y+18,2,44,P.dwood);
+    rect(X,x+23,y+18,2,44,P.dwood);
+
+    // ── CROSS BRACES — X pattern ──
+    X.strokeStyle=P.dwood;X.lineWidth=1;
+    // X-brace 1 (upper)
+    X.beginPath();X.moveTo(x+4,y+24);X.lineTo(x+26,y+36);X.stroke();
+    X.beginPath();X.moveTo(x+26,y+24);X.lineTo(x+4,y+36);X.stroke();
+    // X-brace 2 (lower)
+    X.beginPath();X.moveTo(x+4,y+40);X.lineTo(x+26,y+52);X.stroke();
+    X.beginPath();X.moveTo(x+26,y+40);X.lineTo(x+4,y+52);X.stroke();
+    // Horizontal ties
+    rect(X,x+4,y+24,22,1,P.wood);
+    rect(X,x+4,y+36,22,1,P.wood);
+    rect(X,x+4,y+48,22,1,P.wood);
+    rect(X,x+4,y+60,22,1,P.wood);
+
+    // ── PLATFORM — wooden planks with details ──
+    rect(X,x-3,y+9,36,6,P.dwood);
+    rect(X,x-2,y+10,34,4,P.wood);
+    // Plank seams
+    for(let i=0;i<6;i++){rect(X,x-2+i*6,y+10,1,4,'#1a0e06');}
+    // Platform front edge shadow
+    rect(X,x-3,y+14,36,1,'#0a0604');
+
+    // ── RAILING (4 posts + horizontal bar) ──
+    rect(X,x-3,y+2,2,8,P.wood);
+    rect(X,x+9,y+2,1,8,P.dwood);
+    rect(X,x+20,y+2,1,8,P.dwood);
+    rect(X,x+31,y+2,2,8,P.wood);
+    rect(X,x-3,y+2,36,2,P.wood);
+    // Railing middle bar
+    rect(X,x-3,y+6,36,1,P.dwood);
+
+    // ── ROOF — tin, rusted, sloped ──
+    rect(X,x-4,y-8,38,3,P.rust);
+    rect(X,x-3,y-7,36,1,P.drust);
+    // Roof rust streaks
+    for(let i=0;i<5;i++){
+      px(X,x+hash(i,0,11)*34,y-5,P.drust);
     }
-    // Ladder
-    for(let i=0;i<6;i++){rect(X,x+13,y+15+i*7,4,1,P.wood);}
-    rect(X,x+13,y+15,1,42,P.wood);rect(X,x+16,y+15,1,42,P.wood);
+    // Support beams from roof to platform corners
+    X.strokeStyle=P.dwood;X.lineWidth=1;
+    X.beginPath();X.moveTo(x-3,y-5);X.lineTo(x-3,y+2);X.stroke();
+    X.beginPath();X.moveTo(x+33,y-5);X.lineTo(x+33,y+2);X.stroke();
+
+    // ── HANGING LANTERN from roof ──
+    const lantSway=Math.sin(t*.01)*.5;
+    rect(X,x+4+lantSway,y-4,1,3,P.dgrey);
+    rect(X,x+3+lantSway,y-1,3,3,P.dgrey);
+    rect(X,x+4+lantSway,y,1,1,P.f2);
+    // Lantern glow
+    X.globalAlpha=.15+.05*Math.sin(t*.02);
+    const lanGlow=X.createRadialGradient(x+4+lantSway,y+1,0,x+4+lantSway,y+1,20);
+    lanGlow.addColorStop(0,'rgba(218,165,32,1)');
+    lanGlow.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=lanGlow;X.fillRect(x-16,y-19,40,40);
+    X.globalAlpha=1;
+
+    // ── ARCHIVIST SILHOUETTE on platform ──
+    // Hooded figure sitting, back to viewer
+    const brth=Math.sin(t*.008)*.3;
+    // Body
+    rect(X,x+14,y+3-brth,6,6,'#0a0604');
+    // Hood
+    rect(X,x+13,y+1,8,3,'#0a0604');
+    rect(X,x+14,y,6,2,'#050404');
+    // Shoulders
+    rect(X,x+12,y+4,2,3,'#0a0604');
+    rect(X,x+20,y+4,2,3,'#0a0604');
+
+    // ── BINOCULARS in Archivist's hands (pointing INWARD at settlement) ──
+    rect(X,x+15,y+5,2,2,P.dgrey);
+    rect(X,x+18,y+5,2,2,P.dgrey);
+    rect(X,x+14,y+5,1,1,'#1a1a20'); // left eyepiece
+    rect(X,x+20,y+5,1,1,'#1a1a20'); // right eyepiece
+    // Strap
+    X.strokeStyle='#1a1410';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+14,y+6);X.lineTo(x+13,y+8);X.stroke();
+    X.beginPath();X.moveTo(x+21,y+6);X.lineTo(x+22,y+8);X.stroke();
+    // Animated lens glint
+    if(t%90<6){
+      X.globalAlpha=.6;px(X,x+14,y+5,'#fff');px(X,x+20,y+5,'#fff');X.globalAlpha=1;
+    }
+
+    // ── OPEN JOURNAL on platform beside archivist ──
+    rect(X,x+22,y+8,6,3,P.dbone);
+    rect(X,x+22,y+8,3,3,'#e8d8b0');
+    rect(X,x+25,y+8,3,3,'#d8c8a8');
+    rect(X,x+24,y+8,1,3,'#3a2618'); // spine
+    // Written lines on page
+    rect(X,x+22,y+9,2,1,'#1a1410');
+    rect(X,x+26,y+9,2,1,'#1a1410');
+    rect(X,x+22,y+10,2,1,'#1a1410');
+
+    // ── PENCIL beside journal ──
+    rect(X,x+28,y+7,2,1,P.wood);
+    px(X,x+30,y+7,P.bone);
+
+    // ── THERMOS & CUP ──
+    rect(X,x+6,y+7,2,3,P.dgrey);
+    rect(X,x+6,y+7,2,1,'#1a1a20');
+    rect(X,x+9,y+8,2,2,P.stone);
+    // Steam from cup
+    if(t%30<20){
+      X.globalAlpha=.3;
+      rect(X,x+9+Math.sin(t*.05)*1,y+6,1,2,P.ash);
+      X.globalAlpha=1;
+    }
+
+    // ── LADDER on right side ──
+    rect(X,x+13,y+15,1,45,P.wood);
+    rect(X,x+17,y+15,1,45,P.wood);
+    for(let i=0;i<6;i++){
+      rect(X,x+13,y+18+i*7,5,1,P.wood);
+    }
+
+    // ── HANGING ROPE with knot (escape line?) ──
+    X.strokeStyle='#2a1a10';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+33,y+9);X.lineTo(x+35,y+25);X.lineTo(x+34,y+35);X.stroke();
+    // Knot
+    rect(X,x+34,y+25,2,2,P.dwood);
+
+    // ── TALLY MARKS on railing (days counted) ──
+    X.fillStyle='#1a1410';
+    for(let i=0;i<8;i++){
+      rect(X,x-2+i*4,y+4,1,2);
+    }
+    // Cross-out on 5th
+    rect(X,x-3+16,y+4,5,1,'#1a1410');
   },
   pit(x,y){
     // Dark hole in ground
@@ -4235,7 +5040,7 @@ function handleKeys(){
   if(keys['a']||keys['arrowleft'])dx=-1;
   if(keys['d']||keys['arrowright'])dx=1;
   if(dx||dy){
-    const spd=keys['shift']?3:1.8;
+    const spd=keys['shift']?4:2.4;
     const len=Math.sqrt(dx*dx+dy*dy);
     player.x+=dx/len*spd;player.y+=dy/len*spd;
     player.moving=true;player.tx=player.x;player.ty=player.y;
@@ -5090,7 +5895,7 @@ function loop(){
     if(player.moving&&!Object.values(keys).some(v=>v)){
       const dx=player.tx-player.x,dy=player.ty-player.y,dist=Math.sqrt(dx*dx+dy*dy);
       if(dist<2){player.x=player.tx;player.y=player.ty;player.moving=false;if(activeLoc)showMenu(activeLoc);}
-      else{const spd=1.8;player.x+=dx/dist*spd;player.y+=dy/dist*spd;}
+      else{const spd=2.4;player.x+=dx/dist*spd;player.y+=dy/dist*spd;}
     }
     if(player.moving){stepTimer++;if(stepTimer%18===0)playStep();}else{stepTimer=0;}
     updateCamera();
