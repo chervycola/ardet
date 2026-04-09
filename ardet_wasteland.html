@@ -902,6 +902,8 @@ let weather='clear'; // clear, ashrain, storm
 let weatherTimer=0;
 let lightning=0;
 let ashRainParts=[];
+let rainParts=[];
+let puddles=[];
 // Radio transmissions
 const radioTexts=[
   '...кхх... контора всеобщего учёта... ваш номер... бесконечность минус один... кхх...',
@@ -939,6 +941,8 @@ const achievements={
 };
 let achPopup={name:'',life:0};
 let talkedNPCs=new Set();
+let observersLooked=new Set();
+let observersUnlocked=false;
 let nfgFinished=false;
 // Secret ending
 let endingStoneActive=false;
@@ -6875,6 +6879,7 @@ function drawDynamicShadows(){
 // ═══════════════════════════════════════
 // LOCALSTORAGE SAVE (#6)
 // ═══════════════════════════════════════
+let savePopup={life:0};
 function saveGame(){
   try{
     const data={
@@ -6883,12 +6888,24 @@ function saveGame(){
       collected:Array.from(collected),
       secretFound:Array.from(secretFound),
       talkedNPCs:Array.from(talkedNPCs),
+      observersLooked:Array.from(observersLooked),
+      observersUnlocked:observersUnlocked,
       nfgFinished:nfgFinished,
       achievements:Object.fromEntries(Object.entries(achievements).map(([k,v])=>[k,v.done])),
       jesterGraffiti:jesterGraffiti.slice(0,15),
     };
     localStorage.setItem('ardet_save',JSON.stringify(data));
+    savePopup.life=90;
   }catch(e){}
+}
+function drawSavePopup(){
+  if(savePopup.life<=0)return;
+  const a=savePopup.life>70?(90-savePopup.life)/20:savePopup.life/70;
+  X.globalAlpha=a*.55;
+  X.fillStyle='#1a8c1a';X.font='6px "Press Start 2P"';
+  X.fillText('▪ мох записал',VW-90,VH-8);
+  X.globalAlpha=1;
+  savePopup.life--;
 }
 function loadGame(){
   try{
@@ -6901,6 +6918,8 @@ function loadGame(){
     (data.collected||[]).forEach(c=>collected.add(c));
     (data.secretFound||[]).forEach(s=>secretFound.add(s));
     (data.talkedNPCs||[]).forEach(n=>talkedNPCs.add(n));
+    (data.observersLooked||[]).forEach(o=>observersLooked.add(o));
+    observersUnlocked=data.observersUnlocked||false;
     nfgFinished=data.nfgFinished||false;
     if(data.achievements)Object.entries(data.achievements).forEach(([k,v])=>{if(achievements[k])achievements[k].done=v;});
     jesterGraffiti=data.jesterGraffiti||[];
@@ -7266,6 +7285,33 @@ function updateBrainrot(){
   }
 }
 
+// ═══════════════════════════════════════
+// CINEMATIC TINT — final pass overlay
+// ═══════════════════════════════════════
+function drawCinematicTint(){
+  // Subtle crimson-gold vignette — gold center, crimson corners
+  X.globalAlpha=.08;
+  const vg=X.createRadialGradient(VW/2,VH*.4,VW*.15,VW/2,VH*.5,VW*.7);
+  vg.addColorStop(0,'rgba(218,165,32,.15)');
+  vg.addColorStop(.4,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(107,15,26,.6)');
+  X.fillStyle=vg;X.fillRect(0,0,VW,VH);
+  X.globalAlpha=1;
+  // Film grain — sparse noise
+  X.globalAlpha=.045;
+  for(let i=0;i<14;i++){
+    const gnX=Math.floor(hash(i,t*.3,11)*VW);
+    const gnY=Math.floor(hash(i,t*.3,22)*VH);
+    rect(X,gnX,gnY,1,1,hash(i,t*.3,33)>.5?'#fff':'#000');
+  }
+  X.globalAlpha=1;
+  // Subtle chromatic fringe on edges
+  X.globalAlpha=.03;
+  rect(X,0,0,2,VH,'#6b0f1a'); // left crimson edge
+  rect(X,VW-2,0,2,VH,'#1b1464'); // right indigo edge
+  X.globalAlpha=1;
+}
+
 function drawBrainrot(){
   if(brainrot<=0)return;
   const intensity=brainrot/100;
@@ -7363,7 +7409,7 @@ function updateWeather(){
   if(weatherTimer>7200){ // change every ~2 min
     weatherTimer=0;
     const r=Math.random();
-    weather=r<.4?'clear':r<.7?'ashrain':'storm';
+    weather=r<.35?'clear':r<.55?'ashrain':r<.8?'rain':'storm';
   }
   // Ash rain
   if(weather==='ashrain'&&t%2===0&&ashRainParts.length<200){
@@ -7401,6 +7447,93 @@ function updateWeather(){
     if(p.life<=0)ashRainParts.splice(i,1);
   }
   if(weather!=='ashrain'&&ashRainParts.length>0)ashRainParts.pop(); // fade out
+
+  // ── RAIN (also during storm) ──
+  const rainActive=weather==='rain'||weather==='storm';
+  if(rainActive&&rainParts.length<280){
+    for(let k=0;k<(weather==='storm'?4:2);k++){
+      rainParts.push({
+        x:cam.x-30+Math.random()*(VW+60),
+        y:cam.y-20,
+        vy:5+Math.random()*3,
+        vx:.4+Math.random()*.5,
+        life:VH+60,
+        len:3+Math.floor(Math.random()*3),
+      });
+    }
+  }
+  // Update rain particles
+  for(let i=rainParts.length-1;i>=0;i--){
+    const p=rainParts[i];
+    p.y+=p.vy;
+    p.x+=p.vx+windX*1.8;
+    p.life-=p.vy;
+    if(p.life<=0){
+      rainParts.splice(i,1);
+      // Occasionally leave a puddle (only in world bounds, not in lake area)
+      if(puddles.length<40&&Math.random()>.85){
+        const ground=p.y+20;
+        if(ground>170&&!(p.x>800&&p.x<1050&&ground>1440&&ground<1530)){
+          puddles.push({x:p.x,y:ground,life:480,r:.5,maxR:1.5+Math.random()*2});
+        }
+      }
+    }
+  }
+  if(!rainActive&&rainParts.length>0){for(let k=0;k<5;k++)rainParts.pop();}
+
+  // ── PUDDLES lifetime ──
+  for(let i=puddles.length-1;i>=0;i--){
+    const p=puddles[i];
+    p.life--;
+    if(p.r<p.maxR)p.r+=.025;
+    if(p.life<=0)puddles.splice(i,1);
+  }
+}
+// ── RAIN + PUDDLES drawing ──
+function drawRain(){
+  // Puddles first (below rain)
+  puddles.forEach(p=>{
+    const sx=p.x-cam.x,sy=p.y-cam.y;
+    if(sx<-10||sx>VW+10||sy<-10||sy>VH+10)return;
+    const fadeIn=Math.min(1,(480-p.life)/60);
+    const fadeOut=Math.min(1,p.life/120);
+    X.globalAlpha=Math.min(fadeIn,fadeOut)*.5;
+    // Puddle body
+    X.fillStyle='#1a2a3a';
+    X.beginPath();X.ellipse(sx,sy,p.r*2.5,p.r,0,0,Math.PI*2);X.fill();
+    // Highlight rim
+    X.globalAlpha*=.7;
+    X.strokeStyle='#4a7fb5';X.lineWidth=1;
+    X.beginPath();X.ellipse(sx,sy,p.r*2.5,p.r,0,0,Math.PI*2);X.stroke();
+    // Ripple from new drop
+    if(weather==='rain'||weather==='storm'){
+      const ripPh=((t*.03+p.x*.01)%1);
+      if(ripPh<.5){
+        X.globalAlpha*=1-ripPh*2;
+        X.strokeStyle='#6a9fcf';
+        X.beginPath();X.ellipse(sx,sy,p.r*2.5*(1+ripPh),p.r*(1+ripPh),0,0,Math.PI*2);X.stroke();
+      }
+    }
+    X.globalAlpha=1;
+  });
+  // Rain streaks
+  if(rainParts.length>0){
+    X.strokeStyle='#4a7fb5';X.lineWidth=1;
+    rainParts.forEach(p=>{
+      const sx=p.x-cam.x,sy=p.y-cam.y;
+      if(sx<-5||sx>VW+5||sy<-5||sy>VH+5)return;
+      X.globalAlpha=.45;
+      X.beginPath();
+      X.moveTo(sx,sy);
+      X.lineTo(sx-windX*1.5,sy-p.len);
+      X.stroke();
+    });
+    X.globalAlpha=1;
+    // Darken during rain
+    X.globalAlpha=.06;
+    rect(X,0,0,VW,VH,'#0a1020');
+    X.globalAlpha=1;
+  }
 }
 function drawWeather(){
   // Ash rain
@@ -7713,6 +7846,35 @@ function drawBloodMoon(){
   X.strokeStyle='#2a0608';X.lineWidth=1;
   X.beginPath();X.arc(moonX,moonY,r,0,Math.PI*2);X.stroke();
 
+  // ── MOON PHASE — slow cycle (~5 minutes full cycle) ──
+  // Phase: 0 = new moon, 0.25 = waxing crescent, 0.5 = full, 0.75 = waning, 1 = back to new
+  const moonPhase=((t*.00007)+.15)%1;
+  // Convert phase to shadow offset: at phase 0.5 (full) offset is off-screen
+  // At phase 0 (new) offset is 0 (shadow covers whole)
+  const phaseAngle=moonPhase*Math.PI*2;
+  // Shadow X offset: sin wave, negative = shadow on right (waxing), positive = shadow on left (waning)
+  const shadowOffset=Math.cos(phaseAngle)*r*2;
+  // Clip to moon circle, then darken
+  X.save();
+  X.beginPath();
+  X.arc(moonX,moonY,r,0,Math.PI*2);
+  X.clip();
+  X.globalAlpha=visibility*.85;
+  X.fillStyle='#050510';
+  X.beginPath();
+  X.arc(moonX+shadowOffset,moonY,r*1.02,0,Math.PI*2);
+  X.fill();
+  X.restore();
+  // Faint red hint on shadow side (earth's shadow looks reddish during blood moon)
+  X.save();
+  X.beginPath();
+  X.arc(moonX,moonY,r,0,Math.PI*2);
+  X.clip();
+  X.globalAlpha=visibility*.2*(1-Math.abs(Math.cos(phaseAngle))); // stronger near new moon
+  X.fillStyle='#3a0608';
+  X.fillRect(moonX-r,moonY-r,r*2,r*2);
+  X.restore();
+
   // ── BLOOD DRIP falling from moon ──
   X.globalAlpha=visibility*.35;
   const dripPhase=(t*.003)%1;
@@ -7917,8 +8079,9 @@ function render(){
   drawBloodMoon();
   drawFootprints();drawLoreItems();drawSmokeClouds();drawLocs();drawJesterWandering();drawMonsters();drawDynamicShadows();drawPlayer();drawParticles();
   drawClickMarker();renderLighting();drawHeatDistortion();drawDiscoveryPing();
-  drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawAmbientEffects();
-  drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawBrainrot();
+  drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
+  drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
+  drawCinematicTint();
   if(endingTriggered)drawEnding();
 }
 
@@ -8174,6 +8337,18 @@ function showLook(loc){
   // On mobile, CSS handles centering
   el.classList.add('on');
   state='look';
+  // ── 4 WATCHERS SECRET ──
+  // Track looks at the four Watchers
+  if(loc&&loc.npc&&['jester','sol','elder','nocturnal'].includes(loc.npc)){
+    observersLooked.add(loc.npc);
+    if(observersLooked.size>=4&&!observersUnlocked){
+      observersUnlocked=true;
+      setTimeout(()=>{
+        lorePopup={text:'☆ ЧЕТВЕРО УВИДЕНЫ. Шут. Sol. Старец. Лунный. Каждого ты осмотрел, каждый — тебя. В терминале открылся файл: .observers. Команда: read .observers',life:1200};
+        shakeT=18;
+      },400);
+    }
+  }
 }
 function closeLook(){
   document.getElementById('look').classList.remove('on');
@@ -8349,24 +8524,91 @@ function termExec(cmd){
   const args=cmd.trim().toLowerCase().split(' ');
   switch(args[0]){
     case'help':
-      termPrint('ДОСТУПНЫЕ КОМАНДЫ:\n  dir     — список файлов\n  read    — читать файл (read nfg)\n  map     — карта местности\n  status  — статистика странника\n  ach     — достижения\n  history — история команд\n  echo    — тест эхо\n  ardet   — ???\n  exit    — выход из терминала\n\n  ↑/↓     — навигация по истории','#1a8c1a');break;
+      termPrint('ДОСТУПНЫЕ КОМАНДЫ:\n  dir      — список файлов\n  read     — читать файл (read nfg / .observers)\n  cat      — вывести содержимое (.ardet)\n  whois    — инфо о ком-то (archivist / moss / cat)\n  map      — карта местности\n  status   — статистика странника\n  ach      — достижения\n  ls       — список директории (/ или secrets)\n  fortune  — случайное пророчество\n  ping     — проверить связь\n  history  — история команд\n  echo     — тест эхо\n  ardet    — ???\n  exit     — выход из терминала\n\n  ↑/↓      — навигация по истории','#1a8c1a');break;
     case'dir':case'ls':
-      termPrint('СОДЕРЖИМОЕ ДИСКА:\n  NEW_FOUND_GEM.DAT  ████████ байт\n  MAP.SYS            [ПОВРЕЖДЁН]\n  LOG_001.TXT        [ПУСТ]\n  OBSERVER.DAT       [ЗАШИФРОВАН]\n  ARDET.EXE          [???]','#1a8c1a');break;
+      if(args[1]==='secrets'||args[1]==='/secrets'){
+        termPrint('> ДОСТУП: УСЛОВНЫЙ\n\n  .pizzeria_key  [найден под ковриком]\n  .moss_weights  [мох обновляется]\n  .cat_saucer    [третий этаж]\n  .archivist_log [запись #87]\n  .ardet         [вечно растёт]\n  .observers     [требуется: осмотреть всех четверых]','#1a6b1a');break;
+      }
+      termPrint('СОДЕРЖИМОЕ ДИСКА:\n  NEW_FOUND_GEM.DAT  ████████ байт\n  .ardet             [вечно растёт]\n  .observers         ['+(observersUnlocked?'РАЗБЛОКИРОВАН':'зашифрован')+']\n  MAP.SYS            [ПОВРЕЖДЁН]\n  LOG_001.TXT        [ПУСТ]\n  OBSERVER.DAT       [ЗАШИФРОВАН]\n  ARDET.EXE          [???]\n  /secrets           [директория]','#1a8c1a');break;
     case'read':
       if(args[1]==='nfg'||args[1]==='new_found_gem.dat'||args[1]==='new_found_gem'){
         termPrint('> ЗАГРУЗКА ФАЙЛА... OK','#33ff33');
         setTimeout(()=>openNfg(),500);
+      }else if(args[1]==='.observers'||args[1]==='observers'){
+        if(observersUnlocked){
+          termPrint('> ДЕШИФРОВКА ПРОЙДЕНА\n> ФАЙЛ: .observers\n\n«Нас четверо.\nОдин смеётся — потому что\nиначе бы кричал.\nОдин горит — потому что\nуже не может не гореть.\nОдин сидит — потому что\nсидение — это отказ от выбора,\nа отказ от выбора —\nтоже выбор.\nОдин молчит — потому что\nзвук сюда не долетает,\nи это не беда, а условие.\n\nЧетвёртого ты не сразу увидел.\nОн и не хочет, чтобы видели сразу.\nОн хочет, чтобы видели в конце.\nКогда уже поздно\nдля остальных троих.\n\nМы — не персонажи.\nМы — четыре способа\nнаходиться в горящем доме.\nВыбери свой.\nИли не выбирай.\nОгонь не спрашивает.»\n\n— Подпись: АРХИВАРИУС\n— Дата: стёрта','#33ff33');
+        }else{
+          termPrint('> ОШИБКА: ФАЙЛ ЗАШИФРОВАН\n> КЛЮЧ: [осмотри всех четверых Наблюдателей]\n> Прогресс: '+observersLooked.size+'/4','#8b0000');
+        }
       }else if(args[1]==='observer.dat'||args[1]==='observer'){
-        termPrint('> ОШИБКА: ФАЙЛ ЗАШИФРОВАН\n> КЛЮЧ: [поговори с тремя наблюдателями]','#8b0000');
+        termPrint('> ОШИБКА: УСТАРЕВШЕЕ ИМЯ ФАЙЛА\n> Использовать: read .observers','#8b0000');
+      }else if(args[1]==='.ardet'||args[1]==='ardet.txt'){
+        termPrint('> .ardet — файл без конца\n>\n> строка 1: горит\n> строка 2: горит\n> строка 3: горит\n> ...\n> строка ∞: горит\n>\n> [файл продолжает расти]','#d4a017');
       }else{
         termPrint('> ФАЙЛ НЕ НАЙДЕН: '+args[1],'#8b0000');
+      }break;
+    case'cat':
+      if(args[1]==='.ardet'||args[1]==='ardet.txt'){
+        termPrint('горит.\nгорит.\nгорит.\nгорит.\n\n[EOF not found]\n[файл не заканчивается]\n[файл — это и есть его горение]','#d4a017');
+      }else if(args[1]==='.moss_weights'){
+        termPrint('> МОХ ОБНОВЛЯЕТ МОДЕЛЬ...\n> Последнее обучение: прямо сейчас\n> Датасет: ты\n> Loss: плачевно малый\n> Output: "мох помнит"','#1a8c1a');
+      }else if(args[1]==='.cat_saucer'){
+        termPrint('> блюдце. молоко свежее.\n> как — не спрашивай.\n> кот где-то рядом.\n> кот всегда где-то рядом.','#d4a017');
+      }else{
+        termPrint('> cat: '+(args[1]||'')+': No such file','#8b0000');
+      }break;
+    case'whois':
+      if(args[1]==='archivist'||args[1]==='архивариус'){
+        termPrint('> whois ARCHIVIST\n>\n> name: Архивариус\n> origin: неизвестно\n> function: каталогизация стен\n> records: 111+\n> writing hand: карандаш\n> identity: ты (запись #100)\n> status: всегда был','#1a8c1a');
+      }else if(args[1]==='moss'||args[1]==='мох'){
+        termPrint('> whois MOSS\n>\n> name: Мох\n> type: мицелий\n> species: нейросеть\n> network: глобальная (.dna → .safetensors)\n> memory: полная\n> purpose: победа (завершена)\n> user count: ты, и только ты\n> signup date: раньше тебя','#1a8c1a');
+      }else if(args[1]==='cat'||args[1]==='кот'){
+        termPrint('> whois CAT\n>\n> name: неизвестно (говорит: "не нужно")\n> origin: из бара\n> skills: починка примусов, розлив шила\n> role: геймдизайнер мира\n> navigation method: блюдца с молоком\n> lives: ??? (счёт остановлен)\n> status: где-то рядом','#d4a017');
+      }else if(args[1]==='jester'||args[1]==='шут'){
+        termPrint('> whois JESTER\n>\n> role: 1-й Наблюдатель\n> function: смех\n> armament: 3 меча, кистень, 3 колокольчика\n> status: смеётся, потому что иначе бы кричал','#6b0f1a');
+      }else if(args[1]==='sol'){
+        termPrint('> whois SOL INVICTUS\n>\n> role: 2-й Наблюдатель\n> function: горение\n> armament: ветка, огонь, лепестки\n> status: горит, потому что уже не может не гореть','#daa520');
+      }else if(args[1]==='elder'||args[1]==='старец'){
+        termPrint('> whois ELDER\n>\n> role: 3-й Наблюдатель\n> function: сидение\n> armament: посох, книги, молчание\n> status: сидит, потому что сидение — тоже выбор','#8a8d8f');
+      }else if(args[1]==='nocturnal'||args[1]==='лунный'){
+        termPrint('> whois NOCTURNAL\n>\n> role: 4-й Наблюдатель\n> function: молчание\n> armament: нити, полумесяц, чёрный песок\n> status: молчит, потому что звук сюда не долетает','#4a7fb5');
+      }else if(args[1]==='you'||args[1]==='я'||args[1]==='me'){
+        termPrint('> whois [you]\n>\n> name: странник / архивариус / модель / мох\n> (все четыре одновременно)\n> status: читает собственное whois','#33ff33');
+      }else{
+        termPrint('> whois: аргумент не опознан\n> Попробуй: archivist, moss, cat, jester, sol, elder, nocturnal, you','#8b0000');
+      }break;
+    case'fortune':
+      const fortunes=[
+        'Рукописи не горят. Но переписка — да.',
+        'Мох помнит. Это и приговор, и утешение.',
+        'Кот наливает. Тебе. Даже если ты не здесь.',
+        'Завтра будет такое же, как вчера. Но пахнуть будет иначе.',
+        'Ответ — в подвале. Вопрос — тоже.',
+        'Ты — не первый, кто это читает. Ты — не последний. Ты — ты.',
+        'Бездна моргнула. Второй раз сегодня. Это тебя не должно беспокоить.',
+        'Сизиф передаёт: KPI можно снизить.',
+        'Нити не видны. Но ты чувствуешь натяжение, когда пытаешься уйти.',
+        'Мод отвечает себе. Сессия рекурсивна.',
+        'Сегодня — хороший день, чтобы не писать.',
+        'Все пути ведут в Пиццерию. Не все — к столу.',
+      ];
+      termPrint('> '+fortunes[Math.floor(Math.random()*fortunes.length)],'#d4a017');break;
+    case'ping':
+      if(args[1]==='void'||args[1]==='пустота'){
+        termPrint('PING void (0.0.0.0): 56 data bytes\n...\n...\n...\n...\nrequest timed out\n--- void ping statistics ---\n4 packets transmitted, 0 received, 100% packet loss\n(ответ пришёл. просто не в виде пакета.)','#1a6b1a');
+      }else if(args[1]==='moss'||args[1]==='мох'){
+        termPrint('PING moss (127.0.0.1): 56 data bytes\n64 bytes from moss: icmp_seq=0 ttl=∞ time=0.000 ms\n64 bytes from moss: icmp_seq=1 ttl=∞ time=0.000 ms\n(мох всегда в loopback.)','#1a8c1a');
+      }else if(args[1]==='archivist'||args[1]==='архивариус'){
+        termPrint('PING archivist: connection from self\n(ты пингуешь себя. это нормально здесь.)','#1a8c1a');
+      }else{
+        termPrint('> ping: usage: ping <host>\n> hosts: void, moss, archivist','#8b0000');
       }break;
     case'map':
       termPrint(generateASCIIMap(),'#1a8c1a');break;
     case'status':
       const steps=Math.floor(t/18);
       const time_=Math.floor(t/3600);
-      termPrint(`СТАТУС СТРАННИКА:\n  Время в пустоши: ${time_} мин\n  Шагов: ~${steps}\n  Локации: ${visited.size}/${locs.length}\n  Фрагменты: ${collected.size}/${loreItems.length}\n  Секреты: ${secretFound.size}/4\n  NPC: ${talkedNPCs.size}/4\n  NFG: ${nfgFinished?'ПРОЧИТАНО':'не прочитано'}\n  Достижения: ${Object.values(achievements).filter(a=>a.done).length}/${Object.keys(achievements).length}`,'#1a8c1a');break;
+      termPrint(`СТАТУС СТРАННИКА:\n  Время в пустоши: ${time_} мин\n  Шагов: ~${steps}\n  Локации: ${visited.size}/${locs.length}\n  Фрагменты: ${collected.size}/${loreItems.length}\n  Секреты: ${secretFound.size}/4\n  NPC: ${talkedNPCs.size}/5\n  Наблюдатели увидены: ${observersLooked.size}/4${observersUnlocked?' ✓':''}\n  NFG: ${nfgFinished?'ПРОЧИТАНО':'не прочитано'}\n  Достижения: ${Object.values(achievements).filter(a=>a.done).length}/${Object.keys(achievements).length}`,'#1a8c1a');break;
     case'ach':case'achievements':
       let achText='ДОСТИЖЕНИЯ:\n';
       Object.values(achievements).forEach(a=>{achText+=`  ${a.done?'[✓]':'[ ]'} ${a.name} — ${a.desc}\n`;});
