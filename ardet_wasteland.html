@@ -2501,12 +2501,148 @@ const locDraw={
     }
   },
   cross(x,y){
-    rect(X,x+12,y,5,45,P.wood);rect(X,x+3,y+10,24,4,P.wood);
-    rect(X,x+13,y+1,3,43,P.lwood);rect(X,x+4,y+11,22,2,P.lwood);
-    // Flowers at base
-    px(X,x+8,y+42,P.blood);px(X,x+10,y+43,P.drust);px(X,x+15,y+42,'#4a3a2a');
-    // Candle
-    rect(X,x+20,y+40,2,4,P.bone);px(X,x+20,y+38,P.f2);
+    // ═══ CROSS ON THE HILL — SISYPHUS / GOLGOTHA ═══
+    // Shadow
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+15,y+52,22,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── HILL MOUND underneath (rounded) ──
+    for(let dy=0;dy<10;dy+=1){
+      const w=32-dy*2;
+      const hue=24+dy;
+      rect(X,x-1+dy,y+42+dy,w,1,`rgb(${hue},${hue-2},${hue-6})`);
+    }
+    // Grass (dead)
+    for(let i=0;i<8;i++){
+      const gx=x+hash(i,0,11)*30;
+      px(X,gx,y+42+hash(i,0,22)*3,'#2a1806');
+    }
+
+    // ── CROSS — heavy wooden, weathered ──
+    // Vertical beam
+    rect(X,x+11,y,6,48,P.wood);
+    rect(X,x+12,y+1,4,46,'#3a2814');
+    rect(X,x+13,y+2,2,44,P.lwood);
+    // Wood grain lines
+    for(let i=0;i<20;i++){
+      px(X,x+12,y+3+i*2,'#1a0e06');
+    }
+    // Nails in vertical beam
+    px(X,x+11,y+8,P.dgrey);
+    px(X,x+16,y+8,P.dgrey);
+    px(X,x+11,y+30,P.dgrey);
+
+    // Horizontal beam
+    rect(X,x+2,y+10,24,5,P.wood);
+    rect(X,x+3,y+11,22,3,'#3a2814');
+    rect(X,x+4,y+12,20,1,P.lwood);
+    // Wood grain
+    for(let i=0;i<12;i++){
+      px(X,x+4+i*2,y+13,'#1a0e06');
+    }
+    // End caps
+    rect(X,x+2,y+10,1,5,P.dwood);
+    rect(X,x+25,y+10,1,5,P.dwood);
+    // Nails in crossbar
+    px(X,x+6,y+11,P.dgrey);
+    px(X,x+21,y+11,P.dgrey);
+    px(X,x+13,y+11,P.dgrey);
+    px(X,x+15,y+11,P.dgrey);
+
+    // Weathering (bird droppings, stains)
+    px(X,x+11,y+6,P.bone);
+    px(X,x+17,y+4,P.bone);
+    // Rust/blood stains
+    rect(X,x+13,y+11,2,1,'#3a0608');
+    rect(X,x+14,y+15,1,8,'#3a0608');
+
+    // ── CARVED INSCRIPTION on crossbar ──
+    // "INRI" faint
+    px(X,x+10,y+13,'#0a0a0e');
+    px(X,x+12,y+13,'#0a0a0e');
+    px(X,x+14,y+13,'#0a0a0e');
+    px(X,x+16,y+13,'#0a0a0e');
+    px(X,x+18,y+13,'#0a0a0e');
+
+    // ── SISYPHUS'S STONE at base ──
+    // Big round warm stone
+    const stPulse=.9+.1*Math.sin(t*.005);
+    X.fillStyle=P.stone;
+    X.beginPath();X.arc(x+19,y+43,6,0,Math.PI*2);X.fill();
+    X.fillStyle=P.dstone;
+    X.beginPath();X.arc(x+19,y+43,5,0,Math.PI*2);X.fill();
+    // Warmth aura — the stone is always warm
+    X.globalAlpha=(.08+.04*Math.sin(t*.003))*stPulse;
+    const stGrad=X.createRadialGradient(x+19,y+43,0,x+19,y+43,12);
+    stGrad.addColorStop(0,'rgba(218,165,32,.7)');
+    stGrad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=stGrad;X.fillRect(x+7,y+31,24,24);
+    X.globalAlpha=1;
+    // Stone surface details — texture
+    px(X,x+17,y+41,P.lstone);
+    px(X,x+21,y+42,P.lstone);
+    px(X,x+18,y+44,'#1a1a22');
+    px(X,x+20,y+45,'#1a1a22');
+    // Drag marks from stone — hints it's been rolled before
+    for(let i=0;i<5;i++){
+      rect(X,x+8-i*2,y+48+i,3,1,'#0e0a04');
+    }
+
+    // ── OFFERINGS at base ──
+    // Wilted flowers (dried)
+    rect(X,x+4,y+46,2,1,'#3a0a08');
+    px(X,x+4,y+45,'#1a0404');
+    rect(X,x+8,y+47,2,1,'#2a1806');
+    // Candle (tall, half-burnt)
+    rect(X,x+26,y+40,2,8,P.bone);
+    rect(X,x+26,y+39,2,1,P.dbone); // melted top
+    // Wax drips down
+    rect(X,x+25,y+43,1,2,P.dbone);
+    rect(X,x+28,y+42,1,3,P.dbone);
+    // Flame
+    const fl=Math.sin(t*.04)*.5;
+    px(X,x+26+fl,y+38,P.f2);
+    px(X,x+27+fl,y+37,P.f1);
+    // Candle light
+    X.globalAlpha=.12+.04*Math.sin(t*.03);
+    const cdGrad=X.createRadialGradient(x+27,y+38,0,x+27,y+38,12);
+    cdGrad.addColorStop(0,'rgba(218,165,32,.8)');
+    cdGrad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=cdGrad;X.fillRect(x+15,y+26,24,24);
+    X.globalAlpha=1;
+
+    // Small handwritten paper note weighted by a pebble
+    rect(X,x+10,y+48,5,2,P.dbone);
+    // Barely-visible handwriting
+    px(X,x+11,y+48,'#1a0a06');
+    px(X,x+13,y+48,'#1a0a06');
+    // Pebble holding it down
+    px(X,x+12,y+49,P.dstone);
+
+    // ── KPI BOARD nailed to cross (modern absurdity) ──
+    // Tiny clipboard hanging from a nail
+    rect(X,x+18,y+7,6,8,'#e8dcc8');
+    rect(X,x+18,y+7,6,1,P.dgrey); // clip
+    // Lines of text (graph?)
+    rect(X,x+19,y+9,4,1,'#1a0e06');
+    rect(X,x+19,y+11,3,1,'#1a0e06');
+    rect(X,x+19,y+13,4,1,'#1a0e06');
+    // "0%" marker in red
+    px(X,x+22,y+13,P.crimson);
+
+    // ── DISTANT CROW on top of cross ──
+    if(t%500<480){
+      rect(X,x+13,y-2,3,1,'#050505');
+      px(X,x+15,y-2,'#050505');
+      px(X,x+12,y-2,'#050505'); // beak
+    }
+
+    // ── WIND RIBBONS tied to crossbar ──
+    const ribSway=Math.sin(t*.02)*2;
+    rect(X,x+3+ribSway*.2,y+16,1,5,'#6b0f1a');
+    rect(X,x+4+ribSway*.3,y+18,1,4,'#4a0a12');
+    rect(X,x+24+ribSway*.2,y+16,1,6,'#1b1464');
+    rect(X,x+23+ribSway*.3,y+18,1,4,'#0e0a38');
   },
   raven(x,y){
     // ═══ RAVEN'S NEST — twisted oak with trove ═══
@@ -2660,25 +2796,170 @@ const locDraw={
     }
   },
   lake(x,y){
-    // Toxic water surface
-    for(let py=0;py<50;py++)for(let px_=0;px_<90;px_+=2){
-      const dx=(px_-45)/45,dy=(py-25)/25;
+    // ═══ TOXIC LAKE — the rainbow fish (last optimist) ═══
+
+    // ── LAKE SURFACE — oval toxic water ──
+    for(let py=0;py<55;py++)for(let px_=0;px_<96;px_+=2){
+      const dx=(px_-48)/48,dy=(py-27)/27;
       if(dx*dx+dy*dy<1){
         const n=hash(px_+x,py+y+t*.001,55);
         const c=n>.6?P.btoxic:n>.3?P.toxic:P.dtoxic;
         X.globalAlpha=.7+.2*Math.sin(t*.003+px_*.1);
-        rect(X,x+px_+5,y+py+5,2,1,c);
+        rect(X,x+px_+3,y+py+3,2,1,c);
       }
     }
     X.globalAlpha=1;
-    // Bubbles
-    for(let i=0;i<3;i++){
-      const bx=x+20+hash(i,t*.002,1)*60;
-      const by=y+15+hash(i,t*.002,2)*30;
-      if(hash(i,Math.floor(t*.01),3)>.7){X.globalAlpha=.5;rect(X,bx,by,2,2,P.btoxic);X.globalAlpha=1;}
+
+    // ── SHORELINE — mud, cracked earth ──
+    for(let a=0;a<40;a++){
+      const ang=a/40*Math.PI*2;
+      const r=48+hash(a,0,11)*4;
+      const sx=x+51+Math.cos(ang)*r;
+      const sy=y+30+Math.sin(ang)*28;
+      rect(X,sx,sy,2,1,hash(a,0,22)>.5?'#2a1e14':'#1a1210');
     }
-    // Fish skeleton
-    rect(X,x+75,y+48,8,2,P.bone);rect(X,x+82,y+46,3,6,P.bone);
+
+    // ── SWIRLING OIL SLICKS on surface (rainbow shimmer) ──
+    for(let i=0;i<5;i++){
+      const slPhase=((t*.004+i*.2)%1);
+      const slCx=x+20+i*14+Math.sin(t*.01+i)*3;
+      const slCy=y+25+Math.cos(t*.008+i)*4;
+      X.globalAlpha=.25+.15*Math.sin(t*.02+i);
+      const slColor=['#6b0f1a','#daa520','#4a7fb5','#1b1464','#8a6408'][i];
+      X.beginPath();X.ellipse(slCx,slCy,5+Math.sin(slPhase*Math.PI*2)*2,2,slPhase*Math.PI,0,Math.PI*2);
+      X.fillStyle=slColor;X.fill();
+      X.globalAlpha=1;
+    }
+
+    // ── BUBBLES rising from depths ──
+    for(let i=0;i<6;i++){
+      const bPh=((t*.003+i*.17)%1);
+      const bx=x+15+hash(i,0,1)*70;
+      const by=y+50-bPh*40;
+      X.globalAlpha=.6*(1-bPh);
+      rect(X,bx,by,2,2,P.btoxic);
+      px(X,bx,by+2,P.btoxic);
+      X.globalAlpha=1;
+    }
+
+    // Bigger methane bubbles
+    if(t%120<8){
+      const bigB=t%120;
+      X.globalAlpha=.5;
+      X.beginPath();X.arc(x+40,y+30-bigB,3+bigB*.3,0,Math.PI*2);
+      X.fillStyle=P.btoxic;X.fill();
+      X.globalAlpha=1;
+    }
+
+    // ── DEAD FISH skeletons (multiple, on shore and floating) ──
+    // Shore fish 1
+    rect(X,x+78,y+52,8,2,P.bone);
+    rect(X,x+85,y+51,2,4,P.bone); // tail
+    // Ribs
+    rect(X,x+79,y+51,1,1,P.bone);rect(X,x+81,y+51,1,1,P.bone);rect(X,x+83,y+51,1,1,P.bone);
+    rect(X,x+79,y+54,1,1,P.bone);rect(X,x+81,y+54,1,1,P.bone);rect(X,x+83,y+54,1,1,P.bone);
+    // Skull with eye hole
+    px(X,x+78,y+52,'#0a0a0e');
+
+    // Shore fish 2 (smaller)
+    rect(X,x+10,y+54,5,1,P.dbone);
+    rect(X,x+14,y+53,2,3,P.dbone);
+
+    // Floating fish 3
+    rect(X,x+20,y+12,6,2,P.bone);
+    rect(X,x+25,y+11,2,4,P.bone);
+    px(X,x+20,y+12,'#0a0a0e');
+
+    // ── THE RAINBOW FISH (alive!) ──
+    // Wiggles with sine
+    const fishX=x+55+Math.sin(t*.02)*3;
+    const fishY=y+28+Math.cos(t*.03)*1;
+    const fishDir=Math.sin(t*.008)>0?1:-1;
+    // Body
+    X.fillStyle='#6b0f1a';
+    X.beginPath();X.ellipse(fishX,fishY,5,2,0,0,Math.PI*2);X.fill();
+    // Rainbow scales — each pixel a different color
+    px(X,fishX-2,fishY-1,'#6b0f1a');
+    px(X,fishX-1,fishY-1,P.amber);
+    px(X,fishX,fishY-1,'#daa520');
+    px(X,fishX+1,fishY-1,'#4a7fb5');
+    px(X,fishX+2,fishY-1,'#1b1464');
+    px(X,fishX-2,fishY,'#8b0000');
+    px(X,fishX-1,fishY,P.damber);
+    px(X,fishX,fishY,P.gold);
+    px(X,fishX+1,fishY,P.celestial);
+    px(X,fishX+2,fishY,P.indigo);
+    // Eye (the optimist's eye)
+    px(X,fishX+2*fishDir,fishY-1,'#fff');
+    // Tail (wiggling)
+    const tailPh=Math.sin(t*.04);
+    rect(X,fishX-6*fishDir,fishY-1+tailPh,2,3,'#4a7fb5');
+    px(X,fishX-7*fishDir,fishY-1+tailPh*2,'#1b1464');
+    // Dorsal fin
+    px(X,fishX,fishY-2,'#1b1464');
+    px(X,fishX+1,fishY-2,'#0e0a38');
+    // Bubbles coming from fish mouth
+    if(t%30<15){
+      px(X,fishX+4*fishDir,fishY,P.btoxic);
+      px(X,fishX+5*fishDir,fishY-1,P.btoxic);
+    }
+
+    // Faint rainbow aura around the fish
+    X.globalAlpha=.08+.04*Math.sin(t*.01);
+    const fishGrad=X.createRadialGradient(fishX,fishY,0,fishX,fishY,15);
+    fishGrad.addColorStop(0,'rgba(218,165,32,.8)');
+    fishGrad.addColorStop(.5,'rgba(74,127,181,.4)');
+    fishGrad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=fishGrad;X.fillRect(fishX-15,fishY-15,30,30);
+    X.globalAlpha=1;
+
+    // ── BARREL half-sunk (radiation source?) ──
+    rect(X,x+68,y+20,8,12,'#2a1a08');
+    rect(X,x+69,y+21,6,10,'#3a2a0a');
+    dither(X,x+69,y+22,6,8,P.rust,'#2a1a08',.4);
+    // Radiation symbol
+    rect(X,x+71,y+24,2,1,P.amber);
+    rect(X,x+71,y+27,2,1,P.amber);
+    rect(X,x+72,y+25,1,2,P.amber);
+    // Leaking
+    X.globalAlpha=.6;
+    rect(X,x+70,y+31,2,3,P.btoxic);
+    X.globalAlpha=1;
+
+    // ── WARNING POSTER on a post (Greta reference) ──
+    rect(X,x-4,y+30,1,12,P.dwood);
+    rect(X,x-8,y+22,10,8,P.dbone);
+    rect(X,x-7,y+23,8,6,'#e8d8b0');
+    // Faint text lines
+    X.fillStyle='#3a0608';
+    rect(X,x-6,y+24,6,1);
+    rect(X,x-6,y+26,4,1);
+    rect(X,x-6,y+28,5,1);
+    // Red X across it
+    X.strokeStyle='#6b0f1a';X.lineWidth=1;
+    X.beginPath();X.moveTo(x-7,y+23);X.lineTo(x+1,y+29);X.stroke();
+    X.beginPath();X.moveTo(x+1,y+23);X.lineTo(x-7,y+29);X.stroke();
+
+    // ── TIRE floating in water ──
+    X.strokeStyle='#0a0a0a';X.lineWidth=2;
+    X.beginPath();X.ellipse(x+36,y+38,4,2,0,0,Math.PI*2);X.stroke();
+    X.lineWidth=1;
+
+    // ── DEAD BIRD on shore ──
+    rect(X,x+50,y+55,4,2,'#050505');
+    px(X,x+49,y+55,'#1a0a06'); // beak
+    px(X,x+54,y+56,'#050505'); // wing out
+    px(X,x+55,y+57,'#050505');
+
+    // ── HAZE/STENCH rising from lake ──
+    for(let i=0;i<6;i++){
+      const hzPh=((t*.006+i*.17)%1);
+      const hzX=x+20+i*12+Math.sin(t*.01+i)*2;
+      const hzY=y-hzPh*12;
+      X.globalAlpha=(1-hzPh)*.12;
+      rect(X,hzX,hzY,3,1,P.toxic);
+      X.globalAlpha=1;
+    }
   },
   basement(x,y){
     rect(X,x+5,y+15,40,25,P.dstone);rect(X,x+7,y+17,36,21,'#0a0a0a');
@@ -2695,43 +2976,503 @@ const locDraw={
     rect(X,x+18,y-13,8,2,P.bone);rect(X,x+24,y-15,2,6,P.bone);
   },
   train(x,y){
-    // Two wagons
-    for(let w=0;w<2;w++){
-      const wx=x+w*55;
-      rect(X,wx,y,50,38,P.dgrey);rect(X,wx+2,y+2,46,34,P.dstone);
-      dither(X,wx+4,y+4,42,30,P.rust,P.dstone,.3);
-      // Windows
-      for(let i=0;i<3;i++){rect(X,wx+6+i*14,y+6,10,10,'#0a0a0a');if(hash(w,i,1)>.5)rect(X,wx+8+i*14,y+8,6,6,P.dgrey);} // some broken
-      // Door
-      rect(X,wx+20,y+18,10,20,'#111');
-      // Wheels
-      rect(X,wx+8,y+36,8,6,'#111');rect(X,wx+34,y+36,8,6,'#111');
+    // ═══ RUSTED TRAIN — Platonov's Machinist Route ═══
+    // Shadow
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+60,y+46,70,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── RAIL TIES + RUSTED RAILS underneath ──
+    for(let i=0;i<14;i++){
+      rect(X,x-2+i*9,y+44,6,2,'#2a1806');
     }
-    // Coupling
-    rect(X,x+50,y+25,5,3,P.ash);
+    // Rails
+    rect(X,x-2,y+43,124,1,P.rust);
+    rect(X,x-2,y+46,124,1,P.rust);
+
+    // ── LOCOMOTIVE (left wagon — Platonov's engine) ──
+    const lx=x;
+    // Main body
+    rect(X,lx,y+4,52,34,P.dgrey);
+    rect(X,lx+2,y+6,48,30,P.dstone);
+    dither(X,lx+4,y+8,44,26,P.rust,P.dstone,.4);
+
+    // Boiler — round part
+    X.fillStyle=P.dgrey;
+    X.beginPath();X.arc(lx+14,y+24,14,0,Math.PI*2);X.fill();
+    X.fillStyle=P.dstone;
+    X.beginPath();X.arc(lx+14,y+24,12,0,Math.PI*2);X.fill();
+    // Rust dither on boiler
+    for(let i=0;i<30;i++){
+      const bx=lx+6+hash(i,0,11)*16;
+      const by=y+16+hash(i,0,22)*16;
+      const dx_=bx-(lx+14),dy_=by-(y+24);
+      if(dx_*dx_+dy_*dy_<144)px(X,bx,by,hash(i,0,33)>.5?P.rust:P.drust);
+    }
+    // Boiler bands (metal rings)
+    rect(X,lx+2,y+22,24,1,'#1a1a1a');
+    rect(X,lx+2,y+26,24,1,'#1a1a1a');
+    // Rivets
+    for(let i=0;i<6;i++){
+      px(X,lx+4+i*4,y+22,P.lgrey);
+      px(X,lx+4+i*4,y+26,P.lgrey);
+    }
+    // Headlight (dead)
+    rect(X,lx,y+20,3,4,'#0a0a0a');
+    rect(X,lx,y+21,3,2,'#2a1a0a');
+    // Smokestack
+    rect(X,lx+11,y+4,6,8,P.dgrey);
+    rect(X,lx+12,y+4,4,7,'#1a1a1a');
+    rect(X,lx+10,y+2,8,2,P.dgrey);
+    // Slow steam rising (or soul rising — Platonov didn't differentiate)
+    for(let i=0;i<4;i++){
+      const smPh=((t*.008+i*.25)%1);
+      const smX=lx+14+Math.sin(t*.01+i*2)*3;
+      const smY=y-smPh*18;
+      X.globalAlpha=(1-smPh)*.4;
+      rect(X,smX,smY,2+i%2,1,'#6a5a4a');
+      X.globalAlpha=1;
+    }
+
+    // Cab — behind boiler
+    rect(X,lx+28,y+6,24,22,P.dgrey);
+    rect(X,lx+30,y+8,20,18,'#1a1a1a');
+    // Cab window
+    rect(X,lx+32,y+10,16,8,'#0a0a0e');
+    // MACHINIST silhouette inside cab (breathing slowly, still at controls)
+    const mBrth=Math.sin(t*.005)*.3;
+    rect(X,lx+36,y+12+mBrth,4,4,'#050505');
+    rect(X,lx+37,y+11+mBrth,2,2,'#0a0a0a'); // head
+    // Hand on throttle
+    rect(X,lx+40,y+14+mBrth,2,1,'#050505');
+    // One glowing gauge on cab
+    if(t%120<60){
+      px(X,lx+45,y+12,P.f2);
+    }else{
+      px(X,lx+45,y+12,'#3a0808');
+    }
+
+    // Cab door (open)
+    rect(X,lx+28,y+18,2,10,'#0a0a0a');
+    // Steps
+    rect(X,lx+27,y+28,3,2,P.dgrey);
+    rect(X,lx+27,y+31,3,2,P.dgrey);
+
+    // Locomotive wheels (3 large)
+    for(let i=0;i<3;i++){
+      const whX=lx+6+i*14;
+      rect(X,whX,y+36,10,8,'#0a0a0a');
+      rect(X,whX+1,y+37,8,6,'#1a1a1a');
+      // Spokes
+      px(X,whX+5,y+38,P.dgrey);
+      px(X,whX+5,y+42,P.dgrey);
+      px(X,whX+2,y+40,P.dgrey);
+      px(X,whX+8,y+40,P.dgrey);
+      px(X,whX+5,y+40,P.rust); // center hub
+    }
+    // Connecting rod (red)
+    rect(X,lx+6,y+40,38,1,P.rust);
+
+    // ── COUPLING ──
+    rect(X,lx+52,y+25,6,3,'#1a1a1a');
+    rect(X,lx+55,y+24,3,5,P.dgrey);
+
+    // ── PASSENGER CAR (right wagon) ──
+    const px2=x+60;
+    rect(X,px2,y+4,58,34,P.dgrey);
+    rect(X,px2+2,y+6,54,30,P.dstone);
+    dither(X,px2+4,y+8,50,26,P.rust,P.dstone,.4);
+
+    // Roof
+    rect(X,px2,y+2,58,2,'#1a1a1a');
+
+    // Windows (6, some broken)
+    for(let i=0;i<6;i++){
+      const wx2=px2+4+i*9;
+      rect(X,wx2,y+10,7,8,'#0a0a0a');
+      rect(X,wx2,y+10,7,1,P.rust);
+      rect(X,wx2,y+17,7,1,P.rust);
+      // Some broken — glass shards
+      if(hash(i,0,11)>.5){
+        px(X,wx2+2,y+13,P.lgrey);
+        px(X,wx2+5,y+15,P.lgrey);
+      }
+      // One window — someone still looking out (window 2)
+      if(i===2){
+        X.fillStyle='#050505';
+        rect(X,wx2+2,y+12,3,4);
+        px(X,wx2+3,y+13,P.bone); // face blur
+      }
+      // Window frame divider
+      rect(X,wx2+3,y+10,1,8,P.rust);
+    }
+
+    // Door in middle
+    rect(X,px2+26,y+18,8,18,'#0a0a0a');
+    rect(X,px2+27,y+19,6,16,'#1a1a1a');
+    // Door handle
+    px(X,px2+32,y+27,P.amber);
+
+    // "НИИЧАВО" stencil on side (faded)
+    X.fillStyle='#1a0a06';
+    rect(X,px2+40,y+30,1,2);rect(X,px2+42,y+30,1,2);rect(X,px2+44,y+30,1,2);
+    rect(X,px2+46,y+30,1,2);rect(X,px2+48,y+30,1,2);
+
+    // Passenger car wheels (4)
+    for(let i=0;i<4;i++){
+      const whX=px2+6+i*12;
+      rect(X,whX,y+36,8,7,'#0a0a0a');
+      rect(X,whX+1,y+37,6,5,'#1a1a1a');
+      px(X,whX+3,y+39,P.dgrey);
+      px(X,whX+4,y+39,P.dgrey);
+    }
+
+    // ── BROKEN RAILS ahead (rails end abruptly) ──
+    rect(X,x+120,y+44,6,1,'#050202');
+    rect(X,x+122,y+46,4,1,'#050202');
+    // Jagged broken rail ends
+    px(X,x+126,y+43,P.rust);
+    px(X,x+127,y+44,P.rust);
+
+    // ── GHOSTLY SMOKE trailing from stack (thick) ──
+    for(let i=0;i<6;i++){
+      const ghPh=((t*.003+i*.17)%1);
+      const ghX=lx+14+Math.sin(i*2)*5-ghPh*8;
+      const ghY=y-4-ghPh*20;
+      X.globalAlpha=(1-ghPh)*.15;
+      X.beginPath();X.arc(ghX,ghY,3+i*.5,0,Math.PI*2);
+      X.fillStyle='#3a3028';X.fill();
+      X.globalAlpha=1;
+    }
+
+    // ── RED LANTERN hanging from last wagon ──
+    rect(X,x+116,y+18,2,3,P.dgrey);
+    rect(X,x+115,y+21,4,3,'#1a0a06');
+    if(Math.sin(t*.008)>.3){
+      px(X,x+116,y+22,P.f2);
+      px(X,x+117,y+22,P.f2);
+      // Red glow
+      X.globalAlpha=.15;
+      X.beginPath();X.arc(x+117,y+22,8,0,Math.PI*2);
+      X.fillStyle='#6b0f1a';X.fill();
+      X.globalAlpha=1;
+    }
   },
   bus(x,y){
-    rect(X,x,y,60,32,P.drust);rect(X,x+2,y+2,56,28,'#4a3a1a');
+    // ═══ SCHOOL BUS — "дети алгоритма" ═══
+    // Shadow
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+30,y+38,34,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── BUS BODY — tilted, half-sunken ──
+    // Main chassis
+    rect(X,x,y,60,32,P.drust);
+    rect(X,x+2,y+2,56,28,'#4a3a1a');
     dither(X,x+4,y+4,52,24,P.rust,'#3a2a0a',.4);
-    // Windows
-    for(let i=0;i<5;i++){rect(X,x+5+i*11,y+4,8,10,i<4?P.dgrey:'#0a0a0a');}
-    // Wheels
-    rect(X,x+8,y+30,10,6,'#111');rect(X,x+42,y+30,10,6,'#111');
-    // Cracked windshield
-    rect(X,x+50,y+4,8,14,P.dgrey);px(X,x+53,y+8,P.lgrey);px(X,x+55,y+12,P.lgrey);
+    // Yellow paint remnants
+    rect(X,x+2,y+18,56,3,'#8a6408');
+    rect(X,x+2,y+20,56,1,'#4a3a08');
+    // Yellow stripe stencil "SCHOOL BUS"
+    for(let i=0;i<5;i++){
+      rect(X,x+6+i*11,y+19,8,1,P.damber);
+    }
+
+    // Top edge (slightly raised)
+    rect(X,x,y-1,60,2,P.drust);
+    rect(X,x+2,y-1,56,1,'#3a2a0a');
+
+    // ── WINDOWS (5 side windows) ──
+    for(let i=0;i<5;i++){
+      const wx=x+5+i*11;
+      rect(X,wx,y+4,9,10,P.dgrey);
+      rect(X,wx+1,y+5,7,8,'#1a1a20');
+      // Window frames
+      rect(X,wx,y+4,9,1,P.rust);
+      rect(X,wx,y+13,9,1,P.rust);
+      // Middle divider
+      rect(X,wx+4,y+4,1,10,P.rust);
+      // Some windows broken — glass cracks
+      if(i===1||i===3){
+        X.fillStyle=P.lgrey;
+        px(X,wx+2,y+7);px(X,wx+6,y+10);px(X,wx+3,y+11);
+        X.fillStyle='#0a0a0a';
+        rect(X,wx+1,y+5,7,3,'#0a0a0a');
+      }
+      // One window — eerie face silhouette looking out (window 2)
+      if(i===2){
+        rect(X,wx+1,y+5,7,8,'#2a1a08');
+        // Face
+        X.fillStyle='#1a1006';
+        rect(X,wx+3,y+8,3,3); // head
+        // Glowing eyes
+        if(Math.sin(t*.005)>.2){
+          px(X,wx+3,y+9,P.f2);
+          px(X,wx+5,y+9,P.f2);
+        }
+      }
+    }
+
+    // ── CRACKED WINDSHIELD (front) ──
+    rect(X,x+50,y+3,8,15,P.dgrey);
+    rect(X,x+51,y+4,6,13,'#1a1a20');
+    // Cracks spider pattern
+    X.strokeStyle=P.lgrey;X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+53,y+10);X.lineTo(x+56,y+6);
+    X.moveTo(x+53,y+10);X.lineTo(x+57,y+15);
+    X.moveTo(x+53,y+10);X.lineTo(x+51,y+12);
+    X.moveTo(x+53,y+10);X.lineTo(x+52,y+5);
+    X.stroke();
+    // Central impact point
+    px(X,x+53,y+10,'#fff');
+
+    // ── DOOR (folding, ajar) ──
+    rect(X,x+50,y+18,8,12,'#1a1a20');
+    rect(X,x+51,y+19,3,10,'#0a0a0e');
+    rect(X,x+54,y+19,3,10,'#0a0a0e');
+    rect(X,x+53,y+19,1,10,P.rust); // hinge
+
+    // ── WHEELS — sunken, flat ──
+    // Front wheel
+    rect(X,x+42,y+30,12,5,'#0a0a0a');
+    rect(X,x+43,y+31,10,3,'#1a1a1a');
+    px(X,x+47,y+32,P.dgrey); // hubcap center
+    px(X,x+48,y+32,P.dgrey);
+    // Back wheel
+    rect(X,x+6,y+30,12,5,'#0a0a0a');
+    rect(X,x+7,y+31,10,3,'#1a1a1a');
+    px(X,x+11,y+32,P.dgrey);
+    px(X,x+12,y+32,P.dgrey);
+
+    // ── STOP SIGN arm (extended, broken) ──
+    rect(X,x-6,y+8,6,2,P.drust);
+    // Octagonal stop sign
+    rect(X,x-12,y+5,6,8,'#6b0f1a');
+    rect(X,x-11,y+4,4,1,'#6b0f1a');
+    rect(X,x-11,y+13,4,1,'#6b0f1a');
+    // "STOP" text (faded white)
+    rect(X,x-10,y+8,1,1,P.bone);
+    rect(X,x-9,y+8,1,1,P.bone);
+    rect(X,x-10,y+9,1,1,P.bone);
+    rect(X,x-8,y+9,1,1,P.bone);
+
+    // ── ROOF ESCAPE HATCH (open) ──
+    rect(X,x+30,y-2,10,3,'#1a1a1a');
+    rect(X,x+31,y-3,8,2,'#0a0a0a');
+
+    // ── HOOD MIRRORS (bent) ──
+    rect(X,x+57,y+2,2,3,P.dgrey);
+    px(X,x+58,y+1,P.lgrey);
+    rect(X,x-1,y+2,2,3,P.dgrey);
+
+    // ── SIDE MIRROR (left, hanging) ──
+    const mSway=Math.sin(t*.015)*.5;
+    rect(X,x-2,y+6+mSway,3,2,P.dgrey);
+
+    // ── HEADLIGHTS (broken glass, one flickering) ──
+    // Right headlight
+    rect(X,x+56,y+14,3,4,'#1a1a1a');
+    if(t%80<40){
+      px(X,x+57,y+15,P.amber);
+      X.globalAlpha=.15;
+      X.beginPath();X.arc(x+57,y+16,8,0,Math.PI*2);
+      X.fillStyle=P.amber;X.fill();
+      X.globalAlpha=1;
+    }
+    // Left headlight (broken)
+    rect(X,x+56,y+20,3,3,'#0a0a0a');
+    px(X,x+56,y+21,P.lgrey);
+
+    // ── RUST STREAKS ──
+    for(let i=0;i<8;i++){
+      const rx=x+5+hash(i,0,11)*50;
+      rect(X,rx,y+22,1,6,'#3a0a08');
+    }
+
+    // ── BACKPACK on the ground beside ──
+    rect(X,x+22,y+35,6,5,'#6b0f1a');
+    rect(X,x+22,y+35,6,1,'#4a0a12');
+    px(X,x+23,y+36,P.amber); // zipper
+    // Strap
+    rect(X,x+21,y+34,1,3,'#3a0a08');
+
+    // ── NOTEBOOK fallen out (instruction card peeking) ──
+    rect(X,x+30,y+37,4,2,P.dbone);
+    rect(X,x+30,y+37,4,1,'#6b0f1a');
+    // "v.47" hint
+    px(X,x+31,y+38,'#1a0a06');
+    px(X,x+33,y+38,'#1a0a06');
+
+    // ── VAULT-BOY BOBBLEHEAD on dashboard ──
+    // Through windshield
+    rect(X,x+52,y+14,2,2,'#8a6408');
+    rect(X,x+52,y+16,2,1,'#1b1464'); // vault suit blue
+    // Smile (even-in-apocalypse)
+    px(X,x+52,y+15,'#0a0a0a');
+
+    // ── FADED "NO 47" route sign ──
+    rect(X,x+18,y-2,14,4,P.dbone);
+    rect(X,x+19,y-1,12,2,'#1a1a22');
+    // Tiny "47"
+    rect(X,x+23,y,1,1,P.bone);
+    rect(X,x+25,y,1,1,P.bone);
+    rect(X,x+26,y,1,1,P.bone);
   },
   junkyard(x,y){
-    // Stacked crushed cars
-    for(let i=0;i<6;i++){
-      const cx_=x+i*14+hash(i,0,1)*8;
-      const cy_=y+hash(i,0,2)*40;
-      const w=12+hash(i,0,3)*10;
-      const h=8+hash(i,0,4)*12;
-      rect(X,cx_,cy_,w,h,P.dgrey);
-      dither(X,cx_+1,cy_+1,w-2,h-2,[P.rust,P.drust,P.ash,P.dstone][i%4],P.dgrey,.4);
+    // ═══ JUNKYARD — UNIFICATOR 3000 — CUBE FACTORY ═══
+    // Shadow
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+45,y+72,50,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── BACK WALL — corrugated metal fence ──
+    for(let i=0;i<22;i++){
+      rect(X,x+i*4,y,4,3,i%2?P.dgrey:'#1a1a1a');
+      rect(X,x+i*4,y+3,4,1,'#0a0a0a');
     }
-    // Oil puddle
-    dither(X,x+20,y+60,30,8,'#0a0a0a','#111',.5);
+    // Barbed wire top
+    X.strokeStyle=P.ash;X.lineWidth=1;
+    X.beginPath();X.moveTo(x,y);X.lineTo(x+90,y);X.stroke();
+    // Barbs
+    for(let i=0;i<10;i++){
+      px(X,x+i*9,y-1,P.ash);
+      px(X,x+i*9+1,y-2,P.ash);
+    }
+
+    // ── TOP ROW — 3 perfect grey cubes on an upper shelf ──
+    // Upper ledge/beam
+    rect(X,x+5,y+8,80,2,P.dgrey);
+    // 3 IDENTICAL cubes — this is the point: uniformity
+    for(let i=0;i<3;i++){
+      const cx_=x+12+i*26;
+      const cy_=y+0;
+      // Cube body (all identical 10x10)
+      rect(X,cx_,cy_,10,10,'#3a3a3a');
+      rect(X,cx_+1,cy_+1,8,8,'#2a2a2a');
+      // Highlight
+      rect(X,cx_+1,cy_+1,8,1,'#4a4a4a');
+      rect(X,cx_+1,cy_+1,1,8,'#4a4a4a');
+      // Shadow
+      rect(X,cx_+9,cy_+1,1,8,'#1a1a1a');
+      rect(X,cx_+1,cy_+9,8,1,'#1a1a1a');
+      // Barely-visible serial code
+      px(X,cx_+3,cy_+5,'#4a4a4a');
+      px(X,cx_+4,cy_+5,'#4a4a4a');
+      px(X,cx_+6,cy_+5,'#4a4a4a');
+    }
+
+    // ── UNIFICATOR 3000 machine (left side) ──
+    rect(X,x-2,y+20,14,40,P.dgrey);
+    rect(X,x,y+22,10,36,'#1a1a1a');
+    // Machine lettering
+    X.fillStyle=P.rust;
+    rect(X,x+2,y+25,1,1);rect(X,x+4,y+25,1,1);rect(X,x+6,y+25,1,1);rect(X,x+8,y+25,1,1);
+    // Control panel
+    rect(X,x+1,y+30,8,6,P.dstone);
+    // Blinking lights
+    if(t%60<30)px(X,x+3,y+32,P.f2);
+    else px(X,x+3,y+32,'#3a0808');
+    if(t%80<40)px(X,x+6,y+32,P.gold);
+    // Warning sticker
+    rect(X,x+2,y+38,6,4,P.damber);
+    rect(X,x+3,y+39,4,2,'#1a0a06');
+    px(X,x+5,y+40,P.amber); // exclamation
+    // Input slot (funnel)
+    X.fillStyle=P.dgrey;
+    X.beginPath();
+    X.moveTo(x,y+44);X.lineTo(x+10,y+44);X.lineTo(x+7,y+50);X.lineTo(x+3,y+50);X.closePath();X.fill();
+    X.fillStyle='#0a0a0a';
+    X.beginPath();
+    X.moveTo(x+1,y+45);X.lineTo(x+9,y+45);X.lineTo(x+6,y+49);X.lineTo(x+4,y+49);X.closePath();X.fill();
+    // Output chute to cubes (belt)
+    rect(X,x+10,y+52,30,3,'#1a1a1a');
+    rect(X,x+10,y+52,30,1,'#3a3a3a');
+    // Belt rollers
+    for(let i=0;i<4;i++){
+      px(X,x+14+i*7,y+54,P.dgrey);
+    }
+
+    // ── MAIN PILE — 12 cubes in various rows ──
+    const cubePositions=[
+      [12,62],[23,62],[34,62],[45,62],[56,62],[67,62],
+      [17,52],[28,52],[39,52],[50,52],[61,52],[72,52],
+      [22,42],[33,42],[44,42],[55,42],[66,42],
+    ];
+    cubePositions.forEach(([cPx,cPy],i)=>{
+      const cx_=x+cPx;
+      const cy_=y+cPy;
+      // Identical 10x10 cube
+      rect(X,cx_,cy_,10,10,'#3a3a3a');
+      rect(X,cx_+1,cy_+1,8,8,'#2a2a2a');
+      // Highlight
+      rect(X,cx_+1,cy_+1,8,1,'#4a4a4a');
+      rect(X,cx_+1,cy_+1,1,8,'#4a4a4a');
+      // Shadow
+      rect(X,cx_+9,cy_+1,1,8,'#1a1a1a');
+      rect(X,cx_+1,cy_+9,8,1,'#1a1a1a');
+      // Hints of what WAS — barely visible
+      const ghost=[P.rust,P.crimson,P.amber,P.celestial,P.bone,P.toxic,P.gold][i%7];
+      X.globalAlpha=.12;
+      rect(X,cx_+3,cy_+3,4,4,ghost);
+      X.globalAlpha=1;
+      // Serial numbers — all identical
+      X.fillStyle='#4a4a4a';
+      px(X,cx_+2,cy_+7);px(X,cx_+4,cy_+7);px(X,cx_+6,cy_+7);
+    });
+
+    // ── ONE NON-CUBE sticking out — irregular, colored ──
+    // The "not-cube" in the crack between cubes
+    const ncX=x+44,ncY=y+48;
+    rect(X,ncX,ncY,3,4,P.crimson);
+    px(X,ncX+1,ncY-1,P.rust);
+    rect(X,ncX,ncY+2,2,1,P.damber);
+    // A tiny glint
+    if(Math.sin(t*.02)>.5){
+      px(X,ncX+1,ncY+1,P.gold);
+    }
+
+    // ── CONVEYOR belt top — items waiting to be unified ──
+    // Apple
+    rect(X,x+14,y+49,3,3,P.crimson);
+    px(X,x+15,y+48,'#2a1806'); // stem
+    // Book
+    rect(X,x+20,y+49,3,2,'#1b1464');
+    // Idea (lightbulb silhouette)
+    rect(X,x+26,y+49,2,2,P.amber);
+    px(X,x+27,y+48,P.damber);
+
+    // ── OIL PUDDLE beneath ──
+    dither(X,x+20,y+74,36,4,'#0a0a0a','#111',.5);
+    // Oil slick rainbow shimmer
+    for(let i=0;i<6;i++){
+      const rx=x+24+i*5;
+      const ry=y+75;
+      X.globalAlpha=.2+.1*Math.sin(t*.01+i);
+      px(X,rx,ry,['#6b0f1a','#daa520','#4a7fb5','#1b1464','#4a0a12','#8a6408'][i]);
+      X.globalAlpha=1;
+    }
+
+    // ── TINY "NOT A CUBE" sign nailed to wall ──
+    rect(X,x+76,y+14,10,5,P.dbone);
+    rect(X,x+77,y+15,8,3,P.dbone);
+    // Scratched text
+    X.fillStyle='#1a0a06';
+    rect(X,x+78,y+16,1,1);rect(X,x+80,y+16,1,1);rect(X,x+82,y+16,1,1);rect(X,x+84,y+16,1,1);
+    rect(X,x+78,y+17,1,1);rect(X,x+81,y+17,1,1);rect(X,x+84,y+17,1,1);
+
+    // ── TESLA-T CUBE — one cube with a "T" carved into it ──
+    // Top-middle cube of top row, with a T scratch
+    X.fillStyle='#4a4a4a';
+    rect(X,x+41,y+3,3,1);
+    rect(X,x+42,y+3,1,5);
+
+    // ── CROWS perched on cubes ──
+    rect(X,x+25,y+1,2,1,'#050505');
+    rect(X,x+50,y+1,2,1,'#050505');
+    if(t%400<10){
+      // One flies away
+      X.globalAlpha=.6;
+      px(X,x+27+(t%400)*2,y-(t%400),'#050505');
+      X.globalAlpha=1;
+    }
   },
   church(x,y){
     // ═══ GOTHIC CHURCH — detailed ═══
@@ -2969,21 +3710,200 @@ const locDraw={
     px(X,x+44,y+61,P.dbone);
   },
   fountain(x,y){
-    // Basin
-    X.fillStyle=P.stone;X.beginPath();X.ellipse(x+25,y+30,25,12,0,0,Math.PI*2);X.fill();
-    X.fillStyle=P.dstone;X.beginPath();X.ellipse(x+25,y+30,22,10,0,0,Math.PI*2);X.fill();
-    // Toxic water inside
-    X.globalAlpha=.6;X.fillStyle=P.toxic;X.beginPath();X.ellipse(x+25,y+31,20,8,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-    // Headless angel
-    rect(X,x+21,y+8,8,20,P.stone);rect(X,x+22,y+10,6,16,P.lstone);
-    // Arms (broken)
+    // ═══ FOUNTAIN — HEADLESS ANGEL / PLAGUE MEMORIAL ═══
+    // Shadow
+    X.globalAlpha=.3;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+25,y+42,28,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── OUTER BASIN — three-tier stone ring ──
+    // Outermost ring
+    X.fillStyle=P.dstone;
+    X.beginPath();X.ellipse(x+25,y+32,28,13,0,0,Math.PI*2);X.fill();
+    X.fillStyle=P.stone;
+    X.beginPath();X.ellipse(x+25,y+32,26,12,0,0,Math.PI*2);X.fill();
+    // Stone block segments on rim
+    for(let i=0;i<16;i++){
+      const ang=i/16*Math.PI*2;
+      const bx=x+25+Math.cos(ang)*26;
+      const by=y+32+Math.sin(ang)*12;
+      rect(X,bx-1,by-1,2,2,i%2?P.lstone:P.dstone);
+    }
+    // Inner basin
+    X.fillStyle=P.dstone;
+    X.beginPath();X.ellipse(x+25,y+32,22,10,0,0,Math.PI*2);X.fill();
+
+    // Cracks in basin
+    X.fillStyle='#0a0a0e';
+    rect(X,x+5,y+28,6,1);
+    rect(X,x+8,y+29,2,2);
+    rect(X,x+40,y+35,5,1);
+    rect(X,x+42,y+36,2,1);
+
+    // ── TOXIC JIJA inside ──
+    X.globalAlpha=.7;
+    X.fillStyle=P.dtoxic;
+    X.beginPath();X.ellipse(x+25,y+33,20,8,0,0,Math.PI*2);X.fill();
+    X.fillStyle=P.toxic;
+    X.beginPath();X.ellipse(x+25,y+33,18,7,0,0,Math.PI*2);X.fill();
+    X.globalAlpha=1;
+    // Ripples on the surface
+    for(let i=0;i<4;i++){
+      const rPhase=((t*.01+i*.25)%1);
+      X.globalAlpha=(1-rPhase)*.3;
+      X.strokeStyle=P.btoxic;X.lineWidth=1;
+      X.beginPath();
+      X.ellipse(x+25,y+33,4+rPhase*14,1+rPhase*5,0,0,Math.PI*2);
+      X.stroke();
+      X.globalAlpha=1;
+    }
+    // Floating bubbles
+    for(let i=0;i<4;i++){
+      if(hash(i,Math.floor(t*.005),55)>.5){
+        const bx=x+12+hash(i,0,11)*26;
+        const by=y+30+hash(i,0,22)*6;
+        px(X,bx,by,P.btoxic);
+      }
+    }
+
+    // ── PEDESTAL ──
+    rect(X,x+19,y+26,12,6,P.stone);
+    rect(X,x+20,y+27,10,4,P.lstone);
+    // Carved border
+    rect(X,x+19,y+30,12,1,P.dstone);
+    // Weathered "ПОМНИ" text
+    X.fillStyle='#1a1a22';
+    rect(X,x+21,y+28,1,2);rect(X,x+23,y+28,1,2);rect(X,x+22,y+29,1,1); // П
+    rect(X,x+25,y+28,1,2);rect(X,x+26,y+28,1,1);rect(X,x+26,y+29,1,1); // О fragment
+    rect(X,x+28,y+28,1,2);rect(X,x+29,y+29,1,1); // М fragment
+
+    // ── HEADLESS ANGEL STATUE ──
+    // Draped robe (wider at base)
+    X.fillStyle=P.stone;
+    X.beginPath();
+    X.moveTo(x+20,y+26);
+    X.lineTo(x+22,y+10);
+    X.lineTo(x+28,y+10);
+    X.lineTo(x+30,y+26);
+    X.closePath();X.fill();
+    // Fold highlights
+    X.fillStyle=P.lstone;
+    rect(X,x+22,y+12,1,14);
+    rect(X,x+25,y+12,1,14);
+    rect(X,x+28,y+12,1,14);
+    // Shadow folds
+    X.fillStyle=P.dstone;
+    rect(X,x+23,y+14,1,10);
+    rect(X,x+27,y+14,1,10);
+
+    // ── BROKEN WINGS (half missing, jagged edges) ──
+    // Left wing — mostly intact
+    X.fillStyle=P.stone;
+    X.beginPath();
+    X.moveTo(x+22,y+10);
+    X.lineTo(x+14,y+8);
+    X.lineTo(x+10,y+12);
+    X.lineTo(x+13,y+16);
+    X.lineTo(x+20,y+14);
+    X.closePath();X.fill();
+    // Wing feather details
+    X.fillStyle=P.dstone;
+    rect(X,x+12,y+10,5,1);
+    rect(X,x+13,y+12,4,1);
+    rect(X,x+15,y+14,3,1);
+    // Cracks on left wing
+    X.fillStyle='#0a0a0e';
+    rect(X,x+13,y+11,1,3);
+
+    // Right wing — BROKEN OFF (just stub with jagged edge)
+    X.fillStyle=P.stone;
+    X.beginPath();
+    X.moveTo(x+28,y+10);
+    X.lineTo(x+32,y+9);
+    X.lineTo(x+34,y+12);
+    X.lineTo(x+30,y+14);
+    X.closePath();X.fill();
+    // Jagged break line
+    X.fillStyle='#0a0a0e';
+    rect(X,x+34,y+10,1,1);
+    rect(X,x+35,y+11,1,1);
+    rect(X,x+33,y+13,2,1);
+    // Rubble on ground from broken wing
+    rect(X,x+38,y+30,3,2,P.stone);
+    rect(X,x+40,y+29,2,1,P.dstone);
+
+    // ── BROKEN ARMS ──
+    // Left arm — holding cup forever
     rect(X,x+17,y+14,5,3,P.stone);
-    // Missing head - just neck
-    rect(X,x+23,y+6,4,4,P.stone);
-    // Pedestal
-    rect(X,x+19,y+28,12,5,P.stone);
-    // "ПОМНИ" text
-    rect(X,x+20,y+30,10,1,P.lgrey);
+    rect(X,x+17,y+14,5,1,P.lstone);
+    // Cup (broken)
+    rect(X,x+15,y+15,2,3,P.dstone);
+    // Right arm — stub only
+    rect(X,x+28,y+14,2,3,P.stone);
+    // Broken piece on ground
+    rect(X,x+34,y+20,3,2,P.stone);
+
+    // ── NECK (no head, just jagged break) ──
+    rect(X,x+24,y+8,3,2,P.stone);
+    X.fillStyle='#0a0a0e';
+    rect(X,x+24,y+7,1,1);
+    rect(X,x+26,y+7,1,1);
+    // Bloodstain trail down the robe (dried)
+    X.fillStyle='#3a0608';
+    rect(X,x+25,y+9,1,4);
+    rect(X,x+25,y+14,1,2);
+
+    // ── FALLEN HEAD lying in the basin ──
+    X.fillStyle=P.stone;
+    X.beginPath();X.ellipse(x+38,y+34,3,2,0,0,Math.PI*2);X.fill();
+    X.fillStyle=P.lstone;
+    X.beginPath();X.ellipse(x+38,y+34,2,1.5,0,0,Math.PI*2);X.fill();
+    // Eye sockets
+    px(X,x+37,y+34,'#0a0a0e');
+    px(X,x+39,y+34,'#0a0a0e');
+    // Cracked nose
+    px(X,x+38,y+35,'#1a1a22');
+
+    // ── CRYING FACE CARVING visible on pedestal front ──
+    X.fillStyle='#0a0a0e';
+    // Two eyes
+    px(X,x+22,y+25,'#0a0a0e');
+    px(X,x+27,y+25,'#0a0a0e');
+    // Down-curve mouth
+    rect(X,x+23,y+27,3,1,'#0a0a0e');
+    px(X,x+22,y+26,'#0a0a0e');
+    px(X,x+26,y+26,'#0a0a0e');
+
+    // ── DEAD RAT (Camus plague reference) ──
+    rect(X,x+8,y+38,5,2,'#0a0a0e');
+    rect(X,x+9,y+37,3,1,'#0a0a0e');
+    // Tail
+    rect(X,x+12,y+40,3,1,'#0a0a0e');
+    // Dr. Rieux's hat on the rat (tiny)
+    rect(X,x+9,y+36,3,1,'#1a0a06');
+    rect(X,x+10,y+35,1,1,'#1a0a06');
+
+    // ── CANDLES around the basin (mourners' offerings) ──
+    for(let i=0;i<5;i++){
+      const ang=(i/5)*Math.PI*2+Math.PI/2;
+      const cx_=x+25+Math.cos(ang)*30;
+      const cy_=y+32+Math.sin(ang)*14;
+      rect(X,cx_,cy_-3,1,3,P.bone);
+      // Some still burning
+      if(hash(i,0,11)>.5){
+        const fl=Math.sin(t*.04+i*2)*.4;
+        px(X,cx_+fl,cy_-4,P.f2);
+        // Tiny glow
+        X.globalAlpha=.1;
+        X.beginPath();X.arc(cx_,cy_-3,5,0,Math.PI*2);
+        X.fillStyle=P.amber;X.fill();
+        X.globalAlpha=1;
+      }
+    }
+
+    // ── DRIED FLOWERS (once offerings) ──
+    rect(X,x+32,y+36,2,1,'#3a0a08');
+    rect(X,x+33,y+37,1,1,'#1a0404');
+    rect(X,x+16,y+36,1,2,'#2a1806');
   },
   crypt(x,y){
     // ═══ CRYPT — DANTE'S NINE CIRCLES ═══
