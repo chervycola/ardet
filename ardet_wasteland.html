@@ -6431,6 +6431,34 @@ function drawPlayer(){
   if(player.moving){const step=Math.floor(t*.018)%2;rect(X,sx+2,by+19,3,3,P.d1);rect(X,sx+8+(step?1:-1),by+19,3,3,P.d1);}
   else{rect(X,sx+2,by+19,3,3,P.d1);rect(X,sx+8,by+19,3,3,P.d1);}
   rect(X,sx,by+5,14,15,P.d1);dither(X,sx+1,by+6,12,13,P.dgrey,P.d1,.3);
+  // ── CHEST FIRE — Ardet burns from inside ──
+  // Carve a small dark cavity in the torso
+  rect(X,sx+5,by+9,4,5,'#040404');
+  // Flame body
+  const chFl=Math.sin(t*.05)*.5;
+  const cfx=sx+6,cfy=by+12;
+  // Bottom base (crimson)
+  rect(X,cfx,cfy,3,1,P.f3);
+  // Mid layer (orange)
+  rect(X,cfx+chFl*.3,cfy-1,3,1,P.f1);
+  // Upper layer (gold)
+  rect(X,cfx+1+chFl*.5,cfy-2,2,1,P.f2);
+  // Hot core
+  px(X,cfx+1+chFl*.5,cfy-3,'#ffffcc');
+  // Glow halo
+  X.globalAlpha=.15+.06*Math.sin(t*.04);
+  const cgr=X.createRadialGradient(cfx+1,cfy,0,cfx+1,cfy,10);
+  cgr.addColorStop(0,'rgba(255,100,20,.9)');
+  cgr.addColorStop(1,'rgba(0,0,0,0)');
+  X.fillStyle=cgr;X.fillRect(cfx-9,cfy-10,20,20);
+  X.globalAlpha=1;
+  // Occasional ember rising
+  if(t%30<3){
+    const ePh=(t%30)/3;
+    X.globalAlpha=1-ePh;
+    px(X,cfx+1+Math.sin(t*.1)*1,cfy-4-ePh*3,P.f2);
+    X.globalAlpha=1;
+  }
   rect(X,sx+2,by-2,10,8,P.d1);rect(X,sx+3,by-1,8,6,'#0a0808');
   rect(X,sx+4,by+1,6,3,P.d2);
   const eg=.4+.25*Math.sin(t*.009);X.globalAlpha=eg;px(X,sx+5,by+2,P.bone);px(X,sx+8,by+2,P.bone);X.globalAlpha=1;
@@ -8380,71 +8408,345 @@ function triggerGreenPit(){
       for(let i=0;i<7;i++){pX.fillRect(250+i*5,60,1,10);}
       pX.fillRect(250,65,35,1); // cross mark
       
-      // ── FIGURE 1 — братишка, sitting against left wall ──
-      pX.fillStyle='#0e120c';
-      pX.fillRect(60,130,16,30); // body
-      pX.fillRect(63,120,10,12); // head
-      pX.fillRect(52,140,10,8); // knees
-      pX.fillRect(76,145,12,4); // arm out (holding)
-      // Bowl of kasha in hand
-      pX.fillStyle='#2a2a2e';pX.fillRect(86,142,8,5);
-      pX.fillStyle='#3a3228';pX.fillRect(87,143,6,2); // contents
+      // ── SHARED НАРЫ (prison bunk bed) across the cell ──
+      // Metal frame — main horizontal bar
+      pX.fillStyle='#1a1a1a';
+      pX.fillRect(30,156,260,4);
+      pX.fillStyle='#2a2a2a';
+      pX.fillRect(30,156,260,1); // top highlight
+      pX.fillStyle='#0a0a0a';
+      pX.fillRect(30,160,260,1); // bottom shadow
+
+      // Metal legs (4 front legs)
+      pX.fillStyle='#1a1a1a';
+      [40,120,200,280].forEach(lx=>{
+        pX.fillRect(lx,160,3,20); // front leg
+        pX.fillRect(lx+2,163,2,17); // back leg (depth)
+      });
+      // Cross-braces between legs
+      pX.fillStyle='#2a2a2a';
+      pX.fillRect(43,170,77,1);
+      pX.fillRect(123,170,77,1);
+      pX.fillRect(203,170,77,1);
+      // Rust stains on legs
+      pX.fillStyle='#3a0a08';
+      pX.fillRect(41,168,1,3);
+      pX.fillRect(201,172,1,4);
+
+      // Wooden planks on top of metal frame
+      for(let i=0;i<13;i++){
+        const plX=32+i*20;
+        pX.fillStyle=hash(i,0,11)>.5?'#3a2818':'#2a1a0e';
+        pX.fillRect(plX,154,19,2);
+        // Plank seam
+        pX.fillStyle='#0a0604';
+        pX.fillRect(plX+19,154,1,2);
+        // Grain
+        if(hash(i,0,22)>.5){
+          pX.fillStyle='#1a0e06';
+          pX.fillRect(plX+5,155,8,1);
+        }
+      }
+
+      // ── MATTRESSES — two thin striped prison mats ──
+      // Left mattress (under bratishka)
+      pX.fillStyle='#4a3a2a';
+      pX.fillRect(40,149,80,5);
+      pX.fillStyle='#3a2a1a';
+      for(let i=0;i<8;i++)pX.fillRect(44+i*10,149,2,5);
+      pX.fillStyle='#2a1a08';
+      pX.fillRect(40,153,80,1); // shadow edge
+      // Stains
+      pX.fillStyle='#3a0608';
+      pX.fillRect(55,150,3,1);
+      pX.fillRect(98,151,4,1);
+
+      // Right mattress (under Durov)
+      pX.fillStyle='#4a3a2a';
+      pX.fillRect(190,149,80,5);
+      pX.fillStyle='#3a2a1a';
+      for(let i=0;i<8;i++)pX.fillRect(194+i*10,149,2,5);
+      pX.fillStyle='#2a1a08';
+      pX.fillRect(190,153,80,1);
+
+      // Rolled blanket between them (shared)
+      pX.fillStyle='#2a1810';
+      pX.fillRect(140,146,40,4);
+      pX.fillStyle='#3a2818';
+      pX.fillRect(141,147,38,2);
+      pX.fillStyle='#4a2818';
+      pX.fillRect(145,147,2,2);pX.fillRect(155,147,2,2);
+      pX.fillRect(165,147,2,2);pX.fillRect(175,147,2,2);
+
+      // ── BRATISHKA — pixel art on нары ──
+      const brBrth=Math.sin(timer*.008)*.3;
+      // Legs dangling off bunk
+      pX.fillStyle='#1a0e06';
+      pX.fillRect(55,154,4,18); // left leg
+      pX.fillRect(67,154,4,18); // right leg
+      // Dirty valenki
+      pX.fillStyle='#0a0604';
+      pX.fillRect(53,170,6,4);
+      pX.fillRect(65,170,6,4);
+      // Pants
+      pX.fillStyle='#1a1a22';
+      pX.fillRect(54,148,18,8);
+      // Belt
+      pX.fillStyle='#0a0604';
+      pX.fillRect(54,148,18,1);
+
+      // Torso — checkered shirt
+      pX.fillStyle='#2a1a10';
+      pX.fillRect(53,130+brBrth,20,19);
+      // Checker pattern
+      pX.fillStyle='#3a2818';
+      for(let cy=0;cy<6;cy++)for(let cx=0;cx<5;cx++){
+        if((cx+cy)%2)pX.fillRect(53+cx*4,132+cy*3+brBrth,3,2);
+      }
+      // Shoulders
+      pX.fillStyle='#1a0e06';
+      pX.fillRect(52,132+brBrth,22,2);
+
+      // Arms
+      pX.fillStyle='#2a1a10';
+      pX.fillRect(50,138+brBrth,4,12);
+      pX.fillRect(72,138+brBrth,4,10);
+      // Right arm extended forward with bowl
+      pX.fillRect(74,144+brBrth,10,3);
+
+      // Hands
+      pX.fillStyle='#3a2820';
+      pX.fillRect(49,148+brBrth,4,3);
+      pX.fillRect(84,144+brBrth,3,3);
+
+      // Head — balding, stubble
+      pX.fillStyle='#2a1a10';
+      pX.fillRect(55,118+brBrth,14,14);
+      // Skin tone under stubble
+      pX.fillStyle='#3a2418';
+      pX.fillRect(56,119+brBrth,12,12);
+      // Shadow side
+      pX.fillStyle='#1a0e06';
+      pX.fillRect(55,119+brBrth,2,12);
+      // Eyes — narrow, tired
+      pX.fillStyle='#050404';
+      pX.fillRect(58,124+brBrth,2,1);
+      pX.fillRect(64,124+brBrth,2,1);
+      // Nose
+      pX.fillRect(61,125+brBrth,2,3);
+      // Mouth — thin, half-smile
+      pX.fillRect(59,129+brBrth,5,1);
+      px(pX,64,129+brBrth,'#1a0a06');
+      // Stubble dots
+      for(let i=0;i<6;i++){
+        px(pX,57+hash(i,0,11)*10,128+brBrth+hash(i,0,22)*2,'#1a0a06');
+      }
+      // Scar
+      pX.fillStyle='#3a0a08';
+      pX.fillRect(56,122+brBrth,3,1);
+
+      // Bowl of kasha in extended hand
+      pX.fillStyle='#3a3a3e';
+      pX.fillRect(86,143+brBrth,9,5);
+      pX.fillStyle='#2a2a2e';
+      pX.fillRect(87,144+brBrth,7,3);
+      // Kasha contents
+      pX.fillStyle='#4a3a28';
+      pX.fillRect(88,144+brBrth,5,2);
       // Steam from bowl
       if(timer%40<20){
-        pX.globalAlpha=.3;pX.fillStyle='#8a8d8f';
-        pX.fillRect(88+Math.sin(timer*.08)*1,138,1,3);
-        pX.fillRect(91+Math.sin(timer*.08+1)*1,137,1,4);
+        pX.globalAlpha=.35;pX.fillStyle='#8a8d8f';
+        pX.fillRect(89+Math.sin(timer*.08)*1,138+brBrth,1,4);
+        pX.fillRect(92+Math.sin(timer*.08+1)*1,137+brBrth,1,5);
         pX.globalAlpha=1;
       }
 
-      // ── FIGURE 2 — Pavel Durov, sitting against right wall ──
-      // Black turtleneck body
-      pX.fillStyle='#0a0a10';
-      pX.fillRect(218,130,18,30);
-      // Turtleneck collar
+      // ── PAVEL DUROV — detailed pixel art on нары ──
+      const dBrth=Math.sin(timer*.005)*.3; // slower, controlled breathing
+      const dX=215,dY=116;
+
+      // Legs — dark jeans, one crossed over the other
+      pX.fillStyle='#0a0a14';
+      // Right leg (crossed on top, horizontal)
+      pX.fillRect(dX+2,dY+32,6,14);
+      pX.fillRect(dX-4,dY+38,12,4); // horizontal ankle crossing
+      // Left leg (underneath, dangling)
+      pX.fillRect(dX+14,dY+32,6,18);
+      // Pant fold highlights
+      pX.fillStyle='#1a1a22';
+      pX.fillRect(dX+2,dY+32,6,1);
+      pX.fillRect(dX+14,dY+32,6,1);
+      pX.fillRect(dX-4,dY+38,12,1);
+      // Expensive leather shoes
+      pX.fillStyle='#050505';
+      pX.fillRect(dX-5,dY+42,5,3);
+      pX.fillRect(dX+14,dY+48,7,3);
+      // Shoe shine
+      px(pX,dX-3,dY+42,'#2a2a2a');
+      px(pX,dX+16,dY+48,'#2a2a2a');
+
+      // Belt area
+      pX.fillStyle='#050505';
+      pX.fillRect(dX,dY+30,20,2);
+      // Belt buckle
+      pX.fillStyle='#8a6408';
+      pX.fillRect(dX+9,dY+30,3,2);
+
+      // Torso — BLACK TURTLENECK, fitted
+      pX.fillStyle='#0a0a12';
+      pX.fillRect(dX,dY+14+dBrth,20,16);
+      // Shoulders
+      pX.fillStyle='#1a1a22';
+      pX.fillRect(dX,dY+14+dBrth,20,1);
+      pX.fillRect(dX-1,dY+15+dBrth,2,4);
+      pX.fillRect(dX+19,dY+15+dBrth,2,4);
+      // Fabric folds
       pX.fillStyle='#050508';
-      pX.fillRect(220,128,14,3);
-      // Head — bald, pale
-      pX.fillStyle='#1a1814';
-      pX.fillRect(222,116,12,12);
-      // Beard — short
+      pX.fillRect(dX+4,dY+18+dBrth,1,10);
+      pX.fillRect(dX+15,dY+18+dBrth,1,10);
+      // Subtle chest highlight
+      pX.fillStyle='#15151a';
+      pX.fillRect(dX+6,dY+17+dBrth,8,8);
+
+      // Turtleneck collar (signature)
+      pX.fillStyle='#050508';
+      pX.fillRect(dX+5,dY+12+dBrth,10,3);
+      pX.fillRect(dX+6,dY+11+dBrth,8,2);
+      pX.fillStyle='#1a1a22';
+      pX.fillRect(dX+6,dY+11+dBrth,8,1); // top seam
+
+      // Arms resting down
+      pX.fillStyle='#0a0a12';
+      pX.fillRect(dX-1,dY+18+dBrth,3,12);
+      pX.fillRect(dX,dY+28+dBrth,4,4);
+      pX.fillRect(dX+18,dY+18+dBrth,3,12);
+      pX.fillRect(dX+16,dY+28+dBrth,4,4);
+      // Arm shadows
+      pX.fillStyle='#050508';
+      pX.fillRect(dX-1,dY+18+dBrth,1,12);
+      pX.fillRect(dX+20,dY+18+dBrth,1,12);
+
+      // Hands — pale, thin
+      pX.fillStyle='#3a2c22';
+      pX.fillRect(dX+1,dY+32+dBrth,3,3); // left hand
+      pX.fillRect(dX+16,dY+32+dBrth,3,3); // right hand (holding phone)
+      px(pX,dX+2,dY+32+dBrth,'#1a1208');
+      px(pX,dX+17,dY+32+dBrth,'#1a1208');
+
+      // ── HEAD — bald, detailed ──
+      pX.fillStyle='#2a1e14';
+      pX.fillRect(dX+3,dY,14,13);
+      // Forehead shine (bald highlight)
+      pX.fillStyle='#3a2e20';
+      pX.fillRect(dX+4,dY+1,12,3);
+      pX.fillStyle='#4a3a28';
+      pX.fillRect(dX+6,dY+2,8,1);
+      // Left shadow side
+      pX.fillStyle='#1a120a';
+      pX.fillRect(dX+3,dY+3,2,9);
+      // Top of head
+      pX.fillStyle='#1a120a';
+      pX.fillRect(dX+3,dY,14,1);
+      // Ears
+      pX.fillStyle='#2a1e14';
+      pX.fillRect(dX+2,dY+4,1,3);
+      pX.fillRect(dX+17,dY+4,1,3);
+      px(pX,dX+2,dY+5,'#1a120a');
+      px(pX,dX+17,dY+5,'#1a120a');
+
+      // Brows
+      pX.fillStyle='#050404';
+      pX.fillRect(dX+5,dY+4,3,1);
+      pX.fillRect(dX+12,dY+4,3,1);
+
+      // Eyes — serious
+      pX.fillStyle='#050404';
+      pX.fillRect(dX+5,dY+5,3,2);
+      pX.fillRect(dX+12,dY+5,3,2);
+      // Eye whites
+      pX.fillStyle='#3a3a42';
+      pX.fillRect(dX+6,dY+6,1,1);
+      pX.fillRect(dX+13,dY+6,1,1);
+      // Iris
+      px(pX,dX+6,dY+6,'#1a3a6a');
+      px(pX,dX+13,dY+6,'#1a3a6a');
+
+      // Nose
+      pX.fillStyle='#1a120a';
+      pX.fillRect(dX+9,dY+6,2,4);
+      pX.fillStyle='#2a1e14';
+      pX.fillRect(dX+9,dY+6,1,4);
+      // Nostrils
+      px(pX,dX+9,dY+9,'#050404');
+      px(pX,dX+10,dY+9,'#050404');
+
+      // BEARD — short, neat
       pX.fillStyle='#0a0806';
-      pX.fillRect(223,123,10,4);
-      // Mouth — thin line
+      pX.fillRect(dX+4,dY+9,12,4);
       pX.fillStyle='#050404';
-      pX.fillRect(226,125,4,1);
-      // Eye sockets — shadows
+      pX.fillRect(dX+4,dY+9,12,1);
+      // Mustache
       pX.fillStyle='#050404';
-      pX.fillRect(224,119,2,1);pX.fillRect(230,119,2,1);
-      // Knees drawn up
-      pX.fillStyle='#0a0a10';
-      pX.fillRect(210,140,10,8);
-      pX.fillRect(236,140,8,6);
-      // Arm holding phone
-      pX.fillStyle='#0a0a10';
-      pX.fillRect(204,138,8,4);
-      // Phone in hand — Nokia-like dark rectangle
-      pX.fillStyle='#1a1a20';pX.fillRect(200,135,6,9);
-      pX.fillStyle='#0a0a10';pX.fillRect(201,136,4,7);
-      // Phone screen — faint Telegram-blue glow
-      const phoneGlow=.3+.2*Math.sin(timer*.04);
-      pX.globalAlpha=phoneGlow;
-      pX.fillStyle='#2e5a8f';pX.fillRect(201,137,4,5);
-      pX.globalAlpha=phoneGlow*.4;
-      // Glow bloom outward
-      pX.fillStyle='#4a7fb5';pX.fillRect(199,134,8,11);
-      pX.globalAlpha=1;
-      // Blue reflection on Durov's face from the phone
-      pX.globalAlpha=phoneGlow*.25;
+      pX.fillRect(dX+7,dY+9,6,1);
+      // Beard highlight
+      pX.fillStyle='#1a0e08';
+      pX.fillRect(dX+5,dY+11,10,1);
+      // Mouth
+      pX.fillStyle='#1a0804';
+      pX.fillRect(dX+8,dY+10,4,1);
+
+      // ── PHONE in right hand — detailed ──
+      pX.fillStyle='#1a1a20';
+      pX.fillRect(dX+14,dY+30+dBrth,9,12);
+      pX.fillStyle='#0a0a12';
+      pX.fillRect(dX+15,dY+31+dBrth,7,10);
+      // Screen
+      const phpls=.5+.3*Math.sin(timer*.04);
+      pX.globalAlpha=phpls;
+      pX.fillStyle='#2e5a8f';
+      pX.fillRect(dX+15,dY+31+dBrth,7,8);
+      // Telegram logo silhouette (tiny)
       pX.fillStyle='#4a7fb5';
-      pX.fillRect(222,118,6,6);
+      pX.fillRect(dX+17,dY+33+dBrth,3,4);
+      pX.fillStyle='#6a9fcf';
+      pX.fillRect(dX+18,dY+34+dBrth,2,2);
       pX.globalAlpha=1;
-      // Small "No Signal" icon bar above phone (3 static dashes)
-      if(timer%30<15){
-        pX.globalAlpha=.4;pX.fillStyle='#8b0000';
-        pX.fillRect(201,133,1,1);pX.fillRect(203,133,1,1);pX.fillRect(205,133,1,1);
+      // Home button
+      pX.fillStyle='#0a0a12';
+      pX.fillRect(dX+18,dY+40+dBrth,1,1);
+      // Phone edge highlight
+      pX.fillStyle='#2a2a30';
+      pX.fillRect(dX+14,dY+30+dBrth,9,1);
+
+      // "NO SIGNAL" bars
+      if(timer%40<20){
+        pX.globalAlpha=.5;
+        pX.fillStyle='#8b0000';
+        pX.fillRect(dX+16,dY+29+dBrth,1,1);
+        pX.fillRect(dX+18,dY+29+dBrth,1,1);
+        pX.fillRect(dX+20,dY+29+dBrth,1,1);
         pX.globalAlpha=1;
       }
+
+      // Phone glow on face (blue reflection)
+      pX.globalAlpha=phpls*.3;
+      pX.fillStyle='#4a7fb5';
+      pX.fillRect(dX+3,dY+5,14,7);
+      pX.globalAlpha=1;
+
+      // Big radial glow around phone
+      pX.globalAlpha=.18+.06*Math.sin(timer*.05);
+      const dphGrad=pX.createRadialGradient(dX+18,dY+36,0,dX+18,dY+36,22);
+      dphGrad.addColorStop(0,'rgba(74,127,181,1)');
+      dphGrad.addColorStop(1,'rgba(0,0,0,0)');
+      pX.fillStyle=dphGrad;
+      pX.fillRect(dX-4,dY+14,44,44);
+      pX.globalAlpha=1;
+
+      // Expensive watch on left wrist
+      pX.fillStyle='#8a6408';
+      pX.fillRect(dX-2,dY+29+dBrth,2,2);
+      px(pX,dX-2,dY+29+dBrth,'#daa520');
       
       // Dripping from ceiling
       if(timer%50<10){
