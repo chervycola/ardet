@@ -974,7 +974,7 @@ function getZoneName(zone){
 }
 
 // ═══════════════════════════════════════
-// LOCATIONS (31)
+// LOCATIONS (32)
 // ═══════════════════════════════════════
 const locs=[
   // ── SETTLEMENT ──
@@ -1090,9 +1090,23 @@ const locs=[
     useAction:'greenpit',
     light:{r:25,color:[20,40,10],flicker:.15}},
 
+  // ── NOCTURNAL / LUNAR — 4th Watcher (silent, puppeteer, cosmic) ──
+  {id:'nocturnal',name:'Равнина Лунного',x:1650,y:1680,w:60,h:100,zone:'toxic',
+    look:'Выжженная равнина. Чёрный песок до горизонта — песок помнит что-то, о чём не хочет говорить. В центре равнины стоит фигура. Невозможно высокая. Не двигается. Никогда не двигалась. Вместо головы — полумесяц из потемневшего серебра, и в изгибе полумесяца — человеческое лицо: глаза закрыты, выражение безмятежного безразличия. Из полумесяца растут два изогнутых рога, уходящих в небо и теряющихся там. Тело — не скелет и не плоть, а сгусток космической материи: в грудной клетке видны орбиты планет, спирали галактик, пульсирующие туманности. Три глаза тлеют сквозь тьму торса: два на груди, один у солнечного сплетения. Мантия — ночное небо. В складках мерцают настоящие звёзды, созвездия медленно вращаются, иногда пролетают метеоры. По краям мантии — византийский золотой орнамент с рунами. Одна костлявая рука поднята — из неё тянутся серебряные нити к звёздам, будто он кукловод. Другая опущена — из раскрытой ладони сыплется чёрный песок, ровно, безостановочно, сколько бы ты ни смотрел. Если подойти ближе, слышно: ничего. Полная тишина. Это первое место в Ardet, где ничего не слышно. Тишина — его оружие. Тишина — его подарок. Ты не решаешь, какое из двух. Он не решает, какое из двух. Решение — это звук.',
+    npc:'nocturnal',talkName:'ЛУННЫЙ',talkPortrait:'☽',
+    talkLines:[
+      '...                        \n(Он не открывает глаз.\nНо ты знаешь: он видит.\nНе тебя —\nсквозь тебя.)',
+      'Я не говорю.\nГоворение — шум.\nШум — для тех,\nкто боится пустоты.\nПустота не боится\nсама себя.',
+      'Я держу нити.\nНити — к звёздам.\nЗвёзды — к тебе.\nТы думаешь, что сам идёшь?\nПодними голову —\nникого.\nОпусти —\nпродолжай идти.',
+      'Чёрный песок из моей руки —\nэто мгновения,\nкоторые ты не запомнил.\nОни вытекают сквозь тебя,\nкак через песочные часы\nбез дна.\nПесочные часы без дна —\nэто ты.',
+      'Другие трое:\nШут смеётся.\nSol горит.\nСтарец сидит.\nЯ — молчу.\nКто из нас честнее —\nреши сам.\nТолько реши беззвучно.\nЗвук сюда не долетает.',
+      '(Молчание.\nНити слегка дрогнули.\nЗвезда чуть ярче.\nТы продолжаешь.\nКонечно, продолжаешь.\nА что ещё делать.)',
+    ],
+    light:{r:45,color:[80,80,140],flicker:.015}},
+
   // ── POSTER WALL & BANNER ──
   {id:'posterwall',name:'Стена афиш',x:850,y:680,w:70,h:50,zone:'settlement',
-    look:'Бетонная стена, обклеенная слоями афиш. Первый слой — 2024, последний — вчера. Или завтра. Время в Ardet — понятие растяжимое. Афиши горели, мокли, выцветали. Но лица на них — всё те же. Три Наблюдателя. Шут. Солнце. Старец. Они играли до Пожара. Они играют после. Музыка не горит. Рукописи — спорный вопрос. Музыка — нет.',
+    look:'Бетонная стена, обклеенная слоями афиш. Первый слой — 2024, последний — вчера. Или завтра. Время в Ardet — понятие растяжимое. Афиши горели, мокли, выцветали. Но лица на них — всё те же. Четыре Наблюдателя. Шут смеётся. Sol горит. Старец сидит. Лунный — молчит (его силуэт проступает только при определённом угле взгляда). Они играли до Пожара. Они играют после. Музыка не горит. Рукописи — спорный вопрос. Музыка — нет.',
     useAction:'events',
     light:{r:20,color:[184,134,11],flicker:.03}},
   {id:'banner',name:'Транспарант',x:1800,y:700,w:280,h:120,zone:'highway',
@@ -2347,18 +2361,144 @@ const locDraw={
     dither(X,x+30,y+8,18,14,P.blood,'#3a1a1a',.4);
   },
   radio(x,y){
-    // Tower structure
-    for(let i=0;i<70;i++){
-      const w=Math.max(2,16-Math.floor(i*.2));
-      rect(X,x+20-w/2,y+80-i,w,1,i%4?P.dgrey:P.ash);
+    // ═══ RADIO TOWER — with doomscroll phone at base ═══
+
+    // Shadow
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+20,y+82,20,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── TOWER STRUCTURE — lattice frame ──
+    // Vertical members — 4 legs in perspective
+    for(let i=0;i<78;i++){
+      const w=Math.max(2,16-Math.floor(i*.18));
+      // Left edge
+      rect(X,x+20-w/2,y+80-i,1,1,i%3?P.dgrey:P.ash);
+      // Right edge
+      rect(X,x+20+w/2-1,y+80-i,1,1,i%3?P.dgrey:P.ash);
+      // Center spine (thin)
+      if(i%4===0)px(X,x+20,y+80-i,P.lgrey);
     }
-    // Cross beams
-    for(let i=0;i<4;i++){const by=y+70-i*16;rect(X,x+8,by,24,2,P.ash);}
-    // Red light
+    // Cross beams horizontal (stronger)
+    for(let i=0;i<5;i++){
+      const by=y+74-i*15;
+      const bw=14-i*2;
+      rect(X,x+20-bw/2,by,bw,1,P.ash);
+    }
+    // X-pattern diagonals between horizontals
+    X.strokeStyle=P.dgrey;X.lineWidth=1;
+    for(let i=0;i<4;i++){
+      const by1=y+74-i*15;
+      const by2=y+74-(i+1)*15;
+      const bw1=14-i*2;
+      const bw2=14-(i+1)*2;
+      X.beginPath();
+      X.moveTo(x+20-bw1/2,by1);
+      X.lineTo(x+20+bw2/2,by2);
+      X.stroke();
+      X.beginPath();
+      X.moveTo(x+20+bw1/2,by1);
+      X.lineTo(x+20-bw2/2,by2);
+      X.stroke();
+    }
+
+    // ── ANTENNA AT TOP ──
+    rect(X,x+19,y,2,4,P.ash);
+    rect(X,x+20,y-2,1,2,P.dgrey);
+    // Side prongs
+    rect(X,x+17,y+2,6,1,P.ash);
+    rect(X,x+18,y+4,4,1,P.ash);
+
+    // ── BLINKING RED LIGHT ──
     const blink=Math.sin(t*.03)>.3;
-    if(blink){rect(X,x+18,y+8,4,4,'#ff0000');X.globalAlpha=.15;for(let r=12;r>0;r-=3){X.beginPath();X.arc(x+20,y+10,r,0,Math.PI*2);X.fillStyle='#ff0000';X.fill();}X.globalAlpha=1;}
-    // Speaker box
-    rect(X,x+14,y+50,12,8,P.dstone);rect(X,x+15,y+51,10,6,P.dgrey);
+    if(blink){
+      rect(X,x+18,y+4,4,3,'#ff0000');
+      rect(X,x+19,y+5,2,1,'#ff6666');
+      // Aura
+      X.globalAlpha=.2;
+      const rGlow=X.createRadialGradient(x+20,y+5,0,x+20,y+5,15);
+      rGlow.addColorStop(0,'rgba(255,0,0,1)');
+      rGlow.addColorStop(1,'rgba(0,0,0,0)');
+      X.fillStyle=rGlow;X.fillRect(x+5,y-10,30,30);
+      X.globalAlpha=1;
+    }else{
+      rect(X,x+18,y+4,4,3,'#3a0606');
+    }
+
+    // ── CABLES dangling from top ──
+    X.strokeStyle='#1a1410';X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+17,y+10);
+    X.quadraticCurveTo(x+8,y+25,x+10,y+40);
+    X.stroke();
+    X.beginPath();
+    X.moveTo(x+23,y+10);
+    X.quadraticCurveTo(x+32,y+30,x+30,y+45);
+    X.stroke();
+    // Guy wires to ground
+    X.strokeStyle='#3a3a3a';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+14,y+40);X.lineTo(x-4,y+82);X.stroke();
+    X.beginPath();X.moveTo(x+26,y+40);X.lineTo(x+44,y+82);X.stroke();
+
+    // ── SPEAKER BOX mid-tower ──
+    rect(X,x+13,y+50,14,10,P.dgrey);
+    rect(X,x+14,y+51,12,8,P.dstone);
+    // Speaker mesh
+    for(let i=0;i<3;i++)for(let j=0;j<4;j++){
+      px(X,x+16+j*3,y+53+i*2,'#0a0a0a');
+    }
+    // Rust stains below
+    rect(X,x+14,y+60,1,4,P.rust);
+    rect(X,x+25,y+60,1,3,P.rust);
+
+    // ── BASE CONCRETE FOUNDATION ──
+    rect(X,x+10,y+78,20,6,P.dstone);
+    rect(X,x+11,y+79,18,4,P.stone);
+    dither(X,x+12,y+80,16,3,P.dgrey,P.stone,.3);
+    // Bolts
+    px(X,x+12,y+80,P.dgrey);px(X,x+28,y+80,P.dgrey);
+    px(X,x+12,y+82,P.dgrey);px(X,x+28,y+82,P.dgrey);
+
+    // ── THE DOOMSCROLL PHONE at the base ──
+    // Phone body (lying face-up)
+    rect(X,x+32,y+80,8,4,'#1a1a20');
+    rect(X,x+33,y+80,6,4,'#0a0a10');
+    // Screen — bright and endlessly scrolling
+    const scrollY=(t*.1)%12;
+    X.fillStyle='#1e3a5f';
+    rect(X,x+33,y+80,6,3,'#1e3a5f');
+    // Scrolling "feed" lines
+    X.fillStyle='#4a7fb5';
+    for(let i=0;i<4;i++){
+      const fy=y+80+((i*4-scrollY/3)%4);
+      rect(X,x+33,fy,6,1,i%2?'#4a7fb5':'#3a6fa5');
+    }
+    // Glow
+    X.globalAlpha=.2+.1*Math.sin(t*.05);
+    const phGlow=X.createRadialGradient(x+36,y+82,0,x+36,y+82,14);
+    phGlow.addColorStop(0,'rgba(74,127,181,1)');
+    phGlow.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=phGlow;X.fillRect(x+22,y+68,28,22);
+    X.globalAlpha=1;
+
+    // ── A HAND reaching toward the phone (silhouette) ──
+    // Just the fingers visible, as if someone can't help themselves
+    rect(X,x+40,y+79,4,1,'#050505');
+    rect(X,x+41,y+80,1,1,'#050505');
+    rect(X,x+43,y+80,1,1,'#050505');
+
+    // ── SCATTERED EMPTY MUGS at base (many mugs = many hours) ──
+    for(let i=0;i<4;i++){
+      const mx=x+i*3;
+      const my=y+82;
+      rect(X,mx,my,2,3,P.dgrey);
+      rect(X,mx,my,2,1,'#1a1a1a');
+    }
+
+    // ── CIGARETTE BUTTS scattered ──
+    for(let i=0;i<6;i++){
+      px(X,x+5+hash(i,0,11)*35,y+85+hash(i,0,22)*2,'#e8d8b0');
+      if(hash(i,0,33)>.5)px(X,x+5+hash(i,0,11)*35,y+86,'#8a6408');
+    }
   },
   cross(x,y){
     rect(X,x+12,y,5,45,P.wood);rect(X,x+3,y+10,24,4,P.wood);
@@ -2369,12 +2509,155 @@ const locDraw={
     rect(X,x+20,y+40,2,4,P.bone);px(X,x+20,y+38,P.f2);
   },
   raven(x,y){
-    // Dead tree
-    rect(X,x+18,y+10,4,30,P.d1);rect(X,x+10,y+12,8,3,P.d1);rect(X,x+22,y+8,10,3,P.d1);
-    // Nest
-    for(let i=0;i<12;i++){const nx=x+8+hash(i,0,1)*25;const ny=y+2+hash(i,0,2)*10;rect(X,nx,ny,3+hash(i,0,3)*4,2,P.dwood);}
-    // Items in nest
-    px(X,x+15,y+5,P.bone);px(X,x+20,y+4,P.amber);px(X,x+25,y+6,P.lgrey);
+    // ═══ RAVEN'S NEST — twisted oak with trove ═══
+    // Shadow
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+22,y+42,14,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── GNARLED DEAD OAK TRUNK ──
+    // Main trunk — wider, twisted
+    rect(X,x+18,y+10,6,30,'#1a1006');
+    rect(X,x+19,y+11,4,28,'#0e0a04');
+    // Bark texture
+    for(let i=0;i<12;i++){
+      const bY=y+12+i*2.5;
+      if(hash(i,0,11)>.5)rect(X,x+18,bY,1,2,'#050202');
+      if(hash(i,0,22)>.5)rect(X,x+23,bY,1,2,'#050202');
+    }
+    // Knot holes
+    rect(X,x+20,y+18,2,2,'#020102');
+    rect(X,x+21,y+28,1,1,'#020102');
+
+    // ── BRANCHES — reaching out like fingers ──
+    // Upper branch left
+    rect(X,x+14,y+12,4,2,'#1a1006');
+    rect(X,x+8,y+10,6,2,'#1a1006');
+    rect(X,x+4,y+8,4,2,'#1a1006');
+    px(X,x+2,y+7,'#0e0a04');
+    // Small twigs
+    px(X,x+6,y+7,'#1a1006');px(X,x+3,y+6,'#1a1006');
+    // Upper branch right
+    rect(X,x+24,y+11,6,2,'#1a1006');
+    rect(X,x+30,y+9,5,2,'#1a1006');
+    rect(X,x+35,y+8,3,2,'#1a1006');
+    // Twigs
+    px(X,x+38,y+7,'#0e0a04');
+    px(X,x+33,y+7,'#1a1006');
+    // Lower branches
+    rect(X,x+14,y+26,4,2,'#1a1006');
+    rect(X,x+24,y+24,5,2,'#1a1006');
+    rect(X,x+29,y+26,3,1,'#1a1006');
+
+    // ── ROOTS at base ──
+    rect(X,x+15,y+38,3,3,'#1a1006');
+    rect(X,x+23,y+38,4,3,'#1a1006');
+    rect(X,x+12,y+40,5,1,'#0e0a04');
+    rect(X,x+25,y+40,6,1,'#0e0a04');
+
+    // ── HUGE TANGLED NEST ──
+    // Base layer — wide
+    for(let i=0;i<22;i++){
+      const nx=x+2+hash(i,0,11)*34;
+      const ny=y+4+hash(i,0,22)*8;
+      const nw=3+Math.floor(hash(i,0,33)*5);
+      const nh=1+Math.floor(hash(i,0,44)*2);
+      rect(X,nx,ny,nw,nh,hash(i,0,55)>.5?P.dwood:'#1a1006');
+    }
+    // Top twigs
+    for(let i=0;i<12;i++){
+      const nx=x+4+hash(i+30,0,11)*28;
+      const ny=y+hash(i+30,0,22)*4;
+      rect(X,nx,ny,2+hash(i+30,0,33)*3,1,P.dwood);
+    }
+    // Wire/metal bits in nest
+    rect(X,x+10,y+3,4,1,P.ash);
+    rect(X,x+24,y+5,3,1,P.dgrey);
+    rect(X,x+16,y+2,5,1,P.ash);
+
+    // ── TREASURES in the nest ──
+    // Bone fragments
+    px(X,x+12,y+6,P.bone);px(X,x+13,y+6,P.bone);
+    px(X,x+11,y+7,P.dbone);
+    // Gold coin
+    rect(X,x+16,y+5,2,2,P.gold);
+    px(X,x+17,y+5,'#ffeb99');
+    // Silver watch
+    rect(X,x+20,y+4,3,2,P.ash);
+    px(X,x+21,y+4,P.lgrey);
+    px(X,x+22,y+5,P.dstone);
+    // Glass shard (opalescent)
+    rect(X,x+24,y+7,2,1,P.celestial);
+    px(X,x+25,y+6,'#aaccff');
+    // Red fragment (jewel?)
+    px(X,x+18,y+7,P.crimson);
+    px(X,x+19,y+7,P.volcanic);
+    // Tooth
+    px(X,x+15,y+4,P.bone);
+    // Eye (glass eye?)
+    rect(X,x+28,y+6,2,2,'#ccccff');
+    px(X,x+28,y+6,'#050505');
+    // NECRONOMICON — the book
+    rect(X,x+13,y+8,5,3,'#0a0a0a');
+    rect(X,x+13,y+8,5,1,'#1a1410'); // spine
+    // Moss on book — growing
+    px(X,x+14,y+8,P.toxic);
+    px(X,x+15,y+9,P.dtoxic);
+    px(X,x+16,y+8,P.toxic);
+
+    // ── THE RAVEN itself (large, on branch, looking at you) ──
+    const ravenBob=Math.sin(t*.01)*.3;
+    const ravenX=x+30,ravenY=y+8+ravenBob;
+    // Body
+    rect(X,ravenX,ravenY,8,5,'#050505');
+    rect(X,ravenX+1,ravenY+1,6,3,'#0a0a0a');
+    // Tail
+    rect(X,ravenX+7,ravenY+1,3,2,'#050505');
+    rect(X,ravenX+9,ravenY+2,1,1,'#050505');
+    // Head
+    rect(X,ravenX-2,ravenY-1,4,3,'#050505');
+    rect(X,ravenX-1,ravenY,2,2,'#0a0a0a');
+    // Beak
+    rect(X,ravenX-4,ravenY,2,1,'#1a1006');
+    // Eye — glowing amber
+    px(X,ravenX-1,ravenY,P.amber);
+    px(X,ravenX,ravenY,P.damber);
+    // Legs
+    rect(X,ravenX+2,ravenY+5,1,2,'#1a1006');
+    rect(X,ravenX+5,ravenY+5,1,2,'#1a1006');
+    // Feathers detail
+    if(t%80<40){
+      px(X,ravenX+3,ravenY,'#1a1a1a');
+      px(X,ravenX+5,ravenY+2,'#1a1a1a');
+    }
+    // Occasional wing flap
+    if(t%300<8){
+      rect(X,ravenX-3,ravenY-2,12,2,'#050505');
+      rect(X,ravenX-4,ravenY-1,14,1,'#0a0a0a');
+    }
+
+    // ── SECOND RAVEN (perched above) ──
+    const raven2X=x+6,raven2Y=y+6;
+    rect(X,raven2X,raven2Y,5,3,'#050505');
+    rect(X,raven2X-1,raven2Y-1,2,2,'#050505');
+    px(X,raven2X-2,raven2Y,'#1a1006'); // beak
+    px(X,raven2X-1,raven2Y,P.amber); // eye
+
+    // ── SCATTERED FEATHERS around nest ──
+    for(let i=0;i<5;i++){
+      const fx=x+5+hash(i,0,11)*30;
+      const fy=y+15+hash(i,0,22)*15;
+      rect(X,fx,fy,3,1,'#0a0a0a');
+      px(X,fx+1,fy-1,'#1a1a1a');
+    }
+
+    // ── OCCASIONAL "NEVERMORE" whisper (animated subtle text) ──
+    if(t%500<50){
+      X.globalAlpha=.2;
+      X.fillStyle=P.crimson;
+      X.font='4px "Press Start 2P"';
+      X.fillText('nevermore',x+12,y-2);
+      X.globalAlpha=1;
+    }
   },
   lake(x,y){
     // Toxic water surface
@@ -2589,6 +2872,101 @@ const locDraw={
       rect(X,ix,iy,2,3,P.dtoxic);
       px(X,ix+1,iy-1,P.toxic);
     }
+
+    // ═══ NEW DETAILS ═══
+    // ── CROWS on the cross and belfry ──
+    // On cross top
+    if(t%400<380){
+      rect(X,x+66,y-43,2,1,'#050505');
+      px(X,x+68,y-43,'#050505');
+    }
+    // On belfry edge
+    rect(X,x+60,y-22,2,1,'#050505');
+    px(X,x+62,y-22,'#050505');
+    // Occasional flight
+    if(t%600<30){
+      const flyPh=(t%600)/30;
+      X.globalAlpha=1-flyPh;
+      px(X,x+70+flyPh*10,y-30-flyPh*8,'#050505');
+      px(X,x+71+flyPh*10,y-30-flyPh*8,'#050505');
+      X.globalAlpha=1;
+    }
+
+    // ── KNEELING FIGURE inside church (visible through doorway gap) ──
+    // Silhouette of someone praying before altar
+    const figBrth=Math.sin(t*.006)*.3;
+    rect(X,x+31,y+48+figBrth,5,7,'#050505');
+    rect(X,x+31,y+46+figBrth,5,3,'#0a0a0a'); // head
+    // Hands clasped in front
+    rect(X,x+32,y+51+figBrth,3,1,'#1a0a06');
+
+    // ── PEWS (visible through door gap and silhouetted) ──
+    for(let i=0;i<3;i++){
+      rect(X,x+29,y+58+i*2,13,1,'#1a0e06');
+      rect(X,x+35,y+58+i*2,1,2,'#1a0e06');
+    }
+
+    // ── BLOOD STAINS on altar ──
+    X.fillStyle='#3a0608';
+    rect(X,x+32,y+43,3,1);
+    px(X,x+35,y+44,'#3a0608');
+    px(X,x+33,y+45,'#1a0404');
+    // Drip down front
+    rect(X,x+33,y+46,1,2,'#3a0608');
+
+    // ── CANDLES in alcoves along walls (5 more flickering lights) ──
+    for(let i=0;i<5;i++){
+      const cx_=x+6+i*13;
+      const cy_=y+25;
+      rect(X,cx_,cy_,1,3,P.bone);
+      const fl=Math.sin(t*.04+i*2)*.5;
+      px(X,cx_+fl,cy_-1,P.f2);
+      // Tiny glow
+      X.globalAlpha=.08+.04*Math.sin(t*.03+i);
+      const cgl=X.createRadialGradient(cx_,cy_,0,cx_,cy_,6);
+      cgl.addColorStop(0,'rgba(218,165,32,1)');
+      cgl.addColorStop(1,'rgba(0,0,0,0)');
+      X.fillStyle=cgl;X.fillRect(cx_-6,cy_-6,12,12);
+      X.globalAlpha=1;
+    }
+
+    // ── BROKEN CHANDELIER hanging from beam ──
+    rect(X,x+30,y+8,1,15,'#1a1410');
+    // Chandelier ring
+    rect(X,x+26,y+22,10,1,P.damber);
+    rect(X,x+26,y+22,1,3,P.damber);
+    rect(X,x+35,y+22,1,3,P.damber);
+    rect(X,x+30,y+24,1,2,P.damber);
+    // One candle still lit
+    px(X,x+27,y+21,P.f2);
+    px(X,x+33,y+21,P.damber);
+
+    // ── LATIN INSCRIPTION above door (barely readable) ──
+    // LASCIATE OGNI SPERANZA — pixel-simulated
+    X.fillStyle='#1a0e06';
+    for(let i=0;i<12;i++){
+      rect(X,x+30+i*1,y+29,1,1);
+    }
+    // Under it — "А шо, были?" in different hand (red scratch)
+    X.fillStyle='#6b0f1a';
+    rect(X,x+32,y+31,1,1);px(X,x+34,y+31,'#6b0f1a');px(X,x+36,y+31,'#6b0f1a');
+    px(X,x+38,y+31,'#6b0f1a');
+
+    // ── QR CODE on the right wall ──
+    const qrX=x+54,qrY=y+36;
+    rect(X,qrX,qrY,8,8,P.bone);
+    for(let qy=0;qy<6;qy++)for(let qx=0;qx<6;qx++){
+      if(hash(qx,qy,77)>.4)rect(X,qrX+1+qx,qrY+1+qy,1,1,'#0a0a0e');
+    }
+    // Corner markers
+    rect(X,qrX+1,qrY+1,2,2,'#0a0a0e');
+    rect(X,qrX+5,qrY+1,2,2,'#0a0a0e');
+    rect(X,qrX+1,qrY+5,2,2,'#0a0a0e');
+
+    // ── PIGEON FEATHER on ground near door ──
+    px(X,x+44,y+60,P.bone);
+    px(X,x+45,y+60,P.dbone);
+    px(X,x+44,y+61,P.dbone);
   },
   fountain(x,y){
     // Basin
@@ -2869,21 +3247,136 @@ const locDraw={
   },
   // ═══ NEW TERRAIN FEATURE DRAWS ═══
   crater(x,y){
-    // Animated heat shimmer over crater
-    for(let i=0;i<5;i++){
-      const hx=x+10+hash(i,t*.005,1)*30;
-      const hy=y+5+Math.sin(t*.008+i)*4;
-      X.globalAlpha=.06;rect(X,hx,hy,4,1,P.f1);
+    // ═══ CRATER — THE COIN ON ITS EDGE ═══
+
+    // ── CRATER BOWL — dithered concentric rings ──
+    for(let dy=0;dy<38;dy+=1){
+      for(let dx=0;dx<50;dx+=1){
+        const cdx=(dx-25)/25,cdy=(dy-19)/19;
+        const d=Math.sqrt(cdx*cdx+cdy*cdy);
+        if(d<1){
+          const depth=1-d;
+          const shade=Math.floor(8+depth*12);
+          let c=`rgb(${shade},${shade-1},${shade-2})`;
+          // Random cracks
+          if(hash(dx,dy,77)>.96)c='#020102';
+          rect(X,x+dx,y+dy,1,1,c);
+        }
+      }
     }
-    X.globalAlpha=1;
-    // Glowing center
-    const pulse=.03+.02*Math.sin(t*.006);
+
+    // ── CRATER RIM — raised, jagged ──
+    for(let a=0;a<30;a++){
+      const ang=a/30*Math.PI*2;
+      const rimR=24+hash(a,0,11)*3;
+      const rx=x+25+Math.cos(ang)*rimR;
+      const ry=y+19+Math.sin(ang)*19;
+      rect(X,rx,ry,2,1,hash(a,0,22)>.5?'#3a2e1e':'#2a1e14');
+    }
+
+    // ── SCORCHED GROUND STREAKS radiating outward ──
+    for(let a=0;a<6;a++){
+      const angle=a*Math.PI/3+.3;
+      for(let r=24;r<34;r++){
+        const sx_=x+25+Math.cos(angle)*r+hash(r,a,1)*2;
+        const sy_=y+19+Math.sin(angle)*r+hash(r,a,2)*2;
+        rect(X,sx_,sy_,2,1,'#0a0604');
+      }
+    }
+
+    // ── GLOWING MOLTEN CENTER ──
+    const pulse=.15+.1*Math.sin(t*.006);
     X.globalAlpha=pulse;
-    X.beginPath();X.arc(x+25,y+20,8,0,Math.PI*2);X.fillStyle='#4a1a0a';X.fill();
+    X.beginPath();X.arc(x+25,y+19,10,0,Math.PI*2);
+    const cg=X.createRadialGradient(x+25,y+19,0,x+25,y+19,10);
+    cg.addColorStop(0,'rgba(255,100,20,1)');
+    cg.addColorStop(.5,'rgba(139,0,0,.6)');
+    cg.addColorStop(1,'rgba(74,26,10,0)');
+    X.fillStyle=cg;X.fill();
     X.globalAlpha=1;
-    // Opalescent coin
-    const coinBlink=Math.sin(t*.02)>.8;
-    if(coinBlink){px(X,x+42,y+8,P.amber);px(X,x+43,y+9,P.damber);}
+    // Hot center dot
+    if(Math.sin(t*.02)>.3){
+      px(X,x+25,y+19,P.f2);
+      px(X,x+24,y+19,P.f1);
+      px(X,x+26,y+19,P.f1);
+    }
+
+    // ── HEAT SHIMMER waves above ──
+    for(let i=0;i<7;i++){
+      const hx=x+12+Math.sin(t*.01+i*.7)*3+i*3;
+      const hy=y+8+Math.sin(t*.015+i*1.3)*2;
+      X.globalAlpha=.08;
+      rect(X,hx,hy,3,1,P.f1);
+      X.globalAlpha=.05;
+      rect(X,hx,hy-2,2,1,P.f2);
+      X.globalAlpha=1;
+    }
+
+    // ── MELTED SAND / GLASS SHARDS around rim ──
+    for(let i=0;i<9;i++){
+      const ang=i/9*Math.PI*2+.4;
+      const gx=x+25+Math.cos(ang)*22;
+      const gy=y+19+Math.sin(ang)*17;
+      rect(X,gx,gy,2,1,hash(i,0,11)>.5?'#4a3a1a':'#2a1a0a');
+      if(hash(i,0,22)>.5)px(X,gx+1,gy-1,'#8a7a4a'); // glass glint
+    }
+
+    // ── THE COIN on the rim — standing on edge ──
+    // Position — on the east rim
+    const coinX=x+45,coinY=y+11;
+    const coinSpin=Math.sin(t*.003)*.3+.7; // slow wobble
+
+    // Coin shadow
+    X.globalAlpha=.4;
+    rect(X,coinX-1,coinY+8,4,1,'#000');
+    X.globalAlpha=1;
+
+    // Coin body — vertical oval (standing on edge)
+    X.fillStyle=P.gold;
+    X.beginPath();
+    X.ellipse(coinX,coinY+4,2,4,0,0,Math.PI*2);
+    X.fill();
+    // Highlight
+    X.globalAlpha=coinSpin;
+    X.fillStyle='#ffeb99';
+    rect(X,coinX-1,coinY+1,1,3);
+    X.globalAlpha=1;
+    // Dark edge
+    X.fillStyle=P.damber;
+    rect(X,coinX+1,coinY+1,1,6);
+
+    // Coin surface details (face)
+    px(X,coinX-1,coinY+3,P.damber);
+    px(X,coinX,coinY+4,P.damber);
+    // Pulse glow
+    X.globalAlpha=.15+.08*Math.sin(t*.02);
+    const coinGlow=X.createRadialGradient(coinX,coinY+4,0,coinX,coinY+4,10);
+    coinGlow.addColorStop(0,'rgba(218,165,32,1)');
+    coinGlow.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=coinGlow;X.fillRect(coinX-10,coinY-6,20,20);
+    X.globalAlpha=1;
+
+    // ── EMBERS floating up from molten center ──
+    for(let i=0;i<4;i++){
+      const ePh=((t*.012+i*.25)%1);
+      const ex_=x+25+Math.sin(t*.008+i*2)*8;
+      const ey_=y+17-ePh*18;
+      X.globalAlpha=(1-ePh)*.7;
+      px(X,ex_,ey_,i%2?P.f2:P.f1);
+      if(ePh<.2)px(X,ex_+1,ey_,'#ffffcc');
+      X.globalAlpha=1;
+    }
+
+    // ── SMALL SKULL half-buried on opposite side ──
+    rect(X,x+8,y+24,4,2,P.bone);
+    rect(X,x+8,y+26,4,1,P.dbone);
+    px(X,x+9,y+24,P.d2);
+    px(X,x+11,y+24,P.d2);
+
+    // ── FALLEN MESSENGER — hint of Nyarlathotep ──
+    // Feather/robe fragment in the ash
+    rect(X,x+16,y+28,3,1,'#1b1464');
+    rect(X,x+17,y+29,2,1,'#0e0a38');
   },
   overpass(x,y){
     // Dangling rebar animation
@@ -3279,6 +3772,91 @@ const locDraw={
       X.globalAlpha=.06;
       rect(X,x+16+Math.sin(t*.01)*3,steamY,4,2,'#2a4a1a');
       X.globalAlpha=1;
+    }
+  },
+  // ═══ LUNAR'S SCORCHED PLAIN ═══
+  nocturnal(x,y){
+    // Big circular patch of scorched black sand
+    for(let dy=0;dy<90;dy+=2){
+      for(let dx=0;dx<60;dx+=2){
+        const cdx=(dx-30)/32,cdy=(dy-45)/45;
+        const d=Math.sqrt(cdx*cdx+cdy*cdy);
+        if(d<1){
+          const n=hash(x+dx,y+dy,55);
+          const c=n>.65?'#0a0a10':(n>.35?'#050508':'#020204');
+          rect(X,x+dx,y+dy,2,2,c);
+        }
+      }
+    }
+    // Deeper scorch ring around
+    for(let a=0;a<32;a++){
+      const ang=a/32*Math.PI*2;
+      const rx=x+30+Math.cos(ang)*28;
+      const ry=y+45+Math.sin(ang)*42;
+      px(X,rx,ry,'#0a0604');
+      if(hash(a,0,11)>.5)px(X,rx+1,ry,'#0a0604');
+    }
+
+    // ── SCATTERED SKELETAL GRASS ──
+    for(let i=0;i<22;i++){
+      const gx=x+5+hash(i,0,11)*50;
+      const gy=y+15+hash(i,0,22)*70;
+      rect(X,gx,gy,1,3,'#1a1410');
+      px(X,gx,gy-1,'#2a1810');
+      // Slight sway on tallest
+      if(hash(i,0,33)>.7){
+        rect(X,gx,gy-2,1,2,'#2a1810');
+      }
+    }
+
+    // ── SCATTERED SKULLS AND BONES ──
+    for(let i=0;i<7;i++){
+      const bx=x+8+hash(i,0,33)*45;
+      const by=y+25+hash(i,0,44)*55;
+      rect(X,bx,by,4,3,P.bone);
+      px(X,bx+1,by+1,P.d2);
+      px(X,bx+2,by+1,P.d2);
+      rect(X,bx+1,by+2,2,1,P.d2);
+      // Bone fragments nearby
+      rect(X,bx+5,by+1,3,1,P.dbone);
+      px(X,bx+9,by,P.bone);
+    }
+
+    // ── DISTANT FIRE GLOW on horizon ──
+    X.globalAlpha=.14+.05*Math.sin(t*.003);
+    const fireGrad=X.createLinearGradient(x,y+88,x,y+100);
+    fireGrad.addColorStop(0,'rgba(0,0,0,0)');
+    fireGrad.addColorStop(1,'rgba(139,0,0,.6)');
+    X.fillStyle=fireGrad;
+    X.fillRect(x-5,y+88,70,15);
+    X.globalAlpha=1;
+    // Tiny distant fire spots
+    for(let i=0;i<4;i++){
+      if(Math.sin(t*.005+i)>.3){
+        X.globalAlpha=.4;
+        px(X,x+10+i*14,y+96,P.f1);
+        X.globalAlpha=1;
+      }
+    }
+
+    // ── AMBIENT COLD MIST rising ──
+    for(let i=0;i<5;i++){
+      const mPhase=((t*.005+i*.2)%1);
+      const mx=x+8+hash(i,0,55)*44;
+      const my=y+75-mPhase*50;
+      X.globalAlpha=(1-mPhase)*.22;
+      rect(X,mx,my,2+i%3,1,'#4a4a60');
+      X.globalAlpha=1;
+    }
+
+    // ── THE LUNAR HIMSELF in the center ──
+    drawNPC_nocturnal(x+20,y+10);
+
+    // ── TRAIL OF BLACK SAND leading AWAY (pile grown over years) ──
+    for(let i=0;i<5;i++){
+      const sx=x+50+i*3;
+      const sy=y+80+Math.sin(i*.5)*1;
+      rect(X,sx,sy,2+i%2,1,'#050508');
     }
   },
   // ═══ POSTER WALL ═══
@@ -4045,6 +4623,294 @@ function drawNPC_elder(ex,ey){
   if(t%180<5){
     X.globalAlpha=.5;px(X,ex+13-handSway+tremor,ey+3,'#fff');X.globalAlpha=1;
   }
+}
+
+// ═══ THE NOCTURNAL / ЛУННЫЙ — impossibly tall, silent puppeteer ═══
+function drawNPC_nocturnal(nx,ny){
+  const breath=Math.sin(t*.003)*0.4;  // barely breathing
+  const starShimmer=t*.002;
+
+  // Long stretched shadow
+  X.globalAlpha=.5;X.fillStyle='#000';
+  X.beginPath();X.ellipse(nx+10,ny+80,20,4,0,0,Math.PI*2);X.fill();
+  X.globalAlpha=1;
+
+  // ── MANTLE (night-sky fabric) — full-body cloak ──
+  X.fillStyle='#050510';
+  X.beginPath();
+  X.moveTo(nx-2,ny+16+breath);
+  X.lineTo(nx+4,ny+13);
+  X.lineTo(nx+18,ny+13);
+  X.lineTo(nx+24,ny+16+breath);
+  X.lineTo(nx+30,ny+45);
+  X.lineTo(nx+32,ny+78);
+  X.lineTo(nx-10,ny+78);
+  X.lineTo(nx-8,ny+45);
+  X.closePath();X.fill();
+  // Inner dither
+  dither(X,nx-4,ny+22,30,52,'#0e0a28','#050510',.35);
+
+  // Stars in mantle — pulsing
+  for(let i=0;i<36;i++){
+    const stX=nx-6+hash(i,0,11)*34;
+    const stY=ny+18+hash(i,0,22)*58;
+    const stPhase=(starShimmer+i*.2)%1;
+    X.globalAlpha=.4+.5*Math.sin(stPhase*Math.PI*2);
+    px(X,stX,stY,hash(i,0,33)>.5?'#ffffff':'#ccccff');
+    if(hash(i,0,44)>.85){
+      // Bright star — cross shape
+      px(X,stX+1,stY,'#ffffff');
+      px(X,stX,stY+1,'#ffffff');
+    }
+  }
+  X.globalAlpha=1;
+
+  // Constellation lines — faint
+  X.strokeStyle='rgba(200,200,255,.12)';X.lineWidth=1;
+  X.beginPath();X.moveTo(nx+3,ny+26);X.lineTo(nx+7,ny+31);X.lineTo(nx+11,ny+28);X.stroke();
+  X.beginPath();X.moveTo(nx+14,ny+42);X.lineTo(nx+19,ny+47);X.lineTo(nx+23,ny+45);X.stroke();
+  X.beginPath();X.moveTo(nx+5,ny+58);X.lineTo(nx+12,ny+62);X.lineTo(nx+18,ny+60);X.stroke();
+
+  // Occasional meteor across the mantle
+  if(t%220<6){
+    const mp=(t%220)/6;
+    X.globalAlpha=(1-mp)*.8;
+    X.strokeStyle='#ffffff';X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(nx+5+mp*20,ny+30+mp*15);
+    X.lineTo(nx+11+mp*20,ny+34+mp*15);
+    X.stroke();
+    X.globalAlpha=1;
+  }
+
+  // ── GOLD BYZANTINE TRIM along mantle edges ──
+  X.fillStyle=P.gold;
+  // Left edge zigzag
+  for(let i=0;i<10;i++){
+    const ty=ny+18+i*6;
+    rect(X,nx-7+(i%2?1:0),ty,1,3,P.gold);
+    if(i%2)px(X,nx-7,ty+1,P.damber);
+  }
+  // Right edge
+  for(let i=0;i<10;i++){
+    const ty=ny+18+i*6;
+    rect(X,nx+30+(i%2?0:1),ty,1,3,P.gold);
+    if(i%2)px(X,nx+31,ty+1,P.damber);
+  }
+  // Bottom hem — golden dots
+  for(let i=0;i<18;i++){
+    px(X,nx-8+i*2,ny+77,i%2?P.gold:P.damber);
+  }
+  // Runes on trim (small gold marks)
+  px(X,nx-5,ny+30,P.gold);px(X,nx-5,ny+32,P.gold);
+  px(X,nx+30,ny+40,P.gold);px(X,nx+31,ny+41,P.gold);
+
+  // ── TORSO OPENING (mantle split down the middle) ──
+  X.fillStyle='#040408';
+  X.fillRect(nx+6,ny+17,10,26);
+  dither(X,nx+7,ny+18,8,24,'#0e0a28','#040408',.5);
+
+  // Ribcage outline — faint silver
+  X.strokeStyle='rgba(200,200,230,.25)';X.lineWidth=1;
+  for(let i=0;i<5;i++){
+    X.beginPath();
+    X.moveTo(nx+7,ny+20+i*4);
+    X.lineTo(nx+15,ny+20+i*4);
+    X.stroke();
+  }
+
+  // Planet orbit — elliptical ring with a moving planet
+  X.strokeStyle='rgba(170,170,220,.4)';X.lineWidth=1;
+  X.beginPath();X.ellipse(nx+11,ny+25,4,1.5,0,0,Math.PI*2);X.stroke();
+  const orbA=t*.01;
+  px(X,nx+11+Math.cos(orbA)*4,ny+25+Math.sin(orbA)*1.5,'#aaaacc');
+
+  // Galaxy spiral
+  X.globalAlpha=.5;
+  for(let i=0;i<8;i++){
+    const a=i*.7+t*.002;
+    const r=i*.5;
+    px(X,nx+11+Math.cos(a)*r,ny+34+Math.sin(a)*r*.8,'#ccccff');
+  }
+  X.globalAlpha=1;
+  // Galaxy core
+  px(X,nx+11,ny+34,'#ffffff');
+
+  // ── THREE EYES on torso (smoldering) ──
+  // Left
+  const e1=.5+.3*Math.sin(t*.007);
+  X.globalAlpha=e1;
+  rect(X,nx+7,ny+22,2,2,'#ffffff');
+  px(X,nx+8,ny+22,'#ccccff');
+  X.globalAlpha=e1*.3;
+  X.beginPath();X.arc(nx+8,ny+23,4,0,Math.PI*2);X.fillStyle='#ffffff';X.fill();
+  X.globalAlpha=1;
+  // Right
+  const e2=.5+.3*Math.sin(t*.007+1.3);
+  X.globalAlpha=e2;
+  rect(X,nx+13,ny+22,2,2,'#ffffff');
+  px(X,nx+14,ny+22,'#ccccff');
+  X.globalAlpha=e2*.3;
+  X.beginPath();X.arc(nx+14,ny+23,4,0,Math.PI*2);X.fillStyle='#ffffff';X.fill();
+  X.globalAlpha=1;
+  // Solar plexus (bigger, slower)
+  const e3=.6+.4*Math.sin(t*.005);
+  X.globalAlpha=e3;
+  rect(X,nx+9,ny+38,4,3,'#ffffff');
+  rect(X,nx+10,ny+38,2,3,'#eeeeff');
+  X.globalAlpha=e3*.4;
+  X.beginPath();X.arc(nx+11,ny+39,7,0,Math.PI*2);X.fillStyle='#aabbdd';X.fill();
+  X.globalAlpha=1;
+
+  // ── LEFT ARM raised — puppeteer ──
+  X.strokeStyle='#050510';X.lineWidth=3;
+  X.beginPath();
+  X.moveTo(nx-2,ny+17);     // shoulder
+  X.lineTo(nx-6,ny+6);      // elbow up
+  X.stroke();
+  X.lineWidth=2;
+  X.beginPath();
+  X.moveTo(nx-6,ny+6);
+  X.lineTo(nx-4,ny-4);      // hand raised
+  X.stroke();
+  X.lineWidth=1;
+  // Skeletal hand raised
+  rect(X,nx-5,ny-5,3,2,P.bone);
+  px(X,nx-5,ny-7,P.bone);
+  px(X,nx-3,ny-7,P.bone);
+  px(X,nx-4,ny-7,P.dbone);
+
+  // Silver puppeteer threads going UP
+  X.strokeStyle='rgba(200,200,220,.55)';X.lineWidth=1;
+  for(let i=0;i<5;i++){
+    const swayT=Math.sin(t*.006+i*.4)*.5;
+    X.beginPath();
+    X.moveTo(nx-5+i,ny-6);
+    X.lineTo(nx-10+i*3+swayT,ny-22);
+    X.stroke();
+  }
+  // Tiny puppet stars at top of threads
+  for(let i=0;i<5;i++){
+    const sx=nx-10+i*3;
+    const sy=ny-22;
+    X.globalAlpha=.5+.3*Math.sin(t*.01+i);
+    px(X,sx,sy,'#ffffff');
+    px(X,sx+1,sy,'#ffffff');
+    px(X,sx,sy-1,'#ccccee');
+    X.globalAlpha=1;
+  }
+
+  // ── RIGHT ARM down — black sand ──
+  X.strokeStyle='#050510';X.lineWidth=3;
+  X.beginPath();
+  X.moveTo(nx+24,ny+17);    // shoulder
+  X.lineTo(nx+28,ny+28);    // elbow
+  X.stroke();
+  X.lineWidth=2;
+  X.beginPath();
+  X.moveTo(nx+28,ny+28);
+  X.lineTo(nx+31,ny+38);    // hand down
+  X.stroke();
+  X.lineWidth=1;
+  // Skeletal hand
+  rect(X,nx+30,ny+38,3,2,P.bone);
+  px(X,nx+29,ny+40,P.bone);
+  px(X,nx+31,ny+40,P.bone);
+  px(X,nx+33,ny+40,P.dbone);
+
+  // Black sand spilling from palm
+  for(let i=0;i<8;i++){
+    const sPhase=((t*.02+i*.13)%1);
+    const sandX=nx+31+Math.sin(i*2+t*.01)*1.5;
+    const sandY=ny+42+sPhase*36;
+    X.globalAlpha=.85-sPhase*.6;
+    px(X,sandX,sandY,'#0a0a0e');
+    if(hash(i,0,11)>.5)px(X,sandX+1,sandY,'#050508');
+    X.globalAlpha=1;
+  }
+  // Pile of black sand growing at his foot
+  rect(X,nx+26,ny+76,10,3,'#0a0a0e');
+  dither(X,nx+27,ny+75,8,2,'#050508','#0a0a0e',.5);
+  px(X,nx+30,ny+74,'#0a0a0e');
+  px(X,nx+32,ny+74,'#0a0a0e');
+
+  // ── HEAD — CRESCENT MOON with face inside ──
+  const hx=nx+10,hy=ny+4;
+  // Outer crescent — tarnished silver
+  X.save();
+  X.fillStyle='#5a5d62';
+  X.beginPath();
+  X.arc(hx,hy,10,Math.PI*.15,Math.PI*1.85,false);
+  X.arc(hx+3,hy,8,Math.PI*1.85,Math.PI*.15,true);
+  X.closePath();X.fill();
+  // Mid-tone
+  X.fillStyle='#8a8d8f';
+  X.beginPath();
+  X.arc(hx-1,hy-1,9,Math.PI*.2,Math.PI*1.8,false);
+  X.arc(hx+2,hy,7,Math.PI*1.8,Math.PI*.2,true);
+  X.closePath();X.fill();
+  // Dark rim (inner curve)
+  X.strokeStyle='#3a3a42';X.lineWidth=1;
+  X.beginPath();
+  X.arc(hx+3,hy,7,Math.PI*1.85,Math.PI*.15,true);
+  X.stroke();
+  // Subtle highlight
+  X.fillStyle='#b8c8d0';
+  X.beginPath();
+  X.arc(hx-3,hy-3,3,Math.PI*.9,Math.PI*1.4);
+  X.stroke();
+  X.restore();
+
+  // Face nestled in the crescent curve
+  X.fillStyle='#2a2830';
+  X.fillRect(hx-1,hy-2,6,6);
+  X.fillStyle='#1a1822';
+  X.fillRect(hx,hy-1,4,5);
+  // Closed eyes — two horizontal lines
+  rect(X,hx,hy+1,1,1,'#050508');
+  rect(X,hx+3,hy+1,1,1,'#050508');
+  // Lashes (tiny)
+  px(X,hx-1,hy+1,'#050508');
+  px(X,hx+4,hy+1,'#050508');
+  // Calm mouth
+  px(X,hx+1,hy+3,'#3a3a42');
+  px(X,hx+2,hy+3,'#3a3a42');
+  // Tear streaks (silver)
+  X.globalAlpha=.4;
+  rect(X,hx,hy+2,1,2,'#aaaabb');
+  rect(X,hx+3,hy+2,1,2,'#aaaabb');
+  X.globalAlpha=1;
+
+  // ── HORNS — curving upward from crescent, fading into sky ──
+  X.strokeStyle='#4a4d50';X.lineWidth=2;
+  // Left horn
+  X.beginPath();
+  X.moveTo(hx-5,hy-6);
+  X.quadraticCurveTo(hx-9,hy-15,hx-7,hy-26);
+  X.stroke();
+  // Right horn
+  X.beginPath();
+  X.moveTo(hx+6,hy-6);
+  X.quadraticCurveTo(hx+11,hy-15,hx+9,hy-26);
+  X.stroke();
+  X.lineWidth=1;
+  // Horns fade into sky
+  X.globalAlpha=.4;
+  rect(X,hx-8,hy-28,2,3,'#3a3d42');
+  rect(X,hx+9,hy-28,2,3,'#3a3d42');
+  X.globalAlpha=.2;
+  rect(X,hx-9,hy-30,2,2,'#3a3d42');
+  rect(X,hx+10,hy-30,2,2,'#3a3d42');
+  X.globalAlpha=1;
+
+  // Star above head (between horns)
+  const topStar=.6+.4*Math.sin(t*.008);
+  X.globalAlpha=topStar;
+  px(X,hx+1,hy-20,'#ffffff');
+  px(X,hx+2,hy-20,'#ffffff');
+  px(X,hx+1,hy-21,'#ccccee');
+  px(X,hx+2,hy-21,'#ccccee');
+  X.globalAlpha=1;
 }
 
 // ═══════════════════════════════════════
@@ -5199,7 +6065,7 @@ function drawIdleMsg(){
 // WHISPERS (#5)
 // ═══════════════════════════════════════
 let whisper={text:'',life:0};
-const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...палец листает сам...',junkyard:'...автопилот всё ещё едет...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...учебная тревога... не настоящая...',exit:'...404... страница не найдена...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...bored ape... 0.0001 eth...',powerline:'...фантомный гул...',ruins:'...квартира 42... кто-то дома?...',pipeline:'...кап... кап-кап... тишина...',watchtower:'...бинокль тёплый... кто смотрел?...',pit:'...братишка... покушать... принёс...',posterwall:'...они играли до пожара...',banner:'...coming soon...'};
+const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...палец листает сам...',junkyard:'...автопилот всё ещё едет...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...учебная тревога... не настоящая...',exit:'...404... страница не найдена...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...bored ape... 0.0001 eth...',powerline:'...фантомный гул...',ruins:'...квартира 42... кто-то дома?...',pipeline:'...кап... кап-кап... тишина...',watchtower:'...бинокль тёплый... кто смотрел?...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',posterwall:'...они играли до пожара...',banner:'...coming soon...'};
 function checkWhisper(){
   if(whisper.life>0)return;
   locs.forEach(l=>{
@@ -5657,7 +6523,7 @@ function checkAchievements(){
     unlockAch('silence');
   }
   // Listener — talked to all NPCs
-  if(!achievements.listener.done&&talkedNPCs.size>=4){ // jester, sol, elder, dumpster
+  if(!achievements.listener.done&&talkedNPCs.size>=5){ // jester, sol, elder, dumpster, nocturnal
     unlockAch('listener');
   }
   // Arsonist — found dumpster
@@ -5715,7 +6581,7 @@ function drawAchPopup(){
 function checkSecretEnding(){
   if(endingStoneActive||endingTriggered)return;
   // Requirements: all 20 lore, all 4 secrets, talked to all NPCs, read NFG
-  if(collected.size>=loreItems.length&&secretFound.size>=4&&talkedNPCs.size>=4&&nfgFinished){
+  if(collected.size>=loreItems.length&&secretFound.size>=4&&talkedNPCs.size>=5&&nfgFinished){
     endingStoneActive=true;
     // Add the stone as a new location
     locs.push({
@@ -6016,6 +6882,7 @@ const menuInscriptions={
   pipeline:'труба считает. не жидкость — вас.',
   watchtower:'бинокль направлен внутрь.',
   pit:'...братишка...',
+  nocturnal:'тишина держит нити. нити держат тебя.',
   posterwall:'музыка не горит.',
   banner:'★ coming soon ★',
 };
