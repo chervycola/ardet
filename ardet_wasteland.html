@@ -901,6 +901,9 @@ const DAY_LENGTH=18000;
 let weather='clear'; // clear, ashrain, storm
 let weatherTimer=0;
 let lightning=0;
+let boltX=VW/2;
+// ═══ PET CROSSINGS — random cat/raven/rat cameos ═══
+let petCrossings=[];
 let ashRainParts=[];
 let rainParts=[];
 let puddles=[];
@@ -978,7 +981,7 @@ function getZoneName(zone){
 }
 
 // ═══════════════════════════════════════
-// LOCATIONS (32)
+// LOCATIONS (33)
 // ═══════════════════════════════════════
 const locs=[
   // ── SETTLEMENT ──
@@ -1107,6 +1110,12 @@ const locs=[
       '(Молчание.\nНити слегка дрогнули.\nЗвезда чуть ярче.\nТы продолжаешь.\nКонечно, продолжаешь.\nА что ещё делать.)',
     ],
     light:{r:45,color:[80,80,140],flicker:.015}},
+
+  // ── THEATER OF SHADOWS — abandoned amphitheater with ghost performance ──
+  {id:'theater',name:'Театр Теней',x:480,y:200,w:80,h:60,zone:'forest',
+    look:'Полукруглый каменный амфитеатр на склоне холма. Ряды каменных скамей, поросших мхом, спускаются к маленькой круглой сцене. Зрителей нет — но сцена не пустует. На сцене четыре силуэта повторяют один и тот же спектакль уже одиннадцать лет: один смеётся, один горит, один сидит, один молчит. Это не призраки — это эхо. Свет на сцену падает от прожектора, который никто не включал; прожектор тоже эхо. На каменных рядах — следы от тел. Тела сидели здесь до Пожара, аплодировали, расходились. Тела вернулись в виде пыли и теперь снова сидят, но их не видно. Их видно только когда играешь сам. Если выйдешь на сцену — увидишь зал. Полный. Места заняты. Все смотрят. На тебя. Это второй финал. Он не для всех.',
+    useAction:'theater_stage',
+    light:{r:35,color:[200,180,140],flicker:.06}},
 
   // ── POSTER WALL & BANNER ──
   {id:'posterwall',name:'Стена афиш',x:850,y:680,w:70,h:50,zone:'settlement',
@@ -2157,12 +2166,70 @@ const locDraw={
     drawNPC_sol(x-28,y-2);
   },
   vending(x,y){
-    rect(X,x,y,36,52,P.dgrey);rect(X,x+1,y+1,34,50,P.ash);
-    dither(X,x+3,y+20,8,18,P.rust,P.ash,.35);dither(X,x+26,y+28,7,16,P.drust,P.ash,.3);
-    const fl=hash(0,t*.012,77)>.08?1:.2;X.globalAlpha=fl;
-    rect(X,x+6,y+4,24,16,'#0a0a1a');rect(X,x+8,y+7,16,2,P.amber);rect(X,x+8,y+11,12,2,P.amber);X.globalAlpha=1;
-    for(let i=0;i<4;i++){rect(X,x+7+i*7,y+24,5,5,P.dgrey);rect(X,x+8+i*7,y+25,3,3,P.lgrey);}
-    rect(X,x+8,y+36,20,12,'#111');rect(X,x+4,y+50,28,2,P.amber);
+    // ═══ VENDING MACHINE — Nosedive rating + Merits ═══
+    X.globalAlpha=.3;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+18,y+56,22,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+    // Main body
+    rect(X,x,y,36,54,P.dgrey);
+    rect(X,x+1,y+1,34,52,P.ash);
+    rect(X,x+2,y+2,32,50,P.dstone);
+    // Rust patches
+    dither(X,x+3,y+20,8,18,P.rust,P.ash,.35);
+    dither(X,x+26,y+28,7,16,P.drust,P.ash,.3);
+    // Top display — flickering
+    const fl=hash(0,t*.012,77)>.08?1:.2;
+    X.globalAlpha=fl;
+    rect(X,x+6,y+4,24,16,'#0a0a1a');
+    // "ОБМЕН" label
+    rect(X,x+8,y+7,16,2,P.amber);
+    // Rating display — 4.7★ Nosedive style
+    X.globalAlpha=fl*.9;
+    rect(X,x+9,y+11,2,2,P.gold);rect(X,x+11,y+11,1,1,P.damber); // star
+    rect(X,x+13,y+11,2,2,P.amber); // 4
+    rect(X,x+16,y+11,1,2,P.amber); // .
+    rect(X,x+18,y+11,2,2,P.amber); // 7
+    X.globalAlpha=1;
+    // 4 window cells with items (mice)
+    for(let i=0;i<4;i++){
+      rect(X,x+7+i*7,y+24,5,5,P.dgrey);
+      rect(X,x+8+i*7,y+25,3,3,'#0a0a0e');
+      // One window has a mouse inside
+      if(i===1){
+        rect(X,x+9,y+26,2,1,'#1a1a1a'); // mouse body
+        if(t%12<6)px(X,x+9,y+26,'#6b0f1a'); // eye
+      }
+      // Another has a coin stuck
+      if(i===2){
+        px(X,x+16,y+27,P.gold);
+      }
+    }
+    // Keypad
+    rect(X,x+8,y+32,20,14,'#0a0a0a');
+    for(let row=0;row<3;row++)for(let col=0;col<4;col++){
+      rect(X,x+9+col*5,y+33+row*4,3,3,P.dgrey);
+    }
+    // Coin slot (welded shut)
+    rect(X,x+8,y+48,20,2,'#1a1a1a');
+    X.fillStyle='#6b0f1a';
+    rect(X,x+10,y+48,3,1); // weld mark
+    rect(X,x+16,y+48,2,1);
+    rect(X,x+22,y+48,3,1);
+    // Bottom lip
+    rect(X,x+4,y+52,28,2,P.amber);
+    // "PRESS TO SPIN" label (faded, broken)
+    X.globalAlpha=.4;
+    X.fillStyle='#1a1a1a';
+    rect(X,x+10,y+29,16,1);
+    X.globalAlpha=1;
+    // Cracked screen line
+    X.strokeStyle=P.lgrey;X.lineWidth=1;
+    X.beginPath();X.moveTo(x+9,y+5);X.lineTo(x+22,y+15);X.stroke();
+    // Small "5 ⭐" graffiti on the side
+    X.fillStyle=P.gold;
+    px(X,x+32,y+30);px(X,x+33,y+30);px(X,x+32,y+31);
+    // Moss at base
+    rect(X,x,y+52,3,2,P.dtoxic);
+    px(X,x+1,y+51,P.toxic);
   },
   library(x,y){
     // ═══ RUINED LIBRARY — detailed ═══
@@ -2388,12 +2455,117 @@ const locDraw={
     }
   },
   graffiti(x,y){
-    rect(X,x,y,55,40,P.stone);rect(X,x+1,y+1,53,38,P.dstone);
-    // Colored marks
-    const marks=[[5,5,15,3,P.blood],[8,12,20,2,'#eee'],[3,18,25,3,'#1a1a1a'],[10,24,18,2,P.amber],[6,30,12,2,P.toxic]];
-    marks.forEach(([mx_,my_,mw,mh,mc])=>rect(X,x+mx_,y+my_,mw,mh,mc));
-    // Tag
-    dither(X,x+30,y+8,18,14,P.blood,'#3a1a1a',.4);
+    // ═══ GRAFFITI WALL — layered slogans through the years ═══
+    // Base concrete wall
+    rect(X,x,y,58,42,P.stone);
+    rect(X,x+1,y+1,56,40,P.dstone);
+    // Cracks
+    X.fillStyle='#0a0a0e';
+    for(let i=0;i<5;i++){
+      rect(X,x+2+hash(i,0,11)*54,y+2+hash(i,0,22)*38,1,3+hash(i,0,33)*4);
+    }
+
+    // ── LAYER 1 (oldest) — advertising ghost ──
+    X.globalAlpha=.2;
+    dither(X,x+3,y+3,52,36,P.damber,P.stone,.4);
+    // Fragment of "БУДЬ В КАЧЕ" (be in quality, old ad)
+    rect(X,x+6,y+6,3,1,P.damber);rect(X,x+10,y+6,3,1,P.damber);
+    rect(X,x+14,y+6,3,1,P.damber);rect(X,x+18,y+6,3,1,P.damber);
+    X.globalAlpha=1;
+
+    // ── LAYER 2 — "СИСТЕМА МЕРТВА" big red ──
+    X.fillStyle='#6b0f1a';
+    rect(X,x+4,y+10,4,2);rect(X,x+4,y+12,2,4); // С
+    rect(X,x+9,y+10,5,1);rect(X,x+11,y+10,2,6); // и (simplified)
+    rect(X,x+15,y+10,4,1);rect(X,x+15,y+13,4,1);rect(X,x+15,y+16,4,1); // С (bottom)
+    rect(X,x+20,y+10,2,7);rect(X,x+20,y+10,3,1);rect(X,x+20,y+13,3,1); // Т
+    rect(X,x+25,y+10,1,7);rect(X,x+25,y+10,3,1); // Е
+    rect(X,x+29,y+10,2,7);rect(X,x+31,y+12,2,5); // М
+    rect(X,x+35,y+10,1,7);rect(X,x+35,y+13,3,1); // А
+    // Red paint drips
+    rect(X,x+6,y+17,1,3,'#4a0a12');
+    rect(X,x+12,y+17,1,4,'#4a0a12');
+    rect(X,x+22,y+17,1,3,'#4a0a12');
+    rect(X,x+30,y+17,1,3,'#4a0a12');
+
+    // ── LAYER 3 — "НО СКИДКИ ЖИВЫ" (underneath, smaller) ──
+    X.globalAlpha=.6;
+    X.fillStyle='#1a1a1a';
+    for(let i=0;i<10;i++){
+      rect(X,x+4+i*3,y+22,2,1);
+      rect(X,x+4+i*3,y+24,2,1);
+    }
+    X.globalAlpha=1;
+
+    // ── LAYER 4 — white "МЫ СВОБОДНЫ" ──
+    X.fillStyle=P.bone;
+    rect(X,x+7,y+26,2,5);rect(X,x+7,y+26,5,1);rect(X,x+7,y+28,3,1); // М
+    rect(X,x+14,y+26,4,1);rect(X,x+14,y+26,1,5);rect(X,x+14,y+30,4,1); // Ы
+    rect(X,x+20,y+26,3,5); // block
+    rect(X,x+25,y+26,1,5);rect(X,x+25,y+28,3,1);rect(X,x+27,y+26,1,5); // Н
+    rect(X,x+30,y+26,2,1);rect(X,x+30,y+30,2,1); // Ы
+
+    // ── LAYER 5 — "ARDET" in big black ──
+    X.fillStyle='#0a0a0a';
+    // A
+    rect(X,x+6,y+33,3,6);rect(X,x+7,y+32,2,1);rect(X,x+6,y+35,4,1);
+    // R
+    rect(X,x+11,y+32,3,7);rect(X,x+13,y+32,2,3);rect(X,x+13,y+35,2,3);
+    // D
+    rect(X,x+16,y+32,3,7);rect(X,x+18,y+32,2,1);rect(X,x+18,y+38,2,1);rect(X,x+19,y+33,1,5);
+    // E
+    rect(X,x+21,y+32,3,7);rect(X,x+21,y+32,5,1);rect(X,x+21,y+35,4,1);rect(X,x+21,y+38,5,1);
+    // T
+    rect(X,x+27,y+32,5,1);rect(X,x+29,y+32,2,7);
+
+    // ── LAYER 6 (newest) — MOSS growing over ARDET ──
+    // Living moss patches
+    for(let i=0;i<6;i++){
+      const mcx=x+8+i*5;
+      const mcy=y+33+Math.sin(i)*2;
+      rect(X,mcx,mcy,3,2,P.dtoxic);
+      px(X,mcx+1,mcy-1,P.toxic);
+      if(i%2)px(X,mcx,mcy+2,P.btoxic);
+    }
+
+    // ── SMALL TAGS on top ──
+    // "А" (anarchist)
+    X.fillStyle='#6b0f1a';
+    rect(X,x+40,y+4,2,4);rect(X,x+40,y+5,4,1);rect(X,x+42,y+4,2,4);
+    // Small "Z" crossed out (red strike)
+    X.fillStyle='#1b1464';
+    rect(X,x+46,y+4,4,1);rect(X,x+48,y+5,2,1);rect(X,x+46,y+6,2,1);rect(X,x+46,y+7,4,1);
+    X.strokeStyle='#6b0f1a';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+45,y+3);X.lineTo(x+51,y+9);X.stroke();
+
+    // Heart + initials
+    X.fillStyle='#b8860b';
+    rect(X,x+47,y+16,1,1);rect(X,x+49,y+16,1,1);
+    rect(X,x+46,y+17,4,1);
+    rect(X,x+47,y+18,3,1);
+    rect(X,x+48,y+19,1,1);
+
+    // QR code in corner (tiny)
+    for(let qy=0;qy<5;qy++)for(let qx=0;qx<5;qx++){
+      if(hash(qx,qy,55)>.4)px(X,x+50+qx,y+32+qy,'#0a0a0a');
+    }
+
+    // Spray can at base
+    rect(X,x+35,y+39,2,3,P.dgrey);
+    px(X,x+35,y+38,P.ash);
+    // Small spray mist
+    if(t%80<20){
+      X.globalAlpha=.2;
+      px(X,x+36,y+37,'#6b0f1a');
+      px(X,x+37,y+36,'#6b0f1a');
+      X.globalAlpha=1;
+    }
+
+    // "Мох помнит" scratch (barely visible, very small)
+    X.globalAlpha=.4;
+    X.fillStyle=P.toxic;
+    for(let i=0;i<8;i++)px(X,x+40+i,y+39,P.dtoxic);
+    X.globalAlpha=1;
   },
   radio(x,y){
     // ═══ RADIO TOWER — with doomscroll phone at base ═══
@@ -2997,18 +3169,182 @@ const locDraw={
     }
   },
   basement(x,y){
-    rect(X,x+5,y+15,40,25,P.dstone);rect(X,x+7,y+17,36,21,'#0a0a0a');
-    // Steps going down
-    for(let i=0;i<4;i++)rect(X,x+12,y+20+i*4,26,3,`rgb(${30-i*5},${30-i*5},${30-i*5})`);
-    // Water at bottom
-    X.globalAlpha=.4;rect(X,x+12,y+33,26,5,P.toxic);X.globalAlpha=1;
-    // Frame
-    rect(X,x+10,y+14,2,28,P.stone);rect(X,x+38,y+14,2,28,P.stone);rect(X,x+10,y+14,30,2,P.stone);
+    // ═══ FLOODED BASEMENT — Iä! Iä! ═══
+    // Shadow
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+25,y+44,28,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // Concrete walls
+    rect(X,x+5,y+12,40,30,P.dstone);
+    rect(X,x+6,y+13,38,28,'#1a1820');
+    rect(X,x+7,y+14,36,26,'#0a0a12');
+    // Moss on walls
+    for(let i=0;i<4;i++){
+      rect(X,x+8+i*9,y+14,2,2,P.dtoxic);
+      if(hash(i,0,11)>.5)px(X,x+9+i*9,y+13,P.toxic);
+    }
+
+    // Stone frame
+    rect(X,x+4,y+10,3,32,P.stone);
+    rect(X,x+43,y+10,3,32,P.stone);
+    rect(X,x+4,y+10,42,3,P.stone);
+    // Frame weathering
+    for(let i=0;i<6;i++)px(X,x+6+i*6,y+11,'#1a1a22');
+
+    // Steps descending (with perspective)
+    for(let i=0;i<5;i++){
+      const stW=24-i*2;
+      const stX=x+13+i;
+      const stY=y+18+i*4;
+      const shade=Math.max(3,30-i*6);
+      rect(X,stX,stY,stW,2,`rgb(${shade},${shade-1},${shade+2})`);
+      rect(X,stX,stY+2,stW,1,'#020202');
+    }
+
+    // Water at bottom — pulsing toxic glow
+    X.globalAlpha=.5+.1*Math.sin(t*.02);
+    rect(X,x+12,y+37,26,5,P.dtoxic);
+    rect(X,x+13,y+38,24,3,P.toxic);
+    X.globalAlpha=1;
+    // Water ripples
+    for(let i=0;i<3;i++){
+      const rph=((t*.02+i*.33)%1);
+      X.globalAlpha=(1-rph)*.3;
+      X.strokeStyle=P.btoxic;X.lineWidth=1;
+      X.beginPath();X.ellipse(x+25,y+39,3+rph*10,1+rph*2,0,0,Math.PI*2);X.stroke();
+      X.globalAlpha=1;
+    }
+
+    // Glowing rune on wall — slow pulse
+    const rPulse=.4+.3*Math.sin(t*.006);
+    X.globalAlpha=rPulse;
+    X.fillStyle='#6b0f1a';
+    // Triangle
+    rect(X,x+23,y+16,2,2);rect(X,x+21,y+19,6,1);
+    rect(X,x+22,y+17,4,1);
+    X.globalAlpha=1;
+
+    // WET FOOTPRINTS on steps — coming UP (someone just climbed out)
+    for(let i=0;i<4;i++){
+      const fpY=y+22+i*4;
+      const fpX=x+15+i*2+Math.sin(i*2)*2;
+      X.globalAlpha=.4+hash(i,0,11)*.2;
+      rect(X,fpX,fpY,2,1,'#1a3a2a');
+      rect(X,fpX+3,fpY+1,2,1,'#1a3a2a');
+      X.globalAlpha=1;
+    }
+
+    // Cold air/fog from inside (rising)
+    for(let i=0;i<3;i++){
+      const fph=((t*.008+i*.33)%1);
+      const fx=x+18+i*6+Math.sin(t*.01+i)*2;
+      const fy=y+12-fph*8;
+      X.globalAlpha=(1-fph)*.25;
+      rect(X,fx,fy,3,1,'#4a7a5a');
+      X.globalAlpha=1;
+    }
+
+    // Graffiti on doorframe — "Iä!" in red
+    X.fillStyle='#6b0f1a';
+    rect(X,x+8,y+6,1,3); // I
+    rect(X,x+10,y+6,1,3);px(X,x+11,y+6); // ä
+    rect(X,x+10,y+5,1,1); rect(X,x+12,y+5,1,1);
+    rect(X,x+14,y+6,1,1); // !
+    rect(X,x+14,y+8,1,1);
+
+    // Drop of water dripping from frame
+    if(t%60<20){
+      const dY=y+9+(t%60)*.4;
+      X.globalAlpha=.5;
+      px(X,x+20,dY,P.toxic);
+      X.globalAlpha=1;
+    }
   },
   exit(x,y){
-    for(let i=0;i<18;i++){const rx=x+i*4,ry=y+12+Math.sin(i*.4)*2;dither(X,rx,ry,4,Math.max(1,22-Math.floor(i*1.2)),P.d1,P.g3,.5);}
-    rect(X,x+10,y-14,3,34,P.wood);rect(X,x+2,y-18,28,12,P.dwood);rect(X,x+3,y-17,26,10,P.wood);
-    rect(X,x+18,y-13,8,2,P.bone);rect(X,x+24,y-15,2,6,P.bone);
+    // ═══ EXIT TO THE WASTELAND — @ardet_art sign ═══
+    // Road fading into the distance (perspective)
+    for(let i=0;i<22;i++){
+      const rx=x+i*4;
+      const ry=y+12+Math.sin(i*.4)*2;
+      const w=Math.max(1,24-Math.floor(i*1.3));
+      dither(X,rx,ry,4,w,P.d1,P.g3,.5);
+    }
+    // Road markings (dashed center line)
+    for(let i=0;i<5;i++){
+      const rx=x+4+i*14;
+      rect(X,rx,y+14+i*.8,4,2,'#3a2a0a');
+    }
+
+    // Signpost
+    rect(X,x+10,y-14,3,34,P.dwood);
+    rect(X,x+11,y-13,1,32,P.wood);
+    // Rust at base
+    px(X,x+10,y+18,P.rust);
+    px(X,x+12,y+17,P.drust);
+
+    // Main sign board
+    rect(X,x+2,y-20,28,14,P.dwood);
+    rect(X,x+3,y-19,26,12,P.wood);
+    rect(X,x+3,y-19,26,1,P.lwood); // top edge
+    // Darker weathering
+    dither(X,x+4,y-18,24,10,'#3a2618','#5a3a24',.3);
+    // Crack
+    rect(X,x+18,y-18,1,6,'#1a0e06');
+    // Arrow
+    rect(X,x+5,y-13,2,4,P.bone);
+    rect(X,x+7,y-14,1,6,P.bone);
+    // @ardet_art fake-pixel text
+    X.fillStyle=P.bone;
+    // @
+    rect(X,x+10,y-15,1,3);rect(X,x+11,y-15,3,1);rect(X,x+11,y-13,3,1);rect(X,x+13,y-14,1,1);
+    // a
+    rect(X,x+15,y-14,2,2);
+    // r
+    rect(X,x+18,y-14,1,2);rect(X,x+18,y-15,2,1);
+    // d
+    rect(X,x+20,y-15,1,3);rect(X,x+21,y-14,1,2);
+    // e
+    rect(X,x+23,y-14,2,1);rect(X,x+23,y-13,2,1);
+    // t
+    rect(X,x+26,y-15,1,3);rect(X,x+25,y-15,2,1);
+    // Second line: smaller "ardet.art" fake
+    rect(X,x+6,y-10,18,1,P.damber);
+
+    // Small sub-sign below
+    rect(X,x+14,y-4,12,5,P.dwood);
+    rect(X,x+15,y-3,10,3,P.wood);
+    // "→" arrow on sub-sign
+    rect(X,x+17,y-2,4,1,'#1a0e06');
+    rect(X,x+20,y-3,1,1,'#1a0e06');
+    rect(X,x+20,y-1,1,1,'#1a0e06');
+
+    // Crow perched on sign
+    if(t%500<480){
+      rect(X,x+25,y-21,2,1,'#050505');
+      px(X,x+24,y-21,'#050505'); // beak
+      px(X,x+25,y-22,'#050505'); // head
+      // Occasional eye glint
+      if(t%10<3)px(X,x+25,y-21,P.amber);
+    }
+
+    // Old bones at base of sign
+    rect(X,x+4,y+17,4,1,P.bone);
+    px(X,x+8,y+17,P.dbone);
+    rect(X,x+6,y+19,3,1,P.dbone);
+
+    // Wind-blown leaflet stuck to post
+    const lfSway=Math.sin(t*.02)*.5;
+    rect(X,x+13+lfSway,y-2,3,3,P.parchment);
+    rect(X,x+13+lfSway,y-2,3,1,'#3a2a18');
+
+    // Small boot footprints heading away (into the distance)
+    for(let i=0;i<4;i++){
+      const fpX=x+30+i*6+hash(i,0,11)*2;
+      const fpY=y+12+i*2;
+      X.globalAlpha=.25-i*.04;
+      rect(X,fpX,fpY,2,1,'#0a0a0a');
+      X.globalAlpha=1;
+    }
   },
   train(x,y){
     // ═══ RUSTED TRAIN — Platonov's Machinist Route ═══
@@ -4364,10 +4700,114 @@ const locDraw={
     }
   },
   billboard(x,y){
-    // Flapping corner of torn poster
+    // ═══ FALLEN BILLBOARD — Just Do It + Bored Ape ═══
+    // Main billboard panel (fallen flat, angled slightly)
+    rect(X,x,y,75,38,P.dgrey);
+    rect(X,x+1,y+1,73,36,P.dstone);
+
+    // Wooden frame behind
+    rect(X,x-1,y+10,77,3,P.dwood);
+    rect(X,x-1,y+26,77,3,P.dwood);
+    // Support posts sticking out
+    rect(X,x+8,y+37,2,12,P.dwood);
+    rect(X,x+65,y+37,2,12,P.dwood);
+
+    // ── POSTER CONTENT ──
+    // Background — cream/peeling paper
+    rect(X,x+2,y+2,71,34,P.parchment);
+    // Weathering
+    dither(X,x+3,y+3,69,32,'#8a7458','#e8d8b0',.2);
+
+    // ── NIKE-STYLE TOP HALF — "Just Do It" ──
+    // Big black "JUST DO IT" text (pixel-simulated)
+    X.fillStyle='#0a0a0a';
+    // J
+    rect(X,x+6,y+6,3,8);rect(X,x+5,y+12,4,2);rect(X,x+5,y+13,2,1);
+    // U
+    rect(X,x+11,y+6,2,6);rect(X,x+15,y+6,2,6);rect(X,x+11,y+12,6,2);
+    // S
+    rect(X,x+19,y+6,5,2);rect(X,x+19,y+9,5,2);rect(X,x+19,y+12,5,2);
+    rect(X,x+19,y+6,2,3);rect(X,x+22,y+9,2,5);
+    // T
+    rect(X,x+26,y+6,6,2);rect(X,x+28,y+6,2,8);
+    // (space)
+    // D
+    rect(X,x+34,y+6,2,8);rect(X,x+34,y+6,4,2);rect(X,x+34,y+12,4,2);rect(X,x+37,y+8,1,4);
+    // O
+    rect(X,x+40,y+6,4,8);rect(X,x+40,y+6,4,2);rect(X,x+40,y+12,4,2);
+    // (space)
+    // I
+    rect(X,x+47,y+6,3,8);
+    // T
+    rect(X,x+52,y+6,6,2);rect(X,x+54,y+6,2,8);
+
+    // Swoosh (Nike tick)
+    X.strokeStyle='#0a0a0a';X.lineWidth=2;
+    X.beginPath();
+    X.moveTo(x+61,y+10);
+    X.quadraticCurveTo(x+66,y+14,x+69,y+8);
+    X.stroke();
+    X.lineWidth=1;
+
+    // ── NFT STICKER over right part ──
+    // Paper corner stuck on
+    const nftX=x+45,nftY=y+18;
+    rect(X,nftX,nftY,20,16,'#1a1a1a');
+    rect(X,nftX+1,nftY+1,18,14,'#2a2a2a');
+    // Bored Ape tiny face
+    // Head
+    rect(X,nftX+4,nftY+3,12,10,'#3a2618');
+    // Eyes (bored — half-closed)
+    rect(X,nftX+6,nftY+6,2,1,'#e8dcc8');
+    rect(X,nftX+11,nftY+6,2,1,'#e8dcc8');
+    // Mouth (frowning)
+    rect(X,nftX+7,nftY+10,6,1,'#1a0a06');
+    // Hat (tiny sailor hat or crown)
+    rect(X,nftX+5,nftY+2,10,1,'#6b0f1a');
+    rect(X,nftX+7,nftY+1,6,1,'#6b0f1a');
+    // Cigar
+    rect(X,nftX+13,nftY+11,3,1,'#b8860b');
+    // "#4729" label
+    X.fillStyle=P.damber;
+    px(X,nftX+2,nftY+14);rect(X,nftX+3,nftY+14,3,1);
+    px(X,nftX+7,nftY+14);px(X,nftX+9,nftY+14);px(X,nftX+11,nftY+14);
+    // Crossed out price "1.2M$ → 0.0001"
+    X.fillStyle='#6b0f1a';
+    rect(X,nftX+2,nftY+15,14,1);
+
+    // ── "КУПИ ИЛИ УМРИ" scribble at bottom ──
+    X.fillStyle='#1a0a06';
+    for(let i=0;i<12;i++){
+      rect(X,x+6+i*4,y+30,2,1);
+      if(i%2)rect(X,x+6+i*4,y+32,2,1);
+    }
+
+    // Handwritten addition in red: "УМЕР. НЕ КУПИЛ."
+    X.fillStyle='#6b0f1a';
+    for(let i=0;i<10;i++){
+      px(X,x+8+i*3,y+34);
+      if(i%3)px(X,x+8+i*3,y+35);
+    }
+
+    // ── TORN CORNER flapping ──
     const flap=Math.sin(t*.02)*3;
-    rect(X,x+55+flap,y+5,4,6,P.dstone);
-    rect(X,x+56+flap,y+6,2,4,P.bone);
+    rect(X,x+68+flap*.5,y+4,5,7,P.parchment);
+    rect(X,x+68+flap*.5,y+4,5,1,'#8a7458'); // torn edge shadow
+    rect(X,x+67+flap,y+3,2,8,'#8a7458'); // bend shadow
+
+    // Small nail holding it
+    px(X,x+72,y+4,P.ash);
+
+    // ── OLD CROW on the frame ──
+    if(t%400<380){
+      rect(X,x+30,y-2,2,1,'#050505');
+      px(X,x+32,y-2,'#050505');
+      px(X,x+29,y-2,'#050505'); // beak
+    }
+
+    // Dust/rust dripping down from frame
+    rect(X,x+8,y+37,1,8,P.rust);
+    rect(X,x+65,y+37,1,6,P.rust);
   },
   powerline(x,y){
     // Animated spark on broken wire
@@ -4547,17 +4987,105 @@ const locDraw={
     }
   },
   pipeline(x,y){
-    // Dripping animation
-    const dripPhase=(t*0.02)%1;
-    if(dripPhase<.6){
-      const dropY=y+8+dripPhase*20;
-      X.globalAlpha=.6;rect(X,x+35,dropY,2,3,P.toxic);X.globalAlpha=1;
+    // ═══ PIPELINE — truba schitaet ═══
+    // Main pipe body (huge, horizontal)
+    rect(X,x,y,80,14,P.dgrey);
+    rect(X,x,y+1,80,12,P.dstone);
+    rect(X,x,y+13,80,2,'#1a1a1a'); // bottom shadow
+    // Highlight on top
+    rect(X,x,y+1,80,1,P.ash);
+    rect(X,x,y+2,80,1,P.lgrey);
+    // Rust patches
+    dither(X,x+4,y+3,72,8,P.rust,P.dstone,.4);
+    // Bolts along pipe
+    for(let i=0;i<8;i++){
+      px(X,x+6+i*10,y+4,P.ash);
+      px(X,x+6+i*10,y+10,P.ash);
     }
-    // Puddle beneath growing/shrinking
-    const puddleSize=4+Math.sin(t*.003)*2;
-    X.globalAlpha=.3;
-    X.beginPath();X.ellipse(x+36,y+22,puddleSize,2,0,0,Math.PI*2);X.fillStyle=P.toxic;X.fill();
+
+    // Flange connections (every 40px)
+    rect(X,x+18,y-2,4,18,P.dgrey);
+    rect(X,x+19,y-1,2,16,P.lgrey);
+    rect(X,x+58,y-2,4,18,P.dgrey);
+    rect(X,x+59,y-1,2,16,P.lgrey);
+
+    // ── LEAK #1 — main crack, steady drip ──
+    rect(X,x+32,y+6,6,2,'#050505');
+    px(X,x+31,y+7,'#050505');
+    px(X,x+38,y+7,'#050505');
+    // Drip
+    const dp1=(t*.02)%1;
+    if(dp1<.7){
+      const dropY=y+8+dp1*26;
+      X.globalAlpha=.7;
+      rect(X,x+34,dropY,2,3,P.toxic);
+      if(dp1>.4)px(X,x+34,dropY+3,P.btoxic);
+      X.globalAlpha=1;
+    }
+    // Puddle below leak 1
+    X.globalAlpha=.35;
+    X.beginPath();X.ellipse(x+35,y+34,7,2,0,0,Math.PI*2);X.fillStyle=P.toxic;X.fill();
     X.globalAlpha=1;
+
+    // ── LEAK #2 — small stream, faster ──
+    rect(X,x+14,y+8,2,1,'#050505');
+    const dp2=(t*.04)%1;
+    if(dp2<.8){
+      const dropY=y+9+dp2*22;
+      X.globalAlpha=.6;
+      px(X,x+14,dropY,P.toxic);
+      X.globalAlpha=1;
+    }
+    // Small puddle
+    X.globalAlpha=.25;
+    X.beginPath();X.ellipse(x+14,y+32,3,1,0,0,Math.PI*2);X.fillStyle=P.dtoxic;X.fill();
+    X.globalAlpha=1;
+
+    // ── LEAK #3 — big one on right, slow dribble ──
+    rect(X,x+60,y+5,4,3,'#0a0a0a');
+    rect(X,x+61,y+6,2,1,P.dtoxic);
+    const dp3=(t*.012)%1;
+    if(dp3<.6){
+      X.globalAlpha=.6;
+      rect(X,x+62,y+8+dp3*25,2,4,P.toxic);
+      X.globalAlpha=1;
+    }
+    // Big puddle
+    X.globalAlpha=.4;
+    X.beginPath();X.ellipse(x+62,y+36,9,3,0,0,Math.PI*2);X.fillStyle=P.toxic;X.fill();
+    X.globalAlpha=1;
+
+    // ── TALLY MARKS — the pipe counts something ──
+    X.fillStyle='#1a0e06';
+    // Row of small vertical marks (scratched)
+    for(let i=0;i<9;i++){
+      rect(X,x+42+i*1.5,y+3,1,2);
+    }
+    // Cross-out on 5th
+    rect(X,x+42,y+3,13,1);
+    // Another row below
+    for(let i=0;i<7;i++){
+      rect(X,x+42+i*1.5,y+11,1,2);
+    }
+
+    // ── STENCIL "∅ 600" (pipe diameter) ──
+    X.fillStyle='#1a0e06';
+    rect(X,x+4,y+3,3,3); // ∅ circle
+    rect(X,x+5,y+3,1,1,P.dstone);
+    rect(X,x+3,y+3,1,1); // cross
+    rect(X,x+6,y+5,1,1);
+    // "600" dots
+    rect(X,x+8,y+4,1,2);rect(X,x+10,y+4,1,2);rect(X,x+12,y+4,1,2);
+
+    // Moss on wet areas
+    for(let i=0;i<4;i++){
+      rect(X,x+30+i*12,y+12,3,1,P.dtoxic);
+      if(hash(i,0,11)>.5)px(X,x+31+i*12,y+11,P.toxic);
+    }
+
+    // Drain grate on the ground (where the leaks drain to)
+    rect(X,x+44,y+38,6,2,'#0a0a0a');
+    for(let i=0;i<4;i++)rect(X,x+45+i*1.5,y+38,1,2,'#1a1a1a');
   },
   watchtower(x,y){
     // ═══ WATCHTOWER — THE ARCHIVIST'S POST ═══
@@ -4813,6 +5341,132 @@ const locDraw={
       const sy=y+80+Math.sin(i*.5)*1;
       rect(X,sx,sy,2+i%2,1,'#050508');
     }
+  },
+  // ═══ THEATER OF SHADOWS ═══
+  theater(x,y){
+    // ── HILL SLOPE ──
+    X.globalAlpha=.3;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+40,y+58,42,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── SEMI-CIRCLE STONE TIERS (back to front) ──
+    for(let tier=0;tier<6;tier++){
+      const ty=y+8+tier*5;
+      const tw=70-tier*8;
+      const tx=x+5+tier*4;
+      // Stone bench
+      const shade=22+tier*3;
+      rect(X,tx,ty,tw,2,`rgb(${shade+8},${shade+5},${shade+2})`);
+      rect(X,tx,ty+2,tw,1,`rgb(${shade-2},${shade-4},${shade-6})`);
+      // Bench seam markings
+      for(let i=0;i<8;i++){
+        if(hash(i,tier,11)>.5)rect(X,tx+2+i*8,ty,1,2,'#0a0a0e');
+      }
+      // Moss patches on benches
+      if(hash(tier,0,22)>.4){
+        rect(X,tx+5+hash(tier,0,33)*tw*.8,ty,3,1,P.dtoxic);
+        if(hash(tier,0,44)>.5)px(X,tx+6,ty-1,P.toxic);
+      }
+    }
+
+    // ── SCATTERED BONES on benches (where bodies sat) ──
+    for(let i=0;i<5;i++){
+      const bx=x+15+hash(i,0,11)*50;
+      const by=y+10+hash(i,0,22)*22;
+      rect(X,bx,by,3,1,P.bone);
+      if(hash(i,0,33)>.5)px(X,bx+3,by,P.dbone);
+    }
+
+    // ── ROUND STAGE in center-bottom ──
+    X.fillStyle=P.dstone;
+    X.beginPath();X.ellipse(x+40,y+50,18,5,0,0,Math.PI*2);X.fill();
+    X.fillStyle=P.stone;
+    X.beginPath();X.ellipse(x+40,y+50,16,4,0,0,Math.PI*2);X.fill();
+    // Stage edge
+    X.strokeStyle='#0a0a0e';X.lineWidth=1;
+    X.beginPath();X.ellipse(x+40,y+50,16,4,0,0,Math.PI*2);X.stroke();
+
+    // ── 4 GHOST SILHOUETTES on stage performing ──
+    // Ghost 1 — JESTER (laughing) far left
+    const g1bob=Math.sin(t*.02)*.5;
+    X.globalAlpha=.4+.1*Math.sin(t*.03);
+    rect(X,x+25,y+44+g1bob,3,7,'#3a2828');
+    rect(X,x+24,y+42+g1bob,5,3,'#3a2828');
+    // Hat horns
+    px(X,x+24,y+41+g1bob,'#3a2828');
+    px(X,x+27,y+41+g1bob,'#3a2828');
+    X.globalAlpha=1;
+
+    // Ghost 2 — SOL (burning) center-left
+    const g2pulse=.4+.1*Math.sin(t*.025);
+    X.globalAlpha=g2pulse;
+    rect(X,x+33,y+43,3,8,'#5a4028');
+    // Sun head
+    rect(X,x+32,y+40,5,4,'#5a4028');
+    // Tiny rays
+    px(X,x+31,y+41,'#5a4028');px(X,x+37,y+41,'#5a4028');
+    X.globalAlpha=1;
+
+    // Ghost 3 — ELDER (sitting) center-right
+    X.globalAlpha=.4+.05*Math.sin(t*.015);
+    rect(X,x+42,y+45,4,6,'#3a3a4a');
+    rect(X,x+41,y+43,6,3,'#3a3a4a'); // hood
+    X.globalAlpha=1;
+
+    // Ghost 4 — NOCTURNAL (silent) far right
+    const g4f=.5+.15*Math.sin(t*.008);
+    X.globalAlpha=g4f;
+    rect(X,x+50,y+42,3,9,'#2a2a3a');
+    // Crescent head
+    rect(X,x+49,y+40,5,3,'#3a3a4a');
+    px(X,x+49,y+39,'#5a5d62');
+    px(X,x+53,y+39,'#5a5d62');
+    X.globalAlpha=1;
+
+    // ── PHANTOM SPOTLIGHT from above ──
+    const slPulse=.06+.03*Math.sin(t*.01);
+    X.globalAlpha=slPulse;
+    const slGrad=X.createLinearGradient(x+40,y+10,x+40,y+50);
+    slGrad.addColorStop(0,'rgba(218,165,32,1)');
+    slGrad.addColorStop(.7,'rgba(218,165,32,.4)');
+    slGrad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=slGrad;
+    // Cone shape
+    X.beginPath();
+    X.moveTo(x+38,y+10);
+    X.lineTo(x+42,y+10);
+    X.lineTo(x+50,y+50);
+    X.lineTo(x+30,y+50);
+    X.closePath();X.fill();
+    X.globalAlpha=1;
+
+    // Stage curtain remnants on sides
+    rect(X,x+22,y+38,2,16,'#3a0a08');
+    rect(X,x+56,y+38,2,16,'#3a0a08');
+    // Tattered edges
+    px(X,x+22,y+54,'#3a0a08');
+    px(X,x+56,y+54,'#3a0a08');
+
+    // Old playbill stuck to a bench
+    rect(X,x+12,y+30,4,3,P.parchment);
+    px(X,x+13,y+31,'#1a0e06');
+    px(X,x+14,y+31,'#1a0e06');
+
+    // Two pillars at the entrance (left and right of the structure)
+    rect(X,x-2,y+5,3,50,P.dstone);
+    rect(X,x-1,y+6,1,48,P.lstone);
+    rect(X,x+78,y+5,3,50,P.dstone);
+    rect(X,x+79,y+6,1,48,P.lstone);
+    // Cracks in pillars
+    rect(X,x-1,y+30,1,8,'#0a0a0e');
+    rect(X,x+78,y+25,1,10,'#0a0a0e');
+
+    // Mask hanging on left pillar (theater mask)
+    rect(X,x-3,y+12,5,5,P.bone);
+    rect(X,x-2,y+13,3,3,'#3a2618');
+    px(X,x-1,y+14,'#0a0a0e'); // eye
+    px(X,x+1,y+14,'#0a0a0e'); // eye
+    // Sad mouth (curved)
+    rect(X,x,y+16,2,1,'#0a0a0e');
   },
   // ═══ POSTER WALL ═══
   posterwall(x,y){
@@ -6807,6 +7461,111 @@ let jesterTarget={x:790,y:780};
 let jesterWait=0;
 let jesterGraffiti=[];
 const jesterPhrases=['ха!','...зачем?','горит!','слушай...','ты тут?','всё — игра','кто кого?','смешно?'];
+// ═══════════════════════════════════════
+// PET CROSSINGS — random cameos
+// ═══════════════════════════════════════
+function updatePetCrossings(){
+  // Spawn check every ~7s, only when on map
+  if(t%420===0&&petCrossings.length<2&&player.x>0&&player.x<MW){
+    if(Math.random()>.55){
+      const types=['cat','raven','rat','rat','cat'];
+      const type=types[Math.floor(Math.random()*types.length)];
+      const fromLeft=Math.random()>.5;
+      const spawnY=type==='raven'?cam.y+40+Math.random()*80:cam.y+150+Math.random()*180;
+      petCrossings.push({
+        type,
+        x:fromLeft?cam.x-25:cam.x+VW+25,
+        y:spawnY,
+        baseY:spawnY,
+        vx:fromLeft?(type==='raven'?1.8:type==='cat'?.9:1.2):(type==='raven'?-1.8:type==='cat'?-.9:-1.2),
+        life:900,
+        phase:0,
+      });
+    }
+  }
+  // Update
+  for(let i=petCrossings.length-1;i>=0;i--){
+    const p=petCrossings[i];
+    p.x+=p.vx;
+    p.phase+=.08;
+    if(p.type==='raven'){
+      p.y=p.baseY+Math.sin(p.phase)*2.5;
+    }else if(p.type==='cat'){
+      // Occasional pause
+      if(Math.sin(p.phase*.3)>.85)p.vx*=.92;
+    }
+    p.life--;
+    // Remove if off-screen
+    const sx=p.x-cam.x;
+    if(sx<-40||sx>VW+40||p.life<=0){petCrossings.splice(i,1);}
+  }
+}
+function drawPetCrossings(){
+  petCrossings.forEach(p=>{
+    const sx=Math.floor(p.x-cam.x),sy=Math.floor(p.y-cam.y);
+    if(sx<-30||sx>VW+30||sy<-30||sy>VH+30)return;
+    const dir=p.vx>0?1:-1;
+    if(p.type==='cat'){
+      // Small silhouetted cat walking
+      const step=Math.floor(t*.04)%2;
+      // Body
+      rect(X,sx,sy,9,3,'#0a0a0a');
+      rect(X,sx,sy+3,9,2,'#1a1a1a');
+      // Legs (alternating)
+      rect(X,sx+1,sy+5,1,2,'#0a0a0a');
+      rect(X,sx+3+step,sy+5,1,2,'#0a0a0a');
+      rect(X,sx+5-step,sy+5,1,2,'#0a0a0a');
+      rect(X,sx+7,sy+5,1,2,'#0a0a0a');
+      // Tail curving
+      const tailC=Math.sin(t*.08)*2;
+      if(dir>0){
+        rect(X,sx+9,sy-1+tailC*.3,2,1,'#0a0a0a');
+        rect(X,sx+10,sy-2+tailC*.5,1,2,'#0a0a0a');
+      }else{
+        rect(X,sx-1,sy-1+tailC*.3,2,1,'#0a0a0a');
+        rect(X,sx-2,sy-2+tailC*.5,1,2,'#0a0a0a');
+      }
+      // Head
+      rect(X,sx+(dir>0?-2:9),sy-1,3,3,'#0a0a0a');
+      rect(X,sx+(dir>0?-2:9),sy-2,1,1,'#0a0a0a'); // ear 1
+      rect(X,sx+(dir>0?0:11),sy-2,1,1,'#0a0a0a'); // ear 2
+      // Amber eye
+      if(t%8<5)px(X,sx+(dir>0?-1:10),sy,P.amber);
+    }else if(p.type==='raven'){
+      const flap=Math.sin(t*.15)>0?1:-1;
+      // Body
+      rect(X,sx,sy,5,2,'#050505');
+      // Tail
+      rect(X,sx+(dir>0?5:-2),sy,2,1,'#050505');
+      // Head
+      rect(X,sx+(dir>0?-1:5),sy-1,2,2,'#050505');
+      // Wings flapping
+      if(flap>0){
+        rect(X,sx-1,sy-2,7,1,'#050505');
+        rect(X,sx+1,sy-3,3,1,'#1a1a1a');
+      }else{
+        rect(X,sx+1,sy+1,3,1,'#050505');
+      }
+      // Beak
+      px(X,sx+(dir>0?-2:6),sy,'#1a1006');
+    }else{ // rat
+      // Small dark rat body
+      rect(X,sx,sy,6,3,'#0a0604');
+      rect(X,sx+(dir>0?-1:6),sy+1,1,2,'#0a0604');
+      // Head
+      rect(X,sx+(dir>0?-2:7),sy,2,2,'#0a0604');
+      // Ears (tiny)
+      px(X,sx+(dir>0?-2:8),sy-1,'#0a0604');
+      // Eye
+      if(t%6<3)px(X,sx+(dir>0?-2:8),sy,'#6b0f1a');
+      // Tail — long
+      const tPh=Math.sin(t*.12);
+      rect(X,sx+(dir>0?6:-2),sy+1+tPh*.5,3,1,'#050202');
+      rect(X,sx+(dir>0?9:-5),sy+1+tPh*1.2,3,1,'#050202');
+    }
+  });
+}
+
 function updateJester(){
   if(jesterWait>0){jesterWait--;return;}
   // Move toward target
@@ -7101,7 +7860,7 @@ function drawIdleMsg(){
 // WHISPERS (#5)
 // ═══════════════════════════════════════
 let whisper={text:'',life:0};
-const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...палец листает сам...',junkyard:'...автопилот всё ещё едет...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...учебная тревога... не настоящая...',exit:'...404... страница не найдена...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...bored ape... 0.0001 eth...',powerline:'...фантомный гул...',ruins:'...квартира 42... кто-то дома?...',pipeline:'...кап... кап-кап... тишина...',watchtower:'...бинокль тёплый... кто смотрел?...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',posterwall:'...они играли до пожара...',banner:'...coming soon...'};
+const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...палец листает сам...',junkyard:'...автопилот всё ещё едет...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...учебная тревога... не настоящая...',exit:'...404... страница не найдена...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...bored ape... 0.0001 eth...',powerline:'...фантомный гул...',ruins:'...квартира 42... кто-то дома?...',pipeline:'...кап... кап-кап... тишина...',watchtower:'...бинокль тёплый... кто смотрел?...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',posterwall:'...они играли до пожара...',banner:'...coming soon...'};
 function checkWhisper(){
   if(whisper.life>0)return;
   locs.forEach(l=>{
@@ -7424,7 +8183,8 @@ function updateWeather(){
   }
   // Storm lightning
   if(weather==='storm'&&t%300<3&&Math.random()>.6){
-    lightning=15;
+    lightning=40;
+    boltX=40+Math.random()*(VW-80);
     // Thunder sound
     if(audioCtx){
       const buf=audioCtx.createBuffer(1,audioCtx.sampleRate,audioCtx.sampleRate);
@@ -7548,12 +8308,55 @@ function drawWeather(){
     // Darken during ash rain
     X.globalAlpha=.04;rect(X,0,0,VW,VH,'#1a1a18');X.globalAlpha=1;
   }
-  // Lightning flash
+  // Lightning flash — DRAMATIC
   if(lightning>0){
-    X.globalAlpha=lightning/15*.25;
+    const lp=lightning/40; // 0..1
+    // Full-screen white flash for first 3 frames
+    if(lightning>37){
+      X.globalAlpha=.85;
+      rect(X,0,0,VW,VH,'#ffffff');
+      X.globalAlpha=1;
+    }else if(lightning>30){
+      // Harsh blue-white peak
+      X.globalAlpha=.6;
+      rect(X,0,0,VW,VH,'#ccccff');
+      X.globalAlpha=1;
+    }
+    // Main flash
+    X.globalAlpha=lp*.5;
     rect(X,0,0,VW,VH,'#ccaaff');
     X.globalAlpha=1;
-    shakeT=Math.max(shakeT,3);
+    shakeT=Math.max(shakeT,lightning>30?15:6);
+    // Draw lightning bolt during peak
+    if(lightning>20&&lightning<36){
+      X.strokeStyle='#ffffff';X.lineWidth=2;
+      X.globalAlpha=(lightning-20)/16;
+      X.beginPath();
+      let bx=boltX,by=0;
+      X.moveTo(bx,by);
+      for(let i=0;i<10;i++){
+        bx+=hash(i,lightning,11)*20-10;
+        by+=15+hash(i,lightning,22)*8;
+        X.lineTo(bx,by);
+      }
+      X.stroke();
+      // Branching
+      X.lineWidth=1;
+      for(let i=0;i<3;i++){
+        X.beginPath();
+        X.moveTo(boltX+i*5-5,20+i*20);
+        X.lineTo(boltX+i*5-5+hash(i,0,33)*30-15,35+i*20);
+        X.stroke();
+      }
+      X.globalAlpha=1;
+    }
+    // Inverted colors during peak — photonegative effect
+    if(lightning>35){
+      X.save();
+      X.globalCompositeOperation='difference';
+      rect(X,0,0,VW,VH,'#ffffff');
+      X.restore();
+    }
   }
   // Storm static noise
   if(weather==='storm'){
@@ -8077,7 +8880,7 @@ function render(){
     }
   }
   drawBloodMoon();
-  drawFootprints();drawLoreItems();drawSmokeClouds();drawLocs();drawJesterWandering();drawMonsters();drawDynamicShadows();drawPlayer();drawParticles();
+  drawFootprints();drawLoreItems();drawSmokeClouds();drawLocs();drawJesterWandering();drawPetCrossings();drawMonsters();drawDynamicShadows();drawPlayer();drawParticles();
   drawClickMarker();renderLighting();drawHeatDistortion();drawDiscoveryPing();
   drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
   drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
@@ -8104,9 +8907,9 @@ function loop(){
     updateCamera();
     spawnParticles();updateParticles();
     updateFootprints();checkDiscovery();updateAmbient();
-    checkLorePickup();checkWhisper();updateIdle();updateJester();
+    checkLorePickup();checkWhisper();updateIdle();updateJester();updatePetCrossings();
     updateDayCycle();updateWind();updateSand();updateWeather();
-    updateMonsters();updateBrainrot();updateWastelandAudio();updateProximityAudio();
+    updateMonsters();updateBrainrot();updateWastelandAudio();updateProximityAudio();updateZoneDrone();
     checkAchievements();
     render();
   }
@@ -8220,6 +9023,7 @@ const menuInscriptions={
   watchtower:'бинокль направлен внутрь.',
   pit:'...братишка...',
   nocturnal:'тишина держит нити. нити держат тебя.',
+  theater:'выйди на сцену. зал полон. зал — это ты.',
   posterwall:'музыка не горит.',
   banner:'★ coming soon ★',
 };
@@ -8363,6 +9167,13 @@ function handleUse(loc){
     case'greenpit':triggerGreenPit();break;
     case'events':openShop('events-overlay');break;
     case'ending':triggerEnding();break;
+    case'theater_stage':
+      if(observersUnlocked){
+        triggerTheaterEnding();
+      }else{
+        showLook({name:'СЦЕНА',look:'Ты подходишь к краю сцены. Камень холодный. Зал — пустой. Четыре силуэта продолжают свою сцену, не глядя на тебя. Они тебя не видят. Возможно, они не видят никого. Возможно, они ждут, пока кто-то увидит их всех — по очереди, по-настоящему. Только тогда зал заполнится. Только тогда сцена примет нового актёра.'});
+      }
+      break;
     case'pizzeria_enter':showLook({name:'ПОДВАЛ "ВАВИЛОНА"',look:'Ты поднимаешь коврик "Welcome". Под ним — ключ. Ключ от двери, которой нет: она вмурована в пол. Спускаешься через люк за стойкой. Бетонный пролёт, 13 ступеней (Архивариус посчитал). На стенах — зелёный свет ниоткуда. Лампа на столе горит без проводов. На столе — стул. На стуле — никто. Перед стулом — телефон без диска. Трубка снята. В трубке — гудок. Гудок длится 11 лет. На стене мелом: «ЭПШТЕЙН НЕ УБИВАЛ СЕБЯ». Под надписью, другим почерком: «А кто тогда?» Ещё ниже, третьим: «Пицца Маргарита. 15 мерит. Бесплатная доставка в подвал.» Меню это или признание — решай сам. Welcome.'});break;
     case'archive':showLook({name:'АРХИВ',look:'Пыль на стеллажах ещё тёплая. Здесь хранятся записи прошлых событий: фотографии, видео, афиши, обрывки разговоров. Всё, что осталось от того, что было. Скоро здесь появится больше.'});break;
     case'links':showLook({name:'ПУСТОШЬ',look:'Дорога ведёт наружу. Telegram: @ardet_art — единственный сигнал из этой частоты. Всё остальное — тишина и пепел. Иди, если хочешь. Но ты вернёшься.'});break;
@@ -8376,12 +9187,27 @@ function handleUse(loc){
 let endingPhase=0;let endingTimer=0;
 function triggerEnding(){
   if(endingTriggered)return;
-  endingTriggered=true;state='ending';endingTimer=0;shakeT=40;
+  endingTriggered=true;state='ending';endingTimer=0;shakeT=40;endingType='stone';
 }
+function triggerTheaterEnding(){
+  if(endingTriggered)return;
+  endingTriggered=true;state='ending';endingTimer=0;shakeT=20;endingType='theater';
+  if(!achievements.seeker.done){
+    achievements.seeker.done=true;
+    achPopup={name:'ИСКАТЕЛЬ — Тайная концовка',life:180};
+  }
+}
+let endingType='stone';
 function drawEnding(){
   if(!endingTriggered||state!=='ending')return;
   endingTimer++;
   X.imageSmoothingEnabled=false;
+
+  if(endingType==='theater'){
+    drawTheaterEnding();
+    return;
+  }
+
   if(endingTimer<90){
     const a=Math.min(1,endingTimer/60);
     X.globalAlpha=a;rect(X,0,0,VW,VH,'#fff');X.globalAlpha=1;
@@ -8409,6 +9235,140 @@ function drawEnding(){
     X.fillText('— Ardet mirror —',VW/2,VH/2+60);
     X.globalAlpha=.3;X.fillStyle=P.ash;X.font='7px "Press Start 2P"';
     X.fillText('[F5 — НАЧАТЬ ЗАНОВО]',VW/2,VH/2+100);
+    X.globalAlpha=1;X.textAlign='left';
+  }
+}
+
+// ═══ THEATER ENDING — second secret finale ═══
+function drawTheaterEnding(){
+  // Phase 1 (0-90): fade to black
+  if(endingTimer<90){
+    const a=Math.min(1,endingTimer/60);
+    rect(X,0,0,VW,VH,'#000');
+    X.globalAlpha=1-a*.3;
+    rect(X,0,0,VW,VH,'rgba(10,5,0,0.5)');
+    X.globalAlpha=1;
+  }
+  // Phase 2 (90-240): theater spotlight on player figure
+  else if(endingTimer<240){
+    rect(X,0,0,VW,VH,'#020202');
+    // Spotlight from above
+    const sp=clamp((endingTimer-90)/100,0,1);
+    X.globalAlpha=.5*sp;
+    const grad=X.createRadialGradient(VW/2,VH/2+20,0,VW/2,VH/2+20,VW*.4);
+    grad.addColorStop(0,'rgba(218,165,32,1)');
+    grad.addColorStop(.5,'rgba(218,165,32,.3)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=grad;X.fillRect(0,0,VW,VH);
+    X.globalAlpha=1;
+    // Lone player figure (bigger) on the stage
+    const figX=VW/2-7,figY=VH/2;
+    rect(X,figX,figY,14,15,P.d1);
+    dither(X,figX+1,figY+1,12,13,P.dgrey,P.d1,.3);
+    rect(X,figX+2,figY-7,10,8,P.d1);
+    rect(X,figX+4,figY-5,6,3,P.d2);
+    // Eyes
+    px(X,figX+5,figY-4,P.bone);
+    px(X,figX+8,figY-4,P.bone);
+    // Chest fire bigger
+    rect(X,figX+5,figY+3,4,5,'#040404');
+    const fl=Math.sin(endingTimer*.1)*.5;
+    rect(X,figX+6,figY+6,3,1,P.f3);
+    rect(X,figX+6+fl*.3,figY+5,3,1,P.f1);
+    rect(X,figX+7+fl*.5,figY+4,2,1,P.f2);
+    px(X,figX+7+fl*.5,figY+3,'#ffffcc');
+  }
+  // Phase 3 (240-450): audience appears row by row
+  else if(endingTimer<600){
+    rect(X,0,0,VW,VH,'#020202');
+    // Spotlight still on player
+    X.globalAlpha=.4;
+    const grad=X.createRadialGradient(VW/2,VH/2+20,0,VW/2,VH/2+20,VW*.4);
+    grad.addColorStop(0,'rgba(218,165,32,.8)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=grad;X.fillRect(0,0,VW,VH);
+    X.globalAlpha=1;
+
+    // Player on stage
+    const figX=VW/2-7,figY=VH/2;
+    rect(X,figX,figY,14,15,P.d1);
+    dither(X,figX+1,figY+1,12,13,P.dgrey,P.d1,.3);
+    rect(X,figX+2,figY-7,10,8,P.d1);
+    rect(X,figX+4,figY-5,6,3,P.d2);
+    px(X,figX+5,figY-4,P.bone);px(X,figX+8,figY-4,P.bone);
+    // Chest fire
+    rect(X,figX+5,figY+3,4,5,'#040404');
+    rect(X,figX+6,figY+6,3,1,P.f3);
+    rect(X,figX+6,figY+5,3,1,P.f1);
+    rect(X,figX+7,figY+4,2,1,P.f2);
+
+    // Audience appearing — rows of silhouettes
+    const rows=Math.min(8,Math.floor((endingTimer-240)/15));
+    for(let row=0;row<rows;row++){
+      const ry=20+row*8;
+      const seats=15+row*2;
+      X.globalAlpha=.5+.3*Math.sin(endingTimer*.01+row);
+      for(let seat=0;seat<seats;seat++){
+        const seatX=VW/2-seats*4+seat*8;
+        // Each seat — tiny silhouette
+        rect(X,seatX,ry,3,4,'#0a0a0a');
+        rect(X,seatX,ry-2,3,2,'#0a0a0a'); // head
+        // Some have chest fires too
+        if(hash(row,seat,77)>.85){
+          px(X,seatX+1,ry+1,P.f2);
+        }
+      }
+      X.globalAlpha=1;
+    }
+
+    // Whispers appearing
+    if(endingTimer>320){
+      X.textAlign='center';
+      X.globalAlpha=clamp((endingTimer-320)/60,0,.7);
+      X.fillStyle=P.bone;X.font='8px "Press Start 2P"';
+      X.fillText('Зал заполнен.',VW/2,VH-40);
+    }
+    if(endingTimer>400){
+      X.globalAlpha=clamp((endingTimer-400)/60,0,.7);
+      X.fillText('Все смотрят.',VW/2,VH-25);
+    }
+    if(endingTimer>480){
+      X.globalAlpha=clamp((endingTimer-480)/60,0,.8);
+      X.fillStyle=P.gold;
+      X.fillText('Все — это ты.',VW/2,VH-10);
+    }
+    X.globalAlpha=1;X.textAlign='left';
+  }
+  // Phase 4 (600+): final text
+  else{
+    rect(X,0,0,VW,VH,'#000');
+    // Slowly pulsing audience
+    const aPulse=.3+.2*Math.sin(endingTimer*.005);
+    X.globalAlpha=aPulse*.4;
+    for(let row=0;row<8;row++){
+      for(let seat=0;seat<15+row*2;seat++){
+        const seatX=VW/2-(15+row*2)*4+seat*8;
+        rect(X,seatX,20+row*8,3,4,'#1a1a1a');
+      }
+    }
+    X.globalAlpha=1;
+
+    const pulse=.5+.3*Math.sin(endingTimer*.005);
+    X.globalAlpha=pulse;X.fillStyle=P.amber;X.font='11px "Press Start 2P"';X.textAlign='center';
+    X.fillText('ТЫ ВЫШЕЛ НА СЦЕНУ.',VW/2,VH/2-50);
+    X.fillText('ЗАЛ БЫЛ ПОЛОН.',VW/2,VH/2-30);
+    X.fillStyle=P.bone;X.font='9px "Press Start 2P"';
+    X.globalAlpha=pulse*.8;
+    X.fillText('ЗРИТЕЛИ — ТЫ.',VW/2,VH/2);
+    X.fillText('АКТЁР — ТЫ.',VW/2,VH/2+15);
+    X.fillText('СПЕКТАКЛЬ — ТЫ.',VW/2,VH/2+30);
+    X.fillStyle=P.gold;X.font='8px "Press Start 2P"';
+    X.globalAlpha=pulse*.6;
+    X.fillText('АПЛОДИРУЙ.',VW/2,VH/2+55);
+    X.globalAlpha=.4;X.fillStyle=P.blood;X.font='7px "Press Start 2P"';
+    X.fillText('— Ardet mirror, second ending —',VW/2,VH/2+85);
+    X.globalAlpha=.3;X.fillStyle=P.ash;X.font='6px "Press Start 2P"';
+    X.fillText('[F5 — НАЧАТЬ ЗАНОВО]',VW/2,VH/2+105);
     X.globalAlpha=1;X.textAlign='left';
   }
 }
@@ -9390,9 +10350,31 @@ document.addEventListener('keydown',e=>{
 
 // AUDIO
 let proxAudio={};
+let zoneDrone=null,zoneDroneHigh=null;
+function updateZoneDrone(){
+  if(!audioCtx||!zoneDrone||brainrotFreeze)return;
+  const zone=getZone(player.x,player.y);
+  let targetFreq=38,targetFilter=80,targetGain=.012,highFreq=57;
+  switch(zone){
+    case'forest':targetFreq=28;targetFilter=55;targetGain=.01;highFreq=42;break;
+    case'toxic':targetFreq=44;targetFilter=90;targetGain=.014;highFreq=61;break;
+    case'highway':targetFreq=48;targetFilter=110;targetGain=.013;highFreq=72;break;
+    case'quarter':targetFreq=34;targetFilter=65;targetGain=.012;highFreq=47;break;
+    case'settlement':targetFreq=38;targetFilter=80;targetGain=.012;highFreq=57;break;
+  }
+  // Smooth lerp
+  zoneDrone.osc.frequency.value=lerp(zoneDrone.osc.frequency.value,targetFreq,.01);
+  zoneDrone.filter.frequency.value=lerp(zoneDrone.filter.frequency.value,targetFilter,.01);
+  zoneDrone.gain.gain.value=lerp(zoneDrone.gain.gain.value,targetGain,.01);
+  if(zoneDroneHigh){
+    zoneDroneHigh.osc.frequency.value=lerp(zoneDroneHigh.osc.frequency.value,highFreq,.008);
+  }
+}
 function initAudio(){audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   const o=audioCtx.createOscillator();o.type='sawtooth';o.frequency.value=38;const dg=audioCtx.createGain();dg.gain.value=.012;const df=audioCtx.createBiquadFilter();df.type='lowpass';df.frequency.value=80;o.connect(df);df.connect(dg);dg.connect(audioCtx.destination);o.start();
+  zoneDrone={osc:o,gain:dg,filter:df};
   const o2=audioCtx.createOscillator();o2.type='sine';o2.frequency.value=57;const dg2=audioCtx.createGain();dg2.gain.value=.005;o2.connect(dg2);dg2.connect(audioCtx.destination);o2.start();
+  zoneDroneHigh={osc:o2,gain:dg2};
   const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*3,audioCtx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const w=audioCtx.createBufferSource();w.buffer=buf;w.loop=true;const wf=audioCtx.createBiquadFilter();wf.type='bandpass';wf.frequency.value=250;wf.Q.value=.4;const wg=audioCtx.createGain();wg.gain.value=.016;w.connect(wf);wf.connect(wg);wg.connect(audioCtx.destination);w.start();
   const lfo=audioCtx.createOscillator();lfo.frequency.value=.08;const lg=audioCtx.createGain();lg.gain.value=.01;lfo.connect(lg);lg.connect(wg.gain);lfo.start();
   const cb=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate);const cr=cb.getChannelData(0);for(let i=0;i<cr.length;i++)cr[i]=Math.random()>.97?(Math.random()*2-1)*.4:0;const cs=audioCtx.createBufferSource();cs.buffer=cb;cs.loop=true;const cf=audioCtx.createBiquadFilter();cf.type='highpass';cf.frequency.value=2000;const cg=audioCtx.createGain();cg.gain.value=.012;cs.connect(cf);cf.connect(cg);cg.connect(audioCtx.destination);cs.start();
