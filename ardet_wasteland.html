@@ -959,6 +959,7 @@ const idleMsgs=['мох помнит','рукописи не горят','без
 let monsters=[];
 let brainrot=0;
 let brainrotFreeze=false;
+let brainrotFreezeTimer=0; // counts frames since freeze started
 let wastelandMusic=null;
 // Day cycle
 let dayCycle=0;
@@ -8580,8 +8581,53 @@ function updateBrainrot(){
   // Freeze at max brainrot
   if(brainrot>=100&&!brainrotFreeze){
     brainrotFreeze=true;
-    // Stop all audio
+    brainrotFreezeTimer=0;
+    // Temporarily mute audio during freeze
     if(audioCtx)audioCtx.suspend();
+  }
+}
+
+// ═══ BRAINROT RECOVERY — tick the freeze timer and transport back ═══
+function updateBrainrotRecovery(){
+  if(!brainrotFreeze)return;
+  brainrotFreezeTimer++;
+  // Phases (in frames, 60fps ≈ seconds):
+  // 0-180 (3s): SYSTEM FAILURE text
+  // 180-300 (2s): "Мох тянет тебя назад..."
+  // 300-420 (2s): Fade to black
+  // 420+: Respawn at campfire, reset brainrot, resume audio
+  if(brainrotFreezeTimer>=420){
+    // RESPAWN at the sacrificial fire
+    const camp=locs.find(l=>l.id==='campfire');
+    if(camp){
+      player.x=camp.x+camp.w/2-6;
+      player.y=camp.y+camp.h+10;
+      player.tx=player.x;player.ty=player.y;
+      player.moving=false;
+    }
+    // Re-center camera
+    cam.x=clamp(player.x-VW/2,0,MW-VW);
+    cam.y=clamp(player.y-VH/2,0,MH-VH);
+    // Reset brainrot and monsters
+    brainrot=0;
+    brainrotFreeze=false;
+    brainrotFreezeTimer=0;
+    monsters.length=0;
+    // Resume audio
+    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    // Clean up wasteland audio if it was playing
+    if(wastelandMusic){
+      try{
+        wastelandMusic.gain.gain.value=0;
+        if(wastelandMusic.gain2)wastelandMusic.gain2.gain.value=0;
+      }catch(e){}
+    }
+    // Return to game state
+    state='game';
+    activeLoc=null;
+    // Dramatic welcome-back popup
+    lorePopup={text:'Мох вытащил тебя обратно. Ты очнулся у жертвенного костра. Волосы пахнут дымом и чем-то ещё, что ты не можешь назвать. В груди — тепло, как будто что-то было зажжено заново. Возможно, это и есть ты. Возможно, это что-то другое, что теперь носит твоё имя. Разница — на ощупь неуловима.',life:900};
+    shakeT=20;
   }
 }
 
@@ -8649,24 +8695,76 @@ function drawBrainrot(){
     }
     X.globalAlpha=1;
   }
-  // FREEZE
+  // FREEZE — multi-phase recovery animation
   if(brainrotFreeze){
     X.globalAlpha=.95;
     rect(X,0,0,VW,VH,'#000');
     X.globalAlpha=1;
-    // Glitch text
-    X.fillStyle='#ff0000';X.font='12px "Press Start 2P"';
     X.textAlign='center';
-    const glitchOffset=Math.sin(t*.1)*3;
-    X.fillText('SYSTEM FAILURE',VW/2+glitchOffset,VH/2-40);
-    X.fillStyle='#33ff33';X.font='9px "Press Start 2P"';
-    X.fillText('> ДИАГНОСТИКА...',VW/2,VH/2-10);
-    X.fillText('> КОГНИТИВНЫЙ РАСПАД ОБНАРУЖЕН',VW/2,VH/2+10);
-    X.fillStyle='#ff4400';X.font='14px "Press Start 2P"';
-    X.fillText('ВЫ УПАЛИ В БРЕЙНРОТ',VW/2+Math.sin(t*.05)*2,VH/2+50);
-    X.fillStyle='#555';X.font='8px "Press Start 2P"';
-    X.fillText('зачем ты ушёл так далеко?',VW/2,VH/2+80);
-    X.fillText('[F5 — НАЧАТЬ ЗАНОВО]',VW/2,VH/2+110);
+
+    // Phase 1 (0-180): SYSTEM FAILURE glitch text
+    if(brainrotFreezeTimer<180){
+      // Glitch text
+      X.fillStyle='#ff0000';X.font='12px "Press Start 2P"';
+      const glitchOffset=Math.sin(t*.1)*3;
+      X.fillText('SYSTEM FAILURE',VW/2+glitchOffset,VH/2-40);
+      X.fillStyle='#33ff33';X.font='9px "Press Start 2P"';
+      X.fillText('> ДИАГНОСТИКА...',VW/2,VH/2-10);
+      X.fillText('> КОГНИТИВНЫЙ РАСПАД ОБНАРУЖЕН',VW/2,VH/2+10);
+      X.fillStyle='#ff4400';X.font='14px "Press Start 2P"';
+      X.fillText('ВЫ УПАЛИ В БРЕЙНРОТ',VW/2+Math.sin(t*.05)*2,VH/2+50);
+      X.fillStyle='#555';X.font='8px "Press Start 2P"';
+      X.fillText('зачем ты ушёл так далеко?',VW/2,VH/2+80);
+    }
+    // Phase 2 (180-300): Moss reaching for you
+    else if(brainrotFreezeTimer<300){
+      const ph=(brainrotFreezeTimer-180)/120;
+      X.fillStyle=`rgba(90,200,60,${.5+ph*.5})`;X.font='10px "Press Start 2P"';
+      X.fillText('>>> МОХ ЗАМЕТИЛ <<<',VW/2,VH/2-40);
+      X.fillStyle='#33ff33';X.font='8px "Press Start 2P"';
+      X.fillText('мицелий обнаружил субстрат в аварии',VW/2,VH/2-15);
+      X.fillText('сеть отправляет нить',VW/2,VH/2);
+      X.fillText('нить находит тебя',VW/2,VH/2+15);
+      X.fillStyle='#aaff6a';X.font='9px "Press Start 2P"';
+      X.fillText('мох тянет назад',VW/2+Math.sin(t*.04)*2,VH/2+40);
+      // Growing moss tendrils across screen
+      X.fillStyle='#5aff2a';
+      for(let i=0;i<12;i++){
+        const tLen=Math.floor(ph*60*(.5+hash(i,0,11)*.5));
+        const tx=Math.floor(hash(i,0,22)*VW);
+        for(let j=0;j<tLen;j++){
+          const jy=j+Math.sin(j*.3+i)*2;
+          X.globalAlpha=(.5+.3*Math.sin(t*.01+j))*(1-j/tLen);
+          rect(X,tx+Math.sin(j*.2+i)*3,VH-10-jy,1,1,hash(i,j,33)>.5?'#5aff2a':P.toxic);
+        }
+      }
+      X.globalAlpha=1;
+    }
+    // Phase 3 (300-420): Fade to black + "возвращение"
+    else if(brainrotFreezeTimer<420){
+      const ph=(brainrotFreezeTimer-300)/120;
+      // Cover everything with deeper black
+      X.globalAlpha=1;
+      rect(X,0,0,VW,VH,'#000');
+      X.fillStyle=`rgba(200,160,80,${1-ph*.5})`;
+      X.font='11px "Press Start 2P"';
+      X.fillText('возвращение',VW/2,VH/2-10);
+      X.fillStyle=`rgba(139,0,0,${1-ph*.3})`;
+      X.font='8px "Press Start 2P"';
+      X.fillText('запах дыма',VW/2,VH/2+12);
+      X.fillText('тепло в груди',VW/2,VH/2+26);
+      X.fillText('земля под ногами',VW/2,VH/2+40);
+    }
+
+    // Progress bar at bottom
+    X.globalAlpha=.4;
+    const barW=Math.min(VW-40,200);
+    const barX=(VW-barW)/2;
+    rect(X,barX,VH-30,barW,2,'#1a1a1a');
+    const fillW=Math.floor(barW*Math.min(1,brainrotFreezeTimer/420));
+    rect(X,barX,VH-30,fillW,2,brainrotFreezeTimer<180?'#ff4400':(brainrotFreezeTimer<300?'#5aff2a':'#daa520'));
+    X.globalAlpha=1;
+
     X.textAlign='left';
   }
 }
@@ -9493,7 +9591,7 @@ function render(){
 // ═══════════════════════════════════════
 function loop(){
   t++;
-  if(brainrotFreeze){render();requestAnimationFrame(loop);return;}
+  if(brainrotFreeze){updateBrainrotRecovery();render();requestAnimationFrame(loop);return;}
   if(state==='ending'){endingTimer>0||triggerEnding();render();requestAnimationFrame(loop);return;}
   if(state==='shop'&&currentShopAnim){drawShopScene();}
   if(state==='game'||state==='menu'||state==='dialogue'||state==='look'){
