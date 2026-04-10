@@ -1077,7 +1077,7 @@ const locs=[
   {id:'vending',name:'Торговый автомат',x:550,y:1060,w:42,h:56,zone:'settlement',
     look:'Ржавая коробка с мерцающим экраном. "ОБМЕН" под слоем копоти. Монетоприёмник заварен — но экран работает. Мериты: крути педали — получи еду. Еду — в энергию. Энергию — в педали. Цикл замкнут. Выход: стань судьёй на шоу талантов. Талант: умение крутить. Приз: больше не крутить. Но победитель возвращается — без педалей нет экрана. Без экрана нет себя.',
     useAction:'shop1',light:{r:35,color:[180,140,40],flicker:.2}},
-  {id:'library',name:'Разрушенная библиотека',x:400,y:680,w:80,h:65,zone:'settlement',
+  {id:'library',name:'Разрушенная библиотека',x:400,y:680,w:105,h:82,zone:'settlement',
     look:'Остов здания. Стеллажи обнажены — книги горели, но некоторые страницы ещё шевелятся на ветру. На полке 3.14 — книга другого цвета. Внутри — твой дневник. С записями, которые ты ещё не сделал. Библиотека содержит все книги. В том числе ту, где ты не зашёл сюда. На корешке одной из них Архивариус оставил пометку карандашом: "перечитать. подозрительный, но не чушпан — молчит." Мох растёт на полке 7-G. Мох читает.',
     useAction:'archive'},
   {id:'tent',name:'Палатка Старца',x:1250,y:1080,w:65,h:55,zone:'settlement',
@@ -1129,7 +1129,7 @@ const locs=[
     useAction:'shop3'},
 
   // ── FORGOTTEN QUARTER ──
-  {id:'church',name:'Заброшенная церковь',x:120,y:780,w:80,h:70,zone:'quarter',
+  {id:'church',name:'Заброшенная церковь',x:120,y:780,w:105,h:92,zone:'quarter',
     look:'Готический силуэт без крыши. Витражи разбиты, но рама осталась — рисует узоры на полу. Над входом — полустёртая латынь: LASCIATE OGNI SPERANZA. Под ней баллончиком: «А шо, были?» Алтарь цел. На нём — не библия. Тетрадь в чёрной обложке. QR-код на стене. Ведёт на 404.',
     useAction:'church_candle',
     light:{r:40,color:[100,70,150],flicker:.04}},
@@ -1155,7 +1155,7 @@ const locs=[
       '*треск* *хруст*\nКупи что-нибудь.\nИли не покупай.\nЯ всё равно горю.',
     ],
     useAction:'shop2',light:{r:80,color:[255,50,10],flicker:.2},hidden:true},
-  {id:'pizzeria',name:'Пиццерия "Вавилон"',x:2600,y:1350,w:70,h:55,zone:'highway',
+  {id:'pizzeria',name:'Пиццерия "Вавилон"',x:2600,y:1350,w:98,h:82,zone:'highway',
     look:'Двухэтажная руина. Неоновая вывеска "ВАВИЛОН" — буква "В" мигает уже одиннадцать лет, остальные пять мертвы. Внутри: 47 столов (считал Архивариус — карандашом на косяке, до единицы). 47 меню под стеклом. На каждом — одно блюдо: «Пицца Маргарита. 15 мерит.» Вкус стёрся, как стирается лицо в старых фотоальбомах — на месте вкуса осталось описание вкуса. Печь разбита, но внутри — тёплая. Перевёрнутые стулья образуют спираль — если смотреть сверху. Подвал закрыт. Ключ — под ковриком у входа. Коврик гласит: «Welcome». Welcome куда? Ответ — в подвале. Ответ всегда в подвале.',
     useAction:'pizzeria_enter',
     light:{r:25,color:[200,50,50],flicker:.08}},
@@ -1178,7 +1178,7 @@ const locs=[
   {id:'powerline',name:'Сломанный столб ЛЭП',x:2235,y:695,w:30,h:50,zone:'highway',
     look:'Провода свисают как нервы вырванного зуба. Один ещё гудит. Откуда? Электричество кончилось. Гул — фантомный. Столб помнит ток, как ампутант помнит руку. Между двумя столбами провод провис — форма параболы. Математика пережила физику. Формула провисания верна. Провод — мёртв. Формула — бессмертна.',
     useAction:'powerline_touch'},
-  {id:'ruins',name:'Жилой дом №7',x:665,y:590,w:85,h:60,zone:'settlement',
+  {id:'ruins',name:'Жилой дом №7',x:665,y:590,w:108,h:90,zone:'settlement',
     look:'Девять этажей. Семь — стоят. Два — внутри соседнего двора. Квартира 42 (третий этаж, правое окно): термометр на стене. 42°C. Ответ на главный вопрос. Вопрос: какая температура тела Постороннего. Квартира 13: дверь с двадцатью замками. Все открыты. Внутри — очередь. К чему? Контора сгорела. Очередь — осталась. Печать — цела.',
     useAction:'ruins_apt42'},
   {id:'pipeline',name:'Ржавый трубопровод',x:600,y:1450,w:80,h:25,zone:'toxic',
@@ -2615,106 +2615,392 @@ const locDraw={
     px(X,x+1,y+51,P.toxic);
   },
   library(x,y){
-    // ═══ RUINED LIBRARY — detailed ═══
-    // Main structure — thick stone walls
-    rect(X,x,y,70,55,P.dgrey);rect(X,x+2,y+2,66,51,P.dstone);
-    // Wall texture — cracked plaster
-    for(let i=0;i<12;i++){
-      const cx_=x+3+hash(i,x,11)*62;
-      const cy_=y+3+hash(i,y,22)*47;
-      rect(X,cx_,cy_,hash(i,0,33)*8,1,'#1a1a22');
+    // ═══ CLASSICAL TEMPLE OF BOOKS — Alexandria-on-Fire ═══
+    // Massive stone podium on which the temple rests
+    // Ground shadow
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+50,y+80,60,5,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── STEPS / STYLOBATE — wide marble steps leading up ──
+    for(let s=0;s<5;s++){
+      const sy_=y+72-s*2;
+      rect(X,x+6-s,sy_,88+s*2,3,P.stone);
+      rect(X,x+6-s,sy_,88+s*2,1,P.lstone||'#4a4a52');
+      rect(X,x+6-s,sy_+2,88+s*2,1,'#1a1a22');
+      // Cracks in steps
+      if(s%2)rect(X,x+20+s*8,sy_+1,hash(s,x,11)*25,1,'#0a0a0e');
     }
-    
-    // Collapsed section — right wall partially gone
-    rect(X,x+55,y-4,18,12,P.g3); // sky visible through gap
-    // Rubble from collapse
-    for(let i=0;i<10;i++){
-      rect(X,x+52+hash(i,0,11)*20,y+48+hash(i,0,22)*10,
-        3+hash(i,0,33)*6,2+hash(i,0,44)*3,
-        hash(i,0,55)>.5?P.dgrey:P.dstone);
+    // Crumbled step corner on right
+    for(let i=0;i<6;i++){
+      rect(X,x+82+hash(i,0,11)*12,y+70+hash(i,0,22)*6,2+hash(i,0,33)*3,2,P.dstone);
     }
-    // Remaining roof fragments
-    rect(X,x,y-6,28,8,P.dgrey);rect(X,x+2,y-5,24,6,P.dstone);
-    rect(X,x+40,y-3,15,5,P.dgrey);
-    // Gap in roof — light shaft
-    X.globalAlpha=.03;
-    const shaft=X.createLinearGradient(x+30,y-6,x+38,y+40);
-    shaft.addColorStop(0,'rgba(184,134,11,.4)');shaft.addColorStop(1,'rgba(0,0,0,0)');
-    X.fillStyle=shaft;X.fillRect(x+28,y-6,14,50);
+
+    // ── STYLOBATE (base platform) ──
+    rect(X,x+4,y+60,94,12,P.dstone);
+    rect(X,x+4,y+60,94,1,P.stone);
+    rect(X,x+4,y+71,94,1,'#0a0a0e');
+    // Greek key frieze on stylobate
+    for(let i=0;i<22;i++){
+      const fx=x+6+i*4;
+      if(i%2){rect(X,fx,y+63,3,1,P.dgold||'#8a6408');rect(X,fx+2,y+63,1,3,P.dgold||'#8a6408');}
+      else{rect(X,fx,y+66,3,1,P.dgold||'#8a6408');rect(X,fx,y+63,1,3,P.dgold||'#8a6408');}
+    }
+
+    // ── SIX IONIC COLUMNS ──
+    const colXs=[x+8,x+24,x+40,x+56,x+72,x+88];
+    colXs.forEach((cx,ci)=>{
+      const fallen=ci===4; // 5th column has fallen
+      if(fallen){
+        // Fallen column segments on the ground
+        for(let seg=0;seg<4;seg++){
+          rect(X,x+60+seg*7,y+68,6,4,P.stone);
+          rect(X,x+60+seg*7,y+68,6,1,P.lstone||'#4a4a52');
+          rect(X,x+60+seg*7,y+71,6,1,'#1a1a22');
+          // Fluting on side
+          rect(X,x+61+seg*7,y+69,1,2,'#2a2a32');
+          rect(X,x+63+seg*7,y+69,1,2,'#2a2a32');
+        }
+        // Broken capital on ground
+        rect(X,x+58,y+66,4,4,P.stone);
+        return;
+      }
+      // Column base (torus)
+      rect(X,cx-1,y+58,8,3,P.dstone);
+      rect(X,cx,y+58,6,1,P.lstone||'#4a4a52');
+      rect(X,cx-1,y+60,8,1,'#1a1a22');
+      // Column shaft with fluting (tall)
+      rect(X,cx,y+20,6,38,P.stone);
+      // Fluting lines
+      rect(X,cx+1,y+20,1,38,'#2a2a32');
+      rect(X,cx+3,y+20,1,38,'#3a3a42');
+      rect(X,cx+5,y+20,1,38,'#2a2a32');
+      // Shadow side
+      rect(X,cx,y+20,1,38,'#1a1a22');
+      // Moss at base
+      if(ci%2)rect(X,cx,y+56,6,2,P.dtoxic);
+      if(ci===1)rect(X,cx+2,y+54,3,2,P.toxic);
+      // Cracks on shaft
+      if(ci===2){rect(X,cx+2,y+35,1,12,'#0a0a0e');}
+      if(ci===0){rect(X,cx+3,y+40,1,8,'#0a0a0e');}
+      // Ionic capital — volute scrolls
+      rect(X,cx-2,y+17,10,3,P.stone);
+      rect(X,cx-2,y+17,10,1,P.lstone||'#4a4a52');
+      // Left volute scroll
+      rect(X,cx-2,y+15,3,2,P.dstone);
+      px(X,cx-1,y+14,P.stone);
+      px(X,cx-2,y+15,P.stone);
+      // Right volute scroll
+      rect(X,cx+5,y+15,3,2,P.dstone);
+      px(X,cx+6,y+14,P.stone);
+      px(X,cx+7,y+15,P.stone);
+      // Echinus (curve between capital and shaft)
+      rect(X,cx-1,y+16,8,1,P.dstone);
+    });
+
+    // ── ENTABLATURE (horizontal beam above columns) ──
+    // Architrave
+    rect(X,x+4,y+12,94,5,P.stone);
+    rect(X,x+4,y+12,94,1,P.lstone||'#4a4a52');
+    rect(X,x+4,y+16,94,1,'#1a1a22');
+    // Broken chunk missing above fallen column
+    rect(X,x+58,y+12,16,5,'#0a0604');
+    // Frieze (above architrave) with relief — scholars reading
+    rect(X,x+4,y+8,94,4,P.dstone);
+    // Tiny figures on frieze (Muses)
+    for(let fi=0;fi<8;fi++){
+      if(fi===4)continue; // gap at broken section
+      const ffx=x+8+fi*12;
+      rect(X,ffx,y+9,2,3,P.stone); // body
+      px(X,ffx,y+9,P.dstone); // head shadow
+      px(X,ffx+1,y+9,P.stone);
+      // Scroll in hand
+      px(X,ffx+2,y+10,P.bone);
+    }
+    // Cornice (top overhang)
+    rect(X,x+3,y+6,96,3,P.stone);
+    rect(X,x+3,y+6,96,1,P.lstone||'#4a4a52');
+    rect(X,x+3,y+8,96,1,'#1a1a22');
+    // Dentils (tooth-like blocks under cornice)
+    for(let d=0;d<30;d++){
+      if(d%2)rect(X,x+4+d*3,y+5,2,1,P.dstone);
+    }
+
+    // ── PEDIMENT (triangular gable) ──
+    // Main triangle
+    X.fillStyle=P.stone;
+    X.beginPath();
+    X.moveTo(x+3,y+6);
+    X.lineTo(x+51,y-18);
+    X.lineTo(x+99,y+6);
+    X.closePath();X.fill();
+    // Inner tympanum shadow
+    X.fillStyle=P.dstone;
+    X.beginPath();
+    X.moveTo(x+6,y+6);
+    X.lineTo(x+51,y-14);
+    X.lineTo(x+96,y+6);
+    X.closePath();X.fill();
+    // Edge highlights
+    X.strokeStyle=P.lstone||'#4a4a52';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+3,y+6);X.lineTo(x+51,y-18);X.stroke();
+    X.strokeStyle='#1a1a22';
+    X.beginPath();X.moveTo(x+51,y-18);X.lineTo(x+99,y+6);X.stroke();
+
+    // Sculpture in tympanum — seated goddess with open book
+    // Throne
+    rect(X,x+46,y-6,10,8,P.dstone);
+    rect(X,x+45,y-8,12,2,P.stone);
+    // Goddess body
+    rect(X,x+48,y-12,6,6,P.stone);
+    // Head
+    rect(X,x+49,y-16,4,4,P.stone);
+    px(X,x+50,y-15,P.dstone);
+    px(X,x+51,y-15,P.dstone);
+    // Halo
+    X.globalAlpha=.3;X.fillStyle=P.gold;
+    X.beginPath();X.arc(x+51,y-14,5,0,Math.PI*2);X.fill();
     X.globalAlpha=1;
-    
-    // Bookshelves — 3 rows, detailed spines
-    for(let row=0;row<3;row++){
-      const sy_=y+6+row*15;
-      // Shelf board
-      rect(X,x+5,sy_+11,58,2,P.wood);
-      rect(X,x+5,sy_+11,58,1,P.lwood);
-      // Vertical supports
-      rect(X,x+5,sy_,2,13,P.wood);rect(X,x+32,sy_,2,13,P.wood);rect(X,x+61,sy_,2,13,P.wood);
-      // Individual book spines
-      for(let b=0;b<12;b++){
-        if(hash(b,row+x,11)>.25){ // some gaps (books taken/burned)
-          const bx=x+7+b*4.5;
-          const bh=5+Math.floor(hash(b,row,22)*6);
-          const bw=2+Math.floor(hash(b,row,33)*2);
-          const bc=[P.crimson,'#2a1a0a','#1a2a1a',P.dwood,P.damber,P.indigo,'#3a1a08','#0a1a2a'][Math.floor(hash(b,row,44)*8)];
-          rect(X,bx,sy_+11-bh,bw,bh,bc);
-          // Spine detail — title line
-          if(hash(b,row,55)>.5){
-            rect(X,bx,sy_+11-bh+2,bw,1,P.gold);
-          }
-        }else{
-          // Empty gap — shadow
-          rect(X,x+7+b*4.5,sy_+5,3,6,'#0a0a0e');
+    // Open book in lap
+    rect(X,x+47,y-5,8,2,P.bone);
+    rect(X,x+51,y-5,1,2,P.dstone);
+    // Figures flanking goddess — tiny seated scholars
+    rect(X,x+38,y-2,4,5,P.stone);rect(X,x+40,y-4,2,2,P.stone); // left scholar
+    rect(X,x+58,y-2,4,5,P.stone);rect(X,x+60,y-4,2,2,P.stone); // right scholar
+    // Broken chunk of pediment — top right missing
+    X.fillStyle='#0a0604';
+    X.beginPath();
+    X.moveTo(x+88,y-10);
+    X.lineTo(x+99,y+6);
+    X.lineTo(x+88,y+4);
+    X.closePath();X.fill();
+    // Jagged edge of break
+    for(let i=0;i<6;i++){
+      px(X,x+88+i,y-9+i,P.stone);
+    }
+    // Acroterion (ornament at pediment peak)
+    rect(X,x+49,y-22,4,4,P.dstone);
+    rect(X,x+50,y-24,2,2,P.stone);
+    px(X,x+51,y-26,P.stone);
+
+    // ── INTERIOR — visible between columns (dark depth) ──
+    rect(X,x+10,y+20,80,38,'#0a0604');
+    // Inner back wall
+    rect(X,x+12,y+22,76,34,'#1a0e08');
+    // Wall texture — burnt
+    for(let i=0;i<20;i++){
+      rect(X,x+13+hash(i,x,11)*72,y+23+hash(i,y,22)*32,hash(i,0,33)*8,1,'#0a0604');
+    }
+    // Shaft of light from broken roof — hits the altar
+    X.globalAlpha=.08;
+    const shaft=X.createLinearGradient(x+30,y-6,x+50,y+55);
+    shaft.addColorStop(0,'rgba(184,134,11,.6)');
+    shaft.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=shaft;X.fillRect(x+25,y-6,30,65);
+    X.globalAlpha=1;
+
+    // ── BOOKSHELVES visible between columns ──
+    // Back wall shelves — 4 rows
+    for(let row=0;row<4;row++){
+      const sy_=y+24+row*8;
+      rect(X,x+14,sy_+6,72,1,P.wood);
+      rect(X,x+14,sy_,1,7,P.wood); // left support
+      rect(X,x+49,sy_,1,7,P.wood); // middle support
+      rect(X,x+85,sy_,1,7,P.wood); // right support
+      // Book spines
+      for(let b=0;b<30;b++){
+        if(hash(b,row+x,11)>.3){
+          const bx=x+15+b*2.4;
+          const bh=3+Math.floor(hash(b,row,22)*4);
+          const bc=[P.crimson,'#2a1a0a','#1a2a1a',P.dwood,P.damber,P.indigo,'#3a1a08','#0a1a2a','#2a0a2a'][Math.floor(hash(b,row,44)*9)];
+          rect(X,bx,sy_+6-bh,2,bh,bc);
+          if(hash(b,row,55)>.6)px(X,bx,sy_+6-bh+1,P.gold);
         }
       }
     }
-    
-    // Reading table (center)
-    rect(X,x+22,y+48,20,3,P.wood);
-    rect(X,x+24,y+51,3,5,P.dwood);rect(X,x+37,y+51,3,5,P.dwood);
-    // ── OPEN SCROLL on table — partially unrolled, readable ──
-    // Rolled ends
-    rect(X,x+23,y+44,3,5,'#3a2814');
-    rect(X,x+39,y+44,3,5,'#3a2814');
-    // Main scroll body
-    rect(X,x+26,y+45,13,4,P.parchment);
-    rect(X,x+26,y+45,13,1,'#d8c8a8'); // edge curl top
-    rect(X,x+26,y+48,13,1,'#b8a888'); // edge curl bottom
-    // Text lines on scroll (fake pixel text — moss chain hint)
-    X.fillStyle='#1a0e06';
-    // Line 1 — "мох помнит" dots
-    rect(X,x+27,y+46,2,1);rect(X,x+30,y+46,3,1);rect(X,x+34,y+46,2,1);rect(X,x+37,y+46,1,1);
-    // Line 2 — longer
-    rect(X,x+27,y+47,1,1);rect(X,x+29,y+47,2,1);rect(X,x+32,y+47,1,1);rect(X,x+34,y+47,3,1);rect(X,x+38,y+47,1,1);
-    // Tiny moss spot on the scroll (actually growing)
-    const mossG=Math.min(2,Math.floor(t/5400));
-    if(mossG>0){
-      rect(X,x+28,y+45,mossG,1,P.dtoxic);
-      if(mossG>1)px(X,x+29,y+44,P.toxic);
-    }
-    // Small quill next to scroll
-    rect(X,x+41,y+47,1,3,P.bone);
-    px(X,x+41,y+46,P.damber);
-    
-    // Scattered pages on floor
-    for(let i=0;i<6;i++){
-      const px_=x+5+hash(i,1,11)*55;
-      const py_=y+45+hash(i,1,22)*10;
-      const rot=hash(i,1,33)>.5;
-      rect(X,px_,py_,rot?4:3,rot?3:4,hash(i,1,44)>.3?P.bone:'#d8c8b0');
-    }
-    
-    // Door — arched
-    rect(X,x+28,y+30,14,26,'#0a0808');
-    rect(X,x+27,y+28,16,3,P.dgrey);
-    // Arch
-    rect(X,x+32,y+26,6,4,P.dgrey);
-    
-    // "3.14" scratched on shelf (Borges easter egg — visible only up close)
-    X.globalAlpha=.2;X.fillStyle=P.bone;X.font='4px "Press Start 2P"';
-    X.fillText('3.14',x+48,y+20);
+    // Burn marks on shelves
+    X.globalAlpha=.5;X.fillStyle='#0a0604';
+    rect(X,x+30,y+24,20,8,'#0a0604');
+    rect(X,x+60,y+40,15,6,'#0a0604');
     X.globalAlpha=1;
+    // Burned corner with glowing ember
+    const emberP=(Math.sin(t*.04)+1)*.5;
+    X.globalAlpha=.4+emberP*.3;
+    px(X,x+35,y+28,P.crimson);
+    px(X,x+36,y+28,P.f1);
+    X.globalAlpha=1;
+
+    // ── ALTAR / CENTRAL READING PEDESTAL ──
+    // Marble pedestal
+    rect(X,x+42,y+48,16,10,P.stone);
+    rect(X,x+42,y+48,16,1,P.lstone||'#4a4a52');
+    rect(X,x+42,y+57,16,1,'#1a1a22');
+    // Pedestal carvings
+    rect(X,x+44,y+50,2,6,P.dstone);
+    rect(X,x+54,y+50,2,6,P.dstone);
+
+    // ── OPEN GRAND BOOK on altar — THE книга ──
+    // Book base
+    rect(X,x+40,y+44,20,5,'#3a2814');
+    rect(X,x+40,y+44,20,1,P.dwood);
+    // Left page
+    rect(X,x+41,y+45,9,4,P.parchment);
+    rect(X,x+41,y+45,9,1,'#d8c8a8');
+    // Right page
+    rect(X,x+51,y+45,8,4,P.parchment);
+    rect(X,x+51,y+45,8,1,'#d8c8a8');
+    // Central spine
+    rect(X,x+50,y+44,1,5,P.dwood);
+    // Text on left page (dot pattern)
+    X.fillStyle='#1a0e06';
+    rect(X,x+42,y+46,2,1);rect(X,x+45,y+46,3,1);
+    rect(X,x+42,y+47,4,1);rect(X,x+47,y+47,2,1);
+    rect(X,x+42,y+48,3,1);
+    // Text on right page
+    rect(X,x+52,y+46,3,1);rect(X,x+56,y+46,2,1);
+    rect(X,x+52,y+47,2,1);rect(X,x+55,y+47,3,1);
+    rect(X,x+52,y+48,4,1);
+    // Moss growing on the book (mossG based on time)
+    const mossG=Math.min(3,Math.floor(t/5400));
+    if(mossG>0){
+      rect(X,x+43,y+45,mossG,1,P.dtoxic);
+      if(mossG>1)px(X,x+44,y+44,P.toxic);
+      if(mossG>2)px(X,x+45,y+44,P.btoxic);
+    }
+    // Small candle on altar corner
+    rect(X,x+58,y+42,2,4,P.bone);
+    const cflick=Math.sin(t*.08)*.5;
+    px(X,x+58+cflick*.3,y+41,P.f2);
+    px(X,x+59+cflick*.3,y+41,P.f1);
+    X.globalAlpha=.2+.1*Math.sin(t*.08);
+    X.fillStyle=P.gold;
+    X.beginPath();X.arc(x+59,y+42,6,0,Math.PI*2);X.fill();
+    X.globalAlpha=1;
+
+    // ── SCATTERED PAGES / FLOATING IN LIGHT SHAFT ──
+    for(let i=0;i<10;i++){
+      const px_=x+12+hash(i,1,11)*76;
+      const py_=y+55+hash(i,1,22)*5;
+      const rot=hash(i,1,33)>.5;
+      rect(X,px_,py_,rot?3:2,rot?2:3,hash(i,1,44)>.3?P.bone:'#d8c8b0');
+      // Burnt edges
+      px(X,px_,py_,'#3a2814');
+    }
+    // Floating pages in light shaft (animated)
+    for(let i=0;i<4;i++){
+      const fpy=y+20+((t*.3+i*40)%40);
+      const fpx=x+32+Math.sin(t*.02+i)*3;
+      X.globalAlpha=.6;
+      rect(X,fpx,fpy,2,2,P.bone);
+      X.globalAlpha=1;
+    }
+
+    // ── STATUE fragments inside — broken bust on floor ──
+    rect(X,x+16,y+50,6,8,P.stone);
+    rect(X,x+16,y+50,6,1,P.lstone||'#4a4a52');
+    // Head (decapitated, next to body)
+    rect(X,x+24,y+54,4,4,P.stone);
+    px(X,x+25,y+55,P.dstone); // eye socket
+    px(X,x+26,y+55,P.dstone);
+
+    // ── BIRDCAGE with paper scrolls instead of bird ──
+    rect(X,x+78,y+38,8,10,'#0a0808');
+    for(let bc=0;bc<4;bc++){
+      rect(X,x+78+bc*2,y+38,1,10,'#3a3a3a');
+    }
+    rect(X,x+78,y+38,8,1,'#3a3a3a');
+    rect(X,x+78,y+47,8,1,'#3a3a3a');
+    // Paper scrolls inside
+    rect(X,x+79,y+42,6,3,P.parchment);
+    px(X,x+80,y+43,'#1a0e06');
+    px(X,x+82,y+43,'#1a0e06');
+
+    // ── STRANGE GROWTH — mycelium spreading across back wall ──
+    for(let i=0;i<18;i++){
+      const mx_=x+14+hash(i,x+11,11)*72;
+      const my_=y+22+hash(i,y+22,22)*32;
+      rect(X,mx_,my_,2+hash(i,0,33)*3,1,P.dtoxic);
+      if(hash(i,0,44)>.6)px(X,mx_+1,my_-1,P.toxic);
+      if(hash(i,0,55)>.8)px(X,mx_+2,my_,P.btoxic);
+    }
+    // Connecting threads between moss spots
+    X.strokeStyle=P.dtoxic;X.lineWidth=1;
+    X.globalAlpha=.5;
+    X.beginPath();
+    X.moveTo(x+20,y+30);X.quadraticCurveTo(x+45,y+35,x+80,y+28);
+    X.stroke();
+    X.globalAlpha=1;
+
+    // ── IVY climbing left side ──
+    for(let i=0;i<12;i++){
+      const iy=y+10+i*5;
+      rect(X,x+3,iy,2,3,P.dtoxic);
+      if(i%2)rect(X,x+1,iy+1,2,2,P.toxic);
+      else rect(X,x+5,iy+1,2,2,P.toxic);
+      // Tendrils
+      if(i%3===0){
+        X.strokeStyle=P.dtoxic;X.lineWidth=1;
+        X.beginPath();X.moveTo(x+4,iy);X.quadraticCurveTo(x+1,iy+2,x+3,iy+4);X.stroke();
+      }
+    }
+
+    // ── CRACKED COLUMN capital laying on steps ──
+    rect(X,x+75,y+70,8,3,P.stone);
+    rect(X,x+76,y+69,6,1,P.dstone);
+    // Scroll volutes on fallen capital
+    px(X,x+75,y+70,P.dstone);
+    px(X,x+82,y+70,P.dstone);
+
+    // ── GREEK INSCRIPTION on architrave (faded Cyrillic meta) ──
+    X.globalAlpha=.25;X.fillStyle=P.bone;X.font='4px "Press Start 2P"';
+    X.fillText('БИБЛIOΘHKA',x+28,y+11);
+    X.globalAlpha=1;
+    // "3.14" scratched on column (Borges easter egg)
+    X.globalAlpha=.2;X.fillStyle=P.bone;
+    X.fillText('3.14',x+26,y+45);
+    // Second hidden tag on another column
+    X.fillText('VII-G',x+74,y+40);
+    X.globalAlpha=1;
+
+    // ── RAVEN perched on broken pediment ──
+    const rvBob=Math.sin(t*.02)*.3;
+    rect(X,x+86,y-4+rvBob,4,3,'#0a0604');
+    rect(X,x+89,y-5+rvBob,2,3,'#0a0604');
+    // Beak
+    px(X,x+91,y-4+rvBob,P.damber);
+    // Eye
+    px(X,x+89,y-4+rvBob,P.crimson);
+    // Tail
+    rect(X,x+85,y-3+rvBob,2,1,'#0a0604');
+    // Occasional caw — tiny "!" above
+    if(t%300<20){
+      px(X,x+88,y-8+rvBob,P.bone);
+      px(X,x+88,y-6+rvBob,P.bone);
+    }
+
+    // ── DOORWAY — dark, between middle columns (looks like throat) ──
+    // Keyed arch at back
+    rect(X,x+44,y+30,12,22,'#0a0604');
+    // Glow from deep inside
+    X.globalAlpha=.15+.05*Math.sin(t*.03);
+    X.fillStyle=P.crimson;
+    rect(X,x+47,y+40,6,10,P.crimson);
+    X.globalAlpha=1;
+    // Tiny figure in doorway — ARCHIVARIUS silhouette
+    if(Math.sin(t*.01)>0){
+      rect(X,x+48,y+35,4,12,'#050404');
+      px(X,x+49,y+36,P.bone); // eye glint
+    }
+
+    // ── GROUND DETAILS near base ──
+    // Scattered books on stylobate (fallen out)
+    for(let i=0;i<5;i++){
+      const bkx=x+10+hash(i,2,11)*75;
+      rect(X,bkx,y+58,4,2,[P.crimson,P.indigo,P.dwood,'#2a1a08'][i%4]);
+      px(X,bkx+1,y+58,P.gold);
+    }
+    // Pigeon feather
+    rect(X,x+40,y+73,1,3,P.bone);
+    px(X,x+40,y+73,'#8a8488');
   },
   tent(x,y){
     // ═══ TENT OF THE ELDER — ritual space ═══
@@ -4248,239 +4534,388 @@ const locDraw={
     }
   },
   church(x,y){
-    // ═══ GOTHIC CHURCH — detailed ═══
-    // Main walls — individual stone blocks
-    rect(X,x,y,70,60,P.stone);
-    for(let row=0;row<12;row++){
-      for(let col=0;col<7;col++){
-        const bx=x+1+col*10;
-        const by=y+1+row*5;
-        const bw=9-((row+col)%3===0?1:0);
+    // ═══ GOTHIC CATHEDRAL — massive, detailed ═══
+    // Ground shadow
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+52,y+90,60,5,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── MAIN NAVE BODY — 100x75 stone structure ──
+    rect(X,x,y+8,100,78,P.stone);
+    // Individual stone blocks for texture
+    for(let row=0;row<16;row++){
+      for(let col=0;col<11;col++){
+        const bx=x+1+col*9+(row%2?4:0);
+        const by=y+9+row*5;
+        const bw=8-((row+col)%4===0?1:0);
         const shade=hash(col,row+x,11)>.5?P.dstone:P.stone;
         rect(X,bx,by,bw,4,shade);
-        // Mortar lines
         rect(X,bx,by+4,bw,1,'#1a1a22');
       }
     }
-    // Moss patches on stones
-    for(let i=0;i<5;i++){
-      const mx_=x+3+hash(i,x,22)*60;
-      const my_=y+hash(i,y,33)*50;
-      rect(X,mx_,my_,3+hash(i,0,44)*4,2,P.dtoxic);
+    // Moss patches (more this time, thicker)
+    for(let i=0;i<10;i++){
+      const mx_=x+3+hash(i,x,22)*92;
+      const my_=y+8+hash(i,y,33)*78;
+      rect(X,mx_,my_,3+hash(i,0,44)*5,2,P.dtoxic);
       if(hash(i,0,55)>.5)px(X,mx_+1,my_-1,P.toxic);
+      if(hash(i,0,66)>.7)px(X,mx_+2,my_+1,P.btoxic);
     }
-    
-    // Gothic window frames (3 pointed arch windows)
+
+    // ── FLYING BUTTRESSES on left side ──
+    // Support arches from ground up
     for(let i=0;i<3;i++){
-      const wx=x+8+i*22,wy=y+6;
-      // Window opening — deep black interior
-      rect(X,wx,wy,14,27,'#040408');
+      const bY=y+28+i*20;
+      // Main buttress pier (sticking out from wall)
+      rect(X,x-6,bY,7,12,P.dstone);
+      rect(X,x-5,bY+1,5,10,P.stone);
+      // Arch connecting to wall
+      X.strokeStyle=P.dstone;X.lineWidth=2;
+      X.beginPath();
+      X.moveTo(x-6,bY);
+      X.quadraticCurveTo(x-2,bY-6,x+2,bY-2);
+      X.stroke();
+      X.lineWidth=1;
+      // Moss on buttress
+      if(i%2)rect(X,x-4,bY+8,3,2,P.dtoxic);
+    }
+
+    // ── FRONT FACADE with ROSE WINDOW ──
+    // Slightly taller front section
+    rect(X,x+36,y+2,28,8,P.stone);
+    rect(X,x+37,y+3,26,7,P.dstone);
+    // ROSE WINDOW — circular stained glass
+    const roseX=x+50,roseY=y+18;
+    // Outer stone ring
+    X.fillStyle=P.stone;
+    X.beginPath();X.arc(roseX,roseY,11,0,Math.PI*2);X.fill();
+    X.fillStyle=P.dstone;
+    X.beginPath();X.arc(roseX,roseY,10,0,Math.PI*2);X.fill();
+    // Dark inner void
+    X.fillStyle='#040408';
+    X.beginPath();X.arc(roseX,roseY,9,0,Math.PI*2);X.fill();
+    // Radial stone spokes (6 spokes)
+    X.strokeStyle=P.dstone;X.lineWidth=1;
+    for(let sp=0;sp<6;sp++){
+      const a=sp/6*Math.PI*2;
+      X.beginPath();
+      X.moveTo(roseX,roseY);
+      X.lineTo(roseX+Math.cos(a)*9,roseY+Math.sin(a)*9);
+      X.stroke();
+    }
+    // Inner circle
+    X.fillStyle=P.dstone;
+    X.beginPath();X.arc(roseX,roseY,3,0,Math.PI*2);X.fill();
+    // Stained glass panels — 6 colored triangular shards
+    const roseColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8a5aaa'];
+    for(let sp=0;sp<6;sp++){
+      const a=sp/6*Math.PI*2+Math.PI/6;
+      const gx=roseX+Math.cos(a)*5;
+      const gy=roseY+Math.sin(a)*5;
+      X.globalAlpha=.55+.15*Math.sin(t*.004+sp);
+      rect(X,gx-1,gy-1,2,2,roseColors[sp]);
+      X.globalAlpha=.25;
+      rect(X,gx-2,gy-2,4,4,roseColors[sp]);
+      X.globalAlpha=1;
+    }
+    // Center glass piece (gold)
+    X.globalAlpha=.7+.2*Math.sin(t*.005);
+    px(X,roseX,roseY,P.gold);
+    X.globalAlpha=1;
+    // Rose window glow (at night)
+    X.globalAlpha=.08+.04*Math.sin(t*.003);
+    const rgl=X.createRadialGradient(roseX,roseY,5,roseX,roseY,28);
+    rgl.addColorStop(0,'rgba(218,165,32,.5)');
+    rgl.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=rgl;X.fillRect(roseX-28,roseY-28,56,56);
+    X.globalAlpha=1;
+
+    // ── 4 GOTHIC POINTED-ARCH WINDOWS along the nave ──
+    for(let i=0;i<4;i++){
+      const wx=x+4+i*22,wy=y+36;
+      // Deep black interior
+      rect(X,wx,wy,16,32,'#040408');
       // Pointed arch top
-      for(let a=0;a<7;a++){
-        const archY=wy-1-Math.abs(3-a)*.8;
+      for(let a=0;a<8;a++){
+        const archY=wy-1-Math.abs(4-a)*.9;
         rect(X,wx+a*2,archY,2,2,P.stone);
       }
       // Stone frame
-      rect(X,wx-1,wy,2,27,P.stone);rect(X,wx+13,wy,2,27,P.stone);
+      rect(X,wx-1,wy,2,32,P.stone);
+      rect(X,wx+15,wy,2,32,P.stone);
       // Mullion (vertical divider)
-      rect(X,wx+6,wy+3,2,22,P.dstone);
-      // Tracery (top decoration)
-      rect(X,wx+4,wy+2,6,1,P.dstone);
-      // Remaining stained glass — random colored fragments
-      const glassColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic];
-      for(let g=0;g<6;g++){
-        if(hash(g,i+x,66)>.35){
-          const gx=wx+2+hash(g,i,77)*10;
-          const gy=wy+4+hash(g,i,88)*18;
+      rect(X,wx+7,wy+3,2,26,P.dstone);
+      // Horizontal transoms
+      rect(X,wx+1,wy+11,14,1,P.dstone);
+      rect(X,wx+1,wy+20,14,1,P.dstone);
+      // Tracery decoration
+      rect(X,wx+4,wy+2,8,1,P.dstone);
+      rect(X,wx+6,wy,4,1,P.dstone);
+      // Stained glass fragments (more this time)
+      const glassColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8a5aaa'];
+      for(let g=0;g<10;g++){
+        if(hash(g,i+x,66)>.3){
+          const gx=wx+2+hash(g,i,77)*12;
+          const gy=wy+4+hash(g,i,88)*22;
           const gc=glassColors[Math.floor(hash(g,i,99)*glassColors.length)];
           rect(X,gx,gy,2,3,gc);
-          // Glass glow at night
+          // Glow at night
           X.globalAlpha=.06+.03*Math.sin(t*.003+g);
           rect(X,gx-1,gy-1,4,5,gc);
           X.globalAlpha=1;
         }
       }
     }
-    
-    // Main door — heavy wooden, slightly ajar
-    rect(X,x+28,y+33,14,27,'#0a0808');
-    rect(X,x+27,y+31,16,3,P.stone); // lintel
-    // Door panels
-    rect(X,x+29,y+35,5,23,P.dwood);rect(X,x+36,y+35,5,23,P.dwood);
-    // Door gap (ajar) — deep interior visible
-    rect(X,x+34,y+35,2,23,'#020204');
+
+    // ── MAIN DOOR — heavy Gothic wooden ──
+    // Pointed arch doorway
+    rect(X,x+42,y+54,18,36,'#0a0808');
+    rect(X,x+41,y+51,20,3,P.stone);
+    // Pointed arch top
+    for(let a=0;a<10;a++){
+      const archY=y+51-Math.abs(5-a)*.8;
+      rect(X,x+41+a*2,archY,2,2,P.stone);
+    }
+    // Door panels (thick wood)
+    rect(X,x+43,y+56,6,32,P.dwood);
+    rect(X,x+44,y+57,4,30,'#2a1a08');
+    rect(X,x+52,y+56,6,32,P.dwood);
+    rect(X,x+53,y+57,4,30,'#2a1a08');
+    // Door gap ajar
+    rect(X,x+50,y+56,2,32,'#020204');
     // Iron hinges
-    rect(X,x+29,y+40,5,1,P.dgrey);rect(X,x+29,y+50,5,1,P.dgrey);
-    // Iron ring handle
-    px(X,x+33,y+48,P.ash);
-    
-    // Interior — visible through door gap and windows
-    // Floor tiles (checkerboard visible through door)
-    for(let fy=0;fy<4;fy++){
-      rect(X,x+30,y+55+fy*2,10,1,fy%2?'#0e0e14':'#080810');
+    rect(X,x+43,y+60,6,1,P.dgrey);
+    rect(X,x+43,y+72,6,1,P.dgrey);
+    rect(X,x+43,y+84,6,1,P.dgrey);
+    rect(X,x+53,y+60,5,1,P.dgrey);
+    rect(X,x+53,y+72,5,1,P.dgrey);
+    rect(X,x+53,y+84,5,1,P.dgrey);
+    // Iron door ring
+    X.fillStyle=P.ash;
+    X.beginPath();X.arc(x+48,y+74,2,0,Math.PI*2);X.stroke();
+    // Steps leading up
+    rect(X,x+38,y+88,24,2,P.dstone);
+    rect(X,x+36,y+90,28,2,P.dstone);
+
+    // Interior visible through door gap
+    for(let fy=0;fy<6;fy++){
+      rect(X,x+44,y+78+fy*2,12,1,fy%2?'#0e0e14':'#080810');
     }
-    
-    // Bell tower — taller, with arched opening
-    rect(X,x+58,y-28,16,32,P.stone);
-    // Individual stones on tower
-    for(let row=0;row<8;row++){
-      rect(X,x+59,y-27+row*4,14,3,hash(row,0,11)>.5?P.dstone:P.stone);
+
+    // ── BELL TOWER on the right — taller, more imposing ──
+    rect(X,x+86,y-35,20,45,P.stone);
+    // Tower stones
+    for(let row=0;row<11;row++){
+      rect(X,x+87,y-34+row*4,18,3,hash(row,0,11)>.5?P.dstone:P.stone);
     }
-    // Belfry opening
-    rect(X,x+61,y-22,12,8,'#040408');
-    rect(X,x+66,y-22,2,8,P.dstone); // divider
-    // Bell silhouette
-    X.globalAlpha=.4;
+    // Moss on tower
+    rect(X,x+86,y,3,4,P.dtoxic);
+    px(X,x+87,y+2,P.toxic);
+    // BELFRY — large arched opening
+    rect(X,x+89,y-28,14,10,'#040408');
+    rect(X,x+95,y-28,2,10,P.dstone); // divider
+    // Pointed arches on belfry openings
+    for(let a=0;a<7;a++){
+      rect(X,x+89+a*2,y-29-Math.abs(3-a)*.6,2,1,P.stone);
+    }
+    // Bell silhouette inside
+    X.globalAlpha=.5;
     X.fillStyle='#3a3a42';
-    X.beginPath();X.moveTo(x+63,y-20);X.lineTo(x+65,y-16);X.lineTo(x+71,y-16);
-    X.lineTo(x+73,y-20);X.closePath();X.fill();
+    X.beginPath();
+    X.moveTo(x+91,y-25);X.lineTo(x+93,y-21);
+    X.lineTo(x+100,y-21);X.lineTo(x+102,y-25);
+    X.closePath();X.fill();
+    // Bell rope hanging down
+    rect(X,x+96,y-21,1,12,P.dbone);
     X.globalAlpha=1;
-    // Tower cap — pointed
-    rect(X,x+63,y-32,10,5,P.dstone);
-    rect(X,x+66,y-36,4,5,P.stone);
-    rect(X,x+67,y-38,2,3,P.dgrey);
+    // Second belfry (smaller, above first)
+    rect(X,x+92,y-40,8,6,'#040408');
+    rect(X,x+95,y-40,2,6,P.dstone);
+    // Tower cap — stepped pyramid
+    rect(X,x+84,y-42,24,3,P.dstone);
+    rect(X,x+86,y-46,20,4,P.dstone);
+    rect(X,x+88,y-50,16,4,P.stone);
+    rect(X,x+90,y-54,12,4,P.dstone);
+    rect(X,x+93,y-58,6,4,P.dgrey);
+    // Spire
+    rect(X,x+95,y-64,2,6,P.dgrey);
     // Cross on top
-    rect(X,x+67,y-42,2,5,P.ash);rect(X,x+65,y-40,6,2,P.ash);
-    
-    // No roof — exposed interior, sky visible above walls
-    rect(X,x+3,y+58,64,2,P.dstone);
-    // Collapsed roof beams
-    rect(X,x+10,y+5,2,20,P.dwood); // fallen beam
-    rect(X,x+45,y+15,18,2,P.dwood); // angled beam
-    
-    // Altar — detailed
-    rect(X,x+30,y+42,10,6,P.lstone);
-    rect(X,x+31,y+40,8,3,P.stone);
-    // Cross carved into altar front
-    rect(X,x+34,y+43,2,4,P.ash);rect(X,x+33,y+44,4,1,P.ash);
-    // Black notebook on altar
-    rect(X,x+32,y+39,5,3,'#0a0a0a');
-    rect(X,x+32,y+39,5,1,'#1a1a1a'); // spine
-    // Candle next to notebook
-    rect(X,x+38,y+37,2,5,P.bone);
-    // Animated candle flame
-    const cf=t*.03;
-    const flx=x+38+Math.sin(cf)*1;
-    px(X,flx,y+35,P.f2);px(X,flx+1,y+36,P.f1);
-    // Candle light pool
-    X.globalAlpha=.04+.02*Math.sin(cf);
-    const cg=X.createRadialGradient(x+39,y+37,0,x+39,y+37,12);
-    cg.addColorStop(0,'rgba(218,165,32,.8)');cg.addColorStop(1,'rgba(0,0,0,0)');
-    X.fillStyle=cg;X.fillRect(x+27,y+25,24,24);
-    X.globalAlpha=1;
-    
-    // Gravestones at base of church (outside, right side)
-    for(let i=0;i<4;i++){
-      const gx_=x+72+i*8;
-      const gy_=y+52+hash(i,x,11)*8;
-      rect(X,gx_,gy_-8,5,8,P.stone);
-      rect(X,gx_+1,gy_-7,3,1,P.lstone);
-      // Some leaning
-      if(hash(i,0,22)>.6)rect(X,gx_+1,gy_-9,4,2,P.dstone);
+    rect(X,x+95,y-72,2,8,P.ash);
+    rect(X,x+92,y-68,8,2,P.ash);
+    // Highlight
+    px(X,x+96,y-71,P.bone);
+
+    // ── SECONDARY SPIRE on left (matches tower) ──
+    rect(X,x-3,y-10,12,20,P.stone);
+    for(let row=0;row<5;row++){
+      rect(X,x-2,y-9+row*4,10,3,hash(row,1,22)>.5?P.dstone:P.stone);
     }
-    
-    // Ivy climbing left wall
+    // Small cap
+    rect(X,x-4,y-13,14,3,P.dstone);
+    rect(X,x-1,y-18,8,5,P.dstone);
+    rect(X,x+1,y-22,4,4,P.dgrey);
+    // Small cross
+    rect(X,x+2,y-28,2,6,P.ash);
+    rect(X,x,y-26,6,1,P.ash);
+
+    // ── NO ROOF — exposed interior walls on top ──
+    rect(X,x+2,y+8,82,2,P.dstone);
+    // Collapsed roof beams sticking into the sky
+    rect(X,x+8,y-10,3,20,P.dwood);
+    rect(X,x+8,y-10,3,1,'#0a0604');
+    rect(X,x+24,y-6,2,16,P.dwood);
+    rect(X,x+70,y-4,3,14,P.dwood);
+    rect(X,x+55,y+2,18,2,P.dwood); // fallen angled beam
+    // Broken rafters
     for(let i=0;i<8;i++){
-      const iy=y+55-i*7-hash(i,0,33)*3;
-      const ix=x-1+hash(i,0,44)*4;
-      rect(X,ix,iy,2,3,P.dtoxic);
-      px(X,ix+1,iy-1,P.toxic);
+      rect(X,x+12+i*10,y+4,2,3,'#1a0e06');
     }
 
-    // ═══ NEW DETAILS ═══
-    // ── CROWS on the cross and belfry ──
-    // On cross top
-    if(t%400<380){
-      rect(X,x+66,y-43,2,1,'#050505');
-      px(X,x+68,y-43,'#050505');
-    }
-    // On belfry edge
-    rect(X,x+60,y-22,2,1,'#050505');
-    px(X,x+62,y-22,'#050505');
-    // Occasional flight
-    if(t%600<30){
-      const flyPh=(t%600)/30;
-      X.globalAlpha=1-flyPh;
-      px(X,x+70+flyPh*10,y-30-flyPh*8,'#050505');
-      px(X,x+71+flyPh*10,y-30-flyPh*8,'#050505');
-      X.globalAlpha=1;
-    }
+    // ── ALTAR visible through the main door ──
+    rect(X,x+44,y+70,12,6,P.lstone);
+    rect(X,x+45,y+68,10,3,P.stone);
+    // Carved cross front
+    rect(X,x+49,y+71,2,4,P.ash);
+    rect(X,x+48,y+72,4,1,P.ash);
+    // Black notebook on altar
+    rect(X,x+46,y+66,6,3,'#0a0a0a');
+    rect(X,x+46,y+66,6,1,'#1a1a1a');
+    // Candle next to notebook
+    rect(X,x+53,y+63,2,6,P.bone);
+    const cf=t*.03;
+    const flx=x+53+Math.sin(cf)*1;
+    px(X,flx,y+61,P.f2);
+    px(X,flx+1,y+62,P.f1);
+    // Candle light pool
+    X.globalAlpha=.05+.03*Math.sin(cf);
+    const cg=X.createRadialGradient(x+54,y+63,0,x+54,y+63,14);
+    cg.addColorStop(0,'rgba(218,165,32,.8)');
+    cg.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=cg;X.fillRect(x+40,y+49,28,28);
+    X.globalAlpha=1;
 
-    // ── KNEELING FIGURE inside church (visible through doorway gap) ──
-    // Silhouette of someone praying before altar
+    // ── KNEELING FIGURE before altar (visible through door) ──
     const figBrth=Math.sin(t*.006)*.3;
-    rect(X,x+31,y+48+figBrth,5,7,'#050505');
-    rect(X,x+31,y+46+figBrth,5,3,'#0a0a0a'); // head
-    // Hands clasped in front
-    rect(X,x+32,y+51+figBrth,3,1,'#1a0a06');
+    rect(X,x+46,y+76+figBrth,5,8,'#050505');
+    rect(X,x+46,y+74+figBrth,5,3,'#0a0a0a');
+    rect(X,x+47,y+79+figBrth,3,1,'#1a0a06');
 
-    // ── PEWS (visible through door gap and silhouetted) ──
-    for(let i=0;i<3;i++){
-      rect(X,x+29,y+58+i*2,13,1,'#1a0e06');
-      rect(X,x+35,y+58+i*2,1,2,'#1a0e06');
+    // ── PEWS visible through door ──
+    for(let i=0;i<4;i++){
+      rect(X,x+44,y+84+i*2,12,1,'#1a0e06');
+      rect(X,x+50,y+84+i*2,1,2,'#1a0e06');
     }
 
     // ── BLOOD STAINS on altar ──
     X.fillStyle='#3a0608';
-    rect(X,x+32,y+43,3,1);
-    px(X,x+35,y+44,'#3a0608');
-    px(X,x+33,y+45,'#1a0404');
-    // Drip down front
-    rect(X,x+33,y+46,1,2,'#3a0608');
+    rect(X,x+47,y+69,3,1);
+    px(X,x+50,y+70,'#3a0608');
+    px(X,x+48,y+71,'#1a0404');
+    rect(X,x+48,y+72,1,2,'#3a0608');
 
-    // ── CANDLES in alcoves along walls (5 more flickering lights) ──
-    for(let i=0;i<5;i++){
-      const cx_=x+6+i*13;
-      const cy_=y+25;
-      rect(X,cx_,cy_,1,3,P.bone);
-      const fl=Math.sin(t*.04+i*2)*.5;
-      px(X,cx_+fl,cy_-1,P.f2);
-      // Tiny glow
-      X.globalAlpha=.08+.04*Math.sin(t*.03+i);
-      const cgl=X.createRadialGradient(cx_,cy_,0,cx_,cy_,6);
-      cgl.addColorStop(0,'rgba(218,165,32,1)');
-      cgl.addColorStop(1,'rgba(0,0,0,0)');
-      X.fillStyle=cgl;X.fillRect(cx_-6,cy_-6,12,12);
+    // ── GARGOYLES (stone beast heads jutting from top corners) ──
+    // Left gargoyle
+    rect(X,x-2,y+12,6,5,P.dstone);
+    rect(X,x-3,y+13,7,3,P.stone);
+    // Eyes
+    px(X,x-1,y+14,'#0a0a0e');
+    px(X,x+1,y+14,'#0a0a0e');
+    // Fangs
+    px(X,x,y+16,P.bone);
+    px(X,x+2,y+16,P.bone);
+    // Right gargoyle
+    rect(X,x+96,y+14,6,5,P.dstone);
+    rect(X,x+97,y+15,6,3,P.stone);
+    px(X,x+99,y+16,'#0a0a0e');
+    px(X,x+101,y+16,'#0a0a0e');
+    px(X,x+99,y+18,P.bone);
+    px(X,x+101,y+18,P.bone);
+
+    // ── CROWS on the cross and belfry ──
+    if(t%400<380){
+      rect(X,x+94,y-73,2,1,'#050505');
+      px(X,x+96,y-73,'#050505');
+    }
+    rect(X,x+88,y-29,2,1,'#050505');
+    px(X,x+90,y-29,'#050505');
+    // Occasional crow flight
+    if(t%600<30){
+      const flyPh=(t%600)/30;
+      X.globalAlpha=1-flyPh;
+      px(X,x+100+flyPh*15,y-40-flyPh*10,'#050505');
+      px(X,x+101+flyPh*15,y-40-flyPh*10,'#050505');
       X.globalAlpha=1;
     }
 
-    // ── BROKEN CHANDELIER hanging from beam ──
-    rect(X,x+30,y+8,1,15,'#1a1410');
-    // Chandelier ring
-    rect(X,x+26,y+22,10,1,P.damber);
-    rect(X,x+26,y+22,1,3,P.damber);
-    rect(X,x+35,y+22,1,3,P.damber);
-    rect(X,x+30,y+24,1,2,P.damber);
-    // One candle still lit
-    px(X,x+27,y+21,P.f2);
-    px(X,x+33,y+21,P.damber);
-
-    // ── LATIN INSCRIPTION above door (barely readable) ──
-    // LASCIATE OGNI SPERANZA — pixel-simulated
-    X.fillStyle='#1a0e06';
-    for(let i=0;i<12;i++){
-      rect(X,x+30+i*1,y+29,1,1);
+    // ── ALCOVE CANDLES along the interior walls ──
+    for(let i=0;i<6;i++){
+      const cx_=x+8+i*15;
+      const cy_=y+30;
+      rect(X,cx_,cy_,1,3,P.bone);
+      const fl=Math.sin(t*.04+i*2)*.5;
+      px(X,cx_+fl,cy_-1,P.f2);
+      X.globalAlpha=.06+.03*Math.sin(t*.03+i);
+      const cgl=X.createRadialGradient(cx_,cy_,0,cx_,cy_,7);
+      cgl.addColorStop(0,'rgba(218,165,32,1)');
+      cgl.addColorStop(1,'rgba(0,0,0,0)');
+      X.fillStyle=cgl;X.fillRect(cx_-7,cy_-7,14,14);
+      X.globalAlpha=1;
     }
-    // Under it — "А шо, были?" in different hand (red scratch)
+
+    // ── BROKEN CHANDELIER hanging from a beam ──
+    rect(X,x+48,y+14,1,20,'#1a1410');
+    rect(X,x+42,y+34,14,1,P.damber);
+    rect(X,x+42,y+34,1,4,P.damber);
+    rect(X,x+55,y+34,1,4,P.damber);
+    rect(X,x+48,y+36,1,3,P.damber);
+    px(X,x+43,y+33,P.f2);
+    px(X,x+54,y+33,P.damber);
+
+    // ── IVY climbing left wall ──
+    for(let i=0;i<12;i++){
+      const iy=y+84-i*7-hash(i,0,33)*3;
+      const ix=x-1+hash(i,0,44)*4;
+      rect(X,ix,iy,2,3,P.dtoxic);
+      if(i%2)px(X,ix+1,iy-1,P.toxic);
+    }
+
+    // ── GRAVESTONES at base of church (outside, right side) ──
+    for(let i=0;i<6;i++){
+      const gx_=x+106+i*9;
+      const gy_=y+80+hash(i,x,11)*8;
+      rect(X,gx_,gy_-10,6,10,P.stone);
+      rect(X,gx_+1,gy_-9,4,1,P.lstone);
+      // Cross etching
+      rect(X,gx_+2,gy_-6,2,3,P.dstone);
+      if(hash(i,0,22)>.6)rect(X,gx_+1,gy_-11,5,2,P.dstone);
+    }
+
+    // ── LATIN INSCRIPTION above door (pixel-simulated) ──
+    X.fillStyle='#1a0e06';
+    for(let i=0;i<16;i++){
+      rect(X,x+40+i*1,y+51,1,1);
+    }
+    // Red scratch "А шо, были?"
     X.fillStyle='#6b0f1a';
-    rect(X,x+32,y+31,1,1);px(X,x+34,y+31,'#6b0f1a');px(X,x+36,y+31,'#6b0f1a');
-    px(X,x+38,y+31,'#6b0f1a');
+    rect(X,x+44,y+53,1,1);
+    px(X,x+46,y+53,'#6b0f1a');
+    px(X,x+48,y+53,'#6b0f1a');
+    px(X,x+50,y+53,'#6b0f1a');
+    px(X,x+52,y+53,'#6b0f1a');
 
     // ── QR CODE on the right wall ──
-    const qrX=x+54,qrY=y+36;
+    const qrX=x+78,qrY=y+60;
     rect(X,qrX,qrY,8,8,P.bone);
     for(let qy=0;qy<6;qy++)for(let qx=0;qx<6;qx++){
       if(hash(qx,qy,77)>.4)rect(X,qrX+1+qx,qrY+1+qy,1,1,'#0a0a0e');
     }
-    // Corner markers
     rect(X,qrX+1,qrY+1,2,2,'#0a0a0e');
     rect(X,qrX+5,qrY+1,2,2,'#0a0a0e');
     rect(X,qrX+1,qrY+5,2,2,'#0a0a0e');
 
-    // ── PIGEON FEATHER on ground near door ──
-    px(X,x+44,y+60,P.bone);
-    px(X,x+45,y+60,P.dbone);
-    px(X,x+44,y+61,P.dbone);
+    // ── PIGEON FEATHER near door ──
+    px(X,x+64,y+86,P.bone);
+    px(X,x+65,y+86,P.dbone);
+    px(X,x+64,y+87,P.dbone);
   },
   fountain(x,y){
     // ═══ FOUNTAIN — HEADLESS ANGEL / PLAGUE MEMORIAL ═══
@@ -4815,128 +5250,449 @@ const locDraw={
     rect(X,x+5,y+30,30,1,P.blood);rect(X,x+8,y+33,24,1,P.blood);
   },
   pizzeria(x,y){
-    // ═══ ПИЦЦЕРИЯ "ВАВИЛОН" — двухэтажная руина ═══
-    // Foundation shadow
-    X.globalAlpha=.3;rect(X,x-2,y+52,74,3,'#000');X.globalAlpha=1;
-    // Ground floor — brick walls (chequered rust+drust)
-    for(let row=0;row<6;row++){
-      for(let col=0;col<10;col++){
+    // ═══ ПИЦЦЕРИЯ "ВАВИЛОН" — 3-STORY RUIN, MONUMENT TO GLUTTONY ═══
+    // Ground shadow
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+46,y+80,58,5,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── GROUND FLOOR — wider brick walls ──
+    for(let row=0;row<8;row++){
+      for(let col=0;col<14;col++){
         const bx=x+col*7+(row%2?3:0);
-        const by=y+22+row*5;
+        const by=y+38+row*5;
         const bw=7-((row+col)%4===0?1:0);
         const c=hash(col,row+x,11)>.5?P.rust:P.drust;
         rect(X,bx,by,bw,4,c);
-        // Mortar
         rect(X,bx,by+4,bw,1,'#1a0a08');
       }
     }
-    // Second floor — partially collapsed
-    for(let row=0;row<3;row++){
-      for(let col=0;col<10;col++){
-        // Collapse pattern: right side missing
-        if(col>6&&row>0&&hash(col,row,22)>.4)continue;
+    // Soot staining on ground floor
+    X.globalAlpha=.35;X.fillStyle='#0a0604';
+    rect(X,x,y+38,40,35);
+    X.globalAlpha=1;
+
+    // ── SECOND FLOOR — partially intact ──
+    for(let row=0;row<5;row++){
+      for(let col=0;col<14;col++){
+        // Right side increasingly damaged
+        if(col>9&&row>1&&hash(col,row,22)>.35)continue;
+        if(col>11&&hash(col,row,44)>.3)continue;
         const bx=x+col*7+(row%2?3:0);
-        const by=y+5+row*5;
+        const by=y+13+row*5;
         const bw=7-((row+col)%4===0?1:0);
         const c=hash(col,row+x,33)>.5?P.rust:P.drust;
         rect(X,bx,by,bw,4,c);
         rect(X,bx,by+4,bw,1,'#1a0a08');
       }
     }
-    // Roof remnant — left side only
-    rect(X,x-2,y+2,40,4,P.dgrey);rect(X,x,y+3,38,2,P.dstone);
-    // Exposed beams (right side)
-    for(let i=0;i<4;i++){
-      rect(X,x+42+i*5,y+8,2,8,P.dwood);
+
+    // ── THIRD FLOOR — almost gone, skeletal ──
+    for(let col=0;col<10;col++){
+      if(hash(col,99,55)>.55)continue;
+      const bx=x+col*7;
+      rect(X,bx,y+3,6,4,hash(col,0,11)>.5?P.rust:P.drust);
+      rect(X,bx,y+7,6,1,'#1a0a08');
     }
-    // ── NEON SIGN "ВАВИЛОН" ──
-    rect(X,x+8,y-4,54,8,'#0a0a0a');
-    rect(X,x+9,y-3,52,6,'#1a0a0a');
-    // Letters: В А В И Л О Н — only first "В" lights
-    const blink=t%80<40;
-    // First "В" — alive, flickering
-    if(blink){
-      X.globalAlpha=.9;
-      rect(X,x+11,y-2,4,4,'#ff3030');
-      X.globalAlpha=.4;
-      rect(X,x+10,y-3,6,6,'#ff6060');
+    // Lone standing column of bricks on left
+    for(let i=0;i<3;i++){
+      rect(X,x+4,y+i*5,5,4,P.drust);
+      rect(X,x+4,y+i*5+4,5,1,'#1a0a08');
+    }
+
+    // Roof remnant — only left corner
+    rect(X,x-3,y-1,30,5,P.dgrey);
+    rect(X,x-2,y,28,3,P.dstone);
+    rect(X,x-3,y+4,30,1,'#0a0a0e');
+    // Collapsed tiles
+    for(let i=0;i<6;i++){
+      rect(X,x+30+hash(i,0,11)*15,y+10+hash(i,0,22)*4,3,1,P.dstone);
+    }
+
+    // Exposed beams across collapsed right side
+    for(let i=0;i<6;i++){
+      rect(X,x+42+i*6,y+6,2,14,P.dwood);
+      rect(X,x+42+i*6,y+6,1,14,P.wood);
+      // Rotted ends
+      px(X,x+42+i*6,y+20,'#1a0806');
+    }
+    // Cross beams
+    rect(X,x+42,y+8,36,1,P.dwood);
+    rect(X,x+42,y+16,36,1,P.dwood);
+
+    // Sky visible through collapsed roof
+    X.globalAlpha=.08;
+    rect(X,x+44,y+8,32,10,P.gold);
+    X.globalAlpha=1;
+
+    // ── HUGE NEON SIGN "ВАВИЛОН" — spans full width ──
+    // Sign backing frame
+    rect(X,x-4,y-18,100,16,'#0a0a0a');
+    rect(X,x-3,y-17,98,14,'#1a0a0a');
+    // Inner sign face
+    rect(X,x-2,y-16,96,12,'#050202');
+    // Metal frame details
+    rect(X,x-4,y-18,100,1,'#2a2a2a');
+    rect(X,x-4,y-3,100,1,'#0a0404');
+    // Corner bolts
+    px(X,x-3,y-17,P.lgrey);px(X,x+94,y-17,P.lgrey);
+    px(X,x-3,y-4,P.lgrey);px(X,x+94,y-4,P.lgrey);
+
+    // Letters: В А В И Л О Н — 7 letters across the sign
+    // Only first "В" lights; flickers irregularly
+    const blink1=t%80<40 && Math.sin(t*.3)>-.8;
+    const blink2=Math.sin(t*.15)>.7; // buzz flicker
+    // Drawing helper — each letter is 8x10
+    const drawNeonLetter=(lx,ly,letter,lit,color,glow)=>{
+      if(lit){
+        // Bright core
+        X.globalAlpha=.95;X.fillStyle=color;
+        X.fillText(letter,lx,ly);
+      }else{
+        // Dead letter — dark tube shape
+        X.globalAlpha=.6;X.fillStyle='#2a0a08';
+        X.fillText(letter,lx,ly);
+      }
       X.globalAlpha=1;
+    };
+    X.font='bold 12px "Press Start 2P", monospace';
+    // First В — alive
+    if(blink1){
+      // Glow halo
+      X.globalAlpha=.35;
+      const letterGr=X.createRadialGradient(x+4,y-10,0,x+4,y-10,16);
+      letterGr.addColorStop(0,'rgba(255,60,60,.9)');
+      letterGr.addColorStop(1,'rgba(0,0,0,0)');
+      X.fillStyle=letterGr;X.fillRect(x-12,y-22,32,24);
+      X.globalAlpha=1;
+      // Tube
+      X.fillStyle='#ff3030';
+      rect(X,x+1,y-14,5,10,'#ff3030');
+      rect(X,x+2,y-14,3,1,'#ff8080');
+      rect(X,x+6,y-13,1,3,'#ff3030');
+      rect(X,x+2,y-10,3,1,'#ff6060');
+      rect(X,x+6,y-9,1,3,'#ff3030');
+      rect(X,x+2,y-6,3,1,'#ff6060');
+      // Hot spots
+      if(blink2){
+        X.globalAlpha=.9;
+        px(X,x+3,y-13,'#ffffff');
+        px(X,x+3,y-9,'#ffffff');
+        px(X,x+3,y-5,'#ffffff');
+        X.globalAlpha=1;
+      }
     }else{
-      rect(X,x+11,y-2,4,4,'#3a0a08');
+      rect(X,x+1,y-14,5,10,'#3a0a08');
+      rect(X,x+2,y-14,3,1,'#1a0404');
+      rect(X,x+2,y-10,3,1,'#1a0404');
+      rect(X,x+2,y-6,3,1,'#1a0404');
+      rect(X,x+6,y-13,1,3,'#3a0a08');
+      rect(X,x+6,y-9,1,3,'#3a0a08');
     }
-    // Other letters — dead
-    for(let i=1;i<7;i++){
-      rect(X,x+11+i*7,y-2,4,4,'#2a0a08');
+    // Dead letters А В И Л О Н
+    const letterPositions=[
+      {lx:x+10,char:'А'},
+      {lx:x+22,char:'В'},
+      {lx:x+34,char:'И'},
+      {lx:x+46,char:'Л'},
+      {lx:x+58,char:'О'},
+      {lx:x+70,char:'Н'}
+    ];
+    // А
+    rect(X,x+10,y-14,6,10,'#2a0a08');
+    rect(X,x+11,y-14,4,1,'#1a0404');
+    rect(X,x+10,y-14,1,10,'#2a0a08');
+    rect(X,x+15,y-14,1,10,'#2a0a08');
+    rect(X,x+11,y-10,4,1,'#1a0404');
+    // В (dead)
+    rect(X,x+22,y-14,5,10,'#2a0a08');
+    rect(X,x+23,y-14,3,1,'#1a0404');
+    rect(X,x+23,y-10,3,1,'#1a0404');
+    rect(X,x+23,y-6,3,1,'#1a0404');
+    rect(X,x+27,y-13,1,3,'#2a0a08');
+    rect(X,x+27,y-9,1,3,'#2a0a08');
+    // И
+    rect(X,x+34,y-14,1,10,'#2a0a08');
+    rect(X,x+40,y-14,1,10,'#2a0a08');
+    for(let di=0;di<5;di++)px(X,x+35+di,y-9+di,'#2a0a08');
+    // Л
+    rect(X,x+46,y-14,1,10,'#2a0a08');
+    rect(X,x+51,y-14,1,10,'#2a0a08');
+    rect(X,x+47,y-14,4,1,'#1a0404');
+    rect(X,x+48,y-13,3,1,'#2a0a08');
+    // О — missing / smashed, only fragment
+    rect(X,x+58,y-14,1,6,'#2a0a08');
+    rect(X,x+58,y-14,5,1,'#1a0404');
+    rect(X,x+62,y-14,1,4,'#2a0a08');
+    // O — broken glass below
+    px(X,x+59,y-6,P.lgrey);
+    px(X,x+61,y-5,P.lgrey);
+    // Н
+    rect(X,x+70,y-14,1,10,'#2a0a08');
+    rect(X,x+76,y-14,1,10,'#2a0a08');
+    rect(X,x+71,y-10,5,1,'#1a0404');
+
+    // Sign electrical sparks on dead letters
+    if(t%120<5){
+      px(X,x+24+hash(t,0,11)*3,y-12+hash(t,0,22)*8,'#ffffcc');
+      px(X,x+52+hash(t,2,11)*3,y-12+hash(t,2,22)*8,'#ffffcc');
     }
-    // Sign casing rust drips
-    rect(X,x+15,y+5,2,3,P.drust);
-    rect(X,x+38,y+5,2,2,P.drust);
-    // ── WINDOWS — ground floor, mostly dark ──
-    for(let i=0;i<4;i++){
-      const wx=x+5+i*16;
-      rect(X,wx,y+25,10,12,'#040406');
-      rect(X,wx-1,y+24,12,2,P.dgrey);
-      // Cross-frame
-      rect(X,wx+4,y+25,2,12,P.dstone);
-      rect(X,wx,y+30,10,1,P.dstone);
-      // ONE window — flickering candle inside (the third one)
+
+    // Dangling wire from sign
+    X.strokeStyle='#0a0a0e';X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+94,y-2);
+    X.quadraticCurveTo(x+100,y+6,x+95,y+14);
+    X.stroke();
+    rect(X,x+96,y+14,1,4,'#0a0a0e');
+
+    // Rust drips from sign
+    rect(X,x+20,y-2,2,4,P.drust);
+    rect(X,x+50,y-2,2,3,P.drust);
+    rect(X,x+80,y-2,2,5,P.drust);
+
+    // ── WINDOWS — ground floor, 5 bay windows ──
+    for(let i=0;i<5;i++){
+      const wx=x+5+i*18;
+      // Window frame
+      rect(X,wx-1,y+40,14,2,P.dgrey);
+      rect(X,wx,y+42,12,14,'#040406');
+      // Cross frame
+      rect(X,wx+5,y+42,2,14,P.dstone);
+      rect(X,wx,y+48,12,1,P.dstone);
+      // ONE window — flickering candle (middle)
       if(i===2){
         const cf=Math.sin(t*.018+i)*.4+.5;
-        X.globalAlpha=cf*.5;
-        rect(X,wx+3,y+27,4,7,P.amber);
-        X.globalAlpha=cf*.2;
-        rect(X,wx+1,y+25,8,11,P.f2);
+        X.globalAlpha=cf*.6;
+        rect(X,wx+3,y+44,6,9,P.amber);
+        X.globalAlpha=cf*.25;
+        rect(X,wx+1,y+42,10,14,P.f2);
         X.globalAlpha=1;
+        // Silhouette of diner inside
+        rect(X,wx+4,y+46,3,5,'#1a0806');
+        px(X,wx+4,y+46,'#3a1a08'); // head
       }else if(hash(i,0,55)>.5){
-        // Glass shards
-        px(X,wx+3,y+28,P.lgrey);px(X,wx+7,y+33,P.lgrey);
+        // Smashed glass
+        px(X,wx+3,y+45,P.lgrey);
+        px(X,wx+7,y+50,P.lgrey);
+        px(X,wx+9,y+47,P.lgrey);
+        // Jagged remaining glass
+        rect(X,wx+2,y+42,1,3,'#2a2a32');
+        rect(X,wx+10,y+42,1,4,'#2a2a32');
+      }
+      // Boarded up?
+      if(i===4){
+        rect(X,wx,y+42,12,2,P.dwood);
+        rect(X,wx,y+46,12,2,P.dwood);
+        rect(X,wx,y+50,12,2,P.dwood);
+        // Nails
+        px(X,wx+1,y+43,P.ash);
+        px(X,wx+11,y+43,P.ash);
+        px(X,wx+1,y+51,P.ash);
       }
     }
-    // ── DOOR — ajar ──
-    rect(X,x+30,y+38,16,17,'#0a0808');
-    rect(X,x+29,y+37,18,2,P.dgrey);
-    // Door panels — left half closed, right half open into darkness
-    rect(X,x+31,y+39,6,15,P.dwood);
-    rect(X,x+32,y+40,4,13,P.wood);
-    // Right half — dark gap
-    rect(X,x+38,y+39,7,15,'#020204');
-    // Door handle
-    px(X,x+36,y+46,P.amber);
-    // ── WELCOME MAT ──
-    rect(X,x+30,y+54,16,2,P.dwood);
-    rect(X,x+31,y+54,14,1,P.wood);
-    // Tiny "WELCOME" hint pixels
-    rect(X,x+33,y+54,1,1,P.bone);
-    rect(X,x+36,y+54,1,1,P.bone);
-    rect(X,x+39,y+54,1,1,P.bone);
-    rect(X,x+42,y+54,1,1,P.bone);
-    // ── OVERTURNED CHAIR by entrance ──
-    rect(X,x+48,y+50,5,2,P.dwood);
-    rect(X,x+48,y+47,2,5,P.dwood);
-    rect(X,x+51,y+47,2,3,P.dwood);
-    // ── PIZZA BOX on ground (faded) ──
-    rect(X,x+18,y+52,7,4,'#3a2a14');
-    rect(X,x+19,y+53,5,2,'#5a3a18');
-    px(X,x+21,y+53,P.crimson); // pepperoni
+
+    // ── SECOND FLOOR WINDOWS — smaller ──
+    for(let i=0;i<4;i++){
+      const wx=x+8+i*18;
+      if(hash(i,22,11)>.3){
+        rect(X,wx,y+18,10,8,'#040406');
+        rect(X,wx,y+17,10,1,P.dgrey);
+        rect(X,wx+4,y+18,2,8,P.dstone);
+      }
+    }
+
+    // ── MAIN DOUBLE DOOR — ajar ──
+    rect(X,x+38,y+56,22,22,'#0a0808');
+    rect(X,x+37,y+55,24,2,P.dgrey);
+    // Double door frame
+    rect(X,x+48,y+56,2,22,P.dstone);
+    // Left door (closed)
+    rect(X,x+39,y+57,9,20,P.dwood);
+    rect(X,x+40,y+58,7,18,P.wood);
+    // Door panels
+    rect(X,x+41,y+60,5,4,P.dwood);
+    rect(X,x+41,y+67,5,4,P.dwood);
+    // Handle
+    px(X,x+47,y+66,P.gold);
+    // Right door (open into darkness)
+    rect(X,x+50,y+57,9,20,'#020204');
+    // Glimpse of interior — red neon inside
+    X.globalAlpha=.3+.1*Math.sin(t*.1);
+    rect(X,x+51,y+60,7,10,'#6b0f1a');
+    X.globalAlpha=1;
+    // Handle on right door
+    px(X,x+52,y+66,P.gold);
+
+    // ── "OPEN 24/7" sign above door, cracked ──
+    rect(X,x+38,y+52,22,3,'#0a0a0a');
+    X.fillStyle='#ff3030';X.font='4px "Press Start 2P"';
+    X.globalAlpha=t%90<60?.8:.3;
+    X.fillText('OPEN 24/7',x+40,y+55);
+    X.globalAlpha=1;
+    // Crack through the sign
+    rect(X,x+48,y+52,1,3,'#0a0a0e');
+
+    // ── AWNING tattered over door ──
+    X.fillStyle=P.crimson;
+    X.beginPath();
+    X.moveTo(x+34,y+50);
+    X.lineTo(x+64,y+50);
+    X.lineTo(x+62,y+53);
+    X.lineTo(x+36,y+53);
+    X.closePath();X.fill();
+    // Tattered fringe
+    for(let i=0;i<8;i++){
+      if(hash(i,0,11)>.4)rect(X,x+36+i*3,y+53,2,2,P.dcrimson||'#3a0a0e');
+    }
+    // Support poles
+    rect(X,x+34,y+48,1,4,P.dgrey);
+    rect(X,x+64,y+48,1,4,P.dgrey);
+    // Hanging rusted bell
+    rect(X,x+35,y+50,2,3,P.rust);
+    px(X,x+36,y+51,'#8a6408');
+
+    // ── OUTDOOR SEATING — tables + chairs on sidewalk ──
+    // Round table 1
+    rect(X,x+68,y+70,8,2,P.dwood);
+    rect(X,x+68,y+72,8,1,'#1a0804');
+    rect(X,x+71,y+72,2,6,P.dwood);
+    rect(X,x+69,y+78,6,1,P.dwood);
+    // Umbrella pole
+    rect(X,x+71,y+58,2,12,P.dwood);
+    // Shredded umbrella
+    X.fillStyle=P.crimson;
+    X.beginPath();
+    X.moveTo(x+64,y+58);
+    X.lineTo(x+72,y+54);
+    X.lineTo(x+80,y+58);
+    X.closePath();X.fill();
+    // Tatters
+    px(X,x+66,y+59,P.dcrimson||'#3a0a0e');
+    px(X,x+78,y+59,P.dcrimson||'#3a0a0e');
+    rect(X,x+74,y+56,1,3,P.dcrimson||'#3a0a0e');
+    // Chairs around table
+    rect(X,x+66,y+72,3,2,P.dwood);
+    rect(X,x+66,y+72,1,4,P.dwood);
+    rect(X,x+77,y+72,3,2,P.dwood);
+    rect(X,x+79,y+72,1,4,P.dwood);
+    // Wine glass on table (fallen)
+    rect(X,x+71,y+69,2,1,P.lgrey);
+    px(X,x+71,y+69,'#6b0f1a'); // red wine spill
+    rect(X,x+73,y+71,2,1,'#6b0f1a');
+
+    // Second overturned table
+    rect(X,x+82,y+73,8,2,P.dwood);
+    rect(X,x+84,y+75,2,4,P.dwood);
+    rect(X,x+82,y+79,8,1,P.dwood);
+    // Chair on its side
+    rect(X,x+82,y+68,2,4,P.dwood);
+    rect(X,x+82,y+68,4,2,P.dwood);
+
+    // ── PIZZA BOX graveyard on ground ──
+    for(let i=0;i<5;i++){
+      const pbx=x+14+i*7+hash(i,0,11)*4;
+      const pby=y+76+hash(i,0,22)*4;
+      rect(X,pbx,pby,6,3,'#3a2a14');
+      rect(X,pbx+1,pby+1,4,2,'#5a3a18');
+      // Pepperoni (some rotted)
+      if(hash(i,0,33)>.5)px(X,pbx+2,pby+1,P.crimson);
+      if(hash(i,0,44)>.5)px(X,pbx+3,pby+1,'#2a1a0a');
+    }
+
+    // ── HUGE PIZZA SLICE on ground (petrified) ──
+    X.fillStyle='#8a6408';
+    X.beginPath();
+    X.moveTo(x+8,y+78);
+    X.lineTo(x+20,y+74);
+    X.lineTo(x+18,y+82);
+    X.closePath();X.fill();
+    // Crust
+    X.strokeStyle='#5a3a08';X.lineWidth=1;
+    X.beginPath();X.moveTo(x+20,y+74);X.lineTo(x+18,y+82);X.stroke();
+    // Rotten topping
+    px(X,x+12,y+77,P.crimson);
+    px(X,x+14,y+76,'#2a4a1a'); // moldy green
+    px(X,x+15,y+79,'#3a2a0a');
+    // Flies buzzing
+    for(let i=0;i<3;i++){
+      const fy_=y+70+Math.sin(t*.1+i)*2;
+      const fx_=x+10+i*3+Math.cos(t*.08+i)*1;
+      px(X,fx_,fy_,'#0a0a0a');
+    }
+
     // ── DRIPPING from second floor ──
-    if(t%60<8){
-      const dripY=y+18+(t%60)*1.5;
-      X.globalAlpha=.5;
-      px(X,x+25,dripY,P.drust);
+    if(t%60<10){
+      const dripY=y+26+(t%60)*1.2;
+      X.globalAlpha=.55;
+      px(X,x+40,dripY,P.drust);
+      rect(X,x+40,dripY+1,1,2,P.drust);
       X.globalAlpha=1;
     }
+    // Puddle at drip landing
+    rect(X,x+38,y+85,6,1,P.drust);
+    rect(X,x+39,y+86,4,1,'#2a0a04');
+
     // ── CRACKS on facade ──
-    for(let i=0;i<6;i++){
-      const cx_=x+5+hash(i,x,11)*60;
-      const cy_=y+22+hash(i,y,22)*30;
-      rect(X,cx_,cy_,1,3+hash(i,0,33)*5,'#0a0204');
+    for(let i=0;i<10;i++){
+      const cx_=x+5+hash(i,x,11)*82;
+      const cy_=y+38+hash(i,y,22)*38;
+      rect(X,cx_,cy_,1,3+hash(i,0,33)*6,'#0a0204');
     }
-    // ── MOSS at base ──
-    for(let i=0;i<5;i++){
-      const mx_=x+8+hash(i,x,44)*55;
-      rect(X,mx_,y+50,3,2,P.dtoxic);
-      px(X,mx_+1,y+49,P.toxic);
+    // Big lightning crack on left
+    X.strokeStyle='#0a0204';X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+10,y+40);
+    X.lineTo(x+14,y+48);
+    X.lineTo(x+12,y+56);
+    X.lineTo(x+16,y+66);
+    X.stroke();
+
+    // ── MOSS at base and climbing ──
+    for(let i=0;i<12;i++){
+      const mx_=x+4+hash(i,x,44)*84;
+      rect(X,mx_,y+74,3,2,P.dtoxic);
+      if(i%2)px(X,mx_+1,y+73,P.toxic);
+      // Climbing patches
+      if(i<6){
+        rect(X,mx_,y+60-i*3,2,2,P.dtoxic);
+        if(i%2)px(X,mx_+1,y+59-i*3,P.toxic);
+      }
     }
+
+    // ── BROKEN STREETLIGHT next to pizzeria ──
+    rect(X,x-5,y+50,1,32,P.dgrey);
+    rect(X,x-5,y+46,5,1,P.dgrey);
+    rect(X,x-1,y+44,2,3,P.dgrey);
+    // Glass
+    px(X,x,y+45,P.lgrey);
+    // Flicker
+    if(Math.sin(t*.25)>.9){
+      px(X,x,y+46,P.amber);
+      X.globalAlpha=.2;
+      X.fillStyle=P.amber;
+      X.beginPath();X.arc(x,y+46,4,0,Math.PI*2);X.fill();
+      X.globalAlpha=1;
+    }
+    rect(X,x-7,y+82,5,2,P.dstone);
+
+    // ── CROW on awning ──
+    if(t%250<120){
+      const cbob=Math.sin(t*.02)*.3;
+      rect(X,x+48,y+46+cbob,3,2,'#0a0604');
+      px(X,x+51,y+46+cbob,'#0a0604');
+      px(X,x+47,y+46+cbob,'#0a0604');
+      // Eye
+      px(X,x+49,y+46+cbob,P.crimson);
+    }
+
+    // ── TELEGRAM STICKER on door — @ardet_mirror ──
+    rect(X,x+39,y+62,7,3,P.bone);
+    X.fillStyle='#4a7fb5';X.font='3px "Press Start 2P"';
+    X.globalAlpha=.7;
+    X.fillText('@',x+40,y+65);
+    X.globalAlpha=1;
+    // Peeling corner
+    px(X,x+45,y+62,'#d8c8a8');
   },
   // ═══ NEW TERRAIN FEATURE DRAWS ═══
   crater(x,y){
@@ -5224,169 +5980,394 @@ const locDraw={
     }
   },
   ruins(x,y){
-    // ═══ APARTMENT BLOCK #7 — KHRUSHCHYOVKA RUIN ═══
+    // ═══ APARTMENT BLOCK #7 — 12-STORY KHRUSHCHYOVKA RUIN ═══
+    // Massive Soviet panel building, half-collapsed, swarming with detail
     // Shadow
-    X.globalAlpha=.3;X.fillStyle='#000';
-    X.beginPath();X.ellipse(x+42,y+62,48,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+    X.globalAlpha=.4;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+54,y+92,60,5,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
 
-    // ── MAIN BUILDING — 9 stories tall, concrete panels ──
-    const bldW=85,bldH=60;
-    // Base structure
+    // ── MAIN BUILDING — 12 stories × 7 columns ──
+    const bldW=108,bldH=88;
+    // Base structure — concrete panels
     rect(X,x,y,bldW,bldH,P.dgrey);
     rect(X,x+1,y+1,bldW-2,bldH-2,P.dstone);
-    // Weathering
-    dither(X,x+2,y+2,bldW-4,bldH-4,P.stone,P.dstone,.25);
-    // Concrete panel seams (Soviet panel-building style)
-    for(let row=0;row<9;row++){
-      rect(X,x,y+row*6+5,bldW,1,'#0a0a0e');
+    // Weathering dither
+    dither(X,x+2,y+2,bldW-4,bldH-4,P.stone,P.dstone,.28);
+    // Rain streaks down walls
+    for(let i=0;i<14;i++){
+      const rx_=x+4+hash(i,x,11)*100;
+      const rh_=20+hash(i,x,22)*40;
+      X.globalAlpha=.25;
+      rect(X,rx_,y+2,1,rh_,'#0a0a0e');
+      X.globalAlpha=1;
     }
-    for(let col=0;col<5;col++){
-      rect(X,x+col*17,y,1,bldH,'#0a0a0e');
+    // Concrete panel horizontal seams (every story)
+    for(let row=0;row<13;row++){
+      rect(X,x,y+row*6+5,bldW,1,'#050508');
+      rect(X,x,y+row*6+6,bldW,1,'#1a1a22');
+    }
+    // Vertical panel seams
+    for(let col=0;col<8;col++){
+      rect(X,x+col*14,y,1,bldH,'#0a0a0e');
     }
 
-    // ── WINDOWS — 9 floors × 5 columns = 45 windows ──
-    for(let row=0;row<9;row++){
-      for(let col=0;col<5;col++){
-        const wx=x+3+col*17;
+    // ── WINDOWS — 12 floors × 7 columns = 84 windows ──
+    for(let row=0;row<12;row++){
+      for(let col=0;col<7;col++){
+        const wx=x+3+col*14;
         const wy=y+2+row*6;
-        // Most windows — dark
-        rect(X,wx,wy,11,3,'#040408');
-        // Cracked glass detail
+        // Most windows — dark void
+        rect(X,wx,wy,10,3,'#040408');
+        // Cracked glass
         if(hash(col,row,11)>.7){
           rect(X,wx+2,wy,1,3,'#1a1a22');
-          rect(X,wx+6,wy+1,1,2,'#1a1a22');
+          rect(X,wx+5,wy+1,1,2,'#1a1a22');
         }
-        // Window frames
+        // Window frame
         rect(X,wx,wy,1,3,P.dstone);
-        rect(X,wx+10,wy,1,3,P.dstone);
-        rect(X,wx+5,wy,1,3,P.dstone); // vertical divider
+        rect(X,wx+9,wy,1,3,P.dstone);
+        rect(X,wx+4,wy,1,3,P.dstone);
+        // Boarded window (plywood)
+        if(hash(col+1,row+2,22)>.85){
+          rect(X,wx,wy,10,3,'#3a2814');
+          rect(X,wx,wy+1,10,1,'#2a1808');
+        }
+        // Smashed window
+        if(hash(col+2,row+3,33)>.88){
+          rect(X,wx,wy,10,3,'#020204');
+          px(X,wx+3,wy+1,'#1a1a22');
+          px(X,wx+6,wy+2,'#1a1a22');
+        }
       }
     }
 
-    // ── THE APARTMENT #42 — third floor, right window — LIT ──
-    // It's row 2 (0-indexed), col 3 — "third floor, right window"
-    const apt42X=x+3+3*17,apt42Y=y+2+2*6;
+    // ── THE APARTMENT #42 — 3rd floor, right window — LIT ──
+    const apt42X=x+3+5*14,apt42Y=y+2+2*6;
     const windowOn=Math.sin(t*.003)>.2;
     if(windowOn){
-      // Warm amber interior glow
       X.globalAlpha=.6+.15*Math.sin(t*.01);
-      rect(X,apt42X+1,apt42Y,9,3,'#2a1a08');
-      rect(X,apt42X+2,apt42Y,7,3,P.amber);
+      rect(X,apt42X+1,apt42Y,8,3,'#2a1a08');
+      rect(X,apt42X+2,apt42Y,6,3,P.amber);
       X.globalAlpha=1;
-      // Inner silhouette — a table with a thermometer on it
+      // Thermometer silhouette
       X.fillStyle='#1a1008';
-      rect(X,apt42X+3,apt42Y+1,2,2); // small table/thermometer
-      // Thermometer red bulb visible
+      rect(X,apt42X+3,apt42Y+1,2,2);
       px(X,apt42X+4,apt42Y+2,'#8b0000');
-      // Lamp glow bleeding through
-      X.globalAlpha=.08+.03*Math.sin(t*.01);
-      const wg=X.createRadialGradient(apt42X+5,apt42Y+2,0,apt42X+5,apt42Y+2,16);
+      // Lamp glow
+      X.globalAlpha=.1+.04*Math.sin(t*.01);
+      const wg=X.createRadialGradient(apt42X+5,apt42Y+2,0,apt42X+5,apt42Y+2,18);
       wg.addColorStop(0,'rgba(218,165,32,1)');
       wg.addColorStop(1,'rgba(0,0,0,0)');
-      X.fillStyle=wg;X.fillRect(apt42X-11,apt42Y-14,32,32);
+      X.fillStyle=wg;X.fillRect(apt42X-13,apt42Y-16,36,36);
       X.globalAlpha=1;
     }
-    // Curtain on window 42 — yellowed, fluttering
+    // Yellowed curtain, fluttering
     const cFlut=Math.sin(t*.015)*1.5;
     rect(X,apt42X+1+cFlut,apt42Y,2,3,'#b8a888');
-
-    // Small "42" sign scratched into wall next to window
+    // "42" sign scratched into wall
     X.fillStyle='#1a0a06';
-    rect(X,apt42X-2,apt42Y+4,1,1);rect(X,apt42X-1,apt42Y+4,1,1);rect(X,apt42X-2,apt42Y+5,1,1);
+    rect(X,apt42X-2,apt42Y+4,1,1);rect(X,apt42X-1,apt42Y+4,1,1);
+    rect(X,apt42X-2,apt42Y+5,1,1);
     rect(X,apt42X,apt42Y+4,1,1);rect(X,apt42X+1,apt42Y+4,1,1);
 
     // ── APARTMENT #13 — ground floor, left — door with 20 locks ──
-    const apt13X=x+2,apt13Y=y+bldH-12;
-    rect(X,apt13X,apt13Y,10,12,'#1a0e06');
-    rect(X,apt13X+1,apt13Y+1,8,10,'#0a0604');
-    // 20 tiny lock dots on the door (cluster pattern)
+    const apt13X=x+2,apt13Y=y+bldH-14;
+    rect(X,apt13X,apt13Y,10,14,'#1a0e06');
+    rect(X,apt13X+1,apt13Y+1,8,12,'#0a0604');
     for(let i=0;i<20;i++){
       const lx=apt13X+2+(i%4)*2;
       const ly=apt13Y+2+Math.floor(i/4)*2;
       px(X,lx,ly,P.ash);
     }
-    // Door handle
-    px(X,apt13X+8,apt13Y+6,P.amber);
+    px(X,apt13X+8,apt13Y+7,P.amber);
+    // Eye peeking through peephole
+    if(t%400<30){
+      px(X,apt13X+5,apt13Y+4,P.bone);
+    }
 
-    // ── COLLAPSED TOP-LEFT CORNER — two floors gone ──
-    // Cut a chunk out via darker rect and rubble
+    // ── COLLAPSED TOP-LEFT — 3 floors gone (bigger hole now) ──
     X.fillStyle='#0a0a0e';
     X.beginPath();
     X.moveTo(x,y);
-    X.lineTo(x+25,y);
-    X.lineTo(x+30,y+8);
-    X.lineTo(x+20,y+14);
-    X.lineTo(x,y+8);
+    X.lineTo(x+32,y);
+    X.lineTo(x+40,y+10);
+    X.lineTo(x+26,y+18);
+    X.lineTo(x+10,y+14);
+    X.lineTo(x,y+10);
     X.closePath();X.fill();
-    // Exposed rebar
-    for(let i=0;i<4;i++){
-      rect(X,x+8+i*3,y+8-i*2,1,4+i,P.rust);
+    // Exposed rebar (twisted)
+    for(let i=0;i<6;i++){
+      rect(X,x+8+i*4,y+10-i*1.5,1,5+i,P.rust);
+      // Bent tip
+      px(X,x+9+i*4,y+9-i*1.5,P.rust);
     }
-    // Rubble at base
-    for(let i=0;i<8;i++){
-      rect(X,x-4+hash(i,0,11)*40,y+bldH+1+hash(i,0,22)*4,3,2,hash(i,0,33)>.5?P.dgrey:P.dstone);
+    // Exposed interior — furniture silhouettes
+    // Broken bathtub hanging from edge
+    rect(X,x+18,y+13,8,3,P.stone);
+    rect(X,x+18,y+16,8,1,'#1a1a22');
+    rect(X,x+19,y+14,6,1,'#0a0a0e');
+    // Pipe jutting out
+    rect(X,x+26,y+15,4,1,P.rust);
+    // Falling ceiling panel
+    rect(X,x+14,y+8,10,2,P.dstone);
+    rect(X,x+13,y+10,12,1,'#0a0a0e');
+    // Rebar support through hole
+    rect(X,x+30,y+4,1,10,P.rust);
+
+    // Massive rubble pile at base
+    for(let i=0;i<16;i++){
+      rect(X,x-6+hash(i,0,11)*52,y+bldH+hash(i,0,22)*6,3+hash(i,0,33)*4,2+hash(i,0,44)*2,hash(i,0,55)>.5?P.dgrey:P.dstone);
     }
+    // Big chunk
+    rect(X,x+10,y+bldH+2,8,6,P.dstone);
+    rect(X,x+11,y+bldH+3,6,4,P.stone);
+    // Rebar sticking out of chunk
+    rect(X,x+12,y+bldH-1,1,4,P.rust);
+    rect(X,x+15,y+bldH,1,3,P.rust);
 
-    // ── ROOF ANTENNA (TV style, bent) ──
-    rect(X,x+40,y-8,1,8,P.dgrey);
-    rect(X,x+36,y-6,9,1,P.dgrey);
-    rect(X,x+37,y-4,7,1,P.dgrey);
-    // Bent element
-    rect(X,x+41,y-8,3,1,P.dgrey);
-    // Wires dangling
-    px(X,x+40,y-2,P.dgrey);
-    px(X,x+39,y-1,P.dgrey);
+    // ── FIRE ESCAPE — zigzag metal staircase on right side ──
+    X.strokeStyle='#1a1a22';X.lineWidth=1;
+    for(let floor=0;floor<10;floor++){
+      const fy=y+6+floor*7;
+      // Horizontal platform
+      rect(X,x+bldW,fy,10,1,'#2a2a32');
+      rect(X,x+bldW,fy+1,10,1,'#0a0a0e');
+      // Support brackets to wall
+      rect(X,x+bldW,fy-1,1,3,P.rust);
+      rect(X,x+bldW+9,fy-1,1,3,P.rust);
+      // Railing
+      rect(X,x+bldW+1,fy-3,1,3,'#2a2a32');
+      rect(X,x+bldW+5,fy-3,1,3,'#2a2a32');
+      rect(X,x+bldW+9,fy-3,1,3,'#2a2a32');
+      // Horizontal railing bar
+      rect(X,x+bldW+1,fy-3,9,1,'#2a2a32');
+      // Staircase zigzag between floors
+      if(floor<9){
+        X.beginPath();
+        if(floor%2){
+          X.moveTo(x+bldW+1,fy+2);
+          X.lineTo(x+bldW+9,fy+6);
+        }else{
+          X.moveTo(x+bldW+9,fy+2);
+          X.lineTo(x+bldW+1,fy+6);
+        }
+        X.stroke();
+        // Step lines
+        for(let st=0;st<3;st++){
+          const stp=.2+st*.3;
+          const sx_=floor%2?x+bldW+1+stp*8:x+bldW+9-stp*8;
+          const sy_=fy+2+stp*4;
+          px(X,sx_,sy_,'#2a2a32');
+        }
+      }
+      // Rust patches
+      if(floor%3===1)px(X,x+bldW+3,fy,P.rust);
+    }
+    X.lineWidth=1;
+    // Broken section of fire escape — missing floor 6
+    rect(X,x+bldW,y+6+5*7,10,2,'#0a0604');
+    // Dangling wire from broken section
+    rect(X,x+bldW+4,y+6+5*7+2,1,5,P.rust);
 
-    // ── BALCONY ruins on two floors ──
-    // Floor 5 balcony — broken
-    rect(X,x+34,y+30,14,1,P.dgrey);
-    rect(X,x+34,y+31,1,3,P.dgrey);
-    rect(X,x+47,y+31,1,3,P.dgrey);
-    // Balcony railing with gaps
-    rect(X,x+36,y+30,1,2,P.dgrey);
-    rect(X,x+40,y+30,1,2,P.dgrey);
-    rect(X,x+44,y+30,1,2,P.dgrey);
-    // Hanging laundry (tattered)
-    const laundrySway=Math.sin(t*.015)*1;
-    rect(X,x+38+laundrySway,y+32,3,3,'#6b0f1a');
-    rect(X,x+42+laundrySway*.5,y+32,2,2,'#1b1464');
+    // ── ROOF ANTENNAS — multiple, leaning ──
+    rect(X,x+40,y-12,1,12,P.dgrey);
+    rect(X,x+34,y-8,12,1,P.dgrey);
+    rect(X,x+36,y-5,9,1,P.dgrey);
+    rect(X,x+38,y-2,5,1,P.dgrey);
+    // Bent TV element
+    rect(X,x+41,y-12,3,1,P.dgrey);
+    // Second smaller antenna
+    rect(X,x+70,y-8,1,8,P.dgrey);
+    rect(X,x+66,y-6,8,1,P.dgrey);
+    rect(X,x+67,y-4,6,1,P.dgrey);
+    // Satellite dish
+    rect(X,x+80,y-6,6,1,'#8a8488');
+    rect(X,x+80,y-5,6,1,P.lgrey);
+    rect(X,x+82,y-4,2,3,P.dgrey);
+    rect(X,x+83,y-4,1,5,P.dgrey);
+    // Wire dangling from satellite
+    X.strokeStyle=P.dgrey;X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+83,y+1);
+    X.quadraticCurveTo(x+78,y+8,x+85,y+12);
+    X.stroke();
+    // Wires crisscrossing rooftop
+    rect(X,x+10,y-4,30,1,'#0a0a0e');
+    rect(X,x+45,y-5,20,1,'#0a0a0e');
 
-    // Floor 7 balcony — partially collapsed
-    rect(X,x+17,y+18,14,1,P.dgrey);
-    rect(X,x+17,y+19,1,3,P.dgrey);
-    // Balcony railing remnants
-    rect(X,x+19,y+18,1,2,P.dgrey);
-    rect(X,x+23,y+18,1,2,P.dgrey);
+    // ── BALCONIES on multiple floors ──
+    // Floor 4 balcony
+    rect(X,x+48,y+28,18,1,P.dgrey);
+    rect(X,x+48,y+29,1,4,P.dgrey);
+    rect(X,x+65,y+29,1,4,P.dgrey);
+    rect(X,x+50,y+28,1,2,P.dgrey);
+    rect(X,x+54,y+28,1,2,P.dgrey);
+    rect(X,x+58,y+28,1,2,P.dgrey);
+    rect(X,x+62,y+28,1,2,P.dgrey);
+    // Laundry line with tattered clothes
+    const lsw=Math.sin(t*.015)*1;
+    rect(X,x+52+lsw,y+30,3,3,'#6b0f1a');
+    rect(X,x+57+lsw*.5,y+30,2,2,'#1b1464');
+    rect(X,x+61+lsw*.3,y+30,2,3,'#b8860b');
+    // Plant pot on balcony
+    rect(X,x+49,y+28,2,2,P.rust);
+    rect(X,x+49,y+27,2,1,P.dtoxic);
+
+    // Floor 6 balcony — partially collapsed
+    rect(X,x+20,y+16,16,1,P.dgrey);
+    rect(X,x+20,y+17,1,4,P.dgrey);
+    // Railing broken
+    rect(X,x+22,y+16,1,2,P.dgrey);
+    rect(X,x+26,y+16,1,2,P.dgrey);
+    // Broken-off section
+    rect(X,x+36,y+17,1,2,P.dgrey);
+    // Falling debris from broken balcony
+    rect(X,x+40,y+20,2,1,P.dgrey);
+    rect(X,x+42,y+24,1,1,P.dgrey);
+
+    // Floor 8 balcony — tarped
+    rect(X,x+70,y+4,14,1,P.dgrey);
+    rect(X,x+70,y+5,1,4,P.dgrey);
+    rect(X,x+83,y+5,1,4,P.dgrey);
+    // Blue tarp sagging
+    rect(X,x+71,y+5,12,3,'#1b1464');
+    rect(X,x+71,y+5,12,1,'#2a2478');
+    // Tarp fold
+    rect(X,x+75,y+7,4,1,'#0a0a22');
+    // Tied rope
+    px(X,x+71,y+4,P.bone);
+    px(X,x+83,y+4,P.bone);
+
+    // Floor 10 balcony — bird cage with pigeon
+    rect(X,x+85,y+10,10,1,P.dgrey);
+    rect(X,x+85,y+11,1,3,P.dgrey);
+    // Cage
+    rect(X,x+88,y+8,4,5,'#3a3a3a');
+    rect(X,x+89,y+9,2,3,'#1a1a1a');
+    // Pigeon
+    if(t%300<150){
+      px(X,x+89,y+10,P.lgrey);
+      px(X,x+90,y+10,P.lgrey);
+      px(X,x+90,y+9,P.ash);
+    }
 
     // ── VINES climbing up left wall ──
-    for(let i=0;i<8;i++){
+    for(let i=0;i<14;i++){
       const vx=x-1+Math.sin(i*.4)*2;
-      const vy=y+bldH-i*7;
+      const vy=y+bldH-i*6;
       rect(X,vx,vy,2,3,P.dtoxic);
       if(i%2)px(X,vx+1,vy-1,P.toxic);
+      if(i%3===0)px(X,vx+2,vy,P.btoxic);
+      // Tendrils reaching into windows
+      if(i%4===2){
+        X.strokeStyle=P.dtoxic;X.lineWidth=1;
+        X.beginPath();
+        X.moveTo(vx+2,vy);
+        X.quadraticCurveTo(vx+6,vy-2,vx+8,vy+1);
+        X.stroke();
+      }
     }
 
-    // ── GRAFFITI on ground floor wall ──
+    // ── GRAFFITI on ground floor wall — multiple tags ──
+    // Tag 1 — "мох помнит" in red
     X.fillStyle='#6b0f1a';
-    rect(X,x+55,y+52,3,1); // fragment 1
-    rect(X,x+58,y+53,2,1);
-    rect(X,x+62,y+52,4,1);
-    rect(X,x+55,y+54,1,1);rect(X,x+57,y+54,1,1);rect(X,x+63,y+54,1,1);
+    for(let gi=0;gi<3;gi++){
+      const gy=y+bldH-8+gi*2;
+      rect(X,x+60+gi*4,gy,3,1);
+      rect(X,x+65+gi*3,gy,2,1);
+      rect(X,x+69+gi*2,gy,4,1);
+    }
+    // Tag 2 — "42" in gold
+    X.fillStyle=P.gold;
+    rect(X,x+80,y+bldH-12,5,1);
+    rect(X,x+84,y+bldH-11,1,3);
+    rect(X,x+80,y+bldH-9,5,1);
+    rect(X,x+80,y+bldH-11,1,1);
+    rect(X,x+88,y+bldH-12,5,4);
+    rect(X,x+89,y+bldH-11,3,2);
+    // Tag 3 — crude heart
+    X.fillStyle='#6b0f1a';
+    rect(X,x+96,y+bldH-6,3,2);
+    rect(X,x+100,y+bldH-6,3,2);
+    rect(X,x+97,y+bldH-4,5,1);
+    px(X,x+99,y+bldH-3,'#6b0f1a');
 
     // ── BROKEN LAMPPOST in front ──
-    rect(X,x+72,y+40,1,22,P.dgrey);
-    // Lamp bent
-    rect(X,x+72,y+38,4,1,P.dgrey);
-    rect(X,x+75,y+36,2,3,P.dgrey);
+    rect(X,x+92,y+48,1,38,P.dgrey);
+    rect(X,x+92,y+44,5,1,P.dgrey);
+    rect(X,x+96,y+42,2,4,P.dgrey);
     // Broken glass
-    px(X,x+76,y+38,P.lgrey);
-    px(X,x+75,y+39,P.lgrey);
-
-    // ── OCCASIONAL BIRD on antenna ──
-    if(t%200<20){
-      rect(X,x+40,y-9,2,1,'#0a0a0a');
-      px(X,x+42,y-9,'#0a0a0a');
+    px(X,x+97,y+44,P.lgrey);
+    px(X,x+96,y+45,P.lgrey);
+    // Flickering bulb (still works occasionally)
+    if(Math.sin(t*.2)>.85){
+      px(X,x+96,y+43,P.amber);
+      X.globalAlpha=.3;
+      X.fillStyle=P.amber;
+      X.beginPath();X.arc(x+96,y+44,5,0,Math.PI*2);X.fill();
+      X.globalAlpha=1;
     }
+    // Concrete base
+    rect(X,x+90,y+bldH,5,3,P.dstone);
+
+    // ── TRASH DUMPSTER overflowing ──
+    rect(X,x-10,y+bldH-8,14,8,P.rust);
+    rect(X,x-10,y+bldH-8,14,1,'#2a0a04');
+    rect(X,x-10,y+bldH-1,14,1,'#1a0604');
+    rect(X,x-4,y+bldH-10,2,2,P.dgrey); // lid handle
+    // Overflowing trash
+    rect(X,x-9,y+bldH-10,3,2,'#3a2814');
+    rect(X,x-5,y+bldH-10,3,2,'#2a1808');
+    rect(X,x-1,y+bldH-11,4,3,'#4a3a2a');
+    // Fly swarm
+    for(let i=0;i<4;i++){
+      const fy_=y+bldH-13+Math.sin(t*.1+i)*2;
+      const fx_=x-6+i*3+Math.cos(t*.08+i)*1;
+      px(X,fx_,fy_,'#0a0a0a');
+    }
+
+    // ── OCCASIONAL CROW on antenna ──
+    if(t%200<20){
+      rect(X,x+40,y-13,2,1,'#0a0a0a');
+      px(X,x+42,y-13,'#0a0a0a');
+    }
+    // Crow on fire escape
+    if(t%350<30){
+      const fey=y+6+3*7;
+      rect(X,x+bldW+4,fey-2,2,1,'#0a0a0a');
+      px(X,x+bldW+6,fey-2,'#0a0a0a');
+    }
+
+    // ── ПАДИКА ENTRANCE — covered in detail ──
+    rect(X,x+50,y+bldH-14,14,14,'#0a0604');
+    rect(X,x+51,y+bldH-13,12,12,'#050202');
+    // Door frame
+    rect(X,x+50,y+bldH-14,14,1,P.dstone);
+    rect(X,x+50,y+bldH-1,14,1,'#1a1a22');
+    // Domofon (intercom) with wires
+    rect(X,x+64,y+bldH-10,3,5,'#2a2a2a');
+    px(X,x+65,y+bldH-9,P.crimson);
+    px(X,x+65,y+bldH-7,'#4a7fb5');
+    // Dangling wire
+    rect(X,x+65,y+bldH-4,1,3,'#1a1a22');
+    // Glow from within (TV flicker blue)
+    if(t%40<20){
+      X.globalAlpha=.3;
+      X.fillStyle='#4a7fb5';
+      rect(X,x+53,y+bldH-12,8,4);
+      X.globalAlpha=1;
+    }
+    // Step up
+    rect(X,x+48,y+bldH-2,18,2,P.dstone);
+
+    // ── "ДОМ 7" sign above entrance ──
+    rect(X,x+48,y+bldH-18,18,3,P.dstone);
+    rect(X,x+48,y+bldH-18,18,1,'#3a3a42');
+    X.globalAlpha=.6;X.fillStyle=P.bone;X.font='4px "Press Start 2P"';
+    X.fillText('ДОМ 7',x+51,y+bldH-15);
+    X.globalAlpha=1;
+    // Stain obscuring 7
+    rect(X,x+59,y+bldH-17,4,2,'#3a0a04');
   },
   pipeline(x,y){
     // ═══ PIPELINE — truba schitaet ═══
