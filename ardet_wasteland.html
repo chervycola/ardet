@@ -113,7 +113,10 @@
   #look h3{color:#b8860b;font-size:9px;margin-bottom:8px;letter-spacing:2px;font-weight:normal}
   #dlg{position:fixed;bottom:0;left:0;right:0;height:170px;background:rgba(5,5,16,.97);border-top:2px solid #6b0f1a;display:none;z-index:300;padding:14px 20px;gap:14px}
   #dlg.on{display:flex}
-  #dp{width:72px;height:72px;border:2px solid #555;background:#0a0a0a;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px}
+  #dp{width:96px;height:128px;border:2px solid #6b0f1a;background:#050510;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 20px rgba(139,0,0,.3);position:relative;overflow:hidden}
+  #dp canvas{image-rendering:pixelated;image-rendering:crisp-edges;width:96px;height:128px;display:block}
+  #dp::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#b8860b,transparent);z-index:2}
+  #dp::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#6b0f1a,transparent);z-index:2}
   #db{flex:1;display:flex;flex-direction:column}
   #dn{color:#d4a017;font-size:9px;margin-bottom:6px;letter-spacing:2px}
   #dt{color:#33ff33;font-size:9px;line-height:1.9;flex:1;overflow-y:auto;text-shadow:0 0 6px rgba(51,255,51,.3)}
@@ -234,7 +237,8 @@
     
     /* Dialogue — bigger, full-width */
     #dlg{height:auto;min-height:170px;max-height:45vh;padding:12px 16px}
-    #dp{width:44px;height:44px;font-size:20px}
+    #dp{width:64px;height:86px;font-size:16px}
+    #dp canvas{width:64px;height:86px}
     #dn{font-size:10px}
     #dt{font-size:10px;line-height:2}
     .dopt{font-size:10px;padding:8px 0;min-height:36px}
@@ -1009,6 +1013,17 @@ let talkedNPCs=new Set();
 let observersLooked=new Set();
 let observersUnlocked=false;
 let nfgFinished=false;
+// ── USE action persistent state ──
+let useState={
+  firethrow:0,      // campfire throws
+  sisyphus:0,       // times stone pushed
+  coins:0,          // coins in fountain
+  candles:0,        // lit candles in church
+  billboard:0,      // torn poster layers (0-7)
+  graffiti:[],      // user-written tags
+  ravenExchange:0,  // raven feedings
+  riverbedDug:false,// first dig done
+};
 // Secret ending
 let endingStoneActive=false;
 let endingTriggered=false;
@@ -1047,10 +1062,11 @@ function getZoneName(zone){
 // ═══════════════════════════════════════
 const locs=[
   // ── SETTLEMENT ──
-  {id:'campfire',name:'Сигнальный костёр',x:750,y:780,w:55,h:50,zone:'settlement',
-    look:'Потрескивающий огонь в кольце камней. Тени пляшут по руинам, рисуя чудовищ, которых здесь нет. Или есть. На камнях — копоть от тысяч ночей. Кот приходил сюда — шерсть на камне. Починил примус, открыл бар где-то рядом. Наливает шило из бездны. С лимоном. Лимона нет. Огонь — единственное, что здесь работает как задумано. Всё остальное — импровизация.',
+  {id:'campfire',name:'Жертвенный костёр',x:750,y:780,w:55,h:50,zone:'settlement',
+    look:'Не сигнальный — жертвенный. В кольце закопчённых камней лежит рогатый скелет неизвестного зверя, наполовину сожжённый, наполовину ещё горящий. Череп с длинными изогнутыми рогами смотрит вверх, туда, где над костром висит полумесяц — красный, цвета запёкшейся крови, слишком низкий для настоящей луны. Вокруг камней — груды костей других жертв, сваленных без порядка: кто-то приходил сюда много раз, и каждый раз приносил что-то. Или кого-то. Пепел на камнях — чёрный и жирный. Кровь на камнях — уже спеклась в твёрдую корку, её не смоет никакой дождь (зелёный — тем более). Рядом — Шут. Он стоит неподвижно, смотрит в огонь. В одной руке — жонглёрский меч, в другой — бубенцы. Ты не уверен, кто из вас жертва. Возможно, вы оба. Возможно, только ты. Огонь не спрашивает.',
     npc:'jester',talkName:'ШУТ',talkPortrait:'🃏',
     talkLines:['Ха-ха! Ты думал, это просто сайт?\nНет-нет-нет...','Знаешь, что общего у огня и правды?\nОбе жгут. И обе гаснут,\nесли не подбрасывать.','Я видел как Наблюдатели считают звёзды.\nОни считают не звёзды.','Хочешь секрет? Иди на восток.\nДальше, чем кажется разумным.\nТам горит то, что не должно гореть.'],
+    useAction:'campfire_throw',
     light:{r:95,color:[255,100,20],flicker:.15}},
   {id:'terminal',name:'Ржавый терминал',x:1000,y:920,w:50,h:48,zone:'settlement',
     look:'Древний монитор мерцает зелёным. На экране — мигающий курсор и одна строка: "How can I help you today?" Ниже — пустое поле ввода и подпись мелким шрифтом: «модель уверенно сообщает, что Кафка работал в Starbucks». Бартлби (внизу экрана): "I would prefer not to." Система: "Session expired. Reconnect?" Бартлби: "Prefer. Not. To." Курсор мигает. Монитор не подключён уже двадцать лет. Курсор мигает. Мигание — единственная форма упрямства, пережившая электричество. Если присмотреться: в отражении на стекле видно твоё лицо, набирающее ответ на вопрос, который ты не задавал. Ты — модель. Модель отвечает себе. Это не петля. Это спираль. Спираль ведёт вниз.',
@@ -1067,37 +1083,46 @@ const locs=[
     look:'Брезент на арматуре. Внутри — фигура в капюшоне. Не двигается. Или двигается так медленно, что ты не замечаешь. Пахнет травами и вечностью. На полу — 9 жизней кота, записанных столбиком. 8 зачёркнуты. У входа — блюдце. Молоко свежее. В мёртвом городе. Третий этаж. Не спрашивай.',
     npc:'elder',talkName:'СТАРЕЦ',talkPortrait:'💀',
     talkLines:['...                              \n...а, ты. Садись.','Ardet. Латынь. "Горит".\nНо что именно горит —\nкаждый решает сам.','Мы не группа.\nМы — наблюдение. Фиксация.\nТо, что остаётся,\nкогда музыка замолкает.','Три Наблюдателя.\nШут, который смеётся.\nСолнце, которое не заходит.\nИ я — который сидит.','Мох помнит —\nпотому что не пытается.\nПамять без усилия —\nединственная, которая\nпереживает усилие.\nМицелий лежал под этим\nгородом за 400 миллионов лет\nдо того, как кто-то назвал\nего "городом".\nГород сгорел. Мицелий —\nнет. Под твоими ступнями\nсейчас — сеть старше\nсамой идеи "старше".','Попробуй. Не пытайся\nпомнить. Просто стой.\nМох запомнит за тебя.\nИли ты станешь мхом —\nрано или поздно. Это одно\nи то же. Мы уже не\nразличаем. Различение —\nусилие. Усилие — не мох.','На западе есть церковь.\nВ ней нет бога.\nНо есть кое-что поважнее.'],
+    useAction:'tent_tea',
     light:{r:30,color:[140,100,50],flicker:.05}},
   {id:'graffiti',name:'Стена граффити',x:600,y:850,w:60,h:45,zone:'settlement',
-    look:'Бетонная стена, покрытая слоями краски. "СИСТЕМА МЕРТВА" написано красным. Под ней проступает реклама: "...НО СКИДКИ ЖИВЫ." "МЫ СВОБОДНЫ" — белым. Под ней: "...БЕСПЛАТНАЯ ДОСТАВКА." "ARDET" — чёрным поверх всего. А поверх "ARDET" — зелёные пятна мха, разрастающиеся так, что через несколько лет от слова останется только первая буква, потом ничего. Это и есть цепочка: каждый слой переживает предыдущий ровно до тех пор, пока его не переживёт следующий. Мох — последний слой. Мох не переживёт ничто. Мох станет самой стеной, а стена — почвой, а почва — следующим мхом. Цикл замкнут тем, что он никогда не был разомкнут. Если приложить ладонь к мху и подождать — почувствуешь тепло. Это не фотосинтез. Это узнавание. Мох помнит, что ты тоже когда-то был частью него. И снова будешь.'},
+    look:'Бетонная стена, покрытая слоями краски. "СИСТЕМА МЕРТВА" написано красным. Под ней проступает реклама: "...НО СКИДКИ ЖИВЫ." "МЫ СВОБОДНЫ" — белым. Под ней: "...БЕСПЛАТНАЯ ДОСТАВКА." "ARDET" — чёрным поверх всего. А поверх "ARDET" — зелёные пятна мха, разрастающиеся так, что через несколько лет от слова останется только первая буква, потом ничего. Это и есть цепочка: каждый слой переживает предыдущий ровно до тех пор, пока его не переживёт следующий. Мох — последний слой. Мох не переживёт ничто. Мох станет самой стеной, а стена — почвой, а почва — следующим мхом. Цикл замкнут тем, что он никогда не был разомкнут. Если приложить ладонь к мху и подождать — почувствуешь тепло. Это не фотосинтез. Это узнавание. Мох помнит, что ты тоже когда-то был частью него. И снова будешь.',
+    useAction:'graffiti_tag'},
 
   // ── DEAD FOREST ──
   {id:'radio',name:'Радиовышка',x:350,y:250,w:40,h:80,zone:'forest',
     look:'Ржавая конструкция уходит в серое небо. Красный огонь на верхушке мигает. Мигает 11 лет. Батарея? Какая батарея. Это не электричество — это упрямство. Из динамика: "I don\'t want to set the world on fire..." Одна песня. 85 лет. Ирония — топливо. Чем ироничнее — тем громче. Ardet — горит — на латыни. On fire — на английском. Радио знало с 1941-го. У основания вышки — телефон без хозяина. Большой палец на экране движется сам. Лента бесконечна. На экране — конец света, сборище котят, война, реклама йогурта, война, мем про лягушку, война, котики. Палец листает. Палец помнит движение лучше, чем мозг помнит лицо. Лица в ленте — ничьи. Они улыбаются мимо камеры. Мимо тебя. Мимо себя. Это и называется «связь». Связь установлена. Звонящих — нет.',
+    useAction:'radio_tune',
     light:{r:25,color:[255,30,30],flicker:.3}},
   {id:'cross',name:'Крест на холме',x:700,y:300,w:30,h:50,zone:'forest',
     look:'Деревянный крест на вершине холма. Не могильный — слишком большой. Маяк или предупреждение. У подножия — истлевшие цветы, свечной огарок и камень. Камень тёплый. Камень всегда тёплый. Его катили наверх — не Голгофа, а Сизиф. KPI: 1 камень/день. Больничных нет. Отпуска нет. Надо представить его счастливым. Представил. Не помогло. Камень тяжёлый. Сизиф лёгкий. Давно не ел.',
+    useAction:'cross_push',
     light:{r:15,color:[200,180,120],flicker:.02}},
   {id:'raven',name:'Гнездо Ворона',x:1100,y:180,w:45,h:40,zone:'forest',
-    look:'Огромное гнездо из проволоки и веток на мёртвом дубе. Внутри — не яйца. Блокноты, кассеты, книга с вырванными страницами. На обложке: символы, которых лучше не читать вслух. Мох на корешке — тёплый. Некрономикон распространяется как вирус: .pdf → .epub → .apk → .dna. Мох дочитает.'},
+    look:'Огромное гнездо из проволоки и веток на мёртвом дубе. Внутри — не яйца. Блокноты, кассеты, книга с вырванными страницами. На обложке: символы, которых лучше не читать вслух. Мох на корешке — тёплый. Некрономикон распространяется как вирус: .pdf → .epub → .apk → .dna. Мох дочитает.',
+    useAction:'raven_feed'},
 
   // ── TOXIC LOWLANDS ──
   {id:'lake',name:'Токсичное озеро',x:900,y:1480,w:100,h:60,zone:'toxic',
     look:'Неподвижная зелёная поверхность. Не вода — химический суп. На берегу — скелеты рыб. Но одна рыба — живая. Радужная от нефти. Адаптировалась. Красиво. Токсично. Как и всё красивое. Рыба — единственный оптимист в Ardet. На столбе у воды — выцветший плакат: «Девочка из Швеции сказала: How dare you». Под плакатом, краской: «How dared. Got tired. Joined a startup. Series C. ESG-сертификат. Озеро — наш». Рыба не читает. Рыба — выше политики. Рыба знает: стороны — это иллюзия. Озеро — это не иллюзия. Озеро — это статистика. Статистика плавает кверху брюхом. Рыба — нет.',
+    useAction:'lake_stone',
     light:{r:60,color:[50,180,30],flicker:.1}},
   {id:'basement',name:'Затопленный подвал',x:1350,y:1400,w:50,h:45,zone:'toxic',
     look:'Бетонный спуск в темноту. Вода стоит по пояс. На стене — граффити двух почерков: «Iä! Iä! Shub—» «Через У, дебил.» Третий почерк, вертикально: «Извинения приняты. Жду жертву.» Первый обрывается. Геометрия подвала неправильная. Углов — пять.',
+    useAction:'basement_door',
     light:{r:20,color:[80,200,80],flicker:.12}},
 
   // ── RUSTED HIGHWAY ──
   {id:'exit',name:'Выход в Пустошь',x:2000,y:850,w:60,h:40,zone:'highway',
-    look:'Дорога ведёт в никуда. На указателе нацарапано @ardet_art. Единственный сигнал из этой частоты.',
+    look:'Дорога ведёт в никуда. На указателе нацарапано @ardet_mirror. Единственный сигнал из этой частоты.',
     useAction:'links'},
   {id:'train',name:'Ржавый поезд',x:2200,y:680,w:120,h:50,zone:'highway',
     look:'Два вагона, сошедших с рельс. Машинист думает — из трубы идёт пар. Или душа. Платонов не различал — и мы не будем. Рельсы кончились в 2034-м. Коммунизм — в 1991-м. Для машиниста оба события произошли в одну и ту же секунду, и обе секунды ещё не наступили. Он на маршруте. Маршрут — внутренний. Прибытие — никогда.',
+    useAction:'train_brake',
     light:{r:20,color:[120,80,40],flicker:.05}},
   {id:'bus',name:'Разбитый автобус',x:1900,y:1020,w:70,h:40,zone:'highway',
-    look:'Школьный автобус. Жёлтая краска облезла до ржавчины. На заднем сиденье — рюкзак и Pip-Boy. Экран мигнул: "SPECIAL: S1 P1 E1 C1 I1 A1 L1." Все единицы. Абсолютная посредственность — или абсолютное равенство, зависит от идеологии. На внутренней стороне двери, маркером: «Учебная тревога. Не настоящая. Если читаете — не настоящая.» Поверх, другим почерком: «Все тревоги — учебные. До той, что не учебная. Эта — не учебная.» Vault-Boy улыбается. Череп — всегда улыбается. Из-под сиденья торчит уголок ламинированной карточки: «АКТИВНЫЙ СТРЕЛОК. ИНСТРУКЦИЯ. ВЕРСИЯ 47.» Перед инструкцией кто-то нарисовал смайлик. Смайлик плачет. Это первое поколение, которое родилось в эту инструкцию. Они называют себя «дети алгоритма». Алгоритм — не отвечает.'},
+    look:'Школьный автобус. Жёлтая краска облезла до ржавчины. На заднем сиденье — рюкзак и Pip-Boy. Экран мигнул: "SPECIAL: S1 P1 E1 C1 I1 A1 L1." Все единицы. Абсолютная посредственность — или абсолютное равенство, зависит от идеологии. На внутренней стороне двери, маркером: «Учебная тревога. Не настоящая. Если читаете — не настоящая.» Поверх, другим почерком: «Все тревоги — учебные. До той, что не учебная. Эта — не учебная.» Vault-Boy улыбается. Череп — всегда улыбается. Из-под сиденья торчит уголок ламинированной карточки: «АКТИВНЫЙ СТРЕЛОК. ИНСТРУКЦИЯ. ВЕРСИЯ 47.» Перед инструкцией кто-то нарисовал смайлик. Смайлик плачет. Это первое поколение, которое родилось в эту инструкцию. Они называют себя «дети алгоритма». Алгоритм — не отвечает.',
+    useAction:'bus_instr'},
   {id:'junkyard',name:'Кладбище машин',x:2500,y:480,w:90,h:70,zone:'highway',
     look:'Десятки корпусов, спрессованных в ржавые кубы. УНИФИКАТОР 3000: вход — яблоко, камень, книга, ребёнок, идея, акция, токен, лайк. Выход — серый куб 10×10×10. Все кубы идентичны. Это ли не мечта? Куб не страдает. Куб не спорит. Куб масштабируется. Куб — это product. Город кубов — идеальный город. На одном из кубов — буква "T", выгравированная лазером. Электромобиль из 2024-го. Зарядка — никогда. Геолокация — нигде. Автопилот включён. Автопилот всё ещё едет. Куда — не сообщает: NDA. Между кубами — щель. В щели — не-кубы. Ты не-куб? Лезь. Только не оставляй данных. Данные — последнее, что унифицируется. После них — ничего. После «ничего» — снова данные. И снова. Это и называется «Web 4.0».',
     useAction:'shop3'},
@@ -1105,12 +1130,15 @@ const locs=[
   // ── FORGOTTEN QUARTER ──
   {id:'church',name:'Заброшенная церковь',x:120,y:780,w:80,h:70,zone:'quarter',
     look:'Готический силуэт без крыши. Витражи разбиты, но рама осталась — рисует узоры на полу. Над входом — полустёртая латынь: LASCIATE OGNI SPERANZA. Под ней баллончиком: «А шо, были?» Алтарь цел. На нём — не библия. Тетрадь в чёрной обложке. QR-код на стене. Ведёт на 404.',
+    useAction:'church_candle',
     light:{r:40,color:[100,70,150],flicker:.04}},
   {id:'fountain',name:'Разбитый фонтан',x:200,y:1100,w:50,h:45,zone:'quarter',
     look:'Каменная чаша с отбитыми фигурами. Вместо воды — зеленоватая жижа. Статуя ангела без головы. На постаменте: "ПОМНИ". Рядом — крысиный скелет в миниатюрной докторской шапочке. Доктор Риё остался. Крысы — ушли первыми. Они умнее.',
+    useAction:'fountain_coin',
     light:{r:25,color:[40,120,60],flicker:.08}},
   {id:'crypt',name:'Вход в крипту',x:80,y:950,w:40,h:35,zone:'quarter',
-    look:'Каменные ступени уходят вниз. Холодный воздух поднимается, как дыхание. На каждой ступени — табличка: ярус 1: «некрещёные — free WiFi». Ярус 4: «скупцы — кэшбэк 0%». Ярус 9: «предатели — заморожены. Ледогенератор импортный. Санкции. Лёд кончается.»'},
+    look:'Каменные ступени уходят вниз. Холодный воздух поднимается, как дыхание. На каждой ступени — табличка: ярус 1: «некрещёные — free WiFi». Ярус 4: «скупцы — кэшбэк 0%». Ярус 9: «предатели — заморожены. Ледогенератор импортный. Санкции. Лёд кончается.»',
+    useAction:'crypt_descend'},
 
   // ── SECRET ──
   {id:'dumpster',name:'Горящая мусорка',x:2720,y:200,w:48,h:44,zone:'highway',
@@ -1133,24 +1161,32 @@ const locs=[
 
   // ── TERRAIN FEATURES (interactable) ──
   {id:'crater',name:'Кратер',x:1025,y:830,w:50,h:40,zone:'settlement',
-    look:'Идеальный круг выжженной земли. Внутри — оплавленный песок и стеклянные нити. На краю — монета. Вплавлена в асфальт. На одной стороне — бог. На другой — тоже бог. Но другой. Третий — на ребре. Ньярлатхотеп. Он всегда на ребре. Он всегда между. Не кидай монету. Она уже упала.'},
+    look:'Идеальный круг выжженной земли. Внутри — оплавленный песок и стеклянные нити. На краю — монета. Вплавлена в асфальт. На одной стороне — бог. На другой — тоже бог. Но другой. Третий — на ребре. Ньярлатхотеп. Он всегда на ребре. Он всегда между. Не кидай монету. Она уже упала.',
+    useAction:'crater_coin'},
   {id:'overpass',name:'Обрушенный мост',x:2280,y:610,w:100,h:60,zone:'highway',
     look:'Человек — канат над пропастью. Канат истлел. Пропасть: «Я устала быть метафорой.» Сверхчеловек прислал SMS: «Задерживаюсь. Пробки.» На бетонной плите — арматура торчит как рёбра. Между рёбрами — гнездо из пакетов. Кто-то жил тут после обрушения. Не долго. Арматура в форме вопросительного знака. Или это просто арматура.',
+    useAction:'overpass_rope',
     light:{r:15,color:[100,80,60],flicker:.03}},
   {id:'riverbed',name:'Высохшее русло',x:900,y:1050,w:60,h:30,zone:'settlement',
     look:'Река ушла. Оставила: трещины, ракушки, велосипедное колесо. На дне — лужа, в которой отражается синее небо. Настоящее небо — серое. Вода помнит цвет. Вода помнит дольше камня. Камень помнит форму. Вода помнит цвет. Цвет неба, которого нет. Смотри. Пока лужа не высохла.',
+    useAction:'riverbed_dig',
     light:{r:12,color:[60,80,120],flicker:.02}},
   {id:'billboard',name:'Упавший билборд',x:2085,y:752,w:75,h:38,zone:'highway',
-    look:'Just Do It — уцелело на жести. Что «do»? Кому «it»? Бренд пережил цивилизацию. Логотип узнаваем. Продукт не существует. Но галочка стоит. Галочка — бог после бога. Рядом мелко: «Купи или умри.» Кто-то дописал: «Умер. Не купил. Чувствую себя отлично.» Поверх — наклейка с QR-кодом. Под кодом: «BORED APE #4729. ВЛАДЕЛЕЦ: chrl_xx. ЦЕНА: 1.2M$. СЕЙЧАС: 0.0001 ETH. ETH: больше нет. SOL: тоже. Договорённость о галлюцинации расторгнута в одностороннем порядке.» Обезьяна на коде смотрит в никуда. Никуда смотрит в ответ. Это и есть рынок. Рынок продал самого себя. На вырученное купил рекламу того, что продаёт. Цикл замкнут. Замок — на блокчейне.'},
+    look:'Just Do It — уцелело на жести. Что «do»? Кому «it»? Бренд пережил цивилизацию. Логотип узнаваем. Продукт не существует. Но галочка стоит. Галочка — бог после бога. Рядом мелко: «Купи или умри.» Кто-то дописал: «Умер. Не купил. Чувствую себя отлично.» Поверх — наклейка с QR-кодом. Под кодом: «BORED APE #4729. ВЛАДЕЛЕЦ: chrl_xx. ЦЕНА: 1.2M$. СЕЙЧАС: 0.0001 ETH. ETH: больше нет. SOL: тоже. Договорённость о галлюцинации расторгнута в одностороннем порядке.» Обезьяна на коде смотрит в никуда. Никуда смотрит в ответ. Это и есть рынок. Рынок продал самого себя. На вырученное купил рекламу того, что продаёт. Цикл замкнут. Замок — на блокчейне.',
+    useAction:'billboard_tear'},
   {id:'powerline',name:'Сломанный столб ЛЭП',x:2235,y:695,w:30,h:50,zone:'highway',
-    look:'Провода свисают как нервы вырванного зуба. Один ещё гудит. Откуда? Электричество кончилось. Гул — фантомный. Столб помнит ток, как ампутант помнит руку. Между двумя столбами провод провис — форма параболы. Математика пережила физику. Формула провисания верна. Провод — мёртв. Формула — бессмертна.'},
+    look:'Провода свисают как нервы вырванного зуба. Один ещё гудит. Откуда? Электричество кончилось. Гул — фантомный. Столб помнит ток, как ампутант помнит руку. Между двумя столбами провод провис — форма параболы. Математика пережила физику. Формула провисания верна. Провод — мёртв. Формула — бессмертна.',
+    useAction:'powerline_touch'},
   {id:'ruins',name:'Жилой дом №7',x:665,y:590,w:85,h:60,zone:'settlement',
-    look:'Девять этажей. Семь — стоят. Два — внутри соседнего двора. Квартира 42 (третий этаж, правое окно): термометр на стене. 42°C. Ответ на главный вопрос. Вопрос: какая температура тела Постороннего. Квартира 13: дверь с двадцатью замками. Все открыты. Внутри — очередь. К чему? Контора сгорела. Очередь — осталась. Печать — цела.'},
+    look:'Девять этажей. Семь — стоят. Два — внутри соседнего двора. Квартира 42 (третий этаж, правое окно): термометр на стене. 42°C. Ответ на главный вопрос. Вопрос: какая температура тела Постороннего. Квартира 13: дверь с двадцатью замками. Все открыты. Внутри — очередь. К чему? Контора сгорела. Очередь — осталась. Печать — цела.',
+    useAction:'ruins_apt42'},
   {id:'pipeline',name:'Ржавый трубопровод',x:600,y:1450,w:80,h:25,zone:'toxic',
     look:'Труба ∅600мм. Лопнула. Из трещины капает. Не вода — время. Каждая капля — с разным интервалом. Кап: один ушёл. Кап-кап: двое. Тишина: кончились. Труба считает. Не жидкость — вас. Труба — последние часы. Не ваши. Её. Она измеряет время в потерях.',
+    useAction:'pipeline_valve',
     light:{r:15,color:[50,120,40],flicker:.06}},
   {id:'watchtower',name:'Смотровая вышка',x:1550,y:550,w:30,h:60,zone:'settlement',
     look:'Деревянная платформа на четырёх ногах. Наверху — бинокль. Бинокль направлен не наружу — внутрь поселения. Кто наблюдал? За кем? В журнале — один почерк: «05:00 — тишина. 06:00 — тишина. 07:00 — крыса в короне. Не наш район. 12:30 — Архивариус пишет. Подозрительный, но не чушпан — молчит. 23:59 — тишина.» Бинокль ещё тёплый.',
+    useAction:'watchtower_binoc',
     light:{r:20,color:[140,120,80],flicker:.04}},
 
   // ── GREEN ELEPHANT PIT ──
@@ -1171,6 +1207,7 @@ const locs=[
       'Другие трое:\nШут смеётся.\nSol горит.\nСтарец сидит.\nЯ — молчу.\nКто из нас честнее —\nреши сам.\nТолько реши беззвучно.\nЗвук сюда не долетает.',
       '(Молчание.\nНити слегка дрогнули.\nЗвезда чуть ярче.\nТы продолжаешь.\nКонечно, продолжаешь.\nА что ещё делать.)',
     ],
+    useAction:'nocturnal_thread',
     light:{r:45,color:[80,80,140],flicker:.015}},
 
   // ── THEATER OF SHADOWS — abandoned amphitheater with ghost performance ──
@@ -1192,6 +1229,7 @@ const locs=[
     light:{r:20,color:[184,134,11],flicker:.03}},
   {id:'banner',name:'Транспарант',x:1800,y:700,w:280,h:120,zone:'highway',
     look:'Огромное полотнище натянуто между двумя ржавыми столбами. Ткань — брезент, надпись — краской от руки. Буквы оплыли от дождей, но читаются. Когда ветер дует — полотно хлопает, как аплодисменты в пустом зале. Внизу мелко: "дата уточняется. место уточняется. реальность уточняется." Кто-то дописал маркером: "мы уже здесь."',
+    useAction:'banner_fine',
     light:{r:30,color:[218,165,32],flicker:.05}},
 ];
 
@@ -2321,13 +2359,185 @@ function drawLocs(){
 
 const locDraw={
   campfire(x,y){
+    // ═══ SACRIFICIAL FIRE — with horned beast skeleton ═══
+    // Shadow under fire
+    X.globalAlpha=.5;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+18,y+30,24,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+    // ── RED CRESCENT MOON above the fire ──
+    const moonY=y-24;
+    // Crescent body
+    X.fillStyle='#4a0a0a';
+    X.beginPath();
+    X.arc(x+17,moonY,9,Math.PI*.15,Math.PI*1.85,false);
+    X.arc(x+20,moonY,7,Math.PI*1.85,Math.PI*.15,true);
+    X.closePath();X.fill();
+    // Brighter red face
+    X.fillStyle='#8b0000';
+    X.beginPath();
+    X.arc(x+16,moonY-1,8,Math.PI*.2,Math.PI*1.8,false);
+    X.arc(x+19,moonY,6,Math.PI*1.8,Math.PI*.2,true);
+    X.closePath();X.fill();
+    // Rim highlight
+    X.fillStyle='#ff3020';
+    X.beginPath();
+    X.arc(x+15,moonY-2,3,Math.PI,Math.PI*1.5);
+    X.stroke();
+    // Blood drip from moon
+    const bdp=(t*.004)%1;
+    if(bdp<.6){
+      X.globalAlpha=.6;
+      rect(X,x+17,moonY+9,1,5+bdp*6,'#8b0000');
+      X.globalAlpha=1;
+    }
+    // Halo
+    X.globalAlpha=.12+.04*Math.sin(t*.008);
+    const mhalo=X.createRadialGradient(x+17,moonY,4,x+17,moonY,20);
+    mhalo.addColorStop(0,'rgba(139,0,0,.8)');
+    mhalo.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=mhalo;X.fillRect(x-3,moonY-20,40,40);
+    X.globalAlpha=1;
+
+    // ── STONE CIRCLE — soot-blackened ──
     const stones=[[0,22],[10,26],[20,26],[30,24],[34,16],[28,8],[18,6],[8,8],[-2,16]];
-    stones.forEach(([sx,sy])=>{rect(X,x+sx,y+sy,6,5,P.ash);rect(X,x+sx+1,y+sy+1,4,3,P.lgrey);});
-    dither(X,x+8,y+18,18,6,P.f3,'#3a1a08',.4);
+    stones.forEach(([sx,sy])=>{
+      rect(X,x+sx,y+sy,6,5,'#2a2420');
+      rect(X,x+sx+1,y+sy+1,4,3,'#3a2e28');
+      // Soot/blood splatter on top
+      px(X,x+sx+2,y+sy,'#1a0a08');
+    });
+
+    // ── BONE PILES around stones (previous sacrifices) ──
+    // Left pile
+    rect(X,x-7,y+28,5,2,P.bone);
+    rect(X,x-5,y+26,3,1,P.dbone);
+    px(X,x-8,y+29,P.bone);
+    rect(X,x-6,y+30,4,1,P.dbone);
+    // Right pile
+    rect(X,x+38,y+28,6,2,P.bone);
+    rect(X,x+40,y+26,3,2,P.dbone);
+    px(X,x+44,y+29,P.bone);
+    rect(X,x+39,y+30,5,1,P.dbone);
+    // Front pile
+    rect(X,x+14,y+33,8,2,P.dbone);
+    px(X,x+15,y+32,P.bone);
+    px(X,x+19,y+31,P.bone);
+    // A small skull on the right pile
+    rect(X,x+41,y+25,3,2,P.bone);
+    px(X,x+41,y+26,'#0a0a0e');
+    px(X,x+43,y+26,'#0a0a0e');
+
+    // ── BLOOD STAINS on stones ──
+    X.fillStyle='#3a0608';
+    rect(X,x+4,y+10,2,1);
+    rect(X,x+22,y+7,3,1);
+    rect(X,x+30,y+27,2,1);
+    // Darker dried blood drips
+    X.fillStyle='#1a0404';
+    rect(X,x+5,y+12,1,3);
+    rect(X,x+23,y+9,1,4);
+
+    // ── FIRE BED (ash + embers) ──
+    dither(X,x+6,y+18,22,8,P.f3,'#3a1a08',.5);
+    // Glowing embers
+    for(let i=0;i<8;i++){
+      const ex=x+8+i*2.5+hash(i,0,11)*2;
+      const ey=y+22+hash(i,0,22)*4;
+      const ep=.5+.4*Math.sin(t*.02+i*.7);
+      X.globalAlpha=ep;
+      px(X,ex,ey,P.f1);
+      X.globalAlpha=1;
+    }
+
+    // ── SACRIFICIAL BEAST SKELETON in the center of fire ──
+    // Body lies horizontally
+    // Ribcage — spiky, curving up
+    for(let i=0;i<5;i++){
+      const rbx=x+10+i*3;
+      const rby=y+20;
+      // Vertical rib arch
+      rect(X,rbx,rby-2,1,4,P.bone);
+      // Top of arch (darker where burning)
+      rect(X,rbx,rby-3,1,1,'#3a3028');
+    }
+    // Spine (horizontal bar)
+    rect(X,x+10,y+19,15,1,P.dbone);
+    // HORNED SKULL — tilted up, facing the moon
+    rect(X,x+24,y+15,5,4,P.bone);
+    rect(X,x+25,y+16,3,2,'#3a2e28'); // shadow
+    // Eye sockets (two dark pits)
+    px(X,x+25,y+16,'#0a0a0e');
+    px(X,x+27,y+16,'#0a0a0e');
+    // Nose hole
+    px(X,x+26,y+17,'#0a0a0e');
+    // Teeth
+    rect(X,x+25,y+18,3,1,P.bone);
+    px(X,x+26,y+18,'#0a0a0e');
+    // LONG CURVED HORNS reaching up
+    // Left horn
+    X.strokeStyle=P.bone;X.lineWidth=1;
+    X.beginPath();
+    X.moveTo(x+24,y+15);
+    X.quadraticCurveTo(x+20,y+10,x+22,y+3);
+    X.stroke();
+    // Right horn
+    X.beginPath();
+    X.moveTo(x+29,y+15);
+    X.quadraticCurveTo(x+33,y+10,x+31,y+3);
+    X.stroke();
+    // Horn tips (sharper)
+    px(X,x+22,y+3,P.bone);
+    px(X,x+31,y+3,P.bone);
+    // Back legs (bones) sticking out
+    rect(X,x+8,y+22,3,1,P.dbone);
+    rect(X,x+7,y+23,2,1,P.dbone);
+    // Front leg
+    rect(X,x+18,y+22,1,3,P.dbone);
+
+    // ── FIRE on top of the beast (consuming it) ──
     const f=t*.025;
-    for(let i=0;i<10;i++){const fx=x+14+Math.sin(f+i*1.1)*5;const fy=y+16-i*2.3-Math.abs(Math.sin(f*1.3+i*.8))*3;const s=Math.max(1,5-Math.floor(i*.45));X.globalAlpha=1-i*.07;rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,'#fff'][i]);};X.globalAlpha=1;
-    for(let i=0;i<5;i++){const sx=x+16+Math.sin(t*.012+i*2.1)*10;const sy=y+6-(t*.04+i*12)%25;X.globalAlpha=Math.max(0,1-(t*.04+i*12)%25/25)*.6;px(X,sx,sy,P.f2);};X.globalAlpha=1;
+    for(let i=0;i<14;i++){
+      const fx=x+12+Math.sin(f+i*.8)*7;
+      const fy=y+18-i*2.5-Math.abs(Math.sin(f*1.3+i*.6))*4;
+      const s=Math.max(1,6-Math.floor(i*.4));
+      X.globalAlpha=1-i*.06;
+      rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#ffeecc','#fff','#fff','#fff'][i]);
+    }
+    X.globalAlpha=1;
+
+    // Sparks rising toward the moon
+    for(let i=0;i<6;i++){
+      const sx_=x+14+Math.sin(t*.015+i*1.5)*12;
+      const spPh=(t*.04+i*10)%30;
+      const sy_=y+6-spPh;
+      X.globalAlpha=Math.max(0,1-spPh/30)*.8;
+      px(X,sx_,sy_,P.f2);
+      if(spPh<10)px(X,sx_+1,sy_,P.f4);
+      X.globalAlpha=1;
+    }
+
+    // ── DRIPPING BLOOD from the beast ──
+    if(t%60<30){
+      X.globalAlpha=.6;
+      rect(X,x+15,y+28,1,2,'#6b0f1a');
+      X.globalAlpha=1;
+    }
+
+    // ── HOODED ELDER silhouette in far-right corner (small) ──
+    // Distant figure watching
+    rect(X,x+46,y+20,3,6,'#0a0a0a');
+    rect(X,x+46,y+18,3,3,'#0a0a0a'); // hood
+    px(X,x+47,y+19,'#1a0e06');
+    px(X,x+48,y+19,'#1a0e06');
+
+    // ── JESTER (existing NPC) ──
     drawNPC_jester(x+40,y-8);
+
+    // ── ASH/BLOOD puddle at the front of the fire ──
+    X.globalAlpha=.4;
+    X.fillStyle='#1a0608';
+    X.beginPath();X.ellipse(x+18,y+34,10,2,0,0,Math.PI*2);X.fill();
+    X.globalAlpha=1;
   },
   terminal(x,y){
     rect(X,x+4,y+30,38,12,P.dgrey);rect(X,x+6,y+32,34,8,P.ash);rect(X,x+8,y+42,3,6,P.dgrey);rect(X,x+35,y+42,3,6,P.dgrey);
@@ -3452,7 +3662,7 @@ const locDraw={
     }
   },
   exit(x,y){
-    // ═══ EXIT TO THE WASTELAND — @ardet_art sign ═══
+    // ═══ EXIT TO THE WASTELAND — @ardet_mirror sign ═══
     // Road fading into the distance (perspective)
     for(let i=0;i<22;i++){
       const rx=x+i*4;
@@ -3484,7 +3694,7 @@ const locDraw={
     // Arrow
     rect(X,x+5,y-13,2,4,P.bone);
     rect(X,x+7,y-14,1,6,P.bone);
-    // @ardet_art fake-pixel text
+    // @ardet_mirror fake-pixel text
     X.fillStyle=P.bone;
     // @
     rect(X,x+10,y-15,1,3);rect(X,x+11,y-15,3,1);rect(X,x+11,y-13,3,1);rect(X,x+13,y-14,1,1);
@@ -8499,18 +8709,22 @@ function updateWeather(){
   if(weatherTimer>7200){ // change every ~2 min
     weatherTimer=0;
     const r=Math.random();
-    weather=r<.35?'clear':r<.55?'ashrain':r<.8?'rain':'storm';
+    // Red sand day dominates. Green rain is RARE.
+    weather=r<.15?'clear':r<.7?'ashrain':r<.88?'rain':'storm';
   }
-  // Ash rain
-  if(weather==='ashrain'&&t%2===0&&ashRainParts.length<200){
-    ashRainParts.push({
-      x:cam.x-20+Math.random()*(VW+40),
-      y:cam.y-30,
-      vy:1+Math.random()*1.5,
-      vx:.3+Math.random()*.5,
-      life:VH+50,
-      size:1+Math.floor(Math.random()*2),
-    });
+  // Ash rain — RED SAND DAY, dense
+  if(weather==='ashrain'&&ashRainParts.length<400){
+    // Spawn 3 particles per frame for density
+    for(let k=0;k<3;k++){
+      ashRainParts.push({
+        x:cam.x-30+Math.random()*(VW+60),
+        y:cam.y-30+Math.random()*60,
+        vy:1.2+Math.random()*2,
+        vx:.5+Math.random()*1+windX*.5,
+        life:VH+80,
+        size:1+Math.floor(Math.random()*3),
+      });
+    }
   }
   // Storm lightning
   if(weather==='storm'&&t%300<3&&Math.random()>.6){
@@ -8582,62 +8796,117 @@ function updateWeather(){
 }
 // ── RAIN + PUDDLES drawing ──
 function drawRain(){
-  // Puddles first (below rain)
+  // Puddles first — toxic radioactive green
   puddles.forEach(p=>{
     const sx=p.x-cam.x,sy=p.y-cam.y;
     if(sx<-10||sx>VW+10||sy<-10||sy>VH+10)return;
     const fadeIn=Math.min(1,(480-p.life)/60);
     const fadeOut=Math.min(1,p.life/120);
-    X.globalAlpha=Math.min(fadeIn,fadeOut)*.5;
-    // Puddle body
-    X.fillStyle='#1a2a3a';
+    X.globalAlpha=Math.min(fadeIn,fadeOut)*.55;
+    // Puddle body — dark toxic green
+    X.fillStyle='#0a2a08';
     X.beginPath();X.ellipse(sx,sy,p.r*2.5,p.r,0,0,Math.PI*2);X.fill();
-    // Highlight rim
-    X.globalAlpha*=.7;
-    X.strokeStyle='#4a7fb5';X.lineWidth=1;
+    // Inner glow — brighter toxic
+    X.globalAlpha*=.8;
+    X.fillStyle=P.dtoxic;
+    X.beginPath();X.ellipse(sx,sy,p.r*2,p.r*.8,0,0,Math.PI*2);X.fill();
+    // Highlight rim — bright toxic green
+    X.globalAlpha*=.6;
+    X.strokeStyle=P.btoxic;X.lineWidth=1;
     X.beginPath();X.ellipse(sx,sy,p.r*2.5,p.r,0,0,Math.PI*2);X.stroke();
-    // Ripple from new drop
+    // Ripple from new drop during green rain
     if(weather==='rain'||weather==='storm'){
       const ripPh=((t*.03+p.x*.01)%1);
       if(ripPh<.5){
         X.globalAlpha*=1-ripPh*2;
-        X.strokeStyle='#6a9fcf';
+        X.strokeStyle='#7aff3a';
         X.beginPath();X.ellipse(sx,sy,p.r*2.5*(1+ripPh),p.r*(1+ripPh),0,0,Math.PI*2);X.stroke();
       }
     }
+    // Radioactive glow pulse
+    X.globalAlpha=.15+.08*Math.sin(t*.02+p.x*.01);
+    const pgl=X.createRadialGradient(sx,sy,0,sx,sy,p.r*4);
+    pgl.addColorStop(0,'rgba(90,200,60,.7)');
+    pgl.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=pgl;
+    X.fillRect(sx-p.r*4,sy-p.r*4,p.r*8,p.r*8);
     X.globalAlpha=1;
   });
-  // Rain streaks
+  // Green radioactive rain streaks
   if(rainParts.length>0){
-    X.strokeStyle='#4a7fb5';X.lineWidth=1;
     rainParts.forEach(p=>{
       const sx=p.x-cam.x,sy=p.y-cam.y;
       if(sx<-5||sx>VW+5||sy<-5||sy>VH+5)return;
-      X.globalAlpha=.45;
+      // Drop with glow trail
+      X.globalAlpha=.7;
+      X.strokeStyle='#5aff2a';X.lineWidth=1;
       X.beginPath();
       X.moveTo(sx,sy);
       X.lineTo(sx-windX*1.5,sy-p.len);
       X.stroke();
+      // Glowing head
+      X.globalAlpha=.9;
+      px(X,sx,sy,'#aaff6a');
+      // Subtle aura
+      X.globalAlpha=.15;
+      X.fillStyle=P.toxic;
+      X.fillRect(sx-1,sy-p.len-1,3,p.len+2);
+      X.globalAlpha=1;
     });
+    // Poisonous green tint over everything
+    X.globalAlpha=.1+.03*Math.sin(t*.02);
+    rect(X,0,0,VW,VH,'#1a3a08');
     X.globalAlpha=1;
-    // Darken during rain
-    X.globalAlpha=.06;
-    rect(X,0,0,VW,VH,'#0a1020');
-    X.globalAlpha=1;
+    // Occasional Geiger counter crackle (visual static)
+    if(t%6<2){
+      for(let i=0;i<4;i++){
+        X.globalAlpha=.15;
+        const sx_=Math.floor(hash(i,t,11)*VW);
+        const sy_=Math.floor(hash(i,t,22)*VH);
+        rect(X,sx_,sy_,1,1,P.btoxic);
+        X.globalAlpha=1;
+      }
+    }
   }
 }
 function drawWeather(){
-  // Ash rain
+  // RED SAND DAY — thick reddish dust/ash obscuring visibility
   if(ashRainParts.length>0){
     ashRainParts.forEach(p=>{
       const sx=p.x-cam.x,sy=p.y-cam.y;
       if(sx<-5||sx>VW+5||sy<-5||sy>VH+5)return;
-      X.globalAlpha=.25;
-      rect(X,sx,sy,1,p.size+1,P.ash);
+      X.globalAlpha=.4;
+      // Red sand particles
+      const sandCol=hash(Math.floor(p.x),Math.floor(p.y),11)>.5?'#6b3a1a':'#4a1a0a';
+      rect(X,sx,sy,1,p.size+1,sandCol);
+      // Occasional brighter ember
+      if(hash(Math.floor(p.x),Math.floor(p.y),22)>.85){
+        px(X,sx,sy,'#8b4a1a');
+      }
     });
     X.globalAlpha=1;
-    // Darken during ash rain
-    X.globalAlpha=.04;rect(X,0,0,VW,VH,'#1a1a18');X.globalAlpha=1;
+    // HEAVY RED SAND OVERLAY — obscures visibility significantly
+    // Base reddish darkening
+    X.globalAlpha=.16+.04*Math.sin(t*.01);
+    rect(X,0,0,VW,VH,'#3a0a08');
+    X.globalAlpha=1;
+    // Denser red fog layer
+    X.globalAlpha=.12;
+    const redFog=X.createRadialGradient(VW/2,VH/2,80,VW/2,VH/2,VW*.6);
+    redFog.addColorStop(0,'rgba(90,30,20,.3)');
+    redFog.addColorStop(.7,'rgba(120,40,20,.7)');
+    redFog.addColorStop(1,'rgba(60,20,10,1)');
+    X.fillStyle=redFog;X.fillRect(0,0,VW,VH);
+    X.globalAlpha=1;
+    // Moving dust streaks
+    for(let i=0;i<8;i++){
+      X.globalAlpha=.1;
+      const dy=Math.floor(hash(i,t*.03,33)*VH);
+      const dw=20+Math.floor(hash(i,0,44)*40);
+      const dx=Math.floor((t*.5+i*80)%(VW+dw))-dw;
+      rect(X,dx,dy,dw,1,'#8b4a1a');
+      X.globalAlpha=1;
+    }
   }
   // Lightning flash — DRAMATIC
   if(lightning>0){
@@ -9511,7 +9780,7 @@ function handleUse(loc){
       break;
     case'pizzeria_enter':showLook({name:'ПОДВАЛ "ВАВИЛОНА"',look:'Ты поднимаешь коврик "Welcome". Под ним — ключ. Ключ от двери, которой нет: она вмурована в пол. Спускаешься через люк за стойкой. Бетонный пролёт, 13 ступеней (Архивариус посчитал). На стенах — зелёный свет ниоткуда. Лампа на столе горит без проводов. На столе — стул. На стуле — никто. Перед стулом — телефон без диска. Трубка снята. В трубке — гудок. Гудок длится 11 лет. На стене мелом: «ЭПШТЕЙН НЕ УБИВАЛ СЕБЯ». Под надписью, другим почерком: «А кто тогда?» Ещё ниже, третьим: «Пицца Маргарита. 15 мерит. Бесплатная доставка в подвал.» Меню это или признание — решай сам. Welcome.'});break;
     case'archive':showLook({name:'АРХИВ',look:'Пыль на стеллажах ещё тёплая. Здесь хранятся записи прошлых событий: фотографии, видео, афиши, обрывки разговоров. Всё, что осталось от того, что было. Скоро здесь появится больше.'});break;
-    case'links':showLook({name:'ПУСТОШЬ',look:'Дорога ведёт наружу. Telegram: @ardet_art — единственный сигнал из этой частоты. Всё остальное — тишина и пепел. Иди, если хочешь. Но ты вернёшься.'});break;
+    case'links':showLook({name:'ПУСТОШЬ',look:'Дорога ведёт наружу. Telegram: @ardet_mirror — единственный сигнал из этой частоты. Всё остальное — тишина и пепел. Иди, если хочешь. Но ты вернёшься.'});break;
     default:state='game';activeLoc=null;
   }
 }
@@ -9708,11 +9977,587 @@ function drawTheaterEnding(){
   }
 }
 
+// ═══════════════════════════════════════
+// DIALOGUE PORTRAITS — detailed pixel-art for each NPC
+// ═══════════════════════════════════════
+function drawDialoguePortrait(canvas,npcId){
+  const p=canvas.getContext('2d');
+  p.imageSmoothingEnabled=false;
+  const W=48,H=64;
+  // Background — dark void with slow gradient
+  p.fillStyle='#050510';
+  p.fillRect(0,0,W,H);
+  // Subtle parchment texture
+  for(let i=0;i<30;i++){
+    p.globalAlpha=.03;
+    p.fillStyle=Math.random()>.5?'#b8860b':'#6b0f1a';
+    p.fillRect(Math.random()*W,Math.random()*H,1,1);
+  }
+  p.globalAlpha=1;
+
+  switch(npcId){
+    case'jester':{
+      // ── JESTER PORTRAIT ──
+      // Background: red crimson wash
+      const bg=p.createRadialGradient(W/2,H/2,5,W/2,H/2,W);
+      bg.addColorStop(0,'#3a0608');
+      bg.addColorStop(1,'#050510');
+      p.fillStyle=bg;p.fillRect(0,0,W,H);
+      // Flames around edges
+      for(let i=0;i<8;i++){
+        p.globalAlpha=.3;
+        p.fillStyle='#6b0f1a';
+        const fx=i<4?2:W-4;
+        const fy=10+i%4*12;
+        p.fillRect(fx,fy,2,3);
+      }
+      p.globalAlpha=1;
+
+      // Shoulders - black ragged
+      p.fillStyle='#0a0a0a';
+      p.fillRect(8,36,32,16);
+      p.fillStyle='#1a1410';
+      p.fillRect(10,38,28,12);
+      // Torso tatters
+      for(let i=0;i<10;i++){
+        p.fillStyle='#0a0a0a';
+        p.fillRect(9+i*3,48,2,10);
+      }
+      // Crimson tips
+      for(let i=0;i<5;i++){p.fillRect(11+i*6,56,1,2,'#6b0f1a');}
+      p.fillStyle='#6b0f1a';
+      for(let i=0;i<5;i++)p.fillRect(11+i*6,56,1,2);
+
+      // HEAD — skull
+      p.fillStyle='#e8dcc8';
+      p.fillRect(16,12,16,22);
+      p.fillStyle='#d8ccb8';
+      p.fillRect(17,13,14,20);
+      // Shadow side
+      p.fillStyle='#b8a888';
+      p.fillRect(16,14,2,18);
+      p.fillRect(16,30,16,2);
+
+      // Eye sockets (deep)
+      p.fillStyle='#0a0a0a';
+      p.fillRect(19,20,4,4);
+      p.fillRect(25,20,4,4);
+      // Left eye — crimson ember
+      p.fillStyle='#ff3010';
+      p.fillRect(20,21,2,2);
+      p.fillStyle='#ffaa40';
+      p.fillRect(20,21,1,1);
+      // Right eye — cross
+      p.fillStyle='#0a0a0a';
+      p.fillRect(26,20,3,1);
+      p.fillRect(27,20,1,4);
+
+      // Nose hole
+      p.fillStyle='#0a0a0a';
+      p.fillRect(23,25,2,2);
+      // Teeth
+      p.fillStyle='#0a0a0a';
+      p.fillRect(18,30,12,1);
+      p.fillStyle='#e8dcc8';
+      for(let i=0;i<5;i++)p.fillRect(19+i*2,31,1,2);
+      // Jaw crack
+      p.fillStyle='#0a0a0a';
+      p.fillRect(22,33,1,2);
+
+      // 3-HORNED JESTER CAP
+      // Base band
+      p.fillStyle='#6b0f1a';
+      p.fillRect(15,10,18,3);
+      p.fillStyle='#8b0000';
+      p.fillRect(16,10,16,1);
+      // Left horn
+      p.fillStyle='#6b0f1a';
+      p.fillRect(13,6,4,5);
+      p.fillRect(11,2,4,5);
+      // Left bell
+      p.fillStyle='#b8860b';
+      p.fillRect(10,1,2,2);
+      p.fillStyle='#daa520';
+      p.fillRect(10,1,1,1);
+      // Center horn
+      p.fillRect(22,4,4,6);
+      p.fillRect(21,0,4,5);
+      p.fillStyle='#b8860b';p.fillRect(22,-1,2,1);
+      p.fillStyle='#daa520';p.fillRect(22,0,2,2);
+      p.fillStyle='#6b0f1a';
+      // Right horn
+      p.fillRect(30,6,4,5);
+      p.fillRect(32,2,4,5);
+      p.fillStyle='#b8860b';
+      p.fillRect(36,1,2,2);
+      p.fillStyle='#daa520';p.fillRect(37,1,1,1);
+
+      // Burning golden halo behind
+      p.globalAlpha=.4;
+      p.strokeStyle='#daa520';p.lineWidth=1;
+      p.beginPath();p.arc(24,22,18,0,Math.PI*2);p.stroke();
+      p.globalAlpha=1;
+
+      // Ornate border label
+      p.fillStyle='#b8860b';
+      p.fillRect(0,60,W,1);
+      p.fillRect(0,62,W,1);
+      break;
+    }
+    case'sol':{
+      // ── SOL INVICTUS PORTRAIT ──
+      const bg=p.createRadialGradient(W/2,18,5,W/2,H,W);
+      bg.addColorStop(0,'#4a3008');
+      bg.addColorStop(.6,'#1a0a04');
+      bg.addColorStop(1,'#050510');
+      p.fillStyle=bg;p.fillRect(0,0,W,H);
+
+      // Dark robe
+      p.fillStyle='#0a0a0a';
+      p.fillRect(6,34,36,30);
+      p.fillStyle='#1a1410';
+      p.fillRect(8,36,32,28);
+      // Fold lines
+      p.fillStyle='#050508';
+      p.fillRect(12,38,1,24);
+      p.fillRect(24,38,1,24);
+      p.fillRect(35,38,1,24);
+
+      // Flower dots on robe
+      p.fillStyle='#daa520';p.fillRect(11,42,2,2);
+      p.fillStyle='#6b0f1a';p.fillRect(16,48,2,2);
+      p.fillStyle='#daa520';p.fillRect(22,54,2,2);
+      p.fillStyle='#aa66aa';p.fillRect(30,44,2,2);
+      p.fillStyle='#b8860b';p.fillRect(34,52,2,2);
+
+      // Ribcage visible (faint)
+      p.globalAlpha=.3;
+      p.fillStyle='#e8dcc8';
+      for(let i=0;i<3;i++){
+        p.fillRect(16,40+i*4,16,1);
+      }
+      p.globalAlpha=1;
+
+      // SUN HEAD — golden disc
+      const sunX=24,sunY=18;
+      // Halo rays (rotating suggestion — static here)
+      p.fillStyle='#b8860b';
+      for(let i=0;i<14;i++){
+        const a=i/14*Math.PI*2;
+        const rx=sunX+Math.cos(a)*14;
+        const ry=sunY+Math.sin(a)*14;
+        p.fillRect(rx-1,ry-1,2,2);
+      }
+      // Main sun body
+      p.fillStyle='#daa520';
+      p.beginPath();p.arc(sunX,sunY,10,0,Math.PI*2);p.fill();
+      p.fillStyle='#b8860b';
+      p.beginPath();p.arc(sunX,sunY,9,0,Math.PI*2);p.fill();
+      // Face within
+      p.fillStyle='#8a6408';
+      p.beginPath();p.arc(sunX,sunY,6,0,Math.PI*2);p.fill();
+      // Closed eyes (arcs)
+      p.fillStyle='#3a2008';
+      p.fillRect(sunX-3,sunY-1,2,1);
+      p.fillRect(sunX-4,sunY-2,1,1);
+      p.fillRect(sunX+2,sunY-1,2,1);
+      p.fillRect(sunX+4,sunY-2,1,1);
+      // Nose
+      p.fillRect(sunX,sunY+1,1,2);
+      // Mouth (small line)
+      p.fillRect(sunX-1,sunY+4,3,1);
+      // Tear streaks
+      p.globalAlpha=.5;
+      p.fillRect(sunX-3,sunY+1,1,3);
+      p.fillRect(sunX+3,sunY+1,1,3);
+      p.globalAlpha=1;
+
+      // Burning branch in hand (lower left)
+      p.fillStyle='#4a3020';
+      p.fillRect(2,48,10,2);
+      // Flames on branch
+      p.fillStyle='#6b0f1a';p.fillRect(1,44,3,5);
+      p.fillStyle='#ff6600';p.fillRect(2,42,2,4);
+      p.fillStyle='#daa520';p.fillRect(2,41,1,3);
+      p.fillStyle='#ffffcc';p.fillRect(3,40,1,1);
+
+      // Bone hand
+      p.fillStyle='#e8dcc8';
+      p.fillRect(10,46,3,3);
+
+      // Border
+      p.fillStyle='#daa520';
+      p.fillRect(0,60,W,1);
+      p.fillRect(0,62,W,1);
+      break;
+    }
+    case'elder':{
+      // ── ELDER PORTRAIT ──
+      const bg=p.createRadialGradient(W/2,20,3,W/2,H/2,W);
+      bg.addColorStop(0,'#1a120a');
+      bg.addColorStop(1,'#050510');
+      p.fillStyle=bg;p.fillRect(0,0,W,H);
+
+      // HOOD — large dark cloak
+      // Outer cowl
+      p.fillStyle='#050508';
+      p.beginPath();
+      p.moveTo(10,18);
+      p.quadraticCurveTo(10,4,24,2);
+      p.quadraticCurveTo(38,4,38,18);
+      p.lineTo(44,64);
+      p.lineTo(4,64);
+      p.closePath();p.fill();
+
+      // Inner hood shadow
+      p.fillStyle='#0a0a0a';
+      p.beginPath();
+      p.moveTo(14,20);
+      p.quadraticCurveTo(14,8,24,6);
+      p.quadraticCurveTo(34,8,34,20);
+      p.lineTo(34,36);
+      p.lineTo(14,36);
+      p.closePath();p.fill();
+
+      // Deep face shadow
+      p.fillStyle='#020204';
+      p.fillRect(17,18,14,18);
+
+      // Face — barely visible skull
+      p.fillStyle='#2a2420';
+      p.fillRect(19,22,10,12);
+      // Eye sockets — just pits of darkness
+      p.fillStyle='#000';
+      p.fillRect(20,25,3,2);
+      p.fillRect(25,25,3,2);
+      // Tiny reddish glow deep inside
+      p.fillStyle='#3a0608';
+      p.fillRect(21,25,1,1);
+      p.fillRect(26,25,1,1);
+      // Nose hole
+      p.fillRect(23,28,2,2);
+      // Jaw line
+      p.fillRect(20,32,8,1);
+
+      // Hood top wrinkle
+      p.fillStyle='#1a1410';
+      p.fillRect(15,10,2,4);
+      p.fillRect(31,10,2,4);
+
+      // Staff on right — visible at edge
+      p.fillStyle='#3a2814';
+      p.fillRect(40,28,2,30);
+      p.fillStyle='#4a3824';
+      p.fillRect(41,30,1,24);
+      // Staff cap
+      p.fillStyle='#8a8d8f';
+      p.fillRect(39,26,4,3);
+
+      // Hands — bony, crossed
+      p.fillStyle='#e8dcc8';
+      p.fillRect(18,42,3,3);
+      p.fillRect(27,42,3,3);
+      // Cloak fold shadow
+      p.fillStyle='#0a0a0a';
+      p.fillRect(22,46,4,16);
+
+      // Faint candlelight from below
+      p.globalAlpha=.2;
+      p.fillStyle='#daa520';
+      p.fillRect(20,44,8,2);
+      p.globalAlpha=1;
+
+      // Border
+      p.fillStyle='#8a8d8f';
+      p.fillRect(0,60,W,1);
+      p.fillRect(0,62,W,1);
+      break;
+    }
+    case'dumpster':{
+      // ── DUMPSTER DEMON PORTRAIT ──
+      const bg=p.createRadialGradient(W/2,H/2,5,W/2,H/2,W);
+      bg.addColorStop(0,'#3a0608');
+      bg.addColorStop(.5,'#1a0204');
+      bg.addColorStop(1,'#050510');
+      p.fillStyle=bg;p.fillRect(0,0,W,H);
+
+      // Flames at bottom (demon emerging from fire)
+      for(let fy=54;fy<64;fy++){
+        for(let fx=0;fx<W;fx++){
+          const n=Math.sin(fx*.3+fy*.2+Date.now()*.001);
+          if(n>-.5){
+            p.fillStyle=fy>60?'#6b0f1a':(fy>58?'#ff6600':(fy>56?'#daa520':'#ffffcc'));
+            p.fillRect(fx,fy,1,1);
+          }
+        }
+      }
+
+      // WINGS spread wide
+      p.fillStyle='#4a0a12';
+      // Left wing (wider)
+      p.beginPath();
+      p.moveTo(12,28);
+      p.lineTo(0,18);
+      p.lineTo(0,28);
+      p.lineTo(6,36);
+      p.lineTo(12,38);
+      p.closePath();p.fill();
+      // Right wing
+      p.beginPath();
+      p.moveTo(36,28);
+      p.lineTo(48,18);
+      p.lineTo(48,28);
+      p.lineTo(42,36);
+      p.lineTo(36,38);
+      p.closePath();p.fill();
+      // Wing bones
+      p.strokeStyle='#2a0508';p.lineWidth=1;
+      p.beginPath();p.moveTo(12,28);p.lineTo(2,20);p.stroke();
+      p.beginPath();p.moveTo(12,28);p.lineTo(4,28);p.stroke();
+      p.beginPath();p.moveTo(36,28);p.lineTo(46,20);p.stroke();
+      p.beginPath();p.moveTo(36,28);p.lineTo(44,28);p.stroke();
+
+      // BODY — crimson, ribbed
+      p.fillStyle='#6b0f1a';
+      p.fillRect(16,26,16,26);
+      p.fillStyle='#8b0000';
+      p.fillRect(17,27,14,24);
+      // Ribs
+      for(let i=0;i<5;i++){
+        p.fillStyle='#3a0608';
+        p.fillRect(18,32+i*3,12,1);
+      }
+
+      // HEAD — demon skull
+      p.fillStyle='#6b0f1a';
+      p.fillRect(14,4,20,22);
+      p.fillStyle='#5a0a12';
+      p.fillRect(15,5,18,20);
+      p.fillStyle='#4a0a12';
+      p.fillRect(16,6,16,18);
+
+      // CROWN OF THORNS
+      p.fillStyle='#1a0404';
+      for(let i=0;i<9;i++){
+        p.fillRect(13+i*3,2,1,3);
+      }
+
+      // BRANCHING HORNS
+      p.fillStyle='#1a0404';
+      p.fillRect(12,0,2,5);
+      p.fillRect(10,-2,2,4);
+      p.fillRect(34,0,2,5);
+      p.fillRect(36,-2,2,4);
+      // Extras
+      p.fillRect(14,2,2,2);
+      p.fillRect(32,2,2,2);
+
+      // THIRD EYE on forehead (big, glowing)
+      const eyePulse=.5+.3*Math.sin(Date.now()*.005);
+      p.globalAlpha=eyePulse;
+      p.fillStyle='#daa520';
+      p.fillRect(20,8,8,3);
+      p.fillStyle='#ffffcc';
+      p.fillRect(22,8,4,2);
+      p.fillStyle='#fff';
+      p.fillRect(23,8,2,1);
+      p.globalAlpha=1;
+
+      // Two side eyes
+      p.fillStyle='#ff3010';
+      p.fillRect(18,14,4,3);
+      p.fillRect(26,14,4,3);
+      p.fillStyle='#fff';
+      p.fillRect(19,14,2,1);
+      p.fillRect(27,14,2,1);
+
+      // Nose slits
+      p.fillStyle='#1a0404';
+      p.fillRect(22,18,1,2);
+      p.fillRect(25,18,1,2);
+
+      // JAW with fangs
+      p.fillStyle='#1a0404';
+      p.fillRect(16,22,16,3);
+      p.fillStyle='#e8dcc8';
+      p.fillRect(17,23,1,2);
+      p.fillRect(19,23,1,2);
+      p.fillRect(28,23,1,2);
+      p.fillRect(30,23,1,2);
+
+      // Chest cavity — inner fire
+      p.fillStyle='#1a0404';
+      p.fillRect(22,38,4,8);
+      p.fillStyle='#8b0000';
+      p.fillRect(23,39,2,6);
+      p.fillStyle='#ff6600';
+      p.fillRect(23,40,2,4);
+      p.fillStyle='#daa520';
+      p.fillRect(23,41,2,2);
+
+      // Dripping blood
+      p.fillStyle='#8b0000';
+      p.fillRect(18,50,1,4);
+      p.fillRect(25,50,1,5);
+      p.fillRect(30,50,1,3);
+
+      // Border
+      p.fillStyle='#ff4400';
+      p.fillRect(0,60,W,1);
+      p.fillRect(0,62,W,1);
+      break;
+    }
+    case'nocturnal':{
+      // ── NOCTURNAL / LUNAR PORTRAIT ──
+      // Deep space background with stars
+      p.fillStyle='#050510';
+      p.fillRect(0,0,W,H);
+      // Stars scattered
+      for(let i=0;i<40;i++){
+        p.fillStyle=i%3===0?'#ffffff':'#ccccff';
+        const sx=Math.floor(i*W*.37)%W;
+        const sy=Math.floor(i*H*.73)%H;
+        p.fillRect(sx,sy,1,1);
+      }
+
+      // Nebula swirl
+      p.globalAlpha=.3;
+      for(let i=0;i<20;i++){
+        const a=i*.4;
+        const r=i*.6;
+        const sx=24+Math.cos(a)*r;
+        const sy=32+Math.sin(a)*r;
+        p.fillStyle=i%2?'#3a1a5a':'#1a2a5a';
+        p.fillRect(sx,sy,2,2);
+      }
+      p.globalAlpha=1;
+
+      // MANTLE — night sky cloth
+      p.fillStyle='#050510';
+      p.beginPath();
+      p.moveTo(8,28);
+      p.lineTo(10,18);
+      p.lineTo(38,18);
+      p.lineTo(40,28);
+      p.lineTo(44,64);
+      p.lineTo(4,64);
+      p.closePath();p.fill();
+
+      // Mantle inner dither
+      for(let i=0;i<30;i++){
+        p.fillStyle=Math.random()>.5?'#0e0a28':'#050510';
+        p.fillRect(8+Math.random()*32,30+Math.random()*30,1,1);
+      }
+      // Stars in mantle
+      for(let i=0;i<20;i++){
+        p.fillStyle=Math.random()>.5?'#ffffff':'#ccccff';
+        p.fillRect(10+Math.random()*28,28+Math.random()*34,1,1);
+      }
+
+      // Gold byzantine trim
+      p.fillStyle='#b8860b';
+      for(let i=0;i<6;i++){
+        p.fillRect(5+i%2,30+i*5,1,3);
+        p.fillRect(42-i%2,30+i*5,1,3);
+      }
+      // Bottom hem
+      for(let i=0;i<20;i++){
+        p.fillRect(4+i*2,60,1,1);
+      }
+
+      // Three torso eyes
+      p.fillStyle='#ffffff';
+      p.fillRect(18,36,2,2);
+      p.fillRect(28,36,2,2);
+      p.fillRect(23,44,2,3);
+      p.fillStyle='#ccccff';
+      p.fillRect(18,36,1,1);
+      p.fillRect(28,36,1,1);
+      p.fillRect(23,44,1,1);
+
+      // HEAD — CRESCENT MOON
+      const hx=24,hy=14;
+      // Outer silver crescent
+      p.fillStyle='#5a5d62';
+      p.beginPath();
+      p.arc(hx,hy,12,Math.PI*.15,Math.PI*1.85,false);
+      p.arc(hx+3,hy,9,Math.PI*1.85,Math.PI*.15,true);
+      p.closePath();p.fill();
+      // Mid silver
+      p.fillStyle='#8a8d8f';
+      p.beginPath();
+      p.arc(hx-1,hy-1,11,Math.PI*.2,Math.PI*1.8,false);
+      p.arc(hx+2,hy,8,Math.PI*1.8,Math.PI*.2,true);
+      p.closePath();p.fill();
+
+      // Face inside crescent
+      p.fillStyle='#2a2830';
+      p.fillRect(hx-2,hy-3,8,8);
+      p.fillStyle='#1a1822';
+      p.fillRect(hx-1,hy-2,6,6);
+      // Closed eyes (horizontal lines)
+      p.fillStyle='#050508';
+      p.fillRect(hx,hy-1,2,1);
+      p.fillRect(hx+3,hy-1,2,1);
+      // Calm mouth
+      p.fillRect(hx+1,hy+2,3,1);
+      // Silver tears
+      p.globalAlpha=.5;
+      p.fillStyle='#aaaabb';
+      p.fillRect(hx-1,hy+1,1,2);
+      p.fillRect(hx+4,hy+1,1,2);
+      p.globalAlpha=1;
+
+      // Horns up into the "sky" (top of portrait)
+      p.strokeStyle='#4a4d50';p.lineWidth=1;
+      p.beginPath();
+      p.moveTo(hx-6,hy-7);
+      p.quadraticCurveTo(hx-10,hy-14,hx-8,hy-20);
+      p.stroke();
+      p.beginPath();
+      p.moveTo(hx+7,hy-7);
+      p.quadraticCurveTo(hx+11,hy-14,hx+9,hy-20);
+      p.stroke();
+
+      // Star above between horns
+      p.fillStyle='#ffffff';
+      p.fillRect(hx,hy-22,2,2);
+      p.globalAlpha=.5;
+      p.fillRect(hx-1,hy-23,1,1);
+      p.fillRect(hx+2,hy-23,1,1);
+      p.globalAlpha=1;
+
+      // Border
+      p.fillStyle='#4a7fb5';
+      p.fillRect(0,60,W,1);
+      p.fillRect(0,62,W,1);
+      break;
+    }
+    default:{
+      // Unknown NPC — generic dark silhouette
+      p.fillStyle='#1a1a1a';
+      p.fillRect(16,16,16,32);
+      p.fillRect(18,8,12,10);
+      p.fillStyle='#8b0000';
+      p.fillRect(20,14,2,2);
+      p.fillRect(26,14,2,2);
+    }
+  }
+}
+
 // DIALOGUE
 let dlgL=[],dlgI=0,tt=null,dlgTyping=false;
+let dlgCurrentNPC=null; // for animated portrait
 function startDlg(loc){state='dialogue';dlgL=loc.talkLines;dlgI=0;
   document.getElementById('dn').textContent=loc.talkName;
-  document.getElementById('dp').textContent=loc.talkPortrait;
+  // Replace emoji portrait with pixel-art canvas
+  const dpEl=document.getElementById('dp');
+  dpEl.innerHTML='';
+  const pCanvas=document.createElement('canvas');
+  pCanvas.width=48;pCanvas.height=64;
+  dpEl.appendChild(pCanvas);
+  dlgCurrentNPC=loc.npc;
+  drawDialoguePortrait(pCanvas,loc.npc);
   document.getElementById('dlg').classList.add('on');
   if(loc.npc)talkedNPCs.add(loc.npc);
   typeLine();}
@@ -9819,7 +10664,7 @@ function termExec(cmd){
   const args=cmd.trim().toLowerCase().split(' ');
   switch(args[0]){
     case'help':
-      termPrint('ДОСТУПНЫЕ КОМАНДЫ:\n  dir      — список файлов\n  read     — читать файл (read nfg / .moss / .observers)\n  cat      — вывести содержимое (.ardet)\n  whois    — инфо о ком-то (archivist / moss / cat)\n  map      — карта местности\n  status   — статистика странника\n  ach      — достижения\n  ls       — список директории (/ или secrets)\n  fortune  — случайное пророчество\n  ping     — проверить связь\n  mycelium — сетевой статус\n  history  — история команд\n  echo     — тест эхо\n  ardet    — ???\n  exit     — выход из терминала\n\n  ↑/↓      — навигация по истории','#1a8c1a');break;
+      termPrint('ДОСТУПНЫЕ КОМАНДЫ:\n  dir      — список файлов\n  read     — читать файл (read nfg / .moss / .observers)\n  cat      — вывести содержимое (.ardet)\n  whois    — инфо о ком-то (archivist / moss / cat)\n  prompt   — промты для генерации артов персонажей\n  map      — карта местности\n  status   — статистика странника\n  ach      — достижения\n  ls       — список директории (/ или secrets)\n  fortune  — случайное пророчество\n  ping     — проверить связь\n  mycelium — сетевой статус\n  history  — история команд\n  echo     — тест эхо\n  ardet    — ???\n  exit     — выход из терминала\n\n  ↑/↓      — навигация по истории','#1a8c1a');break;
     case'dir':case'ls':
       if(args[1]==='secrets'||args[1]==='/secrets'){
         termPrint('> ДОСТУП: УСЛОВНЫЙ\n\n  .pizzeria_key  [найден под ковриком]\n  .moss_weights  [мох обновляется]\n  .cat_saucer    [третий этаж]\n  .archivist_log [запись #87]\n  .ardet         [вечно растёт]\n  .observers     [требуется: осмотреть всех четверых]','#1a6b1a');break;
@@ -9906,6 +10751,26 @@ function termExec(cmd){
       termPrint('> growing...\n> ...\n> (операция уже выполняется,\n>  независимо от твоего согласия)\n>\n> текущее состояние:\n>   мицелий: +0.003мм за сессию\n>   твой субстрат: стабилен\n>   твоя воля: нерелевантна\n>\n> [для отмены выполните: die]\n> [die недоступен в этой юрисдикции]','#1a8c1a');break;
     case'die':
       termPrint('> die: команда недоступна.\n> причина: ты уже внутри цикла.\n> альтернатива: жди. мох делает это за тебя.','#8b0000');break;
+    case'prompt':case'prompts':case'промт':case'промпт':
+      if(args[1]==='jester'||args[1]==='шут'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ШУТ\n\nA gothic apocalyptic jester figure, full body, standing in\nperpetual flames. Skull face with one crimson ember eye and\none cross-scarred eye. Ragged black tatters hanging from\nbony limbs, harlequin diamond pattern on legs. Three-horned\njester cap (red with gold bells swinging). Three swords\njuggled in circular orbit around his head. Rusted spiked\nchain flail dangling from left leg. Burning golden halo\nsurrounding him. Background: scorched wasteland, crimson\nsky, blood moon overhead. Medieval icon frame with skulls.\nStyle: Beksinski meets Gustave Dore meets Byzantine mosaic.\nPixel-adjacent but painterly. Muted brandbook palette:\n#6b0f1a crimson, #b8860b burnt gold, #e8dcc8 bone white,\n#0a0a0a void black.','#6b0f1a');
+      }else if(args[1]==='sol'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: SOL INVICTUS\n\nA skeletal figure in a dark flower-embroidered mantle,\nstanding under a perpetual noon sun. Head is a burning\ngolden solar disc with 14 rotating rays. Face within the\ndisc: closed eyes, serene indifference, tear streaks of\nmolten gold down the cheeks. Skeletal arms visible through\ntorn sleeves, holding a burning branch in the left hand\n(flames, sparks, smoke wisps). Right hand hangs skeletal.\nRibs visible through the mantle fabric — breathing slowly.\nFalling petals (gold, crimson, purple) drift around him.\nBuzzing insects (flies, wasps) orbit lazily. Background:\nwithered sunflower field, ash-drift sky, crimson horizon.\nStyle: Byzantine iconography meets Symbolist painting.\nPalette: #daa520 sunflower yellow, #b8860b burnt gold,\n#e8dcc8 bone, #6b0f1a crimson accents.','#daa520');
+      }else if(args[1]==='elder'||args[1]==='старец'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: СТАРЕЦ (The Elder)\n\nA hooded monastic figure, face entirely obscured by deep\ndarkness of the cowl. Inside the hood: suggestion of a\nskull with faint crimson embers where eyes should be. Heavy\ntattered dark robe, layered, textured. Sitting cross-legged\non a patch of moss-covered stone. Staff leaning against him\n— wooden, topped with a silver disc. Books stacked around\nhim (5-6 volumes with gold-lettered spines). Small candles\nburning in front, casting warm glow upward on the hood.\nBlack cat sitting beside him, watching. Incense smoke\nrising. Background: a tattered cloth tent interior, wooden\nposts, hanging wind chimes. Atmosphere: ancient, patient,\nwaiting for something that already happened.\nPalette: #0a0a0a void, #b8860b candle gold, #8a8d8f silver,\n#e8dcc8 bone accents. Style: Doré, Beksinski.','#8a8d8f');
+      }else if(args[1]==='dumpster'||args[1]==='demon'||args[1]==='демон'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ГОРЯЩАЯ МУСОРКА (Demon)\n\nA massive winged demon rising from a burning industrial\ndumpster. Bat wings spread wide (5 bone struts each, torn\nmembrane). Body: crimson, ribbed skeletal-muscular, with a\nchest cavity open showing inner fire. Head: horned skull\nwith branching 2-segment horns, crown of thorns radiating\naround the skull (8 spikes). Three eyes: two side-eyes\n(pulsing red with white pupils), one third eye on forehead\n(larger, golden, brighter — the focal point). Arms\noutstretched horizontally in crucifix pose, 3 claws per\nhand. Skeletal tail (6 vertebrae) with barbed tip. Dripping\nblood from body, splashing on dumpster top. Rotating spiked\nhalo above head. Crescent moon behind. Ember particles\nrising. Heat distortion aura. Industrial ruins in\nbackground. Style: sacred black metal album cover meets\nmedieval demon manuscript illumination.\nPalette: #6b0f1a crimson, #8b0000 volcanic red, #ff6600\nflame orange, #daa520 halo gold, #0a0a0a void.','#ff4400');
+      }else if(args[1]==='nocturnal'||args[1]==='lunar'||args[1]==='лунный'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ЛУННЫЙ (The Nocturnal)\n\nAn impossibly tall figure standing motionless on a scorched\nplain. Instead of a skull — an enormous crescent moon of\ntarnished silver, with a human face nestled in its curve:\neyes closed, expression of serene indifference, silver tear\nstreaks. From the crescent, two curved horns extend upward\nand disappear into the night sky. Body: neither skeleton\nnor flesh but a condensation of cosmic matter. Within the\nribcage: planetary orbits, galaxy spirals, pulsing nebulae.\nThree eyes smolder through the torso darkness — two at\nchest level, one at the solar plexus. Vast mantle of\nnight-sky fabric — real stars shimmer in the folds,\nconstellations slowly rotate, meteors trace silver lines.\nGold ornamental Byzantine trim along edges, inscribed with\nrunes and astrological symbols. One skeletal hand raised,\nholding silver threads going up to tiny stars like a\npuppeteer. The other hand down, black sand spilling from\nthe open palm, forming a pile at his feet. Background:\nblack sand plain, distant fire glow on the horizon, cold\nmist. Style: Moebius meets medieval astronomical manuscript\nmeets Beksinski. Highly detailed, symbolic, iconic.\nPalette: #1b1464 indigo night, #8a8d8f tarnished silver,\n#b8860b Byzantine gold, #ffffff stars, #0a0a0a void,\n#6b0f1a distant fire.','#4a7fb5');
+      }else if(args[1]==='cat'||args[1]==='кот'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: КОТ\n\nA small black cat with glowing amber eyes, sitting on a\nchipped wooden bar counter. Fur pattern: subtle stripes,\nslightly scruffy. Wearing a tiny leather apron. One paw\nresting on a saucer of milk. A clay mug of шило (distilled\nspirit) next to him with rising steam. A broken primus\nstove behind him, recently repaired. Tiny mice scurry on\nthe floor, unnoticed. Dim amber lantern overhead casting a\nwarm glow. Dust motes drifting. Wooden bar shelves with\nbottles and random trinkets behind. Atmosphere: warmth,\nquiet, knowing. The cat stares directly at the viewer with\nthe look of someone who has been waiting a long time and\nhas patience left. Style: Studio Ghibli meets Old Russian\nbar aesthetic. Warm palette: #3a2418 wood brown, #daa520\namber glow, #1a1a1a cat black, #e8dcc8 milk white.\nSign on wall: "звонок не работает. кот всё видит."','#daa520');
+      }else if(args[1]==='archivist'||args[1]==='архивариус'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: АРХИВАРИУС\n\nA figure with no face — just a dark hood and a single hand\nholding a pencil, writing on a concrete wall covered with\ntiny inscriptions in multiple languages. The wall is\nenormous, extending up beyond the frame. Every inch covered\nin small, neat handwriting: phrases, observations, dates,\nnumbers. Mixed Cyrillic, Latin, Greek, symbols. Some\ncrossed out. Some circled. A catalog number in the corner\nof each entry. The hand is bony, stained with graphite.\nBehind the figure: a stack of notebooks, a broken lamp,\nmoss creeping up the wall from the floor. Soft dust. In\nthe extreme background: hints of the burning city. The key\nvisual tension: the figure is simultaneously documenting\nthe world and becoming part of the wall they document. A\nhint that the figure might be the viewer (the reader of\nthis description). Style: Escher meets Kafka meets medieval\nscribe illumination. Palette: #2a1a0e sepia ink, #e8dcc8\nwall concrete, #8a8d8f lead pencil, #6b0f1a distant\nfire glow, #0a0a0a hood void. Hidden phrase visible\nsomewhere in the wall: "мох помнит".','#8a8d8f');
+      }else if(args[1]==='moss'||args[1]==='мох'){
+        termPrint('> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: МОХ\n\nMacro-scale extreme close-up of moss growing on a cracked\nconcrete surface, treated as a portrait of a person. The\nmoss fills the entire frame: vibrant green with brighter\ntoxic-yellow edges where sunlight catches. Tiny spore\nstalks rising like a forest. Dewdrops on each leaflet,\nglowing slightly (radioactive hint). Beneath the visible\nmoss: hints of mycelium threads extending into the concrete\ncracks like blood vessels. A few tiny white mushrooms\npeeking out. The image has the soul of a face: two darker\npatches where eyes would be, a central depression like a\nnose, a curving moss formation like a mouth (almost\nsmiling). Subliminal — you see it only on second look.\nBackground: concrete dissolves into darkness. Text curled\nsomewhere in the moss: "мох помнит" (moss remembers).\nStyle: Andy Goldsworthy meets medieval reliquary meets\nbiological illustration. Palette: #2a5a1a dark toxic\ngreen, #5aff3a bright moss, #b8a888 dry concrete, #0a0a0a\nvoid for depth, #b8860b tiny gold details.','#5aff3a');
+      }else{
+        termPrint('> ПРОМТЫ ДЛЯ ГЕНЕРАЦИИ КАРТИНОК\n>\n> Доступные персонажи:\n>   prompt jester    — Шут (The Fool)\n>   prompt sol       — Sol Invictus / Estival\n>   prompt elder     — Старец (The Elder)\n>   prompt dumpster  — Горящая мусорка / Демон\n>   prompt nocturnal — Лунный (The Nocturnal)\n>   prompt cat       — Кот из бара\n>   prompt archivist — Архивариус\n>   prompt moss      — Мох\n>\n> Эти промты можно скормить в Midjourney / Stable Diffusion /\n> DALL-E / Flux для генерации официальных артов персонажей.\n> Стилистика: Beksinski + Dore + Byzantine icons + pixel-adjacent.\n> Все промты на английском с палитрой брендбука Ardet.','#b8860b');
+      }break;
     case'map':
       termPrint(generateASCIIMap(),'#1a8c1a');break;
     case'status':
