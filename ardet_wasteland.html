@@ -10853,22 +10853,16 @@ function drawCinematicTint(){
     const gnY=Math.floor(hash(i,t*.3,22)*VH);
     rect(X,gnX,gnY,1,1,hash(i,t*.3,33)>.5?'#fff':'#000');
   }
-  // Larger grain clusters (2x2) for texture
-  X.globalAlpha=.035;
-  for(let i=0;i<10;i++){
+  // Larger grain clusters (2x2) — sparse
+  X.globalAlpha=.025;
+  for(let i=0;i<5;i++){
     const gnX=Math.floor(hash(i+40,t*.2,11)*VW);
     const gnY=Math.floor(hash(i+40,t*.2,22)*VH);
     rect(X,gnX,gnY,2,2,hash(i+40,t*.2,33)>.5?'#fff':'#000');
   }
   X.globalAlpha=1;
 
-  // ── SCANLINE HINT — subtle horizontal lines ──
-  X.globalAlpha=.02;
-  X.fillStyle='#000';
-  for(let y=0;y<VH;y+=2){
-    rect(X,0,y,VW,1);
-  }
-  X.globalAlpha=1;
+  // ── SCANLINE HINT — disabled (caused artifacts at pixelated scale) ──
 
   // ── CHROMATIC ABERRATION edges ──
   X.globalAlpha=.04;
