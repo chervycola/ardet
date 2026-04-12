@@ -10294,7 +10294,7 @@ let savePopup={life:0};
 function saveGame(){
   try{
     const data={
-      px:Math.floor(player.x),py:Math.floor(player.y),
+      // Position NOT saved — player always spawns at campfire center
       visited:Array.from(visited),
       collected:Array.from(collected),
       secretFound:Array.from(secretFound),
@@ -10323,7 +10323,8 @@ function loadGame(){
     const raw=localStorage.getItem('ardet_save');
     if(!raw)return false;
     const data=JSON.parse(raw);
-    player.x=data.px||900;player.y=data.py||1000;
+    // Always spawn at campfire center (900,1000) — position not restored
+    player.x=900;player.y=1000;
     player.tx=player.x;player.ty=player.y;
     (data.visited||[]).forEach(v=>visited.add(v));
     (data.collected||[]).forEach(c=>collected.add(c));
