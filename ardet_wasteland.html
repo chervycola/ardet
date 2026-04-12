@@ -1115,7 +1115,7 @@ const locs=[
 
   // ── RUSTED HIGHWAY ──
   {id:'exit',name:'Выход в Пустошь',x:2000,y:850,w:60,h:40,zone:'highway',
-    look:'Дорога ведёт в никуда. На указателе нацарапано @ardet_mirror. Единственный сигнал из этой частоты.',
+    look:'Дорога ведёт в никуда. За ней — мёртвый интернет.\n\nDead Internet Theory, 2019: большая часть контента в сети генерируется ботами для ботов. Люди — меньшинство. Живых страниц — меньше, чем 404-х. Pew Research, 2024: 38% всех веб-страниц, существовавших в 2013-м, больше не доступны. Link rot. Цифровое гниение.\n\n11.10.2024 — пожар в дата-центре Internet Archive. Wayback Machine, последний хранитель мёртвых страниц, сам загорелся. Ardet.\n\nНа указателе нацарапано @ardet_mirror. Единственный сигнал из этой частоты. Дальше — шум, который притворяется речью.',
     useAction:'links'},
   {id:'train',name:'Ржавый поезд',x:2200,y:680,w:120,h:50,zone:'highway',
     look:'Два вагона, сошедших с рельс. Машинист думает — из трубы идёт пар. Или душа. Платонов не различал — и мы не будем. Рельсы кончились в 2034-м. Коммунизм — в 1991-м. Для машиниста оба события произошли в одну и ту же секунду, и обе секунды ещё не наступили. Он на маршруте. Маршрут — внутренний. Прибытие — никогда.',
@@ -10409,22 +10409,22 @@ function drawIdleMsg(){
 // WHISPERS (#5)
 // ═══════════════════════════════════════
 let whisper={text:'',life:0};
-const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...87 миллионов... cambridge analytica... палец помнит движение...',junkyard:'...автопилот всё ещё едет... серверов больше нет, а она снимает...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...школа №1... 01.09... учебная тревога повторяется...',exit:'...404... страница не найдена...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...beeple... 69 миллионов... за jpeg...',powerline:'...фантомный гул...',ruins:'...аннушка уже разлила... примус починен...',pipeline:'...nord stream... 26.09.2022... пузыри четверо суток...',watchtower:'...prism... xkeyscore... сорм-3... кто-то только что ушёл...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',altar:'...приложи ладонь. мох ждал.',posterwall:'...пять свечей... пять дат... выход был заперт снаружи...',banner:'...coming soon...'};
+const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...amor fati...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...87 миллионов... cambridge analytica... палец помнит движение...',junkyard:'...автопилот всё ещё едет... серверов больше нет, а она снимает...',train:'...машинист думает... рельсы кончились...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...школа №1... 01.09... учебная тревога повторяется...',exit:'...dead internet... 38% страниц уже не существуют... link rot...',crater:'...монета... ребро... между...',overpass:'...сверхчеловек прислал sms...',riverbed:'...вода помнит цвет...',billboard:'...beeple... 69 миллионов... за jpeg...',powerline:'...фантомный гул...',ruins:'...аннушка уже разлила... примус починен...',pipeline:'...nord stream... 26.09.2022... пузыри четверо суток...',watchtower:'...prism... xkeyscore... сорм-3... кто-то только что ушёл...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',altar:'...приложи ладонь. мох ждал.',posterwall:'...пять свечей... пять дат... выход был заперт снаружи...',banner:'...coming soon...'};
 function checkWhisper(){
   if(whisper.life>0)return;
   locs.forEach(l=>{
     if(!whisperMap[l.id])return;
     const dx=player.x-l.x-l.w/2,dy=player.y-l.y-l.h/2;
     if(Math.sqrt(dx*dx+dy*dy)<70&&!player.moving){
-      whisper={text:whisperMap[l.id],life:180,x:l.x+l.w/2,y:l.y-10};
+      whisper={text:whisperMap[l.id],life:360,x:l.x+l.w/2,y:l.y-10};
     }
   });
 }
 function drawWhisper(){
   if(whisper.life<=0)return;
-  const WHISP_TOTAL=180;
-  const sx=whisper.x-cam.x,sy=whisper.y-cam.y-((WHISP_TOTAL-whisper.life)*.25);
-  const a=whisper.life>140?((WHISP_TOTAL-whisper.life)/40):whisper.life/140;
+  const WHISP_TOTAL=360;
+  const sx=whisper.x-cam.x,sy=whisper.y-cam.y-((WHISP_TOTAL-whisper.life)*.12);
+  const a=whisper.life>300?((WHISP_TOTAL-whisper.life)/60):whisper.life/300;
   X.globalAlpha=a*.35;X.fillStyle=P.bone;X.font='7px "Press Start 2P"';
   X.textAlign='center';X.fillText(whisper.text,sx,sy);X.textAlign='left';
   X.globalAlpha=1;whisper.life--;
@@ -11709,7 +11709,7 @@ const menuInscriptions={
   raven:'.pdf → .epub → .apk → .dna',
   lake:'рыба — единственный оптимист.',
   basement:'углов — пять. вчера было четыре.',
-  exit:'404 — единственная честная страница.',
+  exit:'dead internet. 38% страниц 2013 года — уже 404. link rot.',
   train:'рельсы кончились. маршрут — внутренний.',
   bus:'SPECIAL: все единицы.',
   junkyard:'вход — разное. выход — куб.',
