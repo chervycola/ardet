@@ -66,15 +66,15 @@
 -->
 <title>ARDET — Пустошь</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=UnifrakturMaguntia&family=Pirata+One&display=swap');
-  @font-face{font-family:'Gothic Mother';src:local('Gothic Mother');font-display:swap}
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=UnifrakturMaguntia&family=Pirata+One&family=Metal+Mania&display=swap');
+  @font-face{font-family:'Gothic Mother';src:local('Gothic Mother'),local('GothicMother');font-display:swap}
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:'Press Start 2P',monospace;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   body{cursor:none}
   #entry{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;z-index:1000;transition:opacity 2s}
   #entry.out{opacity:0;pointer-events:none}
   #entry-logo{
-    font-family:'Gothic Mother','Pirata One','UnifrakturMaguntia',cursive;
+    font-family:'Gothic Mother','Metal Mania','Pirata One','UnifrakturMaguntia',cursive;
     font-size:clamp(48px,12vw,96px);
     letter-spacing:8px;
     margin-bottom:60px;
@@ -6386,70 +6386,36 @@ const locDraw={
   },
   // ═══ NEW TERRAIN FEATURE DRAWS ═══
   crater(x,y){
-    // ═══ CRATER — animated elements only (static bowl baked in buildTerrain) ═══
-
-    // ── GLOWING MOLTEN CENTER ──
-    const pulse=.15+.1*Math.sin(t*.006);
-    X.globalAlpha=pulse;
-    X.beginPath();X.arc(x+25,y+19,10,0,Math.PI*2);
-    const cg=X.createRadialGradient(x+25,y+19,0,x+25,y+19,10);
-    cg.addColorStop(0,'rgba(255,100,20,1)');
-    cg.addColorStop(.5,'rgba(139,0,0,.6)');
-    cg.addColorStop(1,'rgba(74,26,10,0)');
-    X.fillStyle=cg;X.fill();
-    X.globalAlpha=1;
-    // Hot center dot
-    if(Math.sin(t*.02)>.3){
-      px(X,x+25,y+19,P.f2);
-      px(X,x+24,y+19,P.f1);
-      px(X,x+26,y+19,P.f1);
-    }
-
-    // ── HEAT SHIMMER waves above ──
-    for(let i=0;i<7;i++){
-      const hx=x+12+Math.sin(t*.01+i*.7)*3+i*3;
-      const hy=y+8+Math.sin(t*.015+i*1.3)*2;
-      X.globalAlpha=.08;
-      rect(X,hx,hy,3,1,P.f1);
-      X.globalAlpha=.05;
-      rect(X,hx,hy-2,2,1,P.f2);
+    // ═══ CRATER — ultra-light animated overlay ═══
+    // Molten center pulse — simple rects, no gradient
+    const pulse=Math.sin(t*.006);
+    if(pulse>0){
+      X.globalAlpha=pulse*.2;
+      rect(X,x+20,y+14,10,10,'#ff6414');
+      rect(X,x+22,y+16,6,6,'#8b0000');
       X.globalAlpha=1;
     }
-
-    // ── THE COIN on the rim ──
+    // Hot center dot
+    if(Math.sin(t*.02)>.3){
+      px(X,x+25,y+19,P.f2);px(X,x+24,y+19,P.f1);px(X,x+26,y+19,P.f1);
+    }
+    // Heat shimmer — 3 instead of 7
+    for(let i=0;i<3;i++){
+      const hx=x+14+Math.sin(t*.01+i)*4+i*6;
+      const hy=y+8+Math.sin(t*.015+i*1.3)*2;
+      X.globalAlpha=.07;rect(X,hx,hy,2,1,P.f1);X.globalAlpha=1;
+    }
+    // Coin — simple, no gradient
     const coinX=x+45,coinY=y+11;
-    const coinSpin=Math.sin(t*.003)*.3+.7;
-    X.globalAlpha=.4;
-    rect(X,coinX-1,coinY+8,4,1,'#000');
-    X.globalAlpha=1;
-    X.fillStyle=P.gold;
-    X.beginPath();
-    X.ellipse(coinX,coinY+4,2,4,0,0,Math.PI*2);
-    X.fill();
-    X.globalAlpha=coinSpin;
-    X.fillStyle='#ffeb99';
-    rect(X,coinX-1,coinY+1,1,3);
-    X.globalAlpha=1;
-    X.fillStyle=P.damber;
-    rect(X,coinX+1,coinY+1,1,6);
-    px(X,coinX-1,coinY+3,P.damber);
-    px(X,coinX,coinY+4,P.damber);
-    // Coin glow
-    X.globalAlpha=.15+.08*Math.sin(t*.02);
-    const coinGlow=X.createRadialGradient(coinX,coinY+4,0,coinX,coinY+4,10);
-    coinGlow.addColorStop(0,'rgba(218,165,32,1)');
-    coinGlow.addColorStop(1,'rgba(0,0,0,0)');
-    X.fillStyle=coinGlow;X.fillRect(coinX-10,coinY-6,20,20);
-    X.globalAlpha=1;
-
-    // ── EMBERS floating up from molten center ──
-    for(let i=0;i<4;i++){
-      const ePh=((t*.012+i*.25)%1);
-      const ex_=x+25+Math.sin(t*.008+i*2)*8;
-      const ey_=y+17-ePh*18;
-      X.globalAlpha=(1-ePh)*.7;
-      px(X,ex_,ey_,i%2?P.f2:P.f1);
-      if(ePh<.2)px(X,ex_+1,ey_,'#ffffcc');
+    X.globalAlpha=.4;rect(X,coinX-1,coinY+8,4,1,'#000');X.globalAlpha=1;
+    rect(X,coinX-1,coinY+1,3,7,P.gold);
+    rect(X,coinX,coinY+2,1,5,P.damber);
+    px(X,coinX-1,coinY+3,'#ffeb99');
+    // Embers — 2 instead of 4
+    for(let i=0;i<2;i++){
+      const ePh=((t*.012+i*.5)%1);
+      X.globalAlpha=(1-ePh)*.6;
+      px(X,x+25+Math.sin(t*.008+i*3)*6,y+17-ePh*14,P.f2);
       X.globalAlpha=1;
     }
   },
