@@ -1562,6 +1562,19 @@ function buildTerrain(){
       rect(TX,sx_,sy_,2,1,'#0e0a06');
     }
   }
+  // Melted glass shards around crater rim
+  for(let i=0;i<9;i++){
+    const ang=i/9*Math.PI*2+.4;
+    const gx=crX+Math.cos(ang)*22;
+    const gy=crY+Math.sin(ang)*17;
+    rect(TX,gx,gy,2,1,hash(i,0,11)>.5?'#4a3a1a':'#2a1a0a');
+    if(hash(i,0,22)>.5)px(TX,gx+1,gy-1,'#8a7a4a');
+  }
+  // Small skull half-buried
+  rect(TX,crX-17,crY+5,4,2,P.bone);rect(TX,crX-17,crY+7,4,1,P.dbone);
+  px(TX,crX-16,crY+5,P.d2);px(TX,crX-14,crY+5,P.d2);
+  // Fallen messenger robe fragment
+  rect(TX,crX-9,crY+9,3,1,'#1b1464');rect(TX,crX-8,crY+10,2,1,'#0e0a38');
 
   // ═══ BROKEN POWER LINES — along highway ═══
   const poles=[[1900,720],[2050,710],[2250,730],[2450,715],[2650,725],[2800,710]];
@@ -6354,42 +6367,7 @@ const locDraw={
   },
   // ═══ NEW TERRAIN FEATURE DRAWS ═══
   crater(x,y){
-    // ═══ CRATER — THE COIN ON ITS EDGE ═══
-
-    // ── CRATER BOWL — dithered concentric rings ──
-    for(let dy=0;dy<38;dy+=1){
-      for(let dx=0;dx<50;dx+=1){
-        const cdx=(dx-25)/25,cdy=(dy-19)/19;
-        const d=Math.sqrt(cdx*cdx+cdy*cdy);
-        if(d<1){
-          const depth=1-d;
-          const shade=Math.floor(8+depth*12);
-          let c=`rgb(${shade},${shade-1},${shade-2})`;
-          // Random cracks
-          if(hash(dx,dy,77)>.96)c='#020102';
-          rect(X,x+dx,y+dy,1,1,c);
-        }
-      }
-    }
-
-    // ── CRATER RIM — raised, jagged ──
-    for(let a=0;a<30;a++){
-      const ang=a/30*Math.PI*2;
-      const rimR=24+hash(a,0,11)*3;
-      const rx=x+25+Math.cos(ang)*rimR;
-      const ry=y+19+Math.sin(ang)*19;
-      rect(X,rx,ry,2,1,hash(a,0,22)>.5?'#3a2e1e':'#2a1e14');
-    }
-
-    // ── SCORCHED GROUND STREAKS radiating outward ──
-    for(let a=0;a<6;a++){
-      const angle=a*Math.PI/3+.3;
-      for(let r=24;r<34;r++){
-        const sx_=x+25+Math.cos(angle)*r+hash(r,a,1)*2;
-        const sy_=y+19+Math.sin(angle)*r+hash(r,a,2)*2;
-        rect(X,sx_,sy_,2,1,'#0a0604');
-      }
-    }
+    // ═══ CRATER — animated elements only (static bowl baked in buildTerrain) ═══
 
     // ── GLOWING MOLTEN CENTER ──
     const pulse=.15+.1*Math.sin(t*.006);
@@ -6419,43 +6397,25 @@ const locDraw={
       X.globalAlpha=1;
     }
 
-    // ── MELTED SAND / GLASS SHARDS around rim ──
-    for(let i=0;i<9;i++){
-      const ang=i/9*Math.PI*2+.4;
-      const gx=x+25+Math.cos(ang)*22;
-      const gy=y+19+Math.sin(ang)*17;
-      rect(X,gx,gy,2,1,hash(i,0,11)>.5?'#4a3a1a':'#2a1a0a');
-      if(hash(i,0,22)>.5)px(X,gx+1,gy-1,'#8a7a4a'); // glass glint
-    }
-
-    // ── THE COIN on the rim — standing on edge ──
-    // Position — on the east rim
+    // ── THE COIN on the rim ──
     const coinX=x+45,coinY=y+11;
-    const coinSpin=Math.sin(t*.003)*.3+.7; // slow wobble
-
-    // Coin shadow
+    const coinSpin=Math.sin(t*.003)*.3+.7;
     X.globalAlpha=.4;
     rect(X,coinX-1,coinY+8,4,1,'#000');
     X.globalAlpha=1;
-
-    // Coin body — vertical oval (standing on edge)
     X.fillStyle=P.gold;
     X.beginPath();
     X.ellipse(coinX,coinY+4,2,4,0,0,Math.PI*2);
     X.fill();
-    // Highlight
     X.globalAlpha=coinSpin;
     X.fillStyle='#ffeb99';
     rect(X,coinX-1,coinY+1,1,3);
     X.globalAlpha=1;
-    // Dark edge
     X.fillStyle=P.damber;
     rect(X,coinX+1,coinY+1,1,6);
-
-    // Coin surface details (face)
     px(X,coinX-1,coinY+3,P.damber);
     px(X,coinX,coinY+4,P.damber);
-    // Pulse glow
+    // Coin glow
     X.globalAlpha=.15+.08*Math.sin(t*.02);
     const coinGlow=X.createRadialGradient(coinX,coinY+4,0,coinX,coinY+4,10);
     coinGlow.addColorStop(0,'rgba(218,165,32,1)');
@@ -6473,17 +6433,6 @@ const locDraw={
       if(ePh<.2)px(X,ex_+1,ey_,'#ffffcc');
       X.globalAlpha=1;
     }
-
-    // ── SMALL SKULL half-buried on opposite side ──
-    rect(X,x+8,y+24,4,2,P.bone);
-    rect(X,x+8,y+26,4,1,P.dbone);
-    px(X,x+9,y+24,P.d2);
-    px(X,x+11,y+24,P.d2);
-
-    // ── FALLEN MESSENGER — hint of Nyarlathotep ──
-    // Feather/robe fragment in the ash
-    rect(X,x+16,y+28,3,1,'#1b1464');
-    rect(X,x+17,y+29,2,1,'#0e0a38');
   },
   overpass(x,y){
     // Dangling rebar animation
