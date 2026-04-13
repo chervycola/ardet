@@ -8078,14 +8078,6 @@ const locDraw={
     // Peeling corner on top poster
     const peel=Math.sin(t*.008)*1.5;
     rect(X,x+58+peel,y+5,3,4,P.dstone);
-    // Faint glow suggesting "click me"
-    if(t%120<60){
-      X.globalAlpha=.03+.01*Math.sin(t*.01);
-      const g=X.createRadialGradient(x+33,y+22,0,x+33,y+22,30);
-      g.addColorStop(0,'rgba(184,134,11,.5)');g.addColorStop(1,'rgba(0,0,0,0)');
-      X.fillStyle=g;X.fillRect(x,y,65,45);
-      X.globalAlpha=1;
-    }
 
     // ═══════════════════════════════════════════
     // ── 5 FIRE-MEMORIAL POSTERS with WAX SEALS ──
@@ -8125,30 +8117,26 @@ const locDraw={
       px(X,x+sx_,y+sy_,P.bone);
     });
 
-    // ── 5 CANDLES at the base — all burning steadily ──
+    // ── 5 CANDLES at the base — simplified (single cheap glow) ──
     for(let ci=0;ci<5;ci++){
       const cdx=x+8+ci*12;
       const cdy=y+45;
       // Wax puddle base
       rect(X,cdx-1,cdy+5,5,2,'#e8dcc8');
       rect(X,cdx,cdy+7,3,1,'#c8b098');
-      // Candle body — all same height because simultaneous lighting
+      // Candle body
       rect(X,cdx,cdy-3,3,8,P.bone);
       rect(X,cdx,cdy-3,3,1,'#e8dcc8');
       // Wick
       px(X,cdx+1,cdy-4,'#1a0806');
-      // Flame — all burning EXACTLY in sync (impossible in wind)
-      const flk=Math.sin(t*.1+ci*.001)*.3;
+      // Flame — simple
       X.globalAlpha=.9;
-      rect(X,cdx+1+flk*.2,cdy-6,1,2,P.f2);
-      px(X,cdx+1+flk*.2,cdy-7,'#ffffcc');
+      rect(X,cdx+1,cdy-6,1,2,P.f2);
+      px(X,cdx+1,cdy-7,'#ffffcc');
       X.globalAlpha=1;
-      // Glow around each candle
-      X.globalAlpha=.1+.03*Math.sin(t*.1+ci);
-      const cg=X.createRadialGradient(cdx+1,cdy-5,0,cdx+1,cdy-5,6);
-      cg.addColorStop(0,'rgba(218,165,32,1)');
-      cg.addColorStop(1,'rgba(0,0,0,0)');
-      X.fillStyle=cg;X.fillRect(cdx-5,cdy-11,12,12);
+      // Cheap amber glow (plain rect, no gradient)
+      X.globalAlpha=.08+.02*Math.sin(t*.1+ci);
+      rect(X,cdx-3,cdy-8,9,6,P.amber);
       X.globalAlpha=1;
     }
 
