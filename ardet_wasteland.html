@@ -10428,7 +10428,8 @@ function drawLorePopup(){
   X.globalAlpha=a*.9;
   // Dynamic height based on text length
   const w=Math.min(VW-20,440);
-  const maxChars=Math.floor((w-16)/6.5);
+  // Press Start 2P is monospace; at 8px each char is ~8px wide
+  const maxChars=Math.floor((w-16)/8);
   // Estimate lines needed
   const estLines=Math.max(3,Math.ceil(lorePopup.text.length/maxChars)+1);
   const boxH=Math.min(VH-40,Math.max(75,estLines*13+18));
@@ -10442,16 +10443,22 @@ function drawLorePopup(){
   const elapsed=LORE_TOTAL-lorePopup.life;
   const charCount=Math.min(lorePopup.text.length,Math.floor(elapsed/3));
   const txt=lorePopup.text.substring(0,charCount);
-  // Word wrap with more lines
+  // Word wrap — hard-break words longer than maxChars
   const words=txt.split(' ');let line='';let ly=y_+16;
   words.forEach(word=>{
+    // If word itself is longer than maxChars, hard-break it
+    while(word.length>maxChars){
+      if(line.trim()){X.fillText(line,x_+8,ly);ly+=13;line='';}
+      X.fillText(word.substring(0,maxChars),x_+8,ly);ly+=13;
+      word=word.substring(maxChars);
+    }
     if((line+word).length>maxChars){X.fillText(line,x_+8,ly);ly+=13;line=word+' ';}
     else line+=word+' ';
   });
   if(line.trim())X.fillText(line,x_+8,ly);
   // Blinking cursor while typing
   if(charCount<lorePopup.text.length&&t%40<20){
-    const cursorX=x_+8+line.length*6.5;
+    const cursorX=x_+8+line.length*8;
     rect(X,cursorX,ly-8,5,9,P.term);
   }
   X.globalAlpha=1;
