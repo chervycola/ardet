@@ -9941,25 +9941,31 @@ function renderLighting(){
   LX.fillStyle=`rgba(3,2,1,${darkAlpha})`;LX.fillRect(0,0,VW,VH);
   LX.globalCompositeOperation='destination-out';
   const lights=getLights();
+  const dayMod=.8+.4*(1-dayCycle);
+  // Build on-screen list once — avoid recomputing per pass
+  const visible=[];
   lights.forEach(l=>{
     const sx=l.x-cam.x,sy=l.y-cam.y;
     const fl=1+Math.sin(t*(.02+l.flicker*5)+l.x)*l.flicker;
-    const dayMod=.8+.4*(1-dayCycle); // lights bigger at night
     const r=l.r*fl*dayMod;
-    const g=LX.createRadialGradient(sx,sy,0,sx,sy,r);
+    // Cull lights whose bounding circle doesn't touch the viewport
+    if(sx+r<0||sx-r>VW||sy+r<0||sy-r>VH)return;
+    visible.push({sx,sy,r,fl,color:l.color});
+  });
+  visible.forEach(v=>{
+    const g=LX.createRadialGradient(v.sx,v.sy,0,v.sx,v.sy,v.r);
     g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.3,'rgba(255,255,255,.6)');g.addColorStop(.7,'rgba(255,255,255,.2)');g.addColorStop(1,'rgba(255,255,255,0)');
-    LX.fillStyle=g;LX.fillRect(sx-r,sy-r,r*2,r*2);
+    LX.fillStyle=g;LX.fillRect(v.sx-v.r,v.sy-v.r,v.r*2,v.r*2);
   });
   LX.globalCompositeOperation='source-over';
   X.drawImage(LC,0,0);
   X.globalCompositeOperation='lighter';
-  lights.forEach(l=>{
-    const sx=l.x-cam.x,sy=l.y-cam.y;
-    const fl=1+Math.sin(t*(.02+l.flicker*5)+l.x)*l.flicker;
-    const r=l.r*fl*.7*(.8+.4*(1-dayCycle));const[cr,cg,cb]=l.color;
-    const g=X.createRadialGradient(sx,sy,0,sx,sy,r);
+  visible.forEach(v=>{
+    const r2=v.r*.7;
+    const[cr,cg,cb]=v.color;
+    const g=X.createRadialGradient(v.sx,v.sy,0,v.sx,v.sy,r2);
     g.addColorStop(0,`rgba(${cr},${cg},${cb},.07)`);g.addColorStop(.5,`rgba(${cr},${cg},${cb},.025)`);g.addColorStop(1,`rgba(${cr},${cg},${cb},0)`);
-    X.fillStyle=g;X.fillRect(sx-r,sy-r,r*2,r*2);
+    X.fillStyle=g;X.fillRect(v.sx-r2,v.sy-r2,r2*2,r2*2);
   });
   X.globalCompositeOperation='source-over';
 }
