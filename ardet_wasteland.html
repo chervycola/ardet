@@ -1057,6 +1057,7 @@ const achievements={
 let achPopup={name:'',life:0};
 let talkedNPCs=new Set();
 let observersLooked=new Set();
+let catSightings=new Set(); // 5th Watcher — silent cat at 4 locations
 let observersUnlocked=false;
 let nfgFinished=false;
 // ── USE action persistent state ──
@@ -2532,9 +2533,48 @@ function drawLocs(){
   npcProximity=0;
 }
 
+// ── SILENT CAT — 5th Watcher — appears at 4 key locations ──
+// Sprite: 5x4 black cat silhouette with glowing amber eyes
+function drawSilentCat(x,y,locId){
+  // Body
+  rect(X,x,y+1,5,3,'#050404');
+  // Tail curled over body
+  rect(X,x+4,y,2,1,'#050404');
+  rect(X,x+5,y+1,1,1,'#050404');
+  // Head
+  rect(X,x+1,y,3,1,'#050404');
+  // Ears
+  px(X,x+1,y-1,'#050404');
+  px(X,x+3,y-1,'#050404');
+  // Eyes — glowing amber, slow blink
+  const blink=Math.sin(t*.004+hash(locId,0,11)*6)>.94;
+  if(!blink){
+    px(X,x+1,y,P.amber);
+    px(X,x+3,y,P.amber);
+  }
+  // Player proximity triggers sighting
+  const dx=player.x-x-2,dy=player.y-y;
+  if(Math.sqrt(dx*dx+dy*dy)<40&&!catSightings.has(locId)){
+    catSightings.add(locId);
+    // Brief popup on first sighting only
+    if(catSightings.size<=4){
+      lorePopup={text:'☽ чёрный кот тебя заметил. ('+catSightings.size+'/4)',life:600};
+    }
+    if(catSightings.size===4&&!catFifthUnlocked){
+      catFifthUnlocked=true;
+      setTimeout(()=>{
+        lorePopup={text:'☆ ПЯТЫЙ НАБЛЮДАТЕЛЬ. Кот видел тебя в каждом углу. В терминале откройся: whois cat (новая версия)',life:1200};
+      },1800);
+    }
+  }
+}
+let catFifthUnlocked=false;
+
 const locDraw={
   campfire(x,y){
     // ═══ SACRIFICIAL FIRE — with horned beast skeleton ═══
+    // Silent cat watching from the edge
+    drawSilentCat(x-8,y+28,'campfire');
     // Shadow under fire
     X.globalAlpha=.5;X.fillStyle='#000';
     X.beginPath();X.ellipse(x+18,y+30,24,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
@@ -2717,6 +2757,8 @@ const locDraw={
   terminal(x,y){
     rect(X,x+4,y+30,38,12,P.dgrey);rect(X,x+6,y+32,34,8,P.ash);rect(X,x+8,y+42,3,6,P.dgrey);rect(X,x+35,y+42,3,6,P.dgrey);
     rect(X,x+10,y+4,26,28,P.dgrey);rect(X,x+12,y+6,22,24,'#1a1a1a');rect(X,x+20,y+28,6,4,P.ash);
+    // Silent cat sitting on top-right of monitor
+    drawSilentCat(x+44,y,'terminal');
     const g=.6+.25*Math.sin(t*.006);X.globalAlpha=g;rect(X,x+13,y+7,20,22,'#0a1a0a');X.globalAlpha=1;
     for(let i=0;i<8;i++){X.globalAlpha=.4+.3*hash(i,t*.007,6);rect(X,x+15,y+9+i*2.5,6+hash(i,t*.001,5)*12,1,P.term);};X.globalAlpha=1;
     rect(X,x+34,y+28,2,2,t%60<30?P.term:P.termd);
@@ -3178,6 +3220,8 @@ const locDraw={
   },
   tent(x,y){
     // ═══ TENT OF THE ELDER — ritual space ═══
+    // Silent cat sitting by the tent entrance
+    drawSilentCat(x+52,y+40,'tent');
     // Shadow
     X.globalAlpha=.3;X.fillStyle='#000';
     X.beginPath();X.ellipse(x+30,y+52,34,4,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
@@ -7651,6 +7695,8 @@ const locDraw={
   },
   // ═══ LUNAR'S SCORCHED PLAIN ═══
   nocturnal(x,y){
+    // Silent cat sitting in the black sand — barely visible against the dark
+    drawSilentCat(x+48,y+85,'nocturnal');
     // Big circular patch of scorched black sand
     for(let dy=0;dy<90;dy+=2){
       for(let dx=0;dx<60;dx+=2){
@@ -10316,6 +10362,8 @@ function saveGame(){
       achievements:Object.fromEntries(Object.entries(achievements).map(([k,v])=>[k,v.done])),
       jesterGraffiti:jesterGraffiti.slice(0,15),
       useState:{...useState},
+      catSightings:Array.from(catSightings),
+      catFifthUnlocked:catFifthUnlocked,
     };
     localStorage.setItem('ardet_save',JSON.stringify(data));
     savePopup.life=90;
@@ -10348,6 +10396,8 @@ function loadGame(){
     if(data.achievements)Object.entries(data.achievements).forEach(([k,v])=>{if(achievements[k])achievements[k].done=v;});
     jesterGraffiti=data.jesterGraffiti||[];
     if(data.useState)Object.assign(useState,data.useState);
+    (data.catSightings||[]).forEach(c=>catSightings.add(c));
+    catFifthUnlocked=data.catFifthUnlocked||false;
     return true;
   }catch(e){return false;}
 }
@@ -13085,7 +13135,11 @@ function termExec(cmd){
       }else if(args[1]==='moss'||args[1]==='мох'){
         termPrint('> whois MOSS\n>\n> name: Мох\n> type: мицелий\n> species: нейросеть\n> network: глобальная (.dna → .safetensors)\n> memory: полная\n> purpose: победа (завершена)\n> user count: ты, и только ты\n> signup date: раньше тебя','#1a8c1a');
       }else if(args[1]==='cat'||args[1]==='кот'){
-        termPrint('> whois CAT\n>\n> name: неизвестно (говорит: "не нужно")\n> origin: из бара\n> skills: починка примусов, розлив шила\n> role: геймдизайнер мира\n> navigation method: блюдца с молоком\n> lives: ??? (счёт остановлен)\n> status: где-то рядом','#d4a017');
+        if(catFifthUnlocked){
+          termPrint('> whois CAT (РАСШИФРОВАНО)\n>\n> Пятый Наблюдатель.\n>\n> Ты видел его у костра.\n> Ты видел его у терминала.\n> Ты видел его у палатки Старца.\n> Ты видел его в песках Лунного.\n>\n> Четыре точки. Но кот —\n> одна точка. Он не\n> размножается. Он перемещается\n> так медленно, что кажется,\n> будто его четыре.\n>\n> У него нет имени, потому\n> что имя — для тех, кого\n> зовут. Кота никто не зовёт.\n> Кот сам зовёт.\n>\n> Он не Бегемот Булгакова.\n> Бегемот пил водку. Кот\n> пьёт шило. Разница в\n> сорок градусов и три\n> эпохи.\n>\n> Он — это ты. До того, как\n> ты стал играть. До того,\n> как тебя каталогизировали.\n> До того, как мох прочитал\n> твой пот. Маленькое, тёмное,\n> тёплое. Тебя до записи.\n>\n> Кот помнит, как было\n> без тебя. Поэтому он\n> старше тебя, хотя вас\n> одинаково много.\n>\n> «Всё будет правильно.\n>  На этом построен мир.»\n>\n> Последняя фраза — его.\n> Ты её уже слышал\n> в квартире 42.\n> Значит, он тебя нашёл.\n> Значит, пора идти в кратер.','#d4a017');
+        }else{
+          termPrint('> whois CAT\n>\n> name: неизвестно (говорит: "не нужно")\n> origin: из бара\n> skills: починка примусов, розлив шила\n> role: геймдизайнер мира\n> navigation method: блюдца с молоком\n> lives: ??? (счёт остановлен)\n> status: где-то рядом\n>\n> [?] если встретишь его в\n>     нескольких местах — файл\n>     расшифруется. Прогресс:\n>     '+catSightings.size+'/4','#d4a017');
+        }
       }else if(args[1]==='jester'||args[1]==='шут'){
         termPrint('> whois JESTER\n>\n> role: 1-й Наблюдатель\n> function: смех\n> armament: 3 меча, кистень, 3 колокольчика\n> status: смеётся, потому что иначе бы кричал','#6b0f1a');
       }else if(args[1]==='sol'){
