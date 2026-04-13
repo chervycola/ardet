@@ -2569,6 +2569,25 @@ function drawSilentCat(sx,sy,locId){
 }
 let catFifthUnlocked=false;
 
+// Distance-based LOD helper — true if player is close enough for full detail
+function playerNearLoc(loc,threshold){
+  const dx=player.x-(loc.x+loc.w/2),dy=player.y-(loc.y+loc.h/2);
+  return dx*dx+dy*dy < threshold*threshold;
+}
+// Simplified silhouette for distant heavy buildings — cheap dark block
+function drawBuildingSilhouette(x,y,w,h,roofColor){
+  rect(X,x,y,w,h,P.dstone);
+  rect(X,x+2,y+2,w-4,h-4,'#1a1a22');
+  // Dither top-edge to blend with sky
+  rect(X,x,y,w,2,roofColor||P.dgrey);
+  // Suggest windows at a few points
+  for(let wy=10;wy<h-8;wy+=14){
+    for(let wx=6;wx<w-8;wx+=16){
+      rect(X,x+wx,y+wy,3,4,'#050305');
+    }
+  }
+}
+
 const locDraw={
   campfire(x,y){
     // ═══ SACRIFICIAL FIRE — with horned beast skeleton ═══
@@ -2830,6 +2849,15 @@ const locDraw={
     px(X,x+1,y+51,P.toxic);
   },
   library(x,y){
+    if(!playerNearLoc(locs.find(l=>l.id==='library'),350)){
+      // Pediment triangle silhouette
+      X.fillStyle=P.dstone;
+      X.beginPath();X.moveTo(x+3,y+6);X.lineTo(x+51,y-18);X.lineTo(x+99,y+6);X.closePath();X.fill();
+      drawBuildingSilhouette(x+4,y+6,94,72,P.dstone);
+      // Hint columns
+      for(let c=0;c<6;c++)rect(X,x+8+c*16,y+20,5,38,'#1a1a22');
+      return;
+    }
     // ═══ CLASSICAL TEMPLE OF BOOKS — Alexandria-on-Fire ═══
     // Massive stone podium on which the temple rests
     // Ground shadow
@@ -5099,6 +5127,14 @@ const locDraw={
     X.globalAlpha=1;
   },
   church(x,y){
+    // LOD: far player sees simplified silhouette
+    if(!playerNearLoc(locs.find(l=>l.id==='church'),350)){
+      drawBuildingSilhouette(x,y+8,100,78,P.dgrey);
+      // Bell tower silhouette
+      rect(X,x+6,y-25,20,40,P.dstone);
+      rect(X,x+10,y-30,12,10,P.dgrey);
+      return;
+    }
     // ═══ GOTHIC CATHEDRAL — massive, detailed ═══
     // Ground shadow
     X.globalAlpha=.35;X.fillStyle='#000';
@@ -5815,6 +5851,14 @@ const locDraw={
     rect(X,x+5,y+30,30,1,P.blood);rect(X,x+8,y+33,24,1,P.blood);
   },
   pizzeria(x,y){
+    if(!playerNearLoc(locs.find(l=>l.id==='pizzeria'),350)){
+      drawBuildingSilhouette(x,y+8,98,80,P.drust);
+      // Sign silhouette
+      rect(X,x-4,y-18,100,16,'#0a0a0a');
+      // Live red letter
+      if(t%80<40)rect(X,x+1,y-14,5,10,'#6b0f1a');
+      return;
+    }
     // ═══ ПИЦЦЕРИЯ "ВАВИЛОН" — 3-STORY RUIN, MONUMENT TO GLUTTONY ═══
     // Ground shadow
     X.globalAlpha=.4;X.fillStyle='#000';
@@ -6759,6 +6803,14 @@ const locDraw={
     }
   },
   ruins(x,y){
+    if(!playerNearLoc(locs.find(l=>l.id==='ruins'),350)){
+      drawBuildingSilhouette(x,y,108,88,P.dgrey);
+      // Lit window 42 still flickers
+      if(Math.sin(t*.003)>.2){
+        rect(X,x+72,y+14,8,3,P.amber);
+      }
+      return;
+    }
     // ═══ APARTMENT BLOCK #7 — 12-STORY KHRUSHCHYOVKA RUIN ═══
     // Massive Soviet panel building, half-collapsed, swarming with detail
     // Shadow
