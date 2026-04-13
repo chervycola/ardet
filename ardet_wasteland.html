@@ -9928,11 +9928,18 @@ function drawParticles(){
 // ═══════════════════════════════════════
 // LIGHTING
 // ═══════════════════════════════════════
+// Lights are static — cache once on startup
+let _lightsCache=null;
 function getLights(){
-  const lights=[];
-  locs.forEach(l=>{if(l.light)lights.push({x:l.x+l.w/2,y:l.y+l.h/2,r:l.light.r,color:l.light.color,flicker:l.light.flicker});});
-  lights.push({x:player.x+6,y:player.y+10,r:60,color:[150,120,80],flicker:.03});
-  return lights;
+  if(!_lightsCache){
+    _lightsCache=[];
+    locs.forEach(l=>{if(l.light)_lightsCache.push({x:l.x+l.w/2,y:l.y+l.h/2,r:l.light.r,color:l.light.color,flicker:l.light.flicker,isPlayer:false});});
+    _lightsCache.push({x:0,y:0,r:60,color:[150,120,80],flicker:.03,isPlayer:true});
+  }
+  // Update player light position each frame (it's the only moving one)
+  const pl=_lightsCache[_lightsCache.length-1];
+  pl.x=player.x+6;pl.y=player.y+10;
+  return _lightsCache;
 }
 function renderLighting(){
   LX.clearRect(0,0,VW,VH);
