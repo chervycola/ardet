@@ -2534,29 +2534,28 @@ function drawLocs(){
 }
 
 // ── SILENT CAT — 5th Watcher — appears at 4 key locations ──
-// Sprite: 5x4 black cat silhouette with glowing amber eyes
-function drawSilentCat(x,y,locId){
+// Takes screen coords (sx,sy) like other locDraw helpers.
+function drawSilentCat(sx,sy,locId){
   // Body
-  rect(X,x,y+1,5,3,'#050404');
-  // Tail curled over body
-  rect(X,x+4,y,2,1,'#050404');
-  rect(X,x+5,y+1,1,1,'#050404');
-  // Head
-  rect(X,x+1,y,3,1,'#050404');
-  // Ears
-  px(X,x+1,y-1,'#050404');
-  px(X,x+3,y-1,'#050404');
-  // Eyes — glowing amber, slow blink
-  const blink=Math.sin(t*.004+hash(locId,0,11)*6)>.94;
+  rect(X,sx,sy+1,5,3,'#050404');
+  rect(X,sx+4,sy,2,1,'#050404');
+  rect(X,sx+5,sy+1,1,1,'#050404');
+  rect(X,sx+1,sy,3,1,'#050404');
+  px(X,sx+1,sy-1,'#050404');
+  px(X,sx+3,sy-1,'#050404');
+  // Eyes — slow blink with per-location seed
+  const seed=locId.charCodeAt(0)*0.1;
+  const blink=Math.sin(t*.004+seed)>.94;
   if(!blink){
-    px(X,x+1,y,P.amber);
-    px(X,x+3,y,P.amber);
+    px(X,sx+1,sy,P.amber);
+    px(X,sx+3,sy,P.amber);
   }
-  // Player proximity triggers sighting
-  const dx=player.x-x-2,dy=player.y-y;
-  if(Math.sqrt(dx*dx+dy*dy)<40&&!catSightings.has(locId)){
+  // Proximity: convert screen → world by adding camera
+  if(catSightings.has(locId))return;
+  const wx=sx+cam.x,wy=sy+cam.y;
+  const dx=player.x-wx,dy=player.y-wy;
+  if(dx*dx+dy*dy<1600){ // 40^2
     catSightings.add(locId);
-    // Brief popup on first sighting only
     if(catSightings.size<=4){
       lorePopup={text:'☽ чёрный кот тебя заметил. ('+catSightings.size+'/4)',life:600};
     }
@@ -10849,57 +10848,32 @@ function updateBrainrotRecovery(){
 // CINEMATIC TINT — final pass overlay
 // ═══════════════════════════════════════
 function drawCinematicTint(){
-  // ── HEAVY VIGNETTE — dark corners, warm center ──
-  X.globalAlpha=.14;
-  const vg=X.createRadialGradient(VW/2,VH*.45,VW*.1,VW/2,VH*.5,VW*.75);
+  // ── VIGNETTE — single gradient, darker corners ──
+  X.globalAlpha=.16;
+  const vg=X.createRadialGradient(VW/2,VH*.45,VW*.15,VW/2,VH*.5,VW*.75);
   vg.addColorStop(0,'rgba(218,165,32,.08)');
-  vg.addColorStop(.3,'rgba(0,0,0,0)');
-  vg.addColorStop(.7,'rgba(10,4,2,.4)');
-  vg.addColorStop(1,'rgba(10,4,2,.85)');
+  vg.addColorStop(.35,'rgba(0,0,0,0)');
+  vg.addColorStop(.75,'rgba(10,4,2,.5)');
+  vg.addColorStop(1,'rgba(10,4,2,.9)');
   X.fillStyle=vg;X.fillRect(0,0,VW,VH);
   X.globalAlpha=1;
-  // Second pass — subtle crimson in extreme corners
-  X.globalAlpha=.06;
-  const vg2=X.createRadialGradient(VW/2,VH/2,VW*.4,VW/2,VH/2,VW*.8);
-  vg2.addColorStop(0,'rgba(0,0,0,0)');
-  vg2.addColorStop(1,'rgba(107,15,26,.7)');
-  X.fillStyle=vg2;X.fillRect(0,0,VW,VH);
-  X.globalAlpha=1;
 
-  // ── FILM GRAIN — heavier, more cinematic ──
-  X.globalAlpha=.06;
-  for(let i=0;i<40;i++){
+  // ── FILM GRAIN — lighter, fewer particles ──
+  X.globalAlpha=.05;
+  for(let i=0;i<20;i++){
     const gnX=Math.floor(hash(i,t*.3,11)*VW);
     const gnY=Math.floor(hash(i,t*.3,22)*VH);
     rect(X,gnX,gnY,1,1,hash(i,t*.3,33)>.5?'#fff':'#000');
   }
-  // Larger grain clusters (2x2) — sparse
-  X.globalAlpha=.025;
-  for(let i=0;i<5;i++){
-    const gnX=Math.floor(hash(i+40,t*.2,11)*VW);
-    const gnY=Math.floor(hash(i+40,t*.2,22)*VH);
-    rect(X,gnX,gnY,2,2,hash(i+40,t*.2,33)>.5?'#fff':'#000');
-  }
   X.globalAlpha=1;
-
-  // ── SCANLINE HINT — disabled (caused artifacts at pixelated scale) ──
 
   // ── CHROMATIC ABERRATION edges ──
   X.globalAlpha=.04;
-  rect(X,0,0,2,VH,'#6b0f1a'); // left crimson edge
-  rect(X,VW-2,0,2,VH,'#1b1464'); // right indigo edge
-  rect(X,0,0,VW,1,'#6b0f1a'); // top
-  rect(X,0,VH-1,VW,1,'#1b1464'); // bottom
+  rect(X,0,0,2,VH,'#6b0f1a');
+  rect(X,VW-2,0,2,VH,'#1b1464');
+  rect(X,0,0,VW,1,'#6b0f1a');
+  rect(X,0,VH-1,VW,1,'#1b1464');
   X.globalAlpha=1;
-
-  // ── SUBTLE LENS DIRT — occasional bright spots ──
-  if(t%120<60){
-    X.globalAlpha=.015;
-    X.fillStyle='rgba(218,165,32,.3)';
-    X.beginPath();X.arc(VW*.3,VH*.25,8,0,Math.PI*2);X.fill();
-    X.beginPath();X.arc(VW*.7,VH*.6,5,0,Math.PI*2);X.fill();
-    X.globalAlpha=1;
-  }
 }
 
 function drawBrainrot(){
