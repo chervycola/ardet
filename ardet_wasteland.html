@@ -10164,8 +10164,10 @@ function playStep(){
 // ═══════════════════════════════════════
 // WANDERING JESTER (#7)
 // ═══════════════════════════════════════
-let jesterPos={x:790,y:780}; // starts near campfire
-let jesterTarget={x:790,y:780};
+// Wandering jester starts far from campfire to avoid double-draw at spawn.
+// Also waits before first move so he doesn't jitter on spawn.
+let jesterPos={x:1500,y:400};
+let jesterTarget={x:1500,y:400};
 let jesterWait=0;
 let jesterGraffiti=[];
 const jesterPhrases=['ха!','...зачем?','горит!','слушай...','ты тут?','всё — игра','кто кого?','смешно?'];
@@ -10297,6 +10299,10 @@ function updateJester(){
 function drawJesterWandering(){
   const sx=Math.floor(jesterPos.x-cam.x),sy=Math.floor(jesterPos.y-cam.y);
   if(sx<-40||sx>VW+40||sy<-50||sy>VH+40)return;
+  // Guard: don't double-draw if wandering jester is near the campfire home
+  // (static jester NPC is already rendered there via locDraw)
+  const cf=locs[0]; // campfire is locs[0]
+  if(cf&&Math.abs(jesterPos.x-(cf.x+cf.w/2))<50&&Math.abs(jesterPos.y-(cf.y+cf.h/2))<50)return;
   // Use the full jester sprite
   drawNPC_jester(sx,sy);
   // Draw graffiti
