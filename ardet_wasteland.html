@@ -10416,6 +10416,13 @@ setInterval(saveGame,30000);
 document.addEventListener('keydown',e=>{if(['w','a','s','d','W','A','S','D','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))keys[e.key.toLowerCase()]=true;if(e.key==='Shift')keys['shift']=true;});
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='Shift')keys['shift']=false;});
 function handleKeys(){
+  // Movement keys should close modals and start walking
+  const hasMove=keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'];
+  if(hasMove&&(state==='look'||state==='menu'||state==='dialogue')){
+    if(state==='look')closeLook();
+    else if(state==='menu')hideMenu();
+    else if(state==='dialogue'){state='game';activeLoc=null;document.getElementById('dlg').classList.remove('on');}
+  }
   if(state!=='game')return;
   let dx=0,dy=0;
   if(keys['w']||keys['arrowup'])dy=-1;
