@@ -75,13 +75,13 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:'Press Start 2P',monospace;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   body{cursor:none}
-  #entry{position:fixed;inset:0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:clamp(30px,8vw,120px);background:#0a0a0a;z-index:1000;transition:opacity 2s;padding:20px}
+  #entry{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2vw,24px);background:#0a0a0a;z-index:1000;transition:opacity 2s;padding:20px}
   #entry.out{opacity:0;pointer-events:none}
-  #entry-left{display:flex;flex-direction:column;align-items:center;gap:40px}
+  #entry-left{display:contents}
   #entry-logo{
     font-family:'Gothic Mother','Metal Mania','Pirata One','UnifrakturMaguntia',cursive;
-    font-size:clamp(56px,13vw,140px);
-    letter-spacing:8px;
+    font-size:clamp(44px,9vw,96px);
+    letter-spacing:6px;
     background:linear-gradient(180deg,#e8dcc8 0%,#b8860b 30%,#8b0000 60%,#6b0f1a 80%,#3a0a08 100%);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     background-clip:text;
@@ -89,6 +89,7 @@
     animation:burn 4s ease-in-out infinite;
     position:relative;
     line-height:1;
+    margin:0;
   }
   @keyframes burn{
     0%,100%{filter:drop-shadow(0 0 15px rgba(184,134,11,.3)) drop-shadow(0 0 30px rgba(139,0,0,.2));opacity:.85}
@@ -97,43 +98,95 @@
     75%{filter:drop-shadow(0 0 30px rgba(139,0,0,.5)) drop-shadow(0 0 45px rgba(184,134,11,.35));opacity:1}
   }
   #wakeup{position:fixed;inset:0;z-index:999;pointer-events:none;image-rendering:pixelated;image-rendering:crisp-edges}
+
+  /* ═══ ILLUMINATED MANUSCRIPT FRAME ═══ */
   #entry-poster{
-    width:min(280px,30vw);height:min(380px,55vh);
-    border:2px solid #6b0f1a;
-    box-shadow:0 0 30px rgba(107,15,26,.35),inset 0 0 40px rgba(0,0,0,.8);
+    width:min(280px,72vw);
+    aspect-ratio:3/4;
+    max-height:52vh;
     position:relative;
-    background:#0a0a0a;
-    display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;
+    padding:14px;
+    background:
+      /* inner dark core */
+      radial-gradient(ellipse at center,#120808 0%,#050202 65%,#000 100%),
+      /* gold leaf outer border via layered gradients */
+      linear-gradient(135deg,#3a2818,#8a6408,#b8860b,#8a6408,#3a2818);
+    background-size:100% 100%,auto;
+    border:4px solid #8a6408;
+    box-shadow:
+      0 0 50px rgba(107,15,26,.45),
+      0 0 20px rgba(184,134,11,.25),
+      inset 0 0 2px rgba(232,220,200,.3),
+      inset 0 0 50px rgba(0,0,0,.85);
+    isolation:isolate;
   }
+  /* outer gilded border decoration */
   #entry-poster::before{
-    content:'';position:absolute;inset:5px;
-    border:1px solid rgba(184,134,11,.3);
+    content:'';position:absolute;inset:-4px;
     pointer-events:none;
+    border:2px solid transparent;
+    background:
+      repeating-linear-gradient(45deg,rgba(184,134,11,.35) 0 4px,transparent 4px 8px),
+      linear-gradient(135deg,#b8860b,#3a2818 30%,#8a6408 60%,#b8860b);
+    background-clip:padding-box,border-box;
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    opacity:.6;
   }
+  /* inner gold thread */
   #entry-poster::after{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse at center,transparent 30%,rgba(10,4,2,.6));
+    content:'';position:absolute;inset:10px;
+    border:1px solid rgba(184,134,11,.4);
     pointer-events:none;
+    box-shadow:inset 0 0 12px rgba(184,134,11,.12);
+  }
+  /* 4 corner skulls */
+  .corner-skull{
+    position:absolute;font-size:18px;color:#b8860b;
+    text-shadow:0 0 6px rgba(184,134,11,.5),0 0 2px rgba(10,4,2,.9);
+    pointer-events:none;z-index:3;
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.8));
+    line-height:1;
+  }
+  .corner-skull.tl{top:-11px;left:-6px}
+  .corner-skull.tr{top:-11px;right:-6px}
+  .corner-skull.bl{bottom:-11px;left:-6px}
+  .corner-skull.br{bottom:-11px;right:-6px}
+  /* ornamental dots along border */
+  .ornate-dots{
+    position:absolute;pointer-events:none;z-index:2;
+    color:rgba(184,134,11,.55);font-size:10px;line-height:1;
+    letter-spacing:3px;
+  }
+  .ornate-dots.top{top:-2px;left:50%;transform:translateX(-50%)}
+  .ornate-dots.bottom{bottom:-2px;left:50%;transform:translateX(-50%)}
+  /* poster inner space — where content/art lives */
+  #poster-inner{
+    position:relative;z-index:1;width:100%;height:100%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,rgba(26,14,6,.9) 20%,rgba(5,2,2,.95) 80%);
+    overflow:hidden;
   }
   #poster-text{
     font-family:'Gothic Mother','Metal Mania','Pirata One','UnifrakturMaguntia',cursive;
-    font-size:clamp(20px,2.5vw,32px);
+    font-size:clamp(18px,2.2vw,28px);
     color:#b8860b;
     letter-spacing:3px;
     text-transform:lowercase;
-    filter:drop-shadow(0 0 8px rgba(184,134,11,.4));
+    filter:drop-shadow(0 0 8px rgba(184,134,11,.5));
     position:relative;
     z-index:1;
-    opacity:.75;
+    opacity:.82;
     animation:posterFade 6s ease-in-out infinite;
+    text-shadow:0 1px 0 rgba(0,0,0,.8);
   }
   @keyframes posterFade{
-    0%,100%{opacity:.65}
-    50%{opacity:.9}
+    0%,100%{opacity:.68}
+    50%{opacity:.92}
   }
   #boot{color:#33ff33;font-size:9px;line-height:2.2;text-align:left;max-width:600px;width:90%;text-shadow:0 0 6px rgba(51,255,51,0.4);display:none;white-space:pre-wrap;position:fixed;bottom:20px;left:50%;transform:translateX(-50%)}
-  #entry-btn{background:none;border:1px solid #6b0f1a;color:#b8860b;font-family:'Press Start 2P',monospace;font-size:11px;padding:16px 32px;cursor:none;letter-spacing:2px;animation:bp 3s ease-in-out infinite}
+  #entry-btn{background:none;border:1px solid #6b0f1a;color:#b8860b;font-family:'Press Start 2P',monospace;font-size:11px;padding:14px 28px;cursor:none;letter-spacing:2px;animation:bp 3s ease-in-out infinite}
   #entry-btn:hover{background:#6b0f1a;color:#e8dcc8;box-shadow:0 0 40px rgba(107,15,26,0.5)}
   @keyframes bp{0%,100%{border-color:rgba(107,15,26,.3)}50%{border-color:#6b0f1a}}
   #gw{position:fixed;inset:0;background:#000;opacity:0;transition:opacity 1.5s}
@@ -262,13 +315,19 @@
     canvas#game{touch-action:none}
     #crt{display:none} /* CRT too heavy on mobile */
     
-    /* Entry — stacked on mobile */
-    #entry{flex-direction:column;gap:30px}
-    #entry-left{gap:25px}
-    #entry-btn{font-size:10px;padding:16px 28px;min-height:48px}
-    #entry-logo{font-size:clamp(40px,12vw,72px);letter-spacing:4px}
-    #entry-poster{width:min(220px,70vw);height:min(280px,40vh)}
-    #poster-text{font-size:clamp(16px,5vw,24px)}
+    /* Entry — compact on mobile */
+    #entry{gap:14px;padding:14px}
+    #entry-btn{font-size:10px;padding:14px 24px;min-height:44px}
+    #entry-logo{font-size:clamp(36px,10vw,64px);letter-spacing:4px}
+    #entry-poster{width:min(220px,72vw);max-height:42vh;padding:10px}
+    #entry-poster::after{inset:7px}
+    #poster-text{font-size:clamp(16px,5vw,22px)}
+    .corner-skull{font-size:14px}
+    .corner-skull.tl{top:-8px;left:-5px}
+    .corner-skull.tr{top:-8px;right:-5px}
+    .corner-skull.bl{bottom:-8px;left:-5px}
+    .corner-skull.br{bottom:-8px;right:-5px}
+    .ornate-dots{font-size:8px}
     
     /* Menu — centered bottom on mobile, not follow mouse */
     #menu{left:50%!important;top:auto!important;bottom:60px!important;transform:translateX(-50%);min-width:240px;max-width:90vw}
@@ -493,7 +552,7 @@ P.S. Это объяснение написано намеренно, чтобы
 </div>
 <div id="crt"></div>
 <canvas id="cur" width="20" height="20"></canvas>
-<div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">В ПУСТОТУ 25+</button></div><div id="entry-poster"><span id="poster-text">coming soon</span></div><div id="boot"></div></div>
+<div id="entry"><div id="entry-logo">ARDET</div><div id="entry-poster"><div class="corner-skull tl">☠</div><div class="corner-skull tr">☠</div><div class="corner-skull bl">☠</div><div class="corner-skull br">☠</div><div class="ornate-dots top">❦ ✦ ❦</div><div class="ornate-dots bottom">❦ ✦ ❦</div><div id="poster-inner"><span id="poster-text">coming soon</span></div></div><button id="entry-btn">В ПУСТОТУ 25+</button><div id="boot"></div></div>
 <div id="gw"><canvas id="game"></canvas></div>
 <canvas id="wakeup" width="160" height="100"></canvas>
 <div id="menu">
