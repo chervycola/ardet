@@ -6937,6 +6937,9 @@ const locDraw={
     for(let sl=0;sl<8;sl++){
       rect(X,x+22+sl*10,y+bldH+2,2,5,'#2a1808');
     }
+    // ── APARTMENT #13 — ground floor, left — door with 20 locks ──
+    // (declared here so PRIMUS block below can reference apt13X)
+    const apt13X=x+2,apt13Y=y+bldH-14;
     // ── PRIMUS on the landing outside apt 13 ──
     const prX=apt13X+12,prY=apt13Y+7;
     // Primus base (brass)
@@ -6965,8 +6968,7 @@ const locDraw={
     X.fillText('С НЕИЗВЕСТНЫМИ',x+18,y+bldH-24);
     X.globalAlpha=1;
 
-    // ── APARTMENT #13 — ground floor, left — door with 20 locks ──
-    const apt13X=x+2,apt13Y=y+bldH-14;
+    // ── APT #13 DOOR (visual) — 20 locks ──
     rect(X,apt13X,apt13Y,10,14,'#1a0e06');
     rect(X,apt13X+1,apt13Y+1,8,12,'#0a0604');
     for(let i=0;i<20;i++){
