@@ -10938,6 +10938,169 @@ function updateBrainrotRecovery(){
 // ═══════════════════════════════════════
 // CINEMATIC TINT — final pass overlay
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// STYLISTIC EFFECTS — 2026 glitch/reality/memory language
+// ═══════════════════════════════════════════════════════
+
+// ── BINARY GLITCH — rectangular slice of screen turns into flickering 1/0 ──
+let binaryGlitch={active:false,x:0,y:0,w:0,h:0,timer:0,duration:0,kind:0};
+function updateBinaryGlitch(){
+  if(binaryGlitch.active){
+    binaryGlitch.timer++;
+    if(binaryGlitch.timer>=binaryGlitch.duration)binaryGlitch.active=false;
+    return;
+  }
+  // Roll: try once every 180 frames (~every 3s at 60fps), low probability
+  if(t%180===0&&Math.random()>.7){
+    binaryGlitch.active=true;
+    binaryGlitch.x=Math.floor(Math.random()*(VW-80));
+    binaryGlitch.y=Math.floor(Math.random()*(VH-40));
+    binaryGlitch.w=40+Math.floor(Math.random()*80);
+    binaryGlitch.h=15+Math.floor(Math.random()*25);
+    binaryGlitch.duration=80+Math.floor(Math.random()*60);
+    binaryGlitch.timer=0;
+    binaryGlitch.kind=Math.floor(Math.random()*3); // 0=binary, 1=hex, 2=cyrillic entropy
+  }
+}
+function drawBinaryGlitch(){
+  if(!binaryGlitch.active)return;
+  const g=binaryGlitch;
+  // Fade in/out at edges of lifetime
+  const fade=Math.min(1,Math.min(g.timer,g.duration-g.timer)/12);
+  X.globalAlpha=fade*.78;
+  // Black void background
+  X.fillStyle='#050405';
+  X.fillRect(g.x,g.y,g.w,g.h);
+  // Scanline pulse across the block
+  X.globalAlpha=fade*.12;
+  const sl=Math.floor((g.timer*4)%g.h);
+  X.fillStyle=P.toxic;
+  X.fillRect(g.x,g.y+sl,g.w,1);
+  // Flickering characters
+  X.globalAlpha=fade*.85;
+  X.fillStyle=P.toxic;
+  X.font='5px monospace';
+  const cw=4,ch=6;
+  const cols=Math.floor(g.w/cw),rows=Math.floor(g.h/ch);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      if(hash(c,r,Math.floor(t/2))>.18){
+        let ch_;
+        if(g.kind===0)ch_=hash(c,r,Math.floor(t/3))>.5?'1':'0';
+        else if(g.kind===1)ch_='0123456789abcdef'[Math.floor(hash(c,r,Math.floor(t/3))*16)];
+        else ch_='▓▒░#@&%$?'[Math.floor(hash(c,r,Math.floor(t/4))*9)];
+        X.fillText(ch_,g.x+c*cw,g.y+r*ch+5);
+      }
+    }
+  }
+  // Corrupted border
+  X.globalAlpha=fade*.4;
+  X.strokeStyle=P.btoxic;X.lineWidth=1;
+  X.strokeRect(g.x,g.y,g.w,g.h);
+  X.globalAlpha=1;
+}
+
+// ── REALITY SHIFT — near certain locations, brief invert + phrase ──
+let realityShift={active:false,timer:0,duration:0,text:'',color:P.toxic};
+const shiftLocs=['crater','altar','pit','nocturnal','basement','ruins'];
+const shiftTextsByLoc={
+  crater:['ты уже кидал','выбор испарён','случайность отменена'],
+  altar:['мох уже подписан','сеть подтвердила получение','ты всегда был здесь'],
+  pit:['ещё один','братишка помнит','не оборачивайся'],
+  nocturnal:['world-without-you','ничего','звук не долетает'],
+  basement:['углов пять','пять — это ты','не считай'],
+  ruins:['42°C','кот смотрит','аннушка уже разлила']
+};
+function updateRealityShift(){
+  if(realityShift.active){
+    realityShift.timer--;
+    if(realityShift.timer<=0)realityShift.active=false;
+    return;
+  }
+  // Roll rarely — about once every ~45 seconds if player is near a special loc
+  if(t%30===0){
+    for(const id of shiftLocs){
+      const l=locs.find(ll=>ll.id===id);
+      if(!l)continue;
+      const dx=player.x-(l.x+l.w/2),dy=player.y-(l.y+l.h/2);
+      if(dx*dx+dy*dy<12000&&Math.random()>.988){
+        realityShift.active=true;
+        realityShift.duration=18+Math.floor(Math.random()*24); // 0.3–0.7s
+        realityShift.timer=realityShift.duration;
+        const texts=shiftTextsByLoc[id]||['...'];
+        realityShift.text=texts[Math.floor(Math.random()*texts.length)];
+        shakeT=Math.max(shakeT,4);
+        break;
+      }
+    }
+  }
+}
+function drawRealityShift(){
+  if(!realityShift.active)return;
+  const prog=1-realityShift.timer/realityShift.duration;
+  const ease=prog<.5?prog*2:(1-prog)*2; // triangle 0→1→0
+  // Photonegative invert pulse
+  X.save();
+  X.globalCompositeOperation='difference';
+  X.globalAlpha=ease*.55;
+  X.fillStyle='rgba(160,90,220,1)';
+  X.fillRect(0,0,VW,VH);
+  X.restore();
+  // Text flickers in center
+  X.globalAlpha=Math.min(1,ease*1.2);
+  // Jitter offset — pixels wobble
+  const jx=Math.floor((hash(0,t,11)-.5)*3);
+  const jy=Math.floor((hash(0,t,22)-.5)*3);
+  X.fillStyle=P.toxic;
+  X.font='10px "Press Start 2P"';
+  X.textAlign='center';
+  X.fillText(realityShift.text,VW/2+jx,VH/2+jy);
+  // Chromatic shadow
+  X.globalAlpha=ease*.4;
+  X.fillStyle=P.crimson;
+  X.fillText(realityShift.text,VW/2+jx+2,VH/2+jy);
+  X.fillStyle='#4a7fb5';
+  X.fillText(realityShift.text,VW/2+jx-2,VH/2+jy);
+  X.textAlign='left';
+  X.globalAlpha=1;
+}
+
+// ── TEXT GHOSTS — fragments from elsewhere drift across the scene ──
+let textGhosts=[];
+const ghostLines=['...вобла не горит...','...примус починил...','...cheese pizza...','...мох помнит...','...bc1q...','...87 миллионов...','...3.14...','...аннушка уже разлила...','...404...','...dead internet...','...hevel hevalim...','...amor fati...','...fana...','...stay with the trouble...','...world-without-us...','...retromania...','...22.05.2010...','...26.04.1986...','...01.09.2004...','...никто не заметил...'];
+function updateTextGhosts(){
+  if(t%320===0&&Math.random()>.55&&textGhosts.length<2){
+    textGhosts.push({
+      text:ghostLines[Math.floor(Math.random()*ghostLines.length)],
+      x:20+Math.random()*(VW-80),
+      y:VH+8,
+      vy:-.22-Math.random()*.25,
+      life:480,
+      drift:(Math.random()-.5)*.35,
+    });
+  }
+  for(let i=textGhosts.length-1;i>=0;i--){
+    const g=textGhosts[i];
+    g.y+=g.vy;g.x+=g.drift;g.life--;
+    if(g.life<=0||g.y<-10)textGhosts.splice(i,1);
+  }
+}
+function drawTextGhosts(){
+  if(textGhosts.length===0)return;
+  X.font='7px "Press Start 2P"';
+  textGhosts.forEach(g=>{
+    const a=Math.min(1,Math.min(g.life,480-g.life)/90)*.18;
+    X.globalAlpha=a;
+    X.fillStyle=P.bone;
+    X.fillText(g.text,g.x,g.y);
+    // Chromatic edge
+    X.globalAlpha=a*.5;
+    X.fillStyle='#4a7fb5';
+    X.fillText(g.text,g.x-1,g.y);
+  });
+  X.globalAlpha=1;
+}
+
 function drawCinematicTint(){
   // ── VIGNETTE — single gradient, darker corners ──
   X.globalAlpha=.16;
@@ -11133,8 +11296,8 @@ function updateWeather(){
       });
     }
   }
-  // Storm lightning
-  if(weather==='storm'&&t%300<3&&Math.random()>.6){
+  // Storm lightning — 3x rarer temporally
+  if(weather==='storm'&&t%900<3&&Math.random()>.6){
     lightning=40;
     boltX=40+Math.random()*(VW-80);
     // Thunder sound
@@ -11162,8 +11325,8 @@ function updateWeather(){
 
   // ── RAIN (also during storm) ──
   const rainActive=weather==='rain'||weather==='storm';
-  if(rainActive&&rainParts.length<280){
-    for(let k=0;k<(weather==='storm'?4:2);k++){
+  if(rainActive&&rainParts.length<180){
+    for(let k=0;k<(weather==='storm'?3:1);k++){
       rainParts.push({
         x:cam.x-30+Math.random()*(VW+60),
         y:cam.y-20,
@@ -11891,6 +12054,7 @@ function render(){
   drawClickMarker();renderLighting();drawHeatDistortion();drawDiscoveryPing();
   drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
   drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
+  drawTextGhosts();drawBinaryGlitch();drawRealityShift();
   drawCinematicTint();
   if(endingTriggered)drawEnding();
 }
@@ -11937,6 +12101,7 @@ function loop(){
     updateFootprints();checkDiscovery();updateAmbient();
     checkLorePickup();checkWhisper();updateIdle();updateJester();updatePetCrossings();updateWallProximity();
     updateDayCycle();updateWind();updateSand();updateWeather();
+    updateBinaryGlitch();updateRealityShift();updateTextGhosts();
     updateMonsters();updateBrainrot();updateWastelandAudio();updateProximityAudio();updateZoneDrone();
     checkAchievements();
     render();
