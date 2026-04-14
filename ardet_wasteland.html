@@ -11897,7 +11897,9 @@ function render(){
 // GAME LOOP
 // ═══════════════════════════════════════
 function loop(){
+  const _frameStart=performance.now();
   t++;
+  try{
   if(brainrotFreeze){updateBrainrotRecovery();render();requestAnimationFrame(loop);return;}
   if(state==='ending'){endingTimer>0||triggerEnding();render();requestAnimationFrame(loop);return;}
   if(state==='shop'&&currentShopAnim){drawShopScene();}
@@ -11937,8 +11939,18 @@ function loop(){
     checkAchievements();
     render();
   }
+  }catch(e){
+    console.error('LOOP ERROR:',e,e.stack);
+    _loopErrCount=(_loopErrCount||0)+1;
+    if(_loopErrCount>20)return; // stop requesting more frames after too many errors
+  }
+  const _frameEnd=performance.now();
+  if(_frameEnd-_frameStart>100){
+    console.warn('SLOW FRAME:',Math.round(_frameEnd-_frameStart),'ms at player',Math.round(player.x),Math.round(player.y),'loc visible:',locs.filter(l=>{const sx=l.x-cam.x,sy=l.y-cam.y;return !(sx+l.w<-30||sx>VW+30||sy+l.h<-30||sy>VH+30)}).map(l=>l.id).join(','));
+  }
   requestAnimationFrame(loop);
 }
+let _loopErrCount=0;
 
 // ═══════════════════════════════════════
 // CURSOR
