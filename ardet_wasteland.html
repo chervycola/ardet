@@ -10610,6 +10610,29 @@ function drawInventory(){
   X.globalAlpha=.7;X.fillStyle=P.amber;X.font='7px "Press Start 2P"';
   X.fillText('◆ '+count+'/'+loreItems.length,8,13);
   X.globalAlpha=1;
+  // FPS counter (diagnostic)
+  drawFPS();
+}
+let _fpsFrames=0,_fpsLast=performance.now(),_fpsValue=60,_fpsMinValue=60,_fpsMinWindow=0;
+function drawFPS(){
+  _fpsFrames++;
+  const now=performance.now();
+  if(now-_fpsLast>=500){
+    _fpsValue=Math.round(_fpsFrames*1000/(now-_fpsLast));
+    _fpsFrames=0;_fpsLast=now;
+    // Track minimum over last 3 seconds
+    _fpsMinWindow++;
+    if(_fpsValue<_fpsMinValue)_fpsMinValue=_fpsValue;
+    if(_fpsMinWindow>6){_fpsMinValue=_fpsValue;_fpsMinWindow=0;}
+  }
+  X.globalAlpha=.55;X.fillStyle='#000';X.fillRect(VW-76,4,72,14);
+  X.globalAlpha=.85;
+  X.fillStyle=_fpsValue<30?'#ff4040':_fpsValue<50?P.amber:'#5aff3a';
+  X.font='7px "Press Start 2P"';
+  X.fillText(_fpsValue+' fps',VW-70,13);
+  X.fillStyle='#8a8d8f';
+  X.fillText('min '+_fpsMinValue,VW-40,13);
+  X.globalAlpha=1;
 }
 
 // ═══════════════════════════════════════
