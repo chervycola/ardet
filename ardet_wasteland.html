@@ -10567,40 +10567,40 @@ function drawLorePopup(){
   const LORE_TOTAL=900;
   const a=lorePopup.life>80?Math.min(1,(LORE_TOTAL-lorePopup.life)/60):lorePopup.life/80;
   X.globalAlpha=a*.9;
-  // Dynamic height based on text length
-  const w=Math.min(VW-20,440);
-  // Press Start 2P is monospace; at 8px each char is ~8px wide
-  const maxChars=Math.floor((w-16)/8);
+  // Dynamic height based on text length — bigger box, more breathing room
+  const w=Math.min(VW-16,560);
+  // Press Start 2P is monospace; at 9px each char is ~9px wide
+  const FONT_SIZE=9,CHAR_W=9,LINE_H=16;
+  const maxChars=Math.floor((w-20)/CHAR_W);
   // Estimate lines needed
   const estLines=Math.max(3,Math.ceil(lorePopup.text.length/maxChars)+1);
-  const boxH=Math.min(VH-40,Math.max(75,estLines*13+18));
-  const x_=(VW-w)/2,y_=VH-boxH-10;
+  const boxH=Math.min(VH-30,Math.max(90,estLines*LINE_H+22));
+  const x_=(VW-w)/2,y_=VH-boxH-8;
   rect(X,x_,y_,w,boxH,'rgba(5,5,16,0.96)');
   X.strokeStyle=P.crimson;X.lineWidth=1;X.strokeRect(x_,y_,w,boxH);
   // Top accent line — gold
   rect(X,x_+1,y_+1,w-2,1,P.gold);
   // Typing — ~1 char per 3 frames (slow, deliberate)
-  X.fillStyle=P.bone;X.font='8px "Press Start 2P"';
+  X.fillStyle=P.bone;X.font=FONT_SIZE+'px "Press Start 2P"';
   const elapsed=LORE_TOTAL-lorePopup.life;
   const charCount=Math.min(lorePopup.text.length,Math.floor(elapsed/3));
   const txt=lorePopup.text.substring(0,charCount);
   // Word wrap — hard-break words longer than maxChars
-  const words=txt.split(' ');let line='';let ly=y_+16;
+  const words=txt.split(' ');let line='';let ly=y_+18;
   words.forEach(word=>{
-    // If word itself is longer than maxChars, hard-break it
     while(word.length>maxChars){
-      if(line.trim()){X.fillText(line,x_+8,ly);ly+=13;line='';}
-      X.fillText(word.substring(0,maxChars),x_+8,ly);ly+=13;
+      if(line.trim()){X.fillText(line,x_+10,ly);ly+=LINE_H;line='';}
+      X.fillText(word.substring(0,maxChars),x_+10,ly);ly+=LINE_H;
       word=word.substring(maxChars);
     }
-    if((line+word).length>maxChars){X.fillText(line,x_+8,ly);ly+=13;line=word+' ';}
+    if((line+word).length>maxChars){X.fillText(line,x_+10,ly);ly+=LINE_H;line=word+' ';}
     else line+=word+' ';
   });
-  if(line.trim())X.fillText(line,x_+8,ly);
+  if(line.trim())X.fillText(line,x_+10,ly);
   // Blinking cursor while typing
   if(charCount<lorePopup.text.length&&t%40<20){
-    const cursorX=x_+8+line.length*8;
-    rect(X,cursorX,ly-8,5,9,P.term);
+    const cursorX=x_+10+line.length*CHAR_W;
+    rect(X,cursorX,ly-FONT_SIZE,5,FONT_SIZE+1,P.term);
   }
   X.globalAlpha=1;
   lorePopup.life--;
@@ -10612,30 +10612,8 @@ function drawInventory(){
   X.globalAlpha=.7;X.fillStyle=P.amber;X.font='7px "Press Start 2P"';
   X.fillText('◆ '+count+'/'+loreItems.length,8,13);
   X.globalAlpha=1;
-  // FPS counter (diagnostic)
-  drawFPS();
 }
-let _fpsFrames=0,_fpsLast=performance.now(),_fpsValue=60,_fpsMinValue=60,_fpsMinWindow=0;
-function drawFPS(){
-  _fpsFrames++;
-  const now=performance.now();
-  if(now-_fpsLast>=500){
-    _fpsValue=Math.round(_fpsFrames*1000/(now-_fpsLast));
-    _fpsFrames=0;_fpsLast=now;
-    // Track minimum over last 3 seconds
-    _fpsMinWindow++;
-    if(_fpsValue<_fpsMinValue)_fpsMinValue=_fpsValue;
-    if(_fpsMinWindow>6){_fpsMinValue=_fpsValue;_fpsMinWindow=0;}
-  }
-  X.globalAlpha=.55;X.fillStyle='#000';X.fillRect(VW-76,4,72,14);
-  X.globalAlpha=.85;
-  X.fillStyle=_fpsValue<30?'#ff4040':_fpsValue<50?P.amber:'#5aff3a';
-  X.font='7px "Press Start 2P"';
-  X.fillText(_fpsValue+' fps',VW-70,13);
-  X.fillStyle='#8a8d8f';
-  X.fillText('min '+_fpsMinValue,VW-40,13);
-  X.globalAlpha=1;
-}
+// FPS counter removed — diagnostic only. Watchdog errors still log to console.
 
 // ═══════════════════════════════════════
 // ZONE SCREEN EFFECTS (#4)
@@ -11102,19 +11080,19 @@ function drawTextGhosts(){
 }
 
 function drawCinematicTint(){
-  // ── VIGNETTE — single gradient, darker corners ──
-  X.globalAlpha=.16;
-  const vg=X.createRadialGradient(VW/2,VH*.45,VW*.15,VW/2,VH*.5,VW*.75);
-  vg.addColorStop(0,'rgba(218,165,32,.08)');
-  vg.addColorStop(.35,'rgba(0,0,0,0)');
-  vg.addColorStop(.75,'rgba(10,4,2,.5)');
-  vg.addColorStop(1,'rgba(10,4,2,.9)');
+  // ── VIGNETTE — lighter, less oppressive ──
+  X.globalAlpha=.1;
+  const vg=X.createRadialGradient(VW/2,VH*.45,VW*.2,VW/2,VH*.5,VW*.8);
+  vg.addColorStop(0,'rgba(218,165,32,.06)');
+  vg.addColorStop(.45,'rgba(0,0,0,0)');
+  vg.addColorStop(.85,'rgba(10,4,2,.35)');
+  vg.addColorStop(1,'rgba(10,4,2,.6)');
   X.fillStyle=vg;X.fillRect(0,0,VW,VH);
   X.globalAlpha=1;
 
-  // ── FILM GRAIN — lighter, fewer particles ──
-  X.globalAlpha=.05;
-  for(let i=0;i<20;i++){
+  // ── FILM GRAIN — sparse ──
+  X.globalAlpha=.04;
+  for(let i=0;i<15;i++){
     const gnX=Math.floor(hash(i,t*.3,11)*VW);
     const gnY=Math.floor(hash(i,t*.3,22)*VH);
     rect(X,gnX,gnY,1,1,hash(i,t*.3,33)>.5?'#fff':'#000');
@@ -11122,7 +11100,7 @@ function drawCinematicTint(){
   X.globalAlpha=1;
 
   // ── CHROMATIC ABERRATION edges ──
-  X.globalAlpha=.04;
+  X.globalAlpha=.03;
   rect(X,0,0,2,VH,'#6b0f1a');
   rect(X,VW-2,0,2,VH,'#1b1464');
   rect(X,0,0,VW,1,'#6b0f1a');
