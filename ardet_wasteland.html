@@ -207,7 +207,10 @@
   .mi{display:flex;align-items:center;gap:10px;padding:9px 14px;color:#e8dcc8;font-family:'Press Start 2P',monospace;font-size:9px;cursor:none;border:1px solid transparent;transition:all .12s}
   .mi:hover{background:rgba(107,15,26,.15);border-color:#6b0f1a;color:#b8860b}
   .mi i{font-style:normal;font-size:12px;width:18px;text-align:center}
-  #look{position:fixed;display:none;z-index:250;background:rgba(5,5,16,.96);border:1px solid #6b0f1a;padding:16px 20px;max-width:320px;color:#e8dcc8;font-size:8px;line-height:2.1;box-shadow:0 0 40px rgba(27,20,100,.4)}
+  #look{position:fixed;display:none;z-index:250;background:rgba(5,5,16,.96);border:1px solid #6b0f1a;padding:18px 22px 32px;max-width:360px;color:#e8dcc8;font-size:10px;line-height:1.75;box-shadow:0 0 40px rgba(27,20,100,.4);cursor:pointer}
+  #look #lt{font-family:'Press Start 2P',monospace;font-size:11px;color:#b8860b;margin-bottom:10px;letter-spacing:1px}
+  #look #lb{white-space:pre-wrap;min-height:40px}
+  #look #lp-ind{display:none;position:absolute;right:12px;bottom:8px;font-size:9px;color:rgba(184,134,11,.7);letter-spacing:1px;font-family:'Press Start 2P',monospace}
   #look.on{display:block}
   #look h3{color:#b8860b;font-size:9px;margin-bottom:8px;letter-spacing:2px;font-weight:normal}
   #dlg{position:fixed;bottom:0;left:0;right:0;height:170px;background:rgba(5,5,16,.97);border-top:2px solid #6b0f1a;display:none;z-index:300;padding:14px 20px;gap:14px}
@@ -570,7 +573,7 @@ P.S. Это объяснение написано намеренно, чтобы
   <div class="mi" data-a="take"><i>◆</i>ВЗЯТЬ</div>
   <div class="mi" data-a="cancel"><i>✕</i>ОТМЕНА</div>
 </div>
-<div id="look"><h3 id="lt"></h3><div id="lb"></div></div>
+<div id="look"><h3 id="lt"></h3><div id="lb"></div><div id="lp-ind"></div></div>
 <div id="dlg"><div id="dp"></div><div id="db"><div id="dn"></div><div id="dt"></div><div id="do"></div></div></div>
 <div id="term"><div id="tc"></div></div><button id="tx">ESC — ВЫЙТИ</button>
 <div id="nfg">
@@ -11054,14 +11057,16 @@ function _buildGlitchShard(){
   }
   return{pts,bbox:{x:Math.max(0,Math.floor(minX)),y:Math.max(0,Math.floor(minY)),w:Math.min(VW,Math.ceil(maxX))-Math.max(0,Math.floor(minX)),h:Math.min(VH,Math.ceil(maxY))-Math.max(0,Math.floor(minY))},edge};
 }
+let _lastBinaryGlitch=-99999;
 function updateBinaryGlitch(){
   if(binaryGlitch.active){
     binaryGlitch.timer++;
     if(binaryGlitch.timer>=binaryGlitch.duration)binaryGlitch.active=false;
     return;
   }
-  // Roll once every 300 frames (~5s at 60fps), low probability
-  if(t%300===0&&Math.random()>.65){
+  // Minimum 2 minutes between glitches (7200 frames at 60fps)
+  if(t-_lastBinaryGlitch>=7200&&t%120===0&&Math.random()>.5){
+    _lastBinaryGlitch=t;
     const shard=_buildGlitchShard();
     binaryGlitch.active=true;
     binaryGlitch.points=shard.pts;
@@ -12501,20 +12506,57 @@ function checkSecretCombo(){
     }
   });
 }
+// ═══ LOOK MODAL WITH PAGINATION ═══
+// Long lore is split into pages by paragraph breaks. Click/Space advances.
+let lookPages=[],lookPageIdx=0;
+function paginateLook(text){
+  if(!text)return[''];
+  const paragraphs=text.split('\n\n').map(p=>p.trim()).filter(Boolean);
+  const MAX_CHARS=550; // target page length (tuned to fit without scroll)
+  const pages=[];
+  let buf=[],len=0;
+  for(const p of paragraphs){
+    // If single paragraph alone is huge, force break it as one page
+    if(p.length>MAX_CHARS){
+      if(buf.length){pages.push(buf.join('\n\n'));buf=[];len=0;}
+      pages.push(p);continue;
+    }
+    if(len+p.length>MAX_CHARS&&buf.length){
+      pages.push(buf.join('\n\n'));buf=[p];len=p.length;
+    }else{
+      buf.push(p);len+=p.length+2;
+    }
+  }
+  if(buf.length)pages.push(buf.join('\n\n'));
+  return pages.length?pages:[text];
+}
+function renderLookPage(){
+  const lb=document.getElementById('lb');
+  lb.textContent=lookPages[lookPageIdx]||'';
+  const ind=document.getElementById('lp-ind');
+  if(ind){
+    if(lookPages.length>1){
+      const isLast=lookPageIdx>=lookPages.length-1;
+      ind.textContent=(lookPageIdx+1)+' / '+lookPages.length+(isLast?'  ✕':'  →');
+      ind.style.display='block';
+    }else{
+      ind.style.display='none';
+    }
+  }
+}
 function showLook(loc){
   const el=document.getElementById('look');
   document.getElementById('lt').textContent=loc.name;
-  document.getElementById('lb').textContent=loc.look;
+  lookPages=paginateLook(loc.look);
+  lookPageIdx=0;
+  renderLookPage();
   const isMobile=window.innerWidth<=768;
   if(!isMobile){
-    el.style.left=Math.min(mx+10,innerWidth-340)+'px';
-    el.style.top=Math.min(my+10,innerHeight-140)+'px';
+    el.style.left=Math.min(mx+10,innerWidth-380)+'px';
+    el.style.top=Math.min(my+10,innerHeight-300)+'px';
   }
-  // On mobile, CSS handles centering
   el.classList.add('on');
   state='look';
-  // ── 4 WATCHERS SECRET ──
-  // Track looks at the four Watchers
   if(loc&&loc.npc&&['jester','sol','elder','nocturnal'].includes(loc.npc)){
     observersLooked.add(loc.npc);
     if(observersLooked.size>=4&&!observersUnlocked){
@@ -12526,9 +12568,20 @@ function showLook(loc){
     }
   }
 }
+// Advance page or close if already on last
+function advanceOrCloseLook(){
+  if(lookPageIdx<lookPages.length-1){
+    lookPageIdx++;
+    renderLookPage();
+    return false; // didn't close
+  }
+  closeLook();
+  return true;
+}
 function closeLook(){
   document.getElementById('look').classList.remove('on');
   state='game';activeLoc=null;
+  lookPages=[];lookPageIdx=0;
 }
 function handleUse(loc){
   switch(loc.useAction){
@@ -14376,8 +14429,8 @@ function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRe
   }}
 // Canvas click — handles all game state transitions from canvas
 function handleCanvasClick(cx,cy,e){
-  // If look panel is open — close it, don't do anything else
-  if(state==='look'){closeLook();if(e)e.stopPropagation();return;}
+  // If look panel is open — advance page, or close if already last page
+  if(state==='look'){advanceOrCloseLook();if(e)e.stopPropagation();return;}
   // If menu is open — close it, don't do anything else
   if(state==='menu'){hideMenu();if(e)e.stopPropagation();return;}
   // Normal game click
@@ -14402,11 +14455,17 @@ C.addEventListener('touchmove',e=>{
 document.querySelectorAll('.mi').forEach(el=>el.addEventListener('click',(e)=>{e.stopPropagation();menuAction(el.dataset.a);}));
 document.addEventListener('click',e=>{
   // These only fire for clicks NOT on canvas (already handled above with stopPropagation)
-  if(state==='look'){closeLook();return;}
+  if(state==='look'){advanceOrCloseLook();return;}
   if(state==='menu'&&!e.target.closest('#menu')){hideMenu();return;}
   if(state==='dialogue'&&e.target.closest('#dlg')&&!e.target.closest('.dopt'))skipOrAdvanceDlg();
 });
 document.addEventListener('keydown',e=>{
+  // Space / Right arrow / Enter — advance look page (or close on last)
+  if(state==='look'&&(e.key===' '||e.key==='ArrowRight'||e.key==='Enter')){
+    e.preventDefault();
+    advanceOrCloseLook();
+    return;
+  }
   if(e.key==='Escape'){
     if(state==='look'){closeLook();}
     else if(state==='nfg'){closeNfg();}
