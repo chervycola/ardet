@@ -12005,56 +12005,101 @@ function drawBloodMoon(){
 }
 
 function drawDayCycle(){
-  const brightness=dayCycle;
-  // ═══ BRANDBOOK DAY/NIGHT ═══
-  // Night: deep indigo (#1B1464) overlay
-  const nightAlpha=.35*(1-brightness);
-  if(nightAlpha>.01){
-    X.globalAlpha=nightAlpha;
+  const b=dayCycle; // 0=night deep, 1=day peak
+  // Phase detection — smoothstep functions for soft transitions
+  // Dawn window: around b 0.15–0.45, peaks at ~0.3
+  const dawn=Math.max(0,1-Math.abs(b-.3)/.15);
+  // Dusk window: around b 0.55–0.85, peaks at ~0.7
+  const dusk=Math.max(0,1-Math.abs(b-.7)/.15);
+  // Deep night: b < 0.2 smoothly
+  const night=Math.pow(Math.max(0,1-b/.5),1.5);
+  // High day: b > 0.6 smoothly
+  const day=Math.pow(Math.max(0,(b-.5)/.5),1.2);
+
+  // ═══ NIGHT LAYER — cool indigo, deepest at b=0 ═══
+  if(night>.02){
+    X.globalAlpha=night*.38;
     rect(X,0,0,VW,VH,P.indigo);X.globalAlpha=1;
-    // Extra darkness at deep night
-    X.globalAlpha=nightAlpha*.5;
+    // Extra black-blue at deepest
+    X.globalAlpha=night*night*.25;
     rect(X,0,0,VW,VH,'#050510');X.globalAlpha=1;
   }
-  // Day: crimson + gold tint (always present, stronger in "day")
-  const dayAlpha=.02+brightness*.05;
+
+  // ═══ DAWN LAYER — rose + amber warmth rising from horizon ═══
+  if(dawn>.03){
+    X.globalAlpha=dawn*.22;
+    // Sky-side: soft rose
+    const dgrad=X.createLinearGradient(0,0,0,VH);
+    dgrad.addColorStop(0,'rgba(70,40,90,.5)'); // purple residue from night above
+    dgrad.addColorStop(.4,'rgba(220,130,110,.9)'); // rose peach
+    dgrad.addColorStop(.7,'rgba(240,180,120,.6)'); // amber
+    dgrad.addColorStop(1,'rgba(30,20,18,.3)'); // warm shadow on ground
+    X.fillStyle=dgrad;X.fillRect(0,0,VW,VH);
+    X.globalAlpha=1;
+  }
+
+  // ═══ DAY LAYER — crimson + gold (warm, subtle, constant) ═══
+  const dayAlpha=.02+day*.05;
   X.globalAlpha=dayAlpha;
   rect(X,0,0,VW,VH,P.crimson);X.globalAlpha=1;
-  // Subtle gold warmth during day peak
-  if(brightness>.5){
-    X.globalAlpha=(brightness-.5)*.06;
-    rect(X,0,0,VW,VH,'#2a1a08');X.globalAlpha=1;
+  if(day>.3){
+    X.globalAlpha=(day-.3)*.055;
+    rect(X,0,0,VW,VH,'#3a2818');X.globalAlpha=1;
   }
-  // Horizon glow — crimson base + gold highlight
+
+  // ═══ DUSK LAYER — purple + crimson bleeding into ground ═══
+  if(dusk>.03){
+    X.globalAlpha=dusk*.26;
+    const grd=X.createLinearGradient(0,0,0,VH);
+    grd.addColorStop(0,'rgba(30,15,50,.8)'); // indigo above
+    grd.addColorStop(.35,'rgba(107,15,26,.9)'); // crimson horizon band
+    grd.addColorStop(.6,'rgba(138,70,30,.6)'); // burnt gold shadow
+    grd.addColorStop(1,'rgba(20,10,20,.5)'); // cold ground
+    X.fillStyle=grd;X.fillRect(0,0,VW,VH);
+    X.globalAlpha=1;
+  }
+
+  // ═══ HORIZON GLOW (crimson + gold band) — intensifies at dawn/dusk ═══
   const horizY=Math.max(0,160-cam.y);
   if(horizY>0&&horizY<VH){
-    const glowAlpha=(.04+brightness*.1)*(1+.15*Math.sin(t*.003));
+    const glowAlpha=(.04+day*.1+dawn*.18+dusk*.2)*(1+.1*Math.sin(t*.003));
     X.globalAlpha=glowAlpha;
     const grad=X.createLinearGradient(0,horizY-40,0,horizY+60);
     grad.addColorStop(0,'rgba(0,0,0,0)');
-    grad.addColorStop(.3,`rgba(107,15,26,1)`);  // Deep Crimson
-    grad.addColorStop(.5,`rgba(184,134,11,.8)`); // Burnt Gold
-    grad.addColorStop(.7,`rgba(139,0,0,.6)`);    // Volcanic Red
-    grad.addColorStop(1,'rgba(0,0,0,0)');
+    // Shift hue based on time of day
+    if(dawn>.2){
+      grad.addColorStop(.3,'rgba(200,120,90,1)'); // dawn rose
+      grad.addColorStop(.5,'rgba(220,170,100,.7)'); // dawn amber
+    }else if(dusk>.2){
+      grad.addColorStop(.3,'rgba(107,15,26,1)'); // dusk crimson
+      grad.addColorStop(.5,'rgba(80,20,90,.7)'); // dusk purple
+    }else{
+      grad.addColorStop(.3,'rgba(107,15,26,1)');
+      grad.addColorStop(.5,'rgba(184,134,11,.8)');
+    }
+    grad.addColorStop(.7,'rgba(0,0,0,0)');
     X.fillStyle=grad;X.fillRect(0,horizY-40,VW,100);
     X.globalAlpha=1;
   }
-  // Blood moon tint at night — the sky bleeds when the moon is up
-  if(brightness<.4&&cam.y<300){
-    const bloodIntensity=((.4-brightness)/.4);
-    X.globalAlpha=bloodIntensity*.08;
+
+  // ═══ STAR SHIMMER — appear at night, fade during dawn/dusk ═══
+  if(night>.3){
+    X.globalAlpha=night*.5;
+    for(let i=0;i<12;i++){
+      const sx=Math.floor(hash(i,0,11)*VW);
+      const sy=Math.floor(hash(i,0,22)*80);
+      if(Math.sin(t*.02+i)>.7)px(X,sx,sy,P.bone);
+    }
+    X.globalAlpha=1;
+  }
+  // ═══ BLOOD-MOON SKY TINT — only at deep night, visible in upper sky ═══
+  if(night>.4&&cam.y<300){
+    X.globalAlpha=night*.08;
     const skyGrad=X.createLinearGradient(0,0,0,VH*.5);
     skyGrad.addColorStop(0,'#6b0f1a');
     skyGrad.addColorStop(.5,'#3a0608');
     skyGrad.addColorStop(1,'rgba(0,0,0,0)');
     X.fillStyle=skyGrad;X.fillRect(0,0,VW,VH*.5);
-    X.globalAlpha=1;
-    // Slight red vignette on corners
-    X.globalAlpha=bloodIntensity*.06;
-    const vig=X.createRadialGradient(VW/2,VH/2,VW*.3,VW/2,VH/2,VW*.8);
-    vig.addColorStop(0,'rgba(0,0,0,0)');
-    vig.addColorStop(1,'rgba(74,10,18,.8)');
-    X.fillStyle=vig;X.fillRect(0,0,VW,VH);
     X.globalAlpha=1;
   }
 }
