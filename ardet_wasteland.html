@@ -75,13 +75,13 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:'Press Start 2P',monospace;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   body{cursor:none}
-  #entry{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2vw,24px);background:#0a0a0a;z-index:1000;transition:opacity 2s;padding:20px}
+  #entry{position:fixed;inset:0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;background:#0a0a0a;z-index:1000;transition:opacity 2s;padding:20px}
   #entry.out{opacity:0;pointer-events:none}
-  #entry-left{display:contents}
+  #entry-left{display:flex;flex-direction:column;align-items:center;gap:clamp(18px,2.5vw,32px);position:relative;z-index:3}
   #entry-logo{
     font-family:'Gothic Mother','Metal Mania','Pirata One','UnifrakturMaguntia',cursive;
-    font-size:clamp(44px,9vw,96px);
-    letter-spacing:6px;
+    font-size:clamp(56px,13vw,140px);
+    letter-spacing:8px;
     background:linear-gradient(180deg,#e8dcc8 0%,#b8860b 30%,#8b0000 60%,#6b0f1a 80%,#3a0a08 100%);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     background-clip:text;
@@ -89,7 +89,6 @@
     animation:burn 4s ease-in-out infinite;
     position:relative;
     line-height:1;
-    margin:0;
   }
   @keyframes burn{
     0%,100%{filter:drop-shadow(0 0 15px rgba(184,134,11,.3)) drop-shadow(0 0 30px rgba(139,0,0,.2));opacity:.85}
@@ -99,13 +98,19 @@
   }
   #wakeup{position:fixed;inset:0;z-index:999;pointer-events:none;image-rendering:pixelated;image-rendering:crisp-edges}
 
-  /* ═══ ILLUMINATED MANUSCRIPT FRAME ═══ */
+  /* ═══ ILLUMINATED MANUSCRIPT FRAME — behind, offset right, receding ═══ */
   #entry-poster{
-    width:min(280px,72vw);
+    width:min(240px,28vw);
     aspect-ratio:3/4;
-    max-height:52vh;
+    max-height:46vh;
     position:relative;
     padding:14px;
+    /* sit behind the logo, offset to the right, tilted back */
+    margin-left:clamp(-80px,-7vw,-40px);
+    transform:translateX(clamp(30px,4vw,60px)) scale(.94) rotate(.4deg);
+    opacity:.85;
+    z-index:1;
+    filter:drop-shadow(0 8px 24px rgba(0,0,0,.65));
     background:
       /* inner dark core */
       radial-gradient(ellipse at center,#120808 0%,#050202 65%,#000 100%),
@@ -315,11 +320,12 @@
     canvas#game{touch-action:none}
     #crt{display:none} /* CRT too heavy on mobile */
     
-    /* Entry — compact on mobile */
-    #entry{gap:14px;padding:14px}
+    /* Entry — vertical stack on mobile */
+    #entry{flex-direction:column;gap:20px;padding:14px}
+    #entry-left{gap:18px;z-index:1}
     #entry-btn{font-size:10px;padding:14px 24px;min-height:44px}
-    #entry-logo{font-size:clamp(36px,10vw,64px);letter-spacing:4px}
-    #entry-poster{width:min(220px,72vw);max-height:42vh;padding:10px}
+    #entry-logo{font-size:clamp(40px,11vw,68px);letter-spacing:4px}
+    #entry-poster{width:min(220px,72vw);max-height:38vh;padding:10px;margin-left:0;transform:none;opacity:1;z-index:2}
     #entry-poster::after{inset:7px}
     #poster-text{font-size:clamp(16px,5vw,22px)}
     .corner-skull{font-size:14px}
@@ -552,7 +558,7 @@ P.S. Это объяснение написано намеренно, чтобы
 </div>
 <div id="crt"></div>
 <canvas id="cur" width="20" height="20"></canvas>
-<div id="entry"><div id="entry-logo">ARDET</div><div id="entry-poster"><div class="corner-skull tl">☠</div><div class="corner-skull tr">☠</div><div class="corner-skull bl">☠</div><div class="corner-skull br">☠</div><div class="ornate-dots top">❦ ✦ ❦</div><div class="ornate-dots bottom">❦ ✦ ❦</div><div id="poster-inner"><span id="poster-text">coming soon</span></div></div><button id="entry-btn">В ПУСТОТУ 25+</button><div id="boot"></div></div>
+<div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">В ПУСТОТУ 25+</button></div><div id="entry-poster"><div class="corner-skull tl">☠</div><div class="corner-skull tr">☠</div><div class="corner-skull bl">☠</div><div class="corner-skull br">☠</div><div class="ornate-dots top">❦ ✦ ❦</div><div class="ornate-dots bottom">❦ ✦ ❦</div><div id="poster-inner"><span id="poster-text">coming soon</span></div></div><div id="boot"></div></div>
 <div id="gw"><canvas id="game"></canvas></div>
 <canvas id="wakeup" width="160" height="100"></canvas>
 <div id="menu">
@@ -1234,7 +1240,7 @@ const locs=[
     light:{r:20,color:[120,80,40],flicker:.05},
     solid:true},
   {id:'bus',name:'Разбитый автобус',x:1900,y:1020,w:70,h:40,zone:'highway',
-    look:'Школьный автобус. Жёлтая краска облезла. На борту, трафаретом: «ШКОЛА №1».\n\nВнутри — ряды школьных ранцев на сиденьях. Учебники раскрыты на тех страницах, до которых дошли. Дата на доске: 01.09.\n\nНа спинке переднего сиденья висит детский противогаз ГП-5. Размер — младший. На внутренней стороне двери — ламинированная инструкция по ГО, прошита пулей.\n\nНа стене, школьным мелом, пять дат, каждая — с одним именем:\n\n20.03.1995 — Токийское метро. Зарин. 13 погибших. Один — Shizuka Itō, 24, ехал на собеседование. Не доехал.\n\n08.09.1999 — Волгодонск. Дом №35. 19 погибших. Одна — Ирина Рогачёва, 7 лет, спала с куклой. Куклу нашли. Ирину — не всю.\n\n01.09.2004 — Беслан. Школа №1. 334 погибших. 186 — дети. Один — Адам Мерсиев, 9 лет, первый раз в первый класс, новая рубашка с короткими рукавами. Гимн играл на третий день, когда всё кончилось. Гимн не про него.\n\n22.03.2024 — Крокус Сити Холл. 145 погибших. Одна — Ярослав Любимов, 18, купил билет в день концерта, потому что девушка хотела. Девушка выжила. Он — нет.\n\n??.??.???? — пусто. Имя ещё не получило даты.\n\nИз динамика — детский голос, ровный, как робот: «Внимание. Учебная тревога. Повторяю: учебная тревога. Учебная. Учебная.» Повторяется каждые одиннадцать секунд. Одиннадцать секунд назад — тоже повторялся.',
+    look:'Школьный автобус. Жёлтая краска облезла. На борту, трафаретом: «ШКОЛА №1».\n\nВнутри — ряды школьных ранцев на сиденьях. Учебники раскрыты на тех страницах, до которых дошли. Дата на доске: 01.09.\n\nНа спинке переднего сиденья висит детский противогаз ГП-5. Размер — младший. На внутренней стороне двери — ламинированная инструкция по ГО, прошита пулей.\n\nНа стене, школьным мелом, пять дат, каждая — с одним именем:\n\n20.03.1995 — Токийское метро. Зарин. 13 погибших. Один — Shizuka Itō, 24, ехал на собеседование. Не доехал.\n\n08.09.1999 — Волгодонск. Дом №35. 19 погибших. Одна — Ирина Рогачёва, 7 лет, спала с куклой. Куклу нашли. Ирину — не всю.\n\n24.05.2022 — Robb Elementary, Uvalde, Texas. 19 детей + 2 учителя. Одна — Amerie Jo Garza, 10 лет, почётная ученица, хотела стать морским биологом. Взяла классный телефон и набрала 911. Ещё раз. Ещё раз. Снаружи стояли 376 полицейских. Слушали выстрелы 77 минут. Не вошли. Amerie не дождалась. В гробу у неё был значок «honor roll».\n\n22.03.2024 — Крокус Сити Холл. 145 погибших. Одна — Ярослав Любимов, 18, купил билет в день концерта, потому что девушка хотела. Девушка выжила. Он — нет.\n\n??.??.???? — пусто. Имя ещё не получило даты.\n\nИз динамика — детский голос, ровный, как робот: «Внимание. Учебная тревога. Повторяю: учебная тревога. Учебная. Учебная.» Повторяется каждые одиннадцать секунд. Одиннадцать секунд назад — тоже повторялся.',
     useAction:'bus_instr',
     solid:true},
   {id:'junkyard',name:'Кладбище машин',x:2500,y:480,w:90,h:70,zone:'highway',
@@ -4849,15 +4855,15 @@ const locDraw={
     X.font='3px "Press Start 2P"';
     X.fillText('95',bbX+1,bbY+3);
     X.fillText('99',bbX+5,bbY+3);
-    X.fillText('04',bbX+1,bbY+6);
+    X.fillText('22',bbX+1,bbY+6);
     X.fillText('24',bbX+5,bbY+6);
     // Red chalk "???" — unfilled
     X.fillStyle='#6b0f1a';
     X.fillText('??',bbX+2,bbY+9);
     X.globalAlpha=1;
-    // "01.09" big chalk date on top (Beslan memorial)
+    // "24.05" big chalk date on top (Uvalde memorial — last day before summer)
     X.globalAlpha=.6;X.fillStyle=P.bone;X.font='3px "Press Start 2P"';
-    X.fillText('01.09',bbX+1,bbY-1);
+    X.fillText('24.05',bbX+1,bbY-1);
     X.globalAlpha=1;
 
     // ── PILE of small SCHOOL BACKPACKS at back of bus ──
@@ -10979,46 +10985,119 @@ function updateBrainrotRecovery(){
 // STYLISTIC EFFECTS — 2026 glitch/reality/memory language
 // ═══════════════════════════════════════════════════════
 
-// ── BINARY GLITCH — rectangular slice of screen turns into flickering 1/0 ──
-let binaryGlitch={active:false,x:0,y:0,w:0,h:0,timer:0,duration:0,kind:0};
+// ── BINARY GLITCH — irregular shard entering from an edge of viewport ──
+let binaryGlitch={active:false,points:null,bbox:null,timer:0,duration:0,kind:0,edge:0,seed:0};
+function _buildGlitchShard(){
+  // Pick entry edge 0=top, 1=right, 2=bottom, 3=left
+  const edge=Math.floor(Math.random()*4);
+  // Area ratio: ~1/3 on mobile (<600px viewport), ~1/5 desktop
+  const isMobile=window.innerWidth<700;
+  const ratio=isMobile?.33:.2;
+  // Approximate target area
+  const targetArea=VW*VH*ratio;
+  // Build jagged polygon — enter from edge, extend inward with serrated spikes
+  const pts=[];
+  const teeth=8+Math.floor(Math.random()*6);
+  const depth=Math.sqrt(targetArea);
+  const seed=Math.floor(Math.random()*10000);
+  // Per-edge construction
+  if(edge===0){ // from TOP
+    const spread=VW*(.5+Math.random()*.4);
+    const x0=Math.random()*(VW-spread);
+    pts.push([x0,0]);
+    for(let i=0;i<teeth;i++){
+      const tx=x0+spread*(i+1)/teeth;
+      const ty=depth*(.55+.45*hash(i,seed,11));
+      pts.push([tx-8-hash(i,seed,22)*10,ty]);
+      pts.push([tx+hash(i,seed,33)*14,ty-hash(i,seed,44)*16]);
+    }
+    pts.push([x0+spread,0]);
+  }else if(edge===2){ // from BOTTOM
+    const spread=VW*(.5+Math.random()*.4);
+    const x0=Math.random()*(VW-spread);
+    pts.push([x0,VH]);
+    for(let i=0;i<teeth;i++){
+      const tx=x0+spread*(i+1)/teeth;
+      const ty=VH-depth*(.55+.45*hash(i,seed,11));
+      pts.push([tx-8-hash(i,seed,22)*10,ty]);
+      pts.push([tx+hash(i,seed,33)*14,ty+hash(i,seed,44)*16]);
+    }
+    pts.push([x0+spread,VH]);
+  }else if(edge===3){ // from LEFT
+    const spread=VH*(.5+Math.random()*.4);
+    const y0=Math.random()*(VH-spread);
+    pts.push([0,y0]);
+    for(let i=0;i<teeth;i++){
+      const ty=y0+spread*(i+1)/teeth;
+      const tx=depth*(.55+.45*hash(i,seed,11));
+      pts.push([tx,ty-8-hash(i,seed,22)*10]);
+      pts.push([tx-hash(i,seed,44)*16,ty+hash(i,seed,33)*14]);
+    }
+    pts.push([0,y0+spread]);
+  }else{ // from RIGHT
+    const spread=VH*(.5+Math.random()*.4);
+    const y0=Math.random()*(VH-spread);
+    pts.push([VW,y0]);
+    for(let i=0;i<teeth;i++){
+      const ty=y0+spread*(i+1)/teeth;
+      const tx=VW-depth*(.55+.45*hash(i,seed,11));
+      pts.push([tx,ty-8-hash(i,seed,22)*10]);
+      pts.push([tx+hash(i,seed,44)*16,ty+hash(i,seed,33)*14]);
+    }
+    pts.push([VW,y0+spread]);
+  }
+  // Bounding box for char grid
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for(const[px_,py_]of pts){
+    if(px_<minX)minX=px_;if(py_<minY)minY=py_;
+    if(px_>maxX)maxX=px_;if(py_>maxY)maxY=py_;
+  }
+  return{pts,bbox:{x:Math.max(0,Math.floor(minX)),y:Math.max(0,Math.floor(minY)),w:Math.min(VW,Math.ceil(maxX))-Math.max(0,Math.floor(minX)),h:Math.min(VH,Math.ceil(maxY))-Math.max(0,Math.floor(minY))},edge};
+}
 function updateBinaryGlitch(){
   if(binaryGlitch.active){
     binaryGlitch.timer++;
     if(binaryGlitch.timer>=binaryGlitch.duration)binaryGlitch.active=false;
     return;
   }
-  // Roll: try once every 180 frames (~every 3s at 60fps), low probability
-  if(t%180===0&&Math.random()>.7){
+  // Roll once every 300 frames (~5s at 60fps), low probability
+  if(t%300===0&&Math.random()>.65){
+    const shard=_buildGlitchShard();
     binaryGlitch.active=true;
-    binaryGlitch.x=Math.floor(Math.random()*(VW-80));
-    binaryGlitch.y=Math.floor(Math.random()*(VH-40));
-    binaryGlitch.w=40+Math.floor(Math.random()*80);
-    binaryGlitch.h=15+Math.floor(Math.random()*25);
+    binaryGlitch.points=shard.pts;
+    binaryGlitch.bbox=shard.bbox;
+    binaryGlitch.edge=shard.edge;
     binaryGlitch.duration=80+Math.floor(Math.random()*60);
     binaryGlitch.timer=0;
-    binaryGlitch.kind=Math.floor(Math.random()*3); // 0=binary, 1=hex, 2=cyrillic entropy
+    binaryGlitch.kind=Math.floor(Math.random()*3);
+    binaryGlitch.seed=Math.floor(Math.random()*10000);
   }
 }
 function drawBinaryGlitch(){
-  if(!binaryGlitch.active)return;
+  if(!binaryGlitch.active||!binaryGlitch.points)return;
   const g=binaryGlitch;
-  // Fade in/out at edges of lifetime
   const fade=Math.min(1,Math.min(g.timer,g.duration-g.timer)/12);
-  X.globalAlpha=fade*.78;
-  // Black void background
+  X.save();
+  // Clip to jagged polygon
+  X.beginPath();
+  g.points.forEach((p,i)=>i===0?X.moveTo(p[0],p[1]):X.lineTo(p[0],p[1]));
+  X.closePath();
+  X.clip();
+  // Black void fill inside shard
+  X.globalAlpha=fade*.82;
   X.fillStyle='#050405';
-  X.fillRect(g.x,g.y,g.w,g.h);
-  // Scanline pulse across the block
-  X.globalAlpha=fade*.12;
-  const sl=Math.floor((g.timer*4)%g.h);
+  X.fillRect(g.bbox.x,g.bbox.y,g.bbox.w,g.bbox.h);
+  // Scanline pulse
+  X.globalAlpha=fade*.14;
+  const sl=Math.floor((g.timer*4)%Math.max(1,g.bbox.h));
   X.fillStyle=P.toxic;
-  X.fillRect(g.x,g.y+sl,g.w,1);
-  // Flickering characters
+  X.fillRect(g.bbox.x,g.bbox.y+sl,g.bbox.w,1);
+  // Character grid
   X.globalAlpha=fade*.85;
   X.fillStyle=P.toxic;
   X.font='5px monospace';
   const cw=4,ch=6;
-  const cols=Math.floor(g.w/cw),rows=Math.floor(g.h/ch);
+  const cols=Math.ceil(g.bbox.w/cw),rows=Math.ceil(g.bbox.h/ch);
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       if(hash(c,r,Math.floor(t/2))>.18){
@@ -11026,14 +11105,18 @@ function drawBinaryGlitch(){
         if(g.kind===0)ch_=hash(c,r,Math.floor(t/3))>.5?'1':'0';
         else if(g.kind===1)ch_='0123456789abcdef'[Math.floor(hash(c,r,Math.floor(t/3))*16)];
         else ch_='▓▒░#@&%$?'[Math.floor(hash(c,r,Math.floor(t/4))*9)];
-        X.fillText(ch_,g.x+c*cw,g.y+r*ch+5);
+        X.fillText(ch_,g.bbox.x+c*cw,g.bbox.y+r*ch+5);
       }
     }
   }
-  // Corrupted border
-  X.globalAlpha=fade*.4;
+  X.restore();
+  // Toxic-green edge stroke along shard path (after restore — no clip)
+  X.globalAlpha=fade*.45;
   X.strokeStyle=P.btoxic;X.lineWidth=1;
-  X.strokeRect(g.x,g.y,g.w,g.h);
+  X.beginPath();
+  g.points.forEach((p,i)=>i===0?X.moveTo(p[0],p[1]):X.lineTo(p[0],p[1]));
+  X.closePath();
+  X.stroke();
   X.globalAlpha=1;
 }
 
@@ -11104,9 +11187,12 @@ function drawRealityShift(){
 
 // ── TEXT GHOSTS — fragments from elsewhere drift across the scene ──
 let textGhosts=[];
-const ghostLines=['...вобла не горит...','...примус починил...','...cheese pizza...','...мох помнит...','...bc1q...','...87 миллионов...','...3.14...','...аннушка уже разлила...','...404...','...dead internet...','...hevel hevalim...','...amor fati...','...fana...','...stay with the trouble...','...world-without-us...','...retromania...','...22.05.2010...','...26.04.1986...','...01.09.2004...','...никто не заметил...'];
+let _lastGhostSpawn=-9999;
+const ghostLines=['...вобла не горит...','...примус починил...','...cheese pizza...','...мох помнит...','...bc1q...','...87 миллионов...','...3.14...','...аннушка уже разлила...','...404...','...dead internet...','...hevel hevalim...','...amor fati...','...fana...','...stay with the trouble...','...world-without-us...','...retromania...','...22.05.2010...','...26.04.1986...','...24.05.2022...','...никто не заметил...'];
 function updateTextGhosts(){
-  if(t%320===0&&Math.random()>.55&&textGhosts.length<2){
+  // Max one ghost every 15 real seconds (assumes ~60fps ⇒ 900 frames)
+  if(t-_lastGhostSpawn>=900&&Math.random()>.7&&textGhosts.length<1){
+    _lastGhostSpawn=t;
     textGhosts.push({
       text:ghostLines[Math.floor(Math.random()*ghostLines.length)],
       x:20+Math.random()*(VW-80),
