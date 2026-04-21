@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wood Reverb v2.0 — Logical Schematic</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;font-family:'Courier New',monospace;padding:20px;max-width:960px;margin:0 auto;color:#111}
+@media(prefers-color-scheme:dark){body{background:#141412;color:#ddd}.s{border-color:#333;background:#1a1a18}.n{background:#1e1e1a;border-color:#333}}
+h1{font-size:18px;text-align:center;letter-spacing:2px;margin:10px 0 4px}
+.sub{text-align:center;font-size:10px;color:#888;margin-bottom:16px}
+.s{border:1px solid #ccc;border-radius:5px;margin:12px 0;padding:12px;background:#fafaf7}
+.s h2{font-size:13px;margin:0 0 6px;color:#8B6914}
+.n{font-size:9px;color:#888;background:#f5f3ed;border:1px solid #ddd;border-radius:3px;padding:5px 7px;margin:5px 0}
+pre{font-size:10px;line-height:1.4;overflow-x:auto;white-space:pre}
+</style>
+</head>
+<body>
+<h1>WOOD REVERB v2.0 — LOGICAL SCHEMATIC</h1>
+<div class="sub">Material Resonator · 16HP Eurorack · 140 components · 98 nets</div>
+
+<div class="s"><h2>1. Power Supply</h2><pre>
+  +12V bus ──►|── D_P1 (1N5817) ──►── +12V rail ──┬── C_B1 (10µF) ──┐
+                                                     ├── C_B3 (47µF) ──┤
+                                                     │                  GND
+  -12V bus ──|◄── D_P2 (1N5817) ──◄── -12V rail ──┬── C_B2 (10µF) ──┐
+                                                     │                  GND
+  ┌────────┐
+  │ J_PWR  │  2×5 IDC header      Decoupling (100nF each, close to IC pins):
+  │ 2×5    │  Pin 1 = -12V        C1,C2 → U1    C5,C6 → U3    C9,C10 → U5
+  └────────┘  Red stripe = -12V   C3,C4 → U2    C7,C8 → U4
+</pre></div>
+
+<div class="s"><h2>2. Input Buffer (U1A — TL072)</h2><pre>
+              C_IN (1µF)              ┌─────────┐
+  J_IN ──●───┤├──────┬──────────────►│(+)  U1A │──┬── R2 (1kΩ) ──── BUF_OUT
+              │      │               │  TL072  │  │                    │
+             ┴       R1              │(-)     ─│──┘                    ├─→ DRY_SEND
+            GND    100kΩ             └─────────┘                       │    (to Mix)
+                     │              (voltage follower)                 │
+                    ┴                                                  └─→ to Pre-Emphasis
+                   GND                                                      (Section 3)
+</pre></div>
+
+<div class="s"><h2>3. Pre-Emphasis EQ (U3A — TL072)</h2><pre>
+                R_PE1 (10kΩ)        C_PE1 (1nF)
+  BUF_OUT ──────┤├────┬──────────────┤├──────┐
+                       │                      │
+                       │            RV_BOOST (50kΩ)
+                       │                │     │
+                       │                └─────┘
+                  ┌────┴─────────────┐
+                  │                  │     R_PE4 (10kΩ)
+  PE_OUT ◄────────│  U3A (TL072)    │──────┤├──────┐
+                  │  non-inverting   │              │
+                  │  shelf boost     │         R_PE3 (10kΩ)
+                  └──────────────────┘              │
+                                                   GND
+
+  RV_BOOST=0: flat    RV_BOOST=50k: +8dB above ~3.2kHz
+</pre>
+<div class="n">C_PE1 MUST match C_DE1 in de-emphasis section for proper compensation.</div></div>
+
+<div class="s"><h2>4. Driver Amp (U1B) + Push-Pull (Q1/Q2)</h2><pre>
+                                         R4 (47kΩ)
+  RV_DRIVE          R3 (10kΩ)    ┌────────┤├────────┐
+  (100kΩ log)                     │                  │
+  PE_OUT ──►┤ ──────┤├──────┬────►│(-)  U1B (TL072) │──┐
+                             │    │                  │  │
+                            ┴     │(+)              ─│──┤──►── R5 (100Ω) ──┐
+                           GND    └──────────────────┘  │                   │
+                                                        │            ┌──────┤
+  Gain = R4/R3 = 47k/10k = 4.7×                        │            │      │
+                                                               ┌─────┴────┐ │
+                                               +12V ──►│ Q1 BD139 NPN   │ │
+                                                        │     E ──► R6 (10Ω) ──┐
+                                                        └────────────┘          │
+                                                                           PP_OUT ──► C_DC (220µF)
+                                                        ┌────────────┐          │         ──► R8 (4.7Ω)
+                                               -12V ──►│ Q2 BD140 PNP   │ │         ──► EXCITER
+                                                        │     E ──► R7 (10Ω) ──┘
+                                                        └────────────┘
+</pre>
+<div class="n">BD139/BD140 may get warm. Ensure ~2cm² copper pour around pads for heat dissipation.</div></div>
+
+<div class="s"><h2>5. Feedback Summing + Freeze (U4A — TL074)</h2><pre>
+                                      R_FS3 (47kΩ)
+                                ┌──────┤├────────────────────┐
+                                │    D_LIM1 (1N4148)          │
+                                │   ──►|◄──                   │
+                                │    D_LIM2 (1N4148)          │
+             SW_FREEZE          │   ──◄|►──                   │
+  DRV_SEND ──┤ NORMAL├── R_FS1 (47kΩ) ──┤                    │
+              │ FREEZE├── GND            │    ┌────────────┐  │
+              └────────┘                 ├───►│(-)  U4A    │──┘── FB_OUT
+                                         │    │  TL074     │       │
+  WET_FB ── RV_FEEDBACK ── R_FS2 (47kΩ) ─┘    │(+)        │       │
+            (100kΩ log)                        └─────┬─────┘       └──► to Exciter
+                                                R_FS4 (47kΩ)
+                                                     │
+                                                    GND
+
+  FREEZE: disconnects input, maxes feedback → self-oscillation
+  D_LIM1/D_LIM2: clamp feedback to ±0.7V (protects exciter)
+</pre></div>
+
+<div class="s"><h2>6. Sidechain Input (U4B — TL074)</h2><pre>
+                C_SIDE (1µF)    R_SIDE (47kΩ)    R_SIDE_FB (47kΩ)
+  J_SIDE ──●──────┤├─────────────┤├──────┬─────────┤├──────┐
+                                          │                  │
+  (normalled                         ┌────┴──────────────┐   │
+   to GND)                           │(-)  U4B (TL074)  │───┘── R_SIDE_MIX (10kΩ)
+                                     │                    │            │
+                                GND──│(+)                ─│           └──► FB_SUM node
+                                     └────────────────────┘
+
+  Gain = -1. When DRIVE=0, sidechain alone drives exciter.
+</pre></div>
+
+<div class="s"><h2>7. Dual Piezo Preamp (Q3A/Q3B + U3B/U4C)</h2><pre>
+  PIEZO A                                                    Identical for PIEZO B:
+  (27mm)      C_PA      Q3A (2N5457)                         Q3B → C_CB → R_BB → U4C
+    ●────●──────┤├────┐   ┌──── +12V
+         │     10nF   ├──►│ D
+         │            │   │ G
+        R_PA          │   │ S ──┬── R_SA (4.7kΩ) ──► -12V
+       10MΩ           │        │
+         │            │        └── C_CA (1µF) ──┬────────────►│(+) U3B    │──── PREAMP_A_OUT
+        GND           │                         │             │  TL072    │
+                      │                        R_BA           │(-)       ─│──┐
+                      │                       4.7kΩ           └───────────┘  │
+                      │                         │        ┌── R_GA (22kΩ) ─┬──┘
+                      │                        GND       │   C_HA (100pF) │
+                      │                                  └── R_RA (1kΩ) ──┘
+                      │                                          │
+                      │                                         GND
+                      │
+                      │    Gain = 1 + R_GA/R_RA = 1 + 22k/1k = ×23
+                      │    JFET source follower: Zin ≈ R_PA = 10MΩ
+</pre>
+<div class="n">R_PA, R_PB (10MΩ) are critical. Keep gate traces SHORT. Guard ring recommended around JFET gate pad.</div></div>
+
+<div class="s"><h2>8. Position Crossfade (U4D — TL074)</h2><pre>
+                    R_XA (10kΩ)
+  PREAMP_A_OUT ──────┤├──────┐
+                              │     RV_POSITION (100kΩ dual-gang)
+                              ├────►┤ wiper ├──── R_XS1 (47kΩ) ──┐
+                              │                                    │   R_XFB (47kΩ)
+  PREAMP_B_OUT ──────┤├──────┘                               ┌────┴────┤├────┐
+                    R_XB (10kΩ)                               │                │
+                                                         ┌────┴──────────┐     │
+                                                    ┌────│(-)  U4D      │─────┘── XFADE_OUT
+                                                    │    │  TL074       │           │
+                                               R_XBIAS   │(+)          │           └──► to De-Emphasis
+                                               47kΩ │    └─────────────┘
+                                                    │
+                                                   GND
+
+  Fully CCW: Piezo A only (bright). Fully CW: Piezo B only (warm).
+  For stereo: A and B also go directly to L/R outputs BEFORE crossfade.
+</pre></div>
+
+<div class="s"><h2>9. De-Emphasis EQ</h2><pre>
+  Mirror of Pre-Emphasis (Section 3). Same topology, configured for CUT instead of BOOST.
+
+                R_DE1 (10kΩ)        C_DE1 (1nF)
+  XFADE_OUT ─────┤├────┬──────────────┤├──────┐
+                        │                      │
+                        │            R_DE2 (22kΩ) — fixed cut
+                        │                │     │
+                        │                └─────┘
+                  ┌─────┴────────────┐
+  DE_OUT ◄────────│  de-emphasis amp │────── R_DE4 (10kΩ) ──┐
+                  └──────────────────┘                       │
+                                                        R_DE3 (10kΩ)
+                                                             │
+                                                            GND
+</pre>
+<div class="n">C_DE1 MUST match C_PE1 exactly. Both 1nF C0G ceramic from same batch recommended.</div></div>
+
+<div class="s"><h2>10. Tone LPF + LED Clipper (U2A, D1, D2)</h2><pre>
+                R_TF       RV_CUTOFF                    ┌─────────┐
+  DE_OUT ────────┤├────┬───►┤ (100kΩ) ├── C_TF ──┤    │(+)  U2A │──── R_CL ──┬── CLIP_NODE
+                1kΩ    │                   10nF   │    │  TL074  │    1kΩ     │
+                       │                          │    │(-)     ─│──┐         │
+                       │                         GND   └─────────┘  │         ├── D1 LED ──► GND
+                       │                                 (follower)  │         │   (clip +)
+                       └──────────────────────────────────────────────┘         │
+                                                                               ├── D2 LED ◄── GND
+                                                                               │   (clip -)
+  Cutoff range: 158Hz (RV=100k) → 15.9kHz (RV=0)                             │
+  LEDs: clip at ±1.8V, mount on panel as indicators                      R_CLB (100kΩ)
+                                                                               │
+                                                                              GND
+</pre></div>
+
+<div class="s"><h2>11. Attack/Decay VCA (U5 — LM13700)</h2><pre>
+  ════════════ ENVELOPE FOLLOWER ════════════
+
+  BUF_OUT ── R_EF1 (10kΩ) ──►|── D_EF (1N4148) ──┬── ENV_CAP
+                                                    │
+                              RV_ATTACK (1MΩ log)   │   RV_DECAY (1MΩ log)
+                              (charge path)  ────────┤   (discharge path)
+                                                    │        │
+                                               C_ENV (1µF)   R_DCV (100kΩ)
+                                                    │        │
+                                                   GND   J_CV_DECAY
+
+  ENV_CAP voltage → R_IABC (10kΩ) → U5 pin 1 (I_abc)
+
+  ════════════ VCA (OTA1) ════════════
+
+                   R_VCA_IN (10kΩ)       ┌──────────────┐
+  CLIP_NODE ────────┤├──────────────────►│ IN+    U5     │
+                                          │ LM13700     │──► VCA_BUF_OUT
+                   R_VCA_G (10kΩ)        │ OTA1   BUF  │      │
+  GND ──────────────┤├──────────────────►│ IN-          │      └──► to Mix
+                                          └──────────────┘          (wet signal)
+                   R_BLIN (10kΩ)
+  +12V ─────────────┤├──────────►── U5 pin 2 (linearizing diode bias)
+
+  R_VCA_LOAD (10kΩ): OTA output to GND
+</pre>
+<div class="n">OTA2 (pins 9-16) is UNUSED. Tie OTA2 inputs (pins 13,14) and I_abc (pin 16) to GND.</div></div>
+
+<div class="s"><h2>12. Noise Generator + Color (Q4, U2C)</h2><pre>
+  +12V
+    │
+  R20 (100kΩ)        Q4 (BC547)                U2C (TL074)
+    │                reverse-biased              inverting amp
+    └──── E ──┐      B-E junction    R22        R23 (1MΩ)
+              │         │           (10kΩ)  ┌────┤├────────┐
+              │    ┌────┴────┐        │     │   C_NF(10pF) │
+              └────│  Q4     │── C_NI ┤├────┼──►│(-)  U2C │─┘── C_NO (1µF)
+                   │  BC547  │  100nF       │   │         │          │
+              ┌────│         │         ┌────┘   │(+)     ─│──┐      │
+              │    └────┬────┘         │        └─────────┘  │  RV_COLOR
+             GND   R21 (10kΩ)     (virtual                  │  (100kΩ)──┬── C_COL
+                        │          ground)                  GND          │   (10nF)
+                       GND                                               │      │
+                                                                        GND    GND
+  Gain = R23/R22 = 1M/10k = ×100                                        │
+                                                                   RV_NOISE
+                                                                   (100kΩ)
+                                                                        │
+                                                                   NOISE_OUT → Mix
+</pre>
+<div class="n">Not all BC547 have same noise. Test 5-10 transistors, pick the noisiest. 2N2222 often better.</div></div>
+
+<div class="s"><h2>13. Mix + Stereo Output (U2D)</h2><pre>
+  DRY_SEND ──── R_MD (47kΩ) ──────────────┐
+                                            │       R_MFB (47kΩ)
+  VCA_BUF_OUT ── RV_MIX ── R_MW (47kΩ) ───┤   ┌────┤├────────┐
+                 (100kΩ)                    │   │              │
+  NOISE_OUT ──── R_MN (100kΩ) ─────────────┤   │ ┌──────────┐ │
+                                            ├───┴►│(-)  U2D  │─┘── C_OUT ── R_OUT ── J_OUT_L
+  J_CV_MIX ──── R_MCV (100kΩ) ────────────┘     │  TL074   │     (1µF)    (1kΩ)
+                                             ┌───│(+)       │
+                                             │   └──────────┘
+                                        R_MNI (47kΩ)
+                                             │
+                                            GND
+
+  ═══ STEREO (active when J_OUT_R plugged in) ═══
+
+  PREAMP_A_OUT ── R_SL (47kΩ) ──┐                ┌── R_SLF (47kΩ) ── J_OUT_L
+  DRY_SEND ────── R_DL (47kΩ) ──┼── summing amp ─┘
+                                  │
+  PREAMP_B_OUT ── R_SR (47kΩ) ──┐                ┌── R_SRF (47kΩ) ── J_OUT_R
+  DRY_SEND ────── R_DR (47kΩ) ──┼── summing amp ─┘
+</pre></div>
+
+<div class="s"><h2>14. Solenoid Damper (Q5 — 2N7000)</h2><pre>
+  +12V                                  Gate drive:
+    │
+    │    ┌────────────┐                 J_CV_DAMP ── R_DAM1 (100kΩ) ──┬── R_DAM2 (10kΩ) ── Gate
+    │    │  SOLENOID  │                                                │
+    │    │  5V push   │                                           R_DAM3 (100kΩ)
+    │    └──────┬─────┘                                                │
+    │           │                                                     GND
+    │      D_SOL (1N4001)
+    │     ──|◄── (flyback)              CV 0V → solenoid retracted → wood rings free
+    │           │                       CV 5V → solenoid extends → rubber tip damps wood
+    │      ┌────┴────┐
+    └──────│ Drain    │
+           │ Q5 2N7000│
+      Gate─│          │
+           │ Source   │
+           └────┬─────┘
+               GND
+</pre>
+<div class="n">D_SOL is MANDATORY. Without it, inductive kickback destroys Q5 on every off-transition.</div></div>
+
+<div style="text-align:center;margin:20px 0;font-size:11px;color:#888">
+WOOD REVERB v2.0 — Complete Logical Schematic — All 14 circuit sections<br>
+140 components · 98 nets · 5 ICs (TL072×2, TL074×2, LM13700×1) · 6 transistors<br>
+Open hardware — build, modify, share · 2025
+</div>
+</body>
+</html>
