@@ -1,34 +1,26 @@
-# SYSTEM SUICIDE — Executive Summary
+# SYSTEM SUICIDE — Executive Summary (revised)
 
-**TL;DR**: Проект амбициозный и содержит **три-четыре истинно уникальных концепции** (physical plate reverb, oil can delay с solar amp, physical tongue EQ, optical tonewheel VCO). Последует **продать в boutique Eurorack нишу**. Но **первая прошивка PCB Last Night v2.1 не будет работать** без ~8 исправлений схемы — критические блокеры в solenoid driver, JFET EOL, pre-emphasis arithmetic, feedback stability. **Не закупать компоненты до исправления топ-6 рисков ниже**.
+> **Revision**: этот документ был переоценён после появления `wood_reverb_logical_schematic.html` — каркаса с точной топологией Last Night v2.0. Один из моих топ-BLOCKER был снят (детали в `13_schematic_cross_reference.md`). Топ-10 ниже пересортирован.
+
+**TL;DR**: Проект амбициозный и содержит **три-четыре истинно уникальных концепции** (physical plate reverb, oil can delay с solar amp, physical tongue EQ, optical tonewheel VCO). Полностью **продаваем в boutique Eurorack нишу**. Но **первая прошивка PCB Last Night v2.1 требует 3 критических фикса** (JFET EOL, EMI shielding, feedback stability simulation) перед компонентами. Ещё ~5 improvement-уровня правок можно делать на rev B.
 
 ---
 
-## Топ-10 kill-рисков
+## Топ-10 kill-рисков (revised)
 
 Ранжировано по **вероятности × влиянию на проект**.
 
-### #1 — Solenoid driver gate divider inverted — **BLOCKER**
-
-Блок 8 в `10_`. Делитель 100к/10к даёт 0.45В на gate 2N7000 — **MOSFET не откроется** никогда. При CV 5В не work. **Soleнoid damper не работает as designed**.
-
-**Fix**: поменять R_DAM1 и R_DAM2 местами (10к serial + 100к pulldown). 5 минут работы.
-
-**Cost of inaction**: demper не работает, большая заявленная feature dead.
-
----
-
-### #2 — 2N5457 JFET EOL — **BLOCKER**
+### #1 — 2N5457 JFET EOL — **BLOCKER**
 
 Блок 9. Critical preamp component снят с производства. NOS стоки истощаются. Любой production run хрупок к поставщику.
 
-**Fix**: перейти на **LSK489A** (dual matched JFET) — $5–8 per module. Требует redesign preamp на SMD.
+**Fix**: перейти на **LSK489A** (dual matched JFET) — $5–8 per module. Требует redesign preamp на SMD (один sub-secton).
 
 **Cost of inaction**: проект лимитирован старыми запасами JFET, scalability невозможна.
 
 ---
 
-### #3 — Solenoid EMI в piezo preamp — **BLOCKER**
+### #2 — Solenoid EMI в piezo preamp — **BLOCKER**
 
 Блок 8 + СП3. Коммутация 200–500мА через solenoid в 50мм от 10МΩ JFET gate = шум громче сигнала. Cartridge JST cable без shielding = antenna.
 
@@ -43,7 +35,7 @@
 
 ---
 
-### #4 — Feedback loop stability unverified — **BLOCKER**
+### #3 — Feedback loop stability unverified — **BLOCKER**
 
 СП5. Физический резонатор с Q 100–1000 в electronic feedback loop → risk самовозбуждения на резонансной частоте. Лимитер 1N4148 — мягкий, не гарантирует stability.
 
@@ -56,7 +48,7 @@
 
 ---
 
-### #5 — LFO отсутствует в схеме, но на панели педали — **BLOCKER (documentation)**
+### #4 — LFO отсутствует в схеме, но на панели педали — **BLOCKER (documentation)**
 
 C1 в `50_`. Пользователь сам это зафиксировал. Три ручки (SPEED/DEPTH/PHASE) на педальном макете не имеют схемной реализации.
 
@@ -66,37 +58,7 @@ C1 в `50_`. Пользователь сам это зафиксировал. Т
 
 ---
 
-### #6 — RT60 заявлены 10–20× завышенно — **MAJOR (marketing/brand)**
-
-См. `11_last_night_acoustic.md`, C. Oak 1.5–4с заявлено, реально 0.1–0.3с. Marble 2–6с, реально 0.8–2с.
-
-**Fix**: корректировать catalog. Позиционировать Last Night как **"resonator reverb"**, не "plate reverb". Реалистичные RT60 в docs.
-
-**Cost of inaction**: первый buyer подаст return с "reverb не работает как заявлено". Брендовый риск.
-
----
-
-### #7 — Pre-emphasis EQ corner мiscalculated — **MAJOR**
-
-Блок 3. Заявлено 3.2кГц, с текущими номиналами (R=10к, C=1нФ) реально **15.9кГц** — effectively outside hearing range.
-
-**Fix**: C_PE1 и C_DE1 → 4.7нФ (corner 3.4кГц). Или R → 47к. Trivial.
-
-**Cost of inaction**: pre/de-emph не работают, просто добавляют noise без спектральной компенсации.
-
----
-
-### #8 — Push-pull driver без bias — **MAJOR**
-
-Блок 4. BD139/140 без biasing diodes → class B → crossover distortion на низких signal levels.
-
-**Fix**: добавить 2×1N4148 между базами. 2 компонента.
-
-**Cost of inaction**: grungy low-level sound, "broken" ощущение на тихих signals.
-
----
-
-### #9 — Last Day форм-фактор не решён — **BLOCKER (product)**
+### #5 — Last Day форм-фактор не решён — **BLOCKER (product)**
 
 C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks conflict с pedal корпусом.
 
@@ -106,7 +68,39 @@ C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks con
 
 ---
 
-### #10 — Three modules under-specified (Be Careful, Is My, And My) — **MAJOR (roadmap)**
+### #6 — Solenoid gate divider marginal turn-on — **MAJOR** (ранее было #1 BLOCKER — demoted)
+
+Блок 8. Правильная топология делителя (R_DAM1 100k серии, R_DAM3 100k pulldown, R_DAM2 10k к gate) даёт ratio 0.5, не 0.09 как я считал изначально. При CV 5В gate = 2.5В — marginal для Vth 2N7000 (spread 0.8–3В). Работает для typical экземпляров, unreliable для low-Vth.
+
+**Fix**: уменьшить R_DAM1 до 47кΩ → divider 0.68 → CV 5В = 3.4В на gate (solid). Альтернатива: logic-level MOSFET (AO3400, IRLZ34N).
+
+**Cost of inaction**: ~15% экземпляров будут работать нестабильно — мелкая production issue, не катастрофа.
+
+---
+
+### #7 — RT60 заявлены 10–20× завышенно — **MAJOR (marketing/brand)**
+
+См. `11_last_night_acoustic.md`, C. Oak 1.5–4с заявлено, реально 0.1–0.3с. Marble 2–6с, реально 0.8–2с.
+
+**Fix**: корректировать catalog. Позиционировать Last Night как **"resonator reverb"**, не "plate reverb". Реалистичные RT60 в docs.
+
+**Cost of inaction**: первый buyer подаст return с "reverb не работает как заявлено". Брендовый риск.
+
+---
+
+### #8 — Push-pull driver без bias + R8 power rating — **MAJOR**
+
+Блок 4. BD139/140 без biasing diodes → class B → crossover distortion. Кроме того, **R8 4.7Ω должен быть 5W wirewound** (рассеивает ~3.8Вт), не 1/4W. Не ясно из каркаса спецификация — может сгореть если ошибка в BOM.
+
+**Fix**: 
+- 2×1N4148 между базами Q1/Q2 для class AB.
+- R8 — wirewound 5W (Panasonic ERG-5SJ или аналог).
+
+**Cost of inaction**: grungy low-level sound (bias issue) + потенциальное burn-out R8 (power rating issue).
+
+---
+
+### #9 — Three modules under-specified (Be Careful, Is My, And My) — **MAJOR (roadmap)**
 
 См. `30_`, `50_`. Три модуля из девяти имеют либо конфликтующие, либо отсутствующие определения.
 
@@ -116,6 +110,19 @@ C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks con
 - And My: определить (recommended Last Day↔Last Night crossfader) или удалить.
 
 **Cost of inaction**: нельзя продавать 9-module serie как coherent product. Marketing и roadmap confused.
+
+---
+
+### #10 — Envelope follower time constants off — **MAJOR**
+
+Блок 13. τ = 1МΩ × 1µФ = 1 секунда (maximum). Музыкально полезный attack — 1–50 мс. Текущая схема: либо мгновенно (R=0), либо слишком медленно (→1с). Середина плохо управляется.
+
+**Fix**: 
+- Уменьшить C_ENV до 220нФ.
+- Уменьшить R_ATTACK до 220к (τ_max = 48мс — привычный диапазон attack).
+- Добавить 2 диода для independent A/D charge/discharge paths.
+
+**Cost of inaction**: envelope response unusable для musical dynamics — либо gate on/off, либо infinite sustain.
 
 ---
 
@@ -135,13 +142,13 @@ C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks con
 
 ---
 
-## Triage order (practical R&D priority)
+## Triage order (revised practical R&D priority)
 
-1. **IMMEDIATE** (1 day): Fix solenoid gate divider (**#1**), biasing diodes (**#8**), pre-emphasis caps (**#7**). Trivial edits to schematic.
-2. **SHORT** (1 week): Replace 2N5457 with LSK489A (**#2**), SPICE simulation of feedback loop (**#4**). Redraw preamp subsection.
-3. **MEDIUM** (1 month): Add EMI mitigation (**#3**), fix LFO schematic (**#5**). Redesign cartridge cable interface.
-4. **ONGOING** (3 months): Build prototype, measure real RT60 (**#6** correction), validate acoustic claims.
-5. **PARALLEL**: Decide Last Day form-factor (**#9**), define 3 under-specified modules (**#10**).
+1. **IMMEDIATE** (1 day): Biasing diodes 2×1N4148 в push-pull (**#8**), R8 spec → 5W wirewound (**#8**), reduce R_DAM1 to 47k для solenoid solid turn-on (**#6**). Trivial schematic edits + BOM correction.
+2. **SHORT** (1 week): Replace 2N5457 with LSK489A (**#1**), SPICE simulation of feedback loop (**#3**). Redraw preamp subsection.
+3. **MEDIUM** (1 month): Add EMI mitigation (**#2**), fix LFO schematic (**#4**). Redesign cartridge cable interface — mini-XLR.
+4. **ONGOING** (3 months): Build prototype, measure real RT60 (**#7** correction), validate acoustic claims, envelope τ fix (**#10**).
+5. **PARALLEL**: Decide Last Day form-factor (**#5**), define 3 under-specified modules (**#9**).
 
 ## Recommended first production run
 
@@ -160,16 +167,17 @@ C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks con
 
 **Концепция**: **сильная, уникальная, продаваемая** в boutique Eurorack нишу.
 
-**Текущая документация**: **содержит системные ошибки**, которые сделают первую прошивку Last Night v2.1 нерабочей.
+**Текущая документация (после revision)**: содержит **5 BLOCKER** и **5 MAJOR** пунктов, из которых **3 BLOCKER критичны перед первой прошивкой** (JFET EOL, EMI shielding, feedback SPICE). Остальные можно адресовать на rev B.
 
-**Не закупать компоненты** до исправления топ-6 блокеров.
+**Не закупать компоненты** до исправления топ-3 BLOCKER (#1–#3).
 
 **Order of operations**:
-1. Fix Last Night v2.1 schematic (1 week).
-2. Build first prototype, measure noise floor.
+1. Fix Last Night v2.1 schematic — specifically: swap 2N5457 → LSK489A, add mini-XLR cable shielding, SPICE feedback loop (1–2 недели).
+2. Build first prototype rev A, measure noise floor.
 3. Validate acoustic claims против realistic RT60 (update marketing).
-4. Ship Last Night + All Bones Dust (Phase 1).
-5. Parallel R&D на Last Day и pendulum LFO.
+4. Iterate to rev B с MAJOR fixes (bias diodes, R8 power rating, gate margin, envelope τ, LFO add).
+5. Ship Last Night + All Bones Dust (Phase 1).
+6. Parallel R&D на Last Day и pendulum LFO.
 
 **Estimated time to first ship**: 6–9 месяцев при full-time R&D на двух человек.
 
@@ -191,15 +199,29 @@ C2. Заявлено Eurorack AND pedal — но solar amp, motor, RCA jacks con
 **Это значит**: пользователь правильно видит риски. Ауд — валидация и приоритизация, не surprise discovery.
 
 **Что пользователь НЕ идентифицировал** (новые находки в этом аудите):
-- Pre-emphasis corner arithmetic error (блок 3).
-- Push-pull bias missing (блок 4).
-- C_DC 220µФ режет басы перед exciter (блок 7).
+- ~~Pre-emphasis corner arithmetic error (блок 3)~~ — **это моя ошибка, не пользователя. Корректно в каркасе (shelving topology, не simple RC).**
+- Push-pull bias missing (блок 4) — подтверждено каркасом.
+- R8 4.7Ω power rating — появилось только в каркасе, spec не указана.
+- C_DC 220µФ режет басы перед exciter на 83Гц (с учётом R8) — corrected from 180Гц.
 - Envelope follower time constants off by order of magnitude (блок 13).
 - RT60 claims exaggerated 2-20× (acoustic).
-- Gate divider in solenoid driver inverted (блок 8) — это serious oversight.
+- ~~Gate divider in solenoid driver inverted (блок 8)~~ — **это была моя ошибка (неверная интерпретация топологии). Реально — marginal turn-on, не nothing.**
 - Tel-Ray inheritance для oil can (capacitive, not magnetic).
 
-**Это значит**: external review добавляет value. Главные additions — arithmetic errors (pre-emph, gate divider, env follower) и acoustic reality check.
+**Это значит**: external review добавляет value, **но требует верификации с реальной схемой**. Два моих оригинальных замечания были некорректны из-за отсутствия точной топологии на момент первого прохода. Каркас `wood_reverb_logical_schematic.html` зафиксировал это — и запустил revision pass.
+
+**Material errors caught in revision**:
+1. Блок 3 (pre-emphasis): corner 3.2кГц корректен для shelving topology, не 15.9кГц как я считал.
+2. Блок 8 (solenoid): divider ratio 0.5, не 0.09. MOSFET **открывается**, хотя marginal при 5В CV.
+
+**Confirmed findings** (все ещё актуальные):
+- Push-pull crossover distortion без bias.
+- 2N5457 EOL (критический).
+- Solenoid EMI в piezo preamp (критический).
+- BC547 reverse breakdown unreliability (подтверждено note в каркасе!).
+- Envelope τ mismatch.
+- Feedback loop stability не проверена.
+- Acoustic RT60 exaggeration.
 
 ---
 

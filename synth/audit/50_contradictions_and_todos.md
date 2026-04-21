@@ -2,6 +2,8 @@
 
 Живой список несоответствий между разделами, пунктов "TBD", и мест, где две версии документа говорят разное. Каждый пункт — требование к пользователю: решить или явно зафиксировать, какая версия каноническая.
 
+> **Revision**: после появления `wood_reverb_logical_schematic.html` (каркас с точной топологией Last Night), пункт C5 понижен с MAJOR до MINOR (topology clarified). Ряд противоречий, связанных с неясной топологией, уточнены. См. `13_schematic_cross_reference.md`.
+
 ---
 
 ## C1. LFO на панели педали, но отсутствует в схеме — **BLOCKER**
@@ -67,15 +69,24 @@
 
 ---
 
-## C5. Freeze ↔ feedback-limiter: порядок срабатывания — **MAJOR**
+## C5. Freeze ↔ feedback-limiter: порядок срабатывания — **MINOR** (demoted после revision)
 
-**Источник**: блок 5 схемы Last Night — `Feedback Summing + Freeze (U4A)`. `SW_FREEZE (SPDT): normal=сигнал проходит, freeze=вход отключён, feedback 100%`. D_LIM1/D_LIM2 — лимитеры в FB loop.
+> **Revision note**: каркас `wood_reverb_logical_schematic.html` (секция 5) показал точную топологию. Precedence больше не неоднозначна. См. `13_schematic_cross_reference.md` C5.
 
-**Проблема**: не указано, находится ли лимитер **до** или **после** точки freeze-переключения.
-- Если лимитер **до**: в freeze-режиме limited signal бесконечно циркулирует. 1N4148 имеет прямое напряжение 0.6V — ограничение на ±0.6V = ~-5dBu = слабый сигнал в hold.
-- Если лимитер **после**: в freeze-режиме сигнал ограничивается при каждом проходе через кольцо — быстрая деградация / hard clip при высоком RV_FEEDBACK.
+**Уточнённая топология**:
+- SW_FREEZE SPDT: в NORMAL — DRV_SEND через R_FS1 47к к summing node U4A. В FREEZE — R_FS1 вход переключается на GND (вход заглушён).
+- WET_FB через RV_FEEDBACK → R_FS2 → summing node.
+- D_LIM1 и D_LIM2 **параллельно R_FS3 47к** в feedback loop U4A (clip на virtual ground).
 
-**Решение требуется**: описать в схеме топологию точно. Рекомендация — лимитер после summing, до VCA входа, чтобы freeze содержал уже ограниченный сигнал без накопления клиппинга.
+**Behavior в freeze**: вход заглушён через R_FS1→GND. Wet feedback циркулирует через RV_FEEDBACK → R_FS2 → U4A → output → pickup chain → обратно.
+
+Clip на virtual ground ограничивает амплитуду feedback loop. Это soft clip on summing action, не hard clip на signal path.
+
+**Проблема (residual)**: stability loop всё ещё не симулирована при high feedback + freeze. Loop gain может превысить 1 независимо от clip — формально self-oscillation возможна, но с ограниченной амплитудой.
+
+**Verdict**: **MINOR (clarified topology)**. Stability concern (СП5 в `10_`) остаётся отдельным пунктом.
+
+---
 
 ---
 

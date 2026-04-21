@@ -1,30 +1,36 @@
 # Last Night v2.1 — инженерный разбор схемы
 
-По-блочная критика схемотехники ревербератора. Источник — брифы v2.0 и v2.1. Для каждого из 15 блоков: **intent** (зачем нужен), **topology** (как реализовано), **parts** (номиналы/компоненты), **noise/signal** (параметры), **failure modes** (что может пойти не так).
+По-блочная критика схемотехники ревербератора. Источник — брифы v2.0, v2.1 + **каркас `wood_reverb_logical_schematic.html`** (added post-factum, triggered revision — см. `13_schematic_cross_reference.md`).
+
+Для каждого из 15 блоков: **intent** (зачем нужен), **topology** (как реализовано), **parts** (номиналы/компоненты), **noise/signal** (параметры), **failure modes** (что может пойти не так).
 
 Обозначения серьёзности: **BLOCKER / MAJOR / MINOR / QUESTION** — см. `00_README.md`.
 
+> **Revision status**: severity переоценены после сверки с каркасом. Блок 3 и блок 8 понижены; блок 4, 7 получили corrected analysis.
+
 ---
 
-## Сводная таблица блоков
+## Сводная таблица блоков (revised)
 
 | # | Блок | Статус | Топ-риск |
 |---|------|--------|----------|
-| 1 | Power | MINOR | TRACO для педали — OK, decoupling может быть недостаточным возле piezo preamp |
+| 1 | Power | MINOR | Decoupling может быть недостаточным возле piezo preamp |
 | 2 | Input Buffer | MINOR | Zin 100к низковат для высокоимпедансного источника (гитара) |
-| 3 | Pre-emphasis EQ | MAJOR | Corner ~16кГц (не 3.2кГц как заявлено), фиксирован |
-| 4 | Driver Amp + Push-Pull | MAJOR | BD139/140 без термо-контакта — дрейф; BD139 избыточен для exciter 4Ω |
-| 5 | Feedback Summing + Freeze | BLOCKER | Freeze + лимитер порядок не задан; SPDT переключает сигнальную точку |
+| 3 | Pre-emphasis EQ | **MINOR** (было MAJOR) | Corner ~3.2кГц корректен для shelving topology, matching C_PE1=C_DE1 критично |
+| 4 | Driver Amp + Push-Pull | MAJOR | Push-pull без biasing; **R8 4.7Ω должен быть 5W wirewound**; crossover distortion |
+| 5 | Feedback Summing + Freeze | BLOCKER | Stability loop не симулирована (topology теперь ясна) |
 | 6 | Sidechain Input | MINOR | 5 компонентов на фичу, которая редко используется |
-| 7 | Exciter → Резонатор | MAJOR | DC-блок 220µФ на 4Ω → corner ~180Гц, срез баса; exciter thermal |
-| 8 | Solenoid Damper | BLOCKER | Коммутация 200–500мА рядом с 10МΩ JFET gate — EMI катастрофа |
+| 7 | Exciter → Резонатор | MAJOR | C_DC 220µФ corner 83Гц (с R8); power delivery 3Вт peak; dense materials нужен DAEX32 |
+| 8 | Solenoid Damper | **MAJOR** (было BLOCKER) | Marginal turn-on при CV 5В (gate 2.5В, Vth spread); EMI в piezo preamp остаётся |
 | 9 | Dual Piezo + JFET Preamps | BLOCKER | 2N5457 EOL; gain ×23 сразу после JFET → шумовой бюджет |
 | 10 | Position Crossfade | MINOR | Dual-gang pot 100к dependent matching; тембр-эффект слабый при равных датчиках |
-| 11 | De-emphasis EQ | MAJOR | Должен зеркалить pre-emph, проверка matching между C_PE1/C_DE1 |
-| 12 | Tone LPF + LED Clipper | MINOR | LED ±1.8В = -6dBu клиппинг — слишком низкий потолок |
+| 11 | De-emphasis EQ | **MINOR** (было MAJOR) | Зеркало pre-emph, matching C_PE1/C_DE1 критично (note в каркасе) |
+| 12 | Tone LPF + LED Clipper | MINOR | LED ±1.8В клиппинг — низкий потолок |
 | 13 | Attack/Decay VCA | MAJOR | τ = 1с максимум — диапазон смещён в "медленно"; OTA2 не используется |
 | 14 | Mix + Stereo Output | MINOR | Стерео-тракт мёртвый груз в педали (см. C10) |
 | 15 | Noise Generator | MAJOR | BC547 reverse B-E breakdown — параметрический разброс, деградация |
+
+**Severity counts revised**: 2 BLOCKER (было 4), 6 MAJOR (было 7), 7 MINOR (было 4).
 
 ---
 
@@ -75,61 +81,72 @@
 - Добавить ESD clamp диодами.
 - Убрать R2 если не нужен для стабильности длинного кабеля (в педали — убрать; в Eurorack — оставить).
 
-## Блок 3. Pre-emphasis EQ — **MAJOR**
+## Блок 3. Pre-emphasis EQ — **MINOR** (понижено с MAJOR после revision)
+
+> **Revision note**: первоначальный разбор содержал arithmetic error — я упростил топологию до single RC и посчитал corner 15.9кГц. Каркас (секция 3) показывает **shelving EQ с RV_BOOST в shunt path через C_PE1** (Baxandall-style), для которой заявленная частота ~3.2кГц корректна. См. `13_schematic_cross_reference.md` C2.
 
 **Intent**: усиление ВЧ перед exciter, чтобы компенсировать завал, внесённый материалом пластины. После pickup — зеркальный de-emphasis. Цель — сохранить high-frequency детализацию после прохождения физической цепи.
 
-**Topology**: U3A TL072, shelving boost через R_PE1 (10к) + C_PE1 (1n) + RV_BOOST (50к pot).
+**Topology (corrected)**:
+```
+BUF_OUT ──R_PE1 (10k)──┬──C_PE1 (1n)──RV_BOOST (50k)──GND  (shunt path)
+                        │
+                        ↓
+                   U3A non-inv shelf → R_PE3/R_PE4 feedback → PE_OUT
+```
 
-**Parts**: R_PE1 10кΩ, C_PE1 1нФ, RV_BOOST 50кΩ (lin или log не указан), U3A — половина TL072.
+**Parts**: R_PE1 10кΩ, C_PE1 1нФ, RV_BOOST 50кΩ, R_PE3/R_PE4 10кΩ (feedback network), U3A — половина TL072.
 
-**Noise/signal — критическая ошибка в расчёте**:
+**Corrected noise/signal analysis**:
 
-Заявлено: *"shelving boost ~3.2kHz"*. Проверка:
-- Для типичного pre-emphasis через C_PE1=1нФ, corner frequency зависит от импеданса, с которым работает кап.
-- f = 1 / (2π × R × C). Для R=10к, C=1нФ: **fc = 15.9 кГц** (не 3.2кГц).
-- Для получения 3.2кГц при C=1нФ нужен R = 49.7кΩ (в 5 раз больше).
+Когда RV_BOOST = 0Ω (CCW), C_PE1 к GND через нулевое сопротивление → HPF с corner f = 1/(2π × R_PE1 × C_PE1) = 15.9кГц — signal *не получает boost* ниже этой частоты → overall flat.
 
-**Вывод**: заявленная частота 3.2кГц неверна при номиналах 10к/1нФ. Либо C должен быть 5нФ (4.7нФ стандарт), либо R 47к — тогда corner будет действительно 3.4кГц.
+Когда RV_BOOST = 50кΩ (CW), shunt impedance = R_PE1 + RV_BOOST в series с C_PE1 → f = 1/(2π × (R_PE1+RV_BOOST) × C_PE1) = 1/(2π × 60k × 1n) = **2.65кГц**. Shelf начинается примерно здесь, +8dB plateau выше — **согласуется с заявленными ~3.2кГц**.
 
-**Failure modes**:
-- **MAJOR**: если номиналы останутся 10к/1нФ, pre-emphasis реально начнётся на 16кГц — за пределами слышимого диапазона, эффекта нет.
-- **MAJOR**: de-emphasis зеркально страдает тем же. Если обе стадии используют C=1нФ × R=10к, то компенсации ВЧ нет — компонент просто добавляет шум.
-- **MINOR**: RV_BOOST 50к — если потенциометр Alpha с logарифмической характеристикой, поведение в диапазоне неравномерное.
+**Verdict**: заявленная corner frequency корректна для данной shelving топологии. Моя предыдущая критика "15.9кГц arithmetic error" была неправильной — результат упрощения до simple RC.
 
-**Дополнительная проблема — материал-зависимость**:
-- Дерево заваливает ВЧ сильнее камня. Стекло — яркое. Кость — глухая. Фиксированная pre-emphasis curve не универсальна (см. C9 в `50_contradictions_and_todos.md`).
-- Но исправить это переключателем банка конденсаторов — усложнит BOM на ~4 компонента.
+**Failure modes (корректированные)**:
+
+- **MINOR**: C_PE1=C_DE1 matching **критично** (note прямо в каркасе: "C_PE1 MUST match C_DE1 exactly. Both 1nF C0G ceramic from same batch recommended"). Если не matched — pre и de-emph не точно компенсируют, спектр перекошен.
+- **QUESTION**: фаза. Shelving EQ в inverting topology → invert signal. Если de-emphasis топология в такой же inverting — две инверсии сократятся. Если одна неinverting — фаза реверба инвертирована относительно dry, в mix возможный comb-notching. Каркас показывает U3A в non-inverting configuration (входной сигнал на +), signal path non-inverting → OK.
+- **QUESTION**: материал-зависимость. Дерево заваливает ВЧ сильнее камня; стекло яркое; кость глухая. Фиксированная pre-emphasis curve не универсальна (см. C9 в `50_contradictions_and_todos.md`). Это остаётся MINOR — решается pre-emph банком переключаемых C (3 позиции: 2к/4к/8к), +2 компонента.
 
 **Рекомендация**:
-- Поменять C_PE1 на 4.7нФ (и C_DE1 на то же), тогда при R=10к corner ≈3.4кГц — соответствует заявке.
-- Или поменять R на 47к при C=1нФ — тот же результат, меньше ёмкостного тока.
-- Проверить фазу: shelving EQ с ОУ в инвертирующей конфигурации перевернёт фазу, и de-emphasis тоже перевернёт — две инверсии сократятся. Если одна стадия неинвертирующая — фаза реверба инвертирована относительно dry, что в mix даст comb-notching.
+- **Оставить as-is** для v1 — работает для усреднённого материала.
+- Для v2 — **switchable pre-emph corner** (3 cap banks), match с de-emph переключателем в парe.
+- Use **C0G/NP0 1нФ** ceramic caps для temperature stability (thermal drift ±30ppm/°C vs X7R ±15% over temperature).
 
 ## Блок 4. Driver Amp + Push-Pull — **MAJOR**
 
 **Intent**: усилить сигнал до уровня, достаточного для возбуждения surface exciter DAEX25FHE-4 (4Ω, RMS ~5Вт).
 
-**Topology**: U1B (TL072) gain 4.7× (47к/10к feedback) → RV_DRIVE 100к log → R5 100Ω base current limit → Q1 BD139 (NPN) + Q2 BD140 (PNP) push-pull emitter follower → R6/R7 10Ω эмиттерные резисторы → C_DC 220µФ DC-блок → J_EX.
+**Topology (corrected)**: U1B (TL072) gain 4.7× (47к/10к feedback) → RV_DRIVE 100к log → R5 100Ω base current limit → Q1 BD139 (NPN) + Q2 BD140 (PNP) push-pull emitter follower → R6/R7 10Ω эмиттерные резисторы → C_DC 220µФ DC-блок → **R8 4.7Ω current limit** → J_EX.
 
-**Parts**: BD139/140 (TO-126, Ic 1.5А, Pd 12.5Вт), TL072 U1B, RV_DRIVE 100кΩ log, C_DC 220µФ/25В electrolytic, R6/R7 10Ω 0.5Вт.
+> **Revision note**: R8 4.7Ω не был в брифе v2.1, но присутствует в каркасе (секция 4). Это current limiter в exciter path — изменяет power budget и thermal analysis. См. `13_schematic_cross_reference.md` C3.
 
-**Noise/signal**:
-- Gain U1B 4.7× + RV_DRIVE — общий gain на full CW может быть до ~47× (0 → 20× зависит от pot-taper). Для line-level входа (±1В peak) это выводит сигнал до ±12В, что уже в ограничении TL072. **OK для перегруза — это намеренно**, сатурация ОУ часть саунд-дизайна.
-- Push-pull на эмиттерных follower-ах вносит crossover distortion — нелинейность на переходе через ноль, особенно на малых сигналах (если Vbe compensation отсутствует).
+**Parts**: BD139/140 (TO-126, Ic 1.5А, Pd 12.5Вт), TL072 U1B, RV_DRIVE 100кΩ log, C_DC 220µФ/25В electrolytic, R6/R7 10Ω 0.5Вт, **R8 4.7Ω 2W wirewound (должен быть power resistor)**.
+
+**Noise/signal (corrected)**:
+- **Эффективная нагрузка с R8**: 4Ω exciter + 4.7Ω R8 = **8.7Ω** total.
+- Gain U1B 4.7× + RV_DRIVE — общий gain на full CW до ~47×. Для line-level (±1В peak) — до ±12В, в ограничении TL072. **OK для намеренного перегруза**.
+- Push-pull на эмиттерных follower-ах вносит crossover distortion — нелинейность на переходе через ноль (отсутствие Vbe compensation).
+- **Peak power на exciter**: при ±12В rail → Vpp=22В → Vrms=7.8В. P_exciter = Vrms² × R_exciter / Z_load² = 7.8² × 4 / 8.7² = **~3.2Вт peak** (не 15Вт из оригинального расчёта).
+- **Power dissipation в R8**: P_R8 = Vrms² × R8 / Z_load² = 7.8² × 4.7 / 8.7² = **~3.8Вт**. Это **значительно** для 1/4W резистора — **R8 должен быть 5W wirewound** (или 2× 10Ω 2W parallel).
 
 **Failure modes**:
-- **MAJOR**: **нет bias для Q1/Q2**. Классический push-pull без bias = class B с явным crossover. Диоды bias (2×1N4148 между базами) или резисторный divider нужны для перехода в AB. Это одна из тех деталей, которая "будет слышна" как жужжащий грязный low-level signal.
-- **MAJOR**: C_DC 220µФ на нагрузку 4Ω → fc = 1/(2π × 4 × 220µФ) = **181Гц**. Это **обрезает бас** перед exciter. Для exciter это может быть полезно (защита от over-excursion), но для реверба — нет, лишает материал возбуждения в низком регистре.
-- **MAJOR**: тепловая нестабильность. BD139/140 без теплового контакта (thermal relief на PCB) уйдут в thermal runaway при долгом перегрузе. Нужны: либо теплоотводная площадка PCB 1×1 см под TO-126, либо небольшой радиатор, либо снижение bias current.
-- **MINOR**: BD139/140 избыточны для exciter 4Ω ~500мА peak. BD135/136 или даже 2N3904/2N3906 справятся. BD139 — рабочая лошадь, но лишний запас по мощности стоит места на PCB.
-- **QUESTION**: exciter impedance спецификация — DAEX25FHE-4 это **4Ω** (указано в имени). Push-pull на эмиттерных фолловерах даёт низкое Zout (~10Ω эмиттерные + ~1Ω re), с нагрузкой 4Ω передача ~30% от источника. Нужен либо MOSFET class AB, либо понижающий трансформатор для лучшего согласования.
+- **MAJOR (unchanged)**: **нет bias для Q1/Q2**. Push-pull без bias = class B с crossover distortion. Добавить 2×1N4148 между базами для class AB.
+- **MAJOR (corrected)**: C_DC 220µФ на эффективную нагрузку 8.7Ω → fc = 1/(2π × 8.7 × 220µФ) = **83Гц** (не 180Гц как я считал раньше). Басы проходят лучше, но suboctave 20–80Гц всё ещё режется.
+- **MAJOR**: R8 **должен быть power resistor**. Если на PCB стоит 1/4W резистор — он сгорит за секунды при full drive. Это BOM specification issue — если не проверено, первый прототип burn out.
+- **MAJOR**: тепловая нестабильность BD139/140 — без теплового контакта уходят в thermal runaway при долгом перегрузе. R8 снижает максимальный ток через транзисторы (Imax = 12/8.7 ≈ 1.4А, peak), что помогает, но не устраняет.
+- **MINOR (updated)**: BD139/140 теперь более оправданны с R8 — 1.4А peak, Pd около 3Вт на транзистор при sustained drive. Менее мощные (BD135) на грани.
+- **QUESTION**: R8 также служит **short-circuit protection**. Если exciter short (провод оторвался), ток ограничен R8: Imax = 12/4.7 = 2.5А — транзисторы выживают.
 
 **Рекомендация**:
-- Добавить bias: 2×1N4148 в serial между базами Q1 и Q2, потекут ~1мА через R5. Это переведёт каскад в AB, уберёт crossover.
-- C_DC 220µФ оставить, но принять во внимание 180Гц срез. Если нужны басы — увеличить до 1000µФ (fc=40Гц).
-- Добавить thermal pad 10×10мм под каждым транзистором, соединить с GND плейном для теплоотвода.
-- Рассмотреть замену на IRF510+IRF9510 MOSFET pair — меньше greyscale distortion, выше эффективность, нет biasing issue для thermal runaway.
+- **Specification R8**: 4.7Ω **5W wirewound** (Panasonic ERG-5SJ или аналог) — обязательно. Не 1/4W.
+- Добавить bias: 2×1N4148 в serial между базами Q1 и Q2 через R 1к к VCC — потекут ~1мА. Class AB, убирает crossover.
+- C_DC 220µФ → 1000µФ для full bass extension (fc становится 18Гц).
+- Thermal pad 10×10мм под каждым транзистором, соединить с GND plane.
+- Для v2 рассмотреть **IRF510+IRF9510** MOSFET pair — меньше distortion, нет biasing issue.
 
 ## Блок 5. Feedback Summing + Freeze — **BLOCKER**
 
@@ -178,61 +195,81 @@
 
 ## Блок 7. Exciter → Резонатор — **MAJOR**
 
+> **Revision note**: power budget был скорректирован после учёта R8 4.7Ω в блоке 4. Exciter получает ~3Вт peak, не 15Вт. См. `13_schematic_cross_reference.md` C4.
+
 **Intent**: передача усиленного аудиосигнала на surface exciter, который механически вибрирует пластину.
 
-**Topology**: C_DC 220µФ → J_EX (JST 2-pin) → кабель картриджа → DAEX25FHE-4 exciter, закреплённый на face A пластины.
+**Topology**: C_DC 220µФ → **R8 4.7Ω** → J_EX (JST 2-pin) → кабель картриджа → DAEX25FHE-4 exciter, закреплённый на face A пластины.
 
 **Parts**: Dayton DAEX25FHE-4 (25мм, 4Ω, 40Вт max, 20Вт RMS, Fs ~400Гц, резонанс ~2500Гц), JST-XH 2-pin, кабель 50–80мм.
 
-**Noise/signal**:
-- **Реальная мощность на exciter**: push-pull с rail ±12В на нагрузке 4Ω теоретически может дать peak Vpp ≈ 22В → Vrms 7.8В → P = 7.8²/4 = **15Вт**. Реально, с учётом потерь эмиттерных follower-ов и C_DC 180Гц corner, на низких частотах передача ниже. На ВЧ — OK.
-- **Thermal**: DAEX25FHE-4 voice coil small — при 15Вт RMS перегреется за минуты. Для continuous operation лучше ≤5Вт.
+**Noise/signal (corrected)**:
+- **Peak power на exciter** с R8: ~3.2Вт (расчёт в блоке 4). Peak ~8Вт при резонансе exciter'а (где импеданс растёт).
+- **Avg power**: ~0.5–1Вт continuous reverb usage.
+- **Thermal**: при 1Вт avg DAEX25FHE-4 voice coil нагревается незначительно. **Sustainable** long-term operation. Моё предыдущее замечание "перегреется за минуты при 15Вт RMS" было преувеличением из-за неучёта R8.
+- **Bass coupling** с R8: C_DC 220µФ × 8.7Ω = **fc 83Гц** (corrected).
 
 **Failure modes**:
-- **MAJOR**: С_DC 220µФ даёт corner 180Гц с нагрузкой 4Ω — **low-end truncated перед exciter**. Это убирает басовое возбуждение, что для реверба принципиально (органный гул, басовые резонансы мрамора). Увеличить C_DC до 1000µФ снижает corner до 40Гц.
-- **MAJOR**: DAEX25FHE-4 имеет собственный резонанс ~2500Гц. На этой частоте импеданс растёт до ~20Ω, передача другая. Нужен EQ-correction или принять характеристику как "часть звука".
-- **MAJOR**: с плотными пластинами (мрамор, нефрит, бетон — массы 40–70г) exciter испытывает высокую реактивную нагрузку. Эффективность передачи падает. Нужно либо ограничить номенклатуру пластин по массе (≤30г для DAEX25), либо использовать более мощный exciter (Dayton DAEX32Q-4, 32мм, 40Вт RMS) — но тогда физика крепления меняется.
-- **MAJOR**: крепление exciter к пластине — самоклеящийся диск. Через 6–12 месяцев клей может ослабнуть или оторваться под вибрацией. Для сменных картриджей нужно **многоразовое** крепление (винт через резиновую прокладку, магнит).
-- **MINOR**: JST-XH 2-pin — контакт площадью ~1мм², разъём подразумевает ~3А максимум. Для 4Ω × 2А peak — OK, но механически открытый контакт в мобильной среде (перформанс) — риск отсоединения.
+- **MAJOR (unchanged)**: DAEX25FHE-4 имеет собственный резонанс ~2500Гц. На этой частоте импеданс растёт до ~20Ω, передача другая — частотная характеристика не flat. Нужен EQ-correction или принять характеристику как "часть звука".
+- **MAJOR (updated)**: с плотными пластинами (мрамор, нефрит, бетон — массы 40–70г) exciter испытывает высокую реактивную нагрузку. С ограниченной мощностью 3Вт peak (due to R8) эффективная передача в плотный материал низкая. Может потребоваться либо **уменьшить R8 до 2.2Ω** для плотных картриджей, либо переход на **DAEX32Q-4** (32мм, 4Ω, 40Вт RMS).
+- **MAJOR**: крепление exciter к пластине — самоклеящийся диск. Через 6–12 месяцев клей может ослабнуть. Для сменных картриджей нужно многоразовое крепление (винт через резиновую прокладку, магнит).
+- **MAJOR (updated)**: C_DC 220µФ даёт corner **83Гц** с нагрузкой 8.7Ω — низкий bass 20–80Гц режется перед exciter. Для plate reverb дерева/стекла это малозаметно (basic tones выше 200Гц), для мрамора/бетона (fundamental 80–150Гц) это слышится как "нет низа".
+- **MINOR**: JST-XH 2-pin — OK для 2А peak. В мобильной среде — риск отсоединения.
 
 **Рекомендация**:
-- C_DC 220µФ → 1000µФ (corner 40Гц).
-- Для плотных материалов — ограничение массы пластины (спецификация картриджа "max 40г" для DAEX25), или переход на DAEX32Q-4.
-- Exciter крепить через винт M3 + резиновый uncoupler (виброизоляция от рамки картриджа, плотное прилегание к пластине).
-- JST заменить на microMATE-N-LOK или аудио-грейд коннектор (mini-XLR 3-pin: signal + ground + shield).
+- C_DC 220µФ → **1000µФ** (corner 18Гц) — полное bass extension.
+- Для плотных материалов — **R8 2.2Ω** (reduces current limit, increases power to 6Вт peak) или **DAEX32Q-4**.
+- Exciter крепить через винт M3 + резиновый uncoupler (виброизоляция от рамки картриджа).
+- JST заменить на **mini-XLR 3-pin** или аналогичный аудио-грейд коннектор (signal + ground + shield).
 
-## Блок 8. Solenoid Damper — **BLOCKER**
+## Блок 8. Solenoid Damper — **MAJOR** (понижено с BLOCKER после revision)
+
+> **Revision note**: мой первоначальный разбор этого блока содержал material error — я интерпретировал делитель как R_DAM1=100к serial + R_DAM2=10к pulldown → ratio 0.09. Каркас `wood_reverb_logical_schematic.html` (секция 14) показывает правильную топологию: R_DAM1 100к serial, R_DAM3 100к pulldown, R_DAM2 10к в серии к gate. См. `13_schematic_cross_reference.md` C1.
 
 **Intent**: CV-управляемое механическое приглушение пластины через соленоид с фетровым наконечником. При активации соленоид прижимает фетр к пластине, убивая резонанс.
 
-**Topology**: J_CV_DAMP → R_DAM1 100к → R_DAM2 10к (divider/attenuator) → gate Q5 2N7000 MOSFET → drain через соленоид → J_SOL. D_SOL 1N4001 flyback. R_DAM3 100к pulldown.
+**Topology (corrected)**:
+```
+J_CV_DAMP ── R_DAM1 (100kΩ) ──┬── R_DAM2 (10kΩ) ── Gate Q5
+                               │
+                          R_DAM3 (100kΩ pulldown)
+                               │
+                              GND
+```
 
-**Parts**: Q5 2N7000 (Vds 60В, Id 200мА, logic-level gate), соленоид типа ZYE1-0530 (5В, ~300мА, 2.5Вт), 1N4001, JST 2-pin.
+**Parts**: Q5 2N7000 (Vds 60В, Id 200мА, Vth typical 2.1В, range 0.8–3В), соленоид 5В ~300мА, D_SOL 1N4001 flyback, JST 2-pin.
+
+**Divider analysis (corrected)**:
+- Voltage at node X (после R_DAM1, перед R_DAM2) = V_CV × R_DAM3 / (R_DAM1 + R_DAM3) = V_CV × 100k/200k = **V_CV × 0.5**.
+- Gate voltage ≈ V(X) (R_DAM2 10кΩ current-limiting к gate input impedance ~10^13Ω — pad-дорожки добавляют несколько пФ, но нет DC drop).
+
+| CV input | V_gate | vs Vth(2.1В typ) | Turn-on status |
+|----------|--------|-------------------|----------------|
+| 5 В (стандарт Eurorack) | 2.5 В | +0.4В margin | **Marginal** — работает для typical 2N7000, на границе для low-Vth exemplars |
+| 8 В | 4.0 В | +1.9В margin | OK |
+| 10 В | 5.0 В | +2.9В margin | OK, reliable |
+| 12 В | 6.0 В | +3.9В margin | OK, но приближается к Vgs max 20V |
 
 **Noise/signal**:
-- **Switching transient**: при коммутации 300мА через индуктивность соленоида (~10мГн оценочно) dI/dt создаёт ЭДС самоиндукции. Flyback 1N4001 клампит до Vcc+0.7В, но **магнитное поле в момент переключения** излучается из соленоида в окружающее пространство.
-- **Магнитное поле соленоида**: ЭДС, наведённая на соседний проводник, ∝ dI/dt × M (mutual inductance). С 10МΩ JFET gate в 50мм от соленоида — индуктивная связь создаст микровольтовые пики, которые JFET усилит × ~23 в преампах.
+- **Switching transient**: при коммутации 300мА через индуктивность соленоида (~10мГн) dI/dt создаёт ЭДС самоиндукции. Flyback 1N4001 клампит до Vcc+0.7В. Но магнитное поле соленоида излучается наружу.
+- **Магнитное поле**: ЭДС наводится на соседний проводник ∝ dI/dt × M. С 10МΩ JFET gate в 50мм через unshielded JST — микровольтовые пики, усиливаемые в преампах ×23.
 
-**Failure modes — катастрофические для шума**:
-- **BLOCKER**: коммутация 200–500мА через соленоид создаст **импульсные помехи на пьезо-линиях**. Это сценарий, где "щёлк демпфера" будет громче, чем полезный сигнал реверба. Основной риск проекта.
-- **BLOCKER**: если соленоид управляется PWM (для плавного damping), частота ШИМ (обычно 1–20кГц) попадёт прямо в аудиодиапазон.
-- **MAJOR**: 2N7000 gate threshold ~2В, но нужен solid turn-on (Vgs > 5В). Если CV source даёт 0–5В peak через attenuator 100к/10к (Kd = 0.09), то после делителя — 0–0.45В. **Транзистор не откроется**.
+**Failure modes**:
 
-Считаю: CV 5В × 10к / (100к + 10к) = 5 × 0.0909 = **0.45В на gate**. 2N7000 threshold ~2В. Никогда не откроется.
-
-- **MAJOR**: если CV 0–10В → Vgs max = 0.9В. Всё равно не откроется.
-- **MAJOR**: даже если CV 0–12В → Vgs = 1.1В. Может быть в пороге, но работает нестабильно.
-
-**Это baseline ошибка схемы**. Делитель 100к/10к делает gate-drive неадекватным. Нужен R_DAM1/R_DAM2 = 10к/100к (обратный делитель) — тогда CV 5В → 4.5В на gate, работает.
-
-- **MINOR**: пульдаун 100к на gate — OK, удерживает MOSFET закрытым при floating CV.
+- **MAJOR**: **marginal turn-on при CV 5В**. Если пользователь подключает LFO Eurorack с peak 5В, Vth spread 2N7000 (0.8–3В в datasheet) означает, что в ~15% экземпляров транзистор не будет надёжно открываться. Производственная lottery.
+- **MAJOR (unchanged)**: коммутация 200–500мА через соленоид создаёт **импульсные помехи на пьезо-линиях** из-за EMI связи через unshielded JST. Это сценарий, где "щёлк демпфера" будет громче, чем полезный сигнал реверба. **Первичный noise risk проекта** (см. блок 9 и СП3).
+- **MAJOR**: если соленоид управляется PWM (для плавного damping), частота ШИМ (1–20кГц) попадёт прямо в аудиодиапазон.
+- **MINOR**: пульдаун R_DAM3 100к на node X — OK, удерживает MOSFET закрытым при floating CV.
 - **QUESTION**: физически "2мм зазор до face A" с фетровым наконечником — как обеспечить репитабельное позиционирование при смене картриджа? Если каждая пластина имеет разную толщину (3–5мм), зазор будет плавать. Нужен spring-loaded соленоид или механизм юстировки.
 
-**Рекомендация** (критическая, без этого прототип не заработает):
-- **Исправить делитель gate-drive**: поменять R_DAM1 и R_DAM2 местами (R_DAM1=10к в серии, R_DAM2=100к к GND). Или убрать делитель, подключить CV напрямую к gate через R 10к (gate-stop).
-- **EMI**: экранировать соленоид ферритовой оболочкой или заземлённым медным кожухом. Кабель соленоида — витая пара, прижатая к GND.
-- **Физически отделить** соленоидный драйвер и его кабель от пьезо-кабелей — минимум 30мм на PCB, провода на кабельном жгуте по разным сторонам.
-- **Pulse-mode only**: исключить PWM, использовать только полное on/off. Если нужен плавный damping — аналоговый drive (op-amp + transistor как current source), не ШИМ.
+**Рекомендация**:
+- **Уменьшить R_DAM1 до 47кΩ** — divider становится 100/147 = 0.68, gate на CV 5В = 3.4В (solid turn-on для всех 2N7000). Одна деталь изменить.
+- **Или**: заменить 2N7000 на **logic-level MOSFET** — AO3400 (Vth 0.7–1.3В, SMD), IRLZ34N (Vth 1–2В, TO-220). Тогда даже CV 5В × 0.5 = 2.5В — много выше Vth.
+- **EMI (независимо от turn-on issue)**:
+  - Экранировать соленоид ферритовой оболочкой или заземлённым медным кожухом.
+  - Кабель соленоида — витая пара, прижатая к GND.
+  - Физически отделить соленоидный драйвер и его кабель от пьезо-кабелей на PCB (минимум 30мм), провода на кабельном жгуте по разным сторонам.
+  - Pulse-mode only — исключить PWM, использовать только полное on/off. Если нужен плавный damping — аналоговый drive (op-amp + transistor как current source).
 - **Соленоид с pre-loaded spring**: решить проблему зазора при смене пластин.
 - **Альтернатива**: заменить соленоидный демпфер на **электронный mute** (MOSFET в сигнальном пути), если механический damping не критичен. Потеряется perceptual "физический" характер, но устранится большой источник шума.
 
@@ -525,21 +562,32 @@ Feedback loop: driver → exciter → пластина (физический res
 
 ---
 
-## Итоги блочного разбора
+## Итоги блочного разбора (revised)
 
-**Блокеров**: 4 (blocks 5, 8, 9 + СП3, СП5).
-**Major issues**: 7 (blocks 3, 4, 7, 9, 11, 13, 15 + СП1, СП4).
-**Minor issues**: 8.
+**Blockers**: 2 (block 5 stability, block 9 JFET EOL) + 2 cross-cut (СП3 cable shielding, СП5 feedback stability).
+**Major issues**: 6 (blocks 4, 7, 8, 13, 15 + СП1 grounding, СП4 layout).
+**Minor issues**: 7.
 
-**Рекомендуемый порядок фиксов**:
+**Рекомендуемый порядок фиксов (revised)**:
 
-1. **Блок 8 gate divider** — исправить R_DAM1/R_DAM2 местами. Без этого demper вообще не работает. 5 минут работы.
-2. **Блок 9 JFET replacement** — заменить 2N5457 на LSK489. Требует пересчёт bias и gain, но избавляет от EOL.
-3. **СП3 cable shielding** — коаксиал для piezo, JST → аудио-грейд коннектор.
-4. **СП5 feedback stability** — SPICE симуляция до прошивки PCB.
-5. **Блок 3/11 EQ corner fix** — C_PE1/DE1 → 4.7нФ, чтобы pre-emphasis реально работала.
-6. **Блок 4 biasing** — 2×1N4148 bias в push-pull для устранения crossover.
-7. **Блок 7 C_DC** — 220µФ → 1000µФ для low-end.
-8. **Блок 13 envelope follower** — диоды для independent A/D + уменьшить τ.
+1. **Блок 9 JFET replacement** — заменить 2N5457 на LSK489A. Требует пересчёт bias и gain, но избавляет от EOL. Главный блокер проекта.
+2. **СП3 cable shielding** — mini-XLR для piezo, JST оставить для exciter/solenoid.
+3. **СП5 feedback stability** — SPICE симуляция до прошивки PCB. RLC модель резонатора.
+4. **Блок 4 biasing + R8 power rating** — 2×1N4148 bias в push-pull для устранения crossover, R8 обязательно 5W wirewound (не 1/4W).
+5. **Блок 8 gate margin** — уменьшить R_DAM1 до 47к для solid turn-on при 5В CV (или logic-level MOSFET).
+6. **Блок 7 C_DC** — 220µФ → 1000µФ для low-end extension.
+7. **Блок 13 envelope follower** — диоды для independent A/D + уменьшить τ.
+8. **Блок 15 noise gen** — замена BC547 на BZX55C9V1 zener для стабильности.
 
-После 1–8 прототип получит шанс работать. Без них — риск, что первый спайка выдаст шум громче сигнала.
+**Важно**: пункты 1, 2, 3 — критические перед первой прошивкой. Без них первый PCB либо не запустится (1), либо выдаст шум громче сигнала (2), либо самовозбудится на резонансе (3).
+
+Пункты 4–8 могут быть отложены на **rev B** после testing rev A.
+
+---
+
+## Revision log
+
+| Дата | Изменение | Причина |
+|------|-----------|---------|
+| Phase 1 | Initial audit based on v2.0/v2.1 briefs | — |
+| Phase 2 (текущий) | Блок 3 MAJOR → MINOR, блок 8 BLOCKER → MAJOR, блок 4/7 corrected power analysis | Появление `wood_reverb_logical_schematic.html` с точной топологией |
