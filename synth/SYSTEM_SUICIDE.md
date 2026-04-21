@@ -420,28 +420,790 @@ AUDIO B ──► Input B buffer ──► Vactrol B (LDR2) ──┘
 - Happy Nerding 3×VCA — classic op-amp VCA, no optical.
 - **Vactrol-based crossfader в Eurorack 6HP** — есть в DIY, но не в commercial market. Unique character.
 
-## 7. LAST DAY — Предапокалиптичный финализатор
+## 7. LAST DAY — Предапокалиптичный сатуратор: Oil Can Delay + Solar Amp + Resonant EQ
 
-_Заполняется следующим коммитом._
+> *Если Last Night — холодная ночь после конца, то Last Day — раскалённый красный полдень апокалипсиса. Марево, гул проводов, повторяющиеся миражи.*
+
+### Суть в одном предложении
+Тёплый финализатор-грелка: oil can delay (вращающийся диск в масляной ванне, **capacitive pickup по Tel-Ray принципу**), усилитель на фотоэлементе (питается светом), индуктивный EQ с физическим tongue-резонатором — всё пропитано жарой, гулом и деградацией. Зеркальная пара к Last Night.
+
+### Формат
+**40 HP Eurorack only** (pedal version отложена — solar cell и motor несовместимы с pedal form-factor и power budget). RCA I/O для DJ usage возможны как option, но основной I/O — Thonkiconn 3.5мм.
+
+---
+
+### A. SOLAR AMPLIFIER — усилитель, питаемый светом
+
+#### Физический элемент
+Кремниевая солнечная ячейка (~50×50 мм) на лицевой панели. Открытая, незащищённая — реагирует на любой свет: солнце, лампу, стробоскоп, фонарик телефона, тень руки.
+
+Параллельно **внутренний LED** ("SUN") обеспечивает baseline освещённости — модуль работает и в закрытой студии без внешнего света.
+
+#### Принцип
+Фотоэлемент выполняет две функции:
+
+**1. Starved-supply modulation:** Напряжение solar cell (при освещении ~0.5–1В) через **low-voltage boost converter (TPS61240)** → ~3–6В → питание стока MOSFET-каскада. Чем больше света — тем больше headroom — тем чище звук. Мало света → каскад голодает → сатурация, компрессия, гармонические искажения.
+
+**2. Bias рабочей точки:** Делитель от solar cell задаёт bias каскада. Много света = линейный режим. Мало = каскад уходит в отсечку, асимметричный клиппинг.
+
+**Солнечная компрессия:** Параллельно фотоэлемент управляет vactrol VTL5C3 в sidechain — оптическая компрессия от света. Больше света → сильнее сжатие → плоский, спрессованный звук, как через раскалённый телефонный провод.
+
+#### Сигнальная цепь
+
+```
+☀️ SOLAR CELL (на панели, открытая)
+    │
+    ├──→ Boost converter (TPS61240, 0.7В→3–6В) ──→ Starved supply (Vdrain)
+    │
+    ├──→ Делитель ──→ Bias point MOSFET caskада
+    │
+    └──→ Vactrol LED ──→ LDR ──→ Sidechain compressor
+                                        │
+SUN (ручка) ──→ Внутренний LED ──→ ☀️   │
+CV SUN IN ──→ тоже на LED               │
+                                         │
+AUDIO IN ──→ Input Gain ──→ STARVED AMP STAGE (MOSFET BS170)
+                                 (питание от солнца)
+```
+
+**Switch SOLAR / INTERNAL** на панели — user может disable solar dependency для предсказуемости в studio.
+
+---
+
+### B. OIL CAN DELAY — дилей на вращающемся диске в масле
+
+#### Физический элемент
+Металлический диск (∅100мм, нержавеющая сталь, 0.5мм) на оси BLDC мотора с оптическим энкодером для PLL-lock скорости. Нижняя часть диска погружена в ванну с маслом (сменный картридж). Pickup — **capacitive** (Tel-Ray Adineko heritage):
+- Top electrode (conductive paint на PCB) above disk.
+- Masло as dielectric.
+- Disk rotation moves charge distribution → capacitance variation → demodulated signal.
+
+**Второй tract** (optional, v2): hydrophone в масляной ванне снимает acoustic signature. Масло фильтрует верхние частоты, добавляет мягкое размытие, вносит micro-задержку. "Ghost echo" — фильтр, не эхо (путь ~30мм = ~20мкс, слышится как tone coloration).
+
+#### Двойной tract
+
+**Magnetic (removed v1)** — оригинальная концепция использовала tape heads, но capacitive pickup дешевле и проще.
+
+**Capacitive (основной)** — Tel-Ray style. 1 write "электрод" + 2 read электрода (multi-tap). Скорость вращения = время задержки (диапазон 30мс–800мс).
+
+**Hydrophone (optional v2)** — подводный пьезо снимает acoustic через масло.
+
+#### Сменные масляные ванны (картриджи)
+
+Герметичная ванночка с маслом — вставляется как картридж.
+
+| Масло | Характер | Safety |
+|-------|----------|--------|
+| **Минеральное (light)** | Быстрый отклик, ярче, стандартный | OK, pharma-grade |
+| **Силиконовое** | Мягкий, ровный, "шёлковый" | OK |
+| **Касторовое** | Тёплый, органический, густой | OK, pharma-grade |
+| **Глицерин** | Вязкий, медленный, сильный завал ВЧ | OK |
+
+**Исключены из каталога**: трансформаторное масло (PCB toxicity risk в старых stocks), любые отработанные жидкости.
+
+#### Нагреватель (HEAT)
+
+Резистивный нагреватель на дне ванны, управляемый ручкой HEAT через **отдельный power rail +5В** (не аудио-шина). Температура масла влияет на **damping characteristic** (вязкость) — не на delay time (скорость звука в масле меняется незначительно).
+
+Корректировка маркетинга: "cold = dark and closed, warm = open and lively" — не "slow vs fast".
+
+---
+
+### C. RESONANT EQ — индуктивный EQ + физический mid-резонатор
+
+#### Три полосы
+
+**LOW SHELF — индуктивный, на ферритовом тороиде:**
+Катушка на ферритовом кольце. LC-цепочка (Pultec-принцип) в обратной связи ОУ. При большом boost'е сердечник saturates — EQ добавляет тепла. Частота: 80 / 120 / 200 Hz. Boost/Cut: ±12 dB.
+
+**HIGH SHELF — индуктивный, на железном сердечнике:**
+Аналогичный LC-узел для верхов. Железный сердечник — другой характер сатурации, чуть грязнее. Частота: 3 / 5 / 8 kHz. Boost/Cut: ±12 dB.
+
+**MID — физический tongue-резонатор (ключевая фишка модуля):**
+
+Вместо LC-контура — вибрирующая металлическая пластинка, как язычок калимбы. Сменная пластинка разных материалов + **manual clamp-каподастр на rail** (v1) или **motorized lead-screw** (v2 premium SKU).
+
+#### Механизм mid-резонатора
+
+**Пластинка:** ~60–80 × 8–12 × 0.3–0.8 мм. Защемлена с одного конца. Под ней — пьезо-возбудитель. Над свободным концом — пьезо-датчик (низкошумный preamp OPA1642).
+
+**Зажим-каподастр:** Каретка на миниатюрном rail, скользящая вдоль пластинки. Укорачивает вибрирующую часть = повышает частоту. Ход ~30–50 мм покрывает ~4 октавы (200 Hz – 3 kHz).
+
+- **v1**: ручная каретка через knob на панели с тросиком.
+- **v2**: motorized lead-screw + encoder + CV control (preset recall).
+
+**Давление зажима = Q:** Ручка CLAMP отдельная. Слабый прижим → грязный, широкий резонанс, низкий Q. Сильный → чистый, узкий пик, высокий Q. Physical Q control.
+
+**Сменные пластинки (материал = "цвет" mid'а):**
+
+| Материал | Частота (при 40мм) | Характер | Q |
+|----------|-------------------|----------|---|
+| Пружинная сталь | ~1.2 kHz | Звонкий, долгий sustain | Высокий |
+| Латунь | ~800 Hz | Тёплый, мягкий | Средний |
+| Фосфористая бронза | ~900 Hz | Колокольный, сложные обертона | Средний-высокий |
+| Титан | ~1.1 kHz | Стеклянный, чистый | Очень высокий |
+| Медь | ~700 Hz | Тёмный, глухой | Низкий |
+
+**Суперспособность — самовозбуждение:** На высоком MID BOOST пластинка начинает "петь" — EQ превращается в осциллятор на резонансной частоте. Lee Perry dub-style feedback, но контролируемый.
+
+---
+
+### D. ЭФФЕКТЫ "КРАСНОГО ПОЛУДНЯ" (v1 subset)
+
+#### HAZE — тепловое марево
+Медленная модуляция скорости мотора — wow/flutter. PLL permits controlled HAZE без unpredictable drift. Ручка HAZE добавляет pitch instability повторов.
+
+#### DRAG — замедление времени
+Electric brake (MOSFET shorting motor) → мотор замедляется, повторы падают по pitch и тонут. Momentary switch на педали. Read head продолжает работать при 0 RPM — signal fades, not silences abruptly.
+
+**Отложено в v2 (Phase B, 6 месяцев после v1 ship):**
+- **WIRE** — EM antenna (ambient noise pickup).
+- **DUST** — impulse static clicks.
+- **CRASH** — solenoid удар по масляной ванне.
+
+---
+
+### E. ПЕРФОРМАТИВНЫЕ КОНТРОЛЫ (v1)
+
+| Контрол | Тип | Функция |
+|---------|-----|---------|
+| **KILL** | Большая кнопка | Мгновенный mute входа (CMOS switch + soft ramp). Delay tail продолжает играть и деградировать. Dub essential |
+| **FREEZE** | Кнопка-latching | Запись отключается, текущий контент зацикливается и деградирует |
+| **DRAG** | Momentary switch | Замедление мотора → повторы тонут по pitch |
+| **FEEDBACK SEND/RETURN** | Jack-пара | Петля в feedback-path. Можно вставить Last Night → delay → reverb → delay → бесконечность |
+| **CLOCK IN** | Jack | Синхронизация времени delay с внешним клоком (от Is My) |
+
+---
+
+### F. КЛЮЧЕВЫЕ КОНТРОЛЫ — СВОДНАЯ ТАБЛИЦА
+
+| Контрол | Секция | Функция | CV |
+|---------|--------|---------|-----|
+| **SUN** | Solar Amp | Яркость внутреннего LED = baseline. Чистота/сатурация каскада | ✓ |
+| **SOLAR/INTERNAL** | Solar Amp | Switch — external light или только internal LED | — |
+| **DRIVE** | Solar Amp | Входной gain, глубина насыщения | ✓ |
+| **LOW** | EQ | Boost/cut низкочастотной полки | — |
+| **LOW FREQ** | EQ | 80/120/200Hz switch | — |
+| **MID FREQ** | EQ | Положение зажима = центральная частота mid (v1 manual, v2 CV) | ✓ (v2 only) |
+| **MID GAIN** | EQ | Boost/cut mid-резонатора. На max — самовозбуждение | — |
+| **CLAMP** | EQ | Давление зажима = добротность Q | — |
+| **HIGH** | EQ | Boost/cut высокочастотной полки | — |
+| **HIGH FREQ** | EQ | 3/5/8kHz switch | — |
+| **TIME** | Oil Delay | Скорость вращения диска = время задержки | ✓ |
+| **FEEDBACK** | Oil Delay | Уровень рециркуляции | ✓ |
+| **HAZE** | Oil Delay | Wow/flutter — модуляция скорости мотора | ✓ |
+| **HEAT** | Oil Delay | Нагрев масла → damping character | — |
+| **DRY/WET** | Master | Баланс сухого и обработанного сигнала | — |
+| **OUTPUT** | Master | Выходной уровень | — |
+| **KILL** | Perform | Мьют входа, хвост delay играет | — |
+| **FREEZE** | Perform | Зацикливание текущего контента delay | — |
+| **DRAG** | Perform | Замедление мотора (momentary) | — |
+
+---
+
+### G. ЗЕРКАЛЬНОСТЬ LAST DAY ↔ LAST NIGHT
+
+| | Last Night | Last Day |
+|---|---|---|
+| **Настроение** | Холодная ночь после конца | Раскалённый полдень конца |
+| **Пространство** | Реверб (комната, собор, руины) | Delay (эхо, повтор, мираж) |
+| **Физическая среда** | Твёрдое тело (дерево, камень, металл) | Жидкость (масло) + свет |
+| **Шум** | Счётчик Гейгера (радиация) — v2 add-on | HAZE wow/flutter (жар) |
+| **Модуляция** | Соленоидный демпфер | Drag / Haze |
+| **Тембр** | Материал пластины (холодный) | Solar sat + Oil + Inductors (тёплый) |
+| **Сменные элементы** | Пластины (дерево/камень/металл/стекло) | Масляные ванны + tongue |
+| **Перформанс** | Freeze / Sidechain / Демпфер | Kill / Drag / Freeze |
+| **Физический агент** | Вибрация твёрдого тела | Вращение в жидкости + свет |
+
+---
+
+### Тембральный характер
+Тёплый, густой, замедленный. Повторы деградируют не в холодный шёпот (как магнитная лента), а в горячий гул — масло съедает верха, индукторы добавляют сатурации, солнце сжимает динамику.
+
+Для даба: KILL-кнопка бросает эхо, DRAG тормозит его, HEAT делает повторы гуще, солнечная панель на сцене под прожекторами управляет облаками.
+
+Для эмбиента: HAZE на максимуме, FREEZE зацикливает деградирующий фрагмент, MID резонатор в self-oscillation.
+
+Для нойза: MID BOOST до самовозбуждения + FEEDBACK + DRIVE → feedback в Last Night → бесконечный drone.
+
+### Связь с Last Night
+Last Day → Last Night = полная пространственная цепь "день → ночь". Тёплые масляные повторы Last Day попадают в холодный каменный/деревянный резонанс Last Night. Feedback Send/Return позволяет замкнуть петлю: delay → reverb → delay → reverb → бесконечное затухание. KILL на Last Day + Freeze на Last Night = замороженный мираж, медленно растворяющийся в резонансе пластины.
+
+### Сложность: Очень высокая — самый сложный модуль серии
+Oil can: BLDC motor + disk + capacitive pickup mechanics + sealed oil cartridge. Solar amp: boost converter + starved caskад + calibration. EQ: ручная намотка индукторов (или purchased Wurth), tongue-резонатор с clamp mechanism. Каждая секция — отдельный R&D subsystem.
+
+**R&D**: Phase 2 (12 месяцев после ship Phase 1). Phase B (add CRASH/DUST/WIRE) — 6 месяцев после Phase 2 ship.
+
+### Аналоги
+**Oil can delay:** Fender/Gibson Tel-Ray Adineko (1960-е) — базовый принцип capacitive. В современном формате Eurorack не существует. **Solar amp:** Dewanatron использовали солнечные панели как контроллеры, не как часть усилительного каскада. **Resonant EQ на физическом tongue:** не существует ни в каком формате.
+
+Комбинация трёх систем в одном модуле — абсолютно уникальна.
 
 ## 8. AND MY — Day ↔ Night crossfader
 
-_Заполняется следующим коммитом._
+> *"Last Day **and my** Last Night"* — литеральная интерпретация строки. Модуль связывает двух финализаторов.
+
+### Суть
+Финальный stereo crossfader между двумя финализаторами серии — Last Day (delay, жара) и Last Night (reverb, холод). CV-управляемый или manual, с опциональными dual mono outputs для routing flexibility.
+
+### Физический элемент
+Дело обходится без громкого physical gimmick — модуль утилитарный, **connective tissue**. Но у него есть маленькая фишка: **слайдер ручкой** (motorized optional) вместо rotary pot — визуально обозначает temporal transition "day → night".
+
+### Сигнальная цепь
+
+```
+AUDIO L (Last Day)  ──► VCA L_day ──┐
+                                     ├──► Summing amp ──► MAIN OUT L
+AUDIO L (Last Night) ──► VCA L_nite ─┘
+
+AUDIO R (Last Day)  ──► VCA R_day ──┐
+                                     ├──► Summing amp ──► MAIN OUT R
+AUDIO R (Last Night) ──► VCA R_nite ─┘
+
+  CV ──► Control circuit (equal-power law)
+          │
+          ├──► VCA_day (inverse)
+          └──► VCA_nite (direct)
+
+  Manual slider ──► mixed with CV
+  
+  Breakout outputs:
+  - DAY OUT (L, R) — только Last Day content после crossfade
+  - NITE OUT (L, R) — только Last Night content после crossfade
+```
+
+Используется **LM13700 dual OTA** (2 OTA для stereo), либо **SSI2164 quad VCA** для premium audio quality.
+
+### Ключевые контролы
+
+| Контрол | Функция | CV |
+|---------|---------|-----|
+| **BALANCE** | Большой slider (motorized optional), 30мм throw | ✓ (0-5В) |
+| **CURVE** | Linear / equal-power / sharp switch | — |
+| **CV AMOUNT** | Аттенюверт CV input | — |
+| **PUNCH** | Momentary button — temporary full swing (performance gimmick) | — |
+| **LINK** | Switch — L и R crossfade синхронно (mono sum) или независимо (stereo panorama) | — |
+| **DAY OUT / NITE OUT** | Jacks — breakout taps after crossfade | — |
+
+### Тембральный характер
+Чистый mix. Не добавляет character (by design — connective utility). Equal-power curve гарантирует perceived loudness constant через sweep. Motorized slider (premium SKU) отвечает на CV physically — visual performance element.
+
+### Связь с системой
+**Главное назначение**: управляемый переход Day ↔ Night. В конце patch'а пользователь finally commits — signal идёт через **и** delay, **и** reverb, с user-controlled balance.
+
+Живые сценарии:
+- **Slow automation**: 30-секундный slider sweep из Day в Night — из раскалённого полдня в прохладную ночь.
+- **Rhythmic punch**: PUNCH button в такт — momentary snap между Day и Night.
+- **CV modulation**: Fuck Abandoned Sleep pendulum LFO controls balance — дышит между двумя states.
+- **Stereo spread**: LINK off + different CVs на L/R — Day на одном канале, Night на другом, stereo depth.
+
+### Почему это не joystick / не attenuverter
+В оригинальной концепции And My был "TBD утилитарный модуль с джостиком". После decision — специализированная функция, усиленная thematically (literal reading of song line). Joystick-controllers существуют у Make Noise (Pressure Points) и в модуле Tetrapad — не нужно дублировать.
+
+### Сложность: Низкая
+Stereo VCA + summing + CV conditioning. ~25 компонентов. 1-layer PCB достаточно.
+
+Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encoder + driver). Optional premium SKU.
+
+**R&D**: 2–3 месяца. Phase 2 (параллельно с Last Day).
+
+### Аналоги
+- Erica Synths Sample Drum / Noise Engineering Sinc Bucina — дедикатед crossfaders, но без semantic tie к other modules.
+- **Pairing specifically Day↔Night финализаторы** — уникально по контексту, не по technology.
 
 ## 9. LAST NIGHT — Ревербератор на сменных пластинах
 
-_Заполняется следующим коммитом._
+> *Постапокалипсис. Пустота, эхо, треск радиации, жёваная плёнка и старый граммофон.*
+
+### Суть в одном абзаце
+Аналоговый ревербератор, использующий физические пластины (дерево, камень, металл, стекло, кость, карбон, нефрит, медь и др.) вместо DSP/пружин. Surface exciter возбуждает пластину аудиосигналом, два пьезо-датчика снимают резонанс. Сменные картриджи — каждый материал даёт уникальный тембр. Цель — постапокалипсис-звучание: пустота, дыхание руин, генератор треска (Geiger simulator — Phase 2 v2 addition) и имитация жёваной плёнки.
+
+### Формат
+**20HP Eurorack** (canonical), опционально **pedal 190×122мм** (Eventide PitchFactor size). Одна PCB, одна схема. Название: "Last Night".
+
+### Физический элемент
+Тонкая пластина, **вариативный формат**:
+- **Длина: 100мм** — фиксирована для всех материалов (mounting compatibility).
+- **Высота: 20–60мм** — варьируется per material (mode distribution optimization).
+- **Толщина: 0.5–6мм** — варьируется per material (bending mode frequency).
+
+Resилиентные резиновые рельсы в раме картриджа принимают любую толщину в диапазоне. Пластина вибрирует в **изгибных модах** — это ключ к диффузному характеру.
+
+### Repositioning: "resonator reverb", не "plate reverb"
+После acoustic reality check (см. `audit/11_last_night_acoustic.md`): 100мм — слишком маленькая пластина для classical plate reverb (EMT 140 использовал 2×1м). Модуль **не имитирует EMT**, а создаёт **новую категорию** — resonator reverb с материал-зависимым character. Marketing должен быть скорректирован.
+
+### Размещение трансдьюсеров
+- **Exciter**: Dayton DAEX25FHE-4 (для light materials ≤30г) или DAEX32Q-4 (для dense materials >30г). Крепится через винт M3 + резиновый uncoupler к face A, ~1/3 длины от края.
+- **Piezo A**: 27мм piezo disk (budget) или PVDF film (premium), на face B под exciter (ближний сигнал — bright).
+- **Piezo B**: то же, на противоположном конце face B (дальний сигнал — warm, diffuse).
+- **Соленоид**: сверху по центру, фетровый наконечник, 2мм spring-loaded adjustable zазор.
+
+### Архитектура схемы (15 блоков, ~158 компонентов после revision)
+
+```
+J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
+  ├── DRY_SEND (к mix)
+  └── Pre-emphasis (shelving EQ, corner 3.2кГц)
+        │
+        ▼
+  DRIVE pot → U1B gain → Q1 BD139/Q2 BD140 class AB push-pull (с bias diodes)
+        │
+        ▼
+  C_DC 1000µФ → R8 4.7Ω 5W → J_EX → DAEX25/32 exciter
+
+  [Физическая пластина в картридже]
+
+  Piezo A, B (mini-XLR shielded) → LSK489A dual JFET preamp (×23 gain)
+        │
+        ▼
+  Position crossfade (RV_POSITION) → De-emphasis → Tone LPF → LED clipper
+        │
+        ▼
+  Envelope follower VCA (LM13700, τ 1–48мс attack, 10мс–1с decay)
+        │
+        ▼
+  Mix (dry + wet + noise + CV) → Output (L/R stereo, mini-XLR normalling)
+
+  Feedback loop: wet_out → RV_FEEDBACK → SW_FREEZE → summing to driver
+    (с D_LIM1/D_LIM2 soft limiter, SPICE-verified stability)
+
+  Noise generator: BZX55C9V1 zener → gain × 100 → color filter → mix
+    (optional v2: + Geiger cluster pattern via ATtiny85 LFSR)
+
+  Solenoid damper: CV → R_DAM1 47к / R_DAM3 100к divider → Q5 2N7000 → solenoid
+```
+
+### Ключевые изменения относительно v2.1 (после аудита)
+- **LSK489A dual JFET** вместо 2×2N5457 (EOL), автоматический matching между каналами.
+- **BZX55C9V1 zener** вместо BC547 reverse-breakdown (stable noise).
+- **Mini-XLR** для piezo cables вместо JST (shielding от solenoid EMI).
+- **R8 4.7Ω 5W wirewound** (не 1/4W) — survives 3.8Вт rassipated power.
+- **R_DAM1 47к** (не 100к) — solid MOSFET turn-on при CV 5В.
+- **Class AB bias** в push-pull (2× 1N4148 diodes) — no crossover distortion.
+- **C_DC 1000µФ** (не 220µФ) — bass extension до 18Гц.
+- **Envelope follower τ**: С_ENV 220нФ + RV_ATK 220к → attack 1–48мс (музыкально).
+
+### Картриджная система
+
+**Формат рамки**: 110×65×30мм, 3D-печать PETG (прототип) или фрезерованный алюминий (продакшен). **Mount**: 4× neodym магниты + retention pin + направляющие.
+
+**Connectors на рамке**: 2× mini-XLR (piezo A, B shielded) + 2× JST-XH (exciter, solenoid). Mixed strategy — shielding там, где критично.
+
+### Каталог материалов (Phase 1 initial — 6 cartridges)
+
+| Картридж | Размеры | Масса | RT60 (реалистичный) | Exciter | Характер |
+|----------|---------|-------|---------------------|---------|----------|
+| **Oak (raw)** | 100×40×4мм | 12г | 0.1–0.3с | DAEX25 | Тёплый, мягкий, базовый |
+| **Oak (linseed)** | 100×40×4мм | 12г | 0.15–0.35с | DAEX25 | Чуть ярче, закрытые поры |
+| **Maple (shellac)** | 100×35×4мм | 10г | 0.2–0.5с | DAEX25 | Скрипичный, музыкальный |
+| **Marble** | 100×50×5мм | 68г | 0.8–2с | DAEX32 | Cathedral, тёплый |
+| **Brass** | 100×30×3мм | 77г | 1–3с | DAEX32 | Bell-like, ситарный |
+| **Spring steel** | 100×20×0.5мм | 8г | 2–6с | DAEX25 | Infinite shimmer |
+
+### Phase 2 additions (после ship Phase 1)
+
+| Картридж | Характер |
+|----------|----------|
+| Ebony | Премиум, длинный sustain |
+| Nephrite (нефрит) | Поющий, медитативный |
+| Copper | Колокольный, patina меняет тембр со временем |
+| Glass (Pyrex) | Кристаллический — также compatible с Be Careful |
+| Bone (лопатка) | Мрачный, ритуальный |
+| Titanium (1.5мм) | Ultra-premium, макс Q, бесконечный звон |
+
+> **Важно**: заявленные RT60 в исходном v2.0 брифе были завышены в 2–20× (acoustic reality check). Таблица выше — **реалистичные значения**. Feedback knob позволяет искусственно удлинить tail до 5–10× baseline, но это уже self-oscillating regime.
+
+### Покрытия дерева
+
+| Покрытие | Влияние на RT60 | Характер |
+|----------|----------------|----------|
+| Сырое (ничего) | Baseline | Тёплый, матовый, максимальное поглощение ВЧ |
+| Льняное масло (2 слоя) | +10–15% | Чуть ярче, поры частично закрыты |
+| **Шеллак (рекомендуется для premium)** | +20–30% | Скрипичная классика, самый музыкальный |
+
+Для v1 catalog — 3 покрытия (сырое, льняное, шеллак). Nitrocellulose и эпоксидка убраны (меняют "деревянность" слишком сильно).
+
+### Ключевые контролы
+
+| Контрол | Функция | CV |
+|---------|---------|-----|
+| **DRIVE** | Уровень сигнала на exciter | ✓ |
+| **FEEDBACK** | Уровень рециркуляции в loop (SPICE-verified stable) | ✓ |
+| **FREEZE** | SW-toggle: loop locks, бесконечный sustain | ✓ (gate) |
+| **MIX (DRY/WET)** | Баланс | ✓ |
+| **POSITION** | Кроссфейд piezo A/B (bright ↔ warm) | ✓ |
+| **TONE (CUTOFF)** | LPF на output, 158Hz–15.9kHz range | ✓ |
+| **ATTACK** | Envelope follower attack (1–48мс) | — |
+| **DECAY** | Envelope follower decay (10мс–1с) | ✓ |
+| **BOOST** | Pre-emphasis amount (0 → +8dB) | — |
+| **NOISE** | Уровень noise generator подмес | — |
+| **COLOR** | LPF на noise (white → brown) | — |
+| **CV MIX** | CV input на mix modulation | ✓ |
+| **CV DAMP** | CV input на solenoid damper | ✓ |
+| **SIDE IN** | Sidechain input для external excitation | — |
+
+### Тембральный характер
+Пост-апокалиптичный. Звук пустоты. Жёваная плёнка (через envelope follower dynamics + noise generator). Треск радиации (Geiger pattern из v2 noise — короткие discrete clicks вместо continuous hiss). Эхо каменного собора без прихожан. Деревянная пластина даёт warmth разложившегося органа; металлическая — shimmer заброшенной телевизионной антенны; стеклянная (если установлен Be Careful cartridge) — crystalline chime рушашегося небоскрёба.
+
+Short RT60 (оак, берёза) — **перкуссивный**, short slap. Long RT60 (сталь, титан) — **drone-capable** в freeze mode.
+
+### Связь с системой
+Финальный модуль цепи. Принимает signal после всех colorations и **возвращает его в пространство**. Sidechain input позволяет внешний trigger (ритм от kick drum возбуждает reverb независимо от main signal). Feedback output к Last Day (если установлен в системе) создаёт infinite loop между delay и reverb.
+
+### Безопасность (scope из audit)
+- Аудио через пьезо: sub-мВ-уровень, не требует isolation.
+- Соленоид: low-current (300мА), flyback diode mandatory.
+- Feedback loop: SPICE-verified stable, D_LIM1/D_LIM2 soft-clip для amplitude safety.
+- Exciter: ограниченная мощность через R8 4.7Ω (3Вт peak), не перегреется.
+
+### Сложность: Средняя-высокая (flagship модуль)
+LSK489A dual JFET preamp — самая деликатная часть (shielded cables, guard ring, low-noise). Остальное — proven circuit topology. Mechanical: точная установка exciter + piezo + соленоидная механика. Cartridge production — столярка, каменная обработка, металл, стекло.
+
+**R&D**: **Phase 1 — ship first, 6–9 месяцев** после применения fix list. Flagship модуль, определяет brand.
+
+### Аналоги
+- **EMT 140** — classical plate reverb, но 2×1м, не scalable для Eurorack.
+- **Accutronics spring tank reverbs** — swappable springs, но не swappable materials.
+- **Folktek Nano/Micro** — piezo + objects, но не как reverb.
+- **Instruō Tain** — acoustic reverb через tank, closed-system.
+
+**Resonator reverb со сменными material plates, optical damping, envelope follower VCA, shielded cable system, dual-piezo position crossfade** — **уникален**. Нет direct competitor.
 
 ---
 
 ## СИГНАЛЬНАЯ ЦЕПЬ ВСЕЙ СИСТЕМЫ
 
-_Заполняется следующим коммитом._
+### Основной путь (типичный патч)
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│   I SHOW YOU        BODY BLOOD     ALL BONES       BE                    │
+│      LIGHT          AND SALT         DUST        CAREFUL                 │
+│   [Осциллятор] ──→ [Touch]  ──→ [Distortion] ──→ [Glass res filter] ──→ │
+│                                                       │                  │
+│                                                       ▼                  │
+│                                    ┌────── IS MY ──────┐                 │
+│                                    │  [Vactrol xfade]  │                 │
+│                                    │    A          B    │                │
+│                                    └────────┬──────────┘                 │
+│                                             │                            │
+│                                  ┌──────────┴──────────┐                 │
+│                                  ▼                     ▼                 │
+│                           ┌── LAST DAY ──┐     ┌── (dry) ──┐             │
+│                           │ ☀ Solar Amp   │     │            │            │
+│                           │ EQ (tongue)   │     │            │            │
+│                           │ Oil Can Delay │     │            │            │
+│                           └──────┬────────┘     └─────┬──────┘            │
+│                                  │FB SEND             │                  │
+│                                  │                     │                  │
+│                                  └──────┐ ┌───────────┘                  │
+│                                         ▼ ▼                               │
+│                                  ┌── AND MY ──┐                           │
+│                                  │ [Day↔Night │                           │
+│                                  │  xfader]   │                           │
+│                                  └────┬───────┘                           │
+│                                       │                                   │
+│                                       ▼                                   │
+│                              ┌── LAST NIGHT ──┐ ◄── FB RETURN ───┐       │
+│                              │  [Ревербератор]│                   │       │
+│                              └───────┬────────┘                   │       │
+│                                      │                            │       │
+│                                      ▼                            │       │
+│                                   OUTPUT                          │       │
+│                                      │                            │       │
+│                                      └────────────────────────────┘       │
+│                                       (optional infinite Day↔Night loop) │
+│                                                                          │
+│   FUCK ABANDONED SLEEP ──→ CV ──→ (любой модуль: pitch, cutoff,         │
+│   [Маятниковый LFO]              drive, time, feedback, SUN, HAZE...)   │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Альтернативные патчи
+
+**Патч A — "Drone Cathedral"**
+```
+I Show You Light (low speed drone, BLDC-locked 40Гц)
+    → Be Careful (glass Pyrex plate, high resonance, self-oscillating)
+        → Fuck Abandoned Sleep CV → slow swell через маятник
+            → Last Night (marble cartridge, long decay + freeze)
+```
+
+**Патч B — "Red Mirage" (даб)**
+```
+External audio (DJ deck)
+    → Last Day: SUN low (crunchy), касторовое масло, high feedback
+      KILL → DRAG → повторы тонут в горячем масле
+        → Last Night (oak linseed, mid-length decay)
+```
+
+**Патч C — "Pendulum Clock"**
+```
+Fuck Abandoned Sleep (chaos mode, double pendulum) → trigger
+    → I Show You Light (sync input = rhythmic bursts)
+        → All Bones Dust (brass rattle)
+            → Last Day (oil delay, tempo sync via Is My)
+                = self-evolving rhythmic pattern
+```
+
+**Патч D — "Glass and Bone"**
+```
+I Show You Light (contact/DUST mode, пьезо-стилус)
+    → Be Careful (glass Pyrex, high Q band-pass)
+        → IS MY: vactrol crossfade между dry и...
+            → All Bones Dust (bone rattle)
+                → Last Night (spring steel cartridge)
+```
+
+**Патч E — "Day Into Night" (бесконечная петля)**
+```
+Any source → Last Day (FB SEND active)
+    → And My (balance 30% Day / 70% Night)
+    → Last Night (FB RETURN → Last Day)
+    = delay и reverb в бесконечном cycle
+    DRAG на Last Day + Freeze на Last Night
+    = застывший мираж, тонущий в замедленном времени
+```
+
+**Патч F — "Solar Storm"**
+```
+Last Day standalone: SOLAR/INTERNAL switch → external
+    → MID boost до самовозбуждения (tongue резонатор sings)
+    → Oil delay (high feedback, HAZE max)
+    → стробоскоп над модулем → солнечная панель = ритмичная модуляция
+    = нойз-перформанс, управляемый светом
+```
+
+**Патч G — "Touch Meditation"**
+```
+I Show You Light (sine disk, slow drone)
+    → Body Blood And Salt (touch pads, skin-R modulates filter)
+        → And My (balance pendulum-controlled)
+            → Last Night (nephrite cartridge, short decay)
+    — перформер держит пальцы на pads, дыхание управляет filter cutoff
+```
 
 ## КАК МОДУЛИ ДОПОЛНЯЮТ ДРУГ ДРУГА
 
-_Заполняется следующим коммитом._
+### Тембральная палитра
+
+| Модуль | Материальность | Частотный фокус |
+|--------|---------------|-----------------|
+| I Show You Light | Свет + механика | Полный спектр (зависит от диска) |
+| Body Blood And Salt | Кожа (v1), жидкости тела (v5) | Зависит от skin-R modulation |
+| All Bones Dust | Железо, кость | Гармоники, верхняя середина |
+| Be Careful | Стекло, кристалл | Узкополосный резонанс 500Гц–3кГц |
+| Fuck Abandoned Sleep | Гравитация, инерция | Инфра-low (CV, 0.5–5Гц) |
+| Is My | Свет (vactrol) | Полный спектр (crossfader) |
+| Last Day | Масло, свет, ферриты | Тепло, сатурация, деградация повторов |
+| And My | VCA stereo | Полный спектр (crossfader) |
+| Last Night | Дерево/камень/металл/стекло | Пространственный отпечаток материала |
+
+### Принцип взаимодополнения
+
+Каждый модуль добавляет свой слой физической "материальности" к звуку:
+
+1. **I Show You Light** рождает звук из света и вращения — чистая кинетическая энергия.
+2. **Body Blood And Salt** пропускает через кожу — звук обретает человеческое прикосновение.
+3. **All Bones Dust** проводит через железо и кость — добавляет грязь, скелет, обертона.
+4. **Be Careful** фильтрует через стекло — хрупкость, резонанс, осторожность.
+5. **Fuck Abandoned Sleep** — маятник качается, хаос или покой, модуляция всего.
+6. **Is My** — точка выбора, развилка пути, optical inertia.
+7. **Last Day** пропускает через масло, свет и ферриты — жар, повторы, тяжесть, память, которая плавится.
+8. **And My** — мост между днём и ночью, равновесие.
+9. **Last Night** растворяет в резонансе твёрдого тела — звук обретает пространство и остывает.
+
+От света → через кожу → через кость → через стекло → через маятник → через масло и солнце → через мост → через дерево/камень → в тишину.
+
+*День сгорает. Ночь остывает.*
+
+### Scalability — Core Kit + Expansions
+
+Серия **не требует покупки всех 9 модулей сразу**. Рекомендованная customer journey:
+
+**Core Kit** (Phase 1):
+- Last Night (reverb финализатор, standalone usable).
+- All Bones Dust (distortion, universal).
+- Утилиты (mult, attenuator-mixer).
+
+Работает с внешним источником (synth, guitar, DJ deck, microphone). Entry point ~$500.
+
+**Day Expansion** (Phase 2):
+- Last Day (delay + solar amp + resonant EQ).
+- And My (crossfader к Last Night).
+- Is My (vactrol crossfader utility).
+
+Создаёт полный space finalizer pair. Bundle ~$1000 с Phase 1.
+
+**Source Expansion** (Phase 3):
+- I Show You Light (optical VCO).
+- Fuck Abandoned Sleep (pendulum LFO).
+
+Self-contained synth voice + modulation. Bundle ~$500 к existing setup.
+
+**Filter Expansion** (Phase 4):
+- Be Careful (glass resonant filter).
+
+Completes signal chain. $280.
+
+**Experimental** (Phase 5, optional):
+- Body Blood And Salt (touch-pads, touch-only для v1).
+
+Premium ritual piece. $250.
+
+**Total возможная investment**: $2000–2500 для full 9-module system (если покупается полностью). Но entry price point — всего $300–500 для Last Night standalone.
 
 ## ДОРОЖНАЯ КАРТА ПРОТОТИПИРОВАНИЯ
+
+### Phase 1 — Ship flagship + simple (6–9 месяцев)
+
+**Last Night rev A** (flagship):
+- Apply IMMEDIATE fixes в KiCad schematic (bias diodes, R8 5W spec, R_DAM1 47к, C_PE1/DE1 matched).
+- Apply SHORT fixes (LSK489A swap on PCB, SPICE feedback verification, mini-XLR cable system).
+- Apply MEDIUM fixes на rev B (C_DC 1000µФ, envelope τ correction, LED clipper, zener noise).
+- Build 10-unit prototype batch.
+- Test per `fixes/04_testing_protocol.md`.
+- Validate acoustic claims против корректированных RT60.
+- Ship. Retail $350 budget / $400 premium.
+
+**All Bones Dust v1**:
+- Simple transformer + rattle prototype.
+- 2–3 month R&D.
+- Ship parallel с Last Night rev A.
+- Retail $180–220.
+
+**Utilities**:
+- Standard mult + attenuverter-mixer (no innovation, just reliable).
+- DIY-friendly, open source schemes.
+
+**Goal**: validate cartridge concept, establish brand, generate cashflow.
+
+### Phase 2 — Day/Night pair (12 месяцев после Phase 1 ship)
+
+**Last Day v1** (40HP Eurorack only):
+- BLDC motor + capacitive pickup prototype.
+- Sealed oil cartridge mechanics.
+- Inductive shelf EQ + manual tongue resonator.
+- Solar amp с INTERNAL fallback.
+- Perform FX subset: KILL + FREEZE + DRAG + HAZE.
+- Retail $700–900.
+
+**And My** (Day↔Night crossfader, 8HP):
+- Simple stereo VCA design.
+- 2–3 month R&D в parallel с Last Day.
+- Retail $150–200.
+
+**Is My** (vactrol crossfader, 6HP):
+- Simplest module серии.
+- 2 month R&D.
+- Retail $120–150.
+
+### Phase B (6 месяцев после Phase 2)
+
+**Last Day v1.5 — add effects**:
+- CRASH solenoid (удар по масляной ванне).
+- DUST impulse generator.
+- WIRE EM pickup antenna.
+- Firmware update or hardware add-on kit для existing v1 units.
+
+### Phase 3 — Source + modulation (18 месяцев после Phase 1)
+
+**I Show You Light** (16HP):
+- BLDC motor + PLL speed control.
+- Laser-cut disk production setup.
+- CV→pitch expo converter.
+- Multi-disk cartridge system.
+- Retail $300–400.
+
+**Fuck Abandoned Sleep** (10HP):
+- Pendulum mechanics с magnetic release.
+- PSD optical sensor.
+- Visible window в panel.
+- Chaos mode (double pendulum).
+- Retail $200–280.
+
+### Phase 4 — Glass filter (24 месяца после Phase 1)
+
+**Be Careful** (14HP):
+- Reuses Last Night cartridge infrastructure (faster R&D).
+- Glass-specific production (Pyrex plates).
+- Motorized cutoff clamp.
+- Retail $280–350.
+
+### Phase 5 — Experimental, optional (30+ месяцев)
+
+**Body Blood And Salt** (10HP touch-only v1):
+- Touch pads с current-limited buffers.
+- Safety-conscious design.
+- Retail $250.
+
+**Phase 5 premium (v2)** — WELL variant с liquids + medical-grade isolation, если пользователь commits к certification cost. Otherwise — remain touch-only.
+
+### Timeline summary
+
+| Phase | Window | Modules | Cumulative retail (full kit) |
+|-------|--------|---------|------------------------------|
+| 1 | Months 1–9 | Last Night, All Bones Dust, Utilities | ~$550 |
+| 2 | Months 9–21 | Last Day, And My, Is My | ~$1,400 |
+| 2B | Months 21–27 | Last Day v1.5 add-ons | ~$1,500 |
+| 3 | Months 21–33 | I Show You Light, Fuck Abandoned Sleep | ~$2,000 |
+| 4 | Months 27–33 | Be Careful | ~$2,300 |
+| 5 | Months 33+ | Body Blood And Salt | ~$2,550 |
+
+**Solo realistic timeline**: 33 месяца для full 9-module series с part-time R&D. Full-time может скомпрессировать до 18–24 месяцев.
+
+### Зависимости между phases
+
+- Phase 2 **параллелен** с Phase 1 shipment (R&D Last Day starts while Last Night ships).
+- Phase 3 **параллелен** с Phase 2 shipment.
+- Phase 4 **параллелен** с Phase 3 shipment.
+- Phase 5 **serial** после Phase 4 (не блокирующий для rest of series).
+
+### Критические зависимости
+
+1. **Phase 1 Ship успех** — определяет, будет ли Phase 2 funded. Если Phase 1 flops → reconsider strategy.
+2. **Cartridge infrastructure Phase 1** — используется в Be Careful Phase 4.
+3. **LSK489A supply chain** — critical для всех модулей с JFET preamp (Last Night, Be Careful).
+4. **Solar amp proof of concept Phase 2** — если outdoor performance не работает надёжно, fall back к "internal LED only" — но это ограничит narrative.
+
+---
+
+## ЗАКЛЮЧЕНИЕ
+
+**SYSTEM SUICIDE** — это **не** 9 независимых модулей, а **связная цепь физического синтеза**, где каждый узел материализует звук через уникальный физический носитель: свет, кожа, железо, стекло, инерция, масло, резонирующая материя.
+
+Электроника обслуживает физику, а не наоборот.
+
+От рождения (свет вращающегося диска) через касание (кожа), кость (железо и раттл), стекло (узкополосный резонанс), маятник (инерция), мост (crossfader), жар полдня (oil delay + solar), ночь (resonating plate) — звук проходит **literal хронологию апокалипсиса**, превращаясь из чистой энергии в пространственный распад.
+
+*I Show You Light. Body Blood And Salt. All Bones Dust. Be Careful. Fuck Abandoned Sleep Is My Last Day And My Last Night.*
+
+> *День сгорает. Ночь остывает. Последний звук остаётся в резонансе камня.*
+
+---
+
+## REFERENCES
+
+Этот brief — consolidation следующих документов:
+- `audit/01_executive_summary.md` — top-10 kill-risks & triage.
+- `audit/10_last_night_engineering.md` — per-block schematic critique (revised).
+- `audit/11_last_night_acoustic.md` — corrected RT60 ranges.
+- `audit/13_schematic_cross_reference.md` — ground-truth topology reconciliation.
+- `audit/20_last_day_engineering.md` — Last Day subsystem critique.
+- `audit/30_other_modules_gaps.md` — gap analysis для 7 non-flagship modules.
+- `decisions/01_undefined_modules.md` — architecture decisions для TBD.
+- `decisions/02_last_day_scope.md` — Eurorack commit, capacitive pickup.
+- `decisions/03_cartridge_standards.md` — 6-cartridge Phase 1 catalog.
+- `decisions/04_production_strategy.md` — 5-phase sequential roadmap.
+- `fixes/01_last_night_fix_list.md` — 15 actionable schematic fixes.
+- `fixes/02_bom_delta.md` — concrete part replacements.
+- `fixes/03_pcb_layout_guide.md` — noise-minimizing PCB rules.
+- `fixes/04_testing_protocol.md` — phased prototype validation.
+
+Исходные источники:
+- Два брифа пользователя в chat (System overview + Last Night v2.0/v2.1 spec).
+- `audit/wood_reverb_logical_schematic.html` — canonical topology reference.
 
 _Заполняется следующим коммитом._
