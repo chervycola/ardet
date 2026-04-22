@@ -10948,7 +10948,7 @@ function updateBrainrot(){
   else brainrot=Math.max(0,brainrot-.5);
   // Freeze at max brainrot
   if(brainrot>=100&&!brainrotFreeze){
-    brainrotFreeze=true;
+    brainrotFreeze=true;addCrack(VW/2|0,VH/2|0);
     brainrotFreezeTimer=0;
     // Temporarily mute audio during freeze
     if(audioCtx)audioCtx.suspend();
@@ -12221,6 +12221,192 @@ function drawSand(){
 }
 
 // Modify light radius based on day cycle
+// ═══════════════════════════════════════
+// SCREEN MOSS — grows from edges during idle, retreats on movement
+// ═══════════════════════════════════════
+const screenMoss={
+  cells:[],          // {x,y,age,layer} — active moss pixels
+  coverage:0,        // 0..1 how much of screen edge is covered
+  idleGrowth:0,      // accumulates during idle
+  retreatSpeed:.015, // how fast moss retreats on movement
+  maxCells:800,      // performance cap
+  initialized:false,
+  palette:[
+    '#0a1a08','#0d2a0b','#1a3a12','#2a5a1a', // dark base
+    '#1a4a14','#2a6a20','#3a7a2a','#4a8a34', // mid greens
+    '#5aff3a','#3adf2a','#6aaa40','#8ab860', // bright tips
+    '#1a3010','#0e1a08','#3a5a20','#506830', // shadow/variation
+  ],
+};
+function initScreenMoss(){
+  if(screenMoss.initialized)return;
+  screenMoss.initialized=true;
+  screenMoss.cells=[];
+}
+function updateScreenMoss(){
+  initScreenMoss();
+  const m=screenMoss;
+  if(player.moving||Object.values(keys).some(v=>v)){
+    m.idleGrowth=Math.max(0,m.idleGrowth-m.retreatSpeed);
+    if(m.idleGrowth<.01&&m.cells.length>0){
+      const remove=Math.min(3,m.cells.length);
+      for(let i=0;i<remove;i++)m.cells.pop();
+    }
+    return;
+  }
+  m.idleGrowth=Math.min(1,m.idleGrowth+.0002);
+  if(m.idleGrowth>.08&&m.cells.length<m.maxCells&&t%12===0){
+    const edge=Math.floor(Math.random()*4);
+    let nx,ny;
+    if(edge===0){nx=Math.floor(Math.random()*VW);ny=0;}
+    else if(edge===1){nx=Math.floor(Math.random()*VW);ny=VH-1;}
+    else if(edge===2){nx=0;ny=Math.floor(Math.random()*VH);}
+    else{nx=VW-1;ny=Math.floor(Math.random()*VH);}
+    if(m.cells.length>0&&Math.random()>.3){
+      const parent=m.cells[Math.floor(Math.random()*m.cells.length)];
+      nx=parent.x+Math.floor(Math.random()*5)-2;
+      ny=parent.y+Math.floor(Math.random()*5)-2;
+    }
+    nx=Math.max(0,Math.min(VW-1,nx));
+    ny=Math.max(0,Math.min(VH-1,ny));
+    const layer=Math.floor(Math.random()*3);
+    m.cells.push({x:nx,y:ny,age:0,layer:layer});
+  }
+  m.cells.forEach(c=>c.age++);
+}
+function drawScreenMoss(){
+  const m=screenMoss;
+  if(m.cells.length===0)return;
+  const fade=Math.min(1,m.idleGrowth*4);
+  m.cells.forEach(c=>{
+    const cellFade=Math.min(1,c.age/60)*fade;
+    if(cellFade<.05)return;
+    X.globalAlpha=cellFade*(.4+c.layer*.15);
+    const ci=((c.x*7+c.y*13+c.layer*3)&15);
+    X.fillStyle=m.palette[ci];
+    const sz=1+c.layer;
+    X.fillRect(c.x,c.y,sz,sz);
+    if(c.layer===2&&c.age>30){
+      X.globalAlpha=cellFade*.3;
+      X.fillStyle=m.palette[(ci+4)&15];
+      X.fillRect(c.x,c.y-1,1,1);
+    }
+  });
+  X.globalAlpha=1;
+}
+// ═══════════════════════════════════════
+// CRACKED GLASS — fractures that persist through session
+// ═══════════════════════════════════════
+const crackedGlass={
+  cracks:[],   // [{origin:{x,y}, lines:[{angle,len,branches:[...]}]}]
+  maxCracks:12,
+};
+function addCrack(ox,oy){
+  if(crackedGlass.cracks.length>=crackedGlass.maxCracks)return;
+  const numLines=3+Math.floor(Math.random()*5);
+  const lines=[];
+  for(let i=0;i<numLines;i++){
+    const angle=Math.random()*Math.PI*2;
+    const len=30+Math.random()*80;
+    const branches=[];
+    const numB=Math.floor(Math.random()*3);
+    for(let b=0;b<numB;b++){
+      const bPos=.3+Math.random()*.5;
+      const bAngle=angle+(Math.random()-.5)*1.2;
+      const bLen=len*(.2+Math.random()*.3);
+      branches.push({pos:bPos,angle:bAngle,len:bLen});
+    }
+    lines.push({angle,len,branches});
+  }
+  crackedGlass.cracks.push({origin:{x:ox,y:oy},lines,t:t});
+}
+function drawCrackedGlass(){
+  if(crackedGlass.cracks.length===0)return;
+  X.save();
+  X.lineWidth=1;
+  crackedGlass.cracks.forEach(crack=>{
+    const age=Math.min(1,(t-crack.t)/30);
+    crack.lines.forEach(line=>{
+      const ex=crack.origin.x+Math.cos(line.angle)*line.len*age;
+      const ey=crack.origin.y+Math.sin(line.angle)*line.len*age;
+      X.globalAlpha=.35+.1*Math.sin(t*.003);
+      X.strokeStyle='rgba(200,200,200,0.6)';
+      X.beginPath();X.moveTo(crack.origin.x,crack.origin.y);X.lineTo(ex,ey);X.stroke();
+      X.globalAlpha=.15;
+      X.strokeStyle='rgba(255,255,255,0.3)';
+      X.lineWidth=.5;
+      X.beginPath();X.moveTo(crack.origin.x+.5,crack.origin.y+.5);X.lineTo(ex+.5,ey+.5);X.stroke();
+      X.lineWidth=1;
+      line.branches.forEach(b=>{
+        const bx=crack.origin.x+Math.cos(line.angle)*line.len*b.pos;
+        const by=crack.origin.y+Math.sin(line.angle)*line.len*b.pos;
+        const bex=bx+Math.cos(b.angle)*b.len*age;
+        const bey=by+Math.sin(b.angle)*b.len*age;
+        X.globalAlpha=.25;
+        X.strokeStyle='rgba(180,180,180,0.4)';
+        X.beginPath();X.moveTo(bx,by);X.lineTo(bex,bey);X.stroke();
+      });
+    });
+  });
+  X.restore();
+}
+// ═══════════════════════════════════════
+// TAB TITLE — world lives without you
+// ═══════════════════════════════════════
+const tabTitleMsgs=['мох растёт','кот ждёт','огонь не гаснет','ты ушёл — мир остался','стены читают пустоту','колесо крутится','кто-то каталогизирует','тишина гуще','привратник ждёт','пиксели гаснут'];
+let tabTitleInterval=null;
+let tabTitleOriginal='ARDET';
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    let ti=0;
+    tabTitleInterval=setInterval(()=>{
+      document.title=tabTitleMsgs[ti%tabTitleMsgs.length];
+      ti++;
+    },4000);
+  }else{
+    clearInterval(tabTitleInterval);
+    document.title=tabTitleOriginal;
+  }
+});
+// ═══════════════════════════════════════
+// DYING PIXELS — world burns out over time
+// ═══════════════════════════════════════
+const dyingPixels={
+  dead:[],     // [{x,y}]
+  lastDeath:0, // frame of last pixel death
+  interval:3600, // one pixel every ~60 seconds
+};
+function updateDyingPixels(){
+  if(t-dyingPixels.lastDeath<dyingPixels.interval)return;
+  dyingPixels.lastDeath=t;
+  const dx=Math.floor(Math.random()*VW);
+  const dy=Math.floor(Math.random()*VH);
+  if(dyingPixels.dead.length<200)dyingPixels.dead.push({x:dx,y:dy});
+}
+function drawDyingPixels(){
+  if(dyingPixels.dead.length===0)return;
+  X.fillStyle='#000';
+  X.globalAlpha=.7;
+  dyingPixels.dead.forEach(p=>X.fillRect(p.x,p.y,1,1));
+  X.globalAlpha=1;
+}
+// ═══════════════════════════════════════
+// BLANK SCREEN — "Мир сгорел." after N sessions
+// ═══════════════════════════════════════
+let blankScreenDone=false;
+function checkBlankScreen(){
+  const visits=parseInt(localStorage.getItem('ardet_visits')||'0',10)+1;
+  localStorage.setItem('ardet_visits',String(visits));
+  if(visits>=50&&visits%50===0&&!blankScreenDone){
+    blankScreenDone=true;
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Press Start 2P",monospace;color:#8a8d8f;font-size:12px;';
+    overlay.textContent='Мир сгорел.';
+    document.body.appendChild(overlay);
+    setTimeout(()=>overlay.remove(),60000);
+  }
+}
+checkBlankScreen();
 function getDayLightMod(){return .7+dayCycle*.3;} // lights slightly larger at night
 // ═══════════════════════════════════════
 function render(){
@@ -12246,6 +12432,7 @@ function render(){
   drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
   drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
   drawTextGhosts();drawBinaryGlitch();drawRealityShift();
+  drawScreenMoss();drawCrackedGlass();drawDyingPixels();
   drawCinematicTint();
   if(endingTriggered)drawEnding();
 }
@@ -12292,7 +12479,7 @@ function loop(){
     updateFootprints();checkDiscovery();updateAmbient();
     checkLorePickup();checkWhisper();updateIdle();updateJester();updatePetCrossings();updateWallProximity();
     updateDayCycle();updateWind();updateSand();updateWeather();
-    updateBinaryGlitch();updateRealityShift();updateTextGhosts();
+    updateBinaryGlitch();updateRealityShift();updateTextGhosts();updateScreenMoss();updateDyingPixels();
     updateMonsters();updateBrainrot();updateWastelandAudio();updateProximityAudio();updateZoneDrone();
     checkAchievements();
     render();
@@ -12608,7 +12795,7 @@ function handleUse(loc){
     case'shop2':shakeT=15;openShop('shop2');break;
     case'shop3':openShop('shop3');break;
     case'greenpit':triggerGreenPit();break;
-    case'events':openShop('events-overlay');break;
+    case'events':addCrack(Math.random()*VW|0,Math.random()*VH|0);openShop('events-overlay');break;
     case'ending':triggerEnding();break;
     case'theater_stage':
       if(observersUnlocked){
@@ -12622,7 +12809,7 @@ function handleUse(loc){
       break;
     case'pizzeria_enter':showLook({name:'ПОДВАЛ "ВАВИЛОНА"',look:'Ты поднимаешь коврик "Welcome". Под ним — ключ. Ключ от двери, которой нет: она вмурована в пол. Спускаешься через люк за стойкой. Бетонный пролёт, 13 ступеней (Архивариус посчитал). На стенах — зелёный свет ниоткуда. Лампа на столе горит без проводов. На столе — стул. На стуле — никто. Перед стулом — телефон без диска. Трубка снята. В трубке — гудок. Гудок длится 11 лет.\n\nНа стене мелом: «ЭПШТЕЙН НЕ УБИВАЛ СЕБЯ». Под надписью, другим почерком: «А кто тогда?» Ещё ниже, третьим, детским: «cheese pizza. hotdog. walnut sauce. map. pasta. оплата — крипта, доставка — в подвал». Меню это или признание — решай сам.\n\nПод списком — BTC-кошелёк: bc1q... стёрт ногтем, остаток: 0.00000000. Рядом приклеен список дат, вырезанный из старой газеты:\n• 22.05.2010 — Bitcoin Pizza Day. Laszlo Hanyecz. 10 000 BTC. Две пиццы. Начало.\n• 03.01.2009 — Genesis Block. "Chancellor on brink of second bailout for banks."\n• 02.10.2013 — Silk Road закрыт. Ross Ulbricht пожизненно без права на УДО.\n• 28.02.2014 — Mt.Gox. 850 000 BTC исчезли. Никто не сел.\n• 04.11.2016 — Comet Ping Pong. Пиццерия. Podesta emails. Codewords.\n• 10.08.2019 — Эпштейн. Камера. Одиннадцать минут без камер.\n• 01.01.2026 — ???\n\nПод списком — пятый почерк, подпись: «мох помнит всё. мох ничего не забывает. даже то, что ты ещё не сделал». Welcome.'});break;
     case'radio_tune':showLook({name:'ТЕЛЕФОН У ОСНОВАНИЯ',look:'Ты поднимаешь телефон. Лента продолжает ехать — теперь в твоей руке. Палец не нужен.\n\nТы смотришь на ленту. Она показывает тебе то, что ты уже знал.\n\n— Компания знала, что Instagram делает подросткам хуже. Компания знала, что ты узнаешь. Ты не ушёл.\n\n— 87 миллионов профилей ушли к консультантам. Один сказал Конгрессу: «Senator, we run ads». Конгресс засмеялся.\n\n— В Ольгино ферма закрылась в 2023-м. Работу доделывает модель. Ей зарплата не нужна. Статистика — та же.\n\nТы кладёшь телефон обратно. Лента продолжает ехать без тебя.\n\nРадио играет: «I don\'t want to set the world on fire». 1941-й год. Тогда это пели мужчины, которые не хотели воевать.'});break;
-    case'bus_instr':showLook({name:'ИНСТРУКЦИЯ',look:'Ты достаёшь ламинированную карточку из-под сиденья. Она тяжёлая — ламинат толстый. Карточка побывала в руках многих взрослых.\n\n«АКТИВНЫЙ СТРЕЛОК. ИНСТРУКЦИЯ ПО ДЕЙСТВИЯМ. ВЕРСИЯ 47.\n\n1. УЙТИ (RUN). Если путь свободен — бегите. Не берите вещи. Вещи не бегут.\n2. СПРЯТАТЬСЯ (HIDE). Заблокируйте дверь стульями. Выключите свет. Выключите телефон на беззвучный. Не на вибрацию — на беззвучный.\n3. ДРАТЬСЯ (FIGHT). Только если нет первых двух вариантов. Используйте всё, что под рукой. Всё.\n\nДЛЯ ДЕТЕЙ 6+ лет: объяснять через игру. Игра называется «тихая мышка».\nДЛЯ ДЕТЕЙ 3-6 лет: без объяснений. Воспитатель решает за них.\nДЛЯ ДЕТЕЙ 0-3 лет: без объяснений. Воспитатель решает за всех.»\n\nНиже, от руки, другим почерком: «Мы — первое поколение, которое родилось в эту инструкцию. Мы выучили её раньше таблицы умножения. Нам показали её раньше, чем мы узнали слово «нет». Нам объяснили, как выжить при стрельбе, раньше, чем объяснили, откуда берутся дети. Это странное знание. Оно встроено, как родной язык. Мы говорим на нём без акцента. Другие поколения — как туристы, с разговорником. Мы — носители.»\n\nЕщё ниже, совсем мелко: «Версия 47 вышла после 47-го случая в школах США за текущий год. Версия 48 выйдет, когда будет повод. Повод будет.»\n\nТы возвращаешь карточку под сиденье. Рука не дрожит. Это второе поколение. Они уже привыкли. Они даже помогают младшим привыкнуть.\n\nИз динамика: «Внимание. Учебная тревога. Повторяю: учебная тревога.»'});break;
+    case'bus_instr':addCrack(Math.random()*VW|0,Math.random()*VH|0);showLook({name:'ИНСТРУКЦИЯ',look:'Ты достаёшь ламинированную карточку из-под сиденья. Она тяжёлая — ламинат толстый. Карточка побывала в руках многих взрослых.\n\n«АКТИВНЫЙ СТРЕЛОК. ИНСТРУКЦИЯ ПО ДЕЙСТВИЯМ. ВЕРСИЯ 47.\n\n1. УЙТИ (RUN). Если путь свободен — бегите. Не берите вещи. Вещи не бегут.\n2. СПРЯТАТЬСЯ (HIDE). Заблокируйте дверь стульями. Выключите свет. Выключите телефон на беззвучный. Не на вибрацию — на беззвучный.\n3. ДРАТЬСЯ (FIGHT). Только если нет первых двух вариантов. Используйте всё, что под рукой. Всё.\n\nДЛЯ ДЕТЕЙ 6+ лет: объяснять через игру. Игра называется «тихая мышка».\nДЛЯ ДЕТЕЙ 3-6 лет: без объяснений. Воспитатель решает за них.\nДЛЯ ДЕТЕЙ 0-3 лет: без объяснений. Воспитатель решает за всех.»\n\nНиже, от руки, другим почерком: «Мы — первое поколение, которое родилось в эту инструкцию. Мы выучили её раньше таблицы умножения. Нам показали её раньше, чем мы узнали слово «нет». Нам объяснили, как выжить при стрельбе, раньше, чем объяснили, откуда берутся дети. Это странное знание. Оно встроено, как родной язык. Мы говорим на нём без акцента. Другие поколения — как туристы, с разговорником. Мы — носители.»\n\nЕщё ниже, совсем мелко: «Версия 47 вышла после 47-го случая в школах США за текущий год. Версия 48 выйдет, когда будет повод. Повод будет.»\n\nТы возвращаешь карточку под сиденье. Рука не дрожит. Это второе поколение. Они уже привыкли. Они даже помогают младшим привыкнуть.\n\nИз динамика: «Внимание. Учебная тревога. Повторяю: учебная тревога.»'});break;
     case'pipeline_valve':showLook({name:'ВЕНТИЛЬ',look:'Ты берёшься за красное колесо. Оно не крутится. Приржавело с 26.09.2022.\n\nНа вентиле выцарапано четыре даты:\n\n08.11.2011 — NS1 введён в эксплуатацию. 55 млрд кубометров в год. Двенадцать часовых поясов света и тепла.\n10.09.2021 — NS2 достроен. Не запущен. Политика.\n22.02.2022 — Олаф Шольц приостановил сертификацию.\n26.09.2022 — четыре взрыва. 02:03 и 19:03 UTC. Две трубы NS1 и одна NS2. Четвёртая ветка NS2 — уцелела. Чтобы было чем торговаться.\n\nНа трубе, мелом, свежо: «газ шёл пузырями четверо суток. запах был на пятьдесят километров. пузыри видели со спутников. следователи искали вину четыре года. нашли все варианты. приняли ноль.»\n\nНиже — анонимная приписка: «кто сделал — знают трое. двое молчат. третий — мох.»\n\nТы отпускаешь колесо. Рука пахнет железом и газом. Газ — фантом: трубы пустые уже четыре года. Но запах остался. Запахи остаются дольше газа. Дольше газопровода. Дольше стран, которые его строили.'});break;
     case'watchtower_binoc':showLook({name:'БИНОКЛЬ ВНУТРЬ',look:'Ты поднимаешься по лестнице. Платформа ещё тёплая от того, кто только что ушёл. Берёшь бинокль. Смотришь.\n\nБинокль направлен внутрь поселения. Ты видишь свой дом. Через чужие окуляры.\n\nНа столе перед биноклем — блокнот. Последние записи:\n\n06.06.2013 — Гардиан опубликовал первый слайд PRISM. Microsoft, Yahoo, Google, Facebook, YouTube, Skype, AOL, Apple — все подписали. Все отрицали. Все врали.\n09.06.2013 — Сноуден показал лицо. Гонконг. The Guardian. «Я не хочу жить в мире, где всё, что я говорю, всё, что я делаю, всё, с кем я говорю, записывается.»\n23.06.2013 — вылетел в Москву. Транзит. Транзит длится до сих пор.\n17.03.2018 — Cambridge Analytica. 87 миллионов профилей. Выборы сделали.\n04.10.2021 — Frances Haugen. Facebook Files. Знали. Знали и молчали. Знали, что знают, и молчали об этом тоже.\n18.07.2021 — Pegasus. NSO Group. Журналисты, активисты, жёны диссидентов. Один клик. Иногда — ноль кликов.\n26.03.2024 — Signal обновил протокол против квантовых атак. Шифрование догоняет компьютер, который ещё не построен.\n\nПоследняя строчка, другим почерком:\n«Ты читаешь журнал. Я снимаю это на вторую камеру. Ту, которую ты не заметил. Скотча на ней нет — он не помог бы. Привет.»\n\nТы кладёшь бинокль. Он направлен на тебя.'});break;
     case'billboard_tear':showLook({name:'СОРВАННЫЙ ПРИНТ',look:'Ты срываешь одну из обезьян с гвоздя. Бумага тонкая. Сзади — распечатка транзакции с Etherscan:\n\n0xf4a...c8e1 → 0xa12...b7d0\n150.0 ETH (~$450 000)\n24.04.2022 08:17 UTC\n\nПод транзакцией — скриншот чата Discord:\n«gm fren»\n«gm»\n«wen moon?»\n«soon™»\n«ok buying another»\n\nПод чатом — другой скриншот, тот же кошелёк, 18.06.2023:\n«rug pulled»\n«dev disappeared»\n«twitter gone»\n«discord deleted»\n«fuck»\n\nПод этим — рукописная приписка: «Я купил её, чтобы принадлежать. Я принадлежал обезьяне. Обезьяна принадлежала никому. Когда ничего не осталось — мы оба стали свободны.»\n\nТы складываешь бумагу пополам. На сгибе — едва заметный оттиск: «effective altruism» и подпись «SBF». Ты складываешь ещё раз. Бумага хрустит как сухая листва. Ты бросаешь её. Ветра нет — она не улетает.'});break;
