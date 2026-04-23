@@ -8464,348 +8464,481 @@ const locDraw={
 
 // NPC sprites
 function drawNPC_jester(jx,jy){
-  // ═══ THE FOOL — articulated gothic jester ═══
-  const bob=Math.sin(t*.008)*1.5;
-  const breath=Math.sin(t*.012)*1;
-  const lean=Math.sin(t*.005)*.8; // weight shift
+  // ═══ THE JESTER — multi-armed demonic jester, very tall and thin ═══
+  // ~35px wide, ~58px tall
+  const bob=Math.sin(t*.007)*1.2;
+  const breath=Math.sin(t*.01)*0.8;
+  const bodyPulse=Math.sin(t*.015)*0.5; // breathing/body pulse
+  const lean=Math.sin(t*.004)*1.2; // weight shift side to side
   const by=jy+bob;
   const bx=jx+lean;
-  
+  const cx=bx+17; // center X of sprite
+
   // Shadow (stretches with lean)
-  X.globalAlpha=.3;X.fillStyle='#000';
-  X.beginPath();X.ellipse(bx+7,jy+36,10+Math.abs(lean),3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-  
-  // ── LEGS with weight shift ──
-  const legPhase=Math.sin(t*.006)*2;
-  // Left leg (weight-bearing when leaning left)
-  const ll=lean<0?1:0; // left leg straight when leaning left
-  rect(X,bx+1,by+23-ll,4,12+ll,P.d1);
-  rect(X,bx+2,by+24-ll,2,10+ll,'#1a1410'); // inner shade
-  // Right leg
-  const rl=lean>0?1:0;
-  rect(X,bx+9,by+23-rl,4,12+rl,P.d1);
-  rect(X,bx+10,by+24-rl,2,10+rl,'#1a1410');
-  // Harlequin diamonds — animated with leg
-  for(let i=0;i<5;i++){
-    const dc=i%2===0?P.bone:P.crimson;
-    px(X,bx+2,by+24+i*2-ll,dc);px(X,bx+3,by+25+i*2-ll,dc);
-    px(X,bx+10,by+24+i*2-rl,i%2?P.bone:P.crimson);px(X,bx+11,by+25+i*2-rl,i%2?P.bone:P.crimson);
+  X.globalAlpha=.25;X.fillStyle='#000';
+  X.beginPath();X.ellipse(cx,jy+56,14+Math.abs(lean),3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+  // ── CHAIN FLAIL from left leg — pendulum physics ──
+  const chainPendulum=Math.sin(t*.005)*0.6+Math.sin(t*.013)*0.2; // compound pendulum
+  const chainAnchorX=bx+10,chainAnchorY=by+46;
+  for(let i=0;i<10;i++){
+    const swing=Math.sin(chainPendulum+i*.12)*i*1.2;
+    const cx_=chainAnchorX-2+swing;
+    const cy_=chainAnchorY+i*1.8;
+    px(X,cx_,cy_,i%3===0?P.ash:P.dgrey);
+    if(i%3===1)px(X,cx_+1,cy_,P.dgrey);
   }
-  // Pointed curled shoes
-  rect(X,bx-1,by+34,5,2,P.d1);rect(X,bx+9,by+34,5,2,P.d1);
-  px(X,bx-2,by+34,P.d1);px(X,bx+14,by+34,P.d1);
-  px(X,bx-3,by+33,P.crimson);px(X,bx+15,by+33,P.crimson); // shoe bells
-  
-  // ── CHAIN FLAIL — physics swing ──
-  const chainAngle=Math.sin(t*.006)*0.4;
-  for(let i=0;i<8;i++){
-    const cx=bx-1-Math.sin(chainAngle+i*.15)*i*1.5;
-    const cy=by+35+i*1.5;
-    px(X,cx,cy,i%2?P.ash:P.dgrey);
-  }
-  const fbx=bx-1-Math.sin(chainAngle+1.2)*12,fby=by+46;
+  // Spiked ball at end
+  const ballSwing=Math.sin(chainPendulum+1.2)*12;
+  const fbx=chainAnchorX-2+ballSwing,fby=chainAnchorY+18;
   rect(X,fbx-2,fby-2,5,5,P.dgrey);
-  // Spikes
-  px(X,fbx-3,fby,P.d1);px(X,fbx+3,fby,P.d1);px(X,fbx,fby-3,P.d1);px(X,fbx,fby+3,P.d1);
-  
-  // ── TORSO with breathing ──
-  rect(X,bx+1,by+10-breath,12,13+breath,P.d1);
-  dither(X,bx+2,by+11-breath,10,11+breath,'#1a1410',P.d1,.3);
-  // Rib-like texture
-  for(let i=0;i<3;i++){
-    rect(X,bx+3,by+12+i*3,8,1,'#0e0a08');
+  rect(X,fbx-1,fby-1,3,3,P.ash);
+  // Spikes radiate outward
+  px(X,fbx-3,fby,P.d1);px(X,fbx+3,fby,P.d1);
+  px(X,fbx,fby-3,P.d1);px(X,fbx,fby+3,P.d1);
+  px(X,fbx-2,fby-2,P.d1);px(X,fbx+2,fby-2,P.d1);
+  px(X,fbx-2,fby+2,P.d1);px(X,fbx+2,fby+2,P.d1);
+
+  // ── LEGS — harlequin diamond pattern, very long and thin ──
+  const legLen=18;
+  // Left leg
+  const llBend=lean<0?1:0;
+  rect(X,bx+11,by+30-llBend,3,legLen+llBend,P.d1);
+  // Harlequin diamonds on left leg
+  for(let i=0;i<7;i++){
+    const dc=i%2===0?P.crimson:P.bone;
+    px(X,bx+12,by+31+i*2-llBend,dc);
+    if(i%2===0)px(X,bx+11,by+32+i*2-llBend,dc);
+    else px(X,bx+13,by+32+i*2-llBend,dc);
   }
-  // Tatters — each sways independently with cloth physics (segmented)
-  for(let i=0;i<6;i++){
-    const tx=bx+i*2.3;
-    const tSwing=Math.sin(t*.01+i*1.3)*1.5;
-    const tSwing2=Math.sin(t*.013+i*1.7)*0.8; // second segment swings more
-    const tlen=5+Math.sin(t*.008+i*2)*2;
-    // Top segment
-    rect(X,tx+tSwing,by+22,2,Math.floor(tlen/2),P.d1);
-    // Bottom segment — more swing (cloth gravity)
-    rect(X,tx+tSwing+tSwing2,by+22+Math.floor(tlen/2),2,Math.ceil(tlen/2),P.d1);
-    if(i%2)px(X,tx+tSwing+tSwing2,by+22+tlen,P.crimson); // crimson tips
+  // Right leg
+  const rlBend=lean>0?1:0;
+  rect(X,bx+20,by+30-rlBend,3,legLen+rlBend,P.d1);
+  // Harlequin diamonds on right leg
+  for(let i=0;i<7;i++){
+    const dc=i%2===0?P.bone:P.crimson;
+    px(X,bx+21,by+31+i*2-rlBend,dc);
+    if(i%2===0)px(X,bx+20,by+32+i*2-rlBend,dc);
+    else px(X,bx+22,by+32+i*2-rlBend,dc);
   }
-  
-  // ── LEFT ARM — upper, forearm, hand with dagger ──
-  const lArmAngle=Math.sin(t*.011)*0.5-0.3; // swings back-forth
-  const lShoulderX=bx-1,lShoulderY=by+12;
-  const lElbowX=lShoulderX-5+Math.cos(lArmAngle)*4;
-  const lElbowY=lShoulderY+Math.sin(lArmAngle)*3;
-  const lHandX=lElbowX-4+Math.cos(lArmAngle+.5)*3;
-  const lHandY=lElbowY+1+Math.sin(lArmAngle+.5)*2;
-  // Upper arm
-  X.strokeStyle=P.d1;X.lineWidth=3;
-  X.beginPath();X.moveTo(lShoulderX,lShoulderY);X.lineTo(lElbowX,lElbowY);X.stroke();
-  // Forearm
-  X.lineWidth=2;
-  X.beginPath();X.moveTo(lElbowX,lElbowY);X.lineTo(lHandX,lHandY);X.stroke();
-  X.lineWidth=1;
-  // Hand + dagger
-  px(X,lHandX,lHandY,P.bone);
-  // Dagger blade
-  const dAngle=lArmAngle+.3;
-  for(let i=0;i<6;i++){
-    px(X,lHandX-Math.cos(dAngle)*i*1.2,lHandY-Math.sin(dAngle)*i*0.5,i<4?P.ash:P.bone);
+
+  // ── POINTED CURLED SHOES with bells ──
+  // Left shoe — curls left
+  rect(X,bx+8,by+48,5,2,P.d1);
+  rect(X,bx+6,by+47,3,2,P.d1);
+  px(X,bx+5,by+46,P.d1);
+  // Bell on left shoe — bobs
+  const bellBob1=Math.sin(t*.012+0.5)*1;
+  px(X,bx+4,by+45+bellBob1,P.gold);
+  px(X,bx+5,by+45+bellBob1,P.gold);
+  // Right shoe — curls right
+  rect(X,bx+20,by+48,5,2,P.d1);
+  rect(X,bx+24,by+47,3,2,P.d1);
+  px(X,bx+26,by+46,P.d1);
+  // Bell on right shoe — bobs
+  const bellBob2=Math.sin(t*.011+2)*1;
+  px(X,bx+27,by+45+bellBob2,P.gold);
+  px(X,bx+28,by+45+bellBob2,P.gold);
+
+  // ── TORSO — skeletal/insectoid, narrow, with breathing ──
+  // Very thin waist
+  rect(X,bx+13,by+26-bodyPulse,8+bodyPulse,6,P.d1);
+  // Upper torso — slightly wider
+  rect(X,bx+11,by+14-breath,12+breath,12+breath,P.d1);
+  dither(X,bx+12,by+15-breath,10+breath,10+breath,'#1a0a08',P.d1,.3);
+  // Insectoid segments — exoskeleton ridges
+  for(let i=0;i<5;i++){
+    rect(X,bx+12,by+15+i*2.5-breath,10,1,'#2a1210');
   }
-  
-  // ── RIGHT ARM — raised, juggling motion ──
-  const rArmAngle=Math.sin(t*.013)*0.4+0.8; // raised, swaying
-  const rShoulderX=bx+13,rShoulderY=by+12;
-  const rElbowX=rShoulderX+4+Math.cos(rArmAngle)*3;
-  const rElbowY=rShoulderY-3+Math.sin(rArmAngle)*4;
-  const rHandX=rElbowX+2+Math.cos(rArmAngle-.3)*3;
-  const rHandY=rElbowY-4+Math.sin(rArmAngle-.3)*3;
-  X.strokeStyle=P.d1;X.lineWidth=3;
-  X.beginPath();X.moveTo(rShoulderX,rShoulderY);X.lineTo(rElbowX,rElbowY);X.stroke();
-  X.lineWidth=2;
-  X.beginPath();X.moveTo(rElbowX,rElbowY);X.lineTo(rHandX,rHandY);X.stroke();
-  X.lineWidth=1;
-  px(X,rHandX,rHandY,P.bone);
-  
-  // ── JUGGLING SWORDS — orbit around hand with motion trail ──
-  for(let i=0;i<3;i++){
-    const angle=t*.018+i*Math.PI*2/3;
-    const jsx=rHandX+Math.cos(angle)*10;
-    const jsy=rHandY-4+Math.sin(angle)*5;
-    const sRot=angle+Math.PI/3;
-    // Motion trail — 4 ghost positions behind
-    for(let g=1;g<=4;g++){
-      const ga=angle-g*.06;
-      const gx=rHandX+Math.cos(ga)*10;
-      const gy=rHandY-4+Math.sin(ga)*5;
-      X.globalAlpha=(.25-g*.05);
-      px(X,gx,gy,P.bone);
+  // Spine visible through thin body
+  for(let i=0;i<4;i++){
+    px(X,bx+17,by+27+i*2,P.dgrey);
+  }
+
+  // ── 6 ARMS — each on different sin phase, holding weapons ──
+  const armData=[
+    // [shoulderOffX, shoulderOffY, phaseOffset, direction(-1=left,1=right), weaponType]
+    {sox:-1, soy:15, phase:0.0, dir:-1, weapon:'dagger'},     // left upper
+    {sox:-1, soy:18, phase:1.2, dir:-1, weapon:'sword'},      // left mid
+    {sox:-1, soy:21, phase:2.4, dir:-1, weapon:'dagger'},     // left lower
+    {sox:13+breath, soy:15, phase:0.7, dir:1, weapon:'sword'},// right upper
+    {sox:13+breath, soy:18, phase:1.9, dir:1, weapon:'dagger'},// right mid
+    {sox:13+breath, soy:21, phase:3.1, dir:1, weapon:'dagger'},// right lower
+  ];
+  armData.forEach((arm,idx)=>{
+    // Each arm sways independently on its own phase
+    const swing=Math.sin(t*.008+arm.phase)*0.6;
+    const swing2=Math.sin(t*.012+arm.phase*1.3)*0.4;
+    const sx_=bx+arm.sox+11;
+    const sy_=by+arm.soy-breath;
+    // Elbow position — radiates outward
+    const elbowX=sx_+arm.dir*(6+Math.cos(swing)*2);
+    const elbowY=sy_-2+Math.sin(swing)*3+idx*0.5;
+    // Hand position
+    const handX=elbowX+arm.dir*(5+Math.cos(swing+swing2)*2);
+    const handY=elbowY-1+Math.sin(swing2)*2;
+
+    // Draw arm segments — thin insectoid
+    X.strokeStyle='#1a0a08';X.lineWidth=2;
+    X.beginPath();X.moveTo(sx_,sy_);X.lineTo(elbowX,elbowY);X.stroke();
+    X.lineWidth=1;
+    X.beginPath();X.moveTo(elbowX,elbowY);X.lineTo(handX,handY);X.stroke();
+    // Joint
+    px(X,elbowX,elbowY,P.dgrey);
+    // Hand
+    px(X,handX,handY,P.bone);
+
+    // Weapon
+    const wAngle=swing+arm.phase*.5;
+    if(arm.weapon==='dagger'){
+      for(let w=0;w<5;w++){
+        px(X,handX+arm.dir*Math.cos(wAngle)*w*0.8,handY-Math.sin(wAngle+.3)*w*0.6-w*0.3,w<3?P.ash:P.lgrey);
+      }
+      px(X,handX+arm.dir*Math.cos(wAngle)*5*0.8,handY-Math.sin(wAngle+.3)*5*0.6-5*0.3,'#fff');
+    } else {
+      // Sword — longer blade
+      for(let w=0;w<8;w++){
+        const sc=w<2?P.dwood:w<6?P.ash:P.lgrey;
+        px(X,handX+arm.dir*Math.cos(wAngle)*w*0.9,handY-Math.sin(wAngle+.2)*w*0.5-w*0.4,sc);
+      }
+      // Crossguard
+      px(X,handX+arm.dir*1,handY-1,P.gold);
+      px(X,handX+arm.dir*1,handY+1,P.gold);
     }
-    X.globalAlpha=1;
-    // Sword body
-    for(let j=0;j<7;j++){
-      const sc=j<2?P.bone:j<5?P.ash:P.lgrey;
-      px(X,jsx+Math.cos(sRot)*j,jsy+Math.sin(sRot)*j,sc);
-    }
-    // Handle
-    px(X,jsx-Math.cos(sRot),jsy-Math.sin(sRot),P.dwood);
-    // Glint
-    if(Math.sin(angle*2+t*.005)>.85){X.globalAlpha=.7;px(X,jsx+1,jsy-1,'#fff');X.globalAlpha=1;}
+  });
+
+  // Two additional smaller arms (vestigial, twitching) — total 8
+  for(let i=0;i<2;i++){
+    const dir_=i===0?-1:1;
+    const phase_=i===0?4.0:4.8;
+    const twitch=Math.sin(t*.02+phase_)*1.5; // fast twitch
+    const sx_=bx+17+dir_*5;
+    const sy_=by+24-bodyPulse;
+    const tipX=sx_+dir_*(4+twitch);
+    const tipY=sy_+2+Math.sin(t*.015+phase_)*1;
+    X.strokeStyle='#1a0a08';X.lineWidth=1;
+    X.beginPath();X.moveTo(sx_,sy_);X.lineTo(tipX,tipY);X.stroke();
+    px(X,tipX,tipY,P.dbone);
   }
-  
-  // ── HEAD — skull with tilt ──
-  const headTilt=Math.sin(t*.007)*1.5;
-  const hx=bx+2+headTilt*.3,hy=by+1;
-  rect(X,hx,hy,10,9,P.bone);rect(X,hx+1,hy+1,8,7,'#2a2420');
-  // Skull details
-  px(X,hx+2,hy+3,P.crimson); // left eye — crimson ember
-  // Right eye — cross
-  px(X,hx+6,hy+3,P.d1);px(X,hx+5,hy+2,P.d1);px(X,hx+7,hy+2,P.d1);px(X,hx+5,hy+4,P.d1);px(X,hx+7,hy+4,P.d1);
-  // Nose hole
-  px(X,hx+4,hy+5,P.d1);px(X,hx+5,hy+5,P.d1);
-  // Teeth
-  for(let i=0;i<4;i++)px(X,hx+3+i,hy+7,i%2?P.bone:P.d1);
-  // Jaw slightly open
-  rect(X,hx+3,hy+8,5,1,'#2a2420');
-  
-  // ── JESTER CAP — 3 horns with swinging bells ──
-  rect(X,hx,hy-2,10,3,P.crimson);
+
+  // ── HEAD — narrow skull with menacing expression ──
+  const headTilt=Math.sin(t*.006)*1.5;
+  const hx=bx+12+headTilt*.2,hy=by+3;
+  // Narrow skull
+  rect(X,hx,hy,10,10,P.bone);
+  rect(X,hx+1,hy+1,8,8,'#2a2018');
+  // Sunken cheeks
+  rect(X,hx,hy+4,2,3,'#c8b8a0');
+  rect(X,hx+8,hy+4,2,3,'#c8b8a0');
+  // Eyes — crimson embers, menacing
+  px(X,hx+2,hy+3,P.crimson);px(X,hx+3,hy+3,P.crimson);
+  px(X,hx+6,hy+3,P.crimson);px(X,hx+7,hy+3,P.crimson);
+  // Eye glow
+  X.globalAlpha=.2+.1*Math.sin(t*.01);
+  px(X,hx+2,hy+2,P.crimson);px(X,hx+7,hy+2,P.crimson);
+  X.globalAlpha=1;
+  // Nose holes
+  px(X,hx+4,hy+6,P.d1);px(X,hx+5,hy+6,P.d1);
+  // Teeth — grinning
+  for(let i=0;i<6;i++)px(X,hx+2+i,hy+8,i%2?P.bone:P.d1);
+  // Jaw
+  rect(X,hx+2,hy+9,6,1,'#2a2018');
+  for(let i=0;i<4;i++)px(X,hx+3+i,hy+9,i%2?P.d1:P.bone);
+
+  // ── JESTER CAP — 3 horns/points with swinging bells ──
+  rect(X,hx-1,hy-1,12,3,P.crimson);
+  dither(X,hx,hy-1,10,2,P.d1,P.crimson,.3);
   // Horn 1 — left, curves with animation
-  const h1swing=Math.sin(t*.009)*2;
-  rect(X,hx-2+h1swing*.3,hy-4,4,3,P.crimson);
-  rect(X,hx-4+h1swing*.5,hy-7,3,4,P.crimson);
-  px(X,hx-5+h1swing*.7,hy-8,P.gold); // bell swings
-  // Horn 2 — center
-  const h2swing=Math.sin(t*.011+1)*1.5;
-  rect(X,hx+4,hy-5,3,4,P.crimson);
-  rect(X,hx+4+h2swing*.2,hy-9,3,5,P.crimson);
-  px(X,hx+5+h2swing*.3,hy-10,P.gold);
+  const h1s=Math.sin(t*.009)*2.5;
+  rect(X,hx-3+h1s*.2,hy-3,4,3,P.crimson);
+  rect(X,hx-5+h1s*.4,hy-6,3,4,P.crimson);
+  rect(X,hx-7+h1s*.6,hy-9,2,4,P.crimson);
+  // Bell — bobs on delay
+  const bell1Bob=Math.sin(t*.012+0.3)*1.5;
+  px(X,hx-8+h1s*.7,hy-10+bell1Bob,P.gold);
+  px(X,hx-7+h1s*.7,hy-10+bell1Bob,P.gold);
+  px(X,hx-8+h1s*.7,hy-9+bell1Bob,P.sunflower);
+  // Horn 2 — center, tallest
+  const h2s=Math.sin(t*.011+1)*1.8;
+  rect(X,hx+3,hy-4,4,3,P.crimson);
+  rect(X,hx+3+h2s*.15,hy-8,3,5,P.crimson);
+  rect(X,hx+3+h2s*.25,hy-12,3,5,P.crimson);
+  const bell2Bob=Math.sin(t*.01+1.5)*1.2;
+  px(X,hx+4+h2s*.3,hy-13+bell2Bob,P.gold);
+  px(X,hx+5+h2s*.3,hy-13+bell2Bob,P.gold);
+  px(X,hx+4+h2s*.3,hy-12+bell2Bob,P.sunflower);
   // Horn 3 — right
-  const h3swing=Math.sin(t*.008+2)*2;
-  rect(X,hx+8+h3swing*.3,hy-4,4,3,P.crimson);
-  rect(X,hx+11+h3swing*.5,hy-7,3,4,P.crimson);
-  px(X,hx+14+h3swing*.7,hy-8,P.gold);
-  
-  // ── BURNING HALO ──
-  X.globalAlpha=.15+.08*Math.sin(t*.007)+npcProximity*.15;
-  X.strokeStyle=P.gold;X.lineWidth=1;
-  X.beginPath();X.arc(hx+5,hy-2,15+npcProximity*4,0,Math.PI*2);X.stroke();
+  const h3s=Math.sin(t*.008+2.5)*2.5;
+  rect(X,hx+9+h3s*.2,hy-3,4,3,P.crimson);
+  rect(X,hx+12+h3s*.4,hy-6,3,4,P.crimson);
+  rect(X,hx+14+h3s*.6,hy-9,2,4,P.crimson);
+  const bell3Bob=Math.sin(t*.013+2)*1.5;
+  px(X,hx+16+h3s*.7,hy-10+bell3Bob,P.gold);
+  px(X,hx+15+h3s*.7,hy-10+bell3Bob,P.gold);
+  px(X,hx+16+h3s*.7,hy-9+bell3Bob,P.sunflower);
+
+  // ── MENACING AURA ──
+  X.globalAlpha=.1+.06*Math.sin(t*.007)+npcProximity*.12;
+  X.strokeStyle=P.crimson;X.lineWidth=1;
+  X.beginPath();X.arc(cx,by+20,22+npcProximity*4,0,Math.PI*2);X.stroke();
   X.globalAlpha=1;
 
-  // ── PROXIMITY REACTION: "HA!" laugh bubbles ──
+  // ── PROXIMITY REACTION: "ХА!" laugh bubbles ──
   if(npcProximity>.3&&t%80<20){
     const laughPh=(t%80)/20;
     X.globalAlpha=(1-laughPh)*npcProximity*.7;
     X.fillStyle=P.crimson;X.font='6px "Press Start 2P"';
-    X.fillText('ХА!',bx+18-laughPh*2,hy-6-laughPh*4);
+    X.fillText('ХА!',cx+12-laughPh*2,hy-10-laughPh*4);
     X.globalAlpha=1;
   }
 }
 
 function drawNPC_sol(sx,sy){
-  // ═══ SOL INVICTUS / THE ESTIVAL — articulated ═══
-  const breath=Math.sin(t*.01)*1;
-  const sway=Math.sin(t*.004)*.8;
+  // ═══ SOL INVICTUS / THE ESTIVAL — skeleton in dark flower-embroidered mantle ═══
+  // ~36px wide, ~55px tall
+  const breath=Math.sin(t*.008)*0.8;
+  const sway=Math.sin(t*.003)*.6;
   const by=sy;
   const bx=sx+sway;
-  
+  const cx=bx+18; // center X
+
   // Shadow
-  X.globalAlpha=.2;X.fillStyle='#000';X.beginPath();X.ellipse(bx+7,sy+37,9,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-  
-  // ── SKELETAL LEGS — slight sway ──
-  const legSway=Math.sin(t*.005)*.5;
-  // Left leg bones — femur + tibia
+  X.globalAlpha=.2;X.fillStyle='#000';X.beginPath();X.ellipse(cx,sy+52,12,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+
+  // ── SKELETAL LEGS — visible below mantle ──
+  const legSway=Math.sin(t*.004)*.4;
   X.strokeStyle=P.bone;X.lineWidth=2;
-  X.beginPath();X.moveTo(bx+4,by+24);X.lineTo(bx+3+legSway,by+30);X.lineTo(bx+3,by+35);X.stroke();
+  // Left leg
+  X.beginPath();X.moveTo(bx+12,by+40);X.lineTo(bx+11+legSway,by+45);X.lineTo(bx+11,by+50);X.stroke();
   // Right leg
-  X.beginPath();X.moveTo(bx+10,by+24);X.lineTo(bx+11-legSway,by+30);X.lineTo(bx+11,by+35);X.stroke();
+  X.beginPath();X.moveTo(bx+22,by+40);X.lineTo(bx+23-legSway,by+45);X.lineTo(bx+23,by+50);X.stroke();
   X.lineWidth=1;
   // Knee caps
-  px(X,bx+3+legSway,by+30,P.dbone);px(X,bx+11-legSway,by+30,P.dbone);
+  px(X,bx+11+legSway,by+45,P.dbone);px(X,bx+23-legSway,by+45,P.dbone);
   // Feet bones
-  rect(X,bx+1,by+35,4,2,P.dbone);rect(X,bx+9,by+35,4,2,P.dbone);
-  
-  // ── DARK ROBE with sway ──
-  rect(X,bx-1+sway*.3,by+10-breath,16,18+breath,P.d1);
-  dither(X,bx+sway*.3,by+11-breath,14,16+breath,'#1a1410',P.d1,.25);
-  // Robe train — waves
-  for(let i=0;i<5;i++){
-    const rSwing=Math.sin(t*.006+i*.8)*1.5;
-    const rh=7-i+Math.sin(t*.005+i)*1;
-    rect(X,bx-2+i*4+rSwing,by+27,3,rh,P.d1);
+  rect(X,bx+9,by+50,4,2,P.dbone);rect(X,bx+21,by+50,4,2,P.dbone);
+
+  // ── DARK MANTLE — full-body, flower-embroidered, torn ──
+  // Main body
+  rect(X,bx+6+sway*.2,by+12-breath,22+breath*.5,30+breath,P.d1);
+  dither(X,bx+7+sway*.2,by+13-breath,20+breath*.5,28+breath,'#1a1008',P.d1,.2);
+  // Mantle extends wider at bottom (draping)
+  for(let i=0;i<7;i++){
+    const rSwing=Math.sin(t*.005+i*.7)*1.2;
+    const rh=6-Math.abs(i-3)+Math.sin(t*.004+i)*1;
+    rect(X,bx+3+i*4+rSwing,by+41,3,rh,P.d1);
   }
-  
-  // ── FLOWERS along robe — some falling ──
-  const flowerSpots=[[0,14],[1,18],[-1,22],[14,15],[13,20],[14,25],[2,27],[12,28],[5,29],[8,29]];
-  flowerSpots.forEach(([fx,fy],idx)=>{
-    const fc=hash(fx,fy,11)>.5?P.gold:hash(fx,fy,22)>.5?P.crimson:'#aa66aa';
-    const fSway=Math.sin(t*.007+idx*.5)*.5;
-    px(X,bx+fx+fSway,by+fy,fc);
-    if(hash(fx,fy,33)>.5){px(X,bx+fx+1+fSway,by+fy,fc);px(X,bx+fx+fSway,by+fy-1,fc);}
+  // Torn edges on mantle — ragged bottom
+  for(let i=0;i<10;i++){
+    const tx_=bx+4+i*3+Math.sin(t*.006+i*1.1)*.8;
+    const tLen=2+hash(i,0,11)*3;
+    rect(X,tx_,by+46,2,tLen,P.d1);
+    if(hash(i,0,22)>.6)px(X,tx_,by+46+tLen,'#1a1008');
+  }
+
+  // ── FLOWER EMBROIDERY on mantle — sway slightly in wind ──
+  const flowerSpots=[
+    [8,16,'sunflower'],[10,22,'wildflower'],[7,28,'sunflower'],[9,34,'wildflower'],
+    [24,15,'sunflower'],[26,20,'wildflower'],[25,26,'sunflower'],[23,32,'wildflower'],
+    [14,38,'sunflower'],[20,36,'wildflower'],[12,19,'wildflower'],[22,24,'wildflower'],
+  ];
+  flowerSpots.forEach(([fx,fy,type],idx)=>{
+    const fSway=Math.sin(t*.006+idx*.6)*.8;
+    if(type==='sunflower'){
+      // Sunflower — golden center with petals
+      const fcx=bx+fx+fSway,fcy=by+fy;
+      px(X,fcx,fcy,P.gold);
+      px(X,fcx-1,fcy,P.sunflower);px(X,fcx+1,fcy,P.sunflower);
+      px(X,fcx,fcy-1,P.sunflower);px(X,fcx,fcy+1,P.sunflower);
+      // Center
+      px(X,fcx,fcy,'#4a3a10');
+      // Stem
+      px(X,fcx,fcy+2,'#2a4a0a');
+    } else {
+      // Wildflower — smaller, various colors
+      const wc=['#aa66aa','#cc4466','#66aa88','#dd8844'][idx%4];
+      px(X,bx+fx+fSway,by+fy,wc);
+      if(hash(fx,fy,33)>.4)px(X,bx+fx+1+fSway,by+fy,wc);
+      px(X,bx+fx+fSway,by+fy+1,'#2a4a0a'); // stem
+    }
   });
-  // Falling petals — three at different phases, more when player is close
-  const petalCount=3+Math.floor(npcProximity*4);
+
+  // ── SHOULDER FLOWERS — growing from shoulders ──
+  for(let i=0;i<3;i++){
+    const fSway=Math.sin(t*.007+i*1.2)*.6;
+    // Left shoulder
+    px(X,bx+6+i*2+fSway,by+11-i,P.sunflower);
+    px(X,bx+6+i*2+fSway,by+10-i,'#4a3a10');
+    // Right shoulder
+    px(X,bx+24-i*2+fSway,by+11-i,i%2?'#aa66aa':P.sunflower);
+    px(X,bx+24-i*2+fSway,by+10-i,'#4a3a10');
+  }
+
+  // ── FALLING PETALS — gentle sway, more when player is close ──
+  const petalCount=4+Math.floor(npcProximity*5);
   for(let pi=0;pi<petalCount;pi++){
-    const petalPhase=((t*.003*(1+npcProximity*.5))+pi*.33)%1;
-    const pcol=[P.gold,P.crimson,'#aa66aa',P.sunflower,P.volcanic,'#daa520','#8b0000'][pi%7];
-    if(petalPhase<.7){
-      const px_=bx+8-pi*3+petalPhase*10+windX*petalPhase*6;
-      const py_=by+20+pi*2+petalPhase*22;
-      X.globalAlpha=.5*(1-petalPhase*1.4);
-      px(X,px_+Math.sin(petalPhase*20+pi)*2,py_,pcol);
+    const petalPhase=((t*.002*(1+npcProximity*.4))+pi*.25)%1;
+    const pcol=[P.sunflower,P.gold,'#aa66aa','#cc4466','#dd8844',P.crimson,'#66aa88'][pi%7];
+    if(petalPhase<.85){
+      const petalX=cx-8+pi*2.5+petalPhase*6+Math.sin(petalPhase*12+pi*1.5)*3+(typeof windX!=='undefined'?windX*petalPhase*5:0);
+      const petalY=by+8+pi*1.5+petalPhase*48;
+      X.globalAlpha=.55*(1-petalPhase*1.1);
+      // Petal shape — 2px with slight rotation feel
+      px(X,petalX,petalY,pcol);
+      px(X,petalX+Math.sin(petalPhase*8+pi)*.8,petalY+1,pcol);
       X.globalAlpha=1;
     }
   }
-  
-  // ── RIBCAGE through robe — breathing ──
-  for(let i=0;i<4;i++){
-    X.globalAlpha=.25;
-    const ribW=7+breath*.5;
-    rect(X,bx+4-breath*.2,by+13+i*3,ribW,1,P.bone);
-    X.globalAlpha=1;
+
+  // ── RIBCAGE visible through torn mantle — breathing ──
+  X.globalAlpha=.3;
+  for(let i=0;i<5;i++){
+    const ribW=8+breath*.4;
+    const ribExpand=Math.sin(t*.008+i*.2)*0.3;
+    rect(X,bx+13-ribW/2+ribExpand,by+18+i*3,ribW,1,P.bone);
   }
-  // Skulls on chest
-  rect(X,bx+4,by+11,3,3,P.bone);px(X,bx+4,by+12,P.d1);px(X,bx+6,by+12,P.d1);
-  rect(X,bx+8,by+12,3,3,P.bone);px(X,bx+8,by+13,P.d1);px(X,bx+10,by+13,P.d1);
-  
-  // ── LEFT ARM — holding burning branch, swaying ──
-  const lArmAngle=Math.sin(t*.007)*0.3-0.5;
-  const lSx=bx-1,lSy=by+13;
-  const lEx=lSx-5+Math.cos(lArmAngle)*2;
-  const lEy=lSy+1+Math.sin(lArmAngle)*2;
+  X.globalAlpha=1;
+  // Sternum
+  rect(X,bx+17,by+17,1,14,P.dbone);
+
+  // ── SKULLS nestled in chest area ──
+  // Skull 1 — left
+  rect(X,bx+11,by+20,4,4,P.bone);
+  px(X,bx+11,by+21,P.d1);px(X,bx+13,by+21,P.d1); // eyes
+  px(X,bx+12,by+23,P.d1); // mouth
+  // Skull 2 — right
+  rect(X,bx+20,by+21,4,4,P.bone);
+  px(X,bx+20,by+22,P.d1);px(X,bx+22,by+22,P.d1); // eyes
+  px(X,bx+21,by+24,P.d1); // mouth
+  // Skull 3 — center, smaller, nestled deeper
+  rect(X,bx+16,by+25,3,3,P.dbone);
+  px(X,bx+16,by+26,P.d1);px(X,bx+18,by+26,P.d1);
+
+  // ── LEFT ARM — holding burning branch ──
+  const lArmAngle=Math.sin(t*.006)*0.25-0.4;
+  const lSx=bx+7,lSy=by+16;
+  const lEx=lSx-6+Math.cos(lArmAngle)*2;
+  const lEy=lSy+2+Math.sin(lArmAngle)*2;
   const lHx=lEx-5+Math.cos(lArmAngle+.3)*2;
-  const lHy=lEy+Math.sin(lArmAngle+.3)*2;
-  // Bone arm segments
+  const lHy=lEy+1+Math.sin(lArmAngle+.3)*2;
+  // Bone arm
   X.strokeStyle=P.bone;X.lineWidth=2;
   X.beginPath();X.moveTo(lSx,lSy);X.lineTo(lEx,lEy);X.stroke();
   X.lineWidth=1;
   X.beginPath();X.moveTo(lEx,lEy);X.lineTo(lHx,lHy);X.stroke();
-  // Bony fingers gripping
-  px(X,lHx-1,lHy,P.dbone);px(X,lHx,lHy+1,P.dbone);
+  // Bony fingers
+  px(X,lHx-1,lHy,P.dbone);px(X,lHx,lHy+1,P.dbone);px(X,lHx-1,lHy+1,P.dbone);
   // Branch
-  const brAngle=lArmAngle*.5;
-  rect(X,lHx-6,lHy-2+brAngle,8,2,P.dwood);
-  rect(X,lHx-10,lHy-3+brAngle,5,2,P.wood);
-  // Fire on branch — animated, larger
-  const ff=t*.025;
-  for(let i=0;i<7;i++){
-    const flx=lHx-9+Math.sin(ff+i*.8)*2;
-    const fly=lHy-5+brAngle-i*2-Math.abs(Math.sin(ff*1.3+i*.6))*1;
-    const fs=Math.max(1,4-Math.floor(i*.5));
+  const brAngle=lArmAngle*.4;
+  rect(X,lHx-8,lHy-2+brAngle,10,2,P.dwood);
+  rect(X,lHx-12,lHy-3+brAngle,5,2,P.wood);
+  rect(X,lHx-13,lHy-4+brAngle,2,3,P.wood);
+  // Fire on branch — flickering, animated
+  const ff=t*.02;
+  for(let i=0;i<8;i++){
+    const flx=lHx-11+Math.sin(ff+i*.7)*2.5;
+    const fly=lHy-6+brAngle-i*2-Math.abs(Math.sin(ff*1.2+i*.5))*1.5;
+    const fs=Math.max(1,4-Math.floor(i*.4));
     X.globalAlpha=1-i*.1;
-    rect(X,flx,fly,fs,fs,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f2,'#fff'][i]);
+    rect(X,flx,fly,fs,fs,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f2,P.sunflower,'#fff'][i]);
   }
   X.globalAlpha=1;
-  // Smoke wisps above flame
-  for(let i=0;i<4;i++){
-    const swPhase=((t*.015+i*.25)%1);
-    const swx=lHx-9+Math.sin(t*.008+i*2)*3+swPhase*2;
-    const swy=lHy-12+brAngle-swPhase*16;
-    X.globalAlpha=(1-swPhase)*.18;
+  // Smoke wisps
+  for(let i=0;i<5;i++){
+    const swPhase=((t*.012+i*.2)%1);
+    const swx=lHx-11+Math.sin(t*.006+i*1.8)*3+swPhase*2;
+    const swy=lHy-16+brAngle-swPhase*18;
+    X.globalAlpha=(1-swPhase)*.15;
     rect(X,swx,swy,2,2,'#3a3028');
     X.globalAlpha=1;
   }
-  // Fire particles
-  for(let i=0;i<3;i++){
-    const spx=lHx-9+Math.sin(t*.01+i*2)*4;
-    const spy=lHy-14+brAngle-((t*.03+i*5)%10);
-    X.globalAlpha=Math.max(0,.3-((t*.03+i*5)%10)/10);
-    px(X,spx,spy,P.f2);X.globalAlpha=1;
+  // Fire sparks
+  for(let i=0;i<4;i++){
+    const spx=lHx-11+Math.sin(t*.009+i*1.7)*5;
+    const spy=lHy-16+brAngle-((t*.025+i*4)%12);
+    X.globalAlpha=Math.max(0,.35-((t*.025+i*4)%12)/12);
+    px(X,spx,spy,i%2?P.f1:P.f2);X.globalAlpha=1;
   }
-  
-  // ── RIGHT ARM — skeletal, swaying gently ──
-  const rArmSway=Math.sin(t*.006+1)*0.3;
+
+  // ── RIGHT ARM — skeletal, dangling gently ──
+  const rArmSway=Math.sin(t*.005+1)*0.35;
   X.strokeStyle=P.bone;X.lineWidth=2;
-  X.beginPath();X.moveTo(bx+14,by+14);X.lineTo(bx+17+rArmSway*2,by+18);X.stroke();
+  X.beginPath();X.moveTo(bx+27,by+16);X.lineTo(bx+30+rArmSway*2,by+22);X.stroke();
   X.lineWidth=1;
-  X.beginPath();X.moveTo(bx+17+rArmSway*2,by+18);X.lineTo(bx+16+rArmSway*3,by+24);X.stroke();
-  // Dangling fingers
+  X.beginPath();X.moveTo(bx+30+rArmSway*2,by+22);X.lineTo(bx+29+rArmSway*3,by+30);X.stroke();
+  // Dangling bony fingers
   for(let i=0;i<3;i++){
-    const fing=Math.sin(t*.008+i)*0.5;
-    px(X,bx+15+rArmSway*3+i,by+25+fing,P.dbone);
+    const fing=Math.sin(t*.007+i*.8)*0.5;
+    px(X,bx+28+rArmSway*3+i,by+31+fing,P.dbone);
   }
-  
-  // ══ SUN FACE HEAD — tilts and pulses ══
-  const headTilt=Math.sin(t*.005)*1;
-  const pulse=.7+.3*Math.sin(t*.006);
-  const hcx=bx+7+headTilt*.3,hcy=by+4;
-  // Sun disk
+
+  // ══ SUN DISC HEAD — ~14 rays rotating slowly ══
+  const headTilt=Math.sin(t*.004)*0.8;
+  const pulse=.75+.25*Math.sin(t*.005);
+  const hcx=cx+headTilt*.3,hcy=by+4;
+
+  // Sun disc — outer glow
+  X.globalAlpha=pulse*.3;
+  X.fillStyle=P.sunflower;
+  X.beginPath();X.arc(hcx,hcy,11,0,Math.PI*2);X.fill();
+  X.globalAlpha=1;
+
+  // Sun disc body
   X.globalAlpha=pulse;
   X.fillStyle=P.gold;
-  X.beginPath();X.arc(hcx,hcy,8,0,Math.PI*2);X.fill();
-  // Sun rays — rotating, variable length
+  X.beginPath();X.arc(hcx,hcy,9,0,Math.PI*2);X.fill();
+
+  // ~14 sun rays — rotating slowly
+  const rayRot=t*.0015; // very slow rotation
   for(let i=0;i<14;i++){
-    const angle=i/14*Math.PI*2+t*.002;
-    const rayLen=3+Math.sin(angle*3+t*.004)*2;
-    const rx=hcx+Math.cos(angle)*(9+rayLen*.3);
-    const ry=hcy+Math.sin(angle)*(9+rayLen*.3);
-    rect(X,rx-1,ry-1,2,2,P.gold);
-    if(rayLen>3){
-      px(X,rx+Math.cos(angle)*2,ry+Math.sin(angle)*2,P.sunflower);
+    const angle=i/14*Math.PI*2+rayRot;
+    const rayLen=4+Math.sin(angle*3+t*.003)*1.5;
+    const baseR=9;
+    // Ray as a tapered line
+    for(let r=0;r<rayLen;r++){
+      const rx=hcx+Math.cos(angle)*(baseR+r);
+      const ry=hcy+Math.sin(angle)*(baseR+r);
+      const rc=r<2?P.gold:P.sunflower;
+      px(X,rx,ry,rc);
+      if(r<1){px(X,rx+Math.cos(angle+Math.PI/2)*.5,ry+Math.sin(angle+Math.PI/2)*.5,rc);}
     }
   }
   X.globalAlpha=1;
-  // Face — serene
+
+  // Face within disc — closed eyes, serene
   X.fillStyle=P.damber;
-  X.beginPath();X.arc(hcx,hcy,5,0,Math.PI*2);X.fill();
-  // Closed eyes (gentle arcs)
-  px(X,hcx-2,hcy-1,'#4a3a10');px(X,hcx-1,hcy-2,'#4a3a10');
-  px(X,hcx+2,hcy-1,'#4a3a10');px(X,hcx+1,hcy-2,'#4a3a10');
+  X.beginPath();X.arc(hcx,hcy,6,0,Math.PI*2);X.fill();
+  // Darker inner
+  X.fillStyle='#5a4a18';
+  X.beginPath();X.arc(hcx,hcy,4.5,0,Math.PI*2);X.fill();
+
+  // Closed eyes — gentle arcs
+  px(X,hcx-2,hcy-1,'#3a2a08');px(X,hcx-1,hcy-2,'#3a2a08');px(X,hcx-3,hcy,'#3a2a08');
+  px(X,hcx+2,hcy-1,'#3a2a08');px(X,hcx+1,hcy-2,'#3a2a08');px(X,hcx+3,hcy,'#3a2a08');
   // Nose
-  px(X,hcx,hcy+1,P.d1);
-  // Serene mouth
-  rect(X,hcx-1,hcy+2,3,1,P.dbone);
-  // Tear streaks
-  X.globalAlpha=.3;
-  rect(X,hcx-2,hcy,1,3,'#4a3a10');rect(X,hcx+2,hcy,1,3,'#4a3a10');
+  px(X,hcx,hcy+1,'#2a1a06');
+  // Calm mouth
+  px(X,hcx-1,hcy+2,'#3a2a08');px(X,hcx,hcy+2.5,'#3a2a08');px(X,hcx+1,hcy+2,'#3a2a08');
+  // Gold tear streaks
+  X.globalAlpha=.5;
+  rect(X,hcx-3,hcy+1,1,4,P.gold);
+  rect(X,hcx+3,hcy+1,1,4,P.gold);
+  // Tear drops at bottom of streaks
+  px(X,hcx-3,hcy+5,P.sunflower);
+  px(X,hcx+3,hcy+5,P.sunflower);
   X.globalAlpha=1;
-  
-  // Buzzing insects
-  for(let i=0;i<4;i++){
-    const ix=bx+Math.sin(t*.004+i*1.7)*14;
-    const iy=by+Math.cos(t*.005+i*2.1)*12;
-    if(hash(i,Math.floor(t*.008),3)>.3){
-      X.globalAlpha=.5;px(X,ix,iy,P.d1);
-      if(t%4<2)px(X,ix+1,iy,P.d1); // wing flicker
-      X.globalAlpha=1;
-    }
+
+  // ── BUZZING INSECTS — orbit lazily ──
+  for(let i=0;i<5;i++){
+    const iAngle=t*.003+i*Math.PI*2/5;
+    const iRadius=10+Math.sin(t*.002+i*1.3)*6;
+    const ix=cx+Math.cos(iAngle)*iRadius;
+    const iy=by+18+Math.sin(iAngle*.7+i)*iRadius*.5;
+    X.globalAlpha=.5;
+    px(X,ix,iy,P.d1);
+    // Wing flicker
+    if(t%3<2){px(X,ix+1,iy-1,'#666');px(X,ix-1,iy-1,'#666');}
+    X.globalAlpha=1;
   }
 }
 
