@@ -39,6 +39,7 @@ import { updateProximity, draw as drawInscriptions } from './world/inscriptions.
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
+import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon, updateRain, drawRain } from './render/atmosphere.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
@@ -179,10 +180,16 @@ function render() {
     bgCtx.drawImage(terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
   }
 
+  // ── BG: atmosphere ──
+  drawBloodMoon(bgCtx, { x: camX, y: camY });
+  drawSmokeClouds(bgCtx, { x: camX, y: camY });
+
   // ── WORLD: locations + player ──
   worldCtx.save();
   worldCtx.translate(-camX, -camY);
   setCtx(worldCtx);
+
+  drawFootprints(worldCtx, { x: camX, y: camY });
 
   const sortedLocs = [...locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
   for (const loc of sortedLocs) {
@@ -229,6 +236,7 @@ function render() {
   crackedGlass.draw(fxCtx);
   dyingPixels.update();
   dyingPixels.draw(fxCtx);
+  drawRain(fxCtx);
   drawBrainrot(fxCtx);
 
   // ── POST: grading + vignette ──
@@ -311,6 +319,7 @@ function updateGame() {
     else if (move.x < 0) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
     if (t % 8 === 0) footstepDust(player.x, player.y);
+    addFootprint(player.x, player.y);
   } else if (player.moving) {
     // Auto-walk toward target
     const dx = player.tx - player.x;
@@ -354,8 +363,8 @@ function updateGame() {
   updateIdle(player.moving);
   checkWhisper(player, locations);
   updateParticles();
+  updateRain(getZone(player.x, player.y));
 
-  // Fire embers at campfire
   if (t % 3 === 0) fireEmber(775, 795);
 }
 
