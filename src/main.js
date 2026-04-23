@@ -36,6 +36,8 @@ import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achi
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
+import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
+import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -46,6 +48,12 @@ initUI();
 initMetaFx();
 initTerminal();
 initAudio();
+
+// Session memory — increment counter, maybe trigger "Мир сгорел" screen
+const sessionAge = incrementSession();
+const shiftCfg = getShiftConfig();
+maybeShowBlankScreen();
+console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
 
 // Load saved progress
 const savedData = loadGame();
@@ -60,6 +68,8 @@ if (savedData) {
   if (savedData.observersSeen) savedData.observersSeen.forEach(n => flags.observersSeen.add(n));
   if (savedData.achievements) loadUnlocked(savedData.achievements);
   if (savedData.graffiti) setGraffiti(savedData.graffiti);
+  if (savedData.catSightings) loadSightings(savedData.catSightings);
+  if (savedData.catUnlocked) setCatUnlocked(true);
   console.log('[save] loaded');
 }
 
@@ -71,6 +81,8 @@ startAutoSave(() => ({
   collectedLore: getCollectedIds(),
   achievements: getUnlocked(),
   graffiti: getGraffiti(),
+  catSightings: getSightings(),
+  catUnlocked: catUnlocked(),
 }));
 
 // Terrain (cached offscreen)
@@ -176,6 +188,7 @@ function render() {
   drawJesterGraffiti({ x: camX, y: camY });
   drawJesterWandering({ x: camX, y: camY }, locations);
   drawPets({ x: camX, y: camY });
+  drawSilentCat(player, { x: camX, y: camY }, locations);
 
   drawPlayer(player);
 
