@@ -6,33 +6,60 @@ import { layers } from './render/layers.js';
 import { camera } from './render/camera.js';
 import { lighting } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
-import { rect, px, hash, lerp, clamp } from './render/draw.js';
+import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
+import { locations } from './world/locations.js';
+import { tryMove, findLocationAt } from './world/physics.js';
+import { state } from './core/state.js';
+import { events, E } from './core/events.js';
+import { input } from './core/input.js';
 import { drawPlayer } from './sprites/player.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
 layers.init(mainCanvas);
+input.init(mainCanvas);
 
-// Build terrain once (large offscreen canvas)
+// Terrain (cached offscreen)
 const terrainCanvas = buildTerrain();
-const terrainReady = true;
 
-// ═══ GAME STATE ═══
-let t = 0;
-let state = 'entry';
-
+// ═══ GAME OBJECTS ═══
 const player = {
   x: 800, y: 900, tx: 800, ty: 900,
   dir: 1, moving: false, walkFrame: 0,
 };
 
-// Starting lights — will be replaced by location-based lights
-lighting.add({ x: 800, y: 900, r: 60, color: [255, 180, 80], flicker: 0.15, intensity: 1 });  // player lantern
-lighting.add({ x: 750, y: 780, r: 95, color: [255, 100, 20], flicker: 0.15 });  // campfire
-lighting.add({ x: 1000, y: 920, r: 50, color: [30, 200, 30], flicker: 0.08 }); // terminal
-lighting.add({ x: 1250, y: 1080, r: 30, color: [140, 100, 50], flicker: 0.05 }); // tent
-lighting.add({ x: 900, y: 1480, r: 60, color: [50, 180, 30], flicker: 0.1 }); // lake
+// Game flags
+const flags = {
+  talkedTo: new Set(),  // NPC ids
+  visited: new Set(),   // location ids
+  collectedLore: new Set(),
+};
+
+// Check if player can leave settlement
+function canLeaveSettlement() {
+  return flags.talkedTo.has('jester');
+}
+
+// ═══ LIGHTING SETUP from locations ═══
+lighting.clear();
+// Player lantern — follows player
+lighting.add({ x: 800, y: 900, r: 55, color: [255, 180, 80], flicker: 0.1 });
+// Location lights
+for (const loc of locations) {
+  if (!loc.light) continue;
+  lighting.add({
+    x: loc.x + loc.w / 2,
+    y: loc.y + loc.h / 2,
+    r: loc.light.r,
+    color: loc.light.color,
+    flicker: loc.light.flicker,
+  });
+}
+
+// ═══ TIME ═══
+let t = 0;
+let dayCycle = 0.35; // 0 = night, 1 = day (for now: permanent dusk)
 
 // ═══ RENDER ═══
 function render() {
@@ -42,6 +69,7 @@ function render() {
   const bgCtx = layers.ctx('bg');
   const worldCtx = layers.ctx('world');
   const lightCtx = layers.ctx('light');
+  const uiCtx = layers.ctx('ui');
   const postCtx = layers.ctx('post');
 
   // ── BG: terrain slice ──
@@ -51,105 +79,140 @@ function render() {
   const srcY = clamp(camY, 0, MH - vh);
   const srcW = Math.min(vw, MW - srcX);
   const srcH = Math.min(vh, MH - srcY);
-  if (terrainReady && srcW > 0 && srcH > 0) {
+  if (srcW > 0 && srcH > 0) {
     bgCtx.drawImage(terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
   }
 
-  // ── WORLD: player + locations ──
+  // ── WORLD: locations + player ──
   worldCtx.save();
   worldCtx.translate(-camX, -camY);
 
-  // Placeholder location markers (will be replaced by proper sprite system)
-  const locMarkers = [
-    { x: 750, y: 780, w: 55, h: 50, color: '#6b0f1a', label: 'костёр' },
-    { x: 1000, y: 920, w: 50, h: 48, color: '#1a8c1a', label: 'терминал' },
-    { x: 1250, y: 1080, w: 65, h: 55, color: '#3a2418', label: 'палатка' },
-    { x: 400, y: 680, w: 105, h: 82, color: '#2a2418', label: 'библиотека' },
-    { x: 900, y: 1480, w: 100, h: 60, color: '#2a5a1a', label: 'озеро' },
-  ];
-  for (const l of locMarkers) {
-    if (!camera.isVisible(l.x, l.y, l.w, l.h)) continue;
-    rect(worldCtx, l.x, l.y, l.w, l.h, l.color);
-    worldCtx.fillStyle = '#e8dcc8';
-    worldCtx.font = '6px "Press Start 2P"';
-    worldCtx.fillText(l.label, l.x, l.y - 4);
+  // Draw locations (sorted by y for proper depth)
+  const sortedLocs = [...locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
+  for (const loc of sortedLocs) {
+    if (!camera.isVisible(loc.x, loc.y, loc.w, loc.h)) continue;
+    drawLocationPlaceholder(worldCtx, loc);
   }
 
   // Player
   drawPlayer(worldCtx, player, t);
+
   worldCtx.restore();
 
-  // ── LIGHT: additive glow layer ──
-  // Update player lantern position
+  // ── LIGHT: additive lighting ──
   lighting.sources[0].x = player.x + 6;
   lighting.sources[0].y = player.y + 10;
-  const dayCycle = 0; // 0 = night, 1 = day
-  const ambient = 0.35 + dayCycle * 0.4;
+  const ambient = 0.28 + dayCycle * 0.45;
   lighting.render(lightCtx, { x: camX, y: camY }, t, ambient);
 
-  // ── POST: color grading, vignette ──
+  // ── UI: HUD ──
+  drawHUD(uiCtx);
+
+  // ── POST: grading + vignette ──
   postfx.apply(postCtx);
 
   // ── COMPOSITE ──
   layers.composite();
 }
 
-// ═══ INPUT ═══
-const keys = {};
-document.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
-document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+// Placeholder draw function — will be replaced with proper sprites
+function drawLocationPlaceholder(ctx, loc) {
+  const colors = {
+    campfire: '#6b0f1a', terminal: '#1a8c1a', vending: '#b8860b',
+    library: '#2a2418', tent: '#3a2418', ruins: '#2a2a2a',
+    watchtower: '#3a3020', posterwall: '#8a7020', graffiti: '#4a2a2a',
+    crater: '#1a1a1a', riverbed: '#4a6070',
+    radio: '#ff3030', cross: '#a89080', raven: '#1a0a0a',
+    theater: '#c8b890', altar: '#3a6a2a',
+    lake: '#2a5a1a', basement: '#40a050', pipeline: '#5a6030',
+    pit: '#0a0a00', nocturnal: '#4a4a7a',
+    exit: '#2a2a4a', train: '#604030', bus: '#a88018',
+    junkyard: '#3a3a3a', dumpster: '#ff4400',
+    overpass: '#6a5a4a', billboard: '#a03030', powerline: '#2a2a2a',
+    banner: '#8a6a2a', pizzeria: '#c83030',
+    church: '#1a0a24', fountain: '#3a6040', crypt: '#0a0a0a',
+    jester_home: '#6b0f1a', sol_home: '#b8860b', elder_home: '#3a2418',
+    nocturnal_home: '#4a4a7a',
+  };
+  const color = colors[loc.id] || '#444';
+  rect(ctx, loc.x, loc.y, loc.w, loc.h, color);
 
-function handleKeys() {
-  let dx = 0, dy = 0;
-  if (keys['w'] || keys['arrowup']) dy = -1;
-  if (keys['s'] || keys['arrowdown']) dy = 1;
-  if (keys['a'] || keys['arrowleft']) dx = -1;
-  if (keys['d'] || keys['arrowright']) dx = 1;
+  // Small label when camera is close
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.globalAlpha = 0.5;
+  ctx.fillText(loc.name.slice(0, 20), loc.x, loc.y - 4);
+  ctx.globalAlpha = 1;
+}
 
-  if (dx || dy) {
-    const spd = keys['shift'] ? 4 : 2.4;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    player.x = clamp(player.x + dx / len * spd, 10, MW - 22);
-    player.y = clamp(player.y + dy / len * spd, 170, MH - 30);
+function drawHUD(ctx) {
+  // State indicator (bottom left)
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#8a8d8f';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillText(`ARDET V2 · ${scaler.vw}×${scaler.vh} @${scaler.scale}x`, 8, scaler.vh - 8);
+  ctx.globalAlpha = 1;
+}
+
+// ═══ GAME LOGIC ═══
+function updateGame() {
+  if (!state.is('game')) return;
+
+  const move = input.getMove();
+  if (move.active) {
+    const spd = input.isDown('sprint') ? 4 : 2.4;
+    tryMove(player, move.x * spd, move.y * spd, locations, {
+      canLeaveSettlement: canLeaveSettlement(),
+    });
     player.moving = true;
-    if (dx > 0) player.dir = 1;
-    else if (dx < 0) player.dir = -1;
+    if (move.x > 0) player.dir = 1;
+    else if (move.x < 0) player.dir = -1;
+    events.emit(E.PLAYER_MOVE, player);
   } else {
     player.moving = false;
   }
+
+  camera.follow(player.x + 6, player.y + 10);
+  camera.update();
+  camera.clampToWorld(MW, MH);
 }
 
 // ═══ LOOP ═══
 function loop() {
   t++;
-
-  if (state === 'game') {
-    handleKeys();
-    camera.follow(player.x + 6, player.y + 10);
-    camera.update();
-    camera.clampToWorld(MW, MH);
-  }
-
+  updateGame();
   render();
   requestAnimationFrame(loop);
 }
 
-// ═══ ENTRY SCREEN ═══
+// ═══ ENTRY ═══
 document.getElementById('entry-btn').addEventListener('click', () => {
   document.getElementById('entry').style.display = 'none';
   document.getElementById('gw').classList.add('on');
-  state = 'game';
+  state.transition('game');
 });
 
-// Touch
-mainCanvas.addEventListener('touchend', e => {
-  e.preventDefault();
-  if (state !== 'game') return;
-  const touch = e.changedTouches[0];
-  const pos = scaler.screenToGame(touch.clientX, touch.clientY, camera.x, camera.y);
-  player.tx = pos.x;
-  player.ty = pos.y;
+// Touch: walk toward clicked point
+input.onClick(({ clientX, clientY }) => {
+  if (!state.is('game')) return;
+  const pos = input.screenToWorld(clientX, clientY, camera);
+  const loc = findLocationAt(pos.x, pos.y, locations);
+  if (loc) {
+    // Clicked a location — mark visited
+    flags.visited.add(loc.id);
+    events.emit(E.LOCATION_VISIT, loc);
+    // For now just walk toward it (menu system comes later)
+    player.tx = loc.x + loc.w / 2 - 6;
+    player.ty = loc.y + loc.h + 5;
+  } else {
+    player.tx = pos.x;
+    player.ty = pos.y;
+  }
 });
 
-console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x`);
+// ═══ DEBUG ═══
+events.on(E.LOCATION_VISIT, loc => console.log(`[visit] ${loc.name}`));
+events.on(E.PLAYER_MOVE, () => {}); // noop
+
+console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
 requestAnimationFrame(loop);
