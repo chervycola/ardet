@@ -62,24 +62,34 @@ initShop();
 initCursor();
 initAudio();
 
-// Session memory — increment counter, maybe trigger "Мир сгорел" screen
+// ═══ GAME OBJECTS (must be before loadGame!) ═══
+const player = {
+  x: 800, y: 900, tx: 800, ty: 900,
+  dir: 1, moving: false, walkFrame: 0,
+};
+const flags = {
+  talkedTo: new Set(),
+  visited: new Set(),
+  collectedLore: new Set(),
+  observersSeen: new Set(),
+};
+
+// Terrain (cached offscreen)
+const terrainCanvas = buildTerrain();
+
+// Session memory
 const sessionAge = incrementSession();
 const shiftCfg = getShiftConfig();
 maybeShowBlankScreen();
 console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
 
 // Load saved progress
-// Clear V1 save on first V2 run
 if (localStorage.getItem('ardet_save')) {
   localStorage.removeItem('ardet_save');
-  console.log('[save] cleared V1 save');
 }
 const savedData = loadGame();
 if (savedData) {
-  if (savedData.player) {
-    player.x = savedData.player.x;
-    player.y = savedData.player.y;
-  }
+  if (savedData.player) { player.x = savedData.player.x; player.y = savedData.player.y; }
   if (savedData.talkedTo) savedData.talkedTo.forEach(n => flags.talkedTo.add(n));
   if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
   if (savedData.collectedLore) loadCollected(savedData.collectedLore);
@@ -88,8 +98,9 @@ if (savedData) {
   if (savedData.graffiti) setGraffiti(savedData.graffiti);
   if (savedData.catSightings) loadSightings(savedData.catSightings);
   if (savedData.catUnlocked) setCatUnlocked(true);
-  console.log('[save] loaded');
 }
+
+initAchievements(flags, () => getCollectedCount());
 
 startAutoSave(() => ({
   player: { x: player.x, y: player.y },
@@ -102,25 +113,6 @@ startAutoSave(() => ({
   catSightings: getSightings(),
   catUnlocked: catUnlocked(),
 }));
-
-// Terrain (cached offscreen)
-const terrainCanvas = buildTerrain();
-
-// ═══ GAME OBJECTS ═══
-const player = {
-  x: 800, y: 900, tx: 800, ty: 900,
-  dir: 1, moving: false, walkFrame: 0,
-};
-
-// Game flags
-const flags = {
-  talkedTo: new Set(),
-  visited: new Set(),
-  collectedLore: new Set(),
-  observersSeen: new Set(),
-};
-
-initAchievements(flags, () => getCollectedCount());
 
 // Check if player can leave settlement
 function canLeaveSettlement() {
@@ -483,3 +475,4 @@ requestAnimationFrame(loop);
 window.onerror = (msg, src, line, col, err) => {
   document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:14px">ARDET ERROR:\n' + msg + '\nLine: ' + line + '\n\n' + (err && err.stack || '') + '</pre>';
 };
+// build 1776974120

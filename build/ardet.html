@@ -15998,42 +15998,6 @@ Ardet v1.0 \u2014 coming soon.
   initShop();
   init3();
   initAudio();
-  var sessionAge = incrementSession();
-  var shiftCfg = getShiftConfig();
-  maybeShowBlankScreen();
-  console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
-  if (localStorage.getItem("ardet_save")) {
-    localStorage.removeItem("ardet_save");
-    console.log("[save] cleared V1 save");
-  }
-  var savedData = loadGame();
-  if (savedData) {
-    if (savedData.player) {
-      player.x = savedData.player.x;
-      player.y = savedData.player.y;
-    }
-    if (savedData.talkedTo) savedData.talkedTo.forEach((n) => flags.talkedTo.add(n));
-    if (savedData.visited) savedData.visited.forEach((id) => flags.visited.add(id));
-    if (savedData.collectedLore) loadCollected(savedData.collectedLore);
-    if (savedData.observersSeen) savedData.observersSeen.forEach((n) => flags.observersSeen.add(n));
-    if (savedData.achievements) loadUnlocked(savedData.achievements);
-    if (savedData.graffiti) setGraffiti(savedData.graffiti);
-    if (savedData.catSightings) loadSightings(savedData.catSightings);
-    if (savedData.catUnlocked) setUnlocked(true);
-    console.log("[save] loaded");
-  }
-  startAutoSave(() => ({
-    player: { x: player.x, y: player.y },
-    talkedTo: Array.from(flags.talkedTo),
-    visited: Array.from(flags.visited),
-    observersSeen: Array.from(flags.observersSeen),
-    collectedLore: getCollectedIds(),
-    achievements: getUnlocked(),
-    graffiti: getGraffiti(),
-    catSightings: getSightings(),
-    catUnlocked: isUnlocked()
-  }));
-  var terrainCanvas = buildTerrain();
   var player = {
     x: 800,
     y: 900,
@@ -16049,7 +16013,41 @@ Ardet v1.0 \u2014 coming soon.
     collectedLore: /* @__PURE__ */ new Set(),
     observersSeen: /* @__PURE__ */ new Set()
   };
+  var terrainCanvas = buildTerrain();
+  var sessionAge = incrementSession();
+  var shiftCfg = getShiftConfig();
+  maybeShowBlankScreen();
+  console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
+  if (localStorage.getItem("ardet_save")) {
+    localStorage.removeItem("ardet_save");
+  }
+  var savedData = loadGame();
+  if (savedData) {
+    if (savedData.player) {
+      player.x = savedData.player.x;
+      player.y = savedData.player.y;
+    }
+    if (savedData.talkedTo) savedData.talkedTo.forEach((n) => flags.talkedTo.add(n));
+    if (savedData.visited) savedData.visited.forEach((id) => flags.visited.add(id));
+    if (savedData.collectedLore) loadCollected(savedData.collectedLore);
+    if (savedData.observersSeen) savedData.observersSeen.forEach((n) => flags.observersSeen.add(n));
+    if (savedData.achievements) loadUnlocked(savedData.achievements);
+    if (savedData.graffiti) setGraffiti(savedData.graffiti);
+    if (savedData.catSightings) loadSightings(savedData.catSightings);
+    if (savedData.catUnlocked) setUnlocked(true);
+  }
   init2(flags, () => getCollectedCount());
+  startAutoSave(() => ({
+    player: { x: player.x, y: player.y },
+    talkedTo: Array.from(flags.talkedTo),
+    visited: Array.from(flags.visited),
+    observersSeen: Array.from(flags.observersSeen),
+    collectedLore: getCollectedIds(),
+    achievements: getUnlocked(),
+    graffiti: getGraffiti(),
+    catSightings: getSightings(),
+    catUnlocked: isUnlocked()
+  }));
   function canLeaveSettlement() {
     return flags.talkedTo.has("jester");
   }
