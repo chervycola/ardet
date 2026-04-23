@@ -16002,6 +16002,10 @@ Ardet v1.0 \u2014 coming soon.
   var shiftCfg = getShiftConfig();
   maybeShowBlankScreen();
   console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
+  if (localStorage.getItem("ardet_save")) {
+    localStorage.removeItem("ardet_save");
+    console.log("[save] cleared V1 save");
+  }
   var savedData = loadGame();
   if (savedData) {
     if (savedData.player) {
@@ -16116,8 +16120,10 @@ Ardet v1.0 \u2014 coming soon.
     drawPlayer(player);
     drawWorldWhisper({ x: camX, y: camY });
     worldCtx.restore();
-    lighting.sources[0].x = player.x + 6;
-    lighting.sources[0].y = player.y + 10;
+    if (lighting.sources[0]) {
+      lighting.sources[0].x = player.x + 6;
+      lighting.sources[0].y = player.y + 10;
+    }
     const dayCycle = getDayCycle();
     const ambient = 0.28 + dayCycle * 0.45;
     lighting.render(lightCtx, { x: camX, y: camY }, ambient);
@@ -16359,6 +16365,9 @@ Ardet v1.0 \u2014 coming soon.
   });
   console.log(`ARDET V2 | viewport ${scaler.vw}\xD7${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
   requestAnimationFrame(loop);
+  window.onerror = (msg, src, line, col, err) => {
+    document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:14px">ARDET ERROR:\n' + msg + "\nLine: " + line + "\n\n" + (err && err.stack || "") + "</pre>";
+  };
 })();
 </script>
 </body>

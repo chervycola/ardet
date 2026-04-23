@@ -69,6 +69,11 @@ maybeShowBlankScreen();
 console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
 
 // Load saved progress
+// Clear V1 save on first V2 run
+if (localStorage.getItem('ardet_save')) {
+  localStorage.removeItem('ardet_save');
+  console.log('[save] cleared V1 save');
+}
 const savedData = loadGame();
 if (savedData) {
   if (savedData.player) {
@@ -217,8 +222,10 @@ function render() {
   worldCtx.restore();
 
   // ── LIGHT: additive lighting ──
-  lighting.sources[0].x = player.x + 6;
-  lighting.sources[0].y = player.y + 10;
+  if (lighting.sources[0]) {
+    lighting.sources[0].x = player.x + 6;
+    lighting.sources[0].y = player.y + 10;
+  }
   const dayCycle = getDayCycle();
   const ambient = 0.28 + dayCycle * 0.45;
   lighting.render(lightCtx, { x: camX, y: camY }, ambient);
@@ -471,3 +478,8 @@ events.on('location.use', (loc) => {
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
 requestAnimationFrame(loop);
+
+// Global error handler — shows crash on screen
+window.onerror = (msg, src, line, col, err) => {
+  document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:14px">ARDET ERROR:\n' + msg + '\nLine: ' + line + '\n\n' + (err && err.stack || '') + '</pre>';
+};
