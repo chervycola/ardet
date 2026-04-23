@@ -89,3 +89,14 @@ export const locations = [
 // Quick lookup by id
 export const locationById = {};
 for (const loc of locations) locationById[loc.id] = loc;
+
+// Attach content (look texts + dialogues) — called from main after imports
+export function attachContent(looks, dialogues) {
+  for (const loc of locations) {
+    if (looks[loc.id]) loc.look = looks[loc.id];
+    if (dialogues[loc.id]) {
+      loc.talkLines = dialogues[loc.id];
+      loc.talkName = loc.name;
+    }
+  }
+}

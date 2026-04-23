@@ -8,7 +8,7 @@ import { lighting } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
-import { locations } from './world/locations.js';
+import { locations, attachContent } from './world/locations.js';
 import { tryMove, findLocationAt } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
@@ -22,11 +22,16 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
+import { showMenu, hideMenu, initUI, getActiveLoc } from './ui/ui.js';
+import { looks } from './content/looks.js';
+import { dialogues } from './content/dialogues.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
 layers.init(mainCanvas);
 input.init(mainCanvas);
+attachContent(looks, dialogues);
+initUI();
 
 // Terrain (cached offscreen)
 const terrainCanvas = buildTerrain();
@@ -196,6 +201,28 @@ function updateGame() {
     if (move.x > 0) player.dir = 1;
     else if (move.x < 0) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
+  } else if (player.moving) {
+    // Auto-walk toward target
+    const dx = player.tx - player.x;
+    const dy = player.ty - player.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 2) {
+      player.moving = false;
+      // Check if we arrived at a location
+      const loc = findLocationAt(player.x, player.y, locations);
+      if (loc) {
+        flags.visited.add(loc.id);
+        events.emit(E.LOCATION_VISIT, loc);
+        showMenu(loc);
+      }
+    } else {
+      const spd = 2.4;
+      if (dx > 1) player.dir = 1;
+      else if (dx < -1) player.dir = -1;
+      tryMove(player, dx / dist * spd, dy / dist * spd, locations, {
+        canLeaveSettlement: canLeaveSettlement(),
+      });
+    }
   } else {
     player.moving = false;
   }
@@ -222,25 +249,45 @@ document.getElementById('entry-btn').addEventListener('click', () => {
 
 // Touch: walk toward clicked point
 input.onClick(({ clientX, clientY }) => {
+  if (state.is('menu')) { hideMenu(); return; }
+  if (state.is('look') || state.is('dialogue')) return;
   if (!state.is('game')) return;
+
   const pos = input.screenToWorld(clientX, clientY, camera);
   const loc = findLocationAt(pos.x, pos.y, locations);
   if (loc) {
-    // Clicked a location — mark visited
-    flags.visited.add(loc.id);
-    events.emit(E.LOCATION_VISIT, loc);
-    // For now just walk toward it (menu system comes later)
-    player.tx = loc.x + loc.w / 2 - 6;
-    player.ty = loc.y + loc.h + 5;
+    const px_ = loc.x + loc.w / 2 - 6;
+    const py_ = loc.y + loc.h + 5;
+    const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+
+    if (dist < 85) {
+      // Close enough — open menu
+      player.x = px_;
+      player.y = py_;
+      player.moving = false;
+      flags.visited.add(loc.id);
+      events.emit(E.LOCATION_VISIT, loc);
+      showMenu(loc);
+    } else {
+      // Walk toward it
+      player.tx = px_;
+      player.ty = py_;
+      player.moving = true;
+    }
   } else {
     player.tx = pos.x;
     player.ty = pos.y;
+    player.moving = true;
   }
 });
 
-// ═══ DEBUG ═══
-events.on(E.LOCATION_VISIT, loc => console.log(`[visit] ${loc.name}`));
-events.on(E.PLAYER_MOVE, () => {}); // noop
+// ═══ EVENT HANDLERS ═══
+events.on(E.NPC_TALK, (npcId) => {
+  flags.talkedTo.add(npcId);
+});
+events.on(E.OBSERVER_MET, (npcId) => {
+  console.log(`[observer] ${npcId} met`);
+});
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
 requestAnimationFrame(loop);
