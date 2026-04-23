@@ -398,6 +398,11 @@
     .mi{padding:10px 14px;font-size:10px}
   }
   
+  /* Portrait warning — suggest landscape */
+  @media(max-width:768px) and (orientation:portrait){
+    #rotate-hint{display:flex!important}
+  }
+
   /* Very small screens */
   @media(max-width:400px){
     #menu{min-width:200px}
@@ -565,6 +570,7 @@ P.S. Это объяснение написано намеренно, чтобы
 <div id="crt"></div>
 <canvas id="cur" width="20" height="20"></canvas>
 <div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">В ПУСТОТУ 25+</button></div><div id="entry-poster"><div class="corner-skull tl">☠</div><div class="corner-skull tr">☠</div><div class="corner-skull bl">☠</div><div class="corner-skull br">☠</div><div class="ornate-dots top">❦ ✦ ❦</div><div class="ornate-dots bottom">❦ ✦ ❦</div><div id="poster-inner"><span id="poster-text">coming soon</span></div></div><div id="boot"></div></div>
+<div id="rotate-hint" style="display:none;position:fixed;inset:0;z-index:99998;background:#050510;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:'Press Start 2P',monospace;color:#8a8d8f;font-size:10px;text-align:center;padding:20px"><div style="font-size:24px">↻</div><div>поверни устройство</div></div>
 <div id="gw"><canvas id="game"></canvas></div>
 <canvas id="wakeup" width="160" height="100"></canvas>
 <div id="menu">
@@ -12506,6 +12512,23 @@ function drawSessionDesaturation(){
   X.fillStyle='#1a1a1a';
   X.fillRect(0,0,VW,VH);
   X.globalAlpha=1;
+}
+// ═══════════════════════════════════════
+// ORIENTATION — try to lock landscape on mobile
+// ═══════════════════════════════════════
+try{screen.orientation.lock('landscape').catch(()=>{});}catch(e){}
+// ═══════════════════════════════════════
+// VIRTUAL KEYBOARD — compensate on mobile
+// ═══════════════════════════════════════
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>{
+    const vvh=window.visualViewport.height;
+    const wh=window.innerHeight;
+    const kbOpen=wh-vvh>100;
+    document.querySelectorAll('#look,#dlg,.shop-overlay').forEach(el=>{
+      el.style.maxHeight=kbOpen?(vvh-20)+'px':'';
+    });
+  });
 }
 function getDayLightMod(){return .7+dayCycle*.3;} // lights slightly larger at night
 // ═══════════════════════════════════════
