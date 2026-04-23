@@ -398,11 +398,6 @@
     .mi{padding:10px 14px;font-size:10px}
   }
   
-  /* Portrait warning — suggest landscape */
-  @media(max-width:768px) and (orientation:portrait){
-    #rotate-hint{display:flex!important}
-  }
-
   /* Very small screens */
   @media(max-width:400px){
     #menu{min-width:200px}
@@ -570,7 +565,6 @@ P.S. Это объяснение написано намеренно, чтобы
 <div id="crt"></div>
 <canvas id="cur" width="20" height="20"></canvas>
 <div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">В ПУСТОТУ 25+</button></div><div id="entry-poster"><div class="corner-skull tl">☠</div><div class="corner-skull tr">☠</div><div class="corner-skull bl">☠</div><div class="corner-skull br">☠</div><div class="ornate-dots top">❦ ✦ ❦</div><div class="ornate-dots bottom">❦ ✦ ❦</div><div id="poster-inner"><span id="poster-text">coming soon</span></div></div><div id="boot"></div></div>
-<div id="rotate-hint" style="display:none;position:fixed;inset:0;z-index:99998;background:#050510;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:'Press Start 2P',monospace;color:#8a8d8f;font-size:10px;text-align:center;padding:20px"><div style="font-size:24px">↻</div><div>поверни устройство</div></div>
 <div id="gw"><canvas id="game"></canvas></div>
 <canvas id="wakeup" width="160" height="100"></canvas>
 <div id="menu">
@@ -942,9 +936,11 @@ console.log = function(...args) {
 // CONFIG
 // ═══════════════════════════════════════
 const VW=640,VH=400,MW=3000,MH=1800;
-const C=document.getElementById('game');const X=C.getContext('2d');C.width=VW;C.height=VH;
+const _DPR=Math.min(window.devicePixelRatio||1,2);
+const C=document.getElementById('game');const X=C.getContext('2d');
+C.width=VW*_DPR;C.height=VH*_DPR;X.scale(_DPR,_DPR);
 const TC=document.createElement('canvas');TC.width=MW;TC.height=MH;const TX=TC.getContext('2d');
-const LC=document.createElement('canvas');LC.width=VW;LC.height=VH;const LX=LC.getContext('2d');
+const LC=document.createElement('canvas');LC.width=VW*_DPR;LC.height=VH*_DPR;const LX=LC.getContext('2d');LX.scale(_DPR,_DPR);
 
 // ═══════════════════════════════════════
 // PALETTE
@@ -10162,7 +10158,7 @@ function renderLighting(){
     LX.fillStyle=g;LX.fillRect(v.sx-v.r,v.sy-v.r,v.r*2,v.r*2);
   });
   LX.globalCompositeOperation='source-over';
-  X.drawImage(LC,0,0);
+  X.drawImage(LC,0,0,VW,VH);
   X.globalCompositeOperation='lighter';
   visible.forEach(v=>{
     const r2=v.r*.7;
@@ -10783,7 +10779,7 @@ function drawZoneEffects(){
       // Wavy distortion (scanline shift)
       if(t%3===0){
         const sy_=Math.floor(Math.sin(t*.02)*3+VH/2);
-        X.drawImage(C,0,sy_,VW,2,Math.sin(t*.03)*2,sy_,VW,2);
+        X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(C,0,sy_*_DPR,VW*_DPR,2*_DPR,Math.sin(t*.03)*2*_DPR,sy_*_DPR,VW*_DPR,2*_DPR);X.restore();
       }
       X.globalAlpha=1;break;
     case'forest':
@@ -11372,7 +11368,7 @@ function drawBrainrot(){
     // Screen tear
     const tearY=Math.floor(Math.sin(t*.01)*VH*.3+VH*.5);
     const tearH=Math.floor(intensity*20);
-    X.drawImage(C,0,tearY,VW,tearH,Math.sin(t*.05)*intensity*10,tearY,VW,tearH);
+    X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(C,0,tearY*_DPR,VW*_DPR,tearH*_DPR,Math.sin(t*.05)*intensity*10*_DPR,tearY*_DPR,VW*_DPR,tearH*_DPR);X.restore();
   }
   if(intensity>.8){
     // Heavy glitch
@@ -11382,7 +11378,7 @@ function drawBrainrot(){
       const by=Math.floor(hash(i,t*.05,2)*VH);
       const bw=20+Math.floor(hash(i,t*.05,3)*60);
       const bh=5+Math.floor(hash(i,t*.05,4)*20);
-      X.drawImage(C,bx,by,bw,bh,bx+Math.sin(t*.1+i)*15,by,bw,bh);
+      X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(C,bx*_DPR,by*_DPR,bw*_DPR,bh*_DPR,(bx+Math.sin(t*.1+i)*15)*_DPR,by*_DPR,bw*_DPR,bh*_DPR);X.restore();
     }
     X.globalAlpha=1;
   }
@@ -12513,10 +12509,6 @@ function drawSessionDesaturation(){
   X.fillRect(0,0,VW,VH);
   X.globalAlpha=1;
 }
-// ═══════════════════════════════════════
-// ORIENTATION — try to lock landscape on mobile
-// ═══════════════════════════════════════
-try{screen.orientation.lock('landscape').catch(()=>{});}catch(e){}
 // ═══════════════════════════════════════
 // VIRTUAL KEYBOARD — compensate on mobile
 // ═══════════════════════════════════════
@@ -14189,7 +14181,7 @@ function drawHeatDistortion(){
       const intensity=clamp(1-dist/(hs.r*2),0,.6);
       if(intensity>0){
         X.globalAlpha=.7;
-        X.drawImage(C,Math.max(0,sx-30),stripY,60,2,Math.max(0,sx-30)+offset*intensity,stripY,60,2);
+        X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(C,Math.max(0,sx-30)*_DPR,stripY*_DPR,60*_DPR,2*_DPR,(Math.max(0,sx-30)+offset*intensity)*_DPR,stripY*_DPR,60*_DPR,2*_DPR);X.restore();
         X.globalAlpha=1;
       }
     }
