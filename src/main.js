@@ -21,6 +21,7 @@ import { drawNPC_sol } from './sprites/npcs/sol.js';
 import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
+import * as locSprites from './sprites/locations/index.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -107,7 +108,7 @@ function render() {
   const sortedLocs = [...locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
   for (const loc of sortedLocs) {
     if (!camera.isVisible(loc.x, loc.y, loc.w, loc.h)) continue;
-    drawLocationPlaceholder(worldCtx, loc);
+    drawLocation(worldCtx, loc);
     if (loc.npc && npcDrawFn[loc.npc]) {
       npcDrawFn[loc.npc](loc.x, loc.y);
     }
@@ -163,8 +164,17 @@ function drawLocationPlaceholder(ctx, loc) {
   ctx.globalAlpha = 1;
 }
 
+// Location draw: real sprite if migrated, placeholder otherwise
+function drawLocation(ctx, loc) {
+  const fn = locSprites['draw_' + loc.id];
+  if (fn) {
+    fn(loc.x, loc.y);
+  } else {
+    drawLocationPlaceholder(ctx, loc);
+  }
+}
+
 function drawHUD(ctx) {
-  // State indicator (bottom left)
   ctx.globalAlpha = 0.6;
   ctx.fillStyle = '#8a8d8f';
   ctx.font = '6px "Press Start 2P"';
