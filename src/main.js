@@ -4,7 +4,7 @@
 import { scaler } from './render/scaler.js';
 import { layers } from './render/layers.js';
 import { camera } from './render/camera.js';
-import { lighting } from './render/lighting.js';
+import { lighting, lightParticles } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
@@ -67,12 +67,21 @@ for (const loc of locations) {
     r: loc.light.r,
     color: loc.light.color,
     flicker: loc.light.flicker,
+    bloom: loc.light.r > 50,
   });
 }
 
 // ═══ TIME ═══
 import { t } from './core/time.js';
-let dayCycle = 0.35; // 0 = night, 1 = day (for now: permanent dusk)
+// Day cycle: 0 = midnight, 0.5 = noon, 1 = midnight again
+// Full cycle = 18000 frames (~5 minutes at 60fps)
+const DAY_LENGTH = 18000;
+
+function getDayCycle() {
+  const phase = (t % DAY_LENGTH) / DAY_LENGTH;
+  // Sinusoidal: 0 at midnight, 1 at noon
+  return 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+}
 
 // NPC draw dispatch
 const npcDrawFn = {
@@ -126,8 +135,14 @@ function render() {
   // ── LIGHT: additive lighting ──
   lighting.sources[0].x = player.x + 6;
   lighting.sources[0].y = player.y + 10;
+  const dayCycle = getDayCycle();
   const ambient = 0.28 + dayCycle * 0.45;
-  lighting.render(lightCtx, { x: camX, y: camY }, t, ambient);
+  lighting.render(lightCtx, { x: camX, y: camY }, ambient);
+
+  // Atmospheric particles in lit areas (render on world layer for depth)
+  const camObj = { x: camX, y: camY };
+  lightParticles.update(camObj, lighting.sources);
+  lightParticles.draw(worldCtx, camObj);
 
   // ── UI: HUD ──
   drawHUD(uiCtx);
