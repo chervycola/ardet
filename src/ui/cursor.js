@@ -26,9 +26,11 @@ function drawCursor() {
 }
 
 export function init() {
+  // Hide until game starts
+  curEl.style.display = 'none';
+
   drawCursor();
 
-  // Follow mouse
   document.addEventListener('mousemove', e => {
     if (!visible) return;
     curEl.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`;
@@ -40,6 +42,20 @@ export function init() {
     document.body.style.cursor = 'auto';
     visible = false;
   }, { once: true });
+}
+
+// Show cursor (call when game starts)
+export function show() {
+  curEl.style.display = 'block';
+  visible = true;
+  document.body.style.cursor = 'none';
+}
+
+// Hide cursor
+export function hide() {
+  curEl.style.display = 'none';
+  visible = false;
+  document.body.style.cursor = 'auto';
 }
 
 // Change cursor appearance

@@ -44,7 +44,6 @@ canvas#game {
   width: 100vw;
   height: 100vh;
   display: block;
-  cursor: none;
 }
 
 /* ── Entry screen ── */

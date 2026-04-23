@@ -55,7 +55,6 @@ canvas#game {
   width: 100vw;
   height: 100vh;
   display: block;
-  cursor: none;
 }
 
 /* ── Entry screen ── */
@@ -15172,6 +15171,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     curCtx.fillRect(cx, cy, 1, 1);
   }
   function init3() {
+    curEl.style.display = "none";
     drawCursor();
     document.addEventListener("mousemove", (e) => {
       if (!visible) return;
@@ -15182,6 +15182,11 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       document.body.style.cursor = "auto";
       visible = false;
     }, { once: true });
+  }
+  function show() {
+    curEl.style.display = "block";
+    visible = true;
+    document.body.style.cursor = "none";
   }
 
   // src/world/pets.js
@@ -16179,6 +16184,11 @@ Ardet v1.0 \u2014 coming soon.
     draw(ctx2);
     draw7(ctx2);
     draw3(ctx2);
+    ctx2.globalAlpha = 0.5;
+    ctx2.fillStyle = "#1a8c1a";
+    ctx2.font = '6px "Press Start 2P"';
+    ctx2.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
+    ctx2.globalAlpha = 1;
   }
   function drawWorldWhisper(camObj) {
     const worldCtx = layers.ctx("world");
@@ -16248,11 +16258,23 @@ Ardet v1.0 \u2014 coming soon.
     requestAnimationFrame(loop);
   }
   document.getElementById("entry-btn").addEventListener("click", () => {
+    console.log("[entry] clicked, transitioning to game");
     document.getElementById("entry").style.display = "none";
-    document.getElementById("gw").classList.add("on");
+    const gw = document.getElementById("gw");
+    gw.classList.add("on");
+    gw.style.opacity = "1";
     state.transition("game");
+    show();
     resumeAudio();
     startAmbient();
+    console.log("[entry] state now:", state.current, "canvas:", mainCanvas.width, "x", mainCanvas.height);
+  });
+  document.getElementById("gw").addEventListener("click", (e) => {
+    if (!state.is("game") && !state.is("menu")) return;
+    const rect2 = mainCanvas.getBoundingClientRect();
+    if (e.clientX >= rect2.left && e.clientX <= rect2.right && e.clientY >= rect2.top && e.clientY <= rect2.bottom) {
+      input._dispatchClick(e.clientX, e.clientY, "mouse", e);
+    }
   });
   input.onClick(({ clientX, clientY }) => {
     if (state.is("menu")) {

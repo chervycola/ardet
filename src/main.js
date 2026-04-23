@@ -40,7 +40,7 @@ import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon, updateRain, drawRain } from './render/atmosphere.js';
-import { init as initCursor } from './ui/cursor.js';
+import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
@@ -297,6 +297,13 @@ function drawHUD(ctx) {
   drawLorePopup(ctx);
   drawAchPopup(ctx);
   drawIdle(ctx);
+
+  // Debug: show state + position
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = '#1a8c1a';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
+  ctx.globalAlpha = 1;
 }
 
 // Whisper is on world layer (positioned in world coords)
@@ -380,11 +387,26 @@ function loop() {
 
 // ═══ ENTRY ═══
 document.getElementById('entry-btn').addEventListener('click', () => {
+  console.log('[entry] clicked, transitioning to game');
   document.getElementById('entry').style.display = 'none';
-  document.getElementById('gw').classList.add('on');
+  const gw = document.getElementById('gw');
+  gw.classList.add('on');
+  gw.style.opacity = '1'; // force visible
   state.transition('game');
+  showCursor();
   resumeAudio();
   startAmbient();
+  console.log('[entry] state now:', state.current, 'canvas:', mainCanvas.width, 'x', mainCanvas.height);
+});
+
+// Fallback: also listen on #gw for clicks (in case canvas doesn't catch them)
+document.getElementById('gw').addEventListener('click', e => {
+  if (!state.is('game') && !state.is('menu')) return;
+  const rect = mainCanvas.getBoundingClientRect();
+  if (e.clientX >= rect.left && e.clientX <= rect.right &&
+      e.clientY >= rect.top && e.clientY <= rect.bottom) {
+    input._dispatchClick(e.clientX, e.clientY, 'mouse', e);
+  }
 });
 
 // Touch: walk toward clicked point
