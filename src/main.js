@@ -39,6 +39,8 @@ import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen } from './world/brainrot.js';
+import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -190,6 +192,7 @@ function render() {
   drawJesterWandering({ x: camX, y: camY }, locations);
   drawPets({ x: camX, y: camY });
   drawSilentCat(player, { x: camX, y: camY }, locations);
+  drawMonsters({ x: camX, y: camY });
 
   drawPlayer(player);
 
@@ -217,6 +220,7 @@ function render() {
   crackedGlass.draw(fxCtx);
   dyingPixels.update();
   dyingPixels.draw(fxCtx);
+  drawBrainrot(fxCtx);
 
   // ── POST: grading + vignette ──
   postfx.apply(postCtx);
@@ -272,6 +276,7 @@ function drawHUD(ctx) {
 
 // ═══ GAME LOGIC ═══
 function updateGame() {
+  if (isFrozen()) { updateBrainrot(player); return; }
   if (!state.is('game')) return;
 
   const move = input.getMove();
@@ -321,6 +326,8 @@ function updateGame() {
   updateJester(camera);
   updateProximity(player, locations);
   updatePets();
+  updateBrainrot(player);
+  updateMonsters(player);
 }
 
 // ═══ LOOP ═══
