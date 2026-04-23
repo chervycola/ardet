@@ -36,6 +36,8 @@ import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
+import { update as updateIdle, draw as drawIdle } from './world/idle.js';
+import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
@@ -199,6 +201,7 @@ function render() {
   drawMonsters({ x: camX, y: camY });
 
   drawPlayer(player);
+  drawWorldWhisper({ x: camX, y: camY });
 
   worldCtx.restore();
 
@@ -281,6 +284,13 @@ function drawLocation(ctx, loc) {
 function drawHUD(ctx) {
   drawLorePopup(ctx);
   drawAchPopup(ctx);
+  drawIdle(ctx);
+}
+
+// Whisper is on world layer (positioned in world coords)
+function drawWorldWhisper(camObj) {
+  const worldCtx = layers.ctx('world');
+  drawWhisper(worldCtx, camObj);
 }
 
 // ═══ GAME LOGIC ═══
@@ -338,6 +348,8 @@ function updateGame() {
   updateBrainrot(player);
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
+  updateIdle(player.moving);
+  checkWhisper(player, locations);
 }
 
 // ═══ LOOP ═══
