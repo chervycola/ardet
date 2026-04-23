@@ -84,9 +84,13 @@ canvas#game {
   display: none;
   z-index: 200;
   background: rgba(5,5,16,0.96);
-  border: 2px solid var(--c-crimson);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(107,15,26,0.6);
+  border-top: 2px solid var(--c-gold);
   padding: 3px;
   min-width: 180px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 0 15px rgba(107,15,26,0.15);
 }
 #menu.on { display: block; }
 #menu-inscription {
@@ -115,16 +119,21 @@ canvas#game {
   position: fixed;
   display: none;
   z-index: 210;
-  background: rgba(5,5,16,0.96);
-  border: 2px solid var(--c-crimson);
-  padding: 16px 20px;
-  max-width: 380px;
-  width: 380px;
+  background: rgba(5,5,16,0.97);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(107,15,26,0.4);
+  border-top: 2px solid var(--c-gold);
+  padding: 18px 22px;
+  max-width: 400px;
+  width: 400px;
   max-height: 70vh;
   overflow-y: auto;
   font-size: 10px;
   line-height: 2;
+  color: var(--c-bone);
   -webkit-overflow-scrolling: touch;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 20px rgba(27,20,100,0.15);
 }
 #look.on { display: block; }
 #look h3 {

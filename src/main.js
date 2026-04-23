@@ -38,6 +38,7 @@ import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achi
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
+import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
@@ -199,6 +200,7 @@ function render() {
   drawPets({ x: camX, y: camY });
   drawSilentCat(player, { x: camX, y: camY }, locations);
   drawMonsters({ x: camX, y: camY });
+  drawParticles(worldCtx, { x: camX, y: camY });
 
   drawPlayer(player);
   drawWorldWhisper({ x: camX, y: camY });
@@ -308,6 +310,7 @@ function updateGame() {
     if (move.x > 0) player.dir = 1;
     else if (move.x < 0) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
+    if (t % 8 === 0) footstepDust(player.x, player.y);
   } else if (player.moving) {
     // Auto-walk toward target
     const dx = player.tx - player.x;
@@ -350,6 +353,10 @@ function updateGame() {
   updateZone(getZone(player.x, player.y));
   updateIdle(player.moving);
   checkWhisper(player, locations);
+  updateParticles();
+
+  // Fire embers at campfire
+  if (t % 3 === 0) fireEmber(775, 795);
 }
 
 // ═══ LOOP ═══
@@ -413,6 +420,7 @@ events.on(E.OBSERVER_MET, (npcId) => {
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text);
   playPickup();
+  pickupSparkle(item.x, item.y);
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
