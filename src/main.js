@@ -34,6 +34,8 @@ import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistan
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
+import { update as updatePets, draw as drawPets } from './world/pets.js';
+import { draw as drawAchPopup } from './ui/achPopup.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -173,6 +175,7 @@ function render() {
   drawInscriptions({ x: camX, y: camY }, locations);
   drawJesterGraffiti({ x: camX, y: camY });
   drawJesterWandering({ x: camX, y: camY }, locations);
+  drawPets({ x: camX, y: camY });
 
   drawPlayer(player);
 
@@ -250,6 +253,7 @@ function drawLocation(ctx, loc) {
 
 function drawHUD(ctx) {
   drawLorePopup(ctx);
+  drawAchPopup(ctx);
 }
 
 // ═══ GAME LOGIC ═══
@@ -302,6 +306,7 @@ function updateGame() {
   // Update world-level systems
   updateJester(camera);
   updateProximity(player, locations);
+  updatePets();
 }
 
 // ═══ LOOP ═══
