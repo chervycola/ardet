@@ -345,8 +345,8 @@
     .mi i{font-size:14px}
     
     /* Look panel — centered on mobile */
-    #look{left:50%!important;top:50%!important;transform:translate(-50%,-50%);max-width:88vw;width:320px;font-size:8px;line-height:2;max-height:70vh;overflow-y:auto}
-    #look h3{font-size:10px}
+    #look{left:50%!important;top:50%!important;transform:translate(-50%,-50%);max-width:92vw;width:340px;font-size:11px;line-height:1.8;max-height:75vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px}
+    #look h3{font-size:12px}
     
     /* Dialogue — bigger, full-width */
     #dlg{height:auto;min-height:170px;max-height:45vh;padding:12px 16px}
@@ -354,7 +354,7 @@
     #dp canvas{width:64px;height:86px}
     #dn{font-size:10px}
     #dt{font-size:10px;line-height:2}
-    .dopt{font-size:10px;padding:8px 0;min-height:36px}
+    .dopt{font-size:10px;padding:10px 0;min-height:44px}
     
     /* Shops — full mobile layout */
     .shop-overlay{padding:16px 12px;justify-content:flex-start}
@@ -10629,6 +10629,11 @@ function handleKeys(){
       const px1=nx+pmx-pw/2,py1=ny+pmy-ph/2;
       if(px1<l.x+l.w&&px1+pw>l.x&&py1<l.y+l.h&&py1+ph>l.y){blocked=true;break;}
     }
+    if(!blocked&&!talkedNPCs.has('jester')){
+      if(nx<380||nx>1820||ny<480||ny>1320){blocked=true;
+        if(t%180===0)lorePopup={text:'Что-то не пускает. Может, стоит поговорить с кем-нибудь у костра.',life:240};
+      }
+    }
     if(!blocked){player.x=nx;player.y=ny;}
     else{
       // Try sliding along X only
@@ -10834,7 +10839,7 @@ function drawIdleMsg(){
 // ═══════════════════════════════════════
 let whisper={text:'',life:0};
 let _lastWhisperEnd=0;
-const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...круг не размыкается...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...лента продолжает ехать... без пальца...',junkyard:'...автопилот всё ещё едет... серверов больше нет, а она снимает...',train:'...трава у колёс не растёт... боится...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...школа №1... 24.05... учебная тревога повторяется...',exit:'...dead internet... 38% страниц уже не существуют... link rot...',crater:'...ни орла ни решки... он ждал...',overpass:'...тебе не обязательно сегодня...',riverbed:'...вода помнит цвет...',billboard:'...beeple... 69 миллионов... за jpeg...',powerline:'...фантомный гул...',ruins:'...аннушка уже разлила... примус починен...',pipeline:'...nord stream... 26.09.2022... пузыри четверо суток...',watchtower:'...prism... xkeyscore... сорм-3... кто-то только что ушёл...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',altar:'...приложи ладонь. мох ждал.',posterwall:'...пять свечей... пять дат... выход был заперт снаружи...',banner:'...coming soon...'};
+const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...круг не размыкается...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...лента продолжает ехать... без пальца...',junkyard:'...автопилот всё ещё едет... серверов больше нет, а она снимает...',train:'...трава у колёс не растёт... боится...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...учебная тревога повторяется...',exit:'...dead internet... 38% страниц уже не существуют... link rot...',crater:'...ни орла ни решки... он ждал...',overpass:'...тебе не обязательно сегодня...',riverbed:'...вода помнит цвет...',billboard:'...beeple... 69 миллионов... за jpeg...',powerline:'...фантомный гул...',ruins:'...аннушка уже разлила... примус починен...',pipeline:'...nord stream... 26.09.2022... пузыри четверо суток...',watchtower:'...prism... xkeyscore... сорм-3... кто-то только что ушёл...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',altar:'...приложи ладонь. мох ждал.',posterwall:'...пять свечей... пять дат... выход был заперт снаружи...',banner:'...coming soon...'};
 function checkWhisper(){
   if(whisper.life>0)return;
   if(t-_lastWhisperEnd<10800)return;
@@ -12563,6 +12568,7 @@ function loop(){
           const px1=nx+pmx-pw/2,py1=ny+pmy-ph/2;
           if(px1<l.x+l.w&&px1+pw>l.x&&py1<l.y+l.h&&py1+ph>l.y){blocked=true;break;}
         }
+        if(!blocked&&!talkedNPCs.has('jester')&&(nx<380||nx>1820||ny<480||ny>1320))blocked=true;
         if(!blocked){player.x=nx;player.y=ny;}
         else{player.moving=false;player.tx=player.x;player.ty=player.y;}
         player.walkFrame=(player.walkFrame+1)%24;
@@ -14782,13 +14788,18 @@ function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRe
   }
   if(clicked){
     const px_=clicked.x+clicked.w/2-6,py=clicked.y+clicked.h+5;
+    if(!talkedNPCs.has('jester')&&(px_<380||px_>1820||py<480||py>1320)){
+      lorePopup={text:'Что-то не пускает. Может, стоит поговорить с кем-нибудь у костра.',life:240};
+    }else{
     const dist=Math.sqrt((player.x-px_)**2+(player.y-py)**2);
     player.tx=px_;player.ty=py;
-    // Distance threshold — if close enough, open menu immediately
     if(dist<85){player.x=px_;player.y=py;player.moving=false;activeLoc=clicked;showMenu(clicked);}
     else{player.moving=true;activeLoc=clicked;}
+    }
   }else{
-    player.tx=clamp(gx-6,10,MW-20);player.ty=clamp(gy-10,170,MH-30);player.moving=true;activeLoc=null;
+    let tx=clamp(gx-6,10,MW-20),ty=clamp(gy-10,170,MH-30);
+    if(!talkedNPCs.has('jester')){tx=clamp(tx,380,1820);ty=clamp(ty,480,1320);}
+    player.tx=tx;player.ty=ty;player.moving=true;activeLoc=null;
   }}
 // Canvas click — handles all game state transitions from canvas
 function handleCanvasClick(cx,cy,e){
@@ -14809,11 +14820,13 @@ C.addEventListener('touchend',e=>{e.preventDefault();const touch=e.changedTouche
 C.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 // Track touch position for hover-like behavior
+let _lastTouchHover=0;
 C.addEventListener('touchmove',e=>{
   e.preventDefault();
   const touch=e.touches[0];
   mx=touch.clientX;my=touch.clientY;
-  if(state==='game')checkHover(touch.clientX,touch.clientY);
+  const now=performance.now();
+  if(state==='game'&&now-_lastTouchHover>100){_lastTouchHover=now;checkHover(touch.clientX,touch.clientY);}
 },{passive:false});
 document.querySelectorAll('.mi').forEach(el=>el.addEventListener('click',(e)=>{e.stopPropagation();menuAction(el.dataset.a);}));
 document.addEventListener('click',e=>{
