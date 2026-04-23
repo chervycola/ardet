@@ -13,7 +13,14 @@ import { tryMove, findLocationAt } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
 import { input } from './core/input.js';
+import { t as _t, tick } from './core/time.js';
 import { drawPlayer } from './sprites/player.js';
+import { setCtx } from './render/context.js';
+import { drawNPC_jester } from './sprites/npcs/jester.js';
+import { drawNPC_sol } from './sprites/npcs/sol.js';
+import { drawNPC_elder } from './sprites/npcs/elder.js';
+import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
+import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -58,8 +65,17 @@ for (const loc of locations) {
 }
 
 // ═══ TIME ═══
-let t = 0;
+import { t } from './core/time.js';
 let dayCycle = 0.35; // 0 = night, 1 = day (for now: permanent dusk)
+
+// NPC draw dispatch
+const npcDrawFn = {
+  jester: drawNPC_jester,
+  sol: drawNPC_sol,
+  elder: drawNPC_elder,
+  nocturnal: drawNPC_nocturnal,
+  dumpster: drawDumpsterDemon,
+};
 
 // ═══ RENDER ═══
 function render() {
@@ -86,16 +102,18 @@ function render() {
   // ── WORLD: locations + player ──
   worldCtx.save();
   worldCtx.translate(-camX, -camY);
+  setCtx(worldCtx);
 
-  // Draw locations (sorted by y for proper depth)
   const sortedLocs = [...locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
   for (const loc of sortedLocs) {
     if (!camera.isVisible(loc.x, loc.y, loc.w, loc.h)) continue;
     drawLocationPlaceholder(worldCtx, loc);
+    if (loc.npc && npcDrawFn[loc.npc]) {
+      npcDrawFn[loc.npc](loc.x, loc.y);
+    }
   }
 
-  // Player
-  drawPlayer(worldCtx, player, t);
+  drawPlayer(player);
 
   worldCtx.restore();
 
@@ -179,7 +197,7 @@ function updateGame() {
 
 // ═══ LOOP ═══
 function loop() {
-  t++;
+  tick();
   updateGame();
   render();
   requestAnimationFrame(loop);

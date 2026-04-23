@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════
 // PLAYER sprite — the wanderer
+import { X } from '../render/context.js';
 // ═══════════════════════════════════════
 import { rect, px } from '../render/draw.js';
 
@@ -9,7 +10,10 @@ const P = {
   dwood: '#1a0e06', crimson: '#6b0f1a', gold: '#b8860b',
 };
 
-export function drawPlayer(ctx, player, t) {
+import { t } from '../core/time.js';
+
+export function drawPlayer(player) {
+  const ctx = X;
   const x = Math.floor(player.x);
   const y = Math.floor(player.y);
   const dir = player.dir || 1;
