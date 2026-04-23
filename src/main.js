@@ -29,6 +29,7 @@ import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadC
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
 import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
+import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -37,6 +38,7 @@ input.init(mainCanvas);
 attachContent(looks, dialogues);
 initUI();
 initMetaFx();
+initTerminal();
 
 // Load saved progress
 const savedData = loadGame();
@@ -340,6 +342,10 @@ events.on(E.OBSERVER_MET, (npcId) => {
 });
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text);
+});
+events.on('location.use', (loc) => {
+  if (loc.id === 'terminal') openTerminal();
+  // Other use actions can be added here
 });
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
