@@ -341,7 +341,8 @@
     /* Menu — centered bottom on mobile, not follow mouse */
     #menu{left:50%!important;top:auto!important;bottom:60px!important;transform:translateX(-50%);min-width:240px;max-width:90vw}
     #menu-inscription{max-width:none;font-size:7px;text-align:center}
-    .mi{font-size:11px;padding:14px 18px;min-height:44px}
+    .mi{font-size:11px;padding:14px 18px;min-height:44px;transition:background .1s}
+    .mi:active{background:rgba(184,134,11,.15)}
     .mi i{font-size:14px}
     
     /* Look panel — centered on mobile */
@@ -354,7 +355,8 @@
     #dp canvas{width:64px;height:86px}
     #dn{font-size:10px}
     #dt{font-size:10px;line-height:2}
-    .dopt{font-size:10px;padding:10px 0;min-height:44px}
+    .dopt{font-size:10px;padding:10px 0;min-height:44px;transition:background .1s}
+    .dopt:active{background:rgba(184,134,11,.15)}
     
     /* Shops — full mobile layout */
     .shop-overlay{padding:16px 12px;justify-content:flex-start}
@@ -366,7 +368,8 @@
     .si-n{font-size:8px}
     .si-d{font-size:6px;line-height:1.5}
     .si-p{font-size:8px}
-    .sx{font-size:10px;padding:14px 28px;min-height:44px;width:100%;max-width:300px}
+    .sx{font-size:10px;padding:14px 28px;min-height:44px;width:100%;max-width:300px;transition:background .1s}
+    .sx:active{background:rgba(184,134,11,.15)}
     
     /* Events */
     .event-card{flex-direction:column;gap:8px;padding:12px}
@@ -10631,7 +10634,7 @@ function handleKeys(){
     }
     if(!blocked&&!talkedNPCs.has('jester')){
       if(nx<380||nx>1820||ny<480||ny>1320){blocked=true;
-        if(t%180===0)lorePopup={text:'Что-то не пускает. Может, стоит поговорить с кем-нибудь у костра.',life:240};
+
       }
     }
     if(!blocked){player.x=nx;player.y=ny;}
@@ -10759,14 +10762,7 @@ function drawLorePopup(){
   X.globalAlpha=1;
   lorePopup.life--;
 }
-function drawInventory(){
-  // HUD counter top-left
-  const count=collected.size;
-  X.globalAlpha=.5;X.fillStyle='#000';X.fillRect(4,4,80,14);
-  X.globalAlpha=.7;X.fillStyle=P.amber;X.font='7px "Press Start 2P"';
-  X.fillText('◆ '+count+'/'+loreItems.length,8,13);
-  X.globalAlpha=1;
-}
+function drawInventory(){}
 // FPS counter removed — diagnostic only. Watchdog errors still log to console.
 
 // ═══════════════════════════════════════
@@ -11083,7 +11079,7 @@ function _buildGlitchShard(){
   // Pick entry edge 0=top, 1=right, 2=bottom, 3=left
   const edge=Math.floor(Math.random()*4);
   // Area ratio: ~1/3 on mobile (<600px viewport), ~1/5 desktop
-  const isMobile=window.innerWidth<700;
+  const isMobile=window.innerWidth<=768;
   const ratio=isMobile?.33:.2;
   // Approximate target area
   const targetArea=VW*VH*ratio;
@@ -12903,6 +12899,19 @@ function closeLook(){
   state='game';activeLoc=null;
   lookPages=[];lookPageIdx=0;
 }
+// Swipe to advance look pages on mobile
+(function(){
+  const el=document.getElementById('look');
+  let sx=0,sy=0;
+  el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){
+      if(dx<0)advanceOrCloseLook();
+      else if(lookPageIdx>0){lookPageIdx--;renderLookPage();}
+    }
+  },{passive:true});
+})();
 function handleUse(loc){
   switch(loc.useAction){
     case'terminal':openTerminal();break;
@@ -14789,7 +14798,6 @@ function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRe
   if(clicked){
     const px_=clicked.x+clicked.w/2-6,py=clicked.y+clicked.h+5;
     if(!talkedNPCs.has('jester')&&(px_<380||px_>1820||py<480||py>1320)){
-      lorePopup={text:'Что-то не пускает. Может, стоит поговорить с кем-нибудь у костра.',life:240};
     }else{
     const dist=Math.sqrt((player.x-px_)**2+(player.y-py)**2);
     player.tx=px_;player.ty=py;
