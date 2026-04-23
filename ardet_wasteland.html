@@ -10653,26 +10653,42 @@ function drawLorePopup(){
   const LORE_TOTAL=900;
   const a=lorePopup.life>80?Math.min(1,(LORE_TOTAL-lorePopup.life)/60):lorePopup.life/80;
   X.globalAlpha=a*.9;
-  // Dynamic height based on text length — bigger box, more breathing room
   const w=Math.min(VW-16,560);
-  // Press Start 2P is monospace; at 9px each char is ~9px wide
   const FONT_SIZE=9,CHAR_W=9,LINE_H=16;
   const maxChars=Math.floor((w-20)/CHAR_W);
-  // Estimate lines needed
   const estLines=Math.max(3,Math.ceil(lorePopup.text.length/maxChars)+1);
   const boxH=Math.min(VH-30,Math.max(90,estLines*LINE_H+22));
   const x_=(VW-w)/2,y_=VH-boxH-8;
   rect(X,x_,y_,w,boxH,'rgba(5,5,16,0.96)');
   X.strokeStyle=P.crimson;X.lineWidth=1;X.strokeRect(x_,y_,w,boxH);
-  // Top accent line — gold
   rect(X,x_+1,y_+1,w-2,1,P.gold);
-  // Typing — ~1 char per 3 frames (slow, deliberate)
-  X.fillStyle=P.bone;X.font=FONT_SIZE+'px "Press Start 2P"';
+  X.font=FONT_SIZE+'px "Press Start 2P"';
   const elapsed=LORE_TOTAL-lorePopup.life;
-  const charCount=Math.min(lorePopup.text.length,Math.floor(elapsed/3));
-  const txt=lorePopup.text.substring(0,charCount);
-  // Word wrap — hard-break words longer than maxChars
+  const totalLen=lorePopup.text.length;
+  const typeDone=Math.floor(elapsed/3);
+  const charCount=Math.min(totalLen,typeDone);
+  const fullyTyped=charCount>=totalLen;
+  const burnDelay=120;
+  let burnCount=0;
+  if(fullyTyped){
+    const burnElapsed=elapsed-typeDone*3-burnDelay;
+    if(burnElapsed>0)burnCount=Math.min(totalLen,Math.floor(burnElapsed/2));
+  }
+  const visStart=burnCount;
+  const visEnd=charCount;
+  const txt=lorePopup.text.substring(visStart,visEnd);
   const words=txt.split(' ');let line='';let ly=y_+18;
+  if(burnCount>0){
+    const burnFrac=burnCount/totalLen;
+    const emberR=Math.floor(180+burnFrac*75);
+    const emberChars=Math.min(3,totalLen-burnCount);
+    const emberTxt=lorePopup.text.substring(Math.max(0,visStart-emberChars),visStart);
+    if(emberTxt){
+      X.fillStyle=`rgba(${emberR},60,10,${.6-burnFrac*.3})`;
+      X.fillText(emberTxt,x_+10,ly);
+    }
+  }
+  X.fillStyle=P.bone;
   words.forEach(word=>{
     while(word.length>maxChars){
       if(line.trim()){X.fillText(line,x_+10,ly);ly+=LINE_H;line='';}
@@ -10683,11 +10699,11 @@ function drawLorePopup(){
     else line+=word+' ';
   });
   if(line.trim())X.fillText(line,x_+10,ly);
-  // Blinking cursor while typing
-  if(charCount<lorePopup.text.length&&t%40<20){
+  if(!fullyTyped&&t%40<20){
     const cursorX=x_+10+line.length*CHAR_W;
     rect(X,cursorX,ly-FONT_SIZE,5,FONT_SIZE+1,P.term);
   }
+  if(burnCount>=totalLen&&lorePopup.life>80)lorePopup.life=80;
   X.globalAlpha=1;
   lorePopup.life--;
 }
@@ -12407,6 +12423,39 @@ function checkBlankScreen(){
   }
 }
 checkBlankScreen();
+// ═══════════════════════════════════════
+// SESSION MEMORY — world shifts between visits
+// ═══════════════════════════════════════
+const sessionAge=parseInt(localStorage.getItem('ardet_visits')||'1',10);
+const sessionShift={
+  mossThicker:Math.min(1,sessionAge/30),   // moss grows denser 0→1 over 30 sessions
+  colorsDesaturated:Math.min(.15,sessionAge*.005), // colors fade up to 15%
+  idleAlternates:[                          // replacement idle msgs after 10+ sessions
+    'ты уже был здесь','стены узнали тебя','мох помнит твой запах',
+    'трещины стали шире','пиксели гаснут быстрее','колесо сделало ещё один оборот',
+    'кот постарел','записи на стенах бледнее','воздух гуще','пепел глубже',
+  ],
+};
+function applySessionShift(){
+  if(sessionAge>=10&&Math.random()<.3){
+    const alt=sessionShift.idleAlternates;
+    idleMsgs.push(alt[Math.floor(Math.random()*alt.length)]);
+  }
+  if(sessionAge>=5){
+    dyingPixels.interval=Math.max(600,3600-sessionAge*60);
+  }
+  if(sessionAge>=15){
+    screenMoss.retreatSpeed=Math.max(.005,.015-sessionAge*.0003);
+  }
+}
+applySessionShift();
+function drawSessionDesaturation(){
+  if(sessionShift.colorsDesaturated<.01)return;
+  X.globalAlpha=sessionShift.colorsDesaturated;
+  X.fillStyle='#1a1a1a';
+  X.fillRect(0,0,VW,VH);
+  X.globalAlpha=1;
+}
 function getDayLightMod(){return .7+dayCycle*.3;} // lights slightly larger at night
 // ═══════════════════════════════════════
 function render(){
@@ -12432,7 +12481,7 @@ function render(){
   drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
   drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
   drawTextGhosts();drawBinaryGlitch();drawRealityShift();
-  drawScreenMoss();drawCrackedGlass();drawDyingPixels();
+  drawScreenMoss();drawCrackedGlass();drawDyingPixels();drawSessionDesaturation();
   drawCinematicTint();
   if(endingTriggered)drawEnding();
 }
