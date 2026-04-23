@@ -320,7 +320,7 @@
     /* ═══ MOBILE LAYOUT ═══ */
     html,body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
     body{cursor:auto}
-    canvas#game{touch-action:none}
+    canvas#game{touch-action:none;object-fit:fill!important;width:100vw!important;height:100vh!important}
     #crt{display:none} /* CRT too heavy on mobile */
     
     /* Entry — vertical stack on mobile */
@@ -935,12 +935,40 @@ console.log = function(...args) {
 // ═══════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════
-const VW=640,VH=400,MW=3000,MH=1800;
+const MW=3000,MH=1800;
 const _DPR=Math.min(window.devicePixelRatio||1,2);
+// VW/VH adapt to viewport on mobile — keeps sprite scale consistent, fills screen
+let VW=640,VH=400;
+function _calcViewport(){
+  const w=window.innerWidth,h=window.innerHeight;
+  if(w<=768){
+    // Mobile: scale so 1 game pixel ≈ 2 CSS pixels (crisp pixel art, same sprite scale)
+    const scale=2;
+    VW=Math.floor(w/scale);
+    VH=Math.floor(h/scale);
+  }else{
+    // Desktop: keep 640x400 aspect, scaled via CSS
+    VW=640;VH=400;
+  }
+}
+_calcViewport();
 const C=document.getElementById('game');const X=C.getContext('2d');
-C.width=VW*_DPR;C.height=VH*_DPR;X.scale(_DPR,_DPR);
+function _applyCanvasSize(){
+  C.width=VW*_DPR;C.height=VH*_DPR;
+  X.setTransform(_DPR,0,0,_DPR,0,0);
+  if(window.innerWidth<=768){C.style.width='100vw';C.style.height='100vh';C.style.objectFit='fill';}
+}
+_applyCanvasSize();
 const TC=document.createElement('canvas');TC.width=MW;TC.height=MH;const TX=TC.getContext('2d');
 const LC=document.createElement('canvas');LC.width=VW*_DPR;LC.height=VH*_DPR;const LX=LC.getContext('2d');LX.scale(_DPR,_DPR);
+function _resyncLC(){
+  LC.width=VW*_DPR;LC.height=VH*_DPR;
+  LX.setTransform(_DPR,0,0,_DPR,0,0);
+}
+// Handle resize/rotation
+window.addEventListener('resize',()=>{
+  _calcViewport();_applyCanvasSize();_resyncLC();
+});
 
 // ═══════════════════════════════════════
 // PALETTE
@@ -10363,8 +10391,7 @@ function getLights(){
 }
 function renderLighting(){
   LX.clearRect(0,0,VW,VH);
-  // Darkness level — reduced on mobile for visibility
-  const darkAlpha=_isMobileDevice?(.55+.1*(1-dayCycle)):(.82+.12*(1-dayCycle));
+  const darkAlpha=.82+.12*(1-dayCycle);
   LX.fillStyle=`rgba(3,2,1,${darkAlpha})`;LX.fillRect(0,0,VW,VH);
   LX.globalCompositeOperation='destination-out';
   const lights=getLights();
@@ -10400,12 +10427,9 @@ function renderLighting(){
 // ═══════════════════════════════════════
 // CAMERA
 // ═══════════════════════════════════════
-// Mobile camera zoom — show more world on small screens
 const _isMobileDevice=window.innerWidth<=768;
-const _mobileZoom=_isMobileDevice?.5:1;
 function updateCamera(){
-  const effVW=VW/_mobileZoom,effVH=VH/_mobileZoom;
-  const tx=player.x+6-effVW/2,ty=player.y+10-effVH/2;
+  const tx=player.x+6-VW/2,ty=player.y+10-VH/2;
   cam.x=lerp(cam.x,tx,.055);
   cam.y=lerp(cam.y,ty,.055);
   if(shakeT>0){cam.x+=Math.sin(shakeT*1.5)*3*(shakeT/12);cam.y+=Math.cos(shakeT*2)*2*(shakeT/12);shakeT--;}
@@ -12756,30 +12780,23 @@ function getDayLightMod(){return .7+dayCycle*.3;} // lights slightly larger at n
 // ═══════════════════════════════════════
 function render(){
   X.imageSmoothingEnabled=false;X.clearRect(0,0,VW,VH);
-  // Mobile zoom — scale world down to show more
-  if(_mobileZoom<1){X.save();X.scale(_mobileZoom,_mobileZoom);}
-  const effVW=VW/_mobileZoom,effVH=VH/_mobileZoom;
-  // Wasteland beyond map
   drawWasteland();
-  // Terrain (parallax sky + ground)
   if(terrainReady){
     const skyH=160;
-    const skyOffX=clamp(cam.x*.3,0,MW-effVW),skyOffY=clamp(cam.y*.3,0,160);
-    if(cam.y<MH-effVH+skyH&&cam.x>=0&&cam.x<=MW-effVW){
-      X.drawImage(TC,skyOffX,skyOffY,effVW,skyH,0,Math.max(0,-cam.y),effVW,skyH);
+    const skyOffX=clamp(cam.x*.3,0,MW-VW),skyOffY=clamp(cam.y*.3,0,160);
+    if(cam.y<MH-VH+skyH&&cam.x>=0&&cam.x<=MW-VW){
+      X.drawImage(TC,skyOffX,skyOffY,VW,skyH,0,Math.max(0,-cam.y),VW,skyH);
     }
-    const gx=clamp(cam.x,0,MW-effVW),gy=clamp(cam.y+skyH,skyH,MH);
-    const gh=Math.min(effVH-skyH,MH-gy);
-    if(gh>0&&cam.x>=0&&cam.x<=MW-effVW){
-      X.drawImage(TC,gx,gy,effVW,gh,0,skyH+Math.max(0,-cam.y),effVW,gh);
+    const gx=clamp(cam.x,0,MW-VW),gy=clamp(cam.y+skyH,skyH,MH);
+    const gh=Math.min(VH-skyH,MH-gy);
+    if(gh>0&&cam.x>=0&&cam.x<=MW-VW){
+      X.drawImage(TC,gx,gy,VW,gh,0,skyH+Math.max(0,-cam.y),VW,gh);
     }
   }
   drawBloodMoon();
   drawFootprints();drawLoreItems();drawSmokeClouds();drawLocs();drawMossGrowth();drawWallInscriptions();drawJesterWandering();drawPetCrossings();drawMonsters();drawDynamicShadows();drawPlayer();drawParticles();
   drawClickMarker();renderLighting();drawHeatDistortion();drawDiscoveryPing();
   drawWhisper();drawZoneEffects();drawDayCycle();drawSand();drawWeather();drawRain();drawAmbientEffects();
-  if(_mobileZoom<1){X.restore();}
-  // HUD and overlays at normal scale (after restore)
   drawLorePopup();drawRadio();drawEcho();drawIdleMsg();drawInventory();drawAchPopup();drawSavePopup();drawBrainrot();
   drawTextGhosts();drawBinaryGlitch();drawRealityShift();
   drawScreenMoss();drawCrackedGlass();drawDyingPixels();drawSessionDesaturation();
@@ -12878,7 +12895,7 @@ drawCur('none');
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;document.getElementById('cur').style.transform=`translate(${e.clientX-9}px,${e.clientY-9}px)`;if(state==='game')checkHover(e.clientX,e.clientY);});
 function checkHover(cx,cy){
   const r=C.getBoundingClientRect();
-  const gx=(cx-r.left)*(VW/r.width)/_mobileZoom+cam.x,gy=(cy-r.top)*(VH/r.height)/_mobileZoom+cam.y;
+  const gx=(cx-r.left)*(VW/r.width)+cam.x,gy=(cy-r.top)*(VH/r.height)+cam.y;
   let found=null;let bestD=Infinity;
   for(const l of locs){
     if(gx>=l.x-24&&gx<=l.x+l.w+24&&gy>=l.y-24&&gy<=l.y+l.h+24){
@@ -15034,7 +15051,7 @@ function triggerGreenPit(){
 function closeShop(){document.querySelectorAll('.shop-overlay').forEach(e=>e.classList.remove('on'));state='game';activeLoc=null;currentShopAnim=null;}
 
 // CLICKS
-function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRect();const gx=(cx-r.left)*(VW/r.width)/_mobileZoom+cam.x,gy=(cy-r.top)*(VH/r.height)/_mobileZoom+cam.y;
+function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRect();const gx=(cx-r.left)*(VW/r.width)+cam.x,gy=(cy-r.top)*(VH/r.height)+cam.y;
   // Click marker (#2)
   clickMarker={x:gx,y:gy,life:30};
   let clicked=null;let bestDist=Infinity;
