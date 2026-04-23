@@ -38,6 +38,7 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
+import { useTexts } from './world/useActions.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -385,8 +386,13 @@ events.on(E.LORE_COLLECT, (item) => {
   playPickup();
 });
 events.on('location.use', (loc) => {
-  if (loc.id === 'terminal') openTerminal();
-  // Other use actions can be added here
+  if (loc.id === 'terminal') { openTerminal(); return; }
+  // Find useAction key from location data
+  const actionKey = loc.useAction || loc.id;
+  const action = useTexts[actionKey];
+  if (action) {
+    showLook({ name: action.title, look: action.text });
+  }
 });
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
