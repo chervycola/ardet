@@ -10833,9 +10833,11 @@ function drawIdleMsg(){
 // WHISPERS (#5)
 // ═══════════════════════════════════════
 let whisper={text:'',life:0};
+let _lastWhisperEnd=0;
 const whisperMap={church:'...lasciate ogni speranza...',crypt:'...девять ярусов вниз...',lake:'...how dared... how dare...',cross:'...круг не размыкается...',raven:'...некрономикон... .dna...',pizzeria:'...47 столов... одно блюдо... welcome куда?...',radio:'...лента продолжает ехать... без пальца...',junkyard:'...автопилот всё ещё едет... серверов больше нет, а она снимает...',train:'...трава у колёс не растёт... боится...',library:'...мох читает с полки 7-G...',fountain:'...чума мутировала... передаётся через текст...',graffiti:'...мох — финальный бренд...',basement:'...iä! iä!...',campfire:'...примус починил...',terminal:'...how can I help you today?...',tent:'...без меня народ неполный...',vending:'...мериты... крути... цикл замкнут...',bus:'...школа №1... 24.05... учебная тревога повторяется...',exit:'...dead internet... 38% страниц уже не существуют... link rot...',crater:'...ни орла ни решки... он ждал...',overpass:'...тебе не обязательно сегодня...',riverbed:'...вода помнит цвет...',billboard:'...beeple... 69 миллионов... за jpeg...',powerline:'...фантомный гул...',ruins:'...аннушка уже разлила... примус починен...',pipeline:'...nord stream... 26.09.2022... пузыри четверо суток...',watchtower:'...prism... xkeyscore... сорм-3... кто-то только что ушёл...',pit:'...братишка... покушать... принёс...',nocturnal:'......(тишина)......',theater:'...они играют. одиннадцать лет. одну сцену.',altar:'...приложи ладонь. мох ждал.',posterwall:'...пять свечей... пять дат... выход был заперт снаружи...',banner:'...coming soon...'};
 function checkWhisper(){
   if(whisper.life>0)return;
+  if(t-_lastWhisperEnd<1800)return;
   locs.forEach(l=>{
     if(!whisperMap[l.id])return;
     const dx=player.x-l.x-l.w/2,dy=player.y-l.y-l.h/2;
@@ -10852,6 +10854,7 @@ function drawWhisper(){
   X.globalAlpha=a*.35;X.fillStyle=P.bone;X.font='7px "Press Start 2P"';
   X.textAlign='center';X.fillText(whisper.text,sx,sy);X.textAlign='left';
   X.globalAlpha=1;whisper.life--;
+  if(whisper.life<=0)_lastWhisperEnd=t;
 }
 
 // ═══════════════════════════════════════
