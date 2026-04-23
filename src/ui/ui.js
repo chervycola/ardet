@@ -4,6 +4,7 @@
 import { state } from '../core/state.js';
 import { events, E } from '../core/events.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
+import { playClick } from '../audio/audio.js';
 
 // ── MENU (location interaction) ──
 const menuEl = document.getElementById('menu');
@@ -83,6 +84,7 @@ export function hideMenu() {
 export function getActiveLoc() { return activeLoc; }
 
 export function menuAction(action) {
+  playClick();
   menuEl.classList.remove('on');
   const loc = activeLoc;
 

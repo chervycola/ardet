@@ -40,6 +40,7 @@ import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon, updateRain, drawRain } from './render/atmosphere.js';
+import { init as initCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
@@ -58,6 +59,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
+initCursor();
 initAudio();
 
 // Session memory — increment counter, maybe trigger "Мир сгорел" screen
