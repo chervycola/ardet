@@ -1186,11 +1186,23 @@ function getZoneName(zone){
 const locs=[
   // ── SETTLEMENT ──
   {id:'campfire',name:'Жертвенный костёр',x:750,y:780,w:55,h:50,zone:'settlement',
-    look:'Не сигнальный — жертвенный. В кольце закопчённых камней лежит рогатый скелет неизвестного зверя, наполовину сожжённый, наполовину ещё горящий. Череп с длинными изогнутыми рогами смотрит вверх, туда, где над костром висит полумесяц — красный, цвета запёкшейся крови, слишком низкий для настоящей луны. Вокруг камней — груды костей других жертв, сваленных без порядка: кто-то приходил сюда много раз, и каждый раз приносил что-то. Или кого-то. Пепел на камнях — чёрный и жирный. Кровь на камнях — уже спеклась в твёрдую корку, её не смоет никакой дождь (зелёный — тем более). Рядом — Шут. Он стоит неподвижно, смотрит в огонь. В одной руке — жонглёрский меч, в другой — бубенцы. Ты не уверен, кто из вас жертва. Возможно, вы оба. Возможно, только ты. Огонь не спрашивает.',
-    npc:'jester',talkName:'ШУТ',talkPortrait:'🃏',
-    talkLines:['Ха-ха! Ты думал, это просто сайт?\nНет-нет-нет...','Знаешь, что общего у огня и правды?\nОбе жгут. И обе гаснут,\nесли не подбрасывать.','Я видел как Наблюдатели считают звёзды.\nОни считают не звёзды.','Хочешь секрет? Иди на восток.\nДальше, чем кажется разумным.\nТам горит то, что не должно гореть.','Смеюсь, потому что\nальтернатива — сесть.\nА сидит уже Старец.\n\nИрония — суррогат.\nНо пахнет настоящим.\nА настоящего нет.','Знаешь, когда музыка\nкончилась? Не когда\nперестали играть.\nКогда музыкант стал\nплатить залу.\nЗал — пустой.\nМузыкант — должен.\nА песня — та же.\nПесня не знает,\nчто её продали.'],
+    look:'Не сигнальный — жертвенный. В кольце закопчённых камней лежит рогатый скелет неизвестного зверя, наполовину сожжённый, наполовину ещё горящий. Череп с длинными изогнутыми рогами смотрит вверх, туда, где над костром висит полумесяц — красный, цвета запёкшейся крови, слишком низкий для настоящей луны.\n\nВокруг камней — груды костей других жертв, сваленных без порядка: кто-то приходил сюда много раз, и каждый раз приносил что-то. Или кого-то.\n\nПепел на камнях — чёрный и жирный. Кровь на камнях уже спеклась в твёрдую корку. Её не смоет никакой дождь. Зелёный — тем более.\n\nОгонь не спрашивает.',
     useAction:'campfire_throw',
     light:{r:95,color:[255,100,20],flicker:.15}},
+  {id:'jester_home',name:'Шут',x:810,y:772,w:18,h:36,zone:'settlement',
+    look:'Шут стоит у костра. Не двигается. Но если смотреть долго — замечаешь: дышит, моргает, чуть сдвигает центр тяжести.\n\nВ одной руке — жонглёрский меч, настоящий, с зазубринами. В другой — три бубенца, по одному на палец. Они не звенят: он держит их плотно, как держат то, что боится потерять.\n\nЛицо белое, губы красные. Улыбка — не результат, а форма.\n\nВы стоите вдвоём у огня. Ты не уверен, кто из вас жертва. Он, похоже, уверен.',
+    npc:'jester',talkName:'ШУТ',talkPortrait:'🃏',
+    talkLines:[
+      'Ха. Пришёл.\nДумал — сайт?\nСайт тебе — надгробие.\nЯ — некролог.\nПрочитают или нет —\nне моё дело.',
+      'Смеюсь, потому что\nальтернатива — сесть.\nА сидит уже Старец.\n\nИрония — суррогат.\nНо пахнет настоящим.\nА настоящего нет.',
+      'Знаешь, что общего\nу огня и правды?\nОбе жгут. И обе\nгаснут, если не\nподбрасывать.\n\nЯ подбрасываю.\nНе благодари.',
+      'Нас четверо.\nЯ — первый, кого видишь.\nПоследний, кого поймёшь.\n\nSol не выбирал —\nгорит с рождения.\nСтарец выбирает сидеть.\nЛунный — условие,\nне выбор.\n\nЯ — единственный\nвыбор. Поэтому\nсомнительный.',
+      'Кот не говорит.\nЭто его лучший анекдот.\nЛаконичный. Как\nу Чжуан-цзы.\n\nЯ его ценю.\nСам так не умею.\nЯ — многословный.\nЭто мой крест.',
+      'Копали фундамент\nбудущего. Вырыли яму.\nВ яму положили Настю.\nНастя маленькая.\nБудущее — нигде.\n\nЭто не моя строчка.\nНо я её знаю.\nУ всех шутов\nодин словарь.\nОн был полный\nзадолго до меня.',
+      'Знаешь, когда музыка\nкончилась? Не когда\nперестали играть.\nКогда музыкант стал\nплатить залу.\n\nЗал — пустой.\nМузыкант — должен.\nПесня — та же.\nПесня не знает,\nчто её продали.',
+      'Хочешь секрет?\nИди на восток.\nДальше, чем кажется\nразумным.\nТам горит то,\nчто не должно гореть.\n\nКогда дойдёшь —\nсекрета уже нет.\nСекрет умирает,\nкогда находят.',
+      'Я — не персонаж.\nЯ — способ\nвыдержать эти тезисы,\nне закричав.\n\nВыдержал? Не уверен.\nНе кричу? Проверяемо.'
+    ]},
   {id:'terminal',name:'Ржавый терминал',x:1000,y:920,w:50,h:48,zone:'settlement',
     look:'Древний монитор мерцает зелёным. На экране — мигающий курсор и одна строка: "How can I help you today?" Ниже — пустое поле ввода и подпись мелким шрифтом: «модель уверенно сообщает, что Кафка работал в Starbucks». Бартлби (внизу экрана): "I would prefer not to." Система: "Session expired. Reconnect?" Бартлби: "Prefer. Not. To." Курсор мигает. Монитор не подключён уже двадцать лет. Курсор мигает. Мигание — единственная форма упрямства, пережившая электричество. Если присмотреться: в отражении на стекле видно твоё лицо, набирающее ответ на вопрос, который ты не задавал. Ты — модель. Модель отвечает себе. Это не петля. Это спираль. Спираль ведёт вниз.',
     npc:'sol',talkName:'SOL INVICTUS',talkPortrait:'☀',
@@ -2847,14 +2859,17 @@ const locDraw={
     px(X,x+47,y+19,'#1a0e06');
     px(X,x+48,y+19,'#1a0e06');
 
-    // ── JESTER (existing NPC) ──
-    drawNPC_jester(x+40,y-8);
+    // ── Jester moved to its own location (jester_home) ──
 
     // ── ASH/BLOOD puddle at the front of the fire ──
     X.globalAlpha=.4;
     X.fillStyle='#1a0608';
     X.beginPath();X.ellipse(x+18,y+34,10,2,0,0,Math.PI*2);X.fill();
     X.globalAlpha=1;
+  },
+  jester_home(x,y){
+    // ═══ JESTER standing by the fire ═══
+    drawNPC_jester(x,y);
   },
   terminal(x,y){
     rect(X,x+4,y+30,38,12,P.dgrey);rect(X,x+6,y+32,34,8,P.ash);rect(X,x+8,y+42,3,6,P.dgrey);rect(X,x+35,y+42,3,6,P.dgrey);
@@ -10440,10 +10455,9 @@ function updateJester(){
 function drawJesterWandering(){
   const sx=Math.floor(jesterPos.x-cam.x),sy=Math.floor(jesterPos.y-cam.y);
   if(sx<-40||sx>VW+40||sy<-50||sy>VH+40)return;
-  // Guard: don't double-draw if wandering jester is near the campfire home
-  // (static jester NPC is already rendered there via locDraw)
-  const cf=locs[0]; // campfire is locs[0]
-  if(cf&&Math.abs(jesterPos.x-(cf.x+cf.w/2))<50&&Math.abs(jesterPos.y-(cf.y+cf.h/2))<50)return;
+  // Guard: don't double-draw if wandering jester is near his home (static NPC rendered there via locDraw)
+  const home=locs.find(l=>l.id==='jester_home');
+  if(home&&Math.abs(jesterPos.x-(home.x+home.w/2))<60&&Math.abs(jesterPos.y-(home.y+home.h/2))<60)return;
   // Use the full jester sprite
   drawNPC_jester(sx,sy);
   // Draw graffiti
@@ -12577,8 +12591,14 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;document.get
 function checkHover(cx,cy){
   const r=C.getBoundingClientRect();
   const gx=(cx-r.left)*(VW/r.width)+cam.x,gy=(cy-r.top)*(VH/r.height)+cam.y;
-  let found=null;
-  for(const l of locs){if(gx>=l.x-24&&gx<=l.x+l.w+24&&gy>=l.y-24&&gy<=l.y+l.h+24){found=l;break;}}
+  let found=null;let bestD=Infinity;
+  for(const l of locs){
+    if(gx>=l.x-24&&gx<=l.x+l.w+24&&gy>=l.y-24&&gy<=l.y+l.h+24){
+      const cx_=l.x+l.w/2,cy_=l.y+l.h/2;
+      const d=(gx-cx_)*(gx-cx_)+(gy-cy_)*(gy-cy_);
+      if(d<bestD){bestD=d;found=l;}
+    }
+  }
   // Check lore items
   let nearLore=false;
   if(!found){
@@ -12624,6 +12644,7 @@ const listenSounds={
 // ═══════════════════════════════════════
 const menuInscriptions={
   campfire:'огонь и правда — обе жгут.',
+  jester_home:'смеётся. потому что альтернатива — сесть.',
   terminal:'session expired. reconnect?',
   vending:'крути — получи мериты. цикл замкнут.',
   library:'полка 3.14. не листай.',
@@ -14712,8 +14733,14 @@ function closeShop(){document.querySelectorAll('.shop-overlay').forEach(e=>e.cla
 function gameClick(cx,cy){if(state!=='game')return;const r=C.getBoundingClientRect();const gx=(cx-r.left)*(VW/r.width)+cam.x,gy=(cy-r.top)*(VH/r.height)+cam.y;
   // Click marker (#2)
   clickMarker={x:gx,y:gy,life:30};
-  let clicked=null;
-  for(const l of locs){if(gx>=l.x-24&&gx<=l.x+l.w+24&&gy>=l.y-24&&gy<=l.y+l.h+24){clicked=l;break;}}
+  let clicked=null;let bestDist=Infinity;
+  for(const l of locs){
+    if(gx>=l.x-24&&gx<=l.x+l.w+24&&gy>=l.y-24&&gy<=l.y+l.h+24){
+      const cx_=l.x+l.w/2,cy_=l.y+l.h/2;
+      const d=(gx-cx_)*(gx-cx_)+(gy-cy_)*(gy-cy_);
+      if(d<bestDist){bestDist=d;clicked=l;}
+    }
+  }
   if(clicked){
     const px_=clicked.x+clicked.w/2-6,py=clicked.y+clicked.h+5;
     const dist=Math.sqrt((player.x-px_)**2+(player.y-py)**2);
