@@ -30,7 +30,9 @@ import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
 import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
+import { initShop, openShop } from './ui/shop.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
+import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
@@ -40,6 +42,7 @@ import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUn
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen } from './world/brainrot.js';
+import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 
 // ═══ INIT ═══
@@ -50,6 +53,7 @@ attachContent(looks, dialogues);
 initUI();
 initMetaFx();
 initTerminal();
+initShop();
 initAudio();
 
 // Session memory — increment counter, maybe trigger "Мир сгорел" screen
@@ -226,6 +230,11 @@ function render() {
   postfx.apply(postCtx);
 
   // ── COMPOSITE ──
+  // Ending overlay (on top of everything)
+  if (isEndingActive()) {
+    drawEnding(postCtx);
+  }
+
   layers.composite();
 }
 
@@ -328,6 +337,7 @@ function updateGame() {
   updatePets();
   updateBrainrot(player);
   updateMonsters(player);
+  updateZone(getZone(player.x, player.y));
 }
 
 // ═══ LOOP ═══
@@ -394,8 +404,12 @@ events.on(E.LORE_COLLECT, (item) => {
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
-  // Find useAction key from location data
   const actionKey = loc.useAction || loc.id;
+  // Shop actions
+  if (actionKey === 'shop1') { openShop('shop1'); return; }
+  if (actionKey === 'shop2') { openShop('shop2'); return; }
+  if (actionKey === 'shop3') { openShop('shop3'); return; }
+  // Look-based actions
   const action = useTexts[actionKey];
   if (action) {
     showLook({ name: action.title, look: action.text });
