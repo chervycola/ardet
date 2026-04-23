@@ -434,10 +434,26 @@ canvas#game {
       return { canvas: c, ctx: ctx2 };
     },
     // Screen CSS coords → game world coords (for clicks)
+    // Accounts for object-fit:contain letterboxing on desktop
     screenToGame(screenX, screenY, camX, camY) {
-      const rect2 = document.getElementById("game").getBoundingClientRect();
-      const gx = (screenX - rect2.left) * (this.vw / rect2.width) + camX;
-      const gy = (screenY - rect2.top) * (this.vh / rect2.height) + camY;
+      const canvas = document.getElementById("game");
+      const rect2 = canvas.getBoundingClientRect();
+      const canvasAspect = this.vw / this.vh;
+      const rectAspect = rect2.width / rect2.height;
+      let renderW, renderH, renderX, renderY;
+      if (rectAspect > canvasAspect) {
+        renderH = rect2.height;
+        renderW = rect2.height * canvasAspect;
+        renderX = rect2.left + (rect2.width - renderW) / 2;
+        renderY = rect2.top;
+      } else {
+        renderW = rect2.width;
+        renderH = rect2.width / canvasAspect;
+        renderX = rect2.left;
+        renderY = rect2.top + (rect2.height - renderH) / 2;
+      }
+      const gx = (screenX - renderX) * (this.vw / renderW) + camX;
+      const gy = (screenY - renderY) * (this.vh / renderH) + camY;
       return { x: gx, y: gy };
     }
   };
