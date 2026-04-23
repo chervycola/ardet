@@ -25,6 +25,10 @@ import * as locSprites from './sprites/locations/index.js';
 import { showMenu, hideMenu, initUI, getActiveLoc } from './ui/ui.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
+import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
+import { saveGame, loadGame, startAutoSave } from './core/save.js';
+import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
+import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -32,6 +36,28 @@ layers.init(mainCanvas);
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 initUI();
+initMetaFx();
+
+// Load saved progress
+const savedData = loadGame();
+if (savedData) {
+  if (savedData.player) {
+    player.x = savedData.player.x;
+    player.y = savedData.player.y;
+  }
+  if (savedData.talkedTo) savedData.talkedTo.forEach(n => flags.talkedTo.add(n));
+  if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
+  if (savedData.collectedLore) loadCollected(savedData.collectedLore);
+  console.log('[save] loaded');
+}
+
+// Auto-save every 30 seconds
+startAutoSave(() => ({
+  player: { x: player.x, y: player.y },
+  talkedTo: Array.from(flags.talkedTo),
+  visited: Array.from(flags.visited),
+  collectedLore: getCollectedIds(),
+}));
 
 // Terrain (cached offscreen)
 const terrainCanvas = buildTerrain();
@@ -128,6 +154,8 @@ function render() {
     }
   }
 
+  drawLoreItems({ x: camX, y: camY });
+
   drawPlayer(player);
 
   worldCtx.restore();
@@ -146,6 +174,14 @@ function render() {
 
   // ── UI: HUD ──
   drawHUD(uiCtx);
+
+  // ── FX: meta effects (breaking 4th wall) ──
+  const fxCtx = layers.ctx('fx');
+  screenMoss.update(player.moving);
+  screenMoss.draw(fxCtx);
+  crackedGlass.draw(fxCtx);
+  dyingPixels.update();
+  dyingPixels.draw(fxCtx);
 
   // ── POST: grading + vignette ──
   postfx.apply(postCtx);
@@ -195,11 +231,7 @@ function drawLocation(ctx, loc) {
 }
 
 function drawHUD(ctx) {
-  ctx.globalAlpha = 0.6;
-  ctx.fillStyle = '#8a8d8f';
-  ctx.font = '6px "Press Start 2P"';
-  ctx.fillText(`ARDET V2 · ${scaler.vw}×${scaler.vh} @${scaler.scale}x`, 8, scaler.vh - 8);
-  ctx.globalAlpha = 1;
+  drawLorePopup(ctx);
 }
 
 // ═══ GAME LOGIC ═══
@@ -245,6 +277,9 @@ function updateGame() {
   camera.follow(player.x + 6, player.y + 10);
   camera.update();
   camera.clampToWorld(MW, MH);
+
+  // Check for lore pickup
+  checkLorePickup(player);
 }
 
 // ═══ LOOP ═══
@@ -302,6 +337,9 @@ events.on(E.NPC_TALK, (npcId) => {
 });
 events.on(E.OBSERVER_MET, (npcId) => {
   console.log(`[observer] ${npcId} met`);
+});
+events.on(E.LORE_COLLECT, (item) => {
+  showLore(item.text);
 });
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
