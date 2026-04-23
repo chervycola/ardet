@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════ */
+/* ARDET V2 — design tokens + base styles */
+/* ═══════════════════════════════════════ */
+:root {
+  --c-void: #050510;
+  --c-crimson: #6b0f1a;
+  --c-gold: #b8860b;
+  --c-bone: #e8dcc8;
+  --c-ash: #8a8d8f;
+  --c-indigo: #1b1464;
+  --c-term: #1a8c1a;
+  --c-toxic: #2a5a1a;
+
+  --font-pixel: 'Press Start 2P', monospace;
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--c-void);
+  overflow: hidden;
+  font-family: var(--font-pixel);
+  color: var(--c-bone);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ── Game canvas ── */
+#gw {
+  position: fixed; inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1.5s;
+}
+#gw.on { opacity: 1; }
+
+canvas#game {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  cursor: none;
+}
+
+/* ── Entry screen ── */
+#entry {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--c-void);
+}
+#entry-logo {
+  font-size: clamp(36px, 10vw, 72px);
+  color: var(--c-crimson);
+  letter-spacing: 8px;
+  text-shadow: 0 0 40px rgba(107,15,26,0.5);
+}
+#entry-btn {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--c-ash);
+  background: transparent;
+  border: 1px solid var(--c-crimson);
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: all .3s;
+  min-height: 44px;
+}
+#entry-btn:hover {
+  background: var(--c-crimson);
+  color: var(--c-bone);
+}
+#entry-left {
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+
+/* ── Menu ── */
+#menu {
+  position: fixed;
+  display: none;
+  z-index: 200;
+  background: rgba(5,5,16,0.96);
+  border: 2px solid var(--c-crimson);
+  padding: 3px;
+  min-width: 180px;
+}
+#menu.on { display: block; }
+#menu-inscription {
+  font-size: 7px;
+  color: var(--c-gold);
+  padding: 6px 10px;
+  text-align: center;
+  max-width: 200px;
+}
+#menu-inscription.on { display: block; }
+.mi {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--c-bone);
+  cursor: pointer;
+  min-height: 44px;
+  transition: background .1s;
+}
+.mi:hover { background: rgba(107,15,26,0.2); }
+.mi:active { background: rgba(184,134,11,0.15); }
+.mi i { font-style: normal; font-size: 12px; }
+
+/* ── Look panel ── */
+#look {
+  position: fixed;
+  display: none;
+  z-index: 210;
+  background: rgba(5,5,16,0.96);
+  border: 2px solid var(--c-crimson);
+  padding: 16px 20px;
+  max-width: 380px;
+  width: 380px;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 2;
+  -webkit-overflow-scrolling: touch;
+}
+#look.on { display: block; }
+#look h3 {
+  font-size: 11px;
+  color: var(--c-gold);
+  margin-bottom: var(--space-s);
+  border-bottom: 1px solid var(--c-gold);
+  padding-bottom: var(--space-xs);
+}
+#li {
+  font-size: 7px;
+  color: var(--c-ash);
+  margin-top: var(--space-s);
+  text-align: right;
+}
+
+/* ── Dialogue ── */
+#dlg {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: none;
+  z-index: 220;
+  background: rgba(5,5,16,0.96);
+  border-top: 2px solid var(--c-crimson);
+  padding: 16px 20px;
+  min-height: 200px;
+  max-height: 50vh;
+}
+#dlg.on { display: flex; gap: 16px; }
+#dp { width: 80px; height: 100px; flex-shrink: 0; }
+#dd { flex: 1; }
+#dn {
+  font-size: 9px;
+  color: var(--c-gold);
+  margin-bottom: var(--space-s);
+}
+#dt {
+  font-size: 9px;
+  line-height: 2.2;
+  color: var(--c-bone);
+  white-space: pre-wrap;
+}
+.dopt {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--c-gold);
+  background: transparent;
+  border: 1px solid rgba(184,134,11,0.3);
+  padding: 10px 0;
+  width: 100%;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background .1s;
+}
+.dopt:hover { background: rgba(107,15,26,0.15); }
+.dopt:active { background: rgba(184,134,11,0.15); }
+
+/* ── Terminal ── */
+#term {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 300;
+  background: rgba(0,5,0,0.97);
+  padding: var(--space-m);
+  flex-direction: column;
+}
+#term.on { display: flex; }
+#ti {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--c-term);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--c-term);
+  padding: var(--space-s);
+  outline: none;
+  caret-color: var(--c-term);
+}
+#to {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 10px;
+  color: var(--c-term);
+  white-space: pre-wrap;
+  line-height: 1.8;
+  padding-top: var(--space-s);
+}
+
+/* ── Custom cursor ── */
+#cur {
+  position: fixed;
+  width: 20px; height: 20px;
+  pointer-events: none;
+  z-index: 9999;
+  image-rendering: pixelated;
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 768px) {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+  body { cursor: auto; }
+  canvas#game { touch-action: none; }
+
+  #entry { flex-direction: column; gap: 20px; padding: 14px; }
+  #entry-btn { min-height: 44px; }
+  #entry-logo { font-size: clamp(32px, 11vw, 56px); }
+
+  #menu {
+    left: 50% !important;
+    top: auto !important;
+    bottom: 60px !important;
+    transform: translateX(-50%);
+    min-width: 240px;
+    max-width: 90vw;
+  }
+  .mi { font-size: 11px; padding: 14px 18px; }
+  .mi i { font-size: 14px; }
+
+  #look {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%);
+    max-width: 92vw;
+    width: 340px;
+    font-size: 11px;
+    line-height: 1.8;
+    max-height: 75vh;
+    padding: 14px 16px;
+  }
+  #look h3 { font-size: 12px; }
+
+  #dlg {
+    height: auto;
+    min-height: 170px;
+    max-height: 45vh;
+    padding: 12px 16px;
+  }
+  #dp { width: 64px; height: 86px; font-size: 16px; }
+  #dn { font-size: 10px; }
+  #dt { font-size: 10px; line-height: 2; }
+  .dopt { font-size: 10px; min-height: 44px; }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (max-height: 500px) {
+  #menu { bottom: 10px !important; }
+  #dlg { min-height: 120px; max-height: 40vh; }
+  #look { max-height: 85vh; }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  #menu { min-width: 200px; }
+  .mi { font-size: 10px; padding: 12px 14px; }
+  #look { width: 95vw; }
+  #entry-logo { font-size: 28px; }
+}
