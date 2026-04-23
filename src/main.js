@@ -30,6 +30,10 @@ import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
 import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
+import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
+import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
+import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -39,6 +43,7 @@ attachContent(looks, dialogues);
 initUI();
 initMetaFx();
 initTerminal();
+initAudio();
 
 // Load saved progress
 const savedData = loadGame();
@@ -50,15 +55,20 @@ if (savedData) {
   if (savedData.talkedTo) savedData.talkedTo.forEach(n => flags.talkedTo.add(n));
   if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
   if (savedData.collectedLore) loadCollected(savedData.collectedLore);
+  if (savedData.observersSeen) savedData.observersSeen.forEach(n => flags.observersSeen.add(n));
+  if (savedData.achievements) loadUnlocked(savedData.achievements);
+  if (savedData.graffiti) setGraffiti(savedData.graffiti);
   console.log('[save] loaded');
 }
 
-// Auto-save every 30 seconds
 startAutoSave(() => ({
   player: { x: player.x, y: player.y },
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
+  observersSeen: Array.from(flags.observersSeen),
   collectedLore: getCollectedIds(),
+  achievements: getUnlocked(),
+  graffiti: getGraffiti(),
 }));
 
 // Terrain (cached offscreen)
@@ -72,10 +82,13 @@ const player = {
 
 // Game flags
 const flags = {
-  talkedTo: new Set(),  // NPC ids
-  visited: new Set(),   // location ids
+  talkedTo: new Set(),
+  visited: new Set(),
   collectedLore: new Set(),
+  observersSeen: new Set(),
 };
+
+initAchievements(flags, () => getCollectedCount());
 
 // Check if player can leave settlement
 function canLeaveSettlement() {
@@ -157,6 +170,9 @@ function render() {
   }
 
   drawLoreItems({ x: camX, y: camY });
+  drawInscriptions({ x: camX, y: camY }, locations);
+  drawJesterGraffiti({ x: camX, y: camY });
+  drawJesterWandering({ x: camX, y: camY }, locations);
 
   drawPlayer(player);
 
@@ -282,6 +298,10 @@ function updateGame() {
 
   // Check for lore pickup
   checkLorePickup(player);
+
+  // Update world-level systems
+  updateJester(camera);
+  updateProximity(player, locations);
 }
 
 // ═══ LOOP ═══
@@ -297,6 +317,8 @@ document.getElementById('entry-btn').addEventListener('click', () => {
   document.getElementById('entry').style.display = 'none';
   document.getElementById('gw').classList.add('on');
   state.transition('game');
+  resumeAudio();
+  startAmbient();
 });
 
 // Touch: walk toward clicked point
@@ -338,10 +360,11 @@ events.on(E.NPC_TALK, (npcId) => {
   flags.talkedTo.add(npcId);
 });
 events.on(E.OBSERVER_MET, (npcId) => {
-  console.log(`[observer] ${npcId} met`);
+  flags.observersSeen.add(npcId);
 });
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text);
+  playPickup();
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') openTerminal();
