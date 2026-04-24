@@ -213,6 +213,7 @@ canvas#game {
   background: rgba(0,5,0,0.97);
   padding: var(--space-m);
   flex-direction: column;
+  align-items: center;
 }
 #term.on { display: flex; }
 #ti {
@@ -225,6 +226,8 @@ canvas#game {
   padding: var(--space-s);
   outline: none;
   caret-color: var(--c-term);
+  max-width: 660px;
+  width: 100%;
 }
 #to {
   flex: 1;
@@ -235,6 +238,8 @@ canvas#game {
   white-space: pre-wrap;
   line-height: 1.8;
   padding-top: var(--space-s);
+  max-width: 660px;
+  width: 100%;
 }
 
 /* ── Custom cursor ── */
