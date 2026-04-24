@@ -7911,7 +7911,7 @@ canvas#game {
     switch (action) {
       case "look":
         events.emit(E.LOCATION_LOOK, loc);
-        showLook2(loc);
+        showLook(loc);
         break;
       case "use":
         events.emit("location.use", loc);
@@ -7946,7 +7946,7 @@ canvas#game {
     }
     return pages;
   }
-  function showLook2(loc) {
+  function showLook(loc) {
     state.transition("look");
     const lookData = loc.look || loc.name;
     lookPages = paginateLook(lookData);

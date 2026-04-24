@@ -22,7 +22,7 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
-import { showMenu, hideMenu, initUI, getActiveLoc } from './ui/ui.js';
+import { showMenu, hideMenu, initUI, getActiveLoc, showLook } from './ui/ui.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
