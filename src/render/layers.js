@@ -25,7 +25,7 @@ export const layers = {
     // CSS: fill screen
     mainCanvas.style.width = '100vw';
     mainCanvas.style.height = '100vh';
-    mainCanvas.style.objectFit = 'fill';
+    mainCanvas.style.objectFit = 'contain';
     mainCanvas.style.imageRendering = 'pixelated';
 
     for (const name of LAYER_NAMES) {
@@ -93,7 +93,7 @@ export const layers = {
     scaler.applyToCanvas(this.main);
     this.main.style.width = '100vw';
     this.main.style.height = '100vh';
-    this.main.style.objectFit = 'fill';
+    this.main.style.objectFit = 'contain';
 
     for (const name of LAYER_NAMES) {
       const l = this._layers[name];

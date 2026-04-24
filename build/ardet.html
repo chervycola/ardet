@@ -473,7 +473,7 @@ canvas#game {
       this.mainCtx = scaler.applyToCanvas(mainCanvas2);
       mainCanvas2.style.width = "100vw";
       mainCanvas2.style.height = "100vh";
-      mainCanvas2.style.objectFit = "fill";
+      mainCanvas2.style.objectFit = "contain";
       mainCanvas2.style.imageRendering = "pixelated";
       for (const name of LAYER_NAMES) {
         this._layers[name] = scaler.createLayer();
@@ -523,7 +523,7 @@ canvas#game {
       scaler.applyToCanvas(this.main);
       this.main.style.width = "100vw";
       this.main.style.height = "100vh";
-      this.main.style.objectFit = "fill";
+      this.main.style.objectFit = "contain";
       for (const name of LAYER_NAMES) {
         const l = this._layers[name];
         l.canvas.width = scaler.physW;
