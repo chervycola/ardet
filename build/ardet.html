@@ -8833,13 +8833,13 @@ Amor fati. \u041D\u0435
       for (const c of this.cells) {
         const cellFade = Math.min(1, c.age / 60) * fade;
         if (cellFade < 0.05) continue;
-        ctx2.globalAlpha = cellFade * (0.4 + c.layer * 0.15);
+        ctx2.globalAlpha = cellFade * (0.55 + c.layer * 0.15);
         const ci = c.x * 7 + c.y * 13 + c.layer * 3 & 15;
         ctx2.fillStyle = this.palette[ci];
         const sz = 1 + c.layer;
         ctx2.fillRect(c.x, c.y, sz, sz);
         if (c.layer === 2 && c.age > 30) {
-          ctx2.globalAlpha = cellFade * 0.3;
+          ctx2.globalAlpha = cellFade * 0.45;
           ctx2.fillStyle = this.palette[ci + 4 & 15];
           ctx2.fillRect(c.x, c.y - 1, 1, 1);
         }
@@ -15139,34 +15139,268 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     ctx2.fill();
     ctx2.globalAlpha = 1;
   }
-  var raindrops = [];
-  function updateRain(playerZone) {
-    if (playerZone !== "toxic") {
-      raindrops.length = 0;
-      return;
+
+  // src/render/weather.js
+  var STATE = { CLEAR: "clear", TOXIC_RAIN: "toxicRain", SANDSTORM: "sandstorm" };
+  var weather = {
+    state: STATE.CLEAR,
+    // Transition: 0..1 fade-in/fade-out envelope for overlays
+    intensity: 0,
+    targetIntensity: 0,
+    // Scheduling
+    nextCheck: 600,
+    // frames until next weather roll
+    currentDuration: 0,
+    // frames remaining of current weather
+    zone: "settlement",
+    // Particle pools
+    rainParts: [],
+    sandParts: [],
+    puddles: [],
+    // Lightning
+    lightning: 0,
+    // 0 = inactive, otherwise countdown
+    nextStrike: 600,
+    boltX: 0,
+    // Wind — shared between rain + sand
+    windX: 0.4
+  };
+  var MAX_RAIN = 90;
+  var MAX_SAND = 140;
+  var MAX_PUDDLES = 30;
+  function rollWeather(zone) {
+    if (Math.random() < 0.55) return { state: STATE.CLEAR, duration: 400 + Math.floor(Math.random() * 600) };
+    if (zone === "toxic" || zone === "forest") {
+      return { state: STATE.TOXIC_RAIN, duration: 600 + Math.floor(Math.random() * 900) };
     }
-    if (raindrops.length < 60 && t % 2 === 0) {
-      raindrops.push({
-        x: Math.random() * scaler.vw,
-        y: -5,
-        speed: 2 + Math.random() * 2,
-        len: 3 + Math.random() * 4
-      });
+    if (zone === "highway" || zone === "quarter") {
+      return { state: STATE.SANDSTORM, duration: 500 + Math.floor(Math.random() * 800) };
     }
-    for (let i = raindrops.length - 1; i >= 0; i--) {
-      raindrops[i].y += raindrops[i].speed;
-      if (raindrops[i].y > scaler.vh + 10) raindrops.splice(i, 1);
+    if (Math.random() < 0.5) {
+      return { state: STATE.TOXIC_RAIN, duration: 400 + Math.floor(Math.random() * 500) };
+    }
+    return { state: STATE.SANDSTORM, duration: 400 + Math.floor(Math.random() * 500) };
+  }
+  function update3(zone) {
+    weather.zone = zone || "settlement";
+    weather.currentDuration--;
+    weather.nextCheck--;
+    if (weather.nextCheck <= 0 && weather.currentDuration <= 0) {
+      const r = rollWeather(weather.zone);
+      weather.state = r.state;
+      weather.currentDuration = r.duration;
+      weather.nextCheck = r.duration + 200;
+    }
+    weather.targetIntensity = weather.state === STATE.CLEAR ? 0 : 1;
+    if (weather.intensity < weather.targetIntensity) {
+      weather.intensity = Math.min(1, weather.intensity + 4e-3);
+    } else if (weather.intensity > weather.targetIntensity) {
+      weather.intensity = Math.max(0, weather.intensity - 4e-3);
+    }
+    weather.windX = 0.3 + 0.9 * Math.sin(t * 13e-4);
+    if (weather.state === STATE.TOXIC_RAIN || weather.intensity > 0) updateRain();
+    if (weather.state === STATE.SANDSTORM || weather.intensity > 0) updateSand();
+    if (weather.state === STATE.TOXIC_RAIN && weather.intensity > 0.6) {
+      if (weather.lightning > 0) weather.lightning--;
+      if (weather.lightning <= 0 && --weather.nextStrike <= 0) {
+        weather.lightning = 40;
+        weather.nextStrike = 900 + Math.floor(Math.random() * 1800);
+        weather.boltX = Math.floor(Math.random() * scaler.vw);
+      }
+    } else {
+      weather.lightning = Math.max(0, weather.lightning - 1);
+    }
+    for (let i = weather.puddles.length - 1; i >= 0; i--) {
+      const p = weather.puddles[i];
+      p.life--;
+      if (p.r < p.maxR) p.r += 0.03;
+      if (p.life <= 0) weather.puddles.splice(i, 1);
     }
   }
-  function drawRain(ctx2) {
-    if (raindrops.length === 0) return;
-    ctx2.strokeStyle = "rgba(80,200,40,0.25)";
-    ctx2.lineWidth = 1;
-    for (const r of raindrops) {
-      ctx2.beginPath();
-      ctx2.moveTo(r.x, r.y);
-      ctx2.lineTo(r.x - 0.5, r.y + r.len);
-      ctx2.stroke();
+  function updateRain() {
+    const vw = scaler.vw, vh = scaler.vh;
+    const spawning = weather.state === STATE.TOXIC_RAIN;
+    if (spawning && weather.rainParts.length < MAX_RAIN && t % 2 === 0) {
+      const batch = 1 + Math.floor(weather.intensity * 3);
+      for (let i = 0; i < batch; i++) {
+        weather.rainParts.push({
+          x: -20 + Math.random() * (vw + 40),
+          y: -8 - Math.random() * 20,
+          vy: 4 + Math.random() * 3,
+          life: vh + 40,
+          len: 3 + Math.floor(Math.random() * 3)
+        });
+      }
+    }
+    for (let i = weather.rainParts.length - 1; i >= 0; i--) {
+      const p = weather.rainParts[i];
+      p.y += p.vy;
+      p.x += weather.windX * 1.6;
+      p.life -= p.vy;
+      if (p.y > vh + 20 || p.life <= 0) {
+        if (weather.puddles.length < MAX_PUDDLES && Math.random() > 0.82 && p.y < vh + 5) {
+          weather.puddles.push({
+            x: p.x,
+            y: Math.min(p.y, vh - 6),
+            life: 420,
+            r: 0.5,
+            maxR: 1.4 + Math.random() * 2
+          });
+        }
+        weather.rainParts.splice(i, 1);
+      }
+    }
+    if (!spawning && weather.rainParts.length > 0) {
+      for (let k = 0; k < 3; k++) weather.rainParts.pop();
+    }
+  }
+  function updateSand() {
+    const vw = scaler.vw, vh = scaler.vh;
+    const spawning = weather.state === STATE.SANDSTORM;
+    if (spawning && weather.sandParts.length < MAX_SAND && t % 2 === 0) {
+      const batch = 2 + Math.floor(weather.intensity * 3);
+      for (let i = 0; i < batch; i++) {
+        weather.sandParts.push({
+          x: -20 + Math.random() * (vw + 40),
+          y: Math.random() * vh,
+          vx: 1.4 + Math.random() * 2.2,
+          vy: -0.3 + Math.random() * 0.6,
+          life: 220 + Math.floor(Math.random() * 120),
+          size: 1 + Math.floor(Math.random() * 2),
+          tone: Math.random() > 0.5 ? 0 : 1
+        });
+      }
+    }
+    for (let i = weather.sandParts.length - 1; i >= 0; i--) {
+      const p = weather.sandParts[i];
+      p.x += p.vx + weather.windX * 0.9;
+      p.y += p.vy + Math.sin(t * 0.02 + p.life * 0.1) * 0.3;
+      p.life--;
+      if (p.x > vw + 30 || p.life <= 0) weather.sandParts.splice(i, 1);
+    }
+    if (!spawning && weather.sandParts.length > 0) {
+      for (let k = 0; k < 4; k++) weather.sandParts.pop();
+    }
+  }
+  function drawAdditive(ctx2) {
+    if (weather.rainParts.length > 0) {
+      ctx2.globalAlpha = 0.7 * Math.max(0.3, weather.intensity);
+      ctx2.strokeStyle = "#5aff2a";
+      ctx2.lineWidth = 1;
+      for (const p of weather.rainParts) {
+        ctx2.beginPath();
+        ctx2.moveTo(p.x, p.y);
+        ctx2.lineTo(p.x - weather.windX * 1.4, p.y - p.len);
+        ctx2.stroke();
+      }
+      ctx2.globalAlpha = 1;
+      ctx2.fillStyle = "#aaff6a";
+      ctx2.globalAlpha = 0.9 * weather.intensity;
+      for (const p of weather.rainParts) ctx2.fillRect(p.x | 0, p.y | 0, 1, 1);
+      ctx2.globalAlpha = 1;
+      if (t % 6 < 2 && weather.intensity > 0.5) {
+        ctx2.fillStyle = "#9aff5a";
+        for (let i = 0; i < 4; i++) {
+          ctx2.globalAlpha = 0.2;
+          const sx_ = hash(i, t, 11) * scaler.vw | 0;
+          const sy_ = hash(i, t, 22) * scaler.vh | 0;
+          ctx2.fillRect(sx_, sy_, 1, 1);
+        }
+        ctx2.globalAlpha = 1;
+      }
+    }
+    if (weather.lightning > 0) {
+      const l = weather.lightning;
+      if (l > 37) {
+        ctx2.globalAlpha = 0.65;
+        ctx2.fillStyle = "#ffffff";
+        ctx2.fillRect(0, 0, scaler.vw, scaler.vh);
+      } else if (l > 30) {
+        ctx2.globalAlpha = 0.45;
+        ctx2.fillStyle = "#ccccff";
+        ctx2.fillRect(0, 0, scaler.vw, scaler.vh);
+      }
+      ctx2.globalAlpha = l / 40 * 0.45;
+      ctx2.fillStyle = "#ccaaff";
+      ctx2.fillRect(0, 0, scaler.vw, scaler.vh);
+      ctx2.globalAlpha = 1;
+      if (l > 20 && l < 36) {
+        ctx2.strokeStyle = "#ffffff";
+        ctx2.lineWidth = 2;
+        ctx2.globalAlpha = (l - 20) / 16;
+        ctx2.beginPath();
+        let bx = weather.boltX, by = 0;
+        ctx2.moveTo(bx, by);
+        for (let i = 0; i < 10; i++) {
+          bx += hash(i, l, 11) * 22 - 11;
+          by += 14 + hash(i, l, 22) * 8;
+          ctx2.lineTo(bx, by);
+        }
+        ctx2.stroke();
+        ctx2.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          ctx2.beginPath();
+          ctx2.moveTo(weather.boltX + i * 5 - 5, 20 + i * 18);
+          ctx2.lineTo(weather.boltX + i * 5 - 5 + hash(i, 0, 33) * 30 - 15, 34 + i * 18);
+          ctx2.stroke();
+        }
+        ctx2.globalAlpha = 1;
+      }
+    }
+  }
+  function drawOverlay(ctx2) {
+    if (weather.intensity < 0.02) return;
+    const vw = scaler.vw, vh = scaler.vh;
+    if (weather.state === STATE.TOXIC_RAIN || weather.intensity > 0 && weather.rainParts.length > 0) {
+      ctx2.globalAlpha = (0.08 + 0.025 * Math.sin(t * 0.02)) * weather.intensity;
+      ctx2.fillStyle = "#1a3a08";
+      ctx2.fillRect(0, 0, vw, vh);
+      for (const p of weather.puddles) {
+        const fadeIn2 = Math.min(1, (420 - p.life) / 50);
+        const fadeOut = Math.min(1, p.life / 100);
+        ctx2.globalAlpha = Math.min(fadeIn2, fadeOut) * 0.5;
+        ctx2.fillStyle = "#0a2a08";
+        ctx2.beginPath();
+        ctx2.ellipse(p.x, p.y, p.r * 2.5, p.r, 0, 0, Math.PI * 2);
+        ctx2.fill();
+        ctx2.globalAlpha *= 0.7;
+        ctx2.fillStyle = "#2a5a1a";
+        ctx2.beginPath();
+        ctx2.ellipse(p.x, p.y, p.r * 1.8, p.r * 0.7, 0, 0, Math.PI * 2);
+        ctx2.fill();
+      }
+      ctx2.globalAlpha = 1;
+    }
+    if (weather.state === STATE.SANDSTORM || weather.sandParts.length > 0) {
+      ctx2.globalAlpha = (0.16 + 0.04 * Math.sin(t * 0.01)) * weather.intensity;
+      ctx2.fillStyle = "#3a0a08";
+      ctx2.fillRect(0, 0, vw, vh);
+      const fog = ctx2.createRadialGradient(vw / 2, vh / 2, vw * 0.15, vw / 2, vh / 2, vw * 0.6);
+      fog.addColorStop(0, "rgba(90,30,20,0)");
+      fog.addColorStop(0.6, "rgba(120,40,20,0.35)");
+      fog.addColorStop(1, "rgba(60,20,10,0.8)");
+      ctx2.globalAlpha = 0.6 * weather.intensity;
+      ctx2.fillStyle = fog;
+      ctx2.fillRect(0, 0, vw, vh);
+      ctx2.globalAlpha = 1;
+      for (const p of weather.sandParts) {
+        const a = Math.min(0.4, p.life / 400) * weather.intensity;
+        if (a < 0.05) continue;
+        ctx2.globalAlpha = a;
+        ctx2.fillStyle = p.tone ? "#3a2012" : "#6b3a1a";
+        ctx2.fillRect(p.x | 0, p.y | 0, p.size + 1, 1);
+      }
+      ctx2.globalAlpha = 1;
+      const streakCount = 6;
+      for (let i = 0; i < streakCount; i++) {
+        ctx2.globalAlpha = 0.1 * weather.intensity;
+        const dy = hash(i, t * 0.03, 33) * vh | 0;
+        const dw = 20 + (hash(i, 0, 44) * 40 | 0);
+        const dx = (t * 0.6 + i * 80) % (vw + dw) - dw;
+        ctx2.fillStyle = "#8b4a1a";
+        ctx2.fillRect(dx, dy, dw, 1);
+      }
+      ctx2.globalAlpha = 1;
     }
   }
 
@@ -15228,7 +15462,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       bobPhase: Math.random() * Math.PI * 2
     });
   }
-  function update3() {
+  function update4() {
     if (t - lastSpawn > 300 + Math.random() * 600 && pets.length < 3) {
       lastSpawn = t;
       spawn();
@@ -15807,7 +16041,7 @@ Ardet v1.0 \u2014 coming soon.
     if (player2.y > MH) d += player2.y - MH;
     return d;
   }
-  function update4(player2) {
+  function update5(player2) {
     if (brainrotFreeze) {
       brainrotFreezeTimer++;
       if (brainrotFreezeTimer > 300) {
@@ -15932,7 +16166,7 @@ Ardet v1.0 \u2014 coming soon.
     if (player2.y > MH) d += player2.y - MH;
     return d;
   }
-  function update5(player2) {
+  function update6(player2) {
     const dist = getDistFromMap2(player2);
     if (dist > 300 && t - lastSpawn2 > 120 && monsters.length < 8) {
       lastSpawn2 = t;
@@ -16128,15 +16362,16 @@ Ardet v1.0 \u2014 coming soon.
     const camObj = { x: camX, y: camY };
     lightParticles.update(camObj, lighting.sources);
     lightParticles.draw(worldCtx, camObj);
-    drawHUD(uiCtx);
     const fxCtx = layers.ctx("fx");
-    screenMoss.update(player.moving);
-    screenMoss.draw(fxCtx);
     crackedGlass.draw(fxCtx);
     dyingPixels.update();
     dyingPixels.draw(fxCtx);
-    drawRain(fxCtx);
+    drawAdditive(fxCtx);
     draw9(fxCtx);
+    drawOverlay(uiCtx);
+    screenMoss.update(player.moving);
+    screenMoss.draw(uiCtx);
+    drawHUD(uiCtx);
     postfx.apply(postCtx);
     if (isActive()) {
       draw10(postCtx);
@@ -16214,9 +16449,30 @@ Ardet v1.0 \u2014 coming soon.
     const worldCtx = layers.ctx("world");
     draw4(worldCtx, camObj);
   }
+  var lastCrackFrame = -9999;
+  var lastLightning = 0;
+  function updateCrackTriggers(player2) {
+    if (t - lastCrackFrame < 240) return;
+    if (weather.lightning > 34 && lastLightning < 34 && Math.random() < 0.35) {
+      crackedGlass.add(
+        20 + Math.floor(Math.random() * (scaler.vw - 40)),
+        20 + Math.floor(Math.random() * (scaler.vh - 40))
+      );
+      lastCrackFrame = t;
+    }
+    lastLightning = weather.lightning;
+    const offmap = player2.x < 0 || player2.x > MW || player2.y < 160 || player2.y > MH;
+    if (offmap && t % 600 === 0 && Math.random() < 0.4) {
+      crackedGlass.add(
+        30 + Math.floor(Math.random() * (scaler.vw - 60)),
+        30 + Math.floor(Math.random() * (scaler.vh - 60))
+      );
+      lastCrackFrame = t;
+    }
+  }
   function updateGame() {
     if (isFrozen()) {
-      update4(player);
+      update5(player);
       return;
     }
     if (!state.is("game")) return;
@@ -16261,14 +16517,15 @@ Ardet v1.0 \u2014 coming soon.
     checkLorePickup(player);
     updateJester(camera);
     updateProximity(player, locations);
-    update3();
-    update4(player);
+    update4();
     update5(player);
+    update6(player);
     updateZone(getZone2(player.x, player.y));
     update(player.moving);
     check(player, locations);
     update2();
-    updateRain(getZone2(player.x, player.y));
+    update3(getZone2(player.x, player.y));
+    updateCrackTriggers(player);
     if (t % 3 === 0) fireEmber(775, 795);
   }
   function loop() {

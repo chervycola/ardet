@@ -81,37 +81,5 @@ export function drawBloodMoon(ctx, camera) {
   ctx.globalAlpha = 1;
 }
 
-// ── GREEN RAIN (toxic zone) ──
-const raindrops = [];
-export function updateRain(playerZone) {
-  if (playerZone !== 'toxic') {
-    raindrops.length = 0;
-    return;
-  }
-  // Spawn
-  if (raindrops.length < 60 && t % 2 === 0) {
-    raindrops.push({
-      x: Math.random() * scaler.vw,
-      y: -5,
-      speed: 2 + Math.random() * 2,
-      len: 3 + Math.random() * 4,
-    });
-  }
-  // Update
-  for (let i = raindrops.length - 1; i >= 0; i--) {
-    raindrops[i].y += raindrops[i].speed;
-    if (raindrops[i].y > scaler.vh + 10) raindrops.splice(i, 1);
-  }
-}
-
-export function drawRain(ctx) {
-  if (raindrops.length === 0) return;
-  ctx.strokeStyle = 'rgba(80,200,40,0.25)';
-  ctx.lineWidth = 1;
-  for (const r of raindrops) {
-    ctx.beginPath();
-    ctx.moveTo(r.x, r.y);
-    ctx.lineTo(r.x - 0.5, r.y + r.len);
-    ctx.stroke();
-  }
-}
+// Rain/sand/lightning system moved to ./weather.js
+// (richer effects, zone-aware scheduler)
