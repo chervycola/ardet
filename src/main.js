@@ -142,8 +142,8 @@ for (const loc of locations) {
 // ═══ TIME ═══
 import { t } from './core/time.js';
 // Day cycle: 0 = midnight, 0.5 = noon, 1 = midnight again
-// Full cycle = 18000 frames (~5 minutes at 60fps)
-const DAY_LENGTH = 18000;
+// Full cycle = 43200 frames @ 60fps = 12 min (6 min day + 6 min night)
+const DAY_LENGTH = 43200;
 
 function getDayCycle() {
   const phase = (t % DAY_LENGTH) / DAY_LENGTH;

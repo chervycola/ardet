@@ -1337,7 +1337,7 @@ canvas#game {
   var PLAYER_H = 20;
   var PLAYER_MX = 6;
   var PLAYER_MY = 16;
-  var SETTLEMENT = { x1: 380, x2: 1820, y1: 480, y2: 1320 };
+  var SETTLEMENT = { x1: 40, x2: 2650, y1: 180, y2: 1580 };
   function isInSettlement(x, y) {
     return x >= SETTLEMENT.x1 && x <= SETTLEMENT.x2 && y >= SETTLEMENT.y1 && y <= SETTLEMENT.y2;
   }
@@ -15236,14 +15236,15 @@ Pixel-adjacent but painterly. Muted brandbook palette:
 
   // src/render/weather.js
   var STATE = { CLEAR: "clear", TOXIC_RAIN: "toxicRain", SANDSTORM: "sandstorm" };
+  var MIN_GAP_FRAMES = 10800;
   var weather = {
     state: STATE.CLEAR,
     // Transition: 0..1 fade-in/fade-out envelope for overlays
     intensity: 0,
     targetIntensity: 0,
     // Scheduling
-    nextCheck: 600,
-    // frames until next weather roll
+    nextCheck: 1800,
+    // first possible weather after 30s
     currentDuration: 0,
     // frames remaining of current weather
     zone: "settlement",
@@ -15263,27 +15264,29 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   var MAX_SAND = 140;
   var MAX_PUDDLES = 30;
   function rollWeather(zone) {
-    if (Math.random() < 0.55) return { state: STATE.CLEAR, duration: 400 + Math.floor(Math.random() * 600) };
     if (zone === "toxic" || zone === "forest") {
-      return { state: STATE.TOXIC_RAIN, duration: 600 + Math.floor(Math.random() * 900) };
+      return { state: STATE.TOXIC_RAIN, duration: 1800 + Math.floor(Math.random() * 2400) };
     }
     if (zone === "highway" || zone === "quarter") {
-      return { state: STATE.SANDSTORM, duration: 500 + Math.floor(Math.random() * 800) };
+      return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
     }
     if (Math.random() < 0.5) {
-      return { state: STATE.TOXIC_RAIN, duration: 400 + Math.floor(Math.random() * 500) };
+      return { state: STATE.TOXIC_RAIN, duration: 1200 + Math.floor(Math.random() * 1800) };
     }
-    return { state: STATE.SANDSTORM, duration: 400 + Math.floor(Math.random() * 500) };
+    return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
   }
   function update3(zone) {
     weather.zone = zone || "settlement";
     weather.currentDuration--;
     weather.nextCheck--;
-    if (weather.nextCheck <= 0 && weather.currentDuration <= 0) {
+    if (weather.currentDuration <= 0 && weather.state !== STATE.CLEAR) {
+      weather.state = STATE.CLEAR;
+    }
+    if (weather.nextCheck <= 0) {
       const r = rollWeather(weather.zone);
       weather.state = r.state;
       weather.currentDuration = r.duration;
-      weather.nextCheck = r.duration + 200;
+      weather.nextCheck = MIN_GAP_FRAMES;
     }
     weather.targetIntensity = weather.state === STATE.CLEAR ? 0 : 1;
     if (weather.intensity < weather.targetIntensity) {
@@ -16394,7 +16397,7 @@ Ardet v1.0 \u2014 coming soon.
       bloom: loc.light.r > 50
     });
   }
-  var DAY_LENGTH = 18e3;
+  var DAY_LENGTH = 43200;
   function getDayCycle() {
     const phase = t % DAY_LENGTH / DAY_LENGTH;
     return 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);

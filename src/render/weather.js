@@ -8,13 +8,16 @@ import { hash, rect } from './draw.js';
 
 const STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' };
 
+// Minimum spacing between weather-event STARTS (3 min @ 60fps)
+const MIN_GAP_FRAMES = 10800;
+
 export const weather = {
   state: STATE.CLEAR,
   // Transition: 0..1 fade-in/fade-out envelope for overlays
   intensity: 0,
   targetIntensity: 0,
   // Scheduling
-  nextCheck: 600,       // frames until next weather roll
+  nextCheck: 1800,      // first possible weather after 30s
   currentDuration: 0,   // frames remaining of current weather
   zone: 'settlement',
 
@@ -37,34 +40,36 @@ const MAX_SAND = 140;
 const MAX_PUDDLES = 30;
 
 // Zone → preferred weather; rolled each cycle
+// Durations are in frames (60fps). Scheduler enforces a 3-min gap between starts.
 function rollWeather(zone) {
-  // Short clear period to breathe
-  if (Math.random() < 0.55) return { state: STATE.CLEAR, duration: 400 + Math.floor(Math.random() * 600) };
-
   if (zone === 'toxic' || zone === 'forest') {
-    return { state: STATE.TOXIC_RAIN, duration: 600 + Math.floor(Math.random() * 900) };
+    return { state: STATE.TOXIC_RAIN, duration: 1800 + Math.floor(Math.random() * 2400) };
   }
   if (zone === 'highway' || zone === 'quarter') {
-    return { state: STATE.SANDSTORM, duration: 500 + Math.floor(Math.random() * 800) };
+    return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
   }
   // Settlement → 50/50 rain or sand drifting in
   if (Math.random() < 0.5) {
-    return { state: STATE.TOXIC_RAIN, duration: 400 + Math.floor(Math.random() * 500) };
+    return { state: STATE.TOXIC_RAIN, duration: 1200 + Math.floor(Math.random() * 1800) };
   }
-  return { state: STATE.SANDSTORM, duration: 400 + Math.floor(Math.random() * 500) };
+  return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
 }
 
 export function update(zone) {
   weather.zone = zone || 'settlement';
 
-  // Scheduler
+  // Scheduler — weather can only START once every MIN_GAP_FRAMES (~3 min).
+  // Inside that window the sky clears after the event's own duration.
   weather.currentDuration--;
   weather.nextCheck--;
-  if (weather.nextCheck <= 0 && weather.currentDuration <= 0) {
+  if (weather.currentDuration <= 0 && weather.state !== STATE.CLEAR) {
+    weather.state = STATE.CLEAR;
+  }
+  if (weather.nextCheck <= 0) {
     const r = rollWeather(weather.zone);
     weather.state = r.state;
     weather.currentDuration = r.duration;
-    weather.nextCheck = r.duration + 200;
+    weather.nextCheck = MIN_GAP_FRAMES;
   }
 
   weather.targetIntensity = weather.state === STATE.CLEAR ? 0 : 1;

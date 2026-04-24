@@ -9,8 +9,11 @@ const PLAYER_H = 20;
 const PLAYER_MX = 6;  // margin x (for hitbox offset)
 const PLAYER_MY = 16;
 
-// Settlement boundary — player locked until talks to Jester
-const SETTLEMENT = { x1: 380, x2: 1820, y1: 480, y2: 1320 };
+// Starting area — most of the map is open from the beginning.
+// Locked until Jester is spoken to: only the far border territories where
+// the two outlier NPCs live (Dumpster Demon at 2720,200 in top-right highway,
+// Nocturnal at 1665,1685 on the southern toxic plain) and the pit/brainrot fringe.
+const SETTLEMENT = { x1: 40, x2: 2650, y1: 180, y2: 1580 };
 
 export function isInSettlement(x, y) {
   return x >= SETTLEMENT.x1 && x <= SETTLEMENT.x2 &&
