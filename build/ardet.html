@@ -127,6 +127,9 @@ canvas#game {
 /* ── Look panel ── */
 #look {
   position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: none;
   z-index: 210;
   background: rgba(5,5,16,0.97);
@@ -16641,14 +16644,8 @@ Ardet v1.0 \u2014 coming soon.
     startAmbient();
     console.log("[entry] state now:", state.current, "canvas:", mainCanvas.width, "x", mainCanvas.height);
   });
-  document.getElementById("gw").addEventListener("click", (e) => {
-    if (!state.is("game") && !state.is("menu")) return;
-    const rect2 = mainCanvas.getBoundingClientRect();
-    if (e.clientX >= rect2.left && e.clientX <= rect2.right && e.clientY >= rect2.top && e.clientY <= rect2.bottom) {
-      input._dispatchClick(e.clientX, e.clientY, "mouse", e);
-    }
-  });
-  input.onClick(({ clientX, clientY }) => {
+  input.onClick(({ clientX, clientY, originalEvent }) => {
+    if (originalEvent) originalEvent.stopPropagation();
     if (state.is("menu")) {
       hideMenu();
       return;

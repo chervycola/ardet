@@ -433,18 +433,13 @@ document.getElementById('entry-btn').addEventListener('click', () => {
   console.log('[entry] state now:', state.current, 'canvas:', mainCanvas.width, 'x', mainCanvas.height);
 });
 
-// Fallback: also listen on #gw for clicks (in case canvas doesn't catch them)
-document.getElementById('gw').addEventListener('click', e => {
-  if (!state.is('game') && !state.is('menu')) return;
-  const rect = mainCanvas.getBoundingClientRect();
-  if (e.clientX >= rect.left && e.clientX <= rect.right &&
-      e.clientY >= rect.top && e.clientY <= rect.bottom) {
-    input._dispatchClick(e.clientX, e.clientY, 'mouse', e);
-  }
-});
+// Fallback removed: canvas click handler already dispatches. Keeping #gw
+// click listener caused double-dispatch (canvas → #gw bubble), which
+// flashed the menu open+closed on the same click.
 
 // Touch: walk toward clicked point
-input.onClick(({ clientX, clientY }) => {
+input.onClick(({ clientX, clientY, originalEvent }) => {
+  if (originalEvent) originalEvent.stopPropagation();
   if (state.is('menu')) { hideMenu(); return; }
   if (state.is('look') || state.is('dialogue')) return;
   if (!state.is('game')) return;

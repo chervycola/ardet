@@ -116,6 +116,9 @@ canvas#game {
 /* ── Look panel ── */
 #look {
   position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: none;
   z-index: 210;
   background: rgba(5,5,16,0.97);
