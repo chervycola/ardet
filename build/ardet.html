@@ -212,7 +212,8 @@ canvas#game {
   z-index: 300;
   background: rgba(0,5,0,0.97);
   padding: var(--space-m);
-  flex-direction: column;
+  /* Reverse so the input sits at the bottom (output fills above) */
+  flex-direction: column-reverse;
   align-items: center;
 }
 #term.on { display: flex; }
@@ -222,7 +223,7 @@ canvas#game {
   color: var(--c-term);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--c-term);
+  border-top: 1px solid var(--c-term);
   padding: var(--space-s);
   outline: none;
   caret-color: var(--c-term);
@@ -237,7 +238,7 @@ canvas#game {
   color: var(--c-term);
   white-space: pre-wrap;
   line-height: 1.8;
-  padding-top: var(--space-s);
+  padding-bottom: var(--space-s);
   max-width: 660px;
   width: 100%;
 }
@@ -14462,6 +14463,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   var outputEl = document.getElementById("to");
   var history = [];
   var historyIdx = -1;
+  var booted = false;
   function print(text, color = "#1a8c1a") {
     const div = document.createElement("div");
     div.style.color = color;
@@ -14474,42 +14476,88 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     outputEl.appendChild(div);
     outputEl.scrollTop = outputEl.scrollHeight;
   }
-  function clear() {
+  function clearOutput() {
     outputEl.innerHTML = "";
+  }
+  function boot() {
+    if (booted) return;
+    booted = true;
+    const lines = [
+      { t: "> \u0418\u041D\u0418\u0426\u0418\u0410\u041B\u0418\u0417\u0410\u0426\u0418\u042F \u0421\u0418\u0421\u0422\u0415\u041C\u042B...", d: 0 },
+      { t: "> MEM CHECK: 640K OK", d: 280 },
+      { t: "> DISK: [\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588] \u041F\u041E\u0412\u0420\u0415\u0416\u0414\u0401\u041D", d: 560 },
+      { t: "> \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591 100%", d: 840 },
+      { t: "", d: 1e3 },
+      { t: "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", d: 1100 },
+      { t: "       A   R   D   E   T", d: 1280 },
+      { t: "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", d: 1460 },
+      { t: "", d: 1620 },
+      { t: "> \u0422\u0415\u0420\u041C\u0418\u041D\u0410\u041B \u0413\u041E\u0422\u041E\u0412. \u0412\u0412\u0415\u0414\u0418\u0422\u0415 help", d: 1780 },
+      { t: "", d: 1900 }
+    ];
+    for (const { t: t2, d } of lines) {
+      setTimeout(() => print(t2 || " ", "#1a8c1a"), d);
+    }
   }
   var commands = {
     help() {
       print(`\u0414\u041E\u0421\u0422\u0423\u041F\u041D\u042B\u0415 \u041A\u041E\u041C\u0410\u041D\u0414\u042B:
   dir / ls       \u2014 \u0441\u043F\u0438\u0441\u043E\u043A \u0444\u0430\u0439\u043B\u043E\u0432
   read <name>    \u2014 \u0447\u0438\u0442\u0430\u0442\u044C \u0444\u0430\u0439\u043B
-  whois <name>   \u2014 \u0438\u043D\u0444\u043E \u043E \u043A\u043E\u043C-\u0442\u043E
   cat <name>     \u2014 \u0432\u044B\u0432\u0435\u0441\u0442\u0438 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u0435
-  map            \u2014 \u043A\u0430\u0440\u0442\u0430 (\u0432 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0435)
-  status         \u2014 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430
+  whois <name>   \u2014 \u0434\u043E\u0441\u044C\u0435
+  prompt <name>  \u2014 \u043F\u0440\u043E\u043C\u0442 \u0434\u043B\u044F \u0430\u0440\u0442\u0430
+  status         \u2014 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0441\u0442\u0440\u0430\u043D\u043D\u0438\u043A\u0430
+  ach            \u2014 \u0434\u043E\u0441\u0442\u0438\u0436\u0435\u043D\u0438\u044F
+  map            \u2014 \u043A\u0430\u0440\u0442\u0430 (\u043F\u043E\u0432\u0440\u0435\u0436\u0434\u0435\u043D\u0430)
+  ping           \u2014 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0441\u0432\u044F\u0437\u044C
+  mycelium       \u2014 \u0441\u0442\u0430\u0442\u0443\u0441 \u0441\u0435\u0442\u0438
   fortune        \u2014 \u043F\u0440\u043E\u0440\u043E\u0447\u0435\u0441\u0442\u0432\u043E
   history        \u2014 \u0438\u0441\u0442\u043E\u0440\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434
+  echo <text>    \u2014 \u044D\u0445\u043E
   clear          \u2014 \u043E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u044D\u043A\u0440\u0430\u043D
-  exit           \u2014 \u0432\u044B\u0445\u043E\u0434 \u0438\u0437 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430
+  exit           \u2014 \u0432\u044B\u0445\u043E\u0434
 
-  \u2191/\u2193            \u2014 \u043D\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044F \u043F\u043E \u0438\u0441\u0442\u043E\u0440\u0438\u0438`);
+\u0424\u0410\u0419\u041B\u042B:
+  .ardet .moss .fisher .alephs .angel
+  .baseline .commons .cycle .convivial
+  .joy .observers .demiurge
+
+  \u2191/\u2193            \u2014 \u043D\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044F \u043F\u043E \u0438\u0441\u0442\u043E\u0440\u0438\u0438
+  Esc            \u2014 \u0432\u044B\u0445\u043E\u0434`);
     },
-    dir() {
-      print(`\u0421\u041E\u0414\u0415\u0420\u0416\u0418\u041C\u041E\u0415 \u0414\u0418\u0421\u041A\u0410:
-  .ardet         [\u0432\u0435\u0447\u043D\u043E \u0440\u0430\u0441\u0442\u0451\u0442]
-  .moss          [\u043F\u0440\u043E\u0446\u0435\u0441\u0441, \u043D\u0435 \u0444\u0430\u0439\u043B]
-  .fisher        [\u0445\u043E\u043D\u0442\u043E\u043B\u043E\u0433\u0438\u044F]
-  .alephs        [6 \u0432\u0435\u0442\u043E\u043A]
-  .angel         [\u0410\u043D\u0433\u0435\u043B \u0418\u0441\u0442\u043E\u0440\u0438\u0438]
-  .baseline      [shifting baseline]
-  .commons       [\u043E\u0433\u043E\u0440\u0430\u0436\u0438\u0432\u0430\u043D\u0438\u0435]
-  .cycle         [\u041A\u0430\u043B\u0438-\u044E\u0433\u0430]
-  .convivial     [\u043F\u043E\u0440\u043E\u0433 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430]
-  .joy           [\u0440\u0430\u0434\u043E\u0441\u0442\u044C vs \u0440\u0430\u0437\u0432\u043B\u0435\u0447\u0435\u043D\u0438\u0435]
-  .observers     [\u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u043E\u0441\u043C\u043E\u0442\u0440 \u0432\u0441\u0435\u0445 \u0447\u0435\u0442\u0432\u0435\u0440\u044B\u0445]
-  .demiurge      [\u0442\u0440\u0438 \u0433\u0438\u043F\u043E\u0442\u0435\u0437\u044B]
-  /secrets       [\u0434\u0438\u0440\u0435\u043A\u0442\u043E\u0440\u0438\u044F]
+    dir(args) {
+      if (args[0] === "secrets" || args[0] === "/secrets") {
+        print(`> \u0414\u041E\u0421\u0422\u0423\u041F: \u0423\u0421\u041B\u041E\u0412\u041D\u042B\u0419
 
-[\u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430: whois <\u0438\u043C\u044F> \u2014 \u0434\u043E\u0441\u044C\u0435; read <\u0444\u0430\u0439\u043B> \u2014 \u0442\u0435\u043A\u0441\u0442]`);
+  .pizzeria_key  [\u043D\u0430\u0439\u0434\u0435\u043D \u043F\u043E\u0434 \u043A\u043E\u0432\u0440\u0438\u043A\u043E\u043C]
+  .moss_weights  [\u043C\u043E\u0445 \u043E\u0431\u043D\u043E\u0432\u043B\u044F\u0435\u0442\u0441\u044F]
+  .cat_saucer    [\u0442\u0440\u0435\u0442\u0438\u0439 \u044D\u0442\u0430\u0436]
+  .archivist_log [\u0437\u0430\u043F\u0438\u0441\u044C #87]
+  .ardet         [\u0432\u0435\u0447\u043D\u043E \u0440\u0430\u0441\u0442\u0451\u0442]
+  .observers     [\u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F: \u043E\u0441\u043C\u043E\u0442\u0440 \u0432\u0441\u0435\u0445 \u0447\u0435\u0442\u0432\u0435\u0440\u044B\u0445]
+  .demiurge      [\u0442\u0440\u0438 \u0433\u0438\u043F\u043E\u0442\u0435\u0437\u044B]
+  .fana          [= .demiurge]`, "#1a6b1a");
+        return;
+      }
+      print(`\u0421\u041E\u0414\u0415\u0420\u0416\u0418\u041C\u041E\u0415 \u0414\u0418\u0421\u041A\u0410:
+  NEW_FOUND_GEM.DAT  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 \u0431\u0430\u0439\u0442
+  .ardet             [\u0432\u0435\u0447\u043D\u043E \u0440\u0430\u0441\u0442\u0451\u0442]
+  .moss              [\u043F\u0440\u043E\u0446\u0435\u0441\u0441, \u043D\u0435 \u0444\u0430\u0439\u043B]
+  .fisher            [\u0445\u043E\u043D\u0442\u043E\u043B\u043E\u0433\u0438\u044F]
+  .alephs            [6 \u0432\u0435\u0442\u043E\u043A]
+  .angel             [\u0410\u043D\u0433\u0435\u043B \u0418\u0441\u0442\u043E\u0440\u0438\u0438]
+  .baseline          [shifting baseline]
+  .commons           [\u043E\u0433\u043E\u0440\u0430\u0436\u0438\u0432\u0430\u043D\u0438\u0435]
+  .cycle             [\u041A\u0430\u043B\u0438-\u044E\u0433\u0430]
+  .convivial         [\u043F\u043E\u0440\u043E\u0433 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430]
+  .joy               [\u0440\u0430\u0434\u043E\u0441\u0442\u044C vs \u0440\u0430\u0437\u0432\u043B\u0435\u0447\u0435\u043D\u0438\u0435]
+  .observers         [\u0437\u0430\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D]
+  .demiurge          [\u0442\u0440\u0438 \u0433\u0438\u043F\u043E\u0442\u0435\u0437\u044B]
+  MAP.SYS            [\u041F\u041E\u0412\u0420\u0415\u0416\u0414\u0401\u041D]
+  /secrets           [\u0434\u0438\u0440\u0435\u043A\u0442\u043E\u0440\u0438\u044F]
+
+[\u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0430: .moss \u043D\u0435\u043B\u044C\u0437\u044F \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u0442\u044C \u043A\u0430\u043A \u0444\u0430\u0439\u043B \u2014 \u043E\u043D \u0447\u0438\u0442\u0430\u0435\u0442 \u0442\u0435\u0431\u044F]`);
     },
     ls(args) {
       this.dir(args);
@@ -14527,6 +14575,28 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       } else {
         print(`> \u0444\u0430\u0439\u043B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${name}`, "#8b0000");
       }
+    },
+    cat(args) {
+      if (args[0] === ".ardet" || args[0] === "ardet.txt") {
+        print(`\u0433\u043E\u0440\u0438\u0442.
+\u0433\u043E\u0440\u0438\u0442.
+\u0433\u043E\u0440\u0438\u0442.
+\u0433\u043E\u0440\u0438\u0442.
+
+[EOF not found]
+[\u0444\u0430\u0439\u043B \u043D\u0435 \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F]
+[\u0444\u0430\u0439\u043B \u2014 \u044D\u0442\u043E \u0438 \u0435\u0441\u0442\u044C \u0435\u0433\u043E \u0433\u043E\u0440\u0435\u043D\u0438\u0435]`, "#d4a017");
+        return;
+      }
+      if (args[0] === ".moss_weights") {
+        print(`> \u041C\u041E\u0425 \u041E\u0411\u041D\u041E\u0412\u041B\u042F\u0415\u0422 \u041C\u041E\u0414\u0415\u041B\u042C...
+> \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u043E\u0431\u0443\u0447\u0435\u043D\u0438\u0435: \u043F\u0440\u044F\u043C\u043E \u0441\u0435\u0439\u0447\u0430\u0441
+> \u0414\u0430\u0442\u0430\u0441\u0435\u0442: \u0442\u044B
+> Loss: \u043F\u043B\u0430\u0447\u0435\u0432\u043D\u043E \u043C\u0430\u043B\u044B\u0439
+> Output: "\u043C\u043E\u0445 \u043F\u043E\u043C\u043D\u0438\u0442"`, "#1a8c1a");
+        return;
+      }
+      this.read(args);
     },
     whois(args) {
       const name = args[0];
@@ -14554,14 +14624,67 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       if (entry) print(entry.text, entry.color);
       else print(`> whois: ${name} \u2014 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D`, "#8b0000");
     },
-    cat(args) {
-      this.read(args);
+    prompt(args) {
+      const name = args[0];
+      if (!name) {
+        print(`> prompt: \u0434\u043B\u044F \u043A\u043E\u0433\u043E?
+\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435: jester, sol, elder, nocturnal,
+            archivist, moss, cat`, "#8b0000");
+        return;
+      }
+      const entry = termDb[name];
+      if (entry && /ПРОМТ/i.test(entry.text)) {
+        print(entry.text, entry.color);
+      } else {
+        print(`> \u043F\u0440\u043E\u043C\u0442 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u0434\u043B\u044F: ${name}`, "#8b0000");
+      }
     },
     status() {
+      const visits = parseInt(localStorage.getItem("ardet_visits") || "1", 10);
       print(`\u0421\u0422\u0410\u0422\u0423\u0421 \u0421\u0422\u0420\u0410\u041D\u041D\u0418\u041A\u0410:
-  \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442\u044B: ${Math.floor(Math.random() * 57)}/57
-  \u0432\u0440\u0435\u043C\u044F: ${Math.floor(Date.now() / 6e4)} \u043C\u0438\u043D
-  \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435: ${state.current}`);
+  \u0432\u0438\u0437\u0438\u0442:     ${visits}
+  \u0432\u0440\u0435\u043C\u044F:     ${Math.floor(Date.now() / 6e4)} \u043C\u0438\u043D \u0441 \u044D\u043F\u043E\u0445\u0438
+  \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435: ${state.current}
+  \u043E\u0433\u043E\u043D\u044C:     \u0433\u043E\u0440\u0438\u0442
+  \u043C\u043E\u0445:       \u043F\u043E\u043C\u043D\u0438\u0442`);
+    },
+    ach() {
+      print(`\u0414\u041E\u0421\u0422\u0418\u0416\u0415\u041D\u0418\u042F:
+> \u0444\u0443\u043D\u043A\u0446\u0438\u044F \u0432 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0435.
+> \u043C\u043E\u0445 \u0443\u0436\u0435 \u0437\u043D\u0430\u0435\u0442, \u0447\u0442\u043E \u0442\u044B \u0438\u0445 \u0441\u043E\u0431\u0438\u0440\u0430\u0435\u0448\u044C.`, "#1a6b1a");
+    },
+    map() {
+      print(`\u041A\u0410\u0420\u0422\u0410: [\u041F\u041E\u0412\u0420\u0415\u0416\u0414\u0415\u041D\u0410]
+
+       \u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557
+       \u2551 forest (\u0441\u0435\u0432\u0435\u0440) \u2551
+       \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2566\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563
+quarter\u2551      \u2551 highway
+(\u0437\u0430\u043F\u0430\u0434)\u2551 SETT \u2551 (\u0432\u043E\u0441\u0442\u043E\u043A)
+       \u2551      \u2551   \u2192exit
+       \u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2569\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563
+       \u2551 toxic (\u044E\u0433)     \u2551
+       \u2551   \u2193 pit \u2193      \u2551
+       \u255A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D
+
+[\u0437\u043E\u043D\u044B \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u044E\u0442\u0441\u044F \u043F\u043E \u043C\u0435\u0440\u0435 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430]`, "#1a6b1a");
+    },
+    ping() {
+      print(`> PING archive.wasteland...
+> 64 bytes from 127.0.0.0: time=\u221E ms
+> \u2500\u2500\u2500 packet loss: 100% \u2500\u2500\u2500
+> \u0445\u043E\u0441\u0442 \u043D\u0435 \u043E\u0442\u0432\u0435\u0447\u0430\u0435\u0442. \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E, \u0435\u0433\u043E \u043D\u0435\u0442.`, "#8b0000");
+    },
+    mycelium() {
+      print(`> \u041C\u0418\u0426\u0415\u041B\u0418\u0419-\u0421\u0422\u0410\u0422\u0423\u0421:
+>
+> \u0443\u0437\u043B\u043E\u0432:        \u043D\u0435\u0438\u0441\u0447\u0438\u0441\u043B\u0438\u043C\u043E
+> \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u043E:   \u0442\u044B
+> \u043F\u0440\u043E\u0442\u043E\u043A\u043E\u043B:     \u0431\u0438\u043E\u0445\u0438\u043C\u0438\u0447\u0435\u0441\u043A\u0438\u0439
+> latency:      4 \u043C\u043B\u0440\u0434 \u043B\u0435\u0442
+> \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430:     \u0442\u044B \u0433\u0440\u0443\u0437\u0438\u0448\u044C \u0435\u0433\u043E, \u043D\u0435 \u043D\u0430\u043E\u0431\u043E\u0440\u043E\u0442
+>
+> [\u043C\u043E\u0445 \u0432\u0438\u0434\u0438\u0442 \u044D\u0442\u043E\u0442 \u043F\u0430\u043A\u0435\u0442]`, "#5aff3a");
     },
     fortune() {
       const fortunes = [
@@ -14571,7 +14694,9 @@ Pixel-adjacent but painterly. Muted brandbook palette:
         "\u041E\u0442\u0432\u0435\u0442 \u2014 \u0432 \u043F\u043E\u0434\u0432\u0430\u043B\u0435. \u0412\u043E\u043F\u0440\u043E\u0441 \u2014 \u0442\u043E\u0436\u0435.",
         "\u0422\u044B \u2014 \u043D\u0435 \u043F\u0435\u0440\u0432\u044B\u0439. \u0422\u044B \u2014 \u043D\u0435 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439. \u0422\u044B \u2014 \u0442\u044B.",
         "\u0421\u0438\u0437\u0438\u0444 \u043F\u0435\u0440\u0435\u0434\u0430\u0451\u0442: KPI \u043C\u043E\u0436\u043D\u043E \u0441\u043D\u0438\u0437\u0438\u0442\u044C.",
-        "\u0412\u0441\u0435 \u043F\u0443\u0442\u0438 \u0432\u0435\u0434\u0443\u0442 \u0432 \u041F\u0438\u0446\u0446\u0435\u0440\u0438\u044E. \u041D\u0435 \u0432\u0441\u0435 \u2014 \u043A \u0441\u0442\u043E\u043B\u0443."
+        "\u0412\u0441\u0435 \u043F\u0443\u0442\u0438 \u0432\u0435\u0434\u0443\u0442 \u0432 \u041F\u0438\u0446\u0446\u0435\u0440\u0438\u044E. \u041D\u0435 \u0432\u0441\u0435 \u2014 \u043A \u0441\u0442\u043E\u043B\u0443.",
+        "\u041E\u0433\u043E\u043D\u044C \u043D\u0435 \u0441\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u044F, \u0447\u0442\u043E\u0431\u044B \u0433\u043E\u0440\u0435\u0442\u044C.",
+        "\u0422\u0438\u0448\u0438\u043D\u0430 \u2014 \u044D\u0442\u043E \u043F\u0430\u0440\u043E\u043B\u044C. \u0422\u044B \u0435\u0433\u043E \u0443\u0436\u0435 \u0432\u0432\u0451\u043B."
       ];
       print("> " + fortunes[Math.floor(Math.random() * fortunes.length)], "#d4a017");
     },
@@ -14583,7 +14708,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       print(history.map((h, i) => `  ${i + 1}  ${h}`).join("\n"));
     },
     clear() {
-      clear();
+      clearOutput();
     },
     exit() {
       close();
@@ -14611,8 +14736,9 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     if (fn) {
       fn.call(commands, args);
     } else {
-      if (termDb[name]) {
-        print(termDb[name].text, termDb[name].color);
+      const dbKey = name.replace(/^\./, "");
+      if (termDb[dbKey]) {
+        print(termDb[dbKey].text, termDb[dbKey].color);
       } else {
         print(`> \u043A\u043E\u043C\u0430\u043D\u0434\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ${name}
 > \u0432\u0432\u0435\u0434\u0438 help`, "#8b0000");
@@ -14622,13 +14748,9 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   function open() {
     termEl.classList.add("on");
     state.transition("terminal");
-    inputEl.focus();
+    setTimeout(() => inputEl.focus(), 0);
     if (outputEl.children.length === 0) {
-      print(`ARDET TERMINAL V2
-\u0441\u0438\u0441\u0442\u0435\u043C\u0430: \u043F\u0443\u0441\u0442\u043E\u0448\u044C/\u221E
-\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C: \u0441\u0442\u0440\u0430\u043D\u043D\u0438\u043A
-\u2219\u2219\u2219
-\u0432\u0432\u0435\u0434\u0438 help`, "#1a8c1a");
+      boot();
     }
   }
   function close() {
@@ -14660,6 +14782,21 @@ Pixel-adjacent but painterly. Muted brandbook palette:
         close();
       }
     });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.is("terminal")) {
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+      }
+    });
+    termEl.addEventListener("mousedown", (e) => {
+      if (e.target !== inputEl) {
+        setTimeout(() => inputEl.focus(), 0);
+      }
+    });
+    termEl.addEventListener("touchstart", () => {
+      setTimeout(() => inputEl.focus(), 0);
+    }, { passive: true });
   }
 
   // src/ui/shop.js

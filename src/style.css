@@ -201,7 +201,8 @@ canvas#game {
   z-index: 300;
   background: rgba(0,5,0,0.97);
   padding: var(--space-m);
-  flex-direction: column;
+  /* Reverse so the input sits at the bottom (output fills above) */
+  flex-direction: column-reverse;
   align-items: center;
 }
 #term.on { display: flex; }
@@ -211,7 +212,7 @@ canvas#game {
   color: var(--c-term);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--c-term);
+  border-top: 1px solid var(--c-term);
   padding: var(--space-s);
   outline: none;
   caret-color: var(--c-term);
@@ -226,7 +227,7 @@ canvas#game {
   color: var(--c-term);
   white-space: pre-wrap;
   line-height: 1.8;
-  padding-top: var(--space-s);
+  padding-bottom: var(--space-s);
   max-width: 660px;
   width: 100%;
 }
