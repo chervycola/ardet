@@ -15236,7 +15236,18 @@ Pixel-adjacent but painterly. Muted brandbook palette:
 
   // src/render/weather.js
   var STATE = { CLEAR: "clear", TOXIC_RAIN: "toxicRain", SANDSTORM: "sandstorm" };
-  var MIN_GAP_FRAMES = 10800;
+  var COOLDOWN2 = {
+    [STATE.TOXIC_RAIN]: 32400,
+    // 9 min
+    [STATE.SANDSTORM]: 10800
+    // 3 min
+  };
+  var RAMP = {
+    [STATE.TOXIC_RAIN]: 12e-4,
+    // ~14s to reach full
+    [STATE.SANDSTORM]: 4e-3
+    // ~4s to reach full
+  };
   var weather = {
     state: STATE.CLEAR,
     // Transition: 0..1 fade-in/fade-out envelope for overlays
@@ -15248,6 +15259,12 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     currentDuration: 0,
     // frames remaining of current weather
     zone: "settlement",
+    // Last-start timestamps — used for per-type cooldowns.
+    // Negative initial values let the first event fire after `nextCheck`.
+    lastStartAt: {
+      [STATE.TOXIC_RAIN]: -999999,
+      [STATE.SANDSTORM]: -999999
+    },
     // Particle pools
     rainParts: [],
     sandParts: [],
@@ -15264,16 +15281,23 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   var MAX_SAND = 140;
   var MAX_PUDDLES = 30;
   function rollWeather(zone) {
-    if (zone === "toxic" || zone === "forest") {
-      return { state: STATE.TOXIC_RAIN, duration: 1800 + Math.floor(Math.random() * 2400) };
+    const onCooldown = (st) => t - weather.lastStartAt[st] < COOLDOWN2[st];
+    const wantRain = zone === "toxic" || zone === "forest";
+    const wantSand = zone === "highway" || zone === "quarter";
+    if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) {
+      return { state: STATE.TOXIC_RAIN, duration: 7200 + Math.floor(Math.random() * 7200) };
     }
-    if (zone === "highway" || zone === "quarter") {
+    if (wantSand && !onCooldown(STATE.SANDSTORM)) {
       return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
     }
-    if (Math.random() < 0.5) {
-      return { state: STATE.TOXIC_RAIN, duration: 1200 + Math.floor(Math.random() * 1800) };
+    const rainReady = !onCooldown(STATE.TOXIC_RAIN);
+    const sandReady = !onCooldown(STATE.SANDSTORM);
+    if (rainReady && sandReady) {
+      return Math.random() < 0.4 ? { state: STATE.TOXIC_RAIN, duration: 6e3 + Math.floor(Math.random() * 6e3) } : { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
     }
-    return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+    if (rainReady) return { state: STATE.TOXIC_RAIN, duration: 6e3 + Math.floor(Math.random() * 6e3) };
+    if (sandReady) return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+    return null;
   }
   function update3(zone) {
     weather.zone = zone || "settlement";
@@ -15284,15 +15308,24 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     }
     if (weather.nextCheck <= 0) {
       const r = rollWeather(weather.zone);
-      weather.state = r.state;
-      weather.currentDuration = r.duration;
-      weather.nextCheck = MIN_GAP_FRAMES;
+      if (r) {
+        weather.state = r.state;
+        weather.currentDuration = r.duration;
+        weather.lastStartAt[r.state] = t;
+      }
+      weather.nextCheck = 1800;
     }
-    weather.targetIntensity = weather.state === STATE.CLEAR ? 0 : 1;
+    const fadeFrames = Math.min(2400, Math.floor((weather.currentDuration > 0 ? weather.currentDuration : 1) * 0.2));
+    let target = 0;
+    if (weather.state !== STATE.CLEAR && weather.currentDuration > 0) {
+      target = weather.currentDuration < fadeFrames ? weather.currentDuration / fadeFrames : 1;
+    }
+    weather.targetIntensity = target;
+    const ramp = RAMP[weather.state] || 3e-3;
     if (weather.intensity < weather.targetIntensity) {
-      weather.intensity = Math.min(1, weather.intensity + 4e-3);
+      weather.intensity = Math.min(weather.targetIntensity, weather.intensity + ramp);
     } else if (weather.intensity > weather.targetIntensity) {
-      weather.intensity = Math.max(0, weather.intensity - 4e-3);
+      weather.intensity = Math.max(weather.targetIntensity, weather.intensity - ramp * 0.7);
     }
     weather.windX = 0.3 + 0.9 * Math.sin(t * 13e-4);
     if (weather.state === STATE.TOXIC_RAIN || weather.intensity > 0) updateRain();
@@ -15317,9 +15350,14 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   function updateRain() {
     const vw = scaler.vw, vh = scaler.vh;
     const spawning = weather.state === STATE.TOXIC_RAIN;
-    if (spawning && weather.rainParts.length < MAX_RAIN && t % 2 === 0) {
-      const batch = 1 + Math.floor(weather.intensity * 3);
-      for (let i = 0; i < batch; i++) {
+    if (spawning && weather.rainParts.length < MAX_RAIN) {
+      const I = weather.intensity;
+      const expected = I * I * 5;
+      const whole = Math.floor(expected);
+      const frac = expected - whole;
+      const count = whole + (Math.random() < frac ? 1 : 0);
+      for (let i = 0; i < count; i++) {
+        if (weather.rainParts.length >= MAX_RAIN) break;
         weather.rainParts.push({
           x: -20 + Math.random() * (vw + 40),
           y: -8 - Math.random() * 20,
@@ -15346,9 +15384,6 @@ Pixel-adjacent but painterly. Muted brandbook palette:
         }
         weather.rainParts.splice(i, 1);
       }
-    }
-    if (!spawning && weather.rainParts.length > 0) {
-      for (let k = 0; k < 3; k++) weather.rainParts.pop();
     }
   }
   function updateSand() {

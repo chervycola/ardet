@@ -8,8 +8,19 @@ import { hash, rect } from './draw.js';
 
 const STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' };
 
-// Minimum spacing between weather-event STARTS (3 min @ 60fps)
-const MIN_GAP_FRAMES = 10800;
+// Per-type cooldown between event STARTS (@60fps).
+// Rain is a rare, quiet event (~9 min); sandstorm is more frequent (~3 min).
+const COOLDOWN = {
+  [STATE.TOXIC_RAIN]: 32400,  // 9 min
+  [STATE.SANDSTORM]: 10800,   // 3 min
+};
+
+// Intensity ramp speed per state (fraction added/subtracted per frame).
+// Rain creeps in drop-by-drop; sandstorm rolls in faster.
+const RAMP = {
+  [STATE.TOXIC_RAIN]: 0.0012,   // ~14s to reach full
+  [STATE.SANDSTORM]: 0.004,     // ~4s to reach full
+};
 
 export const weather = {
   state: STATE.CLEAR,
@@ -20,6 +31,12 @@ export const weather = {
   nextCheck: 1800,      // first possible weather after 30s
   currentDuration: 0,   // frames remaining of current weather
   zone: 'settlement',
+  // Last-start timestamps — used for per-type cooldowns.
+  // Negative initial values let the first event fire after `nextCheck`.
+  lastStartAt: {
+    [STATE.TOXIC_RAIN]: -999999,
+    [STATE.SANDSTORM]: -999999,
+  },
 
   // Particle pools
   rainParts: [],
@@ -39,27 +56,39 @@ const MAX_RAIN = 90;
 const MAX_SAND = 140;
 const MAX_PUDDLES = 30;
 
-// Zone → preferred weather; rolled each cycle
-// Durations are in frames (60fps). Scheduler enforces a 3-min gap between starts.
+// Zone → preferred weather. Rain gets longer durations (2-4 min) so it can
+// ease in drop-by-drop and taper out. Sandstorm is punchier (25s-60s).
+// Returns null if the chosen type is still on cooldown.
 function rollWeather(zone) {
-  if (zone === 'toxic' || zone === 'forest') {
-    return { state: STATE.TOXIC_RAIN, duration: 1800 + Math.floor(Math.random() * 2400) };
+  const onCooldown = (st) => (t - weather.lastStartAt[st]) < COOLDOWN[st];
+
+  const wantRain = zone === 'toxic' || zone === 'forest';
+  const wantSand = zone === 'highway' || zone === 'quarter';
+
+  if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) {
+    return { state: STATE.TOXIC_RAIN, duration: 7200 + Math.floor(Math.random() * 7200) };
   }
-  if (zone === 'highway' || zone === 'quarter') {
+  if (wantSand && !onCooldown(STATE.SANDSTORM)) {
     return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
   }
-  // Settlement → 50/50 rain or sand drifting in
-  if (Math.random() < 0.5) {
-    return { state: STATE.TOXIC_RAIN, duration: 1200 + Math.floor(Math.random() * 1800) };
+  // Settlement / fallback: pick whichever is off cooldown
+  const rainReady = !onCooldown(STATE.TOXIC_RAIN);
+  const sandReady = !onCooldown(STATE.SANDSTORM);
+  if (rainReady && sandReady) {
+    return Math.random() < 0.4
+      ? { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) }
+      : { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
   }
-  return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+  if (rainReady) return { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) };
+  if (sandReady) return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+  return null; // both on cooldown → sky stays clear
 }
 
 export function update(zone) {
   weather.zone = zone || 'settlement';
 
-  // Scheduler — weather can only START once every MIN_GAP_FRAMES (~3 min).
-  // Inside that window the sky clears after the event's own duration.
+  // Scheduler — each weather type has its own cooldown (rain 9 min, sand 3 min).
+  // If both are on cooldown the roll returns null and the sky stays clear.
   weather.currentDuration--;
   weather.nextCheck--;
   if (weather.currentDuration <= 0 && weather.state !== STATE.CLEAR) {
@@ -67,17 +96,33 @@ export function update(zone) {
   }
   if (weather.nextCheck <= 0) {
     const r = rollWeather(weather.zone);
-    weather.state = r.state;
-    weather.currentDuration = r.duration;
-    weather.nextCheck = MIN_GAP_FRAMES;
+    if (r) {
+      weather.state = r.state;
+      weather.currentDuration = r.duration;
+      weather.lastStartAt[r.state] = t;
+    }
+    // Poll again in 30s regardless (cheap) — cooldowns handle the real gating
+    weather.nextCheck = 1800;
   }
 
-  weather.targetIntensity = weather.state === STATE.CLEAR ? 0 : 1;
-  // Smooth fade
+  // Intensity envelope — bell-shaped so rain creeps in and trails out.
+  // fadeFrames = 20% of total duration, capped at 40s.
+  const fadeFrames = Math.min(2400, Math.floor((weather.currentDuration > 0 ? weather.currentDuration : 1) * 0.2));
+  let target = 0;
+  if (weather.state !== STATE.CLEAR && weather.currentDuration > 0) {
+    // Use currentDuration and the event's starting duration to find phase.
+    // We don't store the original duration, so approximate: taper near the end.
+    target = weather.currentDuration < fadeFrames
+      ? weather.currentDuration / fadeFrames
+      : 1;
+  }
+  weather.targetIntensity = target;
+
+  const ramp = RAMP[weather.state] || 0.003;
   if (weather.intensity < weather.targetIntensity) {
-    weather.intensity = Math.min(1, weather.intensity + 0.004);
+    weather.intensity = Math.min(weather.targetIntensity, weather.intensity + ramp);
   } else if (weather.intensity > weather.targetIntensity) {
-    weather.intensity = Math.max(0, weather.intensity - 0.004);
+    weather.intensity = Math.max(weather.targetIntensity, weather.intensity - ramp * 0.7);
   }
 
   // Update wind with lazy drift
@@ -111,9 +156,20 @@ export function update(zone) {
 function updateRain() {
   const vw = scaler.vw, vh = scaler.vh;
   const spawning = weather.state === STATE.TOXIC_RAIN;
-  if (spawning && weather.rainParts.length < MAX_RAIN && t % 2 === 0) {
-    const batch = 1 + Math.floor(weather.intensity * 3);
-    for (let i = 0; i < batch; i++) {
+
+  // Drop-by-drop intro: spawn rate ~ intensity² so the first drops are
+  // several seconds apart, thickening only as the rain takes hold.
+  if (spawning && weather.rainParts.length < MAX_RAIN) {
+    const I = weather.intensity;
+    // Expected drops-per-frame: tiny at low I, saturates near full I.
+    // At I=0.05 → ~0.0125/frame (≈1 drop every 1.3s).
+    // At I=1.0 → ~5/frame (heavy).
+    const expected = I * I * 5;
+    const whole = Math.floor(expected);
+    const frac = expected - whole;
+    const count = whole + (Math.random() < frac ? 1 : 0);
+    for (let i = 0; i < count; i++) {
+      if (weather.rainParts.length >= MAX_RAIN) break;
       weather.rainParts.push({
         x: -20 + Math.random() * (vw + 40),
         y: -8 - Math.random() * 20,
@@ -139,9 +195,6 @@ function updateRain() {
       }
       weather.rainParts.splice(i, 1);
     }
-  }
-  if (!spawning && weather.rainParts.length > 0) {
-    for (let k = 0; k < 3; k++) weather.rainParts.pop();
   }
 }
 
