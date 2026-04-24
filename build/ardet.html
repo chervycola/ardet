@@ -104,11 +104,12 @@ canvas#game {
 }
 #menu.on { display: block; }
 #menu-inscription {
-  font-size: 7px;
+  font-size: 10px;
   color: var(--c-gold);
-  padding: 6px 10px;
+  padding: 10px 14px;
   text-align: center;
-  max-width: 200px;
+  max-width: 260px;
+  line-height: 1.6;
 }
 #menu-inscription.on { display: block; }
 .mi {
@@ -1604,16 +1605,19 @@ canvas#game {
 
   // src/sprites/player.js
   var P2 = {
-    d1: "#0a0a0a",
-    dgrey: "#2a2a2a",
-    ash: "#8a8d8f",
-    bone: "#e8dcc8",
-    dbone: "#c8b8a8",
-    dwood: "#1a0e06",
-    crimson: "#6b0f1a",
-    gold: "#b8860b",
-    cloak: "#1a1418",
-    cloakLight: "#2a2028"
+    void: "#050408",
+    shadow: "#0a0a0a",
+    cloakDark: "#12101a",
+    cloakMid: "#1e1a28",
+    cloakEdge: "#2a2032",
+    boneHand: "#c8b8a8",
+    // Chest fire palette (from core to halo)
+    fireCore: "#fff4c8",
+    fireHot: "#ffb040",
+    fireMid: "#e06018",
+    fireDim: "#7a1410",
+    ember: "#ff8030",
+    gold: "#b8860b"
   };
   function drawPlayer(player2) {
     const ctx2 = X;
@@ -1624,54 +1628,91 @@ canvas#game {
     const walkPhase = moving ? Math.sin(t * 0.22) : 0;
     const bob = moving ? Math.abs(Math.sin(t * 0.22)) * 1.2 : 0;
     const breath = Math.sin(t * 0.015) * 0.5;
-    const headTilt = Math.sin(t * 8e-3) * 0.3;
-    ctx2.globalAlpha = 0.35;
+    const sway = Math.sin(t * 0.02) * 0.6;
+    const firePulse = 0.7 + 0.3 * Math.sin(t * 0.18);
+    const fireFlicker = 0.85 + 0.15 * Math.sin(t * 0.45 + Math.sin(t * 0.1) * 2);
+    ctx2.globalAlpha = 0.4;
     ctx2.fillStyle = "#000";
     ctx2.beginPath();
-    ctx2.ellipse(x + 7, y + 22, 7 + (moving ? 1 : 0), 2, 0, 0, Math.PI * 2);
+    ctx2.ellipse(x + 7, y + 22, 7 + (moving ? 1 : 0), 2.2, 0, 0, Math.PI * 2);
     ctx2.fill();
+    ctx2.globalAlpha = 1;
+    ctx2.globalAlpha = 0.18 * firePulse;
+    const fireGlow = ctx2.createRadialGradient(x + 6, y + 11, 1, x + 6, y + 11, 22);
+    fireGlow.addColorStop(0, P2.fireHot);
+    fireGlow.addColorStop(0.5, "rgba(224,96,24,0.4)");
+    fireGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx2.fillStyle = fireGlow;
+    ctx2.fillRect(x - 16, y - 6, 44, 34);
     ctx2.globalAlpha = 1;
     const legL = moving ? walkPhase * 2 : 0;
     const legR = moving ? -walkPhase * 2 : 0;
-    rect(ctx2, x + 3, y + 15 - bob, 2, 6 + legL, P2.d1);
-    px(ctx2, x + 3, y + 20 + legL - bob, P2.dgrey);
-    rect(ctx2, x + 8, y + 15 - bob, 2, 6 + legR, P2.d1);
-    px(ctx2, x + 8, y + 20 + legR - bob, P2.dgrey);
-    rect(ctx2, x + 2, y + 21 + legL - bob, 3, 2, P2.dwood);
-    rect(ctx2, x + 7, y + 21 + legR - bob, 3, 2, P2.dwood);
-    rect(ctx2, x + 1, y + 6 - bob + breath, 11, 11 - breath, P2.cloak);
-    rect(ctx2, x + 2, y + 7 - bob + breath, 9, 9 - breath, P2.d1);
-    rect(ctx2, x + 2, y + 5 - bob, 9, 2, P2.cloakLight);
-    rect(ctx2, x + 2, y + 13 - bob, 9, 1, P2.dgrey);
-    px(ctx2, x + 6, y + 13 - bob, P2.gold);
-    const armSwing = moving ? Math.sin(t * 0.22 + 0.5) * 1.5 : 0;
-    rect(ctx2, x + 0 - armSwing * 0.5, y + 8 - bob, 2, 7, P2.d1);
-    px(ctx2, x + 0 - armSwing * 0.5, y + 15 - bob, P2.bone);
-    rect(ctx2, x + 11 + armSwing * 0.5, y + 8 - bob, 2, 7, P2.d1);
-    px(ctx2, x + 11 + armSwing * 0.5, y + 15 - bob, P2.bone);
-    const hx = x + 3 + headTilt;
-    rect(ctx2, hx, y - 1 - bob, 7, 7, P2.bone);
-    rect(ctx2, hx + 1, y - bob, 5, 5, P2.dbone);
-    rect(ctx2, hx - 1, y - 2 - bob, 9, 3, P2.d1);
-    rect(ctx2, hx, y - 3 - bob, 7, 2, P2.cloak);
-    ctx2.globalAlpha = 0.4;
-    rect(ctx2, hx + 1, y - bob, 5, 2, P2.d1);
+    rect(ctx2, x + 4, y + 18 - bob, 2, 4 + legL, P2.shadow);
+    rect(ctx2, x + 7, y + 18 - bob, 2, 4 + legR, P2.shadow);
+    rect(ctx2, x + 3, y + 21 + legL - bob, 3, 2, P2.void);
+    rect(ctx2, x + 7, y + 21 + legR - bob, 3, 2, P2.void);
+    const cbx = x + sway;
+    rect(ctx2, cbx + 1, y + 5 - bob + breath, 11, 6, P2.cloakMid);
+    rect(ctx2, cbx + 2, y + 6 - bob + breath, 9, 5, P2.cloakDark);
+    rect(ctx2, cbx + 0, y + 11 - bob, 13, 7, P2.cloakMid);
+    rect(ctx2, cbx + 1, y + 12 - bob, 11, 6, P2.cloakDark);
+    const hemPh = Math.sin(t * 0.06) * 0.5;
+    px(ctx2, cbx + 0, y + 17 - bob + hemPh, P2.cloakEdge);
+    px(ctx2, cbx + 4, y + 18 - bob, P2.cloakEdge);
+    px(ctx2, cbx + 8, y + 18 - bob - hemPh, P2.cloakEdge);
+    px(ctx2, cbx + 12, y + 17 - bob + hemPh, P2.cloakEdge);
+    rect(ctx2, cbx + 6, y + 7 - bob, 1, 11, P2.void);
+    const armSwing = moving ? Math.sin(t * 0.22 + 0.5) * 1.2 : 0;
+    px(ctx2, cbx + 0 - armSwing * 0.4, y + 13 - bob, P2.boneHand);
+    px(ctx2, cbx + 12 + armSwing * 0.4, y + 13 - bob, P2.boneHand);
+    const fx_ = cbx + 5;
+    const fy_ = y + 9 - bob;
+    ctx2.globalAlpha = 0.55 * firePulse;
+    rect(ctx2, fx_ - 1, fy_, 5, 4, P2.fireDim);
+    ctx2.globalAlpha = 0.75 * firePulse;
+    rect(ctx2, fx_, fy_, 3, 3, P2.fireMid);
+    ctx2.globalAlpha = 0.9 * fireFlicker;
+    rect(ctx2, fx_ + 1, fy_, 1, 3, P2.fireHot);
+    px(ctx2, fx_ + 1, fy_ - 1, P2.fireCore);
+    px(ctx2, fx_ + 1, fy_ + 1, P2.fireCore);
     ctx2.globalAlpha = 1;
-    const eyeY = y + 2 - bob;
-    if (dir > 0) {
-      px(ctx2, hx + 2, eyeY, P2.crimson);
-      px(ctx2, hx + 4, eyeY, P2.crimson);
-    } else {
-      px(ctx2, hx + 3, eyeY, P2.crimson);
-      px(ctx2, hx + 5, eyeY, P2.crimson);
+    if (t % 8 === 0 && Math.random() > 0.4) {
+      const sp = t / 8 % 3;
+      ctx2.globalAlpha = 0.7;
+      ctx2.fillStyle = P2.ember;
+      ctx2.fillRect(fx_ + 1 + Math.sin(t * 0.1) * 2, fy_ - 2 - sp, 1, 1);
+      ctx2.globalAlpha = 1;
     }
-    if (t % 240 < 4) {
-      ctx2.fillStyle = P2.d1;
-      ctx2.fillRect(hx + 1, eyeY, 5, 1);
+    const hx = cbx + 2;
+    const hy = y - 3 - bob;
+    rect(ctx2, hx - 1, hy + 1, 11, 6, P2.void);
+    rect(ctx2, hx, hy, 9, 6, P2.cloakDark);
+    rect(ctx2, hx - 1, hy + 5, 11, 3, P2.cloakMid);
+    px(ctx2, hx - 1, hy + 4, P2.cloakMid);
+    px(ctx2, hx + 9, hy + 4, P2.cloakMid);
+    rect(ctx2, hx + 1, hy + 2, 7, 5, P2.void);
+    const eyeY = hy + 4;
+    const eyePulse = 0.55 + 0.25 * Math.sin(t * 0.12);
+    ctx2.globalAlpha = eyePulse;
+    if (dir > 0) {
+      px(ctx2, hx + 3, eyeY, P2.ember);
+      px(ctx2, hx + 5, eyeY, P2.ember);
+    } else {
+      px(ctx2, hx + 3, eyeY, P2.ember);
+      px(ctx2, hx + 5, eyeY, P2.ember);
+    }
+    ctx2.globalAlpha = eyePulse * 0.7;
+    ctx2.fillStyle = P2.fireHot;
+    ctx2.fillRect(hx + 3, eyeY, 1, 1);
+    ctx2.fillRect(hx + 5, eyeY, 1, 1);
+    ctx2.globalAlpha = 1;
+    if (t % 260 < 5) {
+      ctx2.fillStyle = P2.void;
+      ctx2.fillRect(hx + 2, eyeY, 5, 1);
     }
     if (moving && t % 6 === 0) {
-      ctx2.globalAlpha = 0.2;
-      ctx2.fillStyle = P2.ash;
+      ctx2.globalAlpha = 0.25;
+      ctx2.fillStyle = "#8a8d8f";
       ctx2.fillRect(x + 5 + Math.random() * 4 - 2, y + 22, 1, 1);
       ctx2.globalAlpha = 1;
     }
