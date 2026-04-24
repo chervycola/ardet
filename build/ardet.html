@@ -2599,7 +2599,7 @@ canvas#game {
     toxic: "#3aff1a"
   };
   var npcProximity4 = 0;
-  function drawDumpsterDemon2(dx, dy) {
+  function drawDumpsterDemon(dx, dy) {
     const hover = Math.sin(t * 4e-3) * 3;
     const wingFlap = Math.sin(t * 7e-3) * 11;
     const breathe = Math.sin(t * 6e-3) * 2;
@@ -2928,8 +2928,37 @@ canvas#game {
     g2: "#141208",
     fg1: "#0e1a08",
     fg2: "#1a2812",
-    tg1: "#1a2a0e"
+    tg1: "#1a2a0e",
+    // ported from monolith — referenced w/o ||-fallback
+    rust: "#6b0f1a",
+    drust: "#4a0a12",
+    blood: "#8b0000",
+    volcanic: "#8b0000",
+    dtoxic: "#1a3a0a",
+    btoxic: "#5a8a2a",
+    stone: "#4a4a52",
+    lstone: "#8a8d8f",
+    wood: "#4a3a2a",
+    lwood: "#6a5a42",
+    lgrey: "#b8c8c0",
+    f3: "#8b0000",
+    f4: "#b8860b",
+    g3: "#16100a",
+    indigo: "#1b1464",
+    celestial: "#4a7fb5",
+    sunflower: "#daa520",
+    parchment: "#e8d8b0"
   };
+  function drawBuildingSilhouette(x, y, w, h, roofColor) {
+    rect(X, x, y, w, h, P8.dstone);
+    rect(X, x + 2, y + 2, w - 4, h - 4, "#1a1a22");
+    rect(X, x, y, w, 2, roofColor || P8.dgrey);
+    for (let wy = 10; wy < h - 8; wy += 14) {
+      for (let wx = 6; wx < w - 8; wx += 16) {
+        rect(X, x + wx, y + wy, 3, 4, "#050305");
+      }
+    }
+  }
   function draw_campfire(x, y) {
     X.globalAlpha = 0.5;
     X.fillStyle = "#000";
@@ -16144,7 +16173,7 @@ Ardet v1.0 \u2014 coming soon.
     sol: drawNPC_sol,
     elder: drawNPC_elder,
     nocturnal: drawNPC_nocturnal,
-    dumpster: drawDumpsterDemon2
+    dumpster: drawDumpsterDemon
   };
   function render() {
     const vw = scaler.vw, vh = scaler.vh;

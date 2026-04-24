@@ -6,6 +6,7 @@ import { X } from '../../render/context.js';
 import { t } from '../../core/time.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
+import { drawDumpsterDemon } from '../npcs/dumpster.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -15,7 +16,30 @@ const P = {
   dwood: '#1a0e06', f1: '#ff6600', f2: '#ff3300',
   toxic: '#3aff1a', g1: '#1a1810', g2: '#141208',
   fg1: '#0e1a08', fg2: '#1a2812', tg1: '#1a2a0e',
+  // ported from monolith — referenced w/o ||-fallback
+  rust: '#6b0f1a', drust: '#4a0a12',
+  blood: '#8b0000', volcanic: '#8b0000',
+  dtoxic: '#1a3a0a', btoxic: '#5a8a2a',
+  stone: '#4a4a52', lstone: '#8a8d8f',
+  wood: '#4a3a2a', lwood: '#6a5a42',
+  lgrey: '#b8c8c0',
+  f3: '#8b0000', f4: '#b8860b',
+  g3: '#16100a',
+  indigo: '#1b1464', celestial: '#4a7fb5',
+  sunflower: '#daa520',
+  parchment: '#e8d8b0',
 };
+
+function drawBuildingSilhouette(x, y, w, h, roofColor) {
+  rect(X, x, y, w, h, P.dstone);
+  rect(X, x + 2, y + 2, w - 4, h - 4, '#1a1a22');
+  rect(X, x, y, w, 2, roofColor || P.dgrey);
+  for (let wy = 10; wy < h - 8; wy += 14) {
+    for (let wx = 6; wx < w - 8; wx += 16) {
+      rect(X, x + wx, y + wy, 3, 4, '#050305');
+    }
+  }
+}
 
 let npcProximity = 0;
 
