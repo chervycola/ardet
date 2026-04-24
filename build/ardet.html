@@ -54,7 +54,6 @@ canvas#game {
   image-rendering: crisp-edges;
   width: 100vw;
   height: 100vh;
-  object-fit: contain;
   display: block;
 }
 
@@ -238,6 +237,7 @@ canvas#game {
 /* ── Custom cursor ── */
 #cur {
   position: fixed;
+  top: 0; left: 0;
   width: 20px; height: 20px;
   pointer-events: none;
   z-index: 9999;
@@ -435,26 +435,11 @@ canvas#game {
       return { canvas: c, ctx: ctx2 };
     },
     // Screen CSS coords → game world coords (for clicks)
-    // Accounts for object-fit:contain letterboxing on desktop
+    // Assumes canvas fills its CSS box (object-fit: fill).
     screenToGame(screenX, screenY, camX, camY) {
-      const canvas = document.getElementById("game");
-      const rect2 = canvas.getBoundingClientRect();
-      const canvasAspect = this.vw / this.vh;
-      const rectAspect = rect2.width / rect2.height;
-      let renderW, renderH, renderX, renderY;
-      if (rectAspect > canvasAspect) {
-        renderH = rect2.height;
-        renderW = rect2.height * canvasAspect;
-        renderX = rect2.left + (rect2.width - renderW) / 2;
-        renderY = rect2.top;
-      } else {
-        renderW = rect2.width;
-        renderH = rect2.width / canvasAspect;
-        renderX = rect2.left;
-        renderY = rect2.top + (rect2.height - renderH) / 2;
-      }
-      const gx = (screenX - renderX) * (this.vw / renderW) + camX;
-      const gy = (screenY - renderY) * (this.vh / renderH) + camY;
+      const rect2 = document.getElementById("game").getBoundingClientRect();
+      const gx = (screenX - rect2.left) * (this.vw / rect2.width) + camX;
+      const gy = (screenY - rect2.top) * (this.vh / rect2.height) + camY;
       return { x: gx, y: gy };
     }
   };
@@ -473,7 +458,7 @@ canvas#game {
       this.mainCtx = scaler.applyToCanvas(mainCanvas2);
       mainCanvas2.style.width = "100vw";
       mainCanvas2.style.height = "100vh";
-      mainCanvas2.style.objectFit = "contain";
+      mainCanvas2.style.objectFit = "fill";
       mainCanvas2.style.imageRendering = "pixelated";
       for (const name of LAYER_NAMES) {
         this._layers[name] = scaler.createLayer();
@@ -523,7 +508,7 @@ canvas#game {
       scaler.applyToCanvas(this.main);
       this.main.style.width = "100vw";
       this.main.style.height = "100vh";
-      this.main.style.objectFit = "contain";
+      this.main.style.objectFit = "fill";
       for (const name of LAYER_NAMES) {
         const l = this._layers[name];
         l.canvas.width = scaler.physW;
@@ -15290,7 +15275,8 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     drawCursor();
     document.addEventListener("mousemove", (e) => {
       if (!visible) return;
-      curEl.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`;
+      curEl.style.left = e.clientX - 10 + "px";
+      curEl.style.top = e.clientY - 10 + "px";
     });
     window.addEventListener("touchstart", () => {
       curEl.style.display = "none";

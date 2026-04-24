@@ -75,33 +75,11 @@ export const scaler = {
   },
 
   // Screen CSS coords → game world coords (for clicks)
-  // Accounts for object-fit:contain letterboxing on desktop
+  // Assumes canvas fills its CSS box (object-fit: fill).
   screenToGame(screenX, screenY, camX, camY) {
-    const canvas = document.getElementById('game');
-    const rect = canvas.getBoundingClientRect();
-
-    // Calculate actual rendered area within the CSS rect
-    // (accounts for object-fit: contain letterboxing)
-    const canvasAspect = this.vw / this.vh;
-    const rectAspect = rect.width / rect.height;
-
-    let renderW, renderH, renderX, renderY;
-    if (rectAspect > canvasAspect) {
-      // Pillarboxed (bars on sides)
-      renderH = rect.height;
-      renderW = rect.height * canvasAspect;
-      renderX = rect.left + (rect.width - renderW) / 2;
-      renderY = rect.top;
-    } else {
-      // Letterboxed (bars top/bottom)
-      renderW = rect.width;
-      renderH = rect.width / canvasAspect;
-      renderX = rect.left;
-      renderY = rect.top + (rect.height - renderH) / 2;
-    }
-
-    const gx = (screenX - renderX) * (this.vw / renderW) + camX;
-    const gy = (screenY - renderY) * (this.vh / renderH) + camY;
+    const rect = document.getElementById('game').getBoundingClientRect();
+    const gx = (screenX - rect.left) * (this.vw / rect.width) + camX;
+    const gy = (screenY - rect.top) * (this.vh / rect.height) + camY;
     return { x: gx, y: gy };
   },
 };

@@ -33,7 +33,8 @@ export function init() {
 
   document.addEventListener('mousemove', e => {
     if (!visible) return;
-    curEl.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`;
+    curEl.style.left = (e.clientX - 10) + 'px';
+    curEl.style.top = (e.clientY - 10) + 'px';
   });
 
   // Hide on touch device

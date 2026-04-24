@@ -43,7 +43,6 @@ canvas#game {
   image-rendering: crisp-edges;
   width: 100vw;
   height: 100vh;
-  object-fit: contain;
   display: block;
 }
 
@@ -227,6 +226,7 @@ canvas#game {
 /* ── Custom cursor ── */
 #cur {
   position: fixed;
+  top: 0; left: 0;
   width: 20px; height: 20px;
   pointer-events: none;
   z-index: 9999;
