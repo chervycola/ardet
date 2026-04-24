@@ -57,7 +57,7 @@ export function draw(ctx) {
   ctx.fillStyle = '#b8860b';
   ctx.fillRect(x_ + 1, y_ + 1, w - 2, 1);
 
-  ctx.font = FONT_SIZE + 'px "Press Start 2P"';
+  ctx.font = FONT_SIZE + 'px "Press Start 2P","VT323",monospace';
 
   // Burning edge (ember glow)
   if (burnCount > 0) {

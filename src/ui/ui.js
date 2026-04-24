@@ -5,6 +5,7 @@ import { state } from '../core/state.js';
 import { events, E } from '../core/events.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
+import { input } from '../core/input.js';
 
 // ── MENU (location interaction) ──
 const menuEl = document.getElementById('menu');
@@ -69,6 +70,15 @@ export function showMenu(loc) {
   menuEl.querySelector('[data-a="talk"]').style.display = loc.npc ? 'flex' : 'none';
   menuEl.querySelector('[data-a="listen"]').style.display = 'none'; // TODO: listen sounds
   menuEl.querySelector('[data-a="take"]').style.display = 'none';   // TODO: lore pickup
+
+  // Position near last mouse position on desktop; mobile CSS handles centering.
+  if (window.innerWidth > 768) {
+    menuEl.style.left = Math.min(input.mouseX, window.innerWidth - 200) + 'px';
+    menuEl.style.top = Math.min(input.mouseY, window.innerHeight - 260) + 'px';
+  } else {
+    menuEl.style.left = '';
+    menuEl.style.top = '';
+  }
 
   menuEl.classList.add('on');
   slideUp(menuEl, 200);

@@ -60,7 +60,7 @@ export function drawJesterWandering(camera, locations) {
 
 export function drawJesterGraffiti(camera) {
   const ctx = X;
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
   for (const g of jesterGraffiti) {
     ctx.globalAlpha = 0.35;
     ctx.fillStyle = '#6b0f1a';

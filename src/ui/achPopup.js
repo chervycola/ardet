@@ -35,17 +35,17 @@ export function draw(ctx) {
 
   // Star
   ctx.fillStyle = '#b8860b';
-  ctx.font = '10px "Press Start 2P"';
+  ctx.font = '10px "Press Start 2P","VT323",monospace';
   ctx.fillText('★', x + 8, y + yOff + 16);
 
   // Name
   ctx.fillStyle = '#e8dcc8';
-  ctx.font = '7px "Press Start 2P"';
+  ctx.font = '7px "Press Start 2P","VT323",monospace';
   ctx.fillText(popup.name, x + 24, y + yOff + 15);
 
   // Desc
   ctx.fillStyle = '#8a8d8f';
-  ctx.font = '5px "Press Start 2P"';
+  ctx.font = '5px "Press Start 2P","VT323",monospace';
   ctx.fillText(popup.desc, x + 24, y + yOff + 28);
 
   ctx.globalAlpha = 1;

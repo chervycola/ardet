@@ -70,10 +70,10 @@ export function draw(ctx) {
     // Center text
     ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.05);
     ctx.fillStyle = '#6b0f1a';
-    ctx.font = '12px "Press Start 2P"';
+    ctx.font = '12px "Press Start 2P","VT323",monospace';
     ctx.textAlign = 'center';
     ctx.fillText('КОГНИТИВНЫЙ РАСПАД', vw / 2, vh / 2 - 10);
-    ctx.font = '7px "Press Start 2P"';
+    ctx.font = '7px "Press Start 2P","VT323",monospace';
     ctx.fillText('мох вытаскивает тебя обратно...', vw / 2, vh / 2 + 10);
     ctx.textAlign = 'left';
     ctx.globalAlpha = 1;

@@ -72,7 +72,7 @@ export function draw(ctx, camera) {
   const a = whisper.life > 300 ? ((total - whisper.life) / 60) : whisper.life / 300;
   ctx.globalAlpha = a * 0.35;
   ctx.fillStyle = '#e8dcc8';
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.textAlign = 'center';
   ctx.fillText(whisper.text, sx, sy);
   ctx.textAlign = 'left';

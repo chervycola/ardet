@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>/* ═══════════════════════════════════════ */
 /* ARDET V2 — design tokens + base styles */
 /* ═══════════════════════════════════════ */
@@ -7879,6 +7879,13 @@ canvas#game {
     menuEl.querySelector('[data-a="talk"]').style.display = loc.npc ? "flex" : "none";
     menuEl.querySelector('[data-a="listen"]').style.display = "none";
     menuEl.querySelector('[data-a="take"]').style.display = "none";
+    if (window.innerWidth > 768) {
+      menuEl.style.left = Math.min(input.mouseX, window.innerWidth - 200) + "px";
+      menuEl.style.top = Math.min(input.mouseY, window.innerHeight - 260) + "px";
+    } else {
+      menuEl.style.left = "";
+      menuEl.style.top = "";
+    }
     menuEl.classList.add("on");
     slideUp(menuEl, 200);
   }
@@ -9075,7 +9082,7 @@ Amor fati. \u041D\u0435
     ctx2.strokeRect(x_, y_, w, boxH);
     ctx2.fillStyle = "#b8860b";
     ctx2.fillRect(x_ + 1, y_ + 1, w - 2, 1);
-    ctx2.font = FONT_SIZE + 'px "Press Start 2P"';
+    ctx2.font = FONT_SIZE + 'px "Press Start 2P","VT323",monospace';
     if (burnCount > 0) {
       const burnFrac = burnCount / totalLen;
       const emberR = Math.floor(180 + burnFrac * 75);
@@ -14781,7 +14788,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   }
   function drawJesterGraffiti(camera2) {
     const ctx2 = X;
-    ctx2.font = '6px "Press Start 2P"';
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
     for (const g of jesterGraffiti) {
       ctx2.globalAlpha = 0.35;
       ctx2.fillStyle = "#6b0f1a";
@@ -14887,7 +14894,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       if (sx < -100 || sx > scaler.vw + 100 || sy < -60 || sy > scaler.vh + 60) continue;
       const lines = hiddenInscriptions[locId];
       const revealed = Math.min(lines.length, Math.floor((prox - 60) / 180) + 1);
-      ctx2.font = '5px "Press Start 2P"';
+      ctx2.font = '5px "Press Start 2P","VT323",monospace';
       for (let i = 0; i < revealed; i++) {
         const lineAge = prox - 60 - i * 180;
         const alpha = Math.min(0.5, lineAge / 120) * 0.9;
@@ -14994,7 +15001,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     const y_ = vh / 2 - 20 - (total - msgLife) * 0.15;
     ctx2.globalAlpha = a * 0.45;
     ctx2.fillStyle = "#e8dcc8";
-    ctx2.font = '8px "Press Start 2P"';
+    ctx2.font = '8px "Press Start 2P","VT323",monospace';
     ctx2.textAlign = "center";
     ctx2.fillText(currentMsg, vw / 2, y_);
     ctx2.textAlign = "left";
@@ -15067,7 +15074,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     const a = whisper.life > 300 ? (total - whisper.life) / 60 : whisper.life / 300;
     ctx2.globalAlpha = a * 0.35;
     ctx2.fillStyle = "#e8dcc8";
-    ctx2.font = '6px "Press Start 2P"';
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
     ctx2.textAlign = "center";
     ctx2.fillText(whisper.text, sx, sy);
     ctx2.textAlign = "left";
@@ -15615,13 +15622,13 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     ctx2.lineWidth = 1;
     ctx2.strokeRect(x, y + yOff, w, h);
     ctx2.fillStyle = "#b8860b";
-    ctx2.font = '10px "Press Start 2P"';
+    ctx2.font = '10px "Press Start 2P","VT323",monospace';
     ctx2.fillText("\u2605", x + 8, y + yOff + 16);
     ctx2.fillStyle = "#e8dcc8";
-    ctx2.font = '7px "Press Start 2P"';
+    ctx2.font = '7px "Press Start 2P","VT323",monospace';
     ctx2.fillText(popup.name, x + 24, y + yOff + 15);
     ctx2.fillStyle = "#8a8d8f";
-    ctx2.font = '5px "Press Start 2P"';
+    ctx2.font = '5px "Press Start 2P","VT323",monospace';
     ctx2.fillText(popup.desc, x + 24, y + yOff + 28);
     ctx2.globalAlpha = 1;
     popup.life--;
@@ -16166,10 +16173,10 @@ Ardet v1.0 \u2014 coming soon.
       }
       ctx2.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.05);
       ctx2.fillStyle = "#6b0f1a";
-      ctx2.font = '12px "Press Start 2P"';
+      ctx2.font = '12px "Press Start 2P","VT323",monospace';
       ctx2.textAlign = "center";
       ctx2.fillText("\u041A\u041E\u0413\u041D\u0418\u0422\u0418\u0412\u041D\u042B\u0419 \u0420\u0410\u0421\u041F\u0410\u0414", vw / 2, vh / 2 - 10);
-      ctx2.font = '7px "Press Start 2P"';
+      ctx2.font = '7px "Press Start 2P","VT323",monospace';
       ctx2.fillText("\u043C\u043E\u0445 \u0432\u044B\u0442\u0430\u0441\u043A\u0438\u0432\u0430\u0435\u0442 \u0442\u0435\u0431\u044F \u043E\u0431\u0440\u0430\u0442\u043D\u043E...", vw / 2, vh / 2 + 10);
       ctx2.textAlign = "left";
       ctx2.globalAlpha = 1;
@@ -16231,7 +16238,7 @@ Ardet v1.0 \u2014 coming soon.
         const textFade = localT < 30 ? localT / 30 : localT > 150 ? (180 - localT) / 30 : 1;
         ctx2.globalAlpha = fadeIn2 * textFade * 0.9;
         ctx2.fillStyle = "#e8dcc8";
-        ctx2.font = '10px "Press Start 2P"';
+        ctx2.font = '10px "Press Start 2P","VT323",monospace';
         ctx2.textAlign = "center";
         ctx2.fillText(text, vw / 2, vh / 2);
         ctx2.textAlign = "left";
@@ -16508,7 +16515,7 @@ Ardet v1.0 \u2014 coming soon.
     const color = colors[loc.id] || "#444";
     rect(ctx2, loc.x, loc.y, loc.w, loc.h, color);
     ctx2.fillStyle = "#e8dcc8";
-    ctx2.font = '6px "Press Start 2P"';
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
     ctx2.globalAlpha = 0.5;
     ctx2.fillText(loc.name.slice(0, 20), loc.x, loc.y - 4);
     ctx2.globalAlpha = 1;
@@ -16527,7 +16534,7 @@ Ardet v1.0 \u2014 coming soon.
     draw3(ctx2);
     ctx2.globalAlpha = 0.5;
     ctx2.fillStyle = "#1a8c1a";
-    ctx2.font = '6px "Press Start 2P"';
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
     ctx2.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
     ctx2.globalAlpha = 1;
   }

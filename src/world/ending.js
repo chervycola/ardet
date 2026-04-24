@@ -48,7 +48,7 @@ export function draw(ctx) {
       const textFade = localT < 30 ? localT / 30 : (localT > 150 ? (180 - localT) / 30 : 1);
       ctx.globalAlpha = fadeIn * textFade * 0.9;
       ctx.fillStyle = '#e8dcc8';
-      ctx.font = '10px "Press Start 2P"';
+      ctx.font = '10px "Press Start 2P","VT323",monospace';
       ctx.textAlign = 'center';
       ctx.fillText(text, vw / 2, vh / 2);
       ctx.textAlign = 'left';

@@ -60,7 +60,7 @@ export function draw(ctx) {
   const y_ = vh / 2 - 20 - ((total - msgLife) * 0.15);
   ctx.globalAlpha = a * 0.45;
   ctx.fillStyle = '#e8dcc8';
-  ctx.font = '8px "Press Start 2P"';
+  ctx.font = '8px "Press Start 2P","VT323",monospace';
   ctx.textAlign = 'center';
   ctx.fillText(currentMsg, vw / 2, y_);
   ctx.textAlign = 'left';

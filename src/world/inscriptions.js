@@ -51,7 +51,7 @@ export function draw(camera, locations) {
     const lines = hiddenInscriptions[locId];
     const revealed = Math.min(lines.length, Math.floor((prox - 60) / 180) + 1);
 
-    ctx.font = '5px "Press Start 2P"';
+    ctx.font = '5px "Press Start 2P","VT323",monospace';
     for (let i = 0; i < revealed; i++) {
       const lineAge = prox - 60 - i * 180;
       const alpha = Math.min(0.5, lineAge / 120) * 0.9;

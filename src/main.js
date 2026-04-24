@@ -280,7 +280,7 @@ function drawLocationPlaceholder(ctx, loc) {
 
   // Small label when camera is close
   ctx.fillStyle = '#e8dcc8';
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.globalAlpha = 0.5;
   ctx.fillText(loc.name.slice(0, 20), loc.x, loc.y - 4);
   ctx.globalAlpha = 1;
@@ -304,7 +304,7 @@ function drawHUD(ctx) {
   // Debug: show state + position
   ctx.globalAlpha = 0.5;
   ctx.fillStyle = '#1a8c1a';
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
   ctx.globalAlpha = 1;
 }
