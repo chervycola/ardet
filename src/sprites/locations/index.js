@@ -4,6 +4,8 @@
 import { rect, px, dither, hash } from '../../render/draw.js';
 import { X } from '../../render/context.js';
 import { t } from '../../core/time.js';
+import { playerNearLoc } from '../../core/playerRef.js';
+import { locations as locs } from '../../world/locations.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',

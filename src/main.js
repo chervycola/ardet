@@ -27,6 +27,7 @@ import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
+import { setPlayer } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
 import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
@@ -67,6 +68,7 @@ const player = {
   x: 800, y: 900, tx: 800, ty: 900,
   dir: 1, moving: false, walkFrame: 0,
 };
+setPlayer(player);
 const flags = {
   talkedTo: new Set(),
   visited: new Set(),

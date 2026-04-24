@@ -2890,6 +2890,22 @@ canvas#game {
     draw_vending: () => draw_vending,
     draw_watchtower: () => draw_watchtower
   });
+
+  // src/core/playerRef.js
+  var _player = null;
+  function setPlayer(p) {
+    _player = p;
+  }
+  function playerNearLoc(loc, r) {
+    if (!_player || !loc) return false;
+    const cx = loc.x + (loc.w || 0) / 2;
+    const cy = loc.y + (loc.h || 0) / 2;
+    const dx = _player.x - cx;
+    const dy = _player.y - cy;
+    return dx * dx + dy * dy < r * r;
+  }
+
+  // src/sprites/locations/index.js
   var P8 = {
     d1: "#0a0a0a",
     d2: "#6b0f1a",
@@ -3132,7 +3148,7 @@ canvas#game {
     px(X, x + 1, y + 51, P8.toxic);
   }
   function draw_library(x, y) {
-    if (!playerNearLoc(locs.find((l) => l.id === "library"), 350)) {
+    if (!playerNearLoc(locations.find((l) => l.id === "library"), 350)) {
       X.fillStyle = P8.dstone;
       X.beginPath();
       X.moveTo(x + 3, y + 6);
@@ -5027,7 +5043,7 @@ canvas#game {
     X.globalAlpha = 1;
   }
   function draw_church(x, y) {
-    if (!playerNearLoc(locs.find((l) => l.id === "church"), 350)) {
+    if (!playerNearLoc(locations.find((l) => l.id === "church"), 350)) {
       drawBuildingSilhouette(x, y + 8, 100, 78, P8.dgrey);
       rect(X, x + 6, y - 25, 20, 40, P8.dstone);
       rect(X, x + 10, y - 30, 12, 10, P8.dgrey);
@@ -5628,7 +5644,7 @@ canvas#game {
     rect(X, x + 8, y + 33, 24, 1, P8.blood);
   }
   function draw_pizzeria(x, y) {
-    if (!playerNearLoc(locs.find((l) => l.id === "pizzeria"), 350)) {
+    if (!playerNearLoc(locations.find((l) => l.id === "pizzeria"), 350)) {
       drawBuildingSilhouette(x, y + 8, 98, 80, P8.drust);
       rect(X, x - 4, y - 18, 100, 16, "#0a0a0a");
       if (t % 80 < 40) rect(X, x + 1, y - 14, 5, 10, "#6b0f1a");
@@ -6395,7 +6411,7 @@ canvas#game {
     }
   }
   function draw_ruins(x, y) {
-    if (!playerNearLoc(locs.find((l) => l.id === "ruins"), 350)) {
+    if (!playerNearLoc(locations.find((l) => l.id === "ruins"), 350)) {
       drawBuildingSilhouette(x, y, 108, 88, P8.dgrey);
       if (Math.sin(t * 3e-3) > 0.2) {
         rect(X, x + 72, y + 14, 8, 3, P8.amber);
@@ -16060,6 +16076,7 @@ Ardet v1.0 \u2014 coming soon.
     moving: false,
     walkFrame: 0
   };
+  setPlayer(player);
   var flags = {
     talkedTo: /* @__PURE__ */ new Set(),
     visited: /* @__PURE__ */ new Set(),
