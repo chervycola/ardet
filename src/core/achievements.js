@@ -4,9 +4,6 @@
 import { events, E } from './events.js';
 
 const DEFS = {
-  wanderer: { name: 'СТРАННИК', desc: 'Посетил 10 локаций', threshold: 10 },
-  explorer: { name: 'ИССЛЕДОВАТЕЛЬ', desc: 'Посетил 25 локаций', threshold: 25 },
-  cartographer: { name: 'КАРТОГРАФ', desc: 'Посетил все локации', threshold: 38 },
   collector: { name: 'СОБИРАТЕЛЬ', desc: 'Собрал 20 фрагментов', threshold: 20 },
   archivist: { name: 'АРХИВАРИУС', desc: 'Собрал все фрагменты', threshold: 57 },
   listener: { name: 'СЛУШАТЕЛЬ', desc: 'Поговорил со всеми NPC', threshold: 5 },
@@ -28,12 +25,6 @@ function unlock(id) {
 }
 
 export function init(flags, getLore, getTerminalCount) {
-  events.on(E.LOCATION_VISIT, () => {
-    const count = flags.visited.size;
-    if (count >= 10) unlock('wanderer');
-    if (count >= 25) unlock('explorer');
-    if (count >= 38) unlock('cartographer');
-  });
   events.on(E.LORE_COLLECT, () => {
     const count = getLore();
     if (count >= 20) unlock('collector');

@@ -9047,14 +9047,27 @@ Amor fati. \u041D\u0435
   }
 
   // src/ui/lorepopup.js
+  var TYPE_SPEED = 3;
+  var READ_SPEED = 4.5;
+  var BURN_SPEED = 2;
+  var MIN_HOLD = 360;
+  var TAIL_FADE = 80;
   var state2 = {
     text: "",
     life: 0,
-    totalLife: 900,
+    totalLife: 0,
     startFrame: 0
   };
+  function computeLife(text) {
+    const n = text.length;
+    const typeTime = n * TYPE_SPEED;
+    const hold = Math.max(MIN_HOLD, Math.floor(n * READ_SPEED));
+    const burnTime = n * BURN_SPEED;
+    return typeTime + hold + burnTime + TAIL_FADE;
+  }
   function showLore(text) {
     state2.text = text;
+    state2.totalLife = computeLife(text);
     state2.life = state2.totalLife;
     state2.startFrame = t;
   }
@@ -9062,14 +9075,14 @@ Amor fati. \u041D\u0435
     if (state2.life <= 0) return;
     const elapsed = t - state2.startFrame;
     const totalLen = state2.text.length;
-    const typeDone = Math.floor(elapsed / 3);
+    const typeDone = Math.floor(elapsed / TYPE_SPEED);
     const charCount = Math.min(totalLen, typeDone);
     const fullyTyped = charCount >= totalLen;
-    const burnDelay = 120;
+    const burnDelay = Math.max(MIN_HOLD, Math.floor(totalLen * READ_SPEED));
     let burnCount = 0;
     if (fullyTyped) {
-      const burnElapsed = elapsed - typeDone * 3 - burnDelay;
-      if (burnElapsed > 0) burnCount = Math.min(totalLen, Math.floor(burnElapsed / 2));
+      const burnElapsed = elapsed - totalLen * TYPE_SPEED - burnDelay;
+      if (burnElapsed > 0) burnCount = Math.min(totalLen, Math.floor(burnElapsed / BURN_SPEED));
     }
     const visStart = burnCount;
     const visEnd = charCount;
@@ -9082,7 +9095,7 @@ Amor fati. \u041D\u0435
     const boxH = Math.min(vh - 30, Math.max(60, estLines * LINE_H + 16));
     const x_ = (vw - w) / 2;
     const y_ = vh - boxH - 8;
-    const a = state2.life > 80 ? Math.min(1, (state2.totalLife - state2.life) / 60) : state2.life / 80;
+    const a = state2.life > TAIL_FADE ? Math.min(1, (state2.totalLife - state2.life) / 60) : state2.life / TAIL_FADE;
     ctx2.globalAlpha = a * 0.95;
     ctx2.fillStyle = "rgba(5,5,16,0.96)";
     ctx2.fillRect(x_, y_, w, boxH);
@@ -9129,7 +9142,7 @@ Amor fati. \u041D\u0435
       ctx2.fillStyle = "#1a8c1a";
       ctx2.fillRect(cursorX, ly - FONT_SIZE, 5, FONT_SIZE + 1);
     }
-    if (burnCount >= totalLen && state2.life > 80) state2.life = 80;
+    if (burnCount >= totalLen && state2.life > TAIL_FADE) state2.life = TAIL_FADE;
     ctx2.globalAlpha = 1;
     state2.life--;
   }
@@ -14951,9 +14964,6 @@ quarter\u2551      \u2551 highway
 
   // src/core/achievements.js
   var DEFS = {
-    wanderer: { name: "\u0421\u0422\u0420\u0410\u041D\u041D\u0418\u041A", desc: "\u041F\u043E\u0441\u0435\u0442\u0438\u043B 10 \u043B\u043E\u043A\u0430\u0446\u0438\u0439", threshold: 10 },
-    explorer: { name: "\u0418\u0421\u0421\u041B\u0415\u0414\u041E\u0412\u0410\u0422\u0415\u041B\u042C", desc: "\u041F\u043E\u0441\u0435\u0442\u0438\u043B 25 \u043B\u043E\u043A\u0430\u0446\u0438\u0439", threshold: 25 },
-    cartographer: { name: "\u041A\u0410\u0420\u0422\u041E\u0413\u0420\u0410\u0424", desc: "\u041F\u043E\u0441\u0435\u0442\u0438\u043B \u0432\u0441\u0435 \u043B\u043E\u043A\u0430\u0446\u0438\u0438", threshold: 38 },
     collector: { name: "\u0421\u041E\u0411\u0418\u0420\u0410\u0422\u0415\u041B\u042C", desc: "\u0421\u043E\u0431\u0440\u0430\u043B 20 \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442\u043E\u0432", threshold: 20 },
     archivist: { name: "\u0410\u0420\u0425\u0418\u0412\u0410\u0420\u0418\u0423\u0421", desc: "\u0421\u043E\u0431\u0440\u0430\u043B \u0432\u0441\u0435 \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442\u044B", threshold: 57 },
     listener: { name: "\u0421\u041B\u0423\u0428\u0410\u0422\u0415\u041B\u042C", desc: "\u041F\u043E\u0433\u043E\u0432\u043E\u0440\u0438\u043B \u0441\u043E \u0432\u0441\u0435\u043C\u0438 NPC", threshold: 5 },
@@ -14972,12 +14982,6 @@ quarter\u2551      \u2551 highway
     console.log(`[ach] ${def.name} \u2014 ${def.desc}`);
   }
   function init2(flags2, getLore, getTerminalCount) {
-    events.on(E.LOCATION_VISIT, () => {
-      const count = flags2.visited.size;
-      if (count >= 10) unlock("wanderer");
-      if (count >= 25) unlock("explorer");
-      if (count >= 38) unlock("cartographer");
-    });
     events.on(E.LORE_COLLECT, () => {
       const count = getLore();
       if (count >= 20) unlock("collector");

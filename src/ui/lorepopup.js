@@ -4,15 +4,31 @@
 import { scaler } from '../render/scaler.js';
 import { t } from '../core/time.js';
 
+// Per-character pacing (in frames @ 60fps)
+const TYPE_SPEED = 3;    // time to type one char
+const READ_SPEED = 4.5;  // extra dwell time per char after typing finishes
+const BURN_SPEED = 2;    // time per char during burn animation
+const MIN_HOLD = 360;    // floor on read dwell — ~6s even for tiny fragments
+const TAIL_FADE = 80;    // fade-out after burn
+
 const state = {
   text: '',
   life: 0,
-  totalLife: 900,
+  totalLife: 0,
   startFrame: 0,
 };
 
+function computeLife(text) {
+  const n = text.length;
+  const typeTime = n * TYPE_SPEED;
+  const hold = Math.max(MIN_HOLD, Math.floor(n * READ_SPEED));
+  const burnTime = n * BURN_SPEED;
+  return typeTime + hold + burnTime + TAIL_FADE;
+}
+
 export function showLore(text) {
   state.text = text;
+  state.totalLife = computeLife(text);
   state.life = state.totalLife;
   state.startFrame = t;
 }
@@ -21,15 +37,16 @@ export function draw(ctx) {
   if (state.life <= 0) return;
   const elapsed = t - state.startFrame;
   const totalLen = state.text.length;
-  const typeDone = Math.floor(elapsed / 3);
+  const typeDone = Math.floor(elapsed / TYPE_SPEED);
   const charCount = Math.min(totalLen, typeDone);
   const fullyTyped = charCount >= totalLen;
 
-  const burnDelay = 120;
+  // Hold the fully-typed text for a while before burning so it can be read.
+  const burnDelay = Math.max(MIN_HOLD, Math.floor(totalLen * READ_SPEED));
   let burnCount = 0;
   if (fullyTyped) {
-    const burnElapsed = elapsed - typeDone * 3 - burnDelay;
-    if (burnElapsed > 0) burnCount = Math.min(totalLen, Math.floor(burnElapsed / 2));
+    const burnElapsed = elapsed - totalLen * TYPE_SPEED - burnDelay;
+    if (burnElapsed > 0) burnCount = Math.min(totalLen, Math.floor(burnElapsed / BURN_SPEED));
   }
 
   const visStart = burnCount;
@@ -46,7 +63,7 @@ export function draw(ctx) {
   const x_ = (vw - w) / 2;
   const y_ = vh - boxH - 8;
 
-  const a = state.life > 80 ? Math.min(1, (state.totalLife - state.life) / 60) : state.life / 80;
+  const a = state.life > TAIL_FADE ? Math.min(1, (state.totalLife - state.life) / 60) : state.life / TAIL_FADE;
   ctx.globalAlpha = a * 0.95;
 
   ctx.fillStyle = 'rgba(5,5,16,0.96)';
@@ -95,8 +112,8 @@ export function draw(ctx) {
     ctx.fillRect(cursorX, ly - FONT_SIZE, 5, FONT_SIZE + 1);
   }
 
-  // When fully burned, fade out faster
-  if (burnCount >= totalLen && state.life > 80) state.life = 80;
+  // When fully burned, collapse to the tail fade
+  if (burnCount >= totalLen && state.life > TAIL_FADE) state.life = TAIL_FADE;
 
   ctx.globalAlpha = 1;
   state.life--;
