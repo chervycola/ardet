@@ -40,7 +40,8 @@ import { updateProximity, draw as drawInscriptions } from './world/inscriptions.
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
-import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon, updateRain, drawRain } from './render/atmosphere.js';
+import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
+import { weather, update as updateWeather, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
 import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawAchPopup } from './ui/achPopup.js';
@@ -229,18 +230,19 @@ function render() {
   lightParticles.update(camObj, lighting.sources);
   lightParticles.draw(worldCtx, camObj);
 
-  // ── UI: HUD ──
-  drawHUD(uiCtx);
-
-  // ── FX: meta effects (breaking 4th wall) ──
+  // ── FX (additive): rain streaks, lightning, cracks, dying pixels ──
   const fxCtx = layers.ctx('fx');
-  screenMoss.update(player.moving);
-  screenMoss.draw(fxCtx);
   crackedGlass.draw(fxCtx);
   dyingPixels.update();
   dyingPixels.draw(fxCtx);
-  drawRain(fxCtx);
+  drawWeatherAdditive(fxCtx);
   drawBrainrot(fxCtx);
+
+  // ── UI (normal blend): weather overlay + moss, then HUD on top ──
+  drawWeatherOverlay(uiCtx);
+  screenMoss.update(player.moving);
+  screenMoss.draw(uiCtx);
+  drawHUD(uiCtx);
 
   // ── POST: grading + vignette ──
   postfx.apply(postCtx);
@@ -313,6 +315,34 @@ function drawWorldWhisper(camObj) {
   drawWhisper(worldCtx, camObj);
 }
 
+// ═══ CRACKED GLASS TRIGGERS ═══
+// Occasional screen fractures from: lightning, wandering far
+let lastCrackFrame = -9999;
+let lastLightning = 0;
+function updateCrackTriggers(player) {
+  if (t - lastCrackFrame < 240) return; // cooldown 4s min between cracks
+
+  // Lightning strike → rare glass crack
+  if (weather.lightning > 34 && lastLightning < 34 && Math.random() < 0.35) {
+    crackedGlass.add(
+      20 + Math.floor(Math.random() * (scaler.vw - 40)),
+      20 + Math.floor(Math.random() * (scaler.vh - 40)),
+    );
+    lastCrackFrame = t;
+  }
+  lastLightning = weather.lightning;
+
+  // Wandering beyond map — tension crack
+  const offmap = (player.x < 0 || player.x > MW || player.y < 160 || player.y > MH);
+  if (offmap && t % 600 === 0 && Math.random() < 0.4) {
+    crackedGlass.add(
+      30 + Math.floor(Math.random() * (scaler.vw - 60)),
+      30 + Math.floor(Math.random() * (scaler.vh - 60)),
+    );
+    lastCrackFrame = t;
+  }
+}
+
 // ═══ GAME LOGIC ═══
 function updateGame() {
   if (isFrozen()) { updateBrainrot(player); return; }
@@ -375,7 +405,8 @@ function updateGame() {
   updateIdle(player.moving);
   checkWhisper(player, locations);
   updateParticles();
-  updateRain(getZone(player.x, player.y));
+  updateWeather(getZone(player.x, player.y));
+  updateCrackTriggers(player);
 
   if (t % 3 === 0) fireEmber(775, 795);
 }

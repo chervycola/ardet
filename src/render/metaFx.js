@@ -57,13 +57,15 @@ export const screenMoss = {
     for (const c of this.cells) {
       const cellFade = Math.min(1, c.age / 60) * fade;
       if (cellFade < 0.05) continue;
-      ctx.globalAlpha = cellFade * (0.4 + c.layer * 0.15);
+      // Dark moss body (covers screen, normal blend)
+      ctx.globalAlpha = cellFade * (0.55 + c.layer * 0.15);
       const ci = ((c.x * 7 + c.y * 13 + c.layer * 3) & 15);
       ctx.fillStyle = this.palette[ci];
       const sz = 1 + c.layer;
       ctx.fillRect(c.x, c.y, sz, sz);
+      // Bright moss tip (additive sparkle)
       if (c.layer === 2 && c.age > 30) {
-        ctx.globalAlpha = cellFade * 0.3;
+        ctx.globalAlpha = cellFade * 0.45;
         ctx.fillStyle = this.palette[(ci + 4) & 15];
         ctx.fillRect(c.x, c.y - 1, 1, 1);
       }
