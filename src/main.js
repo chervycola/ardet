@@ -324,6 +324,8 @@ function updateGame() {
     tryMove(player, move.x * spd, move.y * spd, locations, {
       canLeaveSettlement: canLeaveSettlement(),
     });
+    player.tx = player.x;
+    player.ty = player.y;
     player.moving = true;
     if (move.x > 0) player.dir = 1;
     else if (move.x < 0) player.dir = -1;
