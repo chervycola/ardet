@@ -21,6 +21,7 @@ import { drawNPC_sol } from './sprites/npcs/sol.js';
 import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
+import { drawNameplate } from './sprites/nameplate.js';
 import * as locSprites from './sprites/locations/index.js';
 import { showMenu, hideMenu, initUI, getActiveLoc, showLook } from './ui/ui.js';
 import { looks } from './content/looks.js';
@@ -159,6 +160,15 @@ const npcDrawFn = {
   nocturnal: drawNPC_nocturnal,
   dumpster: drawDumpsterDemon,
 };
+// Nameplate config per NPC: label + tint + vertical offset above the loc.y
+// (each sprite extends a different distance above its anchor)
+const NPC_LABEL = {
+  jester:    { name: 'ШУТ',         color: '#d44a5a', dy: 16 },
+  sol:       { name: 'SOL INVICTUS', color: '#ffb340', dy: 22 },
+  elder:     { name: 'СТАРЕЦ',      color: '#c8b8a0', dy: 14 },
+  nocturnal: { name: 'ЛУННЫЙ',      color: '#7aaaff', dy: 18 },
+  dumpster:  { name: 'МУСОРКА',     color: '#ff5418', dy: 20 },
+};
 
 // ═══ RENDER ═══
 function render() {
@@ -199,6 +209,8 @@ function render() {
     drawLocation(worldCtx, loc);
     if (loc.npc && npcDrawFn[loc.npc]) {
       npcDrawFn[loc.npc](loc.x, loc.y);
+      const lbl = NPC_LABEL[loc.npc];
+      if (lbl) drawNameplate(loc.x - 6, loc.y - lbl.dy, loc.w + 12, lbl.name, lbl.color);
     }
   }
 
