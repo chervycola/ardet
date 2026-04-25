@@ -5,7 +5,6 @@
 import { rect, px } from '../render/draw.js';
 import { X } from '../render/context.js';
 import { t } from '../core/time.js';
-import { drawNameplate } from './nameplate.js';
 
 const P = {
   void: '#050408',
@@ -119,9 +118,6 @@ export function drawPlayer(player) {
     ctx.fillStyle = P.void;
     ctx.fillRect(hx + 2, eyeY, 5, 1);
   }
-
-  // ═══ NAMEPLATE ═══
-  drawNameplate(x, hy - 2, 14, 'СТРАННИК', '#b8860b');
   // dir is intentionally unused — the face is a void, no asymmetry
   void dir;
 }

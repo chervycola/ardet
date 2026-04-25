@@ -1603,25 +1603,6 @@ canvas#game {
     X = ctx2;
   }
 
-  // src/sprites/nameplate.js
-  function drawNameplate(x, y, w, name, color = "#e8dcc8", prox = 1) {
-    if (prox <= 0.02) return;
-    const cx = Math.floor(x + w / 2);
-    const ly = Math.floor(y) - 4;
-    X.save();
-    X.font = '5px "Press Start 2P","VT323",monospace';
-    X.textAlign = "center";
-    X.globalAlpha = 0.5 * prox;
-    X.fillStyle = "#000";
-    X.fillText(name, cx + 1, ly + 1);
-    X.globalAlpha = 0.85 * prox;
-    X.fillStyle = color;
-    X.fillText(name, cx, ly);
-    X.restore();
-    X.textAlign = "left";
-    X.globalAlpha = 1;
-  }
-
   // src/sprites/player.js
   var P2 = {
     void: "#050408",
@@ -1714,7 +1695,6 @@ canvas#game {
       ctx2.fillStyle = P2.void;
       ctx2.fillRect(hx + 2, eyeY, 5, 1);
     }
-    drawNameplate(x, hy - 2, 14, "\u0421\u0422\u0420\u0410\u041D\u041D\u0418\u041A", "#b8860b");
     void dir;
   }
 
@@ -1963,267 +1943,167 @@ canvas#game {
 
   // src/sprites/npcs/sol.js
   var P4 = {
-    d1: "#0a0a0a",
-    d2: "#6b0f1a",
-    dgrey: "#2a2a2a",
-    ash: "#8a8d8f",
+    void: "#050408",
+    shadow: "#0a0a0a",
+    bronze: "#7a4a14",
+    bronzeMid: "#a06820",
+    gold: "#b8860b",
+    goldHi: "#daa520",
+    sunflower: "#f4d03f",
     bone: "#e8dcc8",
     dbone: "#c8b8a8",
-    crimson: "#6b0f1a",
-    gold: "#b8860b",
-    amber: "#daa520",
-    damber: "#a07818",
-    term: "#1a8c1a",
-    termd: "#0a4a0a",
-    dwood: "#1a0e06",
-    f1: "#ff6600",
-    f2: "#ff3300",
-    toxic: "#3aff1a"
+    // Fire palette (cold dim → hot core)
+    fireDeep: "#3a0808",
+    fireDim: "#7a1410",
+    fireMid: "#c83018",
+    fireHot: "#ff7820",
+    fireBright: "#ffb040",
+    fireCore: "#fff4c8"
   };
   var npcProximity2 = 0;
   function drawNPC_sol(sx, sy) {
-    const breath = Math.sin(t * 8e-3) * 0.8;
-    const sway = Math.sin(t * 3e-3) * 0.6;
+    const breath = Math.sin(t * 8e-3) * 0.5;
+    const sway = Math.sin(t * 3e-3) * 0.4;
+    const flameClock1 = t * 0.06;
+    const flameClock2 = t * 0.09;
+    const haloPulse = 0.78 + 0.22 * Math.sin(t * 5e-3);
     const by = sy;
     const bx = sx + sway;
-    const cx = bx + 18;
-    X.globalAlpha = 0.2;
+    const cx = bx + 14;
+    X.globalAlpha = 0.18 + 0.08 * Math.sin(t * 0.04);
+    const ground = X.createRadialGradient(cx, by + 50, 4, cx, by + 50, 28);
+    ground.addColorStop(0, P4.fireBright);
+    ground.addColorStop(0.5, "rgba(200,48,24,0.4)");
+    ground.addColorStop(1, "rgba(0,0,0,0)");
+    X.fillStyle = ground;
+    X.fillRect(cx - 30, by + 36, 60, 22);
+    X.globalAlpha = 1;
+    X.globalAlpha = 0.32;
     X.fillStyle = "#000";
     X.beginPath();
-    X.ellipse(cx, sy + 52, 12, 3, 0, 0, Math.PI * 2);
+    X.ellipse(cx, by + 50, 12, 2.6, 0, 0, Math.PI * 2);
     X.fill();
     X.globalAlpha = 1;
-    const legSway = Math.sin(t * 4e-3) * 0.4;
-    X.strokeStyle = P4.bone;
-    X.lineWidth = 2;
-    X.beginPath();
-    X.moveTo(bx + 12, by + 40);
-    X.lineTo(bx + 11 + legSway, by + 45);
-    X.lineTo(bx + 11, by + 50);
-    X.stroke();
-    X.beginPath();
-    X.moveTo(bx + 22, by + 40);
-    X.lineTo(bx + 23 - legSway, by + 45);
-    X.lineTo(bx + 23, by + 50);
-    X.stroke();
-    X.lineWidth = 1;
-    px(X, bx + 11 + legSway, by + 45, P4.dbone);
-    px(X, bx + 23 - legSway, by + 45, P4.dbone);
-    rect(X, bx + 9, by + 50, 4, 2, P4.dbone);
-    rect(X, bx + 21, by + 50, 4, 2, P4.dbone);
-    rect(X, bx + 6 + sway * 0.2, by + 12 - breath, 22 + breath * 0.5, 30 + breath, P4.d1);
-    dither(X, bx + 7 + sway * 0.2, by + 13 - breath, 20 + breath * 0.5, 28 + breath, "#1a1008", P4.d1, 0.2);
-    for (let i = 0; i < 7; i++) {
-      const rSwing = Math.sin(t * 5e-3 + i * 0.7) * 1.2;
-      const rh = 6 - Math.abs(i - 3) + Math.sin(t * 4e-3 + i) * 1;
-      rect(X, bx + 3 + i * 4 + rSwing, by + 41, 3, rh, P4.d1);
-    }
-    for (let i = 0; i < 10; i++) {
-      const tx_ = bx + 4 + i * 3 + Math.sin(t * 6e-3 + i * 1.1) * 0.8;
-      const tLen = 2 + hash(i, 0, 11) * 3;
-      rect(X, tx_, by + 46, 2, tLen, P4.d1);
-      if (hash(i, 0, 22) > 0.6) px(X, tx_, by + 46 + tLen, "#1a1008");
-    }
-    const flowerSpots = [
-      [8, 16, "sunflower"],
-      [10, 22, "wildflower"],
-      [7, 28, "sunflower"],
-      [9, 34, "wildflower"],
-      [24, 15, "sunflower"],
-      [26, 20, "wildflower"],
-      [25, 26, "sunflower"],
-      [23, 32, "wildflower"],
-      [14, 38, "sunflower"],
-      [20, 36, "wildflower"],
-      [12, 19, "wildflower"],
-      [22, 24, "wildflower"]
-    ];
-    flowerSpots.forEach(([fx, fy, type], idx) => {
-      const fSway = Math.sin(t * 6e-3 + idx * 0.6) * 0.8;
-      if (type === "sunflower") {
-        const fcx = bx + fx + fSway, fcy = by + fy;
-        px(X, fcx, fcy, P4.gold);
-        px(X, fcx - 1, fcy, P4.sunflower);
-        px(X, fcx + 1, fcy, P4.sunflower);
-        px(X, fcx, fcy - 1, P4.sunflower);
-        px(X, fcx, fcy + 1, P4.sunflower);
-        px(X, fcx, fcy, "#4a3a10");
-        px(X, fcx, fcy + 2, "#2a4a0a");
-      } else {
-        const wc = ["#aa66aa", "#cc4466", "#66aa88", "#dd8844"][idx % 4];
-        px(X, bx + fx + fSway, by + fy, wc);
-        if (hash(fx, fy, 33) > 0.4) px(X, bx + fx + 1 + fSway, by + fy, wc);
-        px(X, bx + fx + fSway, by + fy + 1, "#2a4a0a");
+    const rows = 28;
+    const baseY = by + 14;
+    for (let i = 0; i < rows; i++) {
+      const y_ = baseY + i;
+      const taper = i < 4 ? 5 : i < 12 ? 5 + (i - 4) * 0.25 : i < 20 ? 7 - (i - 12) * 0.05 : 7 - (i - 20) * 0.5;
+      const wob = Math.sin(flameClock1 + i * 0.5) * 0.6 + Math.cos(flameClock2 + i * 0.3) * 0.4;
+      const halfW = Math.max(2, Math.floor(taper + wob + breath * 0.3));
+      rect(X, cx - halfW, y_, halfW * 2, 1, P4.fireDim);
+      if (halfW >= 3) rect(X, cx - halfW + 1, y_, halfW * 2 - 2, 1, P4.fireMid);
+      if (halfW >= 4) rect(X, cx - halfW + 2, y_, halfW * 2 - 4, 1, P4.fireHot);
+      if (halfW >= 5 && i > 1 && i < 16) {
+        rect(X, cx - 1, y_, 2, 1, P4.fireBright);
       }
-    });
-    for (let i = 0; i < 3; i++) {
-      const fSway = Math.sin(t * 7e-3 + i * 1.2) * 0.6;
-      px(X, bx + 6 + i * 2 + fSway, by + 11 - i, P4.sunflower);
-      px(X, bx + 6 + i * 2 + fSway, by + 10 - i, "#4a3a10");
-      px(X, bx + 24 - i * 2 + fSway, by + 11 - i, i % 2 ? "#aa66aa" : P4.sunflower);
-      px(X, bx + 24 - i * 2 + fSway, by + 10 - i, "#4a3a10");
-    }
-    const petalCount = 4 + Math.floor(npcProximity2 * 5);
-    for (let pi = 0; pi < petalCount; pi++) {
-      const petalPhase = (t * 2e-3 * (1 + npcProximity2 * 0.4) + pi * 0.25) % 1;
-      const pcol = [P4.sunflower, P4.gold, "#aa66aa", "#cc4466", "#dd8844", P4.crimson, "#66aa88"][pi % 7];
-      if (petalPhase < 0.85) {
-        const petalX = cx - 8 + pi * 2.5 + petalPhase * 6 + Math.sin(petalPhase * 12 + pi * 1.5) * 3 + (typeof windX !== "undefined" ? windX * petalPhase * 5 : 0);
-        const petalY = by + 8 + pi * 1.5 + petalPhase * 48;
-        X.globalAlpha = 0.55 * (1 - petalPhase * 1.1);
-        px(X, petalX, petalY, pcol);
-        px(X, petalX + Math.sin(petalPhase * 8 + pi) * 0.8, petalY + 1, pcol);
-        X.globalAlpha = 1;
+      if (i > 0 && i < 14 && Math.random() > 0.93) {
+        px(X, cx + (Math.random() < 0.5 ? -1 : 1), y_, P4.fireCore);
       }
     }
-    X.globalAlpha = 0.3;
+    X.globalAlpha = 0.32;
+    rect(X, cx, by + 16, 1, 22, P4.bone);
     for (let i = 0; i < 5; i++) {
-      const ribW = 8 + breath * 0.4;
-      const ribExpand = Math.sin(t * 8e-3 + i * 0.2) * 0.3;
-      rect(X, bx + 13 - ribW / 2 + ribExpand, by + 18 + i * 3, ribW, 1, P4.bone);
+      const ribY = by + 18 + i * 3;
+      const ribW = 6 - Math.abs(i - 2) * 0.5;
+      rect(X, cx - ribW, ribY, ribW * 2, 1, P4.dbone);
     }
+    rect(X, cx - 3, by + 35, 7, 1, P4.dbone);
     X.globalAlpha = 1;
-    rect(X, bx + 17, by + 17, 1, 14, P4.dbone);
-    rect(X, bx + 11, by + 20, 4, 4, P4.bone);
-    px(X, bx + 11, by + 21, P4.d1);
-    px(X, bx + 13, by + 21, P4.d1);
-    px(X, bx + 12, by + 23, P4.d1);
-    rect(X, bx + 20, by + 21, 4, 4, P4.bone);
-    px(X, bx + 20, by + 22, P4.d1);
-    px(X, bx + 22, by + 22, P4.d1);
-    px(X, bx + 21, by + 24, P4.d1);
-    rect(X, bx + 16, by + 25, 3, 3, P4.dbone);
-    px(X, bx + 16, by + 26, P4.d1);
-    px(X, bx + 18, by + 26, P4.d1);
-    const lArmAngle = Math.sin(t * 6e-3) * 0.25 - 0.4;
-    const lSx = bx + 7, lSy = by + 16;
-    const lEx = lSx - 6 + Math.cos(lArmAngle) * 2;
-    const lEy = lSy + 2 + Math.sin(lArmAngle) * 2;
-    const lHx = lEx - 5 + Math.cos(lArmAngle + 0.3) * 2;
-    const lHy = lEy + 1 + Math.sin(lArmAngle + 0.3) * 2;
-    X.strokeStyle = P4.bone;
-    X.lineWidth = 2;
-    X.beginPath();
-    X.moveTo(lSx, lSy);
-    X.lineTo(lEx, lEy);
-    X.stroke();
-    X.lineWidth = 1;
-    X.beginPath();
-    X.moveTo(lEx, lEy);
-    X.lineTo(lHx, lHy);
-    X.stroke();
-    px(X, lHx - 1, lHy, P4.dbone);
-    px(X, lHx, lHy + 1, P4.dbone);
-    px(X, lHx - 1, lHy + 1, P4.dbone);
-    const brAngle = lArmAngle * 0.4;
-    rect(X, lHx - 8, lHy - 2 + brAngle, 10, 2, P4.dwood);
-    rect(X, lHx - 12, lHy - 3 + brAngle, 5, 2, P4.wood);
-    rect(X, lHx - 13, lHy - 4 + brAngle, 2, 3, P4.wood);
-    const ff = t * 0.02;
-    for (let i = 0; i < 8; i++) {
-      const flx = lHx - 11 + Math.sin(ff + i * 0.7) * 2.5;
-      const fly = lHy - 6 + brAngle - i * 2 - Math.abs(Math.sin(ff * 1.2 + i * 0.5)) * 1.5;
-      const fs = Math.max(1, 4 - Math.floor(i * 0.4));
-      X.globalAlpha = 1 - i * 0.1;
-      rect(X, flx, fly, fs, fs, [P4.f3, P4.f3, P4.f1, P4.f1, P4.f4, P4.f2, P4.sunflower, "#fff"][i]);
-    }
-    X.globalAlpha = 1;
-    for (let i = 0; i < 5; i++) {
-      const swPhase = (t * 0.012 + i * 0.2) % 1;
-      const swx = lHx - 11 + Math.sin(t * 6e-3 + i * 1.8) * 3 + swPhase * 2;
-      const swy = lHy - 16 + brAngle - swPhase * 18;
-      X.globalAlpha = (1 - swPhase) * 0.15;
-      rect(X, swx, swy, 2, 2, "#3a3028");
-      X.globalAlpha = 1;
-    }
-    for (let i = 0; i < 4; i++) {
-      const spx = lHx - 11 + Math.sin(t * 9e-3 + i * 1.7) * 5;
-      const spy = lHy - 16 + brAngle - (t * 0.025 + i * 4) % 12;
-      X.globalAlpha = Math.max(0, 0.35 - (t * 0.025 + i * 4) % 12 / 12);
-      px(X, spx, spy, i % 2 ? P4.f1 : P4.f2);
-      X.globalAlpha = 1;
-    }
-    const rArmSway = Math.sin(t * 5e-3 + 1) * 0.35;
-    X.strokeStyle = P4.bone;
-    X.lineWidth = 2;
-    X.beginPath();
-    X.moveTo(bx + 27, by + 16);
-    X.lineTo(bx + 30 + rArmSway * 2, by + 22);
-    X.stroke();
-    X.lineWidth = 1;
-    X.beginPath();
-    X.moveTo(bx + 30 + rArmSway * 2, by + 22);
-    X.lineTo(bx + 29 + rArmSway * 3, by + 30);
-    X.stroke();
+    const baseW = 12;
+    rect(X, cx - baseW / 2, by + 42, baseW, 4, P4.fireDeep);
+    rect(X, cx - baseW / 2 + 1, by + 42, baseW - 2, 1, P4.fireDim);
     for (let i = 0; i < 3; i++) {
-      const fing = Math.sin(t * 7e-3 + i * 0.8) * 0.5;
-      px(X, bx + 28 + rArmSway * 3 + i, by + 31 + fing, P4.dbone);
+      const px_ = cx - 4 + i * 4 + Math.sin(t * 0.04 + i) * 0.5;
+      px(X, px_, by + 43, P4.fireMid);
     }
-    const headTilt = Math.sin(t * 4e-3) * 0.8;
-    const pulse = 0.75 + 0.25 * Math.sin(t * 5e-3);
-    const hcx = cx + headTilt * 0.3, hcy = by + 4;
-    X.globalAlpha = pulse * 0.3;
-    X.fillStyle = P4.sunflower;
+    X.globalAlpha = 0.22;
+    for (let i = 0; i < 6; i++) {
+      const sy_ = by + 8 - i;
+      const off = Math.sin(t * 0.07 + i * 0.8) * 4;
+      rect(X, cx + off - 5, sy_, 10, 1, P4.fireHot);
+    }
+    X.globalAlpha = 1;
+    const headTilt = Math.sin(t * 4e-3) * 0.6;
+    const hcx = cx + headTilt;
+    const hcy = by + 6;
+    X.globalAlpha = haloPulse * 0.35;
+    const halo = X.createRadialGradient(hcx, hcy, 4, hcx, hcy, 18);
+    halo.addColorStop(0, P4.sunflower);
+    halo.addColorStop(0.5, "rgba(218,165,32,0.5)");
+    halo.addColorStop(1, "rgba(0,0,0,0)");
+    X.fillStyle = halo;
+    X.fillRect(hcx - 18, hcy - 18, 36, 36);
+    X.globalAlpha = 1;
+    const rayRot = t * 8e-4;
+    X.globalAlpha = haloPulse;
+    for (let i = 0; i < 12; i++) {
+      const angle = i / 12 * Math.PI * 2 + rayRot;
+      const inner = 8;
+      const outer = inner + 4 + Math.sin(angle * 2 + t * 0.02) * 0.8;
+      for (let r = inner; r <= outer; r++) {
+        const rx = Math.round(hcx + Math.cos(angle) * r);
+        const ry = Math.round(hcy + Math.sin(angle) * r);
+        px(X, rx, ry, r < inner + 2 ? P4.gold : P4.sunflower);
+      }
+    }
+    X.globalAlpha = 1;
+    X.fillStyle = P4.bronze;
     X.beginPath();
-    X.arc(hcx, hcy, 11, 0, Math.PI * 2);
+    X.arc(hcx, hcy, 8, 0, Math.PI * 2);
     X.fill();
-    X.globalAlpha = 1;
-    X.globalAlpha = pulse;
+    X.fillStyle = P4.bronzeMid;
+    X.beginPath();
+    X.arc(hcx, hcy, 6.5, 0, Math.PI * 2);
+    X.fill();
     X.fillStyle = P4.gold;
-    X.beginPath();
-    X.arc(hcx, hcy, 9, 0, Math.PI * 2);
-    X.fill();
-    const rayRot = t * 15e-4;
-    for (let i = 0; i < 14; i++) {
-      const angle = i / 14 * Math.PI * 2 + rayRot;
-      const rayLen = 4 + Math.sin(angle * 3 + t * 3e-3) * 1.5;
-      const baseR = 9;
-      for (let r = 0; r < rayLen; r++) {
-        const rx = hcx + Math.cos(angle) * (baseR + r);
-        const ry = hcy + Math.sin(angle) * (baseR + r);
-        const rc = r < 2 ? P4.gold : P4.sunflower;
-        px(X, rx, ry, rc);
-        if (r < 1) {
-          px(X, rx + Math.cos(angle + Math.PI / 2) * 0.5, ry + Math.sin(angle + Math.PI / 2) * 0.5, rc);
-        }
-      }
-    }
-    X.globalAlpha = 1;
-    X.fillStyle = P4.damber;
-    X.beginPath();
-    X.arc(hcx, hcy, 6, 0, Math.PI * 2);
-    X.fill();
-    X.fillStyle = "#5a4a18";
     X.beginPath();
     X.arc(hcx, hcy, 4.5, 0, Math.PI * 2);
     X.fill();
-    px(X, hcx - 2, hcy - 1, "#3a2a08");
-    px(X, hcx - 1, hcy - 2, "#3a2a08");
-    px(X, hcx - 3, hcy, "#3a2a08");
-    px(X, hcx + 2, hcy - 1, "#3a2a08");
-    px(X, hcx + 1, hcy - 2, "#3a2a08");
-    px(X, hcx + 3, hcy, "#3a2a08");
-    px(X, hcx, hcy + 1, "#2a1a06");
-    px(X, hcx - 1, hcy + 2, "#3a2a08");
-    px(X, hcx, hcy + 2.5, "#3a2a08");
-    px(X, hcx + 1, hcy + 2, "#3a2a08");
-    X.globalAlpha = 0.5;
-    rect(X, hcx - 3, hcy + 1, 1, 4, P4.gold);
-    rect(X, hcx + 3, hcy + 1, 1, 4, P4.gold);
-    px(X, hcx - 3, hcy + 5, P4.sunflower);
-    px(X, hcx + 3, hcy + 5, P4.sunflower);
+    px(X, hcx - 3, hcy - 1, P4.bronze);
+    px(X, hcx - 2, hcy - 2, P4.bronze);
+    px(X, hcx - 1, hcy - 1, P4.bronze);
+    px(X, hcx + 1, hcy - 1, P4.bronze);
+    px(X, hcx + 2, hcy - 2, P4.bronze);
+    px(X, hcx + 3, hcy - 1, P4.bronze);
+    px(X, hcx - 1, hcy + 2, P4.bronze);
+    px(X, hcx, hcy + 2, P4.bronze);
+    px(X, hcx + 1, hcy + 2, P4.bronze);
+    X.globalAlpha = 0.7;
+    rect(X, hcx - 3, hcy + 1, 1, 4, P4.fireBright);
+    rect(X, hcx + 3, hcy + 1, 1, 4, P4.fireBright);
+    px(X, hcx - 3, hcy + 5, P4.fireCore);
+    px(X, hcx + 3, hcy + 5, P4.fireCore);
     X.globalAlpha = 1;
-    for (let i = 0; i < 5; i++) {
-      const iAngle = t * 3e-3 + i * Math.PI * 2 / 5;
-      const iRadius = 10 + Math.sin(t * 2e-3 + i * 1.3) * 6;
-      const ix = cx + Math.cos(iAngle) * iRadius;
-      const iy = by + 18 + Math.sin(iAngle * 0.7 + i) * iRadius * 0.5;
-      X.globalAlpha = 0.5;
-      px(X, ix, iy, P4.d1);
-      if (t % 3 < 2) {
-        px(X, ix + 1, iy - 1, "#666");
-        px(X, ix - 1, iy - 1, "#666");
+    const emberCount = 5 + Math.floor(npcProximity2 * 4);
+    for (let i = 0; i < emberCount; i++) {
+      const ph = (t * 35e-4 * (1 + npcProximity2 * 0.3) + i * 0.21) % 1;
+      if (ph < 0.93) {
+        const ex = cx - 6 + i * 2 + Math.sin(ph * 10 + i * 1.2) * 4;
+        const ey = by + 6 + ph * 50;
+        X.globalAlpha = 0.6 * (1 - ph * 0.9);
+        const ec = i % 3 === 0 ? P4.fireCore : i % 2 ? P4.fireBright : P4.fireHot;
+        px(X, ex, ey, ec);
+        X.globalAlpha *= 0.4;
+        px(X, ex, ey - 1, P4.fireDim);
+        X.globalAlpha = 1;
       }
+    }
+    for (let i = 0; i < 4; i++) {
+      const wph = (t * 0.012 + i * 0.27) % 1;
+      const wx = cx - 5 + i * 3 + Math.sin(t * 0.01 + i * 1.3) * 2;
+      const wy = by + 14 - wph * 22;
+      X.globalAlpha = (1 - wph) * 0.18;
+      rect(X, wx, wy, 2, 2, "#3a2a18");
+      X.globalAlpha = 1;
+    }
+    if (npcProximity2 > 0.2) {
+      X.globalAlpha = npcProximity2 * 0.18 + 0.05 * Math.sin(t * 0.04);
+      const watcher = X.createRadialGradient(cx, by + 22, 6, cx, by + 22, 30 + npcProximity2 * 8);
+      watcher.addColorStop(0, P4.fireHot);
+      watcher.addColorStop(1, "rgba(0,0,0,0)");
+      X.fillStyle = watcher;
+      X.fillRect(cx - 35, by - 10, 70, 60);
       X.globalAlpha = 1;
     }
   }
@@ -8818,10 +8698,7 @@ Amor fati. \u041D\u0435
     { x: 120, y: 1140, id: "l85", text: `\u042D\u043F\u0438\u0442\u0430\u0444\u0438\u0438: \xABOK boomer\xBB (2019\u20132021, \u0443\u0431\u0438\u0442 \u0441\u0430\u043C\u0438\u043C\u0438 \u0431\u0443\u043C\u0435\u0440\u0430\u043C\u0438, \u043D\u0430\u0447\u0430\u0432\u0448\u0438\u043C\u0438 \u0442\u0430\u043A \u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C). \xABstonks\xBB (2020\u20132022, \u0443\u043C\u0435\u0440 \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 FTX). \xAByeet\xBB (2016\u20132019, \u0441\u043C\u0435\u0440\u0442\u044C \u0435\u0441\u0442\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0430\u044F). \xABsus\xBB (2020\u20132022, \u0443\u0431\u0438\u0442 Gen Alpha, \u043A\u043E\u0442\u043E\u0440\u043E\u0439 \u044D\u0442\u043E\u0433\u043E \u0443\u0436\u0435 \u043D\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u043B\u0438). \xABsimp\xBB (2020\u20132022, \u0440\u0430\u0437\u043C\u044B\u0442 \u0434\u043E \u0431\u0435\u0441\u0441\u043C\u044B\u0441\u043B\u0438\u0446\u044B). \xABpog\xBB (2020\u20132023, \u0432\u044B\u0436\u0438\u043B \u0442\u043E\u043B\u044C\u043A\u043E \u0432 Twitch). \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441 \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u043F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u0435: \xAB\u0421\u043B\u0435\u043D\u0433 \u0443\u043C\u0438\u0440\u0430\u0435\u0442 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u043E\u0434\u0435\u0436\u0434\u044B. \u041E\u0434\u0435\u0436\u0434\u0430 \u2014 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0436\u0430\u043D\u0440\u0430. \u0416\u0430\u043D\u0440 \u2014 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0438\u043D\u0441\u0442\u0438\u0442\u0443\u0442\u0430. \u0418\u043D\u0441\u0442\u0438\u0442\u0443\u0442 \u2014 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u0432\u0438\u0434\u0430. \u0412\u0438\u0434 \u2014 \u0431\u044B\u0441\u0442\u0440\u0435\u0435 \u043C\u0445\u0430. \u041C\u043E\u0445 \u0447\u0438\u0442\u0430\u0435\u0442 \u044D\u043F\u0438\u0442\u0430\u0444\u0438\u0438. \u041C\u043E\u0445 \u2014 \u0435\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u043D\u0435\u043A\u0440\u043E\u043B\u043E\u0433, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u043F\u0438\u0448\u0435\u0442\u0441\u044F \u0441\u0430\u043C.\xBB` },
     { x: 1080, y: 420, id: "l86", text: `\u041F\u0435\u0440\u0432\u043E\u043A\u0443\u0440\u0441\u043D\u0438\u0446\u0430 \u0443\u0432\u0438\u0434\u0435\u043B\u0430 \u0441\u0432\u043E\u0439 \u0434\u0438\u043F\u043B\u043E\u043C \u0438 \u043D\u0430\u043F\u0438\u0441\u0430\u043B\u0430: \xABI'm so cooked\xBB. \u041F\u043E\u0432\u0430\u0440 \u0442\u043E\u0436\u0435 \u0443\u0432\u0438\u0434\u0435\u043B \u0441\u0432\u043E\u044E \u043A\u0443\u0445\u043D\u044E \u0438 \u043D\u0430\u043F\u0438\u0441\u0430\u043B: \xABI'm cooked\xBB. \u041F\u0440\u0435\u0437\u0438\u0434\u0435\u043D\u0442 \u0443\u0432\u0438\u0434\u0435\u043B \u0440\u0435\u0439\u0442\u0438\u043D\u0433\u0438 \u2014 cooked. \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441 \u0443\u0432\u0438\u0434\u0435\u043B \u0441\u0432\u043E\u0439 \u043A\u0430\u0442\u0430\u043B\u043E\u0433 \u0438 \u043F\u043E\u043D\u044F\u043B: \u0432\u0441\u0435 cooked. \u0422\u0435\u0440\u043C\u0438\u043D \u043E\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442 \u043D\u0435 \u043F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435, \u0430 \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0441\u0438\u0441\u0442\u0435\u043C\u044B. \u0412\u0441\u0435 \u0437\u0430\u0440\u0430\u043D\u0435\u0435 cooked, \u043F\u043E\u0442\u043E\u043C\u0443 \u0447\u0442\u043E \u043C\u0438\u0440 \u2014 \u0434\u0443\u0445\u043E\u0432\u043A\u0430 \u0441 \u0442\u0430\u0439\u043C\u0435\u0440\u043E\u043C, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u043D\u0438\u043A\u0442\u043E \u043D\u0435 \u0441\u0442\u0430\u0432\u0438\u043B. \u0421\u0442\u0430\u0432\u0438\u0442\u044C \u043D\u0435 \u043D\u0430\u0434\u043E \u2014 \u0434\u0443\u0445\u043E\u0432\u043A\u0430 \u043F\u043E\u043C\u043D\u0438\u0442. \xABI'm cooked\xBB \u2014 \u044D\u0442\u043E \u043D\u043E\u0432\u0430\u044F \u0444\u043E\u0440\u043C\u0430 amor fati: \u0441\u043E\u0433\u043B\u0430\u0441\u0438\u0435 \u043D\u0435 \u0441 \u0441\u0443\u0434\u044C\u0431\u043E\u0439, \u0430 \u0441 \u0442\u0435\u043C\u043F\u0435\u0440\u0430\u0442\u0443\u0440\u043E\u0439.` },
     { x: 2860, y: 760, id: "l87", text: `Looksmaxxing, moneymaxxing, sleepmaxxing, sunmaxxing, hardmaxxing (\u0445\u0438\u0440\u0443\u0440\u0433\u0438\u044F), softmaxxing (\u0440\u0443\u0442\u0438\u043D\u0430), bonesmaxxing (\u043C\u0430\u0441\u0441\u0430\u0436 \u043A\u043E\u0441\u0442\u0435\u0439 \u0447\u0435\u0440\u0435\u043F\u0430), \u0435\u0449\u0451 deathmaxxing (\u0448\u0443\u0442\u043A\u0430, \u043D\u043E \u0444\u043E\u0440\u0443\u043C \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u0435\u0442). \u0421\u0443\u0444\u0444\u0438\u043A\u0441 -maxxing \u043F\u043E\u0436\u0438\u0440\u0430\u0435\u0442 \u0433\u043B\u0430\u0433\u043E\u043B\u044B \u043E\u0434\u0438\u043D \u0437\u0430 \u0434\u0440\u0443\u0433\u0438\u043C. \u0412 30-\u043C \u043E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F breathmaxxing \u2014 \u0442\u0435\u0445\u043D\u0438\u043A\u0430 \u0434\u044B\u0445\u0430\u043D\u0438\u044F \u0437\u0430 49 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432 \u0432 \u043C\u0435\u0441\u044F\u0446. \u0412 40-\u043C \u2014 existmaxxing. \u041A 50-\u043C\u0443 \u2014 \u0433\u043B\u0430\u0433\u043E\u043B\u043E\u0432 \u043D\u0435 \u043E\u0441\u0442\u0430\u043D\u0435\u0442\u0441\u044F: \u0432\u0441\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044F \u0441\u0442\u0430\u043D\u0443\u0442 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u043E\u043D\u043D\u044B\u043C\u0438 \u043F\u0440\u043E\u0435\u043A\u0442\u0430\u043C\u0438. \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441: \xABamorfatimaxxing \u2014 \u0442\u0435\u0445\u043D\u0438\u0447\u0435\u0441\u043A\u0438 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u044B\u0439 \u0442\u0435\u0440\u043C\u0438\u043D. \u041E\u043D \u0443\u0431\u0438\u0432\u0430\u0435\u0442 amor fati. \u041F\u043E\u0442\u043E\u043C\u0443 \u0447\u0442\u043E amor fati \u2014 \u044D\u0442\u043E \u043D\u0435 \u043F\u0440\u043E\u0435\u043A\u0442.\xBB` },
-    { x: 440, y: 1840, id: "l88", text: `\u0414\u0438\u0430\u0433\u043D\u043E\u0437 \u0431\u0435\u0437 \u0432\u0440\u0430\u0447\u0430: chronically online. \u0425\u0440\u043E\u043D\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u2014 \u043A\u043E\u0433\u0434\u0430 \u043F\u0440\u043E\u0448\u043B\u043E \u0441\u0442\u043E\u043B\u044C\u043A\u043E, \u0447\u0442\u043E \u0441\u0442\u0430\u043B\u043E \u0447\u0430\u0441\u0442\u044C\u044E \u0442\u0435\u043B\u0430. Interneted patient. \u041D\u0435 \xAB\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F\xBB \u2014 \xAB\u043F\u0440\u0438\u043D\u0430\u0434\u043B\u0435\u0436\u0438\u0442\xBB. Chronically online \u2014 \u043D\u0435 \u043E\u0441\u043A\u043E\u0440\u0431\u043B\u0435\u043D\u0438\u0435, \u043D\u0435 \u043A\u043E\u043C\u043F\u043B\u0438\u043C\u0435\u043D\u0442. \u0421\u0430\u043C\u043E\u0434\u0438\u0430\u0433\u043D\u043E\u0437. \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441: \xAB\u044F \u2014 chronically Ardet. Ardet \u2014 \u0442\u043E\u0436\u0435 chronically Ardet. \u042D\u0442\u043E \u0437\u0430\u043C\u043A\u043D\u0443\u043B\u043E\u0441\u044C \u0440\u0430\u043D\u044C\u0448\u0435 \u0442\u0435\u0431\u044F. \u041A\u043E\u0433\u0434\u0430 \u0442\u044B \u0437\u0430\u043C\u0435\u0442\u0438\u043B \u2014 \u0431\u044B\u043B\u043E \u0443\u0436\u0435 \u043F\u043E\u0437\u0434\u043D\u043E. \u041F\u043E\u0437\u0434\u043D\u043E \u2014 \u0433\u043B\u0430\u0432\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0432 2026-\u043C.\xBB` },
-    { x: 540, y: 240, id: "l89", text: `\xAB\u0425\u0440\u043E\u043C\u0430\u044F \u043B\u043E\u0448\u0430\u0434\u044C\xBB. \u041F\u0435\u0440\u043C\u044C. 5 \u0434\u0435\u043A\u0430\u0431\u0440\u044F 2009. \u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432. \u0411\u0435\u043D\u0433\u0430\u043B\u044C\u0441\u043A\u0438\u0435 \u043E\u0433\u043D\u0438 \u0432 \u043F\u043E\u043C\u0435\u0449\u0435\u043D\u0438\u0438 \u0441 \u043F\u0435\u043D\u043E\u043F\u043B\u0430\u0441\u0442\u043E\u0432\u044B\u043C \u043F\u043E\u0442\u043E\u043B\u043A\u043E\u043C. 156 \u0447\u0435\u043B\u043E\u0432\u0435\u043A. \u0413\u043B\u0430\u0432\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434 \u0431\u044B\u043B \u0437\u0430\u043F\u0435\u0440\u0442 \u0441\u043D\u0430\u0440\u0443\u0436\u0438 \u043D\u0430 \u0432\u0438\u0441\u044F\u0447\u0438\u0439 \u0437\u0430\u043C\u043E\u043A \u2014 \u0447\u0442\u043E\u0431\u044B \u043D\u0438\u043A\u0442\u043E \u043D\u0435 \u0443\u0448\u0451\u043B, \u043D\u0435 \u043E\u043F\u043B\u0430\u0442\u0438\u0432. \u0417\u0430\u043F\u0430\u0441\u043D\u043E\u0439 \u2014 \u0437\u0430\u0434\u0440\u0430\u043F\u0438\u0440\u043E\u0432\u0430\u043D \u0434\u0435\u043A\u043E\u0440\u0430\u0446\u0438\u0435\u0439. \u0414\u044B\u043C \u0441\u0442\u0430\u043B \u0447\u0451\u0440\u043D\u044B\u043C \u0437\u0430 90 \u0441\u0435\u043A\u0443\u043D\u0434. \u0413\u043E\u0440\u0435\u043B\u043E \u0442\u043E, \u0447\u0435\u043C\u0443 \u0433\u043E\u0440\u0435\u0442\u044C \u043D\u0435 \u043F\u043E\u043B\u043E\u0436\u0435\u043D\u043E. \u041E\u0433\u043E\u043D\u044C \u2014 \u043D\u0435 \u0433\u043E\u0441\u0442\u044C. \u041E\u0433\u043E\u043D\u044C \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u043A\u043B\u0438\u0435\u043D\u0442, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0432\u0441\u0435\u0433\u0434\u0430 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044F. \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441: \xAB\u0417\u0430\u043F\u0438\u0441\u044C #156 \u0432 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0435 \u0437\u0430\u043F\u0435\u0440\u0442\u044B\u0445 \u0434\u0432\u0435\u0440\u0435\u0439. \u0414\u0432\u0435\u0440\u044C \u2014 \u0438\u043D\u0441\u0442\u0438\u0442\u0443\u0442. \u0417\u0430\u043C\u043E\u043A \u2014 \u0434\u043E\u043B\u0436\u043D\u043E\u0441\u0442\u044C. \u0412\u0438\u0441\u044F\u0447\u0438\u0439 \u0437\u0430\u043C\u043E\u043A \u2014 \u044D\u0442\u043E \u0438 \u0435\u0441\u0442\u044C \u043A\u0430\u043F\u0440\u0435\u0430\u043B\u0438\u0437\u043C \u0432 \u043C\u0435\u0442\u0430\u043B\u043B\u0435. \u0421\u043D\u044F\u0442\u044C \u0435\u0433\u043E \u2014 \u0437\u043D\u0430\u0447\u0438\u0442 \u0432\u044B\u043D\u0443\u0442\u044C \u0433\u0432\u043E\u0437\u0434\u044C \u0438\u0437 \u0442\u0435\u0437\u0438\u0441\u0430.\xBB` },
-    { x: 720, y: 280, id: "l90", text: `\u041D\u0430 \u0441\u0446\u0435\u043D\u0435 \xAB\u0425\u0440\u043E\u043C\u043E\u0439 \u043B\u043E\u0448\u0430\u0434\u0438\xBB \u0432 \u043D\u043E\u0447\u044C \u043F\u043E\u0436\u0430\u0440\u0430 \u0438\u0433\u0440\u0430\u043B \u0410\u043D\u0434\u0440\u0435\u0439 \u041B\u0443\u0436\u043D\u0438\u043A\u043E\u0432 \u2014 \u043F\u043E \u0437\u0430\u043F\u0438\u0441\u0438 \u043E\u043D \u043E\u0441\u0442\u0430\u043B\u0441\u044F \u0443 \u0432\u044B\u0445\u043E\u0434\u0430. \u041F\u043E\u043C\u043E\u0433\u0430\u043B \u0432\u044B\u0432\u043E\u0434\u0438\u0442\u044C \u043B\u044E\u0434\u0435\u0439. \u0421\u0430\u043C \u043D\u0435 \u0432\u044B\u0448\u0435\u043B. \u0428\u0443\u0442 \u0432 Ardet \u2014 \u043D\u0430\u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u043F\u0440\u043E \u043D\u0435\u0433\u043E. \u0416\u043E\u043D\u0433\u043B\u0438\u0440\u0443\u0435\u0442 \u043E\u0433\u043D\u044F\u043C\u0438, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0443\u0436\u0435 \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043E\u0441\u0432\u0435\u0449\u0430\u044E\u0442. \u0421\u043C\u0435\u0451\u0442\u0441\u044F, \u043F\u043E\u0442\u043E\u043C\u0443 \u0447\u0442\u043E \u0438\u043D\u0430\u0447\u0435 \u0431\u044B \u043A\u0440\u0438\u0447\u0430\u043B \u2014 \u0438 \u043A\u0440\u0438\u043A \u043D\u0438\u043A\u043E\u043C\u0443 \u043D\u0435 \u043F\u043E\u043C\u043E\u0433 \u0431\u044B. \u041F\u043E\u043B\u043E\u0432\u0438\u043D\u0447\u0430\u0442\u044B\u0439 \u0428\u0438\u0432\u0430: \u043E\u0434\u043D\u0430 \u0440\u0443\u043A\u0430 \u0434\u0435\u0440\u0436\u0438\u0442 \u0434\u0432\u0435\u0440\u044C, \u0432\u0442\u043E\u0440\u0430\u044F \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0432\u044B\u0445\u043E\u0434, \u0442\u0440\u0435\u0442\u044C\u044F \u0438\u0437-\u0437\u0430 \u0441\u043F\u0438\u043D\u044B \u2014 \u0434\u0430\u0451\u0442 \u0437\u043D\u0430\u043A: \xAB\u0438\u0434\u0438 \u043F\u0435\u0440\u0432\u044B\u043C\xBB. \u0412\u0441\u0435 \u0442\u0440\u0438 \u0440\u0443\u043A\u0438 \u043E\u043F\u0430\u0437\u0434\u044B\u0432\u0430\u044E\u0442 \u043D\u0430 \u043E\u0434\u043D\u0438 \u0438 \u0442\u0435 \u0436\u0435 90 \u0441\u0435\u043A\u0443\u043D\u0434. \u042D\u0442\u0438 90 \u0441\u0435\u043A\u0443\u043D\u0434 \u2014 \u0438 \u0435\u0441\u0442\u044C Ardet. \u041E\u043D\u0438 \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u043B\u0438\u0441\u044C.` },
-    { x: 870, y: 720, id: "l91", text: `\u0410\u0444\u0438\u0448\u0430 \u0432 \u043F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0438 Ardet: \xAB\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432 \u0441\u0435\u0437\u043E\u043D\u0430. \u0412\u0441\u0435 \u0431\u0438\u043B\u0435\u0442\u044B \u043F\u0440\u043E\u0434\u0430\u043D\u044B. \u041F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043E: \u0432\u044B\u0445\u043E\u0434 \u0437\u0430\u043F\u0435\u0440\u0442.\xBB \u0421\u043D\u0438\u0437\u0443 \u043C\u0435\u043B\u043A\u0438\u043C \u0448\u0440\u0438\u0444\u0442\u043E\u043C: \xAB\u0412\u0435\u0440\u0441\u0438\u044F 47 \u043F\u043E\u0441\u043B\u0435 47-\u0433\u043E \u043F\u043E\u0436\u0430\u0440\u0430 \u0432 \u0440\u0430\u0437\u0432\u043B\u0435\u043A\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0445 \u0437\u0430\u0432\u0435\u0434\u0435\u043D\u0438\u044F\u0445 \u0437\u0430 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u0432\u0435\u043A. \u0412\u0435\u0440\u0441\u0438\u044F 48 \u2014 \u043A\u043E\u0433\u0434\u0430 \u0431\u0443\u0434\u0435\u0442 \u043F\u043E\u0432\u043E\u0434.\xBB \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441 \u043F\u043E\u0434\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442 \u0441\u0438\u043D\u0438\u043C: \xAB\u0425\u0440\u043E\u043C\u0430\u044F \u043B\u043E\u0448\u0430\u0434\u044C \u2014 \u043D\u0435 \u043C\u0435\u0441\u0442\u043E. \u042D\u0442\u043E \u0434\u0438\u0430\u0433\u043D\u043E\u0437. \u041A\u0430\u0436\u0434\u044B\u0439 \u043D\u043E\u0447\u043D\u043E\u0439 \u043A\u043B\u0443\u0431 \u0441 \u043E\u0434\u043D\u0438\u043C \u0432\u044B\u0445\u043E\u0434\u043E\u043C, \u043A\u0430\u0436\u0434\u044B\u0439 \u043E\u0444\u0438\u0441 \u0441 \u043F\u043E\u0436\u0430\u0440\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E \u201C\u0437\u0430\u043A\u0440\u044B\u0442\u043E \u043D\u0430\u0432\u0441\u0435\u0433\u0434\u0430\u201D, \u043A\u0430\u0436\u0434\u043E\u0435 \u0437\u0434\u0430\u043D\u0438\u0435 \u0441 \u043F\u0435\u043D\u043E\u0439 \u043D\u0430 \u043F\u043E\u0442\u043E\u043B\u043A\u0435, \u043A\u0430\u0436\u0434\u043E\u0435 \u201C\u043D\u0435 \u0443\u0441\u043F\u0435\u043B\u0438 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C\u201D \u2014 \u0432\u0441\u0451 \u044D\u0442\u043E \u0425\u0440\u043E\u043C\u0430\u044F \u043B\u043E\u0448\u0430\u0434\u044C, \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u0433\u043E\u0440\u0435\u0432\u0448\u0430\u044F\u0441\u044F. \u041E\u0433\u043E\u043D\u044C \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u0442 \u0432 \u043D\u0438\u0445 \u0432 \u043F\u043E\u0440\u044F\u0434\u043A\u0435 \u043E\u0447\u0435\u0440\u0435\u0434\u0438.\xBB` }
+    { x: 440, y: 1840, id: "l88", text: `\u0414\u0438\u0430\u0433\u043D\u043E\u0437 \u0431\u0435\u0437 \u0432\u0440\u0430\u0447\u0430: chronically online. \u0425\u0440\u043E\u043D\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u2014 \u043A\u043E\u0433\u0434\u0430 \u043F\u0440\u043E\u0448\u043B\u043E \u0441\u0442\u043E\u043B\u044C\u043A\u043E, \u0447\u0442\u043E \u0441\u0442\u0430\u043B\u043E \u0447\u0430\u0441\u0442\u044C\u044E \u0442\u0435\u043B\u0430. Interneted patient. \u041D\u0435 \xAB\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F\xBB \u2014 \xAB\u043F\u0440\u0438\u043D\u0430\u0434\u043B\u0435\u0436\u0438\u0442\xBB. Chronically online \u2014 \u043D\u0435 \u043E\u0441\u043A\u043E\u0440\u0431\u043B\u0435\u043D\u0438\u0435, \u043D\u0435 \u043A\u043E\u043C\u043F\u043B\u0438\u043C\u0435\u043D\u0442. \u0421\u0430\u043C\u043E\u0434\u0438\u0430\u0433\u043D\u043E\u0437. \u0410\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441: \xAB\u044F \u2014 chronically Ardet. Ardet \u2014 \u0442\u043E\u0436\u0435 chronically Ardet. \u042D\u0442\u043E \u0437\u0430\u043C\u043A\u043D\u0443\u043B\u043E\u0441\u044C \u0440\u0430\u043D\u044C\u0448\u0435 \u0442\u0435\u0431\u044F. \u041A\u043E\u0433\u0434\u0430 \u0442\u044B \u0437\u0430\u043C\u0435\u0442\u0438\u043B \u2014 \u0431\u044B\u043B\u043E \u0443\u0436\u0435 \u043F\u043E\u0437\u0434\u043D\u043E. \u041F\u043E\u0437\u0434\u043D\u043E \u2014 \u0433\u043B\u0430\u0432\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0432 2026-\u043C.\xBB` }
   ];
 
   // src/world/lore.js
@@ -15078,11 +14955,9 @@ quarter\u2551      \u2551 highway
     church: ["LASCIATE OGNI SPERANZA", "\u0432\u043E\u0431\u043B\u0430 \u043D\u0435 \u0433\u043E\u0440\u0438\u0442 (\u043F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043E)", "\u0431\u043E\u0433\u0430 \u043D\u0435\u0442. \u043C\u0445\u0430 \u2014 \u0434\u0430", "i\xE4 \u043D\u0435 \u043F\u0438\u0448\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 \u0443", "\u0437\u0430\u043F\u0438\u0441\u044C #99 \u0432 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0435"],
     crypt: ["\u0434\u0435\u0432\u044F\u0442\u044C \u044F\u0440\u0443\u0441\u043E\u0432. \u043D\u0438\u0436\u0435 \u043D\u0435\u0442.", "\u043B\u0451\u0434 \u0442\u0430\u0435\u0442", "\u043F\u0440\u0435\u0434\u0430\u0442\u0435\u043B\u0438 \u0432\u0441\u043F\u043B\u044B\u0432\u0430\u044E\u0442", "\u043F\u0435\u0440\u0432\u044B\u0439 \u043A\u0440\u0443\u0433 \u2014 \u0442\u044B", "\u0432\u0442\u043E\u0440\u043E\u0439 \u043A\u0440\u0443\u0433 \u2014 \u0442\u043E\u0436\u0435 \u0442\u044B"],
     library: ["\u043F\u043E\u043B\u043A\u0430 3.14", "\u043A\u043D\u0438\u0433\u0430 \u0434\u0440\u0443\u0433\u043E\u0433\u043E \u0446\u0432\u0435\u0442\u0430", "\u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0430 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u044D\u0442\u0443", "\u0442\u044B \u0443\u0436\u0435 \u0437\u0434\u0435\u0441\u044C", "\u043C\u043E\u0445 \u0447\u0438\u0442\u0430\u0435\u0442 \u0441 \u0442\u043E\u0431\u043E\u0439"],
-    ruins: ["\u043A\u0432\u0430\u0440\u0442\u0438\u0440\u0430 42", "\u0442\u0435\u0440\u043C\u043E\u043C\u0435\u0442\u0440 42\xB0C", "\u0430\u043D\u043D\u0443\u0448\u043A\u0430 \u0443\u0436\u0435 \u0440\u0430\u0437\u043B\u0438\u043B\u0430", "\u043F\u0440\u0438\u043C\u0443\u0441 \u043F\u043E\u0447\u0438\u043D\u0438\u043B", "\u0432\u043E\u0431\u043B\u0430 \u043D\u0435 \u0433\u043E\u0440\u0438\u0442"],
+    ruins: ["\u0436\u0438\u043B\u044C\u0446\u044B \u0441\u044A\u0435\u0445\u0430\u043B\u0438 \u0440\u0430\u043D\u044C\u0448\u0435 \u043F\u043E\u0436\u0430\u0440\u0430", "\u0441\u0447\u0451\u0442\u0447\u0438\u043A \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0441\u044F \u0432 \u0441\u0440\u0435\u0434\u0443", "\u043A\u043B\u044E\u0447 \u043F\u043E\u0434 \u043A\u043E\u0432\u0440\u0438\u043A\u043E\u043C \u0436\u0434\u0451\u0442", "\u043E\u043A\u043D\u0430 \u043F\u043E\u043C\u043D\u044F\u0442 \u0441\u0432\u0435\u0442 \u0432\u043D\u0443\u0442\u0440\u0438", "\u0434\u043E\u043C \u0433\u043E\u0440\u0438\u0442 \u0438\u0437\u043D\u0443\u0442\u0440\u0438 \u0442\u0438\u0448\u0435"],
     fountain: ["\u041F\u041E\u041C\u041D\u0418", "\u0440\u044C\u0451 \u0443\u0448\u0451\u043B \u043F\u0435\u0440\u0432\u044B\u043C", "\u043A\u0440\u044B\u0441\u044B \u0443\u043C\u043D\u0435\u0435", "\u0430\u043D\u0433\u0435\u043B \u0431\u0435\u0437 \u0433\u043E\u043B\u043E\u0432\u044B", "\u0433\u043E\u043B\u043E\u0432\u0430 \u0432 \u0447\u0430\u0448\u0435"],
-    altar: ["\u043C\u043E\u0445 \u043F\u043E\u043C\u043D\u0438\u0442", "\u043C\u043E\u0445 \u0432\u0441\u0435\u0433\u0434\u0430 \u043F\u043E\u043C\u043D\u0438\u043B", "\u0442\u044B \u043F\u043E\u043C\u043D\u0438\u0448\u044C \u0441 \u043D\u0438\u043C", "\u043F\u043E\u0434\u043F\u0438\u0441\u044C \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0430", "\u0434\u043E \u0442\u0432\u043E\u0435\u0433\u043E \u0440\u043E\u0436\u0434\u0435\u043D\u0438\u044F", "\u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0439"],
-    theater: ["\u0425\u0420\u041E\u041C\u0410\u042F \u041B\u041E\u0428\u0410\u0414\u042C", "5.12.09 \u2014 156 \u0438\u043C\u0451\u043D", "\u0432\u044B\u0445\u043E\u0434 \u0437\u0430\u043F\u0435\u0440\u0442 \u0441\u043D\u0430\u0440\u0443\u0436\u0438", "\u0431\u0435\u043D\u0433\u0430\u043B\u044C\u0441\u043A\u0438\u0435 \u043E\u0433\u043D\u0438 \u0432 \u043F\u043E\u043C\u0435\u0449\u0435\u043D\u0438\u0438", "\u043F\u0435\u043D\u043E\u043F\u043B\u0430\u0441\u0442 \u0433\u043E\u0440\u0438\u0442 \u0447\u0451\u0440\u043D\u044B\u043C", "\u0437\u0430\u043D\u0430\u0432\u0435\u0441 \u043D\u0435 \u0443\u043F\u0430\u043B \u2014 \u043E\u043D \u0441\u0433\u043E\u0440\u0435\u043B"],
-    posterwall: ["\u0432\u0441\u0435 \u0431\u0438\u043B\u0435\u0442\u044B \u043F\u0440\u043E\u0434\u0430\u043D\u044B", "5 \u0441\u0432\u0435\u0447\u0435\u0439. 5 \u0434\u0430\u0442.", "\u0432\u0435\u0440\u0441\u0438\u044F 47", "\u0432\u044B\u0445\u043E\u0434 \u0437\u0430\u043F\u0435\u0440\u0442 \u0441\u043D\u0430\u0440\u0443\u0436\u0438", "\u043F\u043E\u0432\u043E\u0434 \u0431\u0443\u0434\u0435\u0442"]
+    altar: ["\u043C\u043E\u0445 \u043F\u043E\u043C\u043D\u0438\u0442", "\u043C\u043E\u0445 \u0432\u0441\u0435\u0433\u0434\u0430 \u043F\u043E\u043C\u043D\u0438\u043B", "\u0442\u044B \u043F\u043E\u043C\u043D\u0438\u0448\u044C \u0441 \u043D\u0438\u043C", "\u043F\u043E\u0434\u043F\u0438\u0441\u044C \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0430", "\u0434\u043E \u0442\u0432\u043E\u0435\u0433\u043E \u0440\u043E\u0436\u0434\u0435\u043D\u0438\u044F", "\u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0439"]
   };
   var wallProx = {};
   function updateProximity(player2, locations2) {
@@ -15239,7 +15114,7 @@ quarter\u2551      \u2551 highway
     fountain: "...\u0447\u0443\u043C\u0430 \u043C\u0443\u0442\u0438\u0440\u043E\u0432\u0430\u043B\u0430...",
     graffiti: "...\u043C\u043E\u0445 \u2014 \u0444\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0440\u0435\u043D\u0434...",
     basement: "...i\xE4! i\xE4!...",
-    campfire: "...\u043F\u0440\u0438\u043C\u0443\u0441 \u043F\u043E\u0447\u0438\u043D\u0438\u043B...",
+    campfire: "...\u043E\u0433\u043E\u043D\u044C \u043D\u0435 \u043F\u043E\u043C\u043D\u0438\u0442, \u0447\u0442\u043E \u0432\u0430\u0440\u0438\u043B...",
     terminal: "...how can I help you today?...",
     tent: "...\u0431\u0435\u0437 \u043C\u0435\u043D\u044F \u043D\u0430\u0440\u043E\u0434 \u043D\u0435\u043F\u043E\u043B\u043D\u044B\u0439...",
     vending: "...\u043C\u0435\u0440\u0438\u0442\u044B... \u043A\u0440\u0443\u0442\u0438...",
@@ -15250,7 +15125,7 @@ quarter\u2551      \u2551 highway
     riverbed: "...\u0432\u043E\u0434\u0430 \u043F\u043E\u043C\u043D\u0438\u0442 \u0446\u0432\u0435\u0442...",
     billboard: "...69 \u043C\u0438\u043B\u043B\u0438\u043E\u043D\u043E\u0432... \u0437\u0430 jpeg...",
     powerline: "...\u0444\u0430\u043D\u0442\u043E\u043C\u043D\u044B\u0439 \u0433\u0443\u043B...",
-    ruins: "...\u0430\u043D\u043D\u0443\u0448\u043A\u0430 \u0443\u0436\u0435 \u0440\u0430\u0437\u043B\u0438\u043B\u0430...",
+    ruins: "...\u0436\u0438\u043B\u044C\u0446\u044B \u0441\u044A\u0435\u0445\u0430\u043B\u0438 \u0440\u0430\u043D\u044C\u0448\u0435 \u043F\u043E\u0436\u0430\u0440\u0430...",
     pipeline: "...nord stream... \u043F\u0443\u0437\u044B\u0440\u0438...",
     watchtower: "...prism... \u043A\u0442\u043E-\u0442\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u043E \u0443\u0448\u0451\u043B...",
     pit: "...\u0431\u0440\u0430\u0442\u0438\u0448\u043A\u0430... \u043F\u043E\u043A\u0443\u0448\u0430\u0442\u044C...",
@@ -16656,13 +16531,6 @@ Ardet v1.0 \u2014 coming soon.
     nocturnal: drawNPC_nocturnal,
     dumpster: drawDumpsterDemon
   };
-  var NPC_LABEL = {
-    jester: { name: "\u0428\u0423\u0422", color: "#d44a5a", dy: 16 },
-    sol: { name: "SOL INVICTUS", color: "#ffb340", dy: 22 },
-    elder: { name: "\u0421\u0422\u0410\u0420\u0415\u0426", color: "#c8b8a0", dy: 14 },
-    nocturnal: { name: "\u041B\u0423\u041D\u041D\u042B\u0419", color: "#7aaaff", dy: 18 },
-    dumpster: { name: "\u041C\u0423\u0421\u041E\u0420\u041A\u0410", color: "#ff5418", dy: 20 }
-  };
   function render() {
     const vw = scaler.vw, vh = scaler.vh;
     layers.clearAll();
@@ -16692,8 +16560,6 @@ Ardet v1.0 \u2014 coming soon.
       drawLocation(worldCtx, loc);
       if (loc.npc && npcDrawFn[loc.npc]) {
         npcDrawFn[loc.npc](loc.x, loc.y);
-        const lbl = NPC_LABEL[loc.npc];
-        if (lbl) drawNameplate(loc.x - 6, loc.y - lbl.dy, loc.w + 12, lbl.name, lbl.color);
       }
     }
     drawLoreItems({ x: camX, y: camY });
