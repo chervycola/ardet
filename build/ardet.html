@@ -2149,47 +2149,166 @@ canvas#game {
 
   // src/sprites/npcs/elder.js
   var P5 = {
+    void: "#050408",
     d1: "#0a0a0a",
-    d2: "#6b0f1a",
-    dgrey: "#2a2a2a",
-    ash: "#8a8d8f",
+    cloakDark: "#1a1410",
+    cloakMid: "#2a2018",
+    cloakEdge: "#3a2a1a",
     bone: "#e8dcc8",
-    dbone: "#c8b8a8",
-    crimson: "#6b0f1a",
+    dbone: "#a89878",
+    parchment: "#d8c898",
+    parchDim: "#a08868",
+    parchDark: "#5a4828",
+    inkBlack: "#0a0a0a",
+    inkBlue: "#1a1838",
+    goldDim: "#7a5a14",
     gold: "#b8860b",
-    amber: "#daa520",
-    damber: "#a07818",
-    term: "#1a8c1a",
-    termd: "#0a4a0a",
-    dwood: "#1a0e06",
-    f1: "#ff6600",
-    f2: "#ff3300",
-    toxic: "#3aff1a"
+    emberRed: "#6b0f1a"
   };
+  var npcProximity3 = 0;
+  function hashr(i, k) {
+    return (Math.sin(i * 12.9898 + k * 78.233) * 43758.5 % 1 + 1) % 1;
+  }
   function drawNPC_elder(ex, ey) {
-    const breath = Math.sin(t * 8e-3) * 0.5;
-    const hoodShift = Math.sin(t * 4e-3) * 0.3;
-    rect(X, ex, ey + 5 - breath, 12, 14 + breath, P5.d1);
-    dither(X, ex + 1, ey + 6 - breath, 10, 12 + breath, P5.dgrey, P5.d1, 0.3);
-    rect(X, ex + 1 + hoodShift, ey - 2, 10, 8, P5.d1);
-    rect(X, ex + 2 + hoodShift, ey - 1, 8, 6, "#0e0a08");
-    rect(X, ex + 3 + hoodShift, ey, 6, 4, P5.bone);
-    const eyeBlink = Math.sin(t * 2e-3) > 0.96 ? 0 : 1;
-    if (eyeBlink) {
-      px(X, ex + 4 + hoodShift, ey + 1, P5.d2);
-      px(X, ex + 7 + hoodShift, ey + 1, P5.d2);
+    const breath = Math.sin(t * 5e-3) * 0.4;
+    const sway = Math.sin(t * 35e-4) * 0.3;
+    const cx = ex + 12 + sway;
+    const QUILL_PERIOD = 360;
+    const qp = t % QUILL_PERIOD / QUILL_PERIOD;
+    let quillX, quillY, quillTilt;
+    if (qp < 0.6) {
+      const w = qp / 0.6;
+      quillX = ex + 8 + (1 - w) * 7;
+      quillY = ey + 22 + Math.sin(t * 0.06) * 0.3;
+      quillTilt = -0.6;
+    } else if (qp < 0.85) {
+      const w = (qp - 0.6) / 0.25;
+      quillX = ex + 8 + w * 12;
+      quillY = ey + 22 - w * 6;
+      quillTilt = -0.6 + w * 0.4;
     } else {
-      rect(X, ex + 4 + hoodShift, ey + 1, 4, 1, P5.d2);
+      const w = (qp - 0.85) / 0.15;
+      const dipY = Math.sin(w * Math.PI) * 1.5;
+      quillX = ex + 20;
+      quillY = ey + 16 + dipY;
+      quillTilt = -0.2;
     }
-    const handSway = Math.sin(t * 6e-3) * 1;
-    rect(X, ex - 2 + handSway, ey + 12, 3, 2, P5.bone);
-    rect(X, ex + 11 - handSway, ey + 12, 3, 2, P5.bone);
-    const tremor = Math.sin(t * 0.05) * 0.4;
-    rect(X, ex + 13 - handSway + tremor, ey + 5, 2, 16, P5.dwood);
-    px(X, ex + 13 - handSway + tremor, ey + 4, P5.ash);
-    if (t % 180 < 5) {
-      X.globalAlpha = 0.5;
-      px(X, ex + 13 - handSway + tremor, ey + 3, "#fff");
+    const writing = qp < 0.6;
+    const writeProgress = writing ? qp / 0.6 : 1;
+    X.globalAlpha = 0.32;
+    X.fillStyle = "#000";
+    X.beginPath();
+    X.ellipse(cx, ey + 36, 14, 2.4, 0, 0, Math.PI * 2);
+    X.fill();
+    X.globalAlpha = 1;
+    rect(X, cx - 11, ey + 30, 22, 5, "#3a3028");
+    rect(X, cx - 10, ey + 30, 20, 2, "#4a3e30");
+    px(X, cx - 5, ey + 32, "#1a1408");
+    px(X, cx + 3, ey + 33, "#1a1408");
+    px(X, cx - 10, ey + 30, "#2a3a14");
+    px(X, cx + 9, ey + 31, "#2a3a14");
+    for (let i = 0; i < 6; i++) {
+      const px_ = cx - 14 + hashr(i, 11) * 28;
+      const py_ = ey + 33 + hashr(i, 22) * 4;
+      const pw_ = 4 + Math.floor(hashr(i, 33) * 3);
+      const pal = hashr(i, 44) > 0.5 ? P5.parchment : P5.parchDim;
+      rect(X, px_, py_, pw_, 3, pal);
+      px(X, px_ + 1, py_ + 1, P5.parchDark);
+      if (pw_ >= 5) px(X, px_ + 3, py_ + 1, P5.parchDark);
+    }
+    rect(X, cx - 9, ey + 22, 18, 10, P5.cloakDark);
+    rect(X, cx - 8, ey + 23, 16, 9, P5.cloakMid);
+    dither(X, cx - 7, ey + 24, 14, 7, P5.cloakEdge, P5.cloakMid, 0.25);
+    rect(X, cx - 7, ey + 22, 4, 3, P5.cloakMid);
+    rect(X, cx + 3, ey + 22, 4, 3, P5.cloakMid);
+    px(X, cx - 6, ey + 22, P5.cloakEdge);
+    px(X, cx + 4, ey + 22, P5.cloakEdge);
+    for (let i = 0; i < 4; i++) {
+      const fx = cx - 7 + i * 5;
+      px(X, fx, ey + 31, P5.cloakEdge);
+    }
+    const torsoLean = -1;
+    rect(X, cx - 6 + torsoLean, ey + 12 - breath, 12, 11 + breath, P5.cloakDark);
+    rect(X, cx - 5 + torsoLean, ey + 13 - breath, 10, 10 + breath, P5.cloakMid);
+    rect(X, cx + torsoLean, ey + 14 - breath, 1, 8, P5.cloakDark);
+    const hx = cx - 5 + torsoLean;
+    const hy = ey + 4;
+    rect(X, hx - 2, hy + 1, 14, 8, P5.cloakDark);
+    rect(X, hx - 1, hy, 12, 7, P5.cloakMid);
+    rect(X, hx, hy - 1, 10, 6, P5.cloakDark);
+    rect(X, hx + 1, hy + 1, 8, 6, P5.void);
+    const beardSway = Math.sin(t * 6e-3) * 0.3;
+    for (let i = 0; i < 5; i++) {
+      const bw = 7 - i;
+      rect(X, hx + 2 + Math.floor(beardSway), hy + 6 + i, bw, 1, i < 2 ? P5.bone : P5.dbone);
+    }
+    px(X, hx + 4 + Math.floor(beardSway), hy + 11, P5.dbone);
+    px(X, hx + 5, hy + 4, P5.dbone);
+    px(X, hx + 5, hy + 5, P5.dbone);
+    const eyesOpen = Math.sin(t * 2e-3) > 0.92 ? 1 : 0;
+    if (eyesOpen) {
+      px(X, hx + 3, hy + 3, P5.emberRed);
+      px(X, hx + 7, hy + 3, P5.emberRed);
+    } else {
+      rect(X, hx + 3, hy + 3, 2, 1, P5.cloakEdge);
+      rect(X, hx + 6, hy + 3, 2, 1, P5.cloakEdge);
+    }
+    const scrollY = ey + 21;
+    rect(X, cx - 9, scrollY, 18, 5, P5.parchment);
+    rect(X, cx - 9, scrollY, 18, 1, P5.parchDim);
+    rect(X, cx - 11, scrollY - 1, 2, 6, P5.parchDim);
+    px(X, cx - 11, scrollY + 5, P5.parchDark);
+    rect(X, cx + 9, scrollY - 1, 2, 6, P5.parchDim);
+    px(X, cx + 10, scrollY + 5, P5.parchDark);
+    const lineLen = Math.floor(writeProgress * 7);
+    for (let i = 0; i < lineLen; i++) {
+      px(X, cx - 8 + i, scrollY + 3, P5.inkBlack);
+      if (i % 2 === 0) px(X, cx - 8 + i, scrollY + 2, P5.inkBlue);
+    }
+    for (let i = 0; i < 14; i++) px(X, cx - 8 + i * 1, scrollY + 1, i % 3 === 0 ? P5.inkBlue : P5.inkBlack);
+    rect(X, cx - 9, scrollY + 1, 2, 2, P5.dbone);
+    px(X, cx - 9, scrollY, P5.dbone);
+    const rhx = quillX - 1;
+    const rhy = quillY + 1;
+    rect(X, rhx, rhy, 2, 2, P5.dbone);
+    rect(X, cx + 12, ey + 23, 4, 4, "#2a1a08");
+    rect(X, cx + 13, ey + 22, 2, 1, "#4a3018");
+    px(X, cx + 14, ey + 24, P5.inkBlue);
+    px(X, cx + 13, ey + 23, "#5a4028");
+    const cosA = Math.cos(quillTilt), sinA = Math.sin(quillTilt);
+    for (let s = 0; s < 8; s++) {
+      const px_ = Math.round(quillX - s * cosA + 0);
+      const py_ = Math.round(quillY - s * sinA);
+      const col = s < 2 ? P5.bone : s < 5 ? P5.dbone : "#7a6850";
+      px(X, px_, py_, col);
+      if (s > 1 && s < 6) {
+        px(X, Math.round(quillX - s * cosA - 1 * sinA), Math.round(quillY - s * sinA + 1 * cosA), "#5a4828");
+      }
+    }
+    if (writing) {
+      px(X, Math.round(quillX), Math.round(quillY), P5.inkBlack);
+    } else {
+      px(X, Math.round(quillX), Math.round(quillY), P5.inkBlue);
+    }
+    if (writing && t % 200 < 4) {
+      px(X, cx - 5 + Math.floor(Math.random() * 4), scrollY + 4, P5.inkBlue);
+    }
+    const driftPh = t * 25e-4 % 1;
+    if (driftPh < 0.7) {
+      const dx_ = cx + 6 + Math.sin(driftPh * 8) * 4;
+      const dy_ = ey + 28 - driftPh * 22;
+      X.globalAlpha = 0.55 * (1 - driftPh / 0.7);
+      rect(X, dx_, dy_, 4, 3, P5.parchment);
+      px(X, dx_ + 1, dy_ + 1, P5.parchDark);
+      X.globalAlpha = 1;
+    }
+    if (npcProximity3 > 0.15) {
+      X.globalAlpha = npcProximity3 * 0.18;
+      const halo = X.createRadialGradient(cx, scrollY + 2, 4, cx, scrollY + 2, 26);
+      halo.addColorStop(0, "#b8860b");
+      halo.addColorStop(1, "rgba(0,0,0,0)");
+      X.fillStyle = halo;
+      X.fillRect(cx - 26, scrollY - 14, 52, 32);
       X.globalAlpha = 1;
     }
   }
@@ -2213,11 +2332,14 @@ canvas#game {
     f2: "#ff3300",
     toxic: "#3aff1a"
   };
-  var npcProximity3 = 0;
+  var npcProximity4 = 0;
   function drawNPC_nocturnal(nx, ny) {
     const breath = Math.sin(t * 3e-3) * 0.4;
     const sway = Math.sin(t * 25e-4) * 0.6;
     const starShimmer = t * 2e-3;
+    const wingFlap = Math.sin(t * 35e-4);
+    const wingTipLift = wingFlap * 4;
+    const wingReach = Math.max(0, wingFlap) * 3;
     const cx = nx + 11 + sway * 0.3;
     X.globalAlpha = 0.5;
     X.fillStyle = "#000";
@@ -2226,15 +2348,15 @@ canvas#game {
     X.fill();
     X.globalAlpha = 1;
     X.save();
-    const lwGrad = X.createLinearGradient(nx - 2, ny + 20, nx - 22, ny + 50);
+    const lwGrad = X.createLinearGradient(nx - 2, ny + 20, nx - 22 - wingReach, ny + 50);
     lwGrad.addColorStop(0, "rgba(232,220,200,.55)");
     lwGrad.addColorStop(0.6, "rgba(184,168,136,.25)");
     lwGrad.addColorStop(1, "rgba(120,110,90,.05)");
     X.fillStyle = lwGrad;
     X.beginPath();
     X.moveTo(nx + 4, ny + 18);
-    X.quadraticCurveTo(nx - 14, ny + 14 + breath, nx - 20, ny + 34);
-    X.quadraticCurveTo(nx - 16, ny + 50, nx - 2, ny + 54);
+    X.quadraticCurveTo(nx - 14, ny + 14 + wingTipLift, nx - 20 - wingReach, ny + 34);
+    X.quadraticCurveTo(nx - 16 - wingReach * 0.5, ny + 50 + Math.sin(t * 5e-3) * 1.2, nx - 2, ny + 54);
     X.lineTo(nx + 4, ny + 44);
     X.closePath();
     X.fill();
@@ -2243,21 +2365,22 @@ canvas#game {
     X.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
       const a = i * 0.18 - 0.1;
+      const tipExtra = i === 0 ? wingTipLift : wingTipLift * (1 - i * 0.18);
       X.beginPath();
       X.moveTo(nx + 4, ny + 18);
-      X.lineTo(nx - 18 + Math.sin(a) * 4, ny + 22 + i * 7);
+      X.lineTo(nx - 18 - wingReach * 0.6 + Math.sin(a) * 4, ny + 22 + i * 7 + tipExtra * 0.5);
       X.stroke();
     }
     X.save();
-    const rwGrad = X.createLinearGradient(nx + 22, ny + 20, nx + 44, ny + 50);
+    const rwGrad = X.createLinearGradient(nx + 22, ny + 20, nx + 44 + wingReach, ny + 50);
     rwGrad.addColorStop(0, "rgba(232,220,200,.55)");
     rwGrad.addColorStop(0.6, "rgba(184,168,136,.25)");
     rwGrad.addColorStop(1, "rgba(120,110,90,.05)");
     X.fillStyle = rwGrad;
     X.beginPath();
     X.moveTo(nx + 18, ny + 18);
-    X.quadraticCurveTo(nx + 36, ny + 14 + breath, nx + 42, ny + 34);
-    X.quadraticCurveTo(nx + 38, ny + 50, nx + 24, ny + 54);
+    X.quadraticCurveTo(nx + 36, ny + 14 + wingTipLift, nx + 42 + wingReach, ny + 34);
+    X.quadraticCurveTo(nx + 38 + wingReach * 0.5, ny + 50 + Math.sin(t * 5e-3 + 1) * 1.2, nx + 24, ny + 54);
     X.lineTo(nx + 18, ny + 44);
     X.closePath();
     X.fill();
@@ -2266,9 +2389,10 @@ canvas#game {
     X.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
       const a = i * 0.18 - 0.1;
+      const tipExtra = i === 0 ? wingTipLift : wingTipLift * (1 - i * 0.18);
       X.beginPath();
       X.moveTo(nx + 18, ny + 18);
-      X.lineTo(nx + 40 - Math.sin(a) * 4, ny + 22 + i * 7);
+      X.lineTo(nx + 40 + wingReach * 0.6 - Math.sin(a) * 4, ny + 22 + i * 7 + tipExtra * 0.5);
       X.stroke();
     }
     X.fillStyle = "#e8dcc8";
@@ -2399,31 +2523,53 @@ canvas#game {
     px(X, nx - 4, ny - 6, "#3a3a42");
     px(X, nx - 2, ny - 7, "#3a3a42");
     X.globalAlpha = 1;
-    X.strokeStyle = `rgba(232,220,200,${0.4 + npcProximity3 * 0.3})`;
+    const handLiftPhase = Math.sin(t * 7e-3);
+    const handPullY = ny - 8 + handLiftPhase * 0.8;
+    X.strokeStyle = `rgba(232,220,200,${0.4 + npcProximity4 * 0.3})`;
     X.lineWidth = 1;
+    const stars = [];
     for (let i = 0; i < 4; i++) {
-      const swayT = Math.sin(t * 6e-3 + i * 0.4) * 0.6 * (1 - npcProximity3 * 0.5);
+      const own = Math.sin(t * 5e-3 + i * 1.7);
+      const rise = -22 + wingFlap * -2 - npcProximity4 * 3 + own * 1.5;
+      const drift = Math.sin(t * 4e-3 + i * 0.9) * 1.2;
+      stars.push({
+        x: nx - 9 + i * 3 + drift,
+        y: ny + rise,
+        handX: nx - 5 + i,
+        handY: handPullY,
+        twinkle: 0.5 + 0.35 * Math.sin(t * 0.012 + i * 1.3) + npcProximity4 * 0.3
+      });
+    }
+    for (const s of stars) {
       X.beginPath();
-      X.moveTo(nx - 5 + i, ny - 8);
-      const pullY = -22 - npcProximity3 * 3;
-      X.lineTo(nx - 9 + i * 3 + swayT, ny + pullY);
+      const mx = (s.handX + s.x) / 2 + Math.sin(t * 8e-3 + s.x * 0.1) * 0.4;
+      const my = (s.handY + s.y) / 2 + 1;
+      X.moveTo(s.handX, s.handY);
+      X.quadraticCurveTo(mx, my, s.x, s.y);
       X.stroke();
-      const shimmerPos = (t * 4e-3 + i * 0.3) % 1;
+      const shimmerPos = (t * 4e-3 + s.x * 0.05) % 1;
       if (shimmerPos > 0.7 && shimmerPos < 0.85) {
-        const shX = nx - 5 + i + (nx - 9 + i * 3 + swayT - (nx - 5 + i)) * shimmerPos;
-        const shY = ny - 8 + (ny + pullY - (ny - 8)) * shimmerPos;
-        X.globalAlpha = 0.8;
+        const lt = shimmerPos;
+        const shX = s.handX * (1 - lt) * (1 - lt) + 2 * mx * (1 - lt) * lt + s.x * lt * lt;
+        const shY = s.handY * (1 - lt) * (1 - lt) + 2 * my * (1 - lt) * lt + s.y * lt * lt;
+        X.globalAlpha = 0.85;
         px(X, shX, shY, "#ffffff");
         X.globalAlpha = 1;
       }
     }
-    for (let i = 0; i < 4; i++) {
-      const ssx = nx - 9 + i * 3;
-      const ssy = ny - 22 - npcProximity3 * 3;
-      X.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.01 + i) + npcProximity3 * 0.3;
-      px(X, ssx, ssy, "#ffffff");
-      px(X, ssx + 1, ssy, "#ffffff");
-      px(X, ssx, ssy - 1, "#ccccee");
+    for (const s of stars) {
+      X.globalAlpha = s.twinkle;
+      px(X, s.x, s.y, "#ffffff");
+      px(X, s.x + 1, s.y, "#ffffff");
+      px(X, s.x, s.y - 1, "#ccccee");
+      px(X, s.x + 1, s.y - 1, "#ccccee");
+      if (s.twinkle > 0.75) {
+        X.globalAlpha = (s.twinkle - 0.75) * 1.5;
+        px(X, s.x - 1, s.y, "#ffffff");
+        px(X, s.x + 2, s.y, "#ffffff");
+        px(X, s.x, s.y - 2, "#ccccee");
+        px(X, s.x, s.y + 1, "#ccccee");
+      }
       X.globalAlpha = 1;
     }
     X.fillStyle = "#e8dcc8";
@@ -2476,8 +2622,8 @@ canvas#game {
     px(X, nx + 30, ny + 74, "#0a0a0e");
     px(X, nx + 33, ny + 74, "#0a0a0e");
     px(X, nx + 35, ny + 75, "#050508");
-    if (npcProximity3 > 0.5) {
-      X.globalAlpha = npcProximity3 * 0.4;
+    if (npcProximity4 > 0.5) {
+      X.globalAlpha = npcProximity4 * 0.4;
       X.strokeStyle = "#ffffff";
       X.lineWidth = 1;
       X.beginPath();
@@ -2573,13 +2719,16 @@ canvas#game {
     f2: "#ff3300",
     toxic: "#3aff1a"
   };
-  var npcProximity4 = 0;
+  var npcProximity5 = 0;
   function drawDumpsterDemon(dx, dy) {
-    const hover = Math.sin(t * 4e-3) * 3;
-    const wingFlap = Math.sin(t * 7e-3) * 11;
+    const flapMain = Math.sin(t * 0.012);
+    const flapFast = Math.sin(t * 0.04 + 1.2) * 0.35;
+    const wingFlap = (flapMain + flapFast) * 8;
+    const hover = Math.sin(t * 4e-3) * 2 - flapMain * 2.5;
     const breathe = Math.sin(t * 6e-3) * 2;
+    const bodyTilt = Math.cos(t * 0.012) * 1.4;
     const demonY = dy - 68 + hover;
-    const demonX = dx - 18;
+    const demonX = dx - 18 + bodyTilt * 0.6;
     const cx = demonX + 30, cy = demonY + 18;
     X.globalAlpha = 0.08 + 0.04 * Math.sin(t * 5e-3);
     const auraR = 38 + breathe * 2;
@@ -2729,6 +2878,22 @@ canvas#game {
       rect(X, hx + 5, hy + 10, 4, 1, P7.f2);
       X.globalAlpha = 1;
     }
+    const droolPh = t * 8e-3 % 1;
+    const droolLen = Math.floor(droolPh * 9);
+    for (let i = 0; i < droolLen; i++) {
+      X.globalAlpha = 0.8 - i * 0.07;
+      const wob = Math.sin(t * 0.05 + i) * 0.4;
+      px(X, hx + 6 + wob, hy + 13 + i, i < 2 ? P7.f2 : i < 5 ? P7.f1 : "#3a0808");
+      X.globalAlpha = 1;
+    }
+    if (droolPh > 0.88) {
+      X.globalAlpha = (1 - droolPh) * 8;
+      const splatY = hy + 22 + Math.floor(Math.random() * 2);
+      px(X, hx + 5, splatY, P7.f1);
+      px(X, hx + 7, splatY, P7.f1);
+      px(X, hx + 6, splatY + 1, P7.f2);
+      X.globalAlpha = 1;
+    }
     const armSway = Math.sin(t * 7e-3) * 2;
     X.strokeStyle = P7.crimson;
     X.lineWidth = 3;
@@ -2806,9 +2971,9 @@ canvas#game {
       }
     }
     X.globalAlpha = 1;
-    const emberCount = 7 + Math.floor(npcProximity4 * 8);
+    const emberCount = 7 + Math.floor(npcProximity5 * 8);
     for (let i = 0; i < emberCount; i++) {
-      const ePhase = (t * 0.012 * (1 + npcProximity4 * 0.4) + i * 0.15) % 1;
+      const ePhase = (t * 0.012 * (1 + npcProximity5 * 0.4) + i * 0.15) % 1;
       const ex = demonX + 15 + Math.sin(t * 8e-3 + i * 2.3) * 20 + windX * ePhase * 8;
       const ey = demonY + 55 - ePhase * 38;
       X.globalAlpha = (1 - ePhase) * 0.7;
@@ -2817,8 +2982,8 @@ canvas#game {
       if (ePhase < 0.15) px(X, ex, ey - 1, "#ffffcc");
       X.globalAlpha = 1;
     }
-    if (npcProximity4 > 0.4) {
-      X.globalAlpha = npcProximity4 * 0.6;
+    if (npcProximity5 > 0.4) {
+      X.globalAlpha = npcProximity5 * 0.6;
       X.beginPath();
       X.arc(demonX + 30 + Math.sin(t * 5e-3) * 2, demonY + 7, 6, 0, Math.PI * 2);
       X.fillStyle = "#ff3010";

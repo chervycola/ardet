@@ -15,12 +15,17 @@ let npcProximity = 0;
 export function setProximity(v) { npcProximity = v; }
 
 export function drawDumpsterDemon(dx,dy){
-  const hover=Math.sin(t*.004)*3;
-  const wingFlap=Math.sin(t*.007)*11; // slower, deeper flap
+  // Compound flap — main slow stroke + faster trailing-edge ripple.
+  const flapMain=Math.sin(t*.012);
+  const flapFast=Math.sin(t*.04+1.2)*0.35;
+  const wingFlap=(flapMain+flapFast)*8;
+  // Hover bobs in time with the upstroke (body lifted when wings push down)
+  const hover=Math.sin(t*.004)*2-flapMain*2.5;
   const breathe=Math.sin(t*.006)*2;
-  const demonY=dy-68+hover; // raised higher to accommodate bigger demon
-  const demonX=dx-18;       // shifted left for wider span
-  const cx=demonX+30,cy=demonY+18; // body center
+  const bodyTilt=Math.cos(t*.012)*1.4;            // body rocks with flap
+  const demonY=dy-68+hover;
+  const demonX=dx-18+bodyTilt*0.6;
+  const cx=demonX+30,cy=demonY+18;
 
   // ── HEAT DISTORTION AURA — thin pulsing ring ──
   X.globalAlpha=.08+.04*Math.sin(t*.005);
@@ -184,6 +189,24 @@ export function drawDumpsterDemon(dx,dy){
   if(Math.sin(t*.008)>.2){
     X.globalAlpha=.5;
     rect(X,hx+5,hy+10,4,1,P.f2);
+    X.globalAlpha=1;
+  }
+  // ── DROOL — molten ember thread that grows then snaps off ──
+  const droolPh=(t*.008)%1;
+  const droolLen=Math.floor(droolPh*9);
+  for(let i=0;i<droolLen;i++){
+    X.globalAlpha=.8-i*.07;
+    const wob=Math.sin(t*.05+i)*0.4;
+    px(X,hx+6+wob,hy+13+i,i<2?P.f2:i<5?P.f1:'#3a0808');
+    X.globalAlpha=1;
+  }
+  // Splat puddle when drool snaps off (last 12% of cycle)
+  if(droolPh>.88){
+    X.globalAlpha=(1-droolPh)*8;
+    const splatY=hy+22+Math.floor(Math.random()*2);
+    px(X,hx+5,splatY,P.f1);
+    px(X,hx+7,splatY,P.f1);
+    px(X,hx+6,splatY+1,P.f2);
     X.globalAlpha=1;
   }
 

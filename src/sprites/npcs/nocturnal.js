@@ -19,6 +19,12 @@ export function drawNPC_nocturnal(nx,ny){
   const breath=Math.sin(t*.003)*0.4;     // barely breathing
   const sway=Math.sin(t*.0025)*0.6;      // slow ceremonial sway
   const starShimmer=t*.002;
+  // Slow ceremonial wing furl/unfurl — full cycle ~30s. Ranges -1..+1.
+  const wingFlap=Math.sin(t*.0035);
+  // Wing tip lift in pixels (negative = up): scales with flap
+  const wingTipLift=wingFlap*4;
+  // Wing reach outward (extra px beyond base)
+  const wingReach=Math.max(0,wingFlap)*3;
   const cx=nx+11+sway*.3;                 // sprite center X
 
   // ── LONG STRETCHED SHADOW ──
@@ -26,50 +32,55 @@ export function drawNPC_nocturnal(nx,ny){
   X.beginPath();X.ellipse(cx,ny+80,22,4,0,0,Math.PI*2);X.fill();
   X.globalAlpha=1;
 
-  // ── WING SUGGESTIONS BEHIND — pale, ghostly, half-furled ──
+  // ── WING SUGGESTIONS BEHIND — pale, ghostly, slowly furling/unfurling ──
+  // The wings breathe over a ~30s cycle: tips lift, reach outward, and
+  // the trailing edge ripples with a secondary phase so the membrane
+  // doesn't move as one rigid flap.
   // Left wing — soft gradient
   X.save();
-  const lwGrad=X.createLinearGradient(nx-2,ny+20,nx-22,ny+50);
+  const lwGrad=X.createLinearGradient(nx-2,ny+20,nx-22-wingReach,ny+50);
   lwGrad.addColorStop(0,'rgba(232,220,200,.55)');
   lwGrad.addColorStop(.6,'rgba(184,168,136,.25)');
   lwGrad.addColorStop(1,'rgba(120,110,90,.05)');
   X.fillStyle=lwGrad;
   X.beginPath();
   X.moveTo(nx+4,ny+18);
-  X.quadraticCurveTo(nx-14,ny+14+breath,nx-20,ny+34);
-  X.quadraticCurveTo(nx-16,ny+50,nx-2,ny+54);
+  X.quadraticCurveTo(nx-14,ny+14+wingTipLift,nx-20-wingReach,ny+34);
+  X.quadraticCurveTo(nx-16-wingReach*.5,ny+50+Math.sin(t*.005)*1.2,nx-2,ny+54);
   X.lineTo(nx+4,ny+44);
   X.closePath();X.fill();
   X.restore();
-  // Wing feather struts
+  // Wing feather struts — bend with the flap
   X.strokeStyle='rgba(232,220,200,.35)';X.lineWidth=1;
   for(let i=0;i<5;i++){
     const a=i*.18-.1;
+    const tipExtra=(i===0?wingTipLift:wingTipLift*(1-i*0.18));
     X.beginPath();
     X.moveTo(nx+4,ny+18);
-    X.lineTo(nx-18+Math.sin(a)*4,ny+22+i*7);
+    X.lineTo(nx-18-wingReach*.6+Math.sin(a)*4,ny+22+i*7+tipExtra*.5);
     X.stroke();
   }
   // Right wing — mirrored
   X.save();
-  const rwGrad=X.createLinearGradient(nx+22,ny+20,nx+44,ny+50);
+  const rwGrad=X.createLinearGradient(nx+22,ny+20,nx+44+wingReach,ny+50);
   rwGrad.addColorStop(0,'rgba(232,220,200,.55)');
   rwGrad.addColorStop(.6,'rgba(184,168,136,.25)');
   rwGrad.addColorStop(1,'rgba(120,110,90,.05)');
   X.fillStyle=rwGrad;
   X.beginPath();
   X.moveTo(nx+18,ny+18);
-  X.quadraticCurveTo(nx+36,ny+14+breath,nx+42,ny+34);
-  X.quadraticCurveTo(nx+38,ny+50,nx+24,ny+54);
+  X.quadraticCurveTo(nx+36,ny+14+wingTipLift,nx+42+wingReach,ny+34);
+  X.quadraticCurveTo(nx+38+wingReach*.5,ny+50+Math.sin(t*.005+1)*1.2,nx+24,ny+54);
   X.lineTo(nx+18,ny+44);
   X.closePath();X.fill();
   X.restore();
   X.strokeStyle='rgba(232,220,200,.35)';X.lineWidth=1;
   for(let i=0;i<5;i++){
     const a=i*.18-.1;
+    const tipExtra=(i===0?wingTipLift:wingTipLift*(1-i*0.18));
     X.beginPath();
     X.moveTo(nx+18,ny+18);
-    X.lineTo(nx+40-Math.sin(a)*4,ny+22+i*7);
+    X.lineTo(nx+40+wingReach*.6-Math.sin(a)*4,ny+22+i*7+tipExtra*.5);
     X.stroke();
   }
 
@@ -224,31 +235,60 @@ export function drawNPC_nocturnal(nx,ny){
   px(X,nx-2,ny-7,'#3a3a42');
   X.globalAlpha=1;
 
-  // Threads from raised hand to small stars above — ceremonial puppeteer
+  // Threads from raised hand to small stars above — ceremonial puppeteer.
+  // Each star drifts on its own slow arc; the thread tension visibly
+  // tugs as the hand lifts (handLiftPhase). When the wings furl outward
+  // (wingFlap > 0) the stars rise too, as if pulled.
+  const handLiftPhase=Math.sin(t*.007);
+  const handPullY=ny-8+handLiftPhase*0.8;
   X.strokeStyle=`rgba(232,220,200,${.4+npcProximity*.3})`;X.lineWidth=1;
+  // Pre-compute star positions so threads connect to the moving stars
+  const stars=[];
   for(let i=0;i<4;i++){
-    const swayT=Math.sin(t*.006+i*.4)*.6*(1-npcProximity*.5);
+    const own=Math.sin(t*.005+i*1.7);
+    const rise=-22+wingFlap*-2-npcProximity*3+own*1.5;
+    const drift=Math.sin(t*.004+i*.9)*1.2;
+    stars.push({
+      x:nx-9+i*3+drift,
+      y:ny+rise,
+      handX:nx-5+i,
+      handY:handPullY,
+      twinkle:.5+.35*Math.sin(t*.012+i*1.3)+npcProximity*.3,
+    });
+  }
+  // Threads (drawn first, stars on top)
+  for(const s of stars){
     X.beginPath();
-    X.moveTo(nx-5+i,ny-8);
-    const pullY=-22-npcProximity*3;
-    X.lineTo(nx-9+i*3+swayT,ny+pullY);
+    // Curve thread slightly using a control point — gives it some slack
+    const mx=(s.handX+s.x)/2+Math.sin(t*.008+s.x*.1)*0.4;
+    const my=(s.handY+s.y)/2+1;
+    X.moveTo(s.handX,s.handY);
+    X.quadraticCurveTo(mx,my,s.x,s.y);
     X.stroke();
-    // Thread shimmer — occasional sparkle traveling along thread
-    const shimmerPos=((t*.004+i*.3)%1);
+    // Thread shimmer — sparkle travels along thread
+    const shimmerPos=((t*.004+s.x*.05)%1);
     if(shimmerPos>.7&&shimmerPos<.85){
-      const shX=(nx-5+i)+((nx-9+i*3+swayT)-(nx-5+i))*shimmerPos;
-      const shY=(ny-8)+((ny+pullY)-(ny-8))*shimmerPos;
-      X.globalAlpha=.8;px(X,shX,shY,'#ffffff');X.globalAlpha=1;
+      const lt=shimmerPos;
+      const shX=s.handX*(1-lt)*(1-lt)+2*mx*(1-lt)*lt+s.x*lt*lt;
+      const shY=s.handY*(1-lt)*(1-lt)+2*my*(1-lt)*lt+s.y*lt*lt;
+      X.globalAlpha=.85;px(X,shX,shY,'#ffffff');X.globalAlpha=1;
     }
   }
-  // Tiny stars at top of threads
-  for(let i=0;i<4;i++){
-    const ssx=nx-9+i*3;
-    const ssy=ny-22-npcProximity*3;
-    X.globalAlpha=.5+.3*Math.sin(t*.01+i)+npcProximity*.3;
-    px(X,ssx,ssy,'#ffffff');
-    px(X,ssx+1,ssy,'#ffffff');
-    px(X,ssx,ssy-1,'#ccccee');
+  // Stars on top of threads
+  for(const s of stars){
+    X.globalAlpha=s.twinkle;
+    px(X,s.x,s.y,'#ffffff');
+    px(X,s.x+1,s.y,'#ffffff');
+    px(X,s.x,s.y-1,'#ccccee');
+    px(X,s.x+1,s.y-1,'#ccccee');
+    // Faint cross-glow when very bright
+    if(s.twinkle>.75){
+      X.globalAlpha=(s.twinkle-.75)*1.5;
+      px(X,s.x-1,s.y,'#ffffff');
+      px(X,s.x+2,s.y,'#ffffff');
+      px(X,s.x,s.y-2,'#ccccee');
+      px(X,s.x,s.y+1,'#ccccee');
+    }
     X.globalAlpha=1;
   }
 
