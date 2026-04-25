@@ -71,54 +71,95 @@ function drawDagger(cx, cy, angle) {
   }
 }
 
-export function drawNPC_jester(jx, jy) {
-  // Sprite anchor: ~24px wide centered on jx+12.
-  const bob = Math.sin(t * 0.007) * 1.2;
+export function drawNPC_jester(jx, jy, opts = {}) {
+  // opts: { moving: bool, dir: -1|+1 } — set by the wandering controller.
+  // moving=true → walk cycle; otherwise idle weight-shift.
+  const moving = !!opts.moving;
+  const dir = opts.dir || 1;
+
+  // ── Clocks ──
+  // Walk cycle has its own faster phase when moving so legs read as steps.
+  // Idle keeps a slow body sway that never completely settles.
+  const walkPhase = moving ? Math.sin(t * 0.18) : 0;
+  const walkPhaseQ = moving ? Math.cos(t * 0.18) : 0;     // 90° offset
+  const walkBob = moving ? Math.abs(Math.sin(t * 0.18)) * 1.6 : 0;
+  const idleSway = Math.sin(t * 0.004) * (moving ? 0.3 : 1.0);
   const breath = Math.sin(t * 0.01) * 0.7;
-  const lean = Math.sin(t * 0.004) * 0.8;
-  const by = jy + bob;
-  const bx = jx + lean;
+  const bodyBob = moving ? walkBob : Math.sin(t * 0.007) * 1.2;
+
+  // Sprite anchor: ~24px wide centered on jx+12.
+  const by = jy + bodyBob;
+  const bx = jx + idleSway;
   const cx = bx + 12;
 
   // ═══ SHADOW ═══
   X.globalAlpha = 0.3;
   X.fillStyle = '#000';
   X.beginPath();
-  X.ellipse(cx, jy + 50, 11 + Math.abs(lean), 2.5, 0, 0, Math.PI * 2);
+  X.ellipse(cx, jy + 50, 11 + Math.abs(idleSway) + (moving ? 0.6 : 0), 2.5, 0, 0, Math.PI * 2);
   X.fill();
   X.globalAlpha = 1;
 
-  // ═══ LEGS — long, thin, harlequin diamonds, one slightly bent ═══
-  const llBend = Math.sin(t * 0.005) * 0.6;
-  const rlBend = -llBend;
-  // Left leg
-  rect(X, bx + 7, by + 28 + llBend, 3, 16 - llBend, P.d1);
+  // ═══ LEGS — alternating walk cycle when moving, idle weight-shift otherwise ═══
+  // Each leg has its own lift offset and knee bend per step.
+  // legL > 0 → left leg lifted (bent and shorter)
+  const legL = moving ? Math.max(0, walkPhase) * 3 : 0;
+  const legR = moving ? Math.max(0, -walkPhase) * 3 : 0;
+  // Idle: slight weight shift that bends one knee at a time
+  const idleLBend = moving ? 0 : Math.max(0, Math.sin(t * 0.005)) * 0.8;
+  const idleRBend = moving ? 0 : Math.max(0, -Math.sin(t * 0.005)) * 0.8;
+
+  // Left leg — base length 16, shortened by lift/bend
+  const lLen = 16 - legL - idleLBend;
+  rect(X, bx + 7, by + 28 + idleLBend, 3, lLen, P.d1);
   for (let i = 0; i < 6; i++) {
     const dc = i % 2 === 0 ? P.crimson : P.bone;
-    px(X, bx + 8, by + 30 + i * 2 + llBend, dc);
+    const dy = i * 2 - legL;
+    if (by + 30 + dy + idleLBend < by + 28 + idleLBend + lLen) {
+      px(X, bx + 8, by + 30 + dy + idleLBend, dc);
+    }
   }
   // Right leg
-  rect(X, bx + 14, by + 28 + rlBend, 3, 16 - rlBend, P.d1);
+  const rLen = 16 - legR - idleRBend;
+  rect(X, bx + 14, by + 28 + idleRBend, 3, rLen, P.d1);
   for (let i = 0; i < 6; i++) {
     const dc = i % 2 === 0 ? P.bone : P.crimson;
-    px(X, bx + 15, by + 30 + i * 2 + rlBend, dc);
+    const dy = i * 2 - legR;
+    if (by + 30 + dy + idleRBend < by + 28 + idleRBend + rLen) {
+      px(X, bx + 15, by + 30 + dy + idleRBend, dc);
+    }
   }
 
-  // ═══ POINTED CURLED SHOES with bells ═══
-  // Left shoe
-  rect(X, bx + 5, by + 44, 5, 2, P.d1);
-  rect(X, bx + 3, by + 43, 3, 2, P.d1);
-  px(X, bx + 2, by + 42, P.d1);
-  const bellL = Math.sin(t * 0.012) * 1;
-  px(X, bx + 1, by + 41 + bellL, P.gold);
-  px(X, bx + 2, by + 41 + bellL, P.sunflower);
-  // Right shoe
-  rect(X, bx + 14, by + 44, 5, 2, P.d1);
-  rect(X, bx + 18, by + 43, 3, 2, P.d1);
-  px(X, bx + 21, by + 42, P.d1);
-  const bellR = Math.sin(t * 0.011 + 1.5) * 1;
-  px(X, bx + 22, by + 41 + bellR, P.gold);
-  px(X, bx + 23, by + 41 + bellR, P.sunflower);
+  // ═══ POINTED CURLED SHOES with bells — follow leg lift ═══
+  // Left shoe (lifts when legL > 0)
+  const lFootY = by + 44 - legL;
+  rect(X, bx + 5, lFootY, 5, 2, P.d1);
+  rect(X, bx + 3, lFootY - 1, 3, 2, P.d1);
+  px(X, bx + 2, lFootY - 2, P.d1);
+  const bellL = Math.sin(t * 0.012) * 1 + (moving ? walkPhaseQ * 1.2 : 0);
+  px(X, bx + 1, lFootY - 3 + bellL, P.gold);
+  px(X, bx + 2, lFootY - 3 + bellL, P.sunflower);
+  // Right shoe (lifts when legR > 0)
+  const rFootY = by + 44 - legR;
+  rect(X, bx + 14, rFootY, 5, 2, P.d1);
+  rect(X, bx + 18, rFootY - 1, 3, 2, P.d1);
+  px(X, bx + 21, rFootY - 2, P.d1);
+  const bellR = Math.sin(t * 0.011 + 1.5) * 1 - (moving ? walkPhaseQ * 1.2 : 0);
+  px(X, bx + 22, rFootY - 3 + bellR, P.gold);
+  px(X, bx + 23, rFootY - 3 + bellR, P.sunflower);
+
+  // Dust kick when a foot plants (walk only)
+  if (moving) {
+    const planting = Math.abs(walkPhase) > 0.85;
+    if (planting && t % 4 === 0) {
+      X.globalAlpha = 0.3;
+      X.fillStyle = '#3a2a18';
+      const planted = walkPhase > 0 ? rFootY : lFootY;
+      const plantedX = walkPhase > 0 ? bx + 16 : bx + 7;
+      X.fillRect(plantedX - 1 + Math.random() * 3, planted + 2, 1, 1);
+      X.globalAlpha = 1;
+    }
+  }
 
   // ═══ TORSO — narrow harlequin doublet ═══
   // Main body block
@@ -135,14 +176,29 @@ export function drawNPC_jester(jx, jy) {
 
   // ═══ THREE-ARM SHIVA SETUP ═══
   // Hand positions form a triangle in screen space; daggers cycle between them.
+  // When walking the whole triangle gets a counter-bob to the body so the
+  // juggle stays cohesive while the torso bounces.
   const armSway = Math.sin(t * 0.008) * 0.5;
   const armSway2 = Math.cos(t * 0.011) * 0.5;
-  // Left front hand — held high to the left
-  const handL = { x: cx - 9 + armSway, y: by + 10 - armSway2 };
-  // Right front hand — held high to the right
-  const handR = { x: cx + 9 - armSway, y: by + 10 + armSway2 };
-  // Back hand — emerges from BEHIND the head/torso, reaches up over the shoulder
-  const handB = { x: cx + Math.sin(t * 0.01) * 2, y: by - 4 + Math.cos(t * 0.01) * 1.5 };
+  // Walking adds an exaggerated swing on the front arms — left swings
+  // back when right leg swings forward, classic counter-arm motion.
+  const walkArm = moving ? walkPhase * 2.5 : 0;
+  const walkArmRise = moving ? walkPhaseQ * 0.8 : 0;
+  // Left front hand
+  const handL = {
+    x: cx - 9 + armSway + walkArm,
+    y: by + 10 - armSway2 + walkArmRise,
+  };
+  // Right front hand (counter-swing)
+  const handR = {
+    x: cx + 9 - armSway - walkArm,
+    y: by + 10 + armSway2 - walkArmRise,
+  };
+  // Back hand — slight bob with body, plus its own slow gesture
+  const handB = {
+    x: cx + Math.sin(t * 0.01) * 2 + (moving ? walkPhase * 0.8 : 0),
+    y: by - 4 + Math.cos(t * 0.01) * 1.5,
+  };
   const hands = [handL, handR, handB];
 
   // Draw shoulders
@@ -182,7 +238,8 @@ export function drawNPC_jester(jx, jy) {
   px(X, handB.x - 1, handB.y, P.dbone);
 
   // ═══ HEAD — narrow skull, jester mask ═══
-  const headTilt = Math.sin(t * 0.006) * 1.2;
+  // Head leans in the direction of motion when walking
+  const headTilt = Math.sin(t * 0.006) * 1.2 + (moving ? dir * 0.8 : 0);
   const hx = bx + 7 + headTilt * 0.2;
   const hy = by + 1;
   rect(X, hx, hy, 10, 11, P.bone);

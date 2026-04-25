@@ -10,6 +10,8 @@ import { MW, MH } from './terrain.js';
 const jesterPos = { x: 1500, y: 400 };
 const jesterTarget = { x: 1500, y: 400 };
 let jesterWait = 0;
+let jesterDir = 1;     // facing direction (-1 left, +1 right)
+let jesterMoving = false;
 const jesterGraffiti = [];
 
 const JESTER_PHRASES = [
@@ -23,12 +25,17 @@ const JESTER_PHRASES = [
 ];
 
 export function updateJester(camera) {
-  if (jesterWait > 0) { jesterWait--; return; }
+  if (jesterWait > 0) {
+    jesterWait--;
+    jesterMoving = false;
+    return;
+  }
   const dx = jesterTarget.x - jesterPos.x;
   const dy = jesterTarget.y - jesterPos.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
   if (dist < 10) {
     jesterWait = 180 + Math.floor(Math.random() * 300);
+    jesterMoving = false;
     if (Math.random() > 0.6 && jesterGraffiti.length < 15) {
       jesterGraffiti.push({
         x: jesterPos.x,
@@ -42,6 +49,8 @@ export function updateJester(camera) {
     const spd = 0.8;
     jesterPos.x += (dx / dist) * spd;
     jesterPos.y += (dy / dist) * spd;
+    jesterMoving = true;
+    if (Math.abs(dx) > 0.3) jesterDir = dx > 0 ? 1 : -1;
   }
 }
 
@@ -55,7 +64,7 @@ export function drawJesterWandering(camera, locations) {
   if (home && Math.abs(jesterPos.x - (home.x + home.w / 2)) < 60 &&
       Math.abs(jesterPos.y - (home.y + home.h / 2)) < 60) return;
 
-  drawNPC_jester(jesterPos.x, jesterPos.y);
+  drawNPC_jester(jesterPos.x, jesterPos.y, { moving: jesterMoving, dir: jesterDir });
 }
 
 export function drawJesterGraffiti(camera) {
