@@ -1022,8 +1022,8 @@ LSK489A dual JFET preamp — самая деликатная часть (shielde
 │                                  └──────┐ ┌───────────┘                  │
 │                                         ▼ ▼                               │
 │                                  ┌── AND MY ──┐                           │
-│                                  │ [Day↔Night │                           │
-│                                  │  xfader]   │                           │
+│                                  │ [MOSFET    │                           │
+│                                  │  shaper]   │                           │
 │                                  └────┬───────┘                           │
 │                                       │                                   │
 │                                       ▼                                   │
@@ -1035,7 +1035,7 @@ LSK489A dual JFET preamp — самая деликатная часть (shielde
 │                                   OUTPUT                          │       │
 │                                      │                            │       │
 │                                      └────────────────────────────┘       │
-│                                       (optional infinite Day↔Night loop) │
+│                                       (optional infinite Day→shaper→Night loop) │
 │                                                                          │
 │   FUCK ABANDONED SLEEP ──→ CV ──→ (любой модуль: pitch, cutoff,         │
 │   [Маятниковый LFO]              drive, time, feedback, SUN, HAZE...)   │
@@ -1082,9 +1082,9 @@ I Show You Light (contact/DUST mode, пьезо-стилус)
 **Патч E — "Day Into Night" (бесконечная петля)**
 ```
 Any source → Last Day (FB SEND active)
-    → And My (balance 30% Day / 70% Night)
+    → And My (SHAPER mode, drive нагнетается джойстиком пульта)
     → Last Night (FB RETURN → Last Day)
-    = delay и reverb в бесконечном cycle
+    = delay и reverb в бесконечном cycle, с MOSFET-сатуратором между ними
     DRAG на Last Day + Freeze на Last Night
     = застывший мираж, тонущий в замедленном времени
 ```
@@ -1102,7 +1102,7 @@ Last Day standalone: SOLAR/INTERNAL switch → external
 ```
 I Show You Light (sine disk, slow drone)
     → Body Blood And Salt (touch pads, skin-R modulates filter)
-        → And My (balance pendulum-controlled)
+        → And My (SHAPER mode, pendulum LFO → BIAS CV)
             → Last Night (nephrite cartridge, short decay)
     — перформер держит пальцы на pads, дыхание управляет filter cutoff
 ```
@@ -1120,7 +1120,7 @@ I Show You Light (sine disk, slow drone)
 | Fuck Abandoned Sleep | Гравитация, инерция | Инфра-low (CV, 0.5–5Гц) |
 | Is My | Свет (vactrol) | Полный спектр (crossfader) |
 | Last Day | Масло, свет, ферриты | Тепло, сатурация, деградация повторов |
-| And My | VCA stereo | Полный спектр (crossfader) |
+| And My | Силовая электроника (ESC FPV-дрон, MOSFET) | Полный спектр (сатурация / ring / gate) |
 | Last Night | Дерево/камень/металл/стекло | Пространственный отпечаток материала |
 
 ### Принцип взаимодополнения
@@ -1134,10 +1134,10 @@ I Show You Light (sine disk, slow drone)
 5. **Fuck Abandoned Sleep** — маятник качается, хаос или покой, модуляция всего.
 6. **Is My** — точка выбора, развилка пути, optical inertia.
 7. **Last Day** пропускает через масло, свет и ферриты — жар, повторы, тяжесть, память, которая плавится.
-8. **And My** — мост между днём и ночью, равновесие.
+8. **And My** — точка физического присутствия исполнителя: MOSFET-каскад из ESC FPV-дрона, ведомый рукой через выносной пилотный пульт.
 9. **Last Night** растворяет в резонансе твёрдого тела — звук обретает пространство и остывает.
 
-От света → через кожу → через кость → через стекло → через маятник → через масло и солнце → через мост → через дерево/камень → в тишину.
+От света → через кожу → через кость → через стекло → через маятник → через масло и солнце → через руку исполнителя → через дерево/камень → в тишину.
 
 *День сгорает. Ночь остывает.*
 
@@ -1154,7 +1154,7 @@ I Show You Light (sine disk, slow drone)
 
 **Day Expansion** (Phase 2):
 - Last Day (delay + solar amp + resonant EQ).
-- And My (crossfader к Last Night).
+- And My (MOSFET shaper + пилотный пульт; перформативный слой между Day и Night).
 - Is My (vactrol crossfader utility).
 
 Создаёт полный space finalizer pair. Bundle ~$1000 с Phase 1.
@@ -1212,10 +1212,12 @@ Premium ritual piece. $250.
 - Perform FX subset: KILL + FREEZE + DRAG + HAZE.
 - Retail $700–900.
 
-**And My** (Day↔Night crossfader, 8HP):
-- Simple stereo VCA design.
-- 2–3 month R&D в parallel с Last Day.
-- Retail $150–200.
+**And My** (MOSFET shaper + пилотный пульт, ~10HP, edition of 13):
+- MOSFET-каскад из ESC FPV-дрона; три режима SHAPER / RING / GATE.
+- Выносной пилотный пульт по MIDI/TRS; 14-bit джойстик, USB-C / USB-MIDI, LiPo с автономностью ≥8 ч.
+- Documented provenance per unit (фото платы до разборки, координаты, дата находки).
+- R&D: TBD — открытые вопросы по схемотехнике MOSFET-каскада, прошивке пульта, корпусу.
+- Retail: TBD (edition pricing).
 
 **Is My** (vactrol crossfader, 6HP):
 - Simplest module серии.
@@ -1268,11 +1270,11 @@ Premium ritual piece. $250.
 | Phase | Window | Modules | Cumulative retail (full kit) |
 |-------|--------|---------|------------------------------|
 | 1 | Months 1–9 | Last Night, All Bones Dust, Utilities | ~$550 |
-| 2 | Months 9–21 | Last Day, And My, Is My | ~$1,400 |
-| 2B | Months 21–27 | Last Day v1.5 add-ons | ~$1,500 |
-| 3 | Months 21–33 | I Show You Light, Fuck Abandoned Sleep | ~$2,000 |
-| 4 | Months 27–33 | Be Careful | ~$2,300 |
-| 5 | Months 33+ | Body Blood And Salt | ~$2,550 |
+| 2 | Months 9–21 | Last Day, And My, Is My | TBD (And My — edition pricing) |
+| 2B | Months 21–27 | Last Day v1.5 add-ons | TBD |
+| 3 | Months 21–33 | I Show You Light, Fuck Abandoned Sleep | TBD |
+| 4 | Months 27–33 | Be Careful | TBD |
+| 5 | Months 33+ | Body Blood And Salt | TBD |
 
 **Solo realistic timeline**: 33 месяца для full 9-module series с part-time R&D. Full-time может скомпрессировать до 18–24 месяцев.
 
@@ -1298,7 +1300,7 @@ Premium ritual piece. $250.
 
 Электроника обслуживает физику, а не наоборот.
 
-От рождения (свет вращающегося диска) через касание (кожа), кость (железо и раттл), стекло (узкополосный резонанс), маятник (инерция), мост (crossfader), жар полдня (oil delay + solar), ночь (resonating plate) — звук проходит **literal хронологию апокалипсиса**, превращаясь из чистой энергии в пространственный распад.
+От рождения (свет вращающегося диска) через касание (кожа), кость (железо и раттл), стекло (узкополосный резонанс), маятник (инерция), жар полдня (oil delay + solar), руку исполнителя (MOSFET-каскад из ESC FPV-дрона), ночь (resonating plate) — звук проходит **literal хронологию апокалипсиса**, превращаясь из чистой энергии в пространственный распад.
 
 *I Show You Light. Body Blood And Salt. All Bones Dust. Be Careful. Fuck Abandoned Sleep Is My Last Day And My Last Night.*
 
