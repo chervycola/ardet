@@ -927,11 +927,260 @@ Solenoid attached к module structure, fetr tip extends into cartridge slot. Car
 
 ## Sequence сборки модуля
 
-_Заполняется следующим коммитом._
+Step-by-step assembly procedure для DIY single-unit или small batch (≤10 units).
+
+### Preparation (1 hour)
+
+1. Verify BOM completeness — все parts arrived согласно BOM table.
+2. Check PCB на defects (cracks, copper bridges, unetched copper).
+3. Set up workstation: ESD mat, soldering iron 350°C, flux, lead-free solder (или leaded для DIY).
+4. Inspect ICs против their packages (avoid SMD vs DIP confusion).
+5. Read schematic for placement reference.
+
+### Step 1 — SMD components (если premium SKU с LSK489A)
+
+LSK489A SOT-23-6 — единственный SMD компонент. Требует hot air rework station или fine-tip iron.
+
+1. Apply small dab of flux на pad area.
+2. Tweezer place LSK489A — orient pin 1 marker to silkscreen dot.
+3. Tack one corner pin first (provides positioning).
+4. Solder remaining pins working diagonally.
+5. Inspect под loupe (10×) для bridges.
+6. Clean flux residue с isopropyl alcohol.
+
+### Step 2 — Resistors (10 minutes)
+
+Bend leads, insert через PCB holes, solder, trim leads. Order:
+1. Power section R1, R2.
+2. Driver section: R3, R4, R5, R6, R7, R_BIAS1, R_BIAS2.
+3. **R8 4.7Ω 5W wirewound** — vertical mount (см. specifications), can space ~3мм above PCB for thermal.
+4. Preamp section: R_SA, R_SB, R_BA, R_BB, R_GA, R_GB, R_RA, R_RB.
+5. Все остальные пассивы по schematic. Sortировать значения и установить в логическом порядке.
+
+**TIP**: установить tallest components last (electrolytic capacitors), shortest first (resistors).
+
+### Step 3 — Diodes (5 minutes)
+
+1. **Polarity critical**: cathode band match silkscreen mark.
+2. 1N4148 × 7 (clipper, bias, env, limiter).
+3. 1N4001 × 1 (D_SOL solenoid flyback) — большое body чем 1N4148, не перепутать.
+4. 1N5817 × 2 (D_P1, D_P2 power reverse) — Schottky.
+5. **BZX55C9V1 zener** — also has cathode band. **Reverse-mounted в circuit** (anode to ground, cathode pulled up через R_NOISE).
+
+### Step 4 — Capacitors (15 minutes)
+
+1. **Ceramic** (X7R, NP0): unpolarized, no orientation. Install C_PE1 + C_DE1 first из same batch (matched).
+2. **Film** (Wima MKS2 1µF): unpolarized. C_IN, C_OUT, C_SIDE, C_CA, C_CB, C_NO, **C_ENV (220nF film)**.
+3. **Electrolytic**: polarized! Long lead = +. C_DC 1000µF, C_B1 10µF × 2, C_B3 47µF.
+   - Orient per silkscreen polarity mark.
+   - Double-check before soldering — reversed electrolytic explodes при первом power-on.
+
+### Step 5 — Transistors (10 minutes)
+
+1. **Q1 BD139** (NPN): pin out **B-C-E** (left-to-right facing flat side). Match silkscreen.
+2. **Q2 BD140** (PNP): pin out **B-C-E** (same as BD139 — same package, opposite type). **Mark BD140 differently** to avoid mix-up. Sharpie dot on top.
+3. **Q5 2N7000** (TO-92, MOSFET): pin out **D-G-S** (left-to-right, flat side facing).
+
+**Thermal pad**:
+- Q1, Q2: leave ~2мм lead length above PCB to allow thermal pad tape underneath. Apply thermal compound + heat-shrink between transistor body and PCB copper area (10×10мм thermal pad zone).
+- Optional: bend transistors flat against PCB и attach с screw к panel mount tab.
+
+### Step 6 — IC sockets (optional but recommended)
+
+- Sockets U1, U2, U3, U4 (DIP-8/14 standard).
+- **Mandatory socket для U5 LM13700** (DIP-16) — most likely IC to fail при miswiring.
+- Insert sockets без ICs first, solder в place.
+
+### Step 7 — ICs
+
+1. **Don't insert ICs yet** — finish PCB assembly first.
+2. After steps 8–12 below complete, then insert.
+
+### Step 8 — Pots (10 minutes)
+
+10× Alpha RV09 9мм vertical:
+1. Solder в place — 3 pins each + 2 mounting tabs.
+2. Verify alignment (perpendicular к PCB) before soldering all.
+3. **Don't tighten panel-side nuts** until panel mounted.
+
+### Step 9 — Switches & jacks (10 minutes)
+
+1. **SW_FREEZE** (SPDT toggle): solder 3 pins.
+2. **Thonkiconn jacks** ×7 (J_IN, J_SIDE, J_OUT_L, J_OUT_R, 3× CV): solder 3 pins each.
+3. **Mini-XLR (TA3M)** ×2 для J_PA, J_PB: panel-mount with 4 screws + solder pins.
+4. **JST-XH** ×2 (J_EX, J_SOL): solder 2 pins each.
+5. **2×5 IDC** (J_PWR): solder 10 pins, **verify polarity match Eurorack standard** (red stripe = -12V).
+
+### Step 10 — LEDs
+
+6× Red LED 3мм (D1–D6, clipper indicators):
+1. **Polarity**: long lead = anode (+).
+2. Match silkscreen.
+3. Install через panel-mount holders if using panel-mount.
+4. Test fit с panel before soldering.
+
+### Step 11 — Mechanical preparation
+
+1. Mount panel temporarily — verify all panel-mount components (pots, jacks, switches, LEDs) align с panel cutouts.
+2. If misalignments, identify and correct before final assembly.
+3. Apply M3 standoffs к PCB corners.
+
+### Step 12 — Pre-power-on inspection
+
+**Before applying power**:
+
+1. **Visual inspection** под loupe — every joint shiny, не dull.
+2. **DMM continuity test**:
+   - +12V to GND: infinite ohms (no short).
+   - -12V to GND: infinite ohms.
+   - +12V to -12V: infinite ohms.
+   - All ICs power pins connected per schematic.
+3. **No solder bridges** between adjacent SMD pads.
+4. **All polarized components** correctly oriented (electrolytics, diodes, transistors).
+
+### Step 13 — IC insertion
+
+After successful inspection:
+
+1. Wear ESD strap.
+2. Insert ICs into sockets — **pin 1 alignment с socket marking**.
+3. **Press carefully** — no bent pins.
+
+### Step 14 — First power-on (smoke test)
+
+**Hardware**:
+- Bench PSU (±12V, current limit 100мА per rail).
+- Multimeter.
+
+**Procedure**:
+1. Connect PSU к J_PWR (verify polarity!).
+2. **Set current limit к 100мА** (key safety step).
+3. Power on. Watch current draw closely.
+4. **Idle current draw should be ~50–80мА per rail**. If higher → short somewhere.
+5. Measure ±12V на каждом IC power pin (should read ±11.6V с 1N5817 drop).
+6. **No magic smoke**: пройти test 1 minute без issues.
+7. **Power off** before next steps.
+
+### Step 15 — Cartridge attachment (test cartridge)
+
+1. Insert test cartridge (oak reference).
+2. Verify magnetic mate with retention pin engaged.
+3. Connect cables (mini-XLR, JST × 2).
+4. Visually verify exciter exciter sits flush к plate.
+
+### Step 16 — Functional test (basic)
+
+Continue к detailed testing per `## Тестирование` section.
+
+### Estimated time
+
+| Step | Time (single unit, experienced) | Time (first time) |
+|------|--------------------------------|-------------------|
+| Preparation | 1 hour | 2 hours |
+| Steps 1-13 | 1 hour | 3 hours |
+| Step 14 (power test) | 15 min | 30 min |
+| Steps 15-16 (cartridge + basic test) | 15 min | 30 min |
+| **Total** | **2.5 hours** | **6 hours** |
+
+Production batch (5–10 units) — multiply by ~0.7× per-unit (assembly line efficiency).
 
 ## Калибровка
 
-_Заполняется следующим коммитом._
+После assembly пройти калибровочные шаги для optimal performance.
+
+### Calibration 1 — JFET preamp bias
+
+LSK489A Idss varies между chips (matched within die, но different chips ≠ same Idss). Adjust **R_SA** (or equivalent) для setting drain voltage.
+
+**Procedure**:
+1. Power up module без cartridge.
+2. Probe Q3 Source A pin (or Drain A).
+3. Adjust R_SA — target voltage ~-6V (mid-rail of -12V supply).
+4. Repeat для channel B (Source B).
+5. **If voltage cannot be adjusted к -6V с standard R_SA = 4.7кΩ** → swap LSK489A (Idss too high or too low).
+
+### Calibration 2 — Solenoid gate threshold
+
+R_DAM1 47кΩ нормально, but Q5 Vth varies ±20% per piece.
+
+**Procedure**:
+1. Apply 5V CV к J_CV_DAMP.
+2. Measure gate voltage on Q5.
+3. **Should be ~3.4V** (CV × 100k / 147k).
+4. If solenoid не activates но gate >2.1V → check solenoid coil continuity, D_SOL polarity.
+5. If gate <2.1V с CV 5V → swap Q5 (low Vth specimen) or reduce R_DAM1 to 33кΩ.
+
+### Calibration 3 — Pre/de-emphasis matching
+
+Pre-emphasis (Block 3) и de-emphasis (Block 9) должны cancel each other when nothing in between.
+
+**Procedure**:
+1. Connect signal generator (1кГц 100мВ sine) к BUF_OUT.
+2. Probe DE_OUT (after de-emphasis).
+3. Sweep frequency 100Hz–20кГц.
+4. **Response should be flat ±0.5dB** (RV_BOOST=0).
+5. With RV_BOOST full CW → +8dB shelf above 3.2кГц при PE_OUT, **but** flat after DE_OUT.
+6. If not flat → C_PE1 ≠ C_DE1. Replace caps from same batch.
+
+### Calibration 4 — Feedback loop stability (SPICE-verified)
+
+Before user accessible — verify loop не self-oscillates без cartridge installed.
+
+**Procedure**:
+1. Cartridge: install test cartridge с low Q (oak — Q ~50).
+2. Set RV_FEEDBACK to maximum.
+3. Listen для self-oscillation.
+4. Should NOT self-oscillate с oak. Self-oscillation acceptable с titanium / spring steel cartridges (intended feature).
+5. **If oak self-oscillates** → loop gain too high, reduce R_FS3 от 47k к 33k.
+
+### Calibration 5 — VCA bias
+
+LM13700 OTA bias for VCA mode.
+
+**Procedure**:
+1. Set RV_DECAY full CW (max sustain).
+2. Apply DC voltage to BUF_OUT (1V).
+3. Probe VCA_BUF_OUT.
+4. Should track input с unity gain after VCA.
+5. If output saturates / cuts off → check R_BLIN value (typical 10kΩ for ±12V supply, 30kΩ Iabc resistor).
+
+### Calibration 6 — LED clipper threshold
+
+3-LED stack should clip at +10.6 dBu.
+
+**Procedure**:
+1. Apply 1кГц sine to J_IN, sweep amplitude от 0 к +20 dBu.
+2. Watch CLIP_NODE on osc.
+3. Clipping должна start visible at peak ~5.4V (RMS ~3.8V = +10.6 dBu RMS).
+4. If clipping starts earlier → проверить, что 3 LED in series correctly soldered (Vf 5.4V total).
+5. If not clipping at all → wiring error, verify cathode-anode polarity each LED.
+
+### Cartridge calibration (per cartridge after manufacturing)
+
+**Each cartridge** receives calibration label с:
+- Material name.
+- Measured RT60 без feedback (±10%).
+- Resonant frequency dominant mode (for SPICE feedback risk assessment).
+- Recommended exciter (DAEX25 vs DAEX32).
+- Mounting strain compensation (если plate sensitive к torque).
+
+This data packed с cartridge для customer reference.
+
+### Калибровочный паспорт модуля
+
+После assembly + calibration выдаётся **calibration certificate** (printed card) с:
+
+- Serial number.
+- Date of manufacture.
+- Idle current draw (per rail).
+- Noise floor (input-shorted, dBV).
+- THD at 100мВ (percent).
+- Pre/de-emphasis matching error (dB across spectrum).
+- Solenoid CV threshold (CV value where damping engages).
+- Feedback stability margin (RV_FEEDBACK position где self-oscillation occurs с reference oak cartridge).
+- Build technician signature.
+
+Customer keeps for warranty + future reference.
 
 ## Тестирование
 
