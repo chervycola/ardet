@@ -612,11 +612,318 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 
 ## PCB layout — зоны и правила разводки
 
-_Заполняется следующим коммитом._
+PCB **101.6 × 108мм**, 2-layer FR4 1.6мм (budget) или 4-layer FR4 1.6мм (premium).
+
+### Zone diagram (top view)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  PCB 101.6 × 108mm                                                  │
+│                                                                     │
+│  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐            │
+│  │ ZONE 1:  │  │ ZONE 4:          │  │ ZONE 8:        │            │
+│  │ POWER    │  │ PIEZO PREAMP     │  │ SOLENOID       │            │
+│  │          │  │ (Q3 LSK489A,     │  │ DRIVER         │            │
+│  │ J_PWR    │  │  guard ring)     │  │ (Q5)           │            │
+│  │ 1N5817×2 │  │                  │  │                │            │
+│  │ C_B*     │  │ J_PA, J_PB       │  │ J_SOL          │            │
+│  │ Decoupling│  │ (mini-XLR pads)  │  │ D_SOL          │            │
+│  └──────────┘  └──────────────────┘  └────────────────┘            │
+│                                                                     │
+│  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐            │
+│  │ ZONE 2:  │  │ ZONE 5:          │  │ ZONE 9:        │            │
+│  │ DRIVER   │  │ FEEDBACK + FREEZE│  │ NOISE GEN      │            │
+│  │ (Q1, Q2, │  │ (U4A, SW_FREEZE, │  │ (D_NOISE       │            │
+│  │  R8 5W)  │  │  D_LIM diodes)   │  │  zener,        │            │
+│  │          │  │                  │  │  U2C)          │            │
+│  │ Thermal  │  │ J_SIDE           │  │                │            │
+│  │ pads to  │  │                  │  │                │            │
+│  │ panel    │  │                  │  │                │            │
+│  └──────────┘  └──────────────────┘  └────────────────┘            │
+│                                                                     │
+│  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐            │
+│  │ ZONE 3:  │  │ ZONE 6:          │  │ ZONE 7:        │            │
+│  │ INPUT/   │  │ TONE / LED CLIP /│  │ MIX / OUTPUT   │            │
+│  │ PRE-EMPH │  │ ENV VCA          │  │ (U2D)          │            │
+│  │ (U1A,    │  │ (U2A, D1-D6,     │  │                │            │
+│  │  U3A)    │  │  U5 LM13700)     │  │ J_OUT_L,       │            │
+│  │          │  │                  │  │ J_OUT_R        │            │
+│  │ J_IN     │  │ J_CV_DAMP        │  │ J_CV_MIX,      │            │
+│  │          │  │ J_CV_DECAY       │  │ J_CV_DECAY     │            │
+│  └──────────┘  └──────────────────┘  └────────────────┘            │
+│                                                                     │
+│  Bottom edge: panel-mount jacks, pots, LEDs                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Strategy: разделение GND зон
+
+**AGND** (analog ground — критическая):
+- Zone 3 (input/pre-emphasis).
+- Zone 4 (piezo preamp — самая чувствительная).
+- Zone 5 (feedback summing).
+- Zone 6 (tone/clip/VCA).
+- Zone 7 (mix/output).
+
+**DGND** (digital/switching):
+- Zone 8 (solenoid driver).
+- Zone 9 (noise generator — может coupling).
+- LED indicators.
+
+**PGND** (power):
+- Zone 1 (power supply).
+- Zone 2 (driver amp output stage — high current).
+
+**Star ground tie**: AGND, DGND, PGND соединяются в **одной точке** около J_PWR. Выглядит как 3 отдельных pour zones, ведущих в одну central point.
+
+### Critical routing rules
+
+#### JFET gate trace (Zone 4)
+
+```
+J_PA (mini-XLR pin 2) ──[short trace 5–10mm, surrounded by guard ring]── Q3 Gate A pad
+                                                                              │
+                          R_PA 10MΩ (close к gate, <3mm) ────────────────────┘
+                                                                              │
+                                                                             AGND
+```
+
+Guard ring requirements:
+- 0.5мм GND trace вокруг entire trace + Q3 gate pad area.
+- Via stitching каждые 2мм along guard.
+- **No other signals routed within 5мм** of guard ring.
+- 4-layer PCB: GND plane на layer 2 directly under guard area.
+
+#### Solenoid driver loop (Zone 8)
+
+Loop area minimization (reduce EMI radiation):
+
+```
++12V rail ──┬── Solenoid coil (на cartridge) ─── return ──┬── Q5 drain ──┬── Q5 source ── PGND
+             │                                              │                │
+            D_SOL (flyback, anode to source, cathode +12V)│                │
+             │                                              │                │
+             └──────────────────────────────────────────────┘                │
+                                                                              │
+                                                                       (R8 not in this loop;
+                                                                        R8 is в exciter path)
+```
+
+Loop physical area <100мм² recommended. Compact placement: D_SOL within 5мм от Q5.
+
+#### Piezo input traces (Zone 4)
+
+- **Length <20мм** from mini-XLR pad к LSK489A gate.
+- **Width 0.2мм** (minimal — high impedance).
+- **GND pour** на both sides of trace + via stitching.
+- **No vias** на signal trace itself.
+- 4-layer PCB: signal trace on top layer, GND plane (layer 2) directly underneath = de facto coaxial.
+
+#### Push-pull power path (Zone 2)
+
+- Symmetry: Q1 and Q2 trace lengths matched (≤2мм difference).
+- Thermal coupling: Q1 и Q2 placed adjacent (<5мм apart) для shared thermal mass.
+- R8 isolated: vertically mounted (на edge), thermally isolated от Q1/Q2.
+- C_DC (1000µF electrolytic): polarized, marker visible после assembly.
+
+### Decoupling placement
+
+Каждый IC получает **100nF X7R ceramic** на каждом power pin (V+ и V-), расположенный **<5мм от pin**:
+
+| IC | Decoupling |
+|----|-----------|
+| U1 (TL072) | C1 (V+ pin 8), C2 (V- pin 4) |
+| U2 (TL074) | C3 (V+ pin 4), C4 (V- pin 11) |
+| U3 (TL072) | C5, C6 |
+| U4 (TL074) | C7, C8 |
+| U5 (LM13700) | C9 (V+ pin 11), C10 (V- pin 6) |
+
+Дополнительно для LM13700: **10µF tantalum/electrolytic** parallel с 100nF (для switching transients OTA Iabc).
+
+### 4-layer PCB stackup (premium)
+
+```
+Layer 1 (Top):     Components + signal traces
+Layer 2 (Internal): Solid AGND plane (no breaks)
+Layer 3 (Internal): Power planes (split: +12V зона, -12V зона)
+Layer 4 (Bottom):   Signal traces + DGND/PGND pours
+```
+
+Via stitching:
+- AGND vias каждые 5мм along critical traces (piezo, signal).
+- Power vias parallel для current carrying.
+- GND tie vias: top GND ↔ AGND plane ↔ bottom DGND/PGND через single-point.
+
+### 2-layer PCB (budget) compromise
+
+Без internal planes — split bottom pour для AGND vs DGND/PGND. Critical:
+- Star ground point у J_PWR.
+- Узкие traces (<0.5мм) соединяющие GND zones — это deliberate "fuse-link" против ground loops.
+- Ferrite bead optional на solenoid +12V supply (snubs switching transients на shared supply).
+
+### Component placement priority
+
+1. **J_PWR** — у edge.
+2. **Power supply zone (Zone 1)** — adjacent to J_PWR.
+3. **Driver Amp (Zone 2)** — adjacent to power, with thermal exit к panel.
+4. **Mini-XLR jacks** — у opposite edge from J_PWR (signal entry от cartridge dock).
+5. **JFET preamp (Zone 4)** — close to mini-XLR jacks (<20мм trace length).
+6. **Solenoid driver (Zone 8)** — opposite corner from JFET preamp (>40мм physical separation).
+7. **Noise generator (Zone 9)** — isolated, separate from signal path.
+8. **Output (Zone 7)** — у edge near panel jacks.
+
+### Mounting holes
+
+4× M3 holes на corners PCB — secured к panel rails. Не overlapping traces (1мм keepout).
+
+### Silkscreen
+
+- Component reference designators visible.
+- Polarity marks для diodes, electrolytic caps, IC orientation (pin 1 dot).
+- ICs orientation arrows.
+- Critical notes: "DO NOT ROUTE SIGNALS NEAR JFET GATE (guard zone)" и "R8 5W WIREWOUND ONLY".
 
 ## Картридж — механика и сборка
 
-_Заполняется следующим коммитом._
+### Cartridge frame design
+
+```
+Front view (cartridge facing user):
+┌──────────────────────────────────┐  ← Frame 110×65×30мм
+│  ┌────────────────────────────┐  │
+│  │                            │  │
+│  │      [ Plate window ]      │  │  ← Plate visible через cutout
+│  │      100×40мм (typ.)       │  │     (varies per material)
+│  │                            │  │
+│  └────────────────────────────┘  │
+│  ◯ Magnet 1   Magnet 2 ◯         │  ← 4 magnets, neodym N42
+│                                  │
+│  ◯ Magnet 3   Magnet 4 ◯         │
+│                                  │
+│  Side: TA3F mini-XLR ×2          │  ← Audio (piezo)
+│  Side: JST-XH ×2                 │  ← Exciter, solenoid
+│                                  │
+│  Material label / serial # /     │
+│  laser-etched logo               │
+└──────────────────────────────────┘
+
+Side view (cross-section):
+┌──────────────────────────────────┐
+│  Plate (variable thickness 0.5–6мм) - exciter mount on top face A
+│ ──┬───────────────────────────┬── Rubber rail (top)
+│   │     [PLATE]                │
+│ ──┴───────────────────────────┴── Rubber rail (bottom)
+│  Piezo A (Face B, near exciter)
+│  Piezo B (Face B, far end)
+│  
+│  Frame (PETG / aluminum)
+│  Connectors на side wall
+└──────────────────────────────────┘
+```
+
+### Mounting hardware
+
+- **Plate retention**: 2× rubber rails (top, bottom) — silicone strips, 2мм thick. Compress slightly при insertion plate.
+- **Frame mount к module**: 4× neodym N42 magnets 5×5×2мм (recessed в frame), aligned с steel plates на module dock.
+- **Retention pin**: spring-loaded plunger (small, like от mini-DIN connector) prevents accidental drop при rack inversion.
+
+### Cartridge interface
+
+```
+Cartridge side wall:
+┌─────────────────────────────────────┐
+│  ┌─────────┐ ┌─────────┐            │
+│  │ TA3F    │ │ TA3F    │            │  ← Piezo A, B (mini-XLR shielded)
+│  │ Pin1=GND│ │ Pin1=GND│            │
+│  │ Pin2=Sig│ │ Pin2=Sig│            │
+│  └─────────┘ └─────────┘            │
+│                                     │
+│  ┌─┐ ┌─┐                            │
+│  │ │ │ │                            │  ← Exciter, Solenoid (JST-XH 2-pin)
+│  │ │ │ │                            │
+│  └─┘ └─┘                            │
+└─────────────────────────────────────┘
+
+Internal wiring:
+TA3F (A) Pin 2 ─── 50мм coax ─── piezo disc 27мм (face B, near exciter)
+TA3F (A) Pin 1 ─── shield to chassis (frame)
+TA3F (B) Pin 2 ─── 50мм coax ─── piezo disc 27мм (face B, far end)
+TA3F (B) Pin 1 ─── shield to chassis
+
+JST-XH (Exciter) ─── 50мм twisted pair ─── DAEX25 / DAEX32 на face A
+JST-XH (Solenoid) ─── 50мм twisted pair ─── (passes through frame to module's solenoid mount)
+```
+
+### Mounting plate в frame
+
+1. Apply 2× rubber rails в верхний и нижний slots of frame (peel-and-stick adhesive backing).
+2. Insert plate sliding sideways от open side of frame.
+3. Slight compression — plate stays put.
+4. Secure exciter к face A using **M3 bolt + rubber gasket** (uncoupler) на center axis (~1/3 length от один edge). Avoid mode nodes.
+5. Glue piezo discs на face B at positions A (under exciter, near edge) and B (opposite end).
+6. Solder coax cable from each piezo к TA3F pins.
+7. Wire exciter terminals к JST.
+8. Wire solenoid coil (если cartridge содержит solenoid mount) к JST.
+
+### Solenoid mount (опционально, может быть в frame или в module)
+
+**Option A — solenoid в module dock**:
+Solenoid attached к module structure, fetr tip extends into cartridge slot. Cartridge просто passes — no solenoid wiring к cartridge.
+
+**Option B — solenoid в cartridge frame** (recommended):
+Каждый картридж имеет own solenoid (felt tip optimized для plate thickness). JST connection через interface.
+
+**Recommend Option B**: per-cartridge tuned damping (felt thickness и position varies по plate thickness). Cost: solenoid +$5 per cartridge.
+
+### Cartridge-specific specifications
+
+#### Wood cartridge (oak example)
+
+- Plate: 100×40×4мм, oak hardwood (kiln-dried, finished с linseed oil).
+- Plate weight: 12г.
+- Exciter: DAEX25FHE-4 (light duty).
+- Mounting position: ~33мм from one edge (1/3 length, off-center, avoids mode 1,1 antinode).
+
+#### Stone cartridge (marble example)
+
+- Plate: 100×50×5мм, polished Carrara marble.
+- Plate weight: 68г.
+- Exciter: DAEX32Q-4 (heavy duty for dense material).
+- Reinforced rubber rails (heavier plate).
+
+#### Metal thin cartridge (spring steel example)
+
+- Plate: 100×20×0.5мм, hardened spring steel.
+- Plate weight: 8г.
+- Exciter: DAEX25FHE-4.
+- **Knife-edge support** instead of rubber rails (preserves Q for thin metal).
+
+#### Glass cartridge (Pyrex example)
+
+- Plate: 100×40×3мм, Pyrex laboratory glass.
+- Plate weight: 25г.
+- Exciter: DAEX25FHE-4 с **thicker rubber gasket** (cushion against glass shock).
+- Warning sticker: "FRAGILE — handle с care, не drop. Self-oscillation may shatter".
+
+### Производство картриджа — флow
+
+**Phase 1 prototype**:
+1. Frame: 3D-print PETG (Prusa MK3S или equivalent), 0.2мм layer, 30% infill. ~2 hours per unit.
+2. Plate: order finished plate from supplier (carpenter for wood, stone shop для marble, etc.).
+3. Rubber rails: cut от silicone sheet 2мм thick, 4×100мм strips per cartridge.
+4. Magnets: glue с epoxy (5-min cure) into recesses.
+5. Exciter: epoxy mount к plate face A (M3 bolt option for recovery).
+6. Piezo: cyanoacrylate (super glue) к face B at positions A, B.
+7. Solder cables to TA3F + JST.
+8. Test: ohmmeter on solenoid coil (~5–10Ω), exciter (~4Ω), piezo (capacitance ~10нФ).
+9. Laser-etch material name + serial # on frame.
+10. Pack in foam box.
+
+**Phase 2 production scale**:
+- Frame: CNC-milled 6061 aluminum (more durable, premium feel). ~10 minutes per unit.
+- Bulk-purchase plates с supplier (50–100 units batch, lower per-unit cost).
+- Pre-cut rubber rails delivered.
+- Assembly line: 6 cartridges per hour solo.
 
 ## Sequence сборки модуля
 
