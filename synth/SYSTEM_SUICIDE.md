@@ -1,6 +1,6 @@
 # SYSTEM SUICIDE — Полная цепь физического синтеза
 
-> *"I Show You Light, Body Blood And Salt, All Bones Dust — Be Careful — Fuck Abandoned Sleep Is My Last Day And My Last Night"*
+> *"I Show You Light, Body Blood And Salt, All Bones Dust. Be Careful — Fuck Abandoned Sleep Is My Last Day And My Last Night"*
 
 > **Версия**: v3.0 — canonical brief после аудита и decisions pass. Учитывает corrected RT60, EOL replacements (LSK489A, BZX55C9V1), cable shielding (mini-XLR), и рекомендованные архитектуры для ранее-TBD модулей.
 
@@ -25,8 +25,8 @@
 **Итого (Phase 1–4, без BBAS)**: *посчитать сумму HP** 
 **Итого с BBAS (Phase 5, опц.)**: **134 HP**.
 
-> Поэтический строй фразы распадается на три такта:
-> *Свет → плоть → прах. Осторожно — сон заброшенный. Мой последний день и моя последняя ночь.*
+> Поэтический строй фразы распадается так:
+> *Я покажу тебе свет. Кровь и пот, пыль всех тел. Будь осторожен. Похуй, что бесполезный сон. Это мой последний день, и моя последняя ночь*
 > 
 > Цепь идёт слева направо и сгорает к концу.
 
