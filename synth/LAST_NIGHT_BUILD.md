@@ -436,7 +436,179 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 
 ## Полный BOM
 
-_Заполняется следующим коммитом._
+Таблица закупок Last Night v2.2 — все компоненты для одного модуля. Цены ориентировочные (USD, retail small-quantity, Mouser/Digi-Key 2025).
+
+### Active components (ICs, transistors, diodes)
+
+| Ref | Part Number | Описание | Package | Qty | Unit $ | Total $ | Sourcing |
+|-----|-------------|----------|---------|-----|--------|---------|----------|
+| U1, U3 | TL072CP | Dual JFET-input op-amp | DIP-8 | 2 | $0.50 | $1.00 | TI / Mouser |
+| U2, U4 | TL074CN | Quad JFET-input op-amp | DIP-14 | 2 | $0.75 | $1.50 | TI / Mouser |
+| U5 | LM13700N | Dual OTA с linearizing diodes | DIP-16 | 1 | $2.00 | $2.00 | TI / Mouser |
+| Q3 | LSK489A | Dual matched N-JFET | SOT-23-6 (SMD) | 1 | $6.00 | $6.00 | LIS / Mouser |
+| Q1 | BD139 | NPN BJT (50V, 1.5A) | TO-126 | 1 | $0.30 | $0.30 | ON Semi / Mouser |
+| Q2 | BD140 | PNP BJT (50V, 1.5A) | TO-126 | 1 | $0.30 | $0.30 | ON Semi / Mouser |
+| Q5 | 2N7000 | N-channel logic-level MOSFET | TO-92 | 1 | $0.15 | $0.15 | Multi-source |
+| D_NOISE | BZX55C9V1 | 9.1V zener (noise source) | DO-35 | 1 | $0.10 | $0.10 | Multi-source |
+| D_BIAS1, D_BIAS2 | 1N4148 | Signal diode (push-pull bias) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| D_LIM1, D_LIM2 | 1N4148 | Signal diode (feedback limiter) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| D_ATK, D_DEC | 1N4148 | Signal diode (envelope follower) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| D_EF | 1N4148 | Envelope rectifier | DO-35 | 1 | $0.01 | $0.01 | Multi-source |
+| D_SOL | 1N4001 | Solenoid flyback | DO-41 | 1 | $0.03 | $0.03 | Multi-source |
+| D_P1, D_P2 | 1N5817 | Schottky reverse protection | DO-41 | 2 | $0.20 | $0.40 | Multi-source |
+| D1–D6 | LED 3мм Red | Clip indicators (3 in series each polarity) | T-1 | 6 | $0.02 | $0.12 | Multi-source |
+| **Subtotal** | | | | | | **$11.97** | |
+
+### Resistors (1/4W metal film 1% unless noted)
+
+| Ref | Value | Qty | Unit $ | Total $ | Notes |
+|-----|-------|-----|--------|---------|-------|
+| R1 | 1MΩ | 1 | $0.02 | $0.02 | Hi-Z input bias [REVISED 100kΩ→1MΩ] |
+| R2 | 1kΩ | 1 | $0.01 | $0.01 | Output resistor |
+| R3, R_DE1, R_DE3, R_DE4, R_PE1, R_PE3, R_PE4, R_EF1, R_IABC, R_VCA_IN, R_VCA_G, R_VCA_LOAD, R_BLIN, R_SIDE_MIX, R22 | 10kΩ | 15 | $0.01 | $0.15 | Various stages |
+| R4 | 47kΩ | 1 | $0.01 | $0.01 | Driver feedback |
+| R_FS1, R_FS2, R_FS3, R_FS4, R_DE2 (22к OK), R_SIDE, R_SIDE_FB, R_XS1, R_XFB, R_XBIAS, R_MD, R_MW, R_MFB, R_MNI, R_SL, R_SR, R_DL, R_DR, R_SLF, R_SRF | 47kΩ | 20 | $0.01 | $0.20 | Summing nets |
+| R_GA, R_GB, R_DE2 | 22kΩ | 3 | $0.01 | $0.03 | Preamp gain, de-emph cut |
+| R_RA, R_RB | 1kΩ | 2 | $0.01 | $0.02 | Preamp gain set |
+| R_BA, R_BB, R_SA, R_SB | 4.7kΩ | 4 | $0.01 | $0.04 | JFET source resistors |
+| R5 | 100Ω | 1 | $0.01 | $0.01 | Push-pull base current |
+| R6, R7 | 10Ω | 2 | $0.01 | $0.02 | Push-pull emitter |
+| **R8** | **4.7Ω 5W wirewound** | **1** | **$0.30** | **$0.30** | **[REVISED — power resistor]** |
+| R_BIAS1, R_BIAS2 | 1kΩ | 2 | $0.01 | $0.02 | Push-pull bias [NEW] |
+| R_TF, R_CL | 1kΩ | 2 | $0.01 | $0.02 | Tone/clip series |
+| R_CLB | 100kΩ | 1 | $0.01 | $0.01 | Clip pulldown |
+| R_NOISE | 10kΩ | 1 | $0.01 | $0.01 | Zener current set [REVISED] |
+| R23 | 1MΩ | 1 | $0.02 | $0.02 | Noise amp gain |
+| R_DAM1 | **47kΩ** | 1 | $0.01 | $0.01 | **[REVISED 100k→47k]** Solenoid divider |
+| R_DAM2 | 10kΩ | 1 | $0.01 | $0.01 | Gate stop |
+| R_DAM3 | 100kΩ | 1 | $0.01 | $0.01 | Gate pulldown |
+| R_DCV, R_MN, R_MCV | 100kΩ | 3 | $0.01 | $0.03 | Various |
+| R_PA, R_PB | 10MΩ | 2 | $0.05 | $0.10 | JFET gate bias (high impedance — quality matters) |
+| **Resistor subtotal** | | ~62 | | **~$1.05** | |
+
+### Capacitors
+
+| Ref | Value | Type | Qty | Unit $ | Total $ | Notes |
+|-----|-------|------|-----|--------|---------|-------|
+| C_PE1, C_DE1 | 1nF | Ceramic C0G/NP0 ±5% | 2 | $0.05 | $0.10 | **[CRITICAL: same batch для matching]** Murata GRM1885C1H102JA01D |
+| C_TF, C_COL | 10nF | Ceramic X7R | 2 | $0.02 | $0.04 | |
+| C_PA, C_PB | 10nF | Ceramic X7R | 2 | $0.02 | $0.04 | Piezo AC coupling |
+| C_NF | 10pF | Ceramic NP0 | 1 | $0.03 | $0.03 | Noise HF rolloff |
+| C_HA, C_HB | 100pF | Ceramic NP0 | 2 | $0.03 | $0.06 | Preamp HF compensation |
+| C_NI | 100nF | Ceramic X7R | 1 | $0.03 | $0.03 | Noise coupling |
+| C1–C10 | 100nF | Ceramic X7R | 10 | $0.03 | $0.30 | IC decoupling |
+| C_IN, C_OUT, C_SIDE, C_CA, C_CB, C_NO | 1µF | Film box | 6 | $0.15 | $0.90 | Audio coupling Wima MKS2 |
+| **C_ENV** | **220nF** | **Film** | **1** | **$0.10** | **$0.10** | **[REVISED 1µF→220nF]** Low-leakage |
+| **C_DC** | **1000µF 25V** | **Electrolytic** | **1** | **$0.30** | **$0.30** | **[REVISED 220µF→1000µF]** Panasonic EEU-FR |
+| C_B1, C_B2 | 10µF | Electrolytic | 2 | $0.10 | $0.20 | Bulk supply |
+| C_B3 | 47µF | Electrolytic | 1 | $0.10 | $0.10 | Bulk supply [NEW visible from caркас] |
+| **Capacitor subtotal** | | ~30 | | | **~$2.20** | |
+
+### Potentiometers (Alpha RV09 9мм vertical PCB-mount)
+
+| Ref | Value | Taper | Qty | Unit $ | Total $ | Function |
+|-----|-------|-------|-----|--------|---------|----------|
+| RV_DRIVE | 100kΩ | log | 1 | $1.20 | $1.20 | Drive level |
+| RV_FEEDBACK | 100kΩ | log | 1 | $1.20 | $1.20 | Feedback amount |
+| RV_MIX | 100kΩ | log | 1 | $1.20 | $1.20 | Wet/dry |
+| RV_BOOST | 50kΩ | lin | 1 | $1.20 | $1.20 | Pre-emphasis |
+| **RV_ATTACK** | **220kΩ** | **log** | 1 | $1.20 | $1.20 | **[REVISED 1MΩ→220kΩ]** Env attack |
+| RV_DECAY | 1MΩ | log | 1 | $1.20 | $1.20 | Env decay |
+| RV_POSITION | 100kΩ dual-gang | lin | 1 | $2.50 | $2.50 | Piezo crossfade |
+| RV_CUTOFF | 100kΩ | lin | 1 | $1.20 | $1.20 | Tone filter |
+| RV_NOISE | 100kΩ | log | 1 | $1.20 | $1.20 | Noise level |
+| RV_COLOR | 100kΩ | lin | 1 | $1.20 | $1.20 | Noise color |
+| **Pot subtotal** | | | 10 | | | **$13.30** |
+
+### Switches & connectors
+
+| Ref | Part | Qty | Unit $ | Total $ | Notes |
+|-----|------|-----|--------|---------|-------|
+| SW_FREEZE | SPDT toggle on-on | 1 | $2.00 | $2.00 | C&K 7101 series |
+| J_IN, J_SIDE, J_OUT_L, J_OUT_R, J_CV_MIX, J_CV_DECAY, J_CV_DAMP | Thonkiconn PJ301M-12 | 7 | $1.00 | $7.00 | 3.5mm vertical |
+| **J_PA, J_PB (на module side)** | **Switchcraft TA3M (mini-XLR)** | **2** | **$3.00** | **$6.00** | **[REVISED — was JST]** Shielded |
+| J_EX, J_SOL | JST-XH 2-pin header | 2 | $0.20 | $0.40 | Cartridge connections (low-criticality) |
+| J_PWR | IDC 2×5 pin header | 1 | $0.50 | $0.50 | Eurorack power |
+| **Connector subtotal** | | | | | **$15.90** |
+
+### Cartridge interface (на cartridge side, included с cartridge)
+
+| Ref | Part | Qty | Unit $ | Total $ |
+|-----|------|-----|--------|---------|
+| Cartridge mating jacks: TA3F (mini-XLR female) | Switchcraft TA3F | 2 | $3.00 | $6.00 |
+| Cartridge mating: JST-XH housing + crimp pins | JST | 2 | $0.20 | $0.40 |
+| Coax cable (RG-174 или sub-mini) | Belden или equivalent | 2× 50мм | $0.50 | $1.00 |
+| **Cartridge interface subtotal** (per cartridge) | | | | **$7.40** |
+
+### Mechanical & misc (на module)
+
+| Item | Qty | Unit $ | Total $ |
+|------|-----|--------|---------|
+| Aluminum panel 20HP × 128.5мм (anodized, laser-etched) | 1 | $15.00 | $15.00 |
+| M3 hex screws (panel mount) | 4 | $0.10 | $0.40 |
+| M3 standoffs (PCB to panel) | 4 | $0.20 | $0.80 |
+| Knob caps (RV pots) | 10 | $0.50 | $5.00 |
+| Shrouded LED holders | 6 | $0.10 | $0.60 |
+| Solder, flux, misc | — | — | $1.00 |
+| **Mechanical subtotal** | | | **$22.80** |
+
+### PCB
+
+| Option | Layers | Cost (5-pcs run) | Per unit |
+|--------|--------|------------------|----------|
+| **Budget** | 2-layer FR4 1.6mm | $15 | $3.00 |
+| **Premium** | 4-layer FR4 1.6mm | $75 | $15.00 |
+
+### Total BOM per module
+
+| Category | Budget | Premium |
+|----------|--------|---------|
+| Active components | $11.97 | $11.97 |
+| Resistors | $1.05 | $1.05 |
+| Capacitors | $2.20 | $2.20 |
+| Pots | $13.30 | $13.30 |
+| Switches & connectors | $15.90 | $15.90 |
+| Mechanical | $22.80 | $22.80 |
+| PCB | $3.00 | $15.00 |
+| **Total module** | **$70.22** | **$82.22** |
+
+### Per cartridge (typical wood, oak)
+
+| Item | Cost |
+|------|------|
+| Cartridge frame (3D PETG print) | $5.00 |
+| Wood plate (oak 100×40×4mm, finished) | $8.00 |
+| Exciter DAEX25FHE-4 | $20.00 |
+| 2× piezo discs 27мм | $1.00 |
+| Cartridge interface (TA3F + JST + cable) | $7.40 |
+| Magnets (4× neodym N42 5×5×2мм) | $1.00 |
+| Retention pin + spring | $0.50 |
+| Foam-lined box + material card | $3.50 |
+| **Total cartridge BOM** | **$46.40** |
+
+### Premium cartridge (titanium с PVDF)
+
+| Item | Cost |
+|------|------|
+| Aluminum frame (CNC-milled) | $15.00 |
+| Titanium plate 100×30×1.5мм | $30.00 |
+| Exciter DAEX32Q-4 | $40.00 |
+| 1× piezo 27мм + 1× PVDF film LDT0-028K | $4.00 |
+| Cartridge interface | $7.40 |
+| Magnets + retention | $1.50 |
+| Premium packaging (foam + leather case + serial card) | $8.00 |
+| **Total premium cartridge BOM** | **$105.90** |
+
+### Retail pricing implications
+
+| SKU | BOM | Retail | Gross margin |
+|-----|-----|--------|--------------|
+| Module budget | $70 | $350 | 80% |
+| Module premium (4-layer PCB) | $82 | $400 | 79% |
+| Cartridge oak | $46 | $80 | 42% |
+| Cartridge premium titanium | $106 | $350 | 70% |
+
+**Boutique sustainable** при above margins — covers R&D amortization (+10–15% deduction), distribution cut (если используется), warranty reserve, manufacturing labor (DIY: own time; factory: $20-30/unit assembly).
 
 ## PCB layout — зоны и правила разводки
 
