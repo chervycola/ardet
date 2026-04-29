@@ -25,11 +25,13 @@
 
 ## Логическая схема — 15 блоков
 
-Полная сигнальная цепь Last Night v2.2 разбита на 15 функциональных блоков. Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
+Полная сигнальная цепь Last Night v3.0 разбита на **20 функциональных блоков**: 15 исходных + 5 новых (Geiger noise MCU, phaser, vinyl FX, gate/crush, charge pump для pedal SKU). Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
 
-Изменения от v2.0 (caркас) → v2.2 (revised) помечены **[REVISED]**.
+Изменения от v2.0 (caркас) → v3.0 (current) помечены **[REVISED]** или **[NEW]**.
 
-### Block 1. Power Supply
+### Block 1. Power Supply (dual SKU)
+
+#### Eurorack SKU — ±12V from rack bus
 
 ```
   +12V bus ──►|── D_P1 (1N5817) ──►── +12V rail ──┬── C_B1 (10µF) ──┐
@@ -40,15 +42,55 @@
   ┌────────┐
   │ J_PWR  │  2×5 IDC header        Decoupling (100nF each, close to IC pins):
   │ 2×5    │  Pin 1 = -12V          C1,C2 → U1    C5,C6 → U3    C9,C10 → U5
-  └────────┘  Red stripe = -12V     C3,C4 → U2    C7,C8 → U4
+  └────────┘  Red stripe = -12V     C3,C4 → U2    C7,C8 → U4    C11,C12 → U6 (phaser)
 
-  [REVISED] Add LC filter post-TMA1212D в pedal version: 10µH inductor + 10µF cap on each rail.
+  +5V LDO (для ATtiny85 + LEDs):
+  +12V ──► 7805 → +5V (50мА)
 ```
 
-**Pedal version**:
+Power budget Eurorack:
+- Audio analog: 150мА steady (TL072×2 + TL074×2 + 2×LM13700 + LSK489A).
+- Driver amp: 100мА average.
+- Solenoid pulse: 300мА peak (intermittent).
+- ATtiny85 + LEDs: 50мА.
+- Phaser + vinyl modulation circuits: 50мА.
+- **Total**: ~250мА steady, ~500мА peak.
+
+#### Pedal SKU — 9V DC + charge pump (NEW)
+
 ```
-  12V DC jack ──► TRACO TMA1212D ──► ±12V isolated ──► [LC filter] ──► rails
+  9V DC jack ──► D_P1 (1N5817 reverse protection)
+                          │
+                          ▼
+                       +9V rail ──┬── 7805 LDO ──► +5V (digital +МCU)
+                                  │
+                                  ▼
+                          TC1044S charge pump
+                                  │
+                          ┌───────┴───────┐
+                          ▼               ▼
+                      +9V audio       -9V audio
+                      (split rails — cleaner для audio path)
+                          │               │
+                      C_B1 10µF        C_B2 10µF
+                      C_B3 47µF        C_B4 47µF
+                          ▼               ▼
+                         GND             GND
+
+  Decoupling (same как Eurorack — 100nF per IC + 10µF на LM13700/MCU).
+
+  External: 9V DC center-negative, 500мА min, regulated.
+  Compatible: Voodoo Lab Pedal Power 2+, Cioks DC7, MXR ISO-Brick.
 ```
+
+**Power budget Pedal**:
+- Audio analog (±9V): 150мА (slightly reduced headroom но musical).
+- Digital +5V: 50мА.
+- Solenoid pulse: 300мА (от +9V rail, low-side switched).
+- LEDs + footswitch indicators: 30мА.
+- **Total**: ~350мА typical, ~600мА с solenoid pulse.
+
+> **Note**: TL072/TL074 spec'd для ±4.5V min, LM13700 для ±5V min. ±9V даёт sufficient headroom для audio (~+12 dBu max output без clipping). ±12V (Eurorack) даёт ~+15 dBu — больше headroom для extreme drive.
 
 ### Block 2. Input Buffer (U1A — TL072)
 
@@ -413,26 +455,219 @@
 
 D_SOL **mandatory** — без flyback diode inductive kickback fries Q5 every off-transition.
 
-### Block 15. Optional v2 — Geiger Pattern Noise (firmware add-on, deferred to Phase 2)
+### Block 15. Geiger Pattern Noise (NEW — Phase 1 в pedal SKU, optional Eurorack)
 
-Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events instead of continuous hiss. Replaces D_NOISE с MCU-driven analog DAC. Не Phase 1.
+ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events для post-apocalypse Geiger character. Активируется через **COLOR (geiger) knob** — на CCW continuous hiss (zener), на CW cluster pulses (MCU-generated).
 
 ```
-  +5V (from local LDO) ──► ATtiny85
-                              │
-                          PWM out ──► RC filter → audio output
-                              │
-                          (replaces zener noise path, optional install)
+  +5V LDO ──► ATtiny85 (program: LFSR + cluster timing)
+                  │
+              PWM out ──► RC filter (10k + 10nF) ──► audio mix
+                  │
+              GPIO (analog mode select) ──► Switch contoller
+                  │
+              CV in (COLOR CV) ──► ADC pin
+
+  COLOR knob position:
+   0  → analog zener noise (continuous hiss)
+   33 → mixed (zener + sparse clicks)
+   66 → cluster pulses (typical Geiger pattern)
+   100 → discrete clicks (sparse, alarming)
 ```
 
-### Suммарная сводка
+### Block 16. Phaser (NEW — Phase/Flutter / DEPTH / SPEED)
 
-- **15 functional blocks** total.
-- **5 ICs**: 2× TL072 (DIP-8) + 2× TL074 (DIP-14) + 1× LM13700 (DIP-16).
-- **6 transistors**: 1× LSK489A (SOT-23-6 dual JFET) + 1× BD139 + 1× BD140 + 1× 2N7000 (TO-92).
-- **1 zener**: BZX55C9V1 (DO-35).
-- **Multiple diodes**: 1× 1N4001 (solenoid flyback), 6× 1N4148 (clamps + bias + envelope), 2× 1N5817 (power reverse).
-- **6 LEDs**: 3× pair clipper indicators (2 trios × 3 LED in series).
+Classic 4-stage OTA-based all-pass phaser, post-pickup, pre-VCA. Adds swirling motion к reverb tail.
+
+```
+  Pickup signal ─► [All-pass 1] ─► [All-pass 2] ─► [All-pass 3] ─► [All-pass 4]
+                                                                        │
+                                                          ┌─────────────┘
+                                                          │
+                                                  Sум с dry input ─► output
+                                                          ▲
+                                                          │
+                                                  Phase/Flutter knob
+                                                  (controls feedback amount
+                                                   into all-pass network)
+
+  All-pass cell topology (typical):
+                       ┌── R1 ──┐
+                       │        │
+  IN ──► R_in ──┬──────┼──── (-)│
+                │      │     OUT│ U_phaser (OTA section of LM13700 #2)
+                │      │   (+)  │
+                ▼      ▼        │
+              C_AP   I_abc      │
+                │      ▲        │
+                ▼      │   ◄────┴── from VINYL LFO
+               GND  modulation
+                    current
+
+  4 cells stacked → 4 notches in frequency response, modulated в unison.
+
+  Components per cell:
+  - LM13700 OTA (using OTA2 — previously unused per Block 13)
+  - C_AP 10nF (sets center frequency)
+  - R_in, R1, R2 = 10k each
+  - Modulation current from vinyl/phaser LFO
+```
+
+**Controls**:
+- **Phase/Flutter** (RV_PHASE 100k log) — internal feedback amount = resonance/peak depth.
+- **DEPTH** (RV_DEPTH 100k lin) — modulation depth (LFO amplitude into Iabc).
+- **SPEED** (RV_SPEED 1M log) — LFO rate 0.05–10Hz.
+- **Shape Form** (slider 4-pos) — selects LFO waveform: triangle / sine / random S&H / vinyl-skip.
+
+**Bypass**: phaser bypass switch on COLOR slider position 1 (COLOR без phaser).
+
+### Block 17. Vinyl FX — Wow / Flutter / Pitch warp (NEW)
+
+Симулятор разрушающегося граммофонного мотора. Modulates pitch reverb-tail через variable BBD-like delay.
+
+```
+  Wet signal (post-VCA) ──► BBD delay (V3207 1024-stage)
+                              │
+                              ▲
+                              │  variable clock
+                              │  from vinyl LFO
+                              │
+                          ┌───┴────┐
+                          │ Vinyl  │
+                          │ LFO    │  (separate from phaser LFO)
+                          │ ±2%    │
+                          │ pitch  │
+                          └────────┘
+                              │
+                          [Shape Form 
+                           selector ─► triangle/sine/skip-wow]
+
+  Output: pitch-modulated wet signal.
+
+  Controls:
+  - SPEED knob shared с phaser SPEED (sync motion)
+  - DEPTH knob controls vinyl wow amplitude
+  - Shape Form selector swaps LFO waveform для both phaser и vinyl
+```
+
+**Implementation notes**:
+- **BBD chip**: Coolaudio V3207 (1024 stages, modern manufacture, replacement for MN3007). $5–8.
+- **Alternative budget**: PT2399 (digital echo IC, lo-fi character). $1.
+- **Clock generator**: V3102 companion chip (MN3101 replacement) or 555-based VCO.
+- **CV-controlled clock rate** = pitch shift amount.
+
+### Block 18. Gate / Crush (NEW — footswitch-driven destruction)
+
+GATE/CRUSH латчinг footswitch активирует destruction effect post-mixer:
+
+```
+  Mix output ──► [Gate cell] ──► [Crush cell] ──► Output buffer
+                      │              │
+                      │              │
+              Threshold pot       Bit-reduce
+              (gate cuts        sample-hold
+               under threshold) (downsamples + 
+                                quantizes)
+
+  Gate: ОУ comparator + VCA (4066 CMOS switch).
+  Crush: sample-hold (LF398) clocked by ATtiny PWM, 
+         bit-reduce via R-2R ladder с stuck-at-0 LSB.
+
+  Footswitch: latching toggle. LED indicator.
+  Threshold (ручка скрытая или sub-knob): hidden trim
+              для gate threshold setting.
+```
+
+**Components**:
+- 4066 quad CMOS switch (gate cell): $0.50.
+- LF398 sample-hold IC (crush cell): $1.00.
+- Comparator (LM393 dual): $0.30.
+- ATtiny85 (used dual-purpose for Geiger noise + crush clock): shared.
+- 6.3мм footswitch (3PDT для bypass + LED): $3.00.
+
+### Block 19. Charge Pump (Pedal SKU only — NEW)
+
+Pedal version generates bipolar audio supply из 9V single-rail input.
+
+```
+  9V DC jack (center-negative) ──► Reverse polarity protection (1N5817)
+                                          │
+                                          ▼
+                                    +9V rail
+                                          │
+                                  ┌───────┼──────────┐
+                                  │       │          │
+                                  ▼       ▼          ▼
+                            TC1044S    7805        Audio circuits
+                            charge pump  +5V       (split rails ±9V)
+                              │          (для
+                              ▼          ATtiny,
+                            -9V rail     LDO для MCU)
+                              │
+                  ┌───────────┴──────────┐
+                  │  Audio analog rails  │
+                  │  ±9V (audio path,    │
+                  │   reduced from ±12V  │
+                  │   но достаточно для  │
+                  │   TL072/74, LM13700) │
+                  └──────────────────────┘
+```
+
+**Charge pump options**:
+- **TC1044S** (Microchip) — simple inverter, $0.80, suitable для low-current bipolar.
+- **TPS61240** (TI) — boost converter, может generate +9V из 0.7V (overkill, для solar).
+- **MAX1044** (alternative) — same as TC1044S.
+
+**Power budget pedal**:
+- Audio (±9V): ~150mA total.
+- Digital (+5V для ATtiny + LEDs): ~50mA.
+- Solenoid pulse: 300mA peak (от +9V rail, low-side switched).
+- **Total**: ~350mA typical, 500mA peak (с solenoid).
+
+**Required external supply**: 9V DC center-negative, **500mA min**, regulated. Voodoo Lab Pedal Power 2 Plus, MXR ISO-Brick, Cioks Big John — все compatible.
+
+### Block 20. Color Preset Slider (NEW — vertical 5-position)
+
+Slider на левой стороне панели вибирает preset combination tone parameters:
+
+```
+  COLOR slider position:
+  
+  ┌────────┐
+  │ COLOR  │ ◄── Position 1: Bypass tone shaping (raw cartridge)
+  │ WARM   │ ◄── Position 2: Warm preset (LF boost +6dB, HF -3dB, slight saturation)
+  │ DARK   │ ◄── Position 3: Dark preset (LF flat, HF -8dB, heavy saturation)
+  │ COLOR  │ ◄── Position 4: Mid color (parallel feedback peaks, vintage character)
+  │ MIX    │ ◄── Position 5: Maximum mix (all FX active с предустановленными values)
+  └────────┘
+
+  Implementation: 4PDT slider switch, switches между 5 banks of fixed
+  resistor networks в EQ + saturation paths.
+  
+  Hardware-only (no MCU needed) — analog preset selection.
+```
+
+**Components**:
+- 4PDT vertical slider switch (Alpha 4P5T or similar): $5.00.
+- Resistor bank (5 sets × 4 resistors): $0.20.
+
+### Suммарная сводка (post-FX engine)
+
+- **20 functional blocks** total (was 15, added 5 для FX engine + pedal power).
+- **6 ICs analog**: 2× TL072 + 2× TL074 + 2× LM13700 (OTA1 = VCA, OTA2 = phaser feedback drive).
+- **1 BBD**: V3207 (vinyl pitch warp).
+- **1 BBD clock**: V3102 (или 555-based VCO alternative).
+- **1 sample-hold**: LF398 (crush cell).
+- **1 quad CMOS switch**: 4066 (gate cell).
+- **1 dual comparator**: LM393.
+- **1 MCU**: ATtiny85 (Geiger noise + crush clock + tap-tempo).
+- **6 transistors**: LSK489A + BD139 + BD140 + 2× 2N7000 (solenoid + audio gate) + 1 spare.
+- **1 zener**: BZX55C9V1.
+- **1 charge pump** (pedal only): TC1044S.
+
+**BOM increase для FX engine**: ~$15 над previous v2.2 baseline ($83 budget → ~$98 budget с FX). Premium SKU ~$130.
+
+**Retail target**: $499 budget / $649 premium (matches initial spec).
 
 ## Полный BOM
 
