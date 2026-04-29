@@ -12,13 +12,13 @@
 ### Рекомендованный roadmap (revised после аудита):
 
 **Phase 1 — Flagship + Simple** (6 мес)
-- **Last Night** (16HP Eurorack, после fixes).
+- **Last Night** (40HP Eurorack flagship, после fixes).
 - **All Bones Dust** (10HP, simple — transformer sat + rattle).
 - **Utility bundle**: mult, attenuator-mixer (standardized).
 
 Goal: establish brand, validate cartridge concept, generate cashflow.
-Retail: Last Night $350 + All Bones Dust $200 + utility $80.
-Target sales: 100 Last Night + 50 All Bones Dust = ~$55k revenue.
+Retail: Last Night $450 (40HP flagship) + All Bones Dust $200 + utility $80.
+Target sales: 100 Last Night + 50 All Bones Dust = ~$55k–60k revenue.
 
 **Phase 2 — Pair + Crossfade** (12 мес после P1)
 - **Last Day** (40HP, долгий R&D — параллельный start с P1).
@@ -103,7 +103,7 @@ Decide starting scale — A / B / C.
 
 | Module | BOM (budget) | BOM (premium) | Retail budget | Retail premium |
 |--------|--------------|---------------|---------------|----------------|
-| Last Night | $89 | $107 | $350 | $400 |
+| Last Night (40HP) | $83 | $112 | $450 | $550 |
 | All Bones Dust | $40 | $55 | $180 | $220 |
 | Last Day | $250 | $350 | $750 | $900 |
 | And My | $50 | $65 | $150 | $200 |

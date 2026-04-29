@@ -4,8 +4,8 @@
 
 **Версия**: v2.2 (revised после audit + decisions pass)
 **Часть серии**: SYSTEM SUICIDE, модуль 9 из 9
-**Форм-фактор**: Eurorack 20HP (canonical) / опционально pedal 190×122мм
-**Цена retail**: $350 budget / $400 premium
+**Форм-фактор**: Eurorack 40HP (canonical) / опционально pedal 190×122мм
+**Цена retail**: $450 budget / $550 premium (40HP flagship pricing)
 
 ---
 
@@ -63,7 +63,7 @@ Last Night — **аналоговый ревербератор на сменны
 ### What's in the box
 
 **Module package**:
-- Last Night module (16HP panel + PCB + electronics).
+- Last Night module (40HP panel + PCB + electronics).
 - 1× wood cartridge (Oak raw, reference).
 - Eurorack power cable (10-pin to 16-pin адаптер).
 - Mini-XLR cartridge cable (внутри корпуса при покупке).
@@ -152,36 +152,48 @@ Last Night — **аналоговый ревербератор на сменны
 
 ## Контролы и интерфейс
 
-### Раскладка панели (20HP × 128.5мм)
+### Раскладка панели (40HP × 128.5мм = 203×128.5мм)
+
+40HP — широкая панель, что позволяет горизонтальный layout и крупные performance-зоны для лайв-использования.
 
 ```
-┌──────────────────────────────────────────────┐
-│           LAST  NIGHT                        │
-│      system suicide / reverberator           │
-├──────────────────────────────────────────────┤
-│                                              │
-│  ◉ DRIVE          ◉ FEEDBACK    ◉ MIX        │
-│   (large)          (large)       (large)     │
-│                                              │
-│  ◉ ATTACK   ◉ DECAY   ◉ POSITION  ◉ TONE    │
-│                                              │
-│  ◉ BOOST    ◉ NOISE   ◉ COLOR                │
-│                                              │
-│  ┌──────────────────────────────────┐        │
-│  │     [CARTRIDGE SLOT]              │       │
-│  │   horizontal magnetic dock        │       │
-│  │   90×40мм window                  │       │
-│  └──────────────────────────────────┘        │
-│                                              │
-│  ▢ FREEZE switch    ◉ Damp LED              │
-│  ▢ Clip LED L       ▢ Clip LED R            │
-│                                              │
-├──────────────────────────────────────────────┤
-│  ⊙ IN    ⊙ SIDE    ⊙ CV MIX                  │
-│  ⊙ CV DECAY    ⊙ CV DAMP                     │
-│  ⊙ OUT L    ⊙ OUT R                          │
-└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                            LAST  NIGHT                                   │
+│                  system suicide / reverberator                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ◉ DRIVE       ◉ BOOST       ◉ ATTACK    ◉ DECAY    ◉ POSITION  ◉ TONE  │
+│                                                                          │
+│  ◉ FEEDBACK    ◉ MIX         ◉ NOISE     ◉ COLOR                         │
+│   (large)       (large)                                                   │
+│                                                                          │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │                                                                   │  │
+│  │             [   C A R T R I D G E   S L O T   ]                   │  │
+│  │             horizontal magnetic dock с retention pin              │  │
+│  │             100×60мм plate window                                 │  │
+│  │                                                                   │  │
+│  │             [Plate visible через cutout]                          │  │
+│  │                                                                   │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ▢ FREEZE switch (large toggle)    ◉ Damp LED                            │
+│                                                                          │
+│  ▢ Clip LED L         ▢ Clip LED R         ◉ Activity LED                │
+│                                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ⊙ IN    ⊙ SIDE    ⊙ CV MIX    ⊙ CV DECAY    ⊙ CV DAMP                  │
+│                                                                          │
+│  ⊙ OUT L    ⊙ OUT R    ⊙ FB SEND    ⊙ FB RETURN                          │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Преимущества 40HP формата**:
+- 10 pots в **один горизонтальный ряд** (12мм центр-центр × 10 = 120мм, comfortable в 203мм панели).
+- Большой картридж slot 100×60мм — full visibility пластины через окно.
+- Дополнительные jacks (FB SEND/RETURN для loop с Last Day) помещаются.
+- Performance-friendly большие FREEZE toggle + клиппeры LED visible.
+- Серия SYSTEM SUICIDE consistency: Last Day 40HP + Last Night 40HP — зеркальная пара одного размера.
 
 ### Полная таблица контролов
 
@@ -544,7 +556,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 | Параметр | Значение |
 |----------|----------|
-| **Form factor** | Eurorack 3U × 20HP (101.6мм × 128.5мм panel) |
+| **Form factor** | Eurorack 3U × 40HP (203.2мм × 128.5мм panel) |
 | **PCB** | 2-layer FR4 1.6мм (budget) / 4-layer FR4 1.6мм (premium) |
 | **PCB dimensions** | 101.6 × 108мм |
 | **Depth** (behind panel) | 35мм (excluding cartridge dock) |
@@ -610,7 +622,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 ### Eurorack совместимость
 
 - **Power**: ±12В bus (стандарт), 2×5 IDC. Reverse polarity protection через 1N5817.
-- **HP**: 20HP — fits в большинстве setups (84HP, 104HP, 168HP racks).
+- **HP**: 40HP — flagship size. Fits в 84HP, 104HP, 168HP racks (occupies нижнюю половину). Same size as Last Day (зеркальная пара).
 - **Depth clearance**: 65мм total — fits в стандартные case (Tiptop Mantis 60мм может не fit; Doepfer А-100 шкафы — yes).
 
 ### Pedal совместимость (если выбран pedal SKU)

@@ -6,7 +6,7 @@
 
 ## A. Power budgets
 
-### A.1. Last Night (Eurorack 16HP, ±12V)
+### A.1. Last Night (Eurorack 40HP, ±12V)
 
 | Block | Current (mA) | Notes |
 |-------|--------------|-------|
@@ -89,7 +89,7 @@ TMA1212D capability: 1Вт output total → 83 мА на каждую шину (
 3. **Thermal pad to chassis** — крепление к алюминиевой панели Eurorack через thermal paste → panel = heatsink. Элегантно.
 4. **Low-drive mode**: ограничить signal peak → driver не потребляет полную мощность. Trade-off с loudness.
 
-**Рекомендация**: **option 3 (thermal pad to panel)**. В Eurorack формате панель 16HP имеет много place для teplootvod.
+**Рекомендация**: **option 3 (thermal pad to panel)**. В Eurorack формате панель 40HP имеет очень много места для теплоотвода — flagship size advantage.
 
 **Exciter DAEX25FHE-4**:
 - Voice coil rated 40Вт peak, 20Вт RMS.

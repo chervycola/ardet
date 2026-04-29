@@ -85,16 +85,19 @@
 
 ---
 
-### 6. Форм-фактор 16HP не слишком много?
+### 6. Форм-фактор 40HP не слишком много?
 
-**16HP — реалистично** для всех заявленных фичей. Сжатие до 14HP возможно через:
-- Удаление sidechain jack (-1 jack, -5 components).
-- Удаление NOISE COLOR pot (фиксированный, -1 pot).
-- Удаление stereo output (mono only, -1 jack + 6 resistors).
+**40HP — flagship size**, мирится со сложностью модуля и пара с Last Day 40HP. Достаточно места для:
+- 10 pots в один горизонтальный ряд (12мм × 10 = 120мм, в 203мм панели — comfortable).
+- Большой картридж slot 100×60мм с full plate visibility.
+- Performance-zone большие FREEZE toggle, прозрачные clip LEDs.
+- Дополнительные jacks (FB SEND/RETURN для loop с Last Day).
 
-До 12HP — трудно без потери UX. Потенциометры 9mm Alpha занимают 12мм центр-центр, 10 потов в ряд = 120мм — не влезут в 12HP (60мм).
+**Сжатие variants**:
+- v1.5 mini 20HP — drop sidechain, FB SEND/RETURN, smaller cartridge slot. Cost reduction $50.
+- v1.5 budget 16HP — also drop stereo output, 5 pots only. Cost reduction $80.
 
-**Рекомендация**: v1 — 16HP с полным набором. v1.5 — 14HP mini с убранными фичами для budget-сегмента.
+**Рекомендация**: v1 — **40HP flagship** с полным набором. Mirror к Last Day 40HP даёт visual coherence в rack.
 
 ---
 

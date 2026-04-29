@@ -408,16 +408,21 @@ Concept готов на уровне creative — liquid synth с biological flu
 | 2 | Body Blood And Salt | (deferred, не в initial 8) |
 | 3 | All Bones Dust | 10 |
 | 4 | **Be Careful (glass plate)** | **14** |
-| 5 | Fuck Abandoned Sleep | 10 |
-| 6 | **Is My (crossfader)** | **6** |
+| 5 | Fuck Abandoned Sleep | 14 |
+| 6 | **Is My (crossfader + clock)** | **8** |
 | 7 | Last Day | 40 |
 | 8 | **And My (Day↔Night xfade)** | **8** |
-| 9 | Last Night | 20 |
-| **Total** | | **124HP** |
+| 9 | **Last Night** | **40** (flagship, mirrors Last Day) |
+| **Total (без BBAS)** | | **150 HP** |
+| **Total (с BBAS Phase 5)** | | **170 HP** |
 
-Fits **один ряд 126HP** (6U rack) or **two rows 84HP** (168HP total) с большим запасом для utilities (mults, attenuators).
+Fits:
+- **150HP без BBAS** — два ряда 84HP (168 total) с запасом 18HP для utilities.
+- **170HP с BBAS** — нужен 3-row setup (3×84 = 252HP) или skiff с extra capacity.
 
-124HP sum — **меньше** заявленного "~142HP" из-за: BBAS deferred (20HP removed), Last Night 20HP not 40HP (corrected).
+150HP sum — **align** с original brief claim "~142HP" (small variance из-за decisions: Be Careful filled 14HP, FAS bumped to 14HP, Is My to 8HP).
+
+**Last Night = 40HP flagship**: same size as Last Day, creates symmetric Day/Night pair в rack visual layout.
 
 ### Timeline implication
 

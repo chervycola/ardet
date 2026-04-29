@@ -153,7 +153,7 @@
 - 4-layer FR4 (recommended для noise reduction) — $30.
 
 ### Корпус / панель
-- Алюминий 16HP × 128.5мм panel — $15.
+- Алюминий 40HP × 128.5мм panel — $25 (flagship size, anodized + laser-etched).
 - Hardware (screws, nuts, spacers) — $3.
 
 ---

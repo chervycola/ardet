@@ -32,45 +32,31 @@
 
 ## B. HP-бюджет — фактический vs. заявленный
 
-### Заявлено: ~142HP
+### Заявлено: ~142HP (исходная таблица системы)
 
-**Ручной counter**:
+### Final canonical sizing (v3 после user decisions):
 
-| Модуль | HP (источник) | Реалистично? |
-|--------|---------------|--------------|
-| I Show You Light | 16 | OK |
-| Body Blood And Salt | 20 | OK |
-| All Bones Dust | 10 | Simple module — OK |
-| Be Careful | **TBD** | Реально 14–16 для full filter |
-| Fuck Abandoned Sleep | 8 | Tight, pendulum visible + 3 pots = edge |
-| Is My | 6 | OK if single function |
-| Last Day | ~40 | OK для 3 subsystems |
-| And My | **TBD** | 8 for utility with joystick |
-| Last Night | ~40 | (Wait — в брифе Last Night v2.1 = **20HP**, не 40HP) |
-| **Sum** | **~150–160** | Overshoots 142 |
+| Модуль | HP final | Notes |
+|--------|----------|-------|
+| I Show You Light | 16 | Optical tonewheel VCO |
+| Body Blood And Salt | 20 | Touch v1 / liquid v5 |
+| All Bones Dust | 10 | Transformer + rattle |
+| Be Careful | 14 | Glass plate resonator |
+| Fuck Abandoned Sleep | 14 | Pendulum LFO с visible window |
+| Is My | 8 | Vactrol crossfade + clock switcher |
+| Last Day | 40 | Oil can + Solar + Resonant EQ |
+| And My | 8 | Day↔Night crossfader |
+| **Last Night** | **40** | **Reverb с swappable cartridges (flagship size, зеркальная пара к Last Day)** |
+| **Sum (без BBAS, Phase 1–4)** | **150 HP** | Phase 5 BBAS добавит +20 |
+| **Sum (с BBAS)** | **170 HP** | |
 
-**Proбlem**: в v2.1 бриф Last Night — 20HP (panel 101.6×128.5мм). Системная таблица показывает "~40HP" для Last Night — **inconsistency**.
+**Fits**:
+- **150 HP без BBAS** — два ряда 84HP (168 total) с запасом 18HP для utilities (mults, attenuverters).
+- **170 HP с BBAS** — нужен 3-row setup (3×84 = 252HP) или skiff с extra.
 
-### Corrected estimate:
+**Vedict**: HP budget **healthy** при canonical 40HP Last Night. Аligns с original system table claim ~142HP (small variance due к decisions: BBAS deferred, Be Careful filled 14HP, FAS bumped to 14HP, Is My to 8HP).
 
-| Модуль | HP corrected |
-|--------|--------------|
-| I Show You Light | 16 |
-| Body Blood And Salt | 20 |
-| All Bones Dust | 10 |
-| Be Careful | ~14 |
-| Fuck Abandoned Sleep | 10 (better) |
-| Is My | 6 |
-| Last Day | 40 |
-| And My | 8 |
-| Last Night | 20 (v2.1 actual) |
-| **Sum** | **~144HP** |
-
-**Fits в 168HP** (two rows 84HP) = ~14% slack для utility modules (attenuators, mults, etc.).
-
-**Vedict**: HP budget **OK при standardization Last Night на 20HP** (not 40HP as в original system table).
-
-Recommend: update system table — Last Night = 20HP.
+**Decision**: Last Night = **40HP flagship** (зеркальный пара к Last Day 40HP, аналогично symmetric Day/Night design).
 
 ---
 
@@ -179,7 +165,7 @@ External audio (DJ deck)
 
 ### Панель-layout проблемы:
 
-- **10 pots в Last Night 16HP** — 12мм center-to-center × 10 = 120мм ширина. Панель 16HP = 81мм. **Не помещается в ряд**. Нужно 2 ряда по 5 pots.
+- **10 pots в Last Night 40HP** — 12мм center-to-center × 10 = 120мм ширина. Панель 40HP = 203мм. **Помещается в один горизонтальный ряд** с большим запасом (40HP flagship resolves layout constraint).
 - **Last Day 40HP** — 40 pots × 6 subsystems. Layout challenging. Необходим grouping + labeling.
 - **Маятник Fuck Abandoned Sleep 8HP** — visible window + 3 pots + 2 jacks + gate output. Tight but doable.
 
@@ -269,7 +255,7 @@ External audio (DJ deck)
 
 ## J. Action items
 
-1. **Update HP spec** — Last Night = 20HP in system table (fix inconsistency).
+1. **Update HP spec** — Last Night = **40HP flagship** in system table (matches original brief claim, mirrors Last Day 40HP).
 2. **Define Be Careful architecture** — single concept.
 3. **Define Is My** — single function.
 4. **Define And My** — recommended: Last Day↔Last Night crossfader.

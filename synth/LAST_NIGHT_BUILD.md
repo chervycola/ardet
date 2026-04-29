@@ -544,7 +544,7 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 
 | Item | Qty | Unit $ | Total $ |
 |------|-----|--------|---------|
-| Aluminum panel 20HP × 128.5мм (anodized, laser-etched) | 1 | $15.00 | $15.00 |
+| Aluminum panel 40HP × 128.5мм (anodized, laser-etched) | 1 | $25.00 | $25.00 |
 | M3 hex screws (panel mount) | 4 | $0.10 | $0.40 |
 | M3 standoffs (PCB to panel) | 4 | $0.20 | $0.80 |
 | Knob caps (RV pots) | 10 | $0.50 | $5.00 |
@@ -552,14 +552,16 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 | Solder, flux, misc | — | — | $1.00 |
 | **Mechanical subtotal** | | | **$22.80** |
 
-### PCB
+### PCB (190×108мм для 40HP формата)
 
 | Option | Layers | Cost (5-pcs run) | Per unit |
 |--------|--------|------------------|----------|
-| **Budget** | 2-layer FR4 1.6mm | $15 | $3.00 |
-| **Premium** | 4-layer FR4 1.6mm | $75 | $15.00 |
+| **Budget** | 2-layer FR4 1.6mm | $30 | $6.00 |
+| **Premium** | 4-layer FR4 1.6mm | $150 | $30.00 |
 
-### Total BOM per module
+(40HP PCB — больше площадь, чем 20HP, поэтому цена ~2× выше.)
+
+### Total BOM per module (40HP)
 
 | Category | Budget | Premium |
 |----------|--------|---------|
@@ -568,9 +570,9 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 | Capacitors | $2.20 | $2.20 |
 | Pots | $13.30 | $13.30 |
 | Switches & connectors | $15.90 | $15.90 |
-| Mechanical | $22.80 | $22.80 |
-| PCB | $3.00 | $15.00 |
-| **Total module** | **$70.22** | **$82.22** |
+| Mechanical (40HP panel $25) | $32.80 | $32.80 |
+| PCB (40HP) | $6.00 | $30.00 |
+| **Total module** | **$83.22** | **$112.22** |
 
 ### Per cartridge (typical wood, oak)
 
@@ -599,26 +601,28 @@ Optional ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events inste
 | Premium packaging (foam + leather case + serial card) | $8.00 |
 | **Total premium cartridge BOM** | **$105.90** |
 
-### Retail pricing implications
+### Retail pricing implications (40HP flagship sizing)
 
 | SKU | BOM | Retail | Gross margin |
 |-----|-----|--------|--------------|
-| Module budget | $70 | $350 | 80% |
-| Module premium (4-layer PCB) | $82 | $400 | 79% |
+| Module budget (40HP) | $83 | $450 | 81% |
+| Module premium (40HP, 4-layer PCB) | $112 | $550 | 80% |
 | Cartridge oak | $46 | $80 | 42% |
 | Cartridge premium titanium | $106 | $350 | 70% |
 
 **Boutique sustainable** при above margins — covers R&D amortization (+10–15% deduction), distribution cut (если используется), warranty reserve, manufacturing labor (DIY: own time; factory: $20-30/unit assembly).
 
+**40HP flagship pricing**: $450-550 retail aligns с premium boutique tier (Make Noise Strega ~$650, Mutable Instruments Beads ~$390, Erica Synths Plates ~$750). Last Night sits в premium half с unique physical differentiation.
+
 ## PCB layout — зоны и правила разводки
 
-PCB **101.6 × 108мм**, 2-layer FR4 1.6мм (budget) или 4-layer FR4 1.6мм (premium).
+PCB **190 × 108мм** (для 40HP формата), 2-layer FR4 1.6мм (budget) или 4-layer FR4 1.6мм (premium).
 
 ### Zone diagram (top view)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  PCB 101.6 × 108mm                                                  │
+│  PCB 190 × 108mm (40HP format — wider, more breathing room)         │
 │                                                                     │
 │  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐            │
 │  │ ZONE 1:  │  │ ZONE 4:          │  │ ZONE 8:        │            │
@@ -1710,27 +1714,27 @@ For 50-unit batch:
 
 **Total tools**: ~$1,700 one-time investment. Reuses across all future batches.
 
-### Profitability snapshot (50-unit Phase 1)
+### Profitability snapshot (50-unit Phase 1, 40HP flagship pricing)
 
 **Revenue**:
-- 50 modules × $400 retail (premium SKU) = $20,000.
-- Or 50 × $350 budget = $17,500.
+- 50 modules × $550 retail (premium SKU) = $27,500.
+- Or 50 × $450 budget = $22,500.
 - + 50 default cartridges (oak) × $80 = $4,000.
-- **Gross**: $21,500-24,000.
+- **Gross**: $26,500–31,500.
 
 **Costs**:
-- BOM (50 units × $80 average): $4,000.
+- BOM (50 units × $95 average для 40HP): $4,750.
 - Cartridges (50 × $50): $2,500.
-- PCBs (50 × $5): $250.
+- PCBs (50 × $6 budget или $30 premium): $300–1,500.
 - Labor (assembly): $0 (DIY) или $1,500 (contractor).
 - Shipping + packaging: $1,000.
-- **Total**: $7,750-9,250.
+- **Total**: $8,550-11,250.
 
-**Net margin**: $12,000-15,000 (50-65% net).
+**Net margin**: $17,000-20,000 (60-65% net).
 
-**Per-unit profit**: $240-300.
+**Per-unit profit**: $340-400.
 
-Sufficient для Phase 2 R&D funding.
+Sufficient для Phase 2 R&D funding и cushion.
 
 ### Scaling beyond 50 units
 
@@ -1762,7 +1766,7 @@ Single-unit DIY build: ~6 hours first time, ~2.5 hours experienced.
 
 50-unit batch: ~21 working days с standard small-batch DIY tooling.
 
-Per-unit BOM $70-82, retail $350-400, gross margin 80%, net margin 50-65%.
+Per-unit BOM $83-112 (40HP), retail $450-550, gross margin 80%, net margin 60-65%.
 
 **Roadmap**: Phase 1 ship 50 units → validate market → Phase 2 starts Last Day R&D.
 

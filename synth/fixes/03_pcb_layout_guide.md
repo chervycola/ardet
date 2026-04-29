@@ -225,8 +225,8 @@ U1B ──── R5 100Ω ──── Q1 base ──── Q1 emitter ───
 | BD139/BD140 TO-126 | PTH | 5мм lateral | Thermal pad shared или individual 10×10мм каждый. |
 | 2N7000 TO-92 | PTH | 2.54мм | Standard. |
 | BZX55C9V1 DO-35 | PTH | Axial | 7мм body length. |
-| Alpha RV09 pots | PTH, panel-mount | 12мм center-center | Row 5 pots max для 16HP panel. |
-| Thonkiconn jacks | PTH, panel-mount | 15мм center-center | Row 4 jacks для 16HP. |
+| Alpha RV09 pots | PTH, panel-mount | 12мм center-center | До 10 pots в один ряд для 40HP panel (203мм width). |
+| Thonkiconn jacks | PTH, panel-mount | 15мм center-center | До 12 jacks в ряд для 40HP. |
 | Mini-XLR | Panel mount | 20мм center-center | Edge of PCB. |
 | Electrolytic caps | PTH axial or radial | 5мм min от other components | Polarity marking on silkscreen. |
 
@@ -234,17 +234,25 @@ U1B ──── R5 100Ω ──── Q1 base ──── Q1 emitter ───
 
 ## F. Board size recommendations
 
+**40HP Eurorack — CANONICAL** (203×128.5мм panel):
+- PCB 190×108мм.
+- Generous space для proper zone separation, star-ground integrity.
+- 10 pots в один ряд + jacks под ними + cartridge slot — все помещается без compromise.
+- Mirrors Last Day 40HP — visually coherent series.
+- 4-layer PCB recommended для production (premium SKU); 2-layer acceptable для budget.
+
+**Smaller variants (alternative SKUs)**:
+
+**20HP Eurorack** (101×128.5мм panel):
+- PCB 100×108мм — compact mini SKU.
+- Drop FB SEND/RETURN, smaller cartridge slot, stacked pots.
+- Cost reduction $50, retail target $300.
+
 **16HP Eurorack** (81×128.5мм panel):
-- PCB 78×110мм (current v2.1).
-- Tight fit — consider 4-layer для noise reduction.
-
-**18HP Eurorack** (91×128.5мм):
-- PCB 90×110мм — extra 12мм width позволяет лучше разнести zones.
-- Recommended **для production** — $2–3 extra PCB cost, much better noise performance.
-
-**20HP Eurorack** (101×128.5мм):
-- PCB 100×110мм — очень comfortable.
-- Consider если price point позволяет.
+- PCB 78×110мм — budget mini SKU.
+- 5 pots only (drop sidechain, noise color, position).
+- Mono only (no stereo path).
+- Cost reduction $80, retail target $250.
 
 **Pedal 125B** (122×66мм):
 - PCB ~110×60мм — landscape orientation.
