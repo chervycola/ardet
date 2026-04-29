@@ -20,7 +20,7 @@
 | 6 | **Is My** | Live-кроссфейдер + clock switcher | Оптический кроссфейд на вактролах + sync-triggers | 8 |
 | 7 | **Last Day** | Delay / Amp / EQ финализатор (предапокалипсис) | Oil can delay + Solar amp + Resonant EQ | 40 |
 | 8 | **And My** | Day ↔ Night crossfader | Двойной VCA с CV/manual balance | 8 |
-| 9 | **Last Night** | Reverb-финализатор (постапокалипсис) | Сменные резонаторные пластины | 40 |
+| 9 | **Last Night** | Reverb + phaser + vinyl FX (постапокалипсис) | Сменные пластины + 4-stage phaser + BBD vinyl wow | 40 (+ pedal SKU) |
 
 **Итого (Phase 1–4, без BBAS)**: 16 + 10 + 14 + 14 + 8 + 40 + 8 + 40 = **150 HP**.
 **Итого с BBAS (Phase 5, опц.)**: 150 + 20 = **170 HP**.
@@ -28,6 +28,8 @@
 Helps fit:
 - **150 HP без BBAS** — два ряда 84HP (168HP total) с запасом 18HP для utilities (mults, attenuverters).
 - **170 HP с BBAS** — нужен setup 84+84+84 (3 ряда) или skiff с большим pool.
+
+> **Примечание о форм-факторе**: Last Night выпускается **в двух SKU** — Eurorack 40HP **и** Pedal (~178×119×38мм, ModFactor-class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only (Last Day тоже Eurorack only из-за solar cell + motor constraints).
 
 > Поэтический строй фразы распадается так:
 > *Я покажу тебе свет. Кровь и пот, пыль всех тел. Будь осторожен. Похуй бесполезный сон. Это мой последний день, и моя последняя ночь*
@@ -714,15 +716,18 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 - Erica Synths Sample Drum / Noise Engineering Sinc Bucina — дедикатед crossfaders, но без semantic tie к other modules.
 - **Pairing specifically Day↔Night финализаторы** — уникально по контексту, не по technology.
 
-## 9. LAST NIGHT — Ревербератор на сменных пластинах
+## 9. LAST NIGHT — Ревербератор на сменных пластинах + FX engine разрушения
 
-> *Постапокалипсис. Пустота, эхо, треск радиации, жёваная плёнка и старый граммофон.*
+> *Постапокалипсис. Пустота, эхо, треск радиации, фейзер заброшенного эфира, плавящаяся плёнка, проседающий мотор винила, gate/crush — звук разрушения.*
 
 ### Суть в одном абзаце
-Аналоговый ревербератор, использующий физические пластины (дерево, камень, металл, стекло, кость, карбон, нефрит, медь и др.) вместо DSP/пружин. Surface exciter возбуждает пластину аудиосигналом, два пьезо-датчика снимают резонанс. Сменные картриджи — каждый материал даёт уникальный тембр. Цель — постапокалипсис-звучание: пустота, дыхание руин, генератор треска (Geiger simulator — Phase 2 v2 addition) и имитация жёваной плёнки.
+Аналоговый ревербератор-симулятор разрушенного граммофона. Физические пластины (дерево, камень, металл, стекло, кость) вместо DSP — реальный resonance materials. Поверх натурального резонанса наслоены **постапокалиптические FX**: 4-stage analog phaser, vinyl wow/flutter (BBD pitch warp), Geiger noise generator (cluster-pattern impulses), gate/crush footswitch (signal destruction). Color preset slider даёт quick tone recall (warm/dark/mix banks).
 
-### Формат
-**40HP Eurorack** (canonical), опционально **pedal 190×122мм** (Eventide PitchFactor size). Одна PCB, одна схема. Название: "Last Night".
+### Формат — dual SKU
+- **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
+- **Pedal ~178×119×38мм** (Eventide ModFactor class) или **145×113×60мм** (Hologram Microcosm class) — 9V DC center-negative, charge pump для bipolar audio.
+- **Identical schematic, identical sound, identical cartridge spec**. Cartridges interchangeable между обеими SKU.
+- **Цена**: $499 budget / $649 premium для обеих SKU.
 
 ### Физический элемент
 Тонкая пластина, **вариативный формат**:
@@ -741,11 +746,11 @@ Resилиентные резиновые рельсы в раме картрид
 - **Piezo B**: то же, на противоположном конце face B (дальний сигнал — warm, diffuse).
 - **Соленоид**: сверху по центру, фетровый наконечник, 2мм spring-loaded adjustable zазор.
 
-### Архитектура схемы (15 блоков, ~158 компонентов после revision)
+### Архитектура схемы (20 блоков, ~200 компонентов с FX engine)
 
 ```
 J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
-  ├── DRY_SEND (к mix)
+  ├── DRY_SEND (к mix + DRY OUT jack)
   └── Pre-emphasis (shelving EQ, corner 3.2кГц)
         │
         ▼
@@ -759,32 +764,76 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
   Piezo A, B (mini-XLR shielded) → LSK489A dual JFET preamp (×23 gain)
         │
         ▼
-  Position crossfade (RV_POSITION) → De-emphasis → Tone LPF → LED clipper
+  Position crossfade (RV_POSIT) → De-emphasis
         │
         ▼
-  Envelope follower VCA (LM13700, τ 1–48мс attack, 10мс–1с decay)
+  HiPass + LowPass (dual filter, separate cutoff knobs)
         │
         ▼
-  Mix (dry + wet + noise + CV) → Output (L/R stereo, mini-XLR normalling)
+  ┌─── PHASER ───┐  4-stage OTA all-pass (LM13700 OTA2)
+  │ Phase/Flutter │  Phase/Flutter (feedback), DEPTH (mod amount), SPEED (LFO rate)
+  │ DEPTH, SPEED  │  Shape Form slider: triangle / sine / random / vinyl-skip
+  └───────┬───────┘
+          ▼
+  ┌── VINYL FX ──┐  BBD V3207 (1024-stage) с CV-controlled clock
+  │ wow/flutter   │  Pitch warp ±2%, sync с phaser SPEED
+  │ pitch warp    │
+  └───────┬───────┘
+          ▼
+  LED clipper (3× LED in series each polarity, ±5.4V threshold)
+          │
+          ▼
+  Envelope follower VCA (LM13700 OTA1, τ 1–48мс attack, 10мс–1с decay)
+          │
+          ▼
+  Mix (dry + wet + noise + CV)
+          │
+  ┌───────┴────────────────┐
+  │   COLOR slider          │  5-position vertical: COLOR/WARM/DARK/COLOR/MIX
+  │   (preset tone bank)    │  switches между банками EQ + saturation
+  └───────┬────────────────┘
+          ▼
+  ┌── GATE / CRUSH ──┐  Footswitch-activated
+  │ 4066 gate        │  Gate threshold cuts signal under level
+  │ LF398 sample-hold│  Crush downsamples + bit-reduces
+  └───────┬──────────┘
+          ▼
+  Output (MAIN L/R stereo, DRY OUT, WET OUT, EG OUT)
 
-  Feedback loop: wet_out → RV_FEEDBACK → SW_FREEZE → summing to driver
+  Feedback loop: wet_out → CARTRIDGE FEEDBACK pot → SW_FREEZE → summing to driver
     (с D_LIM1/D_LIM2 soft limiter, SPICE-verified stability)
 
-  Noise generator: BZX55C9V1 zener → gain × 100 → color filter → mix
-    (optional v2: + Geiger cluster pattern via ATtiny85 LFSR)
+  Noise generator: BZX55C9V1 zener (continuous hiss)
+                   ATtiny85 LFSR (Geiger cluster pulses)
+                   Selectable через COLOR (geiger) knob
+                   → color filter → mix
 
-  Solenoid damper: CV → R_DAM1 47к / R_DAM3 100к divider → Q5 2N7000 → solenoid
+  Solenoid damper: CV / EXP → R_DAM1 47к / R_DAM3 100к divider → Q5 2N7000 → solenoid
+
+  Pedal SKU only:
+    9V DC → TC1044S charge pump → ±9V audio rails
+    7805 → +5V для ATtiny85 + LEDs
+    Footswitches: TAP / GATE-CRUSH / BYPASS / FREEZE
 ```
 
-### Ключевые изменения относительно v2.1 (после аудита)
-- **LSK489A dual JFET** вместо 2×2N5457 (EOL), автоматический matching между каналами.
-- **BZX55C9V1 zener** вместо BC547 reverse-breakdown (stable noise).
-- **Mini-XLR** для piezo cables вместо JST (shielding от solenoid EMI).
-- **R8 4.7Ω 5W wirewound** (не 1/4W) — survives 3.8Вт rassipated power.
-- **R_DAM1 47к** (не 100к) — solid MOSFET turn-on при CV 5В.
-- **Class AB bias** в push-pull (2× 1N4148 diodes) — no crossover distortion.
-- **C_DC 1000µФ** (не 220µФ) — bass extension до 18Гц.
-- **Envelope follower τ**: С_ENV 220нФ + RV_ATK 220к → attack 1–48мс (музыкально).
+### Ключевые изменения от v2.1 → v3.0
+- **+5 новых блоков**: phaser, vinyl FX (BBD), gate/crush, Color preset slider, charge pump (pedal).
+- **Dual SKU**: Eurorack 40HP + Pedal ModFactor-class, identical schematic.
+- **MCU integration**: ATtiny85 для Geiger noise patterns + crush clock + tap-tempo.
+- **Dual filter**: separate HiPass + LowPass (вместо single tone).
+- **Stereo + dry/wet split outputs**: MAIN L+R + DRY OUT + WET OUT + EG OUT.
+- **CV patch bay**: ~21 mini-jacks для full automation.
+- **Footswitch performance**: TAP, GATE/CRUSH, BYPASS, FREEZE.
+
+### Ключевые исправления (post-audit, сохранены)
+- **LSK489A dual JFET** вместо 2×2N5457 (EOL).
+- **BZX55C9V1 zener** для stable analog noise (continuous hiss).
+- **Mini-XLR** для piezo cables (shielding от solenoid EMI).
+- **R8 4.7Ω 5W wirewound** — survives 3.8Вт.
+- **R_DAM1 47к** — solid MOSFET turn-on.
+- **Class AB bias** в push-pull (2× 1N4148 diodes).
+- **C_DC 1000µФ** — bass extension до 18Гц.
+- **Envelope follower τ**: 1–48мс attack, 10мс–1с decay.
 
 ### Картриджная система
 
