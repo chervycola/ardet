@@ -1184,16 +1184,591 @@ Customer keeps for warranty + future reference.
 
 ## Тестирование
 
-_Заполняется следующим коммитом._
+Phased validation protocol для прототипа. Не переходить к следующей phase, пока предыдущая не passed.
+
+(Полная версия — `audit/fixes/04_testing_protocol.md`. Здесь — concise summary для production reference.)
+
+### Phase 0 — Visual + DMM continuity
+
+- Visual inspection components (10× loupe).
+- DMM short-circuit test: no shorts на ±12V rails.
+- Polarized components verified.
+
+**Pass**: no shorts, joints clean.
+
+### Phase 1 — Power validation
+
+- Idle current per rail: <100мА.
+- ±12V на каждом IC pin (with 1N5817 drop ~0.4V → ±11.6V actual).
+- Decoupling ripple <10мВ pp.
+
+**Pass**: rails stable, IC powered.
+
+### Phase 2 — Per-block functional test
+
+Test each block sequentially (T2.1 — T2.12 in `04_testing_protocol.md`):
+
+| Test | Result |
+|------|--------|
+| T2.1 Input buffer + pre-emph | BUF_OUT == input, shelf @3.2кГц working |
+| T2.2 Driver + push-pull | No crossover notch (with bias diodes) |
+| T2.3 R8 thermal (10 min @ full drive) | <80°C surface |
+| T2.4 Exciter + pickup | Signal на piezo outputs at expected level |
+| T2.5 Feedback / freeze | No runaway oscillation на oak cartridge |
+| T2.6 Position crossfade | Audible timbral shift через knob |
+| T2.7 Tone filter | LPF cutoff sweep |
+| T2.8 LED clipper | Clip threshold +10.6 dBu |
+| T2.9 Envelope follower VCA | Dynamic response к input |
+| T2.10 Noise generator | Hiss audible, color sweep |
+| T2.11 Mix section | Dry + wet + noise summing |
+| T2.12 Solenoid damper | Activates на CV 5V, audible damping |
+
+**Pass**: all blocks functional individually.
+
+### Phase 3 — Noise floor measurement
+
+Equipment: spectrum analyzer or RTA software (REW free).
+
+**T3.1 Input-shorted noise floor**:
+- Short J_IN.
+- Mute cartridge mechanically.
+- Spectrum 20Hz–20кГц.
+- **Target**: budget <-85 dBV, premium <-95 dBV.
+
+**T3.2 Solenoid-active noise**:
+- Pulse CV_DAMP @ 10Hz.
+- Click peak should be <-70 dBV.
+
+**T3.3 THD**:
+- 1кГц sine 100мВ input.
+- THD measurement.
+- **Target**: <0.5% at moderate drive.
+
+**Pass**: noise floor and THD within targets.
+
+### Phase 4 — Acoustic verification
+
+**T4.1 RT60 measurement**:
+- Reference oak cartridge installed.
+- Impulse burst input.
+- Record decay.
+- **Target**: 0.1–0.3с (without feedback).
+
+**T4.2 Material A/B comparison**:
+- Test 3+ cartridges (oak, marble, spring steel).
+- A/B comparison via swap.
+- **Pass**: clearly audible different character.
+
+**T4.3 Exciter thermal**:
+- 30 min continuous use.
+- Voice coil <60°C.
+
+**Pass**: realistic acoustic claims, no overheating.
+
+### Phase 5 — Integration (Eurorack)
+
+- Install в rack с other modules.
+- Standard signal chain: VCO → VCF → Last Night → Out.
+- CV inputs work с external CV sources.
+- No interference с neighbors (motor, solenoid emission).
+
+**Pass**: works в context.
+
+### Phase 6 — 24-hour burn-in
+
+- Continuous signal 24 hours.
+- Measure key parameters every 6 hours: rail voltages, noise, THD, RT60.
+- **Pass**: all parameters stable ±10% over 24h.
+
+### Production QC (per unit)
+
+Each unit gets:
+1. Phase 0 (visual + DMM): mandatory.
+2. Phase 1 (power): mandatory.
+3. Phase 2 brief (subset T2.1, T2.2, T2.4, T2.12): mandatory.
+4. Phase 3 brief (T3.1 noise floor): mandatory.
+5. Calibration certificate generated.
+6. Burn-in 4 hours minimum (subset of Phase 6).
+
+**Time budget per unit** (production line): ~2 hours QC + 4 hours burn-in (parallel).
 
 ## Troubleshooting
 
-_Заполняется следующим коммитом._
+Common issues и their resolutions, organized by symptom.
+
+### No power on (idle current zero or extremely high)
+
+**Symptom**: at power-on, no LED activity, ICs не powered.
+
+**Diagnosis**:
+1. Check J_PWR connection — Eurorack ribbon orientation correct?
+2. Measure ±12V at IDC connector — present?
+3. Check 1N5817 reverse protection — possibly shorted (failed mode).
+
+**Common causes**:
+- Reversed power cable (red stripe wrong side).
+- Shorted decoupling capacitor (X7R failure rare but possible).
+- Reversed electrolytic explodes — visual inspection.
+
+**Fix**: replace shorted component, verify polarity, retry.
+
+### Idle current draw >150mA
+
+**Symptom**: power on but high current draw.
+
+**Diagnosis**:
+1. Measure current per rail (insert ammeter).
+2. Check IC temperatures с finger touch — hot IC = problem.
+3. DMM шорт-test specific zones.
+
+**Common causes**:
+- IC inserted backwards (pin 1 reversed).
+- Solder bridge between IC pins.
+- LM13700 incorrectly biased (Iabc shorted).
+
+**Fix**: fix wiring, replace IC if damaged.
+
+### No audio output
+
+**Symptom**: power OK, but silence на J_OUT_L.
+
+**Diagnosis**:
+1. Probe BUF_OUT (after U1A) — input present?
+2. If yes, probe through chain: PE_OUT → CLIP_NODE → VCA_BUF_OUT → MIX → J_OUT.
+3. Find где signal disappears.
+
+**Common causes**:
+- Bad solder joint в signal path.
+- IC failure (replace if BUF_OUT silent при present input).
+- DRY_SEND pot issue (wiper dirty).
+
+**Fix**: trace signal, identify bad junction.
+
+### Hum 50/60Hz
+
+**Symptom**: audible mains hum в output.
+
+**Diagnosis**:
+1. Listen с input shorted vs не shorted — is hum dependent on input?
+2. Probe AGND vs DGND difference voltage.
+3. Inspect physical layout для ground loops.
+
+**Common causes**:
+- Ground loop через chassis / shared PSU.
+- Star-ground point not properly tied.
+- Power supply ripple bleed-through.
+
+**Fix**:
+- Verify single-point ground at J_PWR.
+- Add LC filter post-TMA1212D (if pedal version).
+- Check PCB für AGND/DGND breaks.
+
+### Click / pop при solenoid activation
+
+**Symptom**: every time CV_DAMP активирует solenoid → click в audio output.
+
+**Diagnosis**:
+1. Probe piezo preamp output during solenoid pulse.
+2. Click present? → EMI coupling.
+3. Click absent? → mechanical thump from solenoid hitting plate, normal.
+
+**Common causes (electrical)**:
+- Mini-XLR not properly shielded (shield not connected).
+- Cartridge cable too long without shielding.
+- D_SOL flyback диод incorrect orientation (reversed).
+
+**Fix**:
+- Verify mini-XLR pin 1 = shield, connected to AGND on module side only.
+- Add ferrite bead на solenoid +12V supply line.
+- Replace D_SOL if reversed.
+
+### Self-oscillation runaway
+
+**Symptom**: high RV_FEEDBACK → uncontrollable oscillation, no decay.
+
+**Diagnosis**:
+1. Cartridge material? High Q (titanium, spring steel) → expected.
+2. Oak / wood cartridge → unexpected, check loop.
+
+**Common causes**:
+- Loop gain too high (R_FS3 47k normal — change to 33k if oscillation).
+- D_LIM diodes missing or reversed.
+- SPICE simulation never done — true root cause unknown.
+
+**Fix**:
+- Verify D_LIM1, D_LIM2 в parallel и opposite polarity.
+- Add notch filter in feedback path (если specific freq oscillates).
+- Reduce R_FS3 от 47k к 33k.
+
+### Solenoid не activates
+
+**Symptom**: CV applied, no click from solenoid.
+
+**Diagnosis**:
+1. Measure gate voltage on Q5 при CV 5V — should be ~3.4V.
+2. Measure solenoid coil resistance (should be ~10–30Ω).
+3. Verify D_SOL flyback installed correctly.
+
+**Common causes**:
+- R_DAM1 still 100kΩ (not 47kΩ as revised). Gate voltage too low.
+- 2N7000 has high Vth specimen (>3V).
+- Solenoid coil burned out.
+- Cartridge не connected (no solenoid coil presence).
+
+**Fix**:
+- Replace R_DAM1 → 47kΩ.
+- Replace Q5 если Vth too high (test specimen).
+- Verify cartridge connection.
+
+### One channel dead (стерео)
+
+**Symptom**: J_OUT_L работает, J_OUT_R silent (или vice versa).
+
+**Diagnosis**:
+1. Probe PREAMP_A_OUT и PREAMP_B_OUT — both signals present?
+2. If one silent → JFET preamp failure.
+
+**Common causes**:
+- LSK489A damaged (one channel of dual JFET).
+- Bad piezo соединение (solder cold joint).
+- Mini-XLR cable break (shielded coax internal break).
+
+**Fix**:
+- Test piezo с DMM (should give millivolts when tapped).
+- Replace LSK489A.
+- Replace cartridge cable.
+
+### Distortion на line-level signal
+
+**Symptom**: clean input → distorted output.
+
+**Diagnosis**:
+1. Watch CLIP LEDs (D1-D6) — lit?
+2. If yes, signal exceeds clip threshold.
+3. Check input level meter — too hot?
+
+**Common causes**:
+- Single LED installed instead of 3-in-series (clip threshold too low).
+- Push-pull biasing diodes missing → crossover distortion.
+- BD139/BD140 thermal runaway.
+
+**Fix**:
+- Replace D1-D6 с 3 LEDs in series each direction.
+- Install bias diodes в push-pull.
+- Add thermal pads to BD transistors.
+
+### Hiss above noise floor target
+
+**Symptom**: noise floor higher than -85 dBV (budget) or -95 dBV (premium).
+
+**Diagnosis**:
+1. Spectrum analysis — broadband or specific tones?
+2. Test с input shorted vs floating.
+3. Inspect JFET preamp area для guard ring integrity.
+
+**Common causes**:
+- Mini-XLR shield not connected.
+- JFET LSK489A defective или wrong replacement (not LSK489 specifically).
+- Power supply noise bleeding through.
+
+**Fix**:
+- Verify cable shielding integrity.
+- Test LSK489A с continuity meter.
+- Add additional 10µF ceramic decoupling near LM13700.
+
+### Wood cartridge sounds "thin"
+
+**Symptom**: oak cartridge sounds tinny, no body.
+
+**Diagnosis**:
+1. Visual: plate intact, exciter mounted properly?
+2. Tap test on plate — does plate ring with full body sound?
+
+**Common causes**:
+- Exciter detached от plate (epoxy failed) — only thin sound from imperfect coupling.
+- Plate cracked.
+- Exciter shorted (full power not transferring).
+
+**Fix**:
+- Re-mount exciter with M3 bolt + rubber gasket.
+- Replace plate если cracked.
+- Test exciter resistance (~4Ω) с DMM.
 
 ## Sourcing & supply chain
 
-_Заполняется следующим коммитом._
+### Critical components (sole или dual source)
+
+| Part | Primary source | Backup | Lead time | Notes |
+|------|---------------|--------|-----------|-------|
+| **LSK489A** | Linear Integrated Systems (LIS) via Mouser | 2SK209 GR (Toshiba) — different footprint | 2-4 weeks | Core noise component. Order buffer stock 50+. |
+| **DAEX25FHE-4** | Dayton Audio (Parts Express) | Visaton FRS 5X (alt geometry) | 1-2 weeks | Often in stock, sometimes backorder. |
+| **DAEX32Q-4** | Dayton Audio | Visaton EX 60 S | 1-2 weeks | Premium-tier exciter. |
+| **Switchcraft TA3M / TA3F** | Mouser, Digi-Key | Rean NYS321/322 (lower cost) | 1 week | Standard mini-XLR. |
+| **Alpha RV09 9mm** | Thonk, SmallBear, eBay | Bourns 16mm (different footprint) | 2-4 weeks | Eurorack standard. Order in bulk. |
+
+### Standard components (multi-source)
+
+| Part | Sources |
+|------|---------|
+| TL072CP, TL074CN | TI, ON Semi, JRC. Mouser, Digi-Key, LCSC. |
+| LM13700N | TI direct. Mouser, Digi-Key. |
+| BD139 / BD140 | ON Semi, ST Micro. Multi-source. |
+| 2N7000 | Multiple, $0.10–0.25 каждый. |
+| BZX55C9V1 | Vishay, ON Semi. Multi-source. |
+| 1N4148, 1N4001, 1N5817 | Universal, $0.01–0.05 каждый. |
+| Ceramic / film capacitors | Murata, TDK, Wima — все доступны. |
+| Resistors | Yageo, Vishay — universal. |
+| LED Red 3мм | Multi-source. Verify Vf 1.8V (typical, sometimes variants 2.0V). |
+
+### Cartridge materials sourcing
+
+#### Wood (oak, maple, ebony)
+
+- Local carpenter or instrument-making lumber yard.
+- **Sample order первым делом**: 10× pieces oak 100×40×4мм с linseed oil finish.
+- Dimensional tolerance: ±0.5мм acceptable.
+- Lead time: 2-4 weeks for first batch.
+- Cost: $5-8 per piece для oak, $15-20 для ebony.
+
+#### Stone (marble, slate, granite)
+
+- Stone supplier (local kitchen counter shop).
+- Cut + polish 100×50×5мм marble: $25-35 per piece.
+- Order 10+ для batch discount.
+- Heavy shipping cost — local sourcing preferred.
+
+#### Metal (brass, spring steel, copper, titanium)
+
+- **Brass / copper**: metal supply distributor. Sheet stock cut к size.
+- **Spring steel**: spring manufacturer (Lee Spring, Smalley) — pre-cut blanks.
+- **Titanium**: aerospace-grade supplier (Online Metals). Premium price ($30-50/piece).
+
+#### Glass (Pyrex)
+
+- Laboratory glass supplier (specifies Pyrex / borosilicate).
+- Cut to 100×40×3мм specification.
+- Edge polishing recommended (prevents micro-cracks).
+- Lead time 4-6 weeks (custom cut).
+
+#### Bone
+
+- Cattle bone suppliers (food industry byproduct, ethical).
+- Scapula or rib bone, dried, polished.
+- Specialty supplier — sometimes from artisan craft markets.
+
+### PCB sourcing
+
+| Vendor | 2-layer 5pcs | 4-layer 5pcs | Lead time |
+|--------|--------------|--------------|-----------|
+| **JLCPCB** (China) | $5-15 | $30-50 | 1-2 weeks (incl. shipping) |
+| **PCBWay** (China) | $10-20 | $40-60 | 1-2 weeks |
+| **OSH Park** (US) | $25-40 | $80-120 | 2-3 weeks |
+| **Aisler** (EU) | €20-30 | €60-90 | 1 week (EU) |
+
+**Recommendation**: JLCPCB для prototype, PCBWay для production batch (better quality control).
+
+### Stencil (для SMD)
+
+LSK489A SMD requires solder paste application:
+- Stencil $15-25 from JLCPCB (with PCB order).
+- Manual application с syringe possible но slower.
+
+### Bulk pricing tiers
+
+При production scaling:
+
+| Quantity | Discount estimate |
+|----------|-------------------|
+| 1-10 (DIY) | Retail price |
+| 10-50 | -10-15% (small batch order) |
+| 50-100 | -20-25% (medium batch) |
+| 100+ | -30-40% (volume pricing, requires distributor account) |
+
+### Inventory recommendations
+
+For 50-unit Phase 1 production:
+- **LSK489A**: order 60 pieces (10% spare).
+- **DAEX25FHE-4**: order 60 (per cartridge — separate inventory).
+- **BD139, BD140**: 60 each.
+- **Mini-XLR pairs**: 60 (1 pair per module + spares).
+- **Pots**: 60×10 = 600 pots.
+- **Other passives**: 100-200% buffer (resistors, caps cheap).
+
+**Total inventory cost для 50-unit run**: ~$5,000-7,000.
+
+### Cartridge production batch
+
+For 50 cartridges (mixed catalog):
+- 12× oak (24%): $180 (carpenter).
+- 12× maple (24%): $200 (specialty wood).
+- 8× marble (16%): $280 (stone shop).
+- 10× brass (20%): $350 (metal supplier).
+- 5× spring steel (10%): $80 (spring manuf.).
+- 3× titanium (6%): $120 (premium).
+
+Total raw materials: ~$1,200 для 50 cartridges (~$24/unit average).
+Plus exciters, piezos, frames, packaging: +$30/unit.
+**Total per cartridge BOM**: ~$54-95 depending material.
 
 ## Производственные batch processes
 
-_Заполняется следующим коммитом._
+Optimized workflow для small batch (10-50 units) Phase 1 production.
+
+### Pre-production checklist
+
+1. **Schematic locked**: все revisions applied (см. fix list).
+2. **PCB design final**: ERC + DRC pass, gerbers ready.
+3. **BOM verified**: pricing checked, lead times confirmed.
+4. **Cartridge designs ready**: at least 6 first-batch cartridges specified.
+5. **Test fixtures built**: power tester, audio test rig, calibration jig.
+6. **Documentation ready**: assembly guide, calibration procedure, QC sheet template.
+
+### 50-unit batch workflow
+
+#### Day 1-3: Component intake
+
+- Receive PCB shipment (5pc × 10 batches = 50 units).
+- Receive component shipment (incl. LSK489A buffer stock).
+- Inspect parcels для damage.
+- Inventory count vs BOM.
+- Sort into per-unit kits (small bags or trays).
+
+#### Day 4-10: PCB assembly (5 PCBs / day, 10 days)
+
+- **Day 4**: SMD work (LSK489A solder paste + stencil + reflow). 5 PCBs.
+- **Day 5-9**: THT components — 5 PCBs/day, ~2.5 hours per PCB.
+- **Day 10**: Catch-up day for any rework needed.
+
+**Tools**:
+- Reflow oven (T-962A or upgrade) — $200-400.
+- Hot air rework station — $100-200.
+- Soldering iron 350°C, fume extractor.
+- Component dispensers (resistor / cap reels).
+
+#### Day 11-12: Power test + calibration
+
+- Per-unit power-on test (Phase 1 in testing protocol).
+- Per-unit calibration (R_SA bias, etc.).
+- 5 units per hour достижимо after first 10 как routine.
+- Generate calibration certificates.
+
+#### Day 13-15: Burn-in + QC
+
+- 24-hour burn-in test для каждого unit (parallel — multiple units in parallel).
+- Phase 2-3 testing per unit.
+- Identify any units failing → rework queue.
+
+#### Day 16-18: Cartridge production (parallel с burn-in)
+
+- 50 cartridges (mixed: 15 oak, 10 maple, 8 marble, 10 brass, 5 spring steel, 2 special).
+- Frame 3D printing: 50 frames × 2 hours each = 100 hours, 5 print farm может finish in 20 hours.
+- Plate finishing (sand, oil/shellac).
+- Exciter / piezo bonding.
+- Cable wiring + connector soldering.
+- Packaging.
+
+#### Day 19-20: Final assembly + packaging
+
+- Insert cartridges (one default oak per module).
+- Final inspection.
+- Pack: foam, manual card, calibration cert, warranty card, branded box.
+- Label с serial #.
+
+#### Day 21+: Shipping
+
+- Domestic: 3-5 days.
+- International: 1-3 weeks.
+
+### Total timeline для 50-unit batch
+
+**~21 working days** (4 weeks) от parts arrival к first ship.
+
+Solo / part-time effort: 8-12 weeks (working part-time).
+
+### Quality control gates
+
+- **PCB Gate**: visual + DMM short-test → reject если short found.
+- **Power Gate**: idle current >100mA → reject, debug.
+- **Calibration Gate**: cannot calibrate JFET bias → swap LSK489A.
+- **Audio Gate**: noise floor >-80 dBV → debug routing.
+- **Burn-in Gate**: drift >10% over 24h → reject, investigate.
+- **Final Gate**: cosmetic check, packaging integrity.
+
+**Acceptable failure rate**: <5% (should be <1% после first batch experience).
+
+### Production tools investment
+
+For 50-unit batch:
+- Reflow oven: $400.
+- Hot air station: $150.
+- Bench PSU ±12V: $200.
+- Multimeter (precision): $150.
+- Oscilloscope (basic 100MHz): $400.
+- Audio interface для testing: $200.
+- ESD mat + strap: $50.
+- Component storage cabinet: $150.
+
+**Total tools**: ~$1,700 one-time investment. Reuses across all future batches.
+
+### Profitability snapshot (50-unit Phase 1)
+
+**Revenue**:
+- 50 modules × $400 retail (premium SKU) = $20,000.
+- Or 50 × $350 budget = $17,500.
+- + 50 default cartridges (oak) × $80 = $4,000.
+- **Gross**: $21,500-24,000.
+
+**Costs**:
+- BOM (50 units × $80 average): $4,000.
+- Cartridges (50 × $50): $2,500.
+- PCBs (50 × $5): $250.
+- Labor (assembly): $0 (DIY) или $1,500 (contractor).
+- Shipping + packaging: $1,000.
+- **Total**: $7,750-9,250.
+
+**Net margin**: $12,000-15,000 (50-65% net).
+
+**Per-unit profit**: $240-300.
+
+Sufficient для Phase 2 R&D funding.
+
+### Scaling beyond 50 units
+
+При 100+ unit batches:
+- Consider contract assembly house (CM) for PCB pick-and-place.
+- Bulk order discounts kick in (-20-25%).
+- Marketing scale: hire VA для customer support.
+- Distribution: approach Schneidersladen, Control, Perfect Circuit.
+
+### Lessons learned (template for batch retrospectives)
+
+После каждого batch fill in:
+
+| Question | Answer |
+|----------|--------|
+| Failure rate | x% |
+| Most common defect | (e.g., cold solder joint X) |
+| Time over budget | x hours |
+| Process improvement next batch | (e.g., add stencil for THT) |
+| Customer feedback | (e.g., "need more cartridges") |
+
+---
+
+## Conclusion
+
+Last Night v2.2 — production-ready после applying 15 fixes из `audit/fixes/01_last_night_fix_list.md`.
+
+Single-unit DIY build: ~6 hours first time, ~2.5 hours experienced.
+
+50-unit batch: ~21 working days с standard small-batch DIY tooling.
+
+Per-unit BOM $70-82, retail $350-400, gross margin 80%, net margin 50-65%.
+
+**Roadmap**: Phase 1 ship 50 units → validate market → Phase 2 starts Last Day R&D.
+
+---
+
+*Last Night v2.2 — physical resonance, not algorithmic decay.*
+
+> Production-ready production document.
+> Source: `audit/wood_reverb_logical_schematic.html` + `audit/10_last_night_engineering.md` + `fixes/`.
