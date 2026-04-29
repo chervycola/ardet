@@ -25,7 +25,7 @@
 
 ## Логическая схема — 15 блоков
 
-Полная сигнальная цепь Last Night v3.0 разбита на **20 функциональных блоков**: 15 исходных + 5 новых (Geiger noise MCU, phaser, vinyl FX, gate/crush, charge pump для pedal SKU). Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
+Полная сигнальная цепь Last Night v3.0 разбита на **20 функциональных блоков**: 15 исходных + 5 новых (Geiger noise MCU, phaser, vinyl FX, gate/crush, isolated DC-DC для pedal SKU). Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
 
 Изменения от v2.0 (caркас) → v3.0 (current) помечены **[REVISED]** или **[NEW]**.
 
@@ -56,41 +56,69 @@ Power budget Eurorack:
 - Phaser + vinyl modulation circuits: 50мА.
 - **Total**: ~250мА steady, ~500мА peak.
 
-#### Pedal SKU — 9V DC + charge pump (NEW)
+#### Pedal SKU — 12V DC + isolated DC-DC (NEW)
+
+Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bliss). Это **same as Eurorack ±12V** после isolated DC-DC conversion → identical audio headroom между обеими SKU.
 
 ```
-  9V DC jack ──► D_P1 (1N5817 reverse protection)
-                          │
-                          ▼
-                       +9V rail ──┬── 7805 LDO ──► +5V (digital +МCU)
-                                  │
-                                  ▼
-                          TC1044S charge pump
-                                  │
-                          ┌───────┴───────┐
-                          ▼               ▼
-                      +9V audio       -9V audio
-                      (split rails — cleaner для audio path)
-                          │               │
-                      C_B1 10µF        C_B2 10µF
-                      C_B3 47µF        C_B4 47µF
-                          ▼               ▼
-                         GND             GND
+  12V DC jack (center-negative) ──► D_P1 (1N5817 reverse protection)
+                                          │
+                                          ▼
+                                       +12V rail ──┬── 7805 LDO ──► +5V (digital +МCU)
+                                                   │
+                                                   ▼
+                                           TRACO TMR 3-1212WI
+                                           (isolated DC-DC, 3W,
+                                            ±12V output, 125мА на rail)
+                                                   │
+                                                   ▼
+                                          ╔═══════ ISOLATION BARRIER ═══════╗
+                                          ║                                  ║
+                                          ▼                                  ║
+                                  ┌───────┴───────┐                          ║
+                                  ▼               ▼                          ║
+                              +12V audio     -12V audio                      ║
+                              (clean,        (clean,                          ║
+                               isolated      isolated                         ║
+                               от pedal-     от pedal-                        ║
+                               board GND)    board GND)                       ║
+                                  │               │                          ║
+                              C_B1 10µF        C_B2 10µF                      ║
+                              C_B3 47µF        C_B4 47µF                      ║
+                                  │               │                          ║
+                              [LC filter]     [LC filter]                     ║
+                              10µH + 10µF     10µH + 10µF                     ║
+                                                                              ║
+                              ╚═══════════════════════════════════════════════╝
 
-  Decoupling (same как Eurorack — 100nF per IC + 10µF на LM13700/MCU).
+  Decoupling: 100nF per IC + 10µF на LM13700/MCU (same as Eurorack).
 
-  External: 9V DC center-negative, 500мА min, regulated.
-  Compatible: Voodoo Lab Pedal Power 2+, Cioks DC7, MXR ISO-Brick.
+  External: 12V DC center-negative, 500мА min, regulated.
+  Compatible: Voodoo Lab Pedal Power 4×4 (12V outputs), Cioks DC7/DC10,
+              Eventide PowerMax, Strymon Zuma R300, MXR ISO-Brick (18V port).
 ```
+
+**DC-DC selection options**:
+
+| Part | Output | Current | Cost | Notes |
+|------|--------|---------|------|-------|
+| **TRACO TMR 3-1212WI** | ±12V | 125mA | $13 | **Recommended budget** — 3W class. |
+| **Recom RKD-1212-D** | ±12V | 250mA | $22 | Premium SKU — больше тока, audio-friendly noise specs. |
+| TRACO TMA1212D | ±12V | 83mA | $15 | **Insufficient** для full power budget — не использовать. |
+| RECOM RKE-0905D | ±5V | 100mA | $8 | Если accept reduced headroom (+5 dBu max). |
+
+**Recommend**: **TRACO TMR 3-1212WI** budget SKU, **Recom RKD-1212-D** premium SKU. Both isolated → break ground loops с другими pedals на pedalboard.
 
 **Power budget Pedal**:
-- Audio analog (±9V): 150мА (slightly reduced headroom но musical).
+- Audio analog (±12V): 150мА steady, 250мА peak.
 - Digital +5V: 50мА.
-- Solenoid pulse: 300мА (от +9V rail, low-side switched).
+- Solenoid pulse: 300мА peak (от +12V rail, low-side switched, intermittent).
 - LEDs + footswitch indicators: 30мА.
-- **Total**: ~350мА typical, ~600мА с solenoid pulse.
+- **Total**: ~250мА steady, **~500мА peak с solenoid + max FX**.
 
-> **Note**: TL072/TL074 spec'd для ±4.5V min, LM13700 для ±5V min. ±9V даёт sufficient headroom для audio (~+12 dBu max output без clipping). ±12V (Eurorack) даёт ~+15 dBu — больше headroom для extreme drive.
+> **Headroom benefit**: ±12V audio rails (через isolated DC-DC) дают **identical performance к Eurorack version** — same TL072/TL074/LM13700 spec'd at ±12V get full +15 dBu max output. Audio path **бит-в-бит идентичен** между обеими SKU.
+
+> **Isolation benefit**: isolated DC-DC ломает ground loops если customer запитан Last Night от той же PSU что и другие pedals. Standard Strymon/Empress/Eventide approach.
 
 ### Block 2. Input Buffer (U1A — TL072)
 
@@ -585,46 +613,76 @@ GATE/CRUSH латчinг footswitch активирует destruction effect post-
 - ATtiny85 (used dual-purpose for Geiger noise + crush clock): shared.
 - 6.3мм footswitch (3PDT для bypass + LED): $3.00.
 
-### Block 19. Charge Pump (Pedal SKU only — NEW)
+### Block 19. Isolated DC-DC (Pedal SKU only — NEW)
 
-Pedal version generates bipolar audio supply из 9V single-rail input.
+Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails через **isolated DC-DC module**. Это modern complex-pedal стандарт (Strymon TimeLine $449, Eventide H9, Meris LVX, Chase Bliss CXM 1978 — все на 12V).
 
 ```
-  9V DC jack (center-negative) ──► Reverse polarity protection (1N5817)
+  12V DC jack (center-negative) ──► D_P1 (1N5817 reverse protection)
                                           │
                                           ▼
-                                    +9V rail
+                                    +12V rail (для DC-DC + 5V LDO)
                                           │
                                   ┌───────┼──────────┐
                                   │       │          │
                                   ▼       ▼          ▼
-                            TC1044S    7805        Audio circuits
-                            charge pump  +5V       (split rails ±9V)
-                              │          (для
-                              ▼          ATtiny,
-                            -9V rail     LDO для MCU)
-                              │
-                  ┌───────────┴──────────┐
-                  │  Audio analog rails  │
-                  │  ±9V (audio path,    │
-                  │   reduced from ±12V  │
-                  │   но достаточно для  │
-                  │   TL072/74, LM13700) │
-                  └──────────────────────┘
+                          TRACO TMR 3-1212WI       7805 LDO ──► +5V
+                          (or Recom RKD-1212-D     (для ATtiny85,
+                           для premium)             logic)
+                                  │
+                          ╔═══════ ISOLATION ═══════╗
+                          ║                          ║
+                          ▼                          ║
+                  ┌───────┴───────┐                  ║
+                  ▼               ▼                  ║
+              +12V audio     -12V audio              ║
+              (isolated      (isolated               ║
+               от pedal-      от pedal-              ║
+               board GND)     board GND)             ║
+                  │               │                  ║
+              C_B1, C_B3      C_B2, C_B4             ║
+              (10µF + 47µF)   (10µF + 47µF)          ║
+                  │               │                  ║
+              [LC filter]     [LC filter]            ║
+              10µH + 10µF     10µH + 10µF            ║
+              (DC-DC switching ripple removal)        ║
+                                                     ║
+              ╚══════════════════════════════════════╝
 ```
 
-**Charge pump options**:
-- **TC1044S** (Microchip) — simple inverter, $0.80, suitable для low-current bipolar.
-- **TPS61240** (TI) — boost converter, может generate +9V из 0.7V (overkill, для solar).
-- **MAX1044** (alternative) — same as TC1044S.
+**DC-DC selection (specified в BOM)**:
 
-**Power budget pedal**:
-- Audio (±9V): ~150mA total.
-- Digital (+5V для ATtiny + LEDs): ~50mA.
-- Solenoid pulse: 300mA peak (от +9V rail, low-side switched).
-- **Total**: ~350mA typical, 500mA peak (с solenoid).
+| Part | Output | Current | Cost | SKU tier |
+|------|--------|---------|------|----------|
+| **TRACO TMR 3-1212WI** | ±12V | 125mA | $13 | **Budget** SKU. Sufficient для steady state. |
+| **Recom RKD-1212-D** | ±12V | 250mA | $22 | **Premium** SKU. Headroom для solenoid + FX peaks. Audio-rated noise specs. |
 
-**Required external supply**: 9V DC center-negative, **500mA min**, regulated. Voodoo Lab Pedal Power 2 Plus, MXR ISO-Brick, Cioks Big John — все compatible.
+**Why isolated DC-DC** (не charge pump):
+- **Higher current capability** (125–250mA vs ~50mA charge pump).
+- **Identical headroom к Eurorack** version (±12V rails везде).
+- **Ground loop break** — isolated barrier означает Last Night работает clean даже если запитан с других pedals на shared PSU.
+- **Lower switching noise** (TRACO/Recom audio-grade specs).
+
+**Why 12V DC pedal supply standard**:
+- Modern complex pedals (Strymon, Eventide, Meris, Chase Bliss) **все на 12V**.
+- Premium pedalboard PSUs все имеют 12V outputs (Voodoo Lab Pedal Power 4×4, Cioks DC7/DC10, Eventide PowerMax, Strymon Zuma).
+- 9V supply **не подходит** для headroom этого класса pedals (включая Last Night).
+
+**Power budget pedal (with TMR 3-1212WI)**:
+- Audio analog (±12V via DC-DC): ~125mA на rail steady, peak 250mA.
+- Digital +5V (для ATtiny85 + LEDs): ~50mA.
+- Solenoid pulse: 300mA peak (от +12V rail, low-side switched, intermittent).
+- LEDs + footswitch indicators: 30mA.
+- **Total**: ~250mA steady, ~500mA peak (с solenoid).
+
+**Required external supply**: **12V DC center-negative, 500mA min, regulated**. Cannot use 9V supplies. Recommended: dedicated 12V output на multi-pedal PSU.
+
+**Compatible PSUs (verified examples)**:
+- Voodoo Lab Pedal Power 4×4 (4× 12V outputs).
+- Cioks DC7 / DC10 (configurable 12V).
+- Eventide PowerMax (high current 12V).
+- Strymon Zuma R300 (12V outputs).
+- Truetone CS12 (12V).
 
 ### Block 20. Color Preset Slider (NEW — vertical 5-position)
 
@@ -663,7 +721,7 @@ Slider на левой стороне панели вибирает preset combi
 - **1 MCU**: ATtiny85 (Geiger noise + crush clock + tap-tempo).
 - **6 transistors**: LSK489A + BD139 + BD140 + 2× 2N7000 (solenoid + audio gate) + 1 spare.
 - **1 zener**: BZX55C9V1.
-- **1 charge pump** (pedal only): TC1044S.
+- **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
 
 **BOM increase для FX engine**: ~$15 над previous v2.2 baseline ($83 budget → ~$98 budget с FX). Premium SKU ~$130.
 
@@ -671,7 +729,7 @@ Slider на левой стороне панели вибирает preset combi
 
 ## Полный BOM
 
-Таблица закупок Last Night v2.2 — все компоненты для одного модуля. Цены ориентировочные (USD, retail small-quantity, Mouser/Digi-Key 2025).
+Таблица закупок Last Night v3.0 — все компоненты для одного модуля. Цены ориентировочные (USD, retail small-quantity, Mouser/Digi-Key 2025).
 
 ### Active components (ICs, transistors, diodes)
 
@@ -679,20 +737,66 @@ Slider на левой стороне панели вибирает preset combi
 |-----|-------------|----------|---------|-----|--------|---------|----------|
 | U1, U3 | TL072CP | Dual JFET-input op-amp | DIP-8 | 2 | $0.50 | $1.00 | TI / Mouser |
 | U2, U4 | TL074CN | Quad JFET-input op-amp | DIP-14 | 2 | $0.75 | $1.50 | TI / Mouser |
-| U5 | LM13700N | Dual OTA с linearizing diodes | DIP-16 | 1 | $2.00 | $2.00 | TI / Mouser |
+| U5, U6 | LM13700N | Dual OTA (U5=VCA, U6=phaser stages) | DIP-16 | 2 | $2.00 | $4.00 | TI / Mouser |
+| U_BBD | V3207D (or PT2399) | BBD delay line for vinyl wow / digital echo lo-fi | DIP-16 | 1 | $5.00 / $1.00 | $5.00 | Coolaudio / Princeton |
+| U_BBDCLK | V3102D (or 555) | BBD clock generator (paired with V3207) | DIP-8 | 1 | $3.00 | $3.00 | Coolaudio |
+| U_GATE | CD4066BE | Quad CMOS analog switch (gate cell + bypass) | DIP-14 | 1 | $0.40 | $0.40 | Multi-source |
+| U_SH | LF398N | Sample-and-hold (crush cell) | DIP-8 | 1 | $1.20 | $1.20 | TI |
+| U_COMP | LM393 | Dual comparator (gate threshold + tap detection) | DIP-8 | 1 | $0.30 | $0.30 | TI |
+| U_MCU | ATtiny85-20PU | MCU (Geiger LFSR + crush clock + tap-tempo) | DIP-8 | 1 | $1.50 | $1.50 | Microchip |
+| U_LDO | 7805 (or LM78L05) | +5V LDO для MCU | TO-220 (or TO-92) | 1 | $0.30 | $0.30 | Multi-source |
 | Q3 | LSK489A | Dual matched N-JFET | SOT-23-6 (SMD) | 1 | $6.00 | $6.00 | LIS / Mouser |
-| Q1 | BD139 | NPN BJT (50V, 1.5A) | TO-126 | 1 | $0.30 | $0.30 | ON Semi / Mouser |
-| Q2 | BD140 | PNP BJT (50V, 1.5A) | TO-126 | 1 | $0.30 | $0.30 | ON Semi / Mouser |
-| Q5 | 2N7000 | N-channel logic-level MOSFET | TO-92 | 1 | $0.15 | $0.15 | Multi-source |
-| D_NOISE | BZX55C9V1 | 9.1V zener (noise source) | DO-35 | 1 | $0.10 | $0.10 | Multi-source |
-| D_BIAS1, D_BIAS2 | 1N4148 | Signal diode (push-pull bias) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
-| D_LIM1, D_LIM2 | 1N4148 | Signal diode (feedback limiter) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
-| D_ATK, D_DEC | 1N4148 | Signal diode (envelope follower) | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| Q1 | BD139 | NPN BJT (push-pull NPN) | TO-126 | 1 | $0.30 | $0.30 | ON Semi |
+| Q2 | BD140 | PNP BJT (push-pull PNP) | TO-126 | 1 | $0.30 | $0.30 | ON Semi |
+| Q5 | 2N7000 | N-channel logic-level MOSFET (solenoid driver) | TO-92 | 1 | $0.15 | $0.15 | Multi-source |
+| D_NOISE | BZX55C9V1 | 9.1V zener (continuous hiss noise) | DO-35 | 1 | $0.10 | $0.10 | Multi-source |
+| D_BIAS1, D_BIAS2 | 1N4148 | Push-pull bias diodes | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| D_LIM1, D_LIM2 | 1N4148 | Feedback loop limiter | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
+| D_ATK, D_DEC | 1N4148 | Envelope follower diodes | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
 | D_EF | 1N4148 | Envelope rectifier | DO-35 | 1 | $0.01 | $0.01 | Multi-source |
 | D_SOL | 1N4001 | Solenoid flyback | DO-41 | 1 | $0.03 | $0.03 | Multi-source |
-| D_P1, D_P2 | 1N5817 | Schottky reverse protection | DO-41 | 2 | $0.20 | $0.40 | Multi-source |
+| D_P1, D_P2 | 1N5817 | Schottky reverse polarity protection | DO-41 | 2 | $0.20 | $0.40 | Multi-source |
 | D1–D6 | LED 3мм Red | Clip indicators (3 in series each polarity) | T-1 | 6 | $0.02 | $0.12 | Multi-source |
-| **Subtotal** | | | | | | **$11.97** | |
+| D_LED_FX | LED 3мм Red | Footswitch indicators (BYPASS, FREEZE, GATE, TAP) | T-1 | 4 | $0.02 | $0.08 | Multi-source |
+| **Subtotal active** | | | | | | **$23.95** | |
+
+### FX Engine new components (v3.0)
+
+| Ref | Part Number | Описание | Qty | Unit $ | Total $ |
+|-----|-------------|----------|-----|--------|---------|
+| RV_PHASE, RV_DEPTH | Alpha 9mm pot 100kΩ lin | Phaser feedback + depth | 2 | $1.20 | $2.40 |
+| RV_SPEED | Alpha 9mm pot 1MΩ log | Phaser/vinyl LFO rate | 1 | $1.20 | $1.20 |
+| RV_HIPASS | Alpha 9mm pot 100kΩ lin | HiPass filter cutoff | 1 | $1.20 | $1.20 |
+| RV_INPUT, RV_OUTPUT | Alpha 9mm pot 100kΩ lin | Input gain, output level | 2 | $1.20 | $2.40 |
+| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider for tone preset | 1 | $5.00 | $5.00 |
+| Shape Form slider (4P4T) | Alpha SL-4P4T | 4-position horizontal slider for LFO waveform | 1 | $5.00 | $5.00 |
+| **SWITCH CLIP** | SPDT toggle | Clip mode select | 1 | $1.50 | $1.50 |
+| Footswitches (3PDT × 4) | DPDT/3PDT mechanical | TAP, GATE/CRUSH, BYPASS, FREEZE | 4 | $3.00 | $12.00 |
+| **Subtotal FX engine** | | | | | **$30.70** |
+
+### Power supply (per SKU)
+
+**Eurorack SKU**:
+- IDC 2×5 connector: $0.50.
+- 1N5817 reverse protection: included above.
+- LC filter (10µH + 10µF): $1.00.
+
+**Pedal SKU** (additional):
+- DC barrel jack 2.1mm center-negative: $1.20.
+- **TRACO TMR 3-1212WI** isolated DC-DC (budget SKU): **$13.00**.
+- — or **Recom RKD-1212-D** (premium SKU): **$22.00**.
+- LC filter post-DC-DC (×2 rails): $2.00.
+
+### Заmена subtotal
+
+Subtotal active was $11.97 — увеличено с FX engine + DC-DC до:
+
+| Tier | Subtotal active+FX | Power | **Total active+FX+power** |
+|------|--------------------|-------|---------------------------|
+| Eurorack budget | $54.65 | $1.50 | **$56.15** |
+| Eurorack premium (4-layer PCB) | $54.65 | $1.50 | **$56.15** |
+| Pedal budget (TMR 3-1212WI) | $54.65 | $16.20 | **$70.85** |
+| Pedal premium (RKD-1212-D) | $54.65 | $25.20 | **$79.85** |
 
 ### Resistors (1/4W metal film 1% unless noted)
 
@@ -1599,7 +1703,7 @@ Common issues и their resolutions, organized by symptom.
 
 **Fix**:
 - Verify single-point ground at J_PWR.
-- Add LC filter post-TMA1212D (if pedal version).
+- Add LC filter post-DC-DC (TMR 3-1212WI / RKD-1212-D в pedal version) — снимает ~150кГц switching residue.
 - Check PCB für AGND/DGND breaks.
 
 ### Click / pop при solenoid activation
@@ -1744,6 +1848,14 @@ Common issues и their resolutions, organized by symptom.
 | **DAEX32Q-4** | Dayton Audio | Visaton EX 60 S | 1-2 weeks | Premium-tier exciter. |
 | **Switchcraft TA3M / TA3F** | Mouser, Digi-Key | Rean NYS321/322 (lower cost) | 1 week | Standard mini-XLR. |
 | **Alpha RV09 9mm** | Thonk, SmallBear, eBay | Bourns 16mm (different footprint) | 2-4 weeks | Eurorack standard. Order in bulk. |
+| **TRACO TMR 3-1212WI** | Mouser, Digi-Key | Recom RKD-1212-D, Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
+| **Recom RKD-1212-D** | Mouser, Digi-Key | TRACO TMR 3-1212WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
+| **V3207D BBD** | Coolaudio (multi-source via DSI/Behringer surplus) | PT2399 (digital echo, lo-fi alt) | 2-4 weeks | Vinyl wow tract. PT2399 cheaper alternative для concept fit. |
+| **V3102D BBD clock** | Coolaudio | NE555 + Schmitt (custom alternative) | 2-4 weeks | Paired с V3207. |
+| **ATtiny85-20PU** | Microchip via Mouser/Digi-Key | ATtiny45 (lower memory) | 1 week | Geiger LFSR + crush clock + tap-tempo. |
+| **CD4066BE** | TI, NXP. Multi-source. | DG412 (premium audio switch) | 1 week | Gate cell + bypass switching. |
+| **LF398N** | TI. Multi-source. | LF198 (industrial grade) | 1 week | Crush sample-hold cell. |
+| **3PDT footswitch** | Tayda, SmallBear, Mouser | DPDT (downgrade — no LED indicator) | 1-2 weeks | 4× per pedal SKU. |
 
 ### Standard components (multi-source)
 

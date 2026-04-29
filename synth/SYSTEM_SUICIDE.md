@@ -725,7 +725,7 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 
 ### Формат — dual SKU
 - **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
-- **Pedal ~178×119×38мм** (Eventide ModFactor class) или **145×113×60мм** (Hologram Microcosm class) — 9V DC center-negative, charge pump для bipolar audio.
+- **Pedal ~178×119×38мм** (Eventide ModFactor class) или **145×113×60мм** (Hologram Microcosm class) — **12V DC center-negative** (modern complex-pedal standard), isolated DC-DC (TRACO TMR 3-1212WI / Recom RKD-1212-D) → ±12V audio rails (identical headroom к Eurorack version).
 - **Identical schematic, identical sound, identical cartridge spec**. Cartridges interchangeable между обеими SKU.
 - **Цена**: $499 budget / $649 premium для обеих SKU.
 
@@ -811,13 +811,13 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
   Solenoid damper: CV / EXP → R_DAM1 47к / R_DAM3 100к divider → Q5 2N7000 → solenoid
 
   Pedal SKU only:
-    9V DC → TC1044S charge pump → ±9V audio rails
+    12V DC → TRACO TMR 3-1212WI isolated DC-DC → ±12V audio rails (identical к Eurorack)
     7805 → +5V для ATtiny85 + LEDs
     Footswitches: TAP / GATE-CRUSH / BYPASS / FREEZE
 ```
 
 ### Ключевые изменения от v2.1 → v3.0
-- **+5 новых блоков**: phaser, vinyl FX (BBD), gate/crush, Color preset slider, charge pump (pedal).
+- **+5 новых блоков**: phaser, vinyl FX (BBD V3207 или PT2399), gate/crush, Color preset slider, isolated DC-DC ±12V (pedal SKU only).
 - **Dual SKU**: Eurorack 40HP + Pedal ModFactor-class, identical schematic.
 - **MCU integration**: ATtiny85 для Geiger noise patterns + crush clock + tap-tempo.
 - **Dual filter**: separate HiPass + LowPass (вместо single tone).

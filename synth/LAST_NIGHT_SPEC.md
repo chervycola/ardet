@@ -105,7 +105,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - Last Night pedal (anodized aluminum corpus 178×119×38мм, или Microcosm-class 145×113×60мм для compact tier).
 - 1× wood cartridge (Oak raw, reference).
 - 1× shielded cartridge cable (mini-XLR + JST internal).
-- 9V DC center-negative pedal supply (regulated, 500mA) — **отдельно** или в premium bundle.
+- 12V DC center-negative pedal supply (regulated, 500mA min) — **отдельно** или в premium bundle. Compatible: Voodoo Lab Pedal Power 4×4 (12V output), Cioks DC10, Eventide PowerMax.
 - Quick start card + warranty card.
 
 Обе SKU делят: identical schematic, identical cartridge spec, identical sound. **Cartridges interchangeable** между Eurorack и pedal версиями.
@@ -118,7 +118,9 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - **Mount**: 3U × 40HP standard rack.
 
 **Pedal SKU**:
-- **Power**: 9V DC center-negative (universal pedalboard стандарт). Internal **charge pump** (TC1044S или TPS61240) → bipolar ±9V для audio rails. **500mA min supply current**.
+- **Power**: 12V DC center-negative (современный стандарт для complex pedals — Strymon, Eventide, Meris, Chase Bliss). Internal **isolated DC-DC** (TRACO TMR 3-1212WI или Recom RKD-1212) → bipolar ±12V audio rails. **500mA min supply current**.
+- **Identical audio headroom к Eurorack version** (±12V rails везде, same +15 dBu max output).
+- **Isolated DC-DC** также ломает ground loops с другими pedals на pedalboard — clean integration в любой rig.
 - **I/O**: 6.3мм TS jacks (main audio in/out), 3.5мм mini-jack (CV expansion patch bay).
 - **Bypass**: relay-buffered true bypass (no degradation when off).
 - **Dimensions**: ModFactor-class (178×119×38мм) или Microcosm-class compact (145×113×60мм).
@@ -271,7 +273,7 @@ Customer может start с pedal (для studio/live performance), позже 
 | **Maximum input** | +20 dBu (line level), +15 dBu typical |
 | **Maximum output** | +12 dBu |
 | **Power draw** (Eurorack) | ±12В, 250мА steady, 500мА peak |
-| **Power draw** (Pedal) | 9V DC, 350мА typical (включая phaser + vinyl + charge pump losses) |
+| **Power draw** (Pedal) | 12V DC, 350мА typical / 500мА peak (включая phaser + vinyl + DC-DC losses) |
 | **Feedback loop stability** | SPICE-verified для cartridges Q ≤ 1000 |
 | **Exciter peak power** | 3Вт sustained, 8Вт peak |
 
@@ -314,7 +316,7 @@ Layout соответствует mockup:
 │  ▣ TAP        ▣ GATE/CRUSH                       ▣ BYPASS    ▣ FREEZE        │
 │  (footswitch) (footswitch)                       (footswitch)(footswitch)    │
 │                                                                              │
-│                  9V DC ⊕━○━⊖    EXP IN  ⊙                                    │
+│                  12V DC ⊕━○━⊖    EXP IN  ⊙                                   │
 │  ◯                                                                       ◯   │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -326,7 +328,7 @@ Layout соответствует mockup:
 - **Color preset slider** vertical (5 positions) — quick tone preset selector.
 - **Shape Form slider** horizontal — phaser LFO waveform shape.
 - **SWITCH CLIP toggle** — soft/hard clipper mode.
-- **9V DC jack** + **EXP pedal jack** на rear (или нижний край).
+- **12V DC jack** (center-negative, 2.1мм barrel) + **EXP pedal jack** на rear (или нижний край).
 
 ### Раскладка панели — Eurorack SKU (40HP × 128.5мм)
 
@@ -739,7 +741,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 | Параметр | Значение |
 |----------|----------|
-| **Power supply** | ±12В Eurorack bus (или TRACO TMA1212D / TMA1215D в pedal) |
+| **Power supply** | ±12В Eurorack bus (modular) или 12V DC center-negative + TRACO TMR 3-1212WI / Recom RKD-1212-D isolated DC-DC (pedal) |
 | **Power consumption** | 200мА steady, 450мА peak (с solenoid pulse) |
 | **Audio input** | 1× 3.5мм TS, Hi-Z (1МΩ), max +20 dBu |
 | **Sidechain input** | 1× 3.5мм TS, line level |
@@ -825,12 +827,12 @@ Result: rhythmic pumping reverb wash, dub-style.
 - **HP**: 40HP — flagship size. Fits в 84HP, 104HP, 168HP racks (occupies нижнюю половину). Same size as Last Day (зеркальная пара).
 - **Depth clearance**: 65мм total — fits в стандартные case (Tiptop Mantis 60мм может не fit; Doepfer А-100 шкафы — yes).
 
-### Pedal совместимость (если выбран pedal SKU)
+### Pedal совместимость
 
-- **Power**: 12В DC center-negative, 2.1мм barrel jack. **NOT compatible с 9В стандарт pedalboard supply** — требуется 12В.
-- **Bypass**: relay-bypassed (не buffered) — нет signal coloration when off.
-- **TRS jacks**: I/O standard 6.3мм, CV inputs 3.5мм mini-jack.
-- **Footswitch**: BYPASS (latching), FREEZE (latching), TAP (momentary).
+- **Power**: **12V DC center-negative, 2.1мм barrel jack**, 500mA min, regulated. Это modern standard для complex pedals (Strymon TimeLine $449, Eventide H9 $499, Meris LVX $599, Chase Bliss CXM 1978 — все 12V). 9V supplies **не подходят** — нужны 12V outputs от pedalboard PSU. Compatible: Voodoo Lab Pedal Power 4×4, Cioks DC7/DC10, Eventide PowerMax, Strymon Zuma R300, MXR M238 ISO-Brick (на 18V port — внимание polarity).
+- **Bypass**: relay-bypassed buffered. Selectable true bypass через internal jumper.
+- **TRS jacks**: main I/O 6.3мм TS, CV inputs 3.5мм mini-jack patch bay.
+- **Footswitches**: TAP (momentary), GATE/CRUSH (latching), BYPASS (relay), FREEZE (latching).
 
 ### Compatible с другими SYSTEM SUICIDE модулями
 
