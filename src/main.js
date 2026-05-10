@@ -35,7 +35,7 @@ import { initShop, openShop } from './ui/shop.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
-import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
+import { init as initAchievements, getUnlocked, loadUnlocked, tickStillness } from './core/achievements.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
@@ -403,6 +403,7 @@ function updateGame() {
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   updateIdle(player.moving);
+  tickStillness(player.moving);
   checkWhisper(player, locations);
   updateParticles();
   updateWeather(getZone(player.x, player.y));

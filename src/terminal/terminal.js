@@ -4,6 +4,7 @@
 import { state } from '../core/state.js';
 import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
+import { getDefs, isUnlocked } from '../core/achievements.js';
 
 const termEl = document.getElementById('term');
 const inputEl = document.getElementById('ti');
@@ -206,9 +207,23 @@ const commands = {
   },
 
   ach() {
-    print(`ДОСТИЖЕНИЯ:
-> функция в разработке.
-> мох уже знает, что ты их собираешь.`, '#1a6b1a');
+    const defs = getDefs();
+    const lines = ['ДОСТИЖЕНИЯ:', ''];
+    let got = 0;
+    const total = Object.keys(defs).length;
+    for (const id of Object.keys(defs)) {
+      const d = defs[id];
+      const ok = isUnlocked(id);
+      if (ok) got++;
+      const mark = ok ? '★' : '·';
+      lines.push(`  ${mark} ${d.name}`);
+      lines.push(`     ${d.desc}`);
+      if (ok && d.note) lines.push(`     « ${d.note} »`);
+      lines.push('');
+    }
+    lines.push(`собрано: ${got} / ${total}`);
+    lines.push('мох считает за тебя.');
+    print(lines.join('\n'), '#1a6b1a');
   },
 
   map() {
@@ -289,10 +304,15 @@ function exec(cmd) {
   history.push(trimmed);
   historyIdx = history.length;
   print('> ' + trimmed, '#666');
+  events.emit('terminal.cmd', trimmed);
 
   const parts = trimmed.toLowerCase().split(/\s+/);
   const name = parts[0];
   const args = parts.slice(1);
+
+  if (name === 'read' || name === 'cat') {
+    if (args[0]) events.emit('terminal.read', args[0]);
+  }
 
   const fn = commands[name];
   if (fn) {
@@ -301,6 +321,7 @@ function exec(cmd) {
     // Try as a whois/read fallback (handles bare ".moss" etc.)
     const dbKey = name.replace(/^\./, '');
     if (termDb[dbKey]) {
+      events.emit('terminal.read', name);
       print(termDb[dbKey].text, termDb[dbKey].color);
     } else {
       print(`> команда не найдена: ${name}\n> введи help`, '#8b0000');
