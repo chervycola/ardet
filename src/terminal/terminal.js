@@ -76,7 +76,7 @@ const commands = {
 ФАЙЛЫ:
   .ardet .moss .fisher .alephs .angel
   .baseline .commons .cycle .convivial
-  .joy .observers .demiurge
+  .joy .observers .demiurge .infrastructure
 
   ↑/↓            — навигация по истории
   Esc            — выход`);
@@ -110,6 +110,7 @@ const commands = {
   .joy               [радость vs развлечение]
   .observers         [зашифрован]
   .demiurge          [три гипотезы]
+  .infrastructure    [гудим]
   MAP.SYS            [ПОВРЕЖДЁН]
   /secrets           [директория]
 

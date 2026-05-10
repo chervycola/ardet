@@ -61,6 +61,11 @@ const DEFS = {
     desc: 'Прочитан .fisher',
     note: 'Конец капитализма представить трудно. Конец света — уже наступил.',
   },
+  infrastructure: {
+    name: 'ИНФРАСТРУКТУРА',
+    desc: 'Прочитан .infrastructure',
+    note: '14-й пожар — тот, что генерирует текст про предыдущие 13.',
+  },
 };
 
 const unlocked = new Set();
@@ -102,6 +107,7 @@ export function init(flags, getLore) {
   events.on('terminal.read', (file) => {
     const k = (file || '').replace(/^\./, '').toLowerCase();
     if (k === 'fisher') unlock('hauntology');
+    if (k === 'infrastructure') unlock('infrastructure');
   });
   events.on('cat.sighted', (loc, count) => {
     if (count >= 5) unlock('cat');
