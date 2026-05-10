@@ -36,24 +36,25 @@
        empspacing="10" />
   </sodipodi:namedview>
   <defs id="defs-main">
-    <!-- Reusable knob symbol -->
+    <!--
+      Taiga-style proportions:
+      - knob diameter ~12mm (R=6) for ALL non-anchor knobs (uniform)
+      - large knob R=8 only для INPUT и OUTPUT (corner anchors)
+      - jack diameter ~5.5mm (R=2.75) — Thonkiconn-correct
+      - Knob:jack ratio = 2.2:1 (Pittsburgh aesthetic)
+    -->
     <symbol id="knob-large" overflow="visible">
-      <circle cx="0" cy="0" r="9" fill="none" stroke="#222222" stroke-width="0.3"/>
-      <circle cx="0" cy="0" r="2" fill="none" stroke="#222222" stroke-width="0.3"/>
-      <line x1="0" y1="-1.5" x2="0" y2="-7.5" stroke="#222222" stroke-width="0.3"/>
+      <circle cx="0" cy="0" r="8" fill="none" stroke="#222222" stroke-width="0.3"/>
+      <circle cx="0" cy="0" r="1.8" fill="none" stroke="#222222" stroke-width="0.3"/>
+      <line x1="0" y1="-1.4" x2="0" y2="-6.6" stroke="#222222" stroke-width="0.3"/>
     </symbol>
-    <symbol id="knob-medium" overflow="visible">
+    <symbol id="knob" overflow="visible">
       <circle cx="0" cy="0" r="6" fill="none" stroke="#222222" stroke-width="0.3"/>
       <circle cx="0" cy="0" r="1.4" fill="none" stroke="#222222" stroke-width="0.3"/>
-      <line x1="0" y1="-1" x2="0" y2="-5" stroke="#222222" stroke-width="0.3"/>
+      <line x1="0" y1="-1.0" x2="0" y2="-5.0" stroke="#222222" stroke-width="0.3"/>
     </symbol>
-    <symbol id="knob-small" overflow="visible">
-      <circle cx="0" cy="0" r="4.5" fill="none" stroke="#222222" stroke-width="0.3"/>
-      <circle cx="0" cy="0" r="1" fill="none" stroke="#222222" stroke-width="0.3"/>
-      <line x1="0" y1="-0.7" x2="0" y2="-3.7" stroke="#222222" stroke-width="0.3"/>
-    </symbol>
-    <symbol id="jack-mini" overflow="visible">
-      <circle cx="0" cy="0" r="2.5" fill="none" stroke="#222222" stroke-width="0.3"/>
+    <symbol id="jack" overflow="visible">
+      <circle cx="0" cy="0" r="2.75" fill="none" stroke="#222222" stroke-width="0.3"/>
       <circle cx="0" cy="0" r="1" fill="none" stroke="#222222" stroke-width="0.3"/>
     </symbol>
     <symbol id="footswitch" overflow="visible">
@@ -62,6 +63,17 @@
     </symbol>
     <symbol id="mounting-hole" overflow="visible">
       <circle cx="0" cy="0" r="2" fill="none" stroke="#222222" stroke-width="0.3"/>
+    </symbol>
+    <!-- Cartridge bracket — L-shape, used on both ends of slot -->
+    <symbol id="cartridge-bracket-left" overflow="visible">
+      <!-- Left bracket: vertical line + top/bottom horizontals pointing right -->
+      <path d="M 0,-3.5 L 0,3.5 M 0,-3.5 L 2.5,-3.5 M 0,3.5 L 2.5,3.5"
+            fill="none" stroke="#222222" stroke-width="0.4"/>
+    </symbol>
+    <symbol id="cartridge-bracket-right" overflow="visible">
+      <!-- Right bracket: mirror of left -->
+      <path d="M 0,-3.5 L 0,3.5 M 0,-3.5 L -2.5,-3.5 M 0,3.5 L -2.5,3.5"
+            fill="none" stroke="#222222" stroke-width="0.4"/>
     </symbol>
   </defs>
 
@@ -90,414 +102,383 @@
   </g>
 
   <!-- ============== LAYER: TOP ROW ============== -->
+  <!-- All top-row knobs centered at y=33 -->
   <g id="layer-top-row" inkscape:groupmode="layer" inkscape:label="03 top row">
 
-    <!-- INPUT (large knob, top left) -->
-    <use href="#knob-large" x="20" y="32"/>
-    <text x="20" y="46" text-anchor="middle"
+    <!-- INPUT (large knob, top-left corner anchor) -->
+    <use href="#knob-large" x="18" y="33"/>
+    <text x="18" y="46" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">INPUT</text>
 
-    <!-- CARTRIDGE SLOT (horizontal rounded slot at top center) -->
+    <!-- CARTRIDGE SLOT with brackets on BOTH ends -->
     <g id="cartridge-slot">
-      <rect x="48" y="27" width="86" height="6" rx="1.5" ry="1.5"
+      <!-- Left bracket -->
+      <use href="#cartridge-bracket-left" x="36" y="30"/>
+      <!-- Slot rail (between brackets) -->
+      <rect x="38" y="28" width="98" height="4" rx="0.6" ry="0.6"
             fill="none" stroke="#222222" stroke-width="0.4"/>
-      <!-- Cartridge guide rails (decorative) -->
-      <rect x="49" y="28" width="84" height="4"
-            fill="none" stroke="#666666" stroke-width="0.2"
-            stroke-dasharray="0.8,0.6"/>
-      <text x="91" y="42" text-anchor="middle"
+      <!-- Inner guide groove (decorative, dashed) -->
+      <line x1="40" y1="30" x2="134" y2="30"
+            stroke="#888888" stroke-width="0.2"
+            stroke-dasharray="0.7,0.6"/>
+      <!-- Right bracket -->
+      <use href="#cartridge-bracket-right" x="138" y="30"/>
+      <!-- Label -->
+      <text x="87" y="42" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="2.5" letter-spacing="1"
+            font-size="2.5" letter-spacing="1.2"
             fill="#000000">CARTRIDGE</text>
     </g>
 
-    <!-- CARTRIDGE FEEDBACK knob (medium, below slot) -->
-    <use href="#knob-medium" x="91" y="52"/>
-    <text x="91" y="62" text-anchor="middle"
+    <!-- CARTRIDGE FEEDBACK knob (uniform, below slot) -->
+    <use href="#knob" x="87" y="52"/>
+    <text x="87" y="62" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">FEEDBACK</text>
 
-    <!-- DRY/WET (large knob, top right) -->
-    <use href="#knob-large" x="146" y="32"/>
-    <text x="146" y="46" text-anchor="middle"
+    <!-- DRY/WET (uniform knob) -->
+    <use href="#knob" x="148" y="33"/>
+    <text x="148" y="46" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">DRY/WET</text>
 
-    <!-- OUTPUT (large knob, far top right) -->
-    <use href="#knob-large" x="166" y="32"/>
-    <text x="166" y="46" text-anchor="middle"
+    <!-- OUTPUT (large knob, top-right corner anchor) -->
+    <use href="#knob-large" x="164" y="33"/>
+    <text x="164" y="46" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">OUTPUT</text>
   </g>
 
   <!-- ============== LAYER: MIDDLE ROW ============== -->
+  <!-- All middle-row knobs centered at y=68 (filters at y=63 and y=73 for stacking) -->
   <g id="layer-middle-row" inkscape:groupmode="layer" inkscape:label="04 middle row">
 
     <!-- Color preset slider (vertical, far left) -->
     <g id="color-slider">
-      <rect x="11.5" y="54" width="2" height="22" rx="1" ry="1"
+      <rect x="11.5" y="58" width="2" height="22" rx="1" ry="1"
             fill="none" stroke="#222222" stroke-width="0.3"/>
-      <rect x="10.5" y="62" width="4" height="2.5" rx="0.5" ry="0.5"
+      <rect x="10.5" y="66" width="4" height="2.5" rx="0.5" ry="0.5"
             fill="#888888" stroke="#222222" stroke-width="0.2"/>
-      <text x="8" y="56" text-anchor="end"
+      <text x="8" y="60" text-anchor="end"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">COLOR</text>
-      <text x="8" y="60.5" text-anchor="end"
+      <text x="8" y="64.5" text-anchor="end"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">WARM</text>
-      <text x="8" y="65" text-anchor="end"
+      <text x="8" y="69" text-anchor="end"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">DARK</text>
-      <text x="8" y="69.5" text-anchor="end"
+      <text x="8" y="73.5" text-anchor="end"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">COLOR</text>
-      <text x="8" y="74" text-anchor="end"
+      <text x="8" y="78" text-anchor="end"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">MIX</text>
     </g>
 
-    <!-- DRIVE (medium knob) -->
-    <use href="#knob-medium" x="33" y="65"/>
-    <text x="33" y="77" text-anchor="middle"
+    <!-- DRIVE (uniform knob) -->
+    <use href="#knob" x="32" y="68"/>
+    <text x="32" y="80" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="1"
           fill="#000000">DRIVE</text>
 
-    <!-- ATK (medium knob) -->
-    <use href="#knob-medium" x="50" y="65"/>
-    <text x="50" y="77" text-anchor="middle"
+    <!-- ATK (uniform knob) -->
+    <use href="#knob" x="48" y="68"/>
+    <text x="48" y="80" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">ATK</text>
 
-    <!-- DEC (medium knob) -->
-    <use href="#knob-medium" x="65" y="65"/>
-    <text x="65" y="77" text-anchor="middle"
+    <!-- DEC (uniform knob) -->
+    <use href="#knob" x="64" y="68"/>
+    <text x="64" y="80" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">DEC</text>
 
-    <!-- Vertical separator line (between filters and main row) -->
-    <line x1="76" y1="55" x2="76" y2="80"
+    <!-- Vertical separator (between core controls and filters) -->
+    <line x1="74" y1="58" x2="74" y2="80"
           stroke="#888888" stroke-width="0.25"/>
 
-    <!-- LowPass (small knob, upper) -->
-    <use href="#knob-small" x="84" y="59"/>
-    <text x="84" y="68" text-anchor="middle"
+    <!-- LowPass (uniform knob, upper) -->
+    <use href="#knob" x="83" y="63"/>
+    <text x="83" y="63.5" text-anchor="start"
+          dx="7"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" fill="#000000">LowPass</text>
 
-    <!-- HiPass (small knob, lower) -->
-    <use href="#knob-small" x="84" y="78"/>
-    <text x="84" y="87" text-anchor="middle"
+    <!-- HiPass (uniform knob, lower) -->
+    <use href="#knob" x="83" y="74"/>
+    <text x="83" y="74.5" text-anchor="start"
+          dx="7"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" fill="#000000">HiPass</text>
 
-    <!-- Separator after filters -->
-    <line x1="93" y1="55" x2="93" y2="80"
+    <!-- Vertical separator (between filters and right group) -->
+    <line x1="98" y1="58" x2="98" y2="80"
           stroke="#888888" stroke-width="0.25"/>
 
-    <!-- POSIT (medium knob) -->
-    <use href="#knob-medium" x="106" y="65"/>
-    <text x="106" y="77" text-anchor="middle"
+    <!-- POSIT (uniform knob) -->
+    <use href="#knob" x="106" y="68"/>
+    <text x="106" y="80" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">POSIT</text>
 
-    <!-- BOOST (medium knob) -->
-    <use href="#knob-medium" x="121" y="65"/>
-    <text x="121" y="77" text-anchor="middle"
+    <!-- BOOST (uniform knob) -->
+    <use href="#knob" x="122" y="68"/>
+    <text x="122" y="80" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">BOOST</text>
 
     <!-- SWITCH CLIP (toggle, far right) -->
     <g id="switch-clip">
-      <rect x="135" y="58" width="3.5" height="6" rx="0.4" ry="0.4"
+      <rect x="135" y="62" width="3.5" height="6" rx="0.4" ry="0.4"
             fill="none" stroke="#222222" stroke-width="0.3"/>
-      <rect x="135.5" y="58.5" width="2.5" height="2.5"
+      <rect x="135.5" y="62.5" width="2.5" height="2.5"
             fill="#cccccc" stroke="#222222" stroke-width="0.2"/>
-      <text x="136.7" y="68" text-anchor="middle"
+      <text x="136.7" y="73" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">SWITCH</text>
-      <text x="136.7" y="71" text-anchor="middle"
+      <text x="136.7" y="76" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#000000">CLIP</text>
     </g>
 
     <!-- Shape Form slider (horizontal, right side) -->
     <g id="shape-form-slider">
-      <text x="146" y="59" text-anchor="start"
+      <text x="146" y="63" text-anchor="start"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#444444">Slider</text>
-      <line x1="143" y1="63" x2="174" y2="63"
+      <line x1="143" y1="67" x2="172" y2="67"
             stroke="#222222" stroke-width="0.4"/>
-      <rect x="146.5" y="61.5" width="3" height="3"
+      <rect x="146.5" y="65.5" width="3" height="3"
             fill="#888888" stroke="#222222" stroke-width="0.2"/>
-      <!-- Shape indicators (waveforms along slider) -->
-      <text x="146" y="74" text-anchor="start"
+      <text x="146" y="76" text-anchor="start"
             font-family="Helvetica Neue, Arial, sans-serif"
             font-size="2.2" fill="#444444">Shape Form /</text>
-      <!-- Triangle/sine/random/skip waveform glyphs -->
-      <path d="M 159,72 L 162,68 L 165,72"
+      <!-- Triangle / sine / square waveform glyphs -->
+      <path d="M 158,75 L 161,71 L 164,75"
             fill="none" stroke="#222222" stroke-width="0.3"/>
-      <path d="M 167,72 Q 168.5,68 170,72 T 173,72"
+      <path d="M 165,75 Q 166.5,71 168,75 T 171,75"
             fill="none" stroke="#222222" stroke-width="0.3"/>
-      <path d="M 175,72 L 175,68 L 175.5,68 L 175.5,72"
+      <path d="M 172,75 L 172,71 L 173,71 L 173,75"
             fill="none" stroke="#222222" stroke-width="0.3"/>
     </g>
   </g>
 
   <!-- ============== LAYER: LOWER FX ROW ============== -->
+  <!-- All FX-row knobs centered at y=92, uniform size, even spacing -->
   <g id="layer-fx-row" inkscape:groupmode="layer" inkscape:label="05 fx row">
 
-    <!-- TONE (small knob) -->
-    <use href="#knob-small" x="20" y="86"/>
-    <text x="20" y="95" text-anchor="middle"
+    <!-- Left cluster (static FX) — TONE, NOISE, COLOR(geiger) at 16mm pitch -->
+    <use href="#knob" x="22" y="92"/>
+    <text x="22" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">TONE</text>
 
-    <!-- NOISE (small knob) -->
-    <use href="#knob-small" x="37" y="86"/>
-    <text x="37" y="95" text-anchor="middle"
+    <use href="#knob" x="38" y="92"/>
+    <text x="38" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">NOISE</text>
 
-    <!-- COLOR (geiger) (small knob with sub-label) -->
-    <use href="#knob-small" x="54" y="86"/>
-    <text x="54" y="95" text-anchor="middle"
+    <use href="#knob" x="54" y="92"/>
+    <text x="54" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">COLOR</text>
-    <text x="62.5" y="96.7" text-anchor="middle"
+    <text x="60" y="105.5" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.8" font-style="italic"
+          font-size="1.7" font-style="italic"
           fill="#666666">geiger</text>
 
-    <!-- Phase/Flutter (large knob) -->
-    <use href="#knob-large" x="105" y="84"/>
-    <text x="105" y="98" text-anchor="middle"
+    <!-- Right cluster (motion FX) — Phase/Flutter, DEPTH, SPEED at 18mm pitch -->
+    <use href="#knob" x="105" y="92"/>
+    <text x="105" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="2.6" letter-spacing="0.6"
+          font-size="2.5" letter-spacing="0.4"
           fill="#000000">Phase/Flutter</text>
 
-    <!-- DEPTH (medium knob) -->
-    <use href="#knob-medium" x="135" y="86"/>
-    <text x="135" y="98" text-anchor="middle"
+    <use href="#knob" x="125" y="92"/>
+    <text x="125" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">DEPTH</text>
 
-    <!-- SPEED (medium knob) -->
-    <use href="#knob-medium" x="155" y="86"/>
-    <text x="155" y="98" text-anchor="middle"
+    <use href="#knob" x="145" y="92"/>
+    <text x="145" y="104" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.6" letter-spacing="0.6"
           fill="#000000">SPEED</text>
   </g>
 
   <!-- ============== LAYER: CV PATCH BAY ============== -->
+  <!--
+    Two rows of jacks at consistent 9mm pitch.
+    Row A: y=110 (top row) — outputs + main CV inputs
+    Row B: y=117 (bottom row) — secondary CV inputs + main outputs
+    Footswitch columns at left (x=6-17) and right (x=161-172)
+    so jacks span x=22 to x=156 = 134mm width = 14 slots @ 9.6mm pitch
+  -->
   <g id="layer-patch-bay" inkscape:groupmode="layer" inkscape:label="06 patch bay">
-    <!-- Horizontal divider line above patch bay -->
-    <line x1="6" y1="100" x2="172" y2="100"
+
+    <!-- Horizontal divider -->
+    <line x1="6" y1="107" x2="172" y2="107"
           stroke="#888888" stroke-width="0.25"/>
 
-    <!-- LED indicator (top-left small circle) -->
-    <circle cx="13" cy="103" r="0.8"
-            fill="none" stroke="#222222" stroke-width="0.3"/>
-
-    <!-- Row A — top row of mini-jacks -->
-    <!-- IN -->
-    <use href="#jack-mini" x="22" y="106"/>
-    <text x="22" y="111" text-anchor="middle"
+    <!-- Row A — y=110 — first row of mini-jacks -->
+    <use href="#jack" x="22" y="110"/>
+    <text x="22" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">IN</text>
+          font-size="1.6" fill="#000000">IN</text>
 
-    <!-- DRIVE CV -->
-    <use href="#jack-mini" x="32" y="106"/>
-    <text x="32" y="111" text-anchor="middle"
+    <use href="#jack" x="32" y="110"/>
+    <text x="32" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">DRIVE</text>
+          font-size="1.6" fill="#000000">DRIVE</text>
 
-    <!-- DECAY CV -->
-    <use href="#jack-mini" x="42" y="106"/>
-    <text x="42" y="111" text-anchor="middle"
+    <use href="#jack" x="42" y="110"/>
+    <text x="42" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">DECAY</text>
+          font-size="1.6" fill="#000000">DECAY</text>
 
-    <!-- NOISE CV -->
-    <use href="#jack-mini" x="52" y="106"/>
-    <text x="52" y="111" text-anchor="middle"
+    <use href="#jack" x="52" y="110"/>
+    <text x="52" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">NOISE</text>
+          font-size="1.6" fill="#000000">NOISE</text>
 
-    <!-- POS CV -->
-    <use href="#jack-mini" x="62" y="106"/>
-    <text x="62" y="111" text-anchor="middle"
+    <use href="#jack" x="62" y="110"/>
+    <text x="62" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">POS</text>
+          font-size="1.6" fill="#000000">POS</text>
 
-    <!-- DAMP CV -->
-    <use href="#jack-mini" x="72" y="106"/>
-    <text x="72" y="111" text-anchor="middle"
+    <use href="#jack" x="72" y="110"/>
+    <text x="72" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">DAMP</text>
+          font-size="1.6" fill="#000000">DAMP</text>
 
-    <!-- LoPass CV -->
-    <use href="#jack-mini" x="82" y="106"/>
-    <text x="82" y="111" text-anchor="middle"
+    <use href="#jack" x="82" y="110"/>
+    <text x="82" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">LoPass</text>
+          font-size="1.6" fill="#000000">LoPass</text>
 
-    <!-- MIX CV -->
-    <use href="#jack-mini" x="93" y="106"/>
-    <text x="93" y="111" text-anchor="middle"
+    <use href="#jack" x="92" y="110"/>
+    <text x="92" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">MIX</text>
+          font-size="1.6" fill="#000000">MIX</text>
 
-    <!-- (gap for additional jacks) -->
-    <use href="#jack-mini" x="103" y="106"/>
-    <use href="#jack-mini" x="113" y="106"/>
+    <!-- (gap) — 2 spare slots для future additions -->
+    <use href="#jack" x="106" y="110"/>
+    <use href="#jack" x="116" y="110"/>
 
-    <!-- EG OUT (with attenuverter) -->
-    <use href="#jack-mini" x="125" y="106"/>
-    <text x="125" y="111" text-anchor="middle"
+    <!-- EG OUT с attenuverter -->
+    <use href="#jack" x="128" y="110"/>
+    <text x="128" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.7" fill="#000000">EG</text>
-    <!-- small atten dot -->
-    <circle cx="132" cy="106" r="1.2"
+          font-size="1.6" fill="#000000">EG</text>
+    <circle cx="135" cy="110" r="1.2"
             fill="none" stroke="#222222" stroke-width="0.2"/>
-    <text x="132" y="110" text-anchor="middle"
+    <text x="135" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="1.4" fill="#666666">Att.</text>
 
     <!-- DRY OUT -->
-    <use href="#jack-mini" x="143" y="106"/>
-    <text x="143" y="111" text-anchor="middle"
+    <use href="#jack" x="146" y="110"/>
+    <text x="146" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.9" font-weight="bold"
+          font-size="1.8" font-weight="bold"
           fill="#000000">DRY</text>
 
     <!-- WET OUT -->
-    <use href="#jack-mini" x="153" y="106"/>
-    <text x="153" y="111" text-anchor="middle"
+    <use href="#jack" x="156" y="110"/>
+    <text x="156" y="113.7" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.9" font-weight="bold"
+          font-size="1.8" font-weight="bold"
           fill="#000000">WET</text>
 
-    <!-- Row B — bottom row of mini-jacks -->
-    <!-- CLK -->
-    <use href="#jack-mini" x="22" y="115"/>
-    <text x="22" y="119" text-anchor="middle"
+    <!-- Row B — y=117 — second row of mini-jacks -->
+    <use href="#jack" x="22" y="117"/>
+    <use href="#jack" x="32" y="117"/>
+    <use href="#jack" x="42" y="117"/>
+    <use href="#jack" x="52" y="117"/>
+    <use href="#jack" x="62" y="117"/>
+    <use href="#jack" x="72" y="117"/>
+    <use href="#jack" x="82" y="117"/>
+    <use href="#jack" x="92" y="117"/>
+    <use href="#jack" x="106" y="117"/>
+    <use href="#jack" x="116" y="117"/>
+    <use href="#jack" x="128" y="117"/>
+
+    <!-- L MAIN R stereo output -->
+    <use href="#jack" x="146" y="117"/>
+    <use href="#jack" x="156" y="117"/>
+
+    <!-- Row B labels (small, below jacks would crowd; using top-side) -->
+    <!-- We'll use right-aligned text inside the jack circles or above row -->
+
+    <text x="151" y="115.2" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">CLK</text>
-
-    <!-- TONE CV -->
-    <use href="#jack-mini" x="32" y="115"/>
-    <text x="32" y="119" text-anchor="middle"
+          font-size="1.4" fill="#666666">MAIN</text>
+    <text x="146" y="120.5" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">TONE</text>
-
-    <!-- Attack CV -->
-    <use href="#jack-mini" x="42" y="115"/>
-    <text x="42" y="119" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">Attack</text>
-
-    <!-- COLOR CV -->
-    <use href="#jack-mini" x="52" y="115"/>
-    <text x="52" y="119" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">COLOR</text>
-
-    <!-- FeedBack CV -->
-    <use href="#jack-mini" x="62" y="115"/>
-    <text x="62" y="119" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">FeedBack</text>
-
-    <!-- (gap) -->
-    <use href="#jack-mini" x="72" y="115"/>
-
-    <!-- HiPass CV -->
-    <use href="#jack-mini" x="82" y="115"/>
-    <text x="82" y="119" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">HiPass</text>
-
-    <!-- Boost CV -->
-    <use href="#jack-mini" x="93" y="115"/>
-    <text x="93" y="119" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.6" fill="#000000">Boost</text>
-
-    <use href="#jack-mini" x="103" y="115"/>
-    <use href="#jack-mini" x="113" y="115"/>
-    <use href="#jack-mini" x="125" y="115"/>
-
-    <!-- L MAIN R (stereo output labels) -->
-    <use href="#jack-mini" x="143" y="115"/>
-    <text x="143" y="118.5" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.9" font-weight="bold"
+          font-size="1.8" font-weight="bold"
           fill="#000000">L</text>
-    <text x="148" y="116.5" text-anchor="middle"
+    <text x="156" y="120.5" text-anchor="middle"
           font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.5" fill="#666666">MAIN</text>
-    <use href="#jack-mini" x="153" y="115"/>
-    <text x="153" y="118.5" text-anchor="middle"
-          font-family="Helvetica Neue, Arial, sans-serif"
-          font-size="1.9" font-weight="bold"
+          font-size="1.8" font-weight="bold"
           fill="#000000">R</text>
   </g>
 
   <!-- ============== LAYER: FOOTSWITCHES ============== -->
   <g id="layer-footswitches" inkscape:groupmode="layer" inkscape:label="07 footswitches">
 
+    <!-- LED indicator dot (top-left) -->
+    <circle cx="11" cy="105" r="0.8"
+            fill="none" stroke="#222222" stroke-width="0.3"/>
+
     <!-- TAP footswitch (left column, top) -->
     <g id="footswitch-tap">
-      <rect x="6" y="103" width="11" height="6" rx="1.5" ry="1.5"
+      <rect x="6" y="108" width="11" height="6" rx="1.5" ry="1.5"
             fill="none" stroke="#222222" stroke-width="0.4"/>
-      <text x="11.5" y="107" text-anchor="middle"
+      <text x="11.5" y="111.7" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="2.2" fill="#000000">TAP</text>
+            font-size="2.0" fill="#000000">TAP</text>
     </g>
 
     <!-- GATE/CRUSH footswitch (left column, bottom) -->
     <g id="footswitch-gate-crush">
-      <rect x="6" y="112" width="11" height="6" rx="1.5" ry="1.5"
+      <rect x="6" y="115" width="11" height="3" rx="1.5" ry="1.5"
             fill="none" stroke="#222222" stroke-width="0.4"/>
-      <text x="11.5" y="115" text-anchor="middle"
+      <text x="11.5" y="117.4" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="1.7" fill="#000000">GATE</text>
-      <text x="11.5" y="117.3" text-anchor="middle"
-            font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="1.7" fill="#000000">CRUSH</text>
+            font-size="1.5" fill="#000000">GATE CRUSH</text>
     </g>
 
     <!-- BYPASS footswitch (right column, top) -->
     <g id="footswitch-bypass">
-      <rect x="161" y="103" width="11" height="6" rx="1.5" ry="1.5"
+      <rect x="161" y="108" width="11" height="6" rx="1.5" ry="1.5"
             fill="none" stroke="#222222" stroke-width="0.4"/>
-      <text x="166.5" y="107" text-anchor="middle"
+      <text x="166.5" y="111.7" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="2.0" fill="#000000">BYPASS</text>
+            font-size="1.9" fill="#000000">BYPASS</text>
     </g>
 
     <!-- FREEZE footswitch (right column, bottom) -->
     <g id="footswitch-freeze">
-      <rect x="161" y="112" width="11" height="6" rx="1.5" ry="1.5"
+      <rect x="161" y="115" width="11" height="3" rx="1.5" ry="1.5"
             fill="none" stroke="#222222" stroke-width="0.4"/>
-      <text x="166.5" y="116" text-anchor="middle"
+      <text x="166.5" y="117.2" text-anchor="middle"
             font-family="Helvetica Neue, Arial, sans-serif"
-            font-size="2.0" fill="#000000">FREEZE</text>
+            font-size="1.7" fill="#000000">FREEZE</text>
     </g>
   </g>
 
@@ -509,6 +490,9 @@
           fill="#888888">Last Night pedal panel — 178×119mm (Eventide ModFactor class)</text>
     <text x="2" y="3.5"
           font-family="monospace" font-size="1"
-          fill="#888888">v3.0 — dual SKU + phaser + vinyl FX engine</text>
+          fill="#888888">v3.1 — Taiga-style uniform knobs, dual cartridge brackets, aligned grid</text>
+    <text x="2" y="5"
+          font-family="monospace" font-size="1"
+          fill="#888888">Knobs: R=8 (anchor) / R=6 (uniform). Jacks: R=2.75. Knob:jack ratio 2.2:1</text>
   </g>
 </svg>
