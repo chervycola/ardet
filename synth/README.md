@@ -35,8 +35,9 @@ synth/
 - `decisions/03_cartridge_standards.md` — 7 decisions cartridge.
 - `decisions/04_production_strategy.md` — 8 decisions business.
 - `decisions/05_and_my_respec.md` — And My как MOSFET-shaper из ESC + pilot remote.
-- `decisions/06_last_day_combine_concept.md` — Last Day как standalone-комбайн «раскалённого полудня».
-- `decisions/07_last_night_combine_concept.md` — Last Night как standalone-комбайн «холодной ночи», симметричный диптих к Last Day.
+- `decisions/06_last_day_combine_concept.md` — Last Day combine-архитектура (FX-палитра refined в 08).
+- `decisions/07_last_night_combine_concept.md` — Last Night combine-архитектура (FX-палитра refined в 08).
+- `decisions/08_refined_fx_palette.md` — refined FX-палитры обоих: Day = TAR/CICADA/EMBER, Night = NOISE/GEIGER bipolar + optional PHASER. Reframe «две атмосферы», не зеркало.
 
 ### 4. Для deep dive по конкретному модулю
 
@@ -60,7 +61,7 @@ synth/
 4. LFO missing from schematic but present on panel — need resolution.
 5. ~~Last Day form factor~~ — **решено** (Decision 06): Eurorack 40HP + pedal big-box на одной PCB, два корпуса.
 
-**Major decisions pending**: 25 items across 4 decision documents. Закрыты: And My (Decision 05), Last Day концепт (Decision 06), Last Night концепт (Decision 07). Открыто: respec сателлитов (ABD / FAS / Be Careful / I Show You Light) под anchor-комбайн-логику Day/Night; cartridge-стандарт обновление под унификацию между Day и Night.
+**Major decisions pending**: 25 items across 4 decision documents. Закрыты: And My (Decision 05), Last Day combine-architecture (06), Last Night combine-architecture (07), refined FX-палитры обоих (08). Открыто: respec сателлитов (ABD / FAS / Be Careful / I Show You Light) под anchor-комбайн-логику Day/Night; cartridge-стандарт обновление под унификацию между Day и Night.
 
 ## Schematic reference
 

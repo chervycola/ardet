@@ -1,8 +1,10 @@
 # Decision 06 — Last Day re-spec: «комбайн раскалённого полудня»
 
 **Дата**: 2026-05
-**Статус**: locked (заменяет Decision 02 «Last Day scope» по большинству пунктов)
+**Статус**: combine-архитектура locked; FX-палитра refined в **Decision 08** (см. CONTEXT NOTE ниже)
 **Тип**: концептуальный пересмотр модуля + переопределение эффектов «горячей палитры»
+
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 08)** — этот документ остаётся **анкером для combine-архитектуры** Last Day (форм-фактор 40HP+pedal share PCB, LED baseline + solar modulation overlay, dual capacitive read electrodes для stereo, tongue в сигнальном пути, perform 4 footswitches KILL/FREEZE/CRASH/DRAG). **FX-палитра пересмотрена**: MIRAGE / BLEACH / HEATWAVE откатаны (concept-архивные, возможные future add-ons); HAZE демотирован в sub-knob delay-секции; BLEACH абсорбирован в BRIGHT-режим solar amp; MIRAGE absorbed в новый EMBER (тлеющий vinyl). Текущий канон FX-палитры — `decisions/08_refined_fx_palette.md` + `SYSTEM_SUICIDE.md` §7 (refined version).
 
 ---
 

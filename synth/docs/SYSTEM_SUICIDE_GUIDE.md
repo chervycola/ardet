@@ -290,27 +290,31 @@ Live-кроссфейдер на вактролах. Optical opto-coupled crossf
 
 ## 7 · LAST DAY
 
-> *Жар полудня — масло, свет, ферриты, AM-голос из ионосферы, треск пустынного песка.*
+> *Выжженный полдень — масло, солнце, ферриты, цикады в траве, тлеющие vinyl.*
 
-Standalone-комбайн «раскалённого полудня»: полная аутентичная коробка эффектов в одной педали (40HP Eurorack + big-box pedal на одной PCB). Oil can delay (capacitive, Tel-Ray Adineko-style, **два read-электрода для стерео-tap'ов**) + starved-amp с LED baseline и солнечной модуляцией + resonant EQ с tongue-резонатором всегда в сигнальном пути. Поверх — шесть эффектов «горячего» словаря.
+Standalone-комбайн «выжженного полудня»: полная коробка эффектов в одной педали (40HP Eurorack + big-box pedal на одной PCB). Oil can delay (capacitive, Tel-Ray Adineko-style, **два read-электрода для стерео-tap'ов**) + starved-amp с LED baseline и солнечной модуляцией + resonant EQ с tongue-резонатором всегда в сигнальном пути. Поверх — три character-эффекта.
 
 ```
    ┌─ OIL CAN DELAY ──┐    ┌─ SOLAR AMP ─┐    ┌─ TONGUE EQ ─┐
    │ ▒▒▒ масло ▒▒▒    │    │   ☀ panel    │    │   ▬▬ tongue │
    │ BLDC motor       │    │   LED basel. │    │   inductor +│
    │ disk + 2× cap RD │ ─► │   + solar    │ ─► │   manual    │
-   │   (stereo taps)  │    │   modulation │    │   clamp     │
+   │   (stereo taps)  │    │   + BRIGHT   │    │   clamp     │
+   │   + HAZE wow     │    │     sat      │    │   sw oscill │
    └──────────────────┘    └──────────────┘    └─────────────┘
                     │              │
-                    └── HOT FX ────┘
-        HAZE  MIRAGE  BLEACH  TAR  CICADA  HEATWAVE
-       (per.) (apер.) (свет)  (вязк.) (песок) (AM-ион.)
+                    └── CHARACTER FX ──┘
+                TAR        CICADA       EMBER
+              (вязкость)  (кластерный) (тлеющий vinyl:
+                         треск,       crackle floor +
+                         насекомые ↔  pops + worn-groove
+                         песок)       pitch wobble)
 ```
 
-**Материал**: масло (delay), внутренний LED + солнечный свет (amp), феррит + steel-tongue (резонатор), AM-приёмник + антенна (HEATWAVE).  
-**Контролы**: TIME, FEEDBACK, TAP SPREAD, SUN, SOLAR, DRIVE, LOW/MID/HIGH EQ, CLAMP, HAZE, MIRAGE, BLEACH, TAR, CICADA, HEATWAVE, HEAT, DRY/WET.  
-**Перформ-словарь** (4 footswitches в pedal-форме, 4 кнопки + gate ins в Eurorack-форме): KILL / FREEZE / CRASH / DRAG.  
-**Голос**: жар, плавление, дрожание воздуха, кластерный сухой треск, дальние AM-голоса, вязкое залипание динамики. Каждый эффект — антипод элемента Last Night (симметричный диптих horячо ↔ холодно). Дуб-essential (KILL/CRASH/DRAG/TAR), ambient-essential (MIRAGE/FREEZE/HEATWAVE), noise-ready (self-oscillating tongue + BLEACH + CICADA в feedback).
+**Материал**: масло (delay), внутренний LED + солнечный свет (amp), феррит + steel-tongue (резонатор).  
+**Контролы**: TIME, FEEDBACK, TAP SPREAD, HAZE, HEAT, SUN, SOLAR, DRIVE, BRIGHT, LOW/MID/HIGH EQ, CLAMP, TAR, CICADA, EMBER, DRY/WET.  
+**Перформ-словарь** (4 footswitches в pedal-форме, 4 кнопки + gate ins в Eurorack): KILL / FREEZE / CRASH / DRAG.  
+**Голос**: жар, плавление, тлеющий vinyl, сухой кластерный треск, вязкая динамика. Дуб-essential (KILL/CRASH/DRAG/TAR), ambient-essential (EMBER/FREEZE/self-oscillating tongue), noise-ready (MID BOOST + FEEDBACK + BRIGHT + CICADA → Last Night).
 
 \newpage
 
@@ -359,9 +363,9 @@ VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-др
 
 ## 9 · LAST NIGHT
 
-> *Холодная ночь после конца — резонирующая материя, дыхание руин, треск радиации, голос мёртвой электросети, колокол в опустевшем соборе.*
+> *Холодные руины — резонирующая материя, шум радиации, колокол в опустевшем соборе.*
 
-Standalone-комбайн «холодной ночи»: полная аутентичная коробка эффектов в одной педали (40HP Eurorack + big-box pedal на одной PCB), симметричный диптих с Last Day. Physical-resonator reverb на сменных пластинах + dual piezo position crossfade + solenoid с двойной функцией (damper + striker). Поверх — восемь эффектов «холодного» словаря, каждый имеет парный антипод в hot palette Last Day.
+Standalone-комбайн «холодных руин»: полная коробка эффектов в одной педали (40HP Eurorack + big-box pedal на одной PCB), атмосферный диптих с Last Day. Physical-resonator reverb на сменных пластинах + dual piezo position crossfade + solenoid с двойной функцией (damper + striker). Поверх — bipolar NOISE/GEIGER character knob + optional PHASER.
 
 ```
               ┌─ EXCITER ─┐
@@ -378,11 +382,14 @@ Standalone-комбайн «холодной ночи»: полная аутен
            │                 │
            └────┬────────────┘
                 ▼
-        ┌─── COLD PALETTE FX ───┐
-        │ PULSE  FOG   FROST    │ ◄── damper/EQ/dynamics modulation
-        │ CHILL  GEIGER  HUM    │     (period/apериод/HF/dyn/tick/EMI)
-        └───────────┬───────────┘
-                    ▼
+        ┌─── CHARACTER ───────┐
+        │  NOISE ◄──╳──► GEIGER  │ ◄── bipolar knob:
+        │  (wash)  OFF  (tick)   │     CCW wash / CW ticks
+        │                        │
+        │       PHASER           │ ◄── optional immersion:
+        │   (swirling cold air)  │     4-stage analog OTA
+        └────────────┬───────────┘
+                     ▼
         ┌────────┐
         │ FB →   │  ◄── FB SEND/RETURN
         │ Last Day loop / external
@@ -394,19 +401,13 @@ Standalone-комбайн «холодной ночи»: полная аутен
 
 **Материал (сменные картриджи Phase 1)**: оак (raw/linseed), maple (shellac), мрамор, латунь, spring steel. Phase 2: ebony, нефрит, медь, стекло (Pyrex), кость, титан.
 
-**Cold palette эффекты (v3 design layer)**:
-- **PULSE** — periodic damper LFO, дыхание ночи (↔ HAZE)
-- **FOG** — apериодический damper drift, туман над руинами (↔ MIRAGE)
-- **FROST** — high-band absorber, холод съедает воздух (↔ BLEACH)
-- **CHILL** — expander с brittle release, хрупкая динамика (↔ TAR)
-- **GEIGER** — sparse single tick, радиация после события (↔ CICADA)
-- **HUM** — mains-hum antenna, голос мёртвой электросети (↔ HEATWAVE)
-- **STALL** — held damper, forced short decay (↔ DRAG)
-- **TOLL** — solenoid impulse strike, колокол в пустом соборе (↔ CRASH)
+**Character FX (refined v1)**:
+- **NOISE / GEIGER** — bipolar knob: центр = OFF, CCW = continuous wash шума (тонущее пространство), CW = sparse discrete ticks (счётчик Гейгера). NOISE COLOR sub-switch (white/pink/brown).
+- **PHASER** (optional v1 / v1.5) — 4-stage analog OTA после reverb wet, swirling cold air. PHASER + RATE + DEPTH.
 
-**Перформ-словарь** (4 footswitches в pedal-форме, 4 кнопки + gate ins в Eurorack-форме): KILL / FREEZE / TOLL / STALL.
+**Перформ-словарь** (4 footswitches в pedal-форме, 4 кнопки + gate ins в Eurorack): KILL / FREEZE / TOLL / STALL.
 
-**Голос**: пространственный отпечаток материала + холодное дыхание руин. Дерево — тёплый wooden room. Кость — narrow и harsh. Стекло — bright и кристаллический. Камень — long и каменный. Металл — индустриальный, shimmer. PULSE/FOG-модуляция damper'а делает хвост живым (ритмичное + случайное дыхание). GEIGER сыплет редкие тики, HUM подмешивает гудение мёртвой инфраструктуры. TOLL ударяет пластину как колокол, STALL обрезает хвост в drop. Дуб-essential (KILL/TOLL/STALL/CHILL), ambient-essential (PULSE/FOG/FROST/HUM/FREEZE), noise-ready (self-sustaining FEEDBACK + GEIGER cluster).
+**Голос**: пространственный отпечаток материала + радиационный фон. Дерево — тёплый wooden room. Кость — narrow и harsh. Стекло — bright и кристаллический. Камень — long и каменный. Металл — индустриальный, shimmer. NOISE/GEIGER даёт wash или sparse ticks (один материал, два режима — одна ручка). PHASER (если установлен) добавляет холодное кружение воздуха в хвосте. TOLL ударяет пластину как колокол, STALL обрезает хвост в drop. Дуб-essential (KILL/TOLL/STALL), ambient-essential (NOISE wash + PHASER + FREEZE), noise-ready (GEIGER ticks + self-sustaining FEEDBACK).
 
 \newpage
 

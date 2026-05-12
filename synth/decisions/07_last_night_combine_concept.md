@@ -1,8 +1,10 @@
 # Decision 07 — Last Night re-spec: «комбайн холодной ночи»
 
 **Дата**: 2026-05
-**Статус**: locked (симметричный pair к Decision 06; реконтекстуализирует Last Night под anchor-комбайн-логику)
+**Статус**: combine-архитектура locked; FX-палитра refined в **Decision 08** (см. CONTEXT NOTE ниже)
 **Тип**: концептуальный пересмотр модуля + введение «холодного» словаря эффектов
+
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 08)** — этот документ остаётся **анкером для combine-архитектуры** Last Night (форм-фактор 40HP+pedal share PCB, stereo committed, solenoid double-function DAMP+STRIKE, perform 4 footswitches KILL/FREEZE/TOLL/STALL, cartridge-стандарт унифицирован с Last Day). **FX-палитра пересмотрена**: PULSE / FOG / FROST / CHILL / HUM откатаны (concept-архивные, возможные future add-ons или отдельные сателлит-модули); GEIGER переинтерпретирован как **половина bipolar NOISE/GEIGER knob** (одна ручка, центр=OFF, CCW=NOISE wash, CW=GEIGER ticks); добавлен **optional PHASER** (4-stage analog OTA, swirling cold air immersion). Текущий канон FX-палитры — `decisions/08_refined_fx_palette.md` + `SYSTEM_SUICIDE.md` §9 (refined version). G-таблица в §7 переписана из «симметричный диптих» в «две атмосферы».
 
 ---
 
