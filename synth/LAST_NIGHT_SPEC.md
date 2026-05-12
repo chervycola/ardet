@@ -1003,6 +1003,6 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 ---
 
-*Last Night v2.2 — physical resonance, not algorithmic decay.*
+*Last Night v2.2*
 
-> *"All Bones Dust. Be Careful. Fuck Abandoned Sleep is my Last Day and my Last Night."*
+> *"I show you light, blood, bones, dust. Be Careful. Fuck Abandoned Sleep. Is my Last Day And my Last Night."*
