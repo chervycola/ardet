@@ -419,73 +419,72 @@ AUDIO B ──► Input B buffer ──► Vactrol B (LDR2) ──┘
 - Happy Nerding 3×VCA — classic op-amp VCA, no optical.
 - **Vactrol-based crossfader в Eurorack 6HP** — есть в DIY, но не в commercial market. Unique character.
 
-## 7. LAST DAY — Предапокалиптичный сатуратор: Oil Can Delay + Solar Amp + Resonant EQ
+## 7. LAST DAY — Комбайн раскалённого полудня: Oil Can Delay + Solar Amp + Resonant EQ + Hot-palette FX
 
-> *Если Last Night — холодная ночь после конца, то Last Day — раскалённый красный полдень апокалипсиса. Марево, гул проводов, повторяющиеся миражи.*
+> *Если Last Night — холодная ночь после конца, то Last Day — раскалённый красный полдень апокалипсиса. Марево над асфальтом, AM-голос из ионосферы, выжженный песок и треск цикад.*
+
+> Концепт реконтекстуализирован 2026-05 — см. `decisions/06_last_day_combine_concept.md`. Day и Night теперь два standalone-комбайна: каждый — полная аутентичная коробка эффектов в одной педали. Перекрытия с остальными семью модулями серии — фича, не баг; сателлиты будут переспеcаны отдельным декшном.
 
 ### Суть в одном предложении
-Тёплый финализатор-грелка: oil can delay (вращающийся диск в масляной ванне, **capacitive pickup по Tel-Ray принципу**), усилитель на фотоэлементе (питается светом), индуктивный EQ с физическим tongue-резонатором — всё пропитано жарой, гулом и деградацией. Зеркальная пара к Last Night.
+Самодостаточный комбайн "горячего" словаря: oil can delay (вращающийся диск в масле, **два capacitive read-электрода для стерео-tap'ов**), starved-amp с LED baseline + солнечной модуляцией, индуктивный EQ с tongue-резонатором всегда в сигнальном пути, и шесть эффектов раскалённого полудня (HAZE, MIRAGE, BLEACH, TAR, CICADA, HEATWAVE) + четыре перформ-жеста (KILL, FREEZE, CRASH, DRAG). Зеркальный диптих с Last Night.
 
 ### Формат
-**40 HP Eurorack only** (pedal version отложена — solar cell и motor несовместимы с pedal form-factor и power budget). RCA I/O для DJ usage возможны как option, но основной I/O — Thonkiconn 3.5мм.
+**40HP Eurorack + big-box pedal (~203×140мм) — одна PCB, два корпуса**. I/O комбинированное: TRS stereo + RCA stereo параллельно + 3.5мм mini-jack (modular). Переключатель уровня instrument / -10dBV / +4dBu. Pedal-форма имеет 4 footswitches (KILL / FREEZE / CRASH / DRAG); Eurorack-форма — соответствующие большие кнопки + CV/gate inputs.
 
 ---
 
-### A. SOLAR AMPLIFIER — усилитель, питаемый светом
+### A. SOLAR AMPLIFIER — LED baseline + солнечная модуляция
 
 #### Физический элемент
-Кремниевая солнечная ячейка (~50×50 мм) на лицевой панели. Открытая, незащищённая — реагирует на любой свет: солнце, лампу, стробоскоп, фонарик телефона, тень руки.
+Кремниевая солнечная ячейка (~50×50 мм) на лицевой стороне обеих форм-факторов (Eurorack panel / pedal top). Открытая, доступная руке, видимая как перформативный визуальный элемент.
 
-Параллельно **внутренний LED** ("SUN") обеспечивает baseline освещённости — модуль работает и в закрытой студии без внешнего света.
+**Внутренний LED ("SUN")** — обязательный baseline. Питает старва-каскад в гарантированном рабочем режиме. Модуль играет всегда — на сцене под прожекторами, в студии с лампой, на улице, в подвале.
 
 #### Принцип
-Фотоэлемент выполняет две функции:
 
-**1. Starved-supply modulation:** Напряжение solar cell (при освещении ~0.5–1В) через **low-voltage boost converter (TPS61240)** → ~3–6В → питание стока MOSFET-каскада. Чем больше света — тем больше headroom — тем чище звук. Мало света → каскад голодает → сатурация, компрессия, гармонические искажения.
+**LED baseline — primary supply path.** Внутренний LED через драйвер задаёт стабильное напряжение питания старва-каскада. SUN-knob = яркость LED = "сколько солнца ты выбрал".
 
-**2. Bias рабочей точки:** Делитель от solar cell задаёт bias каскада. Много света = линейный режим. Мало = каскад уходит в отсечку, асимметричный клиппинг.
+**Solar cell — modulation overlay.** Solar input **не питает каскад напрямую**, а **модулирует bias** и **управляет sidechain-компрессором** через vactrol. Свет = light-as-LFO, не light-as-power. Тень руки даёт живую модуляцию, но никогда не уводит каскад в полное cutoff.
 
-**Солнечная компрессия:** Параллельно фотоэлемент управляет vactrol VTL5C3 в sidechain — оптическая компрессия от света. Больше света → сильнее сжатие → плоский, спрессованный звук, как через раскалённый телефонный провод.
+**Mix SUN ↔ SOLAR.** Ручка определяет вклад солнечной модуляции относительно LED baseline. На минимуме — солнце игнорируется (полностью предсказуемо). На максимуме — солнечный вклад доминирует.
+
+**Солнечная компрессия:** Solar cell параллельно управляет vactrol VTL5C3 в sidechain-компрессоре. Больше света → сильнее сжатие → плоский, спрессованный звук, как через раскалённый провод.
 
 #### Сигнальная цепь
 
 ```
-☀️ SOLAR CELL (на панели, открытая)
+☀️ SOLAR CELL (на лицевой стороне, видимая)
     │
-    ├──→ Boost converter (TPS61240, 0.7В→3–6В) ──→ Starved supply (Vdrain)
-    │
-    ├──→ Делитель ──→ Bias point MOSFET caskада
+    ├──→ Bias modulation ──→ MOSFET-каскад (overlay)
     │
     └──→ Vactrol LED ──→ LDR ──→ Sidechain compressor
-                                        │
-SUN (ручка) ──→ Внутренний LED ──→ ☀️   │
-CV SUN IN ──→ тоже на LED               │
-                                         │
+                                          │
+SUN (ручка) ──→ Внутренний LED-драйвер ──→ Stable baseline (Vdrain)
+                                          │
 AUDIO IN ──→ Input Gain ──→ STARVED AMP STAGE (MOSFET BS170)
-                                 (питание от солнца)
+                                 (питание: LED baseline + solar modulation)
 ```
 
-**Switch SOLAR / INTERNAL** на панели — user может disable solar dependency для предсказуемости в studio.
+**Ручки секции:** SUN (LED baseline brightness), SOLAR (вклад солнечной модуляции), DRIVE (входной gain в каскад).
 
 ---
 
-### B. OIL CAN DELAY — дилей на вращающемся диске в масле
+### B. OIL CAN DELAY — диск в масле, два read-электрода для стерео
 
 #### Физический элемент
-Металлический диск (∅100мм, нержавеющая сталь, 0.5мм) на оси BLDC мотора с оптическим энкодером для PLL-lock скорости. Нижняя часть диска погружена в ванну с маслом (сменный картридж). Pickup — **capacitive** (Tel-Ray Adineko heritage):
-- Top electrode (conductive paint на PCB) above disk.
-- Masло as dielectric.
+Металлический диск (∅100мм, нержавеющая сталь, 0.5мм) на оси BLDC мотора с оптическим энкодером для PLL-lock скорости. Нижняя часть диска погружена в сменную масляную ванну. Pickup — **capacitive** (Tel-Ray Adineko heritage):
+- Write electrode (conductive paint на PCB) над диском.
+- **Два read-электрода на разных угловых позициях** (например, 90° и 150° от write) → два delay tap'а с разным timing.
+- Масло as dielectric.
 - Disk rotation moves charge distribution → capacitance variation → demodulated signal.
 
-**Второй tract** (optional, v2): hydrophone в масляной ванне снимает acoustic signature. Масло фильтрует верхние частоты, добавляет мягкое размытие, вносит micro-задержку. "Ghost echo" — фильтр, не эхо (путь ~30мм = ~20мкс, слышится как tone coloration).
+#### Стерео через dual pickup
 
-#### Двойной tract
+**Wet-тракт mono → stereo на выходе**: два read tap'а демодулируются, проходят через общий старва-каскад и tongue-EQ (mono), затем **панорамируются L/R на выходе**. Это классический Roland Space Echo chorus mode, переведённый на capacitive pickup.
 
-**Magnetic (removed v1)** — оригинальная концепция использовала tape heads, но capacitive pickup дешевле и проще.
+**Dry-тракт stereo through-path**: входной стерео-сигнал проходит мимо wet-секции и микшируется на output stage. На выходе: stereo dry + panned wet taps = совместимо с DJ-mixer-loop, гитарным усилителем, модульной системой.
 
-**Capacitive (основной)** — Tel-Ray style. 1 write "электрод" + 2 read электрода (multi-tap). Скорость вращения = время задержки (диапазон 30мс–800мс).
-
-**Hydrophone (optional v2)** — подводный пьезо снимает acoustic через масло.
+**Диапазон времени:** ~30мс–800мс через скорость диска. Два read tap'а дают также фиксированное смещение (offset Δt между tap A и tap B = функция углового расстояния × скорости).
 
 #### Сменные масляные ванны (картриджи)
 
@@ -502,13 +501,15 @@ AUDIO IN ──→ Input Gain ──→ STARVED AMP STAGE (MOSFET BS170)
 
 #### Нагреватель (HEAT)
 
-Резистивный нагреватель на дне ванны, управляемый ручкой HEAT через **отдельный power rail +5В** (не аудио-шина). Температура масла влияет на **damping characteristic** (вязкость) — не на delay time (скорость звука в масле меняется незначительно).
+Резистивный нагреватель на дне ванны, управляемый ручкой HEAT через **отдельный power rail +5В** (не аудио-шина). Температура масла влияет на **damping characteristic** (вязкость) — не на delay time. HEAT также завязан на TAR (см. секцию D) — горячее масло → длиннее залипание динамики.
 
-Корректировка маркетинга: "cold = dark and closed, warm = open and lively" — не "slow vs fast".
+Корректировка маркетинга: "cold = dark and closed, warm = open and lively, sticky" — не "slow vs fast".
 
 ---
 
-### C. RESONANT EQ — индуктивный EQ + физический mid-резонатор
+### C. RESONANT EQ — индуктивный EQ + tongue-резонатор (signature)
+
+**Tongue-резонатор всегда в сигнальном пути** — это тембральная подпись модуля, не optional фича. Сменные пластины (3 материала из коробки) определяют характер mid-полосы.
 
 #### Три полосы
 
@@ -518,9 +519,9 @@ AUDIO IN ──→ Input Gain ──→ STARVED AMP STAGE (MOSFET BS170)
 **HIGH SHELF — индуктивный, на железном сердечнике:**
 Аналогичный LC-узел для верхов. Железный сердечник — другой характер сатурации, чуть грязнее. Частота: 3 / 5 / 8 kHz. Boost/Cut: ±12 dB.
 
-**MID — физический tongue-резонатор (ключевая фишка модуля):**
+**MID — физический tongue-резонатор (подпись модуля):**
 
-Вместо LC-контура — вибрирующая металлическая пластинка, как язычок калимбы. Сменная пластинка разных материалов + **manual clamp-каподастр на rail** (v1) или **motorized lead-screw** (v2 premium SKU).
+Вибрирующая металлическая пластинка, как язычок калимбы. Сменная пластинка разных материалов + **manual clamp-каподастр на rail** (v1) или **motorized lead-screw** (v2 premium SKU).
 
 #### Механизм mid-резонатора
 
@@ -531,46 +532,64 @@ AUDIO IN ──→ Input Gain ──→ STARVED AMP STAGE (MOSFET BS170)
 - **v1**: ручная каретка через knob на панели с тросиком.
 - **v2**: motorized lead-screw + encoder + CV control (preset recall).
 
-**Давление зажима = Q:** Ручка CLAMP отдельная. Слабый прижим → грязный, широкий резонанс, низкий Q. Сильный → чистый, узкий пик, высокий Q. Physical Q control.
+**Давление зажима = Q:** Ручка CLAMP отдельная. Слабый прижим → грязный, широкий резонанс, низкий Q. Сильный → чистый, узкий пик, высокий Q.
 
-**Сменные пластинки (материал = "цвет" mid'а):**
+**Сменные пластинки (3 в базовом каталоге, материал = "цвет" mid'а):**
 
-| Материал | Частота (при 40мм) | Характер | Q |
-|----------|-------------------|----------|---|
-| Пружинная сталь | ~1.2 kHz | Звонкий, долгий sustain | Высокий |
-| Латунь | ~800 Hz | Тёплый, мягкий | Средний |
-| Фосфористая бронза | ~900 Hz | Колокольный, сложные обертона | Средний-высокий |
-| Титан | ~1.1 kHz | Стеклянный, чистый | Очень высокий |
-| Медь | ~700 Hz | Тёмный, глухой | Низкий |
+| Материал | Частота (при 40мм) | Характер | Q | В коробке v1 |
+|----------|-------------------|----------|---|---|
+| Пружинная сталь | ~1.2 kHz | Звонкий, долгий sustain | Высокий | ✓ |
+| Латунь | ~800 Hz | Тёплый, мягкий | Средний | ✓ |
+| Фосфористая бронза | ~900 Hz | Колокольный, сложные обертона | Средний-высокий | ✓ |
+| Титан | ~1.1 kHz | Стеклянный, чистый | Очень высокий | v2 add-on |
+| Медь | ~700 Hz | Тёмный, глухой | Низкий | v2 add-on |
 
-**Суперспособность — самовозбуждение:** На высоком MID BOOST пластинка начинает "петь" — EQ превращается в осциллятор на резонансной частоте. Lee Perry dub-style feedback, но контролируемый.
+**Суперспособность — самовозбуждение:** На высоком MID BOOST пластинка начинает "петь" — EQ превращается в осциллятор на резонансной частоте. Lee Perry dub-style feedback, документированная фича.
 
 ---
 
-### D. ЭФФЕКТЫ "КРАСНОГО ПОЛУДНЯ" (v1 subset)
+### D. ЭФФЕКТЫ "РАСКАЛЁННОГО ПОЛУДНЯ" (hot palette, v1)
 
-#### HAZE — тепловое марево
-Медленная модуляция скорости мотора — wow/flutter. PLL permits controlled HAZE без unpredictable drift. Ручка HAZE добавляет pitch instability повторов.
+Шесть эффектов горячего тембрального словаря. Каждый имеет парный антипод в Last Night (см. секцию G).
+
+#### HAZE — ритмичное тепловое марево
+Periodic wow/flutter — LFO-модуляция скорости мотора. "Сердцебиение жары" — ритмичная составляющая нестабильности. Ручка HAZE — глубина, ручка RATE (или маятник от Fuck Abandoned Sleep через CV) — скорость.
+
+#### MIRAGE — стохастическое марево воздуха
+Апериодический pitch drift ±10 центов, период drift'а 0.5–5с. Реализация: noise source → S&H (4066) → slow slew RC → summing в motor CV. **Solar-modulated**: больше света → шире drift. Случайное, не повторяется. Это "воздух над раскалённым асфальтом", переведённый в звук — то, чего нет ни в одной педали индустрии.
+
+#### BLEACH — пересвет верхов
+High-band soft-saturation на полосе 4–12кГц: state-variable HP-filter → soft-clipper (diode bridge или JFET) → mix обратно. Добавляет вторую гармонику и fizz, теряет air-detail. **Solar-driven threshold**: больше света → ниже порог → больше пересвета. Симметрия к старва-каскаду (он жмёт low/mid, BLEACH — верх).
+
+#### TAR — вязкая динамика
+Peak-hold compressor с long-attack залипанием. Громкие фрагменты "застревают" на 100–500мс, потом медленно стекают (release 1–3с). Реализация: peak detector → flip-flop с hold timer → VCA control. **Завязан на HEAT** через термистор или CV link: горячее масло → длиннее hold. Анти-FREEZE: FREEZE фиксирует сигнал, TAR фиксирует громкость.
+
+#### CICADA — сухой кластерный треск
+Заменяет старый DUST. Не одиночные клики, а **кластерные гнёзда** по 5–30 кликов в случайных позициях. Реализация: noise source → envelope follower на signal → comparator с переменным порогом + retrigger → click shaper. Текстурный диапазон: от насекомых-кластеров (плотные, ритмичные bursts) до **тёплого пустынного песка** (сухой шорох, разреженные пики). Signal-correlated плотность.
+
+#### HEATWAVE — AM-голос ионосферы
+Заменяет старый WIRE. Маленький AM-tuner front-end (TA7642 / MK484, ~$1) + короткая антенна (полная длина в корпусе или внешняя на 3.5мм jack) → детектор → mix в сигнальный путь. Ловит дальнее AM-распространение, атмосферный шум, помехи от солнечной активности. Solar cell **модулирует gain приёмника** (солнечная активность реально влияет на ионосферу — physically true effect). Голос мёртвого мира.
+
+**Risk note:** HEATWAVE-фeasibility зависит от bench-prototype (SNR на короткоштыревой антенне внутри корпуса). Если не подтвердится в первой ревизии — откладывается в v2.
 
 #### DRAG — замедление времени
-Electric brake (MOSFET shorting motor) → мотор замедляется, повторы падают по pitch и тонут. Momentary switch на педали. Read head продолжает работать при 0 RPM — signal fades, not silences abruptly.
-
-**Отложено в v2 (Phase B, 6 месяцев после v1 ship):**
-- **WIRE** — EM antenna (ambient noise pickup).
-- **DUST** — impulse static clicks.
-- **CRASH** — solenoid удар по масляной ванне.
+Electric brake (MOSFET shorting motor) → мотор замедляется, повторы падают по pitch и тонут. Momentary footswitch / button. Read-электроды продолжают работать при 0 RPM — signal fades, not silences abruptly.
 
 ---
 
-### E. ПЕРФОРМАТИВНЫЕ КОНТРОЛЫ (v1)
+### E. ПЕРФОРМ-СЛОВАРЬ (pedal: 4 footswitches; Eurorack: 4 кнопки + CV/gate ins)
 
 | Контрол | Тип | Функция |
 |---------|-----|---------|
-| **KILL** | Большая кнопка | Мгновенный mute входа (CMOS switch + soft ramp). Delay tail продолжает играть и деградировать. Dub essential |
-| **FREEZE** | Кнопка-latching | Запись отключается, текущий контент зацикливается и деградирует |
-| **DRAG** | Momentary switch | Замедление мотора → повторы тонут по pitch |
+| **KILL** | momentary | Мгновенный mute входа (CMOS switch + soft ramp). Delay tail продолжает играть и деградировать. Dub essential |
+| **FREEZE** | latching | Запись отключается, текущий контент зацикливается и деградирует |
+| **CRASH** | momentary | Соленоид физически ударяет по ванне с маслом → impulse в hydrophone-tract → "взрыв" в delay. Red 25мм кнопка в Eurorack-форме, большой footswitch в pedal-форме. Rate-limit ≤1Hz |
+| **DRAG** | momentary | Замедление мотора → повторы тонут по pitch |
 | **FEEDBACK SEND/RETURN** | Jack-пара | Петля в feedback-path. Можно вставить Last Night → delay → reverb → delay → бесконечность |
-| **CLOCK IN** | Jack | Синхронизация времени delay с внешним клоком (от Is My) |
+| **CLOCK IN** | Jack | Синхронизация времени delay с внешним клоком |
+| **EXP** | Jack (pedal) | Expression pedal на HAZE depth или TIME |
+
+CRASH повышен из v2 в v1 — это главный gesture-эффект pedal-перформанса.
 
 ---
 
@@ -578,65 +597,77 @@ Electric brake (MOSFET shorting motor) → мотор замедляется, п
 
 | Контрол | Секция | Функция | CV |
 |---------|--------|---------|-----|
-| **SUN** | Solar Amp | Яркость внутреннего LED = baseline. Чистота/сатурация каскада | ✓ |
-| **SOLAR/INTERNAL** | Solar Amp | Switch — external light или только internal LED | — |
-| **DRIVE** | Solar Amp | Входной gain, глубина насыщения | ✓ |
+| **SUN** | Solar Amp | Яркость LED baseline = базовое "солнце" | ✓ |
+| **SOLAR** | Solar Amp | Вклад солнечной cell в bias-модуляцию (0 = ignore, max = доминирует) | — |
+| **DRIVE** | Solar Amp | Входной gain, глубина насыщения старва-каскада | ✓ |
 | **LOW** | EQ | Boost/cut низкочастотной полки | — |
 | **LOW FREQ** | EQ | 80/120/200Hz switch | — |
-| **MID FREQ** | EQ | Положение зажима = центральная частота mid (v1 manual, v2 CV) | ✓ (v2 only) |
+| **MID FREQ** | EQ | Положение зажима tongue = центральная частота (v1 manual, v2 CV) | ✓ (v2) |
 | **MID GAIN** | EQ | Boost/cut mid-резонатора. На max — самовозбуждение | — |
-| **CLAMP** | EQ | Давление зажима = добротность Q | — |
+| **CLAMP** | EQ | Давление зажима tongue = Q | — |
 | **HIGH** | EQ | Boost/cut высокочастотной полки | — |
 | **HIGH FREQ** | EQ | 3/5/8kHz switch | — |
 | **TIME** | Oil Delay | Скорость вращения диска = время задержки | ✓ |
 | **FEEDBACK** | Oil Delay | Уровень рециркуляции | ✓ |
-| **HAZE** | Oil Delay | Wow/flutter — модуляция скорости мотора | ✓ |
-| **HEAT** | Oil Delay | Нагрев масла → damping character | — |
+| **TAP SPREAD** | Oil Delay | Стерео-ширина между tap A и tap B (угловое расстояние read-электродов фиксировано, но микс/pan можно подстроить) | — |
+| **HAZE** | Hot FX | Глубина periodic wow/flutter | ✓ |
+| **MIRAGE** | Hot FX | Глубина стохастического pitch drift | ✓ |
+| **BLEACH** | Hot FX | Уровень high-band пересвета | — |
+| **TAR** | Hot FX | Threshold вязкого компрессора | — |
+| **CICADA** | Hot FX | Плотность кластерных тресков (signal-correlated baseline) | — |
+| **HEATWAVE** | Hot FX | Уровень AM-приёмника в миксе | — |
+| **HEAT** | Oil Delay | Нагрев масла → damping + TAR release | — |
 | **DRY/WET** | Master | Баланс сухого и обработанного сигнала | — |
-| **OUTPUT** | Master | Выходной уровень | — |
-| **KILL** | Perform | Мьют входа, хвост delay играет | — |
-| **FREEZE** | Perform | Зацикливание текущего контента delay | — |
-| **DRAG** | Perform | Замедление мотора (momentary) | — |
+| **OUTPUT** | Master | Выходной уровень (с переключателем -10dBV / +4dBu / instrument) | — |
+| **KILL / FREEZE / CRASH / DRAG** | Perform | См. секцию E | gate ins для каждого |
 
 ---
 
-### G. ЗЕРКАЛЬНОСТЬ LAST DAY ↔ LAST NIGHT
+### G. ЗЕРКАЛЬНОСТЬ LAST DAY ↔ LAST NIGHT — симметричный диптих
 
-| | Last Night | Last Day |
+| Ось | Last Night (cold) | Last Day (hot) |
 |---|---|---|
 | **Настроение** | Холодная ночь после конца | Раскалённый полдень конца |
 | **Пространство** | Реверб (комната, собор, руины) | Delay (эхо, повтор, мираж) |
-| **Физическая среда** | Твёрдое тело (дерево, камень, металл) | Жидкость (масло) + свет |
-| **Шум** | Счётчик Гейгера (радиация) — v2 add-on | HAZE wow/flutter (жар) |
-| **Модуляция** | Соленоидный демпфер | Drag / Haze |
-| **Тембр** | Материал пластины (холодный) | Solar sat + Oil + Inductors (тёплый) |
-| **Сменные элементы** | Пластины (дерево/камень/металл/стекло) | Масляные ванны + tongue |
-| **Перформанс** | Freeze / Sidechain / Демпфер | Kill / Drag / Freeze |
-| **Физический агент** | Вибрация твёрдого тела | Вращение в жидкости + свет |
+| **Физическая среда** | Твёрдое тело (дерево, камень, металл) | Жидкость (масло) + диск + свет |
+| **Свет** | LED clipper ±1.8В (low headroom, dark) | Solar amp с LED baseline + BLEACH (выжигающий) |
+| **Модуляция (период)** | Periodic envelope (VCA τ до 1с) | HAZE (periodic motor wow) |
+| **Модуляция (apериод)** | — | MIRAGE (стохастический drift) |
+| **Глитч** | Sparse tick (Geiger noise) | CICADA (dense cluster: насекомые ↔ песок) |
+| **EMI** | Сетевой 50/60Гц hum | HEATWAVE (AM-ионосфера, solar-modulated) |
+| **Динамика** | Decay envelope (медленное растворение) | TAR (вязкое залипание) |
+| **Хвост** | Decay reverb | Delay loop |
+| **Глушение** | Solenoid давит пластину (mass) | Solenoid бьёт в масло (impulse → CRASH) |
+| **Замораживание** | FREEZE feedback | FREEZE loop + TAR залипает динамику |
+| **Сменные элементы** | Пластины (дерево/камень/металл/стекло) | Масляные ванны + tongue plates |
+| **Перформ-словарь** | FREEZE / Sidechain / Damper | KILL / FREEZE / CRASH / DRAG |
+| **Цвет** | Холод, тьма, пустота | Жар, плавление, дрожание воздуха |
+
+Каждый эффект Last Day имеет парный антипод в Last Night по тому же физическому/тембральному принципу. Два модуля — не "пара в линейке", а **симметричный диптих**.
 
 ---
 
 ### Тембральный характер
-Тёплый, густой, замедленный. Повторы деградируют не в холодный шёпот (как магнитная лента), а в горячий гул — масло съедает верха, индукторы добавляют сатурации, солнце сжимает динамику.
+Тёплый, густой, выжженный, дрожащий, кластерный. Повторы деградируют не в холодный шёпот (как магнитная лента), а в горячий гул — масло съедает верха (HEAT-modulated), MIRAGE дрожит воздух, BLEACH выжигает air, CICADA сыпет сухой песок, HEATWAVE поднимает голоса из ионосферы.
 
-Для даба: KILL-кнопка бросает эхо, DRAG тормозит его, HEAT делает повторы гуще, солнечная панель на сцене под прожекторами управляет облаками.
+Для даба: KILL бросает эхо, CRASH взрывает ванну, DRAG тормозит мотор, TAR залипает динамику в "тяжёлый" звук. Stereo wet-taps дают пространство без потери mono-coherence.
 
-Для эмбиента: HAZE на максимуме, FREEZE зацикливает деградирующий фрагмент, MID резонатор в self-oscillation.
+Для эмбиента: MIRAGE на максимуме, FREEZE зацикливает деградирующий фрагмент, MID-резонатор в self-oscillation, HEATWAVE добавляет дальние голоса.
 
-Для нойза: MID BOOST до самовозбуждения + FEEDBACK + DRIVE → feedback в Last Night → бесконечный drone.
+Для нойза: MID BOOST до самовозбуждения + FEEDBACK + DRIVE + BLEACH + CICADA → feedback в Last Night → бесконечный жаркий drone.
 
 ### Связь с Last Night
-Last Day → Last Night = полная пространственная цепь "день → ночь". Тёплые масляные повторы Last Day попадают в холодный каменный/деревянный резонанс Last Night. Feedback Send/Return позволяет замкнуть петлю: delay → reverb → delay → reverb → бесконечное затухание. KILL на Last Day + Freeze на Last Night = замороженный мираж, медленно растворяющийся в резонансе пластины.
+Last Day → Last Night = полная пространственная цепь "день → ночь". Тёплые масляные повторы Last Day с MIRAGE-дрожанием и CICADA-треском попадают в холодный каменный/деревянный резонанс Last Night. Feedback Send/Return позволяет замкнуть петлю. KILL на Last Day + FREEZE на Last Night = замороженный мираж, медленно растворяющийся в резонансе пластины. **Каждый комбайн работает соло**; в паре дают полный диапазон "горячо ↔ холодно".
 
 ### Сложность: Очень высокая — самый сложный модуль серии
-Oil can: BLDC motor + disk + capacitive pickup mechanics + sealed oil cartridge. Solar amp: boost converter + starved caskад + calibration. EQ: ручная намотка индукторов (или purchased Wurth), tongue-резонатор с clamp mechanism. Каждая секция — отдельный R&D subsystem.
+Oil can: BLDC motor + disk + dual capacitive pickup + sealed oil cartridge. Solar amp: LED baseline driver + solar modulation overlay + sidechain compressor. EQ: индукторы (Wurth/Bourns) + tongue-резонатор с clamp mechanism. Hot FX: 6 эффектов, из которых MIRAGE и TAR — новые, требующие prototype-валидации; HEATWAVE — risk-bench-test перед commit'ом. Pedal+Eurorack share PCB + два корпуса.
 
-**R&D**: Phase 2 (12 месяцев после ship Phase 1). Phase B (add CRASH/DUST/WIRE) — 6 месяцев после Phase 2 ship.
+**R&D**: Phase 2 (расширенная) — 18–24 месяца. HEATWAVE-prototype в первой ревизии для go/no-go.
 
 ### Аналоги
-**Oil can delay:** Fender/Gibson Tel-Ray Adineko (1960-е) — базовый принцип capacitive. В современном формате Eurorack не существует. **Solar amp:** Dewanatron использовали солнечные панели как контроллеры, не как часть усилительного каскада. **Resonant EQ на физическом tongue:** не существует ни в каком формате.
+**Oil can delay:** Fender/Gibson Tel-Ray Adineko (1960-е) — базовый принцип capacitive; dual read-tap pattern — Roland Space Echo chorus mode. **Solar amp с modulation overlay:** не существует в индустрии; Dewanatron использовали solar как контроллеры, не как bias-модулятор поверх stable baseline. **Resonant EQ на физическом tongue:** не существует. **MIRAGE + TAR + CICADA + HEATWAVE как целостный hot-palette словарь:** уникален для Last Day.
 
-Комбинация трёх систем в одном модуле — абсолютно уникальна.
+Last Day — самостоятельный аутентичный комбайн "раскалённого полудня" в одной коробке.
 
 ## 8. AND MY — VCA-сатуратор-шейпер на ESC из FPV-дрона
 

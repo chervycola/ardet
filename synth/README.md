@@ -30,10 +30,12 @@ synth/
 ### 3. Если задача — принять архитектурные решения
 
 - `decisions/00_README.md`
-- `decisions/01_undefined_modules.md` — 4 модуля под определением.
-- `decisions/02_last_day_scope.md` — 6 decisions Last Day.
+- `decisions/01_undefined_modules.md` — 4 модуля под определением (And My superseded → см. 05).
+- `decisions/02_last_day_scope.md` — 6 decisions Last Day (**superseded** → см. 06).
 - `decisions/03_cartridge_standards.md` — 7 decisions cartridge.
 - `decisions/04_production_strategy.md` — 8 decisions business.
+- `decisions/05_and_my_respec.md` — And My как MOSFET-shaper из ESC + pilot remote.
+- `decisions/06_last_day_combine_concept.md` — Last Day как standalone-комбайн «раскалённого полудня».
 
 ### 4. Для deep dive по конкретному модулю
 
@@ -55,9 +57,9 @@ synth/
 2. Solenoid EMI → piezo preamp — need cable shielding.
 3. Feedback loop stability — need SPICE verification.
 4. LFO missing from schematic but present on panel — need resolution.
-5. Last Day form factor — need Eurorack/pedal commitment.
+5. ~~Last Day form factor~~ — **решено** (Decision 06): Eurorack 40HP + pedal big-box на одной PCB, два корпуса.
 
-**Major decisions pending**: 25 items across 4 decision documents.
+**Major decisions pending**: 25 items across 4 decision documents. Закрыты: And My (Decision 05), Last Day концепт (Decision 06). Открыто: respec сателлитов (ABD / FAS / Be Careful / I Show You Light) под anchor-комбайн-логику Day/Night.
 
 ## Schematic reference
 

@@ -1,5 +1,9 @@
 # Last Day — инженерный разбор
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — этот аудит был написан до концептуального пересмотра Last Day как standalone-комбайна. Разделы A (Solar Amp), B (Oil Can Delay), C (Resonant EQ) и F (общая интеграция / power) **в основной части актуальны** — физика подсистем не изменилась. Но раздел D (FX HAZE/WIRE/DUST/DRAG) и часть раздела E (perform) **superseded**: набор эффектов переписан в "горячий" словарь (HAZE / MIRAGE / BLEACH / TAR / CICADA / HEATWAVE + DRAG; CRASH повышен в v1; DUST и WIRE удалены из Last Day). Также: solar = LED baseline + модуляция (не optional), pedal-форма = в scope с v1, stereo через два read-электрода.
+>
+> Канонический текущий канон — `decisions/06_last_day_combine_concept.md` + `SYSTEM_SUICIDE.md` §7. Этот файл оставлен как исторический — содержательно не переписывается.
+
 Критика трёх подсистем: Solar Amplifier, Oil Can Delay, Resonant EQ. Last Day — концепт, не имеет детальной схемы как Last Night, поэтому критика на уровне блочной архитектуры.
 
 ---

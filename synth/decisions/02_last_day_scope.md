@@ -1,5 +1,9 @@
 # Last Day — scope и subsystem decisions
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — этот документ был написан до концептуального пересмотра Last Day как standalone-комбайна. Большинство выводов здесь (Eurorack-only форма, solar=optional, perform-FX subset HAZE/WIRE/DUST/DRAG, отложенные CRASH/DUST/WIRE в v2) **superseded** Decision 06.
+>
+> Канонический текущий канон — `decisions/06_last_day_combine_concept.md` + `SYSTEM_SUICIDE.md` §7. Этот файл оставлен как исторический документ — содержательно не переписывается.
+
 Last Day — самый сложный модуль серии, 3 независимые подсистемы (oil can delay, solar amp, resonant EQ) + 4 performance effects (HAZE/WIRE/DUST/DRAG) + 3 perform buttons (KILL/CRASH/FREEZE). Реалистичный R&D — 18–30 месяцев. Требуются решения о scope.
 
 ---

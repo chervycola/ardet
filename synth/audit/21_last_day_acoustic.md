@@ -1,5 +1,7 @@
 # Last Day — акустика
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — общий акустический анализ (hydrophone SNR-бюджет, masloe = filter а не delay, HEAT = damping, tongue Q-управление, serviceability) **остаётся актуальным**. Маркетинг-формулировка "oil delay = filter" по-прежнему верна. Реконтекстуализация 2026-05: Last Day = standalone-комбайн с расширенным "горячим" словарём эффектов (см. `decisions/06_last_day_combine_concept.md`). Подсистемы, проанализированные здесь, остаются основой; добавляются hot-palette эффекты (MIRAGE, BLEACH, TAR, CICADA, HEATWAVE) — их акустика будет покрыта отдельно при prototype-сессии.
+
 Реалистичность физических утверждений в трёх подсистемах: гидрофон в 60мл масла, Q управление clamp pressure, oil can servicing, heat влияние.
 
 ---

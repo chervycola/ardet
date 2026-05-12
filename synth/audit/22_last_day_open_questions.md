@@ -1,5 +1,9 @@
 # Last Day — ответы на открытые вопросы
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — большинство ответов про компоненты (Q1 OPA1642 в hydrophone, Q3 motor driver, Q7 4-layer PCB) **остаются актуальными**. Но: Q9 (pedal power budget — "Last Day не помещается") и Q14 (Eurorack-only commitment) **superseded** — Day теперь Eurorack+pedal на одной PCB, два корпуса. Q15 (DUST overkill) moot — DUST удалён из Last Day, заменён CICADA. Q10/WIRE-связанное moot — WIRE удалён, заменён HEATWAVE (AM-tuner).
+>
+> Канонический текущий канон — `decisions/06_last_day_combine_concept.md` + `SYSTEM_SUICIDE.md` §7.
+
 Вопросы из раздела "Open Questions / Things to Challenge" в брифе Last Day, плюс неявные вопросы архитектуры.
 
 ---
