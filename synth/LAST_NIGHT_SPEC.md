@@ -525,10 +525,12 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 | Картридж | Размеры | RT60 | Характер | Retail |
 |----------|---------|------|----------|--------|
 | **EBONY** | 100×25×3 | 0.3–0.8с | Премиум, длинный sustain, тёмный | $180 |
-| **NEPHRITE (Jade)** | 100×40×4 | 0.5–1.5с | Поющий, медитативный, культурный | $250 |
+| **NEPHRITE — Sayan green** | 100×40×4 | **1–3с** | **Поющий, медитативный, bell-like, 4000-летняя традиция (bianqing 编磬)**. ~48г. DAEX32 exciter. См. `cartridges/07_nephrite_processing.md` | **$250** |
+| **NEPHRITE — Hetian "mutton fat" white** | 100×40×4 | 1.5–4с | Премиум limited 50 экз., белый "баранний жир" — visual contrast в каталоге. Mirror-polished с diamond paste | **$450** |
+| **NEPHRITE — pounamu (NZ)** | 100×40×4 | 1–3с | Ritual edition limited 25 экз., Ngāi Tahu treaty-certified. Глубокий "kahurangi" зелёный | **$550** |
 | **COPPER** | 100×40×1.5 | 1–2.5с | Колокольный, patina меняет тембр | $170 |
 | **PYREX GLASS** | 100×40×3 | 1–3с | Crystalline chime (compatible с Be Careful) | $140 |
-| **BONE (lopatka)** | 100×40×4 | 0.3–0.8с | Мрачный, ритуальный, sourced ethically | $190 |
+| **BONE (lopatka)** | 100×40×4 | 0.3–0.8с | Мрачный, ритуальный, sourced ethically. См. `cartridges/05_bone_processing.md` | $190 |
 | **TITANIUM** | 100×30×1.5 | 3–8с | Ultra-premium, max Q, infinite ring | $350 |
 
 ### Premium tier cartridges (с PVDF pickup)

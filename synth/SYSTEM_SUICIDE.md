@@ -857,10 +857,12 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 | Картридж | Характер |
 |----------|----------|
 | Ebony | Премиум, длинный sustain |
-| Nephrite (нефрит) | Поющий, медитативный |
+| **Nephrite — Sayan green** | **Поющий, медитативный, bell-like; 4000-летняя традиция (китайские bianqing 编磬, маорийский pounamu); RT60 1–3с; ~48г plate; см. `cartridges/07_nephrite_processing.md`** |
+| **Nephrite — Hetian white "mutton fat"** | **Premium limited 50 экз., белый цвет — visual rarity, mirror polish с diamond paste** |
+| **Nephrite — pounamu (NZ)** | **Ritual limited 25 экз., Ngāi Tahu treaty certified** |
 | Copper | Колокольный, patina меняет тембр со временем |
 | Glass (Pyrex) | Кристаллический — также compatible с Be Careful |
-| Bone (лопатка) | Мрачный, ритуальный |
+| Bone (лопатка) | Мрачный, ритуальный; см. `cartridges/05_bone_processing.md` |
 | Titanium (1.5мм) | Ultra-premium, макс Q, бесконечный звон |
 
 > **Важно**: заявленные RT60 в исходном v2.0 брифе были завышены в 2–20× (acoustic reality check). Таблица выше — **реалистичные значения**. Feedback knob позволяет искусственно удлинить tail до 5–10× baseline, но это уже self-oscillating regime.

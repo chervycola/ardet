@@ -7,11 +7,12 @@
 | File | Status | Material | Complexity |
 |------|--------|----------|------------|
 | `01_wood_processing.md` | TODO | Oak, maple, ebony, birch | Low |
-| `02_stone_processing.md` | TODO | Marble, slate, granite, nephrite | Medium |
+| `02_stone_processing.md` | TODO | Marble, slate, granite | Medium |
 | `03_metal_processing.md` | TODO | Brass, copper, spring steel, titanium | Medium |
 | `04_glass_processing.md` | TODO | Pyrex borosilicate | High (fragile) |
-| **`05_bone_processing.md`** | **Draft v1** | **Cattle scapula** | **High (multi-week)** |
+| **`05_bone_processing.md`** + `_ru.md` + `.docx` | **Готово v1** | **Cattle scapula** | **High (multi-week)** |
 | `06_assembly.md` | TODO | Common cartridge assembly | — |
+| **`07_nephrite_processing.md`** + `_ru.md` + `.docx` | **Готово v1** | **Nephrite (Sayan / Hetian / pounamu)** | **Medium-high (lapidary)** |
 
 ## Cartridge specification (универсальная)
 
@@ -50,6 +51,8 @@
 | Spring steel | 30 min | 1 day | $20 | Low |
 | Pyrex glass | 1 hour | 3 days | $25 | High (fragile, hazardous edges) |
 | **Bone (scapula)** | **4 hours** | **5–7 weeks** | **$11** | **High (multi-week, smell, PPE)** |
+| **Nephrite (Sayan)** | **4.5 hours** | **1–2 weeks** | **$90–110** | **Medium-high (lapidary, silicate dust, diamond tools)** |
+| **Nephrite (Hetian premium)** | **5–6 hours** | **2–3 weeks** | **$200–300** | **Same + premium sourcing** |
 | Titanium | 1 hour | 2 days | $50 | Medium |
 
 ## Sourcing summary
@@ -61,6 +64,9 @@
 | Metal | Metal supply distributor, online metals (Online Metals, McMaster-Carr) |
 | Glass | Laboratory glass supplier (Pyrex / borosilicate) |
 | Bone | Butcher (food byproduct) или craft supplier |
+| Nephrite (Sayan) | Russian lapidary supplier ($30–80/kg rough slab, Буромское/Кавоктинское/Оспинское месторождения) |
+| Nephrite (Hetian premium) | Chinese lapidary supplier ($200–1000/kg, certified provenance) |
+| Nephrite (pounamu NZ) | Ngāi Tahu treaty-compliant supplier ($150–500/kg, требует certificate) |
 | Titanium | Aerospace metal supplier (premium tier) |
 
 ## Status
@@ -74,9 +80,10 @@ Phase 1 launch catalog (6 cartridges):
 - Spring steel — `03_`.
 
 Phase 2 additions:
-- Ebony, nephrite, copper — extending `01_` and `03_`.
+- Ebony, copper — extending `01_` and `03_`.
 - Pyrex glass — `04_glass_processing.md`.
 - **Cattle bone — `05_bone_processing.md` (готов)**.
+- **Nephrite (Sayan / Hetian / pounamu) — `07_nephrite_processing.md` (готов)**.
 - Titanium — `03_`.
 
 ## Workshop common tools
