@@ -1,17 +1,19 @@
 # LAST NIGHT — Спецификация продукта
 
-> *Постапокалиптический ревербератор-симулятор разрушенного граммофона. Пустота, эхо, треск радиации, фейзер заброшенного эфира, плавящаяся плёнка и проседающий мотор винила.*
+> *Постапокалиптический ревербератор холодной ночи. Сменные физические пластины, дыхание руин, тиканье Гейгера, голос мёртвой электросети, колокол в опустевшем соборе.*
 
-**Версия**: v3.0 — dual SKU + vinyl/phaser FX engine
-**Часть серии**: SYSTEM SUICIDE, модуль 9 из 9
+**Версия**: v4.0 — consolidated base (Decision 08)
+**Часть серии**: SYSTEM SUICIDE, модуль 9 из 9 — combine "холодной ночи", симметричный диптих с Last Day "раскалённого полудня"
 
-**Форм-факторы** (две canonical SKU, общая схема + cartridge система):
+**Форм-факторы** (две canonical SKU, общая PCB, разные корпуса):
 - **Eurorack 3U × 40HP** (203.2 × 128.5мм panel) — для modular setup.
-- **Pedal ~178×119×38мм** (Eventide ModFactor class) или **145×113×60мм** (Hologram Microcosm class) — для pedalboard.
+- **Big-box pedal ~203×140мм** (Strymon BigSky / Eventide H9 Max class) — для pedalboard.
 
 **Цена retail**:
 - Eurorack 40HP: $499 budget / $649 premium.
-- Pedal: $499 budget / $649 premium (одинаковая, разный enclosure).
+- Pedal big-box: $499 budget / $649 premium (одинаковая, разный enclosure).
+
+**Phase plan**: Phase 1 ship = reverb-ядро + bipolar NOISE/GEIGER knob + 4 footswitches (KILL/FREEZE/TOLL/STALL). Cold palette FX (PULSE/FOG/FROST/CHILL/HUM + optional phaser) — Phase 2 upgrade kit / v3 PCB revision.
 
 ---
 
@@ -33,36 +35,36 @@
 
 ### Что это
 
-Last Night — **аналоговая педаль-ревербератор на сменных физических пластинах** с интегрированными постапокалиптическими эффектами: фейзер, симулятор разрушающегося винила (wow/flutter, скрипы, треск), Geiger-counter noise, gate/crush для агрессивного редукции.
+Last Night — **постапокалипсис-ревербератор на сменных физических пластинах**, выпускается в двух canonical SKU (40HP Eurorack module и big-box pedal). Каноническая комбайн-форма "холодной ночи" в серии SYSTEM SUICIDE, симметричный диптих с Last Day "раскалённого полудня".
 
 Реальная пластина из дерева, камня, металла, стекла или кости вибрирует от audio signal через surface exciter, два пьезо-датчика снимают резонанс. Каждый материал — уникальный голос: oak = тёплый slap, marble = cathedral, spring steel = infinite shimmer, glass = crystalline chime, bone = ritual.
 
-Поверх натурального резонанса наслоены электронные эффекты разложения: фейзер делает ноту "плывущей", vinyl-секция симулирует сломанный мотор граммофона (wow/flutter с modulation), Geiger noise подменяет реальный hiss на cluster-импульсы радиации, gate/crush footswitch обрезает в bit-crushed гранулу.
+Поверх ядра наслоены характерные эффекты "холодной палитры": **bipolar NOISE/GEIGER** knob (один control, две текстуры — continuous noise CCW / cluster ticks CW), опциональный **phaser** для дополнительного immersion, и performance gestures (**KILL / FREEZE / TOLL / STALL** — четыре footswitches). В v3 PCB revision (Phase 2 upgrade) добавляются cold-palette эффекты: PULSE (slow damper-breath), FOG (apperiodic drift), FROST (HF absorber), CHILL (anti-compression), HUM (mains-hum antenna).
 
 ### Чем отличается от обычных pedal-reverb
 
-- **Сменные материальные картриджи** — никто другой не делает physical-plate reverb pedal.
-- **Solenoid damper** — реальное механическое приглушение пластины (CV/expression-controlled).
+- **Сменные материальные картриджи** — никто другой не делает physical-plate reverb с swappable physical resonators.
+- **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (5-10мс impulse strike = пластина звенит как колокол независимо от input).
 - **Dual piezo с position crossfade** — два pickup-а на пластине, manual или CV blend.
-- **Phaser sub-engine** — analog 4-stage OTA phaser, перед или после reverb (switchable).
-- **Vinyl FX engine** — wow/flutter LFO, dust clicks, gate/crush — звук разрушения.
-- **Color preset slider** — vertical 5-position selector (COLOR/WARM/DARK/COLOR/MIX) для quick tone preset.
-- **Modular-style CV patch bay** — 14+ CV inputs снизу для full automation.
-- **Stereo + dry/wet split outputs** — flexible routing в pedalboard.
+- **Bipolar NOISE/GEIGER knob** — центральный detent off, CCW = continuous zener hiss, CW = cluster ticks (ATtiny85 LFSR + comparator pattern). Один controlled, два sonic universes.
+- **Optional phaser** — analog 4-stage OTA для immersion. Switchable bypass.
+- **Cold-palette FX layer (Phase 2)** — PULSE/FOG/FROST/CHILL/HUM — symmetric antipodes к hot-palette Last Day (HAZE/MIRAGE/BLEACH/TAR/CICADA/HEATWAVE).
+- **Modular-style CV patch bay** — 14+ CV inputs для full automation.
+- **Stereo + dry/wet split outputs** + TRS/RCA параллельно + instrument/-10/+4dBu level switch.
 
 ### Категория
 
-**Resonator reverb pedal с vinyl-decay FX**. Не имитация EMT 140 plate reverb, не digital algorithmic. Новая категория — **physical resonance + analog decay simulation**.
+**Resonator reverb combine** ("комбайн холодной ночи"). Не имитация EMT 140 plate reverb, не digital algorithmic. Новая категория — **physical resonance + cold-palette FX layer**.
 
-Конкуренты в boutique tier:
+Конкуренты в premium boutique tier:
+- Strymon BigSky — DSP reverb с modes, $499.
+- Eventide H9 Max — multi-effects, $679.
 - Hologram Microcosm — granular/loop pedal, $399.
 - Empress Reverb — algorithmic, $499.
 - Strymon NightSky — DSP с CV, $400.
 - Chase Bliss Habit — long-loop processor, $399.
-- Eventide ModFactor — modulation, $279.
-- Old Blood Noise Endeavors Procession — phaser-reverb hybrid, $279.
 
-Last Night sits в **premium boutique tier** ($499–649) с unique physical differentiator (cartridge swap).
+Last Night sits в **premium boutique tier** ($499–649) с unique physical differentiator (cartridge swap + solenoid double-function).
 
 ### Reality check (для customer expectations)
 
@@ -71,26 +73,39 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - Marble: 0.8–2с (room ambience).
 - Spring steel: 2–6с (long shimmer).
 - С feedback knob — RT60 удлиняется до self-oscillation drone.
-- С phaser/vinyl FX поверх — perceived "size" звука увеличивается ещё в 2–3× за счёт modulation tail.
+- С phaser + cold-palette FX поверх — perceived "size" звука увеличивается ещё в 2–3× за счёт modulation tail.
 
 ### Use cases
 
 - **Guitar/bass pedal** в pedalboard chain — после fuzz, перед delay/looper.
-- **Synth processor** — pedalboard для desktop synth setup, replaces Eurorack reverb.
-- **DJ FX send/return** — line-level routing.
-- **Ambient sound design** — freeze + high feedback + phaser depth + slow vinyl wow.
-- **Noise / experimental** — gate/crush stomp + self-oscillating cartridge + Geiger.
+- **Synth processor** — для desktop synth setup, заменяет Eurorack reverb.
+- **DJ FX send/return** — line-level routing через RCA параллельно с TRS.
+- **Ambient sound design** — freeze + high feedback + phaser depth + slow PULSE damper-breath.
+- **Noise / experimental** — bipolar NOISE/GEIGER CW + self-oscillating cartridge + TOLL bell-strike.
+- **Ritual perform** — TOLL bell-pattern + STALL mute interrupts + cartridge swap drama.
 - **Vocals / drums (studio)** — line-level через Hi-Z input compatible.
 
-### Эффекты "разрушающегося эфира" (postapocalypse FX engine)
+### Эффекты "холодной палитры" (cold-palette FX layer)
 
-Пять характерных модов разложения:
+Постапокалипсис холодной ночи — словарь эффектов, каждый имеет физическое основание и парный антипод в Last Day:
 
-1. **Phaser** (Phase/Flutter / DEPTH / SPEED) — 4-stage OTA-based phaser. От slow swirl до seasick wow.
-2. **Vinyl wow/flutter** — LFO модулирует pitch reverb-tail (tape-like instability).
-3. **Geiger noise** — cluster-pattern impulse clicks (через ATtiny LFSR), а не continuous hiss.
-4. **Gate/Crush** — footswitch активирует gate (cut signal under threshold) → bitcrush (downsample + bit-reduce). Аналоговая imitation digital decay.
-5. **Solenoid stutter** — CV/expression на DAMP даёт rhythmic mechanical mute.
+**Phase 1 ship (ядро)**:
+
+1. **Bipolar NOISE / GEIGER** — один центральный knob с detent в middle (off). **CCW → continuous noise** (BZX55C9V1 zener → gain → color filter → mix). **CW → Geiger ticks** (ATtiny85 LFSR → comparator → cluster pulse shaper → mix). Knob splits CV via VCAs по половинкам signed amount.
+2. **Phaser** (опциональный immersion layer) — 4-stage OTA all-pass (LM13700 OTA2). Phase/Flutter feedback + DEPTH + SPEED. Switchable bypass.
+3. **Solenoid double-function**: DAMP (sustained hold via CV) + TOLL (5–10мс pulse via footswitch / gate) = bell-strike пластины.
+
+**Phase 2 ship (cold-palette upgrade kit, v3 PCB revision)**:
+
+| Cold (Night) | Hot antipode (Day) | Физика |
+|---|---|---|
+| **PULSE** | HAZE | Slow LFO 0.05–2Гц → damper-pressure → "tail дышит" ритмично |
+| **FOG** | MIRAGE | Apperiodic drift: 4066 S&H → slow slew → damper micro-mod |
+| **FROST** | BLEACH | Voltage-controlled LPF в feedback path → sweep-down ВЧ |
+| **CHILL** | TAR | Expander с brittle release: anti-compression, quiet stays quiet |
+| **HUM** | HEATWAVE | Ferrite coil 50/60Hz antenna → tuned amp → mix |
+
+Каждый — knob на лицевой панели в v3 revision (Phase 2 upgrade kit).
 
 ### What's in the box
 
@@ -268,12 +283,13 @@ Customer может start с pedal (для studio/live performance), позже 
 | **THD** (100мВ input, mid drive) | <0.5% |
 | **Phaser depth** | 0–100% (4-stage all-pass) |
 | **Phaser SPEED range** | 0.05–10 Гц |
-| **Vinyl wow/flutter range** | 0.3–8 Гц modulation rate |
-| **BBD pitch instability** (vinyl) | ±2% pitch variation max |
+| **Noise generator bipolar split** | Center-detent pot, CCW continuous / CW Geiger ticks |
+| **Geiger tick rate** | 0.5–20 events/sec @ random cluster pattern (ATtiny85 LFSR) |
+| **Solenoid double-function** | DAMP sustained (CV) + TOLL impulse (5–10мс trigger) |
 | **Maximum input** | +20 dBu (line level), +15 dBu typical |
 | **Maximum output** | +12 dBu |
 | **Power draw** (Eurorack) | ±12В, 250мА steady, 500мА peak |
-| **Power draw** (Pedal) | 12V DC, 350мА typical / 500мА peak (включая phaser + vinyl + DC-DC losses) |
+| **Power draw** (Pedal) | 12V DC, 350мА typical / 500мА peak (включая phaser + cold palette + DC-DC losses) |
 | **Feedback loop stability** | SPICE-verified для cartridges Q ≤ 1000 |
 | **Exciter peak power** | 3Вт sustained, 8Вт peak |
 
@@ -281,54 +297,56 @@ Customer может start с pedal (для studio/live performance), позже 
 
 Контролы идентичны для обеих SKU (одна схема). Раскладка отличается только enclosure-level — pedal vs Eurorack.
 
-### Раскладка панели — Pedal SKU (~178×119мм, ModFactor-class)
-
-Layout соответствует mockup:
+### Раскладка панели — Pedal SKU (~203×140мм, big-box class)
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  ◯                          LAST  NIGHT                                   ◯  │
-│                          system suicide                                      │
-│                                                                              │
-│  ◉ INPUT     ┌─────────────────────────┐    ◉ DRY/WET   ◉ OUTPUT             │
-│              │     CARTRIDGE SLOT      │                                     │
-│              │   horizontal slot —     │   ◉ CARTRIDGE FEEDBACK              │
-│              │   plate visible         │                                     │
-│              └─────────────────────────┘                                     │
-│                                                                              │
-│  ┌─COLOR─┐                                                                   │
-│  │ COLOR │                                                ▢ SWITCH CLIP      │
-│  │ WARM  │  ◉ DRIVE   ◉ ATK   ◉ DEC      ◉ POSIT  ◉ BOOST                   │
-│  │ DARK  │                                                                   │
-│  │ COLOR │                       ◉ LowPass         ┌──── Shape Form ────┐   │
-│  │ MIX   │                       ◉ HiPass          │   slider →          │   │
-│  └───────┘                                          └─────────────────────┘   │
-│                                                                              │
-│  ◉ TONE   ◉ NOISE   ◉ COLOR(geiger)   ◉ Phase/Flutter  ◉ DEPTH  ◉ SPEED     │
-│                                                                              │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  CV PATCH BAY (mini-jacks 3.5мм)                                             │
-│                                                                              │
-│  Row A: ⊙IN ⊙DRIVE ⊙DECAY ⊙NOISE ⊙POS ⊙DAMP ⊙LoPass ⊙MIX  ⊙EG ⊙DRY ⊙WET    │
-│  Row B: ⊙CLK ⊙TONE ⊙Attack ⊙COLOR ⊙FeedBack ⊙HiPass ⊙Boost  ⊙L ⊙MAIN ⊙R    │
-│                                                                              │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  ▣ TAP        ▣ GATE/CRUSH                       ▣ BYPASS    ▣ FREEZE        │
-│  (footswitch) (footswitch)                       (footswitch)(footswitch)    │
-│                                                                              │
-│                  12V DC ⊕━○━⊖    EXP IN  ⊙                                   │
-│  ◯                                                                       ◯   │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  ◯                            LAST  NIGHT                                     ◯  │
+│                            system suicide                                        │
+│                                                                                  │
+│  ◉ INPUT     ┌─[──────────────────────────────]─┐    ◉ DRY/WET   ◉ OUTPUT        │
+│              │       CARTRIDGE SLOT             │                                │
+│              │       horizontal — plate visible │    ◉ CARTRIDGE FEEDBACK        │
+│              └─[──────────────────────────────]─┘                                │
+│                                                                                  │
+│  ┌─COLOR─┐                                                                       │
+│  │ COLOR │                                                       ▢ SWITCH CLIP   │
+│  │ WARM  │  ◉ DRIVE   ◉ ATK   ◉ DEC      ◉ POSIT  ◉ BOOST                       │
+│  │ DARK  │                                                                       │
+│  │ COLOR │             ◉ LowPass           ▢ PHASER ON/OFF                       │
+│  │ MIX   │             ◉ HiPass            ◉ PHASE/FLUTTER  ◉ DEPTH  ◉ SPEED     │
+│  └───────┘                                                                       │
+│                                                                                  │
+│  ◉ TONE     ◉ NOISE/GEIGER     ◉ COLOR                                           │
+│              (bipolar, center)  (noise filter)                                   │
+│                                                                                  │
+│  [Phase 2 v3 PCB upgrade adds: ◉ PULSE  ◉ FOG  ◉ FROST  ◉ CHILL  ◉ HUM ]        │
+│                                                                                  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│  CV PATCH BAY (mini-jacks 3.5мм)                                                 │
+│                                                                                  │
+│  Row A: ⊙IN ⊙DRIVE ⊙DECAY ⊙NOISE ⊙POS ⊙DAMP ⊙TOLL⊙LoPass ⊙MIX ⊙EG ⊙DRY ⊙WET    │
+│  Row B: ⊙CLK ⊙TONE ⊙Attack ⊙COLOR ⊙FB ⊙HiPass ⊙Boost            ⊙L ⊙MAIN ⊙R    │
+│                                                                                  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│  ▣ KILL          ▣ FREEZE                       ▣ TOLL           ▣ STALL         │
+│  (momentary)     (latching)                     (momentary)      (latching)      │
+│                                                                                  │
+│                  12V DC ⊕━○━⊖    EXP IN  ⊙                                       │
+│  ◯                                                                           ◯   │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Pedal layout особенности**:
-- **4 footswitches** в нижнем ряду: TAP / GATE-CRUSH / BYPASS / FREEZE.
-- **2 ряда CV patch bay** (всего ~21 mini-jack) — modular-style integration с external CV.
-- **Cartridge slot horizontal** в top section — visible через окно.
+**Pedal layout особенности** (203×140мм, big-box class — Strymon BigSky / Eventide H9 Max):
+- **4 footswitches**: KILL / FREEZE / TOLL / STALL (жесты "холодной ночи").
+- **2 ряда CV patch bay** (~22 mini-jack) — modular-style integration с external CV.
+- **Cartridge slot horizontal** в top section с brackets на обоих концах — plate visible через окно 100×60мм.
+- **Bipolar NOISE/GEIGER knob** в нижнем ряду — центральный detent в положении 12 часов = off; CCW = continuous zener noise; CW = Geiger cluster ticks.
 - **Color preset slider** vertical (5 positions) — quick tone preset selector.
-- **Shape Form slider** horizontal — phaser LFO waveform shape.
+- **PHASER ON/OFF toggle** — engage / bypass phaser section.
 - **SWITCH CLIP toggle** — soft/hard clipper mode.
-- **12V DC jack** (center-negative, 2.1мм barrel) + **EXP pedal jack** на rear (или нижний край).
+- **12V DC jack** (center-negative, 2.1мм barrel) + **EXP pedal jack** на rear.
+- Phase 2 v3 PCB upgrade — добавляет 5 cold-palette knobs (PULSE/FOG/FROST/CHILL/HUM) в специально отведённом ряду.
 
 ### Раскладка панели — Eurorack SKU (40HP × 128.5мм)
 
@@ -342,28 +360,28 @@ Layout соответствует mockup:
 │                                                                          │
 │  ◉ INPUT  ◉ DRIVE  ◉ ATK  ◉ DEC  ◉ POSIT  ◉ BOOST  ◉ DRY/WET  ◉ OUTPUT  │
 │                                                                          │
-│  ┌─COLOR─┐  ◉ LowPass    ◉ HiPass         ┌── Shape Form slider ─────┐  │
-│  │slider │                                 │                           │  │
-│  │ COLOR │  ◉ TONE  ◉ NOISE  ◉ COLOR(geig) │                           │  │
-│  │ WARM  │                                 │  ▢ SWITCH CLIP            │  │
-│  │ DARK  │  ◉ Phase/Flutter  ◉ DEPTH      └───────────────────────────┘  │
-│  │ COLOR │  ◉ SPEED   ◉ CARTRIDGE FB                                     │
-│  │ MIX   │                                                               │
-│  └───────┘                                                               │
+│  ┌─COLOR─┐  ◉ LowPass    ◉ HiPass         ▢ PHASER ON/OFF                │
+│  │slider │                                                                │
+│  │ COLOR │  ◉ TONE  ◉ NOISE/GEIGER  ◉ COLOR  ◉ Phase/Flutter             │
+│  │ WARM  │           (bipolar)              ◉ DEPTH  ◉ SPEED              │
+│  │ DARK  │                                                                │
+│  │ COLOR │           ◉ CARTRIDGE FB         ▢ SWITCH CLIP                 │
+│  │ MIX   │                                                                │
+│  └───────┘                                                                │
 │                                                                          │
 │  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │              [  C A R T R I D G E   S L O T  ]                     │ │
-│  │     horizontal dock — magnetic mount + retention pin               │ │
-│  │              100×60мм plate window                                 │ │
+│  │           [─ C A R T R I D G E   S L O T ─]                        │ │
+│  │      horizontal dock — magnetic mount + retention pin              │ │
+│  │           100×60мм plate window между brackets                     │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
-│  ▢ FREEZE toggle    ▢ TAP/SYNC button    ▢ GATE-CRUSH button             │
+│  ▢ KILL btn   ▢ FREEZE btn   ▢ TOLL btn   ▢ STALL btn                    │
 │  ◉ Activity LED  ◉ Clip L  ◉ Clip R  ◉ Damp LED                          │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  CV inputs (3.5мм Thonkiconn):                                          │
-│  ⊙IN ⊙DRIVE ⊙DECAY ⊙NOISE ⊙POS ⊙DAMP ⊙LoPass ⊙HiPass ⊙MIX ⊙CLK         │
-│  ⊙Attack ⊙TONE ⊙COLOR ⊙FB ⊙Boost                                        │
+│  CV inputs (3.5мм Thonkiconn):                                           │
+│  ⊙IN ⊙DRIVE ⊙DECAY ⊙NOISE(bipolar) ⊙POS ⊙DAMP ⊙TOLL ⊙LoPass ⊙HiPass     │
+│  ⊙MIX ⊙CLK ⊙Attack ⊙TONE ⊙COLOR ⊙FB ⊙Boost                              │
 │                                                                          │
 │  Audio:  ⊙ MAIN L  ⊙ MAIN R   ⊙ DRY OUT  ⊙ WET OUT  ⊙ EG OUT             │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -371,39 +389,51 @@ Layout соответствует mockup:
 
 ### Полная таблица контролов
 
+**Phase 1 ship (ядро + базовые FX)**:
+
 | # | Контрол | Тип | Функция | CV input |
 |---|---------|-----|---------|----------|
-| 1 | **INPUT** | Pot lin | Input gain (compatible с line level и instrument) | ✓ IN CV (level/trim) |
+| 1 | **INPUT** | Pot lin | Input gain (compatible с line level и instrument) | ✓ IN CV |
 | 2 | **CARTRIDGE FEEDBACK** | Pot log | Уровень рециркуляции в plate-loop. На max → self-oscillation | ✓ FeedBack CV |
 | 3 | **DRY/WET** | Pot log | Mix dry vs обработанного | ✓ MIX CV |
 | 4 | **OUTPUT** | Pot lin | Master output level | — |
 | 5 | **DRIVE** | Pot log | Уровень сигнала на exciter, глубина сатурации | ✓ DRIVE CV |
 | 6 | **ATK (Attack)** | Pot log | Envelope follower attack 1–48мс | ✓ Attack CV |
 | 7 | **DEC (Decay)** | Pot log | Envelope follower decay 10мс–1с | ✓ DECAY CV |
-| 8 | **POSIT (Position)** | Pot dual-gang | Crossfade piezo A↔B (тембральный) | ✓ POS CV |
+| 8 | **POSIT (Position)** | Pot dual-gang lin | Crossfade piezo A↔B (тембральный) | ✓ POS CV |
 | 9 | **BOOST** | Pot lin | Pre-emphasis HF shelf 0 → +8dB | ✓ Boost CV |
 | 10 | **LowPass** | Pot lin | LPF cutoff post-pickup | ✓ LoPass CV |
-| 11 | **HiPass** | Pot lin | HPF cutoff post-pickup (новый dual-filter design) | ✓ HiPass CV |
+| 11 | **HiPass** | Pot lin | HPF cutoff post-pickup (dual-filter design) | ✓ HiPass CV |
 | 12 | **TONE** | Pot lin | Master tone tilt EQ | ✓ TONE CV |
-| 13 | **NOISE** | Pot log | Noise generator level mix | ✓ NOISE CV |
-| 14 | **COLOR (geiger)** | Pot lin | Geiger-noise color: continuous hiss → cluster pulses → discrete clicks | ✓ COLOR CV |
-| 15 | **Phase/Flutter** | Pot lin | Phaser feedback / resonance peak | — |
-| 16 | **DEPTH** | Pot lin | Phaser modulation depth (0–100%) | — |
-| 17 | **SPEED** | Pot log | Phaser + vinyl wow LFO rate (0.05–10 Гц) | ✓ CLK CV (sync to external clock) |
-| 18 | **Color slider** | Vertical 5-pos slider | Preset tone selector: COLOR / WARM / DARK / COLOR / MIX | — |
-| 19 | **Shape Form slider** | Horizontal slider | Phaser LFO waveform: triangle / sine / random / vinyl-skip / step | — |
-| 20 | **SWITCH CLIP** | 2-position toggle | Hard clip (LED) vs soft clip (diode) | — |
+| 13 | **NOISE / GEIGER** | **Center-detent pot, bipolar** | **CCW → continuous noise (zener BZX55C9V1). CW → Geiger cluster ticks (ATtiny85 LFSR + comparator). Center detent = off.** Один knob, две текстуры. | ✓ NOISE CV (bipolar) |
+| 14 | **COLOR** | Pot lin | Color filter on noise tract (LPF cutoff, white → brown) | ✓ COLOR CV |
+| 15 | **PHASER ON/OFF** | 2-pos toggle | Engage / bypass phaser section (optional immersion layer) | — |
+| 16 | **PHASE/FLUTTER** | Pot lin | Phaser feedback / resonance peak | — |
+| 17 | **DEPTH** | Pot lin | Phaser modulation depth (0–100%) | — |
+| 18 | **SPEED** | Pot log | Phaser LFO rate (0.05–10 Гц) | ✓ CLK CV (sync to external clock) |
+| 19 | **Color slider** | Vertical 5-pos slider | Preset tone selector | — |
+| 20 | **SWITCH CLIP** | 2-pos toggle | Hard clip (LED) vs soft clip (diode) | — |
 
-### Footswitches (Pedal SKU)
+**Phase 2 ship (cold-palette upgrade kit)** — v3 PCB revision добавляет:
 
-| Switch | Функция |
-|--------|---------|
-| **TAP** | Tap-tempo для phaser SPEED + vinyl wow rate sync |
-| **GATE/CRUSH** | Latching: gate (signal under threshold cuts) + bitcrush sample-hold для destruction effect |
-| **BYPASS** | Relay-buffered true bypass (no signal coloration when off) |
-| **FREEZE** | Latching: freezes feedback loop, бесконечный sustain |
+| # | Контрол | Тип | Функция | CV input |
+|---|---------|-----|---------|----------|
+| 21 | **PULSE** | Pot lin | Slow LFO 0.05–2Гц на damper-pressure → tail "дышит" | ✓ PULSE CV |
+| 22 | **FOG** | Pot lin | Apperiodic damper-mod (4066 S&H + slow slew) | ✓ FOG CV |
+| 23 | **FROST** | Pot lin | HF absorber: VC-LPF в feedback loop sweep-down ВЧ | ✓ FROST CV |
+| 24 | **CHILL** | Pot lin | Expander с brittle release (anti-compression) | ✓ CHILL CV |
+| 25 | **HUM** | Pot lin | Ferrite-coil antenna pickup level (50/60Гц mains hum) | ✓ HUM CV |
 
-В Eurorack SKU: TAP/SYNC button, GATE-CRUSH button, FREEZE toggle. BYPASS не нужен (можно просто отключить кабель).
+### Footswitches (Pedal SKU — 4 жеста "холодной ночи")
+
+| Switch | Тип | Функция |
+|--------|-----|---------|
+| **KILL** | momentary | Мьют входа, reverb tail продолжает играть и затухать |
+| **FREEZE** | latching | Feedback loop locks, контент бесконечно sustainит и деградирует |
+| **TOLL** | momentary | **Solenoid impulse strike** (5–10мс pulse) → пластина звенит как колокол. Bell-strike независимо от audio input |
+| **STALL** | latching | **Forced damper hold** — solenoid sustained pressure → decay stuck at minimum. Release = decay resumes |
+
+В Eurorack SKU те же четыре функции — большие кнопки на лицевой панели + соответствующие CV/gate inputs. KILL/FREEZE — стандартные, TOLL/STALL — solenoid-actuated (один соленоид, два режима через driver logic).
 
 ### CV Patch Bay (Pedal: ~21 jacks; Eurorack: ~15 jacks)
 
@@ -415,21 +445,26 @@ Layout соответствует mockup:
 - DRY OUT (separate dry signal post-buffer)
 - WET OUT (separate wet signal без dry)
 
-**CV inputs**:
+**CV inputs (Phase 1)**:
 - IN CV (input level)
 - DRIVE CV
 - ATTACK CV
 - DECAY CV
-- NOISE CV
+- **NOISE CV (bipolar — signed, splits noise/geiger via signed amount)**
 - POS CV (Position)
-- DAMP CV (solenoid damper)
+- DAMP CV (solenoid DAMP mode sustained)
+- **TOLL TRIG (gate trigger для solenoid strike pulse)**
 - LoPass CV
 - HiPass CV
 - MIX CV (dry/wet)
 - TONE CV
-- COLOR CV (Geiger color)
+- COLOR CV (noise color filter)
 - FeedBack CV (cartridge feedback)
 - Boost CV
+- CLK (tap-tempo sync для phaser SPEED)
+
+**CV inputs (Phase 2 upgrade adds)**:
+- PULSE CV, FOG CV, FROST CV, CHILL CV, HUM CV
 
 **Outputs (CV/audio)**:
 - EG OUT (envelope follower output, 0-5V для external CV destinations)
