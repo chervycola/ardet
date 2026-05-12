@@ -7,7 +7,7 @@
 1. **`01_undefined_modules.md`** — 4 модуля с неопределённой архитектурой:
    - Be Careful (фильтр с 3 conflicting концепциями → glass plate резонатор).
    - Is My (3 conflicting функции → vactrol crossfader).
-   - And My (TBD → Day↔Night crossfader).
+   - And My (TBD → ~~Day↔Night crossfader~~ **superseded — см. `05_and_my_respec.md`**).
    - Body Blood And Salt (safety + scope → defer to Phase 5).
 
 2. **`02_last_day_scope.md`** — 6 decisions для Last Day:
@@ -26,6 +26,8 @@
    - Exciter tiering (DAEX25 vs DAEX32).
    - Mount mechanism (magnetic vs screw).
    - Packaging standards.
+
+5. **`05_and_my_respec.md`** — пересмотр And My (2026-05): MOSFET-shaper из ESC FPV-дрона + выносной пилотный пульт по MIDI/TRS, edition of 13. Заменяет decision 01-3.
 
 4. **`04_production_strategy.md`** — 8 decisions для business model:
    - Roadmap phasing (5 phases sequential).
@@ -55,7 +57,7 @@
 ## 01_undefined_modules
 - Be Careful: A (glass plate)
 - Is My: A (vactrol crossfader)
-- And My: A (Day↔Night crossfader)
+- And My: A (Day↔Night crossfader) — **SUPERSEDED 2026-05, см. `05_and_my_respec.md`**
 - BBAS: A (defer to Phase 5)
 
 ## 02_last_day_scope

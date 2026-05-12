@@ -1,5 +1,7 @@
 # Production strategy — запуск серии
 
+> ⚠ **PARTIALLY OBSOLETE (2026-05)** — пункты, опирающиеся на And My как простой stereo VCA crossfader ($150–200 retail, 8HP, R&D 2–3 месяца), не отражают текущую архитектуру. С 2026-05 And My — edition of 13 (MOSFET-shaper + выносной пилотный пульт), pricing и R&D-окно TBD. См. `05_and_my_respec.md` и `../SYSTEM_SUICIDE.md` §8. Цифры Phase 2 cumulative retail, BOM и pricing для And My ниже устарели.
+
 Сквозные вопросы по организации выпуска: roadmap sequencing, batch sizes, pricing, distribution. Требуется решений со стороны пользователя для согласования R&D с business model.
 
 ---

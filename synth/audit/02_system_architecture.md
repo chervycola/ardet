@@ -1,5 +1,7 @@
 # Системная архитектура SYSTEM SUICIDE — 9-модульная цепь
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — упоминания And My как «TBD / Undefined / crossfader» ниже отражают состояние до пересмотра. С 2026-05 And My — MOSFET-shaper из ESC FPV-дрона + выносной пилотный пульт, edition of 13. См. `../decisions/05_and_my_respec.md` и `../SYSTEM_SUICIDE.md` §8.
+
 Анализ согласованности системы: роли модулей, сигнальная цепь, HP-бюджет, сценарии использования, перформанс ergonomика.
 
 ---
