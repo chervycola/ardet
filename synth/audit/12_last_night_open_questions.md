@@ -1,6 +1,8 @@
 # Last Night — ответы на открытые вопросы
 
 > ⚠ **HISTORICAL NOTE (pre-2026-05)** — упоминания And My как «под-specified» в разделах ниже относятся к прежней трактовке модуля. С 2026-05 архитектура And My зафиксирована (MOSFET-shaper + пилотный пульт, edition of 13), см. `../decisions/05_and_my_respec.md`.
+>
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 07)** — ответы по reverb-ядру (выбор JFET, mini-XLR, push-pull biasing, R8 wirewound) **остаются актуальными**. Изменено: Q10 «stereo dead weight в педали» **superseded** — в combine-каноне stereo I/O committed (TRS+RCA+mini-jack); Q об HP-формате (20HP vs 40HP) — superseded, новый формат 40HP Eurorack + big-box pedal. Новые open questions для cold palette FX перечислены в `decisions/07_last_night_combine_concept.md`.
 
 Вопросы в конце брифов v2.0 и v2.1. Каждый получает явный ответ со ссылкой на соответствующий раздел аудита.
 

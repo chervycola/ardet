@@ -1,5 +1,7 @@
 # Last Night — акустика пластины
 
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 07)** — этот акустический анализ **полностью актуален** для reverb-ядра. Combine-канон 2026-05 добавляет cold palette FX (PULSE / FOG / FROST / CHILL / GEIGER / HUM / STALL / TOLL) как design layer поверх ядра — акустические выводы здесь не пересматриваются, добавится отдельный акустический анализ для cold palette FX при v3 ревизии (в основном: PULSE/FOG modulation depth vs perceived breath rate, FROST cut-off range, HUM-antenna pickup-зависимость от shielding). См. `decisions/07_last_night_combine_concept.md`.
+
 Проверка реализма акустических утверждений: RT60 по материалам, плотность мод, выбор датчиков, покрытия, крепление.
 
 ---

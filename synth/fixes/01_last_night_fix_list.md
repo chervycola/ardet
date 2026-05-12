@@ -1,5 +1,7 @@
 # Last Night — fix list
 
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 07)** — все 15 фиксов **остаются обязательными** для reverb-ядра v2.1. Combine-канон 2026-05 (40HP+pedal share PCB + cold palette FX) — это **отдельный design layer v3**, добавляемый поверх ядра. v3 PCB ревизия потребует отдельного fix list (cold palette FX schematic + PCB layout under bigger panel + footswitch routing + stereo I/O). См. `decisions/07_last_night_combine_concept.md`.
+
 Конкретные правки к схеме Last Night v2.1, сгруппированные по фазам внедрения. Каждый fix: ссылка на блок в `audit/10_last_night_engineering.md`, точное изменение, причина, BOM impact, severity.
 
 Применять в порядке приоритета: **IMMEDIATE → SHORT → MEDIUM → LONG**.

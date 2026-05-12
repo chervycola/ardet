@@ -1,5 +1,9 @@
 # Last Night v2.1 — инженерный разбор схемы
 
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 07)** — этот аудит **полностью актуален** как разбор v2.1 reverb-ядра. Combine-канон 2026-05 (Decision 07) **не переписывает** v2.1 schematic — он добавляет поверх ядра design layer cold palette FX (PULSE / FOG / FROST / CHILL / GEIGER / HUM / STALL / TOLL). Все 15 блоков, описанных здесь, остаются source of truth для reverb-ядра. Cold palette FX потребуют отдельного блочного разбора при v3 PCB revision.
+>
+> Также: формат модуля изменён с 20HP Eurorack на **40HP Eurorack + big-box pedal на одной PCB**. PCB layout, питание и I/O должны быть пересмотрены при v3 ревизии. См. `decisions/07_last_night_combine_concept.md` и `SYSTEM_SUICIDE.md` §9.
+
 По-блочная критика схемотехники ревербератора. Источник — брифы v2.0, v2.1 + **каркас `wood_reverb_logical_schematic.html`** (added post-factum, triggered revision — см. `13_schematic_cross_reference.md`).
 
 Для каждого из 15 блоков: **intent** (зачем нужен), **topology** (как реализовано), **parts** (номиналы/компоненты), **noise/signal** (параметры), **failure modes** (что может пойти не так).

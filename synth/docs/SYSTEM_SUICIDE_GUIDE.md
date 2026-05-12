@@ -359,40 +359,54 @@ VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-др
 
 ## 9 · LAST NIGHT
 
-> *Резонирующая материя — звук обретает пространство и остывает.*
+> *Холодная ночь после конца — резонирующая материя, дыхание руин, треск радиации, голос мёртвой электросети, колокол в опустевшем соборе.*
 
-Аналоговый ревербератор на физических сменных пластинах. Surface exciter возбуждает пластину аудиосигналом, два пьезо снимают резонанс. Материал пластины определяет тембр. Не «plate reverb» в EMT-смысле — новая категория: resonator reverb с материал-зависимым character.
+Standalone-комбайн «холодной ночи»: полная аутентичная коробка эффектов в одной педали (40HP Eurorack + big-box pedal на одной PCB), симметричный диптих с Last Day. Physical-resonator reverb на сменных пластинах + dual piezo position crossfade + solenoid с двойной функцией (damper + striker). Поверх — восемь эффектов «холодного» словаря, каждый имеет парный антипод в hot palette Last Day.
 
 ```
               ┌─ EXCITER ─┐
               │   ▼  ▼    │
          ┌────┴───────────┴────┐
-         │                     │  ◄── solenoid hit
-         │   CARTRIDGE PLATE   │       (felt tip, "DUST")
-         │   (wood / bone /    │
-         │    glass / stone /  │
-         │    metal / nephrite)│
+         │                     │  ◄── solenoid:
+         │   CARTRIDGE PLATE   │      • DAMP/STALL (hold)
+         │   (oak / marble /   │      • STRIKE/TOLL (impulse)
+         │    brass / steel /  │
+         │    bone / glass)    │
          └─┬─────────────────┬─┘
-           │                 │
         piezo A           piezo B
-        (ближний)         (дальний)
+        (ближний)         (дальний) ──► stereo crossfade
            │                 │
            └────┬────────────┘
                 ▼
-            ┌────────┐
-            │ FB →   │  ◄── FB SEND/RETURN
-            │ DELAY  │      (Last Day loop)
-            └────────┘
+        ┌─── COLD PALETTE FX ───┐
+        │ PULSE  FOG   FROST    │ ◄── damper/EQ/dynamics modulation
+        │ CHILL  GEIGER  HUM    │     (period/apериод/HF/dyn/tick/EMI)
+        └───────────┬───────────┘
+                    ▼
+        ┌────────┐
+        │ FB →   │  ◄── FB SEND/RETURN
+        │ Last Day loop / external
+        └────────┘
                 │
-                ▼
-              MIX
+                ▼  KILL / FREEZE / TOLL / STALL
+              MIX (TRS + RCA + mini-jack, stereo)
 ```
 
-**Материал (сменные картриджи Phase 1)**: дерево, кость, стекло, камень, металл, нефрит. Phase 2: карбон, медь, ткани (wood-coated variations).
+**Материал (сменные картриджи Phase 1)**: оак (raw/linseed), maple (shellac), мрамор, латунь, spring steel. Phase 2: ebony, нефрит, медь, стекло (Pyrex), кость, титан.
 
-**Контролы**: DECAY, DRIVE (pre-emphasis), TONE, FREEZE, FB SEND/RETURN, картридж-slot с magnetic mount.
+**Cold palette эффекты (v3 design layer)**:
+- **PULSE** — periodic damper LFO, дыхание ночи (↔ HAZE)
+- **FOG** — apериодический damper drift, туман над руинами (↔ MIRAGE)
+- **FROST** — high-band absorber, холод съедает воздух (↔ BLEACH)
+- **CHILL** — expander с brittle release, хрупкая динамика (↔ TAR)
+- **GEIGER** — sparse single tick, радиация после события (↔ CICADA)
+- **HUM** — mains-hum antenna, голос мёртвой электросети (↔ HEATWAVE)
+- **STALL** — held damper, forced short decay (↔ DRAG)
+- **TOLL** — solenoid impulse strike, колокол в пустом соборе (↔ CRASH)
 
-**Голос**: пространственный отпечаток материала. Дерево — тёплый wooden room. Кость — narrow и harsh. Стекло — bright и кристаллический. Камень — long и каменный. Металл — индустриальный, металлический. Нефрит — короткий, плотный, минеральный.
+**Перформ-словарь** (4 footswitches в pedal-форме, 4 кнопки + gate ins в Eurorack-форме): KILL / FREEZE / TOLL / STALL.
+
+**Голос**: пространственный отпечаток материала + холодное дыхание руин. Дерево — тёплый wooden room. Кость — narrow и harsh. Стекло — bright и кристаллический. Камень — long и каменный. Металл — индустриальный, shimmer. PULSE/FOG-модуляция damper'а делает хвост живым (ритмичное + случайное дыхание). GEIGER сыплет редкие тики, HUM подмешивает гудение мёртвой инфраструктуры. TOLL ударяет пластину как колокол, STALL обрезает хвост в drop. Дуб-essential (KILL/TOLL/STALL/CHILL), ambient-essential (PULSE/FOG/FROST/HUM/FREEZE), noise-ready (self-sustaining FEEDBACK + GEIGER cluster).
 
 \newpage
 

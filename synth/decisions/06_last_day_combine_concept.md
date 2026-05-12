@@ -131,8 +131,8 @@
 
 ## Что переезжает (не теряем)
 
-- **DUST** (single Geiger-style clicks) — переезжает в другой модуль линейки. Кандидат: Last Night (там уже есть noise-генератор на faulty BC547, DUST стилистически родственник). Или новый сателлит "холодной" группы. **TODO**: зафиксировать целевой модуль для DUST.
-- **WIRE** (EM antenna для сетевого hum) — переезжает либо к Last Night (как side-noise-источник), либо к будущему утилитарному сателлиту. **TODO**: зафиксировать.
+- **DUST** (single Geiger-style clicks) — формализован как **GEIGER** в cold palette Last Night (Decision 07). Использует существующий BZX55C9V1 zener noise generator v2.1, получает имя в общем палитарном наборе.
+- **WIRE** (EM antenna для сетевого hum) — формализован как **HUM** в cold palette Last Night (Decision 07), парный антипод HEATWAVE в Last Day. Mains-hum antenna pickup как часть холодного EMI-словаря.
 
 ## Открытые вопросы для следующих итераций
 

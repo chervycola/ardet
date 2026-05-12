@@ -1,5 +1,7 @@
 # Schematic cross-reference — каркас v2.0 vs. аудит
 
+> ⚠ **CONTEXT NOTE (post-2026-05, Decision 07)** — этот cross-reference **полностью актуален** для v2.1 reverb-ядра. Combine-канон 2026-05 добавляет cold palette FX как отдельный design layer — нового каркаса для них пока нет, и v2.0 каркас он не отменяет. См. `decisions/07_last_night_combine_concept.md`.
+
 Этот файл — систематическая сверка **логического каркаса схемы** (`wood_reverb_logical_schematic.html`, 14 секций) с первоначальным аудитом (`10_last_night_engineering.md`).
 
 Цель: зафиксировать, что подтвердилось, что исправлено, какие новые детали появились в каркасе.
