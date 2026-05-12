@@ -2,6 +2,9 @@
 
 > Production-ready документация: схемы, BOM, PCB layout, последовательность сборки, тестирование, troubleshooting.
 
+> **Версия**: v4.0 (consolidated base, Decision 08).
+> Изменения относительно v3.0: BBD vinyl wow/flutter блок (block 17) удалён — переезжает в Last Day как PT2399 OLD VINYL character. Gate/Crush блок (block 18) удалён — заменён solenoid double-function (DAMP + TOLL strike). Noise generator (block 12) и Geiger pattern (block 15) объединены в **bipolar NOISE/GEIGER knob**. Cold-palette FX blocks (PULSE/FOG/FROST/CHILL/HUM) — Phase 2 v3 PCB upgrade layer.
+
 **Версия**: v2.2 (post-audit, post-decisions)
 **Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
 **Companion document**: `LAST_NIGHT_SPEC.md` (продуктовая спецификация для end-user)
@@ -396,41 +399,87 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 - **D_ATK + D_DEC** added: independent charge/discharge paths.
 - **OTA2 unused** (note in original): tie inputs (pins 13, 14) and I_abc (pin 16) to GND.
 
-### Block 12. Noise Generator (Q4 / D_NOISE, U2C) **[REVISED]**
+### Block 12. Bipolar NOISE / GEIGER Generator **[REVISED v4 — объединено с прежним Block 15]**
+
+> **v4 consolidation (Decision 08)**: один **center-detent bipolar knob** RV_NOISE_GEIGER управляет двумя независимыми noise source'ами через split VCAs. CCW половина → continuous zener noise, CW половина → Geiger cluster ticks (ATtiny85 LFSR). Center detent = both VCAs at zero gain = no noise mix.
 
 ```
-  [REVISED] BC547 reverse-breakdown → BZX55C9V1 zener (stable, specified noise):
+  ============= NOISE SOURCE A — Continuous zener =============
 
   +12V
     │
-  R_NOISE (10kΩ) [REVISED 100kΩ→10kΩ for proper zener current]
+  R_NOISE (10kΩ)
     │
     ▼
-  D_NOISE (BZX55C9V1, 9.1V zener, reverse-biased) ──┬── C_NI (100nF) ── R22 (10kΩ) ──┐
-    │                                                 │                                │
-    └────────────────────────────────────────────────┴─────────────────────────────► U2C (TL074)
-                                                                                      │ inverting amp
-                                                                                      │
-                                                                                  R23 (1MΩ)
-                                                                                      │ (gain)
-                                                                                      │
-                                                                                C_NF (10pF)
-                                                                                      │
-                                                                                      ▼
-                                                                              C_NO (1µF)
-                                                                                      │
-                                                                                  RV_COLOR
-                                                                                  (100kΩ) ── C_COL (10nF)
-                                                                                      │
-                                                                                  RV_NOISE
-                                                                                  (100kΩ)
-                                                                                      │
-                                                                                  NOISE_OUT → Mix
+  D_NOISE (BZX55C9V1, 9.1V zener, reverse-biased) ── C_NI (100nF) ── R22 (10kΩ) ──┐
+                                                                                    │
+                                                                                    ▼
+                                                                            U2C TL074 (×100)
+                                                                                    │
+                                                                              [hiss output]
+                                                                                    │
+                                                                                    ▼
+                                                                            VCA_NOISE_CONT
+                                                                            (controlled by
+                                                                             negative half of
+                                                                             RV_NOISE_GEIGER CV)
 
-  Gain = R23/R22 = 1M/10k = ×100
+  ============= NOISE SOURCE B — Geiger cluster ticks =============
+
+  +5V (LDO from +12V via 7805)
+    │
+    ▼
+  ATtiny85 (firmware: LFSR + cluster timing + comparator threshold sweep)
+    │
+    ├─ PWM_OUT ──► R_LPF (10kΩ) ── C_LPF (10nF) ──► audio click pulse
+    │                                                       │
+    │                                                       ▼
+    └─ TICK_RATE_CV (ADC pin) ◄── reads CW half             VCA_NOISE_CLUSTER
+                                  of RV_NOISE_GEIGER         (controlled by
+                                                              positive half of
+                                                              RV_NOISE_GEIGER CV)
+
+  ============= BIPOLAR KNOB SPLIT LOGIC =============
+
+  RV_NOISE_GEIGER (center-detent, 100kΩ lin, ±50% from center):
+    Wiper voltage:
+      Full CCW = -5V (max continuous noise)
+      Center detent = 0V (off)
+      Full CW = +5V (max Geiger cluster rate)
+
+    Op-amp comparator splits signed voltage:
+      CV_NEG = ABS(CV) when CV < 0, else 0  → into VCA_NOISE_CONT control
+      CV_POS = ABS(CV) when CV > 0, else 0  → into VCA_NOISE_CLUSTER control + ATtiny85 ADC
+
+    Result: each half of knob acts as independent mix level for one noise texture.
+    Center detent = both VCAs zero = silent.
+
+  ============= MIX =============
+
+  VCA_NOISE_CONT ───────┐
+                        ├──► RV_COLOR (100kΩ) ── C_COL (10nF) [LPF] ──► NOISE_BUS
+  VCA_NOISE_CLUSTER ────┘                                                  │
+                                                                            ▼
+                                                                        to MIX (Block 13)
 ```
 
-**[REVISED]**: Q4 BC547 in reverse breakdown → **D_NOISE BZX55C9V1** (9.1V zener). Specified noise spec, batch-consistent, no degradation over time.
+**Components (v4 changes)**:
+- **RV_NOISE_GEIGER**: 100kΩ lin, **center-detent** pot (Alpha 9mm with detent). Critical: must have detent for tactile feedback of "off" position.
+- **VCA_NOISE_CONT**: half of LM13700 OTA (или CD4066 analog switch с PWM duty control via ATtiny85). Simple linear gain.
+- **VCA_NOISE_CLUSTER**: same approach, second channel.
+- **CV_NEG / CV_POS comparator**: 2× op-amp half (U_split), splits signed CV into two unipolar halves.
+- **ATtiny85-20PU**: firmware LFSR pseudo-random + comparator threshold sweep for cluster pattern. Reads RV_NOISE_GEIGER positive half via ADC pin to control tick rate (0.5–20 events/sec range).
+
+**[REVISED v4]**:
+- Block 12 (continuous noise) + Block 15 (Geiger) — теперь **единый bipolar control**.
+- BC547 reverse breakdown → BZX55C9V1 zener (stable, specified noise) — сохраняется.
+- ATtiny85 LFSR + comparator pattern — сохраняется.
+- **Новое**: split-knob logic, объединение в одну ручку.
+
+**Why bipolar split**:
+- One physical control, two textures. User intuition: CCW = "hiss/noise atmosphere", CW = "Geiger/radiation tension". Center = silence.
+- Detent guarantees tactile "off" without searching.
+- Both VCAs always present, instantly switchable via knob.
 
 ### Block 13. Mix + Stereo Output (U2D — TL074)
 
@@ -457,51 +506,75 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
   DRY_SEND ────── R_DR (47kΩ) ──┼── summing amp ─┘
 ```
 
-### Block 14. Solenoid Damper (Q5 — 2N7000) **[REVISED]**
+### Block 14. Solenoid Driver — Double-function DAMP + TOLL **[REVISED v4]**
+
+> **v4 consolidation (Decision 08)**: один соленоид, два логических режима. **DAMP** = sustained pressure (existing CV-controlled damper). **TOLL** = short impulse pulse (5–10мс) для bell-strike пластины как новый named-effect cold palette.
 
 ```
-  +12V                                  Gate drive (REVISED — proper turn-on margin):
+  +12V (audio rail)
     │
-    │    ┌────────────┐                 J_CV_DAMP ── R_DAM1 (47kΩ) [REVISED 100k→47k]
+    ├──────────────────────────────────┐
+    │                                   │
+    │    ┌────────────┐                 J_CV_DAMP ── R_DAM1 (47kΩ)
     │    │  SOLENOID  │                                │
-    │    │  5V push   │                                ├── R_DAM2 (10kΩ) ── Gate Q5
-    │    └──────┬─────┘                                │
-    │           │                                R_DAM3 (100kΩ)
-    │      D_SOL (1N4001)                              │
-    │     ──|◄── (flyback)                            GND
-    │           │                       
-    │      ┌────┴────┐                  Divider ratio: 100k / (47k+100k) = 0.68
-    └──────│ Drain    │                  CV 5V → gate 3.4V (solid turn-on, all 2N7000 specimens)
-           │ Q5 2N7000│                  
-      Gate─│          │                  CV 0V → gate 0V (clean off)
-           │ Source   │
-           └────┬─────┘
-               GND
+    │    │  5V push   │                                ├── R_DAM2 (10kΩ) ──► OR-gate input A
+    │    │  (cartridge)│                               │                         │
+    │    └──────┬─────┘                          R_DAM3 (100kΩ)                  │
+    │           │                                      │                         │
+    │      D_SOL (1N4001)                             GND                        │
+    │     ──|◄── (flyback)                                                       │
+    │           │                          J_TOLL_TRIG (gate input, 5V trigger)  │
+    │      ┌────┴────┐                            │                              │
+    └──────│ Drain   │                            ├──► Monostable (one-shot)    │
+           │ Q5 2N7000│                            │      555 timer, 5-10мс pulse│
+      Gate◄│         │◄────── R_GATE (10kΩ) ──────┤                              │
+           │ Source  │                            │           OR-gate input B    │
+           └────┬────┘                            │                              │
+               GND                       │                              │
+                                          │       OR gate (2× diodes OR)         │
+                                          └──────────► combined gate signal      │
+                                                              │                  │
+                                                              ▼                  │
+                                                       Q5 gate (open MOSFET) ────┘
+
+  ============= DAMP mode (sustained) =============
+  Path: J_CV_DAMP → R_DAM1/R_DAM3 divider → Gate Q5 sustained ON while CV high.
+  Use case: CV envelope held → solenoid pressed against plate → reverb tail damped.
+
+  ============= TOLL mode (impulse) =============
+  Path: J_TOLL_TRIG (or KILL footswitch via TOLL function) → 555 monostable →
+        5-10мс pulse → OR'd с DAMP path → Gate Q5 momentarily ON.
+  Use case: foot tap on TOLL footswitch → solenoid hits plate → bell-strike rings.
+
+  ============= Logical interaction =============
+  - If STALL footswitch latched (DAMP always-on): TOLL impulse is masked
+    (solenoid already pressed). Document as feature, not bug.
+  - If only TOLL pressed (DAMP CV = 0): clean impulse strike, plate rings free.
+  - If brief TOLL while DAMP CV mid-level: layered effect — strike under partial damp.
 ```
 
-**[REVISED]**: R_DAM1 100кΩ → **47кΩ** для solid MOSFET turn-on at CV 5V. Vorher (100k/100k divider gave 0.5 ratio = marginal 2.5V at gate, on threshold). Теперь 0.68 ratio = 3.4V на gate (reliable).
+**Components (v4 additions)**:
+- **U_TOLL_555**: NE555 monostable timer для 5–10мс pulse generation. Triggered by J_TOLL_TRIG или footswitch.
+- **R_555**: 47kΩ + **C_555**: 220nF → pulse width = 1.1 × RC = ~11ms.
+- **D_OR_A, D_OR_B**: 2× 1N4148 diodes для OR-gate combining DAMP path и TOLL pulse path.
+- **R_GATE**: 10kΩ gate-stop на Q5 (защита от ringing на gate).
 
-D_SOL **mandatory** — без flyback diode inductive kickback fries Q5 every off-transition.
+**[REVISED v4]**:
+- R_DAM1 100kΩ → 47kΩ — сохраняется из v3.
+- D_SOL 1N4001 flyback — сохраняется (mandatory).
+- **Новое**: 555 monostable + OR-gate diodes для TOLL pulse path.
+- **Новое**: J_TOLL_TRIG jack для external gate (gate trigger ≥5V).
+- Footswitch TOLL — momentary 3PDT, contacts pull J_TOLL_TRIG high → 5V.
 
-### Block 15. Geiger Pattern Noise (NEW — Phase 1 в pedal SKU, optional Eurorack)
+**Why one solenoid does both**:
+- Existing hardware reused. No second actuator needed.
+- TOLL pulse short (5-10мс) — solenoid plunger barely moves but enough to give plate a kick.
+- DAMP sustained — full plunger travel, felt tip pressed against plate.
+- Physically same actuator, two control profiles.
 
-ATtiny85 + 8-bit DAC + LFSR firmware → impulsive cluster events для post-apocalypse Geiger character. Активируется через **COLOR (geiger) knob** — на CCW continuous hiss (zener), на CW cluster pulses (MCU-generated).
+### Block 15. Removed in v4
 
-```
-  +5V LDO ──► ATtiny85 (program: LFSR + cluster timing)
-                  │
-              PWM out ──► RC filter (10k + 10nF) ──► audio mix
-                  │
-              GPIO (analog mode select) ──► Switch contoller
-                  │
-              CV in (COLOR CV) ──► ADC pin
-
-  COLOR knob position:
-   0  → analog zener noise (continuous hiss)
-   33 → mixed (zener + sparse clicks)
-   66 → cluster pulses (typical Geiger pattern)
-   100 → discrete clicks (sparse, alarming)
-```
+> Block 15 (Geiger Pattern Noise) **объединён с Block 12** в bipolar NOISE/GEIGER generator. Прежнее содержимое перенесено в Block 12. Slot 15 reserved.
 
 ### Block 16. Phaser (NEW — Phase/Flutter / DEPTH / SPEED)
 
@@ -549,69 +622,17 @@ Classic 4-stage OTA-based all-pass phaser, post-pickup, pre-VCA. Adds swirling m
 
 **Bypass**: phaser bypass switch on COLOR slider position 1 (COLOR без phaser).
 
-### Block 17. Vinyl FX — Wow / Flutter / Pitch warp (NEW)
+### Block 17. Removed in v4 (was Vinyl FX BBD)
 
-Симулятор разрушающегося граммофонного мотора. Modulates pitch reverb-tail через variable BBD-like delay.
+> **v4 consolidation (Decision 08)**: BBD vinyl wow/flutter блок **удалён из Last Night**. Vinyl/tape decay character принадлежит delay-секции — мигрирует в **Last Day** как "OLD VINYL" feature (PT2399 lo-fi alternative в parallel с oil-can magnetic tract). См. Decision 06 + Decision 08.
+>
+> Если pitch-warp эффект всё-таки нужен в Last Night — реализуется через **phaser feedback** (block 16) на extreme settings, или **PULSE/FOG damper modulation** (block 21+, Phase 2 v3 PCB).
 
-```
-  Wet signal (post-VCA) ──► BBD delay (V3207 1024-stage)
-                              │
-                              ▲
-                              │  variable clock
-                              │  from vinyl LFO
-                              │
-                          ┌───┴────┐
-                          │ Vinyl  │
-                          │ LFO    │  (separate from phaser LFO)
-                          │ ±2%    │
-                          │ pitch  │
-                          └────────┘
-                              │
-                          [Shape Form 
-                           selector ─► triangle/sine/skip-wow]
+### Block 18. Removed in v4 (was Gate / Crush)
 
-  Output: pitch-modulated wet signal.
-
-  Controls:
-  - SPEED knob shared с phaser SPEED (sync motion)
-  - DEPTH knob controls vinyl wow amplitude
-  - Shape Form selector swaps LFO waveform для both phaser и vinyl
-```
-
-**Implementation notes**:
-- **BBD chip**: Coolaudio V3207 (1024 stages, modern manufacture, replacement for MN3007). $5–8.
-- **Alternative budget**: PT2399 (digital echo IC, lo-fi character). $1.
-- **Clock generator**: V3102 companion chip (MN3101 replacement) or 555-based VCO.
-- **CV-controlled clock rate** = pitch shift amount.
-
-### Block 18. Gate / Crush (NEW — footswitch-driven destruction)
-
-GATE/CRUSH латчinг footswitch активирует destruction effect post-mixer:
-
-```
-  Mix output ──► [Gate cell] ──► [Crush cell] ──► Output buffer
-                      │              │
-                      │              │
-              Threshold pot       Bit-reduce
-              (gate cuts        sample-hold
-               under threshold) (downsamples + 
-                                quantizes)
-
-  Gate: ОУ comparator + VCA (4066 CMOS switch).
-  Crush: sample-hold (LF398) clocked by ATtiny PWM, 
-         bit-reduce via R-2R ladder с stuck-at-0 LSB.
-
-  Footswitch: latching toggle. LED indicator.
-  Threshold (ручка скрытая или sub-knob): hidden trim
-              для gate threshold setting.
-```
-
-**Components**:
-- 4066 quad CMOS switch (gate cell): $0.50.
-- LF398 sample-hold IC (crush cell): $1.00.
-- Comparator (LM393 dual): $0.30.
-- ATtiny85 (used dual-purpose for Geiger noise + crush clock): shared.
-- 6.3мм footswitch (3PDT для bypass + LED): $3.00.
+> **v4 consolidation (Decision 08)**: Gate/Crush footswitch destruction блок **удалён**. Заменён **solenoid double-function** (Block 14) — TOLL (impulse strike) + STALL (held damper). Cold-palette gestures более тематически точные чем generic gate+bitcrush.
+>
+> Если bitcrush-style destruction нужен — Phase 3+ feature, отдельный TBD блок.
 
 ### Block 19. Isolated DC-DC (Pedal SKU only — NEW)
 
@@ -709,23 +730,142 @@ Slider на левой стороне панели вибирает preset combi
 - 4PDT vertical slider switch (Alpha 4P5T or similar): $5.00.
 - Resistor bank (5 sets × 4 resistors): $0.20.
 
-### Suммарная сводка (post-FX engine)
+---
 
-- **20 functional blocks** total (was 15, added 5 для FX engine + pedal power).
-- **6 ICs analog**: 2× TL072 + 2× TL074 + 2× LM13700 (OTA1 = VCA, OTA2 = phaser feedback drive).
-- **1 BBD**: V3207 (vinyl pitch warp).
-- **1 BBD clock**: V3102 (или 555-based VCO alternative).
-- **1 sample-hold**: LF398 (crush cell).
-- **1 quad CMOS switch**: 4066 (gate cell).
-- **1 dual comparator**: LM393.
-- **1 MCU**: ATtiny85 (Geiger noise + crush clock + tap-tempo).
-- **6 transistors**: LSK489A + BD139 + BD140 + 2× 2N7000 (solenoid + audio gate) + 1 spare.
+## Phase 2 Cold Palette FX Layer — v3 PCB revision (blocks 21–25)
+
+> Эти 5 блоков добавляются в v3 PCB revision как **upgrade kit** к Phase 1 ship. Pin-header экспансия PCB (10-pin) позволяет cold palette daughter-board подключаться без замены main board. Можно также включить в main board сразу — для full-feature SKU.
+
+### Block 21. PULSE — Slow LFO на damper-pressure (Phase 2)
+
+Slow periodic LFO (0.05–2 Гц) → модулирует damper-pressure → reverb tail "дышит" ритмично. Антипод HAZE в Last Day.
+
+```
+  Internal LFO (triangle, 0.05–2 Hz):
+    R_PULSE_TIMING (RV_PULSE 1MΩ log) → C_PULSE 1µF → Schmitt trigger →
+    LFO_OUT (bipolar triangle ±5V)
+                                │
+                                ▼
+                        VCA (LM13700 OTA spare)
+                        ── attenuverted ──►
+                                │
+                                ▼
+                        Sum с DAMP_CV → solenoid driver (Block 14)
+
+  Sync: optional TAP CV in → resets LFO phase to beat.
+```
+
+**Controls**: RV_PULSE 100kΩ lin (depth), RV_PULSE_RATE 1MΩ log (rate).
+**CV in**: J_PULSE_CV (modulate rate from external).
+
+### Block 22. FOG — Apperiodic damper drift (Phase 2)
+
+Aperiodic / random damper modulation для "туман над хвостом" character. Антипод MIRAGE в Last Day.
+
+```
+  Noise source (existing zener D_NOISE) ──► 4066 S&H clocked by slow RC oscillator
+                                                    │
+                                                    ▼
+                                            random sample/hold value
+                                                    │
+                                                    ▼
+                                            R_SLEW + C_SLEW = slow slew (~0.5s)
+                                                    │
+                                                    ▼
+                                            VCA (LM13700 OTA spare)
+                                                    │
+                                                    ▼
+                                            Sum в damper CV → micro-mod
+```
+
+**Controls**: RV_FOG 100kΩ lin (depth).
+**CV in**: J_FOG_CV.
+
+### Block 23. FROST — HF absorber в feedback path (Phase 2)
+
+Voltage-controlled LPF в feedback loop reverb — при увеличении FROST sweep-down ВЧ → tail постепенно теряет air. Антипод BLEACH (HF saturation) в Last Day.
+
+```
+  Feedback wet signal ──► [State-variable filter LPF stage] ──► R_FB → summing
+                                    ▲
+                                    │
+                            VCF cutoff control:
+                            RV_FROST → control voltage → OTA Iabc
+                            (uses LM13700 OTA spare or дополнительный LM13700)
+```
+
+**Controls**: RV_FROST 100kΩ lin (cutoff sweep).
+**CV in**: J_FROST_CV.
+
+**Cutoff range**: 20кГц (frost = 0, transparent) → 800Гц (frost = max, only midrange survives).
+
+### Block 24. CHILL — Expander с brittle release (Phase 2)
+
+Anti-compression: quiet stays quiet, loud reaches peak but decays fast. Антипод TAR (vise compressor) в Last Day.
+
+```
+  Mix output ──► [Expander cell]
+                  │
+            Envelope follower (inverted slope)
+                  │
+            Threshold pot + ratio
+                  │
+            VCA control (LM13700 OTA spare)
+                  │
+                  ▼
+            CHILL effect amount → output
+```
+
+**Controls**: RV_CHILL 100kΩ lin (amount), RV_CHILL_THRESH (internal trimmer).
+**CV in**: J_CHILL_CV.
+
+### Block 25. HUM — Mains-hum antenna pickup (Phase 2)
+
+Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки → tuned amp → mix. Антипод HEATWAVE (AM-tuner ионосфера) в Last Day.
+
+```
+  J_HUM_ANT (внешний antenna jack, optional):
+    Internal: ferrite coil 1000 витков ~100mH на ferrite rod 50мм
+    External (premium): coax to remote antenna or pickup coil
+
+                                    │
+                                    ▼
+                            Twin-T 50/60Hz tuned amp (band-pass)
+                                    │
+                                    ▼
+                            Gain stage (×100 LM13700 OTA)
+                                    │
+                                    ▼
+                            VCA (RV_HUM controls level) → mix
+```
+
+**Controls**: RV_HUM 100kΩ log (level). Switch 50Hz/60Hz региональный.
+**CV in**: J_HUM_CV.
+
+**Open question**: внутренняя antenna может ловить collateral switching noise от собственного TMR 3-1212WI DC-DC (150kHz). Mitigation: ferrite shielding coil + 50/60Hz tuned filter cuts switching frequency. Если bench prototype не подтверждает clean signal — HUM откладывается в Phase 2B с external antenna jack only.
+
+---
+
+## Сводная сводка (v4 consolidated)
+
+- **25 functional blocks** total (15 ядро + 6 base FX/utility + 5 cold palette Phase 2):
+  - Blocks 1–15: core v2.1 schematic + cold palette consolidated (block 12 объединён, 15 reserved, 17/18 removed).
+  - Block 16: optional phaser (immersion layer).
+  - Block 19: isolated DC-DC (pedal SKU only).
+  - Block 20: color preset slider.
+  - Blocks 21–25: cold palette FX layer (Phase 2 upgrade — PULSE/FOG/FROST/CHILL/HUM).
+- **6 ICs analog**: 2× TL072 + 2× TL074 + 2× LM13700 (multiple OTA halves reused).
+- **1 MCU**: ATtiny85 (Geiger LFSR cluster pattern + bipolar split helper logic).
+- **1 timer**: NE555 (TOLL pulse monostable).
+- **6 transistors**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver shared DAMP+TOLL).
 - **1 zener**: BZX55C9V1.
 - **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
+- **No BBD chip, no Gate/Crush ICs** — removed in v4 consolidation.
 
-**BOM increase для FX engine**: ~$15 над previous v2.2 baseline ($83 budget → ~$98 budget с FX). Premium SKU ~$130.
+**Phase 1 ship BOM**: $90 budget / $115 premium (v4 базовый, без cold palette FX).
+**Phase 2 v3 PCB BOM**: +$15 для cold palette layer → $105 budget / $130 premium full feature.
 
-**Retail target**: $499 budget / $649 premium (matches initial spec).
+**Retail target**: $499 budget / $649 premium (matches initial spec, sustainable margin даже с Phase 2 features included).
 
 ## Полный BOM
 
@@ -737,19 +877,17 @@ Slider на левой стороне панели вибирает preset combi
 |-----|-------------|----------|---------|-----|--------|---------|----------|
 | U1, U3 | TL072CP | Dual JFET-input op-amp | DIP-8 | 2 | $0.50 | $1.00 | TI / Mouser |
 | U2, U4 | TL074CN | Quad JFET-input op-amp | DIP-14 | 2 | $0.75 | $1.50 | TI / Mouser |
-| U5, U6 | LM13700N | Dual OTA (U5=VCA, U6=phaser stages) | DIP-16 | 2 | $2.00 | $4.00 | TI / Mouser |
-| U_BBD | V3207D (or PT2399) | BBD delay line for vinyl wow / digital echo lo-fi | DIP-16 | 1 | $5.00 / $1.00 | $5.00 | Coolaudio / Princeton |
-| U_BBDCLK | V3102D (or 555) | BBD clock generator (paired with V3207) | DIP-8 | 1 | $3.00 | $3.00 | Coolaudio |
-| U_GATE | CD4066BE | Quad CMOS analog switch (gate cell + bypass) | DIP-14 | 1 | $0.40 | $0.40 | Multi-source |
-| U_SH | LF398N | Sample-and-hold (crush cell) | DIP-8 | 1 | $1.20 | $1.20 | TI |
-| U_COMP | LM393 | Dual comparator (gate threshold + tap detection) | DIP-8 | 1 | $0.30 | $0.30 | TI |
-| U_MCU | ATtiny85-20PU | MCU (Geiger LFSR + crush clock + tap-tempo) | DIP-8 | 1 | $1.50 | $1.50 | Microchip |
+| U5, U6 | LM13700N | Dual OTA (U5=VCA + bipolar noise VCAs, U6=phaser stages) | DIP-16 | 2 | $2.00 | $4.00 | TI / Mouser |
+| U_555 | NE555P | Monostable 555 timer для TOLL pulse generator (5–10мс) | DIP-8 | 1 | $0.25 | $0.25 | Multi-source |
+| U_SPLIT | TL072CP (extra half) | Bipolar CV splitter (positive/negative comparator pair) | shared в U1/U3 | — | — | — | included above |
+| U_MCU | ATtiny85-20PU | MCU (Geiger LFSR cluster pattern + bipolar split logic helper) | DIP-8 | 1 | $1.50 | $1.50 | Microchip |
 | U_LDO | 7805 (or LM78L05) | +5V LDO для MCU | TO-220 (or TO-92) | 1 | $0.30 | $0.30 | Multi-source |
 | Q3 | LSK489A | Dual matched N-JFET | SOT-23-6 (SMD) | 1 | $6.00 | $6.00 | LIS / Mouser |
 | Q1 | BD139 | NPN BJT (push-pull NPN) | TO-126 | 1 | $0.30 | $0.30 | ON Semi |
 | Q2 | BD140 | PNP BJT (push-pull PNP) | TO-126 | 1 | $0.30 | $0.30 | ON Semi |
-| Q5 | 2N7000 | N-channel logic-level MOSFET (solenoid driver) | TO-92 | 1 | $0.15 | $0.15 | Multi-source |
-| D_NOISE | BZX55C9V1 | 9.1V zener (continuous hiss noise) | DO-35 | 1 | $0.10 | $0.10 | Multi-source |
+| Q5 | 2N7000 | N-channel logic-level MOSFET (solenoid driver — shared DAMP+TOLL) | TO-92 | 1 | $0.15 | $0.15 | Multi-source |
+| D_NOISE | BZX55C9V1 | 9.1V zener (continuous hiss noise — CCW noise half) | DO-35 | 1 | $0.10 | $0.10 | Multi-source |
+| D_OR_A, D_OR_B | 1N4148 | OR-gate diodes для DAMP + TOLL combined gate path | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
 | D_BIAS1, D_BIAS2 | 1N4148 | Push-pull bias diodes | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
 | D_LIM1, D_LIM2 | 1N4148 | Feedback loop limiter | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
 | D_ATK, D_DEC | 1N4148 | Envelope follower diodes | DO-35 | 2 | $0.01 | $0.02 | Multi-source |
@@ -757,7 +895,23 @@ Slider на левой стороне панели вибирает preset combi
 | D_SOL | 1N4001 | Solenoid flyback | DO-41 | 1 | $0.03 | $0.03 | Multi-source |
 | D_P1, D_P2 | 1N5817 | Schottky reverse polarity protection | DO-41 | 2 | $0.20 | $0.40 | Multi-source |
 | D1–D6 | LED 3мм Red | Clip indicators (3 in series each polarity) | T-1 | 6 | $0.02 | $0.12 | Multi-source |
-| D_LED_FX | LED 3мм Red | Footswitch indicators (BYPASS, FREEZE, GATE, TAP) | T-1 | 4 | $0.02 | $0.08 | Multi-source |
+| D_LED_FX | LED 3мм Red | Footswitch indicators (KILL/FREEZE/TOLL/STALL) | T-1 | 4 | $0.02 | $0.08 | Multi-source |
+
+**Удалено из BOM v4 vs v3** (соответствует Decision 08):
+- U_BBD V3207D ($5) — vinyl BBD больше не в Last Night.
+- U_BBDCLK V3102D ($3) — clock generator для BBD.
+- U_GATE CD4066BE ($0.40) — Gate/Crush switch.
+- U_SH LF398N ($1.20) — crush sample-hold.
+- U_COMP LM393 ($0.30) — gate threshold comparator (если нужен — можно использовать TL072 spare half).
+
+**Net change**: -$10 из v3 BOM. Last Night BOM становится **дешевле**, проще, фокусированнее.
+
+**Добавлено в v4**:
+- U_555 NE555P ($0.25) — TOLL pulse monostable.
+- D_OR_A, D_OR_B 1N4148 ($0.02) — OR-gate для DAMP+TOLL combined gate path.
+- **RV_NOISE_GEIGER** — center-detent 100kΩ pot (Alpha 9mm with detent), ~$2 (vs $1.20 standard).
+
+**Net new**: +$1 для bipolar knob + TOLL monostable. Final BOM net: **-$9 vs v3**.
 | **Subtotal active** | | | | | | **$23.95** | |
 
 ### FX Engine new components (v3.0)
