@@ -580,51 +580,186 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 
 > Geiger pattern generator (ATtiny85 LFSR) **полностью описан в Block 12** как часть NOISE+COLOR(geiger) crossfader implementation. Slot 15 зарезервирован для будущих расширений (например, Phase 2 v3 PCB add-ons).
 
-### Block 16. Phaser (NEW — Phase/Flutter / DEPTH / SPEED)
+### Block 16. Phaser — 4-stage OTA all-pass (detailed schematic) **[REVISED v5 hybrid]**
 
-Classic 4-stage OTA-based all-pass phaser, post-pickup, pre-VCA. Adds swirling motion к reverb tail.
+> **v5 hybrid (Decision 09)**: phaser **always-on named effect** (mockup canon), не optional layer. Bypass через master BYPASS footswitch. Shape Form slider — separate 1P5T select для LFO waveform (5 позиций вместо прежних 4).
+
+Classic 4-stage OTA-based all-pass phaser, **post-pickup, pre-VCA**. Adds swirling motion к reverb tail. Использует второй LM13700 (U6) для OTA cells.
+
+#### Signal flow
 
 ```
-  Pickup signal ─► [All-pass 1] ─► [All-pass 2] ─► [All-pass 3] ─► [All-pass 4]
-                                                                        │
-                                                          ┌─────────────┘
-                                                          │
-                                                  Sум с dry input ─► output
-                                                          ▲
-                                                          │
-                                                  Phase/Flutter knob
-                                                  (controls feedback amount
-                                                   into all-pass network)
-
-  All-pass cell topology (typical):
-                       ┌── R1 ──┐
-                       │        │
-  IN ──► R_in ──┬──────┼──── (-)│
-                │      │     OUT│ U_phaser (OTA section of LM13700 #2)
-                │      │   (+)  │
-                ▼      ▼        │
-              C_AP   I_abc      │
-                │      ▲        │
-                ▼      │   ◄────┴── from VINYL LFO
-               GND  modulation
-                    current
-
-  4 cells stacked → 4 notches in frequency response, modulated в unison.
-
-  Components per cell:
-  - LM13700 OTA (using OTA2 — previously unused per Block 13)
-  - C_AP 10nF (sets center frequency)
-  - R_in, R1, R2 = 10k each
-  - Modulation current from vinyl/phaser LFO
+   From Block 9 de-emphasis → Block 10 tone filter → Phaser input bus
+                                                              │
+                                                              ▼
+   ┌─ All-pass cell 1 ─► All-pass cell 2 ─► All-pass cell 3 ─► All-pass cell 4 ─┐
+   │   (LM13700 U6      (LM13700 U6        (LM13700 U6        (LM13700 U6      │
+   │    OTA1 + cap)      OTA1 + cap)        OTA2 + cap)        OTA2 + cap)     │
+   │   tuned ~200Hz     tuned ~600Hz        tuned ~1.5kHz      tuned ~4kHz     │
+   │                                                                            │
+   │  All four cells receive same Iabc modulation от LFO → synchronized sweep │
+   │                                                                            │
+   └─────────────────────────► dry pickup signal                                │
+                                       │                                        │
+                                       ▼                                        │
+                                Sум amp (TL074 U_PHSUM half)                   │
+                                       │                                        │
+                                       ▲                                        │
+                                       │     RV_PHASE/FLUTTER (100k log) ──────┘
+                                       │     внутренний feedback amount
+                                       │     (peak depth / resonance)
+                                       ▼
+                                  Phaser output → Block 11 LED clipper → Block 13 VCA
 ```
 
-**Controls**:
-- **Phase/Flutter** (RV_PHASE 100k log) — internal feedback amount = resonance/peak depth.
-- **DEPTH** (RV_DEPTH 100k lin) — modulation depth (LFO amplitude into Iabc).
-- **SPEED** (RV_SPEED 1M log) — LFO rate 0.05–10Hz.
-- **Shape Form** (slider 4-pos) — selects LFO waveform: triangle / sine / random S&H / vinyl-skip.
+**Note about 4 stages spread**: 4 cells deliberately tuned к different center frequencies (200Hz / 600Hz / 1.5kHz / 4kHz) для spread sweep across spectrum. Каждый OTA half работает на своём cap value (см. ниже). Это уходит от "classic Phase 90" уравнивающего all cells — даёт более диффузный, less metallic sweep.
 
-**Bypass**: phaser bypass switch on COLOR slider position 1 (COLOR без phaser).
+#### All-pass cell topology (single cell)
+
+```
+                        R1 (47k feedback resistor)
+                        ┌────┤├────┐
+                        │          │
+  Input ──► R_in (47k) ─┼──► (-)   │
+                        │          │ LM13700 OTA section
+                        │     OUT ─┴──► к next cell или sum amp
+                        │          │
+                        │     (+) ◄── tied to R_BIAS bias network
+                        ▼          │
+                     C_APn (per cell)
+                        │          │
+                       GND      I_abc ◄── from LFO modulation current
+                                modulation current sets effective gm
+                                → controls all-pass corner frequency
+
+  Cell transfer function: H(s) = (R*gm - sR*gm*C) / (R*gm + sR*gm*C)
+                                = (1 - sτ) / (1 + sτ)
+                                where τ = 1 / (gm * Iabc-derived value)
+```
+
+#### Per-cell tuning
+
+**4 cells spread across spectrum** для diffuse sweep:
+
+| Cell | Center freq (mid Iabc) | C_AP value | R_in / R1 | OTA |
+|------|------------------------|-----------|-----------|-----|
+| 1 | 200 Hz | C_AP1 = **47 nF** | R_in1 = 47k / R1 = 47k | LM13700 U6 OTA1 |
+| 2 | 600 Hz | C_AP2 = **15 nF** | R_in2 = 47k / R2 = 47k | LM13700 U6 OTA1 (shared via mux?) |
+| 3 | 1.5 kHz | C_AP3 = **6.8 nF** | R_in3 = 47k / R3 = 47k | LM13700 U6 OTA2 |
+| 4 | 4 kHz | C_AP4 = **2.2 nF** | R_in4 = 47k / R4 = 47k | LM13700 U6 OTA2 |
+
+> **Issue**: 4 cells требуют 4 OTAs, но LM13700 содержит **только 2 OTAs**. **Решение**: cell 1+2 share U6 OTA1 (different cap settings via Pole — нет, OTA это не switching cell), или **добавить U7 = второй LM13700**.
+
+**Recommend**: добавить **U7 LM13700** в BOM specifically для phaser. 4 cells × dedicated OTA = clean design, no shared resources, predictable behaviour. BOM impact: +$2 для одного LM13700.
+
+Обновлённая cell distribution:
+- Cells 1+2: **U7** LM13700 (new для phaser)
+- Cells 3+4: **U6** LM13700 (existing, was VCA + noise crossfader)
+  - U6 OTA1 = noise crossfader (Block 12).
+  - U6 OTA2 = unused в v4. Reused here для phaser cells 3+4.
+
+#### Iabc modulation network
+
+```
+   LFO output (от Shape Form selector, see below)
+        │
+        ▼
+   RV_DEPTH (100kΩ lin) — modulation depth attenuverter
+        │
+        ▼
+   R_DEPTH_BUF (10kΩ) → TL074 buffer (U_DEPTH half)
+        │
+        ▼
+   Common bus to all 4 OTA Iabc pins (pins 1 + 16 на каждом LM13700):
+        ├──► U7 pin 1 (OTA1 Iabc) — cell 1
+        ├──► U7 pin 16 (OTA2 Iabc) — cell 2
+        ├──► U6 pin 1 (OTA1 Iabc) — cell 3 — но это уже crossfader path!
+        └──► U6 pin 16 (OTA2 Iabc) — cell 4
+```
+
+**Conflict**: U6 OTA1 уже используется для noise crossfader VCA в Block 12 — нельзя его modulate phaser'ом одновременно. **Решение**: **полностью dedicated U7 для cells 1+2, добавить U7' (или U8) LM13700 для cells 3+4**. Или **уменьшить phaser до 2 stages** (cells 1+2) с tradeoff в depth.
+
+**Final decision (v5 hybrid)**: 
+- **Standard SKU**: **2-stage phaser** (cells tuned 400Hz + 1.5kHz), uses U7 (new LM13700). Sufficient sweep для most use cases.
+- **Premium SKU**: **4-stage phaser** (full spread), uses U7 + U8 (two new LM13700s). +$2 BOM.
+
+Это снижает phaser complexity для budget tier, premium tier gets full classic 4-stage Phase 90-class character.
+
+#### LFO core + Shape Form routing
+
+```
+   LFO core: TL074 (U_LFO) integrator-comparator triangle generator
+   ────────────────────────────────────────────────────────────
+   
+   R_TIM (RV_SPEED 1MΩ log) → C_LFO (1µF film) → triangle wave amplitude ±5V
+                                                              │
+                                                              ▼
+        Shape Form 1P5T slider routes triangle к один of 5 processing paths:
+        
+   Path 1 (TRIANGLE direct): output ─► LFO_OUT
+   
+   Path 2 (SINE): triangle → 2-stage RC integrator (low-pass with high Q
+                  → approximates sine) → LFO_OUT
+   
+   Path 3 (RANDOM S&H): triangle clock → 4066 sample-hold с noise (Block 12
+                        zener D_NOISE feeds S&H input) → LFO_OUT
+   
+   Path 4 (VINYL-SKIP): triangle → comparator с random threshold (от noise
+                        источника) → short-pulse one-shot (NE555 #2) → 
+                        random skip jumps → LFO_OUT
+   
+   Path 5 (STEP): TAP gate (от TAP footswitch) → counter (74HC161) → 
+                  R-2R ladder DAC → quantized step values → LFO_OUT
+```
+
+> **Shape Form slider** = SP5T (single pole 5-throw) — это **simpler чем 4P5T для Color preset**. Просто routes one of 5 LFO output streams к common bus. Alpha SL-1P5T slider или toggle rotary switch. **$3.00** (cheaper than 4P5T).
+
+#### TAP-tempo input
+
+J_TAP (from TAP footswitch на pedal, или J_CLK CV jack):
+- Gate trigger (+5V edge) → resets LFO phase to start of cycle.
+- Если TAP pressed дважды в течение 5 секунд → captures interval → sets RV_SPEED via voltage feedback к LFO timing network.
+- Implementation: ATtiny85 measures interval, выдаёт PWM → LPF → analog voltage → adds к RV_SPEED voltage divider.
+
+#### BOM (Block 16)
+
+| Ref | Part | Qty | Unit $ | Total |
+|-----|------|-----|--------|-------|
+| U7 (mandatory) | LM13700N (phaser cells 1+2 OTAs) | 1 | $2.00 | $2.00 |
+| **U8 (premium SKU only)** | LM13700N (phaser cells 3+4) | 0–1 | $2.00 | $0–2.00 |
+| U_LFO | TL074CN (LFO triangle generator + sine shaper, shares U2 spare halves) | 0 | — | — (shared) |
+| U_DEPTH | TL074 buffer (shares U2 spare halves) | 0 | — | — (shared) |
+| U_SH | CD4066BE (sample-hold cell) | 0 | — | — (shared с Block 18 Gate cell) |
+| U_VINYL_555 | NE555 (vinyl-skip one-shot) | 1 | $0.25 | $0.25 |
+| U_TAP_CNT | 74HC161 (TAP step counter for Path 5) | 1 | $0.30 | $0.30 |
+| C_AP1 | 47 nF film | 1 | $0.08 | $0.08 |
+| C_AP2 | 15 nF film | 1 | $0.06 | $0.06 |
+| C_AP3 (premium) | 6.8 nF C0G | 0–1 | $0.05 | $0–0.05 |
+| C_AP4 (premium) | 2.2 nF C0G | 0–1 | $0.04 | $0–0.04 |
+| R_in/R1 (per cell) | 47kΩ ×4 (or ×8 для 4-stage) | 4–8 | $0.01 | $0.04–0.08 |
+| C_LFO | 1 µF film (LFO timing) | 1 | $0.15 | $0.15 |
+| C_SINE | 100 nF film ×2 (sine shaper) | 2 | $0.05 | $0.10 |
+| RV_PHASE | Alpha 9mm pot 100kΩ log | 1 | $1.20 | $1.20 |
+| RV_DEPTH | Alpha 9mm pot 100kΩ lin | 1 | $1.20 | $1.20 |
+| RV_SPEED | Alpha 9mm pot 1MΩ log | 1 | $1.20 | $1.20 |
+| SW_SHAPE | Alpha SL-1P5T slider (Shape Form) | 1 | $3.00 | $3.00 |
+| Step DAC (R-2R ladder) | 8 resistors precision | 8 | $0.05 | $0.40 |
+| Misc (additional R, sat diodes feedback) | — | — | — | $0.40 |
+| **Block 16 total (budget 2-stage)** | | | | **$8.93** |
+| **Block 16 total (premium 4-stage)** | | | | **$11.02** |
+
+#### Verification
+
+- **Sweep test**: input 1 kHz sine, SPEED slow (0.2 Hz), DEPTH full, PHASE 50% — output должна показывать обвалы spectrum 200Hz–4kHz range, full sweep cycle ~5 seconds.
+- **Feedback peak**: PHASE knob до 90% → distinct resonant peak в audio output на center frequency. Maximum 95% — controlled self-oscillation possible.
+- **Shape Form switching**: переключение между 5 позициями slider должно быть click-free (signal continuous). RC smoothing на switch output cap may be needed.
+- **TAP sync**: tap two presses в 0.5 sec interval → LFO period = 0.5 sec exactly. Tap drift accuracy ±5%.
+
+#### Why always-on (not optional)
+
+- Phaser — **signature character** "холодной ночи" combine.
+- В mockup есть 3 dedicated knobs + Shape Form slider — это occupies physical real estate. Bypass через master BYPASS footswitch достаточно — отдельный PHASER ON/OFF toggle избыточен.
+- Always-on simplifies wiring (no toggle relay), saves $1 BOM, cleaner UX.
 
 ### Block 17. Removed in v4 (was Vinyl FX BBD)
 
@@ -1010,18 +1145,22 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
   - Block 19: isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
   - **Block 20**: COLOR preset slider (4P5T, **detailed schematic с 5 R-banks**, see above).
   - Blocks 21–25: cold palette FX layer (Phase 2 v3 PCB upgrade — PULSE/FOG/FROST/CHILL/HUM).
-- **8 ICs analog**: 2× TL072 + 2× TL074 + 2× LM13700 (multiple OTA halves reused для VCA + phaser + crossfader + saturation buffers + resonance amps) + CD4066 (Gate cell) + LF398 (Crush cell).
+- **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell shared с Shape Form S&H) + LF398 (Crush cell).
+- **10 ICs analog (premium 4-stage phaser)**: + **U8 LM13700** для phaser cells 3+4.
 - **1 dual comparator**: LM393 (Gate threshold + tap-tempo).
 - **1 MCU**: ATtiny85 (Geiger LFSR cluster pattern + crush sample clock + tap-tempo divider).
-- **1 timer**: NE555 (TOLL pulse monostable, J_TOLL_TRIG path).
+- **2 timers**: NE555 ×2 (U_555 TOLL pulse monostable + U_VINYL_555 vinyl-skip one-shot для Shape Form path 4).
+- **1 counter**: 74HC161 (Block 16 Shape Form step DAC counter).
 - **6 transistors**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver — shared DAMP+TOLL+STALL via 3-way diode-OR).
 - **1 zener**: BZX55C9V1.
 - **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
 - **Footswitches** (mockup canon): TAP / GATE-CRUSH / BYPASS / FREEZE.
 - **CV-only triggers** (modular advanced): J_TOLL_TRIG, J_STALL_CV.
+- **Sliders**: SL-4P5T (Block 20 Color preset) + SL-1P5T (Block 16 Shape Form).
 
-**Phase 1 ship BOM** (v5 hybrid, ядро + Gate/Crush + phaser + Color preset + base FX): **~$92 budget / $118 premium**.
-**Phase 2 v3 PCB BOM**: +$15 для cold palette layer → **~$107 budget / $133 premium** full feature.
+**Phase 1 ship BOM** (v5 hybrid, ядро + Gate/Crush + 2-stage phaser + Color preset + base FX): **~$94 budget / $121 premium**.
+**Phase 1 premium SKU** (4-stage phaser): +$2 → **~$96 budget / $123 premium**.
+**Phase 2 v3 PCB BOM**: +$15 для cold palette layer → **~$111 budget / $138 premium** full feature.
 
 **Retail target**: $499 budget / $649 premium (sustainable margin, premium tier alongside Strymon BigSky / Eventide H9 Max).
 
@@ -1084,16 +1223,23 @@ Phase 1 BOM становится **дешевле и фокусированне�
 
 | Ref | Part Number | Описание | Qty | Unit $ | Total $ |
 |-----|-------------|----------|-----|--------|---------|
-| RV_PHASE, RV_DEPTH | Alpha 9mm pot 100kΩ lin | Phaser feedback + depth | 2 | $1.20 | $2.40 |
-| RV_SPEED | Alpha 9mm pot 1MΩ log | Phaser/vinyl LFO rate | 1 | $1.20 | $1.20 |
+| RV_PHASE | Alpha 9mm pot 100kΩ log | Phaser feedback / resonance (Block 16) | 1 | $1.20 | $1.20 |
+| RV_DEPTH | Alpha 9mm pot 100kΩ lin | Phaser modulation depth (Block 16) | 1 | $1.20 | $1.20 |
+| RV_SPEED | Alpha 9mm pot 1MΩ log | Phaser LFO rate (Block 16) | 1 | $1.20 | $1.20 |
 | RV_HIPASS | Alpha 9mm pot 100kΩ lin | HiPass filter cutoff | 1 | $1.20 | $1.20 |
 | RV_INPUT, RV_OUTPUT | Alpha 9mm pot 100kΩ lin | Input gain, output level | 2 | $1.20 | $2.40 |
-| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider for tone preset (Block 20 — see detailed schematic) | 1 | $5.00 | $5.00 |
-| Color preset banks (resistors + caps + diodes + twin-T) | См. Block 20 BOM | 12× R + 1× 100nF + 1× 1nF + 2× 1N4148 + 6× twin-T | 22 | — | $0.41 |
-| Shape Form slider (4P4T) | Alpha SL-4P4T | 4-position horizontal slider for LFO waveform | 1 | $5.00 | $5.00 |
+| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider для tone preset (Block 20 — see detailed schematic) | 1 | $5.00 | $5.00 |
+| Color preset banks | См. Block 20 BOM | 12× R + 1× 100nF + 1× 1nF + 2× 1N4148 + 6× twin-T | 22 | — | $0.41 |
+| Shape Form slider (1P5T) | Alpha SL-1P5T | **5-position** horizontal slider для LFO waveform (Block 16 routing: triangle/sine/random S&H/vinyl-skip/step) | 1 | $3.00 | $3.00 |
+| **U7 (phaser OTAs)** | LM13700N | Block 16 — phaser cells 1+2 (budget 2-stage SKU) или cells 1+2 of 4 (premium) | 1 | $2.00 | $2.00 |
+| U8 (phaser OTAs premium only) | LM13700N | Block 16 — phaser cells 3+4 (premium 4-stage SKU only) | 0–1 | $2.00 | $0–2.00 |
+| U_VINYL_555 | NE555P | Block 16 — vinyl-skip one-shot для Shape Form path 4 | 1 | $0.25 | $0.25 |
+| U_TAP_CNT | 74HC161 | Block 16 — TAP-incremented step counter для Shape Form path 5 (step DAC) | 1 | $0.30 | $0.30 |
+| Block 16 misc (caps, R-2R ladder, sat diodes) | См. Block 16 BOM | C_AP1/2 + C_LFO + C_SINE + R-2R ladder + cell R's | ~18 | — | $1.10 |
 | **SWITCH CLIP** | SPDT toggle | Clip mode select | 1 | $1.50 | $1.50 |
 | Footswitches (3PDT × 4) | DPDT/3PDT mechanical | TAP, GATE/CRUSH, BYPASS, FREEZE | 4 | $3.00 | $12.00 |
-| **Subtotal FX engine** | | | | | **$30.70** |
+| **Subtotal FX engine (budget 2-stage phaser)** | | | | | **$32.76** |
+| **Subtotal FX engine (premium 4-stage phaser, +U8 + cells 3/4)** | | | | | **$34.85** |
 
 ### Power supply (per SKU)
 
