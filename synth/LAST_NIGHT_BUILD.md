@@ -26,11 +26,20 @@
 
 ---
 
-## Логическая схема — 15 блоков
+## Логическая схема — 25 блоков (v5 hybrid)
 
-Полная сигнальная цепь Last Night v3.0 разбита на **20 функциональных блоков**: 15 исходных + 5 новых (Geiger noise MCU, phaser, vinyl FX, gate/crush, isolated DC-DC для pedal SKU). Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
+Полная сигнальная цепь Last Night v5 hybrid разбита на **25 функциональных блоков**:
+- **Блоки 1–15**: ядро (reverb engine — exciter / piezo preamp / feedback / VCA / solenoid / noise / mix).
+- **Блок 16**: always-on phaser (4-stage OTA all-pass + Shape Form slider).
+- **Блок 17**: REMOVED (was BBD vinyl wow → переехал в Last Day как OLD VINYL PT2399).
+- **Блок 18**: Gate/Crush footswitch (CD4066 + LF398 + LM393, restored per Decision 09 v5 hybrid).
+- **Блок 19**: Isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
+- **Блок 20**: COLOR preset slider (4P5T detailed schematic).
+- **Блоки 21–25**: Phase 2 cold palette upgrade kit (PULSE / FOG / FROST / CHILL / HUM).
 
-Изменения от v2.0 (caркас) → v3.0 (current) помечены **[REVISED]** или **[NEW]**.
+Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
+
+Изменения от v2.0 (каркас) → v5 hybrid (current) помечены **[REVISED]**, **[NEW]**, или **[REMOVED]**.
 
 ### Block 1. Power Supply (dual SKU)
 
@@ -3068,8 +3077,8 @@ Common issues и their resolutions, organized by symptom.
 | **Alpha RV09 9mm** | Thonk, SmallBear, eBay | Bourns 16mm (different footprint) | 2-4 weeks | Eurorack standard. Order in bulk. |
 | **TRACO TMR 3-1212WI** | Mouser, Digi-Key | Recom RKD-1212-D, Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
 | **Recom RKD-1212-D** | Mouser, Digi-Key | TRACO TMR 3-1212WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
-| **V3207D BBD** | Coolaudio (multi-source via DSI/Behringer surplus) | PT2399 (digital echo, lo-fi alt) | 2-4 weeks | Vinyl wow tract. PT2399 cheaper alternative для concept fit. |
-| **V3102D BBD clock** | Coolaudio | NE555 + Schmitt (custom alternative) | 2-4 weeks | Paired с V3207. |
+<!-- BBD V3207/V3102 removed per Decision 08 — vinyl FX moved to Last Day as OLD VINYL PT2399 parallel tract. -->
+| **NE555P** ×2 | TI, multi-source | LMC555 (CMOS variant) | 1 week | TOLL pulse monostable (Block 14) + vinyl-skip one-shot (Block 16 Shape Form path 4). |
 | **ATtiny85-20PU** | Microchip via Mouser/Digi-Key | ATtiny45 (lower memory) | 1 week | Geiger LFSR + crush clock + tap-tempo. |
 | **CD4066BE** | TI, NXP. Multi-source. | DG412 (premium audio switch) | 1 week | Gate cell + bypass switching. |
 | **LF398N** | TI. Multi-source. | LF198 (industrial grade) | 1 week | Crush sample-hold cell. |

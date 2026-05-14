@@ -1,5 +1,11 @@
 # Last Day — scope и subsystem decisions
 
+> **Partial supersession notice**: D1 (form factor → Eurorack only) и D5 (perform FX → v1 subset KILL+FREEZE+DRAG+HAZE) **superseded by Decision 08** (consolidated base):
+> - D1: Last Day теперь dual SKU (Eurorack 40HP + big-box pedal ~203×140мм), идентично Last Night.
+> - D5: hot palette расширена до полного набора HAZE/MIRAGE/BLEACH/TAR/CICADA/HEATWAVE/OLD VINYL + CRASH восстановлен в v1 (Phase B).
+> 
+> D2 (capacitive pickup), D3 (solar optional), D4 (manual v1 / motorized v2), D6 (sequential roadmap) — остаются активными.
+
 Last Day — самый сложный модуль серии, 3 независимые подсистемы (oil can delay, solar amp, resonant EQ) + 4 performance effects (HAZE/WIRE/DUST/DRAG) + 3 perform buttons (KILL/CRASH/FREEZE). Реалистичный R&D — 18–30 месяцев. Требуются решения о scope.
 
 ---

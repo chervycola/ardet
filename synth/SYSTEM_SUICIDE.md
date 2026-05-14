@@ -18,9 +18,9 @@
 | 4 | **Be Careful** | Резонансный фильтр | Стеклянная пластина + exciter/piezo | 14 |
 | 5 | **Fuck Abandoned Sleep** | LFO / модулятор | Физический маятник + оптика | 14 |
 | 6 | **Is My** | Live-кроссфейдер + clock switcher | Оптический кроссфейд на вактролах + sync-triggers | 8 |
-| 7 | **Last Day** | Delay / Amp / EQ финализатор (предапокалипсис) | Oil can delay + Solar amp + Resonant EQ | 40 |
+| 7 | **Last Day** | Delay / Amp / EQ финализатор (предапокалипсис) | Oil-can delay + Solar amp + Tongue resonator + hot palette FX | 40 (+ pedal SKU) |
 | 8 | **And My** | Day ↔ Night crossfader | Двойной VCA с CV/manual balance | 8 |
-| 9 | **Last Night** | Reverb + phaser + vinyl FX (постапокалипсис) | Сменные пластины + 4-stage phaser + BBD vinyl wow | 40 (+ pedal SKU) |
+| 9 | **Last Night** | Reverb финализатор (постапокалипсис) | Сменные пластины + cold palette FX + always-on phaser + Gate/Crush | 40 (+ pedal SKU) |
 
 **Итого (Phase 1–4, без BBAS)**: 16 + 10 + 14 + 14 + 8 + 40 + 8 + 40 = **150 HP**.
 **Итого с BBAS (Phase 5, опц.)**: 150 + 20 = **170 HP**.
@@ -29,7 +29,7 @@ Helps fit:
 - **150 HP без BBAS** — два ряда 84HP (168HP total) с запасом 18HP для utilities (mults, attenuverters).
 - **170 HP с BBAS** — нужен setup 84+84+84 (3 ряда) или skiff с большим pool.
 
-> **Примечание о форм-факторе**: Last Night выпускается **в двух SKU** — Eurorack 40HP **и** big-box Pedal (~203×140×40мм, Strymon BigSky / Eventide H9 Max class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only (Last Day тоже Eurorack only из-за solar cell + motor constraints).
+> **Примечание о форм-факторе** (per Decision 08 consolidated base): и **Last Night**, и **Last Day** выпускаются **в двух SKU каждый** — Eurorack 40HP **и** big-box Pedal (~203×140×40мм, Strymon BigSky / Eventide H9 Max class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only. Last Day pedal version имеет solar cell window на передней панели + tongue resonator slot (mechanical extends ~10мм за enclosure depth — учтено в big-box формате).
 
 > Поэтический строй фразы распадается так:
 > *Я покажу тебе свет. Кровь и пот, пыль всех тел. Будь осторожен. Похуй бесполезный сон. Это мой последний день, и моя последняя ночь*
@@ -721,7 +721,7 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 > *Постапокалипсис. Пустота, эхо, треск радиации, фейзер заброшенного эфира, плавящаяся плёнка, проседающий мотор винила, gate/crush — звук разрушения.*
 
 ### Суть в одном абзаце
-Аналоговый ревербератор-симулятор разрушенного граммофона. Физические пластины (дерево, камень, металл, стекло, кость) вместо DSP — реальный resonance materials. Поверх натурального резонанса наслоены **постапокалиптические FX**: 4-stage analog phaser, vinyl wow/flutter (BBD pitch warp), Geiger noise generator (cluster-pattern impulses), gate/crush footswitch (signal destruction). Color preset slider даёт quick tone recall (warm/dark/mix banks).
+Аналоговый ревербератор-симулятор разрушенного граммофона. Физические пластины (дерево, камень, металл, стекло, кость, нефрит) вместо DSP — реальный resonance materials. Поверх натурального резонанса наслоены **постапокалиптические FX холодной палитры** (per Decision 09 v5 hybrid base): always-on 4-stage analog phaser, bipolar NOISE+COLOR(geiger) crossfader (continuous hiss ↔ cluster-pattern impulses), gate/crush footswitch (signal destruction), solenoid double-function (DAMP/TOLL/STALL — sustained pressure / impulse strike / forced hold). Color preset slider даёт quick tone recall (warm/dark/mix banks). В Phase 2 v3 PCB добавляется cold palette FX layer (PULSE/FOG/FROST/CHILL/HUM) как upgrade kit.
 
 ### Формат — dual SKU
 - **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
@@ -770,15 +770,12 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
   HiPass + LowPass (dual filter, separate cutoff knobs)
         │
         ▼
-  ┌─── PHASER ───┐  4-stage OTA all-pass (LM13700 OTA2)
+  ┌─── PHASER ───┐  4-stage OTA all-pass (LM13700 U7+U8, always-on)
   │ Phase/Flutter │  Phase/Flutter (feedback), DEPTH (mod amount), SPEED (LFO rate)
-  │ DEPTH, SPEED  │  Shape Form slider: triangle / sine / random / vinyl-skip
+  │ DEPTH, SPEED  │  Shape Form slider: TRIANGLE / SINE / RANDOM / VINYL-SKIP / STEP
   └───────┬───────┘
           ▼
-  ┌── VINYL FX ──┐  BBD V3207 (1024-stage) с CV-controlled clock
-  │ wow/flutter   │  Pitch warp ±2%, sync с phaser SPEED
-  │ pitch warp    │
-  └───────┬───────┘
+  (BBD vinyl wow убран в Decision 08 → переехал в Last Day как OLD VINYL PT2399 parallel)
           ▼
   LED clipper (3× LED in series each polarity, ±5.4V threshold)
           │
@@ -816,14 +813,18 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
     Footswitches: TAP / GATE-CRUSH / BYPASS / FREEZE
 ```
 
-### Ключевые изменения от v2.1 → v3.0
-- **+5 новых блоков**: phaser, vinyl FX (BBD V3207 или PT2399), gate/crush, Color preset slider, isolated DC-DC ±12V (pedal SKU only).
-- **Dual SKU**: Eurorack 40HP + Pedal ModFactor-class, identical schematic.
-- **MCU integration**: ATtiny85 для Geiger noise patterns + crush clock + tap-tempo.
+### Ключевые изменения v2.1 → v3.0 → v5 hybrid (Decision 09)
+- **+4 новых блока (v5)**: always-on phaser, gate/crush, Color preset slider, isolated DC-DC ±12V (pedal SKU only).
+- **BBD vinyl wow removed (Decision 08)**: перенесён в Last Day как OLD VINYL PT2399 parallel tract.
+- **Dual SKU**: Eurorack 40HP + Pedal big-box (~203×140мм Strymon BigSky class), identical schematic.
+- **NOISE / COLOR(geiger)**: 2 separate knobs (NOISE level + COLOR continuous crossfader от continuous zener hiss к Geiger cluster ticks).
+- **Solenoid triple-function**: DAMP / TOLL / STALL — три CV-only режима через 3-way diode-OR на gate Q5.
+- **MCU integration**: ATtiny85 для Geiger noise patterns + crush sample clock + tap-tempo + STALL PWM throttle.
 - **Dual filter**: separate HiPass + LowPass (вместо single tone).
 - **Stereo + dry/wet split outputs**: MAIN L+R + DRY OUT + WET OUT + EG OUT.
-- **CV patch bay**: ~21 mini-jacks для full automation.
-- **Footswitch performance**: TAP, GATE/CRUSH, BYPASS, FREEZE.
+- **CV patch bay**: ~22 mini-jacks для full automation (включая J_TOLL_TRIG, J_STALL_CV).
+- **Footswitch performance** (mockup canon): TAP / GATE-CRUSH / BYPASS / FREEZE.
+- **Phase 2 cold palette upgrade kit** (v3 PCB): PULSE / FOG / FROST / CHILL / HUM daughter board — antiподы Last Day hot palette.
 
 ### Ключевые исправления (post-audit, сохранены)
 - **LSK489A dual JFET** вместо 2×2N5457 (EOL).

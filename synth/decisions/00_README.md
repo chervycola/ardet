@@ -37,6 +37,25 @@
    - Open source policy.
    - Warranty и support.
 
+5. **`08_consolidated_base.md`** (**LOCKED**) — Day/Night комбайны final base:
+   - Объединяет Decision 06 (Last Day re-spec) + Decision 07 (Last Night re-spec) + v3.0 prototype.
+   - Cold/hot palette diptych mapping (PULSE↔HAZE, FOG↔MIRAGE, FROST↔BLEACH, CHILL↔TAR, GEIGER↔CICADA, HUM↔HEATWAVE, STALL↔DRAG, TOLL↔CRASH).
+   - **Supersedes**: Decision 02 D1 (Last Day form factor — now dual SKU), Decision 02 D5 (v1 perform FX subset — расширен).
+   - BBD vinyl wow удалён из Last Night → переехал в Last Day как OLD VINYL PT2399.
+
+6. **`09_hybrid_lock.md`** (**LOCKED**) — v5 hybrid lock:
+   - Mockup canon UX (TAP/GATE-CRUSH/BYPASS/FREEZE footswitches) + Decision 08 electrical innovations.
+   - Gate/Crush footswitch восстановлен (был removed в Decision 08).
+   - TOLL/STALL — CV-only triggers (не footswitches).
+   - 2 separate NOISE и COLOR(geiger) knobs (не bipolar single knob).
+   - Solenoid triple-function: DAMP/TOLL/STALL via 3-way diode-OR.
+
+7. **`10_premium_components_sourcing.md`** — Elite tier:
+   - 16 component categories × 4 tiers (budget/premium/elite/boutique).
+   - Curated Elite SKU $1,467 BOM, retail $2,499 (41% margin).
+   - Sourcing matrix (Mouser, Digi-Key, Mundorf direct, Audio Note UK, K&K Sound).
+   - Risk register: 2SK170 NOS, Black Gate caps, OPA627 counterfeits.
+
 ## Как использовать
 
 Каждый документ:

@@ -146,7 +146,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 
 - **Identical schematic**: same blocks, same component values, same calibration.
 - **Identical cartridges**: купленный к Eurorack картридж работает в pedal (и наоборот).
-- **Identical sound**: бит-в-бит идентичный reverb + phaser + vinyl FX character.
+- **Identical sound**: бит-в-бит идентичный reverb + always-on phaser + cold palette FX character.
 - **Identical price**: $499 budget / $649 premium для обеих SKU.
 - **Different power, panel, connectors** — только enclosure-level отличия.
 
@@ -246,9 +246,9 @@ Customer может start с pedal (для studio/live performance), позже 
 13. **Phaser (Phase/Flutter)** — 4-stage OTA-based all-pass network. RV_DEPTH controls phaser modulation depth; RV_SPEED controls LFO rate; SHAPE FORM slider — выбор LFO waveform (triangle / sine / random S&H / vinyl-skip pattern).
 14. **Phaser feedback** — внутренний для resonant peaks.
 
-**Stage 5 — vinyl FX**:
-15. **Wow/flutter LFO** — slow modulator (0.5–8 Гц) → modulates phaser SPEED + ENV VCA → имитация неровного motor граммофона.
-16. **Pitch warp** (внутри vinyl block) — slight pitch instability через time-varying delay (BBD chip — Coolaudio V3207, или PT2399 lo-fi alternative).
+**Stage 5 — (vinyl FX block удалён в Decision 08 → переехал в Last Day как OLD VINYL PT2399 parallel tract)**:
+- Vinyl-skip остаётся как одна из 5 позиций SHAPE FORM slider (LFO waveform), но больше не отдельный BBD pitch-warp block.
+- Wow/flutter character доступен через phaser SPEED + Shape Form: vinyl-skip waveform для аналогичного эффекта.
 
 **Stage 6 — dynamics**:
 17. **LED clipper** — 3× LED in series each polarity, +10.6 dBu threshold.
@@ -415,7 +415,7 @@ Customer может start с pedal (для studio/live performance), позже 
 | 14 | **COLOR (geiger)** | Pot lin | Crossfader noise character: CCW = continuous zener hiss → CW = Geiger cluster ticks (ATtiny85 LFSR). Параллельно работает LPF colour filter (white → brown). | ✓ COLOR CV |
 | 15 | **PHASE/FLUTTER** | Pot log | Phaser feedback / resonance peak. **Always-on named effect** | — |
 | 16 | **DEPTH** | Pot lin | Phaser modulation depth (0–100%) | — |
-| 17 | **SPEED** | Pot log | Phaser + vinyl-wow LFO rate (0.05–10 Гц) | ✓ CLK CV (TAP sync) |
+| 17 | **SPEED** | Pot log | Phaser LFO rate (0.05–10 Гц) | ✓ CLK CV (TAP sync) |
 | 18 | **Shape Form slider** | Horizontal 5-pos slider | Phaser LFO waveform select: triangle / sine / random S&H / vinyl-skip / step | — |
 | 19 | **Color preset slider** | Vertical 5-pos slider | Preset tone selector: COLOR / WARM / DARK / COLOR / MIX | — |
 | 20 | **SWITCH CLIP** | 2-pos toggle | Hard clip (LED) vs soft clip (diode) | — |
@@ -434,7 +434,7 @@ Customer может start с pedal (для studio/live performance), позже 
 
 | Switch | Тип | Функция |
 |--------|-----|---------|
-| **TAP** | momentary | Tap-tempo для phaser SPEED + vinyl-wow rate sync. Sub-divisions через double-tap. |
+| **TAP** | momentary | Tap-tempo для phaser SPEED (sync через Shape Form vinyl-skip waveform для wow-feel). Sub-divisions через double-tap. |
 | **GATE/CRUSH** | latching | **Destruction effect** post-mixer: gate (signal под threshold cuts) + bitcrush (sample-hold downsample). 4066 CMOS gate + LF398 crush cell. |
 | **BYPASS** | relay 3PDT | Relay-buffered true bypass (no signal coloration when off). |
 | **FREEZE** | latching | Feedback loop locks, контент бесконечно sustainит и деградирует. |
@@ -483,14 +483,14 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - COLOR CV (geiger crossfader: hiss ↔ ticks)
 - FeedBack CV (cartridge feedback)
 - Boost CV
-- CLK (tap-tempo sync для phaser SPEED + vinyl-wow rate)
+- CLK (tap-tempo sync для phaser SPEED)
 
 **CV inputs (Phase 2 upgrade adds)**:
 - PULSE CV, FOG CV, FROST CV, CHILL CV, HUM CV
 
 **Outputs (CV/audio)**:
 - EG OUT (envelope follower output, 0-5V для external CV destinations)
-- CLK CV (clock input для sync phaser/vinyl rate)
+- CLK CV (clock input для sync phaser SPEED)
 
 **Pedal-only**:
 - EXP IN (expression pedal jack, normalled к user-assignable target)
