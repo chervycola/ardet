@@ -29,7 +29,7 @@ Helps fit:
 - **150 HP без BBAS** — два ряда 84HP (168HP total) с запасом 18HP для utilities (mults, attenuverters).
 - **170 HP с BBAS** — нужен setup 84+84+84 (3 ряда) или skiff с большим pool.
 
-> **Примечание о форм-факторе**: Last Night выпускается **в двух SKU** — Eurorack 40HP **и** Pedal (~178×119×38мм, ModFactor-class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only (Last Day тоже Eurorack only из-за solar cell + motor constraints).
+> **Примечание о форм-факторе**: Last Night выпускается **в двух SKU** — Eurorack 40HP **и** big-box Pedal (~203×140×40мм, Strymon BigSky / Eventide H9 Max class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only (Last Day тоже Eurorack only из-за solar cell + motor constraints).
 
 > Поэтический строй фразы распадается так:
 > *Я покажу тебе свет. Кровь и пот, пыль всех тел. Будь осторожен. Похуй бесполезный сон. Это мой последний день, и моя последняя ночь*
@@ -725,7 +725,7 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 
 ### Формат — dual SKU
 - **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
-- **Pedal ~178×119×38мм** (Eventide ModFactor class) или **145×113×60мм** (Hologram Microcosm class) — **12V DC center-negative** (modern complex-pedal standard), isolated DC-DC (TRACO TMR 3-1212WI / Recom RKD-1212-D) → ±12V audio rails (identical headroom к Eurorack version).
+- **Big-box Pedal ~203×140×40мм** (Strymon BigSky / Eventide H9 Max class) — **12V DC center-negative** (modern complex-pedal standard), isolated DC-DC (TRACO TMR 3-1212WI / Recom RKD-1212-D) → ±12V audio rails (identical headroom к Eurorack version). Big-box формат необходим для размещения 4 footswitches (TAP/GATE-CRUSH/BYPASS/FREEZE) + 22 CV jacks + всех контролов mockup canon.
 - **Identical schematic, identical sound, identical cartridge spec**. Cartridges interchangeable между обеими SKU.
 - **Цена**: $499 budget / $649 premium для обеих SKU.
 

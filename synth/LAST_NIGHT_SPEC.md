@@ -39,15 +39,15 @@ Last Night — **постапокалипсис-ревербератор на с
 
 Реальная пластина из дерева, камня, металла, стекла или кости вибрирует от audio signal через surface exciter, два пьезо-датчика снимают резонанс. Каждый материал — уникальный голос: oak = тёплый slap, marble = cathedral, spring steel = infinite shimmer, glass = crystalline chime, bone = ritual.
 
-Поверх ядра наслоены характерные эффекты "холодной палитры": **bipolar NOISE/GEIGER** knob (один control, две текстуры — continuous noise CCW / cluster ticks CW), опциональный **phaser** для дополнительного immersion, и performance gestures (**KILL / FREEZE / TOLL / STALL** — четыре footswitches). В v3 PCB revision (Phase 2 upgrade) добавляются cold-palette эффекты: PULSE (slow damper-breath), FOG (apperiodic drift), FROST (HF absorber), CHILL (anti-compression), HUM (mains-hum antenna).
+Поверх ядра наслоены характерные эффекты "холодной палитры": **NOISE + COLOR(geiger)** — 2 отдельные ручки (NOISE = level, COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks), **always-on phaser** (Phase/Flutter / DEPTH / SPEED + Shape Form slider), и performance gestures (**TAP / GATE-CRUSH / BYPASS / FREEZE** — четыре footswitches). **Solenoid double-function** (TOLL strike + STALL hold) доступна как modular-advanced features через CV-only triggers (J_TOLL_TRIG, J_STALL_CV). В v3 PCB revision (Phase 2 upgrade) добавляются cold-palette эффекты: PULSE (slow damper-breath), FOG (apperiodic drift), FROST (HF absorber), CHILL (anti-compression), HUM (mains-hum antenna).
 
 ### Чем отличается от обычных pedal-reverb
 
 - **Сменные материальные картриджи** — никто другой не делает physical-plate reverb с swappable physical resonators.
 - **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (5-10мс impulse strike = пластина звенит как колокол независимо от input).
 - **Dual piezo с position crossfade** — два pickup-а на пластине, manual или CV blend.
-- **Bipolar NOISE/GEIGER knob** — центральный detent off, CCW = continuous zener hiss, CW = cluster ticks (ATtiny85 LFSR + comparator pattern). Один controlled, два sonic universes.
-- **Optional phaser** — analog 4-stage OTA для immersion. Switchable bypass.
+- **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (zener + LFSR shared internally), COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks (ATtiny85 LFSR + comparator pattern). Два sonic universe через 2 ручки (mockup canon).
+- **Always-on phaser** — analog 4-stage OTA, named effect (Phase/Flutter / DEPTH / SPEED + Shape Form slider для LFO waveform). Bypass через footswitch BYPASS.
 - **Cold-palette FX layer (Phase 2)** — PULSE/FOG/FROST/CHILL/HUM — symmetric antipodes к hot-palette Last Day (HAZE/MIRAGE/BLEACH/TAR/CICADA/HEATWAVE).
 - **Modular-style CV patch bay** — 14+ CV inputs для full automation.
 - **Stereo + dry/wet split outputs** + TRS/RCA параллельно + instrument/-10/+4dBu level switch.
@@ -81,19 +81,20 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - **Synth processor** — для desktop synth setup, заменяет Eurorack reverb.
 - **DJ FX send/return** — line-level routing через RCA параллельно с TRS.
 - **Ambient sound design** — freeze + high feedback + phaser depth + slow PULSE damper-breath.
-- **Noise / experimental** — bipolar NOISE/GEIGER CW + self-oscillating cartridge + TOLL bell-strike.
-- **Ritual perform** — TOLL bell-pattern + STALL mute interrupts + cartridge swap drama.
+- **Noise / experimental** — NOISE + COLOR (geiger) full CW + self-oscillating cartridge + GATE-CRUSH footswitch + TOLL bell-strike via CV trigger (J_TOLL_TRIG).
+- **Ritual perform** — TOLL bell-pattern (CV from sequencer) + STALL hold (J_STALL_CV) + cartridge swap drama + FREEZE footswitch для loop sustain.
 - **Vocals / drums (studio)** — line-level через Hi-Z input compatible.
 
 ### Эффекты "холодной палитры" (cold-palette FX layer)
 
 Постапокалипсис холодной ночи — словарь эффектов, каждый имеет физическое основание и парный антипод в Last Day:
 
-**Phase 1 ship (ядро)**:
+**Phase 1 ship (ядро + базовые FX, mockup canon)**:
 
-1. **Bipolar NOISE / GEIGER** — один центральный knob с detent в middle (off). **CCW → continuous noise** (BZX55C9V1 zener → gain → color filter → mix). **CW → Geiger ticks** (ATtiny85 LFSR → comparator → cluster pulse shaper → mix). Knob splits CV via VCAs по половинкам signed amount.
-2. **Phaser** (опциональный immersion layer) — 4-stage OTA all-pass (LM13700 OTA2). Phase/Flutter feedback + DEPTH + SPEED. Switchable bypass.
-3. **Solenoid double-function**: DAMP (sustained hold via CV) + TOLL (5–10мс pulse via footswitch / gate) = bell-strike пластины.
+1. **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (после shared crossfader), COLOR(geiger) = continuous crossfader от continuous zener hiss (CCW, BZX55C9V1) к Geiger cluster ticks (CW, ATtiny85 LFSR + comparator pattern). Internally один shared generator + OTA crossfader pair.
+2. **Phaser always-on** — 4-stage OTA all-pass (LM13700 OTA2). Phase/Flutter feedback + DEPTH + SPEED + Shape Form slider (LFO waveform: triangle / sine / random S&H / vinyl-skip / step). Bypass через footswitch BYPASS.
+3. **Gate / Crush** — footswitch destruction: 4066 CMOS gate + LF398 sample-hold bitcrush.
+4. **Solenoid triple-function** через CV-only triggers (modular-advanced features): **DAMP** (J_CV_DAMP envelope CV), **TOLL** (J_TOLL_TRIG gate → 555 monostable → 5–10мс strike pulse), **STALL** (J_STALL_CV sustained hold).
 
 **Phase 2 ship (cold-palette upgrade kit, v3 PCB revision)**:
 
@@ -116,8 +117,8 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - Eurorack ribbon power cable (10/16-pin).
 - Quick start card + warranty card.
 
-**Pedal SKU (ModFactor-class)**:
-- Last Night pedal (anodized aluminum corpus 178×119×38мм, или Microcosm-class 145×113×60мм для compact tier).
+**Pedal SKU (big-box class — Strymon BigSky / Eventide H9 Max)**:
+- Last Night pedal (anodized aluminum corpus 203×140×40мм).
 - 1× wood cartridge (Oak raw, reference).
 - 1× shielded cartridge cable (mini-XLR + JST internal).
 - 12V DC center-negative pedal supply (regulated, 500mA min) — **отдельно** или в premium bundle. Compatible: Voodoo Lab Pedal Power 4×4 (12V output), Cioks DC10, Eventide PowerMax.
@@ -138,7 +139,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - **Isolated DC-DC** также ломает ground loops с другими pedals на pedalboard — clean integration в любой rig.
 - **I/O**: 6.3мм TS jacks (main audio in/out), 3.5мм mini-jack (CV expansion patch bay).
 - **Bypass**: relay-buffered true bypass (no degradation when off).
-- **Dimensions**: ModFactor-class (178×119×38мм) или Microcosm-class compact (145×113×60мм).
+- **Dimensions**: big-box class (203×140×40мм) — Strymon BigSky / Eventide H9 Max class.
 - **Weight**: ~500г.
 
 ### Cross-compatibility — single instrument, two enclosures
