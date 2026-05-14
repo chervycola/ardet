@@ -454,6 +454,8 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 
 > **Внутри** electrical implementation идентична Decision 08 — solenoid double-function через 555 monostable + OR-gate diodes. Изменена только entry-point (CV jacks вместо footswitches).
 
+> ⚠ **STALL safety**: STALL CV — momentary gesture, **max 5 секунд continuous high** при default setup. Beyond that — firmware PWM throttle automatically dims coil drive к 40% duty (sufficient hold force) для thermal protection. См. BUILD §Block 14 thermal budget.
+
 ### CV Patch Bay (Pedal: ~21 jacks; Eurorack: ~15 jacks)
 
 Все controls имеют CV destination. Список:

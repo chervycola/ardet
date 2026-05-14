@@ -576,6 +576,87 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 - Pedalboard users access через expression-jack CV adapter или modular sequencer.
 - Sustains "комбайн комбайн" UX clarity: для pedal player — standard 4 stomps, для modular — bonus expressive features.
 
+#### Thermal budget — Q5 MOSFET + solenoid coil
+
+**Solenoid baseline (cartridge-side push-type 5V/300mA нo-mock)**:
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| Rated voltage | 5V DC | Adafruit 412 / Sparkfun ROB-11015 class |
+| Coil resistance (R_coil) | ~17 Ω | Measured / spec |
+| Pull current (cold) | 290 mA @ 5V | I = V/R |
+| Pull current (hot, +30°C ΔT) | 250 mA | R rises ~12%/30°C для медной обмотки |
+| Pull force | ~150 g·f @ 5mm stroke | Datasheet |
+| Coil thermal mass | ~2 g copper + bobbin | Estimated |
+| Coil θ_JA | ~150 °C/W (free air, small bobbin) | Empirical |
+| Max coil temp | 80 °C (insulation Class B) | Wire enamel limit |
+
+**Per-mode duty cycle и power dissipation**:
+
+| Mode | Drive voltage on coil | I (cold) | P_coil (steady) | Duty cycle | P_avg | Thermal rise (steady-state) |
+|------|----------------------|----------|-----------------|------------|-------|-------------------------------|
+| **DAMP** (CV-modulated, music tempo) | ~3V avg (envelope shape) | 175 mA | 0.53 W | 30–50% | 0.16–0.26 W | +24–39 °C ΔT |
+| **TOLL** (10ms pulse) | 5V peak | 290 mA | 1.45 W peak | 10ms / 200ms = 5% | 0.073 W | +11 °C ΔT |
+| **STALL** (forced hold) | 5V continuous | 290 mA | 1.45 W | 100% | 1.45 W | **+217 °C ΔT (FAULT)** |
+| DAMP + STALL combined | 5V (STALL wins) | 290 mA | 1.45 W | 100% | 1.45 W | **+217 °C ΔT (FAULT)** |
+
+**Critical finding — STALL mode is thermally unsafe для sustained operation**:
+
+- Continuous 5V applied → 1.45W dissipated в coil → ΔT(steady) ≈ 1.45 × 150 = 217 °C.
+- Ambient 25 °C → coil temp 242 °C → **insulation melts, smoke, solenoid burns out** в ~30 секунд.
+- **Datasheet ON-duty rating** для этого class solenoid: **25% max @ 5V**, OR continuous @ ~2.5V (lower force).
+- STALL mode cannot run continuously без protection.
+
+**Mitigation (mandatory, добавить в v5.1 schematic)**:
+
+1. **PWM dimming для STALL mode** — после initial 50ms "pull-in" pulse @ 100% duty, drop к **40% duty cycle** для "hold". Hold force достаточен (~100 g·f), power drops к **0.58W → ΔT +87 °C** (safe).
+   - Implementation: ATtiny85 detects STALL CV high → generates PWM на secondary gate path → ORed после diode network.
+   - Or: simpler RC slow-charge на gate node → MOSFET self-throttles после ~50ms.
+2. **Thermal sense** (optional, premium SKU): 10kΩ NTC thermistor glued к solenoid bobbin → ADC monitored by ATtiny85 → если T > 70°C, force STALL=OFF независимо от CV input.
+3. **User documentation**: STALL specified как **"momentary hold, max 5 seconds continuous"**. Beyond that — hardware throttle kicks in.
+
+**Q5 MOSFET (2N7000) thermal budget**:
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| V_DS @ I=290mA, V_GS=5V | ~0.6V (on-resistance R_DS_on ~2Ω × 290mA) | Datasheet |
+| P_Q5 (worst case STALL) | 0.6 × 0.29 = **0.17 W** | I × V_DS_on |
+| θ_JA (TO-92, free air) | 200 °C/W | Datasheet |
+| ΔT(Q5 steady STALL) | 0.17 × 200 = **+34 °C** | OK, well within 150°C T_J max |
+| Peak transient (TOLL, 10ms) | 0.17 W × 5% = **0.008 W avg** | Negligible |
+
+**Q5 is comfortable** даже без heatsink при continuous STALL (если coil выдержит — что она не выдержит без PWM throttle).
+
+**Flyback diode (D_SOL = 1N4001)**:
+- При gate-off, coil L ≈ 30mH stores energy E = ½LI² = ½ × 30e-3 × 0.29² = 1.26 mJ.
+- 1N4001 dissipates this в ~5ms через V_F × I = 1V × 290mA = 290mW peak, 5ms = 1.45mJ total — matches.
+- 1N4001 rated 1A continuous, 30A peak — 290mA pulse через 5ms комфортно.
+
+**PCB thermal layout requirements**:
+- Q5 placed в Zone 8 (digital/solenoid corner) подальше от audio Zone 4 (piezo preamp).
+- Coil cable (JST 2.0mm pitch shielded twisted pair) — **shielded**, не parallel к piezo input cable.
+- Star-ground для solenoid loop отдельно от audio ground (см. PCB Zone 8 правила).
+
+**Updated Block 14 BOM (thermal mitigation)**:
+
+| Item | Δ from baseline | Cost |
+|------|-----------------|------|
+| **PWM gate path** (ATtiny85 firmware + 1× extra 1N4148 diode in OR network) | New OR input | $0.01 (diode) |
+| **NTC 10kΩ thermistor** (premium SKU only) | Optional | $0.50 |
+| **Heatsink на Q5** (paranoid, не нужен по расчёту) | Optional | $0.30 |
+| **User-facing warning** в SPEC.md: "STALL = momentary, max 5s" | Documentation | — |
+
+**Recommendation**:
+- **Phase 1 ship**: PWM throttle для STALL в ATtiny85 firmware. Mandatory. Adds 1 diode (~$0.01) + ~50 bytes firmware.
+- **Phase 2 premium**: Add NTC thermistor + ADC monitoring для belt-and-suspenders safety. +$0.50.
+
+#### Verification (thermal)
+
+- [ ] Bench: STALL CV high для 60 секунд → measure solenoid temp via IR thermometer. **Must stay <70°C**.
+- [ ] Если firmware PWM throttle работает → coil temp plateaus <60 °C @ 25 °C ambient.
+- [ ] Q5 heatsink IR temp <40 °C ambient + 34 °C rise = <74 °C под STALL — OK без heatsink.
+- [ ] User documentation в SPEC explicitly states STALL behavior + max duration.
+
 ### Block 15. Reserved (was Geiger Pattern, теперь часть Block 12)
 
 > Geiger pattern generator (ATtiny85 LFSR) **полностью описан в Block 12** как часть NOISE+COLOR(geiger) crossfader implementation. Slot 15 зарезервирован для будущих расширений (например, Phase 2 v3 PCB add-ons).
@@ -767,40 +848,278 @@ J_TAP (from TAP footswitch на pedal, или J_CLK CV jack):
 >
 > Если pitch-warp эффект всё-таки нужен в Last Night — реализуется через **phaser feedback** (block 16) на extreme settings, или **PULSE/FOG damper modulation** (block 21+, Phase 2 v3 PCB).
 
-### Block 18. Gate / Crush — Destruction footswitch **[RESTORED v5 hybrid]**
+### Block 18. Gate / Crush — Destruction footswitch (detailed schematic) **[RESTORED v5 hybrid]**
 
 > **v5 hybrid (Decision 09)**: восстановлен из v3.0 prototype. Mockup canon включает GATE-CRUSH footswitch как named destruction effect. Не конфликтует с solenoid double-function (Block 14 TOLL/STALL — CV-only, complementary).
 
-GATE-CRUSH latching footswitch активирует destruction effect post-mixer:
+GATE-CRUSH latching footswitch активирует **two-stage destruction chain** на выходе mixer'а (Block 13). Stage 1 — noise gate с hard threshold (cuts low-amplitude tail). Stage 2 — bitcrush sample-hold (downsamples + quantizes). Footswitch toggle bypasses обе ступени параллельно через 4066 cells.
+
+#### Signal flow
 
 ```
-  Mix output ──► [Gate cell] ──► [Crush cell] ──► Output buffer
-                      │              │
-                      │              │
-              Threshold pot       Bit-reduce
-              (gate cuts        sample-hold
-               under threshold) (downsamples +
-                                quantizes)
-
-  Gate: ОУ comparator + VCA (4066 CMOS switch).
-  Crush: sample-hold (LF398) clocked by ATtiny PWM,
-         bit-reduce via R-2R ladder с stuck-at-0 LSB.
-
-  Footswitch: latching 3PDT toggle. LED indicator.
-  Threshold (внутренний trimmer): hidden trim для gate threshold setting.
+   From Block 13 Mix output (post-stereo sum, pre-output buffer)
+                      │
+                      ▼
+   ┌─────────── BYPASS multiplexer (CD4066 S1/S2) ───────────┐
+   │                                                          │
+   ▼                                                          ▼
+  Dry path                                              Destruction path
+   │                                                          │
+   │                  ┌─── Stage 1: Gate ───┐                │
+   │                  ▼                      │                │
+   │           R_GIN (47k) ──► U_COMP A (LM393)               │
+   │                  │              │                        │
+   │                  ▼              │ → comparator output    │
+   │           R_GREF (10k)     to gate switch (CD4066 S3)    │
+   │           reference от RV_GTH (50k trim) → +Vth          │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      CD4066 S3 (gate VCA)             │
+   │                  │      Audio in ──► Audio out           │
+   │                  │      Control: comparator output       │
+   │                  │      (HIGH = pass, LOW = cut)         │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      Hysteresis: R_HYS (1M) feedback  │
+   │                  │      от comparator output на (+) in   │
+   │                  │      → Schmitt trigger behaviour      │
+   │                  │              │                        │
+   │                  └──────────────┤                        │
+   │                                 ▼                        │
+   │                  ┌─── Stage 2: Crush ──┐                │
+   │                  ▼                      │                │
+   │              R_CIN (10k) ──► U_SH LF398N (S&H)           │
+   │                  │              │                        │
+   │                  │     C_HOLD (1nF NP0) на pin 6         │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      Sample clock pin 8               │
+   │                  │      ◄── от ATtiny85 PWM (8kHz–62kHz) │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      LF398 output ──► R_R2R network   │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      4-bit R-2R divider               │
+   │                  │      (R_R0 10k / R_R1 20k / R_R2 10k  │
+   │                  │       / R_R3 20k stuck-at-0 LSB)      │
+   │                  │              │                        │
+   │                  │              ▼                        │
+   │                  │      Quantized output                 │
+   │                  │              │                        │
+   │                  └──────────────┘                        │
+   │                                 │                        │
+   ▼                                 ▼                        │
+   └────────── BYPASS multiplexer (S2 selects dry или wet) ──┘
+                                     │
+                                     ▼
+                  Output buffer (U_OUTBUF — TL072 half)
+                                     │
+                                     ▼
+                              Output jack
 ```
 
-**Components**:
-- **U_GATE CD4066BE**: quad CMOS analog switch (gate cell + bypass) — $0.40.
-- **U_SH LF398N**: sample-and-hold (crush cell) — $1.20.
-- **U_COMP LM393**: dual comparator (gate threshold + tap detection) — $0.30.
-- **ATtiny85** (shared с Block 12 LFSR — dual-purpose firmware): crush sample clock + tap-tempo divider.
-- **Footswitch 3PDT** latching: $3.00.
+#### Gate cell (Stage 1) topology
 
-**Why GATE-CRUSH сохраняется**:
+```
+  Audio in ──► R_GIN (47k) ──┬──► (+) U_COMP A (LM393)
+                              │
+                              │             (−) ◄── RV_GTH wiper (50k trim,
+                              │                     panel-internal)
+                              │                     R_GREF (10k) ──► +5V ref
+                              │                     R_GRGND (10k) ──► GND
+                              │                     Threshold range: 0–2.5V
+                              │
+                              │     U_COMP A output (open-collector)
+                              │             │
+                              │     R_PULL (10k pullup to +5V)
+                              │             │
+                              │             ▼
+                              │     CD4066BE pin 13 (S3 control)
+                              │     S3: pin 1 ──► pin 2
+                              │
+                              ▼
+              Audio in (same node) ──► CD4066 pin 1
+                                            │
+                                            ▼
+                                       CD4066 pin 2 ──► Stage 2 input
+                                       (when control HIGH = pass)
+                                       (when control LOW = audio cut to GND
+                                        via residual on-resistance ~80Ω)
+
+  Hysteresis: R_HYS (1MΩ) от U_COMP A output к (+) input
+  → adds ~50mV hysteresis above threshold → no chatter
+```
+
+**Threshold behaviour**:
+- RV_GTH set по умолчанию ~−42 dBV (≈8mVrms на audio bus) — cuts только noise floor.
+- Pre-amp gain через Blocks 7→9 normalizes signal levels к ~0 dBV peak.
+- При peak −18 dBV (≈125mVrms), comparator HIGH → audio passes.
+- Между notes / fade tail: amplitude < threshold → comparator LOW → audio cut.
+- Effect: **abrupt tail cut**, mockup canon "GATE chops the reverb tail to silence between hits".
+
+**Why LM393 (not TL072 comparator)**:
+- LM393 — true comparator с open-collector output, single +5V supply OK.
+- Output rail-to-rail GND/+5V, drives 4066 control pin без level translation.
+- Propagation delay 1.3µs — fast enough для audio gating (no zipper noise).
+- BOM: $0.30.
+
+#### Crush cell (Stage 2) topology
+
+```
+  Gated audio ──► R_CIN (10k) ──► LF398N pin 3 (analog in)
+                                       │
+                                       │  C_HOLD 1nF NP0 на pin 6 (hold cap)
+                                       │
+                                       │  pin 8 LOGIC (sample command)
+                                       │     │
+                                       │     ◄── ATtiny85 OC1A PWM output
+                                       │         (square wave, var. freq)
+                                       │
+                                       ▼
+                            LF398N pin 5 (analog out)
+                                       │
+                                       ▼
+                            R-2R ladder для bit reduction:
+                                       │
+                            ┌──────────┼──────────┐
+                            │          │          │
+                          R_R0 10k  R_R1 20k   R_R2 10k
+                            │          │          │
+                            ▼          ▼          ▼
+                          (output)    │          │
+                                      │          ▼
+                                      │      Audio out node
+                                      │          │
+                                      ▼          │
+                                  R_R3 20k       │
+                                      │          │
+                                      ▼          │
+                                     GND ◄── "stuck-at-0 LSB"
+                                  (Forces LSB to 0 → 1-bit quantization
+                                   loss → audible bitcrush artefact)
+```
+
+**Sample rate control (ATtiny85 PWM)**:
+- ATtiny85 Timer1 PWM output (pin 6, OC1A) generates square wave.
+- ATtiny shared с Block 12 LFSR (Geiger pattern) и Block 16 TAP-tempo divider.
+- Firmware allocation:
+  - Timer0: LFSR clock (4MHz internal / 256 → 15.6kHz)
+  - Timer1: Crush sample clock (variable, set via internal trimmer RV_CRUSH 100k → ADC1)
+- **Sample rate range**: 8kHz (deep crush, Nyquist = 4kHz, audio severely aliased) → 62kHz (mild, transparent).
+- **Default**: 16kHz → telephone-like quality.
+
+**Bit reduction (R-2R stuck-at-0)**:
+- LF398 output is **already** 1-sample-per-clock quantized (sample-and-hold step). Aliasing handled.
+- R-2R network is **not** acting as DAC here — it's a passive resistive divider that loses the LSB by tying lowest weighted resistor (R_R3) to GND.
+- Effective bit depth reduction: ~2 bits lost (input 16-bit equivalent → 14-bit), audible as soft quantization noise floor + warble.
+- Mild but distinctive bitcrush character — лучше **классический LSB truncation** не emulating, без MCU ADC/DAC roundtrip.
+
+**Why LF398 (not 4066 sample-hold)**:
+- LF398 has **dedicated 0.5µs acquisition time**, JFET-input hold amplifier (10pA leakage).
+- C_HOLD 1nF holds value для 1 sample period (62µs @ 16kHz) с <0.5% droop.
+- 4066 как sample-hold gives ~10x leakage → audible 60Hz hum modulation.
+- BOM: $1.20 — оправдано для clean sample step.
+
+#### Bypass multiplexer
+
+```
+  Footswitch (3PDT latching): 3 sections
+   Section A: GND ↔ +5V LED control (LED on when active)
+   Section B: CD4066BE control pin 5 (S1: dry path) — HIGH when bypass
+   Section C: CD4066BE control pin 6 (S2: wet path) — HIGH when active
+   
+   Latching mechanism:
+   - SW unpressed: LED off, S1 closed (dry pass-through), S2 open (destruction muted)
+   - SW pressed: LED on, S1 open, S2 closed (destruction active)
+   
+   No clicks/pops: 4066 switches both паths at одинаковое время (<300ns delay),
+   imperceptible. Tail-fade artifact protected by series 10µF C_OUT cap on output
+   buffer (HPF at <1Hz, slow DC step rejection).
+```
+
+**Why CD4066 (not relay)**:
+- CD4066BE quad analog switch: 80Ω on-resistance, <300ns switch time, $0.40.
+- Two switches needed (dry + wet path) — uses 2 of 4 elements.
+- Remaining 2 switches: S3 (gate VCA) + spare для future expansion.
+- Relay would add $5+ cost и electromechanical click.
+
+#### ATtiny85 firmware allocation (shared chip с Block 12 + Block 16)
+
+| Timer / pin | Function | Block |
+|-------------|----------|-------|
+| Timer0 / pin 5 OC0A | LFSR Geiger clock | 12 |
+| Timer1 / pin 6 OC1A | Crush sample PWM | 18 |
+| ADC1 / pin 7 | RV_CRUSH (sample rate set) | 18 |
+| ADC2 / pin 3 | TAP-tempo input (Schmitt) | 16 |
+| ADC3 / pin 2 | RV_GEIGER (LFSR rate) | 12 |
+| pin 1 (RESET) | Reserved | — |
+
+**Firmware size**: ~512 bytes (ATtiny85 has 8KB flash, ample headroom).
+
+#### Components per stage
+
+**Gate cell**:
+| Ref | Value | Part | Cost |
+|-----|-------|------|------|
+| U_COMP | dual comparator | **LM393N** DIP-8 | $0.30 |
+| U_GATE A | quad analog switch | **CD4066BE** DIP-14 (shared с bypass mux) | $0.40 |
+| R_GIN | 47kΩ 1% MF | YAGEO MFR-25 | $0.05 |
+| R_GREF / R_GRGND | 10kΩ 1% MF | YAGEO MFR-25 (×2) | $0.10 |
+| R_HYS | 1MΩ 1% MF | YAGEO MFR-25 | $0.05 |
+| R_PULL | 10kΩ 1% MF | YAGEO MFR-25 | $0.05 |
+| RV_GTH | 50kΩ trim, multi-turn | Bourns 3296W | $0.80 |
+
+**Crush cell**:
+| Ref | Value | Part | Cost |
+|-----|-------|------|------|
+| U_SH | sample-and-hold | **LF398N** DIP-8 | $1.20 |
+| R_CIN | 10kΩ 1% MF | YAGEO MFR-25 | $0.05 |
+| C_HOLD | 1nF NP0 | KEMET C0G | $0.20 |
+| R_R0 / R_R2 | 10kΩ 0.1% MF | Vishay MRS25 (matched pair) | $0.40 |
+| R_R1 / R_R3 | 20kΩ 0.1% MF | Vishay MRS25 (matched pair) | $0.40 |
+| RV_CRUSH | 100kΩ trim | Bourns 3296W | $0.80 |
+
+**Bypass mux + footswitch**:
+| Ref | Value | Part | Cost |
+|-----|-------|------|------|
+| U_GATE B/C | quad analog switch | **(shared CD4066BE)** | — |
+| SW_DEST | 3PDT latching footswitch | DPDT латчинг + SPDT LED section | $3.00 |
+| LED_DEST | 3mm red | Kingbright L-7104ID | $0.10 |
+| R_LED | 1kΩ | YAGEO MFR-25 | $0.05 |
+
+**ATtiny85 shared** — chip уже включён в Block 12 BOM, дополнительно за Block 18 не считается.
+
+#### BOM (Block 18, новые компоненты)
+
+| Item | Cost |
+|------|------|
+| LM393N | $0.30 |
+| CD4066BE | $0.40 |
+| LF398N | $1.20 |
+| Resistors (8 шт включая R-2R precision) | $1.10 |
+| C_HOLD 1nF NP0 | $0.20 |
+| Trimmers (2 шт Bourns 3296W) | $1.60 |
+| 3PDT latching footswitch | $3.00 |
+| LED + R_LED | $0.15 |
+| **Total** | **$7.95** |
+
+**Cost vs character**: $7.95 для **two named destruction footswitches' worth of FX** (GATE + CRUSH), versus aftermarket pedal alternative ($150+ для standalone bitcrusher + $80+ для noise gate). Mockup canon preserved at <0.6% of unit BOM.
+
+#### Verification
+
+- [ ] Gate threshold: set RV_GTH к ~50% rotation, проверить cut-off на signals <−40 dBV.
+- [ ] Hysteresis: confirm no chatter на signals close to threshold (audible test).
+- [ ] Crush sample rate: scope LF398 pin 5, confirm visible quantization steps.
+- [ ] R-2R matching: измерить R_R0/R_R1 pairs к ±0.1%, иначе LSB-stuck не консистентен.
+- [ ] Bypass click: A/B test footswitch toggle на audio output (oscilloscope), <1mV step.
+- [ ] LED brightness ~= Block 12 NOISE LED для visual consistency.
+
+#### Why GATE-CRUSH сохраняется
+
 - Mockup canon включает его как named footswitch effect.
 - Generic "destruction" gesture с different character чем solenoid TOLL/STALL (которые physical bell/damp gestures).
-- 4066 + LF398 + LM393 — proven components, minimal cost.
+- 4066 + LF398 + LM393 — proven components, $7.95 total.
 - TOLL/STALL — bell + damper (mechanical reverb manipulation).
 - GATE-CRUSH — gate + bitcrush (digital-style destruction effect).
 - Complementary, not duplicative.
@@ -1025,113 +1344,440 @@ Bank | LF res | HF res | SAT bias | FB res
 
 > Эти 5 блоков добавляются в v3 PCB revision как **upgrade kit** к Phase 1 ship. Pin-header экспансия PCB (10-pin) позволяет cold palette daughter-board подключаться без замены main board. Можно также включить в main board сразу — для full-feature SKU.
 
-### Block 21. PULSE — Slow LFO на damper-pressure (Phase 2)
+**Phase 2 IC allocation** (новые ICs только на daughter board):
+
+| Ref | Part | Function |
+|-----|------|----------|
+| U9 | LM13700 | OTA1 = PULSE depth VCA, OTA2 = FOG random VCA |
+| U10 | LM13700 | OTA1 = FROST VCF gm, OTA2 = CHILL expander VCA |
+| U11 | TL074 | Quad op-amp: PULSE LFO core, FOG slew, CHILL env follower, HUM input buffer |
+| U12 | TL072 | Dual op-amp: FROST SVF integrators, HUM Twin-T amplifier |
+| U_CMOS | CD4066BE | (additional) FOG S&H switch + CHILL/FROST bypass mux |
+
+**Phase 2 daughter board total IC cost**: 2× LM13700 ($4) + TL074 ($0.75) + TL072 ($0.50) + 4066 ($0.40) = **$5.65 active**.
+
+### Block 21. PULSE — Slow LFO на damper-pressure (detailed schematic)
 
 Slow periodic LFO (0.05–2 Гц) → модулирует damper-pressure → reverb tail "дышит" ритмично. Антипод HAZE в Last Day.
 
+#### Signal flow
+
 ```
-  Internal LFO (triangle, 0.05–2 Hz):
-    R_PULSE_TIMING (RV_PULSE 1MΩ log) → C_PULSE 1µF → Schmitt trigger →
-    LFO_OUT (bipolar triangle ±5V)
-                                │
-                                ▼
-                        VCA (LM13700 OTA spare)
-                        ── attenuverted ──►
-                                │
-                                ▼
-                        Sum с DAMP_CV → solenoid driver (Block 14)
-
-  Sync: optional TAP CV in → resets LFO phase to beat.
+   ┌──────────── Triangle LFO core (TL074 U11 OTA-free design) ────────────┐
+   │                                                                        │
+   │   ┌──── Integrator ──── Comparator ──── Inverter ───┐                  │
+   │   │     (U11 A)         (U11 B)        (U11 C)      │                  │
+   │   │                                                  │                  │
+   │   └────────── Feedback loop ──────────────────────►──┘                  │
+   │                                                                        │
+   │   Triangle out (±5V) ──► RV_PULSE_RATE 1MΩ log (sets integrator slope) │
+   │                          + C_PULSE 1µF integrator cap                  │
+   │                                                                        │
+   │   Rate range: 0.05 Hz (CCW, max R) ... 2 Hz (CW, min R)                │
+   │                                                                        │
+   └────────────────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+                  RV_PULSE 100k lin (depth attenuverter, center-detent for bipolar)
+                          │
+                          ▼
+                  R_PULSE_BUF 10k ──► U11 D (buffer)
+                          │
+                          ▼
+                  ┌──── J_PULSE_CV (external modulation of rate) summed via R_PULSE_CV 100k
+                  │
+                  ▼
+            U9 OTA1 (LM13700) — depth VCA
+                          │
+                          │ Iabc controlled by RV_PULSE depth knob
+                          ▼
+                  Modulated triangle ──► Sum bus → DAMP_CV (Block 14)
+                          │
+            Sync option: J_TAP_IN gate → resets LFO phase (via CD4066 reset to integrator GND)
 ```
 
-**Controls**: RV_PULSE 100kΩ lin (depth), RV_PULSE_RATE 1MΩ log (rate).
-**CV in**: J_PULSE_CV (modulate rate from external).
+#### Component values
 
-### Block 22. FOG — Apperiodic damper drift (Phase 2)
+| Ref | Value | Function |
+|-----|-------|----------|
+| RV_PULSE_RATE | 1MΩ log Alpha RV09 | Integrator slope (rate) |
+| C_PULSE | 1µF film (WIMA MKS2) | Integrator cap (low leakage critical) |
+| R_INT | 47kΩ 1% MF | Integrator input |
+| R_COMP_THRESH | 100kΩ 1% MF (×2 divider) | ±5V Schmitt thresholds |
+| R_FB | 220kΩ 1% MF | Comparator hysteresis |
+| RV_PULSE | 100kΩ lin Alpha RV09 (center-detent) | Depth attenuverter |
+| R_PULSE_BUF | 10kΩ 1% MF | Buffer input |
+| R_PULSE_CV | 100kΩ 1% MF | CV input mix |
+| R_IABC | 22kΩ 1% MF + 1k series | Depth → Iabc for U9 OTA1 |
+
+**Frequency formula**: f_LFO = 1 / (4 × RV × C_PULSE). At RV=1MΩ, C=1µF → f = 0.25 Hz. At RV=100kΩ → f = 2.5 Hz. Knob log law gives near-musical taper.
+
+**BOM (Block 21)**: 5 resistors ($0.25) + RV_PULSE_RATE ($1.50) + C_PULSE WIMA ($0.80) + RV_PULSE ($1.50) + 2× JST connectors to daughter board = **~$4.35** (excluding shared TL074 + LM13700 amortized in daughter board).
+
+#### Verification (Block 21)
+
+- [ ] Rate sweep 0.05–2 Hz measured via scope on integrator output.
+- [ ] Triangle symmetry within 5% (asymmetry indicates comparator threshold mismatch).
+- [ ] Depth knob CCW = no modulation reaches damper CV (verified via DC voltmeter on DAMP_CV bus).
+- [ ] TAP sync: gate input → LFO phase resets within 1 ms.
+
+---
+
+### Block 22. FOG — Apperiodic damper drift (detailed schematic)
 
 Aperiodic / random damper modulation для "туман над хвостом" character. Антипод MIRAGE в Last Day.
 
+#### Signal flow
+
 ```
-  Noise source (existing zener D_NOISE) ──► 4066 S&H clocked by slow RC oscillator
-                                                    │
-                                                    ▼
-                                            random sample/hold value
-                                                    │
-                                                    ▼
-                                            R_SLEW + C_SLEW = slow slew (~0.5s)
-                                                    │
-                                                    ▼
-                                            VCA (LM13700 OTA spare)
-                                                    │
-                                                    ▼
-                                            Sum в damper CV → micro-mod
+   D_NOISE (BZX55C9V1 zener, existing from Block 12)
+        │
+        │  AC-coupled noise → +9.1V bias hiss source
+        ▼
+   R_FOG_SRC 10k ──► CD4066 pin 1 (S1 input)
+                          │
+                          │  S1 control ◄── Slow RC oscillator gate (random S&H trigger)
+                          ▼
+                  CD4066 pin 2 (S1 output) ──► sampled value held
+                          │
+                          ▼
+                  C_HOLD_FOG 100nF (hold cap)
+                          │
+                          ▼
+                  R_SLEW 100kΩ + C_SLEW 4.7µF → slew limiter
+                  Slew rate: τ = 100k × 4.7µF = 0.47s
+                          │
+                          ▼
+                  U11 D buffer (TL074) ──► unity gain output
+                          │
+                          ▼
+                  RV_FOG 100kΩ lin (depth knob)
+                          │
+                          ▼
+                  J_FOG_CV summed via R_FOG_CV 100k
+                          │
+                          ▼
+                  U9 OTA2 (LM13700) — VCA
+                          │
+                          ▼
+                  Sum bus → DAMP_CV (parallel to PULSE)
+
+   ┌──── Slow RC oscillator (TL072 spare half U12 A) ────┐
+   │  R_OSC 470k + C_OSC 1µF → Schmitt oscillator       │
+   │  Frequency: ~0.5 Hz (random tick rate)              │
+   │  Output → CD4066 S1 control (sample command)        │
+   └──────────────────────────────────────────────────────┘
 ```
 
-**Controls**: RV_FOG 100kΩ lin (depth).
-**CV in**: J_FOG_CV.
+#### Component values
 
-### Block 23. FROST — HF absorber в feedback path (Phase 2)
+| Ref | Value | Function |
+|-----|-------|----------|
+| R_FOG_SRC | 10kΩ 1% MF | Noise source isolation |
+| C_HOLD_FOG | 100nF NP0 ceramic | S&H hold cap |
+| R_SLEW | 100kΩ 1% MF | Slew time constant |
+| C_SLEW | 4.7µF MKS2 film | Slew cap (low leakage) |
+| R_OSC | 470kΩ 1% MF | Schmitt oscillator R |
+| C_OSC | 1µF MKS2 film | Schmitt oscillator C |
+| RV_FOG | 100kΩ lin | Depth knob |
+| R_FOG_CV | 100kΩ 1% MF | CV input mix |
+
+**Slew τ = 0.47s** — moves slowly, dreamy character (not rhythmic ticking like noise burst).
+**Sample rate ~0.5 Hz** — random new value every ~2s on average.
+
+**BOM (Block 22)**: 4 resistors ($0.20) + C_HOLD ($0.20) + C_SLEW + C_OSC WIMA film ($1.60) + RV_FOG ($1.50) + R_OSC ($0.05) = **~$3.55**.
+
+#### Verification (Block 22)
+
+- [ ] CD4066 control pulse rate ~0.5 Hz (scope).
+- [ ] S&H output steps visible на DC voltmeter — random new value each ~2s.
+- [ ] Slew limit: step → 0.47s settle to new value (RC time constant).
+- [ ] No audible clicks when sample switches (slew + buffer prevent click).
+
+---
+
+### Block 23. FROST — HF absorber state-variable VCF (detailed schematic)
 
 Voltage-controlled LPF в feedback loop reverb — при увеличении FROST sweep-down ВЧ → tail постепенно теряет air. Антипод BLEACH (HF saturation) в Last Day.
 
+**Topology**: 2-pole state-variable filter (SVF) с two OTA-driven integrators. Cutoff range 20 kHz → 800 Hz controlled by RV_FROST + J_FROST_CV.
+
+#### Signal flow
+
 ```
-  Feedback wet signal ──► [State-variable filter LPF stage] ──► R_FB → summing
-                                    ▲
-                                    │
-                            VCF cutoff control:
-                            RV_FROST → control voltage → OTA Iabc
-                            (uses LM13700 OTA spare or дополнительный LM13700)
+   Feedback wet signal (tap from U4A output, post-summing)
+        │
+        ▼
+   R_FROST_IN 22k ──► (-) U12 A (TL072 first integrator summing node)
+                          │
+                          │  Feedback from output: R_DAMPING 100k (sets Q)
+                          ▼
+                  U10 OTA1 (LM13700) configured as integrator gm
+                          │
+                          │  C_FROST_1 1nF NP0 on integrator output
+                          ▼
+                  LPF output (1st pole) ──┬──► U12 B (TL072 second integrator)
+                                          │           │
+                                          │   U10 OTA2 configured as gm
+                                          │           │
+                                          │   C_FROST_2 1nF NP0
+                                          ▼           │
+                                  LPF output (2nd pole, -12 dB/oct) ──► Back to U4A feedback summing
+                                                      │
+                                  ┌───────────────────┘
+                                  ▼
+                          Q damping feedback ──► R_DAMPING ──► sum node
+                          (HP output from U12 A summing node)
+
+   Cutoff control:
+        RV_FROST 100kΩ lin → +5V ref bias → R_CUT_BUF 10k → U11 buffer
+              │
+              + J_FROST_CV summed via R_FROST_CV 100k
+              │
+              ▼
+        Control voltage 0–5V → R_IABC 22k → OTA Iabc pins (both U10 halves)
+              │
+              ▼
+        Iabc range: 1µA (cutoff 800 Hz) → 50µA (cutoff 20 kHz)
+        Both OTAs share same Iabc → matched cutoff for both poles
 ```
 
-**Controls**: RV_FROST 100kΩ lin (cutoff sweep).
-**CV in**: J_FROST_CV.
+#### Cutoff formula
+
+For OTA integrator: f_c = gm / (2π × C × R_in_eff). With OTA gm = 19.2 × Iabc (LM13700 datasheet @ room temp):
+- Iabc = 1 µA → gm = 19.2 µS → f_c = 19.2e-6 / (2π × 1e-9 × 1) ≈ 3 kHz (with R_in scaling to 800 Hz via R_FROST_IN 22k tuning)
+- Iabc = 50 µA → gm = 960 µS → f_c ≈ 152 kHz / 22 = 6.9 kHz (limited by op-amp bandwidth at ~20 kHz audio range)
+
+**Tuning**: trim R_FROST_IN value during prototype to land 20 kHz top end + 800 Hz bottom end. Empirical: R_FROST_IN 22k often gives correct range; if not, swap to 33k or 15k.
+
+#### Component values
+
+| Ref | Value | Function |
+|-----|-------|----------|
+| R_FROST_IN | 22kΩ 1% MF | Filter input scaling |
+| R_DAMPING | 100kΩ 1% MF | Q feedback (sets Q ≈ 0.7, low ripple) |
+| C_FROST_1, C_FROST_2 | 1nF NP0 (matched pair, ±2%) | Integrator caps |
+| RV_FROST | 100kΩ lin (center-detent OK) | Cutoff knob |
+| R_CUT_BUF | 10kΩ 1% MF | Buffer input |
+| R_FROST_CV | 100kΩ 1% MF | CV input mix |
+| R_IABC | 22kΩ 1% MF | Iabc current setting |
+
+**Why state-variable (not single-pole)**:
+- 2-pole gives audible -12 dB/oct slope vs single-pole -6 dB/oct.
+- SVF stable across full sweep range (no gain spike at corner).
+- Provides both LPF + HP simultaneously — HP unused here but available for future Phase 3 expansion (frost+hum filtering).
 
 **Cutoff range**: 20кГц (frost = 0, transparent) → 800Гц (frost = max, only midrange survives).
 
-### Block 24. CHILL — Expander с brittle release (Phase 2)
+**BOM (Block 23)**: 4 resistors ($0.20) + 2× C_FROST NP0 matched ($0.40) + RV_FROST ($1.50) = **~$2.10**.
+
+#### Verification (Block 23)
+
+- [ ] Cutoff sweep: white noise input → spectrum analyzer should show -3 dB point sweeping from 20 kHz to 800 Hz.
+- [ ] Q stable across range — no oscillation at any cutoff value.
+- [ ] Matched C_FROST caps within ±2% — measure with LCR meter before solder.
+
+---
+
+### Block 24. CHILL — Expander с brittle release (detailed schematic)
 
 Anti-compression: quiet stays quiet, loud reaches peak but decays fast. Антипод TAR (vise compressor) в Last Day.
 
+**Operating principle**: Detect envelope of audio → gain control inverted (more signal → MORE gain → expander above threshold, gain compression below threshold) → fast release punishes sustained signals.
+
+#### Signal flow
+
 ```
-  Mix output ──► [Expander cell]
-                  │
-            Envelope follower (inverted slope)
-                  │
-            Threshold pot + ratio
-                  │
-            VCA control (LM13700 OTA spare)
-                  │
-                  ▼
-            CHILL effect amount → output
+   Mix output (from Block 13) ──► R_CHILL_IN 10k
+        │
+        ▼
+   ┌──── Sidechain path ────┐         ┌──── Audio path (delayed via R_DELAY/C_DELAY) ────┐
+   │                        │         │                                                  │
+   │  R_FW 10k ──► D1 1N4148 │         │  Audio bus ──► U10 OTA2 (LM13700) — expander VCA │
+   │     │  (HW rectifier)   │         │                       │                          │
+   │     ▼                   │         │                       ▼                          │
+   │  C_ENV 1µF + R_ATT 1k   │         │              CHILL output → output buffer        │
+   │     │  (attack ~1ms)    │         │                                                  │
+   │     │                   │         └──────────────────────────────────────────────────┘
+   │     ▼                                          ▲
+   │  R_REL 100k ──► to GND                         │
+   │  (release ~100ms, brittle fast)                │
+   │     │                                          │
+   │     ▼                                          │
+   │  U11 C (env follower buffer)                   │
+   │     │                                          │
+   │     ▼                                          │
+   │  Envelope DC voltage 0–5V                      │
+   │     │                                          │
+   │     ▼                                          │
+   │  (-) U11 D comparator                          │
+   │     vs RV_CHILL_THRESH (50k trim) ──► ratio    │
+   │     │                                          │
+   │     ▼                                          │
+   │  Above threshold: comparator HIGH              │
+   │     → CV_CHILL_HIGH (max gain)                 │
+   │  Below threshold: comparator LOW               │
+   │     → CV_CHILL_LOW (reduced gain)              │
+   │     │                                          │
+   │     ▼                                          │
+   │  CV scaled by RV_CHILL 100k (amount) ──────────┘
+   └────────────────────────────────────────────────►
 ```
 
-**Controls**: RV_CHILL 100kΩ lin (amount), RV_CHILL_THRESH (internal trimmer).
-**CV in**: J_CHILL_CV.
+#### Component values
 
-### Block 25. HUM — Mains-hum antenna pickup (Phase 2)
+| Ref | Value | Function |
+|-----|-------|----------|
+| R_CHILL_IN | 10kΩ 1% MF | Audio input |
+| R_FW | 10kΩ 1% MF | Half-wave rectifier R |
+| D1 | 1N4148 | HW rectifier diode |
+| C_ENV | 1µF MKS2 | Envelope cap |
+| R_ATT | 1kΩ 1% MF | Attack RC (1 ms) |
+| R_REL | 100kΩ 1% MF | Release RC (100 ms — "brittle" character) |
+| RV_CHILL_THRESH | 50kΩ trim multi-turn (Bourns 3296W) | Internal threshold trim |
+| RV_CHILL | 100kΩ lin | Amount knob |
+| R_CV_LOW, R_CV_HIGH | 22kΩ 1% MF each | CV scaling resistors |
+| R_IABC_CHILL | 22kΩ 1% MF | Iabc for U10 OTA2 |
+
+**Release time 100 ms** = "brittle". Compare к typical compressor release 200–500 ms. Short release punishes sustain (key character of anti-compression).
+
+**Attack 1 ms** = fast envelope follow. No "pump-up" delay.
+
+**BOM (Block 24)**: 8 resistors ($0.40) + D1 ($0.01) + C_ENV ($0.30) + RV_CHILL_THRESH ($0.80) + RV_CHILL ($1.50) = **~$3.00**.
+
+#### Verification (Block 24)
+
+- [ ] Input sine wave 1 kHz at -10 dBV → envelope follower DC ~3V (sanity check).
+- [ ] Burst input: rise to peak < 5 ms (attack OK), decay to 10% in ~250 ms (5τ release = brittle).
+- [ ] Threshold trim: set to mid → comparator switches at -20 dBV input level.
+- [ ] Amount CW: above-threshold signals louder than dry (expander above), below-threshold quieter (compressor below). Inverse compression confirmed.
+
+---
+
+### Block 25. HUM — Mains-hum antenna pickup (detailed schematic)
 
 Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки → tuned amp → mix. Антипод HEATWAVE (AM-tuner ионосфера) в Last Day.
 
-```
-  J_HUM_ANT (внешний antenna jack, optional):
-    Internal: ferrite coil 1000 витков ~100mH на ferrite rod 50мм
-    External (premium): coax to remote antenna or pickup coil
+#### Signal flow
 
-                                    │
-                                    ▼
-                            Twin-T 50/60Hz tuned amp (band-pass)
-                                    │
-                                    ▼
-                            Gain stage (×100 LM13700 OTA)
-                                    │
-                                    ▼
-                            VCA (RV_HUM controls level) → mix
+```
+   ┌──── Antenna source (selectable) ────┐
+   │                                      │
+   │  Internal: L_FERRITE (ferrite-rod    │
+   │   coil 1000т, ~100mH, ferrite rod   │
+   │   50mm × 8mm)                       │
+   │                                      │
+   │  External (premium): J_HUM_ANT       │
+   │   (3.5mm jack, coax to remote        │
+   │    antenna or pickup coil)           │
+   │                                      │
+   │  SW_HUM_SRC SPDT switch selects      │
+   │  internal vs external                │
+   └──────────────────────────────────────┘
+                          │
+                          ▼
+                  C_HUM_IN 1µF (DC block)
+                          │
+                          ▼
+                  R_HUM_IN 1MΩ (high-Z bias to GND, sets input impedance)
+                          │
+                          ▼
+                  U11 B (TL074 input buffer, gain ×1)
+                          │
+                          ▼
+                  ┌──── Twin-T tuned filter (50/60 Hz) ────┐
+                  │                                         │
+                  │  R_T1, R_T2 + C_T1, C_T2 (top arm)    │
+                  │  R_T3 + C_T3 (bottom arm)              │
+                  │                                         │
+                  │  Notch at f_notch — INVERTED для bandpass: │
+                  │  Twin-T usually rejects at 50/60Hz —   │
+                  │  here we wrap в op-amp feedback        │
+                  │  → BANDPASS at 50/60Hz Q≈5             │
+                  └─────────────────────────────────────────┘
+                          │
+                          ▼
+                  U12 B (TL072 bandpass amp, ×5 gain)
+                          │
+                          ▼
+                  U10 OTA — variable gain (×1 to ×100)
+                  Iabc controlled by RV_HUM 100k log
+                          │
+                          ▼
+                  RV_HUM_LEVEL output buffer ──► Sum to Block 13 mix
+                          │
+                          ▼
+                  J_HUM_CV summed in via R_HUM_CV 100k
+
+   ┌──── SW_FREQ (50Hz / 60Hz selector switch) ────┐
+   │                                                 │
+   │  Changes C_T1, C_T2, C_T3 values via SPDT      │
+   │  50Hz path: C_T1=C_T2=68nF, C_T3=130nF         │
+   │  60Hz path: C_T1=C_T2=56nF, C_T3=110nF         │
+   │                                                 │
+   │  Twin-T tuning formula:                         │
+   │  f = 1/(2π × R × C), with R_T1=R_T2=R, R_T3=R/2 │
+   │  + C_T3=2×C_T1  → notch at f                    │
+   └─────────────────────────────────────────────────┘
 ```
 
-**Controls**: RV_HUM 100kΩ log (level). Switch 50Hz/60Hz региональный.
-**CV in**: J_HUM_CV.
+#### Twin-T values (50/60Hz selectable)
+
+| Component | 50Hz position | 60Hz position |
+|-----------|---------------|---------------|
+| R_T1, R_T2 | 47kΩ 1% MF (×2, matched) | (same) |
+| R_T3 | 23.5kΩ (use 22k + 1.5k series) | (same) |
+| C_T1, C_T2 | 68nF film polypropylene | 56nF film |
+| C_T3 | 130nF film (use 100nF + 30nF) | 110nF film |
+
+**Matching critical**: 5% Twin-T mismatch → Q drops to ~2, notch shallow. Use matched pairs from same batch, measure with LCR.
+
+#### Component values
+
+| Ref | Value | Function |
+|-----|-------|----------|
+| L_FERRITE | 100mH ~1000т ferrite rod 50×8mm | Internal antenna |
+| C_HUM_IN | 1µF MKS2 | DC block |
+| R_HUM_IN | 1MΩ 1% MF | Bias |
+| Twin-T components | per table above | 50/60Hz tuned |
+| SW_FREQ | DPDT slide switch | 50/60Hz select |
+| SW_HUM_SRC | SPDT mini-toggle | Internal/external antenna |
+| RV_HUM | 100kΩ log Alpha RV09 | Level knob |
+| R_HUM_CV | 100kΩ 1% MF | CV input |
+| R_IABC_HUM | 22kΩ 1% MF | Iabc for U10 OTA |
+
+**BOM (Block 25)**: L_FERRITE custom-wound ($2.00) + matched film caps ($1.50) + matched MF resistors ($0.40) + 2× switches ($1.00) + RV_HUM ($1.50) + J_HUM_ANT 3.5mm jack ($0.40) = **~$6.80**.
+
+#### Verification (Block 25)
+
+- [ ] Internal ferrite antenna picks up nearby mains transformer audibly при `RV_HUM` full CW (place near AC adapter — confirm hum amplification).
+- [ ] Twin-T tuning: sweep external signal generator 30–80 Hz, identify peak gain frequency. Should be 50 Hz (or 60 Hz per switch position) ±2 Hz.
+- [ ] Q ~5 (bandwidth ~10 Hz at -3 dB).
+- [ ] No collateral switching noise от собственного TMR 3-1212WI DC-DC (150kHz) reaches HUM output (DC-DC ferrite shield essential).
 
 **Open question**: внутренняя antenna может ловить collateral switching noise от собственного TMR 3-1212WI DC-DC (150kHz). Mitigation: ferrite shielding coil + 50/60Hz tuned filter cuts switching frequency. Если bench prototype не подтверждает clean signal — HUM откладывается в Phase 2B с external antenna jack only.
+
+---
+
+### Phase 2 daughter board BOM summary
+
+| Block | Function | Sub-BOM |
+|-------|----------|---------|
+| Active ICs (shared) | 2× LM13700 + TL074 + TL072 + 4066 + extra TL072 | $5.65 |
+| Block 21 PULSE | LFO + depth VCA | $4.35 |
+| Block 22 FOG | Random S&H + slew | $3.55 |
+| Block 23 FROST | SVF VCF | $2.10 |
+| Block 24 CHILL | Expander + env follower | $3.00 |
+| Block 25 HUM | Ferrite antenna + Twin-T amp | $6.80 |
+| Daughter board PCB (4-layer 100×60mm) | | $4.00 |
+| 10-pin header + ribbon to main board | | $1.50 |
+| 5× knobs (RV_PULSE/RATE/FOG/FROST/CHILL/HUM = 6 actually) | Davies 1900H budget | $3.00 |
+| 5× CV jacks + SW_FREQ + SW_HUM_SRC | | $4.00 |
+| **Phase 2 daughter board total** | | **~$37.95** |
+
+**Phase 2 retail upgrade kit price**: $89 (margin 2.3× for low-volume kit production, plus install labor).
+
+**Bench validation status**: All 5 blocks designed на paper, **not prototyped**. Phase 2 launch contingent on prototype validation of: (1) HUM bandpass clean от DC-DC noise; (2) FROST cutoff range achievable with chosen R/C; (3) Daughter board fits mechanically под main board PCB на M3 standoffs.
 
 ---
 
@@ -1160,7 +1806,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 
 **Phase 1 ship BOM** (v5 hybrid, ядро + Gate/Crush + 2-stage phaser + Color preset + base FX): **~$94 budget / $121 premium**.
 **Phase 1 premium SKU** (4-stage phaser): +$2 → **~$96 budget / $123 premium**.
-**Phase 2 v3 PCB BOM**: +$15 для cold palette layer → **~$111 budget / $138 premium** full feature.
+**Phase 2 v3 PCB BOM**: +$38 для cold palette daughter-board (incl. PCB + ribbon + 6 knobs + 5 jacks + 2 switches) → **~$132 budget / $159 premium** full feature.
 
 **Retail target**: $499 budget / $649 premium (sustainable margin, premium tier alongside Strymon BigSky / Eventide H9 Max).
 
@@ -1571,27 +2217,132 @@ Via stitching:
 - Узкие traces (<0.5мм) соединяющие GND zones — это deliberate "fuse-link" против ground loops.
 - Ferrite bead optional на solenoid +12V supply (snubs switching transients на shared supply).
 
-### Component placement priority
-
-1. **J_PWR** — у edge.
-2. **Power supply zone (Zone 1)** — adjacent to J_PWR.
-3. **Driver Amp (Zone 2)** — adjacent to power, with thermal exit к panel.
-4. **Mini-XLR jacks** — у opposite edge from J_PWR (signal entry от cartridge dock).
-5. **JFET preamp (Zone 4)** — close to mini-XLR jacks (<20мм trace length).
-6. **Solenoid driver (Zone 8)** — opposite corner from JFET preamp (>40мм physical separation).
-7. **Noise generator (Zone 9)** — isolated, separate from signal path.
-8. **Output (Zone 7)** — у edge near panel jacks.
-
-### Mounting holes
-
-4× M3 holes на corners PCB — secured к panel rails. Не overlapping traces (1мм keepout).
-
 ### Silkscreen
 
 - Component reference designators visible.
 - Polarity marks для diodes, electrolytic caps, IC orientation (pin 1 dot).
 - ICs orientation arrows.
 - Critical notes: "DO NOT ROUTE SIGNALS NEAR JFET GATE (guard zone)" и "R8 5W WIREWOUND ONLY".
+
+### v5 hybrid PCB review — extended zones
+
+The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds significant new circuitry that needs explicit floor-plan slots:
+
+**New zones (10–14)**:
+
+| Zone | Block(s) | ICs / parts | Physical considerations |
+|------|----------|-------------|--------------------------|
+| **Zone 10** | Block 16 Phaser | U7 LM13700 (cells 1+2), U8 LM13700 premium (cells 3+4), TL074 spare для phaser sum amp, **74HC161** (Shape Form step DAC), **NE555 #2** (vinyl-skip one-shot), C_AP1–4 (47nF / 15nF / 6.8nF / 2.2nF NP0) | Place **away from JFET preamp Zone 4** — phaser LFO can radiate sub-audio crosstalk into hi-Z gate. Min 25mm separation. LFO triangle slow enough that ferrite bead OK. |
+| **Zone 11** | Block 18 Gate/Crush | U_GATE CD4066BE, U_SH LF398N, U_COMP LM393, R-2R matched pairs | Place **between Zone 7 (mix output) and panel** — signal flows mix → Gate → Crush → output buffer → jack. R-2R matched resistors require equal-length traces (<5mm difference). |
+| **Zone 12** | Block 20 COLOR slider | Slider SL-4P5T mounted **panel-edge** (not on PCB body), R-banks (12 resistors) на panel-adjacent strip | Slider physically on panel left side per mockup. R-banks soldered on small **slider satellite PCB** (40×20mm) which mounts behind slider, ribbon-connects to main PCB via 8-pin header. |
+| **Zone 13** | Block 12 noise + Block 16 Shape Form panel slider | SL-1P5T Shape Form slider panel-mount, ATtiny85 MCU (shared с Block 12, 16, 18), 7805 LDO для +5V digital | Slider satellite PCB shared с Block 20 region. ATtiny85 в **digital corner** (DGND, Zone 8 adjacent). +5V LDO heat sink not needed (50mA draw, 0.35W on 7V drop = OK без). |
+| **Zone 14** | Phase 2 daughter board connection | 10-pin header (2×5 IDC ribbon) | Header placed на main PCB **bottom edge** (opposite panel side). Phase 2 daughter board mounts on M3 standoffs 12mm tall, sits underneath main PCB. Ribbon carries: ±12V, GND, audio bus tap (Block 13 output), DAMP_CV input, 4× Phase 2 CV jack connections, +5V digital. |
+
+#### Revised floor plan (40HP module, panel-up view)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PCB 190 × 108mm (40HP format)                                              │
+│                                                                             │
+│  ──── Top row (panel-mount edge) ────                                       │
+│                                                                             │
+│  ┌──────┐ ┌─────────┐ ┌────────────────────────┐ ┌──────────┐ ┌─────────┐  │
+│  │ Z1   │ │ Z2      │ │ Z3                     │ │ Z4       │ │ Z8      │  │
+│  │ POWER│ │ DRIVER  │ │ INPUT+PRE-EMPH+TONE    │ │ PIEZO    │ │ SOLEN.  │  │
+│  │ +    │ │ PUSH-   │ │ U1A U3A U2A            │ │ PRE      │ │ DRIVER  │  │
+│  │ DC-DC│ │ PULL    │ │                        │ │ Q3       │ │ Q5      │  │
+│  │ Z19  │ │ Q1 Q2   │ │ J_IN                   │ │ J_PA J_PB│ │ J_SOL   │  │
+│  │      │ │ R8      │ │                        │ │ guard    │ │ D_SOL   │  │
+│  │ J_PWR│ │         │ │                        │ │ ring     │ │         │  │
+│  └──────┘ └─────────┘ └────────────────────────┘ └──────────┘ └─────────┘  │
+│                                                                             │
+│  ──── Middle row (FX core) ────                                             │
+│                                                                             │
+│  ┌──────────────┐ ┌────────────────┐ ┌──────────────────────┐ ┌──────────┐ │
+│  │ Z5           │ │ Z6             │ │ Z10 PHASER (NEW)     │ │ Z9       │ │
+│  │ FEEDBACK +   │ │ TONE LPF +     │ │ U7 LM13700 cells 1+2 │ │ NOISE +  │ │
+│  │ FREEZE       │ │ LED CLIP +     │ │ U8 LM13700 cells 3+4 │ │ GEIGER   │ │
+│  │ U4A          │ │ ENV VCA        │ │ TL074 phaser sum amp │ │ D_NOISE  │ │
+│  │ SW_FREEZE    │ │ U2A D1-D6      │ │ 74HC161 Shape DAC    │ │ U2C      │ │
+│  │ D_LIM        │ │ U5 LM13700     │ │ NE555 vinyl one-shot │ │ ATtiny85 │ │
+│  │              │ │                │ │ C_AP1-4 NP0          │ │ Z13      │ │
+│  │ J_SIDE       │ │ J_CV_DAMP      │ │                      │ │ +5V LDO  │ │
+│  │              │ │ J_CV_DECAY     │ │ (away from Z4!)      │ │          │ │
+│  └──────────────┘ └────────────────┘ └──────────────────────┘ └──────────┘ │
+│                                                                             │
+│  ──── Bottom row (output + perform) ────                                    │
+│                                                                             │
+│  ┌──────────────┐ ┌──────────────────┐ ┌───────────────────┐ ┌──────────┐  │
+│  │ Z7 MIX OUT   │ │ Z11 GATE/CRUSH   │ │ Z12 COLOR slider  │ │ Z14      │  │
+│  │ U2D          │ │ (NEW)            │ │ satellite PCB     │ │ 10-pin   │  │
+│  │              │ │ U_GATE 4066      │ │ (panel-edge mount)│ │ HEADER   │  │
+│  │ J_OUT_L      │ │ U_SH LF398N      │ │ SL-4P5T + 12 R    │ │ to Phase │  │
+│  │ J_OUT_R      │ │ U_COMP LM393     │ │ ribbon to main    │ │ 2 board  │  │
+│  │ J_CV_MIX     │ │ R-2R matched     │ │                   │ │          │  │
+│  │              │ │ Footswitch       │ │ Shape Form        │ │          │  │
+│  │              │ │ wires to panel   │ │ SL-1P5T satellite │ │          │  │
+│  └──────────────┘ └──────────────────┘ └───────────────────┘ └──────────┘  │
+│                                                                             │
+│  Bottom edge: panel-mount jacks, pots, LEDs                                 │
+│  Daughter PCB (Phase 2): mounts underneath main PCB on 12mm standoffs       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Critical separations (v5 hybrid)
+
+| Pair | Min distance | Why |
+|------|--------------|-----|
+| Z4 (JFET preamp) ↔ Z10 (Phaser LFO) | 25mm | Phaser triangle wave sub-audio coupling into hi-Z gate |
+| Z4 (JFET preamp) ↔ Z8 (Solenoid) | 40mm | EMI from solenoid switching transient |
+| Z4 (JFET preamp) ↔ Z9 (Noise gen) | 30mm | Zener noise radiates 50kHz–MHz hash |
+| Z1 DC-DC (Z19, pedal SKU) ↔ Z11 (Crush S&H) | 20mm + ferrite bead on supply | DC-DC 150kHz switching can couple into S&H hold cap |
+| Z8 (Solenoid +12V loop) ↔ all audio zones | shielded twisted pair cable to cartridge | Magnetic field from 290mA pulse current |
+| ATtiny85 clock (Z13) ↔ Z4 JFET | 30mm + GND moat | Digital clock 16MHz can crosstalk into hi-Z analog |
+
+#### Power distribution review
+
+**Star ground tie point** на J_PWR (Eurorack 16-pin Doepfer power connector) или near 12V jack (pedal SKU). 
+
+Three pour zones meet at single point:
+- AGND: Zones 3, 4, 5, 6, 7, 10, 11 (all audio + phaser)
+- DGND: Zones 8, 9, 13, 14 (solenoid, noise, MCU, daughter board digital portion)
+- PGND: Zones 1, 2 (power supply + push-pull output stage)
+
+**Phase 2 daughter board grounding**: ribbon header carries **separate AGND** and **DGND** wires. Daughter board has own local 0.5mm star tie back via ribbon to main PCB star point.
+
+#### PCB stack-up recommendation (v5 hybrid)
+
+- **Budget SKU**: 2-layer FR4 1.6mm — workable, but Z10 phaser likely needs ferrite bead on +12V supply, и Z11 Crush S&H benefits from extra decoupling.
+- **Premium SKU**: 4-layer FR4 1.6mm strongly recommended. Internal GND plane (layer 2) provides:
+  - Effective shielding для Z4 JFET trace.
+  - Solid ground reference для phaser OTA + LFO.
+  - Better DC-DC switching noise containment.
+- **Audiophile (Elite tier per Decision 10)**: 4-layer + matte black solder mask + ENIG finish + 2oz copper для power planes. +$15-20 PCB cost vs budget.
+
+**Recommendation Phase 1 ship SKU**: **4-layer mandatory** for premium, **2-layer with ferrite + extra decoupling** acceptable for budget. Cost delta: ~$8 per PCB (4-layer vs 2-layer at qty 100).
+
+#### Component placement priority (updated v5 hybrid)
+
+Revised order from v4:
+
+1. **J_PWR** — у edge.
+2. **Power supply zone (Z1) + DC-DC (Z19 pedal)** — adjacent to J_PWR.
+3. **Driver Amp (Z2)** — adjacent to power, with thermal exit к panel.
+4. **Mini-XLR jacks (cartridge)** — у opposite edge from J_PWR (signal entry).
+5. **JFET preamp (Z4)** — close to mini-XLR jacks (<20мм trace length). **No other circuit within 25mm**.
+6. **Solenoid driver (Z8)** — opposite corner from JFET preamp (>40мм physical separation).
+7. **Noise generator (Z9)** + ATtiny85 (Z13) — isolated digital corner, GND moat.
+8. **Output (Z7)** — у edge near panel jacks.
+9. **Phaser (Z10)** — middle row, **between Z6 VCA and Z7 output** (signal flow correct). 25mm clear from Z4.
+10. **Gate/Crush (Z11)** — adjacent to Z7 (post-mix), short trace to output buffer.
+11. **Slider satellites (Z12)** — panel-mounted, ribbon back to main.
+12. **Phase 2 header (Z14)** — bottom edge of main PCB.
+
+### Mounting holes
+
+4× M3 holes на corners PCB — secured к panel rails. Не overlapping traces (1мм keepout).
+
+Phase 2 daughter board: additional 4× M3 standoffs на bottom side of main PCB, 12mm tall.
 
 ## Картридж — механика и сборка
 
