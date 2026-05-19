@@ -39,7 +39,7 @@ Last Night — **постапокалипсис-ревербератор на с
 
 Реальная пластина из дерева, камня, металла, стекла или кости вибрирует от audio signal через surface exciter, два пьезо-датчика снимают резонанс. Каждый материал — уникальный голос: oak = тёплый slap, marble = cathedral, spring steel = infinite shimmer, glass = crystalline chime, bone = ritual.
 
-Поверх ядра наслоены характерные эффекты "холодной палитры": **NOISE + COLOR(geiger)** — 2 отдельные ручки (NOISE = level, COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks), **always-on phaser** (Phase/Flutter / DEPTH / SPEED + Shape Form slider), и performance gestures (**TAP / GATE-CRUSH / BYPASS / FREEZE** — четыре footswitches). **Solenoid double-function** (TOLL strike + STALL hold) доступна как modular-advanced features через CV-only triggers (J_TOLL_TRIG, J_STALL_CV). В v3 PCB revision (Phase 2 upgrade) добавляются cold-palette эффекты: PULSE (slow damper-breath), FOG (apperiodic drift), FROST (HF absorber), CHILL (anti-compression), HUM (mains-hum antenna).
+Поверх ядра наслоены характерные эффекты "холодной палитры": **NOISE + COLOR(geiger)** — 2 отдельные ручки (NOISE = level, COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks), **always-on phaser** (Phase/Flutter knob) с **analog Function Generator** для LFO (rise/fall/depth sliders + exp/log + speed/range knobs + 4 outputs EG/Gate/Sub÷2/Inv) — FG primarily modulates phaser но output patchable куда угодно через CV bay. Performance gestures: **TAP / GATE-CRUSH / BYPASS / FREEZE** — четыре footswitches. **Solenoid triple-function** (DAMP envelope CV + TOLL impulse + STALL hold) доступна как modular-advanced features через CV-only triggers (J_TOLL_TRIG normalled от FG EOR, J_STALL_CV). В v3 PCB revision (Phase 2 upgrade) добавляются cold-palette эффекты: PULSE (slow damper-breath), FOG (apperiodic drift), FROST (HF absorber), CHILL (anti-compression), HUM (mains-hum antenna).
 
 ### Чем отличается от обычных pedal-reverb
 
@@ -47,7 +47,7 @@ Last Night — **постапокалипсис-ревербератор на с
 - **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (5-10мс impulse strike = пластина звенит как колокол независимо от input).
 - **Dual piezo с position crossfade** — два pickup-а на пластине, manual или CV blend.
 - **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (zener + LFSR shared internally), COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks (ATtiny85 LFSR + comparator pattern). Два sonic universe через 2 ручки (mockup canon).
-- **Always-on phaser** — analog 4-stage OTA, named effect (Phase/Flutter / DEPTH / SPEED + Shape Form slider для LFO waveform). Bypass через footswitch BYPASS.
+- **Always-on phaser** — analog 4-stage OTA, named effect. Phase/Flutter knob = continuous feedback intensity morph (subtle → resonant → controlled self-oscillation). LFO source = **analog Function Generator** с 3 sliders (rise/fall/depth) + 2 knobs (exp/log curve, speed/range). FG outputs exposed via 4 jacks (EG/Gate/Sub÷2/Inv). Bypass через footswitch BYPASS.
 - **Cold-palette FX layer (Phase 2)** — PULSE/FOG/FROST/CHILL/HUM — symmetric antipodes к hot-palette Last Day (HAZE/MIRAGE/BLEACH/TAR/CICADA/HEATWAVE).
 - **Modular-style CV patch bay** — 14+ CV inputs для full automation.
 - **Stereo + dry/wet split outputs** + TRS/RCA параллельно + instrument/-10/+4dBu level switch.
@@ -92,7 +92,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 **Phase 1 ship (ядро + базовые FX, mockup canon)**:
 
 1. **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (после shared crossfader), COLOR(geiger) = continuous crossfader от continuous zener hiss (CCW, BZX55C9V1) к Geiger cluster ticks (CW, ATtiny85 LFSR + comparator pattern). Internally один shared generator + OTA crossfader pair.
-2. **Phaser always-on** — 4-stage OTA all-pass (LM13700 OTA2). Phase/Flutter feedback + DEPTH + SPEED + Shape Form slider (LFO waveform: triangle / sine / random S&H / vinyl-skip / step). Bypass через footswitch BYPASS.
+2. **Phaser always-on + analog Function Generator** — 4-stage OTA all-pass (LM13700 U7+U8). Phase/Flutter knob = single continuous feedback intensity morph. LFO source = **analog FG** (Tides-class): rise/fall/depth sliders shape waveform, exp/log knob morphs curve, speed/range knob + clock sync set rate. 4 FG outputs (EG main, Gate rise-active, Sub÷2, Inv) exposed via panel jacks для patch-to-anything routing. Bypass через footswitch BYPASS.
 3. **Gate / Crush** — footswitch destruction: 4066 CMOS gate + LF398 sample-hold bitcrush.
 4. **Solenoid triple-function** через CV-only triggers (modular-advanced features): **DAMP** (J_CV_DAMP envelope CV), **TOLL** (J_TOLL_TRIG gate → 555 monostable → 5–10мс strike pulse), **STALL** (J_STALL_CV sustained hold).
 
@@ -414,11 +414,14 @@ Customer может start с pedal (для studio/live performance), позже 
 | 13 | **NOISE** | Pot log | Noise generator output level (shared zener + LFSR architecture, см. BUILD §Block 12) | ✓ NOISE CV |
 | 14 | **COLOR (geiger)** | Pot lin | Crossfader noise character: CCW = continuous zener hiss → CW = Geiger cluster ticks (ATtiny85 LFSR). Параллельно работает LPF colour filter (white → brown). | ✓ COLOR CV |
 | 15 | **PHASE/FLUTTER** | Pot log | Phaser feedback / resonance peak. **Always-on named effect** | — |
-| 16 | **DEPTH** | Pot lin | Phaser modulation depth (0–100%) | — |
-| 17 | **SPEED** | Pot log | Phaser LFO rate (0.05–10 Гц) | ✓ CLK CV (TAP sync) |
-| 18 | **Shape Form slider** | Horizontal 5-pos slider | Phaser LFO waveform select: triangle / sine / random S&H / vinyl-skip / step | — |
-| 19 | **Color preset slider** | Vertical 5-pos slider | Preset tone selector: COLOR / WARM / DARK / COLOR / MIX | — |
-| 20 | **SWITCH CLIP** | 2-pos toggle | Hard clip (LED) vs soft clip (diode) | — |
+| 16 | **rise** slider | Vertical 30mm linear slider + exp converter | FG rise time (1ms–10s exponential) | ✓ rise CV |
+| 17 | **fall** slider | Vertical 30mm linear slider + exp converter | FG fall time (1ms–10s exponential) | ✓ fall CV |
+| 18 | **depth** slider | Vertical 30mm linear slider | FG output amplitude (0–100%, controls EG OUT and Iabc к phaser) | ✓ depth CV |
+| 19 | **exp/log** | Pot lin center-detent | FG curve shape morph (exponential ↔ linear ↔ logarithmic) | — |
+| 20 | **speed/range** | Pot log | FG rate (0.05–50 Hz exp) + clock sync continuous multiplier (CCW ×8 slow ↔ CW ×8 fast) | ✓ speed CV / CLK CV (TAP sync) |
+| 21 | **SW_FG_RANGE** | 3-pos slide switch | FG range cap select (slow/mid/fast — swaps C_FG 1µF/100nF/10nF) | — |
+| 22 | **Color preset slider** | Vertical 5-pos slider | COLOR (noise color LPF) / WARM / DARK / VOICE / MIX (reverb tone presets) | — |
+| 23 | **SWITCH CLIP** | 2-pos slide | Hard clip (LED) vs soft clip (diode) | — |
 
 **Phase 2 ship (cold-palette upgrade kit)** — v3 PCB revision добавляет:
 
@@ -466,34 +469,50 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - DRY OUT (separate dry signal post-buffer)
 - WET OUT (separate wet signal без dry)
 
-**CV inputs (Phase 1)**:
+**CV inputs (Phase 1 — main row 1 of CV bay)**:
 - IN CV (input level)
-- DRIVE CV
-- ATTACK CV
-- DECAY CV
-- NOISE CV (noise generator level)
-- POS CV (Position crossfade)
-- DAMP CV (solenoid DAMP mode — sustained pressure modulation)
-- **J_TOLL_TRIG** (gate trigger для solenoid strike pulse — bell-tone, 5–10мс monostable)
-- **J_STALL_CV** (sustained CV for forced damper full hold — decay stuck minimum while high)
-- LoPass CV
-- HiPass CV
-- MIX CV (dry/wet)
-- TONE CV
-- COLOR CV (geiger crossfader: hiss ↔ ticks)
-- FeedBack CV (cartridge feedback)
-- Boost CV
-- CLK (tap-tempo sync для phaser SPEED)
+- gate CV (Block 18 gate threshold)
+- attack CV (envelope follower attack)
+- decay CV (envelope follower decay)
+- drive CV
+- tone CV
+- lopass CV
+- feedback CV (cartridge feedback)
+- position CV (Position crossfade)
+- boost CV (pre-emphasis shelf amount)
+- speed CV (FG rate / clock sync)
+
+**CV inputs (main row 2)**:
+- clock CV (TAP/CLK in для FG sync)
+- noise CV (noise generator level)
+- color CV (geiger crossfader: hiss ↔ ticks)
+- output CV (master output level)
+- mix CV (dry/wet blend)
+- HiPass CV (HPF cutoff)
+- rise CV (FG rise time mod)
+- fall CV (FG fall time mod)
+- depth CV (FG depth mod)
+
+**Modular advanced (extras zone, frame-grouped):**
+- **J_TOLL_TRIG** — solenoid strike trigger. Internally normalled от FG EOR (each FG peak → bell strike). Patch external = breaks norm.
+- **J_STALL_CV** — sustained CV for forced damper full hold (decay stuck minimum while high; max 5s continuous per thermal budget).
+- **J_SIDE** — sidechain input для envelope follower (normalled к main input; patch external для dub-style ducking).
 
 **CV inputs (Phase 2 upgrade adds)**:
 - PULSE CV, FOG CV, FROST CV, CHILL CV, HUM CV
 
-**Outputs (CV/audio)**:
-- EG OUT (envelope follower output, 0-5V для external CV destinations)
-- CLK CV (clock input для sync phaser SPEED)
+**Outputs (CV)**:
+- **EG OUT** (main row 2) — FG main waveform output, scaled by depth slider. 0–5V envelope-style.
+- **Gate_OUT** (extras zone) — FG rise-active gate (HIGH during rise phase, LOW during fall).
+- **Sub÷2_OUT** (extras zone) — FG ÷2 rate sub-output (flip-flop divider).
+- **Inv_OUT** (extras zone) — FG inverted main waveform.
 
 **Pedal-only**:
 - EXP IN (expression pedal jack, normalled к user-assignable target)
+
+**Audio outputs (back panel jacks):**
+- MAIN L / MAIN R (stereo TRS + RCA parallel)
+- DRY OUT / WET OUT (separate post-buffer taps)
 
 ### Cartridge connector (внутри slot, идентичен в обеих SKU)
 

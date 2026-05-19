@@ -3,7 +3,7 @@
 > Production-ready документация: схемы, BOM, PCB layout, последовательность сборки, тестирование, troubleshooting.
 
 > **Версия**: v5.0 (hybrid lock, Decision 09).
-> Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE (вместо KILL/FREEZE/TOLL/STALL); phaser always-on (без ON/OFF toggle); Shape Form slider возвращается. Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid double-function (DAMP + TOLL), но TOLL/STALL — **CV-only triggers** (J_TOLL_TRIG, J_STALL_CV) не footswitches. Gate/Crush блок 18 **восстановлен** как footswitch destruction effect.
+> Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE (вместо KILL/FREEZE/TOLL/STALL); phaser always-on (без ON/OFF toggle); **v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv)**. Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid double-function (DAMP + TOLL), но TOLL/STALL — **CV-only triggers** (J_TOLL_TRIG, J_STALL_CV) не footswitches. Gate/Crush блок 18 **восстановлен** как footswitch destruction effect.
 
 **Версия**: v2.2 (post-audit, post-decisions)
 **Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
@@ -30,7 +30,7 @@
 
 Полная сигнальная цепь Last Night v5 hybrid разбита на **25 функциональных блоков**:
 - **Блоки 1–15**: ядро (reverb engine — exciter / piezo preamp / feedback / VCA / solenoid / noise / mix).
-- **Блок 16**: always-on phaser (4-stage OTA all-pass + Shape Form slider).
+- **Блок 16**: always-on phaser (4-stage OTA all-pass) + **analog function generator** (rise/fall/depth + exp/log + speed/range + 4 outputs).
 - **Блок 17**: REMOVED (was BBD vinyl wow → переехал в Last Day как OLD VINYL PT2399).
 - **Блок 18**: Gate/Crush footswitch (CD4066 + LF398 + LM393, restored per Decision 09 v5 hybrid).
 - **Блок 19**: Isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
@@ -672,7 +672,7 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 
 ### Block 16. Phaser — 4-stage OTA all-pass (detailed schematic) **[REVISED v5 hybrid]**
 
-> **v5 hybrid (Decision 09)**: phaser **always-on named effect** (mockup canon), не optional layer. Bypass через master BYPASS footswitch. Shape Form slider — separate 1P5T select для LFO waveform (5 позиций вместо прежних 4).
+> **v6 (post-mockup discussion)**: phaser **always-on named effect** (mockup canon), не optional layer. Bypass через master BYPASS footswitch. Phaser modulation source — **analog function generator** (rise/fall/depth sliders + exp/log + speed/range knobs), waveform output continuously variable от ramps до triangle до saws. FG output также exposed via 4 jacks (EG/Gate/Sub÷2/Inv) для patch-to-anything routing.
 
 Classic 4-stage OTA-based all-pass phaser, **post-pickup, pre-VCA**. Adds swirling motion к reverb tail. Использует второй LM13700 (U6) для OTA cells.
 
@@ -751,7 +751,7 @@ Classic 4-stage OTA-based all-pass phaser, **post-pickup, pre-VCA**. Adds swirli
 #### Iabc modulation network
 
 ```
-   LFO output (от Shape Form selector, see below)
+   LFO output (от analog function generator, см. секцию Analog Function Generator ниже)
         │
         ▼
    RV_DEPTH (100kΩ lin) — modulation depth attenuverter
@@ -775,81 +775,229 @@ Classic 4-stage OTA-based all-pass phaser, **post-pickup, pre-VCA**. Adds swirli
 
 Это снижает phaser complexity для budget tier, premium tier gets full classic 4-stage Phase 90-class character.
 
-#### LFO core + Shape Form routing
+#### Phase/Flutter knob — continuous feedback intensity morph **[REVISED v6]**
+
+В предыдущей версии RV_PHASE был один параметр среди трёх (PHASE + DEPTH + SPEED + Shape Form slider). В v6 layout — единственный large knob для phaser character.
+
+**Functional behaviour**:
+- CCW (0%) — feedback amount = 0 → classic 4-stage all-pass без resonance. Мягкие диффузные notches.
+- 50% — moderate feedback (~50%) → distinct resonant peaks на center freq каждой ячейки.
+- ~90% — high feedback → liquid character, peaks становятся agressive.
+- CW (95%+) — controlled self-oscillation. Pот ограничен 95% максимум через voltage divider, чтобы не уйти в hard runaway.
+
+**Implementation** — single RV_PHASE_FLUTTER 100k log pot:
+```
+   Phaser output (sum amp) ──► R_PFB_PRE 10k ──► RV_PHASE_FLUTTER wiper
+                                                      │
+                                                      ▼
+                                              R_PFB_LIMIT 5k (in series)
+                                                      │
+                                                      ▼
+                                              Soft-clip cell: D_PFB1 D_PFB2 1N4148 ×2 anti-parallel
+                                              (auto-limits runaway amplitude)
+                                                      │
+                                                      ▼
+                                              Sum back to cell 1 input bus
+   
+   Max feedback amount: 95% via R_PFB_LIMIT (wiper + 5k series fixed)
+   Auto-limit by anti-parallel diodes (controlled self-oscillation, no hard clip)
+```
+
+#### Analog Function Generator (replaces Shape Form discrete slider) **[NEW v6]**
+
+В v6 layout discrete Shape Form 1P5T slider удалён. Вместо него — **analog function generator с непрерывной формой волны** (Tides-class topology). Sliders rise/fall/depth + knobs exp/log + speed/range = 5 controls для continuous shape morphing.
+
+**Outputs** (см. также CV jack list):
+- **EG OUT** (main jack в основном CV bay row 2) — primary waveform, scaled by `depth` slider.
+- **Gate_OUT** (extras zone jack) — rise-active gate (HIGH во время rise phase, LOW во время fall).
+- **Sub÷2_OUT** (extras zone) — ÷2 rate sub-output (flip-flop divider).
+- **Inv_OUT** (extras zone) — inverted main waveform.
+- **EOR** (internal) — End-of-Rise trigger, normalled внутри к J_TOLL_TRIG (clever connection: каждый FG peak → solenoid bell strike). Patch any external к J_TOLL_TRIG → breaks internal normal, EOR становится free для других путей через panel-jack tap-off.
+
+**Core topology** — analog integrator с asymmetric rise/fall RC paths:
 
 ```
-   LFO core: TL074 (U_LFO) integrator-comparator triangle generator
-   ────────────────────────────────────────────────────────────
-   
-   R_TIM (RV_SPEED 1MΩ log) → C_LFO (1µF film) → triangle wave amplitude ±5V
-                                                              │
-                                                              ▼
-        Shape Form 1P5T slider routes triangle к один of 5 processing paths:
-        
-   Path 1 (TRIANGLE direct): output ─► LFO_OUT
-   
-   Path 2 (SINE): triangle → 2-stage RC integrator (low-pass with high Q
-                  → approximates sine) → LFO_OUT
-   
-   Path 3 (RANDOM S&H): triangle clock → 4066 sample-hold с noise (Block 12
-                        zener D_NOISE feeds S&H input) → LFO_OUT
-   
-   Path 4 (VINYL-SKIP): triangle → comparator с random threshold (от noise
-                        источника) → short-pulse one-shot (NE555 #2) → 
-                        random skip jumps → LFO_OUT
-   
-   Path 5 (STEP): TAP gate (от TAP footswitch) → counter (74HC161) → 
-                  R-2R ladder DAC → quantized step values → LFO_OUT
+   ┌──── Schmitt comparator (TL074 U_FG_A) ────┐
+   │  Output = ±5V square wave                  │
+   │  Hysteresis: R_FG_HYS 220k feedback        │
+   └────────────┬───────────────────────────────┘
+                │
+                ▼
+   ┌──── Rise/Fall steering ───────────────────────┐
+   │                                                 │
+   │  Positive square (rise phase):                  │
+   │    output → D_FG_R 1N4148 → R_FG_RISE          │
+   │      R_FG_RISE = exp converter output (rise    │
+   │       time set by `rise` slider via exp conv)   │
+   │      → integrator cap C_FG 1µF charges UP      │
+   │                                                 │
+   │  Negative square (fall phase):                  │
+   │    output → D_FG_F 1N4148 (reverse) → R_FG_FALL│
+   │      R_FG_FALL = exp converter (fall slider)    │
+   │      → C_FG discharges DOWN                     │
+   │                                                 │
+   │  Curvature shaping (exp/log knob):              │
+   │    RV_EXP_LOG modulates current source bias    │
+   │    on rise+fall converters simultaneously       │
+   │    → linear (mid) / exponential (CW) /          │
+   │      logarithmic (CCW) curve shape              │
+   └────────────────┬───────────────────────────────┘
+                     │
+                     ▼
+   ┌──── Integrator (TL074 U_FG_B) ──────────────┐
+   │  Inverting integrator on C_FG 1µF           │
+   │  Output: triangle/saw/exp wave ±5V          │
+   │  Range: 0.05 Hz (CCW slow) → 50 Hz (CW fast)│
+   │  Range select toggle SW_FG_RANGE swaps C_FG │
+   │  for ×10 / ×100 / ×1000 ranges              │
+   └─────────────────┬───────────────────────────┘
+                      │
+                      ▼
+   ┌──── Output stage ──────────────────────────┐
+   │                                              │
+   │  Wave ──► U_FG_C (TL074) buffer             │
+   │            │                                 │
+   │            ├──► × `depth` slider VCA        │
+   │            │     (LM13700 OTA half — shared │
+   │            │      with U5 spare half)        │
+   │            │     → EG OUT jack               │
+   │            │     → also feeds Iabc bus к    │
+   │            │       phaser cells (Block 16   │
+   │            │       Iabc modulation)          │
+   │            │                                 │
+   │            ├──► Inverter (U_FG_D TL074)     │
+   │            │     → Inv_OUT jack              │
+   │            │                                 │
+   │            └──► Gate generator (LM393 comp) │
+   │                  HIGH during rise phase     │
+   │                  → Gate_OUT jack            │
+   │                  → flip-flop ÷2 (74HC74)    │
+   │                    → Sub÷2_OUT jack         │
+   │                                              │
+   │  EOR detect (LM393 comp on integrator       │
+   │   reaching +threshold): brief pulse        │
+   │   → internal normal к J_TOLL_TRIG          │
+   │   → breaks when J_TOLL_TRIG patched out    │
+   └─────────────────────────────────────────────┘
 ```
 
-> **Shape Form slider** = SP5T (single pole 5-throw) — это **simpler чем 4P5T для Color preset**. Просто routes one of 5 LFO output streams к common bus. Alpha SL-1P5T slider или toggle rotary switch. **$3.00** (cheaper than 4P5T).
+#### Linear → exp current converter (per slider) **[NEW v6]**
+
+Rise/fall sliders feed **analog exp converter** для musical taper:
+
+```
+   RV_SLIDER (linear taper) → divides +5V ref to control voltage 0-5V
+                                            │
+                                            ▼
+                                  Q_EXP_PAIR (2× 2N3904 matched pair, common base):
+                                    Q1 base = control voltage
+                                    Q2 base = ref voltage (1V fixed)
+                                    Common emitters → R_EXP 1k → -V
+                                    Collector currents = I_REF × exp((V_control - V_ref) / V_T)
+                                            │
+                                            ▼
+                                  Q2 collector = exponentially scaled current
+                                            │
+                                            ▼
+                                  Bias current → R_FG_RISE (or R_FG_FALL)
+                                  → integrator slope
+```
+
+**Range**: 1ms → 10s rise time = 4 decades, achieved через V_control swing 0-5V → ~1 octave per ~600mV input change.
+
+**Matching**: 2N3904 pair должны быть thermally coupled (heat-shrink или close placement) для temperature stability. Premium SKU: использовать LM394 matched pair ($1.50 vs $0.10) для improved precision.
+
+**BOM per slider**: 2× 2N3904 ($0.04) + R_EXP $0.05 + RV_SLIDER $1.50 = **$1.59 per slider** × 3 sliders = **$4.77** total exp converters.
+
+#### Speed/range knob + clock sync (continuous, no detents) **[NEW v6]**
+
+RV_SPEED — free analog pot. **Free-run mode**:
+- ADC mapping (ATtiny85): RV_SPEED 0-100% → exponential rate 0.05 Hz – 50 Hz (4 decades).
+- Range select via secondary effects: SW_FG_RANGE (3-pos slide switch) swaps C_FG 1µF (slow) / 100nF (mid) / 10nF (fast).
+
+**Clock-sync mode** (activates when TAP_IN or CLK_IN gates received within last 5 seconds):
+- ATtiny85 measures T (interval between TAPs или CLK gates).
+- RV_SPEED ADC reading remaps к continuous multiplier:
+  - CCW (0%) = ×8 slower (T × 8)
+  - 25% = ×4 slower
+  - 50% = ×1 (lock к clock period)
+  - 75% = ×4 faster (T / 4)
+  - CW (100%) = ×8 faster (T / 8)
+- Mapping: exponential continuous (~1 octave per 12.5% rotation).
+- ATtiny85 PWM output → LPF → biases integrator current source (parallel к exp converter output).
+
+**No detents** — smooth pot operation, sync is **continuous-multiplier following** rather than quantized division.
 
 #### TAP-tempo input
 
-J_TAP (from TAP footswitch на pedal, или J_CLK CV jack):
-- Gate trigger (+5V edge) → resets LFO phase to start of cycle.
-- Если TAP pressed дважды в течение 5 секунд → captures interval → sets RV_SPEED via voltage feedback к LFO timing network.
-- Implementation: ATtiny85 measures interval, выдаёт PWM → LPF → analog voltage → adds к RV_SPEED voltage divider.
+Same as before:
+- TAP footswitch on pedal OR external J_CLK CV jack (any CMOS gate edge).
+- ATtiny85 measures interval, sets sync multiplier base period.
+- Phase reset on tap edge.
 
-#### BOM (Block 16)
+#### BOM (Block 16 revised v6)
 
 | Ref | Part | Qty | Unit $ | Total |
 |-----|------|-----|--------|-------|
 | U7 (mandatory) | LM13700N (phaser cells 1+2 OTAs) | 1 | $2.00 | $2.00 |
 | **U8 (premium SKU only)** | LM13700N (phaser cells 3+4) | 0–1 | $2.00 | $0–2.00 |
-| U_LFO | TL074CN (LFO triangle generator + sine shaper, shares U2 spare halves) | 0 | — | — (shared) |
-| U_DEPTH | TL074 buffer (shares U2 spare halves) | 0 | — | — (shared) |
-| U_SH | CD4066BE (sample-hold cell) | 0 | — | — (shared с Block 18 Gate cell) |
-| U_VINYL_555 | NE555 (vinyl-skip one-shot) | 1 | $0.25 | $0.25 |
-| U_TAP_CNT | 74HC161 (TAP step counter for Path 5) | 1 | $0.30 | $0.30 |
-| C_AP1 | 47 nF film | 1 | $0.08 | $0.08 |
-| C_AP2 | 15 nF film | 1 | $0.06 | $0.06 |
-| C_AP3 (premium) | 6.8 nF C0G | 0–1 | $0.05 | $0–0.05 |
-| C_AP4 (premium) | 2.2 nF C0G | 0–1 | $0.04 | $0–0.04 |
-| R_in/R1 (per cell) | 47kΩ ×4 (or ×8 для 4-stage) | 4–8 | $0.01 | $0.04–0.08 |
-| C_LFO | 1 µF film (LFO timing) | 1 | $0.15 | $0.15 |
-| C_SINE | 100 nF film ×2 (sine shaper) | 2 | $0.05 | $0.10 |
-| RV_PHASE | Alpha 9mm pot 100kΩ log | 1 | $1.20 | $1.20 |
-| RV_DEPTH | Alpha 9mm pot 100kΩ lin | 1 | $1.20 | $1.20 |
-| RV_SPEED | Alpha 9mm pot 1MΩ log | 1 | $1.20 | $1.20 |
-| SW_SHAPE | Alpha SL-1P5T slider (Shape Form) | 1 | $3.00 | $3.00 |
-| Step DAC (R-2R ladder) | 8 resistors precision | 8 | $0.05 | $0.40 |
-| Misc (additional R, sat diodes feedback) | — | — | — | $0.40 |
-| **Block 16 total (budget 2-stage)** | | | | **$8.93** |
-| **Block 16 total (premium 4-stage)** | | | | **$11.02** |
+| U_FG | TL074CN (FG core: Schmitt + integrator + buffer + inverter) | 1 | $0.75 | $0.75 |
+| U_FG_GATE | LM393 dual comparator (Gate_OUT + EOR detect) | 1 | $0.30 | $0.30 |
+| U_FG_SUB | 74HC74 D flip-flop (÷2 sub-output) | 1 | $0.30 | $0.30 |
+| Q_EXP_RISE/FALL/DEPTH | 2N3904 matched pairs ×3 sliders (6 transistors) | 6 | $0.02 | $0.12 |
+| C_AP1 | 47 nF film (phaser cell 1) | 1 | $0.08 | $0.08 |
+| C_AP2 | 15 nF film (phaser cell 2) | 1 | $0.06 | $0.06 |
+| C_AP3 (premium) | 6.8 nF C0G (cell 3) | 0–1 | $0.05 | $0–0.05 |
+| C_AP4 (premium) | 2.2 nF C0G (cell 4) | 0–1 | $0.04 | $0–0.04 |
+| R_in/R1 (per phaser cell) | 47kΩ ×4 (or ×8 premium) | 4–8 | $0.01 | $0.04–0.08 |
+| C_FG | 1 µF MKS2 + 100 nF + 10 nF film (range cap bank) | 3 | $0.20 | $0.60 |
+| C_HYS | 100 nF film (Schmitt feedback) | 1 | $0.05 | $0.05 |
+| RV_PHASE_FLUTTER | Alpha 9mm pot 100kΩ log | 1 | $1.20 | $1.20 |
+| RV_EXP_LOG | Alpha 9mm pot 100kΩ lin (center detent) | 1 | $1.50 | $1.50 |
+| RV_SPEED | Alpha 9mm pot 100kΩ log | 1 | $1.20 | $1.20 |
+| RV_RISE / RV_FALL / RV_DEPTH | Alpha 30mm slider 100kΩ lin (linear taper + exp conv) | 3 | $1.50 | $4.50 |
+| SW_FG_RANGE | DPDT 3-pos slide switch (range select) | 1 | $0.80 | $0.80 |
+| SW_CLIP | DPDT slide toggle (hard/soft clip select) | 1 | $0.60 | $0.60 |
+| D_PFB1, D_PFB2 | 1N4148 (phaser feedback soft-clip) | 2 | $0.01 | $0.02 |
+| D_FG_R, D_FG_F | 1N4148 (FG rise/fall steering) | 2 | $0.01 | $0.02 |
+| R_PFB_PRE, R_PFB_LIMIT | 10k + 5k 1% MF | 2 | $0.05 | $0.10 |
+| R_EXP × 3 | 1kΩ 1% MF (exp converter emitter R) | 3 | $0.05 | $0.15 |
+| Misc passives (R-banks, R-IABC, etc.) | — | — | — | $0.50 |
+| **Block 16 total (budget 2-stage)** | | | | **$14.83** |
+| **Block 16 total (premium 4-stage)** | | | | **$16.92** |
 
-#### Verification
+**Removed from v5 BOM** (replaced by analog FG):
+- ~~U_VINYL_555 NE555 ($0.25)~~ — vinyl-skip path удалён, форма теперь continuous
+- ~~U_TAP_CNT 74HC161 ($0.30)~~ — step DAC удалён
+- ~~SW_SHAPE Alpha SL-1P5T slider ($3.00)~~ — Shape Form slider удалён
+- ~~Step R-2R ladder 8 resistors ($0.40)~~ — удалён
+- **Removed total**: −$3.95
 
-- **Sweep test**: input 1 kHz sine, SPEED slow (0.2 Hz), DEPTH full, PHASE 50% — output должна показывать обвалы spectrum 200Hz–4kHz range, full sweep cycle ~5 seconds.
-- **Feedback peak**: PHASE knob до 90% → distinct resonant peak в audio output на center frequency. Maximum 95% — controlled self-oscillation possible.
-- **Shape Form switching**: переключение между 5 позициями slider должно быть click-free (signal continuous). RC smoothing на switch output cap may be needed.
-- **TAP sync**: tap two presses в 0.5 sec interval → LFO period = 0.5 sec exactly. Tap drift accuracy ±5%.
+**Added in v6 (FG core + 3 sliders + extras)**:
+- TL074 + LM393 + 74HC74 + 6× 2N3904 + 3 sliders + range/clip switches + extras = **+$9.85**
+
+**Net Block 16 cost change**: +$5.90 vs v5.
+
+#### Verification (v6)
+
+- **Phaser sweep test**: input 1 kHz sine, SPEED slow (0.2 Hz, range slow), RISE/FALL equal mid, DEPTH full, Phase/Flutter 50% — output должна показывать обвалы spectrum 200Hz–4kHz range, full sweep cycle ~5 seconds.
+- **Phase/Flutter feedback morph**: knob CCW = subtle phasing, CW 90% = aggressive resonant peaks, CW 100% = controlled self-oscillation (no hard clip, diode soft-limit kicks in).
+- **FG shape morph**: RISE full CCW + FALL full CW = saw down. RISE full CW + FALL full CCW = saw up. Equal RISE/FALL = triangle. EXP/LOG knob morphs curve shape continuously.
+- **Range switch**: SW_FG_RANGE 3 positions → confirms rate range × 10, × 100 multipliers по C_FG swap.
+- **TAP clock sync**: tap 2 presses в 0.5 sec → FG period locks к 0.5 sec при RV_SPEED 50%. Cw → FG runs faster (0.25 sec, 0.125 sec). CCW → slower (1 sec, 2 sec).
+- **Outputs validation**:
+  - EG OUT amplitude follows `depth` slider 0-100%
+  - Gate_OUT square wave с duty cycle = rise/(rise+fall) ratio
+  - Sub÷2_OUT — half rate of Gate_OUT
+  - Inv_OUT — inverted EG (5V−EG_value)
+  - EOR internal normal к TOLL: каждый peak FG → solenoid impulse → bell strike
 
 #### Why always-on (not optional)
 
 - Phaser — **signature character** "холодной ночи" combine.
-- В mockup есть 3 dedicated knobs + Shape Form slider — это occupies physical real estate. Bypass через master BYPASS footswitch достаточно — отдельный PHASER ON/OFF toggle избыточен.
+- В mockup есть large Phase/Flutter knob + 3 FG sliders + 2 extra knobs — это occupies significant physical real estate. Bypass через master BYPASS footswitch достаточно — отдельный PHASER ON/OFF toggle избыточен.
 - Always-on simplifies wiring (no toggle relay), saves $1 BOM, cleaner UX.
+- FG output exposed via 4 jacks (EG/Gate/Sub/Inv) — даже если phaser sound undesired, FG continues работать как general-purpose modulation source patchable во ВСЕ knobs через CV bay.
 
 ### Block 17. Removed in v4 (was Vinyl FX BBD)
 
@@ -1204,115 +1352,123 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 - Strymon Zuma R300 (12V outputs).
 - Truetone CS12 (12V).
 
-### Block 20. COLOR Preset Slider — vertical 5-position (detailed schematic)
+### Block 20. COLOR Preset Slider — vertical 5-position **[REVISED v6 labels]**
 
-5-позиционный slider switch на левой стороне панели выбирает preset combination tone parameters. Hardware-only — никакого MCU. Slider физически переключает 4 параллельных сигнальных пути (EQ + saturation), используя SP5T switch (single-pole, 5-throw) ×4 ganged как "4PDT 5-position".
+5-позиционный slider switch на левой стороне панели. **Hybrid-purpose preset**: позиция 1 (COLOR) engages **noise color filter** (фильтрация zener hiss/Geiger ticks), позиции 2-4 (WARM/DARK/VOICE) меняют **reverb tone**, позиция 5 (MIX) — combined moderate mode (оба пути активны на средних уровнях).
+
+Используется **4PDT 5-position slider** (Alpha SL-4P5T). Hardware-only — никакого MCU. 4 pole разделяют 4 sub-circuit пути:
+- Pole 1: noise color LPF cutoff R (engaged at COLOR + MIX only)
+- Pole 2: reverb LF shelf R-bank
+- Pole 3: reverb HF shelf R-bank
+- Pole 4: reverb saturation R-bank
 
 #### Topology
 
 ```
-                              4-pole 5-throw rotary/slider switch
-                              (Alpha SL-4P5T или эквивалент)
+                              4-pole 5-throw vertical slider (Alpha SL-4P5T)
                                           
-   Audio bus from Block 9 (de-emphasis output)
-        │
-        ├──────────────────────────────────────────────────────────────┐
-        │                                                              │
-        ▼                                                              │
-   Pole 1 (LF shelf control resistor):                                 │
-        ├─ Pos 1 (COLOR raw):  R_LF1 = ∞ (open)  → no LF mod          │
-        ├─ Pos 2 (WARM):       R_LF2 = 10kΩ      → +6dB @ 150Hz       │
-        ├─ Pos 3 (DARK):       R_LF3 = ∞ (open)  → flat               │
-        ├─ Pos 4 (COLOR mid):  R_LF4 = 22kΩ      → +2dB @ 250Hz       │
-        └─ Pos 5 (MIX):        R_LF5 = 6.8kΩ     → +8dB @ 120Hz       │
-        ▼                                                              │
-   To LF shelf network (uses U2A spare half + C_LF 100nF)             │
-                                                                       │
-   Pole 2 (HF shelf control resistor):                                 │
-        ├─ Pos 1: R_HF1 = ∞      → flat                                │
-        ├─ Pos 2: R_HF2 = 22kΩ   → -3dB @ 5kHz                        │
-        ├─ Pos 3: R_HF3 = 8.2kΩ  → -8dB @ 3kHz                        │
-        ├─ Pos 4: R_HF4 = 47kΩ   → -1dB @ 8kHz (subtle)               │
-        └─ Pos 5: R_HF5 = 15kΩ   → -5dB @ 4kHz                        │
-        ▼                                                              │
-   To HF shelf network (uses U2B spare half + C_HF 1nF)               │
-                                                                       │
-   Pole 3 (saturation diode bias resistor):                            │
-        ├─ Pos 1: R_SAT1 = ∞     → no saturation (clean)               │
-        ├─ Pos 2: R_SAT2 = 4.7kΩ → soft saturation (1N4148 ×2 anti-||)│
-        ├─ Pos 3: R_SAT3 = 1.5kΩ → heavy saturation                    │
-        ├─ Pos 4: R_SAT4 = 10kΩ  → very subtle saturation              │
-        └─ Pos 5: R_SAT5 = 2.2kΩ → medium-heavy saturation             │
-        ▼                                                              │
-   To saturation cell (1N4148 anti-parallel pair + bias network)      │
-                                                                       │
-   Pole 4 (mid feedback resonance peak):                               │
-        ├─ Pos 1: R_FB1 = ∞      → no resonance                        │
-        ├─ Pos 2: R_FB2 = ∞      → no resonance                        │
-        ├─ Pos 3: R_FB3 = ∞      → no resonance                        │
-        ├─ Pos 4: R_FB4 = 47kΩ   → +4dB Q-peak @ 1kHz (vintage mid)   │
-        └─ Pos 5: R_FB5 = 33kΩ   → +6dB Q-peak @ 800Hz (warm mid)     │
-        ▼                                                              │
-   To mid resonance network (twin-T или state-variable BPF cell)      │
-                                                                       │
-        ▼  (combined output)
-   Common bus → output to Block 13 (Mix)
+   Pole 1 — noise color LPF cutoff (только COLOR + MIX active):
+        ├─ Pos 1 (COLOR):  R_NC1 = 10kΩ  → LPF cutoff 2.5kHz (white→brown)
+        ├─ Pos 2 (WARM):   R_NC2 = ∞     → LPF bypass (noise default = white hiss)
+        ├─ Pos 3 (DARK):   R_NC3 = ∞     → bypass
+        ├─ Pos 4 (VOICE):  R_NC4 = ∞     → bypass
+        └─ Pos 5 (MIX):    R_NC5 = 22kΩ  → LPF cutoff 1.1kHz (partial filter)
+        ▼
+   To noise color LPF (uses U_NCLPF — TL072 spare half + C_NC 47nF)
+   
+   Pole 2 — reverb LF shelf cut/boost R-bank:
+        ├─ Pos 1 (COLOR):  R_LF1 = ∞     → LF flat (no reverb mod)
+        ├─ Pos 2 (WARM):   R_LF2 = 10kΩ  → +6dB shelf @ 150Hz
+        ├─ Pos 3 (DARK):   R_LF3 = ∞     → flat (DARK leaves bass alone)
+        ├─ Pos 4 (VOICE):  R_LF4 = 33kΩ  → −3dB shelf @ 150Hz (cleaned bass)
+        └─ Pos 5 (MIX):    R_LF5 = 22kΩ  → +3dB shelf @ 200Hz
+        ▼
+   To reverb LF shelf (U2 spare half + C_LF 100nF)
+   
+   Pole 3 — reverb HF shelf cut/boost R-bank:
+        ├─ Pos 1 (COLOR):  R_HF1 = ∞     → HF flat
+        ├─ Pos 2 (WARM):   R_HF2 = 22kΩ  → −3dB @ 4kHz (gentle roll-off)
+        ├─ Pos 3 (DARK):   R_HF3 = 8.2kΩ → −8dB @ 4kHz (heavy roll-off)
+        ├─ Pos 4 (VOICE):  R_HF4 = 15kΩ  → +2dB @ 2kHz (formant emphasis)
+        └─ Pos 5 (MIX):    R_HF5 = 33kΩ  → +1dB @ 6kHz (subtle air)
+        ▼
+   To reverb HF shelf (U2 spare half + C_HF 1nF)
+   
+   Pole 4 — reverb saturation diode bias R-bank:
+        ├─ Pos 1 (COLOR):  R_SAT1 = ∞    → no saturation (clean)
+        ├─ Pos 2 (WARM):   R_SAT2 = 4.7kΩ→ moderate (tube-like)
+        ├─ Pos 3 (DARK):   R_SAT3 = 1.5kΩ→ heavy (broken radio)
+        ├─ Pos 4 (VOICE):  R_SAT4 = 22kΩ → very subtle (clean vocal)
+        └─ Pos 5 (MIX):    R_SAT5 = 4.7kΩ→ moderate (tube-like)
+        ▼
+   To saturation cell (1N4148 anti-parallel pair + bias network)
+        ▼
+   Combined → Common bus → output к Block 13 (Mix)
 ```
 
-#### Где Block 20 stoit в signal chain
+#### Где Block 20 стоит в signal chain
 
-После **Block 9 (de-emphasis)** и перед **Block 10 (tone filter LPF)**. Логика:
-- **De-emphasis** уже скорректировал spectrum после physical material.
-- **COLOR preset** добавляет character preset поверх raw cartridge tone.
-- **Tone filter** (Block 10) — мaster brightness control (top of stack).
+- **Noise color LPF (Pole 1)** — на пути noise signal от Block 12 (zener + Geiger) перед его VCA. Только COLOR (Pos 1) и MIX (Pos 5) кладут фильтр в путь; в остальных позициях noise signal проходит unchanged (white hiss).
+- **Reverb tone shelves (Poles 2-4)** — между **Block 9 (de-emphasis)** и **Block 10 (tone filter LPF)**, изменяют tone reverb wet signal согласно VOICE/WARM/DARK preset.
+
+Логика: позиция slider выбирает either "noise color emphasis" (Pos 1), "reverb tone preset" (Pos 2-4), или combined moderate (Pos 5). Позиция 1 не трогает reverb, позиции 2-4 не трогают noise color, позиция 5 — оба пути active на средних уровнях.
 
 #### Per-position function (детально)
 
-**Position 1 — COLOR (raw)**:
-- Все 4 pole в "open" / "flat" положении.
-- Bypass всей color-shaping секции.
-- Сигнал проходит unchanged → cartridge character максимально чист.
-- Use case: studio recording когда хочется только material color.
+**Position 1 — COLOR (noise color emphasis)**:
+- **Noise color LPF**: engaged, cutoff 2.5kHz → zener hiss filtered к brown noise character.
+- Reverb LF: flat (no change).
+- Reverb HF: flat.
+- Reverb saturation: off (clean).
+- **Use case**: эмфаsис noise generator character без изменений reverb tone. Studio noise-textural patches.
 
-**Position 2 — WARM**:
-- LF +6dB shelf @ 150Hz (R_LF2=10k + C_LF=100nF в feedback).
-- HF -3dB shelf @ 5kHz (R_HF2=22k + C_HF=1nF).
-- Soft saturation через 1N4148 pair с R_SAT2=4.7k bias.
-- Tube-like character. Mid-focused, ламповый звук.
+**Position 2 — WARM (reverb warm)**:
+- Noise LPF: bypassed (noise = default white hiss).
+- LF reverb: +6dB shelf @ 150Hz.
+- HF reverb: −3dB shelf @ 4kHz (gentle roll-off).
+- Saturation: moderate (R_SAT2=4.7k через 1N4148 pair).
+- **Sound**: tube-like, mid-focused, ламповый reverb.
 
-**Position 3 — DARK**:
-- LF flat.
-- HF -8dB shelf @ 3kHz (heavy treble cut).
-- Heavy saturation R_SAT3=1.5k (более aggressive bias через diodes).
-- Postapocalypse "мёртвая радиостанция" character — closed, мрачный.
+**Position 3 — DARK (reverb dark)**:
+- Noise LPF: bypassed.
+- LF reverb: flat (DARK leaves bass alone).
+- HF reverb: −8dB shelf @ 4kHz (heavy treble cut).
+- Saturation: heavy (R_SAT3=1.5k).
+- **Sound**: "мёртвая радиостанция" character — closed, мрачный, broken radio.
 
-**Position 4 — COLOR mid**:
-- LF subtle +2dB @ 250Hz.
-- HF subtle -1dB @ 8kHz (almost flat but slightly warm top).
-- Very subtle saturation.
-- **Mid resonance peak** +4dB Q @ 1kHz через twin-T или SVF cell.
-- Vintage "coloured" character — mid-rich, slight bell-like.
+**Position 4 — VOICE (reverb vocal/formant emphasis)**:
+- Noise LPF: bypassed.
+- LF reverb: −3dB shelf @ 150Hz (cleaned bass — vocal-like clarity).
+- HF reverb: +2dB shelf @ 2kHz (mid-emphasis, vocal formant boost).
+- Saturation: very subtle (R_SAT4=22k, almost clean).
+- **Sound**: говорящий reverb с vocal-formant emphasis. Подходит для phrases / spoken word / mid-rich material.
 
-**Position 5 — MIX**:
-- LF +8dB @ 120Hz (heaviest bass boost).
-- HF -5dB @ 4kHz (rolled-off top).
-- Medium-heavy saturation.
-- **Mid resonance peak** +6dB Q @ 800Hz (warm mid).
-- "Everything on" — maximum coloured character. Phaser presets remain at user knob settings.
+**Position 5 — MIX (combined moderate)**:
+- Noise LPF: engaged at cutoff 1.1kHz (partial — moderate brown noise character).
+- LF reverb: +3dB shelf @ 200Hz.
+- HF reverb: +1dB @ 6kHz (subtle air on top).
+- Saturation: moderate (R_SAT5=4.7k, как WARM).
+- **Sound**: "everything moderate" — noise color и reverb tone оба active на средних уровнях. Default "balanced" preset.
 
-#### Components per bank
+#### R-bank summary
 
-Поскольку 4 pole × 5 positions = 20 потенциальных резисторов, плюс 2 EQ caps + 2 saturation diodes + 1 resonance cell = **~25 компонентов**.
+| Bank | Noise LPF R | Reverb LF | Reverb HF | Reverb SAT |
+|:-----|:-----------:|:---------:|:---------:|:----------:|
+| 1 **COLOR** | **10k** | open | open | open |
+| 2 **WARM** | open | **10k** | **22k** | **4.7k** |
+| 3 **DARK** | open | open | **8.2k** | **1.5k** |
+| 4 **VOICE** | open | **33k** | **15k** | **22k** |
+| 5 **MIX** | **22k** | **22k** | **33k** | **4.7k** |
 
-Bank | LF res | HF res | SAT bias | FB res
-:----|:-----:|:-----:|:-------:|:-----:
-1 (COLOR raw) | open | open | open | open
-2 (WARM) | **10k** | **22k** | **4.7k** | open
-3 (DARK) | open | **8.2k** | **1.5k** | open
-4 (COLOR mid) | **22k** | **47k** | **10k** | **47k**
-5 (MIX) | **6.8k** | **15k** | **2.2k** | **33k**
+(Open = no resistor for that pole → sub-circuit inactive в данной позиции.)
 
-(Open positions = no resistor on that pole, циркуит inactive для данной позиции).
+**Common components** (вне 4P5T switch):
+- C_NC: 47nF film (noise LPF cap).
+- C_LF: 100nF film (reverb LF shelf cap).
+- C_HF: 1nF C0G ceramic (reverb HF shelf cap).
+- D_SAT_A, D_SAT_B: 2× 1N4148 anti-parallel (saturation pair).
+- U_NCLPF: half TL072 spare (noise LPF amp).
+- U_COLOR_OP: half TL074 spare (shelf feedback amp).
 
 **Common components** (вне 4P5T switch):
 - C_LF: 100nF film (LF shelf cap).
@@ -1800,22 +1956,25 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
   - Block 19: isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
   - **Block 20**: COLOR preset slider (4P5T, **detailed schematic с 5 R-banks**, see above).
   - Blocks 21–25: cold palette FX layer (Phase 2 v3 PCB upgrade — PULSE/FOG/FROST/CHILL/HUM).
-- **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell shared с Shape Form S&H) + LF398 (Crush cell).
+- **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell) + LF398 (Crush cell).
 - **10 ICs analog (premium 4-stage phaser)**: + **U8 LM13700** для phaser cells 3+4.
-- **1 dual comparator**: LM393 (Gate threshold + tap-tempo).
-- **1 MCU**: ATtiny85 (Geiger LFSR cluster pattern + crush sample clock + tap-tempo divider).
-- **2 timers**: NE555 ×2 (U_555 TOLL pulse monostable + U_VINYL_555 vinyl-skip one-shot для Shape Form path 4).
-- **1 counter**: 74HC161 (Block 16 Shape Form step DAC counter).
-- **6 transistors**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver — shared DAMP+TOLL+STALL via 3-way diode-OR).
+- **2 dual comparators**: LM393 ×2 (Block 18 Gate threshold + Block 16 FG Gate_OUT/EOR detect).
+- **1 D flip-flop**: 74HC74 (Block 16 FG Sub÷2 output divider).
+- **1 MCU**: ATtiny85 (Geiger LFSR cluster pattern + crush sample clock + FG clock sync continuous multiplier).
+- **1 timer**: NE555 (Block 14 TOLL pulse monostable). *vinyl-skip NE555 удалён в v6 — заменён analog FG.*
+- **6 transistors discrete**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver).
+- **6× 2N3904** (Block 16 FG exp converters — 3 matched pairs для rise/fall/depth sliders).
 - **1 zener**: BZX55C9V1.
 - **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
 - **Footswitches** (mockup canon): TAP / GATE-CRUSH / BYPASS / FREEZE.
-- **CV-only triggers** (modular advanced): J_TOLL_TRIG, J_STALL_CV.
-- **Sliders**: SL-4P5T (Block 20 Color preset) + SL-1P5T (Block 16 Shape Form).
+- **CV-only triggers** (modular advanced): J_TOLL_TRIG (внутренне normalled от FG EOR), J_STALL_CV, J_SIDE (sidechain in).
+- **FG outputs**: J_EG (in main CV bay row 2), J_Gate / J_Sub÷2 / J_Inv (extras zone).
+- **Sliders**: SL-4P5T (Block 20 Color preset) + 3× linear 30mm sliders (Block 16 FG rise/fall/depth).
+- **Slide switches**: SW_FG_RANGE (DPDT 3-pos для FG range C_FG swap) + SW_CLIP (DPDT для hard/soft clip select).
 
-**Phase 1 ship BOM** (v5 hybrid, ядро + Gate/Crush + 2-stage phaser + Color preset + base FX): **~$94 budget / $121 premium**.
-**Phase 1 premium SKU** (4-stage phaser): +$2 → **~$96 budget / $123 premium**.
-**Phase 2 v3 PCB BOM**: +$38 для cold palette daughter-board (incl. PCB + ribbon + 6 knobs + 5 jacks + 2 switches) → **~$132 budget / $159 premium** full feature.
+**Phase 1 ship BOM** (v6 hybrid, ядро + Gate/Crush + 2-stage phaser + analog FG + Color preset + base FX): **~$100 budget / $127 premium**.
+**Phase 1 premium SKU** (4-stage phaser): +$2 → **~$102 budget / $129 premium**.
+**Phase 2 v3 PCB BOM**: +$38 для cold palette daughter-board (incl. PCB + ribbon + 6 knobs + 5 jacks + 2 switches) → **~$138 budget / $165 premium** full feature.
 
 **Retail target**: $499 budget / $649 premium (sustainable margin, premium tier alongside Strymon BigSky / Eventide H9 Max).
 
@@ -1878,23 +2037,31 @@ Phase 1 BOM становится **дешевле и фокусированне�
 
 | Ref | Part Number | Описание | Qty | Unit $ | Total $ |
 |-----|-------------|----------|-----|--------|---------|
-| RV_PHASE | Alpha 9mm pot 100kΩ log | Phaser feedback / resonance (Block 16) | 1 | $1.20 | $1.20 |
-| RV_DEPTH | Alpha 9mm pot 100kΩ lin | Phaser modulation depth (Block 16) | 1 | $1.20 | $1.20 |
-| RV_SPEED | Alpha 9mm pot 1MΩ log | Phaser LFO rate (Block 16) | 1 | $1.20 | $1.20 |
+| RV_PHASE_FLUTTER | Alpha 9mm pot 100kΩ log | Phaser feedback intensity morph (Block 16, v6) | 1 | $1.20 | $1.20 |
+| RV_EXP_LOG | Alpha 9mm pot 100kΩ lin center-detent | FG curve shape morph exp↔lin↔log (Block 16, v6) | 1 | $1.50 | $1.50 |
+| RV_SPEED | Alpha 9mm pot 100kΩ log | FG rate + clock sync continuous multiplier (Block 16, v6) | 1 | $1.20 | $1.20 |
+| RV_RISE / RV_FALL / RV_DEPTH | Alpha SL-30 30mm linear slider 100kΩ lin | FG shape sliders (3× — Block 16, v6, paired с exp converters) | 3 | $1.50 | $4.50 |
 | RV_HIPASS | Alpha 9mm pot 100kΩ lin | HiPass filter cutoff | 1 | $1.20 | $1.20 |
 | RV_INPUT, RV_OUTPUT | Alpha 9mm pot 100kΩ lin | Input gain, output level | 2 | $1.20 | $2.40 |
-| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider для tone preset (Block 20 — see detailed schematic) | 1 | $5.00 | $5.00 |
-| Color preset banks | См. Block 20 BOM | 12× R + 1× 100nF + 1× 1nF + 2× 1N4148 + 6× twin-T | 22 | — | $0.41 |
-| Shape Form slider (1P5T) | Alpha SL-1P5T | **5-position** horizontal slider для LFO waveform (Block 16 routing: triangle/sine/random S&H/vinyl-skip/step) | 1 | $3.00 | $3.00 |
+| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider для COLOR/WARM/DARK/VOICE/MIX preset (Block 20 v6) | 1 | $5.00 | $5.00 |
+| Color preset banks | См. Block 20 BOM v6 | 13× R + 47nF + 100nF + 1nF + 2× 1N4148 | 18 | — | $0.40 |
 | **U7 (phaser OTAs)** | LM13700N | Block 16 — phaser cells 1+2 (budget 2-stage SKU) или cells 1+2 of 4 (premium) | 1 | $2.00 | $2.00 |
 | U8 (phaser OTAs premium only) | LM13700N | Block 16 — phaser cells 3+4 (premium 4-stage SKU only) | 0–1 | $2.00 | $0–2.00 |
-| U_VINYL_555 | NE555P | Block 16 — vinyl-skip one-shot для Shape Form path 4 | 1 | $0.25 | $0.25 |
-| U_TAP_CNT | 74HC161 | Block 16 — TAP-incremented step counter для Shape Form path 5 (step DAC) | 1 | $0.30 | $0.30 |
-| Block 16 misc (caps, R-2R ladder, sat diodes) | См. Block 16 BOM | C_AP1/2 + C_LFO + C_SINE + R-2R ladder + cell R's | ~18 | — | $1.10 |
-| **SWITCH CLIP** | SPDT toggle | Clip mode select | 1 | $1.50 | $1.50 |
+| U_FG_GATE | LM393 dual comparator | Block 16 FG — Gate_OUT + EOR detect | 1 | $0.30 | $0.30 |
+| U_FG_SUB | 74HC74 D flip-flop | Block 16 FG — Sub÷2 output divider | 1 | $0.30 | $0.30 |
+| Q_EXP_PAIRS | 2N3904 ×6 (3 matched pairs) | Block 16 FG — linear→exp converters per slider | 6 | $0.02 | $0.12 |
+| SW_FG_RANGE | DPDT 3-pos slide switch | Block 16 FG — C_FG range select (slow/mid/fast) | 1 | $0.80 | $0.80 |
+| Block 16 misc (caps, range cap bank, soft-clip diodes, R passives) | См. Block 16 BOM v6 | C_AP1/2 + C_FG bank + C_HYS + R-IABC + R-PFB + R-EXP + diodes | ~20 | — | $1.50 |
+| **SWITCH CLIP** | DPDT slide toggle | Hard/soft clip select | 1 | $0.60 | $0.60 |
 | Footswitches (3PDT × 4) | DPDT/3PDT mechanical | TAP, GATE/CRUSH, BYPASS, FREEZE | 4 | $3.00 | $12.00 |
-| **Subtotal FX engine (budget 2-stage phaser)** | | | | | **$32.76** |
-| **Subtotal FX engine (premium 4-stage phaser, +U8 + cells 3/4)** | | | | | **$34.85** |
+| Mini-jacks (extras zone) | 3.5mm panel-mount | TOLL_TRIG + STALL_CV + SIDE + Gate_OUT + Sub÷2_OUT + Inv_OUT | 6 | $0.40 | $2.40 |
+| **Subtotal FX engine v6 (budget 2-stage phaser)** | | | | | **$37.42** |
+| **Subtotal FX engine v6 (premium 4-stage phaser, +U8 + cells 3/4)** | | | | | **$39.51** |
+
+**Net BOM change v5 → v6** (FX engine):
+- Removed: U_VINYL_555 (−$0.25) + U_TAP_CNT 74HC161 (−$0.30) + Shape Form SL-1P5T slider (−$3.00) + R-2R ladder 8R (−$0.40) + RV_DEPTH knob 100k (−$1.20) = **−$5.15**
+- Added: 3× linear sliders (+$4.50) + LM393 ×1 (+$0.30) + 74HC74 (+$0.30) + 6× 2N3904 (+$0.12) + SW_FG_RANGE (+$0.80) + RV_EXP_LOG (+$1.50) + 6× extras zone jacks (+$2.40) + SWITCH CLIP downgrade to slide (−$0.90 vs $1.50 toggle) = **+$9.02 net add**
+- **Net v5 → v6**: +$3.87 (FX engine), Phase 1 ship total: ~$96 → **~$100 budget / ~$127 premium**.
 
 ### Power supply (per SKU)
 
@@ -2241,10 +2408,10 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 
 | Zone | Block(s) | ICs / parts | Physical considerations |
 |------|----------|-------------|--------------------------|
-| **Zone 10** | Block 16 Phaser | U7 LM13700 (cells 1+2), U8 LM13700 premium (cells 3+4), TL074 spare для phaser sum amp, **74HC161** (Shape Form step DAC), **NE555 #2** (vinyl-skip one-shot), C_AP1–4 (47nF / 15nF / 6.8nF / 2.2nF NP0) | Place **away from JFET preamp Zone 4** — phaser LFO can radiate sub-audio crosstalk into hi-Z gate. Min 25mm separation. LFO triangle slow enough that ferrite bead OK. |
+| **Zone 10** | Block 16 Phaser + analog Function Generator | U7 LM13700 (cells 1+2), U8 LM13700 premium (cells 3+4), TL074 (FG core: Schmitt + integrator + buffer + inverter), LM393 (FG Gate + EOR), 74HC74 (FG ÷2 sub), 6× 2N3904 (exp converters), C_AP1–4 (47/15/6.8/2.2nF NP0), C_FG range bank (1µF/100nF/10nF) | Place **away from JFET preamp Zone 4** — FG integrator + phaser LFO can radiate sub-audio crosstalk into hi-Z gate. Min 25mm separation. Sliders mounted на panel-edge satellite PCB connecting via 12-pin ribbon к main board. |
 | **Zone 11** | Block 18 Gate/Crush | U_GATE CD4066BE, U_SH LF398N, U_COMP LM393, R-2R matched pairs | Place **between Zone 7 (mix output) and panel** — signal flows mix → Gate → Crush → output buffer → jack. R-2R matched resistors require equal-length traces (<5mm difference). |
 | **Zone 12** | Block 20 COLOR slider | Slider SL-4P5T mounted **panel-edge** (not on PCB body), R-banks (12 resistors) на panel-adjacent strip | Slider physically on panel left side per mockup. R-banks soldered on small **slider satellite PCB** (40×20mm) which mounts behind slider, ribbon-connects to main PCB via 8-pin header. |
-| **Zone 13** | Block 12 noise + Block 16 Shape Form panel slider | SL-1P5T Shape Form slider panel-mount, ATtiny85 MCU (shared с Block 12, 16, 18), 7805 LDO для +5V digital | Slider satellite PCB shared с Block 20 region. ATtiny85 в **digital corner** (DGND, Zone 8 adjacent). +5V LDO heat sink not needed (50mA draw, 0.35W on 7V drop = OK без). |
+| **Zone 13** | Block 12 noise + Block 16 FG panel sliders + extras CV jack cluster | 3× FG linear sliders (rise/fall/depth) panel-mount, SW_FG_RANGE + SW_CLIP slide switches, ATtiny85 MCU (shared с Block 12, 16, 18 — added FG clock sync logic), 7805 LDO для +5V digital, 6 extras jacks (TOLL/STALL/SIDE/Gate/Sub÷2/Inv) | Slider satellite PCB shared с Block 20 region — FG sliders mounted vertically на panel right edge, ribbon-connect к main PCB exp converters. Extras jacks group right of slider cluster, frame с dashed outline. ATtiny85 в **digital corner** (DGND, Zone 8 adjacent). +5V LDO heat sink not needed. |
 | **Zone 14** | Phase 2 daughter board connection | 10-pin header (2×5 IDC ribbon) | Header placed на main PCB **bottom edge** (opposite panel side). Phase 2 daughter board mounts on M3 standoffs 12mm tall, sits underneath main PCB. Ribbon carries: ±12V, GND, audio bus tap (Block 13 output), DAMP_CV input, 4× Phase 2 CV jack connections, +5V digital. |
 
 #### Revised floor plan (40HP module, panel-up view)
@@ -2272,7 +2439,11 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 │  │ FEEDBACK +   │ │ TONE LPF +     │ │ U7 LM13700 cells 1+2 │ │ NOISE +  │ │
 │  │ FREEZE       │ │ LED CLIP +     │ │ U8 LM13700 cells 3+4 │ │ GEIGER   │ │
 │  │ U4A          │ │ ENV VCA        │ │ TL074 phaser sum amp │ │ D_NOISE  │ │
-│  │ SW_FREEZE    │ │ U2A D1-D6      │ │ 74HC161 Shape DAC    │ │ U2C      │ │
+│  │ SW_FREEZE    │ │ U2A D1-D6      │ │ TL074 FG core (Schmitt│ │ U2C      │ │
+│  │              │ │                │ │  +integrator+buffer)  │ │          │ │
+│  │              │ │                │ │ LM393 FG Gate/EOR     │ │          │ │
+│  │              │ │                │ │ 74HC74 FG ÷2 sub      │ │          │ │
+│  │              │ │                │ │ 6× 2N3904 exp conv    │ │          │ │
 │  │ D_LIM        │ │ U5 LM13700     │ │ NE555 vinyl one-shot │ │ ATtiny85 │ │
 │  │              │ │                │ │ C_AP1-4 NP0          │ │ Z13      │ │
 │  │ J_SIDE       │ │ J_CV_DAMP      │ │                      │ │ +5V LDO  │ │
