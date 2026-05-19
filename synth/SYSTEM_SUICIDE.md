@@ -721,7 +721,7 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 > *Постапокалипсис. Пустота, эхо, треск радиации, фейзер заброшенного эфира, плавящаяся плёнка, проседающий мотор винила, gate/crush — звук разрушения.*
 
 ### Суть в одном абзаце
-Аналоговый ревербератор-симулятор разрушенного граммофона. Физические пластины (дерево, камень, металл, стекло, кость, нефрит) вместо DSP — реальный resonance materials. Поверх натурального резонанса наслоены **постапокалиптические FX холодной палитры** (per Decision 09 v5 hybrid base): always-on 4-stage analog phaser, bipolar NOISE+COLOR(geiger) crossfader (continuous hiss ↔ cluster-pattern impulses), gate/crush footswitch (signal destruction), solenoid double-function (DAMP/TOLL/STALL — sustained pressure / impulse strike / forced hold). Color preset slider даёт quick tone recall (warm/dark/mix banks). В Phase 2 v3 PCB добавляется cold palette FX layer (PULSE/FOG/FROST/CHILL/HUM) как upgrade kit.
+Аналоговый ревербератор-симулятор разрушенного граммофона. Физические пластины (дерево, камень, металл, стекло, кость, нефрит) вместо DSP — реальный resonance materials. Поверх натурального резонанса наслоены **постапокалиптические FX холодной палитры** (per Decision 09 v5 hybrid base): always-on 4-stage analog phaser, bipolar NOISE+COLOR(geiger) crossfader (continuous hiss ↔ cluster-pattern impulses), gate/crush footswitch (signal destruction), solenoid double-function (DAMP/TOLL/STALL — sustained pressure / impulse strike / forced hold). Bank Mode slider даёт quick tone recall (DIRTY/WARM/DARK/VOICE/MIX presets). В Phase 2 v3 PCB добавляется cold palette FX layer (PULSE/FOG/FROST/CHILL/HUM) как upgrade kit.
 
 ### Формат — dual SKU
 - **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
@@ -814,7 +814,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 ```
 
 ### Ключевые изменения v2.1 → v3.0 → v5 hybrid (Decision 09)
-- **+4 новых блока (v5)**: always-on phaser, gate/crush, Color preset slider, isolated DC-DC ±12V (pedal SKU only).
+- **+4 новых блока (v5)**: always-on phaser, gate/crush, Bank Mode preset slider, isolated DC-DC ±12V (pedal SKU only).
 - **BBD vinyl wow removed (Decision 08)**: перенесён в Last Day как OLD VINYL PT2399 parallel tract.
 - **Dual SKU**: Eurorack 40HP + Pedal big-box (~203×140мм Strymon BigSky class), identical schematic.
 - **NOISE / COLOR(geiger)**: 2 separate knobs (NOISE level + COLOR continuous crossfader от continuous zener hiss к Geiger cluster ticks).

@@ -167,13 +167,20 @@
   </g>
 
   <!-- ============== LAYER: COLOR SLIDER (left edge) ============== -->
-  <g id="layer-color-slider" inkscape:groupmode="layer" inkscape:label="04 COLOR slider">
+  <g id="layer-color-slider" inkscape:groupmode="layer" inkscape:label="04 Bank Mode slider">
+    <!-- Bank Mode category label -->
+    <text x="14" y="50" text-anchor="middle"
+          font-family="Helvetica Neue, Arial, sans-serif"
+          font-size="2.0" letter-spacing="0.6"
+          font-style="italic"
+          fill="#444444">Bank Mode</text>
+
     <use href="#slider-color-vertical-35" x="14" y="72"/>
-    <text x="11" y="56" text-anchor="end"
+    <text x="11" y="58" text-anchor="end"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" letter-spacing="0.5"
-          fill="#000000">COLOR</text>
-    <text x="11" y="64" text-anchor="end"
+          fill="#000000">DIRTY</text>
+    <text x="11" y="65" text-anchor="end"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" letter-spacing="0.5"
           fill="#000000">WARM</text>
@@ -181,11 +188,11 @@
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" letter-spacing="0.5"
           fill="#000000">DARK</text>
-    <text x="11" y="80" text-anchor="end"
+    <text x="11" y="79" text-anchor="end"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" letter-spacing="0.5"
           fill="#000000">VOICE</text>
-    <text x="11" y="88" text-anchor="end"
+    <text x="11" y="86" text-anchor="end"
           font-family="Helvetica Neue, Arial, sans-serif"
           font-size="2.4" letter-spacing="0.5"
           fill="#000000">MIX</text>
@@ -442,32 +449,35 @@
     <text x="116" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">EG</text>
   </g>
 
-  <!-- ============== LAYER: EXTRAS COLUMN (TOLL/STALL/SIDE + Gate/Sub/Inv) ============== -->
+  <!-- ============== LAYER: EXTRAS COLUMN (TOLL/STALL/SIDE/FREEZE + Gate/Sub/Inv) ============== -->
   <g id="layer-cv-extras" inkscape:groupmode="layer" inkscape:label="12 CV extras">
 
     <!-- Subtle frame around extras zone for visual grouping -->
-    <rect x="131" y="111" width="35" height="22" rx="1.2" ry="1.2"
+    <rect x="132" y="111" width="36" height="22" rx="1.2" ry="1.2"
           fill="none" stroke="#bbbbbb" stroke-width="0.2" stroke-dasharray="0.5,0.5"/>
 
-    <!-- Row 1: TOLL_TRIG / STALL_CV / SIDE (inputs) -->
-    <use href="#jack" x="138" y="115"/>
-    <text x="138" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">TOLL</text>
+    <!-- Row 1: TOLL_TRIG / STALL_CV / SIDE / FREEZE_CV (inputs) -->
+    <use href="#jack" x="137" y="115"/>
+    <text x="137" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">TOLL</text>
 
-    <use href="#jack" x="148" y="115"/>
-    <text x="148" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">STALL</text>
+    <use href="#jack" x="145" y="115"/>
+    <text x="145" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">STALL</text>
 
-    <use href="#jack" x="158" y="115"/>
-    <text x="158" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">SIDE</text>
+    <use href="#jack" x="153" y="115"/>
+    <text x="153" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">SIDE</text>
+
+    <use href="#jack" x="161" y="115"/>
+    <text x="161" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="1.9">FREEZE</text>
 
     <!-- Row 2: Gate_OUT / Sub÷2_OUT / Inv_OUT (FG outputs) -->
-    <use href="#jack" x="138" y="128"/>
-    <text x="138" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Gate</text>
+    <use href="#jack" x="137" y="128"/>
+    <text x="137" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Gate</text>
 
-    <use href="#jack" x="148" y="128"/>
-    <text x="148" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="1.8">Sub÷2</text>
+    <use href="#jack" x="145" y="128"/>
+    <text x="145" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="1.8">Sub÷2</text>
 
-    <use href="#jack" x="158" y="128"/>
-    <text x="158" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Inv</text>
+    <use href="#jack" x="153" y="128"/>
+    <text x="153" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Inv</text>
   </g>
 
   <!-- ============== LAYER: AUDIO OUTPUTS (DRY/WET, L/R) ============== -->

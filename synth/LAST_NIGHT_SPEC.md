@@ -200,7 +200,7 @@ Customer может start с pedal (для studio/live performance), позже 
 │   Noise gen (zener / Geiger LFSR) ─► COLOR ─────────────────► MIX │         │
 │                                                                   ▼         │
 │                                                            ┌──────────┐    │
-│   Color preset slider (vertical 5-pos) ─────────────────►  │ Tone     │    │
+│   Bank Mode preset slider (vertical 5-pos) ─────────────────►  │ Tone     │    │
 │   COLOR / WARM / DARK / COLOR / MIX                       │ Shaping  │    │
 │                                                            └────┬─────┘    │
 │                                                                 ▼          │
@@ -256,7 +256,7 @@ Customer может start с pedal (для studio/live performance), позже 
 
 **Stage 7 — mix + output**:
 19. **Mix bus** — DRY + WET + NOISE + CV mix.
-20. **Color preset slider** — 5-position vertical: COLOR / WARM / DARK / COLOR / MIX. Каждая позиция меняет EQ shape + saturation amount + phaser feedback в pre-set комбинациях для quick recall.
+20. **Bank Mode slider** — 5-position vertical: DIRTY / WARM / DARK / VOICE / MIX. DIRTY = noise color LPF + reverb dirt (moderate saturation). WARM/DARK/VOICE = reverb tone presets. MIX = combined moderate.
 21. **Outputs**: 
    - **MAIN L+R** (stereo от dual piezo): A→L, B→R, или summed mono.
    - **DRY** (отдельный jack): чистый сигнал post-buffer, без обработки.
@@ -347,7 +347,7 @@ Customer может start с pedal (для studio/live performance), позже 
 - **NOISE + COLOR(geiger) — 2 ручки** (mockup canon): NOISE level + COLOR crossfader (continuous hiss ↔ Geiger ticks).
 - **Phase/Flutter, DEPTH, SPEED — large named knobs** в lower row, **always-on**. Phaser равноправный эффект, не optional.
 - **Shape Form slider** — horizontal 5-pos slider для LFO waveform select.
-- **Color preset slider** vertical (5 positions) — quick tone preset selector.
+- **Bank Mode preset slider** vertical (5 positions) — quick tone preset selector.
 - **SWITCH CLIP toggle** — soft/hard clipper mode.
 - **12V DC jack** (center-negative, 2.1мм barrel) + **EXP pedal jack** на rear.
 - Phase 2 v3 PCB upgrade — добавляет 5 cold-palette knobs (PULSE/FOG/FROST/CHILL/HUM) в специально отведённом ряду.
@@ -420,7 +420,7 @@ Customer может start с pedal (для studio/live performance), позже 
 | 19 | **exp/log** | Pot lin center-detent | FG curve shape morph (exponential ↔ linear ↔ logarithmic) | — |
 | 20 | **speed/range** | Pot log | FG rate (0.05–50 Hz exp) + clock sync continuous multiplier (CCW ×8 slow ↔ CW ×8 fast) | ✓ speed CV / CLK CV (TAP sync) |
 | 21 | **SW_FG_RANGE** | 3-pos slide switch | FG range cap select (slow/mid/fast — swaps C_FG 1µF/100nF/10nF) | — |
-| 22 | **Color preset slider** | Vertical 5-pos slider | COLOR (noise color LPF) / WARM / DARK / VOICE / MIX (reverb tone presets) | — |
+| 22 | **Bank Mode slider** | Vertical 5-pos slider | DIRTY (noise color LPF + reverb dirt) / WARM / DARK / VOICE / MIX | — |
 | 23 | **SWITCH CLIP** | 2-pos slide | Hard clip (LED) vs soft clip (diode) | — |
 
 **Phase 2 ship (cold-palette upgrade kit)** — v3 PCB revision добавляет:
@@ -497,6 +497,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - **J_TOLL_TRIG** — solenoid strike trigger. Internally normalled от FG EOR (each FG peak → bell strike). Patch external = breaks norm.
 - **J_STALL_CV** — sustained CV for forced damper full hold (decay stuck minimum while high; max 5s continuous per thermal budget).
 - **J_SIDE** — sidechain input для envelope follower (normalled к main input; patch external для dub-style ducking).
+- **J_FREEZE_CV** — gate input для freeze. OR-logic с footswitch state — либо footswitch latched, либо CV > 0.7V → freeze active. Use cases: rhythmic stutter freezes, sequencer-driven freeze patterns.
 
 **CV inputs (Phase 2 upgrade adds)**:
 - PULSE CV, FOG CV, FROST CV, CHILL CV, HUM CV

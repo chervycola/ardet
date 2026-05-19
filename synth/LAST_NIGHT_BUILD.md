@@ -34,7 +34,7 @@
 - **Блок 17**: REMOVED (was BBD vinyl wow → переехал в Last Day как OLD VINYL PT2399).
 - **Блок 18**: Gate/Crush footswitch (CD4066 + LF398 + LM393, restored per Decision 09 v5 hybrid).
 - **Блок 19**: Isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
-- **Блок 20**: COLOR preset slider (4P5T detailed schematic).
+- **Блок 20**: Bank Mode preset slider (4P5T detailed schematic).
 - **Блоки 21–25**: Phase 2 cold palette upgrade kit (PULSE / FOG / FROST / CHILL / HUM).
 
 Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
@@ -216,7 +216,7 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 - R8 **specified as 5W wirewound** (Panasonic ERG-5SJ4R7) — рассеивает 3.8Вт peak.
 - **Bias diodes added**: 2× 1N4148 + 2× 1кΩ для class AB (eliminates crossover distortion).
 
-### Block 5. Feedback Summing + Freeze (U4A — TL074)
+### Block 5. Feedback Summing + Freeze (U4A — TL074) **[REVISED v6.1 — FREEZE_CV input]**
 
 ```
                                       R_FS3 (47kΩ)
@@ -224,24 +224,69 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
                                 │    D_LIM1 (1N4148)          │
                                 │   ──►|◄──                   │
                                 │    D_LIM2 (1N4148)          │
-             SW_FREEZE          │   ──◄|►──                   │
-  DRV_SEND ──┤ NORMAL├── R_FS1 (47kΩ) ──┤                    │
-              │ FREEZE├── GND            │    ┌────────────┐  │
-              └────────┘                 ├───►│(-)  U4A    │──┘── FB_OUT
-                                         │    │  TL074     │       │
-  WET_FB ── RV_FEEDBACK ── R_FS2 (47kΩ) ─┘    │(+)        │       │
-            (100kΩ log)                        └─────┬─────┘       └──► to Driver Amp
-                                                R_FS4 (47kΩ)            (Block 4 input)
-                                                     │
-                                                    GND
+                                │    D_LIM2 (1N4148)          │
+       SW_FREEZE_FS              │   ──◄|►──                   │
+     (footswitch state)          │                             │
+            │                    │                             │
+            ▼                    │    ┌────────────┐  │
+   ┌─── OR gate ───┐──────► R_FREEZE_GATE ─► to switch control mux
+   │  (diode-OR)    │
+   │  via Q_FZ      │
+   │  2N3904        │
+   └──────▲─────────┘
+          │
+          │  Schmitt threshold ~1.5V (R_FZ_DIV 22k/22k divider)
+          │
+   J_FREEZE_CV ──► R_FZ_IN 10k ──► Q_FZ base (+5V threshold)
+                                        │
+                                        Q_FZ_E → GND
+                                        Q_FZ_C → pulled up via R_FZ_PU 10k к +5V
+                                                  → HIGH when CV > 0.7V на base
+                                                  → wired-OR с footswitch state
+   
+   Combined gate → controls 4066 CMOS switch in feedback path:
+     LOW  = NORMAL (input passes through R_FS1)
+     HIGH = FREEZE (input disconnected, feedback only)
+   
+                                                │
+  DRV_SEND ─► R_FS1 (47kΩ) ─► [CMOS switch]    │    ┌────────────┐
+                                                ├───►│(-)  U4A    │──── FB_OUT
+                                                │    │  TL074     │       │
+  WET_FB ── RV_FEEDBACK ── R_FS2 (47kΩ) ───────┘    │(+)         │       │
+            (100kΩ log)                              └─────┬──────┘       └──► to Driver Amp
+                                                     R_FS4 (47kΩ)            (Block 4 input)
+                                                          │
+                                                         GND
 
-  FREEZE: disconnects input, maxes feedback → self-oscillation.
+  FREEZE behaviour (OR-logic):
+  - SW_FREEZE_FS HIGH (footswitch latched)    → FREEZE active
+  - J_FREEZE_CV HIGH (CV gate > 0.7V на Q_FZ) → FREEZE active
+  - Both LOW                                  → NORMAL (signal pass-through)
+  
+  Use cases:
+  - Footswitch only: classic latching freeze gesture (mockup canon).
+  - CV-only: sequencer/LFO gates → rhythmic stutter freezes.
+  - Combined: footswitch holds base freeze, CV gates retrigger / modulate.
+  
   D_LIM1/D_LIM2: clamp feedback to ±0.7V on virtual ground (soft limiter).
 
   [VERIFICATION REQUIRED]: SPICE Nyquist analysis с RLC modelью пластины
   (R=1Ω, L=10mH, C=1µF для ~1.6кГц resonance) — verify Nyquist gain margin > 6dB,
   phase margin > 45° на feedback maximum. Test для high-Q materials (Q=1000 spring steel).
 ```
+
+**FREEZE_CV BOM additions** (v6.1):
+| Ref | Value | Function |
+|-----|-------|----------|
+| Q_FZ | 2N3904 NPN BJT TO-92 | CV→gate transistor switch |
+| R_FZ_IN | 10kΩ 1% MF | CV input current limit |
+| R_FZ_DIV | 22kΩ ×2 1% MF | Schmitt threshold divider к +5V |
+| R_FZ_PU | 10kΩ 1% MF | Q_FZ collector pull-up к +5V |
+| J_FREEZE_CV | 3.5mm panel jack | CV input |
+
+**BOM Block 5 add**: $0.04 (BJT + resistors) + $0.40 (jack) = **$0.44**.
+
+CMOS switch (4066 element) уже выделен в Block 18 BOM (one of 4 elements used для bypass mux). Reuses 4th remaining 4066 element для FREEZE switching path — no new IC needed.
 
 ### Block 6. Sidechain Input (U4B — TL074)
 
@@ -1352,9 +1397,11 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 - Strymon Zuma R300 (12V outputs).
 - Truetone CS12 (12V).
 
-### Block 20. COLOR Preset Slider — vertical 5-position **[REVISED v6 labels]**
+### Block 20. Bank Mode Preset Slider — vertical 5-position **[REVISED v6.1 — DIRTY label + dirt semantic]**
 
-5-позиционный slider switch на левой стороне панели. **Hybrid-purpose preset**: позиция 1 (COLOR) engages **noise color filter** (фильтрация zener hiss/Geiger ticks), позиции 2-4 (WARM/DARK/VOICE) меняют **reverb tone**, позиция 5 (MIX) — combined moderate mode (оба пути активны на средних уровнях).
+5-позиционный slider switch на левой стороне панели. **Hybrid-purpose preset**: позиция 1 (**DIRTY**) engages **noise color filter + moderate reverb saturation** (общая dirt-emphasis mode), позиции 2-4 (WARM/DARK/VOICE) меняют **reverb tone**, позиция 5 (MIX) — combined moderate mode (оба пути активны на средних уровнях).
+
+Категория slider помечена на панели как **"Bank Mode"** (italic header label над позициями).
 
 Используется **4PDT 5-position slider** (Alpha SL-4P5T). Hardware-only — никакого MCU. 4 pole разделяют 4 sub-circuit пути:
 - Pole 1: noise color LPF cutoff R (engaged at COLOR + MIX only)
@@ -1367,8 +1414,8 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 ```
                               4-pole 5-throw vertical slider (Alpha SL-4P5T)
                                           
-   Pole 1 — noise color LPF cutoff (только COLOR + MIX active):
-        ├─ Pos 1 (COLOR):  R_NC1 = 10kΩ  → LPF cutoff 2.5kHz (white→brown)
+   Pole 1 — noise color LPF cutoff (DIRTY + MIX active):
+        ├─ Pos 1 (DIRTY):  R_NC1 = 10kΩ  → LPF cutoff 2.5kHz (white→brown)
         ├─ Pos 2 (WARM):   R_NC2 = ∞     → LPF bypass (noise default = white hiss)
         ├─ Pos 3 (DARK):   R_NC3 = ∞     → bypass
         ├─ Pos 4 (VOICE):  R_NC4 = ∞     → bypass
@@ -1377,7 +1424,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
    To noise color LPF (uses U_NCLPF — TL072 spare half + C_NC 47nF)
    
    Pole 2 — reverb LF shelf cut/boost R-bank:
-        ├─ Pos 1 (COLOR):  R_LF1 = ∞     → LF flat (no reverb mod)
+        ├─ Pos 1 (DIRTY):  R_LF1 = ∞     → LF flat (DIRTY не трогает LF — bass clean)
         ├─ Pos 2 (WARM):   R_LF2 = 10kΩ  → +6dB shelf @ 150Hz
         ├─ Pos 3 (DARK):   R_LF3 = ∞     → flat (DARK leaves bass alone)
         ├─ Pos 4 (VOICE):  R_LF4 = 33kΩ  → −3dB shelf @ 150Hz (cleaned bass)
@@ -1386,7 +1433,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
    To reverb LF shelf (U2 spare half + C_LF 100nF)
    
    Pole 3 — reverb HF shelf cut/boost R-bank:
-        ├─ Pos 1 (COLOR):  R_HF1 = ∞     → HF flat
+        ├─ Pos 1 (DIRTY):  R_HF1 = 22kΩ  → −2dB @ 4kHz (slight roll-off, добавляет dirt character)
         ├─ Pos 2 (WARM):   R_HF2 = 22kΩ  → −3dB @ 4kHz (gentle roll-off)
         ├─ Pos 3 (DARK):   R_HF3 = 8.2kΩ → −8dB @ 4kHz (heavy roll-off)
         ├─ Pos 4 (VOICE):  R_HF4 = 15kΩ  → +2dB @ 2kHz (formant emphasis)
@@ -1395,7 +1442,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
    To reverb HF shelf (U2 spare half + C_HF 1nF)
    
    Pole 4 — reverb saturation diode bias R-bank:
-        ├─ Pos 1 (COLOR):  R_SAT1 = ∞    → no saturation (clean)
+        ├─ Pos 1 (DIRTY):  R_SAT1 = 4.7kΩ→ moderate (1N4148 ×2 anti-||, добавляет harmonic dirt)
         ├─ Pos 2 (WARM):   R_SAT2 = 4.7kΩ→ moderate (tube-like)
         ├─ Pos 3 (DARK):   R_SAT3 = 1.5kΩ→ heavy (broken radio)
         ├─ Pos 4 (VOICE):  R_SAT4 = 22kΩ → very subtle (clean vocal)
@@ -1415,12 +1462,12 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 
 #### Per-position function (детально)
 
-**Position 1 — COLOR (noise color emphasis)**:
+**Position 1 — DIRTY (noise color + reverb dirt)**:
 - **Noise color LPF**: engaged, cutoff 2.5kHz → zener hiss filtered к brown noise character.
-- Reverb LF: flat (no change).
-- Reverb HF: flat.
-- Reverb saturation: off (clean).
-- **Use case**: эмфаsис noise generator character без изменений reverb tone. Studio noise-textural patches.
+- Reverb LF: flat (bass clean).
+- Reverb HF: −2dB @ 4kHz (slight roll-off, добавляет dirt character).
+- Reverb saturation: **moderate** (R_SAT1=4.7k через 1N4148 pair — добавляет harmonic dirt в reverb tail).
+- **Use case**: общая dirt-emphasis mode — noise filtered + reverb gently dirtied. Подходит для grungy/lo-fi patches без перехода в полный "broken radio" DARK mode.
 
 **Position 2 — WARM (reverb warm)**:
 - Noise LPF: bypassed (noise = default white hiss).
@@ -1452,13 +1499,13 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 
 #### R-bank summary
 
-| Bank | Noise LPF R | Reverb LF | Reverb HF | Reverb SAT |
-|:-----|:-----------:|:---------:|:---------:|:----------:|
-| 1 **COLOR** | **10k** | open | open | open |
-| 2 **WARM** | open | **10k** | **22k** | **4.7k** |
-| 3 **DARK** | open | open | **8.2k** | **1.5k** |
-| 4 **VOICE** | open | **33k** | **15k** | **22k** |
-| 5 **MIX** | **22k** | **22k** | **33k** | **4.7k** |
+| Bank Mode | Noise LPF R | Reverb LF | Reverb HF | Reverb SAT |
+|:----------|:-----------:|:---------:|:---------:|:----------:|
+| 1 **DIRTY** | **10k** (2.5kHz) | open (flat) | **22k** (−2dB) | **4.7k** (moderate) |
+| 2 **WARM**  | open | **10k** (+6dB) | **22k** (−3dB) | **4.7k** (moderate) |
+| 3 **DARK**  | open | open | **8.2k** (−8dB) | **1.5k** (heavy) |
+| 4 **VOICE** | open | **33k** (−3dB) | **15k** (+2dB) | **22k** (subtle) |
+| 5 **MIX**   | **22k** (1.1kHz) | **22k** (+3dB) | **33k** (+1dB) | **4.7k** (moderate) |
 
 (Open = no resistor for that pole → sub-circuit inactive в данной позиции.)
 
@@ -1954,7 +2001,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
   - Block 17: **REMOVED** (BBD vinyl wow → переехал в Last Day).
   - Block 18: **Gate/Crush footswitch** (CD4066 + LF398 + LM393, restored from v4 removal).
   - Block 19: isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
-  - **Block 20**: COLOR preset slider (4P5T, **detailed schematic с 5 R-banks**, see above).
+  - **Block 20**: Bank Mode preset slider (4P5T, **detailed schematic с 5 R-banks**, see above).
   - Blocks 21–25: cold palette FX layer (Phase 2 v3 PCB upgrade — PULSE/FOG/FROST/CHILL/HUM).
 - **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell) + LF398 (Crush cell).
 - **10 ICs analog (premium 4-stage phaser)**: + **U8 LM13700** для phaser cells 3+4.
@@ -1967,12 +2014,12 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 - **1 zener**: BZX55C9V1.
 - **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
 - **Footswitches** (mockup canon): TAP / GATE-CRUSH / BYPASS / FREEZE.
-- **CV-only triggers** (modular advanced): J_TOLL_TRIG (внутренне normalled от FG EOR), J_STALL_CV, J_SIDE (sidechain in).
-- **FG outputs**: J_EG (in main CV bay row 2), J_Gate / J_Sub÷2 / J_Inv (extras zone).
-- **Sliders**: SL-4P5T (Block 20 Color preset) + 3× linear 30mm sliders (Block 16 FG rise/fall/depth).
+- **CV-only inputs** (modular advanced — extras zone): J_TOLL_TRIG (внутренне normalled от FG EOR) / J_STALL_CV / J_SIDE (sidechain in) / **J_FREEZE_CV** (OR с footswitch state).
+- **FG outputs** (extras zone bottom row): J_Gate / J_Sub÷2 / J_Inv. J_EG в main CV bay row 2.
+- **Sliders**: SL-4P5T (Block 20 Bank Mode preset) + 3× linear 30mm sliders (Block 16 FG rise/fall/depth).
 - **Slide switches**: SW_FG_RANGE (DPDT 3-pos для FG range C_FG swap) + SW_CLIP (DPDT для hard/soft clip select).
 
-**Phase 1 ship BOM** (v6 hybrid, ядро + Gate/Crush + 2-stage phaser + analog FG + Color preset + base FX): **~$100 budget / $127 premium**.
+**Phase 1 ship BOM** (v6 hybrid, ядро + Gate/Crush + 2-stage phaser + analog FG + Bank Mode preset + base FX): **~$100 budget / $127 premium**.
 **Phase 1 premium SKU** (4-stage phaser): +$2 → **~$102 budget / $129 premium**.
 **Phase 2 v3 PCB BOM**: +$38 для cold palette daughter-board (incl. PCB + ribbon + 6 knobs + 5 jacks + 2 switches) → **~$138 budget / $165 premium** full feature.
 
@@ -2043,8 +2090,8 @@ Phase 1 BOM становится **дешевле и фокусированне�
 | RV_RISE / RV_FALL / RV_DEPTH | Alpha SL-30 30mm linear slider 100kΩ lin | FG shape sliders (3× — Block 16, v6, paired с exp converters) | 3 | $1.50 | $4.50 |
 | RV_HIPASS | Alpha 9mm pot 100kΩ lin | HiPass filter cutoff | 1 | $1.20 | $1.20 |
 | RV_INPUT, RV_OUTPUT | Alpha 9mm pot 100kΩ lin | Input gain, output level | 2 | $1.20 | $2.40 |
-| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider для COLOR/WARM/DARK/VOICE/MIX preset (Block 20 v6) | 1 | $5.00 | $5.00 |
-| Color preset banks | См. Block 20 BOM v6 | 13× R + 47nF + 100nF + 1nF + 2× 1N4148 | 18 | — | $0.40 |
+| Color slider (4P5T) | Alpha SL-4P5T | 5-position vertical slider для DIRTY/WARM/DARK/VOICE/MIX Bank Mode preset (Block 20 v6) | 1 | $5.00 | $5.00 |
+| Bank Mode preset banks | См. Block 20 BOM v6 | 13× R + 47nF + 100nF + 1nF + 2× 1N4148 | 18 | — | $0.40 |
 | **U7 (phaser OTAs)** | LM13700N | Block 16 — phaser cells 1+2 (budget 2-stage SKU) или cells 1+2 of 4 (premium) | 1 | $2.00 | $2.00 |
 | U8 (phaser OTAs premium only) | LM13700N | Block 16 — phaser cells 3+4 (premium 4-stage SKU only) | 0–1 | $2.00 | $0–2.00 |
 | U_FG_GATE | LM393 dual comparator | Block 16 FG — Gate_OUT + EOR detect | 1 | $0.30 | $0.30 |
@@ -2054,9 +2101,10 @@ Phase 1 BOM становится **дешевле и фокусированне�
 | Block 16 misc (caps, range cap bank, soft-clip diodes, R passives) | См. Block 16 BOM v6 | C_AP1/2 + C_FG bank + C_HYS + R-IABC + R-PFB + R-EXP + diodes | ~20 | — | $1.50 |
 | **SWITCH CLIP** | DPDT slide toggle | Hard/soft clip select | 1 | $0.60 | $0.60 |
 | Footswitches (3PDT × 4) | DPDT/3PDT mechanical | TAP, GATE/CRUSH, BYPASS, FREEZE | 4 | $3.00 | $12.00 |
-| Mini-jacks (extras zone) | 3.5mm panel-mount | TOLL_TRIG + STALL_CV + SIDE + Gate_OUT + Sub÷2_OUT + Inv_OUT | 6 | $0.40 | $2.40 |
-| **Subtotal FX engine v6 (budget 2-stage phaser)** | | | | | **$37.42** |
-| **Subtotal FX engine v6 (premium 4-stage phaser, +U8 + cells 3/4)** | | | | | **$39.51** |
+| Mini-jacks (extras zone) | 3.5mm panel-mount | TOLL_TRIG + STALL_CV + SIDE + **FREEZE_CV** + Gate_OUT + Sub÷2_OUT + Inv_OUT | 7 | $0.40 | $2.80 |
+| FREEZE_CV bridge (Q_FZ 2N3904 + R_FZ_IN/PU/DIV) | Block 5 v6.1 — CV→gate transistor | — | — | — | $0.04 |
+| **Subtotal FX engine v6.1 (budget 2-stage phaser)** | | | | | **$37.86** |
+| **Subtotal FX engine v6.1 (premium 4-stage phaser, +U8 + cells 3/4)** | | | | | **$39.95** |
 
 **Net BOM change v5 → v6** (FX engine):
 - Removed: U_VINYL_555 (−$0.25) + U_TAP_CNT 74HC161 (−$0.30) + Shape Form SL-1P5T slider (−$3.00) + R-2R ladder 8R (−$0.40) + RV_DEPTH knob 100k (−$1.20) = **−$5.15**
