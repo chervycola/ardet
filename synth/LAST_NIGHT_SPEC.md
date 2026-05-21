@@ -520,9 +520,17 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 **Pedal-only**:
 - EXP IN (expression pedal jack, normalled к user-assignable target)
 
-**Audio outputs (back panel jacks):**
-- MAIN L / MAIN R (stereo TRS + RCA parallel)
-- DRY OUT / WET OUT (separate post-buffer taps)
+**Audio outputs (pedal SKU back panel — 1/4" TRS + RCA "тюльпаны" parallel-wired):**
+- IN (1/4" TRS + RCA in parallel) — instrument or line input
+- DRY OUT (1/4" TRS + RCA) — post-buffer dry split
+- WET OUT (1/4" TRS + RCA) — wet-only signal
+- MAIN L (1/4" TRS + RCA) — stereo main output left
+- MAIN R (1/4" TRS + RCA) — stereo main output right
+- 12V DC barrel jack (center-negative, 800mA min)
+
+**Total back panel**: 10 audio jacks (5 TRS + 5 RCA) + 1 DC jack. Each audio signal wired в parallel к both connector types — user patches whichever fits setup (1/4" для guitar/synth chain, RCA для DJ console or hi-fi monitor).
+
+**Audio I/O (Eurorack SKU front panel)**: same 5 audio signals on 3.5mm Thonkiconn (mini-jacks) per CV bay layout. No 1/4" или RCA на Eurorack SKU — connect через standard modular cables.
 
 ### Cartridge connector (внутри slot, идентичен в обеих SKU)
 
