@@ -446,7 +446,10 @@
     <text x="106" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">depth</text>
 
     <use href="#jack" x="116" y="128"/>
-    <text x="116" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">EG</text>
+    <text x="116" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">env</text>
+
+    <use href="#jack" x="126" y="128"/>
+    <text x="126" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">TRIG</text>
   </g>
 
   <!-- ============== LAYER: EXTRAS COLUMN (TOLL/STALL/SIDE/FREEZE + Gate/Sub/Inv) ============== -->
@@ -469,7 +472,7 @@
     <use href="#jack" x="161" y="115"/>
     <text x="161" y="122" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="1.9">FREEZE</text>
 
-    <!-- Row 2: Gate_OUT / Sub÷2_OUT / Inv_OUT (FG outputs) -->
+    <!-- Row 2: Gate_OUT / Sub÷2_OUT / Inv_OUT / EG_OUT (FG outputs) -->
     <use href="#jack" x="137" y="128"/>
     <text x="137" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Gate</text>
 
@@ -478,6 +481,9 @@
 
     <use href="#jack" x="153" y="128"/>
     <text x="153" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">Inv</text>
+
+    <use href="#jack" x="161" y="128"/>
+    <text x="161" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="1.9" font-weight="bold">EG OUT</text>
   </g>
 
   <!-- ============== LAYER: AUDIO OUTPUTS (DRY/WET, L/R) ============== -->

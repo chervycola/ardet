@@ -482,7 +482,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - boost CV (pre-emphasis shelf amount)
 - speed CV (FG rate / clock sync)
 
-**CV inputs (main row 2)**:
+**CV inputs (main row 2 — 11 jacks, aligned с row 1)**:
 - clock CV (TAP/CLK in для FG sync)
 - noise CV (noise generator level)
 - color CV (geiger crossfader: hiss ↔ ticks)
@@ -492,21 +492,30 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - rise CV (FG rise time mod)
 - fall CV (FG fall time mod)
 - depth CV (FG depth mod)
+- **env** — envelope follower output (Block 11 ENV_CAP buffered, 0–5V DC trace огибающей input audio)
+- **TRIG** — FG trigger input (gate, internally normalled от Block 11 envelope rising-edge detector)
 
-**Modular advanced (extras zone, frame-grouped):**
+**Modular advanced (extras zone, frame-grouped — 4 inputs row 1, 4 outputs row 2):**
+
+*Row 1 (inputs):*
 - **J_TOLL_TRIG** — solenoid strike trigger. Internally normalled от FG EOR (each FG peak → bell strike). Patch external = breaks norm.
 - **J_STALL_CV** — sustained CV for forced damper full hold (decay stuck minimum while high; max 5s continuous per thermal budget).
 - **J_SIDE** — sidechain input для envelope follower (normalled к main input; patch external для dub-style ducking).
-- **J_FREEZE_CV** — gate input для freeze. OR-logic с footswitch state — либо footswitch latched, либо CV > 0.7V → freeze active. Use cases: rhythmic stutter freezes, sequencer-driven freeze patterns.
+- **J_FREEZE_CV** — gate input для freeze. OR-logic с footswitch state — либо footswitch latched, либо CV > 0.7V → freeze active.
+
+*Row 2 (outputs):*
+- **Gate** — FG rise-active gate output (HIGH during rise phase, LOW during fall).
+- **Sub÷2** — FG ÷2 rate sub-output (flip-flop divider).
+- **Inv** — FG inverted main waveform.
+- **EG OUT** — FG main waveform output, scaled by `depth` slider (Tides-class function generator).
 
 **CV inputs (Phase 2 upgrade adds)**:
 - PULSE CV, FOG CV, FROST CV, CHILL CV, HUM CV
 
-**Outputs (CV)**:
-- **EG OUT** (main row 2) — FG main waveform output, scaled by depth slider. 0–5V envelope-style.
-- **Gate_OUT** (extras zone) — FG rise-active gate (HIGH during rise phase, LOW during fall).
-- **Sub÷2_OUT** (extras zone) — FG ÷2 rate sub-output (flip-flop divider).
-- **Inv_OUT** (extras zone) — FG inverted main waveform.
+**Outputs (CV) — summary (см. detailed list выше)**:
+- **EG OUT** (extras zone row 2 pos 4) — FG main wave output, scaled by depth slider.
+- **Gate / Sub÷2 / Inv** (extras zone row 2 pos 1-3) — FG aux outputs.
+- **env** (main row 2 pos 10) — envelope follower DC output (Block 11 ENV_CAP buffered).
 
 **Pedal-only**:
 - EXP IN (expression pedal jack, normalled к user-assignable target)

@@ -453,6 +453,57 @@ CMOS switch (4066 element) уже выделен в Block 18 BOM (one of 4 eleme
 - **D_ATK + D_DEC** added: independent charge/discharge paths.
 - **OTA2 unused** (note in original): tie inputs (pins 13, 14) and I_abc (pin 16) to GND.
 
+#### Envelope→Trigger comparator + external `env` output **[NEW v6.2]**
+
+ENV_CAP voltage (envelope follower DC level) разветвляется:
+1. Internal → R_IABC → U5 OTA1 Iabc (VCA control, как раньше).
+2. **New external**: ENV_CAP → buffer (TL072 spare half) → J_ENV jack (panel main row 2 pos 10) — envelope follower output для external CV destinations.
+3. **New trigger derivation**: ENV_CAP → R_TRIG_DIFF + C_TRIG_DIFF (RC differentiator 10мс) → LM393 second comparator half → trigger pulse on rising edges.
+
+```
+   ENV_CAP node ──┬──► R_IABC 10k ──► U5 OTA1 Iabc (internal VCA control)
+                  │
+                  ├──► U_ENV_BUF (TL072 spare half) ──► R_ENV_OUT 100R ──► J_ENV jack
+                  │                                     (envelope follower output,
+                  │                                      panel main row 2 pos 10)
+                  │
+                  ▼
+         R_TRIG_DIFF 10k ──► C_TRIG_DIFF 1µF film ──► comparator (+) input
+                                                              │
+                                                              │   R_TRIG_THRESH 22k → +5V
+                                                              │   R_TRIG_GND 22k → GND
+                                                              │   (Schmitt threshold +1V)
+                                                              ▼
+                                                      LM393 second half — outputs:
+                                                        HIGH on envelope rising edge
+                                                        LOW otherwise
+                                                              │
+                                                              ▼
+                                                      ENV_TRIG signal
+                                                              │
+                                                  ┌───────────┴──────┐
+                                                  ▼                  ▼
+                                          Internal normal      External J_TRIG jack
+                                          к J_TRIG (Block 16   (switching contact:
+                                          FG trigger input)    if external patched →
+                                                                breaks internal normal)
+```
+
+**RC differentiator** 10k × 1µF = 10мс time constant — captures envelope **rising edges** (audio attack onsets), не sustained level. Sharp attacks trigger FG once per onset; sustained tones не keep re-triggering.
+
+**Components for env→trigger + ext output**:
+| Ref | Value | Function |
+|-----|-------|----------|
+| U_ENV_BUF | TL072 spare half | Envelope buffer |
+| R_ENV_OUT | 100Ω 1% | Output protection |
+| R_TRIG_DIFF | 10kΩ 1% MF | Differentiator R |
+| C_TRIG_DIFF | 1µF MKS2 | Differentiator C |
+| R_TRIG_THRESH, R_TRIG_GND | 22kΩ ×2 1% MF | Schmitt threshold divider |
+| LM393 half | shared с Block 16 FG (LM393 second half) | Edge comparator |
+| J_ENV | 3.5mm panel jack | envelope output |
+
+**BOM add**: $0.30 (passives + jack — LM393 half reused free, TL072 buffer от existing U1/U3 spare half).
+
 ### Block 12. NOISE Generator + COLOR (Geiger) Crossfader **[REVISED v5 — hybrid layout]**
 
 > **v5 hybrid (Decision 09)**: mockup canon возвращает 2 отдельные ручки фронтенда (NOISE level + COLOR geiger crossfader). Internally — shared zener + LFSR architecture из Decision 08 сохраняется, но **knob mapping упрощён**: NOISE = output level (после crossfader), COLOR(geiger) = position of crossfader между continuous hiss и cluster ticks. CCW COLOR → full hiss, CW COLOR → full ticks, middle = mix.
@@ -973,12 +1024,85 @@ RV_SPEED — free analog pot. **Free-run mode**:
 
 **No detents** — smooth pot operation, sync is **continuous-multiplier following** rather than quantized division.
 
+#### FG trigger input + auto-mode logic **[NEW v6.2]**
+
+FG имеет **3 operating modes** — auto-switching без panel mode-select switch:
+
+```
+   FG operating modes (auto-determined by ATtiny85):
+   
+   1. Free-run (LFO) mode:
+      - Активен когда нет recent trigger activity (>5 секунд idle).
+      - FG continuously cycles на RV_SPEED rate.
+      - Classic LFO behaviour.
+   
+   2. Triggered one-shot mode:
+      - Активен когда J_TRIG receives gate (external sequencer / footswitch).
+      - Каждый rising edge → FG phase reset → выполняется ONE cycle (rise→peak→fall→0).
+      - После завершения cycle FG sits at 0 until next trigger.
+      - Classic ADSR envelope generator behaviour.
+   
+   3. Plate-triggered (signal-driven) mode:
+      - Активен когда J_TRIG не patched externally И envelope follower (Block 11) detects rising edges.
+      - Internal normal: ENV_TRIG (Block 11 envelope differentiator → comparator) → J_TRIG switching contact.
+      - Каждый attack onset на пластине → FG fires одноразовый cycle.
+      - Acoustic-driven envelope — для percussive/strummed input → каждый "удар" producer envelope sweep.
+   
+   Idle detection:
+      - ATtiny85 counts time since last trigger event (any source).
+      - >5 секунд idle → switches к free-run mode.
+      - Trigger received → switches к triggered mode на duration cycle + idle window.
+   
+   Mode 3 is "default sweet spot" — instrument input drives FG, FG drives phaser, phaser modulates reverb.
+   Без patching anything = signal-driven dynamic phaser sweeps.
+```
+
+#### J_TRIG topology
+
+```
+   J_TRIG mini-jack (3.5mm, switching contact)
+        │
+        │  When NO cable patched: switching contact closed
+        │   → internal ENV_TRIG signal (from Block 11) flows through
+        │
+        │  When cable patched: switching contact open
+        │   → external CV gate replaces internal normal
+        │
+        ▼
+   R_TRIG_IN 10k ──► Q_TRIG 2N3904 base (Schmitt input)
+                                  │
+                                  Q_TRIG_E → GND
+                                  Q_TRIG_C → R_TRIG_PU 10k → +5V
+                                            └─► ATtiny85 GPIO (PCINT input)
+   
+   ATtiny85 firmware on PCINT:
+     - Falling edge detected (active LOW от Q_TRIG collector)
+     - Reset FG integrator: discharge C_FG fast through MOSFET shunt switch
+     - Begin new rise cycle от 0V
+     - Set mode flag = TRIGGERED
+     - Reset idle counter
+```
+
+**Phase reset mechanism**: ATtiny85 GPIO drives Q_RESET 2N7000 N-MOSFET — when triggered, MOSFET briefly (1мс) shorts C_FG к GND → discharges integrator → cycle starts fresh.
+
+**Components**:
+| Ref | Value | Function |
+|-----|-------|----------|
+| J_TRIG | 3.5mm switching-contact jack | Trigger input (panel main row 2 pos 11) |
+| R_TRIG_IN | 10kΩ 1% MF | Input current limit |
+| Q_TRIG | 2N3904 | Schmitt buffer transistor |
+| R_TRIG_PU | 10kΩ 1% MF | Collector pull-up к +5V |
+| Q_RESET | 2N7000 | Phase reset MOSFET (C_FG shunt) |
+| R_RESET_G | 1kΩ 1% MF | Q_RESET gate stop |
+
+**BOM add**: $0.20 (BJT + MOSFET + resistors) + $0.40 (J_TRIG jack) = **$0.60**.
+
 #### TAP-tempo input
 
 Same as before:
 - TAP footswitch on pedal OR external J_CLK CV jack (any CMOS gate edge).
 - ATtiny85 measures interval, sets sync multiplier base period.
-- Phase reset on tap edge.
+- Phase reset on tap edge (separate from J_TRIG phase reset — TAP sets RATE, TRIG starts CYCLE).
 
 #### BOM (Block 16 revised v6)
 
