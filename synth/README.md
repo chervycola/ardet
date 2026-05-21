@@ -2,9 +2,15 @@
 
 Техническая документация по 9-модульной серии физического синтеза. Находится в thematically-связанном ардет-репозитории (игра о горящем городе) как параллельный проект.
 
+## ⚡ Для R&D dept и production team
+
+**Начать здесь**: **[`HANDOFF_BRIEF.md`](HANDOFF_BRIEF.md)** — executive brief с приоритетами, манифестом документации и hand-off checkpoints.
+
+**Обязательная визуализация**: **[`signal_flow_last_night.svg`](signal_flow_last_night.svg)** — структурная схема Last Night (10 функциональных зон, signal flow, modulation paths, perform gestures).
+
 ## Текущий статус
 
-**Phase**: design lock (Decision 09 v5 hybrid). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
+**Phase**: design lock (Decision 09 v6.2). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
 
 ## Структура
 
