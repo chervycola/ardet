@@ -1,14 +1,20 @@
-/* SYSTEM SUICIDE — single-module product page.
-   Reads ?m=<slug> from URL, looks the module up in MODULES + PRODUCT_PAGES,
-   and renders either a full detail page (is-my / and-my) or a CLASSIFIED
-   placeholder for the rest. */
+import { Fragment } from 'react';
+import { MODULES, PRODUCT_PAGES } from './data';
+import { XMark } from './motifs';
+import { RedactionBars } from './sections';
+import type {
+  Module,
+  ProductDetail,
+  StatRow,
+  ControlRow,
+} from './types';
 
-function getSlugFromURL() {
+export function getSlugFromURL(): string {
   const params = new URLSearchParams(window.location.search);
-  return params.get("m") || "last-night";
+  return params.get('m') ?? 'last-night';
 }
 
-function ProductBreadcrumb({ module: m }) {
+function ProductBreadcrumb({ module: m }: { module: Module }) {
   return (
     <div className="pp-breadcrumb">
       <a href="index.html">← System catalogue</a>
@@ -18,15 +24,15 @@ function ProductBreadcrumb({ module: m }) {
   );
 }
 
-function ProductHeader({ module: m }) {
-  const isShipping = m.phase.includes("SHIP");
+function ProductHeader({ module: m }: { module: Module }) {
+  const isShipping = m.phase.includes('SHIP');
   return (
     <header className="pp-header">
       <div className="pp-meta">
         <span className="t-eyebrow">M·{m.idx}</span>
         <span className="t-eyebrow">— {m.fn}</span>
         <span className="t-eyebrow">{m.hp} HP</span>
-        <span className={"t-eyebrow " + (isShipping ? "red" : "")}>{m.phase}</span>
+        <span className={'t-eyebrow ' + (isShipping ? 'red' : '')}>{m.phase}</span>
       </div>
       <h1 className="pp-title">{m.name}</h1>
       <div className="pp-line"></div>
@@ -34,7 +40,7 @@ function ProductHeader({ module: m }) {
   );
 }
 
-function ClassifiedBody({ module: m }) {
+function ClassifiedBody({ module: m }: { module: Module }) {
   return (
     <section className="pp-classified">
       <div className="cls-stamp">
@@ -47,8 +53,9 @@ function ClassifiedBody({ module: m }) {
       <p className="cls-blurb">
         This module is under embargo. Details — physical core, signal chain,
         controls and exchange components — are withheld until ship.
-        <br/>
-        For pre-order interest, write to <a href="mailto:workshop@systemsuicide.cc">workshop@systemsuicide.cc</a>.
+        <br />
+        For pre-order interest, write to{' '}
+        <a href="mailto:workshop@systemsuicide.cc">workshop@systemsuicide.cc</a>.
       </p>
 
       <div className="cls-block">
@@ -74,7 +81,7 @@ function ClassifiedBody({ module: m }) {
   );
 }
 
-function StatsTable({ stats }) {
+function StatsTable({ stats }: { stats: StatRow[] }) {
   return (
     <div className="pp-stats">
       {stats.map((s, i) => (
@@ -87,7 +94,7 @@ function StatsTable({ stats }) {
   );
 }
 
-function ControlsTable({ rows }) {
+function ControlsTable({ rows }: { rows: ControlRow[] }) {
   return (
     <div className="pp-controls">
       <div className="pp-controls-head">
@@ -99,22 +106,20 @@ function ControlsTable({ rows }) {
         <div key={i} className="pp-controls-row">
           <span className="ctrl">{r.ctrl}</span>
           <span className="fn">{r.fn}</span>
-          <span className="cv">{r.cv ? "✓" : "—"}</span>
+          <span className="cv">{r.cv ? '✓' : '—'}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function SigChain({ lines }) {
-  return (
-    <pre className="pp-sigchain">{lines.join("\n")}</pre>
-  );
+function SigChain({ lines }: { lines: string[] }) {
+  return <pre className="pp-sigchain">{lines.join('\n')}</pre>;
 }
 
-function RevealedBody({ module: m, detail }) {
+function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDetail }) {
   return (
-    <React.Fragment>
+    <Fragment>
       <section className="pp-quote-row">
         <p className="pp-quote">"{detail.quote}"</p>
         <p className="pp-intro">{detail.intro}</p>
@@ -127,7 +132,9 @@ function RevealedBody({ module: m, detail }) {
         </div>
         <div className="right">
           <h3 className="pp-h">Physical core</h3>
-          {detail.physical.map((p, i) => <p key={i} className="pp-p">{p}</p>)}
+          {detail.physical.map((p, i) => (
+            <p key={i} className="pp-p">{p}</p>
+          ))}
         </div>
       </section>
 
@@ -145,7 +152,7 @@ function RevealedBody({ module: m, detail }) {
         <section className="pp-block">
           <h3 className="pp-h">The pilot remote</h3>
           <p className="pp-p">{detail.remote.blurb}</p>
-          <pre className="pp-sigchain">{detail.remote.layout.join("\n")}</pre>
+          <pre className="pp-sigchain">{detail.remote.layout.join('\n')}</pre>
         </section>
       ) : null}
 
@@ -159,18 +166,23 @@ function RevealedBody({ module: m, detail }) {
       </section>
 
       <section className="pp-cta">
-        <a className="btn primary" href={`mailto:workshop@systemsuicide.cc?subject=Pre-order ${m.name}`}>
-          <span>Pre-order — write to workshop</span><span className="arrow">→</span>
+        <a
+          className="btn primary"
+          href={`mailto:workshop@systemsuicide.cc?subject=Pre-order ${m.name}`}
+        >
+          <span>Pre-order — write to workshop</span>
+          <span className="arrow">→</span>
         </a>
         <a className="btn" href="index.html#catalog">
-          <span>Back to catalogue</span><span className="arrow">→</span>
+          <span>Back to catalogue</span>
+          <span className="arrow">→</span>
         </a>
       </section>
-    </React.Fragment>
+    </Fragment>
   );
 }
 
-function NeighbourNav({ module: m }) {
+function NeighbourNav({ module: m }: { module: Module }) {
   const i = MODULES.findIndex((x) => x.slug === m.slug);
   const prev = MODULES[(i - 1 + MODULES.length) % MODULES.length];
   const next = MODULES[(i + 1) % MODULES.length];
@@ -188,7 +200,7 @@ function NeighbourNav({ module: m }) {
   );
 }
 
-function ProductPage({ slug }) {
+export function ProductPage({ slug }: { slug: string }) {
   const m = MODULES.find((x) => x.slug === slug);
   if (!m) {
     return (
@@ -197,7 +209,8 @@ function ProductPage({ slug }) {
           <h1 className="pp-title">404 / no such module</h1>
           <p className="pp-p">
             The slug "{slug}" does not exist in the catalogue.
-            <br/><a href="index.html">← Back to system</a>
+            <br />
+            <a href="index.html">← Back to system</a>
           </p>
         </div>
       </main>
@@ -205,7 +218,6 @@ function ProductPage({ slug }) {
   }
 
   const detail = PRODUCT_PAGES[slug];
-  const isShipping = m.phase.includes("SHIP");
 
   return (
     <main className="pp">
@@ -213,14 +225,14 @@ function ProductPage({ slug }) {
         <ProductBreadcrumb module={m} />
         <ProductHeader module={m} />
 
-        {detail ? <RevealedBody module={m} detail={detail} /> : <ClassifiedBody module={m} />}
+        {detail ? (
+          <RevealedBody module={m} detail={detail} />
+        ) : (
+          <ClassifiedBody module={m} />
+        )}
 
         <NeighbourNav module={m} />
       </div>
     </main>
   );
 }
-
-Object.assign(window, {
-  ProductPage, getSlugFromURL,
-});
