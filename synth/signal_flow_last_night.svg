@@ -53,7 +53,7 @@
 
   <!-- ========== TITLE BAR ========== -->
   <text x="148.5" y="10" class="label-title">LAST NIGHT — Signal Flow Architecture</text>
-  <text x="148.5" y="14" class="label-sub">System Suicide · Module 9 · Postapocalypse Reverberator · v6.2 production canon</text>
+  <text x="148.5" y="14" class="label-sub">System Suicide · Module 9 · Postapocalypse Reverberator · v6.3 production canon (engineering + sound audit applied)</text>
   <line x1="10" y1="16" x2="287" y2="16" stroke="#666666" stroke-width="0.2"/>
 
   <!-- ========== ZONE: INPUT SIGNAL PATH (Y 22-50) ========== -->
@@ -354,9 +354,9 @@
 
   <!-- ========== POWER + SKU (Y 195-205) ========== -->
   <line x1="10" y1="195" x2="287" y2="195" stroke="#cccccc" stroke-width="0.2"/>
-  <text x="10" y="199" class="label-sub" font-weight="bold">SKU: Eurorack 40HP (±12V bus) OR big-box pedal 203×140mm (12V DC + TRACO TMR 3-1212WI isolated DC-DC)</text>
-  <text x="10" y="202" class="label-sub">Phase 1 BOM: ~$101 budget / $127 premium. Phase 2 +$38 (cold palette daughter board: PULSE/FOG/FROST/CHILL/HUM).</text>
-  <text x="10" y="205" class="label-sub">Retail: $499 budget / $649 premium / $2499 Elite LE (25 serialized units per Decision 10).</text>
+  <text x="10" y="199" class="label-sub" font-weight="bold">SKU: Eurorack 40HP (±12V bus) OR big-box pedal 203×140mm (12V DC, 800mA min; +12V_RAW solenoid + isolated DC-DC audio).</text>
+  <text x="10" y="202" class="label-sub">Phase 1 BOM: ~$101 budget / $127 premium. Phase 2 +$38 (cold palette daughter board: PULSE/FOG/FROST/CHILL/HUM). MCU: ATtiny84A 14-pin.</text>
+  <text x="10" y="205" class="label-sub">Retail: $499 budget / $649 premium / $2499 Elite LE (25 serialized units per Decision 10). Pre-prod validation: SPICE Nyquist + blind A/B cartridge + Bank Mode listener test.</text>
 
   <!-- ========== LEGEND ========== -->
   <rect x="248" y="142" width="44" height="20" rx="0.6" fill="#fafafa" stroke="#888888" stroke-width="0.2"/>

@@ -46,7 +46,7 @@ Last Night — **постапокалипсис-ревербератор на с
 - **Сменные материальные картриджи** — никто другой не делает physical-plate reverb с swappable physical resonators.
 - **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (5-10мс impulse strike = пластина звенит как колокол независимо от input).
 - **Dual piezo с position crossfade** — два pickup-а на пластине, manual или CV blend.
-- **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (zener + LFSR shared internally), COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks (ATtiny85 LFSR + comparator pattern). Два sonic universe через 2 ручки (mockup canon).
+- **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (zener + LFSR shared internally), COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks (ATtiny84A LFSR + comparator pattern). Два sonic universe через 2 ручки (mockup canon).
 - **Always-on phaser** — analog 4-stage OTA, named effect. Phase/Flutter knob = continuous feedback intensity morph (subtle → resonant → controlled self-oscillation). LFO source = **analog Function Generator** с 3 sliders (rise/fall/depth) + 2 knobs (exp/log curve, speed/range). FG outputs exposed via 4 jacks (EG/Gate/Sub÷2/Inv). Bypass через footswitch BYPASS.
 - **Cold-palette FX layer (Phase 2)** — PULSE/FOG/FROST/CHILL/HUM — symmetric antipodes к hot-palette Last Day (HAZE/MIRAGE/BLEACH/TAR/CICADA/HEATWAVE).
 - **Modular-style CV patch bay** — 14+ CV inputs для full automation.
@@ -91,7 +91,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 
 **Phase 1 ship (ядро + базовые FX, mockup canon)**:
 
-1. **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (после shared crossfader), COLOR(geiger) = continuous crossfader от continuous zener hiss (CCW, BZX55C9V1) к Geiger cluster ticks (CW, ATtiny85 LFSR + comparator pattern). Internally один shared generator + OTA crossfader pair.
+1. **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (после shared crossfader), COLOR(geiger) = continuous crossfader от continuous zener hiss (CCW, BZX55C9V1) к Geiger cluster ticks (CW, ATtiny84A LFSR + comparator pattern). Internally один shared generator + OTA crossfader pair.
 2. **Phaser always-on + analog Function Generator** — 4-stage OTA all-pass (LM13700 U7+U8). Phase/Flutter knob = single continuous feedback intensity morph. LFO source = **analog FG** (Tides-class): rise/fall/depth sliders shape waveform, exp/log knob morphs curve, speed/range knob + clock sync set rate. 4 FG outputs (EG main, Gate rise-active, Sub÷2, Inv) exposed via panel jacks для patch-to-anything routing. Bypass через footswitch BYPASS.
 3. **Gate / Crush** — footswitch destruction: 4066 CMOS gate + LF398 sample-hold bitcrush.
 4. **Solenoid triple-function** через CV-only triggers (modular-advanced features): **DAMP** (J_CV_DAMP envelope CV), **TOLL** (J_TOLL_TRIG gate → 555 monostable → 5–10мс strike pulse), **STALL** (J_STALL_CV sustained hold).
@@ -284,8 +284,8 @@ Customer может start с pedal (для studio/live performance), позже 
 | **THD** (100мВ input, mid drive) | <0.5% |
 | **Phaser depth** | 0–100% (4-stage all-pass) |
 | **Phaser SPEED range** | 0.05–10 Гц |
-| **Noise generator architecture** | Shared zener (BZX55C9V1) + ATtiny85 LFSR cluster ticks. NOISE knob = output level; COLOR(geiger) knob = continuous crossfader (CCW = hiss, CW = ticks) |
-| **Geiger tick rate** | 0.5–20 events/sec @ random cluster pattern (ATtiny85 LFSR) |
+| **Noise generator architecture** | Shared zener (BZX55C9V1) + ATtiny84A LFSR cluster ticks. NOISE knob = output level; COLOR(geiger) knob = continuous crossfader (CCW = hiss, CW = ticks) |
+| **Geiger tick rate** | 0.5–20 events/sec @ random cluster pattern (ATtiny84A LFSR) |
 | **Solenoid double-function** | DAMP sustained (CV) + TOLL impulse (5–10мс via J_TOLL_TRIG monostable) + STALL hold (J_STALL_CV forced) — CV-only triggers, no footswitch |
 | **Maximum input** | +20 dBu (line level), +15 dBu typical |
 | **Maximum output** | +12 dBu |
@@ -412,7 +412,7 @@ Customer может start с pedal (для studio/live performance), позже 
 | 11 | **HiPass** | Pot lin | HPF cutoff post-pickup (dual-filter design) | ✓ HiPass CV |
 | 12 | **TONE** | Pot lin | Master tone tilt EQ | ✓ TONE CV |
 | 13 | **NOISE** | Pot log | Noise generator output level (shared zener + LFSR architecture, см. BUILD §Block 12) | ✓ NOISE CV |
-| 14 | **COLOR (geiger)** | Pot lin | Crossfader noise character: CCW = continuous zener hiss → CW = Geiger cluster ticks (ATtiny85 LFSR). Параллельно работает LPF colour filter (white → brown). | ✓ COLOR CV |
+| 14 | **COLOR (geiger)** | Pot lin | Crossfader noise character: CCW = continuous zener hiss → CW = Geiger cluster ticks (ATtiny84A LFSR). Параллельно работает LPF colour filter (white → brown). | ✓ COLOR CV |
 | 15 | **PHASE/FLUTTER** | Pot log | Phaser feedback / resonance peak. **Always-on named effect** | — |
 | 16 | **rise** slider | Vertical 30mm linear slider + exp converter | FG rise time (1ms–10s exponential) | ✓ rise CV |
 | 17 | **fall** slider | Vertical 30mm linear slider + exp converter | FG fall time (1ms–10s exponential) | ✓ fall CV |
@@ -1014,7 +1014,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 ### Software/firmware updates (если v2 noise generator с MCU)
 
-Если future version имеет ATtiny85 для Geiger-pattern noise:
+Если future version имеет ATtiny84A для Geiger-pattern noise:
 - USB-DFU update через bootloader (no programmer needed).
 - Update file посылается customer email при release.
 - Backwards compatible: original analog mode остаётся accessible.

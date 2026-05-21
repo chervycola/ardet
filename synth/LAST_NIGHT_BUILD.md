@@ -2,10 +2,20 @@
 
 > Production-ready документация: схемы, BOM, PCB layout, последовательность сборки, тестирование, troubleshooting.
 
-> **Версия**: v5.0 (hybrid lock, Decision 09).
-> Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE (вместо KILL/FREEZE/TOLL/STALL); phaser always-on (без ON/OFF toggle); **v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv)**. Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid double-function (DAMP + TOLL), но TOLL/STALL — **CV-only triggers** (J_TOLL_TRIG, J_STALL_CV) не footswitches. Gate/Crush блок 18 **восстановлен** как footswitch destruction effect.
+> **Версия**: v6.3 (final engineering + sound design audit pass).
+> 
+> **v6.3 audit changes (vs v6.2)**:
+> - 🔴 Solenoid power split — pulls от +12V_RAW pre-DC-DC (audio rail no longer sags на TOLL pulse).
+> - 🔴 MCU upgrade ATtiny85 → **ATtiny84A** (14-pin DIP) — v6.2 features require 9+ GPIO, ATtiny85 only 5.
+> - 🟡 LM393 reallocation — Block 11 env→trigger uses Block 18 U_COMP unused second half (originally tagged "tap detection" но TAP routes к MCU PCINT directly).
+> - 🟡 U4C double-allocation resolved — Block 9 de-emphasis moved к U2C, Block 7 keeps U4C exclusively.
+> - 🟡 RV_TRIG_THRESH 100k trim added — adjustable FG trigger sensitivity (Block 11 → Block 16).
+> - 🔵 RV_TOLL_DUR 22-100k trim added — 5-22ms TOLL pulse adjustable per cartridge material (Block 14).
+> - Production verification protocol expanded — SPICE Nyquist, blind A/B tests, thermal endurance (see `HANDOFF_BRIEF.md` §6).
+> 
+> **Прежняя версия (v5.0)**: Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE; phaser always-on; v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv). Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid triple-function (DAMP + TOLL + STALL). Gate/Crush блок 18 восстановлен как footswitch destruction effect.
 
-**Версия**: v2.2 (post-audit, post-decisions)
+**Версия**: v6.3 (post-audit, post-decisions)
 **Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
 **Companion document**: `LAST_NIGHT_SPEC.md` (продуктовая спецификация для end-user)
 
@@ -56,7 +66,7 @@
   │ 2×5    │  Pin 1 = -12V          C1,C2 → U1    C5,C6 → U3    C9,C10 → U5
   └────────┘  Red stripe = -12V     C3,C4 → U2    C7,C8 → U4    C11,C12 → U6 (phaser)
 
-  +5V LDO (для ATtiny85 + LEDs):
+  +5V LDO (для ATtiny84A + LEDs):
   +12V ──► 7805 → +5V (50мА)
 ```
 
@@ -64,7 +74,7 @@ Power budget Eurorack:
 - Audio analog: 150мА steady (TL072×2 + TL074×2 + 2×LM13700 + LSK489A).
 - Driver amp: 100мА average.
 - Solenoid pulse: 300мА peak (intermittent).
-- ATtiny85 + LEDs: 50мА.
+- ATtiny84A + LEDs: 50мА.
 - Phaser + vinyl modulation circuits: 50мА.
 - **Total**: ~250мА steady, ~500мА peak.
 
@@ -76,10 +86,14 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
   12V DC jack (center-negative) ──► D_P1 (1N5817 reverse protection)
                                           │
                                           ▼
-                                       +12V rail ──┬── 7805 LDO ──► +5V (digital +МCU)
-                                                   │
-                                                   ▼
-                                           TRACO TMR 3-1212WI
+                                       +12V_RAW bus ──┬── 7805 LDO ──► +5V (digital + MCU)
+                                                      │
+                                                      ├── SOLENOID DRIVER (Block 14)
+                                                      │    direct supply — high-current pulse path,
+                                                      │    bypasses isolated DC-DC barrier
+                                                      │
+                                                      ▼
+                                              TRACO TMR 3-1212WI
                                            (isolated DC-DC, 3W,
                                             ±12V output, 125мА на rail)
                                                    │
@@ -103,6 +117,13 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
                                                                               ║
                               ╚═══════════════════════════════════════════════╝
 
+  ⚠ Power routing rules:
+  - +12V_audio = ONLY analog signal-processing ICs (op-amps, OTAs, comparators)
+  - +12V_RAW   = solenoid driver (Block 14), LDO для digital +5V
+  - GND_audio  = isolated barrier; GND_pedal-board = chassis side
+  - Solenoid 290mA switching transients stay outside isolated audio supply
+    → audio rail не сагает на TOLL/STALL events
+
   Decoupling: 100nF per IC + 10µF на LM13700/MCU (same as Eurorack).
 
   External: 12V DC center-negative, 500мА min, regulated.
@@ -121,12 +142,17 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 
 **Recommend**: **TRACO TMR 3-1212WI** budget SKU, **Recom RKD-1212-D** premium SKU. Both isolated → break ground loops с другими pedals на pedalboard.
 
-**Power budget Pedal**:
-- Audio analog (±12V): 150мА steady, 250мА peak.
-- Digital +5V: 50мА.
-- Solenoid pulse: 300мА peak (от +12V rail, low-side switched, intermittent).
-- LEDs + footswitch indicators: 30мА.
-- **Total**: ~250мА steady, **~500мА peak с solenoid + max FX**.
+**Power budget Pedal** (segregated по supply rail):
+
+| Rail | Source | Steady | Peak | Notes |
+|------|--------|--------|------|-------|
+| **+12V_audio** (DC-DC output) | TRACO TMR 3-1212WI 125mA / Recom RKD-1212-D 250mA | 80mA | 120mA | Audio op-amps + OTAs + FG. Comfortable margin на TRACO. |
+| **−12V_audio** (DC-DC output) | (same DC-DC) | 50mA | 80mA | OP-amps negative rail. |
+| **+5V_digital** (LDO output) | 7805 от +12V_RAW | 40mA | 60mA | ATtiny84A + LEDs + LM393. |
+| **+12V_RAW** (input direct, pre-DC-DC) | external PSU | — | **290mA peak (solenoid TOLL pulse)** | Solenoid driver direct. Intermittent. |
+
+- **External PSU requirement**: 12V DC center-negative, **800mA min** (был 500mA — увеличен для solenoid headroom + DC-DC inefficiency).
+- **Solenoid isolated from audio supply** — критичный fix vs v6.0 (где TOLL transient просаживал audio rail).
 
 > **Headroom benefit**: ±12V audio rails (через isolated DC-DC) дают **identical performance к Eurorack version** — same TL072/TL074/LM13700 spec'd at ±12V get full +15 dBu max output. Audio path **бит-в-бит идентичен** между обеими SKU.
 
@@ -367,7 +393,9 @@ CMOS switch (4066 element) уже выделен в Block 18 BOM (one of 4 eleme
   For stereo: A and B also go directly to L/R outputs BEFORE crossfade.
 ```
 
-### Block 9. De-Emphasis EQ (U4C — TL074)
+### Block 9. De-Emphasis EQ (U2C — TL074) **[REVISED v6.3 — U4C → U2C re-assignment]**
+
+> **v6.3 op-amp reallocation**: U4C ранее double-allocated (Block 7 piezo preamp + Block 9 de-emphasis). De-emphasis перемещён к U2C (spare U2 TL074 quarter, was unused в v6.2 BOM). Block 7 retains exclusive use of U3B + U4C.
 
 ```
   Mirror of Pre-Emphasis (Block 3). Same topology, configured for CUT:
@@ -498,8 +526,8 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 | R_ENV_OUT | 100Ω 1% | Output protection |
 | R_TRIG_DIFF | 10kΩ 1% MF | Differentiator R |
 | C_TRIG_DIFF | 1µF MKS2 | Differentiator C |
-| R_TRIG_THRESH, R_TRIG_GND | 22kΩ ×2 1% MF | Schmitt threshold divider |
-| LM393 half | shared с Block 16 FG (LM393 second half) | Edge comparator |
+| **RV_TRIG_THRESH** | 100kΩ trim multi-turn (Bourns 3296W) | **Adjustable Schmitt threshold** (replaces fixed R_TRIG_THRESH/GND divider). Default mid → ~1V threshold. CCW → 0.3V (sensitive, для soft picking / acoustic instruments). CW → 3V (only loud transients trigger). Set-and-forget на сборке per customer preference. |
+| LM393 half | **shared с Block 18 U_COMP** (Gate threshold comparator chip — second half originally tagged "tap detection" но TAP уходит к ATtiny84A PCINT directly, поэтому U_COMP OUT2 free). | Edge comparator (env→trigger) |
 | J_ENV | 3.5mm panel jack | envelope output |
 
 **BOM add**: $0.30 (passives + jack — LM393 half reused free, TL072 buffer от existing U1/U3 spare half).
@@ -528,7 +556,7 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
   +5V (LDO from +12V via 7805)
     │
     ▼
-  ATtiny85 (firmware: LFSR + cluster timing + comparator threshold sweep)
+  ATtiny84A (firmware: LFSR + cluster timing + comparator threshold sweep)
     │
     ├─ PWM_OUT ──► R_LPF (10kΩ) ── C_LPF (10nF) ──► [tick output B]
     │
@@ -560,7 +588,7 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 - **RV_COLOR (geiger)**: Alpha RV09 9mm 100kΩ lin, standard pot (no detent — full sweep).
 - **OTA crossfader**: использует обе половины LM13700 (U6 spare OTA pair) с complementary Iabc currents.
 - **D_NOISE BZX55C9V1**: zener (continuous hiss noise source).
-- **ATtiny85-20PU**: LFSR + cluster pattern generator (continuous-time output).
+- **ATtiny84A-PU**: LFSR + cluster pattern generator (continuous-time output).
 - **U2C TL074**: noise amp ×100 для zener.
 - **R_LPF, C_LPF**: smoothing для ATtiny PWM output.
 
@@ -612,7 +640,14 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 > All three пути OR-combined в gate Q5 MOSFET. Whichever signal highest wins.
 
 ```
-  +12V (audio rail)
+  +12V_RAW (pre-DC-DC, прямо с input jack для pedal SKU;
+            +12V Eurorack bus для Eurorack SKU)
+            
+  ⚠ КРИТИЧНО: solenoid питается от +12V_RAW, НЕ от +12V audio rail
+     (после isolated DC-DC). Pedal SKU TRACO TMR 3-1212WI обеспечивает
+     лишь 125mA per rail — solenoid pulls 290mA peak → audio rail
+     просядет → audio artifacts. Solenoid loop wired напрямую к
+     +12V_RAW bus, отдельно от audio supply.
     │
     │    ┌────────────┐
     │    │  SOLENOID  │   Three CV inputs feed driver via OR-gate (diode-OR):
@@ -621,11 +656,11 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
     │    └──────┬─────┘                                                  │
     │           │                                                       D_OR_A (1N4148)
     │      D_SOL (1N4001)                                                 │
-    │     ──|◄── (flyback)   J_TOLL_TRIG (5V gate trigger) ──► U_555      │
+    │     ──|◄── (flyback, к +12V_RAW)   J_TOLL_TRIG (5V gate) ──► U_555  │
     │           │                                                  │     │
     │      ┌────┴────┐       NE555 monostable: 5-10мс pulse        │     │
-    └──────│ Drain   │       (R_555=47k, C_555=220n → ~11мс)        │     │
-           │ Q5 2N7000│                                              ▼     │
+    └──────│ Drain   │       (R_555_TRIM=22-100k trim,             │     │
+           │ Q5 2N7000│        C_555=220n → 5-22мс adjustable)      ▼     │
       Gate◄│         │◄──────── R_GATE (10kΩ) ── OR-node ◄──── D_OR_B ────┘
            │ Source  │                              ▲              (1N4148)
            └────┬────┘                              │
@@ -664,7 +699,7 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 
 **Components (v5 hybrid)**:
 - **U_TOLL_555**: NE555 monostable timer для 5–10мс pulse generation на J_TOLL_TRIG.
-- **R_555**: 47kΩ + **C_555**: 220nF → pulse width = 1.1 × RC = ~11ms.
+- **RV_TOLL_DUR**: 22-100kΩ multi-turn trim (Bourns 3296W) + **C_555**: 220nF → pulse width = 1.1 × RC = **5-22ms adjustable**. Per-cartridge tuning: dense materials (stone/nephrite) want longer pulse (~15ms), light materials (wood/spring steel) prefer shorter (~7ms). Trim set on assembly или customer-tunable via case access hole.
 - **D_OR_A, D_OR_B, D_OR_C**: 3× 1N4148 diodes для diode-OR (трёхвходовой) combining DAMP / TOLL / STALL paths.
 - **R_GATE**: 10kΩ gate-stop на Q5 (защита от ringing).
 
@@ -715,9 +750,9 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 **Mitigation (mandatory, добавить в v5.1 schematic)**:
 
 1. **PWM dimming для STALL mode** — после initial 50ms "pull-in" pulse @ 100% duty, drop к **40% duty cycle** для "hold". Hold force достаточен (~100 g·f), power drops к **0.58W → ΔT +87 °C** (safe).
-   - Implementation: ATtiny85 detects STALL CV high → generates PWM на secondary gate path → ORed после diode network.
+   - Implementation: ATtiny84A detects STALL CV high → generates PWM на secondary gate path → ORed после diode network.
    - Or: simpler RC slow-charge на gate node → MOSFET self-throttles после ~50ms.
-2. **Thermal sense** (optional, premium SKU): 10kΩ NTC thermistor glued к solenoid bobbin → ADC monitored by ATtiny85 → если T > 70°C, force STALL=OFF независимо от CV input.
+2. **Thermal sense** (optional, premium SKU): 10kΩ NTC thermistor glued к solenoid bobbin → ADC monitored by ATtiny84A → если T > 70°C, force STALL=OFF независимо от CV input.
 3. **User documentation**: STALL specified как **"momentary hold, max 5 seconds continuous"**. Beyond that — hardware throttle kicks in.
 
 **Q5 MOSFET (2N7000) thermal budget**:
@@ -746,13 +781,13 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 
 | Item | Δ from baseline | Cost |
 |------|-----------------|------|
-| **PWM gate path** (ATtiny85 firmware + 1× extra 1N4148 diode in OR network) | New OR input | $0.01 (diode) |
+| **PWM gate path** (ATtiny84A firmware + 1× extra 1N4148 diode in OR network) | New OR input | $0.01 (diode) |
 | **NTC 10kΩ thermistor** (premium SKU only) | Optional | $0.50 |
 | **Heatsink на Q5** (paranoid, не нужен по расчёту) | Optional | $0.30 |
 | **User-facing warning** в SPEC.md: "STALL = momentary, max 5s" | Documentation | — |
 
 **Recommendation**:
-- **Phase 1 ship**: PWM throttle для STALL в ATtiny85 firmware. Mandatory. Adds 1 diode (~$0.01) + ~50 bytes firmware.
+- **Phase 1 ship**: PWM throttle для STALL в ATtiny84A firmware. Mandatory. Adds 1 diode (~$0.01) + ~50 bytes firmware.
 - **Phase 2 premium**: Add NTC thermistor + ADC monitoring для belt-and-suspenders safety. +$0.50.
 
 #### Verification (thermal)
@@ -764,7 +799,7 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
 
 ### Block 15. Reserved (was Geiger Pattern, теперь часть Block 12)
 
-> Geiger pattern generator (ATtiny85 LFSR) **полностью описан в Block 12** как часть NOISE+COLOR(geiger) crossfader implementation. Slot 15 зарезервирован для будущих расширений (например, Phase 2 v3 PCB add-ons).
+> Geiger pattern generator (ATtiny84A LFSR) **полностью описан в Block 12** как часть NOISE+COLOR(geiger) crossfader implementation. Slot 15 зарезервирован для будущих расширений (например, Phase 2 v3 PCB add-ons).
 
 ### Block 16. Phaser — 4-stage OTA all-pass (detailed schematic) **[REVISED v5 hybrid]**
 
@@ -1008,11 +1043,11 @@ Rise/fall sliders feed **analog exp converter** для musical taper:
 #### Speed/range knob + clock sync (continuous, no detents) **[NEW v6]**
 
 RV_SPEED — free analog pot. **Free-run mode**:
-- ADC mapping (ATtiny85): RV_SPEED 0-100% → exponential rate 0.05 Hz – 50 Hz (4 decades).
+- ADC mapping (ATtiny84A): RV_SPEED 0-100% → exponential rate 0.05 Hz – 50 Hz (4 decades).
 - Range select via secondary effects: SW_FG_RANGE (3-pos slide switch) swaps C_FG 1µF (slow) / 100nF (mid) / 10nF (fast).
 
 **Clock-sync mode** (activates when TAP_IN or CLK_IN gates received within last 5 seconds):
-- ATtiny85 measures T (interval between TAPs или CLK gates).
+- ATtiny84A measures T (interval between TAPs или CLK gates).
 - RV_SPEED ADC reading remaps к continuous multiplier:
   - CCW (0%) = ×8 slower (T × 8)
   - 25% = ×4 slower
@@ -1020,7 +1055,7 @@ RV_SPEED — free analog pot. **Free-run mode**:
   - 75% = ×4 faster (T / 4)
   - CW (100%) = ×8 faster (T / 8)
 - Mapping: exponential continuous (~1 octave per 12.5% rotation).
-- ATtiny85 PWM output → LPF → biases integrator current source (parallel к exp converter output).
+- ATtiny84A PWM output → LPF → biases integrator current source (parallel к exp converter output).
 
 **No detents** — smooth pot operation, sync is **continuous-multiplier following** rather than quantized division.
 
@@ -1029,7 +1064,7 @@ RV_SPEED — free analog pot. **Free-run mode**:
 FG имеет **3 operating modes** — auto-switching без panel mode-select switch:
 
 ```
-   FG operating modes (auto-determined by ATtiny85):
+   FG operating modes (auto-determined by ATtiny84A):
    
    1. Free-run (LFO) mode:
       - Активен когда нет recent trigger activity (>5 секунд idle).
@@ -1049,7 +1084,7 @@ FG имеет **3 operating modes** — auto-switching без panel mode-select 
       - Acoustic-driven envelope — для percussive/strummed input → каждый "удар" producer envelope sweep.
    
    Idle detection:
-      - ATtiny85 counts time since last trigger event (any source).
+      - ATtiny84A counts time since last trigger event (any source).
       - >5 секунд idle → switches к free-run mode.
       - Trigger received → switches к triggered mode на duration cycle + idle window.
    
@@ -1073,9 +1108,9 @@ FG имеет **3 operating modes** — auto-switching без panel mode-select 
                                   │
                                   Q_TRIG_E → GND
                                   Q_TRIG_C → R_TRIG_PU 10k → +5V
-                                            └─► ATtiny85 GPIO (PCINT input)
+                                            └─► ATtiny84A GPIO (PCINT input)
    
-   ATtiny85 firmware on PCINT:
+   ATtiny84A firmware on PCINT:
      - Falling edge detected (active LOW от Q_TRIG collector)
      - Reset FG integrator: discharge C_FG fast through MOSFET shunt switch
      - Begin new rise cycle от 0V
@@ -1083,7 +1118,7 @@ FG имеет **3 operating modes** — auto-switching без panel mode-select 
      - Reset idle counter
 ```
 
-**Phase reset mechanism**: ATtiny85 GPIO drives Q_RESET 2N7000 N-MOSFET — when triggered, MOSFET briefly (1мс) shorts C_FG к GND → discharges integrator → cycle starts fresh.
+**Phase reset mechanism**: ATtiny84A GPIO drives Q_RESET 2N7000 N-MOSFET — when triggered, MOSFET briefly (1мс) shorts C_FG к GND → discharges integrator → cycle starts fresh.
 
 **Components**:
 | Ref | Value | Function |
@@ -1101,7 +1136,7 @@ FG имеет **3 operating modes** — auto-switching без panel mode-select 
 
 Same as before:
 - TAP footswitch on pedal OR external J_CLK CV jack (any CMOS gate edge).
-- ATtiny85 measures interval, sets sync multiplier base period.
+- ATtiny84A measures interval, sets sync multiplier base period.
 - Phase reset on tap edge (separate from J_TRIG phase reset — TAP sets RATE, TRIG starts CYCLE).
 
 #### BOM (Block 16 revised v6)
@@ -1220,7 +1255,7 @@ GATE-CRUSH latching footswitch активирует **two-stage destruction chai
    │                  │              │                        │
    │                  │              ▼                        │
    │                  │      Sample clock pin 8               │
-   │                  │      ◄── от ATtiny85 PWM (8kHz–62kHz) │
+   │                  │      ◄── от ATtiny84A PWM (8kHz–62kHz) │
    │                  │              │                        │
    │                  │              ▼                        │
    │                  │      LF398 output ──► R_R2R network   │
@@ -1299,7 +1334,7 @@ GATE-CRUSH latching footswitch активирует **two-stage destruction chai
                                        │
                                        │  pin 8 LOGIC (sample command)
                                        │     │
-                                       │     ◄── ATtiny85 OC1A PWM output
+                                       │     ◄── ATtiny84A OC1A PWM output
                                        │         (square wave, var. freq)
                                        │
                                        ▼
@@ -1326,8 +1361,8 @@ GATE-CRUSH latching footswitch активирует **two-stage destruction chai
                                    loss → audible bitcrush artefact)
 ```
 
-**Sample rate control (ATtiny85 PWM)**:
-- ATtiny85 Timer1 PWM output (pin 6, OC1A) generates square wave.
+**Sample rate control (ATtiny84A PWM)**:
+- ATtiny84A Timer1 PWM output (pin 6, OC1A) generates square wave.
 - ATtiny shared с Block 12 LFSR (Geiger pattern) и Block 16 TAP-tempo divider.
 - Firmware allocation:
   - Timer0: LFSR clock (4MHz internal / 256 → 15.6kHz)
@@ -1370,18 +1405,30 @@ GATE-CRUSH latching footswitch активирует **two-stage destruction chai
 - Remaining 2 switches: S3 (gate VCA) + spare для future expansion.
 - Relay would add $5+ cost и electromechanical click.
 
-#### ATtiny85 firmware allocation (shared chip с Block 12 + Block 16)
+#### ATtiny84A firmware allocation (shared chip с Block 12 + Block 14 + Block 16 + Block 18)
 
-| Timer / pin | Function | Block |
-|-------------|----------|-------|
-| Timer0 / pin 5 OC0A | LFSR Geiger clock | 12 |
-| Timer1 / pin 6 OC1A | Crush sample PWM | 18 |
-| ADC1 / pin 7 | RV_CRUSH (sample rate set) | 18 |
-| ADC2 / pin 3 | TAP-tempo input (Schmitt) | 16 |
-| ADC3 / pin 2 | RV_GEIGER (LFSR rate) | 12 |
-| pin 1 (RESET) | Reserved | — |
+ATtiny84A (14-pin DIP, ATMEL family) — 12 GPIO + 8 ADC channels. Allocation:
 
-**Firmware size**: ~512 bytes (ATtiny85 has 8KB flash, ample headroom).
+| Pin (PA/PB) | Function | Direction | Block |
+|-------------|----------|-----------|-------|
+| pin 1 VCC | +5V supply | — | — |
+| pin 2 PB0 (OC0A) | LFSR Geiger clock output | output PWM | 12 |
+| pin 3 PB1 (OC0B) | Crush sample PWM | output PWM | 18 |
+| pin 4 PB3 (RESET) | Reserved (programming) | — | — |
+| pin 5 PB2 (INT0/OC1A) | FG speed bias PWM | output PWM | 16 |
+| pin 6 PA7 (OC1B) | STALL PWM throttle output | output PWM | 14 |
+| pin 7 PA6 (ICP1) | TAP input (capture) | input | 16 |
+| pin 8 PA5 (MISO) | FG TRIG input (PCINT) | input (interrupt) | 16 |
+| pin 9 PA4 (SCK/ADC4) | NTC thermistor read (premium SKU) | input ADC | 14 |
+| pin 10 PA3 (ADC3) | RV_GEIGER (LFSR rate) | input ADC | 12 |
+| pin 11 PA2 (ADC2) | RV_CRUSH (sample rate) | input ADC | 18 |
+| pin 12 PA1 (ADC1) | RV_SPEED (FG rate) | input ADC | 16 |
+| pin 13 PA0 (ADC0) | reserved (future expansion) | — | — |
+| pin 14 GND | ground | — | — |
+
+**Pin distribution rationale**: Timer0 для слабо-критичных PWM (LFSR clock + crush sample). Timer1 для precision PWM (FG speed bias). PCINT для async trigger events. ADC inputs grouped on PA port для shared sample-and-hold circuit efficiency.
+
+**Firmware size estimate**: ~2KB (ATtiny84A has 8KB flash, comfortable headroom для PID loops + LFSR + timing).
 
 #### Components per stage
 
@@ -1414,7 +1461,7 @@ GATE-CRUSH latching footswitch активирует **two-stage destruction chai
 | LED_DEST | 3mm red | Kingbright L-7104ID | $0.10 |
 | R_LED | 1kΩ | YAGEO MFR-25 | $0.05 |
 
-**ATtiny85 shared** — chip уже включён в Block 12 BOM, дополнительно за Block 18 не считается.
+**ATtiny84A shared** — chip уже включён в Block 12 BOM, дополнительно за Block 18 не считается.
 
 #### BOM (Block 18, новые компоненты)
 
@@ -1464,7 +1511,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
                                   │       │          │
                                   ▼       ▼          ▼
                           TRACO TMR 3-1212WI       7805 LDO ──► +5V
-                          (or Recom RKD-1212-D     (для ATtiny85,
+                          (or Recom RKD-1212-D     (для ATtiny84A,
                            для premium)             logic)
                                   │
                           ╔═══════ ISOLATION ═══════╗
@@ -1507,7 +1554,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 
 **Power budget pedal (with TMR 3-1212WI)**:
 - Audio analog (±12V via DC-DC): ~125mA на rail steady, peak 250mA.
-- Digital +5V (для ATtiny85 + LEDs): ~50mA.
+- Digital +5V (для ATtiny84A + LEDs): ~50mA.
 - Solenoid pulse: 300mA peak (от +12V rail, low-side switched, intermittent).
 - LEDs + footswitch indicators: 30mA.
 - **Total**: ~250mA steady, ~500mA peak (с solenoid).
@@ -1665,8 +1712,9 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 #### Verification
 
 - **A/B switch test**: passing 1kHz sine через каждую позицию, измерить EQ response с audio analyzer. Должно match таблицу выше ±1dB.
-- **THD test**: на DARK position при +6dBu input → THD должна быть 5–10% (heavy saturation). На MIX position → 3–5%. На COLOR raw → <0.5%.
+- **THD test**: на DARK position при +6dBu input → THD должна быть 5–10% (heavy saturation). На MIX position → 3–5%. На DIRTY position → 3–5%.
 - **Click-free switching**: переключение между позициями не должно давать audible pop. Если pop — добавить muting cap (10µF) на slider's common node.
+- **🟡 [CRITICAL — Production sign-off]**: **Bank Mode preset blind A/B listener test**. Sample audio: reverb tail на oak cartridge с identical input (pink noise burst + percussive transient). 10 listeners blind, name preset (DIRTY/WARM/DARK/VOICE/MIX) из звука. **Target accuracy: >70%**. Если меньше — adjust R-bank values. VOICE specifically known weak — может потребовать +4dB @ 2kHz boost вместо +2dB.
 
 #### Why slider, не rotary switch
 
@@ -2129,9 +2177,9 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
   - Blocks 21–25: cold palette FX layer (Phase 2 v3 PCB upgrade — PULSE/FOG/FROST/CHILL/HUM).
 - **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell) + LF398 (Crush cell).
 - **10 ICs analog (premium 4-stage phaser)**: + **U8 LM13700** для phaser cells 3+4.
-- **2 dual comparators**: LM393 ×2 (Block 18 Gate threshold + Block 16 FG Gate_OUT/EOR detect).
+- **2 dual comparators**: LM393 ×2 — U_COMP (Block 18 Gate threshold + **Block 11 env→trigger reused второй half**) + U_FG_GATE (Block 16 FG Gate_OUT + EOR detect). All 4 halves utilized.
 - **1 D flip-flop**: 74HC74 (Block 16 FG Sub÷2 output divider).
-- **1 MCU**: ATtiny85 (Geiger LFSR cluster pattern + crush sample clock + FG clock sync continuous multiplier).
+- **1 MCU**: ATtiny84A (Geiger LFSR cluster pattern + crush sample clock + FG clock sync continuous multiplier).
 - **1 timer**: NE555 (Block 14 TOLL pulse monostable). *vinyl-skip NE555 удалён в v6 — заменён analog FG.*
 - **6 transistors discrete**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver).
 - **6× 2N3904** (Block 16 FG exp converters — 3 matched pairs для rise/fall/depth sliders).
@@ -2165,7 +2213,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 | U_SH | LF398N | Sample-and-hold (Crush cell) | DIP-8 | 1 | $1.20 | $1.20 | TI |
 | U_COMP | LM393 | Dual comparator (Gate threshold + Tap-tempo detection) | DIP-8 | 1 | $0.30 | $0.30 | TI |
 | U_SPLIT | TL072CP (extra half) | Bipolar CV splitter (positive/negative comparator pair) | shared в U1/U3 | — | — | — | included above |
-| U_MCU | ATtiny85-20PU | MCU (Geiger LFSR cluster pattern + bipolar split logic helper) | DIP-8 | 1 | $1.50 | $1.50 | Microchip |
+| U_MCU | ATtiny84A-PU | MCU shared — Geiger LFSR (Block 12) + Crush sample clock (Block 18) + FG TAP/clock sync + trigger PCINT + phase reset (Block 16) + STALL PWM throttle (Block 14). **Upgraded v6.3** — ATtiny85 5-GPIO insufficient для v6.2 (FG TRIG input + phase reset + speed bias PWM + TAP would need 9 pins). ATtiny84A 14-pin DIP = 12 GPIO + 8 ADC, same family/toolchain/price. | DIP-14 | 1 | $1.50 | $1.50 | Microchip |
 | U_LDO | 7805 (or LM78L05) | +5V LDO для MCU | TO-220 (or TO-92) | 1 | $0.30 | $0.30 | Multi-source |
 | Q3 | LSK489A | Dual matched N-JFET | SOT-23-6 (SMD) | 1 | $6.00 | $6.00 | LIS / Mouser |
 | Q1 | BD139 | NPN BJT (push-pull NPN) | TO-126 | 1 | $0.30 | $0.30 | ON Semi |
@@ -2583,7 +2631,7 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 | **Zone 10** | Block 16 Phaser + analog Function Generator | U7 LM13700 (cells 1+2), U8 LM13700 premium (cells 3+4), TL074 (FG core: Schmitt + integrator + buffer + inverter), LM393 (FG Gate + EOR), 74HC74 (FG ÷2 sub), 6× 2N3904 (exp converters), C_AP1–4 (47/15/6.8/2.2nF NP0), C_FG range bank (1µF/100nF/10nF) | Place **away from JFET preamp Zone 4** — FG integrator + phaser LFO can radiate sub-audio crosstalk into hi-Z gate. Min 25mm separation. Sliders mounted на panel-edge satellite PCB connecting via 12-pin ribbon к main board. |
 | **Zone 11** | Block 18 Gate/Crush | U_GATE CD4066BE, U_SH LF398N, U_COMP LM393, R-2R matched pairs | Place **between Zone 7 (mix output) and panel** — signal flows mix → Gate → Crush → output buffer → jack. R-2R matched resistors require equal-length traces (<5mm difference). |
 | **Zone 12** | Block 20 COLOR slider | Slider SL-4P5T mounted **panel-edge** (not on PCB body), R-banks (12 resistors) на panel-adjacent strip | Slider physically on panel left side per mockup. R-banks soldered on small **slider satellite PCB** (40×20mm) which mounts behind slider, ribbon-connects to main PCB via 8-pin header. |
-| **Zone 13** | Block 12 noise + Block 16 FG panel sliders + extras CV jack cluster | 3× FG linear sliders (rise/fall/depth) panel-mount, SW_FG_RANGE + SW_CLIP slide switches, ATtiny85 MCU (shared с Block 12, 16, 18 — added FG clock sync logic), 7805 LDO для +5V digital, 6 extras jacks (TOLL/STALL/SIDE/Gate/Sub÷2/Inv) | Slider satellite PCB shared с Block 20 region — FG sliders mounted vertically на panel right edge, ribbon-connect к main PCB exp converters. Extras jacks group right of slider cluster, frame с dashed outline. ATtiny85 в **digital corner** (DGND, Zone 8 adjacent). +5V LDO heat sink not needed. |
+| **Zone 13** | Block 12 noise + Block 16 FG panel sliders + extras CV jack cluster | 3× FG linear sliders (rise/fall/depth) panel-mount, SW_FG_RANGE + SW_CLIP slide switches, ATtiny84A MCU (shared с Block 12, 16, 18 — added FG clock sync logic), 7805 LDO для +5V digital, 6 extras jacks (TOLL/STALL/SIDE/Gate/Sub÷2/Inv) | Slider satellite PCB shared с Block 20 region — FG sliders mounted vertically на panel right edge, ribbon-connect к main PCB exp converters. Extras jacks group right of slider cluster, frame с dashed outline. ATtiny84A в **digital corner** (DGND, Zone 8 adjacent). +5V LDO heat sink not needed. |
 | **Zone 14** | Phase 2 daughter board connection | 10-pin header (2×5 IDC ribbon) | Header placed на main PCB **bottom edge** (opposite panel side). Phase 2 daughter board mounts on M3 standoffs 12mm tall, sits underneath main PCB. Ribbon carries: ±12V, GND, audio bus tap (Block 13 output), DAMP_CV input, 4× Phase 2 CV jack connections, +5V digital. |
 
 #### Revised floor plan (40HP module, panel-up view)
@@ -2616,7 +2664,7 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 │  │              │ │                │ │ LM393 FG Gate/EOR     │ │          │ │
 │  │              │ │                │ │ 74HC74 FG ÷2 sub      │ │          │ │
 │  │              │ │                │ │ 6× 2N3904 exp conv    │ │          │ │
-│  │ D_LIM        │ │ U5 LM13700     │ │ NE555 vinyl one-shot │ │ ATtiny85 │ │
+│  │ D_LIM        │ │ U5 LM13700     │ │ NE555 vinyl one-shot │ │ ATtiny84A │ │
 │  │              │ │                │ │ C_AP1-4 NP0          │ │ Z13      │ │
 │  │ J_SIDE       │ │ J_CV_DAMP      │ │                      │ │ +5V LDO  │ │
 │  │              │ │ J_CV_DECAY     │ │ (away from Z4!)      │ │          │ │
@@ -2649,7 +2697,7 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 | Z4 (JFET preamp) ↔ Z9 (Noise gen) | 30mm | Zener noise radiates 50kHz–MHz hash |
 | Z1 DC-DC (Z19, pedal SKU) ↔ Z11 (Crush S&H) | 20mm + ferrite bead on supply | DC-DC 150kHz switching can couple into S&H hold cap |
 | Z8 (Solenoid +12V loop) ↔ all audio zones | shielded twisted pair cable to cartridge | Magnetic field from 290mA pulse current |
-| ATtiny85 clock (Z13) ↔ Z4 JFET | 30mm + GND moat | Digital clock 16MHz can crosstalk into hi-Z analog |
+| ATtiny84A clock (Z13) ↔ Z4 JFET | 30mm + GND moat | Digital clock 16MHz can crosstalk into hi-Z analog |
 
 #### Power distribution review
 
@@ -2683,7 +2731,7 @@ Revised order from v4:
 4. **Mini-XLR jacks (cartridge)** — у opposite edge from J_PWR (signal entry).
 5. **JFET preamp (Z4)** — close to mini-XLR jacks (<20мм trace length). **No other circuit within 25mm**.
 6. **Solenoid driver (Z8)** — opposite corner from JFET preamp (>40мм physical separation).
-7. **Noise generator (Z9)** + ATtiny85 (Z13) — isolated digital corner, GND moat.
+7. **Noise generator (Z9)** + ATtiny84A (Z13) — isolated digital corner, GND moat.
 8. **Output (Z7)** — у edge near panel jacks.
 9. **Phaser (Z10)** — middle row, **between Z6 VCA and Z7 output** (signal flow correct). 25mm clear from Z4.
 10. **Gate/Crush (Z11)** — adjacent to Z7 (post-mix), short trace to output buffer.
@@ -3421,8 +3469,8 @@ Common issues и their resolutions, organized by symptom.
 | **TRACO TMR 3-1212WI** | Mouser, Digi-Key | Recom RKD-1212-D, Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
 | **Recom RKD-1212-D** | Mouser, Digi-Key | TRACO TMR 3-1212WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
 <!-- BBD V3207/V3102 removed per Decision 08 — vinyl FX moved to Last Day as OLD VINYL PT2399 parallel tract. -->
-| **NE555P** ×2 | TI, multi-source | LMC555 (CMOS variant) | 1 week | TOLL pulse monostable (Block 14) + vinyl-skip one-shot (Block 16 Shape Form path 4). |
-| **ATtiny85-20PU** | Microchip via Mouser/Digi-Key | ATtiny45 (lower memory) | 1 week | Geiger LFSR + crush clock + tap-tempo. |
+| **NE555P** ×1 | TI, multi-source | LMC555 (CMOS variant) | 1 week | TOLL pulse monostable (Block 14) only. vinyl-skip NE555 удалён в v6 — analog FG заменяет. |
+| **ATtiny84A-PU** | Microchip via Mouser/Digi-Key | ATtiny44 (lower memory, same pinout) | 1 week | DIP-14, 12 GPIO + 8 ADC. v6.3 upgrade vs ATtiny85 — added FG TRIG + speed PWM + phase reset features required >5 GPIO. |
 | **CD4066BE** | TI, NXP. Multi-source. | DG412 (premium audio switch) | 1 week | Gate cell + bypass switching. |
 | **LF398N** | TI. Multi-source. | LF198 (industrial grade) | 1 week | Crush sample-hold cell. |
 | **3PDT footswitch** | Tayda, SmallBear, Mouser | DPDT (downgrade — no LED indicator) | 1-2 weeks | 4× per pedal SKU. |

@@ -10,7 +10,7 @@
 
 ## Текущий статус
 
-**Phase**: design lock (Decision 09 v6.2). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
+**Phase**: design lock (Decision 09 v6.3 — final engineering + sound design audit applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
 
 ## Структура
 

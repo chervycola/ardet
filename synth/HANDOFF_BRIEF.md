@@ -1,9 +1,18 @@
 # LAST NIGHT — Handoff Brief для R&D и подготовки производства
 
-**Версия канона**: v6.2 (panel + Function Generator + trigger architecture)
+**Версия канона**: v6.3 (final engineering + sound design audit pass)
 **Парный модуль**: Last Day (диптих холода/жары)
 **Серия**: System Suicide — 9 модулей физического синтеза
 **Целевой ship window**: Phase 1 — months 1-9 от kickoff
+
+**Audit applied changes v6.2 → v6.3**:
+- 🔴 Solenoid power split: +12V_RAW pre-DC-DC (исправлен audio rail sag на TOLL pulse).
+- 🔴 MCU upgrade: ATtiny85 → ATtiny84A (14-pin DIP) — v6.2 features требуют 9+ GPIO, ATtiny85 имеет только 5.
+- 🟡 LM393 reallocation: Block 11 env→trigger reuses Block 18 U_COMP second half.
+- 🟡 U4C double-allocation resolved: Block 9 de-emphasis → U2C.
+- 🟡 RV_TRIG_THRESH trim (adjustable FG trigger sensitivity).
+- 🔵 RV_TOLL_DUR trim (5-22ms TOLL pulse per cartridge tuning).
+- Production checklist расширен в §6 (SPICE Nyquist, blind A/B tests, thermal endurance, etc.).
 
 ---
 
@@ -37,7 +46,7 @@
 
 1. **Material plate cartridge** — физическая сменная пластина из реального материала. Не PCB-mounted speaker. Не digital convolution. Не piezo-only attachment. Plate должна **физически вибрировать** в bending modes под exciter drive.
 2. **Acoustic-driven envelope** (plate-triggered FG mode) — Block 11 envelope follower → comparator → FG trigger. **Default behaviour без patching**: каждый attack onset на пластине = FG fires одноразовый cycle. Это формирует "instrument отвечает на игру" effect — главная UX feature, отличающая Last Night от любого generic reverb.
-3. **Analog Function Generator** (не digital LFO simulation) — TL074 integrator + diode-steered rise/fall RC + 2N3904 matched-pair exp converters. Эмуляция через ATtiny85 DAC недопустима — теряется analog character который пользователь будет слышать в exp curve nonlinearity и в RC charging tail.
+3. **Analog Function Generator** (не digital LFO simulation) — TL074 integrator + diode-steered rise/fall RC + 2N3904 matched-pair exp converters. Эмуляция через ATtiny84A DAC недопустима — теряется analog character который пользователь будет слышать в exp curve nonlinearity и в RC charging tail.
 4. **LSK489A dual matched JFET** в piezo preamp — не generic 2SK170, не SMD JFET pair. Decision 02 specifically locked LSK489A — это noise floor cornerstone. Substitution = audible SNR degradation.
 5. **Cartridge format compatibility** между Last Night и Last Day — same frame 110×65×30mm, same mini-XLR + JST, same retention. Если material plate cartridge не вставляется в Last Day slot и наоборот — диптих ломается, перекрёстные patches невозможны.
 
@@ -150,17 +159,49 @@ Top priority bench tests:
 
 ## 6. Hand-off checkpoints
 
-Перед началом production:
-
+### 6.1 Documentation review (week 1)
 - [ ] R&D engineer прочитал signal_flow_last_night.svg + LAST_NIGHT_BUILD.md.
-- [ ] PCB layout drafted в KiCad (zone diagram → реальная разводка).
 - [ ] BOM verified против sourcing matrix (Decision 10).
-- [ ] Material plate cartridge prototyped — все 6 materials звучат различно (A/B blind test passed).
-- [ ] Solenoid thermal endurance test (Block 14 verification).
-- [ ] JFET preamp SNR measured (Block 7 verification).
 - [ ] Footswitches mockup canon names confirmed на silkscreen.
 - [ ] Bank Mode slider labels CONFIRMED (DIRTY / WARM / DARK / VOICE / MIX).
+
+### 6.2 Schematic validation (weeks 2-3, pre-PCB)
+- [ ] **🔴 SPICE Nyquist analysis** feedback loop с RLC model каждого cartridge material (Q range 50 для oak до 1000 для spring steel). Verify gain margin >6dB, phase margin >45° на feedback knob maximum. Без passes — добавить attenuator в feedback path.
+- [ ] **🔴 Power budget verification** — confirm solenoid wired к +12V_RAW, не к +12V_audio. Probe DC-DC output rail during TOLL pulse — должна оставаться flat (<5mV ripple на load step).
+- [ ] **🔴 ATtiny84A pin allocation review** — verify firmware fits в 12 GPIO (всё в Block 18 firmware table). Если не fits — добавить shift register или upgrade к ATtiny441.
+- [ ] **🟡 LM393 reallocation** confirmed в schematic — Block 11 env→trigger comparator uses U_COMP (Block 18 LM393 second half, originally tagged "tap detection" but unused since TAP routes к MCU PCINT).
+- [ ] **🟡 U4C/U2C reallocation** confirmed — Block 9 de-emphasis uses U2C (spare TL074 quarter), Block 7 retains U4C exclusively.
+
+### 6.3 PCB design (weeks 3-5)
+- [ ] PCB layout drafted в KiCad (zone diagram → реальная разводка).
+- [ ] Power planes split: AGND / DGND / PGND с single-point star tie на J_PWR.
+- [ ] JFET preamp Z4 separated >25mm от phaser Z10 (Iabc bus radiation).
+- [ ] Solenoid driver Z8 >40mm от piezo input Z4 (EMI).
+- [ ] ATtiny84A digital clock (Z13) >30mm от Z4 + GND moat.
+
+### 6.4 Prototype bench tests (weeks 6-8)
+- [ ] Solenoid thermal endurance test — STALL CV high 60s, IR thermometer на coil <70°C. Если выше — confirm ATtiny84A PWM throttle к 40% duty.
+- [ ] **🔴 JFET preamp SNR measured** — open-input noise floor <-90 dBV referenced к pickup input. Если хуже — investigate bias resistor noise (consider raise to 100MΩ or 1GΩ).
+- [ ] FG plate-triggered mode — confirm reliability across input dynamics range (soft pick / hard pluck / sustained tone). RV_TRIG_THRESH default adjustment.
+- [ ] Phase/Flutter knob taper feel — log taper, audible phasing at 10% rotation, controlled self-osc at 95%+.
+- [ ] FG depth slider mapping — 10% depth = audible но subtle phaser modulation, 100% = full 4-octave sweep.
+- [ ] TOLL pulse duration adjustment per cartridge material — RV_TOLL_DUR set per material type during assembly QC.
+
+### 6.5 Material cartridge validation (weeks 6-10, parallel)
+- [ ] **🔴 Material plate cartridge prototyped** — все 6 materials (oak / spring steel / marble / glass / bone / nephrite) изготовлены.
+- [ ] **🔴 Cartridge differentiation blind A/B test** — 10 listeners blind name material из same input signal. Target accuracy: >80%. **Если меньше — пересмотр design** (thicker materials, larger plates, decoupling mount).
+- [ ] FFT spectral signature comparison per material — visibly distinct decay envelopes + mode density.
+- [ ] Decay time measurement per material — confirm corrected reality-check claims (oak 0.1-0.3s, marble 0.8-2s, spring steel 2-6s, glass 0.5-1.5s, bone 0.05-0.2s, nephrite 1-3s).
+- [ ] Feedback drone musicality per cartridge — все materials produce listenable self-osc tone (not just "noise").
+
+### 6.6 Sound design validation (weeks 8-10)
+- [ ] **🔴 Bank Mode preset blind A/B** — 10 listeners blind identify preset (DIRTY/WARM/DARK/VOICE/MIX) из sound character. Target accuracy: >70%. Если меньше — adjust R-bank values (VOICE specifically may need +4dB boost вместо +2dB).
+- [ ] Stereo image stability cross-cartridge — same patch settings, swap cartridges, stereo width должен оставаться stable.
+
+### 6.7 Pre-production (weeks 10-12)
 - [ ] First 10-unit pre-production batch для closed beta перед public ship.
+- [ ] Beta tester feedback collected (>5 testers, 2-week minimum use period).
+- [ ] Final BOM lock после bench validation.
 
 ---
 
