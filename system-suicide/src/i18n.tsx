@@ -14,7 +14,7 @@ interface LangContextValue {
   setLang: (lang: Lang) => void;
 }
 
-const LangContext = createContext<LangContextValue>({
+export const LangContext = createContext<LangContextValue>({
   lang: 'en',
   setLang: () => {},
 });
@@ -27,7 +27,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     nav_patches: 'Patches',
     nav_manifesto: 'Manifesto',
     nav_contact: 'Contact',
-    top_workshop: 'Workshop · open',
+    top_workshop: 'Workshop still open',
     top_cart: 'Cart',
 
     hero_lot: 'Page',
@@ -45,24 +45,24 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     counter_burned: '47 prototypes burned',
     counter_ships: 'Next batch ships',
 
-    sig_tag: 'Signal chain · left to right · burns to the end',
+    sig_tag: '',
     sig_fig: 'Fig. 01 / 09',
-    sig_h_a: 'The voice',
-    sig_h_b: 'passes through',
-    sig_h_c: 'nine bodies.',
-    sig_foot_in: 'IN · ±5V',
-    sig_foot_arrow: '→ light → body → bone → glass → pendulum → mix → oil → balance → plate →',
-    sig_foot_out: 'OUT · stereo',
+    sig_h_a: 'Signal',
+    sig_h_b: 'chain.',
+    sig_h_c: '',
+    sig_foot_in: 'SOLVE',
+    sig_foot_arrow: 'Disintegrate into components. Become free of light and stone.\n  Become as fluid as a molecule, as durable as an atom. As soulless\n                          as the earth itself',
+    sig_foot_out: 'COAGULA',
 
     cat_h_a: 'Catalogue',
     cat_h_b: '2026 — 2030',
     cat_meta_1: '9 modules · ~144 HP · Be Careful + And My TBD',
-    cat_meta_2: 'Eurorack only · ±12 V',
-    cat_meta_3: 'Hand-built · Tbilisi',
+    cat_meta_2: 'Eurorack/pedal · ±12 V',
+    cat_meta_3: 'Hand-built · Moscow',
     cat_phys_core: 'Physical core',
     cat_classified: 'Physical core · CLASSIFIED',
 
-    ln_eyebrow: 'M·09 / Flagship / In stock',
+    ln_eyebrow: 'M·09 / Flagship / Pre-order',
     ln_h_a: 'Last',
     ln_h_b: 'Night.',
     ln_quote: '"Post-apocalypse. The breath of ruins. An old gramophone in an empty room."',
@@ -81,11 +81,11 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_spec_carts: 'Cartridges',
     ln_spec_carts_v: '6 ship · 6 phase 2',
     ln_spec_price: 'Price',
-    ln_spec_price_v: '€ 640 · cartridge € 25–95',
+    ln_spec_price_v: '€ 3640 · all cartridge',
     ln_spec_lead: 'Lead time',
-    ln_spec_lead_v: '4 weeks · made to order',
+    ln_spec_lead_v: '8-12 weeks · made to order',
     ln_cart_lib: 'Cartridge library · phase 1 + phase 2',
-    ln_preorder: 'Pre-order — €640',
+    ln_preorder: 'Pre-order — €3640',
     ln_schematic: 'Schematic PDF',
 
     pat_h_a: 'Six ways',
@@ -109,8 +109,8 @@ const TRANSLATIONS: Record<Lang, Dict> = {
       'We ship slowly. We replace what breaks. We refuse to certify anything as silent.',
     man_p3_red: 'The system will fail eventually — that is the point.',
     man_sig_a: '— SYSTEM',
-    man_sig_b: '/ WORKSHOP',
-    man_sig_geo: 'TBILISI · GE · 41.7°N 44.8°E',
+    man_sig_b: '',
+    man_sig_geo: '',
 
     foot_modules: '/ 9 MODULES',
     foot_h_catalogue: 'Catalogue',
@@ -182,27 +182,27 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     cta_read_chain: 'Читать сигнальную цепь',
 
     counter_days: 'Дней с начала системы',
-    counter_burned: '47 прототипов сожжено',
+    counter_burned: 'прототипов сожжено',
     counter_ships: 'следующая партия',
 
-    sig_tag: 'Сигнальная цепь · слева направо · сгорает к концу',
+    sig_tag: '',
     sig_fig: 'Рис. 01 / 09',
-    sig_h_a: 'Голос',
-    sig_h_b: 'проходит через',
-    sig_h_c: 'девять тел.',
-    sig_foot_in: 'IN · ±5В',
-    sig_foot_arrow: '→ свет → тело → кость → стекло → маятник → микс → масло → баланс → пластина →',
-    sig_foot_out: 'OUT · стерео',
+    sig_h_a: 'Сигнальная',
+    sig_h_b: 'цепь.',
+    sig_h_c: '',
+    sig_foot_in: 'SOLVE',
+    sig_foot_arrow: 'Разложиться на составные части. Стать свободным от света и камня.\n  Стать изменчивым как молекула, прочным, как атом. Бездушным\n                          как сама земля',
+    sig_foot_out: 'COAGULA',
 
     cat_h_a: 'Каталог',
     cat_h_b: '2026 — 2030',
     cat_meta_1: '9 модулей · ~144 HP · Be Careful + And My TBD',
-    cat_meta_2: 'Только Eurorack · ±12 В',
-    cat_meta_3: 'Ручная сборка · Тбилиси',
+    cat_meta_2: 'Eurorack/pedal · ±12 В',
+    cat_meta_3: 'Ручная сборка · Москва',
     cat_phys_core: 'Физическое ядро',
     cat_classified: 'Физическое ядро · ЗАСЕКРЕЧЕНО',
 
-    ln_eyebrow: 'M·09 / Флагман / В наличии',
+    ln_eyebrow: 'M·09 / Флагман / Предзаказ',
     ln_h_a: 'Last',
     ln_h_b: 'Night.',
     ln_quote: '"Постапокалипсис. Дыхание руин. Старый граммофон в пустой комнате."',
@@ -221,11 +221,11 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_spec_carts: 'Картриджи',
     ln_spec_carts_v: '6 в продаже · 6 в Phase 2',
     ln_spec_price: 'Цена',
-    ln_spec_price_v: '€ 640 · картридж € 25–95',
+    ln_spec_price_v: '€ 3640 · все картриджи',
     ln_spec_lead: 'Срок',
-    ln_spec_lead_v: '4 недели · под заказ',
+    ln_spec_lead_v: '8-12 недель · под заказ',
     ln_cart_lib: 'Библиотека картриджей · phase 1 + phase 2',
-    ln_preorder: 'Предзаказ — €640',
+    ln_preorder: 'Предзаказ — €3640',
     ln_schematic: 'PDF со схемой',
 
     pat_h_a: 'Шесть способов',
@@ -249,8 +249,8 @@ const TRANSLATIONS: Record<Lang, Dict> = {
       'Мы отгружаем медленно. Заменяем то, что ломается. Отказываемся сертифицировать что-либо как «бесшумное».',
     man_p3_red: 'Система рано или поздно даст сбой — в этом и смысл.',
     man_sig_a: '— SYSTEM',
-    man_sig_b: '/ МАСТЕРСКАЯ',
-    man_sig_geo: 'ТБИЛИСИ · GE · 41.7°N 44.8°E',
+    man_sig_b: '',
+    man_sig_geo: '',
 
     foot_modules: '/ 9 МОДУЛЕЙ',
     foot_h_catalogue: 'Каталог',
@@ -305,9 +305,9 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
     try {
       const stored = localStorage.getItem('ss_lang');
-      return stored === 'ru' ? 'ru' : 'en';
+      return stored === 'en' ? 'en' : 'ru';
     } catch {
-      return 'en';
+      return 'ru';
     }
   });
 

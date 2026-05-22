@@ -47,7 +47,9 @@ export interface ProductDetail {
   sigchain: string[];
   controls: ControlRow[];
   remote?: RemoteSpec;
+  cartridges?: string[];
   uses: string[];
+  safety?: string[];
 }
 
 export type ProductPages = Record<string, ProductDetail>;

@@ -156,7 +156,8 @@ export function CounterStrip() {
         <div className="label">
           <span>{t('counter_days')} / </span>
           <span className="red">{t('counter_burned')}</span>
-          <span> / {t('counter_ships')}</span>
+          <span> / </span>
+          <span className="red">{t('counter_ships')}</span>
         </div>
         <div style={{ maxWidth: 480, width: '100%' }}>
           <TallyCounter count={47} />
@@ -219,8 +220,8 @@ export function Catalog() {
           </h2>
           <div className="meta">
             9 modules · ~144 HP · Be Careful + And My TBD<br />
-            Eurorack only · ±12 V<br />
-            Hand-built · Tbilisi
+            Eurorack/pedal · ±12 V<br />
+            Hand-built · Moscow
           </div>
         </div>
 
@@ -267,18 +268,17 @@ export function Catalog() {
 }
 
 export function LastNight() {
+  const t = useT();
   return (
     <section className="catalog" id="last-night" style={{ paddingTop: 0 }}>
       <div className="shell">
         <div className="flagship-block">
           <div className="left">
-            <div className="ey">M·09 / Flagship / In stock</div>
+            <div className="ey">{t('ln_eyebrow')}</div>
             <h2>
-              Last<br />Night.
+              {t('ln_h_a')}<br />{t('ln_h_b')}
             </h2>
-            <p className="quote">
-              "Post-apocalypse. The breath of ruins. An old gramophone in an empty room."
-            </p>
+            <p className="quote">{t('ln_quote')}</p>
 
             <p
               style={{
@@ -290,21 +290,18 @@ export function LastNight() {
                 maxWidth: '42ch',
               }}
             >
-              An analogue reverb with no DSP. A surface exciter drives a thin plate held
-              in a cartridge — wood, stone, metal, glass, bone, jade. Two piezo pickups
-              read the resonance from the other face. A solenoid damps. A feedback loop
-              freezes. Each cartridge is a different room.
+              {t('ln_desc')}
             </p>
 
             <div className="specs">
-              <div className="row"><span className="k">Format</span><span className="v">Eurorack · 40 HP</span></div>
-              <div className="row"><span className="k">Power</span><span className="v">±12 V · 180 mA</span></div>
-              <div className="row"><span className="k">I/O</span><span className="v">Mono in / stereo out · 3.5 mm</span></div>
-              <div className="row"><span className="k">Pickups</span><span className="v">2 × piezo · mini-XLR shielded</span></div>
-              <div className="row"><span className="k">Exciter</span><span className="v">Dayton DAEX25 · 4 Ω</span></div>
-              <div className="row"><span className="k">Cartridges</span><span className="v">6 ship · 6 phase 2</span></div>
-              <div className="row"><span className="k">Price</span><span className="v">€ 640 · cartridge € 25–95</span></div>
-              <div className="row"><span className="k">Lead time</span><span className="v">4 weeks · made to order</span></div>
+              <div className="row"><span className="k">{t('ln_spec_format')}</span><span className="v">{t('ln_spec_format_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_power')}</span><span className="v">{t('ln_spec_power_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_io')}</span><span className="v">{t('ln_spec_io_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_pickups')}</span><span className="v">{t('ln_spec_pickups_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_exciter')}</span><span className="v">{t('ln_spec_exciter_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_carts')}</span><span className="v">{t('ln_spec_carts_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_price')}</span><span className="v">{t('ln_spec_price_v')}</span></div>
+              <div className="row"><span className="k">{t('ln_spec_lead')}</span><span className="v">{t('ln_spec_lead_v')}</span></div>
             </div>
 
             <div style={{ marginTop: 36, display: 'flex', gap: 12 }}>
@@ -322,7 +319,7 @@ export function LastNight() {
                   textTransform: 'uppercase',
                 }}
               >
-                Pre-order — €640
+                {t('ln_preorder')}
               </a>
               <a
                 className="btn"
@@ -337,7 +334,7 @@ export function LastNight() {
                   textTransform: 'uppercase',
                 }}
               >
-                Schematic PDF
+                {t('ln_schematic')}
               </a>
             </div>
           </div>
@@ -345,7 +342,7 @@ export function LastNight() {
           <div className="right">
             <div className="tag-rule" style={{ marginBottom: 24 }}>
               <span className="dot"></span>
-              <span>Cartridge library · phase 1 + phase 2</span>
+              <span>{t('ln_cart_lib')}</span>
               <span className="spacer"></span>
               <span>08</span>
             </div>
@@ -373,13 +370,14 @@ export function LastNight() {
 }
 
 export function Patches() {
+  const t = useT();
   return (
     <section className="patches" id="patches">
       <div className="shell">
         <h2>
-          Six ways<br />to be heard.
+          {t('pat_h_a')}<br />{t('pat_h_b')}
         </h2>
-        <div className="sub">— Patch atlas · live-tested · February 2026</div>
+        <div className="sub">{t('pat_sub')}</div>
 
         <div className="patch-list">
           {PATCHES.map((p, i) => (
@@ -399,44 +397,40 @@ export function Patches() {
 }
 
 export function Manifesto() {
+  const t = useT();
   return (
     <section className="manifesto" id="manifesto">
       <div
         className="shell"
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'start' }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 2.6fr)',
+          gap: 56,
+          alignItems: 'start',
+        }}
       >
         <div>
-          <div className="ey">— Manifesto · v3.0</div>
+          <div className="ey">{t('man_eyebrow')}</div>
           <h2>
-            Electronics<br />serve the physics,<br />not the opposite.
+            {t('man_h_a')}<br />{t('man_h_b')}<br />{t('man_h_c')}
           </h2>
         </div>
         <div>
+          <p>{t('man_p1')}</p>
           <p>
-            We make instruments. Each one has a body — a thing that resonates, vibrates,
-            heats, decays. The circuit board exists to feed the body and listen to its
-            answer. When the body sings, the circuit gets out of the way.
+            <strong>{t('man_p2_part1')}</strong>{t('man_p2_part2')}
           </p>
           <p>
-            <strong>No DSP. No screens. No presets.</strong> The voice of the instrument
-            is the voice of its material — wood, brass, glass, oil, light, skin. Each
-            cartridge is a different room. Each pendulum keeps its own time. Each plate
-            ages and the sound ages with it.
-          </p>
-          <p>
-            We ship slowly. We replace what breaks. We refuse to certify anything as
-            silent.{' '}
-            <span style={{ color: 'var(--accent)' }}>
-              The system will fail eventually — that is the point.
-            </span>
+            {t('man_p3')}{' '}
+            <span style={{ color: 'var(--accent)' }}>{t('man_p3_red')}</span>
           </p>
           <div className="sig">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              — SYSTEM
+              {t('man_sig_a')}
               <RazorScratch width={48} />
-              / WORKSHOP
+              {t('man_sig_b')}
             </span>
-            <span>TBILISI · GE · 41.7°N 44.8°E</span>
+            <span>{t('man_sig_geo')}</span>
           </div>
         </div>
       </div>
@@ -489,12 +483,12 @@ export function Footer() {
 
         <div className="foot-bottom">
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            © 2026–203∞∞ SYSTEM
+            © 2026–203∞ SYSTEM
             <RazorScratch width={36} />
             / All instruments hand-built
           </span>
           <span className="center">РОССИЯ. ОРЁЛ-МОСКВА-ЗЕЛЕНОГРАД</span>
-          <span className="right">END PAGE001</span>
+          <span className="right">END PAGE001-000-001</span>
         </div>
       </div>
     </footer>

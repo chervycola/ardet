@@ -222,6 +222,7 @@ export function ProductPage({ slug }: { slug: string }) {
   return (
     <main className="pp">
       <div className="shell">
+        <div className="section-page">Page №002·000·{m.idx}</div>
         <ProductBreadcrumb module={m} />
         <ProductHeader module={m} />
 

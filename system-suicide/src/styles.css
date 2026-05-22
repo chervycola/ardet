@@ -497,7 +497,7 @@ section { position: relative; }
   color: var(--fg-3);
   text-transform: uppercase; letter-spacing: 0.16em;
 }
-.signal-foot .arrow { color: var(--accent); }
+.signal-foot .arrow { color: var(--accent); white-space: pre-line; text-align: center; flex: 1; padding: 0 24px; }
 
 /* ----- MODULE CATALOG ----- */
 .catalog {
@@ -555,7 +555,8 @@ section { position: relative; }
 .module.redacted .card-arrow,
 .module:hover .card-arrow { display: block; }
 .module.redacted:hover { background: var(--bg-2); }
-.module.redacted .name { color: var(--fg-2); }
+.module.redacted .name { color: var(--fg-2); filter: blur(5px); pointer-events: none; }
+.module:not(.redacted) .name { color: var(--accent); }
 
 /* Redaction bars — black/red censoring blocks */
 .redaction {
@@ -1445,9 +1446,14 @@ section { position: relative; }
 }
 .manifesto h2 {
   font-family: var(--f-display);
-  font-size: clamp(36px, 5vw, 64px);
+  font-size: clamp(24px, 2.8vw, 44px);
   line-height: 0.92;
+  letter-spacing: -0.01em;
   text-transform: uppercase;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+  max-width: 100%;
 }
 .manifesto p {
   font-family: var(--f-mono);
@@ -1455,7 +1461,7 @@ section { position: relative; }
   line-height: 1.6;
   color: var(--fg-2);
   margin-bottom: 18px;
-  max-width: 48ch;
+  max-width: 120ch;
 }
 .manifesto p strong { color: var(--fg); font-weight: 500; }
 .manifesto .sig {
@@ -1555,4 +1561,212 @@ section { position: relative; }
   .foot-bottom { grid-template-columns: 1fr; }
   .foot-bottom .center, .foot-bottom .right { text-align: left; }
   .lex-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- MOBILE (≤ 560px) ---------- */
+@media (max-width: 560px) {
+  :root { --gutter: 16px; }
+
+  body { font-size: 12px; }
+
+  /* topbar — compact, language-only */
+  .topbar .row {
+    grid-template-columns: 1fr auto;
+    height: 48px;
+    gap: 12px;
+  }
+  .topbar .brand { font-size: 12px; }
+  .topbar .brand span:last-child { display: none; } /* hide razor scratch */
+  .topbar .cart {
+    gap: 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+  .topbar .cart .live,
+  .topbar .cart span:not(.live):not(.lang-opt):not(.lang-sep) { display: none; }
+  .topbar .cart .lang-toggle { display: inline-flex; }
+
+  /* hero */
+  .hero { padding: 40px 0 56px; }
+  .hero-eyebrow {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+  .hero-eyebrow .t-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-align: left !important;
+  }
+
+  .hero-title {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    font-size: clamp(64px, 22vw, 110px);
+    line-height: 0.86;
+  }
+  .hero-razor-corner {
+    max-width: 360px;
+    margin: 0 auto;
+    transform: rotate(-5deg);
+  }
+  .hero-mark .hero-line {
+    height: 16px;
+  }
+
+  .hero-row { gap: 28px; margin-top: 32px; }
+  .hero-row .poem {
+    font-size: 22px;
+    line-height: 1.08;
+  }
+  .hero-row .blurb { font-size: 12px; line-height: 1.6; }
+  .hero-cta .btn { padding: 14px 14px; font-size: 10px; }
+
+  /* counter */
+  .counter { padding: 24px 0; }
+  .counter .shell { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .counter .label { font-size: 10px; letter-spacing: 0.14em; }
+  .counter .tally { height: 28px; }
+
+  /* signal chain */
+  .signal { padding: 56px 0; }
+  .signal h2 { font-size: clamp(40px, 11vw, 64px); margin-bottom: 32px; }
+  .signal-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 24px;
+    column-gap: 18px;
+  }
+  .signal-grid::before { display: none; }
+  .signal-node .pin { margin-top: 0; }
+  .signal-node .name { font-size: 11px; min-height: auto; }
+  .signal-node .fn { font-size: 9px; }
+  .signal-foot {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+  .signal-foot .arrow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  /* catalog */
+  .catalog { padding: 56px 0; }
+  .cat-head {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .cat-head h2 { font-size: clamp(40px, 11vw, 64px); }
+  .cat-head .meta { font-size: 9px; text-align: left; }
+  .cat-grid { grid-template-columns: 1fr; }
+  .module {
+    min-height: 220px;
+    padding: 20px 18px 22px;
+    gap: 12px;
+  }
+  .module .name { font-size: 24px; }
+  .module .top { font-size: 9px; gap: 6px; }
+  .module .top .hp { padding: 2px 6px; }
+
+  /* last night flagship */
+  .flagship-block { padding: 56px 0; gap: 36px; }
+  .flagship-block h2 { font-size: clamp(56px, 18vw, 96px); }
+  .flagship-block .quote { font-size: 15px; padding-left: 16px; }
+  .flagship-block .specs .row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 10px 0;
+    font-size: 10px;
+  }
+  .flagship-block .specs .row .v {
+    justify-self: start;
+    text-align: left;
+  }
+  .flagship-block .left > div:last-child { flex-direction: column; }
+  .flagship-block .left > div:last-child a { padding: 14px 16px !important; font-size: 10px !important; }
+
+  /* patches */
+  .patches { padding: 56px 0; }
+  .patches h2 { font-size: clamp(40px, 11vw, 64px); }
+  .patches .sub { margin-bottom: 28px; font-size: 10px; }
+  .patch { padding: 18px 4px; grid-template-columns: 24px 1fr auto; gap: 14px; }
+  .patch .nm { font-size: 16px; }
+  .patch .nm small { font-size: 9px; }
+  .patch .dur { font-size: 9px; }
+
+  /* manifesto */
+  .manifesto { padding: 56px 0; gap: 24px !important; }
+  .manifesto .shell { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .manifesto h2 { font-size: clamp(36px, 10vw, 56px); }
+  .manifesto p { font-size: 12px; }
+  .manifesto .sig { gap: 4px; font-size: 9px; }
+
+  /* footer */
+  .foot { padding: 56px 0 32px; }
+  .foot-grid { padding-top: 40px; gap: 28px; }
+  .foot .brand-block { font-size: clamp(36px, 10vw, 56px); }
+  .foot .foot-blade { max-width: 240px; }
+  .foot h3 { font-size: 10px; margin-bottom: 12px; }
+  .foot ul { gap: 8px; }
+  .foot ul a { font-size: 12px; }
+  .foot-bottom { margin-top: 48px; font-size: 9px; }
+
+  /* product page */
+  .pp { padding: 24px 0 56px; }
+  .pp-header { padding: 40px 0 28px; }
+  .pp-title { font-size: clamp(44px, 14vw, 96px); }
+  .pp-meta { gap: 14px; }
+  .pp-meta .t-eyebrow { font-size: 9px; }
+  .pp-quote-row, .pp-two-col { padding: 32px 0; gap: 28px; }
+  .pp-quote { font-size: 18px; padding-left: 16px; }
+  .pp-intro { font-size: 12px; }
+  .pp-sigchain { font-size: 10px; padding: 14px 16px; }
+  .pp-controls-head, .pp-controls-row {
+    grid-template-columns: 1fr 36px;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .pp-controls-row .fn { grid-column: 1 / -1; color: var(--fg-3); font-size: 11px; }
+  .pp-controls-row .cv { grid-column: 2; grid-row: 1; }
+  .pp-cta .btn { min-width: 0; width: 100%; }
+  .pp-neighbours .name { font-size: 20px; }
+
+  /* AmEx blade scale */
+  .hero-mark-amex { width: 92%; }
+}
+
+/* ---------- TINY (≤ 380px) ---------- */
+@media (max-width: 380px) {
+  .signal-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-title { font-size: 56px; }
+  .hero-row .poem { font-size: 19px; }
+}
+
+
+/* ----- SECTION PAGE LABEL ----- */
+.section-page {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  padding: 18px 0 10px;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 28px;
+}
+.manifesto > .section-page,
+.foot > .section-page {
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  max-width: 1480px;
+  margin: 0 auto 28px;
+  box-sizing: border-box;
+}
+@media (max-width: 720px) {
+  .section-page { font-size: 9px; padding: 10px 0 6px; margin-bottom: 16px; }
 }
