@@ -31,14 +31,14 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     top_cart: 'Cart',
 
     hero_lot: 'Page',
-    hero_synthesis: 'Physical synthesis · since 2024',
-    hero_n_modules: '9 modules',
+    hero_synthesis: 'From Russia with love',
+    hero_n_modules: 'Dules',
     hero_format: 'Eurorack · 3U',
     hero_blurb:
       'Nine modules. Each one carries a {strong}physical core{/strong} — an oil-soaked disc, a brass weight on a carbon rod, a pyrex plate that can crack from its own resonance. Electronics serve the physics, never the opposite. Together they form a complete voice — generation, body, distortion, filter, modulation, mix, the burning day, and the cold night after.',
     hero_blurb_strong: 'physical core',
     cta_catalogue: 'Catalogue',
-    cta_last_night: 'Last Night · in stock',
+    cta_last_night: 'Last Night · pre-order',
     cta_read_chain: 'Read the signal chain',
 
     counter_days: 'Days since the system',
@@ -55,7 +55,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     sig_foot_out: 'OUT · stereo',
 
     cat_h_a: 'Catalogue',
-    cat_h_b: '2024 — 2026',
+    cat_h_b: '2026 — 2030',
     cat_meta_1: '9 modules · ~144 HP · Be Careful + And My TBD',
     cat_meta_2: 'Eurorack only · ±12 V',
     cat_meta_3: 'Hand-built · Tbilisi',
@@ -171,14 +171,14 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     top_cart: 'Корзина',
 
     hero_lot: 'Page',
-    hero_synthesis: '· Физический синтез · ',
-    hero_n_modules: '9 модулей',
+    hero_synthesis: 'From Russia with love',
+    hero_n_modules: 'Dules',
     hero_format: 'Eurorack · 3U',
     hero_blurb:
       'Девять модулей. Каждый несёт {strong}физическое ядро{/strong} — пропитанный маслом диск, латунный груз на углеродном стержне, стеклянную пластину, которая трескается от собственного резонанса. Электроника обслуживает физику, а не наоборот. Вместе они образуют законченный голос — генерация, тело, искажение, фильтр, модуляция, микс, горящий день и холодная ночь после.',
     hero_blurb_strong: 'физическое ядро',
     cta_catalogue: 'Каталог',
-    cta_last_night: 'Last Night · в наличии',
+    cta_last_night: 'Last Night · pre-order',
     cta_read_chain: 'Читать сигнальную цепь',
 
     counter_days: 'Дней с начала системы',
@@ -195,7 +195,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     sig_foot_out: 'OUT · стерео',
 
     cat_h_a: 'Каталог',
-    cat_h_b: '2024 — 2026',
+    cat_h_b: '2026 — 2030',
     cat_meta_1: '9 модулей · ~144 HP · Be Careful + And My TBD',
     cat_meta_2: 'Только Eurorack · ±12 В',
     cat_meta_3: 'Ручная сборка · Тбилиси',
