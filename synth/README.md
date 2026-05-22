@@ -10,6 +10,8 @@
 
 **PCB design**: **[`PCB_DESIGN_SPEC.md`](PCB_DESIGN_SPEC.md)** — KiCad-ready spec для PCB designer (6 PCBs inventory, XY coordinates, layer stackup, ground topology, ribbon pinouts).
 
+**Acoustic / cartridge**: **[`acoustic_modeling.md`](acoustic_modeling.md)** — modal density calculator + acoustic-optimized cartridge dimensions per material + tap-test protocol (закрывает главный риск проекта — звук пластин).
+
 ## Текущий статус
 
 **Phase**: design lock (Decision 09 v6.3 — final engineering + sound design audit applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).

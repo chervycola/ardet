@@ -111,6 +111,11 @@
 3. **`decisions/03_cartridge_standards.md`** — cartridge format спецификация.
 4. **`cartridges/*.md`** — processing manuals для bone и nephrite (другие материалы TBD).
 
+### Для acoustic / cartridge engineer
+
+1. **`acoustic_modeling.md`** — modal density calculator + acoustic-optimized cartridge dimensions per material (plate theory), two-family classification, multi-plate stack design, **tap-test protocol (обязательный gate перед cartridge tooling)**.
+2. **`audit/11_last_night_acoustic.md`** — acoustic reality check (corrected RT60 ranges).
+
 ### Для design / panel engineer
 
 1. **`last_night_pedal_panel.svg`** — Inkscape SVG panel, 203×140mm pedal SKU, grid-aligned 5mm.
