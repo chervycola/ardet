@@ -7,7 +7,6 @@ import {
   Catalog,
   LastNight,
   Patches,
-  Lexicon,
   Manifesto,
   Footer,
 } from './sections';
@@ -24,7 +23,6 @@ export default function App() {
       <Catalog />
       <LastNight />
       <Patches />
-      <Lexicon />
       <Manifesto />
       <Footer />
     </>

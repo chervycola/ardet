@@ -52,7 +52,7 @@ export const MODULES: Module[] = [
   {
     idx: '09', slug: 'last-night',
     name: 'Last Night', fn: 'Resonator reverb',
-    hp: 40, phase: 'SHIP — PHASE 1', redacted: true, flagship: true,
+    hp: 40, phase: 'SHIP — PHASE 1', redacted: false, flagship: true,
     core: 'Swappable plates of wood, stone, metal, bone, glass. No DSP.',
   },
 ];
@@ -130,6 +130,48 @@ export const PRODUCT_PAGES: ProductPages = {
       'Live performance: foot switch holds ARM, the joystick shapes the signal in real time, the CV outs simultaneously modulate the rest of the system. One gesture, four modules moving.',
       'Studio: USB-MIDI to the DAW, the remote becomes a generic controller, the module is silent unless armed.',
       "Hybrid: drive the module from another module's CV (panel inputs override the remote), keep the remote as a CV source for the rest of the rack.",
+    ],
+  },
+
+  'last-night': {
+    quote: 'Post-apocalypse. The breath of ruins. An old gramophone in an empty room.',
+    intro: 'An analogue reverb with no DSP. A surface exciter drives a thin plate held in a cartridge — wood, stone, metal, glass, bone, jade. Two piezo pickups read the resonance from the other face. A solenoid damps. A feedback loop freezes. Each cartridge is a different room.',
+    stats: [
+      { k: 'Format',    v: 'Eurorack · 40 HP' },
+      { k: 'Power',     v: '±12 V · 180 mA' },
+      { k: 'I/O',       v: 'Mono in / stereo out · 3.5 mm' },
+      { k: 'Pickups',   v: '2 × piezo · mini-XLR shielded' },
+      { k: 'Exciter',   v: 'Dayton DAEX25 · 4 Ω' },
+      { k: 'Cartridges',v: '6 ship · 6 phase 2' },
+      { k: 'Phase',     v: 'Phase 1 · ships now' },
+      { k: 'Price',     v: '€ 640 · cartridge € 25–95' },
+      { k: 'Lead time', v: '4 weeks · made to order' },
+    ],
+    physical: [
+      'There is no chip doing the reverb. A surface exciter (Dayton DAEX25) is bolted to one face of a thin plate held under tension in a swappable cartridge. The dry signal drives the exciter; the plate physically rings. Two piezo pickups on the opposite face read that resonance back as a stereo image — the room is the material, not a model of it.',
+      'The plate material is the entire character. Oak is warm and percussive; spring steel shimmers for seconds; marble is a slow cathedral; scapula bone is dry and ritual. A solenoid presses the plate to damp the tail on a CV, and a feedback path can be latched to freeze a resonance into an endless drone. Six cartridges ship; six more arrive in phase 2.',
+    ],
+    sigchain: [
+      'AUDIO IN ──► Drive amp ──► Surface exciter ──┐',
+      '                                              ▼',
+      '                                  [ Cartridge plate ] rings',
+      '                                              │',
+      '2 × piezo pickup ──► Stereo preamp ──► Dry / wet mix ──► OUT L·R',
+      '                                              │',
+      'DAMP CV ──► Solenoid (presses plate)          └──► Feedback loop ──► FREEZE',
+    ],
+    controls: [
+      { ctrl: 'DRIVE',     fn: 'Exciter level into the plate',                  cv: true  },
+      { ctrl: 'DAMP',      fn: 'Solenoid pressure — shortens the decay',        cv: true  },
+      { ctrl: 'FREEZE',    fn: 'Latches the feedback loop into infinite sustain', cv: true  },
+      { ctrl: 'MIX',       fn: 'Dry / wet balance',                             cv: true  },
+      { ctrl: 'TONE',      fn: 'Tilt EQ on the wet return',                     cv: false },
+      { ctrl: 'CARTRIDGE', fn: 'Physical swap — selects the resonant body',     cv: false },
+    ],
+    uses: [
+      'Drone Cathedral — freeze a sustained chord from I Show You Light through a marble cartridge for an endless hall.',
+      'Day Into Night — close a feedback loop with Last Day (07 ⇌ 09) for infinite, slowly-collapsing decay.',
+      'Mineral percussion — a bone or glass cartridge turns transients into dry, ritual hits.',
     ],
   },
 };

@@ -10,12 +10,7 @@ import {
   TallyCounter,
   XMark,
 } from './motifs';
-import {
-  ANIM_METAPHOR_MAP,
-  ANIM_METAPHOR_LABELS,
-  ANIM_METAPHOR_SUB,
-} from './anim-metaphors';
-import type { HeroIcon, MetaphorKey } from './types';
+import type { HeroIcon } from './types';
 
 export function RedactionBars({ lines = 4 }: { lines?: number }) {
   const rng = (i: number, j: number) => {
@@ -43,45 +38,6 @@ export function RedactionBars({ lines = 4 }: { lines?: number }) {
         );
       })}
     </div>
-  );
-}
-
-export function Lexicon() {
-  const items: MetaphorKey[] = [
-    'razor', 'shotgun', 'capsule', 'noose', 'tablets',
-    'match', 'knife', 'bottle', 'cassette', 'hourglass',
-  ];
-  return (
-    <section className="lexicon" id="lexicon">
-      <div className="shell">
-        <div className="cat-head">
-          <h2>
-            Lexicon<br />of methods.
-          </h2>
-          <div className="meta">
-            10 metaphors · one vocabulary<br />
-            for synthesis and for its end<br />
-            — read both ways
-          </div>
-        </div>
-
-        <div className="lex-grid">
-          {items.map((key) => {
-            const C = ANIM_METAPHOR_MAP[key];
-            const label = ANIM_METAPHOR_LABELS[key];
-            const sub = ANIM_METAPHOR_SUB[key];
-            return (
-              <div className="lex" key={key}>
-                <div className="lex-num">{label.split(' / ')[0]}</div>
-                <div className="lex-icon"><C /></div>
-                <div className="lex-term">{label.split(' / ')[1]}</div>
-                <div className="lex-sub">{sub}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
   );
 }
 
