@@ -9,33 +9,33 @@ export const MODULES: Module[] = [
   },
   {
     idx: '02', slug: 'body-blood-and-salt',
-    name: 'Body Blood And Salt', fn: 'Tactile processor',
-    hp: 10, phase: 'PHASE 5', redacted: true,
-    core: 'Skin resistance is in the audio path. Four touch pads — gate, filter, bend, chaos.',
+    name: 'Body Blood And Salt', fn: 'Liquid synth / processor',
+    hp: 20, phase: 'PHASE 5', redacted: true,
+    core: 'Body fluids and skin in the audio path. Four touch pads — gate, filter, bend, chaos — plus a liquid well with swappable electrodes.',
   },
   {
     idx: '03', slug: 'all-bones-dust',
-    name: 'All Bones Dust', fn: 'Saturator / VCA',
+    name: 'All Bones Dust', fn: 'Waveshaper / distortion / VCA',
     hp: 10, phase: 'SHIP — PHASE 1', redacted: true,
     core: 'Audio transformer in saturation + mechanical rattle plate.',
   },
   {
     idx: '04', slug: 'be-careful',
     name: 'Be Careful', fn: 'Glass resonant filter',
-    hp: 14, phase: 'PHASE 3', redacted: true,
+    hp: 'TBD', phase: 'PHASE 3', redacted: true,
     core: 'Glass plate as filter element. Motorised clamp shifts effective length = cutoff. Self-oscillates near Q=max. Plate can crack.',
   },
   {
     idx: '05', slug: 'fuck-abandoned-sleep',
     name: 'Fuck Abandoned Sleep', fn: 'Pendulum LFO',
-    hp: 10, phase: 'PHASE 3', redacted: true,
+    hp: 8, phase: 'PHASE 3', redacted: true,
     core: 'Brass weight on a carbon rod. Optical readout, electromagnet sustains the swing.',
   },
   {
     idx: '06', slug: 'is-my',
-    name: 'Is My', fn: 'Optical crossfader',
-    hp: 6, phase: 'PHASE 2', redacted: false,
-    core: 'Two vactrols, matched pair. LDR inertia gives 30 ms optical lag — every transition has a small spring. For live morphing and triggered A/B jumps.',
+    name: 'Is My', fn: 'MOSFET shaper · VCA · ring · gate',
+    hp: 10, phase: 'PHASE 2', redacted: false,
+    core: 'MOSFET core from a recycled drone ESC. Three modes — SHAPER / RING / GATE — switched from an external pilot remote over MIDI/TRS. Edition of 13 with documented provenance.',
   },
   {
     idx: '07', slug: 'last-day',
@@ -45,14 +45,14 @@ export const MODULES: Module[] = [
   },
   {
     idx: '08', slug: 'and-my',
-    name: 'And My', fn: 'MOSFET shaper · VCA · ring · gate',
-    hp: 10, phase: 'PHASE 2', redacted: false,
-    core: 'MOSFET core from a recycled drone ESC. Three modes — SHAPER / RING / GATE — switched from an external pilot remote over MIDI/TRS. Edition of 13 with documented provenance.',
+    name: 'And My', fn: 'Optical crossfader',
+    hp: 6, phase: 'PHASE 2', redacted: false,
+    core: 'Two vactrols, matched pair. LDR inertia gives 30 ms optical lag — every transition has a small spring. For live morphing and triggered A/B jumps.',
   },
   {
     idx: '09', slug: 'last-night',
     name: 'Last Night', fn: 'Resonator reverb',
-    hp: 20, phase: 'SHIP — PHASE 1', redacted: true, flagship: true,
+    hp: 40, phase: 'SHIP — PHASE 1', redacted: true, flagship: true,
     core: 'Swappable plates of wood, stone, metal, bone, glass. No DSP.',
   },
 ];
@@ -78,7 +78,7 @@ export const PATCHES: Patch[] = [
 ];
 
 export const PRODUCT_PAGES: ProductPages = {
-  'is-my': {
+  'and-my': {
     quote: 'Every transition has a small spring.',
     intro: 'A two-channel optical crossfader on matched vactrols. The 30 ms inertia of the LDR is the whole point — fast jumps feel sprung, slow morphs feel breathed.',
     stats: [
@@ -119,7 +119,7 @@ export const PRODUCT_PAGES: ProductPages = {
     ],
   },
 
-  'and-my': {
+  'is-my': {
     quote: 'The hand that flew now plays.',
     intro: 'A VCA-saturator-shaper with three modes (SHAPER / RING / GATE), built around a MOSFET stage harvested from a flight-controller ESC. The module is operated from an external pilot remote — a joystick, knobs, foot switch, on a tethered MIDI/TRS link.',
     stats: [

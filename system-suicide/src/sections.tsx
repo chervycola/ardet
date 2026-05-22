@@ -262,7 +262,7 @@ export function Catalog() {
             Catalogue<br />2024 — 2026
           </h2>
           <div className="meta">
-            9 modules · 124 HP · 1 row 126 HP<br />
+            9 modules · ~150 HP · Be Careful TBD<br />
             Eurorack only · ±12 V<br />
             Hand-built · Tbilisi
           </div>
@@ -284,7 +284,7 @@ export function Catalog() {
                 >
                   {m.phase}
                 </span>
-                <span className="hp">{m.hp} HP</span>
+                <span className="hp">{m.hp === 'TBD' ? 'TBD' : `${m.hp} HP`}</span>
               </div>
               <h3 className="name">{m.name}</h3>
               <div className="fn">— {m.fn}</div>
@@ -341,7 +341,7 @@ export function LastNight() {
             </p>
 
             <div className="specs">
-              <div className="row"><span className="k">Format</span><span className="v">Eurorack · 20 HP</span></div>
+              <div className="row"><span className="k">Format</span><span className="v">Eurorack · 40 HP</span></div>
               <div className="row"><span className="k">Power</span><span className="v">±12 V · 180 mA</span></div>
               <div className="row"><span className="k">I/O</span><span className="v">Mono in / stereo out · 3.5 mm</span></div>
               <div className="row"><span className="k">Pickups</span><span className="v">2 × piezo · mini-XLR shielded</span></div>

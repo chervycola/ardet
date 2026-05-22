@@ -31,7 +31,7 @@ function ProductHeader({ module: m }: { module: Module }) {
       <div className="pp-meta">
         <span className="t-eyebrow">M·{m.idx}</span>
         <span className="t-eyebrow">— {m.fn}</span>
-        <span className="t-eyebrow">{m.hp} HP</span>
+        <span className="t-eyebrow">{m.hp === 'TBD' ? 'TBD' : `${m.hp} HP`}</span>
         <span className={'t-eyebrow ' + (isShipping ? 'red' : '')}>{m.phase}</span>
       </div>
       <h1 className="pp-title">{m.name}</h1>

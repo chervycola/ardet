@@ -56,7 +56,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     cat_h_a: 'Catalogue',
     cat_h_b: '2024 — 2026',
-    cat_meta_1: '9 modules · 124 HP · 1 row 126 HP',
+    cat_meta_1: '9 modules · ~150 HP · Be Careful TBD',
     cat_meta_2: 'Eurorack only · ±12 V',
     cat_meta_3: 'Hand-built · Tbilisi',
     cat_phys_core: 'Physical core',
@@ -69,7 +69,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_desc:
       'An analogue reverb with no DSP. A surface exciter drives a thin plate held in a cartridge — wood, stone, metal, glass, bone, jade. Two piezo pickups read the resonance from the other face. A solenoid damps. A feedback loop freezes. Each cartridge is a different room.',
     ln_spec_format: 'Format',
-    ln_spec_format_v: 'Eurorack · 20 HP',
+    ln_spec_format_v: 'Eurorack · 40 HP',
     ln_spec_power: 'Power',
     ln_spec_power_v: '±12 V · 180 mA',
     ln_spec_io: 'I/O',
@@ -196,7 +196,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     cat_h_a: 'Каталог',
     cat_h_b: '2024 — 2026',
-    cat_meta_1: '9 модулей · 124 HP · 1 ряд 126 HP',
+    cat_meta_1: '9 модулей · ~150 HP · Be Careful TBD',
     cat_meta_2: 'Только Eurorack · ±12 В',
     cat_meta_3: 'Ручная сборка · Тбилиси',
     cat_phys_core: 'Физическое ядро',
@@ -209,7 +209,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_desc:
       'Аналоговый реверб без DSP. Surface-эксайтер раскачивает тонкую пластину в картридже — дерево, камень, металл, стекло, кость, нефрит. Два пьезо-датчика снимают резонанс с обратной стороны. Соленоид демпфирует. Feedback-петля замораживает. Каждый картридж — другая комната.',
     ln_spec_format: 'Формат',
-    ln_spec_format_v: 'Eurorack · 20 HP',
+    ln_spec_format_v: 'Eurorack · 40 HP',
     ln_spec_power: 'Питание',
     ln_spec_power_v: '±12 В · 180 мА',
     ln_spec_io: 'I/O',

@@ -3,7 +3,7 @@ export interface Module {
   slug: string;
   name: string;
   fn: string;
-  hp: number;
+  hp: number | 'TBD';
   phase: string;
   redacted: boolean;
   core: string;
