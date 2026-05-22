@@ -45,9 +45,9 @@ export const MODULES: Module[] = [
   },
   {
     idx: '08', slug: 'and-my',
-    name: 'And My', fn: 'Optical crossfader',
-    hp: 6, phase: 'PHASE 2', redacted: false,
-    core: 'Two vactrols, matched pair. LDR inertia gives 30 ms optical lag — every transition has a small spring. For live morphing and triggered A/B jumps.',
+    name: 'And My', fn: 'TBD',
+    hp: 'TBD', phase: 'PHASE 2', redacted: true,
+    core: 'TBD.',
   },
   {
     idx: '09', slug: 'last-night',
@@ -78,47 +78,6 @@ export const PATCHES: Patch[] = [
 ];
 
 export const PRODUCT_PAGES: ProductPages = {
-  'and-my': {
-    quote: 'Every transition has a small spring.',
-    intro: 'A two-channel optical crossfader on matched vactrols. The 30 ms inertia of the LDR is the whole point — fast jumps feel sprung, slow morphs feel breathed.',
-    stats: [
-      { k: 'Format', v: 'Eurorack · 6 HP' },
-      { k: 'Power',  v: '±12 V · 24 mA' },
-      { k: 'I/O',    v: '2 × audio in · 1 audio out · CV · sync' },
-      { k: 'Curve',  v: 'Linear / equal-power / reverse-log' },
-      { k: 'Lag',    v: '~30 ms optical (LDR rise/fall)' },
-      { k: 'Phase',  v: 'Phase 2 · ships Q3 2026' },
-      { k: 'Price',  v: '€ 220' },
-    ],
-    physical: [
-      "Two vactrols (VTL5C3 or VTL5C4, hand-matched) wired in complementary configuration: one LED inverted from the CV signal, one direct. The CV summs the manual POSITION baseline with the external input through an attenuverter, then drives both LEDs through a current source.",
-      "The cells themselves are slow — LDR rise ~10 ms, fall ~50 ms. Fast CV sweeps get smeared by the photoresistor's inertia; this is the audible signature. At rest, the cell sits at a specific resistance that adds about 1 dB of midrange colour to whichever channel is open.",
-    ],
-    sigchain: [
-      'AUDIO A ──► Input A buffer ──► Vactrol A (LDR1) ──┐',
-      '                                                   ├──► Summing amp ──► OUTPUT',
-      'AUDIO B ──► Input B buffer ──► Vactrol B (LDR2) ──┘',
-      '',
-      'CV ──► LED driver ──┬──► LED in Vactrol A (inverted)',
-      '                    └──► LED in Vactrol B (direct)',
-      '',
-      'Manual POSITION ──► mixed into CV summing node',
-      'SYNC IN ──► gate latch ──► momentary A/B flip',
-    ],
-    controls: [
-      { ctrl: 'POSITION',  fn: 'Manual baseline. 0 = A · 10 = B · 5 = mix',     cv: false },
-      { ctrl: 'CV AMOUNT', fn: 'Attenuverter on CV input',                       cv: false },
-      { ctrl: 'CURVE',     fn: 'Switch · linear / equal-power / reverse-log',    cv: false },
-      { ctrl: 'SYNC IN',   fn: 'Gate-triggered A/B momentary flip',              cv: true  },
-      { ctrl: 'LED A · B', fn: "Visual indicator of each vactrol's open state",  cv: false },
-    ],
-    uses: [
-      'Live crossfade between two voices — rhythmic SYNC triggers in time with the sequencer give audible 30 ms fades instead of hard switches.',
-      'Slow morph between two reverb tails. CV from Fuck Abandoned Sleep pendulum LFO breathes the balance.',
-      'Triggered drum bus mute. The lag turns a kick mute into a perceptible duck rather than a hard cut.',
-    ],
-  },
-
   'is-my': {
     quote: 'The hand that flew now plays.',
     intro: 'A VCA-saturator-shaper with three modes (SHAPER / RING / GATE), built around a MOSFET stage harvested from a flight-controller ESC. The module is operated from an external pilot remote — a joystick, knobs, foot switch, on a tethered MIDI/TRS link.',

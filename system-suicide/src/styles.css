@@ -619,6 +619,8 @@ section { position: relative; }
   margin-top: auto;
   border-top: 1px dashed var(--line);
   padding-top: 14px;
+  overflow: hidden;
+  max-height: 9em;
 }
 .module .core .key {
   color: var(--fg-3);

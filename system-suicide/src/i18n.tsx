@@ -30,7 +30,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     top_workshop: 'Workshop · open',
     top_cart: 'Cart',
 
-    hero_lot: 'Lot',
+    hero_lot: 'Page',
     hero_synthesis: 'Physical synthesis · since 2024',
     hero_n_modules: '9 modules',
     hero_format: 'Eurorack · 3U',
@@ -56,7 +56,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     cat_h_a: 'Catalogue',
     cat_h_b: '2024 — 2026',
-    cat_meta_1: '9 modules · ~150 HP · Be Careful TBD',
+    cat_meta_1: '9 modules · ~144 HP · Be Careful + And My TBD',
     cat_meta_2: 'Eurorack only · ±12 V',
     cat_meta_3: 'Hand-built · Tbilisi',
     cat_phys_core: 'Physical core',
@@ -167,10 +167,10 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     nav_patches: 'Патчи',
     nav_manifesto: 'Манифест',
     nav_contact: 'Контакты',
-    top_workshop: 'Мастерская · работает',
+    top_workshop: 'Мастерская пока работает',
     top_cart: 'Корзина',
 
-    hero_lot: 'Лот',
+    hero_lot: 'Page',
     hero_synthesis: '· Физический синтез · ',
     hero_n_modules: '9 модулей',
     hero_format: 'Eurorack · 3U',
@@ -196,7 +196,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     cat_h_a: 'Каталог',
     cat_h_b: '2024 — 2026',
-    cat_meta_1: '9 модулей · ~150 HP · Be Careful TBD',
+    cat_meta_1: '9 модулей · ~144 HP · Be Careful + And My TBD',
     cat_meta_2: 'Только Eurorack · ±12 В',
     cat_meta_3: 'Ручная сборка · Тбилиси',
     cat_phys_core: 'Физическое ядро',

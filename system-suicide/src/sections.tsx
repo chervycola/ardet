@@ -131,7 +131,7 @@ export function Hero({ icon }: { icon: HeroIcon }) {
       <div className="shell">
         <div className="hero-eyebrow">
           <span className="t-eyebrow">
-            {t('hero_lot')} <span className="lot">№0021·150992·25445</span>
+            {t('hero_lot')} <span className="lot">№001·000·001</span>
           </span>
           <span className="t-eyebrow" style={{ textAlign: 'center' }}>
             {t('hero_synthesis')}
@@ -259,10 +259,10 @@ export function Catalog() {
       <div className="shell">
         <div className="cat-head">
           <h2>
-            Catalogue<br />2024 — 2026
+            Catalogue<br />2026 — 2030
           </h2>
           <div className="meta">
-            9 modules · ~150 HP · Be Careful TBD<br />
+            9 modules · ~144 HP · Be Careful + And My TBD<br />
             Eurorack only · ±12 V<br />
             Hand-built · Tbilisi
           </div>
@@ -497,7 +497,7 @@ export function Footer() {
           <div className="brand-block">
             SYSTEM
             <div className="foot-blade"><RazorSlash /></div>
-            <span className="dim">/ 9 MODULES</span>
+            <span className="dim">2/ 9</span>
           </div>
           <div>
             <h3>Catalogue</h3>
@@ -533,12 +533,12 @@ export function Footer() {
 
         <div className="foot-bottom">
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            © 2024–2026 SYSTEM
+            © 2026–203∞∞ SYSTEM
             <RazorScratch width={36} />
             / All instruments hand-built
           </span>
-          <span className="center">"The system will fail eventually."</span>
-          <span className="right">v3.0 / canonical brief / hash 25445</span>
+          <span className="center">РОССИЯ. ОРЁЛ-МОСКВА-ЗЕЛЕНОГРАД</span>
+          <span className="right">END PAGE001</span>
         </div>
       </div>
     </footer>

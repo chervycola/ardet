@@ -163,14 +163,14 @@ function RailRopeAnim() {
           <circle cx="40" cy="2" r="2.5" fill="var(--fg-3)" />
           {(() => {
             const pts: string[] = [];
-            for (let y = 0; y <= 720; y += 8) {
+            for (let y = 0; y <= 1400; y += 8) {
               const x = 40 + Math.sin(y / 36) * 1.6;
               pts.push(`${y === 0 ? 'M' : 'L'}${x.toFixed(2)},${y}`);
             }
             return <path d={pts.join(' ')} stroke="var(--accent)" strokeWidth="1.8" fill="none" />;
           })()}
 
-          <g transform="translate(40, 720)">
+          <g transform="translate(40, 1400)">
             <path
               d="M -11 0 Q -14 18 -11 36 L 11 36 Q 14 18 11 0 Z"
               fill="oklch(0.16 0.04 25)"
@@ -198,9 +198,9 @@ function RailRopeAnim() {
 
           {(() => {
             const pts: string[] = [];
-            for (let y = 756; y <= 2200; y += 12) {
+            for (let y = 1436; y <= 2200; y += 12) {
               const x = 40 + Math.sin(y / 48) * 1.4;
-              pts.push(`${y === 756 ? 'M' : 'L'}${x.toFixed(2)},${y}`);
+              pts.push(`${y === 1436 ? 'M' : 'L'}${x.toFixed(2)},${y}`);
             }
             return (
               <path
@@ -492,102 +492,122 @@ export function AmexRazorBlade({ className, style }: { className?: string; style
     >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="oklch(0.42 0.012 230)" />
-          <stop offset="8%" stopColor="oklch(0.30 0.012 230)" />
+          <stop offset="0%" stopColor="oklch(0.46 0.012 230)" />
+          <stop offset="8%" stopColor="oklch(0.32 0.012 230)" />
           <stop offset="42%" stopColor="oklch(0.18 0.010 230)" />
           <stop offset="58%" stopColor="oklch(0.18 0.010 230)" />
-          <stop offset="92%" stopColor="oklch(0.28 0.012 230)" />
-          <stop offset="100%" stopColor="oklch(0.38 0.012 230)" />
+          <stop offset="92%" stopColor="oklch(0.30 0.012 230)" />
+          <stop offset="100%" stopColor="oklch(0.42 0.012 230)" />
         </linearGradient>
         <linearGradient id={innerGradId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="oklch(0.46 0.012 230)" />
+          <stop offset="0%" stopColor="oklch(0.48 0.012 230)" />
           <stop offset="100%" stopColor="oklch(0.22 0.010 230)" />
         </linearGradient>
         <radialGradient id={portraitGradId} cx="50%" cy="40%" r="65%">
-          <stop offset="0%" stopColor="oklch(0.52 0.012 230)" />
+          <stop offset="0%" stopColor="oklch(0.54 0.012 230)" />
           <stop offset="100%" stopColor="oklch(0.22 0.010 230)" />
         </radialGradient>
         <mask id={cutMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="1400" height="500">
           <rect width="1400" height="500" fill="white" />
           <g fill="black">
-            <rect x="305" y="240" width="270" height="20" />
-            <circle cx="305" cy="250" r="34" />
-            <circle cx="575" cy="250" r="34" />
+            <rect x="305" y="242" width="270" height="16" />
+            <circle cx="305" cy="250" r="40" />
+            <circle cx="575" cy="250" r="40" />
           </g>
           <g fill="black">
-            <rect x="825" y="240" width="270" height="20" />
-            <circle cx="825" cy="250" r="34" />
-            <circle cx="1095" cy="250" r="34" />
+            <rect x="825" y="242" width="270" height="16" />
+            <circle cx="825" cy="250" r="40" />
+            <circle cx="1095" cy="250" r="40" />
           </g>
         </mask>
       </defs>
 
+      {/* Card-on-a-sticker: cream sticker with corner tabs behind a black
+          rounded card; dumbbell slots cut the card only, revealing sticker. */}
       <path
         d="
-          M 100 70
-          L 120 70 L 120 32 L 250 32 L 250 70
-          L 1150 70 L 1150 32 L 1280 32 L 1280 70
-          L 1300 70
-          Q 1350 70 1350 120
-          L 1350 380
-          Q 1350 430 1300 430
-          L 1280 430 L 1280 468 L 1150 468 L 1150 430
-          L 250 430 L 250 468 L 120 468 L 120 430
-          L 100 430
-          Q 50 430 50 380
-          L 50 120
-          Q 50 70 100 70
+          M 96 90
+          Q 96 64 122 64
+          L 184 64
+          Q 210 64 210 90
+          L 210 110
+          L 1190 110
+          L 1190 90
+          Q 1190 64 1216 64
+          L 1278 64
+          Q 1304 64 1304 90
+          L 1304 130
+          Q 1304 138 1312 138
+          L 1322 138
+          Q 1336 138 1336 152
+          L 1336 348
+          Q 1336 362 1322 362
+          L 1312 362
+          Q 1304 362 1304 370
+          L 1304 410
+          Q 1304 436 1278 436
+          L 1216 436
+          Q 1190 436 1190 410
+          L 1190 390
+          L 210 390
+          L 210 410
+          Q 210 436 184 436
+          L 122 436
+          Q 96 436 96 410
+          L 96 370
+          Q 96 362 88 362
+          L 78 362
+          Q 64 362 64 348
+          L 64 152
+          Q 64 138 78 138
+          L 88 138
+          Q 96 138 96 130
           Z
         "
-        fill="oklch(0.66 0.012 230)"
-        stroke="none"
+        fill="oklch(0.78 0.008 230)"
       />
+
+      <rect x="118" y="116" width="1164" height="268" rx="14" fill="none" stroke="rgba(0,0,0,0.32)" strokeWidth="2" />
 
       <path
         d="
-          M 110 80
-          L 130 80 L 130 42 L 240 42 L 240 80
-          L 1160 80 L 1160 42 L 1270 42 L 1270 80
-          L 1290 80
-          Q 1340 80 1340 130
-          L 1340 370
-          Q 1340 420 1290 420
-          L 1270 420 L 1270 458 L 1160 458 L 1160 420
-          L 240 420 L 240 458 L 130 458 L 130 420
-          L 110 420
-          Q 60 420 60 370
-          L 60 130
-          Q 60 80 110 80
+          M 132 124
+          L 1268 124
+          Q 1296 124 1296 152
+          L 1296 348
+          Q 1296 376 1268 376
+          L 132 376
+          Q 104 376 104 348
+          L 104 152
+          Q 104 124 132 124
           Z
         "
         fill={`url(#${gradId})`}
-        stroke="oklch(0.72 0.012 230)"
-        strokeWidth="1.6"
         mask={`url(#${cutMaskId})`}
       />
 
-      <line x1="130" y1="92" x2="1270" y2="92" stroke="rgba(220,232,240,0.50)" strokeWidth="1.6" />
-      <line x1="130" y1="408" x2="1270" y2="408" stroke="rgba(0,0,0,0.62)" strokeWidth="1.6" />
-      <rect x="82" y="100" width="1236" height="300" fill="none" stroke="oklch(0.60 0.012 230)" strokeWidth="1" rx="6" />
-      <rect x="88" y="106" width="1224" height="288" fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="0.6" rx="4" />
-      <line x1="150" y1="100" x2="1250" y2="100" stroke="rgba(220,232,240,0.22)" strokeWidth="0.6" />
+      <line x1="160" y1="138" x2="1240" y2="138" stroke="rgba(220,232,240,0.55)" strokeWidth="2" />
+      <line x1="160" y1="146" x2="1240" y2="146" stroke="rgba(220,232,240,0.18)" strokeWidth="0.8" />
+      <line x1="160" y1="362" x2="1240" y2="362" stroke="rgba(0,0,0,0.75)" strokeWidth="2" />
+      <line x1="160" y1="354" x2="1240" y2="354" stroke="rgba(0,0,0,0.30)" strokeWidth="0.8" />
 
-      <g fill="none" stroke="oklch(0.78 0.012 230)" strokeWidth="0.9">
-        <circle cx="305" cy="250" r="34" />
-        <circle cx="575" cy="250" r="34" />
-        <line x1="335.5" y1="240" x2="544.5" y2="240" />
-        <line x1="335.5" y1="260" x2="544.5" y2="260" />
-        <circle cx="825" cy="250" r="34" />
-        <circle cx="1095" cy="250" r="34" />
-        <line x1="855.5" y1="240" x2="1064.5" y2="240" />
-        <line x1="855.5" y1="260" x2="1064.5" y2="260" />
-      </g>
-      <g fill="none" stroke="rgba(0,0,0,0.72)" strokeWidth="1.6">
-        <circle cx="305" cy="250" r="33" />
-        <circle cx="575" cy="250" r="33" />
-        <circle cx="825" cy="250" r="33" />
-        <circle cx="1095" cy="250" r="33" />
-      </g>
+      <path
+        d="
+          M 132 124
+          L 1268 124
+          Q 1296 124 1296 152
+          L 1296 348
+          Q 1296 376 1268 376
+          L 132 376
+          Q 104 376 104 348
+          L 104 152
+          Q 104 124 132 124
+          Z
+        "
+        fill="none"
+        stroke="oklch(0.60 0.012 230)"
+        strokeWidth="1.2"
+      />
 
       <g className="amex-word">
         <text x="700" y="171" textAnchor="middle" fontFamily="Archivo Narrow, Archivo Black, sans-serif" fontWeight="700" fontSize="56" letterSpacing="28" fill="rgba(220,232,240,0.40)">
