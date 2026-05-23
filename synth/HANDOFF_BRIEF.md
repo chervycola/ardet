@@ -1,9 +1,21 @@
 # LAST NIGHT — Handoff Brief для R&D и подготовки производства
 
-**Версия канона**: v6.3 (final engineering + sound design audit pass)
+**Версия канона**: v6.4 (improvements pass — bypass trails, output limiter, power mute, CV protection, transducer coupling, coatings, calibration, cartridge keying)
 **Парный модуль**: Last Day (диптих холода/жары)
 **Серия**: System Suicide — 9 модулей физического синтеза
 **Целевой ship window**: Phase 1 — months 1-9 от kickoff
+
+**v6.4 improvements (vs v6.3)** — overlooked items pass:
+- 🔴 Bypass trails (buffered bypass option) — reverb-critical UX, true-bypass cuts tail иначе.
+- 🔴 Self-oscillation output limiter — safety (FEEDBACK CW может blast).
+- 🔴 Power-on/off muting (anti-thump).
+- 🔴 CV input protection (BAT85 clamps на 22 jacks) — modular mispatch safety.
+- 🟡 Transducer coupling spec (exciter mount + piezo bonding) — часть "звук пластин" риска (acoustic_modeling §7A).
+- 🟡 Plate coating tuning + product line (acoustic_modeling §7B) — voicing + revenue.
+- 🟡 Calibration procedure (`calibration_procedure.md`) — 12-step trim setup для production.
+- 🟡 Cartridge mis-insertion protection (keying + polarized magnets).
+- 🔵 Acoustic feedback mitigation documented (acoustic_modeling §7C).
+- BOM impact обязательных improvements: ~$5/unit.
 
 **Audit applied changes v6.2 → v6.3**:
 - 🔴 Solenoid power split: +12V_RAW pre-DC-DC (исправлен audio rail sag на TOLL pulse).

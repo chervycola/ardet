@@ -333,6 +333,15 @@ Mounts directly underneath panel cartridge slot opening на 4× M3 standoffs.
    - 2× JST-XH 2-pin (EXCITER + SOLENOID)
    - 4× neodymium N42 magnets (Ø6×3mm, retention)
    - 1× spring-loaded retention pin (Ø3×8mm)
+   - 1× orientation key post (Ø4mm asymmetric, off-center) — см. keying ниже
+
+   ⚠ MIS-INSERTION PROTECTION (v6.4):
+   - Cartridge frame имеет asymmetric notch (corner cut 8×8mm только на ОДНОМ углу)
+     → cartridge физически вставляется только в одной orientation.
+   - Dock has matching key post — cartridge не сядет если перевёрнут.
+   - Prevents: exciter drive → piezo input (damage), HV bias (Last Day +30V) → piezo.
+   - Magnets polarized (N up on 2 corners, S up on 2) — wrong orientation отталкивается.
+   - Connectors (mini-XLR + JST) различной spacing — physical impossibility cross-connect.
    
    Connector to main PCB:
    - 10-pin IDC ribbon (2×5):

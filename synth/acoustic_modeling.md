@@ -206,6 +206,87 @@ Nephrite stack: 3 × 5 = ~15 мод → fuller bell choir
 
 ---
 
+## 7A. Transducer coupling — exciter + piezo (критично к звуку)
+
+> **Главный пробел до v6.4**: размеры пластин оптимизированы, но **способ крепления трансдьюсеров не специфицирован**. Два идентичных steel plate с разным coupling/bonding звучат по-разному. Это часть "звук пластин" риска.
+
+### 7A.1 Exciter coupling
+
+| Параметр | Опции | Влияние | Рекомендация |
+|----------|-------|---------|--------------|
+| **Mount type** | rigid (жёсткий винт) vs compliant (rubber uncoupler) | rigid → больше energy transfer + plate-frame coupling (рама звенит); compliant → чище plate modes | **Compliant** (rubber grommet) — изолирует plate от frame resonances |
+| **Contact point** | center / 1/3 length / edge | center драйвит symmetric modes, давит antisymmetric; 1/3 point драйвит широкий mode set | **~1/3 от края** (драйвит и symmetric и antisymmetric моды) |
+| **Pre-load force** | light / medium / heavy | слишком light → buzz/rattle; heavy → damping, давит моды | medium, **calibrated torque** (spring washer на M3) |
+| **Coupling compound** | dry contact / silicone grease / epoxy bond | dry → micro-rattle; grease → clean transfer; epoxy → permanent но cracks | **Thin silicone coupling pad** (replaceable, clean transfer) |
+
+**Drive point оптимизация per FEM**: после FEM modal analysis (§8.2) — разместить exciter на **пучности** низких мод (max displacement), избегать узлов. Для 100×53 пластины ~1/3 от короткого края обычно good compromise.
+
+### 7A.2 Piezo bonding
+
+| Метод | Pros | Cons | Рекомендация |
+|-------|------|------|--------------|
+| **Cyanoacrylate (CA)** | thin bond line, good HF transfer | brittle, cracks под vibration over time | прототип only |
+| **Epoxy (slow-cure)** | strong, durable | thicker bond → HF rolloff, cracks eventually | acceptable |
+| **Mechanical clamp + couplant** | replaceable, no crack | bulkier, pressure-dependent | durability builds |
+| **Double-sided acrylic tape (VHB)** | compliant, durable, easy | softer HF coupling | **рекомендуется** — VHB durable под vibration, slight compliance OK |
+
+**Piezo placement**: dual piezo (A near exciter = bright/early, B far = diffuse/late) per FEM mode shapes. **Избегать узлов** доминирующих мод — иначе piezo не слышит эти моды. FEM mode shape map → optimal piezo coordinates.
+
+### 7A.3 Bench validation (обязательно)
+
+Tap-test (§8.4) + exciter bench (§8.5) должны A/B сравнить:
+- 3 exciter mount types (rigid / compliant / pad)
+- 3 piezo bonding methods (CA / epoxy / VHB)
+- → выбрать комбинацию по: clean mode transfer + durability (10000 strike cycles) + consistent unit-to-unit.
+
+---
+
+## 7B. Plate coating — tuning lever + product line
+
+Одна и та же пластина с разным покрытием = **разный RT60 + character**. Двойная выгода: voicing без новых материалов + product line expansion (один заготовка → несколько SKU).
+
+| Coating | Эффект на η (damping) | Character shift | Применение |
+|---------|----------------------|-----------------|------------|
+| **Raw (uncoated)** | baseline | максимальный sustain, brightest | metals, default |
+| **Lacquer (nitro/acrylic)** | +η ~0.001-0.003 | чуть короче, smoother top | wood, brass |
+| **Linseed/tung oil** | +η ~0.002 | warmer, damped HF | wood (oak) |
+| **Anodizing (aluminum)** | +η ~0.0005 + surface hardness | чуть brighter attack, durability | aluminum |
+| **Powder coat** | +η ~0.005-0.01 | значительно damped, matte tone | "dead" novelty variants |
+| **Patina (brass/copper)** | minimal η, surface texture | micro-texture scatter HF | aged aesthetic |
+
+### 7B.1 Product line implication
+
+Из **одной steel заготовки** → 3 SKU:
+- LN-STEEL (raw) — bright reverb
+- LN-STEEL-LAQ (lacquered) — smoother
+- LN-STEEL-PWR (powder coat) — damped/dark
+
+Razor-and-blades: cartridges = recurring revenue. Coating differentiation = low marginal cost (same plate stock + finishing step).
+
+> **Tap-test protocol** должен включать coated samples — измерить RT60 delta per coating для каждого материала.
+
+---
+
+## 7C. Acoustic feedback risk (live use) — mitigation
+
+> Модуль = exciter→plate→**piezo** chain. На громкой сцене plate резонирует от мониторов через воздух → **acoustic self-oscillation** (не электрическое). Piezo на резонирующей пластине = по сути контактный микрофон.
+
+### Mitigation (Phase 1)
+
+1. **Cartridge slot acoustic gasket** — foam/rubber seal вокруг slot opening снижает airborne coupling к plate.
+2. **Piezo HPF** — Block 7 input HPF режет sub-resonances где acoustic coupling сильнее.
+3. **Enclosure damping** — внутренняя поверхность корпуса с acoustic foam.
+4. **Documentation** — SPEC + manual: "place away from stage monitors / high-SPL sources". Standard для contact-mic instruments.
+
+### Mitigation (Phase 2 если bench подтверждает проблему)
+
+5. **Notch filter** на dominant feedback frequency (tunable).
+6. **Plate damping switch** — добавляет mechanical damping (felt против plate) для high-SPL environments.
+
+> **Bench test**: при prototype — measure SPL threshold где acoustic feedback начинается. Если <100 dB SPL (typical stage) → mitigation mandatory. Если >110 dB → acceptable, document only.
+
+---
+
 ## 8. Расчётная методика (для cartridge engineer)
 
 ### 8.1 Уровень 1 — аналитический spreadsheet (1 день, $0)

@@ -2,7 +2,16 @@
 
 > Production-ready документация: схемы, BOM, PCB layout, последовательность сборки, тестирование, troubleshooting.
 
-> **Версия**: v6.3 (final engineering + sound design audit pass).
+> **Версия**: v6.4 (improvements pass).
+>
+> **v6.4 improvements (vs v6.3)**:
+> - Block 13: self-oscillation output limiter (safety) + bypass trails option (reverb UX, default trails mode).
+> - Block 1: power-on/off muting (anti-thump, ~200ms).
+> - Block 6 area: CV input protection (1k series + BAT85 clamps на 22 CV jacks).
+> - Transducer coupling spec + plate coatings → `acoustic_modeling.md` §7A/7B.
+> - Cartridge mis-insertion keying → `PCB_DESIGN_SPEC.md` §6.1.
+> - Calibration → `calibration_procedure.md` (12-step).
+> - BOM impact: ~$5/unit (relay + OTA-limiter passives + mute circuit + 22× CV clamps).
 > 
 > **v6.3 audit changes (vs v6.2)**:
 > - 🔴 Solenoid power split — pulls от +12V_RAW pre-DC-DC (audio rail no longer sags на TOLL pulse).
@@ -126,12 +135,35 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 
   Decoupling: 100nF per IC + 10µF на LM13700/MCU (same as Eurorack).
 
-  External: 12V DC center-negative, 500мА min, regulated.
+  External: 12V DC center-negative, 800мА min, regulated.
   Compatible: Voodoo Lab Pedal Power 4×4 (12V outputs), Cioks DC7/DC10,
               Eventide PowerMax, Strymon Zuma R300, MXR ISO-Brick (18V port).
 ```
 
-**DC-DC selection options**:
+#### Power-on/off muting (anti-thump) **[NEW v6.4]**
+
+При power up/down ±12V rails settle несинхронно → DC step → thump в динамик. Muting circuit держит output muted ~200ms после стабилизации rails.
+
+```
+  +5V_digital (LDO output, settles last) ──► R_MUTE 100k ──┬──► C_MUTE 10µF ──► GND
+                                                            │
+                                                            ▼
+                                              Comparator (LM393 spare half)
+                                              threshold +3V
+                                                            │
+                                              Output LOW until C_MUTE charges >3V (~200ms)
+                                                            │
+                                                            ▼
+                                              Q_MUTE 2N7000 — shunts output к GND
+                                              while muting active
+                                                            │
+                                              Output J_OUT held к GND during power transition
+  
+  Power-up: rails settle → +5V rises → C_MUTE charges 200ms → mute releases → audio passes.
+  Power-down: +5V collapses fast → comparator flips → mute engages before rails ring → no thump.
+```
+
+**Components**: R_MUTE 100k + C_MUTE 10µF + Q_MUTE 2N7000 + LM393 half (shared). **BOM: $0.30**.
 
 | Part | Output | Current | Cost | Notes |
 |------|--------|---------|------|-------|
@@ -328,6 +360,29 @@ CMOS switch (4066 element) уже выделен в Block 18 BOM (one of 4 eleme
 
   Gain = -1. When DRIVE=0, sidechain alone drives exciter.
 ```
+
+### CV input protection (all CV jacks) **[NEW v6.4 — modular safety]**
+
+Eurorack CV может быть ±12V (или выше с mispatching). Все CV inputs (rise/fall/depth/speed/tone/feedback/position/boost/mix/output/noise/color/attack/decay/gate/IN/clock/TOLL/STALL/SIDE/FREEZE) получают protection network:
+
+```
+  J_CV_xxx ──► R_CVP 1kΩ (series current limit) ──┬──► to circuit input
+                                                   │
+                                          ┌────────┼────────┐
+                                          │        │        │
+                                    D_CVP_H      (node)   D_CVP_L
+                                    BAT85          │       BAT85
+                                    к +12V       к input   к -12V
+                                    (clamp high)           (clamp low)
+  
+  Over-voltage > +12V → D_CVP_H conducts → clamped к +12V + 0.3V (Schottky Vf)
+  Under-voltage < -12V → D_CVP_L conducts → clamped к -12V − 0.3V
+  Normal CV range (±10V Eurorack standard) → diodes off, transparent.
+```
+
+**Components per CV jack**: R_CVP 1kΩ + 2× BAT85 Schottky. **22 CV jacks × $0.07 = $1.54 total**. Cheap insurance против modular mispatching damage.
+
+> Schottky (BAT85) выбран вместо 1N4148 — lower Vf (0.3V vs 0.65V) → tighter clamp, faster. Audio CV bandwidth не страдает (1k series + few pF junction cap = corner >1MHz).
 
 ### Block 7. Dual Piezo Preamp (Q3 LSK489A + U3B/U4C) **[REVISED]**
 
@@ -628,6 +683,57 @@ ENV_CAP voltage (envelope follower DC level) разветвляется:
   PREAMP_B_OUT ── R_SR (47kΩ) ──┐                ┌── R_SRF (47kΩ) ── J_OUT_R
   DRY_SEND ────── R_DR (47kΩ) ──┼── summing amp ─┘
 ```
+
+#### Self-oscillation output limiter **[NEW v6.4 — safety]**
+
+FEEDBACK CW → controlled self-oscillation. Soft-clip D_LIM в feedback loop (Block 5) ограничивает amplitude **внутри петли**, но output может быть очень громким при случайном FEEDBACK CW. Output limiter защищает уши/динамики.
+
+```
+  Mix output ──► R_LIM_IN 10k ──┬──► U_LIM (LM13700 OTA spare — U5 OTA2 unused)
+                                 │         │
+                                 │    VCA gain controlled by:
+                                 │         │
+                                 │    Envelope detector на output level:
+                                 │    D_LIM_DET 1N4148 → C_LIM_DET 4.7µF
+                                 │    → threshold comparator (LM393 spare?)
+                                 │    → reduces OTA Iabc when output > +6dBu
+                                 │         │
+                                 ▼         ▼
+                          Brick-wall soft limit @ +6dBu (2.5Vrms на ±12V rails)
+                                 │
+                                 ▼
+                          Output buffer → J_OUT
+  
+  Attack <1ms (fast catch), release ~50ms (musical recovery).
+  Below +6dBu: transparent (limiter inactive). Above: gain reduction.
+```
+
+**Components**: U_LIM = U5 LM13700 OTA2 (unused в v6.2, reuse). D_LIM_DET 1N4148 + C_LIM_DET 4.7µF + R_LIM passives + threshold от +5V divider. **BOM: $0.30** (OTA free, passives only).
+
+#### Bypass trails (buffered bypass option) **[NEW v6.4 — reverb-critical UX]**
+
+Master BYPASS footswitch имеет **2 режима** (internal jumper J_TRAILS или panel-access toggle):
+
+```
+  TRUE BYPASS mode (jumper position 1):
+    Relay (Omron G6K-2F) hard-disconnects всю schematic, input→output прямой.
+    Хвост обрывается мгновенно. Zero coloration when off. Classic.
+  
+  TRAILS mode (jumper position 2):
+    BYPASS footswitch → mutes DRY path (input dry signal cut) via CD4066,
+    но WET path (reverb tail) продолжает decay естественно.
+    Input still buffered (no true disconnect).
+    Reverb tail доигрывает после bypass press → ambient-friendly.
+    
+    Implementation:
+      Footswitch → CD4066 S_DRY control (mute dry input to mix)
+      Wet feedback loop continues until natural decay
+      Re-engage: dry path restored, reverb continues building
+```
+
+**Why both modes**: reverb pedals universally split on this. True-bypass purists vs ambient players who need trails. Internal jumper (или premium SKU panel toggle) lets user choose. **BOM: $1.50** (relay G6K-2F + CD4066 element shared + jumper).
+
+> **Default ship setting**: TRAILS mode (ambient-friendly). True-bypass via jumper для purists.
 
 ### Block 14. Solenoid Driver — Triple-function DAMP + TOLL + STALL **[REVISED v5 hybrid]**
 

@@ -10,11 +10,13 @@
 
 **PCB design**: **[`PCB_DESIGN_SPEC.md`](PCB_DESIGN_SPEC.md)** — KiCad-ready spec для PCB designer (6 PCBs inventory, XY coordinates, layer stackup, ground topology, ribbon pinouts).
 
-**Acoustic / cartridge**: **[`acoustic_modeling.md`](acoustic_modeling.md)** — modal density calculator + acoustic-optimized cartridge dimensions per material + tap-test protocol (закрывает главный риск проекта — звук пластин).
+**Acoustic / cartridge**: **[`acoustic_modeling.md`](acoustic_modeling.md)** — modal density calculator + acoustic-optimized cartridge dimensions per material + transducer coupling spec + plate coating tuning + acoustic feedback mitigation + tap-test protocol (закрывает главный риск проекта — звук пластин).
+
+**Calibration**: **[`calibration_procedure.md`](calibration_procedure.md)** — пошаговая настройка всех trim pots для production assembly + QC sign-off.
 
 ## Текущий статус
 
-**Phase**: design lock (Decision 09 v6.3 — final engineering + sound design audit applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
+**Phase**: design lock (Decision 09 v6.4 — improvements pass applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
 
 ## Структура
 
