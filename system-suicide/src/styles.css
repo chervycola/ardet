@@ -1547,6 +1547,7 @@ section { position: relative; }
   .patch-list { grid-template-columns: 1fr; }
   .patch:nth-child(2n) { border-left: 0; padding-left: 4px; }
   .manifesto { grid-template-columns: 1fr; gap: 40px; }
+  .manifesto .shell { grid-template-columns: 1fr !important; gap: 40px !important; }
   .foot-grid { grid-template-columns: 1fr 1fr; }
   .topbar nav { display: none; }
   .rails { display: none; }
@@ -1648,10 +1649,11 @@ section { position: relative; }
     letter-spacing: 0.12em;
   }
   .signal-foot .arrow {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: pre-line;
+    text-align: center;
     max-width: 100%;
-    white-space: nowrap;
+    padding: 0;
+    line-height: 1.55;
   }
 
   /* catalog */
