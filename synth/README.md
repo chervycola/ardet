@@ -16,6 +16,8 @@
 
 **Procurement**: **[`BOM_SOURCING.md`](BOM_SOURCING.md)** — purchasing guide для small-batch (20 units): part numbers, дистрибьюторы, qty с буфером, преимущества, альтернативы, lead time + risk register.
 
+**Cartridge sourcing**: **[`CARTRIDGE_SOURCING.md`](CARTRIDGE_SOURCING.md)** — transducers + plate materials per cartridge type, exciter selection по массе, batch plan, supplier domains + P/N.
+
 ## Текущий статус
 
 **Phase**: design lock (Decision 09 v6.4 — improvements pass applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
