@@ -16,7 +16,7 @@
 
 **Procurement**: **[`BOM_SOURCING.md`](BOM_SOURCING.md)** — purchasing guide для small-batch (20 units): part numbers, дистрибьюторы, qty с буфером, преимущества, альтернативы, lead time + risk register.
 
-**Cartridge sourcing**: **[`CARTRIDGE_SOURCING.md`](CARTRIDGE_SOURCING.md)** — transducers + plate materials per cartridge type, exciter selection по массе, batch plan, supplier domains + P/N.
+**Cartridge sourcing**: **[`CARTRIDGE_SOURCING.md`](CARTRIDGE_SOURCING.md)** — split: module transducers (×модули, Decision 11) vs passive plate cartridges (×count), supplier domains + P/N.
 
 ## Текущий статус
 
@@ -70,11 +70,12 @@ synth/
 |----------|--------|----------|
 | 01 | Active | 4 undefined modules → fixed concepts |
 | 02 | Active (partial) | Last Day scope (D1, D5 superseded by 08) |
-| 03 | Active | Cartridge standards (mini-XLR + JST + 4 magnets) |
+| 03 | Active (partial, see D11) | Cartridge standards — frame format + 4 magnets (passive plate per Decision 11) |
 | 04 | Active | Production strategy (5 phases sequential) |
 | 08 | **LOCKED** | Day/Night комбайны consolidated base + diptych mapping |
 | 09 | **LOCKED** | v5 hybrid — mockup canon UX + Decision 08 internals |
 | 10 | Reference | Elite tier components + sourcing |
+| 11 | **LOCKED** | Plate-only passive cartridge + in-module transducers (contact coupling) |
 
 ## Schematic reference
 

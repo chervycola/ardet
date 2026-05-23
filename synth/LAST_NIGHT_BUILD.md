@@ -387,11 +387,10 @@ Eurorack CV может быть ±12V (или выше с mispatching). Все C
 ### Block 7. Dual Piezo Preamp (Q3 LSK489A + U3B/U4C) **[REVISED]**
 
 ```
-  Cartridge piezo connection via mini-XLR shielded cable [REVISED — was JST]:
+  Piezo pickup — module-side contact pin (Decision 11, no swappable connector):
 
-  J_PA TA3M ──Pin 2 (signal)──► Module piezo preamp:
-              Pin 1 (shield)──► AGND (single-point at module side)
-              Pin 3 (NC or signal return)
+  Piezo A (27mm disc, spring contact pin к back пластины) ──► short shielded
+              wire (<50mm) ──► AGND shield single-point ──► Module piezo preamp
 
   [REVISED] LSK489A SOT-23-6 dual matched JFET (replaces 2× 2N5457 EOL):
 
@@ -423,7 +422,7 @@ Eurorack CV может быть ±12V (или выше с mispatching). Все C
 
 **[REVISED CRITICAL]**:
 - 2× 2N5457 → **1× LSK489A SOT-23-6 dual matched JFET**. Auto-matched between channels (same die).
-- **Mini-XLR connector** (Switchcraft TA3M на module, TA3F на cartridge) replaces JST для piezo.
+- **Piezo module-side** (Decision 11) — contact pins к пластине, разведены коротким shielded проводом к JFET. **Нет swappable mini-XLR** (hi-Z не пересекает разъём → ниже noise floor).
 - **Guard ring** на PCB вокруг JFET gate pads — 0.5мм GND trace, via stitching (см. PCB layout section).
 
 ### Block 8. Position Crossfade (U4D — TL074)
@@ -2480,19 +2479,20 @@ Subtotal active was $11.97 — увеличено с FX engine + DC-DC до:
 |-----|------|-----|--------|---------|-------|
 | SW_FREEZE | SPDT toggle on-on | 1 | $2.00 | $2.00 | C&K 7101 series |
 | J_IN, J_SIDE, J_OUT_L, J_OUT_R, J_CV_MIX, J_CV_DECAY, J_CV_DAMP | Thonkiconn PJ301M-12 | 7 | $1.00 | $7.00 | 3.5mm vertical |
-| **J_PA, J_PB (на module side)** | **Switchcraft TA3M (mini-XLR)** | **2** | **$3.00** | **$6.00** | **[REVISED — was JST]** Shielded |
-| J_EX, J_SOL | JST-XH 2-pin header | 2 | $0.20 | $0.40 | Cartridge connections (low-criticality) |
+| **Transducer engine** (Decision 11 — module-side, internal wiring no swappable connector) | exciter DAEX32 + 2 piezo contact pins + solenoid + spring carriage | 1 set | $32.00 | $32.00 | См. CARTRIDGE_SOURCING §0A |
 | J_PWR | IDC 2×5 pin header | 1 | $0.50 | $0.50 | Eurorack power |
-| **Connector subtotal** | | | | | **$15.90** |
+| **Connector subtotal** (без transducer engine) | | | | | **$9.50** |
 
-### Cartridge interface (на cartridge side, included с cartridge)
+### Cartridge (passive plate — Decision 11)
 
 | Ref | Part | Qty | Unit $ | Total $ |
 |-----|------|-----|--------|---------|
-| Cartridge mating jacks: TA3F (mini-XLR female) | Switchcraft TA3F | 2 | $3.00 | $6.00 |
-| Cartridge mating: JST-XH housing + crimp pins | JST | 2 | $0.20 | $0.40 |
-| Coax cable (RG-174 или sub-mini) | Belden или equivalent | 2× 50мм | $0.50 | $1.00 |
-| **Cartridge interface subtotal** (per cartridge) | | | | **$7.40** |
+| Plate (материал) | per material (см. acoustic_modeling §10) | 1 | $5-15 | $5-15 |
+| Frame (PETG proto / anodized alu prod) | — | 1 | $3.00 | $3.00 |
+| Retention magnets N42 Ø6×3 (polarized, keying) | neodymium | 4 | $0.30 | $1.20 |
+| **Cartridge subtotal** (passive, per cartridge) | | | | **~$10-20** |
+
+> Картридж **не несёт** трансдьюсеров/разъёмов (Decision 11). Дёшев → razor-blade.
 
 ### Mechanical & misc (на module)
 
@@ -2536,7 +2536,7 @@ Subtotal active was $11.97 — увеличено с FX engine + DC-DC до:
 | Wood plate (oak 100×40×4mm, finished) | $8.00 |
 | Exciter DAEX25FHE-4 | $20.00 |
 | 2× piezo discs 27мм | $1.00 |
-| Cartridge interface (TA3F + JST + cable) | $7.40 |
+| Transducer engine (module, Decision 11 — exciter+piezo+solenoid) | $32.00 |
 | Magnets (4× neodym N42 5×5×2мм) | $1.00 |
 | Retention pin + spring | $0.50 |
 | Foam-lined box + material card | $3.50 |
@@ -2585,7 +2585,7 @@ PCB **190 × 108мм** (для 40HP формата), 2-layer FR4 1.6мм (budget
 │  │ J_PWR    │  │  guard ring)     │  │ (Q5)           │            │
 │  │ 1N5817×2 │  │                  │  │                │            │
 │  │ C_B*     │  │ J_PA, J_PB       │  │ J_SOL          │            │
-│  │ Decoupling│  │ (mini-XLR pads)  │  │ D_SOL          │            │
+│  │ Decoupling│  │ (piezo contact)  │  │ D_SOL          │            │
 │  └──────────┘  └──────────────────┘  └────────────────┘            │
 │                                                                     │
 │  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐            │
@@ -2639,7 +2639,7 @@ PCB **190 × 108мм** (для 40HP формата), 2-layer FR4 1.6мм (budget
 #### JFET gate trace (Zone 4)
 
 ```
-J_PA (mini-XLR pin 2) ──[short trace 5–10mm, surrounded by guard ring]── Q3 Gate A pad
+Piezo A contact pin ──[short shielded wire 5–10mm, guard ring at PCB entry]── Q3 Gate A pad
                                                                               │
                           R_PA 10MΩ (close к gate, <3mm) ────────────────────┘
                                                                               │
@@ -2671,7 +2671,7 @@ Loop physical area <100мм² recommended. Compact placement: D_SOL within 5мм
 
 #### Piezo input traces (Zone 4)
 
-- **Length <20мм** from mini-XLR pad к LSK489A gate.
+- **Length <20мм** from piezo contact wire entry к LSK489A gate.
 - **Width 0.2мм** (minimal — high impedance).
 - **GND pour** на both sides of trace + via stitching.
 - **No vias** на signal trace itself.
@@ -2835,7 +2835,7 @@ Revised order from v4:
 2. **Power supply zone (Z1) + DC-DC (Z19 pedal)** — adjacent to J_PWR.
 3. **Driver Amp (Z2)** — adjacent to power, with thermal exit к panel.
 4. **Mini-XLR jacks (cartridge)** — у opposite edge from J_PWR (signal entry).
-5. **JFET preamp (Z4)** — close to mini-XLR jacks (<20мм trace length). **No other circuit within 25mm**.
+5. **JFET preamp (Z4)** — close to piezo contact wire entry (<20мм). **No other circuit within 25mm**.
 6. **Solenoid driver (Z8)** — opposite corner from JFET preamp (>40мм physical separation).
 7. **Noise generator (Z9)** + ATtiny84A (Z13) — isolated digital corner, GND moat.
 8. **Output (Z7)** — у edge near panel jacks.
@@ -2867,80 +2867,58 @@ Front view (cartridge facing user):
 │                                  │
 │  ◯ Magnet 3   Magnet 4 ◯         │
 │                                  │
-│  Side: TA3F mini-XLR ×2          │  ← Audio (piezo)
-│  Side: JST-XH ×2                 │  ← Exciter, solenoid
+│  (НЕТ разъёмов — Decision 11)    │  ← картридж пассивный
 │                                  │
 │  Material label / serial # /     │
 │  laser-etched logo               │
 └──────────────────────────────────┘
 
-Side view (cross-section):
+Side view (cross-section) — картридж = пассивная пластина в рамке:
 ┌──────────────────────────────────┐
-│  Plate (variable thickness 0.5–6мм) - exciter mount on top face A
-│ ──┬───────────────────────────┬── Rubber rail (top)
+│  Plate (variable thickness 0.3–3мм)
+│ ──┬───────────────────────────┬── Rubber rail (top, frame damping)
 │   │     [PLATE]                │
 │ ──┴───────────────────────────┴── Rubber rail (bottom)
-│  Piezo A (Face B, near exciter)
-│  Piezo B (Face B, far end)
-│  
-│  Frame (PETG / aluminum)
-│  Connectors на side wall
+│  Frame (PETG / aluminum) + 4 магнита + keying
+│  Открытые окна: где module exciter/piezo касаются пластины
 └──────────────────────────────────┘
 ```
 
 ### Mounting hardware
 
-- **Plate retention**: 2× rubber rails (top, bottom) — silicone strips, 2мм thick. Compress slightly при insertion plate.
-- **Frame mount к module**: 4× neodym N42 magnets 5×5×2мм (recessed в frame), aligned с steel plates на module dock.
-- **Retention pin**: spring-loaded plunger (small, like от mini-DIN connector) prevents accidental drop при rack inversion.
+- **Plate retention в рамке**: 2× rubber rails (top, bottom) silicone 2мм — компрессия + frame damping (рама не резонирует).
+- **Frame mount к module**: 4× neodym N42 (polarized, keying) align с magnets на module engine bay.
+- **Retention pin**: spring-loaded plunger в module, входит в groove рамки.
 
-### Cartridge interface
+### Cartridge interface — passive (Decision 11)
 
 ```
-Cartridge side wall:
-┌─────────────────────────────────────┐
-│  ┌─────────┐ ┌─────────┐            │
-│  │ TA3F    │ │ TA3F    │            │  ← Piezo A, B (mini-XLR shielded)
-│  │ Pin1=GND│ │ Pin1=GND│            │
-│  │ Pin2=Sig│ │ Pin2=Sig│            │
-│  └─────────┘ └─────────┘            │
-│                                     │
-│  ┌─┐ ┌─┐                            │
-│  │ │ │ │                            │  ← Exciter, Solenoid (JST-XH 2-pin)
-│  │ │ │ │                            │
-│  └─┘ └─┘                            │
-└─────────────────────────────────────┘
+Картридж = пассивная пластина. НЕТ разъёмов, НЕТ wiring.
+Рамка имеет открытые окна (cutouts) где module-side трансдьюсеры
+касаются пластины при вставке:
 
-Internal wiring:
-TA3F (A) Pin 2 ─── 50мм coax ─── piezo disc 27мм (face B, near exciter)
-TA3F (A) Pin 1 ─── shield to chassis (frame)
-TA3F (B) Pin 2 ─── 50мм coax ─── piezo disc 27мм (face B, far end)
-TA3F (B) Pin 1 ─── shield to chassis
+  Window 1 (face A, ~1/3 от края): module exciter puck contact (~5N spring)
+  Window 2,3 (face B): module piezo contact pins (A near, B far)
+  Window 4 (top): module solenoid plunger reaches plate
 
-JST-XH (Exciter) ─── 50мм twisted pair ─── DAEX25 / DAEX32 на face A
-JST-XH (Solenoid) ─── 50мм twisted pair ─── (passes through frame to module's solenoid mount)
+Все трансдьюсеры — в module engine bay (см. PCB_DESIGN_SPEC §6.1).
+Картридж только позиционирует пластину против них (магниты + keying + pin).
 ```
 
-### Mounting plate в frame
+### Cartridge assembly (passive — простая)
 
-1. Apply 2× rubber rails в верхний и нижний slots of frame (peel-and-stick adhesive backing).
-2. Insert plate sliding sideways от open side of frame.
-3. Slight compression — plate stays put.
-4. Secure exciter к face A using **M3 bolt + rubber gasket** (uncoupler) на center axis (~1/3 length от один edge). Avoid mode nodes.
-5. Glue piezo discs на face B at positions A (under exciter, near edge) and B (opposite end).
-6. Solder coax cable from each piezo к TA3F pins.
-7. Wire exciter terminals к JST.
-8. Wire solenoid coil (если cartridge содержит solenoid mount) к JST.
+1. Apply 2× rubber rails в slots рамки (frame damping + retention).
+2. Insert plate в рамку (slide от open side).
+3. Slight compression — plate держится.
+4. Install 4× retention magnets (polarized per keying scheme).
+5. (Дерево) apply coating — linseed/shellac. (Металл) anodize опц.
+6. Laser-etch material label + serial.
 
-### Solenoid mount (опционально, может быть в frame или в module)
+**Всё.** Никаких трансдьюсеров, пайки, разъёмов. Картридж — чисто механический пассивный объект.
 
-**Option A — solenoid в module dock**:
-Solenoid attached к module structure, fetr tip extends into cartridge slot. Cartridge просто passes — no solenoid wiring к cartridge.
+### Transducer engine (в module, не в картридже)
 
-**Option B — solenoid в cartridge frame** (recommended):
-Каждый картридж имеет own solenoid (felt tip optimized для plate thickness). JST connection через interface.
-
-**Recommend Option B**: per-cartridge tuned damping (felt thickness и position varies по plate thickness). Cost: solenoid +$5 per cartridge.
+Exciter + 2 piezo (contact pins) + solenoid — постоянно в module engine bay, spring-loaded contact к вставленной пластине. См. `decisions/11_cartridge_architecture_lock.md` + `PCB_DESIGN_SPEC.md §6.1`. Solenoid felt tip + 2мм gap фиксирован в module (не per-cartridge).
 
 ### Cartridge-specific specifications
 
@@ -2981,7 +2959,7 @@ Solenoid attached к module structure, fetr tip extends into cartridge slot. Car
 4. Magnets: glue с epoxy (5-min cure) into recesses.
 5. Exciter: epoxy mount к plate face A (M3 bolt option for recovery).
 6. Piezo: cyanoacrylate (super glue) к face B at positions A, B.
-7. Solder cables to TA3F + JST.
+7. (Картридж пассивный — пайки нет. Трансдьюсеры в module.)
 8. Test: ohmmeter on solenoid coil (~5–10Ω), exciter (~4Ω), piezo (capacitance ~10нФ).
 9. Laser-etch material name + serial # on frame.
 10. Pack in foam box.
@@ -3074,7 +3052,7 @@ Bend leads, insert через PCB holes, solder, trim leads. Order:
 
 1. **SW_FREEZE** (SPDT toggle): solder 3 pins.
 2. **Thonkiconn jacks** ×7 (J_IN, J_SIDE, J_OUT_L, J_OUT_R, 3× CV): solder 3 pins each.
-3. **Mini-XLR (TA3M)** ×2 для J_PA, J_PB: panel-mount with 4 screws + solder pins.
+3. **Piezo contact pins** ×2: spring-loaded mounts в engine bay, short shielded wire к JFET.
 4. **JST-XH** ×2 (J_EX, J_SOL): solder 2 pins each.
 5. **2×5 IDC** (J_PWR): solder 10 pins, **verify polarity match Eurorack standard** (red stripe = -12V).
 
@@ -3132,7 +3110,7 @@ After successful inspection:
 
 1. Insert test cartridge (oak reference).
 2. Verify magnetic mate with retention pin engaged.
-3. Connect cables (mini-XLR, JST × 2).
+3. (Трансдьюсеры в module — internal wiring, no swappable cables.)
 4. Visually verify exciter exciter sits flush к plate.
 
 ### Step 16 — Functional test (basic)
@@ -3445,7 +3423,7 @@ Common issues и their resolutions, organized by symptom.
 - D_SOL flyback диод incorrect orientation (reversed).
 
 **Fix**:
-- Verify mini-XLR pin 1 = shield, connected to AGND on module side only.
+- Verify piezo shielded wire shield = AGND single-point on module side only.
 - Add ferrite bead на solenoid +12V supply line.
 - Replace D_SOL if reversed.
 
@@ -3570,7 +3548,7 @@ Common issues и their resolutions, organized by symptom.
 | **LSK489A** | Linear Integrated Systems (LIS) via Mouser | 2SK209 GR (Toshiba) — different footprint | 2-4 weeks | Core noise component. Order buffer stock 50+. |
 | **DAEX25FHE-4** | Dayton Audio (Parts Express) | Visaton FRS 5X (alt geometry) | 1-2 weeks | Often in stock, sometimes backorder. |
 | **DAEX32Q-4** | Dayton Audio | Visaton EX 60 S | 1-2 weeks | Premium-tier exciter. |
-| **Switchcraft TA3M / TA3F** | Mouser, Digi-Key | Rean NYS321/322 (lower cost) | 1 week | Standard mini-XLR. |
+| ~~Switchcraft TA3M/TA3F~~ | — | — | — | Устранён (Decision 11 — пьезо module-internal, no swappable connector). |
 | **Alpha RV09 9mm** | Thonk, SmallBear, eBay | Bourns 16mm (different footprint) | 2-4 weeks | Eurorack standard. Order in bulk. |
 | **TRACO TMR 3-1212WI** | Mouser, Digi-Key | Recom RKD-1212-D, Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
 | **Recom RKD-1212-D** | Mouser, Digi-Key | TRACO TMR 3-1212WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |

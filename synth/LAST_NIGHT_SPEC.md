@@ -119,7 +119,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 **Pedal SKU (big-box class — Strymon BigSky / Eventide H9 Max)**:
 - Last Night pedal (anodized aluminum corpus 203×140×40мм).
 - 1× wood cartridge (Oak raw, reference).
-- 1× shielded cartridge cable (mini-XLR + JST internal).
+- (картридж пассивный — без кабеля; трансдьюсеры в модуле, Decision 11)
 - 12V DC center-negative pedal supply (regulated, 500mA min) — **отдельно** или в premium bundle. Compatible: Voodoo Lab Pedal Power 4×4 (12V output), Cioks DC10, Eventide PowerMax.
 - Quick start card + warranty card.
 
@@ -233,7 +233,7 @@ Customer может start с pedal (для studio/live performance), позже 
 5. **EXCITER** — Dayton DAEX25 (light) или DAEX32 (dense) на face A.
 6. **Physical plate** — материал резонирует в bending modes.
 7. **Dual piezo pickup** — Piezo A (bright, near exciter) + Piezo B (warm, far end).
-8. **JFET preamp LSK489A** — dual matched, +27dB gain через mini-XLR shielded cables.
+8. **JFET preamp LSK489A** — dual matched, +27dB gain. Пьезо contact pins (module-side, Decision 11) → короткий shielded провод → JFET.
 9. **POSITION crossfade** — A↔B mix (manual или CV).
 10. **De-emphasis** — зеркало pre-emph.
 
@@ -555,7 +555,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - **Содержит только**: пластину (100×53×h мм) + покрытие (дерево) + 4 retention магнита + keying notch. Пассивный.
 - **Plate dimensions**: длина **100мм fixed**, высота 20–60мм per material, толщина 0.5–6мм per material.
 - **Mount**: 4× neodym N42 магниты align + spring-loaded retention pin.
-- **Connectors**: 2× mini-XLR (Piezo A, B) + 2× JST-XH (Exciter, Solenoid).
+- **Connectors**: НЕТ (Decision 11 — картридж пассивный; трансдьюсеры в модуле, contact coupling).
 - **Mass**: ~50г frame + plate-зависимая масса.
 
 ### Phase 1 catalog — 6 cartridges (initial launch)
@@ -574,7 +574,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 | Картридж | Размеры | RT60 | Характер | Retail |
 |----------|---------|------|----------|--------|
 | **EBONY** | 100×25×3 | 0.3–0.8с | Премиум, длинный sustain, тёмный | $180 |
-| **NEPHRITE — Sayan green** | 100×40×4 | **1–3с** | **Поющий, медитативный, bell-like, 4000-летняя традиция (bianqing 编磬)**. ~48г. DAEX32 exciter. См. `cartridges/07_nephrite_processing.md` | **$250** |
+| **NEPHRITE — Sayan green** | 100×53×2.5 | **1–3с** | **Поющий, медитативный, bell-like, 4000-летняя традиция (bianqing 编磬)**. ~40г. (Module DAEX32 universal exciter.) См. `cartridges/07_nephrite_processing.md` | **$250** |
 | **NEPHRITE — Hetian "mutton fat" white** | 100×40×4 | 1.5–4с | Премиум limited 50 экз., белый "баранний жир" — visual contrast в каталоге. Mirror-polished с diamond paste | **$450** |
 | **NEPHRITE — pounamu (NZ)** | 100×40×4 | 1–3с | Ritual edition limited 25 экз., Ngāi Tahu treaty-certified. Глубокий "kahurangi" зелёный | **$550** |
 | **COPPER** | 100×40×1.5 | 1–2.5с | Колокольный, patina меняет тембр | $170 |
@@ -879,9 +879,8 @@ Result: rhythmic pumping reverb wash, dub-style.
 |-----------|---------------|
 | **Audio in/out** | Thonkiconn PJ301M-12 (3.5мм TS, vertical) |
 | **CV in** | Thonkiconn PJ301M-12 |
-| **Cartridge piezo** | 2× Switchcraft TA3M (mini-XLR, locking, shielded) |
-| **Cartridge exciter** | JST-XH 2-pin |
-| **Cartridge solenoid** | JST-XH 2-pin |
+| **Transducers (module-side, Decision 11)** | exciter + 2 piezo contact pins + solenoid — internal wiring к main PCB, contact coupling к пластине |
+| **Cartridge** | пассивная пластина — без разъёмов |
 | **Power** | 2×5 IDC (Eurorack standard) или DC jack 12V (pedal) |
 
 ### Cartridge interface
@@ -973,7 +972,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 - **Cartridge swap**: до 1000 cycles specified. После 500+ swaps — visual inspection магнитов на debris.
 - **Pots**: используются Alpha RV09 quality. Контактная очистка DeoxIT каждые 2 года при heavy use.
-- **Cartridge dock cleanliness**: blow dust от mini-XLR connectors каждые 6 месяцев compressed air.
+- **Transducer contact cleanliness**: blow dust от exciter puck + piezo contact pins каждые 6 месяцев compressed air. Чистый contact = consistent coupling.
 - **PCB inspection**: при weird noise — open chassis, visually inspect для cold solder joints, capacitor bulging.
 
 ### Wood cartridge re-finishing
@@ -1016,11 +1015,11 @@ Result: rhythmic pumping reverb wash, dub-style.
 |---------|--------------|-----|
 | No sound output | Power issue, blown fuse | Check ±12V на ICs, verify 1N5817 not shorted |
 | Hum 50/60Гц | Ground loop | Check star-ground tie at power conn, replace cable |
-| Clicks при solenoid activation | EMI coupling в piezo | Verify mini-XLR cables shielded, ferrite bead на solenoid |
+| Clicks при solenoid activation | EMI coupling в piezo | Verify piezo internal wiring shielded, ferrite bead на solenoid, solenoid от +12V_RAW |
 | Self-oscillation runaway | Feedback loop instability | Check D_LIM diodes installed correctly, test SPICE if recurring |
 | One channel dead | JFET preamp failure | Test LSK489A с DMM, check bias resistors |
 | Solenoid не activates | MOSFET gate issue | Verify R_DAM1 = 47кΩ, gate voltage at CV 5В should be ~3.4В |
-| Wood cartridge pitch sounding "thin" | Plate cracked or detached от exciter | Replace cartridge |
+| Wood cartridge pitch sounding "thin" | Plate cracked OR weak exciter contact (insertion) | Re-seat cartridge (check contact), replace если cracked |
 | Distortion на line level | LED clipper threshold low | Verify D1/D2 = 3× LED in series (not single LED) |
 | Hiss above noise floor | Input source / cable / preamp issue | Test с input shorted — should be -85dBV или quieter |
 

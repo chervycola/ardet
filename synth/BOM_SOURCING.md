@@ -23,10 +23,10 @@
 |-----|-----|---------------|--------------|------------------|--------|---------------------------|--------------|
 | **Q3** | **LSK489A** | Linear Integrated Systems | Mouser, DigiKey, LIS direct | **20 → 30** | $6.00 | Dual matched JFET, ~1.8 nV/√Hz. **Noise cornerstone** — заменяет EOL 2N5457. Sole practical source. | 2SK170BL pair (matched вручную, разный footprint) — но хуже matching |
 | **U5/U6/U7** | **LM13700N** | TI | Mouser, DigiKey | 60 → 70 | $2.00 | Dual OTA. VCA + noise xfade + phaser. Industry standard, но проверять stock (периодически backorder). | NE5517 (almost drop-in), LM13600 (NOS) |
-| **Exciter** | **DAEX25FHE-4** | Dayton Audio | Parts Express, Mouser | per cartridge | $14 | Surface exciter 4Ω, low-mass. Core transducer. Often in stock, иногда backorder. | Visaton FRS 5X (alt geometry), DAEX32Q-4 (premium, dense plates) |
+| **Exciter** | **DAEX32Q-4** | Dayton Audio | Parts Express, Mouser | **per module ×28** (Decision 11 — в модуле, не в картридже) | $20 | Universal surface exciter 4Ω. В transducer engine bay. Often backorder. | Visaton EX 60 S, DAEX25FHE-4 (lighter) |
 | **DC-DC** (pedal) | **TMR 3-1212WI** | TRACO Power | Mouser, DigiKey | 20 → 24 | $13 | Isolated ±12V 125mA, 3W. Audio-grade noise. Pedal SKU only. | Recom RKD-1212-D (250mA, premium), Mornsun 1212S-1WR3 |
-| **TA3F** (cartridge) | **TA3FX** | Switchcraft | Mouser, DigiKey | 2/cartridge | $6 | Mini-XLR 3-pin female, shielded. Piezo connector. **Shielding критичен** (TRS даёт hum). | Rean NYS321 (cheaper, lower cycles) |
-| **TA3M** (dock) | **TA3MX** | Switchcraft | Mouser, DigiKey | 2/module → 40+5 | $6 | Mini-XLR 3-pin male (dock side). Mating cycle rating важен (частый swap). | Rean NYS322 |
+| ~~Mini-XLR TA3F/TA3M~~ | — | — | — | **0 (устранён, Decision 11)** | — | Пьезо теперь module-internal, разведён коротким shielded проводом к JFET. Swappable mini-XLR не нужен. Экономия ~$1920. | — |
+| **Piezo pickup** | 27mm disc + spring contact pin | various | Tayda + Mouser (pogo) | **2/module ×28 = 56 (+6 буфер)** | $1 | Module-side contact pickup (Decision 11). A near / B far. | PVDF film premium |
 | **MCU** | **ATtiny84A-PU** | Microchip | Mouser, DigiKey | 20 → 25 | $1.50 | 14-pin DIP, 12 GPIO + 8 ADC. v6.4 upgrade. Same toolchain как ATtiny85. | ATtiny44 (less flash, same pinout) |
 
 **Tier A batch cost (20 units, +буфер)**: ~$800 (LSK489A dominant + LM13700 + DC-DC).
@@ -127,7 +127,7 @@
 
 | Tier | Описание | Cost (20 units +буфер) |
 |------|----------|------------------------|
-| A | Критичные/редкие (LSK489A, LM13700, exciter, DC-DC, mini-XLR, MCU) | ~$800 |
+| A | Критичные/редкие (LSK489A, LM13700, exciter ×28, piezo ×56, DC-DC, MCU) | ~$1700 (incl. ×28 transducer engine) |
 | B | Специализированные (pots, sliders, footswitch, relay, LF398, trim, solenoid) | ~$450 |
 | C | Commodity ICs + discrete | ~$200 |
 | Passives | Caps + resistors | ~$300 |
@@ -136,7 +136,7 @@
 | **Итого материалы на 20 units** | | **~$2750** |
 | **Per unit material cost** | | **~$137** |
 
-> Соответствует BUILD BOM estimate ~$100-127/unit + mechanical/PCB overhead. Cartridges (exciter/piezo/solenoid/magnets) считаются отдельно per cartridge.
+> Соответствует BUILD BOM estimate ~$100-127/unit + mechanical/PCB overhead. **Transducer engine** (exciter/piezo/solenoid, Decision 11) — теперь часть module BOM ×28 (~$32/модуль), не per-cartridge. Plate cartridges (пассивные) — отдельно, ~$10-20 каждый (см. CARTRIDGE_SOURCING).
 
 ---
 
@@ -147,7 +147,7 @@
 | **LSK489A** | 2-4 нед | EOL-аналоги вокруг, single practical source | Буфер 30 шт сразу. Мониторить LIS stock. |
 | **LM13700N** | 1-4 нед | Периодический backorder | Буфер. NE5517 backup qualified. |
 | **SL-4P5T slider** | ⚠ возможно custom MOQ | **Off-the-shelf почти нет** | **Решить до tooling**: rotary 4P5T или custom. |
-| DAEX25 exciter | 1-2 нед | Иногда backorder | Буфер per cartridge plan. |
+| DAEX32 exciter | 1-2 нед | Иногда backorder | Буфер ×28→32 (module engine, Decision 11). Visaton backup. |
 | TRACO DC-DC | 2-3 нед | OK | Standard. |
 | Mini-XLR Switchcraft | 1 нед | OK, mating cycle wear long-term | Spec cycle rating, spare connectors. |
 | WIMA film caps | 1-2 нед | OK | Buy matched batch для pre/de-emphasis. |
@@ -156,7 +156,7 @@
 ### Топ-3 sourcing блокера до production:
 1. **SL-4P5T** — найти реальный part (rotary alt или custom). **Не существует off-the-shelf slider.**
 2. **LSK489A** буфер — закупить 30 шт пока в наличии (EOL risk у JFET категории).
-3. **Cartridge transducers** (exciter+piezo+solenoid) — scaling с cartridge count, не unit count. Отдельный procurement plan.
+3. **Transducer engine** (exciter+piezo+solenoid) — scaling с **module count** (×28, Decision 11), не cartridge count. Plate cartridges пассивны (только материал+рамка+магниты).
 
 ---
 

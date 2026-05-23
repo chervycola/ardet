@@ -60,7 +60,7 @@
 2. **Acoustic-driven envelope** (plate-triggered FG mode) — Block 11 envelope follower → comparator → FG trigger. **Default behaviour без patching**: каждый attack onset на пластине = FG fires одноразовый cycle. Это формирует "instrument отвечает на игру" effect — главная UX feature, отличающая Last Night от любого generic reverb.
 3. **Analog Function Generator** (не digital LFO simulation) — TL074 integrator + diode-steered rise/fall RC + 2N3904 matched-pair exp converters. Эмуляция через ATtiny84A DAC недопустима — теряется analog character который пользователь будет слышать в exp curve nonlinearity и в RC charging tail.
 4. **LSK489A dual matched JFET** в piezo preamp — не generic 2SK170, не SMD JFET pair. Decision 02 specifically locked LSK489A — это noise floor cornerstone. Substitution = audible SNR degradation.
-5. **Cartridge format compatibility** между Last Night и Last Day — same frame 110×65×30mm, same mini-XLR + JST, same retention. Если material plate cartridge не вставляется в Last Day slot и наоборот — диптих ломается, перекрёстные patches невозможны.
+5. **Cartridge format compatibility** между Last Night и Last Day — same frame 110×65×30mm, same retention magnets + keying. Material plate cartridge (passive, Decision 11) вставляется в обе модели. Если не совместимы — диптих ломается.
 
 ### Tier 2 — high importance (compromise требует написанного решения)
 
@@ -74,7 +74,7 @@
 
 11. **Phase/Flutter** — single continuous knob (не 3 отдельные phaser controls). Morph между мягкое phasing → resonant → controlled self-oscillation.
 12. **FG output exposed via 4 jacks** (EG OUT main + Gate + Sub÷2 + Inv) — FG не private к phaser, может патчиться куда угодно через CV bay. Это распахивает modular usefulness в 10× по сравнению с typical reverb pedal.
-13. **Mini-XLR (Switchcraft TA3F)** для piezo cartridge interface, не TRS, не JST. Shielding критичен для noise floor — TRS jacks дают audible 50Hz hum при движении cable рядом с power.
+13. **Piezo pickup — module-internal contact** (Decision 11), не на картридже. Hi-Z пьезо разведён коротким shielded проводом к JFET preamp на module PCB → не пересекает swappable разъём → ниже noise floor. (Прежний mini-XLR cartridge interface устранён.)
 
 ---
 
@@ -150,7 +150,8 @@
 | Decision | Что закреплено |
 |----------|----------------|
 | Decision 02 (Last Day scope) | D2 capacitive pickup, D3 solar optional, D4 manual v1 tongue. *D1 form factor и D5 perform FX superseded by Decision 08.* |
-| Decision 03 (cartridge standards) | Frame 110×65×30mm, 4 magnets + retention pin, mini-XLR ×2 + JST-XH ×2. |
+| Decision 03 (cartridge standards) | Frame 110×65×30mm, 4 magnets + retention pin. *Connectors superseded by Decision 11 — картридж пассивный, трансдьюсеры в модуле.* |
+| Decision 11 (cartridge architecture) | **LOCKED** — passive plate cartridge + in-module transducer engine (contact coupling). |
 | Decision 04 (production strategy) | 5 phases sequential, DIY → contract, tiered pricing. |
 | Decision 08 (consolidated base) | Day/Night комбайны base, cold↔hot palette diptych mapping. |
 | Decision 09 (v5 hybrid lock) | Mockup canon UX + Decision 08 electrical innovations + Gate/Crush restored. |

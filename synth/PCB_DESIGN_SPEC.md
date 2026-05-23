@@ -25,7 +25,7 @@ Per Decision PCB-1 (v6.3): **C — common main PCB + form-factor adapter sub-PCB
 | 3 | **FG slider satellite** | 60 × 30 mm | 2L FR4 1.6mm | 1 | 3× sliders + exp converters |
 | 4 | **Bank Mode slider satellite** | 25 × 40 mm | 2L FR4 1.6mm | 1 | SL-4P5T + R-banks |
 | 5 | **Footswitch satellite** | 100 × 40 mm | 2L FR4 1.6mm | 1 | 4× 3PDT + LED indicators |
-| 6 | **Cartridge dock satellite** | 80 × 30 mm | 2L FR4 1.6mm | 1 | 2× mini-XLR + 2× JST + retention magnets |
+| 6 | **Cartridge dock = transducer engine bay** | mechanical assembly | — | 1 | exciter (spring carriage) + 2 piezo contact pins + solenoid + magnets (Decision 11) |
 
 Всего на unit: 4 PCBs (main + form-factor + 2-3 satellites — sliders consolidated в Eurorack version possibly).
 
@@ -597,13 +597,14 @@ PCB designer must enforce per Block 14 thermal budget + EMI rules:
    Insertion: vertical (cartridge slid into pedal body from above through panel slot)
    Travel: 30mm down into pedal body, 0mm overhang above panel
    
-   Cartridge dock satellite PCB:
+   Transducer engine bay (Decision 11 — mechanical, not connector PCB):
      - Mounted ~20mm below panel внутри pedal body
-     - 4× M3 standoffs from main PCB top side
-     - 2× mini-XLR receptacles facing UP (toward cartridge)
-     - 2× JST-XH receptacles facing UP
-     - 4× neodymium magnets on dock PCB align с 4× magnets on cartridge bottom
+     - Exciter DAEX32 on spring carriage, puck faces UP (contact к plate front ~5N)
+     - 2× piezo contact pins (spring-loaded) touch plate back facing UP
+     - Solenoid bracket above, plunger strikes plate
+     - 4× neodymium magnets align с 4× magnets on cartridge (retention + keying)
      - Spring-loaded retention pin engages cartridge groove при insertion
+     - Transducers wired internally к main PCB (no swappable connectors)
    
    Cartridge ejection: press retention pin (panel access hole 3mm) → cartridge releases → lift out vertically
 ```

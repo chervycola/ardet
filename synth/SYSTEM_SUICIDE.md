@@ -740,11 +740,12 @@ Resилиентные резиновые рельсы в раме картрид
 ### Repositioning: "resonator reverb", не "plate reverb"
 После acoustic reality check (см. `audit/11_last_night_acoustic.md`): 100мм — слишком маленькая пластина для classical plate reverb (EMT 140 использовал 2×1м). Модуль **не имитирует EMT**, а создаёт **новую категорию** — resonator reverb с материал-зависимым character. Marketing должен быть скорректирован.
 
-### Размещение трансдьюсеров
-- **Exciter**: Dayton DAEX25FHE-4 (для light materials ≤30г) или DAEX32Q-4 (для dense materials >30г). Крепится через винт M3 + резиновый uncoupler к face A, ~1/3 длины от края.
-- **Piezo A**: 27мм piezo disk (budget) или PVDF film (premium), на face B под exciter (ближний сигнал — bright).
-- **Piezo B**: то же, на противоположном конце face B (дальний сигнал — warm, diffuse).
-- **Соленоид**: сверху по центру, фетровый наконечник, 2мм spring-loaded adjustable zазор.
+### Размещение трансдьюсеров (в модуле, contact к вставленной пластине — Decision 11)
+- **Exciter**: Dayton DAEX32Q-4 (universal). На spring-loaded carriage, contact к face A пластины ~5N, ~1/3 длины от края (FEM antinode).
+- **Piezo A**: 27мм disk на spring contact pin, касается face B под exciter (ближний — bright).
+- **Piezo B**: то же, противоположный конец face B (дальний — warm, diffuse).
+- **Соленоид**: фиксирован сверху, фетровый наконечник, 2мм gap, бьёт по вставленной пластине.
+- Всё **module-side**; картридж (пассивная пластина) контактирует при вставке.
 
 ### Архитектура схемы (20 блоков, ~200 компонентов с FX engine)
 
@@ -761,7 +762,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 
   [Физическая пластина в картридже]
 
-  Piezo A, B (mini-XLR shielded) → LSK489A dual JFET preamp (×23 gain)
+  Piezo A, B (module contact pins, short shielded wire, Decision 11) → LSK489A dual JFET preamp (×23 gain)
         │
         ▼
   Position crossfade (RV_POSIT) → De-emphasis
@@ -836,11 +837,13 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 - **C_DC 1000µФ** — bass extension до 18Гц.
 - **Envelope follower τ**: 1–48мс attack, 10мс–1с decay.
 
-### Картриджная система
+### Картриджная система **[Decision 11]**
 
-**Формат рамки**: 110×65×30мм, 3D-печать PETG (прототип) или фрезерованный алюминий (продакшен). **Mount**: 4× neodym магниты + retention pin + направляющие.
+**Картридж = пассивная пластина**: материал + покрытие (дерево) + рамка + 4 магнита + keying. **НЕ несёт** трансдьюсеры/разъёмы.
 
-**Connectors на рамке**: 2× mini-XLR (piezo A, B shielded) + 2× JST-XH (exciter, solenoid). Mixed strategy — shielding там, где критично.
+**Формат рамки**: 110×65×30мм, 3D-печать PETG (прототип) или фрезерованный алюминий (продакшен). **Mount**: 4× neodym магниты (polarized, keying) + retention pin.
+
+**Трансдьюсеры — в модуле** (transducer engine bay): exciter (spring contact) + 2 пьезо (contact pins) + соленоид. Вставка картриджа = механический contact coupling. Никаких разъёмов на картридже → дёшев ($10-20), durable, razor-blade модель. См. `decisions/11_cartridge_architecture_lock.md`.
 
 ### Каталог материалов (Phase 1 initial — 6 cartridges)
 
@@ -1116,7 +1119,7 @@ Premium ritual piece. $250.
 
 **Last Night rev A** (flagship):
 - Apply IMMEDIATE fixes в KiCad schematic (bias diodes, R8 5W spec, R_DAM1 47к, C_PE1/DE1 matched).
-- Apply SHORT fixes (LSK489A swap on PCB, SPICE feedback verification, mini-XLR cable system).
+- Apply SHORT fixes (LSK489A swap on PCB, SPICE feedback verification, transducer engine contact mechanism per Decision 11).
 - Apply MEDIUM fixes на rev B (C_DC 1000µФ, envelope τ correction, LED clipper, zener noise).
 - Build 10-unit prototype batch.
 - Test per `fixes/04_testing_protocol.md`.

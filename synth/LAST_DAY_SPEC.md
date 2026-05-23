@@ -33,7 +33,7 @@ Last Day — **electromechanical delay + tone shaping combine** на oil-can т�
 - **Tongue resonator с физическим caподастром**: пользователь двигает clamp вдоль guide rail → меняет резонансную частоту mid-range. Q control через clamp pressure. Acoustic plate-tongue resonator wrapped в audio feedback loop.
 - **Solar saturator**: solar cell + internal LED → starved supply для opening stage. Outdoor performance = sun-driven saturation. Indoor = LED baseline stable.
 - **Hot palette FX antiподы Last Night cold palette**: каждый Last Day эффект — semantic mirror Last Night эффекта (HAZE↔PULSE, BLEACH↔FROST, TAR↔CHILL, CICADA↔GEIGER, HEATWAVE↔HUM, DRAG↔STALL, CRASH↔TOLL).
-- **Cartridge стандарт един** с Last Night — те же mini-XLR + JST connectors, те же мехи retention. Можно swap-картриджи между модулями (один материал слышен и как plate-reverb, и как oil-can wet-tap delay material).
+- **Cartridge frame стандарт един** с Last Night — та же рамка 110×65×30мм + retention магниты + keying. **Два типа картриджей**: (1) пассивная material-пластина (Decision 11 — для plate-resonator, трансдьюсеры в модуле) и (2) активный oil-can disk (capacitive электроды + JFET на картридже — собственная delay-архитектура Last Day). Material-пластину можно swap между Night и Day; oil-can — только Last Day.
 
 ### Категория
 

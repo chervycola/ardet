@@ -167,4 +167,4 @@ Transducer engine bay per module — см. §0A. **Σ module transducers ~$900**
 
 ---
 
-**End of cartridge sourcing v6.4. Топ-приоритет: DAEX25/32 буфер (backorder risk) + mini-XLR cost decision (Switchcraft vs Rean per tier).**
+**End of cartridge sourcing v6.5 (Decision 11). Топ-приоритет: DAEX32 буфер ×28→32 (module engine), contact coupling bench validation, cartridge quantity model (A/B/C).**
