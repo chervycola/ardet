@@ -1,8 +1,14 @@
 # Decision 10 — Elite tier components & sourcing strategy
 
 **Дата**: 2026-05
-**Статус**: draft v1 (open для refinement after first prototype sourcing)
+**Статус**: v2 (aligned к v6.4 design + Decision 11)
 **Тип**: SKU tier definition + supply chain strategy
+
+> **v6.4 + Decision 11 alignment**:
+> - **Exciter + пьезо — module-side** (Decision 11), не cartridge. Их audiophile-tier теперь part of MODULE build (§11, §12 ниже актуальны для module engine bay).
+> - **Cartridge connectors / cables (§9, §10, §246)** — устранены (Decision 11, картридж пассивный). Игнорировать эти секции.
+> - **Новые v6.4 компоненты** требуют audiophile-tier: FG core (2nd TL074 + LM393 + 74HC74 + 2N3904 exp pairs), output limiter, CV protection (BAT85), bypass relay (G6K-2F), FG/Bank Mode sliders. См. §17 (v6.4 additions) ниже.
+> - **Картриджи закупаются отдельно** (user decision) — этот doc = MODULE electronics audiophile sourcing.
 
 ---
 
@@ -487,6 +493,96 @@ Elite tier — lower margin, но **absolute profit higher** ($1,032 vs $405 н�
 | **Solid brass knobs** | **Etsy custom machinist commissions** | Mod kit suppliers | Custom-order |
 | **TRACO / Recom DC-DC** | Mouser, Digi-Key | RS Components | Industry stock |
 | **Linear PSU audiophile** | **Mojo Audio, Cardas direct** | Audiogon (used market) | Boutique audio |
+
+---
+
+## 17. v6.4 new components — audiophile tiers
+
+Компоненты, добавленные после первичного Decision 10 (Function Generator, output limiter, CV protection, bypass relay, sliders). Audiophile options:
+
+### FG core (Block 16 — analog function generator)
+
+| Компонент | Budget | Premium / audiophile | Sourcing |
+|-----------|--------|---------------------|----------|
+| FG op-amp (Schmitt+integrator+buffer+inverter) | TL074CN $0.75 | **OPA1644** (quad, low-noise FET) $5 | Mouser, DigiKey |
+| FG comparator (Gate/EOR) | LM393N $0.30 | **LT1720** (fast precision comp) $4 | Mouser |
+| FG ÷2 flip-flop | 74HC74 $0.30 | 74HC74 (digital — no audio path, budget OK) | Tayda |
+| **Exp converter pairs** | 2N3904 ×6 $0.12 | **LM394 / SSM2210 matched pair** $3 ea | Mouser, что критично для FG curve consistency |
+| FG integrator cap C_FG | WIMA MKS2 $0.20 | **WIMA FKP2 polypropylene** $0.60 (low leakage = stable FG rate) | Mouser |
+
+> Exp converter matched pairs — **критичны для FG curve consistency** между rise/fall и unit-to-unit. LM394 (monolithic dual matched) >> 2N3904 hand-matched. Audiophile-tier worth it здесь.
+
+### Output limiter (Block 13 — self-osc safety)
+
+| Компонент | Budget | Audiophile | Note |
+|-----------|--------|-----------|------|
+| Limiter VCA | LM13700 spare OTA | **THAT2180** (если limiter в audio path always) $8 | Limiter обычно transparent below threshold — budget OTA OK |
+| Detector diode | 1N4148 | **BAT85 Schottky** $0.05 (faster, lower Vf) | Cleaner attack catch |
+
+### CV input protection (22 jacks)
+
+| Компонент | Budget | Audiophile | Note |
+|-----------|--------|-----------|------|
+| Clamp diodes | BAT85 ×44 $2.20 | **BAV199** (low-leakage dual) $0.10 ea | Low leakage = меньше CV path loading. Audiophile worth для precision CV. |
+| Series R | 1k MF | **Susumu RG thin-film 1k** $0.10 | Lower noise/drift |
+
+### Bypass relay (Block 13 — trails/true-bypass)
+
+| Компонент | Budget | Audiophile | Sourcing |
+|-----------|--------|-----------|----------|
+| Signal relay | Omron G6K-2F $2.50 | **Omron G6A-274P** (audio-grade, bifurcated gold contacts) $4 | Mouser, DigiKey |
+| | | **Panasonic TQ2-L2-5V** (latching, low power) $5 | Mouser — latching saves power |
+
+### Sliders (FG rise/fall/depth + Bank Mode)
+
+| Компонент | Budget | Audiophile | Sourcing |
+|-----------|--------|-----------|----------|
+| FG linear sliders | Alpha SL-30 $1.50 | **Bourns PTL series** conductive plastic $4 | Mouser, smooth feel + long life |
+| Bank Mode 4P5T | Alpha SL-4P5T (sourcing risk!) | **Grayhill 56SD rotary 4P5T** $12 (надёжнее) | Mouser, DigiKey — см. BOM_SOURCING блокер |
+
+---
+
+## 18. Curated audiophile MODULE build — consolidated shopping list
+
+Рекомендуемый audiophile-tier для **module electronics** (картриджи отдельно). Selective — апгрейд там где слышно, baseline где не критично.
+
+| Stage | Part | Qty | $ ea | Σ | Где |
+|-------|------|-----|------|---|-----|
+| **Input/output op-amps** | OPA1612 (SoundPlus dual) | 2 | $8 | $16 | Mouser/DigiKey |
+| **Signal path op-amps** | OPA1644 quad | 3 | $5 | $15 | Mouser |
+| **JFET preamp** | LSK489B (selected grade) | 1 | $10 | $10 | linearsystems.com |
+| **OTA (VCA + phaser)** | LM13700N (keep — character) | 3 | $2 | $6 | Mouser |
+| **FG exp pairs** | LM394 matched | 3 | $3 | $9 | Mouser |
+| **Signal coupling caps** | WIMA MKP4 polypropylene 1µF | 6 | $0.80 | $4.80 | Mouser |
+| **EQ caps (matched)** | Cornell Dubilier silver mica 1nF | 2 | $3 | $6 | Mouser/Allied |
+| **Bulk electrolytic** | Nichicon Muse FW / Elna Silmic II 1000µF | 2 | $3 | $6 | Banzai Music |
+| **Critical gain resistors** | Susumu RG / Dale CMF55 thin-film | ~20 | $0.10 | $2 | Mouser |
+| **Volume/key pots** | Alps RK09L (9mm premium) | 17 | $3 | $51 | Mouser, Thonk |
+| **Bypass relay** | Omron G6A-274P (gold bifurcated) | 1 | $4 | $4 | Mouser |
+| **Audio jacks** | Neutrik gold (pedal) / Thonkiconn (EU CV) | — | — | ~$30 | Neutrik, Thonk |
+| **DC-DC (pedal)** | Recom RKD-1212-D (low-noise) | 1 | $22 | $22 | Mouser |
+| **PCB** | 4-layer ENIG immersion gold | 1 | $12 | $12 | JLCPCB |
+| **Module transducers** (Decision 11) | DAEX32Q-4 + 2 piezo + solenoid | 1 set | — | ~$32 | Parts Express |
+| **Σ audiophile module electronics** | | | | **~$232** | |
+
+> Это **module-only** (картриджи отдельно). vs budget module ~$100 → audiophile ~$232. Sweet-spot upgrades: op-amps (audible), LM394 FG pairs (consistency), WIMA MKP4 coupling, Alps RK09L feel, gold relay/jacks. Пропущены over-the-top boutique (Mundorf $40 caps, brass knobs $490, copper corpus) — diminishing returns для module electronics.
+
+### Где закупать — quick reference (module audiophile)
+
+| Категория | Магазин (домен) |
+|-----------|-----------------|
+| Op-amps (OPA1612/1644), LM394, comparators | mouser.com · digikey.com |
+| LSK489B selected | linearsystems.com (direct) |
+| WIMA MKP4 / FKP film caps | mouser.com · digikey.com |
+| Cornell Dubilier silver mica | mouser.com · alliedelec.com |
+| Elna Silmic II / Nichicon Muse | banzaimusic.com (EU audio electrolytic) |
+| Alps RK09L pots | mouser.com · thonk.co.uk |
+| Omron G6A relay | mouser.com · digikey.com |
+| Neutrik gold jacks | neutrik.com · thonk.co.uk |
+| Recom RKD-1212-D | mouser.com · digikey.com |
+| Susumu/Dale precision resistors | mouser.com · digikey.com |
+| 4-layer ENIG PCB | jlcpcb.com · pcbway.com |
+| DAEX32 exciter | parts-express.com · daytonaudio.com |
 
 ---
 
