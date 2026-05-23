@@ -2,6 +2,8 @@
 
 Вопросы о стандартизации физических картриджей для Last Night (и Be Careful, если выбран glass-plate вариант).
 
+> **⚠ Decision 11 (LOCKED)**: картридж = **пассивная пластина** (материал + покрытие + рамка 110×65×30мм + 4 retention магнита + keying notch). **НЕ несёт** exciter/пьезо/соленоид/разъёмы — всё это в модуле (transducer engine bay, contact coupling). Все упоминания "exciter в картридже" / "mini-XLR на картридже" / "JST на картридже" в старых таблицах ниже **superseded**. Картридж дёшев ($10-20). См. `decisions/11_cartridge_architecture_lock.md`.
+
 ---
 
 ## C1. Размер plate — fixed / variable

@@ -1,95 +1,72 @@
-# LAST NIGHT — Cartridge Transducer & Material Sourcing
+# LAST NIGHT — Transducer (module) & Plate Material (cartridge) Sourcing
 
-**Версия**: v6.4 canon
-**Назначение**: procurement transducers + plate materials для cartridge production. Scaling по **cartridge count** (не unit count) — каждый картридж содержит свой набор.
-**Парные документы**: `BOM_SOURCING.md` (module electronics), `acoustic_modeling.md` §10 (cartridge dimensions), `cartridges/*.md` (material processing).
+**Версия**: v6.5 (Decision 11 — plate-only cartridge architecture)
+**Назначение**: procurement двух раздельных населений: (1) **module transducers** ×модули, (2) **plate cartridges** ×картриджи.
+**Парные документы**: `decisions/11_cartridge_architecture_lock.md`, `BOM_SOURCING.md` (module electronics), `acoustic_modeling.md` §10 (plate dimensions).
 
-> **По ссылкам**: даю **домен магазина + точный P/N**. Deep-product URL не привожу — они содержат внутренние store-IDs (например `mouser.com/ProductDetail/...?qs=РАНДОМ`), которые невозможно достоверно сгенерировать; guessed-ссылки = битые. Поиск по P/N на сайте магазина → продукт за 5 секунд, надёжно.
+> **⚠ Decision 11 архитектура**: картридж = **пассивная пластина** (материал + покрытие + рамка + магниты). Трансдьюсеры (exciter/пьезо/соленоид) — **в модуле**, ×модули. Это разводит два населения компонентов — раньше (ошибочно) всё считалось ×картриджи.
+
+> **По ссылкам**: домен магазина + точный P/N. Deep-product URL не фабрикую (внутренние store-ID → битые ссылки). Поиск по P/N → продукт надёжно.
 
 ---
 
-## 0. Что в каждом картридже
+## 0A. Module transducers (×модули — фиксированы в педали/Eurorack)
 
-Все cartridges (110×65×30мм frame) содержат:
+Каждый модуль содержит **transducer engine bay** (Decision 11):
+
+| Компонент | Кол-во/модуль | P/N | Магазин | Unit $ |
+|-----------|---------------|-----|---------|--------|
+| Surface exciter | 1 | **DAEX32Q-4** (universal — handle light+dense) | parts-express.com · daytonaudio.com | $20 |
+| Piezo contact pin | 2 | spring-loaded pogo + 27mm piezo OR contact pin | Mouser (pogo) + Tayda (piezo) | $1 ea |
+| Solenoid 5V push | 1 | Adafruit 412 / bulk JF-0530B | adafruit.com / aliexpress | $1.5-5 |
+| Exciter spring carriage | 1 | compression spring + bracket | mcmaster.com | $1 |
+| Internal shielded wire | — | piezo→JFET short run | — | $0.50 |
+
+> **Universal DAEX32Q-4** (Decision 11 open-question resolved option A): один exciter type на все модули, handle и лёгкие и dense пластины. Driver amp (Block 4) спроектирован с запасом. Один module SKU.
+
+### Module transducer batch (×28 модулей: 14 EU + 14 pedal)
+
+| Item | Qty (28 +буфер) | Unit $ | Subtotal |
+|------|-----------------|--------|----------|
+| DAEX32Q-4 | 28 → 32 | $20 | $640 |
+| Piezo + pogo pins | 56 → 64 | $1 | $64 |
+| Solenoid | 28 → 32 | $5 | $160 |
+| Spring carriage + brackets | 28 → 32 | $1 | $32 |
+| **Σ module transducers** | | | **~$900** |
+
+→ Трансдьюсеры теперь **one-time module cost ~$32/модуль**, не per-cartridge $25-30.
+
+---
+
+## 0B. Plate cartridges (×картриджи — пассивные, дёшевы)
+
+Каждый картридж содержит **только**:
 
 | Компонент | Кол-во/cartridge | Назначение |
 |-----------|------------------|------------|
-| Plate (материал) | 1 | Резонатор (100×53мм, толщина per material) |
-| Surface exciter | 1 | DAEX25 (light) или DAEX32 (dense) |
-| Piezo disc 27mm | 2 | Pickup A + B |
-| Solenoid 5V push | 1 | DAMP/TOLL/STALL |
+| Plate (материал) | 1 | Резонатор 100×53×h |
+| Покрытие | — | Дерево: linseed/shellac. Металл: anodize опц. |
+| Frame | 1 | PETG (proto) / anodized alu (prod), 110×65×30мм |
 | Neodymium magnet N42 Ø6×3 | 4 | Retention + keying (polarized) |
-| Mini-XLR TA3F | 2 | Piezo A/B audio out |
-| JST-XH 2-pin | 2 | Exciter + solenoid wiring |
-| Cartridge frame | 1 | PETG (proto) / anodized alu (prod) |
-| Coupling pad (silicone) | 1 | Exciter mount |
-| VHB tape | — | Piezo bonding |
+| Keying notch | — | Asymmetric, single-orientation |
+
+**НЕТ**: exciter, пьезо, соленоид, разъёмов, электроники.
+
+**Cartridge cost**: пластина $5-15 + рамка $3 + магниты $1.2 = **~$10-20**. Razor-blade viable.
 
 ---
 
-## 1. Exciter selection per material (по массе plate)
+## 1. Plate material stock — supplier per material (cartridge-side)
 
-Масса plate определяет exciter: DAEX25 для <30г, DAEX32 для >30г (mass loading).
+> Decision 11: exciter в модуле (universal DAEX32, см. §0A) — НЕ per-cartridge. Картридж = пластина + рамка + магниты. Эта секция = plate material + magnets.
 
-| Cartridge | Материал | h (мм) | Объём (мм³) | Масса (г) | Exciter |
-|-----------|----------|--------|-------------|-----------|---------|
-| LN-STEEL | spring steel | 0.3 | 1590 | 12.5 | **DAEX25FHE-4** |
-| LN-ALU | aluminum | 0.4 | 2120 | 5.7 | **DAEX25FHE-4** |
-| LN-OAK | oak | 2.0 | 10600 | 7.4 | **DAEX25FHE-4** |
-| LN-GLASS | tempered glass | 1.5 | 7950 | 19.9 | **DAEX25FHE-4** |
-| LN-BRASS | brass | 0.5 | 2650 | 22.5 | **DAEX25FHE-4** |
-| LN-BONE | beef bone | 2.5 | 13250 | 25.2 | **DAEX25FHE-4** |
-| LN-SLATE | slate | 2.0 | 10600 | 29.2 | **DAEX25FHE-4** (borderline) |
-| LN-JADE | nephrite | 2.5 | 13250 | 39.8 | **DAEX32Q-4** |
-| LN-MARBLE | marble | 3.0 | 15900 | 42.9 | **DAEX32Q-4** |
-| LN-STUDIO | steel ×3 stack | 0.3×3 | — | ~37.5 + bar | **DAEX32Q-4** |
-
-→ **DAEX25** для 7 cartridge types, **DAEX32** для 3 (jade/marble/studio stack).
-
----
-
-## 2. Transducers — supplier + P/N
-
-### Exciters
-
-| P/N | Описание | Магазин (домен) | Unit $ | Note |
-|-----|----------|------------------|--------|------|
-| **DAEX25FHE-4** | Dayton 25mm exciter, 4Ω, low-mass | parts-express.com (Dayton direct: daytonaudio.com) · также Mouser | $14 | Core. Light/medium plates. |
-| **DAEX32Q-4** | Dayton 32mm exciter, 4Ω, higher power | parts-express.com · daytonaudio.com | $20 | Dense plates (jade/marble/stack). |
-
-> Parts Express (parts-express.com) — primary Dayton stock. Dayton Audio direct (daytonaudio.com) тоже. Mouser carries DAEX25 (search "DAEX25FHE-4"). Часто backorder — заказывать заранее с буфером.
-
-### Piezo pickups
+### Magnets (cartridge retention + keying)
 
 | P/N | Описание | Магазин | Unit $ | Note |
 |-----|----------|---------|--------|------|
-| **27mm brass piezo disc** | bare piezo element 27mm | taydaelectronics.com (search "27mm piezo") · Mouser · AliExpress bulk | $0.30 | 2/cartridge. Cheap. Premium: PVDF film. |
-| **PVDF film** (premium) | piezoelectric film sensor | Mouser (search "Measurement Specialties LDT0") · TE Connectivity | $5 | Premium cartridge — wider freq, less resonant peak. |
+| **N42 Ø6×3mm disc** | neodymium disc magnet | kjmagnetics.com (P/N D43) · supermagnete.de · AliExpress bulk | $0.30 | 4/cartridge. **Polarized для keying** (single-orientation). |
 
-### Solenoid
-
-| P/N | Описание | Магазин | Unit $ | Note |
-|-----|----------|---------|--------|------|
-| **Adafruit 412** | 5V push-pull solenoid ~5N | adafruit.com (P/N 412) | $5 | DAMP/TOLL/STALL. Felt tip добавить. |
-| **ROB-11015** | Sparkfun mini push solenoid | sparkfun.com | $5 | Alternative. |
-| generic 5V JF-0530B | bulk push solenoid | aliexpress.com (bulk MOQ) | $1.5 | Production bulk — qualify sample first. |
-
-### Magnets
-
-| P/N | Описание | Магазин | Unit $ | Note |
-|-----|----------|---------|--------|------|
-| **N42 Ø6×3mm disc** | neodymium disc magnet | kjmagnetics.com (P/N D43 ≈ Ø1/4×3/16) · supermagnete.de · AliExpress bulk | $0.30 | 4/cartridge + 4/dock. **Polarized для keying** (см. PCB §6.1). |
-
-### Connectors (cartridge side)
-
-| P/N | Описание | Магазин | Unit $ | Note |
-|-----|----------|---------|--------|------|
-| **Switchcraft TA3FX** | mini-XLR 3-pin female | Mouser · DigiKey (search "TA3FX") | $6 | 2/cartridge. Piezo audio. |
-| **JST B2B-XH-A** | XH 2-pin header | Mouser · DigiKey · Tayda | $0.15 | 2/cartridge. Exciter + solenoid. |
-
----
-
-## 3. Plate material stock — supplier per material
+### Plate material stock
 
 | Материал | Spec | Магазин (домен) | Note |
 |----------|------|------------------|------|
@@ -113,58 +90,61 @@
 |------|------|---------|------|
 | Frame (prototype) | PETG 3D-print | local / printables design | 110×65×30mm. Iterate cheaply. |
 | Frame (production) | anodized aluminum CNC | pcbway.com (CNC service) · jlccnc.com | Production qty. Asymmetric keying notch. |
-| Coupling pad | silicone sheet 2мм | mcmaster.com (search "silicone rubber sheet 40A") | Exciter mount cut to ~25mm disc. |
-| VHB tape | 3M VHB 5952 | Mouser · 3M · amazon | Piezo bonding (durable). |
-| Retention pin | spring-loaded Ø3 plunger | mcmaster.com (search "spring plunger") | Cartridge lock. |
-| Felt (solenoid tip) | adhesive felt dot | craft/hardware | Soft strike on plate. |
+| Felt (solenoid tip) | adhesive felt dot | craft/hardware | Soft strike on plate. Module-side (на solenoid plunger). |
+| Frame damping | rubber/foam strip | mcmaster | Между frame и plate edges → frame не резонирует. |
+
+> Coupling pad / VHB / spring carriage — теперь **module-side** (transducer engine bay), см. §0A + `decisions/11`.
 
 ---
 
-## 5. Production batch plan (sample — Phase 1)
+## 5. Production batch plan — два населения раздельно
 
-Допустим Phase 1: **20 modules + cartridge stock**. Cartridge mix (не все типы равны — steel/oak популярнее):
+### Модули (×28: 14 EU + 14 pedal)
 
-| Cartridge | Batch qty | Exciter | Plate stock | Buffer |
-|-----------|-----------|---------|-------------|--------|
-| LN-STEEL | 30 | DAEX25 ×30 | 1× steel sheet 300×300 | +5 |
-| LN-OAK | 25 | DAEX25 ×25 | oak stock | +5 |
-| LN-BRASS | 15 | DAEX25 ×15 | brass sheet | +3 |
-| LN-ALU | 15 | DAEX25 ×15 | alu sheet | +3 |
-| LN-GLASS | 15 | DAEX25 ×15 | tempered cut ×18 | +3 |
-| LN-SLATE | 15 | DAEX25 ×15 | slate offcuts | +3 |
-| LN-BONE | 10 | DAEX25 ×10 | processed bone | +2 |
-| LN-JADE | 10 | DAEX32 ×10 | nephrite slab | +2 |
-| LN-MARBLE | 8 | DAEX32 ×8 | marble offcut | +2 |
-| LN-STUDIO | 8 | DAEX32 ×8 | steel ×3 ea | +2 |
-| **Σ cartridges** | **151** | DAEX25 ×120 / DAEX32 ×26 | — | — |
+Transducer engine bay per module — см. §0A. **Σ module transducers ~$900** (28 units +буфер).
 
-### Transducer batch totals
+### Картриджи (× cartridge count — business decision, см. §5.1)
 
-| Item | Qty (151 cartridges + буфер) | Unit $ | Subtotal |
-|------|------------------------------|--------|----------|
-| DAEX25FHE-4 | 120 → 130 | $14 | $1820 |
-| DAEX32Q-4 | 26 → 30 | $20 | $600 |
-| Piezo 27mm | 302 → 330 | $0.30 | $99 |
-| Solenoid (Adafruit 412 / bulk) | 151 → 165 | $1.5-5 | $250-825 |
-| Magnets N42 (4/cartridge + 4/dock×20) | 684 → 750 | $0.30 | $225 |
-| Mini-XLR TA3FX | 302 → 320 | $6 | $1920 |
-| JST-XH | 302 → 320 | $0.15 | $48 |
-| **Σ transducers** | | | **~$5000-5600** |
+Картридж = пластина + рамка + 4 магнита + покрытие. **~$10-20 каждый**, без трансдьюсеров.
 
-> **Mini-XLR доминирует** ($1920) — рассмотреть Rean NYS321 ($2-3) для budget cartridges, Switchcraft только premium.
+| Cartridge | Plate stock | Магниты | Coating |
+|-----------|-------------|---------|---------|
+| LN-STEEL | steel sheet нарезка | 4× N42 | raw / lacquer |
+| LN-OAK | oak stock | 4× N42 | linseed/shellac |
+| LN-BRASS | brass sheet | 4× N42 | raw / patina |
+| LN-ALU | alu sheet | 4× N42 | anodize опц. |
+| LN-GLASS | tempered cut | 4× N42 | — |
+| LN-SLATE | slate offcuts | 4× N42 | — |
+| LN-BONE | processed bone | 4× N42 | sealed |
+| LN-JADE | nephrite slab | 4× N42 | polished |
+| LN-MARBLE | marble offcut | 4× N42 | — |
+| LN-STUDIO | steel ×3 stack | 4× N42 | raw |
+
+### §5.1 Cartridge quantity — зависит от business model
+
+| Модель | Картриджей на 28 модулей | Plate+magnet cost |
+|--------|--------------------------|-------------------|
+| **A. Стартовый 1/модуль + малый сток** | ~58 | ~$700-1100 |
+| **B. Bundle "все картриджи"** (€3640 marketing) | 28 × набор (6-10) = 168-280 | $2000-5000 |
+| **C. Картриджи отдельная product line** | независимый сток | по плану |
+
+> **Требует решения**: какая модель? Маркетинг-страница (€3640 "все картриджи") = модель B.
 
 ---
 
-## 6. Sourcing risks (cartridge-specific)
+## 6. Sourcing risks
 
 | Риск | Mitigation |
 |------|------------|
-| **DAEX25/32 backorder** | Parts Express периодически out. Заказывать буфер заранее, мониторить stock. Visaton FRS 5X backup. |
-| **Nephrite quality variance** | Натуральный камень — variance в density/inclusions. Select-grade slabs, reject cracked. См. processing manual. |
-| **Bone processing labor** | DIY-intensive (см. 05_bone_processing). Premium pricing justified. |
+| **DAEX32 backorder** | Parts Express периодически out. Буфер заранее (×28 → 32), мониторить. Visaton FRS 5X backup. |
+| **Contact coupling acoustic variance** (Decision 11 new risk) | Spring-loaded calibrated force. Tap-test с contact mechanism (не свободной пластиной). Bench A/B contact pressure. |
+| **Nephrite quality variance** | Натуральный камень — select-grade slabs, reject cracked. См. processing manual. |
+| **Bone processing labor** | DIY-intensive (05_bone_processing). Premium pricing justified. |
 | **Tempered glass custom cut** | MOQ у glass cutters. Batch order. |
-| **Mini-XLR cost** | $6×302 = $1920. Rean alternative для budget cartridges. |
-| **Solenoid felt wear** | Strike point wears felt + plate. Replaceable felt tip + maintenance note. |
+| **Solenoid felt + plate wear** | Strike point wears felt + plate. Replaceable felt tip (module-side) + maintenance note. |
+| **Plate thickness variance** (0.3-3мм) | Spring carriage travel ±2mm компенсирует. Verify contact force across range. |
+
+> **Mini-XLR устранён** (Decision 11 — пьезо в модуле, internal wiring). Экономия $1920 + проще сборка.
 
 ---
 

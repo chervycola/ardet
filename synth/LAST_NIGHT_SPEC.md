@@ -111,9 +111,8 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 ### What's in the box
 
 **Eurorack SKU (40HP)**:
-- Last Night module (203×128.5мм aluminum panel + 190×108мм PCB).
-- 1× wood cartridge (Oak raw, reference).
-- 1× shielded cartridge cable (mini-XLR + JST internal).
+- Last Night module (203×128.5мм aluminum panel + 203×128.5мм PCB) — со встроенным transducer engine (exciter + 2 пьезо + соленоид).
+- 1× wood cartridge (Oak raw, reference) — пассивная пластина.
 - Eurorack ribbon power cable (10/16-pin).
 - Quick start card + warranty card.
 
@@ -532,18 +531,28 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 
 **Audio I/O (Eurorack SKU front panel)**: same 5 audio signals on 3.5mm Thonkiconn (mini-jacks) per CV bay layout. No 1/4" или RCA на Eurorack SKU — connect через standard modular cables.
 
-### Cartridge connector (внутри slot, идентичен в обеих SKU)
+### Cartridge interface — passive plate, in-module transducers **[Decision 11]**
 
-| Connector | Покрытие | Функция |
-|-----------|----------|---------|
-| **TA3M (mini-XLR) ×2** | Shielded coax 50мм | Piezo A, Piezo B (low-noise audio) |
-| **JST-XH 2-pin ×2** | Twisted pair | Exciter drive, Solenoid coil |
+> **Картридж = пассивная пластина.** Несёт только материал-резонатор + покрытие + рамку + retention магниты. **Никакой электроники, никаких разъёмов.** Вся начинка — exciter, 2 пьезо, соленоид — **постоянно в модуле** (transducer engine bay). Вставка картриджа = механическое coupling.
+
+| Что | Где | Coupling |
+|-----|-----|----------|
+| **Пластина (материал)** | в картридже | пассивный резонатор |
+| **Surface exciter** | **в модуле** (фиксирован) | spring-loaded contact к фронту пластины (~5N) |
+| **2× пьезо pickup** | **в модуле** (фиксированы) | spring-loaded contact pins к back пластины |
+| **Соленоид** | **в модуле** (фиксирован) | бьёт по пластине, 2мм gap |
+
+**Преимущества**:
+- Картридж дёшев (~$10-20) — только материал + рамка → razor-blade модель работает.
+- Hi-Z пьезо сигнал не пересекает swappable разъём → ниже noise floor.
+- Картридж — чисто механический, durable, никаких хрупких разъёмов.
 
 ## Картриджи — каталог материалов
 
 ### Формат картриджа
 
 - **Внешний размер рамки**: 110×65×30мм (PETG 3D-print prototype, фрезерованный алюминий production).
+- **Содержит только**: пластину (100×53×h мм) + покрытие (дерево) + 4 retention магнита + keying notch. Пассивный.
 - **Plate dimensions**: длина **100мм fixed**, высота 20–60мм per material, толщина 0.5–6мм per material.
 - **Mount**: 4× neodym N42 магниты align + spring-loaded retention pin.
 - **Connectors**: 2× mini-XLR (Piezo A, B) + 2× JST-XH (Exciter, Solenoid).

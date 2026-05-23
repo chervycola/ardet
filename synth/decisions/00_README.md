@@ -56,6 +56,12 @@
    - Sourcing matrix (Mouser, Digi-Key, Mundorf direct, Audio Note UK, K&K Sound).
    - Risk register: 2SK170 NOS, Black Gate caps, OPA627 counterfeits.
 
+8. **`11_cartridge_architecture_lock.md`** (**LOCKED**) — фундаментальная коррекция:
+   - Картридж = **пассивная пластина** (материал + покрытие + рамка + магниты).
+   - Трансдьюсеры (exciter/пьезо/соленоид) — **в модуле**, contact coupling.
+   - Supersedes "full cartridge" модель во всех ранних docs.
+   - Картридж $10-20 (было $40-45) → razor-blade viable. Universal DAEX32 в модуле.
+
 ## Как использовать
 
 Каждый документ:

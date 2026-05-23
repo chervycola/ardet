@@ -323,40 +323,41 @@ STAR TIE POINT recommendation:
 
 ## 6. Sub-PCB definitions
 
-### 6.1 Cartridge dock satellite (80 × 30 mm)
+### 6.1 Cartridge dock = Transducer Engine Bay (Decision 11)
 
-Mounts directly underneath panel cartridge slot opening на 4× M3 standoffs.
+> **Decision 11**: dock больше не connector PCB — это **transducer engine bay**. Содержит exciter + 2 пьезо + solenoid (постоянно в модуле) + spring-loaded contact mechanism. Картридж (пассивная пластина) вставляется и контактирует с трансдьюсерами. **Нет mini-XLR, нет JST к картриджу** — трансдьюсеры разведены прямо к main PCB internal wiring.
+
+Mounts directly underneath panel cartridge slot opening. Mechanical assembly (не просто PCB).
 
 ```
-   Components:
-   - 2× Switchcraft TA3F mini-XLR (PIEZO A + PIEZO B)
-   - 2× JST-XH 2-pin (EXCITER + SOLENOID)
-   - 4× neodymium N42 magnets (Ø6×3mm, retention)
-   - 1× spring-loaded retention pin (Ø3×8mm)
-   - 1× orientation key post (Ø4mm asymmetric, off-center) — см. keying ниже
+   Components (module-side, fixed):
+   - 1× Surface exciter DAEX32Q-4 на spring-loaded carriage (±2mm travel)
+     → puck faces UP, contact к front пластины ~5N
+   - 2× piezo pickup (27mm) на spring contact mounts (~1.5N each)
+     → contact к back пластины (A near-exciter, B far) per FEM mode shapes
+   - 1× solenoid (5V push) на fixed bracket, felt-tip plunger
+     → strikes plate face, 2mm gap adjustable
+   - 4× neodymium N42 magnets (Ø6×3mm, polarized) — cartridge retention + keying
+   - 1× spring-loaded retention pin (Ø3×8mm) — cartridge lock
+   - 1× orientation key post (asymmetric) — single-orientation insertion
+   - Frame damping foam (cartridge frame seats против this)
 
-   ⚠ MIS-INSERTION PROTECTION (v6.4):
-   - Cartridge frame имеет asymmetric notch (corner cut 8×8mm только на ОДНОМ углу)
-     → cartridge физически вставляется только в одной orientation.
-   - Dock has matching key post — cartridge не сядет если перевёрнут.
-   - Prevents: exciter drive → piezo input (damage), HV bias (Last Day +30V) → piezo.
-   - Magnets polarized (N up on 2 corners, S up on 2) — wrong orientation отталкивается.
-   - Connectors (mini-XLR + JST) различной spacing — physical impossibility cross-connect.
+   ⚠ MIS-INSERTION PROTECTION:
+   - Cartridge frame asymmetric notch (corner cut 8×8mm один угол) → single orientation.
+   - Magnets polarized (N up ×2, S up ×2) — wrong orientation отталкивается.
+   - Поскольку картридж пассивный (нет электрических контактов) — нет risk
+     electrical damage от mis-insertion. Keying только для acoustic alignment
+     (exciter/piezo contact points должны попасть на правильные plate zones).
+
+   Wiring to main PCB (internal, NOT swappable — трансдьюсеры fixed в модуле):
+   - EXCITER (+/−): short twisted pair → driver amp output (Block 4)
+   - PIEZO_A signal + shield: short shielded wire → JFET preamp (Block 7)
+   - PIEZO_B signal + shield: short shielded wire → JFET preamp (Block 7)
+   - SOLENOID (+/−): twisted pair → solenoid driver Q5 (Block 14)
    
-   Connector to main PCB:
-   - 10-pin IDC ribbon (2×5):
-     Pin 1: PIEZO_A signal
-     Pin 2: PIEZO_A shield (GND_audio)
-     Pin 3: PIEZO_B signal
-     Pin 4: PIEZO_B shield (GND_audio)
-     Pin 5: EXCITER (+)
-     Pin 6: EXCITER (−)
-     Pin 7: SOLENOID (+) (drives 5V coil — note: cartridge-side solenoid 5V step-down или driven 5V from main PCB)
-     Pin 8: SOLENOID (−)
-     Pin 9: GND_chassis (cartridge dock ground reference)
-     Pin 10: +5V (cartridge ID LED, optional future)
-
-   Ribbon shielded twisted-pair recommended (Belden 9501 or equiv) for cable length 20-50mm.
+   Пьезо hi-Z провод КОРОТКИЙ (<50mm) и НЕ пересекает swappable разъём
+   → меньше noise floor чем старая mini-XLR cartridge scheme.
+   Cartridge сам — чисто механический объект (пластина + рамка + магниты).
 ```
 
 ### 6.2 FG slider satellite (60 × 30 mm)

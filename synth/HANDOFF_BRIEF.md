@@ -56,7 +56,7 @@
 
 ### Tier 1 — sacred (изменение = смерть проекта)
 
-1. **Material plate cartridge** — физическая сменная пластина из реального материала. Не PCB-mounted speaker. Не digital convolution. Не piezo-only attachment. Plate должна **физически вибрировать** в bending modes под exciter drive.
+1. **Material plate cartridge** — физическая сменная пластина из реального материала. Не PCB-mounted speaker. Не digital convolution. Plate должна **физически вибрировать** в bending modes под exciter drive. **[Decision 11]**: картридж = **пассивная пластина** (материал + покрытие + рамка + магниты); exciter/пьезо/соленоид — **в модуле** (transducer engine bay), contact coupling. Картридж дёшев ($10-20) → razor-blade модель.
 2. **Acoustic-driven envelope** (plate-triggered FG mode) — Block 11 envelope follower → comparator → FG trigger. **Default behaviour без patching**: каждый attack onset на пластине = FG fires одноразовый cycle. Это формирует "instrument отвечает на игру" effect — главная UX feature, отличающая Last Night от любого generic reverb.
 3. **Analog Function Generator** (не digital LFO simulation) — TL074 integrator + diode-steered rise/fall RC + 2N3904 matched-pair exp converters. Эмуляция через ATtiny84A DAC недопустима — теряется analog character который пользователь будет слышать в exp curve nonlinearity и в RC charging tail.
 4. **LSK489A dual matched JFET** в piezo preamp — не generic 2SK170, не SMD JFET pair. Decision 02 specifically locked LSK489A — это noise floor cornerstone. Substitution = audible SNR degradation.

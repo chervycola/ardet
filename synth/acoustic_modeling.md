@@ -206,38 +206,52 @@ Nephrite stack: 3 × 5 = ~15 мод → fuller bell choir
 
 ---
 
-## 7A. Transducer coupling — exciter + piezo (критично к звуку)
+## 7A. Transducer coupling — CONTACT mechanism (Decision 11)
 
-> **Главный пробел до v6.4**: размеры пластин оптимизированы, но **способ крепления трансдьюсеров не специфицирован**. Два идентичных steel plate с разным coupling/bonding звучат по-разному. Это часть "звук пластин" риска.
+> **Decision 11 архитектура**: трансдьюсеры (exciter/пьезо/соленоид) — **в модуле**, не в картридже. Картридж = пассивная пластина. Coupling = **контактный** (spring-loaded), не bonded. Два идентичных steel plate дадут одинаковый звук если contact force repeatable. Это часть "звук пластин" риска — contact mechanism критичен.
+
+### 7A.0 Contact coupling vs bonded — tradeoff
+
+| | Bonded (старая ошибочная модель) | Contact (Decision 11) |
+|--|----------------------------------|----------------------|
+| Картридж cost | $40-45 (трансдьюсеры внутри) | $10-20 (только пластина) |
+| Coupling efficiency | высокая, consistent | зависит от spring force |
+| Rattle risk | нет | есть если контакт слаб → нужен ≥5N |
+| Razor-blade model | не работает | работает |
+
+Контактный coupling — правильный выбор (cost), но требует **spring-loaded механизм с calibrated force** чтобы coupling был repeatable и без rattle.
 
 ### 7A.1 Exciter coupling
 
 | Параметр | Опции | Влияние | Рекомендация |
 |----------|-------|---------|--------------|
-| **Mount type** | rigid (жёсткий винт) vs compliant (rubber uncoupler) | rigid → больше energy transfer + plate-frame coupling (рама звенит); compliant → чище plate modes | **Compliant** (rubber grommet) — изолирует plate от frame resonances |
-| **Contact point** | center / 1/3 length / edge | center драйвит symmetric modes, давит antisymmetric; 1/3 point драйвит широкий mode set | **~1/3 от края** (драйвит и symmetric и antisymmetric моды) |
-| **Pre-load force** | light / medium / heavy | слишком light → buzz/rattle; heavy → damping, давит моды | medium, **calibrated torque** (spring washer на M3) |
-| **Coupling compound** | dry contact / silicone grease / epoxy bond | dry → micro-rattle; grease → clean transfer; epoxy → permanent но cracks | **Thin silicone coupling pad** (replaceable, clean transfer) |
+| **Contact force** | light / medium (≥5N) / heavy | слишком light → buzz/rattle при high drive; heavy → damping модов | **medium ~5N** spring-loaded carriage (calibrated, repeatable) |
+| **Contact point** | center / 1/3 length / edge | center драйвит symmetric, давит antisymmetric; 1/3 драйвит широкий set | **~1/3 от края** (и symmetric и antisymmetric моды) |
+| **Puck face** | flat metal / silicone pad tip | flat → жёсткий contact + buzz risk; silicone → clean transfer + compliance | **thin silicone pad на puck face** — чистый transfer + компенсирует surface irregularity |
+| **Carriage travel** | fixed / spring ±2mm | fixed не handle разную толщину; spring компенсирует | **spring ±2mm** — handle plates 0.3-3мм одним механизмом |
 
-**Drive point оптимизация per FEM**: после FEM modal analysis (§8.2) — разместить exciter на **пучности** низких мод (max displacement), избегать узлов. Для 100×53 пластины ~1/3 от короткого края обычно good compromise.
+**Drive point per FEM**: разместить exciter contact на **пучности** низких мод (§8.2 mode shapes), избегать узлов. ~1/3 от короткого края — good compromise.
 
-### 7A.2 Piezo bonding
+### 7A.2 Piezo contact pickup (Decision 11 — spring pins, не bonded)
 
-| Метод | Pros | Cons | Рекомендация |
-|-------|------|------|--------------|
-| **Cyanoacrylate (CA)** | thin bond line, good HF transfer | brittle, cracks под vibration over time | прототип only |
-| **Epoxy (slow-cure)** | strong, durable | thicker bond → HF rolloff, cracks eventually | acceptable |
-| **Mechanical clamp + couplant** | replaceable, no crack | bulkier, pressure-dependent | durability builds |
-| **Double-sided acrylic tape (VHB)** | compliant, durable, easy | softer HF coupling | **рекомендуется** — VHB durable под vibration, slight compliance OK |
+Пьезо **в модуле**, контактные spring-loaded pins касаются back пластины. Не bonded к пластине (картридж сменный).
 
-**Piezo placement**: dual piezo (A near exciter = bright/early, B far = diffuse/late) per FEM mode shapes. **Избегать узлов** доминирующих мод — иначе piezo не слышит эти моды. FEM mode shape map → optimal piezo coordinates.
+| Параметр | Опции | Рекомендация |
+|----------|-------|--------------|
+| **Contact type** | pogo pin / spring-loaded piezo disc / contact stylus | **spring-loaded piezo disc** (27mm) на flexible mount, прижат к back |
+| **Contact force** | 1-2N per pickup | **~1.5N** — достаточно для sense, не давит моды |
+| **Tip material** | bare brass / gold-plated / rubber-tipped | gold-plated contact point (corrosion-free, consistent) |
+| **Placement** | A near exciter / B far | per FEM mode shapes — **избегать узлов** доминирующих мод |
+
+> Contact pickup (прижатый пьезо) работает как contact-mic — sense через точку касания. Acoustically чуть отличается от bonded (slightly less HF), но картридж сменный → contact обязателен.
 
 ### 7A.3 Bench validation (обязательно)
 
-Tap-test (§8.4) + exciter bench (§8.5) должны A/B сравнить:
-- 3 exciter mount types (rigid / compliant / pad)
-- 3 piezo bonding methods (CA / epoxy / VHB)
-- → выбрать комбинацию по: clean mode transfer + durability (10000 strike cycles) + consistent unit-to-unit.
+Tap-test (§8.4) + exciter bench (§8.5) с **contact mechanism** (не свободной пластиной):
+- Contact force sweep (3-8N exciter, 1-2N piezo) → найти clean transfer без rattle.
+- Plate thickness range (0.3-3мм) → verify spring carriage handle все.
+- Insertion repeatability — вставить/вынуть 20× → consistent coupling?
+- → выбрать contact force + puck/pin design по: clean transfer + no rattle + repeatable insertion + durability (10000 cycles).
 
 ---
 
