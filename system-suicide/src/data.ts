@@ -138,14 +138,14 @@ export const PRODUCT_PAGES: ProductPages = {
     intro: 'An analogue resonator-reverb with no DSP. A surface exciter drives a thin plate held in a swappable cartridge — wood, stone, metal, bone, glass, jade. Two piezo pickups read the resonance from the other face. A solenoid damps the plate from above. Each cartridge is a different room.',
     stats: [
       { k: 'Format',     v: 'Eurorack · 40 HP (pedal 190×122 mm available)' },
-      { k: 'Power',      v: '±12 V · 180 mA' },
-      { k: 'I/O',        v: 'Mono in / stereo out · 3.5 mm + sidechain' },
-      { k: 'Exciter',    v: 'Dayton DAEX25FHE-4 · 4 Ω (DAEX32Q for dense plates)' },
+      { k: 'Power',      v: '±12 V · 800 mA' },
+      { k: 'I/O',        v: 'Mono / stereo in / stereo out · 3.5 mm + sidechain' },
+      { k: 'Exciter',    v: 'Dayton DAEX32 · 4 Ω' },
       { k: 'Pickups',    v: '2 × piezo / PVDF · mini-XLR shielded' },
       { k: 'Damper',     v: 'Felted solenoid · CV-controlled, ~2 mm gap' },
       { k: 'Front end',  v: 'LSK489A dual-JFET preamp · ×23 gain' },
       { k: 'Cartridges', v: '6 ship · 6 more in Phase 2' },
-      { k: 'Phase',      v: 'SHIP — PHASE 1 · 4 weeks made-to-order' },
+      { k: 'Phase',      v: 'SHIP — PHASE 1 · 3-4 months made-to-order' },
       { k: 'Price',      v: '€ 640 · cartridge € 25–95' },
     ],
     physical: [
