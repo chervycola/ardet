@@ -14,6 +14,8 @@
 
 **Calibration**: **[`calibration_procedure.md`](calibration_procedure.md)** — пошаговая настройка всех trim pots для production assembly + QC sign-off.
 
+**Procurement**: **[`BOM_SOURCING.md`](BOM_SOURCING.md)** — purchasing guide для small-batch (20 units): part numbers, дистрибьюторы, qty с буфером, преимущества, альтернативы, lead time + risk register.
+
 ## Текущий статус
 
 **Phase**: design lock (Decision 09 v6.4 — improvements pass applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).

@@ -118,10 +118,11 @@
 
 ### Для production / sourcing manager
 
-1. **`decisions/10_premium_components_sourcing.md`** — Elite tier components + sourcing matrix (Mouser, Digi-Key, Mundorf, Audio Note UK).
-2. **`decisions/04_production_strategy.md`** — phases roadmap.
-3. **`decisions/03_cartridge_standards.md`** — cartridge format спецификация.
-4. **`cartridges/*.md`** — processing manuals для bone и nephrite (другие материалы TBD).
+1. **`BOM_SOURCING.md`** — purchasing guide для small-batch (20 units): part numbers, дистрибьюторы, qty+буфер, lead time, risk register. **Топ-приоритет: SL-4P5T sourcing + LSK489A буфер.**
+2. **`decisions/10_premium_components_sourcing.md`** — Elite tier components + sourcing matrix (Mouser, Digi-Key, Mundorf, Audio Note UK).
+3. **`decisions/04_production_strategy.md`** — phases roadmap.
+4. **`decisions/03_cartridge_standards.md`** — cartridge format спецификация.
+5. **`cartridges/*.md`** — processing manuals для bone и nephrite (другие материалы TBD).
 
 ### Для acoustic / cartridge engineer
 
