@@ -3,7 +3,14 @@
 **Версия**: v6.4 + Decision 11
 **Scope**: module electronics + transducer engine. Картриджи закупаются отдельно (вне scope).
 
-> ⚠ **Цены — approximate small-quantity estimates** (USD, 2025-2026). НЕ live-fetched. Реальная цена зависит от qty-breaks и stock на момент заказа. Точная цена = поиск по P/N в магазине. Колонки: **Budget** (стандартная сборка) / **Audiophile** (premium-tier, Decision 10 §18).
+> ⚠ **Цены — approximate small-quantity estimates** (USD, 2025-2026). Большинство НЕ live-fetched. Точная цена = поиск по P/N в магазине. Колонки: **Budget** / **Audiophile** (Decision 10 §18).
+
+> ✅ **Spot-checked (web, May 2026)** — отдельные позиции верифицированы:
+> - **LSK489A SOT-23-6: $6.58** (DigiKey), SOIC-8: $7.55 — наша оценка $6 близка.
+> - **OPA1612AID: ~$6.48** — оценка была $8, скорректировано к $6.50.
+> - **DC-DC PART NUMBER ИСПРАВЛЕН** 🔴: было `TMR 3-1212WI` = **single 12V output** (неверно!). Корректный dual ±12V = **`TMR 3-1222WI`** (±12V, 125mA each, 3W, SIP-8). Исправлено во всех docs. ~$13-18.
+> - **Recom RKD-1212-D не подтверждён** — P/N сомнителен, помечен "verify" в docs. Корректный Recom dual ±12V regulated 3W нужно уточнить (R2D-1212 = unregulated; RKZE-1212D = только ±84mA).
+> - **DAEX32Q-4**: Parts Express блокирует fetch (403), Dayton cert issue. Оценка $20 (clearance ASSY-вариант с кабелем ~$12, но это другой P/N).
 
 ---
 
@@ -11,7 +18,7 @@
 
 | Ref | Budget P/N | $ | Audiophile P/N | $ | Qty/unit | Магазин |
 |-----|-----------|---|----------------|---|----------|---------|
-| U1, U3 (in/out buf) | TL072CP | 0.50 | OPA1612 | 8.00 | 2 | mouser, tayda |
+| U1, U3 (in/out buf) | TL072CP | 0.50 | OPA1612AID ✅ | 6.50 | 2 | mouser, tayda |
 | U2, U4, U_FG (signal/FG) | TL074CN | 0.75 | OPA1644 | 5.00 | 3 | mouser |
 | U5,U6,U7 (OTA) | LM13700N | 2.00 | LM13700N (keep) | 2.00 | 3 | mouser |
 | U8 (phaser premium) | LM13700N | 2.00 | LM13700N | 2.00 | 0-1 | mouser |
@@ -22,7 +29,7 @@
 | U_555 (TOLL) | NE555P | 0.25 | NE555P | 0.25 | 1 | tayda |
 | U_MCU | ATtiny84A-PU | 1.50 | ATtiny84A-PU | 1.50 | 1 | mouser |
 | U_LDO | L7805CV | 0.30 | L7805CV | 0.30 | 1 | tayda |
-| Q3 (JFET preamp) | LSK489A | 6.00 | LSK489B selected | 10.00 | 1 | linearsystems.com |
+| Q3 (JFET preamp) | LSK489A ✅ | 6.58 | LSK489B selected | 10.00 | 1 | digikey, linearsystems.com |
 | Q_EXP (FG pairs) | 2N3904 ×6 | 0.18 | LM394 ×3 matched | 9.00 | 3-6 | mouser |
 | **Σ active (budget / audiophile)** | | **~$15** | | **~$60** | | |
 
@@ -87,7 +94,7 @@
 
 | Item | Budget P/N | $ | Audiophile P/N | $ | Qty | Магазин |
 |------|-----------|---|----------------|---|-----|---------|
-| Isolated DC-DC (pedal) | TRACO TMR 3-1212WI | 13.00 | Recom RKD-1212-D | 22.00 | 1 | mouser, digikey |
+| Isolated DC-DC (pedal) | TRACO TMR 3-1222WI ✅ (dual ±12V, 125mA ea) | 15.00 | Recom (verify dual ±12V regulated P/N) | ~22 | 1 | mouser, digikey |
 | Power connectors / bulk | IDC / barrel + caps | 2.00 | (same) | 2.00 | — | mouser, tayda |
 | **Σ power (pedal)** | | **~$15** | | **~$24** | | |
 

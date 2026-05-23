@@ -103,7 +103,7 @@ Last Day канонически остаётся как Decision 06: oil-can del
 - Уровень: instrument / -10dBV / +4dBu switchable.
 - **4 footswitches в pedal-форме**: KILL / FREEZE / TOLL / STALL.
 - В Eurorack-форме — большие кнопки + CV/gate inputs для тех же четырёх жестов.
-- Power: 12V DC center-negative + isolated DC-DC (TRACO TMR 3-1212WI) → ±12V audio rails. Identical к Eurorack version.
+- Power: 12V DC center-negative + isolated DC-DC (TRACO TMR 3-1222WI) → ±12V audio rails. Identical к Eurorack version.
 - Stereo committed — больше не "dead weight".
 
 ### Cartridge стандарт (общий с Last Day)

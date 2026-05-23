@@ -1242,11 +1242,11 @@ Oil pocket: 5ml mineral oil в acrylic ball (~30mm diameter) bonded к chassis. 
 
 ## Блок 20. Isolated DC-DC (pedal SKU only)
 
-Identical к Last Night Block 19 (also called Block 19 there). Same TRACO TMR 3-1212WI (budget) / Recom RKD-1212-D (premium) selection.
+Identical к Last Night Block 19 (also called Block 19 there). Same TRACO TMR 3-1222WI (budget) / Recom RxxD-1212 (verify dual ±12V P/N) (premium) selection.
 
 **Key difference vs Last Night**:
-- Last Day has motor + solenoid → **needs RKD-1212-D 250mA** для both SKUs (TRACO 125mA insufficient when motor + CRASH simultaneous).
-- Budget Last Day pedal: RKD-1212-D = +$22 BOM (vs $13 для TRACO у Last Night budget).
+- Last Day has motor + solenoid → **needs RxxD-1212 (verify) 250mA** для both SKUs (TRACO 125mA insufficient when motor + CRASH simultaneous).
+- Budget Last Day pedal: RxxD-1212 (verify) = +$22 BOM (vs $13 для TRACO у Last Night budget).
 
 **External supply requirement**: **12V DC center-negative, 1000 mA min** (higher than Last Night's 500mA due to motor load).
 
@@ -1314,7 +1314,7 @@ Identical к Last Night Block 19 (also called Block 19 there). Same TRACO TMR 3-
 
 | Item | Cost |
 |------|------|
-| Pedal isolated DC-DC: RKD-1212-D | $22 |
+| Pedal isolated DC-DC: RxxD-1212 (verify) | $22 |
 | Decoupling caps | $2 |
 | **Subtotal power (pedal SKU)** | **$24** |
 

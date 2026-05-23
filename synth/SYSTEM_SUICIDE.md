@@ -725,7 +725,7 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 
 ### Формат — dual SKU
 - **Eurorack 3U × 40HP** (203×128.5мм panel, ±12V bus power) — для modular setup.
-- **Big-box Pedal ~203×140×40мм** (Strymon BigSky / Eventide H9 Max class) — **12V DC center-negative** (modern complex-pedal standard), isolated DC-DC (TRACO TMR 3-1212WI / Recom RKD-1212-D) → ±12V audio rails (identical headroom к Eurorack version). Big-box формат необходим для размещения 4 footswitches (TAP/GATE-CRUSH/BYPASS/FREEZE) + 22 CV jacks + всех контролов mockup canon.
+- **Big-box Pedal ~203×140×40мм** (Strymon BigSky / Eventide H9 Max class) — **12V DC center-negative** (modern complex-pedal standard), isolated DC-DC (TRACO TMR 3-1222WI / Recom RxxD-1212 (verify dual ±12V P/N)) → ±12V audio rails (identical headroom к Eurorack version). Big-box формат необходим для размещения 4 footswitches (TAP/GATE-CRUSH/BYPASS/FREEZE) + 22 CV jacks + всех контролов mockup canon.
 - **Identical schematic, identical sound, identical cartridge spec**. Cartridges interchangeable между обеими SKU.
 - **Цена**: $499 budget / $649 premium для обеих SKU.
 
@@ -809,7 +809,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
   Solenoid damper: CV / EXP → R_DAM1 47к / R_DAM3 100к divider → Q5 2N7000 → solenoid
 
   Pedal SKU only:
-    12V DC → TRACO TMR 3-1212WI isolated DC-DC → ±12V audio rails (identical к Eurorack)
+    12V DC → TRACO TMR 3-1222WI isolated DC-DC → ±12V audio rails (identical к Eurorack)
     7805 → +5V для ATtiny85 + LEDs
     Footswitches: TAP / GATE-CRUSH / BYPASS / FREEZE
 ```

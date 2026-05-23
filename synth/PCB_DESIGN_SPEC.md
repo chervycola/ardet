@@ -480,7 +480,7 @@ Mounts behind footswitch row на panel bottom-edge.
    Components:
    - 1× DC barrel jack 5.5×2.1mm centre-negative
    - 1× 1N5817 Schottky reverse polarity protection
-   - 1× TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium)
+   - 1× TRACO TMR 3-1222WI (budget) или Recom RxxD-1212 (verify dual ±12V P/N) (premium)
      isolated DC-DC ±12V output
    - 1× 7805 LDO TO-220 (+5V_digital from +12V_RAW)
    - Bulk caps: C_IN_RAW 220µF, C_OUT_AUDIO ±12V 47µF each, C_5V 22µF

@@ -24,7 +24,7 @@
 | **Q3** | **LSK489A** | Linear Integrated Systems | Mouser, DigiKey, LIS direct | **20 → 30** | $6.00 | Dual matched JFET, ~1.8 nV/√Hz. **Noise cornerstone** — заменяет EOL 2N5457. Sole practical source. | 2SK170BL pair (matched вручную, разный footprint) — но хуже matching |
 | **U5/U6/U7** | **LM13700N** | TI | Mouser, DigiKey | 60 → 70 | $2.00 | Dual OTA. VCA + noise xfade + phaser. Industry standard, но проверять stock (периодически backorder). | NE5517 (almost drop-in), LM13600 (NOS) |
 | **Exciter** | **DAEX32Q-4** | Dayton Audio | Parts Express, Mouser | **per module ×28** (Decision 11 — в модуле, не в картридже) | $20 | Universal surface exciter 4Ω. В transducer engine bay. Often backorder. | Visaton EX 60 S, DAEX25FHE-4 (lighter) |
-| **DC-DC** (pedal) | **TMR 3-1212WI** | TRACO Power | Mouser, DigiKey | 20 → 24 | $13 | Isolated ±12V 125mA, 3W. Audio-grade noise. Pedal SKU only. | Recom RKD-1212-D (250mA, premium), Mornsun 1212S-1WR3 |
+| **DC-DC** (pedal) | **TMR 3-1222WI** | TRACO Power | Mouser, DigiKey | 20 → 24 | $13 | Isolated ±12V 125mA, 3W. Audio-grade noise. Pedal SKU only. | Recom RxxD-1212 (verify dual ±12V P/N) (250mA, premium), Mornsun 1212S-1WR3 |
 | ~~Mini-XLR TA3F/TA3M~~ | — | — | — | **0 (устранён, Decision 11)** | — | Пьезо теперь module-internal, разведён коротким shielded проводом к JFET. Swappable mini-XLR не нужен. Экономия ~$1920. | — |
 | **Piezo pickup** | 27mm disc + spring contact pin | various | Tayda + Mouser (pogo) | **2/module ×28 = 56 (+6 буфер)** | $1 | Module-side contact pickup (Decision 11). A near / B far. | PVDF film premium |
 | **MCU** | **ATtiny84A-PU** | Microchip | Mouser, DigiKey | 20 → 25 | $1.50 | 14-pin DIP, 12 GPIO + 8 ADC. v6.4 upgrade. Same toolchain как ATtiny85. | ATtiny44 (less flash, same pinout) |
@@ -166,7 +166,7 @@
 - Op-amps TL07x → **OPA1612 / OPA1641** (audio-grade, Mouser)
 - LSK489A → keep (already best)
 - Exciter DAEX25 → **DAEX32Q-4** (dense plates)
-- DC-DC TRACO → **Recom RKD-1212-D** (250mA, lower noise)
+- DC-DC TRACO → **Recom RxxD-1212 (verify dual ±12V P/N)** (250mA, lower noise)
 - Pots Alpha → **Bourns PTV / ALPS RK09** (better feel)
 - Film caps WIMA → **Mundorf / Wima FKP** (audiophile)
 

@@ -362,8 +362,8 @@ Baseline: generic RG-174 50мм за $1.
 
 | Tier | Part | $ | Notes |
 |------|------|---|-------|
-| **Budget** | TRACO TMR 3-1212WI | $13 | 3W isolated, current spec |
-| **Premium baseline** | Recom RKD-1212-D | $22 | 250mA per rail, audio-rated |
+| **Budget** | TRACO TMR 3-1222WI | $13 | 3W isolated, current spec |
+| **Premium baseline** | Recom RxxD-1212 (verify dual ±12V P/N) | $22 | 250mA per rail, audio-rated |
 | **Premium audio** | **Recom REC15-1212S with EMI shielding** | $35 | Shielded, lower noise |
 | **Premium** | **Mean Well DKE15B-12** | $30 | Premium audio-grade DC-DC |
 | **Elite** | **Linear regulated PSU (no switching)** | $50 | Heavier, no switching noise, audiophile cult |
@@ -560,7 +560,7 @@ Elite tier — lower margin, но **absolute profit higher** ($1,032 vs $405 н�
 | **Volume/key pots** | Alps RK09L (9mm premium) | 17 | $3 | $51 | Mouser, Thonk |
 | **Bypass relay** | Omron G6A-274P (gold bifurcated) | 1 | $4 | $4 | Mouser |
 | **Audio jacks** | Neutrik gold (pedal) / Thonkiconn (EU CV) | — | — | ~$30 | Neutrik, Thonk |
-| **DC-DC (pedal)** | Recom RKD-1212-D (low-noise) | 1 | $22 | $22 | Mouser |
+| **DC-DC (pedal)** | Recom RxxD-1212 (verify dual ±12V P/N) (low-noise) | 1 | $22 | $22 | Mouser |
 | **PCB** | 4-layer ENIG immersion gold | 1 | $12 | $12 | JLCPCB |
 | **Module transducers** (Decision 11) | DAEX32Q-4 + 2 piezo + solenoid | 1 set | — | ~$32 | Parts Express |
 | **Σ audiophile module electronics** | | | | **~$232** | |
@@ -579,7 +579,7 @@ Elite tier — lower margin, но **absolute profit higher** ($1,032 vs $405 н�
 | Alps RK09L pots | mouser.com · thonk.co.uk |
 | Omron G6A relay | mouser.com · digikey.com |
 | Neutrik gold jacks | neutrik.com · thonk.co.uk |
-| Recom RKD-1212-D | mouser.com · digikey.com |
+| Recom RxxD-1212 (verify dual ±12V P/N) | mouser.com · digikey.com |
 | Susumu/Dale precision resistors | mouser.com · digikey.com |
 | 4-layer ENIG PCB | jlcpcb.com · pcbway.com |
 | DAEX32 exciter | parts-express.com · daytonaudio.com |

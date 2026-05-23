@@ -133,7 +133,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 - **Mount**: 3U × 40HP standard rack.
 
 **Pedal SKU**:
-- **Power**: 12V DC center-negative (современный стандарт для complex pedals — Strymon, Eventide, Meris, Chase Bliss). Internal **isolated DC-DC** (TRACO TMR 3-1212WI или Recom RKD-1212) → bipolar ±12V audio rails. **500mA min supply current**.
+- **Power**: 12V DC center-negative (современный стандарт для complex pedals — Strymon, Eventide, Meris, Chase Bliss). Internal **isolated DC-DC** (TRACO TMR 3-1222WI или Recom RKD-1212) → bipolar ±12V audio rails. **500mA min supply current**.
 - **Identical audio headroom к Eurorack version** (±12V rails везде, same +15 dBu max output).
 - **Isolated DC-DC** также ломает ground loops с другими pedals на pedalboard — clean integration в любой rig.
 - **I/O**: 6.3мм TS jacks (main audio in/out), 3.5мм mini-jack (CV expansion patch bay).
@@ -846,7 +846,7 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 | Параметр | Значение |
 |----------|----------|
-| **Power supply** | ±12В Eurorack bus (modular) или 12V DC center-negative + TRACO TMR 3-1212WI / Recom RKD-1212-D isolated DC-DC (pedal) |
+| **Power supply** | ±12В Eurorack bus (modular) или 12V DC center-negative + TRACO TMR 3-1222WI / Recom RxxD-1212 (verify dual ±12V P/N) isolated DC-DC (pedal) |
 | **Power consumption** | 200мА steady, 450мА peak (с solenoid pulse) |
 | **Audio input** | 1× 3.5мм TS, Hi-Z (1МΩ), max +20 dBu |
 | **Sidechain input** | 1× 3.5мм TS, line level |

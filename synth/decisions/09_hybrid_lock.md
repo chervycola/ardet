@@ -44,7 +44,7 @@
 ### Cartridge & power = без изменений
 
 - 40HP Eurorack + big-box pedal 203×140мм — оба formfactor canonical.
-- 12V DC pedal supply + isolated DC-DC (TRACO TMR 3-1212WI / Recom RKD-1212-D).
+- 12V DC pedal supply + isolated DC-DC (TRACO TMR 3-1222WI / Recom RxxD-1212 (verify dual ±12V P/N)).
 - Mini-XLR cartridge connectors, единый cartridge стандарт с Last Day.
 
 ## TOLL / STALL через CV — обоснование

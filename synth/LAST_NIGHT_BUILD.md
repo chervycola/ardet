@@ -52,7 +52,7 @@
 - **Блок 16**: always-on phaser (4-stage OTA all-pass) + **analog function generator** (rise/fall/depth + exp/log + speed/range + 4 outputs).
 - **Блок 17**: REMOVED (was BBD vinyl wow → переехал в Last Day как OLD VINYL PT2399).
 - **Блок 18**: Gate/Crush footswitch (CD4066 + LF398 + LM393, restored per Decision 09 v5 hybrid).
-- **Блок 19**: Isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
+- **Блок 19**: Isolated DC-DC (pedal SKU only — TRACO TMR 3-1222WI / Recom RxxD-1212 (verify dual ±12V P/N)).
 - **Блок 20**: Bank Mode preset slider (4P5T detailed schematic).
 - **Блоки 21–25**: Phase 2 cold palette upgrade kit (PULSE / FOG / FROST / CHILL / HUM).
 
@@ -102,7 +102,7 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
                                                       │    bypasses isolated DC-DC barrier
                                                       │
                                                       ▼
-                                              TRACO TMR 3-1212WI
+                                              TRACO TMR 3-1222WI
                                            (isolated DC-DC, 3W,
                                             ±12V output, 125мА на rail)
                                                    │
@@ -167,18 +167,18 @@ Modern complex-pedal standard: 12V DC supply (Strymon, Eventide, Meris, Chase Bl
 
 | Part | Output | Current | Cost | Notes |
 |------|--------|---------|------|-------|
-| **TRACO TMR 3-1212WI** | ±12V | 125mA | $13 | **Recommended budget** — 3W class. |
-| **Recom RKD-1212-D** | ±12V | 250mA | $22 | Premium SKU — больше тока, audio-friendly noise specs. |
+| **TRACO TMR 3-1222WI** | ±12V | 125mA | $13 | **Recommended budget** — 3W class. |
+| **Recom RxxD-1212 (verify dual ±12V P/N)** | ±12V | 250mA | $22 | Premium SKU — больше тока, audio-friendly noise specs. |
 | TRACO TMA1212D | ±12V | 83mA | $15 | **Insufficient** для full power budget — не использовать. |
 | RECOM RKE-0905D | ±5V | 100mA | $8 | Если accept reduced headroom (+5 dBu max). |
 
-**Recommend**: **TRACO TMR 3-1212WI** budget SKU, **Recom RKD-1212-D** premium SKU. Both isolated → break ground loops с другими pedals на pedalboard.
+**Recommend**: **TRACO TMR 3-1222WI** budget SKU, **Recom RxxD-1212 (verify dual ±12V P/N)** premium SKU. Both isolated → break ground loops с другими pedals на pedalboard.
 
 **Power budget Pedal** (segregated по supply rail):
 
 | Rail | Source | Steady | Peak | Notes |
 |------|--------|--------|------|-------|
-| **+12V_audio** (DC-DC output) | TRACO TMR 3-1212WI 125mA / Recom RKD-1212-D 250mA | 80mA | 120mA | Audio op-amps + OTAs + FG. Comfortable margin на TRACO. |
+| **+12V_audio** (DC-DC output) | TRACO TMR 3-1222WI 125mA / Recom RxxD-1212 (verify dual ±12V P/N) 250mA | 80mA | 120mA | Audio op-amps + OTAs + FG. Comfortable margin на TRACO. |
 | **−12V_audio** (DC-DC output) | (same DC-DC) | 50mA | 80mA | OP-amps negative rail. |
 | **+5V_digital** (LDO output) | 7805 от +12V_RAW | 40mA | 60mA | ATtiny84A + LEDs + LM393. |
 | **+12V_RAW** (input direct, pre-DC-DC) | external PSU | — | **290mA peak (solenoid TOLL pulse)** | Solenoid driver direct. Intermittent. |
@@ -749,7 +749,7 @@ Master BYPASS footswitch имеет **2 режима** (internal jumper J_TRAILS
             +12V Eurorack bus для Eurorack SKU)
             
   ⚠ КРИТИЧНО: solenoid питается от +12V_RAW, НЕ от +12V audio rail
-     (после isolated DC-DC). Pedal SKU TRACO TMR 3-1212WI обеспечивает
+     (после isolated DC-DC). Pedal SKU TRACO TMR 3-1222WI обеспечивает
      лишь 125mA per rail — solenoid pulls 290mA peak → audio rail
      просядет → audio artifacts. Solenoid loop wired напрямую к
      +12V_RAW bus, отдельно от audio supply.
@@ -1615,8 +1615,8 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
                                   ┌───────┼──────────┐
                                   │       │          │
                                   ▼       ▼          ▼
-                          TRACO TMR 3-1212WI       7805 LDO ──► +5V
-                          (or Recom RKD-1212-D     (для ATtiny84A,
+                          TRACO TMR 3-1222WI       7805 LDO ──► +5V
+                          (or Recom RxxD-1212 (verify dual ±12V P/N)     (для ATtiny84A,
                            для premium)             logic)
                                   │
                           ╔═══════ ISOLATION ═══════╗
@@ -1643,8 +1643,8 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 
 | Part | Output | Current | Cost | SKU tier |
 |------|--------|---------|------|----------|
-| **TRACO TMR 3-1212WI** | ±12V | 125mA | $13 | **Budget** SKU. Sufficient для steady state. |
-| **Recom RKD-1212-D** | ±12V | 250mA | $22 | **Premium** SKU. Headroom для solenoid + FX peaks. Audio-rated noise specs. |
+| **TRACO TMR 3-1222WI** | ±12V | 125mA | $13 | **Budget** SKU. Sufficient для steady state. |
+| **Recom RxxD-1212 (verify dual ±12V P/N)** | ±12V | 250mA | $22 | **Premium** SKU. Headroom для solenoid + FX peaks. Audio-rated noise specs. |
 
 **Why isolated DC-DC** (не charge pump):
 - **Higher current capability** (125–250mA vs ~50mA charge pump).
@@ -1657,7 +1657,7 @@ Pedal version converts 12V DC single-rail input в bipolar ±12V audio rails ч�
 - Premium pedalboard PSUs все имеют 12V outputs (Voodoo Lab Pedal Power 4×4, Cioks DC7/DC10, Eventide PowerMax, Strymon Zuma).
 - 9V supply **не подходит** для headroom этого класса pedals (включая Last Night).
 
-**Power budget pedal (with TMR 3-1212WI)**:
+**Power budget pedal (with TMR 3-1222WI)**:
 - Audio analog (±12V via DC-DC): ~125mA на rail steady, peak 250mA.
 - Digital +5V (для ATtiny84A + LEDs): ~50mA.
 - Solenoid pulse: 300mA peak (от +12V rail, low-side switched, intermittent).
@@ -2242,9 +2242,9 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 - [ ] Internal ferrite antenna picks up nearby mains transformer audibly при `RV_HUM` full CW (place near AC adapter — confirm hum amplification).
 - [ ] Twin-T tuning: sweep external signal generator 30–80 Hz, identify peak gain frequency. Should be 50 Hz (or 60 Hz per switch position) ±2 Hz.
 - [ ] Q ~5 (bandwidth ~10 Hz at -3 dB).
-- [ ] No collateral switching noise от собственного TMR 3-1212WI DC-DC (150kHz) reaches HUM output (DC-DC ferrite shield essential).
+- [ ] No collateral switching noise от собственного TMR 3-1222WI DC-DC (150kHz) reaches HUM output (DC-DC ferrite shield essential).
 
-**Open question**: внутренняя antenna может ловить collateral switching noise от собственного TMR 3-1212WI DC-DC (150kHz). Mitigation: ferrite shielding coil + 50/60Hz tuned filter cuts switching frequency. Если bench prototype не подтверждает clean signal — HUM откладывается в Phase 2B с external antenna jack only.
+**Open question**: внутренняя antenna может ловить collateral switching noise от собственного TMR 3-1222WI DC-DC (150kHz). Mitigation: ferrite shielding coil + 50/60Hz tuned filter cuts switching frequency. Если bench prototype не подтверждает clean signal — HUM откладывается в Phase 2B с external antenna jack only.
 
 ---
 
@@ -2277,7 +2277,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
   - Block 16: **always-on phaser** (named effect, не optional layer).
   - Block 17: **REMOVED** (BBD vinyl wow → переехал в Last Day).
   - Block 18: **Gate/Crush footswitch** (CD4066 + LF398 + LM393, restored from v4 removal).
-  - Block 19: isolated DC-DC (pedal SKU only — TRACO TMR 3-1212WI / Recom RKD-1212-D).
+  - Block 19: isolated DC-DC (pedal SKU only — TRACO TMR 3-1222WI / Recom RxxD-1212 (verify dual ±12V P/N)).
   - **Block 20**: Bank Mode preset slider (4P5T, **detailed schematic с 5 R-banks**, see above).
   - Blocks 21–25: cold palette FX layer (Phase 2 v3 PCB upgrade — PULSE/FOG/FROST/CHILL/HUM).
 - **9 ICs analog (budget 2-stage phaser)**: 2× TL072 + 2× TL074 + **3× LM13700** (U5=VCA + Block 12 crossfader OTA; U6=spare halves для Block 20 saturation / resonance; U7=Block 16 phaser cells 1+2) + CD4066 (Gate cell) + LF398 (Crush cell).
@@ -2289,7 +2289,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 - **6 transistors discrete**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver).
 - **6× 2N3904** (Block 16 FG exp converters — 3 matched pairs для rise/fall/depth sliders).
 - **1 zener**: BZX55C9V1.
-- **1 isolated DC-DC** (pedal only): TRACO TMR 3-1212WI (budget) или Recom RKD-1212-D (premium).
+- **1 isolated DC-DC** (pedal only): TRACO TMR 3-1222WI (budget) или Recom RxxD-1212 (verify dual ±12V P/N) (premium).
 - **Footswitches** (mockup canon): TAP / GATE-CRUSH / BYPASS / FREEZE.
 - **CV-only inputs** (modular advanced — extras zone): J_TOLL_TRIG (внутренне normalled от FG EOR) / J_STALL_CV / J_SIDE (sidechain in) / **J_FREEZE_CV** (OR с footswitch state).
 - **FG outputs** (extras zone bottom row): J_Gate / J_Sub÷2 / J_Inv. J_EG в main CV bay row 2.
@@ -2397,8 +2397,8 @@ Phase 1 BOM становится **дешевле и фокусированне�
 
 **Pedal SKU** (additional):
 - DC barrel jack 2.1mm center-negative: $1.20.
-- **TRACO TMR 3-1212WI** isolated DC-DC (budget SKU): **$13.00**.
-- — or **Recom RKD-1212-D** (premium SKU): **$22.00**.
+- **TRACO TMR 3-1222WI** isolated DC-DC (budget SKU): **$13.00**.
+- — or **Recom RxxD-1212 (verify dual ±12V P/N)** (premium SKU): **$22.00**.
 - LC filter post-DC-DC (×2 rails): $2.00.
 
 ### Заmена subtotal
@@ -2409,8 +2409,8 @@ Subtotal active was $11.97 — увеличено с FX engine + DC-DC до:
 |------|--------------------|-------|---------------------------|
 | Eurorack budget | $54.65 | $1.50 | **$56.15** |
 | Eurorack premium (4-layer PCB) | $54.65 | $1.50 | **$56.15** |
-| Pedal budget (TMR 3-1212WI) | $54.65 | $16.20 | **$70.85** |
-| Pedal premium (RKD-1212-D) | $54.65 | $25.20 | **$79.85** |
+| Pedal budget (TMR 3-1222WI) | $54.65 | $16.20 | **$70.85** |
+| Pedal premium (RxxD-1212 (verify)) | $54.65 | $25.20 | **$79.85** |
 
 ### Resistors (1/4W metal film 1% unless noted)
 
@@ -3405,7 +3405,7 @@ Common issues и their resolutions, organized by symptom.
 
 **Fix**:
 - Verify single-point ground at J_PWR.
-- Add LC filter post-DC-DC (TMR 3-1212WI / RKD-1212-D в pedal version) — снимает ~150кГц switching residue.
+- Add LC filter post-DC-DC (TMR 3-1222WI / RxxD-1212 (verify) в pedal version) — снимает ~150кГц switching residue.
 - Check PCB für AGND/DGND breaks.
 
 ### Click / pop при solenoid activation
@@ -3550,8 +3550,8 @@ Common issues и their resolutions, organized by symptom.
 | **DAEX32Q-4** | Dayton Audio | Visaton EX 60 S | 1-2 weeks | Premium-tier exciter. |
 | ~~Switchcraft TA3M/TA3F~~ | — | — | — | Устранён (Decision 11 — пьезо module-internal, no swappable connector). |
 | **Alpha RV09 9mm** | Thonk, SmallBear, eBay | Bourns 16mm (different footprint) | 2-4 weeks | Eurorack standard. Order in bulk. |
-| **TRACO TMR 3-1212WI** | Mouser, Digi-Key | Recom RKD-1212-D, Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
-| **Recom RKD-1212-D** | Mouser, Digi-Key | TRACO TMR 3-1212WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
+| **TRACO TMR 3-1222WI** | Mouser, Digi-Key | Recom RxxD-1212 (verify dual ±12V P/N), Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
+| **Recom RxxD-1212 (verify dual ±12V P/N)** | Mouser, Digi-Key | TRACO TMR 3-1222WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
 <!-- BBD V3207/V3102 removed per Decision 08 — vinyl FX moved to Last Day as OLD VINYL PT2399 parallel tract. -->
 | **NE555P** ×1 | TI, multi-source | LMC555 (CMOS variant) | 1 week | TOLL pulse monostable (Block 14) only. vinyl-skip NE555 удалён в v6 — analog FG заменяет. |
 | **ATtiny84A-PU** | Microchip via Mouser/Digi-Key | ATtiny44 (lower memory, same pinout) | 1 week | DIP-14, 12 GPIO + 8 ADC. v6.3 upgrade vs ATtiny85 — added FG TRIG + speed PWM + phase reset features required >5 GPIO. |
