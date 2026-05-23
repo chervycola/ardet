@@ -42,7 +42,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     cta_read_chain: 'Read the signal chain',
 
     counter_days: 'Days since the system',
-    counter_burned: '47 prototypes burned',
+    counter_burned: 'prototypes burned',
     counter_ships: 'Next batch ships',
 
     sig_tag: '',

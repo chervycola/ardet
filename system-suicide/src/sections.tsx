@@ -160,7 +160,7 @@ export function CounterStrip() {
           <span className="red">{t('counter_ships')}</span>
         </div>
         <div style={{ maxWidth: 480, width: '100%' }}>
-          <TallyCounter count={47} />
+          <TallyCounter count={0} />
         </div>
       </div>
     </section>

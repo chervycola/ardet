@@ -156,6 +156,17 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
         </section>
       ) : null}
 
+      {detail.cartridges ? (
+        <section className="pp-block">
+          <h3 className="pp-h">Cartridge library</h3>
+          <ul className="pp-uses">
+            {detail.cartridges.map((c, i) => (
+              <li key={i}><XMark size={14} /> <span>{c}</span></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="pp-block">
         <h3 className="pp-h">Uses</h3>
         <ul className="pp-uses">
@@ -164,6 +175,17 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
           ))}
         </ul>
       </section>
+
+      {detail.safety ? (
+        <section className="pp-block">
+          <h3 className="pp-h">Safety</h3>
+          <ul className="pp-uses">
+            {detail.safety.map((s, i) => (
+              <li key={i}><XMark size={14} /> <span>{s}</span></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="pp-cta">
         <a

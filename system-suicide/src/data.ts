@@ -51,7 +51,7 @@ export const MODULES: Module[] = [
   },
   {
     idx: '09', slug: 'last-night',
-    name: 'Last Night', fn: 'Natura reverb · post-apocalyptic phaser',
+    name: 'Last Night', fn: 'Natura reverb · post-apocalyptic phaser · function generator',
     hp: 40, phase: 'SHIP — PHASE 1', redacted: false, flagship: true,
     core: 'Swappable plates of wood, stone, metal, bone, glass. Surface exciter + dual piezo. Solenoid damper, freeze loop. No DSP.',
   },
