@@ -18,6 +18,8 @@
 
 **Cartridge sourcing**: **[`CARTRIDGE_SOURCING.md`](CARTRIDGE_SOURCING.md)** — split: module transducers (×модули, Decision 11) vs passive plate cartridges (×count), supplier domains + P/N.
 
+**Price table**: **[`PRICE_TABLE.md`](PRICE_TABLE.md)** — консолидированная таблица цен (budget/audiophile) × компонент × магазин. ~$176 budget / ~$361 audiophile per module.
+
 ## Текущий статус
 
 **Phase**: design lock (Decision 09 v6.4 — improvements pass applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
