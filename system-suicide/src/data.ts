@@ -134,8 +134,8 @@ export const PRODUCT_PAGES: ProductPages = {
   },
 
   'last-night': {
-    quote: 'Post-apocalypse. The breath of ruins. An old gramophone in an empty room.',
-    intro: 'An analogue resonator-reverb with no DSP. A surface exciter drives a thin plate held in a swappable cartridge — wood, stone, metal, bone, glass, jade. Two piezo pickups read the resonance from the other face. A solenoid damps the plate from above. Each cartridge is a different room.',
+    quote: 'A post-apocalyptic resonator on swappable plates. A Geiger counter and an old gramophone.',
+    intro: 'An analogue multi-effect workstation. A surface exciter drives a thin plate held in a swappable cartridge — wood, stone, metal, bone, glass, jade. Two piezo pickups read the resonance from the other face. A solenoid damps the plate from above. Each cartridge is a different room.',
     stats: [
       { k: 'Format',     v: 'Eurorack · 40 HP (pedal 190×122 mm available)' },
       { k: 'Power',      v: '±12 V · 800 mA' },

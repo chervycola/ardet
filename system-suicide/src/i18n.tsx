@@ -65,9 +65,9 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_eyebrow: 'M·09 / Flagship / Pre-order',
     ln_h_a: 'Last',
     ln_h_b: 'Night.',
-    ln_quote: '"Post-apocalypse. The breath of ruins. An old gramophone in an empty room."',
+    ln_quote: '"A post-apocalyptic resonator on swappable plates. A Geiger counter and an old gramophone."',
     ln_desc:
-      'An analogue reverb with no DSP. A surface exciter drives a thin plate held in a cartridge — wood, stone, metal, glass, bone, jade. Two piezo pickups read the resonance from the other face. A solenoid damps. A feedback loop freezes. Each cartridge is a different room.',
+      'An analogue multi-effect workstation. A surface exciter drives a thin plate held in a cartridge — wood, stone, metal, glass, bone, jade. Two piezo pickups read the resonance from the other face. A solenoid damps. A feedback loop freezes. Each cartridge is a different room.',
     ln_spec_format: 'Format',
     ln_spec_format_v: 'Eurorack · 40 HP',
     ln_spec_power: 'Power',
