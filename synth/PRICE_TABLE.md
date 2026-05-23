@@ -132,6 +132,41 @@
 
 ---
 
+## AliExpress sourcing split (OK / AVOID)
+
+**Правило**: actives + precision caps + DC-DC + matched pairs → **только authorized** (Mouser/DigiKey/LIS, authentic+traceable). Mechanical + commodity → **AliExpress OK** (sample-qualify сначала).
+
+> Counterfeit-риск actives с AliExpress катастрофичен для boutique-продукта ($499-2499): фейк op-amp/JFET = inconsistent звук + убитая репутация. LSK489A (Tier 1 noise cornerstone) с AE = почти наверняка релейбл generic → весь noise floor дизайн мёртв.
+
+| Категория | AliExpress | Обоснование |
+|-----------|:----------:|-------------|
+| Op-amps (OPA1612/1644, TL07x) | 🔴 AVOID | massiv counterfeit, особенно OPA1612 |
+| LSK489A/B JFET | 🔴 AVOID | noise cornerstone, релейбл risk = дизайн мёртв |
+| LM13700 / LF398 / ATtiny84A | 🔴 AVOID | relabel / fake die |
+| LM394 matched pairs | 🔴 AVOID | matching нельзя доверять |
+| Precision/audio caps (WIMA/Mundorf/Elna) | 🔴 AVOID | индустрия фейковых "аудиофильских" cap |
+| Isolated DC-DC (TMR 3-1222WI) | 🔴 AVOID | safety + isolation + реальный ток сомнительны |
+| BD139/140, 2N7000, diodes, zener | 🟡 OK с осторожностью | commodity, но sample-test (fake возможен) |
+| **Pots (Alpha RV09 / Alps RK09L)** | 🔴 **AVOID** | **feel/taper/longevity критичны** — AE Alpha-клоны scratchy, кривой taper. Pot — это **тактильное качество boutique**. Authorized (Thonk/Mouser). |
+| **Knob caps (грип)** | 🟡 **OK budget / premium worth real** | косметика+тактиль. AE OK для budget aesthetic, но **premium tier — реальные Davies/Re'an/brass** (вес, grip, indicator важны для feel). |
+| Sliders (FG/Bank Mode) | 🟡 OK с qualify | mechanical, sample-test wiper smoothness |
+| Footswitches 3PDT | 🟡 OK с qualify | mechanical, но cheap 3PDT часто rattle/fail — sample-test |
+| Bypass relay (Omron G6K/G6A) | 🔴 AVOID | signal relay — contact quality критичен, fake possible |
+| Enclosure (big-box corpus) | ✅ OK | штамповка, спеков не требует |
+| Магниты N42 | ✅ OK | физика стабильна |
+| Standoffs / hardware / винты | ✅ OK | commodity |
+| Piezo discs 27mm | ✅ OK (sample-qualify звук) | generic, всё равно тест по звуку |
+| Generic solenoid 5V | ✅ OK (sample-qualify) | bulk дёшево, тест функции |
+| LED / wire / heat shrink | ✅ OK | commodity |
+| JST / IDC connectors | ✅ OK | generic |
+| Commodity resistors / ceramic caps | ✅ OK (non-critical) | decoupling/general, не signal-critical |
+
+**Экономия на 28 units**: AliExpress mechanical+commodity ~$30-50/unit × 28 = **$840-1400** на партию. Существенно. Активка строго authorized — риск > экономии.
+
+**Правила AE-закупки**: (1) sample first (2-5 шт, тест), (2) mechanical/commodity only, (3) проверенный продавец (rating + store age + order count), (4) piezo/solenoid bench-test перед bulk.
+
+---
+
 ## Магазины — сводка (домены)
 
 | Магазин | Домен | Что |
@@ -150,6 +185,7 @@
 | Neutrik | neutrik.com | Gold audio jacks |
 | Allied Electronics | alliedelec.com | Cornell Dubilier silver mica |
 | McMaster-Carr | mcmaster.com | Spring carriage, mechanical |
+| AliExpress | aliexpress.com | **Mechanical/commodity ТОЛЬКО** (enclosure, knob caps, magnets, piezo, generic solenoid, hardware). 🔴 НЕ для actives/precision (counterfeit). Sample-qualify. |
 
 ---
 

@@ -13,6 +13,29 @@
 - **Commodity** (multi-source jellybean): заказывать по точному count + 10% spare для брака.
 - **Дистрибьюторы**: Mouser / Digi-Key (основные, всё в наличии), Thonk / Love My Switches / Small Bear (Eurorack/pedal-specific), Parts Express / Dayton direct (exciters), Tayda (commodity дёшево).
 
+### Split sourcing — authorized vs AliExpress
+
+```
+AUTHORIZED ONLY (Mouser/DigiKey/LIS/Thonk) — authentic + traceable:
+  • Все active semiconductors (op-amps, JFET, OTA, comparator, MCU, LF398)
+  • Matched pairs (LM394)
+  • Precision/audio caps (WIMA, Mundorf, Elna Silmic, silver mica)
+  • Isolated DC-DC (safety + isolation rating)
+  • Bypass relay (contact quality)
+  • POTS (Alpha/Alps — feel/taper критичен для boutique тактиля)
+
+ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
+  • Enclosure, knob CAPS (косметика; premium tier — реальные Davies/brass)
+  • Magnets N42, standoffs, hardware
+  • Piezo discs, generic solenoid (bench-test перед bulk)
+  • LED, wire, heat shrink, JST/IDC connectors
+  • Commodity resistors / ceramic decoupling caps
+```
+
+> **Counterfeit-риск**: actives с AliExpress = катастрофа для boutique ($499-2499). Fake LSK489A (Tier 1 noise cornerstone) = убитый noise floor. Fake OPA1612 = inconsistent звук. **Pots тоже authorized** — AE Alpha-клоны scratchy + кривой taper (тактильное качество boutique). **Knob caps** — AE budget OK, premium worth real. Полная split-таблица: `PRICE_TABLE.md` §"AliExpress sourcing split".
+>
+> **Экономия**: AE mechanical+commodity ~$30-50/unit × партию. Правила: sample first → mechanical only → проверенный продавец → bench-test piezo/solenoid.
+
 ---
 
 ## 1. Tier A — Критичные / редкие (буфер обязателен)
