@@ -1772,3 +1772,11 @@ section { position: relative; }
 @media (max-width: 720px) {
   .section-page { font-size: 9px; padding: 10px 0 6px; margin-bottom: 16px; }
 }
+
+/* ----- BLURRED (classified) MODULE NAMES ----- */
+.blur-name {
+  filter: blur(0.35em);
+  -webkit-filter: blur(0.35em);
+  user-select: none;
+  -webkit-user-select: none;
+}

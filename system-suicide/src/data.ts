@@ -1,5 +1,9 @@
 import type { Module, Cartridge, Patch, ProductPages } from './types';
 
+// Module names that stay legible; every other name is visually blurred.
+export const REVEALED_NAMES = new Set(['is-my', 'last-night']);
+export const isNameRevealed = (slug: string): boolean => REVEALED_NAMES.has(slug);
+
 export const MODULES: Module[] = [
   {
     idx: '01', slug: 'i-show-you-light',

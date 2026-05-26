@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import { useT, LanguageToggle } from './i18n';
-import { MODULES, CARTRIDGES, PATCHES } from './data';
+import { MODULES, CARTRIDGES, PATCHES, isNameRevealed } from './data';
 import {
   AmexRazorBlade,
   BarbedDivider,
@@ -75,7 +75,14 @@ export function TopBar() {
 export function Hero({ icon }: { icon: HeroIcon }) {
   const t = useT();
   const link = (slug: string, label: string, extraClass?: string): ReactNode => (
-    <a href={`module.html?m=${slug}`} className={'mlink' + (extraClass ? ' ' + extraClass : '')}>
+    <a
+      href={`module.html?m=${slug}`}
+      className={
+        'mlink' +
+        (extraClass ? ' ' + extraClass : '') +
+        (isNameRevealed(slug) ? '' : ' blur-name')
+      }
+    >
       {label}
     </a>
   );
@@ -194,7 +201,7 @@ export function SignalChain() {
             >
               <div className="num">{m.idx}</div>
               <div className="pin"></div>
-              <div className="name">{m.name}</div>
+              <div className={'name' + (isNameRevealed(m.slug) ? '' : ' blur-name')}>{m.name}</div>
               <div className="fn">{m.fn}</div>
             </a>
           ))}
@@ -243,7 +250,7 @@ export function Catalog() {
                 </span>
                 <span className="hp">{m.hp === 'TBD' ? 'TBD' : `${m.hp} HP`}</span>
               </div>
-              <h3 className="name">{m.name}</h3>
+              <h3 className={'name' + (isNameRevealed(m.slug) ? '' : ' blur-name')}>{m.name}</h3>
               <div className="fn">— {m.fn}</div>
               <div className="core">
                 {m.redacted ? (

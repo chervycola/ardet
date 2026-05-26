@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { MODULES, PRODUCT_PAGES } from './data';
+import { MODULES, PRODUCT_PAGES, isNameRevealed } from './data';
 import { XMark } from './motifs';
 import { RedactionBars } from './sections';
 import type {
@@ -19,7 +19,7 @@ function ProductBreadcrumb({ module: m }: { module: Module }) {
     <div className="pp-breadcrumb">
       <a href="index.html">← System catalogue</a>
       <span className="sep">/</span>
-      <span className="here">M·{m.idx} · {m.name}</span>
+      <span className="here">M·{m.idx} · <span className={isNameRevealed(m.slug) ? '' : 'blur-name'}>{m.name}</span></span>
     </div>
   );
 }
@@ -34,7 +34,7 @@ function ProductHeader({ module: m }: { module: Module }) {
         <span className="t-eyebrow">{m.hp === 'TBD' ? 'TBD' : `${m.hp} HP`}</span>
         <span className={'t-eyebrow ' + (isShipping ? 'red' : '')}>{m.phase}</span>
       </div>
-      <h1 className="pp-title">{m.name}</h1>
+      <h1 className={'pp-title' + (isNameRevealed(m.slug) ? '' : ' blur-name')}>{m.name}</h1>
       <div className="pp-line"></div>
     </header>
   );
@@ -212,11 +212,11 @@ function NeighbourNav({ module: m }: { module: Module }) {
     <nav className="pp-neighbours">
       <a href={`module.html?m=${prev.slug}`} className="prev">
         <div className="dir">← Previous · M·{prev.idx}</div>
-        <div className="name">{prev.name}</div>
+        <div className={'name' + (isNameRevealed(prev.slug) ? '' : ' blur-name')}>{prev.name}</div>
       </a>
       <a href={`module.html?m=${next.slug}`} className="next">
         <div className="dir">Next · M·{next.idx} →</div>
-        <div className="name">{next.name}</div>
+        <div className={'name' + (isNameRevealed(next.slug) ? '' : ' blur-name')}>{next.name}</div>
       </a>
     </nav>
   );
