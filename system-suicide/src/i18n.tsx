@@ -81,7 +81,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     ln_spec_carts: 'Cartridges',
     ln_spec_carts_v: '6 ship · 6 phase 2',
     ln_spec_price: 'Price',
-    ln_spec_price_v: '€ 3640 · all cartridge',
+    ln_spec_price_v: '€ 3640 · all cartridges',
     ln_spec_lead: 'Lead time',
     ln_spec_lead_v: '3-4 months · made to order',
     ln_cart_lib: 'Cartridge library · phase 1 + phase 2',

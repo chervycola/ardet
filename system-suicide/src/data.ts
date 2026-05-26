@@ -146,7 +146,7 @@ export const PRODUCT_PAGES: ProductPages = {
       { k: 'Front end',  v: 'LSK489A dual-JFET preamp · ×23 gain' },
       { k: 'Cartridges', v: '6 ship · 6 more in Phase 2' },
       { k: 'Phase',      v: 'SHIP — PHASE 1 · 3-4 months made-to-order' },
-      { k: 'Price',      v: '€ 640 · cartridge € 25–95' },
+      { k: 'Price',      v: '€ 3640 · all cartridges included' },
     ],
     physical: [
       'The instrument is the plate. A 100 mm long, 20–60 mm tall, 0.5–6 mm thick sheet of material — wood, stone, metal, glass, bone — sits in a cartridge that is nothing but the plate, its finish, a frame and four N42 magnets. The transducer engine lives in the module, not the cartridge: a module-side surface exciter spring-contacts the front of the plate and drives it into its flexural modes; two 27 mm piezo pickups spring-contact the back at different positions (near = bright, far = warm); a felted solenoid sits ~2 mm off the surface.',
