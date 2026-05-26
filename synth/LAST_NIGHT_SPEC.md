@@ -230,7 +230,7 @@ Customer может start с pedal (для studio/live performance), позже 
 **Stage 2 — material resonance**:
 3. **Pre-emphasis** — shelving +8dB выше 3.2кГц для HF compensation материала.
 4. **Class AB driver** — BD139/BD140 push-pull с bias diodes, R8 4.7Ω current limit, 3Вт peak на exciter.
-5. **EXCITER** — Dayton DAEX25 (light) или DAEX32 (dense) на face A.
+5. **EXCITER** — Dayton DAEX32Q-4 universal (module-side, spring-contact к пластине, Decision 11).
 6. **Physical plate** — материал резонирует в bending modes.
 7. **Dual piezo pickup** — Piezo A (bright, near exciter) + Piezo B (warm, far end).
 8. **JFET preamp LSK489A** — dual matched, +27dB gain. Пьезо contact pins (module-side, Decision 11) → короткий shielded провод → JFET.
@@ -560,7 +560,9 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 
 ### Phase 1 catalog — 6 cartridges (initial launch)
 
-| Картридж | Размеры (Д×В×Т, мм) | Масса plate | RT60 (без feedback) | Exciter | Pickup | Retail |
+> **Decision 11**: картридж = пассивная пластина. Колонки "Exciter"/"Pickup" ниже — **historical** (per-material selection отменён). Exciter (DAEX32 universal) + пьезо — **в модуле**, contact coupling, одинаковы для всех картриджей. Картридж несёт только пластину+рамку+магниты.
+
+| Картридж | Размеры (Д×В×Т, мм) | Масса plate | RT60 (без feedback) | ~~Exciter~~ | ~~Pickup~~ | Retail |
 |----------|---------------------|-------------|---------------------|---------|--------|--------|
 | **OAK RAW** | 100×40×4 | 12г | 0.1–0.3с | DAEX25FHE-4 | 2× piezo 27мм | $80 |
 | **OAK LINSEED** | 100×40×4 | 12г | 0.15–0.35с | DAEX25FHE-4 | 2× piezo 27мм | $90 |

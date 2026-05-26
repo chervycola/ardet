@@ -24,7 +24,7 @@
 > 
 > **Прежняя версия (v5.0)**: Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE; phaser always-on; v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv). Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid triple-function (DAMP + TOLL + STALL). Gate/Crush блок 18 восстановлен как footswitch destruction effect.
 
-**Версия**: v6.3 (post-audit, post-decisions)
+**Версия**: v6.4 (post-audit, post-decisions, Decision 11 plate-only cartridge)
 **Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
 **Companion document**: `LAST_NIGHT_SPEC.md` (продуктовая спецификация для end-user)
 

@@ -53,7 +53,7 @@
 
   <!-- ========== TITLE BAR ========== -->
   <text x="148.5" y="10" class="label-title">LAST NIGHT — Signal Flow Architecture</text>
-  <text x="148.5" y="14" class="label-sub">System Suicide · Module 9 · Postapocalypse Reverberator · v6.3 production canon (engineering + sound audit applied)</text>
+  <text x="148.5" y="14" class="label-sub">System Suicide · Module 9 · Postapocalypse Reverberator · v6.4 + Decision 11 (plate-only cartridge, in-module transducers)</text>
   <line x1="10" y1="16" x2="287" y2="16" stroke="#666666" stroke-width="0.2"/>
 
   <!-- ========== ZONE: INPUT SIGNAL PATH (Y 22-50) ========== -->
@@ -86,39 +86,40 @@
   <text x="93" y="32.5" class="label-block">R8 4.7Ω</text>
   <text x="93" y="35.5" class="label-sub">5W series</text>
 
-  <!-- ========== ZONE: CARTRIDGE (Y 22-90) ========== -->
-  <text x="103" y="22" class="label-zone">B. CARTRIDGE (sacred core — physical material plate)</text>
+  <!-- ========== ZONE: CARTRIDGE + TRANSDUCER ENGINE (Y 22-90) ========== -->
+  <text x="103" y="22" class="label-zone">B. CARTRIDGE (passive plate) + MODULE TRANSDUCER ENGINE — contact coupling (Decision 11)</text>
 
-  <rect x="103" y="26" width="60" height="60" rx="2" class="cartridge-block"/>
+  <rect x="103" y="26" width="60" height="60" rx="2" class="modulation-block"/>
 
-  <!-- Exciter -->
+  <!-- Exciter (MODULE-side) -->
   <rect x="108" y="32" width="22" height="8" rx="0.6" class="block"/>
-  <text x="119" y="35" class="label-block">Exciter</text>
-  <text x="119" y="37.8" class="label-sub">DAEX25FHE-4</text>
+  <text x="119" y="35" class="label-block">Exciter [module]</text>
+  <text x="119" y="37.8" class="label-sub">DAEX32Q-4 spring-contact</text>
 
-  <!-- Plate -->
-  <rect x="108" y="44" width="50" height="18" rx="0.6" fill="#ffe4b5" stroke="#7a4a00" stroke-width="0.5"/>
-  <text x="133" y="51" class="label-block" font-size="3" font-weight="bold">MATERIAL PLATE</text>
-  <text x="133" y="55" class="label-sub">wood / stone / metal / glass / bone / nephrite</text>
-  <text x="133" y="58.5" class="label-sub">100×40×{0.5-6}mm · swappable cartridge</text>
+  <!-- Plate (CARTRIDGE — passive, amber) -->
+  <rect x="108" y="44" width="50" height="18" rx="0.6" class="cartridge-block"/>
+  <text x="133" y="50" class="label-block" font-size="3" font-weight="bold">PLATE = CARTRIDGE (passive)</text>
+  <text x="133" y="54" class="label-sub">wood/stone/metal/glass/bone/nephrite</text>
+  <text x="133" y="57.5" class="label-sub">100×53×h · swappable · только пластина+рамка+магниты</text>
+  <text x="133" y="61" class="label-sub">$10-20 · razor-blade</text>
 
-  <!-- Piezo A / B pickups -->
+  <!-- Piezo A / B pickups (MODULE-side contact pins) -->
   <rect x="108" y="65" width="22" height="8" rx="0.6" class="block"/>
-  <text x="119" y="68" class="label-block">Piezo A</text>
-  <text x="119" y="70.8" class="label-sub">27mm disk</text>
+  <text x="119" y="68" class="label-block">Piezo A [module]</text>
+  <text x="119" y="70.8" class="label-sub">contact pin</text>
 
   <rect x="136" y="65" width="22" height="8" rx="0.6" class="block"/>
-  <text x="147" y="68" class="label-block">Piezo B</text>
-  <text x="147" y="70.8" class="label-sub">27mm disk</text>
+  <text x="147" y="68" class="label-block">Piezo B [module]</text>
+  <text x="147" y="70.8" class="label-sub">contact pin</text>
 
-  <!-- Solenoid -->
+  <!-- Solenoid (MODULE-side) -->
   <rect x="136" y="32" width="22" height="8" rx="0.6" fill="#f0e0ff" stroke="#440066" stroke-width="0.5"/>
-  <text x="147" y="35" class="label-block">Solenoid</text>
-  <text x="147" y="37.8" class="label-sub">5V, 5N · DAMP/TOLL/STALL</text>
+  <text x="147" y="35" class="label-block">Solenoid [module]</text>
+  <text x="147" y="37.8" class="label-sub">strikes plate · DAMP/TOLL/STALL</text>
 
-  <!-- Cartridge legend -->
-  <text x="106" y="80" class="label-sub">┃ mini-XLR ×2 (piezo, shielded)</text>
-  <text x="106" y="83.5" class="label-sub">┃ JST-XH ×2 (exciter, solenoid)</text>
+  <!-- Engine legend -->
+  <text x="106" y="80" class="label-sub">▣ amber = картридж (пассивная пластина). Остальное = module engine bay.</text>
+  <text x="106" y="83.5" class="label-sub">Spring-loaded contact coupling. НЕТ разъёмов на картридже (Decision 11).</text>
 
   <!-- Signal arrows: input chain -->
   <path d="M 16 32 L 20 32" class="audio-arrow"/>
@@ -280,11 +281,11 @@
   <text x="99" y="149" class="label-sub">CV_DAMP (envelope-controlled)</text>
   <text x="99" y="152" class="label-sub">J_TOLL_TRIG (5V gate) → NE555 monostable → 10ms pulse</text>
   <text x="99" y="155" class="label-sub">J_STALL_CV (sustained high) → forced hold (max 5s thermal)</text>
-  <text x="99" y="158" class="label-sub">→ Q5 2N7000 MOSFET → solenoid coil (cartridge)</text>
+  <text x="99" y="158" class="label-sub">→ Q5 2N7000 (от +12V_RAW) → module solenoid → strikes plate</text>
 
-  <!-- Solenoid driver → solenoid in cartridge -->
+  <!-- Solenoid driver → module solenoid strikes inserted plate -->
   <path d="M 178 152 L 195 152 L 195 90 L 158 90 L 158 40 L 158 40" class="mod-arrow"/>
-  <text x="180" y="151" class="label-sub" fill="#666666">→ cartridge solenoid</text>
+  <text x="180" y="151" class="label-sub" fill="#666666">→ module solenoid</text>
 
   <!-- ========== ZONE: MIX + DESTRUCTION + OUTPUT (Y 160-195) ========== -->
   <text x="10" y="170" class="label-zone">I. MIX · DESTRUCTION · OUTPUT</text>
@@ -301,11 +302,11 @@
   <text x="52" y="181.5" class="label-sub">B18 · footswitch destruction</text>
   <text x="52" y="185" class="label-sub">4066 gate + LF398 S&amp;H + R-2R</text>
 
-  <!-- Output buffer + jacks -->
+  <!-- Output buffer + limiter + jacks -->
   <rect x="72" y="174" width="22" height="14" rx="1" class="block"/>
-  <text x="83" y="178" class="label-block">Output Buf</text>
-  <text x="83" y="181.5" class="label-sub">TL072 ×2</text>
-  <text x="83" y="185" class="label-sub">L + R + DRY + WET</text>
+  <text x="83" y="178" class="label-block">Out Buf + Limiter</text>
+  <text x="83" y="181.5" class="label-sub">TL072 ×2 · self-osc limit</text>
+  <text x="83" y="185" class="label-sub">L+R+DRY+WET · trails/true bypass</text>
 
   <!-- Output jacks -->
   <circle cx="100" cy="178" r="1.8" class="jack-circle"/>
@@ -367,7 +368,7 @@
         stroke-dasharray="1.5,1" marker-end="url(#arrow-mod)"/>
   <text x="259" y="154" class="label-legend">modulation / CV</text>
   <rect x="250" y="156" width="3" height="2" class="cartridge-block"/>
-  <text x="255" y="157.5" class="label-legend">cartridge zone</text>
+  <text x="255" y="157.5" class="label-legend">cartridge (passive plate)</text>
   <rect x="250" y="159" width="3" height="2" class="perform-block"/>
   <text x="255" y="160.5" class="label-legend">perform gesture</text>
 

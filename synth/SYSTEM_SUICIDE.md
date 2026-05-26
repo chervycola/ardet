@@ -758,7 +758,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
   DRIVE pot → U1B gain → Q1 BD139/Q2 BD140 class AB push-pull (с bias diodes)
         │
         ▼
-  C_DC 1000µФ → R8 4.7Ω 5W → J_EX → DAEX25/32 exciter
+  C_DC 1000µФ → R8 4.7Ω 5W → DAEX32 exciter (module-side, contact к пластине)
 
   [Физическая пластина в картридже]
 
@@ -847,7 +847,9 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 
 ### Каталог материалов (Phase 1 initial — 6 cartridges)
 
-| Картридж | Размеры | Масса | RT60 (реалистичный) | Exciter | Характер |
+> **Decision 11**: колонка "Exciter" — historical. Exciter (DAEX32 universal) в модуле, не в картридже. Все картриджи используют один module exciter.
+
+| Картридж | Размеры | Масса | RT60 (реалистичный) | ~~Exciter~~ | Характер |
 |----------|---------|-------|---------------------|---------|----------|
 | **Oak (raw)** | 100×40×4мм | 12г | 0.1–0.3с | DAEX25 | Тёплый, мягкий, базовый |
 | **Oak (linseed)** | 100×40×4мм | 12г | 0.15–0.35с | DAEX25 | Чуть ярче, закрытые поры |
