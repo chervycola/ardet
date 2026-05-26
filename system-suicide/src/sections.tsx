@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { useT, LanguageToggle } from './i18n';
+import { useT, useLang, LanguageToggle } from './i18n';
 import { MODULES, CARTRIDGES, PATCHES, isNameRevealed } from './data';
 import {
   AmexRazorBlade,
@@ -154,9 +154,22 @@ export function Hero({ icon }: { icon: HeroIcon }) {
 
 export function CounterStrip() {
   const t = useT();
+  const { lang } = useLang();
   const SYSTEM_START = Date.UTC(2026, 1, 14); // 14 Feb 2026
   const days = Math.max(0, Math.floor((Date.now() - SYSTEM_START) / 86_400_000));
   const burned = 0;
+  const dayNoun =
+    lang === 'ru'
+      ? (() => {
+          const d10 = days % 10;
+          const d100 = days % 100;
+          if (d10 === 1 && d100 !== 11) return 'день';
+          if (d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14)) return 'дня';
+          return 'дней';
+        })()
+      : days === 1
+        ? 'day'
+        : 'days';
   return (
     <section className="counter">
       <div
@@ -164,7 +177,7 @@ export function CounterStrip() {
         style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}
       >
         <div className="label">
-          <span>{days} {t('counter_days')} / </span>
+          <span>{days} {dayNoun} {t('counter_days')} / </span>
           <span className="red">{burned} {t('counter_burned')}</span>
           <span> / </span>
           <span className="red">{t('counter_ships')}</span>

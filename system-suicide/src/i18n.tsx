@@ -41,7 +41,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     cta_last_night: 'Last Night · pre-order',
     cta_read_chain: 'Read the signal chain',
 
-    counter_days: 'Days since the system',
+    counter_days: 'since the system',
     counter_burned: 'prototypes burned',
     counter_ships: 'Next batch · December 2026',
 
@@ -183,7 +183,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     cta_last_night: 'Last Night · pre-order',
     cta_read_chain: 'Читать сигнальную цепь',
 
-    counter_days: 'Дней с начала системы',
+    counter_days: 'с начала системы',
     counter_burned: 'прототипов сожжено',
     counter_ships: 'Следующая партия · декабрь 2026',
 
