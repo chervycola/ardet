@@ -449,7 +449,7 @@
     <text x="116" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">env</text>
 
     <use href="#jack" x="126" y="128"/>
-    <text x="126" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">TRIG</text>
+    <text x="126" y="135" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="2.0">ph/flt</text>
   </g>
 
   <!-- ============== LAYER: EXTRAS COLUMN (TOLL/STALL/SIDE/FREEZE + Gate/Sub/Inv) ============== -->

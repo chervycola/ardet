@@ -492,7 +492,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - fall CV (FG fall time mod)
 - depth CV (FG depth mod)
 - **env** — envelope follower output (Block 11 ENV_CAP buffered, 0–5V DC trace огибающей input audio)
-- **TRIG** — FG trigger input (gate, internally normalled от Block 11 envelope rising-edge detector)
+- **ph/flt** — Phase/Flutter CV input (v6.5 — phaser feedback intensity voltage-control; envelope/LFO → evolving resonance, auto-swells к self-osc). *Заменил TRIG: FG trigger теперь internal-only (plate-driven envelope), external trigger jack убран ради phaser CV.*
 
 **Modular advanced (extras zone, frame-grouped — 4 inputs row 1, 4 outputs row 2):**
 

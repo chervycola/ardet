@@ -187,7 +187,7 @@
   <rect x="240" y="60" width="38" height="14" rx="1" class="block"/>
   <text x="259" y="65" class="label-block" font-weight="bold">PHASER (always-on)</text>
   <text x="259" y="68.5" class="label-sub">B16 · 4-stage OTA all-pass</text>
-  <text x="259" y="71.5" class="label-sub">Phase/Flutter knob = continuous feedback intensity</text>
+  <text x="259" y="71.5" class="label-sub">Phase/Flutter knob + CV (ph/flt) = feedback intensity</text>
   <text x="259" y="74.5" class="label-sub">LFO source ← Function Generator (see F)</text>
 
   <!-- Audio flow position→bank→tone→VCA→phaser -->

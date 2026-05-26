@@ -1021,23 +1021,28 @@ Classic 4-stage OTA-based all-pass phaser, **post-pickup, pre-VCA**. Adds swirli
 - ~90% — high feedback → liquid character, peaks становятся agressive.
 - CW (95%+) — controlled self-oscillation. Pот ограничен 95% максимум через voltage divider, чтобы не уйти в hard runaway.
 
-**Implementation** — single RV_PHASE_FLUTTER 100k log pot:
+**Implementation** — single RV_PHASE_FLUTTER 100k log pot **+ CV input (v6.5)**:
 ```
-   Phaser output (sum amp) ──► R_PFB_PRE 10k ──► RV_PHASE_FLUTTER wiper
-                                                      │
-                                                      ▼
-                                              R_PFB_LIMIT 5k (in series)
-                                                      │
-                                                      ▼
-                                              Soft-clip cell: D_PFB1 D_PFB2 1N4148 ×2 anti-parallel
-                                              (auto-limits runaway amplitude)
-                                                      │
-                                                      ▼
-                                              Sum back to cell 1 input bus
+   Phaser output (sum amp) ──► R_PFB_PRE 10k ──► RV_PHASE_FLUTTER wiper ──┐
+                                                                          │
+   J_PHFLT_CV ──► R_PFCV 100k ──► summing node ◄────────────────────────┘
+   (panel main row 2 pos 11,                  │
+    was TRIG — v6.5 swap)                     ▼
+                                       R_PFB_LIMIT 5k (in series)
+                                              │
+                                              ▼
+                                      Soft-clip cell: D_PFB1 D_PFB2 1N4148 ×2 anti-parallel
+                                      (auto-limits runaway amplitude)
+                                              │
+                                              ▼
+                                      Sum back to cell 1 input bus
    
-   Max feedback amount: 95% via R_PFB_LIMIT (wiper + 5k series fixed)
-   Auto-limit by anti-parallel diodes (controlled self-oscillation, no hard clip)
+   Max feedback amount: 95% via R_PFB_LIMIT. CV adds/subtracts feedback intensity
+   → envelope/LFO → phaser intensity → evolving resonance, auto-swells к self-osc.
+   Auto-limit by anti-parallel diodes (controlled self-oscillation, no hard clip).
 ```
+
+> **v6.5 panel change**: J_TRIG (external FG trigger) удалён с панели → слот занят **J_PHFLT_CV** (Phase/Flutter CV — закрывает единственный main knob без CV). FG trigger остаётся через **internal normal** от envelope follower (plate-triggered mode) + free-run; external sequencer-trigger жертвуется ради phaser CV (более broadly useful).
 
 #### Analog Function Generator (replaces Shape Form discrete slider) **[NEW v6]**
 
@@ -1176,73 +1181,61 @@ FG имеет **3 operating modes** — auto-switching без panel mode-select 
       - FG continuously cycles на RV_SPEED rate.
       - Classic LFO behaviour.
    
-   2. Triggered one-shot mode:
-      - Активен когда J_TRIG receives gate (external sequencer / footswitch).
-      - Каждый rising edge → FG phase reset → выполняется ONE cycle (rise→peak→fall→0).
-      - После завершения cycle FG sits at 0 until next trigger.
-      - Classic ADSR envelope generator behaviour.
-   
-   3. Plate-triggered (signal-driven) mode:
-      - Активен когда J_TRIG не patched externally И envelope follower (Block 11) detects rising edges.
-      - Internal normal: ENV_TRIG (Block 11 envelope differentiator → comparator) → J_TRIG switching contact.
-      - Каждый attack onset на пластине → FG fires одноразовый cycle.
-      - Acoustic-driven envelope — для percussive/strummed input → каждый "удар" producer envelope sweep.
+   2. Plate-triggered (signal-driven) mode — **default sweet spot**:
+      - Internal normal: ENV_TRIG (Block 11 envelope differentiator → comparator) → FG trigger.
+      - Каждый attack onset на пластине → FG fires одноразовый cycle (rise→peak→fall→0).
+      - Acoustic-driven envelope — percussive/strummed input → каждый "удар" producer envelope sweep.
+      - Instrument input drives FG → FG drives phaser → phaser modulates reverb.
+      - **Без patching anything = signal-driven dynamic phaser sweeps.**
    
    Idle detection:
-      - ATtiny84A counts time since last trigger event (any source).
+      - ATtiny84A counts time since last trigger event.
       - >5 секунд idle → switches к free-run mode.
       - Trigger received → switches к triggered mode на duration cycle + idle window.
-   
-   Mode 3 is "default sweet spot" — instrument input drives FG, FG drives phaser, phaser modulates reverb.
-   Без patching anything = signal-driven dynamic phaser sweeps.
+
+   > **v6.5**: external J_TRIG jack удалён с панели (слот → J_PHFLT_CV phaser CV).
+   > FG trigger теперь **internal-only** (envelope-driven). External sequencer-trigger
+   > пожертвован — но FG всё равно plate-triggered + free-run. Для строгого external
+   > clocking FG rate синкается через TAP/CLK (sets rate), не per-cycle trigger.
 ```
 
-#### J_TRIG topology
+#### FG trigger (internal — v6.5)
 
 ```
-   J_TRIG mini-jack (3.5mm, switching contact)
-        │
-        │  When NO cable patched: switching contact closed
-        │   → internal ENV_TRIG signal (from Block 11) flows through
-        │
-        │  When cable patched: switching contact open
-        │   → external CV gate replaces internal normal
+   ENV_TRIG (Block 11 envelope differentiator → LM393 comparator rising edge)
         │
         ▼
-   R_TRIG_IN 10k ──► Q_TRIG 2N3904 base (Schmitt input)
-                                  │
-                                  Q_TRIG_E → GND
-                                  Q_TRIG_C → R_TRIG_PU 10k → +5V
-                                            └─► ATtiny84A GPIO (PCINT input)
+   Q_TRIG 2N3904 buffer ──► ATtiny84A GPIO (PCINT input)
    
    ATtiny84A firmware on PCINT:
-     - Falling edge detected (active LOW от Q_TRIG collector)
-     - Reset FG integrator: discharge C_FG fast through MOSFET shunt switch
+     - Rising edge от envelope onset
+     - Reset FG integrator: Q_RESET 2N7000 briefly (1мс) shorts C_FG к GND
      - Begin new rise cycle от 0V
-     - Set mode flag = TRIGGERED
-     - Reset idle counter
+     - Set mode flag = TRIGGERED, reset idle counter
+   
+   No external trigger jack (v6.5) — trigger derives internally от plate signal.
 ```
 
-**Phase reset mechanism**: ATtiny84A GPIO drives Q_RESET 2N7000 N-MOSFET — when triggered, MOSFET briefly (1мс) shorts C_FG к GND → discharges integrator → cycle starts fresh.
+**Phase reset mechanism**: ATtiny84A GPIO drives Q_RESET 2N7000 N-MOSFET — on trigger, MOSFET briefly (1мс) shorts C_FG к GND → discharges integrator → cycle starts fresh.
 
 **Components**:
 | Ref | Value | Function |
 |-----|-------|----------|
-| J_TRIG | 3.5mm switching-contact jack | Trigger input (panel main row 2 pos 11) |
-| R_TRIG_IN | 10kΩ 1% MF | Input current limit |
-| Q_TRIG | 2N3904 | Schmitt buffer transistor |
+| Q_TRIG | 2N3904 | Envelope-edge buffer transistor (internal) |
 | R_TRIG_PU | 10kΩ 1% MF | Collector pull-up к +5V |
 | Q_RESET | 2N7000 | Phase reset MOSFET (C_FG shunt) |
 | R_RESET_G | 1kΩ 1% MF | Q_RESET gate stop |
+| **J_PHFLT_CV** | 3.5mm jack | **Phase/Flutter CV input (v6.5, panel main row 2 pos 11, was TRIG)** |
+| R_PFCV | 100kΩ 1% MF | Phase/Flutter CV summing |
 
-**BOM add**: $0.20 (BJT + MOSFET + resistors) + $0.40 (J_TRIG jack) = **$0.60**.
+**BOM add**: $0.15 (BJT + MOSFET + resistors) + $0.40 (J_PHFLT_CV jack) = **$0.55** (external J_TRIG jack удалён, заменён phaser CV jack — net same).
 
 #### TAP-tempo input
 
 Same as before:
 - TAP footswitch on pedal OR external J_CLK CV jack (any CMOS gate edge).
 - ATtiny84A measures interval, sets sync multiplier base period.
-- Phase reset on tap edge (separate from J_TRIG phase reset — TAP sets RATE, TRIG starts CYCLE).
+- Phase reset on tap edge. (TAP sets RATE; внутренний envelope trigger starts CYCLE.)
 
 #### BOM (Block 16 revised v6)
 
