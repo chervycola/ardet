@@ -48,5 +48,11 @@ writeFileSync('system_suicide_index.html', page('SYSTEM — physical synthesis',
 const ln = renderToStaticMarkup(withLang(h(ProductPage, { slug: 'last-night' })));
 writeFileSync('system_suicide_last-night.html', page('SYSTEM — Last Night', ln));
 
+// Bilingual module page preview (Is My).
+for (const l of ['ru', 'en']) {
+  const node = h(LangContext.Provider, { value: { lang: l, setLang: () => {} } }, h(ProductPage, { slug: 'is-my' }));
+  writeFileSync(`system_suicide_is-my-${l}.html`, page(`SYSTEM — Is My (${l})`, renderToStaticMarkup(node)));
+}
+
 await vite.close();
 console.log('wrote system_suicide_index.html + system_suicide_last-night.html');

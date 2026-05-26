@@ -86,8 +86,8 @@ export const PRODUCT_PAGES: ProductPages = {
     quote: 'The hand that flew now plays.',
     intro: 'A VCA-saturator-shaper with three modes (SHAPER / RING / GATE), built around a MOSFET stage harvested from a flight-controller ESC. The module is operated from an external pilot remote — a joystick, knobs, foot switch, on a tethered MIDI/TRS link.',
     stats: [
-      { k: 'Format',  v: 'Eurorack · 10 HP + remote' },
-      { k: 'Power',   v: '±12 V · 60 mA (remote: LiPo · USB-C)' },
+      { k: 'Format',  v: 'Eurorack · 12 HP + remote' },
+      { k: 'Power',   v: '±12 V · ~210 mA (remote: 1S LiPo · USB-C)' },
       { k: 'Core',    v: 'MOSFET stage from FPV drone ESC' },
       { k: 'Modes',   v: 'SHAPER · RING · GATE (switched at remote)' },
       { k: 'Link',    v: 'TRS · MIDI Type A · 14-bit on joystick' },
@@ -216,6 +216,65 @@ export const PRODUCT_PAGES: ProductPages = {
       'Audio through the piezos sits at sub-millivolt levels — no isolation required.',
       'Solenoid runs at ~300 mA with a flyback diode; the felt tip cannot impact the plate hard enough to crack it under normal CV.',
       'Glass and ceramic cartridges can self-destruct at maximum feedback. Replacement plates are €25–95. The name is not a metaphor.',
+    ],
+  },
+};
+
+// Russian product-page content. Falls back to PRODUCT_PAGES (English) when a
+// slug is absent here.
+export const PRODUCT_PAGES_RU: ProductPages = {
+  'is-my': {
+    quote: 'Рука, что летала, теперь играет.',
+    intro: 'VCA-сатуратор-шейпер с тремя режимами (SHAPER / RING / GATE) на MOSFET-каскаде, снятом с ESC полётного контроллера. Управление — с внешнего пульта-пилота: джойстик, ручки, ножная педаль, по привязке MIDI/TRS.',
+    stats: [
+      { k: 'Формат',     v: 'Eurorack · 12 HP + пульт' },
+      { k: 'Питание',    v: '±12 В · ~210 мА (пульт: 1S LiPo · USB-C)' },
+      { k: 'Ядро',       v: 'MOSFET-каскад из ESC FPV-дрона' },
+      { k: 'Режимы',     v: 'SHAPER · RING · GATE (переключение на пульте)' },
+      { k: 'Связь',      v: 'TRS · MIDI Type A · 14 бит по джойстику' },
+      { k: 'Тираж',      v: '13 нумерованных · сертификат происхождения' },
+      { k: 'Фаза',       v: 'Phase 2 · отгрузка Q4 2026' },
+      { k: 'Цена',       v: '€ 1 480 (модуль + пульт)' },
+    ],
+    physical: [
+      'Каскад усиления каждого модуля построен на силовом MOSFET, снятом с ESC полётного контроллера сбитого дрона. Плата идентифицирована — модель, регион, дата — и фотография путешествует с устройством как сертификат происхождения. Компонент делает ту же работу, что и в полёте: коммутирует мощность. Просто сигнал теперь меньше.',
+      'В режиме SHAPER MOSFET работает как VCA с управляемой сатурацией; Drive загоняет прибор в нелинейность, Bias смещает рабочую точку (чётные ↔ нечётные гармоники). В режиме RING внутренний носитель (200 Гц – 10 кГц) модулирует скважность относительно аудио — металлично, негармонично. В режиме GATE тот же прибор — жёсткий лимитер + нойз-гейт; транзиенты становятся перкуссивными, хвосты обрезаются.',
+      'Переключение режимов делается кроссфейдом ~50 мс, чтобы убрать щелчки. Каждый ESC — отдельный экземпляр со своей тепловой историей и разбросом кремния, поэтому каждый нумерованный модуль звучит чуть иначе. Это документируется, а не исправляется.',
+    ],
+    sigchain: [
+      'AUDIO IN ──► input buffer ──► MOSFET shaper core ──► output buffer ──► AUDIO OUT',
+      '                                ▲',
+      'VIDEO IN ──► audifier ──────────┤  (composite NTSC/PAL as parallel source)',
+      '                                ▲',
+      'CV bus ────────────────────────┘  (DRIVE / BIAS / LEVEL / TONE)',
+      '                                ▲',
+      '                       MIDI IN ◄── pilot remote (TRS, MIDI Type A)',
+      '',
+      'Remote outs: X / Y / GATE on 3.5 mm jacks — patch to any other module.',
+    ],
+    controls: [
+      { ctrl: 'LEVEL',    fn: 'Усиление VCA. Ручка на пульте, CV на панели',           cv: true  },
+      { ctrl: 'DRIVE',    fn: 'Сатурация / носитель PWM / верхний порог',              cv: true  },
+      { ctrl: 'BIAS',     fn: 'Смещение рабочей точки (зависит от режима)',            cv: true  },
+      { ctrl: 'TONE',     fn: 'Спектральный наклон после ядра',                        cv: true  },
+      { ctrl: 'MODE',     fn: 'SHAPER · RING · GATE (3-позиц. тумблер, пульт)',        cv: false },
+      { ctrl: 'ARM',      fn: 'Глобальное включение гейта. Управляется и педалью.',    cv: false },
+      { ctrl: 'LINK',     fn: 'Связь осей джойстика · независимо / синхронно',         cv: false },
+      { ctrl: 'JOYSTICK', fn: 'X→BIAS · Y→DRIVE · нажатие→триггер GATE (14-бит MIDI)', cv: false },
+    ],
+    remote: {
+      blurb: 'Пульт-пилот — это интерфейс модуля. Питается от собственного LiPo и заряжается по USB-C, который заодно работает как USB-MIDI-контроллер для DAW. Корпус — либо стандартный CNC-кейс, либо, при наличии донора, оригинальный радиопульт, сохранённый как есть.',
+      layout: [
+        'Верхний ряд  ARM · MODE · LINK              (левая рука, тумблеры)',
+        'Левая зона   LEVEL · TONE · LED активности  (левая рука, ручки)',
+        'Правая зона  Джойстик · нажатие = GATE      (правая рука)',
+        'Нижний край  Педаль · MIDI OUT · CV OUT × 3 (X / Y / GATE)',
+      ],
+    },
+    uses: [
+      'Живое выступление: педаль удерживает ARM, джойстик формирует сигнал в реальном времени, CV-выходы одновременно модулируют остальную систему. Один жест — четыре модуля в движении.',
+      'Студия: USB-MIDI в DAW, пульт становится обычным контроллером, модуль молчит, пока не активирован.',
+      'Гибрид: управляйте модулем с CV другого модуля (входы на панели важнее пульта), а пульт оставьте источником CV для остального рэка.',
     ],
   },
 };

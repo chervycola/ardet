@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
-import { MODULES, PRODUCT_PAGES, isNameRevealed } from './data';
+import { MODULES, PRODUCT_PAGES, PRODUCT_PAGES_RU, isNameRevealed } from './data';
+import { useT, useLang } from './i18n';
 import { XMark } from './motifs';
 import { RedactionBars } from './sections';
 import type {
@@ -9,15 +10,18 @@ import type {
   ControlRow,
 } from './types';
 
+const WORKSHOP_EMAIL = 'workshop@systemsuicide.cc';
+
 export function getSlugFromURL(): string {
   const params = new URLSearchParams(window.location.search);
   return params.get('m') ?? 'last-night';
 }
 
 function ProductBreadcrumb({ module: m }: { module: Module }) {
+  const t = useT();
   return (
     <div className="pp-breadcrumb">
-      <a href="index.html">← System catalogue</a>
+      <a href="index.html">{t('pp_back')}</a>
       <span className="sep">/</span>
       <span className="here">M·{m.idx} · <span className={isNameRevealed(m.slug) ? '' : 'blur-name'}>{m.name}</span></span>
     </div>
@@ -41,40 +45,40 @@ function ProductHeader({ module: m }: { module: Module }) {
 }
 
 function ClassifiedBody({ module: m }: { module: Module }) {
+  const t = useT();
+  const [before, after] = t('pp_embargo').split('{email}');
   return (
     <section className="pp-classified">
       <div className="cls-stamp">
         <span className="cls-mark">▣</span>
-        <span>CLASSIFIED</span>
+        <span>{t('pp_classified')}</span>
         <span className="cls-sep">·</span>
-        <span>{m.phase} · release scheduled</span>
+        <span>{m.phase} · {t('pp_release')}</span>
       </div>
 
-      <p className="cls-blurb">
-        This module is under embargo. Details — physical core, signal chain,
-        controls and exchange components — are withheld until ship.
-        <br />
-        For pre-order interest, write to{' '}
-        <a href="mailto:workshop@systemsuicide.cc">workshop@systemsuicide.cc</a>.
+      <p className="cls-blurb" style={{ whiteSpace: 'pre-line' }}>
+        {before}
+        <a href={`mailto:${WORKSHOP_EMAIL}`}>{WORKSHOP_EMAIL}</a>
+        {after}
       </p>
 
       <div className="cls-block">
-        <span className="cls-key">Physical core</span>
+        <span className="cls-key">{t('pp_h_core')}</span>
         <RedactionBars lines={6} />
       </div>
 
       <div className="cls-block">
-        <span className="cls-key">Signal chain</span>
+        <span className="cls-key">{t('pp_h_chain')}</span>
         <RedactionBars lines={5} />
       </div>
 
       <div className="cls-block">
-        <span className="cls-key">Controls</span>
+        <span className="cls-key">{t('pp_h_controls')}</span>
         <RedactionBars lines={4} />
       </div>
 
       <div className="cls-block">
-        <span className="cls-key">Connection to the system</span>
+        <span className="cls-key">{t('pp_h_connect')}</span>
         <RedactionBars lines={3} />
       </div>
     </section>
@@ -95,12 +99,13 @@ function StatsTable({ stats }: { stats: StatRow[] }) {
 }
 
 function ControlsTable({ rows }: { rows: ControlRow[] }) {
+  const t = useT();
   return (
     <div className="pp-controls">
       <div className="pp-controls-head">
-        <span>Control</span>
-        <span>Function</span>
-        <span>CV</span>
+        <span>{t('pp_col_control')}</span>
+        <span>{t('pp_col_function')}</span>
+        <span>{t('pp_col_cv')}</span>
       </div>
       {rows.map((r, i) => (
         <div key={i} className="pp-controls-row">
@@ -118,6 +123,7 @@ function SigChain({ lines }: { lines: string[] }) {
 }
 
 function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDetail }) {
+  const t = useT();
   return (
     <Fragment>
       <section className="pp-quote-row">
@@ -127,11 +133,11 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
 
       <section className="pp-two-col">
         <div className="left">
-          <h3 className="pp-h">Specs</h3>
+          <h3 className="pp-h">{t('pp_h_specs')}</h3>
           <StatsTable stats={detail.stats} />
         </div>
         <div className="right">
-          <h3 className="pp-h">Physical core</h3>
+          <h3 className="pp-h">{t('pp_h_core')}</h3>
           {detail.physical.map((p, i) => (
             <p key={i} className="pp-p">{p}</p>
           ))}
@@ -139,18 +145,18 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
       </section>
 
       <section className="pp-block">
-        <h3 className="pp-h">Signal chain</h3>
+        <h3 className="pp-h">{t('pp_h_chain')}</h3>
         <SigChain lines={detail.sigchain} />
       </section>
 
       <section className="pp-block">
-        <h3 className="pp-h">Controls</h3>
+        <h3 className="pp-h">{t('pp_h_controls')}</h3>
         <ControlsTable rows={detail.controls} />
       </section>
 
       {detail.remote ? (
         <section className="pp-block">
-          <h3 className="pp-h">The pilot remote</h3>
+          <h3 className="pp-h">{t('pp_h_remote')}</h3>
           <p className="pp-p">{detail.remote.blurb}</p>
           <pre className="pp-sigchain">{detail.remote.layout.join('\n')}</pre>
         </section>
@@ -158,7 +164,7 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
 
       {detail.cartridges ? (
         <section className="pp-block">
-          <h3 className="pp-h">Cartridge library</h3>
+          <h3 className="pp-h">{t('pp_h_cartridges')}</h3>
           <ul className="pp-uses">
             {detail.cartridges.map((c, i) => (
               <li key={i}><XMark size={14} /> <span>{c}</span></li>
@@ -168,7 +174,7 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
       ) : null}
 
       <section className="pp-block">
-        <h3 className="pp-h">Uses</h3>
+        <h3 className="pp-h">{t('pp_h_uses')}</h3>
         <ul className="pp-uses">
           {detail.uses.map((u, i) => (
             <li key={i}><XMark size={14} /> <span>{u}</span></li>
@@ -178,7 +184,7 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
 
       {detail.safety ? (
         <section className="pp-block">
-          <h3 className="pp-h">Safety</h3>
+          <h3 className="pp-h">{t('pp_h_safety')}</h3>
           <ul className="pp-uses">
             {detail.safety.map((s, i) => (
               <li key={i}><XMark size={14} /> <span>{s}</span></li>
@@ -190,13 +196,13 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
       <section className="pp-cta">
         <a
           className="btn primary"
-          href={`mailto:workshop@systemsuicide.cc?subject=Pre-order ${m.name}`}
+          href={`mailto:${WORKSHOP_EMAIL}?subject=Pre-order ${m.name}`}
         >
-          <span>Pre-order — write to workshop</span>
+          <span>{t('pp_cta_preorder')}</span>
           <span className="arrow">→</span>
         </a>
         <a className="btn" href="index.html#catalog">
-          <span>Back to catalogue</span>
+          <span>{t('pp_cta_back')}</span>
           <span className="arrow">→</span>
         </a>
       </section>
@@ -205,17 +211,18 @@ function RevealedBody({ module: m, detail }: { module: Module; detail: ProductDe
 }
 
 function NeighbourNav({ module: m }: { module: Module }) {
+  const t = useT();
   const i = MODULES.findIndex((x) => x.slug === m.slug);
   const prev = MODULES[(i - 1 + MODULES.length) % MODULES.length];
   const next = MODULES[(i + 1) % MODULES.length];
   return (
     <nav className="pp-neighbours">
       <a href={`module.html?m=${prev.slug}`} className="prev">
-        <div className="dir">← Previous · M·{prev.idx}</div>
+        <div className="dir">{t('pp_prev')}{prev.idx}</div>
         <div className={'name' + (isNameRevealed(prev.slug) ? '' : ' blur-name')}>{prev.name}</div>
       </a>
       <a href={`module.html?m=${next.slug}`} className="next">
-        <div className="dir">Next · M·{next.idx} →</div>
+        <div className="dir">{t('pp_next')}{next.idx} →</div>
         <div className={'name' + (isNameRevealed(next.slug) ? '' : ' blur-name')}>{next.name}</div>
       </a>
     </nav>
@@ -223,23 +230,26 @@ function NeighbourNav({ module: m }: { module: Module }) {
 }
 
 export function ProductPage({ slug }: { slug: string }) {
+  const t = useT();
+  const { lang } = useLang();
   const m = MODULES.find((x) => x.slug === slug);
   if (!m) {
     return (
       <main className="pp">
         <div className="shell">
-          <h1 className="pp-title">404 / no such module</h1>
+          <h1 className="pp-title">{t('pp_404_h')}</h1>
           <p className="pp-p">
-            The slug "{slug}" does not exist in the catalogue.
+            {t('pp_404_p_a')}{slug}{t('pp_404_p_b')}
             <br />
-            <a href="index.html">← Back to system</a>
+            <a href="index.html">{t('pp_404_back')}</a>
           </p>
         </div>
       </main>
     );
   }
 
-  const detail = PRODUCT_PAGES[slug];
+  const detail =
+    (lang === 'ru' ? PRODUCT_PAGES_RU[slug] : undefined) ?? PRODUCT_PAGES[slug];
 
   return (
     <main className="pp">
