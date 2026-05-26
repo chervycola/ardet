@@ -93,7 +93,7 @@ export const PRODUCT_PAGES: ProductPages = {
       { k: 'Link',    v: 'TRS · MIDI Type A · 14-bit on joystick' },
       { k: 'Edition', v: '13 numbered · provenance certificate' },
       { k: 'Phase',   v: 'Phase 2 · ships Q4 2026' },
-      { k: 'Price',   v: '€ 1 480 (module + remote)' },
+      { k: 'Price',   v: '€ 2 480 (module + remote)' },
     ],
     physical: [
       "Each module's gain stage is built around a power MOSFET pulled from a flight-controller ESC of a downed drone. The board is identified — model, region, date — and a photograph travels with the unit as a provenance certificate. The component does the same job it did in flight: it switches power. The signal is just smaller now.",
@@ -234,7 +234,7 @@ export const PRODUCT_PAGES_RU: ProductPages = {
       { k: 'Связь',      v: 'TRS · MIDI Type A · 14 бит по джойстику' },
       { k: 'Тираж',      v: '13 нумерованных · сертификат происхождения' },
       { k: 'Фаза',       v: 'Phase 2 · отгрузка Q4 2026' },
-      { k: 'Цена',       v: '€ 1 480 (модуль + пульт)' },
+      { k: 'Цена',       v: '€ 2 480 (модуль + пульт)' },
     ],
     physical: [
       'Каскад усиления каждого модуля построен на силовом MOSFET, снятом с ESC полётного контроллера сбитого дрона. Плата идентифицирована — модель, регион, дата — и фотография путешествует с устройством как сертификат происхождения. Компонент делает ту же работу, что и в полёте: коммутирует мощность. Просто сигнал теперь меньше.',
