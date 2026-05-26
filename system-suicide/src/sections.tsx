@@ -154,6 +154,9 @@ export function Hero({ icon }: { icon: HeroIcon }) {
 
 export function CounterStrip() {
   const t = useT();
+  const SYSTEM_START = Date.UTC(2026, 1, 14); // 14 Feb 2026
+  const days = Math.max(0, Math.floor((Date.now() - SYSTEM_START) / 86_400_000));
+  const burned = 0;
   return (
     <section className="counter">
       <div
@@ -161,13 +164,13 @@ export function CounterStrip() {
         style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}
       >
         <div className="label">
-          <span>{t('counter_days')} / </span>
-          <span className="red">{t('counter_burned')}</span>
+          <span>{days} {t('counter_days')} / </span>
+          <span className="red">{burned} {t('counter_burned')}</span>
           <span> / </span>
           <span className="red">{t('counter_ships')}</span>
         </div>
         <div style={{ maxWidth: 480, width: '100%' }}>
-          <TallyCounter count={0} />
+          <TallyCounter count={burned} />
         </div>
       </div>
     </section>

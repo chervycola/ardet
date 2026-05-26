@@ -43,7 +43,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     counter_days: 'Days since the system',
     counter_burned: 'prototypes burned',
-    counter_ships: 'Next batch ships',
+    counter_ships: 'Next batch · December 2026',
 
     sig_tag: '',
     sig_fig: 'Fig. 01 / 09',
@@ -185,7 +185,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     counter_days: 'Дней с начала системы',
     counter_burned: 'прототипов сожжено',
-    counter_ships: 'следующая партия',
+    counter_ships: 'Следующая партия · декабрь 2026',
 
     sig_tag: '',
     sig_fig: 'Рис. 01 / 09',
