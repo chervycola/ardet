@@ -106,7 +106,10 @@ export function Hero({ icon }: { icon: HeroIcon }) {
           <span className="hero-word">SYSTEM</span>
           {icon === 'amex' ? (
             <div className="hero-razor-corner" aria-hidden="true">
-              <img src="/amex-blade.png" alt="" className="hero-blade-img" />
+              <picture>
+                <source srcSet="/amex-blade.webp" type="image/webp" />
+                <img src="/amex-blade.png" alt="" className="hero-blade-img" />
+              </picture>
             </div>
           ) : null}
         </h1>

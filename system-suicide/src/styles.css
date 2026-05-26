@@ -221,6 +221,7 @@ section { position: relative; }
   filter: drop-shadow(0 14px 26px rgba(0,0,0,0.55));
 }
 .hero-razor-corner svg,
+.hero-razor-corner picture,
 .hero-razor-corner .hero-blade-img { width: 100%; height: auto; display: block; }
 
 .hero-mark {
