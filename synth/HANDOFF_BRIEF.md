@@ -110,7 +110,8 @@
 
 ### Для R&D engineer / прототипирование (4-6 часов)
 
-1. **`signal_flow_last_night.svg`** (вы здесь — обязательное чтение).
+0. **`RISK_ASSESSMENT.md`** — ⚠ ПЕРВЫМ. Честный risk-register + bench-prototype protocol. Stage 0 (contact coupling + material A/B) — обязательный gate ПЕРЕД любым PCB/tooling/закупкой. Не тратить деньги пока Stage 0-1 не passed.
+1. **`signal_flow_last_night.svg`** (обязательное чтение).
 2. **`LAST_NIGHT_BUILD.md`** — детальная build documentation, 25 функциональных блоков с R/C values, BOM, PCB zones, verification.
 3. **`PCB_DESIGN_SPEC.md`** — KiCad-ready PCB design spec: 6 PCB inventory (main + adapters + satellites + dock), XY coordinates всех component groups, layer stackup, ground topology, ribbon pinouts, critical traces.
 4. **`audit/13_schematic_cross_reference.md`** — сверка с logical schematic ASCII (источник истины по топологии).

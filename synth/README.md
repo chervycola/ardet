@@ -8,6 +8,8 @@
 
 **Обязательная визуализация**: **[`signal_flow_last_night.svg`](signal_flow_last_night.svg)** — структурная схема Last Night (10 функциональных зон, signal flow, modulation paths, perform gestures).
 
+**⚠ Читать до tooling**: **[`RISK_ASSESSMENT.md`](RISK_ASSESSMENT.md)** — честный risk-register (3 недоказанных физических риска) + bench-prototype protocol (Stage 0 — обязательный gate перед PCB/закупками).
+
 **PCB design**: **[`PCB_DESIGN_SPEC.md`](PCB_DESIGN_SPEC.md)** — KiCad-ready spec для PCB designer (6 PCBs inventory, XY coordinates, layer stackup, ground topology, ribbon pinouts).
 
 **Acoustic / cartridge**: **[`acoustic_modeling.md`](acoustic_modeling.md)** — modal density calculator + acoustic-optimized cartridge dimensions per material + transducer coupling spec + plate coating tuning + acoustic feedback mitigation + tap-test protocol (закрывает главный риск проекта — звук пластин).
