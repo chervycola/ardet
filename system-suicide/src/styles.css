@@ -214,12 +214,14 @@ section { position: relative; }
 .hero-razor-corner {
   justify-self: end;
   width: 100%;
-  max-width: 500px;
-  transform: rotate(-7deg);
-  transform-origin: 70% 60%;
+  max-width: 520px;
+  /* tilt "/" — left edge dips toward the red line, right edge lifts away */
+  transform: rotate(-11deg);
+  transform-origin: 50% 50%;
   filter: drop-shadow(0 14px 26px rgba(0,0,0,0.55));
 }
-.hero-razor-corner svg { width: 100%; height: auto; display: block; }
+.hero-razor-corner svg,
+.hero-razor-corner .hero-blade-img { width: 100%; height: auto; display: block; }
 
 .hero-mark {
   margin-top: 20px;

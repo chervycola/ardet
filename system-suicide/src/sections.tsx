@@ -2,7 +2,6 @@ import { Fragment, type ReactNode } from 'react';
 import { useT, useLang, LanguageToggle } from './i18n';
 import { MODULES, CARTRIDGES, PATCHES, isNameRevealed } from './data';
 import {
-  AmexRazorBlade,
   BarbedDivider,
   HeroMark,
   RazorScratch,
@@ -106,8 +105,8 @@ export function Hero({ icon }: { icon: HeroIcon }) {
         <h1 className="hero-title">
           <span className="hero-word">SYSTEM</span>
           {icon === 'amex' ? (
-            <div className="hero-razor-corner" aria-hidden="false">
-              <AmexRazorBlade />
+            <div className="hero-razor-corner" aria-hidden="true">
+              <img src="/amex-blade.png" alt="" className="hero-blade-img" />
             </div>
           ) : null}
         </h1>
