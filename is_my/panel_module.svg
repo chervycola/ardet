@@ -116,25 +116,22 @@
 
   <!-- divider: I/O -->
   <line x1="4" y1="103.5" x2="66.8" y2="103.5" stroke="#37312b" stroke-width="0.3"/>
-  <text x="4.5" y="106.6" font-size="1.9" letter-spacing="0.8" fill="#6f685f">AUDIO / VIDEO / MIDI</text>
+  <text x="4.5" y="106.6" font-size="1.9" letter-spacing="0.8" fill="#6f685f">AUDIO / MIDI</text>
 
-  <!-- ====== BANK 3: I/O ====== -->
-  <!-- row y 112: VIDEO mix pot | AUDIO IN | VIDEO IN -->
-  <use href="#pot"  transform="translate(16.5,113.0)"/>
-  <text x="16.5" y="121.4" text-anchor="middle" font-size="1.7" fill="#8a837a">VIDEO mix</text>
+  <!-- ====== BANK 3: I/O (no video knob) ====== -->
+  <!-- row1 y 112.5: AUDIO IN | AUDIO OUT(inverted) -->
+  <use href="#jack" transform="translate(23.0,112.5)"/>
+  <text x="23.0" y="118.0" text-anchor="middle" font-size="1.7" fill="#8a837a">AUDIO IN</text>
 
-  <use href="#jack" transform="translate(35.4,112.5)"/>
-  <text x="35.4" y="118.0" text-anchor="middle" font-size="1.6" fill="#8a837a">AUD IN</text>
+  <use href="#jack" transform="translate(47.8,112.5)"/>
+  <rect x="43.0" y="116.4" width="9.6" height="2.7" rx="0.5" fill="#cfc9bf"/>
+  <text x="47.8" y="118.35" text-anchor="middle" font-size="1.7" font-weight="700" fill="#14110f">AUDIO OUT</text>
 
-  <use href="#jack" transform="translate(54.3,112.5)"/>
-  <text x="54.3" y="118.0" text-anchor="middle" font-size="1.6" fill="#8a837a">VID IN</text>
+  <!-- row2 y 122: VIDEO IN (под пересмотром) | MIDI IN -->
+  <use href="#jack" transform="translate(23.0,122.0)"/>
+  <text x="23.0" y="127.3" text-anchor="middle" font-size="1.6" fill="#6f685f">VID IN ?</text>
 
-  <!-- row y 121.5: MIDI IN | AUDIO OUT(inverted) -->
-  <use href="#jack" transform="translate(35.4,122.0)"/>
-  <rect x="31.0" y="124.0" width="8.8" height="2.7" rx="0.5" fill="#cfc9bf"/>
-  <text x="35.4" y="125.95" text-anchor="middle" font-size="1.7" font-weight="700" fill="#14110f">AUD OUT</text>
-
-  <use href="#jack" transform="translate(54.3,122.0)"/>
-  <text x="54.3" y="127.0" text-anchor="middle" font-size="1.6" fill="#8a837a">MIDI IN</text>
+  <use href="#jack" transform="translate(47.8,122.0)"/>
+  <text x="47.8" y="127.3" text-anchor="middle" font-size="1.6" fill="#8a837a">MIDI IN</text>
 
 </svg>
