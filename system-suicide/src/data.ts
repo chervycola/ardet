@@ -139,7 +139,7 @@ export const PRODUCT_PAGES: ProductPages = {
     stats: [
       { k: 'Format',     v: 'Eurorack 40 HP / pedal big-box (203×140×40 mm)' },
       { k: 'Power',      v: '±12 V · 200 mA (450 mA peak)' },
-      { k: 'I/O',        v: 'Mono in / stereo out · 3.5 mm TS + sidechain' },
+      { k: 'I/O',        v: 'Mono in (Eurorack) / stereo in summed (pedal) · stereo out · 3.5 mm TS + sidechain' },
       { k: 'Exciter',    v: 'Dayton DAEX32Q-4 · 3 W / 8 W peak (module-side)' },
       { k: 'Pickups',    v: '2 × piezo 27 mm · in-module contact · PVDF (premium)' },
       { k: 'Damper',     v: 'Felted solenoid · DAMP / TOLL / STALL · ~2 mm gap' },
