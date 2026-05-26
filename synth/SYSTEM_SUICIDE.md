@@ -737,8 +737,8 @@ Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encod
 
 Resилиентные резиновые рельсы в раме картриджа принимают любую толщину в диапазоне. Пластина вибрирует в **изгибных модах** — это ключ к диффузному характеру.
 
-### Repositioning: "resonator reverb", не "plate reverb"
-После acoustic reality check (см. `audit/11_last_night_acoustic.md`): 100мм — слишком маленькая пластина для classical plate reverb (EMT 140 использовал 2×1м). Модуль **не имитирует EMT**, а создаёт **новую категорию** — resonator reverb с материал-зависимым character. Marketing должен быть скорректирован.
+### Категория: **material resonator** (не "reverb", не "plate reverb")
+После acoustic reality check (см. `audit/11_last_night_acoustic.md`): 100мм — слишком маленькая пластина для classical plate reverb (EMT 140 использовал 2×1м). Модуль **не имитирует EMT**, а создаёт **новую категорию — material resonator** с материал-зависимым sparse-modal character (резонатор/колокол/chime). **Зафиксированное название категории**: material resonator. Honest expectations — не обещаем reverb-плотность.
 
 ### Размещение трансдьюсеров (в модуле, contact к вставленной пластине — Decision 11)
 - **Exciter**: Dayton DAEX32Q-4 (universal). На spring-loaded carriage, contact к face A пластины ~5N, ~1/3 длины от края (FEM antinode).

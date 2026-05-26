@@ -100,6 +100,8 @@ synth/
 | Premium | ~$123 | $649 | ~81% |
 | Elite (LE 25) | ~$1,467 | $2,499 | 41% |
 
+> **Headline price (current, locked): €3640** (flagship). Tier table выше — prior plan, под reconciliation vs €3640 ("потом разберемся").
+
 ## Source of truth ranking
 
 1. **`LAST_NIGHT_SPEC.md` + `LAST_NIGHT_BUILD.md`** — primary technical canon (v5 hybrid).

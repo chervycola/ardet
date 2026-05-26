@@ -10,8 +10,9 @@
 - **Big-box pedal ~203×140мм** (Strymon BigSky / Eventide H9 Max class) — для pedalboard.
 
 **Цена retail**:
-- Eurorack 40HP: $499 budget / $649 premium.
-- Pedal big-box: $499 budget / $649 premium (одинаковая, разный enclosure).
+- **Headline (current, locked): €3640** — flagship/boutique tier. Tier breakdown ниже — pending reconciliation ("потом разберемся").
+- Prior tier plan (Decision 10, под пересмотр vs €3640 headline): $499 budget / $649 premium / $2499 Elite LE.
+- ⚠ €3640 (~$3900) выше прежнего Elite $2499 — требует обоснования premium (boutique build + all-cartridges bundle?) ИЛИ пересмотра. Зафиксировано как headline, reconciliation TBD.
 
 **Phase plan**: Phase 1 ship = reverb-ядро + phaser + noise/geiger секция + 4 footswitches (TAP/GATE-CRUSH/BYPASS/FREEZE). Cold palette FX (PULSE/FOG/FROST/CHILL/HUM) — Phase 2 v3 PCB upgrade kit. **Solenoid double-function** (TOLL strike + STALL hold) — modular-advanced feature, доступна через CV-only triggers (J_TOLL_TRIG, J_STALL_CV), не через footswitches.
 
@@ -35,7 +36,9 @@
 
 ### Что это
 
-Last Night — **постапокалипсис-ревербератор на сменных физических пластинах**, выпускается в двух canonical SKU (40HP Eurorack module и big-box pedal). Каноническая комбайн-форма "холодной ночи" в серии SYSTEM SUICIDE, симметричный диптих с Last Day "раскалённого полудня".
+Last Night — **material resonator на сменных физических пластинах** (постапокалипсис холодной ночи), выпускается в двух canonical SKU (40HP Eurorack module и big-box pedal). Каноническая комбайн-форма "холодной ночи" в серии SYSTEM SUICIDE, симметричный диптих с Last Day "раскалённого полудня".
+
+> **Категория = material resonator** (не "reverb"). Физическая пластина резонирует материал-зависимо — sparse modal character (резонатор/колокол/chime), не густой digital hall. Это сознательная категория, не имитация EMT. Marketing/customer expectations выставляются как "резонатор материала", чтобы не обещать reverb-плотность которую физика 100мм пластины не даёт.
 
 Реальная пластина из дерева, камня, металла, стекла или кости вибрирует от audio signal через surface exciter, два пьезо-датчика снимают резонанс. Каждый материал — уникальный голос: oak = тёплый slap, marble = cathedral, spring steel = infinite shimmer, glass = crystalline chime, bone = ritual.
 

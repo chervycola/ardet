@@ -42,7 +42,7 @@
 
 **Last Night — флагман серии System Suicide**. Это не один из 9 модулей среди равных — это **identity-bearing piece**, через которую формируется brand recognition. Все стратегические дизайн-решения по Last Day и сателлитам подчиняются Last Night canon (через диптих + cartridge format совместимость).
 
-**Категория**: постапокалипсис-ревербератор с физическим resonator (сменные материальные пластины как core medium). Конкурентов в категории нет — Last Night создаёт **новую market niche**, не клонирует существующую (Strymon BigSky класс — competitor только по цене и форм-фактору, не по принципу работы).
+**Категория**: **material resonator** (сменные материальные пластины как core medium). НЕ "reverb" — физика 100мм пластины даёт sparse-modal резонатор/chime character, не густой hall. Конкурентов в категории нет. Strymon BigSky класс — competitor только по цене/форм-фактору, не по принципу. Называть "material resonator" честно выставляет expectations (см. risk: sparse modes).
 
 **Этический и эстетический stake**: материалы — wood, stone, metal, glass, bone, nephrite — несут narrative weight серии "System Suicide" (постапокалипсис, ритуальность, физическое распадение). Это **не gimmick** — каждый material cartridge должен звучать радикально различно (свой spectral signature, decay character, mode density). Если все cartridges звучат "одинаково с лёгким тонал-сдвигом" — проект провалился концептуально.
 
@@ -239,7 +239,7 @@ Top priority bench tests:
 
 ## 8. Финальное напоминание
 
-> **"Last Night" — это не reverb pedal. Это physical reverberator с swappable material core, signal-driven envelope generator, и performance gestures grounded в acoustic mechanical truth. Если в production процессе что-то превращается в "просто ещё один reverb" — значит вы потеряли проект.**
+> **"Last Night" — это не reverb pedal. Это material resonator со сменным physical core, signal-driven envelope generator, и performance gestures grounded в acoustic mechanical truth. Если в production процессе что-то превращается в "просто ещё один reverb" — значит вы потеряли проект.**
 
 > **Это значимое культурное и техническое заявление в категории, где её ещё нет. Делайте medecindo.**
 
