@@ -69,40 +69,61 @@ n(f) = (S/2)·√(ρh/D)
 
 ---
 
-## 3. Оптимизированные размеры — per material
+## 3. Оптимизированные размеры — per material (refined h + W)
 
-Все пластины: **L×W = 100×53мм** (max площадь в cartridge 110×65мм с mounting margin, non-integer ratio 1.887:1 → избегает degenerate modes). Толщина — по durability материала. Fundamental — SS-оценка (реальный free-free ~0.6× ниже).
+L = **100мм константа**. **Ширина W варьируется per material как character-рычаг** (не только density):
+- **Широкая (W→55мм)** — 2D plate-моды, плотные/диффузные → **reverb-like**
+- **Узкая (W→35мм)** — 1D bar-моды, разреженные/чистые pitched тоны → **chime/колокол/lithophone**
 
-| # | Материал | h (мм) | f₁₁ (SS est) | f₁₁ (free-free ~est) | Мод <10кГц | RT60 практич. | Семейство |
-|---|----------|--------|-------------|---------------------|-----------|---------------|-----------|
-| 1 | **Spring steel** | 0.3 | 330 Гц | ~200 Гц | **56** | 3–8 с | dense reverb |
-| 2 | **Brass** | 0.5 | 370 Гц | ~220 Гц | **49** | 2.2 с | dense metallic |
-| 3 | **Aluminum** | 0.4 | 440 Гц | ~260 Гц | **41** | 4–10 с | dense bright |
-| 4 | **Bone** | 2.5 | 1670 Гц | ~1000 Гц | 10 | 0.11 с | dry knock |
-| 5 | **Glass** | 1.5 | 1720 Гц | ~1030 Гц | 9 | 2.2 с | crystalline chime |
-| 6 | **Oak** | 2.0 | 1800 Гц | ~1080 Гц | 9 (×1.5 анизотропия ≈ 14) | 0.28 с | warm slap |
-| 7 | **Nephrite** | 2.5 | 2710 Гц | ~1630 Гц | 5 | 4.4 с | singing bell |
-| 8 | **Marble** | 3.0 | 3700 Гц | ~2220 Гц | 3 | 0.73 с | stone clack (проблемный) |
+Толщина — durability + fundamental tradeoff. Fundamental SS / free-free ~0.6× ниже.
+
+| # | Материал | h (мм) | **W (мм)** | f₁₁ SS / ff | Мод <10кГц | RT60 | Семейство |
+|---|----------|--------|------------|-------------|-----------|------|-----------|
+| 1 | **Spring steel** | 0.3 | **55** | 310/190 | **~58** | 3–8 с | reverb (wide, dense shimmer) |
+| 2 | **Brass** | 0.5 | **55** | 351/210 | **~51** | 2.2 с | reverb (wide, metallic) |
+| 3 | **Aluminum** | 0.4 | **55** | 414/250 | **~43** | 4–10 с | reverb (wide, bright) |
+| 4 | **Oak** (∥ волокна) | 1.8 | 45 | 1900/1150 | ~12 (анизотропия) | 0.28 с | wood (medium, warm slap) |
+| 5 | **Slate** (заменяет marble) | 2.0 | 45 | 2637/1580 | ~6 | 0.44 с | stone (medium) |
+| 6 | **Glass** (tempered) | 1.5 | **40** | 2735/1640 | ~6 | 2.2 с | chime (narrow, crystalline) |
+| 7 | **Nephrite** (jade) | 2.0 | 45 | 2824/1700 | ~5 | 4.4 с | bell (medium, поющий) |
+| 8 | **Bone** | 2.5 | **35** | 3352/2010 | ~5 | 0.11 с | percussion (narrow, dry knock) |
+| ~~9~~ | ~~Marble~~ | ~~3.0~~ | ~~45~~ | ~~3700/2220~~ | ~~3~~ | 0.73 с | superseded by slate (см. §5) |
+
+### Логика выбора per family
+
+**Метал-reverb (steel/brass/alu)** → тончайшие durable + **широкие (55мм)** → max модов + низкий fundamental + 2D density.
+
+**Chime/bell (glass/nephrite/bone)** → min durable толщина + **узкие (35-45мм)** → чистые bar-тоны (lithophone-традиция). Nephrite жёстче типичного камня (tough — историч. орудия) → можно 2мм вместо 2.5.
+
+**Wood/stone (oak/slate)** → medium W=45 — баланс плотности и pitched character.
+
+### ⚠ Конструктивное ограничение для contact engine
+
+Variable W (35-55мм) усложняет fixed module-contact mechanism. Module contact-points (exciter + 2 пьезо) должны попадать на **самую узкую** пластину (bone W=35) → располагаются в центральной зоне 100×35мм.
+
+**De-risk вариант для v1 / bench Stage 0**: **W = 50мм константа** для всех — упрощает фиксированный contact-rig, character дифференциация идёт через материал + толщину. Variable W (таблица выше) — refinement для v2 после того как contact coupling доказан (см. RISK_ASSESSMENT R1 + Stage 0).
 
 ### 3.1 Расчёт примеры (для воспроизводимости)
 
-**Spring steel 100×53×0.3мм**:
+**Spring steel 100×55×0.3мм**:
 ```
-D = 200e9 × (0.3e-3)³/10.92 = 0.495 Н·м
-ρh = 7850 × 0.3e-3 = 2.355 кг/м²
-f₁₁ = 1.571 × √(0.495/2.355) × [(1/0.1)²+(1/0.053)²]
-    = 1.571 × 0.458 × 456 = 328 Гц
-n(f) = 0.0053/(0.606×5050×0.3e-3) = 0.00578 мод/Гц
-N(<10кГц) = 0.00578 × (10000−328) = 56 мод
+D = 200e9 × (0.3e-3)³/10.92 = 0.4945
+ρh = 7850 × 0.3e-3 = 2.355
+[(1/0.1)² + (1/0.055)²] = 100 + 330.6 = 430.6
+f₁₁ = 1.571 × √(0.4945/2.355) × 430.6 = 1.571 × 0.458 × 430.6 = 310 Гц
+n(f) = 0.0055/(0.606×5050×0.3e-3) = 0.00599
+N(<10кГц) = 0.00599 × (10000−310) = 58 мод
 ```
 
-**Marble 100×53×3мм**:
+**Bone 100×35×2.5мм** (узкая = bar-like percussion):
 ```
-D = 50e9 × (3e-3)³/10.92 = 123.6 Н·м
-ρh = 2700 × 3e-3 = 8.1 кг/м²
-f₁₁ = 1.571 × √(123.6/8.1) × 456 = 1.571 × 3.906 × 456 = 2798 Гц (3мм)
-n(f) = 0.0053/(0.606×4300×3e-3) = 0.000678 мод/Гц
-N(<10кГц) = 0.000678 × 7202 = 4.9 → округл. сообразно BC ~3 мод
+D = 18e9 × (2.5e-3)³/10.92 = 25.76
+ρh = 1900 × 2.5e-3 = 4.75
+[(1/0.1)² + (1/0.035)²] = 100 + 816.3 = 916.3
+f₁₁ = 1.571 × √(25.76/4.75) × 916.3 = 1.571 × 2.329 × 916.3 = 3352 Гц
+n(f) = 0.0035/(0.606×3078×2.5e-3) = 0.000751
+N(<10кГц) = 0.000751 × 6648 = ~5 мод
+RT60 = 2.2/(1000 × 0.02) = 0.11 с
 ```
 
 ---
@@ -360,20 +381,26 @@ Per `HANDOFF_BRIEF.md` §6.5:
 
 Свод для cartridge engineering — готово к `decisions/03_cartridge_standards.md` update:
 
+**v2 (refined per-material h+W)** — bar-vs-plate width logic + nephrite 2мм tough:
+
 | Cartridge | Материал | h (мм) | L×W (мм) | Tier | Character |
 |-----------|----------|--------|----------|------|-----------|
-| LN-STEEL | Spring steel | 0.3 | 100×53 | core | reverb, long shimmer |
-| LN-BRASS | Brass | 0.5 | 100×53 | core | metallic reverb |
-| LN-ALU | Aluminum | 0.4 | 100×53 | core | bright sustain |
-| LN-OAK | Oak (∥ grain) | 2.0 | 100×53 | core | warm slap |
-| LN-GLASS | Tempered glass | 1.5 | 100×53 | core | crystalline chime |
-| LN-BONE | Beef bone | 2.5 | 100×53 | premium | dry ritual knock |
-| LN-JADE | Nephrite | 2.5 | 100×53 | premium | singing bell |
-| LN-SLATE | Slate | 2.0 | 100×53 | core | stone (replaces marble) |
-| LN-MARBLE | Marble | 3.0 | 100×53 | novelty | percussion clack |
-| LN-STUDIO | Steel ×3 stack | 0.3 ea | 97/100/103 × 51/53/55 | flagship | dense reverb |
+| LN-STEEL | Spring steel | 0.3 | **100×55** | core | reverb, long shimmer (wide=dense) |
+| LN-BRASS | Brass | 0.5 | **100×55** | core | metallic reverb (wide) |
+| LN-ALU | Aluminum | 0.4 | **100×55** | core | bright sustain (wide) |
+| LN-OAK | Oak (∥ grain) | 1.8 | **100×45** | core | warm slap (medium) |
+| LN-SLATE | Slate | 2.0 | **100×45** | core | stone (replaces marble) |
+| LN-GLASS | Tempered glass | 1.5 | **100×40** | core | crystalline chime (narrow=bar) |
+| LN-JADE | Nephrite (tough) | **2.0** | **100×45** | premium | singing bell |
+| LN-BONE | Beef bone | 2.5 | **100×35** | premium | dry knock (narrow=percussion) |
+| LN-STUDIO | Steel ×3 stack | 0.3 ea | 97/100/103 × 51/53/55 detuned | flagship | dense reverb |
+| ~~LN-MARBLE~~ | ~~Marble~~ | ~~3.0~~ | ~~100×45~~ | novelty | superseded by slate (см. §5) |
 
-**Все non-integer aspect ratio** (1.887:1 для 100×53) → избегают degenerate modes. Толщины — durability-optimized per material.
+**Все non-integer aspect ratio** → избегают degenerate modes. Толщины + ширины — character-optimized per material и family (см. §3 логика).
+
+### ⚠ De-risk для v1 / Stage 0 bench
+
+**Рекомендация: на bench и v1 — W=50мм константа для всех** (упрощает фиксированный contact-rig, см. RISK_ASSESSMENT R1). Variable W (таблица выше) — refinement для v2 после того как contact coupling доказан на Stage 0.
 
 ---
 

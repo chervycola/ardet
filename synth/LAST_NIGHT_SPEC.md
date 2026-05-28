@@ -561,31 +561,30 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 - **Connectors**: НЕТ (Decision 11 — картридж пассивный; трансдьюсеры в модуле, contact coupling).
 - **Mass**: ~50г frame + plate-зависимая масса.
 
-### Phase 1 catalog — 6 cartridges (initial launch)
+### Phase 1 catalog — acoustic-optimized (refined v2 — bar-vs-plate width)
 
-> **Decision 11**: картридж = пассивная пластина. Колонки "Exciter"/"Pickup" ниже — **historical** (per-material selection отменён). Exciter (DAEX32 universal) + пьезо — **в модуле**, contact coupling, одинаковы для всех картриджей. Картридж несёт только пластину+рамку+магниты.
+> **Decision 11**: картридж = пассивная пластина (только материал + покрытие + рамка + магниты). Exciter (DAEX32 universal) + пьезо — **в модуле**, contact coupling. См. `acoustic_modeling.md §3/§10` для расчётной базы. **De-risk для v1/bench: W=50мм константа** (упрощает contact-rig); variable W ниже — refinement для v2.
 
-| Картридж | Размеры (Д×В×Т, мм) | Масса plate | RT60 (без feedback) | ~~Exciter~~ | ~~Pickup~~ | Retail |
-|----------|---------------------|-------------|---------------------|---------|--------|--------|
-| **OAK RAW** | 100×40×4 | 12г | 0.1–0.3с | DAEX25FHE-4 | 2× piezo 27мм | $80 |
-| **OAK LINSEED** | 100×40×4 | 12г | 0.15–0.35с | DAEX25FHE-4 | 2× piezo 27мм | $90 |
-| **MAPLE SHELLAC** | 100×35×4 | 10г | 0.2–0.5с | DAEX25FHE-4 | 2× piezo 27мм | $110 |
-| **MARBLE** | 100×50×5 | 68г | 0.8–2с | DAEX32Q-4 | 2× piezo 27мм | $150 |
-| **BRASS** | 100×30×3 | 77г | 1–3с | DAEX32Q-4 | 2× piezo 27мм | $160 |
-| **SPRING STEEL** | 100×20×0.5 | 8г | 2–6с | DAEX25FHE-4 | 2× piezo 27мм | $130 |
+| Картридж | Размеры (Д×В×Т, мм) | RT60 | Семейство | Retail |
+|----------|---------------------|------|-----------|--------|
+| **SPRING STEEL** | **100×55×0.3** | 3–8с | reverb, wide, dense shimmer | $130 |
+| **BRASS** | **100×55×0.5** | 2.2с | reverb, metallic | $160 |
+| **ALUMINUM** | **100×55×0.4** | 4–10с | reverb, bright sustain | $140 |
+| **OAK** (∥ волокна) | **100×45×1.8** | 0.28с | wood, warm slap | $90 |
+| **SLATE** (replaces marble) | **100×45×2.0** | 0.44с | stone | $150 |
+| **GLASS** (tempered) | **100×40×1.5** | 2.2с | chime, narrow=bar, crystalline | $140 |
 
 ### Phase 2 additions (после ship Phase 1)
 
 | Картридж | Размеры | RT60 | Характер | Retail |
 |----------|---------|------|----------|--------|
-| **EBONY** | 100×25×3 | 0.3–0.8с | Премиум, длинный sustain, тёмный | $180 |
-| **NEPHRITE — Sayan green** | 100×53×2.5 | **1–3с** | **Поющий, медитативный, bell-like, 4000-летняя традиция (bianqing 编磬)**. ~40г. (Module DAEX32 universal exciter.) См. `cartridges/07_nephrite_processing.md` | **$250** |
-| **NEPHRITE — Hetian "mutton fat" white** | 100×40×4 | 1.5–4с | Премиум limited 50 экз., белый "баранний жир" — visual contrast в каталоге. Mirror-polished с diamond paste | **$450** |
-| **NEPHRITE — pounamu (NZ)** | 100×40×4 | 1–3с | Ritual edition limited 25 экз., Ngāi Tahu treaty-certified. Глубокий "kahurangi" зелёный | **$550** |
-| **COPPER** | 100×40×1.5 | 1–2.5с | Колокольный, patina меняет тембр | $170 |
-| **PYREX GLASS** | 100×40×3 | 1–3с | Crystalline chime (compatible с Be Careful) | $140 |
-| **BONE (lopatka)** | 100×40×4 | 0.3–0.8с | Мрачный, ритуальный, sourced ethically. См. `cartridges/05_bone_processing.md` | $190 |
-| **TITANIUM** | 100×30×1.5 | 3–8с | Ultra-premium, max Q, infinite ring | $350 |
+| **NEPHRITE — Sayan green** | **100×45×2.0** | 4.4с | bell, поющий, lithophone-традиция bianqing 编磬. Nephrite tough → 2мм OK. См. `cartridges/07_nephrite_processing.md` | **$250** |
+| **NEPHRITE — Hetian "mutton fat" white** | **100×45×2.0** | 4.4с | Limited 50 экз., белый "баранний жир", mirror-polished diamond paste | **$450** |
+| **NEPHRITE — pounamu (NZ)** | **100×45×2.0** | 4.4с | Ritual limited 25 экз., Ngāi Tahu treaty-certified, "kahurangi" зелёный | **$550** |
+| **BONE (lopatka)** | **100×35×2.5** | 0.11с | percussion, narrow=bar, dry knock. См. `cartridges/05_bone_processing.md` | $190 |
+| **COPPER** | 100×55×0.5 | ~2с | reverb-metallic, patina меняет тембр | $170 |
+| **TITANIUM** | 100×55×0.4 | 5–10с | Ultra-premium, max Q, infinite ring | $350 |
+| **STUDIO STACK** (flagship) | steel ×3 detuned 97/100/103 × 51/53/55 × 0.3 ea | ~6с | density boost ~168 модов (see acoustic_modeling §6) | $480 |
 
 ### Premium tier cartridges (с PVDF pickup)
 

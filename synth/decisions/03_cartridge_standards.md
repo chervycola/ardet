@@ -54,16 +54,18 @@
 
 | Cartridge | Материал | h (мм) | L×W (мм) | Tier | Мод <10кГц | Character |
 |-----------|----------|--------|----------|------|-----------|-----------|
-| LN-STEEL | Spring steel | 0.3 | 100×53 | core | ~56 | reverb, long shimmer |
-| LN-BRASS | Brass | 0.5 | 100×53 | core | ~49 | metallic reverb |
-| LN-ALU | Aluminum | 0.4 | 100×53 | core | ~41 | bright sustain |
-| LN-OAK | Oak (∥ grain) | 2.0 | 100×53 | core | ~14 | warm slap |
-| LN-GLASS | Tempered glass | 1.5 | 100×53 | core | ~9 | crystalline chime |
-| LN-SLATE | Slate | 2.0 | 100×53 | core | ~8 | stone (replaces marble) |
-| LN-BONE | Beef bone | 2.5 | 100×53 | premium | ~10 | dry ritual knock |
-| LN-JADE | Nephrite | 2.5 | 100×53 | premium | ~5 | singing bell |
-| LN-MARBLE | Marble | 3.0 | 100×53 | novelty | ~3 | percussion clack |
-| LN-STUDIO | Steel ×3 stack | 0.3 ea | 97/100/103 detuned | flagship | ~168 | dense reverb |
+> **v2 update**: per-material h+W refined (bar-vs-plate width logic, см. `acoustic_modeling.md §3` / §10). De-risk для v1/bench: **W=50мм константа** (упрощает contact-rig).
+
+| LN-STEEL | Spring steel | 0.3 | **100×55** | core | ~58 | reverb (wide, dense shimmer) |
+| LN-BRASS | Brass | 0.5 | **100×55** | core | ~51 | metallic reverb (wide) |
+| LN-ALU | Aluminum | 0.4 | **100×55** | core | ~43 | bright sustain (wide) |
+| LN-OAK | Oak (∥ grain) | 1.8 | **100×45** | core | ~12 | warm slap (medium) |
+| LN-GLASS | Tempered glass | 1.5 | **100×40** | core | ~6 | chime (narrow=bar) |
+| LN-SLATE | Slate | 2.0 | **100×45** | core | ~6 | stone (replaces marble) |
+| LN-BONE | Beef bone | 2.5 | **100×35** | premium | ~5 | dry knock (narrow=percussion) |
+| LN-JADE | Nephrite (tough) | **2.0** | **100×45** | premium | ~5 | singing bell |
+| ~~LN-MARBLE~~ | ~~Marble~~ | — | — | superseded | — | superseded by slate (см. acoustic_modeling §5) |
+| LN-STUDIO | Steel ×3 stack | 0.3 ea | 97/100/103 × 51/53/55 detuned | flagship | ~168 | dense reverb |
 
 ### Прежний initial catalog (Phase 1 launch — superseded, сохранён для истории)
 

@@ -43,6 +43,56 @@
 Plate-only (дёшево) конфликтует с good coupling (нужен bond). **Не решается документацией — только bench.** Может не заработать.
 → **Gate: Stage 0 ниже.**
 
+#### R1 — Fallback ladder (план Б если Stage 0 fail)
+
+Зависит от failure-mode:
+
+| Симптом | Корень |
+|---------|--------|
+| Уровень слабый, но чисто | недостаточный/неравномерный contact transfer |
+| Rattle/buzz на drive | контакт отрывается на пиках |
+| Глухо/безжизненно | потеря energy transfer на интерфейсе |
+| Inconsistent unit-to-unit | force varies при вставке |
+
+**Ladder фиксов (cheapest-first, сохраняем passive cartridge):**
+
+1. **Ступень 1 — Force + геометрия + gain** (почти бесплатно, пробовать первым):
+   - Spring force 5N → 10-15N (жёстче пружина)
+   - Flat-lap puck face + плоская пластина → max contact area
+   - +6-10dB gain в preamp если уровень слабый но чисто
+   - Tradeoff: слишком большой force демпфирует тонкие пластины
+   - Чинит: «слабый уровень», частично «rattle»
+
+2. **Ступень 2 — Driver-bridge two-layer** ⭐ лучший структурный фикс:
+   - Exciter **bonded к жёсткой driver-bridge** (alu/brass), которая постоянно в модуле
+   - Cartridge plate прижимается к bridge **большой плоскостью face-to-face** ~5-10N
+   - Exciter coupling = solid bond; cartridge interface = large-area face contact (намного лучше puck-point)
+   - Cartridge остаётся пассивным + дёшевым
+   - Con: bridge добавляет свои резонансы (должна быть жёсткой + задемпфированной)
+   - Это как работают коммерческие tactile transducer мосты. **Top-pick если ступень 1 не хватило.**
+
+3. **Ступень 3 — Coupling pad** на интерфейсе:
+   - Тонкий high-durometer silicone / acoustic gel между bridge и пластиной
+   - Улучшает контактную площадь и transfer
+   - Дёшево, заменяемо. Полу-фикс.
+
+4. **Ступень 4 — Screw-down cartridge** (вместо magnetic drop-in):
+   - Картридж фиксируется четверть-оборотом/винтом, прикладывая высокий repeatable force
+   - Pro: высокий стабильный force → хорошее coupling
+   - Con: медленнее swap, механический износ
+
+5. **Ступень 5 — Exciter в картридже (hybrid)** — гарантия ценой экономики:
+   - Перенести **только exciter** в картридж (bonded), пьезо остаётся contact в модуле
+   - Cartridge cost +$14-20 (exciter + JST connector) → razor-blade частично теряется
+   - **Last resort** если ступени 1-4 не дали
+
+6. **Ниша — Magnetic drive** (steel-only линейка):
+   - Электромагнит драйвит ферромагнитную пластину без контакта
+   - Хорошо только для steel; non-ferrous нужен bonded магнит
+   - Отдельная "steel resonator" линейка
+
+**Рекомендация**: на Stage 0 сразу заложить тест **и puck-contact, и driver-bridge** (ступени 1 + 2) — за один заход узнаешь, нужна ли ступень 2. Большинство «contact fail» решаются ступенями 1-2 при сохранении пассивного картриджа. Ступень 5 — гарантированный откат, но жертвует razor-blade.
+
 ### 🔴 R2 — Material differentiation НЕ доказана
 Вся идентичность — материалы звучат различно (target >80% blind A/B). Если oak и nephrite через один module engine + одинаковый processing звучат похоже → концепция провалена. Пока не проверено.
 → **Gate: Stage 0.**
