@@ -2,7 +2,7 @@
 
 > *"All Bones Dust"* — но прежде чем dust, нужна правильно подготовленная кость.
 
-Полный workflow обработки говяжьей лопатки (scapula) для cartridge plate **100×40×4мм**.
+Полный workflow обработки говяжьей лопатки (scapula) для cartridge plate **100×35×2.5 мм**.
 
 **Total elapsed time**: 5–8 недель (большинство — passive maceration/drying).
 **Active labor**: ~4 часа на cartridge.
@@ -32,7 +32,7 @@
 
 Бычья **лопатка** (scapula) выбрана как basis для bone cartridge по нескольким причинам:
 
-- **Geometry**: естественно плоская, broad blade ~150×200мм с толщиной 4–8мм в основной части. Из одной scapula можно нарезать **1–2 пластины** 100×40×4мм без значительных отходов.
+- **Geometry**: естественно плоская, broad blade ~150×200мм с толщиной 4–8мм в основной части. Из одной scapula можно нарезать **1–2 пластины** 100×35×2.5 мм без значительных отходов.
 - **Density**: cortical bone (плотная наружная) однородна в blade region. Отлично резонирует.
 - **Availability**: byproduct мясной промышленности, дёшево.
 - **Ethics**: food industry waste — никаких specific убийств для craft. Documenting source важно для boutique brand.
@@ -339,10 +339,10 @@ Bone после wet processing содержит significant water в cancellous 
 
 Bone shrinks during drying. **DO NOT cut to final dimensions wet**.
 
-- Plan cartridge plate: 100×40×4мм final.
+- Plan cartridge plate: 100×35×2.5 мм final.
 - Cut wet OVERSIZE: **104×42×5мм** (gives 4% margin).
 - Allow full drying.
-- Final-trim к 100×40×4мм after dry.
+- Final-trim к 100×35×2.5 мм after dry.
 
 This adds workflow step но prevents undersized parts.
 
@@ -567,7 +567,7 @@ Bone plate готовка для resonance peak performance:
 ### Density check
 
 **Cattle scapula cortical bone density**: ~2.0 g/cm³.
-For 100×40×4мм plate: **mass ≈ 32г**.
+For 100×35×2.5 мм plate: **mass ≈ 17г**.
 
 If finished plate weighs:
 - **<25г** — too porous, internal voids. Acoustic dull. Reject.
@@ -582,21 +582,24 @@ After full processing, hold plate by edge (clamp loosely в vise или fingers)
 - **Dull "thunk", little sustain** — porous, fat-laden, или incomplete drying. Reject или re-process.
 - **"Tick" с very long sustain** — exceptional, premium quality. Mark for premium cartridge SKU.
 
-### Mounting position для exciter
+### Contact point advice для module engine bay (Decision 11)
 
-Cattle bone has natural fiber/grain orientation. Optimal exciter position:
+> Per Decision 11 exciter/пьезо в модуле, не в картридже. Эти позиции — рекомендации для module-side contact points (где module exciter и пьезо контактируют с вставленной костяной пластиной).
+
+Cattle bone has natural fiber/grain orientation. Optimal **module exciter contact**:
 - **Off-center**, ~1/3 from one edge (avoids node of fundamental mode).
 - **Across grain direction**, not parallel (better energy transfer).
-- Visual: scapula natural striations visible — mount perpendicular to them.
+- Visual: scapula natural striations visible — orient plate в картридже так чтобы они были перпендикулярны module exciter contact direction.
 
-### Piezo placement
+**Module piezo contact pins** (per FEM mode shapes):
+- **Piezo A pin**: near exciter contact, 30мм from one edge — captures direct excitation, bright character.
+- **Piezo B pin**: opposite end, 70мм from exciter — captures decay tail, warmer character. Position crossfade controls timbre.
 
-- **Piezo A**: near exciter, 30мм from one edge — captures direct excitation, bright character.
-- **Piezo B**: opposite end, 70мм from exciter — captures decay tail, warmer character. Position crossfade controls timbre.
+> Для bone (100×35×2.5мм — narrow=bar character), все module contact points должны попадать в центральную 100×35 зону — для bone plate это вся ширина пластины.
 
 ### Expected RT60
 
-For properly processed cattle scapula plate 100×40×4мм:
+For properly processed cattle scapula plate 100×35×2.5 мм:
 - **RT60 unforced**: 0.3–0.8с.
 - **Character**: dry, ritual, harmonic-rich on transient.
 - **Q-factor**: ~80–150 (medium).

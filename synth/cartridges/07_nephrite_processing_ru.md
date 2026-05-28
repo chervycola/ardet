@@ -2,7 +2,7 @@
 
 > *"Камень, который поёт"* — нефрит звучал в китайских ритуальных оркестрах за 2000 лет до н.э. (bianqing 编磬). Один из самых вязких природных материалов с исключительной акустической добротностью.
 
-Полный технологический процесс обработки сырого нефритового слэба для пластины картриджа **100×40×4 мм**.
+Полный технологический процесс обработки сырого нефритового слэба для пластины картриджа **100×45×2.0 мм**.
 
 **Общее время цикла**: 1–2 недели (большая часть — lapidary processing, не пассивное ожидание как в кости).
 **Активная работа**: ~6–8 часов на один картридж.
@@ -310,32 +310,28 @@ Optional: **mineral oil polish** (1 drop, rub с soft cloth) — slight depth en
 
 ---
 
-## 7. Монтаж в раму картриджа
+## 7. Монтаж в раму картриджа **[Decision 11 — пассивная пластина, без электроники]**
 
-Готовая обработанная пластина (4 мм thick, 100×40 мм, mirror polished) монтируется в cartridge frame аналогично другим материалам:
+> **Decision 11**: картридж = пассивная пластина. **Без exciter/пьезо/соленоида в картридже** — все трансдьюсеры в модуле (transducer engine bay), spring-contact coupling. Картридж несёт только материал-пластину + рамку + retention магниты + keying. Это делает картридж дёшевым ($10-20) и razor-blade модель работающей.
+
+Готовая обработанная пластина (2.0 мм толщина, 100×45 мм, mirror polished) монтируется в раму:
 
 ### Процедура
 
-1. **Inspect frame** (PETG print или milled aluminum, 110×65×30 мм).
-2. **Apply rubber rails** в top/bottom slots: 2× silicone strips 2 мм thick, adhesive backing.
+1. **Inspect frame** (PETG print или milled aluminum, 110×65×30 мм). Открытые окна для module-side трансдьюсеров: window 1 (face A, ~1/3 от края — module exciter contact), window 2/3 (face B — module piezo contact pins), window 4 (top — module solenoid plunger).
+2. **Apply rubber rails** в top/bottom slots: 2× silicone strips 2 мм thick, adhesive backing. Frame damping (рама не резонирует, только plate).
 3. **Insert plate** sliding sideways в frame. Compression от rubber rails holds it.
-4. **Mount exciter** к face A: Dayton DAEX32Q-4 (heavy duty — нефрит при 48г borderline между DAEX25 light и DAEX32 dense range). M3 bolt через rubber gasket uncoupler.
-5. **Glue piezo discs** на face B:
-   - Piezo A: ~33 мм from one edge (near exciter mounting position).
-   - Piezo B: ~67 мм from same edge (far position).
-   - Cyanoacrylate gel (CA glue), 24 часа cure.
-6. **Solder cables**:
-   - Piezo A coax 50 мм → TA3F mini-XLR (Pin 2 signal, Pin 1 shield).
-   - Piezo B coax 50 мм → second TA3F.
-   - Exciter twisted pair 50 мм → JST-XH 2-pin.
-   - Solenoid wiring → second JST-XH (cartridge level solenoid).
-7. **Test electrical**: DMM check piezo каждый канал (~10нФ capacitance), exciter (~4Ω DC), solenoid (~5–10Ω).
-8. **Laser-etch serial** на frame edge: `SYSTEM SUICIDE / LAST NIGHT / NEPHRITE / SAYAN / SN: 0001`.
-9. **Pack** в foam-lined box с material card.
+4. **Install 4× retention magnets** N42 Ø6×3 мм в углах рамы — polarized per keying scheme (2× N up, 2× S up — wrong orientation отталкивается).
+5. **Asymmetric notch** 8×8 мм на ОДНОМ углу рамы (визуально + механически key для single-orientation insertion).
+6. **No transducers**: exciter / пьезо / соленоид НЕ устанавливаются в картридж. Они постоянно в module engine bay.
+7. **Без разъёмов / кабелей / пайки**: картридж чисто механический пассивный объект.
+8. **Test mechanical**: вставить-вынуть в module dock несколько раз — проверить retention force, key alignment, plate seating против module transducer contact points.
+9. **Laser-etch serial** на frame edge: `SYSTEM SUICIDE / LAST NIGHT / NEPHRITE / SAYAN / SN: 0001`.
+10. **Pack** в foam-lined box с material card.
 
 ### Выбор exciter — DAEX25 или DAEX32?
 
-- **Нефритовая пластина 100×40×4 мм**: масса ~48 г.
+- **Нефритовая пластина 100×45×2.0 мм**: масса ~27 г.
 - **DAEX25FHE-4 spec**: до 30 г material weight.
 - **DAEX32Q-4 spec**: до 60 г.
 
@@ -348,10 +344,10 @@ Optional: **mineral oil polish** (1 drop, rub с soft cloth) — slight depth en
 ### Проверка плотности
 
 **Cortical Саянский nephrite плотность**: 2,95–3,05 г/см³.
-For 100×40×4 мм plate: **mass ≈ 47–49 г**.
+For 100×45×2.0 мм plate: **mass ≈ 26–28 г**.
 
 - **<40 г**: material too porous или wrong stone type. Брак.
-- **47–49 г**: правильный density, expected acoustic character.
+- **26–28 г**: правильный density, expected acoustic character.
 - **>52 г**: unusually dense (premium Hetian grade?). Excellent для premium SKU.
 
 ### Tap test
@@ -378,7 +374,7 @@ Nephrite grain isotropic (interlocking fibrous microstructure без preferred d
 
 ### Ожидаемые акустические параметры
 
-Для Сибирского Саянского нефрита пластина 100×40×4 мм:
+Для Сибирского Саянского нефрита пластина 100×45×2.0 мм:
 - **RT60 unforced**: 1–3 секунды.
 - **Character**: singing, медитативный, harmonic-rich.
 - **Q-factor**: 300–500.
@@ -388,7 +384,7 @@ Nephrite grain isotropic (interlocking fibrous microstructure без preferred d
 
 Nephrite high-Q + Last Night feedback loop → очень легко push to self-oscillation. Игроки любят это — "drone cartridge".
 
-**SPICE verification**: при cartridge Q=500, feedback loop gain margin **снижается** vs oak (Q=50). Loop stable до ~70% feedback knob position. Above — controlled self-oscillation на dominant material resonance frequency (typically 800Гц–1,5кГц для 100×40×4 мм нефрита).
+**SPICE verification**: при cartridge Q=500, feedback loop gain margin **снижается** vs oak (Q=50). Loop stable до ~70% feedback knob position. Above — controlled self-oscillation на dominant material resonance frequency (typically 800Гц–1,5кГц для 100×45×2.0 мм нефрита).
 
 ---
 
