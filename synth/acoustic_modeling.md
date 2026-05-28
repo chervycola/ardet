@@ -45,8 +45,8 @@ n(f) = (S/2)·√(ρh/D)
 | Система | Размер | Мод <10кГц | Character |
 |---------|--------|-----------|-----------|
 | EMT 140 (классика) | 2000×1000×0.5мм steel | ~13 000 | dense reverb |
-| Last Night steel | 100×53×0.3мм | ~56 | resonator reverb |
-| Last Night marble | 100×53×3мм | ~3 | bell/clack |
+| Last Night steel | 100×55×0.3мм | ~56 | resonator reverb |
+| Last Night slate | 100×45×2.0мм | ~5 | stone bell/clack |
 
 Разница EMT/LN steel ~230×. **Last Night = resonator-class**, density добирается feedback + modulation + (premium) multi-plate stack.
 
@@ -165,7 +165,7 @@ RT60 = 2.2/(1000 × 0.02) = 0.11 с
 | **C. Soapstone (стеатит)** | Мягче (E~20ГПа, ниже c_L) → ниже fundamental | Мягкий, износ от exciter |
 | **D. Убрать из reverb-каталога** | Marble = novelty/collector, не core | Теряем "monumental stone" narrative |
 
-**Рекомендация**: **B (slate) для core stone cartridge** + опционально A (marble как percussion novelty). Slate 100×53×2мм:
+**Рекомендация**: **B (slate) для core stone cartridge** + опционально A (marble как percussion novelty). Slate 100×45×2.0мм:
 ```
 E~60ГПа, ρ~2750, c_L~4670, η~0.005
 f₁₁(2мм) ≈ 1.571 × √(60e9×8e-9/10.92 / (2750×2e-3)) × 456 ≈ 1850 Гц (SS) → ~1100 Гц free-free
@@ -200,9 +200,9 @@ Nephrite stack: 3 × 5 = ~15 мод → fuller bell choir
         │
         ▼
    Mount bar (алюминий, передаёт vibration к 3 пластинам)
-        ├── Plate 1: 100×53мм   (baseline)
-        ├── Plate 2: 97×51мм    (−3% → detune вверх ~3%)
-        └── Plate 3: 103×55мм   (+3% → detune вниз ~3%)
+        ├── Plate 1: 100×55мм   (baseline)
+        ├── Plate 2: 97×55мм    (−3% length → detune вверх ~3%)
+        └── Plate 3: 103×55мм   (+3% length → detune вниз ~3%)
         │
         ▼
    Dual piezo снимает combined response (по одному на крайние пластины)

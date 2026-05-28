@@ -44,7 +44,7 @@
 
 | Компонент | Кол-во/cartridge | Назначение |
 |-----------|------------------|------------|
-| Plate (материал) | 1 | Резонатор 100×53×h |
+| Plate (материал) | 1 | Резонатор 100×(35-55)×h per material (см. `acoustic_modeling.md §10`) |
 | Покрытие | — | Дерево: linseed/shellac. Металл: anodize опц. |
 | Frame | 1 | PETG (proto) / anodized alu (prod), 110×65×30мм |
 | Neodymium magnet N42 Ø6×3 | 4 | Retention + keying (polarized) |
@@ -70,17 +70,17 @@
 
 | Материал | Spec | Магазин (домен) | Note |
 |----------|------|------------------|------|
-| **Spring steel 0.3мм** | shim/spring steel sheet 1095 | mcmaster.com (search "1095 spring steel shim 0.012in") · onlinemetals.com | Cut to 100×53. Cheap. Buffer stock. |
+| **Spring steel 0.3мм** | shim/spring steel sheet 1095 | mcmaster.com (search "1095 spring steel shim 0.012in") · onlinemetals.com | Cut to 100×55. Cheap. Buffer stock. |
 | **Brass 0.5мм** | brass sheet C260 | mcmaster.com · onlinemetals.com (search "brass sheet 0.020in") | Cut to size. |
 | **Aluminum 0.4мм** | aluminum sheet 5052 | mcmaster.com · onlinemetals.com | Cut. Anodize optional (coating tuning). |
 | **Oak 2мм** | quartersawn oak veneer/thin stock | luthier suppliers (lmii.com, stewmac.com) · local carpenter | Along-grain orientation. Linseed/shellac finish options. |
-| **Tempered glass 1.5мм** | custom-cut tempered glass | local glass cutter · cutmyglass.com class | Tempered для durability. Custom cut 100×53. |
+| **Tempered glass 1.5мм** | custom-cut tempered glass | local glass cutter · cutmyglass.com class | Tempered для durability. Custom cut 100×40 (narrow=chime). |
 | **Slate 2мм** | roofing/craft slate | stone/tile supplier · local roofer offcuts · etsy lapidary | Splits thin naturally. Replaces marble. |
 | **Beef bone 2.5мм** | processed bovine bone | DIY — см. `cartridges/05_bone_processing.md` | Butcher source + processing protocol. |
 | **Nephrite 2.5мм** | jade slab/tile | lapidary suppliers · etsy (search "nephrite slab") · jade供应 AliExpress | См. `cartridges/07_nephrite_processing.md`. Premium. |
 | **Marble 3мм** | marble tile offcut | stone/tile supplier · local countertop fabricator scrap | Novelty tier. |
 
-> Metal stock (steel/brass/alu): **McMaster-Carr (mcmaster.com)** или **OnlineMetals (onlinemetals.com)** — sheet stock cut-to-size. Buy один большой лист → нарезать много пластин (1 лист 300×300мм → ~30 пластин 100×53).
+> Metal stock (steel/brass/alu): **McMaster-Carr (mcmaster.com)** или **OnlineMetals (onlinemetals.com)** — sheet stock cut-to-size. Buy один большой лист → нарезать много пластин (1 лист 300×300мм → ~25-30 пластин 100×55).
 
 ---
 

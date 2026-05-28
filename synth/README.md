@@ -24,7 +24,7 @@
 
 ## Текущий статус
 
-**Phase**: design lock (Decision 09 v6.4 — improvements pass applied). Готовы к prototyping Phase 1 ship (Last Night) и R&D Phase A (Last Day).
+**Phase**: design lock (v6.5 = Decision 09 hybrid + audit v6.3 + improvements v6.4 + **Decision 11** plate-only cartridge). Готовы к prototyping Phase 1 ship (Last Night) — но **Stage 0 bench gate обязателен** (R1 contact coupling + R2 material differentiation непроверены) и R&D Phase A (Last Day).
 
 ## Структура
 

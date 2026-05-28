@@ -232,9 +232,11 @@ LM13700 — workhorse. Premium ОТА для VCA + phaser:
 
 ---
 
-## 9. Cartridge cable connectors
+## 9. Cartridge cable connectors — ⚠ SUPERSEDED (Decision 11)
 
-Уже chose Switchcraft TA3M/TA3F mini-XLR (premium baseline). Elite alternatives:
+> **Decision 11 (LOCKED)**: картридж = пассивная пластина, **без разъёмов**. Трансдьюсеры в модуле, пьезо разведён module-internal коротким shielded проводом к JFET — swappable mini-XLR/JST к картриджу **устранены**. Раздел ниже (premium cartridge connectors) больше **не применяется**. Premium-апгрейд для module-internal piezo wiring: micro-coax (RG-178/RG-316) + хорошая пайка к JFET, не разъём. См. `decisions/11_cartridge_architecture_lock.md`.
+
+~~Уже chose Switchcraft TA3M/TA3F mini-XLR (premium baseline). Elite alternatives:~~
 
 | Tier | Part | $ | Notes |
 |------|------|---|-------|

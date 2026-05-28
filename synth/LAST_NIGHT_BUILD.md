@@ -2,7 +2,12 @@
 
 > Production-ready документация: схемы, BOM, PCB layout, последовательность сборки, тестирование, troubleshooting.
 
-> **Версия**: v6.4 (improvements pass).
+> **Версия**: v6.5 (= v6.4 improvements pass + Decision 11 plate-only cartridge lock).
+>
+> **v6.5 changes (vs v6.4)**:
+> - 🔴 **Decision 11 LOCKED** — картридж = пассивная пластина (материал + покрытие + рамка + retention магниты + keying). Все трансдьюсеры (exciter / 2× пьезо / соленоид) **постоянно в модуле** (transducer engine bay, spring-loaded contact coupling). Cartridge BOM пересчитан как passive (~$17), transducer engine ($32) перенесён в module BOM. Razor-blade модель восстановлена.
+> - 🔴 Swappable mini-XLR / JST к картриджу **устранены** — пьезо разведён module-internal коротким shielded проводом к JFET (ниже noise floor).
+> - 🔴 Refined per-material plate dims — длина 100мм const, ширина 35–55мм per material, толщина per durability (oak 100×45×1.8, glass 100×40×1.5, bone 100×35×2.5 и т.д., см. `acoustic_modeling.md §3/§10`). Старый константный 100×40×4 / 100×53 superseded.
 >
 > **v6.4 improvements (vs v6.3)**:
 > - Block 13: self-oscillation output limiter (safety) + bypass trails option (reverb UX, default trails mode).
@@ -24,7 +29,7 @@
 > 
 > **Прежняя версия (v5.0)**: Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE; phaser always-on; v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv). Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid triple-function (DAMP + TOLL + STALL). Gate/Crush блок 18 восстановлен как footswitch destruction effect.
 
-**Версия**: v6.4 (post-audit, post-decisions, Decision 11 plate-only cartridge)
+**Версия**: v6.5 (post-audit, post-decisions, Decision 11 plate-only cartridge)
 **Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
 **Companion document**: `LAST_NIGHT_SPEC.md` (продуктовая спецификация для end-user)
 
@@ -2516,46 +2521,57 @@ Subtotal active was $11.97 — увеличено с FX engine + DC-DC до:
 | Resistors | $1.05 | $1.05 |
 | Capacitors | $2.20 | $2.20 |
 | Pots | $13.30 | $13.30 |
-| Switches & connectors | $15.90 | $15.90 |
+| Switches & connectors (без engine) | $15.90 | $15.90 |
+| **Transducer engine (Decision 11 — module-side)** | $32.00 | $32.00 |
 | Mechanical (40HP panel $25) | $32.80 | $32.80 |
 | PCB (40HP) | $6.00 | $30.00 |
-| **Total module** | **$83.22** | **$112.22** |
+| **Total module** | **$115.22** | **$144.22** |
 
-### Per cartridge (typical wood, oak)
+### Per cartridge (typical wood, oak) — **passive (Decision 11)**
+
+> Картридж **пассивный**: только пластина + рамка + магниты + keying. Трансдьюсеры (exciter + 2× пьезо + соленоид) — в module engine bay, считаются **один раз per module**, не per cartridge.
 
 | Item | Cost |
 |------|------|
 | Cartridge frame (3D PETG print) | $5.00 |
-| Wood plate (oak 100×40×4mm, finished) | $8.00 |
-| Exciter DAEX25FHE-4 | $20.00 |
-| 2× piezo discs 27мм | $1.00 |
-| Transducer engine (module, Decision 11 — exciter+piezo+solenoid) | $32.00 |
+| Wood plate (oak 100×45×1.8mm, finished) | $7.00 |
 | Magnets (4× neodym N42 5×5×2мм) | $1.00 |
-| Retention pin + spring | $0.50 |
+| Retention notch + keying | $0.50 |
 | Foam-lined box + material card | $3.50 |
-| **Total cartridge BOM** | **$46.40** |
+| **Total cartridge BOM (passive)** | **$17.00** |
 
-### Premium cartridge (titanium с PVDF)
+### Premium cartridge (titanium) — **passive (Decision 11)**
 
 | Item | Cost |
 |------|------|
 | Aluminum frame (CNC-milled) | $15.00 |
-| Titanium plate 100×30×1.5мм | $30.00 |
-| Exciter DAEX32Q-4 | $40.00 |
-| 1× piezo 27мм + 1× PVDF film LDT0-028K | $4.00 |
-| Cartridge interface | $7.40 |
+| Titanium plate 100×40×0.4мм | $30.00 |
 | Magnets + retention | $1.50 |
 | Premium packaging (foam + leather case + serial card) | $8.00 |
-| **Total premium cartridge BOM** | **$105.90** |
+| **Total premium cartridge BOM (passive)** | **$54.50** |
+
+### Transducer engine — **per module (Decision 11)**
+
+> Уже включён в module total выше ($32). Здесь — breakdown (см. `CARTRIDGE_SOURCING.md §0A`).
+
+| Item | Cost |
+|------|------|
+| Exciter DAEX32Q-4 (universal — handle light+dense) | $20.00 |
+| 2× piezo contact pickups (module-internal, shielded) | $2.00 |
+| Solenoid 5V push + felt tip | $5.00 |
+| Spring carriage + bracket + internal shielded wire | $5.00 |
+| **Total transducer engine (in module BOM)** | **$32.00** |
 
 ### Retail pricing implications (40HP flagship sizing)
 
 | SKU | BOM | Retail | Gross margin |
 |-----|-----|--------|--------------|
-| Module budget (40HP) | $83 | $450 | 81% |
-| Module premium (40HP, 4-layer PCB) | $112 | $550 | 80% |
-| Cartridge oak | $46 | $80 | 42% |
-| Cartridge premium titanium | $106 | $350 | 70% |
+| Module budget (40HP, incl. $32 transducer engine) | $115 | $450 | 74% |
+| Module premium (40HP, 4-layer PCB, incl. engine) | $144 | $550 | 74% |
+| Cartridge oak (passive) | $17 | $40 | 58% |
+| Cartridge premium titanium (passive) | $55 | $150 | 63% |
+
+> **Decision 11 economics**: трансдьюсеры теперь в module (one-time $32), а не в каждом картридже. Cartridge упал с ~$46 → $17 (passive) → razor-blade модель работает: дешёвый картридж, повторные продажи разных материалов.
 
 **Boutique sustainable** при above margins — covers R&D amortization (+10–15% deduction), distribution cut (если используется), warranty reserve, manufacturing labor (DIY: own time; factory: $20-30/unit assembly).
 
@@ -2827,7 +2843,7 @@ Revised order from v4:
 1. **J_PWR** — у edge.
 2. **Power supply zone (Z1) + DC-DC (Z19 pedal)** — adjacent to J_PWR.
 3. **Driver Amp (Z2)** — adjacent to power, with thermal exit к panel.
-4. **Mini-XLR jacks (cartridge)** — у opposite edge from J_PWR (signal entry).
+4. **Transducer engine bay (cartridge dock)** — у opposite edge from J_PWR. Module-internal exciter + 2× piezo contact pins + solenoid; пьезо разведён коротким shielded проводом (Decision 11 — нет swappable разъёма).
 5. **JFET preamp (Z4)** — close to piezo contact wire entry (<20мм). **No other circuit within 25mm**.
 6. **Solenoid driver (Z8)** — opposite corner from JFET preamp (>40мм physical separation).
 7. **Noise generator (Z9)** + ATtiny84A (Z13) — isolated digital corner, GND moat.
@@ -2915,32 +2931,31 @@ Exciter + 2 piezo (contact pins) + solenoid — постоянно в module eng
 
 ### Cartridge-specific specifications
 
+> **Decision 11**: exciter — **универсальный DAEX32Q-4 в module** (spring-loaded contact ко всем пластинам). Ниже — per-material plate specs + contact-point особенности; per-cartridge exciter больше нет.
+
 #### Wood cartridge (oak example)
 
-- Plate: 100×40×4мм, oak hardwood (kiln-dried, finished с linseed oil).
-- Plate weight: 12г.
-- Exciter: DAEX25FHE-4 (light duty).
-- Mounting position: ~33мм from one edge (1/3 length, off-center, avoids mode 1,1 antinode).
+- Plate: 100×45×1.8мм, oak hardwood (kiln-dried, finished с linseed oil).
+- Plate weight: ~6г.
+- Contact point: ~33мм from one edge (1/3 length, off-center, avoids mode 1,1 antinode).
 
-#### Stone cartridge (marble example)
+#### Stone cartridge (slate example — replaces marble)
 
-- Plate: 100×50×5мм, polished Carrara marble.
-- Plate weight: 68г.
-- Exciter: DAEX32Q-4 (heavy duty for dense material).
-- Reinforced rubber rails (heavier plate).
+- Plate: 100×45×2.0мм, slate (marble репозиционирован percussion novelty).
+- Plate weight: ~25г.
+- Reinforced rubber rails (heavier plate), firm module contact для dense material.
 
 #### Metal thin cartridge (spring steel example)
 
-- Plate: 100×20×0.5мм, hardened spring steel.
-- Plate weight: 8г.
-- Exciter: DAEX25FHE-4.
+- Plate: 100×55×0.3мм, hardened spring steel.
+- Plate weight: ~13г.
 - **Knife-edge support** instead of rubber rails (preserves Q for thin metal).
 
-#### Glass cartridge (Pyrex example)
+#### Glass cartridge (tempered example)
 
-- Plate: 100×40×3мм, Pyrex laboratory glass.
-- Plate weight: 25г.
-- Exciter: DAEX25FHE-4 с **thicker rubber gasket** (cushion against glass shock).
+- Plate: 100×40×1.5мм, tempered glass (narrow=chime/bar).
+- Plate weight: ~15г.
+- **Thicker rubber gasket** at module contact (cushion against glass shock).
 - Warning sticker: "FRAGILE — handle с care, не drop. Self-oscillation may shatter".
 
 ### Производство картриджа — флow
@@ -3411,8 +3426,8 @@ Common issues и their resolutions, organized by symptom.
 3. Click absent? → mechanical thump from solenoid hitting plate, normal.
 
 **Common causes (electrical)**:
-- Mini-XLR not properly shielded (shield not connected).
-- Cartridge cable too long without shielding.
+- Module piezo wire shield not connected (Decision 11 — internal shielded lead).
+- Piezo contact lead too long without shielding.
 - D_SOL flyback диод incorrect orientation (reversed).
 
 **Fix**:
@@ -3469,12 +3484,12 @@ Common issues и their resolutions, organized by symptom.
 **Common causes**:
 - LSK489A damaged (one channel of dual JFET).
 - Bad piezo соединение (solder cold joint).
-- Mini-XLR cable break (shielded coax internal break).
+- Module piezo shielded lead break (internal coax break).
 
 **Fix**:
 - Test piezo с DMM (should give millivolts when tapped).
 - Replace LSK489A.
-- Replace cartridge cable.
+- Replace module piezo lead.
 
 ### Distortion на line-level signal
 
@@ -3505,7 +3520,7 @@ Common issues и their resolutions, organized by symptom.
 3. Inspect JFET preamp area для guard ring integrity.
 
 **Common causes**:
-- Mini-XLR shield not connected.
+- Module piezo lead shield not connected.
 - JFET LSK489A defective или wrong replacement (not LSK489 specifically).
 - Power supply noise bleeding through.
 
@@ -3571,7 +3586,7 @@ Common issues и their resolutions, organized by symptom.
 #### Wood (oak, maple, ebony)
 
 - Local carpenter or instrument-making lumber yard.
-- **Sample order первым делом**: 10× pieces oak 100×40×4мм с linseed oil finish.
+- **Sample order первым делом**: 10× pieces oak 100×45×1.8мм с linseed oil finish.
 - Dimensional tolerance: ±0.5мм acceptable.
 - Lead time: 2-4 weeks for first batch.
 - Cost: $5-8 per piece для oak, $15-20 для ebony.
@@ -3634,9 +3649,9 @@ LSK489A SMD requires solder paste application:
 
 For 50-unit Phase 1 production:
 - **LSK489A**: order 60 pieces (10% spare).
-- **DAEX25FHE-4**: order 60 (per cartridge — separate inventory).
+- **DAEX32Q-4**: order 60 (universal exciter — **per module** engine, Decision 11, не per cartridge).
 - **BD139, BD140**: 60 each.
-- **Mini-XLR pairs**: 60 (1 pair per module + spares).
+- **Piezo contact pickups**: 120 (2 per module + spares; module-internal, Decision 11 — mini-XLR устранён).
 - **Pots**: 60×10 = 600 pots.
 - **Other passives**: 100-200% buffer (resistors, caps cheap).
 

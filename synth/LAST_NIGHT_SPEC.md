@@ -2,7 +2,7 @@
 
 > *Постапокалиптический ревербератор холодной ночи. Сменные физические пластины, дыхание руин, тиканье Гейгера, голос мёртвой электросети, колокол в опустевшем соборе.*
 
-**Версия**: v5.0 — hybrid lock (Decision 09): visual canon = mockup пользователя, electrical innovations = Decision 08
+**Версия**: v6.5 — hybrid lock (Decision 09) + audit v6.3 + improvements v6.4 + Decision 11 plate-only cartridge. Visual canon = mockup пользователя, electrical innovations = Decision 08. Картридж = пассивная пластина, трансдьюсеры в модуле.
 **Часть серии**: SYSTEM SUICIDE, модуль 9 из 9 — combine "холодной ночи", симметричный диптих с Last Day "раскалённого полудня"
 
 **Форм-факторы** (две canonical SKU, общая PCB, разные корпуса):
@@ -555,8 +555,8 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 ### Формат картриджа
 
 - **Внешний размер рамки**: 110×65×30мм (PETG 3D-print prototype, фрезерованный алюминий production).
-- **Содержит только**: пластину (100×53×h мм) + покрытие (дерево) + 4 retention магнита + keying notch. Пассивный.
-- **Plate dimensions**: длина **100мм fixed**, высота 20–60мм per material, толщина 0.5–6мм per material.
+- **Содержит только**: пластину (100×(35-55)×h мм per material) + покрытие (дерево) + 4 retention магнита + keying notch. Пассивный (Decision 11 — трансдьюсеры в модуле).
+- **Plate dimensions**: длина **100мм fixed**, ширина 35–55мм per material, толщина 0.3–2.5мм per material (см. `acoustic_modeling.md §10`).
 - **Mount**: 4× neodym N42 магниты align + spring-loaded retention pin.
 - **Connectors**: НЕТ (Decision 11 — картридж пассивный; трансдьюсеры в модуле, contact coupling).
 - **Mass**: ~50г frame + plate-зависимая масса.
@@ -901,8 +901,8 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 | Параметр | Значение |
 |----------|----------|
-| **Plate dimensions** | 100мм × 20–60мм × 0.5–6мм (variable) |
-| **Mode density** | ~950 modes below 10кГц для oak 100×40×4мм |
+| **Plate dimensions** | 100мм × 35–55мм × 0.3–2.5мм (per material) |
+| **Mode density** | ~10–20 modes below 10кГц для oak 100×45×1.8мм (resonator-class; steel thinner ≈ ~56, см. `acoustic_modeling.md §3`) |
 | **Fundamental frequency** | 200–400Гц typical for wood |
 | **RT60 unforced** | 0.1–0.3с (oak) до 6с (spring steel) |
 | **Q factor** | 50 (oak) до 1000+ (titanium) |

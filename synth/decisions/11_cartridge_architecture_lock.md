@@ -9,7 +9,7 @@
 ## Решение
 
 **Картридж = пассивная пластина.** Несёт только:
-- Материал-резонатор (100×53×h мм, per material)
+- Материал-резонатор (длина 100мм const × ширина 35-55мм per material × h, см. `acoustic_modeling.md §10`)
 - Покрытие (для дерева: linseed/shellac; для металлов: anodize/lacquer опц.)
 - Рамку-держатель (PETG proto / anodized alu prod)
 - 4× retention магнита + keying notch
@@ -59,7 +59,7 @@ Trade-off vs bonded: контактный coupling зависит от contact p
    ┌─────────────────────────┐
    │   Frame (PETG/alu)       │
    │  ┌───────────────────┐   │
-   │  │  PLATE (material)  │   │ ← 100×53×h, пассивная
+   │  │  PLATE (material)  │   │ ← 100×(35-55)×h per material, пассивная
    │  └───────────────────┘   │
    │  ◯magnet ◯ ◯ ◯magnet    │
    └────────┬────────┬────────┘

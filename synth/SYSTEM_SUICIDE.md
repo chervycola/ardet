@@ -2,7 +2,7 @@
 
 > *"I Show You Light, Body Blood And Salt, All Bones Dust. Be Careful — Fuck Abandoned Sleep Is My Last Day And My Last Night"*
 
-> **Версия**: v3.0 — canonical brief после аудита и decisions pass. Учитывает corrected RT60, EOL replacements (LSK489A, BZX55C9V1), cable shielding (mini-XLR), и рекомендованные архитектуры для ранее-TBD модулей.
+> **Версия**: v3.1 — canonical brief после аудита, decisions pass + Decision 11 (Last Night §9). Учитывает corrected RT60, EOL replacements (LSK489A, BZX55C9V1), Decision 11 (картридж = пассивная пластина, трансдьюсеры в модуле, пьезо module-internal shielded), refined per-material plate dims, ATtiny84A, и рекомендованные архитектуры для ранее-TBD модулей.
 
 ---
 
@@ -802,7 +802,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
     (с D_LIM1/D_LIM2 soft limiter, SPICE-verified stability)
 
   Noise generator: BZX55C9V1 zener (continuous hiss)
-                   ATtiny85 LFSR (Geiger cluster pulses)
+                   ATtiny84A LFSR (Geiger cluster pulses)
                    Selectable через COLOR (geiger) knob
                    → color filter → mix
 
@@ -810,7 +810,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 
   Pedal SKU only:
     12V DC → TRACO TMR 3-1222WI isolated DC-DC → ±12V audio rails (identical к Eurorack)
-    7805 → +5V для ATtiny85 + LEDs
+    7805 → +5V для ATtiny84A + LEDs
     Footswitches: TAP / GATE-CRUSH / BYPASS / FREEZE
 ```
 
@@ -820,7 +820,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 - **Dual SKU**: Eurorack 40HP + Pedal big-box (~203×140мм Strymon BigSky class), identical schematic.
 - **NOISE / COLOR(geiger)**: 2 separate knobs (NOISE level + COLOR continuous crossfader от continuous zener hiss к Geiger cluster ticks).
 - **Solenoid triple-function**: DAMP / TOLL / STALL — три CV-only режима через 3-way diode-OR на gate Q5.
-- **MCU integration**: ATtiny85 для Geiger noise patterns + crush sample clock + tap-tempo + STALL PWM throttle.
+- **MCU integration**: ATtiny84A (14-pin, upgraded from ATtiny85 — v6.2 features need 9+ GPIO) для Geiger noise patterns + crush sample clock + tap-tempo + STALL PWM throttle.
 - **Dual filter**: separate HiPass + LowPass (вместо single tone).
 - **Stereo + dry/wet split outputs**: MAIN L+R + DRY OUT + WET OUT + EG OUT.
 - **CV patch bay**: ~22 mini-jacks для full automation (включая J_TOLL_TRIG, J_STALL_CV).
@@ -830,7 +830,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 ### Ключевые исправления (post-audit, сохранены)
 - **LSK489A dual JFET** вместо 2×2N5457 (EOL).
 - **BZX55C9V1 zener** для stable analog noise (continuous hiss).
-- **Mini-XLR** для piezo cables (shielding от solenoid EMI).
+- **Piezo module-internal** (Decision 11) — пьезо в модуле, короткий shielded провод к JFET (mini-XLR swappable устранён; ниже noise floor + razor-blade cartridge).
 - **R8 4.7Ω 5W wirewound** — survives 3.8Вт.
 - **R_DAM1 47к** — solid MOSFET turn-on.
 - **Class AB bias** в push-pull (2× 1N4148 diodes).
@@ -849,21 +849,23 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 
 > **Decision 11**: колонка "Exciter" — historical. Exciter (DAEX32 universal) в модуле, не в картридже. Все картриджи используют один module exciter.
 
-| Картридж | Размеры | Масса | RT60 (реалистичный) | ~~Exciter~~ | Характер |
-|----------|---------|-------|---------------------|---------|----------|
-| **Oak (raw)** | 100×40×4мм | 12г | 0.1–0.3с | DAEX25 | Тёплый, мягкий, базовый |
-| **Oak (linseed)** | 100×40×4мм | 12г | 0.15–0.35с | DAEX25 | Чуть ярче, закрытые поры |
-| **Maple (shellac)** | 100×35×4мм | 10г | 0.2–0.5с | DAEX25 | Скрипичный, музыкальный |
-| **Marble** | 100×50×5мм | 68г | 0.8–2с | DAEX32 | Cathedral, тёплый |
-| **Brass** | 100×30×3мм | 77г | 1–3с | DAEX32 | Bell-like, ситарный |
-| **Spring steel** | 100×20×0.5мм | 8г | 2–6с | DAEX25 | Infinite shimmer |
+> Exciter — **универсальный DAEX32Q-4 в модуле** (Decision 11), картридж пассивный. Размеры refined (acoustic-optimized, см. `acoustic_modeling.md §10`).
+
+| Картридж | Размеры | Масса | RT60 (реалистичный) | Характер |
+|----------|---------|-------|---------------------|----------|
+| **Oak (raw)** | 100×45×1.8мм | ~6г | 0.1–0.3с | Тёплый, мягкий, базовый |
+| **Oak (linseed)** | 100×45×1.8мм | ~6г | 0.15–0.35с | Чуть ярче, закрытые поры |
+| **Maple (shellac)** | 100×45×1.8мм | ~5г | 0.2–0.5с | Скрипичный, музыкальный |
+| **Slate (replaces marble)** | 100×45×2.0мм | ~25г | 0.5–1.5с | Cathedral stone (marble→percussion novelty) |
+| **Brass** | 100×55×0.5мм | ~23г | 1–3с | Bell-like, ситарный |
+| **Spring steel** | 100×55×0.3мм | ~13г | 2–6с | Infinite shimmer |
 
 ### Phase 2 additions (после ship Phase 1)
 
 | Картридж | Характер |
 |----------|----------|
 | Ebony | Премиум, длинный sustain |
-| **Nephrite — Sayan green** | **Поющий, медитативный, bell-like; 4000-летняя традиция (китайские bianqing 编磬, маорийский pounamu); RT60 1–3с; ~48г plate; см. `cartridges/07_nephrite_processing.md`** |
+| **Nephrite — Sayan green** | **Поющий, медитативный, bell-like; 4000-летняя традиция (китайские bianqing 编磬, маорийский pounamu); RT60 1–3с; ~27г plate (100×45×2.0); см. `cartridges/07_nephrite_processing.md`** |
 | **Nephrite — Hetian white "mutton fat"** | **Premium limited 50 экз., белый цвет — visual rarity, mirror polish с diamond paste** |
 | **Nephrite — pounamu (NZ)** | **Ritual limited 25 экз., Ngāi Tahu treaty certified** |
 | Copper | Колокольный, patina меняет тембр со временем |

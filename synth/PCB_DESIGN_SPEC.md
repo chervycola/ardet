@@ -70,7 +70,7 @@ Major component groups placed по зонам A-J (from signal_flow SVG):
 | **F** | **Function Generator core** | 50 | 95 | 30×20 | U_FG TL074 (Schmitt + integrator + buffer + inverter) + Q_EXP_PAIRS 6× 2N3904 + C_FG range bank + RV_EXP_LOG + 74HC74 + Q_RESET 2N7000 |
 | **F2** | FG slider satellite header | 75 | 110 | 6×16 (2×6 IDC) | 12-pin ribbon to FG slider satellite PCB |
 | **G** | Noise + Geiger gen | 25 | 90 | 22×16 | BZX55C9V1 zener + U2 noise amp + U6 LM13700 OTA1 crossfader |
-| **H** | **Solenoid driver (Block 14)** | 168 | 92 | 22×18 | Q5 2N7000 + R_GATE 10k + D_OR ×3 + D_SOL 1N4001 + U_TOLL_555 + RV_TOLL_DUR trim + R_DAM1/3 + cartridge JST ribbon |
+| **H** | **Solenoid driver (Block 14)** | 168 | 92 | 22×18 | Q5 2N7000 + R_GATE 10k + D_OR ×3 + D_SOL 1N4001 + U_TOLL_555 + RV_TOLL_DUR trim + R_DAM1/3 + engine-bay JST ribbon (module-internal) |
 | **I1** | Mix bus (U2D TL074) | 110 | 92 | 14×10 | Summing amp + RV_MIX + balance |
 | **I2** | Gate/Crush Block 18 | 130 | 92 | 24×16 | U_GATE CD4066 + U_SH LF398 + U_COMP LM393 + R-2R + RV_GTH + RV_CRUSH trims |
 | **I3** | Output buffer | 158 | 75 | 16×10 | TL072 ×2 (L+R + DRY+WET) + output protection R_OUT 100Ω + C_OUT 10µF |
@@ -214,7 +214,7 @@ STAR TIE POINT recommendation:
                                                 Q5 drain (zone H)
                                                        │
                                                        Solenoid coil
-                                                       (cartridge via JST)
+                                                       (engine bay, internal JST)
                                                        │
                                                        ▼
                                                 Q5 source ─────┐
@@ -307,12 +307,12 @@ STAR TIE POINT recommendation:
                                   C_DC 1000µF output cap
                                           │
                                           ▼ (audio signal к exciter)
-                                  Cartridge dock satellite header
+                                  Engine-bay satellite header (module-internal)
                                           │
                                           └─► +exciter (JST pin 1)
                                           
                                   Return current path:
-                                  Exciter (-) → JST pin 2 → cartridge dock satellite →
+                                  Exciter (-) → JST pin 2 → engine-bay satellite →
                                   → ribbon back to main PCB →
                                   → GND_audio plane @ R8 return
    

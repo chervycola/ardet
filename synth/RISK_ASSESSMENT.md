@@ -150,7 +150,7 @@ Solenoid + DC-DC + MCU = EMI. Для коммерческой продажи н�
 
 **Закупка (AliExpress/Tayda OK для прото)**:
 - 1× DAEX32Q-4 exciter (~$20, Parts Express)
-- 3-4 сырые пластины: spring steel 0.3мм, oak 2мм, brass 0.5мм, (nephrite/glass если есть) — cut ~100×53 (McMaster / local)
+- 3-4 сырые пластины: spring steel 0.3мм, oak 1.8мм, brass 0.5мм, (nephrite/glass если есть) — cut ~100×50 (W=50 bench de-risk const; McMaster / local)
 - 2× piezo disc 27мм ($1)
 - TL072 ×2, LM386 (или любой chipamp), breadboard, резисторы/конденсаторы (jellybean)
 - Пружина сжатия + струбцина/jig для contact rig

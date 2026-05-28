@@ -172,7 +172,7 @@ ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
 | **SL-4P5T slider** | ⚠ возможно custom MOQ | **Off-the-shelf почти нет** | **Решить до tooling**: rotary 4P5T или custom. |
 | DAEX32 exciter | 1-2 нед | Иногда backorder | Буфер ×28→32 (module engine, Decision 11). Visaton backup. |
 | TRACO DC-DC | 2-3 нед | OK | Standard. |
-| Mini-XLR Switchcraft | 1 нед | OK, mating cycle wear long-term | Spec cycle rating, spare connectors. |
+| ~~Mini-XLR Switchcraft~~ | — | **Устранён (Decision 11)** — пьезо module-internal | Заменён micro-coax (RG-178/316) короткий run к JFET. |
 | WIMA film caps | 1-2 нед | OK | Buy matched batch для pre/de-emphasis. |
 | 4L PCB | 1-2 нед (JLCPCB) | OK | — |
 
