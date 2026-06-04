@@ -1,6 +1,7 @@
 import { rect, px, dither, hash } from '../../render/draw.js';
 import { t } from '../../core/time.js';
 import { X } from '../../render/context.js';
+import { weather } from '../../render/weather.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a',
@@ -8,6 +9,8 @@ const P = {
   crimson: '#6b0f1a', gold: '#b8860b', amber: '#daa520',
   damber: '#a07818', term: '#1a8c1a', termd: '#0a4a0a',
   dwood: '#1a0e06', f1: '#ff6600', f2: '#ff3300',
+  // Fire ramp (dark→bright): f3 deep coal-red, f4 bright ember
+  f3: '#c81810', f4: '#ffaa33',
   toxic: '#3aff1a',
 };
 
@@ -285,7 +288,7 @@ export function drawDumpsterDemon(dx,dy){
   const emberCount=7+Math.floor(npcProximity*8);
   for(let i=0;i<emberCount;i++){
     const ePhase=((t*.012*(1+npcProximity*.4)+i*.15)%1);
-    const ex=demonX+15+Math.sin(t*.008+i*2.3)*20+windX*ePhase*8;
+    const ex=demonX+15+Math.sin(t*.008+i*2.3)*20+weather.windX*ePhase*8;
     const ey=demonY+55-ePhase*38;
     X.globalAlpha=(1-ePhase)*.7;
     px(X,ex,ey,i%2?P.f1:P.f2);

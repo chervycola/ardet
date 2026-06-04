@@ -33,7 +33,11 @@ const ARMS = 3;
 
 // Returns { x, y, angle } for a dagger at frame f given index i (0..2).
 function daggerPos(f, i, hands) {
-  const phase = (f + (i * TOSS_PERIOD * 2 / ARMS)) % (TOSS_PERIOD * ARMS);
+  // Positive modulo: f can be negative (motion-blur samples f = t - 2 on the
+  // first frames), and JS % keeps the sign of the dividend, which would yield
+  // a negative handIdx and index hands[] out of bounds.
+  const period = TOSS_PERIOD * ARMS;
+  const phase = (((f + (i * TOSS_PERIOD * 2 / ARMS)) % period) + period) % period;
   const handIdx = Math.floor(phase / TOSS_PERIOD);
   const localT = (phase % TOSS_PERIOD) / TOSS_PERIOD; // 0..1
   const fromHand = hands[handIdx % ARMS];
