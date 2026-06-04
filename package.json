@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node test/smoke-sprites.mjs && node test/logic.mjs",
+    "test": "node test/smoke-sprites.mjs && node test/logic.mjs && node test/systems.mjs",
     "test:sprites": "node test/smoke-sprites.mjs",
-    "test:logic": "node test/logic.mjs"
+    "test:logic": "node test/logic.mjs",
+    "test:systems": "node test/systems.mjs"
   },
   "repository": {
     "type": "git",
