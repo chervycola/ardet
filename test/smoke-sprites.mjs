@@ -50,8 +50,12 @@ const jest  = await imp('sprites/npcs/jester.js');
 const noct  = await imp('sprites/npcs/nocturnal.js');
 const dump  = await imp('sprites/npcs/dumpster.js');
 const plyr  = await imp('sprites/player.js');
+const locsMod  = await imp('sprites/locations/index.js');
+const { locations } = await imp('world/locations.js');
+const { setPlayer } = await imp('core/playerRef.js');
 
-const cases = [
+// NPC cases — exercise each draw fn with realistic args/states
+const npcCases = [
   ['elder',        () => elder.drawNPC_elder(100, 100)],
   ['sol',          () => sol.drawNPC_sol(100, 100)],
   ['jester(idle)', () => jest.drawNPC_jester(100, 100)],
@@ -63,22 +67,68 @@ const cases = [
   ['player(mv)',   () => plyr.drawPlayer({ x: 100, y: 100, dir: 1, moving: true })],
 ];
 
+// Location cases — for each registered location id, build a case that
+// invokes the matching draw_<id> function at the location's real coords.
+// Skip locations whose sprite isn't migrated yet (no draw_<id> export).
+const locCases = [];
+const missingDraws = [];
+for (const loc of locations) {
+  const fn = locsMod['draw_' + loc.id];
+  if (!fn) { missingDraws.push(loc.id); continue; }
+  locCases.push([`loc:${loc.id}`, () => fn(loc.x, loc.y)]);
+}
+
+// Run both groups across 400 frames. Player is teleported between
+// "far" and "near" each iteration to exercise both playerNearLoc
+// branches inside location sprites (some draw extra detail up close).
+const farPlayer  = { x: -9999, y: -9999 };
+const nearPlayer = { x: 0, y: 0 };
+setPlayer(farPlayer);
+
 let errors = 0, runs = 0;
+const seenErrors = new Set();
 const FRAMES = 400;
 for (let f = 0; f < FRAMES; f++) {
   tick();
   updateWeather('highway');
   const prox = (f % 100) / 100;
   [elder, sol, jest, noct, dump].forEach(m => m.setProximity(prox));
-  for (const [name, fn] of cases) {
+
+  for (const [name, fn] of npcCases) {
     runs++;
     try { fn(); }
     catch (e) {
       errors++;
-      if (errors <= 8) console.log(`✗ frame ${f} [${name}]: ${e.message}`);
+      const key = `${name}: ${e.message}`;
+      if (!seenErrors.has(key)) { seenErrors.add(key); console.log(`✗ frame ${f} [${name}]: ${e.message}`); }
+    }
+  }
+
+  // Alternate player position so both branches of playerNearLoc fire.
+  const useNear = (f % 2) === 0;
+  for (const [name, fn] of locCases) {
+    if (useNear) {
+      // Park the player on top of this location's center
+      const loc = locations.find(l => 'loc:' + l.id === name);
+      nearPlayer.x = loc.x + (loc.w || 0) / 2;
+      nearPlayer.y = loc.y + (loc.h || 0) / 2;
+      setPlayer(nearPlayer);
+    } else {
+      setPlayer(farPlayer);
+    }
+    runs++;
+    try { fn(); }
+    catch (e) {
+      errors++;
+      const key = `${name}: ${e.message}`;
+      if (!seenErrors.has(key)) { seenErrors.add(key); console.log(`✗ frame ${f} [${name}]: ${e.message}`); }
     }
   }
 }
-console.log(`\n${runs} draw calls over ${FRAMES} frames`);
-console.log(errors === 0 ? '✓ ALL CLEAN — no runtime errors' : `✗ ${errors} errors`);
+
+if (missingDraws.length) {
+  console.log(`\nℹ ${missingDraws.length} locations still on placeholder (no draw_ sprite): ${missingDraws.join(', ')}`);
+}
+console.log(`\n${runs} draw calls over ${FRAMES} frames (${npcCases.length} NPCs + ${locCases.length} locations × 2 player states)`);
+console.log(errors === 0 ? '✓ ALL CLEAN — no runtime errors' : `✗ ${errors} errors (${seenErrors.size} unique)`);
 process.exit(errors === 0 ? 0 : 1);
