@@ -818,6 +818,80 @@ function IconHourglass() {
   );
 }
 
+/* ----- SOLVE / COAGULA illustrations -----
+   Paired pieces: same particle field around the centre. SOLVE shows a
+   dashed, broken form with particles flying outward; COAGULA shows a
+   solid form with the same particles being drawn inward. */
+
+const SC_PARTICLES_FAR: Array<[number, number, number]> = [
+  [150, 55, 2.4],  [170, 100, 2],   [160, 155, 2.4], [100, 175, 2],
+  [40, 160, 2.4],  [25, 100, 2],    [40, 45, 2.4],   [100, 25, 2],
+];
+const SC_PARTICLES_NEAR: Array<[number, number, number]> = [
+  [130, 70, 1.6],  [145, 125, 1.6], [125, 150, 1.6], [70, 155, 1.6],
+  [55, 125, 1.6],  [70, 65, 1.6],   [125, 55, 1.6],  [60, 95, 1.2],
+  [140, 95, 1.2],
+];
+
+export function SolveIllust() {
+  return (
+    <svg viewBox="0 0 200 200" aria-hidden="true" role="img">
+      {/* dashed dissolving form */}
+      <rect x="80" y="80" width="40" height="40" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeDasharray="3 5" opacity="0.7" />
+      <rect x="93" y="93" width="14" height="14" fill="var(--accent)" opacity="0.45" />
+      {/* radial flow guides */}
+      <g stroke="var(--fg-3)" strokeWidth="0.6" strokeDasharray="1 4" fill="none">
+        <line x1="100" y1="100" x2="180" y2="40" />
+        <line x1="100" y1="100" x2="180" y2="160" />
+        <line x1="100" y1="100" x2="20" y2="40" />
+        <line x1="100" y1="100" x2="20" y2="160" />
+        <line x1="100" y1="100" x2="100" y2="20" />
+        <line x1="100" y1="100" x2="100" y2="180" />
+      </g>
+      <g fill="var(--accent)">
+        {SC_PARTICLES_FAR.map(([x, y, r], i) => (
+          <circle key={i} cx={x} cy={y} r={r} />
+        ))}
+      </g>
+      <g fill="var(--fg-2)">
+        {SC_PARTICLES_NEAR.map(([x, y, r], i) => (
+          <circle key={i} cx={x} cy={y} r={r} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+export function CoagulaIllust() {
+  return (
+    <svg viewBox="0 0 200 200" aria-hidden="true" role="img">
+      {/* inward-pointing flow guides (corner → centre square edge) */}
+      <g stroke="var(--accent)" strokeWidth="1" fill="none" opacity="0.85">
+        <line x1="160" y1="55" x2="124" y2="84" />
+        <polyline points="118,82 124,84 122,90" />
+        <line x1="160" y1="155" x2="124" y2="124" />
+        <polyline points="122,118 124,124 118,126" />
+        <line x1="40" y1="55" x2="76" y2="84" />
+        <polyline points="82,82 76,84 78,90" />
+        <line x1="40" y1="155" x2="76" y2="124" />
+        <polyline points="78,118 76,124 82,126" />
+      </g>
+      {/* solid coagulated form */}
+      <rect x="80" y="80" width="40" height="40" fill="var(--accent)" />
+      <g fill="var(--accent)" opacity="0.7">
+        {SC_PARTICLES_NEAR.map(([x, y, r], i) => (
+          <circle key={i} cx={x} cy={y} r={r} />
+        ))}
+      </g>
+      <g fill="var(--fg-2)">
+        {SC_PARTICLES_FAR.map(([x, y, r], i) => (
+          <circle key={i} cx={x} cy={y} r={r * 0.7} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 const HERO_ICON_MAP: Record<HeroIcon, null | (() => JSX.Element)> = {
   none: null,
   amex: AmexRazorBlade,

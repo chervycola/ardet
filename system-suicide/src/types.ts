@@ -17,12 +17,6 @@ export interface Cartridge {
   ch: string;
 }
 
-export interface Patch {
-  nm: string;
-  sub: string;
-  dur: string;
-}
-
 export interface StatRow {
   k: string;
   v: string;

@@ -6,7 +6,7 @@ import {
   SignalChain,
   Catalog,
   LastNight,
-  Patches,
+  SolveCoagula,
   Manifesto,
   Footer,
 } from './sections';
@@ -22,7 +22,7 @@ export default function App() {
       <SignalChain />
       <Catalog />
       <LastNight />
-      <Patches />
+      <SolveCoagula />
       <Manifesto />
       <Footer />
     </>

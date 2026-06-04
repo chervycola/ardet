@@ -1,4 +1,4 @@
-import type { Module, Cartridge, Patch, ProductPages } from './types';
+import type { Module, Cartridge, ProductPages } from './types';
 
 // Module names that stay legible; every other name is visually blurred.
 export const REVEALED_NAMES = new Set(['is-my', 'last-night']);
@@ -70,15 +70,6 @@ export const CARTRIDGES: Cartridge[] = [
   { sw: 'sw-bone',     nm: 'Scapula bone',    rt: '1–3 s',     ch: 'Dry, ritual, percussive.' },
   { sw: 'sw-glass',    nm: 'Pyrex glass',     rt: '2–6 s',     ch: 'Crystalline. Compatible with Be Careful.' },
   { sw: 'sw-nephrite', nm: 'Nephrite',        rt: '1–4 s',     ch: 'Singing, meditative, ancient.' },
-];
-
-export const PATCHES: Patch[] = [
-  { nm: 'Drone Cathedral', sub: '01 → 04 → 09',           dur: 'Q∞ / freeze' },
-  { nm: 'Red Mirage',      sub: 'EXT → 07 → 09',          dur: 'Dub kill + drag' },
-  { nm: 'Pendulum Clock',  sub: '05 → 01 → 03 → 07',      dur: 'Self-evolving' },
-  { nm: 'Glass and Bone',  sub: '01·dust → 04 → 03 → 09', dur: 'Mineral perc.' },
-  { nm: 'Day Into Night',  sub: '07 ⇌ 09 (FB loop)',      dur: 'Infinite decay' },
-  { nm: 'Solar Storm',     sub: '07 standalone, SUN 0',   dur: 'Noise / live' },
 ];
 
 export const PRODUCT_PAGES: ProductPages = {

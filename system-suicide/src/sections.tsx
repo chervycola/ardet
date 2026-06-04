@@ -1,13 +1,14 @@
 import { Fragment, type ReactNode } from 'react';
 import { useT, useLang, LanguageToggle } from './i18n';
-import { MODULES, CARTRIDGES, PATCHES, isNameRevealed } from './data';
+import { MODULES, CARTRIDGES, isNameRevealed } from './data';
 import {
   BarbedDivider,
+  CoagulaIllust,
   HeroMark,
   RazorScratch,
   RazorSlash,
+  SolveIllust,
   TallyCounter,
-  XMark,
 } from './motifs';
 import type { HeroIcon } from './types';
 
@@ -394,27 +395,29 @@ export function LastNight() {
   );
 }
 
-export function Patches() {
+export function SolveCoagula() {
   const t = useT();
   return (
-    <section className="patches" id="patches">
+    <section className="solve-coagula" id="solve-coagula">
       <div className="shell">
-        <h2>
-          {t('pat_h_a')}<br />{t('pat_h_b')}
-        </h2>
-        <div className="sub">{t('pat_sub')}</div>
+        <div className="sc-head">
+          <h2>
+            {t('sc_h_a')}<br />{t('sc_h_b')}
+          </h2>
+          <div className="sub">{t('sc_sub')}</div>
+        </div>
 
-        <div className="patch-list">
-          {PATCHES.map((p, i) => (
-            <div key={i} className="patch">
-              <span className="x"><XMark size={22} /></span>
-              <div className="nm">
-                {p.nm}
-                <small>{p.sub}</small>
-              </div>
-              <span className="dur">{p.dur}</span>
-            </div>
-          ))}
+        <div className="sc-grid">
+          <div className="sc-item">
+            <div className="sc-illust"><SolveIllust /></div>
+            <div className="sc-label">{t('sc_solve_label')}</div>
+            <p className="sc-text">{t('sc_solve_text')}</p>
+          </div>
+          <div className="sc-item">
+            <div className="sc-illust"><CoagulaIllust /></div>
+            <div className="sc-label">{t('sc_coagula_label')}</div>
+            <p className="sc-text">{t('sc_coagula_text')}</p>
+          </div>
         </div>
       </div>
     </section>

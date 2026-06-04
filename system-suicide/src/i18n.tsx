@@ -91,6 +91,13 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     pat_h_a: 'Six ways',
     pat_h_b: 'to be heard.',
     pat_sub: '— Patch atlas · live-tested · February 2026',
+    sc_h_a: 'Solve.',
+    sc_h_b: 'Coagula.',
+    sc_sub: '— The principle of the system',
+    sc_solve_label: 'SOLVE',
+    sc_solve_text: 'Dissolve. Reduce the form to its components — light and stone, molecule and atom.',
+    sc_coagula_label: 'COAGULA',
+    sc_coagula_text: 'Coagulate. Gather the components into a new body — heartless as the earth itself.',
 
     lex_h_a: 'Lexicon',
     lex_h_b: 'of methods.',
@@ -193,7 +200,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     sig_h_b: 'цепь.',
     sig_h_c: '',
     sig_foot_in: 'SOLVE',
-    sig_foot_arrow: 'Разложиться на составные части. Стать свободным от света и камня.\n  Стать изменчивым как молекула, прочным, как атом. Бездушным\n                          как сама земля',
+    sig_foot_arrow: 'Разложиться на составные части. Стать свободным от света и камня.\nСтать изменчивым как молекула, прочным, как атом, бездушным,\nкак сама земля',
     sig_foot_out: 'COAGULA',
 
     cat_h_a: 'Каталог',
@@ -233,6 +240,13 @@ const TRANSLATIONS: Record<Lang, Dict> = {
     pat_h_a: 'Шесть способов',
     pat_h_b: 'быть услышанным.',
     pat_sub: '— Атлас патчей · протестировано вживую · февраль 2026',
+    sc_h_a: 'Solve.',
+    sc_h_b: 'Coagula.',
+    sc_sub: '— Принцип системы',
+    sc_solve_label: 'SOLVE',
+    sc_solve_text: 'Растворить. Расщепить форму на составные — свет и камень, молекулу и атом.',
+    sc_coagula_label: 'COAGULA',
+    sc_coagula_text: 'Сгустить. Собрать составные в новое тело — бездушное, как сама земля.',
 
     lex_h_a: 'Лексикон',
     lex_h_b: 'методов.',
@@ -246,7 +260,7 @@ const TRANSLATIONS: Record<Lang, Dict> = {
       'Полуживые инструменты для последних дней человечества. Вещи, у которых есть тело. Когда тело поёт, схема создаёт ему путь.',
     man_p2_part1: 'Минимум цифры. Никаких экранов. Лучшие из актуальных компонентов.',
     man_p2_part2:
-      ' Звук инструментов — это голос времен. Каждый картридж — другая комната. Каждый маятник держит своё время. Каждая пластина стареет, ломается и звук меняется.',
+      ' Звук инструментов — это голос времён. Каждый картридж — другая комната. Каждый маятник держит своё время. Каждая пластина стареет, ломается и звук меняется.',
     man_p3:
       'Мы отгружаем медленно. И желаем для вас складной логистики, дорогие товарищи.',
     man_p3_red: 'Система .',
