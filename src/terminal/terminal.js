@@ -371,3 +371,7 @@ export function init() {
     setTimeout(() => inputEl.focus(), 0);
   }, { passive: true });
 }
+
+// Test-only handle so the smoke test can run every command headlessly
+// without simulating keyboard events. Not part of the public API.
+export const _test = { exec, commands, history };
