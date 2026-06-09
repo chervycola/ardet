@@ -224,6 +224,58 @@ const imp = p => import(new URL(p, base));
 }
 
 // ═══════════════════════════════════════
+// PHYSICS — movement + settlement lock
+// ═══════════════════════════════════════
+{
+  const { tryMove, isInSettlement } = await imp('world/physics.js');
+  const { locations } = await imp('world/locations.js');
+
+  test('physics: stranded outside settlement → tryMove can walk back in', () => {
+    // Regression for the "stuck near Pizzeria Babylon" bug. The Pizzeria
+    // click-teleport landed the player at (2664, 1443) but the locked
+    // starting area ends at x=2650. With the old per-frame slide rule
+    // (must land inside in one step) the 2.4 px/frame keyboard step
+    // could never bring the player back: 2664 - 2.4 = 2661.6, still
+    // outside. The recovery slide must allow moves that REDUCE distance
+    // to the settlement even if the new position is still outside.
+    const player = { x: 2664, y: 1443 };
+    assert(!isInSettlement(player.x, player.y), 'precondition: outside');
+
+    let frames = 0;
+    while (!isInSettlement(player.x, player.y) && frames < 200) {
+      const moved = tryMove(player, -2.4, 0, locations, { canLeaveSettlement: false });
+      assert(moved, `stuck at frame ${frames}, x=${player.x}`);
+      frames++;
+    }
+    assert(isInSettlement(player.x, player.y),
+      `failed to re-enter after ${frames} frames at (${player.x},${player.y})`);
+    assert(frames < 50, `took too long: ${frames} frames`);
+  });
+
+  test('physics: stranded recovery only allows progress, not further drift', () => {
+    // Same scenario, but trying to push further out (east, away from
+    // settlement). Must be rejected.
+    const player = { x: 2664, y: 1443 };
+    const moved = tryMove(player, +2.4, 0, locations, { canLeaveSettlement: false });
+    assert(!moved, 'must not allow movement further away from settlement');
+    eq(player.x, 2664, 'x unchanged');
+  });
+
+  test('physics: inside settlement, trying to cross boundary is still blocked', () => {
+    // The other half of the contract: a player inside the zone can't
+    // walk OUT while it's locked. (Movement along the boundary should
+    // still work via the original per-axis slide.)
+    const player = { x: 2649, y: 900 };  // 1 px inside east edge
+    assert(isInSettlement(player.x, player.y));
+    const moved = tryMove(player, +5, 0, locations, { canLeaveSettlement: false });
+    // Either no move (5px east crosses the line) or sliding works on y.
+    // We just assert player didn't end up outside.
+    assert(isInSettlement(player.x, player.y),
+      `breached boundary: (${player.x},${player.y})`);
+  });
+}
+
+// ═══════════════════════════════════════
 // WORLD — pure update functions
 // ═══════════════════════════════════════
 {

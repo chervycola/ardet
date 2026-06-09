@@ -1348,6 +1348,14 @@ canvas#game {
   function isInSettlement(x, y) {
     return x >= SETTLEMENT.x1 && x <= SETTLEMENT.x2 && y >= SETTLEMENT.y1 && y <= SETTLEMENT.y2;
   }
+  function settlementDist(x, y) {
+    let d = 0;
+    if (x < SETTLEMENT.x1) d += SETTLEMENT.x1 - x;
+    if (x > SETTLEMENT.x2) d += x - SETTLEMENT.x2;
+    if (y < SETTLEMENT.y1) d += SETTLEMENT.y1 - y;
+    if (y > SETTLEMENT.y2) d += y - SETTLEMENT.y2;
+    return d;
+  }
   function isBlocked(nx, ny, locations2) {
     const px1 = nx + PLAYER_MX - PLAYER_W / 2;
     const py1 = ny + PLAYER_MY - PLAYER_H / 2;
@@ -1366,6 +1374,23 @@ canvas#game {
     nx = clamp(nx, 10, MW - 22);
     ny = clamp(ny, 170, MH - 30);
     if (!canLeaveSettlement2 && !isInSettlement(nx, ny)) {
+      if (!isInSettlement(player2.x, player2.y)) {
+        const cur = settlementDist(player2.x, player2.y);
+        if (settlementDist(nx, ny) < cur && !isBlocked(nx, ny, locations2)) {
+          player2.x = nx;
+          player2.y = ny;
+          return true;
+        }
+        if (settlementDist(nx, player2.y) < cur && !isBlocked(nx, player2.y, locations2)) {
+          player2.x = nx;
+          return true;
+        }
+        if (settlementDist(player2.x, ny) < cur && !isBlocked(player2.x, ny, locations2)) {
+          player2.y = ny;
+          return true;
+        }
+        return false;
+      }
       const slideX = player2.x + dx;
       const slideY = player2.y + dy;
       if (isInSettlement(slideX, player2.y) && !isBlocked(slideX, player2.y, locations2)) {
@@ -16998,6 +17023,7 @@ Ardet v1.0 \u2014 coming soon.
     if (loc) {
       const px_ = loc.x + loc.w / 2 - 6;
       const py_ = loc.y + loc.h + 5;
+      if (!canLeaveSettlement() && !isInSettlement(px_, py_)) return;
       const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
       if (dist < 85) {
         player.x = px_;

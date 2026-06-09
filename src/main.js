@@ -9,7 +9,7 @@ import { postfx } from './render/postfx.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent } from './world/locations.js';
-import { tryMove, findLocationAt } from './world/physics.js';
+import { tryMove, findLocationAt, isInSettlement } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
 import { input } from './core/input.js';
@@ -449,6 +449,11 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (loc) {
     const px_ = loc.x + loc.w / 2 - 6;
     const py_ = loc.y + loc.h + 5;
+    // Block click-routing to locations whose access point is outside the
+    // locked starting area (e.g. Pizzeria sits at the highway border).
+    // Otherwise a near-click would teleport the player out of the zone
+    // and movement would jam against the boundary.
+    if (!canLeaveSettlement() && !isInSettlement(px_, py_)) return;
     const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
 
     if (dist < 85) {
