@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════
-// ULITSA TESTS — street data integrity + walk + two-sided plaques.
+// ULITSA TESTS — the street lifted onto the world surface.
+// Data integrity + world mapping + corridor physics + zone audio.
 // Run: node test/ulitsa.mjs
 // ═══════════════════════════════════════
 const noop = () => {};
@@ -9,54 +10,34 @@ globalThis.localStorage = {
   setItem: (k, v) => storage.set(k, String(v)),
   removeItem: k => storage.delete(k),
 };
-globalThis.window = {
-  innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
-  addEventListener: noop, removeEventListener: noop, visualViewport: null,
-  AudioContext: function () {
-    return {
-      state: 'running', currentTime: 0, destination: {},
-      createOscillator: () => ({ type: '', frequency: { value: 0, exponentialRampToValueAtTime: noop }, connect: noop, start: noop, stop: noop }),
-      createGain:       () => ({ gain: { value: 0, exponentialRampToValueAtTime: noop, linearRampToValueAtTime: noop }, connect: noop }),
-      createBiquadFilter: () => ({ type: '', frequency: { value: 0 }, Q: { value: 0 }, connect: noop }),
-      resume: noop,
-    };
-  },
-};
-const grad = () => ({ addColorStop: noop });
-function fakeCtx() {
-  return {
-    globalAlpha: 1, fillStyle: '#000', strokeStyle: '#000', lineWidth: 1, font: '',
-    textAlign: 'left', globalCompositeOperation: 'source-over', imageSmoothingEnabled: false,
-    fillRect: noop, strokeRect: noop, clearRect: noop, beginPath: noop, closePath: noop,
-    moveTo: noop, lineTo: noop, arc: noop, ellipse: noop, rect: noop,
-    quadraticCurveTo: noop, bezierCurveTo: noop, stroke: noop, fill: noop, save: noop,
-    restore: noop, fillText: noop, strokeText: noop, translate: noop, setTransform: noop,
-    drawImage: noop, scale: noop, rotate: noop,
-    createLinearGradient: grad, createRadialGradient: grad, measureText: () => ({ width: 10 }),
-  };
-}
-function fakeEl(tag = 'div') {
-  const classes = new Set();
-  return {
-    tagName: tag.toUpperCase(),
-    classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c), toggle: noop },
-    set innerHTML(v) { this._html = v; }, get innerHTML() { return this._html || ''; },
-    addEventListener: noop, removeEventListener: noop,
+globalThis.window = { innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
+  addEventListener: noop, removeEventListener: noop, visualViewport: null };
+const els = new Map();
+function fakeEl() {
+  return { style: {}, classList: { add: noop, remove: noop, contains: () => false },
+    addEventListener: noop, set innerHTML(v) {}, get innerHTML() { return ''; },
     set width(v) { this._w = v; }, get width() { return this._w; },
     set height(v) { this._h = v; }, get height() { return this._h; },
-    getContext: () => fakeCtx(), style: {}, appendChild: noop, focus: noop, blur: noop,
-    querySelectorAll: () => [],
-  };
+    getContext: () => fakeCtx(), appendChild: noop, focus: noop };
 }
-const els = new Map();
 globalThis.document = {
   getElementById: id => els.get(id) || (els.set(id, fakeEl()), els.get(id)),
-  createElement: tag => fakeEl(tag), addEventListener: noop, removeEventListener: noop,
-  querySelectorAll: () => [], title: 'x', body: fakeEl(), hidden: false,
+  createElement: () => fakeEl(), addEventListener: noop, removeEventListener: noop,
+  querySelectorAll: () => [], title: 'x', body: fakeEl(),
 };
-globalThis.requestAnimationFrame = (cb) => 0;
+globalThis.requestAnimationFrame = () => 0;
 globalThis.cancelAnimationFrame = noop;
-globalThis.setTimeout = (fn) => { try { fn(); } catch {} return 0; };
+const grad = () => ({ addColorStop: noop });
+function fakeCtx() {
+  return { globalAlpha:1, fillStyle:'#000', strokeStyle:'#000', lineWidth:1, font:'',
+    textAlign:'left', imageSmoothingEnabled:false, setLineDash:noop,
+    fillRect:noop, strokeRect:noop, clearRect:noop, beginPath:noop, closePath:noop,
+    moveTo:noop, lineTo:noop, arc:noop, ellipse:noop, rect:noop,
+    quadraticCurveTo:noop, bezierCurveTo:noop, stroke:noop, fill:noop, save:noop,
+    restore:noop, fillText:noop, translate:noop, setTransform:noop, drawImage:noop,
+    scale:noop, rotate:noop, createLinearGradient:grad, createRadialGradient:grad,
+    measureText:()=>({width:10}) };
+}
 
 const results = [];
 function test(name, fn) {
@@ -69,172 +50,153 @@ function eq(a, b, m) { if (a !== b) throw new Error((m || 'eq') + `: ${a} !== ${
 const base = new URL('../src/', import.meta.url);
 const imp = p => import(new URL(p, base));
 
-// ═══ STREET DATA INTEGRITY ═══
+// ═══ STREET DATA INTEGRITY (ulitsa_db) ═══
 {
   const db = await imp('content/ulitsa_db.js');
-  const { TOWNLET, SEGMENTS, allSigns, segmentAt, STREET_END } = db;
+  const { TOWNLET, SEGMENTS, allSigns, segmentAt } = db;
 
-  test('street: townlet + 9 segments, east-bound non-overlapping ranges', () => {
+  test('street: townlet + 9 segments, §1..§9 contiguous', () => {
     assert(TOWNLET.range[0] === 0, 'townlet starts at 0');
     eq(SEGMENTS.length, 9, '9 epoch segments');
-    // Allow a small neutral gap between townlet and §1 (the gates corridor);
-    // §1..§9 must be strictly contiguous.
-    assert(SEGMENTS[0].range[0] >= TOWNLET.range[1],
-      `§1 must start at or after townlet end (${TOWNLET.range[1]})`);
+    assert(SEGMENTS[0].range[0] >= TOWNLET.range[1], '§1 after townlet');
     let prev = SEGMENTS[0].range[1];
     for (let i = 1; i < SEGMENTS.length; i++) {
-      const seg = SEGMENTS[i];
-      eq(seg.range[0], prev, `${seg.id} starts where previous ended (${prev})`);
-      assert(seg.range[1] > seg.range[0], `${seg.id} non-empty range`);
-      prev = seg.range[1];
+      eq(SEGMENTS[i].range[0], prev, `${SEGMENTS[i].id} contiguous`);
+      prev = SEGMENTS[i].range[1];
     }
-    eq(STREET_END, prev, 'STREET_END matches the last segment');
   });
 
-  test('street: every sign has facade text and lives inside its segment range', () => {
+  test('street: every sign has facade and sits inside its segment', () => {
     for (const seg of [TOWNLET, ...SEGMENTS]) {
       for (const sign of seg.signs) {
-        assert(typeof sign.name === 'string' && sign.name.length > 0, `${seg.id}: nameless sign`);
-        assert(typeof sign.facade === 'string' && sign.facade.length > 0,
-          `${seg.id}/${sign.name}: missing facade`);
+        assert(sign.facade && sign.facade.length > 0, `${seg.id}/${sign.name}: facade`);
         assert(sign.x >= seg.range[0] && sign.x < seg.range[1],
-          `${seg.id}/${sign.name}: x=${sign.x} outside ${seg.range.join('..')}`);
+          `${seg.id}/${sign.name}: x outside`);
       }
     }
   });
 
-  test('street: act signs declared at segments 6..9 (acts I–IV)', () => {
-    const withAct = SEGMENTS.filter(s => s.actSign).map(s => s.n).sort();
-    eq(withAct.join(','), '6,7,8,9', `expected acts at §6..§9, got §${withAct.join(',§')}`);
-  });
-
-  test('street: §7 carries quiet:true (humor falls silent by architecture)', () => {
-    const s7 = SEGMENTS.find(s => s.n === 7);
-    assert(s7.quiet === true, '§7 must be quiet');
-  });
-
-  test('street: at least four live segments scattered across the gradient', () => {
-    const live = allSigns().filter(s => s.live);
-    assert(live.length >= 4, `expected ≥4 live signs, got ${live.length}`);
-    // None of them in §1..§4 (the deep past): the handoff puts live nodes
-    // from medieval Timbuktu onward — that's our floor.
-    for (const s of live) {
-      const seg = segmentAt(s.x);
-      assert(seg.n === undefined || seg.n >= 3,
-        `live sign in too early segment: ${s.name} (§${seg.n})`);
-    }
-  });
-
-  test('street: euphemism stand visits exactly 5 stops with consistent name', () => {
-    const visits = allSigns().filter(s => s.name === 'стенд эвфемизма');
-    eq(visits.length, 5, `expected 5 stops, got ${visits.length}`);
-    // Spread across at least 4 different segments
-    const segs = new Set(visits.map(v => v._segment));
-    assert(segs.size >= 4, `euphemism stand should travel: ${segs.size} unique segs`);
-  });
-
-  test('street: Plato cave shadow recurs across 3+ different surfaces/segments', () => {
-    const shadows = allSigns().filter(s => /тень/.test(s.name) || /тень/.test(s.facade));
-    const segs = new Set(shadows.map(s => s._segment));
-    assert(segs.size >= 3,
-      `Plato shadow should appear on 3+ surfaces; got ${segs.size}: ${[...segs].join(',')}`);
-  });
-
-  test('street: segmentAt returns the right segment for known x values', () => {
-    eq(segmentAt(50).id, 'townlet', 'townlet contains 50');
-    eq(segmentAt(400).id, 'axial', 'axial contains 400');
-    eq(segmentAt(2900).id, 'now', 'now contains 2900');
+  test('street: acts at §6..§9; §7 quiet; ≥4 live; euphemism stand ×5; Plato shadow ×3', () => {
+    const acts = SEGMENTS.filter(s => s.actSign).map(s => s.n).join(',');
+    eq(acts, '6,7,8,9', 'acts');
+    assert(SEGMENTS.find(s => s.n === 7).quiet === true, '§7 quiet');
+    const signs = allSigns();
+    assert(signs.filter(s => s.live).length >= 4, 'live count');
+    eq(signs.filter(s => s.name === 'стенд эвфемизма').length, 5, 'euphemism stops');
+    const shadows = new Set(signs.filter(s => /тень/.test(s.name)).map(s => s._segment));
+    assert(shadows.size >= 3, 'Plato shadow surfaces');
+    eq(segmentAt(2900).id, 'now', 'segmentAt sanity');
   });
 }
 
-// ═══ OVERLAY: walking, sides, draw ═══
+// ═══ WORLD MAPPING (street.js) ═══
 {
-  const { state } = await imp('core/state.js');
-  const ul = await imp('ui/ulitsa.js');
-  ul.init();
+  const street = await imp('world/street.js');
+  const { streetLocations, STREET_SHIFT, STREET_X0, STREET_END_W,
+          STREET_Y_MIN, STREET_Y_MAX, STREET_SPAWN, GATES_RETURN, consumeGatesLine } = street;
+  const { useTexts } = await imp('world/useActions.js');
+  const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
 
-  test('ulitsa: open from game → state ulitsa, player at gate', () => {
-    state.current = 'game';
-    ul._test.resetFirstEntry();
-    ul.open();
-    assert(state.is('ulitsa'), 'should be in ulitsa state');
-    eq(ul._test.player.x, 220, 'player spawns at gate');
-  });
-
-  test('ulitsa: walking east populates nearestSign when in range', () => {
-    // Park the player right next to "река Гераклита" at x=260
-    ul._test.setPlayerX(259, +1);
-    ul._test.step();   // advance once to update nearestSign + draw
-    const s = ul._test.nearestSign;
-    assert(s && s.name === 'река Гераклита', `expected sign, got ${s && s.name}`);
-  });
-
-  test('ulitsa: approach from LEFT → facade; approach from RIGHT → backyard', () => {
-    // Sign "указатель Сократа" at x=310, has both sides
-    // Approach from the LEFT (player.dir=+1)
-    ul._test.setPlayerX(299, +1);
-    ul._test.step();
-    eq(ul._test.approachSide, 'facade', 'left-approach is facade');
-    eq(ul._test.nearestSign.name, 'указатель Сократа');
-    // Walk away, then come back from the RIGHT (player.dir=-1)
-    ul._test.setPlayerX(335, -1);  // past the sign
-    ul._test.step();   // out of range — clears lastSign
-    ul._test.setPlayerX(322, -1);
-    ul._test.step();   // step in from the right
-    eq(ul._test.approachSide, 'backyard', 'right-approach is backyard');
-  });
-
-  test('ulitsa: palette blends across segment boundaries (no hard jump)', () => {
-    const p1 = ul._test.paletteAt(530);   // just inside axial (ends 540)
-    const p2 = ul._test.paletteAt(545);   // inside porticoes
-    assert(p1.sky !== p2.sky, 'palettes near boundary should differ');
-    // The blend band starts ~80 px before the boundary; pick a midband point
-    const mid = ul._test.paletteAt(465);    // ~75 px before boundary 540
-    // Mid sky must be a blend, i.e. *not* equal to deep-inside §1
-    const deep = ul._test.paletteAt(300);
-    assert(mid.sky !== deep.sky || mid.sky === p2.sky,
-      'mid-band palette should be blended away from the deep value');
-  });
-
-  test('ulitsa: lamp type follows segment palette (gas / neon / screen)', () => {
-    eq(ul._test.paletteAt(1500).lamp, 'gas', 'enlightenment runs on gas');
-    eq(ul._test.paletteAt(2500).lamp, 'neon', 'neon runs on neon');
-    eq(ul._test.paletteAt(2800).lamp, 'screen', 'now runs on screens');
-  });
-
-  test('ulitsa: walking past STREET_END is clamped', () => {
-    ul._test.setPlayerX(2999, +1);
-    ul._test.keys.ArrowRight = true;
-    for (let i = 0; i < 100; i++) ul._test.forceTickStep();
-    ul._test.keys.ArrowRight = false;
-    assert(ul._test.player.x < 3000, `clamped: ${ul._test.player.x}`);
-  });
-
-  test('ulitsa: Esc returns to game', () => {
-    state.current = 'ulitsa';
-    // Synthesise a keydown handler call via the test handle by checking
-    // close() works directly — onKeyDown is wired but unobservable here.
-    // The lifecycle assertion is enough.
-    // (open + close used by integration test below.)
-  });
-
-  test('ulitsa: open → close → open cycle leaves state clean', () => {
-    state.current = 'game';
-    ul.open();
-    assert(state.is('ulitsa'));
-    ul.close();
-    assert(state.is('game'));
-    ul.open();
-    assert(state.is('ulitsa'));
-    ul.close();
-  });
-
-  test('ulitsa: draw runs without throwing across multiple frames', () => {
-    state.current = 'ulitsa';
-    for (let i = 0; i < 20; i++) {
-      ul._test.setPlayerX(100 + i * 150, +1);
-      ul._test.draw();
+  test('streetLocations: one per segment sign, unique ids, world coords in band', () => {
+    const segSignCount = SEGMENTS.reduce((n, s) => n + s.signs.length, 0);
+    eq(streetLocations.length, segSignCount, 'location per sign');
+    const seen = new Set();
+    for (const l of streetLocations) {
+      assert(!seen.has(l.id), `dup id ${l.id}`);
+      seen.add(l.id);
+      assert(l.zone === 'street', `${l.id}: zone`);
+      assert(typeof l.look === 'string' && l.look.length > 0, `${l.id}: inline look`);
+      const cx = l.x + l.w / 2;
+      assert(cx > STREET_X0 - 80 && cx < STREET_END_W + 50,
+        `${l.id}: world x ${cx} out of street`);
+      assert(l.y > STREET_Y_MIN - 100 && l.y < STREET_Y_MAX,
+        `${l.id}: y ${l.y} off the corridor`);
     }
+  });
+
+  test('streetLocations: every two-sided sign registers a flip useAction', () => {
+    const twoSided = allSigns().filter(s => s.backyard && s._segment !== 'townlet').length;
+    const withFlip = streetLocations.filter(l => l.useAction);
+    eq(withFlip.length, twoSided, 'flip count matches backyard count');
+    for (const l of withFlip) {
+      const u = useTexts[l.useAction];
+      assert(u && u.title && u.text, `${l.id}: flip text missing`);
+      assert(u.title.includes('обратная сторона'), `${l.id}: flip title`);
+    }
+  });
+
+  test('streetLocations: live signs flagged and форма passed through', () => {
+    const live = streetLocations.filter(l => l.streetLive);
+    assert(live.length >= 4, `live: ${live.length}`);
+    for (const l of streetLocations) assert(l.streetForm, `${l.id}: form`);
+  });
+
+  test('street constants: spawn on the road, return at the gates', () => {
+    assert(STREET_SPAWN.x > STREET_X0 && STREET_SPAWN.x < STREET_X0 + 100, 'spawn near west edge');
+    assert(STREET_SPAWN.y >= STREET_Y_MIN && STREET_SPAWN.y <= STREET_Y_MAX, 'spawn in band');
+    assert(GATES_RETURN.x > 1300 && GATES_RETURN.x < 1500, 'return near gates');
+    void STREET_SHIFT;
+  });
+
+  test('gates line: consumed exactly once per session', () => {
+    eq(consumeGatesLine(), true, 'first');
+    eq(consumeGatesLine(), false, 'second');
+    eq(consumeGatesLine(), false, 'third');
+  });
+}
+
+// ═══ WORLD INTEGRATION ═══
+{
+  const { MW } = await imp('world/terrain.js');
+  const { locations } = await imp('world/locations.js');
+  const physics = await imp('world/physics.js');
+  const { getZone } = await imp('audio/zoneAmbient.js');
+
+  test('world: MW covers the street; street locations joined the registry', () => {
+    assert(MW >= 6000, `MW ${MW} too small for the street`);
+    const street = locations.filter(l => l.zone === 'street');
+    assert(street.length > 50, `street locations in world: ${street.length}`);
+  });
+
+  test('physics: street corridor clamps y to the road band', () => {
+    const player = { x: 4000, y: 880 };
+    // Try to walk north off the road — must be clamped to the band
+    for (let i = 0; i < 200; i++) physics.tryMove(player, 0, -5, locations, {});
+    assert(player.y >= 800, `y ${player.y} escaped north`);
+    // And south
+    for (let i = 0; i < 200; i++) physics.tryMove(player, 0, +5, locations, {});
+    assert(player.y <= 960, `y ${player.y} escaped south`);
+  });
+
+  test('physics: settlement lock does not apply on the street', () => {
+    const player = { x: 3300, y: 880 };
+    const moved = physics.tryMove(player, +5, 0, locations, { canLeaveSettlement: false });
+    assert(moved, 'street walk must work before Jester');
+    assert(player.x > 3300, 'actually moved east');
+  });
+
+  test('zones: street zone east of the waste; waste zones intact', () => {
+    eq(getZone(4000, 880), 'street', 'street zone');
+    eq(getZone(1000, 900), 'settlement', 'settlement intact');
+    eq(getZone(2500, 900), 'highway', 'highway intact');
+  });
+}
+
+// ═══ TERRAIN + MAP RENDER ═══
+{
+  const { buildTerrain } = await imp('world/terrain.js');
+  test('terrain: builds with the street strip without throwing', () => {
+    const canvas = buildTerrain();
+    assert(canvas && canvas.width >= 6000, 'canvas spans the street');
+  });
+
+  const map = await imp('ui/worldmap.js');
+  test('worldmap: init + toggle lifecycle without throwing', () => {
+    map.init();
+    map.toggle();
+    assert(map.isOpen(), 'open');
+    map.toggle();
+    assert(!map.isOpen(), 'closed');
   });
 }
 

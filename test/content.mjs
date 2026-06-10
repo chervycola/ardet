@@ -69,7 +69,7 @@ setCtx(fakeCtx());
       for (const k of ['id','name','x','y','w','h','zone']) {
         assert(l[k] !== undefined, `loc ${l.id}: missing ${k}`);
       }
-      assert(['settlement','forest','toxic','highway','quarter'].includes(l.zone),
+      assert(['settlement','forest','toxic','highway','quarter','street'].includes(l.zone),
         `loc ${l.id}: unknown zone ${l.zone}`);
       assert(l.w > 0 && l.h > 0, `loc ${l.id}: non-positive size`);
     }
@@ -95,10 +95,15 @@ setCtx(fakeCtx());
   // Locations that aren't ordinary "places" — they're NPC slots:
   const npcSlots = new Set(['jester_home','sol_home','elder_home','nocturnal_home']);
 
-  test('looks: every non-NPC location has an entry', () => {
+  test('looks: every non-NPC location has an entry (street uses inline look)', () => {
     const missing = [];
     for (const l of locations) {
       if (npcSlots.has(l.id)) continue;
+      if (l.zone === 'street') {
+        // Street signs carry their look inline (built from ulitsa_db)
+        if (!l.look) missing.push(`${l.id} (inline)`);
+        continue;
+      }
       if (!looks[l.id]) missing.push(l.id);
     }
     assert(missing.length === 0, `missing looks: ${missing.join(', ')}`);
@@ -224,10 +229,10 @@ setCtx(fakeCtx());
   test('state.transition: all declared transitions actually work', () => {
     const TRANSITIONS = {
       entry: ['game'],
-      game: ['menu','look','dialogue','terminal','shop','ending','ulitsa'],
-      menu: ['game','look','dialogue','terminal','shop','ulitsa'],
+      game: ['menu','look','dialogue','terminal','shop','ending'],
+      menu: ['game','look','dialogue','terminal','shop'],
       look: ['game','menu'], dialogue: ['game'], terminal: ['game'],
-      shop: ['game'], ending: ['game'], ulitsa: ['game'],
+      shop: ['game'], ending: ['game'],
     };
     for (const [from, tos] of Object.entries(TRANSITIONS)) {
       for (const to of tos) {

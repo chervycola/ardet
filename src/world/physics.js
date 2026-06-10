@@ -48,6 +48,12 @@ export function isBlocked(nx, ny, locations) {
   return false;
 }
 
+// Street corridor — east of the waste the world narrows to one road.
+// Kept in sync with world/street.js constants.
+const STREET_EDGE_X = 3100;
+const STREET_BAND = { y1: 800, y2: 960 };
+export function isOnStreet(x) { return x > STREET_EDGE_X; }
+
 // Try to move player, respecting collisions + boundaries
 export function tryMove(player, dx, dy, locations, opts = {}) {
   const { canLeaveSettlement = true } = opts;
@@ -59,8 +65,17 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
   nx = clamp(nx, 10, MW - 22);
   ny = clamp(ny, 170, MH - 30);
 
+  // Street corridor: east of the waste the walkable band is the road
+  if (isOnStreet(nx)) {
+    ny = clamp(ny, STREET_BAND.y1, STREET_BAND.y2);
+  }
+
+  // The street is reached by the gates (made for you alone) — the
+  // settlement lock never applies there.
+  const onStreet = isOnStreet(nx) || isOnStreet(player.x);
+
   // Settlement lock
-  if (!canLeaveSettlement && !isInSettlement(nx, ny)) {
+  if (!canLeaveSettlement && !onStreet && !isInSettlement(nx, ny)) {
     // Stranded outside? Allow any move that *reduces* the distance back
     // to the settlement. Covers two cases:
     //   1) the player was click-teleported to a location whose access

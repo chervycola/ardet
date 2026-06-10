@@ -29,10 +29,11 @@ import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadC
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
-import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
+import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
-import { init as initUlitsa, open as openUlitsa } from './ui/ulitsa.js';
+import { STREET_SPAWN, GATES_RETURN, STREET_X0, consumeGatesLine } from './world/street.js';
+import { init as initWorldMap, toggle as toggleWorldMap } from './ui/worldmap.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -62,7 +63,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
-initUlitsa();
+initWorldMap();
 initCursor();
 initAudio();
 
@@ -290,11 +291,88 @@ function drawLocationPlaceholder(ctx, loc) {
 
 // Location draw: real sprite if migrated, placeholder otherwise
 function drawLocation(ctx, loc) {
+  if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
   const fn = locSprites['draw_' + loc.id];
   if (fn) {
     fn(loc.x, loc.y);
   } else {
     drawLocationPlaceholder(ctx, loc);
+  }
+}
+
+// ═══ STREET SIGNS — small pixel landmarks by form ═══
+function drawStreetSign(ctx, loc) {
+  const x = loc.x + 7;            // anchor center
+  const gy = loc.y + loc.h;       // ground line
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(x - 5, gy, 10, 2);
+
+  const form = loc.streetForm;
+  if (form === 'building') {
+    ctx.fillStyle = '#15100c';
+    ctx.fillRect(x - 9, gy - 30, 18, 30);
+    ctx.fillStyle = '#241c14';
+    ctx.fillRect(x - 8, gy - 29, 16, 28);
+    ctx.fillStyle = '#0a0808';
+    ctx.fillRect(x - 2, gy - 14, 5, 14);          // door
+    ctx.fillStyle = '#b8860b';
+    ctx.fillRect(x + 1, gy - 9, 1, 1);            // handle
+    ctx.fillStyle = loc.streetLive ? '#daa520' : '#3a3022';
+    ctx.fillRect(x - 6, gy - 24, 4, 4);           // windows
+    ctx.fillRect(x + 3, gy - 24, 4, 4);
+  } else if (form === 'kiosk') {
+    ctx.fillStyle = '#3a2418';
+    ctx.fillRect(x - 7, gy - 13, 14, 13);
+    ctx.fillStyle = '#6b0f1a';
+    ctx.fillRect(x - 8, gy - 16, 16, 3);          // awning
+    ctx.fillStyle = '#daa520';
+    ctx.fillRect(x - 5, gy - 9, 2, 1);            // counter glint
+    ctx.fillStyle = '#0a0808';
+    ctx.fillRect(x - 3, gy - 8, 7, 5);            // window
+  } else if (form === 'stand') {
+    ctx.fillStyle = '#3a2818';
+    ctx.fillRect(x - 6, gy - 16, 12, 12);
+    ctx.fillStyle = '#1a1410';
+    ctx.fillRect(x - 5, gy - 4, 2, 4);
+    ctx.fillRect(x + 3, gy - 4, 2, 4);
+    ctx.fillStyle = '#b8860b';
+    ctx.fillRect(x - 5, gy - 15, 10, 1);
+  } else if (form === 'surface') {
+    ctx.fillStyle = '#3a3328';
+    ctx.fillRect(x - 8, gy - 18, 16, 18);
+    ctx.fillStyle = '#1a1a16';
+    ctx.fillRect(x - 7, gy - 17, 14, 3);
+    if (/тень/.test(loc.name)) {
+      ctx.fillStyle = '#0a0a0e';
+      ctx.fillRect(x - 4, gy - 13, 8, 11);        // the recurring shadow
+    }
+  } else {
+    // plaque: post + placard
+    ctx.fillStyle = '#1a1410';
+    ctx.fillRect(x, gy - 14, 2, 14);
+    ctx.fillStyle = '#b8860b';
+    ctx.fillRect(x - 5, gy - 18, 12, 6);
+    ctx.fillStyle = '#3a2818';
+    ctx.fillRect(x - 4, gy - 17, 10, 4);
+  }
+
+  // Live signs: flickering scaffolding + occasional static pip
+  if (loc.streetLive) {
+    ctx.strokeStyle = '#aa7818';
+    ctx.lineWidth = 1;
+    const flick = 0.5 + 0.45 * Math.sin(t * 0.05 + loc.x);
+    ctx.globalAlpha = 0.5 + flick * 0.4;
+    ctx.strokeRect(x - 11, gy - 34, 22, 34);
+    ctx.beginPath();
+    ctx.moveTo(x - 11, gy - 34);
+    ctx.lineTo(x + 11, gy);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (t % 90 < 6) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 12 + ((t * 7) % 24), gy - 36, 1, 1);
+    }
   }
 }
 
@@ -390,6 +468,16 @@ function updateGame() {
     player.moving = false;
   }
 
+  // Walking west past the street's edge returns through the gates
+  if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8) {
+    player.x = GATES_RETURN.x;
+    player.y = GATES_RETURN.y;
+    player.tx = player.x; player.ty = player.y;
+    player.moving = false;
+    camera.x = player.x - scaler.vw / 2;
+    camera.y = player.y - scaler.vh / 2;
+  }
+
   camera.follow(player.x + 6, player.y + 10);
   camera.update();
   camera.clampToWorld(MW, MH);
@@ -445,6 +533,8 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (state.is('menu')) { hideMenu(); return; }
   if (state.is('look') || state.is('dialogue')) return;
   if (!state.is('game')) return;
+  // Lore popup eats the first click: dismiss, don't walk
+  if (loreActive()) { dismissLore(); return; }
 
   const pos = input.screenToWorld(clientX, clientY, camera);
   const loc = findLocationAt(pos.x, pos.y, locations);
@@ -494,8 +584,19 @@ events.on(E.LORE_COLLECT, (item) => {
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
-  // The gates open onto the street (phase 2): one road, gradient of epochs
-  if (actionKey === 'gates_pass') { openUlitsa(); return; }
+  // The gates teleport onto the street: one road, gradient of epochs
+  if (actionKey === 'gates_pass') {
+    player.x = STREET_SPAWN.x;
+    player.y = STREET_SPAWN.y;
+    player.tx = player.x; player.ty = player.y;
+    player.moving = false;
+    camera.x = player.x - scaler.vw / 2;
+    camera.y = player.y - scaler.vh / 2;
+    if (consumeGatesLine()) {
+      showLook({ name: 'Врата', look: 'Эти врата были предназначены для тебя одного. Обычно это узнают позже.' });
+    }
+    return;
+  }
   // Shop actions
   if (actionKey === 'shop1') { openShop('shop1'); return; }
   if (actionKey === 'shop2') { openShop('shop2'); return; }

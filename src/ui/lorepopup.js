@@ -35,6 +35,12 @@ export function showLore(text, live = false) {
   state.startFrame = t;
 }
 
+// Dismiss on click / key — the panel must never trap the screen.
+export function dismiss() {
+  if (state.life > TAIL_FADE) state.life = TAIL_FADE;
+}
+export function isActive() { return state.life > 0; }
+
 export function draw(ctx) {
   if (state.life <= 0) return;
   const elapsed = t - state.startFrame;
@@ -55,13 +61,17 @@ export function draw(ctx) {
   const visEnd = charCount;
   const visible = state.text.substring(visStart, visEnd);
 
-  // Panel
+  // Panel — capped at 40% of the viewport height; long texts scroll
+  // like a terminal (the newest lines stay visible).
   const vw = scaler.vw, vh = scaler.vh;
   const w = Math.min(vw - 16, 360);
   const FONT_SIZE = 9, CHAR_W = 9, LINE_H = 14;
   const maxChars = Math.floor((w - 20) / CHAR_W);
+  const maxBoxH = Math.floor(vh * 0.4);
+  const maxLines = Math.max(2, Math.floor((maxBoxH - 16) / LINE_H));
   const estLines = Math.max(3, Math.ceil(visible.length / maxChars) + 1);
-  const boxH = Math.min(vh - 30, Math.max(60, estLines * LINE_H + 16));
+  const shownLines = Math.min(estLines, maxLines);
+  const boxH = Math.max(60, shownLines * LINE_H + 16);
   const x_ = (vw - w) / 2;
   const y_ = vh - boxH - 8;
 
@@ -90,22 +100,35 @@ export function draw(ctx) {
     }
   }
 
-  // Main text
+  // Main text — wrap into lines first, then draw only the tail that fits
   ctx.fillStyle = '#e8dcc8';
   const words = visible.split(' ');
+  const wrapped = [];
   let line = '';
-  let ly = y_ + 18;
   for (let word of words) {
     while (word.length > maxChars) {
-      if (line.trim()) { ctx.fillText(line, x_ + 10, ly); ly += LINE_H; line = ''; }
-      ctx.fillText(word.substring(0, maxChars), x_ + 10, ly); ly += LINE_H;
+      if (line.trim()) { wrapped.push(line); line = ''; }
+      wrapped.push(word.substring(0, maxChars));
       word = word.substring(maxChars);
     }
     if ((line + word).length > maxChars) {
-      ctx.fillText(line, x_ + 10, ly); ly += LINE_H; line = word + ' ';
+      wrapped.push(line); line = word + ' ';
     } else line += word + ' ';
   }
-  if (line.trim()) ctx.fillText(line, x_ + 10, ly);
+  if (line.trim()) wrapped.push(line);
+  const tail = wrapped.slice(-maxLines);
+  // Overflow marker on the top line when scrolled
+  if (wrapped.length > maxLines) {
+    ctx.globalAlpha = a * 0.4;
+    ctx.fillStyle = '#8a8d8f';
+    ctx.fillText('…', x_ + w - 18, y_ + 12);
+    ctx.globalAlpha = a * 0.95;
+    ctx.fillStyle = '#e8dcc8';
+  }
+  let ly = y_ + 18;
+  for (const ln of tail) { ctx.fillText(ln, x_ + 10, ly); ly += LINE_H; }
+  // keep `line` semantics for the typing cursor below
+  ly -= LINE_H;
 
   // Cursor
   if (!fullyTyped && t % 40 < 20) {
@@ -137,4 +160,12 @@ export function draw(ctx) {
 
   ctx.globalAlpha = 1;
   state.life--;
+}
+
+// Keyboard dismiss — Space / Enter / Escape close the panel early.
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('keydown', (e) => {
+    if (!isActive()) return;
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') dismiss();
+  });
 }

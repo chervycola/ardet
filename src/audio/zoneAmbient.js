@@ -12,6 +12,7 @@ const ZONE_CONFIGS = {
   toxic:      { freq: 65, type: 'square', filterFreq: 200, gain: 0.010 },
   highway:    { freq: 48, type: 'triangle', filterFreq: 120, gain: 0.009 },
   quarter:    { freq: 38, type: 'sine', filterFreq: 80, gain: 0.007 },
+  street:     { freq: 60, type: 'triangle', filterFreq: 90, gain: 0.007 },
 };
 
 function createZoneSound(cfg) {
@@ -69,6 +70,7 @@ export function updateZone(zone) {
 }
 
 export function getZone(x, y) {
+  if (x > 3100) return 'street';
   if (y < 500) return 'forest';
   if (y > 1300) return 'toxic';
   if (x < 400) return 'quarter';

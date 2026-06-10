@@ -2,19 +2,18 @@
 // STATE MACHINE — formal game states
 // ═══════════════════════════════════════
 
-const STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'ulitsa'];
+const STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'];
 
 // Valid transitions (from → to)
 const TRANSITIONS = {
   entry: ['game'],
-  game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'ulitsa'],
-  menu: ['game', 'look', 'dialogue', 'terminal', 'shop', 'ulitsa'],
+  game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'],
+  menu: ['game', 'look', 'dialogue', 'terminal', 'shop'],
   look: ['game', 'menu'],
   dialogue: ['game'],
   terminal: ['game'],
   shop: ['game'],
   ending: ['game'],  // allow reset
-  ulitsa: ['game'],
 };
 
 class StateMachine {

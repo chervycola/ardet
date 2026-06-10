@@ -128,6 +128,11 @@ export const locations = [
     useAction: 'crypt_descend' },
 ];
 
+// The street (ulitsa) signs join the world as ordinary locations.
+// Their look texts are inline (loc.look) — see world/street.js.
+import { streetLocations } from './street.js';
+locations.push(...streetLocations);
+
 // Quick lookup by id
 export const locationById = {};
 for (const loc of locations) locationById[loc.id] = loc;

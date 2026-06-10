@@ -5,6 +5,10 @@ let _player = null;
 
 export function setPlayer(p) { _player = p; }
 
+export function getPlayerPos() {
+  return _player ? { x: _player.x, y: _player.y } : null;
+}
+
 export function playerNearLoc(loc, r) {
   if (!_player || !loc) return false;
   const cx = loc.x + (loc.w || 0) / 2;
