@@ -485,7 +485,7 @@ events.on(E.OBSERVER_MET, (npcId) => {
   flags.observersSeen.add(npcId);
 });
 events.on(E.LORE_COLLECT, (item) => {
-  showLore(item.text);
+  showLore(item.text, item.live);
   playPickup();
   pickupSparkle(item.x, item.y);
 });

@@ -190,6 +190,16 @@ setCtx(fakeCtx());
       assert(typeof it.text === 'string' && it.text.length > 0, `lore ${it.id}: empty text`);
     }
   });
+  test('lore: live flag (Package F) is boolean and present on the live set', () => {
+    const liveIds = loreItems.filter(it => it.live).map(it => it.id).sort();
+    // Handoff designates exactly l91/l92/l99/l102 as live in Phase 1.
+    for (const id of ['l91','l92','l99','l102']) {
+      assert(liveIds.includes(id), `expected ${id} to be live`);
+    }
+    for (const it of loreItems) {
+      if ('live' in it) assert(typeof it.live === 'boolean', `lore ${it.id}: live not boolean`);
+    }
+  });
 }
 
 // ═══ STATE MACHINE ═══

@@ -13,6 +13,7 @@ const TAIL_FADE = 80;    // fade-out after burn
 
 const state = {
   text: '',
+  live: false,   // PHASE 1 / PACKAGE F — "запись продолжается" status
   life: 0,
   totalLife: 0,
   startFrame: 0,
@@ -26,8 +27,9 @@ function computeLife(text) {
   return typeTime + hold + burnTime + TAIL_FADE;
 }
 
-export function showLore(text) {
+export function showLore(text, live = false) {
   state.text = text;
+  state.live = !!live;
   state.totalLife = computeLife(text);
   state.life = state.totalLife;
   state.startFrame = t;
@@ -110,6 +112,24 @@ export function draw(ctx) {
     const cursorX = x_ + 10 + line.length * CHAR_W;
     ctx.fillStyle = '#1a8c1a';
     ctx.fillRect(cursorX, ly - FONT_SIZE, 5, FONT_SIZE + 1);
+  }
+
+  // PHASE 1 / PACKAGE F — "запись продолжается": once the text has fully
+  // typed and before it starts burning, append a muted status line with a
+  // softly blinking cursor. Status only — no timer, no auto-update (Phase 2).
+  if (state.live && fullyTyped && burnCount === 0) {
+    const sy = ly + LINE_H;
+    ctx.globalAlpha = a * (0.45 + 0.2 * Math.sin(t * 0.06));
+    ctx.fillStyle = '#7a6a3a';
+    ctx.font = '7px "Press Start 2P","VT323",monospace';
+    ctx.fillText('— запись продолжается', x_ + 10, sy);
+    // Blinking cursor block at the end of the line
+    if (t % 50 < 25) {
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(x_ + 10 + 21 * 7, sy - 6, 4, 7);
+    }
+    ctx.font = FONT_SIZE + 'px "Press Start 2P","VT323",monospace';
+    ctx.globalAlpha = 1;
   }
 
   // When fully burned, collapse to the tail fade

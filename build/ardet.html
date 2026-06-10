@@ -9695,6 +9695,8 @@ Amor fati. \u041D\u0435
   var TAIL_FADE = 80;
   var state2 = {
     text: "",
+    live: false,
+    // PHASE 1 / PACKAGE F — "запись продолжается" status
     life: 0,
     totalLife: 0,
     startFrame: 0
@@ -9706,8 +9708,9 @@ Amor fati. \u041D\u0435
     const burnTime = n * BURN_SPEED;
     return typeTime + hold + burnTime + TAIL_FADE;
   }
-  function showLore(text) {
+  function showLore(text, live = false) {
     state2.text = text;
+    state2.live = !!live;
     state2.totalLife = computeLife(text);
     state2.life = state2.totalLife;
     state2.startFrame = t;
@@ -9782,6 +9785,19 @@ Amor fati. \u041D\u0435
       const cursorX = x_ + 10 + line.length * CHAR_W;
       ctx2.fillStyle = "#1a8c1a";
       ctx2.fillRect(cursorX, ly - FONT_SIZE, 5, FONT_SIZE + 1);
+    }
+    if (state2.live && fullyTyped && burnCount === 0) {
+      const sy = ly + LINE_H;
+      ctx2.globalAlpha = a * (0.45 + 0.2 * Math.sin(t * 0.06));
+      ctx2.fillStyle = "#7a6a3a";
+      ctx2.font = '7px "Press Start 2P","VT323",monospace';
+      ctx2.fillText("\u2014 \u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F", x_ + 10, sy);
+      if (t % 50 < 25) {
+        ctx2.fillStyle = "#b8860b";
+        ctx2.fillRect(x_ + 10 + 21 * 7, sy - 6, 4, 7);
+      }
+      ctx2.font = FONT_SIZE + 'px "Press Start 2P","VT323",monospace';
+      ctx2.globalAlpha = 1;
     }
     if (burnCount >= totalLen && state2.life > TAIL_FADE) state2.life = TAIL_FADE;
     ctx2.globalAlpha = 1;
@@ -17296,7 +17312,7 @@ Ardet v1.0 \u2014 coming soon.
     flags.observersSeen.add(npcId);
   });
   events.on(E.LORE_COLLECT, (item) => {
-    showLore(item.text);
+    showLore(item.text, item.live);
     playPickup();
     pickupSparkle(item.x, item.y);
   });
