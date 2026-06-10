@@ -244,46 +244,69 @@ canvas#game {
   width: 100%;
 }
 
-/* ── Anfilada (nine halls) ── */
-#anf {
+/* ── Ulitsa (the street: pixel sidescroller + subtitle panel) ── */
+#ulitsa {
   position: fixed;
   inset: 0;
   display: none;
   z-index: 300;
-  background: rgba(8,6,4,0.97);
+  background: rgba(6,4,4,0.98);
   padding: var(--space-l);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   justify-content: center;
+  align-items: center;
 }
-#anf.on { display: flex; }
-#anf-body {
-  max-width: 640px;
+#ulitsa.on { display: flex; }
+#ulitsa-body {
+  max-width: 760px;
   width: 100%;
   font-family: var(--font-pixel);
+}
+#ulitsa-strip {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  image-rendering: pixelated;
+  margin: 0 auto 12px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: #000;
+}
+#ulitsa-hud {
+  font-size: 7px;
+  color: var(--c-ash);
+  margin-bottom: 8px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.ul-hud-seg { color: var(--c-gold); min-width: 160px; }
+.ul-hud-bar { flex: 1; height: 4px; background: rgba(138,141,143,0.18); position: relative; }
+.ul-hud-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c-gold); transition: width 0.1s linear; }
+.ul-hud-nav { font-size: 7px; color: var(--c-ash); }
+#ulitsa-sub {
+  font-size: 9px;
+  color: var(--c-bone);
   line-height: 1.9;
+  min-height: 110px;
+  padding: 10px 14px;
+  border-left: 2px solid var(--c-crimson);
+  background: rgba(20,12,8,0.45);
 }
-.anf-num { font-size: 7px; color: var(--c-ash); margin-bottom: 6px; }
-.anf-title { font-size: 13px; color: var(--c-gold); letter-spacing: 2px; margin-bottom: 4px; }
-.anf-years { font-size: 8px; color: var(--c-ash); margin-bottom: 14px; }
-.anf-side { font-size: 8px; color: var(--c-crimson); margin-bottom: 10px; }
-.anf-text { font-size: 9px; color: var(--c-bone); margin-bottom: 14px; }
-.anf-h { font-size: 8px; color: var(--c-gold); margin: 12px 0 6px; }
-.anf-ex { font-size: 8px; color: var(--c-bone); margin-bottom: 7px; opacity: 0.85; }
-.anf-exn { color: var(--c-gold); }
-.anf-leak { font-size: 8px; color: #7a8a6a; margin-bottom: 6px; font-style: normal; }
-.anf-draft { font-size: 8px; color: #b8a060; margin-bottom: 6px; cursor: pointer; }
-.anf-draft:hover { color: var(--c-gold); }
-.anf-go { color: var(--c-crimson); }
-.anf-nav { font-size: 7px; color: var(--c-ash); margin-top: 20px; border-top: 1px solid rgba(138,141,143,0.25); padding-top: 8px; }
-.anf-gates { font-size: 10px; color: var(--c-bone); margin-top: 30vh; text-align: center; }
-.anf-static { animation: anfstatic 0.45s steps(6) both; }
-@keyframes anfstatic {
-  0% { opacity: 1; filter: none; }
-  30% { opacity: 0.4; filter: contrast(3) brightness(2); }
-  60% { opacity: 0.7; filter: contrast(0.5); }
-  100% { opacity: 1; filter: none; }
-}
+.ul-signname { color: var(--c-gold); font-size: 9px; margin-bottom: 6px; }
+.ul-side { color: var(--c-crimson); font-size: 7px; }
+.ul-text { color: var(--c-bone); }
+.ul-tags { margin-top: 6px; font-size: 7px; }
+.ul-live { color: #b8860b; }
+.ul-whisper { color: #7a8a6a; font-style: italic; margin-left: 8px; }
+.ul-flip { font-size: 7px; color: var(--c-ash); margin-top: 6px; }
+.ul-era { font-size: 7px; color: var(--c-ash); }
+.ul-segname { font-size: 10px; color: var(--c-gold); margin-top: 4px; }
+.ul-hint { font-size: 7px; color: var(--c-ash); opacity: 0.7; margin-top: 4px; }
+.ul-gates { font-size: 10px; color: var(--c-bone); text-align: center; padding: 24px 12px; }
+.ul-prelude #ulitsa-strip { opacity: 0; transition: opacity 0.8s 0.7s; }
+.ul-prelude #ulitsa-hud { opacity: 0; }
 
 /* ── Custom cursor ── */
 #cur {
@@ -376,7 +399,13 @@ canvas#game {
 <div id="look"><h3 id="lt"></h3><div id="lb"></div><div id="li"></div></div>
 <div id="dlg"><div id="dp"><canvas id="dpc" width="80" height="100"></canvas></div><div id="dd"><div id="dn"></div><div id="dt"></div><div id="do"></div></div></div>
 <div id="term"><input id="ti" type="text" autocomplete="off" spellcheck="false"><div id="to"></div></div>
-<div id="anf"><div id="anf-body"></div></div>
+<div id="ulitsa">
+  <div id="ulitsa-body">
+    <div id="ulitsa-hud"></div>
+    <canvas id="ulitsa-strip"></canvas>
+    <div id="ulitsa-sub"></div>
+  </div>
+</div>
 
 <div id="shop1" class="shop-overlay">
   <div class="sh">ПУНКТ ОБМЕНА v.2.77</div>
@@ -468,10 +497,10 @@ canvas#game {
       }
     },
     // Apply to a canvas element
-    applyToCanvas(canvas) {
-      canvas.width = this.physW;
-      canvas.height = this.physH;
-      const ctx2 = canvas.getContext("2d");
+    applyToCanvas(canvas2) {
+      canvas2.width = this.physW;
+      canvas2.height = this.physH;
+      const ctx2 = canvas2.getContext("2d");
       ctx2.setTransform(this.scale, 0, 0, this.scale, 0, 0);
       ctx2.imageSmoothingEnabled = false;
       return ctx2;
@@ -488,9 +517,9 @@ canvas#game {
     },
     // Screen CSS coords → game world coords (for clicks)
     // Assumes canvas fills its CSS box (object-fit: fill).
-    screenToGame(screenX, screenY, camX, camY) {
+    screenToGame(screenX, screenY, camX2, camY) {
       const rect2 = document.getElementById("game").getBoundingClientRect();
-      const gx = (screenX - rect2.left) * (this.vw / rect2.width) + camX;
+      const gx = (screenX - rect2.left) * (this.vw / rect2.width) + camX2;
       const gy = (screenY - rect2.top) * (this.vh / rect2.height) + camY;
       return { x: gx, y: gy };
     }
@@ -883,10 +912,10 @@ canvas#game {
     }
   }
   function buildTerrain() {
-    const canvas = document.createElement("canvas");
-    canvas.width = MW;
-    canvas.height = MH;
-    const ctx2 = canvas.getContext("2d");
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = MW;
+    canvas2.height = MH;
+    const ctx2 = canvas2.getContext("2d");
     ctx2.imageSmoothingEnabled = false;
     for (let y = 0; y < 160; y++) {
       const t2 = y / 160;
@@ -938,7 +967,7 @@ canvas#game {
       ctx2.fillStyle = `rgb(${gray},${gray},${gray - 10})`;
       ctx2.fillRect(Math.floor(x), Math.floor(y), 1, 1);
     }
-    return canvas;
+    return canvas2;
   }
 
   // src/world/locations.js
@@ -1432,53 +1461,53 @@ canvas#game {
     }
     return false;
   }
-  function tryMove(player2, dx, dy, locations2, opts = {}) {
+  function tryMove(player3, dx, dy, locations2, opts = {}) {
     const { canLeaveSettlement: canLeaveSettlement2 = true } = opts;
-    let nx = player2.x + dx;
-    let ny = player2.y + dy;
+    let nx = player3.x + dx;
+    let ny = player3.y + dy;
     nx = clamp(nx, 10, MW - 22);
     ny = clamp(ny, 170, MH - 30);
     if (!canLeaveSettlement2 && !isInSettlement(nx, ny)) {
-      if (!isInSettlement(player2.x, player2.y)) {
-        const cur = settlementDist(player2.x, player2.y);
+      if (!isInSettlement(player3.x, player3.y)) {
+        const cur = settlementDist(player3.x, player3.y);
         if (settlementDist(nx, ny) < cur && !isBlocked(nx, ny, locations2)) {
-          player2.x = nx;
-          player2.y = ny;
+          player3.x = nx;
+          player3.y = ny;
           return true;
         }
-        if (settlementDist(nx, player2.y) < cur && !isBlocked(nx, player2.y, locations2)) {
-          player2.x = nx;
+        if (settlementDist(nx, player3.y) < cur && !isBlocked(nx, player3.y, locations2)) {
+          player3.x = nx;
           return true;
         }
-        if (settlementDist(player2.x, ny) < cur && !isBlocked(player2.x, ny, locations2)) {
-          player2.y = ny;
+        if (settlementDist(player3.x, ny) < cur && !isBlocked(player3.x, ny, locations2)) {
+          player3.y = ny;
           return true;
         }
         return false;
       }
-      const slideX = player2.x + dx;
-      const slideY = player2.y + dy;
-      if (isInSettlement(slideX, player2.y) && !isBlocked(slideX, player2.y, locations2)) {
-        player2.x = clamp(slideX, 10, MW - 22);
+      const slideX = player3.x + dx;
+      const slideY = player3.y + dy;
+      if (isInSettlement(slideX, player3.y) && !isBlocked(slideX, player3.y, locations2)) {
+        player3.x = clamp(slideX, 10, MW - 22);
         return true;
       }
-      if (isInSettlement(player2.x, slideY) && !isBlocked(player2.x, slideY, locations2)) {
-        player2.y = clamp(slideY, 170, MH - 30);
+      if (isInSettlement(player3.x, slideY) && !isBlocked(player3.x, slideY, locations2)) {
+        player3.y = clamp(slideY, 170, MH - 30);
         return true;
       }
       return false;
     }
     if (!isBlocked(nx, ny, locations2)) {
-      player2.x = nx;
-      player2.y = ny;
+      player3.x = nx;
+      player3.y = ny;
       return true;
     }
-    if (!isBlocked(nx, player2.y, locations2)) {
-      player2.x = nx;
+    if (!isBlocked(nx, player3.y, locations2)) {
+      player3.x = nx;
       return true;
     }
-    if (!isBlocked(player2.x, ny, locations2)) {
-      player2.y = ny;
+    if (!isBlocked(player3.x, ny, locations2)) {
+      player3.y = ny;
       return true;
     }
     return false;
@@ -1500,18 +1529,18 @@ canvas#game {
   }
 
   // src/core/state.js
-  var STATES = ["entry", "game", "menu", "look", "dialogue", "terminal", "shop", "ending", "anfilada"];
+  var STATES = ["entry", "game", "menu", "look", "dialogue", "terminal", "shop", "ending", "ulitsa"];
   var TRANSITIONS = {
     entry: ["game"],
-    game: ["menu", "look", "dialogue", "terminal", "shop", "ending", "anfilada"],
-    menu: ["game", "look", "dialogue", "terminal", "shop", "anfilada"],
+    game: ["menu", "look", "dialogue", "terminal", "shop", "ending", "ulitsa"],
+    menu: ["game", "look", "dialogue", "terminal", "shop", "ulitsa"],
     look: ["game", "menu"],
     dialogue: ["game"],
     terminal: ["game"],
     shop: ["game"],
     ending: ["game"],
     // allow reset
-    anfilada: ["game"]
+    ulitsa: ["game"]
   };
   var StateMachine = class {
     constructor() {
@@ -1618,7 +1647,7 @@ canvas#game {
       this.clickHandlers = [];
       this.touchHandlers = [];
     }
-    init(canvas) {
+    init(canvas2) {
       window.addEventListener("keydown", (e) => {
         this.keys[e.key.toLowerCase()] = true;
       });
@@ -1630,18 +1659,18 @@ canvas#game {
         this.mouseX = e.clientX;
         this.mouseY = e.clientY;
       });
-      canvas.addEventListener("click", (e) => {
+      canvas2.addEventListener("click", (e) => {
         this._dispatchClick(e.clientX, e.clientY, "mouse", e);
       });
-      canvas.addEventListener("touchstart", (e) => {
+      canvas2.addEventListener("touchstart", (e) => {
         if (e.touches.length > 1) e.preventDefault();
       }, { passive: false });
-      canvas.addEventListener("touchend", (e) => {
+      canvas2.addEventListener("touchend", (e) => {
         e.preventDefault();
         const touch = e.changedTouches[0];
         this._dispatchClick(touch.clientX, touch.clientY, "touch", e);
       });
-      canvas.addEventListener("touchmove", (e) => {
+      canvas2.addEventListener("touchmove", (e) => {
         e.preventDefault();
         const touch = e.touches[0];
         this.mouseX = touch.clientX;
@@ -1649,8 +1678,8 @@ canvas#game {
       }, { passive: false });
     }
     isDown(action) {
-      const keys = ACTIONS[action] || [];
-      return keys.some((k) => this.keys[k]);
+      const keys2 = ACTIONS[action] || [];
+      return keys2.some((k) => this.keys[k]);
     }
     // Movement vector (normalized)
     getMove() {
@@ -1708,12 +1737,12 @@ canvas#game {
     fireDim: "#7a1410",
     ember: "#ff8030"
   };
-  function drawPlayer(player2) {
+  function drawPlayer(player3) {
     const ctx2 = X;
-    const x = Math.floor(player2.x);
-    const y = Math.floor(player2.y);
-    const dir = player2.dir || 1;
-    const moving = player2.moving;
+    const x = Math.floor(player3.x);
+    const y = Math.floor(player3.y);
+    const dir = player3.dir || 1;
+    const moving = player3.moving;
     const bob = Math.sin(t * 0.04) * 1.2 + (moving ? Math.abs(Math.sin(t * 0.18)) * 0.6 : 0);
     const breath = Math.sin(t * 0.015) * 0.5;
     const sway = Math.sin(t * 0.02) * 0.6;
@@ -8373,29 +8402,29 @@ canvas#game {
   }
 
   // src/ui/transitions.js
-  function fadeIn(el2, duration = 300) {
-    el2.style.opacity = "0";
-    el2.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`;
-    el2.style.transform = "translateY(8px)";
-    el2.offsetHeight;
-    el2.style.opacity = "1";
-    el2.style.transform = "translateY(0)";
+  function fadeIn(el, duration = 300) {
+    el.style.opacity = "0";
+    el.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`;
+    el.style.transform = "translateY(8px)";
+    el.offsetHeight;
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
   }
-  function scaleIn(el2, duration = 250) {
-    el2.style.opacity = "0";
-    el2.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-    el2.style.transform = "scale(0.92)";
-    el2.offsetHeight;
-    el2.style.opacity = "1";
-    el2.style.transform = "scale(1)";
+  function scaleIn(el, duration = 250) {
+    el.style.opacity = "0";
+    el.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+    el.style.transform = "scale(0.92)";
+    el.offsetHeight;
+    el.style.opacity = "1";
+    el.style.transform = "scale(1)";
   }
-  function slideUp(el2, duration = 300) {
-    el2.style.opacity = "0";
-    el2.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`;
-    el2.style.transform = "translateY(20px)";
-    el2.offsetHeight;
-    el2.style.opacity = "1";
-    el2.style.transform = "translateY(0)";
+  function slideUp(el, duration = 300) {
+    el.style.opacity = "0";
+    el.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`;
+    el.style.transform = "translateY(20px)";
+    el.offsetHeight;
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
   }
 
   // src/audio/audio.js
@@ -8703,10 +8732,10 @@ canvas#game {
     dlgIndex = 0;
   }
   function initUI() {
-    document.querySelectorAll(".mi").forEach((el2) => {
-      el2.addEventListener("click", (e) => {
+    document.querySelectorAll(".mi").forEach((el) => {
+      el.addEventListener("click", (e) => {
         e.stopPropagation();
-        menuAction(el2.dataset.a);
+        menuAction(el.dataset.a);
       });
     });
     document.addEventListener("click", (e) => {
@@ -9450,11 +9479,11 @@ Amor fati. \u041D\u0435
 
   // src/world/lore.js
   var collected = /* @__PURE__ */ new Set();
-  function checkLorePickup(player2) {
+  function checkLorePickup(player3) {
     for (const item of loreItems) {
       if (collected.has(item.id)) continue;
-      const dx = player2.x + 6 - item.x;
-      const dy = player2.y + 10 - item.y;
+      const dx = player3.x + 6 - item.x;
+      const dy = player3.y + 10 - item.y;
       if (dx * dx + dy * dy < 800) {
         collected.add(item.id);
         events.emit(E.LORE_COLLECT, item);
@@ -16277,9 +16306,9 @@ quarter\u2551      \u2551 highway
 
   // src/ui/shop.js
   function openShop(id) {
-    const el2 = document.getElementById(id);
-    if (!el2) return;
-    el2.classList.add("on");
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("on");
     state.transition("shop");
   }
   function closeShop() {
@@ -16295,415 +16324,974 @@ quarter\u2551      \u2551 highway
     });
   }
 
-  // src/content/anfilada_db.js
-  var HALLS = [
+  // src/content/ulitsa_db.js
+  var TOWNLET = {
+    id: "townlet",
+    range: [0, 200],
+    name: "\u0433\u043E\u0440\u043E\u0434\u043E\u043A",
+    era: "\u0432\u043D\u0435 \u0432\u0440\u0435\u043C\u0435\u043D\u0438",
+    palette: { sky: "#1a1410", ground: "#2a1e14", lamp: "ember", dust: "#3a2a18" },
+    signs: [
+      {
+        x: 180,
+        name: "\u0443\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C \u0443 \u0432\u0440\u0430\u0442",
+        facade: `\u041E\u0441\u0435\u0432\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u2014 \u043F\u0440\u044F\u043C\u043E. \u0421\u0435\u0439\u0447\u0430\u0441 \u2014 \u043F\u0440\u044F\u043C\u043E \u0436\u0435. \u0414\u043E\u0440\u043E\u0433\u0430 \u043E\u0434\u043D\u0430.`,
+        backyard: `\u041D\u0430\u0437\u0430\u0434 \u2014 \u0432\u0441\u0435\u0433\u0434\u0430. \u0413\u043E\u0440\u043E\u0434\u043E\u043A \u043D\u0435 \u0437\u0430\u043F\u0438\u0440\u0430\u0435\u0442\u0441\u044F. \u041F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043E \u0432\u0435\u0442\u0440\u043E\u043C, \u0433\u043E\u0434\u0430\u043C\u0438, \u0442\u043E\u0431\u043E\u0439.`
+      }
+    ]
+    // No act sign; nothing here is on the street's timeline
+  };
+  var SEGMENTS = [
+    // ── §1 — three fires (axial age) ──
     {
+      id: "axial",
       n: 1,
-      id: "hall1",
-      title: "\u041E\u0421\u0415\u0412\u041E\u0415 \u0412\u0420\u0415\u041C\u042F: \u0422\u0420\u0418 \u041E\u0413\u041D\u042F",
-      years: "VI\u2013IV \u0432\u0432. \u0434\u043E \u043D.\u044D.",
-      facade: `\u0420\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \u0434\u043E\u043F\u0440\u043E\u0441\u0430. \u0417\u0434\u0435\u0441\u044C \u0438\u0437\u043E\u0431\u0440\u0435\u043B\u0438 \u0432\u043E\u043F\u0440\u043E\u0441 \xAB\u0430 \u043F\u043E\u0447\u0435\u043C\u0443, \u0441\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u043E?\xBB \u2014 \u043E\u0434\u043D\u043E\u0432\u0440\u0435\u043C\u0435\u043D\u043D\u043E \u043D\u0430 \u0442\u0440\u0451\u0445 \u044F\u0437\u044B\u043A\u0430\u0445.
-
-\u0413\u0435\u0440\u0430\u043A\u043B\u0438\u0442, \u0411\u0443\u0434\u0434\u0430 \u0438 \u041A\u043E\u043D\u0444\u0443\u0446\u0438\u0439 \u2014 \u0441\u043E\u0432\u0440\u0435\u043C\u0435\u043D\u043D\u0438\u043A\u0438, \u043D\u0435 \u0437\u043D\u0430\u0432\u0448\u0438\u0435 \u0434\u0440\u0443\u0433 \u043E \u0434\u0440\u0443\u0433\u0435. \u0422\u0440\u0438 \u043E\u0433\u043D\u044F \u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u043D\u0430\u0442\u0435: \u043E\u0433\u043E\u043D\u044C-\u043F\u0440\u0438\u0440\u043E\u0434\u0430 (\u043C\u0435\u0440\u0430\u043C\u0438), \u043E\u0433\u043E\u043D\u044C-\u0436\u0430\u0436\u0434\u0430 (\u0442\u0430\u043D\u0445\u0430) \u0438 \u043E\u0447\u0430\u0433-\u0440\u0438\u0442\u0443\u0430\u043B (\u043B\u0438). \u0422\u044B \u2014 \u043F\u0435\u0440\u0432\u044B\u0439, \u043A\u0442\u043E \u0432\u0438\u0434\u0438\u0442 \u0438\u0445 \u0440\u044F\u0434\u043E\u043C.`,
-      backyard: `\u041F\u0440\u0438\u0433\u043E\u0432\u043E\u0440 \u0434\u043E\u043F\u0440\u043E\u0441\u0447\u0438\u043A\u0443 \u2014 \u0446\u0438\u043A\u0443\u0442\u0430 \u0432 \u043F\u0435\u0448\u0435\u0439 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u0438 \u043E\u0442 \u043B\u0443\u0447\u0448\u0438\u0445 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u043E\u0432 \u0432 \u0438\u0441\u0442\u043E\u0440\u0438\u0438.
-
-\u0413\u0435\u0440\u0430\u043A\u043B\u0438\u0442, \u043F\u0440\u0435\u0437\u0438\u0440\u0430\u0432\u0448\u0438\u0439 \u0442\u043E\u043B\u043F\u0443, \u2014 \u0442\u0435\u043F\u0435\u0440\u044C \u0432 \u0446\u0438\u0442\u0430\u0442\u043D\u0438\u043A\u0430\u0445 \u0434\u043B\u044F \u0442\u043E\u043B\u043F\u044B.
-
-\u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u0443 \u0432\u044B\u0445\u043E\u0434\u0430: \xAB\u043C\u0435\u0442\u043E\u0434 \u0434\u043E\u043F\u0440\u043E\u0441\u0430. \u043F\u0430\u0442\u0435\u043D\u0442 \u043D\u0435 \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D. \u0441\u043C. \u043F\u043E\u0441\u043B\u0435\u0434\u0441\u0442\u0432\u0438\u044F \u0432 \u0437\u0430\u043B\u0430\u0445 6\u20139\xBB.`,
-      exhibits: [
-        { name: "\u042D\u0444\u0435\u0441", text: "\u041F\u0435\u0440\u0435\u0441\u043E\u0445\u0448\u0430\u044F \u0440\u0435\u043A\u0430. \u0414\u0432\u0430\u0436\u0434\u044B \u043D\u0435 \u0432\u043E\u0439\u0442\u0438 \u0431\u044B\u043B\u043E \u0438 \u0440\u0430\u043D\u044C\u0448\u0435; \u0442\u0435\u043F\u0435\u0440\u044C \u2014 \u043D\u0438 \u0440\u0430\u0437\u0443." },
-        { name: "\u0410\u0444\u0438\u043D\u044B", text: "\u0410\u0433\u043E\u0440\u0430 \u0438 \u043C\u0435\u0441\u0442\u043E \u043A\u0430\u0437\u043D\u0438 \u0432 \u043F\u0435\u0448\u0435\u0439 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u0438 \u0434\u0440\u0443\u0433 \u043E\u0442 \u0434\u0440\u0443\u0433\u0430. \u0410\u043A\u0430\u0434\u0435\u043C\u0438\u044F \u2014 \u0437\u0430 \u0441\u0442\u0435\u043D\u043E\u0439." },
-        { name: "\u0421\u043B\u0435\u0434 \u043F\u0438\u0444\u043E\u0441\u0430", text: "\u0421\u0430\u043C \u043F\u0438\u0444\u043E\u0441 \u043E\u0441\u0442\u0430\u043B\u0441\u044F \u0432 \u0433\u043E\u0440\u043E\u0434\u043A\u0435: \u0436\u0438\u043B\u0435\u0446 \u0443\u0448\u0451\u043B \u0432 \u0434\u043E\u0440\u043E\u0433\u0443, \u0431\u043E\u0447\u043A\u0430 \u2014 \u043D\u0430 \u0441\u0442\u0430\u0440\u0442." },
-        { name: "\u0421\u0435\u0442\u044C \u0418\u043D\u0434\u0440\u044B (\u0432 \u0437\u0430\u0447\u0430\u0442\u043A\u0435)", text: "\u0410\u043D\u0430\u0442\u0442\u0430. \u041F\u0440\u0430\u0442\u0438\u0442\u044C\u044F-\u0441\u0430\u043C\u0443\u0442\u043F\u0430\u0434\u0430. \u0423\u0437\u043B\u044B \u0443\u0436\u0435 \u043E\u0442\u0440\u0430\u0436\u0430\u044E\u0442 \u0434\u0440\u0443\u0433 \u0434\u0440\u0443\u0433\u0430 \u2014 \u043F\u043E\u043A\u0430 \u0438\u0445 \u043C\u0430\u043B\u043E." },
-        { name: "\u0411\u044E\u0440\u043E \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F \u0438\u043C\u0451\u043D", text: "\u041F\u0440\u0438\u0451\u043C \u0437\u0430\u044F\u0432\u043B\u0435\u043D\u0438\u0439 \u043E \u0437\u0430\u0437\u043E\u0440\u0435 \u043C\u0435\u0436\u0434\u0443 \u0441\u043B\u043E\u0432\u043E\u043C \u0438 \u0432\u0435\u0449\u044C\u044E. \u041E\u0447\u0435\u0440\u0435\u0434\u044C \u043D\u0435 \u0440\u0430\u0441\u0441\u0430\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F." },
-        { name: "\u0411\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u043D\u043E\u0435 \u0434\u0435\u0440\u0435\u0432\u043E", text: "\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043A\u0440\u0438\u0432\u043E\u0435 \u0434\u043B\u044F \u043F\u043B\u043E\u0442\u043D\u0438\u043A\u0430. \u041F\u043E\u044D\u0442\u043E\u043C\u0443 \u2014 \u0441\u0442\u0430\u0440\u043E\u0435. \u0420\u044F\u0434\u043E\u043C \u043D\u043E\u0436 \u0414\u0438\u043D\u0430: \u0446\u0435\u043B\u044B\u0439, \u0434\u0435\u0432\u044F\u0442\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u043B\u0435\u0442 \u0431\u0435\u0437 \u0437\u0430\u0442\u043E\u0447\u043A\u0438." }
-      ],
-      leaks: [
-        "\u0422\u0435\u043D\u044C \u043D\u0430 \u0441\u0442\u0435\u043D\u0435. \u0422\u0430 \u0436\u0435, \u0447\u0442\u043E \u0432 \u0432\u0438\u0442\u0440\u0438\u043D\u0435 \u0437\u0430\u043B\u0430 8 \u0438 \u0432 \u043B\u0435\u043D\u0442\u0435 \u0437\u0430\u043B\u0430 9. \u0421\u0442\u0435\u043D\u0430 \u0442\u0430 \u0436\u0435.",
-        "\u0428\u0443\u0442 \u0437\u0434\u0435\u0441\u044C \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041D\u0430 \u0444\u0430\u0441\u0430\u0434\u0435 \u043D\u0435 \u0448\u0443\u0442\u0438\u0442 \u2014 \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u043E, \u043D\u0435 \u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F.",
-        "\u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C. \u0411\u0435\u0437 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0438."
-      ],
-      drafts: []
+      range: [220, 540],
+      name: "\u0442\u0440\u0438 \u043E\u0433\u043D\u044F",
+      era: "\u043E\u0441\u0435\u0432\u043E\u0435 \u0432\u0440\u0435\u043C\u044F",
+      palette: { sky: "#3a2818", ground: "#4a3a22", lamp: "none", dust: "#5a4632" },
+      signs: [
+        {
+          x: 260,
+          name: "\u0440\u0435\u043A\u0430 \u0413\u0435\u0440\u0430\u043A\u043B\u0438\u0442\u0430",
+          facade: `\u0420\u0435\u043A\u0430 \u0413\u0435\u0440\u0430\u043A\u043B\u0438\u0442\u0430. \u0412\u043E\u0439\u0442\u0438 \u043D\u0435\u043B\u044C\u0437\u044F \u0434\u0432\u0430\u0436\u0434\u044B. \u0422\u0435\u043F\u0435\u0440\u044C \u2014 \u043D\u0438 \u0440\u0430\u0437\u0443.`
+        },
+        {
+          x: 310,
+          name: "\u0443\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C \u0421\u043E\u043A\u0440\u0430\u0442\u0430",
+          facade: `\u0410\u0433\u043E\u0440\u0430 300 \u043C \u2192    \u043C\u0435\u0441\u0442\u043E \u043A\u0430\u0437\u043D\u0438 350 \u043C \u2192`,
+          backyard: `\u041B\u0443\u0447\u0448\u0438\u0435 \u0440\u0430\u0437\u0433\u043E\u0432\u043E\u0440\u044B \u0438 \u0445\u0443\u0434\u0448\u0438\u0439 \u043F\u0440\u0438\u0433\u043E\u0432\u043E\u0440 \u2014 \u0432 \u043E\u0434\u043D\u043E\u043C \u0440\u0430\u0439\u043E\u043D\u0435. \u0417\u043D\u0430\u043D\u0438\u0435 \u043D\u0435 \u0437\u0430\u0449\u0438\u0442\u0438\u043B\u043E \u0434\u0430\u0436\u0435 \u043D\u043E\u0441\u0438\u0442\u0435\u043B\u044F.`
+        },
+        {
+          x: 360,
+          name: "\u043E\u0441\u0435\u0432\u0430\u044F \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u043D\u043E\u0441\u0442\u044C",
+          facade: `\u0417\u0434\u0435\u0441\u044C \u0433\u043E\u0432\u043E\u0440\u0438\u043B\u0438 \u0442\u0440\u043E\u0435, \u043D\u0435 \u0437\u043D\u0430\u0432\u0448\u0438\u0435 \u0434\u0440\u0443\u0433 \u043E \u0434\u0440\u0443\u0433\u0435: \u0432\u0441\u0451 \u0442\u0435\u0447\u0451\u0442 / \u0432\u0441\u0451 \u0441\u0432\u044F\u0437\u0430\u043D\u043E / \u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430.`,
+          backyard: `\u0413\u0435\u0440\u0430\u043A\u043B\u0438\u0442, \u0411\u0443\u0434\u0434\u0430, \u041A\u043E\u043D\u0444\u0443\u0446\u0438\u0439. \u0421\u043E\u0432\u0440\u0435\u043C\u0435\u043D\u043D\u0438\u043A\u0438. \u0422\u0440\u0438 \u043E\u0433\u043D\u044F \u0432 \u043E\u0434\u043D\u043E\u0439 \u0442\u043E\u0447\u043A\u0435. \u0411\u043E\u043B\u044C\u0448\u0435 \u0442\u0430\u043A \u043D\u0435 \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u043B\u043E.`
+        },
+        {
+          x: 410,
+          name: "\u0431\u044E\u0440\u043E \u0438\u0441\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F \u0438\u043C\u0451\u043D",
+          form: "kiosk",
+          facade: `\u0427\u0430\u0441\u0442\u044C \u0438\u043C\u0451\u043D \u043D\u0430 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430\u0445 \u0437\u0430\u0447\u0451\u0440\u043A\u043D\u0443\u0442\u0430 \u0438 \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u0430\u043D\u0430. \u0420\u0430\u0431\u043E\u0442\u0430 \u043D\u0435 \u0437\u0430\u043A\u043E\u043D\u0447\u0435\u043D\u0430. \u0420\u0430\u0431\u043E\u0442\u0430 \u043D\u0435 \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 460,
+          name: "\u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u043D\u043E\u0435 \u0434\u0435\u0440\u0435\u0432\u043E",
+          facade: `\u041A\u0440\u0438\u0432\u043E\u0439 \u0434\u0443\u0431. \u041D\u0435 \u0433\u043E\u0434\u0435\u043D \u043D\u0430 \u0434\u043E\u0441\u043A\u0438, \u043D\u0435 \u0433\u043E\u0434\u0435\u043D \u043D\u0430 \u043A\u043E\u0440\u043C. \u0426\u0435\u043B.`,
+          whisper: "...\u0446\u0435\u043B..."
+        },
+        {
+          x: 500,
+          name: "\u043D\u043E\u0436 \u0414\u0438\u043D\u0430",
+          facade: `\u041D\u043E\u0436 \u043D\u0430 \u043A\u0430\u043C\u043D\u0435. \u0414\u0435\u0432\u044F\u0442\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u043B\u0435\u0442 \u0431\u0435\u0437 \u0437\u0430\u0442\u043E\u0447\u043A\u0438. \u0425\u043E\u0437\u044F\u0438\u043D \u043D\u0435 \u0440\u0443\u0431\u0438\u043B \u2014 \u043D\u0430\u0445\u043E\u0434\u0438\u043B \u043F\u0440\u043E\u043C\u0435\u0436\u0443\u0442\u043A\u0438.`
+        },
+        // Euphemism stand — first stop. Stops at §3, §6, §9, §10.
+        {
+          x: 280,
+          name: "\u0441\u0442\u0435\u043D\u0434 \u044D\u0432\u0444\u0435\u043C\u0438\u0437\u043C\u0430",
+          form: "stand",
+          facade: `\xAB\u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430\xBB \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u043D\u0430 \u0441\u0442\u0435\u043D\u0434\u0435. \u0421\u0432\u0435\u0436\u0430\u044F \u0446\u0430\u0440\u0430\u043F\u0438\u043D\u0430 \u0443 \u043F\u0440\u0430\u0432\u043E\u0433\u043E \u043A\u0440\u0430\u044F.`,
+          backyard: `\u0422\u0430 \u0436\u0435 \u0446\u0430\u0440\u0430\u043F\u0438\u043D\u0430 \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u0435\u0449\u0451 \u0447\u0435\u0442\u044B\u0440\u0435 \u0440\u0430\u0437\u0430. \u041E\u0434\u0438\u043D \u0441\u0442\u0435\u043D\u0434, \u0440\u0430\u0437\u043D\u044B\u0435 \u0441\u043B\u043E\u0432\u0430.`
+        },
+        // Plato cave — first surface. Same shadow recurs at §9, §10.
+        {
+          x: 380,
+          name: "\u0441\u0442\u0435\u043D\u0430 \u0441 \u0442\u0435\u043D\u044C\u044E",
+          form: "surface",
+          facade: `\u041D\u0430 \u0441\u0442\u0435\u043D\u0435 \u2014 \u0442\u0435\u043D\u044C \u0440\u0443\u043A\u0438. \u041D\u0435 \u0442\u0432\u043E\u0435\u0439. \u0421\u0442\u0435\u043D\u0430 \u0442\u0430 \u0436\u0435 \u0431\u0443\u0434\u0435\u0442 \u0432 \u043D\u0435\u043E\u043D\u0435 \u0438 \u0432 \u043B\u0435\u043D\u0442\u0435.`
+        }
+      ]
     },
+    // ── §2 — porticoes (late antiquity) ──
     {
+      id: "porticoes",
       n: 2,
-      id: "hall2",
-      title: "\u041F\u041E\u0420\u0422\u0418\u041A\u0418 \u0418 \u0421\u0410\u0414\u042B",
-      years: "III \u0432. \u0434\u043E \u043D.\u044D. \u2013 V \u0432. \u043D.\u044D.",
-      facade: `\u0422\u0435\u0445\u043D\u0438\u043A\u0438 \u0436\u0438\u0437\u043D\u0438 \u2014 \u0434\u0435\u0448\u0451\u0432\u044B\u0435, \u043F\u0435\u0440\u0435\u043D\u043E\u0441\u0438\u043C\u044B\u0435, \u043A\u043B\u0430\u0441\u0441\u043E\u0432\u043E \u0443\u043D\u0438\u0432\u0435\u0440\u0441\u0430\u043B\u044C\u043D\u044B\u0435: \u0440\u0430\u0431 \u0438 \u0438\u043C\u043F\u0435\u0440\u0430\u0442\u043E\u0440 \u0441 \u043E\u0434\u043D\u0438\u043C \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u043C.
-
-\u0412 \u0437\u0430\u043B\u0435 \u0437\u0432\u0443\u0447\u0438\u0442 \u0433\u043E\u043B\u043E\u0441: \u0445\u0435\u0432\u0435\u043B\u044C, \u0445\u0435\u0432\u0435\u043B\u044C. \u041B\u043E\u043A\u0430\u0446\u0438\u0438 \u0443 \u0433\u043E\u043B\u043E\u0441\u0430 \u043D\u0435\u0442.`,
-      backyard: `\u041B\u0430\u0432\u043A\u0430 memento mori. \u041A\u0430\u0441\u0441\u0430. \u041E\u0447\u0435\u0440\u0435\u0434\u044C.
-
-\u041F\u043B\u0430\u043A\u0430\u0442: \xAB\u0421\u0435\u043D\u0435\u043A\u0430. \u041D\u0435\u0441\u0442\u044F\u0436\u0430\u043D\u0438\u0435. \u0426\u0435\u043D\u044B \u0443\u0442\u043E\u0447\u043D\u044F\u0439\u0442\u0435\xBB.
-
-\u041C\u0435\u043B\u043A\u0438\u0439 \u0448\u0440\u0438\u0444\u0442 \u043F\u043E\u0434 \u0434\u0438\u0445\u043E\u0442\u043E\u043C\u0438\u0435\u0439 \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F: \xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435 \u0432 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0441 1882 \u0433.\xBB.
-
-\u041F\u0435\u0440\u0432\u0430\u044F \u0432 \u0438\u0441\u0442\u043E\u0440\u0438\u0438 \u0432\u0438\u0442\u0440\u0438\u043D\u0430 \u0437\u0430\u0445\u0432\u0430\u0442\u0430 \u2014 \u043C\u043E\u043D\u0435\u0442\u0438\u0437\u0430\u0446\u0438\u044F \u043D\u0430\u0447\u0430\u043B\u0430\u0441\u044C \u043D\u0435 \u0432 XXI \u0432\u0435\u043A\u0435. \u041E\u043D\u0430 \u0440\u043E\u0432\u0435\u0441\u043D\u0438\u0446\u0430 \u043F\u043E\u0440\u0442\u0438\u043A\u0430.`,
-      exhibits: [
-        { name: "\u041F\u043E\u0440\u0442\u0438\u043A", text: "\u0414\u0438\u0445\u043E\u0442\u043E\u043C\u0438\u044F \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F. \u0412 \u043C\u043E\u0435\u0439 \u0432\u043B\u0430\u0441\u0442\u0438 \u2014 \u0441\u0443\u0436\u0434\u0435\u043D\u0438\u044F. \u041D\u0435 \u0432 \u043C\u043E\u0435\u0439 \u2014 \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u043E\u0435. \u041F\u043E\u043A\u043E\u0439 \u0436\u0438\u0432\u0451\u0442 \u043D\u0430 \u0433\u0440\u0430\u043D\u0438\u0446\u0435." },
-        { name: "\u041D\u0430\u0433\u0430\u0440\u0434\u0436\u0443\u043D\u0430", text: "\xAB\u0414\u043B\u044F \u043A\u043E\u0433\u043E \u043F\u0443\u0441\u0442\u043E\u0442\u0430 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430 \u2014 \u0434\u043B\u044F \u0442\u043E\u0433\u043E \u0432\u0441\u0451 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E.\xBB \u0421\u0442\u0435\u043D\u0434 \u043F\u0443\u0441\u0442. \u042D\u0442\u043E \u0438 \u0435\u0441\u0442\u044C \u044D\u043A\u0441\u043F\u043E\u043D\u0430\u0442." },
-        { name: "\u0413\u0438\u043F\u043F\u043E\u043D", text: "\u0410\u0432\u0433\u0443\u0441\u0442\u0438\u043D \u0434\u043E\u043F\u0438\u0441\u044B\u0432\u0430\u043B, \u043F\u043E\u043A\u0430 \u0433\u043E\u0440\u043E\u0434 \u0433\u043E\u0440\u0435\u043B. \u0414\u043E\u043F\u0438\u0441\u0430\u043B. \u0412\u0440\u0435\u043C\u044F \u2014 \u0440\u0430\u0441\u0442\u044F\u0436\u0435\u043D\u0438\u0435 \u0434\u0443\u0448\u0438." }
-      ],
-      leaks: [
-        "\u042D\u0432\u0444\u0435\u043C\u0438\u0437\u043C, \u044D\u043A\u0441\u043F\u043E\u043D\u0430\u0442-\u043F\u0443\u0442\u0435\u0448\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0438\u043A. \u0417\u0434\u0435\u0441\u044C \u0435\u0433\u043E \u044D\u0442\u0438\u043A\u0435\u0442\u043A\u0430: \xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435\xBB. \u0421\u043B\u043E\u0438 \u044D\u0442\u0438\u043A\u0435\u0442\u043E\u043A \u0432\u0438\u0434\u043D\u044B \u043F\u043E \u043A\u0440\u0430\u044E.",
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041A\u043E\u0442 \u0432 \u0437\u0430\u043B \u043D\u0435 \u0437\u0430\u0445\u043E\u0434\u0438\u0442: \u0431\u043B\u044E\u0434\u0446\u0435 \u0432 \u043A\u043E\u0440\u0438\u0434\u043E\u0440\u0435.",
-        "\u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: []
+      range: [540, 820],
+      name: "\u043F\u043E\u0440\u0442\u0438\u043A\u0438 \u0438 \u0441\u0430\u0434\u044B",
+      era: "III \u0434\u043E \u2014 V \u043D.\u044D.",
+      palette: { sky: "#4a3a2a", ground: "#5a4632", lamp: "oil", dust: "#6b5236" },
+      signs: [
+        {
+          x: 580,
+          name: "\u043F\u043E\u0440\u0442\u0438\u043A",
+          form: "building",
+          facade: `\u0414\u0438\u0445\u043E\u0442\u043E\u043C\u0438\u044F \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F: \u0440\u0430\u0437\u043B\u0438\u0447\u0430\u0439, \u0447\u0442\u043E \u0432 \u0442\u0432\u043E\u0435\u0439 \u0432\u043B\u0430\u0441\u0442\u0438, \u0438 \u0431\u0443\u0434\u0435\u0448\u044C \u0441\u0432\u043E\u0431\u043E\u0434\u0435\u043D.`,
+          backyard: `\u041F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435 \u0432 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0441 1882 \u0433. \u0411\u0435\u0437 \u043D\u0435\u0433\u043E \u2014 \u043F\u0440\u043E\u0441\u0442\u043E \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430 \u0442\u0435\u0440\u043F\u0435\u0442\u044C.`
+        },
+        {
+          x: 640,
+          name: "\u043A\u0438\u043E\u0441\u043A MEMENTO MORI\u2122",
+          form: "kiosk",
+          facade: `\u041A\u0430\u0441\u0441\u0430. \u041E\u0447\u0435\u0440\u0435\u0434\u044C. \xAB\u041F\u043E\u043C\u043D\u0438 \u043E \u0441\u043C\u0435\u0440\u0442\u0438. \u0421\u0443\u0432\u0435\u043D\u0438\u0440 \u2014 36 \u0434\u0435\u043D\u0430\u0440\u0438\u0435\u0432. \u0421\u043A\u0438\u0434\u043A\u0430 \u043F\u043E\u0441\u0442\u043E\u044F\u043D\u043D\u044B\u043C.\xBB`,
+          backyard: `\u0417\u0430\u0445\u0432\u0430\u0442 \u0440\u043E\u0432\u0435\u0441\u043D\u0438\u043A \u043F\u043E\u0440\u0442\u0438\u043A\u0430. \u041F\u0435\u0440\u0432\u0430\u044F \u0432 \u0438\u0441\u0442\u043E\u0440\u0438\u0438 \u0432\u0438\u0442\u0440\u0438\u043D\u0430 \u2014 \u0437\u0434\u0435\u0441\u044C.`
+        },
+        {
+          x: 700,
+          name: "\u043F\u043B\u0430\u043A\u0430\u0442 \u0421\u0435\u043D\u0435\u043A\u0438",
+          form: "surface",
+          facade: `\xAB\u0421\u0435\u043D\u0435\u043A\u0430. \u041A\u0443\u0440\u0441 \u043D\u0435\u0441\u0442\u044F\u0436\u0430\u043D\u0438\u044F. \u041E\u043F\u043B\u0430\u0442\u0430 \u043A\u0430\u0440\u0442\u043E\u0439.\xBB \u041F\u043E\u0434\u043F\u0438\u0441\u044C \u0441\u0442\u0451\u0440\u0442\u0430.`
+        },
+        {
+          x: 750,
+          name: "\u0433\u043E\u043B\u043E\u0441 \u042D\u043A\u043A\u043B\u0435\u0437\u0438\u0430\u0441\u0442\u0430",
+          facade: `\u0413\u043E\u043B\u043E\u0441\u0430 \u043D\u0435\u0442, \u0435\u0441\u0442\u044C \u0441\u043B\u043E\u0432\u043E \u0432 \u0432\u043E\u0437\u0434\u0443\u0445\u0435: ...\u0445\u0435\u0432\u0435\u043B\u044C... \u043F\u0430\u0440... \u0438 \u044D\u0442\u043E \u0442\u043E\u0436\u0435 \u043F\u0430\u0440...`,
+          whisper: "...\u0445\u0435\u0432\u0435\u043B\u044C..."
+        },
+        {
+          x: 790,
+          name: "\u0441\u0442\u0435\u043D\u0430-\u0440\u0443\u0438\u043D\u0430 \u0413\u0438\u043F\u043F\u043E\u043D\u0430",
+          form: "surface",
+          facade: `\u0417\u0434\u0435\u0441\u044C \u0434\u043E\u043F\u0438\u0441\u044B\u0432\u0430\u043B\u0438, \u043F\u043E\u043A\u0430 \u0433\u043E\u0440\u043E\u0434 \u0433\u043E\u0440\u0435\u043B. \u0412\u0430\u043D\u0434\u0430\u043B\u044B \u043F\u043E\u0434 \u0441\u0442\u0435\u043D\u043E\u0439. \u0427\u0435\u0440\u043D\u0438\u043B\u0430 \u043D\u0435 \u043A\u043E\u043D\u0447\u0438\u043B\u0438\u0441\u044C \u043F\u0435\u0440\u0432\u044B\u043C\u0438.`
+        },
+        // Euphemism stand — second stop
+        {
+          x: 670,
+          name: "\u0441\u0442\u0435\u043D\u0434 \u044D\u0432\u0444\u0435\u043C\u0438\u0437\u043C\u0430",
+          form: "stand",
+          facade: `\xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435\xBB \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430. \u041F\u043E\u0434 \u043D\u0435\u0439 \u043F\u0440\u043E\u0441\u0432\u0435\u0447\u0438\u0432\u0430\u0435\u0442 \xAB\u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430\xBB.`,
+          backyard: `\u0412\u0442\u043E\u0440\u0430\u044F \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430. \u0422\u0430 \u0436\u0435 \u0446\u0430\u0440\u0430\u043F\u0438\u043D\u0430 \u0443 \u043F\u0440\u0430\u0432\u043E\u0433\u043E \u043A\u0440\u0430\u044F.`
+        }
+      ]
     },
+    // ── §3 — light and garden (medieval) ──
     {
+      id: "lightgarden",
       n: 3,
-      id: "hall3",
-      title: "\u0421\u0412\u0415\u0422, \u0421\u0410\u0414, \u041F\u0423\u0421\u0422\u042B\u041D\u042F",
-      years: "VI\u2013XVI \u0432\u0432.",
-      facade: `\u0421\u0432\u0435\u0442 \u043A\u0430\u043A \u043E\u043D\u0442\u043E\u043B\u043E\u0433\u0438\u044F. \u0410\u0440\u0445\u0438\u0432 \u043A\u0430\u043A \u0432\u0435\u0440\u043D\u043E\u0441\u0442\u044C. \u041F\u0440\u043E\u043C\u0435\u0436\u0443\u0442\u043E\u043A \u043A\u0430\u043A \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u0442\u0432\u043E.
-
-\u0420\u0443\u043C\u0438 \u0438 \u0414\u043E\u0433\u044D\u043D \u2014 \u0441\u043E\u0432\u0440\u0435\u043C\u0435\u043D\u043D\u0438\u043A\u0438: \u0444\u043B\u0435\u0439\u0442\u0430, \u043F\u043E\u044E\u0449\u0430\u044F \u043E \u0442\u0440\u043E\u0441\u0442\u043D\u0438\u043A\u0435, \u0438 \u043F\u0435\u043F\u0435\u043B, \u043D\u0435 \u0431\u044B\u0432\u0448\u0438\u0439 \u0434\u0440\u043E\u0432\u0430\u043C\u0438, \u2014 \u0432 \u043E\u0434\u043D\u043E\u0439 \u043A\u043E\u043C\u043D\u0430\u0442\u0435 \u0434\u0432\u0435 \u0441\u0430\u043C\u044B\u0435 \u0442\u0451\u043F\u043B\u044B\u0435 \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u0438 \u043E\u0441\u0442\u0430\u0442\u043A\u0430.`,
-      backyard: `\u0417\u0430 \u0441\u0432\u0435\u0442 \u043A\u0430\u0437\u043D\u044F\u0442. \u0410\u043B\u0435\u043F\u043F\u043E, 1191 \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u0431\u0435\u0437 \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u044F.
-
-\xAB\u0412\u0435\u0447\u043D\u043E\u0441\u0442\u044C\xBB \u0430\u043A\u043A\u0443\u0440\u0430\u0442\u043D\u043E \u043F\u0435\u0440\u0435\u043F\u043B\u0435\u0442\u0435\u043D\u0430 \u0432 \u0441\u0435\u043C\u0435\u0439\u043D\u044B\u0435 \u0441\u0443\u043D\u0434\u0443\u043A\u0438. \u042D\u043A\u0441\u043F\u043B\u0438\u043A\u0430\u0446\u0438\u044F: \xAB\u0441\u0443\u043D\u0434\u0443\u043A\u0438 \u043F\u0440\u0438\u0433\u043E\u0434\u044F\u0442\u0441\u044F. \u0441\u043C. \u0437\u0430\u043B 9\xBB.`,
-      exhibits: [
-        { name: "\u0421\u043A\u0438\u0442", text: "\u0410\u043F\u043E\u0444\u0430\u0442\u0438\u043A\u0430. \u041B\u043E\u043A\u0430\u0446\u0438\u044F \u0431\u0435\u0437 \u0442\u0435\u043A\u0441\u0442\u0430." },
-        { name: "\u0418\u0441\u0444\u0430\u0445\u0430\u043D-\u043F\u0440\u0435\u0434\u0442\u0435\u0447\u0430", text: "\u041B\u0435\u0442\u044F\u0449\u0438\u0439 \u0447\u0435\u043B\u043E\u0432\u0435\u043A: \u0431\u0435\u0437 \u0447\u0443\u0432\u0441\u0442\u0432, \u0431\u0435\u0437 \u0442\u0435\u043B\u0430 \u2014 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \xAB\u044F \u0435\u0441\u0442\u044C\xBB. \u0428\u0435\u0441\u0442\u044C \u0432\u0435\u043A\u043E\u0432 \u0434\u043E \u0414\u0435\u043A\u0430\u0440\u0442\u0430." },
-        { name: "\u041A\u0430\u0437\u043D\u0451\u043D\u043D\u044B\u0439 \u0441\u0432\u0435\u0442", text: "\u0421\u0443\u0445\u0440\u0430\u0432\u0430\u0440\u0434\u0438, 1191. \u0424\u0430\u0439\u043B .ishraq \u043D\u0435 \u0434\u043E\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442\u0441\u044F. \u042D\u0442\u043E \u043D\u0435 \u043E\u0448\u0438\u0431\u043A\u0430." },
-        { name: "\u041A\u043E\u043D\u044C\u044F", text: "\u0424\u043B\u0435\u0439\u0442\u0430 \u043F\u043E\u0451\u0442 \u043E \u0442\u0440\u043E\u0441\u0442\u043D\u0438\u043A\u0435, \u0438\u0437 \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u0441\u0440\u0435\u0437\u0430\u043D\u0430." },
-        { name: "\u0421\u0435\u0442\u044C \u0418\u043D\u0434\u0440\u044B (\u043F\u043E\u043B\u043D\u0430\u044F \u0441\u0431\u043E\u0440\u043A\u0430)", text: "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0437\u0435\u043B \u043E\u0442\u0440\u0430\u0436\u0430\u0435\u0442 \u0432\u0441\u0435 \u0443\u0437\u043B\u044B. \u0412\u043A\u043B\u044E\u0447\u0430\u044F \u0441\u043C\u043E\u0442\u0440\u044F\u0449\u0438\u0439." },
-        { name: "\u042D\u0439\u0445\u044D\u0439\u0434\u0437\u0438-\u043F\u0440\u0438\u0437\u0440\u0430\u043A", text: "\u041F\u0435\u043F\u0435\u043B \u2014 \u043D\u0435 \u0431\u044B\u0432\u0448\u0438\u0435 \u0434\u0440\u043E\u0432\u0430. \u0423 \u043F\u0435\u043F\u043B\u0430 \u0441\u0432\u043E\u0451 \u0441\u0435\u0439\u0447\u0430\u0441." },
-        { name: "\u0414\u043E\u043C \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043A\u043E\u043C\u043D\u0430\u0442", text: "1377. \u041F\u0435\u0440\u0432\u044B\u0439 \u043F\u043E\u0441\u0442\u0440\u043E\u0438\u043B. \u0412\u0442\u043E\u0440\u043E\u0439 \u0437\u0430\u043F\u0435\u0440. \u0422\u0440\u0435\u0442\u0438\u0439 \u0432\u043E\u0437\u043B\u0451\u0433. \u0427\u0435\u0442\u0432\u0451\u0440\u0442\u044B\u0439 \u043D\u0435 \u043F\u043E\u043D\u044F\u043B \u0432\u043E\u043F\u0440\u043E\u0441\u0430." },
-        { name: "\u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443", text: "\u0411\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0430 \u0432 \u0440\u0430\u0441\u0446\u0432\u0435\u0442\u0435. XV\u2013XVI. \u041E\u043F\u0438\u0441\u044C. \u0421\u0443\u043D\u0434\u0443\u043A. \u041E\u0441\u0451\u043B." },
-        { name: "\u0420\u0451\u0430\u043D\u0434\u0437\u0438 \u0438 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0430\u044F \u043A\u0438\u043D\u0446\u0443\u0433\u0438", text: "\u0422\u0440\u0435\u0449\u0438\u043D\u0443 \u043D\u0435 \u043F\u0440\u044F\u0447\u0443\u0442 \u2014 \u0432\u0435\u0434\u0443\u0442 \u0437\u043E\u043B\u043E\u0442\u043E\u043C. \u041F\u0440\u043E\u043C\u0435\u0436\u0443\u0442\u043E\u043A \u2014 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u0442\u0432\u043E." },
-        { name: "\u0425\u0438\u0436\u0438\u043D\u0430 \u041A\u0430\u043C\u043E-\u043D\u043E \u0422\u0451\u043C\u044D\u044F", text: "\u041A\u0432\u0430\u0434\u0440\u0430\u0442\u043D\u044B\u0439 \u0441\u0430\u0436\u0435\u043D\u044C. \u0420\u0435\u043A\u0430 \u0442\u0435\u0447\u0451\u0442, \u0432\u043E\u0434\u0430 \u043D\u0435 \u0442\u0430 \u0436\u0435. \u0425\u0438\u0436\u0438\u043D\u0430 \u0441\u043E\u0433\u043B\u0430\u0441\u043D\u0430." }
-      ],
-      leaks: [
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: [
-        { name: "\u0414\u0432\u0435\u0440\u044C \u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443", note: "\u043F\u0435\u0440\u0432\u0430\u044F \u0434\u0432\u0435\u0440\u044C-\u0441\u043A\u0432\u043E\u0437\u043D\u044F\u043A \u0430\u043D\u0444\u0438\u043B\u0430\u0434\u044B: \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0430 \u0441\u0442\u043E\u0438\u0442 \u0437\u0434\u0435\u0441\u044C, \u0441\u043F\u0430\u0441\u0435\u043D\u0438\u0435 \u2014 \u0442\u0430\u043C" },
-        { name: "\u0418\u0441\u0444\u0430\u0445\u0430\u043D", note: "\u0441\u043A\u0432\u043E\u0437\u0438\u0442 \u0432 \xAB\u0441\u0435\u0439\u0447\u0430\u0441\xBB" }
+      range: [820, 1240],
+      name: "\u0441\u0432\u0435\u0442 \u0438 \u0441\u0430\u0434",
+      era: "VI\u2013XVI \u0432\u0432.",
+      palette: { sky: "#3a2a3a", ground: "#5a4634", lamp: "lantern", dust: "#7a5236" },
+      signs: [
+        {
+          x: 860,
+          name: "\u0434\u043E\u043C \u0431\u0435\u0437 \u0432\u0438\u0434\u0438\u043C\u043E\u0433\u043E \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u0430 \u0441\u0432\u0435\u0442\u0430",
+          form: "building",
+          facade: `\u0421\u0432\u0435\u0442\u043B\u043E. \u041B\u0430\u043C\u043F\u044B \u043D\u0435\u0442. \u041D\u0430 \u043F\u043E\u043B\u043A\u0430\u0445 \u2014 \u0410\u0432\u0438\u0446\u0435\u043D\u043D\u0430, \u0421\u0443\u0445\u0440\u0430\u0432\u0430\u0440\u0434\u0438, \u0421\u0430\u0434\u0440\u0430. \u0422\u0435\u0440\u043C\u0438\u043D\u0430\u043B \u0432\u043D\u0443\u0442\u0440\u0438: .ishraq`,
+          backyard: `\u0417\u0430 \u044D\u0442\u043E\u0442 \u0441\u0432\u0435\u0442 \u043A\u0430\u0437\u043D\u0438\u043B\u0438 \u0432 \u0410\u043B\u0435\u043F\u043F\u043E, 1191. \u0421\u0432\u0435\u0442 \u043D\u0435 \u043E\u0442\u043C\u0435\u043D\u0438\u043B\u0438.`
+        },
+        {
+          x: 920,
+          name: "\u043F\u0435\u0449\u0435\u0440\u0430",
+          form: "building",
+          facade: `\u0420\u043E\u0432\u043D\u044B\u0439 \u0441\u0432\u0435\u0442, \u0441\u043B\u043E\u0432\u043E \u043D\u0430 \u0433\u0435\u044D\u0437\u0435. \u041E\u0434\u0438\u043D \u0447\u0435\u043B\u043E\u0432\u0435\u043A, \u0442\u0435\u043C\u043D\u043E\u0442\u0430. \u0422\u0435\u0440\u043C\u0438\u043D\u0430\u043B: .hatata`,
+          backyard: `\u0410\u0432\u0442\u043E\u0440 \u043E\u0441\u043F\u043E\u0440\u0435\u043D. \u041C\u0435\u0442\u043E\u0434 \u2014 \u043D\u0435\u0442. \u0418\u0441\u043F\u043E\u043B\u043D\u0438 \u2014 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0448\u044C.`
+        },
+        {
+          x: 970,
+          name: "\u0441\u043A\u0438\u0442",
+          facade: `......`
+          // single surface without text by design
+        },
+        {
+          x: 1020,
+          name: "\u0434\u043E\u043C \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043A\u043E\u043C\u043D\u0430\u0442",
+          facade: `\u041F\u0435\u0440\u0432\u044B\u0439 \u043F\u043E\u0441\u0442\u0440\u043E\u0438\u043B. \u0412\u0442\u043E\u0440\u043E\u0439 \u0437\u0430\u043F\u0435\u0440. \u0422\u0440\u0435\u0442\u0438\u0439 \u0432\u043E\u0437\u043B\u0451\u0433. \u0427\u0435\u0442\u0432\u0451\u0440\u0442\u044B\u0439 \u043D\u0435 \u043F\u043E\u043D\u044F\u043B \u0432\u043E\u043F\u0440\u043E\u0441\u0430.`
+        },
+        {
+          x: 1080,
+          name: "\u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443",
+          form: "building",
+          live: true,
+          facade: `\u041F\u043E\u043B\u043A\u0438 \u043F\u043E\u043B\u0443\u043F\u0443\u0441\u0442\u044B, \u0441\u043B\u0435\u0434\u044B \u0441\u0443\u043D\u0434\u0443\u043A\u043E\u0432. \u0422\u0435\u0440\u043C\u0438\u043D\u0430\u043B: .timbuktu. \u0423\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C: \xAB\u0430\u0440\u0445\u0438\u0432 \u2192 \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0451\u043D \u2192 \u0430\u0434\u0440\u0435\u0441 \u0437\u043D\u0430\u0435\u0442 \u043D\u0438\u043A\u0442\u043E\xBB.`,
+          backyard: `\u0414\u0432\u0435\u0440\u044C-\u0441\u043A\u0432\u043E\u0437\u043D\u044F\u043A. \u0421 \u043E\u0431\u0440\u0430\u0442\u043D\u043E\u0439 \u0441\u0442\u043E\u0440\u043E\u043D\u044B \u0441\u043B\u044B\u0448\u043D\u043E \u0440\u0430\u0434\u0438\u043E: \xAB...\u043E\u043F\u0438\u0441\u044C... \u0441\u0443\u043D\u0434\u0443\u043A... \u043E\u0441\u0451\u043B...\xBB \u2014 \u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 1130,
+          name: "\u0444\u043B\u0435\u0439\u0442\u0430 \u0420\u0443\u043C\u0438",
+          facade: `\u0422\u0440\u043E\u0441\u0442\u043D\u0438\u043A\u043E\u0432\u0430\u044F \u0444\u043B\u0435\u0439\u0442\u0430 \u043D\u0430 \u043A\u0430\u043C\u043D\u0435. \u041F\u043E\u0451\u0442 \u043E \u0442\u0440\u043E\u0441\u0442\u043D\u0438\u043A\u0435, \u0438\u0437 \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u0441\u0440\u0435\u0437\u0430\u043D\u0430.`,
+          whisper: "...\u043F\u043E\u0451\u0442, \u043F\u043E\u0442\u043E\u043C\u0443 \u0447\u0442\u043E \u0441\u0440\u0435\u0437\u0430\u043D\u0430..."
+        },
+        {
+          x: 1170,
+          name: "\u0441\u0430\u0434 \u043A\u0430\u043C\u043D\u0435\u0439 \u0420\u0451\u0430\u043D\u0434\u0437\u0438",
+          facade: `\u041F\u044F\u0442\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u043A\u0430\u043C\u043D\u0435\u0439. \u0412\u0438\u0434\u043D\u043E \u0447\u0435\u0442\u044B\u0440\u043D\u0430\u0434\u0446\u0430\u0442\u044C. \u0422\u0430\u043A \u0437\u0430\u0434\u0443\u043C\u0430\u043D\u043E.`
+        },
+        {
+          x: 1210,
+          name: "\u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0430\u044F \u043A\u0438\u043D\u0446\u0443\u0433\u0438",
+          facade: `\u0427\u0430\u0448\u0430 \u0441\u043E \u0437\u043E\u043B\u043E\u0442\u044B\u043C\u0438 \u0448\u0432\u0430\u043C\u0438. \u0420\u0430\u0437\u0431\u0438\u0432\u0430\u043B\u0430\u0441\u044C. \u0428\u0432\u044B \u2014 \u0437\u043E\u043B\u043E\u0442\u043E\u043C. \u0411\u0438\u043E\u0433\u0440\u0430\u0444\u0438\u044E \u043D\u0435 \u043F\u0440\u044F\u0447\u0443\u0442 \u2014 \u043F\u0440\u043E\u044F\u0432\u043B\u044F\u044E\u0442.`
+        }
       ]
     },
+    // ── §4 — two hearths (XVII) ──
     {
+      id: "twohearths",
       n: 4,
-      id: "hall4",
-      title: "\u0414\u0412\u0410 \u041E\u0427\u0410\u0413\u0410",
-      years: "XVII \u0432.",
-      facade: `\u0427\u0438\u0441\u0442\u044B\u0439 \u0440\u0430\u0437\u0443\u043C, \u0440\u0430\u0437\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0439 \u0432 \u043E\u0442\u0432\u0435\u0434\u0451\u043D\u043D\u043E\u043C \u043C\u0435\u0441\u0442\u0435. \u041E\u0447\u0430\u0433 \u2014 \u043E\u0433\u043E\u043D\u044C, \u0441\u043E\u0433\u043B\u0430\u0441\u0438\u0432\u0448\u0438\u0439\u0441\u044F \u043D\u0430 \u0433\u0440\u0430\u043D\u0438\u0446\u0443.
-
-\u041E\u0434\u0438\u043D \u0432\u0435\u043A, \u0434\u0432\u0430 \u0434\u043E\u043F\u0440\u043E\u0441\u0430 \u0432\u0441\u0435\u0445 \u0430\u0432\u0442\u043E\u0440\u0438\u0442\u0435\u0442\u043E\u0432 \u0441\u0432\u0435\u0442\u043E\u043C \u0440\u0430\u0437\u0443\u043C\u0430, \u0447\u0435\u0442\u044B\u0440\u0435 \u0442\u044B\u0441\u044F\u0447\u0438 \u043A\u0438\u043B\u043E\u043C\u0435\u0442\u0440\u043E\u0432, \u043F\u043E\u043B\u043D\u043E\u0435 \u0432\u0437\u0430\u0438\u043C\u043D\u043E\u0435 \u043D\u0435\u0437\u043D\u0430\u043D\u0438\u0435. \u0421\u0438\u043B\u0430 \u0437\u0430\u043B\u0430 \u0432 \u043C\u0430\u043B\u043E\u0441\u0442\u0438: \u0434\u0432\u0430 \u043E\u0433\u043D\u044F \u0438 \u0442\u0438\u0448\u0438\u043D\u0430.`,
-      backyard: `\u041A\u0430\u043D\u043E\u043D \u0437\u0430\u043F\u043E\u043C\u043D\u0438\u043B \u043E\u0434\u0438\u043D \u043E\u0447\u0430\u0433 \u0438\u0437 \u0434\u0432\u0443\u0445 \u2014 \u0443 \u0432\u0442\u043E\u0440\u043E\u0433\u043E \u043E\u0441\u043F\u043E\u0440\u0438\u043B\u0438 \u0434\u0430\u0436\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u044C.
-
-\u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430: \xAB\u0430\u0432\u0442\u043E\u0440 \u043E\u0441\u043F\u043E\u0440\u0435\u043D. \u043C\u0435\u0442\u043E\u0434 \u2014 \u043D\u0435\u0442. \u0438\u0441\u043F\u043E\u043B\u043D\u0438 \u2014 \u0438 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0448\u044C\xBB.
-
-\u041F\u0440\u0438\u043F\u0438\u0441\u043A\u0430 \u043C\u0435\u043B\u043E\u043C: \xAB\u0433\u0430\u0440\u0430\u043D\u0442 \u044F\u0441\u043D\u044B\u0445 \u0438\u0434\u0435\u0439 \u043D\u0435 \u0432\u044B\u0448\u0435\u043B \u043D\u0430 \u0441\u0432\u044F\u0437\u044C. \u043E\u0447\u0430\u0433\u0438 \u0440\u0430\u0431\u043E\u0442\u0430\u044E\u0442 \u0431\u0435\u0437 \u0433\u0430\u0440\u0430\u043D\u0442\u0430. \u0434\u0430\u0432\u043D\u043E\xBB.`,
-      exhibits: [
-        { name: "\u041F\u0435\u0447\u044C", text: "\u0410\u043C\u0441\u0442\u0435\u0440\u0434\u0430\u043C. \u0427\u0435\u0442\u044B\u0440\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430, \u0432\u043E\u0439\u043D\u0430 \u0437\u0430 \u043E\u043A\u043D\u043E\u043C. \u0413\u043E\u0440\u0438\u0442 \u043C\u0435\u0440\u0430\u043C\u0438, \u0432 \u043E\u0442\u0432\u0435\u0434\u0451\u043D\u043D\u043E\u043C \u043C\u0435\u0441\u0442\u0435." },
-        { name: "\u041F\u0435\u0449\u0435\u0440\u0430", text: "\u0413\u043E\u043B\u0443\u0431\u043E\u0439 \u041D\u0438\u043B. \u0425\u0430\u0442\u0430\u0442\u0430, \u0433\u043E\u043D\u0435\u043D\u0438\u044F \u0441\u043D\u0430\u0440\u0443\u0436\u0438. \u041E\u0434\u0438\u043D \u0447\u0435\u043B\u043E\u0432\u0435\u043A, \u0442\u0435\u043C\u043D\u043E\u0442\u0430." },
-        { name: "\u041B\u0438\u043D\u0437\u0430 \u0448\u043B\u0438\u0444\u043E\u0432\u0449\u0438\u043A\u0430", text: "Conatus. \u0421\u0442\u0435\u043A\u043B\u043E, \u0447\u0435\u0440\u0435\u0437 \u043A\u043E\u0442\u043E\u0440\u043E\u0435 \u0441\u043C\u043E\u0442\u0440\u044F\u0442, \u0443\u0431\u0438\u043B\u043E \u0448\u043B\u0438\u0444\u043E\u0432\u0449\u0438\u043A\u0430." }
-      ],
-      leaks: [
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: []
+      range: [1240, 1440],
+      name: "\u0434\u0432\u0430 \u043E\u0447\u0430\u0433\u0430",
+      era: "XVII \u0432\u0435\u043A",
+      palette: { sky: "#2a3450", ground: "#3a3a4a", lamp: "candle", dust: "#5a5236" },
+      signs: [
+        {
+          x: 1280,
+          name: "\u0434\u043E\u043C \u0441 \u043F\u0435\u0447\u044C\u044E",
+          form: "building",
+          facade: `\u041E\u0447\u0430\u0433 \u0433\u043E\u0440\u0438\u0442 \u0440\u043E\u0432\u043D\u043E, \u043D\u0430 \u0441\u0442\u043E\u043B\u0435 \u0447\u0435\u0442\u044B\u0440\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430, \u043E\u043A\u043D\u043E \u0437\u0430\u043A\u0440\u044B\u0442\u043E, \u0437\u0430 \u043D\u0438\u043C \u0432\u043E\u0439\u043D\u0430. \u0422\u0435\u0440\u043C\u0438\u043D\u0430\u043B: .demon`,
+          backyard: `\u0413\u0430\u0440\u0430\u043D\u0442 \u044F\u0441\u043D\u044B\u0445 \u0438\u0434\u0435\u0439 \u043D\u0435 \u0432\u044B\u0448\u0435\u043B \u043D\u0430 \u0441\u0432\u044F\u0437\u044C \u0441 1650. \u041E\u0447\u0430\u0433 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0431\u0435\u0437 \u043D\u0435\u0433\u043E.`
+        },
+        {
+          x: 1340,
+          name: "\u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0430\u044F \u043B\u0438\u043D\u0437",
+          facade: `\u0421\u0442\u0435\u043A\u043B\u043E, \u0447\u0435\u0440\u0435\u0437 \u043A\u043E\u0442\u043E\u0440\u043E\u0435 \u0441\u043C\u043E\u0442\u0440\u044F\u0442. \u0423\u0431\u0438\u043B\u043E \u0448\u043B\u0438\u0444\u043E\u0432\u0449\u0438\u043A\u0430 \u2014 \u043F\u044B\u043B\u044C\u044E.`,
+          backyard: `\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442 \u0437\u0440\u0435\u043D\u0438\u044F \u043A\u0430\u043A \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u044B\u0439 \u044F\u0434. \u0421\u043B\u0443\u0447\u0430\u0439 \u043D\u0435 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439.`
+        },
+        {
+          x: 1400,
+          name: "\u0443\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C \u043D\u0430\u0437\u0430\u0434",
+          facade: `\u0412\u0442\u043E\u0440\u043E\u0439 \u043E\u0447\u0430\u0433 \u2014 \u043D\u0430\u0437\u0430\u0434 \u043F\u043E \u0443\u043B\u0438\u0446\u0435, 4 \u043A\u043C \u0438 \u043F\u043E\u043B\u0432\u0435\u043A\u0430. \u041E\u043D\u0438 \u043D\u0435 \u0437\u043D\u0430\u043B\u0438 \u0434\u0440\u0443\u0433 \u043E \u0434\u0440\u0443\u0433\u0435.`
+        }
+      ]
     },
+    // ── §5 — small print (Enlightenment) ──
     {
+      id: "enlightenment",
       n: 5,
-      id: "hall5",
-      title: "\u041F\u0420\u041E\u0421\u0412\u0415\u0429\u0415\u041D\u0418\u0415, \u041C\u0415\u041B\u041A\u0418\u0419 \u0428\u0420\u0418\u0424\u0422",
-      years: "XVIII \u0432.",
-      facade: `Sapere aude \u2014 \u0438\u043C\u0435\u0439 \u043C\u0443\u0436\u0435\u0441\u0442\u0432\u043E \u0437\u043D\u0430\u0442\u044C. \u041F\u0440\u0430\u0432\u0430, \u043D\u0430\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0435 \u043D\u0430 \u0431\u0443\u043C\u0430\u0433\u0435, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u0443\u0442\u0440\u0430\u0447\u0435\u043D\u043D\u0443\u044E \u0434\u0438\u0441\u0441\u0435\u0440\u0442\u0430\u0446\u0438\u044E \u043E \u043F\u0440\u0430\u0432\u0430\u0445.
-
-\u041A\u0430\u043D\u0442, \u043F\u043E \u043A\u043E\u0442\u043E\u0440\u043E\u043C\u0443 \u0441\u0432\u0435\u0440\u044F\u043B\u0438 \u0447\u0430\u0441\u044B, \u0438 \u0421\u043A\u043E\u0432\u043E\u0440\u043E\u0434\u0430, \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u043D\u0435 \u043F\u043E\u0439\u043C\u0430\u043B \u043C\u0438\u0440, \u2014 \u043E\u0434\u043D\u0430 \u044D\u043F\u043E\u0445\u0430, \u0434\u0432\u0430 \u043E\u0442\u0432\u0435\u0442\u0430 \u043D\u0430 \u0432\u043E\u043F\u0440\u043E\u0441 \u043E \u043C\u0430\u0440\u0448\u0440\u0443\u0442\u0435: \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u044C \u0438 \u043D\u0435\u0443\u043B\u043E\u0432\u0438\u043C\u043E\u0441\u0442\u044C.`,
-      backyard: `\u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 \u043D\u0430 \u043C\u0443\u0436\u0435\u0441\u0442\u0432\u043E \u0437\u043D\u0430\u0442\u044C. \u041F\u0440\u0435\u0439\u0441\u043A\u0443\u0440\u0430\u043D\u0442: \xAB\u0441\u043C\u0435\u043B\u043E\u0441\u0442\u044C, \u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0439 \u0442\u0430\u0440\u0438\u0444\xBB.
-
-\u0427\u0430\u0441\u044B \u0441\u0442\u043E\u044F\u0442 \u2014 \u0441\u0432\u0435\u0440\u044F\u0442\u044C \u043D\u0435\u043A\u043E\u043C\u0443.
-
-\u0410\u043C\u043E \u0432\u0435\u0440\u043D\u0443\u043B\u0441\u044F. \u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430: \xAB\u0430\u0440\u0433\u0443\u043C\u0435\u043D\u0442\u044B \u043D\u0435 \u0437\u0430\u0449\u0438\u0449\u0430\u044E\u0442 \u043E\u0442 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438. \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F \u043D\u0435 \u043F\u0440\u0438\u0448\u043B\u0430. \u043E\u043D \u0443\u0448\u0451\u043B\xBB.
-
-\u0418\u0437 \xAB\u0435\u0441\u0442\u044C\xBB \u043F\u043E-\u043F\u0440\u0435\u0436\u043D\u0435\u043C\u0443 \u0432\u044B\u0432\u043E\u0434\u044F\u0442 \xAB\u0434\u043E\u043B\u0436\u043D\u043E\xBB \u2014 \u043A\u0430\u0441\u0441\u0430 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0431\u0435\u0437 \u043F\u0435\u0440\u0435\u0440\u044B\u0432\u0430 \u0441 1739 \u0433\u043E\u0434\u0430.`,
-      exhibits: [
-        { name: "\u041A\u0451\u043D\u0438\u0433\u0441\u0431\u0435\u0440\u0433", text: "\u0421\u0442\u043E\u044F\u0449\u0438\u0435 \u0447\u0430\u0441\u044B. \u041F\u043E \u043F\u0440\u043E\u0433\u0443\u043B\u043A\u0435 \u0441\u0432\u0435\u0440\u044F\u043B\u0438 \u0432\u0440\u0435\u043C\u044F. \u041F\u0440\u043E\u0433\u0443\u043B\u043A\u0430 \u043A\u043E\u043D\u0447\u0438\u043B\u0430\u0441\u044C." },
-        { name: "\u041A\u0430\u0431\u0438\u043D\u0435\u0442 \u042E\u043C\u0430", text: "\u0418\u043D\u0434\u0443\u043A\u0446\u0438\u044F; is/ought. \u041B\u0435\u0441\u0442\u043D\u0438\u0446\u0430, \u043F\u043E \u043A\u043E\u0442\u043E\u0440\u043E\u0439 \u043D\u0435 \u043F\u043E\u0434\u043D\u044F\u0442\u044C\u0441\u044F \u0431\u0435\u0437 \u0441\u043E\u0441\u0435\u0434\u043A\u0438." },
-        { name: "\u0419\u0435\u043D\u0430-\u0440\u0430\u043D\u043D\u044F\u044F", text: "\u0410\u043C\u043E \u0443 \u043A\u0430\u0444\u0435\u0434\u0440\u044B, 1730-\u0435. \u0412\u0442\u043E\u0440\u0430\u044F \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0430 \u0434\u0432\u043E\u0439\u043D\u043E\u0433\u043E \u0441\u043B\u043E\u044F." },
-        { name: "\u0421\u043B\u043E\u0431\u043E\u0434\u0441\u043A\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430-\u0438\u0441\u0442\u043E\u043A", text: "\u0422\u043E\u0440\u0431\u0430 \u0438 \u0444\u043B\u0435\u0439\u0442\u0430. \u041A\u0430\u0444\u0435\u0434\u0440\u044B \u043D\u0435 \u043F\u0440\u0438\u043D\u044F\u043B. \u042D\u043F\u0438\u0442\u0430\u0444\u0438\u044E \u043D\u0430\u043F\u0438\u0441\u0430\u043B \u0441\u0430\u043C." }
-      ],
-      leaks: [
-        "\u042D\u0432\u0444\u0435\u043C\u0438\u0437\u043C \u0441\u043C\u0435\u043D\u0438\u043B \u044D\u0442\u0438\u043A\u0435\u0442\u043A\u0443: \u0442\u0435\u043F\u0435\u0440\u044C \xAB\u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\xBB. \u0421\u0442\u0430\u0440\u044B\u0439 \u0441\u043B\u043E\u0439 \u0432\u0438\u0434\u0435\u043D \u043F\u043E \u043A\u0440\u0430\u044E.",
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: [
-        { name: "\u0421\u043B\u043E\u0431\u043E\u0434\u0441\u043A\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430", note: "\u0434\u043E\u0440\u043E\u0433\u0430 \u0438\u0434\u0451\u0442, \u0447\u0430\u0441\u044B \u0441\u0442\u043E\u044F\u0442 \u2014 \u0441\u043A\u0432\u043E\u0437\u0438\u0442 \u0432 \xAB\u0441\u0435\u0439\u0447\u0430\u0441\xBB" }
+      range: [1440, 1740],
+      name: "\u043C\u0435\u043B\u043A\u0438\u0439 \u0448\u0440\u0438\u0444\u0442",
+      era: "XVIII \u0432\u0435\u043A",
+      palette: { sky: "#403626", ground: "#4a3e2a", lamp: "gas", dust: "#7a6242" },
+      signs: [
+        {
+          x: 1480,
+          name: "\u0441\u0442\u043E\u044F\u0449\u0438\u0435 \u0447\u0430\u0441\u044B",
+          facade: `\u041F\u043E \u044D\u0442\u0438\u043C \u0447\u0430\u0441\u0430\u043C \u0441\u0432\u0435\u0440\u044F\u043B\u0438 \u0433\u043E\u0440\u043E\u0434. \u0413\u043E\u0440\u043E\u0434 \u0441\u043C\u0435\u043D\u0438\u043B \u0438\u043C\u044F. \u0427\u0430\u0441\u044B \u0441\u0442\u043E\u044F\u0442. \u0421\u0432\u0435\u0440\u044F\u0442\u044C \u043D\u0435\u043A\u043E\u043C\u0443.`
+        },
+        {
+          x: 1540,
+          name: "\u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430 SAPERE AUDE",
+          facade: `\u0418\u043C\u0435\u0439 \u043C\u0443\u0436\u0435\u0441\u0442\u0432\u043E \u0437\u043D\u0430\u0442\u044C.`,
+          backyard: `\u0422\u0430\u0440\u0438\u0444 \xAB\u0421\u043C\u0435\u043B\u043E\u0441\u0442\u044C\xBB: 9,99/\u043C\u0435\u0441. \u041F\u0435\u0440\u0432\u044B\u0435 7 \u0434\u043D\u0435\u0439 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E.`
+        },
+        {
+          x: 1590,
+          name: "\u043B\u0435\u0441\u0442\u043D\u0438\u0446\u0430 \u042E\u043C\u0430",
+          facade: `\u0418\u0437 \xAB\u0435\u0441\u0442\u044C\xBB \u043D\u0435 \u0441\u043B\u0435\u0434\u0443\u0435\u0442 \xAB\u0434\u043E\u043B\u0436\u043D\u043E\xBB. \u0421\u043A\u0435\u043F\u0442\u0438\u043A \u0437\u0430\u0441\u0442\u0440\u044F\u043B \u043D\u0430 \u043B\u0435\u0441\u0442\u043D\u0438\u0446\u0435.`,
+          backyard: `\u0412\u044B\u0442\u0430\u0449\u0438\u043B\u0430 \u0441\u043E\u0441\u0435\u0434\u043A\u0430 \u2014 \u0437\u0430 \xAB\u041E\u0442\u0447\u0435 \u043D\u0430\u0448\xBB. \u041F\u0440\u043E\u0447\u0451\u043B. \u0425\u0432\u0430\u0442\u0438\u043B\u043E \u044E\u043C\u043E\u0440\u0430. \u041D\u0430\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u0438 \u0432\u044B\u0432\u043E\u0434\u044F\u0442 \xAB\u0434\u043E\u043B\u0436\u043D\u043E\xBB \u0438\u0437 \xAB\u0435\u0441\u0442\u044C\xBB \u0441 1739 \u0433. \u0431\u0435\u0437 \u043F\u0435\u0440\u0435\u0440\u044B\u0432\u0430.`
+        },
+        {
+          x: 1640,
+          name: "\u0434\u0432\u043E\u0439\u043D\u043E\u0439 \u0444\u0430\u0441\u0430\u0434 \u0419\u0435\u043D\u044B",
+          form: "building",
+          facade: `\u0423 \u043A\u0430\u0444\u0435\u0434\u0440\u044B \u2014 \u0430\u0444\u0440\u0438\u043A\u0430\u043D\u0441\u043A\u0438\u0439 \u0444\u0438\u043B\u043E\u0441\u043E\u0444, 1730-\u0435. \u0411\u0438\u043B \u043A\u0430\u0440\u0442\u0435\u0437\u0438\u0430\u043D\u0441\u043A\u0438\u0439 \u0434\u0443\u0430\u043B\u0438\u0437\u043C.`,
+          backyard: `\u041A\u0430\u0442\u0430\u043B\u043E\u0433 \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u043B \u0441\u043E\u0441\u0435\u0434\u0430 \u043F\u043E \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438, \u043D\u0435 \u0435\u0433\u043E.`
+        },
+        {
+          x: 1700,
+          name: "\u0441\u043B\u043E\u0431\u043E\u0434\u0441\u043A\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430",
+          live: true,
+          facade: `\u041E\u0431\u043E\u0447\u0438\u043D\u0430-\u043A\u0430\u0444\u0435\u0434\u0440\u0430. \u041E\u0431\u0433\u043E\u0440\u0435\u0432\u0448\u0438\u0439 \u043E\u0441\u0442\u043E\u0432. \u0426\u0435\u043B\u0430\u044F \u0441\u0442\u0430\u0442\u0443\u044F. \u0423\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C: \xAB\u0421\u043A\u043E\u0432\u043E\u0440\u043E\u0434\u0430 \u0438 \u041A\u0430\u043D\u0442 \u2014 \u043E\u0434\u043D\u0430 \u044D\u043F\u043E\u0445\u0430\xBB.`,
+          backyard: `\u041E\u0434\u0438\u043D \u0441\u0432\u0435\u0440\u044F\u043B \u0447\u0430\u0441\u044B. \u0414\u0440\u0443\u0433\u043E\u0433\u043E \u043D\u0435 \u043F\u043E\u0439\u043C\u0430\u043B \u043C\u0438\u0440. \u0420\u0430\u0434\u0438\u043E\u0448\u0443\u043C \u0441\u0431\u043E\u043A\u0443 \u2014 \u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 1510,
+          name: "\u0441\u0442\u0435\u043D\u0434 \u044D\u0432\u0444\u0435\u043C\u0438\u0437\u043C\u0430",
+          form: "stand",
+          facade: `\xAB\u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\xBB \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430. \u041F\u043E\u0434 \u043D\u0435\u0439 \u0441\u043B\u043E\u0439 \xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435\xBB. \u041F\u043E\u0434 \u043D\u0438\u043C \u0441\u043B\u043E\u0439 \xAB\u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430\xBB.`,
+          backyard: `\u0422\u0440\u0435\u0442\u044C\u044F \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430. \u0421\u043B\u043E\u0438 \u0432\u0438\u0434\u043D\u044B \u043F\u043E \u043A\u0440\u0430\u044E.`
+        }
       ]
     },
+    // ── §6 — steam & shadows (XIX, act I) ──
     {
+      id: "steamshadows",
       n: 6,
-      id: "hall6",
-      title: "\u041F\u0410\u0420 \u0418 \u0422\u0415\u041D\u0418",
-      years: "XIX \u0432. \u2014 \u0430\u043A\u0442 I",
-      facade: `\u041C\u0430\u0448\u0438\u043D\u044B \u0438 \u043E\u0431\u0435\u0449\u0430\u043D\u0438\u044F: \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441, \u043E\u0441\u0432\u043E\u0431\u043E\u0436\u0434\u0435\u043D\u0438\u0435, \u0432\u043E\u0441\u043A\u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u043E\u0442\u0446\u043E\u0432 \u2014 \u0432\u0435\u043A, \u043F\u043E\u0432\u0435\u0440\u0438\u0432\u0448\u0438\u0439, \u0447\u0442\u043E \u0431\u0443\u0434\u0443\u0449\u0435\u0435 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442\u0441\u044F.`,
-      backyard: `\u0412\u0441\u0435 \u043E\u0431\u0435\u0449\u0430\u043D\u0438\u044F \u0437\u0430\u043B\u0430 \u2014 \u0432 \u043A\u043E\u043B\u043E\u043D\u043A\u0435 \u0441\u0433\u043E\u0440\u0435\u0432\u0448\u0438\u0445.
-
-\u0412\u0435\u0447\u043D\u043E\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435 \u0438\u0434\u0451\u0442 \u043A\u0430\u0436\u0434\u044B\u0439 \u0432\u0435\u0447\u0435\u0440 \u043F\u0440\u0438 \u043E\u0434\u043D\u043E\u043C \u043C\u043E\u0440\u0433\u0430\u044E\u0449\u0435\u043C \u0437\u0440\u0438\u0442\u0435\u043B\u0435.
-
-\u0424\u0443\u0442\u0431\u043E\u043B\u043A\u0430 \u0441 \u0431\u043E\u0440\u043E\u0434\u0430\u0442\u044B\u043C \u043F\u0440\u043E\u0444\u0438\u043B\u0435\u043C: \u0444\u0435\u0442\u0438\u0448\u0438\u0437\u043C, \u043E\u0431\u044A\u044F\u0441\u043D\u0451\u043D\u043D\u044B\u0439 \u0432\u043B\u0430\u0434\u0435\u043B\u044C\u0446\u0435\u043C \u043F\u0440\u043E\u0444\u0438\u043B\u044F, \u043F\u0440\u043E\u0434\u0430\u043D\u043D\u044B\u0439 \u0435\u0433\u043E \u043B\u0438\u0446\u043E\u043C.
-
-\u0410\u043A\u0442 I \u0430\u043D\u043D\u0435\u043A\u0441\u0438\u0440\u0443\u0435\u0442 \u0442\u0440\u0443\u0434 \u0438 \u043B\u0430\u043D\u0434\u0448\u0430\u0444\u0442 \u2014 \u0443 \u0432\u0445\u043E\u0434\u0430 \u0432 \u0437\u0430\u043B \u043F\u0435\u0440\u0432\u0430\u044F \u0444\u0440\u043E\u043D\u0442\u043E\u0432\u0430\u044F \u0441\u0432\u043E\u0434\u043A\u0430.`,
-      exhibits: [
-        { name: "\u0427\u0438\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0437\u0430\u043B \u0411\u0440\u0438\u0442\u0430\u043D\u0441\u043A\u043E\u0433\u043E \u043C\u0443\u0437\u0435\u044F", text: "\u0424\u0435\u0442\u0438\u0448\u0438\u0437\u043C: \u0441\u0432\u044F\u0437\u0438 \u043C\u0435\u0436\u0434\u0443 \u043B\u044E\u0434\u044C\u043C\u0438 \u0432 \u0444\u043E\u0440\u043C\u0435 \u043E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u0439 \u043C\u0435\u0436\u0434\u0443 \u0432\u0435\u0449\u0430\u043C\u0438. \u0412\u0441\u0451 \u0442\u0432\u0451\u0440\u0434\u043E\u0435 \u0438\u0441\u043F\u0430\u0440\u044F\u0435\u0442\u0441\u044F." },
-        { name: "\u041A\u043E\u043F\u0435\u043D\u0433\u0430\u0433\u0435\u043D", text: "\u0413\u043E\u043B\u043E\u0432\u043E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435 \u0441\u0432\u043E\u0431\u043E\u0434\u044B. \u0427\u0435\u043C \u0431\u043E\u043B\u044C\u0448\u0435 \u043C\u043E\u0436\u0435\u0448\u044C, \u0442\u0435\u043C \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043A\u0440\u0443\u0436\u0438\u0442." },
-        { name: "\u0424\u0440\u0430\u043D\u043A\u0444\u0443\u0440\u0442-\u043F\u0435\u0440\u0432\u044B\u0439", text: "\u041F\u0443\u0434\u0435\u043B\u044C \u043F\u043E \u0438\u043C\u0435\u043D\u0438 \u041C\u0438\u0440\u043E\u0432\u0430\u044F \u0414\u0443\u0448\u0430. \u0425\u043E\u0437\u044F\u0438\u043D \u043D\u0435 \u0432\u0435\u0440\u0438\u043B \u0432 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441 \u2014 \u043F\u0443\u0434\u0435\u043B\u044C \u043D\u0435 \u0432\u043E\u0437\u0440\u0430\u0436\u0430\u043B." },
-        { name: "\u0410\u0444\u0438\u0448\u0430 \u043A \u0422\u0435\u0430\u0442\u0440\u0443 \u0422\u0435\u043D\u0435\u0439", text: "\xAB\u0411\u043E\u0433 \u0443\u043C\u0435\u0440\xBB \u2014 \u043F\u0440\u0435\u043C\u044C\u0435\u0440\u0430 \u0442\u0435\u043D\u0438. \u041F\u0440\u043E\u043A\u0430\u0442 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F. \u0421\u0430\u043C \u0442\u0435\u0430\u0442\u0440 \u2014 \u0432\u043D\u0435 \u0432\u0440\u0435\u043C\u0435\u043D\u0438; \u043E\u0442\u0441\u044E\u0434\u0430 \u043A \u043D\u0435\u043C\u0443 \u0441\u043B\u0443\u0436\u0435\u0431\u043D\u044B\u0439 \u043A\u043E\u0440\u0438\u0434\u043E\u0440." },
-        { name: "\u0427\u0438\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0437\u0430\u043B \u0424\u0451\u0434\u043E\u0440\u043E\u0432\u0430", text: "\u041A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u2014 \u0444\u043E\u0440\u043C\u0430 \u0432\u0435\u0440\u043D\u043E\u0441\u0442\u0438. \u0410\u0432\u0442\u043E\u0440\u0441\u0442\u0432\u043E \u2014 \u0433\u0440\u0435\u0445. \u0421\u043E\u043D \u043D\u0430 \u0441\u0443\u043D\u0434\u0443\u043A\u0435 \u2014 \u0434\u043E\u0441\u0442\u0430\u0442\u043E\u0447\u0435\u043D." },
-        { name: "\u0410\u0444\u0438\u0448\u0430 \u0427\u0430\u0430\u0434\u0430\u0435\u0432\u0430", text: "\u0417\u0430 \u043A\u0443\u043B\u0438\u0441\u0430\u043C\u0438. \u0412\u044B\u0441\u043E\u0447\u0430\u0439\u0448\u0435 \u0443\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043D\u043D\u044B\u0439 \u0434\u0438\u0430\u0433\u043D\u043E\u0437." },
-        { name: "\u0421\u0442\u0430\u043D\u0446\u0438\u044F \u0410\u0441\u0442\u0430\u043F\u043E\u0432\u043E", text: "1910. \u041F\u043E\u0440\u043E\u0433 \u0437\u0430\u043B\u0430. \u0427\u0430\u0441\u044B \u0441\u0442\u043E\u044F\u0442 \u043D\u0430 6:05. \u0427\u0435\u043B\u043E\u0432\u0435\u043A \u0432\u044B\u0445\u043E\u0434\u0438\u0442 \u0438\u0437 \u0430\u043D\u0444\u0438\u043B\u0430\u0434\u044B \u043D\u0430 \u043F\u0435\u0440\u0440\u043E\u043D." }
-      ],
-      leaks: [
-        "\u041F\u0440\u0438\u0437\u0440\u0430\u043A \u0424\u0438\u0448\u0435\u0440\u0430 \u0438\u0434\u0451\u0442 \u043F\u0440\u043E\u0442\u0438\u0432 \u0445\u043E\u0434\u0430 \u0430\u043D\u0444\u0438\u043B\u0430\u0434\u044B: \u0441\u043C\u043E\u0442\u0440\u0438\u0442 \u043D\u0430 \u043E\u0431\u0435\u0449\u0430\u043D\u0438\u044F, \u0437\u043D\u0430\u044F \u043F\u0440\u043E\u043A\u0430\u0442.",
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: []
-    },
-    {
-      n: 7,
-      id: "hall7",
-      title: "\u0412\u0415\u041A \u041A\u0410\u0422\u0410\u0421\u0422\u0420\u041E\u0424",
-      years: "1900\u20131970-\u0435 \u2014 \u0430\u043A\u0442 II",
-      facade: `\u0421\u0432\u0438\u0434\u0435\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u043E. \u0412\u0435\u043A, \u0432 \u043A\u043E\u0442\u043E\u0440\u043E\u043C \u043F\u0438\u0441\u044C\u043C\u043E \u043F\u0440\u0438 \u043E\u0433\u043D\u0435 \u0441\u0442\u0430\u043B\u043E \u0433\u043B\u0430\u0432\u043D\u044B\u043C \u0436\u0430\u043D\u0440\u043E\u043C: \u0434\u043E\u043F\u0438\u0441\u044B\u0432\u0430\u043B\u0438 \u0432 \u0413\u0438\u043F\u043F\u043E\u043D\u0435 \u2014 \u0437\u0434\u0435\u0441\u044C \u0434\u043E\u043F\u0438\u0441\u044B\u0432\u0430\u043B\u0438 \u0432\u0435\u0437\u0434\u0435.`,
-      backyard: `\u0413\u0440\u0430\u043D\u0434-\u043E\u0442\u0435\u043B\u044C \xAB\u0411\u0435\u0437\u0434\u043D\u0430\xBB: \u0448\u0432\u0435\u0434\u0441\u043A\u0438\u0439 \u0441\u0442\u043E\u043B \u0441 \u0432\u0438\u0434\u043E\u043C \u043D\u0430 \u043E\u0431\u0440\u044B\u0432. \xAB\u041C\u0435\u0441\u0442 \u043D\u0435\u0442 \u2014 \u0437\u0430\u043D\u044F\u0442\u044B \u043D\u0430\u043C\u0438\xBB. \u041D\u0430\u0448\u0430 \u0431\u0440\u043E\u043D\u044C \u0442\u0430\u043C \u0442\u043E\u0436\u0435.
-
-\u0420\u0435\u0446\u0435\u043D\u0437\u0438\u0438 \u043D\u0430 \u043A\u0430\u0442\u0430\u0441\u0442\u0440\u043E\u0444\u0443, \u0438\u0437\u0434\u0430\u043D\u043D\u044B\u0435 \u0442\u0438\u0440\u0430\u0436\u0430\u043C\u0438.
-
-\u0423\u0437\u043A\u0430\u044F \u0434\u0432\u0435\u0440\u044C \u0431\u0435\u0437 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0438 \u2014 \u0437\u0430 \u043D\u0435\u0439 \u0442\u0438\u0445\u043E: \u0441\u0442\u0443\u043F\u0435\u043D\u044C, \u0442\u0435\u043D\u044C, \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0438\u0447\u0435\u0433\u043E.`,
-      quiet: true,
-      // humor falls silent here by architecture
-      exhibits: [
-        { name: "\u0425\u0438\u0436\u0438\u043D\u0430 \u0432 \u0428\u0451\u043B\u0434\u0435\u043D\u0435", text: "\u0413\u0440\u0430\u043D\u0438\u0446\u044B \u044F\u0437\u044B\u043A\u0430. \u041B\u0435\u0441\u0442\u043D\u0438\u0446\u0443 \u043E\u0442\u0431\u0440\u043E\u0441\u0438\u0442\u044C, \u043F\u043E\u0434\u043D\u044F\u0432\u0448\u0438\u0441\u044C." },
-        { name: "\u0422\u043E\u0434\u0442\u043D\u0430\u0443\u0431\u0435\u0440\u0433", text: "\u0413\u043E\u0441\u0442\u0435\u0432\u0430\u044F \u043A\u043D\u0438\u0433\u0430 \u0431\u0435\u0437 \u043E\u0442\u0432\u0435\u0442\u0430." },
-        { name: "\u041F\u043E\u0440\u0442-\u0411\u0443", text: "\u0427\u0435\u043C\u043E\u0434\u0430\u043D. \u0420\u0443\u043A\u043E\u043F\u0438\u0441\u044C \u0432\u0430\u0436\u043D\u0435\u0435 \u043C\u0435\u043D\u044F. \u041D\u0435 \u043D\u0430\u0448\u043B\u0438." },
-        { name: "\u0413\u0440\u0430\u043D\u0434-\u043E\u0442\u0435\u043B\u044C \xAB\u0411\u0435\u0437\u0434\u043D\u0430\xBB", text: "\u0424\u0430\u0441\u0430\u0434 \u0438 \u0437\u0430\u0434\u0432\u043E\u0440\u043A\u0438 \u0432 \u043E\u0434\u043D\u043E\u043C \u0437\u0434\u0430\u043D\u0438\u0438. \u041F\u0440\u043E\u0442\u043E\u0442\u0438\u043F \u0432\u0441\u0435\u0439 \u043C\u0435\u0445\u0430\u043D\u0438\u043A\u0438." },
-        { name: "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u0431\u0443\u0434\u043A\u0430", text: "\u0416\u0434\u0430\u043B\u0438 \u0434\u0435\u043C\u043E\u043D\u0430. \u041F\u0440\u0438\u0448\u0451\u043B \u043A\u0430\u0440\u044C\u0435\u0440\u0438\u0441\u0442 \u0441 \u043D\u0430\u0441\u043C\u043E\u0440\u043A\u043E\u043C \u0438 \u043A\u0430\u043D\u0446\u0435\u043B\u044F\u0440\u0438\u0442\u043E\u043C." },
-        { name: "\u041F\u0430\u0440\u0438\u0436-\u043A\u0430\u0444\u0435", text: "\u041F\u0435\u0440\u0435\u0438\u0433\u0440\u044B\u0432\u0430\u044E\u0449\u0438\u0439 \u043E\u0444\u0438\u0446\u0438\u0430\u043D\u0442. \u041F\u043B\u043E\u0445\u0430\u044F \u0432\u0435\u0440\u0430 \u0432 \u0448\u0442\u0430\u0442\u043D\u043E\u043C \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0438." },
-        { name: "\u041A\u043E\u0442\u043B\u043E\u0432\u0430\u043D", text: "\u041A\u043E\u043F\u0430\u043B\u0438 \u0444\u0443\u043D\u0434\u0430\u043C\u0435\u043D\u0442 \u0431\u0443\u0434\u0443\u0449\u0435\u0433\u043E. \u0412\u044B\u0440\u044B\u043B\u0438 \u044F\u043C\u0443." },
-        { name: "\u0422\u0440\u043E\u043F\u0430 \u043F\u043E \u0441\u043D\u0435\u0433\u0443", text: "\u041F\u044F\u0442\u0435\u0440\u043E \u0440\u044F\u0434\u043E\u043C, \u043D\u0435 \u0441\u043B\u0435\u0434 \u0432 \u0441\u043B\u0435\u0434. \u041F\u0435\u0440\u0432\u043E\u043C\u0443 \u0442\u044F\u0436\u0435\u043B\u0435\u0435 \u0432\u0441\u0435\u0445." },
-        { name: "\u041A\u0430\u043C\u0435\u0440\u0430", text: "\u0414\u0435\u0441\u044F\u0442\u044C \u043B\u0435\u0442 \u0441\u043E\u0431\u043E\u0440\u0430 \u043F\u0440\u0438 \u043D\u0443\u043B\u0435\u0432\u043E\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438. \u0420\u0443\u043A\u043E\u043F\u0438\u0441\u044C \u043E\u0442\u043D\u044F\u043B\u0438. \u0412\u0435\u0440\u043D\u0443\u043B\u0438 \u0447\u0430\u0441\u0442\u044C." },
-        { name: "\u0411\u043B\u0438\u0434\u0430", text: "\u041F\u0441\u0438\u0445\u0438\u0430\u0442\u0440\u0438\u044F \u043A\u043E\u043B\u043E\u043D\u0438\u0438: \u0432\u0440\u0430\u0447 \u043B\u0435\u0447\u0438\u0442 \u0442\u043E, \u0447\u0442\u043E \u0441\u0430\u043C \u0436\u0435 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0438\u0442." },
-        { name: "\u0424\u0438\u043B\u043E\u0441\u043E\u0444\u0441\u043A\u0438\u0439 \u043F\u0430\u0440\u043E\u0445\u043E\u0434", text: "1922. \u0413\u0440\u0430\u0444\u0430 \xAB\u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439\xBB: \u043F\u0440\u043E\u0447\u0435\u0440\u043A. \u0413\u0440\u0430\u0444\u0430 \xAB\u0431\u0430\u0433\u0430\u0436\xBB: \u0431\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0430." },
-        { name: "\u0421\u0442\u0443\u043F\u0435\u043D\u044C", text: "1945." },
-        { name: "\u0414\u0432\u0435\u0440\u044C \u0441\u0430\u0440\u043A\u043E\u0444\u0430\u0433\u0430", text: "1986. \u0424\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u043E \u2014 \u0437\u0430\u043B 8. \u041D\u043E \u043A\u0430\u0442\u0430\u0441\u0442\u0440\u043E\u0444\u044B \u0432\u0435\u043A\u0430 \u043A\u0443\u0447\u043A\u0443\u044E\u0442\u0441\u044F: \u0434\u0432\u0435\u0440\u044C \u0442\u043E\u0440\u0447\u0438\u0442 \u0441\u044E\u0434\u0430." }
-      ],
-      leaks: [
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u0417\u0434\u0435\u0441\u044C \u043E\u043D \u043C\u043E\u043B\u0447\u0438\u0442.",
-        "\u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: []
-    },
-    {
-      n: 8,
-      id: "hall8",
-      title: "\u041D\u0415\u041E\u041D",
-      years: "1960-\u0435\u20131990-\u0435 \u2014 \u0430\u043A\u0442 III",
-      facade: `\u041A\u0440\u0438\u0442\u0438\u043A\u0430 \u0432\u0441\u0435\u0433\u043E \u2014 \u0432\u0435\u043A, \u043E\u0442\u0440\u0430\u0441\u0442\u0438\u0432\u0448\u0438\u0439 \u043B\u0443\u0447\u0448\u0438\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u0440\u0430\u0437\u043E\u0431\u043B\u0430\u0447\u0435\u043D\u0438\u044F.`,
-      backyard: `\u0412\u0441\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u043F\u0435\u0440\u0435\u043A\u0443\u043F\u043B\u0435\u043D\u044B. \u041F\u0440\u0435\u0439\u0441\u043A\u0443\u0440\u0430\u043D\u0442 \u0443 \u0432\u0445\u043E\u0434\u0430: \u0431\u0440\u0438\u0442\u0432\u0430 \u2014 \u0432 \u043E\u0442\u0434\u0435\u043B\u0435 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438, d\xE9tournement \u2014 \u0432 \u0440\u0435\u043A\u043B\u0430\u043C\u0435, \u0434\u0435\u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u2014 \u0432 \u044E\u0440\u043E\u0442\u0434\u0435\u043B\u0435. \xABDoubt is our product\xBB \u2014 \u0432 \u0440\u0430\u043C\u043E\u0447\u043A\u0435, \u043A\u0430\u043A \u043F\u0435\u0440\u0432\u044B\u0439 \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043D\u044B\u0439 \u0434\u043E\u043B\u043B\u0430\u0440.
-
-\u041F\u0430\u043D\u043E\u043F\u0442\u0438\u043A\u043E\u043D \u2014 \u0431\u0440\u0435\u043B\u043E\u043A. \u0418\u0440\u043E\u043D\u0438\u044F \u2014 \u0448\u0442\u0430\u0442\u043D\u044B\u0439 \u0436\u0430\u043D\u0440.
-
-\u0417\u0430\u0434\u0432\u043E\u0440\u043A\u0438 \u0437\u0430\u043B\u0430 8 \u2014 \u0440\u043E\u0434\u0438\u043D\u0430 \u0446\u0435\u0445\u0430 \u0413.`,
-      exhibits: [
-        { name: "\u041F\u0430\u0440\u0438\u0436-\u0441\u0442\u0435\u043D\u044B", text: "\u041B\u043E\u0437\u0443\u043D\u0433\u0438 \u043F\u043E\u0434 \u0440\u0435\u043A\u043B\u0430\u043C\u043E\u0439, \u0446\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u043B\u043E\u0437\u0443\u043D\u0433\u0438." },
-        { name: "\u041A\u0440\u0443\u0433\u043B\u0430\u044F \u0431\u0430\u0448\u043D\u044F-\u043C\u0443\u0437\u0435\u0439", text: "\u041F\u0430\u043D\u043E\u043F\u0442\u0438\u043A\u043E\u043D \u0441 \u0441\u0443\u0432\u0435\u043D\u0438\u0440\u043D\u043E\u0439 \u043B\u0430\u0432\u043A\u043E\u0439." },
-        { name: "\u041B\u0430\u0441-\u0412\u0435\u0433\u0430\u0441", text: "\u041A\u0430\u0440\u0442\u0430 \u043F\u0440\u0435\u0434\u0448\u0435\u0441\u0442\u0432\u0443\u0435\u0442 \u0442\u0435\u0440\u0440\u0438\u0442\u043E\u0440\u0438\u0438. \u0422\u0435\u0440\u0440\u0438\u0442\u043E\u0440\u0438\u044F \u043D\u0435 \u0432\u043E\u0437\u0440\u0430\u0436\u0430\u0435\u0442." },
-        { name: "\u0410\u0440\u0445\u0438\u0432 \u0414\u0435\u0440\u0440\u0438\u0434\u0430", text: "\u041F\u043E\u043B\u043A\u0438 \u0432\u044B\u0436\u0438\u0432\u0448\u0438\u0445 \u0441 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430\u043C\u0438 \u0432\u044B\u0431\u0440\u043E\u0448\u0435\u043D\u043D\u043E\u0433\u043E." },
-        { name: "\u041A\u0443\u044D\u0440\u043D\u0430\u0432\u0430\u043A\u0430", text: "\u041F\u043E\u0440\u043E\u0433 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430. \u041F\u0435\u0448\u0435\u0445\u043E\u0434 \u043E\u0431\u0433\u043E\u043D\u044F\u0435\u0442 \u0430\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u044C \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u0438 \u0432\u043B\u0430\u0434\u0435\u043D\u0438\u044F." },
-        { name: "\u0422\u0431\u0438\u043B\u0438\u0441\u0438", text: "1990. \u041C\u044B\u0441\u043B\u044C, \u0441\u043E\u0432\u0435\u0440\u0448\u0430\u0435\u043C\u0430\u044F \u0437\u0430\u043D\u043E\u0432\u043E, \u043D\u0430 \u043F\u043E\u0440\u043E\u0433\u0435 \u043E\u0431\u0432\u0430\u043B\u0430." },
-        { name: "\u0428\u043A\u043E\u043B\u044C\u043D\u044B\u0439 \u043A\u043B\u0430\u0441\u0441", text: "\u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u043D\u0430 \u0448\u0435\u0435 \u0442\u043E\u043C\u0443, \u043A\u0442\u043E \u0433\u043E\u0432\u043E\u0440\u0438\u043B \u043D\u0430 \u0440\u043E\u0434\u043D\u043E\u043C." },
-        { name: "\u0414\u0435\u0440\u0435\u0432\u043E \u0441\u043E\u0432\u0435\u0442\u0430", text: "\u0421\u043F\u043E\u0440 \u043E\u0431 \u0443\u0431\u0443\u043D\u0442\u0443, 1980-\u0435. \u0421\u043E\u0433\u043B\u0430\u0441\u0438\u0435 \u2014 \u043D\u0435 \u0446\u0435\u043B\u044C. \u0426\u0435\u043B\u044C \u2014 \u0434\u043E\u0441\u043B\u0443\u0448\u0430\u044E\u0442." },
-        { name: "\u0412\u044B\u0441\u043E\u043A\u0430\u044F \u0442\u0440\u0430\u0432\u0430", text: "\u0422\u0438\u0433\u0440 \u043D\u0435 \u043F\u0440\u043E\u0432\u043E\u0437\u0433\u043B\u0430\u0448\u0430\u0435\u0442. \u0422\u0438\u0433\u0440 \u043F\u0440\u044B\u0433\u0430\u0435\u0442." },
-        { name: "\u041F\u0440\u0430\u0432\u043E \u043D\u0430 \u043D\u0435\u043F\u0440\u043E\u0437\u0440\u0430\u0447\u043D\u043E\u0441\u0442\u044C", text: "1990. \u0414\u043D\u0430 \u0442\u0435\u0431\u0435 \u043D\u0435 \u043F\u043E\u043A\u0430\u0436\u0443\u0442. \u042D\u0442\u043E \u043D\u0435 \u043D\u0435\u0445\u0432\u0430\u0442\u043A\u0430." },
-        { name: "\u041E\u0433\u043E\u043D\u0438\u043B\u0435\u043D\u0434", text: "1995. \u0424\u0430\u043A\u0435\u043B. \u0417\u0430\u043F\u0438\u0441\u044C \u0431\u044B\u043B\u0430 \u043E\u043F\u043B\u0430\u0447\u0435\u043D\u0430." }
-      ],
-      leaks: [
-        "\u0422\u0435\u043D\u044C \u0441\u043E \u0441\u0442\u0435\u043D\u044B \u0437\u0430\u043B\u0430 1 \u2014 \u0437\u0434\u0435\u0441\u044C \u043E\u043D\u0430 \u0432 \u0432\u0438\u0442\u0440\u0438\u043D\u0435. \u0421\u0442\u0435\u043D\u0430 \u0442\u0430 \u0436\u0435.",
-        "\u042D\u0432\u0444\u0435\u043C\u0438\u0437\u043C \u043F\u0435\u0440\u0435\u043A\u043B\u0435\u0435\u043D: \u0442\u0435\u043F\u0435\u0440\u044C \xAB\u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u044F\xBB.",
-        "\u0428\u0443\u0442 \u2014 \u0431\u0435\u0437 \u0431\u0438\u043B\u0435\u0442\u0430. \u041C\u043E\u0445 \u2014 \u043F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C."
-      ],
-      drafts: [
-        { name: "\u0424\u0430\u043A\u0435\u043B \u041E\u0433\u043E\u043D\u0438\u043B\u0435\u043D\u0434\u0430", note: "\u0433\u043E\u0440\u0438\u0442 \u0432 \xAB\u0441\u0435\u0439\u0447\u0430\u0441\xBB \u2014 \u0434\u0432\u0435\u0440\u044C \u0440\u0430\u0441\u043F\u0430\u0445\u043D\u0443\u0442\u0430" }
+      range: [1740, 2020],
+      name: "\u043F\u0430\u0440 \u0438 \u0442\u0435\u043D\u0438",
+      era: "XIX \u0432\u0435\u043A",
+      palette: { sky: "#3a2818", ground: "#4a3622", lamp: "tungsten", dust: "#8a6232" },
+      actSign: `\u0410\u041A\u0422 I.
+\u0410\u043D\u043D\u0435\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u043E: \u043C\u044B\u0448\u0435\u0447\u043D\u044B\u0439 \u0442\u0440\u0443\u0434, \u043B\u0430\u043D\u0434\u0448\u0430\u0444\u0442.`,
+      signs: [
+        {
+          x: 1780,
+          name: "\u0447\u0438\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0437\u0430\u043B \u0411\u0440\u0438\u0442\u0430\u043D\u0441\u043A\u043E\u0433\u043E \u043C\u0443\u0437\u0435\u044F",
+          facade: `\u0421\u0432\u044F\u0437\u0438 \u043C\u0435\u0436\u0434\u0443 \u043B\u044E\u0434\u044C\u043C\u0438 \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u044E\u0442 \u0444\u043E\u0440\u043C\u0443 \u0432\u0435\u0449\u0435\u0439.`,
+          backyard: `\u041B\u0430\u0439\u043A \u2014 \u0434\u0440\u0443\u0436\u0431\u0430, \u0441\u0442\u0430\u0432\u0448\u0430\u044F \u0441\u0447\u0451\u0442\u0447\u0438\u043A\u043E\u043C. \u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 \u2014 \u0434\u0440\u0443\u0436\u0431\u0430, \u0441\u0442\u0430\u0432\u0448\u0430\u044F \u0442\u0440\u0430\u043D\u0437\u0430\u043A\u0446\u0438\u0435\u0439.`
+        },
+        {
+          x: 1830,
+          name: "\u0441\u043B\u0443\u0436\u0435\u0431\u043D\u044B\u0439 \u043A\u043E\u0440\u0438\u0434\u043E\u0440 \u043A \u0422\u0435\u0430\u0442\u0440\u0443",
+          facade: `\u041F\u0440\u0435\u043C\u044C\u0435\u0440\u0430 \u0442\u0435\u043D\u0438 \u2014 \u043F\u0440\u043E\u043A\u0430\u0442 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F. \u0422\u0435\u0430\u0442\u0440 \u2014 \u0432\u043D\u0435 \u0432\u0440\u0435\u043C\u0435\u043D\u0438, \u0432\u0445\u043E\u0434 \u0438\u0437 \u0433\u043E\u0440\u043E\u0434\u043A\u0430.`
+        },
+        {
+          x: 1880,
+          name: "\u043A\u0430\u0442\u0430\u043B\u043E\u0436\u043D\u044B\u0439 \u0448\u043A\u0430\u0444 \u043F\u043E\u0434 \u043D\u0430\u0432\u0435\u0441\u043E\u043C",
+          facade: `\u041F\u0430\u043B\u044C\u0442\u043E \u043D\u0430 \u0441\u0443\u043D\u0434\u0443\u043A\u0435. \u041A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u2014 \u0444\u043E\u0440\u043C\u0430 \u0432\u0435\u0440\u043D\u043E\u0441\u0442\u0438. \u0410\u0432\u0442\u043E\u0440 \u0441\u0447\u0438\u0442\u0430\u043B \u0430\u0432\u0442\u043E\u0440\u0441\u0442\u0432\u043E \u0433\u0440\u0435\u0445\u043E\u043C.`,
+          backyard: `\u041A\u0430\u0440\u0442\u043E\u0447\u043A\u0438 \u0432 \u043F\u043E\u0440\u044F\u0434\u043A\u0435. \u042D\u0442\u043E \u0432\u0441\u0451, \u0447\u0442\u043E \u043E\u043D \u043F\u0440\u043E\u0441\u0438\u043B.`
+        },
+        {
+          x: 1940,
+          name: "\u0441\u0442\u0430\u043D\u0446\u0438\u044F \u0410\u0441\u0442\u0430\u043F\u043E\u0432\u043E",
+          facade: `\u0427\u0430\u0441\u044B \u043D\u0430 6:05. \xAB\u0412\u044B\u0448\u0435\u043B \u0438\u0437 \u0441\u0432\u043E\u0435\u0433\u043E \u0433\u043E\u0440\u043E\u0434\u043A\u0430 \u0437\u0430 \u0432\u043E\u0441\u0435\u043C\u044C\u0434\u0435\u0441\u044F\u0442 \u0434\u0432\u0430 \u0433\u043E\u0434\u0430. \u0423\u0441\u043F\u0435\u043B.\xBB`,
+          backyard: `\u0411\u043E\u043B\u043E\u0433\u043E\u0435 \u2190 50 \u043B\u0435\u0442 / \u0410\u0441\u0442\u0430\u043F\u043E\u0432\u043E \u2192 10 \u0434\u043D\u0435\u0439. \u0414\u0432\u0435 \u0441\u0442\u0430\u043D\u0446\u0438\u0438 \u043E\u0434\u043D\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0438.`
+        },
+        {
+          x: 1990,
+          name: "\u043F\u0443\u0434\u0435\u043B\u044C",
+          facade: `\u0424\u0438\u043B\u043E\u0441\u043E\u0444 \u043F\u0435\u0441\u0441\u0438\u043C\u0438\u0437\u043C\u0430 \u0433\u0443\u043B\u044F\u043B \u0441 \u0441\u043E\u0431\u0430\u043A\u043E\u0439 \u0435\u0436\u0435\u0434\u043D\u0435\u0432\u043D\u043E. \u0421\u043E\u0431\u0430\u043A\u0443 \u0437\u0432\u0430\u043B \u041C\u0438\u0440\u043E\u0432\u0430\u044F \u0414\u0443\u0448\u0430. \u042D\u0442\u043E \u0448\u0443\u0442\u043A\u0430. \u0418 \u043D\u0435 \u0448\u0443\u0442\u043A\u0430.`
+        }
       ]
     },
+    // ── §7 — century of catastrophes (XX, act II) — quiet ──
     {
+      id: "catastrophes",
+      n: 7,
+      range: [2020, 2400],
+      name: "\u0432\u0435\u043A \u043A\u0430\u0442\u0430\u0441\u0442\u0440\u043E\u0444",
+      era: "XX \u0432\u0435\u043A",
+      palette: { sky: "#1a1818", ground: "#2a2422", lamp: "tungsten", dust: "#4a3a32" },
+      actSign: `\u0410\u041A\u0422 II.
+\u0410\u043D\u043D\u0435\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u043E: \u043C\u0430\u0442\u0435\u0440\u0438\u044F, \u0431\u044B\u0442. \u0414\u043E \u043C\u043E\u043B\u0435\u043A\u0443\u043B\u044B.`,
+      quiet: true,
+      signs: [
+        {
+          x: 2060,
+          name: "\u0413\u0440\u0430\u043D\u0434-\u043E\u0442\u0435\u043B\u044C \xAB\u0411\u0435\u0437\u0434\u043D\u0430\xBB",
+          form: "building",
+          facade: `\u0426\u0435\u043B\u043E\u0435 \u0435\u0441\u0442\u044C \u043B\u043E\u0436\u043D\u043E\u0435.`,
+          backyard: `\u041C\u0435\u0441\u0442 \u043D\u0435\u0442 \u2014 \u0437\u0430\u043D\u044F\u0442\u044B \u043D\u0430\u043C\u0438. \u0411\u0440\u043E\u043D\u044C Ardet \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0430.`
+        },
+        {
+          x: 2110,
+          name: "\u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u0431\u0443\u0434\u043A\u0430",
+          facade: `\u0421\u0435\u0440\u044B\u0439 \u0447\u0435\u043B\u043E\u0432\u0435\u043A, \u043E\u0447\u043A\u0438. \u0416\u0434\u0430\u043B\u0438 \u0434\u0435\u043C\u043E\u043D\u0430. \u041F\u0440\u0438\u0448\u0451\u043B \u043A\u0430\u0440\u044C\u0435\u0440\u0438\u0441\u0442 \u0441 \u043D\u0430\u0441\u043C\u043E\u0440\u043A\u043E\u043C. \u0417\u043B\u043E \u043D\u043E\u0441\u0438\u0442 \u0431\u0435\u0439\u0434\u0436 \u0438 \u043F\u0438\u0448\u0435\u0442 \u0434\u043E \u043E\u0431\u0435\u0434\u0430.`
+        },
+        {
+          x: 2150,
+          name: "\u0447\u0435\u043C\u043E\u0434\u0430\u043D",
+          facade: `\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F. \u041D\u0435 \u0437\u0430\u043F\u0435\u0440\u0442 \u2014 \u0432\u043D\u0443\u0442\u0440\u0438 \u0440\u0443\u043A\u043E\u043F\u0438\u0441\u044C, \u043A\u043E\u0442\u043E\u0440\u043E\u0439, \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E, \u043D\u0435 \u0431\u044B\u043B\u043E.`
+        },
+        {
+          x: 2190,
+          name: "\u043A\u043E\u0442\u043B\u043E\u0432\u0430\u043D",
+          facade: `\u0413\u043B\u0443\u0431\u0438\u043D\u0430 \u0440\u0430\u0441\u0442\u0451\u0442 \u2014 \u0434\u043E\u043C \u043D\u0435 \u043D\u0430\u0447\u0430\u0442. \u0417\u0435\u043C\u043B\u0435\u043A\u043E\u043F\u044B \u0441\u043E\u0447\u0443\u0432\u0441\u0442\u0432\u043E\u0432\u0430\u043B\u0438 \u043E\u0431\u0449\u0435\u043C\u0443 \u0433\u043E\u0440\u044E \u0438 \u043D\u0435 \u043C\u043E\u0433\u043B\u0438 \u0435\u0433\u043E \u043E\u0440\u0433\u0430\u043D\u0438\u0437\u043E\u0432\u0430\u0442\u044C.`,
+          backyard: `\u0417\u0430\u043C\u043E\u043A \u2191 \u0432\u0438\u0434\u0435\u043D, \u043D\u0435\u0434\u043E\u0441\u0442\u0438\u0436\u0438\u043C / \u043A\u043E\u0442\u043B\u043E\u0432\u0430\u043D \u2193 \u0437\u0434\u0435\u0441\u044C, \u043D\u0435 \u043F\u043E\u0434\u043D\u044F\u0442\u044C.`
+        },
+        {
+          x: 2230,
+          name: "\u0442\u0440\u043E\u043F\u0430 \u043F\u043E \u0441\u043D\u0435\u0433\u0443",
+          facade: `\u041F\u044F\u0442\u0435\u0440\u043E \u0440\u044F\u0434\u043E\u043C, \u043D\u0435 \u0441\u043B\u0435\u0434 \u0432 \u0441\u043B\u0435\u0434. \u041F\u0435\u0440\u0432\u043E\u043C\u0443 \u0442\u044F\u0436\u0435\u043B\u0435\u0435 \u0432\u0441\u0435\u0445.`
+        },
+        {
+          x: 2270,
+          name: "\u043A\u0430\u043C\u0435\u0440\u0430",
+          facade: `\u0414\u0435\u0441\u044F\u0442\u044C \u043B\u0435\u0442 \u0441\u0442\u0440\u043E\u0438\u043B\u0438 \u0441\u043E\u0431\u043E\u0440. \u0418\u0437 \u043F\u0430\u043C\u044F\u0442\u0438, \u0431\u0435\u0437 \u0431\u0443\u043C\u0430\u0433\u0438. \u0410\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F: \u043D\u043E\u043B\u044C. \u0421\u0442\u0440\u043E\u0439\u043A\u0430 \u043D\u0435 \u043F\u0440\u0435\u043A\u0440\u0430\u0449\u0430\u043B\u0430\u0441\u044C.`
+        },
+        {
+          x: 2310,
+          name: "\u0443\u0437\u043A\u0430\u044F \u0434\u0432\u0435\u0440\u044C \u0431\u0435\u0437 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0438",
+          facade: `\u0421\u0442\u0443\u043F\u0435\u043D\u044C. \u041D\u0430 \u0441\u0442\u0443\u043F\u0435\u043D\u0438 \u2014 \u0442\u0435\u043D\u044C. \u0411\u043E\u043B\u044C\u0448\u0435 \u043D\u0438\u0447\u0435\u0433\u043E.`
+        },
+        {
+          x: 2340,
+          name: "\u0445\u0438\u0436\u0438\u043D\u0430 \u0443 \u0444\u044C\u043E\u0440\u0434\u0430",
+          facade: `\u0420\u0430\u0437\u0434\u0430\u043B \u043E\u0434\u043D\u043E \u0438\u0437 \u043A\u0440\u0443\u043F\u043D\u0435\u0439\u0448\u0438\u0445 \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0439 \u0415\u0432\u0440\u043E\u043F\u044B, \u0447\u0442\u043E\u0431\u044B \u0434\u0443\u043C\u0430\u0442\u044C \u0432 \u0442\u0438\u0448\u0438\u043D\u0435. \u0421\u0432\u0438\u0434\u0435\u0442\u0435\u043B\u0435\u0439 \u043F\u043E\u0447\u0442\u0438 \u043D\u0435 \u0431\u044B\u043B\u043E. \u041C\u0435\u0440\u0447\u0430 \u043D\u0435\u0442 \u0434\u043E \u0441\u0438\u0445 \u043F\u043E\u0440.`
+        },
+        {
+          x: 2370,
+          name: "\u043F\u0430\u0440\u043E\u0445\u043E\u0434",
+          facade: `\u0422\u0440\u0430\u043F \u0441\u043F\u0443\u0449\u0435\u043D. \u0411\u0438\u043B\u0435\u0442 \u0432 \u043E\u0434\u0438\u043D \u043A\u043E\u043D\u0435\u0446 \u043E\u043F\u043B\u0430\u0442\u0438\u043B\u043E \u0433\u043E\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u043E. \u0423\u0441\u043B\u043E\u0432\u0438\u0435: \u043D\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0442\u044C\u0441\u044F. \u0421\u043E\u0431\u043B\u044E\u0434\u0435\u043D\u043E \u043D\u0435 \u0432\u0441\u0435\u043C\u0438 \u043A\u043D\u0438\u0433\u0430\u043C\u0438.`
+        },
+        {
+          x: 2395,
+          name: "\u0411\u043B\u0438\u0434\u0430",
+          facade: `\u0414\u0432\u0430 \u043A\u0440\u044B\u043B\u0430, \u043E\u0434\u0438\u043D \u0434\u0438\u0430\u0433\u043D\u043E\u0437. \u041B\u0435\u0447\u0438\u0442\u044C \u043E\u0431\u043E\u0438\u0445. \u0411\u043E\u043B\u0435\u0437\u043D\u044C \u043E\u0434\u043D\u0430. \u041A\u0430\u043A\u0430\u044F \u2014 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u043B \u0432 \u043E\u043A\u043D\u043E.`
+        }
+      ]
+    },
+    // ── §8 — neon (1960-90s, act III) ──
+    {
+      id: "neon",
+      n: 8,
+      range: [2400, 2700],
+      name: "\u043D\u0435\u043E\u043D",
+      era: "1960\u201390-\u0435",
+      palette: { sky: "#1a1430", ground: "#2a1a3a", lamp: "neon", dust: "#aa3a8a" },
+      actSign: `\u0410\u041A\u0422 III.
+\u0410\u043D\u043D\u0435\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u043E: \u0432\u043D\u0438\u043C\u0430\u043D\u0438\u0435, \u0441\u0432\u044F\u0437\u044C.`,
+      signs: [
+        {
+          x: 2430,
+          name: "\u0441\u0442\u0435\u043D\u044B \u043F\u043E\u0434 \u0440\u0435\u043A\u043B\u0430\u043C\u043E\u0439",
+          facade: `\u041B\u043E\u0437\u0443\u043D\u0433\u0438 68-\u0433\u043E. \u041F\u043E\u0432\u0435\u0440\u0445 \u2014 \u0440\u0435\u043A\u043B\u0430\u043C\u0430, \u0446\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0430\u044F \u043B\u043E\u0437\u0443\u043D\u0433\u0438. \u0422\u0440\u0438 \u0441\u043B\u043E\u044F \u043A\u0440\u0430\u0441\u043A\u0438, \u0432\u0438\u0434\u043D\u044B \u043F\u043E \u043A\u0440\u0430\u044E.`
+        },
+        {
+          x: 2470,
+          name: "\u0431\u0430\u0448\u043D\u044F-\u043C\u0443\u0437\u0435\u0439",
+          form: "building",
+          facade: `\u041F\u0430\u043D\u043E\u043F\u0442\u0438\u043A\u043E\u043D. \u0411\u0440\u0435\u043B\u043E\u043A \u2014 5.99.`,
+          backyard: `\u041D\u0430\u0441\u0442\u043E\u044F\u0449\u0430\u044F \u0441\u043B\u0435\u0436\u043A\u0430 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u043D\u0443\u0436\u0434\u0430\u0435\u0442\u0441\u044F \u0432 \u0437\u0434\u0430\u043D\u0438\u0438.`
+        },
+        {
+          x: 2520,
+          name: "\u043F\u0440\u0435\u0439\u0441\u043A\u0443\u0440\u0430\u043D\u0442 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u0432",
+          form: "stand",
+          facade: `\u0411\u0440\u0438\u0442\u0432\u0430 \u041E\u043A\u043A\u0430\u043C\u0430 \u2014 \u043E\u0442\u0434\u0435\u043B \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438. \u0414\u0435\u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u2014 \u044E\u0440\u043E\u0442\u0434\u0435\u043B. D\xE9tournement \u2014 \u0440\u0435\u043A\u043B\u0430\u043C\u043D\u044B\u0439. Mindfulness \u2014 HR. \u0423-\u0432\u044D\u0439 \u2014 flow.`,
+          backyard: `\xABDoubt is our product\xBB \u2014 \u0432 \u0440\u0430\u043C\u043E\u0447\u043A\u0435, \u043A\u0430\u043A \u043F\u0435\u0440\u0432\u044B\u0439 \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043D\u044B\u0439 \u0434\u043E\u043B\u043B\u0430\u0440. \u0412\u0441\u0435 \u043C\u0435\u0442\u043E\u0434\u044B \u0442\u0440\u0443\u0434\u043E\u0443\u0441\u0442\u0440\u043E\u0435\u043D\u044B.`
+        },
+        {
+          x: 2570,
+          name: "\u0448\u043A\u043E\u043B\u044C\u043D\u044B\u0439 \u043A\u043B\u0430\u0441\u0441",
+          facade: `\u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u043D\u0430 \u0448\u043D\u0443\u0440\u043A\u0435, \u0440\u0443\u043B\u043E\u043D \u0441\u0435\u0440\u043E\u0439 \u0431\u0443\u043C\u0430\u0433\u0438. \u0417\u0430 \u0441\u043B\u043E\u0432\u043E \u0440\u043E\u0434\u043D\u043E\u0439 \u0440\u0435\u0447\u0438 \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u043D\u0430 \u0448\u0435\u044E.`,
+          backyard: `\u0427\u0435\u0440\u0435\u0437 \u043F\u043E\u043A\u043E\u043B\u0435\u043D\u0438\u0435 \u0441\u0442\u0430\u043B\u0430 \u043D\u0435 \u043D\u0443\u0436\u043D\u0430. \u0420\u043E\u043C\u0430\u043D \u043D\u0430\u043F\u0438\u0441\u0430\u043D \u043D\u0430 \u044D\u0442\u043E\u0439 \u0431\u0443\u043C\u0430\u0433\u0435. \u0411\u0443\u043C\u0430\u0433\u0430 \u0432\u044B\u0434\u0435\u0440\u0436\u0430\u043B\u0430.`
+        },
+        {
+          x: 2610,
+          name: "\u0434\u0435\u0440\u0435\u0432\u043E \u0441\u043E\u0432\u0435\u0442\u0430",
+          facade: `\u041A\u0440\u0443\u0433 \u0432\u044B\u0442\u043E\u043F\u0442\u0430\u043D\u043D\u043E\u0439 \u0437\u0435\u043C\u043B\u0438. \u0421\u0438\u0434\u0435\u043B\u0438, \u043F\u043E\u043A\u0430 \u043D\u0435 \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044F\u0442\u0441\u044F. \u041C\u0435\u043D\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u043E \u043D\u0435 \u043F\u0435\u0440\u0435\u0433\u043E\u043B\u043E\u0441\u043E\u0432\u044B\u0432\u0430\u043B\u0438 \u2014 \u0434\u043E\u0441\u043B\u0443\u0448\u0438\u0432\u0430\u043B\u0438.`,
+          whisper: "...\u0442\u0435\u0431\u044F \u0434\u043E\u0441\u043B\u0443\u0448\u0430\u044E\u0442..."
+        },
+        {
+          x: 2640,
+          name: "\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0432 \u0432\u044B\u0441\u043E\u043A\u043E\u0439 \u0442\u0440\u0430\u0432\u0435",
+          facade: `\u0422\u0438\u0433\u0440 \u043D\u0435 \u043F\u0440\u043E\u0432\u043E\u0437\u0433\u043B\u0430\u0448\u0430\u0435\u0442 \u0442\u0438\u0433\u0440\u0438\u0442\u044E\u0434\u043D\u043E\u0441\u0442\u044C.`
+        },
+        {
+          x: 2670,
+          name: "\u0422\u0431\u0438\u043B\u0438\u0441\u0438",
+          facade: `\u0421\u0442\u0443\u043B \u0432\u043C\u0435\u0441\u0442\u043E \u043A\u0430\u0444\u0435\u0434\u0440\u044B. \u041C\u044B\u0441\u043B\u044C \u043D\u0435 \u043F\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u043B\u0438 \u2014 \u0441\u043E\u0432\u0435\u0440\u0448\u0430\u043B\u0438. \u0412\u0441\u043B\u0443\u0445. \u041E\u0434\u0438\u043D \u0440\u0430\u0437.`,
+          backyard: `\u041A\u043E\u043D\u0441\u043F\u0435\u043A\u0442 \u043E\u0442\u043D\u043E\u0441\u0438\u0442\u0441\u044F \u043A \u043C\u044B\u0441\u043B\u0438 \u043A\u0430\u043A \u043A\u0430\u0440\u0442\u0430 \u043A \u0445\u043E\u0434\u044C\u0431\u0435.`
+        },
+        {
+          x: 2695,
+          name: "\u041E\u0433\u043E\u043D\u0438\u043B\u0435\u043D\u0434",
+          live: true,
+          facade: `\u0424\u0430\u043A\u0435\u043B \u043D\u0430\u0434 \u0432\u043E\u0434\u043E\u0439, \u0433\u043E\u0440\u0438\u0442 \u0434\u0435\u0441\u044F\u0442\u0438\u043B\u0435\u0442\u0438\u044F\u043C\u0438. \xAB\u0411\u043E\u0440\u044C\u0431\u0430 \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u2026\xBB`,
+          backyard: `\u0414\u0432\u0435\u0440\u044C-\u0441\u043A\u0432\u043E\u0437\u043D\u044F\u043A \u0432 \xAB\u0441\u0435\u0439\u0447\u0430\u0441\xBB. \u0417\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F.`
+        },
+        // Plato cave returns — same shadow on a shop window
+        {
+          x: 2460,
+          name: "\u0432\u0438\u0442\u0440\u0438\u043D\u0430 \u0441 \u0442\u0435\u043D\u044C\u044E",
+          form: "surface",
+          facade: `\u041D\u0430 \u0432\u0438\u0442\u0440\u0438\u043D\u0435 \u2014 \u0442\u0430 \u0436\u0435 \u0442\u0435\u043D\u044C. \u0427\u0442\u043E \u0432 \xA71. \u0421\u0442\u0435\u043D\u0430 \u0442\u0430 \u0436\u0435.`
+        },
+        // Euphemism stand — fourth stop
+        {
+          x: 2540,
+          name: "\u0441\u0442\u0435\u043D\u0434 \u044D\u0432\u0444\u0435\u043C\u0438\u0437\u043C\u0430",
+          form: "stand",
+          facade: `\xAB\u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u044F\xBB \u2014 \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430\xBB, \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u044F\xBB, \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430\xBB.`,
+          backyard: `\u0427\u0435\u0442\u0432\u0451\u0440\u0442\u0430\u044F \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430. \u0422\u0430 \u0436\u0435 \u0446\u0430\u0440\u0430\u043F\u0438\u043D\u0430 \u0443 \u043F\u0440\u0430\u0432\u043E\u0433\u043E \u043A\u0440\u0430\u044F.`
+        },
+        // Anachronistic kiosk: Stoics™ in neon
+        {
+          x: 2500,
+          name: "\u043A\u0438\u043E\u0441\u043A \xAB\u0414\u0435\u0439\u043B\u0438-\u041F\u043E\u0440\u0442\u0438\u043A\xBB",
+          form: "kiosk",
+          facade: `\xAB\u0414\u0438\u0445\u043E\u0442\u043E\u043C\u0438\u044F \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F. \u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 2.99/\u043C\u0435\u0441. \u041F\u0440\u0435\u043C\u0438\u0443\u043C \u2014 \u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u0435 \u0432 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0442.\xBB`,
+          backyard: `\u0421\u0442\u043E\u0438\u043A\u0438 \u0438\u0437 \xA72 \u0437\u0430\u0432\u0435\u043B\u0438 \u0444\u0438\u043B\u0438\u0430\u043B. \u0410\u043D\u0430\u0445\u0440\u043E\u043D\u0438\u0437\u043C. \u0414\u0432\u0435\u0440\u044C \u0443 \u0444\u0438\u043B\u0438\u0430\u043B\u0430 \u0435\u0441\u0442\u044C. \u0423 \u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B\u0430 \u0431\u044B\u043B\u0430 \u2014 \u043D\u0435\u0442.`
+        }
+      ]
+    },
+    // ── §9 — now (2000s, act IV) ──
+    {
+      id: "now",
       n: 9,
-      id: "hall9",
-      title: "\u0421\u0415\u0419\u0427\u0410\u0421",
-      years: "2000-\u0435 \u2014 \u0430\u043A\u0442 IV",
-      facade: `\u0417\u0435\u0440\u043A\u0430\u043B\u0430 \u0438 \u0434\u0430\u043D\u043D\u044B\u0435. \u0414\u0438\u0430\u0433\u043D\u043E\u0441\u0442\u044B \u043D\u0430 \u043C\u0435\u0441\u0442\u0435, \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u0437\u0430\u0442\u043E\u0447\u0435\u043D\u044B.
-
-\u042D\u0442\u043E \u0435\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u0437\u0430\u043B, \u043A\u0443\u0434\u0430 \u0432\u0435\u0434\u0443\u0442 \u0434\u0432\u0435\u0440\u0438 \u0432\u0441\u0435\u0445 \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0445: \xAB\u0441\u0435\u0439\u0447\u0430\u0441\xBB \u2014 \u043C\u0435\u0441\u0442\u043E, \u0433\u0434\u0435 \u0441\u043A\u0432\u043E\u0437\u0438\u0442 \u0438\u0437 \u043A\u0430\u0436\u0434\u043E\u0439 \u044D\u043F\u043E\u0445\u0438.`,
-      backyard: `\u0414\u0432\u0435\u0440\u044C \u0441 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u043E\u0439 \xABArdet\xBB. \u0417\u0430 \u043D\u0435\u0439 \u2014 \u0437\u0435\u0440\u043A\u0430\u043B\u043E \u0441 \u0437\u0430\u0434\u0435\u0440\u0436\u043A\u043E\u0439.
-
-\u0417\u0430\u0434\u043D\u0438\u0439 \u0434\u0432\u043E\u0440: \xAB\u043A\u0440\u0438\u0442\u0438\u043A\u0430 \u0441\u043F\u0435\u043A\u0442\u0430\u043A\u043B\u044F, \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u043D\u0430\u044F \u043A\u0430\u043A \u043A\u043E\u043D\u0442\u0435\u043D\u0442. \u043A\u0430\u0442\u0430\u043B\u043E\u0433 \u043F\u043E\u0436\u0430\u0440\u043E\u0432, \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0439 \u043F\u043E \u0441\u0441\u044B\u043B\u043A\u0435. \u0438\u0440\u043E\u043D\u0438\u044F \u0441 \u0442\u0435\u043F\u043B\u043E\u043C, \u0442\u0438\u0440\u0430\u0436 \u0443\u0442\u043E\u0447\u043D\u044F\u0435\u0442\u0441\u044F. \u0441\u043C. \u043F\u043E\u043B\u043A\u0443: \u0425\u0430\u043D, \u041F\u0435\u043B\u0435\u0432\u0438\u043D, \u043C\u044B\xBB.
-
-\u041D\u0430 \u0441\u0442\u0435\u043D\u0435 \u2014 \u043D\u0430\u0448 \u0436\u0435 \u0442\u0435\u0441\u0442 18, \u043E\u0431\u0440\u0430\u0449\u0451\u043D\u043D\u044B\u0439 \u043A \u043D\u0430\u043C. \u0411\u0435\u0437 \u043E\u0442\u0432\u0435\u0442\u0430.
-
-\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u044D\u043A\u0441\u043F\u043E\u043D\u0430\u0442 \u2014 \u043F\u0443\u0441\u0442\u0430\u044F \u0440\u0430\u043C\u0430: \xAB\u0434\u043B\u044F \u0442\u043E\u0433\u043E, \u043A\u0442\u043E \u043F\u0440\u0438\u0434\u0451\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u043C\xBB.`,
-      exhibits: [
-        { name: "Felixstowe", text: "\u041F\u043E\u0440\u043E\u0433 \u0437\u0430\u043B\u0430. \u041C\u0435\u0434\u043B\u0435\u043D\u043D\u0430\u044F \u043E\u0442\u043C\u0435\u043D\u0430 \u0431\u0443\u0434\u0443\u0449\u0435\u0433\u043E." },
-        { name: "\u0421\u0435\u0443\u043B", text: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u0443\u0441\u0442\u0430\u043B\u043E\u0441\u0442\u0438. \u0412\u044B\u0433\u043E\u0440\u0430\u043D\u0438\u0435, \u043F\u0440\u043E\u0447\u0438\u0442\u0430\u043D\u043D\u043E\u0435 \u043A\u0430\u043A \u0441\u0432\u043E\u0431\u043E\u0434\u0430." },
-        { name: "\u041F\u0430\u0440\u043A\u0435\u0440\u0441\u0431\u0435\u0440\u0433", text: "C8. \u041C\u043E\u043B\u0435\u043A\u0443\u043B\u0430 \u043D\u0435 \u043F\u0430\u0445\u043D\u0435\u0442, \u043D\u0435 \u043D\u0430 \u0432\u043A\u0443\u0441, \u043D\u0435 \u043D\u0430 \u0432\u0438\u0434." },
-        { name: "\u041E\u0440\u0435\u0433\u043E\u043D", text: "\u0413\u0440\u0438\u0431 \u043D\u0430 \u0440\u0443\u0438\u043D\u0430\u0445. \u0416\u0438\u0437\u043D\u044C \u0432 \u043A\u0430\u043F\u0438\u0442\u0430\u043B\u0438\u0441\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0445 \u0440\u0430\u0437\u0432\u0430\u043B\u0438\u043D\u0430\u0445 \u2014 \u0443\u0436\u0435 \u0438\u0434\u0451\u0442." },
-        { name: "\u0421\u0430\u043D\u0442\u0430-\u041A\u0440\u0443\u0437", text: "Staying with the trouble. \u0420\u043E\u0434\u0441\u0442\u0432\u043E \u0432\u043C\u0435\u0441\u0442\u043E \u043F\u043E\u0442\u043E\u043C\u0441\u0442\u0432\u0430." },
-        { name: "\u041C\u0430\u0443\u043D\u0442\u0438\u043D-\u0412\u044C\u044E", text: "\u041F\u043E\u0432\u0435\u0434\u0435\u043D\u0447\u0435\u0441\u043A\u0438\u0439 \u0438\u0437\u043B\u0438\u0448\u0435\u043A. \u0422\u044B \u2014 \u043D\u0435 \u043A\u043B\u0438\u0435\u043D\u0442 \u0438 \u043D\u0435 \u0442\u043E\u0432\u0430\u0440. \u0422\u044B \u2014 \u043C\u0435\u0441\u0442\u043E\u0440\u043E\u0436\u0434\u0435\u043D\u0438\u0435." },
-        { name: "\u0411\u043B\u043E\u043A\u043F\u043E\u0441\u0442", text: "\u0412\u043B\u0430\u0441\u0442\u044C \u043D\u0430\u0437\u043D\u0430\u0447\u0430\u0435\u0442 \u0436\u0438\u0437\u043D\u0438 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C. \u0422\u0438\u043F III-b." },
-        { name: "\u0421\u0430\u043D-\u0424\u0440\u0430\u043D\u0446\u0438\u0441\u043A\u043E", text: "\u0410\u0434\u0440\u0435\u0441 \u0430\u043A\u0442\u0430 IV \u2014 \u0430\u043D\u043D\u0435\u043A\u0441\u0438\u044F \u0440\u0435\u0447\u0438 \u043F\u0438\u0448\u0435\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C. \u0417\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F." },
-        { name: "\u041B\u043E\u0441-\u0410\u043D\u0434\u0436\u0435\u043B\u0435\u0441", text: "\u0413\u0438\u0431\u0440\u0438\u0434\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u044C. \u0413\u043E\u0440\u0438\u0442 \u043F\u043E \u043F\u0440\u043E\u0435\u043A\u0442\u0443. \u0417\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F." },
-        { name: "Agbogbloshie", text: "\u041A\u043E\u043D\u0435\u0446 \u0444\u043E\u0440\u043C\u0430\u0442\u043E\u0432. \u0424\u043E\u0440\u043C\u0430\u0442 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F: \u0434\u044B\u043C." },
-        { name: "\u041A\u043E\u043B\u0442\u0430\u043D", text: "\u042D\u043A\u0441\u043F\u043E\u043D\u0430\u0442-\u0434\u044B\u0440\u0430: \u043F\u0443\u0441\u0442\u043E\u0439 \u043F\u043E\u0441\u0442\u0430\u043C\u0435\u043D\u0442. \u0422\u0430\u0431\u043B\u0438\u0447\u043A\u0430: \xAB\u043C\u0435\u043C\u043E\u0440\u0430\u043D\u0434\u0443\u043C \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D. \u0432\u0438\u043D\u0430 \u0432 \u043D\u0430\u043B\u0438\u0447\u0438\u0438\xBB." },
-        { name: "\u041F\u0443\u0441\u0442\u0430\u044F \u0440\u0430\u043C\u0430", text: "\u0414\u043B\u044F \u0442\u043E\u0433\u043E, \u043A\u0442\u043E \u043F\u0440\u0438\u0434\u0451\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u043C." }
-      ],
-      leaks: [
-        "\u041A\u0438\u043E\u0441\u043A \u0421\u0442\u043E\u0438\u043A\u0438\u2122: \u0434\u0435\u0439\u043B\u0438-\u043F\u043E\u0440\u0442\u0438\u043A, \u043C\u043E\u043D\u0435\u0442\u044B \u043F\u043E \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0435. \u041F\u0440\u0438\u0431\u044B\u043B \u0438\u0437 \u0437\u0430\u043B\u0430 2.",
-        "\u0422\u0435\u043D\u044C \u2014 \u0442\u0435\u043F\u0435\u0440\u044C \u043B\u0435\u043D\u0442\u0430. \u0421\u0442\u0435\u043D\u0430 \u0432\u0441\u0451 \u0442\u0430 \u0436\u0435.",
-        "\u042D\u0432\u0444\u0435\u043C\u0438\u0437\u043C: \xAB\u0432\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C\xBB. \u041E\u0434\u0438\u043D\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u0441\u043B\u043E\u0451\u0432 \u044D\u0442\u0438\u043A\u0435\u0442\u043E\u043A.",
-        "\u041C\u043E\u0445. \u0415\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u0430\u044F \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430 \u0430\u043D\u0444\u0438\u043B\u0430\u0434\u044B: \xAB\u0431\u044B\u043B \u0437\u0434\u0435\u0441\u044C \u0434\u043E \u0430\u043D\u0444\u0438\u043B\u0430\u0434\u044B\xBB."
-      ],
-      drafts: [],
-      // Hall 9 receives drafts; doors arriving here from other halls:
-      receives: ["\u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443 (\u0441\u0443\u043D\u0434\u0443\u043A\u0438)", "\u0418\u0441\u0444\u0430\u0445\u0430\u043D", "\u0441\u043B\u043E\u0431\u043E\u0434\u0441\u043A\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430", "\u0444\u0430\u043A\u0435\u043B \u041E\u0433\u043E\u043D\u0438\u043B\u0435\u043D\u0434\u0430", "\u0442\u0435\u0440\u0440\u0430\u0441\u0430 \u0441 \u043E\u043B\u0438\u0432\u0430\u043C\u0438", "\u0440\u044B\u043D\u043E\u043A-\u043B\u0430\u0431\u0438\u0440\u0438\u043D\u0442"]
+      range: [2700, 3e3],
+      name: "\u0441\u0435\u0439\u0447\u0430\u0441",
+      era: "2000-\u0435 \u2014",
+      palette: { sky: "#0e1a2a", ground: "#1a2030", lamp: "screen", dust: "#4a8aaa" },
+      actSign: `\u0410\u041A\u0422 IV.
+\u0410\u043D\u043D\u0435\u043A\u0441\u0438\u0440\u0443\u0435\u0442\u0441\u044F: \u0440\u0435\u0447\u044C, \u043E\u0431\u0440\u0430\u0437. \u0412\u043D\u0443\u0442\u0440\u0435\u043D\u043D\u0438\u0439 \u043C\u043E\u043D\u043E\u043B\u043E\u0433 \u2014 \u043D\u0430 \u043E\u0447\u0435\u0440\u0435\u0434\u0438.`,
+      signs: [
+        {
+          x: 2720,
+          name: "Felixstowe",
+          facade: `\u041F\u043E\u0440\u0442 \u0438 \u0437\u0430\u043A\u043E\u043B\u043E\u0447\u0435\u043D\u043D\u044B\u0439 \u043F\u0438\u0440\u0441. \u0411\u0443\u0434\u0443\u0449\u0435\u0435 \u043D\u0435 \u043E\u0442\u043C\u0435\u043D\u0438\u043B\u0438 \u2014 \u043E\u0442\u043C\u0435\u043D\u0438\u043B\u0438 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u0435\u0433\u043E \u0432\u043E\u043E\u0431\u0440\u0430\u0436\u0430\u0442\u044C.`
+        },
+        {
+          x: 2750,
+          name: "\u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u044B\u0439 \u043E\u0444\u0438\u0441 \u0432 2 \u043D\u043E\u0447\u0438",
+          facade: `\u0421\u0432\u0435\u0442\u0438\u0442\u0441\u044F, \u043D\u0438\u043A\u043E\u0433\u043E. \u041D\u0438\u043A\u0442\u043E \u043D\u0435 \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442. \u0412 \u044D\u0442\u043E\u043C \u0438 \u0434\u0435\u043B\u043E.`
+        },
+        {
+          x: 2780,
+          name: "\u0444\u0435\u0440\u043C\u0430 \u0422\u0435\u043D\u043D\u0430\u043D\u0442\u043E\u0432",
+          facade: `153 \u043A\u043E\u0440\u043E\u0432\u044B \u0438 \u043E\u0434\u043D\u043E \u0443\u043F\u0440\u044F\u043C\u0441\u0442\u0432\u043E \u0441\u0434\u0435\u043B\u0430\u043B\u0438 \u043D\u0435\u0432\u0438\u0434\u0438\u043C\u043E\u0435 \u0432\u0438\u0434\u0438\u043C\u044B\u043C. C8 \u2014 \u0432 \u043A\u0440\u043E\u0432\u0438 \u0447\u0438\u0442\u0430\u044E\u0449\u0435\u0433\u043E. \u0412\u043E\u0434\u0443 \u0432\u0438\u0434\u043D\u043E. \u041C\u043E\u043B\u0435\u043A\u0443\u043B\u0443 \u2014 \u043D\u0435\u0442.`
+        },
+        {
+          x: 2810,
+          name: "\u043A\u0430\u043C\u043F\u0443\u0441 \u0441 \u043E\u0431\u0435\u0434\u0430\u043C\u0438",
+          facade: `\u041E\u0431\u0435\u0434\u044B \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B. \u041A\u043B\u0438\u0435\u043D\u0442 \u2014 \u043D\u0435 \u0442\u044B. \u0422\u043E\u0432\u0430\u0440 \u2014 \u043D\u0435 \u0442\u044B. \u041C\u0435\u0441\u0442\u043E\u0440\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \u2014 \u0442\u044B.`
+        },
+        {
+          x: 2840,
+          name: "\u0421\u0430\u043D-\u0424\u0440\u0430\u043D\u0446\u0438\u0441\u043A\u043E",
+          live: true,
+          facade: `\u0422\u0443\u043C\u0430\u043D. \u0427\u0435\u0442\u044B\u0440\u0435 \u043B\u0438\u0445\u043E\u0440\u0430\u0434\u043A\u0438: \u0437\u043E\u043B\u043E\u0442\u043E, \u0434\u043E\u0442\u043A\u043E\u043C\u044B, \u043A\u0440\u0438\u043F\u0442\u0430, \u0418\u0418. \u0426\u0438\u043A\u043B \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043F\u043E\u043A\u043E\u043B\u0435\u043D\u0438\u0439 \u0432 \u0443\u0441\u043A\u043E\u0440\u0435\u043D\u043D\u043E\u0439 \u0441\u044A\u0451\u043C\u043A\u0435.`,
+          backyard: `\u0410\u043D\u043D\u0435\u043A\u0441\u0438\u044F \u0440\u0435\u0447\u0438 \u043F\u0438\u0448\u0435\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C. \u0422\u0443\u043C\u0430\u043D \u0441\u0442\u0430\u0440\u0448\u0435 \u0432\u0441\u0435\u0445 \u043B\u0438\u0445\u043E\u0440\u0430\u0434\u043E\u043A. \u0417\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 2870,
+          name: "\u041B\u043E\u0441-\u0410\u043D\u0434\u0436\u0435\u043B\u0435\u0441",
+          live: true,
+          facade: `\u0413\u043E\u0440\u043E\u0434 \u0441\u043F\u0435\u043A\u0442\u0430\u043A\u043B\u044F \u0433\u043E\u0440\u0435\u043B \u0432 \u043F\u0440\u044F\u043C\u043E\u043C \u044D\u0444\u0438\u0440\u0435. \u0421\u0442\u0438\u0445\u0438\u044F \u043F\u043E \u0444\u043E\u0440\u043C\u0435 \u2014 \u0441\u0447\u0451\u0442 \u043F\u043E \u0432\u0435\u043A\u0443. \u041C\u0430\u043B\u0438\u0431\u0443 \u0433\u043E\u0440\u0438\u0442 \u043F\u043E \u043F\u0440\u043E\u0435\u043A\u0442\u0443: \u043F\u0440\u0435\u0434\u0443\u043F\u0440\u0435\u0436\u0434\u0430\u043B\u0438.`,
+          backyard: `\u041F\u0440\u0438\u0447\u0438\u043D\u0443 \u0438\u0449\u0443\u0442 \u0432 \u043F\u0440\u043E\u0432\u043E\u0434\u0430\u0445. \u0417\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 2895,
+          name: "\u043F\u043E\u043B\u0435 \u0433\u0430\u0440\u0438 Agbogbloshie",
+          facade: `\u0423\u0433\u043E\u043B \u043F\u043B\u0430\u0442\u044B \u0438\u0437 \u0437\u0435\u043C\u043B\u0438, \u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B \u0440\u044F\u0434\u043E\u043C. \u0422\u0435\u0440\u043C\u0438\u043D\u0430\u043B: .agbogbloshie. \u0421\u0433\u043E\u0440\u0435\u043B\u043E \u043F\u0438\u0441\u0435\u043C \u0431\u043E\u043B\u044C\u0448\u0435, \u0447\u0435\u043C \u0432 \u0410\u043B\u0435\u043A\u0441\u0430\u043D\u0434\u0440\u0438\u0438. \u0424\u043E\u0440\u043C\u0430\u0442 \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F: \u0434\u044B\u043C.`
+        },
+        {
+          x: 2920,
+          name: "\u043F\u0443\u0441\u0442\u043E\u0439 \u043F\u043E\u0441\u0442\u0430\u043C\u0435\u043D\u0442",
+          facade: `\u041C\u0435\u043C\u043E\u0440\u0430\u043D\u0434\u0443\u043C \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D. \u0412\u0438\u043D\u0430 \u0432 \u043D\u0430\u043B\u0438\u0447\u0438\u0438. \u041C\u0430\u0440\u043A\u0435\u0440 \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0451\u043D\u043D\u043E\u0439 \u0432\u0438\u043D\u044B \u2014 \u0440\u0430\u0437\u044B\u0441\u043A\u0438\u0432\u0430\u0435\u0442\u0441\u044F.`
+        },
+        {
+          x: 2945,
+          name: "\u0431\u043B\u043E\u043A\u043F\u043E\u0441\u0442",
+          facade: `\u0428\u043B\u0430\u0433\u0431\u0430\u0443\u043C \u043D\u0430 \u043F\u0443\u0441\u0442\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0435, \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u043D\u0435 \u0432\u0438\u0434\u0435\u043B \u043D\u0438\u043A\u0442\u043E. \u041F\u0440\u043E\u043F\u0443\u0441\u043A\u0430\u044E\u0442 \u0432\u0441\u0435\u0445. \u041D\u0435 \u0441\u0440\u0430\u0437\u0443.`,
+          backyard: `\u0412 \xAB\u043D\u0435 \u0441\u0440\u0430\u0437\u0443\xBB \u2014 \u0432\u0441\u044F \u0432\u043B\u0430\u0441\u0442\u044C: \u043E\u043D\u0430 \u043D\u0430\u0437\u043D\u0430\u0447\u0430\u0435\u0442 \u0442\u0432\u043E\u0435\u0439 \u0436\u0438\u0437\u043D\u0438 \u0441\u043A\u043E\u0440\u043E\u0441\u0442\u044C.`
+        },
+        {
+          x: 2970,
+          name: "\u0434\u0432\u0435\u0440\u044C \xABARDET\xBB",
+          form: "building",
+          facade: `\u041D\u0430 \u0434\u0432\u0435\u0440\u0438 \u2014 \u0437\u0435\u0440\u043A\u0430\u043B\u043E \u0441 \u0437\u0430\u0434\u0435\u0440\u0436\u043A\u043E\u0439.`,
+          backyard: `\u041A\u0440\u0438\u0442\u0438\u043A\u0430 \u0441\u043F\u0435\u043A\u0442\u0430\u043A\u043B\u044F, \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u043D\u0430\u044F \u043A\u0430\u043A \u043A\u043E\u043D\u0442\u0435\u043D\u0442. \u041A\u0430\u0442\u0430\u043B\u043E\u0433 \u043F\u043E\u0436\u0430\u0440\u043E\u0432 \u043F\u043E \u0441\u0441\u044B\u043B\u043A\u0435. \u0418\u0440\u043E\u043D\u0438\u044F \u0441 \u0442\u0435\u043F\u043B\u043E\u043C, \u0442\u0438\u0440\u0430\u0436 \u0443\u0442\u043E\u0447\u043D\u044F\u0435\u0442\u0441\u044F. \u041F\u043E\u043B\u043A\u0430: \u0425\u0430\u043D, \u041F\u0435\u043B\u0435\u0432\u0438\u043D, \u043C\u044B.`
+        },
+        {
+          x: 2995,
+          name: "\u043F\u0443\u0441\u0442\u0430\u044F \u0440\u0430\u043C\u0430",
+          facade: `\u0414\u043B\u044F \u0442\u043E\u0433\u043E, \u043A\u0442\u043E \u043F\u0440\u0438\u0434\u0451\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u043C.`,
+          backyard: `\u041D\u0430\u0437\u0430\u0434 \u2014 \u0432\u0441\u0435\u0433\u0434\u0430. \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0430 \u043F\u0443\u0441\u0442\u0430\u044F.`
+        },
+        // Plato cave — third surface: a screen
+        {
+          x: 2735,
+          name: "\u044D\u043A\u0440\u0430\u043D \u0441 \u0442\u0435\u043D\u044C\u044E",
+          form: "surface",
+          facade: `\u041D\u0430 \u044D\u043A\u0440\u0430\u043D\u0435 \u2014 \u0442\u0430 \u0436\u0435 \u0442\u0435\u043D\u044C. \u0427\u0442\u043E \u0432 \xA71, \u0447\u0442\u043E \u0432 \xA78. \u0421\u0442\u0435\u043D\u0430 \u0442\u0430 \u0436\u0435. \u0422\u043E\u043B\u044C\u043A\u043E \u043D\u043E\u0441\u0438\u0442\u0435\u043B\u044C.`
+        },
+        // Euphemism stand — final stop
+        {
+          x: 2790,
+          name: "\u0441\u0442\u0435\u043D\u0434 \u044D\u0432\u0444\u0435\u043C\u0438\u0437\u043C\u0430",
+          form: "stand",
+          facade: `\xAB\u0432\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C\xBB \u2014 \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438\xBB, \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430\xBB, \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u043F\u0440\u043E\u0432\u0438\u0434\u0435\u043D\u0438\u044F\xBB, \u043F\u043E\u0432\u0435\u0440\u0445 \xAB\u0438\u0441\u043F\u0440\u0430\u0432\u044C \u0438\u043C\u0435\u043D\u0430\xBB. \u0421\u043B\u043E\u0451\u0432 \u043F\u044F\u0442\u044C.`,
+          backyard: `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430. \u0422\u0430 \u0436\u0435 \u0446\u0430\u0440\u0430\u043F\u0438\u043D\u0430 \u0443 \u043F\u0440\u0430\u0432\u043E\u0433\u043E \u043A\u0440\u0430\u044F.`
+        },
+        // Moss plaque — the only one in the anfilada
+        {
+          x: 2900,
+          name: "\u043C\u043E\u0445",
+          facade: `\u041F\u043E\u0434 \u043F\u043B\u0438\u043D\u0442\u0443\u0441\u043E\u043C \u2014 \u043C\u043E\u0445. \u0417\u0434\u0435\u0441\u044C \u2014 \u0442\u0430\u0431\u043B\u0438\u0447\u043A\u0430: \xAB\u0431\u044B\u043B \u0437\u0434\u0435\u0441\u044C \u0434\u043E \u0443\u043B\u0438\u0446\u044B.\xBB`
+        }
+      ]
     }
   ];
-  function getHall(n) {
-    return HALLS.find((h) => h.n === n) || null;
+  function segmentAt(x) {
+    if (x < TOWNLET.range[1]) return TOWNLET;
+    return SEGMENTS.find((s) => x >= s.range[0] && x < s.range[1]) || SEGMENTS[SEGMENTS.length - 1];
   }
+  var STREET_END = SEGMENTS[SEGMENTS.length - 1].range[1];
 
-  // src/ui/anfilada.js
-  var el = () => document.getElementById("anf");
-  var bodyEl = () => document.getElementById("anf-body");
-  var current = 1;
-  var side = "facade";
-  var gatesLineShown = false;
-  var staticTimer = null;
-  function esc(s) {
-    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function render() {
-    const h = getHall(current);
-    if (!h || !bodyEl()) return;
-    const lines = [];
-    lines.push(`<div class="anf-num">\u0417\u0410\u041B ${h.n} / 9</div>`);
-    lines.push(`<div class="anf-title">${esc(h.title)}</div>`);
-    lines.push(`<div class="anf-years">${esc(h.years)}</div>`);
-    const isBack = side === "backyard";
-    lines.push(`<div class="anf-side">${isBack ? "\u2014 \u0437\u0430\u0434\u0432\u043E\u0440\u043A\u0438 (\u0441\u043B\u0443\u0436\u0435\u0431\u043D\u0430\u044F \u0434\u0432\u0435\u0440\u044C) \u2014" : "\u2014 \u0444\u0430\u0441\u0430\u0434 \u2014"}</div>`);
-    const text = isBack ? h.backyard : h.facade;
-    lines.push(`<div class="anf-text">${esc(text).replace(/\n/g, "<br>")}</div>`);
-    if (!isBack) {
-      lines.push(`<div class="anf-h">\u044D\u043A\u0441\u043F\u043E\u043D\u0430\u0442\u044B:</div>`);
-      for (const ex of h.exhibits) {
-        lines.push(`<div class="anf-ex"><span class="anf-exn">${esc(ex.name)}</span> \u2014 ${esc(ex.text)}</div>`);
-      }
-    } else {
-      if (h.leaks && h.leaks.length) {
-        lines.push(`<div class="anf-h">\u043F\u0440\u043E\u0442\u0435\u0447\u043A\u0438:</div>`);
-        for (const lk of h.leaks) {
-          lines.push(`<div class="anf-leak">${esc(lk)}</div>`);
+  // src/ui/ulitsa.js
+  var VIEW_W = 720;
+  var VIEW_H = 180;
+  var GROUND_Y = 130;
+  var PLAYER_H2 = 16;
+  var canvas;
+  var sbCtx;
+  var bodyEl;
+  var subEl;
+  var hudEl;
+  var player = { x: 220, dir: 1, walkPhase: 0 };
+  var camX = 0;
+  var rafId = 0;
+  var lastSign = null;
+  var nearestSign = null;
+  var approachSide = "facade";
+  var firstEntry = true;
+  var staticPulse = 0;
+  var INTERACT_R = 14;
+  function pickNearest() {
+    const seg = segmentAt(player.x);
+    let best = null, bestD = INTERACT_R + 1;
+    const lookup = [TOWNLET, ...SEGMENTS];
+    for (const s of lookup) {
+      if (!overlaps(s.range, player.x - INTERACT_R, player.x + INTERACT_R)) continue;
+      for (const sign of s.signs) {
+        const d = Math.abs(sign.x - player.x);
+        if (d < bestD) {
+          bestD = d;
+          best = sign;
         }
       }
     }
-    if (h.drafts && h.drafts.length) {
-      lines.push(`<div class="anf-h">\u0441\u043A\u0432\u043E\u0437\u043D\u044F\u043A:</div>`);
-      for (const d of h.drafts) {
-        lines.push(`<div class="anf-draft" data-draft="1">\u25B8 ${esc(d.name)} \u2014 ${esc(d.note)}. <span class="anf-go">[\u0432\u043E\u0439\u0442\u0438]</span></div>`);
+    return best;
+  }
+  function overlaps(range, lo, hi) {
+    return range[1] >= lo && range[0] <= hi;
+  }
+  function renderSubtitle() {
+    if (!subEl) return;
+    const s = nearestSign;
+    if (!s) {
+      const seg = segmentAt(player.x);
+      subEl.innerHTML = `<div class="ul-era">${seg.era || ""}</div><div class="ul-segname">${seg.name || ""}</div><div class="ul-hint">\u2014 \u0438\u0434\u0438 \u0434\u0430\u043B\u044C\u0448\u0435: \u0447\u0442\u043E-\u0442\u043E \u0434\u0430 \u0431\u0443\u0434\u0435\u0442 \u2014</div>`;
+      return;
+    }
+    const useBack = approachSide === "backyard" && s.backyard;
+    const text = useBack ? s.backyard : s.facade;
+    const sideLabel = useBack ? "\u043E\u0431\u0440\u0430\u0442\u043D\u0430\u044F \u0441\u0442\u043E\u0440\u043E\u043D\u0430" : "\u043B\u0438\u0446\u0435\u0432\u0430\u044F";
+    const lineTags = [];
+    if (s.live) lineTags.push('<span class="ul-live">[\u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F]</span>');
+    if (s.whisper) lineTags.push(`<span class="ul-whisper">${esc(s.whisper)}</span>`);
+    subEl.innerHTML = `<div class="ul-signname">${esc(s.name)} <span class="ul-side">\u2014 ${sideLabel}</span></div><div class="ul-text">${esc(text).replace(/\n/g, "<br>")}</div>` + (lineTags.length ? `<div class="ul-tags">${lineTags.join(" ")}</div>` : "") + (s.backyard ? `<div class="ul-flip">[Z] \u043E\u0431\u043E\u0439\u0442\u0438 \u0437\u043D\u0430\u043A</div>` : "");
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function renderHUD() {
+    if (!hudEl) return;
+    const seg = segmentAt(player.x);
+    const prog = Math.min(1, player.x / STREET_END);
+    hudEl.innerHTML = `<div class="ul-hud-seg">\xA7${seg.n || 0} ${seg.name}</div><div class="ul-hud-bar"><div class="ul-hud-fill" style="width:${(prog * 100).toFixed(1)}%"></div></div><div class="ul-hud-nav">\u2190 \u2192  \u0438\u0434\u0442\u0438   |   [Z] \u043E\u0431\u043E\u0439\u0442\u0438   |   [Esc] \u0433\u043E\u0440\u043E\u0434\u043E\u043A</div>`;
+  }
+  function hexToRGB(h) {
+    const v = parseInt(h.slice(1), 16);
+    return [v >> 16 & 255, v >> 8 & 255, v & 255];
+  }
+  function rgbStr([r, g, b]) {
+    return `rgb(${r | 0},${g | 0},${b | 0})`;
+  }
+  function blend(a, b, t2) {
+    return [a[0] + (b[0] - a[0]) * t2, a[1] + (b[1] - a[1]) * t2, a[2] + (b[2] - a[2]) * t2];
+  }
+  function paletteAt(x) {
+    const all = [TOWNLET, ...SEGMENTS];
+    let curIdx = 0;
+    for (let i = 0; i < all.length; i++) {
+      if (x >= all[i].range[0]) curIdx = i;
+    }
+    const cur = all[curIdx];
+    const next = all[Math.min(all.length - 1, curIdx + 1)];
+    if (cur === next) return cur.palette;
+    const boundary = cur.range[1];
+    const bandHalf = 80;
+    let t2 = 0;
+    if (x > boundary - bandHalf) t2 = Math.min(1, (x - (boundary - bandHalf)) / bandHalf);
+    if (x > boundary) t2 = 1;
+    return {
+      sky: rgbStr(blend(hexToRGB(cur.palette.sky), hexToRGB(next.palette.sky), t2)),
+      ground: rgbStr(blend(hexToRGB(cur.palette.ground), hexToRGB(next.palette.ground), t2)),
+      dust: rgbStr(blend(hexToRGB(cur.palette.dust), hexToRGB(next.palette.dust), t2)),
+      lamp: t2 > 0.5 ? next.palette.lamp : cur.palette.lamp
+    };
+  }
+  function draw2() {
+    if (!sbCtx) return;
+    const ctx2 = sbCtx;
+    ctx2.imageSmoothingEnabled = false;
+    camX = Math.max(0, Math.min(STREET_END - VIEW_W, player.x - VIEW_W / 2));
+    const palCenter = paletteAt(player.x);
+    ctx2.fillStyle = palCenter.sky;
+    ctx2.fillRect(0, 0, VIEW_W, GROUND_Y);
+    ctx2.fillStyle = "rgba(0,0,0,0.25)";
+    ctx2.fillRect(0, GROUND_Y - 8, VIEW_W, 8);
+    ctx2.fillStyle = palCenter.ground;
+    ctx2.fillRect(0, GROUND_Y, VIEW_W, VIEW_H - GROUND_Y);
+    ctx2.fillStyle = palCenter.dust;
+    for (let i = 0; i < 70; i++) {
+      const px2 = (i * 53 + (camX >> 1 & 511)) % VIEW_W;
+      const py = GROUND_Y + 6 + i * 17 % (VIEW_H - GROUND_Y - 8);
+      ctx2.fillRect(px2, py, 1, 1);
+    }
+    drawLampPosts(ctx2, palCenter);
+    drawActSigns(ctx2);
+    const all = [TOWNLET, ...SEGMENTS];
+    for (const seg of all) {
+      if (seg.range[1] < camX - 30 || seg.range[0] > camX + VIEW_W + 30) continue;
+      for (const sign of seg.signs) drawLandmark(ctx2, sign);
+    }
+    drawScaffolding(ctx2);
+    drawPlayer2(ctx2);
+    if (staticPulse > 0) {
+      ctx2.globalAlpha = staticPulse / 18;
+      for (let i = 0; i < 60; i++) {
+        ctx2.fillStyle = i & 1 ? "#ffffff" : "#000000";
+        ctx2.fillRect(Math.random() * VIEW_W | 0, Math.random() * VIEW_H | 0, 2, 1);
+      }
+      ctx2.globalAlpha = 1;
+      staticPulse--;
+    }
+    const fade = ctx2.createLinearGradient(0, 0, VIEW_W, 0);
+    fade.addColorStop(0, "rgba(0,0,0,0.6)");
+    fade.addColorStop(0.08, "rgba(0,0,0,0)");
+    fade.addColorStop(0.92, "rgba(0,0,0,0)");
+    fade.addColorStop(1, "rgba(0,0,0,0.6)");
+    ctx2.fillStyle = fade;
+    ctx2.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
+  function drawLampPosts(ctx2, pal) {
+    const start = (Math.floor(camX / 50) - 1) * 50;
+    for (let wx = start; wx < camX + VIEW_W + 50; wx += 50) {
+      const sx = wx - camX;
+      if (sx < -8 || sx > VIEW_W + 8) continue;
+      const lampType = paletteAt(wx).lamp;
+      if (lampType === "none") continue;
+      ctx2.fillStyle = "#1a1410";
+      ctx2.fillRect(sx, GROUND_Y - 24, 2, 24);
+      ctx2.fillRect(sx - 1, GROUND_Y - 26, 4, 2);
+      let col = "#3a2a18", glow = null, r = 0;
+      if (lampType === "oil") {
+        col = "#aa6618";
+        glow = "rgba(180,120,40,";
+        r = 10;
+      }
+      if (lampType === "lantern") {
+        col = "#c8881a";
+        glow = "rgba(200,140,40,";
+        r = 12;
+      }
+      if (lampType === "candle") {
+        col = "#daa520";
+        glow = "rgba(218,165,32,";
+        r = 9;
+      }
+      if (lampType === "gas") {
+        col = "#f4d03f";
+        glow = "rgba(244,208,63,";
+        r = 14;
+      }
+      if (lampType === "tungsten") {
+        col = "#ffb060";
+        glow = "rgba(255,176,96,";
+        r = 16;
+      }
+      if (lampType === "neon") {
+        col = "#ff4aff";
+        glow = "rgba(255,74,255,";
+        r = 18;
+      }
+      if (lampType === "screen") {
+        col = "#7adfff";
+        glow = "rgba(122,223,255,";
+        r = 20;
+      }
+      if (lampType === "ember") {
+        col = "#ff7020";
+        glow = "rgba(255,112,32,";
+        r = 11;
+      }
+      if (glow) {
+        const g = ctx2.createRadialGradient(sx + 1, GROUND_Y - 27, 0, sx + 1, GROUND_Y - 27, r);
+        g.addColorStop(0, glow + "0.65)");
+        g.addColorStop(1, glow + "0)");
+        ctx2.fillStyle = g;
+        ctx2.fillRect(sx + 1 - r, GROUND_Y - 27 - r, r * 2, r * 2);
+      }
+      ctx2.fillStyle = col;
+      ctx2.fillRect(sx, GROUND_Y - 28, 3, 2);
+    }
+  }
+  function drawActSigns(ctx2) {
+    for (const seg of SEGMENTS) {
+      if (!seg.actSign) continue;
+      const wx = seg.range[0] + 6;
+      const sx = wx - camX;
+      if (sx < -40 || sx > VIEW_W + 40) continue;
+      ctx2.fillStyle = "rgba(0,0,0,0.7)";
+      ctx2.fillRect(sx, GROUND_Y - 4, 38, 4);
+      ctx2.fillStyle = "#b8860b";
+      ctx2.fillRect(sx, GROUND_Y - 5, 38, 1);
+      ctx2.font = '6px "Press Start 2P","VT323",monospace';
+      ctx2.fillStyle = "#b8860b";
+      const lines = seg.actSign.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        ctx2.fillText(lines[i], sx, 16 + i * 9);
       }
     }
-    if (h.n === 9 && h.receives && h.receives.length) {
-      lines.push(`<div class="anf-h">\u0441\u044E\u0434\u0430 \u0441\u043A\u0432\u043E\u0437\u0438\u0442 \u0438\u0437:</div>`);
-      lines.push(`<div class="anf-leak">${esc(h.receives.join(" \xB7 "))}</div>`);
-    }
-    lines.push(`<div class="anf-nav">${current > 1 ? "\u2190 \u0437\u0430\u043B " + (current - 1) : "\u2190 \u0432\u0440\u0430\u0442\u0430"}   |   ${isBack ? "[B] \u0444\u0430\u0441\u0430\u0434" : "[B] \u0437\u0430\u0434\u0432\u043E\u0440\u043A\u0438"}   |   ${current < 9 ? "\u0437\u0430\u043B " + (current + 1) + " \u2192" : "(\u0430\u043D\u0444\u0438\u043B\u0430\u0434\u0430 \u043A\u043E\u043D\u0447\u0430\u0435\u0442\u0441\u044F; \u0441\u043A\u0432\u043E\u0437\u0438\u0442)"}   |   [Esc] \u0432\u044B\u0439\u0442\u0438</div>`);
-    bodyEl().innerHTML = lines.join("");
-    bodyEl().querySelectorAll("[data-draft]").forEach((d) => {
-      d.addEventListener("click", () => jumpToNow());
-    });
   }
-  function jumpToNow() {
-    if (current === 9) return;
-    playDistantSound();
-    const b = bodyEl();
-    if (b) {
-      b.classList.add("anf-static");
-      clearTimeout(staticTimer);
-      staticTimer = setTimeout(() => {
-        b.classList.remove("anf-static");
-      }, 450);
+  function drawLandmark(ctx2, sign) {
+    const sx = sign.x - camX;
+    if (sx < -16 || sx > VIEW_W + 16) return;
+    const form = sign.form || "plaque";
+    const gy = GROUND_Y;
+    ctx2.fillStyle = "rgba(0,0,0,0.35)";
+    ctx2.fillRect(sx - 4, gy, 8, 1);
+    if (form === "building") {
+      ctx2.fillStyle = "#1a1410";
+      ctx2.fillRect(sx - 7, gy - 22, 14, 22);
+      ctx2.fillStyle = "#2a2018";
+      ctx2.fillRect(sx - 6, gy - 21, 12, 20);
+      ctx2.fillStyle = "#0a0808";
+      ctx2.fillRect(sx - 2, gy - 12, 4, 12);
+      ctx2.fillStyle = "#b8860b";
+      ctx2.fillRect(sx + 1, gy - 8, 1, 1);
+      ctx2.fillStyle = sign.live ? "#daa520" : "#3a3022";
+      ctx2.fillRect(sx - 4, gy - 18, 3, 3);
+      ctx2.fillRect(sx + 1, gy - 18, 3, 3);
+    } else if (form === "kiosk") {
+      ctx2.fillStyle = "#3a2418";
+      ctx2.fillRect(sx - 5, gy - 10, 10, 10);
+      ctx2.fillStyle = "#6b0f1a";
+      ctx2.fillRect(sx - 6, gy - 12, 12, 2);
+      ctx2.fillStyle = "#daa520";
+      ctx2.fillRect(sx - 4, gy - 7, 1, 1);
+    } else if (form === "stand") {
+      ctx2.fillStyle = "#3a2818";
+      ctx2.fillRect(sx - 4, gy - 12, 8, 10);
+      ctx2.fillStyle = "#1a1410";
+      ctx2.fillRect(sx - 3, gy, 2, 4);
+      ctx2.fillRect(sx + 1, gy, 2, 4);
+      ctx2.fillStyle = "#b8860b";
+      ctx2.fillRect(sx - 3, gy - 11, 6, 1);
+    } else if (form === "surface") {
+      ctx2.fillStyle = "#3a3328";
+      ctx2.fillRect(sx - 6, gy - 14, 12, 14);
+      ctx2.fillStyle = "#1a1a16";
+      ctx2.fillRect(sx - 5, gy - 13, 10, 2);
+      if (/тень/.test(sign.name)) {
+        ctx2.fillStyle = "#0a0a0e";
+        ctx2.fillRect(sx - 3, gy - 10, 6, 8);
+      }
+    } else {
+      ctx2.fillStyle = "#1a1410";
+      ctx2.fillRect(sx, gy - 12, 1, 12);
+      ctx2.fillStyle = "#b8860b";
+      ctx2.fillRect(sx - 4, gy - 14, 9, 4);
+      ctx2.fillStyle = "#3a2818";
+      ctx2.fillRect(sx - 3, gy - 13, 7, 2);
     }
-    current = 9;
-    side = "facade";
-    render();
+    if (Math.abs(sign.x - player.x) < INTERACT_R) {
+      ctx2.fillStyle = "#ffffff";
+      ctx2.fillRect(sx - 1, gy - 26, 2, 1);
+    }
   }
-  function open2() {
-    if (!el()) return;
-    if (!state.transition("anfilada")) return;
-    current = 1;
-    side = "facade";
-    el().classList.add("on");
-    if (!gatesLineShown) {
-      gatesLineShown = true;
-      if (bodyEl()) {
-        bodyEl().innerHTML = `<div class="anf-gates">\u042D\u0442\u0438 \u0432\u0440\u0430\u0442\u0430 \u0431\u044B\u043B\u0438 \u043F\u0440\u0435\u0434\u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u044B \u0434\u043B\u044F \u0442\u0435\u0431\u044F \u043E\u0434\u043D\u043E\u0433\u043E. \u041E\u0431\u044B\u0447\u043D\u043E \u044D\u0442\u043E \u0443\u0437\u043D\u0430\u044E\u0442 \u043F\u043E\u0437\u0436\u0435.</div><div class="anf-nav">[\u043B\u044E\u0431\u0430\u044F \u043A\u043B\u0430\u0432\u0438\u0448\u0430]</div>`;
-        const once = () => {
-          render();
-        };
-        setTimeout(() => {
-          document.addEventListener("keydown", once, { once: true });
-          el().addEventListener("click", once, { once: true });
-        }, 0);
-        return;
+  function drawScaffolding(ctx2) {
+    const allSegs = [TOWNLET, ...SEGMENTS];
+    for (const seg of allSegs) {
+      for (const sign of seg.signs) {
+        if (!sign.live) continue;
+        const sx = sign.x - camX;
+        if (sx < -16 || sx > VIEW_W + 16) continue;
+        ctx2.strokeStyle = "#aa7818";
+        ctx2.lineWidth = 1;
+        ctx2.globalAlpha = 0.85;
+        const w = 18, h = 28;
+        ctx2.strokeRect(sx - w / 2, GROUND_Y - h, w, h);
+        const flick = Math.sin(Date.now() * 5e-3 + sx) * 0.5 + 0.5;
+        ctx2.globalAlpha = 0.4 + flick * 0.5;
+        ctx2.beginPath();
+        ctx2.moveTo(sx - w / 2, GROUND_Y - h);
+        ctx2.lineTo(sx + w / 2, GROUND_Y);
+        ctx2.stroke();
+        ctx2.globalAlpha = 1;
       }
     }
-    render();
   }
-  function close2() {
-    if (!el()) return;
-    el().classList.remove("on");
-    state.transition("game");
+  function drawPlayer2(ctx2) {
+    const sx = Math.floor(player.x - camX);
+    const baseY = GROUND_Y - PLAYER_H2;
+    ctx2.fillStyle = "rgba(0,0,0,0.45)";
+    ctx2.fillRect(sx - 3, GROUND_Y, 7, 1);
+    ctx2.fillStyle = "#0a0810";
+    ctx2.fillRect(sx - 2, baseY + 4, 5, 10);
+    ctx2.fillRect(sx - 2, baseY, 5, 5);
+    ctx2.fillStyle = "#1a1420";
+    ctx2.fillRect(sx - 1, baseY + 1, 3, 3);
+    ctx2.fillStyle = "#ffb040";
+    ctx2.fillRect(sx, baseY + 7, 1, 1);
+    ctx2.fillStyle = "#ff7020";
+    ctx2.fillRect(sx, baseY + 8, 1, 1);
+    if (Math.abs(player.dir) > 0 && (Math.floor(Date.now() / 80) & 3) === 0) {
+      ctx2.fillStyle = "#5a4632";
+      ctx2.fillRect(sx + (player.dir > 0 ? -3 : 3), GROUND_Y - 1, 1, 1);
+    }
   }
-  function onKey(e) {
-    if (!state.is("anfilada")) return;
+  function tick2() {
+    if (!state.is("ulitsa")) return;
+    const kx = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
+    if (kx !== 0) {
+      player.dir = kx;
+      player.x = Math.max(0, Math.min(STREET_END - 1, player.x + kx * 1.4));
+      player.walkPhase = (player.walkPhase + 1) % 60;
+    }
+    const near = pickNearest();
+    if (near && near !== lastSign) {
+      approachSide = player.dir >= 0 ? "facade" : "backyard";
+      lastSign = near;
+      if (near.live && Math.random() < 0.25) {
+        staticPulse = 14;
+        playDistantSound();
+      }
+    }
+    if (!near) lastSign = null;
+    nearestSign = near;
+    draw2();
+    renderSubtitle();
+    renderHUD();
+    rafId = requestAnimationFrame(tick2);
+  }
+  var keys = { ArrowLeft: false, ArrowRight: false };
+  function onKeyDown(e) {
+    if (!state.is("ulitsa")) return;
     if (e.key === "Escape") {
       e.preventDefault();
       close2();
       return;
     }
-    if (e.key === "ArrowRight") {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
-      if (current < 9) {
-        current++;
-        side = "facade";
-        playClick();
-        render();
-      }
-      return;
+      keys[e.key] = true;
     }
-    if (e.key === "ArrowLeft") {
+    if (e.key === "z" || e.key === "Z" || e.key === "\u044F" || e.key === "\u042F") {
       e.preventDefault();
-      if (current > 1) {
-        current--;
-        side = "facade";
+      if (nearestSign && nearestSign.backyard) {
+        approachSide = approachSide === "facade" ? "backyard" : "facade";
         playClick();
-        render();
-      } else {
-        close2();
       }
-      return;
-    }
-    if (e.key === "b" || e.key === "B" || e.key === "\u0438" || e.key === "\u0418") {
-      e.preventDefault();
-      side = side === "facade" ? "backyard" : "facade";
-      playClick();
-      render();
     }
   }
+  function onKeyUp(e) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") keys[e.key] = false;
+  }
+  function open2() {
+    const el = document.getElementById("ulitsa");
+    if (!el) return;
+    if (!state.transition("ulitsa")) return;
+    el.classList.add("on");
+    player.x = 220;
+    player.dir = 1;
+    lastSign = null;
+    nearestSign = null;
+    approachSide = "facade";
+    staticPulse = 0;
+    if (firstEntry && bodyEl) {
+      firstEntry = false;
+      bodyEl.classList.add("ul-prelude");
+      if (subEl) subEl.innerHTML = `<div class="ul-gates">\u042D\u0442\u0438 \u0432\u0440\u0430\u0442\u0430 \u0431\u044B\u043B\u0438 \u043F\u0440\u0435\u0434\u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u044B \u0434\u043B\u044F \u0442\u0435\u0431\u044F \u043E\u0434\u043D\u043E\u0433\u043E. \u041E\u0431\u044B\u0447\u043D\u043E \u044D\u0442\u043E \u0443\u0437\u043D\u0430\u044E\u0442 \u043F\u043E\u0437\u0436\u0435.</div>`;
+      setTimeout(() => {
+        bodyEl && bodyEl.classList.remove("ul-prelude");
+      }, 1700);
+    }
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick2);
+  }
+  function close2() {
+    const el = document.getElementById("ulitsa");
+    if (!el) return;
+    el.classList.remove("on");
+    cancelAnimationFrame(rafId);
+    keys.ArrowLeft = keys.ArrowRight = false;
+    state.transition("game");
+  }
   function init2() {
-    document.addEventListener("keydown", onKey);
+    canvas = document.getElementById("ulitsa-strip");
+    bodyEl = document.getElementById("ulitsa-body");
+    subEl = document.getElementById("ulitsa-sub");
+    hudEl = document.getElementById("ulitsa-hud");
+    if (canvas) {
+      canvas.width = VIEW_W;
+      canvas.height = VIEW_H;
+      sbCtx = canvas.getContext("2d");
+    }
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
   }
 
   // src/audio/zoneAmbient.js
@@ -16899,19 +17487,19 @@ quarter\u2551      \u2551 highway
     altar: ["\u043C\u043E\u0445 \u043F\u043E\u043C\u043D\u0438\u0442", "\u043C\u043E\u0445 \u0432\u0441\u0435\u0433\u0434\u0430 \u043F\u043E\u043C\u043D\u0438\u043B", "\u0442\u044B \u043F\u043E\u043C\u043D\u0438\u0448\u044C \u0441 \u043D\u0438\u043C", "\u043F\u043E\u0434\u043F\u0438\u0441\u044C \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0430", "\u0434\u043E \u0442\u0432\u043E\u0435\u0433\u043E \u0440\u043E\u0436\u0434\u0435\u043D\u0438\u044F", "\u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0439"]
   };
   var wallProx = {};
-  function updateProximity(player2, locations2) {
+  function updateProximity(player3, locations2) {
     for (const locId of Object.keys(hiddenInscriptions)) {
       const l = locations2.find((ll) => ll.id === locId);
       if (!l) continue;
-      const dx = player2.x - (l.x + l.w / 2);
-      const dy = player2.y - (l.y + l.h / 2);
+      const dx = player3.x - (l.x + l.w / 2);
+      const dy = player3.y - (l.y + l.h / 2);
       const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < 60 && !player2.moving) {
+      if (d < 60 && !player3.moving) {
         wallProx[locId] = (wallProx[locId] || 0) + 1;
       }
     }
   }
-  function draw2(camera2, locations2) {
+  function draw3(camera2, locations2) {
     const ctx2 = X;
     for (const locId of Object.keys(hiddenInscriptions)) {
       const prox = wallProx[locId] || 0;
@@ -17032,7 +17620,7 @@ quarter\u2551      \u2551 highway
       playDistantSound();
     }
   }
-  function draw3(ctx2) {
+  function draw4(ctx2) {
     if (msgLife <= 0) return;
     const vw = scaler.vw, vh = scaler.vh;
     const total = 240;
@@ -17090,14 +17678,14 @@ quarter\u2551      \u2551 highway
   var whisper = { text: "", life: 0, x: 0, y: 0 };
   var lastWhisperEnd = 0;
   var COOLDOWN2 = 10800;
-  function check(player2, locations2) {
+  function check(player3, locations2) {
     if (whisper.life > 0) return;
     if (t - lastWhisperEnd < COOLDOWN2) return;
     for (const l of locations2) {
       if (!WHISPERS[l.id]) continue;
-      const dx = player2.x - l.x - l.w / 2;
-      const dy = player2.y - l.y - l.h / 2;
-      if (Math.sqrt(dx * dx + dy * dy) < 70 && !player2.moving) {
+      const dx = player3.x - l.x - l.w / 2;
+      const dy = player3.y - l.y - l.h / 2;
+      if (Math.sqrt(dx * dx + dy * dy) < 70 && !player3.moving) {
         whisper = {
           text: WHISPERS[l.id],
           life: 360,
@@ -17108,7 +17696,7 @@ quarter\u2551      \u2551 highway
       }
     }
   }
-  function draw4(ctx2, camera2) {
+  function draw5(ctx2, camera2) {
     if (whisper.life <= 0) return;
     const total = 360;
     const sx = whisper.x - camera2.x;
@@ -17167,7 +17755,7 @@ quarter\u2551      \u2551 highway
       if (p.life <= 0) particles.splice(i, 1);
     }
   }
-  function draw5(ctx2, camera2) {
+  function draw6(ctx2, camera2) {
     for (const p of particles) {
       const sx = Math.floor(p.x - camera2.x);
       const sy = Math.floor(p.y - camera2.y);
@@ -17346,7 +17934,7 @@ quarter\u2551      \u2551 highway
       }
     }
   }
-  function draw6(camera2) {
+  function draw7(camera2) {
     const ctx2 = X;
     for (const p of pets) {
       const sx = Math.floor(p.x - camera2.x);
@@ -17382,7 +17970,7 @@ quarter\u2551      \u2551 highway
     popup.desc = ach.desc;
     popup.life = popup.total;
   });
-  function draw7(ctx2) {
+  function draw8(ctx2) {
     if (popup.life <= 0) return;
     const vw = scaler.vw;
     const w = 240, h = 40;
@@ -17422,7 +18010,7 @@ quarter\u2551      \u2551 highway
     { loc: "nocturnal", ox: 48, oy: 85 },
     { loc: "raven", ox: 8, oy: 18 }
   ];
-  function draw8(player2, camera2, locations2) {
+  function draw9(player3, camera2, locations2) {
     const ctx2 = X;
     const P11 = { cat: "#050404", amber: "#daa520" };
     for (const spot of spots) {
@@ -17446,8 +18034,8 @@ quarter\u2551      \u2551 highway
         ctx2.fillRect(sx + 3, sy, 1, 1);
       }
       if (sightings.has(spot.loc)) continue;
-      const dx = player2.x - wx;
-      const dy = player2.y - wy;
+      const dx = player3.x - wx;
+      const dy = player3.y - wy;
       if (dx * dx + dy * dy < 1600) {
         sightings.add(spot.loc);
         events.emit("cat.sighted", spot.loc, sightings.size);
@@ -17923,28 +18511,28 @@ Ardet v1.0 \u2014 coming soon.
   var brainrot = 0;
   var brainrotFreeze = false;
   var brainrotFreezeTimer = 0;
-  function getDistFromMap(player2) {
+  function getDistFromMap(player3) {
     let d = 0;
-    if (player2.x < 0) d += Math.abs(player2.x);
-    if (player2.x > MW) d += player2.x - MW;
-    if (player2.y < 160) d += Math.abs(player2.y - 160);
-    if (player2.y > MH) d += player2.y - MH;
+    if (player3.x < 0) d += Math.abs(player3.x);
+    if (player3.x > MW) d += player3.x - MW;
+    if (player3.y < 160) d += Math.abs(player3.y - 160);
+    if (player3.y > MH) d += player3.y - MH;
     return d;
   }
-  function update5(player2) {
+  function update5(player3) {
     if (brainrotFreeze) {
       brainrotFreezeTimer++;
       if (brainrotFreezeTimer > 300) {
         brainrotFreeze = false;
         brainrotFreezeTimer = 0;
         brainrot = 50;
-        player2.x = 800;
-        player2.y = 900;
+        player3.x = 800;
+        player3.y = 900;
         events.emit("brainrot.recover");
       }
       return;
     }
-    const dist = getDistFromMap(player2);
+    const dist = getDistFromMap(player3);
     if (dist > 600) {
       brainrot = Math.min(100, (dist - 600) / 30);
     } else {
@@ -17957,7 +18545,7 @@ Ardet v1.0 \u2014 coming soon.
       events.emit("brainrot.freeze");
     }
   }
-  function draw9(ctx2) {
+  function draw10(ctx2) {
     if (brainrot <= 0 && !brainrotFreeze) return;
     const vw = scaler.vw, vh = scaler.vh;
     if (brainrotFreeze) {
@@ -18020,7 +18608,7 @@ Ardet v1.0 \u2014 coming soon.
   function isActive() {
     return active;
   }
-  function draw10(ctx2) {
+  function draw11(ctx2) {
     if (!active) return;
     const vw = scaler.vw, vh = scaler.vh;
     timer++;
@@ -18048,23 +18636,23 @@ Ardet v1.0 \u2014 coming soon.
   // src/world/monsters.js
   var monsters = [];
   var lastSpawn2 = 0;
-  function getDistFromMap2(player2) {
+  function getDistFromMap2(player3) {
     let d = 0;
-    if (player2.x < 0) d += Math.abs(player2.x);
-    if (player2.x > MW) d += player2.x - MW;
-    if (player2.y < 160) d += Math.abs(player2.y - 160);
-    if (player2.y > MH) d += player2.y - MH;
+    if (player3.x < 0) d += Math.abs(player3.x);
+    if (player3.x > MW) d += player3.x - MW;
+    if (player3.y < 160) d += Math.abs(player3.y - 160);
+    if (player3.y > MH) d += player3.y - MH;
     return d;
   }
-  function update6(player2) {
-    const dist = getDistFromMap2(player2);
+  function update6(player3) {
+    const dist = getDistFromMap2(player3);
     if (dist > 300 && t - lastSpawn2 > 120 && monsters.length < 8) {
       lastSpawn2 = t;
       const angle = Math.random() * Math.PI * 2;
       const spawnDist = 100 + Math.random() * 60;
       monsters.push({
-        x: player2.x + Math.cos(angle) * spawnDist,
-        y: player2.y + Math.sin(angle) * spawnDist,
+        x: player3.x + Math.cos(angle) * spawnDist,
+        y: player3.y + Math.sin(angle) * spawnDist,
         speed: 0.3 + Math.random() * 0.4,
         size: 3 + Math.floor(Math.random() * 4),
         life: 600,
@@ -18073,8 +18661,8 @@ Ardet v1.0 \u2014 coming soon.
     }
     for (let i = monsters.length - 1; i >= 0; i--) {
       const m = monsters[i];
-      const dx = player2.x - m.x;
-      const dy = player2.y - m.y;
+      const dx = player3.x - m.x;
+      const dy = player3.y - m.y;
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d > 3) {
         m.x += dx / d * m.speed;
@@ -18086,7 +18674,7 @@ Ardet v1.0 \u2014 coming soon.
       }
     }
   }
-  function draw11(camera2) {
+  function draw12(camera2) {
     const ctx2 = X;
     for (const m of monsters) {
       const sx = Math.floor(m.x - camera2.x);
@@ -18123,7 +18711,7 @@ Ardet v1.0 \u2014 coming soon.
   init2();
   init4();
   initAudio();
-  var player = {
+  var player2 = {
     x: 800,
     y: 900,
     tx: 800,
@@ -18132,7 +18720,7 @@ Ardet v1.0 \u2014 coming soon.
     moving: false,
     walkFrame: 0
   };
-  setPlayer(player);
+  setPlayer(player2);
   var flags = {
     talkedTo: /* @__PURE__ */ new Set(),
     visited: /* @__PURE__ */ new Set(),
@@ -18150,8 +18738,8 @@ Ardet v1.0 \u2014 coming soon.
   var savedData = loadGame();
   if (savedData) {
     if (savedData.player) {
-      player.x = savedData.player.x;
-      player.y = savedData.player.y;
+      player2.x = savedData.player.x;
+      player2.y = savedData.player.y;
     }
     if (savedData.talkedTo) savedData.talkedTo.forEach((n) => flags.talkedTo.add(n));
     if (savedData.visited) savedData.visited.forEach((id) => flags.visited.add(id));
@@ -18164,7 +18752,7 @@ Ardet v1.0 \u2014 coming soon.
   }
   init3(flags, () => getCollectedCount());
   startAutoSave(() => ({
-    player: { x: player.x, y: player.y },
+    player: { x: player2.x, y: player2.y },
     talkedTo: Array.from(flags.talkedTo),
     visited: Array.from(flags.visited),
     observersSeen: Array.from(flags.observersSeen),
@@ -18202,7 +18790,7 @@ Ardet v1.0 \u2014 coming soon.
     nocturnal: drawNPC_nocturnal,
     dumpster: drawDumpsterDemon
   };
-  function render2() {
+  function render() {
     const vw = scaler.vw, vh = scaler.vh;
     layers.clearAll();
     const bgCtx = layers.ctx("bg");
@@ -18210,21 +18798,21 @@ Ardet v1.0 \u2014 coming soon.
     const lightCtx = layers.ctx("light");
     const uiCtx = layers.ctx("ui");
     const postCtx = layers.ctx("post");
-    const camX = Math.round(camera.x);
+    const camX2 = Math.round(camera.x);
     const camY = Math.round(camera.y);
-    const srcX = clamp(camX, 0, MW - vw);
+    const srcX = clamp(camX2, 0, MW - vw);
     const srcY = clamp(camY, 0, MH - vh);
     const srcW = Math.min(vw, MW - srcX);
     const srcH = Math.min(vh, MH - srcY);
     if (srcW > 0 && srcH > 0) {
       bgCtx.drawImage(terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
     }
-    drawBloodMoon(bgCtx, { x: camX, y: camY });
-    drawSmokeClouds(bgCtx, { x: camX, y: camY });
+    drawBloodMoon(bgCtx, { x: camX2, y: camY });
+    drawSmokeClouds(bgCtx, { x: camX2, y: camY });
     worldCtx.save();
-    worldCtx.translate(-camX, -camY);
+    worldCtx.translate(-camX2, -camY);
     setCtx(worldCtx);
-    drawFootprints(worldCtx, { x: camX, y: camY });
+    drawFootprints(worldCtx, { x: camX2, y: camY });
     const sortedLocs = [...locations].sort((a, b) => a.y + a.h - (b.y + b.h));
     for (const loc of sortedLocs) {
       if (!camera.isVisible(loc.x, loc.y, loc.w, loc.h)) continue;
@@ -18233,25 +18821,25 @@ Ardet v1.0 \u2014 coming soon.
         npcDrawFn[loc.npc](loc.x, loc.y);
       }
     }
-    drawLoreItems({ x: camX, y: camY });
-    draw2({ x: camX, y: camY }, locations);
-    drawJesterGraffiti({ x: camX, y: camY });
-    drawJesterWandering({ x: camX, y: camY }, locations);
-    draw6({ x: camX, y: camY });
-    draw8(player, { x: camX, y: camY }, locations);
-    draw11({ x: camX, y: camY });
-    draw5(worldCtx, { x: camX, y: camY });
-    drawPlayer(player);
-    drawWorldWhisper({ x: camX, y: camY });
+    drawLoreItems({ x: camX2, y: camY });
+    draw3({ x: camX2, y: camY }, locations);
+    drawJesterGraffiti({ x: camX2, y: camY });
+    drawJesterWandering({ x: camX2, y: camY }, locations);
+    draw7({ x: camX2, y: camY });
+    draw9(player2, { x: camX2, y: camY }, locations);
+    draw12({ x: camX2, y: camY });
+    draw6(worldCtx, { x: camX2, y: camY });
+    drawPlayer(player2);
+    drawWorldWhisper({ x: camX2, y: camY });
     worldCtx.restore();
     if (lighting.sources[0]) {
-      lighting.sources[0].x = player.x + 6;
-      lighting.sources[0].y = player.y + 10;
+      lighting.sources[0].x = player2.x + 6;
+      lighting.sources[0].y = player2.y + 10;
     }
     const dayCycle = getDayCycle();
     const ambient = 0.28 + dayCycle * 0.45;
-    lighting.render(lightCtx, { x: camX, y: camY }, ambient);
-    const camObj = { x: camX, y: camY };
+    lighting.render(lightCtx, { x: camX2, y: camY }, ambient);
+    const camObj = { x: camX2, y: camY };
     lightParticles.update(camObj, lighting.sources);
     lightParticles.draw(worldCtx, camObj);
     const fxCtx = layers.ctx("fx");
@@ -18259,14 +18847,14 @@ Ardet v1.0 \u2014 coming soon.
     dyingPixels.update();
     dyingPixels.draw(fxCtx);
     drawAdditive(fxCtx);
-    draw9(fxCtx);
+    draw10(fxCtx);
     drawOverlay(uiCtx);
-    screenMoss.update(player.moving);
+    screenMoss.update(player2.moving);
     screenMoss.draw(uiCtx);
     drawHUD(uiCtx);
     postfx.apply(postCtx);
     if (isActive()) {
-      draw10(postCtx);
+      draw11(postCtx);
     }
     layers.composite();
   }
@@ -18329,21 +18917,21 @@ Ardet v1.0 \u2014 coming soon.
   }
   function drawHUD(ctx2) {
     draw(ctx2);
-    draw7(ctx2);
-    draw3(ctx2);
+    draw8(ctx2);
+    draw4(ctx2);
     ctx2.globalAlpha = 0.5;
     ctx2.fillStyle = "#1a8c1a";
     ctx2.font = '6px "Press Start 2P","VT323",monospace';
-    ctx2.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
+    ctx2.fillText(`[${state.current}] ${Math.floor(player2.x)},${Math.floor(player2.y)}`, 4, scaler.vh - 4);
     ctx2.globalAlpha = 1;
   }
   function drawWorldWhisper(camObj) {
     const worldCtx = layers.ctx("world");
-    draw4(worldCtx, camObj);
+    draw5(worldCtx, camObj);
   }
   var lastCrackFrame = -9999;
   var lastLightning = 0;
-  function updateCrackTriggers(player2) {
+  function updateCrackTriggers(player3) {
     if (t - lastCrackFrame < 240) return;
     if (weather.lightning > 34 && lastLightning < 34 && Math.random() < 0.35) {
       crackedGlass.add(
@@ -18353,7 +18941,7 @@ Ardet v1.0 \u2014 coming soon.
       lastCrackFrame = t;
     }
     lastLightning = weather.lightning;
-    const offmap = player2.x < 0 || player2.x > MW || player2.y < 160 || player2.y > MH;
+    const offmap = player3.x < 0 || player3.x > MW || player3.y < 160 || player3.y > MH;
     if (offmap && t % 600 === 0 && Math.random() < 0.4) {
       crackedGlass.add(
         30 + Math.floor(Math.random() * (scaler.vw - 60)),
@@ -18364,31 +18952,31 @@ Ardet v1.0 \u2014 coming soon.
   }
   function updateGame() {
     if (isFrozen()) {
-      update5(player);
+      update5(player2);
       return;
     }
     if (!state.is("game")) return;
     const move = input.getMove();
     if (move.active) {
       const spd = input.isDown("sprint") ? 4 : 2.4;
-      tryMove(player, move.x * spd, move.y * spd, locations, {
+      tryMove(player2, move.x * spd, move.y * spd, locations, {
         canLeaveSettlement: canLeaveSettlement()
       });
-      player.tx = player.x;
-      player.ty = player.y;
-      player.moving = true;
-      if (move.x > 0) player.dir = 1;
-      else if (move.x < 0) player.dir = -1;
-      events.emit(E.PLAYER_MOVE, player);
-      if (t % 8 === 0) footstepDust(player.x, player.y);
-      addFootprint(player.x, player.y);
-    } else if (player.moving) {
-      const dx = player.tx - player.x;
-      const dy = player.ty - player.y;
+      player2.tx = player2.x;
+      player2.ty = player2.y;
+      player2.moving = true;
+      if (move.x > 0) player2.dir = 1;
+      else if (move.x < 0) player2.dir = -1;
+      events.emit(E.PLAYER_MOVE, player2);
+      if (t % 8 === 0) footstepDust(player2.x, player2.y);
+      addFootprint(player2.x, player2.y);
+    } else if (player2.moving) {
+      const dx = player2.tx - player2.x;
+      const dy = player2.ty - player2.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 2) {
-        player.moving = false;
-        const loc = findLocationAt(player.x, player.y, locations);
+        player2.moving = false;
+        const loc = findLocationAt(player2.x, player2.y, locations);
         if (loc) {
           flags.visited.add(loc.id);
           events.emit(E.LOCATION_VISIT, loc);
@@ -18396,36 +18984,36 @@ Ardet v1.0 \u2014 coming soon.
         }
       } else {
         const spd = 2.4;
-        if (dx > 1) player.dir = 1;
-        else if (dx < -1) player.dir = -1;
-        tryMove(player, dx / dist * spd, dy / dist * spd, locations, {
+        if (dx > 1) player2.dir = 1;
+        else if (dx < -1) player2.dir = -1;
+        tryMove(player2, dx / dist * spd, dy / dist * spd, locations, {
           canLeaveSettlement: canLeaveSettlement()
         });
       }
     } else {
-      player.moving = false;
+      player2.moving = false;
     }
-    camera.follow(player.x + 6, player.y + 10);
+    camera.follow(player2.x + 6, player2.y + 10);
     camera.update();
     camera.clampToWorld(MW, MH);
-    checkLorePickup(player);
+    checkLorePickup(player2);
     updateJester(camera);
-    updateProximity(player, locations);
+    updateProximity(player2, locations);
     update4();
-    update5(player);
-    update6(player);
-    updateZone(getZone2(player.x, player.y));
-    update2(player.moving);
-    check(player, locations);
+    update5(player2);
+    update6(player2);
+    updateZone(getZone2(player2.x, player2.y));
+    update2(player2.moving);
+    check(player2, locations);
     update3();
-    update(getZone2(player.x, player.y));
-    updateCrackTriggers(player);
+    update(getZone2(player2.x, player2.y));
+    updateCrackTriggers(player2);
     if (t % 3 === 0) fireEmber(775, 795);
   }
   function loop() {
     tick();
     updateGame();
-    render2();
+    render();
     requestAnimationFrame(loop);
   }
   document.getElementById("entry-btn").addEventListener("click", () => {
@@ -18454,23 +19042,23 @@ Ardet v1.0 \u2014 coming soon.
       const px_ = loc.x + loc.w / 2 - 6;
       const py_ = loc.y + loc.h + 5;
       if (!canLeaveSettlement() && !isInSettlement(px_, py_)) return;
-      const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+      const dist = Math.sqrt((player2.x - px_) ** 2 + (player2.y - py_) ** 2);
       if (dist < 85) {
-        player.x = px_;
-        player.y = py_;
-        player.moving = false;
+        player2.x = px_;
+        player2.y = py_;
+        player2.moving = false;
         flags.visited.add(loc.id);
         events.emit(E.LOCATION_VISIT, loc);
         showMenu(loc);
       } else {
-        player.tx = px_;
-        player.ty = py_;
-        player.moving = true;
+        player2.tx = px_;
+        player2.ty = py_;
+        player2.moving = true;
       }
     } else {
-      player.tx = pos.x;
-      player.ty = pos.y;
-      player.moving = true;
+      player2.tx = pos.x;
+      player2.ty = pos.y;
+      player2.moving = true;
     }
   });
   events.on(E.NPC_TALK, (npcId) => {

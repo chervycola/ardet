@@ -224,10 +224,10 @@ setCtx(fakeCtx());
   test('state.transition: all declared transitions actually work', () => {
     const TRANSITIONS = {
       entry: ['game'],
-      game: ['menu','look','dialogue','terminal','shop','ending','anfilada'],
-      menu: ['game','look','dialogue','terminal','shop','anfilada'],
+      game: ['menu','look','dialogue','terminal','shop','ending','ulitsa'],
+      menu: ['game','look','dialogue','terminal','shop','ulitsa'],
       look: ['game','menu'], dialogue: ['game'], terminal: ['game'],
-      shop: ['game'], ending: ['game'], anfilada: ['game'],
+      shop: ['game'], ending: ['game'], ulitsa: ['game'],
     };
     for (const [from, tos] of Object.entries(TRANSITIONS)) {
       for (const to of tos) {

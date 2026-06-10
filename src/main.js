@@ -32,7 +32,7 @@ import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/meta
 import { showLore, draw as drawLorePopup } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
-import { init as initAnfilada, open as openAnfilada } from './ui/anfilada.js';
+import { init as initUlitsa, open as openUlitsa } from './ui/ulitsa.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -62,7 +62,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
-initAnfilada();
+initUlitsa();
 initCursor();
 initAudio();
 
@@ -494,8 +494,8 @@ events.on(E.LORE_COLLECT, (item) => {
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
-  // The gates open into the anfilada (phase 2): nine halls of epochs
-  if (actionKey === 'gates_pass') { openAnfilada(); return; }
+  // The gates open onto the street (phase 2): one road, gradient of epochs
+  if (actionKey === 'gates_pass') { openUlitsa(); return; }
   // Shop actions
   if (actionKey === 'shop1') { openShop('shop1'); return; }
   if (actionKey === 'shop2') { openShop('shop2'); return; }

@@ -233,46 +233,69 @@ canvas#game {
   width: 100%;
 }
 
-/* ── Anfilada (nine halls) ── */
-#anf {
+/* ── Ulitsa (the street: pixel sidescroller + subtitle panel) ── */
+#ulitsa {
   position: fixed;
   inset: 0;
   display: none;
   z-index: 300;
-  background: rgba(8,6,4,0.97);
+  background: rgba(6,4,4,0.98);
   padding: var(--space-l);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   justify-content: center;
+  align-items: center;
 }
-#anf.on { display: flex; }
-#anf-body {
-  max-width: 640px;
+#ulitsa.on { display: flex; }
+#ulitsa-body {
+  max-width: 760px;
   width: 100%;
   font-family: var(--font-pixel);
+}
+#ulitsa-strip {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  image-rendering: pixelated;
+  margin: 0 auto 12px;
+  border: 1px solid rgba(184,134,11,0.35);
+  background: #000;
+}
+#ulitsa-hud {
+  font-size: 7px;
+  color: var(--c-ash);
+  margin-bottom: 8px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.ul-hud-seg { color: var(--c-gold); min-width: 160px; }
+.ul-hud-bar { flex: 1; height: 4px; background: rgba(138,141,143,0.18); position: relative; }
+.ul-hud-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c-gold); transition: width 0.1s linear; }
+.ul-hud-nav { font-size: 7px; color: var(--c-ash); }
+#ulitsa-sub {
+  font-size: 9px;
+  color: var(--c-bone);
   line-height: 1.9;
+  min-height: 110px;
+  padding: 10px 14px;
+  border-left: 2px solid var(--c-crimson);
+  background: rgba(20,12,8,0.45);
 }
-.anf-num { font-size: 7px; color: var(--c-ash); margin-bottom: 6px; }
-.anf-title { font-size: 13px; color: var(--c-gold); letter-spacing: 2px; margin-bottom: 4px; }
-.anf-years { font-size: 8px; color: var(--c-ash); margin-bottom: 14px; }
-.anf-side { font-size: 8px; color: var(--c-crimson); margin-bottom: 10px; }
-.anf-text { font-size: 9px; color: var(--c-bone); margin-bottom: 14px; }
-.anf-h { font-size: 8px; color: var(--c-gold); margin: 12px 0 6px; }
-.anf-ex { font-size: 8px; color: var(--c-bone); margin-bottom: 7px; opacity: 0.85; }
-.anf-exn { color: var(--c-gold); }
-.anf-leak { font-size: 8px; color: #7a8a6a; margin-bottom: 6px; font-style: normal; }
-.anf-draft { font-size: 8px; color: #b8a060; margin-bottom: 6px; cursor: pointer; }
-.anf-draft:hover { color: var(--c-gold); }
-.anf-go { color: var(--c-crimson); }
-.anf-nav { font-size: 7px; color: var(--c-ash); margin-top: 20px; border-top: 1px solid rgba(138,141,143,0.25); padding-top: 8px; }
-.anf-gates { font-size: 10px; color: var(--c-bone); margin-top: 30vh; text-align: center; }
-.anf-static { animation: anfstatic 0.45s steps(6) both; }
-@keyframes anfstatic {
-  0% { opacity: 1; filter: none; }
-  30% { opacity: 0.4; filter: contrast(3) brightness(2); }
-  60% { opacity: 0.7; filter: contrast(0.5); }
-  100% { opacity: 1; filter: none; }
-}
+.ul-signname { color: var(--c-gold); font-size: 9px; margin-bottom: 6px; }
+.ul-side { color: var(--c-crimson); font-size: 7px; }
+.ul-text { color: var(--c-bone); }
+.ul-tags { margin-top: 6px; font-size: 7px; }
+.ul-live { color: #b8860b; }
+.ul-whisper { color: #7a8a6a; font-style: italic; margin-left: 8px; }
+.ul-flip { font-size: 7px; color: var(--c-ash); margin-top: 6px; }
+.ul-era { font-size: 7px; color: var(--c-ash); }
+.ul-segname { font-size: 10px; color: var(--c-gold); margin-top: 4px; }
+.ul-hint { font-size: 7px; color: var(--c-ash); opacity: 0.7; margin-top: 4px; }
+.ul-gates { font-size: 10px; color: var(--c-bone); text-align: center; padding: 24px 12px; }
+.ul-prelude #ulitsa-strip { opacity: 0; transition: opacity 0.8s 0.7s; }
+.ul-prelude #ulitsa-hud { opacity: 0; }
 
 /* ── Custom cursor ── */
 #cur {
