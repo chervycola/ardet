@@ -161,6 +161,15 @@ setCtx(fakeCtx());
         `termDb.${k}: bad color ${v.color}`);
     }
   });
+
+  test('termDb: Package-C files present; .demon alias does not clobber art prompt', () => {
+    for (const k of ['fire','demon_descartes','hatata','ishraq','timbuktu','agbogbloshie','indra']) {
+      assert(termDb[k], `missing Package-C file: ${k}`);
+    }
+    // The art-generation "demon" prompt must remain intact and distinct
+    assert(termDb.demon && /ПРОМТ/.test(termDb.demon.text), 'art-prompt demon clobbered');
+    assert(termDb.demon_descartes.text !== termDb.demon.text, 'demon files must be distinct');
+  });
 }
 
 // ═══ LORE IDS ═══

@@ -13,6 +13,16 @@ const history = [];
 let historyIdx = -1;
 let booted = false;
 
+// File aliases: the Cartesian ".demon" file lives under a distinct key
+// because "demon" is already taken by an art-generation prompt (reachable
+// via `prompt demon`). read/cat .demon resolve here.
+const FILE_ALIASES = { demon: 'demon_descartes' };
+function fileEntry(rawName) {
+  const stripped = rawName.replace(/^\./, '');
+  const key = FILE_ALIASES[stripped] || stripped;
+  return termDb[key] || termDb[rawName];
+}
+
 function print(text, color = '#1a8c1a') {
   const div = document.createElement('div');
   div.style.color = color;
@@ -120,8 +130,7 @@ const commands = {
   read(args) {
     const name = args[0];
     if (!name) { print('> использование: read <файл>', '#8b0000'); return; }
-    const key = name.replace(/^\./, '');
-    const entry = termDb[key] || termDb[name];
+    const entry = fileEntry(name);
     if (entry) {
       print(entry.text, entry.color);
     } else {
@@ -298,10 +307,10 @@ function exec(cmd) {
   if (fn) {
     fn.call(commands, args);
   } else {
-    // Try as a whois/read fallback (handles bare ".moss" etc.)
-    const dbKey = name.replace(/^\./, '');
-    if (termDb[dbKey]) {
-      print(termDb[dbKey].text, termDb[dbKey].color);
+    // Try as a whois/read fallback (handles bare ".moss", ".demon" etc.)
+    const entry = fileEntry(name);
+    if (entry) {
+      print(entry.text, entry.color);
     } else {
       print(`> команда не найдена: ${name}\n> введи help`, '#8b0000');
     }
