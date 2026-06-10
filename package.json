@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node test/smoke-sprites.mjs && node test/logic.mjs && node test/systems.mjs && node test/content.mjs && node test/effects.mjs",
+    "test": "node test/smoke-sprites.mjs && node test/logic.mjs && node test/systems.mjs && node test/content.mjs && node test/effects.mjs && node test/anfilada.mjs",
     "test:sprites": "node test/smoke-sprites.mjs",
     "test:logic": "node test/logic.mjs",
     "test:systems": "node test/systems.mjs",
     "test:content": "node test/content.mjs",
-    "test:effects": "node test/effects.mjs"
+    "test:effects": "node test/effects.mjs",
+    "test:anfilada": "node test/anfilada.mjs"
   },
   "repository": {
     "type": "git",
