@@ -190,13 +190,75 @@ const imp = p => import(new URL(p, base));
     assert(canvas && canvas.width >= 6000, 'canvas spans the street');
   });
 
+  const { state } = await imp('core/state.js');
   const map = await imp('ui/worldmap.js');
-  test('worldmap: init + toggle lifecycle without throwing', () => {
+  test('worldmap: only opens from game state; close always works', () => {
     map.init();
-    map.toggle();
-    assert(map.isOpen(), 'open');
-    map.toggle();
-    assert(!map.isOpen(), 'closed');
+    state.current = 'menu';
+    map.open();
+    assert(!map.isOpen(), 'must not open outside game state');
+    state.current = 'game';
+    map.open();
+    assert(map.isOpen(), 'opens from game');
+    map.close();
+    assert(!map.isOpen(), 'close works');
+    map.toggle(); assert(map.isOpen(), 'toggle on');
+    map.toggle(); assert(!map.isOpen(), 'toggle off');
+  });
+}
+
+// ═══ WORLD MAP DB (editor-derived nodes) ═══
+{
+  const db = await imp('content/worldmap_db.js');
+  const { CONTINENTS, NODES, TUNNELS, MUSEUMS, PRECIPICES, STATUS_COLORS, THREAD_COLORS, nodeById } = db;
+
+  test('worldmap_db: four continents with polygon points and labels', () => {
+    eq(CONTINENTS.length, 4, '4 continents');
+    for (const c of CONTINENTS) {
+      assert(typeof c.name === 'string' && c.name.length > 0, 'name');
+      assert(typeof c.pts === 'string' && c.pts.split(' ').length >= 4, `pts: ${c.name}`);
+      assert(Array.isArray(c.label) && c.label.length === 2, `label: ${c.name}`);
+    }
+  });
+
+  test('worldmap_db: nodes have unique ids, valid statuses, threads array', () => {
+    const seen = new Set();
+    for (const n of NODES) {
+      assert(!seen.has(n.id), `dup ${n.id}`); seen.add(n.id);
+      assert(STATUS_COLORS[n.st], `${n.id}: bad st ${n.st}`);
+      assert(Array.isArray(n.thr), `${n.id}: thr`);
+      for (const tn of n.thr) assert(THREAD_COLORS[tn], `${n.id}: thread ${tn}`);
+    }
+    // Must include SF + LA as live nodes (matching the new fire locations)
+    const sf = nodeById('sf'), la = nodeById('la');
+    assert(sf && sf.st === 'live', 'sf live on map');
+    assert(la && la.st === 'live', 'la live on map');
+  });
+
+  test('worldmap_db: tunnels/museums/precipices point at real nodes', () => {
+    assert(TUNNELS.length >= 1 && MUSEUMS.length >= 1 && PRECIPICES.length >= 1, 'each present');
+    for (const t of TUNNELS) {
+      assert(nodeById(t.a) && nodeById(t.b), `tunnel ${t.id}: endpoints`);
+    }
+    for (const m of MUSEUMS) assert(nodeById(m.at), `museum ${m.id}`);
+    for (const p of PRECIPICES) assert(nodeById(p.at), `precipice ${p.id}`);
+  });
+}
+
+// ═══ HYBRID FIRES (SF, LA on the street) ═══
+{
+  const { locations } = await imp('world/locations.js');
+  test('hybrid fires: SF + LA are full street locations with light + live look', () => {
+    const sf = locations.find(l => l.id === 'fire_sf');
+    const la = locations.find(l => l.id === 'fire_la');
+    assert(sf && la, 'fires present');
+    for (const f of [sf, la]) {
+      eq(f.zone, 'street', `${f.id}: zone`);
+      eq(f.streetForm, 'fire', `${f.id}: form`);
+      assert(f.streetLive === true, `${f.id}: live`);
+      assert(f.light && f.light.r > 50, `${f.id}: lit`);
+      assert(/запись продолжается/.test(f.look), `${f.id}: live tag in look`);
+    }
   });
 }
 

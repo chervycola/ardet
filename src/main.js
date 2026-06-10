@@ -309,6 +309,57 @@ function drawStreetSign(ctx, loc) {
   ctx.fillRect(x - 5, gy, 10, 2);
 
   const form = loc.streetForm;
+  if (form === 'fire') {
+    // Charred mound + 5 flame tongues with independent flicker.
+    ctx.fillStyle = '#1a0a08';
+    ctx.fillRect(x - 11, gy - 4, 22, 4);
+    ctx.fillStyle = '#3a1408';
+    ctx.fillRect(x - 9, gy - 6, 18, 3);
+    // Embers
+    for (let i = 0; i < 4; i++) {
+      const ex = x - 7 + i * 4;
+      ctx.fillStyle = (t * 0.04 + i) % 1 < 0.5 ? '#ff7020' : '#aa3008';
+      ctx.fillRect(ex, gy - 4, 1, 1);
+    }
+    // Flame body (layered)
+    const flick = Math.sin(t * 0.18) * 1.4;
+    const flick2 = Math.sin(t * 0.27 + 1.6) * 0.9;
+    // Outer dim
+    ctx.fillStyle = '#6b0f1a';
+    ctx.fillRect(x - 7, gy - 12 + flick * 0.5, 14, 6);
+    // Mid
+    ctx.fillStyle = '#c83018';
+    ctx.fillRect(x - 5, gy - 16 + flick, 10, 8);
+    // Hot
+    ctx.fillStyle = '#ff7020';
+    ctx.fillRect(x - 3, gy - 21 + flick * 1.2, 6, 10);
+    // Wick / core white
+    ctx.fillStyle = '#ffd060';
+    ctx.fillRect(x - 1, gy - 24 + flick2, 2, 8);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x, gy - 26 + flick2, 1, 4);
+    // Rising sparks
+    for (let i = 0; i < 6; i++) {
+      const sp = ((t * 0.04 + i * 0.18) % 1);
+      if (sp < 0.92) {
+        const sx = x + Math.sin(t * 0.05 + i) * 4;
+        const sy = gy - 24 - sp * 24;
+        ctx.globalAlpha = (1 - sp) * 0.85;
+        ctx.fillStyle = i % 2 ? '#ff7020' : '#ffb040';
+        ctx.fillRect(sx | 0, sy | 0, 1, 1);
+        ctx.globalAlpha = 1;
+      }
+    }
+    // Heat shimmer / hot ground
+    const grad = ctx.createRadialGradient(x, gy - 12, 2, x, gy - 12, 30);
+    grad.addColorStop(0, 'rgba(255,120,40,0.18)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - 30, gy - 30, 60, 36);
+    // Live status scaffolding outline (already drawn below for live signs)
+    return;
+  }
+
   if (form === 'building') {
     ctx.fillStyle = '#15100c';
     ctx.fillRect(x - 9, gy - 30, 18, 30);
@@ -592,8 +643,9 @@ events.on('location.use', (loc) => {
     player.moving = false;
     camera.x = player.x - scaler.vw / 2;
     camera.y = player.y - scaler.vh / 2;
+    // First-pass quiet line via the lore popup (dismissable, can't trap).
     if (consumeGatesLine()) {
-      showLook({ name: 'Врата', look: 'Эти врата были предназначены для тебя одного. Обычно это узнают позже.' });
+      showLore('Эти врата были предназначены для тебя одного. Обычно это узнают позже.');
     }
     return;
   }

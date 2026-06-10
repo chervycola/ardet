@@ -133,6 +133,39 @@ export const locations = [
 import { streetLocations } from './street.js';
 locations.push(...streetLocations);
 
+// ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
+// They are full burning landmarks, not just plaques: lit, animated, and
+// addressable like the campfire. Coordinates match their §9 sign x ranges.
+locations.push({
+  id: 'fire_sf', name: 'Пожар Сан-Франциско', zone: 'street',
+  x: 5828, y: 840, w: 28, h: 36,
+  streetForm: 'fire',
+  streetLive: true,
+  look: `Туман не приехал — он здесь жил всегда. Сейчас он держит на плечах горячий воздух.
+
+Город четырёх лихорадок: 1849, доткомы, крипта, ИИ. Цикл четырёх поколений в ускоренной съёмке.
+
+Адрес акта IV. Аннексия речи пишется здесь, сейчас. Туман старше всех лихорадок.
+
+[запись продолжается]`,
+  light: { r: 95, color: [255, 110, 60], flicker: 0.18 },
+});
+
+locations.push({
+  id: 'fire_la', name: 'Пожар Лос-Анджелеса', zone: 'street',
+  x: 5858, y: 840, w: 28, h: 36,
+  streetForm: 'fire',
+  streetLive: true,
+  look: `Январь 2025: город спектакля горел в прямом эфире.
+
+Гибридный огонь — стихия по форме, тип II по условиям: климат как меморандум, размазанный по веку. Причину ищут в проводах. Суды идут.
+
+Дэвис предупреждал: Малибу горит по проекту.
+
+[запись продолжается]`,
+  light: { r: 105, color: [255, 90, 30], flicker: 0.2 },
+});
+
 // Quick lookup by id
 export const locationById = {};
 for (const loc of locations) locationById[loc.id] = loc;

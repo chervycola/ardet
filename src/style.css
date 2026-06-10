@@ -246,9 +246,12 @@ canvas#game {
 }
 #map.on { display: flex; }
 #map-canvas {
-  width: min(92vw, 960px);
+  width: min(94vw, 1100px);
   height: auto;
+  max-height: 92vh;
   image-rendering: pixelated;
+  border: 1px solid rgba(107,15,26,0.4);
+  background: #08060a;
 }
 
 /* ── Custom cursor ── */

@@ -257,9 +257,12 @@ canvas#game {
 }
 #map.on { display: flex; }
 #map-canvas {
-  width: min(92vw, 960px);
+  width: min(94vw, 1100px);
   height: auto;
+  max-height: 92vh;
   image-rendering: pixelated;
+  border: 1px solid rgba(107,15,26,0.4);
+  background: #08060a;
 }
 
 /* ── Custom cursor ── */
@@ -2501,6 +2504,44 @@ ${sign.whisper}`;
     }
   ];
   locations.push(...streetLocations);
+  locations.push({
+    id: "fire_sf",
+    name: "\u041F\u043E\u0436\u0430\u0440 \u0421\u0430\u043D-\u0424\u0440\u0430\u043D\u0446\u0438\u0441\u043A\u043E",
+    zone: "street",
+    x: 5828,
+    y: 840,
+    w: 28,
+    h: 36,
+    streetForm: "fire",
+    streetLive: true,
+    look: `\u0422\u0443\u043C\u0430\u043D \u043D\u0435 \u043F\u0440\u0438\u0435\u0445\u0430\u043B \u2014 \u043E\u043D \u0437\u0434\u0435\u0441\u044C \u0436\u0438\u043B \u0432\u0441\u0435\u0433\u0434\u0430. \u0421\u0435\u0439\u0447\u0430\u0441 \u043E\u043D \u0434\u0435\u0440\u0436\u0438\u0442 \u043D\u0430 \u043F\u043B\u0435\u0447\u0430\u0445 \u0433\u043E\u0440\u044F\u0447\u0438\u0439 \u0432\u043E\u0437\u0434\u0443\u0445.
+
+\u0413\u043E\u0440\u043E\u0434 \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043B\u0438\u0445\u043E\u0440\u0430\u0434\u043E\u043A: 1849, \u0434\u043E\u0442\u043A\u043E\u043C\u044B, \u043A\u0440\u0438\u043F\u0442\u0430, \u0418\u0418. \u0426\u0438\u043A\u043B \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043F\u043E\u043A\u043E\u043B\u0435\u043D\u0438\u0439 \u0432 \u0443\u0441\u043A\u043E\u0440\u0435\u043D\u043D\u043E\u0439 \u0441\u044A\u0451\u043C\u043A\u0435.
+
+\u0410\u0434\u0440\u0435\u0441 \u0430\u043A\u0442\u0430 IV. \u0410\u043D\u043D\u0435\u043A\u0441\u0438\u044F \u0440\u0435\u0447\u0438 \u043F\u0438\u0448\u0435\u0442\u0441\u044F \u0437\u0434\u0435\u0441\u044C, \u0441\u0435\u0439\u0447\u0430\u0441. \u0422\u0443\u043C\u0430\u043D \u0441\u0442\u0430\u0440\u0448\u0435 \u0432\u0441\u0435\u0445 \u043B\u0438\u0445\u043E\u0440\u0430\u0434\u043E\u043A.
+
+[\u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F]`,
+    light: { r: 95, color: [255, 110, 60], flicker: 0.18 }
+  });
+  locations.push({
+    id: "fire_la",
+    name: "\u041F\u043E\u0436\u0430\u0440 \u041B\u043E\u0441-\u0410\u043D\u0434\u0436\u0435\u043B\u0435\u0441\u0430",
+    zone: "street",
+    x: 5858,
+    y: 840,
+    w: 28,
+    h: 36,
+    streetForm: "fire",
+    streetLive: true,
+    look: `\u042F\u043D\u0432\u0430\u0440\u044C 2025: \u0433\u043E\u0440\u043E\u0434 \u0441\u043F\u0435\u043A\u0442\u0430\u043A\u043B\u044F \u0433\u043E\u0440\u0435\u043B \u0432 \u043F\u0440\u044F\u043C\u043E\u043C \u044D\u0444\u0438\u0440\u0435.
+
+\u0413\u0438\u0431\u0440\u0438\u0434\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u044C \u2014 \u0441\u0442\u0438\u0445\u0438\u044F \u043F\u043E \u0444\u043E\u0440\u043C\u0435, \u0442\u0438\u043F II \u043F\u043E \u0443\u0441\u043B\u043E\u0432\u0438\u044F\u043C: \u043A\u043B\u0438\u043C\u0430\u0442 \u043A\u0430\u043A \u043C\u0435\u043C\u043E\u0440\u0430\u043D\u0434\u0443\u043C, \u0440\u0430\u0437\u043C\u0430\u0437\u0430\u043D\u043D\u044B\u0439 \u043F\u043E \u0432\u0435\u043A\u0443. \u041F\u0440\u0438\u0447\u0438\u043D\u0443 \u0438\u0449\u0443\u0442 \u0432 \u043F\u0440\u043E\u0432\u043E\u0434\u0430\u0445. \u0421\u0443\u0434\u044B \u0438\u0434\u0443\u0442.
+
+\u0414\u044D\u0432\u0438\u0441 \u043F\u0440\u0435\u0434\u0443\u043F\u0440\u0435\u0436\u0434\u0430\u043B: \u041C\u0430\u043B\u0438\u0431\u0443 \u0433\u043E\u0440\u0438\u0442 \u043F\u043E \u043F\u0440\u043E\u0435\u043A\u0442\u0443.
+
+[\u0437\u0430\u043F\u0438\u0441\u044C \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F]`,
+    light: { r: 105, color: [255, 90, 30], flicker: 0.2 }
+  });
   var locationById = {};
   for (const loc of locations) locationById[loc.id] = loc;
   function attachContent(looks2, dialogues2) {
@@ -17441,127 +17482,416 @@ quarter\u2551      \u2551 highway
     });
   }
 
+  // src/content/worldmap_db.js
+  var MAP_W = 1400;
+  var MAP_H = 1560;
+  var CONTINENTS = [
+    { name: "\u0410\u043C\u0435\u0440\u0438\u043A\u0438", label: [200, 170], pts: "90,260 300,200 380,380 330,560 260,620 290,780 215,950 125,860 150,620 95,430" },
+    { name: "\u0415\u0432\u0440\u043E\u043F\u0430", label: [640, 100], pts: "430,180 660,130 940,165 1005,265 990,415 940,495 960,610 860,650 700,650 580,610 470,590 415,395" },
+    { name: "\u0410\u0444\u0440\u0438\u043A\u0430", label: [640, 740], pts: "500,800 740,758 880,860 860,1120 760,1360 620,1440 520,1280 470,1000" },
+    { name: "\u0410\u0437\u0438\u044F \xB7 \u0411\u043B\u0438\u0436\u043D\u0438\u0439 \u0412\u043E\u0441\u0442\u043E\u043A", label: [1140, 270], pts: "1050,340 1220,295 1330,375 1325,650 1270,860 1120,940 1045,775 1030,555" }
+  ];
+  var STATUS_COLORS = {
+    closed: "#8a8474",
+    // closed record
+    live: "#d4a017",
+    // запись продолжается
+    hearth: "#3fae8c",
+    // очаг
+    natural: "#d85a30",
+    // нерукотворный огонь
+    start: "#9b8cf0",
+    // старт
+    ghost: "#55514a"
+    // призрак, предполагается
+  };
+  var THREAD_COLORS = {
+    "\u0443\u0447\u0438\u0442\u0435\u043B\u044F": "#9b8cf0",
+    "\u0444\u043E\u043D\u0430\u0440\u0438": "#d4a017",
+    "\u043E\u0447\u0430\u0433\u0438": "#3fae8c",
+    "\u0441\u0432\u0435\u0442\u0430": "#e8d48a",
+    "\u0430\u0440\u0445\u0438\u0432": "#c8b89a",
+    "\u0432\u044B\u0432\u043E\u0437\u044B": "#7da7c4",
+    "\u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C": "#8b2d2d"
+  };
+  var NODES = [
+    { id: "gorodok", name: "\u0413\u043E\u0440\u043E\u0434\u043E\u043A (\u0441\u0442\u0430\u0440\u0442)", x: 992, y: 400, st: "start", thr: ["\u0443\u0447\u0438\u0442\u0435\u043B\u044F", "\u0444\u043E\u043D\u0430\u0440\u0438", "\u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C"] },
+    { id: "felix", name: "Felixstowe", x: 500, y: 236, st: "closed", thr: [] },
+    { id: "amst", name: "\u041F\u0435\u0447\u044C \u0414\u0435\u043A\u0430\u0440\u0442\u0430", x: 572, y: 300, st: "hearth", thr: ["\u043E\u0447\u0430\u0433\u0438"] },
+    { id: "paris", name: "\u041F\u0430\u0440\u0438\u0436 \xD73", x: 506, y: 392, st: "closed", thr: [] },
+    { id: "portbou", name: "\u041F\u043E\u0440\u0442-\u0411\u0443", x: 468, y: 600, st: "closed", thr: [] },
+    { id: "shelden", name: "\u0428\u0451\u043B\u0434\u0435\u043D", x: 660, y: 180, st: "closed", thr: [] },
+    { id: "kopen", name: "\u041A\u043E\u043F\u0435\u043D\u0433\u0430\u0433\u0435\u043D", x: 718, y: 236, st: "closed", thr: [] },
+    { id: "kenig", name: "\u041A\u0451\u043D\u0438\u0433\u0441\u0431\u0435\u0440\u0433", x: 906, y: 222, st: "closed", thr: [] },
+    { id: "jena", name: "\u0419\u0435\u043D\u0430 \xD72", x: 690, y: 330, st: "closed", thr: [] },
+    { id: "frank", name: "\u0413\u0440\u0430\u043D\u0434-\u043E\u0442\u0435\u043B\u044C \xAB\u0411\u0435\u0437\u0434\u043D\u0430\xBB", x: 636, y: 396, st: "closed", thr: [] },
+    { id: "todt", name: "\u0422\u043E\u0434\u0442\u043D\u0430\u0443\u0431\u0435\u0440\u0433", x: 598, y: 458, st: "closed", thr: [] },
+    { id: "teatr", name: "\u0422\u0435\u0430\u0442\u0440 \u041D\u0438\u0446\u0448\u0435", x: 812, y: 358, st: "closed", thr: ["\u0444\u043E\u043D\u0430\u0440\u0438"] },
+    { id: "rim", name: "\u0420\u0438\u043C", x: 668, y: 548, st: "closed", thr: [] },
+    { id: "afiny", name: "\u0410\u0444\u0438\u043D\u044B", x: 788, y: 580, st: "closed", thr: [] },
+    { id: "efes", name: "\u042D\u0444\u0435\u0441", x: 918, y: 598, st: "closed", thr: [] },
+    { id: "skit", name: "\u0421\u043A\u0438\u0442", x: 838, y: 646, st: "closed", thr: [] },
+    { id: "sloboda", name: "\u0421\u043B\u043E\u0431\u043E\u0434\u0441\u043A\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430", x: 938, y: 448, st: "live", thr: ["\u0443\u0447\u0438\u0442\u0435\u043B\u044F"] },
+    { id: "kotlovan", name: "\u041A\u043E\u0442\u043B\u043E\u0432\u0430\u043D", x: 906, y: 514, st: "closed", thr: ["\u0432\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C"] },
+    { id: "chern", name: "\u0427\u0435\u0440\u043D\u043E\u0431\u044B\u043B\u044C", x: 972, y: 318, st: "closed", thr: [] },
+    { id: "parohod", name: "\u0424\u0438\u043B\u043E\u0441\u043E\u0444\u0441\u043A\u0438\u0439 \u043F\u0430\u0440\u043E\u0445\u043E\u0434", x: 762, y: 150, st: "closed", thr: ["\u0432\u044B\u0432\u043E\u0437\u044B"] },
+    { id: "kamera", name: "\u041A\u0430\u043C\u0435\u0440\u0430 \xB7 \u0412\u043B\u0430\u0434\u0438\u043C\u0438\u0440", x: 1014, y: 366, st: "closed", thr: [] },
+    { id: "astap", name: "\u0421\u0442\u0430\u043D\u0446\u0438\u044F \u0410\u0441\u0442\u0430\u043F\u043E\u0432\u043E", x: 1036, y: 424, st: "closed", thr: [] },
+    { id: "tropa", name: "\u0422\u0440\u043E\u043F\u0430 \u043F\u043E \u0441\u043D\u0435\u0433\u0443", x: 1284, y: 180, st: "closed", thr: [] },
+    { id: "tipasa", name: "\u0422\u0438\u043F\u0430\u0441\u0430", x: 432, y: 714, st: "natural", thr: [] },
+    { id: "oregon", name: "\u041E\u0440\u0435\u0433\u043E\u043D", x: 152, y: 318, st: "closed", thr: [] },
+    { id: "parker", name: "\u041F\u0430\u0440\u043A\u0435\u0440\u0441\u0431\u0435\u0440\u0433", x: 282, y: 368, st: "closed", thr: [] },
+    { id: "santa", name: "\u0421\u0430\u043D\u0442\u0430-\u041A\u0440\u0443\u0437", x: 142, y: 438, st: "closed", thr: [] },
+    { id: "mview", name: "\u041C\u0430\u0443\u043D\u0442\u0438\u043D-\u0412\u044C\u044E", x: 192, y: 518, st: "closed", thr: [] },
+    { id: "vegas", name: "\u041B\u0430\u0441-\u0412\u0435\u0433\u0430\u0441", x: 224, y: 600, st: "closed", thr: [] },
+    { id: "sf", name: "\u0421\u0430\u043D-\u0424\u0440\u0430\u043D\u0446\u0438\u0441\u043A\u043E", x: 148, y: 482, st: "live", thr: [] },
+    { id: "la", name: "\u041B\u043E\u0441-\u0410\u043D\u0434\u0436\u0435\u043B\u0435\u0441", x: 172, y: 596, st: "live", thr: [] },
+    { id: "rynok", name: "\u0420\u044B\u043D\u043E\u043A-\u043B\u0430\u0431\u0438\u0440\u0438\u043D\u0442", x: 272, y: 862, st: "live", thr: [] },
+    { id: "blida", name: "\u0411\u043B\u0438\u0434\u0430", x: 582, y: 830, st: "closed", thr: [] },
+    { id: "dom4", name: "\u0414\u043E\u043C \u0447\u0435\u0442\u044B\u0440\u0451\u0445 \u043A\u043E\u043C\u043D\u0430\u0442", x: 682, y: 800, st: "closed", thr: [] },
+    { id: "timbuktu", name: "\u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443", x: 600, y: 938, st: "closed", thr: ["\u0443\u0447\u0438\u0442\u0435\u043B\u044F", "\u0430\u0440\u0445\u0438\u0432", "\u0432\u044B\u0432\u043E\u0437\u044B"] },
+    { id: "blokpost", name: "\u0411\u043B\u043E\u043A\u043F\u043E\u0441\u0442", x: 778, y: 938, st: "closed", thr: [] },
+    { id: "yakob", name: "\u041F\u0435\u0449\u0435\u0440\u0430 \u042F\u043A\u043E\u0431\u0430", x: 832, y: 1010, st: "hearth", thr: ["\u043E\u0447\u0430\u0433\u0438", "\u0441\u0432\u0435\u0442\u0430"] },
+    { id: "klass", name: "\u0428\u043A\u043E\u043B\u044C\u043D\u044B\u0439 \u043A\u043B\u0430\u0441\u0441", x: 748, y: 1062, st: "closed", thr: [] },
+    { id: "agbog", name: "Agbogbloshie", x: 588, y: 1118, st: "closed", thr: ["\u0430\u0440\u0445\u0438\u0432"] },
+    { id: "derevo", name: "\u0414\u0435\u0440\u0435\u0432\u043E \u0441\u043E\u0432\u0435\u0442\u0430", x: 700, y: 1160, st: "closed", thr: ["\u0443\u0447\u0438\u0442\u0435\u043B\u044F"] },
+    { id: "fort", name: "\u0424\u043E\u0440\u0442 \u0421\u0430\u043D-\u0421\u0435\u0431\u0430\u0441\u0442\u044C\u044F\u043D", x: 540, y: 1198, st: "closed", thr: [] },
+    { id: "ogoni", name: "\u041E\u0433\u043E\u043D\u0438\u043B\u0435\u043D\u0434", x: 652, y: 1228, st: "live", thr: [] },
+    { id: "trava", name: "\u0412\u044B\u0441\u043E\u043A\u0430\u044F \u0442\u0440\u0430\u0432\u0430", x: 642, y: 1390, st: "closed", thr: [] },
+    { id: "konya", name: "\u041A\u043E\u043D\u044C\u044F", x: 1078, y: 524, st: "closed", thr: ["\u0443\u0447\u0438\u0442\u0435\u043B\u044F"] },
+    { id: "tbilisi", name: "\u0422\u0431\u0438\u043B\u0438\u0441\u0438", x: 1108, y: 462, st: "closed", thr: [] },
+    { id: "isfahan", name: "\u0418\u0441\u0444\u0430\u0445\u0430\u043D", x: 1174, y: 608, st: "live", thr: ["\u0441\u0432\u0435\u0442\u0430"] },
+    { id: "jerusalem", name: "\u0418\u0435\u0440\u0443\u0441\u0430\u043B\u0438\u043C \xB7 \u0441\u0443\u0434", x: 1088, y: 676, st: "closed", thr: [] },
+    { id: "oliva", name: "\u0422\u0435\u0440\u0440\u0430\u0441\u0430 \u0441 \u043E\u043B\u0438\u0432\u0430\u043C\u0438", x: 1062, y: 744, st: "live", thr: [] },
+    { id: "bhopal", name: "\u0411\u0445\u043E\u043F\u0430\u043B", x: 1252, y: 806, st: "closed", thr: [] },
+    { id: "seoul", name: "\u0421\u0435\u0443\u043B", x: 1274, y: 408, st: "closed", thr: [] },
+    { id: "buro", name: "\u0411\u044E\u0440\u043E \u0438\u043C\u0451\u043D", x: 1198, y: 420, st: "closed", thr: [] },
+    { id: "din", name: "\u041D\u043E\u0436 \u0414\u0438\u043D\u0430", x: 1178, y: 472, st: "closed", thr: [] },
+    { id: "derevo2", name: "\u0411\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u043D\u043E\u0435 \u0434\u0435\u0440\u0435\u0432\u043E", x: 1142, y: 520, st: "closed", thr: [] },
+    { id: "indra", name: "\u0421\u0435\u0442\u044C \u0418\u043D\u0434\u0440\u044B", x: 1236, y: 700, st: "closed", thr: ["\u0441\u0432\u0435\u0442\u0430"] },
+    { id: "kioto", name: "\u041A\u0438\u043E\u0442\u043E \xB7 \u0420\u0451\u0430\u043D\u0434\u0437\u0438", x: 1296, y: 494, st: "closed", thr: [] },
+    { id: "kintsugi", name: "\u041C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0430\u044F \u043A\u0438\u043D\u0446\u0443\u0433\u0438", x: 1318, y: 540, st: "closed", thr: [] },
+    { id: "hirosima", name: "\u0421\u0442\u0443\u043F\u0435\u043D\u044C \xB7 \u0425\u0438\u0440\u043E\u0441\u0438\u043C\u0430", x: 1282, y: 566, st: "closed", thr: [] },
+    { id: "nemo", name: "\u0422\u043E\u0447\u043A\u0430 \u041D\u0435\u043C\u043E", x: 184, y: 1300, st: "natural", thr: [] },
+    { id: "g_vedanta", name: "(?) \u0412\u0435\u0434\u0430\u043D\u0442\u0430", x: 1206, y: 862, st: "ghost", thr: [] },
+    { id: "g_dogen", name: "(?) \u042D\u0439\u0445\u044D\u0439\u0434\u0437\u0438", x: 1342, y: 498, st: "ghost", thr: [] },
+    { id: "g_rus", name: "(?) \u0420\u0443\u0441\u0441\u043A\u0430\u044F \u043B\u0438\u043D\u0438\u044F", x: 1062, y: 322, st: "ghost", thr: [] }
+  ];
+  var TUNNELS = [
+    // a, b — endpoints; threaded between two distant nodes
+    { id: "tun_metro", a: "paris", b: "todt", label: "\u0442\u0443\u043D\u043D\u0435\u043B\u044C \u0426\u0435\u043B\u0430\u043D\u0430" },
+    { id: "tun_ship", a: "parohod", b: "sf", label: "\u0442\u0443\u043D\u043D\u0435\u043B\u044C \u043F\u0430\u0440\u043E\u0445\u043E\u0434\u0430" },
+    { id: "tun_road", a: "sloboda", b: "kenig", label: "\u0442\u0443\u043D\u043D\u0435\u043B\u044C \u0421\u043A\u043E\u0432\u043E\u0440\u043E\u0434\u0430 \u2194 \u041A\u0430\u043D\u0442" }
+  ];
+  var MUSEUMS = [
+    // Captures: institutions that house an idea behind glass.
+    { id: "mus_frank", at: "frank", label: "\u043C\u0443\u0437\u0435\u0439 \xAB\u0411\u0435\u0437\u0434\u043D\u044B\xBB" },
+    { id: "mus_paris", at: "paris", label: "\u043C\u0443\u0437\u0435\u0439 \u0441\u0443\u0432\u0435\u043D\u0438\u0440\u043E\u0432 \u043A\u0440\u0438\u0442\u0438\u043A\u0438" },
+    { id: "mus_panopt", at: "mview", label: "\u043C\u0443\u0437\u0435\u0439 \u043F\u0430\u043D\u043E\u043F\u0442\u0438\u043A\u043E\u043D\u0430 (\u0431\u0440\u0435\u043B\u043E\u043A)" }
+  ];
+  var PRECIPICES = [
+    // Drop-off zones — at the literal precipice or at the figurative one.
+    { id: "prc_nemo", at: "nemo", label: "\u043F\u0440\u043E\u043F\u0430\u0441\u0442\u044C \u041D\u0435\u043C\u043E" },
+    { id: "prc_agbog", at: "agbog", label: "\u043F\u0440\u043E\u043F\u0430\u0441\u0442\u044C \u0444\u043E\u0440\u043C\u0430\u0442\u043E\u0432" },
+    { id: "prc_la", at: "la", label: "\u043F\u0440\u043E\u043F\u0430\u0441\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442\u0430" }
+  ];
+  function nodeById(id) {
+    return NODES.find((n) => n.id === id) || null;
+  }
+
   // src/ui/worldmap.js
+  var W = 720;
+  var H = 800;
   var visible = false;
   var canvas = null;
   var ctx2 = null;
   var rafId = 0;
-  var W = 640;
-  var H = 300;
-  var WASTE_BOX = { x: 16, y: 30, w: 240, h: 144 };
-  var STREET_BOX = { x: 280, y: 86, w: 344, h: 30 };
-  var ZONES = [
-    { name: "\u043B\u0435\u0441", x0: 0, y0: 0, x1: 3e3, y1: 500, col: "#16240e" },
-    { name: "\u043A\u0432\u0430\u0440\u0442\u0430\u043B", x0: 0, y0: 500, x1: 400, y1: 1300, col: "#1a1824" },
-    { name: "\u043F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0435", x0: 400, y0: 500, x1: 1800, y1: 1300, col: "#241e14" },
-    { name: "\u0442\u0440\u0430\u0441\u0441\u0430", x0: 1800, y0: 500, x1: 3e3, y1: 1300, col: "#2a2015" },
-    { name: "\u0442\u043E\u043A\u0441", x0: 0, y0: 1300, x1: 3e3, y1: 1800, col: "#16240e" }
-  ];
-  function wasteToMap(wx, wy) {
-    return {
-      x: WASTE_BOX.x + wx / 3e3 * WASTE_BOX.w,
-      y: WASTE_BOX.y + wy / 1800 * WASTE_BOX.h
-    };
+  var MAP_BOX = { x: 12, y: 30, w: W - 24, h: 540 };
+  var STREET_BOX = { x: 30, y: MAP_BOX.y + MAP_BOX.h + 36, w: W - 60, h: 32 };
+  var WASTE_BOX = { x: 384, y: 380, w: 80, h: 56 };
+  function ax(mx) {
+    return MAP_BOX.x + mx / MAP_W * MAP_BOX.w;
   }
-  function streetToMap(wx) {
-    const t2 = (wx - STREET_X0) / (STREET_END_W - STREET_X0);
-    return STREET_BOX.x + t2 * STREET_BOX.w;
+  function ay(my) {
+    return MAP_BOX.y + my / MAP_H * MAP_BOX.h;
+  }
+  function rgba(c, a) {
+    const v = parseInt(c.slice(1), 16);
+    return `rgba(${v >> 16 & 255},${v >> 8 & 255},${v & 255},${a})`;
   }
   function draw2() {
     if (!visible || !ctx2) return;
-    ctx2.clearRect(0, 0, W, H);
-    ctx2.fillStyle = "rgba(5,5,16,0.96)";
+    ctx2.fillStyle = "rgba(8,6,4,0.97)";
     ctx2.fillRect(0, 0, W, H);
-    ctx2.strokeStyle = "#6b0f1a";
+    ctx2.strokeStyle = "rgba(107,15,26,0.55)";
+    ctx2.lineWidth = 1;
     ctx2.strokeRect(0.5, 0.5, W - 1, H - 1);
     ctx2.fillStyle = "#b8860b";
     ctx2.fillRect(1, 1, W - 2, 1);
     ctx2.font = '8px "Press Start 2P","VT323",monospace';
     ctx2.fillStyle = "#daa520";
-    ctx2.fillText("\u041A\u0410\u0420\u0422\u0410", 16, 18);
+    ctx2.fillText("\u041A\u0410\u0420\u0422\u0410 \u041C\u0418\u0420\u0410", 16, 18);
     ctx2.font = '6px "Press Start 2P","VT323",monospace';
     ctx2.fillStyle = "#8a8d8f";
-    ctx2.fillText("[M] \u0437\u0430\u043A\u0440\u044B\u0442\u044C", W - 90, 16);
-    for (const z of ZONES) {
-      const a = wasteToMap(z.x0, z.y0);
-      const b = wasteToMap(z.x1, z.y1);
-      ctx2.fillStyle = z.col;
-      ctx2.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+    ctx2.fillText("[M / Esc / \u043A\u043B\u0438\u043A] \u0437\u0430\u043A\u0440\u044B\u0442\u044C", W - 170, 16);
+    drawContinents();
+    drawThreads();
+    drawNodes();
+    drawOverlays();
+    drawWasteAndStreet();
+    drawPlayer2();
+    drawLegend();
+    rafId = requestAnimationFrame(draw2);
+  }
+  function drawContinents() {
+    for (const c of CONTINENTS) {
+      const pts = c.pts.split(" ").map((p) => p.split(",").map(Number));
+      ctx2.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const [px2, py] = pts[i];
+        const sx = ax(px2), sy = ay(py);
+        if (i === 0) ctx2.moveTo(sx, sy);
+        else ctx2.lineTo(sx, sy);
+      }
+      ctx2.closePath();
+      ctx2.fillStyle = "#161410";
+      ctx2.fill();
+      ctx2.strokeStyle = "#332e22";
+      ctx2.lineWidth = 1;
+      ctx2.stroke();
+      ctx2.fillStyle = "#4d4738";
+      ctx2.font = '8px "Press Start 2P","VT323",monospace';
+      ctx2.fillText(c.name.toUpperCase(), ax(c.label[0]), ay(c.label[1]));
     }
-    ctx2.strokeStyle = "rgba(138,141,143,0.4)";
+  }
+  function drawThreads() {
+    const groups = {};
+    for (const n of NODES) {
+      for (const t2 of n.thr) {
+        (groups[t2] = groups[t2] || []).push(n);
+      }
+    }
+    ctx2.setLineDash([3, 3]);
+    ctx2.lineWidth = 1;
+    for (const [name, ns] of Object.entries(groups)) {
+      if (ns.length < 2) continue;
+      ctx2.strokeStyle = rgba(THREAD_COLORS[name] || "#777777", 0.55);
+      ctx2.beginPath();
+      for (let i = 0; i < ns.length; i++) {
+        const sx = ax(ns[i].x), sy = ay(ns[i].y);
+        if (i === 0) ctx2.moveTo(sx, sy);
+        else ctx2.lineTo(sx, sy);
+      }
+      ctx2.stroke();
+    }
+    ctx2.setLineDash([]);
+  }
+  function drawNodes() {
+    for (const n of NODES) {
+      const sx = ax(n.x), sy = ay(n.y);
+      const isStart = n.st === "start";
+      const isLive = n.st === "live";
+      const r = isStart ? 4 : isLive ? 3 : 2.4;
+      const pr = isLive ? r + 1 + Math.sin(Date.now() * 4e-3) * 1.2 : r;
+      if (isLive) {
+        ctx2.fillStyle = rgba(STATUS_COLORS[n.st], 0.18);
+        ctx2.beginPath();
+        ctx2.arc(sx, sy, pr + 3, 0, Math.PI * 2);
+        ctx2.fill();
+      }
+      ctx2.fillStyle = STATUS_COLORS[n.st] || "#888";
+      ctx2.beginPath();
+      ctx2.arc(sx, sy, pr, 0, Math.PI * 2);
+      ctx2.fill();
+      ctx2.strokeStyle = "#0c0b09";
+      ctx2.lineWidth = 1;
+      ctx2.stroke();
+    }
+  }
+  function drawOverlays() {
+    ctx2.setLineDash([1, 2]);
+    ctx2.lineWidth = 1;
+    for (const tn of TUNNELS) {
+      const a = nodeById(tn.a), b = nodeById(tn.b);
+      if (!a || !b) continue;
+      const ax_ = ax(a.x), ay_ = ay(a.y), bx_ = ax(b.x), by_ = ay(b.y);
+      const mx = (ax_ + bx_) / 2 + (by_ - ay_) * 0.18;
+      const my = (ay_ + by_) / 2 - (bx_ - ax_) * 0.05;
+      ctx2.strokeStyle = "rgba(184,134,11,0.75)";
+      ctx2.beginPath();
+      ctx2.moveTo(ax_, ay_);
+      ctx2.quadraticCurveTo(mx, my, bx_, by_);
+      ctx2.stroke();
+      ctx2.fillStyle = "#daa520";
+      ctx2.fillRect(ax_ - 2, ay_ - 1, 4, 1);
+      ctx2.fillRect(bx_ - 2, by_ - 1, 4, 1);
+    }
+    ctx2.setLineDash([]);
+    ctx2.strokeStyle = "#9b8cf0";
+    ctx2.lineWidth = 1;
+    for (const m of MUSEUMS) {
+      const n = nodeById(m.at);
+      if (!n) continue;
+      const sx = ax(n.x), sy = ay(n.y);
+      ctx2.strokeRect(sx - 5, sy - 5, 10, 10);
+      ctx2.beginPath();
+      ctx2.moveTo(sx - 6, sy - 5);
+      ctx2.lineTo(sx, sy - 8);
+      ctx2.lineTo(sx + 6, sy - 5);
+      ctx2.stroke();
+    }
+    ctx2.fillStyle = "#8b2d2d";
+    for (const p of PRECIPICES) {
+      const n = nodeById(p.at);
+      if (!n) continue;
+      const sx = ax(n.x), sy = ay(n.y) + 9;
+      ctx2.beginPath();
+      ctx2.moveTo(sx - 4, sy);
+      ctx2.lineTo(sx + 4, sy);
+      ctx2.lineTo(sx, sy + 4);
+      ctx2.closePath();
+      ctx2.fill();
+      for (let i = 0; i < 3; i++) {
+        ctx2.fillRect(sx, sy + 6 + i * 3, 1, 1);
+      }
+    }
+  }
+  function drawWasteAndStreet() {
+    ctx2.fillStyle = "#241c14";
+    ctx2.fillRect(WASTE_BOX.x, WASTE_BOX.y, WASTE_BOX.w, WASTE_BOX.h);
+    ctx2.strokeStyle = "#6b0f1a";
     ctx2.strokeRect(WASTE_BOX.x + 0.5, WASTE_BOX.y + 0.5, WASTE_BOX.w, WASTE_BOX.h);
-    ctx2.fillStyle = "rgba(232,220,200,0.6)";
-    ctx2.fillText("\u043F\u0443\u0441\u0442\u043E\u0448\u044C", WASTE_BOX.x, WASTE_BOX.y - 4);
-    ctx2.fillStyle = "rgba(138,141,143,0.55)";
-    ctx2.fillText("\u043B\u0435\u0441", WASTE_BOX.x + 100, WASTE_BOX.y + 18);
-    ctx2.fillText("\u043F\u043E\u0441\u0435\u043B\u0435\u043D\u0438\u0435", WASTE_BOX.x + 80, WASTE_BOX.y + 74);
-    ctx2.fillText("\u0442\u043E\u043A\u0441", WASTE_BOX.x + 100, WASTE_BOX.y + 136);
-    const g = wasteToMap(1395, 880);
+    ctx2.fillStyle = "#b8860b";
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
+    ctx2.fillText("\u043F\u0443\u0441\u0442\u043E\u0448\u044C", WASTE_BOX.x + 4, WASTE_BOX.y - 2);
     ctx2.fillStyle = "#daa520";
-    ctx2.fillRect(g.x - 1, g.y - 3, 3, 6);
+    ctx2.fillRect(WASTE_BOX.x + WASTE_BOX.w - 8, WASTE_BOX.y + WASTE_BOX.h / 2 - 1, 2, 4);
     ctx2.fillStyle = "rgba(218,165,32,0.7)";
-    ctx2.fillText("\u0432\u0440\u0430\u0442\u0430", g.x - 14, g.y + 14);
-    ctx2.strokeStyle = "rgba(184,134,11,0.5)";
+    ctx2.fillText("\u0432\u0440\u0430\u0442\u0430", WASTE_BOX.x + WASTE_BOX.w - 26, WASTE_BOX.y + WASTE_BOX.h + 8);
+    ctx2.strokeStyle = "rgba(184,134,11,0.6)";
     ctx2.setLineDash([3, 3]);
     ctx2.beginPath();
-    ctx2.moveTo(g.x + 3, g.y);
+    ctx2.moveTo(WASTE_BOX.x + WASTE_BOX.w, WASTE_BOX.y + WASTE_BOX.h / 2);
     ctx2.lineTo(STREET_BOX.x, STREET_BOX.y + STREET_BOX.h / 2);
     ctx2.stroke();
     ctx2.setLineDash([]);
-    ctx2.fillStyle = "rgba(232,220,200,0.6)";
-    ctx2.fillText("\u0443\u043B\u0438\u0446\u0430", STREET_BOX.x, STREET_BOX.y - 8);
+    ctx2.fillStyle = "#daa520";
+    ctx2.font = '7px "Press Start 2P","VT323",monospace';
+    ctx2.fillText("\u0423\u041B\u0418\u0426\u0410 \u2014 9 \u044D\u043F\u043E\u0445 \u2192 \u0441\u0435\u0439\u0447\u0430\u0441", STREET_BOX.x, STREET_BOX.y - 6);
     for (const seg of SEGMENTS) {
-      const x0 = streetToMap(seg.range[0] + STREET_SHIFT);
-      const x1 = streetToMap(seg.range[1] + STREET_SHIFT);
+      const t0 = (seg.range[0] + STREET_SHIFT - STREET_X0) / (STREET_END_W - STREET_X0);
+      const t1 = (seg.range[1] + STREET_SHIFT - STREET_X0) / (STREET_END_W - STREET_X0);
+      const x0 = STREET_BOX.x + t0 * STREET_BOX.w;
+      const x1 = STREET_BOX.x + t1 * STREET_BOX.w;
       ctx2.fillStyle = seg.palette.ground;
       ctx2.fillRect(x0, STREET_BOX.y, x1 - x0, STREET_BOX.h);
       ctx2.fillStyle = "rgba(232,220,200,0.5)";
       ctx2.fillRect(x0, STREET_BOX.y, 1, STREET_BOX.h);
+      ctx2.font = '6px "Press Start 2P","VT323",monospace';
+      ctx2.fillStyle = "rgba(232,220,200,0.65)";
       ctx2.fillText(`${seg.n}`, x0 + 2, STREET_BOX.y - 2);
     }
     ctx2.strokeStyle = "rgba(138,141,143,0.4)";
     ctx2.strokeRect(STREET_BOX.x + 0.5, STREET_BOX.y + 0.5, STREET_BOX.w, STREET_BOX.h);
-    ctx2.fillStyle = "rgba(138,141,143,0.5)";
-    ctx2.fillText("\u0441\u0435\u0439\u0447\u0430\u0441 \u2192", STREET_BOX.x + STREET_BOX.w - 56, STREET_BOX.y + STREET_BOX.h + 12);
-    ctx2.fillText("\u043E\u0441\u0435\u0432\u043E\u0435", STREET_BOX.x, STREET_BOX.y + STREET_BOX.h + 12);
-    ctx2.fillStyle = "rgba(138,141,143,0.45)";
-    let lx = STREET_BOX.x, lyy = STREET_BOX.y + STREET_BOX.h + 30;
-    for (const seg of SEGMENTS) {
-      ctx2.fillText(`\xA7${seg.n} ${seg.name}`, lx, lyy);
-      lyy += 10;
-      if (seg.n === 5) {
-        lx += 176;
-        lyy = STREET_BOX.y + STREET_BOX.h + 30;
-      }
-    }
-    const p = getPlayerPos();
-    if (p) {
-      const blink = (Date.now() / 300 | 0) % 2 === 0;
-      if (blink) {
-        ctx2.fillStyle = "#ff7020";
-        if (p.x > STREET_X0 - 100) {
-          const mx = streetToMap(Math.max(STREET_X0, Math.min(STREET_END_W, p.x)));
-          ctx2.fillRect(mx - 1, STREET_BOX.y + STREET_BOX.h / 2 - 2, 3, 4);
-        } else {
-          const m = wasteToMap(Math.min(3e3, p.x), p.y);
-          ctx2.fillRect(m.x - 1, m.y - 2, 3, 4);
-        }
-      }
-    }
-    rafId = requestAnimationFrame(draw2);
+    ctx2.fillStyle = "rgba(138,141,143,0.55)";
+    ctx2.fillText("\u043E\u0441\u0435\u0432\u043E\u0435", STREET_BOX.x, STREET_BOX.y + STREET_BOX.h + 10);
+    ctx2.fillText("\u0441\u0435\u0439\u0447\u0430\u0441 \u2192", STREET_BOX.x + STREET_BOX.w - 56, STREET_BOX.y + STREET_BOX.h + 10);
   }
-  function toggle() {
-    visible = !visible;
+  function drawPlayer2() {
+    const p = getPlayerPos();
+    if (!p) return;
+    const blink = (Date.now() / 300 | 0) % 2 === 0;
+    if (!blink) return;
+    ctx2.fillStyle = "#ff7020";
+    if (p.x > STREET_X0 - 100) {
+      const t2 = Math.max(0, Math.min(1, (p.x - STREET_X0) / (STREET_END_W - STREET_X0)));
+      const mx = STREET_BOX.x + t2 * STREET_BOX.w;
+      ctx2.fillRect(mx - 1, STREET_BOX.y + STREET_BOX.h / 2 - 2, 3, 4);
+    } else {
+      const t2 = Math.min(1, p.x / 3e3);
+      const ty = Math.max(0, Math.min(1, (p.y - 160) / (1800 - 160)));
+      const mx = WASTE_BOX.x + t2 * WASTE_BOX.w;
+      const my = WASTE_BOX.y + ty * WASTE_BOX.h;
+      ctx2.fillRect(mx - 1, my - 1, 3, 3);
+    }
+  }
+  function drawLegend() {
+    const ly = H - 56;
+    ctx2.font = '6px "Press Start 2P","VT323",monospace';
+    ctx2.fillStyle = "#8a8d8f";
+    ctx2.fillText("\u0443\u0437\u043B\u044B:", 16, ly);
+    const items = [
+      ["start", "\u0441\u0442\u0430\u0440\u0442"],
+      ["hearth", "\u043E\u0447\u0430\u0433"],
+      ["live", "\u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F"],
+      ["natural", "\u043D\u0435\u0440\u0443\u043A\u043E\u0442\u0432."],
+      ["closed", "\u0437\u0430\u043A\u0440\u044B\u0442\u043E"],
+      ["ghost", "(?)"]
+    ];
+    let lx = 56;
+    for (const [k, label] of items) {
+      ctx2.fillStyle = STATUS_COLORS[k];
+      ctx2.beginPath();
+      ctx2.arc(lx, ly - 2, 2.5, 0, Math.PI * 2);
+      ctx2.fill();
+      ctx2.fillStyle = "#a8a89a";
+      ctx2.fillText(label, lx + 5, ly);
+      lx += ctx2.measureText(label).width + 22;
+    }
+    ctx2.fillStyle = "#8a8d8f";
+    ctx2.fillText("\u043E\u0432\u0435\u0440\u043B\u0435\u0438:", 16, ly + 16);
+    ctx2.strokeStyle = "#9b8cf0";
+    ctx2.strokeRect(60, ly + 11, 6, 6);
+    ctx2.fillStyle = "#a8a89a";
+    ctx2.fillText("\u043C\u0443\u0437\u0435\u0439", 70, ly + 17);
+    ctx2.fillStyle = "#8b2d2d";
+    ctx2.beginPath();
+    ctx2.moveTo(124, ly + 12);
+    ctx2.lineTo(132, ly + 12);
+    ctx2.lineTo(128, ly + 17);
+    ctx2.fill();
+    ctx2.fillStyle = "#a8a89a";
+    ctx2.fillText("\u043F\u0440\u043E\u043F\u0430\u0441\u0442\u044C", 138, ly + 17);
+    ctx2.strokeStyle = "#daa520";
+    ctx2.setLineDash([1, 2]);
+    ctx2.beginPath();
+    ctx2.moveTo(210, ly + 14);
+    ctx2.lineTo(232, ly + 14);
+    ctx2.stroke();
+    ctx2.setLineDash([]);
+    ctx2.fillStyle = "#a8a89a";
+    ctx2.fillText("\u0442\u0443\u043D\u043D\u0435\u043B\u044C", 236, ly + 17);
+    ctx2.fillStyle = "#8a8d8f";
+    ctx2.fillText("\u043D\u0438\u0442\u0438:", 16, ly + 32);
+    let tx = 60;
+    for (const [name, col] of Object.entries(THREAD_COLORS)) {
+      ctx2.strokeStyle = col;
+      ctx2.setLineDash([3, 3]);
+      ctx2.beginPath();
+      ctx2.moveTo(tx, ly + 28);
+      ctx2.lineTo(tx + 12, ly + 28);
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+      ctx2.fillStyle = "#a8a89a";
+      ctx2.fillText(name, tx + 16, ly + 31);
+      tx += 16 + ctx2.measureText(name).width + 18;
+    }
+  }
+  function open2() {
+    if (visible) return;
+    if (!state.is("game")) return;
+    visible = true;
     const el = document.getElementById("map");
     if (!el) return;
-    if (visible) {
-      el.classList.add("on");
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(draw2);
-    } else {
-      el.classList.remove("on");
-      cancelAnimationFrame(rafId);
-    }
+    el.classList.add("on");
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(draw2);
+  }
+  function close2() {
+    visible = false;
+    const el = document.getElementById("map");
+    if (el) el.classList.remove("on");
+    cancelAnimationFrame(rafId);
   }
   function init2() {
     canvas = document.getElementById("map-canvas");
@@ -17573,13 +17903,18 @@ quarter\u2551      \u2551 highway
     }
     const el = document.getElementById("map");
     if (el) el.addEventListener("click", () => {
-      if (visible) toggle();
+      if (visible) close2();
     });
     document.addEventListener("keydown", (e) => {
+      if (visible) {
+        if (e.key === "Escape" || e.key === " " || e.key === "Enter" || e.key === "m" || e.key === "M" || e.key === "\u044C" || e.key === "\u042C") {
+          e.preventDefault();
+          close2();
+        }
+        return;
+      }
       if (e.key === "m" || e.key === "M" || e.key === "\u044C" || e.key === "\u042C") {
-        if (state.is("game") || visible) toggle();
-      } else if (visible && (e.key === "Escape" || e.key === " " || e.key === "Enter")) {
-        toggle();
+        if (state.is("game")) open2();
       }
     });
   }
@@ -18807,6 +19142,46 @@ quarter\u2551      \u2551 highway
     ctx3.fillStyle = "rgba(0,0,0,0.35)";
     ctx3.fillRect(x - 5, gy, 10, 2);
     const form = loc.streetForm;
+    if (form === "fire") {
+      ctx3.fillStyle = "#1a0a08";
+      ctx3.fillRect(x - 11, gy - 4, 22, 4);
+      ctx3.fillStyle = "#3a1408";
+      ctx3.fillRect(x - 9, gy - 6, 18, 3);
+      for (let i = 0; i < 4; i++) {
+        const ex = x - 7 + i * 4;
+        ctx3.fillStyle = (t * 0.04 + i) % 1 < 0.5 ? "#ff7020" : "#aa3008";
+        ctx3.fillRect(ex, gy - 4, 1, 1);
+      }
+      const flick = Math.sin(t * 0.18) * 1.4;
+      const flick2 = Math.sin(t * 0.27 + 1.6) * 0.9;
+      ctx3.fillStyle = "#6b0f1a";
+      ctx3.fillRect(x - 7, gy - 12 + flick * 0.5, 14, 6);
+      ctx3.fillStyle = "#c83018";
+      ctx3.fillRect(x - 5, gy - 16 + flick, 10, 8);
+      ctx3.fillStyle = "#ff7020";
+      ctx3.fillRect(x - 3, gy - 21 + flick * 1.2, 6, 10);
+      ctx3.fillStyle = "#ffd060";
+      ctx3.fillRect(x - 1, gy - 24 + flick2, 2, 8);
+      ctx3.fillStyle = "#ffffff";
+      ctx3.fillRect(x, gy - 26 + flick2, 1, 4);
+      for (let i = 0; i < 6; i++) {
+        const sp = (t * 0.04 + i * 0.18) % 1;
+        if (sp < 0.92) {
+          const sx = x + Math.sin(t * 0.05 + i) * 4;
+          const sy = gy - 24 - sp * 24;
+          ctx3.globalAlpha = (1 - sp) * 0.85;
+          ctx3.fillStyle = i % 2 ? "#ff7020" : "#ffb040";
+          ctx3.fillRect(sx | 0, sy | 0, 1, 1);
+          ctx3.globalAlpha = 1;
+        }
+      }
+      const grad = ctx3.createRadialGradient(x, gy - 12, 2, x, gy - 12, 30);
+      grad.addColorStop(0, "rgba(255,120,40,0.18)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx3.fillStyle = grad;
+      ctx3.fillRect(x - 30, gy - 30, 60, 36);
+      return;
+    }
     if (form === "building") {
       ctx3.fillStyle = "#15100c";
       ctx3.fillRect(x - 9, gy - 30, 18, 30);
@@ -19055,7 +19430,7 @@ quarter\u2551      \u2551 highway
       camera.x = player.x - scaler.vw / 2;
       camera.y = player.y - scaler.vh / 2;
       if (consumeGatesLine()) {
-        showLook({ name: "\u0412\u0440\u0430\u0442\u0430", look: "\u042D\u0442\u0438 \u0432\u0440\u0430\u0442\u0430 \u0431\u044B\u043B\u0438 \u043F\u0440\u0435\u0434\u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u044B \u0434\u043B\u044F \u0442\u0435\u0431\u044F \u043E\u0434\u043D\u043E\u0433\u043E. \u041E\u0431\u044B\u0447\u043D\u043E \u044D\u0442\u043E \u0443\u0437\u043D\u0430\u044E\u0442 \u043F\u043E\u0437\u0436\u0435." });
+        showLore("\u042D\u0442\u0438 \u0432\u0440\u0430\u0442\u0430 \u0431\u044B\u043B\u0438 \u043F\u0440\u0435\u0434\u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u044B \u0434\u043B\u044F \u0442\u0435\u0431\u044F \u043E\u0434\u043D\u043E\u0433\u043E. \u041E\u0431\u044B\u0447\u043D\u043E \u044D\u0442\u043E \u0443\u0437\u043D\u0430\u044E\u0442 \u043F\u043E\u0437\u0436\u0435.");
       }
       return;
     }
