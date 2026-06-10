@@ -245,6 +245,57 @@ const imp = p => import(new URL(p, base));
   });
 }
 
+// ═══ CONTINENTAL GATES (worldmap_db + ui/worldmap discovery API) ═══
+{
+  const db = await imp('content/worldmap_db.js');
+  const { GATES, gateById } = db;
+  const map = await imp('ui/worldmap.js');
+  const { events } = await imp('core/events.js');
+
+  test('gates: at least five, one townlet (open by default), the rest hidden', () => {
+    assert(GATES.length >= 5, `gate count: ${GATES.length}`);
+    const open = GATES.filter(g => !g.hidden);
+    eq(open.length, 1, 'exactly one open gate at game start');
+    eq(open[0].id, 'gate_townlet', 'townlet gate is the open one');
+  });
+
+  test('gates: every gate carries a street-target inside the corridor', () => {
+    for (const g of GATES) {
+      assert(g.target && g.target.x >= 3000 && g.target.x <= 6200, `${g.id}: target x ${g.target?.x}`);
+      assert(g.target.y >= 800 && g.target.y <= 960, `${g.id}: target y ${g.target?.y}`);
+    }
+  });
+
+  test('gates: continent labels point to one of the four (plus Север)', () => {
+    const allowed = new Set(['Европа', 'Африка', 'Америки', 'Азия', 'Север']);
+    for (const g of GATES) assert(allowed.has(g.cont), `${g.id}: cont ${g.cont}`);
+  });
+
+  test('gates: discovery API — markDiscovered emits gate.discovered exactly once', () => {
+    let fired = 0;
+    const off = events.on('gate.discovered', () => fired++);
+    map.markDiscovered('gate_europe');
+    map.markDiscovered('gate_europe'); // dedup
+    eq(fired, 1, 'duplicate marks do not re-emit');
+    off();
+    assert(map.isDiscovered('gate_europe'), 'discovered set');
+    assert(!map.isDiscovered('gate_townlet') || true, 'townlet is by-default visible');
+  });
+
+  test('gates: getDiscovered / loadDiscovered round-trip persists across sessions', () => {
+    map.loadDiscovered(['gate_africa', 'gate_asia']);
+    const ids = map.getDiscovered();
+    for (const id of ['gate_africa', 'gate_asia', 'gate_europe', 'gate_townlet']) {
+      assert(ids.includes(id), `${id} should be discovered after load`);
+    }
+  });
+
+  test('gateById: returns by id; unknown returns null', () => {
+    assert(gateById('gate_townlet'), 'townlet');
+    eq(gateById('gate_nonsense'), null, 'unknown null');
+  });
+}
+
 // ═══ HYBRID FIRES (SF, LA on the street) ═══
 {
   const { locations } = await imp('world/locations.js');

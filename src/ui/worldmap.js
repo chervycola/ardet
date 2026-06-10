@@ -7,12 +7,30 @@
 // ═══════════════════════════════════════
 import { state } from '../core/state.js';
 import {
-  MAP_W, MAP_H, CONTINENTS, NODES, TUNNELS, MUSEUMS, PRECIPICES,
-  STATUS_COLORS, THREAD_COLORS, nodeById,
+  MAP_W, MAP_H, CONTINENTS, NODES, TUNNELS, MUSEUMS, PRECIPICES, GATES,
+  STATUS_COLORS, THREAD_COLORS, nodeById, gateById,
 } from '../content/worldmap_db.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { STREET_SHIFT, STREET_X0, STREET_END_W } from '../world/street.js';
-import { getPlayerPos } from '../core/playerRef.js';
+import { getPlayerPos, getPlayer } from '../core/playerRef.js';
+import { events } from '../core/events.js';
+
+// ── Gate discovery state (persistable) ──
+const discovered = new Set(['gate_townlet']);
+const recently   = new Map();    // gate id → timestamp of discovery (for pulse)
+export function isDiscovered(id) { return discovered.has(id); }
+export function getDiscovered() { return Array.from(discovered); }
+export function loadDiscovered(ids) {
+  if (!Array.isArray(ids)) return;
+  for (const id of ids) discovered.add(id);
+}
+export function markDiscovered(id) {
+  if (discovered.has(id)) return false;
+  discovered.add(id);
+  recently.set(id, Date.now());
+  events.emit('gate.discovered', id);
+  return true;
+}
 
 const W = 720, H = 800;             // canvas pixel size (logical)
 let visible = false;
@@ -52,13 +70,25 @@ function draw() {
   ctx.fillText('КАРТА МИРА', 16, 18);
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.fillStyle = '#8a8d8f';
-  ctx.fillText('[M / Esc / клик] закрыть', W - 170, 16);
+  ctx.fillText('[M / Esc / клик мимо] закрыть · клик на вратах → быстрый переход', W - 460, 16);
+  // Sub-banner: most-recently-discovered gate
+  const fresh = [...recently.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (fresh && (Date.now() - fresh[1] < 10000)) {
+    const g = gateById(fresh[0]);
+    if (g) {
+      const alpha = Math.min(1, 1 - (Date.now() - fresh[1]) / 10000);
+      ctx.fillStyle = `rgba(218,165,32,${alpha})`;
+      ctx.font = '7px "Press Start 2P","VT323",monospace';
+      ctx.fillText('→ открылись: ' + g.label.toUpperCase(), 16, 28);
+    }
+  }
 
   drawContinents();
   drawThreads();
   drawNodes();
   drawOverlays();           // tunnels / museums / precipices
   drawWasteAndStreet();
+  drawGates();              // continental fast-travel points
   drawPlayer();
   drawLegend();
 
@@ -190,6 +220,59 @@ function drawOverlays() {
       ctx.fillRect(sx, sy + 6 + i * 3, 1, 1);
     }
   }
+}
+
+// ── Gates: small arches on each continent ──
+// Discovered gates render bright and clickable; hidden ones show as a
+// faint dotted "?" near where they're expected to be — enough hint to
+// feel that the world is bigger than what you see, not so much that
+// they trivialize their own discovery.
+function drawGates() {
+  const now = Date.now();
+  for (const g of GATES) {
+    const sx = ax(g.x), sy = ay(g.y);
+    const known = discovered.has(g.id);
+    if (!known) {
+      // Faint dotted ghost — only on continents where the player has
+      // shown some commitment (>=1 lore or any conversation). Without
+      // any progress, hidden gates are invisible.
+      ctx.fillStyle = 'rgba(155,140,90,0.18)';
+      ctx.fillText('?', sx - 2, sy + 3);
+      continue;
+    }
+    // New-discovery pulse for ~6 s after reveal
+    const t = recently.has(g.id) ? (now - recently.get(g.id)) / 1000 : 99;
+    const pulse = t < 6 ? (1 + Math.sin(now * 0.012) * 0.5) : 0;
+    // Halo
+    if (pulse) {
+      ctx.fillStyle = `rgba(218,165,32,${0.18 + pulse * 0.12})`;
+      ctx.beginPath(); ctx.arc(sx, sy - 2, 8 + pulse * 2, 0, Math.PI * 2); ctx.fill();
+    }
+    // Arch: two pillars + lintel
+    ctx.fillStyle = '#b8860b';
+    ctx.fillRect(sx - 4, sy - 6, 1, 6);     // left pillar
+    ctx.fillRect(sx + 3, sy - 6, 1, 6);     // right pillar
+    ctx.fillRect(sx - 4, sy - 7, 8, 1);     // lintel
+    // Cap
+    ctx.fillStyle = '#daa520';
+    ctx.fillRect(sx - 5, sy - 8, 10, 1);
+    // Opening — dark inside
+    ctx.fillStyle = '#0c0a08';
+    ctx.fillRect(sx - 2, sy - 5, 5, 5);
+    // Tiny ember dot for the active arch
+    ctx.fillStyle = '#ff7020';
+    ctx.fillRect(sx, sy - 3, 1, 1);
+  }
+}
+
+// Returns the gate id under (cx,cy) in canvas pixel space, or null.
+function gateAt(cx, cy) {
+  for (const g of GATES) {
+    if (!discovered.has(g.id)) continue;
+    const sx = ax(g.x), sy = ay(g.y);
+    if (Math.abs(cx - sx) <= 8 && Math.abs(cy - (sy - 3)) <= 9) return g;
+  }
+  return null;
 }
 
 // ── Our waste pocket + street strip ──
@@ -358,7 +441,21 @@ export function init() {
     ctx.imageSmoothingEnabled = false;
   }
   const el = document.getElementById('map');
-  if (el) el.addEventListener('click', () => { if (visible) close(); });
+  if (el) el.addEventListener('click', (e) => {
+    if (!visible || !canvas) return;
+    // Translate the screen click into canvas pixel coords (canvas is
+    // CSS-scaled). If it landed on a discovered gate, fast-travel; else close.
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const cy = (e.clientY - rect.top)  * (canvas.height / rect.height);
+    const g = gateAt(cx, cy);
+    if (g) {
+      events.emit('gate.use', g);
+      close();
+    } else {
+      close();
+    }
+  });
   document.addEventListener('keydown', (e) => {
     if (visible) {
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' ||

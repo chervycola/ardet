@@ -17235,6 +17235,8 @@ Pixel-adjacent but painterly. Muted brandbook palette:
       const entry = fileEntry(name);
       if (entry) {
         print(entry.text, entry.color);
+        const key = FILE_ALIASES[name.replace(/^\./, "")] || name.replace(/^\./, "");
+        events.emit("terminal.read", key);
       } else {
         print(`> \u0444\u0430\u0439\u043B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${name}`, "#8b0000");
       }
@@ -17598,8 +17600,100 @@ quarter\u2551      \u2551 highway
   function nodeById(id) {
     return NODES.find((n) => n.id === id) || null;
   }
+  var GATES = [
+    {
+      id: "gate_townlet",
+      cont: "\u0415\u0432\u0440\u043E\u043F\u0430",
+      x: 660,
+      y: 408,
+      target: { x: 3230, y: 880 },
+      // §1 axial-age spawn
+      label: "\u0432\u0440\u0430\u0442\u0430 \u0433\u043E\u0440\u043E\u0434\u043A\u0430",
+      note: "\u043F\u0435\u0440\u0432\u0430\u044F \u0434\u0432\u0435\u0440\u044C; \u0442\u044B \u0443\u0436\u0435 \u0435\u0451 \u043F\u0440\u043E\u0448\u0451\u043B",
+      hidden: false
+    },
+    {
+      id: "gate_europe",
+      cont: "\u0415\u0432\u0440\u043E\u043F\u0430",
+      x: 580,
+      y: 308,
+      target: { x: 4320, y: 880 },
+      // §4 two hearths — Декарт area
+      label: "\u0432\u0440\u0430\u0442\u0430 \u0414\u0435\u043A\u0430\u0440\u0442\u0430",
+      note: "\u0447\u0435\u0442\u044B\u0440\u0435 \u043F\u0440\u0430\u0432\u0438\u043B\u0430, \u0432\u043E\u0439\u043D\u0430 \u0437\u0430 \u043E\u043A\u043D\u043E\u043C",
+      hidden: true,
+      reveal: "\u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0439 \u0431\u0435\u0441\u0435\u0434\u044B \u0441 \u0448\u0443\u0442\u043E\u043C"
+    },
+    {
+      id: "gate_africa",
+      cont: "\u0410\u0444\u0440\u0438\u043A\u0430",
+      x: 612,
+      y: 940,
+      target: { x: 4015, y: 880 },
+      // §3 medieval — Timbuktu
+      label: "\u0432\u0440\u0430\u0442\u0430 \u0422\u0438\u043C\u0431\u0443\u043A\u0442\u0443",
+      note: "\u043E\u043F\u0438\u0441\u044C. \u0441\u0443\u043D\u0434\u0443\u043A. \u043E\u0441\u0451\u043B.",
+      hidden: true,
+      reveal: "\u043F\u043E\u0441\u043B\u0435 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430: read .timbuktu"
+    },
+    {
+      id: "gate_americas",
+      cont: "\u0410\u043C\u0435\u0440\u0438\u043A\u0438",
+      x: 158,
+      y: 542,
+      target: { x: 5840, y: 880 },
+      // §9 — SF/LA fires
+      label: "\u0432\u0440\u0430\u0442\u0430 \u043F\u043E\u0436\u0430\u0440\u043E\u0432",
+      note: "\u044F\u043D\u0432\u0430\u0440\u044C 2025; \u0442\u0443\u043C\u0430\u043D \u0441\u0442\u0430\u0440\u0448\u0435 \u043B\u0438\u0445\u043E\u0440\u0430\u0434\u043E\u043A",
+      hidden: true,
+      reveal: "\u043F\u043E\u0441\u043B\u0435 30 \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442\u043E\u0432"
+    },
+    {
+      id: "gate_asia",
+      cont: "\u0410\u0437\u0438\u044F",
+      x: 1176,
+      y: 612,
+      target: { x: 4015, y: 880 },
+      // §3 — Isfahan
+      label: "\u0432\u0440\u0430\u0442\u0430 \u0418\u0441\u0444\u0430\u0445\u0430\u043D\u0430",
+      note: "\u0441\u0432\u0435\u0442\u043B\u043E \u0431\u0435\u0437 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u0430",
+      hidden: true,
+      reveal: "\u043F\u043E\u0441\u043B\u0435 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430: read .ishraq"
+    },
+    {
+      id: "gate_north",
+      cont: "\u0421\u0435\u0432\u0435\u0440",
+      x: 660,
+      y: 184,
+      target: { x: 4730, y: 880 },
+      // §6 steam — Wittgenstein-quiet
+      label: "\u0432\u0440\u0430\u0442\u0430 \u0428\u0451\u043B\u0434\u0435\u043D\u0430",
+      note: "\u043C\u0435\u0440\u0447\u0430 \u043D\u0435\u0442 \u0434\u043E \u0441\u0438\u0445 \u043F\u043E\u0440",
+      hidden: true,
+      reveal: "\u043F\u043E\u0441\u043B\u0435 60 \u0444\u0440\u0430\u0433\u043C\u0435\u043D\u0442\u043E\u0432"
+    }
+  ];
+  function gateById(id) {
+    return GATES.find((g) => g.id === id) || null;
+  }
 
   // src/ui/worldmap.js
+  var discovered = /* @__PURE__ */ new Set(["gate_townlet"]);
+  var recently = /* @__PURE__ */ new Map();
+  function getDiscovered() {
+    return Array.from(discovered);
+  }
+  function loadDiscovered(ids) {
+    if (!Array.isArray(ids)) return;
+    for (const id of ids) discovered.add(id);
+  }
+  function markDiscovered(id) {
+    if (discovered.has(id)) return false;
+    discovered.add(id);
+    recently.set(id, Date.now());
+    events.emit("gate.discovered", id);
+    return true;
+  }
   var W = 720;
   var H = 800;
   var visible = false;
@@ -17633,12 +17727,23 @@ quarter\u2551      \u2551 highway
     ctx2.fillText("\u041A\u0410\u0420\u0422\u0410 \u041C\u0418\u0420\u0410", 16, 18);
     ctx2.font = '6px "Press Start 2P","VT323",monospace';
     ctx2.fillStyle = "#8a8d8f";
-    ctx2.fillText("[M / Esc / \u043A\u043B\u0438\u043A] \u0437\u0430\u043A\u0440\u044B\u0442\u044C", W - 170, 16);
+    ctx2.fillText("[M / Esc / \u043A\u043B\u0438\u043A \u043C\u0438\u043C\u043E] \u0437\u0430\u043A\u0440\u044B\u0442\u044C \xB7 \u043A\u043B\u0438\u043A \u043D\u0430 \u0432\u0440\u0430\u0442\u0430\u0445 \u2192 \u0431\u044B\u0441\u0442\u0440\u044B\u0439 \u043F\u0435\u0440\u0435\u0445\u043E\u0434", W - 460, 16);
+    const fresh = [...recently.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (fresh && Date.now() - fresh[1] < 1e4) {
+      const g = gateById(fresh[0]);
+      if (g) {
+        const alpha = Math.min(1, 1 - (Date.now() - fresh[1]) / 1e4);
+        ctx2.fillStyle = `rgba(218,165,32,${alpha})`;
+        ctx2.font = '7px "Press Start 2P","VT323",monospace';
+        ctx2.fillText("\u2192 \u043E\u0442\u043A\u0440\u044B\u043B\u0438\u0441\u044C: " + g.label.toUpperCase(), 16, 28);
+      }
+    }
     drawContinents();
     drawThreads();
     drawNodes();
     drawOverlays();
     drawWasteAndStreet();
+    drawGates();
     drawPlayer2();
     drawLegend();
     rafId = requestAnimationFrame(draw2);
@@ -17755,6 +17860,44 @@ quarter\u2551      \u2551 highway
         ctx2.fillRect(sx, sy + 6 + i * 3, 1, 1);
       }
     }
+  }
+  function drawGates() {
+    const now = Date.now();
+    for (const g of GATES) {
+      const sx = ax(g.x), sy = ay(g.y);
+      const known = discovered.has(g.id);
+      if (!known) {
+        ctx2.fillStyle = "rgba(155,140,90,0.18)";
+        ctx2.fillText("?", sx - 2, sy + 3);
+        continue;
+      }
+      const t2 = recently.has(g.id) ? (now - recently.get(g.id)) / 1e3 : 99;
+      const pulse = t2 < 6 ? 1 + Math.sin(now * 0.012) * 0.5 : 0;
+      if (pulse) {
+        ctx2.fillStyle = `rgba(218,165,32,${0.18 + pulse * 0.12})`;
+        ctx2.beginPath();
+        ctx2.arc(sx, sy - 2, 8 + pulse * 2, 0, Math.PI * 2);
+        ctx2.fill();
+      }
+      ctx2.fillStyle = "#b8860b";
+      ctx2.fillRect(sx - 4, sy - 6, 1, 6);
+      ctx2.fillRect(sx + 3, sy - 6, 1, 6);
+      ctx2.fillRect(sx - 4, sy - 7, 8, 1);
+      ctx2.fillStyle = "#daa520";
+      ctx2.fillRect(sx - 5, sy - 8, 10, 1);
+      ctx2.fillStyle = "#0c0a08";
+      ctx2.fillRect(sx - 2, sy - 5, 5, 5);
+      ctx2.fillStyle = "#ff7020";
+      ctx2.fillRect(sx, sy - 3, 1, 1);
+    }
+  }
+  function gateAt(cx, cy) {
+    for (const g of GATES) {
+      if (!discovered.has(g.id)) continue;
+      const sx = ax(g.x), sy = ay(g.y);
+      if (Math.abs(cx - sx) <= 8 && Math.abs(cy - (sy - 3)) <= 9) return g;
+    }
+    return null;
   }
   function drawWasteAndStreet() {
     ctx2.fillStyle = "#241c14";
@@ -17902,8 +18045,18 @@ quarter\u2551      \u2551 highway
       ctx2.imageSmoothingEnabled = false;
     }
     const el = document.getElementById("map");
-    if (el) el.addEventListener("click", () => {
-      if (visible) close2();
+    if (el) el.addEventListener("click", (e) => {
+      if (!visible || !canvas) return;
+      const rect2 = canvas.getBoundingClientRect();
+      const cx = (e.clientX - rect2.left) * (canvas.width / rect2.width);
+      const cy = (e.clientY - rect2.top) * (canvas.height / rect2.height);
+      const g = gateAt(cx, cy);
+      if (g) {
+        events.emit("gate.use", g);
+        close2();
+      } else {
+        close2();
+      }
     });
     document.addEventListener("keydown", (e) => {
       if (visible) {
@@ -18966,6 +19119,7 @@ quarter\u2551      \u2551 highway
     if (savedData.graffiti) setGraffiti(savedData.graffiti);
     if (savedData.catSightings) loadSightings(savedData.catSightings);
     if (savedData.catUnlocked) setUnlocked(true);
+    if (savedData.discoveredGates) loadDiscovered(savedData.discoveredGates);
   }
   init3(flags, () => getCollectedCount());
   startAutoSave(() => ({
@@ -18977,7 +19131,8 @@ quarter\u2551      \u2551 highway
     achievements: getUnlocked(),
     graffiti: getGraffiti(),
     catSightings: getSightings(),
-    catUnlocked: isUnlocked()
+    catUnlocked: isUnlocked(),
+    discoveredGates: getDiscovered()
   }));
   function canLeaveSettlement() {
     return flags.talkedTo.has("jester");
@@ -19406,9 +19561,29 @@ quarter\u2551      \u2551 highway
   });
   events.on(E.NPC_TALK, (npcId) => {
     flags.talkedTo.add(npcId);
+    if (npcId === "jester") markDiscovered("gate_europe");
   });
   events.on(E.OBSERVER_MET, (npcId) => {
     flags.observersSeen.add(npcId);
+  });
+  events.on(E.LORE_COLLECT, () => {
+    const n = getCollectedCount();
+    if (n >= 30) markDiscovered("gate_americas");
+    if (n >= 60) markDiscovered("gate_north");
+  });
+  events.on("terminal.read", (key) => {
+    if (key === "timbuktu") markDiscovered("gate_africa");
+    if (key === "ishraq") markDiscovered("gate_asia");
+  });
+  events.on("gate.use", (gate) => {
+    if (!gate || !gate.target) return;
+    player.x = gate.target.x;
+    player.y = gate.target.y;
+    player.tx = player.x;
+    player.ty = player.y;
+    player.moving = false;
+    camera.x = player.x - scaler.vw / 2;
+    camera.y = player.y - scaler.vh / 2;
   });
   events.on(E.LORE_COLLECT, (item) => {
     showLore(item.text, item.live);

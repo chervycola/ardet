@@ -124,3 +124,52 @@ export const PRECIPICES = [
 
 // Helper: find a node by id
 export function nodeById(id) { return NODES.find(n => n.id === id) || null; }
+
+// ═══════════════════════════════════════
+// GATES — fast-travel points scattered across the continents.
+// The townlet gate is the canonical first entry; the others have to be
+// discovered. Each gate carries a `target` in world coordinates (the
+// street x/y where the player lands when stepping through).
+// `reveal` is a label-only hint shown when the gate is still hidden;
+// the actual discovery is driven by ui/worldmap.markDiscovered(id),
+// called from main.js when its trigger fires.
+// ═══════════════════════════════════════
+export const GATES = [
+  { id: 'gate_townlet',  cont: 'Европа',          x: 660,  y: 408,
+    target: { x: 3230, y: 880 },     // §1 axial-age spawn
+    label: 'врата городка',
+    note: 'первая дверь; ты уже её прошёл',
+    hidden: false },
+  { id: 'gate_europe',   cont: 'Европа',          x: 580,  y: 308,
+    target: { x: 4320, y: 880 },     // §4 two hearths — Декарт area
+    label: 'врата Декарта',
+    note: 'четыре правила, война за окном',
+    hidden: true,
+    reveal: 'после первой беседы с шутом' },
+  { id: 'gate_africa',   cont: 'Африка',          x: 612,  y: 940,
+    target: { x: 4015, y: 880 },     // §3 medieval — Timbuktu
+    label: 'врата Тимбукту',
+    note: 'опись. сундук. осёл.',
+    hidden: true,
+    reveal: 'после терминала: read .timbuktu' },
+  { id: 'gate_americas', cont: 'Америки',         x: 158,  y: 542,
+    target: { x: 5840, y: 880 },     // §9 — SF/LA fires
+    label: 'врата пожаров',
+    note: 'январь 2025; туман старше лихорадок',
+    hidden: true,
+    reveal: 'после 30 фрагментов' },
+  { id: 'gate_asia',     cont: 'Азия',            x: 1176, y: 612,
+    target: { x: 4015, y: 880 },     // §3 — Isfahan
+    label: 'врата Исфахана',
+    note: 'светло без источника',
+    hidden: true,
+    reveal: 'после терминала: read .ishraq' },
+  { id: 'gate_north',    cont: 'Север',           x: 660,  y: 184,
+    target: { x: 4730, y: 880 },     // §6 steam — Wittgenstein-quiet
+    label: 'врата Шёлдена',
+    note: 'мерча нет до сих пор',
+    hidden: true,
+    reveal: 'после 60 фрагментов' },
+];
+
+export function gateById(id) { return GATES.find(g => g.id === id) || null; }

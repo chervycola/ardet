@@ -133,6 +133,10 @@ const commands = {
     const entry = fileEntry(name);
     if (entry) {
       print(entry.text, entry.color);
+      // Tell the rest of the game which file the player just opened —
+      // some gates listen for specific keys (timbuktu, ishraq).
+      const key = (FILE_ALIASES[name.replace(/^\./, '')] || name.replace(/^\./, ''));
+      events.emit('terminal.read', key);
     } else {
       print(`> файл не найден: ${name}`, '#8b0000');
     }

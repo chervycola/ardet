@@ -5,6 +5,7 @@ let _player = null;
 
 export function setPlayer(p) { _player = p; }
 
+export function getPlayer() { return _player; }
 export function getPlayerPos() {
   return _player ? { x: _player.x, y: _player.y } : null;
 }

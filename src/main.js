@@ -33,7 +33,12 @@ import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as lo
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, consumeGatesLine } from './world/street.js';
-import { init as initWorldMap, toggle as toggleWorldMap } from './ui/worldmap.js';
+import {
+  init as initWorldMap, toggle as toggleWorldMap,
+  markDiscovered as discoverGate,
+  getDiscovered as getDiscoveredGates,
+  loadDiscovered as loadDiscoveredGates,
+} from './ui/worldmap.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -104,6 +109,7 @@ if (savedData) {
   if (savedData.graffiti) setGraffiti(savedData.graffiti);
   if (savedData.catSightings) loadSightings(savedData.catSightings);
   if (savedData.catUnlocked) setCatUnlocked(true);
+  if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
 }
 
 initAchievements(flags, () => getCollectedCount());
@@ -118,6 +124,7 @@ startAutoSave(() => ({
   graffiti: getGraffiti(),
   catSightings: getSightings(),
   catUnlocked: catUnlocked(),
+  discoveredGates: getDiscoveredGates(),
 }));
 
 // Check if player can leave settlement
@@ -623,9 +630,34 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
 // ═══ EVENT HANDLERS ═══
 events.on(E.NPC_TALK, (npcId) => {
   flags.talkedTo.add(npcId);
+  if (npcId === 'jester') discoverGate('gate_europe');
 });
 events.on(E.OBSERVER_MET, (npcId) => {
   flags.observersSeen.add(npcId);
+});
+
+// Gates open on milestones: thresholds match content/worldmap_db.GATES.reveal.
+events.on(E.LORE_COLLECT, () => {
+  const n = getCollectedCount();
+  if (n >= 30) discoverGate('gate_americas');
+  if (n >= 60) discoverGate('gate_north');
+});
+// Terminal-driven discoveries — fired from inside terminal.exec via the
+// 'terminal.read' bus event below.
+events.on('terminal.read', (key) => {
+  if (key === 'timbuktu') discoverGate('gate_africa');
+  if (key === 'ishraq')   discoverGate('gate_asia');
+});
+
+// Fast-travel through a gate: teleport to its world target.
+events.on('gate.use', (gate) => {
+  if (!gate || !gate.target) return;
+  player.x = gate.target.x;
+  player.y = gate.target.y;
+  player.tx = player.x; player.ty = player.y;
+  player.moving = false;
+  camera.x = player.x - scaler.vw / 2;
+  camera.y = player.y - scaler.vh / 2;
 });
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text, item.live);
