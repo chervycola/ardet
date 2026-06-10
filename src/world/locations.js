@@ -45,6 +45,14 @@ export const locations = [
   { id: 'crater', name: 'Кратер', x: 1025, y: 830, w: 50, h: 40, zone: 'settlement',
     useAction: 'crater_coin' },
 
+  // ── PHILOSOPHY PHASE 1 / PACKAGE A: TOWN (around the campfire) ──
+  { id: 'pithos', name: 'Пифос', x: 700, y: 845, w: 24, h: 16, zone: 'settlement' },
+  { id: 'lantern1', name: 'Погасший фонарь', x: 690, y: 720, w: 10, h: 44, zone: 'settlement' },
+  { id: 'office', name: 'Канцелярия', x: 1080, y: 720, w: 52, h: 46, zone: 'settlement',
+    solid: true },
+  { id: 'gates', name: 'Врата', x: 1380, y: 820, w: 40, h: 56, zone: 'settlement',
+    useAction: 'gates_pass' },
+
   // ── DEAD FOREST ──
   { id: 'radio', name: 'Радиовышка', x: 350, y: 250, w: 40, h: 80, zone: 'forest',
     useAction: 'radio_tune',

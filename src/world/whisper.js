@@ -38,6 +38,9 @@ const WHISPERS = {
   altar: '...приложи ладонь. мох ждал.',
   posterwall: '...выход был заперт снаружи...',
   banner: '...coming soon...',
+  // ── PHILOSOPHY PHASE 1 / PACKAGE A + G ──
+  pithos: '...жильё без ипотеки... солнца не заслоняй...',
+  gates: '...обычно это узнают позже...',
 };
 
 let whisper = { text: '', life: 0, x: 0, y: 0 };

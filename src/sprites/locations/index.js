@@ -5804,3 +5804,122 @@ export function draw_banner(x, y) {
 }
 
 // End of location sprites
+
+// ═══════════════════════════════════════
+// PHILOSOPHY PHASE 1 — PACKAGE A: TOWN
+// ═══════════════════════════════════════
+
+// Pithos — Diogenes' barrel, on its side, empty
+export function draw_pithos(x, y) {
+  // Shadow
+  X.globalAlpha = 0.25; X.fillStyle = '#000';
+  X.beginPath(); X.ellipse(x + 12, y + 15, 13, 3, 0, 0, Math.PI * 2); X.fill();
+  X.globalAlpha = 1;
+  // Barrel body lying on its side (horizontal cylinder)
+  rect(X, x + 2, y + 4, 22, 11, P.wood);
+  dither(X, x + 3, y + 5, 20, 9, P.dwood, P.wood, 0.35);
+  // Staves (vertical strips)
+  for (let i = 0; i < 6; i++) px(X, x + 4 + i * 3.4, y + 5, P.lwood);
+  // Iron hoops
+  rect(X, x + 5, y + 4, 1, 11, P.dgrey);
+  rect(X, x + 12, y + 4, 1, 11, P.dgrey);
+  rect(X, x + 19, y + 4, 1, 11, P.dgrey);
+  // Open mouth — dark interior, swept clean
+  X.fillStyle = '#000'; X.beginPath();
+  X.ellipse(x + 23, y + 9, 2, 5, 0, 0, Math.PI * 2); X.fill();
+  // A single sunbeam the tenant didn't want blocked
+  X.globalAlpha = 0.12 + 0.05 * Math.sin(t * 0.01);
+  X.fillStyle = P.amber;
+  X.fillRect(x + 24, y + 7, 6, 1);
+  X.globalAlpha = 1;
+}
+
+// Dead lantern — the only lamp post in the game with no light source
+export function draw_lantern1(x, y) {
+  // Shadow
+  X.globalAlpha = 0.2; X.fillStyle = '#000';
+  X.beginPath(); X.ellipse(x + 5, y + 43, 6, 2, 0, 0, Math.PI * 2); X.fill();
+  X.globalAlpha = 1;
+  // Post
+  rect(X, x + 4, y + 8, 3, 36, P.stone);
+  px(X, x + 4, y + 8, P.lstone);
+  // Crossarm
+  rect(X, x + 2, y + 8, 8, 2, P.stone);
+  // Lamp housing — dark, glass cracked, never lit
+  rect(X, x + 1, y, 8, 8, P.dgrey);
+  rect(X, x + 2, y + 1, 6, 6, '#1a1a1a');
+  // Dead glass (no glow — deliberate)
+  px(X, x + 3, y + 2, '#3a3a3a');
+  px(X, x + 5, y + 4, '#2a2a2a');
+  // A crack
+  X.strokeStyle = '#000'; X.lineWidth = 1;
+  X.beginPath(); X.moveTo(x + 3, y + 2); X.lineTo(x + 6, y + 6); X.stroke();
+}
+
+// Office — bureaucratic building, window №3, solid
+export function draw_office(x, y) {
+  // Body
+  rect(X, x, y + 6, 52, 40, P.dstone);
+  dither(X, x + 1, y + 7, 50, 38, P.stone, P.dstone, 0.2);
+  // Flat roof
+  rect(X, x - 2, y + 2, 56, 5, '#2a2a30');
+  rect(X, x - 2, y + 2, 56, 1, P.stone);
+  // Window №3 — small barred opening
+  rect(X, x + 6, y + 16, 14, 12, '#0a0a0e');
+  rect(X, x + 7, y + 17, 12, 10, '#141422');
+  // Bars
+  px(X, x + 10, y + 16, P.dgrey); px(X, x + 14, y + 16, P.dgrey); px(X, x + 18, y + 16, P.dgrey);
+  rect(X, x + 6, y + 21, 14, 1, P.dgrey);
+  // "№3" plate
+  X.fillStyle = P.bone; X.font = '5px "Press Start 2P","VT323",monospace';
+  X.globalAlpha = 0.6; X.fillText('N3', x + 9, y + 14); X.globalAlpha = 1;
+  // Door — shut, paper-clogged
+  rect(X, x + 32, y + 22, 14, 24, '#1a1410');
+  rect(X, x + 33, y + 23, 12, 22, P.dwood);
+  px(X, x + 43, y + 34, P.gold); // handle
+  // A few bланки scattered at the door
+  X.globalAlpha = 0.5;
+  rect(X, x + 30, y + 45, 4, 1, P.parchment);
+  rect(X, x + 36, y + 46, 3, 1, P.parchment);
+  X.globalAlpha = 1;
+}
+
+// Gates — always open, the porter gone, panels held by no one
+export function draw_gates(x, y) {
+  const drift = Math.sin(t * 0.003) * 0.4; // wind pushes the open panels
+  // Two stone pillars
+  rect(X, x, y + 4, 7, 52, P.stone);
+  rect(X, x + 33, y + 4, 7, 52, P.stone);
+  px(X, x, y + 4, P.lstone); px(X, x + 33, y + 4, P.lstone);
+  // Pillar caps
+  rect(X, x - 1, y, 9, 5, '#3a3a40');
+  rect(X, x + 32, y, 9, 5, '#3a3a40');
+  // Open panels — swung outward, ajar
+  // Left panel
+  X.strokeStyle = P.dwood; X.lineWidth = 2;
+  X.beginPath(); X.moveTo(x + 6, y + 10); X.lineTo(x - 6 + drift, y + 22); X.stroke();
+  X.beginPath(); X.moveTo(x + 6, y + 40); X.lineTo(x - 6 + drift, y + 52); X.stroke();
+  X.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    X.beginPath();
+    X.moveTo(x + 6, y + 14 + i * 9);
+    X.lineTo(x - 5 + drift, y + 24 + i * 9);
+    X.stroke();
+  }
+  // Right panel — mirrored
+  X.lineWidth = 2;
+  X.beginPath(); X.moveTo(x + 34, y + 10); X.lineTo(x + 46 - drift, y + 22); X.stroke();
+  X.beginPath(); X.moveTo(x + 34, y + 40); X.lineTo(x + 46 - drift, y + 52); X.stroke();
+  X.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    X.beginPath();
+    X.moveTo(x + 34, y + 14 + i * 9);
+    X.lineTo(x + 45 - drift, y + 24 + i * 9);
+    X.stroke();
+  }
+  // The gap between — open, leads to the waste
+  X.globalAlpha = 0.15;
+  X.fillStyle = P.amber;
+  X.fillRect(x + 8, y + 10, 24, 46);
+  X.globalAlpha = 1;
+}
