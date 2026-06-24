@@ -9533,6 +9533,73 @@ ${sign.whisper}`;
     X.globalAlpha = 1;
   }
 
+  // src/assets/manifest.js
+  var PORTRAITS = {
+    jester: "assets/portraits/jester.png",
+    sol: "assets/portraits/sol.png",
+    elder: "assets/portraits/elder.png",
+    nocturnal: "assets/portraits/nocturnal.png",
+    dumpster: "assets/portraits/dumpster.png",
+    machinist: "assets/portraits/machinist.png",
+    // Train NPC, no canonical prompt — paint TBD
+    // The next two are non-NPC archetypes but show up in look panels /
+    // terminal entries — kept here so the same loader can serve them.
+    archivist: "assets/portraits/archivist.png",
+    cat: "assets/portraits/cat.png",
+    moss: "assets/portraits/moss.png"
+  };
+  var SCENES = {
+    entry: "assets/scenes/entry.png",
+    // CSS background of #entry
+    ending: "assets/scenes/ending.png"
+    // drawn during the ending sequence
+  };
+
+  // src/assets/loader.js
+  var cache = /* @__PURE__ */ new Map();
+  var pending = /* @__PURE__ */ new Map();
+  function probe(path) {
+    if (cache.has(path)) return Promise.resolve(cache.get(path));
+    if (pending.has(path)) return pending.get(path);
+    const p = new Promise((resolve) => {
+      if (typeof Image === "undefined") {
+        cache.set(path, null);
+        resolve(null);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        cache.set(path, img);
+        resolve(img);
+      };
+      img.onerror = () => {
+        cache.set(path, null);
+        resolve(null);
+      };
+      img.src = path;
+    });
+    pending.set(path, p);
+    return p;
+  }
+  function getPortrait(npcId) {
+    const path = PORTRAITS[npcId];
+    if (!path) return null;
+    if (cache.has(path)) return cache.get(path);
+    probe(path);
+    return null;
+  }
+  function getScene(id) {
+    const path = SCENES[id];
+    if (!path) return null;
+    if (cache.has(path)) return cache.get(path);
+    probe(path);
+    return null;
+  }
+  function preloadAll() {
+    const paths = [...Object.values(PORTRAITS), ...Object.values(SCENES)];
+    return Promise.all(paths.map(probe));
+  }
+
   // src/ui/transitions.js
   function fadeIn(el, duration = 300) {
     el.style.opacity = "0";
@@ -9827,12 +9894,29 @@ ${sign.whisper}`;
     fadeIn(dlgEl, 300);
     typeLine();
   }
+  function drawPortrait(npcId) {
+    const c = document.getElementById("dpc");
+    if (!c) return;
+    const ctx3 = c.getContext("2d");
+    ctx3.clearRect(0, 0, c.width, c.height);
+    const img = getPortrait(npcId);
+    if (!img) {
+      ctx3.fillStyle = "#0a0810";
+      ctx3.fillRect(0, 0, c.width, c.height);
+      return;
+    }
+    ctx3.imageSmoothingEnabled = false;
+    const r = Math.max(c.width / img.width, c.height / img.height);
+    const w = img.width * r, h = img.height * r;
+    ctx3.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h);
+  }
   function typeLine() {
     const nameEl = document.getElementById("dn");
     const textEl = document.getElementById("dt");
     const optsEl = document.getElementById("do");
     if (dlgLoc) {
       nameEl.textContent = dlgLoc.talkName || dlgLoc.name || "";
+      drawPortrait(dlgLoc.npc);
     }
     textEl.textContent = dlgLines[dlgIndex] || "";
     optsEl.innerHTML = "";
@@ -19081,6 +19165,18 @@ quarter\u2551      \u2551 highway
   init2();
   init4();
   initAudio();
+  preloadAll().then(() => {
+    const entry = getScene("entry");
+    if (entry) {
+      const el = document.getElementById("entry");
+      if (el) {
+        el.style.backgroundImage = `url('${entry.src}')`;
+        el.style.backgroundSize = "cover";
+        el.style.backgroundPosition = "center";
+        el.style.boxShadow = "inset 0 0 0 100vmax rgba(5,4,8,0.55)";
+      }
+    }
+  });
   var player = {
     x: 800,
     y: 900,

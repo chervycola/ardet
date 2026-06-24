@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { state } from '../core/state.js';
 import { events, E } from '../core/events.js';
+import { getPortrait } from '../assets/loader.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
 import { input } from '../core/input.js';
@@ -217,6 +218,30 @@ export function startDialogue(loc) {
   typeLine();
 }
 
+function drawPortrait(npcId) {
+  // The #dpc canvas is 80×100; an Higgsfield 1024×1280 painting drawn
+  // into it with nearest-neighbour reads as a detailed pixel icon —
+  // this is the bridge between the painterly style and the game art.
+  const c = document.getElementById('dpc');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  const img = getPortrait(npcId);
+  if (!img) {
+    // No painting yet — leave the frame empty (the existing dlg
+    // border + bone-color background already reads as an icon slot).
+    ctx.fillStyle = '#0a0810';
+    ctx.fillRect(0, 0, c.width, c.height);
+    return;
+  }
+  ctx.imageSmoothingEnabled = false;
+  // Cover-fit: scale up the shorter side so the painting fills the
+  // 4:5 frame, then center-crop the longer side.
+  const r = Math.max(c.width / img.width, c.height / img.height);
+  const w = img.width * r, h = img.height * r;
+  ctx.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h);
+}
+
 function typeLine() {
   const nameEl = document.getElementById('dn');
   const textEl = document.getElementById('dt');
@@ -224,6 +249,7 @@ function typeLine() {
 
   if (dlgLoc) {
     nameEl.textContent = dlgLoc.talkName || dlgLoc.name || '';
+    drawPortrait(dlgLoc.npc);
   }
   textEl.textContent = dlgLines[dlgIndex] || '';
 

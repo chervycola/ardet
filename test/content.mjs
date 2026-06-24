@@ -427,6 +427,45 @@ setCtx(fakeCtx());
   });
 }
 
+// ═══ ASSETS — manifest sanity + loader cache behaviour ═══
+{
+  const manifest = await imp('assets/manifest.js');
+  const loader = await imp('assets/loader.js');
+  const { locations: assetWorldLocations } = await imp('world/locations.js');
+
+  test('assets: every NPC has a portrait entry in the manifest', () => {
+    // Anyone tied to dialogues (location.npc) should have a portrait
+    // slot declared, so painters can drop in PNGs incrementally.
+    const npcsInWorld = new Set(assetWorldLocations.filter(l => l.npc).map(l => l.npc));
+    for (const npc of npcsInWorld) {
+      assert(manifest.PORTRAITS[npc], `missing portrait slot for npc: ${npc}`);
+    }
+  });
+
+  test('assets: manifest paths live under assets/ (no absolute, no escapes)', () => {
+    for (const path of manifest.allAssetPaths()) {
+      assert(path.startsWith('assets/'), `path must be relative: ${path}`);
+      assert(!path.includes('..'), `no path escapes: ${path}`);
+      assert(/\.(png|jpe?g|webp)$/i.test(path), `unexpected extension: ${path}`);
+    }
+  });
+
+  test('loader: missing image resolves to null without throwing; cache stays consistent', () => {
+    loader._test.clear();
+    // No Image global in headless env — loader records null in cache
+    // and getPortrait/getScene return null synchronously after.
+    const p = loader.getPortrait('jester');
+    assert(p === null, 'first call returns null while load is pending');
+    loader._test.seed('assets/portraits/jester.png', null);
+    eq(loader.getPortrait('jester'), null, 'cached null returned synchronously');
+  });
+
+  test('loader: getPortrait("nonsense_npc") gracefully returns null', () => {
+    eq(loader.getPortrait('nonsense_npc'), null);
+    eq(loader.getScene('nonexistent_scene'), null);
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
