@@ -103,6 +103,52 @@ ref 5 (он остаётся «верхней планкой» только дл
 
 ---
 
+## ☀️ SOL INVICTUS — ЗАФИКСИРОВАНО (прогон 2026-06-25)
+
+Локнутый портрет: `assets/portraits/sol.png` (Higgsfield media
+`02f217d1-551a-4cd9-a926-bd6ca81ea4a5`, 1792×2400). Это ручной
+Unlimited-рендер автора из веб-UI Higgsfield — отобран как финал.
+
+**Регистр:** «вудкат-король + нимб» — тот же дом-стиль, что у Шута
+(чёрная тушь / кросс-хэтчинг Доре на пергаменте, почти пустой фон,
+низ — пустошь с останцами).
+
+Ключевые черты, которые держим:
+- **Вместо головы — антик-солнце-лик**: скульптурное лицо с закрытыми
+  глазами, тонкие **золотые потёки-слёзы** по щекам.
+- **Над головой — тонкое золотое нимб-кольцо** + короткие лучи (диск).
+- **Рёбра в прорехах царственной мантии**; в животе —
+  золотой череп-реликварий. Латные ноги.
+- В поднятой руке — **ветка, что горит не сгорая**; **сгоревшая ветка
+  лежит у босых ног**.
+- **ДВЕ руки, чистый силуэт** — осознанное отступление от много-рукой
+  ДНК Шута (для Sol мультирукость и «две кости + звериная лапа» сняты).
+- **Акцент — ТОЛЬКО золото** (`#b8860b`): лик, нимб, лучи, пламя ветки.
+  Всё остальное — чистая чёрная тушь по кости.
+
+Дом-промт Sol (для возможных перегенераций / когезии):
+> Single full-body figure: SOL, a regal sun-king ascetic, frontal, still.
+> Instead of a head, a sculpted classical sun-face mask, serene, eyes
+> closed, thin golden rivulets down the cheeks; a thin gold halo-ring +
+> short sun-rays behind the head. Two arms only: one bony hand holds aloft
+> a branch that burns without being consumed, the other open in a calm
+> mudra; a spent burned branch lies at the bare skeletal feet. Ribs visible
+> through the rents of a long ragged regal mantle. Black pen-and-ink
+> woodcut / Gustave Doré crosshatch on aged bone-white parchment, dense
+> crosshatch, paper texture, almost empty background. SINGLE accent:
+> burnished gold (sun-face, halo, rays, flame). Faint wasteland buttes at
+> the bottom. No other colors, no 3D, no gloss, no text, no signature.
+
+**⚠️ Пайплайн-заметка (генерация):** «Unlimited» в Higgsfield доступен
+ТОЛЬКО в ручном веб-UI — через MCP-мост любая генерация списывает кредиты
+(параметр `use_unlim` API отклоняет). Поэтому тяжёлые финалы автор рендерит
+руками на Unlimited и отдаёт агенту через upload-виджет (media_id), а агент
+качает, кладёт в `portraits/` (src+build) и коммитит. Если генерим через
+агента — самые дешёвые модели: Kling O1 Image (0.5 кр), Seedream 4.5 /
+5.0 Lite / Nano Banana (1 кр); GPT Image 2 (7 кр) — только на финалистов.
+
+---
+
 ## ДОМ-СТИЛЬ ДЛЯ ОСТАЛЬНЫХ ПОРТРЕТОВ (предложение)
 
 Распространить ту же технику — **тушь/вудкат на пергаменте + один
