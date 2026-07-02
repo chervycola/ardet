@@ -14,16 +14,26 @@
  * Переключение канала хранится во flash (cal-структуры прошивок).      */
 #define MIDIMAP_CH_DEFAULT      0u          /* wire-формат: 0 == канал 1 */
 
-/* ---- 14-bit оси джойстика ----------------------------------------------
+/* ---- 14-bit оси (донор DJI C5: два стика, 05_pult_dji_c5.md) -----------
  * Порядок на проводе: ВСЕГДА MSB, затем LSB (CC#N, затем CC#N+32).
  * Приёмник применяет значение по приходу LSB; если вместо LSB пришло
- * что-то другое — fallback: применить MSB<<7 (см. module/main.c).      */
-#define CC_JOY_X_MSB            16u         /* BIAS,  X-ось */
+ * что-то другое — fallback: применить MSB<<7 (см. module/main.c).
+ * Левый стик:  Y=DRIVE (rate), X=BIAS (momentary вокруг центра).
+ * Правый стик: Y=CUTOFF (rate), X=RESO (momentary вокруг базы модуля). */
+#define CC_JOY_X_MSB            16u         /* BIAS,   левый X  */
 #define CC_JOY_X_LSB            48u
-#define CC_JOY_Y_MSB            17u         /* DRIVE, Y-ось */
+#define CC_JOY_Y_MSB            17u         /* DRIVE,  левый Y  */
 #define CC_JOY_Y_LSB            49u
+#define CC_CUT_MSB              18u         /* CUTOFF, правый Y */
+#define CC_CUT_LSB              50u
+#define CC_RESO_MSB             19u         /* RESO,   правый X */
+#define CC_RESO_LSB             51u
 
-/* ---- 7-bit ручки -------------------------------------------------------*/
+/* ---- 7-bit ------------------------------------------------------------*/
+#define CC_DIAL                 20u         /* gimbal dial DJI, назначаемый (деф. MIX-офсет) */
+
+/* DEPRECATED для пульта: LEVEL/TONE — аналоговые ручки МОДУЛЯ (05 §2.2).
+ * Дефайны оставлены: модуль может принимать их извне (DAW) в будущем.  */
 #define CC_LEVEL                7u
 #define CC_TONE                 74u
 
