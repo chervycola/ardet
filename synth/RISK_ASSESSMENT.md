@@ -93,6 +93,8 @@ Plate-only (дёшево) конфликтует с good coupling (нужен bo
 
 **Рекомендация**: на Stage 0 сразу заложить тест **и puck-contact, и driver-bridge** (ступени 1 + 2) — за один заход узнаешь, нужна ли ступень 2. Большинство «contact fail» решаются ступенями 1-2 при сохранении пассивного картриджа. Ступень 5 — гарантированный откат, но жертвует razor-blade.
 
+> ⚠ **Ladder качает EXCITER force. Пьезо-pin preload (~1.5N) — отдельный параметр** и главное слабое звено под TOLL-ударом (см. R13). Force-ступени exciter не поднимают прижим пьезо. Пин надо усиливать независимо + крепить к жёсткому шасси, не к податливой рамке.
+
 ### 🔴 R2 — Material differentiation НЕ доказана
 Вся идентичность — материалы звучат различно (target >80% blind A/B). Если oak и nephrite через один module engine + одинаковый processing звучат похоже → концепция провалена. Пока не проверено.
 → **Gate: Stage 0.**
@@ -111,7 +113,7 @@ ATtiny84A на 5+ задачах, аналоговый Tides-class FG, phaser, L
 LFSR + crush PWM (audio-rate) + TAP/sync + FG phase reset + envelope trigger + STALL throttle. Timer/interrupt contention. Может потребовать RP2040/STM32.
 
 ### 🟡 R7 — Solenoid на сменной пластине через contact — wear/reliability
-Бьёт по spring-held пластине, thermal limits, felt wear. Novelty с вопросами надёжности.
+Бьёт по spring-held пластине, thermal limits, felt wear. Novelty с вопросами надёжности. Felt wear → рано или поздно металл-по-металлу: нужен captive-felt с visual wear indicator ИЛИ recessed plunger, физически не достающий до пластины при стёртом войлоке. **Fatigue** зависит от материала (mammoth bone хрупче cattle — ресурс неизвестен). **Динамика удара (unseating) вынесена в R13** — это отдельный, более серьёзный конфликт, чем износ.
 
 ### 🟡 R8 — Dual SKU удваивает всё
 Eurorack + pedal = ×2 testing/cert/mechanical. Первый продукт = отгрузить ОДНУ форму хорошо.
@@ -127,6 +129,25 @@ Bench-время на hand-built = cost + consistency risk.
 
 ### 🔵 R12 — EMC/CE не адресован
 Solenoid + DC-DC + MCU = EMI. Для коммерческой продажи нужен pre-compliance.
+
+### 🔴 R13 — TOLL-удар может сам сорвать contact (strike × seating × frame-compliance)
+**Найдено adversarial-физревью (Claim 11), диаграмма: `strike_seating_problem.svg`.** Это не «wear» (R7), а фундаментальный механический конфликт: соленоид бьёт по пластине, которая в тот же момент spring-прижата к пьезо-пикапу и exciter-пятаку (Decision 11 contact coupling). Считаем связанно, а не по частям:
+
+- **Momentum matching.** Плунжер ~5г несёт I=√(2·F·d·m)=**0.010 Н·с** при v=2 м/с. Тонкая пластина (oak ~5-6г) — **равная масса** → передача импульса ≈100% → пластина получает те же **~2 м/с** как rigid body. Brass 13г → 0.77 м/с, slate/bone 17-25г → 0.4-0.6 м/с. **Хуже всего на лёгком краю палитры.**
+- **Preload marginal по ВРЕМЕНИ, не величине.** 5N seating арестует 0.01 Н·с за t=I/F≈**2 мс** — тот же порядок, что сам удар (транзит ~2мс). Пик Hertzian-контакта **10-20N** (не квазистатика 5N — см. Claim 9) кратковременно превышает preload в разы.
+- **🔴 Слабое звено — пьезо, не exciter.** Пьезо-пин прижат отдельной пружиной **~1.5N** (не 5N exciter, не net-магниты). Пик 10-20N превышает 1.5N в **7-13×** → **первым отскакивает именно сигнальный пикап** → rattle/dropout **прямо в звуковом тракте**, слышен напрямую, а не как побочка. Диаграмма недооценивала это (рисовала 5N на pin).
+- **Frame rubber = ловушка.** Резина, добавленная чтобы рамка не звенела, даёт плите-на-mount резонанс **70-160 Гц (период 6-14мс) > 2мс удара** → на timescale strike резина НЕ держит, разрешает плите подпрыгнуть.
+
+**TOLL может провоцировать ровно тот R1-rattle, против которого существует R1.** На 5-13г пластинах «bell strike» и «clean pickup» в прямом конфликте.
+
+**Mitigations (нет ни в одном текущем доке):**
+1. **Pin preload поднять отдельно** от exciter force (R1-ladder качает exciter, пьезо оставался 1.5N).
+2. **Пьезо-пины крепить к жёсткому шасси модуля**, не к податливой frame-rubber.
+3. **Cap TOLL energy на light-tier** пластинах (SOFT drive 3.8V по умолчанию — уменьшает импульс и заодно fatigue).
+4. **Gate-synchronous MUTE FET** шунтирует пьезо на время CONTACT-фазы (Phase 1, не Phase 2 — см. EMI Block 14).
+5. **Escapement pulse** ~3.5мс — плунжер уходит сразу после транзита, не сидит на звенящей плите.
+
+→ **Gate: Stage 0B (ниже).** Требует замера **массы плунжера** (главный неизвестный рычаг: v∝1/√m, plate-kick ∝ m).
 
 ---
 
@@ -173,6 +194,21 @@ Piezo (contact-pressed к back) → TL072 hi-Z preamp (×23, R_PA 10M) → audio
 **Gate Stage 0**:
 - ✅ Pass → contact coupling работает, материалы различны → **фундамент жив**, продолжать.
 - ❌ Fail (contact слаб / rattle / материалы одинаковы) → **остановиться**. Решения: (a) exciter bonded к driver-plate в модуле, картридж прижимается к ней (двухслойный coupling); (b) более крупные/тонкие пластины; (c) пересмотр концепции. **НЕ заказывать PCB/tooling до решения.**
+
+### Stage 0B — Strike-unseating gate ⭐ (тот же rig + соленоид, ~$10, полдня)
+
+**Вопрос**: не срывает ли TOLL-удар contact пьезо/exciter (R13)? Дешевле выяснить сейчас, чем после feedback/signal-chain работы.
+
+**Добавить к Stage 0 rig**: 1× push-solenoid 5V (Adafruit 412 / bulk, ~$5) на bracket над пластиной, felt-tip, gap 2мм. Драйв от gate-генератора (или кнопка + 555). **Сначала взвесить плунжер** (главный неизвестный, v∝1/√m).
+
+**Тесты**:
+1. **Unseating scope**: пьезо-выход на осциллограф, дать одиночный TOLL. **Fail-признак**: спайк/дропаут/двойной-удар в сигнале в первые ~5мс (пластина отскочила от пина). **Pass**: чистый bell-attack без rattle-артефакта.
+2. **Масса пластины sweep**: oak ~6г (worst) → brass ~13г → slate ~25г. **Pass**: лёгкая пластина не хуже тяжёлой; если oak rattl'ит а slate нет — подтверждён momentum-matching.
+3. **Pin preload sweep**: пьезо-пружина 1.5N → 3N → 5N. **Pass**: есть preload, убирающий unseating без демпфирования тембра.
+4. **Pulse width**: 3.5мс escapement vs 15мс held. **Pass**: короткий pulse = длиннее sustain (подтверждает инверсию duration=damping).
+5. **EMI click**: тот же удар, но пьезо **не касается** пластины (только электрика рядом). Слышен click? → capacitive coupling с drain-узла (R13/Block 14), нужен MUTE FET.
+
+**Gate**: ❌ Fail (лёгкие пластины rattl'ят, click слышен) → применить R13 mitigations (pin preload↑, пины на жёсткое шасси, SOFT drive, MUTE FET) **до** любого PCB. Если не лечится — TOLL только для тяжёлых пластин (≥15г), либо отдельный «struck» под-каталог.
 
 ### Stage 1 — Feedback loop stability (после Stage 0 pass, ~неделя)
 
@@ -225,6 +261,7 @@ Piezo (contact-pressed к back) → TL072 hi-Z preamp (×23, R_PA 10M) → audio
 ## 7. Pre-tooling checklist (gate перед любыми затратами)
 
 - [ ] **Stage 0 passed** — contact coupling работает, материалы различны (blind A/B >80%)
+- [ ] **Stage 0B passed** — TOLL-удар не срывает пьезо/exciter contact (R13); плунжер взвешен
 - [ ] **Stage 1 passed** — feedback стабилен (SPICE + bench) на всех материалах
 - [ ] **Stage 2 passed** — JFET noise floor OK, core chain musical
 - [ ] Решение scope: v1 урезан или полный (с осознанием риска)

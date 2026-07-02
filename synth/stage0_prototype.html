@@ -132,10 +132,11 @@
 <tr><td>Aluminum</td><td class="n">0.4</td><td class="n">55</td><td class="n">414/250</td><td class="n">~43</td><td class="n">4–10с</td><td>bright sustain</td></tr>
 <tr><td>Oak (∥ волокна)</td><td class="n">1.8</td><td class="n">45</td><td class="n">1900/1150</td><td class="n">~12</td><td class="n">0.28с</td><td>warm slap</td></tr>
 <tr><td>Slate (камень)</td><td class="n">2.0</td><td class="n">45</td><td class="n">2637/1580</td><td class="n">~6</td><td class="n">0.44с</td><td>каменный</td></tr>
-<tr><td>Glass (tempered)</td><td class="n">1.5</td><td class="n">40</td><td class="n">2735/1640</td><td class="n">~6</td><td class="n">2.2с</td><td>crystalline chime</td></tr>
+<tr><td>Glass (annealed*)</td><td class="n">1.5</td><td class="n">40</td><td class="n">2735/1640</td><td class="n">~6</td><td class="n">2.2с</td><td>crystalline chime</td></tr>
 <tr><td>Nephrite (jade)</td><td class="n">2.0</td><td class="n">45</td><td class="n">2824/1700</td><td class="n">~5</td><td class="n">4.4с</td><td>поющий колокол</td></tr>
-<tr><td>Bone</td><td class="n">2.5</td><td class="n">35</td><td class="n">3352/2010</td><td class="n">~5</td><td class="n">0.11с</td><td>dry knock</td></tr>
+<tr><td>Bone (femur cortical**)</td><td class="n">2.5</td><td class="n">35</td><td class="n">3352/2010</td><td class="n">~5</td><td class="n">0.11с</td><td>dry knock</td></tr>
 </table>
+<p class="sub">* <b>Glass — annealed, НЕ tempered.</b> Tempered при ударе взрывается целиком (запасённое поверхностное напряжение) + NiS-включения → спонтанный разлёт; резать/обрабатывать после закалки нельзя. Для hand-held striking-девайса это liability. Annealed скалывается локально и предсказуемо. Ещё безопаснее — laminate/polymer. <br>** <b>Bone — femur/humerus cortical shaft, НЕ scapula.</b> Лопатка в основном губчатая (cancellous), кортикальный слой 1-2мм — из неё не выйдет чистая acoustic-grade плита 2.5мм. Диафиз длинной кости даёт цельный cortical slab.</p>
 <p class="sub"><b>Для Stage 0 (de-risk):</b> рекомендую <b>W = 50мм константа</b> для всех пластин на bench — упрощает фиксированный contact-rig (контактные точки всегда попадают). Variable W (таблица выше) — refinement для v2 после того как contact coupling доказан.</p>
 <p class="sub"><b>Минимальный набор для теста:</b> spring steel 0.3мм (reverb-эталон) + oak 2мм (warm) + один камень/стекло (chime) + nephrite если доступен. 3–4 пластины достаточно чтобы увидеть дифференциацию.</p>
 <h3>Источники пластин</h3>
@@ -181,6 +182,7 @@
 <li><span class="ok">✅ PASS</span> → contact coupling работает + материалы различны → <b>фундамент жив</b>. Переходить к Stage 1 (feedback stability).</li>
 <li><span class="warn">❌ FAIL</span> (contact слаб / rattle / материалы одинаковы) → <b class="warn">СТОП.</b> Решения: (a) exciter bonded к driver-plate в модуле, картридж прижимается к ней (двухслойный coupling); (b) крупнее/тоньше пластины; (c) пересмотр концепции. <b>НЕ заказывать PCB/tooling до решения.</b></li>
 </ul>
+<p class="sub"><b>⚠ Solenoid тут НЕ тестируется</b> (Stage 0 — чистая акустика: усилки + пластины). TOLL-удар несёт отдельный фундаментальный риск (<b>R13</b>: удар может сам сорвать пьезо-contact — momentum matching на лёгких пластинах, пьезо-preload всего ~1.5N). Это <b>Stage 0B</b> gate: тот же rig + соленоид + осциллограф на пьезо, полдня, ~$10. Сначала <b>взвесить плунжер</b>. См. <code>RISK_ASSESSMENT.md</code> R13 + Stage 0B и диаграмму <code>strike_seating_problem.svg</code>.</p>
 
 <div class="scope">
 <b>Главное правило:</b> не тратить деньги на PCB / panel-CNC / component-bulk, пока Stage 0 не passed.
