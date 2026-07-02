@@ -47,7 +47,7 @@ Last Night — **material resonator на сменных физических п�
 ### Чем отличается от обычных pedal-reverb
 
 - **Сменные материальные картриджи** — никто другой не делает physical-plate reverb с swappable physical resonators.
-- **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (5-10мс impulse strike = пластина звенит как колокол независимо от input).
+- **Solenoid double-function** — один соленоид, два режима: DAMP (sustained hold = мех. приглушение хвоста) и TOLL (~4мс escapement strike — боёк бьёт и мгновенно отпускает, как молоточек пианино → пластина звенит свободно, как колокол, независимо от input).
 - **Dual piezo с position crossfade** — два pickup-а на пластине, manual или CV blend.
 - **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (zener + LFSR shared internally), COLOR = continuous crossfader от continuous zener hiss к Geiger cluster ticks (ATtiny84A LFSR + comparator pattern). Два sonic universe через 2 ручки (mockup canon).
 - **Always-on phaser** — analog 4-stage OTA, named effect. Phase/Flutter knob = continuous feedback intensity morph (subtle → resonant → controlled self-oscillation). LFO source = **analog Function Generator** с 3 sliders (rise/fall/depth) + 2 knobs (exp/log curve, speed/range). FG outputs exposed via 4 jacks (EG/Gate/Sub÷2/Inv). Bypass через footswitch BYPASS.
@@ -97,7 +97,7 @@ Last Night sits в **premium boutique tier** ($499–649) с unique physical dif
 1. **NOISE + COLOR(geiger) — 2 separate knobs**: NOISE = output level (после shared crossfader), COLOR(geiger) = continuous crossfader от continuous zener hiss (CCW, BZX55C9V1) к Geiger cluster ticks (CW, ATtiny84A LFSR + comparator pattern). Internally один shared generator + OTA crossfader pair.
 2. **Phaser always-on + analog Function Generator** — 4-stage OTA all-pass (LM13700 U7+U8). Phase/Flutter knob = single continuous feedback intensity morph. LFO source = **analog FG** (Tides-class): rise/fall/depth sliders shape waveform, exp/log knob morphs curve, speed/range knob + clock sync set rate. 4 FG outputs (EG main, Gate rise-active, Sub÷2, Inv) exposed via panel jacks для patch-to-anything routing. Bypass через footswitch BYPASS.
 3. **Gate / Crush** — footswitch destruction: 4066 CMOS gate + LF398 sample-hold bitcrush.
-4. **Solenoid triple-function** через CV-only triggers (modular-advanced features): **DAMP** (J_CV_DAMP envelope CV), **TOLL** (J_TOLL_TRIG gate → 555 monostable → 5–10мс strike pulse), **STALL** (J_STALL_CV sustained hold).
+4. **Solenoid triple-function** через CV-only triggers (modular-advanced features): **DAMP** (J_CV_DAMP envelope CV), **TOLL** (J_TOLL_TRIG gate → NE556 monostable → ~4.4мс escapement strike с мгновенным release), **STALL** (J_STALL_CV sustained hold).
 
 **Phase 2 ship (cold-palette upgrade kit, v3 PCB revision)**:
 
@@ -288,7 +288,7 @@ Customer может start с pedal (для studio/live performance), позже 
 | **Phaser SPEED range** | 0.05–10 Гц |
 | **Noise generator architecture** | Shared zener (BZX55C9V1) + ATtiny84A LFSR cluster ticks. NOISE knob = output level; COLOR(geiger) knob = continuous crossfader (CCW = hiss, CW = ticks) |
 | **Geiger tick rate** | 0.5–20 events/sec @ random cluster pattern (ATtiny84A LFSR) |
-| **Solenoid double-function** | DAMP sustained (CV) + TOLL impulse (5–10мс via J_TOLL_TRIG monostable) + STALL hold (J_STALL_CV forced) — CV-only triggers, no footswitch |
+| **Solenoid double-function** | DAMP sustained (CV) + TOLL escapement impulse (~4.4мс fixed via J_TOLL_TRIG monostable, мгновенный release) + STALL hold (J_STALL_CV forced) — CV-only triggers, no footswitch |
 | **Maximum input** | +20 dBu (line level), +15 dBu typical |
 | **Maximum output** | +12 dBu |
 | **Power draw** (Eurorack) | ±12В, 250мА steady, 500мА peak |
@@ -452,7 +452,7 @@ Solenoid double-function реализована на electrical уровне (о
 
 | CV input | Тип | Функция |
 |----------|-----|---------|
-| **J_TOLL_TRIG** | gate (5V trigger) | Короткий impulse → solenoid strike → bell-tone пластины. Через NE555 monostable 5–10мс pulse + OR-gate с DAMP path. |
+| **J_TOLL_TRIG** | gate (5V trigger) | Короткий impulse → solenoid strike → bell-tone пластины. Через NE556 monostable ~4.4мс escapement pulse (мгновенный release — пластина звенит свободно) + OR-gate с DAMP path. |
 | **J_STALL_CV** | sustained CV (+5V hold) | Forced full damper hold. Длительный high → decay stuck at minimum. Release = decay resumes. |
 
 Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedalboard users могут использовать через expression-jack adapter (CV-trigger box) — но это advanced workflow.

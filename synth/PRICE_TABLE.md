@@ -1,6 +1,6 @@
 # LAST NIGHT — Consolidated Price Table (module electronics)
 
-**Версия**: v6.4 + Decision 11
+**Версия**: v6.5 (= v6.4 + Decision 11 + Block 14 rewrite)
 **Scope**: module electronics + transducer engine. Картриджи закупаются отдельно (вне scope).
 
 > ⚠ **Цены — approximate small-quantity estimates** (USD, 2025-2026). Большинство НЕ live-fetched. Точная цена = поиск по P/N в магазине. Колонки: **Budget** / **Audiophile** (Decision 10 §18).
@@ -191,4 +191,4 @@
 
 > **Для точных цен**: открыть домен → поиск по P/N (колонки выше) → актуальная цена + qty-breaks. Цены здесь — порядок величины для бюджетирования партии, не для финального заказа.
 
-**End of price table v6.4. Цены approximate — verify по P/N перед закупкой.**
+**End of price table v6.5. Цены approximate — verify по P/N перед закупкой.**

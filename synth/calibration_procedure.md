@@ -1,7 +1,7 @@
 # LAST NIGHT — Calibration Procedure
 
-**Версия**: v1.0 (для production assembly + service)
-**Применимо**: v6.4 canon
+**Версия**: v1.1 (для production assembly + service; Block 14 rewrite — RV_TOLL_DUR удалён, Шаг 7 стал verification вместо adjustment)
+**Применимо**: v6.5 canon
 **Требуется**: каждый собранный unit проходит калибровку перед QC sign-off.
 
 > Last Night имеет несколько internal trim pots, требующих настройки на сборке. Этот документ — пошаговая процедура. Без калибровки unit может вести себя непредсказуемо (gate threshold, trigger sensitivity, push-pull bias, etc.).
@@ -28,7 +28,7 @@
 | RV_GTH | 18 | mid | Gate threshold (Gate/Crush) |
 | RV_CRUSH | 18 | mid | Crush sample rate |
 | RV_TRIG_THRESH | 11/16 | mid (~1V) | FG trigger sensitivity |
-| RV_TOLL_DUR | 14 | mid (~11ms) | TOLL pulse duration |
+| ~~RV_TOLL_DUR~~ | 14 | — | **Удалён (Block 14 rewrite)**: pulse duration ≠ сила удара (это степень демпфирования). Fixed 4.4мс escapement (R_556A 180k 1%). Шаг 7 = verification |
 | RV_CHILL_THRESH | 24 (Phase 2) | mid | Expander threshold |
 
 ---
@@ -102,17 +102,16 @@
 6. Для acoustic guitar / soft picking: установить CCW (~0.5V).
 7. **Pass**: FG fires reliably на intended attack level, no false triggers на sustain.
 
-### Шаг 7 — TOLL pulse duration (RV_TOLL_DUR)
+### Шаг 7 — TOLL escapement pulse (verification, не adjustment)
+
+> **Block 14 rewrite**: pulse fixed 4.4мс (NE556 half A, R_556A 180k 1% + C 22нФ). Per-material подстройки НЕТ — длинный pulse не «усиливал» удар, а демпфировал звенящую пластину (физревью; нефрит страдал сильнее всех). Крутить нечего — проверяем, что константы верны.
 
 1. Подать gate (+5V) на J_TOLL_TRIG (или trigger via internal EOR normal).
-2. Scope на Q5 gate.
-3. Измерить pulse width.
-4. Вращать RV_TOLL_DUR: 5ms (CCW) → 22ms (CW).
-5. **Default per cartridge material**:
-   - Light materials (steel, oak): ~7ms.
-   - Dense materials (nephrite, marble): ~15ms.
-   - Universal default: 11ms.
-6. **Pass**: pulse width adjustable, solenoid strikes plate cleanly (audible bell on reference cartridge).
+2. Scope на coil current (shunt/current probe) — **pulse width 4.4мс ±10%**.
+3. Спад тока после gate-off **<0.6мс** (Z_SOL fast release; если 2-5мс — zener не работает/закорочен, плунжер «доживает» на пластине).
+4. Scope на выход JFET preamp: MUTE window закрывает turn-ON click (тихий транзит), unmute к импакту — атака колокола сохранена.
+5. Reference cartridge (slate/nephrite): audible clean bell, без rattle/двойного удара в первые 5мс (unseating — R13).
+6. **Pass**: все четыре пункта. Fail по п.5 → Stage 0B mitigation review (pin preload / шасси), не трогая pulse.
 
 ### Шаг 8 — Solenoid thermal check
 
@@ -170,7 +169,7 @@ Unit passes если все 12 шагов **Pass**. Записать в QC log:
 
 - Pedal SKU: trim pots доступны через **bottom panel access holes** (3mm) без полной разборки. Label на bottom panel: trim map.
 - Eurorack SKU: trims на PCB, доступны при removal из rack (back accessible).
-- RV_TRIG_THRESH + RV_TOLL_DUR: customer-tunable (case access) — для per-cartridge / per-playing-style adjustment. Остальные — factory-set.
+- RV_TRIG_THRESH: customer-tunable (case access) — per-playing-style adjustment. Остальные — factory-set. *(RV_TOLL_DUR удалён — Block 14 rewrite: клиенту больше нечего крутить не в ту сторону; сила удара — не ширина импульса.)*
 
 ---
 

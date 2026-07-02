@@ -70,7 +70,7 @@ Major component groups placed по зонам A-J (from signal_flow SVG):
 | **F** | **Function Generator core** | 50 | 95 | 30×20 | U_FG TL074 (Schmitt + integrator + buffer + inverter) + Q_EXP_PAIRS 6× 2N3904 + C_FG range bank + RV_EXP_LOG + 74HC74 + Q_RESET 2N7000 |
 | **F2** | FG slider satellite header | 75 | 110 | 6×16 (2×6 IDC) | 12-pin ribbon to FG slider satellite PCB |
 | **G** | Noise + Geiger gen | 25 | 90 | 22×16 | BZX55C9V1 zener + U2 noise amp + U6 LM13700 OTA1 crossfader |
-| **H** | **Solenoid driver (Block 14)** | 168 | 92 | 22×18 | Q5 2N7000 + R_GATE 10k + D_OR ×3 + D_SOL 1N4001 + U_TOLL_555 + RV_TOLL_DUR trim + R_DAM1/3 + engine-bay JST ribbon (module-internal) |
+| **H** | **Solenoid driver (Block 14 rewrite)** | 168 | 92 | 24×20 | Q5 2N7000 + R_GATE 10k + D_OR ×3 + D_SOL 1N4001 + **Z_SOL 12V** (fast release) + **R_SOL 36Ω 5W WW** (thermal — у edge, как R8) + **U_TOLL_556** (fixed R_556A/B, трим удалён) + **R_SNUB+C_SNUB** + R_DAM1/3 + engine-bay JST ribbon (module-internal). **Q_MUTE 2N7000 НЕ здесь** — у выхода JFET preamp (Zone C edge), gate-провод от U_556B поверху с GND return |
 | **I1** | Mix bus (U2D TL074) | 110 | 92 | 14×10 | Summing amp + RV_MIX + balance |
 | **I2** | Gate/Crush Block 18 | 130 | 92 | 24×16 | U_GATE CD4066 + U_SH LF398 + U_COMP LM393 + R-2R + RV_GTH + RV_CRUSH trims |
 | **I3** | Output buffer | 158 | 75 | 16×10 | TL072 ×2 (L+R + DRY+WET) + output protection R_OUT 100Ω + C_OUT 10µF |

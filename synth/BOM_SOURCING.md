@@ -1,6 +1,6 @@
 # LAST NIGHT — BOM Sourcing & Procurement Guide
 
-**Версия**: v6.4 canon
+**Версия**: v6.5 canon (Decision 11 + Block 14 rewrite)
 **Назначение**: practical purchasing guide для small-batch production (target 20 units). Part numbers, дистрибьюторы, qty, преимущества, альтернативы.
 **Парный документ**: `decisions/10_premium_components_sourcing.md` (Elite tier deep-dive).
 
@@ -66,8 +66,8 @@ ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
 | Footswitch (×4) | **3PDT latching** | various | Love My Switches, Tayda, Small Bear | 80 → 88 | $3 | Heavy-duty stomp, latching. TAP momentary variant. | Alpha 3PDT (cheaper, lower rating) |
 | Relay (bypass) | **G6K-2F-Y** | Omron | Mouser, DigiKey | 20 → 24 | $2.50 | Signal relay для true-bypass. Low contact resistance. | Takamisawa, Panasonic TQ2 |
 | LF398 | **LF398N** | TI | Mouser, DigiKey | 20 → 24 | $1.20 | Sample-and-hold (Crush cell). | LF398AN (premium grade) |
-| Trim (×6) | **3296W** | Bourns | Mouser, DigiKey, Tayda | 120 → 132 | $0.80 | Multi-turn trim. Calibration pots (gate/crush/trig/toll/bias). | 3266W (smaller) |
-| Solenoid (cartridge) | **412** push-type | Adafruit / generic 5V | Adafruit, AliExpress bulk | per cartridge | $5 | 5V push solenoid, ~5N. DAMP/TOLL/STALL. | Sparkfun ROB-11015 class |
+| Trim (×5) | **3296W** | Bourns | Mouser, DigiKey, Tayda | 100 → 110 | $0.80 | Multi-turn trim. Calibration pots (gate/crush/trig/bias ×2). *RV_TOLL_DUR удалён — Block 14 rewrite (fixed escapement).* | 3266W (smaller) |
+| Solenoid (module engine bay) | **412** push-type | Adafruit / generic 5V | Adafruit, AliExpress bulk | **per module ×28 (+4)** (Decision 11 — в модуле, не в картридже) | $5 | 5V push, felt tip. Драйв 3.8V SOFT через R_SOL (Block 14 rewrite). ⚠ Взвесить плунжер на первом образце (R13). | Sparkfun ROB-11015 class |
 
 > **⚠ SL-4P5T sourcing risk**: 4-pole 5-throw **slider** switches практически не существуют off-the-shelf. **Рекомендация**: использовать **rotary 4P5T** (Grayhill 56SD, Electroswitch) с slider-style knob cap для visual соответствия мокапу, ИЛИ кастомный slider от китайского производителя (MOQ ~500). Это **должно решиться до tooling** — flag для R&D.
 
@@ -86,10 +86,10 @@ ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
 | LM393N | LM393N | Tayda, Mouser | 40 | $0.30 | Dual comparator |
 | 74HC74 | SN74HC74N | Mouser, Tayda | 20 | $0.30 | D flip-flop |
 | CD4066BE | CD4066BE | Tayda, Mouser | 20 | $0.40 | Quad analog switch |
-| NE555P | NE555P | Tayda | 20 | $0.25 | Timer (TOLL) |
+| NE556N | NE556N | Tayda, Mouser | 20 | $0.45 | Dual timer (Block 14 rewrite: TOLL escapement pulse + piezo MUTE window) |
 | 7805 | L7805CV | Tayda, Mouser | 20 | $0.30 | +5V LDO |
 | BD139/BD140 | BD139 / BD140 | Mouser, Tayda | 40 ea | $0.30 | Push-pull pair |
-| 2N7000 | 2N7000 | Tayda | 60 | $0.10 | MOSFET (×3/unit: solenoid/reset/mute) |
+| 2N7000 | 2N7000 | Tayda | 80 | $0.10 | MOSFET (×4/unit: Q5 solenoid / FG reset / power mute / **Q_MUTE piezo** — Block 14 rewrite) |
 | 2N3904 | 2N3904 | Tayda | 140 | $0.03 | FG exp converters (×6) + freeze (×1). **Matched pairs** — buy reel, match по hFE |
 | BZX55C9V1 | BZX55C9V1 | Mouser, Tayda | 20 | $0.10 | 9.1V zener (noise) |
 | BAT85 | BAT85S | Mouser, Tayda | 1000 | $0.05 | Schottky CV-clamp (×~44/unit для 22 jacks ×2) + BLEACH/limiter. Buy 1000-reel. |
@@ -195,4 +195,4 @@ ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
 
 ---
 
-**End of BOM sourcing guide v6.4. Топ-приоритет: решить SL-4P5T + закупить LSK489A буфер.**
+**End of BOM sourcing guide v6.5. Топ-приоритет: решить SL-4P5T + закупить LSK489A буфер.**

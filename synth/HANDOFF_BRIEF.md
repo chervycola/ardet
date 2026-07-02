@@ -1,9 +1,15 @@
 # LAST NIGHT — Handoff Brief для R&D и подготовки производства
 
-**Версия канона**: v6.4 (improvements pass — bypass trails, output limiter, power mute, CV protection, transducer coupling, coatings, calibration, cartridge keying)
+**Версия канона**: v6.5 (= v6.4 improvements + Decision 11 plate-only cartridge + Block 14 strike-physics rewrite)
 **Парный модуль**: Last Day (диптих холода/жары)
 **Серия**: System Suicide — 9 модулей физического синтеза
 **Целевой ship window**: Phase 1 — months 1-9 от kickoff
+
+**v6.5 changes (vs v6.4)**:
+- 🔴 **Decision 11 LOCKED** — картридж = пассивная пластина; трансдьюсеры (exciter/пьезо/соленоид) постоянно в модуле (engine bay, spring contact). Mini-XLR/JST к картриджу устранены.
+- 🔴 **Block 14 переписан по verified физике** (adversarial review): TOLL pulse duration ≠ сила удара — это степень демпфирования. Fixed 4.4мс escapement (NE556), RV_TOLL_DUR удалён, SOFT drive 3.8V fixed для всех картриджей (R_SOL 36Ω), Z_SOL fast release, Q_MUTE piezo click mute. **Инженеру: НЕ «удлинять pulse для более сильного удара»** — это перевёрнутая интуиция, которую ревью и похоронило.
+- 🔴 **R13** (RISK_ASSESSMENT) — TOLL-удар может срывать пьезо-contact (momentum matching, пьезо-preload 1.5N слабое звено). Stage 0B bench gate обязателен. Диаграмма: `strike_seating_problem.svg`.
+- 🔴 Refined per-material plate dims (100×(35-55)×h, см. acoustic_modeling §10); glass = annealed (не tempered — liability); bone = femur cortical (не scapula).
 
 **v6.4 improvements (vs v6.3)** — overlooked items pass:
 - 🔴 Bypass trails (buffered bypass option) — reverb-critical UX, true-bypass cuts tail иначе.
@@ -23,7 +29,7 @@
 - 🟡 LM393 reallocation: Block 11 env→trigger reuses Block 18 U_COMP second half.
 - 🟡 U4C double-allocation resolved: Block 9 de-emphasis → U2C.
 - 🟡 RV_TRIG_THRESH trim (adjustable FG trigger sensitivity).
-- 🔵 RV_TOLL_DUR trim (5-22ms TOLL pulse per cartridge tuning).
+- 🔵 ~~RV_TOLL_DUR trim (5-22ms TOLL pulse per cartridge tuning).~~ *Superseded в v6.5 — Block 14 rewrite (fixed escapement, трим удалён).*
 - Production checklist расширен в §6 (SPICE Nyquist, blind A/B tests, thermal endurance, etc.).
 
 ---
@@ -206,7 +212,7 @@ Top priority bench tests:
 - [ ] FG plate-triggered mode — confirm reliability across input dynamics range (soft pick / hard pluck / sustained tone). RV_TRIG_THRESH default adjustment.
 - [ ] Phase/Flutter knob taper feel — log taper, audible phasing at 10% rotation, controlled self-osc at 95%+.
 - [ ] FG depth slider mapping — 10% depth = audible но subtle phaser modulation, 100% = full 4-octave sweep.
-- [ ] TOLL pulse duration adjustment per cartridge material — RV_TOLL_DUR set per material type during assembly QC.
+- [ ] TOLL escapement verification (Block 14 rewrite): coil pulse 4.4мс ±10%, ток спадает <0.6мс после gate-off (Z_SOL), MUTE window закрывает transit-click, нет unseating-артефакта в первые 5мс (R13). Per-material adjustment **упразднён** — fixed pulse для всех.
 
 ### 6.5 Material cartridge validation (weeks 6-10, parallel)
 - [ ] **🔴 Material plate cartridge prototyped** — все 6 materials (oak / spring steel / marble / glass / bone / nephrite) изготовлены.

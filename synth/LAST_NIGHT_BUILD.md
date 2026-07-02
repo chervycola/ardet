@@ -24,7 +24,7 @@
 > - 🟡 LM393 reallocation — Block 11 env→trigger uses Block 18 U_COMP unused second half (originally tagged "tap detection" но TAP routes к MCU PCINT directly).
 > - 🟡 U4C double-allocation resolved — Block 9 de-emphasis moved к U2C, Block 7 keeps U4C exclusively.
 > - 🟡 RV_TRIG_THRESH 100k trim added — adjustable FG trigger sensitivity (Block 11 → Block 16).
-> - 🔵 RV_TOLL_DUR 22-100k trim added — 5-22ms TOLL pulse adjustable per cartridge material (Block 14).
+> - 🔵 ~~RV_TOLL_DUR 22-100k trim added — 5-22ms TOLL pulse adjustable per cartridge material (Block 14).~~ **Superseded**: физревью показало, что duration ≠ сила удара (это степень демпфирования; и арифметика была битой — 220нФ давало 36мс, не 5-22). Block 14 переписан: fixed 4.4мс escapement, трим удалён.
 > - Production verification protocol expanded — SPICE Nyquist, blind A/B tests, thermal endurance (see `HANDOFF_BRIEF.md` §6).
 > 
 > **Прежняя версия (v5.0)**: Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE; phaser always-on; v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv). Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid triple-function (DAMP + TOLL + STALL). Gate/Crush блок 18 восстановлен как footswitch destruction effect.
@@ -739,173 +739,167 @@ Master BYPASS footswitch имеет **2 режима** (internal jumper J_TRAILS
 
 > **Default ship setting**: TRAILS mode (ambient-friendly). True-bypass via jumper для purists.
 
-### Block 14. Solenoid Driver — Triple-function DAMP + TOLL + STALL **[REVISED v5 hybrid]**
+### Block 14. Solenoid Driver — Triple-function DAMP + TOLL + STALL **[REWRITTEN — verified strike physics, post adversarial review]**
 
-> **v5 hybrid (Decision 09)**: один соленоид, три логических режима, все через **CV-only triggers** (не footswitches — те заняты mockup canon TAP/CRUSH/BYPASS/FREEZE).
+> **Что изменилось и почему.** Прежняя ревизия трактовала ширину TOLL-импульса как «силу удара» (5–22мс per-material, «нефриту длиннее — более поющий колокол»). Независимое физревью подтвердило: **модель была перевёрнута**. Плунжер пролетает 2мм зазора за ~2–3мс; всё время, которое катушка держится включённой дольше, — это войлок, прижатый к уже звенящей пластине, т.е. **демпфер**, гасящий именно то, что должно петь. Сила удара задаётся **приводом (ток/напряжение) и зазором**, а не шириной импульса. Полный механический разбор: `strike_seating_problem.svg`, `RISK_ASSESSMENT.md` R13 + Stage 0B.
 >
-> - **DAMP** = sustained pressure modulation (CV envelope-controlled, как в v2.1).
-> - **TOLL** = short impulse pulse (5–10мс) для bell-strike пластины. Trigger через J_TOLL_TRIG gate (5V).
-> - **STALL** = forced full-pressure hold. Trigger через J_STALL_CV (+5V sustained → solenoid stays fully engaged → decay stuck at minimum).
+> Заодно исправлены три бага прежней ревизии, найденные при переписывании:
+> 1. **Арифметика 555 была битой**: «RV 22–100k + C_555 220нФ → 5–22мс» неверно — 1.1 × 150k × 220н = **36мс**, чистое душение даже по старой логике.
+> 2. **+12V_RAW → 5V-катушка без ограничения тока**: coil 17Ω на 12V тянул бы ~700мА / 8.5Вт; thermal-таблица при этом считала 5V/290мА — противоречие схемы и расчёта. Добавлен R_SOL (см. 14.2).
+> 3. **Диаграмма подписывала соленоид «(cartridge)»** — соленоид постоянно в module engine bay (Decision 11), не в картридже.
 >
-> All three пути OR-combined в gate Q5 MOSFET. Whichever signal highest wins.
+> Три логических режима без изменений, все **CV-only** (footswitches заняты mockup canon TAP/CRUSH/BYPASS/FREEZE):
+> - **DAMP** = sustained pressure modulation (CV envelope → войлок ритмично прижат). Held-режим **штатен** — это и есть демпфер.
+> - **TOLL** = bell-strike: короткий escapement-импульс (см. 14.3). Trigger через J_TOLL_TRIG gate (5V).
+> - **STALL** = forced full hold (J_STALL_CV +5V sustained → decay stuck at minimum). Held-режим штатен.
+
+#### 14.1 Физика удара (verified)
+
+Ключевое разделение: **роль плунжера выбирается шириной импульса**, сила — приводом.
+
+- **Striker (TOLL)**: импульс ≈ время транзита + ~1мс — плунжер бьёт и немедленно освобождается (escapement, как молоточек пианино / часовой боёк). Пластина звенит свободно.
+- **Damper (DAMP/STALL)**: длительное удержание — войлок сидит на пластине. Штатно для DAMP/STALL, фатально для TOLL.
+
+| Параметр | Формула | @ SOFT 3.8V (F≈3N) — v1 default | @ NORMAL 5V (F≈5N) — v2 option |
+|----------|---------|--------------------------------|--------------------------------|
+| Энергия удара | E = F·d (gap d=2мм) | ~6 мДж | ~10 мДж |
+| Скорость плунжера | v = √(2E/m), m≈5г | ~1.55 м/с | ~2.0 м/с |
+| Импульс в пластину | I = m·v | ~0.008 Н·с | ~0.010 Н·с |
+| Транзит зазора | t = √(2d/(F/m)) | ~2.6 мс | ~2.0 мс |
+
+Caveats (из ревью):
+- Сила соленоида **позиционно-зависима** (растёт при закрытии зазора); «константная F» — первый порядок. Порядок величин держится.
+- **Масса плунжера m — главный неизвестный рычаг** (v ∝ 1/√m, удар в пластину ∝ m·v; при m=10г вместо 5г unseating-импульс удваивается). **Взвесить на первом образце** — шаг 0 в Stage 0B.
+- **Upper bound привода**: войлочный контакт насыщается — выше порога дополнительный привод почти не добавляет громкости колокола, но линейно добавляет unseating-импульс (R13) и износ. Больше ≠ громче.
+
+#### 14.2 Drive design — фиксированный SOFT-привод (v1)
 
 ```
-  +12V_RAW (pre-DC-DC, прямо с input jack для pedal SKU;
-            +12V Eurorack bus для Eurorack SKU)
-            
-  ⚠ КРИТИЧНО: solenoid питается от +12V_RAW, НЕ от +12V audio rail
-     (после isolated DC-DC). Pedal SKU TRACO TMR 3-1222WI обеспечивает
-     лишь 125mA per rail — solenoid pulls 290mA peak → audio rail
-     просядет → audio artifacts. Solenoid loop wired напрямую к
-     +12V_RAW bus, отдельно от audio supply.
+  +12V_RAW (pre-DC-DC; +12V Eurorack bus для Eurorack SKU)
     │
-    │    ┌────────────┐
-    │    │  SOLENOID  │   Three CV inputs feed driver via OR-gate (diode-OR):
-    │    │  5V push   │
-    │    │  (cartridge)│   J_CV_DAMP (modulating CV, env-shaped) ──► R_DAM1 (47kΩ)
-    │    └──────┬─────┘                                                  │
-    │           │                                                       D_OR_A (1N4148)
-    │      D_SOL (1N4001)                                                 │
-    │     ──|◄── (flyback, к +12V_RAW)   J_TOLL_TRIG (5V gate) ──► U_555  │
-    │           │                                                  │     │
-    │      ┌────┴────┐       NE555 monostable: 5-10мс pulse        │     │
-    └──────│ Drain   │       (R_555_TRIM=22-100k trim,             │     │
-           │ Q5 2N7000│        C_555=220n → 5-22мс adjustable)      ▼     │
-      Gate◄│         │◄──────── R_GATE (10kΩ) ── OR-node ◄──── D_OR_B ────┘
-           │ Source  │                              ▲              (1N4148)
-           └────┬────┘                              │
-               GND                       J_STALL_CV (+5V sustained) ──► D_OR_C
-                                                                          (1N4148)
-
-  Three paths combined через diode-OR:
-  - DAMP path: R_DAM1/R_DAM3 (47k/100k divider) → D_OR_A → OR-node.
-  - TOLL path: J_TOLL_TRIG (5V) → 555 monostable → 10мс pulse → D_OR_B → OR-node.
-  - STALL path: J_STALL_CV (+5V) → D_OR_C → OR-node (direct).
-
-  R_DAM3 (100kΩ pulldown) holds OR-node low когда нет CV signals.
-  R_GATE (10kΩ gate-stop) защищает Q5.
-
-  ============= Operation modes =============
-
-  DAMP mode (sustained envelope):
-    J_CV_DAMP receives envelope CV → solenoid pressure modulated continuously.
-    Use case: CV envelope from external sequencer / LFO → tail rhythmically pumped.
-
-  TOLL mode (impulse strike):
-    J_TOLL_TRIG receives gate → 555 fires 10мс pulse → solenoid strikes plate.
-    Use case: trigger from sequencer rhythm → bell-tone strikes плоскости.
-
-  STALL mode (forced full hold):
-    J_STALL_CV sustained high (+5V) → solenoid full pressure → reverb tail dies hard.
-    Use case: hold STALL CV high during chorus break → suddenly mute reverb tail.
-
-  Combined behaviour:
-  - TOLL + DAMP: strike layered поверх env modulation.
-  - STALL + TOLL: STALL holds solenoid → TOLL impulse masked (already pressed).
-                  Можно использовать как expressive "almost-but-not-quite-stuck" mode
-                  если STALL CV не полностью на +5V.
-  - DAMP + STALL: STALL overrides DAMP (always stronger pressure).
+    ⚠ Solenoid питается от +12V_RAW, НЕ от +12V audio rail:
+      TRACO TMR 3-1222WI даёт 125mA/rail — solenoid load просадил бы audio.
+    │
+    ├──► R_SOL 36Ω 5W wirewound ──► SOLENOID coil 17Ω (module engine bay)
+    │        │                          │ coil видит ~3.8V / ~224mA (SOFT tier)
+    │        │                     D_SOL 1N4001 + Z_SOL 12V zener (series) — fast release
+    │        │                          │
+    │        └── JP_SOL (v2): jumper замыкает часть R_SOL → NORMAL 5V tier
+    │                                   │
+    │                              Q5 2N7000 drain
+    │                              gate ◄── R_GATE 10k ◄── OR-node (diode-OR, 14.4)
+    │                              source ── GND (solenoid star ground)
 ```
 
-**Components (v5 hybrid)**:
-- **U_TOLL_555**: NE555 monostable timer для 5–10мс pulse generation на J_TOLL_TRIG.
-- **RV_TOLL_DUR**: 22-100kΩ multi-turn trim (Bourns 3296W) + **C_555**: 220nF → pulse width = 1.1 × RC = **5-22ms adjustable**. Per-cartridge tuning: dense materials (stone/nephrite) want longer pulse (~15ms), light materials (wood/spring steel) prefer shorter (~7ms). Trim set on assembly или customer-tunable via case access hole.
-- **D_OR_A, D_OR_B, D_OR_C**: 3× 1N4148 diodes для diode-OR (трёхвходовой) combining DAMP / TOLL / STALL paths.
-- **R_GATE**: 10kΩ gate-stop на Q5 (защита от ringing).
+**Почему фиксированный SOFT для всех картриджей (v1)** — вердикт физревью, вариант (c):
 
-**[REVISED v5 hybrid]**:
-- DAMP path сохраняется из v4 (R_DAM1 47kΩ + R_DAM3 100kΩ pulldown).
-- TOLL path: J_TOLL_TRIG jack + 555 monostable → diode-OR в общий gate node. **CV-only**, не footswitch.
-- **NEW**: STALL path — J_STALL_CV jack → direct diode-OR. CV high (+5V) → forced solenoid hold.
-- Diode-OR (3× 1N4148) выполняет логическое "highest wins" между всеми тремя путями.
-- Footswitches **не trigger TOLL/STALL** — это modular advanced features через CV territory.
+- Безопасен для fragile-материалов (annealed glass, aluminum) **без механизма определения картриджа** — картридж пассивный (Decision 11), сообщить свой тип он не может.
+- Меньше импульс → меньше unseating (R13) — двойная выгода, а не «жертва атаки».
+- **Reed-switch auto-keying отклонён**: 4 retention-магнита картриджа рядом с герконом → ложные срабатывания в обе стороны; отказ детекции = полный привод в хрупкую пластину (**fails dangerous**). Механизм, чей fail-mode направлен на разрушение картриджа, не ставим.
+- **NORMAL 5V** — v2 опция через JP_SOL (jumper/DIP внутри корпуса), включать только после Stage 0B и только для плит ≥15г (slate, bone, nephrite). Glass/aluminum — never, и в v2.
 
-**Why CV-only TOLL/STALL**:
-- Footswitches заняты mockup canon: TAP / GATE-CRUSH / BYPASS / FREEZE.
-- TOLL/STALL — modular-style advanced gestures.
-- Pedalboard users access через expression-jack CV adapter или modular sequencer.
-- Sustains "комбайн комбайн" UX clarity: для pedal player — standard 4 stomps, для modular — bonus expressive features.
+Бонус R_SOL: τ_LR = L/R_total = 30мГн/53Ω ≈ **0.57мс** (против 1.76мс без R_SOL) — ток и сила устанавливаются быстро внутри окна импульса, удар предсказуемее.
 
-#### Thermal budget — Q5 MOSFET + solenoid coil
+**Solenoid baseline** (Adafruit 412 / JF-0530B class, felt tip, gap 2мм adjustable): coil ~17Ω, L≈30мГн, плунжер ~5г (⚠ взвесить), rated 5V, у нас 3.8V SOFT. Return spring — штатная.
 
-**Solenoid baseline (cartridge-side push-type 5V/300mA нo-mock)**:
+#### 14.3 TOLL — escapement pulse (фиксированный ~4.4мс, trim удалён)
 
-| Parameter | Value | Source |
-|-----------|-------|--------|
-| Rated voltage | 5V DC | Adafruit 412 / Sparkfun ROB-11015 class |
-| Coil resistance (R_coil) | ~17 Ω | Measured / spec |
-| Pull current (cold) | 290 mA @ 5V | I = V/R |
-| Pull current (hot, +30°C ΔT) | 250 mA | R rises ~12%/30°C для медной обмотки |
-| Pull force | ~150 g·f @ 5mm stroke | Datasheet |
-| Coil thermal mass | ~2 g copper + bobbin | Estimated |
-| Coil θ_JA | ~150 °C/W (free air, small bobbin) | Empirical |
-| Max coil temp | 80 °C (insulation Class B) | Wire enamel limit |
+**U_TOLL — NE556** (dual timer; half A = coil pulse, half B = MUTE window, см. 14.5). Оба запускаются одним фронтом J_TOLL_TRIG.
 
-**Per-mode duty cycle и power dissipation**:
+- **Half A (coil)**: monostable R_556A **180kΩ 1%** + C_556A **22нФ C0G** → t = 1.1·R·C ≈ **4.4мс fixed**.
+- Правило ширины: pulse ≈ транзит (2.6–3мс @ SOFT) + ~1–1.5мс контакта. **Не** per-material параметр и **не** точка калибровки — RV_TOLL_DUR удалён (см. `calibration_procedure.md` — шаг 7 упразднён).
+- Если Stage 0B (взвешенный плунжер, реальная сила) сдвинет транзит — подбирается **один** номинал R_556A на производство (150k→3.6мс … 200k→4.8мс), не трим.
 
-| Mode | Drive voltage on coil | I (cold) | P_coil (steady) | Duty cycle | P_avg | Thermal rise (steady-state) |
-|------|----------------------|----------|-----------------|------------|-------|-------------------------------|
-| **DAMP** (CV-modulated, music tempo) | ~3V avg (envelope shape) | 175 mA | 0.53 W | 30–50% | 0.16–0.26 W | +24–39 °C ΔT |
-| **TOLL** (10ms pulse) | 5V peak | 290 mA | 1.45 W peak | 10ms / 200ms = 5% | 0.073 W | +11 °C ΔT |
-| **STALL** (forced hold) | 5V continuous | 290 mA | 1.45 W | 100% | 1.45 W | **+217 °C ΔT (FAULT)** |
-| DAMP + STALL combined | 5V (STALL wins) | 290 mA | 1.45 W | 100% | 1.45 W | **+217 °C ΔT (FAULT)** |
+**Per-material поведение — инвертировано против старой таблицы:**
 
-**Critical finding — STALL mode is thermally unsafe для sustained operation**:
+| Материал | Привод v1 | Pulse | Комментарий |
+|----------|-----------|-------|-------------|
+| **Nephrite** (RT60 ~4с) | SOFT | 4.4мс | **Короткий snappy + мгновенный release.** Старая рекомендация «15–18мс = более поющий» душила бы сильнее всего именно его |
+| Spring steel / brass | SOFT | 4.4мс | Sustaining — быстрый release = чистый shimmer |
+| Slate / bone | SOFT | 4.4мс | Плотные; кандидаты на NORMAL в v2 (≥15г) |
+| Oak / maple | SOFT | 4.4мс | Собственный decay короткий; held pulse ничего не добавлял и раньше |
+| Aluminum, annealed glass | SOFT (locked) | 4.4мс | Fragile: NORMAL заблокирован и в v2 (dent / chip) |
 
-- Continuous 5V applied → 1.45W dissipated в coil → ΔT(steady) ≈ 1.45 × 150 = 217 °C.
-- Ambient 25 °C → coil temp 242 °C → **insulation melts, smoke, solenoid burns out** в ~30 секунд.
-- **Datasheet ON-duty rating** для этого class solenoid: **25% max @ 5V**, OR continuous @ ~2.5V (lower force).
-- STALL mode cannot run continuously без protection.
+**Release speed — flyback против escapement (найдено при переписывании, не было ни в ревью, ни в критике):** обычный flyback 1N4001 замыкает ток катушки на себя → сила спадает с τ = L/R ≈ 1.8мс, т.е. плунжер «доживает» на пластине ещё 2–5мс после gate-off — тихо съедая escapement, ради которого всё затевалось. Фикс: **Z_SOL 12V zener последовательно с D_SOL** — энергия катушки сбрасывается на ~13В, спад тока t ≈ L·I/(V_Z+V_F) ≈ 30м·0.224/13 ≈ **0.5мс**. Q5 drain видит 12V_RAW + 13В ≈ 25В пик — 2N7000 (V_DS max 60В) комфортно.
 
-**Mitigation (mandatory, добавить в v5.1 schematic)**:
+**Retrigger**: 556 half A неретриггеруемый в течение импульса; spring return плунжера ~10–20мс → музыкальный max rate ~20–30Гц. Выше — удары теряют силу (плунжер не успевает вернуться на полный зазор), это натуральный roll-off, не защита.
 
-1. **PWM dimming для STALL mode** — после initial 50ms "pull-in" pulse @ 100% duty, drop к **40% duty cycle** для "hold". Hold force достаточен (~100 g·f), power drops к **0.58W → ΔT +87 °C** (safe).
-   - Implementation: ATtiny84A detects STALL CV high → generates PWM на secondary gate path → ORed после diode network.
-   - Or: simpler RC slow-charge на gate node → MOSFET self-throttles после ~50ms.
-2. **Thermal sense** (optional, premium SKU): 10kΩ NTC thermistor glued к solenoid bobbin → ADC monitored by ATtiny84A → если T > 70°C, force STALL=OFF независимо от CV input.
-3. **User documentation**: STALL specified как **"momentary hold, max 5 seconds continuous"**. Beyond that — hardware throttle kicks in.
+#### 14.4 DAMP / STALL + diode-OR (логика без изменений, числа обновлены)
 
-**Q5 MOSFET (2N7000) thermal budget**:
+Три пути OR-combined в gate Q5, «highest wins»:
 
-| Parameter | Value | Source |
-|-----------|-------|--------|
-| V_DS @ I=290mA, V_GS=5V | ~0.6V (on-resistance R_DS_on ~2Ω × 290mA) | Datasheet |
-| P_Q5 (worst case STALL) | 0.6 × 0.29 = **0.17 W** | I × V_DS_on |
-| θ_JA (TO-92, free air) | 200 °C/W | Datasheet |
-| ΔT(Q5 steady STALL) | 0.17 × 200 = **+34 °C** | OK, well within 150°C T_J max |
-| Peak transient (TOLL, 10ms) | 0.17 W × 5% = **0.008 W avg** | Negligible |
+```
+  J_CV_DAMP (env CV) ──► R_DAM1 47k ─┬─► D_OR_A ─┐
+                          R_DAM3 100k ┴ (pulldown) │
+  J_TOLL_TRIG (5V gate) ──► U_556A → 4.4мс ──► D_OR_B ──► OR-node ──► R_GATE 10k ──► Q5 gate
+  J_STALL_CV (+5V sust) ─────────────────────► D_OR_C ─┘
+```
 
-**Q5 is comfortable** даже без heatsink при continuous STALL (если coil выдержит — что она не выдержит без PWM throttle).
+- **DAMP**: envelope CV → частичное давление войлока → хвост ритмично прижат. Held = intended.
+- **STALL**: full hold → decay умирает. STALL+TOLL: TOLL маскируется (войлок уже прижат) — expressive «almost-stuck» при неполном STALL CV. STALL overrides DAMP.
 
-**Flyback diode (D_SOL = 1N4001)**:
-- При gate-off, coil L ≈ 30mH stores energy E = ½LI² = ½ × 30e-3 × 0.29² = 1.26 mJ.
-- 1N4001 dissipates this в ~5ms через V_F × I = 1V × 290mA = 290mW peak, 5ms = 1.45mJ total — matches.
-- 1N4001 rated 1A continuous, 30A peak — 290mA pulse через 5ms комфортно.
+**Thermal @ SOFT 3.8V** (было 5V/290мА — пересчитано):
 
-**PCB thermal layout requirements**:
-- Q5 placed в Zone 8 (digital/solenoid corner) подальше от audio Zone 4 (piezo preamp).
-- Coil cable (JST 2.0mm pitch shielded twisted pair) — **shielded**, не parallel к piezo input cable.
-- Star-ground для solenoid loop отдельно от audio ground (см. PCB Zone 8 правила).
+| Mode | I coil | P_coil | Duty | ΔT steady |
+|------|--------|--------|------|-----------|
+| DAMP (env, ~60% avg) | ~135мА | ~0.31Вт | 30–50% | +14–23°C — OK |
+| TOLL (4.4мс pulse) | 224мА | 0.85Вт peak | <2% | +2°C — negligible |
+| STALL continuous | 224мА | 0.85Вт | 100% | **+128°C — FAULT** |
 
-**Updated Block 14 BOM (thermal mitigation)**:
+- **STALL по-прежнему thermally unsafe continuous** → PWM-throttle **обязателен** (без изменений): ATtiny84A: 50мс pull-in 100% → hold 40% duty → P_avg ≈ 0.34Вт → coil plateaus ~75°C @ 25°C ambient (граница Class B 80°C — bench verify). NTC 10k thermal cutoff — premium SKU опция (без изменений).
+- **R_SOL rating**: @ STALL continuous 1.8Вт, @ PWM-hold ~0.7Вт → 5W wirewound (тот же класс, что R8).
+- **Q5**: P = I²·R_DS(on) ≈ 0.224² × 2Ω ≈ 0.1Вт → ΔT ≈ +20°C (TO-92 200°C/W) — комфортно без heatsink.
+- **Flyback энергия**: E = ½LI² = ½·30м·0.224² ≈ 0.75мДж — 1N4001 + zener комфортно.
+- User doc (SPEC): STALL = «momentary hold, max 5s continuous», дальше hardware throttle (без изменений).
 
-| Item | Δ from baseline | Cost |
-|------|-----------------|------|
-| **PWM gate path** (ATtiny84A firmware + 1× extra 1N4148 diode in OR network) | New OR input | $0.01 (diode) |
-| **NTC 10kΩ thermistor** (premium SKU only) | Optional | $0.50 |
-| **Heatsink на Q5** (paranoid, не нужен по расчёту) | Optional | $0.30 |
-| **User-facing warning** в SPEC.md: "STALL = momentary, max 5s" | Documentation | — |
+#### 14.5 EMI — click в пьезо на каждый TOLL (capacitive, не индуктивный)
 
-**Recommendation**:
-- **Phase 1 ship**: PWM throttle для STALL в ATtiny84A firmware. Mandatory. Adds 1 diode (~$0.01) + ~50 bytes firmware.
-- **Phase 2 premium**: Add NTC thermistor + ADC monitoring для belt-and-suspenders safety. +$0.50.
+Механизм (по ревью): доминирует **ёмкостная связь drain-узла Q5** (быстрый фронт ~12В→0.5В) в hi-Z пьезо-узел (10МΩ): Q = C_stray·ΔV ≈ (0.5–5пФ)·12В = 6–60пКл на пьезо-ёмкость 10–27нФ → **0.2–6 мВ/фронт** — слышимо на тихом контактном микрофоне. Индуктивный kick гасится flyback+zener; **+12V_RAW split лечит rail sag, но не этот coupling**. RC-snubber полезен вторично (смягчает drain-фронт), основным фиксом быть не может.
 
-#### Verification (thermal)
+**Приоритет фиксов (Phase 1 — все первые три):**
 
-- [ ] Bench: STALL CV high для 60 секунд → measure solenoid temp via IR thermometer. **Must stay <70°C**.
-- [ ] Если firmware PWM throttle работает → coil temp plateaus <60 °C @ 25 °C ambient.
-- [ ] Q5 heatsink IR temp <40 °C ambient + 34 °C rise = <74 °C под STALL — OK без heatsink.
-- [ ] User documentation в SPEC explicitly states STALL behavior + max duration.
+1. **MUTE FET** Q_MUTE 2N7000 — шунт **выхода JFET-преампа** (low-Z точка; hi-Z узел не трогаем — не добавляем ему ёмкости/утечки) через R_MUTE 1k на GND. Окно = **U_556 half B**: R_556B 130k + C_556B 22нФ ≈ **3.1мс от TOLL-триггера**. Логика окна: turn-ON click закрыт в течение **тихого транзита** (плунжер ещё летит, пластина молчит — click был бы голым), unmute ровно к импакту → **акустическая атака колокола сохранена полностью**. Turn-OFF фронт (4.4мс) падает на звенящую во всю пластину — маскируется + смягчён снаббером.
+2. **Guard ring / экран** вокруг пьезо-узла и contact-пинов engine bay (класс HIZ_PIEZO в `PCB_DESIGN_SPEC.md` уже требует guard — подтвердить охват пинов bay, не только узла на PCB).
+3. **Routing**: solenoid drive — twisted pair, перпендикулярно hi-Z трассам, ≥40мм от Zone 4, ferrite bead на drive у Q5.
+4. **R_SNUB 100Ω + C_SNUB 100нФ X7R** поперёк катушки — вторичное смягчение drain-фронта.
+
+DAMP/STALL — медленные CV-события с редкими фронтами; для них достаточно snubber+routing, MUTE не привязывается (иначе рвал бы полезный сигнал при каждом движении envelope).
+
+#### 14.6 Связка с R13 — удар может срывать contact пикапа
+
+Импульс удара 0.008–0.010 Н·с действует на пластину, прижатую к пьезо-пину пружиной всего **~1.5Н** (слабое звено — не 5Н exciter): пик контактной силы 10–20Н превышает preload пина в 7–13×, лёгкие пластины (oak ~6г) получают до ~1.5–2 м/с rigid-body kick (momentum matching с плунжером равной массы). **TOLL может сам провоцировать R1-rattle.** Разбор, диаграмма и bench-протокол: `RISK_ASSESSMENT.md` R13 + Stage 0B, `strike_seating_problem.svg`.
+
+**Block-level требования** (входят в engine bay spec):
+- Пьезо-пины крепить к **жёсткому шасси bay**, не к податливой frame-rubber.
+- Preload пьезо-пина ревизовать 1.5Н → 3–5Н по результатам Stage 0B (sweep в протоколе).
+- SOFT drive default (14.2) — часть той же mitigation.
+
+#### Block 14 BOM (delta от старой ревизии)
+
+| Item | Было | Стало | Δ$ |
+|------|------|-------|-----|
+| U_TOLL | NE555 | **NE556** (dual: coil pulse + MUTE window) | +$0.20 |
+| RV_TOLL_DUR 22–100k trim | был | **удалён** (fixed R_556A 180k 1%) | −$1.50 |
+| R_556A 180k / R_556B 130k 1%, C_556A/B 2× 22нФ C0G | C_555 220нФ | заменены | +$0.30 |
+| **R_SOL 36Ω 5W wirewound** | — | новый (SOFT tier + защита coil от 12V) | +$0.60 |
+| **Z_SOL 12V zener 1.3W** | — | новый (fast release — escapement) | +$0.15 |
+| **Q_MUTE 2N7000 + R_MUTE 1k** | — | новый (EMI click mute) | +$0.35 |
+| **R_SNUB 100Ω + C_SNUB 100нФ X7R** | — | новый (drain edge) | +$0.20 |
+| JP_SOL jumper (v2 NORMAL tier) | — | footprint only | +$0.05 |
+| PWM gate path (ATtiny84A + 1N4148), NTC premium | были | без изменений | — |
+
+Net Δ ≈ **+$0.35** и **минус одна точка калибровки** (RV_TOLL_DUR у клиента больше нет — нечего крутить не в ту сторону).
+
+#### Verification (Block 14)
+
+- [ ] **Плунжер взвешен** и записан в паспорт прототипа (m — главный рычаг модели).
+- [ ] Coil current scope: TOLL pulse 4.4мс ±10%; **спад тока после gate-off <0.6мс** (Z_SOL release работает; с plain diode было бы 2–5мс).
+- [ ] Preamp output scope на одиночный TOLL: нет click до импакта (MUTE window закрывает транзит), нет спайка/дропаута unseating в первые 5мс (R13 / Stage 0B тест 1).
+- [ ] **A/B held-vs-escapement**: 4.4мс vs принудительные 20мс на nephrite и steel → короткий pulse даёт **дольше** sustain (слышимое подтверждение инверсии).
+- [ ] Subjective loudness @ SOFT 3.8V: bell-strike музыкально достаточен на slate/nephrite (если тихо — сначала gap 2→2.5мм, потом обсуждать NORMAL, не наоборот).
+- [ ] STALL 60с: coil <80°C IR (PWM throttle), R_SOL в рамках rating.
+- [ ] Retrigger 20Гц: удары равной силы (spring return успевает).
+- [ ] DAMP envelope: ритмичное демпфирование без слышимых EMI-фронтов (snubber/routing достаточны без MUTE).
 
 ### Block 15. Reserved (was Geiger Pattern, теперь часть Block 12)
 
@@ -2283,8 +2277,8 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 - **2 dual comparators**: LM393 ×2 — U_COMP (Block 18 Gate threshold + **Block 11 env→trigger reused второй half**) + U_FG_GATE (Block 16 FG Gate_OUT + EOR detect). All 4 halves utilized.
 - **1 D flip-flop**: 74HC74 (Block 16 FG Sub÷2 output divider).
 - **1 MCU**: ATtiny84A (Geiger LFSR cluster pattern + crush sample clock + FG clock sync continuous multiplier).
-- **1 timer**: NE555 (Block 14 TOLL pulse monostable). *vinyl-skip NE555 удалён в v6 — заменён analog FG.*
-- **6 transistors discrete**: LSK489A dual JFET + BD139 + BD140 + 2N7000 (solenoid driver).
+- **1 dual timer**: NE556 (Block 14 rewrite: half A = TOLL 4.4мс coil pulse, half B = 3.1мс piezo MUTE window). *vinyl-skip NE555 удалён в v6 — заменён analog FG.*
+- **7 transistors discrete**: LSK489A dual JFET + BD139 + BD140 + 2N7000 ×2 (Q5 solenoid driver + Q_MUTE piezo output mute).
 - **6× 2N3904** (Block 16 FG exp converters — 3 matched pairs для rise/fall/depth sliders).
 - **1 zener**: BZX55C9V1.
 - **1 isolated DC-DC** (pedal only): TRACO TMR 3-1222WI (budget) или Recom RxxD-1212 (verify dual ±12V P/N) (premium).
@@ -2311,7 +2305,8 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 | U1, U3 | TL072CP | Dual JFET-input op-amp | DIP-8 | 2 | $0.50 | $1.00 | TI / Mouser |
 | U2, U4 | TL074CN | Quad JFET-input op-amp | DIP-14 | 2 | $0.75 | $1.50 | TI / Mouser |
 | U5, U6 | LM13700N | Dual OTA (U5=VCA + bipolar noise VCAs, U6=phaser stages) | DIP-16 | 2 | $2.00 | $4.00 | TI / Mouser |
-| U_555 | NE555P | Monostable 555 timer для TOLL pulse generator (5–10мс) | DIP-8 | 1 | $0.25 | $0.25 | Multi-source |
+| U_556 | NE556N | Dual timer (Block 14 rewrite): half A = TOLL escapement pulse 4.4мс fixed, half B = piezo MUTE window 3.1мс | DIP-14 | 1 | $0.45 | $0.45 | Multi-source |
+| R_SOL / Z_SOL / Q_MUTE / R_SNUB+C_SNUB | 36Ω 5W WW / zener 12V 1.3W / 2N7000 / 100Ω+100нФ | Block 14 rewrite: SOFT drive tier + fast escapement release + EMI mute + drain snubber | mixed | 1 set | — | ~$1.30 | Multi-source |
 | U_GATE | CD4066BE | Quad CMOS analog switch (Gate cell + bypass relay logic) | DIP-14 | 1 | $0.40 | $0.40 | Multi-source |
 | U_SH | LF398N | Sample-and-hold (Crush cell) | DIP-8 | 1 | $1.20 | $1.20 | TI |
 | U_COMP | LM393 | Dual comparator (Gate threshold + Tap-tempo detection) | DIP-8 | 1 | $0.30 | $0.30 | TI |
@@ -2345,7 +2340,7 @@ Ferrite-coil antenna ловит сетевой 50/60Hz hum + EM-наводки �
 - U_COMP LM393 ($0.30) — Gate threshold comparator + tap-tempo detection.
 
 **Добавлено в v5 hybrid**:
-- U_555 NE555P ($0.25) — TOLL pulse monostable (J_TOLL_TRIG path).
+- U_555 NE555P ($0.25) — TOLL pulse monostable (J_TOLL_TRIG path). *Block 14 rewrite: → NE556 dual (coil pulse + MUTE window), см. delta-таблицу Block 14.*
 - D_OR_A, D_OR_B, D_OR_C 1N4148 ($0.03) — 3-way diode-OR для DAMP+TOLL+STALL paths.
 - RV_NOISE Alpha RV09 log ($1.20) — стандартная ручка, не detent.
 - RV_COLOR Alpha RV09 lin ($1.20) — стандартная ручка для geiger crossfader.
@@ -2779,7 +2774,7 @@ The v4-era zone diagram (1–9) covers только core blocks. v5 hybrid adds 
 │  │              │ │                │ │ LM393 FG Gate/EOR     │ │          │ │
 │  │              │ │                │ │ 74HC74 FG ÷2 sub      │ │          │ │
 │  │              │ │                │ │ 6× 2N3904 exp conv    │ │          │ │
-│  │ D_LIM        │ │ U5 LM13700     │ │ NE555 vinyl one-shot │ │ ATtiny84A │ │
+│  │ D_LIM        │ │ U5 LM13700     │ │ (vinyl 555 removed)  │ │ ATtiny84A │ │
 │  │              │ │                │ │ C_AP1-4 NP0          │ │ Z13      │ │
 │  │ J_SIDE       │ │ J_CV_DAMP      │ │                      │ │ +5V LDO  │ │
 │  │              │ │ J_CV_DECAY     │ │ (away from Z4!)      │ │          │ │
@@ -3561,7 +3556,7 @@ Common issues и their resolutions, organized by symptom.
 | **TRACO TMR 3-1222WI** | Mouser, Digi-Key | Recom RxxD-1212 (verify dual ±12V P/N), Mornsun 1212S-1WR3 | 2-3 weeks | **Pedal SKU only**. Isolated DC-DC ±12V. |
 | **Recom RxxD-1212 (verify dual ±12V P/N)** | Mouser, Digi-Key | TRACO TMR 3-1222WI (lower cost) | 2-3 weeks | **Pedal premium SKU**. Higher current 250mA. |
 <!-- BBD V3207/V3102 removed per Decision 08 — vinyl FX moved to Last Day as OLD VINYL PT2399 parallel tract. -->
-| **NE555P** ×1 | TI, multi-source | LMC555 (CMOS variant) | 1 week | TOLL pulse monostable (Block 14) only. vinyl-skip NE555 удалён в v6 — analog FG заменяет. |
+| **NE556N** ×1 | TI, multi-source | 2× LMC555 (CMOS variant) | 1 week | Dual timer Block 14 rewrite: TOLL escapement pulse + piezo MUTE window. vinyl-skip NE555 удалён в v6 — analog FG заменяет. |
 | **ATtiny84A-PU** | Microchip via Mouser/Digi-Key | ATtiny44 (lower memory, same pinout) | 1 week | DIP-14, 12 GPIO + 8 ADC. v6.3 upgrade vs ATtiny85 — added FG TRIG + speed PWM + phase reset features required >5 GPIO. |
 | **CD4066BE** | TI, NXP. Multi-source. | DG412 (premium audio switch) | 1 week | Gate cell + bypass switching. |
 | **LF398N** | TI. Multi-source. | LF198 (industrial grade) | 1 week | Crush sample-hold cell. |
