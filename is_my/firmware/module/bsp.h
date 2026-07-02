@@ -11,9 +11,13 @@
 /* --- время --- */
 uint32_t bsp_millis(void);
 
-/* --- MIDI in: UART RX 31250 через опто, ISR складывает в кольцевой буфер.
- * bsp_midi_rx_pop() возвращает true и байт, если есть данные.            */
+/* --- MIDI in: USB-host (MAX3421E по SPI, 05 §4.1) — стек энумерирует пульт
+ * как USB-MIDI device, разворачивает 4-байтовые USB-MIDI пакеты в сырые
+ * MIDI-байты и складывает в кольцевой буфер. Парсеру всё равно, откуда байты.
+ * bsp_midi_rx_pop() возвращает true и байт, если есть данные.
+ * bsp_midi_link_up(): пульт энумерирован и жив (detach = потеря линка).   */
 bool bsp_midi_rx_pop(uint8_t *out);
+bool bsp_midi_link_up(void);
 
 /* --- DAC8568: одна 32-битная SPI-транзакция (SYNC вручную в bsp) --- */
 void bsp_dac_write32(uint32_t frame);

@@ -50,19 +50,45 @@ static uint16_t apply_cal(uint8_t ch, uint16_t v14)
     return (uint16_t)code;
 }
 
+/* ---------------- 14-bit пары: таблица осей DJI ---------------- */
+typedef struct {
+    uint8_t  cc_msb, cc_lsb;
+    uint8_t  dac_ch;
+    uint16_t v14;
+} pair_t;
+
+static pair_t s_pairs[4] = {
+    { CC_JOY_X_MSB, CC_JOY_X_LSB, DAC_CH_X_BIAS,  8192 },  /* левый X  BIAS   */
+    { CC_JOY_Y_MSB, CC_JOY_Y_LSB, DAC_CH_Y_DRIVE, 0    },  /* левый Y  DRIVE  */
+    { CC_RESO_MSB,  CC_RESO_LSB,  DAC_CH_RESO,    8192 },  /* правый X RESO   */
+    { CC_CUT_MSB,   CC_CUT_LSB,   DAC_CH_CUTOFF,  0    },  /* правый Y CUTOFF */
+};
+
+static pair_t *pair_by_msb(uint8_t cc)
+{
+    for (int i = 0; i < 4; i++)
+        if (s_pairs[i].cc_msb == cc) return &s_pairs[i];
+    return 0;
+}
+
+static pair_t *pair_by_lsb(uint8_t cc)
+{
+    for (int i = 0; i < 4; i++)
+        if (s_pairs[i].cc_lsb == cc) return &s_pairs[i];
+    return 0;
+}
+
 /* ---------------- состояние параметров ---------------- */
 typedef struct {
-    uint16_t x14, y14;              /* BIAS, DRIVE      */
-    uint8_t  level7, tone7;
     bool     arm;
     uint8_t  mode;                  /* 0/1/2            */
     bool     link;
-    bool     gate;                  /* joy press | foot */
+    bool     gate;                  /* shutter-кнопка   */
     uint32_t last_midi_ms;
     bool     link_lost;
 } params_t;
 
-static params_t s_p = { .x14 = 8192, .y14 = 0, .level7 = 100, .tone7 = 64 };
+static params_t s_p;
 
 /* ---------------- FSM mute/crossfade (MODE + ROUTE, A7) ---------------- */
 typedef enum { FSM_RUN, FSM_DOWN, FSM_SWITCH, FSM_UP } fsm_state_t;
@@ -78,9 +104,9 @@ static struct {
 
 static uint16_t mute_target(void)
 {
-    /* ARM off -> 0; иначе уровень от LEVEL knob */
-    if (!s_p.arm) return 0;
-    return apply_cal(DAC_CH_LEVEL, (uint16_t)s_p.level7 << 7);
+    /* ARM off -> 0; on -> полный код. LEVEL — аналоговая ручка модуля,
+     * она аттенюирует управляющий ток VCA в аналоге ПОСЛЕ ramp (05 §2.2). */
+    return s_p.arm ? 0xFFFFu : 0u;
 }
 
 static void fsm_request(uint8_t mode, bool route_pre)
@@ -103,11 +129,20 @@ static uint16_t ramp_shape(uint32_t elapsed, uint16_t from, uint16_t to)
 static void fsm_tick(uint32_t now)
 {
     switch (s_fsm.st) {
-    case FSM_RUN:
-        /* уровень следует LEVEL/ARM напрямую (медленное слежение без FSM) */
-        s_fsm.level_now = mute_target();
-        dac8568_write(DAC_CH_MUTE, s_fsm.level_now);
+    case FSM_RUN: {
+        /* ARM on/off вне смены режима — слew к цели за ~RAMP_MS (без щелчка) */
+        uint16_t tgt = mute_target();
+        if (s_fsm.level_now != tgt) {
+            const int32_t step = 0xFFFF / (int32_t)RAMP_MS;   /* за тик 1 мс */
+            int32_t v = (int32_t)s_fsm.level_now;
+            v += (tgt > s_fsm.level_now) ? step : -step;
+            if ((tgt > s_fsm.level_now && v > (int32_t)tgt) ||
+                (tgt < s_fsm.level_now && v < (int32_t)tgt)) v = tgt;
+            s_fsm.level_now = (uint16_t)v;
+            dac8568_write(DAC_CH_MUTE, s_fsm.level_now);
+        }
         break;
+    }
     case FSM_DOWN: {
         uint16_t v = ramp_shape(now - s_fsm.t0, s_fsm.level_now, 0);
         dac8568_write(DAC_CH_MUTE, v);
@@ -133,10 +168,15 @@ static void fsm_tick(uint32_t now)
 }
 
 /* ---------------- применение параметров к ЦАП ---------------- */
+static void pair_apply(pair_t *p, uint16_t v14)
+{
+    p->v14 = v14;
+    dac8568_write(p->dac_ch, apply_cal(p->dac_ch, v14));
+}
+
 static void apply_axes(void)
 {
-    dac8568_write(DAC_CH_Y_DRIVE, apply_cal(DAC_CH_Y_DRIVE, s_p.y14));
-    dac8568_write(DAC_CH_X_BIAS,  apply_cal(DAC_CH_X_BIAS,  s_p.x14));
+    for (int i = 0; i < 4; i++) pair_apply(&s_pairs[i], s_pairs[i].v14);
 }
 
 static void apply_gate(uint32_t now)
@@ -159,12 +199,12 @@ typedef struct {
     uint8_t data[2];
     uint8_t n_data;
     /* 14-bit ожидание LSB */
-    uint8_t  wait_lsb_cc;           /* 0xFF = не ждём                      */
+    pair_t  *wait_pair;             /* NULL = не ждём                      */
     uint8_t  msb_cache;
     uint32_t msb_ms;
 } parser_t;
 
-static parser_t s_par = { .wait_lsb_cc = 0xFF };
+static parser_t s_par;
 
 static void on_cc(uint8_t cc, uint8_t val, uint32_t now);
 static void on_note(uint8_t note, bool on);
@@ -197,40 +237,30 @@ static void midi_byte(uint8_t b, uint32_t now)
     }
 }
 
-static void set_axis14(uint8_t cc_msb, uint16_t v14)
-{
-    if (cc_msb == CC_JOY_X_MSB) s_p.x14 = v14; else s_p.y14 = v14;
-    apply_axes();
-}
-
 static void on_cc(uint8_t cc, uint8_t val, uint32_t now)
 {
-    /* --- 14-bit пары: MSB кэшируется, применяется по LSB --- */
-    if (cc == CC_JOY_X_MSB || cc == CC_JOY_Y_MSB) {
-        /* если ждали другой LSB — применить незакрытый MSB грубо */
-        if (s_par.wait_lsb_cc != 0xFF)
-            set_axis14(s_par.wait_lsb_cc, (uint16_t)s_par.msb_cache << 7);
-        s_par.wait_lsb_cc = cc;
-        s_par.msb_cache   = val;
-        s_par.msb_ms      = now;
+    /* --- 14-bit пары (таблица s_pairs): MSB кэшируется, применяется по LSB --- */
+    pair_t *pm = pair_by_msb(cc);
+    if (pm) {
+        /* ждали другой LSB — применить незакрытый MSB грубо */
+        if (s_par.wait_pair)
+            pair_apply(s_par.wait_pair, (uint16_t)s_par.msb_cache << 7);
+        s_par.wait_pair = pm;
+        s_par.msb_cache = val;
+        s_par.msb_ms    = now;
         return;
     }
-    if (cc == CC_JOY_X_LSB || cc == CC_JOY_Y_LSB) {
-        uint8_t want_msb = (cc == CC_JOY_X_LSB) ? CC_JOY_X_MSB : CC_JOY_Y_MSB;
-        if (s_par.wait_lsb_cc == want_msb) {
-            set_axis14(want_msb, midi14_join(s_par.msb_cache, val));
-            s_par.wait_lsb_cc = 0xFF;
+    pair_t *pl = pair_by_lsb(cc);
+    if (pl) {
+        if (s_par.wait_pair == pl) {
+            pair_apply(pl, midi14_join(s_par.msb_cache, val));
+            s_par.wait_pair = 0;
         }
         /* LSB без MSB — игнор (защита от рассинхрона) */
         return;
     }
 
     switch (cc) {
-    case CC_LEVEL: s_p.level7 = val; break;    /* уровень подтянет fsm_tick */
-    case CC_TONE:
-        s_p.tone7 = val;
-        dac8568_write(DAC_CH_TONE, apply_cal(DAC_CH_TONE, (uint16_t)val << 7));
-        break;
     case CC_ARM:
         s_p.arm = (val >= 64u);
         bsp_led_arm(s_p.arm);
@@ -241,6 +271,10 @@ static void on_cc(uint8_t cc, uint8_t val, uint32_t now)
         break;
     }
     case CC_LINK: s_p.link = (val >= 64u); break;  /* линк-логика на пульте */
+    case CC_DIAL:                                  /* dial -> нормаль MIX-in */
+        dac8568_write(DAC_CH_DIAL, apply_cal(DAC_CH_DIAL, (uint16_t)val << 7));
+        break;
+    /* CC_LEVEL / CC_TONE — deprecated: ручки модуля, MIDI игнорируется */
     default: break;
     }
 }
@@ -275,9 +309,9 @@ int main(void)
         while (bsp_midi_rx_pop(&b)) midi_byte(b, now);
 
         /* незакрытый MSB по таймауту применяем грубо (MSB<<7) */
-        if (s_par.wait_lsb_cc != 0xFF && (now - s_par.msb_ms) >= LSB_WAIT_TIMEOUT_MS) {
-            set_axis14(s_par.wait_lsb_cc, (uint16_t)s_par.msb_cache << 7);
-            s_par.wait_lsb_cc = 0xFF;
+        if (s_par.wait_pair && (now - s_par.msb_ms) >= LSB_WAIT_TIMEOUT_MS) {
+            pair_apply(s_par.wait_pair, (uint16_t)s_par.msb_cache << 7);
+            s_par.wait_pair = 0;
         }
 
         if (now - t_ctrl >= CTRL_TICK_MS) {

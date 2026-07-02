@@ -10,16 +10,17 @@
 #include <stdint.h>
 #include "bsp.h"
 
-/* Каналы (02_technical.md §A6.3) */
+/* Каналы (05_pult_dji_c5.md §4.2: LEVEL/TONE — аналоговые ручки модуля,
+ * C/D отданы фильтру, H — dial) */
 enum {
     DAC_CH_Y_DRIVE = 0,   /* A: нормаль DRIVE-in + CV-out Y   */
     DAC_CH_X_BIAS  = 1,   /* B: нормаль BIAS-in  + CV-out X   */
-    DAC_CH_LEVEL   = 2,   /* C */
-    DAC_CH_TONE    = 3,   /* D */
+    DAC_CH_CUTOFF  = 2,   /* C: нормаль CUTOFF-in (правый Y)  */
+    DAC_CH_RESO    = 3,   /* D: нормаль RESO-in   (правый X)  */
     DAC_CH_GATE    = 4,   /* E: CV-out GATE + внутр. gate      */
     DAC_CH_MUTE    = 5,   /* F: ramp мьют-VCA (управление Iabc)*/
     DAC_CH_IQREF   = 6,   /* G: опора Iq серв ядра             */
-    DAC_CH_SPARE   = 7,   /* H */
+    DAC_CH_DIAL    = 7,   /* H: gimbal dial (нормаль MIX-in)   */
 };
 
 static inline void dac8568_write(uint8_t ch, uint16_t code)

@@ -1,9 +1,7 @@
 /*
- * bsp.h (pult) — тонкий слой железа для скелета пульта.
- *
- * Реализуется под конкретную плату (Nucleo-G431KB для It-1, донорская плата
- * позже). Логика в main.c не знает про HAL/регистры — только эти вызовы.
- * Все функции реализовать в bsp_g431.c (генерится из CubeMX + ручные обвязки).
+ * bsp.h (pult) — слой железа пульта на доноре DJI C5 (RC-N1/RC231).
+ * См. 05_pult_dji_c5.md. Питание от VBUS (батареи нет), связь только USB-MIDI.
+ * Реализация: bsp_g431.c (CubeMX: ADC oversample x16, USB FS device, GPIO).
  */
 #ifndef ISMY_PULT_BSP_H
 #define ISMY_PULT_BSP_H
@@ -14,35 +12,30 @@
 /* --- время --- */
 uint32_t bsp_millis(void);                 /* монотонные мс со старта */
 
-/* --- оси джойстика ---
- * Возвращают сырой ADC с аппаратным оверсэмплингом x16 -> 16 бит эффективных.
- * (CubeMX: ADC oversampler ratio=16, shift=0). Для AS5600-варианта — чтение
- * по I2C, приведённое к той же 16-битной шкале.                           */
-uint16_t bsp_axis_read_x(void);
-uint16_t bsp_axis_read_y(void);
+/* --- оси гимбалов DJI: сырой ADC, 16-bit эффективных (oversample x16).
+ * Сенсоры донора (Hall/pot — R18) приводятся к этой шкале в bsp.        */
+uint16_t bsp_axis_read_lx(void);           /* левый  X -> BIAS   */
+uint16_t bsp_axis_read_ly(void);           /* левый  Y -> DRIVE  */
+uint16_t bsp_axis_read_rx(void);           /* правый X -> RESO   */
+uint16_t bsp_axis_read_ry(void);           /* правый Y -> CUTOFF */
 
-/* --- ручки (12 бит достаточно) --- */
-uint16_t bsp_knob_read_level(void);
-uint16_t bsp_knob_read_tone(void);
+/* --- gimbal dial (колёсико, аналоговое) --- */
+uint16_t bsp_dial_read(void);              /* 12-bit достаточно */
 
-/* --- дискретные органы (уже с подтяжками; true = замкнут) --- */
-bool bsp_sw_arm(void);
-bool bsp_sw_link(void);
-uint8_t bsp_sw_mode(void);                 /* 0/1/2 = SHAPER/RING/GATE (3-poz ON-OFF-ON) */
-bool bsp_btn_joy_press(void);
-bool bsp_btn_foot(void);                   /* foot-jack, полярность нормализована в bsp */
+/* --- дискретные органы DJI (true = нажат/замкнут) --- */
+uint8_t bsp_sw_mode(void);                 /* слайдер 3-поз: 0/1/2 = SHAPER/RING/GATE */
+bool bsp_btn_arm(void);                    /* кнопка RTH  (momentary -> toggle в логике) */
+bool bsp_btn_link(void);                   /* кнопка Fn   (momentary -> toggle)          */
+bool bsp_btn_gate(void);                   /* кнопка Shutter/Record (momentary gate)     */
+bool bsp_btn_power(void);                  /* кнопка Power (сервис: калибровка/panic)    */
 
-/* --- MIDI out: одинаковый поток в TRS-UART (31250) и USB-MIDI --- */
+/* --- USB-MIDI out (device, class-compliant) --- */
 void bsp_midi_send(const uint8_t *bytes, uint8_t len);
 
-/* --- LED / индикация --- */
-void bsp_led_arm(bool on);
-void bsp_led_activity_pulse(void);         /* короткий импульс на исходящий трафик */
-void bsp_batt_indicator(uint8_t percent);  /* 4 LED или OLED — решает bsp */
-
-/* --- питание --- */
-uint8_t bsp_fuel_gauge_percent(void);      /* MAX17048 по I2C */
-void bsp_power_off(void);                  /* load-switch off -> standby */
+/* --- индикация: 4 родных LED батареи как статусы --- */
+enum { LED_USB = 0, LED_ACT = 1, LED_ARM = 2, LED_AUX = 3 };
+void bsp_led(uint8_t idx, bool on);
+void bsp_led_activity_pulse(void);         /* короткий импульс LED_ACT */
 
 /* --- flash-хранилище калибровки (одна страница) --- */
 bool bsp_flash_load(void *dst, uint32_t len);
