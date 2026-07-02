@@ -245,7 +245,7 @@ All Bones Dust → Last Night = индустриальный нойз-эмбие
 Пластина сменяется картриджем, как в Last Night — но **только стеклянные варианты**:
 - **Pyrex 3мм** (стандарт): чистый резонанс, высокий Q, ~1кГц fundamental.
 - **Soda-lime glass**: тише, грязнее, исторический аромат.
-- **Tempered glass**: максимальный Q, длинный sustain, но риск explosive breakage при resonance peak.
+- **Annealed glass**: максимальный Q, длинный sustain. Именно annealed, не tempered — закалённое взрывается целиком при повреждении (liability для striking-девайса), отожжённое скалывается локально и предсказуемо.
 - **Crystal (свинцовое стекло)**: звенящий, "bell-like", премиум.
 
 ### Сигнальная цепь
@@ -870,7 +870,7 @@ J_IN → C_IN (1µ) → R1 (1МΩ, Hi-Z) → U1A buffer (TL072)
 | **Nephrite — pounamu (NZ)** | **Ritual limited 25 экз., Ngāi Tahu treaty certified** |
 | Copper | Колокольный, patina меняет тембр со временем |
 | Glass (Pyrex) | Кристаллический — также compatible с Be Careful |
-| Bone (лопатка) | Мрачный, ритуальный; см. `cartridges/05_bone_processing.md` |
+| Bone (femur cortical, не лопатка) | Мрачный, ритуальный; см. `cartridges/05_bone_processing.md` |
 | Titanium (1.5мм) | Ultra-premium, макс Q, бесконечный звон |
 
 > **Важно**: заявленные RT60 в исходном v2.0 брифе были завышены в 2–20× (acoustic reality check). Таблица выше — **реалистичные значения**. Feedback knob позволяет искусственно удлинить tail до 5–10× baseline, но это уже self-oscillating regime.

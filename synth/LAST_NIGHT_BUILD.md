@@ -2946,9 +2946,9 @@ Exciter + 2 piezo (contact pins) + solenoid — постоянно в module eng
 - Plate weight: ~13г.
 - **Knife-edge support** instead of rubber rails (preserves Q for thin metal).
 
-#### Glass cartridge (tempered example)
+#### Glass cartridge (annealed example)
 
-- Plate: 100×40×1.5мм, tempered glass (narrow=chime/bar).
+- Plate: 100×40×1.5мм, **annealed** glass (narrow=chime/bar). НЕ tempered: закалённое при повреждении взрывается целиком (запасённое напряжение + NiS-включения → спонтанный разлёт) и не режется после закалки — liability для striking-девайса. Annealed скалывается локально и предсказуемо.
 - Plate weight: ~15г.
 - **Thicker rubber gasket** at module contact (cushion against glass shock).
 - Warning sticker: "FRAGILE — handle с care, не drop. Self-oscillation may shatter".
@@ -3609,7 +3609,7 @@ Common issues и their resolutions, organized by symptom.
 #### Bone
 
 - Cattle bone suppliers (food industry byproduct, ethical).
-- Scapula or rib bone, dried, polished.
+- Femur/humerus **cortical shaft** (диафиз), dried, polished. НЕ scapula: лопатка в основном губчатая (cancellous), кортикальный слой 1-2мм — цельной acoustic-grade плиты 2.5мм из неё не выйдет.
 - Specialty supplier — sometimes from artisan craft markets.
 
 ### PCB sourcing

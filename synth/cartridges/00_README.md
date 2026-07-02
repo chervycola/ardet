@@ -9,8 +9,8 @@
 | `01_wood_processing.md` | TODO | Oak (100×45×1.8), maple, ebony | Low |
 | `02_stone_processing.md` | TODO | Slate (100×45×2.0) — replaces marble | Medium |
 | `03_metal_processing.md` | TODO | Spring steel / brass / aluminum (100×55), copper, titanium | Medium |
-| `04_glass_processing.md` | TODO | Tempered glass (100×40×1.5) — narrow=chime | High (fragile) |
-| **`05_bone_processing.md`** + `_ru.md` + `.docx` | **Готово v2** | **Cattle scapula (100×35×2.5 — narrow=percussion)** | **High (multi-week)** |
+| `04_glass_processing.md` | TODO | Annealed glass (100×40×1.5) — narrow=chime; **НЕ tempered** (взрывается, liability) | High (fragile) |
+| **`05_bone_processing.md`** + `_ru.md` + `.docx` | **Готово v2 ⚠ source correction** | **Cattle femur cortical (100×35×2.5 — narrow=percussion); scapula отклонена (губчатая)** | **High (multi-week)** |
 | `06_assembly.md` | TODO | Frame + magnets + keying (passive, no electronics) | Low |
 | **`07_nephrite_processing.md`** + `_ru.md` + `.docx` | **Готово v2** | **Nephrite (100×45×2.0 — tough)** | **Medium-high (lapidary)** |
 
@@ -34,7 +34,7 @@
 | Spring steel / brass / aluminum | 0.3 / 0.5 / 0.4 | **55** (wide) | reverb (dense modes) |
 | Oak (∥ grain) | 1.8 | 45 | wood (medium) |
 | Slate (replaces marble) | 2.0 | 45 | stone (medium) |
-| Glass (tempered) | 1.5 | **40** | chime (narrow=bar) |
+| Glass (annealed) | 1.5 | **40** | chime (narrow=bar) |
 | Nephrite (tough) | 2.0 | 45 | bell (medium) |
 | Bone | 2.5 | **35** | percussion (narrow=bar) |
 
@@ -64,8 +64,8 @@
 | Brass 100×55×0.5 | 30 min | 1 day | $25 | Low |
 | Aluminum 100×55×0.4 | 30 min | 1 day | $15 | Low |
 | Spring steel 100×55×0.3 | 30 min | 1 day | $10 | Low |
-| Tempered glass 100×40×1.5 | 1 hour | 3 days | $20 | High (fragile, hazardous edges) |
-| **Bone (scapula) 100×35×2.5** | **4 hours** | **5–7 weeks** | **$11** | **High (multi-week, smell, PPE)** |
+| Annealed glass 100×40×1.5 | 1 hour | 3 days | $15 | High (fragile, hazardous edges — grind) |
+| **Bone (femur cortical) 100×35×2.5** | **4 hours** | **5–7 weeks** | **$11** | **High (multi-week, smell, PPE)** |
 | **Nephrite (Sayan) 100×45×2.0** | **4.5 hours** | **1–2 weeks** | **$90–110** | **Medium-high (lapidary, silicate dust, diamond tools)** |
 | **Nephrite (Hetian premium) 100×45×2.0** | **5–6 hours** | **2–3 weeks** | **$200–300** | **Same + premium sourcing** |
 | Copper 100×55×0.5 | 30 min | 1 day | $30 | Low |
@@ -94,7 +94,7 @@ Phase 1 launch catalog (acoustic-optimized, 6 cartridges):
 - Aluminum 100×55×0.4 — `03_`.
 - Oak (∥ grain) 100×45×1.8 — `01_wood_processing.md` priority.
 - Slate 100×45×2.0 — `02_stone_processing.md` (replaces marble).
-- Glass (tempered) 100×40×1.5 — `04_glass_processing.md`.
+- Glass (annealed) 100×40×1.5 — `04_glass_processing.md`.
 
 Phase 2 additions:
 - **Nephrite (Sayan / Hetian / pounamu) 100×45×2.0 — `07_nephrite_processing.md` (готов v2)**.

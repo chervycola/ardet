@@ -74,7 +74,7 @@
 | **Brass 0.5мм** | brass sheet C260 | mcmaster.com · onlinemetals.com (search "brass sheet 0.020in") | Cut to size. |
 | **Aluminum 0.4мм** | aluminum sheet 5052 | mcmaster.com · onlinemetals.com | Cut. Anodize optional (coating tuning). |
 | **Oak 2мм** | quartersawn oak veneer/thin stock | luthier suppliers (lmii.com, stewmac.com) · local carpenter | Along-grain orientation. Linseed/shellac finish options. |
-| **Tempered glass 1.5мм** | custom-cut tempered glass | local glass cutter · cutmyglass.com class | Tempered для durability. Custom cut 100×40 (narrow=chime). |
+| **Annealed glass 1.5мм** | annealed sheet glass, cut + edge grind | local glass cutter (проще: annealed режется обычным инструментом) | **Annealed, НЕ tempered** (tempered взрывается целиком + не режется после закалки — liability). Custom cut 100×40 (narrow=chime), кромку шлифовать. |
 | **Slate 2мм** | roofing/craft slate | stone/tile supplier · local roofer offcuts · etsy lapidary | Splits thin naturally. Replaces marble. |
 | **Beef bone 2.5мм** | processed bovine bone | DIY — см. `cartridges/05_bone_processing.md` | Butcher source + processing protocol. |
 | **Nephrite 2.5мм** | jade slab/tile | lapidary suppliers · etsy (search "nephrite slab") · jade供应 AliExpress | См. `cartridges/07_nephrite_processing.md`. Premium. |
@@ -113,7 +113,7 @@ Transducer engine bay per module — см. §0A. **Σ module transducers ~$900**
 | LN-OAK | oak stock | 4× N42 | linseed/shellac |
 | LN-BRASS | brass sheet | 4× N42 | raw / patina |
 | LN-ALU | alu sheet | 4× N42 | anodize опц. |
-| LN-GLASS | tempered cut | 4× N42 | — |
+| LN-GLASS | annealed cut, edge grind | 4× N42 | — |
 | LN-SLATE | slate offcuts | 4× N42 | — |
 | LN-BONE | processed bone | 4× N42 | sealed |
 | LN-JADE | nephrite slab | 4× N42 | polished |
@@ -140,7 +140,7 @@ Transducer engine bay per module — см. §0A. **Σ module transducers ~$900**
 | **Contact coupling acoustic variance** (Decision 11 new risk) | Spring-loaded calibrated force. Tap-test с contact mechanism (не свободной пластиной). Bench A/B contact pressure. |
 | **Nephrite quality variance** | Натуральный камень — select-grade slabs, reject cracked. См. processing manual. |
 | **Bone processing labor** | DIY-intensive (05_bone_processing). Premium pricing justified. |
-| **Tempered glass custom cut** | MOQ у glass cutters. Batch order. |
+| **Annealed glass custom cut** | Проще tempered (режется), но кромка требует шлифовки. Batch order у стекольщика. |
 | **Solenoid felt + plate wear** | Strike point wears felt + plate. Replaceable felt tip (module-side) + maintenance note. |
 | **Plate thickness variance** (0.3-3мм) | Spring carriage travel ±2mm компенсирует. Verify contact force across range. |
 

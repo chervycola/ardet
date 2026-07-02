@@ -572,7 +572,7 @@ Modular users patch sequencer gates → TOLL для rhythmic bell-strikes. Pedal
 | **ALUMINUM** | **100×55×0.4** | 4–10с | reverb, bright sustain | $140 |
 | **OAK** (∥ волокна) | **100×45×1.8** | 0.28с | wood, warm slap | $90 |
 | **SLATE** (replaces marble) | **100×45×2.0** | 0.44с | stone | $150 |
-| **GLASS** (tempered) | **100×40×1.5** | 2.2с | chime, narrow=bar, crystalline | $140 |
+| **GLASS** (annealed) | **100×40×1.5** | 2.2с | chime, narrow=bar, crystalline | $140 |
 
 ### Phase 2 additions (после ship Phase 1)
 
@@ -621,7 +621,7 @@ Premium SKU использует **PVDF film** на B-канале вместо 
 
 #### Bone & exotic
 
-- **Bone scapula** (Phase 2): сухой, ритуальный, matt sustain. Source: cattle (food industry byproduct, ethical).
+- **Bone — femur cortical** (Phase 2): сухой, ритуальный, matt sustain. Source: cattle (food industry byproduct, ethical); диафиз бедренной/плечевой кости — цельный кортикальный slab (scapula отклонена: губчатая, не даёт плиту 2.5мм).
 - **Mammoth ivory** (limited edition): между bone и stone. $400–600 retail. Limited 50 units.
 
 ### Cartridge swap procedure
