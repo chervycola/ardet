@@ -8,7 +8,8 @@
 synth/
 ├── audit/          — критический аудит существующей документации (14 files)
 ├── fixes/          — конкретные правки по выявленным ошибкам (5 files)
-└── decisions/      — варианты решений по открытым вопросам (5 files)
+├── decisions/      — варианты решений по открытым вопросам (8 decisions)
+└── proto/          — bench-план прототипирования Last Day (4 rigs + план)
 ```
 
 ## Читать в порядке
@@ -48,9 +49,17 @@ synth/
 - Last Day: `audit/20_`, `21_`, `22_`.
 - Other 7 modules: `audit/30_other_modules_gaps.md`.
 
+### 5. Если задача — прототипировать Last Day
+
+- `proto/00_bench_plan.md` — принцип (экзистенциальные риски первыми), карта зависимостей, milestones.
+- `proto/01_rig_oil_pickup.md` — capacitive pickup (категория A, первая волна).
+- `proto/02_rig_tongue.md` — tongue-резонатор (категория A, первая волна, параллельно с #1).
+- `proto/03_rig_motor_pll.md` — BLDC+FOC (категория B, после «go» от #1).
+- `proto/04_rig_solar_amp.md` — solar amp (категория B, независим).
+
 ## Current status
 
-**Phase**: pre-production design review.
+**Phase**: pre-production design review → **bench prototyping Last Day (первая волна: rigs #1 + #2)**.
 
 **Blockers resolved**: 1 of 5 (solenoid divider error corrected after schematic ground-truth).
 
