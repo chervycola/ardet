@@ -13,19 +13,20 @@
 
   <!-- ===================== CONTROL HEADER ===================== -->
   <rect x="6" y="11" width="40" height="20" rx="1.6" fill="#15191c" stroke="#6f9aa8" stroke-width="0.4"/>
-  <text x="26" y="19" text-anchor="middle" font-size="3" font-weight="600" fill="#cfe0e6">PULT (донор)</text>
-  <text x="26" y="24.5" text-anchor="middle" font-size="2.3" fill="#8aa3ac">джойстик·ручки·свитчи</text>
+  <text x="26" y="19" text-anchor="middle" font-size="3" font-weight="600" fill="#cfe0e6">PULT · DJI C5</text>
+  <text x="26" y="24.5" text-anchor="middle" font-size="2.3" fill="#8aa3ac">2 стика·кнопки·dial</text>
 
-  <text x="52" y="17.5" font-size="2.3" fill="#8aa3ac">TRS MIDI</text>
+  <text x="51.8" y="17.5" text-anchor="middle" font-size="2.3" fill="#8aa3ac">USB-C</text>
   <line x1="46" y1="21" x2="57.5" y2="21" stroke="#7fa3b0" stroke-width="0.5" marker-end="url(#arrb)"/>
+  <text x="51.8" y="25.6" text-anchor="middle" font-size="1.9" fill="#6a7d84">data + 5V ◂</text>
 
   <rect x="58" y="11" width="42" height="20" rx="1.6" fill="#15191c" stroke="#6f9aa8" stroke-width="0.4"/>
-  <text x="79" y="19" text-anchor="middle" font-size="3" font-weight="600" fill="#cfe0e6">MCU + DAC</text>
-  <text x="79" y="24.5" text-anchor="middle" font-size="2.3" fill="#8aa3ac">MIDI → CV</text>
+  <text x="79" y="19" text-anchor="middle" font-size="3" font-weight="600" fill="#cfe0e6">USB-HOST · MCU</text>
+  <text x="79" y="24.5" text-anchor="middle" font-size="2.3" fill="#8aa3ac">MAX3421E → DAC</text>
 
   <line x1="100" y1="21" x2="105.5" y2="21" stroke="#7fa3b0" stroke-width="0.5" marker-end="url(#arrb)"/>
   <rect x="106" y="15.5" width="150" height="11" rx="1.6" fill="#1a2226" stroke="#6f9aa8" stroke-width="0.4"/>
-  <text x="181" y="22.5" text-anchor="middle" font-size="3" font-weight="600" letter-spacing="0.4" fill="#cfe0e6">CV BUS · DRIVE  BIAS  LEVEL  TONE  GATE</text>
+  <text x="181" y="22.5" text-anchor="middle" font-size="3" font-weight="600" letter-spacing="0.4" fill="#cfe0e6">CV BUS · DRIVE  BIAS  CUTOFF  RESO  GATE  DIAL</text>
 
   <line x1="256" y1="21" x2="261.5" y2="21" stroke="#7fa3b0" stroke-width="0.5" marker-end="url(#arrb)"/>
   <rect x="262" y="11" width="78" height="20" rx="1.6" fill="#15191c" stroke="#6f9aa8" stroke-width="0.4"/>
@@ -36,14 +37,18 @@
   <g stroke="#7fa3b0" stroke-width="0.4" stroke-dasharray="1.4 1.2" fill="none">
     <line x1="72"  y1="26.5" x2="72"  y2="69" marker-end="url(#arrb)"/>
     <line x1="140" y1="26.5" x2="140" y2="65" marker-end="url(#arrb)"/>
-    <line x1="211" y1="26.5" x2="211" y2="69" marker-end="url(#arrb)"/>
+    <line x1="178" y1="26.5" x2="178" y2="71" marker-end="url(#arrb)"/>
+    <line x1="248" y1="26.5" x2="262" y2="69" marker-end="url(#arrb)"/>
     <line x1="294" y1="26.5" x2="294" y2="69" marker-end="url(#arrb)"/>
   </g>
   <g font-size="2.1" fill="#8aa3ac" text-anchor="middle">
     <text x="72"  y="48">DRIVE</text>
     <text x="140" y="44">BIAS · MODE</text>
-    <text x="211" y="48">TONE</text>
-    <text x="294" y="48">LEVEL·ARM·GATE</text>
+    <text x="178" y="52">CUTOFF · RESO</text>
+    <text x="247" y="44">DIAL → MIX</text>
+    <text x="294" y="48">ARM · GATE</text>
+    <text x="211" y="48" fill="#6f685f">LEVEL·TONE·HPF·MIX·BASS</text>
+    <text x="211" y="52" fill="#6f685f">= ручки модуля (аналог)</text>
   </g>
 
   <!-- ===================== AUDIO PATH ===================== -->
@@ -107,9 +112,9 @@
 
   <!-- ===================== CV IN FOOTER ===================== -->
   <rect x="6" y="150" width="250" height="22" rx="1.6" fill="#1a1714" stroke="#9a8f80" stroke-width="0.4"/>
-  <text x="12" y="158" font-size="2.7" font-weight="600" fill="#cdbfae">CV IN · switched · attenuverted · normalled → пульт</text>
-  <text x="12" y="165" font-size="2.4" fill="#a79c8d">DRIVE  BIAS  LEVEL  TONE   ·   HPF  MIX  CUTOFF  RESO</text>
-  <text x="12" y="170.5" font-size="2.1" fill="#8a837a">нет кабеля → CV с пульта;  есть кабель → внешнее CV перехватывает</text>
+  <text x="12" y="158" font-size="2.7" font-weight="600" fill="#cdbfae">CV IN · switched · attenuverted</text>
+  <text x="12" y="165" font-size="2.4" fill="#a79c8d">норм. на стики: DRIVE BIAS CUTOFF RESO · норм. на ручки: LEVEL TONE HPF MIX</text>
+  <text x="12" y="170.5" font-size="2.1" fill="#8a837a">нет кабеля → нормаль;  есть кабель → внешнее CV перехватывает</text>
 
   <!-- cv-in dashed up to params -->
   <g stroke="#9a8f80" stroke-width="0.4" stroke-dasharray="1.4 1.2" fill="none">
