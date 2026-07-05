@@ -7,6 +7,18 @@ import { getPortrait } from '../assets/loader.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
 import { input } from '../core/input.js';
+import { useTexts } from '../world/useActions.js';
+
+// Special use-actions handled directly by main.js (not via useTexts)
+const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass']);
+
+// Does this location actually do something on «использовать»?
+// Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
+function hasUseAction(loc) {
+  if (loc.id === 'terminal') return true;
+  const key = loc.useAction || loc.id;
+  return SPECIAL_USE.has(key) || !!useTexts[key];
+}
 
 // ── MENU (location interaction) ──
 const menuEl = document.getElementById('menu');
@@ -71,6 +83,19 @@ export function showMenu(loc) {
   menuEl.querySelector('[data-a="talk"]').style.display = loc.npc ? 'flex' : 'none';
   menuEl.querySelector('[data-a="listen"]').style.display = 'none'; // TODO: listen sounds
   menuEl.querySelector('[data-a="take"]').style.display = 'none';   // TODO: lore pickup
+  // «использовать»: hide when the location has no action (a silent
+  // dead button reads as a bug); on two-sided street signs it means
+  // walking around the plaque — label it accordingly.
+  const useBtn = menuEl.querySelector('[data-a="use"]');
+  if (!hasUseAction(loc)) {
+    useBtn.style.display = 'none';
+  } else {
+    useBtn.style.display = 'flex';
+    const flipping = loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip');
+    useBtn.innerHTML = flipping
+      ? '<i>↺</i>ОБОЙТИ ЗНАК'
+      : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+  }
 
   // Position near last mouse position on desktop; mobile CSS handles centering.
   if (window.innerWidth > 768) {

@@ -454,17 +454,22 @@ function drawStreetSign(ctx, loc) {
   }
 }
 
+// Dev overlay only with ?debug in the URL — players shouldn't see
+// coordinates and state internals.
+const DEBUG_HUD = typeof location !== 'undefined' && /[?&]debug\b/.test(location.search);
+
 function drawHUD(ctx) {
   drawLorePopup(ctx);
   drawAchPopup(ctx);
   drawIdle(ctx);
 
-  // Debug: show state + position
-  ctx.globalAlpha = 0.5;
-  ctx.fillStyle = '#1a8c1a';
-  ctx.font = '6px "Press Start 2P","VT323",monospace';
-  ctx.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
-  ctx.globalAlpha = 1;
+  if (DEBUG_HUD) {
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#1a8c1a';
+    ctx.font = '6px "Press Start 2P","VT323",monospace';
+    ctx.fillText(`[${state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler.vh - 4);
+    ctx.globalAlpha = 1;
+  }
 }
 
 // Whisper is on world layer (positioned in world coords)

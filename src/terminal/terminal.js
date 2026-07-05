@@ -4,6 +4,9 @@
 import { state } from '../core/state.js';
 import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
+import { getCollectedCount, getTotalCount } from '../world/lore.js';
+import { getSessionAge } from '../core/sessionMemory.js';
+import { t } from '../core/time.js';
 
 const termEl = document.getElementById('term');
 const inputEl = document.getElementById('ti');
@@ -209,10 +212,15 @@ const commands = {
   },
 
   status() {
-    const visits = parseInt(localStorage.getItem('ardet_visits') || '1', 10);
+    // Real numbers: session count from sessionMemory (the v2 key —
+    // the old 'ardet_visits' read always lied), fragments from the
+    // lore module, and session time from the frame counter.
+    const visits = Math.max(1, getSessionAge());
+    const mins = Math.floor(t / 3600);
     print(`СТАТУС СТРАННИКА:
   визит:     ${visits}
-  время:     ${Math.floor(Date.now() / 60000)} мин с эпохи
+  фрагменты: ${getCollectedCount()}/${getTotalCount()}
+  в пути:    ${mins} мин
   состояние: ${state.current}
   огонь:     горит
   мох:       помнит`);
