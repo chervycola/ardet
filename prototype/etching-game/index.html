@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ardet · офорт — играбельная проба</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#080706;overflow:hidden}
+  canvas{display:block;position:fixed;inset:0;touch-action:none}
+  #hud{position:fixed;top:14px;left:18px;pointer-events:none;
+    font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
+    letter-spacing:3px;color:#8A8D8F;text-transform:uppercase}
+  #loc{position:fixed;top:14px;right:18px;pointer-events:none;text-align:right;
+    font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
+    letter-spacing:3px;color:#8A8D8F;text-transform:uppercase}
+  #hint{position:fixed;bottom:12px;left:0;right:0;text-align:center;pointer-events:none;
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#5b5f61}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">ardet · проба офорта</div>
+<div id="loc">городок</div>
+<div id="hint">wasd · стрелки · палец — идти</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARDET — играбельная проба офортного рендера. Вид сверху-сбоку.
+// Статичный мир гравируется один раз в офскрин-слой; каждый кадр —
+// только живое: костёр, окно №3, дым, лужа, кот, шут, странник.
+// Палитра и правила — арт-библия v2 «Ночь и канцелярия».
+// ═══════════════════════════════════════════════════════════════════
+const NIGHT='#0D0B0A', BONE='#D9CFB8', ASH='#8A8D8F', MIST='#3D4A3A', CANDLE='#E28A3A', RED='#C23B2B';
+const WORLD={w:2560,h:1440};
+const Q=1.6;                       // разрешение статичного слоя
+const FIRE={x:820,y:800};
+
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+let CW=0,CH=0,DPR=1,zoom=1;
+function resize(){
+  CW=innerWidth; CH=innerHeight;
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=CW*DPR; cv.height=CH*DPR;
+  cv.style.width=CW+'px'; cv.style.height=CH+'px';
+  zoom=Math.max(CW/1200, CH/900, CW/WORLD.w, CH/WORLD.h);
+}
+addEventListener('resize',resize); resize();
+
+// детерминированный «рукотворный» джиттер
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+
+// ── штрих внутри пути (слоями => перекрёстный) ──
+function hatch(g,pathFn,bb,layers){
+  for(const L of layers){
+    g.save(); g.beginPath(); pathFn(g); g.clip();
+    g.strokeStyle=L.col||BONE; g.globalAlpha=L.a; g.lineWidth=L.w||0.6;
+    const ang=L.ang*Math.PI/180, diag=Math.hypot(bb.w,bb.h);
+    const cx=bb.x+bb.w/2, cy=bb.y+bb.h/2, n=Math.ceil(diag/L.gap)+2;
+    g.beginPath();
+    for(let i=-n;i<n;i++){
+      const off=i*L.gap, j1=J(i+L.ang)*(L.j||0), j2=J(i*2+L.ang)*(L.j||0);
+      const x0=cx+Math.cos(ang+Math.PI/2)*off-Math.cos(ang)*diag;
+      const y0=cy+Math.sin(ang+Math.PI/2)*off-Math.sin(ang)*diag;
+      g.moveTo(x0+j1,y0+j2);
+      g.lineTo(x0+Math.cos(ang)*diag*2+j2, y0+Math.sin(ang)*diag*2+j1);
+    }
+    g.stroke(); g.restore();
+  }
+  g.globalAlpha=1;
+}
+// ── радиальные лучи света ──
+function rays(g,cx,cy,r0,r1,n,col,a,a0=0,a1=Math.PI*2){
+  g.strokeStyle=col; g.globalAlpha=a; g.lineWidth=0.7;
+  g.beginPath();
+  for(let i=0;i<n;i++){
+    const ang=a0+(i/n)*(a1-a0)+J(i)*0.03;
+    const rr=r1*(0.75+J(i*3)*0.5);
+    g.moveTo(cx+Math.cos(ang)*r0, cy+Math.sin(ang)*r0);
+    g.lineTo(cx+Math.cos(ang)*rr, cy+Math.sin(ang)*rr);
+  }
+  g.stroke(); g.globalAlpha=1;
+}
+
+// ═══════════════ СТАТИЧНЫЙ СЛОЙ ═══════════════
+const staticC=document.createElement('canvas');
+staticC.width=WORLD.w*Q; staticC.height=WORLD.h*Q;
+const S=staticC.getContext('2d');
+
+// здание: дальний скат / ближний скат / фасад — вид сверху-сбоку
+function building(g,bx0,by0,wid,farH,nearH,facH,tile){
+  const ridge=by0+farH, eave=ridge+nearH, fbot=eave+facH, bx1=bx0+wid;
+  // тень от луны — вправо-вниз
+  const sh=p=>{p.moveTo(bx1,by0+26);p.lineTo(bx1+88,by0+88);p.lineTo(bx1+88,fbot+44);p.lineTo(bx1,fbot);p.closePath();};
+  g.fillStyle='rgba(4,3,3,0.3)'; g.beginPath(); sh(g); g.fill();
+  hatch(g,sh,{x:bx1,y:by0,w:92,h:fbot-by0+50},
+    [{ang:45,gap:2.8,a:0.4,col:NIGHT,w:1},{ang:-38,gap:5.8,a:0.09,col:BONE,w:0.5,j:0.6}]);
+  // дальний скат
+  g.fillStyle='#0F0D0B'; g.fillRect(bx0,by0,wid,farH);
+  // ближний скат
+  g.fillStyle='#13110E'; g.fillRect(bx0,ridge,wid,nearH);
+  const slope=(y0,h,base)=>{
+    g.save(); g.beginPath(); g.rect(bx0,y0,wid,h); g.clip();
+    g.strokeStyle=BONE; g.lineWidth=0.6;
+    const rows=Math.floor(h/13);
+    for(let r=0;r<rows;r++){
+      const ry=y0+10+r*13;
+      g.globalAlpha=base+r*0.016;
+      g.beginPath();
+      if(tile==='arc'){
+        for(let cx2=bx0-8;cx2<bx1+16;cx2+=17){
+          g.moveTo(cx2+16,ry+(r%2?8:0));
+          g.arc(cx2+8+(r%2?8:0),ry,8,0,Math.PI);
+        }
+      }else{
+        for(let i=0;i<wid/15+2;i++){
+          const sx=bx0-8+i*15+(r%2?7:0);
+          g.moveTo(sx,ry); g.lineTo(sx+12,ry+3.6);
+        }
+      }
+      g.stroke();
+    }
+    g.restore(); g.globalAlpha=1;
+  };
+  slope(by0,farH,0.10); slope(ridge,nearH,0.2);
+  // конёк, карниз, торцы
+  g.strokeStyle=BONE; g.lineWidth=1.1; g.globalAlpha=0.65;
+  g.beginPath(); g.moveTo(bx0-4,ridge); g.lineTo(bx1+4,ridge); g.stroke();
+  g.globalAlpha=0.45; g.lineWidth=0.9;
+  g.strokeRect(bx0,by0,wid,farH+nearH);
+  // фасад
+  g.fillStyle='#0D0B0A'; g.fillRect(bx0,eave,wid,facH);
+  hatch(g,p=>p.rect(bx0,eave,wid,facH),{x:bx0,y:eave,w:wid,h:facH},
+    [{ang:90,gap:2.8,a:0.18,w:0.55,j:0.4},{ang:0,gap:5.6,a:0.10,w:0.5,j:0.6}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
+  g.strokeRect(bx0,eave,wid,facH); g.globalAlpha=1;
+  return {ridge,eave,fbot};
+}
+
+function renderStatic(){
+  const g=S;
+  g.setTransform(Q,0,0,Q,0,0);
+  g.clearRect(0,0,WORLD.w,WORLD.h);
+  g.fillStyle=NIGHT; g.fillRect(0,0,WORLD.w,WORLD.h);
+
+  // ── грунт: общий горизонтальный офорт пластины ──
+  hatch(g,p=>p.rect(0,0,WORLD.w,WORLD.h),{x:0,y:0,w:WORLD.w,h:WORLD.h},[
+    {ang:0,gap:3.6,a:0.13,w:0.55,j:1},
+    {ang:0,gap:7.6,a:0.08,w:0.5,j:1.6},
+  ]);
+
+  // ── брусчатка городка (x<1420) ──
+  g.strokeStyle=BONE; g.lineWidth=0.55;
+  for(let row=0;row<47;row++){
+    const ry=40+row*30;
+    for(let i=0;i<24;i++){
+      const sx=(i*60+((row%2)?30:0));
+      if(sx>1420) continue;
+      if(J(row*31+i)>0.62) continue;          // выщербины
+      g.globalAlpha=0.09+Math.abs(J(row+i*7))*0.07;
+      g.beginPath(); g.ellipse(sx,ry,24,8.4,J(i+row)*0.08,0,7); g.stroke();
+    }
+  }
+  g.globalAlpha=1;
+  // ── пустошь за городком: пыль и камешки ──
+  for(let i=0;i<520;i++){
+    const px=1420+(J(i)*0.5+0.5)*1140, py=(J(i*3)*0.5+0.5)*1440;
+    g.globalAlpha=0.10+Math.abs(J(i*5))*0.08;
+    g.strokeStyle=BONE; g.lineWidth=0.5;
+    g.beginPath(); g.moveTo(px,py); g.lineTo(px+6+J(i*7)*4,py+J(i*11)*1.5); g.stroke();
+  }
+  for(let i=0;i<70;i++){
+    const px=1430+(J(i*13)*0.5+0.5)*1120, py=(J(i*17)*0.5+0.5)*1420;
+    g.globalAlpha=0.2;
+    g.beginPath(); g.ellipse(px,py,3+Math.abs(J(i))*4,1.6+Math.abs(J(i*3))*2,0,0,7); g.stroke();
+  }
+  g.globalAlpha=1;
+
+  // ── мох — пятна МГЛЫ ──
+  const moss=(mx,my,r,d)=>{
+    const p=pp=>{
+      for(let i=0;i<=9;i++){
+        const a=i/9*Math.PI*2, rr=r*(0.7+Math.abs(J(i*3+mx))*0.5);
+        const px=mx+Math.cos(a)*rr, py=my+Math.sin(a)*rr*0.6;
+        i?pp.lineTo(px,py):pp.moveTo(px,py);
+      }
+      pp.closePath();
+    };
+    g.fillStyle=`rgba(61,74,58,${0.14*d})`; g.beginPath(); p(g); g.fill();
+    hatch(g,p,{x:mx-r,y:my-r,w:r*2,h:r*2},[{ang:-20,gap:2.2,a:0.3*d,col:MIST,w:0.5,j:0.5}]);
+    g.fillStyle=MIST; g.globalAlpha=0.5*d;
+    for(let i=0;i<8;i++) g.fillRect(mx+J(i*7+mx)*r*0.8, my+J(i*3+my)*r*0.5, 1.4,1.4);
+    g.globalAlpha=1;
+  };
+  moss(240,420,34,0.8); moss(660,1060,42,0.7); moss(1240,540,30,0.8);
+  moss(560,260,26,0.6); moss(1180,1120,36,0.7);
+  moss(1560,700,44,1); moss(1900,1000,52,1); moss(2260,760,40,1.1);
+  moss(2050,700,30,1.2); moss(2440,940,46,1.3);
+
+  // ── колеи дороги: от врат через площадь за мост ──
+  g.strokeStyle='#090807'; g.lineWidth=6; g.globalAlpha=0.6; g.lineCap='round';
+  for(const off of [0,15]){
+    g.beginPath(); g.moveTo(185,792+off);
+    g.quadraticCurveTo(900,872+off, 1660,884+off);
+    g.quadraticCurveTo(2100,894+off, 2560,930+off);
+    g.stroke();
+  }
+  g.globalAlpha=0.14; g.strokeStyle=BONE; g.lineWidth=0.8;
+  for(const off of [-4,19]){
+    g.beginPath(); g.moveTo(185,792+off);
+    g.quadraticCurveTo(900,872+off, 1660,884+off);
+    g.quadraticCurveTo(2100,894+off, 2560,930+off);
+    g.stroke();
+  }
+  g.globalAlpha=1; g.lineCap='butt';
+
+  // ── ВРАТА (x~60..180) — открыты всегда, вросли ──
+  const gx=64, gy=764;
+  g.fillStyle='rgba(4,3,3,0.45)';
+  g.beginPath(); g.moveTo(gx+2,gy); g.lineTo(gx+52,gy+34); g.lineTo(gx+150,gy+34); g.lineTo(gx+118,gy); g.closePath(); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.75; g.lineWidth=1.2;
+  g.strokeRect(gx-6,gy-120,16,120);
+  g.strokeRect(gx+96,gy-120,16,120);
+  g.beginPath(); g.moveTo(gx-8,gy-120);
+  g.quadraticCurveTo(gx+52,gy-136, gx+114,gy-120); g.stroke();
+  g.globalAlpha=1;
+  hatch(g,p=>{p.rect(gx-6,gy-120,16,120);p.rect(gx+96,gy-120,16,120);},
+    {x:gx-6,y:gy-120,w:120,h:120},[{ang:90,gap:2.4,a:0.26,w:0.6,j:0.4},{ang:8,gap:9,a:0.13,w:0.5}]);
+  // створка — упала, вросла: параллелограмм на земле
+  const leaf=p=>{p.moveTo(gx+40,gy+16);p.lineTo(gx+96,gy+30);p.lineTo(gx+88,gy+74);p.lineTo(gx+30,gy+58);p.closePath();};
+  g.fillStyle='#0F0D0B'; g.beginPath(); leaf(g); g.fill();
+  hatch(g,leaf,{x:gx+28,y:gy+14,w:72,h:64},[{ang:16,gap:3,a:0.24,w:0.55}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.5; g.lineWidth=0.9;
+  g.beginPath(); leaf(g); g.stroke();
+  for(let i=1;i<4;i++){
+    g.beginPath(); g.moveTo(gx+40+i*14,gy+16+i*3.4); g.lineTo(gx+30+i*14.5,gy+58+i*4); g.stroke();
+  }
+  g.globalAlpha=1;
+  // трава у створки
+  g.strokeStyle=MIST; g.globalAlpha=0.85; g.lineWidth=0.9;
+  for(let i=0;i<11;i++){
+    const bx2=gx+22+i*7;
+    g.beginPath(); g.moveTo(bx2,gy+14);
+    g.quadraticCurveTo(bx2+J(i)*5-2,gy-2-Math.abs(J(i*2))*8, bx2+J(i*3)*7-3,gy-8-Math.abs(J(i))*9);
+    g.stroke();
+  }
+  g.globalAlpha=1;
+
+  // ── КАНЦЕЛЯРИЯ ──
+  const kb=building(g,300,380,260,58,100,64,'arc');
+  // окна фасада: 4, №3 — тёмное в статике (динамика зажжёт)
+  g.strokeStyle=ASH; g.lineWidth=0.9;
+  const winxs=[330,392,454,516];
+  for(const wx of winxs){
+    g.globalAlpha=0.6;
+    g.strokeRect(wx,kb.eave+22,34,30);
+    g.beginPath(); g.moveTo(wx+17,kb.eave+22); g.lineTo(wx+17,kb.eave+52);
+    g.moveTo(wx,kb.eave+37); g.lineTo(wx+34,kb.eave+37); g.stroke();
+  }
+  g.globalAlpha=1;
+  g.fillStyle=BONE; g.globalAlpha=0.85; g.font='300 12px Montserrat';
+  g.fillText('К А Н Ц Е Л Я Р И Я', 344, kb.eave+14);
+  g.globalAlpha=0.55; g.font='300 10px Montserrat';
+  g.fillText('№3', 458, kb.eave+66); g.globalAlpha=1;
+
+  // ── доска объявлений у канцелярии ──
+  g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=2.4;
+  g.beginPath(); g.moveTo(600,612); g.lineTo(600,566); g.moveTo(652,612); g.lineTo(652,566); g.stroke();
+  g.globalAlpha=0.7; g.lineWidth=1;
+  g.strokeRect(588,548,78,44);
+  g.globalAlpha=0.4;
+  for(let i=0;i<3;i++) g.strokeRect(594+i*24+J(i)*2, 554+J(i*3)*2, 18, 13);
+  g.globalAlpha=0.75; g.font='italic 11px "Cormorant Garamond"'; g.fillStyle=BONE;
+  g.fillText('утеряно: смысл', 592, 586); g.globalAlpha=1;
+
+  // ── КОЛОДЕЦ ──
+  const wlx=760, wly=318;
+  g.fillStyle='rgba(4,3,3,0.45)';
+  g.beginPath(); g.ellipse(wlx+52,wly+30,52,15,0.3,0,7); g.fill();
+  g.fillStyle='#12100D'; g.beginPath(); g.ellipse(wlx,wly,42,19,0,0,7); g.fill();
+  hatch(g,p=>p.ellipse(wlx,wly,42,19,0,0,7),{x:wlx-42,y:wly-19,w:84,h:38},
+    [{ang:-6,gap:2.6,a:0.26,w:0.55,j:0.4}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=1;
+  g.beginPath(); g.ellipse(wlx,wly,42,19,0,0,7); g.stroke();
+  // камни венца
+  g.globalAlpha=0.45;
+  for(let i=0;i<11;i++){
+    const a=i/11*Math.PI*2;
+    g.beginPath(); g.moveTo(wlx+Math.cos(a)*42,wly+Math.sin(a)*19);
+    g.lineTo(wlx+Math.cos(a)*30,wly+Math.sin(a)*13); g.stroke();
+  }
+  // зев
+  g.globalAlpha=1; g.fillStyle='#050404';
+  g.beginPath(); g.ellipse(wlx,wly,26,11,0,0,7); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.5;
+  g.beginPath(); g.ellipse(wlx,wly,26,11,0,0,7); g.stroke();
+  // стойки и крыша
+  g.strokeStyle='#241E18'; g.lineWidth=4;
+  g.beginPath(); g.moveTo(wlx-26,wly-4); g.lineTo(wlx-26,wly-66);
+  g.moveTo(wlx+26,wly-4); g.lineTo(wlx+26,wly-66); g.stroke();
+  g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=0.8;
+  g.beginPath(); g.moveTo(wlx-24.5,wly-4); g.lineTo(wlx-24.5,wly-66);
+  g.moveTo(wlx+27.5,wly-4); g.lineTo(wlx+27.5,wly-66); g.stroke(); g.globalAlpha=1;
+  g.fillStyle='#12100D';
+  g.beginPath(); g.moveTo(wlx-40,wly-64); g.lineTo(wlx,wly-88); g.lineTo(wlx+40,wly-64); g.closePath(); g.fill();
+  g.save(); g.beginPath(); g.moveTo(wlx-40,wly-64); g.lineTo(wlx,wly-88); g.lineTo(wlx+40,wly-64); g.closePath(); g.clip();
+  g.strokeStyle=BONE; g.lineWidth=0.55;
+  for(let r=0;r<3;r++){
+    g.globalAlpha=0.22+r*0.05;
+    g.beginPath();
+    for(let cx2=wlx-42;cx2<wlx+44;cx2+=12){ g.moveTo(cx2+11,wly-84+r*8+(r%2?5:0)); g.arc(cx2+5.5+(r%2?6:0),wly-84+r*8,5.5,0,Math.PI); }
+    g.stroke();
+  }
+  g.restore(); g.globalAlpha=1;
+  g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
+  g.beginPath(); g.moveTo(wlx-40,wly-64); g.lineTo(wlx,wly-88); g.lineTo(wlx+40,wly-64); g.closePath(); g.stroke();
+  // ворот и верёвка в зев
+  g.beginPath(); g.moveTo(wlx-26,wly-52); g.lineTo(wlx+26,wly-52); g.stroke();
+  g.globalAlpha=0.4;
+  g.beginPath(); g.moveTo(wlx+4,wly-52); g.lineTo(wlx+4,wly-6); g.stroke();
+  g.globalAlpha=1;
+
+  // ── ДОМ С КОТОМ ──
+  const hb=building(g,950,420,230,52,88,58,'shake');
+  g.strokeStyle=ASH; g.lineWidth=0.9; g.globalAlpha=0.55;
+  g.strokeRect(978,hb.eave+18,30,28);
+  g.strokeRect(1070,hb.eave+18,30,28);
+  g.strokeRect(1128,hb.eave+16,26,42);  // дверь
+  g.globalAlpha=1;
+  // труба на ближнем скате
+  g.fillStyle='#0F0D0B'; g.fillRect(1116,hb.ridge+8,20,26);
+  g.strokeStyle=BONE; g.globalAlpha=0.5; g.strokeRect(1116,hb.ridge+8,20,26);
+  g.fillStyle='#050404'; g.fillRect(1120,hb.ridge+11,12,8); g.globalAlpha=1;
+
+  // ── ЛУЖА с луной (статика: чаша; динамика: луна и рябь) ──
+  const px3=1120, py3=760;
+  g.fillStyle='#0E0D0B';
+  g.beginPath();
+  for(let i=0;i<=10;i++){
+    const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
+    const px=px3+Math.cos(a)*rr, py=py3+Math.sin(a)*rr*0.36;
+    i?g.lineTo(px,py):g.moveTo(px,py);
+  }
+  g.closePath(); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.35; g.lineWidth=0.7;
+  g.beginPath();
+  for(let i=0;i<=10;i++){
+    const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
+    const px=px3+Math.cos(a)*rr, py=py3+Math.sin(a)*rr*0.36;
+    i?g.lineTo(px,py):g.moveTo(px,py);
+  }
+  g.closePath(); g.stroke(); g.globalAlpha=1;
+
+  // ── ПОГАСШИЙ ФОНАРЬ ──
+  const lx=480, ly=858;
+  g.strokeStyle='#090807'; g.globalAlpha=0.6; g.lineWidth=3;
+  g.beginPath(); g.moveTo(lx+4,ly+2); g.lineTo(lx+92,ly+30); g.stroke(); // тень
+  g.globalAlpha=1;
+  g.strokeStyle='#2A241E'; g.lineWidth=4; g.lineCap='round';
+  g.beginPath(); g.moveTo(lx,ly); g.lineTo(lx,ly-96); g.stroke();
+  g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=1.1;
+  g.beginPath(); g.moveTo(lx,ly-96); g.quadraticCurveTo(lx+2,ly-108,lx+15,ly-108); g.stroke();
+  g.strokeRect(lx+10,ly-122,14,17);
+  g.beginPath(); g.moveTo(lx+12,ly-118); g.lineTo(lx+21,ly-109); g.stroke();
+  g.globalAlpha=1; g.lineCap='butt';
+  hatch(g,p=>p.rect(lx-2,ly-96,4,96),{x:lx-2,y:ly-96,w:4,h:96},[{ang:90,gap:2,a:0.3,w:0.5}]);
+
+  // ── ПИФОС ──
+  const pf=p=>p.ellipse(1080,935,52,28,-0.08,0,7);
+  g.fillStyle='rgba(4,3,3,0.45)';
+  g.beginPath(); g.ellipse(1108,972,56,12,0.06,0,7); g.fill();
+  g.fillStyle='#141110'; g.beginPath(); pf(g); g.fill();
+  hatch(g,pf,{x:1028,y:907,w:104,h:56},[
+    {ang:-8,gap:2.4,a:0.3,w:0.6,j:0.5},{ang:78,gap:4.6,a:0.15,w:0.5,j:0.5}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=1;
+  g.beginPath(); pf(g); g.stroke();
+  for(const k of [-0.5,-0.1,0.34]){
+    g.globalAlpha=0.45;
+    g.beginPath(); g.ellipse(1080+52*k,935+k,8,25,-0.08,0,7); g.stroke();
+  }
+  g.globalAlpha=1; g.fillStyle=NIGHT;
+  g.beginPath(); g.ellipse(1034,930,10,19,-0.08,0,7); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.75;
+  g.beginPath(); g.ellipse(1034,930,10,19,-0.08,0,7); g.stroke(); g.globalAlpha=1;
+
+  // ── КОСТРИЩЕ (камни и поленья; пламя — динамика) ──
+  g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=0.9;
+  for(let i=0;i<9;i++){
+    const a=i/9*Math.PI*2;
+    g.beginPath();
+    g.ellipse(FIRE.x+Math.cos(a)*38,FIRE.y+6+Math.sin(a)*15,7,4.4,a*0.3,0,7);
+    g.stroke();
+  }
+  g.globalAlpha=1;
+  g.strokeStyle='#241E18'; g.lineWidth=6; g.lineCap='round';
+  g.beginPath(); g.moveTo(FIRE.x-26,FIRE.y+6); g.lineTo(FIRE.x+24,FIRE.y-4);
+  g.moveTo(FIRE.x-20,FIRE.y-6); g.lineTo(FIRE.x+27,FIRE.y+7); g.stroke();
+  g.lineCap='butt';
+
+  // ── ЧЕРЕП БЫКА на шесте у костра ──
+  const skx=884, sky=668, sc=0.62;
+  const su=v=>v*sc;
+  g.strokeStyle='#241E18'; g.lineWidth=3.4;
+  g.beginPath(); g.moveTo(skx,sky+su(30)); g.lineTo(skx,FIRE.y-8); g.stroke();
+  g.strokeStyle=BONE; g.globalAlpha=0.35; g.lineWidth=0.8;
+  g.beginPath(); g.moveTo(skx+1.5,sky+su(30)); g.lineTo(skx+1.5,FIRE.y-8); g.stroke(); g.globalAlpha=1;
+  const skp=p=>{
+    p.moveTo(skx-su(15),sky-su(16));
+    p.bezierCurveTo(skx-su(7),sky-su(23), skx+su(7),sky-su(23), skx+su(15),sky-su(16));
+    p.bezierCurveTo(skx+su(19),sky-su(9), skx+su(18),sky-su(1), skx+su(13),sky+su(4));
+    p.bezierCurveTo(skx+su(9),sky+su(10), skx+su(7),sky+su(18), skx+su(5),sky+su(27));
+    p.bezierCurveTo(skx+su(3),sky+su(31), skx-su(3),sky+su(31), skx-su(5),sky+su(27));
+    p.bezierCurveTo(skx-su(7),sky+su(18), skx-su(9),sky+su(10), skx-su(13),sky+su(4));
+    p.bezierCurveTo(skx-su(18),sky-su(1), skx-su(19),sky-su(9), skx-su(15),sky-su(16));
+    p.closePath();
+  };
+  g.fillStyle='rgba(217,207,184,0.14)';
+  g.strokeStyle=BONE; g.lineWidth=1.1; g.globalAlpha=0.95;
+  g.beginPath(); skp(g); g.fill(); g.stroke(); g.globalAlpha=1;
+  hatch(g,skp,{x:skx-su(20),y:sky-su(24),w:su(40),h:su(56)},
+    [{ang:-28,gap:1.8,a:0.22,col:'#8A7B5C',w:0.5},{ang:52,gap:3.6,a:0.11,col:'#8A7B5C',w:0.5}]);
+  const hornS=(s)=>{
+    const hp=p=>{
+      p.moveTo(skx+s*su(13),sky-su(15));
+      p.bezierCurveTo(skx+s*su(34),sky-su(24), skx+s*su(48),sky-su(34), skx+s*su(44),sky-su(52));
+      p.bezierCurveTo(skx+s*su(40),sky-su(34), skx+s*su(30),sky-su(20), skx+s*su(11),sky-su(8));
+      p.closePath();
+    };
+    g.fillStyle='rgba(217,207,184,0.12)';
+    g.strokeStyle=BONE; g.globalAlpha=0.9; g.lineWidth=1;
+    g.beginPath(); hp(g); g.fill(); g.stroke();
+    g.lineWidth=0.5; g.globalAlpha=0.5;
+    for(const [ax,ay,bx3,by3] of [[22,19,20,12],[30,25,27,17],[37,32,33,25]]){
+      g.beginPath(); g.moveTo(skx+s*su(ax),sky-su(ay)); g.lineTo(skx+s*su(bx3),sky-su(by3)); g.stroke();
+    }
+    g.globalAlpha=1;
+  };
+  hornS(-1); hornS(1);
+  g.fillStyle=NIGHT;
+  g.beginPath(); g.ellipse(skx-su(8.5),sky-su(2),su(4.2),su(5.6),0.55,0,7); g.fill();
+  g.beginPath(); g.ellipse(skx+su(8.5),sky-su(2),su(4.2),su(5.6),-0.55,0,7); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.75; g.lineWidth=0.6;
+  g.beginPath(); g.ellipse(skx-su(2.6),sky+su(24),su(1.4),su(3),0.25,0,7); g.stroke();
+  g.beginPath(); g.ellipse(skx+su(2.6),sky+su(24),su(1.4),su(3),-0.25,0,7); g.stroke();
+  g.globalAlpha=1;
+
+  // ═══ БЛОК 2 — ЗА ГОРОДКОМ ═══
+  // ── сухое русло ──
+  const bank=(bx4)=>{
+    g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=1;
+    g.beginPath();
+    for(let y2=0;y2<=1440;y2+=40){
+      const px=bx4+Math.sin(y2*0.012+bx4)*14+J(y2+bx4)*5;
+      y2?g.lineTo(px,y2):g.moveTo(px,y2);
+    }
+    g.stroke();
+    g.globalAlpha=0.2; g.lineWidth=0.6;
+    g.beginPath();
+    for(let y2=0;y2<=1440;y2+=40){
+      const px=bx4+10+Math.sin(y2*0.012+bx4)*14+J(y2+bx4)*5;
+      y2?g.lineTo(px,y2):g.moveTo(px,y2);
+    }
+    g.stroke(); g.globalAlpha=1;
+  };
+  bank(1650); bank(1800);
+  hatch(g,p=>p.rect(1660,0,140,1440),{x:1660,y:0,w:140,h:1440},
+    [{ang:0,gap:5,a:0.09,w:0.5,j:1.6}]);
+  g.strokeStyle=BONE;
+  for(let i=0;i<64;i++){
+    const px=1668+(J(i*3)*0.5+0.5)*124, py=(J(i*7)*0.5+0.5)*1420;
+    if(py>820 && py<950) continue;
+    g.globalAlpha=0.16+Math.abs(J(i))*0.14; g.lineWidth=0.6;
+    g.beginPath(); g.ellipse(px,py,4+Math.abs(J(i*5))*6,2+Math.abs(J(i*9))*3,J(i)*0.4,0,7); g.stroke();
+  }
+  g.globalAlpha=1;
+
+  // ── мост через русло ──
+  g.fillStyle='#100E0C'; g.fillRect(1636,846,180,72);
+  g.save(); g.beginPath(); g.rect(1636,846,180,72); g.clip();
+  g.strokeStyle=BONE; g.lineWidth=0.7;
+  for(let i=0;i<16;i++){
+    g.globalAlpha=0.2+Math.abs(J(i*3))*0.14;
+    const px=1640+i*11.4;
+    g.beginPath(); g.moveTo(px+J(i)*2,846); g.lineTo(px+J(i*2)*2,918); g.stroke();
+  }
+  g.restore(); g.globalAlpha=1;
+  g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=1.1;
+  g.beginPath(); g.moveTo(1636,846); g.lineTo(1816,846);
+  g.moveTo(1636,918); g.lineTo(1816,918); g.stroke();
+  // перила северные (вертикали) + прогон
+  g.globalAlpha=0.55; g.lineWidth=1;
+  for(let i=0;i<6;i++){
+    const px=1646+i*33;
+    g.beginPath(); g.moveTo(px,846); g.lineTo(px,820); g.stroke();
+  }
+  g.beginPath(); g.moveTo(1640,822); g.lineTo(1814,820); g.stroke();
+  g.globalAlpha=1;
+
+  // ── мёртвые деревья ──
+  const tree=(tx,ty,s2)=>{
+    g.strokeStyle='#090807'; g.globalAlpha=0.55; g.lineWidth=2.4*s2;
+    g.beginPath(); g.moveTo(tx+3,ty+2); g.lineTo(tx+56*s2,ty+22*s2); g.stroke(); // тень
+    g.globalAlpha=1;
+    g.strokeStyle='#1C1712'; g.lineWidth=5*s2; g.lineCap='round';
+    g.beginPath(); g.moveTo(tx,ty);
+    g.quadraticCurveTo(tx-4*s2,ty-40*s2, tx+4*s2,ty-72*s2); g.stroke();
+    g.lineWidth=2.2*s2;
+    g.beginPath(); g.moveTo(tx+2*s2,ty-48*s2); g.quadraticCurveTo(tx+22*s2,ty-64*s2, tx+30*s2,ty-84*s2);
+    g.moveTo(tx,ty-60*s2); g.quadraticCurveTo(tx-16*s2,ty-76*s2, tx-22*s2,ty-92*s2);
+    g.moveTo(tx+3*s2,ty-70*s2); g.quadraticCurveTo(tx+10*s2,ty-84*s2, tx+6*s2,ty-98*s2);
+    g.stroke();
+    g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=0.8;
+    g.beginPath(); g.moveTo(tx-2*s2,ty);
+    g.quadraticCurveTo(tx-6*s2,ty-40*s2, tx+2*s2,ty-72*s2); g.stroke();
+    g.globalAlpha=1; g.lineCap='butt';
+  };
+  tree(1450,530,1); tree(2320,988,1.15);
+
+  // ── РУИНЫ «жильцы съехали раньше пожара» ──
+  const rx0=1980, ry0=560;
+  // пепельный ореол
+  hatch(g,p=>p.ellipse(rx0+120,ry0+80,190,110,0,0,7),
+    {x:rx0-70,y:ry0-30,w:380,h:220},[{ang:12,gap:3.4,a:0.10,col:ASH,w:0.5,j:1}]);
+  // задняя стена с изломанным верхом
+  const wall=p=>{
+    p.moveTo(rx0,ry0+130);
+    p.lineTo(rx0,ry0+40); p.lineTo(rx0+34,ry0+52); p.lineTo(rx0+60,ry0+14);
+    p.lineTo(rx0+96,ry0+40); p.lineTo(rx0+130,ry0+8); p.lineTo(rx0+164,ry0+46);
+    p.lineTo(rx0+205,ry0+22); p.lineTo(rx0+240,ry0+56); p.lineTo(rx0+240,ry0+130);
+    p.closePath();
+  };
+  g.fillStyle='#0F0D0B'; g.beginPath(); wall(g); g.fill();
+  hatch(g,wall,{x:rx0,y:ry0,w:240,h:135},[
+    {ang:90,gap:2.6,a:0.2,w:0.55,j:0.5},{ang:0,gap:5.2,a:0.1,w:0.5}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
+  g.beginPath(); wall(g); g.stroke(); g.globalAlpha=1;
+  // копоть — чёрные языки по стене
+  g.strokeStyle='#050404'; g.lineWidth=5;
+  for(let i=0;i<6;i++){
+    g.globalAlpha=0.5;
+    const px=rx0+26+i*38;
+    g.beginPath(); g.moveTo(px,ry0+128);
+    g.quadraticCurveTo(px+J(i)*8,ry0+80, px+J(i*3)*10,ry0+34+Math.abs(J(i))*22);
+    g.stroke();
+  }
+  g.globalAlpha=1;
+  // упавшие балки
+  g.strokeStyle='#131009'; g.lineWidth=7; g.lineCap='round';
+  g.beginPath(); g.moveTo(rx0+30,ry0+140); g.lineTo(rx0+130,ry0+180);
+  g.moveTo(rx0+180,ry0+136); g.lineTo(rx0+96,ry0+186);
+  g.moveTo(rx0+220,ry0+142); g.lineTo(rx0+160,ry0+196); g.stroke();
+  g.strokeStyle=BONE; g.globalAlpha=0.3; g.lineWidth=1;
+  g.beginPath(); g.moveTo(rx0+30,ry0+138); g.lineTo(rx0+130,ry0+178); g.stroke();
+  g.globalAlpha=1; g.lineCap='butt';
+  // дверной проём — стоит один
+  g.strokeStyle=BONE; g.globalAlpha=0.8; g.lineWidth=1.4;
+  g.strokeRect(rx0+104,ry0+150,34,58);
+  g.globalAlpha=0.4; g.strokeRect(rx0+109,ry0+155,24,53);
+  g.globalAlpha=1;
+
+  // ── столб на краю ──
+  const ex=2480, ey=862;
+  g.strokeStyle='#090807'; g.globalAlpha=0.55; g.lineWidth=3;
+  g.beginPath(); g.moveTo(ex+3,ey+2); g.lineTo(ex+64,ey+22); g.stroke(); g.globalAlpha=1;
+  g.strokeStyle='#2A241E'; g.lineWidth=4;
+  g.beginPath(); g.moveTo(ex,ey); g.lineTo(ex,ey-78); g.stroke();
+  g.save(); g.translate(ex,ey-64); g.rotate(-0.1);
+  g.fillStyle='#0F0D0B'; g.fillRect(-34,-12,68,22);
+  g.strokeStyle=BONE; g.globalAlpha=0.75; g.lineWidth=1; g.strokeRect(-34,-12,68,22);
+  g.fillStyle=BONE; g.globalAlpha=0.7; g.font='300 8px Montserrat';
+  g.fillText('К Р А Й', -14, 2);
+  g.restore(); g.globalAlpha=1;
+}
+renderStatic();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(renderStatic);
+
+// ═══════════════ МИР: КОЛЛИЗИИ, ОККЛЮДЕРЫ, ШЁПОТЫ ═══════════════
+const solids=[
+  {t:'r',x:300,y:390,w:260,h:214},           // канцелярия
+  {t:'r',x:950,y:430,w:230,h:188},           // дом с котом
+  {t:'c',x:760,y:318,r:48},                  // колодец
+  {t:'c',x:FIRE.x,y:FIRE.y,r:46},            // костёр
+  {t:'c',x:884,y:796,r:10},                  // шест черепа
+  {t:'c',x:480,y:858,r:8},                   // фонарь
+  {t:'r',x:588,y:585,w:78,h:26},             // доска
+  {t:'r',x:58,y:700,w:22,h:66},{t:'r',x:160,y:700,w:22,h:66}, // врата
+  {t:'r',x:1028,y:915,w:104,h:44},           // пифос
+  {t:'c',x:1450,y:530,r:12},{t:'c',x:2320,y:988,r:14},        // деревья
+  {t:'r',x:1980,y:560,w:240,h:150},          // руины
+  {t:'r',x:1640,y:0,w:170,h:838},            // русло север
+  {t:'r',x:1640,y:926,w:170,h:514},          // русло юг
+  {t:'c',x:2480,y:862,r:8},                  // столб края
+];
+const occluders=[
+  {x:300,y:380,w:352,h:225,base:604},        // канцелярия (+тень)
+  {x:950,y:420,w:230,h:198,base:618},
+  {x:712,y:224,w:96,h:120,base:340},         // колодец верх
+  {x:850,y:628,w:68,h:170,base:798},         // шест с черепом
+  {x:456,y:736,w:52,h:124,base:860},         // фонарь
+  {x:584,y:544,w:86,h:70,base:612},          // доска
+  {x:54,y:628,w:132,h:138,base:766},         // врата
+  {x:1436,y:426,w:60,h:106,base:532},        // дерево 1
+  {x:2290,y:868,w:66,h:122,base:990},        // дерево 2
+  {x:1976,y:556,w:250,h:156,base:710},       // руины
+  {x:2442,y:778,w:80,h:86,base:864},         // столб края
+];
+const whispers=[
+  {x:120,y:700,r:100,t:'...обычно это узнают позже...'},
+  {x:760,y:330,r:90,t:'...эхо возвращается неполным...'},
+  {x:434,y:600,r:110,t:'...канцелярия работает. всегда работала...'},
+  {x:626,y:585,r:70,t:'...утеряно: смысл. нашедшему — не возвращать...'},
+  {x:FIRE.x,y:FIRE.y,r:110,t:'...огонь не помнит, что варил...'},
+  {x:940,y:862,r:70,t:'...бубенцы считают тишину...'},
+  {x:1080,y:935,r:85,t:'...жильё без ипотеки. солнца не заслоняй...'},
+  {x:1120,y:760,r:75,t:'...луна живёт тут, пока не высохнет...'},
+  {x:1060,y:520,r:95,t:'...кот числится жильцом. единственным...'},
+  {x:1726,y:882,r:110,t:'...вода помнит цвет...'},
+  {x:1450,y:530,r:85,t:'...дерево держит небо. по привычке...'},
+  {x:2100,y:650,r:130,t:'...жильцы съехали раньше пожара...'},
+  {x:2480,y:862,r:120,t:'...дальше пока не нарисовано. мох уже там...'},
+];
+
+// ═══════════════ ИГРОК И КАМЕРА ═══════════════
+const player={x:236,y:790,fx:1,fy:0,step:0,moving:false};
+let cam={x:0,y:0};
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+let touchTarget=null, touchHeld=false;
+const toWorld=(px,py)=>({x:cam.x+px/zoom, y:cam.y+py/zoom});
+cv.addEventListener('pointerdown',e=>{touchHeld=true;touchTarget=toWorld(e.clientX,e.clientY);});
+cv.addEventListener('pointermove',e=>{if(touchHeld)touchTarget=toWorld(e.clientX,e.clientY);});
+addEventListener('pointerup',()=>{touchHeld=false;});
+
+const footprints=[];
+let lastFoot={x:player.x,y:player.y}, footSide=1;
+
+function collide(nx,ny){
+  const R=10;
+  for(const s of solids){
+    if(s.t==='r'){
+      const cx2=Math.max(s.x,Math.min(nx,s.x+s.w)), cy2=Math.max(s.y,Math.min(ny,s.y+s.h));
+      const dx=nx-cx2, dy=ny-cy2, d=Math.hypot(dx,dy);
+      if(d<R){ const k=(R-d)/(d||1); nx+=dx*k; ny+=dy*k; }
+    }else{
+      const dx=nx-s.x, dy=ny-s.y, d=Math.hypot(dx,dy), rr=s.r+R;
+      if(d<rr){ const k=(rr-d)/(d||1); nx+=dx*k; ny+=dy*k; }
+    }
+  }
+  nx=Math.max(16,Math.min(WORLD.w-16,nx));
+  ny=Math.max(16,Math.min(WORLD.h-16,ny));
+  return [nx,ny];
+}
+
+function updatePlayer(){
+  let dx=0,dy=0;
+  if(keys['w']||keys['ц']||keys['arrowup'])dy-=1;
+  if(keys['s']||keys['ы']||keys['arrowdown'])dy+=1;
+  if(keys['a']||keys['ф']||keys['arrowleft'])dx-=1;
+  if(keys['d']||keys['в']||keys['arrowright'])dx+=1;
+  if(!dx&&!dy&&touchTarget){
+    const tx=touchTarget.x-player.x, ty=touchTarget.y-player.y, d=Math.hypot(tx,ty);
+    if(d>8){dx=tx/d;dy=ty/d;} else if(!touchHeld) touchTarget=null;
+  }
+  const len=Math.hypot(dx,dy);
+  player.moving=len>0.01;
+  if(player.moving){
+    dx/=len;dy/=len;
+    const sp=2.7;
+    const [nx,ny]=collide(player.x+dx*sp, player.y+dy*sp*0.86); // лёгкая анизотропия ¾-вида
+    player.x=nx;player.y=ny;
+    player.fx=dx;player.fy=dy;player.step+=sp;
+    if(Math.hypot(player.x-lastFoot.x,player.y-lastFoot.y)>17){
+      footSide*=-1;
+      footprints.push({x:player.x-player.fy*3.4*footSide, y:player.y+6+player.fx*2*footSide,
+        a:Math.atan2(player.fy,player.fx), age:0});
+      if(footprints.length>240)footprints.shift();
+      lastFoot={x:player.x,y:player.y};
+    }
+  }
+}
+
+// ═══════════════ ШЁПОТЫ ═══════════════
+let whisper={t:'',life:0,x:0,y:0}, whisperCd=0;
+function updateWhispers(){
+  if(whisper.life>0){whisper.life--; if(whisper.life<=0)whisperCd=150; return;}
+  if(whisperCd>0){whisperCd--;return;}
+  for(const w of whispers){
+    if(Math.hypot(player.x-w.x,player.y-w.y)<w.r){
+      whisper={t:w.t,life:300,x:w.x,y:w.y-40}; break;
+    }
+  }
+}
+
+// ═══════════════ КАДР ═══════════════
+let t0=performance.now(), frameN=0;
+const locEl=document.getElementById('loc');
+function frame(now){
+  const t=(now-t0)/1000; frameN++;
+  const breath=0.75+0.25*Math.sin(t*(Math.PI*2/6));
+  updatePlayer(); updateWhispers();
+
+  // камера с люфтом + дрожь у края
+  const viewW=CW/zoom, viewH=CH/zoom;
+  let tx=player.x-viewW/2, ty=player.y-viewH/2;
+  cam.x+=(tx-cam.x)*0.08; cam.y+=(ty-cam.y)*0.08;
+  cam.x=Math.max(0,Math.min(WORLD.w-viewW,cam.x));
+  cam.y=Math.max(0,Math.min(WORLD.h-viewH,cam.y));
+  let shx=0,shy=0;
+  if(player.x>2400){
+    const amp=(player.x-2400)/160*5;
+    shx=J(frameN*3)*amp; shy=J(frameN*7)*amp;
+  }
+  locEl.textContent=player.x<1520?'городок':(player.x<2360?'за мостом':'край');
+
+  // ── статичный слой ──
+  x.setTransform(DPR,0,0,DPR,0,0);
+  x.fillStyle=NIGHT; x.fillRect(0,0,CW,CH);
+  x.imageSmoothingEnabled=true;
+  x.drawImage(staticC,(cam.x+shx)*Q,(cam.y+shy)*Q,viewW*Q,viewH*Q, 0,0,CW,CH);
+
+  // мировая система координат
+  x.setTransform(DPR*zoom,0,0,DPR*zoom,-(cam.x+shx)*DPR*zoom,-(cam.y+shy)*DPR*zoom);
+
+  // ── следы ──
+  for(const f of footprints){
+    f.age++;
+    const a=Math.max(0,1-f.age/800)*0.2;
+    if(a<=0)continue;
+    x.strokeStyle=BONE; x.globalAlpha=a; x.lineWidth=0.8;
+    x.beginPath(); x.ellipse(f.x,f.y,3.4,1.6,f.a,0,7); x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ── свет костра по земле (эллиптический) ──
+  x.save(); x.translate(FIRE.x,FIRE.y+4); x.scale(1,0.5);
+  const bg2=x.createRadialGradient(0,0,10,0,0,200*breath);
+  bg2.addColorStop(0,`rgba(226,138,58,${0.26*breath})`);
+  bg2.addColorStop(0.5,`rgba(194,59,43,${0.09*breath})`);
+  bg2.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=bg2; x.fillRect(-210,-210,420,420);
+  rays(x,0,0,44,150*breath,64,CANDLE,0.13*breath);
+  rays(x,0,0,34,90*breath,32,'#F2C079',0.16*breath);
+  x.restore();
+
+  // ── свет окна №3 на брусчатке ──
+  const flick=0.8+0.2*(Math.sin(t*7.1)*0.3+Math.sin(t*12.7)*0.2+Math.sin(t*2.3)*0.5);
+  const w3x=454, w3y=560; // окно №3 канцелярии (facade eave=538 → окно 560..590)
+  const spill=p=>{p.moveTo(w3x-2,604);p.lineTo(w3x+36,604);p.lineTo(w3x+58,706);p.lineTo(w3x-26,706);p.closePath();};
+  const sg=x.createLinearGradient(0,604,0,706);
+  sg.addColorStop(0,`rgba(226,138,58,${0.22*flick})`); sg.addColorStop(1,'rgba(226,138,58,0)');
+  x.fillStyle=sg; x.beginPath(); spill(x); x.fill();
+  rays(x,w3x+17,606,14,72,20,CANDLE,0.12*flick,0.5,Math.PI-0.5);
+  // само окно
+  x.fillStyle=`rgba(236,190,120,${0.85*flick})`; x.fillRect(w3x,w3y,34,30);
+  x.strokeStyle=NIGHT; x.lineWidth=1.3;
+  x.beginPath(); x.moveTo(w3x+17,w3y); x.lineTo(w3x+17,w3y+30);
+  x.moveTo(w3x,w3y+15); x.lineTo(w3x+34,w3y+15); x.stroke();
+  x.fillStyle='rgba(13,11,10,0.75)';
+  x.beginPath(); x.arc(w3x+11,w3y+22,6,Math.PI,0); x.fill();
+  const wg=x.createRadialGradient(w3x+17,w3y+15,4,w3x+17,w3y+15,70);
+  wg.addColorStop(0,`rgba(226,138,58,${0.25*flick})`); wg.addColorStop(1,'rgba(226,138,58,0)');
+  x.fillStyle=wg; x.fillRect(w3x-56,w3y-56,146,146);
+
+  // ── лужа: луна и рябь ──
+  x.save(); x.beginPath();
+  for(let i=0;i<=10;i++){
+    const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
+    const px=1120+Math.cos(a)*rr, py=760+Math.sin(a)*rr*0.36;
+    i?x.lineTo(px,py):x.moveTo(px,py);
+  }
+  x.closePath(); x.clip();
+  x.fillStyle='#DDC08A'; x.globalAlpha=0.5;
+  x.beginPath(); x.ellipse(1108,756,15,9,0,0,7); x.fill();
+  x.strokeStyle='#8F7448'; x.globalAlpha=0.4; x.lineWidth=0.6;
+  x.beginPath(); x.ellipse(1108,756,15,9,0,0,7); x.stroke();
+  x.strokeStyle='#0E0D0B'; x.globalAlpha=0.8; x.lineWidth=1.1;
+  for(let i=0;i<2;i++){
+    const ry2=753+i*6+Math.sin(t*0.8+i*2)*1.4;
+    x.beginPath(); x.moveTo(1090,ry2); x.lineTo(1128,ry2); x.stroke();
+  }
+  x.strokeStyle=BONE; x.globalAlpha=0.16; x.lineWidth=0.6;
+  for(let i=0;i<3;i++){
+    const rr=22+i*13+Math.sin(t*0.6+i)*2;
+    x.beginPath(); x.ellipse(1112,758,rr,rr*0.34,0,0.4,Math.PI-0.5); x.stroke();
+  }
+  x.restore(); x.globalAlpha=1;
+
+  // ── дым из трубы ──
+  x.strokeStyle=ASH; x.lineWidth=1.2;
+  for(let i=0;i<3;i++){
+    x.globalAlpha=0.26-i*0.06;
+    const ph=t*0.3+i*2.1;
+    x.beginPath();
+    x.moveTo(1126,478-i*18);
+    x.bezierCurveTo(1140+Math.sin(ph)*9,462-i*18, 1120+Math.cos(ph*0.8)*10,448-i*18, 1136+Math.sin(ph*0.6)*12,432-i*18);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ── кот на коньке ──
+  const catx=1035, caty=472, tw=Math.sin(t*1.1);
+  x.fillStyle='#080706';
+  x.beginPath(); x.ellipse(catx,caty,8,5,0,0,7); x.fill();
+  x.beginPath(); x.arc(catx+7,caty-3.4,3.6,0,7); x.fill();
+  x.beginPath(); x.moveTo(catx+5,caty-6); x.lineTo(catx+6.2,caty-9.4); x.lineTo(catx+7.6,caty-6.2); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(catx+7.4,caty-6.2); x.lineTo(catx+8.8,caty-9.2); x.lineTo(catx+9.8,caty-5.8); x.closePath(); x.fill();
+  x.strokeStyle='#080706'; x.lineWidth=1.8;
+  x.beginPath(); x.moveTo(catx-7.4,caty);
+  x.bezierCurveTo(catx-13,caty-2+tw, catx-13,caty-11+tw*2, catx-9,caty-12+tw*2);
+  x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.55; x.lineWidth=0.6;
+  x.beginPath(); x.ellipse(catx,caty,8,5,0,-2.4,-0.6); x.stroke();
+  x.globalAlpha=1;
+
+  // ── динамические фигуры с сортировкой по y ──
+  const sprites=[
+    {y:FIRE.y, draw:drawFire},
+    {y:862, draw:drawJester},
+    {y:player.y, draw:drawWanderer},
+  ].sort((a,b)=>a.y-b.y);
+  for(const s of sprites) s.draw(t,breath);
+
+  // ── окклюдеры: заслоняют игрока, когда он «за» объектом ──
+  for(const o of occluders){
+    if(player.y<o.base &&
+       player.x+14>o.x && player.x-14<o.x+o.w &&
+       player.y+10>o.y && player.y-24<o.y+o.h){
+      x.drawImage(staticC,o.x*Q,o.y*Q,o.w*Q,o.h*Q,o.x,o.y,o.w,o.h);
+    }
+  }
+
+  // ── глазницы черепа ловят костёр ──
+  x.strokeStyle=CANDLE; x.globalAlpha=0.7*breath; x.lineWidth=0.8;
+  x.beginPath(); x.arc(884-5.3,668+1,2,0.6,2.5); x.stroke();
+  x.beginPath(); x.arc(884+5.3,668+1,2,0.6,2.5); x.stroke();
+  x.globalAlpha=1;
+
+  // ── шёпот ──
+  if(whisper.life>0){
+    const a=whisper.life>240?(300-whisper.life)/60:Math.min(1,whisper.life/120);
+    const sx2=(whisper.x-cam.x-shx)*zoom, sy2=(whisper.y-cam.y-shy)*zoom-(300-whisper.life)*0.06;
+    x.setTransform(DPR,0,0,DPR,0,0);
+    x.font='italic 17px "Cormorant Garamond"'; x.textAlign='center';
+    x.fillStyle='rgba(217,207,184,'+(a*0.7)+')';
+    x.fillText(whisper.t, Math.max(120,Math.min(CW-120,sx2)), Math.max(40,Math.min(CH-60,sy2)));
+    x.textAlign='left';
+  }
+
+  // ── экранный слой: зерно, виньетка, рамка ──
+  x.setTransform(DPR,0,0,DPR,0,0);
+  const gseed=Math.floor(t*7);
+  x.globalAlpha=0.05;
+  for(let i=0;i<170;i++){
+    x.fillStyle=(i%3)?BONE:ASH;
+    x.fillRect((J(i+gseed)*0.5+0.5)*CW,(J(i*7+gseed)*0.5+0.5)*CH,1,1);
+  }
+  x.globalAlpha=1;
+  const vig=x.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.44,CW/2,CH/2,Math.max(CW,CH)*0.72);
+  vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(5,4,3,0.4)');
+  x.fillStyle=vig; x.fillRect(0,0,CW,CH);
+  x.strokeStyle=BONE; x.globalAlpha=0.5; x.lineWidth=1;
+  x.strokeRect(10,10,CW-20,CH-20);
+  x.globalAlpha=0.18; x.strokeRect(14,14,CW-28,CH-28);
+  x.globalAlpha=1;
+
+  requestAnimationFrame(frame);
+}
+
+// ── костёр: пламя, искры, пыль ──
+function drawFire(t,breath){
+  const bx=FIRE.x, by=FIRE.y;
+  const flame=(ph,s,col,al)=>{
+    x.fillStyle=col; x.globalAlpha=al;
+    const fh=(52+Math.sin(t*3.1+ph)*11)*s, fw=(17+Math.sin(t*4.7+ph)*4.6)*s;
+    x.beginPath();
+    x.moveTo(bx-fw,by);
+    x.bezierCurveTo(bx-fw*1.3,by-fh*0.45, bx+Math.sin(t*5+ph)*7,by-fh*0.8, bx+Math.sin(t*2.4+ph)*5.4,by-fh);
+    x.bezierCurveTo(bx+fw*1.25,by-fh*0.5, bx+fw,by-fh*0.15, bx+fw,by);
+    x.closePath(); x.fill(); x.globalAlpha=1;
+  };
+  flame(0,1.12,RED,0.5); flame(2.2,0.88,CANDLE,0.72); flame(4.1,0.5,'#F2C079',0.9);
+  x.strokeStyle='#F2C079'; x.lineWidth=0.7;
+  for(let i=0;i<7;i++){
+    x.globalAlpha=0.4;
+    const ph=t*2.2+i*1.7, hgt=27+Math.sin(ph)*8;
+    x.beginPath();
+    x.moveTo(bx-11+i*3.7,by-3);
+    x.quadraticCurveTo(bx-9+i*3.7+Math.sin(ph)*4,by-hgt*0.6, bx-7+i*3.7+Math.sin(ph*1.3)*4.6,by-hgt);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+  x.fillStyle=CANDLE;
+  for(let i=0;i<9;i++){
+    const sp=(t*0.24+i*0.11)%1;
+    if(sp<0.9){
+      x.globalAlpha=(1-sp)*0.85;
+      x.beginPath();
+      x.arc(bx+Math.sin(t*1.4+i*2.2)*18*sp, by-16-sp*130, 1.2,0,7);
+      x.fill();
+    }
+  }
+  for(let i=0;i<10;i++){
+    const dp=(t*0.045+i*0.1)%1;
+    x.globalAlpha=(1-dp)*0.3*breath;
+    x.fillRect(bx-52+Math.sin(i*3.3+t*0.4)*40, by-10-dp*160, 1.2,1.2);
+  }
+  x.globalAlpha=1;
+}
+
+// ── Шут у костра ──
+function drawJester(t,breath){
+  const jx=940, jy=862, sw=Math.sin(t*0.8)*2;
+  x.fillStyle='rgba(4,3,3,0.5)';
+  x.beginPath(); x.ellipse(jx+22,jy+4,26,6,0.1,0,7); x.fill();
+  x.fillStyle='#0A0908';
+  x.beginPath();
+  x.moveTo(jx-13,jy);
+  x.bezierCurveTo(jx-15,jy-30, jx-8,jy-46, jx-3+sw,jy-52);
+  x.lineTo(jx-10+sw,jy-66); x.lineTo(jx-4+sw,jy-58);
+  x.lineTo(jx+sw,jy-72); x.lineTo(jx+4+sw,jy-58);
+  x.lineTo(jx+10+sw,jy-64); x.lineTo(jx+5+sw,jy-52);
+  x.bezierCurveTo(jx+10,jy-41, jx+12,jy-22, jx+10,jy);
+  x.closePath(); x.fill();
+  x.fillStyle=CANDLE; x.globalAlpha=0.85*breath;
+  x.beginPath(); x.arc(jx-10+sw,jy-66,1.6,0,7); x.fill();
+  x.beginPath(); x.arc(jx+sw,jy-72,1.6,0,7); x.fill();
+  x.beginPath(); x.arc(jx+10+sw,jy-64,1.6,0,7); x.fill();
+  x.globalAlpha=1;
+  x.strokeStyle='#E8C89A'; x.globalAlpha=0.7*breath; x.lineWidth=1.1;
+  x.beginPath();
+  x.moveTo(jx-13,jy);
+  x.bezierCurveTo(jx-15,jy-30, jx-8,jy-46, jx-3+sw,jy-52);
+  x.stroke(); x.globalAlpha=1;
+  x.strokeStyle='#B99B6E'; x.globalAlpha=0.4*breath; x.lineWidth=0.5;
+  for(let i=0;i<3;i++){
+    x.beginPath();
+    x.moveTo(jx-7+i*6,jy-7); x.lineTo(jx-4.6+i*6,jy-12);
+    x.lineTo(jx-2.2+i*6,jy-7); x.lineTo(jx-4.6+i*6,jy-2);
+    x.closePath(); x.stroke();
+  }
+  x.globalAlpha=1;
+}
+
+// ── Странник (игрок) ──
+function drawWanderer(t,breath){
+  const p=player, s=Math.sin(p.step*0.32)*(p.moving?1:0.2);
+  const df=Math.hypot(p.x-FIRE.x,p.y-FIRE.y);
+  // тень: от костра, если близко, иначе лунная (вниз-вправо)
+  let sang, slen;
+  if(df<340){ sang=Math.atan2(p.y-FIRE.y,p.x-FIRE.x); slen=22+(340-df)*0.10; }
+  else { sang=0.55; slen=26; }
+  x.save(); x.translate(p.x,p.y+7); x.rotate(sang);
+  x.fillStyle='rgba(4,3,3,0.5)';
+  x.beginPath(); x.ellipse(slen*0.5,0,slen*0.6,5.6,0,0,7); x.fill();
+  x.restore();
+  // подол — рваный контур
+  x.fillStyle='#0A0908';
+  x.beginPath();
+  for(let i=0;i<=11;i++){
+    const a=-Math.PI/2+i/11*Math.PI*2;
+    const r=14+J(i*3)*1.8+(i%2?2.2:0)+s*0.7;
+    const px=p.x+Math.cos(a)*r, py=p.y+Math.sin(a)*r*0.74;
+    i?x.lineTo(px,py):x.moveTo(px,py);
+  }
+  x.closePath(); x.fill();
+  // штрих по ткани
+  x.strokeStyle=BONE; x.globalAlpha=0.12; x.lineWidth=0.5;
+  for(let i=0;i<4;i++){
+    x.beginPath(); x.ellipse(p.x,p.y,10-i*2,7.4-i*1.5,0,0.6,2.6); x.stroke();
+  }
+  x.globalAlpha=1;
+  // плечи
+  x.fillStyle='#080706';
+  x.beginPath(); x.ellipse(p.x,p.y-7,10,7,0,0,7); x.fill();
+  // капюшон — чуть к направлению взгляда
+  x.fillStyle='#060505';
+  x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7,6,0,0,7); x.fill();
+  x.fillStyle='#020202';
+  x.beginPath(); x.ellipse(p.x+p.fx*4.6,p.y-12.4+s*0.5,3.4,3,0,0,7); x.fill();
+  // лунная кромка — всегда, слева-сверху
+  x.strokeStyle=BONE; x.globalAlpha=0.28; x.lineWidth=0.8;
+  x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7.4,6.4,0,Math.PI*1.05,Math.PI*1.75); x.stroke();
+  x.beginPath(); x.ellipse(p.x,p.y,14.6,10.6,0,Math.PI*1.1,Math.PI*1.7); x.stroke();
+  x.globalAlpha=1;
+  // кромка света со стороны костра
+  if(df<380){
+    const la=Math.atan2(FIRE.y-p.y,FIRE.x-p.x);
+    x.strokeStyle='#E8C89A'; x.globalAlpha=(0.55-df/380*0.4)*breath; x.lineWidth=1;
+    x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7.4,6.4,0,la-0.9,la+0.9); x.stroke();
+    x.beginPath(); x.ellipse(p.x,p.y,15,11,0,la-0.7,la+0.7); x.stroke();
+    x.globalAlpha=1;
+  }
+  // уголёк у сердца
+  const hb2=0.7+0.3*Math.sin(t*2.6);
+  x.fillStyle='#F2C079'; x.globalAlpha=hb2*0.9;
+  x.beginPath(); x.arc(p.x+p.fx*3,p.y-6,1.6,0,7); x.fill();
+  x.globalAlpha=1;
+}
+
+window.__game={player,cam:()=>cam,tp:(px,py)=>{player.x=px;player.y=py;}};
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
