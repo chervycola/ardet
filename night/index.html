@@ -299,16 +299,15 @@ body{
 </div>
 
 <script>
-/* ARDET vector etching scene — v3 "opryatno".
-   Tonal engraving, clean stroke systems: streamlines around the blood moon,
-   crisp silhouettes, deliberate rhythms. Display list API unchanged. */
+/* ARDET vector etching scene generator — shared node/browser.
+   Tonal engraving: line density = light. Display list: rect|poly|circle|glow|path|stroke. */
 (function(root){
 
 function genOutside(W,H,opts){
   opts=opts||{campfire:true,wanderer:true};
   var L=[];
   var horizon=0.64*H;
-  var moon={x:0.27*W, y:0.22*H, r:0.072*W};
+  var moon={x:0.27*W, y:0.22*H, r:0.070*W};
 
   function hash(x,y){var n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n);}
   function n2(x,y){
@@ -318,9 +317,122 @@ function genOutside(W,H,opts){
     return a+(b-a)*s(xf)+(c-a)*s(yf)+(a-b-c+d)*s(xf)*s(yf);
   }
 
-  /* ── stroke store ── */
+  /* ── cathedral profile: architectural blocks ────── */
+  var CATH0=0.545*W, CATH1=0.985*W, CW=CATH1-CATH0;
+  function cathTop(x){
+    var a=(x-CATH0)/CW;
+    if(a<0||a>1) return horizon;
+    var h=0;
+    if(a<0.36){ h=0.36; if(Math.sin(a*160)>0.2) h+=0.035; }            // nave + battlements
+    else if(a<0.40){ h=0.48; }                                          // shoulder
+    else if(a<0.58){                                                    // great tower
+      h=0.97;
+      var t=(a-0.40)/0.18;
+      if(t>0.72) h=0.97-(t-0.72)*1.5;                                   // broken diagonal top
+      if(Math.sin(t*70)>0.55) h+=0.03;
+    }
+    else if(a<0.70){ h=0.44; if(Math.sin(a*120)>0.4) h+=0.03; }
+    else if(a<0.80){                                                    // pointed spire, snapped
+      var u=(a-0.70)/0.10;
+      h=0.46+ (u<0.5? u*0.62 : (1-u)*0.62)*1.35;
+      if(u>0.42&&u<0.58) h=0.78;                                        // flat snap
+    }
+    else { h=Math.max(0, 0.30-(a-0.80)*1.15); if(Math.sin(a*90)>0.3) h+=0.04; }
+    h+= (n2(x*0.12,7)-0.5)*0.02;
+    return horizon - Math.max(0,h)*(horizon*0.96);
+  }
+  var RUIN0=0.015*W, RUIN1=0.27*W;
+  function ruinTop(x){
+    var b=(x-RUIN0)/(RUIN1-RUIN0);
+    if(b<0||b>1) return horizon;
+    var rh=0.16*Math.pow(Math.sin(b*Math.PI),0.6)*(0.4+0.6*Math.sin(b*30));
+    if(Math.sin(b*13)>0.35) rh+=0.05;
+    if(b>0.27&&b<0.35) rh=0.34;                                          // broken tower 1
+    if(b>0.61&&b<0.67) rh=0.27;                                          // broken tower 2
+    return horizon - Math.max(0,rh)*horizon;
+  }
+  function skylineTop(x){ return Math.min(cathTop(x), ruinTop(x)); }
+  function inSky(x,y){ return y < skylineTop(x)-0.5; }
+
+  /* windows (lancets + rose) */
+  var lancets=[
+    {x:0.665*W,y:0.435*H,w:0.024*W,h:0.10*H},
+    {x:0.715*W,y:0.30*H, w:0.026*W,h:0.13*H},
+    {x:0.745*W,y:0.30*H, w:0.026*W,h:0.13*H},
+    {x:0.885*W,y:0.475*H,w:0.022*W,h:0.09*H}
+  ];
+  var rose={x:0.730*W,y:0.20*H,r:0.030*W};
+
+  /* fires on ruin towers */
+  var fires=[{x:RUIN0+(RUIN1-RUIN0)*0.31,y:0,p:1.0},{x:RUIN0+(RUIN1-RUIN0)*0.64,y:0,p:0.75}];
+  fires.forEach(function(f){ f.y=ruinTop(f.x)-2; });
+
+  /* ── tone fields ────────────────────────────────── */
+  function skyTone(x,y){
+    var dm=Math.hypot(x-moon.x,y-moon.y);
+    var g=Math.max(0, 1.05 - dm/(moon.r*2.6));
+    var fog=Math.max(0, 1-(horizon-y)/(H*0.13))*0.42;
+    var f=0;
+    for(var i=0;i<fires.length;i++){
+      var d=Math.hypot(x-fires[i].x,y-fires[i].y);
+      f=Math.max(f, fires[i].p*Math.max(0,1-d/(0.085*W)));
+    }
+    var t=Math.max(g*g*1.15, fog, f*0.75);
+    t+=(n2(x*0.015,y*0.02)-0.5)*0.14;
+    return Math.max(0,Math.min(1.2,t));
+  }
+  function winGlow(x,y){
+    var g=0;
+    for(var i=0;i<lancets.length;i++){
+      var l=lancets[i];
+      var d=Math.hypot(x-l.x,(y-(l.y+l.h*0.5))*1.3);
+      g=Math.max(g, Math.max(0,1-d/(l.w*3.6)));
+    }
+    var dr=Math.hypot(x-rose.x,y-rose.y);
+    g=Math.max(g, Math.max(0,1-dr/(rose.r*3.0)));
+    return g;
+  }
+  function cathLight(x,y){
+    var top=cathTop(x);
+    if(y<top||y>horizon) return 0;
+    var a=(x-CATH0)/CW;
+    var lit=Math.max(0.04, 0.62-0.95*a);                    // moonlit left
+    var edge=Math.max(0, 1-(y-top)/(H*0.07));               // top rim
+    var t=(lit*0.34 + edge*0.42*Math.max(0.3,lit) + winGlow(x,y)*0.55)*1.25;
+    if((a>0.36&&a<0.405)||(a>0.575&&a<0.615)||(a>0.79&&a<0.815)) t*=0.22;   // shadow joints between blocks
+    t+=(n2(x*0.05,y*0.05)-0.5)*0.10;
+    if(n2(x*0.09,y*0.09)>0.78) t*=0.25;                      // cracks
+    return Math.max(0,Math.min(1,t));
+  }
+  var wx=0.325*W, wy=horizon+(H-horizon)*0.34;
+  var fx=0.795*W, fy=horizon+(H-horizon)*0.62;
+  function groundTone(x,y){
+    var fog=Math.max(0,1-(y-horizon)/(H*0.062))*0.58*(0.35+0.65*n2(x*0.02,y*0.31));
+    var px=0.185*W+(y-H)*(-0.20), pw=0.03*W+(y-horizon)*0.13;
+    var pd=Math.abs(x-px);
+    var path=pd<pw?(1-pd/pw)*0.70*Math.max(0.25,1-(y-horizon)/(H-horizon)):0;
+    var lamp=Math.max(0,1-Math.hypot(x-(wx+9),y-(wy+7))/34)*0.85;
+    var camp=Math.max(0,1-Math.hypot(x-fx,y-(fy-4))/52)*0.8;
+    var spill=0;                                            // red spill under windows
+    for(var i=1;i<3;i++){
+      var l=lancets[i];
+      spill=Math.max(spill,Math.max(0,1-Math.hypot(x-l.x,(y-horizon-8)*2.2)/(l.w*4))*0.20);
+    }
+    var t=Math.max(fog,path,lamp,camp,spill);
+    t+=(n2(x*0.04,y*0.05)-0.5)*0.12;
+    return Math.max(0,Math.min(1,t));
+  }
+  function groundColor(x,y){
+    for(var i=1;i<3;i++){
+      var l=lancets[i];
+      if(Math.hypot(x-l.x,(y-horizon-8)*2.2)<l.w*2.1 && n2(x*0.2,y*0.2)>0.48) return 'blood';
+    }
+    return 'etch';
+  }
+
+  /* ── stroke store ───────────────────────────────── */
   var S={};
-  function stroke(pts,w,c){ if(pts.length>1){var k=c+'|'+w;(S[k]=S[k]||[]).push(pts);} }
+  function stroke(pts,w,c){ if(pts.length>1){ var k=c+'|'+w; (S[k]=S[k]||[]).push(pts);} }
   function runs(pts,keep,color,w){
     var run=[],lastC=null;
     function flush(){ if(run.length>1&&lastC)stroke(run,w,lastC); run=[]; }
@@ -332,214 +444,134 @@ function genOutside(W,H,opts){
     }
     flush();
   }
-  var TH=[0.10,0.28,0.50,0.72];
-
-  /* ── skyline ─────────────────────────────────────── */
-  var CATH0=0.545*W, CATH1=0.985*W, CW=CATH1-CATH0;
-  function cathTop(x){
-    var a=(x-CATH0)/CW;
-    if(a<0||a>1) return horizon;
-    var h;
-    if(a<0.36){ h=0.36 + (((a*44)%2)<1?0:0.035); }                     // nave, regular battlements
-    else if(a<0.40){ h=0.50; }                                          // shoulder
-    else if(a<0.58){                                                    // great tower
-      h=0.97;
-      var t=(a-0.40)/0.18;
-      if(t>0.74) h=0.97-(t-0.74)*1.7;                                   // broken diagonal
-    }
-    else if(a<0.70){ h=0.44 + (((a*60)%2)<1?0:0.03); }
-    else if(a<0.80){                                                    // snapped spire
-      var u=(a-0.70)/0.10;
-      h=0.46+(u<0.5?u:1-u)*1.35*0.62;
-      if(u>0.44&&u<0.56) h=0.76;
-    }
-    else { h=Math.max(0,0.28-(a-0.80)*1.3) + (((a*70)%2)<1?0:0.03); }
-    return horizon - Math.max(0,h)*(horizon*0.96);
-  }
-  var RUIN0=0.015*W, RUIN1=0.26*W;
-  function ruinTop(x){
-    var b=(x-RUIN0)/(RUIN1-RUIN0);
-    if(b<0||b>1) return horizon;
-    var rh=0.10*Math.pow(Math.sin(b*Math.PI),0.7);
-    if(b>0.16&&b<0.24) rh=0.20;                                         // tower 1
-    if(b>0.30&&b<0.345) rh=0.335;                                       // tower 2 (burning)
-    if(b>0.58&&b<0.625) rh=0.245;                                       // tower 3 (burning)
-    if(b>0.78&&b<0.82) rh=0.16;
-    return horizon - rh*horizon;
-  }
-  function skylineTop(x){ return Math.min(cathTop(x),ruinTop(x)); }
-  function inSky(x,y){ return y < skylineTop(x)-0.6; }
-
-  var lancets=[
-    {x:0.665*W,y:0.435*H,w:0.024*W,h:0.10*H},
-    {x:0.715*W,y:0.30*H, w:0.026*W,h:0.13*H},
-    {x:0.745*W,y:0.30*H, w:0.026*W,h:0.13*H},
-    {x:0.885*W,y:0.475*H,w:0.022*W,h:0.09*H}
-  ];
-  var rose={x:0.730*W,y:0.20*H,r:0.030*W};
-  var fires=[{x:RUIN0+(RUIN1-RUIN0)*0.322,y:0,p:1.0},{x:RUIN0+(RUIN1-RUIN0)*0.602,y:0,p:0.6}];
-  fires.forEach(function(f){f.y=ruinTop(f.x)-1;});
-
-  /* ── tone fields (smooth, no confetti noise) ────── */
-  function skyTone(x,y){
-    var d=Math.hypot(x-moon.x,y-moon.y);
-    var g=Math.max(0,1.12-d/(moon.r*3.0)); g=g*g;
-    var fog=Math.max(0,1-(horizon-y)/(H*0.10))*0.5;
-    var f=0;
-    for(var i=0;i<fires.length;i++){
-      var dd=Math.hypot(x-fires[i].x,y-fires[i].y);
-      f=Math.max(f,fires[i].p*Math.max(0,1-dd/(0.09*W)));
-    }
-    return Math.max(g*1.15,fog,f*0.8) + (n2(x*0.006,y*0.006)-0.5)*0.06;
-  }
-  function skyColor(x,y){
-    var d=Math.hypot(x-moon.x,y-moon.y);
-    if(d<moon.r*1.7) return 'blood';
-    for(var i=0;i<fires.length;i++)
-      if(Math.hypot(x-fires[i].x,y-fires[i].y)<0.05*W) return 'blood';
-    if(d>moon.r*2.9 && skyTone(x,y)<0.34) return 'ash';
-    return 'etch';
-  }
-  function winGlow(x,y){
-    var g=0;
-    for(var i=0;i<lancets.length;i++){
-      var l=lancets[i];
-      var d=Math.hypot(x-l.x,(y-(l.y+l.h*0.5))*1.25);
-      g=Math.max(g,Math.max(0,1-d/(l.w*3.2)));
-    }
-    g=Math.max(g,Math.max(0,1-Math.hypot(x-rose.x,y-rose.y)/(rose.r*2.6)));
-    return g;
-  }
-  function cathLight(x,y){
-    var top=cathTop(x);
-    if(y<top||y>horizon) return 0;
-    var a=(x-CATH0)/CW;
-    var lit=Math.max(0.05,0.60-0.85*a);
-    var edge=Math.max(0,1-(y-top)/(H*0.10));
-    var t=lit*0.42 + edge*0.42*Math.max(0.25,lit) + winGlow(x,y)*0.72;
-    if((a>0.365&&a<0.40)||(a>0.578&&a<0.60)||(a>0.795&&a<0.812)) t*=0.15;   // shadow joints
-    return Math.max(0,Math.min(1,t));
-  }
-  var wx=0.335*W, wy=horizon+(H-horizon)*0.36;
-  var fx=0.795*W, fy=horizon+(H-horizon)*0.62;
+  function wob(x,y,ph,amp){return (n2(x*0.08+ph*3.7,y*0.08)-0.5)*2*amp;}
+  var TH=[0.07,0.20,0.36,0.55,0.76];
 
   /* ══ PAINT ═══════════════════════════════════════ */
   L.push({t:'rect',x:0,y:0,w:W,h:H,c:'sky'});
-  fires.forEach(function(f){L.push({t:'glow',x:f.x,y:f.y-10,r:0.10*W*Math.sqrt(f.p),c:'blood',a:0.5});});
-  L.push({t:'glow',x:moon.x,y:moon.y,r:moon.r*2.5,c:'blood',a:0.45});
 
-  /* SKY — potential-flow streamlines around the moon disc */
+  // fire glows (behind silhouettes)
+  fires.forEach(function(f){L.push({t:'glow',x:f.x,y:f.y-12,r:0.11*W*f.p,c:'blood',a:0.55});
+    for(var ei=0;ei<5;ei++){var ex=f.x+(hash(ei,f.x)-0.5)*22, el=6+hash(ei,9)*16;
+      stroke([[ex,f.y-14-hash(ei,3)*34],[ex+(hash(ei,5)-0.5)*5,f.y-14-hash(ei,3)*34-el]],1.2,'blood');}});
+  L.push({t:'glow',x:moon.x,y:moon.y,r:moon.r*2.4,c:'blood',a:0.42});
+
+  /* sky engraving: near-horizontal lines flowing AROUND the moon */
   (function(){
-    var R=moon.r*1.16, R2=R*R, idx=0;
-    for(var s=-moon.y+6; s<horizon-moon.y-2; s+=2.9, idx++){
-      var th=TH[idx%4], pts=[];
-      for(var x=0;x<=W;x+=3.2){
-        var dx=x-moon.x;
-        var yv=s;                                   // solve streamline: y(1-R²/(dx²+y²))=s
-        for(var it=0;it<7;it++) yv = s + R2*yv/(dx*dx+yv*yv+1e-6);
-        var y=moon.y+yv;
-        if(dx*dx+yv*yv < (R+1.2)*(R+1.2) || y>=horizon-1){ pts.push(null); continue; }
-        y += 1.1*Math.sin(x*0.011+idx*1.7);         // long calm wave, no jitter
-        pts.push([x,y]);
+    var idx=0;
+    for(var y0=4;y0<horizon-1;y0+=2.6,idx++){
+      var th=TH[idx%5], pts=[];
+      for(var x=-4;x<=W+4;x+=3.0){
+        var y=y0 + 5*Math.sin(x/W*Math.PI*1.1+idx*0.3)*0.4;
+        // deflect around the moon disc
+        var dx=x-moon.x, dy=y-moon.y;
+        var d=Math.hypot(dx,dy);
+        if(d<moon.r*2.5){
+          var push=(moon.r*2.5-d)/(moon.r*2.5);
+          y+= (dy>=0?1:-1) * push*push * moon.r*0.58;
+          dy=y-moon.y; d=Math.hypot(dx,dy);
+        }
+        if(d<moon.r+1.8){ pts.push(null); continue; }
+        pts.push([x, y+wob(x,y,idx,0.8)]);
       }
-      runs(pts,function(px,py){return inSky(px,py)&&skyTone(px,py)>th;},skyColor,
-           idx%4===0?0.8:0.7);
+      runs(pts,function(px,py){return py<horizon-1&&inSky(px,py)&&skyTone(px,py)>th;},
+        function(px,py){ return Math.hypot(px-moon.x,py-moon.y)<moon.r*1.85?'blood':'etch'; },
+        0.7);
     }
-    // two deliberate aura arcs at the disc edge
-    [1.20,1.38].forEach(function(k,ki){
-      var arc=[];
-      for(var a=-2.45;a<0.75;a+=0.07)
-        arc.push([moon.x+Math.cos(a)*moon.r*k, moon.y+Math.sin(a)*moon.r*k]);
-      stroke(arc,ki===0?1.0:0.8,'blood');
-    });
+    // second diagonal layer in the halo core (richness)
+    idx=0;
+    for(var d0=-H;d0<W;d0+=4.2,idx++){
+      var th2=TH[1+(idx%2)], pts2=[];
+      for(var yy=0;yy<horizon;yy+=3){
+        var xx=d0+yy*0.9;
+        var dd=Math.hypot(xx-moon.x,yy-moon.y);
+        if(dd<moon.r+2||dd>moon.r*2.6)continue;
+        pts2.push([xx+wob(xx,yy,idx,0.6),yy]);
+      }
+      runs(pts2,function(px,py){return inSky(px,py)&&skyTone(px,py)>th2;},
+        function(){return 'blood';},0.65);
+    }
   })();
 
-  /* smoke — two clean ribbons per column */
-  function ribbon(sx,sy,topLim,amp,drift,w){
-    for(var off=0;off<2;off++){
-      var pts=[];
-      for(var y=sy;y>topLim;y-=4){
-        var t=(sy-y);
-        var A=2+amp*t/(sy-topLim);
-        var x=sx+off*4 + drift*t*0.18 + A*Math.sin(t*0.030+off*0.9);
-        pts.push([x,y]);
-      }
-      stroke(pts,w,'ash');
+  /* smoke: engraved curls rising from tower + fires */
+  function smokeCurls(sx,sy,n,scale,drift){
+    var x=sx,y=sy,r=3.5*scale;
+    for(var i=0;i<n;i++){
+      var arc=[];
+      var a0=hash(i,sx)*Math.PI;
+      for(var a=a0;a<a0+2.5;a+=0.3)
+        arc.push([x+Math.cos(a)*r+wob(x,a*9,i,0.5), y+Math.sin(a)*r*0.72]);
+      stroke(arc,0.8,'ash');
+      x+=drift*(6+r*0.5)+(n2(x*0.05,i*3)-0.5)*7;
+      y-=r*1.5+4;
+      r*=1.22;
+      if(y<H*0.06)break;
     }
   }
-  ribbon(0.652*W,cathTop(0.652*W)+3,H*0.10,26,0.9,0.9);
-  ribbon(fires[0].x,fires[0].y-6,H*0.22,20,1.1,0.85);
-  ribbon(fires[1].x,fires[1].y-6,H*0.30,14,0.8,0.8);
+  smokeCurls(0.652*W,cathTop(0.652*W)+4,9,1.15,0.5);
+  smokeCurls(fires[0].x,fires[0].y-6,7,0.9,0.65);
+  
 
-  /* far ruins — solid silhouette, one rim line, fires */
+  /* far ruins: silhouette + rim + flames */
   (function(){
     var pts=[];
-    for(var x=RUIN0;x<=RUIN1;x+=2)pts.push(x.toFixed(1)+','+ruinTop(x).toFixed(1));
+    for(var x=RUIN0;x<=RUIN1;x+=2.5)pts.push(x.toFixed(1)+','+ruinTop(x).toFixed(1));
     pts.push(RUIN1.toFixed(1)+','+horizon,RUIN0.toFixed(1)+','+horizon);
-    L.push({t:'poly',p:pts.join(' '),c:'void'});
-    var rim=[];
-    for(var x2=RUIN0;x2<=RUIN1;x2+=2)rim.push([x2,ruinTop(x2)-0.7]);
-    stroke(rim,1.0,'etch');
-    // flames: clean three-tongue silhouettes
-    fires.forEach(function(f,fi){
-      var s=f.p*13;
-      L.push({t:'path',d:'M'+(f.x-s*0.7)+','+(f.y+2)+
-        ' q'+(s*0.15)+','+(-s*0.9)+' '+(s*0.35)+','+(-s*1.15)+
-        ' q'+(s*0.12)+','+(s*0.55)+' '+(s*0.32)+','+(s*0.62)+
-        ' q'+(s*0.10)+','+(-s*1.1)+' '+(s*0.34)+','+(-s*1.5)+
-        ' q'+(s*0.25)+','+(s*0.9)+' '+(s*0.18)+','+(s*1.4)+
-        ' q'+(s*0.28)+','+(-s*0.5)+' '+(s*0.20)+','+(-s*0.95)+
-        ' q'+(s*0.25)+','+(s*0.85)+' '+(-s*0.08)+','+(s*1.42)+
-        ' q'+(-s*0.7)+','+(s*0.35)+' '+(-s*1.31)+',0 z',c:'blood'});
-      for(var e=0;e<4;e++){
-        var ex=f.x+(hash(e,fi)-0.5)*18, ey=f.y-18-hash(e,7)*26;
-        stroke([[ex,ey],[ex+1.5,ey-6-hash(e,3)*10]],1.1,'blood');
-      }
+    L.push({t:'poly',p:pts.join(' '),c:'far'});
+    var seg=[];
+    for(var x2=RUIN0;x2<=RUIN1;x2+=2){
+      var y2=ruinTop(x2);
+      if(y2<horizon-2)seg.push([x2,y2-0.6+wob(x2,y2,4,0.5)]);
+      else{if(seg.length>2)stroke(seg,0.8,'etch');seg=[];}
+    }
+    if(seg.length>2)stroke(seg,0.8,'etch');
+    fires.forEach(function(f){
+      var fl='M'+(f.x-11)+','+(f.y+3)+' q3,-16 5.5,-22 q3,11 6.6,14 q3,-19 6.6,-25 q5.5,14 3.3,25 q8,-8 5.5,-19 q5.5,16 -2.7,27 q-14,8 -25,0 z';
+      L.push({t:'path',d:fl,c:'blood'});
     });
   })();
 
-  /* horizon line — only in the open gap */
-  (function(){
-    var seg=[];
-    for(var x=0;x<=W;x+=3){
-      if(skylineTop(x)>=horizon-1&&skyTone(x,horizon-4)>0.15)seg.push([x,horizon-0.5]);
-      else{if(seg.length>2)stroke(seg,0.9,'etch');seg=[];}
-    }
-    if(seg.length>2)stroke(seg,0.9,'etch');
-  })();
-
-  /* CATHEDRAL — solid mass, crisp contour, calm masonry */
+  /* cathedral: mass, engraving, windows, rose */
   (function(){
     var pts=[];
-    for(var x=CATH0;x<=CATH1;x+=1.6)pts.push(x.toFixed(1)+','+cathTop(x).toFixed(1));
+    for(var x=CATH0;x<=CATH1;x+=2)pts.push(x.toFixed(1)+','+cathTop(x).toFixed(1));
     pts.push(CATH1.toFixed(1)+','+horizon,CATH0.toFixed(1)+','+horizon);
     L.push({t:'poly',p:pts.join(' '),c:'stone'});
 
-    // crisp continuous contour (steps render as clean verticals)
-    var cont=[];
-    for(var x1=CATH0;x1<=CATH1;x1+=1.6)cont.push([x1,cathTop(x1)-0.6]);
-    stroke(cont,1.15,'etch');
-
-    // vertical engraving, stone courses on a fixed grid
+    // vertical strokes (primary)
     var idx=0;
-    for(var x2=CATH0+2;x2<CATH1;x2+=2.7,idx++){
-      var th=TH[idx%4],p2=[];
-      for(var y=cathTop(x2)+1;y<horizon-0.5;y+=2.4){
-        if((y%22)<2.6){p2.push(null);continue;}                 // aligned course breaks
-        p2.push([x2,y]);
+    for(var x2=CATH0+1.5;x2<CATH1;x2+=2.7,idx++){
+      var th=TH[idx%5],p2=[];
+      for(var y=cathTop(x2)-0.5;y<horizon;y+=2.6){
+        if(((y+x2*0.33)%26)<4.5){p2.push(null);continue;}              // stone-course breaks
+        p2.push([x2+wob(x2,y,1,0.55),y]);
       }
       runs(p2,function(px,py){return cathLight(px,py)>th;},
-        function(px,py){return winGlow(px,py)>0.5?'blood':'etch';},0.7);
+        function(px,py){return winGlow(px,py)>0.55?'blood':'etch';},0.7);
     }
-    // masonry horizontals only in the lit band
-    for(var y3=H*0.30;y3<horizon;y3+=11){
-      var p3=[];
-      for(var x3=CATH0;x3<CATH0+CW*0.36;x3+=3)p3.push([x3,y3]);
-      runs(p3,function(px,py){return py>cathTop(px)+3&&cathLight(px,py)>0.42;},
-        function(){return 'etch';},0.55);
+    // masonry courses (horizontal, mid tones)
+    idx=0;
+    for(var y3=H*0.06;y3<horizon;y3+=7.0,idx++){
+      var th3=TH[2+(idx%3)],p3=[];
+      for(var x3=CATH0;x3<CATH1;x3+=3)p3.push([x3,y3+wob(x3,y3,6,0.6)]);
+      runs(p3,function(px,py){return py>cathTop(px)+2&&cathLight(px,py)>th3;},
+        function(){return 'etch';},0.5);
     }
+    // rim light along profile
+    var seg=[];
+    for(var x4=CATH0;x4<=CATH1;x4+=1.6){
+      var y4=cathTop(x4),y5=cathTop(x4+1.6);
+      if(Math.abs(y5-y4)<3.2&&y4<horizon-4)seg.push([x4,y4-0.8+wob(x4,y4,9,0.4)]);
+      else{if(seg.length>2)stroke(seg,1.15,'etch');seg=[];}
+    }
+    if(seg.length>2)stroke(seg,1.15,'etch');
+    // vertical edges of the great tower & spire (crisp bone lines)
+    [[0.40,0.97],[0.58,0.44]].forEach(function(e){
+      var ex=CATH0+e[0]*CW;
+      stroke([[ex,cathTop(ex+2)],[ex,horizon]],0.9,'etch');
+    });
 
-    // windows: fire fill, clean outline, mullion+transom
+    // lancet windows: outline + mullion + fire fill
     lancets.forEach(function(l){
       var x0=l.x-l.w/2,x1=l.x+l.w/2,ya=l.y+l.h*0.38;
       var d='M'+x0.toFixed(1)+','+(l.y+l.h).toFixed(1)+' L'+x0.toFixed(1)+','+ya.toFixed(1)+
@@ -547,191 +579,200 @@ function genOutside(W,H,opts){
         ' Q'+x1.toFixed(1)+','+l.y.toFixed(1)+' '+x1.toFixed(1)+','+ya.toFixed(1)+
         ' L'+x1.toFixed(1)+','+(l.y+l.h).toFixed(1)+' Z';
       L.push({t:'path',d:d,c:'winfire'});
-      L.push({t:'path',d:d,c:'none',sc:'etch',sw:1.0,so:0.9});
-      stroke([[l.x,l.y+2.5],[l.x,l.y+l.h]],1.3,'void');
-      stroke([[x0+1.5,l.y+l.h*0.56],[x1-1.5,l.y+l.h*0.56]],1.1,'void');
-      L.push({t:'glow',x:l.x,y:l.y+l.h*0.5,r:l.w*2.1,c:'blood',a:0.26});
+      L.push({t:'path',d:d,c:'none',sc:'etch',sw:0.9,so:0.8});
+      stroke([[l.x,l.y+3],[l.x,l.y+l.h]],1.2,'void');                 // mullion
+      stroke([[x0+1,l.y+l.h*0.55],[x1-1,l.y+l.h*0.55]],1.0,'void');   // transom
+      L.push({t:'glow',x:l.x,y:l.y+l.h*0.5,r:l.w*2.2,c:'blood',a:0.28});
     });
 
-    // rose window — burning wheel
+    // rose window: burning wheel
     L.push({t:'circle',x:rose.x,y:rose.y,r:rose.r,c:'winfire'});
-    L.push({t:'glow',x:rose.x,y:rose.y,r:rose.r*2.4,c:'blood',a:0.32});
+    L.push({t:'glow',x:rose.x,y:rose.y,r:rose.r*2.6,c:'blood',a:0.34});
     for(var a6=0;a6<Math.PI*2;a6+=Math.PI/8)
-      stroke([[rose.x+Math.cos(a6)*rose.r*0.22,rose.y+Math.sin(a6)*rose.r*0.22],
-              [rose.x+Math.cos(a6)*rose.r*0.94,rose.y+Math.sin(a6)*rose.r*0.94]],0.95,'void');
-    [1.0,0.72,0.26].forEach(function(rr,ri){
+      stroke([[rose.x+Math.cos(a6)*rose.r*0.25,rose.y+Math.sin(a6)*rose.r*0.25],
+              [rose.x+Math.cos(a6)*rose.r*0.96,rose.y+Math.sin(a6)*rose.r*0.96]],0.9,'void');
+    [0.99,0.75,0.28].forEach(function(rr,ri){
       var ring=[];
-      for(var a7=0;a7<=Math.PI*2+0.12;a7+=0.14)
+      for(var a7=0;a7<=Math.PI*2+0.15;a7+=0.18)
         ring.push([rose.x+Math.cos(a7)*rose.r*rr,rose.y+Math.sin(a7)*rose.r*rr]);
-      stroke(ring,ri===0?1.3:0.8,ri===0?'etch':'void');
+      stroke(ring,ri===0?1.2:0.8,ri===0?'etch':'void');
     });
   })();
 
-  /* GROUND — fog lines, road ladder, curated props */
+  /* horizon rim: broken bone segments */
+  (function(){
+    var seg=[];
+    for(var x=0;x<W;x+=3){
+      if(n2(x*0.02,50)>0.42&&skyTone(x,horizon-3)>0.25)seg.push([x,horizon-1+wob(x,horizon,8,0.6)]);
+      else{if(seg.length>2)stroke(seg,0.8,'etch');seg=[];}
+    }
+    if(seg.length>2)stroke(seg,0.8,'etch');
+  })();
+
+  /* ground */
   L.push({t:'rect',x:0,y:horizon,w:W,h:H-horizon,c:'ground'});
   (function(){
-    // fog: long calm lines fading down
-    for(var k=0;k<7;k++){
-      var y=horizon+2.5+k*2.4, pts=[];
-      for(var x=0;x<=W;x+=3.5)
-        pts.push([x, y+1.4*Math.sin(x*0.012+k*1.3)]);
-      var gate=0.92-k*0.13;
-      runs(pts,function(px){
-          return (0.5+0.5*Math.sin(px*0.008+k*2.2)) < gate;
-        },function(px){
-          for(var i=1;i<3;i++)
-            if(Math.abs(px-lancets[i].x)<lancets[i].w*2.4) return 'blood';
-          return k<3?'etch':'ash';
-        },0.75);
+    var idx=0;
+    for(var y=horizon+1.2;y<H;y+=2.3+(y-horizon)*0.036,idx++){
+      var th=TH[idx%5],pts=[];
+      for(var x=0;x<W;x+=3.0)pts.push([x,y+wob(x,y,2,1.6)]);
+      runs(pts,function(px,py){return groundTone(px,py)>th;},groundColor,0.7);
     }
-    // road: two edges + perspective rungs
-    function edge(x0,y0,x1,y1,bend){
-      var pts=[];
-      for(var t=0;t<=1.001;t+=0.05){
-        var x=x0+(x1-x0)*t, y=y0+(y1-y0)*t;
-        x+=bend*Math.sin(t*Math.PI);
-        pts.push([x,y]);
-      }
-      return pts;
+    // tufts of dead grass
+    for(var i=0;i<70;i++){
+      var gx=hash(i,41)*W, gy=horizon+6+hash(i,43)*(H-horizon)*0.8;
+      var t=groundTone(gx,gy);
+      if(t<0.12||t>0.7)continue;
+      var s=2+hash(i,47)*3;
+      stroke([[gx,gy],[gx+(hash(i,53)-0.5)*3,gy-s]],0.7,'etch');
+      if(hash(i,59)>0.5)stroke([[gx+1.5,gy],[gx+2.5,gy-s*0.7]],0.6,'etch');
     }
-    var eL=edge(0.075*W,H+2, wx-9, wy+16,-14);
-    var eR=edge(0.26*W, H+2, wx+16, wy+16, 10);
-    stroke(eL,0.9,'etch'); stroke(eR,0.9,'etch');
-    for(var r=0;r<9;r++){
-      var i=2+r*2;
-      if(i>=eL.length-1)break;
-      stroke([[eL[i][0]+3,eL[i][1]],[eR[i][0]-3,eR[i][1]]],0.7,'ash');
-    }
-    // grass clumps (curated, sparse)
-    var clumps=[[0.30,0.55],[0.41,0.28],[0.48,0.62],[0.55,0.40],[0.63,0.68],[0.69,0.30],[0.145,0.42],[0.22,0.75]];
-    clumps.forEach(function(cpos,i){
-      var gx=cpos[0]*W, gy=horizon+(H-horizon)*cpos[1];
-      for(var b=0;b<3;b++)
-        stroke([[gx,gy],[gx+(b-1)*3.2,gy-5-hash(i,b)*4]],0.8,'etch');
-    });
-    // rubble near the tree
-    for(var j=0;j<4;j++){
-      var rx=0.10*W+hash(j,61)*0.06*W, ry=horizon+(H-horizon)*(0.55+hash(j,67)*0.3);
-      var rr=3+hash(j,71)*3, st=[];
-      for(var a=0;a<=Math.PI*2.1;a+=0.45)
-        st.push([rx+Math.cos(a)*rr,ry+Math.sin(a)*rr*0.55]);
-      stroke(st,0.75,'etch');
+    // rubble stones near path
+    for(var j=0;j<12;j++){
+      var rx=0.10*W+hash(j,61)*0.30*W, ry=horizon+14+hash(j,67)*(H-horizon)*0.6;
+      var rr=2+hash(j,71)*4;
+      var st=[];
+      for(var a=0;a<=Math.PI*2.1;a+=0.5)
+        st.push([rx+Math.cos(a)*rr*(1+0.3*hash(j,a*10)),ry+Math.sin(a)*rr*0.6]);
+      stroke(st,0.7,'etch');
     }
   })();
 
-  /* graves — five crisp leaning crosses, receding */
+  /* procession of leaning grave-crosses along the path */
   (function(){
-    var defs=[[0.445,0.14,26],[0.505,0.075,20],[0.575,0.22,30],[0.64,0.11,18],[0.69,0.33,24]];
+    var defs=[[0.415,0.10],[0.465,0.22],[0.515,0.08],[0.565,0.30],[0.615,0.14],[0.665,0.36],[0.44,0.46],[0.36,0.18]];
     defs.forEach(function(g,i){
-      var gx=g[0]*W, gy=horizon+(H-horizon)*g[1], hgt=g[2];
-      var lean=(hash(i,5)-0.5)*0.5;
+      var gx=g[0]*W, gy=horizon+(H-horizon)*g[1];
+      var hgt=14+hash(i,11)*22, lean=(hash(i,5)-0.5)*0.8;
       var tx=gx+lean*hgt, ty=gy-hgt;
-      stroke([[gx,gy],[tx,ty]],3.2,'void');
-      stroke([[gx-2,gy],[tx-2,ty]],0.9,'etch');                       // moon rim
-      var bx=gx+lean*hgt*0.7, by=gy-hgt*0.7, arm=hgt*0.34;
-      stroke([[bx-arm,by-lean*3],[bx+arm,by+lean*3]],2.8,'void');
-      stroke([[bx-arm,by-lean*3-1.6],[bx+arm,by+lean*3-1.6]],0.9,'etch');
+      stroke([[gx,gy],[tx,ty]],3.0,'void');
+      stroke([[gx-1.6,gy],[tx-1.6,ty]],0.8,'etch');
+      var bx=gx+lean*hgt*0.68, by=gy-hgt*0.68;
+      stroke([[bx-hgt*0.32,by-lean*2.5],[bx+hgt*0.32,by+lean*2.5]],2.6,'void');
+      stroke([[bx-hgt*0.32,by-lean*2.5-1.4],[bx+hgt*0.32,by+lean*2.5-1.4]],0.8,'etch');
+      stroke([[tx-1,ty],[tx+1.5,ty-1]],1,'etch');                     // moon glint on top
     });
   })();
 
-  /* wanderer — larger, cleaner, one warm lantern */
+  /* wanderer + lantern */
   if(opts.wanderer){
-  L.push({t:'glow',x:wx+9,y:wy+8,r:32,c:'flame',a:0.85,cls:'warmglow'});
-  L.push({t:'path',d:'M'+wx+','+(wy-21)+' q8,-4 11,5 l8,34 q-14,6 -27,0 z',c:'void',sc:'etch',sw:1.0,so:0.75});
-  L.push({t:'circle',x:wx+5,y:wy-24,r:5.6,c:'void',sc:'etch',sw:1.0,so:0.75});
-  stroke([[wx+2,wy-27],[wx+9,wy-29]],0.9,'etch');                      // hood rim
-  stroke([[wx-2,wy-16],[wx-4,wy+15]],1.0,'etch');                      // cloak rim
-  stroke([[wx+20,wy-32],[wx+17,wy+18]],1.4,'etch');                    // staff
-  L.push({t:'circle',x:wx+14,y:wy+9,r:3.0,c:'flame',cls:'warmdot'});
-  stroke([[wx+14,wy+2],[wx+14,wy+6]],0.9,'etch');                      // lantern cord
+  L.push({t:'glow',x:wx+8,y:wy+6,r:26,c:'flame',a:0.85,cls:'warmglow'});
+  L.push({t:'path',d:'M'+wx+','+(wy-17)+' q7,-3 9,4 l7,28 q-12,5 -23,0 z',c:'void',sc:'etch',sw:0.9,so:0.7});
+  L.push({t:'circle',x:wx+5,y:wy-19,r:4.8,c:'void',sc:'etch',sw:0.9,so:0.7});
+  L.push({t:'circle',x:wx+12,y:wy+8,r:2.6,c:'flame',cls:'warmdot'});
+  stroke([[wx+12,wy+2],[wx+12,wy+5.5]],0.8,'etch');                    // lantern handle
+  stroke([[wx+16,wy-26],[wx+14,wy+16]],1.3,'etch');                    // staff
+  stroke([[wx-1,wy-14],[wx-3,wy+12]],1.0,'etch');                      // cloak rim (moon side)
+  stroke([[wx+1,wy-22],[wx+7,wy-24]],0.9,'etch');                      // hood rim
+
   }
 
   /* campfire + jester */
   if(opts.campfire){
-  L.push({t:'glow',x:fx,y:fy-6,r:46,c:'flame',a:0.7,cls:'warmglow'});
-  L.push({t:'path',d:'M'+(fx-17)+','+fy+' q17,7 34,0 l-4,4 q-13,4 -26,0 z',c:'void',sc:'etch',sw:0.9,so:0.6});
-  L.push({t:'path',d:'M'+fx+','+(fy-31)+' q7,10 3,20 q8,-4 6,-13 q6,14 -3,22 q-14,6 -18,-6 q-3,-10 4,-16 q-2,8 3,10 q-3,-9 5,-17 z',c:'flame',cls:'warmglow'});
-  stroke([[fx+1,fy-35],[fx+1,fy-53]],1.1,'etch');
-  L.push({t:'circle',x:fx+1,y:fy-58,r:5.2,c:'void',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx-4)+','+(fy-61)+' q-9,-6 -7,-14',c:'none',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx+6)+','+(fy-61)+' q9,-6 7,-14',c:'none',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx+35)+','+(fy+4)+' q10,-23 21,0 q2,6 -4,8 l-15,0 q-4,-3 -2,-8 z',c:'void',sc:'etch',sw:0.9,so:0.7});
-  L.push({t:'circle',x:fx+45,y:fy-23,r:5.6,c:'void',sc:'etch',sw:0.9,so:0.7});
-  L.push({t:'path',d:'M'+(fx+41)+','+(fy-27)+' l-7,-8 l5,8 M'+(fx+45)+','+(fy-29)+' l0,-10 l2,10 M'+(fx+49)+','+(fy-27)+' l8,-7 l-6,8',c:'none',sc:'etch',sw:1.7,so:0.7});
+  L.push({t:'glow',x:fx,y:fy-6,r:44,c:'flame',a:0.7,cls:'warmglow'});
+  L.push({t:'path',d:'M'+(fx-16)+','+fy+' q16,6 32,0 l-4,4 q-12,4 -24,0 z',c:'void',sc:'etch',sw:0.8,so:0.5});
+  L.push({t:'path',d:'M'+fx+','+(fy-30)+' q7,10 3,20 q8,-4 6,-13 q6,14 -3,22 q-14,6 -18,-6 q-3,-10 4,-16 q-2,8 3,10 q-3,-9 5,-17 z',c:'flame',cls:'warmglow'});
+  stroke([[fx+1,fy-34],[fx+1,fy-52]],1,'etch');
+  L.push({t:'circle',x:fx+1,y:fy-57,r:5,c:'void',sc:'etch',sw:1,so:0.7});
+  L.push({t:'path',d:'M'+(fx-4)+','+(fy-60)+' q-8,-6 -6,-13',c:'none',sc:'etch',sw:1,so:0.7});
+  L.push({t:'path',d:'M'+(fx+6)+','+(fy-60)+' q8,-6 6,-13',c:'none',sc:'etch',sw:1,so:0.7});
+  L.push({t:'path',d:'M'+(fx+34)+','+(fy+4)+' q10,-22 20,0 q2,6 -4,8 l-14,0 q-4,-3 -2,-8 z',c:'void',sc:'etch',sw:0.8,so:0.6});
+  L.push({t:'circle',x:fx+44,y:fy-22,r:5.4,c:'void',sc:'etch',sw:0.8,so:0.6});
+  L.push({t:'path',d:'M'+(fx+40)+','+(fy-26)+' l-6,-8 l4,8 M'+(fx+44)+','+(fy-28)+' l0,-9 l2,9 M'+(fx+48)+','+(fy-26)+' l7,-7 l-5,8',c:'none',sc:'etch',sw:1.6,so:0.6});
+
   }
 
-  /* THE BLOOD MOON — engraved sphere, clean rings, drips, crows */
+  /* ── THE BLOOD MOON: engraved sphere ── */
   L.push({t:'circle',x:moon.x,y:moon.y,r:moon.r,c:'bloodDark'});
   (function(){
+    // latitude hatching, denser toward lower-right limb
     var idx=0;
-    for(var ly=-moon.r+2;ly<moon.r-1.2;ly+=1.6,idx++){
-      var th=TH[idx%4];
+    for(var ly=-moon.r+2;ly<moon.r-1;ly+=1.3,idx++){
+      var th=TH[idx%5];
       var half=Math.sqrt(moon.r*moon.r-ly*ly);
       var pts=[];
-      for(var lx=-half+1.2;lx<half-1.2;lx+=2.2){
-        var sag=ly*0.13*(1-(lx*lx)/(half*half));
-        pts.push([moon.x+lx,moon.y+ly+sag]);
+      for(var lx=-half+1;lx<half-1;lx+=2.4){
+        var sag=ly*0.16*(1-(lx*lx)/(half*half));
+        pts.push([moon.x+lx, moon.y+ly+sag+wob(lx,ly,idx,0.4)]);
       }
       runs(pts,function(px,py){
           var nx=(px-moon.x)/moon.r, ny=(py-moon.y)/moon.r;
-          var light=0.24+0.92*Math.max(0,(-nx*0.64-ny*0.77));
-          if(((nx-0.16)/0.46)*((nx-0.16)/0.46)+((ny+0.06)/0.30)*((ny+0.06)/0.30)<1) light-=0.34;  // mare 1
-          if(((nx+0.30)/0.28)*((nx+0.30)/0.28)+((ny-0.34)/0.20)*((ny-0.34)/0.20)<1) light-=0.30;  // mare 2
-          return light>th*0.85+0.05;
+          var light=0.20+0.85*Math.max(0,(-nx*0.62-ny*0.78));           // lit upper-left limb
+          var mare=n2(nx*3+9,ny*3+4)>0.60?-0.30:0;                      // maria eat light
+          return (light+mare)>th*0.7+0.03;
         },function(){return 'blood';},0.75);
     }
+    // limb ring
     var ring=[];
-    for(var a=0;a<=Math.PI*2+0.1;a+=0.09)
+    for(var a=0;a<=Math.PI*2+0.1;a+=0.12)
       ring.push([moon.x+Math.cos(a)*moon.r,moon.y+Math.sin(a)*moon.r]);
-    stroke(ring,1.6,'blood');
+    stroke(ring,1.5,'blood');
   })();
-  (function(){ // drips
-    var xs=[-0.62,-0.33,-0.05,0.24,0.55];
+  // drips
+  (function(){
+    var xs=[-0.66,-0.38,-0.12,0.13,0.42,0.68];
     for(var i=0;i<xs.length;i++){
       var dx=xs[i]*moon.r;
       var yb=moon.y+Math.sqrt(Math.max(0,moon.r*moon.r-dx*dx));
-      var len=(16+hash(i,23)*52)*(1-Math.abs(xs[i])*0.4);
-      stroke([[moon.x+dx,yb-1],[moon.x+dx,yb+len]],1.15,'blood');
-      L.push({t:'circle',x:moon.x+dx,y:yb+len+1.8,r:1.7,c:'blood'});
+      var len=(16+hash(i,23)*54)*(1-Math.abs(xs[i])*0.45);
+      stroke([[moon.x+dx,yb-2],[moon.x+dx,yb+len]],1.1,'blood');
+      L.push({t:'circle',x:moon.x+dx,y:yb+len+1.6,r:1.6,c:'blood'});
     }
   })();
-  (function(){ // crows: one arc from moon toward the cathedral
-    var flock=[[0.255,0.20,12],[0.30,0.155,10],[0.355,0.125,9],[0.415,0.105,7.5],[0.475,0.115,6.5],[0.535,0.145,5.5]];
+  // crow flock: from moon toward the cathedral
+  (function(){
+    var flock=[[0.255,0.205,11],[0.293,0.165,9],[0.235,0.275,8],[0.35,0.13,9],[0.415,0.10,7],
+               [0.47,0.155,8],[0.53,0.12,6],[0.585,0.165,5],[0.315,0.30,7],[0.41,0.24,5.5]];
     flock.forEach(function(b,i){
-      var cx=b[0]*W, cy=b[1]*H, s=b[2], f=0.62+hash(i,77)*0.5;
-      stroke([[cx-s,cy-s*0.24],[cx-s*0.42,cy-s*f*0.6],[cx,cy]],2.1,'void');
-      stroke([[cx,cy],[cx+s*0.42,cy-s*f*0.6],[cx+s,cy-s*0.24]],2.1,'void');
+      var cx=b[0]*W, cy=b[1]*H, s=b[2];
+      var f=hash(i,77)*0.8+0.6;                                        // wing phase
+      stroke([[cx-s,cy-s*0.1],[cx-s*0.35,cy-s*f*0.6],[cx,cy]],2.0,'void');
+      stroke([[cx,cy],[cx+s*0.35,cy-s*f*0.6],[cx+s,cy-s*0.1]],2.0,'void');
     });
   })();
 
-  /* dead tree repoussoir — smooth limbs, bone rim */
+  /* dead tree repoussoir over the halo */
   (function(){
-    function limb(x,y,ang,len,w0,w1,curve,seg){
-      var pts=[[x,y]],a=ang;
-      for(var i=1;i<=seg;i++){
-        a+=curve/seg;
-        x+=Math.cos(a)*len/seg; y+=Math.sin(a)*len/seg;
+    function branch(x,y,ang,len,w,depth){
+      var pts=[[x,y]];
+      var steps=Math.max(3,Math.floor(len/8));
+      for(var i=1;i<=steps;i++){
+        ang+=(n2(x*0.04+i*0.7,depth*5)-0.5)*0.5;
+        x+=Math.cos(ang)*len/steps; y+=Math.sin(ang)*len/steps;
         pts.push([x,y]);
+        if(depth<3&&i===Math.floor(steps*0.5)&&hash(x,y)>0.3)
+          branch(x,y,ang+(hash(x,depth)>0.5?0.85:-0.85),len*0.5,Math.max(0.8,w*0.5),depth+1);
       }
-      stroke(pts,w0,'void');
-      stroke(pts.slice(Math.floor(seg*0.4)),(w0+w1)/2,'void');
-      stroke(pts.slice(Math.floor(seg*0.7)),w1,'void');
-      return pts;
+      stroke(pts,w,'void');
+      // dead droop twigs at tips
+      if(depth>=1&&hash(x,y)>0.45)
+        stroke([[x,y],[x+Math.cos(ang+0.9)*7,y+Math.sin(ang+0.9)*7+4]],Math.max(0.7,w*0.4),'void');
     }
-    var trunk=limb(0.052*W,H+4,-Math.PI/2,H*0.66,14,7,-0.10,8);
-    var main=limb(trunk[5][0],trunk[5][1],-1.02,H*0.40,7,2,-0.34,9);   // sweeps over the halo
-    limb(trunk[6][0],trunk[6][1],-0.30,W*0.24,6,1.5,0.22,9);           // long right arm
-    limb(trunk[4][0],trunk[4][1],-2.05,W*0.055,4,1.2,-0.3,5);
-    limb(main[5][0],main[5][1],-0.45,W*0.085,3,1,0.35,5);
-    limb(main[7][0],main[7][1],-1.5,W*0.05,2.2,0.8,-0.4,4);
-    var rim=trunk.map(function(p){return [p[0]+6.5,p[1]];});
-    stroke(rim.slice(0,7),1.1,'etch');
+    var tpts=[[0.035*W,H],[0.045*W,H*0.84],[0.040*W,H*0.66],[0.052*W,H*0.50],[0.048*W,H*0.38]];
+    stroke(tpts,13,'void'); stroke(tpts,9,'void'); stroke(tpts,6,'void');
+    branch(0.048*W,H*0.40,-0.82,H*0.40,6.5,0);   // main up-right over halo
+    branch(0.050*W,H*0.52,-0.22,W*0.26,5.5,0);  // long right arm
+    branch(0.044*W,H*0.62,-1.9,W*0.06,3,1);
+    branch(0.049*W,H*0.38,-1.35,H*0.16,3.4,1);
+    // bone rim on moon side of the trunk
+    var rim=tpts.map(function(p){return [p[0]+5.0,p[1]-1];});
+    stroke(rim,1.1,'etch');
   })();
+
+  /* пустая рама — конец дороги (только в игре) */
+  if(opts.frame){
+    var qx=0.965*W, qy=horizon+(H-horizon)*0.72;
+    stroke([[qx-15,qy],[qx-13,qy-62]],3,'void');
+    stroke([[qx+15,qy],[qx+13,qy-62]],3,'void');
+    stroke([[qx-14,qy-2],[qx-12,qy-60]],0.9,'etch');
+    var fr=[[qx-27,qy-58],[qx+27,qy-58],[qx+27,qy-128],[qx-27,qy-128],[qx-27,qy-58]];
+    stroke(fr,1.6,'etch');
+    stroke(fr.map(function(p){return[p[0]+(p[0]<qx?4:-4),p[1]+(p[1]<qy-90?4:-4)];}),0.8,'etch');
+    stroke([[qx-16,qy-50],[qx+16,qy-50]],0.7,'ash');
+  }
 
   return {list:L, strokes:S, W:W, H:H};
 }
-
-
 
 /* ── TOWN block — «вязкая почти-нормальность» (canon §04) ── */
 function genTown(W,H){
@@ -759,7 +800,8 @@ function genTown(W,H){
     }
     flush();
   }
-  var TH=[0.10,0.28,0.50,0.72];
+  var TH=[0.07,0.20,0.36,0.55,0.76];
+  function wob(x,y,ph,amp){return (n2(x*0.08+ph*3.7,y*0.08)-0.5)*2*amp;}
 
   /* houses (front plane) */
   var houses=[
@@ -800,28 +842,44 @@ function genTown(W,H){
     var d=Math.hypot(x-moon.x,y-moon.y);
     var g=Math.max(0,1.05-d/(moon.r*4.2)); g=g*g;
     var fog=Math.max(0,1-(horizon-y)/(H*0.09))*0.42;
-    return Math.max(g,fog)+(n2(x*0.006,y*0.006)-0.5)*0.05;
+    return Math.max(g*1.1,fog)+(n2(x*0.015,y*0.02)-0.5)*0.14;
   }
 
   /* PAINT */
   L.push({t:'rect',x:0,y:0,w:W,h:H,c:'sky'});
   L.push({t:'glow',x:moon.x,y:moon.y,r:moon.r*2.2,c:'flame',a:0.16});   // тёплая луна
 
-  /* streamlines around the bone moon */
+  /* sky: v5 deflected lines around the bone moon + diagonal layer */
   (function(){
-    var R=moon.r*1.25,R2=R*R,idx=0;
-    for(var s=-moon.y+6;s<horizon-moon.y-2;s+=3.1,idx++){
-      var th=TH[idx%4],pts=[];
-      for(var x=0;x<=W;x+=4.2){
-        var dx=x-moon.x, yv=s;
-        for(var it=0;it<6;it++) yv=s+R2*yv/(dx*dx+yv*yv+1e-6);
-        var y=moon.y+yv;
-        if(dx*dx+yv*yv<(R+1.2)*(R+1.2)||y>=horizon-1){pts.push(null);continue;}
-        y+=1.0*Math.sin(x*0.010+idx*1.7);
-        pts.push([x,y]);
+    var idx=0;
+    for(var y0=4;y0<horizon-1;y0+=2.6,idx++){
+      var th=TH[idx%5], pts=[];
+      for(var x=-4;x<=W+4;x+=3.0){
+        var y=y0;
+        var dx=x-moon.x, dy=y-moon.y;
+        var d=Math.hypot(dx,dy);
+        if(d<moon.r*2.5){
+          var push=(moon.r*2.5-d)/(moon.r*2.5);
+          y+=(dy>=0?1:-1)*push*push*moon.r*0.58;
+          dy=y-moon.y; d=Math.hypot(dx,dy);
+        }
+        if(d<moon.r+1.8){pts.push(null);continue;}
+        pts.push([x,y+wob(x,y,idx,0.8)]);
       }
-      runs(pts,function(px,py){return inSky(px,py)&&skyTone(px,py)>th;},
-        function(px,py){return skyTone(px,py)<0.30?'ash':'etch';},0.7);
+      runs(pts,function(px,py){return py<horizon-1&&inSky(px,py)&&skyTone(px,py)>th;},
+        function(px,py){return skyTone(px,py)<0.28?'ash':'etch';},0.7);
+    }
+    idx=0;
+    for(var d0=-H;d0<W;d0+=4.2,idx++){
+      var th2=TH[1+(idx%2)],pts2=[];
+      for(var yy=0;yy<horizon;yy+=3){
+        var xx=d0+yy*0.9;
+        var dd=Math.hypot(xx-moon.x,yy-moon.y);
+        if(dd<moon.r+2||dd>moon.r*2.6)continue;
+        pts2.push([xx+wob(xx,yy,idx,0.6),yy]);
+      }
+      runs(pts2,function(px,py){return inSky(px,py)&&skyTone(px,py)>th2;},
+        function(){return 'ash';},0.65);
     }
   })();
 
@@ -832,7 +890,7 @@ function genTown(W,H){
       var th=TH[idx%4];
       var half=Math.sqrt(moon.r*moon.r-ly*ly), pts=[];
       for(var lx=-half+1;lx<half-1;lx+=2.0)
-        pts.push([moon.x+lx,moon.y+ly+ly*0.10*(1-(lx*lx)/(half*half))]);
+        pts.push([moon.x+lx,moon.y+ly+ly*0.10*(1-(lx*lx)/(half*half))+wob(lx,ly,7,0.4)]);
       runs(pts,function(px,py){
           var nx=(px-moon.x)/moon.r, ny=(py-moon.y)/moon.r;
           var light=0.30+0.85*Math.max(0,(-nx*0.5-ny*0.85));
@@ -883,16 +941,15 @@ function genTown(W,H){
     var idx=0;
     for(var x3=hh.x0+3;x3<hh.x1-2;x3+=3.0,idx++){
       if(hh.office)break;
-      if(idx%4!==0)continue;
-      var p3=[];
+      var thh=TH[idx%5],p3=[];
       for(var y=base+3;y<horizon-1;y+=2.6){
-        if((y%20)<2.4){p3.push(null);continue;}
-        p3.push([x3,y]);
+        if(((y+x3*0.33)%26)<4.5){p3.push(null);continue;}
+        p3.push([x3+wob(x3,y,1,0.55),y]);
       }
       runs(p3,function(px,py){
-        var lit=Math.max(0.1,0.5-Math.abs(px-moon.x)/(0.5*W));
-        return lit>0.18;
-      },function(){return 'etch';},0.55);
+        var lit=Math.max(0.08,0.55-Math.abs(px-moon.x)/(0.55*W));
+        return lit*(0.7+(n2(px*0.05,py*0.05)-0.5)*0.5)>thh*0.55;
+      },function(){return 'etch';},0.6);
     }
     // windows: dark; office gets окно №3 warm + переплёт
     var wcount=Math.max(1,Math.floor((hh.x1-hh.x0)/46));
@@ -986,13 +1043,25 @@ function genTown(W,H){
 
   /* ground: fog lines + street + props */
   (function(){
-    for(var k=0;k<6;k++){
-      var y=horizon+2.5+k*2.5, pts=[];
-      for(var x=0;x<=W;x+=4)
-        pts.push([x,y+1.3*Math.sin(x*0.011+k*1.3)]);
-      var gate=0.9-k*0.13;
-      runs(pts,function(px2){return (0.5+0.5*Math.sin(px2*0.0075+k*2.2))<gate;},
-        function(){return k<3?'etch':'ash';},0.7);
+    var idxg=0;
+    for(var y=horizon+1.2;y<H;y+=2.3+(y-horizon)*0.036,idxg++){
+      var th=TH[idxg%5],pts=[];
+      for(var x=0;x<W;x+=3.0)pts.push([x,y+wob(x,y,2,1.6)]);
+      runs(pts,function(px2,py2){
+          var fog=Math.max(0,1-(py2-horizon)/(H*0.062))*0.58*(0.35+0.65*n2(px2*0.02,py2*0.31));
+          var lamp=Math.max(0,1-Math.hypot(px2-0.225*W,py2-(horizon+(H-horizon)*0.52))/52)*0.75;
+          var winl=Math.max(0,1-Math.hypot(px2-win3.x,(py2-horizon-10)*2.2)/60)*0.4;
+          var t=Math.max(fog,lamp,winl)+(n2(px2*0.04,py2*0.05)-0.5)*0.12;
+          return t>th;
+        },function(px2){
+          return Math.abs(px2-win3.x)<26&&n2(px2*0.2,3)>0.4?'flame':'etch';
+        },0.7);
+    }
+    for(var ti=0;ti<46;ti++){
+      var tx=hash(ti,41)*W, ty=horizon+6+hash(ti,43)*(H-horizon)*0.8;
+      var ts=2+hash(ti,47)*3;
+      stroke([[tx,ty],[tx+(hash(ti,53)-0.5)*3,ty-ts]],0.7,'etch');
+      if(hash(ti,59)>0.5)stroke([[tx+1.5,ty],[tx+2.5,ty-ts*0.7]],0.6,'etch');
     }
     // street: two long edges + occasional rungs
     var sy1=horizon+(H-horizon)*0.62, sy2=horizon+(H-horizon)*0.86;
