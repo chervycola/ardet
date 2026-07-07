@@ -31,6 +31,12 @@
 
 **Recomend**: прототип на breadboard — один диск, один LED, одна pitch CV. После proof of concept — engineer pitch stability и multi-disk swap mechanism.
 
+> **Update 2026-07**: зрелость концепта повышена — полный проектный док,
+> прошивка сервопетли, численные критерии Stage 0
+> (`../i_show_you_light/`). Приоритет Phase 3-4 оспорен Decision 14
+> (параллельный Stage 0 трек как de-risk для Last Day BLDC) —
+> требует sign-off.
+
 ---
 
 ## 2. BODY BLOOD AND SALT — Жидкостный синт

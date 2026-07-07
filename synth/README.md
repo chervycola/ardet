@@ -36,8 +36,9 @@ synth/
 ├── SYSTEM_SUICIDE.md            — общий брифинг по 9-модульной серии
 ├── last_night_pedal_panel.svg   — Inkscape SVG панели Last Night pedal (203×140мм)
 ├── audit/                       — критический аудит (14 файлов)
-├── decisions/                   — locked design decisions (00, 01–04, 08, 09, 10, 11, 12, 13)
+├── decisions/                   — locked design decisions (00, 01–04, 08, 09, 10, 11, 12, 13, 14, 15)
 ├── cartridges/                  — manuals по обработке материалов (bone, nephrite)
+├── i_show_you_light/            — модуль 1 R&D: проектный док + прошивка сервопетли (Decision 14/15)
 ├── is_my/                       — концепт + пилотный пульт DJI C5 (sync с веткой jolly-gates)
 └── fixes/                       — конкретные правки post-audit (5 файлов)
 ```

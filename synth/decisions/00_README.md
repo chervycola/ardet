@@ -74,6 +74,10 @@
     - Optical vactrol crossfader (перенесённый на слот 8 в System-suicide branch commit `71b4aa8`) также снят через commit `b41db61`.
     - Слот 8 остаётся placeholder'ом до появления архитектуры уровня остальных модулей.
 
+11. **`14_isyl_respec.md`** (proposed → lock после Stage 0) — I Show You Light re-spec: лазер 650 нм вместо LED, FOC-сервопетля (gimbal BLDC + AS5047P + RP2040/SimpleFOC) вместо PLL, auto-gearshift по дорожкам, четыре голоса (LIGHT/MIRROR/CLOCK/DUST), строб-лок; параллельный Stage 0 трек как де-риск BLDC-контура для Last Day (требует sign-off).
+
+12. **`15_optical_bus_hybrid.md`** (**LOCKED** топология; retina-спека — draft до KiCad) — вторая шина серии: свет. Гибрид «ретрансляция внутри модулей + сквозные байпас-окна», стандартная retina-плата (BPW34 + TIA, выходы AUDIO/BRIGHT CV/GATE), двухконтурная калибровка строя (энкодер + конечный приёмник).
+
 ## Как использовать
 
 Каждый документ:
