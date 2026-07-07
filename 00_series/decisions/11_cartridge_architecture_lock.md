@@ -9,7 +9,7 @@
 ## Решение
 
 **Картридж = пассивная пластина.** Несёт только:
-- Материал-резонатор (длина 100мм const × ширина 35-55мм per material × h, см. `acoustic_modeling.md §10`)
+- Материал-резонатор (длина 100мм const × ширина 35-55мм per material × h, см. `../01_last_night/acoustic_modeling.md §10`)
 - Покрытие (для дерева: linseed/shellac; для металлов: anodize/lacquer опц.)
 - Рамку-держатель (PETG proto / anodized alu prod)
 - 4× retention магнита + keying notch
@@ -102,10 +102,10 @@ Trade-off vs bonded: контактный coupling зависит от contact p
 
 | Документ | Изменение |
 |----------|-----------|
-| `LAST_NIGHT_SPEC.md` | "что в картридже" = только пластина; transducers описаны как module-internal |
-| `LAST_NIGHT_BUILD.md` | Cartridge interface block переписан; Block 7 piezo = internal contact; exciter/solenoid module-internal |
-| `acoustic_modeling.md §7A` | Coupling = contact mechanism (spring-loaded), не bonding |
-| `CARTRIDGE_SOURCING.md` | Split: module transducers (×28) vs plate cartridges (cheap, × count) |
+| `../01_last_night/LAST_NIGHT_SPEC.md` | "что в картридже" = только пластина; transducers описаны как module-internal |
+| `../01_last_night/LAST_NIGHT_BUILD.md` | Cartridge interface block переписан; Block 7 piezo = internal contact; exciter/solenoid module-internal |
+| `../01_last_night/acoustic_modeling.md §7A` | Coupling = contact mechanism (spring-loaded), не bonding |
+| `../01_last_night/CARTRIDGE_SOURCING.md` | Split: module transducers (×28) vs plate cartridges (cheap, × count) |
 | `PCB_DESIGN_SPEC.md §6.1` | Cartridge dock = transducer engine bay + spring mechanism, не connector PCB |
 | `decisions/03_cartridge_standards.md` | Cartridge = plate + frame + magnets only |
 | `HANDOFF_BRIEF.md` | Tier 1 sacred #1 уточнён: passive plate cartridge |

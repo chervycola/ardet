@@ -2,7 +2,7 @@
 
 **Версия**: v6.5 canon (Decision 11 + Block 14 rewrite)
 **Назначение**: practical purchasing guide для small-batch production (target 20 units). Part numbers, дистрибьюторы, qty, преимущества, альтернативы.
-**Парный документ**: `decisions/10_premium_components_sourcing.md` (Elite tier deep-dive).
+**Парный документ**: `../00_series/decisions/10_premium_components_sourcing.md` (Elite tier deep-dive).
 
 > **Как пользоваться**: каждая строка = manufacturer P/N + дистрибьютор. Заказ — поиск по P/N на сайте дистрибьютора (URL не привожу — P/N стабильнее ссылок, ссылки протухают). Колонка Qty/20 = сколько нужно на партию 20 units. Редкие/sole-source — с буфером (+spare).
 
@@ -185,7 +185,7 @@ ALIEXPRESS OK (mechanical + commodity, sample-qualify сначала):
 
 ## 9. Premium / Elite tier upgrades
 
-Для premium SKU — см. `decisions/10_premium_components_sourcing.md`. Ключевые swaps:
+Для premium SKU — см. `../00_series/decisions/10_premium_components_sourcing.md`. Ключевые swaps:
 - Op-amps TL07x → **OPA1612 / OPA1641** (audio-grade, Mouser)
 - LSK489A → keep (already best)
 - Exciter DAEX25 → **DAEX32Q-4** (dense plates)

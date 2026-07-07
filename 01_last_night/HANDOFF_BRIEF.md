@@ -120,21 +120,21 @@
 1. **`signal_flow_last_night.svg`** (обязательное чтение).
 2. **`LAST_NIGHT_BUILD.md`** — детальная build documentation, 25 функциональных блоков с R/C values, BOM, PCB zones, verification.
 3. **`PCB_DESIGN_SPEC.md`** — KiCad-ready PCB design spec: 6 PCB inventory (main + adapters + satellites + dock), XY coordinates всех component groups, layer stackup, ground topology, ribbon pinouts, critical traces.
-4. **`audit/13_schematic_cross_reference.md`** — сверка с logical schematic ASCII (источник истины по топологии).
-5. **`audit/wood_reverb_logical_schematic.html`** — ASCII-art каркас оригинальной v2.0 схемы.
+4. **`../00_series/audit/13_schematic_cross_reference.md`** — сверка с logical schematic ASCII (источник истины по топологии).
+5. **`../00_series/audit/wood_reverb_logical_schematic.html`** — ASCII-art каркас оригинальной v2.0 схемы.
 
 ### Для production / sourcing manager
 
 1. **`BOM_SOURCING.md`** — purchasing guide для small-batch (20 units): part numbers, дистрибьюторы, qty+буфер, lead time, risk register. **Топ-приоритет: SL-4P5T sourcing + LSK489A буфер.**
-2. **`decisions/10_premium_components_sourcing.md`** — Elite tier components + sourcing matrix (Mouser, Digi-Key, Mundorf, Audio Note UK).
-3. **`decisions/04_production_strategy.md`** — phases roadmap.
-4. **`decisions/03_cartridge_standards.md`** — cartridge format спецификация.
+2. **`../00_series/decisions/10_premium_components_sourcing.md`** — Elite tier components + sourcing matrix (Mouser, Digi-Key, Mundorf, Audio Note UK).
+3. **`../00_series/decisions/04_production_strategy.md`** — phases roadmap.
+4. **`../00_series/decisions/03_cartridge_standards.md`** — cartridge format спецификация.
 5. **`cartridges/*.md`** — processing manuals для bone и nephrite (другие материалы TBD).
 
 ### Для acoustic / cartridge engineer
 
 1. **`acoustic_modeling.md`** — modal density calculator + acoustic-optimized cartridge dimensions per material (plate theory), two-family classification, multi-plate stack design, **tap-test protocol (обязательный gate перед cartridge tooling)**.
-2. **`audit/11_last_night_acoustic.md`** — acoustic reality check (corrected RT60 ranges).
+2. **`../00_series/audit/11_last_night_acoustic.md`** — acoustic reality check (corrected RT60 ranges).
 
 ### Для design / panel engineer
 
@@ -144,9 +144,9 @@
 
 ### Для architecture / system decisions
 
-1. **`decisions/08_consolidated_base.md`** — locked Day/Night комбайны base + diptych mapping.
-2. **`decisions/09_hybrid_lock.md`** — v5 hybrid → v6 evolution.
-3. **`decisions/00_README.md`** — index всех locked decisions.
+1. **`../00_series/decisions/08_consolidated_base.md`** — locked Day/Night комбайны base + diptych mapping.
+2. **`../00_series/decisions/09_hybrid_lock.md`** — v5 hybrid → v6 evolution.
+3. **`../00_series/decisions/00_README.md`** — index всех locked decisions.
 
 ---
 

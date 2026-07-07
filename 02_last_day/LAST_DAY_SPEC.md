@@ -422,8 +422,8 @@ Per Decision 08 consolidated roadmap (Last Day track):
 ## Документация
 
 - `LAST_DAY_BUILD.md` — детальная build documentation (R&D Phase A — TBD после prototype completion).
-- `decisions/02_last_day_scope.md` — D1–D6 decisions.
-- `decisions/08_consolidated_base.md` — diptych consolidation, hot/cold palette mapping.
+- `../00_series/decisions/02_last_day_scope.md` — D1–D6 decisions.
+- `../00_series/decisions/08_consolidated_base.md` — diptych consolidation, hot/cold palette mapping.
 - `SYSTEM_SUICIDE.md` §10 — Last Day brief в series context.
 
 ---

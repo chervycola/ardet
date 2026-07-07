@@ -162,8 +162,8 @@ Last Day канонически остаётся как Decision 06: oil-can del
 
 После lock этого decision:
 
-1. **`LAST_NIGHT_SPEC.md`** переписывается полностью под consolidated base.
-2. **`LAST_NIGHT_BUILD.md`** обновляется: blocks 16–18 (phaser/vinyl/gate-crush из v3.0) пересматриваются:
+1. **`../01_last_night/LAST_NIGHT_SPEC.md`** переписывается полностью под consolidated base.
+2. **`../01_last_night/LAST_NIGHT_BUILD.md`** обновляется: blocks 16–18 (phaser/vinyl/gate-crush из v3.0) пересматриваются:
    - Phaser → опциональный layer (был block 16, остаётся).
    - Vinyl wow/flutter BBD → **удаляется** (переезжает в Last Day).
    - Gate/Crush → **удаляется** (заменён на TOLL/STALL solenoid double-function).

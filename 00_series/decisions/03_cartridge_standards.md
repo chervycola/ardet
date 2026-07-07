@@ -48,13 +48,13 @@
 
 ## C2. Final cartridge catalog
 
-> **⚠ Superseded by acoustic modeling (v1.0)**: размеры ниже — первоначальная оценка. **Авторитетные acoustic-optimized размеры в `acoustic_modeling.md` §10** (рассчитаны через plate modal theory). Ключевые изменения: пластины **тоньше** (металлы 0.3-0.5мм для density), **выше + non-integer ratio** (100×53мм vs прежние 100×40), marble заменён slate (marble репозиционирован percussion novelty). См. таблицу §10 acoustic_modeling.md для tooling.
+> **⚠ Superseded by acoustic modeling (v1.0)**: размеры ниже — первоначальная оценка. **Авторитетные acoustic-optimized размеры в `../01_last_night/acoustic_modeling.md` §10** (рассчитаны через plate modal theory). Ключевые изменения: пластины **тоньше** (металлы 0.3-0.5мм для density), **выше + non-integer ratio** (100×53мм vs прежние 100×40), marble заменён slate (marble репозиционирован percussion novelty). См. таблицу §10 acoustic_modeling.md для tooling.
 
 ### Acoustic-optimized catalog (acoustic_modeling.md §10 — authoritative)
 
 | Cartridge | Материал | h (мм) | L×W (мм) | Tier | Мод <10кГц | Character |
 |-----------|----------|--------|----------|------|-----------|-----------|
-> **v2 update**: per-material h+W refined (bar-vs-plate width logic, см. `acoustic_modeling.md §3` / §10). De-risk для v1/bench: **W=50мм константа** (упрощает contact-rig).
+> **v2 update**: per-material h+W refined (bar-vs-plate width logic, см. `../01_last_night/acoustic_modeling.md §3` / §10). De-risk для v1/bench: **W=50мм константа** (упрощает contact-rig).
 
 | LN-STEEL | Spring steel | 0.3 | **100×55** | core | ~58 | reverb (wide, dense shimmer) |
 | LN-BRASS | Brass | 0.5 | **100×55** | core | ~51 | metallic reverb (wide) |

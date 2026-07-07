@@ -33,7 +33,7 @@
 
 - **Decision 01-3** «And My → Day↔Night crossfader (Variant A)» — superseded. Файл `decisions/01_undefined_modules.md §3` оставлен как исторический документ с banner'ом supersession в шапке.
 - **`SYSTEM_SUICIDE.md §8`** старой редакции (stereo VCA crossfader на LM13700/SSI2164) — заменён на TBD-раздел с ссылкой на этот документ и историческим текстом ниже baner'а.
-- Все downstream-ссылки на «And My as crossfader / Day↔Night mix / balance point» в `SYSTEM_SUICIDE.md` (сценарии, signal-flow, journey), `LAST_NIGHT_SPEC.md` и др. — устарели, помечены inline.
+- Все downstream-ссылки на «And My as crossfader / Day↔Night mix / balance point» в `SYSTEM_SUICIDE.md` (сценарии, signal-flow, journey), `../01_last_night/LAST_NIGHT_SPEC.md` и др. — устарели, помечены inline.
 
 ## Что остаётся открытым
 

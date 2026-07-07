@@ -2,7 +2,7 @@
 
 **Версия**: v6.5 (Decision 11 — plate-only cartridge architecture)
 **Назначение**: procurement двух раздельных населений: (1) **module transducers** ×модули, (2) **plate cartridges** ×картриджи.
-**Парные документы**: `decisions/11_cartridge_architecture_lock.md`, `BOM_SOURCING.md` (module electronics), `acoustic_modeling.md` §10 (plate dimensions).
+**Парные документы**: `../00_series/decisions/11_cartridge_architecture_lock.md`, `BOM_SOURCING.md` (module electronics), `acoustic_modeling.md` §10 (plate dimensions).
 
 > **⚠ Decision 11 архитектура**: картридж = **пассивная пластина** (материал + покрытие + рамка + магниты). Трансдьюсеры (exciter/пьезо/соленоид) — **в модуле**, ×модули. Это разводит два населения компонентов — раньше (ошибочно) всё считалось ×картриджи.
 
@@ -93,7 +93,7 @@
 | Felt (solenoid tip) | adhesive felt dot | craft/hardware | Soft strike on plate. Module-side (на solenoid plunger). |
 | Frame damping | rubber/foam strip | mcmaster | Между frame и plate edges → frame не резонирует. |
 
-> Coupling pad / VHB / spring carriage — теперь **module-side** (transducer engine bay), см. §0A + `decisions/11`.
+> Coupling pad / VHB / spring carriage — теперь **module-side** (transducer engine bay), см. §0A + `../00_series/decisions/11`.
 
 ---
 

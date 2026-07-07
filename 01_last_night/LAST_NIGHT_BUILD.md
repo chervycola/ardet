@@ -30,7 +30,7 @@
 > **Прежняя версия (v5.0)**: Versus v4: фронтенд возвращается к mockup canon — две ручки NOISE + COLOR(geiger) (вместо одного bipolar knob); footswitches TAP/GATE-CRUSH/BYPASS/FREEZE; phaser always-on; v6 update — discrete Shape Form slider удалён, заменён на analog function generator (3 sliders rise/fall/depth + exp/log + speed/range knobs) с continuous waveform morphing и 4 outputs (EG/Gate/Sub÷2/Inv). Electrical Decision 08 находки сохраняются: shared noise generator (zener + LFSR), solenoid triple-function (DAMP + TOLL + STALL). Gate/Crush блок 18 восстановлен как footswitch destruction effect.
 
 **Версия**: v6.5 (post-audit, post-decisions, Decision 11 plate-only cartridge)
-**Source schematic**: `audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
+**Source schematic**: `../00_series/audit/wood_reverb_logical_schematic.html` (canonical 14-section reference)
 **Companion document**: `LAST_NIGHT_SPEC.md` (продуктовая спецификация для end-user)
 
 ---
@@ -61,7 +61,7 @@
 - **Блок 20**: Bank Mode preset slider (4P5T detailed schematic).
 - **Блоки 21–25**: Phase 2 cold palette upgrade kit (PULSE / FOG / FROST / CHILL / HUM).
 
-Каждый блок документируется в стиле каркаса `audit/wood_reverb_logical_schematic.html`.
+Каждый блок документируется в стиле каркаса `../00_series/audit/wood_reverb_logical_schematic.html`.
 
 Изменения от v2.0 (каркас) → v5 hybrid (current) помечены **[REVISED]**, **[NEW]**, или **[REMOVED]**.
 
@@ -2922,7 +2922,7 @@ Side view (cross-section) — картридж = пассивная пласти
 
 ### Transducer engine (в module, не в картридже)
 
-Exciter + 2 piezo (contact pins) + solenoid — постоянно в module engine bay, spring-loaded contact к вставленной пластине. См. `decisions/11_cartridge_architecture_lock.md` + `PCB_DESIGN_SPEC.md §6.1`. Solenoid felt tip + 2мм gap фиксирован в module (не per-cartridge).
+Exciter + 2 piezo (contact pins) + solenoid — постоянно в module engine bay, spring-loaded contact к вставленной пластине. См. `../00_series/decisions/11_cartridge_architecture_lock.md` + `PCB_DESIGN_SPEC.md §6.1`. Solenoid felt tip + 2мм gap фиксирован в module (не per-cartridge).
 
 ### Cartridge-specific specifications
 
@@ -3234,7 +3234,7 @@ Customer keeps for warranty + future reference.
 
 Phased validation protocol для прототипа. Не переходить к следующей phase, пока предыдущая не passed.
 
-(Полная версия — `audit/fixes/04_testing_protocol.md`. Здесь — concise summary для production reference.)
+(Полная версия — `../00_series/audit/fixes/04_testing_protocol.md`. Здесь — concise summary для production reference.)
 
 ### Phase 0 — Visual + DMM continuity
 
@@ -3812,7 +3812,7 @@ Sufficient для Phase 2 R&D funding и cushion.
 
 ## Conclusion
 
-Last Night v2.2 — production-ready после applying 15 fixes из `audit/fixes/01_last_night_fix_list.md`.
+Last Night v2.2 — production-ready после applying 15 fixes из `../00_series/audit/fixes/01_last_night_fix_list.md`.
 
 Single-unit DIY build: ~6 hours first time, ~2.5 hours experienced.
 
@@ -3827,4 +3827,4 @@ Per-unit BOM $83-112 (40HP), retail $450-550, gross margin 80%, net margin 60-65
 *Last Night v2.2 — physical resonance, not algorithmic decay.*
 
 > Production-ready production document.
-> Source: `audit/wood_reverb_logical_schematic.html` + `audit/10_last_night_engineering.md` + `fixes/`.
+> Source: `../00_series/audit/wood_reverb_logical_schematic.html` + `../00_series/audit/10_last_night_engineering.md` + `../00_series/fixes/`.

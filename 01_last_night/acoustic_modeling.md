@@ -2,7 +2,7 @@
 
 **Версия**: v1.0
 **Назначение**: расчётная де-рискизация главного риска проекта — "звук пластин может быть не очень". Закрывает acoustic concern на бумаге до cartridge tooling.
-**Парные документы**: `decisions/03_cartridge_standards.md`, `audit/11_last_night_acoustic.md`, `HANDOFF_BRIEF.md` (Tier 1 sacred #1).
+**Парные документы**: `../00_series/decisions/03_cartridge_standards.md`, `../00_series/audit/11_last_night_acoustic.md`, `HANDOFF_BRIEF.md` (Tier 1 sacred #1).
 
 > **Главный вывод**: при 100мм пластинах материалы делятся на два акустических семейства — **dense-modal** (тонкие ковкие металлы → reverb-character) и **sparse-modal** (толстые жёсткие → резонатор/chime). Это не дефект, а палитра. Каждый материал имеет оптимальную толщину/размер, рассчитанные ниже.
 
@@ -28,7 +28,7 @@
 
 ### 1.1 Поправка к константе modal density
 
-Ранние оценки в `audit/11` использовали `n(f) ≈ S/(1.8·c_L·h)` — **константа неверна**. Корректный вывод из Cremer & Heckl "Structure-Borne Sound":
+Ранние оценки в `../00_series/audit/11` использовали `n(f) ≈ S/(1.8·c_L·h)` — **константа неверна**. Корректный вывод из Cremer & Heckl "Structure-Borne Sound":
 
 ```
 n(f) = (S/2)·√(ρh/D)
@@ -403,7 +403,7 @@ Per `HANDOFF_BRIEF.md` §6.5:
 
 ## 10. Финальные cartridge размеры (для tooling)
 
-Свод для cartridge engineering — готово к `decisions/03_cartridge_standards.md` update:
+Свод для cartridge engineering — готово к `../00_series/decisions/03_cartridge_standards.md` update:
 
 **v2 (refined per-material h+W)** — bar-vs-plate width logic + nephrite 2мм tough:
 

@@ -1,4 +1,4 @@
-# Is My — модуль-шейпер + пилотный пульт
+# 03 · Is My — MOSFET-shaper + пилотный пульт (Phase 2, edition of 13)
 
 Слот 6 линейки SYSTEM SUICIDE. VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-дрона, три режима SHAPER / RING / GATE, выносной пилотный пульт из корпуса DJI C5 (RC-N1/RC231), линк USB-C (USB-MIDI). Edition of 13 с документированным провенансом.
 
@@ -22,7 +22,7 @@
 
 ## Соотношение с остальным репо
 
-- **Обзор в цепи серии**: `../SYSTEM_SUICIDE.md §6`.
-- **Формальное решение о re-spec**: `../decisions/12_is_my_shaper_respec.md`.
-- **Slot swap с And My** (And My → TBD): `../decisions/13_and_my_tbd.md`.
-- **Историческая архитектура** (vactrol crossfader): `../decisions/01_undefined_modules.md §2` (помечена superseded).
+- **Обзор в цепи серии**: `../00_series/SYSTEM_SUICIDE.md §6`.
+- **Формальное решение о re-spec**: `../00_series/decisions/12_is_my_shaper_respec.md`.
+- **Slot swap с And My** (And My → TBD): `../00_series/decisions/13_and_my_tbd.md`.
+- **Историческая архитектура** (vactrol crossfader): `../00_series/decisions/01_undefined_modules.md §2` (помечена superseded).
