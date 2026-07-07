@@ -1,0 +1,16 @@
+# Binary file types — git won't try to convert line endings or merge them
+*.docx binary
+*.doc binary
+*.pdf binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+
+# Source files — text mode
+*.md text
+*.txt text
+*.html text
+*.svg text
+*.json text
+*.csv text
