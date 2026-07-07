@@ -26,21 +26,48 @@
 
 **Phase**: design lock (v6.5 = Decision 09 hybrid + audit v6.3 + improvements v6.4 + **Decision 11** plate-only cartridge). Готовы к prototyping Phase 1 ship (Last Night) — но **Stage 0 bench gate обязателен** (R1 contact coupling + R2 material differentiation непроверены) и R&D Phase A (Last Day).
 
-## Структура
+## Структура (по категориям)
 
+**Канон серии:**
 ```
-synth/
+├── SYSTEM_SUICIDE.md            — общий брифинг по 9-модульной серии (source of truth)
+├── docs/                        — иллюстрированный гид (markdown → PDF/DOCX/HTML через pandoc)
+└── decisions/                   — design decisions 00–13 (полная цепочка, включая superseded)
+```
+
+**Модули — рабочая документация:**
+```
 ├── LAST_NIGHT_SPEC.md / .docx   — продуктовая спецификация Last Night v5 hybrid
 ├── LAST_NIGHT_BUILD.md / .docx  — детальная build документация (25 блоков, ~2600 строк)
 ├── LAST_DAY_SPEC.md / .docx     — продуктовая спецификация Last Day v1.0
-├── SYSTEM_SUICIDE.md            — общий брифинг по 9-модульной серии
-├── last_night_pedal_panel.svg   — Inkscape SVG панели Last Night pedal (203×140мм)
-├── audit/                       — критический аудит (14 файлов)
-├── decisions/                   — locked design decisions (00, 01–04, 08, 09, 10, 11, 12, 13)
-├── cartridges/                  — manuals по обработке материалов (bone, nephrite)
-├── is_my/                       — концепт + пилотный пульт DJI C5 (sync с веткой jolly-gates)
-└── fixes/                       — конкретные правки post-audit (5 файлов)
+├── LAST_DAY_BUILD.md / .docx    — build документация Last Day
+├── is_my/                       — Is My: концепт, схемотехника, прошивки, панели (sync с jolly-gates)
+└── cartridges/                  — manuals по обработке материалов пластин (bone, nephrite)
 ```
+
+**Инженерия и производство:**
+```
+├── HANDOFF_BRIEF.md             — executive brief для R&D/production
+├── RISK_ASSESSMENT.md           — risk-register + Stage 0 bench gate
+├── PCB_DESIGN_SPEC.md           — KiCad-ready spec (6 PCBs)
+├── acoustic_modeling.md         — модальный калькулятор + cartridge dimensions
+├── calibration_procedure.md     — настройка trim pots + QC
+├── BOM_SOURCING.md / CARTRIDGE_SOURCING.md / PRICE_TABLE.md — закупки
+├── proto/                       — bench-план прототипирования Last Day (4 rigs)
+├── fixes/                       — конкретные правки post-audit (5 файлов)
+├── last_night_40hp.epanel/.json — проект панели для EURORACK-PANEL-DESIGNER
+├── last_night_pedal_panel.svg   — панель Last Night pedal (203×140мм)
+├── signal_flow_last_night.svg   — структурная схема Last Night
+├── strike_seating_problem.svg   — диаграмма strike × seating
+└── stage0_prototype.html        — bench prototype build sheet
+```
+
+**Историческое (с HISTORICAL/SUPERSEDED баннерами):**
+```
+└── audit/                       — критический аудит серии (14 файлов, весна 2026)
+```
+
+Соседние проекты монорепо — см. корневой `../README.md` (игра `game/`, сайт `site/`, секвенсор `sequencer/`).
 
 ## Читать в порядке
 
@@ -74,15 +101,21 @@ synth/
 | Decision | Status | Описание |
 |----------|--------|----------|
 | 01 | Active (§1, §4); §2, §3 superseded | 4 undefined modules → fixed concepts. §2 Is My superseded by 12; §3 And My superseded by 13. |
-| 02 | Active (partial) | Last Day scope (D1, D5 superseded by 08) |
+| 02 | Active (partial) | Last Day scope (D1, D5 superseded by 08-consolidated) |
 | 03 | Active (partial, see D11) | Cartridge standards — frame format + 4 magnets (passive plate per Decision 11) |
 | 04 | Active (partial, Is My/And My pricing obsolete) | Production strategy (5 phases sequential) |
-| 08 | **LOCKED** | Day/Night комбайны consolidated base + diptych mapping |
+| 05 | Superseded by 12/13 | And My re-spec → MOSFET-shaper (до slot swap; хранится как звено цепочки 01-3 → 05 → 12/13) |
+| 06 | **LOCKED** (via 08-consolidated) | Last Day re-spec — комбайн раскалённого полудня |
+| 07 | **LOCKED** (via 08-consolidated) | Last Night re-spec — комбайн холодной ночи |
+| 08-refined | Superseded by 08-consolidated | Refined FX palettes (промежуточный рефайнинг 06/07) |
+| 08-consolidated | **LOCKED** | Day/Night комбайны consolidated base + diptych mapping |
 | 09 | **LOCKED** | v5 hybrid — mockup canon UX + Decision 08 internals |
 | 10 | Reference | Elite tier components + sourcing |
 | 11 | **LOCKED** | Plate-only passive cartridge + in-module transducers (contact coupling) |
 | 12 | **LOCKED** | Is My re-spec: MOSFET-shaper из ESC + пилотный пульт из корпуса DJI C5, edition of 13, €2480. Полная техспека — ветка `origin/claude/jolly-gates-KxAP2`, локальная копия — `synth/is_my/`. |
 | 13 | **LOCKED** | And My rolled back to TBD. Слот 8 остаётся placeholder'ом до появления концепта уровня остальных модулей. |
+
+> **Примечание о нумерации**: существуют два файла «Decision 08» — `08_refined_fx_palette.md` (импортирован с ветки HWbFa, промежуточный) и `08_consolidated_base.md` (финальный, консолидирует 06+07+refined+v3-prototype). Нумерация исторически разошлась между ветками; consolidated — актуальный.
 
 ## Schematic reference
 

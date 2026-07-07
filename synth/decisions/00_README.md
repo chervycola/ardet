@@ -37,6 +37,14 @@
    - Open source policy.
    - Warranty и support.
 
+4b. **`05_and_my_respec.md`** (superseded by 12/13) — And My → MOSFET-shaper (звено цепочки до slot swap).
+
+4c. **`06_last_day_combine_concept.md`** (**LOCKED** via 08-consolidated) — Last Day re-spec: комбайн раскалённого полудня (anchor-документ hot palette).
+
+4d. **`07_last_night_combine_concept.md`** (**LOCKED** via 08-consolidated) — Last Night re-spec: комбайн холодной ночи (anchor-документ cold palette).
+
+4e. **`08_refined_fx_palette.md`** (superseded by 08-consolidated) — рефайнинг палитр 06/07: leaner FX-наборы. Внимание: **нумерация «08» задвоена** — этот файл импортирован с ветки HWbFa; финальный «Decision 08» — `08_consolidated_base.md` ниже.
+
 5. **`08_consolidated_base.md`** (**LOCKED**) — Day/Night комбайны final base:
    - Объединяет Decision 06 (Last Day re-spec) + Decision 07 (Last Night re-spec) + v3.0 prototype.
    - Cold/hot palette diptych mapping (PULSE↔HAZE, FOG↔MIRAGE, FROST↔BLEACH, CHILL↔TAR, GEIGER↔CICADA, HUM↔HEATWAVE, STALL↔DRAG, TOLL↔CRASH).
