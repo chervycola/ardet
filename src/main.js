@@ -174,9 +174,13 @@ import { t } from './core/time.js';
 // Day cycle: 0 = midnight, 0.5 = noon, 1 = midnight again
 // Full cycle = 43200 frames @ 60fps = 12 min (6 min day + 6 min night)
 const DAY_LENGTH = 43200;
+// Start the session mid-morning, not at exact midnight — with no
+// offset t=0 gave dayCycle 0 and every first impression was the
+// darkest frame the game can produce.
+const DAY_START_OFFSET = 0.3; // fraction of a full cycle
 
 function getDayCycle() {
-  const phase = (t % DAY_LENGTH) / DAY_LENGTH;
+  const phase = ((t / DAY_LENGTH) + DAY_START_OFFSET) % 1;
   // Sinusoidal: 0 at midnight, 1 at noon
   return 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
 }
@@ -252,7 +256,10 @@ function render() {
     lighting.sources[0].y = player.y + 10;
   }
   const dayCycle = getDayCycle();
-  const ambient = 0.28 + dayCycle * 0.45;
+  // Readability floor: night was 0.28 (28% brightness through the
+  // multiply layer) — dramatic on a desk, near-black on a phone in
+  // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
+  const ambient = 0.40 + dayCycle * 0.42;
   lighting.render(lightCtx, { x: camX, y: camY }, ambient);
 
   // Atmospheric particles in lit areas (render on world layer for depth)

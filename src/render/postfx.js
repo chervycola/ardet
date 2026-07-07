@@ -35,11 +35,11 @@ export const postfx = {
   // Vignette — dark edges with subtle color
   vignette(ctx) {
     const vw = scaler.vw, vh = scaler.vh;
-    // Dark vignette
+    // Dark vignette — softened for readability (was 0.15/0.45)
     const grd = ctx.createRadialGradient(vw / 2, vh / 2, vw * 0.25, vw / 2, vh / 2, vw * 0.85);
     grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(0.7, 'rgba(0,0,0,0.15)');
-    grd.addColorStop(1, 'rgba(0,0,0,0.45)');
+    grd.addColorStop(0.7, 'rgba(0,0,0,0.10)');
+    grd.addColorStop(1, 'rgba(0,0,0,0.32)');
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, vw, vh);
 
