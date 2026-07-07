@@ -32,7 +32,7 @@ import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/meta
 import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
-import { STREET_SPAWN, GATES_RETURN, STREET_X0, consumeGatesLine } from './world/street.js';
+import { STREET_SPAWN, GATES_RETURN, STREET_X0, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
   init as initWorldMap, toggle as toggleWorldMap,
   markDiscovered as discoverGate,
@@ -277,6 +277,9 @@ function render() {
   // ── POST: grading + vignette ──
   postfx.apply(postCtx);
 
+  // Teleport blink — above everything except the ending
+  drawTeleportFade(postCtx);
+
   // ── COMPOSITE ──
   // Ending overlay (on top of everything)
   if (isEndingActive()) {
@@ -462,6 +465,7 @@ function drawHUD(ctx) {
   drawLorePopup(ctx);
   drawAchPopup(ctx);
   drawIdle(ctx);
+  drawEpochTitle(ctx);
 
   if (DEBUG_HUD) {
     ctx.globalAlpha = 0.5;
@@ -507,9 +511,140 @@ function updateCrackTriggers(player) {
 }
 
 // ═══ GAME LOGIC ═══
+// ═══ TELEPORT WITH FADE ═══
+// Every instant relocation (click-approach, gates, map fast-travel,
+// street return) goes through a short black blink so it reads as an
+// intentional step, not a glitch. The move happens at the black
+// midpoint; `after` (e.g. opening the menu) fires right after it.
+const FADE_HALF = 10; // frames each way (~330 ms total @60fps)
+const teleportFade = { phase: 0, dir: 0, target: null, after: null };
+
+function teleportWithFade(x, y, after = null) {
+  // If a fade is already running, just retarget it.
+  teleportFade.target = { x, y };
+  teleportFade.after = after;
+  if (teleportFade.dir === 0) {
+    teleportFade.dir = 1;
+    teleportFade.phase = 0;
+  }
+}
+
+function updateTeleportFade() {
+  if (teleportFade.dir === 0) return;
+  teleportFade.phase += teleportFade.dir;
+  if (teleportFade.dir === 1 && teleportFade.phase >= FADE_HALF) {
+    // Black midpoint — move now.
+    const tgt = teleportFade.target;
+    if (tgt) {
+      player.x = tgt.x; player.y = tgt.y;
+      player.tx = tgt.x; player.ty = tgt.y;
+      player.moving = false;
+      camera.x = player.x - scaler.vw / 2;
+      camera.y = player.y - scaler.vh / 2;
+      camera.targetX = camera.x; camera.targetY = camera.y;
+    }
+    const cb = teleportFade.after;
+    teleportFade.target = null;
+    teleportFade.after = null;
+    teleportFade.dir = -1;
+    if (cb) cb();
+  } else if (teleportFade.dir === -1 && teleportFade.phase <= 0) {
+    teleportFade.dir = 0;
+    teleportFade.phase = 0;
+  }
+}
+
+function drawTeleportFade(ctx) {
+  if (teleportFade.dir === 0 && teleportFade.phase <= 0) return;
+  ctx.globalAlpha = Math.min(1, teleportFade.phase / FADE_HALF);
+  ctx.fillStyle = '#050408';
+  ctx.fillRect(0, 0, scaler.vw, scaler.vh);
+  ctx.globalAlpha = 1;
+}
+
+// ═══ EPOCH TITLE CARD ═══
+// Crossing into a street segment shows a large translucent title for a
+// couple of seconds — «§2 · ПОРТИКИ И САДЫ» — like zone cards in
+// action games. Re-shown every re-entry (the street is long; the
+// reminder is the point).
+const EPOCH_TITLE_LIFE = 160; // ~2.7 s
+const epochTitle = { text: '', era: '', life: 0, lastSegId: null };
+
+function updateEpochTitle() {
+  const seg = worldSegmentAt(player.x);
+  const id = seg ? seg.id : null;
+  if (id !== epochTitle.lastSegId) {
+    epochTitle.lastSegId = id;
+    if (seg) {
+      epochTitle.text = `§${seg.n} · ${seg.name.toUpperCase()}`;
+      epochTitle.era = seg.era;
+      epochTitle.life = EPOCH_TITLE_LIFE;
+    }
+  }
+  if (epochTitle.life > 0) epochTitle.life--;
+}
+
+function drawEpochTitle(ctx) {
+  if (epochTitle.life <= 0) return;
+  const total = EPOCH_TITLE_LIFE;
+  const age = total - epochTitle.life;
+  // Envelope: quick fade-in, hold, slow fade-out
+  const a = age < 20 ? age / 20 : (epochTitle.life < 50 ? epochTitle.life / 50 : 1);
+  const vw = scaler.vw;
+  const y = 54 - (age < 20 ? (20 - age) * 0.35 : 0); // slight settle-down
+  ctx.textAlign = 'center';
+  // Underline flourish
+  ctx.globalAlpha = a * 0.35;
+  ctx.fillStyle = '#b8860b';
+  ctx.fillRect(vw / 2 - 70, y + 8, 140, 1);
+  // Title
+  ctx.globalAlpha = a * 0.85;
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = '11px "Press Start 2P","VT323",monospace';
+  ctx.fillText(epochTitle.text, vw / 2, y);
+  // Era subtitle
+  ctx.globalAlpha = a * 0.5;
+  ctx.fillStyle = '#8a8d8f';
+  ctx.font = '7px "Press Start 2P","VT323",monospace';
+  ctx.fillText(epochTitle.era, vw / 2, y + 20);
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
+}
+
 function updateGame() {
+  updateTeleportFade();
+  updateEpochTitle();
   if (isFrozen()) { updateBrainrot(player); return; }
   if (!state.is('game')) return;
+
+  // Held-finger walk (mobile): while a finger stays down, walk toward
+  // it continuously. A short tap still dispatches as a click.
+  const held = input.getHeldTouch();
+  if (held) {
+    const pos = input.screenToWorld(held.x, held.y, camera);
+    const hdx = pos.x - (player.x + 6);
+    const hdy = pos.y - (player.y + 10);
+    const hd = Math.sqrt(hdx * hdx + hdy * hdy);
+    if (hd > 8) {
+      const spd = 2.4;
+      tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations, {
+        canLeaveSettlement: canLeaveSettlement(),
+      });
+      player.tx = player.x;
+      player.ty = player.y;
+      player.moving = true;
+      if (hdx > 1) player.dir = 1;
+      else if (hdx < -1) player.dir = -1;
+      events.emit(E.PLAYER_MOVE, player);
+      if (t % 8 === 0) footstepDust(player.x, player.y);
+      addFootprint(player.x, player.y);
+    } else {
+      player.moving = false;
+    }
+    // Skip keyboard/auto-walk branches while the finger is down.
+    updateWorldSystems();
+    return;
+  }
 
   const move = input.getMove();
   if (move.active) {
@@ -552,15 +687,16 @@ function updateGame() {
   }
 
   // Walking west past the street's edge returns through the gates
-  if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8) {
-    player.x = GATES_RETURN.x;
-    player.y = GATES_RETURN.y;
-    player.tx = player.x; player.ty = player.y;
-    player.moving = false;
-    camera.x = player.x - scaler.vw / 2;
-    camera.y = player.y - scaler.vh / 2;
+  if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8 && teleportFade.dir === 0) {
+    teleportWithFade(GATES_RETURN.x, GATES_RETURN.y);
   }
 
+  updateWorldSystems();
+}
+
+// Camera + all per-frame world systems. Shared by the normal movement
+// path and the held-finger walk branch above.
+function updateWorldSystems() {
   camera.follow(player.x + 6, player.y + 10);
   camera.update();
   camera.clampToWorld(MW, MH);
@@ -592,10 +728,13 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// ═══ ENTRY ═══
-document.getElementById('entry-btn').addEventListener('click', () => {
-  console.log('[entry] clicked, transitioning to game');
-  document.getElementById('entry').style.display = 'none';
+// ═══ ENTRY → HOW-TO → GAME ═══
+// «В ПУСТОТУ» first shows a one-plate controls card; any key/click on
+// it drops into the game. Both interactions are user gestures, so
+// resumeAudio() stays autoplay-policy-safe.
+function startGame() {
+  const howto = document.getElementById('howto');
+  if (howto) howto.classList.remove('on');
   const gw = document.getElementById('gw');
   gw.classList.add('on');
   gw.style.opacity = '1'; // force visible
@@ -603,7 +742,28 @@ document.getElementById('entry-btn').addEventListener('click', () => {
   showCursor();
   resumeAudio();
   startAmbient();
-  console.log('[entry] state now:', state.current, 'canvas:', mainCanvas.width, 'x', mainCanvas.height);
+}
+
+document.getElementById('entry-btn').addEventListener('click', () => {
+  document.getElementById('entry').style.display = 'none';
+  const howto = document.getElementById('howto');
+  if (!howto) { startGame(); return; }
+  // Swap the key list for touch devices
+  const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+  if (isMobile) {
+    const d = document.getElementById('howto-desktop');
+    const m = document.getElementById('howto-mobile');
+    if (d) d.style.display = 'none';
+    if (m) m.style.display = 'grid';
+  }
+  howto.classList.add('on');
+  const go = () => {
+    document.removeEventListener('keydown', go);
+    startGame();
+  };
+  howto.addEventListener('click', go, { once: true });
+  // Delay the key listener a tick so the entry click doesn't self-trigger
+  setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
 });
 
 // Fallback removed: canvas click handler already dispatches. Keeping #gw
@@ -632,13 +792,12 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
     const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
 
     if (dist < 85) {
-      // Close enough — open menu
-      player.x = px_;
-      player.y = py_;
-      player.moving = false;
-      flags.visited.add(loc.id);
-      events.emit(E.LOCATION_VISIT, loc);
-      showMenu(loc);
+      // Close enough — blink-step to the location, then open the menu
+      teleportWithFade(px_, py_, () => {
+        flags.visited.add(loc.id);
+        events.emit(E.LOCATION_VISIT, loc);
+        showMenu(loc);
+      });
     } else {
       // Walk toward it
       player.tx = px_;
@@ -677,12 +836,7 @@ events.on('terminal.read', (key) => {
 // Fast-travel through a gate: teleport to its world target.
 events.on('gate.use', (gate) => {
   if (!gate || !gate.target) return;
-  player.x = gate.target.x;
-  player.y = gate.target.y;
-  player.tx = player.x; player.ty = player.y;
-  player.moving = false;
-  camera.x = player.x - scaler.vw / 2;
-  camera.y = player.y - scaler.vh / 2;
+  teleportWithFade(gate.target.x, gate.target.y);
 });
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text, item.live);
@@ -694,16 +848,12 @@ events.on('location.use', (loc) => {
   const actionKey = loc.useAction || loc.id;
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
-    player.x = STREET_SPAWN.x;
-    player.y = STREET_SPAWN.y;
-    player.tx = player.x; player.ty = player.y;
-    player.moving = false;
-    camera.x = player.x - scaler.vw / 2;
-    camera.y = player.y - scaler.vh / 2;
-    // First-pass quiet line via the lore popup (dismissable, can't trap).
-    if (consumeGatesLine()) {
-      showLore('Эти врата были предназначены для тебя одного. Обычно это узнают позже.');
-    }
+    teleportWithFade(STREET_SPAWN.x, STREET_SPAWN.y, () => {
+      // First-pass quiet line via the lore popup (dismissable, can't trap).
+      if (consumeGatesLine()) {
+        showLore('Эти врата были предназначены для тебя одного. Обычно это узнают позже.');
+      }
+    });
     return;
   }
   // Shop actions

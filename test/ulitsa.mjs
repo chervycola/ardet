@@ -93,9 +93,17 @@ const imp = p => import(new URL(p, base));
 {
   const street = await imp('world/street.js');
   const { streetLocations, STREET_SHIFT, STREET_X0, STREET_END_W,
-          STREET_Y_MIN, STREET_Y_MAX, STREET_SPAWN, GATES_RETURN, consumeGatesLine } = street;
+          STREET_Y_MIN, STREET_Y_MAX, STREET_SPAWN, GATES_RETURN,
+          consumeGatesLine, worldSegmentAt } = street;
   const { useTexts } = await imp('world/useActions.js');
   const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
+
+  test('worldSegmentAt: maps world x to epoch segments (for the title card)', () => {
+    eq(worldSegmentAt(1000), null, 'waste is off-street');
+    eq(worldSegmentAt(3300).id, 'axial', 'west end is §1');
+    eq(worldSegmentAt(4100).id, 'lightgarden', 'medieval stretch');
+    eq(worldSegmentAt(5900).id, 'now', 'east end is §9');
+  });
 
   test('streetLocations: one per segment sign, unique ids, world coords in band', () => {
     const segSignCount = SEGMENTS.reduce((n, s) => n + s.signs.length, 0);

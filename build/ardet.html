@@ -244,6 +244,43 @@ canvas#game {
   width: 100%;
 }
 
+/* ── How-to plate (after В ПУСТОТУ) ── */
+#howto {
+  position: fixed; inset: 0; z-index: 150;
+  display: none;
+  align-items: center; justify-content: center;
+  background: var(--c-void);
+  cursor: pointer;
+}
+#howto.on { display: flex; }
+#howto-box {
+  border: 1px solid rgba(107,15,26,0.5);
+  border-top: 2px solid var(--c-gold);
+  background: rgba(10,8,6,0.9);
+  padding: 26px 34px;
+  max-width: 420px;
+}
+.ht-title {
+  font-size: 11px; color: var(--c-gold);
+  letter-spacing: 3px; margin-bottom: 18px; text-align: center;
+}
+.ht-grid {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 10px 18px; font-size: 9px; line-height: 1.6;
+}
+.ht-k { color: var(--c-gold); white-space: nowrap; }
+.ht-v { color: var(--c-bone); }
+.ht-note {
+  margin-top: 18px; font-size: 8px; color: var(--c-ash);
+  text-align: center; font-style: normal;
+}
+.ht-go {
+  margin-top: 14px; font-size: 8px; color: var(--c-crimson);
+  text-align: center;
+  animation: htblink 1.6s ease-in-out infinite;
+}
+@keyframes htblink { 0%,100%{opacity:0.9} 50%{opacity:0.3} }
+
 /* ── World map (M) ── */
 #map {
   position: fixed;
@@ -344,6 +381,24 @@ canvas#game {
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
 <div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">В ПУСТОТУ 25+</button></div></div>
+<div id="howto">
+  <div id="howto-box">
+    <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
+    <div class="ht-grid" id="howto-desktop">
+      <span class="ht-k">WASD / стрелки</span><span class="ht-v">идти</span>
+      <span class="ht-k">shift</span><span class="ht-v">быстрее</span>
+      <span class="ht-k">клик</span><span class="ht-v">подойти · осмотреть</span>
+      <span class="ht-k">M</span><span class="ht-v">карта мира</span>
+      <span class="ht-k">esc</span><span class="ht-v">закрыть · назад</span>
+    </div>
+    <div class="ht-grid" id="howto-mobile" style="display:none">
+      <span class="ht-k">держи палец</span><span class="ht-v">идти за ним</span>
+      <span class="ht-k">тап</span><span class="ht-v">подойти · осмотреть</span>
+    </div>
+    <div class="ht-note">прогресс сохраняется сам. мох помнит.</div>
+    <div class="ht-go">— нажми что угодно —</div>
+  </div>
+</div>
 <div id="menu">
   <div id="menu-inscription"></div>
   <div class="mi" data-a="look"><i>☠</i>ОСМОТРЕТЬ</div>
@@ -1740,6 +1795,15 @@ Ardet v1.0 — coming soon.
   var STREET_Y_MIN = 800;
   var STREET_Y_MAX = 960;
   var STREET_ROAD_Y = 880;
+  function isOnStreet(x) {
+    return x > STREET_X0 - 100;
+  }
+  function worldSegmentAt(x) {
+    if (!isOnStreet(x))
+      return null;
+    const vx = x - STREET_SHIFT;
+    return SEGMENTS.find((s) => vx >= s.range[0] && vx < s.range[1]) || (vx >= SEGMENTS[SEGMENTS.length - 1].range[1] ? SEGMENTS[SEGMENTS.length - 1] : SEGMENTS[0]);
+  }
   var STREET_SPAWN = { x: STREET_X0 + 30, y: STREET_ROAD_Y };
   var GATES_RETURN = { x: 1395, y: 885 };
   var gatesLineShown = false;
@@ -2567,7 +2631,7 @@ ${sign.whisper}`;
   }
   var STREET_EDGE_X = 3100;
   var STREET_BAND = { y1: 800, y2: 960 };
-  function isOnStreet(x) {
+  function isOnStreet2(x) {
     return x > STREET_EDGE_X;
   }
   function tryMove(player, dx, dy, locations2, opts = {}) {
@@ -2576,10 +2640,10 @@ ${sign.whisper}`;
     let ny = player.y + dy;
     nx = clamp(nx, 10, MW - 22);
     ny = clamp(ny, 170, MH - 30);
-    if (isOnStreet(nx)) {
+    if (isOnStreet2(nx)) {
       ny = clamp(ny, STREET_BAND.y1, STREET_BAND.y2);
     }
-    const onStreet = isOnStreet(nx) || isOnStreet(player.x);
+    const onStreet = isOnStreet2(nx) || isOnStreet2(player.x);
     if (!canLeaveSettlement && !onStreet && !isInSettlement(nx, ny)) {
       if (!isInSettlement(player.x, player.y)) {
         const cur = settlementDist(player.x, player.y);
@@ -2757,6 +2821,8 @@ ${sign.whisper}`;
     interact: [" ", "enter", "e"],
     back: ["escape"]
   };
+  var TAP_MAX_MS = 280;
+  var TAP_MAX_DRIFT = 14;
 
   class Input {
     constructor() {
@@ -2765,6 +2831,7 @@ ${sign.whisper}`;
       this.mouseY = 0;
       this.clickHandlers = [];
       this.touchHandlers = [];
+      this.touch = null;
     }
     init(canvas) {
       window.addEventListener("keydown", (e) => {
@@ -2783,20 +2850,48 @@ ${sign.whisper}`;
         this._dispatchClick(e.clientX, e.clientY, "mouse", e);
       });
       canvas.addEventListener("touchstart", (e) => {
-        if (e.touches.length > 1)
+        if (e.touches.length > 1) {
           e.preventDefault();
+          return;
+        }
+        const t0 = e.touches[0];
+        this.touch = {
+          x: t0.clientX,
+          y: t0.clientY,
+          startX: t0.clientX,
+          startY: t0.clientY,
+          startT: Date.now(),
+          moved: false
+        };
+      }, { passive: false });
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        const t0 = e.touches[0];
+        this.mouseX = t0.clientX;
+        this.mouseY = t0.clientY;
+        if (this.touch) {
+          this.touch.x = t0.clientX;
+          this.touch.y = t0.clientY;
+          const dx = t0.clientX - this.touch.startX;
+          const dy = t0.clientY - this.touch.startY;
+          if (dx * dx + dy * dy > TAP_MAX_DRIFT * TAP_MAX_DRIFT)
+            this.touch.moved = true;
+        }
       }, { passive: false });
       canvas.addEventListener("touchend", (e) => {
         e.preventDefault();
-        const touch = e.changedTouches[0];
-        this._dispatchClick(touch.clientX, touch.clientY, "touch", e);
+        const t0 = e.changedTouches[0];
+        const wasTap = this.touch && !this.touch.moved && Date.now() - this.touch.startT < TAP_MAX_MS;
+        this.touch = null;
+        if (wasTap)
+          this._dispatchClick(t0.clientX, t0.clientY, "touch", e);
       });
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        this.mouseX = touch.clientX;
-        this.mouseY = touch.clientY;
-      }, { passive: false });
+      canvas.addEventListener("touchcancel", () => {
+        this.touch = null;
+      });
+    }
+    getHeldTouch() {
+      return this.touch ? { x: this.touch.x, y: this.touch.y } : null;
     }
     isDown(action) {
       const keys = ACTIONS[action] || [];
@@ -19475,6 +19570,7 @@ quarter║      ║ highway
     screenMoss.draw(uiCtx);
     drawHUD(uiCtx);
     postfx.apply(postCtx);
+    drawTeleportFade(postCtx);
     if (isActive2()) {
       draw11(postCtx);
     }
@@ -19655,6 +19751,7 @@ quarter║      ║ highway
     draw(ctx3);
     draw8(ctx3);
     draw4(ctx3);
+    drawEpochTitle(ctx3);
     if (DEBUG_HUD) {
       ctx3.globalAlpha = 0.5;
       ctx3.fillStyle = "#1a8c1a";
@@ -19683,13 +19780,128 @@ quarter║      ║ highway
       lastCrackFrame = t;
     }
   }
+  var FADE_HALF = 10;
+  var teleportFade = { phase: 0, dir: 0, target: null, after: null };
+  function teleportWithFade(x, y, after = null) {
+    teleportFade.target = { x, y };
+    teleportFade.after = after;
+    if (teleportFade.dir === 0) {
+      teleportFade.dir = 1;
+      teleportFade.phase = 0;
+    }
+  }
+  function updateTeleportFade() {
+    if (teleportFade.dir === 0)
+      return;
+    teleportFade.phase += teleportFade.dir;
+    if (teleportFade.dir === 1 && teleportFade.phase >= FADE_HALF) {
+      const tgt = teleportFade.target;
+      if (tgt) {
+        player.x = tgt.x;
+        player.y = tgt.y;
+        player.tx = tgt.x;
+        player.ty = tgt.y;
+        player.moving = false;
+        camera.x = player.x - scaler.vw / 2;
+        camera.y = player.y - scaler.vh / 2;
+        camera.targetX = camera.x;
+        camera.targetY = camera.y;
+      }
+      const cb = teleportFade.after;
+      teleportFade.target = null;
+      teleportFade.after = null;
+      teleportFade.dir = -1;
+      if (cb)
+        cb();
+    } else if (teleportFade.dir === -1 && teleportFade.phase <= 0) {
+      teleportFade.dir = 0;
+      teleportFade.phase = 0;
+    }
+  }
+  function drawTeleportFade(ctx3) {
+    if (teleportFade.dir === 0 && teleportFade.phase <= 0)
+      return;
+    ctx3.globalAlpha = Math.min(1, teleportFade.phase / FADE_HALF);
+    ctx3.fillStyle = "#050408";
+    ctx3.fillRect(0, 0, scaler.vw, scaler.vh);
+    ctx3.globalAlpha = 1;
+  }
+  var EPOCH_TITLE_LIFE = 160;
+  var epochTitle = { text: "", era: "", life: 0, lastSegId: null };
+  function updateEpochTitle() {
+    const seg = worldSegmentAt(player.x);
+    const id = seg ? seg.id : null;
+    if (id !== epochTitle.lastSegId) {
+      epochTitle.lastSegId = id;
+      if (seg) {
+        epochTitle.text = `§${seg.n} · ${seg.name.toUpperCase()}`;
+        epochTitle.era = seg.era;
+        epochTitle.life = EPOCH_TITLE_LIFE;
+      }
+    }
+    if (epochTitle.life > 0)
+      epochTitle.life--;
+  }
+  function drawEpochTitle(ctx3) {
+    if (epochTitle.life <= 0)
+      return;
+    const total = EPOCH_TITLE_LIFE;
+    const age = total - epochTitle.life;
+    const a = age < 20 ? age / 20 : epochTitle.life < 50 ? epochTitle.life / 50 : 1;
+    const vw = scaler.vw;
+    const y = 54 - (age < 20 ? (20 - age) * 0.35 : 0);
+    ctx3.textAlign = "center";
+    ctx3.globalAlpha = a * 0.35;
+    ctx3.fillStyle = "#b8860b";
+    ctx3.fillRect(vw / 2 - 70, y + 8, 140, 1);
+    ctx3.globalAlpha = a * 0.85;
+    ctx3.fillStyle = "#e8dcc8";
+    ctx3.font = '11px "Press Start 2P","VT323",monospace';
+    ctx3.fillText(epochTitle.text, vw / 2, y);
+    ctx3.globalAlpha = a * 0.5;
+    ctx3.fillStyle = "#8a8d8f";
+    ctx3.font = '7px "Press Start 2P","VT323",monospace';
+    ctx3.fillText(epochTitle.era, vw / 2, y + 20);
+    ctx3.textAlign = "left";
+    ctx3.globalAlpha = 1;
+  }
   function updateGame() {
+    updateTeleportFade();
+    updateEpochTitle();
     if (isFrozen()) {
       update5(player);
       return;
     }
     if (!state.is("game"))
       return;
+    const held = input.getHeldTouch();
+    if (held) {
+      const pos = input.screenToWorld(held.x, held.y, camera);
+      const hdx = pos.x - (player.x + 6);
+      const hdy = pos.y - (player.y + 10);
+      const hd = Math.sqrt(hdx * hdx + hdy * hdy);
+      if (hd > 8) {
+        const spd = 2.4;
+        tryMove(player, hdx / hd * spd, hdy / hd * spd, locations, {
+          canLeaveSettlement: canLeaveSettlement()
+        });
+        player.tx = player.x;
+        player.ty = player.y;
+        player.moving = true;
+        if (hdx > 1)
+          player.dir = 1;
+        else if (hdx < -1)
+          player.dir = -1;
+        events.emit(E.PLAYER_MOVE, player);
+        if (t % 8 === 0)
+          footstepDust(player.x, player.y);
+        addFootprint(player.x, player.y);
+      } else {
+        player.moving = false;
+      }
+      updateWorldSystems();
+      return;
+    }
     const move = input.getMove();
     if (move.active) {
       const spd = input.isDown("sprint") ? 4 : 2.4;
@@ -19732,15 +19944,12 @@ quarter║      ║ highway
     } else {
       player.moving = false;
     }
-    if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8) {
-      player.x = GATES_RETURN.x;
-      player.y = GATES_RETURN.y;
-      player.tx = player.x;
-      player.ty = player.y;
-      player.moving = false;
-      camera.x = player.x - scaler.vw / 2;
-      camera.y = player.y - scaler.vh / 2;
+    if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8 && teleportFade.dir === 0) {
+      teleportWithFade(GATES_RETURN.x, GATES_RETURN.y);
     }
+    updateWorldSystems();
+  }
+  function updateWorldSystems() {
     camera.follow(player.x + 6, player.y + 10);
     camera.update();
     camera.clampToWorld(MW, MH);
@@ -19765,9 +19974,10 @@ quarter║      ║ highway
     render();
     requestAnimationFrame(loop);
   }
-  document.getElementById("entry-btn").addEventListener("click", () => {
-    console.log("[entry] clicked, transitioning to game");
-    document.getElementById("entry").style.display = "none";
+  function startGame() {
+    const howto = document.getElementById("howto");
+    if (howto)
+      howto.classList.remove("on");
     const gw = document.getElementById("gw");
     gw.classList.add("on");
     gw.style.opacity = "1";
@@ -19775,7 +19985,30 @@ quarter║      ║ highway
     show();
     resumeAudio();
     startAmbient();
-    console.log("[entry] state now:", state.current, "canvas:", mainCanvas.width, "x", mainCanvas.height);
+  }
+  document.getElementById("entry-btn").addEventListener("click", () => {
+    document.getElementById("entry").style.display = "none";
+    const howto = document.getElementById("howto");
+    if (!howto) {
+      startGame();
+      return;
+    }
+    const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
+    if (isMobile) {
+      const d = document.getElementById("howto-desktop");
+      const m = document.getElementById("howto-mobile");
+      if (d)
+        d.style.display = "none";
+      if (m)
+        m.style.display = "grid";
+    }
+    howto.classList.add("on");
+    const go = () => {
+      document.removeEventListener("keydown", go);
+      startGame();
+    };
+    howto.addEventListener("click", go, { once: true });
+    setTimeout(() => document.addEventListener("keydown", go, { once: true }), 50);
   });
   input.onClick(({ clientX, clientY, originalEvent }) => {
     if (originalEvent)
@@ -19801,12 +20034,11 @@ quarter║      ║ highway
         return;
       const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
       if (dist < 85) {
-        player.x = px_;
-        player.y = py_;
-        player.moving = false;
-        flags.visited.add(loc.id);
-        events.emit(E.LOCATION_VISIT, loc);
-        showMenu(loc);
+        teleportWithFade(px_, py_, () => {
+          flags.visited.add(loc.id);
+          events.emit(E.LOCATION_VISIT, loc);
+          showMenu(loc);
+        });
       } else {
         player.tx = px_;
         player.ty = py_;
@@ -19842,13 +20074,7 @@ quarter║      ║ highway
   events.on("gate.use", (gate) => {
     if (!gate || !gate.target)
       return;
-    player.x = gate.target.x;
-    player.y = gate.target.y;
-    player.tx = player.x;
-    player.ty = player.y;
-    player.moving = false;
-    camera.x = player.x - scaler.vw / 2;
-    camera.y = player.y - scaler.vh / 2;
+    teleportWithFade(gate.target.x, gate.target.y);
   });
   events.on(E.LORE_COLLECT, (item) => {
     showLore(item.text, item.live);
@@ -19862,16 +20088,11 @@ quarter║      ║ highway
     }
     const actionKey = loc.useAction || loc.id;
     if (actionKey === "gates_pass") {
-      player.x = STREET_SPAWN.x;
-      player.y = STREET_SPAWN.y;
-      player.tx = player.x;
-      player.ty = player.y;
-      player.moving = false;
-      camera.x = player.x - scaler.vw / 2;
-      camera.y = player.y - scaler.vh / 2;
-      if (consumeGatesLine()) {
-        showLore("Эти врата были предназначены для тебя одного. Обычно это узнают позже.");
-      }
+      teleportWithFade(STREET_SPAWN.x, STREET_SPAWN.y, () => {
+        if (consumeGatesLine()) {
+          showLore("Эти врата были предназначены для тебя одного. Обычно это узнают позже.");
+        }
+      });
       return;
     }
     if (actionKey === "shop1") {

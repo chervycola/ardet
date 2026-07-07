@@ -233,6 +233,43 @@ canvas#game {
   width: 100%;
 }
 
+/* ── How-to plate (after В ПУСТОТУ) ── */
+#howto {
+  position: fixed; inset: 0; z-index: 150;
+  display: none;
+  align-items: center; justify-content: center;
+  background: var(--c-void);
+  cursor: pointer;
+}
+#howto.on { display: flex; }
+#howto-box {
+  border: 1px solid rgba(107,15,26,0.5);
+  border-top: 2px solid var(--c-gold);
+  background: rgba(10,8,6,0.9);
+  padding: 26px 34px;
+  max-width: 420px;
+}
+.ht-title {
+  font-size: 11px; color: var(--c-gold);
+  letter-spacing: 3px; margin-bottom: 18px; text-align: center;
+}
+.ht-grid {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 10px 18px; font-size: 9px; line-height: 1.6;
+}
+.ht-k { color: var(--c-gold); white-space: nowrap; }
+.ht-v { color: var(--c-bone); }
+.ht-note {
+  margin-top: 18px; font-size: 8px; color: var(--c-ash);
+  text-align: center; font-style: normal;
+}
+.ht-go {
+  margin-top: 14px; font-size: 8px; color: var(--c-crimson);
+  text-align: center;
+  animation: htblink 1.6s ease-in-out infinite;
+}
+@keyframes htblink { 0%,100%{opacity:0.9} 50%{opacity:0.3} }
+
 /* ── World map (M) ── */
 #map {
   position: fixed;

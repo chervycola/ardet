@@ -21,6 +21,15 @@ export const STREET_ROAD_Y = 880;         // road centerline
 
 export function isOnStreet(x) { return x > STREET_X0 - 100; }
 
+// Which epoch segment the player is standing in, by WORLD x.
+// Returns the segment object from ulitsa_db or null when off-street.
+export function worldSegmentAt(x) {
+  if (!isOnStreet(x)) return null;
+  const vx = x - STREET_SHIFT;
+  return SEGMENTS.find(s => vx >= s.range[0] && vx < s.range[1])
+    || (vx >= SEGMENTS[SEGMENTS.length - 1].range[1] ? SEGMENTS[SEGMENTS.length - 1] : SEGMENTS[0]);
+}
+
 // Where the gates drop you, and where walking west returns you
 export const STREET_SPAWN = { x: STREET_X0 + 30, y: STREET_ROAD_Y };
 export const GATES_RETURN = { x: 1395, y: 885 };
