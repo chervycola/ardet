@@ -302,6 +302,27 @@ canvas#game {
   background: #08060a;
 }
 
+/* ── Map button (touch devices — no M key there) ── */
+#map-btn {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: none;               /* shown from JS on touch devices */
+  align-items: center; justify-content: center;
+  z-index: 250;                /* under terminal(300)/map(320) overlays */
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--c-gold);
+  background: rgba(10,8,6,0.72);
+  border: 1px solid rgba(184,134,11,0.5);
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#map-btn:active { background: rgba(107,15,26,0.4); }
+#map-btn.on { display: flex; }
+
 /* ── Custom cursor ── */
 #cur {
   position: fixed;
@@ -412,6 +433,7 @@ canvas#game {
 <div id="dlg"><div id="dp"><canvas id="dpc" width="80" height="100"></canvas></div><div id="dd"><div id="dn"></div><div id="dt"></div><div id="do"></div></div></div>
 <div id="term"><input id="ti" type="text" autocomplete="off" spellcheck="false"><div id="to"></div></div>
 <div id="map"><canvas id="map-canvas"></canvas></div>
+<button id="map-btn" aria-label="Карта мира">M</button>
 
 <div id="shop1" class="shop-overlay">
   <div class="sh">ПУНКТ ОБМЕНА v.2.77</div>
@@ -489,7 +511,7 @@ canvas#game {
       let s = Math.max(1, Math.min(maxScaleX, maxScaleY));
       const isMobile = sw <= 768;
       if (isMobile) {
-        const pixelSize = Math.max(1, Math.floor(Math.min(sw * dpr / 320, sh * dpr / 180)));
+        const pixelSize = Math.max(1, Math.floor(Math.min(sw * dpr / 230, sh * dpr / 130)));
         this.vw = Math.floor(sw * dpr / pixelSize);
         this.vh = Math.floor(sh * dpr / pixelSize);
         this.scale = pixelSize;
@@ -8372,8 +8394,8 @@ ${sign.whisper}`;
     X.globalAlpha = 0.85;
     X.fillStyle = P8.bone;
     X.font = '4px "Press Start 2P"';
-    X.fillText("АННУШКА", x + 52, y + bldH - 22);
-    X.fillText("УЖЕ РАЗЛИЛА", x + 46, y + bldH - 17);
+    X.fillText("ЖИЛЬЦЫ СЪЕХАЛИ", x + 44, y + bldH - 22);
+    X.fillText("РАНЬШЕ ПОЖАРА", x + 46, y + bldH - 17);
     X.globalAlpha = 1;
     X.fillStyle = "#3a2a08";
     X.beginPath();
@@ -10326,11 +10348,11 @@ ${sign.whisper}`;
 Радио играет «I don't want to set the world on fire». Песне восемьдесят лет. Мужчины, которые её пели, уже поняли, что хотеть этого — не главное.`,
     raven: `Огромное гнездо из проволоки и веток на мёртвом дубе. Внутри — не яйца. Блокноты, кассеты, книга с вырванными страницами. На обложке: символы, которых лучше не читать вслух. Мох на корешке — тёплый. Некрономикон распространяется как вирус: .pdf → .epub → .apk → .dna. Мох дочитает.`,
     riverbed: `Река ушла. Оставила: трещины, ракушки, велосипедное колесо. На дне — лужа, в которой отражается синее небо. Настоящее небо — серое. Вода помнит цвет. Вода помнит дольше камня. Камень помнит форму. Вода помнит цвет. Цвет неба, которого нет. Смотри. Пока лужа не высохла.`,
-    ruins: `Двенадцать этажей. Три верхних — обрушены во двор. На стене подъезда, белой краской по кирпичу: «АННУШКА УЖЕ РАЗЛИЛА».
+    ruins: `Двенадцать этажей. Три верхних — обрушены во двор. На стене подъезда, белой краской по кирпичу: «ЖИЛЬЦЫ СЪЕХАЛИ РАНЬШЕ ПОЖАРА».
 
-Квартира 42 — третий этаж, правое окно. Термометр на стене показывает 42°C. В окне — силуэт чёрного кота. Сидит. Смотрит.
+Квартира 42 — третий этаж, правое окно. В окне — силуэт чёрного кота. Сидит. Смотрит.
 
-Квартира 13, первый этаж: дверь с двадцатью замками. Все открыты. Внутри — никого. На табурете — примус. Починен.`,
+Квартира 13, первый этаж: дверь с двадцатью замками. Все открыты. Внутри — никого. Счётчик в коридоре остановился в среду.`,
     sol_home: `Sol стоит у терминала. Не смотрит на экран — экран смотрит на него.
 
 Вместо головы — пылающий диск. Четырнадцать лучей медленно вращаются, как стрелки часов, которые ждут, что их оттянут назад. Под диском — лицо: закрытые глаза, золотые потёки, замершие на щеках.
@@ -18343,6 +18365,12 @@ quarter║      ║ highway
       el.classList.remove("on");
     cancelAnimationFrame(rafId);
   }
+  function toggle() {
+    if (visible)
+      close2();
+    else
+      open2();
+  }
   function init2() {
     canvas = document.getElementById("map-canvas");
     if (canvas) {
@@ -18988,6 +19016,7 @@ quarter║      ║ highway
   var curCtx = curEl.getContext("2d");
   curCtx.imageSmoothingEnabled = false;
   var visible2 = true;
+  var IS_TOUCH = typeof window !== "undefined" && (("ontouchstart" in window) || navigator && navigator.maxTouchPoints > 0);
   function drawCursor() {
     curCtx.clearRect(0, 0, 20, 20);
     const cx = 10, cy = 10;
@@ -19015,6 +19044,8 @@ quarter║      ║ highway
     }, { once: true });
   }
   function show() {
+    if (IS_TOUCH)
+      return;
     curEl.style.display = "block";
     visible2 = true;
     document.body.style.cursor = "none";
@@ -19985,6 +20016,13 @@ quarter║      ║ highway
     show();
     resumeAudio();
     startAmbient();
+    if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
+      const mb = document.getElementById("map-btn");
+      if (mb) {
+        mb.classList.add("on");
+        mb.addEventListener("click", () => toggle());
+      }
+    }
   }
   document.getElementById("entry-btn").addEventListener("click", () => {
     document.getElementById("entry").style.display = "none";

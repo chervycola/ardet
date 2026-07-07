@@ -291,6 +291,27 @@ canvas#game {
   background: #08060a;
 }
 
+/* ── Map button (touch devices — no M key there) ── */
+#map-btn {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: none;               /* shown from JS on touch devices */
+  align-items: center; justify-content: center;
+  z-index: 250;                /* under terminal(300)/map(320) overlays */
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--c-gold);
+  background: rgba(10,8,6,0.72);
+  border: 1px solid rgba(184,134,11,0.5);
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#map-btn:active { background: rgba(107,15,26,0.4); }
+#map-btn.on { display: flex; }
+
 /* ── Custom cursor ── */
 #cur {
   position: fixed;

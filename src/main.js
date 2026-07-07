@@ -742,6 +742,14 @@ function startGame() {
   showCursor();
   resumeAudio();
   startAmbient();
+  // Touch devices have no M key — give them an on-screen map button.
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    const mb = document.getElementById('map-btn');
+    if (mb) {
+      mb.classList.add('on');
+      mb.addEventListener('click', () => toggleWorldMap());
+    }
+  }
 }
 
 document.getElementById('entry-btn').addEventListener('click', () => {

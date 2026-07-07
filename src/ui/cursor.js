@@ -8,6 +8,12 @@ curCtx.imageSmoothingEnabled = false;
 
 let visible = true;
 
+// On touch devices the crosshair must never appear at all. The old
+// hide-on-first-touch approach raced with show() at game start: touch
+// hid it, then startGame() re-showed it and it sat dead in a corner.
+const IS_TOUCH = typeof window !== 'undefined' &&
+  ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0));
+
 // Draw pixel-art cursor once
 function drawCursor() {
   curCtx.clearRect(0, 0, 20, 20);
@@ -47,6 +53,7 @@ export function init() {
 
 // Show cursor (call when game starts)
 export function show() {
+  if (IS_TOUCH) return; // never on touch — no pointer to follow
   curEl.style.display = 'block';
   visible = true;
   document.body.style.cursor = 'none';

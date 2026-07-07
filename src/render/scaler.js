@@ -32,8 +32,11 @@ export const scaler = {
     // On mobile: if integer scale leaves >20% of screen blank, adapt viewport
     const isMobile = sw <= 768;
     if (isMobile) {
-      // Adaptive viewport: fill screen, keep pixel size consistent
-      const pixelSize = Math.max(1, Math.floor(Math.min(sw * dpr / 320, sh * dpr / 180)));
+      // Adaptive viewport: fill screen, keep pixel size consistent.
+      // Target ≈230×130 logical px — the old 320×180 target gave a
+      // 390 px phone @2dpr pixelSize=2 (1 game px = 1 CSS px): sprites
+      // were tiny and tap targets fiddly.
+      const pixelSize = Math.max(1, Math.floor(Math.min(sw * dpr / 230, sh * dpr / 130)));
       this.vw = Math.floor(sw * dpr / pixelSize);
       this.vh = Math.floor(sh * dpr / pixelSize);
       this.scale = pixelSize;

@@ -4396,10 +4396,10 @@ export function draw_ruins(x, y) {
     rect(X,apt42X-2,apt42Y+4,1,1);rect(X,apt42X-1,apt42Y+4,1,1);
     rect(X,apt42X-2,apt42Y+5,1,1);
     rect(X,apt42X,apt42Y+4,1,1);rect(X,apt42X+1,apt42Y+4,1,1);
-    // ── «АННУШКА УЖЕ РАЗЛИЛА» — white paint on brick wall by entrance ──
+    // ── wall paint by entrance (kept in the quiet register) ──
     X.globalAlpha=.85;X.fillStyle=P.bone;X.font='4px "Press Start 2P"';
-    X.fillText('АННУШКА',x+52,y+bldH-22);
-    X.fillText('УЖЕ РАЗЛИЛА',x+46,y+bldH-17);
+    X.fillText('ЖИЛЬЦЫ СЪЕХАЛИ',x+44,y+bldH-22);
+    X.fillText('РАНЬШЕ ПОЖАРА',x+46,y+bldH-17);
     X.globalAlpha=1;
     // Oil spill at the base (golden-brown puddle)
     X.fillStyle='#3a2a08';
