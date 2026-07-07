@@ -944,9 +944,9 @@ Result: rhythmic pumping reverb wash, dub-style.
 
 ### Compatible с другими SYSTEM SUICIDE модулями
 
-- **Fed by**: I Show You Light, Body Blood And Salt, All Bones Dust, Be Careful, Last Day.
-- **Modulated by**: Fuck Abandoned Sleep (CV from pendulum LFO), Is My (gates/clocks), And My (balance crossfade с Last Day).
-- **Feeds**: And My (input в crossfader), final OUTPUT.
+- **Fed by**: I Show You Light, Body Blood And Salt, All Bones Dust, Be Careful, Last Day, **Is My** (MOSFET shaper на выходе Last Day перед реверб-хвостом).
+- **Modulated by**: Fuck Abandoned Sleep (CV from pendulum LFO); Is My через CV outs пилотного пульта (X/Y/GATE патчатся в decay/tone/freeze).
+- **Feeds**: final OUTPUT (direct — And My как crossfader снят с этого слота, см. Decision 13; Day↔Night mix, если нужен, теперь через любой сторонний VCA или пассивный splitter).
 
 ### Compatible с external Eurorack modules
 

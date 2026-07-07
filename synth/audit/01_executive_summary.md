@@ -1,5 +1,7 @@
 # SYSTEM SUICIDE — Executive Summary (revised)
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — упоминания Is My/And My как «under-specified» / «vactrol crossfader» / «TBD → crossfader» ниже отражают состояние до пересмотра. Актуально: Is My = MOSFET-shaper + пилотный пульт (Decision 12), And My = TBD (Decision 13). См. `../decisions/12_is_my_shaper_respec.md`, `../decisions/13_and_my_tbd.md`, `../SYSTEM_SUICIDE.md §6, §8`.
+
 > **Revision**: этот документ был переоценён после появления `wood_reverb_logical_schematic.html` — каркаса с точной топологией Last Night v2.0. Один из моих топ-BLOCKER был снят (детали в `13_schematic_cross_reference.md`). Топ-10 ниже пересортирован.
 
 **TL;DR**: Проект амбициозный и содержит **три-четыре истинно уникальных концепции** (physical plate reverb, oil can delay с solar amp, physical tongue EQ, optical tonewheel VCO). Полностью **продаваем в boutique Eurorack нишу**. Но **первая прошивка PCB Last Night v2.1 требует 3 критических фикса** (JFET EOL, EMI shielding, feedback stability simulation) перед компонентами. Ещё ~5 improvement-уровня правок можно делать на rev B.

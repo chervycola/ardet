@@ -6,8 +6,8 @@
 
 1. **`01_undefined_modules.md`** — 4 модуля с неопределённой архитектурой:
    - Be Careful (фильтр с 3 conflicting концепциями → glass plate резонатор).
-   - Is My (3 conflicting функции → vactrol crossfader).
-   - And My (TBD → Day↔Night crossfader).
+   - Is My (3 conflicting функции → ~~vactrol crossfader~~ **superseded — см. `12_is_my_shaper_respec.md`**).
+   - And My (TBD → ~~Day↔Night crossfader~~ **superseded → back to TBD, см. `13_and_my_tbd.md`**).
    - Body Blood And Salt (safety + scope → defer to Phase 5).
 
 2. **`02_last_day_scope.md`** — 6 decisions для Last Day:
@@ -62,6 +62,18 @@
    - Supersedes "full cartridge" модель во всех ранних docs.
    - Картридж $10-20 (было $40-45) → razor-blade viable. Universal DAEX32 в модуле.
 
+9. **`12_is_my_shaper_respec.md`** (**LOCKED**) — Is My re-spec + slot swap с And My:
+   - Is My больше не vactrol crossfader (Decision 01-2 superseded).
+   - Новая архитектура: VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-дрона.
+   - Три режима SHAPER / RING / GATE, управление внешним пилотным пультом.
+   - Донор пульта — DJI C5 (RC-N1/RC231), линк USB-C (USB-MIDI), STM32G431 в обоих устройствах.
+   - Полная техспека — ветка `origin/claude/jolly-gates-KxAP2`. Retail €2480. 14 HP, edition of 13.
+
+10. **`13_and_my_tbd.md`** (**LOCKED**) — And My rolled back to TBD:
+    - Day↔Night crossfader концепт (Decision 01-3) снят как не соответствующий принципу серии.
+    - Optical vactrol crossfader (перенесённый на слот 8 в System-suicide branch commit `71b4aa8`) также снят через commit `b41db61`.
+    - Слот 8 остаётся placeholder'ом до появления архитектуры уровня остальных модулей.
+
 ## Как использовать
 
 Каждый документ:
@@ -79,8 +91,8 @@
 
 ## 01_undefined_modules
 - Be Careful: A (glass plate)
-- Is My: A (vactrol crossfader)
-- And My: A (Day↔Night crossfader)
+- Is My: A (vactrol crossfader) — **SUPERSEDED 2026-05/07, см. `12_is_my_shaper_respec.md`** (MOSFET-shaper из ESC + пилотный пульт из DJI C5)
+- And My: A (Day↔Night crossfader) — **SUPERSEDED 2026-07, см. `13_and_my_tbd.md`** (rolled back to TBD)
 - BBAS: A (defer to Phase 5)
 
 ## 02_last_day_scope

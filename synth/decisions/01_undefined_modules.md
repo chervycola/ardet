@@ -1,5 +1,11 @@
 # Решения по TBD модулям
 
+> ⚠ **PARTIALLY SUPERSEDED (2026-05/07)** — разделы §2 (Is My) и §3 (And My) заменены новыми decisions:
+> - §2 Is My «vactrol crossfader (Variant A)» → **superseded** decision `12_is_my_shaper_respec.md` (MOSFET-shaper из ESC FPV-дрона + пилотный пульт из корпуса DJI C5, edition of 13). Полная техспека — ветка `origin/claude/jolly-gates-KxAP2`.
+> - §3 And My «Day↔Night crossfader (Variant A)» → **superseded** decision `13_and_my_tbd.md` (rolled back to TBD; концепт не соответствует принципу серии).
+>
+> Разделы §1 (Be Careful) и §4 (BBAS) остаются в силе.
+
 Четыре модуля серии имеют либо undefined, либо conflicting спецификации. Для каждого — текущее состояние, 2–3 варианта архитектуры с trade-offs, рекомендация. **Пользователь должен выбрать** один вариант (или явно cut модуль из серии).
 
 Scope fence напоминание: этот документ **не проектирует** модули полностью — только даёт архитектурные варианты с ключевыми trade-offs. После выбора — отдельный R&D проект.
@@ -122,6 +128,8 @@ Scope fence напоминание: этот документ **не проек�
 
 ## 2. Is My — live switcher / clock router / octaver
 
+> ⚠ **SUPERSEDED 2026-05/07** — принятый Variant A (vactrol crossfader) отменён. Актуальная архитектура — MOSFET-shaper + пилотный пульт (edition of 13). См. `12_is_my_shaper_respec.md` и `../SYSTEM_SUICIDE.md §6`. Содержимое §2 ниже сохраняется как историческая запись.
+
 ### Текущее состояние
 Три conflicting функции в описании:
 - Vactrol crossfade (audio mix).
@@ -221,6 +229,8 @@ Scope fence напоминание: этот документ **не проек�
 ---
 
 ## 3. And My — TBD
+
+> ⚠ **SUPERSEDED 2026-07** — принятый Variant A (Last Day ↔ Last Night crossfader) отменён; модуль возвращён в TBD-состояние. Причина — концепт «connective utility» на stereo VCA не соответствует принципу серии «электроника обслуживает физику». См. `13_and_my_tbd.md` и `../SYSTEM_SUICIDE.md §8`. Содержимое §3 ниже сохраняется как историческая запись.
 
 ### Текущее состояние
 Полностью undefined. Описано как "утилитарный модуль с джостиком". Phantom модуль в системе.

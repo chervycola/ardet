@@ -1,5 +1,7 @@
 # Остальные 7 модулей — пробелы и риски
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — разделы про Is My («три conflicting функции») и And My («TBD») ниже отражают состояние до пересмотра. С 2026-05/07 архитектуры этих модулей зафиксированы (Is My = MOSFET-shaper из ESC + пилотный пульт DJI C5; And My = TBD, awaiting concept). См. `../decisions/12_is_my_shaper_respec.md`, `../decisions/13_and_my_tbd.md`, `../SYSTEM_SUICIDE.md §6, §8`.
+
 Для каждого из 7 модулей вне Last Night/Last Day: заявленная функция, зрелость концепта, что критически отсутствует, вердикт load-bearing / filler.
 
 **Scope fence (повторение)**: этот раздел **флагирует пробелы**, а не проектирует модули. Конкретная электроника и схемы не предлагаются.

@@ -36,8 +36,9 @@ synth/
 ├── SYSTEM_SUICIDE.md            — общий брифинг по 9-модульной серии
 ├── last_night_pedal_panel.svg   — Inkscape SVG панели Last Night pedal (203×140мм)
 ├── audit/                       — критический аудит (14 файлов)
-├── decisions/                   — locked design decisions (00, 01–04, 08, 09, 10)
+├── decisions/                   — locked design decisions (00, 01–04, 08, 09, 10, 11, 12, 13)
 ├── cartridges/                  — manuals по обработке материалов (bone, nephrite)
+├── is_my/                       — концепт + пилотный пульт DJI C5 (sync с веткой jolly-gates)
 └── fixes/                       — конкретные правки post-audit (5 файлов)
 ```
 
@@ -72,14 +73,16 @@ synth/
 
 | Decision | Status | Описание |
 |----------|--------|----------|
-| 01 | Active | 4 undefined modules → fixed concepts |
+| 01 | Active (§1, §4); §2, §3 superseded | 4 undefined modules → fixed concepts. §2 Is My superseded by 12; §3 And My superseded by 13. |
 | 02 | Active (partial) | Last Day scope (D1, D5 superseded by 08) |
 | 03 | Active (partial, see D11) | Cartridge standards — frame format + 4 magnets (passive plate per Decision 11) |
-| 04 | Active | Production strategy (5 phases sequential) |
+| 04 | Active (partial, Is My/And My pricing obsolete) | Production strategy (5 phases sequential) |
 | 08 | **LOCKED** | Day/Night комбайны consolidated base + diptych mapping |
 | 09 | **LOCKED** | v5 hybrid — mockup canon UX + Decision 08 internals |
 | 10 | Reference | Elite tier components + sourcing |
 | 11 | **LOCKED** | Plate-only passive cartridge + in-module transducers (contact coupling) |
+| 12 | **LOCKED** | Is My re-spec: MOSFET-shaper из ESC + пилотный пульт из корпуса DJI C5, edition of 13, €2480. Полная техспека — ветка `origin/claude/jolly-gates-KxAP2`, локальная копия — `synth/is_my/`. |
+| 13 | **LOCKED** | And My rolled back to TBD. Слот 8 остаётся placeholder'ом до появления концепта уровня остальных модулей. |
 
 ## Schematic reference
 

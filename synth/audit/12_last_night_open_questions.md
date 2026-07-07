@@ -1,5 +1,7 @@
 # Last Night — ответы на открытые вопросы
 
+> ⚠ **HISTORICAL NOTE (pre-2026-05)** — упоминания Is My и And My как «под-specified» ниже относятся к прежней трактовке. С 2026-05/07 Is My = MOSFET-shaper + пилотный пульт, And My = TBD (rolled back). См. `../decisions/12_is_my_shaper_respec.md` и `../decisions/13_and_my_tbd.md`.
+
 Вопросы в конце брифов v2.0 и v2.1. Каждый получает явный ответ со ссылкой на соответствующий раздел аудита.
 
 ---

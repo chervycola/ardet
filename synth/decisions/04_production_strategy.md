@@ -1,5 +1,7 @@
 # Production strategy — запуск серии
 
+> ⚠ **PARTIALLY OBSOLETE (2026-05/07)** — цены/roadmap/BOM для Is My как «vactrol crossfader $120–150» и And My как «Day↔Night crossfader $150–200» устарели. Актуально: Is My — edition of 13 (MOSFET-shaper + пилотный пульт из DJI C5), retail **€2480** (из System-suicide branch commit `318587d`), R&D-окно больше остальных модулей; And My — TBD (нет retail до появления концепта). См. `12_is_my_shaper_respec.md`, `13_and_my_tbd.md`. Цифры Phase 2 cumulative retail ниже устарели.
+
 Сквозные вопросы по организации выпуска: roadmap sequencing, batch sizes, pricing, distribution. Требуется решений со стороны пользователя для согласования R&D с business model.
 
 ---

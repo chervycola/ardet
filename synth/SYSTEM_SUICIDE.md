@@ -17,17 +17,19 @@
 | 3 | **All Bones Dust** | Waveshaper / distortion / VCA | Трансформатор + механический раттл | 10 |
 | 4 | **Be Careful** | Резонансный фильтр | Стеклянная пластина + exciter/piezo | 14 |
 | 5 | **Fuck Abandoned Sleep** | LFO / модулятор | Физический маятник + оптика | 14 |
-| 6 | **Is My** | Live-кроссфейдер + clock switcher | Оптический кроссфейд на вактролах + sync-triggers | 8 |
+| 6 | **Is My** | MOSFET shaper · VCA · ring · gate + пилотный пульт | MOSFET-каскад из ESC FPV-дрона + DJI C5 донор пульта | 14 |
 | 7 | **Last Day** | Delay / Amp / EQ финализатор (предапокалипсис) | Oil-can delay + Solar amp + Tongue resonator + hot palette FX | 40 (+ pedal SKU) |
-| 8 | **And My** | Day ↔ Night crossfader | Двойной VCA с CV/manual balance | 8 |
+| 8 | **And My** | **TBD** (см. Decision 13) | TBD | TBD |
 | 9 | **Last Night** | Reverb финализатор (постапокалипсис) | Сменные пластины + cold palette FX + always-on phaser + Gate/Crush | 40 (+ pedal SKU) |
 
-**Итого (Phase 1–4, без BBAS)**: 16 + 10 + 14 + 14 + 8 + 40 + 8 + 40 = **150 HP**.
-**Итого с BBAS (Phase 5, опц.)**: 150 + 20 = **170 HP**.
+**Итого (Phase 1–4, без BBAS, And My = TBD)**: 16 + 10 + 14 + 14 + 14 + 40 + 0 + 40 = **148 HP** + резерв под And My.
+**Итого с BBAS (Phase 5, опц.)**: 148 + 20 = **168 HP** + резерв под And My.
 
 Helps fit:
-- **150 HP без BBAS** — два ряда 84HP (168HP total) с запасом 18HP для utilities (mults, attenuverters).
-- **170 HP с BBAS** — нужен setup 84+84+84 (3 ряда) или skiff с большим pool.
+- **148 HP без BBAS + And My** — два ряда 84HP (168 HP total). Диапазон под And My: 6–14 HP укладывается.
+- **168 HP с BBAS** — And My + BBAS вместе выпадают из двух рядов. Нужен третий ряд, skiff, или один из финализаторов в pedal-SKU.
+
+> **Slot 6 (Is My) и slot 8 (And My) — re-spec 2026-05/07**: Is My перенесена с оптического кроссфейдера на MOSFET-shaper + пилотный пульт (Decision 12, ветка `origin/claude/jolly-gates-KxAP2` — полная техспека). And My возвращена в TBD (Decision 13) — старый Day↔Night crossfader концепт не соответствует принципу серии «электроника обслуживает физику».
 
 > **Примечание о форм-факторе** (per Decision 08 consolidated base): и **Last Night**, и **Last Day** выпускаются **в двух SKU каждый** — Eurorack 40HP **и** big-box Pedal (~203×140×40мм, Strymon BigSky / Eventide H9 Max class). Identical schematic, identical sound, identical cartridges. Customer выбирает enclosure по контексту использования. Остальные модули серии — Eurorack only. Last Day pedal version имеет solar cell window на передней панели + tongue resonator slot (mechanical extends ~10мм за enclosure depth — учтено в big-box формате).
 
@@ -367,63 +369,118 @@ SUSTAIN ──→ Электромагнит ────┘ (подталкив
 ### Аналоги
 Маятниковые модуляторы существуют как арт-объекты и инсталляции, но в формате Eurorack с CV-выходом, электромагнитным приводом, chaos-режимом и visible window — **не реализовано**. Ближайшее: Landscape Stereo Field (тактильный controller) — не generator CV.
 
-## 6. IS MY — Оптический кроссфейдер
+## 6. IS MY — MOSFET-shaper + пилотный пульт (edition of 13)
+
+> **Re-spec 2026-05/07 (Decision 12).** Vactrol crossfader (старая архитектура) снят с этого слота. Полная канoническая техспека модуля живёт на ветке `origin/claude/jolly-gates-KxAP2` в директории `is_my/` — см. также локальную копию в `synth/is_my/` этого репо. Ниже — концептуальный обзор.
 
 ### Суть
-Плавный CV-управляемый кроссфейд между двумя аудиосигналами через пару vactrol'ов. Lo-fi "оптический" характер — не идеально линейный, не equal-power, с лёгкой оптической инерцией от LDR. Для live-performance — между двумя голосами, для перехода Last Day → Last Night, для slow morph в ambient patches.
+VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-дрона (силовая электроника, прошедшая боевое применение). Три режима работы (SHAPER / RING / GATE), управляется выносным пилотным пультом по USB-C (USB-MIDI). Модуль — единственный в линейке с физическим интерфейсом, который держат в руках. Занимает место исполнителя в стихе — «Is My» между строкой сна (Fuck Abandoned Sleep) и строкой дня (Last Day). Edition of 13 с документированным провенансом.
 
 ### Физический элемент
-Два **vactrol'а** (VTL5C3 или VTL5C4 matched pair) — LED внутри opaque housing светит на LDR (photoresistor). Инерция LDR ~10–50мс даёт optical lag, который **слышен как smooth-lag crossfade**.
+**MOSFET-каскад из донорского ESC (Electronic Speed Controller) FPV-дрона.** Материал делает то же, что делал раньше: силовое переключение, только среда сменилась с электромеханической на звуковую. Разброс параметров MOSFET'ов между донорами определяет edition-логику — каждый из 13 экземпляров звучит чуть иначе.
 
-CV 0В → выход только A. CV 5В → выход только B. CV 2.5В → ~equal mix (non-linear, slightly lagging from optical inertia).
+**Донор пульта — DJI C5 (RC-N1 / RC231)**, штатный контроллер Mavic 3 / Air 2S / Mini 2. Родной корпус, гимбалы, кнопки, слайдер режимов, USB-C окно порта переиспользуются. Собственная плата пульта (STM32G431 + LDO 3.3V) заменяет родную (SoC + OcuSync удалены).
 
 ### Сигнальная цепь
 
 ```
-AUDIO A ──► Input A buffer ──► Vactrol A (LDR1) ──┐
-                                                   ├──► Summing amp ──► OUTPUT
-AUDIO B ──► Input B buffer ──► Vactrol B (LDR2) ──┘
-
-  CV ──► LED driver ──┬──► LED in Vactrol A (inverted for A attenuate)
-                      └──► LED in Vactrol B (non-inverted for B pass)
-
-  Manual knob ──► mixed with CV at CV summing point
+┌─ МОДУЛЬ (Eurorack 3U, 14HP) ───────────────────────┐
+│                                                     │
+│  AUDIO IN → buffer → INPUT DRIVE → pre-HPF(var) ──┐ │
+│                                                    │ │
+│                                                    ▼ │
+│                         ┌── ROUTE (pre/post) ──┐    │
+│                         │ MOSFET core (SHAPER │    │
+│                         │  / RING / GATE)  ⇄  │    │
+│                         │  Polivoks-type VCF  │    │
+│                         └──────────┬───────────┘    │
+│                                    ▼                │
+│                          TONE (tilt) + BASS         │
+│                                    ▼                │
+│                     MIX (dry/wet) → DIRTY OTA-VCA   │
+│                                    ▼                │
+│                                 AUDIO OUT           │
+│                                                     │
+│  VIDEO IN → audifier (deferred v2, R13)             │
+│                                                     │
+│  4× CV IN (DRIVE/BIAS/CUTOFF/RESO) — attn + norm    │
+│    ↑ normalised from pilot remote                   │
+│  3× CV OUT (X/Y/GATE) — pass-through от пульта      │
+│                                                     │
+│  USB-C ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← ─────── │
+└────────────────────────────────────────────────┼───┘
+                                                 │
+                                                 ▼
+                     ┌─ ПИЛОТНЫЙ ПУЛЬТ (DJI C5 donor) ─┐
+                     │                                  │
+                     │  Left stick Y  → DRIVE (rate)    │
+                     │  Left stick X  → BIAS  (momentary)│
+                     │  Right stick Y → CUTOFF (rate)   │
+                     │  Right stick X → RESO   (momentary)│
+                     │  Mode slider   → SHAPER/RING/GATE │
+                     │  RTH button    → ARM (toggle)     │
+                     │  Fn button     → LINK (toggle)    │
+                     │  Shutter       → GATE (momentary) │
+                     │  Gimbal dial   → MIX offset       │
+                     │  Foot switch   → GATE (backup)    │
+                     │                                  │
+                     │  MCU STM32G431 · USB-MIDI device │
+                     │  Питание от VBUS модуля (5В)      │
+                     └──────────────────────────────────┘
 ```
 
-### Ключевые контролы
+### Ключевые архитектурные решения (из jolly-gates)
 
-| Контрол | Функция | CV |
-|---------|---------|-----|
-| **POSITION** | Ручной baseline кроссфейда (0 = A, 10 = B, 5 = mix) | — |
-| **CV amount** | Аттенювертер CV input | — |
-| **CURVE** | Переключатель: linear / equal-power / reverse-log | — |
-| **SYNC input** | Gate-triggered A/B switch (momentary) | ✓ |
-| **LED indicator A** | Visual показывает уровень vactrol A | — |
-| **LED indicator B** | Visual показывает уровень vactrol B | — |
+| Что | Как | Обоснование |
+|-----|-----|-------------|
+| **Линк пульт↔модуль** | USB-C (модуль = USB-host на MAX3421E) | Пульт работает и как class-compliant USB-MIDI для DAW; никаких доработок корпуса DJI |
+| **Питание пульта** | От VBUS модуля (5В/500 мА) | Убивает всю секцию LiPo/заряд/boost/fuel-gauge — минимум электроники в пульте |
+| **Y-оси стика** | Rate-режим (интегратор) | Пружины DJI не мешают: стик = скорость, значение держится |
+| **X-оси стика** | Momentary (absolute, возврат в 0) | Живут «в руке», модулируют вокруг baseline |
+| **MCU обоих устройств** | STM32G431 (LQFP48/32) | 12-bit ADC × 16 oversample, USB FS device, дёшев |
+| **Ядро модуля** | MOSFET-каскад двухкаскадный + Polivoks-VCF pre/post | Вся нелинейность — в MOSFET; фильтр pre определяет, что искажается, post — режет грязь |
+| **Выходной VCA** | OTA («грязный»), не clean-buffer | Отдельная тембральная краска на выходе |
+| **Video path** | Отложен, JACK снят с панели (R13) | Оставить путь для v2 без блокирования MVP |
 
-### Тембральный характер
-**Оптическая инерция** — это главная фишка. Быстрый CV-sweep (<30мс) получает lag, делает crossfade "springy". Медленный sweep — работает как стандартный VCA. При быстрых gate-переключениях (SYNC input) — audible "fade-in-fade-out" 30мс вместо hard switch.
+### Три режима работы (MODE slider = DJI Cine/Normal/Sport)
 
-Характер: "рассказ 1970-х аналогового мира" — не идеально чистый, но музыкально приятный. Добавляет немного mid-range EQ (LDR не flat).
+- **SHAPER** — VCA с управляемым насыщением. Drive раздувает уровень в нелинейность, Bias смещает рабочую точку (чётные ↔ нечётные гармоники). На высоких Drive — period-doubling chaos, естественная sub-octave.
+- **RING** — ring modulator через PWM. Внутренний несущий генератор (200 Гц – 10 кГц, частота от Drive) модулируется аудиосигналом по duty cycle. Металлический инхармоничный тембр, на низких частотах несущей — слышимый PWM-tick (голос материала).
+- **GATE** — комбинированный hard limiter + noise gate. Drive задаёт верхний порог, Bias — нижний. Перкуссивный, акцентирует транзиенты, режет хвосты.
+
+Переключение режимов — под mute ~50–100 мс для подавления щелчков.
+
+### Edition of 13
+
+Каждый экземпляр получает **provenance certificate**:
+
+1. Фото платы ESC до разборки.
+2. Координаты (или регион) находки.
+3. Дата изъятия из донора.
+4. Тип/модель платы (если идентифицируется).
+
+Уникальность экземпляров: из-за разброса параметров MOSFET'ов между донорами (тепловой износ, состояние платы) каждый из 13 звучит чуть иначе. Документация не обещает идентичности; обещает работоспособность в спецификации.
 
 ### Связь с системой
-- **Главная роль**: live crossfade между двумя голосами.
-- **Перфоманс**: triggered SYNC = rhythmic A/B jumping в такт секвенсору.
-- **Ambient**: slow CV → slow morph между двумя reverb tails.
 
-### Почему это **не** clock divider и **не** octaver
-В оригинальной концепции были три conflicting функции в одном 6HP модуле. После decision — одна функция: vactrol crossfade. Это решение освобождает 6HP для чистой ergonomики, а clock utilities и octaver — стандартные модули, легко найти у других производителей.
+- **Аудио**: главный shape'р сигнала между сном (Fuck Abandoned Sleep как CV-источник) и днём (Last Day как приёмник).
+- **CV-хаб**: X/Y/GATE от пульта расходятся по всем модулям через панельные джеки — тот же жест джойстика управляет и своим шейпером, и delay time Last Day, decay Last Night, cutoff Be Careful.
+- **USB-MIDI**: пульт втыкается в DAW без модуля — универсальный перформ-контроллер линейки.
 
-### Сложность: Низкая
-5 компонентов + 2 vactrol + 2 pot + 2 jack input + 1 jack output + 1 CV input + 1 sync input. ~30 компонентов total. 1-layer PCB достаточна.
+### Retail
+**€2480** (from `origin/System-suicide` commit `318587d`).
 
-**R&D**: 2–3 месяца. Phase 2 (параллельно с Last Day).
+### Сложность: Высокая
+Пульт с STM32G431 + прошивкой + корпусной работой (teardown DJI, посадка платы, окно USB-C). Модуль со STM32G431 + MAX3421E USB-host + DAC8568 + MOSFET-каскадом + Polivoks-VCF + OTA-VCA. Firmware для двух устройств, USB-MIDI host stack на G431. Небанальный порядок сложности для линейки.
+
+**R&D**: Phase 2. Итерации It-1 (гимбалы + Nucleo + rate-режим), It-2 (MAX3421E bring-up + USB-host), It-7 (teardown посадки). Точный timeline — TBD, зависит от логистики поиска доноров ESC для edition.
 
 ### Аналоги
-- Mutable Instruments Blinds / Veils — quad VCA с linear response, но без оптической инерции.
-- Joranalogue CV Mix — similar, без vactrol character.
-- Happy Nerding 3×VCA — classic op-amp VCA, no optical.
-- **Vactrol-based crossfader в Eurorack 6HP** — есть в DIY, но не в commercial market. Unique character.
+- Nothing directly comparable в Eurorack. Ближайшее по духу:
+- Landscape Stereo Field — тактильный контроллер, но не audio-processor.
+- Make Noise Pressure Points — expressive контроллер, но без edition-логики и материала.
+- Bastl Softpop — микро-синт с идиосинкразическим character, edition-практика.
+- **MOSFET-shaper из донорского ESC FPV-дрона с выносным пультом из DJI-корпуса и document'ированным провенансом** — уникально в commercial rack.
 
 ## 7. LAST DAY — Предапокалиптичный сатуратор: Oil Can Delay + Solar Amp + Resonant EQ
 
@@ -576,7 +633,7 @@ Electric brake (MOSFET shorting motor) → мотор замедляется, п
 | **FREEZE** | Кнопка-latching | Запись отключается, текущий контент зацикливается и деградирует |
 | **DRAG** | Momentary switch | Замедление мотора → повторы тонут по pitch |
 | **FEEDBACK SEND/RETURN** | Jack-пара | Петля в feedback-path. Можно вставить Last Night → delay → reverb → delay → бесконечность |
-| **CLOCK IN** | Jack | Синхронизация времени delay с внешним клоком (от Is My) |
+| **CLOCK IN** | Jack | Синхронизация времени delay с внешним клоком (мастер-clock от секвенсора / Fuck Abandoned Sleep) |
 
 ---
 
@@ -644,77 +701,40 @@ Oil can: BLDC motor + disk + capacitive pickup mechanics + sealed oil cartridge.
 
 Комбинация трёх систем в одном модуле — абсолютно уникальна.
 
-## 8. AND MY — Day ↔ Night crossfader
+## 8. AND MY — TBD
 
-> *"Last Day **and my** Last Night"* — литеральная интерпретация строки. Модуль связывает двух финализаторов.
+> **Rolled back to TBD (Decision 13, 2026-07).** Старый концепт «Day↔Night stereo crossfader» на LM13700/SSI2164 признан несоответствующим принципу серии «электроника обслуживает физику» и снят. Новый материал и функция для этого слота не заданы. Модуль остаётся в линейке (позиция в стихе неотчуждаема), но проектирование отложено до появления концепта уровня остальных модулей. Подробности — `decisions/13_and_my_tbd.md`.
 
-### Суть
-Финальный stereo crossfader между двумя финализаторами серии — Last Day (delay, жара) и Last Night (reverb, холод). CV-управляемый или manual, с опциональными dual mono outputs для routing flexibility.
+### Что известно на сегодня
 
-### Физический элемент
-Дело обходится без громкого physical gimmick — модуль утилитарный, **connective tissue**. Но у него есть маленькая фишка: **слайдер ручкой** (motorized optional) вместо rotary pot — визуально обозначает temporal transition "day → night".
+- **Позиция в цепи**: слот 8, между Last Day (delay-финализатор) и Last Night (reverb-финализатор). Занята в стихе фразой «and my» — «моя» на предпоследнем такте.
+- **Не будет**: чистой утилитой (stereo VCA / crossfader / attenuverter / joystick controller). Все эти функции существуют как generic-модули у других производителей и не несут материального слоя, характерного для остальных 8 модулей серии.
+- **HP-бюджет**: TBD. Резерв 6–14 HP в двух рядах 84HP без BBAS (см. §Обзор).
+- **Retail**: TBD.
+- **Phase**: Phase 2 (параллельно с Is My и Last Day), но не блокирует ship — модуль откладывается до появления концепта.
 
-### Сигнальная цепь
+### Пространство поиска
 
-```
-AUDIO L (Last Day)  ──► VCA L_day ──┐
-                                     ├──► Summing amp ──► MAIN OUT L
-AUDIO L (Last Night) ──► VCA L_nite ─┘
+Не решение, а направление. Возможные оси:
 
-AUDIO R (Last Day)  ──► VCA R_day ──┐
-                                     ├──► Summing amp ──► MAIN OUT R
-AUDIO R (Last Night) ──► VCA R_nite ─┘
+- **Материал, ещё не задействованный в линейке**: кристаллы, вода, соль, растительная ткань, воздух в резонаторе, магнитная лента в новом качестве. Слот требует физического элемента, определяющего звук.
+- **Тематически «моё»**: субъективность исполнителя в системе. Слот пилотного пульта уже занят через Is My — дублировать перформ-контроллер нельзя.
+- **Функция связки Day↔Night без утилитарности**: если модуль всё-таки соединяет Last Day и Last Night, то через материал (например: физический медиум, через который сигнал одного проходит и попадает в другой), а не через VCA-mix.
 
-  CV ──► Control circuit (equal-power law)
-          │
-          ├──► VCA_day (inverse)
-          └──► VCA_nite (direct)
+### Что нельзя
 
-  Manual slider ──► mixed with CV
-  
-  Breakout outputs:
-  - DAY OUT (L, R) — только Last Day content после crossfade
-  - NITE OUT (L, R) — только Last Night content после crossfade
-```
+- **Vactrol crossfader**: перенесён на слот 8 commit'ом `71b4aa8` System-suicide branch, затем откачен `b41db61` — вернулся оптический crossfader на слот 6, старую Is My-функцию. Но затем сам был снят с Is My через Decision 12 (MOSFET-shaper занял слот 6). Vactrol crossfader концепт сейчас нигде не живёт; повторно назначать его на слот 8 — прямой возврат к отвергнутому варианту.
+- **Stereo VCA (Day↔Night mix)**: отвергнут (см. этот же banner).
+- **Joystick / attenuverter / mult**: generic-утилиты, отвергнуты.
 
-Используется **LM13700 dual OTA** (2 OTA для stereo), либо **SSI2164 quad VCA** для premium audio quality.
+### Историческая запись (Decision 01-3, superseded)
 
-### Ключевые контролы
+<details>
+<summary>Старая архитектура «Day↔Night crossfader» — как выглядела до Decision 13</summary>
 
-| Контрол | Функция | CV |
-|---------|---------|-----|
-| **BALANCE** | Большой slider (motorized optional), 30мм throw | ✓ (0-5В) |
-| **CURVE** | Linear / equal-power / sharp switch | — |
-| **CV AMOUNT** | Аттенюверт CV input | — |
-| **PUNCH** | Momentary button — temporary full swing (performance gimmick) | — |
-| **LINK** | Switch — L и R crossfade синхронно (mono sum) или независимо (stereo panorama) | — |
-| **DAY OUT / NITE OUT** | Jacks — breakout taps after crossfade | — |
+Финальный stereo crossfader между Last Day и Last Night. CV-управляемый, motorized slider (optional), dual mono outputs (DAY OUT / NITE OUT breakout taps). LM13700 dual OTA или SSI2164 quad VCA. Sole controls: BALANCE (slider, CV-in), CURVE (linear/equal-power/sharp), CV AMOUNT (attn), PUNCH (momentary full swing), LINK (L/R mono/stereo). Equal-power curve, чистый mix без character. Retail предполагался ~€150–200, R&D 2–3 месяца, Phase 2 параллельно с Last Day. Full technical details — см. историю коммитов, файл до `decisions/13_and_my_tbd.md`.
 
-### Тембральный характер
-Чистый mix. Не добавляет character (by design — connective utility). Equal-power curve гарантирует perceived loudness constant через sweep. Motorized slider (premium SKU) отвечает на CV physically — visual performance element.
-
-### Связь с системой
-**Главное назначение**: управляемый переход Day ↔ Night. В конце patch'а пользователь finally commits — signal идёт через **и** delay, **и** reverb, с user-controlled balance.
-
-Живые сценарии:
-- **Slow automation**: 30-секундный slider sweep из Day в Night — из раскалённого полдня в прохладную ночь.
-- **Rhythmic punch**: PUNCH button в такт — momentary snap между Day и Night.
-- **CV modulation**: Fuck Abandoned Sleep pendulum LFO controls balance — дышит между двумя states.
-- **Stereo spread**: LINK off + different CVs на L/R — Day на одном канале, Night на другом, stereo depth.
-
-### Почему это не joystick / не attenuverter
-В оригинальной концепции And My был "TBD утилитарный модуль с джостиком". После decision — специализированная функция, усиленная thematically (literal reading of song line). Joystick-controllers существуют у Make Noise (Pressure Points) и в модуле Tetrapad — не нужно дублировать.
-
-### Сложность: Низкая
-Stereo VCA + summing + CV conditioning. ~25 компонентов. 1-layer PCB достаточно.
-
-Motorized slider (v2) — добавка ~$15 BOM (small linear actuator + encoder + driver). Optional premium SKU.
-
-**R&D**: 2–3 месяца. Phase 2 (параллельно с Last Day).
-
-### Аналоги
-- Erica Synths Sample Drum / Noise Engineering Sinc Bucina — дедикатед crossfaders, но без semantic tie к other modules.
-- **Pairing specifically Day↔Night финализаторы** — уникально по контексту, не по technology.
+</details>
 
 ## 9. LAST NIGHT — Ревербератор на сменных пластинах + FX engine разрушения
 
@@ -945,28 +965,27 @@ LSK489A dual JFET preamp — самая деликатная часть (shielde
 │   [Осциллятор] ──→ [Touch]  ──→ [Distortion] ──→ [Glass res filter] ──→ │
 │                                                       │                  │
 │                                                       ▼                  │
-│                                    ┌────── IS MY ──────┐                 │
-│                                    │  [Vactrol xfade]  │                 │
-│                                    │    A          B    │                │
+│                                    ┌────── IS MY ──────┐   ◄── USB-MIDI  │
+│                                    │  [MOSFET shaper]  │      от пилот-  │
+│                                    │  SHAPER/RING/GATE │      ного пульта│
+│                                    │  + Polivoks VCF   │   (корпус DJI C5)│
 │                                    └────────┬──────────┘                 │
 │                                             │                            │
-│                                  ┌──────────┴──────────┐                 │
-│                                  ▼                     ▼                 │
-│                           ┌── LAST DAY ──┐     ┌── (dry) ──┐             │
-│                           │ ☀ Solar Amp   │     │            │            │
-│                           │ EQ (tongue)   │     │            │            │
-│                           │ Oil Can Delay │     │            │            │
-│                           └──────┬────────┘     └─────┬──────┘            │
-│                                  │FB SEND             │                  │
-│                                  │                     │                  │
-│                                  └──────┐ ┌───────────┘                  │
-│                                         ▼ ▼                               │
-│                                  ┌── AND MY ──┐                           │
-│                                  │ [Day↔Night │                           │
-│                                  │  xfader]   │                           │
-│                                  └────┬───────┘                           │
-│                                       │                                   │
-│                                       ▼                                   │
+│                                             ▼                            │
+│                                     ┌── LAST DAY ──┐                     │
+│                                     │ ☀ Solar Amp   │                    │
+│                                     │ EQ (tongue)   │                    │
+│                                     │ Oil Can Delay │                    │
+│                                     └──────┬────────┘                    │
+│                                            │FB SEND                       │
+│                                            │                             │
+│                                            ▼                             │
+│                                     [ AND MY = TBD ]                     │
+│                                    (Decision 13 —                        │
+│                                     slot placeholder                     │
+│                                     до появления концепта)               │
+│                                            │                             │
+│                                            ▼                             │
 │                              ┌── LAST NIGHT ──┐ ◄── FB RETURN ───┐       │
 │                              │  [Ревербератор]│                   │       │
 │                              └───────┬────────┘                   │       │
@@ -1006,7 +1025,7 @@ External audio (DJ deck)
 Fuck Abandoned Sleep (chaos mode, double pendulum) → trigger
     → I Show You Light (sync input = rhythmic bursts)
         → All Bones Dust (brass rattle)
-            → Last Day (oil delay, tempo sync via Is My)
+            → Last Day (oil delay, tempo sync via CLOCK IN от FAS)
                 = self-evolving rhythmic pattern
 ```
 
@@ -1014,7 +1033,7 @@ Fuck Abandoned Sleep (chaos mode, double pendulum) → trigger
 ```
 I Show You Light (contact/DUST mode, пьезо-стилус)
     → Be Careful (glass Pyrex, high Q band-pass)
-        → IS MY: vactrol crossfade между dry и...
+        → IS MY (MOSFET GATE mode, короткие транзиенты)
             → All Bones Dust (bone rattle)
                 → Last Night (spring steel cartridge)
 ```
@@ -1022,12 +1041,13 @@ I Show You Light (contact/DUST mode, пьезо-стилус)
 **Патч E — "Day Into Night" (бесконечная петля)**
 ```
 Any source → Last Day (FB SEND active)
-    → And My (balance 30% Day / 70% Night)
+    → Is My (SHAPER, mild drive) — рука шейпит переход
     → Last Night (FB RETURN → Last Day)
     = delay и reverb в бесконечном cycle
     DRAG на Last Day + Freeze на Last Night
     = застывший мираж, тонущий в замедленном времени
 ```
+*(Прежний вариант с And My как crossfader'ом — устарел после Decision 13. And My = TBD.)*
 
 **Патч F — "Solar Storm"**
 ```
@@ -1042,9 +1062,10 @@ Last Day standalone: SOLAR/INTERNAL switch → external
 ```
 I Show You Light (sine disk, slow drone)
     → Body Blood And Salt (touch pads, skin-R modulates filter)
-        → And My (balance pendulum-controlled)
+        → Is My (SHAPER, low drive, pilot джойстик держит baseline)
             → Last Night (nephrite cartridge, short decay)
-    — перформер держит пальцы на pads, дыхание управляет filter cutoff
+    — перформер держит пальцы на pads, дыхание управляет filter cutoff,
+      второй рукой — пилотный пульт задаёт медленный shape
 ```
 
 ## КАК МОДУЛИ ДОПОЛНЯЮТ ДРУГ ДРУГА
@@ -1058,9 +1079,9 @@ I Show You Light (sine disk, slow drone)
 | All Bones Dust | Железо, кость | Гармоники, верхняя середина |
 | Be Careful | Стекло, кристалл | Узкополосный резонанс 500Гц–3кГц |
 | Fuck Abandoned Sleep | Гравитация, инерция | Инфра-low (CV, 0.5–5Гц) |
-| Is My | Свет (vactrol) | Полный спектр (crossfader) |
+| Is My | Силовая электроника (MOSFET ex-ESC) | Sat/ring/gate шейпинг + жест руки через пилотный пульт |
 | Last Day | Масло, свет, ферриты | Тепло, сатурация, деградация повторов |
-| And My | VCA stereo | Полный спектр (crossfader) |
+| And My | TBD (Decision 13) | TBD |
 | Last Night | Дерево/камень/металл/стекло | Пространственный отпечаток материала |
 
 ### Принцип взаимодополнения
@@ -1072,9 +1093,9 @@ I Show You Light (sine disk, slow drone)
 3. **All Bones Dust** проводит через железо и кость — добавляет грязь, скелет, обертона.
 4. **Be Careful** фильтрует через стекло — хрупкость, резонанс, осторожность.
 5. **Fuck Abandoned Sleep** — маятник качается, хаос или покой, модуляция всего.
-6. **Is My** — точка выбора, развилка пути, optical inertia.
+6. **Is My** — рука исполнителя. Единственный модуль с физическим интерфейсом, который держат — пилотный пульт из корпуса DJI C5. MOSFET-каскад из донорского ESC шейпит/звенит/затыкает сигнал; жест джойстика через CV-выходы пульта расходится по всей линейке.
 7. **Last Day** пропускает через масло, свет и ферриты — жар, повторы, тяжесть, память, которая плавится.
-8. **And My** — мост между днём и ночью, равновесие.
+8. **And My** — TBD (Decision 13). Слот в стихе занят, но материал и функция не заданы.
 9. **Last Night** растворяет в резонансе твёрдого тела — звук обретает пространство и остывает.
 
 От света → через кожу → через кость → через стекло → через маятник → через масло и солнце → через мост → через дерево/камень → в тишину.
@@ -1094,10 +1115,10 @@ I Show You Light (sine disk, slow drone)
 
 **Day Expansion** (Phase 2):
 - Last Day (delay + solar amp + resonant EQ).
-- And My (crossfader к Last Night).
-- Is My (vactrol crossfader utility).
+- Is My (MOSFET-shaper + пилотный пульт, edition of 13, €2480).
+- And My — TBD (Decision 13), в Phase 2 не входит до появления концепта.
 
-Создаёт полный space finalizer pair. Bundle ~$1000 с Phase 1.
+Создаёт полный space finalizer pair + рука исполнителя в системе. Bundle retail Phase 2 = **TBD** (зависит от Last Day цены; Is My €2480 + Last Day TBD).
 
 **Source Expansion** (Phase 3):
 - I Show You Light (optical VCO).
@@ -1152,15 +1173,19 @@ Premium ritual piece. $250.
 - Perform FX subset: KILL + FREEZE + DRAG + HAZE.
 - Retail $700–900.
 
-**And My** (Day↔Night crossfader, 8HP):
-- Simple stereo VCA design.
-- 2–3 month R&D в parallel с Last Day.
-- Retail $150–200.
+**Is My** (MOSFET-shaper + пилотный пульт, edition of 13, 14HP module + standalone remote):
+- Донор пульта: DJI C5 (RC-N1/RC231), teardown первого экземпляра — открывает It-1 работу над гимбалами.
+- MOSFET-каскад из донорского ESC FPV-дрона (SHAPER/RING/GATE), Polivoks-VCF pre/post, dirty OTA-VCA out.
+- STM32G431 в обоих устройствах, MAX3421E USB-host на модуле, USB-C линк.
+- Провенанс каждого экземпляра: фото платы ESC + координаты + дата + модель.
+- R&D-окно увеличено относительно других модулей: teardown, USB-MIDI host stack, firmware для двух устройств. Точная оценка — открытый вопрос.
+- Retail **€2480**.
+- Полная техспека — ветка `origin/claude/jolly-gates-KxAP2`, директория `is_my/`.
 
-**Is My** (vactrol crossfader, 6HP):
-- Simplest module серии.
-- 2 month R&D.
-- Retail $120–150.
+**And My** — **TBD** (Decision 13):
+- Старый концепт «Day↔Night crossfader» снят.
+- Слот 8 остаётся placeholder'ом до появления архитектуры уровня остальных модулей (принцип «электроника обслуживает физику»).
+- Не блокирует ship Phase 2 — Last Day + Is My готовы шипить без And My.
 
 ### Phase B (6 месяцев после Phase 2)
 
@@ -1208,11 +1233,12 @@ Premium ritual piece. $250.
 | Phase | Window | Modules | Cumulative retail (full kit) |
 |-------|--------|---------|------------------------------|
 | 1 | Months 1–9 | Last Night, All Bones Dust, Utilities | ~$550 |
-| 2 | Months 9–21 | Last Day, And My, Is My | ~$1,400 |
-| 2B | Months 21–27 | Last Day v1.5 add-ons | ~$1,500 |
-| 3 | Months 21–33 | I Show You Light, Fuck Abandoned Sleep | ~$2,000 |
-| 4 | Months 27–33 | Be Careful | ~$2,300 |
-| 5 | Months 33+ | Body Blood And Salt | ~$2,550 |
+| 2 | Months 9–21 | Last Day, **Is My (edition of 13, €2480)** | **TBD** (Is My €2480 + Last Day TBD) |
+| 2B | Months 21–27 | Last Day v1.5 add-ons | TBD |
+| 3 | Months 21–33 | I Show You Light, Fuck Abandoned Sleep | TBD |
+| 4 | Months 27–33 | Be Careful | TBD |
+| 5 | Months 33+ | Body Blood And Salt | TBD |
+| — | TBD | **And My** — Decision 13, awaiting concept | — |
 
 **Solo realistic timeline**: 33 месяца для full 9-module series с part-time R&D. Full-time может скомпрессировать до 18–24 месяцев.
 

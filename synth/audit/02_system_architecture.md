@@ -1,5 +1,7 @@
 # Системная архитектура SYSTEM SUICIDE — 9-модульная цепь
 
+> ⚠ **HISTORICAL SNAPSHOT (pre-2026-05)** — таблицы модулей / HP-бюджет / signal-flow ниже показывают Is My как «vactrol crossfader» и And My как «TBD → crossfader». С 2026-05/07 Is My = MOSFET-shaper + пилотный пульт (14 HP), And My = TBD. См. `../decisions/12_is_my_shaper_respec.md`, `../decisions/13_and_my_tbd.md`, `../SYSTEM_SUICIDE.md §6, §8`. Актуальный HP-бюджет (148 HP без BBAS + резерв под And My) — в `SYSTEM_SUICIDE.md`.
+
 Анализ согласованности системы: роли модулей, сигнальная цепь, HP-бюджет, сценарии использования, перформанс ergonomика.
 
 ---
