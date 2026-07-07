@@ -111,6 +111,7 @@
 // Тот же пост-фх — пайплайн для любых нейрокартинок игры.
 // ═══════════════════════════════════════════════════════════════════
 const NIGHT=[13,11,10], UMBER=[38,34,28], ASH=[138,141,143], BONE=[217,207,184];
+const RASTER=0.45; // сила ротапринта: 1 — чистый растр, 0 — гладкий тон
 const cv=document.getElementById('world'), x=cv.getContext('2d');
 const src=document.createElement('canvas'), s=src.getContext('2d',{willReadFrequently:true});
 let W=0,H=0,CELL=4,LW=0,LH=0;
@@ -234,6 +235,11 @@ function paintScene(t){
 function rotaprint(t){
   const img=s.getImageData(0,0,LW,LH).data;
   x.fillStyle='#0D0B0A';x.fillRect(0,0,W,H);
+  // подложка: гладкий тон (чем меньше RASTER, тем больше живёт картинка)
+  x.imageSmoothingEnabled=true;
+  x.globalAlpha=1-RASTER*0.55;
+  x.drawImage(src,0,0,W,H);
+  x.globalAlpha=1;
   const inks=['#26221C','#8A8D8F','#D9CFB8'];
   for(let cy=0;cy<LH;cy++){
     for(let cx=0;cx<LW;cx++){
@@ -250,18 +256,21 @@ function rotaprint(t){
       const lvl=Math.min(3,Math.floor(L*3.4+th));
       if(lvl<=0)continue;
       x.fillStyle=inks[lvl-1];
+      x.globalAlpha=RASTER*(0.5+lvl*0.16);
       x.fillRect(cx*CELL,cy*CELL,CELL-1,CELL-1);
     }
   }
+  x.globalAlpha=1;
   // осыпание по краям — шум казённой копии
   const seed=Math.floor(t*5);
   x.fillStyle='#D9CFB8';
-  for(let i=0;i<130;i++){
+  const nEdge=Math.round(130*RASTER);
+  for(let i=0;i<nEdge;i++){
     const e=Math.abs(J(i*3+seed));
     let px,py;
     if(i%2){px=(J(i+seed)*0.5+0.5)*W; py=e<0.5?e*90:H-(e-0.5)*180;}
     else{px=e<0.5?e*120:W-(e-0.5)*240; py=(J(i*7+seed)*0.5+0.5)*H;}
-    x.globalAlpha=0.25+Math.abs(J(i*11+seed))*0.4;
+    x.globalAlpha=(0.2+Math.abs(J(i*11+seed))*0.35)*Math.max(0.5,RASTER);
     x.fillRect(Math.floor(px/CELL)*CELL,Math.floor(py/CELL)*CELL,CELL-1,CELL-1);
   }
   x.globalAlpha=1;
