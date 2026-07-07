@@ -6,6 +6,7 @@ import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
 import { getCollectedCount, getTotalCount } from '../world/lore.js';
 import { getSessionAge } from '../core/sessionMemory.js';
+import { getUnlocked, getDefs } from '../core/achievements.js';
 import { t } from '../core/time.js';
 
 const termEl = document.getElementById('term');
@@ -227,9 +228,17 @@ const commands = {
   },
 
   ach() {
-    print(`ДОСТИЖЕНИЯ:
-> функция в разработке.
-> мох уже знает, что ты их собираешь.`, '#1a6b1a');
+    // Quiet inventory for nerds — design law #1 forbids toasts and
+    // counters in the world; the ledger lives only here, as an опись.
+    const defs = getDefs();
+    const unlocked = new Set(getUnlocked());
+    const lines = Object.entries(defs).map(([id, d]) =>
+      `  [${unlocked.has(id) ? '×' : ' '}] ${d.name} — ${d.desc}`);
+    print(`ОПИСЬ ОТМЕТОК СТРАННИКА:
+${lines.join('\n')}
+
+> отметки ставятся сами. плашек не будет.
+> мох уже знает.`, '#1a6b1a');
   },
 
   map() {

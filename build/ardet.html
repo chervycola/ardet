@@ -17431,6 +17431,56 @@ Pixel-adjacent but painterly. Muted brandbook palette:
     return true;
   }
 
+  // src/core/achievements.js
+  var DEFS = {
+    collector: { name: "СОБИРАТЕЛЬ", desc: "Собрал 20 фрагментов", threshold: 20 },
+    archivist: { name: "АРХИВАРИУС", desc: "Собрал все фрагменты", threshold: 57 },
+    listener: { name: "СЛУШАТЕЛЬ", desc: "Поговорил со всеми NPC", threshold: 5 },
+    observers: { name: "СВИДЕТЕЛЬ", desc: "Увидел всех Наблюдателей", threshold: 4 },
+    fire: { name: "ОГНЕННЫЙ", desc: "Бросил 7 вещей в костёр", threshold: 7 },
+    moss: { name: "МОХ ПОМНИТ", desc: "Простоял 10 минут неподвижно" },
+    terminal: { name: "ПРОШИВКА", desc: "Ввёл 10 команд в терминал", threshold: 10 }
+  };
+  var unlocked = new Set;
+  function unlock(id) {
+    if (unlocked.has(id))
+      return;
+    unlocked.add(id);
+    const def = DEFS[id];
+    if (!def)
+      return;
+    events.emit(E.ACHIEVEMENT, { id, ...def });
+    console.log(`[ach] ${def.name} — ${def.desc}`);
+  }
+  function init(flags, getLore, getTerminalCount) {
+    events.on(E.LORE_COLLECT, () => {
+      const count = getLore();
+      if (count >= 20)
+        unlock("collector");
+      if (count >= 57)
+        unlock("archivist");
+    });
+    events.on(E.NPC_TALK, () => {
+      if (flags.talkedTo.size >= 5)
+        unlock("listener");
+    });
+    events.on(E.OBSERVER_MET, () => {
+      if (flags.observersSeen && flags.observersSeen.size >= 4)
+        unlock("observers");
+    });
+  }
+  function getUnlocked() {
+    return Array.from(unlocked);
+  }
+  function loadUnlocked(ids) {
+    unlocked.clear();
+    if (Array.isArray(ids))
+      ids.forEach((id) => unlocked.add(id));
+  }
+  function getDefs() {
+    return DEFS;
+  }
+
   // src/terminal/terminal.js
   var termEl = document.getElementById("term");
   var inputEl = document.getElementById("ti");
@@ -17635,9 +17685,15 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   мох:       помнит`);
     },
     ach() {
-      print(`ДОСТИЖЕНИЯ:
-> функция в разработке.
-> мох уже знает, что ты их собираешь.`, "#1a6b1a");
+      const defs = getDefs();
+      const unlocked2 = new Set(getUnlocked());
+      const lines = Object.entries(defs).map(([id, d]) => `  [${unlocked2.has(id) ? "×" : " "}] ${d.name} — ${d.desc}`);
+      print(`ОПИСЬ ОТМЕТОК СТРАННИКА:
+${lines.join(`
+`)}
+
+> отметки ставятся сами. плашек не будет.
+> мох уже знает.`, "#1a6b1a");
     },
     map() {
       print(`КАРТА: [ПОВРЕЖДЕНА]
@@ -17746,7 +17802,7 @@ quarter║      ║ highway
     state.transition("game");
     inputEl.blur();
   }
-  function init() {
+  function init2() {
     inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         exec(inputEl.value);
@@ -18371,7 +18427,7 @@ quarter║      ║ highway
     else
       open2();
   }
-  function init2() {
+  function init3() {
     canvas = document.getElementById("map-canvas");
     if (canvas) {
       canvas.width = W;
@@ -18556,53 +18612,6 @@ quarter║      ║ highway
   function setGraffiti(list) {
     jesterGraffiti.length = 0;
     list.forEach((g) => jesterGraffiti.push(g));
-  }
-
-  // src/core/achievements.js
-  var DEFS = {
-    collector: { name: "СОБИРАТЕЛЬ", desc: "Собрал 20 фрагментов", threshold: 20 },
-    archivist: { name: "АРХИВАРИУС", desc: "Собрал все фрагменты", threshold: 57 },
-    listener: { name: "СЛУШАТЕЛЬ", desc: "Поговорил со всеми NPC", threshold: 5 },
-    observers: { name: "СВИДЕТЕЛЬ", desc: "Увидел всех Наблюдателей", threshold: 4 },
-    fire: { name: "ОГНЕННЫЙ", desc: "Бросил 7 вещей в костёр", threshold: 7 },
-    moss: { name: "МОХ ПОМНИТ", desc: "Простоял 10 минут неподвижно" },
-    terminal: { name: "ПРОШИВКА", desc: "Ввёл 10 команд в терминал", threshold: 10 }
-  };
-  var unlocked = new Set;
-  function unlock(id) {
-    if (unlocked.has(id))
-      return;
-    unlocked.add(id);
-    const def = DEFS[id];
-    if (!def)
-      return;
-    events.emit(E.ACHIEVEMENT, { id, ...def });
-    console.log(`[ach] ${def.name} — ${def.desc}`);
-  }
-  function init3(flags, getLore, getTerminalCount) {
-    events.on(E.LORE_COLLECT, () => {
-      const count = getLore();
-      if (count >= 20)
-        unlock("collector");
-      if (count >= 57)
-        unlock("archivist");
-    });
-    events.on(E.NPC_TALK, () => {
-      if (flags.talkedTo.size >= 5)
-        unlock("listener");
-    });
-    events.on(E.OBSERVER_MET, () => {
-      if (flags.observersSeen && flags.observersSeen.size >= 4)
-        unlock("observers");
-    });
-  }
-  function getUnlocked() {
-    return Array.from(unlocked);
-  }
-  function loadUnlocked(ids) {
-    unlocked.clear();
-    if (Array.isArray(ids))
-      ids.forEach((id) => unlocked.add(id));
   }
 
   // src/world/inscriptions.js
@@ -19119,44 +19128,6 @@ quarter║      ║ highway
     }
   }
 
-  // src/ui/achPopup.js
-  var popup = { name: "", desc: "", life: 0, total: 280 };
-  events.on(E.ACHIEVEMENT, (ach) => {
-    popup.name = ach.name;
-    popup.desc = ach.desc;
-    popup.life = popup.total;
-  });
-  function draw8(ctx3) {
-    if (popup.life <= 0)
-      return;
-    const vw = scaler.vw;
-    const w = 240, h = 40;
-    const x = (vw - w) / 2;
-    const y = 16;
-    const age = popup.total - popup.life;
-    const slideIn = Math.min(1, age / 18);
-    const slideOut = popup.life < 30 ? popup.life / 30 : 1;
-    const alpha = slideIn * slideOut;
-    const yOff = (1 - slideIn) * -20 + (1 - slideOut) * -20;
-    ctx3.globalAlpha = alpha * 0.96;
-    ctx3.fillStyle = "rgba(5,5,16,0.98)";
-    ctx3.fillRect(x, y + yOff, w, h);
-    ctx3.strokeStyle = "#b8860b";
-    ctx3.lineWidth = 1;
-    ctx3.strokeRect(x, y + yOff, w, h);
-    ctx3.fillStyle = "#b8860b";
-    ctx3.font = '10px "Press Start 2P","VT323",monospace';
-    ctx3.fillText("★", x + 8, y + yOff + 16);
-    ctx3.fillStyle = "#e8dcc8";
-    ctx3.font = '7px "Press Start 2P","VT323",monospace';
-    ctx3.fillText(popup.name, x + 24, y + yOff + 15);
-    ctx3.fillStyle = "#8a8d8f";
-    ctx3.font = '5px "Press Start 2P","VT323",monospace';
-    ctx3.fillText(popup.desc, x + 24, y + yOff + 28);
-    ctx3.globalAlpha = 1;
-    popup.life--;
-  }
-
   // src/world/silentCat.js
   var sightings = new Set;
   var fifthUnlocked = false;
@@ -19167,7 +19138,7 @@ quarter║      ║ highway
     { loc: "nocturnal", ox: 48, oy: 85 },
     { loc: "raven", ox: 8, oy: 18 }
   ];
-  function draw9(player, camera2, locations2) {
+  function draw8(player, camera2, locations2) {
     const ctx3 = X;
     const P11 = { cat: "#050404", amber: "#daa520" };
     for (const spot of spots) {
@@ -19262,7 +19233,7 @@ quarter║      ║ highway
       events.emit("brainrot.freeze");
     }
   }
-  function draw10(ctx3) {
+  function draw9(ctx3) {
     if (brainrot <= 0 && !brainrotFreeze)
       return;
     const vw = scaler.vw, vh = scaler.vh;
@@ -19326,7 +19297,7 @@ quarter║      ║ highway
   function isActive2() {
     return active;
   }
-  function draw11(ctx3) {
+  function draw10(ctx3) {
     if (!active)
       return;
     const vw = scaler.vw, vh = scaler.vh;
@@ -19397,7 +19368,7 @@ quarter║      ║ highway
       }
     }
   }
-  function draw12(camera2) {
+  function draw11(camera2) {
     const ctx3 = X;
     for (const m of monsters) {
       const sx = Math.floor(m.x - camera2.x);
@@ -19429,9 +19400,9 @@ quarter║      ║ highway
   attachContent(looks, dialogues);
   initUI();
   initMetaFx();
-  init();
-  initShop();
   init2();
+  initShop();
+  init3();
   init4();
   initAudio();
   preloadAll().then(() => {
@@ -19495,7 +19466,7 @@ quarter║      ║ highway
     if (savedData.discoveredGates)
       loadDiscovered(savedData.discoveredGates);
   }
-  init3(flags, () => getCollectedCount());
+  init(flags, () => getCollectedCount());
   startAutoSave(() => ({
     player: { x: player.x, y: player.y },
     talkedTo: Array.from(flags.talkedTo),
@@ -19575,8 +19546,8 @@ quarter║      ║ highway
     drawJesterGraffiti({ x: camX, y: camY });
     drawJesterWandering({ x: camX, y: camY }, locations);
     draw7({ x: camX, y: camY });
-    draw9(player, { x: camX, y: camY }, locations);
-    draw12({ x: camX, y: camY });
+    draw8(player, { x: camX, y: camY }, locations);
+    draw11({ x: camX, y: camY });
     draw6(worldCtx, { x: camX, y: camY });
     drawPlayer(player);
     drawWorldWhisper({ x: camX, y: camY });
@@ -19596,7 +19567,7 @@ quarter║      ║ highway
     dyingPixels.update();
     dyingPixels.draw(fxCtx);
     drawAdditive(fxCtx);
-    draw10(fxCtx);
+    draw9(fxCtx);
     drawOverlay(uiCtx);
     screenMoss.update(player.moving);
     screenMoss.draw(uiCtx);
@@ -19604,7 +19575,7 @@ quarter║      ║ highway
     postfx.apply(postCtx);
     drawTeleportFade(postCtx);
     if (isActive2()) {
-      draw11(postCtx);
+      draw10(postCtx);
     }
     layers.composite();
   }
@@ -19781,7 +19752,6 @@ quarter║      ║ highway
   var DEBUG_HUD = typeof location !== "undefined" && /[?&]debug\b/.test(location.search);
   function drawHUD(ctx3) {
     draw(ctx3);
-    draw8(ctx3);
     draw4(ctx3);
     drawEpochTitle(ctx3);
     if (DEBUG_HUD) {
@@ -19979,7 +19949,27 @@ quarter║      ║ highway
     if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8 && teleportFade.dir === 0) {
       teleportWithFade(GATES_RETURN.x, GATES_RETURN.y);
     }
+    updateEdgeLaw();
     updateWorldSystems();
+  }
+  var EDGE_START = 6020;
+  var EDGE_FALL = 6120;
+  function updateEdgeLaw() {
+    if (player.x <= EDGE_START || teleportFade.dir !== 0)
+      return;
+    const depth = Math.min(1, (player.x - EDGE_START) / (EDGE_FALL - EDGE_START));
+    if (t % Math.max(6, 24 - Math.floor(depth * 18)) === 0) {
+      camera.shake(2 + Math.floor(depth * 8));
+    }
+    if (t % 300 === 0)
+      playDistantSound();
+    if (player.x >= EDGE_FALL) {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([90, 40, 180]);
+      }
+      camera.shake(24);
+      teleportWithFade(5985, STREET_ROAD_Y);
+    }
   }
   function updateWorldSystems() {
     camera.follow(player.x + 6, player.y + 10);

@@ -32,7 +32,7 @@ import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/meta
 import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
-import { STREET_SPAWN, GATES_RETURN, STREET_X0, consumeGatesLine, worldSegmentAt } from './world/street.js';
+import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_ROAD_Y, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
   init as initWorldMap, toggle as toggleWorldMap,
   markDiscovered as discoverGate,
@@ -51,7 +51,8 @@ import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './
 import { weather, update as updateWeather, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
 import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
-import { draw as drawAchPopup } from './ui/achPopup.js';
+// Achievement toast removed by design law #1 («глубина не геймифицируется»):
+// unlocks are silent; the full list lives in the terminal `ach` command.
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
@@ -470,7 +471,6 @@ const DEBUG_HUD = typeof location !== 'undefined' && /[?&]debug\b/.test(location
 
 function drawHUD(ctx) {
   drawLorePopup(ctx);
-  drawAchPopup(ctx);
   drawIdle(ctx);
   drawEpochTitle(ctx);
 
@@ -698,7 +698,38 @@ function updateGame() {
     teleportWithFade(GATES_RETURN.x, GATES_RETURN.y);
   }
 
+  updateEdgeLaw();
+
   updateWorldSystems();
+}
+
+// ═══ LAW OF THE EDGE (v3.1, soft form) ═══
+// Past the empty frame the road is gone but the corridor lets you keep
+// walking. The world objects: the picture trembles harder the deeper
+// you go, a wordless call sounds — and at the fall line the screen
+// blacks out, the phone buzzes, and you wake where you stood. Nothing
+// is taken: the terminal logs stay, the moss keeps growing, everyone
+// remembers. Pause or a step back always saves.
+const EDGE_START = 6020;   // just past the empty frame (world x)
+const EDGE_FALL = 6120;    // the fall line
+function updateEdgeLaw() {
+  if (player.x <= EDGE_START || teleportFade.dir !== 0) return;
+  const depth = Math.min(1, (player.x - EDGE_START) / (EDGE_FALL - EDGE_START));
+  // Trembling picture — small, then not small
+  if (t % Math.max(6, 24 - Math.floor(depth * 18)) === 0) {
+    camera.shake(2 + Math.floor(depth * 8));
+  }
+  // The call: no words, just an interval that promises
+  if (t % 300 === 0) playDistantSound();
+  if (player.x >= EDGE_FALL) {
+    // The phone trembles too, where hardware allows
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([90, 40, 180]);
+    }
+    camera.shake(24);
+    // Blackout → wake at the frame. Same place, same memory.
+    teleportWithFade(5985, STREET_ROAD_Y);
+  }
 }
 
 // Camera + all per-frame world systems. Shared by the normal movement
