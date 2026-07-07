@@ -1,8 +1,10 @@
-/* ПК-симулятор: синтетический кадр или PGM -> ядро -> CSV + бинарный протокол.
+/* ПК-симулятор: синтетический кадр или PGM -> ядро -> CSV/протокол/MIDI.
  * Использование:
  *   lithoseq_sim <pattern|file.pgm> [--traj name] [--preset reveal|compose]
  *                [--ticks N] [--csv out.csv] [--bin out.bin]
+ *                [--mid out.mid] [--bpm N]
  * Паттерны: blank checker rings dots5 dots15 dots40
+ * --mid пишет Standard MIDI File (шаг = 1/16) — аудиция в любом DAW (D10).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +15,7 @@
 #include "../core/mapping.h"
 #include "patterns.h"
 #include "proto.h"
+#include "midi.h"
 
 static uint8_t frame[FRAME_W * FRAME_H];
 
@@ -48,7 +51,8 @@ int main(int argc, char **argv)
     const preset_t *preset = &PRESET_REVEAL;
     const char *preset_name = "reveal";
     long ticks = 1024;
-    const char *csv_path = NULL, *bin_path = NULL;
+    long bpm = 120;
+    const char *csv_path = NULL, *bin_path = NULL, *mid_path = NULL;
 
     for (int i = 2; i < argc; i++) {
         if (!strcmp(argv[i], "--traj") && i + 1 < argc) traj = parse_traj(argv[++i]);
@@ -61,6 +65,8 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--ticks") && i + 1 < argc) ticks = atol(argv[++i]);
         else if (!strcmp(argv[i], "--csv") && i + 1 < argc) csv_path = argv[++i];
         else if (!strcmp(argv[i], "--bin") && i + 1 < argc) bin_path = argv[++i];
+        else if (!strcmp(argv[i], "--mid") && i + 1 < argc) mid_path = argv[++i];
+        else if (!strcmp(argv[i], "--bpm") && i + 1 < argc) bpm = atol(argv[++i]);
         else { fprintf(stderr, "bad arg '%s'\n", argv[i]); return 2; }
     }
 
@@ -87,7 +93,20 @@ int main(int argc, char **argv)
 
     FILE *csv = csv_path ? fopen(csv_path, "w") : stdout;
     FILE *bin = bin_path ? fopen(bin_path, "wb") : NULL;
-    if (!csv || (bin_path && !bin)) { fprintf(stderr, "cannot open output\n"); return 1; }
+    FILE *mid = mid_path ? fopen(mid_path, "wb") : NULL;
+    if (!csv || (bin_path && !bin) || (mid_path && !mid)) {
+        fprintf(stderr, "cannot open output\n");
+        return 1;
+    }
+
+    smf_t smf;
+    midi_state_t ms;
+    midi_reset(&ms);
+    if (mid && smf_begin(&smf, mid, (uint16_t)bpm)) {
+        fprintf(stderr, "smf init failed\n");
+        return 1;
+    }
+    uint32_t last_midi_tick = 0;
 
     fprintf(csv, "# src=%s traj=%s preset=%s R=%u/32767 hash=%08x\n",
             src, traj_name(traj), preset_name, feat.r_q15, feat.hash);
@@ -103,8 +122,25 @@ int main(int argc, char **argv)
                 ev.tick, ev.x, ev.y, ev.note, ev.gate,
                 ev.note_on, ev.accent, ev.aux1, ev.aux2);
         if (bin) proto_write_event(bin, &ev);
+        if (mid) {
+            uint8_t msgs[12];
+            uint32_t n = midi_from_event(&ms, &ev, msgs);
+            for (uint32_t k = 0; k < n; k += 3) {
+                uint32_t delta = (k == 0)
+                    ? (ev.tick - last_midi_tick) * SMF_TICKS_PER_STEP : 0;
+                smf_add(&smf, delta, msgs + k);
+                if (k == 0) last_midi_tick = ev.tick;
+            }
+        }
     }
 
+    if (mid) {
+        uint8_t msgs[3];
+        if (midi_flush(&ms, msgs))
+            smf_add(&smf, SMF_TICKS_PER_STEP, msgs);
+        if (smf_end(&smf)) { fprintf(stderr, "smf write failed\n"); return 1; }
+        fclose(mid);
+    }
     if (csv != stdout) fclose(csv);
     if (bin) fclose(bin);
     fprintf(stderr, "R=%.3f hash=%08x ticks=%ld -> %s%s%s\n",

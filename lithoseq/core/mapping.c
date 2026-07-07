@@ -18,6 +18,7 @@ const preset_t PRESET_REVEAL = {
     .t_accent = 96,
     .rhythm_reg = 0,
     .scale_bias = 0,
+    .pitch_eq = 0, /* «как есть»: однородный материал звучит монотонно */
 };
 
 const preset_t PRESET_COMPOSE = {
@@ -26,6 +27,7 @@ const preset_t PRESET_COMPOSE = {
     .t_accent = 72,
     .rhythm_reg = 1,
     .scale_bias = 1,
+    .pitch_eq = 1, /* D11: полный мелодический диапазон из CDF карты */
 };
 
 static int r_level(uint16_t r_q15)
@@ -73,6 +75,8 @@ void mapping_tick(const features_t *f, const map32_t *m,
     int idx = y * MAP_W + x;
     uint8_t raw = m->v[idx];
     uint8_t d = f->d.v[idx];
+    if (p->pitch_eq)
+        d = f->d_eq[d];
     uint8_t s = f->s.v[idx];
 
     /* G — градиент вдоль траектории (F8) */

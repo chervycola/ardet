@@ -11,6 +11,7 @@ typedef struct {
     uint8_t t_accent;     /* порог акцента по S */
     uint8_t rhythm_reg;   /* Compose: gate-on только на чётных тиках */
     int8_t  scale_bias;   /* сдвиг уровня консонантности от R (+1 = мягче) */
+    uint8_t pitch_eq;     /* D11: питч из CDF-эквализованной D (Compose) */
 } preset_t;
 
 typedef struct {

@@ -100,6 +100,19 @@ void metrics_compute(const map32_t *m, features_t *f)
     lap4(m, &l);
     box5(&l, &f->s);
 
+    /* D11: кривая эквализации — CDF гистограммы D-карты.
+     * d_eq[v] = 255 * P(D <= v). Считается из самой карты: та же
+     * пластина -> та же кривая, детерминизм и повторяемость сохранены. */
+    {
+        uint16_t hist[256] = { 0 };
+        for (int i = 0; i < MAP_N; i++) hist[f->d.v[i]]++;
+        uint32_t cum = 0;
+        for (int v = 0; v < 256; v++) {
+            cum += hist[v];
+            f->d_eq[v] = (uint8_t)((cum * 255) / MAP_N);
+        }
+    }
+
     uint16_t r90  = ncc_self(m, 0);
     uint16_t r180 = ncc_self(m, 1);
     uint16_t rmir = ncc_self(m, 2);

@@ -221,6 +221,40 @@ static void test_presets_differ_and_deterministic(void)
     CHECK(ons_b > 0, "compose produced no notes on checker");
 }
 
+/* --- D11: эквализация питча разворачивает узкое распределение D --- */
+static void test_pitch_equalization(void)
+{
+    pattern_dots(frame, 15, 0xC0FFEE);
+    map32_t m; features_t f;
+    frame_to_map(&m);
+    metrics_compute(&m, &f);
+
+    uint8_t seen_plain[128] = { 0 }, seen_eq[128] = { 0 };
+    preset_t plain = PRESET_REVEAL;              /* pitch_eq = 0 */
+    preset_t eq = PRESET_REVEAL;
+    eq.pitch_eq = 1;                             /* изолируем эффект D11 */
+
+    playhead_t ph; map_state_t st;
+    playhead_init(&ph, TRAJ_BOUSTRO); mapping_reset(&st);
+    for (int i = 0; i < MAP_N; i++) {
+        uint8_t x, y; event_t ev;
+        playhead_next(&ph, &x, &y);
+        mapping_tick(&f, &m, x, y, &plain, &st, &ev);
+        seen_plain[ev.note & 127] = 1;
+    }
+    playhead_init(&ph, TRAJ_BOUSTRO); mapping_reset(&st);
+    for (int i = 0; i < MAP_N; i++) {
+        uint8_t x, y; event_t ev;
+        playhead_next(&ph, &x, &y);
+        mapping_tick(&f, &m, x, y, &eq, &st, &ev);
+        seen_eq[ev.note & 127] = 1;
+    }
+    int n_plain = 0, n_eq = 0;
+    for (int i = 0; i < 128; i++) { n_plain += seen_plain[i]; n_eq += seen_eq[i]; }
+    CHECK(n_eq > 2 * n_plain, "pitch_eq no effect: %d vs %d", n_eq, n_plain);
+    CHECK(n_eq >= 12, "equalized range too narrow: %d notes", n_eq);
+}
+
 /* --- полный тракт дважды: кадр->карта->метрики идентичны (D7) --- */
 static void test_full_determinism(void)
 {
@@ -245,6 +279,7 @@ int main(void)
     test_quantizer_in_scale();
     test_no_gates_on_blank();
     test_presets_differ_and_deterministic();
+    test_pitch_equalization();
     test_full_determinism();
 
     if (failures) {
