@@ -1,31 +1,31 @@
-# ardet
+# Ardet Wasteland
 
-Монорепозиторий трёх связанных проектов: игра **Ardet Wasteland**, серия модулей физического синтеза **SYSTEM SUICIDE**, и их спутники. Эта ветка — консолидированное дерево: актуальные версии каждого проекта собраны из рабочих веток в одну структуру.
+Пиксельная игра о горящем городе. Модульная версия: esbuild-сборка из `src/`, тесты, контент-базы (диалоги, лор, терминал, философия P1/P2).
 
-## Карта репозитория
+## Сборка и запуск
 
-| Директория | Что | Живая ветка разработки |
-|------------|-----|------------------------|
-| **`game/`** | Игра Ardet Wasteland — модульная версия (esbuild, `src/`, тесты). Сборка: `node build.js` → `build/ardet.html` | `claude/philosophy-architecture-update-oDemg`, `claude/improve-writing-style-ayW6n` |
-| **`synth/`** | SYSTEM SUICIDE — 9-модульная серия физического синтеза: канон-бриф, спеки Last Night/Last Day, decisions, аудит, прототипирование | эта ветка (canonical) |
-| **`synth/is_my/`** | Модуль Is My: MOSFET-shaper + пилотный пульт DJI C5 — концепт, схемотехника, прошивки, панели | `claude/jolly-gates-KxAP2` |
-| **`site/`** | Маркетинг-сайт system-suicide (Vite + React + TS, bilingual) | `System-suicide` |
-| **`sequencer/`** | Генеративный Eurorack-секвенсор (сканирование физического образца — кристалл/пористый материал → CV/gate). Отдельный проект, не входит в 9-модульную серию | `claude/eurorack-sequencer-design-3wu8wb` |
-| **`legal/`** | Юридические документы проекта «Баклажания» (privacy policy, consent) | `claude/baklazania-content-review-TZbAM` |
-| **`archive/`** | Файлы, которые проект перерос. Хранятся для истории | — |
+```bash
+npm install
+node build.js        # → build/ardet.html + build/index.html
+npm test             # smoke + logic + systems + content + effects + ulitsa
+```
 
-## Синхронизация с ветками
+Готовый играбельный артефакт закоммичен: `build/index.html`.
 
-Директории, помеченные «живой веткой», — это **снапшоты**: активная разработка продолжается на своих ветках, сюда периодически подтягивается актуальное состояние. Дата последней синхронизации и происхождение — в README соответствующей директории.
+## Структура
 
-Прежде чем редактировать `game/`, `site/`, `synth/is_my/`, `sequencer/` здесь — проверь, не уехала ли вперёд живая ветка.
+```
+├── src/             — исходники: core, render, world, content, ui, audio, assets
+├── test/            — 6 тест-сьютов
+├── build.js         — esbuild-сборка (src → build/ardet.html)
+└── archive/         — монолитный ardet_wasteland.html (апрель 2026) — предшественник модульной версии
+```
 
-## Быстрый старт по проектам
+## Происхождение и живые ветки
 
-**Игра**: `cd game && npm install && node build.js` → открыть `build/index.html`. Тесты: `npm test`.
+Эта ветка собрана из снапшота `claude/philosophy-architecture-update-oDemg` (2026-07-05, commit `40ae900`). Параллельные линии разработки:
 
-**Сайт**: `cd site && npm install && npm run dev`.
+- `claude/philosophy-architecture-update-oDemg` — архитектура, world map, гейты, ассеты.
+- `claude/improve-writing-style-ayW6n` — стилевые проходы по текстам, ОБРАЗ-блоки, achievements.
 
-**Synth-доки**: начать с `synth/README.md` (карта документации) и `synth/SYSTEM_SUICIDE.md` (канон-бриф серии). Иллюстрированный гид: `synth/docs/` (сборка PDF/DOCX через pandoc — `./build.sh`).
-
-**Секвенсор**: `sequencer/DESIGN-OPINION.md` → `00-ROADMAP.md`.
+Соседние проекты монорепо — на ветках **SS** (синт-серия SYSTEM SUICIDE + сайт + секвенсор) и **Баклажания** (legal).
