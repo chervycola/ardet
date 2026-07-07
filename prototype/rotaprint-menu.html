@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ardet · форма 0 — казённый ротапринт</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;500&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#0D0B0A;overflow:hidden}
+  #world{position:fixed;inset:0}
+  /* ── БУМАГА: форма 0 ── */
+  #form{
+    position:fixed;left:50%;top:50%;
+    width:min(520px,88vw);
+    transform:translate(-50%,-52%) rotate(-1.4deg);
+    background:
+      repeating-linear-gradient(0deg,transparent 0 31px,rgba(58,48,38,0.12) 31px 32px),
+      linear-gradient(168deg,#EEE3CB 0%,#E8DCC3 46%,#E0D2B4 100%);
+    color:#3A3026;
+    box-shadow:0 18px 60px rgba(0,0,0,0.75), 0 2px 0 rgba(255,248,230,0.25) inset;
+    padding:26px 34px 22px;
+    box-sizing:border-box;
+  }
+  #form .grif{
+    font-family:Montserrat;font-weight:500;font-size:10px;letter-spacing:4px;
+    color:#C23B2B;text-transform:uppercase;margin-bottom:10px;
+  }
+  #form h1{
+    font-family:'UnifrakturMaguntia',serif;font-weight:400;
+    font-size:52px;line-height:0.9;margin:0 0 6px;color:#12100D;
+  }
+  #form .sub{
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:17px;color:#7A6F5E;margin-bottom:26px;
+  }
+  #menu{list-style:none;margin:0;padding:0}
+  #menu li{
+    font-family:'Cormorant Garamond',serif;font-size:26px;line-height:1.72;
+    color:#241E16;cursor:pointer;position:relative;display:flex;align-items:baseline;
+  }
+  #menu li .x{
+    position:absolute;left:-28px;color:#12100D;font-size:20px;opacity:0;
+    transform:rotate(-8deg);transition:opacity .12s;
+  }
+  #menu li:hover .x{opacity:0.85}
+  #menu li.first span.t{
+    border-bottom:2px solid rgba(194,59,43,0.85);
+    padding-bottom:1px;
+  }
+  #menu li.closed{color:#9a8f7c;cursor:default}
+  #menu li.closed:hover .x{opacity:0}
+  #menu li.closed .lead{
+    flex:1;border-bottom:1.5px dotted #9a8f7c;margin:0 10px;transform:translateY(-7px);
+  }
+  #menu li.closed .zk{
+    font-family:Montserrat;font-weight:300;font-size:11px;letter-spacing:3px;
+    color:#9a8f7c;text-transform:uppercase;
+  }
+  #form .foot{
+    margin-top:24px;font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:14px;color:#8a7e6a;line-height:1.5;max-width:75%;
+  }
+  /* ── ПЕЧАТЬ ── */
+  #stamp{
+    position:absolute;right:-34px;bottom:-46px;width:158px;height:158px;
+    transform:rotate(-16deg);opacity:0.88;mix-blend-mode:multiply;
+    pointer-events:none;
+  }
+  #cap{position:fixed;bottom:10px;left:0;right:0;text-align:center;pointer-events:none;
+    font-family:Montserrat;font-weight:300;font-size:9px;letter-spacing:3px;
+    color:#8A8D8F;text-transform:uppercase}
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+
+<div id="form">
+  <div class="grif">Канцелярия &nbsp;·&nbsp; Форма 0</div>
+  <h1>ardet</h1>
+  <div class="sub">заявление о начале странствия</div>
+  <ul id="menu">
+    <li class="first"><span class="x">✕</span><span class="t">идти дальше</span></li>
+    <li><span class="x">✕</span><span class="t">вспомнить дорогу</span></li>
+    <li><span class="x">✕</span><span class="t">настройки быта</span></li>
+    <li class="closed"><span class="x">✕</span><span class="t">покинуть вечер</span><span class="lead"></span><span class="zk">закрыто</span></li>
+  </ul>
+  <div class="foot">нужное отметить углём · недостающее вписать · лишнее пережить</div>
+  <svg id="stamp" viewBox="0 0 158 158">
+    <defs>
+      <path id="arcTop" d="M 29 79 A 50 50 0 0 1 129 79"/>
+      <path id="arcBot" d="M 24 79 A 55 55 0 0 0 134 79"/>
+    </defs>
+    <circle cx="79" cy="79" r="70" fill="none" stroke="#C23B2B" stroke-width="3"/>
+    <circle cx="79" cy="79" r="62" fill="none" stroke="#C23B2B" stroke-width="1.2"/>
+    <text font-family="Montserrat" font-weight="500" font-size="14.5" letter-spacing="4" fill="#C23B2B">
+      <textPath href="#arcTop" startOffset="50%" text-anchor="middle">ПРОВЕРЕНО</textPath>
+    </text>
+    <text font-family="Montserrat" font-weight="500" font-size="14.5" letter-spacing="3" fill="#C23B2B">
+      <textPath href="#arcBot" startOffset="50%" text-anchor="middle">СМЫСЛА НЕТ</textPath>
+    </text>
+    <text x="79" y="88" text-anchor="middle" font-size="26" fill="#C23B2B">☠</text>
+  </svg>
+</div>
+<div id="cap">регистр III · казённый ротапринт — растр живьём</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// НЕЙРОСТИЛЬ «КАЗЁННЫЙ РОТАПРИНТ». Мир рисуется ТОНОМ в малый буфер,
+// затем квантуется в 4 казённые краски упорядоченным растром Байера.
+// Правило: тепло (свеча/киноварь) НЕ растрируется — пятно живое.
+// Тот же пост-фх — пайплайн для любых нейрокартинок игры.
+// ═══════════════════════════════════════════════════════════════════
+const NIGHT=[13,11,10], UMBER=[38,34,28], ASH=[138,141,143], BONE=[217,207,184];
+const cv=document.getElementById('world'), x=cv.getContext('2d');
+const src=document.createElement('canvas'), s=src.getContext('2d',{willReadFrequently:true});
+let W=0,H=0,CELL=4,LW=0,LH=0;
+function resize(){
+  W=innerWidth;H=innerHeight;
+  const DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=W*DPR;cv.height=H*DPR;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  x.setTransform(DPR,0,0,DPR,0,0);
+  CELL=Math.max(3,Math.round(W/300));
+  LW=Math.ceil(W/CELL);LH=Math.ceil(H/CELL);
+  src.width=LW;src.height=LH;
+}
+addEventListener('resize',resize);resize();
+
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+// матрица Байера 8×8
+const B8=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],
+[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],
+[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
+
+// ── источник: ТОНАЛЬНАЯ ночная сцена (как нейрокартинка) ──
+function paintScene(t){
+  const w=LW,h=LH;
+  const g0=s.createLinearGradient(0,0,0,h);
+  g0.addColorStop(0,'#060505');g0.addColorStop(0.5,'#141210');g0.addColorStop(1,'#0A0908');
+  s.fillStyle=g0;s.fillRect(0,0,w,h);
+  // луна + гало
+  const mx=w*0.79,my=h*0.18,mr=w*0.045;
+  const hg=s.createRadialGradient(mx,my,mr*0.4,mx,my,mr*4);
+  hg.addColorStop(0,'rgba(200,180,140,0.55)');hg.addColorStop(1,'rgba(200,180,140,0)');
+  s.fillStyle=hg;s.fillRect(mx-mr*4,my-mr*4,mr*8,mr*8);
+  s.fillStyle='#D8C08D';s.beginPath();s.arc(mx,my,mr,0,7);s.fill();
+  s.fillStyle='rgba(90,75,50,0.5)';
+  s.beginPath();s.arc(mx+mr*0.3,my+mr*0.25,mr*0.8,0,7);s.fill();
+  s.fillStyle='#D8C08D';
+  s.beginPath();s.arc(mx-mr*0.15,my-mr*0.15,mr*0.72,0,7);s.fill();
+  // облачный тяж через луну
+  s.fillStyle='rgba(8,7,6,0.7)';
+  s.beginPath();s.ellipse(mx-w*0.02+Math.sin(t*0.05)*w*0.01,my+mr*0.7,w*0.11,h*0.012,0,0,7);s.fill();
+  // дальние крыши
+  s.fillStyle='#080706';
+  s.beginPath();s.moveTo(0,h*0.56);
+  for(let i=0;i<=12;i++){
+    const px=i/12*w;
+    s.lineTo(px,h*(0.56-((i%3==1)?0.05:(i%3==2?0.02:0))-Math.abs(J(i))*0.015));
+    s.lineTo(px+w/24,h*0.565);
+  }
+  s.lineTo(w,h*0.62);s.lineTo(0,h*0.62);s.closePath();s.fill();
+  // канцелярия справа: стена-полутон, тёмная крыша, ОКНО №3
+  const kx=w*0.62,ky=h*0.44,kw=w*0.27,kh=h*0.24;
+  s.fillStyle='#0B0A08';
+  s.beginPath();s.moveTo(kx-w*0.015,ky);s.lineTo(kx+kw*0.5,ky-h*0.09);s.lineTo(kx+kw+w*0.015,ky);s.closePath();s.fill();
+  s.fillStyle='#191612';s.fillRect(kx,ky,kw,kh);
+  const wg2=s.createLinearGradient(kx,ky,kx,ky+kh);
+  wg2.addColorStop(0,'rgba(120,110,90,0.16)');wg2.addColorStop(1,'rgba(120,110,90,0.02)');
+  s.fillStyle=wg2;s.fillRect(kx,ky,kw,kh);
+  // тёмные окна
+  s.fillStyle='#0A0908';
+  for(const fx of [0.12,0.42,0.72]) s.fillRect(kx+kw*fx,ky+kh*0.2,kw*0.16,kh*0.3);
+  // окно №3 — ТЕПЛО (не растрируется)
+  const flick=0.8+0.2*(Math.sin(t*7.1)*0.3+Math.sin(t*12.7)*0.2+Math.sin(t*2.3)*0.5);
+  const w3x=kx+kw*0.42,w3y=ky+kh*0.58,w3w=kw*0.16,w3h=kh*0.32;
+  const wg3=s.createRadialGradient(w3x+w3w/2,w3y+w3h/2,1,w3x+w3w/2,w3y+w3h/2,w*0.06);
+  wg3.addColorStop(0,`rgba(226,138,58,${0.55*flick})`);wg3.addColorStop(1,'rgba(226,138,58,0)');
+  s.fillStyle=wg3;s.fillRect(w3x-w*0.06,w3y-w*0.06,w*0.12,w*0.12);
+  s.fillStyle=`rgba(236,190,120,${0.95*flick})`;s.fillRect(w3x,w3y,w3w,w3h);
+  s.fillStyle='rgba(13,11,10,0.8)';
+  s.fillRect(w3x+w3w*0.46,w3y,w3w*0.08,w3h);s.fillRect(w3x,w3y+w3h*0.46,w3w,w3h*0.08);
+  // свет из окна на землю
+  s.fillStyle=`rgba(226,138,58,${0.12*flick})`;
+  s.beginPath();s.moveTo(w3x,w3y+w3h);s.lineTo(w3x+w3w,w3y+w3h);
+  s.lineTo(w3x+w3w+w*0.03,h*0.86);s.lineTo(w3x-w*0.03,h*0.86);s.closePath();s.fill();
+  // земля: подсветка вокруг костра
+  const bx=w*0.215,by=h*0.8;
+  const breath=0.75+0.25*Math.sin(t*(Math.PI*2/6));
+  const gg=s.createRadialGradient(bx,by,2,bx,by,w*0.17*breath);
+  gg.addColorStop(0,`rgba(226,138,58,${0.5*breath})`);
+  gg.addColorStop(0.4,`rgba(194,59,43,${0.2*breath})`);
+  gg.addColorStop(1,'rgba(0,0,0,0)');
+  s.save();s.translate(bx,by);s.scale(1,0.5);s.translate(-bx,-by);
+  s.fillStyle=gg;s.fillRect(bx-w*0.2,by-w*0.2,w*0.4,w*0.4);
+  s.restore();
+  // пламя
+  const fh=h*0.09*(1+Math.sin(t*3.1)*0.15),fw=w*0.017;
+  s.fillStyle='#C23B2B';
+  s.beginPath();s.moveTo(bx-fw*1.3,by);
+  s.bezierCurveTo(bx-fw*1.6,by-fh*0.5,bx+Math.sin(t*5)*fw*0.5,by-fh*0.8,bx+Math.sin(t*2.4)*fw*0.4,by-fh*1.15);
+  s.bezierCurveTo(bx+fw*1.5,by-fh*0.5,bx+fw*1.3,by-fh*0.1,bx+fw*1.3,by);s.closePath();s.fill();
+  s.fillStyle='#E28A3A';
+  s.beginPath();s.moveTo(bx-fw*0.8,by);
+  s.bezierCurveTo(bx-fw,by-fh*0.35,bx+Math.sin(t*5.6)*fw*0.4,by-fh*0.55,bx+Math.sin(t*3)*fw*0.3,by-fh*0.8);
+  s.bezierCurveTo(bx+fw,by-fh*0.3,bx+fw*0.8,by-fh*0.05,bx+fw*0.8,by);s.closePath();s.fill();
+  s.fillStyle='#F2C079';
+  s.beginPath();s.ellipse(bx,by-fh*0.16,fw*0.5,fh*0.22,0,0,7);s.fill();
+  // странник у костра — силуэт с тёплой кромкой
+  const px2=bx-w*0.075,py2=by+h*0.004;
+  s.fillStyle='#1C1915';
+  s.beginPath();
+  s.moveTo(px2-w*0.012,py2);
+  s.bezierCurveTo(px2-w*0.014,py2-h*0.07,px2-w*0.008,py2-h*0.1,px2,py2-h*0.115);
+  s.bezierCurveTo(px2+w*0.008,py2-h*0.1,px2+w*0.011,py2-h*0.06,px2+w*0.012,py2);
+  s.closePath();s.fill();
+  s.strokeStyle=`rgba(232,200,154,${0.75*breath})`;s.lineWidth=Math.max(1,w*0.0018);
+  s.beginPath();
+  s.moveTo(px2+w*0.011,py2-h*0.01);
+  s.bezierCurveTo(px2+w*0.012,py2-h*0.06,px2+w*0.007,py2-h*0.1,px2,py2-h*0.112);
+  s.stroke();
+  // врата слева — полутон
+  s.fillStyle='rgba(150,140,115,0.17)';
+  s.fillRect(w*0.045,h*0.56,w*0.011,h*0.16);
+  s.fillRect(w*0.108,h*0.56,w*0.011,h*0.16);
+  s.fillRect(w*0.042,h*0.546,w*0.081,h*0.013);
+  // виньетка
+  const vg=s.createRadialGradient(w/2,h/2,Math.min(w,h)*0.36,w/2,h/2,Math.max(w,h)*0.7);
+  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.72)');
+  s.fillStyle=vg;s.fillRect(0,0,w,h);
+}
+
+// ── РОТАПРИНТ: квантование в 4 краски + Байер; тепло — сплошным ──
+function rotaprint(t){
+  const img=s.getImageData(0,0,LW,LH).data;
+  x.fillStyle='#0D0B0A';x.fillRect(0,0,W,H);
+  const inks=['#26221C','#8A8D8F','#D9CFB8'];
+  for(let cy=0;cy<LH;cy++){
+    for(let cx=0;cx<LW;cx++){
+      const i=(cy*LW+cx)*4, r=img[i],g2=img[i+1],b=img[i+2];
+      const warm=r>96 && (r-g2)>40;
+      if(warm){
+        // тепло не растрируется — живое пятно
+        x.fillStyle=`rgb(${r},${g2},${b})`;
+        x.fillRect(cx*CELL,cy*CELL,CELL,CELL);
+        continue;
+      }
+      const L=(r*0.32+g2*0.5+b*0.18)/255;
+      const th=(B8[cy%8][cx%8]+0.5)/64;
+      const lvl=Math.min(3,Math.floor(L*3.4+th));
+      if(lvl<=0)continue;
+      x.fillStyle=inks[lvl-1];
+      x.fillRect(cx*CELL,cy*CELL,CELL-1,CELL-1);
+    }
+  }
+  // осыпание по краям — шум казённой копии
+  const seed=Math.floor(t*5);
+  x.fillStyle='#D9CFB8';
+  for(let i=0;i<130;i++){
+    const e=Math.abs(J(i*3+seed));
+    let px,py;
+    if(i%2){px=(J(i+seed)*0.5+0.5)*W; py=e<0.5?e*90:H-(e-0.5)*180;}
+    else{px=e<0.5?e*120:W-(e-0.5)*240; py=(J(i*7+seed)*0.5+0.5)*H;}
+    x.globalAlpha=0.25+Math.abs(J(i*11+seed))*0.4;
+    x.fillRect(Math.floor(px/CELL)*CELL,Math.floor(py/CELL)*CELL,CELL-1,CELL-1);
+  }
+  x.globalAlpha=1;
+}
+
+let t0=performance.now();
+function frame(now){
+  const t=(now-t0)/1000;
+  paintScene(t);
+  rotaprint(t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// «идти дальше» → играбельная проба
+document.querySelector('#menu .first').addEventListener('click',()=>{
+  location.href='etching-game/index.html';
+});
+// остальные пункты — отметить углём
+document.querySelectorAll('#menu li:not(.first):not(.closed)').forEach(li=>{
+  li.addEventListener('click',()=>{
+    const xm=li.querySelector('.x');
+    xm.style.opacity=xm.style.opacity==='0.9'?'':'0.9';
+  });
+});
+</script>
+</body>
+</html>
