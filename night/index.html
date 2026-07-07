@@ -212,6 +212,8 @@ body{
 <div id="mctl">
   <button id="mLeft" aria-label="влево">‹</button>
   <button id="mRight" aria-label="вправо">›</button>
+  <button id="mUp" aria-label="вглубь">˄</button>
+  <button id="mDown" aria-label="ближе">˅</button>
 </div>
 
 <!-- look card -->
@@ -306,7 +308,9 @@ body{
 function genOutside(W,H,opts){
   opts=opts||{campfire:true,wanderer:true};
   var L=[];
-  var horizon=0.64*H;
+  var horizon=0.42*H;                     // вид сбоку-сверху: поле занимает низ
+  var ARC=0.016*W;                        // дуга планеты-диска
+  function hy(x){var u=(x-W*0.5)/(W*0.5);return horizon+ARC*u*u;}
   var moon={x:0.27*W, y:0.22*H, r:0.070*W};
 
   function hash(x,y){var n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n);}
@@ -339,7 +343,7 @@ function genOutside(W,H,opts){
     }
     else { h=Math.max(0, 0.30-(a-0.80)*1.15); if(Math.sin(a*90)>0.3) h+=0.04; }
     h+= (n2(x*0.12,7)-0.5)*0.02;
-    return horizon - Math.max(0,h)*(horizon*0.96);
+    return hy(x) - Math.max(0,h)*(H*0.40);
   }
   var RUIN0=0.015*W, RUIN1=0.27*W;
   function ruinTop(x){
@@ -349,19 +353,19 @@ function genOutside(W,H,opts){
     if(Math.sin(b*13)>0.35) rh+=0.05;
     if(b>0.27&&b<0.35) rh=0.34;                                          // broken tower 1
     if(b>0.61&&b<0.67) rh=0.27;                                          // broken tower 2
-    return horizon - Math.max(0,rh)*horizon;
+    return hy(x) - Math.max(0,rh)*(H*0.40);
   }
   function skylineTop(x){ return Math.min(cathTop(x), ruinTop(x)); }
   function inSky(x,y){ return y < skylineTop(x)-0.5; }
 
   /* windows (lancets + rose) */
   var lancets=[
-    {x:0.665*W,y:0.435*H,w:0.024*W,h:0.10*H},
-    {x:0.715*W,y:0.30*H, w:0.026*W,h:0.13*H},
-    {x:0.745*W,y:0.30*H, w:0.026*W,h:0.13*H},
-    {x:0.885*W,y:0.475*H,w:0.022*W,h:0.09*H}
+    {x:0.665*W,y:0.285*H,w:0.024*W,h:0.065*H},
+    {x:0.715*W,y:0.16*H, w:0.026*W,h:0.085*H},
+    {x:0.745*W,y:0.16*H, w:0.026*W,h:0.085*H},
+    {x:0.885*W,y:0.305*H,w:0.022*W,h:0.055*H}
   ];
-  var rose={x:0.730*W,y:0.20*H,r:0.030*W};
+  var rose={x:0.730*W,y:0.155*H,r:0.024*W};
 
   /* fires on ruin towers */
   var fires=[{x:RUIN0+(RUIN1-RUIN0)*0.31,y:0,p:1.0},{x:RUIN0+(RUIN1-RUIN0)*0.64,y:0,p:0.75}];
@@ -394,7 +398,7 @@ function genOutside(W,H,opts){
   }
   function cathLight(x,y){
     var top=cathTop(x);
-    if(y<top||y>horizon) return 0;
+    if(y<top||y>hy(x)) return 0;
     var a=(x-CATH0)/CW;
     var lit=Math.max(0.04, 0.62-0.95*a);                    // moonlit left
     var edge=Math.max(0, 1-(y-top)/(H*0.07));               // top rim
@@ -407,7 +411,7 @@ function genOutside(W,H,opts){
   var wx=0.325*W, wy=horizon+(H-horizon)*0.34;
   var fx=0.795*W, fy=horizon+(H-horizon)*0.62;
   function groundTone(x,y){
-    var fog=Math.max(0,1-(y-horizon)/(H*0.062))*0.58*(0.35+0.65*n2(x*0.02,y*0.31));
+    var fog=Math.max(0,1-(y-hy(x))/(H*0.062))*0.58*(0.35+0.65*n2(x*0.02,y*0.31));
     var px=0.185*W+(y-H)*(-0.20), pw=0.03*W+(y-horizon)*0.13;
     var pd=Math.abs(x-px);
     var path=pd<pw?(1-pd/pw)*0.70*Math.max(0.25,1-(y-horizon)/(H-horizon)):0;
@@ -459,7 +463,7 @@ function genOutside(W,H,opts){
   /* sky engraving: near-horizontal lines flowing AROUND the moon */
   (function(){
     var idx=0;
-    for(var y0=4;y0<horizon-1;y0+=2.6,idx++){
+    for(var y0=4;y0<horizon+ARC-1;y0+=2.6,idx++){
       var th=TH[idx%5], pts=[];
       for(var x=-4;x<=W+4;x+=3.0){
         var y=y0 + 5*Math.sin(x/W*Math.PI*1.1+idx*0.3)*0.4;
@@ -603,20 +607,28 @@ function genOutside(W,H,opts){
   (function(){
     var seg=[];
     for(var x=0;x<W;x+=3){
-      if(n2(x*0.02,50)>0.42&&skyTone(x,horizon-3)>0.25)seg.push([x,horizon-1+wob(x,horizon,8,0.6)]);
+      if(n2(x*0.02,50)>0.42&&skyTone(x,hy(x)-3)>0.25)seg.push([x,hy(x)-1+wob(x,horizon,8,0.6)]);
       else{if(seg.length>2)stroke(seg,0.8,'etch');seg=[];}
     }
     if(seg.length>2)stroke(seg,0.8,'etch');
   })();
 
-  /* ground */
-  L.push({t:'rect',x:0,y:horizon,w:W,h:H-horizon,c:'ground'});
+  /* ground — под дугой планеты */
+  (function(){
+    var gp=[];
+    for(var gx=0;gx<=W;gx+=8)gp.push(gx.toFixed(0)+','+hy(gx).toFixed(1));
+    gp.push(W+','+H,'0,'+H);
+    L.push({t:'poly',p:gp.join(' '),c:'ground'});
+  })();
   (function(){
     var idx=0;
     for(var y=horizon+1.2;y<H;y+=2.3+(y-horizon)*0.036,idx++){
       var th=TH[idx%5],pts=[];
-      for(var x=0;x<W;x+=3.0)pts.push([x,y+wob(x,y,2,1.6)]);
-      runs(pts,function(px,py){return groundTone(px,py)>th;},groundColor,0.7);
+      for(var x=0;x<W;x+=3.0){
+        var bend=(hy(x)-horizon)*(1-Math.min(1,(y-horizon)/(H-horizon)));
+        pts.push([x,y+bend+wob(x,y,2,1.6)]);
+      }
+      runs(pts,function(px,py){return py>hy(px)+1&&groundTone(px,py)>th;},groundColor,0.7);
     }
     // tufts of dead grass
     for(var i=0;i<70;i++){
@@ -645,10 +657,10 @@ function genOutside(W,H,opts){
       var gx=g[0]*W, gy=horizon+(H-horizon)*g[1];
       var hgt=14+hash(i,11)*22, lean=(hash(i,5)-0.5)*0.8;
       var tx=gx+lean*hgt, ty=gy-hgt;
-      stroke([[gx,gy],[tx,ty]],3.0,'void');
-      stroke([[gx-1.6,gy],[tx-1.6,ty]],0.8,'etch');
+      stroke([[gx,gy],[tx,ty]],3.6,'void');
+      stroke([[gx-2,gy],[tx-2,ty]],1.0,'etch');
       var bx=gx+lean*hgt*0.68, by=gy-hgt*0.68;
-      stroke([[bx-hgt*0.32,by-lean*2.5],[bx+hgt*0.32,by+lean*2.5]],2.6,'void');
+      stroke([[bx-hgt*0.32,by-lean*2.5],[bx+hgt*0.32,by+lean*2.5]],3.2,'void');
       stroke([[bx-hgt*0.32,by-lean*2.5-1.4],[bx+hgt*0.32,by+lean*2.5-1.4]],0.8,'etch');
       stroke([[tx-1,ty],[tx+1.5,ty-1]],1,'etch');                     // moon glint on top
     });
@@ -768,17 +780,22 @@ function genOutside(W,H,opts){
     var fr=[[qx-27,qy-58],[qx+27,qy-58],[qx+27,qy-128],[qx-27,qy-128],[qx-27,qy-58]];
     stroke(fr,1.6,'etch');
     stroke(fr.map(function(p){return[p[0]+(p[0]<qx?4:-4),p[1]+(p[1]<qy-90?4:-4)];}),0.8,'etch');
+    [[qx-27,qy-58],[qx+27,qy-58],[qx+27,qy-128],[qx-27,qy-128]].forEach(function(cp){
+      L.push({t:'circle',x:cp[0],y:cp[1],r:3,c:'void',sc:'etch',sw:1,so:0.9});
+    });
     stroke([[qx-16,qy-50],[qx+16,qy-50]],0.7,'ash');
   }
 
   return {list:L, strokes:S, W:W, H:H};
 }
 
-/* ── TOWN block — «вязкая почти-нормальность» (canon §04) ── */
+
+/* ── TOWN block — вид сбоку-сверху, кровавая луна, жирные пропсы ── */
 function genTown(W,H){
   var L=[];
-  var horizon=0.64*H;
-  var moon={x:0.525*W, y:0.19*H, r:0.026*W};   // bone moon — тёплое пятно III
+  var horizon=0.42*H, ARC=0.015*W;
+  function hy(x){var u=(x-W*0.5)/(W*0.5);return horizon+ARC*u*u;}
+  var moon={x:0.525*W, y:0.15*H, r:0.034*W};
 
   function hash(x,y){var n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n);}
   function n2(x,y){
@@ -803,36 +820,34 @@ function genTown(W,H){
   var TH=[0.07,0.20,0.36,0.55,0.76];
   function wob(x,y,ph,amp){return (n2(x*0.08+ph*3.7,y*0.08)-0.5)*2*amp;}
 
-  /* houses (front plane) */
+  /* houses */
   var houses=[
-    {x0:0.075*W,x1:0.165*W,h:0.30,roof:0.12,chimney:true},
-    {x0:0.32*W, x1:0.395*W,h:0.24,roof:0.10},
-    {x0:0.59*W, x1:0.69*W, h:0.34,roof:0.0,parapet:true,office:true},  // канцелярия
-    {x0:0.78*W, x1:0.85*W, h:0.26,roof:0.11}
+    {x0:0.075*W,x1:0.165*W,hh:150,roof:52,chimney:true},
+    {x0:0.32*W, x1:0.395*W,hh:120,roof:44},
+    {x0:0.59*W, x1:0.69*W, hh:170,roof:0,office:true},
+    {x0:0.78*W, x1:0.85*W, hh:130,roof:48}
   ];
-  var win3={x:0.657*W,y:0,w:13,h:17};                                  // окно №3
-  houses.forEach(function(hh){ if(hh.office) win3.y = horizon - hh.h*H*0.55; });
-
+  var win3={x:0,y:0};
   function houseTop(x){
     for(var i=0;i<houses.length;i++){
-      var hh=houses[i];
-      if(x>=hh.x0&&x<=hh.x1){
-        var base=horizon-hh.h*H;
-        if(hh.roof>0){
-          var mid=(hh.x0+hh.x1)/2;
-          var t=1-Math.abs(x-mid)/((hh.x1-hh.x0)/2);
-          return base - hh.roof*H*t;
+      var h=houses[i];
+      if(x>=h.x0-6&&x<=h.x1+6){
+        var mid=(h.x0+h.x1)/2, base=hy(mid)-h.hh;
+        if(h.roof>0){
+          if(x<h.x0||x>h.x1){var t=x<h.x0?(x-(h.x0-6))/6:((h.x1+6)-x)/6;return base- h.roof*0.1*t;}
+          var tt=1-Math.abs(x-mid)/((h.x1-h.x0)/2);
+          return base - h.roof*tt;
         }
-        if(hh.parapet && (((x-hh.x0)/9)%2)<1 ) return base-6;
+        if(x<h.x0||x>h.x1)return hy(x);
+        if((((x-h.x0)/10)%2)<1) return base-8;
         return base;
       }
     }
-    return horizon;
+    return hy(x);
   }
-  /* far roofs plane */
   function farTop(x){
-    var t=horizon-(0.10+0.05*Math.sin(x*0.004)+0.04*Math.sin(x*0.0113+2))*H;
-    if((x%(0.11*W))<6) t-=0.05*H;                                      // chimneys
+    var t=hy(x)-(42+22*Math.sin(x*0.004)+16*Math.sin(x*0.0113+2));
+    if((x%(0.11*W))<6) t-=22;
     return t;
   }
   function skylineTop(x){ return Math.min(houseTop(x),farTop(x)); }
@@ -840,19 +855,25 @@ function genTown(W,H){
 
   function skyTone(x,y){
     var d=Math.hypot(x-moon.x,y-moon.y);
-    var g=Math.max(0,1.05-d/(moon.r*4.2)); g=g*g;
-    var fog=Math.max(0,1-(horizon-y)/(H*0.09))*0.42;
-    return Math.max(g*1.1,fog)+(n2(x*0.015,y*0.02)-0.5)*0.14;
+    var g=Math.max(0,1.12-d/(moon.r*3.0)); g=g*g;
+    var fog=Math.max(0,1-(hy(x)-y)/(H*0.09))*0.42;
+    return Math.max(g*1.15,fog)+(n2(x*0.015,y*0.02)-0.5)*0.14;
+  }
+  function skyColor(x,y){
+    var d=Math.hypot(x-moon.x,y-moon.y);
+    if(d<moon.r*1.5) return 'blood';
+    if(skyTone(x,y)<0.28) return 'ash';
+    return 'etch';
   }
 
-  /* PAINT */
+  /* ══ PAINT ══ */
   L.push({t:'rect',x:0,y:0,w:W,h:H,c:'sky'});
-  L.push({t:'glow',x:moon.x,y:moon.y,r:moon.r*2.2,c:'flame',a:0.16});   // тёплая луна
+  L.push({t:'glow',x:moon.x,y:moon.y,r:moon.r*2.5,c:'blood',a:0.45});
 
-  /* sky: v5 deflected lines around the bone moon + diagonal layer */
+  /* sky — v5 deflected lines around the BLOOD moon + diagonal red layer */
   (function(){
     var idx=0;
-    for(var y0=4;y0<horizon-1;y0+=2.6,idx++){
+    for(var y0=4;y0<horizon+ARC-1;y0+=2.6,idx++){
       var th=TH[idx%5], pts=[];
       for(var x=-4;x<=W+4;x+=3.0){
         var y=y0;
@@ -866,49 +887,58 @@ function genTown(W,H){
         if(d<moon.r+1.8){pts.push(null);continue;}
         pts.push([x,y+wob(x,y,idx,0.8)]);
       }
-      runs(pts,function(px,py){return py<horizon-1&&inSky(px,py)&&skyTone(px,py)>th;},
-        function(px,py){return skyTone(px,py)<0.28?'ash':'etch';},0.7);
+      runs(pts,function(px,py){return py<hy(px)-1&&inSky(px,py)&&skyTone(px,py)>th;},skyColor,0.7);
     }
     idx=0;
-    for(var d0=-H;d0<W;d0+=4.2,idx++){
-      var th2=TH[1+(idx%2)],pts2=[];
-      for(var yy=0;yy<horizon;yy+=3){
+    for(var d0=-H;d0<W;d0+=5.6,idx++){
+      var th2=TH[2+(idx%2)],pts2=[];
+      for(var yy=0;yy<horizon+ARC;yy+=3){
         var xx=d0+yy*0.9;
         var dd=Math.hypot(xx-moon.x,yy-moon.y);
         if(dd<moon.r+2||dd>moon.r*2.6)continue;
         pts2.push([xx+wob(xx,yy,idx,0.6),yy]);
       }
       runs(pts2,function(px,py){return inSky(px,py)&&skyTone(px,py)>th2;},
-        function(){return 'ash';},0.65);
+        function(){return 'blood';},0.65);
     }
   })();
 
-  /* bone moon — quiet engraved disc */
+  /* THE BLOOD MOON — как за вратами: тёмный диск, свет на кромке */
+  L.push({t:'circle',x:moon.x,y:moon.y,r:moon.r,c:'bloodDark'});
   (function(){
     var idx=0;
-    for(var ly=-moon.r+1.5;ly<moon.r-1;ly+=1.6,idx++){
-      var th=TH[idx%4];
+    for(var ly=-moon.r+1.5;ly<moon.r-1;ly+=1.3,idx++){
+      var th=TH[idx%5];
       var half=Math.sqrt(moon.r*moon.r-ly*ly), pts=[];
       for(var lx=-half+1;lx<half-1;lx+=2.0)
         pts.push([moon.x+lx,moon.y+ly+ly*0.10*(1-(lx*lx)/(half*half))+wob(lx,ly,7,0.4)]);
       runs(pts,function(px,py){
           var nx=(px-moon.x)/moon.r, ny=(py-moon.y)/moon.r;
-          var light=0.30+0.85*Math.max(0,(-nx*0.5-ny*0.85));
-          if(((nx-0.2)/0.4)*((nx-0.2)/0.4)+((ny+0.1)/0.3)*((ny+0.1)/0.3)<1) light-=0.28;
-          return light>th*0.9+0.06;
-        },function(){return 'etch';},0.7);
+          var light=0.20+0.85*Math.max(0,(-nx*0.62-ny*0.78));
+          if(n2(nx*3+9,ny*3+4)>0.60) light-=0.30;
+          return light>TH[idx%5]*0.7+0.03;
+        },function(){return 'blood';},0.75);
     }
     var ring=[];
-    for(var a=0;a<=Math.PI*2+0.1;a+=0.11)
+    for(var a=0;a<=Math.PI*2+0.1;a+=0.09)
       ring.push([moon.x+Math.cos(a)*moon.r,moon.y+Math.sin(a)*moon.r]);
-    stroke(ring,1.2,'etch');
+    stroke(ring,1.5,'blood');
+    // потёки
+    var xs=[-0.6,-0.28,0.05,0.4,0.66];
+    for(var i=0;i<xs.length;i++){
+      var dxx=xs[i]*moon.r;
+      var yb=moon.y+Math.sqrt(Math.max(0,moon.r*moon.r-dxx*dxx));
+      var len=(12+hash(i,23)*38)*(1-Math.abs(xs[i])*0.4);
+      stroke([[moon.x+dxx,yb-1],[moon.x+dxx,yb+len]],1.1,'blood');
+      L.push({t:'circle',x:moon.x+dxx,y:yb+len+1.4,r:1.5,c:'blood'});
+    }
   })();
 
-  /* far roofs silhouette */
+  /* far roofs */
   (function(){
     var pts=[];
     for(var x=0;x<=W;x+=3)pts.push(x.toFixed(1)+','+farTop(x).toFixed(1));
-    pts.push(W+','+horizon,'0,'+horizon);
+    pts.push(W+','+(horizon+ARC+2),'0,'+(horizon+ARC+2));
     L.push({t:'poly',p:pts.join(' '),c:'far'});
     var seg=[];
     for(var x2=0;x2<=W;x2+=3){
@@ -918,31 +948,40 @@ function genTown(W,H){
     if(seg.length>2)stroke(seg,0.7,'ash');
   })();
 
-  /* ground fill goes under everything that stands on it */
-  L.push({t:'rect',x:0,y:horizon,w:W,h:H-horizon,c:'ground'});
+  /* ground — под дугой планеты */
+  (function(){
+    var gp=[];
+    for(var gx=0;gx<=W;gx+=8)gp.push(gx.toFixed(0)+','+hy(gx).toFixed(1));
+    gp.push(W+','+H,'0,'+H);
+    L.push({t:'poly',p:gp.join(' '),c:'ground'});
+  })();
 
   /* front houses */
-  houses.forEach(function(hh,hi){
-    var base=horizon-hh.h*H, mid=(hh.x0+hh.x1)/2;
-    // body
-    L.push({t:'poly',p:[hh.x0+','+horizon,hh.x0+','+base,hh.x1+','+base,hh.x1+','+horizon].join(' '),c:'stone'});
-    // roof
-    if(hh.roof>0){
-      L.push({t:'poly',p:[(hh.x0-6)+','+base,mid+','+(base-hh.roof*H),(hh.x1+6)+','+base].join(' '),c:'void'});
-      stroke([[hh.x0-6,base],[mid,base-hh.roof*H],[hh.x1+6,base]],1.1,'etch');
+  houses.forEach(function(h,hi){
+    var mid=(h.x0+h.x1)/2, HY=hy(mid), base=HY-h.hh;
+    L.push({t:'poly',p:[h.x0+','+HY,h.x0+','+base,h.x1+','+base,h.x1+','+HY].join(' '),c:'stone'});
+    if(h.roof>0){
+      L.push({t:'poly',p:[(h.x0-8)+','+base,mid+','+(base-h.roof),(h.x1+8)+','+base].join(' '),c:'void'});
+      stroke([[h.x0-8,base],[mid,base-h.roof],[h.x1+8,base]],1.2,'etch');
+      // штрих кровли
+      for(var rx=h.x0-2;rx<h.x1+2;rx+=5){
+        var t=1-Math.abs(rx-mid)/((h.x1-h.x0)/2+8);
+        if(t<=0.05)continue;
+        stroke([[rx,base-2],[rx+3,base-h.roof*t*0.85]],0.6,'ash');
+      }
     } else {
       var par=[];
-      for(var x=hh.x0;x<=hh.x1;x+=1.5)par.push([x,houseTop(x)-0.5]);
-      stroke(par,1.1,'etch');
+      for(var px2=h.x0;px2<=h.x1;px2+=1.5)par.push([px2,houseTop(px2)-0.5]);
+      stroke(par,1.2,'etch');
     }
-    stroke([[hh.x0,horizon],[hh.x0,base]],1.0,'etch');
-    stroke([[hh.x1,horizon],[hh.x1,base]],1.0,'etch');
-    // facade hatch — quiet
+    stroke([[h.x0,HY],[h.x0,base]],1.1,'etch');
+    stroke([[h.x1,HY],[h.x1,base]],1.1,'etch');
+    // фасадный штрих v5
     var idx=0;
-    for(var x3=hh.x0+3;x3<hh.x1-2;x3+=3.0,idx++){
-      if(hh.office)break;
+    for(var x3=h.x0+3;x3<h.x1-2;x3+=3.0,idx++){
+      if(h.office)break;
       var thh=TH[idx%5],p3=[];
-      for(var y=base+3;y<horizon-1;y+=2.6){
+      for(var y=base+3;y<HY-1;y+=2.6){
         if(((y+x3*0.33)%26)<4.5){p3.push(null);continue;}
         p3.push([x3+wob(x3,y,1,0.55),y]);
       }
@@ -951,12 +990,12 @@ function genTown(W,H){
         return lit*(0.7+(n2(px*0.05,py*0.05)-0.5)*0.5)>thh*0.55;
       },function(){return 'etch';},0.6);
     }
-    // windows: dark; office gets окно №3 warm + переплёт
-    var wcount=Math.max(1,Math.floor((hh.x1-hh.x0)/46));
+    // окна
+    var wcount=Math.max(1,Math.floor((h.x1-h.x0)/46));
     for(var wi=0;wi<wcount;wi++){
-      var wxp=hh.x0+(wi+0.5)*((hh.x1-hh.x0)/wcount)-6;
-      var wyp=base+(horizon-base)*0.32;
-      if(hh.office&&wi===1){
+      var wxp=h.x0+(wi+0.5)*((h.x1-h.x0)/wcount)-6;
+      var wyp=base+(HY-base)*0.30;
+      if(h.office&&wi===1){
         win3.x=wxp+6; win3.y=wyp;
         L.push({t:'rect',x:wxp,y:wyp,w:13,h:17,c:'flame',cls:'warmglow'});
         L.push({t:'glow',x:wxp+6,y:wyp+8,r:26,c:'flame',a:0.5,cls:'warmglow'});
@@ -965,92 +1004,139 @@ function genTown(W,H){
         stroke([[wxp-1,wyp-1],[wxp+14,wyp-1],[wxp+14,wyp+18],[wxp-1,wyp+18],[wxp-1,wyp-1]],0.9,'etch');
       } else {
         L.push({t:'rect',x:wxp,y:wyp,w:12,h:16,c:'void'});
-        stroke([[wxp,wyp],[wxp+12,wyp],[wxp+12,wyp+16],[wxp,wyp+16],[wxp,wyp]],0.8,'etch');
+        stroke([[wxp,wyp],[wxp+12,wyp],[wxp+12,wyp+16],[wxp,wyp+16],[wxp,wyp]],0.9,'etch');
       }
     }
-    // door
-    var dx=mid-8+(hi%2)*10;
-    L.push({t:'rect',x:dx,y:horizon-24,w:14,h:24,c:'void'});
-    stroke([[dx,horizon-24],[dx+14,horizon-24]],0.8,'etch');
-    // chimney + smoke
-    if(hh.chimney){
-      var cx=hh.x0+(hh.x1-hh.x0)*0.72, cy=base-hh.roof*H*0.55;
-      L.push({t:'rect',x:cx-5,y:cy-16,w:10,h:16,c:'void'});
+    var dx2=mid-8+(hi%2)*10;
+    L.push({t:'rect',x:dx2,y:HY-26,w:15,h:26,c:'void'});
+    stroke([[dx2,HY-26],[dx2+15,HY-26]],0.9,'etch');
+    if(h.chimney){
+      var cx=h.x0+(h.x1-h.x0)*0.72, cy=base-h.roof*0.55;
+      L.push({t:'rect',x:cx-5,y:cy-18,w:11,h:18,c:'void'});
+      stroke([[cx-5,cy-18],[cx+6,cy-18]],1,'etch');
       for(var off=0;off<2;off++){
         var pts=[];
-        for(var y2=cy-18;y2>H*0.16;y2-=4){
-          var t=(cy-18-y2);
-          pts.push([cx+off*4+t*0.10+(2+16*t/(cy-18-H*0.16))*Math.sin(t*0.03+off),y2]);
+        for(var y2=cy-20;y2>H*0.12;y2-=4){
+          var t=(cy-20-y2);
+          pts.push([cx+off*4+t*0.10+(2+16*t/(cy-20-H*0.12))*Math.sin(t*0.03+off),y2]);
         }
         stroke(pts,0.85,'ash');
       }
     }
   });
 
-  /* Жертвенный костёр + Шут (canon: череп быка над огнём) */
-  var fx=0.225*W, fy=horizon+(H-horizon)*0.52;
-  L.push({t:'glow',x:fx,y:fy-6,r:46,c:'flame',a:0.7,cls:'warmglow'});
-  L.push({t:'path',d:'M'+(fx-17)+','+fy+' q17,7 34,0 l-4,4 q-13,4 -26,0 z',c:'void',sc:'etch',sw:0.9,so:0.6});
-  L.push({t:'path',d:'M'+fx+','+(fy-31)+' q7,10 3,20 q8,-4 6,-13 q6,14 -3,22 q-14,6 -18,-6 q-3,-10 4,-16 q-2,8 3,10 q-3,-9 5,-17 z',c:'flame',cls:'warmglow'});
-  stroke([[fx+1,fy-35],[fx+1,fy-53]],1.1,'etch');
-  L.push({t:'circle',x:fx+1,y:fy-58,r:5.2,c:'void',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx-4)+','+(fy-61)+' q-9,-6 -7,-14',c:'none',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx+6)+','+(fy-61)+' q9,-6 7,-14',c:'none',sc:'etch',sw:1.1,so:0.8});
-  L.push({t:'path',d:'M'+(fx+35)+','+(fy+4)+' q10,-23 21,0 q2,6 -4,8 l-15,0 q-4,-3 -2,-8 z',c:'void',sc:'etch',sw:0.9,so:0.7});
-  L.push({t:'circle',x:fx+45,y:fy-23,r:5.6,c:'void',sc:'etch',sw:0.9,so:0.7});
-  L.push({t:'path',d:'M'+(fx+41)+','+(fy-27)+' l-7,-8 l5,8 M'+(fx+45)+','+(fy-29)+' l0,-10 l2,10 M'+(fx+49)+','+(fy-27)+' l8,-7 l-6,8',c:'none',sc:'etch',sw:1.7,so:0.7});
-
-  /* пифос — глиняная бочка на боку, пустая (canon A1) */
-  var px_=0.415*W, py_=horizon+(H-horizon)*0.50;
-  L.push({t:'path',d:'M'+(px_-24)+','+py_+' q-4,-14 0,-26 q24,-9 48,0 q4,12 0,26 q-24,8 -48,0 z',c:'void',sc:'etch',sw:1.0,so:0.85});
-  [[-10,-27,-10,1],[6,-28,6,2]].forEach(function(rb){
-    stroke([[px_+rb[0],py_+rb[1]],[px_+rb[2],py_+rb[3]]],0.9,'etch');
+  /* Жертвенный костёр — кольцо камней (вид сверху-сбоку), Шут у огня */
+  var fx=0.225*W, fy=hy(0.225*W)+(H-horizon)*0.36;
+  L.push({t:'glow',x:fx,y:fy-8,r:52,c:'flame',a:0.7,cls:'warmglow'});
+  // кольцо камней — эллипс из 9 валунов
+  for(var st=0;st<9;st++){
+    var a=st/9*Math.PI*2;
+    var sx=fx+Math.cos(a)*24, sy=fy+Math.sin(a)*10;
+    L.push({t:'circle',x:sx,y:sy,r:3.4+hash(st,3)*1.6,c:'void',sc:'etch',sw:1,so:0.85});
+  }
+  L.push({t:'path',d:'M'+fx+','+(fy-36)+' q9,12 4,24 q10,-5 7,-16 q8,17 -4,27 q-17,7 -22,-7 q-4,-12 5,-19 q-2,10 4,12 q-4,-11 6,-21 z',c:'flame',cls:'warmglow'});
+  for(var e=0;e<3;e++)
+    L.push({t:'circle',x:fx-8+hash(e,9)*16,y:fy-42-hash(e,5)*16,r:1.3,c:'flame',cls:'warmdot'});
+  stroke([[fx+1,fy-38],[fx+1,fy-58]],1.4,'etch');
+  L.push({t:'circle',x:fx+1,y:fy-64,r:6,c:'void',sc:'etch',sw:1.2,so:0.9});
+  L.push({t:'path',d:'M'+(fx-5)+','+(fy-67)+' q-10,-7 -8,-16',c:'none',sc:'etch',sw:1.3,so:0.9});
+  L.push({t:'path',d:'M'+(fx+7)+','+(fy-67)+' q10,-7 8,-16',c:'none',sc:'etch',sw:1.3,so:0.9});
+  // Шут: трёхрогий колпак с бубенцами, кочерга к огню
+  var jx=fx+52, jy=fy-2;
+  L.push({t:'path',d:'M'+jx+','+jy+' q3,-26 13,-28 q11,-2 14,28 q1,7 -5,9 l-18,0 q-5,-3 -4,-9 z',c:'void',sc:'etch',sw:1.0,so:0.8});
+  L.push({t:'circle',x:jx+13,y:jy-34,r:6.4,c:'void',sc:'etch',sw:1.0,so:0.8});
+  L.push({t:'path',d:'M'+(jx+8)+','+(jy-38)+' q-9,-3 -11,-12 M'+(jx+13)+','+(jy-40)+' q0,-10 1,-13 M'+(jx+18)+','+(jy-38)+' q9,-5 10,-13',c:'none',sc:'etch',sw:1.6,so:0.85});
+  [[-11.5,-50],[1.5,-53.5],[10.5,-51]].forEach(function(b){
+    L.push({t:'circle',x:jx+13+b[0]*0.9,y:jy+b[1],r:1.6,c:'etch'});
   });
-  L.push({t:'circle',x:px_-22,y:py_-13,r:9,c:'void',sc:'etch',sw:1.1,so:0.9});
-  stroke([[px_-30,py_+3],[px_+28,py_+3]],0.7,'ash');
+  stroke([[jx+2,jy-14],[fx+26,fy-6]],1.2,'etch');   // кочерга
+  stroke([[jx-6,jy+9],[jx+34,jy+9]],0.8,'ash');      // тень-подсед
 
-  /* погасший фонарь — единственный столб без света (canon A2) */
-  var lx=0.505*W, ly=horizon+(H-horizon)*0.42;
-  stroke([[lx,ly],[lx,ly-64]],3.0,'void');
-  stroke([[lx-1.4,ly],[lx-1.4,ly-64]],0.9,'etch');
-  stroke([[lx,ly-64],[lx+10,ly-70]],2.2,'void');
-  L.push({t:'rect',x:lx+6,y:ly-82,w:11,h:14,c:'void'});
-  stroke([[lx+6,ly-82],[lx+17,ly-82],[lx+17,ly-68],[lx+6,ly-68],[lx+6,ly-82]],0.9,'etch');
-  stroke([[lx+11.5,ly-84],[lx+11.5,ly-82]],1.5,'etch');
+  /* пифос — амфора на боку, плотный силуэт */
+  var px_=0.415*W, py_=hy(0.415*W)+(H-horizon)*0.30;
+  L.push({t:'path',d:'M'+(px_-30)+','+py_+' q-7,-16 0,-32 q30,-12 62,0 q7,16 0,32 q-32,11 -62,0 z',c:'void',sc:'etch',sw:1.3,so:0.95});
+  [[-14],[4],[20]].forEach(function(rb){
+    L.push({t:'path',d:'M'+(px_+rb[0])+','+(py_-33)+' q4,17 0,34',c:'none',sc:'etch',sw:1.1,so:0.7});
+  });
+  L.push({t:'circle',x:px_-29,y:py_-16,r:11,c:'void',sc:'etch',sw:1.4,so:1});
+  L.push({t:'circle',x:px_-29,y:py_-16,r:6.5,c:'none',sc:'etch',sw:0.9,so:0.6});
+  stroke([[px_-38,py_+4],[px_+36,py_+4]],0.9,'ash');
+  stroke([[px_-30,py_+7],[px_+24,py_+7]],0.6,'ash');
 
-  /* доска объявлений (подмигивание: «утеряно: смысл») */
-  var bx=0.735*W, by=horizon+(H-horizon)*0.34;
-  stroke([[bx-14,by],[bx-14,by-34]],2.2,'void');
-  stroke([[bx+14,by],[bx+14,by-34]],2.2,'void');
-  L.push({t:'rect',x:bx-20,y:by-56,w:40,h:24,c:'void'});
-  stroke([[bx-20,by-56],[bx+20,by-56],[bx+20,by-32],[bx-20,by-32],[bx-20,by-56]],1.0,'etch');
-  L.push({t:'rect',x:bx-12,y:by-52,w:10,h:13,c:'etch'});
-  L.push({t:'rect',x:bx+2,y:by-50,w:9,h:11,c:'ash'});
+  /* погасший фонарь — кованый, с завитком */
+  var lx=0.505*W, ly=hy(0.505*W)+(H-horizon)*0.22;
+  stroke([[lx,ly],[lx,ly-84]],3.6,'void');
+  stroke([[lx-1.8,ly-2],[lx-1.8,ly-82]],1.0,'etch');
+  L.push({t:'path',d:'M'+lx+','+(ly-84)+' q14,2 16,-12 q1,-7 -5,-8',c:'none',sc:'void',sw:3,so:1});
+  L.push({t:'path',d:'M'+lx+','+(ly-84)+' q14,2 16,-12',c:'none',sc:'etch',sw:1,so:0.8});
+  L.push({t:'rect',x:lx+5,y:ly-104,w:14,h:18,c:'void'});
+  stroke([[lx+5,ly-104],[lx+19,ly-104],[lx+19,ly-86],[lx+5,ly-86],[lx+5,ly-104]],1.2,'etch');
+  stroke([[lx+12,ly-104],[lx+12,ly-86]],0.8,'etch');
+  stroke([[lx+5,ly-95],[lx+19,ly-95]],0.8,'etch');
+  stroke([[lx+12,ly-107],[lx+12,ly-104]],1.6,'etch');
+  L.push({t:'path',d:'M'+(lx-8)+','+ly+' q8,-5 16,0',c:'none',sc:'etch',sw:1,so:0.7});
+  stroke([[lx-12,ly+4],[lx+14,ly+4]],0.8,'ash');
 
-  /* врата — открыты всегда, вросли (canon A4) */
+  /* доска объявлений — бумаги и сургучная печать */
+  var bx=0.735*W, by=hy(0.735*W)+(H-horizon)*0.16;
+  stroke([[bx-16,by],[bx-16,by-40]],3.0,'void');
+  stroke([[bx+16,by],[bx+16,by-40]],3.0,'void');
+  stroke([[bx-17.5,by-2],[bx-17.5,by-38]],0.9,'etch');
+  L.push({t:'rect',x:bx-24,y:by-66,w:48,h:28,c:'void'});
+  stroke([[bx-24,by-66],[bx+24,by-66],[bx+24,by-38],[bx-24,by-38],[bx-24,by-66]],1.3,'etch');
+  stroke([[bx-21,by-63],[bx+21,by-63],[bx+21,by-41],[bx-21,by-41],[bx-21,by-63]],0.7,'etch');
+  L.push({t:'rect',x:bx-16,y:by-60,w:11,h:15,c:'etch'});
+  L.push({t:'rect',x:bx+3,y:by-58,w:10,h:12,c:'ash'});
+  L.push({t:'path',d:'M'+(bx-16)+','+(by-45)+' l3,3 l8,0 l0,-3 z',c:'etch'});
+  L.push({t:'circle',x:bx-10.5,y:by-49,r:2,c:'blood'});
+  stroke([[bx-20,by+3],[bx+20,by+3]],0.8,'ash');
+
+  /* врата — две башни по обе стороны дороги (сверху-сбоку) */
   var gx=0.945*W;
-  [[-30,110],[30,110]].forEach(function(p){
-    var X=gx+p[0];
-    L.push({t:'rect',x:X-9,y:horizon-p[1],w:18,h:p[1],c:'void'});
-    stroke([[X-9,horizon],[X-9,horizon-p[1]],[X+9,horizon-p[1]],[X+9,horizon]],1.0,'etch');
-    stroke([[X-12,horizon-p[1]],[X+12,horizon-p[1]-6],[X+12,horizon-p[1]]],1.0,'etch');
+  [[hy(gx)+34,148],[hy(gx)+206,120]].forEach(function(p,pi){
+    var baseY=p[0], hgt=p[1], X=gx+(pi===0?-4:4);
+    L.push({t:'rect',x:X-13,y:baseY-hgt,w:26,h:hgt,c:'void'});
+    stroke([[X-13,baseY],[X-13,baseY-hgt],[X+13,baseY-hgt],[X+13,baseY]],1.3,'etch');
+    for(var tt=0;tt<3;tt++)
+      L.push({t:'rect',x:X-13+tt*9,y:baseY-hgt-7,w:6,h:7,c:'void'});
+    stroke([[X-13,baseY-hgt-7],[X+13,baseY-hgt-7]],1.0,'etch');
+    for(var vv=0;vv<3;vv++){
+      var vx=X-8+vv*8, pv=[];
+      for(var vy=baseY-hgt+4;vy<baseY-2;vy+=2.6){
+        if(((vy+vx*0.33)%26)<4.5){pv.push(null);continue;}
+        pv.push([vx+wob(vx,vy,1,0.5),vy]);
+      }
+      runs(pv,function(){return true;},function(){return 'etch';},0.55);
+    }
   });
-  L.push({t:'path',d:'M'+(gx-21)+','+(horizon-8)+' l-26,10 l0,-64 l26,-6 z',c:'void',sc:'etch',sw:1.0,so:0.85});
-  L.push({t:'path',d:'M'+(gx+21)+','+(horizon-8)+' l26,10 l0,-64 l-26,-6 z',c:'void',sc:'etch',sw:1.0,so:0.85});
-  var vy=horizon+2;
-  stroke([[gx-40,vy+6],[gx-21,vy]],0.7,'ash');
-  stroke([[gx+21,vy],[gx+40,vy+6]],0.7,'ash');
+  // распахнутые створки у основания башен — плоские, вросли
+  L.push({t:'path',d:'M'+(gx-17)+','+(hy(gx)+30)+' l-34,10 l0,-52 l34,-8 z',c:'void',sc:'etch',sw:1.1,so:0.9});
+  stroke([[gx-24,hy(gx)+18],[gx-24,hy(gx)-16]],0.7,'etch');
+  stroke([[gx-38,hy(gx)+24],[gx-38,hy(gx)-10]],0.7,'etch');
+  L.push({t:'path',d:'M'+(gx+17)+','+(hy(gx)+202)+' l34,10 l0,-52 l-34,-8 z',c:'void',sc:'etch',sw:1.1,so:0.9});
+  stroke([[gx+24,hy(gx)+190],[gx+24,hy(gx)+156]],0.7,'etch');
+  stroke([[gx+38,hy(gx)+196],[gx+38,hy(gx)+162]],0.7,'etch');
 
-  /* ground: fog lines + street + props */
+  /* блюдце — эллипс, вид сверху */
+  var mx=0.975*W, my=hy(0.975*W)+(H-horizon)*0.40;
+  L.push({t:'circle',x:mx,y:my,r:8,c:'void',sc:'etch',sw:1.2,so:0.95});
+  L.push({t:'path',d:'M'+(mx-8)+','+my+' a8,3.4 0 1,0 16,0 a8,3.4 0 1,0 -16,0 z',c:'void',sc:'etch',sw:1.2,so:0.95});
+  L.push({t:'path',d:'M'+(mx-5)+','+my+' a5,2 0 1,0 10,0 a5,2 0 1,0 -10,0 z',c:'etch'});
+
+  /* ground rows + tufts (v5 texture, изгиб дуги) */
   (function(){
     var idxg=0;
     for(var y=horizon+1.2;y<H;y+=2.3+(y-horizon)*0.036,idxg++){
       var th=TH[idxg%5],pts=[];
-      for(var x=0;x<W;x+=3.0)pts.push([x,y+wob(x,y,2,1.6)]);
+      for(var x=0;x<W;x+=3.0){
+        var bend=(hy(x)-horizon)*(1-Math.min(1,(y-horizon)/(H-horizon)));
+        pts.push([x,y+bend+wob(x,y,2,1.6)]);
+      }
       runs(pts,function(px2,py2){
-          var fog=Math.max(0,1-(py2-horizon)/(H*0.062))*0.58*(0.35+0.65*n2(px2*0.02,py2*0.31));
-          var lamp=Math.max(0,1-Math.hypot(px2-0.225*W,py2-(horizon+(H-horizon)*0.52))/52)*0.75;
-          var winl=Math.max(0,1-Math.hypot(px2-win3.x,(py2-horizon-10)*2.2)/60)*0.4;
+          if(py2<=hy(px2)+1)return false;
+          var fog=Math.max(0,1-(py2-hy(px2))/(H*0.062))*0.58*(0.35+0.65*n2(px2*0.02,py2*0.31));
+          var lamp=Math.max(0,1-Math.hypot(px2-fx,py2-fy)/60)*0.75;
+          var winl=Math.max(0,1-Math.hypot(px2-win3.x,(py2-hy(px2)-10)*2.2)/60)*0.4;
           var t=Math.max(fog,lamp,winl)+(n2(px2*0.04,py2*0.05)-0.5)*0.12;
           return t>th;
         },function(px2){
@@ -1058,32 +1144,22 @@ function genTown(W,H){
         },0.7);
     }
     for(var ti=0;ti<46;ti++){
-      var tx=hash(ti,41)*W, ty=horizon+6+hash(ti,43)*(H-horizon)*0.8;
+      var tx=hash(ti,41)*W, ty=horizon+ARC+8+hash(ti,43)*(H-horizon-ARC)*0.85;
+      if(ty<hy(tx)+6)continue;
       var ts=2+hash(ti,47)*3;
       stroke([[tx,ty],[tx+(hash(ti,53)-0.5)*3,ty-ts]],0.7,'etch');
       if(hash(ti,59)>0.5)stroke([[tx+1.5,ty],[tx+2.5,ty-ts*0.7]],0.6,'etch');
     }
-    // street: two long edges + occasional rungs
-    var sy1=horizon+(H-horizon)*0.62, sy2=horizon+(H-horizon)*0.86;
-    [[sy1,0.9],[sy2,0.9]].forEach(function(e,ei){
+    // колея дороги — две волнистые пары через всё поле
+    [0.30,0.62].forEach(function(fr,fi){
       var pts=[];
-      for(var x=0;x<=W;x+=5)pts.push([x,e[0]+2.2*Math.sin(x*0.006+ei*2)]);
-      stroke(pts,e[1],'etch');
+      for(var x=0;x<=W;x+=6){
+        var yy=horizon+(H-horizon)*fr;
+        var bend=(hy(x)-horizon)*(1-fr);
+        pts.push([x,yy+bend+2.5*Math.sin(x*0.006+fi*2)+wob(x,yy,fi+4,1)]);
+      }
+      stroke(pts,0.8,'ash');
     });
-    for(var r=0;r<14;r++){
-      var rx=(0.03+r*0.07)*W;
-      stroke([[rx,sy1+3],[rx-6,sy2-3]],0.6,'ash');
-    }
-    var clumps=[[0.06,0.35],[0.13,0.72],[0.28,0.30],[0.40,0.75],[0.52,0.28],[0.63,0.70],[0.71,0.40],[0.88,0.68],[0.97,0.35]];
-    clumps.forEach(function(cp,i){
-      var gx2=cp[0]*W, gy2=horizon+(H-horizon)*cp[1];
-      for(var b=0;b<3;b++)
-        stroke([[gx2,gy2],[gx2+(b-1)*3,gy2-5-hash(i,b)*4]],0.75,'etch');
-    });
-    // блюдце молока — сразу за вратами (подмигивание)
-    var mx=0.975*W, my=horizon+(H-horizon)*0.55;
-    L.push({t:'circle',x:mx,y:my,r:5,c:'none',sc:'etch',sw:0.9,so:0.9});
-    L.push({t:'circle',x:mx,y:my,r:2.6,c:'etch'});
   })();
 
   return {list:L,strokes:S,W:W,H:H};
@@ -1164,30 +1240,31 @@ var LOOKS={
     c:'последняя страница пустая'}
 };
 
+var HOR=252, YMIN=HOR+54, YMAX=584;
 var BLOCKS={
   town:{
-    W:1920, walkY:540, spawn:520, backSpawn:1720,
+    W:1920, spawn:{x:520,y:430}, backSpawn:{x:1700,y:430},
     place:'городок', sub:'врата открыты',
     gen:function(){return SG.genTown(1920,600);},
     objs:[
-      {x:470, label:'поговорить с Шутом', glyph:'❦', act:'jester'},
-      {x:797, label:'осмотреть пифос', act:'look', id:'pithos'},
-      {x:970, label:'осмотреть фонарь', act:'look', id:'lantern'},
-      {x:1205,label:'окно №3', act:'look', id:'office'},
-      {x:1411,label:'прочесть доску', act:'look', id:'board'},
-      {x:1872,label:'блюдце', act:'look', id:'saucer'},
-      {x:1790,label:'пройти во врата', glyph:'§', act:'gate'}
+      {x:470, y:392, label:'поговорить с Шутом', glyph:'❦', act:'jester'},
+      {x:797, y:360, label:'осмотреть пифос', act:'look', id:'pithos'},
+      {x:970, y:334, label:'осмотреть фонарь', act:'look', id:'lantern'},
+      {x:1205,y:312, label:'окно №3', act:'look', id:'office'},
+      {x:1411,y:320, label:'прочесть доску', act:'look', id:'board'},
+      {x:1872,y:418, label:'блюдце', act:'look', id:'saucer'},
+      {x:1814,y:400, label:'пройти во врата', glyph:'§', act:'gate'}
     ]
   },
   out:{
-    W:2400, walkY:540, spawn:300,
+    W:2400, spawn:{x:300,y:430},
     place:'веха дороги', sub:'за вратами',
     gen:function(){return SG.genOutside(2400,600,{campfire:false,wanderer:false,frame:true});},
     objs:[
-      {x:210, label:'вернуться в городок', glyph:'§', act:'gateBack'},
-      {x:1330,label:'кресты', act:'look', id:'crosses'},
-      {x:1836,label:'осмотреть собор', act:'inspect'},
-      {x:2316,label:'пустая рама', act:'look', id:'frame'}
+      {x:210, y:430, label:'вернуться в городок', glyph:'§', act:'gateBack'},
+      {x:1330,y:380, label:'кресты', act:'look', id:'crosses'},
+      {x:1836,y:330, label:'осмотреть собор', act:'inspect'},
+      {x:2316,y:500, label:'пустая рама', act:'look', id:'frame'}
     ]
   }
 };
@@ -1215,8 +1292,8 @@ var PLAYER_SVG=
 
 /* ── game state ── */
 var cur=null, curKey='';
-var px=0, dir=1, camX=0, moving=0;
-var keys={L:false,R:false};
+var px=0, py=430, dir=1, camX=0, moving=0;
+var keys={L:false,R:false,U:false,D:false};
 var uiOpen=false;
 var seenGate=false, saidBegun=false;
 
@@ -1224,7 +1301,7 @@ function loadBlock(key, spawnX){
   curKey=key; cur=BLOCKS[key];
   var scene=cur.gen();
   wld.innerHTML=sceneToSVG(scene)+PLAYER_SVG;
-  px=spawnX; dir=1; camX=Math.max(0,Math.min(px-430,cur.W-VW));
+  px=spawnX.x; py=spawnX.y; dir=1; camX=Math.max(0,Math.min(px-430,cur.W-VW));
   document.getElementById('placeLab').textContent=cur.place;
   document.getElementById('placeSub').textContent=cur.sub;
 }
@@ -1332,7 +1409,7 @@ document.querySelectorAll('#form0 .rows button').forEach(function(b){
     }
     sub.classList.add('open');
     if(r==='way'){
-      sub.innerHTML='<p>← → или A/D — идти · E или ⏎ — осмотреть, говорить · Esc — форма 0 · 1/2/3 — вечер/ночь/полдень.<br>'+
+      sub.innerHTML='<p>← → ↑ ↓ или WASD — идти по полю · E или ⏎ — осмотреть, говорить · Esc — форма 0 · 1/2/3 — вечер/ночь/полдень.<br>'+
       'Нужное отмечено углём. Дорога одна: из городка — во врата, дальше — веха. Назад — всегда.</p>';
     } else if(r==='byt'){
       sub.innerHTML='<span style="font-family:var(--san);font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:#7a6a52">свет дня</span><br><br>'+
@@ -1384,6 +1461,8 @@ document.addEventListener('keydown',function(e){
   if(anyOpen())return;
   if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'||e.key==='ф'||e.key==='Ф')keys.L=true;
   if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'||e.key==='в'||e.key==='В')keys.R=true;
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'||e.key==='ц'||e.key==='Ц')keys.U=true;
+  if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'||e.key==='ы'||e.key==='Ы')keys.D=true;
   if(e.key==='e'||e.key==='E'||e.key==='у'||e.key==='У'||e.key==='Enter'||e.key===' '){interact();e.preventDefault();}
   if(e.key==='1')setPhase('evening');
   if(e.key==='2')setPhase('night');
@@ -1392,8 +1471,10 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('keyup',function(e){
   if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'||e.key==='ф'||e.key==='Ф')keys.L=false;
   if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'||e.key==='в'||e.key==='В')keys.R=false;
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'||e.key==='ц'||e.key==='Ц')keys.U=false;
+  if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'||e.key==='ы'||e.key==='Ы')keys.D=false;
 });
-[['mLeft','L'],['mRight','R']].forEach(function(mc){
+[['mLeft','L'],['mRight','R'],['mUp','U'],['mDown','D']].forEach(function(mc){
   var el=document.getElementById(mc[0]);
   ['pointerdown','touchstart'].forEach(function(ev){el.addEventListener(ev,function(e){keys[mc[1]]=true;e.preventDefault();});});
   ['pointerup','pointerleave','touchend','touchcancel'].forEach(function(ev){el.addEventListener(ev,function(){keys[mc[1]]=false;});});
@@ -1406,11 +1487,13 @@ function frame(ts){
   if(last==null)last=ts;
   var dt=Math.min(0.05,(ts-last)/1000); last=ts;
   if(!uiOpen){
-    var v=0;
+    var v=0, vy=0;
     if(keys.L)v-=1; if(keys.R)v+=1;
-    if(v!==0){dir=v; px+=v*185*dt; moving=1; bobT+=dt; idleT=0;}
+    if(keys.U)vy-=1; if(keys.D)vy+=1;
+    if(v!==0||vy!==0){if(v!==0)dir=v; px+=v*185*dt; py+=vy*150*dt; moving=1; bobT+=dt; idleT=0;}
     else moving=0;
     px=Math.max(30,Math.min(cur.W-30,px));
+    py=Math.max(YMIN,Math.min(YMAX,py));
     var target=Math.max(0,Math.min(px-430,cur.W-VW));
     camX+=(target-camX)*Math.min(1,dt*6);
     idleT+=dt;
@@ -1420,14 +1503,14 @@ function frame(ts){
   var pShift=document.getElementById('pShift');
   if(pShift){
     var bob=(moving&&!reduce)?1.6*Math.abs(Math.sin(bobT*7)):0;
-    pShift.setAttribute('transform','translate('+px+','+(cur.walkY-bob)+') scale('+dir+',1)');
+    pShift.setAttribute('transform','translate('+px+','+(py-bob)+') scale('+dir+',1)');
   }
   // prompt
   nearObj=null;
-  var best=64;
+  var best=1e9;
   cur.objs.forEach(function(o){
-    var d=Math.abs(px-o.x);
-    if(d<best){best=d;nearObj=o;}
+    var dx=Math.abs(px-o.x), dy=Math.abs(py-o.y);
+    if(dx<74&&dy<50){var d=dx+dy*1.4; if(d<best){best=d;nearObj=o;}}
   });
   if(nearObj&&!uiOpen){
     var cwr=document.documentElement.clientWidth, chr=document.documentElement.clientHeight;
@@ -1435,7 +1518,7 @@ function frame(ts){
     var offX=(cwr-VW*scale)/2, offY=(chr-VH*scale)/2;
     prompt.style.display='block';
     prompt.style.left=((nearObj.x-camX)*scale+offX)+'px';
-    prompt.style.top=((cur.walkY-92)*scale+offY)+'px';
+    prompt.style.top=((nearObj.y-96)*scale+offY)+'px';
     promptTxt.textContent=nearObj.label;
     prompt.querySelector('.g').textContent=nearObj.glyph||'✦';
   } else prompt.style.display='none';
