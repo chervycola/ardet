@@ -1284,10 +1284,14 @@ var LOOKS={
 };
 
 var HOR=252, YMIN=HOR+54, YMAX=584;
+/* Полярная физика диска: вверх экрана = к центру (в прошлое),
+   вниз = к ободу (в будущее), вбок = вдоль кольца (между традициями).
+   inner/outer — соседние кольца; ring=true — замкнуто по x. */
 var BLOCKS={
   town:{
     W:1920, spawn:{x:520,y:430}, backSpawn:{x:1700,y:430},
-    place:'городок', sub:'врата открыты',
+    outer:'out', inner:null, ring:false,
+    place:'городок', sub:'центр диска · время свёрнуто',
     gen:function(){return SG.genTown(1920,600);},
     objs:[
       {x:470, y:392, label:'поговорить с Шутом', glyph:'❦', act:'jester'},
@@ -1301,7 +1305,8 @@ var BLOCKS={
   },
   out:{
     W:2400, spawn:{x:300,y:430},
-    place:'веха дороги', sub:'за вратами',
+    inner:'town', outer:null, ring:true,
+    place:'веха дороги', sub:'кольцо I · сектор Европы',
     gen:function(){return SG.genOutside(2400,600,{campfire:false,wanderer:false,frame:true});},
     objs:[
       {x:210, y:430, label:'вернуться в городок', glyph:'§', act:'gateBack'},
@@ -1579,7 +1584,7 @@ document.querySelectorAll('#form0 .rows button').forEach(function(b){
     sub.classList.add('open');
     if(r==='way'){
       sub.innerHTML='<p>← → ↑ ↓ или WASD — идти по полю · E или ⏎ — осмотреть, говорить · Esc — форма 0 · 1/2/3 — вечер/ночь/полдень.<br>'+
-      'Нужное отмечено углём. Дорога одна: из городка — во врата, дальше — веха. Назад — всегда.</p>';
+      'Мир — диск: вверх экрана — к центру, в прошлое; вниз — к ободу, в будущее; вбок — вдоль кольца, по кругу эпохи. Назад — всегда: это закон края, не геометрии.</p>';
     } else if(r==='byt'){
       sub.innerHTML='<span style="font-family:var(--san);font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:#7a6a52">свет дня</span><br><br>'+
         '<button class="ph" data-p="evening">вечер</button>'+
@@ -1602,15 +1607,40 @@ function interact(){
   if(o.act==='look')showLook(o.id);
   else if(o.act==='jester'){buildDlg();openOv('ovJester');}
   else if(o.act==='inspect')openOv('ovCath');
-  else if(o.act==='gate')travel('out',BLOCKS.out.spawn,function(){
+  else if(o.act==='gate'){
+    var after=null;
     if(!seenGate){seenGate=true;
-      setTimeout(function(){toast('Эти врата были предназначены для тебя одного. Обычно это узнают позже.',true);},800);}
-  });
+      after=function(){setTimeout(function(){toast('Эти врата были предназначены для тебя одного. Обычно это узнают позже.',true);},800);};}
+    travel('out',BLOCKS.out.spawn,after);
+  }
   else if(o.act==='gateBack')travel('town',BLOCKS.town.backSpawn);
 }
 prompt.addEventListener('click',interact);
 
 var fade=document.getElementById('fade');
+var travelLock=false, ringT=0, edgeT=0;
+function ringNote(){
+  var now=Date.now();
+  if(now-ringT>12000){ ringT=now;
+    toast('Кольцо замкнуто — ты обходишь эпоху по кругу. Сектора юга, востока и запада — строятся.'); }
+}
+function edgeNote(){
+  var now=Date.now();
+  if(now-edgeT>12000){ edgeT=now;
+    toast('Дальше — кольца новее. Строятся. Обод подождёт.'); }
+}
+function radialTravel(key,newY){
+  travelLock=true;
+  var theta=px/cur.W;                       // угол сохраняется: остаёшься в своей традиции
+  var target=BLOCKS[key];
+  var nx=Math.max(40,Math.min(target.W-40,theta*target.W));
+  var after=null;
+  if(curKey==='town'&&key==='out'&&!seenGate){
+    seenGate=true;
+    after=function(){setTimeout(function(){toast('Эти врата были предназначены для тебя одного. Обычно это узнают позже.',true);},800);};
+  }
+  travel(key,{x:nx,y:newY},function(){ if(after)after(); setTimeout(function(){travelLock=false;},400); });
+}
 function travel(key,spawn,after){
   fade.classList.add('on');
   setTimeout(function(){
@@ -1661,8 +1691,21 @@ function frame(ts){
     if(keys.U)vy-=1; if(keys.D)vy+=1;
     if(v!==0||vy!==0){if(v!==0)dir=v; px+=v*185*dt; py+=vy*150*dt; moving=1; bobT+=dt; idleT=0;}
     else moving=0;
-    px=Math.max(30,Math.min(cur.W-30,px));
-    py=Math.max(YMIN,Math.min(YMAX,py));
+    /* по кольцу: мир замкнут — ушёл за край, пришёл с другого */
+    if(cur.ring){
+      if(px<26){ px=cur.W-40; ringNote(); }
+      else if(px>cur.W-26){ px=40; ringNote(); }
+    } else {
+      px=Math.max(30,Math.min(cur.W-30,px));
+    }
+    /* по радиусу: вверх — к центру (в прошлое), вниз — к ободу */
+    if(py<YMIN){
+      if(cur.inner && !travelLock){ radialTravel(cur.inner, YMAX-22); }
+      else py=YMIN;
+    } else if(py>YMAX){
+      if(cur.outer && !travelLock){ radialTravel(cur.outer, YMIN+22); }
+      else { py=YMAX; edgeNote(); }
+    }
     var target=Math.max(0,Math.min(px-430,cur.W-VW));
     camX+=(target-camX)*Math.min(1,dt*6);
     idleT+=dt;
