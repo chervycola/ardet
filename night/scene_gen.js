@@ -488,7 +488,8 @@ function genOutside(W,H,opts){
 
 
 /* ── TOWN block — вид сбоку-сверху, кровавая луна, жирные пропсы ── */
-function genTown(W,H){
+function genTown(W,H,opts){
+  opts=opts||{}; var RU=!!opts.ruined;
   var L=[];
   var horizon=0.42*H, ARC=0.015*W;
   function hy(x){var u=(x-W*0.5)/(W*0.5);return horizon+ARC*u*u;}
@@ -524,6 +525,7 @@ function genTown(W,H){
     {x0:0.59*W, x1:0.69*W, hh:170,roof:0,office:true},
     {x0:0.78*W, x1:0.85*W, hh:130,roof:48}
   ];
+  if(RU) houses.forEach(function(h,i){ h.hh=Math.round(h.hh*(0.38+0.14*((i*7)%3))); h.roof=0; h.chimney=false; h.broken=true; });
   var win3={x:0,y:0};
   function houseTop(x){
     for(var i=0;i<houses.length;i++){
@@ -536,6 +538,7 @@ function genTown(W,H){
           return base - h.roof*tt;
         }
         if(x<h.x0||x>h.x1)return hy(x);
+        if(h.broken) return base + Math.abs(Math.sin(x*0.11)*14) + (Math.sin(x*0.31)>0.6?10:0);
         if((((x-h.x0)/10)%2)<1) return base-8;
         return base;
       }
@@ -669,7 +672,13 @@ function genTown(W,H){
     } else {
       var par=[];
       for(var px2=h.x0;px2<=h.x1;px2+=1.5)par.push([px2,houseTop(px2)-0.5]);
-      stroke(par,1.2,'etch');
+      stroke(par,h.broken?1.0:1.2,'etch');
+      if(h.broken){
+        // пролом в стене
+        var bx0=mid-14+((hi*13)%12), bw=26;
+        L.push({t:'path',d:'M'+bx0+','+HY+' l4,-26 l7,-8 l6,9 l5,-6 l4,31 z',c:'sky'});
+        stroke([[bx0,HY],[bx0+4,HY-26],[bx0+11,HY-34],[bx0+17,HY-25],[bx0+22,HY-31],[bx0+26,HY]],0.9,'etch');
+      }
     }
     stroke([[h.x0,HY],[h.x0,base]],1.1,'etch');
     stroke([[h.x1,HY],[h.x1,base]],1.1,'etch');
@@ -692,12 +701,18 @@ function genTown(W,H){
     for(var wi=0;wi<wcount;wi++){
       var wxp=h.x0+(wi+0.5)*((h.x1-h.x0)/wcount)-6;
       var wyp=base+(HY-base)*0.30;
-      if(h.office&&wi===1){
+      if(h.office&&wi===1&&!RU){
         win3.x=wxp+6; win3.y=wyp;
         L.push({t:'rect',x:wxp,y:wyp,w:13,h:17,c:'flame',cls:'warmglow'});
         L.push({t:'glow',x:wxp+6,y:wyp+8,r:26,c:'flame',a:0.5,cls:'warmglow'});
         stroke([[wxp+6.5,wyp],[wxp+6.5,wyp+17]],1,'void');
         stroke([[wxp,wyp+8.5],[wxp+13,wyp+8.5]],1,'void');
+        stroke([[wxp-1,wyp-1],[wxp+14,wyp-1],[wxp+14,wyp+18],[wxp-1,wyp+18],[wxp-1,wyp-1]],0.9,'etch');
+      } else if(h.office&&wi===1&&RU){
+        win3.x=wxp+6; win3.y=wyp;
+        L.push({t:'rect',x:wxp,y:wyp,w:13,h:17,c:'void'});
+        stroke([[wxp,wyp],[wxp+13,wyp+17]],0.9,'etch');   // разбитая рама крестом
+        stroke([[wxp+13,wyp],[wxp,wyp+17]],0.9,'etch');
         stroke([[wxp-1,wyp-1],[wxp+14,wyp-1],[wxp+14,wyp+18],[wxp-1,wyp+18],[wxp-1,wyp-1]],0.9,'etch');
       } else {
         L.push({t:'rect',x:wxp,y:wyp,w:12,h:16,c:'void'});
@@ -760,8 +775,26 @@ function genTown(W,H){
   stroke([[px_-38,py_+4],[px_+36,py_+4]],0.9,'ash');
   stroke([[px_-30,py_+7],[px_+24,py_+7]],0.6,'ash');
 
+  /* обломки постиндустрии (только в руинах) */
+  if(RU){
+    for(var db=0;db<9;db++){
+      var dx0=(0.08+db*0.10)*W+(hash(db,3)-0.5)*40, dy0=hy(dx0)+30+hash(db,7)*(H-horizon)*0.5;
+      // наклонная балка
+      stroke([[dx0,dy0],[dx0+26+hash(db,9)*20,dy0-14-hash(db,11)*10]],3.2,'void');
+      stroke([[dx0-1,dy0-1],[dx0+24,dy0-14]],0.8,'etch');
+      // гнутая арматура
+      L.push({t:'path',d:'M'+(dx0+8)+','+dy0+' q6,-14 2,-22 q-3,-6 3,-9',c:'none',sc:'etch',sw:1,so:0.7});
+      // куча кирпича
+      L.push({t:'path',d:'M'+(dx0-14)+','+(dy0+6)+' q10,-9 22,0 z',c:'void',sc:'etch',sw:0.8,so:0.6});
+    }
+  }
+
   /* погасший фонарь — кованый, с завитком */
   var lx=0.505*W, ly=hy(0.505*W)+(H-horizon)*0.22;
+  if(RU){ // столб покосился
+    stroke([[lx,ly],[lx+14,ly-78]],3.6,'void');
+    stroke([[lx+1.4,ly-2],[lx+15,ly-76]],1.0,'etch');
+  } else {
   stroke([[lx,ly],[lx,ly-84]],3.6,'void');
   stroke([[lx-1.8,ly-2],[lx-1.8,ly-82]],1.0,'etch');
   L.push({t:'path',d:'M'+lx+','+(ly-84)+' q14,2 16,-12 q1,-7 -5,-8',c:'none',sc:'void',sw:3,so:1});
@@ -773,6 +806,7 @@ function genTown(W,H){
   stroke([[lx+12,ly-107],[lx+12,ly-104]],1.6,'etch');
   L.push({t:'path',d:'M'+(lx-8)+','+ly+' q8,-5 16,0',c:'none',sc:'etch',sw:1,so:0.7});
   stroke([[lx-12,ly+4],[lx+14,ly+4]],0.8,'ash');
+  }
 
   /* доска объявлений — бумаги и сургучная печать */
   var bx=0.735*W, by=hy(0.735*W)+(H-horizon)*0.16;
@@ -791,6 +825,7 @@ function genTown(W,H){
   /* врата — две башни по обе стороны дороги (сверху-сбоку) */
   var gx=0.945*W;
   [[hy(gx)+34,148],[hy(gx)+206,120]].forEach(function(p,pi){
+    if(RU&&pi===1){p[1]=Math.round(p[1]*0.38);}
     var baseY=p[0], hgt=p[1], X=gx+(pi===0?-4:4);
     L.push({t:'rect',x:X-13,y:baseY-hgt,w:26,h:hgt,c:'void'});
     stroke([[X-13,baseY],[X-13,baseY-hgt],[X+13,baseY-hgt],[X+13,baseY]],1.3,'etch');
