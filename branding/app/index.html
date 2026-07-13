@@ -314,30 +314,43 @@ const SCHED = [
   { t:"13:00", e:"13:45", title:"Выступление", who:"—", room:"sm" },
   { t:"13:00", e:"15:00", title:"Полевые записи", who:"", room:"w2" },
   { t:"14:00", e:"14:45", title:"Зачем делать свой прибор", who:"", room:"l2" },
-  { t:"14:00", e:"14:45", title:"Сонификация: данные как источник звука", who:"Лиза + Всеволод", room:"l1" },
+  { t:"14:00", e:"14:45", title:"Сонификация: данные как источник звука", who:"Лиза + Всеволод", room:"l1", author:"lizavsevolod" },
   { t:"14:00", e:"14:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"15:00", e:"15:45", title:"Фильтры в синтезаторах", who:"Кабанов · ПРИБОР", room:"l2" },
-  { t:"15:00", e:"15:45", title:"Интерфейс творческого прибора", who:"Олег Слуцкий", room:"l1" },
+  { t:"15:00", e:"15:45", title:"Фильтры в синтезаторах", who:"Кабанов · ПРИБОР", room:"l2", author:"kabanov" },
+  { t:"15:00", e:"15:45", title:"Интерфейс творческого прибора", who:"Олег Слуцкий", room:"l1", author:"slutsky" },
   { t:"15:00", e:"15:45", title:"Выступление", who:"—", room:"sm" },
   { t:"15:00", e:"15:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
-  { t:"15:00", e:"18:00", title:"Воркшоп · Полина", who:"5000 ₽", room:"w1" },
-  { t:"16:00", e:"16:45", title:"Платформа SEMECHKO", who:"Лунев + Григорьев", room:"l2" },
+  { t:"15:00", e:"18:00", title:"Воркшоп · Полина", who:"5000 ₽", room:"w1", author:"polina" },
+  { t:"16:00", e:"16:45", title:"Платформа SEMECHKO", who:"Лунев + Григорьев", room:"l2", author:"semechko" },
   { t:"16:00", e:"16:45", title:"Выбор материалов для корпуса", who:"", room:"l1" },
   { t:"16:00", e:"16:45", title:"Выступление", who:"—", room:"sm" },
   { t:"16:00", e:"16:30", title:"Саундчек", who:"", room:"sb" },
   { t:"16:00", e:"16:30", title:"Экскурсия по МИЭТ", who:"", room:"hall" },
-  { t:"16:00", e:"19:00", title:"Воркшоп · totoro", who:"5000 ₽", room:"w2" },
-  { t:"17:00", e:"17:45", title:"Кристалл как творческий объект", who:"Ангстрем", room:"l2" },
-  { t:"17:00", e:"17:45", title:"Самодельные микрофоны и датчики", who:"Илья Черто", room:"l1" },
+  { t:"16:00", e:"19:00", title:"Воркшоп · totoro", who:"5000 ₽", room:"w2", author:"totoro" },
+  { t:"17:00", e:"17:45", title:"Кристалл как творческий объект", who:"Ангстрем", room:"l2", author:"angstrem" },
+  { t:"17:00", e:"17:45", title:"Самодельные микрофоны и датчики", who:"Илья Черто", room:"l1", author:"cherto" },
   { t:"17:00", e:"17:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"17:00", e:"17:45", title:"Лиза и Всеволод", who:"", room:"sb" },
+  { t:"17:00", e:"17:45", title:"Лиза и Всеволод", who:"", room:"sb", author:"lizavsevolod" },
   { t:"17:00", e:"17:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
   { t:"18:00", e:"18:45", title:"От прототипа к серии · мелкосерийная разработка", who:"", room:"l2" },
   { t:"18:00", e:"18:45", title:"Индикация и световое оформление приборов", who:"", room:"l1" },
   { t:"18:00", e:"18:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"18:00", e:"18:45", title:"Влад Лисицкий · AV", who:"", room:"sb" },
+  { t:"18:00", e:"18:45", title:"Влад Лисицкий · AV", who:"", room:"sb", author:"lisitsky" },
   { t:"19:00", e:"20:00", title:"Финал · результаты · речь", who:"", room:"sb" },
   { t:"20:00", e:"21:00", title:"Выезд", who:"", room:"all" },
+];
+
+// ===== АВТОРЫ / СПИКЕРЫ (страницы-заготовки, наполняются данными) =====
+const A = [
+  { id:"kabanov", name:"Кабанов", role:"Лекция · Фильтры в синтезаторах", session:"ЛЕКЦИЯ · ПРИБОР", room:"l2", time:"15:00–15:45", photos:[], links:[], desc:"" },
+  { id:"slutsky", name:"Олег Слуцкий", role:"Лекция · Интерфейс творческого прибора", session:"ЛЕКЦИЯ", room:"l1", time:"15:00–15:45", photos:[], links:[], desc:"" },
+  { id:"semechko", name:"Лунёв + Григорьев", role:"Лекция · Платформа SEMECHKO", session:"ЛЕКЦИЯ", room:"l2", time:"16:00–16:45", photos:[], links:[], desc:"" },
+  { id:"angstrem", name:"Ангстрем", role:"Лекция · Кристалл как творческий объект", session:"ЛЕКЦИЯ", room:"l2", time:"17:00–17:45", photos:[], links:[], desc:"" },
+  { id:"cherto", name:"Илья Черто", role:"Лекция · Самодельные микрофоны и датчики", session:"ЛЕКЦИЯ", room:"l1", time:"17:00–17:45", photos:[], links:[], desc:"" },
+  { id:"lizavsevolod", name:"Лиза + Всеволод", role:"Сонификация · AV на большой сцене", session:"ЛЕКЦИЯ + AV", room:"sb", time:"14:00 / 17:00", photos:[], links:[], desc:"" },
+  { id:"polina", name:"Полина", role:"Воркшоп · 5000 ₽", session:"ВОРКШОП", room:"w1", time:"15:00–18:00", photos:[], links:[], desc:"" },
+  { id:"totoro", name:"totoro", role:"Воркшоп · 5000 ₽", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"" },
+  { id:"lisitsky", name:"Влад Лисицкий", role:"AV на большой сцене", session:"AV", room:"sb", time:"18:00–18:45", photos:[], links:[], desc:"" },
 ];
 
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -377,11 +390,11 @@ function renderDevices(){
     </article>`).join("");
 }
 function renderSchedule(){
-  const tap = s => s.go ? `class="srow2 tap" onclick="haptic('light');setView('${s.go}')"` : (s.link ? `class="srow2 tap" onclick="openDetail('${s.link}')"` : `class="srow2"`);
+  const tap = s => s.author ? `class="srow2 tap" onclick="openAuthor('${s.author}')"` : s.go ? `class="srow2 tap" onclick="haptic('light');setView('${s.go}')"` : (s.link ? `class="srow2 tap" onclick="openDetail('${s.link}')"` : `class="srow2"`);
   $("#slist").innerHTML = SCHED.map(s => `
     <div ${tap(s)}>
       <div class="stime2">${s.t}${s.e?`<span>${s.e}</span>`:""}</div>
-      <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.go||s.link)?' <em class="lk">открыть ↗</em>':""}</div>
+      <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.author||s.go||s.link)?' <em class="lk">открыть ↗</em>':""}</div>
       <div class="sroom ${(s.room==='sb')?'red':''}">${ROOMS[s.room]}</div>
     </div>`).join("");
 }
@@ -427,6 +440,30 @@ function initCarousel(n){
   if(pv) pv.addEventListener("click",()=>go(cur()-1));
   if(nx) nx.addEventListener("click",()=>go(cur()+1));
   box.addEventListener("scroll",()=>{ const c=cur(); dots.forEach((d,i)=>d.classList.toggle("on",i===c)); },{passive:true});
+}
+function openAuthor(id){
+  const a = A.find(x=>x.id===id); if(!a) return; haptic("light");
+  $("#ddc").textContent = "АВТОР";
+  const slides = (a.photos && a.photos.length) ? a.photos : [];
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Фото скоро</div>`;
+  const multi = slides.length > 1;
+  $("#dbody").innerHTML = `
+    <div class="carousel">
+      <div class="cslides" id="cslides">${slidesHTML}</div>
+      <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
+      ${multi ? `<button class="cnav cprev" id="cprev">‹</button><button class="cnav cnext" id="cnext">›</button><div class="cdots" id="cdots">${slides.map((_,i)=>`<span class="cdot ${i===0?"on":""}"></span>`).join("")}</div>` : ""}
+    </div>
+    ${a.session ? `<span class="dlabel">${esc(a.session)}</span>` : ""}${WAVE}
+    <h1 class="dname" style="margin-top:0">${esc(a.name)}</h1>
+    <div class="drole">${esc(a.role)}</div>
+    <div class="dgrid">
+      <div class="dcell"><div class="k">Зал</div><div class="v">${esc(ROOMS[a.room]||"—")}</div></div>
+      <div class="dcell"><div class="k">Время</div><div class="v">${esc(a.time||"—")}</div></div>
+    </div>
+    <div class="dframe"><span class="k">О сессии</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">— описание уточняется —</p>`}</div>
+    ${(a.links && a.links.length) ? `<div class="dlinks">${a.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+  if(multi) initCarousel(slides.length);
+  $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
 function closeDetail(){ $("#detail").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
 $("#dback").addEventListener("click", closeDetail);
