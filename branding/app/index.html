@@ -103,6 +103,16 @@
   .tabs button.on{color:var(--hair);}
   .tabs button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:6px; width:20px; height:3px; background:var(--red);}
 
+  .srow2{display:grid; grid-template-columns:56px 1fr auto; gap:10px; align-items:center; padding:11px 4px; border-bottom:1px solid var(--line);}
+  .srow2.tap{cursor:pointer;}
+  .srow2.tap:active{background:var(--panel);}
+  .stime2{font-family:var(--grotesk); font-weight:800; font-size:17px; letter-spacing:.5px; line-height:1;}
+  .stime2 span{display:block; font-family:var(--mono); font-weight:400; font-size:9.5px; color:var(--muted); margin-top:3px;}
+  .sinfo b{font-size:13.5px; font-weight:400; color:var(--hair); display:block; line-height:1.28;}
+  .sinfo span{font-size:11px; color:var(--muted);}
+  .sinfo .lk{font-style:normal; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--red);}
+  .sroom{font-size:9px; letter-spacing:.5px; text-transform:uppercase; border:1px solid var(--hair); color:var(--hair); padding:3px 6px; white-space:nowrap; align-self:center;}
+  .sroom.red{background:var(--red); color:#fff; border-color:var(--red);}
   .detail{position:fixed; inset:0; z-index:40; background:var(--bg); max-width:520px; margin:0 auto; overflow-y:auto; display:none; flex-direction:column;}
   .detail.on{display:flex;}
   .dbar{position:sticky; top:0; background:var(--top-bg); backdrop-filter:blur(6px); border-bottom:2px solid var(--hair);
@@ -210,7 +220,7 @@
 
     <section class="view" id="v-schedule">
       <div class="vhead"><h2>Расписание</h2><span class="vrule"></span></div>
-      <div class="draft">Черновик · порядок и время уточняются</div>
+      <div class="draft">Черновик по рабочей сетке · время уточняется</div>
       <div id="slist"></div>
     </section>
 
@@ -295,6 +305,41 @@ const P = [
     desc:"Бутиковые синтезаторы и педали эффектов, где инновации встречаются с музыкальным экспериментом. В линейке Fortress, Chord и Solar Panel; на форуме — премьера цифрового фильтра." },
 ];
 
+// ===== РАСПИСАНИЕ (по рабочей сетке форума, черновик) =====
+const ROOMS = { hall:"ХОЛЛ", l2:"ЛЕК·3102", l1:"ЛЕК·3101", sm:"СЦЕНА·М", sb:"СЦЕНА·Б", w1:"МАСТ·1", w2:"МАСТ·2", all:"ВСЕ ЗАЛЫ" };
+// go: переключить вкладку · link: открыть карточку девайса
+const SCHED = [
+  { t:"13:00", e:"20:00", title:"Экспо участников", who:"все приборы стенда", room:"hall", go:"devices" },
+  { t:"13:00", e:"15:45", title:"Показ видео-работ", who:"", room:"sb" },
+  { t:"13:00", e:"13:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"13:00", e:"15:00", title:"Полевые записи", who:"", room:"w2" },
+  { t:"14:00", e:"14:45", title:"Зачем делать свой прибор", who:"", room:"l2" },
+  { t:"14:00", e:"14:45", title:"Сонификация: данные как источник звука", who:"Лиза + Всеволод", room:"l1" },
+  { t:"14:00", e:"14:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"15:00", e:"15:45", title:"Фильтры в синтезаторах", who:"Кабанов · ПРИБОР", room:"l2" },
+  { t:"15:00", e:"15:45", title:"Интерфейс творческого прибора", who:"Олег Слуцкий", room:"l1" },
+  { t:"15:00", e:"15:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"15:00", e:"15:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
+  { t:"15:00", e:"18:00", title:"Воркшоп · Полина", who:"5000 ₽", room:"w1" },
+  { t:"16:00", e:"16:45", title:"Платформа SEMECHKO", who:"Лунев + Григорьев", room:"l2" },
+  { t:"16:00", e:"16:45", title:"Выбор материалов для корпуса", who:"", room:"l1" },
+  { t:"16:00", e:"16:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"16:00", e:"16:30", title:"Саундчек", who:"", room:"sb" },
+  { t:"16:00", e:"16:30", title:"Экскурсия по МИЭТ", who:"", room:"hall" },
+  { t:"16:00", e:"19:00", title:"Воркшоп · totoro", who:"5000 ₽", room:"w2" },
+  { t:"17:00", e:"17:45", title:"Кристалл как творческий объект", who:"Ангстрем", room:"l2" },
+  { t:"17:00", e:"17:45", title:"Самодельные микрофоны и датчики", who:"Илья Черто", room:"l1" },
+  { t:"17:00", e:"17:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"17:00", e:"17:45", title:"Лиза и Всеволод", who:"", room:"sb" },
+  { t:"17:00", e:"17:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
+  { t:"18:00", e:"18:45", title:"От прототипа к серии · мелкосерийная разработка", who:"", room:"l2" },
+  { t:"18:00", e:"18:45", title:"Индикация и световое оформление приборов", who:"", room:"l1" },
+  { t:"18:00", e:"18:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"18:00", e:"18:45", title:"Влад Лисицкий · AV", who:"", room:"sb" },
+  { t:"19:00", e:"20:00", title:"Финал · результаты · речь", who:"", room:"sb" },
+  { t:"20:00", e:"21:00", title:"Выезд", who:"", room:"all" },
+];
+
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 const $ = s => document.querySelector(s);
 const esc = s => (s+"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -332,12 +377,12 @@ function renderDevices(){
     </article>`).join("");
 }
 function renderSchedule(){
-  const rows = [...P].sort((a,b)=> a.time.localeCompare(b.time));
-  $("#slist").innerHTML = rows.map(p => `
-    <div class="srow" onclick="openDetail('${p.id}')">
-      <div class="stime">${p.time}</div>
-      <div class="sname"><b>${esc(p.device)}</b><span>${esc(p.name)}</span></div>
-      <div class="sstage ${p.stage==='MAIN'?'main':''}">${p.stage}</div>
+  const tap = s => s.go ? `class="srow2 tap" onclick="haptic('light');setView('${s.go}')"` : (s.link ? `class="srow2 tap" onclick="openDetail('${s.link}')"` : `class="srow2"`);
+  $("#slist").innerHTML = SCHED.map(s => `
+    <div ${tap(s)}>
+      <div class="stime2">${s.t}${s.e?`<span>${s.e}</span>`:""}</div>
+      <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.go||s.link)?' <em class="lk">открыть ↗</em>':""}</div>
+      <div class="sroom ${(s.room==='sb')?'red':''}">${ROOMS[s.room]}</div>
     </div>`).join("");
 }
 function renderForum(){
