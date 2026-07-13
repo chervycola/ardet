@@ -1,0 +1,329 @@
+<title>ДИСКРЕТ · Рамки участников</title>
+<style>
+  :root{
+    --paper:#FFFFFF; --ink:#0a0a0a; --red:#E30613;
+    --bg:#EDEDEA; --panel:#FFFFFF; --muted:#5a5a56; --hair:#0a0a0a; --soft:#d6d6d1;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Courier New", monospace;
+    --grotesk: "Helvetica Neue", Arial, sans-serif;
+    --cond: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b0b0b; --panel:#141414; --muted:#8f8f8a; --hair:#e8e8e3; --soft:#242424; }
+  }
+  :root[data-theme="light"]{ --bg:#EDEDEA; --panel:#FFFFFF; --muted:#5a5a56; --hair:#0a0a0a; --soft:#d6d6d1; }
+  :root[data-theme="dark"]{ --bg:#0b0b0b; --panel:#141414; --muted:#8f8f8a; --hair:#e8e8e3; --soft:#242424; }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--hair);
+    font-family:var(--mono); font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--soft) 1px, transparent 1px), linear-gradient(90deg, var(--soft) 1px, transparent 1px);
+    background-size:44px 44px;
+  }
+  .wrap{ max-width:1200px; margin:0 auto; padding:40px 24px 90px; }
+  svg{ display:block; }
+
+  header.masthead{ border:2px solid var(--hair); background:var(--panel); }
+  .mast-top{ display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:18px 22px; border-bottom:2px solid var(--hair); flex-wrap:wrap; }
+  .logo{ display:flex; align-items:center; gap:14px; color:var(--hair); }
+  .logo b{ font-family:var(--cond); font-weight:800; font-size:32px; letter-spacing:.5px; text-transform:uppercase; }
+  .mast-meta{ font-family:var(--mono); font-size:12px; letter-spacing:2px; color:var(--muted); text-align:right; text-transform:uppercase; }
+  .mast-body{ padding:26px 22px; }
+  h1{ font-family:var(--cond); font-weight:800; text-transform:uppercase; font-size:clamp(34px,6vw,66px);
+    line-height:.98; letter-spacing:.5px; margin:0 0 10px; text-wrap:balance; color:var(--hair); }
+  .tag{ font-family:var(--cond); font-weight:800; font-size:clamp(16px,2.4vw,24px); color:var(--red);
+    text-transform:uppercase; letter-spacing:.5px; margin:0 0 18px; }
+  .lede{ max-width:66ch; color:var(--muted); font-size:15px; }
+  .lede b{ color:var(--hair); font-weight:400; border-bottom:2px solid var(--red); }
+
+  .sec{ margin-top:56px; }
+  .sec-label{ display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+  .sec-num{ background:var(--red); color:#fff; font-family:var(--cond); font-weight:800; font-size:20px; padding:2px 12px; letter-spacing:1px; }
+  .sec-title{ font-family:var(--cond); font-weight:800; text-transform:uppercase; font-size:clamp(20px,3vw,30px); letter-spacing:.5px; color:var(--hair); }
+  .sec-rule{ flex:1; height:2px; background:var(--hair); }
+
+  .frames{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:26px; }
+  .card{ border:2px solid var(--hair); background:var(--panel); display:flex; flex-direction:column; position:relative; }
+  .card.pick{ outline:4px solid var(--red); outline-offset:-2px; }
+  .badge{ position:absolute; top:0; right:0; background:var(--red); color:#fff; font-family:var(--cond);
+    font-weight:800; font-size:13px; letter-spacing:1px; padding:4px 10px; z-index:2; text-transform:uppercase; }
+  .card-figure{ background:#111; border-bottom:2px solid var(--hair); }
+  .card-figure svg{ width:100%; height:auto; }
+  .card-body{ padding:16px 18px 20px; }
+  .card-kicker{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+  .card-id{ font-family:var(--cond); font-weight:800; font-size:22px; color:var(--red); }
+  .card-name{ font-family:var(--cond); font-weight:800; text-transform:uppercase; font-size:22px; letter-spacing:.5px; color:var(--hair); }
+  .card-when{ font-size:13px; color:var(--muted); margin:0 0 12px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-size:11px; letter-spacing:1px; text-transform:uppercase; border:1.5px solid var(--hair); padding:3px 8px; color:var(--hair); }
+  .chip.red{ border-color:var(--red); color:var(--red); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+  @media (max-width:760px){ .grid2{ grid-template-columns:1fr; } }
+  .panel{ border:2px solid var(--hair); background:var(--panel); padding:20px 22px; }
+  .panel h3{ font-family:var(--cond); font-weight:800; text-transform:uppercase; font-size:18px; letter-spacing:.5px; margin:0 0 14px; color:var(--hair); }
+  .swatch-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .sw{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+  .sw i{ width:64px; height:44px; display:block; border:2px solid var(--hair); }
+  .sw span{ font-size:11px; letter-spacing:1px; color:var(--muted); }
+  .kv{ display:grid; grid-template-columns:auto 1fr; gap:6px 16px; font-size:13px; }
+  .kv dt{ color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+  .kv dd{ margin:0; color:var(--hair); }
+  .yesno{ display:grid; grid-template-columns:1fr 1fr; border:2px solid var(--hair); }
+  .yesno ul{ list-style:none; margin:0; padding:14px 16px; font-size:13px; }
+  .yesno li{ padding:3px 0; }
+  .yesno .yes{ border-right:2px solid var(--hair); }
+  .yesno .yes li::before{ content:"✓ "; color:#0a7a2f; font-weight:700; }
+  .yesno .no li::before{ content:"✕ "; color:var(--red); font-weight:700; }
+  .yesno h4{ font-family:var(--cond); font-weight:800; text-transform:uppercase; font-size:14px; margin:0 0 6px; letter-spacing:1px; }
+  @media (prefers-color-scheme:dark){ .yesno .yes li::before{ color:#3fbf63; } }
+
+  .steps{ display:grid; gap:2px; counter-reset:s; }
+  .step{ counter-increment:s; display:flex; gap:16px; align-items:flex-start; border:2px solid var(--hair); background:var(--panel); padding:16px 18px; }
+  .step::before{ content:counter(s,decimal-leading-zero); font-family:var(--cond); font-weight:800; font-size:24px; color:var(--red); min-width:38px; }
+  .step p{ margin:0; font-size:14px; color:var(--hair); }
+  .step code{ background:var(--soft); padding:1px 6px; font-size:12px; color:var(--hair); }
+
+  footer{ margin-top:60px; border-top:2px solid var(--hair); padding-top:18px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+  .stamp{ color:var(--red); border:2px solid var(--red); padding:4px 10px; font-family:var(--cond); font-weight:800; letter-spacing:1px; }
+  a{ color:var(--red); }
+</style>
+
+<!-- общий пиксельный знак «Д» -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logoD" viewBox="0 0 8 8" shape-rendering="crispEdges">
+    <rect x="2" y="0" width="6" height="2"/><rect x="2" y="2" width="1" height="1"/>
+    <rect x="5" y="2" width="3" height="4"/><rect x="1" y="3" width="2" height="1"/>
+    <rect x="0" y="4" width="2" height="2"/><rect x="0" y="6" width="8" height="1"/>
+    <rect x="0" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="logo">
+        <svg width="42" height="42" viewBox="0 0 8 8"><use href="#logoD" fill="currentColor"/></svg>
+        <b>ДИСКРЕТ</b>
+      </div>
+      <div class="mast-meta">
+        НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ<br>
+        DS_PUBLIC · STYLE_FIRST / SIGNAL_ALWAYS
+      </div>
+    </div>
+    <div class="mast-body">
+      <h1>Рамки участников · единый брендинг</h1>
+      <p class="tag">Не растворяется. Переключается.</p>
+      <p class="lede">Четыре рамки в одном языке ДИСКРЕТ, чтобы анонсы участников выходили как один прибор,
+        а не как случайный сток. Одну и ту же сетку кладём поверх любого фото — девайс, синт, педаль, прибор.
+        Диапазон: от чистой плакатной карточки до плотной приборной панели — <b>риск-менеджмент против скучной
+        «сосисочной» ленты</b>: система держит форму даже там, где фото слабое.</p>
+    </div>
+  </header>
+
+  <!-- 01 · FRAMES -->
+  <section class="sec">
+    <div class="sec-label"><span class="sec-num">01</span><span class="sec-title">Четыре рамки</span><span class="sec-rule"></span></div>
+    <div class="frames">
+
+      <!-- ===== D · FORUM (recommended) ===== -->
+      <article class="card pick">
+        <span class="badge">Рекомендую</span>
+        <div class="card-figure">
+          <svg viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+            <defs><pattern id="hD" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#eee"/><line x1="0" y1="0" x2="0" y2="12" stroke="#d3d3d3" stroke-width="3"/></pattern></defs>
+            <rect width="1080" height="1350" fill="#fff"/>
+            <use href="#logoD" x="72" y="60" width="40" height="40" fill="#000"/>
+            <text x="1008" y="76" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+            <text x="1008" y="98" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+            <text x="72" y="178" font-family="'Courier New',monospace" font-size="22" letter-spacing="3" fill="#E30613">УЧАСТНИК № 04</text>
+            <text x="70" y="290" font-family="'Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="104" letter-spacing="-1" fill="#000">ВАДИМ<tspan x="70" dy="104">МИНКИН</tspan></text>
+            <text font-family="'Helvetica Neue',Arial,sans-serif" font-size="27" fill="#333"><tspan x="72" y="472">Генеративный грувбокс собственной разработки.</tspan><tspan x="72" y="508">Живой сет: звук собирается на глазах — из зерна,</tspan><tspan x="72" y="544">порога и обратной связи. Не запись, а прибор.</tspan></text>
+            <rect x="72" y="560" width="936" height="590" fill="url(#hD)"/>
+            <text x="540" y="840" text-anchor="middle" font-family="'Courier New',monospace" font-size="22" letter-spacing="3" fill="#9a9a9a">ФОТО · 936×590</text>
+            <text x="540" y="874" text-anchor="middle" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#b0b0b0">ВАШ СНИМОК СЮДА</text>
+            <rect x="72" y="560" width="936" height="590" fill="none" stroke="#000" stroke-width="3"/>
+            <path d="M72 588 V560 H100 M980 560 H1008 V588 M1008 1122 V1150 H980 M100 1150 H72 V1122" fill="none" stroke="#000" stroke-width="2"/>
+            <line x1="72" y1="1230" x2="1008" y2="1230" stroke="#000" stroke-width="2"/>
+            <use href="#logoD" x="72" y="1258" width="21" height="21" fill="#000"/>
+            <text x="110" y="1282" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="26" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+            <text x="1008" y="1282" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">10 СЕНТЯБРЯ · ЗЕЛЕНОГРАД</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-kicker"><span class="card-id">D</span><span class="card-name">Карточка форума</span></div>
+          <p class="card-when">Чистый плакатный стиль форума: воздух, жирный гротеск-имя, красный — точечно. Ближе всего к текущему бренду. Основа ленты.</p>
+          <div class="chips"><span class="chip">много воздуха</span><span class="chip">жирный гротеск</span><span class="chip">фото в рамке</span><span class="chip red">красный кикер</span></div>
+        </div>
+      </article>
+
+      <!-- ===== B · PLASHKA ===== -->
+      <article class="card">
+        <div class="card-figure">
+          <svg viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+            <defs><pattern id="hB" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#171717"/><line x1="0" y1="0" x2="0" y2="12" stroke="#2f2f2f" stroke-width="3"/></pattern>
+              <g id="xB"><line x1="-16" y1="0" x2="16" y2="0" stroke="#fff" stroke-width="2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#fff" stroke-width="2"/></g></defs>
+            <rect width="1080" height="1350" fill="url(#hB)"/>
+            <text x="540" y="520" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#8a8a8a">ФОТО · 1080×1350</text>
+            <text x="540" y="558" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="2" fill="#6f6f6f">НА ВЕСЬ КАДР</text>
+            <use href="#xB" x="42" y="42"/><use href="#xB" x="1038" y="42"/>
+            <rect x="42" y="90" width="252" height="52" fill="#000"/>
+            <use href="#logoD" x="56" y="100" width="32" height="32" fill="#fff"/>
+            <text x="102" y="127" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="32" letter-spacing="1" fill="#fff">ДИСКРЕТ</text>
+            <text x="1038" y="120" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#fff">B2 / 25%</text>
+            <rect x="0" y="1074" width="1080" height="276" fill="#000"/>
+            <line x1="0" y1="1074" x2="1080" y2="1074" stroke="#E30613" stroke-width="6"/>
+            <text x="42" y="1180" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="72" fill="#E30613">04</text>
+            <line x1="150" y1="1120" x2="150" y2="1300" stroke="#333" stroke-width="1.5"/>
+            <text x="184" y="1178" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="86" fill="#fff">ВАДИМ МИНКИН</text>
+            <text x="186" y="1224" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#fff">GENERATIVE GROOVEBOX · ЖИВОЙ СЕТ</text>
+            <text x="186" y="1266" font-family="'Courier New',monospace" font-size="15" letter-spacing="1" fill="#8a8a8a">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+            <text x="186" y="1296" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#8a8a8a">DISKRET.SPACE</text>
+            <text x="1038" y="1296" text-anchor="end" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#8a8a8a">SIGNAL_ALWAYS</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-kicker"><span class="card-id">B</span><span class="card-name">Плашка</span></div>
+          <p class="card-when">Фото на весь кадр, имя выворачивается из чёрной плашки. Самая универсальная — читается на любом фото. Рабочая лошадка ленты.</p>
+          <div class="chips"><span class="chip">full-bleed</span><span class="chip">чёрная плашка</span><span class="chip">выворотка</span><span class="chip red">красная линия + №</span></div>
+        </div>
+      </article>
+
+      <!-- ===== A · PRIBOR ===== -->
+      <article class="card">
+        <div class="card-figure">
+          <svg viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+            <defs><pattern id="hA" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#141414"/><line x1="0" y1="0" x2="0" y2="12" stroke="#2b2b2b" stroke-width="3"/></pattern>
+              <g id="xA"><line x1="-17" y1="0" x2="17" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-17" x2="0" y2="17" stroke="#000" stroke-width="2"/></g></defs>
+            <rect width="1080" height="1350" fill="#fff"/>
+            <rect x="20" y="20" width="1040" height="1310" fill="none" stroke="#000" stroke-width="2"/>
+            <use href="#xA" x="20" y="20"/><use href="#xA" x="1060" y="20"/><use href="#xA" x="20" y="1330"/><use href="#xA" x="1060" y="1330"/>
+            <use href="#logoD" x="60" y="26" width="37" height="37" fill="#000"/>
+            <text x="115" y="70" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="48" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+            <text x="1020" y="34" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#000">УЧАСТНИК / PARTICIPANT</text>
+            <text x="1020" y="80" text-anchor="end" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="38" fill="#E30613">№ 04</text>
+            <text x="60" y="90" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+            <line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
+            <rect x="60" y="196" width="960" height="720" fill="url(#hA)"/>
+            <text x="540" y="548" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#8a8a8a">ФОТО · 960×720</text>
+            <text x="540" y="586" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="2" fill="#666">ЭКРАН ПРИБОРА</text>
+            <rect x="60" y="196" width="960" height="720" fill="none" stroke="#000" stroke-width="3"/>
+            <rect x="68" y="204" width="944" height="704" fill="none" stroke="#000" stroke-width="1"/>
+            <path d="M60 236 V196 H100 M980 196 H1020 V236 M1020 876 V916 H980 M100 916 H60 V876" fill="none" stroke="#E30613" stroke-width="4"/>
+            <rect x="60" y="916" width="440" height="30" fill="#000"/>
+            <text x="72" y="937" font-family="'Courier New',monospace" font-size="16" letter-spacing="2" fill="#FFF">CH1  2V/DIV   5ms/DIV   TRIG:A</text>
+            <polyline points="60,1000 150,1000 175,975 200,1000 260,1000 285,955 310,1035 335,1000 470,1000 495,982 520,1018 545,1000 700,1000 720,970 760,970 780,1000 1020,1000" fill="none" stroke="#000" stroke-width="3"/>
+            <circle cx="60" cy="1000" r="5" fill="#E30613"/>
+            <text x="60" y="1130" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="92" fill="#000">ВАДИМ МИНКИН</text>
+            <text x="62" y="1176" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#000">GENERATIVE GROOVEBOX · ЖИВОЙ СЕТ</text>
+            <text x="60" y="1236" font-family="'Courier New',monospace" font-size="14" letter-spacing="1" fill="#000">SCALE_BAR</text>
+            <rect x="60" y="1248" width="30" height="10" fill="#000"/><rect x="90" y="1248" width="30" height="10" fill="none" stroke="#000" stroke-width="1.5"/><rect x="120" y="1248" width="30" height="10" fill="#000"/><rect x="150" y="1248" width="30" height="10" fill="none" stroke="#000" stroke-width="1.5"/>
+            <text x="1020" y="1246" text-anchor="end" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#000">STYLE_FIRST</text>
+            <text x="1020" y="1268" text-anchor="end" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#E30613">SIGNAL_ALWAYS</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-kicker"><span class="card-id">A</span><span class="card-name">Прибор</span></div>
+          <p class="card-when">Осциллограф. Фото живёт «на экране прибора». Максимум технической разметки — для флагманских анонсов и хедлайнеров.</p>
+          <div class="chips"><span class="chip">экран + скобки</span><span class="chip">осциллограмма</span><span class="chip">scale bar</span><span class="chip red">№ красный</span></div>
+        </div>
+      </article>
+
+      <!-- ===== C · SIGNAL ===== -->
+      <article class="card">
+        <div class="card-figure">
+          <svg viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+            <defs><pattern id="hC" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#141414"/><line x1="0" y1="0" x2="0" y2="12" stroke="#2b2b2b" stroke-width="3"/></pattern>
+              <pattern id="dotC" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#fff"/><circle cx="4" cy="4" r="2.6" fill="#000"/></pattern>
+              <pattern id="dotF" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#fff"/><circle cx="4" cy="4" r="1.4" fill="#000"/></pattern>
+              <g id="xC"><line x1="-16" y1="0" x2="16" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#000" stroke-width="2"/></g></defs>
+            <rect width="1080" height="1350" fill="#fff"/>
+            <use href="#xC" x="40" y="40"/><use href="#xC" x="1040" y="40"/><use href="#xC" x="40" y="1310"/><use href="#xC" x="1040" y="1310"/>
+            <use href="#logoD" x="60" y="66" width="37" height="37" fill="#000"/>
+            <text x="115" y="112" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="48" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+            <text x="60" y="140" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+            <text x="1020" y="86" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ПОРОГ · THRESHOLD</text>
+            <text x="1020" y="118" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#E30613">ID:04 · A3</text>
+            <polyline points="60,168 160,168 160,148 320,148 320,180 470,180 470,150 640,150 640,178 790,178 790,152 940,152 940,170 1020,170" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="60" y="250" width="72" height="700" fill="url(#dotC)"/><rect x="60" y="250" width="72" height="700" fill="none" stroke="#000" stroke-width="2"/>
+            <rect x="60" y="250" width="72" height="230" fill="#E30613"/>
+            <text x="96" y="366" transform="rotate(-90 96 366)" text-anchor="middle" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="34" letter-spacing="4" fill="#fff">СИГНАЛ</text>
+            <rect x="150" y="250" width="870" height="700" fill="url(#hC)"/>
+            <text x="585" y="592" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#8a8a8a">ФОТО · 870×700</text>
+            <text x="585" y="630" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="2" fill="#666">ПОЛЕ НАБЛЮДЕНИЯ</text>
+            <rect x="150" y="250" width="870" height="700" fill="none" stroke="#000" stroke-width="3" stroke-dasharray="14 10"/>
+            <rect x="150" y="250" width="230" height="28" fill="#000"/>
+            <text x="162" y="270" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#fff">ПОЛЕ НАБЛЮДЕНИЯ</text>
+            <rect x="150" y="972" width="870" height="40" fill="url(#dotF)"/><rect x="150" y="972" width="870" height="40" fill="none" stroke="#000" stroke-width="1.5"/>
+            <text x="60" y="1120" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="94" fill="#000">ВАДИМ МИНКИН</text>
+            <line x1="62" y1="1140" x2="720" y2="1140" stroke="#000" stroke-width="2" stroke-dasharray="10 8"/>
+            <text x="62" y="1182" font-family="'Courier New',monospace" font-size="24" letter-spacing="3" fill="#000">GENERATIVE GROOVEBOX · ЖИВОЙ СЕТ</text>
+            <text x="60" y="1266" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#000">DISKRET.SPACE</text>
+            <text x="1020" y="1266" text-anchor="end" font-family="'Courier New',monospace" font-size="15" letter-spacing="2" fill="#E30613">ШУМ = СТРУКТУРА</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-kicker"><span class="card-id">C</span><span class="card-name">Сигнал / Порог</span></div>
+          <p class="card-when">Фото в пунктирном «поле наблюдения», растр как структура, порог-волна сверху, вертикальный тег СИГНАЛ. Для лайнапов с характером.</p>
+          <div class="chips"><span class="chip">пунктир</span><span class="chip">растр точек</span><span class="chip">порог-волна</span><span class="chip red">тег СИГНАЛ</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- 02 · SYSTEM -->
+  <section class="sec">
+    <div class="sec-label"><span class="sec-num">02</span><span class="sec-title">Система в двух словах</span><span class="sec-rule"></span></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Цвет</h3>
+        <div class="swatch-row">
+          <div class="sw"><i style="background:#0a0a0a"></i><span>Ч/Б — режим<br>по умолчанию</span></div>
+          <div class="sw"><i style="background:#E30613;border-color:#E30613"></i><span>Сигнальный<br>красный · акцент</span></div>
+          <div class="sw"><i style="background:#1E7A46"></i><span>Тёмный<br>зелёный · alt</span></div>
+          <div class="sw"><i style="background:#0057B7"></i><span>Холодный<br>синий · alt</span></div>
+          <div class="sw"><i style="background:#FFD400"></i><span>Жёлтый<br>· alt</span></div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:16px 0 0">Один акцент на макет. Красный — по умолчанию. Альтернативы — чтобы разводить дни / сцены / форматы, но никогда не два акцента разом.</p>
+      </div>
+      <div class="panel">
+        <h3>Типографика</h3>
+        <dl class="kv">
+          <dt>Имя</dt><dd>Жирный гротеск (Helvetica&nbsp;/&nbsp;Arial Bold) — заголовок карточки.</dd>
+          <dt>Технич.</dt><dd>Узкий гротеск (Arial&nbsp;Narrow) — номера и метки в приборных рамках.</dd>
+          <dt>Подписи</dt><dd>Моноширинный (Courier&nbsp;/&nbsp;SF&nbsp;Mono) — роли, координаты, техданные.</dd>
+          <dt>Знак</dt><dd>Пиксельная «Д» + вордмарк ДИСКРЕТ — цельный технический знак.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="yesno" style="margin-top:26px">
+      <ul class="yes"><h4 style="color:#0a7a2f">Допустимо</h4>
+        <li>штриховка, контур, плашка</li><li>пороговое изображение</li><li>технический растр / точки</li>
+        <li>пиксельная декомпозиция</li><li>повторяющийся модуль, разрыв линии</li><li>реперные кресты, шкалы, координаты</li></ul>
+      <ul class="no"><h4 style="color:var(--red)">Недопустимо</h4>
+        <li>градиенты, мягкие полутона</li><li>glow / дымка, размытие</li><li>плавные прозрачности</li>
+        <li>атмосферные фоны</li><li>абстрактные волны без структуры</li><li>настроение вместо связи ♥ ?</li></ul>
+    </div>
+  </section>
+
+  <!-- 03 · USAGE -->
+  <section class="sec">
+    <div class="sec-label"><span class="sec-num">03</span><span class="sec-title">Как накладывать на фото</span><span class="sec-rule"></span></div>
+    <div class="steps">
+      <div class="step"><p><b>Файлы.</b> Шаблоны — в <code>branding/frames/</code> (SVG, 1080×1350). Открываются в Figma / Illustrator / Inkscape и в браузере. Знак «Д» переиспользуется как символ — если есть официальный вектор, просто замените <code>#logoD</code>.</p></div>
+      <div class="step"><p><b>Фото.</b> Подставьте путь в <code>&lt;image href="PHOTO.jpg"&gt;</code>. Снимок кадрируется по слоту автоматически (<code>slice</code>) — заранее ресайзить не нужно.</p></div>
+      <div class="step"><p><b>Текст.</b> Отредактируйте блоки с пометкой <code>EDIT</code>: имя, роль, индекс участника (красный № / ID), дата и место.</p></div>
+      <div class="step"><p><b>Фото «шумит»?</b> Прогоните через порог (threshold) или растр — так любой пёстрый снимок ложится в систему. Мягкие/дымчатые фото не берём: нужен контраст.</p></div>
+      <div class="step"><p><b>Один поток.</b> Держите один акцентный цвет на серию и единый формат индекса (№01, №02…). Тогда лента выглядит как один прибор, а не сборная солянка.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>ДИСКРЕТ · DISKRET.SPACE · ВИЗУАЛЬНАЯ СИСТЕМА · РАМКИ УЧАСТНИКОВ</span>
+    <span class="stamp">DS · APPROVED</span>
+  </footer>
+
+</div>

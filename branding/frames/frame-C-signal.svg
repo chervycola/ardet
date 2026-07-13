@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1080" height="1350" viewBox="0 0 1080 1350" fill="none">
+<!-- ============================================================
+     ДИСКРЕТ · РАМКА C «СИГНАЛ / ПОРОГ» (обработка сигнала)
+     Фото в пунктирном поле наблюдения, растр как структура,
+     пороговая волна сверху, вертикальный тег СИГНАЛ.
+     ============================================================ -->
+<defs>
+  <clipPath id="obsClip"><rect x="150" y="250" width="870" height="700"/></clipPath>
+  <pattern id="hatchC" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#0d0d0d"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#222" stroke-width="3"/>
+  </pattern>
+  <pattern id="dotsC" width="16" height="16" patternUnits="userSpaceOnUse">
+    <rect width="16" height="16" fill="#FFF"/>
+    <circle cx="4" cy="4" r="2.6" fill="#000"/>
+  </pattern>
+  <pattern id="dotsFade" width="16" height="16" patternUnits="userSpaceOnUse">
+    <rect width="16" height="16" fill="#FFF"/>
+    <circle cx="4" cy="4" r="1.4" fill="#000"/>
+  </pattern>
+  <g id="crossC">
+    <line x1="-16" y1="0" x2="16" y2="0" stroke="#000" stroke-width="2"/>
+    <line x1="0" y1="-16" x2="0" y2="16" stroke="#000" stroke-width="2"/>
+  </g>
+  <g id="logoD" shape-rendering="crispEdges">
+    <rect x="2" y="0" width="6" height="2"/><rect x="2" y="2" width="1" height="1"/>
+    <rect x="5" y="2" width="3" height="4"/><rect x="1" y="3" width="2" height="1"/>
+    <rect x="0" y="4" width="2" height="2"/><rect x="0" y="6" width="8" height="1"/>
+    <rect x="0" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+  </g>
+</defs>
+
+<rect width="1080" height="1350" fill="#FFFFFF"/>
+<use xlink:href="#crossC" x="40" y="40"/>
+<use xlink:href="#crossC" x="1040" y="40"/>
+<use xlink:href="#crossC" x="40" y="1310"/>
+<use xlink:href="#crossC" x="1040" y="1310"/>
+
+<!-- ШАПКА -->
+<use xlink:href="#logoD" x="0" y="0" fill="#000" transform="translate(60,66) scale(4.6)"/>
+<text x="115" y="112" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800"
+      font-size="48" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="60" y="140" font-family="'Courier New',monospace" font-size="14" letter-spacing="2"
+      fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="1020" y="86" text-anchor="end" font-family="'Courier New',monospace" font-size="18"
+      letter-spacing="2" fill="#000">ПОРОГ · THRESHOLD</text>
+<!-- EDIT: индекс + координата -->
+<text x="1020" y="118" text-anchor="end" font-family="'Courier New',monospace" font-size="18"
+      letter-spacing="2" fill="#E30613">ID:04 · A3</text>
+
+<!-- ПОРОГОВАЯ ВОЛНА (ступени) -->
+<polyline points="60,168 160,168 160,148 320,148 320,180 470,180 470,150 640,150 640,178
+                   790,178 790,152 940,152 940,170 1020,170"
+          fill="none" stroke="#000" stroke-width="4"/>
+
+<!-- РАСТР слева (шум как структура) -->
+<rect x="60" y="250" width="72" height="700" fill="url(#dotsC)"/>
+<rect x="60" y="250" width="72" height="700" fill="none" stroke="#000" stroke-width="2"/>
+<!-- вертикальный тег СИГНАЛ -->
+<rect x="60" y="250" width="72" height="230" fill="#E30613"/>
+<text x="96" y="366" transform="rotate(-90 96 366)" text-anchor="middle"
+      font-family="'Arial Narrow',Arial,sans-serif" font-weight="800" font-size="34"
+      letter-spacing="4" fill="#FFF">СИГНАЛ</text>
+
+<!-- ПОЛЕ НАБЛЮДЕНИЯ / ФОТО -->
+<rect x="150" y="250" width="870" height="700" fill="url(#hatchC)"/>
+<text x="585" y="600" text-anchor="middle" font-family="'Courier New',monospace"
+      font-size="22" letter-spacing="3" fill="#666">ФОТО УЧАСТНИКА · 870×700</text>
+<!-- EDIT: подставьте своё фото -->
+<image id="photo" xlink:href="PHOTO.jpg" x="150" y="250" width="870" height="700"
+       clip-path="url(#obsClip)" preserveAspectRatio="xMidYMid slice"/>
+<rect x="150" y="250" width="870" height="700" fill="none" stroke="#000"
+      stroke-width="3" stroke-dasharray="14 10"/>
+<!-- метка поля -->
+<rect x="150" y="250" width="230" height="28" fill="#000"/>
+<text x="162" y="270" font-family="'Courier New',monospace" font-size="15" letter-spacing="2"
+      fill="#FFF">ПОЛЕ НАБЛЮДЕНИЯ</text>
+
+<!-- растровая полоса снизу -->
+<rect x="150" y="972" width="870" height="40" fill="url(#dotsFade)"/>
+<rect x="150" y="972" width="870" height="40" fill="none" stroke="#000" stroke-width="1.5"/>
+
+<!-- ИМЯ / РОЛЬ -->
+<!-- EDIT -->
+<text x="60" y="1120" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800"
+      font-size="94" letter-spacing="1" fill="#000">ВАДИМ МИНКИН</text>
+<line x1="62" y1="1140" x2="720" y2="1140" stroke="#000" stroke-width="2" stroke-dasharray="10 8"/>
+<!-- EDIT -->
+<text x="62" y="1182" font-family="'Courier New',monospace" font-size="24" letter-spacing="3"
+      fill="#000">GENERATIVE GROOVEBOX · ЖИВОЙ СЕТ</text>
+
+<!-- ПОДВАЛ -->
+<text x="60" y="1266" font-family="'Courier New',monospace" font-size="15" letter-spacing="2"
+      fill="#000">DISKRET.SPACE</text>
+<text x="1020" y="1266" text-anchor="end" font-family="'Courier New',monospace" font-size="15"
+      letter-spacing="2" fill="#E30613">ШУМ = СТРУКТУРА · SIGNAL_ALWAYS</text>
+</svg>

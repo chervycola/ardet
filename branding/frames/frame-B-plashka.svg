@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1080" height="1350" viewBox="0 0 1080 1350" fill="none">
+<!-- ============================================================
+     ДИСКРЕТ · РАМКА B «ПЛАШКА» (минимум, максимальный контраст)
+     Фото на всю площадь, имя выворачивается из чёрной плашки.
+     Самая универсальная: читается на любом фото.
+     ============================================================ -->
+<defs>
+  <clipPath id="fullClip"><rect x="0" y="0" width="1080" height="1350"/></clipPath>
+  <pattern id="hatchB" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#111"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#2a2a2a" stroke-width="3"/>
+  </pattern>
+  <g id="crossB">
+    <line x1="-16" y1="0" x2="16" y2="0" stroke="#FFF" stroke-width="2"/>
+    <line x1="0" y1="-16" x2="0" y2="16" stroke="#FFF" stroke-width="2"/>
+  </g>
+  <g id="logoD" shape-rendering="crispEdges">
+    <rect x="2" y="0" width="6" height="2"/><rect x="2" y="2" width="1" height="1"/>
+    <rect x="5" y="2" width="3" height="4"/><rect x="1" y="3" width="2" height="1"/>
+    <rect x="0" y="4" width="2" height="2"/><rect x="0" y="6" width="8" height="1"/>
+    <rect x="0" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+  </g>
+</defs>
+
+<!-- плейсхолдер + ФОТО во весь кадр -->
+<rect x="0" y="0" width="1080" height="1350" fill="url(#hatchB)"/>
+<text x="540" y="560" text-anchor="middle" font-family="'Courier New',monospace"
+      font-size="22" letter-spacing="3" fill="#777">ФОТО УЧАСТНИКА · 1080×1350</text>
+<!-- EDIT: подставьте своё фото -->
+<image id="photo" xlink:href="PHOTO.jpg" x="0" y="0" width="1080" height="1350"
+       clip-path="url(#fullClip)" preserveAspectRatio="xMidYMid slice"/>
+
+<!-- реперные кресты по углам (белые, поверх фото) -->
+<use xlink:href="#crossB" x="42"   y="42"/>
+<use xlink:href="#crossB" x="1038" y="42"/>
+
+<!-- логотип: чёрный таб + выворотный пиксельный знак -->
+<g transform="translate(42,90)">
+  <rect x="0" y="0" width="252" height="52" fill="#000"/>
+  <use xlink:href="#logoD" fill="#FFF" transform="translate(14,10) scale(4)"/>
+  <text x="60" y="37" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800"
+        font-size="32" letter-spacing="1" fill="#FFF">ДИСКРЕТ</text>
+</g>
+
+<!-- координата справа сверху -->
+<g transform="translate(1038,120)" text-anchor="end">
+  <text font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#FFF">B2 / 25%</text>
+</g>
+
+<!-- НИЖНЯЯ ПЛАШКА -->
+<rect x="0" y="1074" width="1080" height="276" fill="#000"/>
+<line x1="0" y1="1074" x2="1080" y2="1074" stroke="#E30613" stroke-width="6"/>
+<!-- EDIT: индекс -->
+<text x="42" y="1180" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800"
+      font-size="72" fill="#E30613">04</text>
+<line x1="150" y1="1120" x2="150" y2="1300" stroke="#333" stroke-width="1.5"/>
+<!-- EDIT: имя -->
+<text x="184" y="1178" font-family="'Arial Narrow',Arial,sans-serif" font-weight="800"
+      font-size="86" letter-spacing="1" fill="#FFF">ВАДИМ МИНКИН</text>
+<!-- EDIT: роль -->
+<text x="186" y="1224" font-family="'Courier New',monospace" font-size="24" letter-spacing="3"
+      fill="#FFF">GENERATIVE GROOVEBOX · ЖИВОЙ СЕТ</text>
+<!-- метки -->
+<text x="186" y="1266" font-family="'Courier New',monospace" font-size="15" letter-spacing="1"
+      fill="#8a8a8a">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="186" y="1296" font-family="'Courier New',monospace" font-size="15" letter-spacing="2"
+      fill="#8a8a8a">DISKRET.SPACE</text>
+<text x="1038" y="1296" text-anchor="end" font-family="'Courier New',monospace" font-size="15"
+      letter-spacing="2" fill="#8a8a8a">SIGNAL_ALWAYS</text>
+</svg>
