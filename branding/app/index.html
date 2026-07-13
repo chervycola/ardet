@@ -127,6 +127,22 @@
   .dcell .v.red{color:var(--red);}
   .dblurb{color:var(--muted); font-size:14px; line-height:1.65;}
 
+  .carousel{position:relative; margin-bottom:2px;}
+  .cslides{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; border:2px solid var(--hair); background:#000; scrollbar-width:none;}
+  .cslides::-webkit-scrollbar{display:none;}
+  .cslide{flex:0 0 100%; scroll-snap-align:center; aspect-ratio:4/3;}
+  .cslide img{width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(.1) contrast(1.05);}
+  .cslide.empty{display:flex; align-items:center; justify-content:center; background:var(--panel2); color:var(--muted); font-size:12px; letter-spacing:2px; text-transform:uppercase;}
+  .cdots{position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; pointer-events:none;}
+  .cdot{width:7px; height:7px; background:rgba(255,255,255,.55); border:1px solid #000;}
+  .cdot.on{background:var(--red);}
+  .cnav{position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.55); color:#fff; border:0; width:38px; height:54px; font-size:22px; cursor:pointer;}
+  .cprev{left:0;} .cnext{right:0;}
+  .tempty{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:10px; letter-spacing:1px; text-transform:uppercase;}
+  .dframe{border:2px solid var(--hair); padding:16px 14px 14px; margin:16px 0 6px; position:relative;}
+  .dframe .k{position:absolute; top:-10px; left:12px; background:var(--bg); padding:0 8px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--red);}
+  .dframe p{color:var(--hair); font-size:14px; line-height:1.62; margin:0;}
+  .dframe p.ph{color:var(--muted);}
   .modal{position:fixed; inset:0; z-index:50; display:none; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.5);}
   .modal.on{display:flex; animation:in .16s ease;}
   .msheet{width:100%; max-width:520px; max-height:88%; overflow-y:auto; background:var(--bg); border-top:3px solid var(--red); padding-bottom:calc(24px + var(--sab)); animation:up .22s ease;}
@@ -207,15 +223,9 @@
         </div>
       </div>
       <div class="card">
-        <p class="blurb">ДИСКРЕТ — научно-технический форум творческого приборостроения.
-          <b>Это не графика о технологии — это графика, работающая как технология.</b>
-          Электроника и музыка на одном языке: сигнал, порог, модуль, связь.</p>
-        <ol class="princ">
-          <li>Дискретность — про звук и про схемы одновременно</li>
-          <li>За каждым прибором стоит человек</li>
-          <li>Всё можно потрогать</li>
-          <li>Первый раз с паяльником — это нормально</li>
-        </ol>
+        <p class="blurb"><b>«Дискрет» — это сообщество вокруг электронной культуры и искусства технологий.</b></p>
+        <p class="blurb">Аналоговые и цифровые гибриды, нестандартные интерфейсы, самодельные схемы и поиск нового в старых деталях — всё это способы задать вопрос «как это сделано?» и ответить на него своими руками.</p>
+        <p class="blurb">«Дискрет» объединяет инженеров, музыкантов и художников, для которых технология — продолжение мысли, а не кнопка в магазине приложений.</p>
       </div>
     </section>
   </main>
@@ -248,24 +258,28 @@ const LOTTERY = { prize:"Набор для сборки синт-модуля", 
 const P = [
   { id:"kaledoscope", idx:"01", name:"Вадим Минкин", device:"Kaleidoscope", sub:"Generative Groovebox",
     role:"Живой генеративный сет", spec:"Standalone Unit · 1A, 12В+", stage:"MAIN", time:"18:40",
-    tags:["генеративное","MIDI","standalone"], tbd:false,
-    blurb:"Грувбокс собственной разработки. Звук собирается на глазах — из зерна, порога и обратной связи. Не запись, а прибор: восемь голосов, страницы параметров, живой сет без ноутбука." },
+    tags:["генеративное","MIDI","standalone"], tbd:false, photos:["kaledoscope"],
+    desc:"Мультитембральный синтезатор с открытой матрицей модуляции: тембры порождают музыку через взаимодействие. Компактная лаборатория для сборки звуковых систем и исследования их звучания." },
   { id:"archeon", idx:"02", name:"— уточняется —", device:"ARCHEON", sub:"Wave-sequencing synth voice · EFEMI",
     role:"Евро-модуль · голос-секвенсор", spec:"Eurorack · V/Oct · Shaper", stage:"MODULAR", time:"17:20",
-    tags:["eurorack","wave-seq","EFEMI"], tbd:true,
-    blurb:"Голос синтезатора с волновым секвенсором: пресеты генерируются кнопкой, форма и сдвиг частоты — под ручками. Формат Eurorack, аудиовыход прямо на панели." },
+    tags:["eurorack","wave-seq","EFEMI"], tbd:true, photos:["archeon"],
+    desc:"Голос синтезатора с волновым секвенсором: пресеты генерируются кнопкой, форма и сдвиг частоты — под ручками. Формат Eurorack." },
   { id:"mayak", idx:"03", name:"— уточняется —", device:"МАЯК", sub:"DIY-синтезатор",
     role:"Прозрачный корпус · ручная пайка", spec:"Макетная плата · USB", stage:"LAB", time:"16:00",
-    tags:["DIY","noise","hand-made"], tbd:true,
-    blurb:"Самодельный прибор в прозрачном корпусе: вся схема на виду — макетка, навесной монтаж, один большой регулятор. Питание и данные по USB «МАЯК»." },
+    tags:["DIY","noise","hand-made"], tbd:true, photos:["mayak"],
+    desc:"Самодельный прибор в прозрачном корпусе: вся схема на виду — макетка, навесной монтаж, один большой регулятор." },
   { id:"tr1", idx:"04", name:"— уточняется —", device:"Тл-1", sub:"Измерительный прибор",
     role:"Винтажный тестер как инструмент", spec:"Стрелочный · Ω / V · нуль-омметр", stage:"LAB", time:"15:00",
-    tags:["винтаж","репер","измерение"], tbd:true,
-    blurb:"Ламповый измеритель Тл-1 в родном кофре: стрелочная шкала, галетники, нуль-омметр. Прибор-предок — как измерение становится частью звука и разметки ДИСКРЕТ." },
+    tags:["винтаж","репер","измерение"], tbd:true, photos:["tr1"],
+    desc:"Ламповый измеритель в родном кофре: стрелочная шкала, галетники, нуль-омметр. Прибор-предок — измерение как часть звука и разметки." },
   { id:"unost", idx:"05", name:"— уточняется —", device:"ЮНОСТЬ-4", sub:"Эффект / педаль",
     role:"Металлический корпус · СПАД / ХОР", spec:"2 ручки · вход/выход jack", stage:"MAIN", time:"19:30",
-    tags:["эффект","lo-fi","педаль"], tbd:true,
-    blurb:"Педаль эффекта в цельнометаллическом корпусе, красный трафарет «ЮНОСТЬ-4». Две ручки — СПАД и ХОР — и характер, который не спутать." },
+    tags:["эффект","lo-fi","педаль"], tbd:true, photos:["unost"],
+    desc:"Педаль эффекта в цельнометаллическом корпусе, красный трафарет «ЮНОСТЬ-4». Две ручки — СПАД и ХОР — и характер, который не спутать." },
+  { id:"solyara", idx:"06", name:"Станислав Суслов", device:"SOLYARA", sub:"Дрон-синтезатор",
+    role:"3 пилообразных осциллятора · фильтр", spec:"3 OSC · НЧ/ВЧ/полосовой · 50Вт", stage:"LAB", time:"—",
+    tags:["дрон","3 OSC","фильтр"], tbd:false, photos:[],
+    desc:"Дрон-синтезатор на трёх пилообразных осцилляторах — частоты крутятся по отдельности и вместе; фильтр (НЧ/ВЧ/полосовой) выделяет гармоники в широком диапазоне." },
 ];
 
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -295,7 +309,7 @@ function renderDevices(){
   $("#pcount").textContent = "ПРИБОРОВ: " + P.length;
   $("#plist").innerHTML = P.map(p => `
     <article class="pcard" onclick="openDetail('${p.id}')">
-      <div class="thumb"><span class="tick t1"></span><span class="tick t2"></span><img src="${photo(p.id)}" alt=""></div>
+      <div class="thumb"><span class="tick t1"></span><span class="tick t2"></span>${(p.photos&&p.photos.length)?`<img src="${photo(p.photos[0])}" alt="">`:`<div class="tempty">Фото скоро</div>`}</div>
       <div class="meta">
         <div class="mrow"><span class="idx">№${p.idx}</span><span class="slot">${EVENT.date.slice(0,5)} · ${p.time} · ${p.stage}</span></div>
         <h3 class="name">${esc(p.device)}</h3>
@@ -323,8 +337,15 @@ const WAVE = '<svg class="dwave" viewBox="0 0 400 34" preserveAspectRatio="none"
 function openDetail(id){
   const p = P.find(x=>x.id===id); if(!p) return; haptic("light");
   $("#ddc").textContent = "ДЕВАЙС № " + p.idx;
+  const slides = (p.photos && p.photos.length) ? p.photos : [];
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Фото скоро</div>`;
+  const multi = slides.length > 1;
   $("#dbody").innerHTML = `
-    <div class="dphoto"><span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span><img src="${photo(p.id)}" alt=""></div>
+    <div class="carousel">
+      <div class="cslides" id="cslides">${slidesHTML}</div>
+      <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
+      ${multi ? `<button class="cnav cprev" id="cprev" aria-label="Назад">‹</button><button class="cnav cnext" id="cnext" aria-label="Вперёд">›</button><div class="cdots" id="cdots">${slides.map((_,i)=>`<span class="cdot ${i===0?"on":""}"></span>`).join("")}</div>` : ""}
+    </div>
     <span class="dlabel">${esc(p.spec)}</span>${WAVE}
     <div><span class="didx">№ ${p.idx}</span></div>
     <h1 class="dname">${esc(p.device)}</h1>
@@ -335,8 +356,19 @@ function openDetail(id){
       <div class="dcell"><div class="k">Сцена</div><div class="v red">${esc(p.stage)}</div></div>
       <div class="dcell"><div class="k">Время</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
     </div>
-    <p class="dblurb">${esc(p.blurb)}</p>`;
+    <div class="dframe"><span class="k">О приборе</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">— пара строк о приборе —</p>`}</div>`;
+  if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
+}
+function initCarousel(n){
+  const box=$("#cslides"); if(!box) return;
+  const dots=[...document.querySelectorAll("#cdots .cdot")];
+  const cur=()=>Math.round(box.scrollLeft/box.clientWidth);
+  const go=i=>{ i=Math.max(0,Math.min(n-1,i)); box.scrollTo({left:i*box.clientWidth, behavior:"smooth"}); haptic("light"); };
+  const pv=$("#cprev"), nx=$("#cnext");
+  if(pv) pv.addEventListener("click",()=>go(cur()-1));
+  if(nx) nx.addEventListener("click",()=>go(cur()+1));
+  box.addEventListener("scroll",()=>{ const c=cur(); dots.forEach((d,i)=>d.classList.toggle("on",i===c)); },{passive:true});
 }
 function closeDetail(){ $("#detail").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
 $("#dback").addEventListener("click", closeDetail);
