@@ -66,8 +66,9 @@
   .slot{font-size:10.5px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-left:auto;}
   .name{font-family:var(--grotesk); font-weight:800; text-transform:uppercase; font-size:22px; letter-spacing:.4px; margin:1px 0 3px; line-height:1;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .dev{font-size:12px; color:var(--hair); letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dev{font-size:12px; color:var(--hair); letter-spacing:.3px; line-height:1.4;}
   .dev small{color:var(--muted);}
+  .dev .colink{color:var(--red); text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
   .tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
   .tag{font-size:9.5px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--line); color:var(--muted); padding:2px 6px;}
   .tag.tbd{border-color:var(--red); color:var(--red);}
@@ -289,43 +290,43 @@ const CONTACT = { tg:"diskret_space", site:"diskret.space", email:"contact@diskr
 const LOTTERY = { prize:"Набор для сборки синт-модуля", draw:"19.09.2026 · на форуме" };   // EDIT
 
 const P = [
-  { id:"kaledoscope", idx:"01", name:"Вадим Минкин", device:"Kaleidoscope", sub:"Generative Groovebox",
+  { id:"kaledoscope", idx:"01", device:"Kaleidoscope", name:"Вадим Минкин", sub:"генеративный грувбокс", city:"Москва",
     role:"Живой генеративный сет", spec:"Standalone Unit · 1A, 12В+", stage:"MAIN", time:"18:40",
-    tags:["генеративное","MIDI","standalone"], tbd:false, photos:["kaledoscope"],
+    tags:["standalone","voice","MIDI","цифра"], tbd:false, photos:["kaledoscope"],
     links:[{t:"TG",u:"https://t.me/kaledoscopesynth"},{t:"САЙТ",u:"https://vadjuse.ru"}],
     desc:"Мультитембральный синтезатор с открытой матрицей модуляции: тембры порождают музыку через взаимодействие. Компактная лаборатория для сборки звуковых систем и исследования их звучания." },
-  { id:"archeon", idx:"02", name:"ЭФЭМИ", device:"ARCHEON", sub:"Генеративный осциллятор · Зеленоград",
+  { id:"archeon", idx:"02", device:"ARCHEON", name:"ЭФЭМИ", company:"efemi", sub:"генеративный осциллятор", city:"Зеленоград",
     role:"Евро-модуль · генеративный секвенсор", spec:"Eurorack · Preset 10 ячеек · до 16 шагов", stage:"MODULAR", time:"17:20",
-    tags:["eurorack","генеративное","EFEMI"], tbd:false, photos:["archeon"], company:"efemi",
+    tags:["eurorack","voice","CV","цифра"], tbd:false, photos:["archeon"],
     links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}],
     desc:"Форма волны меняется на каждом шаге встроенного генеративного секвенсора: из исходного числа (10 ячеек Preset) рождается до 16 шагов агрессивных тембральных вариаций. Для экспериментальных ритм-текстур и случайных находок." },
-  { id:"mayak", idx:"03", name:"Лаборатория звука", device:"МАЯК", sub:"Синтезаторы СУТ · оптические модули",
+  { id:"mayak", idx:"03", device:"МАЯК", name:"Лаборатория звука МАЯК", company:"mayak-lab", sub:"СУТ-синтезатор", city:"Химки",
     role:"Лаборатория звука · Химки, МО", spec:"СУТ · аналоговые оптические модули", stage:"LAB", time:"16:00",
-    tags:["СУТ","оптические","аналог"], tbd:false, photos:["mayak"], company:"mayak-lab",
+    tags:["standalone","voice","CV","аналог"], tbd:false, photos:["mayak"],
     links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
     desc:"Лаборатория звука МАЯК из Химок: синтезаторы СУТ и аналоговые оптические модули — направление, где звук встречается со светом." },
-  { id:"solyara", idx:"04", name:"Станислав Суслов", device:"SOLYARA", sub:"Дрон-синтезатор · Москва",
+  { id:"solyara", idx:"04", device:"SOLYARA", name:"Станислав Суслов", sub:"дрон-синтезатор", city:"Москва",
     role:"3 пилообразных осциллятора · фильтр", spec:"3 OSC · НЧ/ВЧ/полосовой · 50Вт", stage:"LAB", time:"15:00",
-    tags:["дрон","3 OSC","фильтр"], tbd:false, photos:["tr1"],
+    tags:["standalone","voice","аналог"], tbd:false, photos:["tr1"],
     links:[{t:"TG",u:"https://t.me/solyara_dron"}],
     desc:"Дрон-синтезатор на трёх пилообразных осцилляторах — частоты крутятся по отдельности и вместе; фильтр (НЧ/ВЧ/полосовой) выделяет гармоники в широком диапазоне." },
-  { id:"unost", idx:"05", name:"— уточняется —", device:"ЮНОСТЬ-4", sub:"Эффект / педаль",
+  { id:"unost", idx:"05", device:"ЮНОСТЬ-4", name:"— уточняется —", sub:"эффект-педаль", city:"",
     role:"Металлический корпус · СПАД / ХОР", spec:"2 ручки · вход/выход jack", stage:"MAIN", time:"19:30",
-    tags:["эффект","lo-fi","педаль"], tbd:true, photos:["unost"],
+    tags:["педаль","эффект","аналог"], tbd:true, photos:["unost"],
     desc:"Педаль эффекта в цельнометаллическом корпусе, красный трафарет «ЮНОСТЬ-4». Две ручки — СПАД и ХОР — и характер, который не спутать." },
-  { id:"hgx", idx:"06", name:"Независимый разработчик", device:"HgX_System", sub:"Unheld modular · Москва",
-    role:"Аналоговая eurorack-система", spec:"Eurorack · аналог · замкнутый цикл", stage:"MODULAR", time:"—",
-    tags:["eurorack","аналог","модульная"], tbd:false, photos:["hgx","hgx2"],
+  { id:"hgx", idx:"06", device:"HgX_System", name:"Независимый разработчик", sub:"аналоговая eurorack-система", city:"Москва",
+    role:"Unheld modular", spec:"Eurorack · аналог · замкнутый цикл", stage:"MODULAR", time:"—",
+    tags:["eurorack","voice","CV","аналог"], tbd:false, photos:["hgx","hgx2"],
     links:[{t:"TG",u:"https://t.me/HaggardT"}],
     desc:"Почти полностью аналоговая модульная eurorack-система с замкнутым циклом: генерация — модуляция — вывод сигнала. В наборе всё для полноценной студийной работы со звуком." },
-  { id:"sxlab", idx:"07", name:"Москва", device:"SxLab", sub:"Бутиковые синтезаторы · педали",
+  { id:"sxlab", idx:"07", device:"SxLab", name:"SX LAB", company:"sxlab-co", sub:"цифровой фильтр", city:"Москва",
     role:"На форуме — цифровой фильтр", spec:"Fortress · Chord · Solar Panel", stage:"MAIN", time:"—",
-    tags:["бутик","фильтр","педали"], tbd:false, photos:["sx","sx2","sxlab"], company:"sxlab-co",
+    tags:["эффект","CV","цифра"], tbd:false, photos:["sx","sx2","sxlab"],
     links:[{t:"САЙТ",u:"https://sxlab.ru"},{t:"VK",u:"https://vk.com/sxlab"},{t:"TG",u:"https://t.me/sxlabmusic"}],
     desc:"Бутиковые синтезаторы и педали эффектов, где инновации встречаются с музыкальным экспериментом. В линейке Fortress, Chord и Solar Panel; на форуме — премьера цифрового фильтра." },
-  { id:"alpha1", idx:"08", name:"Михаил Синицын", device:"Alpha1", sub:"MIDI Looper · Москва",
+  { id:"alpha1", idx:"08", device:"Alpha1", name:"Михаил Синицын", sub:"MIDI-секвенсор / лупер", city:"Москва",
     role:"MIDI-секвенсор для живого исполнения", spec:"16 треков · MIDI Thru · flash", stage:"MAIN", time:"—",
-    tags:["MIDI","секвенсор","лупер"], tbd:false, photos:["alphaseq"],
+    tags:["standalone","секвенсор","MIDI","цифра"], tbd:false, photos:["alphaseq"],
     links:[{t:"САЙТ",u:"https://sinitsinmike.github.io/Portable-MIDI-sequencer-Alpha1/"},{t:"TG",u:"https://t.me/miharussian"}],
     desc:"Alpha1 — MIDI-секвенсор и MIDI-лупер для живого исполнения. Запись в реальном времени, 16 треков, MIDI Thru и сохранение проектов во внутренней flash-памяти." },
 ];
@@ -409,6 +410,7 @@ const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : 
 const $ = s => document.querySelector(s);
 const esc = s => (s+"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const photo = id => (window.PHOTOS && PHOTOS[id]) || "";
+const cname = id => (C.find(c=>c.id===id)||{}).name || id;
 function haptic(t){ try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(t||"light"); }catch(e){} }
 function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } }
 
@@ -437,7 +439,7 @@ function renderDevices(){
       <div class="meta">
         <div class="mrow"><span class="idx">№${p.idx}</span><span class="slot">${EVENT.date.slice(0,5)} · ${p.time} · ${p.stage}</span></div>
         <h3 class="name">${esc(p.device)}</h3>
-        <div class="dev">${esc(p.name)} <small>· ${esc(p.sub)}</small></div>
+        <div class="dev">${p.company?`<a class="colink" onclick="event.stopPropagation();openCompany('${p.company}')">${esc(cname(p.company))}</a>`:`<span>${esc(p.name)}</span>`}<small> · ${esc(p.sub)}${p.city?` · ${esc(p.city)}`:""}</small></div>
         <div class="tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}${p.tbd?'<span class="tag tbd">автор TBD</span>':''}</div>
       </div>
     </article>`).join("");
