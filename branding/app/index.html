@@ -220,57 +220,56 @@
       </svg>
     </button>
     <nav class="menu" id="menu" hidden>
-      <button class="mi" data-m="about">О нас</button>
-      <button class="mi" data-m="companies">Конторы</button>
-      <button class="mi" data-m="feedback">Обратная связь</button>
-      <button class="mi" data-m="lottery">Конкурс <span class="mi-tag">билет</span></button>
-      <button class="mi" id="scanBtn">Сканировать QR <span class="mi-tag">стойка</span></button>
+      <button class="mi" data-m="about"><span data-t="m.about">О нас</span></button>
+      <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
+      <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
+      <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
+      <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
       <div class="mi-div"></div>
-      <button class="mi" id="themeToggle">Тема: <span id="themeName" style="color:var(--red);margin-left:6px">Светлая</span></button>
+      <button class="mi" id="langToggle"><span data-t="m.lang">Язык</span>: <span id="langName" style="color:var(--red);margin-left:6px">Русский</span></button>
+      <button class="mi" id="themeToggle"><span data-t="m.theme">Тема</span>: <span id="themeName" style="color:var(--red);margin-left:6px">Светлая</span></button>
     </nav>
   </header>
 
   <main>
     <section class="view on" id="v-devices">
-      <div class="vhead"><h2>Девайсы</h2><span class="n" id="pcount"></span><span class="vrule"></span></div>
+      <div class="vhead"><h2 data-t="sec.devices">Девайсы</h2><span class="n" id="pcount"></span><span class="vrule"></span></div>
       <div id="plist"></div>
     </section>
 
     <section class="view" id="v-schedule">
-      <div class="vhead"><h2>Расписание</h2><span class="vrule"></span></div>
-      <div class="draft">Черновик по рабочей сетке · время уточняется</div>
+      <div class="vhead"><h2 data-t="sec.schedule">Расписание</h2><span class="vrule"></span></div>
+      <div class="draft" data-t="sched.draft">Черновик по рабочей сетке · время уточняется</div>
       <div id="schedbar" class="schedbar"></div>
       <div id="slist"></div>
     </section>
 
     <section class="view" id="v-forum">
-      <div class="vhead"><h2>Форум</h2><span class="vrule"></span></div>
+      <div class="vhead"><h2 data-t="sec.forum">Форум</h2><span class="vrule"></span></div>
       <div class="card evt">
         <div class="date" id="edate"></div>
         <div class="place" id="eplace"></div>
         <div class="chron">
-          <div class="cl"><span>Хроника анонсов</span><span id="cposts"></span></div>
+          <div class="cl"><span data-t="forum.chron">Хроника анонсов</span><span id="cposts"></span></div>
           <div class="track"><div class="fill" id="cfill"></div><div class="ptr" id="cptr"></div></div>
           <div class="ticks"><span>0</span><span>25</span><span>50</span><span>100</span></div>
         </div>
       </div>
       <div class="card">
-        <p class="blurb"><b>«Дискрет» — это сообщество вокруг электронной культуры и искусства технологий.</b></p>
-        <p class="blurb">Аналоговые и цифровые гибриды, нестандартные интерфейсы, самодельные схемы и поиск нового в старых деталях — всё это способы задать вопрос «как это сделано?» и ответить на него своими руками.</p>
-        <p class="blurb">«Дискрет» объединяет инженеров, музыкантов и художников, для которых технология — продолжение мысли, а не кнопка в магазине приложений.</p>
+        <div id="forumProse" data-t="forum.prose"></div>
       </div>
     </section>
   </main>
 
   <nav class="tabs">
-    <button class="on" data-v="devices">Девайсы</button>
-    <button data-v="schedule">Расписание</button>
-    <button data-v="forum">Форум</button>
+    <button class="on" data-v="devices" data-t="sec.devices">Девайсы</button>
+    <button data-v="schedule" data-t="sec.schedule">Расписание</button>
+    <button data-v="forum" data-t="sec.forum">Форум</button>
   </nav>
 </div>
 
 <div class="detail" id="detail">
-  <div class="dbar"><button class="back" id="dback">← НАЗАД</button><span class="dc" id="ddc"></span></div>
+  <div class="dbar"><button class="back" id="dback" data-t="back">← НАЗАД</button><span class="dc" id="ddc"></span></div>
   <div class="dbody" id="dbody"></div>
   <button class="dnav dprev" id="devPrev">‹</button>
   <button class="dnav dnext" id="devNext">›</button>
@@ -414,9 +413,128 @@ const cname = id => (C.find(c=>c.id===id)||{}).name || id;
 function haptic(t){ try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(t||"light"); }catch(e){} }
 function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } }
 
+/* ===== ЯЗЫКИ / ПЕРЕВОД: ru · пацанский (90-е) · зумерский ===== */
+const L = {
+  ru: {
+    "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
+    "m.scan":"Сканировать QR", "m.theme":"Тема", "m.lang":"Язык",
+    "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
+    "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум",
+    "dev.count":"ПРИБОРОВ", "sched.draft":"Черновик по рабочей сетке · время уточняется",
+    "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"ПОСТ",
+    "forum.prose":`<p class="blurb"><b>«Дискрет» — это сообщество вокруг электронной культуры и искусства технологий.</b></p><p class="blurb">Аналоговые и цифровые гибриды, нестандартные интерфейсы, самодельные схемы и поиск нового в старых деталях — всё это способы задать вопрос «как это сделано?» и ответить на него своими руками.</p><p class="blurb">«Дискрет» объединяет инженеров, музыкантов и художников, для которых технология — продолжение мысли, а не кнопка в магазине приложений.</p>`,
+    "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"КОМПАНИЯ", "badge.product":"ТОВАР",
+    "key.author":"Автор", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
+    "frame.device":"О приборе", "frame.session":"О сессии", "frame.company":"О компании",
+    "frame.members":"Участники", "frame.products":"Товары", "frame.desc":"Описание",
+    "btn.company":"Компания ↗", "btn.companyOf":"Компания · ",
+    "empty.photo":"Фото скоро", "empty.logo":"Логотип / фото скоро",
+    "ph.device":"— пара строк о приборе —", "ph.session":"— описание уточняется —", "ph.members":"— уточняются —",
+    "tag.tbd":"автор TBD", "prod.unit":"тов.", "back":"← НАЗАД",
+    "about.lead":"ДИСКРЕТ — научно-технический форум творческого приборостроения. <b>Это не графика о технологии — это графика, работающая как технология.</b> Мы собираем тех, кто делает приборы для звука своими руками, и показываем их вживую.",
+    "about.p1":"Дискретность — про звук и про схемы одновременно",
+    "about.p2":"За каждым прибором стоит человек",
+    "about.p3":"Всё можно потрогать",
+    "about.p4":"Первый раз с паяльником — это нормально",
+    "about.site":"Сайт форума",
+    "fb.lead":"Есть прибор, идея или вопрос? Напишите — ответим.",
+    "fb.tg":"Написать в Telegram", "fb.mail":"Почта", "fb.or":"Или коротко здесь",
+    "fb.ph":"Ваше сообщение…", "fb.send":"Отправить",
+    "fb.note":"В Telegram сообщение уйдёт боту. В браузере — откроется чат",
+    "fb.thanks":"Спасибо", "fb.sent":"Сообщение отправлено. Мы на связи.",
+    "lot.l1":"Конкурс среди гостей с билетом. Приз —", "lot.l2":"Итоги —",
+    "lot.l3":"Зарегистрируйте номер билета, чтобы участвовать.",
+    "lot.ticket":"Номер билета", "lot.join":"Участвовать", "lot.update":"Обновить заявку",
+    "lot.note":"Заявка сохраняется на устройстве и уходит боту в Telegram. Итоговую сверку билетов делают организаторы.",
+    "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
+  },
+  bratva: {
+    "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
+    "m.scan":"Пробить QR", "m.theme":"Масть", "m.lang":"Базар",
+    "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
+    "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка",
+    "dev.count":"АППАРАТОВ", "sched.draft":"Черновой расклад · время ещё утрясаем",
+    "sched.open":"глянуть ↗", "forum.chron":"Хроника движа", "forum.post":"ПОСТ",
+    "forum.prose":`<p class="blurb"><b>«Дискрет» — это своя движуха вокруг электронной культуры и технического искусства.</b></p><p class="blurb">Аналог, цифра и гибриды, нестандартные интерфейсы, самопальные схемы и поиск темы в старых деталях — это всё способ спросить «как это сделано?» и ответить своими руками, без посредников.</p><p class="blurb">«Дискрет» сводит инженеров, музыкантов и художников, для которых технология — продолжение мысли, а не кнопка «купить» в магазине приложений.</p>`,
+    "badge.device":"АППАРАТ №", "badge.author":"МАСТЕР", "badge.company":"КОНТОРА", "badge.product":"ТОВАР",
+    "key.author":"Мастер", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
+    "frame.device":"Про аппарат", "frame.session":"Про движ", "frame.company":"Про контору",
+    "frame.members":"Наши люди", "frame.products":"Товар", "frame.desc":"Что за тема",
+    "btn.company":"Контора ↗", "btn.companyOf":"Контора · ",
+    "empty.photo":"Фото на подходе", "empty.logo":"Лого / фото на подходе",
+    "ph.device":"— пара слов за аппарат —", "ph.session":"— инфа утрясается —", "ph.members":"— пока по секрету —",
+    "tag.tbd":"мастер по секрету", "prod.unit":"тов.", "back":"← НАЗАД",
+    "about.lead":"ДИСКРЕТ — серьёзная сходка по теме самодельных звуковых аппаратов. <b>Тут не гонят порожняк — тут паяльник, схемы и реальный звук.</b> Собираем пацанов, которые сами мутят приборы для звука, и показываем всё вживую, без базара.",
+    "about.p1":"Дискрет — это и про звук, и про схемы, всё чётко",
+    "about.p2":"За каждым аппаратом стоит конкретный человек",
+    "about.p3":"Всё можно пощупать руками, без разводов",
+    "about.p4":"Первый раз с паяльником — не ссы, это норма",
+    "about.site":"Сайт сходки",
+    "fb.lead":"Есть аппарат, тема или вопрос? Пиши — ответим, базара нет.",
+    "fb.tg":"Стукнуть в Telegram", "fb.mail":"Почта", "fb.or":"Или коротко тут",
+    "fb.ph":"Твоё сообщение…", "fb.send":"Отправить",
+    "fb.note":"В Telegram сообщение уйдёт боту. В браузере — откроется чат",
+    "fb.thanks":"Респект", "fb.sent":"Сообщение ушло. Мы на связи.",
+    "lot.l1":"Движуха для тех, кто с билетом. Приз —", "lot.l2":"Итоги —",
+    "lot.l3":"Забей номер билета, чтобы быть в теме.",
+    "lot.ticket":"Номер билета", "lot.join":"Влиться", "lot.update":"Обновить заявку",
+    "lot.note":"Заявка ложится на устройство и уходит боту в Telegram. Сверку билетов держат организаторы.",
+    "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
+  },
+  zoomer: {
+    "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
+    "m.scan":"Скан QR", "m.theme":"Тема", "m.lang":"Язык",
+    "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
+    "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич",
+    "dev.count":"ДЕВАЙСОВ", "sched.draft":"Драфт-тайминги · время ещё не финалайзнули",
+    "sched.open":"го ↗", "forum.chron":"Лента анонсов", "forum.post":"ПОСТ",
+    "forum.prose":`<p class="blurb"><b>«Дискрет» — это комьюнити вокруг электронной культуры и технологического арта.</b></p><p class="blurb">Аналог, цифра и гибриды, необычные интерфейсы, самодельные схемы и поиск чего-то нового в старых деталях — это всё способ задать вопрос «как это вообще сделано?» и захендлить его своими руками.</p><p class="blurb">«Дискрет» коннектит инженеров, музыкантов и художников, для которых технология — это экстеншн мысли, а не кнопка в аппсторе. Вайб — база.</p>`,
+    "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"БРЕНД", "badge.product":"ДРОП",
+    "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Тайм", "key.hall":"Зал",
+    "frame.device":"Про девайс", "frame.session":"Про сессию", "frame.company":"Про бренд",
+    "frame.members":"Пипл", "frame.products":"Дропы", "frame.desc":"Что за тема",
+    "btn.company":"Бренд ↗", "btn.companyOf":"Бренд · ",
+    "empty.photo":"Фото скоро", "empty.logo":"Лого / фото скоро",
+    "ph.device":"— пару строк про девайс —", "ph.session":"— инфа скоро дропнется —", "ph.members":"— скоро дропнем —",
+    "tag.tbd":"автор TBA", "prod.unit":"дроп.", "back":"← НАЗАД",
+    "about.lead":"ДИСКРЕТ — это ивент про самодельные звуковые девайсы, рил ток. <b>Тут не про «поговорить» — тут паяльник, схемы и звук, который качает.</b> Собираем тех, кто сам крафтит приборы для звука, и показываем вживую. Вайб имба.",
+    "about.p1":"Дискрет — это про звук и про схемы одновременно, база",
+    "about.p2":"За каждым девайсом стоит реальный чел",
+    "about.p3":"Всё можно потрогать, изи",
+    "about.p4":"Первый раз с паяльником? Не кринж, это норма",
+    "about.site":"Сайт ивента",
+    "fb.lead":"Есть девайс, идея или вопрос? Пиши — ответим, изи.",
+    "fb.tg":"Написать в тг", "fb.mail":"Мыло", "fb.or":"Или го прямо тут",
+    "fb.ph":"Го сообщение…", "fb.send":"Отправить",
+    "fb.note":"В тг сообщение улетит боту. В браузере — откроется чат",
+    "fb.thanks":"Спасибо, крутяк", "fb.sent":"Сообщение улетело. Мы на связи.",
+    "lot.l1":"Гив для всех с билетом. Приз —", "lot.l2":"Итоги —",
+    "lot.l3":"Закинь номер билета, чтобы заучаститься.",
+    "lot.ticket":"Номер билета", "lot.join":"Го участвовать", "lot.update":"Обновить заявку",
+    "lot.note":"Заявка сейвится на устройстве и улетает боту в тг. Финальную сверку билетов делают организаторы.",
+    "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
+  }
+};
+let LANG = store("ds_lang") || "ru";
+const LANGS = ["ru","bratva","zoomer"];
+const LANGNAME = { ru:"Русский", bratva:"Пацанский", zoomer:"Зумерский" };
+function t(k){ const o=L[LANG]; if(o && o[k]!=null) return o[k]; return (L.ru[k]!=null) ? L.ru[k] : k; }
+let curModalKind=null, lastDetail=null;
+function paintThemeName(){ const dark=document.documentElement.getAttribute("data-theme")==="dark"; const el=$("#themeName"); if(el) el.textContent = dark ? t("theme.dark") : t("theme.light"); }
+function paintChrome(){
+  document.querySelectorAll("[data-t]").forEach(el=>{ const k=el.getAttribute("data-t"), v=t(k); if(k==="forum.prose") el.innerHTML=v; else el.textContent=v; });
+  const ln=$("#langName"); if(ln) ln.textContent = LANGNAME[LANG];
+  paintThemeName();
+  renderDevices(); renderSchedule(); renderForum();
+  if($("#modal").classList.contains("on") && curModalKind) openModal(curModalKind);
+  if($("#detail").classList.contains("on") && lastDetail) lastDetail();
+}
+function setLang(l){ LANG=l; store("ds_lang",l); paintChrome(); haptic("light"); }
+function cycleLang(){ setLang(LANGS[(LANGS.indexOf(LANG)+1)%LANGS.length]); }
+
 function applyTheme(t){
   document.documentElement.setAttribute("data-theme", t);
-  $("#themeName").textContent = t==="dark" ? "Тёмная" : "Светлая";
+  paintThemeName();
   const bg = t==="dark" ? "#0b0b0b" : "#ffffff";
   try{ tg && tg.setHeaderColor && tg.setHeaderColor(bg); tg && tg.setBackgroundColor && tg.setBackgroundColor(bg); }catch(e){}
   store("ds_theme", t);
@@ -429,18 +547,19 @@ $("#menuBtn").addEventListener("click", e=>{ e.stopPropagation(); menu.hidden=!m
 document.addEventListener("click", e=>{ if(!menu.hidden && !menu.contains(e.target) && e.target.closest("#menuBtn")===null) closeMenu(); });
 menu.querySelectorAll(".mi[data-m]").forEach(b=> b.addEventListener("click", ()=>{ closeMenu(); openModal(b.dataset.m); }));
 $("#themeToggle").addEventListener("click", e=>{ e.stopPropagation(); toggleTheme(); haptic("light"); });
+$("#langToggle").addEventListener("click", e=>{ e.stopPropagation(); cycleLang(); });
 $("#scanBtn").addEventListener("click", e=>{ e.stopPropagation(); closeMenu(); scanQR(); });
 
 function renderDevices(){
-  $("#pcount").textContent = "ПРИБОРОВ: " + P.length;
+  $("#pcount").textContent = t("dev.count") + ": " + P.length;
   $("#plist").innerHTML = P.map(p => `
     <article class="pcard" onclick="openDetail('${p.id}')">
-      <div class="thumb"><span class="tick t1"></span><span class="tick t2"></span>${(p.photos&&p.photos.length)?`<img src="${photo(p.photos[0])}" alt="">`:`<div class="tempty">Фото скоро</div>`}</div>
+      <div class="thumb"><span class="tick t1"></span><span class="tick t2"></span>${(p.photos&&p.photos.length)?`<img src="${photo(p.photos[0])}" alt="">`:`<div class="tempty">${t("empty.photo")}</div>`}</div>
       <div class="meta">
         <div class="mrow"><span class="idx">№${p.idx}</span><span class="slot">${EVENT.date.slice(0,5)} · ${p.time} · ${p.stage}</span></div>
         <h3 class="name">${esc(p.device)}</h3>
         <div class="dev">${p.company?`<a class="colink" onclick="event.stopPropagation();openCompany('${p.company}')">${esc(cname(p.company))}</a>`:`<span>${esc(p.name)}</span>`}<small> · ${esc(p.sub)}${p.city?` · ${esc(p.city)}`:""}</small></div>
-        <div class="tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}${p.tbd?'<span class="tag tbd">автор TBD</span>':''}</div>
+        <div class="tags">${p.tags.map(tg=>`<span class="tag">${esc(tg)}</span>`).join("")}${p.tbd?`<span class="tag tbd">${t("tag.tbd")}</span>`:''}</div>
       </div>
     </article>`).join("");
 }
@@ -456,13 +575,13 @@ function renderSchedule(){
   $("#slist").innerHTML = list.map(s => `
     <div ${tap(s)}>
       <div class="stime2">${s.t}${s.e?`<span>${s.e}</span>`:""}</div>
-      <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.author||s.go||s.link)?' <em class="lk">открыть ↗</em>':""}</div>
+      <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.author||s.go||s.link)?` <em class="lk">${t("sched.open")}</em>`:""}</div>
       <div class="sroom ${(s.room==='sb')?'red':''}" onclick="event.stopPropagation();filterRoom('${s.room}')">${ROOMS[s.room]}</div>
     </div>`).join("");
 }
 function renderForum(){
   $("#edate").textContent = EVENT.date; $("#eplace").textContent = EVENT.place;
-  $("#cposts").textContent = "ПОСТ " + EVENT.posts;
+  $("#cposts").textContent = t("forum.post") + " " + EVENT.posts;
   $("#cfill").style.width = (EVENT.progress*100)+"%"; $("#cptr").style.left = (EVENT.progress*100)+"%";
 }
 
@@ -472,10 +591,11 @@ function showDevNav(on){ const pv=$("#devPrev"),nx=$("#devNext"); if(!pv||!nx) r
 function navDevice(d){ if(curDev<0) return; const i=(curDev+d+P.length)%P.length; openDetail(P[i].id); }
 function openDetail(id){
   const p = P.find(x=>x.id===id); if(!p) return; haptic("light");
-  $("#ddc").textContent = "ДЕВАЙС № " + p.idx;
+  lastDetail = ()=>openDetail(id);
+  $("#ddc").textContent = t("badge.device") + " " + p.idx;
   curDev = P.findIndex(x=>x.id===id); showDevNav(true);
   const slides = (p.photos && p.photos.length) ? p.photos : [];
-  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Фото скоро</div>`;
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.photo")}</div>`;
   const multi = slides.length > 1;
   $("#dbody").innerHTML = `
     <div class="carousel">
@@ -488,12 +608,12 @@ function openDetail(id){
     <h1 class="dname">${esc(p.device)}</h1>
     <div class="drole">${esc(p.name)} · ${esc(p.role)}</div>
     <div class="dgrid">
-      <div class="dcell"><div class="k">Автор</div><div class="v">${esc(p.name)}</div></div>
-      <div class="dcell"><div class="k">Формат</div><div class="v">${esc(p.sub)}</div></div>
-      <div class="dcell"><div class="k">Сцена</div><div class="v red">${esc(p.stage)}</div></div>
-      <div class="dcell"><div class="k">Время</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
+      <div class="dcell"><div class="k">${t("key.author")}</div><div class="v">${esc(p.name)}</div></div>
+      <div class="dcell"><div class="k">${t("key.format")}</div><div class="v">${esc(p.sub)}</div></div>
+      <div class="dcell"><div class="k">${t("key.stage")}</div><div class="v red">${esc(p.stage)}</div></div>
+      <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
     </div>
-    <div class="dframe"><span class="k">О приборе</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">— пара строк о приборе —</p>`}</div>${(p.company || (p.links && p.links.length)) ? `<div class="dlinks">${p.company?`<button class="dlink co" onclick="openCompany('${p.company}')">Контора ↗</button>`:""}${(p.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+    <div class="dframe"><span class="k">${t("frame.device")}</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">${t("ph.device")}</p>`}</div>${(p.company || (p.links && p.links.length)) ? `<div class="dlinks">${p.company?`<button class="dlink co" onclick="openCompany('${p.company}')">${t("btn.company")}</button>`:""}${(p.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
@@ -509,9 +629,10 @@ function initCarousel(n){
 }
 function openAuthor(id){
   const a = A.find(x=>x.id===id); if(!a) return; haptic("light");
-  $("#ddc").textContent = "АВТОР"; showDevNav(false);
+  lastDetail = ()=>openAuthor(id);
+  $("#ddc").textContent = t("badge.author"); showDevNav(false);
   const slides = (a.photos && a.photos.length) ? a.photos : [];
-  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Фото скоро</div>`;
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.photo")}</div>`;
   const multi = slides.length > 1;
   $("#dbody").innerHTML = `
     <div class="carousel">
@@ -523,15 +644,15 @@ function openAuthor(id){
     <h1 class="dname" style="margin-top:0">${esc(a.name)}</h1>
     <div class="drole">${esc(a.role)}</div>
     <div class="dgrid">
-      <div class="dcell"><div class="k">Зал</div><div class="v">${esc(ROOMS[a.room]||"—")}</div></div>
-      <div class="dcell"><div class="k">Время</div><div class="v">${esc(a.time||"—")}</div></div>
+      <div class="dcell"><div class="k">${t("key.hall")}</div><div class="v">${esc(ROOMS[a.room]||"—")}</div></div>
+      <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${esc(a.time||"—")}</div></div>
     </div>
-    <div class="dframe"><span class="k">О сессии</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">— описание уточняется —</p>`}</div>
+    <div class="dframe"><span class="k">${t("frame.session")}</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">${t("ph.session")}</p>`}</div>
     ${(a.links && a.links.length) ? `<div class="dlinks">${a.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
-function closeDetail(){ showDevNav(false); $("#detail").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
+function closeDetail(){ showDevNav(false); lastDetail=null; $("#detail").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
 $("#dback").addEventListener("click", closeDetail);
 
 function openLink(url){ try{ if(tg && tg.openLink) tg.openLink(url); else window.open(url,"_blank"); }catch(e){ window.open(url,"_blank"); } }
@@ -539,47 +660,45 @@ function openTG(user){ const u="https://t.me/"+user; try{ if(tg && tg.openTelegr
 function openAny(u){ try{ if(/t\.me\//.test(u) && tg && tg.openTelegramLink) tg.openTelegramLink(u); else if(tg && tg.openLink) tg.openLink(u); else window.open(u,"_blank"); }catch(e){ window.open(u,"_blank"); } }
 
 const MODALS = {
-  about: { title:"О нас", html:()=>`
-    <p>ДИСКРЕТ — научно-технический форум творческого приборостроения.
-    <b>Это не графика о технологии — это графика, работающая как технология.</b>
-    Мы собираем тех, кто делает приборы для звука своими руками, и показываем их вживую.</p>
+  about: { title:"m.about", html:()=>`
+    <p>${t("about.lead")}</p>
     <ol class="princ">
-      <li>Дискретность — про звук и про схемы одновременно</li>
-      <li>За каждым прибором стоит человек</li>
-      <li>Всё можно потрогать</li>
-      <li>Первый раз с паяльником — это нормально</li>
+      <li>${t("about.p1")}</li>
+      <li>${t("about.p2")}</li>
+      <li>${t("about.p3")}</li>
+      <li>${t("about.p4")}</li>
     </ol>
     <div class="btnrow">
-      <button class="btn" onclick="openLink('https://${CONTACT.site}')">Сайт форума<span class="a">${CONTACT.site}</span></button>
+      <button class="btn" onclick="openLink('https://${CONTACT.site}')">${t("about.site")}<span class="a">${CONTACT.site}</span></button>
     </div>` },
-  feedback: { title:"Обратная связь", html:()=>`
-    <p>Есть прибор, идея или вопрос? Напишите — ответим.</p>
+  feedback: { title:"m.feedback", html:()=>`
+    <p>${t("fb.lead")}</p>
     <div class="btnrow">
-      <button class="btn red" onclick="openTG('${CONTACT.tg}')">Написать в Telegram<span class="a">@${CONTACT.tg}</span></button>
-      <button class="btn" onclick="openLink('mailto:${CONTACT.email}')">Почта<span class="a">${CONTACT.email}</span></button>
+      <button class="btn red" onclick="openTG('${CONTACT.tg}')">${t("fb.tg")}<span class="a">@${CONTACT.tg}</span></button>
+      <button class="btn" onclick="openLink('mailto:${CONTACT.email}')">${t("fb.mail")}<span class="a">${CONTACT.email}</span></button>
     </div>
-    <div class="field"><label>Или коротко здесь</label><textarea id="fbText" rows="3" placeholder="Ваше сообщение…"></textarea></div>
-    <div class="btnrow"><button class="btn" id="fbSend">Отправить</button></div>
-    <div class="note">В Telegram сообщение уйдёт боту. В браузере — откроется чат @${CONTACT.tg}.</div>` },
-  lottery: { title:"Конкурс", html:()=>lotteryHTML() },
-  companies: { title:"Конторы", html:()=>`<div class="prods"><div class="prods-h">Конторы · ${C.length}</div>${C.map(c=>`<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${(c.products&&c.products.length)?c.products.length+" тов. ":""}›</span></button>`).join("")}</div>` },
+    <div class="field"><label>${t("fb.or")}</label><textarea id="fbText" rows="3" placeholder="${t("fb.ph")}"></textarea></div>
+    <div class="btnrow"><button class="btn" id="fbSend">${t("fb.send")}</button></div>
+    <div class="note">${t("fb.note")} @${CONTACT.tg}.</div>` },
+  lottery: { title:"m.lottery", html:()=>lotteryHTML() },
+  companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>`<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${(c.products&&c.products.length)?c.products.length+" "+t("prod.unit")+" ":""}›</span></button>`).join("")}</div>` },
 };
 function lotteryHTML(){
   const saved = store("ds_lottery");
   let box = "";
   if(saved){ try{ const s=JSON.parse(saved); box=`
-    <div class="okbox"><div class="big">Заявка принята</div>
-      <div class="kvline"><span>Билет</span><span>${esc(s.ticket)}</span></div>
-      <div class="kvline"><span>Заявка №</span><span>${esc(s.entry)}</span></div>
-      <div class="kvline"><span>Итоги</span><span>${esc(LOTTERY.draw)}</span></div>
+    <div class="okbox"><div class="big">${t("lot.okTitle")}</div>
+      <div class="kvline"><span>${t("lot.kTicket")}</span><span>${esc(s.ticket)}</span></div>
+      <div class="kvline"><span>${t("lot.kEntry")}</span><span>${esc(s.entry)}</span></div>
+      <div class="kvline"><span>${t("lot.kDraw")}</span><span>${esc(LOTTERY.draw)}</span></div>
     </div>`; }catch(e){} }
   return `
-    <p>Конкурс среди гостей с билетом. Приз — <b>${esc(LOTTERY.prize)}</b>.
-    Итоги — ${esc(LOTTERY.draw)}. Зарегистрируйте номер билета, чтобы участвовать.</p>
+    <p>${t("lot.l1")} <b>${esc(LOTTERY.prize)}</b>.
+    ${t("lot.l2")} ${esc(LOTTERY.draw)}. ${t("lot.l3")}</p>
     ${box}
-    <div class="field"><label>Номер билета</label><input id="lotTicket" inputmode="numeric" placeholder="напр. 100482"></div>
-    <div class="btnrow"><button class="btn red" id="lotJoin">${saved?"Обновить заявку":"Участвовать"}</button></div>
-    <div class="note">Заявка сохраняется на устройстве и уходит боту в Telegram. Итоговую сверку билетов делают организаторы.</div>`;
+    <div class="field"><label>${t("lot.ticket")}</label><input id="lotTicket" inputmode="numeric" placeholder="напр. 100482"></div>
+    <div class="btnrow"><button class="btn red" id="lotJoin">${saved?t("lot.update"):t("lot.join")}</button></div>
+    <div class="note">${t("lot.note")}</div>`;
 }
 function bindModal(kind){
   if(kind==="feedback"){
@@ -588,7 +707,7 @@ function bindModal(kind){
       haptic("medium");
       if(tg && tg.sendData){ tg.sendData(JSON.stringify({type:"feedback", text:t})); }
       else { openTG(CONTACT.tg); }
-      $("#mbody").innerHTML = `<div class="okbox"><div class="big">Спасибо</div><p style="margin:8px 0 0">Сообщение отправлено. Мы на связи.</p></div>`;
+      $("#mbody").innerHTML = `<div class="okbox"><div class="big">${t("fb.thanks")}</div><p style="margin:8px 0 0">${t("fb.sent")}</p></div>`;
     });
   }
   if(kind==="lottery"){
@@ -606,48 +725,51 @@ function bindModal(kind){
 function shake(el){ if(!el) return; el.style.borderColor="var(--red)"; el.focus(); haptic("heavy"); }
 function openModal(kind){
   const m = MODALS[kind]; if(!m) return; haptic("light");
-  $("#mtitle").textContent = m.title;
+  curModalKind = kind;
+  $("#mtitle").textContent = t(m.title);
   $("#mbody").innerHTML = m.html();
   $("#modal").classList.add("on"); document.body.style.overflow="hidden";
   bindModal(kind); syncBack();
 }
-function closeModal(){ $("#modal").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
+function closeModal(){ curModalKind=null; $("#modal").classList.remove("on"); document.body.style.overflow=""; syncBack(); }
 $("#mclose").addEventListener("click", closeModal);
 $("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
 
 function openCompany(id){
   const c = C.find(x=>x.id===id); if(!c) return; haptic("light");
-  $("#ddc").textContent = "КОНТОРА"; showDevNav(false);
+  lastDetail = ()=>openCompany(id);
+  $("#ddc").textContent = t("badge.company"); showDevNav(false);
   const slides = (c.photos && c.photos.length) ? c.photos : [];
-  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Логотип / фото скоро</div>`;
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.logo")}</div>`;
   const multi = slides.length > 1;
   const prods = c.products || [];
   $("#dbody").innerHTML = `
     <div class="carousel"><div class="cslides" id="cslides">${slidesHTML}</div>
       <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
       ${multi ? `<button class="cnav cprev" id="cprev">‹</button><button class="cnav cnext" id="cnext">›</button><div class="cdots" id="cdots">${slides.map((_,i)=>`<span class="cdot ${i===0?"on":""}"></span>`).join("")}</div>` : ""}</div>
-    <span class="dlabel">КОНТОРА</span>${WAVE}
+    <span class="dlabel">${t("badge.company")}</span>${WAVE}
     <h1 class="dname" style="margin-top:0">${esc(c.name)}</h1>
     <div class="drole">${esc(c.role||"")}</div>
-    ${c.desc ? `<div class="dframe"><span class="k">О конторе</span><p>${esc(c.desc)}</p></div>` : ""}
-    <div class="dframe"><span class="k">Участники</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>esc(m)).join(", ")}</p>` : `<p class="ph">— уточняются —</p>`}</div>
-    ${prods.length ? `<div class="prods"><div class="prods-h">Товары · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
+    ${c.desc ? `<div class="dframe"><span class="k">${t("frame.company")}</span><p>${esc(c.desc)}</p></div>` : ""}
+    <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>esc(m)).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
+    ${prods.length ? `<div class="prods"><div class="prods-h">${t("frame.products")} · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
     ${(c.links && c.links.length) ? `<div class="dlinks">${c.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
 function openProduct(cid, pid){
   const c = C.find(x=>x.id===cid); if(!c) return; const pr=(c.products||[]).find(x=>x.id===pid); if(!pr) return; haptic("light");
-  $("#ddc").textContent = "ТОВАР"; showDevNav(false);
+  lastDetail = ()=>openProduct(cid,pid);
+  $("#ddc").textContent = t("badge.product"); showDevNav(false);
   const slides = (pr.photos && pr.photos.length) ? pr.photos : [];
-  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Фото скоро</div>`;
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.photo")}</div>`;
   $("#dbody").innerHTML = `
     <div class="carousel"><div class="cslides">${slidesHTML}</div><span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span></div>
     <span class="dlabel">${esc(c.name)}${pr.hp?" · "+esc(pr.hp):""}</span>${WAVE}
     <h1 class="dname" style="margin-top:0">${esc(pr.name)}</h1>
     ${pr.price?`<div class="drole">${esc(pr.price)}</div>`:""}
-    <div class="dframe"><span class="k">Описание</span><p class="pre">${esc(pr.desc||"")}</p></div>
-    <div class="dlinks"><button class="dlink co" onclick="openCompany('${c.id}')">Контора · ${esc(c.name)} ↗</button></div>`;
+    <div class="dframe"><span class="k">${t("frame.desc")}</span><p class="pre">${esc(pr.desc||"")}</p></div>
+    <div class="dlinks"><button class="dlink co" onclick="openCompany('${c.id}')">${t("btn.companyOf")}${esc(c.name)} ↗</button></div>`;
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
 // ===== QR: сканер стойки + диплинки (d_<id> / a_<id> / c_<id>) =====
@@ -685,7 +807,7 @@ document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click"
 
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 applyTheme(store("ds_theme") || (tg && tg.colorScheme==="dark" ? "dark" : "light"));
-renderDevices(); renderSchedule(); renderForum();
+paintChrome();
 try{ const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||decodeURIComponent((location.hash||"").replace(/^#/,"")); if(sp) routeToken(sp); }catch(e){}
 </script>
 </body>
