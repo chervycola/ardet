@@ -113,6 +113,12 @@
   .sinfo .lk{font-style:normal; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--red);}
   .sroom{font-size:9px; letter-spacing:.5px; text-transform:uppercase; border:1px solid var(--hair); color:var(--hair); padding:3px 6px; white-space:nowrap; align-self:center;}
   .sroom.red{background:var(--red); color:#fff; border-color:var(--red);}
+  .schedbar{display:flex; gap:6px; overflow-x:auto; padding-bottom:12px; margin-bottom:4px; scrollbar-width:none;}
+  .schedbar::-webkit-scrollbar{display:none;}
+  .chip-r{flex:0 0 auto; background:var(--panel); border:1.5px solid var(--hair); color:var(--hair); font-family:var(--mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:6px 10px; cursor:pointer; white-space:nowrap;}
+  .chip-r.on{background:var(--red); color:#fff; border-color:var(--red);}
+  .sroom{cursor:pointer;}
+  .dlink.co{border-color:var(--red); color:var(--red);}
   .detail{position:fixed; inset:0; z-index:40; background:var(--bg); max-width:520px; margin:0 auto; overflow-y:auto; display:none; flex-direction:column;}
   .detail.on{display:flex;}
   .dbar{position:sticky; top:0; background:var(--top-bg); backdrop-filter:blur(6px); border-bottom:2px solid var(--hair);
@@ -207,6 +213,7 @@
       <button class="mi" data-m="about">О нас</button>
       <button class="mi" data-m="feedback">Обратная связь</button>
       <button class="mi" data-m="lottery">Лотерея <span class="mi-tag">билет</span></button>
+      <button class="mi" id="scanBtn">Сканировать QR <span class="mi-tag">стойка</span></button>
       <div class="mi-div"></div>
       <button class="mi" id="themeToggle">Тема: <span id="themeName" style="color:var(--red);margin-left:6px">Светлая</span></button>
     </nav>
@@ -221,6 +228,7 @@
     <section class="view" id="v-schedule">
       <div class="vhead"><h2>Расписание</h2><span class="vrule"></span></div>
       <div class="draft">Черновик по рабочей сетке · время уточняется</div>
+      <div id="schedbar" class="schedbar"></div>
       <div id="slist"></div>
     </section>
 
@@ -276,12 +284,12 @@ const P = [
     desc:"Мультитембральный синтезатор с открытой матрицей модуляции: тембры порождают музыку через взаимодействие. Компактная лаборатория для сборки звуковых систем и исследования их звучания." },
   { id:"archeon", idx:"02", name:"ЭФЭМИ", device:"ARCHEON", sub:"Генеративный осциллятор · Зеленоград",
     role:"Евро-модуль · генеративный секвенсор", spec:"Eurorack · Preset 10 ячеек · до 16 шагов", stage:"MODULAR", time:"17:20",
-    tags:["eurorack","генеративное","EFEMI"], tbd:false, photos:["archeon"],
+    tags:["eurorack","генеративное","EFEMI"], tbd:false, photos:["archeon"], company:"efemi",
     links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}],
     desc:"Форма волны меняется на каждом шаге встроенного генеративного секвенсора: из исходного числа (10 ячеек Preset) рождается до 16 шагов агрессивных тембральных вариаций. Для экспериментальных ритм-текстур и случайных находок." },
   { id:"mayak", idx:"03", name:"Лаборатория звука", device:"МАЯК", sub:"Синтезаторы СУТ · оптические модули",
     role:"Лаборатория звука · Химки, МО", spec:"СУТ · аналоговые оптические модули", stage:"LAB", time:"16:00",
-    tags:["СУТ","оптические","аналог"], tbd:false, photos:["mayak"],
+    tags:["СУТ","оптические","аналог"], tbd:false, photos:["mayak"], company:"mayak-lab",
     links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
     desc:"Лаборатория звука МАЯК из Химок: синтезаторы СУТ и аналоговые оптические модули — направление, где звук встречается со светом." },
   { id:"solyara", idx:"04", name:"Станислав Суслов", device:"SOLYARA", sub:"Дрон-синтезатор · Москва",
@@ -300,7 +308,7 @@ const P = [
     desc:"Почти полностью аналоговая модульная eurorack-система с замкнутым циклом: генерация — модуляция — вывод сигнала. В наборе всё для полноценной студийной работы со звуком." },
   { id:"sxlab", idx:"07", name:"Москва", device:"SxLab", sub:"Бутиковые синтезаторы · педали",
     role:"На форуме — цифровой фильтр", spec:"Fortress · Chord · Solar Panel", stage:"MAIN", time:"—",
-    tags:["бутик","фильтр","педали"], tbd:false, photos:["sx","sx2","sxlab"],
+    tags:["бутик","фильтр","педали"], tbd:false, photos:["sx","sx2","sxlab"], company:"sxlab-co",
     links:[{t:"САЙТ",u:"https://sxlab.ru"},{t:"VK",u:"https://vk.com/sxlab"},{t:"TG",u:"https://t.me/sxlabmusic"}],
     desc:"Бутиковые синтезаторы и педали эффектов, где инновации встречаются с музыкальным экспериментом. В линейке Fortress, Chord и Solar Panel; на форуме — премьера цифрового фильтра." },
 ];
@@ -353,6 +361,31 @@ const A = [
   { id:"lisitsky", name:"Влад Лисицкий", role:"AV на большой сцене", session:"AV", room:"sb", time:"18:00–18:45", photos:[], links:[], desc:"" },
 ];
 
+// ===== КОНТОРЫ / КОЛЛЕКТИВЫ (карточки; участники и детали наполняются) =====
+const C = [
+  { id:"efemi", name:"ЭФЭМИ", role:"Экспериментальная фабрика ЭМИ · Зеленоград", photos:[], members:[],
+    links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}],
+    desc:"Российское производство полного цикла уникальных электронных и электроакустических инструментов. Инструменты ЭФЭМИ ломают шаблоны и помогают музыкантам найти свой стиль." },
+  { id:"sxlab-co", name:"SX LAB", role:"Бутиковые синтезаторы и педали · Москва", photos:[], members:[],
+    links:[{t:"САЙТ",u:"https://sxlab.ru"},{t:"VK",u:"https://vk.com/sxlab"},{t:"TG",u:"https://t.me/sxlabmusic"}],
+    desc:"Бутиковые синтезаторы и педали эффектов: Fortress, Chord, Solar Panel. На форуме — цифровой фильтр." },
+  { id:"mayak-lab", name:"Лаборатория звука МАЯК", role:"Синтезаторы СУТ · оптические модули · Химки", photos:[], members:[],
+    links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
+    desc:"Лаборатория звука: синтезаторы СУТ и аналоговые оптические модули (АСТРОВОКС)." },
+  { id:"pribor", name:"ПРИБОР", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"twang", name:"Twang Modular", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"artcraft", name:"ArtCraft workshop", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"lasernoto", name:"LaserNoto", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"mxls", name:"MXLS", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"saolla", name:"Saolla", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"yandex", name:"Яндекс", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"rezonans", name:"Резонанс", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"vgline", name:"VG Line", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"paratek", name:"Paratek", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"uralsintmash", name:"УралСинтМаш", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"rawjungle", name:"Сырые Джунгли (Raw Jungle)", role:"—", photos:[], members:[], links:[], desc:"" },
+];
+
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 const $ = s => document.querySelector(s);
 const esc = s => (s+"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -375,6 +408,7 @@ $("#menuBtn").addEventListener("click", e=>{ e.stopPropagation(); menu.hidden=!m
 document.addEventListener("click", e=>{ if(!menu.hidden && !menu.contains(e.target) && e.target.closest("#menuBtn")===null) closeMenu(); });
 menu.querySelectorAll(".mi[data-m]").forEach(b=> b.addEventListener("click", ()=>{ closeMenu(); openModal(b.dataset.m); }));
 $("#themeToggle").addEventListener("click", e=>{ e.stopPropagation(); toggleTheme(); haptic("light"); });
+$("#scanBtn").addEventListener("click", e=>{ e.stopPropagation(); closeMenu(); scanQR(); });
 
 function renderDevices(){
   $("#pcount").textContent = "ПРИБОРОВ: " + P.length;
@@ -389,13 +423,19 @@ function renderDevices(){
       </div>
     </article>`).join("");
 }
+let schedRoom = null;
+function filterRoom(r){ schedRoom = (r==="*") ? null : r; haptic("light"); renderSchedule(); window.scrollTo(0,0); }
 function renderSchedule(){
+  const used = [...new Set(SCHED.map(s=>s.room))].filter(r=>r!=="all");
+  const chips = [["*","ВСЕ ЗАЛЫ"], ...used.map(r=>[r,ROOMS[r]])];
+  $("#schedbar").innerHTML = chips.map(([r,l])=>`<button class="chip-r ${((schedRoom==null&&r==='*')||schedRoom===r)?'on':''}" onclick="filterRoom('${r}')">${l}</button>`).join("");
+  const list = SCHED.filter(s => schedRoom==null || s.room===schedRoom || s.room==='all');
   const tap = s => s.author ? `class="srow2 tap" onclick="openAuthor('${s.author}')"` : s.go ? `class="srow2 tap" onclick="haptic('light');setView('${s.go}')"` : (s.link ? `class="srow2 tap" onclick="openDetail('${s.link}')"` : `class="srow2"`);
-  $("#slist").innerHTML = SCHED.map(s => `
+  $("#slist").innerHTML = list.map(s => `
     <div ${tap(s)}>
       <div class="stime2">${s.t}${s.e?`<span>${s.e}</span>`:""}</div>
       <div class="sinfo"><b>${esc(s.title)}</b>${s.who?`<span>${esc(s.who)}</span>`:""}${(s.author||s.go||s.link)?' <em class="lk">открыть ↗</em>':""}</div>
-      <div class="sroom ${(s.room==='sb')?'red':''}">${ROOMS[s.room]}</div>
+      <div class="sroom ${(s.room==='sb')?'red':''}" onclick="event.stopPropagation();filterRoom('${s.room}')">${ROOMS[s.room]}</div>
     </div>`).join("");
 }
 function renderForum(){
@@ -427,7 +467,7 @@ function openDetail(id){
       <div class="dcell"><div class="k">Сцена</div><div class="v red">${esc(p.stage)}</div></div>
       <div class="dcell"><div class="k">Время</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
     </div>
-    <div class="dframe"><span class="k">О приборе</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">— пара строк о приборе —</p>`}</div>${(p.links && p.links.length) ? `<div class="dlinks">${p.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+    <div class="dframe"><span class="k">О приборе</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">— пара строк о приборе —</p>`}</div>${(p.company || (p.links && p.links.length)) ? `<div class="dlinks">${p.company?`<button class="dlink co" onclick="openCompany('${p.company}')">Контора ↗</button>`:""}${(p.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
@@ -548,6 +588,45 @@ function closeModal(){ $("#modal").classList.remove("on"); document.body.style.o
 $("#mclose").addEventListener("click", closeModal);
 $("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
 
+function openCompany(id){
+  const c = C.find(x=>x.id===id); if(!c) return; haptic("light");
+  $("#ddc").textContent = "КОНТОРА";
+  const slides = (c.photos && c.photos.length) ? c.photos : [];
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">Логотип / фото скоро</div>`;
+  const multi = slides.length > 1;
+  $("#dbody").innerHTML = `
+    <div class="carousel"><div class="cslides" id="cslides">${slidesHTML}</div>
+      <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
+      ${multi ? `<button class="cnav cprev" id="cprev">‹</button><button class="cnav cnext" id="cnext">›</button><div class="cdots" id="cdots">${slides.map((_,i)=>`<span class="cdot ${i===0?"on":""}"></span>`).join("")}</div>` : ""}</div>
+    <span class="dlabel">КОНТОРА</span>${WAVE}
+    <h1 class="dname" style="margin-top:0">${esc(c.name)}</h1>
+    <div class="drole">${esc(c.role||"")}</div>
+    <div class="dframe"><span class="k">О конторе</span>${c.desc ? `<p>${esc(c.desc)}</p>` : `<p class="ph">— описание уточняется —</p>`}</div>
+    <div class="dframe"><span class="k">Участники</span>${(c.members && c.members.length) ? `<p>${c.members.map(esc).join(", ")}</p>` : `<p class="ph">— уточняются —</p>`}</div>
+    ${(c.links && c.links.length) ? `<div class="dlinks">${c.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+  if(multi) initCarousel(slides.length);
+  $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
+}
+// ===== QR: сканер стойки + диплинки (d_<id> / a_<id> / c_<id>) =====
+function routeToken(txt){
+  if(!txt) return false;
+  const t=(""+txt).trim();
+  const m = t.match(/(?:startapp=|[#\/])?\b([dac])[_:\/-]([a-zA-Z0-9_-]+)/);
+  if(m){ const k=m[1].toLowerCase(), id=m[2];
+    if(k==="d" && P.find(p=>p.id===id)){ openDetail(id); return true; }
+    if(k==="a" && A.find(a=>a.id===id)){ openAuthor(id); return true; }
+    if(k==="c" && C.find(c=>c.id===id)){ openCompany(id); return true; }
+  }
+  if(P.find(p=>p.id===t)){ openDetail(t); return true; }
+  return false;
+}
+function manualScan(){ const t=prompt("Код прибора со стойки (напр. archeon или d_archeon):"); if(t && !routeToken(t)){ try{ tg && tg.showAlert ? tg.showAlert("Код не найден: "+t) : alert("Код не найден: "+t); }catch(e){} } }
+function scanQR(){
+  if(tg && tg.showScanQrPopup){
+    try{ tg.showScanQrPopup({text:"Наведите на QR у стойки прибора"}, (txt)=>{ if(routeToken(txt)){ try{tg.closeScanQrPopup();}catch(e){} return true; } return false; }); }
+    catch(e){ manualScan(); }
+  } else manualScan();
+}
 function anyOpen(){ return $("#modal").classList.contains("on") || $("#detail").classList.contains("on"); }
 function closeTop(){ if($("#modal").classList.contains("on")) closeModal(); else if($("#detail").classList.contains("on")) closeDetail(); }
 function syncBack(){ if(!tg || !tg.BackButton) return; anyOpen() ? tg.BackButton.show() : tg.BackButton.hide(); }
@@ -564,6 +643,7 @@ document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click"
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 applyTheme(store("ds_theme") || (tg && tg.colorScheme==="dark" ? "dark" : "light"));
 renderDevices(); renderSchedule(); renderForum();
+try{ const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||decodeURIComponent((location.hash||"").replace(/^#/,"")); if(sp) routeToken(sp); }catch(e){}
 </script>
 </body>
 </html>
