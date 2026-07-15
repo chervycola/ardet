@@ -39,3 +39,40 @@
 ## Требования хостинга
 - PHP 7.4+ с `curl` (на reg.ru есть по умолчанию).
 - HTTPS с валидным сертификатом (Telegram требует).
+
+---
+
+# Cloudflare Workers (рекомендуемый вариант)
+
+Если хостинг (напр. shared reg.ru) режет входящие POST от Telegram
+(симптом: `getWebhookInfo` показывает `Connection timed out`, а сайт при этом
+открывается из браузера) — держите бота на **Cloudflare Workers**. Telegram
+достаёт до воркера всегда, хостинг для вебхука больше не нужен. Приложение и
+сайт остаются на reg.ru — телефон пользователя грузит их без проблем.
+
+Файл: **`worker.js`**.
+
+## Установка (10 минут)
+1. Зайдите на **dash.cloudflare.com** → **Workers & Pages** → **Create** →
+   **Create Worker** → задайте имя (напр. `diskret-bot`) → **Deploy**.
+2. **Edit code** → удалите шаблон, вставьте весь `worker.js` → **Deploy**.
+3. **Settings → Variables and Secrets** → добавьте:
+   - `BOT_TOKEN` — тип **Secret** (шифруется), токен от @BotFather;
+   - `APP_URL` — ссылка на приложение, напр. `https://diskret.space/app/`;
+   - `SITE_URL` — `https://diskret.space`;
+   - `CHANNEL_URL` — `https://t.me/diskret_space`;
+   - `ADMIN_CHAT_ID` — ваш численный id (или `0`);
+   - `SETUP_SECRET` — любая строка-пароль.
+   Сохраните и **Deploy** ещё раз (чтобы переменные подхватились).
+4. Узнайте адрес воркера (вида `https://diskret-bot.ВАШ.workers.dev`) и **один раз** откройте:
+   `https://diskret-bot.ВАШ.workers.dev/setup?secret=ВАШ_SETUP_SECRET`
+   → три `"ok":true` = вебхук, команды и кнопка-меню зарегистрированы.
+5. Напишите боту `/start`.
+
+## Заметки
+- Токен хранится как Secret в Cloudflare — в репозиторий не попадает.
+- Поменяли переменные — снова откройте `…workers.dev/setup?secret=…`.
+- Проверка статуса: `https://api.telegram.org/bot<ТОКЕН>/getWebhookInfo`.
+- Бесплатного тарифа Cloudflare (100k запросов/день) хватает с огромным запасом.
+- `bot.php` можно оставить как запасной вариант; активен тот вебхук, который
+  зарегистрирован последним вызовом `setup`.
