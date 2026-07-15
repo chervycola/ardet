@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<!--
+  DESIGN PLAN
+  Subject: LAST NIGHT — material resonator, постапокалиптический «ревербератор холодной ночи».
+  Treatment: editorial, единый визуальный мир — ночь/фосфор осциллографа/инженерный журнал.
+  Committed single-theme dark (это «Last Night»: светлой темы у ночи нет — осознанный выбор).
+  Palette: --night #0B0F12 (ground) · --panel #10161B · --line #25313A · --bone #C7CCC3 (text)
+           --phos #7FD9B0 (фосфор ЭЛТ — сигнал/акцент) · --rust #D2814F (соленоид/опасность/жар)
+  Type: display+labels = ui-monospace (панельная шелкография, машинная гравировка), body = system grotesk.
+  Layout: 10 «листов» вертикальной прокрутки, каждый = eyebrow + заголовок + lead + инфографика.
+  Нумерация листов информативна: это туториал-последовательность от макета к финалу.
+-->
+<title>LAST NIGHT — от макета до финала</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --night:#0B0F12; --panel:#10161B; --panel2:#0D1317;
+    --line:#25313A; --line-soft:#1A2229;
+    --bone:#C7CCC3; --bright:#EDF2E9; --dim:#8B968F;
+    --phos:#7FD9B0; --phos-dim:#3E6E5B; --phos-ghost:#1E3A30;
+    --rust:#D2814F; --rust-bright:#E09A6A; --rust-dim:#6E4128;
+    --mono: ui-monospace,'Cascadia Mono','SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+    --sans: system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0; background:var(--night); color:var(--bone);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px}
+  a{color:var(--phos); text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--phos); outline-offset:3px; border-radius:2px}
+  ::selection{background:var(--phos-ghost); color:var(--bright)}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:72px 0 48px; border-bottom:1px solid var(--line-soft)}
+  .hero-series{font-family:var(--mono); font-size:12px; letter-spacing:.22em; color:var(--dim); text-transform:uppercase}
+  .hero h1{
+    font-family:var(--mono); font-weight:700; color:var(--bright);
+    font-size:clamp(38px,7.5vw,72px); letter-spacing:.08em; line-height:1.05;
+    margin:.35em 0 .2em; text-wrap:balance;
+  }
+  .hero-sub{font-size:18px; color:var(--bone); max-width:58ch; margin:0 0 8px}
+  .hero-tag{font-family:var(--mono); font-size:12.5px; color:var(--phos); letter-spacing:.12em}
+  .hero-fig{margin-top:36px}
+  @keyframes ripple {0%,100%{opacity:.25} 50%{opacity:.9}}
+  .rip{animation:ripple 4s ease-in-out infinite}
+  .rip.r2{animation-delay:.6s} .rip.r3{animation-delay:1.2s}
+  @media (prefers-reduced-motion: reduce){ .rip{animation:none; opacity:.6} }
+
+  /* ---------- TOC ---------- */
+  .toc{padding:36px 0 8px}
+  .toc-title{font-family:var(--mono); font-size:12px; letter-spacing:.22em; color:var(--dim); text-transform:uppercase; margin-bottom:16px}
+  .toc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:8px 24px; padding:0; margin:0; list-style:none}
+  .toc-grid a{display:flex; gap:12px; padding:7px 8px; border-radius:3px; color:var(--bone); font-size:14.5px}
+  .toc-grid a:hover{background:var(--panel); text-decoration:none; color:var(--bright)}
+  .toc-num{font-family:var(--mono); color:var(--phos); font-size:13px; min-width:2.2em}
+
+  /* ---------- SHEETS ---------- */
+  main{display:grid; gap:0}
+  .sheet{padding:64px 0 72px; border-top:1px solid var(--line-soft)}
+  .sheet-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.2em; color:var(--phos); text-transform:uppercase}
+  .sheet-side{font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; color:var(--dim)}
+  .sheet h2{
+    font-family:var(--mono); font-weight:700; color:var(--bright);
+    font-size:clamp(24px,4vw,34px); letter-spacing:.05em; line-height:1.2;
+    margin:.5em 0 .45em; text-transform:uppercase; text-wrap:balance;
+  }
+  .lead{font-size:17px; max-width:64ch; margin:0 0 28px; color:var(--bone)}
+  .lead b, p b{color:var(--bright); font-weight:600}
+  p{max-width:66ch}
+  .cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:14px; margin:22px 0}
+  .card{background:var(--panel); border:1px solid var(--line-soft); border-radius:4px; padding:16px 18px}
+  .card h3{font-family:var(--mono); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--phos); margin:0 0 8px}
+  .card p{font-size:14.5px; margin:0; color:var(--bone)}
+  .card.rust h3{color:var(--rust-bright)}
+
+  .fig{background:var(--panel2); border:1px solid var(--line-soft); border-radius:4px; padding:18px 16px 10px; overflow-x:auto; margin:24px 0 8px}
+  .fig svg{display:block; min-width:640px; width:100%; height:auto}
+  .fig-cap{font-family:var(--mono); font-size:12px; color:var(--dim); letter-spacing:.06em; margin:6px 2px 26px}
+
+  /* SVG shared classes */
+  .sl{stroke:var(--line); stroke-width:1; fill:none}
+  .sl-soft{stroke:var(--line-soft); stroke-width:1; fill:none}
+  .sb{fill:var(--panel); stroke:var(--line); stroke-width:1}
+  .sb-hi{fill:var(--phos-ghost); stroke:var(--phos-dim); stroke-width:1.2}
+  .sb-rust{fill:#221610; stroke:var(--rust-dim); stroke-width:1.2}
+  .sp{stroke:var(--phos); stroke-width:1.6; fill:none}
+  .sp-thin{stroke:var(--phos-dim); stroke-width:1.1; fill:none}
+  .sr{stroke:var(--rust); stroke-width:1.6; fill:none}
+  text{font-family:var(--mono)}
+  .t{fill:var(--bone); font-size:12px}
+  .t-b{fill:var(--bright); font-size:12.5px; font-weight:700}
+  .t-d{fill:var(--dim); font-size:10.5px}
+  .t-p{fill:var(--phos); font-size:11px}
+  .t-r{fill:var(--rust-bright); font-size:11px}
+  .t-big{fill:var(--bright); font-size:15px; font-weight:700; letter-spacing:.08em}
+
+  /* ---------- RT60 bars ---------- */
+  .bars{display:grid; gap:9px; margin:22px 0 6px}
+  .bar-row{display:grid; grid-template-columns:190px 1fr 84px; gap:12px; align-items:center}
+  .bar-label{font-family:var(--mono); font-size:12.5px; color:var(--bone); white-space:nowrap}
+  .bar-label small{color:var(--dim); display:block; font-size:10.5px; letter-spacing:.05em}
+  .bar-track{height:14px; background:var(--panel); border:1px solid var(--line-soft); border-radius:2px; position:relative}
+  .bar-fill{position:absolute; inset:2px auto 2px 2px; background:linear-gradient(90deg,var(--phos-dim),var(--phos)); border-radius:1px}
+  .bar-fill.warm{background:linear-gradient(90deg,var(--rust-dim),var(--rust))}
+  .bar-val{font-family:var(--mono); font-size:12.5px; color:var(--phos); font-variant-numeric:tabular-nums; text-align:right}
+  .bar-scale{font-family:var(--mono); font-size:10.5px; color:var(--dim); display:flex; justify-content:space-between; margin-top:4px; padding-left:202px; padding-right:96px}
+  @media (max-width:640px){ .bar-row{grid-template-columns:130px 1fr 64px} .bar-scale{padding-left:142px; padding-right:76px} }
+
+  /* ---------- mapping table (лист 08) ---------- */
+  .map{display:grid; gap:10px; margin:24px 0}
+  .map-row{display:grid; grid-template-columns:minmax(200px,5fr) 34px minmax(240px,7fr); gap:8px; align-items:center;
+           background:var(--panel); border:1px solid var(--line-soft); border-radius:4px; padding:13px 16px}
+  .map-poet{font-size:15px; color:var(--bright); font-style:italic}
+  .map-arrow{font-family:var(--mono); color:var(--phos); text-align:center}
+  .map-circ{font-family:var(--mono); font-size:12.5px; color:var(--bone); line-height:1.5}
+  .map-circ b{color:var(--phos); font-weight:600}
+  @media (max-width:620px){ .map-row{grid-template-columns:1fr} .map-arrow{display:none} }
+
+  /* ---------- gates ladder (лист 09) ---------- */
+  .gates{display:grid; gap:0; margin:26px 0}
+  .gate{border-left:2px solid var(--phos-dim); padding:4px 0 26px 22px; position:relative}
+  .gate::before{content:""; position:absolute; left:-6px; top:8px; width:10px; height:10px; border-radius:50%;
+                background:var(--night); border:2px solid var(--phos)}
+  .gate:last-child{padding-bottom:6px}
+  .gate-name{font-family:var(--mono); font-size:14px; color:var(--bright); font-weight:700; letter-spacing:.06em}
+  .gate-meta{font-family:var(--mono); font-size:11.5px; color:var(--phos); letter-spacing:.06em; margin-left:10px}
+  .gate p{font-size:14.5px; margin:6px 0 0; color:var(--bone)}
+  .gate .fail{font-family:var(--mono); font-size:12px; color:var(--rust-bright); margin-top:7px; display:block}
+
+  /* ---------- misc ---------- */
+  .rule-quote{border-left:3px solid var(--rust); background:#181008; padding:14px 20px; margin:26px 0;
+              font-family:var(--mono); font-size:14.5px; color:var(--rust-bright); letter-spacing:.02em; max-width:640px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+  .chip{font-family:var(--mono); font-size:12px; letter-spacing:.08em; padding:5px 12px; border-radius:2px;
+        border:1px solid var(--line); color:var(--bone); background:var(--panel)}
+  .chip.hi{border-color:var(--phos-dim); color:var(--phos)}
+  .chip.warm{border-color:var(--rust-dim); color:var(--rust-bright)}
+  table.spec{border-collapse:collapse; width:100%; margin:20px 0; font-size:14px}
+  table.spec th{font-family:var(--mono); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim);
+                text-align:left; padding:8px 14px 8px 0; border-bottom:1px solid var(--line)}
+  table.spec td{padding:9px 14px 9px 0; border-bottom:1px solid var(--line-soft); vertical-align:top}
+  table.spec td:first-child{font-family:var(--mono); font-size:13px; color:var(--phos); white-space:nowrap}
+  .tbl-wrap{overflow-x:auto}
+  footer{border-top:1px solid var(--line-soft); padding:44px 0 64px; margin-top:24px}
+  .foot-mark{font-family:var(--mono); font-size:12px; color:var(--dim); letter-spacing:.14em; line-height:2}
+  .foot-mark b{color:var(--phos); font-weight:600}
+</style>
+
+<div class="wrap">
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="hero-series">SYSTEM SUICIDE · МОДУЛЬ 9 ИЗ 9 · MATERIAL RESONATOR</div>
+  <h1>LAST NIGHT</h1>
+  <p class="hero-sub">От макета до финала: как собирается ревербератор, у которого вместо алгоритма — кусок стали, нефрита или кости. Туториал в десяти листах: путь разработки, физика звука, управление, патчи, проверка и то, как из схемотехники складывается постапокалипсис.</p>
+  <div class="hero-tag">канон v6.5 · производственный журнал · 10 листов</div>
+
+  <div class="hero-fig" role="img" aria-label="Пластина-резонатор 100×45 мм с точкой удара на трети длины и расходящимися модальными волнами">
+    <svg viewBox="0 0 900 250">
+      <!-- bench field -->
+      <line x1="0" y1="228" x2="900" y2="228" class="sl-soft"/>
+      <!-- plate -->
+      <rect x="230" y="88" width="440" height="86" rx="3" class="sb"/>
+      <text x="450" y="120" class="t-big" text-anchor="middle">ПЛАСТИНА · КАРТРИДЖ</text>
+      <text x="450" y="140" class="t-d" text-anchor="middle">сталь · латунь · дуб · шифер · стекло · нефрит · кость</text>
+      <!-- strike point at 1/3 -->
+      <circle cx="376" cy="131" r="4" fill="var(--rust)"/>
+      <circle cx="376" cy="131" r="14" class="sr rip" opacity=".7"/>
+      <circle cx="376" cy="131" r="30" class="sp-thin rip r2"/>
+      <circle cx="376" cy="131" r="50" class="sp-thin rip r3"/>
+      <!-- dimension marks -->
+      <line x1="230" y1="196" x2="670" y2="196" class="sl"/>
+      <line x1="230" y1="190" x2="230" y2="202" class="sl"/>
+      <line x1="670" y1="190" x2="670" y2="202" class="sl"/>
+      <text x="450" y="214" class="t-d" text-anchor="middle">L = 100 мм — константа палитры</text>
+      <line x1="694" y1="88" x2="694" y2="174" class="sl"/>
+      <line x1="688" y1="88" x2="700" y2="88" class="sl"/>
+      <line x1="688" y1="174" x2="700" y2="174" class="sl"/>
+      <text x="712" y="136" class="t-d">W 35–55</text>
+      <!-- strike caption -->
+      <line x1="376" y1="88" x2="376" y2="52" class="sr" stroke-dasharray="3 3"/>
+      <text x="376" y="42" class="t-r" text-anchor="middle">точка удара · ⅓ длины</text>
+      <!-- signal out -->
+      <line x1="670" y1="131" x2="810" y2="131" class="sp"/>
+      <path d="M810 131 l-9 -5 v10 z" fill="var(--phos)"/>
+      <text x="822" y="135" class="t-p">звук</text>
+      <line x1="90" y1="131" x2="230" y2="131" class="sp-thin"/>
+      <text x="86" y="135" class="t-d" text-anchor="end">вход</text>
+    </svg>
+  </div>
+</header>
+
+<!-- ================= TOC ================= -->
+<nav class="toc" aria-label="Содержание">
+  <div class="toc-title">Содержание</div>
+  <ul class="toc-grid">
+    <li><a href="#l01"><span class="toc-num">01</span>Что это такое</a></li>
+    <li><a href="#l02"><span class="toc-num">02</span>От макета до канона</a></li>
+    <li><a href="#l03"><span class="toc-num">03</span>Как рождается звук</a></li>
+    <li><a href="#l04"><span class="toc-num">04</span>Материал = голос</a></li>
+    <li><a href="#l05"><span class="toc-num">05</span>Колокол и глушитель</a></li>
+    <li><a href="#l06"><span class="toc-num">06</span>Управление</a></li>
+    <li><a href="#l07"><span class="toc-num">07</span>В системе: патчи и CV</a></li>
+    <li><a href="#l08"><span class="toc-num">08</span>Постапокалипсис как схемотехника</a></li>
+    <li><a href="#l09"><span class="toc-num">09</span>Проверка: bench перед bucks</a></li>
+    <li><a href="#l10"><span class="toc-num">10</span>Дорога к финалу</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ================= ЛИСТ 01 ================= -->
+<section class="sheet" id="l01">
+  <div class="sheet-head"><span class="eyebrow">Лист 01 / 10</span><span class="sheet-side">КОНЦЕПЦИЯ</span></div>
+  <h2>Что это такое</h2>
+  <p class="lead">Last Night — <b>материальный резонатор</b>: эффект-процессор, в котором звук проходит через настоящую физическую пластину. Не свёртка, не алгоритм, не эмуляция — вибрирующий кусок материала. Пластина сменная: вставил нефрит — играет нефрит, вставил ржавеющую сталь — играет сталь.</p>
+  <div class="cols">
+    <div class="card"><h3>Сменные картриджи</h3><p>Картридж — пассивная пластина в рамке на магнитах: материал, покрытие, ничего больше. Вся электроника и все трансдьюсеры живут в модуле. Картридж дёшев (~$17) — палитру собирают как коллекцию.</p></div>
+    <div class="card"><h3>Соленоид-колокол</h3><p>Боёк с войлоком бьёт по пластине по CV-триггеру — пластина звенит как колокол независимо от входа. Тот же боёк умеет глушить хвост (демпфер) и душить его насмерть (STALL).</p></div>
+    <div class="card"><h3>Аналоговое сердце</h3><p>Функциональный генератор класса Tides (rise/fall/depth, exp/log), 4-каскадный фазер на OTA, зенеровский шум с гейгер-кластерами. Цифра — только там, где она честнее: один ATtiny84A на служебных ролях.</p></div>
+  </div>
+  <p>Модуль замыкает серию <b>SYSTEM SUICIDE</b> — девять устройств физического синтеза. Last Night — «комбайн холодной ночи», симметричный диптих с Last Day («раскалённый полдень»). Два корпуса, одна схема: <b>Eurorack 3U × 40HP</b> и <b>big-box педаль ~203×140 мм</b> класса Strymon BigSky.</p>
+</section>
+
+<!-- ================= ЛИСТ 02 ================= -->
+<section class="sheet" id="l02">
+  <div class="sheet-head"><span class="eyebrow">Лист 02 / 10</span><span class="sheet-side">ИСТОРИЯ РАЗРАБОТКИ</span></div>
+  <h2>От макета до канона</h2>
+  <p class="lead">Дизайн не родился готовым — он выжил через шесть ревизий, и каждая проверка ломала что-то важное. Это не стыдная история, это <b>метод</b>: чем раньше ошибка найдена на бумаге, тем дешевле она стоит.</p>
+
+  <div class="fig" role="img" aria-label="Таймлайн шести ревизий от макета до v6.5">
+    <svg viewBox="0 0 900 230">
+      <line x1="40" y1="60" x2="860" y2="60" class="sl"/>
+      <!-- nodes -->
+      <g>
+        <circle cx="70" cy="60" r="6" fill="var(--phos)"/>
+        <text x="70" y="40" class="t-b" text-anchor="middle">МАКЕТ</text>
+        <text x="70" y="86" class="t-d" text-anchor="middle">рисунок панели</text>
+        <text x="70" y="100" class="t-d" text-anchor="middle">от автора</text>
+      </g>
+      <g>
+        <circle cx="215" cy="60" r="6" fill="var(--phos)"/>
+        <text x="215" y="40" class="t-b" text-anchor="middle">v5 HYBRID</text>
+        <text x="215" y="86" class="t-d" text-anchor="middle">макет = визуальный канон,</text>
+        <text x="215" y="100" class="t-d" text-anchor="middle">схемные находки D08</text>
+      </g>
+      <g>
+        <circle cx="360" cy="60" r="6" fill="var(--phos)"/>
+        <text x="360" y="40" class="t-b" text-anchor="middle">v6.3 АУДИТ</text>
+        <text x="360" y="86" class="t-d" text-anchor="middle">EOL-замены, ATtiny84A,</text>
+        <text x="360" y="100" class="t-d" text-anchor="middle">питание соленоида отделено</text>
+      </g>
+      <g>
+        <circle cx="505" cy="60" r="6" fill="var(--phos)"/>
+        <text x="505" y="40" class="t-b" text-anchor="middle">v6.4</text>
+        <text x="505" y="86" class="t-d" text-anchor="middle">лимитер, anti-thump,</text>
+        <text x="505" y="100" class="t-d" text-anchor="middle">защита 22 CV-входов</text>
+      </g>
+      <g>
+        <circle cx="650" cy="60" r="6" fill="var(--rust)"/>
+        <text x="650" y="40" class="t-b" text-anchor="middle">DECISION 11</text>
+        <text x="650" y="86" class="t-r" text-anchor="middle">картридж стал пассивным:</text>
+        <text x="650" y="100" class="t-d" text-anchor="middle">трансдьюсеры — в модуль,</text>
+        <text x="650" y="114" class="t-d" text-anchor="middle">экономика спасена</text>
+      </g>
+      <g>
+        <circle cx="800" cy="60" r="6" fill="var(--rust)"/>
+        <text x="800" y="40" class="t-b" text-anchor="middle">v6.5</text>
+        <text x="800" y="86" class="t-r" text-anchor="middle">физика удара перевёрнута</text>
+        <text x="800" y="100" class="t-d" text-anchor="middle">независимым ревью:</text>
+        <text x="800" y="114" class="t-d" text-anchor="middle">Block 14 переписан</text>
+      </g>
+      <!-- lesson strip -->
+      <rect x="40" y="150" width="820" height="56" class="sb-rust" rx="3"/>
+      <text x="450" y="174" class="t-r" text-anchor="middle" font-size="12.5">ЗАКОН ПРОЕКТА: каждая ревизия обязана пытаться сломать предыдущую.</text>
+      <text x="450" y="192" class="t-d" text-anchor="middle">Две самые дорогие ошибки (экономика картриджа и модель удара) найдены на бумаге — бесплатно.</text>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 02-1 · шесть ревизий: две красные точки — фундаментальные коррекции, найденные проверками</div>
+
+  <p>Две поворотные точки. <b>Decision 11</b>: изначально каждый картридж нёс собственный эксайтер, пьезо и разъёмы — $40+ себестоимости убивали идею дешёвой сменной пластины. Теперь всё «железо» одно на модуль, картридж — только материал. <b>v6.5</b>: независимое физревью доказало, что длительность импульса соленоида — это не «сила удара», а степень демпфирования; вся таблица ударов была перевёрнута и переписана заново (лист 05).</p>
+</section>
+
+<!-- ================= ЛИСТ 03 ================= -->
+<section class="sheet" id="l03">
+  <div class="sheet-head"><span class="eyebrow">Лист 03 / 10</span><span class="sheet-side">СИГНАЛЬНЫЙ ТРАКТ</span></div>
+  <h2>Как рождается звук</h2>
+  <p class="lead">Тракт честный до наивности: усилитель толкает пластину, пластина звенит, два пьезо снимают звон. Всё остальное — обвязка вокруг этого акустического ядра.</p>
+
+  <div class="fig" role="img" aria-label="Сигнальный тракт: вход, драйвер, эксайтер, пластина, пьезо, преамп, эффекты, выход; соленоид сверху, функциональный генератор снизу">
+    <svg viewBox="0 0 900 350">
+      <!-- main chain -->
+      <rect x="20" y="120" width="80" height="44" class="sb" rx="3"/>
+      <text x="60" y="139" class="t" text-anchor="middle">ВХОД</text>
+      <text x="60" y="154" class="t-d" text-anchor="middle">inst/line</text>
+
+      <rect x="128" y="120" width="96" height="44" class="sb" rx="3"/>
+      <text x="176" y="139" class="t" text-anchor="middle">DRIVER</text>
+      <text x="176" y="154" class="t-d" text-anchor="middle">push-pull 3.8Вт</text>
+
+      <rect x="252" y="120" width="90" height="44" class="sb" rx="3"/>
+      <text x="297" y="139" class="t" text-anchor="middle">EXCITER</text>
+      <text x="297" y="154" class="t-d" text-anchor="middle">прижат ~5Н</text>
+
+      <rect x="370" y="106" width="180" height="72" class="sb-hi" rx="3"/>
+      <text x="460" y="132" class="t-b" text-anchor="middle">ПЛАСТИНА</text>
+      <text x="460" y="150" class="t-p" text-anchor="middle">= сменный картридж</text>
+      <text x="460" y="166" class="t-d" text-anchor="middle">пассивная · Decision 11</text>
+
+      <rect x="578" y="120" width="86" height="44" class="sb" rx="3"/>
+      <text x="621" y="139" class="t" text-anchor="middle">ПЬЕЗО ×2</text>
+      <text x="621" y="154" class="t-d" text-anchor="middle">A/B blend</text>
+
+      <rect x="692" y="120" width="86" height="44" class="sb" rx="3"/>
+      <text x="735" y="139" class="t" text-anchor="middle">JFET</text>
+      <text x="735" y="154" class="t-d" text-anchor="middle">LSK489A ×23</text>
+
+      <rect x="806" y="120" width="74" height="44" class="sb" rx="3"/>
+      <text x="843" y="139" class="t" text-anchor="middle">FX →</text>
+      <text x="843" y="154" class="t-d" text-anchor="middle">выход</text>
+
+      <!-- arrows -->
+      <line x1="100" y1="142" x2="128" y2="142" class="sp"/>
+      <line x1="224" y1="142" x2="252" y2="142" class="sp"/>
+      <line x1="342" y1="142" x2="370" y2="142" class="sp"/>
+      <line x1="550" y1="142" x2="578" y2="142" class="sp"/>
+      <line x1="664" y1="142" x2="692" y2="142" class="sp"/>
+      <line x1="778" y1="142" x2="806" y2="142" class="sp"/>
+
+      <!-- solenoid above plate -->
+      <rect x="418" y="24" width="84" height="40" class="sb-rust" rx="3"/>
+      <text x="460" y="41" class="t-r" text-anchor="middle">СОЛЕНОИД</text>
+      <text x="460" y="56" class="t-d" text-anchor="middle">TOLL·DAMP·STALL</text>
+      <line x1="460" y1="64" x2="460" y2="106" class="sr" stroke-dasharray="4 3"/>
+
+      <!-- feedback loop -->
+      <path d="M621 164 C621 210 297 210 297 164" class="sp-thin" stroke-dasharray="5 4"/>
+      <text x="460" y="222" class="t-d" text-anchor="middle">FEEDBACK · до самоосцилляции (с лимитером)</text>
+
+      <!-- FG below -->
+      <rect x="60" y="252" width="200" height="52" class="sb" rx="3"/>
+      <text x="160" y="273" class="t" text-anchor="middle">FUNCTION GEN (аналог)</text>
+      <text x="160" y="290" class="t-d" text-anchor="middle">rise / fall / depth · exp/log</text>
+      <rect x="330" y="252" width="150" height="52" class="sb" rx="3"/>
+      <text x="405" y="273" class="t" text-anchor="middle">PHASER 4-OTA</text>
+      <text x="405" y="290" class="t-d" text-anchor="middle">always-on · ph/flt CV</text>
+      <rect x="550" y="252" width="150" height="52" class="sb" rx="3"/>
+      <text x="625" y="273" class="t" text-anchor="middle">NOISE / GEIGER</text>
+      <text x="625" y="290" class="t-d" text-anchor="middle">зенер ↔ LFSR</text>
+      <line x1="260" y1="278" x2="330" y2="278" class="sp-thin"/>
+      <text x="295" y="270" class="t-d" text-anchor="middle">мод.</text>
+      <line x1="480" y1="278" x2="550" y2="278" class="sl-soft"/>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 03-1 · акустическое ядро (подсвечено) + обвязка. Пунктир — петля обратной связи вокруг пластины</div>
+
+  <p><b>Ключевой инженерный риск живёт здесь же.</b> Коммерческие эксайтеры приклеивают к поверхности; у нас — пружинный прижим, иначе картридж не будет сменным. Держится ли контактная передача (уровень, отсутствие дребезга) — риск <b>R1</b>, главный вопрос всего проекта. Он не решается документацией — только верстаком (лист 09).</p>
+</section>
+
+<!-- ================= ЛИСТ 04 ================= -->
+<section class="sheet" id="l04">
+  <div class="sheet-head"><span class="eyebrow">Лист 04 / 10</span><span class="sheet-side">ПАЛИТРА МАТЕРИАЛОВ</span></div>
+  <h2>Материал = голос</h2>
+  <p class="lead">Длина пластины всегда 100 мм; ширину и толщину каждому материалу считает модальная теория. Палитра распадается на два семейства: <b>тонкие металлы</b> с плотным набором мод (это «реверб») и <b>жёсткие разреженные</b> материалы, звучащие как колокол или чайм.</p>
+
+  <div class="bars" role="img" aria-label="Длительность звона RT60 по материалам, логарифмическая шкала от 0.1 до 10 секунд">
+    <div class="bar-row"><span class="bar-label">Spring steel 0.3<small>reverb · shimmer</small></span><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><span class="bar-val">3–8 с</span></div>
+    <div class="bar-row"><span class="bar-label">Aluminum 0.4<small>reverb · bright</small></span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="bar-val">4–10 с</span></div>
+    <div class="bar-row"><span class="bar-label">Brass 0.5<small>reverb · metallic</small></span><div class="bar-track"><div class="bar-fill" style="width:67%"></div></div><span class="bar-val">2.2 с</span></div>
+    <div class="bar-row"><span class="bar-label">Nephrite 2.0<small>bell · поющий</small></span><div class="bar-track"><div class="bar-fill warm" style="width:82%"></div></div><span class="bar-val">4.4 с</span></div>
+    <div class="bar-row"><span class="bar-label">Glass annealed 1.5<small>chime · crystalline</small></span><div class="bar-track"><div class="bar-fill warm" style="width:67%"></div></div><span class="bar-val">2.2 с</span></div>
+    <div class="bar-row"><span class="bar-label">Slate 2.0<small>stone · собор</small></span><div class="bar-track"><div class="bar-fill warm" style="width:32%"></div></div><span class="bar-val">0.44 с</span></div>
+    <div class="bar-row"><span class="bar-label">Oak ∥ 1.8<small>wood · warm slap</small></span><div class="bar-track"><div class="bar-fill warm" style="width:22%"></div></div><span class="bar-val">0.28 с</span></div>
+    <div class="bar-row"><span class="bar-label">Bone cortical 2.5<small>percussion · dry</small></span><div class="bar-track"><div class="bar-fill warm" style="width:2.5%"></div></div><span class="bar-val">0.11 с</span></div>
+  </div>
+  <div class="bar-scale"><span>0.1 с</span><span>1 с</span><span>10 с</span></div>
+  <div class="fig-cap">РИС. 04-1 · RT60 (время затухания звона), лог-шкала. Зелёное — семейство «реверб», ржавое — «колокол/перкуссия»</div>
+
+  <p>Палитра честно расслаивается на два ценовых уровня. <b>Razor-blade</b> ($17–25): сталь, латунь, алюминий, дуб, шифер, стекло — дёшевы, покупаются пачками. <b>Premium</b> ($90–300): нефрит (саянский или хэтяньский, лапидарная обработка) и кость (диафиз бедренной кости, недели мацерации). Один модуль — много голосов; коллекция картриджей и есть бизнес-модель.</p>
+  <div class="chips">
+    <span class="chip hi">сталь · $10</span><span class="chip hi">алюминий · $15</span><span class="chip hi">латунь · $25</span>
+    <span class="chip hi">дуб · $5</span><span class="chip hi">шифер · $15</span><span class="chip hi">стекло · $15</span>
+    <span class="chip warm">кость · $90+</span><span class="chip warm">нефрит · $90–300</span>
+  </div>
+</section>
+
+<!-- ================= ЛИСТ 05 ================= -->
+<section class="sheet" id="l05">
+  <div class="sheet-head"><span class="eyebrow">Лист 05 / 10</span><span class="sheet-side">BLOCK 14 · ФИЗИКА УДАРА</span></div>
+  <h2>Колокол и глушитель</h2>
+  <p class="lead">Один соленоид — три роли, и различает их <b>ширина импульса</b>. Короткий импульс — боёк ударил и мгновенно отпустил: пластина поёт (TOLL). Длинный — войлок остался лежать на звенящей пластине: это уже демпфер (DAMP), а на полном прижиме — глушитель насмерть (STALL).</p>
+
+  <div class="fig" role="img" aria-label="Таймлайн удара: транзит 2-3 мс, контакт, освобождение на 4.4 мс; ниже сравнение короткого и длинного импульса">
+    <svg viewBox="0 0 900 320">
+      <!-- timeline -->
+      <line x1="60" y1="70" x2="840" y2="70" class="sl"/>
+      <g>
+        <rect x="60" y="56" width="330" height="28" fill="#14202B" stroke="var(--line)"/>
+        <text x="225" y="74" class="t-d" text-anchor="middle">ТРАНЗИТ · боёк летит через зазор 2 мм</text>
+        <rect x="390" y="56" width="90" height="28" fill="#221610" stroke="var(--rust-dim)"/>
+        <text x="435" y="74" class="t-r" text-anchor="middle">КОНТАКТ</text>
+        <rect x="480" y="56" width="360" height="28" fill="#10231C" stroke="var(--phos-dim)"/>
+        <text x="660" y="74" class="t-p" text-anchor="middle">ОСВОБОЖДЕНИЕ · пластина звенит свободно</text>
+      </g>
+      <text x="60" y="104" class="t-d" text-anchor="middle">0</text>
+      <text x="390" y="104" class="t-d" text-anchor="middle">~2.6 мс</text>
+      <text x="480" y="104" class="t-d" text-anchor="middle">4.4 мс — конец импульса</text>
+
+      <!-- two scenarios -->
+      <text x="60" y="150" class="t-b">ИМПУЛЬС 4.4 мс (escapement):</text>
+      <path d="M60 200 q10 -34 20 0 q10 30 20 0 q10 -26 20 0 q10 22 20 0 q10 -19 20 0 q10 16 20 0 q10 -13 20 0 q10 11 20 0 q10 -9 20 0 q10 7 20 0 q10 -6 20 0 q10 5 20 0" class="sp"/>
+      <text x="330" y="196" class="t-p">хвост живёт секундами</text>
+
+      <text x="60" y="248" class="t-b">ИМПУЛЬС 20 мс (война с физикой):</text>
+      <path d="M60 292 q10 -26 20 0 q10 16 20 0 q8 -8 16 0 q7 4 14 0 q6 -2 12 0 l24 0 l60 0" class="sr"/>
+      <text x="290" y="288" class="t-r">войлок сидит на пластине — звон задушен</text>
+
+      <!-- verdict box -->
+      <rect x="520" y="150" width="320" height="150" class="sb" rx="3"/>
+      <text x="536" y="176" class="t-b">СИЛА УДАРА ≠ ШИРИНА ИМПУЛЬСА</text>
+      <text x="536" y="200" class="t" font-size="11.5">Сила = привод (ток) + зазор.</text>
+      <text x="536" y="218" class="t" font-size="11.5">Ширина = только степень демпфирования.</text>
+      <text x="536" y="244" class="t-p" font-size="11.5">Все материалы: 4.4 мс, фикс.</text>
+      <text x="536" y="262" class="t-p" font-size="11.5">Привод: SOFT 3.8В — безопасен всем.</text>
+      <text x="536" y="286" class="t-d">Старая таблица «нефриту длиннее» душила бы</text>
+      <text x="536" y="299" class="t-d">именно самый поющий материал. Перевёрнута.</text>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 05-1 · escapement-модель: как молоточек пианино — ударил и немедленно освободил</div>
+
+  <div class="cols">
+    <div class="card"><h3>TOLL · колокол</h3><p>Гейт на J_TOLL_TRIG → NE556 отмеряет 4.4 мс → удар. Стабилитрон в flyback-цепи гасит ток за ~0.5 мс — боёк отпускает мгновенно, не «доживая» на пластине.</p></div>
+    <div class="card"><h3>DAMP · демпфер</h3><p>CV-огибающая на J_CV_DAMP прижимает войлок плавно — хвост реверба ритмично «пампится» секвенсором. Здесь длительное удержание — штатный режим.</p></div>
+    <div class="card rust"><h3>R13 · честный риск</h3><p>Удар бьёт по пластине, прижатой к пьезо пружиной всего ~1.5Н. На лёгких пластинах импульс может на миг сорвать контакт — дребезг прямо в звуковом тракте. Проверяется стендом Stage 0B до любых плат.</p></div>
+  </div>
+</section>
+
+<!-- ================= ЛИСТ 06 ================= -->
+<section class="sheet" id="l06">
+  <div class="sheet-head"><span class="eyebrow">Лист 06 / 10</span><span class="sheet-side">ПАНЕЛЬ · ФИШКИ</span></div>
+  <h2>Управление</h2>
+  <p class="lead">Панель следует макету автора один в один: слева — характер, в центре — генератор функций с фейдерами, справа — шум и перформанс. Четыре футсвича снизу — перформанс-ряд педали.</p>
+
+  <div class="fig" role="img" aria-label="Карта органов управления: слайдер Bank Mode, ручки реверба, три фейдера функционального генератора, шумовая секция, четыре футсвича">
+    <svg viewBox="0 0 900 400">
+      <rect x="20" y="16" width="860" height="330" rx="6" class="sl"/>
+      <!-- Bank mode -->
+      <rect x="44" y="40" width="200" height="60" class="sb" rx="3"/>
+      <text x="144" y="62" class="t-p" text-anchor="middle">BANK MODE</text>
+      <line x1="64" y1="82" x2="224" y2="82" class="sl"/>
+      <circle cx="64" cy="82" r="5" fill="var(--phos)"/>
+      <text x="144" y="96" class="t-d" text-anchor="middle" font-size="9.5">DIRTY · WARM · DARK · VOICE · MIX</text>
+      <!-- reverb knobs -->
+      <g>
+        <circle cx="70" cy="150" r="17" class="sb"/><text x="70" y="182" class="t-d" text-anchor="middle">MIX</text>
+        <circle cx="128" cy="150" r="17" class="sb"/><text x="128" y="182" class="t-d" text-anchor="middle">DECAY</text>
+        <circle cx="186" cy="150" r="17" class="sb"/><text x="186" y="182" class="t-d" text-anchor="middle">FEEDBK</text>
+        <circle cx="70" cy="222" r="17" class="sb"/><text x="70" y="254" class="t-d" text-anchor="middle">HIPASS</text>
+        <circle cx="128" cy="222" r="17" class="sb"/><text x="128" y="254" class="t-d" text-anchor="middle">LOPASS</text>
+        <circle cx="186" cy="222" r="17" class="sb"/><text x="186" y="254" class="t-d" text-anchor="middle">DRIVE</text>
+      </g>
+      <text x="144" y="292" class="t-d" text-anchor="middle">характер реверба</text>
+
+      <!-- FG center -->
+      <rect x="292" y="40" width="300" height="252" class="sb-hi" rx="3"/>
+      <text x="442" y="64" class="t-p" text-anchor="middle">FUNCTION GENERATOR · аналог</text>
+      <!-- 3 sliders -->
+      <g>
+        <line x1="352" y1="90" x2="352" y2="230" class="sl"/><rect x="342" y="120" width="20" height="12" fill="var(--phos)"/><text x="352" y="250" class="t-d" text-anchor="middle">RISE</text>
+        <line x1="442" y1="90" x2="442" y2="230" class="sl"/><rect x="432" y="170" width="20" height="12" fill="var(--phos)"/><text x="442" y="250" class="t-d" text-anchor="middle">FALL</text>
+        <line x1="532" y1="90" x2="532" y2="230" class="sl"/><rect x="522" y="140" width="20" height="12" fill="var(--phos)"/><text x="532" y="250" class="t-d" text-anchor="middle">DEPTH</text>
+      </g>
+      <text x="442" y="276" class="t-d" text-anchor="middle">+ EXP/LOG · SPEED · RANGE · TAP-sync</text>
+
+      <!-- noise / perform right -->
+      <rect x="640" y="40" width="216" height="120" class="sb" rx="3"/>
+      <text x="748" y="62" class="t-p" text-anchor="middle">NOISE · COLOR (GEIGER)</text>
+      <circle cx="700" cy="106" r="17" class="sb"/><text x="700" y="140" class="t-d" text-anchor="middle">NOISE</text>
+      <circle cx="796" cy="106" r="17" class="sb"/><text x="796" y="140" class="t-d" text-anchor="middle">COLOR</text>
+      <rect x="640" y="180" width="216" height="112" class="sb" rx="3"/>
+      <text x="748" y="204" class="t-p" text-anchor="middle">PHASER · PERFORM</text>
+      <circle cx="690" cy="244" r="17" class="sb"/><text x="690" y="278" class="t-d" text-anchor="middle">PH/FLT</text>
+      <circle cx="748" cy="244" r="17" class="sb"/><text x="748" y="278" class="t-d" text-anchor="middle">TYPE</text>
+      <circle cx="806" cy="244" r="17" class="sb"/><text x="806" y="278" class="t-d" text-anchor="middle">FREEZE</text>
+
+      <!-- footswitches -->
+      <g>
+        <circle cx="240" cy="374" r="13" class="sb"/><text x="240" y="352" class="t-d" text-anchor="middle">TAP</text>
+        <circle cx="380" cy="374" r="13" class="sb"/><text x="380" y="352" class="t-d" text-anchor="middle">GATE-CRUSH</text>
+        <circle cx="520" cy="374" r="13" class="sb"/><text x="520" y="352" class="t-d" text-anchor="middle">BYPASS</text>
+        <circle cx="660" cy="374" r="13" class="sb"/><text x="660" y="352" class="t-d" text-anchor="middle">FREEZE</text>
+      </g>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 06-1 · карта панели (pedal SKU). Подсвечен центр — аналоговый функциональный генератор</div>
+
+  <div class="cols">
+    <div class="card"><h3>Bank Mode</h3><p>Пять пресетов характера одним слайдером: DIRTY / WARM / DARK / VOICE / MIX — пять банков номиналов, переключаемых 4P5T. Мгновенная смена «личности» без меню.</p></div>
+    <div class="card"><h3>COLOR = гейгер</h3><p>Одна ручка ведёт шум от сплошного зенеровского шипения (влево) к кластерам гейгеровских щелчков (вправо). Внутри — кроссфейд двух генераторов через OTA.</p></div>
+    <div class="card"><h3>GATE-CRUSH</h3><p>Футсвич разрушения: гейт по порогу + sample-hold дробилка. Нажал — сигнал рассыпается на осколки; отпустил — ночь снова целая.</p></div>
+    <div class="card"><h3>FREEZE</h3><p>Бесконечное удержание хвоста — футсвичем или по CV. Пластина продолжает звенеть замороженным слоем, поверх можно играть.</p></div>
+  </div>
+</section>
+
+<!-- ================= ЛИСТ 07 ================= -->
+<section class="sheet" id="l07">
+  <div class="sheet-head"><span class="eyebrow">Лист 07 / 10</span><span class="sheet-side">ИНТЕГРАЦИЯ · CV</span></div>
+  <h2>В системе: патчи и CV</h2>
+  <p class="lead">~22 CV-джека делают модуль полноправным жителем рэка: почти каждый параметр автоматизируется, а функциональный генератор отдаёт свои сигналы <b>наружу</b> — Last Night может модулировать соседей.</p>
+
+  <div class="fig" role="img" aria-label="Схема соединений: секвенсор, LFO, огибающая и клок подключены к модулю; выходы функционального генератора идут к соседним модулям">
+    <svg viewBox="0 0 900 330">
+      <!-- center module -->
+      <rect x="340" y="100" width="220" height="130" class="sb-hi" rx="4"/>
+      <text x="450" y="130" class="t-big" text-anchor="middle">LAST NIGHT</text>
+      <text x="450" y="152" class="t-d" text-anchor="middle">22 CV in · 4 out FG</text>
+      <text x="450" y="172" class="t-d" text-anchor="middle">TOLL · STALL · FREEZE</text>
+      <text x="450" y="192" class="t-d" text-anchor="middle">ph/flt · MIX · DECAY · DAMP</text>
+      <text x="450" y="212" class="t-d" text-anchor="middle">COLOR · SIDE · CLK</text>
+
+      <!-- left sources -->
+      <rect x="40" y="40" width="150" height="44" class="sb" rx="3"/>
+      <text x="115" y="59" class="t" text-anchor="middle">СЕКВЕНСОР</text>
+      <text x="115" y="74" class="t-d" text-anchor="middle">триггеры</text>
+      <path d="M190 62 C270 62 300 118 340 118" class="sr"/>
+      <text x="262" y="92" class="t-r">→ TOLL: колокольня</text>
+
+      <rect x="40" y="130" width="150" height="44" class="sb" rx="3"/>
+      <text x="115" y="149" class="t" text-anchor="middle">LFO</text>
+      <text x="115" y="164" class="t-d" text-anchor="middle">медленный</text>
+      <path d="M190 152 C260 152 290 160 340 160" class="sp-thin"/>
+      <text x="256" y="146" class="t-p">→ FREEZE CV: дыхание</text>
+
+      <rect x="40" y="220" width="150" height="44" class="sb" rx="3"/>
+      <text x="115" y="239" class="t" text-anchor="middle">ОГИБАЮЩАЯ</text>
+      <text x="115" y="254" class="t-d" text-anchor="middle">от удара</text>
+      <path d="M190 242 C270 242 300 200 340 200" class="sp-thin"/>
+      <text x="248" y="232" class="t-p">→ ph/flt: авто-вой фазера</text>
+
+      <!-- right destinations -->
+      <rect x="710" y="60" width="150" height="44" class="sb" rx="3"/>
+      <text x="785" y="79" class="t" text-anchor="middle">ФИЛЬТР</text>
+      <text x="785" y="94" class="t-d" text-anchor="middle">соседний модуль</text>
+      <path d="M560 130 C640 130 660 82 710 82" class="sp"/>
+      <text x="642" y="96" class="t-p">EG →</text>
+
+      <rect x="710" y="150" width="150" height="44" class="sb" rx="3"/>
+      <text x="785" y="169" class="t" text-anchor="middle">ДРАМ-ТРИГГЕР</text>
+      <text x="785" y="184" class="t-d" text-anchor="middle">ритм от FG</text>
+      <path d="M560 172 C630 172 650 172 710 172" class="sp"/>
+      <text x="636" y="164" class="t-p">Gate / Sub÷2 →</text>
+
+      <rect x="710" y="240" width="150" height="44" class="sb" rx="3"/>
+      <text x="785" y="259" class="t" text-anchor="middle">VCA</text>
+      <text x="785" y="274" class="t-d" text-anchor="middle">инверсный слой</text>
+      <path d="M560 210 C640 210 660 262 710 262" class="sp"/>
+      <text x="640" y="248" class="t-p">Inv →</text>
+
+      <!-- env out note -->
+      <text x="450" y="308" class="t-d" text-anchor="middle">env out: огибающая самой пластины уходит в рэк — материал управляет системой</text>
+      <path d="M450 232 L450 292" class="sp-thin" stroke-dasharray="4 3"/>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 07-1 · три патча-рецепта входа (слева) и три направления выхода (справа)</div>
+
+  <div class="tbl-wrap"><table class="spec">
+    <tr><th>Патч</th><th>Что происходит</th></tr>
+    <tr><td>seq → TOLL</td><td>Секвенсор бьёт в пластину — колокольня играет ритм, независимо от входного сигнала. Нефрит: 4 секунды звона на каждый удар.</td></tr>
+    <tr><td>env → DAMP</td><td>Огибающая прижимает войлок в такт — хвост реверба «дышит» под ритм трека (sidechain-эффект механическим способом).</td></tr>
+    <tr><td>LFO → ph/flt</td><td>Медленная модуляция глубины фазера: от лёгкого дрожания до самоосцилляции — вой ветра нарастает и отступает.</td></tr>
+    <tr><td>plate env →</td><td>Выход огибающей пластины наружу: звон материала открывает фильтр соседнего голоса. Резонатор становится мозгом патча.</td></tr>
+  </table></div>
+
+  <p><b>Один и тот же модуль — два мира.</b> Eurorack-версия живёт в рэке и питается от шины ±12В; педальная — на пелборде от 12В-адаптера с изолированным DC-DC внутри (та же схема, тот же звук, добавлены футсвичи). Гитарист получает модульные трюки без рэка; модульщик — 40HP-флагман.</p>
+</section>
+
+<!-- ================= ЛИСТ 08 ================= -->
+<section class="sheet" id="l08">
+  <div class="sheet-head"><span class="eyebrow">Лист 08 / 10</span><span class="sheet-side">ЭСТЕТИКА → СХЕМА</span></div>
+  <h2>Постапокалипсис как схемотехника</h2>
+  <p class="lead">«Постапокалипсис» здесь — не пресет и не шильдик. Каждый образ холодной ночи имеет конкретный физический носитель в схеме. Поэзия слева, цепь справа — и они обязаны сходиться.</p>
+
+  <div class="map">
+    <div class="map-row"><span class="map-poet">Тиканье счётчика Гейгера в мёртвой зоне</span><span class="map-arrow">→</span><span class="map-circ"><b>COLOR (geiger)</b>: LFSR-кластеры на ATtiny84A, нерегулярные пачки щелчков; кроссфейд от сплошного шипения зенера BZX55C9V1</span></div>
+    <div class="map-row"><span class="map-poet">Колокол в опустевшем соборе</span><span class="map-arrow">→</span><span class="map-circ"><b>TOLL</b>: escapement-удар соленоида по нефриту или шиферу — настоящий звон настоящего камня, 4.4 мс касания, секунды хвоста</span></div>
+    <div class="map-row"><span class="map-poet">Дыхание руин, ветер в пустых пролётах</span><span class="map-arrow">→</span><span class="map-circ"><b>FREEZE + FEEDBACK</b>: замороженный слой звона + петля на грани самоосцилляции; <b>ph/flt CV</b> раскачивает фазер до воя и отпускает</span></div>
+    <div class="map-row"><span class="map-poet">Сигнал рассыпается, связь умирает</span><span class="map-arrow">→</span><span class="map-circ"><b>GATE-CRUSH</b>: пороговый гейт (CD4066) рвёт сигнал на куски + sample-hold (LF398) дробит то, что осталось</span></div>
+    <div class="map-row"><span class="map-poet">Голос мёртвой электросети</span><span class="map-arrow">→</span><span class="map-circ"><b>HUM</b> (Phase 2, cold palette): антенна ловит настоящие 50 Гц — гул проводки как музыкальный слой</span></div>
+    <div class="map-row"><span class="map-poet">Сами руины — в руках</span><span class="map-arrow">→</span><span class="map-circ"><b>Картриджи</b>: ржавеющая сталь, кость, шифер с крыши, стекло — материальность мира буквальная, не метафора. Каждая пластина чуть отличается от соседней</span></div>
+    <div class="map-row"><span class="map-poet">Холод последней ночи</span><span class="map-arrow">→</span><span class="map-circ"><b>Cold palette</b> (Phase 2 плата): PULSE / FOG / FROST / CHILL / HUM — антиподы «жаркого» Last Day; диптих замыкается</span></div>
+  </div>
+
+  <p>Правило серии: если образ нельзя показать физикой цепи — образ не попадает на панель. Поэтому Last Night не «звучит как постапокалипсис» — он <b>устроен</b> как постапокалипсис: реальный камень, реальный удар, реальный шумовой распад.</p>
+</section>
+
+<!-- ================= ЛИСТ 09 ================= -->
+<section class="sheet" id="l09">
+  <div class="sheet-head"><span class="eyebrow">Лист 09 / 10</span><span class="sheet-side">ВЕРИФИКАЦИЯ · ГЕЙТЫ</span></div>
+  <h2>Проверка: bench перед bucks</h2>
+  <p class="lead">Три главных вопроса проекта нельзя закрыть документацией: держится ли контакт (R1), различимы ли материалы (R2), не срывает ли удар пикап (R13). Поэтому деньги тратятся только через <b>гейты</b> — каждый следующий этап открывается только после прохождения предыдущего.</p>
+
+  <div class="gates">
+    <div class="gate">
+      <span class="gate-name">STAGE 0 · акустическое ядро</span><span class="gate-meta">выходные · $50–80</span>
+      <p>Брэдборд: буфер → усилитель → эксайтер на пружине → пластина → пьезо → преамп. Тесты: contact vs клей (в пределах ~6 дБ, без дребезга), различимость материалов (слепой A/B &gt; 80%), sweet spot прижима.</p>
+      <span class="fail">FAIL → СТОП. Лестница фиксов R1 (сила/геометрия → driver-bridge). Ни одной платы не заказывается.</span>
+    </div>
+    <div class="gate">
+      <span class="gate-name">STAGE 0B · удар не срывает контакт</span><span class="gate-meta">полдня · ~$10</span>
+      <p>Тот же стенд + соленоид. Сначала взвесить боёк. Осциллограф на пьезо: одиночный TOLL — нет спайка/пропадания в первые 5 мс. Свип массы пластины, прижима пьезо (1.5→5Н), A/B короткий-длинный импульс (подтверждение escapement на слух).</p>
+      <span class="fail">FAIL → mitigations R13 (прижим пина, жёсткое шасси, SOFT-drive) до любого PCB.</span>
+    </div>
+    <div class="gate">
+      <span class="gate-name">STAGE 1 · устойчивость обратной связи</span><span class="gate-meta">~неделя</span>
+      <p>SPICE-Nyquist + стенд: петля вокруг высокодобротной стали должна доходить до самоосцилляции управляемо, без визга-разноса. Каждый материал — своя добротность, свой запас фазы.</p>
+    </div>
+    <div class="gate">
+      <span class="gate-name">STAGE 2–3 · тракт и эффекты</span><span class="gate-meta">инкрементально</span>
+      <p>Шумовой пол JFET-преампа (&lt; −85 дБВ), pre/de-emphasis, затем FX-подсистемы по одной: фазер, FG, шум, gate-crush. Ничего не собирается «всё сразу».</p>
+    </div>
+    <div class="gate">
+      <span class="gate-name">STAGE 4 · первая плата</span><span class="gate-meta">только после 0–3</span>
+      <p>PCB rev A — прототип, не продакшн. Калибровка по процедуре (11 шагов — ширину импульса TOLL больше не крутят: она фиксированная).</p>
+    </div>
+  </div>
+
+  <div class="rule-quote">НЕ ТРАТИТЬ ДЕНЬГИ НА ЖЕЛЕЗО, ПОКА STAGE 0 НЕ ПРОЙДЕН.<br>Это единственный честный способ не потерять $3000+ на недоказанном фундаменте.</div>
+</section>
+
+<!-- ================= ЛИСТ 10 ================= -->
+<section class="sheet" id="l10">
+  <div class="sheet-head"><span class="eyebrow">Лист 10 / 10</span><span class="sheet-side">ROADMAP · ЭКОНОМИКА</span></div>
+  <h2>Дорога к финалу</h2>
+  <p class="lead">Финал — это не «нарисовали панель», а прошедший все гейты инструмент с живой экосистемой картриджей. Модуль покупают один раз; голоса — докупают. Экономика бритвенных лезвий, где лезвия сделаны из нефрита и кости.</p>
+
+  <div class="fig" role="img" aria-label="Фазы дороги к финалу и разделение экономики: модуль один раз, картриджи постоянно">
+    <svg viewBox="0 0 900 250">
+      <!-- phases -->
+      <line x1="40" y1="56" x2="860" y2="56" class="sl"/>
+      <g>
+        <circle cx="90" cy="56" r="6" fill="var(--phos)"/><text x="90" y="36" class="t-b" text-anchor="middle">BENCH</text>
+        <text x="90" y="80" class="t-d" text-anchor="middle">Stage 0–1</text>
+        <circle cx="290" cy="56" r="6" fill="var(--phos)"/><text x="290" y="36" class="t-b" text-anchor="middle">PROTO</text>
+        <text x="290" y="80" class="t-d" text-anchor="middle">rev A · калибровка</text>
+        <circle cx="490" cy="56" r="6" fill="var(--phos)"/><text x="490" y="36" class="t-b" text-anchor="middle">PHASE 1 SHIP</text>
+        <text x="490" y="80" class="t-d" text-anchor="middle">ядро + 6 картриджей</text>
+        <circle cx="690" cy="56" r="6" fill="var(--phos-dim)"/><text x="690" y="36" class="t-b" text-anchor="middle">PHASE 2</text>
+        <text x="690" y="80" class="t-d" text-anchor="middle">cold palette · нефрит/кость</text>
+        <circle cx="830" cy="56" r="6" fill="var(--phos-dim)"/><text x="830" y="36" class="t-b" text-anchor="middle">PHASE 3</text>
+        <text x="830" y="80" class="t-d" text-anchor="middle">exotics</text>
+      </g>
+      <!-- economics -->
+      <rect x="40" y="120" width="390" height="100" class="sb" rx="3"/>
+      <text x="235" y="146" class="t-p" text-anchor="middle">МОДУЛЬ — ПОКУПАЕТСЯ ОДИН РАЗ</text>
+      <text x="235" y="170" class="t" text-anchor="middle">BOM ~$115 · весь трансдьюсерный движок внутри</text>
+      <text x="235" y="190" class="t-d" text-anchor="middle">эксайтер + 2 пьезо + соленоид + FX + FG</text>
+      <text x="235" y="208" class="t-d" text-anchor="middle">Eurorack 40HP или big-box педаль</text>
+      <rect x="470" y="120" width="390" height="100" class="sb" rx="3"/>
+      <text x="665" y="146" class="t-r" text-anchor="middle">КАРТРИДЖИ — ДОКУПАЮТСЯ ВСЕГДА</text>
+      <text x="665" y="170" class="t" text-anchor="middle">razor-blade $17–25 · premium $90–300</text>
+      <text x="665" y="190" class="t-d" text-anchor="middle">пассивная пластина: материал + рамка + магниты</text>
+      <text x="665" y="208" class="t-d" text-anchor="middle">лазерный серийник · реестр экземпляров</text>
+    </svg>
+  </div>
+  <div class="fig-cap">РИС. 10-1 · фазы и модель: два тусклых узла справа открываются только после успеха Phase 1</div>
+
+  <p>На рассмотрении для дальней палитры — <b>кость мамонта</b> (минерализованный кортикал: звон камня в органическом материале, elite-тираж) и <b>рог буйвола</b> (тёмный короткий thump — слот, который сейчас пуст). Оба ждут своей очереди на верстаке, как всё в этом проекте.</p>
+  <p><i>Plates are stories.</i> Каждый картридж — отдельный экземпляр материала, чуть отличающийся от соседа. Слушатель этого не знает. Играющий — чувствует.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-mark">
+    <b>LAST NIGHT</b> · SYSTEM SUICIDE · МОДУЛЬ 9/9 · MATERIAL RESONATOR<br>
+    канон v6.5 · полные документы: LAST_NIGHT_BUILD.md · LAST_NIGHT_SPEC.md · RISK_ASSESSMENT.md · acoustic_modeling.md<br>
+    туториал сгенерирован из производственного журнала · числа RT60 и цены — расчётные, до подтверждения Stage 0
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
