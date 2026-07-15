@@ -275,7 +275,7 @@
         <div class="chron">
           <div class="cl"><span data-t="forum.chron">Хроника анонсов</span><span id="cposts"></span></div>
           <div class="track"><div class="fill" id="cfill"></div><div class="ptr" id="cptr"></div></div>
-          <div class="ticks"><span>0</span><span>25</span><span>50</span><span>100</span></div>
+          <div class="ticks" id="cticks"></div>
         </div>
       </div>
     </section>
@@ -626,6 +626,7 @@ function renderForum(){
   const n = POSTS.length, prog = Math.min(1, n / EVENT.total);
   $("#cposts").textContent = t("forum.post") + " " + String(n).padStart(2,"0") + " / " + EVENT.total;
   $("#cfill").style.width = (prog*100)+"%"; $("#cptr").style.left = (prog*100)+"%";
+  $("#cticks").innerHTML = [0,.25,.5,.75,1].map(f=>`<span>${Math.round(EVENT.total*f)}</span>`).join("");
 }
 
 function renderPosts(){
@@ -853,6 +854,8 @@ function openProduct(cid, pid){
 function routeToken(txt){
   if(!txt) return false;
   const t=(""+txt).trim();
+  const mt = t.match(/\bt[_:\/-](forum|posts|devices|schedule)\b/i);
+  if(mt){ setView(mt[1].toLowerCase()); return true; }
   const m = t.match(/(?:startapp=|[#\/])?\b([dac])[_:\/-]([a-zA-Z0-9_-]+)/);
   if(m){ const k=m[1].toLowerCase(), id=m[2];
     if(k==="d" && P.find(p=>p.id===id)){ openDetail(id); return true; }
