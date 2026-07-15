@@ -82,6 +82,22 @@ if (isset($_GET['setup'])) {
   exit;
 }
 
+/* ---------- диагностика: ?ping=SECRET&chat=ВАШ_ID ----------
+   Шлёт два тестовых сообщения (простой текст и с кнопкой приложения)
+   и показывает ответ Telegram + текущий APP_URL. Если "с кнопкой" даёт
+   ok:false — значит APP_URL кривой (пустой / без https / кириллица). */
+if (isset($_GET['ping'])) {
+  if ($_GET['ping'] !== SETUP_SECRET) { http_response_code(403); exit('forbidden'); }
+  $chat = $_GET['chat'] ?? ADMIN_CHAT_ID;
+  $plain = tg('sendMessage', ['chat_id' => $chat, 'text' => 'ping 1/2 · простой текст']);
+  $btn   = tg('sendMessage', ['chat_id' => $chat, 'text' => 'ping 2/2 · с кнопкой приложения',
+            'reply_markup' => ['inline_keyboard' => [[['text' => '🟥 Открыть ДИСКРЕТ', 'web_app' => ['url' => appUrl()]]]]]]);
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode(['APP_URL' => APP_URL, 'chat' => $chat, 'plain_text' => $plain, 'with_webapp_button' => $btn],
+        JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+  exit;
+}
+
 /* ---------- обработка входящего апдейта ---------- */
 $update = json_decode(file_get_contents('php://input'), true);
 if (!$update) { exit; }
