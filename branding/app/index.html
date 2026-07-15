@@ -888,7 +888,13 @@ document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click"
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 applyTheme(store("ds_theme") || (tg && tg.colorScheme==="dark" ? "dark" : "light"));
 paintChrome();
-try{ const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||decodeURIComponent((location.hash||"").replace(/^#/,"")); if(sp) routeToken(sp); }catch(e){}
+try{
+  const qp = new URLSearchParams(location.search);
+  const sp = (tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)
+           || qp.get("k") || qp.get("startapp")
+           || decodeURIComponent((location.hash||"").replace(/^#/,""));
+  if(sp) routeToken(sp);
+}catch(e){}
 </script>
 </body>
 </html>
