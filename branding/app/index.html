@@ -474,7 +474,7 @@ const L = {
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"КОМПАНИЯ", "badge.product":"ТОВАР",
     "key.author":"Автор", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
     "frame.device":"О приборе", "frame.session":"О сессии", "frame.person":"О человеке", "frame.company":"О компании",
-    "frame.members":"Участники", "frame.products":"Товары", "frame.desc":"Описание",
+    "frame.members":"Участники", "frame.devices":"Приборы", "frame.products":"Товары", "frame.desc":"Описание",
     "btn.company":"Компания ↗", "btn.companyOf":"Компания · ",
     "empty.photo":"Фото скоро", "empty.logo":"Логотип / фото скоро",
     "ph.device":"— пара строк о приборе —", "ph.session":"— описание уточняется —", "ph.members":"— уточняются —",
@@ -508,7 +508,7 @@ const L = {
     "badge.device":"АППАРАТ №", "badge.author":"МАСТЕР", "badge.company":"КОНТОРА", "badge.product":"ТОВАР",
     "key.author":"Мастер", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
     "frame.device":"Про аппарат", "frame.session":"Про движ", "frame.person":"За человека", "frame.company":"Про контору",
-    "frame.members":"Наши люди", "frame.products":"Товар", "frame.desc":"Что за тема",
+    "frame.members":"Наши люди", "frame.devices":"Аппараты", "frame.products":"Товар", "frame.desc":"Что за тема",
     "btn.company":"Контора ↗", "btn.companyOf":"Контора · ",
     "empty.photo":"Фото на подходе", "empty.logo":"Лого / фото на подходе",
     "ph.device":"— пара слов за аппарат —", "ph.session":"— инфа утрясается —", "ph.members":"— пока по секрету —",
@@ -542,7 +542,7 @@ const L = {
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"БРЕНД", "badge.product":"ДРОП",
     "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Тайм", "key.hall":"Зал",
     "frame.device":"Про девайс", "frame.session":"Про сессию", "frame.person":"Про чела", "frame.company":"Про бренд",
-    "frame.members":"Пипл", "frame.products":"Дропы", "frame.desc":"Что за тема",
+    "frame.members":"Пипл", "frame.devices":"Девайсы", "frame.products":"Дропы", "frame.desc":"Что за тема",
     "btn.company":"Бренд ↗", "btn.companyOf":"Бренд · ",
     "empty.photo":"Фото скоро", "empty.logo":"Лого / фото скоро",
     "ph.device":"— пару строк про девайс —", "ph.session":"— инфа скоро дропнется —", "ph.members":"— скоро дропнем —",
@@ -767,7 +767,7 @@ const MODALS = {
     <div class="btnrow"><button class="btn" id="fbSend">${t("fb.send")}</button></div>
     <div class="note">${t("fb.note")} @${CONTACT.tg}.</div>` },
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
-  companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>`<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${(c.products&&c.products.length)?c.products.length+" "+t("prod.unit")+" ":""}›</span></button>`).join("")}</div>` },
+  companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
 };
 function lotteryHTML(){
   const saved = store("ds_lottery");
@@ -829,6 +829,7 @@ function openCompany(id){
   const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.logo")}</div>`;
   const multi = slides.length > 1;
   const prods = c.products || [];
+  const devs = P.filter(p=>p.company===c.id);
   $("#dbody").innerHTML = `
     <div class="carousel"><div class="cslides" id="cslides">${slidesHTML}</div>
       <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
@@ -838,6 +839,7 @@ function openCompany(id){
     <div class="drole">${esc(c.role||"")}</div>
     ${c.desc ? `<div class="dframe"><span class="k">${t("frame.company")}</span><p>${esc(c.desc)}</p></div>` : ""}
     <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>{const nm=(typeof m==="string")?m:m.name; const aid=(m&&m.a)?m.a:null; return (aid && A.find(x=>x.id===aid)) ? `<a class="colink" onclick="openAuthor('${aid}')">${esc(nm)}</a>` : esc(nm);}).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
+    ${devs.length ? `<div class="prods"><div class="prods-h">${t("frame.devices")} · ${devs.length}</div>${devs.map(p=>`<button class="prod" onclick="openDetail('${p.id}')"><span class="prod-n">${esc(p.device)}</span><span class="prod-m">${esc(p.sub||"")} ›</span></button>`).join("")}</div>` : ""}
     ${prods.length ? `<div class="prods"><div class="prods-h">${t("frame.products")} · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
     ${(c.links && c.links.length) ? `<div class="dlinks">${c.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
