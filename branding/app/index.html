@@ -208,7 +208,8 @@
   .kvline{display:flex; justify-content:space-between; border-top:1px solid var(--line); padding:9px 0; font-size:13px;}
   .kvline span:first-child{color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-size:11px;}
 
-  .post{border:2px solid var(--hair); background:var(--panel); margin-bottom:16px;}
+  .post{border:2px solid var(--hair); background:var(--panel); margin-bottom:16px; cursor:pointer;}
+  .post:active{border-color:var(--red);}
   .pmedia{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; background:#000; scrollbar-width:none; border-bottom:2px solid var(--hair);}
   .pmedia::-webkit-scrollbar{display:none;}
   .pmedia img{flex:0 0 100%; scroll-snap-align:center; width:100%; aspect-ratio:4/3; object-fit:cover; display:block; filter:grayscale(.1) contrast(1.05);}
@@ -217,7 +218,9 @@
   .post-h .pd{font-size:11px; letter-spacing:1px; color:var(--muted); text-transform:uppercase;}
   .post-h .pi{font-family:var(--grotesk); font-weight:800; color:var(--red); font-size:16px; white-space:nowrap;}
   .post-title{font-family:var(--grotesk); font-weight:800; text-transform:uppercase; font-size:19px; letter-spacing:.4px; margin:7px 0 6px; line-height:1.05;}
-  .post-text{color:var(--muted); font-size:13.5px; line-height:1.62; white-space:pre-line;}
+  .post-text{color:var(--muted); font-size:13.5px; line-height:1.62; white-space:pre-line;
+    display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden;}
+  .post-more{font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--red); margin-top:10px;}
   .pempty{border:1.5px dashed var(--line); color:var(--muted); text-align:center; padding:44px 16px; font-size:12px; letter-spacing:1px; text-transform:uppercase;}
 </style>
 </head>
@@ -456,7 +459,7 @@ const L = {
     "m.scan":"Сканировать QR", "m.theme":"Тема", "m.lang":"Язык",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
-    "posts.empty":"Скоро — дублируем посты из Telegram", "posts.open":"В Telegram",
+    "posts.empty":"Скоро — дублируем посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
     "dev.count":"ПРИБОРОВ", "sched.draft":"Черновик по рабочей сетке · время уточняется",
     "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"ПОСТ",
     "forum.prose":`<h3 class="prose-h">Что такое Дискрет</h3><p class="blurb"><b>Есть люди, которые делают приборы.</b></p><p class="blurb">Не только пользуются готовым. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, какой способ управления им нужен. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужую ошибку, свою упрямую гипотезу — и доводят это до объекта, который можно включить. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или устройство, которому ещё трудно дать имя.</p><p class="blurb">ДИСКРЕТ собирает такие объекты и людей вокруг них.</p>`,
@@ -490,7 +493,7 @@ const L = {
     "m.scan":"Пробить QR", "m.theme":"Масть", "m.lang":"Базар",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
-    "posts.empty":"Скоро — зальём посты из Telegram", "posts.open":"В Telegram",
+    "posts.empty":"Скоро — зальём посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
     "dev.count":"АППАРАТОВ", "sched.draft":"Черновой расклад · время ещё утрясаем",
     "sched.open":"глянуть ↗", "forum.chron":"Хроника движа", "forum.post":"ПОСТ",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет</h3><p class="blurb"><b>Есть люди, которые сами мутят приборы.</b></p><p class="blurb">Не просто берут готовое. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, каким способом всем этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой косяк, свою упрямую тему — и доводят это до аппарата, который реально включается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самопальный микрофон, модуль, процессор, шумовой генератор или штука, которой ещё и имя-то дать сложно.</p><p class="blurb">ДИСКРЕТ сводит такие аппараты и пацанов вокруг них.</p>`,
@@ -524,7 +527,7 @@ const L = {
     "m.scan":"Скан QR", "m.theme":"Тема", "m.lang":"Язык",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
-    "posts.empty":"Скоро — задропим посты из Telegram", "posts.open":"В тг",
+    "posts.empty":"Скоро — задропим посты из Telegram", "posts.open":"В тг", "posts.more":"Читать всё",
     "dev.count":"ДЕВАЙСОВ", "sched.draft":"Драфт-тайминги · время ещё не финалайзнули",
     "sched.open":"го ↗", "forum.chron":"Лента анонсов", "forum.post":"ПОСТ",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет вообще</h3><p class="blurb"><b>Есть чуваки, которые сами крафтят приборы.</b></p><p class="blurb">Не просто юзают готовое. Не ждут, пока производитель зарешает за них, какой звук, какой интерфейс, каким способом этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой фейл, свою упрямую гипотезу — и доводят это до девайса, который реально врубается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или штука, которой пока даже имя не подобрать.</p><p class="blurb">ДИСКРЕТ коннектит такие девайсы и пипл вокруг них.</p>`,
@@ -629,13 +632,13 @@ function renderPosts(){
   const box = $("#postlist"); if(!box) return;
   if(!POSTS.length){ box.innerHTML = `<div class="pempty">${t("posts.empty")}</div>`; return; }
   box.innerHTML = POSTS.map((p,i)=>`
-    <article class="post">
+    <article class="post" onclick="openPost(${i})">
       ${(p.photos&&p.photos.length)?`<div class="pmedia">${p.photos.map(k=>`<img src="${photo(k)}" alt="">`).join("")}</div>`:""}
       <div class="post-b">
         <div class="post-h"><span class="pd">${esc(p.date||"")}</span><span class="pi">№ ${String(POSTS.length-i).padStart(2,"0")}</span></div>
         ${p.title?`<h3 class="post-title">${esc(p.title)}</h3>`:""}
         ${p.text?`<div class="post-text">${esc(p.text)}</div>`:""}
-        ${p.link?`<div class="dlinks"><button class="dlink" onclick="openAny('${p.link}')">${t("posts.open")} ↗</button></div>`:""}
+        <div class="post-more">${t("posts.more")} ↗</div>
       </div>
     </article>`).join("");
 }
@@ -703,6 +706,26 @@ function openAuthor(id){
     </div>
     <div class="dframe"><span class="k">${t("frame.session")}</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">${t("ph.session")}</p>`}</div>
     ${(a.links && a.links.length) ? `<div class="dlinks">${a.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+  if(multi) initCarousel(slides.length);
+  $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
+}
+function openPost(i){
+  const p = POSTS[i]; if(!p) return; haptic("light");
+  lastDetail = ()=>openPost(i);
+  $("#ddc").textContent = t("forum.post") + " № " + String(POSTS.length-i).padStart(2,"0"); showDevNav(false);
+  const slides = (p.photos && p.photos.length) ? p.photos : [];
+  const slidesHTML = slides.length ? slides.map(k=>`<div class="cslide"><img src="${photo(k)}" alt=""></div>`).join("") : `<div class="cslide empty">${t("empty.photo")}</div>`;
+  const multi = slides.length > 1;
+  $("#dbody").innerHTML = `
+    <div class="carousel">
+      <div class="cslides" id="cslides">${slidesHTML}</div>
+      <span class="dbrk b1"></span><span class="dbrk b2"></span><span class="dbrk b3"></span><span class="dbrk b4"></span>
+      ${multi ? `<button class="cnav cprev" id="cprev">‹</button><button class="cnav cnext" id="cnext">›</button><div class="cdots" id="cdots">${slides.map((_,j)=>`<span class="cdot ${j===0?"on":""}"></span>`).join("")}</div>` : ""}
+    </div>
+    <span class="dlabel">${esc(p.date||"")}</span>${WAVE}
+    <h1 class="dname" style="margin-top:0">${esc(p.title||"")}</h1>
+    <div class="dframe"><span class="k">${t("forum.post")}</span><p class="pre">${esc(p.text||"")}</p></div>
+    ${p.link?`<div class="dlinks"><button class="dlink" onclick="openAny('${p.link}')">${t("posts.open")} ↗</button></div>`:""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
