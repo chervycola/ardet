@@ -414,6 +414,9 @@ const A = [
   { id:"polina", name:"Полина", role:"Воркшоп · 5000 ₽", session:"ВОРКШОП", room:"w1", time:"15:00–18:00", photos:[], links:[], desc:"" },
   { id:"totoro", name:"totoro", role:"Воркшоп · 5000 ₽", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"" },
   { id:"lisitsky", name:"Влад Лисицкий", role:"AV на большой сцене", session:"AV", room:"sb", time:"18:00–18:45", photos:[], links:[], desc:"" },
+  { id:"vgrigoriev", name:"Вячеслав Григорьев", role:"Основатель MAD SOUND FACTORY и VG-line", session:"", room:"", time:"", photos:[],
+    links:[{t:"MAD SOUND FACTORY",u:"https://madsoundfactory.com"},{t:"VG-LINE",u:"https://instagram.com/vg.line/"}],
+    desc:"Разрабатывает собственные музыкальные инструменты — самостоятельно и в сотрудничестве с брендами и музыкантами. Производит свои инструменты и оказывает услуги по производству другим брендам. Регион — ЕАЭС." },
 ];
 
 // ===== КОНТОРЫ / КОЛЛЕКТИВЫ (карточки; участники и детали наполняются) =====
@@ -435,7 +438,12 @@ const C = [
   { id:"saolla", name:"Saolla", role:"—", photos:[], members:[], links:[], desc:"" },
   { id:"yandex", name:"Яндекс", role:"—", photos:[], members:[], links:[], desc:"" },
   { id:"rezonans", name:"Резонанс", role:"—", photos:[], members:[], links:[], desc:"" },
-  { id:"vgline", name:"VG Line", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"vgline", name:"VG-line", role:"Музыкальные инструменты · ЕАЭС", photos:[], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
+    links:[{t:"INSTAGRAM",u:"https://instagram.com/vg.line/"}],
+    desc:"Компания Вячеслава Григорьева. Разработка и производство собственных музыкальных инструментов — самостоятельно и в коллаборации с брендами и музыкантами; плюс услуги по производству для других брендов." },
+  { id:"msf", name:"MAD SOUND FACTORY", role:"Музыкальные инструменты · ЕАЭС", photos:[], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
+    links:[{t:"САЙТ",u:"https://madsoundfactory.com"}],
+    desc:"Компания Вячеслава Григорьева. Разработка и производство собственных музыкальных инструментов — самостоятельно и в коллаборации с брендами и музыкантами; плюс услуги по производству для других брендов." },
   { id:"paratek", name:"Paratek", role:"—", photos:["para","para2","para3"], members:[], links:[], desc:"" },
   { id:"uralsintmash", name:"УралСинтМаш", role:"—", photos:[], members:[], links:[], desc:"" },
   { id:"rawjungle", name:"Сырые Джунгли (Raw Jungle)", role:"—", photos:[], members:[], links:[], desc:"" },
@@ -465,7 +473,7 @@ const L = {
     "forum.prose":`<h3 class="prose-h">Что такое Дискрет</h3><p class="blurb"><b>Есть люди, которые делают приборы.</b></p><p class="blurb">Не только пользуются готовым. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, какой способ управления им нужен. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужую ошибку, свою упрямую гипотезу — и доводят это до объекта, который можно включить. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или устройство, которому ещё трудно дать имя.</p><p class="blurb">ДИСКРЕТ собирает такие объекты и людей вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"КОМПАНИЯ", "badge.product":"ТОВАР",
     "key.author":"Автор", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
-    "frame.device":"О приборе", "frame.session":"О сессии", "frame.company":"О компании",
+    "frame.device":"О приборе", "frame.session":"О сессии", "frame.person":"О человеке", "frame.company":"О компании",
     "frame.members":"Участники", "frame.products":"Товары", "frame.desc":"Описание",
     "btn.company":"Компания ↗", "btn.companyOf":"Компания · ",
     "empty.photo":"Фото скоро", "empty.logo":"Логотип / фото скоро",
@@ -499,7 +507,7 @@ const L = {
     "forum.prose":`<h3 class="prose-h">Что за Дискрет</h3><p class="blurb"><b>Есть люди, которые сами мутят приборы.</b></p><p class="blurb">Не просто берут готовое. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, каким способом всем этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой косяк, свою упрямую тему — и доводят это до аппарата, который реально включается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самопальный микрофон, модуль, процессор, шумовой генератор или штука, которой ещё и имя-то дать сложно.</p><p class="blurb">ДИСКРЕТ сводит такие аппараты и пацанов вокруг них.</p>`,
     "badge.device":"АППАРАТ №", "badge.author":"МАСТЕР", "badge.company":"КОНТОРА", "badge.product":"ТОВАР",
     "key.author":"Мастер", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
-    "frame.device":"Про аппарат", "frame.session":"Про движ", "frame.company":"Про контору",
+    "frame.device":"Про аппарат", "frame.session":"Про движ", "frame.person":"За человека", "frame.company":"Про контору",
     "frame.members":"Наши люди", "frame.products":"Товар", "frame.desc":"Что за тема",
     "btn.company":"Контора ↗", "btn.companyOf":"Контора · ",
     "empty.photo":"Фото на подходе", "empty.logo":"Лого / фото на подходе",
@@ -533,7 +541,7 @@ const L = {
     "forum.prose":`<h3 class="prose-h">Что за Дискрет вообще</h3><p class="blurb"><b>Есть чуваки, которые сами крафтят приборы.</b></p><p class="blurb">Не просто юзают готовое. Не ждут, пока производитель зарешает за них, какой звук, какой интерфейс, каким способом этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой фейл, свою упрямую гипотезу — и доводят это до девайса, который реально врубается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или штука, которой пока даже имя не подобрать.</p><p class="blurb">ДИСКРЕТ коннектит такие девайсы и пипл вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"БРЕНД", "badge.product":"ДРОП",
     "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Тайм", "key.hall":"Зал",
-    "frame.device":"Про девайс", "frame.session":"Про сессию", "frame.company":"Про бренд",
+    "frame.device":"Про девайс", "frame.session":"Про сессию", "frame.person":"Про чела", "frame.company":"Про бренд",
     "frame.members":"Пипл", "frame.products":"Дропы", "frame.desc":"Что за тема",
     "btn.company":"Бренд ↗", "btn.companyOf":"Бренд · ",
     "empty.photo":"Фото скоро", "empty.logo":"Лого / фото скоро",
@@ -701,11 +709,11 @@ function openAuthor(id){
     ${a.session ? `<span class="dlabel">${esc(a.session)}</span>` : ""}${WAVE}
     <h1 class="dname" style="margin-top:0">${esc(a.name)}</h1>
     <div class="drole">${esc(a.role)}</div>
-    <div class="dgrid">
+    ${(a.room||a.time) ? `<div class="dgrid">
       <div class="dcell"><div class="k">${t("key.hall")}</div><div class="v">${esc(ROOMS[a.room]||"—")}</div></div>
       <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${esc(a.time||"—")}</div></div>
-    </div>
-    <div class="dframe"><span class="k">${t("frame.session")}</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">${t("ph.session")}</p>`}</div>
+    </div>` : ""}
+    <div class="dframe"><span class="k">${(a.room||a.time) ? t("frame.session") : t("frame.person")}</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">${t("ph.session")}</p>`}</div>
     ${(a.links && a.links.length) ? `<div class="dlinks">${a.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
@@ -829,7 +837,7 @@ function openCompany(id){
     <h1 class="dname" style="margin-top:0">${esc(c.name)}</h1>
     <div class="drole">${esc(c.role||"")}</div>
     ${c.desc ? `<div class="dframe"><span class="k">${t("frame.company")}</span><p>${esc(c.desc)}</p></div>` : ""}
-    <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>esc(m)).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
+    <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>{const nm=(typeof m==="string")?m:m.name; const aid=(m&&m.a)?m.a:null; return (aid && A.find(x=>x.id===aid)) ? `<a class="colink" onclick="openAuthor('${aid}')">${esc(nm)}</a>` : esc(nm);}).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
     ${prods.length ? `<div class="prods"><div class="prods-h">${t("frame.products")} · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
     ${(c.links && c.links.length) ? `<div class="dlinks">${c.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
   if(multi) initCarousel(slides.length);
