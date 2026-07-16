@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <g id="cross"><line x1="-16" y1="0" x2="16" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#000" stroke-width="2"/></g>
+</defs>
+
+<rect width="1080" height="1350" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1040" height="1310" fill="none" stroke="#000" stroke-width="2"/>
+<use href="#cross" x="20" y="20"/><use href="#cross" x="1060" y="20"/><use href="#cross" x="20" y="1330"/><use href="#cross" x="1060" y="1330"/>
+
+<!-- шапка -->
+<use href="#logoD" fill="#000" transform="translate(60,32) scale(4.6)"/>
+<text x="115" y="76" font-weight="800" font-size="48" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="1020" y="52" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">АНОНС</text>
+<text x="1020" y="80" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#E30613">ЭКСПО · 01</text>
+<line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
+
+<!-- красный кикер -->
+<text x="60" y="300" font-family="'Courier New',monospace" font-size="26" letter-spacing="6" fill="#E30613">ПЕРВЫЙ СОСТАВ ЭКСПОЗИЦИИ</text>
+
+<!-- заголовок -->
+<text x="56" y="470" font-weight="800" font-size="150" letter-spacing="1" fill="#000">ПЕРВАЯ</text>
+<text x="56" y="610" font-weight="800" font-size="150" letter-spacing="1" fill="#000">ВОЛНА</text>
+<text x="56" y="742" font-weight="800" font-size="96" letter-spacing="1" fill="#E30613">УЧАСТНИКОВ</text>
+
+<text x="60" y="820" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">15 приборов, коллективов и авторов</text>
+
+<!-- линия-знак: волна + солнце -->
+<g stroke="#000" stroke-width="3" fill="none">
+  <line x1="60" y1="960" x2="360" y2="960"/>
+  <polyline points="360,960 405,960 432,912 460,1000 486,942 512,972 560,960"/>
+  <line x1="560" y1="960" x2="912" y2="960"/>
+</g>
+<g stroke="#E30613" stroke-width="3" stroke-linecap="round">
+  <line x1="961" y1="960" x2="978" y2="960"/><line x1="939" y1="960" x2="926" y2="960"/>
+  <line x1="950" y1="949" x2="950" y2="934"/><line x1="950" y1="971" x2="950" y2="986"/>
+  <line x1="957.8" y1="952.2" x2="968" y2="942"/><line x1="942.2" y1="967.8" x2="932" y2="978"/>
+  <line x1="957.8" y1="967.8" x2="968" y2="978"/><line x1="942.2" y1="952.2" x2="932" y2="942"/>
+</g>
+<circle cx="950" cy="960" r="7" fill="#E30613"/><circle cx="60" cy="960" r="5" fill="#E30613"/>
+
+<!-- манифест-подпись -->
+<text font-family="'Courier New',monospace" font-size="27" fill="#000">
+  <tspan x="60" y="1055">Экспо собирается как среда для честного</tspan>
+  <tspan x="60" y="1095">разговора об устройстве вещей. Подойти,</tspan>
+  <tspan x="60" y="1135">включить, послушать, спросить автора.</tspan>
+</text>
+
+<!-- подвал -->
+<line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
+<text x="60" y="1258" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="60" y="1288" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="1020" y="1258" text-anchor="end" font-weight="800" font-size="34" fill="#000">19.09.2026</text>
+<text x="1020" y="1290" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <g id="cross"><line x1="-16" y1="0" x2="16" y2="0" stroke="#FFF" stroke-width="2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#FFF" stroke-width="2"/></g>
+</defs>
+
+<!-- чёрный фон — заключительный акцент -->
+<rect width="1080" height="1350" fill="#0A0A0A"/>
+<rect x="20" y="20" width="1040" height="1310" fill="none" stroke="#FFF" stroke-width="2"/>
+<use href="#cross" x="20" y="20"/><use href="#cross" x="1060" y="20"/><use href="#cross" x="20" y="1330"/><use href="#cross" x="1060" y="1330"/>
+
+<!-- шапка -->
+<use href="#logoD" fill="#FFF" transform="translate(60,32) scale(4.6)"/>
+<text x="115" y="76" font-weight="800" font-size="48" letter-spacing="1" fill="#FFF">ДИСКРЕТ</text>
+<text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#E30613">ЭКСПО · 01</text>
+<line x1="60" y1="104" x2="1020" y2="104" stroke="#FFF" stroke-width="2"/>
+
+<!-- красный кикер -->
+<text x="60" y="470" font-family="'Courier New',monospace" font-size="26" letter-spacing="6" fill="#E30613">ЭТО ТОЛЬКО НАЧАЛО</text>
+
+<!-- заголовок -->
+<text x="56" y="620" font-weight="800" font-size="128" letter-spacing="1" fill="#FFF">СПИСОК</text>
+<text x="56" y="748" font-weight="800" font-size="128" letter-spacing="1" fill="#FFF">БУДЕТ</text>
+<text x="56" y="872" font-weight="800" font-size="104" letter-spacing="1" fill="#E30613">ПОПОЛНЯТЬСЯ</text>
+
+<text x="60" y="962" font-family="'Courier New',monospace" font-size="28" letter-spacing="3" fill="#FFF">Следите за новостями, товарищи.</text>
+
+<!-- прогресс-шкала хроники -->
+<text x="60" y="1090" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">ХРОНИКА АНОНСОВ</text>
+<rect x="60" y="1104" width="770" height="14" fill="none" stroke="#FFF" stroke-width="2"/>
+<rect x="60" y="1104" width="38.5" height="14" fill="#FFF"/>
+<path d="M98.5 1104 L91 1091 L106 1091 Z" fill="#E30613"/>
+<text x="1020" y="1118" text-anchor="end" font-family="'Courier New',monospace" font-size="18" letter-spacing="1" fill="#FFF">01 / 20</text>
+
+<!-- подвал -->
+<line x1="60" y1="1210" x2="1020" y2="1210" stroke="#FFF" stroke-width="2"/>
+<text x="60" y="1262" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#FFF">DISKRET.SPACE</text>
+<text x="1020" y="1250" text-anchor="end" font-weight="800" font-size="34" fill="#FFF">19.09.2026</text>
+<text x="1020" y="1284" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
+</svg>
