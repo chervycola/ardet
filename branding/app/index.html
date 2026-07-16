@@ -69,9 +69,14 @@
   .slot{font-size:10.5px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-left:auto;}
   .name{font-family:var(--grotesk); font-weight:800; text-transform:uppercase; font-size:22px; letter-spacing:.4px; margin:1px 0 3px; line-height:1;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .dev{font-size:12px; color:var(--hair); letter-spacing:.3px; line-height:1.4;}
+  .dev{font-size:12px; color:var(--muted); letter-spacing:.3px; line-height:1.4;}
   .dev small{color:var(--muted);}
   .dev .colink{color:var(--red); text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
+  .dev-co{font-size:11px; letter-spacing:1px; text-transform:uppercase; line-height:1.2; margin-bottom:1px;}
+  .dev-co .colink{color:var(--red); cursor:pointer;}
+  .dev-co span{color:var(--muted);}
+  .dkick{font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin:6px 0 2px;}
+  .dkick .colink{color:var(--red); cursor:pointer;}
   .tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
   .tag{font-size:9.5px; letter-spacing:1px; text-transform:uppercase; border:1px solid var(--line); color:var(--muted); padding:2px 6px;}
   .tag.tbd{border-color:var(--red); color:var(--red);}
@@ -334,12 +339,12 @@ const P = [
     links:[{t:"САЙТ",u:"https://vadjuse.ru"},{t:"TG",u:"https://t.me/kaleidoscopesynth"}],
     desc:"Мультитембральный синтезатор с открытой матрицей модуляции: тембры взаимодействуют, порождая музыку и позволяя собирать собственные звуковые системы.",
     feat:"Открытая матрица модуляции; тембры влияют друг на друга; инструмент как лаборатория для конструирования звуковых систем." },
-  { id:"archeon", idx:"02", device:"ARCHEON", name:"ЭФЭМИ", company:"efemi", sub:"генеративный осциллятор", city:"Зеленоград",
+  { id:"archeon", idx:"02", device:"ARCHEON", name:"Иван Михальченков", company:"efemi", sub:"генеративный осциллятор", city:"Зеленоград",
     role:"Евро-модуль · генеративный секвенсор", spec:"Eurorack · Preset 10 ячеек · до 16 шагов", stage:"MODULAR", time:"17:20",
     tags:["eurorack","voice","CV","цифра"], tbd:false, photos:["arch1","arch2"],
     links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}],
     desc:"Форма волны меняется на каждом шаге встроенного генеративного секвенсора: из исходного числа (10 ячеек Preset) рождается до 16 шагов агрессивных тембральных вариаций. Для экспериментальных ритм-текстур и случайных находок." },
-  { id:"mayak", idx:"03", device:"МАЯК", name:"Лаборатория звука МАЯК", company:"mayak-lab", sub:"СУТ-синтезатор", city:"Химки",
+  { id:"mayak", idx:"03", device:"МАЯК", name:"", company:"mayak-lab", sub:"СУТ-синтезатор", city:"Химки",
     role:"Лаборатория звука · Химки, МО", spec:"СУТ · аналоговые оптические модули", stage:"LAB", time:"16:00",
     tags:["standalone","voice","CV","аналог"], tbd:false, photos:["mayak"],
     links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
@@ -350,9 +355,10 @@ const P = [
     links:[{t:"TG",u:"https://t.me/solyara_dron"}],
     desc:"Дрон-синтезатор на трёх пилообразных осцилляторах с индивидуальной и общей настройкой частоты, дополненный НЧ-, ВЧ- и полосовым фильтрами.",
     feat:"Три осциллятора; индивидуальное и общее управление частотой; мультирежимный фильтр; ориентация на дроновые структуры." },
-  { id:"unost", idx:"05", device:"ЮНОСТЬ-4", name:"— уточняется —", sub:"эффект-педаль", city:"",
+  { id:"unost", idx:"05", device:"ЮНОСТЬ-4", name:"", company:"mayak-lab", sub:"эффект-педаль", city:"Химки",
     role:"Металлический корпус · СПАД / ХОР", spec:"2 ручки · вход/выход jack", stage:"MAIN", time:"19:30",
-    tags:["педаль","эффект","аналог"], tbd:true, photos:["unost"],
+    tags:["педаль","эффект","аналог"], tbd:false, photos:["unost"],
+    links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
     desc:"Педаль эффекта в цельнометаллическом корпусе, красный трафарет «ЮНОСТЬ-4». Две ручки — СПАД и ХОР — и характер, который не спутать." },
   { id:"hgx", idx:"06", device:"EXTREMUM", name:"Независимый разработчик", company:"hgx-system", sub:"аналоговая eurorack-система", city:"Москва",
     role:"Аналоговая модульная система", spec:"Eurorack · аналог · замкнутый цикл", stage:"MODULAR", time:"—",
@@ -360,7 +366,7 @@ const P = [
     links:[{t:"TG",u:"https://t.me/HaggardT"}],
     desc:"Почти полностью аналоговая Eurorack-система с замкнутым циклом генерации, модуляции и вывода сигнала — полный набор для студийной работы со звуком.",
     feat:"Почти полностью аналоговая архитектура; законченный автономный тракт; система одного независимого разработчика." },
-  { id:"sxlab", idx:"07", device:"SxLab", name:"SX LAB", company:"sxlab-co", sub:"цифровой фильтр", city:"Москва",
+  { id:"sxlab", idx:"07", device:"SxLab", name:"", company:"sxlab-co", sub:"цифровой фильтр", city:"Москва",
     role:"На форуме — цифровой фильтр", spec:"Fortress · Chord · Solar Panel", stage:"MAIN", time:"—",
     tags:["эффект","CV","цифра"], tbd:false, photos:["sx","sx2","sxlab"],
     links:[{t:"САЙТ",u:"https://sxlab.ru"},{t:"VK",u:"https://vk.com/sxlab"},{t:"TG",u:"https://t.me/sxlabmusic"}],
@@ -371,6 +377,12 @@ const P = [
     links:[{t:"САЙТ",u:"https://sinitsinmike.github.io/Portable-MIDI-sequencer-Alpha1/"},{t:"TG",u:"https://t.me/miharussian"}],
     desc:"MIDI-секвенсор и лупер для живого исполнения: запись в реальном времени, 16 треков, MIDI Thru и сохранение проектов во внутренней флеш-памяти.",
     feat:"16 MIDI-треков; запись в реальном времени; работа без компьютера; MIDI Thru; сохранение проектов внутри устройства." },
+  { id:"astrovox", idx:"09", device:"АСТРОВОКС", name:"", company:"mayak-lab", sub:"аналоговый оптический модуль", city:"Химки",
+    role:"Оптический модуль · свет управляет звуком", spec:"Аналоговый · оптическое управление", stage:"LAB", time:"—",
+    tags:["standalone","эффект","аналог"], tbd:false, photos:[],
+    links:[{t:"VK",u:"https://vk.com/mayaksoundlab"}],
+    desc:"Аналоговый оптический модуль лаборатории звука МАЯК: свет становится элементом управления звуковым трактом.",
+    feat:"Оптическое управление; аналоговый тракт; свет как часть звуковой системы." },
 ];
 
 // ===== ЛЕНТА: дубли постов из Telegram (новые — сверху) =====
@@ -678,8 +690,9 @@ function renderDevices(){
       <div class="thumb"><span class="tick t1"></span><span class="tick t2"></span>${(p.photos&&p.photos.length)?`<img src="${photo(p.photos[0])}" alt="">`:`<div class="tempty">${t("empty.photo")}</div>`}</div>
       <div class="meta">
         <div class="mrow"><span class="idx">№${p.idx}</span><span class="slot">${EVENT.date.slice(0,5)} · ${p.time} · ${p.stage}</span></div>
+        <div class="dev-co">${p.company?`<a class="colink" onclick="event.stopPropagation();openCompany('${p.company}')">${esc(cname(p.company))}</a>`:`<span>${esc(p.name||"Независимый автор")}</span>`}</div>
         <h3 class="name">${esc(p.device)}</h3>
-        <div class="dev">${p.company?`<a class="colink" onclick="event.stopPropagation();openCompany('${p.company}')">${esc(cname(p.company))}</a>`:`<span>${esc(p.name)}</span>`}<small> · ${esc(p.sub)}${p.city?` · ${esc(p.city)}`:""}</small></div>
+        <div class="dev"><small>${[(p.company&&p.name)?esc(p.name):"", esc(p.sub), p.city?esc(p.city):""].filter(Boolean).join(" · ")}</small></div>
         <div class="tags">${p.tags.map(tg=>`<span class="tag">${esc(tg)}</span>`).join("")}${p.tbd?`<span class="tag tbd">${t("tag.tbd")}</span>`:''}</div>
       </div>
     </article>`).join("");
@@ -746,11 +759,11 @@ function openDetail(id){
       ${multi ? `<button class="cnav cprev" id="cprev" aria-label="Назад">‹</button><button class="cnav cnext" id="cnext" aria-label="Вперёд">›</button><div class="cdots" id="cdots">${slides.map((_,i)=>`<span class="cdot ${i===0?"on":""}"></span>`).join("")}</div>` : ""}
     </div>
     <span class="dlabel">${esc(p.spec)}</span>${WAVE}
-    <div><span class="didx">№ ${p.idx}</span></div>
-    <h1 class="dname">${esc(p.device)}</h1>
-    <div class="drole">${esc(p.name)} · ${esc(p.role)}</div>
+    <div class="dkick">${p.company?`<a class="colink" onclick="openCompany('${p.company}')">${esc(cname(p.company))}</a>`:esc(p.name||"Независимый автор")} · № ${p.idx}</div>
+    <h1 class="dname" style="margin-top:2px">${esc(p.device)}</h1>
+    <div class="drole">${[(p.company&&p.name)?esc(p.name):"", esc(p.role||p.sub)].filter(Boolean).join(" · ")}</div>
     <div class="dgrid">
-      <div class="dcell"><div class="k">${t("key.author")}</div><div class="v">${esc(p.name)}</div></div>
+      ${p.name?`<div class="dcell"><div class="k">${t("key.author")}</div><div class="v">${esc(p.name)}</div></div>`:`<div class="dcell"><div class="k">${t("badge.company")}</div><div class="v">${p.company?esc(cname(p.company)):"—"}</div></div>`}
       <div class="dcell"><div class="k">${t("key.format")}</div><div class="v">${esc(p.sub)}</div></div>
       <div class="dcell"><div class="k">${t("key.stage")}</div><div class="v red">${esc(p.stage)}</div></div>
       <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
