@@ -37,7 +37,7 @@
 
 <!-- подвал -->
 <line x1="60" y1="1210" x2="1020" y2="1210" stroke="#FFF" stroke-width="2"/>
-<text x="60" y="1262" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#FFF">DISKRET.SPACE</text>
+<text x="60" y="1262" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#FFF">ДИСКРЕТ.РФ</text>
 <text x="1020" y="1250" text-anchor="end" font-weight="800" font-size="34" fill="#FFF">19.09.2026</text>
 <text x="1020" y="1284" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
 </svg>
