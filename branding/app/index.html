@@ -240,7 +240,6 @@
       </svg>
     </button>
     <nav class="menu" id="menu" hidden>
-      <button class="mi" data-m="about"><span data-t="m.about">О нас</span></button>
       <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
@@ -268,6 +267,9 @@
       <div class="vhead"><h2 data-t="sec.forum">Форум</h2><span class="vrule"></span></div>
       <div class="card">
         <div id="forumProse" data-t="forum.prose"></div>
+      </div>
+      <div class="card">
+        <div id="forumAbout"></div>
       </div>
       <div class="card evt">
         <div class="date" id="edate"></div>
@@ -655,6 +657,11 @@ function renderForum(){
   $("#cposts").textContent = t("forum.post") + " " + String(n).padStart(2,"0") + " / " + EVENT.total;
   $("#cfill").style.width = (prog*100)+"%"; $("#cptr").style.left = (prog*100)+"%";
   $("#cticks").innerHTML = [0,.25,.5,.75,1].map(f=>`<span>${Math.round(EVENT.total*f)}</span>`).join("");
+  const fa=$("#forumAbout");
+  if(fa) fa.innerHTML =
+    `<p class="blurb">${t("about.lead")}</p>`+
+    `<ol class="princ"><li>${t("about.p1")}</li><li>${t("about.p2")}</li><li>${t("about.p3")}</li><li>${t("about.p4")}</li></ol>`+
+    `<div class="btnrow"><button class="btn" onclick="openLink('https://${CONTACT.site}')">${t("about.site")}<span class="a">${esc(CONTACT.site)}</span></button></div>`;
 }
 
 function renderPosts(){
@@ -766,17 +773,6 @@ function openTG(user){ const u="https://t.me/"+user; try{ if(tg && tg.openTelegr
 function openAny(u){ try{ if(/t\.me\//.test(u) && tg && tg.openTelegramLink) tg.openTelegramLink(u); else if(tg && tg.openLink) tg.openLink(u); else window.open(u,"_blank"); }catch(e){ window.open(u,"_blank"); } }
 
 const MODALS = {
-  about: { title:"m.about", html:()=>`
-    <p>${t("about.lead")}</p>
-    <ol class="princ">
-      <li>${t("about.p1")}</li>
-      <li>${t("about.p2")}</li>
-      <li>${t("about.p3")}</li>
-      <li>${t("about.p4")}</li>
-    </ol>
-    <div class="btnrow">
-      <button class="btn" onclick="openLink('https://${CONTACT.site}')">${t("about.site")}<span class="a">${CONTACT.site}</span></button>
-    </div>` },
   feedback: { title:"m.feedback", html:()=>`
     <p>${t("fb.lead")}</p>
     <div class="btnrow">
