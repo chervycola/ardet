@@ -244,6 +244,7 @@
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
+      <button class="mi" data-m="privacy"><span data-t="m.privacy">Политика данных</span></button>
       <div class="mi-div"></div>
       <button class="mi" id="langToggle"><span data-t="m.lang">Язык</span>: <span id="langName" style="color:var(--red);margin-left:6px">Русский</span></button>
       <button class="mi" id="themeToggle"><span data-t="m.theme">Тема</span>: <span id="themeName" style="color:var(--red);margin-left:6px">Светлая</span></button>
@@ -486,7 +487,8 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 const L = {
   ru: {
     "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Сканировать QR", "m.theme":"Тема", "m.lang":"Язык",
+    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык",
+    "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
     "posts.empty":"Скоро — дублируем посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
@@ -520,7 +522,8 @@ const L = {
   },
   bratva: {
     "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
-    "m.scan":"Пробить QR", "m.theme":"Масть", "m.lang":"Базар",
+    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар",
+    "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
     "posts.empty":"Скоро — зальём посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
@@ -554,7 +557,8 @@ const L = {
   },
   zoomer: {
     "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
-    "m.scan":"Скан QR", "m.theme":"Тема", "m.lang":"Язык",
+    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык",
+    "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
     "posts.empty":"Скоро — задропим посты из Telegram", "posts.open":"В тг", "posts.more":"Читать всё",
@@ -781,9 +785,20 @@ const MODALS = {
     </div>
     <div class="field"><label>${t("fb.or")}</label><textarea id="fbText" rows="3" placeholder="${t("fb.ph")}"></textarea></div>
     <div class="btnrow"><button class="btn" id="fbSend">${t("fb.send")}</button></div>
-    <div class="note">${t("fb.note")} @${CONTACT.tg}.</div>` },
+    <div class="note">${t("fb.note")} @${CONTACT.tg}.</div>
+    <div class="note">${t("consent.pre")} <a class="colink" onclick="openModal('privacy')">${t("consent.link")}</a>.</div>` },
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
   companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
+  privacy: { title:"m.privacy", html:()=>`
+    <p>Настоящая политика описывает, какие данные собирает мини-приложение и Telegram-бот форума ДИСКРЕТ (далее — Сервис) и как они используются.</p>
+    <p><b>1. Какие данные мы собираем.</b> Данные Telegram-профиля, передаваемые платформой при открытии приложения (идентификатор, имя, username); сведения, которые вы отправляете сами — текст обращения в «Обратной связи» и номер билета в «Конкурсе». Мы не собираем паспортные и платёжные данные, геолокацию и не запрашиваем доступ к контактам.</p>
+    <p><b>2. Цели обработки.</b> Ответ на обращения; проведение конкурса среди гостей и определение победителей; организация участия в форуме и информационная поддержка.</p>
+    <p><b>3. Хранение.</b> Часть данных (номер билета, черновики сообщений) хранится локально на вашем устройстве и удаляется очисткой данных приложения/браузера. Отправленные сообщения и заявки поступают организаторам через Telegram-бота и хранятся в течение подготовки и проведения форума.</p>
+    <p><b>4. Передача третьим лицам.</b> Мы не продаём и не передаём ваши данные третьим лицам, кроме случаев, предусмотренных законодательством РФ. Передача сообщений происходит в инфраструктуре Telegram в соответствии с его политикой.</p>
+    <p><b>5. Ваши права.</b> Вы можете запросить сведения об обработке, уточнение или удаление своих данных, написав на ${CONTACT.email}. Заявку «Конкурса» можно удалить с устройства самостоятельно.</p>
+    <p><b>6. Согласие.</b> Отправляя сообщение или заявку через Сервис, вы подтверждаете согласие на обработку указанных данных в перечисленных целях. Если вы не согласны — не отправляйте данные через Сервис.</p>
+    <p><b>7. Изменения.</b> Политика может обновляться; актуальная версия публикуется в приложении и на ${CONTACT.site}.</p>
+    <div class="btnrow"><button class="btn" onclick="openLink('mailto:${CONTACT.email}')">Вопросы по данным<span class="a">${CONTACT.email}</span></button></div>` },
 };
 function lotteryHTML(){
   const saved = store("ds_lottery");
@@ -800,7 +815,8 @@ function lotteryHTML(){
     ${box}
     <div class="field"><label>${t("lot.ticket")}</label><input id="lotTicket" inputmode="numeric" placeholder="напр. 100482"></div>
     <div class="btnrow"><button class="btn red" id="lotJoin">${saved?t("lot.update"):t("lot.join")}</button></div>
-    <div class="note">${t("lot.note")}</div>`;
+    <div class="note">${t("lot.note")}</div>
+    <div class="note">${t("consent.pre")} <a class="colink" onclick="openModal('privacy')">${t("consent.link")}</a>.</div>`;
 }
 function bindModal(kind){
   if(kind==="feedback"){
