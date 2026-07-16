@@ -29,9 +29,9 @@
 <text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">Eurorack · аналог · замкнутый цикл</text>
 
 <!-- подписи -->
-<text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">АНАЛОГОВАЯ EURORACK-СИСТЕМА</text>
-<text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">HgX_SYSTEM</text>
-<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">Unheld modular · Независимый разработчик · Москва</text>
+<text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">HgX_SYSTEM · АНАЛОГОВЫЙ EURORACK</text>
+<text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">EXTREMUM</text>
+<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">HgX_System · Независимый разработчик · Москва</text>
 
 <!-- осциллограмма -->
 <polyline points="60,1130 250,1130 275,1105 300,1130 430,1130 455,1088 480,1168 505,1130 700,1130 720,1108 760,1108 780,1130 1020,1130" fill="none" stroke="#000" stroke-width="3"/>
