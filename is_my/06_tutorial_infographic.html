@@ -1,0 +1,578 @@
+<title>IS MY — от концепта до прибора</title>
+<style>
+  :root{
+    --paper:#14110f; --panel:#1c1815; --panel2:#211d19; --line:#37312b; --line2:#2a2521;
+    --ink:#e8e2d6; --muted:#8a837a; --dim:#6f685f;
+    --amber:#e0a23a; --amber2:#a07a5c; --blue:#7fa3b0; --blue2:#4f6e7a; --green:#4fbf6a; --warn:#c96a4a;
+    --mono:ui-monospace,"JetBrains Mono","Cascadia Mono","IBM Plex Mono",Consolas,Menlo,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color-scheme:dark;
+  }
+  html{background:var(--paper);}
+  body{margin:0;color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;
+       -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 24px 96px;}
+  ::selection{background:var(--amber);color:#14110f;}
+
+  /* ---------- type ---------- */
+  h1,h2,h3,.lbl{font-family:var(--mono);text-wrap:balance;}
+  h1{font-size:clamp(2.2rem,6vw,3.6rem);letter-spacing:.35em;margin:.1em 0 0;font-weight:700;}
+  h2{font-size:1.05rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;margin:0;}
+  h3{font-size:.92rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin:0 0 .5em;color:var(--ink);}
+  p{max-width:68ch;margin:.7em 0;}
+  .lbl{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);}
+  .mut{color:var(--muted);}
+  a{color:var(--blue);}
+  code{font-family:var(--mono);font-size:.85em;background:var(--panel2);border:1px solid var(--line2);
+       border-radius:3px;padding:.08em .35em;}
+
+  /* ---------- masthead ---------- */
+  header{border-bottom:1px solid var(--line);padding:56px 0 28px;margin-bottom:8px;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:18px;align-items:baseline;}
+  .meta-row .lbl b{color:var(--muted);font-weight:600;}
+  .led{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:baseline;margin-right:7px;}
+  .led.amber{background:radial-gradient(circle at 35% 30%,#ffd27a,#e0a23a 55%,#7a5410);}
+  .led.green{background:radial-gradient(circle at 35% 30%,#b6f5c4,#4fbf6a 55%,#16602c);}
+  .sub{color:var(--muted);font-family:var(--mono);letter-spacing:.14em;font-size:.8rem;margin-top:10px;}
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 12px;border-bottom:1px solid var(--line2);}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px;}
+  .sec-num{font-family:var(--mono);color:var(--amber);font-size:.9rem;letter-spacing:.1em;}
+  .lede{color:var(--muted);max-width:70ch;}
+
+  /* ---------- cards & grids ---------- */
+  .grid{display:grid;gap:14px;margin:22px 0;}
+  .g2{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  @media(max-width:820px){.g2,.g3{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 20px;}
+  .card p{font-size:.92rem;margin:.4em 0 0;color:var(--muted);}
+  .card .big{color:var(--ink);font-size:1rem;}
+  .tag{display:inline-block;font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;
+       border:1px solid var(--line);border-radius:3px;padding:.18em .5em;color:var(--muted);
+       text-transform:uppercase;}
+  .tag.amber{color:var(--amber);border-color:#5c4a26;}
+  .tag.blue{color:var(--blue);border-color:#3a5560;}
+  .tag.green{color:var(--green);border-color:#2c5c3a;}
+  .tag.warn{color:var(--warn);border-color:#5c3a2c;}
+
+  /* ---------- figures ---------- */
+  figure{margin:26px 0;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  figure>.scroll{overflow-x:auto;padding:10px;}
+  figure svg{display:block;margin:0 auto;max-width:100%;height:auto;}
+  figcaption{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;color:var(--dim);
+             padding:10px 16px;border-top:1px solid var(--line2);text-transform:uppercase;}
+  .callout{font-size:.85rem;color:var(--muted);}
+
+  /* ---------- roadmap ---------- */
+  .rmap{list-style:none;margin:28px 0 8px;padding:0;position:relative;}
+  .rmap:before{content:"";position:absolute;left:11px;top:8px;bottom:8px;width:2px;
+               background:linear-gradient(var(--amber2),var(--blue2));opacity:.5;}
+  .rmap li{position:relative;padding:0 0 26px 44px;}
+  .rmap .dot{position:absolute;left:3px;top:4px;width:18px;height:18px;border-radius:50%;
+             background:var(--panel2);border:2px solid var(--amber2);}
+  .rmap li.blue .dot{border-color:var(--blue2);}
+  .rmap li.crit .dot{border-color:var(--warn);box-shadow:0 0 0 3px rgba(201,106,74,.15);}
+  .it-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;}
+  .it-head .name{font-family:var(--mono);font-weight:700;letter-spacing:.08em;font-size:.95rem;}
+  .rmap p{font-size:.92rem;color:var(--muted);margin:.35em 0 0;max-width:72ch;}
+  .rmap .done-when{font-size:.8rem;color:var(--dim);font-family:var(--mono);letter-spacing:.04em;margin-top:.45em;}
+  .rmap .done-when b{color:var(--green);font-weight:600;}
+
+  /* ---------- fantasy ---------- */
+  .fx .card{display:grid;grid-template-columns:64px 1fr;gap:16px;align-items:start;}
+  .fx .card svg{width:64px;height:64px;}
+  @media(max-width:480px){.fx .card{grid-template-columns:1fr;}}
+
+  /* ---------- principles / footer ---------- */
+  .princ{display:grid;gap:10px;margin:20px 0;}
+  .princ .row{display:grid;grid-template-columns:26px 1fr;gap:12px;font-size:.95rem;color:var(--muted);}
+  .princ .row b{color:var(--ink);}
+  .princ .n{font-family:var(--mono);color:var(--amber);}
+  footer{padding:36px 0 0;color:var(--dim);font-size:.85rem;}
+  footer .lbl{margin-bottom:6px;}
+
+  table{border-collapse:collapse;width:100%;font-size:.9rem;margin:18px 0;}
+  th,td{border:1px solid var(--line2);padding:.5em .8em;text-align:left;vertical-align:top;}
+  th{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+     color:var(--dim);font-weight:600;background:var(--panel2);}
+  td{color:var(--muted);}
+  td b{color:var(--ink);font-weight:600;}
+  .tbl-scroll{overflow-x:auto;}
+  @media (prefers-reduced-motion:no-preference){
+    .rmap li.crit .dot{animation:pulse 2.6s ease-in-out infinite;}
+    @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(201,106,74,.08);}}
+  }
+</style>
+
+<div class="wrap">
+
+<!-- ================= MASTHEAD ================= -->
+<header>
+  <div class="lbl">SYSTEM SUICIDE · МОДУЛЬ №8 · РАБОЧЕЕ ДОСЬЕ</div>
+  <h1>IS&nbsp;MY</h1>
+  <div class="sub">VCA-сатуратор-шейпер на силовой электронике боевого FPV-дрона · пилотный пульт DJI C5</div>
+  <div class="meta-row">
+    <span class="lbl"><span class="led amber"></span><b>EDITION</b>&nbsp; 13 экз. с провенансом</span>
+    <span class="lbl"><span class="led green"></span><b>ФОРМАТ</b>&nbsp; Eurorack 3U · 20HP · ±12V</span>
+    <span class="lbl"><b>СВЯЗЬ</b>&nbsp; один кабель USB-C</span>
+    <span class="lbl"><b>СТАТУС</b>&nbsp; документация готова → прототип</span>
+  </div>
+</header>
+
+<!-- ================= 00 CONCEPT ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">00</span><h2>Что это за прибор</h2></div>
+  <p class="lede">Модуль искажений, у которого нелинейность делает не диод и не микросхема,
+  а <b>силовой MOSFET, снятый с регулятора хода (ESC) боевого дрона</b>. Транзистор
+  продолжает делать то, что делал в полёте — силовое переключение, — только среда сменилась
+  с электромеханической на звуковую. Играют прибором с выпотрошенного пульта DJI:
+  тот же тип контроллера, которым пилот вёл дрон, теперь ведёт звук.</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 720 210" width="720" font-family="ui-monospace,Consolas,monospace">
+      <!-- pult -->
+      <rect x="30" y="55" width="180" height="100" rx="14" fill="#1c1815" stroke="#7fa3b0" stroke-width="1.2"/>
+      <circle cx="80" cy="105" r="26" fill="#14110f" stroke="#46403a"/>
+      <circle cx="80" cy="105" r="11" fill="#2a2521" stroke="#5c574f"/>
+      <circle cx="160" cy="105" r="26" fill="#14110f" stroke="#46403a"/>
+      <circle cx="160" cy="105" r="11" fill="#2a2521" stroke="#5c574f"/>
+      <rect x="105" y="66" width="30" height="8" rx="4" fill="#0c0a09" stroke="#4a433d" stroke-width=".7"/>
+      <text x="120" y="180" text-anchor="middle" font-size="11" fill="#7fa3b0" letter-spacing="2">PULT · DJI C5</text>
+      <text x="120" y="196" text-anchor="middle" font-size="9" fill="#6f685f">жест пилота</text>
+      <!-- usb link -->
+      <line x1="210" y1="105" x2="300" y2="105" stroke="#7fa3b0" stroke-width="1.6" stroke-dasharray="7 4"/>
+      <text x="255" y="94" text-anchor="middle" font-size="10" fill="#7fa3b0">USB-C</text>
+      <text x="255" y="122" text-anchor="middle" font-size="9" fill="#6f685f">данные + питание</text>
+      <!-- module -->
+      <rect x="300" y="25" width="150" height="160" rx="6" fill="#1c1815" stroke="#e0a23a" stroke-width="1.2"/>
+      <circle cx="332" cy="60" r="12" fill="#2a2521" stroke="#5c574f"/>
+      <circle cx="375" cy="60" r="12" fill="#2e241d" stroke="#6b5240"/>
+      <circle cx="418" cy="60" r="12" fill="#1d262b" stroke="#3f6675"/>
+      <circle cx="332" cy="100" r="12" fill="#2a2521" stroke="#5c574f"/>
+      <circle cx="375" cy="100" r="12" fill="#2e241d" stroke="#6b5240"/>
+      <circle cx="418" cy="100" r="12" fill="#1d262b" stroke="#3f6675"/>
+      <g fill="#b9b2a6"><circle cx="332" cy="145" r="6"/><circle cx="360" cy="145" r="6"/><circle cx="388" cy="145" r="6"/><circle cx="416" cy="145" r="6"/></g>
+      <text x="375" y="205" text-anchor="middle" font-size="11" fill="#e0a23a" letter-spacing="2">МОДУЛЬ · 20HP</text>
+      <!-- rack context -->
+      <line x1="450" y1="105" x2="520" y2="105" stroke="#9a8f80" stroke-width="1.2"/>
+      <polygon points="520,101 528,105 520,109" fill="#9a8f80"/>
+      <rect x="530" y="25" width="160" height="160" rx="6" fill="none" stroke="#37312b" stroke-dasharray="4 4"/>
+      <text x="610" y="98" text-anchor="middle" font-size="10" fill="#6f685f">остальная система</text>
+      <text x="610" y="114" text-anchor="middle" font-size="10" fill="#6f685f">SYSTEM SUICIDE</text>
+      <text x="610" y="205" text-anchor="middle" font-size="11" fill="#6f685f" letter-spacing="2">CV / AUDIO</text>
+    </svg>
+    </div>
+    <figcaption>Система из двух устройств: пульт играет · модуль лепит голос · стойка слушает</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="card"><span class="tag amber">материал</span>
+      <p class="big">2 донорских MOSFET</p>
+      <p>с одной платы ESC — оба каскада сатурации. Каждый экземпляр звучит чуть иначе: разброс и износ — свойство edition, не баг.</p></div>
+    <div class="card"><span class="tag blue">интерфейс</span>
+      <p class="big">Ни одного отверстия</p>
+      <p>в корпусе DJI. Родные стики, кнопки, слайдер и USB-C порт. Внутри — только наша плата вместо родной.</p></div>
+    <div class="card"><span class="tag green">принцип</span>
+      <p class="big">Пульт играет — модуль формует</p>
+      <p>Стики шлют жест (DRIVE, BIAS, CUTOFF, RESO). Глубину, характер и маршрут задают ручки и свитчи на панели.</p></div>
+  </div>
+</section>
+
+<!-- ================= 01 ANATOMY ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>Анатомия · два устройства</h2></div>
+
+  <div class="grid g2">
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 340 400" width="340" font-family="ui-monospace,Consolas,monospace">
+      <rect x="10" y="10" width="240" height="380" rx="5" fill="#1a1714" stroke="#000"/>
+      <text x="130" y="42" text-anchor="middle" font-size="17" font-weight="700" letter-spacing="6" fill="#e6e1d8">IS MY</text>
+      <!-- knobs rows -->
+      <g stroke-width=".8">
+        <circle cx="55" cy="85" r="16" fill="#26211c" stroke="#4a433d"/><circle cx="110" cy="85" r="16" fill="#26211c" stroke="#4a433d"/>
+        <circle cx="165" cy="85" r="16" fill="#2e241d" stroke="#6b5240"/><circle cx="220" cy="85" r="16" fill="#1d262b" stroke="#3f6675"/>
+        <circle cx="55" cy="135" r="16" fill="#26211c" stroke="#4a433d"/><circle cx="110" cy="135" r="16" fill="#26211c" stroke="#4a433d"/>
+        <circle cx="165" cy="135" r="16" fill="#2e241d" stroke="#6b5240"/><circle cx="220" cy="135" r="16" fill="#1d262b" stroke="#3f6675"/>
+        <circle cx="165" cy="185" r="16" fill="#2e241d" stroke="#6b5240"/>
+        <rect x="208" y="170" width="11" height="24" rx="5" fill="#0c0a09" stroke="#4a433d"/>
+        <rect x="208" y="205" width="11" height="24" rx="5" fill="#0c0a09" stroke="#4a433d"/>
+      </g>
+      <g fill="#8a837a" font-size="7.5" text-anchor="middle">
+        <text x="55" y="63">DRIVE</text><text x="110" y="63">BIAS</text>
+        <text x="165" y="63" fill="#c9a374">HPF</text><text x="220" y="63" fill="#8fb3c0">CUTOFF</text>
+        <text x="55" y="115">LEVEL</text><text x="110" y="115">TONE</text>
+        <text x="165" y="115" fill="#c9a374">MIX</text><text x="220" y="115" fill="#8fb3c0">RESO</text>
+        <text x="165" y="163" fill="#c9a374">BASS</text>
+        <text x="232" y="180" fill="#8fb3c0" text-anchor="start" font-size="7">LP/BP</text>
+        <text x="232" y="215" fill="#8fb3c0" text-anchor="start" font-size="7">pre/post</text>
+      </g>
+      <!-- cv in -->
+      <g fill="#b9b2a6"><circle cx="55" cy="255" r="8"/><circle cx="110" cy="255" r="8"/><circle cx="165" cy="255" r="8"/><circle cx="220" cy="255" r="8"/>
+        <circle cx="55" cy="290" r="8"/><circle cx="110" cy="290" r="8"/><circle cx="165" cy="290" r="8"/><circle cx="220" cy="290" r="8"/></g>
+      <!-- cv out + io -->
+      <g fill="#b9b2a6"><circle cx="55" cy="335" r="8"/><circle cx="110" cy="335" r="8"/><circle cx="165" cy="335" r="8"/></g>
+      <rect x="200" y="328" width="34" height="14" rx="7" fill="#0a0908" stroke="#7fa3b0" stroke-width="1"/>
+      <g fill="#b9b2a6"><circle cx="110" cy="368" r="8"/><circle cx="165" cy="368" r="8"/></g>
+      <text x="60" y="372" text-anchor="middle" font-size="7" fill="#8a837a">AUDIO ▸</text>
+      <!-- callouts -->
+      <g font-size="9" fill="#e0a23a">
+        <line x1="252" y1="85" x2="285" y2="85" stroke="#5c4a26"/><text x="290" y="88" fill="#e0a23a">колонки:</text>
+        <text x="290" y="102" fill="#8a837a" font-size="8">MODULATION</text>
+        <text x="290" y="114" fill="#c9a374" font-size="8">SATURATE</text>
+        <text x="290" y="126" fill="#8fb3c0" font-size="8">FILTER</text>
+        <line x1="252" y1="272" x2="285" y2="272" stroke="#5c4a26"/>
+        <text x="290" y="268" fill="#8a837a" font-size="8">8× CV-in c</text>
+        <text x="290" y="279" fill="#8a837a" font-size="8">аттенювер-</text>
+        <text x="290" y="290" fill="#8a837a" font-size="8">торами</text>
+        <line x1="252" y1="335" x2="285" y2="335" stroke="#3a5560"/>
+        <text x="290" y="332" fill="#7fa3b0" font-size="8">USB-C:</text>
+        <text x="290" y="343" fill="#8a837a" font-size="8">пульт сюда</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Модуль · 20HP: три колонки контролей + патч-поле</figcaption>
+  </figure>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 340 400" width="340" font-family="ui-monospace,Consolas,monospace">
+      <rect x="20" y="60" width="300" height="180" rx="26" fill="#1a1714" stroke="#000"/>
+      <rect x="24" y="64" width="292" height="172" rx="23" fill="none" stroke="#37312b" stroke-width=".8"/>
+      <!-- sticks -->
+      <circle cx="105" cy="150" r="42" fill="#14110f" stroke="#46403a"/>
+      <circle cx="105" cy="150" r="17" fill="#2a2521" stroke="#5c574f"/>
+      <circle cx="235" cy="150" r="42" fill="#14110f" stroke="#46403a"/>
+      <circle cx="235" cy="150" r="17" fill="#2a2521" stroke="#5c574f"/>
+      <!-- vertical arrows on sticks -->
+      <g stroke="#e0a23a" stroke-width="1.4">
+        <line x1="105" y1="118" x2="105" y2="132"/><polygon points="101,120 105,112 109,120" fill="#e0a23a"/>
+        <line x1="235" y1="118" x2="235" y2="132"/><polygon points="231,120 235,112 239,120" fill="#e0a23a"/>
+      </g>
+      <g stroke="#7fa3b0" stroke-width="1.4">
+        <line x1="70" y1="150" x2="84" y2="150"/><polygon points="72,146 64,150 72,154" fill="#7fa3b0"/>
+        <line x1="200" y1="150" x2="214" y2="150"/><polygon points="202,146 194,150 202,154" fill="#7fa3b0"/>
+      </g>
+      <!-- top controls -->
+      <rect x="150" y="72" width="40" height="10" rx="5" fill="#0c0a09" stroke="#4a433d" stroke-width=".8"/>
+      <circle cx="135" cy="77" r="6" fill="#0c0a09" stroke="#4a433d" stroke-width=".8"/>
+      <circle cx="205" cy="77" r="6" fill="#0c0a09" stroke="#4a433d" stroke-width=".8"/>
+      <rect x="255" y="70" width="26" height="12" rx="6" fill="#0c0a09" stroke="#4a433d" stroke-width=".8"/>
+      <!-- usb -->
+      <rect x="155" y="234" width="30" height="9" rx="4.5" fill="#0a0908" stroke="#7fa3b0"/>
+      <!-- callouts -->
+      <g font-size="9">
+        <text x="105" y="270" text-anchor="middle" fill="#e0a23a">Y↑ DRIVE · rate</text>
+        <text x="105" y="283" text-anchor="middle" fill="#7fa3b0">X↔ BIAS · momentary</text>
+        <text x="235" y="270" text-anchor="middle" fill="#e0a23a">Y↑ CUTOFF · rate</text>
+        <text x="235" y="283" text-anchor="middle" fill="#7fa3b0">X↔ RESO · momentary</text>
+        <line x1="170" y1="66" x2="170" y2="40" stroke="#37312b"/>
+        <text x="170" y="32" text-anchor="middle" fill="#8a837a" font-size="8">слайдер = MODE (shaper·ring·gate)</text>
+        <line x1="135" y1="70" x2="80" y2="46" stroke="#37312b"/>
+        <text x="76" y="40" text-anchor="end" fill="#8a837a" font-size="8">RTH = ARM · Fn = LINK</text>
+        <line x1="268" y1="66" x2="288" y2="46" stroke="#37312b"/>
+        <text x="290" y="40" text-anchor="middle" fill="#8a837a" font-size="8">dial → MIX</text>
+        <text x="170" y="262" text-anchor="middle" fill="#8a837a" font-size="8">Shutter = GATE · USB-C = всё</text>
+        <text x="170" y="316" text-anchor="middle" fill="#6f685f" font-size="9">rate: толкнул — растёт, отпустил — стоит</text>
+        <text x="170" y="330" text-anchor="middle" fill="#6f685f" font-size="9">momentary: живёт в руке, пружина = возврат к базе</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Пульт · DJI C5 без сверловки: левый стик — сатурация, правый — фильтр</figcaption>
+  </figure>
+  </div>
+
+  <p class="callout">Хитрость с пружинами: у DJI все оси центрируются (GPS-дрон). Вместо вскрытия
+  гимбалов вертикали работают в <b>rate-режиме</b> — как газ в полёте по-настоящему: отклонение
+  задаёт <i>скорость</i> изменения, значение держится, когда стик отпущен. Горизонтали остаются
+  моментальными — пружина честно возвращает BIAS к симметрии, RESO — к базе, выставленной ручкой модуля.</p>
+</section>
+
+<!-- ================= 02 SIGNAL ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>Как течёт звук</h2></div>
+  <p class="lede">Полный голос: сатуратор + резонансный фильтр + грязный VCA. Свитч ROUTE меняет
+  порядок ядра и фильтра — «что искажаем» против «чем режем грязь».</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 900 150" width="900" font-family="ui-monospace,Consolas,monospace" font-size="10">
+      <defs><marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#d9c0a0"/></marker></defs>
+      <g fill="#1c1815" stroke="#a07a5c" stroke-width="1">
+        <rect x="8"   y="45" width="52" height="40" rx="4"/>
+        <rect x="80"  y="45" width="62" height="40" rx="4"/>
+        <rect x="162" y="45" width="62" height="40" rx="4"/>
+        <rect x="380" y="45" width="52" height="40" rx="4"/>
+        <rect x="452" y="45" width="52" height="40" rx="4"/>
+        <rect x="524" y="45" width="56" height="40" rx="4"/>
+        <rect x="672" y="45" width="66" height="40" rx="4" stroke="#e0a23a" stroke-width="1.4"/>
+        <rect x="758" y="45" width="52" height="40" rx="4"/>
+      </g>
+      <rect x="244" y="30" width="116" height="70" rx="5" fill="#181613" stroke="#9a8f80" stroke-dasharray="4 2.5"/>
+      <rect x="250" y="45" width="48" height="40" rx="4" fill="#1c1815" stroke="#c98f5a"/>
+      <rect x="306" y="45" width="48" height="40" rx="4" fill="#1c1815" stroke="#6f9aa8"/>
+      <text x="302" y="70" text-anchor="middle" fill="#cdbfae" font-size="11">↔</text>
+      <text x="302" y="26" text-anchor="middle" fill="#cdbfae" font-size="8">ROUTE pre/post</text>
+      <g fill="#f0e6da" text-anchor="middle" font-weight="600">
+        <text x="34" y="63">AUDIO</text><text x="34" y="75">IN</text>
+        <text x="111" y="63">DRIVE</text><text x="111" y="75" fill="#8a837a" font-size="8">предусил</text>
+        <text x="193" y="63">HPF</text><text x="193" y="75" fill="#8a837a" font-size="8">бас↔fuzz</text>
+        <text x="274" y="63">CORE</text><text x="274" y="75" fill="#8a837a" font-size="8">2×MOSFET</text>
+        <text x="330" y="63" fill="#cfe0e6">VCF</text><text x="330" y="75" fill="#8fb3c0" font-size="8">LP/BP·reso</text>
+        <text x="406" y="70">TONE</text>
+        <text x="478" y="70">BASS</text>
+        <text x="552" y="63">MIX</text><text x="552" y="75" fill="#8a837a" font-size="8">dry/wet</text>
+        <text x="705" y="63" fill="#ffd9a0">OUT VCA</text><text x="705" y="75" fill="#cd9a66" font-size="8">грязный·ARM</text>
+        <text x="784" y="63">AUDIO</text><text x="784" y="75">OUT</text>
+      </g>
+      <g stroke="#d9c0a0" stroke-width="1.1" marker-end="url(#a)">
+        <line x1="60" y1="65" x2="76" y2="65"/><line x1="142" y1="65" x2="158" y2="65"/>
+        <line x1="224" y1="65" x2="240" y2="65"/><line x1="360" y1="65" x2="376" y2="65"/>
+        <line x1="432" y1="65" x2="448" y2="65"/><line x1="504" y1="65" x2="520" y2="65"/>
+        <line x1="580" y1="65" x2="668" y2="65"/><line x1="738" y1="65" x2="754" y2="65"/>
+      </g>
+      <path d="M226,65 L226,122 L552,122 L552,89" fill="none" stroke="#c98f5a" stroke-width="1"
+            stroke-dasharray="5 3" marker-end="url(#a)"/>
+      <text x="390" y="118" text-anchor="middle" fill="#cdbfae" font-size="8.5">clean tap → в MIX: чистый фундамент под любой грязью</text>
+    </svg>
+    </div>
+    <figcaption>Один тракт — три режима ядра (SHAPER · RING · GATE), фильтр до или после</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="card"><span class="tag amber">SHAPER</span>
+      <p>Два каскада MOSFET: первый мягко насыщает, второй жёстко клиппит в отсечку. BIAS плавно
+      гнёт симметрию — чётные ↔ нечётные гармоники. На больших DRIVE — саб-октава (period-doubling).</p></div>
+    <div class="card"><span class="tag amber">RING</span>
+      <p>Транзистор буквально коммутирует на несущей 200 Гц – 10 кГц (частота от DRIVE). Боковые
+      полосы, металл, а на низкой несущей — слышимый PWM-tick: голос материала.</p></div>
+    <div class="card"><span class="tag amber">GATE</span>
+      <p>Верхний порог лимитирует (DRIVE), нижний гейтит (BIAS): транзиенты остаются, хвосты
+      отрезаются. Перкуссия из чего угодно.</p></div>
+  </div>
+</section>
+
+<!-- ================= 03 HEART ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>Сердце · донорский транзистор и серва</h2></div>
+  <p class="lede">Главная инженерная задача edition: каждый ESC-MOSFET другой (порог, крутизна,
+  износ), а прибор обязан работать в спецификации. Решение — сервопетля, которая сама
+  находит рабочую точку любого донора и держит её при прогреве.</p>
+
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 640 250" width="640" font-family="ui-monospace,Consolas,monospace" font-size="10">
+      <defs><marker id="b" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#9a8f80"/></marker></defs>
+      <!-- stage boxes -->
+      <rect x="120" y="40" width="150" height="120" rx="6" fill="#1c1815" stroke="#c98f5a"/>
+      <rect x="330" y="40" width="150" height="120" rx="6" fill="#1c1815" stroke="#c98f5a"/>
+      <text x="195" y="62" text-anchor="middle" fill="#f0e6da" font-weight="600">STAGE 1</text>
+      <text x="195" y="76" text-anchor="middle" fill="#8a837a" font-size="8.5">мягкое насыщение</text>
+      <text x="405" y="62" text-anchor="middle" fill="#f0e6da" font-weight="600">STAGE 2</text>
+      <text x="405" y="76" text-anchor="middle" fill="#8a837a" font-size="8.5">жёсткий клип</text>
+      <!-- mosfet glyphs -->
+      <g stroke="#e0a23a" stroke-width="1.5" fill="none">
+        <line x1="180" y1="95" x2="180" y2="135"/><line x1="188" y1="98" x2="188" y2="112"/>
+        <line x1="188" y1="118" x2="188" y2="132"/><line x1="188" y1="105" x2="212" y2="105"/>
+        <line x1="188" y1="125" x2="212" y2="125"/><line x1="212" y1="105" x2="212" y2="92"/>
+        <line x1="212" y1="125" x2="212" y2="138"/><line x1="165" y1="115" x2="180" y2="115"/>
+        <line x1="390" y1="95" x2="390" y2="135"/><line x1="398" y1="98" x2="398" y2="112"/>
+        <line x1="398" y1="118" x2="398" y2="132"/><line x1="398" y1="105" x2="422" y2="105"/>
+        <line x1="398" y1="125" x2="422" y2="125"/><line x1="422" y1="105" x2="422" y2="92"/>
+        <line x1="422" y1="125" x2="422" y2="138"/><line x1="375" y1="115" x2="390" y2="115"/>
+      </g>
+      <text x="212" y="152" text-anchor="middle" fill="#c9a374" font-size="8.5">ESC Q1</text>
+      <text x="422" y="152" text-anchor="middle" fill="#c9a374" font-size="8.5">ESC Q2</text>
+      <!-- flow -->
+      <g stroke="#d9c0a0" stroke-width="1.1">
+        <line x1="40" y1="100" x2="116" y2="100"/><polygon points="116,96 124,100 116,104" fill="#d9c0a0"/>
+        <line x1="270" y1="100" x2="326" y2="100"/><polygon points="326,96 334,100 326,104" fill="#d9c0a0"/>
+        <line x1="480" y1="100" x2="560" y2="100"/><polygon points="560,96 568,100 560,104" fill="#d9c0a0"/>
+      </g>
+      <text x="40" y="90" fill="#8a837a" font-size="9">аудио</text>
+      <text x="530" y="90" fill="#8a837a" font-size="9">→ дальше</text>
+      <!-- servo loops -->
+      <g stroke="#7fa3b0" stroke-width="1" fill="none" stroke-dasharray="4 3">
+        <path d="M195,160 L195,205 L110,205 L110,120 L118,120" marker-end="url(#b)"/>
+        <path d="M405,160 L405,205 L320,205 L320,120 L328,120" marker-end="url(#b)"/>
+      </g>
+      <rect x="150" y="196" width="92" height="18" rx="3" fill="#15191c" stroke="#3a5560"/>
+      <rect x="360" y="196" width="92" height="18" rx="3" fill="#15191c" stroke="#3a5560"/>
+      <text x="196" y="208.5" text-anchor="middle" fill="#8fb3c0" font-size="8.5">серва · τ = 1 c</text>
+      <text x="406" y="208.5" text-anchor="middle" fill="#8fb3c0" font-size="8.5">серва · τ = 1 c</text>
+      <text x="320" y="238" text-anchor="middle" fill="#6f685f" font-size="9">петля меряет ток покоя на истоке и подводит затвор — любой донор попадает в зону</text>
+      <!-- bias input -->
+      <line x1="195" y1="14" x2="195" y2="36" stroke="#7fa3b0" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#b)"/>
+      <line x1="405" y1="14" x2="405" y2="36" stroke="#7fa3b0" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#b)"/>
+      <text x="195" y="10" text-anchor="middle" fill="#8fb3c0" font-size="8.5">BIAS (стик X) — поверх сервы</text>
+      <text x="405" y="10" text-anchor="middle" fill="#8fb3c0" font-size="8.5">DRIVE гонит в клип</text>
+    </svg>
+    </div>
+    <figcaption>Серва держит среднее — пилот модулирует вокруг. Уникальность звучит, спецификация держится</figcaption>
+  </figure>
+
+  <div class="grid g2">
+    <div class="card"><span class="tag warn">главный риск</span>
+      <p class="big">Достаточно ли зол клип без диодов?</p>
+      <p>Вся нелинейность — в транзисторах, диодных клипперов нет из принципа. Проверяется на
+      макете (It-4a) <b>до</b> заказа плат и до разборки доноров. Если плотности не хватит — пересмотр.</p></div>
+    <div class="card"><span class="tag green">провенанс</span>
+      <p class="big">Каждый транзистор — документ</p>
+      <p>Фото платы ESC до разборки, координаты и дата находки, измеренные Vth / gfs / Rds(on) —
+      в сертификат экземпляра. Калибровка прошивки подгоняется под конкретный донор.</p></div>
+  </div>
+</section>
+
+<!-- ================= 04 ROADMAP ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>Дорожная карта · от стола до пред-серии</h2></div>
+  <p class="lede">Порядок неслучайный: цифра идёт первой, потому что она быстрая, дешёвая и
+  становится измерительным стендом для аналога. Каждая итерация закрывает конкретные риски
+  и имеет проверяемый выход.</p>
+
+  <ul class="rmap">
+    <li class="blue"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-0 · Стенд и закупка</span><span class="tag">неделя</span></div>
+      <p>2× Nucleo-G431, 2× DJI C5 б/у (рабочий + жертва на разбор), MAX3421E, DAC8568, BS170
+      россыпью как суррогаты доноров, осциллограф и лабораторный ±12.</p>
+      <div class="done-when"><b>выход:</b> всё на столе, ничего не блокирует</div></li>
+
+    <li class="blue"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-1 · Пульт-MIDI на гимбалах DJI</span><span class="tag blue">R4 · R18</span></div>
+      <p>Разбор жертвы: какие сенсоры в гимбалах, распайка шлейфов. Nucleo читает 4 оси, шлёт
+      USB-MIDI. Главное — тюнинг rate-режима: скорость, deadzone, экспо. «Нагнетание» должно
+      ощущаться как газ, а не как курсор.</p>
+      <div class="done-when"><b>выход:</b> DAW пишет гладкую автоматизацию со всех четырёх осей</div></li>
+
+    <li class="blue"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-2 · USB-host на модуле</span><span class="tag blue">R19</span></div>
+      <p>MAX3421E + второй Nucleo энумерируют пульт, VBUS кормит его через токовый лимитер.
+      Горячее втыкание, 10 минут «пилотажа» без единой ошибки парсинга.</p>
+      <div class="done-when"><b>выход:</b> один кабель = данные + питание, стабильно</div></li>
+
+    <li class="blue"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-3 · MIDI → CV</span><span class="tag blue">R5</span></div>
+      <p>DAC8568 с калибровкой: центр стика = 0.00 В, края = ±5.00 В, никакой слышимой
+      ступенчатости. Отработать процесс калибровочных таблиц — он потом нужен для каждого экземпляра.</p>
+      <div class="done-when"><b>выход:</b> осциллограмма «жест → CV» чистая, латентность &lt; 15 мс</div></li>
+
+    <li class="crit"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-4a · Ядро на суррогатах</span><span class="tag warn">R2 · R14 — блокер</span></div>
+      <p>Двухкаскадный сатуратор + обе сервы на копеечных BS170. Серва должна захватить пять
+      разных транзисторов без подстройки. Найти зону саб-октавы. И — вердикт: злой ли клип
+      без диодов. <b>До закрытия — не заказывать платы, не разбирать доноров.</b></p>
+      <div class="done-when"><b>выход:</b> A/B-записи звучат, номиналы зафиксированы</div></li>
+
+    <li><span class="dot"></span>
+      <div class="it-head"><span class="name">It-4b · Донорские ESC</span><span class="tag amber">R8</span></div>
+      <p>Обмер пяти+ доноров (Vth, крутизна), каждый в сокет — серва обязана захватить. Таблица
+      допусков становится критерием входного контроля edition.</p>
+      <div class="done-when"><b>выход:</b> материал в тракте, разница с суррогатом задокументирована</div></li>
+
+    <li><span class="dot"></span>
+      <div class="it-head"><span class="name">It-5 · RING + GATE + переключения</span><span class="tag amber">R17</span></div>
+      <p>Несущий VCO, ШИМ-компаратор, детектор огибающей. Смена режима — под мьютом с рампой:
+      сто переключений подряд без единого щелчка громче −60 дБ.</p>
+      <div class="done-when"><b>выход:</b> три режима на одном ядре, переходы бесшумны</div></li>
+
+    <li><span class="dot"></span>
+      <div class="it-head"><span class="name">It-6 · Фильтр + полный тракт</span><span class="tag amber">R16 · R17</span></div>
+      <p>Резонансный VCF с самовозбуждением и клипом об рельсы, ROUTE pre/post, clean-blend,
+      грязный выходной VCA. Записать демо-сессию всего тракта, замерить реальное потребление.</p>
+      <div class="done-when"><b>выход:</b> модуль звучит целиком на макете</div></li>
+
+    <li class="blue"><span class="dot"></span>
+      <div class="it-head"><span class="name">It-7 · Посадка в корпус DJI</span><span class="tag blue">R20</span></div>
+      <p>Наша плата на посадочные места родной, родной USB-C порт, все шлейфы на родных
+      разъёмах. Снаружи — нетронутый пульт дрона.</p>
+      <div class="done-when"><b>выход:</b> корпус закрыт, наружу смотрит только USB-C</div></li>
+
+    <li><span class="dot"></span>
+      <div class="it-head"><span class="name">It-8 · Интеграция и пред-серия</span><span class="tag green">финал</span></div>
+      <p>Сквозная сессия в системе, финальные номиналы → разводка PCB (20HP + плата пульта),
+      релизные прошивки, провенанс-процесс на первых экземплярах end-to-end.</p>
+      <div class="done-when"><b>выход:</b> экземпляр №1 из 13</div></li>
+  </ul>
+</section>
+
+<!-- ================= 05 FANTASY ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>Фантазии · фишки следующих ревизий</h2></div>
+  <p class="lede">Не входит в прототип — но архитектура оставляет для этого двери. У ЦАП есть
+  свободные ноги, у DJI — неиспользованные органы, у USB — запас пропускной способности.</p>
+
+  <div class="grid g2 fx">
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="8" y="14" width="48" height="36" rx="4" fill="#1c1815" stroke="#c96a4a"/><circle cx="22" cy="32" r="8" fill="none" stroke="#c96a4a" stroke-width="1.5"/><path d="M22,26 a6,6 0 0 1 6,6" fill="none" stroke="#e8e2d6" stroke-width="1.5"/><rect x="38" y="24" width="12" height="16" rx="2" fill="#c96a4a" opacity=".7"/></svg>
+      <div><h3>Чёрный ящик</h3>
+      <p>Бортовой самописец жеста: удержание GATE пишет автоматизацию всех четырёх осей,
+      двойное нажатие — воспроизводит петлёй. Полёт можно повторить — как запись телеметрии
+      разбившегося борта.</p></div>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="10" y="22" width="44" height="26" rx="12" fill="#1c1815" stroke="#7fa3b0"/><path d="M20,48 Q32,60 44,48" fill="none" stroke="#7fa3b0" stroke-width="1.5" stroke-dasharray="3 2"/><path d="M16,18 Q32,4 48,18" fill="none" stroke="#7fa3b0" stroke-width="1.5"/><circle cx="32" cy="35" r="5" fill="#2a2521" stroke="#5c574f"/></svg>
+      <div><h3>Наклон как CV</h3>
+      <p>IMU на нашей плате: пульт в руках — крен и тангаж корпуса становятся пятой и шестой
+      осями. Прибор играется всем телом, как настоящий полёт FPV.</p></div>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="6" y="24" width="22" height="16" rx="7" fill="#1c1815" stroke="#e0a23a"/><rect x="36" y="24" width="22" height="16" rx="7" fill="#1c1815" stroke="#7fa3b0"/><line x1="28" y1="32" x2="36" y2="32" stroke="#8a837a" stroke-dasharray="2 2"/><circle cx="17" cy="32" r="4" fill="#2a2521" stroke="#5c574f"/><circle cx="47" cy="32" r="4" fill="#2a2521" stroke="#5c574f"/></svg>
+      <div><h3>Дуэт</h3>
+      <p>USB-хаб на входе — и модуль слышит два пульта: один пилот ведёт сатурацию, второй —
+      фильтр. Четырёхрукий инструмент для двоих.</p></div>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="12" y="10" width="40" height="44" rx="3" fill="#1c1815" stroke="#a07a5c"/><rect x="18" y="16" width="28" height="18" rx="2" fill="#0c0a09" stroke="#46403a"/><path d="M20,30 l6,-8 5,5 4,-6 7,9" fill="none" stroke="#e0a23a" stroke-width="1.3"/><circle cx="24" cy="44" r="3.5" fill="#b9b2a6"/><circle cx="40" cy="44" r="3.5" fill="#b9b2a6"/></svg>
+      <div><h3>Видео-картридж</h3>
+      <p>Возвращение video audifier отдельным 4HP-экспандером: композитный вход, аналоговая
+      камера — тембр зависит от того, что видит объектив. Дрон снова смотрит.</p></div>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="14" y="8" width="36" height="48" rx="4" fill="#1c1815" stroke="#4fbf6a"/><path d="M26,26 a8,8 0 0 1 12,0 M22,20 a14,14 0 0 1 20,0" fill="none" stroke="#4fbf6a" stroke-width="1.5"/><circle cx="32" cy="34" r="2.5" fill="#4fbf6a"/><text x="32" y="50" text-anchor="middle" font-size="8" fill="#8a837a" font-family="monospace">№07/13</text></svg>
+      <div><h3>NFC-провенанс</h3>
+      <p>Метка в корпусе каждого экземпляра: телефон к панели — открывается сертификат:
+      фото платы ESC до разборки, координаты находки, кривые обмера транзисторов.</p></div>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 64 64"><rect x="8" y="18" width="48" height="28" rx="4" fill="#1c1815" stroke="#8a837a"/><rect x="14" y="24" width="36" height="16" rx="2" fill="#0c0a09"/><path d="M17,36 h6 v-6 h5 v6 h6 v-9 h5 v9 h7" fill="none" stroke="#7fa3b0" stroke-width="1.3"/></svg>
+      <div><h3>Телеметрия</h3>
+      <p>OLED в окне держателя телефона DJI: «высота» (DRIVE), «курс» (CUTOFF), режим, ARM,
+      номер экземпляра. Кокпит показывает полёт по прибору.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TABLE: CONTROLS CHEAT ================= -->
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>Шпаргалка управления</h2></div>
+  <div class="tbl-scroll">
+  <table>
+    <tr><th>Орган</th><th>Параметр</th><th>Поведение</th><th>Где база/глубина</th></tr>
+    <tr><td><b>Левый стик ↑</b></td><td>DRIVE</td><td>rate — копит, держится</td><td>аттенювертор DRIVE на модуле</td></tr>
+    <tr><td><b>Левый стик ↔</b></td><td>BIAS</td><td>momentary — вокруг симметрии</td><td>аттенювертор BIAS</td></tr>
+    <tr><td><b>Правый стик ↑</b></td><td>CUTOFF</td><td>rate — «открыл и стоит»</td><td>ручка CUTOFF на модуле</td></tr>
+    <tr><td><b>Правый стик ↔</b></td><td>RESO</td><td>momentary — вокруг базы</td><td>ручка RESO</td></tr>
+    <tr><td><b>Слайдер 3-поз</b></td><td>MODE</td><td>SHAPER · RING · GATE</td><td>смена под мьютом, без щелчка</td></tr>
+    <tr><td><b>RTH / Fn</b></td><td>ARM / LINK</td><td>toggle</td><td>LED-зеркало на пульте и модуле</td></tr>
+    <tr><td><b>Shutter</b></td><td>GATE</td><td>momentary, нота C2</td><td>дублируется CV-выходом GATE</td></tr>
+    <tr><td><b>Колёсико</b></td><td>→ MIX</td><td>назначаемый CC#20</td><td>нормаль на вход MIX</td></tr>
+    <tr><td><b>Ручки модуля</b></td><td>LEVEL · TONE · HPF · MIX · BASS</td><td>аналог, вне MIDI</td><td>+ CV-входы с перехватом</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="princ">
+    <div class="row"><span class="n">I</span><span><b>Функция важнее семиотики.</b> ESC был силовым переключателем — остаётся силовым переключателем.</span></div>
+    <div class="row"><span class="n">II</span><span><b>Edition не объясняет себя.</b> Документация честная, но ненавязчивая. Объект говорит сам.</span></div>
+    <div class="row"><span class="n">III</span><span><b>Звук первичен.</b> Если модуль не работает как инструмент — концепция его не вытащит.</span></div>
+    <div class="row"><span class="n">IV</span><span><b>Часть линейки.</b> Архитектура живёт в общем потоке System Suicide, не отдельным объектом.</span></div>
+  </div>
+  <div class="lbl" style="margin-top:28px">IS MY · SYSTEM SUICIDE №8 · рабочие документы: 01_concept → 05_pult_dji_c5 + firmware/ · ветка claude/jolly-gates-KxAP2</div>
+</footer>
+
+</div>
