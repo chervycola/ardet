@@ -108,9 +108,9 @@
   .princ li::before{content:counter(p,decimal-leading-zero); color:var(--red); font-family:var(--grotesk); font-weight:800; min-width:26px;}
 
   .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; max-width:520px; margin:0 auto;
-    display:grid; grid-template-columns:repeat(4,1fr); background:var(--nav-bg); border-top:2px solid var(--hair); padding-bottom:var(--sab);}
+    display:grid; grid-template-columns:repeat(3,1fr); background:var(--nav-bg); border-top:2px solid var(--hair); padding-bottom:var(--sab);}
   .tabs button{background:none; border:0; appearance:none; -webkit-appearance:none; color:var(--muted);
-    font-family:var(--grotesk); font-weight:800; text-transform:uppercase; letter-spacing:.2px; font-size:13px; padding:13px 2px; cursor:pointer; position:relative;}
+    font-family:var(--grotesk); font-weight:800; text-transform:uppercase; letter-spacing:.5px; font-size:14px; padding:14px 4px; cursor:pointer; position:relative;}
   .tabs button.on{color:var(--hair);}
   .tabs button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:6px; width:20px; height:3px; background:var(--red);}
 
@@ -302,7 +302,6 @@
     <button class="on" data-v="forum" data-t="sec.forum">Форум</button>
     <button data-v="posts" data-t="sec.posts">Лента</button>
     <button data-v="devices" data-t="sec.devices">Девайсы</button>
-    <button data-v="schedule" data-t="sec.schedule">Расписание</button>
   </nav>
 </div>
 
@@ -965,7 +964,7 @@ function openProduct(cid, pid){
 function routeToken(txt){
   if(!txt) return false;
   const t=(""+txt).trim();
-  const mt = t.match(/\bt[_:\/-](forum|posts|devices|schedule)\b/i);
+  const mt = t.match(/\bt[_:\/-](forum|posts|devices)\b/i);
   if(mt){ setView(mt[1].toLowerCase()); return true; }
   const m = t.match(/(?:startapp=|[#\/])?\b([dac])[_:\/-]([a-zA-Z0-9_-]+)/);
   if(m){ const k=m[1].toLowerCase(), id=m[2];
