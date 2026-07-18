@@ -1,0 +1,605 @@
+<title>LAST DAY — от макета до финала</title>
+<style>
+:root{
+  --bg:#EAE6DE; --panel:#F4F1EA; --panel2:#E0DBCF;
+  --ink:#191411; --muted:#6E655C; --line:#C6BFB2;
+  --sun:#D8450F; --sun-soft:#D8450F22; --haz:#C79000;
+  --go:#4E7D42; --fight:#A87718; --stop:#B23A26;
+  --knob:#241E19; --knob-line:#4A4038;
+  --font-d:'Arial Narrow','Helvetica Neue',Arial,sans-serif;
+  --font-b:Georgia,'Times New Roman',serif;
+  --font-m:Consolas,'Cascadia Mono','SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16110D; --panel:#201914; --panel2:#2A211A;
+    --ink:#EFE7DA; --muted:#9A8D7D; --line:#3D332A;
+    --sun:#F0602A; --sun-soft:#F0602A26; --haz:#E0B043;
+    --go:#7FA867; --fight:#CDA544; --stop:#D96A4F;
+    --knob:#0E0B08; --knob-line:#4A4038;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16110D; --panel:#201914; --panel2:#2A211A;
+  --ink:#EFE7DA; --muted:#9A8D7D; --line:#3D332A;
+  --sun:#F0602A; --sun-soft:#F0602A26; --haz:#E0B043;
+  --go:#7FA867; --fight:#CDA544; --stop:#D96A4F;
+  --knob:#0E0B08; --knob-line:#4A4038;
+}
+:root[data-theme="light"]{
+  --bg:#EAE6DE; --panel:#F4F1EA; --panel2:#E0DBCF;
+  --ink:#191411; --muted:#6E655C; --line:#C6BFB2;
+  --sun:#D8450F; --sun-soft:#D8450F22; --haz:#C79000;
+  --go:#4E7D42; --fight:#A87718; --stop:#B23A26;
+  --knob:#241E19; --knob-line:#4A4038;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16.5px;line-height:1.62}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+p{max-width:66ch}
+a{color:var(--sun);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+
+/* ── HERO ─────────────────────────────── */
+.hero{position:relative;overflow:hidden;padding:88px 0 72px;
+  background:
+    radial-gradient(ellipse 620px 340px at 50% 108%, var(--sun-soft) 0%, transparent 70%),
+    var(--bg);}
+.hero .sun{position:absolute;left:50%;bottom:-140px;transform:translateX(-50%);
+  width:420px;height:420px;border-radius:50%;
+  background:radial-gradient(circle, var(--sun) 0%, var(--sun) 42%, transparent 70%);
+  opacity:.16;filter:blur(2px);pointer-events:none}
+.hero .road{position:absolute;left:0;right:0;bottom:0;height:7px;
+  background:repeating-linear-gradient(-45deg, var(--sun) 0 14px, transparent 14px 28px);opacity:.55}
+.kicker{font-family:var(--font-m);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--sun);margin:0 0 18px}
+h1{font-family:var(--font-d);font-weight:700;text-transform:uppercase;
+  font-size:clamp(64px,13vw,124px);line-height:.9;letter-spacing:.01em;margin:0;
+  transform:scaleY(1.14);transform-origin:left bottom;text-wrap:balance;
+  background:linear-gradient(180deg,var(--ink) 55%, var(--sun) 130%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+@keyframes shimmer{0%,100%{filter:none}50%{filter:blur(.4px);transform:scaleY(1.14) skewX(.5deg)}}
+@media (prefers-reduced-motion: no-preference){ h1{animation:shimmer 6s ease-in-out infinite} }
+.sub{font-size:19px;color:var(--muted);margin:26px 0 0;max-width:56ch}
+.sub b{color:var(--ink)}
+.meta{font-family:var(--font-m);font-size:12px;color:var(--muted);margin-top:30px;letter-spacing:.06em}
+
+/* ── TOC ─────────────────────────────── */
+.toc{padding:36px 0 8px}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-top:14px}
+.toc-grid a{display:flex;gap:10px;align-items:baseline;padding:9px 12px;border:1px solid var(--line);
+  background:var(--panel);font-family:var(--font-m);font-size:12.5px;color:var(--ink)}
+.toc-grid a:hover{border-color:var(--sun);text-decoration:none}
+.toc-grid .n{color:var(--sun);font-weight:bold}
+
+/* ── SHEETS ──────────────────────────── */
+.hazard{height:6px;background:repeating-linear-gradient(-45deg, var(--sun) 0 12px, transparent 12px 24px);opacity:.45;margin:0}
+.sheet{padding:58px 0 64px;position:relative}
+.sheet + .sheet{border-top:1px solid var(--line)}
+.eyebrow{font-family:var(--font-m);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--sun);margin:0 0 10px}
+h2{font-family:var(--font-d);font-weight:700;text-transform:uppercase;font-size:clamp(30px,5vw,44px);
+  line-height:1;letter-spacing:.01em;margin:0 0 22px;transform:scaleY(1.08);transform-origin:left bottom;text-wrap:balance}
+h3{font-family:var(--font-d);font-weight:700;text-transform:uppercase;font-size:19px;letter-spacing:.04em;margin:30px 0 10px}
+.lede{font-size:18.5px;max-width:62ch}
+.note{border-left:3px solid var(--sun);background:var(--panel);padding:12px 16px;margin:20px 0;font-size:15px;max-width:66ch}
+.note b{font-family:var(--font-m);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sun)}
+
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:20px 0;padding:16px;background:var(--panel);border:1px solid var(--line)}
+.fbox{border:1.5px solid var(--ink);padding:7px 12px;font-family:var(--font-m);font-size:12.5px;background:var(--bg);white-space:nowrap}
+.fbox.hot{border-color:var(--sun);color:var(--sun)}
+.farr{color:var(--sun);font-family:var(--font-m);font-weight:bold;font-size:15px}
+.fnote{width:100%;font-family:var(--font-m);font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* tables */
+.tblwrap{overflow-x:auto;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-family:var(--font-m);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:8px 12px;border-bottom:2px solid var(--ink)}
+td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+td.m,.m{font-family:var(--font-m);font-size:13px;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-family:var(--font-m);font-size:11px;letter-spacing:.06em;padding:2px 8px;border-radius:2px;color:#fff;text-transform:uppercase}
+.chip.go{background:var(--go)} .chip.fight{background:var(--fight)} .chip.stop{background:var(--stop)}
+
+/* rig cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:20px 0}
+.card{border:1px solid var(--line);background:var(--panel);padding:18px 20px}
+.card .tag{font-family:var(--font-m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sun)}
+.card h4{font-family:var(--font-d);font-weight:700;text-transform:uppercase;font-size:20px;margin:6px 0 8px;letter-spacing:.02em}
+.card p{font-size:14.5px;margin:8px 0}
+.card .price{font-family:var(--font-m);font-size:13px;color:var(--muted)}
+
+/* knobs */
+.panelbox{background:var(--panel);border:1px solid var(--line);padding:22px;margin:20px 0}
+.panelbox .ptitle{font-family:var(--font-m);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.krow{display:flex;flex-wrap:wrap;gap:20px 26px}
+.kn{display:flex;flex-direction:column;align-items:center;width:74px}
+.knob{position:relative;width:54px;height:54px;border-radius:50%;background:var(--knob);
+  border:2px solid var(--knob-line);box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.knob .ptr{position:absolute;inset:0;transform:rotate(var(--rot,0deg))}
+.knob .ptr::before{content:"";position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:3px;height:15px;background:var(--sun);border-radius:2px}
+.kn label{font-family:var(--font-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-top:7px;text-align:center;color:var(--ink)}
+.kn .kv{font-family:var(--font-m);font-size:10px;color:var(--muted)}
+/* footswitches */
+.fsrow{display:flex;flex-wrap:wrap;gap:22px;margin-top:6px}
+.fs{display:flex;flex-direction:column;align-items:center;width:80px}
+.fs .cap{width:44px;height:44px;border-radius:50%;background:var(--panel2);border:3px solid var(--ink);
+  box-shadow:0 3px 0 var(--ink)}
+.fs.red .cap{border-color:var(--stop);box-shadow:0 3px 0 var(--stop)}
+.fs label{font-family:var(--font-m);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.fs .kv{font-family:var(--font-m);font-size:10px;color:var(--muted)}
+
+/* recipes */
+.recipe{border:1px solid var(--line);background:var(--panel);margin:18px 0;padding:20px 22px}
+.recipe h4{font-family:var(--font-d);font-weight:700;text-transform:uppercase;font-size:24px;margin:0 0 4px;letter-spacing:.02em}
+.recipe .mood{font-style:italic;color:var(--muted);font-size:14.5px;margin:0 0 14px}
+.recipe .gest{font-size:14px;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.recipe .gest b{color:var(--sun);font-family:var(--font-m);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+
+/* milestones */
+.miles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:20px 0}
+.mile{border:1px solid var(--line);background:var(--panel);padding:14px 16px}
+.mile .mn{font-family:var(--font-d);font-weight:700;font-size:26px;color:var(--sun)}
+.mile p{font-size:13.5px;margin:6px 0 0}
+
+/* svg diagram */
+.diagram{background:var(--panel);border:1px solid var(--line);padding:14px;margin:20px 0;overflow-x:auto}
+.diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+.diagram .cap{font-family:var(--font-m);font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* checklist */
+.check{list-style:none;padding:0;margin:16px 0;max-width:66ch}
+.check li{padding:8px 0 8px 30px;position:relative;border-bottom:1px dashed var(--line);font-size:15px}
+.check li::before{content:"";position:absolute;left:2px;top:12px;width:14px;height:14px;border:2px solid var(--sun);background:var(--bg)}
+
+footer{padding:40px 0 60px;border-top:1px solid var(--line);margin-top:20px;
+  font-family:var(--font-m);font-size:12px;color:var(--muted);letter-spacing:.05em}
+</style>
+
+<div class="hero">
+  <div class="sun"></div>
+  <div class="wrap">
+    <p class="kicker">System Suicide · модуль 7 из 9 · туториал</p>
+    <h1>Last<br>Day</h1>
+    <p class="sub">От настольного макета до финальной педали: как построить <b>комбайн выжженного полудня</b> — масляный делэй, солнечный сатуратор, физический эквалайзер — и добиться звука печёного асфальта, пустыни и адской жары.</p>
+    <p class="meta">11 ЛИСТОВ · ПО DECISION 06–08 + BENCH-ПЛАНУ PROTO/ · ЦЕПЬ СИНХРОНИЗИРОВАНА С ВЕТКОЙ SS (D09 / D12 / D13 + LITHOSEQ) · 2026-07</p>
+  </div>
+  <div class="road"></div>
+</div>
+
+<div class="wrap toc">
+  <p class="eyebrow">Содержание</p>
+  <div class="toc-grid">
+    <a href="#s1"><span class="n">01</span> Что мы строим</a>
+    <a href="#s2"><span class="n">02</span> Физика масляного диска</a>
+    <a href="#s3"><span class="n">03</span> Макет — волна 1: риски</a>
+    <a href="#s4"><span class="n">04</span> Макет — волна 2: первое эхо</a>
+    <a href="#s5"><span class="n">05</span> Проверка: критерии и вехи</a>
+    <a href="#s6"><span class="n">06</span> От франкенштейна к финалу</a>
+    <a href="#s7"><span class="n">07</span> Панель управления</a>
+    <a href="#s8"><span class="n">08</span> Рецепты жары</a>
+    <a href="#s9"><span class="n">09</span> Соединения с системой</a>
+    <a href="#s10"><span class="n">10</span> Диптих: Last Night</a>
+    <a href="#s11"><span class="n">11</span> Дорожная карта</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ЛИСТ 01 -->
+<section class="sheet" id="s1">
+  <p class="eyebrow">Лист 01 · Концепт</p>
+  <h2>Что мы строим</h2>
+  <p class="lede">Last Day — самодостаточный комбайн: одна коробка закрывает весь антураж «раскалённого полудня». Не набор фич, а три физические подсистемы и три character-эффекта, играющие в одну атмосферу.</p>
+
+  <div class="flow">
+    <span class="fbox">IN (stereo)</span><span class="farr">→</span>
+    <span class="fbox hot">SOLAR AMP</span><span class="farr">→</span>
+    <span class="fbox hot">TONGUE EQ</span><span class="farr">→</span>
+    <span class="fbox hot">OIL CAN DELAY</span><span class="farr">→</span>
+    <span class="fbox">MIX</span><span class="farr">→</span>
+    <span class="fbox">OUT (stereo)</span>
+    <span class="fnote">dry-тракт идёт в обход wet-цепи и микшируется на выходе; wet — mono внутри, стерео через два read-tap'а · TAR / CICADA / EMBER живут вокруг делэя и его feedback-петли</span>
+  </div>
+
+  <div class="tblwrap"><table>
+    <tr><th>Подсистема</th><th>Физический носитель</th><th>Что даёт</th></tr>
+    <tr><td><b>Oil Can Delay</b></td><td class="m">стальной диск ∅100мм в масляной ванне, capacitive pickup (Tel-Ray)</td><td>жидкое эхо, деградирующее в тёплый гул</td></tr>
+    <tr><td><b>Solar Amp</b></td><td class="m">LED baseline + солнечная ячейка 50×50мм</td><td>сатурация, управляемая светом; рука над панелью — жест</td></tr>
+    <tr><td><b>Resonant EQ</b></td><td class="m">Pultec-полки на индукторах + металлический язычок с каподастром</td><td>звенящий mid, самовозбуждение как инструмент</td></tr>
+    <tr><td><b>TAR / CICADA / EMBER</b></td><td class="m">peak-hold VCA · comparator-кластеры · noise + S&amp;H wobble</td><td>вязкость, песок и насекомые, тлеющий винил</td></tr>
+  </table></div>
+
+  <div class="note"><b>Форм-фактор</b><br>Одна плата — два корпуса: Eurorack 40HP и напольная big-box педаль (~203×140 мм). I/O: TRS + RCA + миниджек 3.5 мм, переключатель уровня instrument / −10 dBV / +4 dBu. Диджей включается по RCA в петлю пульта, гитарист — в разрыв борда, модульщик — миниджеком.</div>
+</section>
+
+<!-- ЛИСТ 02 -->
+<section class="sheet" id="s2">
+  <p class="eyebrow">Лист 02 · Физика</p>
+  <h2>Масляный диск: как масло помнит звук</h2>
+  <p class="lede">Наследие Tel-Ray Adineko (1960-е): не магнитная запись, а электростатика. Масляная плёнка на вращающемся диске переносит поляризацию от электрода записи к электродам чтения.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 340 235" width="340" height="235" role="img" aria-label="Схема масляного диска с электродами">
+      <rect x="55" y="152" width="230" height="46" rx="4" fill="var(--sun)" opacity="0.14"/>
+      <rect x="55" y="152" width="230" height="46" rx="4" fill="none" stroke="var(--muted)" stroke-width="1"/>
+      <circle cx="170" cy="108" r="78" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+      <circle cx="170" cy="108" r="6" fill="var(--ink)"/>
+      <!-- write pad, 10 o'clock -->
+      <rect x="95" y="55" width="22" height="9" rx="1" fill="var(--sun)" transform="rotate(-40 106 60)"/>
+      <!-- read A, 12 o'clock -->
+      <rect x="159" y="20" width="22" height="9" rx="1" fill="var(--ink)"/>
+      <!-- read B, 2 o'clock -->
+      <rect x="224" y="55" width="22" height="9" rx="1" fill="var(--ink)" transform="rotate(40 235 60)"/>
+      <!-- rotation arrow -->
+      <path d="M 116 155 A 66 66 0 0 1 108 78" fill="none" stroke="var(--sun)" stroke-width="2"/>
+      <path d="M 108 78 l -4 10 l 11 1 z" fill="var(--sun)"/>
+      <!-- labels -->
+      <text x="60" y="42" font-family="Consolas,monospace" font-size="10.5" fill="var(--sun)">WRITE</text>
+      <text x="152" y="14" font-family="Consolas,monospace" font-size="10.5" fill="var(--ink)">READ A → L</text>
+      <text x="248" y="42" font-family="Consolas,monospace" font-size="10.5" fill="var(--ink)">READ B → R</text>
+      <text x="62" y="190" font-family="Consolas,monospace" font-size="10.5" fill="var(--muted)">масляная ванна (сменный картридж)</text>
+      <text x="120" y="228" font-family="Consolas,monospace" font-size="10.5" fill="var(--muted)">t = θ / (360 × об/с)</text>
+    </svg>
+    <p class="cap">Диск заземлён. Write-электрод поляризует плёнку масла; диск уносит её по кругу; read-электроды снимают displacement-current через OPA1642.</p>
+  </div>
+
+  <h3>Честные времена задержки</h3>
+  <div class="tblwrap"><table>
+    <tr><th>Tap</th><th>Угол от write</th><th>30 об/с (max)</th><th>1 об/с (floor)</th></tr>
+    <tr><td class="m">READ A (левый канал)</td><td class="m">90°</td><td class="m">8 мс</td><td class="m">250 мс</td></tr>
+    <tr><td class="m">READ B (правый канал)</td><td class="m">180°</td><td class="m">17 мс</td><td class="m">500 мс</td></tr>
+  </table></div>
+
+  <div class="note"><b>Бонус касторового масла</b><br>Плотное масло держит поляризацию 2–3 оборота: сигнал возвращается под read-электрод снова и снова, деградируя с каждым проходом. Эффективный хвост — до ~2 секунд. Это не спрятанный дефект, а character сменного картриджа: выбор масла = выбор памяти. FEEDBACK растягивает хвост до бесконечности, DRAG тормозит мотор — и всё эхо тонет по питчу.</div>
+</section>
+
+<!-- ЛИСТ 03 -->
+<section class="sheet" id="s3">
+  <p class="eyebrow">Лист 03 · Макет — волна 1</p>
+  <h2>Сначала — то, что может убить концепт</h2>
+  <p class="lede">Два экзистенциальных риска прототипируются первыми и параллельно. Никакой пайки «приятных» блоков, пока эти два не дали «go». Бюджет волны — около $65 и одни выходные.</p>
+
+  <div class="cards">
+    <div class="card">
+      <span class="tag">Rig #1 · категория A</span>
+      <h4>Capacitive pickup</h4>
+      <p><b>Вопрос:</b> переносит ли масляная плёнка поляризацию по кругу с измеримым сигналом?</p>
+      <p><b>Стенд:</b> старый проигрыватель винила (33 об/мин — сразу худший медленный случай), стальной блин, медные площадки на FR4 с зазором 1 мм, три ступени уровня записи (±5 / ±10 / ±20 В), чтение через OPA1642.</p>
+      <p><b>Ключевой момент:</b> подать burst 1 кГц, заглушить запись — и увидеть его на чтении с задержкой ~450 мс. Если увидели — концепт жив.</p>
+      <p class="price">BOM ≈ $40 · матрица: 3 масла × 3 зазора × 3 уровня</p>
+    </div>
+    <div class="card">
+      <span class="tag">Rig #2 · категория A</span>
+      <h4>Tongue-резонатор</h4>
+      <p><b>Вопрос:</b> даёт ли защемлённая пластинка с подвижным каподастром музыкально управляемый резонанс?</p>
+      <p><b>Стенд:</b> щуповая лента 0.5 мм из автомагазина как пластина, «крокодил» с резиновыми губками как каподастр нулевой итерации, два пьезо-диска (drive + sense), тяжёлое основание.</p>
+      <p><b>Ключевой момент:</b> проверить закон f ∝ 1/L², диапазон Q от прижима и — главное — контролируемое самовозбуждение с диодным лимитером.</p>
+      <p class="price">BOM ≈ $25 · слепой тест: сталь против латуни</p>
+    </div>
+  </div>
+
+  <div class="note"><b>Дисциплина до M0</b><br>Не рисовать платы. Не покупать корпуса и ручки. Не собирать стерео (второй электрод — copy-paste после «go»). Не греть масло нагревателем — холодное из холодильника против тёплого с батареи отвечает на тот же вопрос бесплатно.</div>
+</section>
+
+<!-- ЛИСТ 04 -->
+<section class="sheet" id="s4">
+  <p class="eyebrow">Лист 04 · Макет — волна 2</p>
+  <h2>Мотор, солнце и первое эхо</h2>
+  <p class="lede">Когда физика доказана, добавляем точный привод и световой каскад. Здесь живёт психологическая веха всего проекта — M1, первое настоящее эхо.</p>
+
+  <div class="cards">
+    <div class="card">
+      <span class="tag">Rig #3 · после «go» от Rig #1</span>
+      <h4>Мотор + PLL</h4>
+      <p><b>Железо:</b> BLDC gimbal-мотор 2208 (намотан для плавного медленного вращения), SimpleFOC, магнитный энкодер AS5600.</p>
+      <p><b>Проверяем:</b> стабильность 0.5–30 об/с под масляной нагрузкой; cogging <i>через pickup</i> — боковые полосы FM вокруг несущей не громче −40 dB; модуляции HAZE и EMBER поверх замкнутой петли; DRAG — плавный ли pitch-dive и ramp-up.</p>
+      <p class="price">BOM ≈ $45</p>
+    </div>
+    <div class="card">
+      <span class="tag">Rig #4 · независим, в любой момент</span>
+      <h4>Solar amp</h4>
+      <p><b>Архитектура:</b> LED и солнечная ячейка смотрят в одну оптическую камеру с окном наружу. LED задаёт гарантированный пол освещённости — каскад играет всегда; внешний свет добавляется поверх. Baseline + overlay одним оптическим смешением.</p>
+      <p><b>Проверяем:</b> каскад не глохнет ни при каком SUN ≥ 10%; рука над окном — слышимый музыкальный жест; резкое открытие окна — без «плюха».</p>
+      <p class="price">BOM ≈ $20</p>
+    </div>
+  </div>
+
+  <div class="flow">
+    <span class="fbox">Rig #1</span><span class="farr">+</span>
+    <span class="fbox">Rig #3</span><span class="farr">=</span>
+    <span class="fbox hot">M1: гитара → диск → эхо</span>
+    <span class="fnote">записать proto/audio/rig3_M1_first_echo.wav, датировать. Первый oil-can delay проекта — не пропустить момент.</span>
+  </div>
+</section>
+
+<!-- ЛИСТ 05 -->
+<section class="sheet" id="s5">
+  <p class="eyebrow">Лист 05 · Проверка</p>
+  <h2>Критерии: go, борьба, no-go</h2>
+  <p class="lede">У каждого рига три зоны. «Go» — идём дальше. «Борьба» — концепт жив, дожимаем реализацию. «No-go» — включаем зафиксированный fallback, а не изобретаем на панике.</p>
+
+  <div class="tblwrap"><table>
+    <tr><th>Узел</th><th>Критерий</th><th><span class="chip go">go</span></th><th><span class="chip fight">борьба</span></th><th><span class="chip stop">no-go</span></th></tr>
+    <tr><td>Pickup</td><td class="m">SNR @ 1 кГц</td><td class="m">≥ 30 dB</td><td class="m">15–30 dB</td><td class="m">&lt; 15 dB</td></tr>
+    <tr><td>Pickup</td><td class="m">persistence (касторовое)</td><td class="m">≥ 2 оборота</td><td class="m">1–2</td><td class="m">&lt; 1 оборота</td></tr>
+    <tr><td>Tongue</td><td class="m">диапазон по каподастру</td><td class="m">≥ 3 октавы</td><td class="m">2–3</td><td class="m">&lt; 2 октав</td></tr>
+    <tr><td>Tongue</td><td class="m">повторяемость позиции</td><td class="m">≤ ±50 центов</td><td class="m">±50–200</td><td class="m">&gt; ±200</td></tr>
+    <tr><td>Мотор</td><td class="m">wow/flutter @ 3–30 об/с</td><td class="m">≤ 0.1%</td><td class="m">0.1–0.5%</td><td class="m">&gt; 0.5%</td></tr>
+    <tr><td>Мотор</td><td class="m">cogging через pickup</td><td class="m">≤ −40 dB</td><td class="m">−25…−40</td><td class="m">слышимый дребезг</td></tr>
+    <tr><td>Solar</td><td class="m">baseline</td><td class="m">играет при любом SUN</td><td class="m">узкая зона</td><td class="m">глохнет</td></tr>
+  </table></div>
+
+  <h3>Вехи</h3>
+  <div class="miles">
+    <div class="mile"><span class="mn">M0</span><p>Rig #1 и #2 дали вердикт. Решение: как задумано / fallback (магнитный tract или BBD + oil-фильтр).</p></div>
+    <div class="mile"><span class="mn">M1</span><p>Первое эхо: гитара на входе, повтор из масла на выходе. Аудиозапись в архив.</p></div>
+    <div class="mile"><span class="mn">M2</span><p>Полный breadboard-франкенштейн: pickup + мотор + tongue-EQ + solar + 1–2 character FX. Играет.</p></div>
+    <div class="mile"><span class="mn">M3</span><p>KiCad rev A. Номиналы — измеренные на M2, не расчётные.</p></div>
+  </div>
+</section>
+
+<!-- ЛИСТ 06 -->
+<section class="sheet" id="s6">
+  <p class="eyebrow">Лист 06 · Производство</p>
+  <h2>От франкенштейна к финалу</h2>
+  <p class="lede">Путь после M2 — итерации платы и механики. Одна PCB рождает оба корпуса; различаются только шасси, панель и то, чем жмут: пальцы или подошва.</p>
+
+  <div class="flow">
+    <span class="fbox">M2 breadboard</span><span class="farr">→</span>
+    <span class="fbox">KiCad rev A</span><span class="farr">→</span>
+    <span class="fbox">прототип rev A + тест-протокол</span><span class="farr">→</span>
+    <span class="fbox">rev B (фиксы)</span><span class="farr">→</span>
+    <span class="fbox hot">Eurorack 40HP</span><span class="farr">+</span>
+    <span class="fbox hot">Pedal big-box</span>
+  </div>
+
+  <div class="tblwrap"><table>
+    <tr><th>Этап</th><th>Что происходит</th><th>Критичные узлы</th></tr>
+    <tr><td class="m">rev A</td><td>4-слойная плата (сложность требует отдельный GND-план), механика диска и ванны, tongue-каретка на rail</td><td>разводка high-Z чтения подальше от драйвера мотора; звезда земли; экран pickup-зоны</td></tr>
+    <tr><td class="m">тест rev A</td><td>протокол по образцу fixes/04: питание → тракты по одному → интеграция → burn-in 24 ч</td><td>термодрейф масла за 30 мин; EMI соленоида CRASH в pickup; стабильность FB-петли (SPICE + живьём)</td></tr>
+    <tr><td class="m">rev B</td><td>фиксы по протоколу, финальная панель, серийные картриджи (Viton-прокладки, фильтр заливки)</td><td>герметичность ванны при перевозке вверх ногами; сервисный доступ к мотору и электродам</td></tr>
+    <tr><td class="m">корпуса</td><td>Eurorack-панель и педальное шасси от одной платы; солнечная ячейка видима в обоих</td><td>в педали ячейка на верхней крышке; виброразвязка диска от пола (резиновые опоры)</td></tr>
+  </table></div>
+
+  <div class="note"><b>Сервисность</b><br>Модуль maintenance-heavy по природе: мотор 5000 ч, масло меняется картриджем, пластины tongue — сменные. Каждая подсистема демонтируется отдельно; это позиция бренда, а не оговорка мелким шрифтом.</div>
+</section>
+
+<!-- ЛИСТ 07 -->
+<section class="sheet" id="s7">
+  <p class="eyebrow">Лист 07 · Управление</p>
+  <h2>Панель: каждая ручка — жест</h2>
+  <p class="lede">Тонкая настройка живёт на внутренних триммерах. На панель выходит только то, чем играют. Ниже — полная раскладка по секциям с «домашними» положениями для первого включения.</p>
+
+  <div class="panelbox">
+    <p class="ptitle">Solar Amp — свет и сатурация</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-20deg"></div></div><label>Sun</label><span class="kv">яркость LED-пола</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-60deg"></div></div><label>Solar</label><span class="kv">вклад ячейки</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:0deg"></div></div><label>Drive</label><span class="kv">глубина насыщения</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-45deg"></div></div><label>Bright</label><span class="kv">выжиг верха</span></div>
+    </div>
+  </div>
+
+  <div class="panelbox">
+    <p class="ptitle">Resonant EQ — полки и язычок</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:20deg"></div></div><label>Low</label><span class="kv">80/120/200 Гц ±12 dB</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:0deg"></div></div><label>Mid Freq</label><span class="kv">каподастр, 4 октавы</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:30deg"></div></div><label>Mid Gain</label><span class="kv">max → само­возбуждение</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-30deg"></div></div><label>Clamp</label><span class="kv">прижим = Q</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-15deg"></div></div><label>High</label><span class="kv">3/5/8 кГц ±12 dB</span></div>
+    </div>
+  </div>
+
+  <div class="panelbox">
+    <p class="ptitle">Oil Can Delay — время и масло</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-10deg"></div></div><label>Time</label><span class="kv">скорость диска</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:15deg"></div></div><label>Feedback</label><span class="kv">рециркуляция</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:60deg"></div></div><label>Tap Spread</label><span class="kv">стерео A↔B</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-50deg"></div></div><label>Haze</label><span class="kv">wow мотора</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-30deg"></div></div><label>Heat</label><span class="kv">нагрев масла</span></div>
+    </div>
+  </div>
+
+  <div class="panelbox">
+    <p class="ptitle">Character — три голоса жары</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-40deg"></div></div><label>Tar</label><span class="kv">вязкое залипание</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-60deg"></div></div><label>Cicada</label><span class="kv">кластерный треск</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-25deg"></div></div><label>Ember</label><span class="kv">тлеющий винил</span></div>
+    </div>
+  </div>
+
+  <div class="panelbox">
+    <p class="ptitle">Perform — четыре футсвича (в стойке — кнопки + gate-входы)</p>
+    <div class="fsrow">
+      <div class="fs"><div class="cap"></div><label>Kill</label><span class="kv">momentary · мьют входа, хвост живёт</span></div>
+      <div class="fs"><div class="cap"></div><label>Freeze</label><span class="kv">latching · петля деградирует</span></div>
+      <div class="fs red"><div class="cap"></div><label>Crash</label><span class="kv">momentary · соленоид в ванну</span></div>
+      <div class="fs"><div class="cap"></div><label>Drag</label><span class="kv">momentary · тормоз мотора</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ЛИСТ 08 -->
+<section class="sheet" id="s8">
+  <p class="eyebrow">Лист 08 · Рецепты</p>
+  <h2>Как выплавить жару</h2>
+  <p class="lede">Четыре прогнозных пресета — стартовые точки, а не догма. Проверяются и калибруются на M2, когда франкенштейн заиграет целиком.</p>
+
+  <div class="recipe">
+    <h4>Печёный асфальт</h4>
+    <p class="mood">Медленное вязкое эхо плавится под ногами. Каждый громкий звук вязнет и медленно вытекает.</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-55deg"></div></div><label>Time</label><span class="kv">~350 мс</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:30deg"></div></div><label>Feedback</label><span class="kv">60%</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:95deg"></div></div><label>Heat</label><span class="kv">85% · масло горячее</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:70deg"></div></div><label>Tar</label><span class="kv">75%</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-30deg"></div></div><label>Ember</label><span class="kv">40%</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-80deg"></div></div><label>Sun</label><span class="kv">35% · грязноватый каскад</span></div>
+    </div>
+    <p class="gest"><b>Жест:</b> в конце фразы — DRAG. Мотор тормозит, эхо тонет по питчу и растворяется в асфальте. HEAT удлиняет залипание TAR — жара буквально делает динамику более вязкой. Масло — глицерин или касторовое.</p>
+  </div>
+
+  <div class="recipe">
+    <h4>Пустыня в полдень</h4>
+    <p class="mood">Сухо, звонко, широко. Песок шуршит в такт сигналу, стерео-ветер разносит повторы.</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:60deg"></div></div><label>Cicada</label><span class="kv">70% · песок и насекомые</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:135deg"></div></div><label>Tap Spread</label><span class="kv">max · стерео-ветер</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:100deg"></div></div><label>Sun</label><span class="kv">80% · света много</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:55deg"></div></div><label>Bright</label><span class="kv">70% · верх звенит</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-25deg"></div></div><label>Feedback</label><span class="kv">35% · редкие повторы</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:20deg"></div></div><label>Mid Freq</label><span class="kv">сталь · ~2.5 кГц · узкий Q</span></div>
+    </div>
+    <p class="gest"><b>Жест:</b> ладонь медленно проплывает над солнечной ячейкой — компрессия дышит, как облако над барханом. CICADA сама уплотняется на пиках сигнала: чем громче играешь, тем гуще рой. Масло — минеральное лёгкое.</p>
+  </div>
+
+  <div class="recipe">
+    <h4>Адское пекло</h4>
+    <p class="mood">Каскад голодает, язычок поёт сам, петля на грани самовозбуждения. Всё горит.</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:115deg"></div></div><label>Drive</label><span class="kv">90%</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-110deg"></div></div><label>Sun</label><span class="kv">15% · каскад голодает!</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:135deg"></div></div><label>Mid Gain</label><span class="kv">max · язычок поёт</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:90deg"></div></div><label>Clamp</label><span class="kv">жёсткий · высокий Q</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:100deg"></div></div><label>Feedback</label><span class="kv">80% · край</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:45deg"></div></div><label>Tar</label><span class="kv">60%</span></div>
+    </div>
+    <p class="gest"><b>Жест:</b> CRASH бьёт соленоидом в ванну — всплеск врывается в петлю и горит в ней кругами. KILL бросает вход: остаётся только пылающий хвост и поющая пластина. Главный трюк — SUN вниз: меньше света, больше голода, больше огня.</p>
+  </div>
+
+  <div class="recipe">
+    <h4>Тлеющая пластинка</h4>
+    <p class="mood">Память, которая доигрывает сама себя. Треск, редкие щелчки пыли, изношенная канавка плывёт.</p>
+    <div class="krow">
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:110deg"></div></div><label>Ember</label><span class="kv">90% · всё тлеет</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:0deg"></div></div><label>Time</label><span class="kv">~200 мс</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:10deg"></div></div><label>Feedback</label><span class="kv">50%</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-45deg"></div></div><label>Haze</label><span class="kv">30% · лёгкий wow</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-70deg"></div></div><label>High</label><span class="kv">−6 dB · верх стёрт</span></div>
+      <div class="kn"><div class="knob"><div class="ptr" style="--rot:-50deg"></div></div><label>Tar</label><span class="kv">30%</span></div>
+    </div>
+    <p class="gest"><b>Жест:</b> сыграть фразу — и FREEZE. Запись отключается, петля крутится и деградирует: с каждым оборотом масло съедает детали, EMBER подсыпает треск и качает питч на ±5 центов. Через полминуты от фразы остаётся тёплый пепел.</p>
+  </div>
+</section>
+
+<!-- ЛИСТ 09 -->
+<section class="sheet" id="s9">
+  <p class="eyebrow">Лист 09 · Соединения</p>
+  <h2>Место в системе</h2>
+  <p class="lede">Last Day работает соло — это принцип комбайна. В системе SYSTEM SUICIDE он встаёт в слот 7 из 9: перед ним — рука пилота, после него — кристальная партитура и холодная ночь.</p>
+
+  <div class="flow">
+    <span class="fbox">…цепь модулей 1–5</span><span class="farr">→</span>
+    <span class="fbox">IS MY · MOSFET-шейпер</span><span class="farr">→</span>
+    <span class="fbox hot">LAST DAY</span><span class="farr">→</span>
+    <span class="fbox hot">LAST NIGHT</span><span class="farr">→</span>
+    <span class="fbox">OUT</span>
+    <span class="fnote">AND MY (кристальный секвенсор) стоит в слоте 8 как CV/MIDI-мозг: аудио Day → Night идёт напрямую, а паттерны кристалла ведут оба финализатора по CV и gate</span>
+  </div>
+
+  <h3>Соседи по цепи — актуальный канон</h3>
+  <div class="tblwrap"><table>
+    <tr><th>Слот</th><th>Модуль</th><th>Что это теперь</th><th>Что даёт Last Day</th></tr>
+    <tr><td class="m">06</td><td><b>Is My</b></td><td>VCA-сатуратор-шейпер на MOSFET-каскаде из ESC FPV-дрона; режимы SHAPER / RING / GATE + Polivoks-фильтр; выносной пилотный пульт (корпус DJI C5, USB-C); 14 HP, edition of 13</td><td>формует сигнал перед маслом; X/Y/GATE пульта дублируются на панель модуля и патчатся в TIME / FEEDBACK — жест пилота ведёт и шейпер, и делэй</td></tr>
+    <tr><td class="m">08</td><td><b>And My</b></td><td>кристальный секвенсор (LITHOSEQ): камера читает пластину 25×25 мм с выращенным кристаллом (соль, купорос на предметном стекле) → карта 32×32 → плейхед ходит спиралью, бустрофедоном или лучами → CV 1V/oct + gate + 2 aux. Детерминизм: та же пластина — тот же паттерн</td><td>gate кристалла дёргает KILL / CRASH / DRAG в такт узору породы; aux CV качает TIME и SUN — партитура, выращенная из соли, дирижирует жарой</td></tr>
+  </table></div>
+
+  <div class="tblwrap"><table>
+    <tr><th>Разъём Last Day</th><th>Куда / зачем</th></tr>
+    <tr><td class="m">FB SEND → RETURN</td><td>вставить Last Night (или любой внешний процессор) прямо в петлю повторов</td></tr>
+    <tr><td class="m">CLOCK IN</td><td>общий клок системы — тот же тик ведёт плейхед And My и время делэя</td></tr>
+    <tr><td class="m">EXP (педаль)</td><td>экспрессия на HAZE depth или TIME — нога управляет маревом</td></tr>
+    <tr><td class="m">CV: TIME, FEEDBACK, SUN, DRIVE, HAZE</td><td>маятник Fuck Abandoned Sleep качает wow; пульт Is My и aux CV кристалла And My ведут время и солнце</td></tr>
+    <tr><td class="m">GATE: KILL / FREEZE / CRASH / DRAG</td><td>перформ-жесты доступны секвенсору And My — кристалл играет авто-даб</td></tr>
+    <tr><td class="m">TRS + RCA + 3.5 мм</td><td>гитарный борд / диджейский пульт / модульная стойка — одновременно распаяны, переключатель уровня на задней стенке</td></tr>
+  </table></div>
+
+  <div class="note"><b>Партитура из соли</b><br>And My закрыл TBD Decision 13 ровно по заявленному направлению поиска — «кристаллы». Пластина-образец вставляется как пластинка: играет одно и то же, вынимается, подписывается, коллекционируется. Вырастил кристалл — вырастил трек.</div>
+</section>
+
+<!-- ЛИСТ 10 -->
+<section class="sheet" id="s10">
+  <p class="eyebrow">Лист 10 · Диптих</p>
+  <h2>Last Night: холодная половина</h2>
+  <p class="lede">Два комбайна — две погоды одного постапокалипсиса. Last Day плавит, Last Night остужает. Каждый самодостаточен; вместе они замыкают полный цикл суток.</p>
+
+  <h3>Портрет партнёра (по актуальному канону ветки SS, Decision 09)</h3>
+  <div class="tblwrap"><table>
+    <tr><th>Узел Last Night</th><th>Что это</th></tr>
+    <tr><td class="m">Ядро</td><td>resonator reverb: exciter возбуждает сменную пластину, два пьезо снимают резонанс, position-кроссфейд bright↔warm</td></tr>
+    <tr><td class="m">Пластины</td><td>дуб, клён, мрамор, латунь, сталь; Phase 2 — кость, нефрит, медь, стекло, титан. Материал = тон комнаты</td></tr>
+    <tr><td class="m">Соленоид</td><td>двойная функция: DAMP (прижим — глушит хвост) + TOLL (импульсный удар — пластина звенит колоколом). Оба — через CV-джеки</td></tr>
+    <tr><td class="m">Шум</td><td>две ручки: NOISE (уровень) + COLOR (кроссфейд от сплошного hiss к гейгер-кластерам LFSR) — радиация от фона до счётчика</td></tr>
+    <tr><td class="m">Phase/Flutter</td><td>постоянная секция: 4-каскадный OTA-фейзер + DEPTH + SPEED + Shape Form slider (формы LFO, включая vinyl-skip)</td></tr>
+    <tr><td class="m">Футсвичи</td><td>TAP / GATE-CRUSH / BYPASS / FREEZE — свой перформ-словарь, не зеркало Last Day</td></tr>
+    <tr><td class="m">Phase 2</td><td>cold palette upgrade: PULSE / FOG / FROST / CHILL / HUM — пять ручек холодного словаря поверх ядра</td></tr>
+  </table></div>
+
+  <h3>Пары-антиподы</h3>
+  <div class="tblwrap"><table>
+    <tr><th>Last Day (жар)</th><th>Last Night (холод)</th><th>Общая ось</th></tr>
+    <tr><td class="m">HAZE — wow мотора</td><td class="m">PULSE² — дыхание демпфера</td><td>периодическая нестабильность</td></tr>
+    <tr><td class="m">EMBER — тлеющий винил</td><td class="m">vinyl-skip (форма LFO фейзера)</td><td>изношенный носитель</td></tr>
+    <tr><td class="m">CICADA — кластерный треск</td><td class="m">COLOR→гейгер — редкие тики</td><td>гранулы: рой ↔ радиация</td></tr>
+    <tr><td class="m">TAR — вязкое залипание</td><td class="m">CHILL² — хрупкое рассыпание</td><td>динамика среды</td></tr>
+    <tr><td class="m">BRIGHT — выжиг верха</td><td class="m">FROST² — поглощение верха</td><td>что жара и холод делают с воздухом</td></tr>
+    <tr><td class="m">CRASH — удар в масло</td><td class="m">TOLL — удар по камню</td><td>соленоид: жидкость ↔ твердь</td></tr>
+    <tr><td class="m">DRAG — тормоз мотора</td><td class="m">STALL — прижим демпфера</td><td>принудительная остановка времени</td></tr>
+    <tr><td class="m">FREEZE — петля тлеет</td><td class="m">FREEZE — хвост застывает</td><td>общий жест заморозки</td></tr>
+  </table></div>
+  <p style="font-size:13.5px;color:var(--muted)">² — эффекты cold palette Phase 2; в базовой панели Last Night их роль частично закрывают Phase/Flutter-секция и ATK/DEC-огибающая.</p>
+
+  <h3>Петля день ↔ ночь</h3>
+  <div class="flow">
+    <span class="fbox hot">LAST DAY · FB SEND</span><span class="farr">→</span>
+    <span class="fbox hot">LAST NIGHT · вход</span><span class="farr">→</span>
+    <span class="fbox hot">LAST NIGHT · выход</span><span class="farr">→</span>
+    <span class="fbox hot">LAST DAY · FB RETURN</span>
+    <span class="fnote">делэй → реверб → делэй → бесконечность. Масляные повторы с треском CICADA падают в каменный резонанс с гейгер-радиацией — и возвращаются остывшими. Один цикл петли = одни сутки.</span>
+  </div>
+
+  <div class="note"><b>Общий картридж-стандарт (Decision 11)</b><br>Рамка 110×65×30 мм, неодимовые магниты, mini-XLR — едины для обоих модулей. Материальную пластину можно переставить из Last Night в Last Day и обратно; oil-can картридж с электродами — только для Last Day. Одна коллекция носителей на весь диптих.</div>
+
+  <div class="note"><b>Жест-каскад CRASH + TOLL</b><br>Gate-выход с CRASH Last Day разветвляется в J_TOLL_TRIG Last Night: один удар — всплеск в жидкости и следом колокол в камне. Два модуля отвечают на один жест как единый инструмент. А если этот gate ведёт кристалл And My — суточный цикл играет сам себя.</div>
+</section>
+
+<!-- ЛИСТ 11 -->
+<section class="sheet" id="s11">
+  <p class="eyebrow">Лист 11 · Дорожная карта</p>
+  <h2>Что дальше</h2>
+  <p class="lede">Полный путь Last Day — 12–18 месяцев неспешного R&amp;D. Порядок закреплён: физика → эхо → франкенштейн → плата → корпус.</p>
+
+  <ul class="check">
+    <li><b>Неделя 1–2:</b> закупка волны 1 (~$65), сборка Rig #1 и Rig #2, первые журналы измерений.</li>
+    <li><b>M0:</b> вердикт по физике. SNR ≥ 30 dB и язычок с диапазоном ≥ 3 октав — или включаем fallback.</li>
+    <li><b>Месяц 2:</b> Rig #3 (мотор+PLL, ~$45) и Rig #4 (solar, ~$20). <b>M1 — первое эхо, записать аудио.</b></li>
+    <li><b>Месяц 3–4:</b> M2 — полный breadboard. Проверка рецептов с листа 08 живьём, калибровка «домашних» положений ручек.</li>
+    <li><b>Месяц 5–7:</b> KiCad rev A (4 слоя), заказ платы, сборка прототипа, тест-протокол, burn-in.</li>
+    <li><b>Месяц 8–12:</b> rev B, серийные масляные картриджи (3 пластины tongue в комплекте), два корпуса от одной платы.</li>
+    <li><b>Параллельно:</b> открытые вопросы — топология MID (рекомендация: parallel, Pultec-style), MELT/BBD-смазыватель повторов (обсуждается, не канон), раздельная механика частоты и Q у язычка.</li>
+  </ul>
+
+  <div class="tblwrap"><table>
+    <tr><th>Статья</th><th>Бюджет</th></tr>
+    <tr><td>Волна 1 (риги #1 + #2)</td><td class="m">≈ $65</td></tr>
+    <tr><td>Волна 2 (риги #3 + #4)</td><td class="m">≈ $65</td></tr>
+    <tr><td>M2-франкенштейн (добавка компонентов)</td><td class="m">≈ $60</td></tr>
+    <tr><td>Прототип rev A (плата + BOM + механика)</td><td class="m">≈ $180–250</td></tr>
+    <tr><td>Ориентир розницы v1</td><td class="m">$700–900</td></tr>
+  </table></div>
+
+  <div class="note"><b>Главное правило проекта</b><br>Каждый этап — отдельно тестируемая подсистема. Итоговый Last Day — сумма работающих узлов, а не монолит с тремя неизвестными. Если какой-то узел горит — горит только он, а не весь полдень.</div>
+</section>
+
+</div>
+
+<div class="hazard"></div>
+<footer>
+  <div class="wrap">SYSTEM SUICIDE · LAST DAY TUTORIAL · decisions/06–08 + synth/proto/ (ветка HWbFa) · цепь и Last Night — по ветке SS (D09 hybrid lock, D12 Is My shaper, D13→LITHOSEQ) · ardet repo · 2026-07</div>
+</footer>
