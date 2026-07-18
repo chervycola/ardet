@@ -1,0 +1,828 @@
+<title>LITHOSEQ — от стенда к модулю</title>
+<style>
+  :root {
+    --bg: #F2F4F4;
+    --panel: #FFFFFF;
+    --ink: #1C2226;
+    --muted: #5A676D;
+    --line: #D5DCDE;
+    --line-soft: #E3E8E9;
+    --accent: #1F8CA6;
+    --accent-glow: #57C7DC;
+    --copper: #B4693F;
+    --ok: #3E8E63;
+    --code-bg: #EAEEEF;
+    --fig-bg: #FAFBFB;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171A;
+      --panel: #1A2126;
+      --ink: #E6ECEE;
+      --muted: #8FA0A7;
+      --line: #2A343A;
+      --line-soft: #232D33;
+      --accent: #57C7DC;
+      --accent-glow: #57C7DC;
+      --copper: #D08A5B;
+      --ok: #63B98B;
+      --code-bg: #20292E;
+      --fig-bg: #161C20;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12171A; --panel: #1A2126; --ink: #E6ECEE; --muted: #8FA0A7;
+    --line: #2A343A; --line-soft: #232D33; --accent: #57C7DC;
+    --accent-glow: #57C7DC; --copper: #D08A5B; --ok: #63B98B;
+    --code-bg: #20292E; --fig-bg: #161C20;
+  }
+  :root[data-theme="light"] {
+    --bg: #F2F4F4; --panel: #FFFFFF; --ink: #1C2226; --muted: #5A676D;
+    --line: #D5DCDE; --line-soft: #E3E8E9; --accent: #1F8CA6;
+    --accent-glow: #57C7DC; --copper: #B4693F; --ok: #3E8E63;
+    --code-bg: #EAEEEF; --fig-bg: #FAFBFB;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.68 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px 96px; }
+  .col { max-width: 720px; }
+
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; text-wrap: balance; }
+  h1 { font-size: clamp(30px, 5vw, 42px); line-height: 1.15; font-weight: 400; margin: 10px 0 14px; }
+  h2 { font-size: 27px; font-weight: 400; margin: 0 0 6px; }
+  h3 { font-size: 19px; margin: 34px 0 10px; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+  }
+  header.hero { padding: 56px 0 8px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 640px; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 22px 0 26px;
+    font: 12.5px/1.5 ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+    color: var(--muted);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  nav.toc {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 2px; margin: 26px 0 10px; padding: 0;
+  }
+  nav.toc a {
+    display: block; padding: 9px 12px; text-decoration: none; color: var(--ink);
+    border-left: 2px solid var(--line); font-size: 14px;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { border-left-color: var(--accent); color: var(--accent); outline: none; }
+  nav.toc a .n { font-family: ui-monospace, Consolas, monospace; color: var(--muted); font-size: 12px; margin-right: 7px; }
+
+  section.phase { padding: 44px 0 8px; }
+  .phasehead { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 22px; }
+  .phasenum {
+    font-family: Georgia, serif; font-size: 46px; line-height: 1; color: var(--accent);
+    min-width: 52px;
+  }
+  .phasehead .sub { color: var(--muted); font-size: 14px; }
+
+  figure.plate {
+    margin: 26px 0; border: 1px solid var(--line); background: var(--fig-bg);
+    padding: 18px 18px 12px; overflow-x: auto;
+  }
+  figure.plate svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  figcaption {
+    margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line-soft);
+    font-size: 13px; color: var(--muted);
+  }
+  figcaption b { color: var(--ink); font-weight: 600; font-variant: small-caps; letter-spacing: .03em; }
+
+  .detail {
+    border-left: 3px solid var(--copper);
+    background: color-mix(in srgb, var(--copper) 6%, var(--panel));
+    padding: 13px 16px; margin: 18px 0; font-size: 14.5px;
+  }
+  .detail .dt {
+    font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--copper); font-weight: 700; margin-bottom: 4px;
+  }
+
+  .check {
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 14px 18px; margin: 22px 0;
+  }
+  .check .ct {
+    font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--ok); font-weight: 700; margin-bottom: 8px;
+  }
+  .check ul { margin: 0; padding-left: 20px; font-size: 14.5px; }
+  .check li { margin: 4px 0; }
+  .check .tid {
+    font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;
+    color: var(--ok); font-weight: 600; margin-right: 4px;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 16px 0; }
+  .tablewrap { overflow-x: auto; }
+  th {
+    text-align: left; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 8px 12px 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  td.mono, .mono { font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  code, pre {
+    font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+    font-size: 13.5px;
+  }
+  code { background: var(--code-bg); padding: 1.5px 6px; border-radius: 3px; }
+  pre {
+    background: var(--code-bg); padding: 14px 16px; overflow-x: auto;
+    line-height: 1.55; margin: 14px 0; border-left: 3px solid var(--accent);
+  }
+  pre code { background: none; padding: 0; }
+
+  ol.steps { counter-reset: st; list-style: none; padding: 0; margin: 16px 0; }
+  ol.steps > li {
+    counter-increment: st; position: relative; padding: 0 0 18px 46px;
+    border-left: 1px solid var(--line); margin-left: 15px;
+  }
+  ol.steps > li:last-child { border-left-color: transparent; }
+  ol.steps > li::before {
+    content: counter(st);
+    position: absolute; left: -16px; top: -2px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--panel); border: 1px solid var(--accent); color: var(--accent);
+    font: 600 13px/28px ui-monospace, Consolas, monospace; text-align: center;
+  }
+  ol.steps b.st { display: block; margin-bottom: 3px; }
+  ol.steps .why { color: var(--muted); font-size: 14px; }
+
+  .svgtxt { font: 12px system-ui, sans-serif; fill: var(--ink); }
+  .svgtxt-s { font: 10.5px ui-monospace, Consolas, monospace; fill: var(--muted); }
+  .svgtxt-a { font: 600 11px ui-monospace, Consolas, monospace; fill: var(--accent); }
+  .svgtxt-c { font: 600 11px ui-monospace, Consolas, monospace; fill: var(--copper); }
+
+  footer {
+    margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="hero col">
+  <div class="eyebrow">Lithoseq · полевое руководство</div>
+  <h1>От настольного стенда к модулю Eurorack</h1>
+  <p class="lede">Пошаговый маршрут сборки генеративного секвенсора, читающего музыку из физических образцов: кристаллов, пористого камня, всего, что имеет форму. Каждая фаза заканчивается проверяемой контрольной точкой — дальше не идём, пока она не закрыта.</p>
+  <div class="meta">
+    <span>репо: <b>lithoseq/</b> + <b>docs/eurorack-sequencer/</b></span>
+    <span>окно образца: <b>25×25 мм</b></span>
+    <span>карта: <b>32×32</b> (0.78 мм/пиксель)</span>
+    <span>бюджет стенда: <b>~$130</b></span>
+  </div>
+  <nav class="toc" aria-label="Оглавление">
+    <a href="#how"><span class="n">0</span>Как это работает</a>
+    <a href="#phase1"><span class="n">1</span>Стенд захвата</a>
+    <a href="#phase2"><span class="n">2</span>Метрики и музыка</a>
+    <a href="#phase3"><span class="n">3</span>CV-выходы</a>
+    <a href="#phase4"><span class="n">4</span>Модуль Eurorack</a>
+    <a href="#phase5"><span class="n">5</span>Что дальше</a>
+  </nav>
+</header>
+
+<!-- ============================== 0 ============================== -->
+<section class="phase" id="how">
+  <div class="phasehead">
+    <div class="phasenum">0</div>
+    <div><h2>Как это работает</h2>
+    <div class="sub">три принципа и один тракт данных</div></div>
+  </div>
+
+  <div class="col">
+  <p>Сменная пластина с образцом просвечивается или подсвечивается сбоку; камера снимает её в карту 32×32. Из карты детерминированно считаются три метрики — локальная <b>плотность D</b>, локальная <b>резкость S</b>, глобальная <b>поворотная симметрия R</b>. Виртуальный плейхед обходит карту по выбранной траектории и на каждом тике клока превращает значения под собой в ноту, gate и CV.</p>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 880 150" role="img" aria-label="Тракт данных: образец, камера, карта, метрики, плейхед, выходы">
+      <!-- chain boxes -->
+      <g>
+        <rect x="10" y="40" width="110" height="60" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="65" y="65" text-anchor="middle" class="svgtxt">пластина</text>
+        <text x="65" y="82" text-anchor="middle" class="svgtxt-s">образец 25 мм</text>
+
+        <rect x="160" y="40" width="110" height="60" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="215" y="65" text-anchor="middle" class="svgtxt">камера</text>
+        <text x="215" y="82" text-anchor="middle" class="svgtxt-s">OV7670 QVGA</text>
+
+        <rect x="310" y="40" width="110" height="60" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="365" y="65" text-anchor="middle" class="svgtxt">карта 32×32</text>
+        <text x="365" y="82" text-anchor="middle" class="svgtxt-s">flat-field</text>
+
+        <rect x="460" y="40" width="110" height="60" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="515" y="65" text-anchor="middle" class="svgtxt">метрики</text>
+        <text x="515" y="82" text-anchor="middle" class="svgtxt-s">D · S · R</text>
+
+        <rect x="610" y="40" width="110" height="60" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="665" y="65" text-anchor="middle" class="svgtxt">плейхед</text>
+        <text x="665" y="82" text-anchor="middle" class="svgtxt-s">клок → (x,y)</text>
+
+        <rect x="760" y="40" width="110" height="60" fill="none" stroke="var(--copper)" stroke-width="1.5"/>
+        <text x="815" y="65" text-anchor="middle" class="svgtxt">выходы</text>
+        <text x="815" y="82" text-anchor="middle" class="svgtxt-s">MIDI / CV</text>
+
+        <g stroke="var(--muted)" stroke-width="1.2" fill="none">
+          <path d="M120 70 h35 m-8 -5 8 5 -8 5"/>
+          <path d="M270 70 h35 m-8 -5 8 5 -8 5"/>
+          <path d="M420 70 h35 m-8 -5 8 5 -8 5"/>
+          <path d="M570 70 h35 m-8 -5 8 5 -8 5"/>
+          <path d="M720 70 h35 m-8 -5 8 5 -8 5"/>
+        </g>
+        <text x="65" y="28" text-anchor="middle" class="svgtxt-a">физика</text>
+        <text x="440" y="130" text-anchor="middle" class="svgtxt-s">кадр 5–15 Гц (асинхронно)   ·   тики клока 0.5–50 Гц   ·   подмена карты атомарна между тиками</text>
+        <text x="815" y="28" text-anchor="middle" class="svgtxt-c">звук</text>
+      </g>
+    </svg>
+    <figcaption><b>Рис. 1.</b> Тракт данных. Всё между камерой и выходами — целочисленная детерминированная обработка на STM32; вычислительная нагрузка &lt;1% CPU, весь риск проекта в оптике и механике.</figcaption>
+  </figure>
+
+  <div class="col">
+  <p>Три принципа, на которых всё держится:</p>
+  <p><b>Детерминизм.</b> Никакого RNG, никакой адаптации на лету. Та же пластина + те же настройки → тот же паттерн, побайтово. Образец — это «пластинка», которую можно переигрывать, подписывать и коллекционировать.</p>
+  <p><b>Регулярное → консонантное.</b> Метрика симметрии R управляет маской шкалы квантайзера: высокосимметричный образец играет пентатонику, хаотичный — хроматику. Это свойство зашито в маппинг явно — само из метрик оно не возникает.</p>
+  <p><b>Характер материала доходит до звука.</b> Калибровка фиксированная, по эталонным пластинам; покадрового автоусиления нет. Плотный и рыхлый образцы звучат по-разному, потому что и карты у них разные.</p>
+  </div>
+</section>
+
+<!-- ============================== 1 ============================== -->
+<section class="phase" id="phase1">
+  <div class="phasehead">
+    <div class="phasenum">1</div>
+    <div><h2>Стенд захвата</h2>
+    <div class="sub">оптический короб · электроника · пластины · калибровка</div></div>
+  </div>
+
+  <h3>1.1 Что купить</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Узел</th><th>Позиция</th><th>≈Цена</th><th>Зачем</th></tr>
+    <tr><td>Мозг</td><td>Nucleo-H743ZI2</td><td class="mono">$30</td><td>DCMI на морфо-штырях, 1 МБ RAM, USB</td></tr>
+    <tr><td>Глаз</td><td>OV7670 <b>без FIFO</b> ×2, M12-объектив</td><td class="mono">$6</td><td>DCMI читает сам; второй — запас</td></tr>
+    <tr><td>Свет</td><td>Белые LED + токовый драйвер; 4 группы косых + кольцо</td><td class="mono">$14</td><td>просвет TRANS + отражение REFLECT</td></tr>
+    <tr><td>Оптика</td><td>Молочный акрил 3 мм, чёрная матовая самоклейка</td><td class="mono">$11</td><td>диффузор, тубус</td></tr>
+    <tr><td>Пластины</td><td>Предметные стёкла 26×76 (уп. 50), чёрный акрил 2 мм, УФ-клей</td><td class="mono">$20</td><td>≈100 носителей образцов</td></tr>
+    <tr><td>Аналог (фаза 3)</td><td>MCP4728, TL074, пассив, адаптер 12 В</td><td class="mono">$20</td><td>CV-выходы</td></tr>
+    <tr><td>Опция</td><td>Плёночный поляризатор ×2</td><td class="mono">$10</td><td>двулучепреломление кристаллов, §5</td></tr>
+  </table>
+  </div>
+
+  <h3>1.2 Оптический короб</h3>
+  <div class="col"><p>Вертикальный стек: свет сверху, камера снизу, между ними — слот пластины. Никакой механики развёртки: карта снимается целиком, а «движение» по ней делает виртуальный плейхед — это осознанное архитектурное решение, дающее свободные траектории и X/Y-модуляцию.</p></div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 320" role="img" aria-label="Разрез оптического короба">
+      <!-- LED panel -->
+      <rect x="290" y="18" width="280" height="22" fill="none" stroke="var(--copper)" stroke-width="1.5"/>
+      <g fill="var(--copper)">
+        <circle cx="320" cy="29" r="3"/><circle cx="360" cy="29" r="3"/><circle cx="400" cy="29" r="3"/>
+        <circle cx="440" cy="29" r="3"/><circle cx="480" cy="29" r="3"/><circle cx="520" cy="29" r="3"/>
+      </g>
+      <text x="600" y="33" class="svgtxt">LED-панель 12 В, токовый драйвер</text>
+
+      <!-- diffuser -->
+      <rect x="290" y="62" width="280" height="10" fill="var(--line)" opacity="0.55"/>
+      <text x="600" y="71" class="svgtxt">диффузор: молочный акрил 3 мм, зазор 5 мм</text>
+
+      <!-- plate slot -->
+      <rect x="270" y="96" width="320" height="26" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      <g stroke="var(--accent)" stroke-width="1">
+        <path d="M330 109 l14 -7 v14 z" fill="var(--accent)" opacity=".6"/>
+        <path d="M470 102 q15 7 0 14" fill="none"/>
+        <path d="M415 102 l10 14 m0 -14 l-10 14" />
+      </g>
+      <text x="600" y="114" class="svgtxt-a">слот пластины + 2 штифта регистрации</text>
+
+      <!-- tube -->
+      <path d="M330 122 L365 250 h130 L530 122" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="600" y="190" class="svgtxt">тубус, изнутри матово-чёрный</text>
+      <text x="600" y="208" class="svgtxt-s">рабочая дистанция 30–50 мм</text>
+
+      <!-- raking lights -->
+      <g stroke="var(--copper)" stroke-width="1.5" fill="none">
+        <path d="M340 140 l60 22 m-8 -8 8 8 -11 2"/>
+        <path d="M520 140 l-60 22 m8 -8 -8 8 11 2"/>
+      </g>
+      <circle cx="336" cy="138" r="4" fill="var(--copper)"/>
+      <circle cx="524" cy="138" r="4" fill="var(--copper)"/>
+      <text x="600" y="150" class="svgtxt-c">4 косые группы (N·E·S·W), 10–20°</text>
+      <text x="600" y="166" class="svgtxt-s">+ диффузное кольцо у объектива — режимы REFLECT</text>
+
+      <!-- camera -->
+      <rect x="400" y="250" width="60" height="16" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <circle cx="430" cy="250" r="9" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <rect x="392" y="266" width="76" height="26" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+      <text x="600" y="266" class="svgtxt">OV7670, M12-объектив</text>
+      <text x="600" y="283" class="svgtxt-s">фокус — подкруткой резьбы на миру</text>
+
+      <!-- left dimension -->
+      <g stroke="var(--muted)" stroke-width="1">
+        <path d="M240 96 v26 m-4 -26 h8 m-8 26 h8" fill="none"/>
+      </g>
+      <text x="180 " y="114" class="svgtxt-s">до 6 мм</text>
+      <text x="30" y="40" class="svgtxt-s">свет</text>
+      <text x="30" y="114" class="svgtxt-s">образец</text>
+      <text x="30" y="275" class="svgtxt-s">сенсор</text>
+    </svg>
+    <figcaption><b>Рис. 2.</b> Разрез короба. Просвет (сверху) — для полупрозрачных образцов; косые группы и кольцо (в тубусе) — для непрозрачных. Камера с объективом: «лензлесс»-контакт на такой дистанции даёт только размытие.</figcaption>
+  </figure>
+
+  <div class="detail"><div class="dt">Деталь · почему свет питается током, а не напряжением</div>
+  Яркость LED уплывает с температурой, а вся шкала карты — абсолютная (автоусиления нет). Токовый драйвер + прогрев 2–3 минуты до калибровки + «пиксель-свидетель» (участок кадра на пустой кромке рамки) для контроля дрейфа. Если диммируете ШИМом — только ≥20 кГц, иначе rolling shutter камеры нарисует полосы.</div>
+
+  <h3>1.3 Электроника: камера → Nucleo</h3>
+  <div class="col"><p>OV7670 без FIFO подключается прямо к DCMI: контроллер сам складывает кадр в память через DMA. Жгуты — короче 10 см, DCMI капризен к длинным проводам.</p></div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 250" role="img" aria-label="Схема подключения OV7670 к Nucleo">
+      <rect x="30" y="30" width="200" height="190" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="130" y="55" text-anchor="middle" class="svgtxt" font-weight="600">OV7670</text>
+      <circle cx="130" cy="95" r="26" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <circle cx="130" cy="95" r="12" fill="none" stroke="var(--muted)" stroke-width="1"/>
+      <text x="130" y="145" text-anchor="middle" class="svgtxt-s">QVGA · YUV422</text>
+      <text x="130" y="162" text-anchor="middle" class="svgtxt-s">берём только Y</text>
+
+      <rect x="620" y="30" width="210" height="190" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="725" y="55" text-anchor="middle" class="svgtxt" font-weight="600">Nucleo-H743ZI2</text>
+      <text x="725" y="73" text-anchor="middle" class="svgtxt-s">морфо-разъёмы</text>
+
+      <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+        <path d="M230 85 H620"/>
+      </g>
+      <text x="425" y="78" text-anchor="middle" class="svgtxt-a">D0–D7 → DCMI_D0–D7 (8 линий)</text>
+
+      <g stroke="var(--muted)" stroke-width="1.2" fill="none">
+        <path d="M230 115 H620"/><path d="M230 140 H620"/><path d="M230 165 H620"/>
+      </g>
+      <text x="425" y="108" text-anchor="middle" class="svgtxt-s">PCLK → PA6 · HREF → PA4 · VSYNC → PB7</text>
+      <text x="425" y="133" text-anchor="middle" class="svgtxt-s">XCLK ← PA8 (MCO1, 12–24 МГц)</text>
+      <text x="425" y="158" text-anchor="middle" class="svgtxt-s">SIOC/SIOD ↔ I2C (SCCB, 100 кГц)</text>
+
+      <g stroke="var(--copper)" stroke-width="1.2" fill="none"><path d="M230 195 H620"/></g>
+      <text x="425" y="188" text-anchor="middle" class="svgtxt-c">3V3 / GND · жгут ≤ 10 см</text>
+    </svg>
+    <figcaption><b>Рис. 3.</b> Сигналы камеры. Полная таблица пинов и чек-лист CubeMX — в <span class="mono">lithoseq/fw-stm32/README.md</span>; раскладку D5–D7 финализировать в CubeMX, возможны конфликты ног.</figcaption>
+  </figure>
+
+  <div class="detail"><div class="dt">Деталь · D-Cache и DMA на H7</div>
+  На H743 ядро смотрит на память через кэш, а DMA пишет мимо него. Буферы кадра — в AXI SRAM (не в DTCM: DMA туда не достаёт), и вокруг каждого захвата — <code>SCB_CleanInvalidateDCache_by_Addr</code>, либо MPU-регион non-cacheable. Симптом пропуска этого шага — «полосатые» кадры со старыми данными.</div>
+
+  <h3>1.4 Прошивка</h3>
+  <div class="col">
+  <p>Ядро уже написано и оттестировано на ПК — пайплайн, метрики, плейхед, маппинг собираются обычным <code>gcc</code> и гоняются тестами (<code>make test</code> в <span class="mono">lithoseq/</span>). На стенде то же ядро оборачивается тонким HAL-слоем:</p>
+  <ol class="steps">
+    <li><b class="st">Создайте CubeIDE-проект по чек-листу</b> <span class="why"><span class="mono">fw-stm32/README.md</span>: клоки 480 МГц, DCMI+DMA snapshot, I2C, TIM6 (клок секвенсора), 6 GPIO света, USB.</span></li>
+    <li><b class="st">Добавьте в сорцы <span class="mono">core/</span>, <span class="mono">app/proto.c</span>, <span class="mono">app/midi.c</span> и файлы <span class="mono">fw-stm32/</span></b> <span class="why">ядро не знает про железо — оно уже готово; правится только обвязка.</span></li>
+    <li><b class="st">Первый запуск: кадр → USB → просмотрщик</b> <span class="why"><code>python3 tools/viewer.py /dev/ttyACM0 --live</code> — тот же протокол, что у симулятора, ПК-часть уже отлажена.</span></li>
+  </ol>
+  </div>
+
+  <div class="detail"><div class="dt">Деталь · авторежимы камеры выключаются насмерть</div>
+  AEC (автоэкспозиция), AGC (автоусиление), AWB (автобаланс) — все OFF, экспозиция и усиление задаются вручную и хранятся в конфиге. Иначе камера будет «улучшать» каждый кадр по-своему, и повторяемость — фундамент всей концепции — рассыпется. Проверка: два кадра одной сцены с интервалом 10 минут различаются не больше чем на 1 LSB медианно (тест T1.2).</div>
+
+  <h3>1.5 Пластины образцов</h3>
+  <div class="col"><p>Носитель — «пластинка»: сэндвич из половинок предметного стекла в печатной рамке. Модель параметрическая (<span class="mono">mech/plate.scad</span>), рендер STL одной командой.</p></div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 260" role="img" aria-label="Устройство пластины образца">
+      <!-- frame top view -->
+      <g transform="translate(40,30)">
+        <path d="M14 0 H310 V180 H0 V14 Z" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+        <rect x="60" y="35" width="190" height="110" fill="none" stroke="var(--line)" stroke-width="1"/>
+        <rect x="92" y="52" width="125" height="76" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="155" y="94" text-anchor="middle" class="svgtxt-a">окно 25×25</text>
+        <circle cx="35" cy="90" r="5" fill="none" stroke="var(--ink)" stroke-width="1.4"/>
+        <g fill="none" stroke="var(--ink)" stroke-width="1.4">
+          <path d="M270 85 a5 5 0 0 1 0 10 h-8 a5 5 0 0 1 0 -10 z"/>
+        </g>
+        <rect x="310" y="76" width="26" height="28" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+        <g fill="var(--muted)">
+          <rect x="100" y="150" width="7" height="7"/><rect x="118" y="150" width="7" height="7"/>
+          <rect x="154" y="150" width="7" height="7"/>
+        </g>
+        <text x="155" y="205" text-anchor="middle" class="svgtxt-s">вид сверху</text>
+        <text x="35" y="72" text-anchor="middle" class="svgtxt-s">отв. ⌀2.2</text>
+        <text x="266" y="72" text-anchor="middle" class="svgtxt-s">овальный паз</text>
+        <text x="352" y="94" class="svgtxt-s">язычок</text>
+        <text x="128" y="172" text-anchor="middle" class="svgtxt-s">ID-метки (4 бит, читает камера)</text>
+        <path d="M14 0 L0 14" stroke="var(--copper)" stroke-width="2"/>
+        <text x="-6" y="-8" class="svgtxt-c">скос: одна ориентация вставки</text>
+      </g>
+
+      <!-- sandwich side view -->
+      <g transform="translate(490,52)">
+        <text x="150" y="-10" text-anchor="middle" class="svgtxt">разрез сэндвича</text>
+        <rect x="0" y="20" width="300" height="14" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+        <text x="310" y="31" class="svgtxt-s">стекло 26×38×1</text>
+        <g stroke="var(--accent)" fill="none" stroke-width="1.5">
+          <path d="M40 54 l18 -14 14 10 20 -16 16 14 22 -10 18 12 24 -14 16 12 20 -8 14 8"/>
+        </g>
+        <text x="310" y="56" class="svgtxt-a">образец до 4 мм</text>
+        <rect x="0" y="72" width="300" height="14" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+        <text x="310" y="83" class="svgtxt-s">стекло (опция)</text>
+        <rect x="-18" y="8" width="18" height="90" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+        <rect x="300" y="8" width="18" height="90" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="150" y="125" text-anchor="middle" class="svgtxt-s">рамка PETG/SLA · для непрозрачных: нижнее стекло → чёрный матовый акрил, образец лицом к камере</text>
+      </g>
+    </svg>
+    <figcaption><b>Рис. 4.</b> Пластина. Регистрация «отверстие + овальный паз» на двух штифтах — классическая кинематика: повторная вставка садится в те же 0.2 мм (¼ пикселя карты). Без этого «пластинка» не пластинка.</figcaption>
+  </figure>
+
+  <div class="col">
+  <p><b>Выращивание первых образцов.</b> Соль: насыщенный раствор (растворять при 40–50 °C, пока растворяется), профильтровать, каплю на стекло, накрыть от пыли, 2–4 дня медленного испарения — кубические кристаллы. Медный купорос (садовый магазин): то же, но кристаллы крупнее и триклинные; растут за 1–2 дня. Сахар — дольше и капризнее, зато даёт «леденцовую» фактуру. Пемза/губка — тонкий срез лезвием, приклеить УФ-клеем по краю на чёрный акрил.</p>
+  </div>
+
+  <h3>1.6 Юстировка и калибровка</h3>
+  <div class="col">
+  <ol class="steps">
+    <li><b class="st">Мира</b> <span class="why">Печатная шахматка 25×25 на плёнке вставляется как пластина; по живому просмотру выставляются фокус и границы ROI. ROI сохраняется в конфиг.</span></li>
+    <li><b class="st">Тёмный кадр</b> <span class="why">Весь свет выключен, усреднение 16 кадров → <span class="mono">dark[i]</span>. Заодно проверка светоизоляции короба.</span></li>
+    <li><b class="st">Flat-field</b> <span class="why">Эталон (BLANK — два чистых стекла для просвета; GREY — матовая серая пластина для отражения) → <span class="mono">white[i]</span> → <span class="mono">gain[i] = K/(white−dark)</span>. Свой набор на каждый режим света.</span></li>
+    <li><b class="st">Сохранить и забыть</b> <span class="why">Калибровка перезаписывается только вручную. Никогда — автоматически.</span></li>
+  </ol>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 170" role="img" aria-label="Эффект flat-field калибровки">
+      <defs>
+        <radialGradient id="vig" cx="50%" cy="50%">
+          <stop offset="45%" stop-color="var(--muted)" stop-opacity="0"/>
+          <stop offset="100%" stop-color="var(--ink)" stop-opacity=".45"/>
+        </radialGradient>
+      </defs>
+      <g transform="translate(80,20)">
+        <rect width="180" height="110" fill="var(--line)" opacity=".5"/>
+        <rect width="180" height="110" fill="url(#vig)"/>
+        <rect width="180" height="110" fill="none" stroke="var(--line)"/>
+        <text x="90" y="132" text-anchor="middle" class="svgtxt-s">сырой кадр BLANK: виньетка,</text>
+        <text x="90" y="147" text-anchor="middle" class="svgtxt-s">неравномерность подсветки</text>
+      </g>
+      <g stroke="var(--muted)" stroke-width="1.2" fill="none">
+        <path d="M300 75 h60 m-10 -6 10 6 -10 6"/>
+      </g>
+      <text x="330" y="60" text-anchor="middle" class="svgtxt-s">gain[i]</text>
+      <g transform="translate(400,20)">
+        <rect width="180" height="110" fill="var(--line)" opacity=".5"/>
+        <rect width="180" height="110" fill="none" stroke="var(--ok)" stroke-width="1.5"/>
+        <text x="90" y="132" text-anchor="middle" class="svgtxt-s">после: плоско в ±2 LSB</text>
+        <text x="90" y="147" text-anchor="middle" class="svgtxt-s">(тест T1.4)</text>
+      </g>
+      <g transform="translate(640,20)">
+        <rect width="140" height="110" fill="none" stroke="var(--line)"/>
+        <rect x="12" y="80" width="10" height="18" fill="var(--accent)"/>
+        <rect x="30" y="60" width="10" height="38" fill="var(--accent)"/>
+        <rect x="48" y="30" width="10" height="68" fill="var(--accent)"/>
+        <rect x="66" y="45" width="10" height="53" fill="var(--accent)"/>
+        <rect x="84" y="70" width="10" height="28" fill="var(--accent)"/>
+        <rect x="102" y="88" width="10" height="10" fill="var(--accent)"/>
+        <text x="70" y="132" text-anchor="middle" class="svgtxt-s">шкала абсолютная:</text>
+        <text x="70" y="147" text-anchor="middle" class="svgtxt-s">гистограмму не растягиваем</text>
+      </g>
+    </svg>
+    <figcaption><b>Рис. 5.</b> Flat-field убирает всё, что не образец: виньетку объектива, неровность подсветки. А вот распределение самого образца остаётся как есть — в этом художественная честность шкалы.</figcaption>
+  </figure>
+
+  <div class="check"><div class="ct">Контрольная точка фазы 1</div>
+    <ul>
+      <li><span class="tid">T1.1</span> стабильные 10+ fps без срывов DMA, 10 минут</li>
+      <li><span class="tid">T1.2</span> два кадра через 10 минут: медиана |Δ| ≤ 1 LSB (авторежимы мертвы, свет стабилен)</li>
+      <li><span class="tid">T1.3</span> мира: клетка 0.8 мм различима, ROI покрывает окно</li>
+      <li><span class="tid">T1.4</span> BLANK после калибровки плоский в ±2 LSB (GREY — ±3 LSB для REFLECT)</li>
+      <li><span class="tid">T1.5</span> 10 циклов вынуть/вставить: средний |Δ| ≤ 2 LSB. Провал — дорабатывать <em>механику</em>, не софт</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 2 ============================== -->
+<section class="phase" id="phase2">
+  <div class="phasehead">
+    <div class="phasenum">2</div>
+    <div><h2>Метрики и музыка</h2>
+    <div class="sub">карта становится паттерном · аудиция через MIDI до всякого CV</div></div>
+  </div>
+
+  <div class="col">
+  <p>Здесь решается судьба проекта: слышно ли материал. Поэтому фаза музыкальная, а не железная — стенд отдаёт USB-MIDI (а симулятор — готовые <span class="mono">.mid</span>), и маппинг настраивается на слух в любом DAW задолго до аналоговых выходов.</p>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 300" role="img" aria-label="Три метрики карты">
+      <!-- D -->
+      <g transform="translate(30,26)">
+        <text x="80" y="-6" text-anchor="middle" class="svgtxt" font-weight="600">D — плотность</text>
+        <g>
+          <rect width="160" height="160" fill="none" stroke="var(--line)"/>
+          <rect x="18" y="18" width="46" height="46" fill="var(--accent)" opacity=".85"/>
+          <rect x="72" y="30" width="30" height="30" fill="var(--accent)" opacity=".55"/>
+          <rect x="102" y="88" width="40" height="40" fill="var(--accent)" opacity=".7"/>
+          <rect x="30" y="96" width="24" height="24" fill="var(--accent)" opacity=".35"/>
+          <rect x="52" y="70" width="60" height="60" fill="none" stroke="var(--copper)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        </g>
+        <text x="80" y="182" text-anchor="middle" class="svgtxt-s">среднее окна 5×5</text>
+        <text x="80" y="198" text-anchor="middle" class="svgtxt-a">→ высота ноты</text>
+      </g>
+      <!-- S -->
+      <g transform="translate(330,26)">
+        <text x="80" y="-6" text-anchor="middle" class="svgtxt" font-weight="600">S — резкость</text>
+        <rect width="160" height="160" fill="none" stroke="var(--line)"/>
+        <g stroke="var(--accent)" stroke-width="2" fill="none">
+          <path d="M20 120 q20 -70 45 -40 t40 -50 t35 60"/>
+        </g>
+        <g stroke="var(--copper)" stroke-width="1.3" fill="none">
+          <path d="M20 140 h30 v-8 h20 v8 h25 v-14 h20 v14 h25"/>
+        </g>
+        <text x="80" y="182" text-anchor="middle" class="svgtxt-s">|лапласиан| в окне: края, зерно</text>
+        <text x="80" y="198" text-anchor="middle" class="svgtxt-a">→ тембр (CC74) и акценты</text>
+      </g>
+      <!-- R -->
+      <g transform="translate(630,26)">
+        <text x="80" y="-6" text-anchor="middle" class="svgtxt" font-weight="600">R — симметрия</text>
+        <rect width="160" height="160" fill="none" stroke="var(--line)"/>
+        <g fill="none" stroke="var(--accent)" stroke-width="1.6">
+          <circle cx="80" cy="80" r="22"/><circle cx="80" cy="80" r="44"/><circle cx="80" cy="80" r="64"/>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1" fill="none">
+          <path d="M80 10 v140 M10 80 h140"/>
+        </g>
+        <path d="M118 26 a46 46 0 0 1 16 24" stroke="var(--copper)" stroke-width="1.6" fill="none"/>
+        <path d="M132 44 l2 8 -8 -1" fill="var(--copper)"/>
+        <text x="80" y="182" text-anchor="middle" class="svgtxt-s">корреляция с rot90/rot180/зеркалом</text>
+        <text x="80" y="198" text-anchor="middle" class="svgtxt-a">→ маска шкалы квантайзера</text>
+      </g>
+      <text x="430" y="262" text-anchor="middle" class="svgtxt-s">и четвёртая, живущая в движении: G — градиент карты вдоль траектории плейхеда → gate (с гистерезисом, чтобы не дребезжал)</text>
+      <text x="430" y="286" text-anchor="middle" class="svgtxt-s">проверено на синтетике: кольца R=0.97 · шахматка R=0.99 · случайные точки R=0.03</text>
+    </svg>
+    <figcaption><b>Рис. 6.</b> Метрики. Все — целочисленные, все считаются за микросекунды; нормировочные константы фиксируются один раз на печатных тестовых паттернах и дальше не трогаются.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Симметрия R</th><th>Маска шкалы</th><th>Характер</th></tr>
+    <tr><td class="mono">&gt; 0.8</td><td>мажорная пентатоника</td><td>консонанс, «кристалл»</td></tr>
+    <tr><td class="mono">0.6–0.8</td><td>диатоника</td><td>упорядоченно</td></tr>
+    <tr><td class="mono">0.4–0.6</td><td>гармонический минор</td><td>напряжение</td></tr>
+    <tr><td class="mono">0.2–0.4</td><td>октатоника</td><td>тревожно</td></tr>
+    <tr><td class="mono">&lt; 0.2</td><td>хроматика / кластер</td><td>«камень», шум формы</td></tr>
+  </table>
+  </div>
+
+  <div class="detail"><div class="dt">Деталь · находка из симуляции (решение D11)</div>
+  На случайных точках метрика плотности сжалась в ~7 значений у среднего — питч стоял на месте. Лекарство: кривая эквализации, равная CDF гистограммы D-карты самого кадра. Та же пластина → та же кривая, детерминизм цел. Повешено на пресеты: <b>Reveal</b> без эквализации — однородный материал честно звучит монотонно; <b>Compose</b> с ней — полный мелодический диапазон (после включения: 18 нот на 3 октавы вместо 7). Пресеты стали радикально различимее — что и требовал слепой тест.</div>
+
+  <div class="col">
+  <p><b>Аудиция уже сейчас, без железа:</b></p>
+  <pre><code>make sim
+./build/lithoseq_sim rings  --traj spiral_in --preset reveal  --mid rings.mid
+./build/lithoseq_sim dots15 --traj spiral_in --preset compose --mid dots.mid
+# файлы .mid — в любой DAW; позже вместо паттернов — PGM-дампы реальной камеры</code></pre>
+  </div>
+
+  <div class="check"><div class="ct">Контрольная точка фазы 2 — главный тест проекта</div>
+    <ul>
+      <li><span class="tid">T-M1</span> метрология на печатных паттернах: D монотонна по плотности, R инвариантна к повороту (≤0.05)</li>
+      <li><span class="tid">T-M2</span> слепая сортировка Reveal/Compose посторонним слушателем: ≥ 7 из 8</li>
+      <li><span class="tid">T-M3</span> пары «регулярный/нерегулярный» (соль↔пемза, купорос↔губка): слепая ранжировка слушателей совпадает с физикой в ≥ 80% пар. <b>Это и есть проверка того, что проект состоялся.</b></li>
+      <li><span class="tid">T-M4</span> перезагрузка + повторная вставка → тот же MIDI-поток побайтово</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 3 ============================== -->
+<section class="phase" id="phase3">
+  <div class="phasehead">
+    <div class="phasenum">3</div>
+    <div><h2>CV-выходы</h2>
+    <div class="sub">стенд начинает разговаривать с модульной системой</div></div>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 240" role="img" aria-label="Схема CV-выходов">
+      <rect x="20" y="70" width="130" height="70" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="85" y="100" text-anchor="middle" class="svgtxt">STM32</text>
+      <text x="85" y="118" text-anchor="middle" class="svgtxt-s">I2C</text>
+
+      <rect x="210" y="70" width="130" height="70" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="275" y="96" text-anchor="middle" class="svgtxt">MCP4728</text>
+      <text x="275" y="114" text-anchor="middle" class="svgtxt-s">4×12 бит DAC</text>
+      <text x="275" y="130" text-anchor="middle" class="svgtxt-s">0…4.096 В</text>
+
+      <g transform="translate(400,58)">
+        <path d="M0 22 L54 47 L0 72 Z" fill="none" stroke="var(--copper)" stroke-width="1.5"/>
+        <text x="20" y="52" class="svgtxt-c">×k</text>
+      </g>
+      <text x="427" y="150" text-anchor="middle" class="svgtxt-s">TL074, +12 В</text>
+
+      <g stroke="var(--muted)" stroke-width="1.3" fill="none">
+        <path d="M150 105 h60 m-10 -5 10 5 -10 5"/>
+        <path d="M340 105 h60 m-10 -5 10 5 -10 5"/>
+        <path d="M454 105 h50 m-10 -5 10 5 -10 5"/>
+      </g>
+      <rect x="504" y="93" width="44" height="24" fill="none" stroke="var(--muted)" stroke-width="1.2"/>
+      <text x="526" y="109" text-anchor="middle" class="svgtxt-s">1 кОм</text>
+      <g stroke="var(--muted)" stroke-width="1.3" fill="none"><path d="M548 105 h40 m-10 -5 10 5 -10 5"/></g>
+
+      <g transform="translate(600,55)">
+        <circle cx="35" cy="50" r="26" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <circle cx="35" cy="50" r="8" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="35" y="106" text-anchor="middle" class="svgtxt-a">джеки 3.5 мм</text>
+      </g>
+
+      <g transform="translate(700,30)" class="svgtxt-s">
+        <text x="0" y="30">PITCH  0–5 В · 1V/oct</text>
+        <text x="0" y="52">GATE   0/+8 В</text>
+        <text x="0" y="74">AUX1   тембр (S)</text>
+        <text x="0" y="96">AUX2   характер (R)</text>
+      </g>
+      <text x="430" y="205" text-anchor="middle" class="svgtxt-s">12 бит на 5 В = 1.22 мВ/LSB ≈ 1.5 цента — стенду хватает; в модуле фазы 4 — 16-битный DAC8564</text>
+    </svg>
+    <figcaption><b>Рис. 7.</b> Аналоговый хвост стенда. Выходные 1 кОм последовательно — стандарт Eurorack и защита. Калибровка 1V/oct — таблицей поправок по октавам, мультиметром, командами <span class="mono">cvcal</span>.</figcaption>
+  </figure>
+
+  <div class="detail"><div class="dt">Деталь · петля земли</div>
+  Пока стенд связан USB с компьютером и джеками с кейсом, земли образуют кольцо — в аудио лезет гул 50 Гц. На перформансе: ноутбук от батареи, либо USB отключён (стенд автономен — клок внутренний). В готовом модуле проблема исчезает вместе с USB.</div>
+
+  <div class="check"><div class="ct">Контрольная точка фазы 3</div>
+    <ul>
+      <li><span class="tid">T3.1</span> 1V/oct: ≤ ±3 цента во всех октавах после калибровки</li>
+      <li><span class="tid">T3.2</span> gate: фронт &lt; 1 мс, без дребезга</li>
+      <li><span class="tid">T3.3</span> 30 минут игры VCO+VCF+VCA: без гула, без зависаний, паттерн управляем</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 4 ============================== -->
+<section class="phase" id="phase4">
+  <div class="phasehead">
+    <div class="phasenum">4</div>
+    <div><h2>Модуль Eurorack</h2>
+    <div class="sub">стенд сжимается в панель · окно образца становится лицом инструмента</div></div>
+  </div>
+
+  <div class="col">
+  <p>К этому моменту всё музыкальное уже доказано и отлажено — ядро переезжает без единой правки (это было архитектурным требованием с первого дня). Меняется обвязка: питание от шины ±12 В, клок из джека вместо USB, управление ручками вместо CLI, 16-битный DAC на питче.</p>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 400" role="img" aria-label="Эскиз лицевой панели модуля">
+      <!-- panel -->
+      <g transform="translate(285,10)">
+        <rect x="0" y="0" width="290" height="378" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <circle cx="14" cy="12" r="4" fill="none" stroke="var(--muted)"/>
+        <circle cx="276" cy="12" r="4" fill="none" stroke="var(--muted)"/>
+        <circle cx="14" cy="366" r="4" fill="none" stroke="var(--muted)"/>
+        <circle cx="276" cy="366" r="4" fill="none" stroke="var(--muted)"/>
+
+        <!-- specimen window -->
+        <rect x="75" y="34" width="140" height="140" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        <g stroke="var(--accent)" stroke-width="1" opacity=".65" fill="none">
+          <path d="M100 90 l22 -26 20 16 24 -20 22 24 M96 130 l30 -18 26 22 34 -30"/>
+        </g>
+        <rect x="60" y="98" width="15" height="12" fill="none" stroke="var(--muted)" stroke-width="1.2"/>
+        <text x="145" y="192" text-anchor="middle" class="svgtxt-s">окно + слот пластины (вставка сбоку)</text>
+
+        <!-- knobs -->
+        <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+          <circle cx="60" cy="235" r="17"/><circle cx="145" cy="235" r="17"/><circle cx="230" cy="235" r="17"/>
+        </g>
+        <g stroke="var(--ink)" stroke-width="1.6">
+          <path d="M60 235 l0 -13"/><path d="M145 235 l9 -9"/><path d="M230 235 l-9 -9"/>
+        </g>
+        <text x="60" y="266" text-anchor="middle" class="svgtxt-s">TRAJ</text>
+        <text x="145" y="266" text-anchor="middle" class="svgtxt-s">ROOT</text>
+        <text x="230" y="266" text-anchor="middle" class="svgtxt-s">RANGE</text>
+        <!-- preset switch -->
+        <rect x="115" y="283" width="60" height="16" rx="8" fill="none" stroke="var(--copper)" stroke-width="1.5"/>
+        <circle cx="130" cy="291" r="6" fill="var(--copper)"/>
+        <text x="145" y="315" text-anchor="middle" class="svgtxt-c">REVEAL / COMPOSE</text>
+
+        <!-- jacks row -->
+        <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+          <circle cx="40" cy="345" r="11"/><circle cx="94" cy="345" r="11"/>
+          <circle cx="148" cy="345" r="11"/><circle cx="202" cy="345" r="11"/><circle cx="252" cy="345" r="11"/>
+        </g>
+        <text x="40" y="372" text-anchor="middle" class="svgtxt-s">CLK</text>
+        <text x="94" y="372" text-anchor="middle" class="svgtxt-s">X/Y</text>
+        <text x="148" y="372" text-anchor="middle" class="svgtxt-s">PITCH</text>
+        <text x="202" y="372" text-anchor="middle" class="svgtxt-s">GATE</text>
+        <text x="252" y="372" text-anchor="middle" class="svgtxt-s">AUX</text>
+      </g>
+
+      <!-- annotations left -->
+      <g class="svgtxt-s">
+        <text x="20" y="60">ширина ~16–18 HP:</text>
+        <text x="20" y="78">диктуется окном 25 мм</text>
+        <text x="20" y="96">с рамкой слота</text>
+        <text x="20" y="140">подсветка окна двойная:</text>
+        <text x="20" y="158">просвет и косые группы —</text>
+        <text x="20" y="176">образец виден зрителю</text>
+        <text x="20" y="220">глубина: камера + тубус,</text>
+        <text x="20" y="238">целиться в ≤ 45 мм</text>
+      </g>
+      <!-- annotations right -->
+      <g class="svgtxt-s">
+        <text x="600" y="60">питание: шина ±12 В;</text>
+        <text x="600" y="78">бюджет LED — считать</text>
+        <text x="600" y="96">заранее (07-BOM)</text>
+        <text x="600" y="140">X/Y CV-вход двигает</text>
+        <text x="600" y="158">плейхед напрямую —</text>
+        <text x="600" y="176">векторный секвенсор</text>
+        <text x="600" y="220">на аудиоскорости клока</text>
+        <text x="600" y="238">карта = волновая таблица:</text>
+        <text x="600" y="256">образец становится тембром</text>
+      </g>
+    </svg>
+    <figcaption><b>Рис. 8.</b> Эскиз панели (не финальная графика). Композиционный центр — светящееся окно с образцом: инструмент показывает то, что играет. Слот с боковой вставкой сохраняет кинематическую регистрацию стенда.</figcaption>
+  </figure>
+
+  <div class="col">
+  <ol class="steps">
+    <li><b class="st">Схема и плата</b> <span class="why">Тот же H743 (или H723 дешевле), DCMI-камера на шлейфе, DAC8564 на питч, защита всех входов (клампы, последовательные резисторы), обратный диод и полифуз по питанию.</span></li>
+    <li><b class="st">Механика панели</b> <span class="why">Слот пластины на лицевой панели — самая ответственная деталь: пыль, износ, светоизоляция. Шторка или лабиринт по периметру щели.</span></li>
+    <li><b class="st">Перенос прошивки</b> <span class="why">core/ без правок; меняются hal-реализация и UI-слой. Golden-тесты гоняются на ПК на каждый коммит — регресс маппинга невозможен незамеченным.</span></li>
+    <li><b class="st">Прогон всех тестов фаз 1–3 на модуле</b> <span class="why">Та же батарея T1/T-M/T3 — модуль обязан играть не хуже стенда, и это проверяется, а не предполагается.</span></li>
+  </ol>
+  </div>
+</section>
+
+<!-- ============================== 5 ============================== -->
+<section class="phase" id="phase5">
+  <div class="phasehead">
+    <div class="phasenum">5</div>
+    <div><h2>Что дальше</h2>
+    <div class="sub">три направления, заложенные в архитектуру заранее</div></div>
+  </div>
+
+  <figure class="plate">
+    <svg viewBox="0 0 860 250" role="img" aria-label="Принцип REFLECT-4">
+      <g transform="translate(60,30)">
+        <text x="150" y="0" text-anchor="middle" class="svgtxt" font-weight="600">REFLECT-4: рельеф из четырёх теней</text>
+        <!-- four lit frames -->
+        <g transform="translate(0,20)">
+          <rect width="64" height="64" fill="none" stroke="var(--line)"/>
+          <circle cx="20" cy="32" r="10" fill="var(--muted)" opacity=".8"/>
+          <rect x="30" y="24" width="14" height="16" fill="var(--ink)" opacity=".5"/>
+          <text x="32" y="80" text-anchor="middle" class="svgtxt-s">свет N</text>
+        </g>
+        <g transform="translate(78,20)">
+          <rect width="64" height="64" fill="none" stroke="var(--line)"/>
+          <circle cx="32" cy="20" r="10" fill="var(--muted)" opacity=".8"/>
+          <rect x="24" y="30" width="16" height="14" fill="var(--ink)" opacity=".5"/>
+          <text x="32" y="80" text-anchor="middle" class="svgtxt-s">свет E</text>
+        </g>
+        <g transform="translate(156,20)">
+          <rect width="64" height="64" fill="none" stroke="var(--line)"/>
+          <circle cx="44" cy="32" r="10" fill="var(--muted)" opacity=".8"/>
+          <rect x="20" y="24" width="14" height="16" fill="var(--ink)" opacity=".5"/>
+          <text x="32" y="80" text-anchor="middle" class="svgtxt-s">свет S</text>
+        </g>
+        <g transform="translate(234,20)">
+          <rect width="64" height="64" fill="none" stroke="var(--line)"/>
+          <circle cx="32" cy="44" r="10" fill="var(--muted)" opacity=".8"/>
+          <rect x="24" y="20" width="16" height="14" fill="var(--ink)" opacity=".5"/>
+          <text x="32" y="80" text-anchor="middle" class="svgtxt-s">свет W</text>
+        </g>
+        <text x="150" y="130" text-anchor="middle" class="svgtxt-a">relief = max − min по четырём кадрам</text>
+        <text x="150" y="150" text-anchor="middle" class="svgtxt-s">тени выделены, альбедо подавлено, направление света не влияет на R</text>
+      </g>
+      <g transform="translate(500,50)" class="svgtxt">
+        <text x="0" y="10" font-weight="600">Ещё два направления:</text>
+        <text x="0" y="44">· скрещенные поляризаторы — двулучепреломление</text>
+        <text x="0" y="64" class="svgtxt-s">  купорос вспыхивает на чёрном; угол скрещивания —</text>
+        <text x="0" y="82" class="svgtxt-s">  ещё одна ручка на панели</text>
+        <text x="0" y="116">· живой образец — скан во время роста кристалла</text>
+        <text x="0" y="136" class="svgtxt-s">  секвенция эволюционирует часы; инсталляционный режим</text>
+        <text x="0" y="170">· пьезо-возбуждение — «настоящий резервуар»</text>
+        <text x="0" y="190" class="svgtxt-s">  эксайтер вводит сигнал в пластину, пикапы читают отклик:</text>
+        <text x="0" y="208" class="svgtxt-s">  материал становится физическим резонатором</text>
+      </g>
+    </svg>
+    <figcaption><b>Рис. 9.</b> Косой свет с четырёх сторон по очереди: у каждой неровности тень падает в свою сторону, разность max−min оставляет только рельеф. Так непрозрачный камень читается той же камерой, что и просвеченный кристалл.</figcaption>
+  </figure>
+
+  <div class="col">
+  <p>Всё перечисленное не требует пересборки: пластины dual-ready (зоны под электроды уже в рамке), интерфейс траекторий уже принимает <span class="mono">seek(x,y)</span> для X/Y-модуляции, а «живой» режим — это просто ненулевая кадровая частота, которая и так есть.</p>
+  </div>
+
+  <footer>
+    Полные спецификации: <span class="mono">docs/eurorack-sequencer/00–08</span> · журнал решений: <span class="mono">DECISIONS.md</span> · код и тесты: <span class="mono">lithoseq/</span> (<span class="mono">make test</span>) · механика: <span class="mono">lithoseq/mech/plate.scad</span> · прошивка стенда: <span class="mono">lithoseq/fw-stm32/</span>. Ни одна фаза не начинается, пока не закрыта контрольная точка предыдущей.
+  </footer>
+</section>
+
+</div>
