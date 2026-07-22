@@ -16,40 +16,51 @@
     letter-spacing:3px;color:#8A8D8F;text-transform:uppercase}
   #hint{position:fixed;bottom:12px;left:0;right:0;text-align:center;pointer-events:none;
     font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#5b5f61}
+  /* опись — бумажный ярлык, не полоса */
+  #opis{position:fixed;left:16px;bottom:16px;pointer-events:none;
+    background:linear-gradient(172deg,#EEE3CB,#E0D2B4);color:#3A3026;
+    transform:rotate(-1.6deg);padding:8px 14px 9px;
+    box-shadow:0 6px 22px rgba(0,0,0,0.6);}
+  #opis b{display:block;font-family:Montserrat;font-weight:500;font-size:8px;
+    letter-spacing:3px;color:#C23B2B;margin-bottom:3px}
+  #opis span{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud">ardet · проба офорта</div>
-<div id="loc">городок</div>
-<div id="hint">wasd · стрелки · палец — идти</div>
+<div id="loc">городок · вечер</div>
+<div id="hint">wasd · палец — идти · e — быт</div>
+<div id="opis"><b>опись</b><span id="opistext">пусто. пока честно.</span></div>
 <script>
 // ═══════════════════════════════════════════════════════════════════
-// ARDET — играбельная проба офортного рендера. Вид сверху-сбоку.
-// Статичный мир гравируется один раз в офскрин-слой; каждый кадр —
-// только живое: костёр, окно №3, дым, лужа, кот, шут, странник.
-// Палитра и правила — арт-библия v2 «Ночь и канцелярия».
+// ARDET — играбельная проба. Визуально и по петле — как Don't Starve,
+// но по канону: ни одной полосы. Состояние = свет и чернила.
+// Ночь съедает мир до кругов света; костёр кормится щепой; уголёк
+// у сердца — личный огонь; фонарь можно затеплить навсегда.
 // ═══════════════════════════════════════════════════════════════════
 const NIGHT='#0D0B0A', BONE='#D9CFB8', ASH='#8A8D8F', MIST='#3D4A3A', CANDLE='#E28A3A', RED='#C23B2B';
 const WORLD={w:2560,h:1440};
-const Q=1.6;                       // разрешение статичного слоя
+const Q=1.6;
 const FIRE={x:820,y:800};
+const LANTERN={x:480,y:858};
+const IS_TOUCH='ontouchstart' in window||navigator.maxTouchPoints>0;
 
 const cv=document.getElementById('c'), x=cv.getContext('2d');
 let CW=0,CH=0,DPR=1,zoom=1;
+const darkC=document.createElement('canvas'); const dk=darkC.getContext('2d');
 function resize(){
   CW=innerWidth; CH=innerHeight;
   DPR=Math.min(2,devicePixelRatio||1);
   cv.width=CW*DPR; cv.height=CH*DPR;
   cv.style.width=CW+'px'; cv.style.height=CH+'px';
+  darkC.width=CW*DPR; darkC.height=CH*DPR;
   zoom=Math.max(CW/1200, CH/900, CW/WORLD.w, CH/WORLD.h);
 }
 addEventListener('resize',resize); resize();
 
-// детерминированный «рукотворный» джиттер
 const J=i=>Math.sin(i*127.13)*43758.545%1;
 
-// ── штрих внутри пути (слоями => перекрёстный) ──
 function hatch(g,pathFn,bb,layers){
   for(const L of layers){
     g.save(); g.beginPath(); pathFn(g); g.clip();
@@ -68,7 +79,6 @@ function hatch(g,pathFn,bb,layers){
   }
   g.globalAlpha=1;
 }
-// ── радиальные лучи света ──
 function rays(g,cx,cy,r0,r1,n,col,a,a0=0,a1=Math.PI*2){
   g.strokeStyle=col; g.globalAlpha=a; g.lineWidth=0.7;
   g.beginPath();
@@ -86,54 +96,45 @@ const staticC=document.createElement('canvas');
 staticC.width=WORLD.w*Q; staticC.height=WORLD.h*Q;
 const S=staticC.getContext('2d');
 
-// здание: дальний скат / ближний скат / фасад — вид сверху-сбоку
-function building(g,bx0,by0,wid,farH,nearH,facH,tile){
-  const ridge=by0+farH, eave=ridge+nearH, fbot=eave+facH, bx1=bx0+wid;
-  // тень от луны — вправо-вниз
-  const sh=p=>{p.moveTo(bx1,by0+26);p.lineTo(bx1+88,by0+88);p.lineTo(bx1+88,fbot+44);p.lineTo(bx1,fbot);p.closePath();};
-  g.fillStyle='rgba(4,3,3,0.3)'; g.beginPath(); sh(g); g.fill();
-  hatch(g,sh,{x:bx1,y:by0,w:92,h:fbot-by0+50},
-    [{ang:45,gap:2.8,a:0.4,col:NIGHT,w:1},{ang:-38,gap:5.8,a:0.09,col:BONE,w:0.5,j:0.6}]);
-  // дальний скат
-  g.fillStyle='#0F0D0B'; g.fillRect(bx0,by0,wid,farH);
-  // ближний скат
-  g.fillStyle='#13110E'; g.fillRect(bx0,ridge,wid,nearH);
-  const slope=(y0,h,base)=>{
-    g.save(); g.beginPath(); g.rect(bx0,y0,wid,h); g.clip();
-    g.strokeStyle=BONE; g.lineWidth=0.6;
-    const rows=Math.floor(h/13);
-    for(let r=0;r<rows;r++){
-      const ry=y0+10+r*13;
-      g.globalAlpha=base+r*0.016;
-      g.beginPath();
-      if(tile==='arc'){
-        for(let cx2=bx0-8;cx2<bx1+16;cx2+=17){
-          g.moveTo(cx2+16,ry+(r%2?8:0));
-          g.arc(cx2+8+(r%2?8:0),ry,8,0,Math.PI);
-        }
-      }else{
-        for(let i=0;i<wid/15+2;i++){
-          const sx=bx0-8+i*15+(r%2?7:0);
-          g.moveTo(sx,ry); g.lineTo(sx+12,ry+3.6);
-        }
+// фасад «картонкой» — как в Don't Starve: стена анфас + двускатная крыша
+function facade(g,bx0,base,wid,hgt,roofH,tile){
+  const wallTop=base-hgt, bx1=bx0+wid, peak=wallTop-roofH, cx=bx0+wid/2;
+  // прижатая тень у основания
+  g.fillStyle='rgba(4,3,3,0.5)';
+  g.beginPath(); g.ellipse(cx+14,base+7,wid*0.56,13,0,0,7); g.fill();
+  // стена
+  g.fillStyle='#0F0D0B'; g.fillRect(bx0,wallTop,wid,hgt);
+  hatch(g,p=>p.rect(bx0,wallTop,wid,hgt),{x:bx0,y:wallTop,w:wid,h:hgt},[
+    {ang:90,gap:2.8,a:0.2,w:0.6,j:0.4},{ang:0,gap:5.4,a:0.11,w:0.5,j:0.6}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=1;
+  g.strokeRect(bx0,wallTop,wid,hgt); g.globalAlpha=1;
+  // крыша
+  const roof=p=>{p.moveTo(bx0-12,wallTop);p.lineTo(cx,peak);p.lineTo(bx1+12,wallTop);p.closePath();};
+  g.fillStyle='#13110E'; g.beginPath(); roof(g); g.fill();
+  g.save(); g.beginPath(); roof(g); g.clip();
+  g.strokeStyle=BONE; g.lineWidth=0.6;
+  const rows=Math.floor(roofH/12);
+  for(let r=0;r<rows+1;r++){
+    const ry=peak+8+r*12;
+    g.globalAlpha=0.2+r*0.025;
+    g.beginPath();
+    if(tile==='arc'){
+      for(let cx2=bx0-14;cx2<bx1+16;cx2+=16){
+        g.moveTo(cx2+15,ry+(r%2?8:0));
+        g.arc(cx2+7.5+(r%2?8:0),ry,7.5,0,Math.PI);
       }
-      g.stroke();
+    }else{
+      for(let i=0;i<wid/14+2;i++){
+        const sx=bx0-12+i*14+(r%2?7:0);
+        g.moveTo(sx,ry); g.lineTo(sx+11,ry+3.2);
+      }
     }
-    g.restore(); g.globalAlpha=1;
-  };
-  slope(by0,farH,0.10); slope(ridge,nearH,0.2);
-  // конёк, карниз, торцы
-  g.strokeStyle=BONE; g.lineWidth=1.1; g.globalAlpha=0.65;
-  g.beginPath(); g.moveTo(bx0-4,ridge); g.lineTo(bx1+4,ridge); g.stroke();
-  g.globalAlpha=0.45; g.lineWidth=0.9;
-  g.strokeRect(bx0,by0,wid,farH+nearH);
-  // фасад
-  g.fillStyle='#0D0B0A'; g.fillRect(bx0,eave,wid,facH);
-  hatch(g,p=>p.rect(bx0,eave,wid,facH),{x:bx0,y:eave,w:wid,h:facH},
-    [{ang:90,gap:2.8,a:0.18,w:0.55,j:0.4},{ang:0,gap:5.6,a:0.10,w:0.5,j:0.6}]);
-  g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
-  g.strokeRect(bx0,eave,wid,facH); g.globalAlpha=1;
-  return {ridge,eave,fbot};
+    g.stroke();
+  }
+  g.restore(); g.globalAlpha=1;
+  g.strokeStyle=BONE; g.globalAlpha=0.65; g.lineWidth=1.1;
+  g.beginPath(); roof(g); g.stroke(); g.globalAlpha=1;
+  return {wallTop,peak,cx};
 }
 
 function renderStatic(){
@@ -142,26 +143,25 @@ function renderStatic(){
   g.clearRect(0,0,WORLD.w,WORLD.h);
   g.fillStyle=NIGHT; g.fillRect(0,0,WORLD.w,WORLD.h);
 
-  // ── грунт: общий горизонтальный офорт пластины ──
   hatch(g,p=>p.rect(0,0,WORLD.w,WORLD.h),{x:0,y:0,w:WORLD.w,h:WORLD.h},[
     {ang:0,gap:3.6,a:0.13,w:0.55,j:1},
     {ang:0,gap:7.6,a:0.08,w:0.5,j:1.6},
   ]);
 
-  // ── брусчатка городка (x<1420) ──
+  // брусчатка городка
   g.strokeStyle=BONE; g.lineWidth=0.55;
   for(let row=0;row<47;row++){
     const ry=40+row*30;
     for(let i=0;i<24;i++){
       const sx=(i*60+((row%2)?30:0));
       if(sx>1420) continue;
-      if(J(row*31+i)>0.62) continue;          // выщербины
+      if(J(row*31+i)>0.62) continue;
       g.globalAlpha=0.09+Math.abs(J(row+i*7))*0.07;
       g.beginPath(); g.ellipse(sx,ry,24,8.4,J(i+row)*0.08,0,7); g.stroke();
     }
   }
   g.globalAlpha=1;
-  // ── пустошь за городком: пыль и камешки ──
+  // пустошь
   for(let i=0;i<520;i++){
     const px=1420+(J(i)*0.5+0.5)*1140, py=(J(i*3)*0.5+0.5)*1440;
     g.globalAlpha=0.10+Math.abs(J(i*5))*0.08;
@@ -175,7 +175,7 @@ function renderStatic(){
   }
   g.globalAlpha=1;
 
-  // ── мох — пятна МГЛЫ ──
+  // мох
   const moss=(mx,my,r,d)=>{
     const p=pp=>{
       for(let i=0;i<=9;i++){
@@ -196,7 +196,7 @@ function renderStatic(){
   moss(1560,700,44,1); moss(1900,1000,52,1); moss(2260,760,40,1.1);
   moss(2050,700,30,1.2); moss(2440,940,46,1.3);
 
-  // ── колеи дороги: от врат через площадь за мост ──
+  // колеи
   g.strokeStyle='#090807'; g.lineWidth=6; g.globalAlpha=0.6; g.lineCap='round';
   for(const off of [0,15]){
     g.beginPath(); g.moveTo(185,792+off);
@@ -213,7 +213,7 @@ function renderStatic(){
   }
   g.globalAlpha=1; g.lineCap='butt';
 
-  // ── ВРАТА (x~60..180) — открыты всегда, вросли ──
+  // ВРАТА
   const gx=64, gy=764;
   g.fillStyle='rgba(4,3,3,0.45)';
   g.beginPath(); g.moveTo(gx+2,gy); g.lineTo(gx+52,gy+34); g.lineTo(gx+150,gy+34); g.lineTo(gx+118,gy); g.closePath(); g.fill();
@@ -225,7 +225,6 @@ function renderStatic(){
   g.globalAlpha=1;
   hatch(g,p=>{p.rect(gx-6,gy-120,16,120);p.rect(gx+96,gy-120,16,120);},
     {x:gx-6,y:gy-120,w:120,h:120},[{ang:90,gap:2.4,a:0.26,w:0.6,j:0.4},{ang:8,gap:9,a:0.13,w:0.5}]);
-  // створка — упала, вросла: параллелограмм на земле
   const leaf=p=>{p.moveTo(gx+40,gy+16);p.lineTo(gx+96,gy+30);p.lineTo(gx+88,gy+74);p.lineTo(gx+30,gy+58);p.closePath();};
   g.fillStyle='#0F0D0B'; g.beginPath(); leaf(g); g.fill();
   hatch(g,leaf,{x:gx+28,y:gy+14,w:72,h:64},[{ang:16,gap:3,a:0.24,w:0.55}]);
@@ -235,7 +234,6 @@ function renderStatic(){
     g.beginPath(); g.moveTo(gx+40+i*14,gy+16+i*3.4); g.lineTo(gx+30+i*14.5,gy+58+i*4); g.stroke();
   }
   g.globalAlpha=1;
-  // трава у створки
   g.strokeStyle=MIST; g.globalAlpha=0.85; g.lineWidth=0.9;
   for(let i=0;i<11;i++){
     const bx2=gx+22+i*7;
@@ -245,24 +243,30 @@ function renderStatic(){
   }
   g.globalAlpha=1;
 
-  // ── КАНЦЕЛЯРИЯ ──
-  const kb=building(g,300,380,260,58,100,64,'arc');
-  // окна фасада: 4, №3 — тёмное в статике (динамика зажжёт)
+  // ── КАНЦЕЛЯРИЯ — фасад анфас ──
+  const kf=facade(g,300,604,260,150,62,'arc');
   g.strokeStyle=ASH; g.lineWidth=0.9;
   const winxs=[330,392,454,516];
   for(const wx of winxs){
     g.globalAlpha=0.6;
-    g.strokeRect(wx,kb.eave+22,34,30);
-    g.beginPath(); g.moveTo(wx+17,kb.eave+22); g.lineTo(wx+17,kb.eave+52);
-    g.moveTo(wx,kb.eave+37); g.lineTo(wx+34,kb.eave+37); g.stroke();
+    g.strokeRect(wx,490,34,36);
+    g.beginPath(); g.moveTo(wx+17,490); g.lineTo(wx+17,526);
+    g.moveTo(wx,508); g.lineTo(wx+34,508); g.stroke();
   }
   g.globalAlpha=1;
+  // дверь-арка
+  g.fillStyle='#070605';
+  g.beginPath(); g.moveTo(414,604); g.lineTo(414,560);
+  g.quadraticCurveTo(430,542,446,560); g.lineTo(446,604); g.closePath(); g.fill();
+  g.strokeStyle=BONE; g.globalAlpha=0.45;
+  g.beginPath(); g.moveTo(414,604); g.lineTo(414,560);
+  g.quadraticCurveTo(430,542,446,560); g.lineTo(446,604); g.stroke(); g.globalAlpha=1;
   g.fillStyle=BONE; g.globalAlpha=0.85; g.font='300 12px Montserrat';
-  g.fillText('К А Н Ц Е Л Я Р И Я', 344, kb.eave+14);
+  g.fillText('К А Н Ц Е Л Я Р И Я', 344, 478);
   g.globalAlpha=0.55; g.font='300 10px Montserrat';
-  g.fillText('№3', 458, kb.eave+66); g.globalAlpha=1;
+  g.fillText('№3', 492, 540); g.globalAlpha=1;
 
-  // ── доска объявлений у канцелярии ──
+  // доска объявлений
   g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=2.4;
   g.beginPath(); g.moveTo(600,612); g.lineTo(600,566); g.moveTo(652,612); g.lineTo(652,566); g.stroke();
   g.globalAlpha=0.7; g.lineWidth=1;
@@ -272,7 +276,7 @@ function renderStatic(){
   g.globalAlpha=0.75; g.font='italic 11px "Cormorant Garamond"'; g.fillStyle=BONE;
   g.fillText('утеряно: смысл', 592, 586); g.globalAlpha=1;
 
-  // ── КОЛОДЕЦ ──
+  // КОЛОДЕЦ
   const wlx=760, wly=318;
   g.fillStyle='rgba(4,3,3,0.45)';
   g.beginPath(); g.ellipse(wlx+52,wly+30,52,15,0.3,0,7); g.fill();
@@ -281,19 +285,16 @@ function renderStatic(){
     [{ang:-6,gap:2.6,a:0.26,w:0.55,j:0.4}]);
   g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=1;
   g.beginPath(); g.ellipse(wlx,wly,42,19,0,0,7); g.stroke();
-  // камни венца
   g.globalAlpha=0.45;
   for(let i=0;i<11;i++){
     const a=i/11*Math.PI*2;
     g.beginPath(); g.moveTo(wlx+Math.cos(a)*42,wly+Math.sin(a)*19);
     g.lineTo(wlx+Math.cos(a)*30,wly+Math.sin(a)*13); g.stroke();
   }
-  // зев
   g.globalAlpha=1; g.fillStyle='#050404';
   g.beginPath(); g.ellipse(wlx,wly,26,11,0,0,7); g.fill();
   g.strokeStyle=BONE; g.globalAlpha=0.5;
   g.beginPath(); g.ellipse(wlx,wly,26,11,0,0,7); g.stroke();
-  // стойки и крыша
   g.strokeStyle='#241E18'; g.lineWidth=4;
   g.beginPath(); g.moveTo(wlx-26,wly-4); g.lineTo(wlx-26,wly-66);
   g.moveTo(wlx+26,wly-4); g.lineTo(wlx+26,wly-66); g.stroke();
@@ -313,31 +314,31 @@ function renderStatic(){
   g.restore(); g.globalAlpha=1;
   g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
   g.beginPath(); g.moveTo(wlx-40,wly-64); g.lineTo(wlx,wly-88); g.lineTo(wlx+40,wly-64); g.closePath(); g.stroke();
-  // ворот и верёвка в зев
   g.beginPath(); g.moveTo(wlx-26,wly-52); g.lineTo(wlx+26,wly-52); g.stroke();
   g.globalAlpha=0.4;
   g.beginPath(); g.moveTo(wlx+4,wly-52); g.lineTo(wlx+4,wly-6); g.stroke();
   g.globalAlpha=1;
 
-  // ── ДОМ С КОТОМ ──
-  const hb=building(g,950,420,230,52,88,58,'shake');
+  // ── ДОМ С КОТОМ — фасад ──
+  const hf=facade(g,950,618,230,120,58,'shake');
   g.strokeStyle=ASH; g.lineWidth=0.9; g.globalAlpha=0.55;
-  g.strokeRect(978,hb.eave+18,30,28);
-  g.strokeRect(1070,hb.eave+18,30,28);
-  g.strokeRect(1128,hb.eave+16,26,42);  // дверь
+  g.strokeRect(978,530,30,32);
+  g.strokeRect(1092,530,30,32);
   g.globalAlpha=1;
-  // труба на ближнем скате
-  g.fillStyle='#0F0D0B'; g.fillRect(1116,hb.ridge+8,20,26);
-  g.strokeStyle=BONE; g.globalAlpha=0.5; g.strokeRect(1116,hb.ridge+8,20,26);
-  g.fillStyle='#050404'; g.fillRect(1120,hb.ridge+11,12,8); g.globalAlpha=1;
+  // дверь
+  g.fillStyle='#070605'; g.fillRect(1032,556,30,48);
+  g.strokeStyle=BONE; g.globalAlpha=0.45; g.strokeRect(1032,556,30,48); g.globalAlpha=1;
+  // труба на скате
+  g.fillStyle='#0F0D0B'; g.fillRect(1108,452,20,36);
+  g.strokeStyle=BONE; g.globalAlpha=0.5; g.strokeRect(1108,452,20,36);
+  g.fillStyle='#050404'; g.fillRect(1112,455,12,8); g.globalAlpha=1;
 
-  // ── ЛУЖА с луной (статика: чаша; динамика: луна и рябь) ──
-  const px3=1120, py3=760;
+  // ЛУЖА (чаша)
   g.fillStyle='#0E0D0B';
   g.beginPath();
   for(let i=0;i<=10;i++){
     const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
-    const px=px3+Math.cos(a)*rr, py=py3+Math.sin(a)*rr*0.36;
+    const px=1120+Math.cos(a)*rr, py=760+Math.sin(a)*rr*0.36;
     i?g.lineTo(px,py):g.moveTo(px,py);
   }
   g.closePath(); g.fill();
@@ -345,15 +346,15 @@ function renderStatic(){
   g.beginPath();
   for(let i=0;i<=10;i++){
     const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
-    const px=px3+Math.cos(a)*rr, py=py3+Math.sin(a)*rr*0.36;
+    const px=1120+Math.cos(a)*rr, py=760+Math.sin(a)*rr*0.36;
     i?g.lineTo(px,py):g.moveTo(px,py);
   }
   g.closePath(); g.stroke(); g.globalAlpha=1;
 
-  // ── ПОГАСШИЙ ФОНАРЬ ──
-  const lx=480, ly=858;
+  // ФОНАРЬ (погасший в статике)
+  const lx=LANTERN.x, ly=LANTERN.y;
   g.strokeStyle='#090807'; g.globalAlpha=0.6; g.lineWidth=3;
-  g.beginPath(); g.moveTo(lx+4,ly+2); g.lineTo(lx+92,ly+30); g.stroke(); // тень
+  g.beginPath(); g.moveTo(lx+4,ly+2); g.lineTo(lx+92,ly+30); g.stroke();
   g.globalAlpha=1;
   g.strokeStyle='#2A241E'; g.lineWidth=4; g.lineCap='round';
   g.beginPath(); g.moveTo(lx,ly); g.lineTo(lx,ly-96); g.stroke();
@@ -361,10 +362,12 @@ function renderStatic(){
   g.beginPath(); g.moveTo(lx,ly-96); g.quadraticCurveTo(lx+2,ly-108,lx+15,ly-108); g.stroke();
   g.strokeRect(lx+10,ly-122,14,17);
   g.beginPath(); g.moveTo(lx+12,ly-118); g.lineTo(lx+21,ly-109); g.stroke();
+  g.globalAlpha=0.4;
+  g.beginPath(); g.moveTo(lx+11,ly-121); g.lineTo(lx+26,ly-121); g.stroke();
   g.globalAlpha=1; g.lineCap='butt';
   hatch(g,p=>p.rect(lx-2,ly-96,4,96),{x:lx-2,y:ly-96,w:4,h:96},[{ang:90,gap:2,a:0.3,w:0.5}]);
 
-  // ── ПИФОС ──
+  // ПИФОС
   const pf=p=>p.ellipse(1080,935,52,28,-0.08,0,7);
   g.fillStyle='rgba(4,3,3,0.45)';
   g.beginPath(); g.ellipse(1108,972,56,12,0.06,0,7); g.fill();
@@ -382,7 +385,7 @@ function renderStatic(){
   g.strokeStyle=BONE; g.globalAlpha=0.75;
   g.beginPath(); g.ellipse(1034,930,10,19,-0.08,0,7); g.stroke(); g.globalAlpha=1;
 
-  // ── КОСТРИЩЕ (камни и поленья; пламя — динамика) ──
+  // КОСТРИЩЕ
   g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=0.9;
   for(let i=0;i<9;i++){
     const a=i/9*Math.PI*2;
@@ -396,7 +399,7 @@ function renderStatic(){
   g.moveTo(FIRE.x-20,FIRE.y-6); g.lineTo(FIRE.x+27,FIRE.y+7); g.stroke();
   g.lineCap='butt';
 
-  // ── ЧЕРЕП БЫКА на шесте у костра ──
+  // ЧЕРЕП на шесте
   const skx=884, sky=668, sc=0.62;
   const su=v=>v*sc;
   g.strokeStyle='#241E18'; g.lineWidth=3.4;
@@ -443,8 +446,7 @@ function renderStatic(){
   g.beginPath(); g.ellipse(skx+su(2.6),sky+su(24),su(1.4),su(3),-0.25,0,7); g.stroke();
   g.globalAlpha=1;
 
-  // ═══ БЛОК 2 — ЗА ГОРОДКОМ ═══
-  // ── сухое русло ──
+  // ═══ БЛОК 2 ═══
   const bank=(bx4)=>{
     g.strokeStyle=BONE; g.globalAlpha=0.4; g.lineWidth=1;
     g.beginPath();
@@ -473,7 +475,7 @@ function renderStatic(){
   }
   g.globalAlpha=1;
 
-  // ── мост через русло ──
+  // мост
   g.fillStyle='#100E0C'; g.fillRect(1636,846,180,72);
   g.save(); g.beginPath(); g.rect(1636,846,180,72); g.clip();
   g.strokeStyle=BONE; g.lineWidth=0.7;
@@ -486,7 +488,6 @@ function renderStatic(){
   g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=1.1;
   g.beginPath(); g.moveTo(1636,846); g.lineTo(1816,846);
   g.moveTo(1636,918); g.lineTo(1816,918); g.stroke();
-  // перила северные (вертикали) + прогон
   g.globalAlpha=0.55; g.lineWidth=1;
   for(let i=0;i<6;i++){
     const px=1646+i*33;
@@ -495,10 +496,10 @@ function renderStatic(){
   g.beginPath(); g.moveTo(1640,822); g.lineTo(1814,820); g.stroke();
   g.globalAlpha=1;
 
-  // ── мёртвые деревья ──
+  // деревья
   const tree=(tx,ty,s2)=>{
     g.strokeStyle='#090807'; g.globalAlpha=0.55; g.lineWidth=2.4*s2;
-    g.beginPath(); g.moveTo(tx+3,ty+2); g.lineTo(tx+56*s2,ty+22*s2); g.stroke(); // тень
+    g.beginPath(); g.moveTo(tx+3,ty+2); g.lineTo(tx+56*s2,ty+22*s2); g.stroke();
     g.globalAlpha=1;
     g.strokeStyle='#1C1712'; g.lineWidth=5*s2; g.lineCap='round';
     g.beginPath(); g.moveTo(tx,ty);
@@ -515,12 +516,10 @@ function renderStatic(){
   };
   tree(1450,530,1); tree(2320,988,1.15);
 
-  // ── РУИНЫ «жильцы съехали раньше пожара» ──
+  // РУИНЫ
   const rx0=1980, ry0=560;
-  // пепельный ореол
   hatch(g,p=>p.ellipse(rx0+120,ry0+80,190,110,0,0,7),
     {x:rx0-70,y:ry0-30,w:380,h:220},[{ang:12,gap:3.4,a:0.10,col:ASH,w:0.5,j:1}]);
-  // задняя стена с изломанным верхом
   const wall=p=>{
     p.moveTo(rx0,ry0+130);
     p.lineTo(rx0,ry0+40); p.lineTo(rx0+34,ry0+52); p.lineTo(rx0+60,ry0+14);
@@ -533,7 +532,6 @@ function renderStatic(){
     {ang:90,gap:2.6,a:0.2,w:0.55,j:0.5},{ang:0,gap:5.2,a:0.1,w:0.5}]);
   g.strokeStyle=BONE; g.globalAlpha=0.55; g.lineWidth=0.9;
   g.beginPath(); wall(g); g.stroke(); g.globalAlpha=1;
-  // копоть — чёрные языки по стене
   g.strokeStyle='#050404'; g.lineWidth=5;
   for(let i=0;i<6;i++){
     g.globalAlpha=0.5;
@@ -543,7 +541,6 @@ function renderStatic(){
     g.stroke();
   }
   g.globalAlpha=1;
-  // упавшие балки
   g.strokeStyle='#131009'; g.lineWidth=7; g.lineCap='round';
   g.beginPath(); g.moveTo(rx0+30,ry0+140); g.lineTo(rx0+130,ry0+180);
   g.moveTo(rx0+180,ry0+136); g.lineTo(rx0+96,ry0+186);
@@ -551,13 +548,12 @@ function renderStatic(){
   g.strokeStyle=BONE; g.globalAlpha=0.3; g.lineWidth=1;
   g.beginPath(); g.moveTo(rx0+30,ry0+138); g.lineTo(rx0+130,ry0+178); g.stroke();
   g.globalAlpha=1; g.lineCap='butt';
-  // дверной проём — стоит один
   g.strokeStyle=BONE; g.globalAlpha=0.8; g.lineWidth=1.4;
   g.strokeRect(rx0+104,ry0+150,34,58);
   g.globalAlpha=0.4; g.strokeRect(rx0+109,ry0+155,24,53);
   g.globalAlpha=1;
 
-  // ── столб на краю ──
+  // столб КРАЙ
   const ex=2480, ey=862;
   g.strokeStyle='#090807'; g.globalAlpha=0.55; g.lineWidth=3;
   g.beginPath(); g.moveTo(ex+3,ey+2); g.lineTo(ex+64,ey+22); g.stroke(); g.globalAlpha=1;
@@ -573,35 +569,35 @@ function renderStatic(){
 renderStatic();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(renderStatic);
 
-// ═══════════════ МИР: КОЛЛИЗИИ, ОККЛЮДЕРЫ, ШЁПОТЫ ═══════════════
+// ═══════════════ МИР ═══════════════
 const solids=[
-  {t:'r',x:300,y:390,w:260,h:214},           // канцелярия
-  {t:'r',x:950,y:430,w:230,h:188},           // дом с котом
-  {t:'c',x:760,y:318,r:48},                  // колодец
-  {t:'c',x:FIRE.x,y:FIRE.y,r:46},            // костёр
-  {t:'c',x:884,y:796,r:10},                  // шест черепа
-  {t:'c',x:480,y:858,r:8},                   // фонарь
-  {t:'r',x:588,y:585,w:78,h:26},             // доска
-  {t:'r',x:58,y:700,w:22,h:66},{t:'r',x:160,y:700,w:22,h:66}, // врата
-  {t:'r',x:1028,y:915,w:104,h:44},           // пифос
-  {t:'c',x:1450,y:530,r:12},{t:'c',x:2320,y:988,r:14},        // деревья
-  {t:'r',x:1980,y:560,w:240,h:150},          // руины
-  {t:'r',x:1640,y:0,w:170,h:838},            // русло север
-  {t:'r',x:1640,y:926,w:170,h:514},          // русло юг
-  {t:'c',x:2480,y:862,r:8},                  // столб края
+  {t:'r',x:300,y:576,w:260,h:30},            // канцелярия (за ней можно ходить)
+  {t:'r',x:950,y:590,w:230,h:30},            // дом
+  {t:'c',x:760,y:318,r:48},
+  {t:'c',x:FIRE.x,y:FIRE.y,r:44},
+  {t:'c',x:884,y:796,r:10},
+  {t:'c',x:LANTERN.x,y:LANTERN.y,r:8},
+  {t:'r',x:588,y:585,w:78,h:26},
+  {t:'r',x:58,y:700,w:22,h:66},{t:'r',x:160,y:700,w:22,h:66},
+  {t:'r',x:1028,y:915,w:104,h:44},
+  {t:'c',x:1450,y:530,r:12},{t:'c',x:2320,y:988,r:14},
+  {t:'r',x:1980,y:560,w:240,h:150},
+  {t:'r',x:1640,y:0,w:170,h:838},
+  {t:'r',x:1640,y:926,w:170,h:514},
+  {t:'c',x:2480,y:862,r:8},
 ];
 const occluders=[
-  {x:300,y:380,w:352,h:225,base:604},        // канцелярия (+тень)
-  {x:950,y:420,w:230,h:198,base:618},
-  {x:712,y:224,w:96,h:120,base:340},         // колодец верх
-  {x:850,y:628,w:68,h:170,base:798},         // шест с черепом
-  {x:456,y:736,w:52,h:124,base:860},         // фонарь
-  {x:584,y:544,w:86,h:70,base:612},          // доска
-  {x:54,y:628,w:132,h:138,base:766},         // врата
-  {x:1436,y:426,w:60,h:106,base:532},        // дерево 1
-  {x:2290,y:868,w:66,h:122,base:990},        // дерево 2
-  {x:1976,y:556,w:250,h:156,base:710},       // руины
-  {x:2442,y:778,w:80,h:86,base:864},         // столб края
+  {x:288,y:392,w:290,h:214,base:606},
+  {x:938,y:440,w:256,h:180,base:620},
+  {x:712,y:224,w:96,h:120,base:340},
+  {x:850,y:628,w:68,h:170,base:798},
+  {x:456,y:736,w:52,h:124,base:860},
+  {x:584,y:544,w:86,h:70,base:612},
+  {x:54,y:628,w:132,h:138,base:766},
+  {x:1436,y:426,w:60,h:106,base:532},
+  {x:2290,y:868,w:66,h:122,base:990},
+  {x:1976,y:556,w:250,h:156,base:710},
+  {x:2442,y:778,w:80,h:86,base:864},
 ];
 const whispers=[
   {x:120,y:700,r:100,t:'...обычно это узнают позже...'},
@@ -619,17 +615,85 @@ const whispers=[
   {x:2480,y:862,r:120,t:'...дальше пока не нарисовано. мох уже там...'},
 ];
 
-// ═══════════════ ИГРОК И КАМЕРА ═══════════════
+// ═══════════════ БЫТ: подбираемое, костёр, уголёк, фонарь ═══════════════
+const inv={wood:0,moss:0,wax:0};
+const NAMES={wood:'щепа',moss:'мох',wax:'воск'};
+const PICKUPS=[
+  {x:420,y:700,k:'wood'},{x:700,y:650,k:'wood'},{x:260,y:540,k:'wood'},
+  {x:580,y:880,k:'wood'},{x:880,y:950,k:'wood'},{x:1300,y:860,k:'wood'},
+  {x:1520,y:760,k:'wood'},{x:1440,y:1000,k:'wood'},{x:2260,y:880,k:'wood'},
+  {x:660,y:420,k:'wood'},{x:1260,y:690,k:'wood'},{x:2130,y:940,k:'wood'},
+  {x:250,y:445,k:'moss'},{x:1570,y:718,k:'moss'},{x:1910,y:1010,k:'moss'},
+  {x:1190,y:1120,k:'moss'},{x:2270,y:770,k:'moss'},
+  {x:1062,y:898,k:'wax'},{x:1104,y:962,k:'wax'},{x:2060,y:706,k:'wax'},
+];
+PICKUPS.forEach(p=>p.taken=false);
+const fire={fuel:0.85};
+const ember={v:0.8};
+let lanternLit=false;
+try{lanternLit=localStorage.getItem('ardet_proto_lantern')==='1';}catch(e){}
+const notes=[]; // всплывающие пометки
+function note(x2,y2,t2){notes.push({x:x2,y:y2,t:t2,life:150});}
+const opisEl=document.getElementById('opistext');
+function opis(){
+  const parts=[];
+  for(const k of ['wood','moss','wax']) if(inv[k]>0) parts.push(`${NAMES[k]} ×${inv[k]}`);
+  opisEl.textContent=parts.length?parts.join(' · '):'пусто. пока честно.';
+}
+
+// ═══════════════ ВРЕМЯ СУТОК ═══════════════
+const CYCLE=240; // секунд на сутки
+let tCycle=CYCLE*0.30; // старт — день клонится к вечеру
+let lastPhase=0;
+function ambientDark(ph){
+  if(ph<0.42) return 0.06;                       // день
+  if(ph<0.55) return 0.06+((ph-0.42)/0.13)*0.74; // сумерки
+  if(ph<0.92) return 0.8;                        // ночь
+  return 0.8-((ph-0.92)/0.08)*0.74;              // рассвет
+}
+function phaseWord(ph){
+  return ph<0.42?'день':(ph<0.55?'сумерки':(ph<0.92?'ночь':'рассвет'));
+}
+
+// ═══════════════ ИГРОК ═══════════════
 const player={x:236,y:790,fx:1,fy:0,step:0,moving:false};
 let cam={x:0,y:0};
 const keys={};
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
+addEventListener('keydown',e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(e.key.toLowerCase()==='e'||e.key.toLowerCase()==='у') tryAction();
+});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 let touchTarget=null, touchHeld=false;
 const toWorld=(px,py)=>({x:cam.x+px/zoom, y:cam.y+py/zoom});
-cv.addEventListener('pointerdown',e=>{touchHeld=true;touchTarget=toWorld(e.clientX,e.clientY);});
+cv.addEventListener('pointerdown',e=>{
+  const w=toWorld(e.clientX,e.clientY);
+  // тап по костру/фонарю рядом = действие
+  if(Math.hypot(w.x-FIRE.x,w.y-FIRE.y)<60 && Math.hypot(player.x-FIRE.x,player.y-FIRE.y)<90){tryAction('fire');return;}
+  if(Math.hypot(w.x-LANTERN.x,w.y-LANTERN.y)<50 && Math.hypot(player.x-LANTERN.x,player.y-LANTERN.y)<80){tryAction('lantern');return;}
+  touchHeld=true; touchTarget=w;
+});
 cv.addEventListener('pointermove',e=>{if(touchHeld)touchTarget=toWorld(e.clientX,e.clientY);});
 addEventListener('pointerup',()=>{touchHeld=false;});
+
+function tryAction(which){
+  const dF=Math.hypot(player.x-FIRE.x,player.y-FIRE.y);
+  const dL=Math.hypot(player.x-LANTERN.x,player.y-LANTERN.y);
+  if((which==='fire'||!which) && dF<90 && inv.wood>0){
+    inv.wood--; fire.fuel=Math.min(1.25,fire.fuel+0.28);
+    note(FIRE.x,FIRE.y-70,'огонь принял щепу'); opis(); return;
+  }
+  if((which==='lantern'||!which) && dL<80 && !lanternLit && ember.v>0.35){
+    lanternLit=true;
+    try{localStorage.setItem('ardet_proto_lantern','1');}catch(e){}
+    note(LANTERN.x,LANTERN.y-130,'фонарь помнит, зачем он');
+    return;
+  }
+  if((which==='fire'||!which) && dF<90 && inv.moss>0 && ember.v<0.9){
+    inv.moss--; ember.v=Math.min(1,ember.v+0.3);
+    note(player.x,player.y-50,'уголёк поел'); opis(); return;
+  }
+}
 
 const footprints=[];
 let lastFoot={x:player.x,y:player.y}, footSide=1;
@@ -651,7 +715,7 @@ function collide(nx,ny){
   return [nx,ny];
 }
 
-function updatePlayer(){
+function updatePlayer(dt){
   let dx=0,dy=0;
   if(keys['w']||keys['ц']||keys['arrowup'])dy-=1;
   if(keys['s']||keys['ы']||keys['arrowdown'])dy+=1;
@@ -666,7 +730,7 @@ function updatePlayer(){
   if(player.moving){
     dx/=len;dy/=len;
     const sp=2.7;
-    const [nx,ny]=collide(player.x+dx*sp, player.y+dy*sp*0.86); // лёгкая анизотропия ¾-вида
+    const [nx,ny]=collide(player.x+dx*sp, player.y+dy*sp*0.86);
     player.x=nx;player.y=ny;
     player.fx=dx;player.fy=dy;player.step+=sp;
     if(Math.hypot(player.x-lastFoot.x,player.y-lastFoot.y)>17){
@@ -676,14 +740,23 @@ function updatePlayer(){
       if(footprints.length>240)footprints.shift();
       lastFoot={x:player.x,y:player.y};
     }
+    // подбор
+    for(const pk of PICKUPS){
+      if(pk.taken) continue;
+      if(Math.hypot(player.x-pk.x,player.y-pk.y)<16){
+        pk.taken=true; inv[pk.k]++;
+        note(pk.x,pk.y-20,'+ '+NAMES[pk.k]); opis();
+      }
+    }
   }
 }
 
 // ═══════════════ ШЁПОТЫ ═══════════════
 let whisper={t:'',life:0,x:0,y:0}, whisperCd=0;
-function updateWhispers(){
+function updateWhispers(litHere){
   if(whisper.life>0){whisper.life--; if(whisper.life<=0)whisperCd=150; return;}
   if(whisperCd>0){whisperCd--;return;}
+  if(!litHere) return; // в темноте мир не отвечает
   for(const w of whispers){
     if(Math.hypot(player.x-w.x,player.y-w.y)<w.r){
       whisper={t:w.t,life:300,x:w.x,y:w.y-40}; break;
@@ -692,14 +765,60 @@ function updateWhispers(){
 }
 
 // ═══════════════ КАДР ═══════════════
-let t0=performance.now(), frameN=0;
+let t0=performance.now(), tPrev=t0, frameN=0;
+let sitPhase=0; // 0 — нет; >0 идёт «пересиживание ночи»
 const locEl=document.getElementById('loc');
 function frame(now){
-  const t=(now-t0)/1000; frameN++;
-  const breath=0.75+0.25*Math.sin(t*(Math.PI*2/6));
-  updatePlayer(); updateWhispers();
+  const t=(now-t0)/1000, dt=Math.min(0.05,(now-tPrev)/1000); tPrev=now; frameN++;
+  const breath=(0.75+0.25*Math.sin(t*(Math.PI*2/6)))*(0.55+fire.fuel*0.45);
+  tCycle+=dt;
+  const ph=(tCycle%CYCLE)/CYCLE;
+  if(ph<lastPhase){ // новое утро — подбираемое возвращается
+    PICKUPS.forEach(p=>{if(Math.abs(J(p.x+frameN))>0.35)p.taken=false;});
+  }
+  lastPhase=ph;
+  const darkA=ambientDark(ph);
 
-  // камера с люфтом + дрожь у края
+  // костёр горит и прогорает
+  fire.fuel=Math.max(0.08,fire.fuel-dt/340);
+  const fireR=(110+fire.fuel*170)*(0.94+0.06*Math.sin(t*8.7));
+
+  // источники света
+  const lights=[
+    {x:FIRE.x,y:FIRE.y-10,r:fireR},
+    {x:471,y:508,r:120*(0.9+0.1*Math.sin(t*7.1))}, // окно №3
+  ];
+  if(lanternLit) lights.push({x:LANTERN.x+17,y:LANTERN.y-112,r:120*(0.95+0.05*Math.sin(t*6.3))});
+  lights.push({x:player.x,y:player.y-14,r:30+ember.v*70});
+
+  // освещён ли странник
+  let litHere=darkA<0.4;
+  let nearLight=false;
+  for(const L of lights.slice(0,-1)){
+    const d=Math.hypot(player.x-L.x,player.y-L.y);
+    if(d<L.r){litHere=true;}
+    if(d<L.r*0.85){nearLight=true;}
+  }
+  // уголёк: греется у огня, тускнеет в пути (ночью быстрее)
+  if(nearLight) ember.v=Math.min(1,ember.v+dt/3);
+  else ember.v=Math.max(0,ember.v-dt/(darkA>0.4?220:420));
+  if(ember.v>0.05) litHere=litHere||darkA<0.4;
+
+  // ночь взяла своё: уголёк погас, света нет — странник садится до утра
+  if(darkA>0.7 && !nearLight && ember.v<=0.05 && sitPhase===0) sitPhase=0.0001;
+  if(sitPhase>0){
+    sitPhase+=dt/2.4;
+    if(sitPhase>=1){
+      tCycle=Math.ceil(tCycle/CYCLE)*CYCLE+CYCLE*0.935; // к рассвету
+      player.x=FIRE.x+52; player.y=FIRE.y+38;
+      ember.v=0.55; sitPhase=-1; // -1 = проявление
+      note(player.x,player.y-60,'вечер пережит');
+    }
+  }
+  if(sitPhase<0){ sitPhase+=dt/1.6; if(sitPhase>=0)sitPhase=0; }
+
+  updatePlayer(dt); updateWhispers(litHere);
+
   const viewW=CW/zoom, viewH=CH/zoom;
   let tx=player.x-viewW/2, ty=player.y-viewH/2;
   cam.x+=(tx-cam.x)*0.08; cam.y+=(ty-cam.y)*0.08;
@@ -710,18 +829,17 @@ function frame(now){
     const amp=(player.x-2400)/160*5;
     shx=J(frameN*3)*amp; shy=J(frameN*7)*amp;
   }
-  locEl.textContent=player.x<1520?'городок':(player.x<2360?'за мостом':'край');
+  locEl.textContent=(player.x<1520?'городок':(player.x<2360?'за мостом':'край'))+' · '+phaseWord(ph);
 
-  // ── статичный слой ──
+  // статичный слой
   x.setTransform(DPR,0,0,DPR,0,0);
   x.fillStyle=NIGHT; x.fillRect(0,0,CW,CH);
   x.imageSmoothingEnabled=true;
   x.drawImage(staticC,(cam.x+shx)*Q,(cam.y+shy)*Q,viewW*Q,viewH*Q, 0,0,CW,CH);
 
-  // мировая система координат
   x.setTransform(DPR*zoom,0,0,DPR*zoom,-(cam.x+shx)*DPR*zoom,-(cam.y+shy)*DPR*zoom);
 
-  // ── следы ──
+  // следы
   for(const f of footprints){
     f.age++;
     const a=Math.max(0,1-f.age/800)*0.2;
@@ -731,7 +849,7 @@ function frame(now){
   }
   x.globalAlpha=1;
 
-  // ── свет костра по земле (эллиптический) ──
+  // свет костра по земле
   x.save(); x.translate(FIRE.x,FIRE.y+4); x.scale(1,0.5);
   const bg2=x.createRadialGradient(0,0,10,0,0,200*breath);
   bg2.addColorStop(0,`rgba(226,138,58,${0.26*breath})`);
@@ -742,26 +860,35 @@ function frame(now){
   rays(x,0,0,34,90*breath,32,'#F2C079',0.16*breath);
   x.restore();
 
-  // ── свет окна №3 на брусчатке ──
+  // окно №3 (фасад): тёплое стекло + свет на брусчатку
   const flick=0.8+0.2*(Math.sin(t*7.1)*0.3+Math.sin(t*12.7)*0.2+Math.sin(t*2.3)*0.5);
-  const w3x=454, w3y=560; // окно №3 канцелярии (facade eave=538 → окно 560..590)
-  const spill=p=>{p.moveTo(w3x-2,604);p.lineTo(w3x+36,604);p.lineTo(w3x+58,706);p.lineTo(w3x-26,706);p.closePath();};
-  const sg=x.createLinearGradient(0,604,0,706);
-  sg.addColorStop(0,`rgba(226,138,58,${0.22*flick})`); sg.addColorStop(1,'rgba(226,138,58,0)');
+  const w3x=454, w3y=490;
+  const spill=p=>{p.moveTo(w3x-2,604);p.lineTo(w3x+36,604);p.lineTo(w3x+58,700);p.lineTo(w3x-26,700);p.closePath();};
+  const sg=x.createLinearGradient(0,604,0,700);
+  sg.addColorStop(0,`rgba(226,138,58,${0.2*flick})`); sg.addColorStop(1,'rgba(226,138,58,0)');
   x.fillStyle=sg; x.beginPath(); spill(x); x.fill();
-  rays(x,w3x+17,606,14,72,20,CANDLE,0.12*flick,0.5,Math.PI-0.5);
-  // само окно
-  x.fillStyle=`rgba(236,190,120,${0.85*flick})`; x.fillRect(w3x,w3y,34,30);
+  rays(x,w3x+17,604,12,64,18,CANDLE,0.11*flick,0.5,Math.PI-0.5);
+  x.fillStyle=`rgba(236,190,120,${0.85*flick})`; x.fillRect(w3x,w3y,34,36);
   x.strokeStyle=NIGHT; x.lineWidth=1.3;
-  x.beginPath(); x.moveTo(w3x+17,w3y); x.lineTo(w3x+17,w3y+30);
-  x.moveTo(w3x,w3y+15); x.lineTo(w3x+34,w3y+15); x.stroke();
+  x.beginPath(); x.moveTo(w3x+17,w3y); x.lineTo(w3x+17,w3y+36);
+  x.moveTo(w3x,w3y+18); x.lineTo(w3x+34,w3y+18); x.stroke();
   x.fillStyle='rgba(13,11,10,0.75)';
-  x.beginPath(); x.arc(w3x+11,w3y+22,6,Math.PI,0); x.fill();
-  const wg=x.createRadialGradient(w3x+17,w3y+15,4,w3x+17,w3y+15,70);
+  x.beginPath(); x.arc(w3x+11,w3y+26,6,Math.PI,0); x.fill();
+  const wg=x.createRadialGradient(w3x+17,w3y+18,4,w3x+17,w3y+18,70);
   wg.addColorStop(0,`rgba(226,138,58,${0.25*flick})`); wg.addColorStop(1,'rgba(226,138,58,0)');
   x.fillStyle=wg; x.fillRect(w3x-56,w3y-56,146,146);
 
-  // ── лужа: луна и рябь ──
+  // фонарь затеплен?
+  if(lanternLit){
+    const lgl=x.createRadialGradient(LANTERN.x+17,LANTERN.y-112,2,LANTERN.x+17,LANTERN.y-112,70);
+    lgl.addColorStop(0,'rgba(226,138,58,0.5)'); lgl.addColorStop(1,'rgba(226,138,58,0)');
+    x.fillStyle=lgl; x.fillRect(LANTERN.x-60,LANTERN.y-190,160,160);
+    x.fillStyle=`rgba(242,192,121,${0.8+0.2*Math.sin(t*6.3)})`;
+    x.fillRect(LANTERN.x+12,LANTERN.y-120,10,13);
+    rays(x,LANTERN.x+17,LANTERN.y-112,16,52,20,CANDLE,0.12);
+  }
+
+  // лужа
   x.save(); x.beginPath();
   for(let i=0;i<=10;i++){
     const a=i/10*Math.PI*2, rr=64*(0.8+Math.abs(J(i*5))*0.3);
@@ -769,36 +896,29 @@ function frame(now){
     i?x.lineTo(px,py):x.moveTo(px,py);
   }
   x.closePath(); x.clip();
-  x.fillStyle='#DDC08A'; x.globalAlpha=0.5;
+  x.fillStyle='#DDC08A'; x.globalAlpha=0.5*(darkA>0.3?1:0.4);
   x.beginPath(); x.ellipse(1108,756,15,9,0,0,7); x.fill();
-  x.strokeStyle='#8F7448'; x.globalAlpha=0.4; x.lineWidth=0.6;
-  x.beginPath(); x.ellipse(1108,756,15,9,0,0,7); x.stroke();
   x.strokeStyle='#0E0D0B'; x.globalAlpha=0.8; x.lineWidth=1.1;
   for(let i=0;i<2;i++){
     const ry2=753+i*6+Math.sin(t*0.8+i*2)*1.4;
     x.beginPath(); x.moveTo(1090,ry2); x.lineTo(1128,ry2); x.stroke();
   }
-  x.strokeStyle=BONE; x.globalAlpha=0.16; x.lineWidth=0.6;
-  for(let i=0;i<3;i++){
-    const rr=22+i*13+Math.sin(t*0.6+i)*2;
-    x.beginPath(); x.ellipse(1112,758,rr,rr*0.34,0,0.4,Math.PI-0.5); x.stroke();
-  }
   x.restore(); x.globalAlpha=1;
 
-  // ── дым из трубы ──
+  // дым
   x.strokeStyle=ASH; x.lineWidth=1.2;
   for(let i=0;i<3;i++){
     x.globalAlpha=0.26-i*0.06;
-    const ph=t*0.3+i*2.1;
+    const phm=t*0.3+i*2.1;
     x.beginPath();
-    x.moveTo(1126,478-i*18);
-    x.bezierCurveTo(1140+Math.sin(ph)*9,462-i*18, 1120+Math.cos(ph*0.8)*10,448-i*18, 1136+Math.sin(ph*0.6)*12,432-i*18);
+    x.moveTo(1118,452-i*18);
+    x.bezierCurveTo(1132+Math.sin(phm)*9,436-i*18, 1112+Math.cos(phm*0.8)*10,422-i*18, 1128+Math.sin(phm*0.6)*12,406-i*18);
     x.stroke();
   }
   x.globalAlpha=1;
 
-  // ── кот на коньке ──
-  const catx=1035, caty=472, tw=Math.sin(t*1.1);
+  // кот на коньке дома
+  const catx=1065, caty=440, tw=Math.sin(t*1.1);
   x.fillStyle='#080706';
   x.beginPath(); x.ellipse(catx,caty,8,5,0,0,7); x.fill();
   x.beginPath(); x.arc(catx+7,caty-3.4,3.6,0,7); x.fill();
@@ -812,15 +932,38 @@ function frame(now){
   x.beginPath(); x.ellipse(catx,caty,8,5,0,-2.4,-0.6); x.stroke();
   x.globalAlpha=1;
 
-  // ── динамические фигуры с сортировкой по y ──
-  const sprites=[
-    {y:FIRE.y, draw:drawFire},
-    {y:862, draw:drawJester},
-    {y:player.y, draw:drawWanderer},
-  ].sort((a,b)=>a.y-b.y);
-  for(const s of sprites) s.draw(t,breath);
+  // подбираемое — мерцает, зовёт
+  for(const pk of PICKUPS){
+    if(pk.taken) continue;
+    const gl=0.5+0.35*Math.sin(t*2.2+pk.x);
+    if(pk.k==='wood'){
+      x.strokeStyle=BONE; x.globalAlpha=0.65*gl+0.2; x.lineWidth=1.6;
+      x.beginPath(); x.moveTo(pk.x-7,pk.y+3); x.lineTo(pk.x+7,pk.y-4);
+      x.moveTo(pk.x-5,pk.y-4); x.lineTo(pk.x+6,pk.y+4); x.stroke();
+    }else if(pk.k==='moss'){
+      x.strokeStyle=MIST; x.globalAlpha=0.8*gl+0.2; x.lineWidth=1.4;
+      for(let i=0;i<3;i++){
+        x.beginPath(); x.moveTo(pk.x-4+i*4,pk.y+3);
+        x.quadraticCurveTo(pk.x-5+i*4,pk.y-4, pk.x-2+i*4,pk.y-7); x.stroke();
+      }
+    }else{
+      x.fillStyle='#E8DCC3'; x.globalAlpha=0.6*gl+0.25;
+      x.beginPath(); x.ellipse(pk.x,pk.y,4,5.4,0,0,7); x.fill();
+      x.strokeStyle=BONE; x.globalAlpha=0.5;
+      x.beginPath(); x.ellipse(pk.x,pk.y,4,5.4,0,0,7); x.stroke();
+    }
+  }
+  x.globalAlpha=1;
 
-  // ── окклюдеры: заслоняют игрока, когда он «за» объектом ──
+  // спрайты по глубине
+  const sprites=[
+    {y:FIRE.y, draw:()=>drawFire(t,breath)},
+    {y:862, draw:()=>drawJester(t,breath)},
+    {y:player.y, draw:()=>drawWanderer(t)},
+  ].sort((a,b)=>a.y-b.y);
+  for(const s of sprites) s.draw();
+
+  // окклюдеры
   for(const o of occluders){
     if(player.y<o.base &&
        player.x+14>o.x && player.x-14<o.x+o.w &&
@@ -829,13 +972,56 @@ function frame(now){
     }
   }
 
-  // ── глазницы черепа ловят костёр ──
+  // глазницы черепа
   x.strokeStyle=CANDLE; x.globalAlpha=0.7*breath; x.lineWidth=0.8;
   x.beginPath(); x.arc(884-5.3,668+1,2,0.6,2.5); x.stroke();
   x.beginPath(); x.arc(884+5.3,668+1,2,0.6,2.5); x.stroke();
   x.globalAlpha=1;
 
-  // ── шёпот ──
+  // ═══ ТЬМА: ночь съедает мир до кругов света ═══
+  if(darkA>0.01){
+    dk.setTransform(DPR,0,0,DPR,0,0);
+    dk.clearRect(0,0,CW,CH);
+    dk.fillStyle=`rgba(3,2,2,${darkA})`;
+    dk.fillRect(0,0,CW,CH);
+    dk.globalCompositeOperation='destination-out';
+    for(const L of lights){
+      const sx2=(L.x-cam.x-shx)*zoom, sy2=(L.y-cam.y-shy)*zoom, sr=L.r*zoom;
+      const gg=dk.createRadialGradient(sx2,sy2,sr*0.12,sx2,sy2,sr);
+      gg.addColorStop(0,'rgba(0,0,0,1)');
+      gg.addColorStop(0.6,'rgba(0,0,0,0.85)');
+      gg.addColorStop(1,'rgba(0,0,0,0)');
+      dk.fillStyle=gg;
+      dk.beginPath(); dk.arc(sx2,sy2,sr,0,7); dk.fill();
+    }
+    dk.globalCompositeOperation='source-over';
+    x.setTransform(DPR,0,0,DPR,0,0);
+    x.drawImage(darkC,0,0,CW,CH);
+    x.setTransform(DPR*zoom,0,0,DPR*zoom,-(cam.x+shx)*DPR*zoom,-(cam.y+shy)*DPR*zoom);
+  }
+
+  // всплывающие пометки
+  for(let i=notes.length-1;i>=0;i--){
+    const n=notes[i]; n.life--; n.y-=0.14;
+    if(n.life<=0){notes.splice(i,1);continue;}
+    const a=Math.min(1,n.life/40)*Math.min(1,(150-n.life)/20);
+    x.font='italic 15px "Cormorant Garamond"'; x.textAlign='center';
+    x.fillStyle=`rgba(217,207,184,${a*0.85})`;
+    x.fillText(n.t,n.x,n.y);
+    x.textAlign='left';
+  }
+
+  // подсказки действий
+  const dF=Math.hypot(player.x-FIRE.x,player.y-FIRE.y);
+  const dL=Math.hypot(player.x-LANTERN.x,player.y-LANTERN.y);
+  x.font='italic 14px "Cormorant Garamond"'; x.textAlign='center';
+  x.fillStyle='rgba(217,207,184,0.6)';
+  if(dF<90&&inv.wood>0) x.fillText(IS_TOUCH?'коснись огня — подложить щепу':'e — подложить щепу',FIRE.x,FIRE.y-92);
+  else if(dF<90&&inv.moss>0&&ember.v<0.9) x.fillText(IS_TOUCH?'коснись огня — покормить уголёк':'e — покормить уголёк мхом',FIRE.x,FIRE.y-92);
+  if(dL<80&&!lanternLit&&ember.v>0.35) x.fillText(IS_TOUCH?'коснись фонаря — затеплить':'e — затеплить фонарь',LANTERN.x,LANTERN.y-146);
+  x.textAlign='left';
+
+  // шёпот
   if(whisper.life>0){
     const a=whisper.life>240?(300-whisper.life)/60:Math.min(1,whisper.life/120);
     const sx2=(whisper.x-cam.x-shx)*zoom, sy2=(whisper.y-cam.y-shy)*zoom-(300-whisper.life)*0.06;
@@ -846,7 +1032,7 @@ function frame(now){
     x.textAlign='left';
   }
 
-  // ── экранный слой: зерно, виньетка, рамка ──
+  // экранный слой
   x.setTransform(DPR,0,0,DPR,0,0);
   const gseed=Math.floor(t*7);
   x.globalAlpha=0.05;
@@ -856,8 +1042,15 @@ function frame(now){
   }
   x.globalAlpha=1;
   const vig=x.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.44,CW/2,CH/2,Math.max(CW,CH)*0.72);
-  vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(5,4,3,0.4)');
+  vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,`rgba(5,4,3,${0.4+darkA*0.2})`);
   x.fillStyle=vig; x.fillRect(0,0,CW,CH);
+  // пересиживание ночи — мягкое затемнение и возврат
+  if(sitPhase!==0){
+    const a=sitPhase>0?Math.min(1,sitPhase):1-Math.min(1,-sitPhase*(-1));
+    const aa=sitPhase>0?Math.min(1,sitPhase):Math.min(1,1+sitPhase);
+    x.fillStyle=`rgba(3,2,2,${sitPhase>0?Math.min(1,sitPhase):1-Math.min(1,sitPhase+1)})`;
+    x.fillRect(0,0,CW,CH);
+  }
   x.strokeStyle=BONE; x.globalAlpha=0.5; x.lineWidth=1;
   x.strokeRect(10,10,CW-20,CH-20);
   x.globalAlpha=0.18; x.strokeRect(14,14,CW-28,CH-28);
@@ -866,12 +1059,12 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
-// ── костёр: пламя, искры, пыль ──
+// ── костёр ──
 function drawFire(t,breath){
-  const bx=FIRE.x, by=FIRE.y;
+  const bx=FIRE.x, by=FIRE.y, fs=0.55+fire.fuel*0.6;
   const flame=(ph,s,col,al)=>{
     x.fillStyle=col; x.globalAlpha=al;
-    const fh=(52+Math.sin(t*3.1+ph)*11)*s, fw=(17+Math.sin(t*4.7+ph)*4.6)*s;
+    const fh=(52+Math.sin(t*3.1+ph)*11)*s*fs, fw=(17+Math.sin(t*4.7+ph)*4.6)*s*fs;
     x.beginPath();
     x.moveTo(bx-fw,by);
     x.bezierCurveTo(bx-fw*1.3,by-fh*0.45, bx+Math.sin(t*5+ph)*7,by-fh*0.8, bx+Math.sin(t*2.4+ph)*5.4,by-fh);
@@ -881,8 +1074,8 @@ function drawFire(t,breath){
   flame(0,1.12,RED,0.5); flame(2.2,0.88,CANDLE,0.72); flame(4.1,0.5,'#F2C079',0.9);
   x.strokeStyle='#F2C079'; x.lineWidth=0.7;
   for(let i=0;i<7;i++){
-    x.globalAlpha=0.4;
-    const ph=t*2.2+i*1.7, hgt=27+Math.sin(ph)*8;
+    x.globalAlpha=0.4*fs;
+    const ph=t*2.2+i*1.7, hgt=(27+Math.sin(ph)*8)*fs;
     x.beginPath();
     x.moveTo(bx-11+i*3.7,by-3);
     x.quadraticCurveTo(bx-9+i*3.7+Math.sin(ph)*4,by-hgt*0.6, bx-7+i*3.7+Math.sin(ph*1.3)*4.6,by-hgt);
@@ -893,21 +1086,16 @@ function drawFire(t,breath){
   for(let i=0;i<9;i++){
     const sp=(t*0.24+i*0.11)%1;
     if(sp<0.9){
-      x.globalAlpha=(1-sp)*0.85;
+      x.globalAlpha=(1-sp)*0.85*fs;
       x.beginPath();
-      x.arc(bx+Math.sin(t*1.4+i*2.2)*18*sp, by-16-sp*130, 1.2,0,7);
+      x.arc(bx+Math.sin(t*1.4+i*2.2)*18*sp, by-16-sp*130*fs, 1.2,0,7);
       x.fill();
     }
-  }
-  for(let i=0;i<10;i++){
-    const dp=(t*0.045+i*0.1)%1;
-    x.globalAlpha=(1-dp)*0.3*breath;
-    x.fillRect(bx-52+Math.sin(i*3.3+t*0.4)*40, by-10-dp*160, 1.2,1.2);
   }
   x.globalAlpha=1;
 }
 
-// ── Шут у костра ──
+// ── Шут ──
 function drawJester(t,breath){
   const jx=940, jy=862, sw=Math.sin(t*0.8)*2;
   x.fillStyle='rgba(4,3,3,0.5)';
@@ -941,63 +1129,80 @@ function drawJester(t,breath){
   x.globalAlpha=1;
 }
 
-// ── Странник (игрок) ──
-function drawWanderer(t,breath){
-  const p=player, s=Math.sin(p.step*0.32)*(p.moving?1:0.2);
-  const df=Math.hypot(p.x-FIRE.x,p.y-FIRE.y);
-  // тень: от костра, если близко, иначе лунная (вниз-вправо)
-  let sang, slen;
-  if(df<340){ sang=Math.atan2(p.y-FIRE.y,p.x-FIRE.x); slen=22+(340-df)*0.10; }
-  else { sang=0.55; slen=26; }
-  x.save(); x.translate(p.x,p.y+7); x.rotate(sang);
-  x.fillStyle='rgba(4,3,3,0.5)';
-  x.beginPath(); x.ellipse(slen*0.5,0,slen*0.6,5.6,0,0,7); x.fill();
-  x.restore();
-  // подол — рваный контур
-  x.fillStyle='#0A0908';
+// ── Странник — «картонка» как в Don't Starve: большая голова, качание ──
+function drawWanderer(t){
+  const p=player;
+  const per=0.8+(p.y/WORLD.h)*0.45;           // лёгкая перспектива: ниже — крупнее
+  const mov=p.moving?1:0;
+  const bob=Math.abs(Math.sin(p.step*0.28))*2.6*mov;
+  const sway=Math.sin(p.step*0.14)*0.055*mov + Math.sin(t*0.9)*0.012;
+  // тень (не качается)
+  x.fillStyle='rgba(4,3,3,0.48)';
+  x.beginPath(); x.ellipse(p.x+3,p.y+3,13*per,4.4*per,0,0,7); x.fill();
+  x.save(); x.translate(p.x,p.y); x.rotate(sway); x.scale(per,per); x.translate(0,-bob);
+  // ноги — шаг
+  const lp=Math.sin(p.step*0.28);
+  x.strokeStyle='#0A0908'; x.lineWidth=3; x.lineCap='round';
   x.beginPath();
-  for(let i=0;i<=11;i++){
-    const a=-Math.PI/2+i/11*Math.PI*2;
-    const r=14+J(i*3)*1.8+(i%2?2.2:0)+s*0.7;
-    const px=p.x+Math.cos(a)*r, py=p.y+Math.sin(a)*r*0.74;
-    i?x.lineTo(px,py):x.moveTo(px,py);
+  x.moveTo(-3.4,-7); x.lineTo(-3.4+lp*4.6*mov,0.6);
+  x.moveTo(3.4,-7); x.lineTo(3.4-lp*4.6*mov,0.6);
+  x.stroke(); x.lineCap='butt';
+  // плащ-лохмотья: узкие плечи, рваный подол
+  x.fillStyle='#0B0A08';
+  x.beginPath();
+  x.moveTo(-7,-30);
+  x.bezierCurveTo(-10,-22,-12,-13,-13,-4);
+  for(let i=0;i<=6;i++){
+    const sx=-13+(26)*(i/6);
+    x.lineTo(sx-1.6,-4-(i%2?4.6:0)-Math.abs(J(i*3))*2.4);
+    x.lineTo(sx,-4);
   }
+  x.bezierCurveTo(12,-13,10,-22,7,-30);
   x.closePath(); x.fill();
   // штрих по ткани
   x.strokeStyle=BONE; x.globalAlpha=0.12; x.lineWidth=0.5;
-  for(let i=0;i<4;i++){
-    x.beginPath(); x.ellipse(p.x,p.y,10-i*2,7.4-i*1.5,0,0.6,2.6); x.stroke();
+  for(let i=0;i<3;i++){
+    x.beginPath(); x.moveTo(-10+i*2,-26+i*7); x.lineTo(9-i*2,-23+i*7); x.stroke();
   }
   x.globalAlpha=1;
-  // плечи
-  x.fillStyle='#080706';
-  x.beginPath(); x.ellipse(p.x,p.y-7,10,7,0,0,7); x.fill();
-  // капюшон — чуть к направлению взгляда
+  // голова — крупный капюшон (пропорция DS)
   x.fillStyle='#060505';
-  x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7,6,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(p.fx*1.6,-37,8.6,8,0,0,7); x.fill();
+  x.beginPath(); x.moveTo(-6,-33); x.quadraticCurveTo(0,-27,6,-33); x.lineTo(4,-29.4); x.lineTo(-4,-29.4); x.closePath(); x.fill();
+  // тьма лица
   x.fillStyle='#020202';
-  x.beginPath(); x.ellipse(p.x+p.fx*4.6,p.y-12.4+s*0.5,3.4,3,0,0,7); x.fill();
-  // лунная кромка — всегда, слева-сверху
-  x.strokeStyle=BONE; x.globalAlpha=0.28; x.lineWidth=0.8;
-  x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7.4,6.4,0,Math.PI*1.05,Math.PI*1.75); x.stroke();
-  x.beginPath(); x.ellipse(p.x,p.y,14.6,10.6,0,Math.PI*1.1,Math.PI*1.7); x.stroke();
+  x.beginPath(); x.ellipse(p.fx*4,-36.4,4.6,4,0,0,7); x.fill();
+  // лунная кромка
+  x.strokeStyle=BONE; x.globalAlpha=0.3; x.lineWidth=0.8;
+  x.beginPath(); x.ellipse(p.fx*1.6,-37,8.9,8.3,0,Math.PI*1.05,Math.PI*1.75); x.stroke();
+  x.beginPath(); x.moveTo(-7.4,-29); x.bezierCurveTo(-10.4,-21,-12.4,-12,-13.2,-4); x.stroke();
   x.globalAlpha=1;
-  // кромка света со стороны костра
+  // кромка от костра
+  const df=Math.hypot(p.x-FIRE.x,p.y-FIRE.y);
   if(df<380){
     const la=Math.atan2(FIRE.y-p.y,FIRE.x-p.x);
-    x.strokeStyle='#E8C89A'; x.globalAlpha=(0.55-df/380*0.4)*breath; x.lineWidth=1;
-    x.beginPath(); x.ellipse(p.x+p.fx*2.4,p.y-13+s*0.5,7.4,6.4,0,la-0.9,la+0.9); x.stroke();
-    x.beginPath(); x.ellipse(p.x,p.y,15,11,0,la-0.7,la+0.7); x.stroke();
+    x.strokeStyle='#E8C89A'; x.globalAlpha=0.5-df/380*0.35; x.lineWidth=1;
+    x.beginPath(); x.ellipse(p.fx*1.6,-37,8.9,8.3,0,la-0.8,la+0.8); x.stroke();
     x.globalAlpha=1;
   }
-  // уголёк у сердца
-  const hb2=0.7+0.3*Math.sin(t*2.6);
-  x.fillStyle='#F2C079'; x.globalAlpha=hb2*0.9;
-  x.beginPath(); x.arc(p.x+p.fx*3,p.y-6,1.6,0,7); x.fill();
+  // уголёк у сердца — единственный «индикатор»
+  const hb=0.5+0.5*Math.sin(t*2.6);
+  x.fillStyle='#F2C079'; x.globalAlpha=(0.25+ember.v*0.75)*(0.6+hb*0.4);
+  x.beginPath(); x.arc(p.fx*2.4,-22,1.5+ember.v*1.3,0,7); x.fill();
   x.globalAlpha=1;
+  // дорожный посох
+  x.strokeStyle='#241E18'; x.lineWidth=2;
+  x.beginPath(); x.moveTo(9,-26); x.lineTo(12.6,1); x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.35; x.lineWidth=0.6;
+  x.beginPath(); x.moveTo(9.8,-26); x.lineTo(13.4,1); x.stroke();
+  x.globalAlpha=1;
+  x.restore();
 }
 
-window.__game={player,cam:()=>cam,tp:(px,py)=>{player.x=px;player.y=py;}};
+window.__game={player,cam:()=>cam,tp:(px,py)=>{player.x=px;player.y=py;},
+  inv,fire,ember,setPhase:f=>{tCycle=Math.floor(tCycle/CYCLE)*CYCLE+CYCLE*f;},
+  act:tryAction};
+opis();
 requestAnimationFrame(frame);
 </script>
 </body>
