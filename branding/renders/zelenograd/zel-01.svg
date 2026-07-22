@@ -19,14 +19,14 @@
 <text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">01 / 06</text>
 
 <!-- дискретные модули (равная высота, стоят на линии) -->
-<rect x="894" y="152" width="88" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="906" y="170" width="64" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
+<rect x="880" y="152" width="96" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="890" y="170" width="50" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/><rect x="952" y="170" width="14" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
 
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· 1958–1962</text>
 <text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">ГОРОД</text>
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613" textLength="960" lengthAdjust="spacingAndGlyphs">ЭЛЕКТРОНИКИ</text>
 
 <!-- непрерывная линия + локальное событие + красный акцент -->
-<circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="240" y2="576" stroke="#000" stroke-width="3"/><polyline points="240,576 262,545 284,576" fill="none" stroke="#000" stroke-width="3"/><line x1="284" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/><circle cx="938" cy="576" r="6" fill="#E30613"/>
+<circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="240" y2="576" stroke="#000" stroke-width="3"/><polyline points="240,576 262,545 284,576" fill="none" stroke="#000" stroke-width="3"/><line x1="284" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/><circle cx="915" cy="576" r="6" fill="#E30613"/>
 
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Зеленоград строился как город</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">электроники. В 1958-м заложили</text>

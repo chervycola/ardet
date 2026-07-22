@@ -19,17 +19,15 @@
 <text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">05 / 06</text>
 
 <!-- дискретные модули (равная высота, стоят на линии) -->
-<rect x="576" y="152" width="88" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="588" y="170" width="64" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
-<rect x="682" y="152" width="88" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="694" y="170" width="64" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
-<rect x="788" y="152" width="88" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="800" y="170" width="64" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
-<rect x="894" y="152" width="88" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="906" y="170" width="64" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
+<rect x="750" y="152" width="96" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="760" y="170" width="50" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/><rect x="822" y="170" width="14" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
+<rect x="880" y="152" width="96" height="18" fill="#ececec" stroke="#c9c9c9" stroke-width="2"/><rect x="890" y="170" width="50" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/><rect x="952" y="170" width="14" height="406" fill="url(#th)" stroke="#c9c9c9" stroke-width="2"/>
 
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· МОДЕРНИЗМ</text>
 <text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">ФУНКЦИЯ</text>
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">В ФОРМЕ</text>
 
 <!-- непрерывная линия + локальное событие + красный акцент -->
-<circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="393" y2="576" stroke="#000" stroke-width="3"/><line x1="407" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/><circle cx="400" cy="576" r="9" fill="none" stroke="#000" stroke-width="3"/><circle cx="400" cy="576" r="4" fill="#E30613"/>
+<circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="393" y2="576" stroke="#000" stroke-width="3"/><line x1="407" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/><circle cx="400" cy="576" r="9" fill="none" stroke="#000" stroke-width="3"/><circle cx="400" cy="576" r="4" fill="#E30613"/><line x1="760" y1="280" x2="810" y2="280" stroke="#bdbdbd" stroke-width="2.5"/><line x1="890" y1="280" x2="940" y2="280" stroke="#bdbdbd" stroke-width="2.5"/><line x1="760" y1="370" x2="810" y2="370" stroke="#bdbdbd" stroke-width="2.5"/><line x1="890" y1="370" x2="940" y2="370" stroke="#bdbdbd" stroke-width="2.5"/><line x1="760" y1="460" x2="810" y2="460" stroke="#bdbdbd" stroke-width="2.5"/><line x1="890" y1="460" x2="940" y2="460" stroke="#bdbdbd" stroke-width="2.5"/>
 
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Комплекс МИЭТ построен в эпоху советского</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">модернизма и сегодня — объект культурного</text>

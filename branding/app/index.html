@@ -840,22 +840,24 @@ function openAuthor(id){
 }
 function ncard(c, n, total){
   const pid = "th" + n;
-  // дискретные модули: равная высота, стоят на линии (y=133)
-  const MODS = {1:[344], 2:[302,344], 3:[260,302,344], 4:[260,302,344], 5:[218,260,302,344], 6:[260,302,344]};
-  const mods = (MODS[n]||[]).map((x,i)=>{
-    const redCap = (n===3 && i===1);
-    return `<rect x="${x-4}" y="4" width="32" height="7" fill="${redCap?'#E30613':'var(--panel2)'}"${redCap?'':' stroke="var(--line)" stroke-width="1"'}/>`+
-           `<rect x="${x}" y="11" width="24" height="122" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`;
+  // максимум две башни (два реальных здания); форма как в лого: широкая + узкая полоса под козырьком
+  const T1 = 302, T2 = 348;
+  const POS = { 1:[T2], 2:[T1,T2], 3:[T1,T2], 4:[T1,T2], 5:[T1,T2], 6:[T1,T2] };
+  const mods = (POS[n]||[]).map((x,i)=>{
+    const redCap = (n===3 && i===0);
+    return `<rect x="${x-3}" y="4" width="34" height="7" fill="${redCap?'#E30613':'var(--panel2)'}"${redCap?'':' stroke="var(--line)" stroke-width="1"'}/>`+
+           `<rect x="${x}" y="11" width="18" height="122" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`+
+           `<rect x="${x+22}" y="11" width="5" height="122" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`;
   }).join("");
   // непрерывная линия + локальное событие + красный акцент
   const L=(a,b)=>`<line x1="${a}" y1="133" x2="${b}" y2="133" stroke="currentColor" stroke-width="1.8"/>`;
   let ev = "";
-  if(n===1) ev = L(5,84)+`<polyline points="84,133 92,122 100,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(100,400)+`<circle cx="356" cy="133" r="2.6" fill="#E30613"/>`;
-  else if(n===2) ev = L(5,118)+`<polyline points="118,133 123,127 145,127 150,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(150,400)+`<line x1="326" y1="56" x2="344" y2="56" stroke="#E30613" stroke-width="2.2"/><circle cx="326" cy="56" r="2" fill="#E30613"/><circle cx="344" cy="56" r="2" fill="#E30613"/>`;
+  if(n===1) ev = L(5,84)+`<polyline points="84,133 92,122 100,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(100,400)+`<circle cx="357" cy="133" r="2.6" fill="#E30613"/>`;
+  else if(n===2) ev = L(5,118)+`<polyline points="118,133 123,127 145,127 150,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(150,400)+`<line x1="329" y1="60" x2="348" y2="60" stroke="#E30613" stroke-width="2.2"/><circle cx="329" cy="60" r="2" fill="#E30613"/><circle cx="348" cy="60" r="2" fill="#E30613"/>`;
   else if(n===3) ev = L(5,120)+`<polyline points="120,133 120,123 146,123 146,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(146,400);
   else if(n===4) ev = L(5,106)+`<line x1="106" y1="133" x2="106" y2="124" stroke="#E30613" stroke-width="2.2"/><polyline points="106,124 120,124 120,133 134,133 134,124 148,124 148,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+L(148,400);
-  else if(n===5) ev = L(5,137)+L(144,400)+`<circle cx="140" cy="133" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="140" cy="133" r="1.7" fill="#E30613"/>`;
-  else ev = L(5,400)+`<line x1="284" y1="52" x2="302" y2="52" stroke="currentColor" stroke-width="1.4"/><line x1="326" y1="95" x2="344" y2="95" stroke="currentColor" stroke-width="1.4"/><circle cx="284" cy="52" r="1.9" fill="#E30613"/><circle cx="302" cy="52" r="1.9" fill="#E30613"/><circle cx="326" cy="95" r="1.9" fill="#E30613"/><circle cx="344" cy="95" r="1.9" fill="#E30613"/>`;
+  else if(n===5) ev = L(5,137)+L(144,400)+`<circle cx="140" cy="133" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="140" cy="133" r="1.7" fill="#E30613"/>`+[45,75,105].map(y=>`<line x1="302" y1="${y}" x2="320" y2="${y}" stroke="var(--line)" stroke-width="1.5"/><line x1="348" y1="${y}" x2="366" y2="${y}" stroke="var(--line)" stroke-width="1.5"/>`).join("");
+  else ev = L(5,400)+`<line x1="329" y1="32" x2="348" y2="32" stroke="currentColor" stroke-width="1.6"/><line x1="338.5" y1="32" x2="338.5" y2="133" stroke="currentColor" stroke-width="1.2"/><circle cx="329" cy="32" r="1.9" fill="#E30613"/><circle cx="348" cy="32" r="1.9" fill="#E30613"/><circle cx="338.5" cy="133" r="2.3" fill="#E30613"/>`;
   return `<div class="ncard">
     <div class="nk">· ${esc(c.k||"")}</div>
     <h4>${esc(c.h[0])}<br><span class="r">${esc(c.h[1])}</span></h4>
