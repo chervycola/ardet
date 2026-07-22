@@ -16,24 +16,26 @@
 <text x="1020" y="76" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">01 / 06</text>
 <line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
 
-<text x="60" y="200" font-family="'Courier New',monospace" font-size="24" letter-spacing="5" fill="#E30613">ПОЧЕМУ ЗЕЛЕНОГРАД</text>
-<text x="56" y="330" font-weight="800" font-size="130" letter-spacing="1" fill="#000">ГОРОД</text>
-<text x="56" y="452" font-weight="800" font-size="130" letter-spacing="1" fill="#E30613">ЭЛЕКТРОНИКИ</text>
+<text x="60" y="196" font-family="'Courier New',monospace" font-size="24" letter-spacing="5" fill="#E30613">ПОЧЕМУ ЗЕЛЕНОГРАД</text>
+<text x="56" y="322" font-weight="800" font-size="128" letter-spacing="1" fill="#000">ГОРОД</text>
+<text x="56" y="442" font-weight="800" font-size="128" letter-spacing="1" fill="#E30613">ЭЛЕКТРОНИКИ</text>
 
-<!-- осциллограмма-разделитель -->
 <polyline points="60,502 250,502 275,478 300,502 430,502 455,462 480,540 505,502 700,502 720,482 760,482 780,502 1020,502" fill="none" stroke="#000" stroke-width="2.5"/>
 <circle cx="60" cy="502" r="5" fill="#E30613"/>
 
-<text x="60" y="560" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">Зеленоград строился как город электроники. В</text>
-<text x="60" y="606" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">1958-м заложили город-спутник Москвы, а в</text>
-<text x="60" y="652" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">1962-м решили разместить здесь центр</text>
-<text x="60" y="698" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">микроэлектроники. Это решение задало всё:</text>
-<text x="60" y="744" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">промышленность, образование, жителей и саму</text>
-<text x="60" y="790" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">архитектуру города.</text>
+<text x="60" y="588" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">Зеленоград строился как город</text>
+<text x="60" y="641" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">электроники. В 1958-м заложили</text>
+<text x="60" y="694" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">город-спутник Москвы, а в 1962-м</text>
+<text x="60" y="747" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">решили разместить здесь центр</text>
+<text x="60" y="800" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">микроэлектроники. Это решение задало</text>
+<text x="60" y="853" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">всё: промышленность, образование,</text>
+<text x="60" y="906" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">состав жителей и саму архитектуру.</text>
+<text x="60" y="959" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">Город с самого начала собирали вокруг</text>
+<text x="60" y="1012" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">одной задачи — делать электронику.</text>
 
-<line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
-<text x="60" y="1256" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
-<text x="60" y="1284" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
-<text x="1020" y="1250" text-anchor="end" font-weight="800" font-size="32" fill="#000">19.09.2026</text>
-<text x="1020" y="1282" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
+<line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
+<text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
+<text x="1020" y="1252" text-anchor="end" font-weight="800" font-size="32" fill="#000">19.09.2026</text>
+<text x="1020" y="1284" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
 </svg>

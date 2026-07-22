@@ -16,25 +16,27 @@
 <text x="1020" y="76" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">02 / 06</text>
 <line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
 
-<text x="60" y="200" font-family="'Courier New',monospace" font-size="24" letter-spacing="5" fill="#E30613">ПОЛНЫЙ ИНЖЕНЕРНЫЙ ЦИКЛ</text>
-<text x="56" y="330" font-weight="800" font-size="130" letter-spacing="1" fill="#000">ПОЛНЫЙ</text>
-<text x="56" y="452" font-weight="800" font-size="130" letter-spacing="1" fill="#E30613">ЦИКЛ</text>
+<text x="60" y="196" font-family="'Courier New',monospace" font-size="24" letter-spacing="5" fill="#E30613">ПОЛНЫЙ ИНЖЕНЕРНЫЙ ЦИКЛ</text>
+<text x="56" y="322" font-weight="800" font-size="128" letter-spacing="1" fill="#000">ПОЛНЫЙ</text>
+<text x="56" y="442" font-weight="800" font-size="128" letter-spacing="1" fill="#E30613">ЦИКЛ</text>
 
-<!-- осциллограмма-разделитель -->
 <polyline points="60,502 250,502 275,478 300,502 430,502 455,462 480,540 505,502 700,502 720,482 760,482 780,502 1020,502" fill="none" stroke="#000" stroke-width="2.5"/>
 <circle cx="60" cy="502" r="5" fill="#E30613"/>
 
-<text x="60" y="560" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">Институты, опытные производства и жилые</text>
-<text x="60" y="606" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">районы строили рядом. Исследование</text>
-<text x="60" y="652" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">продолжалось в разработке, разработка — в</text>
-<text x="60" y="698" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">технологии, технология становилась серийным</text>
-<text x="60" y="744" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">изделием. Лаборатория, КБ, завод и</text>
-<text x="60" y="790" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">подготовка специалистов встали в один</text>
-<text x="60" y="836" font-family="'Courier New',monospace" font-size="28" letter-spacing="0.3" fill="#000">контур.</text>
+<text x="60" y="588" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">Институты, опытные производства и</text>
+<text x="60" y="641" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">жилые районы строили рядом, в одном</text>
+<text x="60" y="694" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">контуре. Исследование продолжалось в</text>
+<text x="60" y="747" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">разработке, разработка переходила в</text>
+<text x="60" y="800" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">технологию, технология становилась</text>
+<text x="60" y="853" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">серийным изделием. Лаборатория,</text>
+<text x="60" y="906" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">конструкторское бюро, завод и</text>
+<text x="60" y="959" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">подготовка специалистов работали как</text>
+<text x="60" y="1012" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">единый инженерный цикл — от идеи до</text>
+<text x="60" y="1065" font-family="'Courier New',monospace" font-size="37" letter-spacing="0.2" fill="#000">готового прибора.</text>
 
-<line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
-<text x="60" y="1256" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
-<text x="60" y="1284" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
-<text x="1020" y="1250" text-anchor="end" font-weight="800" font-size="32" fill="#000">19.09.2026</text>
-<text x="1020" y="1282" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
+<line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
+<text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
+<text x="1020" y="1252" text-anchor="end" font-weight="800" font-size="32" fill="#000">19.09.2026</text>
+<text x="1020" y="1284" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
 </svg>
