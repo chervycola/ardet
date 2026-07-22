@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ardet · карта-схема диска — дело о мире, лист 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;min-height:100%;background:#151210;display:flex;
+    align-items:center;justify-content:center;overflow:auto}
+  canvas{display:block;max-width:100vw;height:auto}
+</style>
+</head>
+<body>
+<canvas id="c" width="1800" height="1560"></canvas>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARDET — КАРТА-СХЕМА ДИСКА. Архивный оттиск: бумага, сепия, киноварь.
+// Радиус = время, азимут = сторона света. Источник данных —
+// src/content/world_weave.js (здесь — снятая копия для оттиска).
+// ═══════════════════════════════════════════════════════════════════
+const PAPER='#E8DCC3', SEPIA='#3A3026', FADE='#8a7e6a', REDS='#C23B2B', MISTS='#5a6152';
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+
+const EPOCHS=[
+  {id:'axial',n:'три огня',era:'осевое время'},
+  {id:'porticoes',n:'портики и сады',era:'III до — V н.э.'},
+  {id:'lightgarden',n:'свет и сад',era:'VI–XVI вв.'},
+  {id:'twohearths',n:'два очага',era:'XVII век'},
+  {id:'enlightenment',n:'мелкий шрифт',era:'XVIII век'},
+  {id:'steamshadows',n:'пар и тени',era:'XIX век'},
+  {id:'catastrophes',n:'век катастроф',era:'XX век'},
+  {id:'neon',n:'неон',era:'1960–90-е'},
+  {id:'now',n:'сейчас',era:'2000-е —'},
+];
+// сектора: азимуты в градусах (0 = восток, 90 = юг [низ карты])
+const SIDES=[
+  {id:'south',n:'ЮГ · ПОЛДЕНЬ',a0:45,a1:135,c:90},
+  {id:'west',n:'ЗАПАД · ВЕЧЕР',a0:135,a1:225,c:180},
+  {id:'north',n:'СЕВЕР · ПОЛНОЧЬ',a0:225,a1:292,c:258},
+  {id:'plain',n:'РАВНИНА · ПРЕДРАССВЕТНЫЙ ЧАС',a0:292,a1:338,c:315},
+  {id:'east',n:'ВОСТОК · УТРО',a0:338,a1:405,c:0},
+];
+// клетки с кадрами (опись 11/47) — epoch:side → число референсов
+const FILLED={'axial:south':1,'porticoes:south':3,'lightgarden:west':4,
+  'steamshadows:west':1,'catastrophes:plain':6,'neon:east':2,
+  'now:east':1,'now:west':2,'now:south':1};
+// кольцевые дороги (узловые эпохи)
+const RINGS_ROADS=[{e:0,n:'шёлковый путь'},{e:2,n:'караваны'},
+  {e:5,n:'железная дорога'},{e:8,n:'сеть'}];
+// изнанка
+const TUNNELS=[
+  {id:'U1',layer:'крипта',from:['lightgarden','north'],to:['axial','south'],
+   fe:'дверца за алтарём',te:'сухая цистерна у бассейна'},
+  {id:'U2',layer:'катакомбы',from:['porticoes','south'],to:['lightgarden','west'],
+   fe:'дверь за колоннадой',te:'крипта собора'},
+  {id:'U3',layer:'канализация',from:['steamshadows','west'],to:['catastrophes','plain'],
+   fe:'решётка у фонаря',te:'люк у завода'},
+  {id:'U4',layer:'бомбоубежище',from:['catastrophes','plain'],to:['neon','east'],
+   fe:'дверь в подвале',te:'дверь вагона 89 6'},
+  {id:'U5',layer:'метро',from:['now','east'],to:['townlet','all'],
+   fe:'заклеенный вход метро',te:'колодец городка'},
+  {id:'U6',layer:'ход мха',from:['townlet','all'],to:['edge','all'],
+   fe:'пифос: лечь и уснуть',te:'нора у подножия огня'},
+];
+
+const CX=700, CY=760, R0=92, R1=560, REDGE=606;
+const RW=(R1-R0)/EPOCHS.length;
+const rad=d=>d*Math.PI/180;
+const ringR=i=>R0+RW*(i+0.5);                 // середина кольца эпохи i
+function cellXY(eid,sid){
+  if(eid==='townlet') return {x:CX,y:CY};
+  if(eid==='edge'){ return {x:CX+Math.cos(rad(90))*(REDGE-18),y:CY+Math.sin(rad(90))*(REDGE-18)}; }
+  const e=EPOCHS.findIndex(q=>q.id===eid), s=SIDES.find(q=>q.id===sid);
+  return {x:CX+Math.cos(rad(s.c))*ringR(e), y:CY+Math.sin(rad(s.c))*ringR(e)};
+}
+// рукотворная линия
+function inkLine(x1,y1,x2,y2,w,a,col){
+  x.strokeStyle=col||SEPIA;x.globalAlpha=a;x.lineWidth=w;
+  x.beginPath();x.moveTo(x1,y1);
+  const mx=(x1+x2)/2+J(x1+y2)*2,my=(y1+y2)/2+J(x2+y1)*2;
+  x.quadraticCurveTo(mx,my,x2,y2);x.stroke();x.globalAlpha=1;
+}
+function inkCircle(r,w,a,col,dash){
+  x.strokeStyle=col||SEPIA;x.globalAlpha=a;x.lineWidth=w;
+  if(dash)x.setLineDash(dash);
+  x.beginPath();
+  for(let d=0;d<=360;d+=3){
+    const rr=r+J(d+r)*1.6;
+    const px=CX+Math.cos(rad(d))*rr,py=CY+Math.sin(rad(d))*rr;
+    d?x.lineTo(px,py):x.moveTo(px,py);
+  }
+  x.closePath();x.stroke();x.setLineDash([]);x.globalAlpha=1;
+}
+
+// ── БУМАГА ──
+x.fillStyle=PAPER;x.fillRect(0,0,1800,1560);
+const pg=x.createLinearGradient(0,0,1800,1560);
+pg.addColorStop(0,'rgba(255,248,230,0.5)');pg.addColorStop(0.5,'rgba(0,0,0,0)');
+pg.addColorStop(1,'rgba(120,95,60,0.16)');
+x.fillStyle=pg;x.fillRect(0,0,1800,1560);
+x.globalAlpha=0.05;x.fillStyle=SEPIA;
+for(let i=0;i<3200;i++)x.fillRect((J(i)*0.5+0.5)*1800,(J(i*7)*0.5+0.5)*1560,1.3,1.3);
+x.globalAlpha=1;
+// сгиб карты
+x.strokeStyle=SEPIA;x.globalAlpha=0.10;x.lineWidth=2;
+x.beginPath();x.moveTo(900,20);x.lineTo(900,1540);x.stroke();
+x.beginPath();x.moveTo(30,780);x.lineTo(1770,780);x.stroke();x.globalAlpha=1;
+
+// ── ГРИФ ──
+x.fillStyle=REDS;x.font='500 15px Montserrat';
+x.fillText('К А Н Ц Е Л Я Р И Я   ·   Д Е Л О   О   М И Р Е   ·   Л И С Т  1',60,58);
+x.fillStyle=SEPIA;x.font='600 44px "Cormorant Garamond"';
+x.fillText('карта-схема диска',60,110);
+x.font='italic 20px "Cormorant Garamond"';x.fillStyle=FADE;
+x.fillText('радиус — время · азимут — сторона света · составлено углём, проверено мхом',60,140);
+
+// ── СЕКТОРА: клетки с кадрами — штрих ──
+for(const s of SIDES){
+  for(let e=0;e<EPOCHS.length;e++){
+    const k=EPOCHS[e].id+':'+s.id;
+    if(!FILLED[k])continue;
+    x.save();x.beginPath();
+    x.moveTo(CX+Math.cos(rad(s.a0))*(R0+RW*e),CY+Math.sin(rad(s.a0))*(R0+RW*e));
+    x.arc(CX,CY,R0+RW*e,rad(s.a0),rad(s.a1));
+    x.arc(CX,CY,R0+RW*(e+1),rad(s.a1),rad(s.a0),true);
+    x.closePath();x.clip();
+    x.strokeStyle=SEPIA;x.globalAlpha=0.16;x.lineWidth=1;
+    for(let i=-40;i<40;i++){
+      x.beginPath();x.moveTo(CX-700+i*16,CY-700);x.lineTo(CX-700+i*16+560,CY+700);x.stroke();
+    }
+    x.restore();x.globalAlpha=1;
+  }
+}
+
+// ── КОЛЬЦА ЭПОХ ──
+inkCircle(R0,2.2,0.85);
+for(let i=1;i<=EPOCHS.length;i++)inkCircle(R0+RW*i,1.1,0.5);
+// кольцо огня
+for(let d=0;d<360;d+=2){
+  const a1=rad(d+J(d)*1.4);
+  const r1=R1+8,r2=REDGE+J(d*3)*6;
+  x.strokeStyle=REDS;x.globalAlpha=0.5+Math.abs(J(d*7))*0.4;x.lineWidth=1.6;
+  x.beginPath();x.moveTo(CX+Math.cos(a1)*r1,CY+Math.sin(a1)*r1);
+  x.lineTo(CX+Math.cos(a1)*r2,CY+Math.sin(a1)*r2);x.stroke();
+}
+x.globalAlpha=1;
+inkCircle(REDGE,2,0.7,REDS);
+
+// ── ГРАНИЦЫ СЕКТОРОВ ──
+for(const s of SIDES){
+  const a=rad(s.a0);
+  inkLine(CX+Math.cos(a)*R0,CY+Math.sin(a)*R0,CX+Math.cos(a)*R1,CY+Math.sin(a)*R1,1,0.35);
+}
+// ── РАДИАЛЬНЫЕ ДОРОГИ ──
+for(const s of SIDES){
+  const a=rad(s.c);
+  x.setLineDash([9,5]);
+  inkLine(CX+Math.cos(a)*R0,CY+Math.sin(a)*R0,CX+Math.cos(a)*REDGE,CY+Math.sin(a)*REDGE,2.4,0.75);
+  x.setLineDash([]);
+}
+// ── КОЛЬЦЕВЫЕ ДОРОГИ ──
+for(const rr of RINGS_ROADS){
+  inkCircle(ringR(rr.e)-5,1,0.55,SEPIA,[2,4]);
+  inkCircle(ringR(rr.e)+5,1,0.55,SEPIA,[2,4]);
+  x.fillStyle=SEPIA;x.font='italic 15px "Cormorant Garamond"';x.globalAlpha=0.8;
+  x.textAlign='center';
+  x.fillText(rr.n,CX,CY-ringR(rr.e)-9);
+  x.textAlign='left';x.globalAlpha=1;
+}
+// ── РЕКА ГЕРАКЛИТА — спираль ──
+x.strokeStyle=MISTS;x.globalAlpha=0.85;x.lineWidth=2.6;
+x.beginPath();
+for(let t2=0;t2<=1;t2+=0.004){
+  const a=rad(200+t2*820);           // ~2.3 оборота
+  const r=R0*0.3+t2*(REDGE-R0*0.3-14)+Math.sin(t2*60)*3;
+  const px=CX+Math.cos(a)*r,py=CY+Math.sin(a)*r;
+  t2?x.lineTo(px,py):x.moveTo(px,py);
+}
+x.stroke();x.globalAlpha=1;
+x.fillStyle=MISTS;x.font='italic 15px "Cormorant Garamond"';
+x.save();x.translate(CX+150,CY+240);x.rotate(0.5);x.fillText('река Гераклита ~',0,0);x.restore();
+
+// ── ЦЕНТР: ГОРОДОК ──
+x.fillStyle=PAPER;x.beginPath();x.arc(CX,CY,R0-4,0,7);x.fill();
+inkCircle(R0,2.2,0.85);
+x.fillStyle=SEPIA;x.textAlign='center';
+x.font='600 22px "Cormorant Garamond"';x.fillText('ГОРОДОК',CX,CY-14);
+x.font='italic 15px "Cormorant Garamond"';x.fillStyle=FADE;
+x.fillText('вне времени',CX,CY+8);
+x.font='13px "Cormorant Garamond"';
+x.fillText('колодец ○ · пифос ✕',CX,CY+30);
+x.textAlign='left';
+
+// ── ПОДПИСИ СЕКТОРОВ (снаружи) ──
+x.font='500 15px Montserrat';x.fillStyle=SEPIA;
+for(const s of SIDES){
+  const a=rad(s.c),lr=REDGE+30;
+  const px=CX+Math.cos(a)*lr,py=CY+Math.sin(a)*lr;
+  x.textAlign=Math.cos(a)>0.4?'left':(Math.cos(a)<-0.4?'right':'center');
+  x.globalAlpha=0.9;
+  const lines=s.n.split(' · ');
+  x.fillText(lines[0],px,py+(Math.sin(a)>0.3?84:(Math.sin(a)<-0.3?-34:0)));
+  x.font='300 11px Montserrat';x.fillStyle=FADE;
+  x.fillText(lines[1],px,py+(Math.sin(a)>0.3?102:(Math.sin(a)<-0.3?-16:18)));
+  x.font='500 15px Montserrat';x.fillStyle=SEPIA;
+}
+x.textAlign='left';x.globalAlpha=1;
+// край
+x.textAlign='center';x.fillStyle=REDS;x.font='500 13px Montserrat';
+x.fillText('К Р А Й   —   К О Л Ь Ц О   О Г Н Я',CX,CY+REDGE+34);
+x.font='italic 15px "Cormorant Garamond"';
+x.fillText('дальше пока нечего · лицо в дыму · все дороги приходят сюда',CX,CY+REDGE+54);
+x.textAlign='left';
+
+// ── ЛЕСЕНКА ЭПОХ (справа) ──
+const LX=1435;
+x.font='600 20px "Cormorant Garamond"';x.fillStyle=SEPIA;
+x.fillText('кольца времени',LX,210);
+inkLine(LX,220,LX+300,220,1,0.4);
+for(let i=0;i<EPOCHS.length;i++){
+  const y=252+i*44;
+  const a=rad(-32);
+  const px=CX+Math.cos(a)*ringR(i),py=CY+Math.sin(a)*ringR(i);
+  inkLine(px,py,LX-14,y-5,0.7,0.22);
+  x.fillStyle=SEPIA;x.font='600 17px "Cormorant Garamond"';
+  x.fillText((i+1)+'. '+EPOCHS[i].n,LX,y);
+  x.fillStyle=FADE;x.font='italic 14px "Cormorant Garamond"';
+  x.fillText(EPOCHS[i].era,LX+170,y);
+  const cnt=SIDES.filter(s=>FILLED[EPOCHS[i].id+':'+s.id]).length;
+  if(cnt){x.fillStyle=SEPIA;x.font='12px Montserrat';
+    x.fillText('■'.repeat(cnt)+'□'.repeat(5-cnt),LX+178,y+16);}
+  else{x.fillStyle=FADE;x.font='12px Montserrat';x.fillText('□□□□□',LX+178,y+16);}
+}
+
+// ── ИЗНАНКА: тоннели киноварью ──
+x.setLineDash([3,5]);
+for(let i=0;i<TUNNELS.length;i++){
+  const t=TUNNELS[i];
+  const p1=cellXY(t.from[0],t.from[1]),p2=cellXY(t.to[0],t.to[1]);
+  x.strokeStyle=REDS;x.globalAlpha=0.7;x.lineWidth=1.8;
+  const bx=(p1.x+p2.x)/2+(CX-(p1.x+p2.x)/2)*0.55;
+  const by=(p1.y+p2.y)/2+(CY-(p1.y+p2.y)/2)*0.55;
+  x.beginPath();x.moveTo(p1.x,p1.y);x.quadraticCurveTo(bx,by,p2.x,p2.y);x.stroke();
+  x.globalAlpha=1;x.setLineDash([3,5]);
+  // вход ✕ и выход ○
+  x.fillStyle=REDS;x.font='600 15px "Cormorant Garamond"';
+  x.setLineDash([]);
+  x.fillText('✕',p1.x-5,p1.y+5);
+  x.strokeStyle=REDS;x.lineWidth=1.6;
+  x.beginPath();x.arc(p2.x,p2.y,6,0,7);x.stroke();
+  x.font='500 11px Montserrat';
+  x.fillText(t.id,p1.x+8,p1.y-6);
+  x.setLineDash([3,5]);
+}
+x.setLineDash([]);
+
+// ── ОПИСЬ ИЗНАНКИ (слева внизу) ──
+let oy=1180;
+x.fillStyle=SEPIA;x.font='600 20px "Cormorant Garamond"';
+x.fillText('изнанка — скрытые ходы',60,oy);oy+=8;
+inkLine(60,oy,420,oy,1,0.4);oy+=26;
+x.font='500 11px Montserrat';
+for(const t of TUNNELS){
+  x.fillStyle=REDS;x.fillText(t.id,60,oy);
+  x.fillStyle=SEPIA;x.font='italic 15px "Cormorant Garamond"';
+  x.fillText(`${t.layer}:  ✕ ${t.fe}  →  ○ ${t.te}`,100,oy);
+  x.font='500 11px Montserrat';oy+=27;
+}
+// ── ЛЕГЕНДА (справа внизу) ──
+let ly=1180;const LGX=1435;
+x.fillStyle=SEPIA;x.font='600 20px "Cormorant Garamond"';
+x.fillText('условные знаки',LGX,ly);ly+=8;
+inkLine(LGX,ly,1740,ly,1,0.4);ly+=26;
+const leg=[
+  ['— — —','радиальная дорога стороны'],
+  ['· · || · ·','кольцевой путь узловой эпохи'],
+  ['~','река Гераклита, спираль'],
+  ['✕ → ○','тоннель изнанки: вход → выход'],
+  ['▨','сектор с кадрами (опись)'],
+  ['■□','кадры стороны в кольце'],
+];
+for(const [s2,d] of leg){
+  x.fillStyle=SEPIA;x.font='14px Montserrat';x.fillText(s2,LGX,ly);
+  x.font='italic 15px "Cormorant Garamond"';x.fillText(d,LGX+90,ly);ly+=26;
+}
+ly+=8;
+x.fillStyle=FADE;x.font='italic 15px "Cormorant Garamond"';
+x.fillText('состояние фонда: 11 из 47 клеток имеют кадры',LGX,ly);ly+=22;
+x.fillText('волна I — хребты юга и запада · не заполнять клетку,',LGX,ly);ly+=20;
+x.fillText('пока не готовы кромки соседей',LGX,ly);
+
+// ── ПЕЧАТЬ ──
+x.save();x.translate(1620,120);x.rotate(-0.24);x.globalAlpha=0.8;
+x.strokeStyle=REDS;x.lineWidth=3;
+x.beginPath();x.arc(0,0,62,0,7);x.stroke();
+x.lineWidth=1.2;x.beginPath();x.arc(0,0,53,0,7);x.stroke();
+x.fillStyle=REDS;x.font='500 13px Montserrat';x.textAlign='center';
+x.fillText('ПРОВЕРЕНО',0,-18);x.fillText('СМЫСЛА НЕТ',0,26);
+x.font='22px serif';x.fillText('☠',0,8);
+x.restore();x.globalAlpha=1;
+// подпись угла
+x.fillStyle=FADE;x.font='italic 14px "Cormorant Garamond"';
+x.fillText('сост.: странник · зав. фондом: мох · ardet — it burns',60,1520);
+</script>
+</body>
+</html>
