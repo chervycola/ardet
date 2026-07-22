@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ardet · эпохи — сцены и переходы</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#080706;overflow:hidden}
+  canvas{display:block;position:fixed;inset:0;touch-action:none}
+  #hud{position:fixed;top:14px;left:18px;pointer-events:none;
+    font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
+    letter-spacing:3px;color:#8A8D8F;text-transform:uppercase}
+  #cap{position:fixed;bottom:12px;left:0;right:0;text-align:center;pointer-events:none;
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#5b5f61}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">ardet · маршрут эпох</div>
+<div id="cap">вглубь кадра — дальше · назад к кромке — обратно</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARDET — маршрут эпох: цепочка сцен-задников (референсы), связанных
+// переходами. Странник один на все века: силуэт, уголёк, красная
+// кромка, перспективный масштаб. Раскладка — src/assets/EPOCH_SCENES.md
+// ═══════════════════════════════════════════════════════════════════
+const NIGHT='#0D0B0A', BONE='#D9CFB8', ASH='#8A8D8F';
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+let CW=0,CH=0,DPR=1;
+function resize(){
+  CW=innerWidth;CH=innerHeight;
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=CW*DPR;cv.height=CH*DPR;
+  cv.style.width=CW+'px';cv.style.height=CH+'px';
+  x.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize',resize);resize();
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+
+// walk: y0 — дальняя кромка, y1 — ближняя; xl/xr интерполируются
+const SCENES=[
+  {file:'сократики эпоха.jpg',w:736,h:1308,name:'три огня',era:'осевое время',
+   walk:{y0:1020,y1:1280,xlT:250,xrT:480,xlB:90,xrB:640},sF:0.42,sN:1.0,
+   entryF:{x:368,y:1240},entryB:{x:368,y:1060},fwd:'depth',
+   glows:[{x:368,y:800,r:80,c:'240,150,80',a:0.10}]},
+  {file:'римская эпоха начало.jpg',w:736,h:1308,name:'портики и сады',era:'III до — V н.э.',
+   walk:{y0:880,y1:1290,xlT:300,xrT:430,xlB:110,xrB:640},sF:0.34,sN:1.05,
+   entryF:{x:368,y:1250},entryB:{x:368,y:920},fwd:'depth',glows:[]},
+  {file:'пустая европа.jpg',w:1200,h:2370,name:'свет и сад',era:'VI–XVI вв.',
+   walk:{y0:2150,y1:2330,xlT:40,xrT:1160,xlB:40,xrB:1160},sF:0.85,sN:0.98,
+   entryF:{x:130,y:2250},entryB:{x:1080,y:2250},fwd:'right',glows:[]},
+  {file:'реф город 1.jpg',w:736,h:1104,name:'пар и тени',era:'XIX век',
+   walk:{y0:830,y1:1085,xlT:330,xrT:430,xlB:190,xrB:570},sF:0.34,sN:1.0,
+   entryF:{x:380,y:1040},entryB:{x:380,y:870},fwd:'depth',
+   glows:[{x:295,y:452,r:110,c:'255,190,90',a:0.20}]},
+  {file:'дороги электрический цепей.jpg',w:736,h:1144,name:'дороги цепей',era:'на границе веков',
+   walk:{y0:950,y1:1100,xlT:50,xrT:690,xlB:50,xrB:690},sF:0.78,sN:0.95,
+   entryF:{x:100,y:1030},entryB:{x:640,y:1030},fwd:'right',glows:[]},
+  {file:'территория завода.jpg',w:1200,h:1807,name:'век катастроф',era:'XX век',
+   walk:{y0:1500,y1:1760,xlT:350,xrT:850,xlB:180,xrB:1020},sF:0.5,sN:1.0,
+   entryF:{x:600,y:1710},entryB:{x:600,y:1540},fwd:'depth',
+   glows:[{x:600,y:880,r:180,c:'255,80,50',a:0.10}]},
+  {file:'плоский новый мир, граница нашего времени.jpg',w:1200,h:2000,name:'сейчас',era:'2000-е —',
+   walk:{y0:1600,y1:1930,xlT:250,xrT:650,xlB:80,xrB:800},sF:0.4,sN:1.0,
+   entryF:{x:400,y:1880},entryB:{x:420,y:1640},fwd:'depth',glows:[]},
+  {file:'дыра огня.jpg',w:736,h:1381,name:'край',era:'дальше пока нечего',
+   walk:{y0:1160,y1:1340,xlT:60,xrT:680,xlB:60,xrB:680},sF:0.7,sN:0.95,
+   entryF:{x:368,y:1300},entryB:{x:368,y:1300},fwd:'edge',
+   glows:[{x:368,y:1000,r:420,c:'255,70,40',a:0.10}]},
+];
+for(const s of SCENES){
+  s.img=new Image();
+  s.img.src='../'+encodeURIComponent(s.file);
+}
+
+let cur=0;
+const player={x:0,y:0,fx:1,fy:-1,step:0,moving:false};
+function enter(i,fromBack){
+  cur=(i+SCENES.length)%SCENES.length;
+  const s=SCENES[cur], e=fromBack?s.entryB:s.entryF;
+  player.x=e.x;player.y=e.y;
+  title={t:s.name,e:s.era,life:210};
+}
+let title={t:'',e:'',life:0};
+let fade=0, pending=null; // pending: {i, back}
+enter(0,false);
+
+const keys={};
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let touchTarget=null,touchHeld=false,view={s:1,ox:0,oy:0};
+cv.addEventListener('pointerdown',e=>{
+  touchHeld=true;
+  touchTarget={x:(e.clientX-view.ox)/view.s,y:(e.clientY-view.oy)/view.s};
+});
+cv.addEventListener('pointermove',e=>{
+  if(touchHeld)touchTarget={x:(e.clientX-view.ox)/view.s,y:(e.clientY-view.oy)/view.s};
+});
+addEventListener('pointerup',()=>touchHeld=false);
+
+const walkAt=(s,y)=>{
+  const k=Math.max(0,Math.min(1,(y-s.walk.y0)/(s.walk.y1-s.walk.y0)));
+  return {xl:s.walk.xlT+(s.walk.xlB-s.walk.xlT)*k,
+          xr:s.walk.xrT+(s.walk.xrB-s.walk.xrT)*k,
+          ps:s.sF+(s.sN-s.sF)*k, k};
+};
+
+let edgeShake=0;
+function updatePlayer(){
+  if(fade>0) return;
+  const s=SCENES[cur];
+  let dx=0,dy=0;
+  if(keys['w']||keys['ц']||keys['arrowup'])dy-=1;
+  if(keys['s']||keys['ы']||keys['arrowdown'])dy+=1;
+  if(keys['a']||keys['ф']||keys['arrowleft'])dx-=1;
+  if(keys['d']||keys['в']||keys['arrowright'])dx+=1;
+  if(!dx&&!dy&&touchTarget){
+    const tx=touchTarget.x-player.x,ty=touchTarget.y-player.y,d=Math.hypot(tx,ty);
+    if(d>6){dx=tx/d;dy=ty/d;} else if(!touchHeld)touchTarget=null;
+  }
+  const len=Math.hypot(dx,dy);
+  player.moving=len>0.01;
+  if(!player.moving) return;
+  dx/=len;dy/=len;
+  const wa=walkAt(s,player.y);
+  const sp=1.7+wa.k*2.1;
+  player.x+=dx*sp;player.y+=dy*sp*0.8;
+  player.fx=dx;player.fy=dy;player.step+=sp;
+  player.y=Math.max(s.walk.y0,Math.min(s.walk.y1,player.y));
+  const wa2=walkAt(s,player.y);
+  player.x=Math.max(wa2.xl,Math.min(wa2.xr,player.x));
+  // ── переходы ──
+  if(s.fwd==='depth' && player.y<=s.walk.y0+4) trans(cur+1,false);
+  else if(s.fwd==='right' && player.x>=wa2.xr-4) trans(cur+1,false);
+  else if(s.fwd==='edge' && player.y<=s.walk.y0+4){ edgeShake=1; trans(0,false); }
+  // назад
+  if(cur>0){
+    if(s.fwd==='right'){ if(player.x<=wa2.xl+4) trans(cur-1,true); }
+    else if(player.y>=s.walk.y1-3 && player.fy>0.5) trans(cur-1,true);
+  }
+}
+function trans(i,back){ if(!pending){ pending={i,back}; } }
+
+let t0=performance.now(),tPrev=t0;
+function frame(now){
+  const t=(now-t0)/1000, dt=Math.min(0.05,(now-tPrev)/1000);tPrev=now;
+  updatePlayer();
+  // фейд перехода
+  if(pending){
+    fade=Math.min(1,fade+dt*2.4);
+    if(fade>=1){ enter(pending.i,pending.back); pending=null; }
+  }else if(fade>0) fade=Math.max(0,fade-dt*1.8);
+  if(edgeShake>0) edgeShake=Math.max(0,edgeShake-dt*0.5);
+
+  const s=SCENES[cur];
+  x.setTransform(DPR,0,0,DPR,0,0);
+  x.fillStyle=NIGHT;x.fillRect(0,0,CW,CH);
+
+  // поля гравюры
+  x.strokeStyle=BONE;x.lineWidth=0.6;
+  for(let i=0;i<Math.ceil(CH/4);i++){
+    x.globalAlpha=0.045+Math.abs(J(i))*0.045;
+    const y2=i*4+J(i*3)*2;
+    x.beginPath();x.moveTo(0,y2);x.lineTo(CW,y2+J(i*7)*2);x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // задник: полная высота, панорама по x за игроком
+  const sc=CH/s.h, dw=s.w*sc;
+  let ox=dw<=CW?(CW-dw)/2:Math.max(CW-dw,Math.min(0,CW/2-player.x*sc));
+  const shx=edgeShake>0?J(now*0.05)*edgeShake*9:0;
+  ox+=shx;
+  view={s:sc,ox,oy:0};
+  if(s.img.complete&&s.img.naturalWidth) x.drawImage(s.img,ox,0,dw,s.h*sc);
+  x.strokeStyle=BONE;x.globalAlpha=0.5;x.lineWidth=1;
+  x.strokeRect(ox-1,0,dw+2,CH);x.globalAlpha=1;
+
+  // мир сцены
+  x.save();x.translate(ox,0);x.scale(sc,sc);
+  // дыхание света сцены
+  for(const g of s.glows){
+    const br=0.7+0.3*Math.sin(t*(2.2+g.x%3)+g.x);
+    const gl=x.createRadialGradient(g.x,g.y,4,g.x,g.y,g.r*br);
+    gl.addColorStop(0,`rgba(${g.c},${g.a*br})`);gl.addColorStop(1,`rgba(${g.c},0)`);
+    x.fillStyle=gl;x.fillRect(g.x-g.r,g.y-g.r,g.r*2,g.r*2);
+  }
+  drawWanderer(t,s);
+  x.restore();
+
+  // грейд
+  const gseed=Math.floor(t*7);
+  x.globalAlpha=0.06;
+  for(let i=0;i<200;i++){
+    x.fillStyle=(i%3)?BONE:'#C23B2B';
+    x.fillRect((J(i+gseed)*0.5+0.5)*CW,(J(i*7+gseed)*0.5+0.5)*CH,1,1);
+  }
+  x.globalAlpha=1;
+  const vig=x.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.4,CW/2,CH/2,Math.max(CW,CH)*0.74);
+  vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(5,2,2,0.5)');
+  x.fillStyle=vig;x.fillRect(0,0,CW,CH);
+
+  // титул эпохи
+  if(title.life>0){
+    title.life--;
+    const a=title.life>170?(210-title.life)/40:Math.min(1,title.life/60);
+    x.textAlign='center';
+    x.font='300 11px Montserrat';
+    x.fillStyle=`rgba(138,141,143,${a*0.9})`;
+    const et=title.e.toUpperCase().split('').join(' ');
+    x.fillText(et,CW/2,CH*0.30-30);
+    x.font='italic 34px "Cormorant Garamond"';
+    x.fillStyle=`rgba(217,207,184,${a})`;
+    x.fillText(title.t,CW/2,CH*0.30);
+    x.textAlign='left';
+  }
+
+  x.strokeStyle=BONE;x.globalAlpha=0.5;x.lineWidth=1;
+  x.strokeRect(10,10,CW-20,CH-20);
+  x.globalAlpha=0.18;x.strokeRect(14,14,CW-28,CH-28);
+  x.globalAlpha=1;
+
+  if(fade>0){ x.fillStyle=`rgba(3,2,2,${fade})`;x.fillRect(0,0,CW,CH); }
+  requestAnimationFrame(frame);
+}
+
+function drawWanderer(t,s){
+  const p=player;
+  const ps=walkAt(s,p.y).ps;
+  const mov=p.moving?1:0;
+  const bob=Math.abs(Math.sin(p.step*0.28))*2.4*mov;
+  const sway=Math.sin(p.step*0.14)*0.05*mov+Math.sin(t*0.9)*0.012;
+  x.fillStyle='rgba(5,2,2,0.55)';
+  x.beginPath();x.ellipse(p.x+3*ps,p.y+3,13*ps,4.2*ps,0,0,7);x.fill();
+  x.save();x.translate(p.x,p.y);x.rotate(sway);x.scale(ps,ps);x.translate(0,-bob);
+  const lp=Math.sin(p.step*0.28);
+  x.strokeStyle='#060303';x.lineWidth=3;x.lineCap='round';
+  x.beginPath();
+  x.moveTo(-3.4,-7);x.lineTo(-3.4+lp*4.6*mov,0.6);
+  x.moveTo(3.4,-7);x.lineTo(3.4-lp*4.6*mov,0.6);
+  x.stroke();x.lineCap='butt';
+  x.fillStyle='#070404';
+  x.beginPath();
+  x.moveTo(-7,-30);
+  x.bezierCurveTo(-10,-22,-12,-13,-13,-4);
+  for(let i=0;i<=6;i++){
+    const sx=-13+26*(i/6);
+    x.lineTo(sx-1.6,-4-(i%2?4.6:0)-Math.abs(J(i*3))*2.4);
+    x.lineTo(sx,-4);
+  }
+  x.bezierCurveTo(12,-13,10,-22,7,-30);
+  x.closePath();x.fill();
+  x.fillStyle='#050303';
+  x.beginPath();x.ellipse(p.fx*1.6,-37,8.6,8,0,0,7);x.fill();
+  x.beginPath();x.moveTo(-6,-33);x.quadraticCurveTo(0,-27,6,-33);x.lineTo(4,-29.4);x.lineTo(-4,-29.4);x.closePath();x.fill();
+  x.fillStyle='#020101';
+  x.beginPath();x.ellipse(p.fx*4,-36.4,4.6,4,0,0,7);x.fill();
+  x.strokeStyle='#C23B2B';x.globalAlpha=0.55;x.lineWidth=1;
+  x.beginPath();x.ellipse(p.fx*1.6,-37,8.9,8.3,0,Math.PI*1.02,Math.PI*1.8);x.stroke();
+  x.beginPath();x.moveTo(-7.4,-29);x.bezierCurveTo(-10.4,-21,-12.4,-12,-13.2,-4);x.stroke();
+  x.globalAlpha=1;
+  const hb=0.5+0.5*Math.sin(t*2.6);
+  const eg=x.createRadialGradient(p.fx*2.4,-22,0.5,p.fx*2.4,-22,10);
+  eg.addColorStop(0,`rgba(242,192,121,${0.5+hb*0.3})`);eg.addColorStop(1,'rgba(242,192,121,0)');
+  x.fillStyle=eg;x.fillRect(p.fx*2.4-10,-32,20,20);
+  x.fillStyle='#F2C079';x.globalAlpha=0.7+hb*0.3;
+  x.beginPath();x.arc(p.fx*2.4,-22,1.9,0,7);x.fill();
+  x.globalAlpha=1;
+  x.strokeStyle='#1A0E0A';x.lineWidth=2;
+  x.beginPath();x.moveTo(9,-26);x.lineTo(12.6,1);x.stroke();
+  x.restore();
+}
+
+window.__game={player,scene:()=>cur,go:i=>{enter(i,false);},tp:(px,py)=>{player.x=px;player.y=py;}};
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
