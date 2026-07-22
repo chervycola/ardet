@@ -850,10 +850,8 @@ function ncard(c, n, total){
   const pid = "th" + n;
   // единая иллюстрация: две башни одной высоты фоном + солнце + линия со всплеском
   const mods =
-    `<rect x="248" y="8" width="52" height="9" fill="var(--panel2)" stroke="var(--line)" stroke-width="1"/>`+
-    `<rect x="257" y="17" width="34" height="116" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`+
-    `<rect x="306" y="8" width="46" height="9" fill="var(--panel2)" stroke="var(--line)" stroke-width="1"/>`+
-    `<rect x="314" y="17" width="30" height="116" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`+
+    `<rect x="257" y="8" width="34" height="125" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`+
+    `<rect x="314" y="8" width="30" height="125" fill="url(#${pid})" stroke="var(--line)" stroke-width="1"/>`+
     `<g stroke="#E30613" stroke-width="2" stroke-linecap="round">`+
       `<line x1="378" y1="22" x2="378" y2="10"/><line x1="378" y1="38" x2="378" y2="50"/>`+
       `<line x1="370" y1="30" x2="358" y2="30"/><line x1="386" y1="30" x2="398" y2="30"/>`+
@@ -861,11 +859,7 @@ function ncard(c, n, total){
       `<line x1="372" y1="36" x2="363" y2="45"/><line x1="384" y1="36" x2="393" y2="45"/>`+
     `</g><circle cx="378" cy="30" r="4" fill="#E30613"/>`;
   const ev =
-    `<line x1="5" y1="133" x2="86" y2="133" stroke="currentColor" stroke-width="1.8"/>`+
-    `<polyline points="86,133 96,133 102,122 109,141 115,127 120,134 130,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+
-    `<line x1="130" y1="133" x2="257" y2="133" stroke="currentColor" stroke-width="1.8"/>`+
-    `<polyline points="291,133 296,133 300,126 305,126 309,133 314,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`+
-    `<line x1="344" y1="133" x2="400" y2="133" stroke="currentColor" stroke-width="1.8"/>`;
+    `<polyline points="5,133 96,133 102,122 109,141 115,127 120,134 130,133 296,133 300,126 305,126 309,133 400,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`;
   return `<div class="ncard">
     <div class="nk">· ${esc(c.k||"")}</div>
     <h4>${esc(c.h[0])}<br><span class="r">${esc(c.h[1])}</span></h4>
