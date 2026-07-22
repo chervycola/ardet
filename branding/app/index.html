@@ -563,7 +563,9 @@ const L = {
     "about.p3":"Любой желающий может попробовать устройство в работе",
     "about.p4":"Для участия в разговоре достаточно интереса к тому, как устроен физический объект",
     "about.site":"Сайт форума",
-    "fb.lead":"Есть прибор, идея или вопрос? Напишите — ответим.",
+    "fb.lead":"Есть прибор, идея или вопрос? Заполните форму — ответим.",
+    "fb.name":"Имя", "fb.namePh":"Как к вам обращаться", "fb.contact":"Контакт", "fb.contactPh":"@telegram или почта", "fb.msg":"Сообщение",
+    "fb.copied":"Текст скопирован — вставьте его в открывшийся чат", "fb.mailNote":"Откроется письмо на",
     "fb.tg":"Написать в Telegram", "fb.mail":"Почта", "fb.or":"Или коротко здесь",
     "fb.ph":"Ваше сообщение…", "fb.send":"Отправить",
     "fb.note":"В Telegram сообщение уйдёт боту. В браузере — откроется чат",
@@ -598,7 +600,9 @@ const L = {
     "about.p3":"Любой может пощупать прибор в деле",
     "about.p4":"Чтобы влиться в разговор, хватит интереса к тому, как устроена железка",
     "about.site":"Сайт сходки",
-    "fb.lead":"Есть аппарат, тема или вопрос? Пиши — ответим, базара нет.",
+    "fb.lead":"Есть аппарат, тема или вопрос? Заполни форму — ответим, базара нет.",
+    "fb.name":"Имя", "fb.namePh":"Как к тебе обращаться", "fb.contact":"Контакт", "fb.contactPh":"@telegram или почта", "fb.msg":"Сообщение",
+    "fb.copied":"Текст скопирован — вставь его в открывшийся чат", "fb.mailNote":"Откроется письмо на",
     "fb.tg":"Стукнуть в Telegram", "fb.mail":"Почта", "fb.or":"Или коротко тут",
     "fb.ph":"Твоё сообщение…", "fb.send":"Отправить",
     "fb.note":"В Telegram сообщение уйдёт боту. В браузере — откроется чат",
@@ -633,7 +637,9 @@ const L = {
     "about.p3":"Любой может потестить девайс вживую",
     "about.p4":"Чтобы вписаться в разговор, хватит интереса к тому, как устроен физический объект",
     "about.site":"Сайт ивента",
-    "fb.lead":"Есть девайс, идея или вопрос? Пиши — ответим, изи.",
+    "fb.lead":"Есть девайс, идея или вопрос? Заполни форму — ответим, изи.",
+    "fb.name":"Имя", "fb.namePh":"Как к тебе обращаться", "fb.contact":"Контакт", "fb.contactPh":"@telegram или мыло", "fb.msg":"Сообщение",
+    "fb.copied":"Текст скопирован — вставь его в открывшийся чат", "fb.mailNote":"Откроется письмо на",
     "fb.tg":"Написать в тг", "fb.mail":"Мыло", "fb.or":"Или го прямо тут",
     "fb.ph":"Го сообщение…", "fb.send":"Отправить",
     "fb.note":"В тг сообщение улетит боту. В браузере — откроется чат",
@@ -667,7 +673,9 @@ const L = {
     "about.p3":"Каждый желающий может испытать прибор в работе",
     "about.p4":"Для участия в разговоре довольно интереса к тому, как устроен физический объект",
     "about.site":"Сайт форума",
-    "fb.lead":"Есть прибор, замысел или вопрос? Напишите — ответим непременно.",
+    "fb.lead":"Есть прибор, замысел или вопрос? Заполните форму — ответим непременно.",
+    "fb.name":"Имя", "fb.namePh":"Как к вам обращаться", "fb.contact":"Контакт", "fb.contactPh":"@telegram или почта", "fb.msg":"Сообщение",
+    "fb.copied":"Текст скопирован — вставьте его в открывшийся чат", "fb.mailNote":"Откроется письмо на",
     "fb.tg":"Написать в Telegram", "fb.mail":"Почта", "fb.or":"Или коротко здесь",
     "fb.ph":"Ваше сообщение…", "fb.send":"Отправить",
     "fb.note":"В Telegram сообщение уйдёт боту. В браузере — откроется чат",
@@ -907,13 +915,14 @@ function openAny(u){ try{ if(/t\.me\//.test(u) && tg && tg.openTelegramLink) tg.
 const MODALS = {
   feedback: { title:"m.feedback", html:()=>`
     <p>${t("fb.lead")}</p>
+    <div class="field"><label>${t("fb.name")}</label><input id="fbName" placeholder="${t("fb.namePh")}"></div>
+    <div class="field"><label>${t("fb.contact")}</label><input id="fbContact" placeholder="${t("fb.contactPh")}"></div>
+    <div class="field"><label>${t("fb.msg")}</label><textarea id="fbText" rows="4" placeholder="${t("fb.ph")}"></textarea></div>
+    <div class="btnrow"><button class="btn red" id="fbSend">${t("fb.send")}</button></div>
     <div class="btnrow">
-      <button class="btn red" onclick="openTG('${CONTACT.tg}')">${t("fb.tg")}<span class="a">@${CONTACT.tg}</span></button>
+      <button class="btn" onclick="openTG('${CONTACT.tg}')">${t("fb.tg")}<span class="a">@${CONTACT.tg}</span></button>
       <button class="btn" onclick="openLink('mailto:${CONTACT.email}')">${t("fb.mail")}<span class="a">${CONTACT.email}</span></button>
     </div>
-    <div class="field"><label>${t("fb.or")}</label><textarea id="fbText" rows="3" placeholder="${t("fb.ph")}"></textarea></div>
-    <div class="btnrow"><button class="btn" id="fbSend">${t("fb.send")}</button></div>
-    <div class="note">${t("fb.note")} @${CONTACT.tg}.</div>
     <div class="note">${t("consent.pre")} <a class="colink" onclick="openModal('privacy')">${t("consent.link")}</a>.</div>` },
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
   companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
@@ -949,11 +958,22 @@ function lotteryHTML(){
 function bindModal(kind){
   if(kind==="feedback"){
     const b=$("#fbSend"); if(b) b.addEventListener("click", ()=>{
-      const t=($("#fbText").value||"").trim(); if(!t){ shake($("#fbText")); return; }
+      const msg=($("#fbText").value||"").trim(); if(!msg){ shake($("#fbText")); return; }
+      const nm=($("#fbName").value||"").trim(), ct=($("#fbContact").value||"").trim();
+      const full = "ДИСКРЕТ · обратная связь\n" + (nm?("Имя: "+nm+"\n"):"") + (ct?("Контакт: "+ct+"\n"):"") + "\n" + msg;
       haptic("medium");
-      if(tg && tg.sendData){ tg.sendData(JSON.stringify({type:"feedback", text:t})); }
-      else { openTG(CONTACT.tg); }
-      $("#mbody").innerHTML = `<div class="okbox"><div class="big">${t("fb.thanks")}</div><p style="margin:8px 0 0">${t("fb.sent")}</p></div>`;
+      if(tg && tg.sendData){
+        tg.sendData(JSON.stringify({type:"feedback", name:nm, contact:ct, text:msg}));
+        $("#mbody").innerHTML = `<div class="okbox"><div class="big">${t("fb.thanks")}</div><p style="margin:8px 0 0">${t("fb.sent")}</p></div>`;
+      } else if(tg){
+        // внутри Telegram без sendData: копируем текст и открываем чат
+        try{ navigator.clipboard && navigator.clipboard.writeText(full); }catch(e){}
+        $("#mbody").innerHTML = `<div class="okbox"><div class="big">${t("fb.thanks")}</div><p style="margin:8px 0 0">${t("fb.copied")} @${CONTACT.tg}.</p></div><div class="btnrow"><button class="btn red" onclick="openTG('${CONTACT.tg}')">${t("fb.tg")}<span class="a">@${CONTACT.tg}</span></button></div>`;
+      } else {
+        // браузер: письмо с заполненным текстом
+        window.location.href = "mailto:"+CONTACT.email+"?subject="+encodeURIComponent("ДИСКРЕТ · обратная связь")+"&body="+encodeURIComponent(full);
+        $("#mbody").innerHTML = `<div class="okbox"><div class="big">${t("fb.thanks")}</div><p style="margin:8px 0 0">${t("fb.mailNote")} ${CONTACT.email}.</p></div>`;
+      }
     });
   }
   if(kind==="lottery"){
