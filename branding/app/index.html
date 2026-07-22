@@ -168,10 +168,10 @@
   .natcards .cslides{background:var(--panel);}
   .natcards .cslide{aspect-ratio:4/5;}
   .ncard{display:flex; flex-direction:column; height:100%; min-height:430px; padding:22px 20px 18px; background:var(--panel);}
-  .ncard .nk{font-family:var(--mono); font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--red);}
-  .ncard h4{font-family:var(--grotesk); font-weight:800; text-transform:uppercase; font-size:clamp(26px,9vw,40px); line-height:.95; letter-spacing:.5px; margin:10px 0 0; color:var(--hair);}
+  .ncard .nk{position:relative; z-index:1; font-family:var(--mono); font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--red);}
+  .ncard h4{position:relative; z-index:1; font-family:var(--grotesk); font-weight:800; text-transform:uppercase; font-size:clamp(26px,9vw,40px); line-height:.95; letter-spacing:.5px; margin:10px 0 0; color:var(--hair);}
   .ncard h4 .r{color:var(--red);}
-  .ncard .nwave{width:100%; height:auto; display:block; margin:14px 0 2px; color:var(--hair);}
+  .ncard .nwave{width:100%; height:auto; display:block; margin:-88px 0 4px; position:relative; z-index:0; color:var(--hair);}
   .ncard .nb{font-family:var(--mono); font-size:13.5px; line-height:1.62; color:var(--hair); margin-top:10px;}
   .ncard .nfoot{margin-top:auto; padding-top:18px; display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);}
   .cdots{position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; pointer-events:none;}
@@ -839,27 +839,35 @@ function openAuthor(id){
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
 function ncard(c, n, total){
+  const pid = "th" + n;
   return `<div class="ncard">
     <div class="nk">· ${esc(c.k||"")}</div>
     <h4>${esc(c.h[0])}<br><span class="r">${esc(c.h[1])}</span></h4>
-    <svg class="nwave" viewBox="0 0 400 42" aria-hidden="true">
-      <circle cx="3" cy="25" r="2.5" fill="#E30613"/>
-      <line x1="5" y1="25" x2="12" y2="25" stroke="currentColor" stroke-width="1.8"/>
-      <g fill="currentColor">
-        <rect x="14" y="6" width="7" height="19"/><rect x="11.5" y="2.6" width="12" height="3.6"/>
-        <rect x="28" y="12" width="7" height="13"/><rect x="25.5" y="9" width="12" height="3.2"/>
+    <svg class="nwave" viewBox="0 0 400 150" aria-hidden="true">
+      <defs><pattern id="${pid}" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="var(--panel2)"/><line x1="0" y1="0" x2="0" y2="8" stroke="var(--line)" stroke-width="2.5"/>
+      </pattern></defs>
+      <g stroke="var(--line)" stroke-width="1.2">
+        <rect x="248" y="8" width="52" height="9" fill="var(--panel2)"/>
+        <rect x="257" y="17" width="34" height="116" fill="url(#${pid})"/>
+        <rect x="306" y="30" width="46" height="8" fill="var(--panel2)"/>
+        <rect x="314" y="38" width="30" height="95" fill="url(#${pid})"/>
       </g>
-      <line x1="38" y1="25" x2="150" y2="25" stroke="currentColor" stroke-width="1.8"/>
-      <polyline points="150,25 169,25 180,6 192,40 203,17.5 213,30 233,25" fill="none" stroke="currentColor" stroke-width="1.8"/>
-      <line x1="233" y1="25" x2="358" y2="25" stroke="currentColor" stroke-width="1.8"/>
-      <g stroke="#E30613" stroke-width="1.7" stroke-linecap="round">
-        <line x1="371" y1="20" x2="371" y2="14"/><line x1="371" y1="30" x2="371" y2="36"/>
-        <line x1="366" y1="25" x2="361" y2="25"/><line x1="376" y1="25" x2="381" y2="25"/>
-        <line x1="374.5" y1="21.5" x2="378.5" y2="17.5"/><line x1="367.5" y1="28.5" x2="363.5" y2="32.5"/>
-        <line x1="374.5" y1="28.5" x2="378.5" y2="32.5"/><line x1="367.5" y1="21.5" x2="363.5" y2="17.5"/>
+      <g stroke="#E30613" stroke-width="2" stroke-linecap="round">
+        <line x1="378" y1="22" x2="378" y2="10"/><line x1="378" y1="38" x2="378" y2="50"/>
+        <line x1="370" y1="30" x2="358" y2="30"/><line x1="386" y1="30" x2="398" y2="30"/>
+        <line x1="372" y1="24" x2="363" y2="15"/><line x1="384" y1="24" x2="393" y2="15"/>
+        <line x1="372" y1="36" x2="363" y2="45"/><line x1="384" y1="36" x2="393" y2="45"/>
       </g>
-      <circle cx="371" cy="25" r="3" fill="#E30613"/>
-      <line x1="384" y1="25" x2="400" y2="25" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="378" cy="30" r="4" fill="#E30613"/>
+      <circle cx="3" cy="133" r="2.5" fill="#E30613"/>
+      <g stroke="currentColor" stroke-width="1.8" fill="none">
+        <line x1="5" y1="133" x2="86" y2="133"/>
+        <polyline points="86,133 96,133 102,122 109,141 115,127 120,134 130,133"/>
+        <line x1="130" y1="133" x2="257" y2="133"/>
+        <polyline points="291,133 296,133 300,124 306,124 310,133 314,133"/>
+        <line x1="344" y1="133" x2="400" y2="133"/>
+      </g>
     </svg>
     <div class="nb">${esc(c.b||"")}</div>
     <div class="nfoot"><span>ДИСКРЕТ.РФ</span><span>${n} / ${total}</span></div>
