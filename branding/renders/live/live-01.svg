@@ -20,12 +20,14 @@
 
 <circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="430" y2="576" stroke="#000" stroke-width="3"/><polyline points="430,576 452,540 474,576" fill="none" stroke="#000" stroke-width="3"/><line x1="474" y1="576" x2="940" y2="576" stroke="#000" stroke-width="3"/><circle cx="950" cy="576" r="9" fill="none" stroke="#000" stroke-width="3"/><circle cx="950" cy="576" r="4" fill="#E30613"/><line x1="959" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/>
 
-<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Фиксируем живую программу форума: четыре</text>
-<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">сета — от глубокого дрона до лазерного</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">IDM. Самодельные электромеханические</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">машины, космические импровизации, музыка</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">из движения тени и модульный синтез со</text>
-<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">светом. Всё вживую, всё руками.</text>
+<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Фиксируем первую волну живой программы:</text>
+<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">четыре сета — от глубокого дрона до</text>
+<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">лазерного IDM. Самодельные</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">электромеханические машины, космические</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">импровизации, музыка из движения тени и</text>
+<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">модульный синтез со светом. Всё вживую,</text>
+<text x="60" y="1000" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">всё руками. Список артистов вскоре</text>
+<text x="60" y="1056" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">продолжим.</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>

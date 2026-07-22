@@ -20,12 +20,12 @@
 
 <circle cx="60" cy="576" r="5" fill="#E30613"/><line x1="66" y1="576" x2="948" y2="576" stroke="#000" stroke-width="3"/><circle cx="958" cy="576" r="9" fill="none" stroke="#000" stroke-width="3"/><circle cx="958" cy="576" r="4" fill="#E30613"/><line x1="967" y1="576" x2="1020" y2="576" stroke="#000" stroke-width="3"/>
 
-<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Живая программа будет расти вместе со</text>
-<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">списком участников. Приходите слушать</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">приборы в деле: каждый сет — это</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">устройство, включённое на ваших глазах, и</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">человек, который знает его до последней</text>
-<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">детали. Следите за сводками.</text>
+<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Это первая волна артистов — вскоре</text>
+<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">продолжим список. Приходите слушать</text>
+<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">приборы в деле: каждый сет — устройство,</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">включённое на ваших глазах, и человек,</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">который знает его до последней детали.</text>
+<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Следите за сводками.</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
