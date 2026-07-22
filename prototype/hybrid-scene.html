@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ardet · гибрид — растровый задник + живой странник</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#080706;overflow:hidden}
+  canvas{display:block;position:fixed;inset:0;touch-action:none}
+  #hud{position:fixed;top:14px;left:18px;pointer-events:none;
+    font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
+    letter-spacing:3px;color:#8A8D8F;text-transform:uppercase}
+  #cap{position:fixed;bottom:12px;left:0;right:0;text-align:center;pointer-events:none;
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#5b5f61}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">ardet · гибрид: задник-оттиск + странник</div>
+<div id="cap">красный час · wasd / палец — идти</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARDET — проба гибридного рендера: растровый задник (референс/нейро-
+// генерация) + процедурный странник, свет, зерно и рамка поверх.
+// Формат «экран-сцена»: кадр в полную высоту, поля — штрихованная ночь.
+// ═══════════════════════════════════════════════════════════════════
+const NIGHT='#0D0B0A', BONE='#D9CFB8', ASH='#8A8D8F', CANDLE='#E28A3A';
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+let CW=0,CH=0,DPR=1;
+function resize(){
+  CW=innerWidth;CH=innerHeight;
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=CW*DPR;cv.height=CH*DPR;
+  cv.style.width=CW+'px';cv.style.height=CH+'px';
+  x.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize',resize);resize();
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+
+const bg=new Image();
+bg.src='../'+encodeURIComponent('реф город 1.jpg');
+const BW=736,BH=1104; // натив задника
+
+// сцена: дорожка переулка (в координатах задника)
+const WALK={y0:830,y1:1085,
+  xl:y=>330-(y-830)/255*140,   // левый край сужается вверх
+  xr:y=>430+(y-830)/255*140};
+const player={x:380,y:1040,fx:-0.4,fy:-1,step:0,moving:false};
+const keys={};
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let touchTarget=null,touchHeld=false;
+let view={s:1,ox:0,oy:0};
+cv.addEventListener('pointerdown',e=>{
+  touchHeld=true;
+  touchTarget={x:(e.clientX-view.ox)/view.s,y:(e.clientY-view.oy)/view.s};
+});
+cv.addEventListener('pointermove',e=>{
+  if(touchHeld)touchTarget={x:(e.clientX-view.ox)/view.s,y:(e.clientY-view.oy)/view.s};
+});
+addEventListener('pointerup',()=>touchHeld=false);
+
+function updatePlayer(){
+  let dx=0,dy=0;
+  if(keys['w']||keys['ц']||keys['arrowup'])dy-=1;
+  if(keys['s']||keys['ы']||keys['arrowdown'])dy+=1;
+  if(keys['a']||keys['ф']||keys['arrowleft'])dx-=1;
+  if(keys['d']||keys['в']||keys['arrowright'])dx+=1;
+  if(!dx&&!dy&&touchTarget){
+    const tx=touchTarget.x-player.x,ty=touchTarget.y-player.y,d=Math.hypot(tx,ty);
+    if(d>6){dx=tx/d;dy=ty/d;} else if(!touchHeld)touchTarget=null;
+  }
+  const len=Math.hypot(dx,dy);
+  player.moving=len>0.01;
+  if(player.moving){
+    dx/=len;dy/=len;
+    const depth=(player.y-WALK.y0)/(WALK.y1-WALK.y0);      // 0 вдали, 1 вблизи
+    const sp=(0.8+depth*1.6);                              // дальше — «медленнее» (перспектива)
+    player.x+=dx*sp; player.y+=dy*sp*0.8;
+    player.fx=dx;player.fy=dy;player.step+=sp;
+    player.y=Math.max(WALK.y0,Math.min(WALK.y1,player.y));
+    player.x=Math.max(WALK.xl(player.y),Math.min(WALK.xr(player.y),player.x));
+  }
+}
+
+let t0=performance.now();
+function frame(now){
+  const t=(now-t0)/1000;
+  updatePlayer();
+  x.setTransform(DPR,0,0,DPR,0,0);
+  x.fillStyle=NIGHT;x.fillRect(0,0,CW,CH);
+
+  // ── поля гравюры по бокам ──
+  x.strokeStyle=BONE;x.lineWidth=0.6;
+  for(let i=0;i<Math.ceil(CH/4);i++){
+    x.globalAlpha=0.05+Math.abs(J(i))*0.05;
+    const y2=i*4+J(i*3)*2;
+    x.beginPath();x.moveTo(0,y2);x.lineTo(CW,y2+J(i*7)*2);x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ── задник в полную высоту, по центру ──
+  const s=CH/BH, dw=BW*s, ox=(CW-dw)/2, oy=0;
+  view={s,ox,oy};
+  if(bg.complete&&bg.naturalWidth) x.drawImage(bg,ox,oy,dw,BH*s);
+  // кромки кадра — костяная линия
+  x.strokeStyle=BONE;x.globalAlpha=0.5;x.lineWidth=1;
+  x.strokeRect(ox-1,0,dw+2,CH);x.globalAlpha=1;
+
+  // всё дальше — в координатах задника
+  x.save();
+  x.translate(ox,oy);x.scale(s,s);
+
+  // ── дыхание фонаря сцены (примерно там, где он на заднике) ──
+  const flick=0.75+0.25*(Math.sin(t*6.7)*0.4+Math.sin(t*11.3)*0.25+Math.sin(t*2.2)*0.35);
+  const lg=x.createRadialGradient(295,452,4,295,452,120);
+  lg.addColorStop(0,`rgba(255,190,90,${0.22*flick})`);
+  lg.addColorStop(1,'rgba(255,190,90,0)');
+  x.fillStyle=lg;x.fillRect(175,332,240,240);
+
+  // ── туман у земли ──
+  x.strokeStyle='#1A0505';x.lineWidth=8;
+  for(let i=0;i<4;i++){
+    x.globalAlpha=0.16-i*0.03;
+    const ph=t*0.14+i*1.9;
+    x.beginPath();
+    x.moveTo(120,980+i*30+Math.sin(ph)*6);
+    x.bezierCurveTo(300,960+i*30+Math.cos(ph*0.7)*10, 460,1000+i*30+Math.sin(ph*0.9)*8, 640,975+i*30);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ── СТРАННИК — силуэт с угольком, красная кромка часа ──
+  const depth=(player.y-WALK.y0)/(WALK.y1-WALK.y0);
+  const ps=0.34+depth*0.85;                        // перспективный масштаб
+  const mov=player.moving?1:0;
+  const bob=Math.abs(Math.sin(player.step*0.28))*2.4*mov;
+  const sway=Math.sin(player.step*0.14)*0.05*mov+Math.sin(t*0.9)*0.012;
+  x.fillStyle='rgba(5,2,2,0.55)';
+  x.beginPath();x.ellipse(player.x+3*ps,player.y+3,13*ps,4.2*ps,0,0,7);x.fill();
+  x.save();x.translate(player.x,player.y);x.rotate(sway);x.scale(ps,ps);x.translate(0,-bob);
+  const lp=Math.sin(player.step*0.28);
+  x.strokeStyle='#060303';x.lineWidth=3;x.lineCap='round';
+  x.beginPath();
+  x.moveTo(-3.4,-7);x.lineTo(-3.4+lp*4.6*mov,0.6);
+  x.moveTo(3.4,-7);x.lineTo(3.4-lp*4.6*mov,0.6);
+  x.stroke();x.lineCap='butt';
+  x.fillStyle='#070404';
+  x.beginPath();
+  x.moveTo(-7,-30);
+  x.bezierCurveTo(-10,-22,-12,-13,-13,-4);
+  for(let i=0;i<=6;i++){
+    const sx=-13+26*(i/6);
+    x.lineTo(sx-1.6,-4-(i%2?4.6:0)-Math.abs(J(i*3))*2.4);
+    x.lineTo(sx,-4);
+  }
+  x.bezierCurveTo(12,-13,10,-22,7,-30);
+  x.closePath();x.fill();
+  x.fillStyle='#050303';
+  x.beginPath();x.ellipse(player.fx*1.6,-37,8.6,8,0,0,7);x.fill();
+  x.beginPath();x.moveTo(-6,-33);x.quadraticCurveTo(0,-27,6,-33);x.lineTo(4,-29.4);x.lineTo(-4,-29.4);x.closePath();x.fill();
+  x.fillStyle='#020101';
+  x.beginPath();x.ellipse(player.fx*4,-36.4,4.6,4,0,0,7);x.fill();
+  // красная кромка — свет часа
+  x.strokeStyle='#C23B2B';x.globalAlpha=0.55;x.lineWidth=1;
+  x.beginPath();x.ellipse(player.fx*1.6,-37,8.9,8.3,0,Math.PI*1.02,Math.PI*1.8);x.stroke();
+  x.beginPath();x.moveTo(-7.4,-29);x.bezierCurveTo(-10.4,-21,-12.4,-12,-13.2,-4);x.stroke();
+  x.globalAlpha=1;
+  // тёплая кромка от фонаря, если рядом
+  const dl=Math.hypot(player.x-295,player.y-452);
+  // уголёк
+  const hb=0.5+0.5*Math.sin(t*2.6);
+  const eg=x.createRadialGradient(player.fx*2.4,-22,0.5,player.fx*2.4,-22,10);
+  eg.addColorStop(0,`rgba(242,192,121,${0.5+hb*0.3})`);eg.addColorStop(1,'rgba(242,192,121,0)');
+  x.fillStyle=eg;x.fillRect(player.fx*2.4-10,-32,20,20);
+  x.fillStyle='#F2C079';x.globalAlpha=0.7+hb*0.3;
+  x.beginPath();x.arc(player.fx*2.4,-22,1.9,0,7);x.fill();
+  x.globalAlpha=1;
+  // посох
+  x.strokeStyle='#1A0E0A';x.lineWidth=2;
+  x.beginPath();x.moveTo(9,-26);x.lineTo(12.6,1);x.stroke();
+  x.restore();
+
+  x.restore(); // конец координат задника
+
+  // ── объединяющий грейд: зерно + виньетка + рамка ──
+  const gseed=Math.floor(t*7);
+  x.globalAlpha=0.06;
+  for(let i=0;i<220;i++){
+    x.fillStyle=(i%3)?BONE:'#C23B2B';
+    x.fillRect((J(i+gseed)*0.5+0.5)*CW,(J(i*7+gseed)*0.5+0.5)*CH,1,1);
+  }
+  x.globalAlpha=1;
+  const vig=x.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*0.4,CW/2,CH/2,Math.max(CW,CH)*0.74);
+  vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(5,2,2,0.5)');
+  x.fillStyle=vig;x.fillRect(0,0,CW,CH);
+  x.strokeStyle=BONE;x.globalAlpha=0.5;x.lineWidth=1;
+  x.strokeRect(10,10,CW-20,CH-20);
+  x.globalAlpha=0.18;x.strokeRect(14,14,CW-28,CH-28);
+  x.globalAlpha=1;
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__game={player,tp:(px,py)=>{player.x=px;player.y=py;}};
+</script>
+</body>
+</html>
