@@ -88,6 +88,15 @@ export const WAVES = [
   { n: 4, what: 'изнанка U1–U6' },
 ];
 
+// за кольцом огня: проход у костра Шута (сцена, не формула),
+// пустыня рассыпанного времени, брейнрот = RASTER, blackout → дом.
+export const BEYOND = {
+  pass: { at: 'костёр Шута у кольца', how: 'художественная сцена: играть, не просить' },
+  desert: { arteries: 'нет — рассыпанное вневременье', decay: 'brainrot → RASTER 0..1' },
+  fall: 'blackout → дома: журнал пуст, ботинки стоптаны сильнее, чем помнишь',
+  jesterLine: 'С возвращением. Как самочувствие?', // канон v3.2
+};
+
 export function cellKey(c) { return `${c.epoch}:${c.side}`; }
 export function progress() {
   const t = CELLS.length, done = CELLS.filter(c => c.status !== 'нет').length;
