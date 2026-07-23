@@ -2,6 +2,50 @@
 статус: Higgsfield MCP мигает — очередь готова к запуску при первом
 подключении; промты совместимы с midjourney/kling/flux.
 
+**ПРИОРИТЕТ: городок первым (G0).** Он — центр диска: из него выходят
+все пять радиальных дорог, значит его кадры задают эталон стиля,
+масштаба фигуры и профилей кромок для всех дальнейших швов.
+Не генерить эпохи, пока не принят G0.1.
+
+## G0.1 · ГОРОДОК — опорный кадр площади (16:9, эталон мира)
+```
+small timeless town square at long evening, seen slightly from above,
+left: two-story chancellery building with gable roof and ONE warm lit
+window casting light on cobblestones, center: small bonfire with a
+bull skull on a pole and a tiny jester silhouette beside it, right:
+low house with a cat on the roof ridge and thin chimney smoke, far
+back: open gates overgrown with grass and a dark castle silhouette
+like weather on the hill, cobblestone ground with moss patches,
+a stone well, a clay pithos lying on its side, dead street lantern,
+dark etching-inspired painterly scene, deep flat blacks, bone-white
+highlights #D9CFB8, warm light #E28A3A (max three warm spots: window,
+bonfire, ember), cinnabar #C23B2B as the only red, heavy film grain,
+vast negative space, tiny lone hooded figure for scale --ar 16:9
+```
+приёмка эталона: масштаб фигуры = канон для всех клеток; три тёплых
+пятна ровно; после приёмки — аутпейнт влево/вправо до панорамы
+6 экранов.
+
+## G0.2 · ГОРОДОК — врата, южный выход (2:3, шов к осевому·юг)
+```
+same town, its open gates seen from inside the square: two stone
+pillars, sagging lintel, one gate leaf fallen and overgrown with
+grass, dirt road passes through the gates and EXITS into depth at
+center toward a red-tinted horizon, wheel ruts, footprints, a small
+signpost, cobblestone fades to dust beyond the gates, + стиль-блок
+(see G0.1 palette lines) --ar 2:3
+```
+пасхалка в промт: табличка на вратах (И1, мелкая, нечитаемая —
+текст ставим оверлеем).
+
+## G0.3 · ГОРОДОК — колодец и дом с котом, северная кромка (2:3)
+```
+same town, northern edge: stone well with wooden winch roof in
+foreground, low house with lit doorway ajar and a cat on the ridge,
+road EXITS top edge at center into darker night, laundry line,
+moss creeping up the well stones, + стиль-блок --ar 2:3
+```
+
 ## G1 · ТИТУЛЬНЫЙ ЭКРАН — красная луна над городком (16:9)
 ```
 vast dark night sky dominated by a huge blood-red moon with painterly
