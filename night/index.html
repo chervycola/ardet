@@ -337,7 +337,7 @@ body{
     <p class="marg">нужное отметить углём · недостающее вписать · лишнее пережить</p>
     <div class="seal" aria-label="печать канцелярии, поставлена криво">
       <span class="ring" aria-hidden="true"></span><span class="sk">☠</span>
-      <span class="st" id="sealText">проверено<br>смысла нет</span>
+      <span class="st" id="sealText">погашено</span>
     </div>
   </div>
 </div>
@@ -1401,9 +1401,9 @@ function loadBlock(key, spawnX){
 /* ── phases ── */
 var stage=document.getElementById('stage');
 var PH_SEQ=[['evening',320],['night',240],['polden',0]]; // placeholder, real below
-var PHASES={evening:{lab:'вечер',seal:'проверено<br>смысла нет',dur:320},
-            night:{lab:'ночь',seal:'к проживанию<br>годен',dur:240},
-            noon:{lab:'полдень',seal:'уплачено<br>вечером',dur:160}};
+var PHASES={evening:{lab:'вечер',seal:'погашено',dur:320},
+            night:{lab:'ночь',seal:'получено<br>ответ не требуется',dur:240},
+            noon:{lab:'полдень',seal:'утверждаю',dur:160}};
 var phOrder=['evening','night','noon'];
 var phTimer=null;
 function setPhase(p){
