@@ -384,55 +384,77 @@ Seedream 4.5 · FLUX.2 pro), формат 3:4 (Recraft 4:5):
 
 ---
 
-## Промт ТИТУЛА/меню «Город издалека под луной-пластинкой» (вер. 1, 26.07)
+## Промт ТИТУЛА/меню «Город под кольцами» (вер. 2, 26.07)
 
-Назначение: заглавный экран и фон меню. Формат 16:9 (под меню — можно
-21:9). Референсы: `weave/STYLE_FX_nano_scratches.png` (главный —
-луна-пластинка, дуга земли, городок) + `weave/STYLE_OVERLAY_kling_moon.png`
-(вторичный — кольца-нимб на полнеба, красно-чёрный грануляр).
+Назначение: заглавный экран и фон меню. Формат 16:9, для меню лучше 21:9.
+Референсы: `weave/STYLE_FX_nano_scratches.png` (главный) +
+`weave/STYLE_OVERLAY_kling_moon.png` (вторичный — нимб-кольца на полнеба).
 
-Две вещи, ради которых кадр переделывается: **земля выгнута к луне**
-(кривизна мира-диска, городок на макушке дуги) и **луна — пластинка**
-(бороздки + дырка-шпиндель + кольцо-этикетка). Верхняя треть держится
-пустой под логотип — текст не рисуем, место оставляем.
+**Почему вер. 2.** В вер. 1 луна описывалась через «виниловую пластинку»
+(бороздки + шпиндель + этикетка) — сетки принимают это слишком буквально
+и рисуют настоящую пластинку с бликом вместо луны. Убрано. Теперь весь
+кадр строится на ОДНОЙ абстракции:
+
+> всё в кадре — концентрические окружности, расходящиеся из центра луны.
+
+Из неё выпадают сразу три вещи, и «пластинка» получается сама:
+1. кольца на самом диске луны (ближние, плотные);
+2. кольца-нимб, расходящиеся по небу (средние, редеющие);
+3. **линия горизонта — самое внешнее кольцо этого же семейства**: она
+   провисает в центре кадра и круто задирается вверх к луне у левого и
+   правого краёв. Это и есть «затягивает» / эффект широкоугольной линзы:
+   мир прогнут чашей, края земли тянутся к диску.
+
+Городок — на дне этой чаши, в центре, крошечный. Верхняя треть пустая
+под логотип; текст не рисуем, место оставляем.
 
 ### RU
 > Заглавный кадр: огромное ночное небо и крошечный городок далеко внизу.
-> Луна — гигантский кровавый диск в верхней половине кадра, прочерченный
-> плотными концентрическими бороздками, как виниловая пластинка: в самом
-> центре маленькое круглое отверстие-шпиндель, вокруг него гладкое
-> кольцо-этикетка, дальше — кольца бороздок до самого края диска. С нижней
-> кромки луны тяжёлыми каплями стекает чёрная тушь. Поперёк диска тонкой
-> горизонтальной лентой летит стая чёрных птиц силуэтами. Земля внизу
-> ВЫГНУТА ВВЕРХ К ЛУНЕ сильной выпуклой дугой — это кривизна мира-диска;
-> дуга поднимается к центру кадра, и на самой её макушке, ближе всего к
-> луне, стоит чёрный силуэт маленького провинциального городка с одной
-> колокольней. Два крошечных тёплых окна светятся в силуэте. За городком
-> по дуге разлито костяное бледное зарево (никогда не чисто белое),
-> к верхним углам небо уходит в глухой плоский чёрный, редкие звёзды.
-> Верхняя треть кадра оставлена пустой. Гравюра-вудкат сухой кистью,
-> плоские чёрные массы, костяно-белые вырезанные блики, состаренная
-> бумага, плотное печатное зерно и царапины по всему полю, затёртая
-> процарапанная рамка по краю кадра, огромное пустое пространство.
-> Единственные цвета: чёрный, костяной и багровый — багровый только
-> в луне. Без 3D, без глянца, без текста, без букв, без подписей,
-> без сигнатуры
+> Вся композиция построена на концентрических окружностях, расходящихся
+> из одного центра — из середины луны. Луна — большой багровый диск в
+> верхней половине кадра, весь прочерченный тонкими концентрическими
+> кольцами, идущими от маленькой тёмной точки в самом центре к краю
+> диска: ровные гравюрные окружности, вырезанные штихелем. Те же кольца
+> продолжаются за пределы диска и расходятся по всему небу огромным
+> нимбом, слабея и редея к углам кадра. С нижней кромки луны тяжёлыми
+> каплями стекает чёрная тушь; поперёк диска тонкой горизонтальной лентой
+> летит стая чёрных птиц силуэтами. Линия горизонта — самое внешнее из
+> этих колец: она провисает низко в центре кадра и круто ЗАГИБАЕТСЯ ВВЕРХ
+> К ЛУНЕ у левого и правого краёв, так что земля вздёрнута по бокам, как
+> в широкоугольной линзе, и словно затягивается к диску. Мир прогнут
+> чашей. На дне этой чаши, в самом центре, стоит крошечный чёрный силуэт
+> провинциального городка с одной колокольней, два тёплых окна светятся
+> в силуэте, за ним по земле разлито бледное костяное зарево (никогда не
+> чисто белое). К верхним углам небо уходит в глухой плоский чёрный,
+> редкие звёзды. Верхняя треть кадра оставлена пустой. Гравюра-вудкат
+> сухой кистью, плоские чёрные массы, костяно-белые вырезанные блики,
+> состаренная бумага, плотное печатное зерно и царапины по всему полю,
+> затёртая процарапанная рамка по краю кадра, огромное пустое
+> пространство. Единственные цвета: чёрный, костяной и багровый —
+> багровый только в луне. Без 3D, без глянца, без текста, без букв,
+> без подписей, без сигнатуры
+
 ### EN
-> Title screen: an enormous night sky above a tiny town far below.
-> The moon is a giant blood-red disc in the upper half of the frame,
-> scored with dense concentric grooves like a vinyl record: a small
-> round spindle hole at the very center, a smooth label ring around it,
-> then rings of grooves out to the rim of the disc. Heavy drops of black
-> ink drip from the moon's lower edge. A thin horizontal ribbon of black
-> birds crosses the disc in silhouette. The ground below CURVES UP TOWARD
-> THE MOON in a strong convex arc — the curvature of a disc-world; the arc
-> rises toward the center of the frame and at its very crown, nearest the
-> moon, stands the black silhouette of a small provincial town with a
-> single steeple. Two tiny warm lit windows glow in the silhouette. A pale
-> bone-white glow (never pure white) spreads along the arc behind the town;
-> the sky fades to deep flat black at the top corners, sparse stars. The
-> top third of the frame is left empty. Dry-brush woodcut engraving, flat
-> black masses, bone-white carved highlights, aged paper, heavy print grain
-> and scratches across the whole field, worn scratched frame border, vast
-> negative space. Only colors: black, bone and crimson — crimson only in
-> the moon. No 3D, no gloss, no text, no letters, no captions, no signature
+> Title screen: an enormous night sky above a tiny town far below. The
+> whole composition is built from concentric circles radiating from a
+> single center — the middle of the moon. The moon is a large crimson disc
+> in the upper half of the frame, entirely scored with fine concentric
+> rings running from a small dark point at its exact center out to the rim:
+> even engraved circles cut with a burin. The same rings continue beyond
+> the disc and spread across the whole sky as an enormous halo, weakening
+> and thinning toward the corners. Heavy drops of black ink drip from the
+> moon's lower edge; a thin horizontal ribbon of black birds crosses the
+> disc in silhouette. The horizon line is the outermost of these rings: it
+> sags low at the center of the frame and sweeps steeply UPWARD TOWARD THE
+> MOON at the left and right edges, so the land tilts up at the sides as if
+> seen through a wide-angle lens, drawn in toward the disc. The world is
+> bowed into a shallow bowl. At the bottom of that bowl, dead center,
+> stands the tiny black silhouette of a provincial town with a single
+> steeple, two warm lit windows glowing in it, a pale bone-white glow
+> (never pure white) spread along the ground behind it. The sky fades to
+> deep flat black at the top corners, sparse stars. The top third of the
+> frame is left empty. Dry-brush woodcut engraving, flat black masses,
+> bone-white carved highlights, aged paper, heavy print grain and scratches
+> across the whole field, worn scratched frame border, vast negative space.
+> Only colors: black, bone and crimson — crimson only in the moon. No 3D,
+> no gloss, no text, no letters, no captions, no signature
