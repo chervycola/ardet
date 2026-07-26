@@ -237,17 +237,18 @@ export function SignalChain() {
 }
 
 export function Catalog() {
+  const t = useT();
   return (
     <section className="catalog" id="catalog">
       <div className="shell">
         <div className="cat-head">
           <h2>
-            Catalogue<br />2026 — 2030
+            {t('cat_h_a')}<br />{t('cat_h_b')}
           </h2>
           <div className="meta">
-            9 modules · ~144 HP · Be Careful + And My TBD<br />
-            Eurorack/pedal · ±12 V<br />
-            Hand-built · Moscow
+            {t('cat_meta_1')}<br />
+            {t('cat_meta_2')}<br />
+            {t('cat_meta_3')}
           </div>
         </div>
 
@@ -467,6 +468,7 @@ export function Manifesto() {
 }
 
 export function Footer() {
+  const t = useT();
   return (
     <footer className="foot" id="contact">
       <div className="barbed"><BarbedDivider /></div>
@@ -478,33 +480,33 @@ export function Footer() {
             <span className="dim">2/ 9</span>
           </div>
           <div>
-            <h3>Catalogue</h3>
+            <h3>{t('foot_h_catalogue')}</h3>
             <ul>
-              <li><a href="#catalog">All modules</a></li>
-              <li><a href="#last-night">Last Night</a></li>
-              <li><a href="#last-night">Cartridges</a></li>
-              <li><a href="#">Schematics</a></li>
-              <li><a href="#">Service</a></li>
+              <li><a href="#catalog">{t('foot_all_modules')}</a></li>
+              <li><a href="#last-night">{t('foot_last_night')}</a></li>
+              <li><a href="#last-night">{t('foot_cartridges')}</a></li>
+              <li><a href="#">{t('foot_schematics')}</a></li>
+              <li><a href="#">{t('foot_service')}</a></li>
             </ul>
           </div>
           <div>
-            <h3>Workshop</h3>
+            <h3>{t('foot_h_workshop')}</h3>
             <ul>
-              <li><a href="#manifesto">Manifesto</a></li>
-              <li><a href="#">Studio visits</a></li>
-              <li><a href="#">Live demos</a></li>
-              <li><a href="#">Press</a></li>
-              <li><a href="#">Lookbook</a></li>
+              <li><a href="#manifesto">{t('foot_manifesto')}</a></li>
+              <li><a href="#">{t('foot_visits')}</a></li>
+              <li><a href="#">{t('foot_demos')}</a></li>
+              <li><a href="#">{t('foot_press')}</a></li>
+              <li><a href="#">{t('foot_lookbook')}</a></li>
             </ul>
           </div>
           <div>
-            <h3>Contact</h3>
+            <h3>{t('foot_h_contact')}</h3>
             <ul>
               <li><a href="mailto:workshop@systemsuicide.cc">workshop@systemsuicide.cc</a></li>
-              <li><a href="#">Instagram</a></li>
-              <li><a href="#">Bandcamp</a></li>
-              <li><a href="#">Reddit · r/modular</a></li>
-              <li><a href="#" className="help-line">Crisis lines · global</a></li>
+              <li><a href="#">{t('foot_ig')}</a></li>
+              <li><a href="#">{t('foot_bc')}</a></li>
+              <li><a href="#">{t('foot_reddit')}</a></li>
+              <li><a href="#" className="help-line">{t('foot_crisis')}</a></li>
             </ul>
           </div>
         </div>
@@ -513,7 +515,7 @@ export function Footer() {
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             © 2026–203∞ SYSTEM
             <RazorScratch width={36} />
-            / All instruments hand-built
+            {t('foot_handbuilt')}
           </span>
           <span className="center">РОССИЯ. ОРЁЛ-МОСКВА-ЗЕЛЕНОГРАД</span>
           <span className="right">END PAGE001-000-001</span>
