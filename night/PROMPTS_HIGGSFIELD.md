@@ -284,6 +284,25 @@ Seedream 4.5 · FLUX.2 pro), формат 3:4 (Recraft 4:5):
   четырёх сетках: горящая свалка внизу, демон образуется из дыма
   (первая волна «собран из мусора» — брак концепции, в архиве).
 
+## 10. Сцена «Поезд издалека» · 26.07
+
+Первая СЦЕНА по канону (в отличие от портретов — путник в кадре есть
+и он мал; см. `weave/STYLE_SYSTEM.md`, канон фигур п.2).
+
+Собрана из трёх обязательных для сцен вещей:
+- **мультиплан** — тёмный передний план (сухой бурьян и щебень насыпи) /
+  освещённый средний (путник на путях) / дальний силуэт (паровоз);
+- **иерархический масштаб** — паровоз-громада, путник крошечный;
+- **один акцент** — багровое окно кабины и уголёк топки, единственный
+  красный в кадре; он же связывает сцену с портретом Машиниста.
+
+Мотивы из канона Машиниста, вшитые в сцену: приоткрытая дверь кабины,
+трава не растёт у колёс, пар стоит вертикально (поезд мёртв, но топка
+жива). Фаза — вечер (= ночь с бо́льшим костяным светом, без луны).
+
+Промт лежит ниже в этом файле в двух языках; локнутого кадра пока нет —
+ждёт прогона.
+
 ## 9. Волна с референсами · 26.07 (сведение к рисовке игры)
 
 Диагноз: портреты уезжали от кадров игры, потому что генерились
@@ -307,3 +326,58 @@ Seedream 4.5 · FLUX.2 pro), формат 3:4 (Recraft 4:5):
 надписи в кадре («THE LANDFILL DEMON» у Recraft) — брак, режем
 рамкой или перегенерацией; иконный масштаб костра и Шута — правило
 для сцен, в портретах не участвует.
+
+---
+
+## Промт сцены «Поезд издалека с путником» (вер. 1, 26.07)
+
+Референсы (если сетка принимает): `weave/STYLE_AQUEDUCT_nano.png` —
+рамка/зерно/ночной регистр; `weave/STYLE_MEGACITY_recraft.png` —
+бумага/палитра. Формат 3:2 или 16:9 (сцена, не портрет).
+
+### RU
+> Широкий пейзажный кадр пустоши на исходе вечера. Вдалеке, на насыпи,
+> стоит мёртвый паровоз — огромная чёрная громада, застывшая боком к
+> зрителю, дверь кабины приоткрыта. Из трубы стоит вертикальный столб
+> пара, неподвижный, будто нарисованный. У колёс не растёт трава:
+> вокруг них голая проплешина земли. Ржавые рельсы уходят из нижнего
+> края кадра к паровозу и обрываются, не доходя до горизонта.
+> На путях, много ближе к зрителю, спиной к нам стоит КРОШЕЧНАЯ
+> одинокая фигура путника в капюшоне и смотрит на поезд. Иерархический
+> иконный масштаб: паровоз-великан, путник размером с ноготь — он
+> должен теряться в кадре. Многоплановая глубина: тёмный передний план
+> силуэтом (сухой бурьян, щебень насыпи, шпалы), освещённый средний
+> план (путник на путях), дальний силуэт (паровоз и еле различимые
+> столовые горы на горизонте). Чёрная тушь, гравюра-вудкат,
+> кросс-хэтчинг в духе Гюстава Доре, глубокие плоские чёрные массы и
+> костяно-белые вырезанные блики на состаренном пергаменте, плотное
+> печатное зерно и царапины, фактура состаренной монотипии, двойная
+> рамка по краю кадра тёмного красно-охристого цвета с затёртыми
+> поцарапанными краями, много пустого неба, огромное пустое
+> пространство. ЕДИНСТВЕННЫЙ акцент: багровое свечение из приоткрытой
+> двери кабины и из щели топки — единственный красный в кадре.
+> Никаких других цветов, без 3D, без глянца, без текста, без букв,
+> без подписей, без сигнатуры
+
+### EN
+> Wide landscape shot of a wasteland at late evening. Far away on an
+> embankment stands a dead steam locomotive — an enormous black mass
+> halted side-on to the viewer, its cab door left ajar. A vertical
+> column of steam stands motionless above the funnel, as if drawn in
+> place. No grass grows by the wheels: bare scoured earth rings them.
+> Rusted rails run from the bottom edge of the frame toward the engine
+> and break off before reaching the horizon. On the track, much nearer
+> to us, a TINY lone hooded traveller stands with his back turned,
+> looking at the train. Hierarchic icon scale: the locomotive is a
+> giant, the traveller is a fingernail-sized speck who should almost
+> be lost in the frame. Layered multiplane depth: dark foreground
+> silhouette layer (dry scrub, embankment gravel, sleepers), lit middle
+> ground (the traveller on the rails), far silhouette layer (the engine
+> and faint wasteland buttes on the horizon). Black pen-and-ink woodcut
+> engraving, Gustave Dore crosshatch, deep flat blacks with bone-white
+> carved highlights on aged parchment, heavy print grain and scratches,
+> aged monoprint texture, double frame border in dark red-ochre with
+> worn scratched edges, vast empty sky, enormous negative space.
+> SINGLE accent: crimson glow from the ajar cab door and the firebox
+> slit — the only red in the image. No other colors, no 3D, no gloss,
+> no text, no letters, no captions, no signature
