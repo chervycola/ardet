@@ -47,7 +47,7 @@ const KNOWN = {
 
 export const CELLS = [];
 for (const e of EPOCHS) {
-  if (e.id === 'townlet') { CELLS.push({ epoch: e.id, side: 'all', screens: 6, status: 'есть', refs: ['процедурный городок (etching-game)'] }); continue; }
+  if (e.id === 'townlet') { CELLS.push({ epoch: e.id, side: 'all', screens: 6, status: 'есть', refs: ['weave/G0_1_v2_dark.png (ЭТАЛОН мира: масштаб, зерно, палитра)', 'weave/G0_1_pano.png (панорама 21:9)', 'weave/G0_1_v1.png (арт: вечерний план)', 'процедурный городок (etching-game)'] }); continue; }
   if (e.id === 'edge')    { CELLS.push({ epoch: e.id, side: 'all', screens: 2, ...(KNOWN['edge:all'] || { status: 'нет', refs: [] }) }); continue; }
   for (const s of SIDES) {
     const k = `${e.id}:${s.id}`;
