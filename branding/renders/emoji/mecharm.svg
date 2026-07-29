@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none"><defs><filter id="ol" x="-15%" y="-15%" width="130%" height="130%">
+  <feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="d"/>
+  <feFlood flood-color="#FFFFFF"/><feComposite in2="d" operator="in" result="o"/>
+  <feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter></defs><g filter="url(#ol)"><rect x="58" y="68" width="36" height="22" rx="6" fill="#000"/>
+<line x1="76" y1="74" x2="48" y2="40" stroke="#000" stroke-width="15" stroke-linecap="round"/>
+<line x1="48" y1="40" x2="30" y2="20" stroke="#000" stroke-width="13" stroke-linecap="round"/>
+<circle cx="28" cy="18" r="12" fill="#000"/>
+<path d="M20 12 A11 11 0 0 1 34 8" stroke="#FFF" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+<circle cx="76" cy="74" r="7" fill="#FFF"/><circle cx="76" cy="74" r="3.5" fill="#000"/>
+<circle cx="48" cy="40" r="8.5" fill="#E30613"/><circle cx="48" cy="40" r="3.4" fill="#FFF"/>
+<g stroke="#FFF" stroke-width="2.4" stroke-linecap="round">
+  <line x1="66" y1="84" x2="86" y2="84"/>
+  <line x1="38" y1="34" x2="42" y2="30"/>
+</g></g></svg>
