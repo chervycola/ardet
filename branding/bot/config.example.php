@@ -14,6 +14,9 @@ return [
   'SITE_URL'   => 'https://diskret.space',
   'CHANNEL_URL'=> 'https://t.me/diskret_space',
 
+  // Билеты (необязательно: если не указать, берётся ссылка по умолчанию из bot.php)
+  'TICKETS_URL'=> 'https://flat.audio/e/2470',
+
   // Куда пересылать заявки/сообщения из приложения (ваш численный chat_id).
   // Узнать свой id: напишите боту @userinfobot. Можно оставить 0 — тогда просто не пересылаем.
   'ADMIN_CHAT_ID' => 0,

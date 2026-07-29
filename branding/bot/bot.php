@@ -16,6 +16,7 @@
  *   /posts   — Лента
  *   /schedule— Расписание
  *   /devices — Девайсы
+ *   /tickets — билеты
  *   /site    — сайт форума
  *   /contact — как связаться
  *   /help    — помощь
@@ -31,6 +32,7 @@ define('SITE_URL',     $cfg['SITE_URL']);
 define('CHANNEL_URL',  $cfg['CHANNEL_URL']);
 define('ADMIN_CHAT_ID',$cfg['ADMIN_CHAT_ID']);
 define('SETUP_SECRET', $cfg['SETUP_SECRET']);
+define('TICKETS_URL',  $cfg['TICKETS_URL'] ?? 'https://flat.audio/e/2470');
 
 /* ---------- вызов Telegram Bot API ---------- */
 function tg($method, $params = []) {
@@ -70,6 +72,7 @@ if (isset($_GET['setup'])) {
     ['command' => 'posts',    'description' => 'Лента'],
     ['command' => 'schedule', 'description' => 'Расписание'],
     ['command' => 'devices',  'description' => 'Девайсы'],
+    ['command' => 'tickets',  'description' => 'Билеты'],
     ['command' => 'site',     'description' => 'Сайт форума'],
     ['command' => 'contact',  'description' => 'Связаться'],
     ['command' => 'help',     'description' => 'Помощь'],
@@ -136,6 +139,7 @@ switch ($cmd) {
               . "Открой приложение: девайсы участников, расписание, лента анонсов.",
       'reply_markup' => ['inline_keyboard' => [
         [['text' => '🟥 Открыть ДИСКРЕТ', 'web_app' => ['url' => appUrl()]]],
+        [['text' => '🎟 Билеты', 'url' => TICKETS_URL]],
         [['text' => 'Лента',      'web_app' => ['url' => appUrl('t_posts')]],
          ['text' => 'Расписание', 'web_app' => ['url' => appUrl('t_schedule')]]],
         [['text' => 'Девайсы',    'web_app' => ['url' => appUrl('t_devices')]],
@@ -166,6 +170,11 @@ switch ($cmd) {
       'reply_markup' => ['inline_keyboard' => [[['text' => 'Открыть девайсы', 'web_app' => ['url' => appUrl('t_devices')]]]]]]);
     break;
 
+  case '/tickets':
+    tg('sendMessage', ['chat_id' => $chatId, 'text' => 'Билеты на ДИСКРЕТ · 19.09.2026:',
+      'reply_markup' => ['inline_keyboard' => [[['text' => '🎟 Купить билет', 'url' => TICKETS_URL]]]]]);
+    break;
+
   case '/site':
     tg('sendMessage', ['chat_id' => $chatId, 'text' => 'Сайт форума:',
       'reply_markup' => ['inline_keyboard' => [[['text' => SITE_URL, 'url' => SITE_URL]]]]]);
@@ -180,7 +189,7 @@ switch ($cmd) {
   case '/help':
     tg('sendMessage', ['chat_id' => $chatId,
       'text' => "Команды:\n/start — меню\n/app — приложение\n/posts — лента\n/schedule — расписание\n"
-              . "/devices — девайсы\n/site — сайт\n/contact — связаться"]);
+              . "/devices — девайсы\n/tickets — билеты\n/site — сайт\n/contact — связаться"]);
     break;
 
   default:

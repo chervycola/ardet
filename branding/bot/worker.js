@@ -30,6 +30,7 @@ export default {
         { command: "posts",    description: "Лента" },
         { command: "schedule", description: "Расписание" },
         { command: "devices",  description: "Девайсы" },
+        { command: "tickets",  description: "Билеты" },
         { command: "site",     description: "Сайт форума" },
         { command: "contact",  description: "Связаться" },
         { command: "help",     description: "Помощь" },
@@ -108,6 +109,7 @@ async function handle(update, env) {
         "Открой приложение: девайсы участников, расписание, лента анонсов.",
         { inline_keyboard: [
           [{ text: "🟥 Открыть ДИСКРЕТ", web_app: { url: appUrl(env) } }],
+          [{ text: "🎟 Билеты", url: env.TICKETS_URL || "https://flat.audio/e/2470" }],
           [{ text: "Лента",      web_app: { url: appUrl(env, "t_posts") } },
            { text: "Расписание", web_app: { url: appUrl(env, "t_schedule") } }],
           [{ text: "Девайсы",    web_app: { url: appUrl(env, "t_devices") } },
@@ -120,9 +122,10 @@ async function handle(update, env) {
     case "/posts":    await send(env, chatId, "Лента анонсов:", webApp("t_posts")); break;
     case "/schedule": await send(env, chatId, "Расписание форума (черновик):", webApp("t_schedule")); break;
     case "/devices":  await send(env, chatId, "Девайсы участников:", webApp("t_devices")); break;
+    case "/tickets":  await send(env, chatId, "Билеты на ДИСКРЕТ · 19.09.2026:", { inline_keyboard: [[{ text: "🎟 Купить билет", url: env.TICKETS_URL || "https://flat.audio/e/2470" }]] }); break;
     case "/site":     await send(env, chatId, "Сайт форума:", { inline_keyboard: [[{ text: env.SITE_URL, url: env.SITE_URL }]] }); break;
     case "/contact":  await send(env, chatId, "Связь с организаторами:\n• Telegram-канал — ниже\n• Почта — contact@diskret.space", { inline_keyboard: [[{ text: "Канал ДИСКРЕТ", url: env.CHANNEL_URL }]] }); break;
-    case "/help":     await send(env, chatId, "Команды:\n/start — меню\n/app — приложение\n/posts — лента\n/schedule — расписание\n/devices — девайсы\n/site — сайт\n/contact — связаться"); break;
+    case "/help":     await send(env, chatId, "Команды:\n/start — меню\n/app — приложение\n/posts — лента\n/schedule — расписание\n/devices — девайсы\n/tickets — билеты\n/site — сайт\n/contact — связаться"); break;
     default:
       if (/^([dac])[_:\/-][a-z0-9_-]+$/i.test(text))
         await send(env, chatId, "Открыть карточку:", webApp(text));
