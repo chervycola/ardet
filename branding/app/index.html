@@ -108,9 +108,9 @@
   .princ li::before{content:counter(p,decimal-leading-zero); color:var(--red); font-family:var(--grotesk); font-weight:800; min-width:26px;}
 
   .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; max-width:520px; margin:0 auto;
-    display:grid; grid-template-columns:repeat(3,1fr); background:var(--nav-bg); border-top:2px solid var(--hair); padding-bottom:var(--sab);}
+    display:grid; grid-template-columns:repeat(4,1fr); background:var(--nav-bg); border-top:2px solid var(--hair); padding-bottom:var(--sab);}
   .tabs button{background:none; border:0; appearance:none; -webkit-appearance:none; color:var(--muted);
-    font-family:var(--grotesk); font-weight:800; text-transform:uppercase; letter-spacing:.5px; font-size:14px; padding:14px 4px; cursor:pointer; position:relative;}
+    font-family:var(--grotesk); font-weight:800; text-transform:uppercase; letter-spacing:.2px; font-size:12.5px; padding:14px 2px; cursor:pointer; position:relative; white-space:nowrap;}
   .tabs button.on{color:var(--hair);}
   .tabs button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:6px; width:20px; height:3px; background:var(--red);}
 
@@ -282,7 +282,7 @@
 
     <section class="view" id="v-schedule">
       <div class="vhead"><h2 data-t="sec.schedule">Расписание</h2><span class="vrule"></span></div>
-      <div class="draft" data-t="sched.draft">Черновик по рабочей сетке · время уточняется</div>
+      <div class="draft" data-t="sched.draft">Лекционный блок объявим отдельно · время может уточняться</div>
       <div id="schedbar" class="schedbar"></div>
       <div id="slist"></div>
     </section>
@@ -313,6 +313,7 @@
   <nav class="tabs">
     <button class="on" data-v="forum" data-t="sec.forum">Форум</button>
     <button data-v="posts" data-t="sec.posts">Лента</button>
+    <button data-v="schedule" data-t="sec.schedule">Расписание</button>
     <button data-v="devices" data-t="sec.devices">Девайсы</button>
   </nav>
 </div>
@@ -461,46 +462,43 @@ const POSTS = [
 ];
 
 // ===== РАСПИСАНИЕ (по рабочей сетке форума, черновик) =====
-const ROOMS = { hall:"ХОЛЛ", l2:"ЛЕК·3102", l1:"ЛЕК·3101", sm:"СЦЕНА·М", sb:"СЦЕНА·Б", w1:"МАСТ·1", w2:"МАСТ·2", all:"ВСЕ ЗАЛЫ" };
+const ROOMS = { hall:"ХОЛЛ", l2:"ЛЕК·3102", l1:"ЛЕК·3101", sm:"СЦЕНА·М", sb:"СЦЕНА·Б", w1:"МАСТ·1", w2:"МАСТ·2", kids:"ДЕТСКАЯ", all:"ВСЕ ЗАЛЫ" };
 // go: переключить вкладку · link: открыть карточку девайса
 const SCHED = [
   { t:"13:00", e:"20:00", title:"Экспо участников", who:"все приборы стенда", room:"hall", go:"devices" },
-  { t:"13:00", e:"15:45", title:"Показ видео-работ", who:"", room:"sb" },
-  { t:"13:00", e:"13:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"13:00", e:"15:00", title:"Полевые записи", who:"", room:"w2" },
-  { t:"14:00", e:"14:45", title:"Зачем делать свой прибор", who:"", room:"l2" },
-  { t:"14:00", e:"14:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"15:00", e:"15:45", title:"Фильтры в синтезаторах", who:"Кабанов · ПРИБОР", room:"l2", author:"kabanov" },
-  { t:"15:00", e:"15:45", title:"Интерфейс творческого прибора", who:"Олег Слуцкий", room:"l1", author:"slutsky" },
-  { t:"15:00", e:"15:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"13:00", e:"15:00", title:"Полевые записи", who:"Илья Чертков", room:"w2", author:"chertkov" },
+  { t:"13:00", e:"", title:"Игра с тенью", who:"", room:"sm" },
+  { t:"14:00", e:"", title:"Tihaya Reka", who:"", room:"sm" },
+  { t:"14:00", e:"15:00", title:"Мастер-класс для детей 6–12 лет", who:"Олег Слуцкий", room:"kids", author:"slutsky" },
+  { t:"14:00", e:"16:00", title:"Саундчек", who:"", room:"sb" },
   { t:"15:00", e:"15:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
-  { t:"15:00", e:"18:00", title:"Воркшоп · Полина", who:"5000 ₽", room:"w1", author:"polina" },
-  { t:"16:00", e:"16:45", title:"Платформа SEMECHKO", who:"Лунев + Григорьев", room:"l2", author:"semechko" },
-  { t:"16:00", e:"16:45", title:"Выбор материалов для корпуса", who:"", room:"l1" },
-  { t:"16:00", e:"16:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"16:00", e:"16:30", title:"Саундчек", who:"", room:"sb" },
+  { t:"15:00", e:"", title:"сОлныш6", who:"", room:"sm" },
+  { t:"15:00", e:"18:00", title:"Воркшоп · Хаотический синтезатор", who:"Полина Шмонина", room:"w1", author:"polina" },
   { t:"16:00", e:"16:30", title:"Экскурсия по МИЭТ", who:"", room:"hall" },
-  { t:"16:00", e:"19:00", title:"Воркшоп · Карманная драм-машина", who:"5000 ₽", room:"w2", author:"totoro" },
-  { t:"17:00", e:"17:45", title:"Кристалл как творческий объект", who:"Ангстрем", room:"l2", author:"angstrem" },
-  { t:"17:00", e:"17:45", title:"Самодельные микрофоны и датчики", who:"Илья Черто", room:"l1", author:"cherto" },
-  { t:"17:00", e:"17:45", title:"Выступление", who:"—", room:"sm" },
+  { t:"16:00", e:"", title:"М.О.У.Б.", who:"", room:"sm" },
+  { t:"16:00", e:"16:45", title:"Анна Пряхина", who:"", room:"sb" },
+  { t:"16:00", e:"19:00", title:"Воркшоп · Аналоговый синтезатор на интегральной микросхеме", who:"Егор Воронов", room:"w2", author:"voronov" },
+  { t:"16:00", e:"17:00", title:"Мастер-класс для детей от 10 до 99 лет", who:"Олег Слуцкий", room:"kids", author:"slutsky" },
   { t:"17:00", e:"17:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
-  { t:"18:00", e:"18:45", title:"От прототипа к серии · мелкосерийная разработка", who:"", room:"l2" },
-  { t:"18:00", e:"18:45", title:"Индикация и световое оформление приборов", who:"", room:"l1" },
-  { t:"18:00", e:"18:45", title:"Выступление", who:"—", room:"sm" },
-  { t:"18:00", e:"18:45", title:"Влад Лисицкий · AV", who:"", room:"sb", author:"lisitsky" },
-  { t:"19:00", e:"20:00", title:"Финал · результаты · речь", who:"", room:"sb" },
+  { t:"17:00", e:"", title:"dr.SpaceKir", who:"", room:"sm" },
+  { t:"17:00", e:"17:45", title:"Влад Лисицкий · AV", who:"", room:"sb", author:"lisitsky" },
+  { t:"18:00", e:"", title:"Alexander Turkin", who:"", room:"sm" },
+  { t:"18:00", e:"18:45", title:"Digital Moss", who:"", room:"sb" },
+  { t:"19:00", e:"20:00", title:"Финальное выступление · результаты конкурса", who:"", room:"sb" },
   { t:"20:00", e:"21:00", title:"Выезд", who:"", room:"all" },
 ];
 
 // ===== АВТОРЫ / СПИКЕРЫ (страницы-заготовки, наполняются данными) =====
 const A = [
   { id:"kabanov", name:"Кабанов", role:"Лекция · Фильтры в синтезаторах", session:"ЛЕКЦИЯ · ПРИБОР", room:"l2", time:"15:00–15:45", photos:[], links:[], desc:"" },
-  { id:"slutsky", name:"Олег Слуцкий", role:"Лекция · Интерфейс творческого прибора", session:"ЛЕКЦИЯ", room:"l1", time:"15:00–15:45", photos:[], links:[], desc:"" },
+  { id:"slutsky", name:"Олег Слуцкий", role:"Мастер-классы детской программы", session:"ДЕТСКАЯ ПРОГРАММА", room:"kids", time:"14:00 и 16:00", photos:[], links:[],
+    desc:"Мастер-классы для детей: младшая группа 6–12 лет (14:00–15:00) и группа от 10 до 99 лет (16:00–17:00)." },
   { id:"semechko", name:"Лунёв + Григорьев", role:"Лекция · Платформа SEMECHKO", session:"ЛЕКЦИЯ", room:"l2", time:"16:00–16:45", photos:[], links:[], desc:"" },
   { id:"angstrem", name:"Ангстрем", role:"Лекция · Кристалл как творческий объект", session:"ЛЕКЦИЯ", room:"l2", time:"17:00–17:45", photos:[], links:[], desc:"" },
   { id:"cherto", name:"Илья Черто", role:"Лекция · Самодельные микрофоны и датчики", session:"ЛЕКЦИЯ", room:"l1", time:"17:00–17:45", photos:[], links:[], desc:"" },
-  { id:"polina", name:"Полина", role:"Воркшоп · 5000 ₽", session:"ВОРКШОП", room:"w1", time:"15:00–18:00", photos:[], links:[], desc:"" },
+  { id:"polina", name:"Полина Шмонина", role:"Воркшоп · Хаотический синтезатор", session:"ВОРКШОП", room:"w1", time:"15:00–18:00", photos:[], links:[], desc:"" },
+  { id:"chertkov", name:"Илья Чертков", role:"Полевые записи · мастерская", session:"ВОРКШОП", room:"w2", time:"13:00–15:00", photos:[], links:[], desc:"" },
+  { id:"voronov", name:"Егор Воронов", role:"Воркшоп · Аналоговый синтезатор на интегральной микросхеме", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"" },
   { id:"totoro", name:"Карманная драм-машина", role:"Воркшоп · сборка своими руками · 5000 ₽", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"Воркшоп по сборке карманной драм-машины своими руками." },
   { id:"lisitsky", name:"Влад Лисицкий", role:"AV на большой сцене", session:"AV", room:"sb", time:"18:00–18:45", photos:[], links:[], desc:"" },
   { id:"vgrigoriev", name:"Вячеслав Григорьев", role:"Основатель MAD SOUND FACTORY и VG-line", session:"", room:"", time:"", photos:[],
@@ -534,7 +532,7 @@ const C = [
   { id:"lasernoto", name:"LaserNoto", role:"Аудиовизуальная лазерная система · Зеленоград", photos:["lnreal","laser1","laser","laser2"], members:[], links:[{t:"САЙТ",u:"https://lasernoto.ru"},{t:"TG",u:"https://t.me/LaserNoto"}],
     desc:"Аудиовизуальная лазерная проекционная система, которая визуализирует звук, создаёт световой аккомпанемент и позволяет работать с аудиореактивным лучом.",
     feat:"Связь звука и лазерного изображения; аудиореактивное управление лучом; проект на стыке приборостроения и сценической визуализации." },
-  { id:"mxls", name:"MXLS", role:"Модульный стенд · Eurorack", photos:[], members:[], links:[],
+  { id:"mxls", name:"MXLS", role:"Модульный стенд · Eurorack", photos:[], members:[], links:[{t:"PARATEK",u:"https://paratek.org"}],
     desc:"Российский модульный стенд: авторские Eurorack-кейсы, кабели и питание MXLS, модули Paratek и ламповые, вактрольные разработки Bizarre Jezabel.",
     feat:"На одном стенде — три российских направления; полный инфраструктурный набор для Eurorack; ламповые и вактрольные модули." },
   { id:"saolla", name:"Saolla", role:"—", photos:[], members:[], links:[], desc:"" },
@@ -550,7 +548,7 @@ const C = [
     feat:"Собственные разработки и контрактное производство; сотрудничество с другими брендами и музыкантами; опыт серийного изготовления." },
   { id:"paratek", name:"Paratek", role:"Эстетика советского киберпанка · Подольск", photos:["para","para2","para3"], members:[],
     links:[{t:"САЙТ",u:"https://paratek.org"},{t:"VK",u:"https://vk.ru/paratekorg"},{t:"INSTAGRAM",u:"https://instagram.com/paratekorg"}],
-    desc:"Идеи, вдохновлённые ретрофутуризмом и постатомной романтикой, реализованные в авторских приборах и модулях формата еврорэк.",
+    desc:"Авторские приборы и Eurorack-модули, в которых эстетика советского киберпанка соединяется с ретрофутуризмом и постатомной романтикой.",
     feat:"Выраженная визуальная идентичность; советский киберпанк; ретрофутуризм; постатомная эстетика как часть конструкции приборов." },
   { id:"uralsintmash", name:"УралСинтМаш", role:"Электромузыкальные объекты · Урал", photos:[], members:[{name:"Степан Гамаюн"}], links:[{t:"TG",u:"https://t.me/gamayun_house"}],
     desc:"Уральский Синтезаторный завод машинной музыки выпускает автономные возобновляемые электромузыкальные изделия — и не только. На форуме представит объекты «Красная шапка» и «Горшочек Света»; возможно, третьим станет автономный модульный синтезатор.",
@@ -581,7 +579,7 @@ const L = {
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
     "posts.empty":"Скоро — дублируем посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
-    "dev.count":"ПРИБОРОВ", "sched.draft":"Черновик по рабочей сетке · время уточняется",
+    "dev.count":"ПРИБОРОВ", "sched.draft":"Лекционный блок объявим отдельно · время может уточняться",
     "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"ПОСТ", "forum.tickets":"Билеты",
     "forum.prose":`<h3 class="prose-h">Что такое Дискрет</h3><p class="blurb"><b>Есть люди, которые делают приборы.</b></p><p class="blurb">Не только пользуются готовым. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, какой способ управления им нужен. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужую ошибку, свою упрямую гипотезу — и доводят это до объекта, который можно включить. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или устройство, которому ещё трудно дать имя.</p><p class="blurb">ДИСКРЕТ собирает такие объекты и людей вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"КОМПАНИЯ", "badge.product":"ТОВАР",
@@ -618,7 +616,7 @@ const L = {
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
     "posts.empty":"Скоро — зальём посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
-    "dev.count":"АППАРАТОВ", "sched.draft":"Черновой расклад · время ещё утрясаем",
+    "dev.count":"АППАРАТОВ", "sched.draft":"Лекции подгоним отдельно · тайминг могут подвинуть",
     "sched.open":"глянуть ↗", "forum.chron":"Хроника движа", "forum.post":"ПОСТ", "forum.tickets":"Проходки",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет</h3><p class="blurb"><b>Есть люди, которые сами мутят приборы.</b></p><p class="blurb">Не просто берут готовое. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, каким способом всем этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой косяк, свою упрямую тему — и доводят это до аппарата, который реально включается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самопальный микрофон, модуль, процессор, шумовой генератор или штука, которой ещё и имя-то дать сложно.</p><p class="blurb">ДИСКРЕТ сводит такие аппараты и пацанов вокруг них.</p>`,
     "badge.device":"АППАРАТ №", "badge.author":"МАСТЕР", "badge.company":"КОНТОРА", "badge.product":"ТОВАР",
@@ -655,7 +653,7 @@ const L = {
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
     "posts.empty":"Скоро — задропим посты из Telegram", "posts.open":"В тг", "posts.more":"Читать всё",
-    "dev.count":"ДЕВАЙСОВ", "sched.draft":"Драфт-тайминги · время ещё не финалайзнули",
+    "dev.count":"ДЕВАЙСОВ", "sched.draft":"Лекции дропнем отдельным анонсом · тайминги могут поехать",
     "sched.open":"го ↗", "forum.chron":"Лента анонсов", "forum.post":"ПОСТ", "forum.tickets":"Тикеты",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет вообще</h3><p class="blurb"><b>Есть чуваки, которые сами крафтят приборы.</b></p><p class="blurb">Не просто юзают готовое. Не ждут, пока производитель зарешает за них, какой звук, какой интерфейс, каким способом этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой фейл, свою упрямую гипотезу — и доводят это до девайса, который реально врубается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или штука, которой пока даже имя не подобрать.</p><p class="blurb">ДИСКРЕТ коннектит такие девайсы и пипл вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"БРЕНД", "badge.product":"ДРОП",
@@ -692,7 +690,7 @@ const L = {
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
     "sec.devices":"Приборы", "sec.schedule":"Программа", "sec.forum":"Форум", "sec.posts":"Хроника",
     "posts.empty":"Скоро — публикуем сводки из Telegram", "posts.open":"В Telegram", "posts.more":"Читать полностью",
-    "dev.count":"ПРИБОРОВ", "sched.draft":"Предварительная программа · время уточняется",
+    "dev.count":"ПРИБОРОВ", "sched.draft":"Лекционная программа будет объявлена дополнительно · время уточняется",
     "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"СВОДКА", "forum.tickets":"Приобрести билет",
     "badge.device":"ПРИБОР №", "badge.author":"АВТОР", "badge.company":"КОЛЛЕКТИВ", "badge.product":"ИЗДЕЛИЕ",
     "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
