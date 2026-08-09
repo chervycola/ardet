@@ -463,15 +463,14 @@ const POSTS = [
 ];
 
 // ===== РАСПИСАНИЕ (по рабочей сетке форума, черновик) =====
-const ROOMS = { hall:"ХОЛЛ", l2:"ЛЕК·3102", l1:"ЛЕК·3101", sm:"СЦЕНА·М", sb:"СЦЕНА·Б", w1:"МАСТ·1", w2:"МАСТ·2", kids:"ДЕТСКАЯ", all:"ВСЕ ЗАЛЫ" };
+const ROOMS = { hall:"ЭКСПО", sm:"СЦЕНА·М", sb:"СЦЕНА·Б", w1:"МАСТ·1", w2:"МАСТ·2", w3:"МАСТ·3", kids:"ДЕТСКАЯ", l2:"ЛЕК·3102", l1:"ЛЕК·3101", all:"ВСЕ ЗАЛЫ" };
 // go: переключить вкладку · link: открыть карточку девайса
 const SCHED = [
   { t:"13:00", e:"20:00", title:"Экспо участников", who:"все приборы стенда", room:"hall", go:"devices" },
-  { t:"13:00", e:"15:00", title:"Полевые записи", who:"Илья Чертков", room:"w2", author:"chertkov" },
+  { t:"13:00", e:"15:00", title:"Полевые записи", who:"Илья Чертков", room:"w3", author:"chertkov" },
   { t:"13:00", e:"", title:"Игра с тенью", who:"Светлана Гончар", room:"sm", author:"shadow" },
   { t:"14:00", e:"", title:"TiihayaRekaa", who:"Катрин Моррисон", room:"sm", author:"tiihaya" },
   { t:"14:00", e:"15:00", title:"Мастер-класс для детей 6–12 лет", who:"Олег Слуцкий", room:"kids", author:"slutsky" },
-  { t:"14:00", e:"16:00", title:"Саундчек", who:"", room:"sb" },
   { t:"15:00", e:"15:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
   { t:"15:00", e:"", title:"Там Огни | c0deterr0r", who:"Александр Гриднев", room:"sm", author:"codeterror" },
   { t:"15:00", e:"18:00", title:"Воркшоп · Хаотический синтезатор", who:"Полина Шмонина", room:"w1", author:"polina" },
@@ -486,7 +485,6 @@ const SCHED = [
   { t:"18:00", e:"", title:"Alexander Turkin", who:"", room:"sm", author:"turkin" },
   { t:"18:00", e:"18:45", title:"Digital Moss", who:"", room:"sb", author:"digitalmoss" },
   { t:"19:00", e:"20:00", title:"Финальное выступление · результаты конкурса", who:"", room:"sb" },
-  { t:"20:00", e:"21:00", title:"Выезд", who:"", room:"all" },
 ];
 
 // ===== АВТОРЫ / СПИКЕРЫ (страницы-заготовки, наполняются данными) =====
@@ -498,7 +496,7 @@ const A = [
   { id:"angstrem", name:"Ангстрем", role:"Лекция · Кристалл как творческий объект", session:"ЛЕКЦИЯ", room:"l2", time:"17:00–17:45", photos:[], links:[], desc:"" },
   { id:"cherto", name:"Илья Черто", role:"Лекция · Самодельные микрофоны и датчики", session:"ЛЕКЦИЯ", room:"l1", time:"17:00–17:45", photos:[], links:[], desc:"" },
   { id:"polina", name:"Полина Шмонина", role:"Воркшоп · Хаотический синтезатор", session:"ВОРКШОП", room:"w1", time:"15:00–18:00", photos:[], links:[], desc:"" },
-  { id:"chertkov", name:"Илья Чертков", role:"Полевые записи · мастерская", session:"ВОРКШОП", room:"w2", time:"13:00–15:00", photos:[], links:[], desc:"" },
+  { id:"chertkov", name:"Илья Чертков", role:"Полевые записи · мастерская", session:"ВОРКШОП", room:"w3", time:"13:00–15:00", photos:[], links:[], desc:"" },
   { id:"voronov", name:"Егор Воронов", role:"Воркшоп · Аналоговый синтезатор на интегральной микросхеме", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"" },
   { id:"totoro", name:"Карманная драм-машина", role:"Воркшоп · сборка своими руками · 5000 ₽", session:"ВОРКШОП", room:"w2", time:"16:00–19:00", photos:[], links:[], desc:"Воркшоп по сборке карманной драм-машины своими руками." },
   { id:"lisitsky", name:"H.Ruine · Влад Лисицкий", role:"Live IDM + лазерное шоу · Москва", session:"AV", room:"sb", time:"17:00–17:45", photos:["hruine1"],
@@ -795,7 +793,7 @@ function renderDevices(){
 let schedRoom = null;
 function filterRoom(r){ schedRoom = (r==="*") ? null : r; haptic("light"); renderSchedule(); window.scrollTo(0,0); }
 function renderSchedule(){
-  const used = [...new Set(SCHED.map(s=>s.room))].filter(r=>r!=="all");
+  const used = Object.keys(ROOMS).filter(r=>r!=="all" && SCHED.some(s=>s.room===r));
   const chips = [["*","ВСЕ ЗАЛЫ"], ...used.map(r=>[r,ROOMS[r]])];
   $("#schedbar").innerHTML = chips.map(([r,l])=>`<button class="chip-r ${((schedRoom==null&&r==='*')||schedRoom===r)?'on':''}" onclick="filterRoom('${r}')">${l}</button>`).join("");
   const _onc=document.querySelector("#schedbar .chip-r.on"); if(_onc) _onc.scrollIntoView({inline:"center",block:"nearest"});
