@@ -47,7 +47,7 @@
 
 <rect x="60" y="920" width="720" height="96" fill="#E30613"/>
 <text x="96" y="984" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">FLAT.AUDIO/E/2470</text>
-<text x="60" y="1076" font-family="'Courier New',monospace" font-size="30" letter-spacing="1" fill="#000">или кнопка «Билеты» в @discret_space_bot</text>
+<text x="60" y="1076" font-family="'Courier New',monospace" font-size="30" letter-spacing="1" fill="#000">или кнопка «Билеты» в @dskrt_bot</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
