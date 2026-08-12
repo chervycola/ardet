@@ -37,6 +37,15 @@
   .menu{position:absolute; top:calc(100% + 6px); right:14px; width:250px; background:var(--panel);
     border:2px solid var(--hair); z-index:35;}
   .menu[hidden]{display:none;}
+  .mi.langrow{flex-direction:column; align-items:flex-start; gap:6px; cursor:default;}
+  .lchips{display:flex; gap:6px; width:100%;}
+  .lchip{flex:1; border:1.5px solid var(--hair); background:none; color:var(--muted); font-family:var(--grotesk);
+    font-weight:800; font-size:11px; letter-spacing:.5px; padding:6px 0; cursor:pointer; text-align:center;}
+  .lchip.on{background:var(--red); border-color:var(--red); color:#fff;}
+  .orgrow{padding:12px 0; border-bottom:1px solid var(--line);}
+  .orgrow b{display:block; font-family:var(--grotesk); font-size:17px; letter-spacing:.3px;}
+  .orgrow .orole{display:block; font-size:12.5px; color:var(--muted); margin-top:2px;}
+  .orgrow .dlinks{margin-top:8px;}
   .mi{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:0;
     border-bottom:1px solid var(--line); padding:14px 16px; cursor:pointer; color:var(--hair);
     font-family:var(--grotesk); font-weight:800; font-size:16px; text-transform:uppercase; letter-spacing:.5px;}
@@ -267,9 +276,17 @@
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
+      <button class="mi" data-m="orgs"><span data-t="m.orgs">Организаторы и партнёры</span></button>
       <button class="mi" data-m="privacy"><span data-t="m.privacy">Политика данных</span></button>
       <div class="mi-div"></div>
-      <button class="mi" id="langToggle"><span data-t="m.lang">Язык</span>: <span id="langName" style="color:var(--red);margin-left:6px">Русский</span></button>
+      <div class="mi langrow"><span data-t="m.lang">Язык</span>
+        <span class="lchips">
+          <button class="lchip" data-lang="ru">РУС</button>
+          <button class="lchip" data-lang="bratva">90-Е</button>
+          <button class="lchip" data-lang="zoomer">ЗУМ</button>
+          <button class="lchip" data-lang="soviet">СССР</button>
+        </span>
+      </div>
       <button class="mi" id="themeToggle"><span data-t="m.theme">Тема</span>: <span id="themeName" style="color:var(--red);margin-left:6px">Светлая</span></button>
     </nav>
   </header>
@@ -341,6 +358,17 @@
 <script>
 window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
+const ORG = {
+  team: [
+    { name:"Оргкоманда ДИСКРЕТ", role:"организация форума · Зеленоград", links:[{t:"TG",u:"https://t.me/creativeforumzel"},{t:"ПОЧТА",u:"mailto:contact@diskret.space"}] },
+  ],
+  venue: [
+    { name:"МИЭТ", role:"Национальный исследовательский университет · Зеленоград", links:[{t:"САЙТ",u:"https://miet.ru"}] },
+  ],
+  partners: [
+    { name:"flat.audio", role:"билетная платформа", links:[{t:"БИЛЕТЫ",u:"https://flat.audio/e/2470"}] },
+  ],
+};
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:20, tickets:"https://flat.audio/e/2470" };
 const CONTACT = { tg:"creativeforumzel", site:"дискрет.рф", siteUrl:"https://xn--d1acii4aek.xn--p1ai", email:"contact@diskret.space" }; // EDIT
 const LOTTERY = { prize:"Набор для сборки синт-модуля", draw:"19.09.2026 · на форуме" };   // EDIT
@@ -609,7 +637,7 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 const L = {
   ru: {
     "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык",
+    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор", "org.venue":"Площадка", "org.partners":"Партнёры", "org.note":"Хотите стать партнёром форума — напишите нам:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
@@ -646,7 +674,7 @@ const L = {
   },
   bratva: {
     "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
-    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар",
+    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.orgs":"Кто держит тему", "org.team":"Кто организует", "org.venue":"Где всё будет", "org.partners":"Партнёры", "org.note":"Есть желание вписаться партнёром — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
@@ -683,7 +711,7 @@ const L = {
   },
   zoomer: {
     "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
-    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык",
+    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.orgs":"Орги и партнёры", "org.team":"Орги", "org.venue":"Локация", "org.partners":"Партнёры", "org.note":"Хочешь в коллаб — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
@@ -720,7 +748,7 @@ const L = {
   },
   soviet: {
     "m.about":"О нас", "m.companies":"Коллективы", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык",
+    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор форума", "org.venue":"Место проведения", "org.partners":"Партнёры форума", "org.note":"По вопросам партнёрства обращаться:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
     "sec.devices":"Приборы", "sec.schedule":"Программа", "sec.forum":"Форум", "sec.posts":"Хроника",
@@ -763,7 +791,7 @@ let curModalKind=null, lastDetail=null;
 function paintThemeName(){ const dark=document.documentElement.getAttribute("data-theme")==="dark"; const el=$("#themeName"); if(el) el.textContent = dark ? t("theme.dark") : t("theme.light"); }
 function paintChrome(){
   document.querySelectorAll("[data-t]").forEach(el=>{ const k=el.getAttribute("data-t"), v=t(k); if(k==="forum.prose") el.innerHTML=v; else el.textContent=v; });
-  const ln=$("#langName"); if(ln) ln.textContent = LANGNAME[LANG];
+  document.querySelectorAll(".lchip").forEach(b=> b.classList.toggle("on", b.dataset.lang===LANG));
   paintThemeName();
   renderDevices(); renderSchedule(); renderForum(); renderPosts();
   if($("#modal").classList.contains("on") && curModalKind) openModal(curModalKind);
@@ -787,7 +815,7 @@ $("#menuBtn").addEventListener("click", e=>{ e.stopPropagation(); menu.hidden=!m
 document.addEventListener("click", e=>{ if(!menu.hidden && !menu.contains(e.target) && e.target.closest("#menuBtn")===null) closeMenu(); });
 menu.querySelectorAll(".mi[data-m]").forEach(b=> b.addEventListener("click", ()=>{ closeMenu(); openModal(b.dataset.m); }));
 $("#themeToggle").addEventListener("click", e=>{ e.stopPropagation(); toggleTheme(); haptic("light"); });
-$("#langToggle").addEventListener("click", e=>{ e.stopPropagation(); cycleLang(); });
+menu.querySelectorAll(".lchip").forEach(b=> b.addEventListener("click", e=>{ e.stopPropagation(); setLang(b.dataset.lang); }));
 $("#scanBtn").addEventListener("click", e=>{ e.stopPropagation(); closeMenu(); scanQR(); });
 
 function renderDevices(){
@@ -990,6 +1018,13 @@ const MODALS = {
     <div class="note">${t("consent.pre")} <a class="colink" onclick="openModal('privacy')">${t("consent.link")}</a>.</div>` },
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
   companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
+  orgs: { title:"m.orgs", html:()=>{
+    const row = o => `<div class="orgrow"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div>`;
+    return `<div class="prods-h">${t("org.team")}</div>${ORG.team.map(row).join("")}
+    <div class="prods-h" style="margin-top:18px">${t("org.venue")}</div>${ORG.venue.map(row).join("")}
+    <div class="prods-h" style="margin-top:18px">${t("org.partners")}</div>${ORG.partners.map(row).join("")}
+    <div class="note" style="margin-top:16px">${t("org.note")} <a class="colink" onclick="openTG('${CONTACT.tg}')">@${CONTACT.tg}</a></div>`;
+  } },
   privacy: { title:"m.privacy", html:()=>`
     <p>Настоящая политика описывает, какие данные собирает мини-приложение и Telegram-бот форума ДИСКРЕТ (далее — Сервис) и как они используются.</p>
     <p><b>1. Какие данные мы собираем.</b> Данные Telegram-профиля, передаваемые платформой при открытии приложения (идентификатор, имя, username); сведения, которые вы отправляете сами — текст обращения в «Обратной связи» и номер билета в «Конкурсе». Мы не собираем паспортные и платёжные данные, геолокацию и не запрашиваем доступ к контактам.</p>
