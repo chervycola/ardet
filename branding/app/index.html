@@ -42,7 +42,9 @@
   .lchip{flex:1; border:1.5px solid var(--hair); background:none; color:var(--muted); font-family:var(--grotesk);
     font-weight:800; font-size:11px; letter-spacing:.5px; padding:6px 0; cursor:pointer; text-align:center;}
   .lchip.on{background:var(--red); border-color:var(--red); color:#fff;}
-  .orgrow{padding:12px 0; border-bottom:1px solid var(--line);}
+  .orgrow{padding:12px 0; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:flex-start;}
+  .orgrow .ologo{width:64px; height:64px; object-fit:contain; border:1px solid var(--line); background:#fff; flex:none;}
+  .orgrow .obody{flex:1; min-width:0;}
   .orgrow b{display:block; font-family:var(--grotesk); font-size:17px; letter-spacing:.3px;}
   .orgrow .orole{display:block; font-size:12.5px; color:var(--muted); margin-top:2px;}
   .orgrow .dlinks{margin-top:8px;}
@@ -356,17 +358,24 @@
 </div>
 
 <script>
-window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg"};
+window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.jpg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.jpg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
   team: [
     { name:"Оргкоманда ДИСКРЕТ", role:"организация форума · Зеленоград", links:[{t:"TG",u:"https://t.me/creativeforumzel"},{t:"ПОЧТА",u:"mailto:contact@diskret.space"}] },
   ],
   venue: [
-    { name:"МИЭТ", role:"Национальный исследовательский университет · Зеленоград", links:[{t:"САЙТ",u:"https://miet.ru"}] },
+    { name:"МИЭТ", role:"институциональный партнёр · Национальный исследовательский университет · Зеленоград", links:[{t:"САЙТ",u:"https://miet.ru"}] },
   ],
   partners: [
-    { name:"flat.audio", role:"билетная платформа", links:[{t:"БИЛЕТЫ",u:"https://flat.audio/e/2470"}] },
+    { name:"ЭФЭМИ", role:"стратегический партнёр", links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}] },
+    { name:"БАКЛАЖАНИЯ", role:"стратегический партнёр", photo:"lg_baklazhania", links:[] },
+    { name:"АНГСТРЕМ", role:"технологический партнёр", links:[] },
+    { name:"Пикасо 3D", role:"партнёр инфраструктуры · российский производитель 3D-принтеров", photo:"lg_picaso", links:[{t:"САЙТ",u:"https://picaso-3d.com"}] },
+    { name:"СОЮЗ", role:"технический партнёр · сделано вручную", photo:"lg_soyuz", links:[] },
+    { name:"ioAudio", role:"технический партнёр", links:[] },
+    { name:"Flat.Audio", role:"информационный партнёр · билетная платформа", links:[{t:"БИЛЕТЫ",u:"https://flat.audio/e/2470"}] },
+    { name:"Инфопортал Зеленограда", role:"информационный партнёр", links:[{t:"САЙТ",u:"https://www.zelenograd.ru"}] },
   ],
 };
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:20, tickets:"https://flat.audio/e/2470" };
@@ -1019,7 +1028,7 @@ const MODALS = {
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
   companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
   orgs: { title:"m.orgs", html:()=>{
-    const row = o => `<div class="orgrow"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div>`;
+    const row = o => `<div class="orgrow">${o.photo&&photo(o.photo)?`<img class="ologo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<div class="obody"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div></div>`;
     return `<div class="prods-h">${t("org.team")}</div>${ORG.team.map(row).join("")}
     <div class="prods-h" style="margin-top:18px">${t("org.venue")}</div>${ORG.venue.map(row).join("")}
     <div class="prods-h" style="margin-top:18px">${t("org.partners")}</div>${ORG.partners.map(row).join("")}
