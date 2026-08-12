@@ -275,6 +275,7 @@
     </button>
     <nav class="menu" id="menu" hidden>
       <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
+      <button class="mi" data-m="artists"><span data-t="m.artists">Артисты</span></button>
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
@@ -520,12 +521,14 @@ const SCHED = [
   { t:"13:00", e:"", title:"Игра с тенью", who:"Светлана Гончар", room:"sm", author:"shadow" },
   { t:"14:00", e:"", title:"TiihayaRekaa", who:"Катрин Моррисон", room:"sm", author:"tiihaya" },
   { t:"14:00", e:"15:00", title:"Мастер-класс для детей 6–12 лет", who:"Олег Слуцкий", room:"kids", author:"slutsky" },
-  { t:"15:00", e:"15:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
+  { t:"14:00", e:"14:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
+  { t:"14:30", e:"15:15", title:"xandr.vasiliev vs Артемий Анрилов", who:"лайв на Twang Modular", room:"hall", author:"anrilov" },
   { t:"15:00", e:"", title:"Там Огни | c0deterr0r", who:"Александр Гриднев", room:"sm", author:"codeterror" },
   { t:"15:00", e:"18:00", title:"Воркшоп · Хаотический синтезатор", who:"Полина Шмонина", room:"w1", author:"polina" },
-  { t:"16:00", e:"16:30", title:"Экскурсия по МИЭТ", who:"", room:"hall" },
+  { t:"15:30", e:"16:00", title:"Экскурсия по МИЭТ", who:"", room:"hall" },
+  { t:"16:00", e:"16:45", title:"Gogidze", who:"", room:"hall", author:"gogidze" },
   { t:"16:00", e:"", title:"М.О.У.Б.", who:"Игорь Прокофьев", room:"sm", author:"moub" },
-  { t:"16:00", e:"16:45", title:"Анна Пряхина", who:"", room:"sb" },
+  { t:"16:00", e:"16:45", title:"Анна Пряхина", who:"", room:"sb", author:"pryahina" },
   { t:"16:00", e:"19:00", title:"Воркшоп · Аналоговый синтезатор на интегральной микросхеме", who:"Егор Воронов", room:"w2", author:"voronov" },
   { t:"16:00", e:"17:00", title:"Мастер-класс для детей от 10 до 99 лет", who:"Олег Слуцкий", room:"kids", author:"slutsky" },
   { t:"17:00", e:"17:30", title:"Мини-презентация проектов", who:"участники экспо", room:"hall", go:"devices" },
@@ -568,6 +571,10 @@ const A = [
   { id:"spacekir", name:"dr.SpaceKir", role:"Space ambient / drone · Зеленогорск — Санкт-Петербург", session:"ЛАЙВ", room:"sm", time:"17:00", photos:["spacekir1"],
     links:[{t:"BANDCAMP",u:"https://drspacekir.bandcamp.com"},{t:"YOUTUBE",u:"https://youtube.com/@dr.spacekir"},{t:"SOUNDCLOUD",u:"https://soundcloud.com/dr-spacekir"}],
     desc:"dr.SpaceKir — space ambient / drone Кирилла из Зеленогорска: размышления о космическом пространстве и его атмосфере, переданные через синтезаторные импровизации. Всё вживую, без компьютера: синтезатор, грувбокс и полевые записи." },
+  { id:"gogidze", name:"Gogidze", role:"Живое выступление · зона экспо", session:"ЛАЙВ", room:"hall", time:"16:00–16:45", photos:[], links:[], desc:"" },
+  { id:"pryahina", name:"Анна Пряхина", role:"Живое выступление · большая сцена", session:"ЛАЙВ", room:"sb", time:"16:00–16:45", photos:[], links:[], desc:"" },
+  { id:"anrilov", name:"xandr.vasiliev vs Артемий Анрилов", role:"Совместный лайв на Twang Modular · дебют дуэта", session:"ЛАЙВ", room:"hall", time:"14:30–15:15", photos:[], links:[],
+    desc:"Музыканты, давно связанные годами творческой работы, но ни разу не выступавшие вместе. Артемий Анрилов работает в электронной музыке с 1990-х: от ранних экспериментов в компьютерных трекерах до глубокого погружения в аналоговый и модульный синтез; в основе его языка — тембр, модуляция и внутренняя динамика звука. Основатель лейбла Fragment, куратор Signal Music Residency, резидент Resonance Moscow. xandr.vasiliev — московский музыкант и композитор: электроника, постиндустриальный шум, минимализм и кинематографический саундскейп; резидент Resonance Moscow, преподаватель продакшна, микс- и мастеринг-инженер, участник фестивалей Signal, Outline, Gamma, NUR и Дягилевского. Оба используют исключительно модули Twang Modular: совместный лайв — дебют дуэта и презентация возможностей системы, диалог двух авторских подходов в реальном времени на единой платформе." },
   { id:"turkin", name:"Alexander Turkin", role:"Живая электроника · Pulsar-23", session:"ЛАЙВ", room:"sm", time:"18:00", photos:[],
     links:[{t:"INSTAGRAM",u:"https://instagram.com/a.atu"}],
     desc:"Живая электроника Александра Туркина: Pulsar-23, педали эффектов и микшер — весь звук собирается на столе, вживую." },
@@ -646,7 +653,7 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 const L = {
   ru: {
     "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор", "org.venue":"Площадка", "org.partners":"Партнёры", "org.note":"Хотите стать партнёром форума — напишите нам:",
+    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Артисты", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор", "org.venue":"Площадка", "org.partners":"Партнёры", "org.note":"Хотите стать партнёром форума — напишите нам:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
@@ -683,7 +690,7 @@ const L = {
   },
   bratva: {
     "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
-    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.orgs":"Кто держит тему", "org.team":"Кто организует", "org.venue":"Где всё будет", "org.partners":"Партнёры", "org.note":"Есть желание вписаться партнёром — пиши:",
+    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.artists":"Кто играет", "m.orgs":"Кто держит тему", "org.team":"Кто организует", "org.venue":"Где всё будет", "org.partners":"Партнёры", "org.note":"Есть желание вписаться партнёром — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
@@ -720,7 +727,7 @@ const L = {
   },
   zoomer: {
     "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
-    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.orgs":"Орги и партнёры", "org.team":"Орги", "org.venue":"Локация", "org.partners":"Партнёры", "org.note":"Хочешь в коллаб — пиши:",
+    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Лайвы", "m.orgs":"Орги и партнёры", "org.team":"Орги", "org.venue":"Локация", "org.partners":"Партнёры", "org.note":"Хочешь в коллаб — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
@@ -757,7 +764,7 @@ const L = {
   },
   soviet: {
     "m.about":"О нас", "m.companies":"Коллективы", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор форума", "org.venue":"Место проведения", "org.partners":"Партнёры форума", "org.note":"По вопросам партнёрства обращаться:",
+    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.artists":"Артисты программы", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор форума", "org.venue":"Место проведения", "org.partners":"Партнёры форума", "org.note":"По вопросам партнёрства обращаться:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
     "sec.devices":"Приборы", "sec.schedule":"Программа", "sec.forum":"Форум", "sec.posts":"Хроника",
@@ -1027,6 +1034,10 @@ const MODALS = {
     <div class="note">${t("consent.pre")} <a class="colink" onclick="openModal('privacy')">${t("consent.link")}</a>.</div>` },
   lottery: { title:"m.lottery", html:()=>lotteryHTML() },
   companies: { title:"m.companies", html:()=>`<div class="prods"><div class="prods-h">${t("m.companies")} · ${C.length}</div>${C.map(c=>{const nd=P.filter(p=>p.company===c.id).length; const np=(c.products&&c.products.length)||0; return `<button class="prod" onclick="closeModal();openCompany('${c.id}')"><span class="prod-n">${esc(c.name)}</span><span class="prod-m">${nd?nd+" приб. ":""}${np?np+" "+t("prod.unit")+" ":""}›</span></button>`;}).join("")}</div>` },
+  artists: { title:"m.artists", html:()=>{
+    const arts = A.filter(a=>a.session==="ЛАЙВ"||a.session==="AV");
+    return `<div class="prods"><div class="prods-h">${t("m.artists")} · ${arts.length}</div>${arts.map(a=>`<button class="prod" onclick="closeModal();openAuthor('${a.id}')"><span class="prod-n">${esc(a.name)}</span><span class="prod-m">${a.time?esc(a.time)+" ":""}›</span></button>`).join("")}</div>`;
+  } },
   orgs: { title:"m.orgs", html:()=>{
     const row = o => `<div class="orgrow">${o.photo&&photo(o.photo)?`<img class="ologo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<div class="obody"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div></div>`;
     return `<div class="prods-h">${t("org.team")}</div>${ORG.team.map(row).join("")}
