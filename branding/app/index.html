@@ -427,6 +427,18 @@ const P = [
 // Формат: { date, title, text, photos:["ключ_из_PHOTOS"], link:"https://t.me/..." }
 // Картинки для постов кладём в branding/photos и добавляем в PHOTOS тем же ключом.
 const POSTS = [
+  { date:"11.08.2026", title:"Вторая волна участников",
+    text:"Основательно и без спешки продолжаем представлять состав экспозиции.\n\nВо второй волне:\n— ПРИБОР — аналоговые педали эффектов с кириллическими панелями: «Малый фильтр» и «Фестиваль»\n— Twang Modular — авторские модули и системы в форматах Eurorack и Serge/4U (Анапа)\n— Solyara — дрон-синтезатор Станислава Суслова: три пилообразных осциллятора и мультирежимный фильтр (Москва)\n— Alpha1 · MIDI Sequencer / Looper — секвенсор Михаила Синицына: 16 треков, запись в реальном времени, без компьютера (Москва)\n— VG-line / MAD SOUND FACTORY — инструменты Вячеслава Григорьева: собственные разработки и серийное производство\n— ArtCraft Workshop — мастерская на пересечении технологий и ручной работы: свет, 3D-печать, авторские корпуса\n\nКаждый прибор на экспо можно включить, послушать и обсудить с автором — так у нас заведено. Список продолжает расти — следите за сводками.",
+    cards:[
+      { k:"ЭКСПО · ВТОРАЯ ВОЛНА", h:["ВТОРАЯ","ВОЛНА"], b:"Основательно и без спешки продолжаем представлять состав экспозиции: шесть новых участников — педали, модульные форматы, дрон-синтезатор, MIDI-инструменты, серийное производство и мастерская света." },
+      { k:"ПЕДАЛИ ЭФФЕКТОВ · ФИЛЬТРЫ", h:["ПРИБОР","ПЕДАЛИ"], b:"Аналоговые педали эффектов с кириллическими панелями: «Малый фильтр» — частота среза, резонанс и вход педали экспрессии — и «Фестиваль» — уровень, ансамбль, усиление, НЧ/ВЧ." },
+      { k:"АНАПА", h:["TWANG","MODULAR"], b:"Авторские модули и системы в форматах Eurorack и Serge/4U: генераторы, процессоры, модуляторы и комплексная автономная 4U-система. Редкое для России сочетание форматов." },
+      { k:"ДРОН-СИНТЕЗАТОР · МОСКВА", h:["SOLYARA","3 OSC"], b:"Дрон-синтезатор Станислава Суслова: три пилообразных осциллятора с индивидуальной и общей настройкой частоты и мультирежимный фильтр для плотных гудящих структур." },
+      { k:"MIDI · МОСКВА", h:["ALPHA1","SEQ/LOOP"], b:"MIDI-секвенсор и лупер Михаила Синицына для живого исполнения: 16 треков, запись в реальном времени, MIDI Thru и сохранение проектов во внутренней памяти — без компьютера." },
+      { k:"ИНСТРУМЕНТЫ · ПРОИЗВОДСТВО", h:["VG-LINE","И MSF"], b:"Инструменты Вячеслава Григорьева: собственные разработки и серийное производство — самостоятельно, вместе с музыкантами и брендами, по контракту для других компаний." },
+      { k:"СВЕТ · 3D-ПЕЧАТЬ", h:["ARTCRAFT","WORKSHOP"], b:"Мастерская на пересечении технологий и ручной работы: декоративное освещение, 3D-печать, авторские корпуса и напечатанные ручки из фанеры и оргстекла." },
+    ],
+    link:"https://t.me/forumcreativetech" },
   { date:"22.07.2026", title:"Живая программа — первая волна",
     text:"Предлагаем вашему вниманию открывающую четвёрку художников живой программы:\n\n— М.О.У.Б. — грамотный drone / dark ambient на самодельных электромеханических устройствах: пружины, вибромоторы, кассетные петли (Великий Новгород)\n\n— dr.SpaceKir — space ambient: космос из живых синтезаторных импровизаций, без компьютера, но с графикой (Зеленогорск — Петербург)\n\n— Игра с тенью — Светлана Гончар использует оптическое управление вместо ручек, музыка и картина рождаются из движения тени\n\n— H.Ruine — live IDM Влада Лисицкого: модульный синтез и лазерное шоу в прозрачных сферах (Москва)\n\nКаждый сет — устройство, включённое на ваших глазах, и человек, который знает его до последней детали.\n\nЭто первая волна артистов — вскоре продолжим список.",
     cards:[
@@ -603,7 +615,7 @@ const L = {
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
     "posts.empty":"Скоро — дублируем посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
     "dev.count":"ПРИБОРОВ", "sched.draft":"Лекционный блок объявим отдельно · время может уточняться",
-    "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"ПОСТ", "forum.tickets":"Билеты",
+    "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"ПОСТ", "forum.tickets":"Билеты", "share":"Поделиться", "share.copied":"Ссылка скопирована",
     "forum.prose":`<h3 class="prose-h">Что такое Дискрет</h3><p class="blurb"><b>Есть люди, которые делают приборы.</b></p><p class="blurb">Не только пользуются готовым. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, какой способ управления им нужен. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужую ошибку, свою упрямую гипотезу — и доводят это до объекта, который можно включить. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или устройство, которому ещё трудно дать имя.</p><p class="blurb">ДИСКРЕТ собирает такие объекты и людей вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"КОМПАНИЯ", "badge.product":"ТОВАР",
     "key.author":"Автор", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
@@ -640,7 +652,7 @@ const L = {
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
     "posts.empty":"Скоро — зальём посты из Telegram", "posts.open":"В Telegram", "posts.more":"Читать целиком",
     "dev.count":"АППАРАТОВ", "sched.draft":"Лекции подгоним отдельно · тайминг могут подвинуть",
-    "sched.open":"глянуть ↗", "forum.chron":"Хроника движа", "forum.post":"ПОСТ", "forum.tickets":"Проходки",
+    "sched.open":"глянуть ↗", "forum.chron":"Хроника движа", "forum.post":"ПОСТ", "forum.tickets":"Проходки", "share":"Кинуть своим", "share.copied":"Ссылка в кармане — скопирована",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет</h3><p class="blurb"><b>Есть люди, которые сами мутят приборы.</b></p><p class="blurb">Не просто берут готовое. Не ждут, пока производитель решит за них, какой звук, какой интерфейс, каким способом всем этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой косяк, свою упрямую тему — и доводят это до аппарата, который реально включается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самопальный микрофон, модуль, процессор, шумовой генератор или штука, которой ещё и имя-то дать сложно.</p><p class="blurb">ДИСКРЕТ сводит такие аппараты и пацанов вокруг них.</p>`,
     "badge.device":"АППАРАТ №", "badge.author":"МАСТЕР", "badge.company":"КОНТОРА", "badge.product":"ТОВАР",
     "key.author":"Мастер", "key.format":"Формат", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
@@ -677,7 +689,7 @@ const L = {
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
     "posts.empty":"Скоро — задропим посты из Telegram", "posts.open":"В тг", "posts.more":"Читать всё",
     "dev.count":"ДЕВАЙСОВ", "sched.draft":"Лекции дропнем отдельным анонсом · тайминги могут поехать",
-    "sched.open":"го ↗", "forum.chron":"Лента анонсов", "forum.post":"ПОСТ", "forum.tickets":"Тикеты",
+    "sched.open":"го ↗", "forum.chron":"Лента анонсов", "forum.post":"ПОСТ", "forum.tickets":"Тикеты", "share":"Шэрнуть", "share.copied":"Линк скопирован",
     "forum.prose":`<h3 class="prose-h">Что за Дискрет вообще</h3><p class="blurb"><b>Есть чуваки, которые сами крафтят приборы.</b></p><p class="blurb">Не просто юзают готовое. Не ждут, пока производитель зарешает за них, какой звук, какой интерфейс, каким способом этим рулить. Они берут схему, корпус, датчик, разъём, ручку, кусок панели, чужой фейл, свою упрямую гипотезу — и доводят это до девайса, который реально врубается. Иногда это синтезатор. Иногда фонарь. Иногда инсталляция, самодельный микрофон, модуль, процессор, шумовой генератор или штука, которой пока даже имя не подобрать.</p><p class="blurb">ДИСКРЕТ коннектит такие девайсы и пипл вокруг них.</p>`,
     "badge.device":"ДЕВАЙС №", "badge.author":"АВТОР", "badge.company":"БРЕНД", "badge.product":"ДРОП",
     "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Тайм", "key.hall":"Зал",
@@ -714,7 +726,7 @@ const L = {
     "sec.devices":"Приборы", "sec.schedule":"Программа", "sec.forum":"Форум", "sec.posts":"Хроника",
     "posts.empty":"Скоро — публикуем сводки из Telegram", "posts.open":"В Telegram", "posts.more":"Читать полностью",
     "dev.count":"ПРИБОРОВ", "sched.draft":"Лекционная программа будет объявлена дополнительно · время уточняется",
-    "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"СВОДКА", "forum.tickets":"Приобрести билет",
+    "sched.open":"открыть ↗", "forum.chron":"Хроника анонсов", "forum.post":"СВОДКА", "forum.tickets":"Приобрести билет", "share":"Поделиться", "share.copied":"Ссылка скопирована",
     "badge.device":"ПРИБОР №", "badge.author":"АВТОР", "badge.company":"КОЛЛЕКТИВ", "badge.product":"ИЗДЕЛИЕ",
     "key.author":"Автор", "key.format":"Тип", "key.stage":"Сцена", "key.time":"Время", "key.hall":"Зал",
     "frame.device":"О приборе", "frame.session":"О выступлении", "frame.person":"О человеке", "frame.company":"О коллективе", "frame.feat":"Особенности",
@@ -865,7 +877,7 @@ function openDetail(id){
       <div class="dcell"><div class="k">${t("key.stage")}</div><div class="v red">${esc(p.stage)}</div></div>
       <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${EVENT.date.slice(0,5)} · ${p.time}</div></div>
     </div>
-    <div class="dframe"><span class="k">${t("frame.device")}</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">${t("ph.device")}</p>`}</div>${p.feat ? `<div class="dframe"><span class="k">${t("frame.feat")}</span><p>${esc(p.feat)}</p></div>` : ""}${(p.company || (p.links && p.links.length)) ? `<div class="dlinks">${p.company?`<button class="dlink co" onclick="openCompany('${p.company}')">${t("btn.company")}</button>`:""}${(p.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+    <div class="dframe"><span class="k">${t("frame.device")}</span>${p.desc ? `<p>${esc(p.desc)}</p>` : `<p class="ph">${t("ph.device")}</p>`}</div>${p.feat ? `<div class="dframe"><span class="k">${t("frame.feat")}</span><p>${esc(p.feat)}</p></div>` : ""}<div class="dlinks">${p.company?`<button class="dlink co" onclick="openCompany('${p.company}')">${t("btn.company")}</button>`:""}${(p.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}<button class="dlink share" onclick="shareCard('d','${p.id}')">${t("share")} ⇱</button></div>`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
@@ -900,7 +912,7 @@ function openAuthor(id){
       <div class="dcell"><div class="k">${t("key.time")}</div><div class="v">${esc(a.time||"—")}</div></div>
     </div>` : ""}
     <div class="dframe"><span class="k">${(a.room||a.time) ? t("frame.session") : t("frame.person")}</span>${a.desc ? `<p>${esc(a.desc)}</p>` : `<p class="ph">${t("ph.session")}</p>`}</div>
-    ${(a.links && a.links.length) ? `<div class="dlinks">${a.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+    <div class="dlinks">${(a.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}<button class="dlink share" onclick="shareCard('a','${a.id}')">${t("share")} ⇱</button></div>`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
@@ -1074,7 +1086,7 @@ function openCompany(id){
     <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>{const nm=(typeof m==="string")?m:m.name; const aid=(m&&m.a)?m.a:null; return (aid && A.find(x=>x.id===aid)) ? `<a class="colink" onclick="openAuthor('${aid}')">${esc(nm)}</a>` : esc(nm);}).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
     ${devs.length ? `<div class="prods"><div class="prods-h">${t("frame.devices")} · ${devs.length}</div>${devs.map(p=>`<button class="prod" onclick="openDetail('${p.id}')"><span class="prod-n">${esc(p.device)}</span><span class="prod-m">${esc(p.sub||"")} ›</span></button>`).join("")}</div>` : ""}
     ${prods.length ? `<div class="prods"><div class="prods-h">${t("frame.products")} · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
-    ${(c.links && c.links.length) ? `<div class="dlinks">${c.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>` : ""}`;
+    <div class="dlinks">${(c.links||[]).map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}<button class="dlink share" onclick="shareCard('c','${c.id}')">${t("share")} ⇱</button></div>`;
   if(multi) initCarousel(slides.length);
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
@@ -1094,6 +1106,20 @@ function openProduct(cid, pid){
   $("#detail").classList.add("on"); document.body.style.overflow="hidden"; syncBack();
 }
 // ===== QR: сканер стойки + диплинки (d_<id> / a_<id> / c_<id>) =====
+function shareCard(kind, id){
+  const tok = kind + "_" + id;
+  let name = "";
+  if(kind==="d"){ const x=P.find(v=>v.id===id); name=x?x.device:""; }
+  else if(kind==="a"){ const x=A.find(v=>v.id===id); name=x?x.name:""; }
+  else if(kind==="c"){ const x=C.find(v=>v.id===id); name=x?x.name:""; }
+  const url = CONTACT.siteUrl + "/?k=" + encodeURIComponent(tok);
+  const txt = (name ? name + " · " : "") + "ДИСКРЕТ · 19.09.2026 · Зеленоград";
+  haptic("light");
+  try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent(txt)); return; } }catch(e){}
+  try{ if(navigator.share){ navigator.share({ title: txt, url }).catch(()=>{}); return; } }catch(e){}
+  try{ navigator.clipboard.writeText(url).then(()=>{ try{ tg&&tg.showAlert ? tg.showAlert(t("share.copied")) : alert(t("share.copied")); }catch(e){} }); }
+  catch(e){ try{ prompt("URL:", url); }catch(_){} }
+}
 function routeToken(txt){
   if(!txt) return false;
   const t=(""+txt).trim();
