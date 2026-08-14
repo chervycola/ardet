@@ -43,8 +43,20 @@
     font-weight:800; font-size:11px; letter-spacing:.5px; padding:6px 0; cursor:pointer; text-align:center;}
   .lchip.on{background:var(--red); border-color:var(--red); color:#fff;}
   .orgrow{padding:12px 0; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:flex-start;}
-  .orgrow .ologo{width:64px; height:64px; object-fit:contain; border:1px solid var(--line); background:#fff; flex:none;}
   .orgrow .obody{flex:1; min-width:0;}
+  .ocard-big{border:2px solid var(--hair); padding:16px; margin-top:10px;}
+  .ocard-big b{display:block; font-family:var(--grotesk); font-weight:800; font-size:20px; letter-spacing:.3px;}
+  .ocard-big .orole{display:block; font-size:12.5px; color:var(--muted); margin-top:4px;}
+  .ocard-big .dlinks{margin-top:10px;}
+  .ocard-big.ghost{border-style:dashed; border-color:var(--line); color:var(--muted); text-align:center;
+    font-family:var(--mono); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; padding:20px 16px;}
+  .pgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+  .pcell{border:1.5px solid var(--line); padding:12px; min-width:0;}
+  .pcell.tap{cursor:pointer;}
+  .pcell.tap:active{border-color:var(--red);}
+  .pcell .plogo{width:44px; height:44px; object-fit:contain; border:1px solid var(--line); background:#fff; display:block; margin-bottom:8px;}
+  .pcell b{display:block; font-family:var(--grotesk); font-weight:800; font-size:14px; line-height:1.2; letter-spacing:.2px;}
+  .pcell span{display:block; font-size:11px; color:var(--muted); margin-top:3px;}
   .orgrow b{display:block; font-family:var(--grotesk); font-size:17px; letter-spacing:.3px;}
   .orgrow .orole{display:block; font-size:12.5px; color:var(--muted); margin-top:2px;}
   .orgrow .dlinks{margin-top:8px;}
@@ -362,23 +374,24 @@
 window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.jpg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.jpg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
-  team: [
-    { name:"Оргкоманда ДИСКРЕТ", role:"организация форума · Зеленоград", links:[{t:"TG",u:"https://t.me/creativeforumzel"},{t:"ПОЧТА",u:"mailto:contact@diskret.space"}] },
-  ],
-  venue: [
-    { name:"МИЭТ", role:"институциональный партнёр · Национальный исследовательский университет · Зеленоград", links:[{t:"САЙТ",u:"https://miet.ru"}] },
+  inst: [
+    { name:"МИЭТ", role:"институциональный партнёр · Национальный исследовательский университет", links:[{t:"САЙТ",u:"https://miet.ru"}] },
+    { name:"Администрация Зеленограда", role:"административная поддержка", links:[] },
   ],
   partners: [
-    { name:"ЭФЭМИ", role:"стратегический партнёр", links:[{t:"VK",u:"https://vk.com/efemisynths"},{t:"TG",u:"https://t.me/efemisynths"}] },
+    { name:"ЭФЭМИ", role:"стратегический партнёр", links:[{t:"VK",u:"https://vk.com/efemisynths"}] },
     { name:"БАКЛАЖАНИЯ", role:"стратегический партнёр", photo:"lg_baklazhania", links:[] },
     { name:"АНГСТРЕМ", role:"технологический партнёр", links:[] },
-    { name:"Пикасо 3D", role:"партнёр инфраструктуры · российский производитель 3D-принтеров", photo:"lg_picaso", links:[{t:"САЙТ",u:"https://picaso-3d.com"}] },
-    { name:"СОЮЗ", role:"технический партнёр · сделано вручную", photo:"lg_soyuz", links:[] },
+    { name:"Пикасо 3D", role:"партнёр инфраструктуры", photo:"lg_picaso", links:[{t:"САЙТ",u:"https://picaso-3d.com"}] },
+    { name:"СОЮЗ", role:"технический партнёр", photo:"lg_soyuz", links:[] },
     { name:"ioAudio", role:"технический партнёр", links:[] },
-    { name:"Flat.Audio", role:"информационный партнёр · билетная платформа", links:[{t:"БИЛЕТЫ",u:"https://flat.audio/e/2470"}] },
+    { name:"Flat.Audio", role:"информационный партнёр", links:[{t:"БИЛЕТЫ",u:"https://flat.audio/e/2470"}] },
     { name:"Инфопортал Зеленограда", role:"информационный партнёр", links:[{t:"САЙТ",u:"https://www.zelenograd.ru"}] },
   ],
-};
+  people: [
+    { name:"Александр Григорьев", role:"организатор форума" },
+  ],
+}
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:20, tickets:"https://flat.audio/e/2470" };
 const CONTACT = { tg:"creativeforumzel", site:"дискрет.рф", siteUrl:"https://xn--d1acii4aek.xn--p1ai", email:"contact@diskret.space" }; // EDIT
 const LOTTERY = { prize:"Набор для сборки синт-модуля", draw:"19.09.2026 · на форуме" };   // EDIT
@@ -657,7 +670,7 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 const L = {
   ru: {
     "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Артисты", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор", "org.venue":"Площадка", "org.partners":"Партнёры", "org.note":"Хотите стать партнёром форума — напишите нам:",
+    "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Артисты", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Оргкоманда", "org.ghost":"Здесь может быть ваша организация", "org.note":"Хотите стать партнёром форума — напишите нам:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Девайсы", "sec.schedule":"Расписание", "sec.forum":"Форум", "sec.posts":"Лента",
@@ -694,7 +707,7 @@ const L = {
   },
   bratva: {
     "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
-    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.artists":"Кто играет", "m.orgs":"Кто держит тему", "org.team":"Кто организует", "org.venue":"Где всё будет", "org.partners":"Партнёры", "org.note":"Есть желание вписаться партнёром — пиши:",
+    "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.artists":"Кто играет", "m.orgs":"Кто держит тему", "org.inst":"Серьёзная поддержка", "org.partners":"Партнёры", "org.people":"Кто всё это держит", "org.ghost":"Тут может встать твоя контора", "org.note":"Есть желание вписаться партнёром — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
     "sec.devices":"Аппараты", "sec.schedule":"Расклад", "sec.forum":"Сходка", "sec.posts":"Сводки",
@@ -731,7 +744,7 @@ const L = {
   },
   zoomer: {
     "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
-    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Лайвы", "m.orgs":"Орги и партнёры", "org.team":"Орги", "org.venue":"Локация", "org.partners":"Партнёры", "org.note":"Хочешь в коллаб — пиши:",
+    "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Лайвы", "m.orgs":"Орги и партнёры", "org.inst":"Институции", "org.partners":"Партнёры", "org.people":"Орг-тима", "org.ghost":"Тут могла быть твоя орга", "org.note":"Хочешь в коллаб — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
     "sec.devices":"Девайсы", "sec.schedule":"Тайминги", "sec.forum":"Тусич", "sec.posts":"Фид",
@@ -768,7 +781,7 @@ const L = {
   },
   soviet: {
     "m.about":"О нас", "m.companies":"Коллективы", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
-    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.artists":"Артисты программы", "m.orgs":"Организаторы и партнёры", "org.team":"Организатор форума", "org.venue":"Место проведения", "org.partners":"Партнёры форума", "org.note":"По вопросам партнёрства обращаться:",
+    "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.artists":"Артисты программы", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Организационный комитет", "org.ghost":"Место для вашей организации", "org.note":"По вопросам партнёрства обращаться:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
     "sec.devices":"Приборы", "sec.schedule":"Программа", "sec.forum":"Форум", "sec.posts":"Хроника",
@@ -1043,11 +1056,16 @@ const MODALS = {
     return `<div class="prods"><div class="prods-h">${t("m.artists")} · ${arts.length}</div>${arts.map(a=>`<button class="prod" onclick="closeModal();openAuthor('${a.id}')"><span class="prod-n">${esc(a.name)}</span><span class="prod-m">${a.time?esc(a.time)+" ":""}›</span></button>`).join("")}</div>`;
   } },
   orgs: { title:"m.orgs", html:()=>{
-    const row = o => `<div class="orgrow">${o.photo&&photo(o.photo)?`<img class="ologo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<div class="obody"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div></div>`;
-    return `<div class="prods-h">${t("org.team")}</div>${ORG.team.map(row).join("")}
-    <div class="prods-h" style="margin-top:18px">${t("org.venue")}</div>${ORG.venue.map(row).join("")}
-    <div class="prods-h" style="margin-top:18px">${t("org.partners")}</div>${ORG.partners.map(row).join("")}
-    <div class="note" style="margin-top:16px">${t("org.note")} <a class="colink" onclick="openTG('${CONTACT.tg}')">@${CONTACT.tg}</a></div>`;
+    const big = o => `<div class="ocard-big"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div>`;
+    const cell = o => { const u=(o.links&&o.links[0])?o.links[0].u:""; return `<div class="pcell${u?" tap":""}"${u?` onclick="openAny('${u}')"`:""}>${o.photo&&photo(o.photo)?`<img class="plogo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<b>${esc(o.name)}${u?" ↗":""}</b><span>${esc(o.role)}</span></div>`; };
+    const person = o => `<div class="orgrow"><div class="obody"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span></div></div>`;
+    return `<div class="prods-h">${t("org.inst")}</div>${ORG.inst.map(big).join("")}
+    <div class="ocard-big ghost" onclick="openTG('${CONTACT.tg}')">${t("org.ghost")}</div>
+    <div class="prods-h" style="margin-top:22px">${t("org.partners")}</div>
+    <div class="pgrid">${ORG.partners.map(cell).join("")}</div>
+    <div class="prods-h" style="margin-top:22px">${t("org.people")}</div>${ORG.people.map(person).join("")}
+    <div class="dlinks" style="margin-top:12px"><button class="dlink" onclick="openTG('${CONTACT.tg}')">TG ↗</button><button class="dlink" onclick="openLink('mailto:${CONTACT.email}')">${t("fb.mail")} ↗</button></div>
+    <div class="note" style="margin-top:14px">${t("org.note")} <a class="colink" onclick="openTG('${CONTACT.tg}')">@${CONTACT.tg}</a></div>`;
   } },
   privacy: { title:"m.privacy", html:()=>`
     <p>Настоящая политика описывает, какие данные собирает мини-приложение и Telegram-бот форума ДИСКРЕТ (далее — Сервис) и как они используются.</p>
