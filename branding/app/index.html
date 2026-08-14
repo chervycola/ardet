@@ -548,7 +548,6 @@ const SCHED = [
   { t:"17:00", e:"", title:"dr.SpaceKir", who:"", room:"sm", author:"spacekir" },
   { t:"17:00", e:"17:45", title:"Влад Лисицкий · AV", who:"", room:"sb", author:"lisitsky" },
   { t:"18:00", e:"", title:"Alexander Turkin", who:"", room:"sm", author:"turkin" },
-  { t:"18:00", e:"18:45", title:"Digital Moss", who:"", room:"sb", author:"digitalmoss" },
   { t:"19:00", e:"20:00", title:"Финальное выступление · результаты конкурса", who:"", room:"sb" },
 ];
 
@@ -569,9 +568,7 @@ const A = [
   { id:"lisitsky", name:"H.Ruine · Влад Лисицкий", role:"Live IDM + лазерное шоу · Москва", session:"AV", room:"sb", time:"17:00–17:45", photos:["hruine1"],
     links:[{t:"BAND.LINK",u:"https://band.link/hruine"},{t:"САЙТ",u:"https://www.vladlisits.ru/music"},{t:"BANDCAMP",u:"https://hruine.bandcamp.com"},{t:"SOUNDCLOUD",u:"https://soundcloud.com/hruine-music"},{t:"YOUTUBE",u:"https://youtube.com/@hruine"},{t:"VK",u:"https://vk.com/h.ruine"}],
     desc:"Сольный live-IDM проект московского художника и мультиинструменталиста Влада Лисицкого: хаотичная, абстрактная электроника, неустанные эксперименты со звуковыми текстурами и ритмами — мрачный, сложный и тревожный саунд, несущий в каждом треке набор неосязаемых ассоциаций и образов. На ДИСКРЕТЕ Влад представит лазерное шоу в прозрачных сферах и сыграет треки с грядущего альбома." },
-  { id:"digitalmoss", name:"Digital Moss", role:"Ambient / drone / downtempo", session:"ЛАЙВ", room:"sb", time:"18:00–18:45", photos:[], links:[],
-    desc:"Российский электронный проект, создающий атмосферную музыку в жанрах ambient, drone и downtempo: кинематографичные звуковые ландшафты, модульные синтезаторы и медитативные аудиовизуальные перформансы. Смесь аналогового хаоса, антиутопических мотивов и глубокого медитативного звучания; музыка выходит на цифровых платформах и на физических носителях, включая аудиокассеты." },
-  { id:"shadow", name:"Игра с тенью", role:"Оптическая хореография · Светлана Гончар", session:"ЛАЙВ", room:"sm", time:"13:00", photos:["shadow1","shadow2"],
+    { id:"shadow", name:"Игра с тенью", role:"Оптическая хореография · Светлана Гончар", session:"ЛАЙВ", room:"sm", time:"13:00", photos:["shadow1","shadow2"],
     links:[{t:"САЙТ",u:"https://gonchargallery.com"}],
     desc:"Проект Светланы Гончар — переосмысление эргономики музыкального оборудования: механические регуляторы заменены оптическим управлением. Управление звуком и визуалом превращается в оптическую хореографию — музыка и картина рождаются из движения тени." },
   { id:"tiihaya", name:"TiihayaRekaa", role:"Dark ambient / dronescape · Санкт-Петербург", session:"ЛАЙВ", room:"sm", time:"14:00", photos:["tiihaya1","tiihaya2","tiihaya3"],
@@ -1189,7 +1186,8 @@ function shareCard(kind, id){
   if(kind==="d"){ const x=P.find(v=>v.id===id); name=x?x.device:""; }
   else if(kind==="a"){ const x=A.find(v=>v.id===id); name=x?x.name:""; }
   else if(kind==="c"){ const x=C.find(v=>v.id===id); name=x?x.name:""; }
-  const url = CONTACT.siteUrl + "/?k=" + encodeURIComponent(tok);
+  const slug = (name||"").trim().replace(/[^A-Za-zА-Яа-яЁё0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  const url = CONTACT.siteUrl + "/" + (slug ? encodeURIComponent(slug) : "?k=" + encodeURIComponent(tok));
   const txt = (name ? name + " · " : "") + "ДИСКРЕТ · 19.09.2026 · Зеленоград";
   haptic("light");
   try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent(txt)); return; } }catch(e){}
@@ -1209,6 +1207,17 @@ function routeToken(txt){
     if(k==="c" && C.find(c=>c.id===id)){ openCompany(id); return true; }
   }
   if(P.find(p=>p.id===t)){ openDetail(t); return true; }
+  // красивые ссылки: дискрет.рф/TiihayaRekaa, /EXTREMUM, /Paratek …
+  const norm = x => (""+x).toLowerCase().replace(/[^a-zа-яё0-9]+/gi,"");
+  const q = norm(t);
+  if(q){
+    const d = P.find(p=>norm(p.id)===q || norm(p.device)===q);
+    if(d){ openDetail(d.id); return true; }
+    const a = A.find(x=>norm(x.id)===q || norm(x.name)===q);
+    if(a){ openAuthor(a.id); return true; }
+    const c = C.find(x=>norm(x.id)===q || norm(x.name)===q);
+    if(c){ openCompany(c.id); return true; }
+  }
   return false;
 }
 function manualScan(){ const t=prompt("Код прибора со стойки (напр. archeon или d_archeon):"); if(t && !routeToken(t)){ try{ tg && tg.showAlert ? tg.showAlert("Код не найден: "+t) : alert("Код не найден: "+t); }catch(e){} } }
@@ -1241,9 +1250,11 @@ applyTheme(store("ds_theme") || (tg && tg.colorScheme==="dark" ? "dark" : "light
 paintChrome();
 try{
   const qp = new URLSearchParams(location.search);
+  const pathTok = decodeURIComponent(location.pathname.replace(/^\/+/,"")).replace(/\/+$/,"");
   const sp = (tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)
            || qp.get("k") || qp.get("startapp")
-           || decodeURIComponent((location.hash||"").replace(/^#/,""));
+           || decodeURIComponent((location.hash||"").replace(/^#/,""))
+           || pathTok;
   if(sp) routeToken(sp);
 }catch(e){}
 </script>
