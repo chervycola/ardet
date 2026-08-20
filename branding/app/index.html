@@ -1068,7 +1068,6 @@ const MODALS = {
     const cell = o => { const u=(o.links&&o.links[0])?o.links[0].u:""; return `<div class="pcell${u?" tap":""}"${u?` onclick="openAny('${u}')"`:""}>${o.photo&&photo(o.photo)?`<img class="plogo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<b>${esc(o.name)}${u?" ↗":""}</b><span>${esc(o.role)}</span></div>`; };
     const person = o => `<div class="orgrow"><div class="obody"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span></div></div>`;
     return `<div class="prods-h">${t("org.inst")}</div>${ORG.inst.map(big).join("")}
-    <div class="ocard-big ghost" onclick="openTG('${CONTACT.tg}')">${t("org.ghost")}</div>
     <div class="prods-h" style="margin-top:22px">${t("org.partners")}</div>
     <div class="pgrid">${ORG.partners.map(cell).join("")}</div>
     <div class="prods-h" style="margin-top:22px">${t("org.people")}</div>${ORG.people.map(person).join("")}
