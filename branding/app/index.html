@@ -371,7 +371,7 @@
 </div>
 
 <script>
-window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
+window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","uz1":"photos/uz1.jpg","uz2":"photos/uz2.jpg","uz3":"photos/uz3.jpg","uz4":"photos/uz4.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
   inst: [
@@ -472,6 +472,12 @@ const P = [
     links:[{t:"TG",u:"https://t.me/gamayun_house"}],
     desc:"«Горшочек Света» — автономный электромузыкальный объект Уральского Синтезаторного завода машинной музыки. Самостоятельное возобновляемое изделие: работает и звучит без внешней обвязки.",
     feat:"Автономная работа; возобновляемое электромузыкальное изделие; объект серии УралСинтМаш." },
+  { id:"yane1", idx:"14", device:"ЯНЕ1", name:"", company:"yandex", sub:"гибридный синтезатор", city:"Москва",
+    role:"Арт-лаборатория «Techno Sound Art»", spec:"Standalone · собственная разработка", stage:"LAB", time:"—",
+    tags:["standalone","voice","цифра"], tbd:false, photos:[],
+    links:[{t:"КОМПАНИЯ",u:"https://yandex.ru"}],
+    desc:"ЯНЕ1 — живой инструмент арт-лаборатории Яндекса «Techno Sound Art»: полностью новая разработка лаборатории. Инструмент создан из мыслей и идей участников — схема, дизайн и ПО созданы внутри лаборатории.\n\nОдин из примеров — пресет, построенный на реальных GPS-маршрутах роверов-доставщиков. Технология здесь не исполняет волю человека, а откликается вместе с ним — открытость к случайности равна открытости к творчеству.",
+    feat:"Полностью собственная разработка — схема, дизайн и ПО созданы внутри лаборатории; пресеты на реальных данных (GPS-маршруты роверов-доставщиков); гибридная архитектура." },
 ];
 
 // ===== ЛЕНТА: дубли постов из Telegram (новые — сверху) =====
@@ -638,11 +644,24 @@ const C = [
     desc:"Российский модульный стенд: авторские Eurorack-кейсы, кабели и питание MXLS, модули Paratek и ламповые, вактрольные разработки Bizarre Jezabel.",
     feat:"На одном стенде — три российских направления; полный инфраструктурный набор для Eurorack; ламповые и вактрольные модули." },
   { id:"saolla", name:"Saolla", role:"—", photos:[], members:[], links:[], desc:"" },
-  { id:"yandex", name:"Яндекс", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"yandex", name:"Яндекс", role:"Арт-лаборатория «Techno Sound Art»", photos:[], members:[],
+    links:[{t:"КОМПАНИЯ",u:"https://yandex.ru"}],
+    desc:"Арт-лаборатория Яндекса «Techno Sound Art». На форуме представит ЯНЕ1 — гибридный синтезатор полностью собственной разработки: схема, дизайн и ПО созданы внутри лаборатории.",
+    feat:"Полностью новая разработка лаборатории; пресеты на реальных данных — например, GPS-маршрутах роверов-доставщиков." },
   { id:"edwards", name:"Edwards-audio", role:"Аудиолаборатория", photos:[], members:[], links:[], desc:"" },
   { id:"faza", name:"ФАЗА Электроника", role:"—", photos:[], members:[], links:[], desc:"" },
   { id:"rezonans", name:"Резонанс", role:"—", photos:[], members:[], links:[], desc:"" },
-  { id:"universezen", name:"Universe Zen", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"universezen", name:"Universe Zen", role:"Педали эффектов · Санкт-Петербург", photos:["uz1","uz2","uz3","uz4"],
+    members:[{name:"Ростислав Савари (Слава Дзен)"}],
+    links:[{t:"VK",u:"https://vk.ru/universezen"},{t:"TG",u:"https://t.me/universezenaudio"}],
+    desc:"Педали эффектов для гитар и синтезаторов: многофункциональные устройства, понятный интерфейс и надёжная сборка. От аналоговой сатурации до космической реверберации. Основатель и главный инженер мастерской — Ростислав Савари, в сети известный как Слава Дзен.",
+    feat:"На форуме: ревербераторы Восход-2 и Восход-2М, фузз-бустер-предусилитель Сатурн-2 и деструктивный ревербератор Тессеракт (старая ревизия — новых в мастерской не осталось).",
+    products:[
+      { id:"voshod2", name:"Восход-2", hp:"", price:"", photos:["uz1"], desc:"Ревербератор с набором алгоритмов на общем энкодере: пред. задержка, октава, модуляция, тембр, время, затухание, режим «хвосты». Стереовходы и выходы 1/2." },
+      { id:"voshod2m", name:"Восход-2М", hp:"", price:"", photos:["uz2"], desc:"Развитие Восхода-2: два футсвича (эффект и сустейн), тумблеры «хвосты» и «фиксация», пара моно/TRS-стерео входов и выходов. Питание 9В · 150мА." },
+      { id:"tesserakt", name:"Тессеракт", hp:"", price:"", photos:["uz3"], desc:"Деструктивный ревербератор: алгоритмы гонг, волна, ревер-гейт, п-фильтр, резонанс, комната, шиммер, эхо. Основной и альтернативный банки настроек, вход экспрессии. На форуме — старая ревизия." },
+      { id:"saturn2", name:"Сатурн-2", hp:"", price:"", photos:["uz4"], desc:"Фузз-бустер-предусилитель: трёхполосный тембр-блок (низкие/средние/высокие), режимы чистый/вырез/микс/бустер, переключатели 600/1200 Гц и фузз/драйв." },
+    ] },
   { id:"vgline", name:"VG-line", role:"Музыкальные инструменты · ЕАЭС", photos:["vg","vg1","vg2","vg3"], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
     links:[{t:"INSTAGRAM",u:"https://instagram.com/vg.line/"}],
     desc:"Компания Вячеслава Григорьева. Разработка и производство авторских музыкальных инструментов — самостоятельно, совместно с музыкантами и брендами, а также по контракту для других компаний.",
