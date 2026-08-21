@@ -50,21 +50,21 @@
 <text x="140" y="2216" font-family="'Courier New',monospace" font-size="44" fill="#000">· Solyara</text>
 <text x="140" y="2288" font-family="'Courier New',monospace" font-size="44" fill="#000">· Лаборатория звука МАЯК</text>
 <text x="140" y="2360" font-family="'Courier New',monospace" font-size="44" fill="#000">· ArtCraft workshop</text>
-<text x="140" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· Сырые Джунгли</text>
-<text x="950" y="2000" font-family="'Courier New',monospace" font-size="44" fill="#000">· LaserNoto</text>
-<text x="950" y="2072" font-family="'Courier New',monospace" font-size="44" fill="#000">· ЭФЭМИ</text>
-<text x="950" y="2144" font-family="'Courier New',monospace" font-size="44" fill="#000">· SX LAB</text>
-<text x="950" y="2216" font-family="'Courier New',monospace" font-size="44" fill="#000">· ЯНДЕКС</text>
-<text x="950" y="2288" font-family="'Courier New',monospace" font-size="44" fill="#000">· Резонанс</text>
-<text x="950" y="2360" font-family="'Courier New',monospace" font-size="44" fill="#000">· VG Line</text>
-<text x="950" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· HgX_System | Unheld</text>
-<text x="1720" y="2000" font-family="'Courier New',monospace" font-size="44" fill="#000">· Paratek</text>
-<text x="1720" y="2072" font-family="'Courier New',monospace" font-size="44" fill="#000">· УралСинтМаш</text>
-<text x="1720" y="2144" font-family="'Courier New',monospace" font-size="44" fill="#000">· Alpha1 Midi Sequencer</text>
-<text x="1720" y="2216" font-family="'Courier New',monospace" font-size="44" fill="#000">· Радиокружок Зеленоград</text>
-<text x="1720" y="2288" font-family="'Courier New',monospace" font-size="44" fill="#000">· Edwards-audio</text>
-<text x="1720" y="2360" font-family="'Courier New',monospace" font-size="44" fill="#000">· ФАЗА Электроника</text>
-<text x="1720" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· Universe Zen</text>
+<text x="140" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· LaserNoto</text>
+<text x="950" y="2000" font-family="'Courier New',monospace" font-size="44" fill="#000">· ЭФЭМИ</text>
+<text x="950" y="2072" font-family="'Courier New',monospace" font-size="44" fill="#000">· SX LAB</text>
+<text x="950" y="2144" font-family="'Courier New',monospace" font-size="44" fill="#000">· ЯНДЕКС</text>
+<text x="950" y="2216" font-family="'Courier New',monospace" font-size="44" fill="#000">· Резонанс</text>
+<text x="950" y="2288" font-family="'Courier New',monospace" font-size="44" fill="#000">· VG Line</text>
+<text x="950" y="2360" font-family="'Courier New',monospace" font-size="44" fill="#000">· HgX_System | Unheld</text>
+<text x="950" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· Paratek</text>
+<text x="1720" y="2000" font-family="'Courier New',monospace" font-size="44" fill="#000">· УралСинтМаш</text>
+<text x="1720" y="2072" font-family="'Courier New',monospace" font-size="44" fill="#000">· Alpha1 Midi Sequencer</text>
+<text x="1720" y="2144" font-family="'Courier New',monospace" font-size="44" fill="#000">· Радиокружок Зеленоград</text>
+<text x="1720" y="2216" font-family="'Courier New',monospace" font-size="44" fill="#000">· Edwards-audio</text>
+<text x="1720" y="2288" font-family="'Courier New',monospace" font-size="44" fill="#000">· ФАЗА Электроника</text>
+<text x="1720" y="2360" font-family="'Courier New',monospace" font-size="44" fill="#000">· Universe Zen</text>
+<text x="1720" y="2432" font-family="'Courier New',monospace" font-size="44" fill="#000">· и другие..</text>
 
 <line x1="140" y1="2600" x2="2340" y2="2600" stroke="#000" stroke-width="5"/>
 
@@ -76,7 +76,7 @@
   </g>
   <rect x="430" y="3178" width="528" height="86" fill="#E30613"/>
   <text x="694" y="3238" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="2" fill="#fff">БИЛЕТЫ</text>
-  <text x="694" y="3318" text-anchor="middle" font-family="'Courier New',monospace" font-size="34" letter-spacing="1" fill="#000">flat.audio/e/2470 · ранняя цена 555 ₽</text>
+  <text x="694" y="3318" text-anchor="middle" font-family="'Courier New',monospace" font-size="34" letter-spacing="1" fill="#000">flat.audio/e/2470</text>
 </g>
 
 <g>
@@ -90,6 +90,6 @@
 </g>
 
 <line x1="140" y1="3330" x2="2340" y2="3330" stroke="#000" stroke-width="5"/>
-<text x="140" y="3408" font-family="'Courier New',monospace" font-size="38" letter-spacing="3" fill="#000">ВХОД ПО БИЛЕТАМ · КАЖДЫЙ ПРИБОР МОЖНО ТРОГАТЬ</text>
+<text x="140" y="3408" font-family="'Courier New',monospace" font-size="38" letter-spacing="3" fill="#000">ВХОД ПО БИЛЕТАМ</text>
 <text x="2340" y="3408" text-anchor="end" font-weight="800" font-size="56" fill="#E30613">ДИСКРЕТ.РФ</text>
 </svg>
