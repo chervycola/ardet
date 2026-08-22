@@ -54,7 +54,8 @@
   .pcell{border:1.5px solid var(--line); padding:12px; min-width:0;}
   .pcell.tap{cursor:pointer;}
   .pcell.tap:active{border-color:var(--red);}
-  .pcell .plogo{width:100%; height:60px; object-fit:contain; object-position:left center; border:1px solid var(--line); background:#fff; padding:6px; box-sizing:border-box; display:block; margin-bottom:8px;}
+  .pcell .plogo{width:75%; height:60px; object-fit:contain; object-position:left center; border:1px solid var(--line); background:#fff; padding:6px; box-sizing:border-box; display:block; margin-bottom:8px;}
+  .pcell .plogo.sq{width:84px; height:84px; object-position:center;}
   .pcell b{display:block; font-family:var(--grotesk); font-weight:800; font-size:14px; line-height:1.2; letter-spacing:.2px;}
   .pcell span{display:block; font-size:11px; color:var(--muted); margin-top:3px;}
   .orgrow b{display:block; font-family:var(--grotesk); font-size:17px; letter-spacing:.3px;}
@@ -382,8 +383,8 @@ const ORG = {
     { name:"Администрация Зеленограда", role:"административная поддержка", links:[] },
   ],
   partners: [
-    { name:"ЭФЭМИ", role:"стратегический партнёр", photo:"lg_efemi", links:[{t:"VK",u:"https://vk.com/efemisynths"}] },
-    { name:"БАКЛАЖАНИЯ", role:"стратегический партнёр", photo:"lg_baklazhania", links:[] },
+    { name:"ЭФЭМИ", role:"стратегический партнёр", photo:"lg_efemi", sq:true, links:[{t:"VK",u:"https://vk.com/efemisynths"}] },
+    { name:"БАКЛАЖАНИЯ", role:"стратегический партнёр", photo:"lg_baklazhania", sq:true, links:[] },
     { name:"АНГСТРЕМ", role:"технологический партнёр", photo:"lg_angstrem", links:[] },
     { name:"Пикасо 3D", role:"партнёр инфраструктуры", photo:"lg_picaso", links:[{t:"САЙТ",u:"https://picaso-3d.com"}] },
     { name:"СОЮЗ", role:"технический партнёр", photo:"lg_soyuz", links:[] },
@@ -1091,7 +1092,7 @@ const MODALS = {
   } },
   orgs: { title:"m.orgs", html:()=>{
     const big = o => `<div class="ocard-big"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div>`;
-    const cell = o => { const u=(o.links&&o.links[0])?o.links[0].u:""; return `<div class="pcell${u?" tap":""}"${u?` onclick="openAny('${u}')"`:""}>${o.photo&&photo(o.photo)?`<img class="plogo" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<b>${esc(o.name)}${u?" ↗":""}</b><span>${esc(o.role)}</span></div>`; };
+    const cell = o => { const u=(o.links&&o.links[0])?o.links[0].u:""; return `<div class="pcell${u?" tap":""}"${u?` onclick="openAny('${u}')"`:""}>${o.photo&&photo(o.photo)?`<img class="plogo${o.sq?" sq":""}" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<b>${esc(o.name)}${u?" ↗":""}</b><span>${esc(o.role)}</span></div>`; };
     const person = o => { const ini=o.name.split(/\s+/).slice(0,2).map(w=>w[0]||"").join(""); return `<div class="orgrow">${o.photo&&photo(o.photo)?`<img class="pava" loading="lazy" src="${photo(o.photo)}" alt="">`:`<div class="pava">${esc(ini)}</div>`}<div class="obody" style="align-self:center"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span></div></div>`; };
     return `<div class="prods-h">${t("org.inst")}</div>${ORG.inst.map(big).join("")}
     <div class="prods-h" style="margin-top:22px">${t("org.partners")}</div>
