@@ -61,6 +61,7 @@
   .orgrow .orole{display:block; font-size:12.5px; color:var(--muted); margin-top:2px;}
   .orgrow .dlinks{margin-top:8px;}
   .pava{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;border:1px solid var(--line);}
+  img.pava{filter:grayscale(1) sepia(.22) contrast(1.08) brightness(1.04);}
   div.pava{display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-family:var(--mono);font-size:22px;letter-spacing:1px;}
   .mi{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:0;
     border-bottom:1px solid var(--line); padding:14px 16px; cursor:pointer; color:var(--hair);
@@ -373,7 +374,7 @@
 </div>
 
 <script>
-window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","uz1":"photos/uz1.jpg","uz2":"photos/uz2.jpg","uz3":"photos/uz3.jpg","uz4":"photos/uz4.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
+window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","org_slutsky":"photos/org_slutsky.jpg","org_boykov":"photos/org_boykov.jpg","uz1":"photos/uz1.jpg","uz2":"photos/uz2.jpg","uz3":"photos/uz3.jpg","uz4":"photos/uz4.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
   inst: [
@@ -393,8 +394,8 @@ const ORG = {
   people: [
     { name:"Александр Григорьев", role:"организатор форума", photo:"org_grigoriev" },
     { name:"Новиков Максим Сергеевич", role:"риск-менеджмент · ИТ · дизайн", photo:"org_novikov" },
-    { name:"Тони Спагетти", role:"административное · финансы" },
-    { name:"Олег Слуцкий", role:"merchandise" },
+    { name:"Антон Бойков", role:"административное · финансы", photo:"org_boykov" },
+    { name:"Олег Слуцкий", role:"merchandise", photo:"org_slutsky" },
   ],
 }
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:20, tickets:"https://flat.audio/e/2470" };
