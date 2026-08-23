@@ -945,7 +945,7 @@ function renderPosts(){
       </div>
     </article>`).join("");
 }
-const WAVE = '<svg class="dwave" viewBox="0 0 400 34" preserveAspectRatio="none"><polyline points="0,17 60,17 70,6 80,28 92,17 180,17 192,9 204,25 214,17 300,17 312,10 340,10 352,17 400,17" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="2" cy="17" r="3" fill="#E30613"/></svg>';
+const WAVE = '<svg class="dwave" viewBox="0 0 400 34" preserveAspectRatio="none"><polyline points="0,17 60,17 60,6 80,6 80,28 96,28 96,17 180,17 180,9 204,9 204,25 218,25 218,17 300,17 300,10 348,10 348,17 400,17" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="2" cy="17" r="3" fill="#E30613"/></svg>';
 let curDev = -1;
 function showDevNav(on){ const pv=$("#devPrev"),nx=$("#devNext"); if(!pv||!nx) return; pv.classList.toggle("on",on); nx.classList.toggle("on",on); if(on){ pv.onclick=()=>navDevice(-1); nx.onclick=()=>navDevice(1); } }
 function navDevice(d){ if(curDev<0) return; const i=(curDev+d+P.length)%P.length; openDetail(P[i].id); }
@@ -1025,7 +1025,7 @@ function ncard(c, n, total){
       `<line x1="372" y1="36" x2="363" y2="45"/><line x1="384" y1="36" x2="393" y2="45"/>`+
     `</g><circle cx="378" cy="30" r="4" fill="#E30613"/>`;
   const ev =
-    `<polyline points="5,133 96,133 102,122 109,141 115,127 120,134 130,133 296,133 300,126 305,126 309,133 400,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`;
+    `<polyline points="5,133 96,133 96,122 109,122 109,141 120,141 120,133 296,133 296,126 309,126 309,133 400,133" fill="none" stroke="currentColor" stroke-width="1.8"/>`;
   return `<div class="ncard">
     <div class="nk">· ${esc(c.k||"")}</div>
     <h4>${esc(c.h[0])}<br><span class="r">${esc(c.h[1])}</span></h4>

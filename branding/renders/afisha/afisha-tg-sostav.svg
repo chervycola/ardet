@@ -17,7 +17,7 @@
 <text x="1020" y="150" text-anchor="end" font-family="'Courier New',monospace" font-size="22" letter-spacing="2" fill="#E30613">19.09.2026</text>
 
 <circle cx="60" cy="184" r="5" fill="#E30613"/>
-<polyline points="60,184 260,184 282,158 304,184 460,184 482,146 500,206 518,184 800,184 812,166 828,166 840,184 1020,184" fill="none" stroke="#000" stroke-width="2.5"/>
+<polyline points="60,184 240,184 240,158 300,158 300,184 460,184 460,146 516,146 516,206 566,206 566,184 800,184 800,166 848,166 848,184 1020,184" fill="none" stroke="#000" stroke-width="2.5"/>
 
 <text x="60" y="240" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ЭКСПО</text>
 <text x="60" y="274" font-family="'Courier New',monospace" font-size="24" fill="#000">Kaleidoscope</text>
