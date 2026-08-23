@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+</defs>
+<rect width="1080" height="1350" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1040" height="1310" fill="none" stroke="#000" stroke-width="2"/>
+
+<use href="#logoD" fill="#000" transform="translate(60,34) scale(4.0)"/>
+<text x="540" y="72" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">АФИША</text>
+<line x1="60" y1="96" x2="1020" y2="96" stroke="#000" stroke-width="2"/>
+
+<text x="60" y="152" font-weight="800" font-size="56" letter-spacing="1" fill="#000">ВЕСЬ <tspan fill="#E30613">СОСТАВ</tspan> ФОРУМА</text>
+<text x="1020" y="150" text-anchor="end" font-family="'Courier New',monospace" font-size="22" letter-spacing="2" fill="#E30613">19.09.2026</text>
+
+<circle cx="60" cy="184" r="5" fill="#E30613"/>
+<polyline points="60,184 260,184 282,158 304,184 460,184 482,146 500,206 518,184 800,184 812,166 828,166 840,184 1020,184" fill="none" stroke="#000" stroke-width="2.5"/>
+
+<text x="60" y="240" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ЭКСПО</text>
+<text x="60" y="274" font-family="'Courier New',monospace" font-size="24" fill="#000">Kaleidoscope</text>
+<text x="60" y="308" font-family="'Courier New',monospace" font-size="24" fill="#000">ПРИБОР</text>
+<text x="60" y="342" font-family="'Courier New',monospace" font-size="24" fill="#000">Twang Modular</text>
+<text x="60" y="376" font-family="'Courier New',monospace" font-size="24" fill="#000">Solyara</text>
+<text x="60" y="410" font-family="'Courier New',monospace" font-size="24" fill="#000">Лаборатория звука МАЯК</text>
+<text x="60" y="444" font-family="'Courier New',monospace" font-size="24" fill="#000">ArtCraft workshop</text>
+<text x="60" y="478" font-family="'Courier New',monospace" font-size="24" fill="#000">LaserNoto</text>
+<text x="60" y="512" font-family="'Courier New',monospace" font-size="24" fill="#000">ЭФЭМИ</text>
+<text x="60" y="546" font-family="'Courier New',monospace" font-size="24" fill="#000">MXLS</text>
+<text x="60" y="580" font-family="'Courier New',monospace" font-size="24" fill="#000">SX LAB</text>
+<text x="60" y="614" font-family="'Courier New',monospace" font-size="24" fill="#000">ЯНДЕКС</text>
+<text x="60" y="648" font-family="'Courier New',monospace" font-size="24" fill="#000">Резонанс</text>
+<text x="60" y="682" font-family="'Courier New',monospace" font-size="24" fill="#000">VG Line</text>
+<text x="60" y="716" font-family="'Courier New',monospace" font-size="24" fill="#000">HgX_System | Unheld modular</text>
+<text x="60" y="750" font-family="'Courier New',monospace" font-size="24" fill="#000">Paratek</text>
+<text x="60" y="784" font-family="'Courier New',monospace" font-size="24" fill="#000">УралСинтМаш</text>
+<text x="60" y="818" font-family="'Courier New',monospace" font-size="24" fill="#000">Alpha1 Midi Sequencer</text>
+<text x="60" y="852" font-family="'Courier New',monospace" font-size="24" fill="#000">Радиокружок Зеленоград</text>
+<text x="60" y="886" font-family="'Courier New',monospace" font-size="24" fill="#000">Edwards-audio</text>
+<text x="60" y="920" font-family="'Courier New',monospace" font-size="24" fill="#000">ФАЗА Электроника</text>
+<text x="60" y="954" font-family="'Courier New',monospace" font-size="24" fill="#000">Universe Zen</text>
+<text x="60" y="988" font-family="'Courier New',monospace" font-size="24" fill="#000">Пикасо 3D</text>
+<text x="575" y="240" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· АРТИСТЫ</text>
+<text x="575" y="274" font-family="'Courier New',monospace" font-size="24" fill="#000">Там Огни | c0deterr0r</text>
+<text x="575" y="308" font-family="'Courier New',monospace" font-size="24" fill="#000">TiihayaRekaa</text>
+<text x="575" y="342" font-family="'Courier New',monospace" font-size="24" fill="#000">М.О.У.Б.</text>
+<text x="575" y="376" font-family="'Courier New',monospace" font-size="24" fill="#000">dr.SpaceKir</text>
+<text x="575" y="410" font-family="'Courier New',monospace" font-size="24" fill="#000">Alexander Turkin</text>
+<text x="575" y="444" font-family="'Courier New',monospace" font-size="24" fill="#000">Игра с тенью</text>
+<text x="575" y="478" font-family="'Courier New',monospace" font-size="24" fill="#000">H.Ruine</text>
+<text x="575" y="512" font-family="'Courier New',monospace" font-size="24" fill="#000">Анна Пряхина</text>
+<text x="575" y="546" font-family="'Courier New',monospace" font-size="24" fill="#000">Артемий Анрилов и xandr.vasiliev</text>
+<text x="575" y="580" font-family="'Courier New',monospace" font-size="24" fill="#000">Gogidze</text>
+<text x="575" y="636" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ЛЕКТОРИЙ</text>
+<text x="575" y="670" font-family="'Courier New',monospace" font-size="24" fill="#000">Владимир Черепанов</text>
+<text x="575" y="704" font-family="'Courier New',monospace" font-size="24" fill="#000">Владимир Кабанов</text>
+<text x="575" y="738" font-family="'Courier New',monospace" font-size="24" fill="#000">Захар Лунев</text>
+<text x="575" y="772" font-family="'Courier New',monospace" font-size="24" fill="#000">Александр Григорьев</text>
+<text x="575" y="806" font-family="'Courier New',monospace" font-size="24" fill="#000">Александр Пленингер</text>
+<text x="575" y="840" font-family="'Courier New',monospace" font-size="24" fill="#000">Георгий Орлов-Давыдовский</text>
+<text x="575" y="874" font-family="'Courier New',monospace" font-size="24" fill="#000">Николай Козловский</text>
+<text x="575" y="908" font-family="'Courier New',monospace" font-size="24" fill="#000">Илья Чертков</text>
+<text x="575" y="942" font-family="'Courier New',monospace" font-size="24" fill="#000">Игорь Мирзоев</text>
+<text x="575" y="976" font-family="'Courier New',monospace" font-size="24" fill="#000">Каут Алекс</text>
+<text x="575" y="1010" font-family="'Courier New',monospace" font-size="24" fill="#000">Иван Антоновский</text>
+
+<text x="60" y="1044" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· МАСТЕР-КЛАССЫ</text>
+<text x="60" y="1078" font-family="'Courier New',monospace" font-size="24" fill="#000">Воронов Егор</text>
+<text x="60" y="1112" font-family="'Courier New',monospace" font-size="24" fill="#000">Полина Шмонина</text>
+<text x="60" y="1146" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
+<text x="60" y="1180" font-family="'Courier New',monospace" font-size="24" fill="#000">Илья Чертков</text>
+<text x="575" y="1044" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ИНСТАЛЛЯЦИИ</text>
+<text x="575" y="1078" font-family="'Courier New',monospace" font-size="24" fill="#000">Анна Ходыкина</text>
+<text x="575" y="1112" font-family="'Courier New',monospace" font-size="24" fill="#000">Василий Конкрет</text>
+<text x="575" y="1146" font-family="'Courier New',monospace" font-size="24" fill="#000">Дарья Лукьянова</text>
+<text x="575" y="1180" font-family="'Courier New',monospace" font-size="24" fill="#000">Лидия Симич</text>
+
+<line x1="60" y1="1250" x2="1020" y2="1250" stroke="#000" stroke-width="2"/>
+<text x="60" y="1292" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="60" y="1318" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · МИЭТ · 13:00–20:00 · БИЛЕТЫ: FLAT.AUDIO/E/2470</text>
+<text x="1020" y="1300" text-anchor="end" font-weight="800" font-size="32" fill="#E30613">ДИСКРЕТ.РФ</text>
+</svg>
