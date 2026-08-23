@@ -1,7 +1,7 @@
 {
   "name": "ardet",
   "version": "1.0.0",
-  "description": "",
+  "description": "ardet — it burns · SxLab",
   "main": "index.js",
   "scripts": {
     "test": "node test/smoke-sprites.mjs && node test/logic.mjs && node test/systems.mjs && node test/content.mjs && node test/effects.mjs && node test/ulitsa.mjs",
@@ -17,7 +17,7 @@
     "url": "http://local_proxy@127.0.0.1:46201/git/chervycola/ardet"
   },
   "keywords": [],
-  "author": "",
+  "author": "SxLab",
   "license": "ISC",
   "devDependencies": {
     "esbuild": "^0.28.0"
