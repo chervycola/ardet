@@ -36,8 +36,8 @@
 <text x="80" y="688" font-family="'Courier New',monospace" font-size="34" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · МИЭТ · 13:00–20:00</text>
 <text x="80" y="748" font-family="'Courier New',monospace" font-size="26" letter-spacing="1" fill="#000">ПЛОЩАДЬ ШОКИНА, 1 · КОРПУС МИЭТ</text>
 
-<circle cx="80" cy="830" r="7" fill="#E30613"/>
-<polyline points="80,830 300,830 300,804 360,804 360,830 540,830 540,786 598,786 598,846 640,846 640,830 900,830 900,810 942,810 942,830 1160,830" fill="none" stroke="#000" stroke-width="4"/>
+<circle cx="80" cy="820" r="7" fill="#E30613"/>
+<polyline points="80,820 180,820 180,812 237,812 237,828 283,828 283,820 360,820 360,804 410,804 410,836 453,836 453,812 510,812 510,844 577,844 577,828 627,828 627,820 713,820 713,804 767,804 767,828 813,828 813,812 877,812 877,836 927,836 927,820 1000,820 1000,812 1060,812 1060,820 1160,820" fill="none" stroke="#000" stroke-width="4"/>
 
 <text x="620" y="892" text-anchor="middle" font-weight="800" font-size="40" fill="#000" textLength="1080" lengthAdjust="spacingAndGlyphs">ЭКСПО ПРИБОРОВ · ДВЕ СЦЕНЫ · МАСТЕР-КЛАССЫ · ЛЕКТОРИЙ · ДЕТСКАЯ ЗОНА</text>
 
