@@ -13,7 +13,7 @@
 <text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">АФИША</text>
 <line x1="60" y1="96" x2="1020" y2="96" stroke="#000" stroke-width="2"/>
 
-<text x="60" y="152" font-weight="800" font-size="56" letter-spacing="1" fill="#000">ВЕСЬ <tspan fill="#E30613">СОСТАВ</tspan> ФОРУМА</text>
+<text x="60" y="152" font-weight="800" font-size="56" letter-spacing="1" fill="#000">СПИСОК <tspan fill="#E30613">УЧАСТНИКОВ</tspan></text>
 <text x="1020" y="150" text-anchor="end" font-family="'Courier New',monospace" font-size="22" letter-spacing="2" fill="#E30613">19.09.2026</text>
 
 <circle cx="60" cy="184" r="5" fill="#E30613"/>
