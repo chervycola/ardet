@@ -35,7 +35,7 @@
 
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· 15:00–18:00 · ЗАЛ МАСТ·1</text>
 <text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000" textLength="960" lengthAdjust="spacingAndGlyphs">ХАОТИЧЕСКИЙ</text>
-<text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">СИНТЕЗАТОР</text>
+<text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613" textLength="960" lengthAdjust="spacingAndGlyphs">СИНТЕЗАТОР</text>
 
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
