@@ -650,15 +650,17 @@ const C = [
   { id:"mxls", name:"MXLS", role:"Модульный стенд · Eurorack", photos:[], members:[], links:[{t:"PARATEK",u:"https://paratek.org"}],
     desc:"Российский модульный стенд: авторские Eurorack-кейсы, кабели и питание MXLS, модули Paratek и ламповые, вактрольные разработки Bizarre Jezabel.",
     feat:"На одном стенде — три российских направления; полный инфраструктурный набор для Eurorack; ламповые и вактрольные модули." },
-  { id:"picaso", name:"Пикасо 3D", role:"3D-печать · партнёр инфраструктуры", photos:["lg_picaso"], members:[], links:[{t:"САЙТ",u:"https://picaso-3d.com"}],
-    desc:"Российский производитель 3D-принтеров. На форуме — участник экспозиции и партнёр инфраструктуры.", feat:"" },
+  { id:"picaso", name:"Пикасо 3D", role:"Промышленные 3D-принтеры · Зеленоград", photos:[], members:[], links:[{t:"САЙТ",u:"https://picaso-3d.com"}],
+    desc:"Зеленоградский разработчик и производитель промышленных 3D-принтеров. Создаём оборудование для FDM/FFF-печати в Зеленограде с 2011 года. Сегодня на предприятиях России работает более 15 000 наших принтеров.",
+    feat:"Разрабатываем 3D-принтеры, материалы и программное обеспечение как единую систему. Оборудование печатает инженерными и композиционными пластиками.\n\nПринтеры используют для изготовления прототипов, производственной оснастки, корпусов, запчастей и малых серий готовых изделий." },
   { id:"yandex", name:"Яндекс", role:"Арт-лаборатория «Techno Sound Art»", photos:[], members:[],
     links:[{t:"КОМПАНИЯ",u:"https://yandex.ru"}],
     desc:"Арт-лаборатория Яндекса «Techno Sound Art». На форуме представит ЯНЕ1 — гибридный синтезатор полностью собственной разработки: схема, дизайн и ПО созданы внутри лаборатории.",
     feat:"Полностью новая разработка лаборатории; пресеты на реальных данных — например, GPS-маршрутах роверов-доставщиков." },
   { id:"edwards", name:"Edwards-audio", role:"Аудиолаборатория", photos:[], members:[], links:[], desc:"" },
   { id:"faza", name:"ФАЗА Электроника", role:"—", photos:[], members:[], links:[], desc:"" },
-  { id:"rezonans", name:"Резонанс", role:"—", photos:[], members:[], links:[], desc:"" },
+  { id:"rezonans", name:"Резонанс", role:"Электронные музыкальные инструменты", photos:[], members:[], links:[],
+    desc:"Resonance-1 — электронный музыкальный инструмент, вдохновляющий на эксперименты и выход за рамки традиционного синтеза звука.\n\nВ основе его работы — генерация резонансов в спектре с помощью фильтров и систем обратной связи, придающих звучанию нелинейный, экспрессивный характер." },
   { id:"porkysynth", name:"PORKYSYNTH", role:"DIY-модульные синтезаторы · Челябинск", photos:["porky1"],
     members:[{name:"Роман Торхов"}], links:[],
     desc:"DIY-энтузиаст, в прошлом бас-гитарист: собирает и паяет модульные синтезаторы. Несёт DIY в массы — делится опытом и помогает другим погрузиться в мир электроники." },
@@ -679,13 +681,9 @@ const C = [
       { id:"tesserakt", name:"Тессеракт", hp:"", price:"", photos:["uz3"], desc:"Деструктивный ревербератор: алгоритмы гонг, волна, ревер-гейт, п-фильтр, резонанс, комната, шиммер, эхо. Основной и альтернативный банки настроек, вход экспрессии. На форуме — старая ревизия." },
       { id:"saturn2", name:"Сатурн-2", hp:"", price:"", photos:["uz4"], desc:"Фузз-бустер-предусилитель: трёхполосный тембр-блок (низкие/средние/высокие), режимы чистый/вырез/микс/бустер, переключатели 600/1200 Гц и фузз/драйв." },
     ] },
-  { id:"vgline", name:"VG-line", role:"Музыкальные инструменты · ЕАЭС", photos:["vg","vg1","vg2","vg3"], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
-    links:[{t:"INSTAGRAM",u:"https://instagram.com/vg.line/"}],
-    desc:"Компания Вячеслава Григорьева. Разработка и производство авторских музыкальных инструментов — самостоятельно, совместно с музыкантами и брендами, а также по контракту для других компаний.",
-    feat:"Собственные разработки и контрактное производство; сотрудничество с другими брендами и музыкантами; опыт серийного изготовления." },
-  { id:"msf", name:"MAD SOUND FACTORY", role:"Музыкальные инструменты · ЕАЭС", photos:["vg","vg1","vg2","vg3"], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
-    links:[{t:"САЙТ",u:"https://madsoundfactory.com"}],
-    desc:"Компания Вячеслава Григорьева. Разработка и производство авторских музыкальных инструментов — самостоятельно, совместно с музыкантами и брендами, а также по контракту для других компаний.",
+  { id:"vgline", name:"VG Line / MAD SOUND FACTORY", role:"Музыкальные инструменты · ЕАЭС", photos:["vg","vg1","vg2","vg3"], members:[{name:"Вячеслав Григорьев",a:"vgrigoriev"}],
+    links:[{t:"INSTAGRAM",u:"https://instagram.com/vg.line/"},{t:"САЙТ",u:"https://madsoundfactory.com"}],
+    desc:"Два бренда Вячеслава Григорьева. Разработка и производство авторских музыкальных инструментов — самостоятельно, совместно с музыкантами и брендами, а также по контракту для других компаний.",
     feat:"Собственные разработки и контрактное производство; сотрудничество с другими брендами и музыкантами; опыт серийного изготовления." },
   { id:"paratek", name:"Paratek", role:"Эстетика советского киберпанка · Подольск", photos:["para","para2","para3"], members:[],
     links:[{t:"САЙТ",u:"https://paratek.org"},{t:"VK",u:"https://vk.ru/paratekorg"},{t:"INSTAGRAM",u:"https://instagram.com/paratekorg"}],
@@ -1201,8 +1199,8 @@ function openCompany(id){
     <span class="dlabel">${t("badge.company")}</span>${WAVE}
     <h1 class="dname" style="margin-top:0">${esc(c.name)}</h1>
     <div class="drole">${esc(c.role||"")}</div>
-    ${c.desc ? `<div class="dframe"><span class="k">${t("frame.company")}</span><p>${esc(c.desc)}</p></div>` : ""}
-    ${c.feat ? `<div class="dframe"><span class="k">${t("frame.feat")}</span><p>${esc(c.feat)}</p></div>` : ""}
+    ${c.desc ? `<div class="dframe"><span class="k">${t("frame.company")}</span><p class="pre">${esc(c.desc)}</p></div>` : ""}
+    ${c.feat ? `<div class="dframe"><span class="k">${t("frame.feat")}</span><p class="pre">${esc(c.feat)}</p></div>` : ""}
     <div class="dframe"><span class="k">${t("frame.members")}</span>${(c.members && c.members.length) ? `<p>${c.members.map(m=>{const nm=(typeof m==="string")?m:m.name; const aid=(m&&m.a)?m.a:null; return (aid && A.find(x=>x.id===aid)) ? `<a class="colink" onclick="openAuthor('${aid}')">${esc(nm)}</a>` : esc(nm);}).join(", ")}</p>` : `<p class="ph">${t("ph.members")}</p>`}</div>
     ${devs.length ? `<div class="prods"><div class="prods-h">${t("frame.devices")} · ${devs.length}</div>${devs.map(p=>`<button class="prod" onclick="openDetail('${p.id}')"><span class="prod-n">${esc(p.device)}</span><span class="prod-m">${esc(p.sub||"")} ›</span></button>`).join("")}</div>` : ""}
     ${prods.length ? `<div class="prods"><div class="prods-h">${t("frame.products")} · ${prods.length}</div>${prods.map(pr=>`<button class="prod" onclick="openProduct('${c.id}','${pr.id}')"><span class="prod-n">${esc(pr.name)}</span><span class="prod-m">${pr.hp?esc(pr.hp)+" ":""}${pr.price?"· "+esc(pr.price)+" ":""}›</span></button>`).join("")}</div>` : ""}
