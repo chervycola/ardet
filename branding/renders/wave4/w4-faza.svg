@@ -20,26 +20,18 @@
 <text x="1020" y="48" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЧЕТВЁРТАЯ ВОЛНА</text>
 <text x="1020" y="76" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#000">ЭКСПО · 07/07</text>
 <line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
-<g stroke="#c9c9c9" stroke-width="2">
-  <rect x="664" y="160" width="84" height="416" fill="url(#th)"/>
-  <rect x="826" y="160" width="74" height="416" fill="url(#th)"/>
-</g>
-<g stroke="#E30613" stroke-width="3.5" stroke-linecap="round">
-  <line x1="975" y1="180" x2="975" y2="150"/><line x1="975" y1="268" x2="975" y2="298"/>
-  <line x1="931" y1="224" x2="947" y2="224"/><line x1="1003" y1="224" x2="1019" y2="224"/>
-  <line x1="944" y1="193" x2="923" y2="172"/><line x1="1006" y1="193" x2="1027" y2="172"/>
-  <line x1="944" y1="255" x2="923" y2="276"/><line x1="1006" y1="255" x2="1027" y2="276"/>
-</g>
-<circle cx="975" cy="224" r="9" fill="#E30613"/>
-<text x="60" y="216" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· ЭЛЕКТРОНИКА</text>
-<text x="56" y="360" font-weight="800" font-size="140" letter-spacing="1" fill="#000">ФАЗА</text>
-<text x="56" y="502" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613" textLength="960" lengthAdjust="spacingAndGlyphs">ЭЛЕКТРОНИКА</text>
-<circle cx="60" cy="576" r="5" fill="#E30613"/>
-<polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
-<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">ФАЗА Электроника присоединяется к</text>
-<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">экспозиции форума. Подробности — в</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">карточке участника на дискрет.рф и в</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">приложении @dskrt_bot.</text>
+<rect x="60" y="140" width="960" height="690" fill="#0d0d0d"/>
+<image xlink:href="../../app/photos/faza1.jpg" x="60" y="140" width="960" height="690" clip-path="url(#scr)" filter="url(#gray)" preserveAspectRatio="xMidYMid slice"/>
+<rect x="60" y="140" width="960" height="690" fill="none" stroke="#000" stroke-width="3"/>
+<rect x="68" y="148" width="944" height="674" fill="none" stroke="#FFF" stroke-width="1" opacity="0.35"/>
+<path d="M60 180 V140 H100 M980 140 H1020 V180 M1020 790 V830 H980 M100 830 H60 V790" fill="none" stroke="#E30613" stroke-width="4"/>
+<rect x="60" y="800" width="230" height="30" fill="#000"/>
+<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">встречаемся на экспо</text>
+<text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">ЭЛЕКТРОНИКА</text>
+<text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">ФАЗА</text>
+<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">ФАЗА Электроника</text>
+<circle cx="60" cy="1130" r="5" fill="#E30613"/>
+<polyline points="60,1130 149,1130 149,1122 199,1122 199,1138 241,1138 241,1130 309,1130 309,1114 353,1114 353,1146 392,1146 392,1122 442,1122 442,1154 501,1154 501,1138 546,1138 546,1130 623,1130 623,1114 670,1114 670,1138 712,1138 712,1122 768,1122 768,1146 813,1146 813,1130 878,1130 878,1122 931,1122 931,1130 1020,1130" fill="none" stroke="#000" stroke-width="3"/>
 <line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
 <text x="60" y="1256" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1284" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>

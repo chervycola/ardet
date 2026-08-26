@@ -375,7 +375,7 @@
 </div>
 
 <script>
-window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","porky1":"photos/porky1.jpg","moon1":"photos/moon1.jpg","prov1":"photos/prov1.jpg","prov2":"photos/prov2.jpg","sl1":"photos/sl1.jpg","sl2":"photos/sl2.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","org_slutsky":"photos/org_slutsky.jpg","org_boykov":"photos/org_boykov.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
+window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","faza1":"photos/faza1.jpg","rez1":"photos/rez1.jpg","rez2":"photos/rez2.jpg","rez3":"photos/rez3.jpg","porky1":"photos/porky1.jpg","moon1":"photos/moon1.jpg","prov1":"photos/prov1.jpg","prov2":"photos/prov2.jpg","sl1":"photos/sl1.jpg","sl2":"photos/sl2.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","org_slutsky":"photos/org_slutsky.jpg","org_boykov":"photos/org_boykov.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
   inst: [
@@ -394,9 +394,9 @@ const ORG = {
   ],
   people: [
     { name:"Александр Григорьев", role:"организатор форума", photo:"org_grigoriev" },
-    { name:"Новиков Максим Сергеевич", role:"риск-менеджмент · ИТ · дизайн", photo:"org_novikov" },
+    { name:"Новиков Максим", role:"риск-менеджмент · ИТ · дизайн", photo:"org_novikov" },
     { name:"Антон Бойков", role:"административное · финансы", photo:"org_boykov" },
-    { name:"Олег Слуцкий", role:"merchandise", photo:"org_slutsky" },
+    { name:"Олег Слуцкий", role:"образование · арт", photo:"org_slutsky" },
   ],
 }
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:20, tickets:"https://flat.audio/e/2470" };
@@ -658,8 +658,8 @@ const C = [
     desc:"Арт-лаборатория Яндекса «Techno Sound Art». На форуме представит ЯНЕ1 — гибридный синтезатор полностью собственной разработки: схема, дизайн и ПО созданы внутри лаборатории.",
     feat:"Полностью новая разработка лаборатории; пресеты на реальных данных — например, GPS-маршрутах роверов-доставщиков." },
   { id:"edwards", name:"Edwards-audio", role:"Аудиолаборатория", photos:[], members:[], links:[], desc:"" },
-  { id:"faza", name:"ФАЗА Электроника", role:"—", photos:[], members:[], links:[], desc:"" },
-  { id:"rezonans", name:"Резонанс", role:"Электронные музыкальные инструменты", photos:[], members:[], links:[],
+  { id:"faza", name:"ФАЗА Электроника", role:"—", photos:["faza1"], members:[], links:[], desc:"" },
+  { id:"rezonans", name:"Резонанс", role:"Электронные музыкальные инструменты", photos:["rez1","rez2","rez3"], members:[], links:[],
     desc:"Resonance-1 — электронный музыкальный инструмент, вдохновляющий на эксперименты и выход за рамки традиционного синтеза звука.\n\nВ основе его работы — генерация резонансов в спектре с помощью фильтров и систем обратной связи, придающих звучанию нелинейный, экспрессивный характер." },
   { id:"porkysynth", name:"PORKYSYNTH", role:"DIY-модульные синтезаторы · Челябинск", photos:["porky1"],
     members:[{name:"Роман Торхов"}], links:[],
