@@ -25,11 +25,11 @@
 <rect x="60" y="140" width="960" height="690" fill="none" stroke="#000" stroke-width="3"/>
 <rect x="68" y="148" width="944" height="674" fill="none" stroke="#FFF" stroke-width="1" opacity="0.35"/>
 <path d="M60 180 V140 H100 M980 140 H1020 V180 M1020 790 V830 H980 M100 830 H60 V790" fill="none" stroke="#E30613" stroke-width="4"/>
-<rect x="60" y="800" width="230" height="30" fill="#000"/>
-<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">встречаемся на экспо</text>
+<rect x="60" y="800" width="475" height="30" fill="#000"/>
+<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">бесконечная палитра шумов в одном устройстве</text>
 <text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">ЭЛЕКТРОНИКА</text>
 <text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">ФАЗА</text>
-<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">ФАЗА Электроника</text>
+<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">Никита Кузнецов · Москва</text>
 <circle cx="60" cy="1130" r="5" fill="#E30613"/>
 <polyline points="60,1130 149,1130 149,1122 199,1122 199,1138 241,1138 241,1130 309,1130 309,1114 353,1114 353,1146 392,1146 392,1122 442,1122 442,1154 501,1154 501,1138 546,1138 546,1130 623,1130 623,1114 670,1114 670,1138 712,1138 712,1122 768,1122 768,1146 813,1146 813,1130 878,1130 878,1122 931,1122 931,1130 1020,1130" fill="none" stroke="#000" stroke-width="3"/>
 <line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
