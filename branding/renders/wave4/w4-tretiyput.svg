@@ -25,8 +25,8 @@
 <rect x="60" y="140" width="960" height="690" fill="none" stroke="#000" stroke-width="3"/>
 <rect x="68" y="148" width="944" height="674" fill="none" stroke="#FFF" stroke-width="1" opacity="0.35"/>
 <path d="M60 180 V140 H100 M980 140 H1020 V180 M1020 790 V830 H980 M100 830 H60 V790" fill="none" stroke="#E30613" stroke-width="4"/>
-<rect x="60" y="800" width="148" height="30" fill="#000"/>
-<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">moonunit.com</text>
+<rect x="60" y="800" width="332" height="30" fill="#000"/>
+<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">Moon Unit · Dark Side · Nevroz</text>
 <text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">ТВОРЧЕСКИЙ ЦЕНТР · МОСКВА — САНКТ-ПЕТЕРБУРГ</text>
 <text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">MOON UNIT</text>
 <text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">Творческий Центр «Третий Путь»</text>
