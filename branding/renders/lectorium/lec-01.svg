@@ -33,13 +33,13 @@
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">ДИСКРЕТА</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
-<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">В центре каждой лекции — прибор, а не</text>
-<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">вода. РАСТР — понятным языком для всех,</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">ВЕКТОР — техническим для тех, кто в теме.</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Плюс две лекции прямо на демо-сцене</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">экспо. Листайте.</text>
+<text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">В центре каждой лекции — система и опыт.</text>
+<text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Лекционный блок РАСТР — общий формат для</text>
+<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">всех, ВЕКТОР — уклон в технические</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">детали. Плюс две дополнительные лекции на</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">демо-сцене возле экспо. Листайте.</text>
 <rect x="60" y="960" width="720" height="96" fill="#E30613"/>
-<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">14:00–19:00 · БЕЗ ПАУЗ</text>
+<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">13:40–18:50 · БЕЗ ПАУЗ</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
