@@ -33,17 +33,18 @@
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">ВЕКТОР</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
-<text x="60" y="644" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">14:00 · НИКОЛАЙ КОЗЛОВСКИЙ</text>
-<text x="60" y="682" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Аудиовизуальная синестезия</text>
+<text x="60" y="644" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">14:00 · ЕВГЕНИЙ КАРЛО</text>
+<text x="60" y="682" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Цена и ценность музыкальных устройств</text>
 <text x="60" y="736" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">15:00 · ИВАН АНТОНОВСКИЙ · АНГСТРЕМ</text>
 <text x="60" y="774" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Микроконтроллеры и их применение — в технике, в</text>
 <text x="60" y="812" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">жизни, в музыке</text>
 <text x="60" y="866" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">16:00 · ИГОРЬ МИРЗОЕВ · ПИКАСО 3D</text>
-<text x="60" y="904" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">3D-печать в музыкальной электронике</text>
-<text x="60" y="958" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">17:00 · ИЛЬЯ ЧЕРТКОВ</text>
-<text x="60" y="996" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Творческое применение самодельных микрофонов</text>
-<text x="60" y="1050" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">18:00 · АЛЕКС КАУТ · BORING MODULAR</text>
-<text x="60" y="1088" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Опыт малотиражной разработки</text>
+<text x="60" y="904" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Выбор материалов для корпуса</text>
+<text x="60" y="958" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">17:00 · ВЛАДИМИР ЧЕРЕПАНОВ</text>
+<text x="60" y="996" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Медицинский звук. Использование в</text>
+<text x="60" y="1034" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">звукоэкспериментальных целях непрофильной техники</text>
+<text x="60" y="1088" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">18:00 · АЛЕКС КАУТ · BORING MODULAR</text>
+<text x="60" y="1126" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Опыт малотиражной разработки</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>

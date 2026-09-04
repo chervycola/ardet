@@ -36,16 +36,16 @@
 <text x="60" y="644" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">13:40 · ВЛАДИМИР КАБАНОВ · ПРИБОР</text>
 <text x="60" y="682" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Бесконденсаторные фильтры в синтезаторах:</text>
 <text x="60" y="720" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">особенности, история, перспективы</text>
-<text x="60" y="774" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">15:00 · ЕВГЕНИЙ КАРЛО</text>
-<text x="60" y="812" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Цена и ценность музыкальных устройств</text>
-<text x="60" y="866" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">16:00 · АЛЕКСАНДР ПЛЕНИНГЕР · ОНЛАЙН</text>
-<text x="60" y="904" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Технический дизайн: дьявол в деталях</text>
-<text x="60" y="958" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">17:00 · АЛЕКСАНДР ГРИГОРЬЕВ И ЗАХАР ЛУНЕВ</text>
-<text x="60" y="996" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">DSP-платформа «Семечко» и студия разработки Rostok</text>
-<text x="60" y="1034" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">IDE</text>
-<text x="60" y="1088" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">18:00 · ВЛАДИМИР ЧЕРЕПАНОВ</text>
-<text x="60" y="1126" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Медицинский звук. Использование в</text>
-<text x="60" y="1164" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">звукоэкспериментальных целях непрофильной техники</text>
+<text x="60" y="774" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">15:00 · ВЛАД КРЕЙМЕР · SOMA</text>
+<text x="60" y="812" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Организмический синтез как поэтический предвестник</text>
+<text x="60" y="850" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">нового измерения науки</text>
+<text x="60" y="904" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">16:00 · АЛЕКСАНДР ПЛЕНИНГЕР · ОНЛАЙН</text>
+<text x="60" y="942" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Технический дизайн: дьявол в деталях</text>
+<text x="60" y="996" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">17:00 · АЛЕКСАНДР ГРИГОРЬЕВ И ЗАХАР ЛУНЕВ</text>
+<text x="60" y="1034" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">DSP-платформа «Семечко» и студия разработки Rostok</text>
+<text x="60" y="1072" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">IDE</text>
+<text x="60" y="1126" font-family="'Courier New',monospace" font-size="23" letter-spacing="2" fill="#E30613">18:00 · ИЛЬЯ ЧЕРТКОВ</text>
+<text x="60" y="1164" font-weight="800" font-size="32" letter-spacing="0.3" fill="#000">Творческое применение самодельных микрофонов</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>

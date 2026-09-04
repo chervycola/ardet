@@ -41,25 +41,26 @@
 <text x="60" y="917" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· СЦЕНА ДК</text>
 <text x="60" y="956" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Анна Пряхина</text>
 <text x="60" y="989" font-family="'Courier New',monospace" font-size="20" fill="#000">17:00 H.Ruine · AV</text>
-<text x="60" y="1022" font-family="'Courier New',monospace" font-size="20" fill="#000">19:00 Финал · результаты конкурса</text>
+<text x="60" y="1022" font-family="'Courier New',monospace" font-size="20" fill="#000">18:00 Аудиовиз. синестезия · Козловский</text>
+<text x="60" y="1055" font-family="'Courier New',monospace" font-size="20" fill="#000">19:00 Финал · результаты конкурса</text>
 
 <text x="575" y="296" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· ЛЕКЦИИ · РАСТР · 3101</text>
 <text x="575" y="335" font-family="'Courier New',monospace" font-size="20" fill="#000">13:40 Фильтры в синтезаторах · Кабанов</text>
-<text x="575" y="368" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Цена и ценность устройств · Карло</text>
+<text x="575" y="368" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Организмический синтез · Креймер</text>
 <text x="575" y="401" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Технический дизайн · Пленингер</text>
 <text x="575" y="434" font-family="'Courier New',monospace" font-size="20" fill="#000">17:00 «Семечко» и Rostok IDE · Григорьев,</text>
 <text x="651" y="467" font-family="'Courier New',monospace" font-size="20" fill="#000">Лунев</text>
-<text x="575" y="500" font-family="'Courier New',monospace" font-size="20" fill="#000">18:00 Медицинский звук · Черепанов</text>
+<text x="575" y="500" font-family="'Courier New',monospace" font-size="20" fill="#000">18:00 Самодельные микрофоны · Чертков</text>
 <text x="575" y="557" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· ЛЕКЦИИ · ВЕКТОР · 3104</text>
-<text x="575" y="596" font-family="'Courier New',monospace" font-size="20" fill="#000">14:00 Аудиовиз. синестезия · Козловский</text>
+<text x="575" y="596" font-family="'Courier New',monospace" font-size="20" fill="#000">14:00 Цена и ценность устройств · Карло</text>
 <text x="575" y="629" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Микроконтроллеры · Антоновский</text>
-<text x="575" y="662" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 3D-печать · Мирзоев (Пикасо 3D)</text>
-<text x="575" y="695" font-family="'Courier New',monospace" font-size="20" fill="#000">17:00 Самодельные микрофоны · Чертков</text>
+<text x="575" y="662" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Материалы для корпуса · Мирзоев</text>
+<text x="575" y="695" font-family="'Courier New',monospace" font-size="20" fill="#000">17:00 Медицинский звук · Черепанов</text>
 <text x="575" y="728" font-family="'Courier New',monospace" font-size="20" fill="#000">18:00 Малотиражная разработка · Каут</text>
-<text x="575" y="785" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· МАСТЕРСКИЕ · МАСТ·1 И МАСТ·2</text>
-<text x="575" y="824" font-family="'Courier New',monospace" font-size="20" fill="#000">14:00 Полевые записи · Чертков</text>
-<text x="575" y="857" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Хаотический синтезатор · Шмонина</text>
-<text x="575" y="890" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Аналоговый синтезатор · Воронов</text>
+<text x="575" y="785" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· МАСТЕРСКИЕ И УЛИЦА</text>
+<text x="575" y="824" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Хаотический синтезатор · Шмонина</text>
+<text x="575" y="857" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Аналоговый синтезатор · Воронов</text>
+<text x="575" y="890" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Полевые записи · улица · Чертков</text>
 <text x="575" y="947" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· ДЕТСКАЯ ПРОГРАММА</text>
 <text x="575" y="986" font-family="'Courier New',monospace" font-size="20" fill="#000">14:00 Мастерская звуков · 6–12 лет</text>
 <text x="575" y="1019" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Синтезатор из сковородки · 10+</text>
