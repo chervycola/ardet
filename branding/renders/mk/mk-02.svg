@@ -43,12 +43,12 @@
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Прогулка с записью звуков города:</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">30-минутный инструктаж от Ильи Черткова —</text>
 <text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">продюсера (mal0, WALM), номинанта Премии</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Курёхина, — затем в путь вместе с Владом</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Креймером (SOMA) и экскурсоводом Павлом</text>
-<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Чукаевым.</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Курёхина, — затем в путь с экспертом</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Владом Креймером (SOMA). Маршрут составил</text>
+<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">экскурсовод Павел Чукаев.</text>
 
 <rect x="60" y="960" width="702" height="96" fill="#E30613"/>
-<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ИЛЬЯ ЧЕРТКОВ · 4567 ₽</text>
+<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ИЛЬЯ ЧЕРТКОВ · 3456 ₽</text>
 
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>

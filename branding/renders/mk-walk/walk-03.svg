@@ -29,16 +29,16 @@
 </g>
 <circle cx="975" cy="214" r="9" fill="#E30613"/>
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· ЧТО ВЗЯТЬ И ЧТО ДАДУТ</text>
-<text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">ГЕОФОН</text>
+<text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">СЕНСОРЫ</text>
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">И ЭФИРЫ</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">С собой — рекордер или другое средство</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">записи с аудиовходом. На месте —</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">диктофоны, наушники, пьезо-датчики,</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">геофон и приёмники SOMA Ether. По очереди</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">взаимодействуем с устройствами и</text>
-<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">объектами пути.</text>
+<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">диктофоны, наушники, приёмники SOMA Ether</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">и датчики вибраций: они слушают не</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">воздух, а дрожь материала. Записи с</text>
+<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">диктофонов заберёте с собой.</text>
 <rect x="60" y="960" width="654" height="96" fill="#E30613"/>
 <text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ВОЗЬМИТЕ РЕКОРДЕР</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>

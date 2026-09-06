@@ -28,19 +28,19 @@
   <line x1="944" y1="245" x2="923" y2="266"/><line x1="1006" y1="245" x2="1027" y2="266"/>
 </g>
 <circle cx="975" cy="214" r="9" fill="#E30613"/>
-<text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· ТРОЕ ВЕДУЩИХ</text>
+<text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· ПРОГУЛКА С ЭКСПЕРТАМИ</text>
 <text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">КТО</text>
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">ВЕДЁТ</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Ведущий — Илья Чертков, продюсер (mal0,</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">WALM), номинант Премии Курёхина.</text>
-<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Технический эксперт — Влад Креймер, SOMA.</text>
-<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Экскурсовод — Павел Чукаев. Через 20</text>
-<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">минут после финиша — лекция Ильи о</text>
-<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">микрофонах.</text>
+<text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Приглашённый технический эксперт — Влад</text>
+<text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Креймер, SOMA. Маршрут — от экскурсовода</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Павла Чукаева. Через 20 минут после</text>
+<text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">финиша — лекция Ильи о микрофонах.</text>
 <rect x="60" y="960" width="722" height="96" fill="#E30613"/>
-<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">4567 ₽ · ПО БИЛЕТАМ</text>
+<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">3456 ₽ · ПО БИЛЕТАМ</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
