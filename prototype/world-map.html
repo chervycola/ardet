@@ -205,8 +205,9 @@ x.textAlign='left';
 x.font='500 15px Montserrat';x.fillStyle=SEPIA;
 for(const s of SIDES){
   const a=rad(s.c),lr=REDGE+30;
-  const px=CX+Math.cos(a)*lr,py=CY+Math.sin(a)*lr;
-  x.textAlign=Math.cos(a)>0.4?'left':(Math.cos(a)<-0.4?'right':'center');
+  let px=CX+Math.cos(a)*lr;const py=CY+Math.sin(a)*lr;
+  if(Math.cos(a)<-0.4){x.textAlign='left';px=24;}
+  else x.textAlign=Math.cos(a)>0.4?'left':'center';
   x.globalAlpha=0.9;
   const lines=s.n.split(' · ');
   x.fillText(lines[0],px,py+(Math.sin(a)>0.3?84:(Math.sin(a)<-0.3?-34:0)));
