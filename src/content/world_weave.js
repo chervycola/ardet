@@ -63,7 +63,7 @@ for (const e of EPOCHS) {
 export const RING_ROADS = [
   { epoch: 'axial',        name: 'шёлковый путь',   arc: 'южная дуга',         pairs: [['east', 'south']] },
   { epoch: 'lightgarden',  name: 'караваны',        arc: 'юго-западная дуга',  pairs: [['south', 'west']] },
-  { epoch: 'steamshadows', name: 'железная дорога', arc: 'северо-западная дуга', pairs: [['west', 'north'], ['north', 'plain']] },
+  { epoch: 'steamshadows', name: 'железная дорога', arc: 'северо-восточная дуга (СНГ)', pairs: [['north', 'plain'], ['plain', 'east']] },
   { epoch: 'now',          name: 'сеть',            arc: 'полное кольцо',      pairs: [['east', 'west'], ['south', 'north'], ['plain', 'east'], ['south', 'plain']] },
 ];
 
