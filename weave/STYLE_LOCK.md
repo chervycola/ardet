@@ -46,3 +46,36 @@ dark academia / gothic. Чёрный список: очки на открыто�
 
 Модель: **seedream v5 pro** (первый выбор), GPT Image 2 — самые
 тёмные кадры. Приёмка — по скиллу ardet-scene-accept.
+
+## Регистр «Волшебники-1977» (v2 — задники и движок)
+
+Утверждено пользователем: движок и генерации целятся в стиль
+и физику «Wizards» Ральфа Бакши (1977) — это лечит плоскость
+и одиночество кадра и достижимо нейрогенерацией:
+
+- **многоплановость**: 3–4 слоя — огромное градиентное небо
+  с диском (солнце/красная луна), дальний силуэтный план в дымке,
+  средний план с жизнью (караван, руины), полоса действия,
+  передний силуэтный план (травы, камни) поверх;
+- **кадр Бакши**: небо — верхняя треть-половина, действие —
+  сжатая полоса; горизонт с кромкой света (рим-лайт киноварью);
+- **жизнь на планах**: далёкие фигуры-силуэты в движении, птицы
+  у диска (по анти-слоп правилу: 3–5 разрозненных, не стаи-галочки),
+  пыль в воздухе, качающиеся травы;
+- **физика анимации**: плавучий шаг, наклон в движение, качание —
+  ротоскопная тяжесть вместо аркадной резкости;
+- палитра — канон без изменений; психоделика Бакши не берётся,
+  берётся его воздух и слоистость.
+
+Стиль-блок генераций в регистре (для задников-панорам):
+```
+1977 hand-painted fantasy animation still, Ralph Bakshi Wizards
+style, gouache multi-plane background: vast gradient sky with a
+huge dim disc, layered flat silhouette dunes and ruins fading
+into haze, rim-lit horizon, tiny dark cel-silhouette hooded
+figure for scale, rough paper texture, heavy film grain, muted:
+near-black #0D0B0A, bone #D9CFB8, ash grey #8A8D8F, single amber
+light #E28A3A, cinnabar #C23B2B only in sky/disc, no neon,
+no clean vector lines, no saturated psychedelic colors,
+full-bleed, no frame, no text
+```
