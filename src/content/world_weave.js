@@ -60,11 +60,21 @@ for (const e of EPOCHS) {
 // радиальные швы: эпоха n → n+1 вдоль луча (везде, где обе клетки будут)
 // кольцевые дороги: ДУГИ с географией (v3.3), не полные кольца.
 // arc — географическое положение дуги; pairs — кого сшивает.
+// УЗЕЛ = одна сцена обмена на шве смежной пары, оба соседа описывают её
+// идентично; сцены узлов — src/content/world_cells.js: RING_NODES (v3.4).
 export const RING_ROADS = [
-  { epoch: 'axial',        name: 'шёлковый путь',   arc: 'южная дуга',         pairs: [['east', 'south']] },
-  { epoch: 'lightgarden',  name: 'караваны',        arc: 'юго-западная дуга',  pairs: [['south', 'west']] },
-  { epoch: 'steamshadows', name: 'железная дорога', arc: 'северо-восточная дуга (СНГ)', pairs: [['north', 'plain'], ['plain', 'east']] },
-  { epoch: 'now',          name: 'сеть',            arc: 'полное кольцо',      pairs: [['east', 'west'], ['south', 'north'], ['plain', 'east'], ['south', 'plain']] },
+  { epoch: 'axial',        name: 'шёлковый путь',   arc: 'южная дуга + степная ветка (узел без дороги на меже север|равнина)',
+    pairs: [['east', 'south'], ['north', 'plain']],
+    nodes: { 'east|south': 'весовая при заставе Лао-цзы (+ столб золотого правила Ж9 — каноническая клетка)', 'north|plain': 'янтарный камень немого торга' } },
+  { epoch: 'lightgarden',  name: 'караваны',        arc: 'юго-западная дуга + санная ветка (зимник) + волок',
+    pairs: [['south', 'west'], ['north', 'plain'], ['plain', 'east']],
+    nodes: { 'south|west': 'хан с двумя воротами (во дворе — толедский стол)', 'north|plain': 'ганзейские весы', 'plain|east': 'волок у сарая «Полупустой тюк»' } },
+  { epoch: 'steamshadows', name: 'железная дорога', arc: 'северо-восточная дуга (СНГ)',
+    pairs: [['north', 'plain'], ['plain', 'east']],
+    nodes: { 'north|plain': 'таможня двух часов (без домкратов)', 'plain|east': 'станция перестановки тележек (1520/1435)' } },
+  { epoch: 'now',          name: 'сеть',            arc: 'полное кольцо',
+    pairs: [['east', 'west'], ['south', 'north'], ['plain', 'east'], ['south', 'plain']],
+    nodes: { 'east|west': 'аэропорт-хаб на насыпном острове', 'south|north': 'кабельный берег', 'plain|east': 'контейнерный рынок у вышки' } },
 ];
 
 // изнанка: тоннели сшивают несмежное; вход — пасхалка, не кнопка
