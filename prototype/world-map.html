@@ -46,9 +46,14 @@ const SIDES=[
 const FILLED={'axial:south':1,'porticoes:south':3,'lightgarden:west':4,
   'steamshadows:west':1,'catastrophes:plain':6,'neon:east':2,
   'now:east':1,'now:west':2,'now:south':1};
-// кольцевые дороги (узловые эпохи)
-const RINGS_ROADS=[{e:0,n:'шёлковый путь'},{e:2,n:'караваны'},
-  {e:5,n:'железная дорога'},{e:8,n:'сеть'}];
+// кольцевые дороги (узловые эпохи) — ДУГИ с географией, не полные кольца
+// (сеть — единственное полное кольцо: у «сейчас» связано всё)
+const RINGS_ROADS=[
+  {e:0,n:'шёлковый путь',d0:15,d1:150,la:90},     // южная дуга: восток↔юг
+  {e:2,n:'караваны',d0:80,d1:215,la:150},          // юго-западная: юг↔запад
+  {e:5,n:'железная дорога',d0:170,d1:340,la:228},  // северо-западная: запад↔север↔СНГ
+  {e:8,n:'сеть',d0:0,d1:360,la:270},               // полное кольцо
+];
 // изнанка
 const TUNNELS=[
   {id:'U1',layer:'крипта',from:['lightgarden','north'],to:['axial','south'],
@@ -168,13 +173,34 @@ for(const s of SIDES){
   inkLine(CX+Math.cos(a)*R0,CY+Math.sin(a)*R0,CX+Math.cos(a)*REDGE,CY+Math.sin(a)*REDGE,2.4,0.75);
   x.setLineDash([]);
 }
-// ── КОЛЬЦЕВЫЕ ДОРОГИ ──
+// ── КОЛЬЦЕВЫЕ ДОРОГИ — дуги ──
+function inkArc(r,w,a,col,dash,d0,d1){
+  x.strokeStyle=col||SEPIA;x.globalAlpha=a;x.lineWidth=w;
+  if(dash)x.setLineDash(dash);
+  x.beginPath();
+  for(let d=d0;d<=d1;d+=3){
+    const rr=r+J(d+r)*1.6;
+    const px=CX+Math.cos(rad(d))*rr,py=CY+Math.sin(rad(d))*rr;
+    d>d0?x.lineTo(px,py):x.moveTo(px,py);
+  }
+  x.stroke();x.setLineDash([]);x.globalAlpha=1;
+}
 for(const rr of RINGS_ROADS){
-  inkCircle(ringR(rr.e)-5,1,0.55,SEPIA,[2,4]);
-  inkCircle(ringR(rr.e)+5,1,0.55,SEPIA,[2,4]);
+  inkArc(ringR(rr.e)-5,1,0.55,SEPIA,[2,4],rr.d0,rr.d1);
+  inkArc(ringR(rr.e)+5,1,0.55,SEPIA,[2,4],rr.d0,rr.d1);
+  // засечки-концы дуги (кроме полного кольца)
+  if(rr.d1-rr.d0<360){
+    for(const de of [rr.d0,rr.d1]){
+      const ae=rad(de),r1=ringR(rr.e)-10,r2=ringR(rr.e)+10;
+      x.strokeStyle=SEPIA;x.globalAlpha=0.5;x.lineWidth=1.2;
+      x.beginPath();x.moveTo(CX+Math.cos(ae)*r1,CY+Math.sin(ae)*r1);
+      x.lineTo(CX+Math.cos(ae)*r2,CY+Math.sin(ae)*r2);x.stroke();x.globalAlpha=1;
+    }
+  }
+  const al=rad(rr.la),lrr=ringR(rr.e)+(rr.la>180&&rr.la<360?-16:18);
   x.fillStyle=SEPIA;x.font='italic 15px "Cormorant Garamond"';x.globalAlpha=0.8;
   x.textAlign='center';
-  x.fillText(rr.n,CX,CY-ringR(rr.e)-9);
+  x.fillText(rr.n,CX+Math.cos(al)*lrr,CY+Math.sin(al)*lrr+5);
   x.textAlign='left';x.globalAlpha=1;
 }
 // ── РЕКА ГЕРАКЛИТА — спираль ──

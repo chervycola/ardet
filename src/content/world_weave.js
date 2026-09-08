@@ -58,12 +58,13 @@ for (const e of EPOCHS) {
 }
 
 // радиальные швы: эпоха n → n+1 вдоль луча (везде, где обе клетки будут)
-// кольцевые дороги: полный круг только в узловых эпохах
+// кольцевые дороги: ДУГИ с географией (v3.3), не полные кольца.
+// arc — географическое положение дуги; pairs — кого сшивает.
 export const RING_ROADS = [
-  { epoch: 'axial',        name: 'шёлковый путь',    pairs: [['south','east'], ['south','west']] },
-  { epoch: 'lightgarden',  name: 'караваны',         pairs: [['west','south'], ['east','plain']] },
-  { epoch: 'steamshadows', name: 'железная дорога',  pairs: [['west','plain'], ['west','north']] },
-  { epoch: 'now',          name: 'сеть/аэропорт',    pairs: [['east','west'], ['south','north'], ['plain','east']] },
+  { epoch: 'axial',        name: 'шёлковый путь',   arc: 'южная дуга',         pairs: [['east', 'south']] },
+  { epoch: 'lightgarden',  name: 'караваны',        arc: 'юго-западная дуга',  pairs: [['south', 'west']] },
+  { epoch: 'steamshadows', name: 'железная дорога', arc: 'северо-западная дуга', pairs: [['west', 'north'], ['north', 'plain']] },
+  { epoch: 'now',          name: 'сеть',            arc: 'полное кольцо',      pairs: [['east', 'west'], ['south', 'north'], ['plain', 'east'], ['south', 'plain']] },
 ];
 
 // изнанка: тоннели сшивают несмежное; вход — пасхалка, не кнопка
