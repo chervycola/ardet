@@ -24,6 +24,12 @@
   #opis b{display:block;font-family:Montserrat;font-weight:500;font-size:8px;
     letter-spacing:3px;color:#C23B2B;margin-bottom:3px}
   #opis span{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px}
+  #paper{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) rotate(-1.2deg);
+    background:linear-gradient(172deg,#EEE3CB,#E0D2B4);color:#3A3026;
+    padding:13px 20px 14px;max-width:400px;box-shadow:0 8px 30px rgba(0,0,0,.65);display:none}
+  #paper b{display:block;font-family:Montserrat;font-weight:500;font-size:8px;
+    letter-spacing:3px;color:#C23B2B;margin-bottom:4px;text-transform:uppercase}
+  #paper span{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15.5px;line-height:1.35}
 </style>
 </head>
 <body>
@@ -32,6 +38,7 @@
 <div id="loc">городок · вечер</div>
 <div id="hint">wasd · палец — идти · e — быт</div>
 <div id="opis"><b>опись</b><span id="opistext">пусто. пока честно.</span></div>
+<div id="paper"><b id="ptitle"></b><span id="ptext"></span></div>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // ARDET — играбельная проба. Визуально и по петле — как Don't Starve,
@@ -44,6 +51,8 @@ const WORLD={w:2560,h:1440};
 const Q=1.6;
 const FIRE={x:820,y:800};
 const LANTERN={x:480,y:858};
+const TOWER={x:340,y:1010};   // пожарная каланча — Маячник обратного света
+const CATHOME={x:1065,y:560}; // дом кота
 const IS_TOUCH='ontouchstart' in window||navigator.maxTouchPoints>0;
 
 const cv=document.getElementById('c'), x=cv.getContext('2d');
@@ -553,6 +562,66 @@ function renderStatic(){
   g.globalAlpha=0.4; g.strokeRect(rx0+109,ry0+155,24,53);
   g.globalAlpha=1;
 
+  // ── ПОЖАРНАЯ КАЛАНЧА — Маячник обратного света (world_folk) ──
+  const twx=TOWER.x, twy=TOWER.y;
+  g.fillStyle='rgba(4,3,3,0.5)';
+  g.beginPath(); g.ellipse(twx+30,twy+8,44,11,0.08,0,7); g.fill();
+  // сужающийся сруб
+  const tower=p=>{p.moveTo(twx-24,twy);p.lineTo(twx-13,twy-170);
+    p.lineTo(twx+13,twy-170);p.lineTo(twx+24,twy);p.closePath();};
+  g.fillStyle='#0F0D0B'; g.beginPath(); tower(g); g.fill();
+  hatch(g,tower,{x:twx-24,y:twy-170,w:48,h:170},[
+    {ang:90,gap:2.6,a:0.2,w:0.55,j:0.4},{ang:4,gap:11,a:0.14,w:0.5}]);
+  g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=1.1;
+  g.beginPath(); tower(g); g.stroke();
+  // крестовины
+  g.globalAlpha=0.35; g.lineWidth=0.8;
+  for(let i=0;i<4;i++){
+    const y1=twy-20-i*38, y2=twy-58-i*38, w1=24-i*2.4, w2=21.4-i*2.4;
+    g.beginPath(); g.moveTo(twx-w1,y1); g.lineTo(twx+w2,y2);
+    g.moveTo(twx+w1,y1); g.lineTo(twx-w2,y2); g.stroke();
+  }
+  g.globalAlpha=1;
+  // смотровая площадка и прожектор с зеркалом
+  g.fillStyle='#12100D'; g.fillRect(twx-20,twy-186,40,16);
+  g.strokeStyle=BONE; g.globalAlpha=0.75; g.strokeRect(twx-20,twy-186,40,16);
+  g.beginPath(); g.moveTo(twx-20,twy-186); g.lineTo(twx-16,twy-198);
+  g.lineTo(twx+16,twy-198); g.lineTo(twx+20,twy-186); g.stroke(); // крыша
+  g.strokeRect(twx-7,twy-181,14,10);                              // будка прожектора
+  g.beginPath(); g.arc(twx,twy-176,4,0,7); g.stroke();            // зеркало
+  g.globalAlpha=1;
+  // лесенка
+  g.globalAlpha=0.4; g.lineWidth=0.7;
+  g.beginPath(); g.moveTo(twx+26,twy); g.lineTo(twx+15,twy-168); g.stroke();
+  for(let i=0;i<12;i++){ g.beginPath();
+    g.moveTo(twx+25-i*0.9,twy-6-i*14); g.lineTo(twx+19-i*0.9,twy-6-i*14); g.stroke(); }
+  g.globalAlpha=1;
+
+  // ── Е5: сломанная лопата у костра (для тех, кто ждал меч) ──
+  g.strokeStyle='#241E18'; g.lineWidth=3.4; g.lineCap='round';
+  g.beginPath(); g.moveTo(FIRE.x+52,FIRE.y+34); g.lineTo(FIRE.x+58,FIRE.y-2); g.stroke();
+  g.lineCap='butt';
+  g.strokeStyle=BONE; g.globalAlpha=0.6; g.lineWidth=1;
+  g.beginPath(); g.moveTo(FIRE.x+54,FIRE.y+32);            // штык, обломанный
+  g.lineTo(FIRE.x+47,FIRE.y+40); g.lineTo(FIRE.x+52,FIRE.y+46);
+  g.lineTo(FIRE.x+59,FIRE.y+40); g.stroke();
+  g.globalAlpha=0.3;
+  g.beginPath(); g.moveTo(FIRE.x+49,FIRE.y+43); g.lineTo(FIRE.x+56,FIRE.y+43); g.stroke();
+  g.globalAlpha=1;
+
+  // ── Ж6: табличка у колодца «ОСТОРОЖНО: АСТРОНОМЫ» ──
+  g.strokeStyle='#2A241E'; g.lineWidth=3;
+  g.beginPath(); g.moveTo(700,352); g.lineTo(700,318); g.stroke();
+  g.save(); g.translate(700,312); g.rotate(-0.05);
+  g.fillStyle='#0F0D0B'; g.fillRect(-30,-9,60,16);
+  g.strokeStyle=BONE; g.globalAlpha=0.7; g.lineWidth=0.8; g.strokeRect(-30,-9,60,16);
+  g.fillStyle=BONE; g.globalAlpha=0.6; g.font='300 6px Montserrat'; g.textAlign='center';
+  g.fillText('ОСТОРОЖНО: АСТРОНОМЫ',0,2); g.textAlign='left';
+  g.restore(); g.globalAlpha=1;
+
+  // ── второй стакан на подоконнике окна №3 (появляется навсегда) ──
+  // рисуется в динамике при teaCup=1
+
   // столб КРАЙ
   const ex=2480, ey=862;
   g.strokeStyle='#090807'; g.globalAlpha=0.55; g.lineWidth=3;
@@ -585,6 +654,7 @@ const solids=[
   {t:'r',x:1640,y:0,w:170,h:838},
   {t:'r',x:1640,y:926,w:170,h:514},
   {t:'c',x:2480,y:862,r:8},
+  {t:'r',x:316,y:970,w:48,h:44},
 ];
 const occluders=[
   {x:288,y:392,w:290,h:214,base:606},
@@ -598,6 +668,7 @@ const occluders=[
   {x:2290,y:868,w:66,h:122,base:990},
   {x:1976,y:556,w:250,h:156,base:710},
   {x:2442,y:778,w:80,h:86,base:864},
+  {x:306,y:800,w:76,h:214,base:1014},
 ];
 const whispers=[
   {x:120,y:700,r:100,t:'...обычно это узнают позже...'},
@@ -613,7 +684,29 @@ const whispers=[
   {x:1450,y:530,r:85,t:'...дерево держит небо. по привычке...'},
   {x:2100,y:650,r:130,t:'...жильцы съехали раньше пожара...'},
   {x:2480,y:862,r:120,t:'...дальше пока не нарисовано. мох уже там...'},
+  {x:TOWER.x,y:TOWER.y,r:110,t:'...возвращающимся темней всего в конце...'},
 ];
+
+// ═══════════════ ОСМОТРЫ (глубина II руками) ═══════════════
+const INSPECT=[
+  {x:110,y:760,r:70,title:'табличка на вратах · И1',
+   t:'«ЭТИ ВРАТА ПРЕДНАЗНАЧАЛИСЬ ТОЛЬКО ТЕБЕ. ЗАКРЫТО НЕ БУДЕТ.» створка вросла в землю; закрывать давно нечем.'},
+  {x:700,y:330,r:44,title:'табличка · Ж6',
+   t:'«ОСТОРОЖНО: АСТРОНОМЫ.» у колодца. запись о происшествии не сохранилась — сохранилась осторожность.'},
+  {x:FIRE.x+56,y:FIRE.y+30,r:34,title:'лопата · Е5',
+   t:'у костра воткнут не меч — сломанная лопата. для тех, кто ждал меч.'},
+  {x:TOWER.x,y:TOWER.y,r:56,title:'каланча · Маячник обратного света',
+   t:'прожектор глядит внутрь мира, не наружу. маячник смазывает ось, не оборачиваясь: «уходящим не свечу — у них уголёк. свечу возвращающимся: у них к концу пути темней всего.»'},
+  {x:626,y:585,r:50,title:'доска объявлений · Д9',
+   t:'«УТЕРЯНО: СМЫСЛ. НАШЕДШЕМУ — НЕ ВОЗВРАЩАТЬ.» объявление старое; кнопки ржавые; рука твёрдая.'},
+];
+const paperEl=document.getElementById('paper');
+let paperTimer=0;
+function showPaper(title,text){
+  document.getElementById('ptitle').textContent=title;
+  document.getElementById('ptext').textContent=text;
+  paperEl.style.display='block'; paperTimer=430;
+}
 
 // ═══════════════ БЫТ: подбираемое, костёр, уголёк, фонарь ═══════════════
 const inv={wood:0,moss:0,wax:0};
@@ -693,7 +786,33 @@ function tryAction(which){
     inv.moss--; ember.v=Math.min(1,ember.v+0.3);
     note(player.x,player.y-50,'уголёк поел'); opis(); return;
   }
+  // ведро общего дна — колодец
+  if(!which && Math.hypot(player.x-760,player.y-318)<80){
+    const day=Math.floor(tCycle/CYCLE);
+    if(day!==lastWellDay){
+      lastWellDay=day;
+      const it=WELL_ITEMS[Math.floor(Math.abs(J(day*7))*WELL_ITEMS.length)%WELL_ITEMS.length];
+      showPaper('ведро общего дна','ворот скрипит. ведро приходит тяжёлым, воды в нём нет. внутри: '+it+'. бирка: «ВОЗВРАЩЕНО. ВЛАДЕЛЕЦ ВЫБЫЛ». своё попросить нельзя — очередь общая.');
+    }else{
+      showPaper('ведро общего дна','ведро пусто. очередь идёт. мир терял долго — поднимается в порядке потери, не в порядке нужды.');
+    }
+    return;
+  }
+  // осмотры
+  if(!which){
+    for(const ins of INSPECT){
+      if(Math.hypot(player.x-ins.x,player.y-ins.y)<ins.r+34){ showPaper(ins.title,ins.t); return; }
+    }
+  }
 }
+const WELL_ITEMS=['ключ от дома, которого нет','варежка на левую руку','оловянный солдатик без ружья','пуговица с якорем','очень маленький компас, стрелка на месте'];
+let lastWellDay=-1;
+// ═══════════════ НАРОД ГОРОДКА (world_folk) ═══════════════
+let teaCup=0, silDone=false, catTalkDay=-1, catBlink=0, stillT=0;
+try{ teaCup=localStorage.getItem('ardet_tea_cup')==='1'?1:0;
+     silDone=localStorage.getItem('ardet_sil')==='1'; }catch(e){}
+let teaDays=0; try{ teaDays=parseInt(localStorage.getItem('ardet_tea_days')||'0'); }catch(e){}
+let teaSeenToday=false, lastTeaDay=-1;
 
 const footprints=[];
 let lastFoot={x:player.x,y:player.y}, footSide=1;
@@ -818,6 +937,39 @@ function frame(now){
   if(sitPhase<0){ sitPhase+=dt/1.6; if(sitPhase>=0)sitPhase=0; }
 
   updatePlayer(dt); updateWhispers(litHere);
+  if(paperTimer>0){ paperTimer--; if(paperTimer<=0) paperEl.style.display='none'; }
+  stillT = player.moving ? 0 : stillT+dt;
+  const dayN=Math.floor(tCycle/CYCLE);
+
+  // ── ЧАЙ ТРЕТЬЕГО ОКНА: дым 3 минуты в один и тот же час ──
+  const teaOn = ph>0.455 && ph<0.48;
+  if(teaOn && dayN!==lastTeaDay && Math.hypot(player.x-471,player.y-560)<170){
+    lastTeaDay=dayN; teaDays++; teaSeenToday=true;
+    try{localStorage.setItem('ardet_tea_days',''+teaDays);}catch(e){}
+    if(teaDays>=3 && !teaCup){
+      teaCup=1; try{localStorage.setItem('ardet_tea_cup','1');}catch(e){}
+      note(488,516,'на подоконнике — второй стакан');
+    } else note(471,520,'ложечка о стакан, единожды');
+  }
+
+  // ── ПИШУЩИЙ СИЛУЭТ: «Не отвлекаю?» — раз за игру, в полночь, неподвижному ──
+  if(!silDone && ph>0.715 && ph<0.75 && stillT>3 &&
+     Math.hypot(player.x-471,player.y-560)<90){
+    silDone=true; try{localStorage.setItem('ardet_sil','1');}catch(e){}
+    note(471,470,'— Не отвлекаю?');
+  }
+
+  // ── КОТ — ОТВЕТ ПО ФОРМЕ: неподвижному, раз в сутки ──
+  if(catBlink>0) catBlink-=dt;
+  if(catTalkDay!==dayN && stillT>7 &&
+     Math.hypot(player.x-CATHOME.x,player.y-CATHOME.y)<150){
+    catTalkDay=dayN; catBlink=3.2;
+    setTimeout(()=>note(1065,410,'в журнале наблюдений: «беседа состоялась»'),3400);
+  }
+
+  // ── ЛУЧ МАЯЧНИКА: раз в ночь, полный оборот, артерии проступают ──
+  const beamOn = ph>0.60 && ph<0.66;
+  const beamA = beamOn ? ((ph-0.60)/0.06)*Math.PI*2 - Math.PI/2 : 0;
 
   const viewW=CW/zoom, viewH=CH/zoom;
   let tx=player.x-viewW/2, ty=player.y-viewH/2;
@@ -963,6 +1115,68 @@ function frame(now){
   ].sort((a,b)=>a.y-b.y);
   for(const s of sprites) s.draw();
 
+  // ── дым чая над канцелярией ──
+  if(teaOn){
+    x.strokeStyle=ASH; x.lineWidth=1.1;
+    for(let i=0;i<3;i++){
+      x.globalAlpha=0.3-i*0.08;
+      x.beginPath(); x.moveTo(430,436-i*20);
+      x.bezierCurveTo(431,420-i*20, 429,404-i*20, 430.5,388-i*20); x.stroke();
+    }
+    x.globalAlpha=1;
+  }
+  // ── второй стакан на подоконнике (навсегда) ──
+  if(teaCup){
+    x.strokeStyle=BONE; x.globalAlpha=0.8; x.lineWidth=0.9;
+    x.strokeRect(490,517,5,8);
+    x.beginPath(); x.moveTo(495,519); x.arc(496.5,521,1.6,-1.2,1.2); x.stroke();
+    x.globalAlpha=1;
+  }
+  // ── глаза кота при беседе: медленно закрывает, открывает ──
+  if(catBlink>0){
+    const bph=3.2-catBlink;
+    const open=bph<1?1-bph:(bph<2?0:(bph-2));
+    x.fillStyle='#DDC08A'; x.globalAlpha=0.85;
+    x.beginPath(); x.ellipse(1062,438,1.5,1.5*Math.max(0.06,open),0,0,7); x.fill();
+    x.beginPath(); x.ellipse(1068,438,1.5,1.5*Math.max(0.06,open),0,0,7); x.fill();
+    x.globalAlpha=1;
+  }
+  // ── луч маячника: полоса света идёт по кольцам ──
+  if(beamOn){
+    const bx=TOWER.x, by=TOWER.y-176;
+    x.save();
+    const grd=x.createLinearGradient(bx,by,bx+Math.cos(beamA)*700,by+Math.sin(beamA)*700*0.5);
+    grd.addColorStop(0,'rgba(217,207,184,0.20)');
+    grd.addColorStop(1,'rgba(217,207,184,0)');
+    x.fillStyle=grd;
+    x.beginPath(); x.moveTo(bx,by);
+    x.lineTo(bx+Math.cos(beamA-0.09)*760, by+Math.sin(beamA-0.09)*760*0.55);
+    x.lineTo(bx+Math.cos(beamA+0.09)*760, by+Math.sin(beamA+0.09)*760*0.55);
+    x.closePath(); x.fill();
+    x.restore();
+    // артерии проступают в луче: колеи дороги пунктиром кости
+    x.strokeStyle=BONE; x.lineWidth=1.6;
+    for(let tt=0;tt<=1;tt+=0.02){
+      const px=185+tt*2375;
+      const py=792+80*Math.sin(tt*Math.PI*0.9)+15*tt;
+      const ang=Math.atan2((py-TOWER.y)*1.8,px-TOWER.x);
+      let d=Math.abs(((ang-beamA+Math.PI*3)%(Math.PI*2))-Math.PI);
+      if(d<0.22){
+        x.globalAlpha=0.55*(1-d/0.22);
+        x.beginPath(); x.moveTo(px-8,py); x.lineTo(px+8,py); x.stroke();
+      }
+    }
+    x.globalAlpha=1;
+    // мох в луче серебрится
+    x.fillStyle=BONE;
+    for(const [mx,my] of [[240,420],[660,1060],[1240,540],[1560,700],[1900,1000],[2260,760]]){
+      const ang=Math.atan2((my-TOWER.y)*1.8,mx-TOWER.x);
+      let d=Math.abs(((ang-beamA+Math.PI*3)%(Math.PI*2))-Math.PI);
+      if(d<0.18){ x.globalAlpha=0.35; x.beginPath(); x.ellipse(mx,my,10,4,0,0,7); x.fill(); }
+    }
+    x.globalAlpha=1;
+  }
+
   // окклюдеры
   for(const o of occluders){
     if(player.y<o.base &&
@@ -1019,6 +1233,15 @@ function frame(now){
   if(dF<90&&inv.wood>0) x.fillText(IS_TOUCH?'коснись огня — подложить щепу':'e — подложить щепу',FIRE.x,FIRE.y-92);
   else if(dF<90&&inv.moss>0&&ember.v<0.9) x.fillText(IS_TOUCH?'коснись огня — покормить уголёк':'e — покормить уголёк мхом',FIRE.x,FIRE.y-92);
   if(dL<80&&!lanternLit&&ember.v>0.35) x.fillText(IS_TOUCH?'коснись фонаря — затеплить':'e — затеплить фонарь',LANTERN.x,LANTERN.y-146);
+  if(paperTimer<=0){
+    if(Math.hypot(player.x-760,player.y-318)<80)
+      x.fillText('e — покрутить ворот',760,214);
+    else for(const ins of INSPECT){
+      if(Math.hypot(player.x-ins.x,player.y-ins.y)<ins.r+34){
+        x.fillText('e — рассмотреть',ins.x,ins.y-56); break;
+      }
+    }
+  }
   x.textAlign='left';
 
   // шёпот
