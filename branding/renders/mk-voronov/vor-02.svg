@@ -37,8 +37,8 @@
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">деталей, последовательность сборки</text>
 <text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">электронной платы. Желающие попробуют</text>
 <text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">монтаж SMD-компонентов.</text>
-<rect x="60" y="960" width="620" height="96" fill="#E30613"/>
-<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">SMD — ПО ЖЕЛАНИЮ</text>
+<rect x="60" y="960" width="790" height="96" fill="#E30613"/>
+<text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ОТ РЕЗИСТОРА ДО ЗВУКА</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
