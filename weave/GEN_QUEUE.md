@@ -127,3 +127,59 @@ scene, museum plate composition --ar 3:4
 Приёмка всех: артерии на третях, один тёплый источник (кроме G5 — ноль),
 красный только киноварь, масштаб фигуры, имя файла weave/E{...}.jpg,
 внесение в опись world_weave.js.
+
+
+## G7–G8 · задники прототипов в регистре «Волшебники-1977» (v3.5)
+Композиции сняты с процедурного блокинга движка (он же — подмалёвок
+и спецификация кадра). Модель: seedream v5 pro. AR 21:9 (панорама
+под сшивку с полосой действия). Надписи в генерации ЗАПРЕЩЕНЫ —
+все таблички ставит игра. Тёплые пятна не генерить огнём — движок
+рисует живое пламя поверх; в промте лишь тёплые окна.
+
+### G7 · городок — «замок в небе» (эталон композиции: скрин движка f92f5a2)
+```
+1977 hand-painted fantasy animation still, Ralph Bakshi Wizards style,
+gouache multi-plane background, panoramic wide shot. Upper half: vast
+gradient dusk sky from deep brown-black to ember red at horizon, a huge
+dim blood-red sun disc low over dark layered hills; far plane — a great
+dark mountain with a silhouetted castle on top (walls, four towers,
+tiny flag), its masonry torn by heat-haze bands, unreachable. Mid
+plane: pole fences of empty fields, two haystacks, one small dark hut,
+a lone bare tree. Lower half, action strip of a tiny timeless hamlet:
+a two-storey wooden chancellery house with steep tiled roof and one
+warm amber window; a round stone well with a small wooden canopy;
+a log fire-watchtower with observation deck; a big clay pithos jar
+lying by a house; an unlit cast-iron street lantern; a cold fire pit
+ring of stones with a horned animal skull on a pole beside it. Rough
+paper texture, heavy film grain, deep flat blacks, bone-white #D9CFB8
+highlights, ash grey halftones, cinnabar #C23B2B only in sky and sun,
+one amber light #E28A3A, tiny lone hooded figure for scale, vast
+negative space, no text, no signs, no neon, no clean vector lines,
+full-bleed --ar 21:9
+```
+
+### G8 · осевое·юг — «чаша на фундаменте» (эталон композиции: скрины c68c4c9/f848961)
+```
+1977 hand-painted fantasy animation still, Ralph Bakshi Wizards style,
+gouache multi-plane background, panoramic wide shot. Upper half:
+scorched dusk sky with a huge dim red sun, far plane — silhouetted
+dunes and three great pyramids torn by heat-haze, a broken colonnade
+and one dead tree on the mid plane, a tiny camel caravan silhouette
+walking the horizon line. Lower half, action strip of an axial-age
+southern courtyard: low ancient stone walls with one upside-down
+reused block in the masonry; a wide shallow stone bowl of water on
+a pedestal, the water glowing faint turquoise faience from beneath
+(the ONLY foreign color); a small wooden cage; a dead sprawling tree
+with a burrow in its roots; a fallen obelisk polished smooth as
+a bench; a round nilometer well with a measuring post; a small
+stepped fire-altar tower; a dry stream bed crossing with two stone
+slabs as a bridge. Rough paper texture, heavy film grain, deep flat
+blacks, bone-white highlights, cinnabar dust in the midtones, one
+amber glow, tiny lone hooded figure for scale, vast negative space,
+no text, no signs, no readable glyphs, full-bleed --ar 21:9
+```
+
+Приёмка обоих — по скиллу ardet-scene-accept (включая новый
+инвариант «где здесь то, на чём это стоит»); после приёмки задник
+подключается в движок слоем под динамику: свет, тьма, огонь,
+персонажи, погода и все надписи остаются процедурными.
