@@ -59,14 +59,12 @@
 
 <text x="281.77777777777777" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ЭКСПО /</text>
 <text x="281.77777777777777" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">ДЕМО-ЗОНА</text>
-<text x="533.3333333333333" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ЛЕКЦИИ 3101</text>
+<text x="533.3333333333333" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ЛЕКЦИИ 1202</text>
 <text x="533.3333333333333" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">РАСТР</text>
-<text x="784.8888888888889" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ЛЕКЦИИ 3104</text>
+<text x="784.8888888888889" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ЛЕКЦИИ 1204</text>
 <text x="784.8888888888889" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">ВЕКТОР</text>
-<text x="1036.4444444444443" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">СЦЕНА</text>
-<text x="1036.4444444444443" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">КЛУБ</text>
-<text x="1288" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">СЦЕНА</text>
-<text x="1288" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">ДК</text>
+<text x="1036.4444444444443" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">АНДЕР-ГАЛЕРЕЯ</text>
+<text x="1288" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ВЕСТИБЮЛЬ ДК</text>
 <text x="1539.5555555555557" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">МАСТЕРСКАЯ 1</text>
 <text x="1791.111111111111" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">МАСТЕРСКАЯ 2</text>
 <text x="2042.6666666666665" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">УЛИЦА</text>
@@ -113,8 +111,10 @@
 <text x="171" y="1302.8571428571427" font-size="16" fill="#000">шумовых перформансов</text>
 
 <rect x="161" y="1447.142857142857" width="241.6" height="170.9" fill="#E30613" stroke="#000" stroke-width="1.6"/>
-<text x="171" y="1471.142857142857" font-weight="800" font-size="22" fill="#FFF">ЭКСПО ОТКРЫТО</text>
-<text x="171" y="1497.142857142857" font-size="16" fill="#FFF">13:00 – 20:00 · весь день</text>
+<text x="171" y="1471.142857142857" font-weight="800" font-size="22" fill="#FFF">ОРГКОМАНДА</text>
+<text x="171" y="1497.142857142857" font-size="16" fill="#FFF">19:00 – 20:00 ·</text>
+<text x="171" y="1516.142857142857" font-size="16" fill="#FFF">выступление и результаты</text>
+<text x="171" y="1535.142857142857" font-size="16" fill="#FFF">конкурса</text>
 
 <rect x="412.55555555555554" y="514.5714285714286" width="241.6" height="214.6" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="422.55555555555554" y="538.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">13:40 – 14:55</text>
@@ -169,8 +169,8 @@
 <rect x="664.1111111111111" y="922.5714285714286" width="241.6" height="156.3" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="674.1111111111111" y="946.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:00 – 16:55</text>
 <text x="674.1111111111111" y="971.5714285714286" font-weight="800" font-size="22" fill="#000">Игорь Мирзоев</text>
-<text x="674.1111111111111" y="997.5714285714286" font-size="16" fill="#000">Выбор материалов для</text>
-<text x="674.1111111111111" y="1016.5714285714286" font-size="16" fill="#000">корпуса · Пикасо 3D</text>
+<text x="674.1111111111111" y="997.5714285714286" font-size="16" fill="#000">3D-печать в музыкальной</text>
+<text x="674.1111111111111" y="1016.5714285714286" font-size="16" fill="#000">электронике · Пикасо 3D</text>
 
 <rect x="664.1111111111111" y="1097.4285714285716" width="241.6" height="156.3" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="674.1111111111111" y="1121.4285714285716" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:00 – 17:55</text>
@@ -187,49 +187,46 @@
 <text x="674.1111111111111" y="1366.2857142857142" font-size="16" fill="#000">разработки · Boring</text>
 <text x="674.1111111111111" y="1385.2857142857142" font-size="16" fill="#000">modular</text>
 
-<rect x="915.6666666666666" y="398" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="422" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">13:00 – 13:55</text>
-<text x="925.6666666666666" y="447" font-weight="800" font-size="22" fill="#000">Игра с тенью</text>
+<rect x="915.6666666666666" y="572.8571428571429" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="925.6666666666666" y="596.8571428571429" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:00 – 14:50</text>
+<text x="925.6666666666666" y="621.8571428571429" font-weight="800" font-size="22" fill="#000">Там Огни |</text>
+<text x="925.6666666666666" y="645.8571428571429" font-weight="800" font-size="22" fill="#000">c0deterr0r</text>
 
-<rect x="915.6666666666666" y="572.8571428571429" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="596.8571428571429" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:00 – 14:55</text>
-<text x="925.6666666666666" y="621.8571428571429" font-weight="800" font-size="22" fill="#000">TiihayaRekaa</text>
+<rect x="915.6666666666666" y="718.5714285714286" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="925.6666666666666" y="742.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:50 – 15:40</text>
+<text x="925.6666666666666" y="767.5714285714286" font-weight="800" font-size="22" fill="#000">М.О.У.Б.</text>
 
-<rect x="915.6666666666666" y="747.7142857142858" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="771.7142857142858" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">15:00 – 15:55</text>
-<text x="925.6666666666666" y="796.7142857142858" font-weight="800" font-size="22" fill="#000">c0deterr0r</text>
+<rect x="915.6666666666666" y="864.2857142857142" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="925.6666666666666" y="888.2857142857142" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">15:40 – 16:30</text>
+<text x="925.6666666666666" y="913.2857142857142" font-weight="800" font-size="22" fill="#000">dr.SpaceKir</text>
 
-<rect x="915.6666666666666" y="922.5714285714286" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="946.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:00 – 16:55</text>
-<text x="925.6666666666666" y="971.5714285714286" font-weight="800" font-size="22" fill="#000">М.О.У.Б.</text>
+<rect x="915.6666666666666" y="1010" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="925.6666666666666" y="1034" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:30 – 17:20</text>
+<text x="925.6666666666666" y="1059" font-weight="800" font-size="22" fill="#000">Alexander Turkin</text>
 
-<rect x="915.6666666666666" y="1097.4285714285716" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="1121.4285714285716" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:00 – 17:55</text>
-<text x="925.6666666666666" y="1146.4285714285716" font-weight="800" font-size="22" fill="#000">dr.SpaceKir</text>
+<rect x="915.6666666666666" y="1155.7142857142858" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="925.6666666666666" y="1179.7142857142858" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:20 – 18:10</text>
+<text x="925.6666666666666" y="1204.7142857142858" font-weight="800" font-size="22" fill="#000">RUBIGO FORTUNA</text>
+<text x="925.6666666666666" y="1230.7142857142858" font-size="16" fill="#000">Раис · Казань</text>
 
-<rect x="915.6666666666666" y="1272.2857142857142" width="241.6" height="156.3" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="925.6666666666666" y="1296.2857142857142" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">18:00 – 18:55</text>
-<text x="925.6666666666666" y="1321.2857142857142" font-weight="800" font-size="22" fill="#000">Alexander Turkin</text>
+<rect x="1167.2222222222222" y="660.2857142857142" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="1177.2222222222222" y="684.2857142857142" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:30 – 15:20</text>
+<text x="1177.2222222222222" y="709.2857142857142" font-weight="800" font-size="22" fill="#000">Игра с тенью</text>
 
-<rect x="1167.2222222222222" y="922.5714285714286" width="241.6" height="127.1" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="1177.2222222222222" y="946.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:00 – 16:45</text>
-<text x="1177.2222222222222" y="971.5714285714286" font-weight="800" font-size="22" fill="#000">Анна Пряхина · AV</text>
+<rect x="1167.2222222222222" y="835.1428571428571" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="1177.2222222222222" y="859.1428571428571" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">15:30 – 16:20</text>
+<text x="1177.2222222222222" y="884.1428571428571" font-weight="800" font-size="22" fill="#000">TiihayaRekaa</text>
 
-<rect x="1167.2222222222222" y="1097.4285714285716" width="241.6" height="127.1" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="1177.2222222222222" y="1121.4285714285716" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:00 – 17:45</text>
-<text x="1177.2222222222222" y="1146.4285714285716" font-weight="800" font-size="22" fill="#000">H.Ruine · AV</text>
-<text x="1177.2222222222222" y="1172.4285714285716" font-size="16" fill="#000">Влад Лисицкий</text>
+<rect x="1167.2222222222222" y="980.8571428571428" width="241.6" height="112.6" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="1177.2222222222222" y="1004.8571428571428" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:20 – 17:00</text>
+<text x="1177.2222222222222" y="1029.8571428571427" font-weight="800" font-size="22" fill="#000">Анна Пряхина · AV</text>
 
-<rect x="1167.2222222222222" y="1272.2857142857142" width="241.6" height="127.1" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
-<text x="1177.2222222222222" y="1296.2857142857142" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">18:00 – 18:45</text>
-<text x="1177.2222222222222" y="1321.2857142857142" font-weight="800" font-size="22" fill="#000">Аудиовизуальная</text>
-<text x="1177.2222222222222" y="1345.2857142857142" font-weight="800" font-size="22" fill="#000">синестезия · AV</text>
-<text x="1177.2222222222222" y="1371.2857142857142" font-size="16" fill="#000">Козловский Николай</text>
-
-<rect x="1167.2222222222222" y="1447.142857142857" width="241.6" height="170.9" fill="#E30613" stroke="#000" stroke-width="1.6"/>
-<text x="1177.2222222222222" y="1471.142857142857" font-weight="800" font-size="22" fill="#FFF">ФИНАЛ</text>
-<text x="1177.2222222222222" y="1497.142857142857" font-size="16" fill="#FFF">19:00 – 20:00 · результаты</text>
-<text x="1177.2222222222222" y="1516.142857142857" font-size="16" fill="#FFF">конкурса</text>
+<rect x="1167.2222222222222" y="1097.4285714285716" width="241.6" height="170.9" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="1177.2222222222222" y="1121.4285714285716" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:00 – 18:00</text>
+<text x="1177.2222222222222" y="1146.4285714285716" font-weight="800" font-size="22" fill="#000">Аудиовизуальная</text>
+<text x="1177.2222222222222" y="1170.4285714285716" font-weight="800" font-size="22" fill="#000">синестезия ·</text>
+<text x="1177.2222222222222" y="1194.4285714285716" font-weight="800" font-size="22" fill="#000">AV-лекция</text>
+<text x="1177.2222222222222" y="1220.4285714285716" font-size="16" fill="#000">Козловский Николай</text>
 
 <rect x="1418.7777777777778" y="747.7142857142858" width="241.6" height="520.6" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="1428.7777777777778" y="771.7142857142858" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">15:00 – 18:00</text>
@@ -251,6 +248,12 @@
 <text x="1931.8888888888887" y="1059.5714285714284" font-size="16" fill="#000">Креймером, Павлом Чукаевым</text>
 <text x="1931.8888888888887" y="1078.5714285714284" font-size="16" fill="#000">(экскурсовод)</text>
 
+<rect x="1921.8888888888887" y="1272.2857142857142" width="241.6" height="170.9" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
+<text x="1931.8888888888887" y="1296.2857142857142" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">18:00 – 19:00</text>
+<text x="1931.8888888888887" y="1321.2857142857142" font-weight="800" font-size="22" fill="#000">H.Ruine ·</text>
+<text x="1931.8888888888887" y="1345.2857142857142" font-weight="800" font-size="22" fill="#000">выступление AV</text>
+<text x="1931.8888888888887" y="1371.2857142857142" font-size="16" fill="#000">Влад Лисицкий</text>
+
 <rect x="2173.4444444444443" y="572.8571428571429" width="241.6" height="170.9" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="2183.4444444444443" y="596.8571428571429" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:00 – 15:00</text>
 <text x="2183.4444444444443" y="621.8571428571429" font-weight="800" font-size="22" fill="#000">Мастер-класс · Олег</text>
@@ -265,7 +268,7 @@
 
 
 <line x1="60" y1="1662" x2="2420" y2="1662" stroke="#000" stroke-width="2.5"/>
-<text x="60" y="1700" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#000">СИНТЕЗИРУЕМ БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<text x="60" y="1700" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#000">СИНТЕЗИРУЕМ БОЛЬШЕ, ЧЕМ ЗВУК · ЭКСПО ОТКРЫТО 13:00–20:00</text>
 <text x="1560" y="1700" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#000">ВХОД ПО БИЛЕТАМ · FLAT.AUDIO/E/2470</text>
 <text x="2420" y="1700" text-anchor="end" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">ЗАКРЫТИЕ · 20:00 ●</text>
 </svg>
