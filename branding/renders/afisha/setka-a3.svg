@@ -69,7 +69,7 @@
 <text x="1791.111111111111" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">МАСТЕРСКАЯ 2</text>
 <text x="2042.6666666666665" y="366" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">УЛИЦА</text>
 <text x="2294.222222222222" y="352" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">ДЕТСКАЯ</text>
-<text x="2294.222222222222" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">ПРОГРАММА</text>
+<text x="2294.222222222222" y="378" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">ДЕТИ АЙКЬЮ</text>
 
 <rect x="161" y="398" width="241.6" height="141.7" fill="url(#th)" stroke="#000" stroke-width="1.6"/>
 <text x="171" y="422" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">13:00 – 13:50</text>
@@ -256,15 +256,28 @@
 
 <rect x="2173.4444444444443" y="572.8571428571429" width="241.6" height="170.9" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="2183.4444444444443" y="596.8571428571429" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">14:00 – 15:00</text>
-<text x="2183.4444444444443" y="621.8571428571429" font-weight="800" font-size="22" fill="#000">Мастер-класс · Олег</text>
-<text x="2183.4444444444443" y="645.8571428571429" font-weight="800" font-size="22" fill="#000">Слуцкий</text>
-<text x="2183.4444444444443" y="671.8571428571429" font-size="16" fill="#000">для детей от 6 до 12 лет</text>
+<text x="2183.4444444444443" y="621.8571428571429" font-weight="800" font-size="22" fill="#000">Мастерская звуков</text>
+<text x="2183.4444444444443" y="647.8571428571429" font-size="16" fill="#000">Олег Слуцкий · от 6 до 12</text>
+<text x="2183.4444444444443" y="666.8571428571429" font-size="16" fill="#000">лет</text>
+
+<rect x="2173.4444444444443" y="747.7142857142858" width="241.6" height="170.9" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
+<text x="2183.4444444444443" y="771.7142857142858" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">15:00 – 16:00</text>
+<text x="2183.4444444444443" y="796.7142857142858" font-weight="800" font-size="22" fill="#000">Звук — собери свою</text>
+<text x="2183.4444444444443" y="820.7142857142858" font-weight="800" font-size="22" fill="#000">гармошку!</text>
+<text x="2183.4444444444443" y="846.7142857142858" font-size="16" fill="#000">Склад Ума · от 6 до 12 лет</text>
 
 <rect x="2173.4444444444443" y="922.5714285714286" width="241.6" height="170.9" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
 <text x="2183.4444444444443" y="946.5714285714286" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">16:00 – 17:00</text>
-<text x="2183.4444444444443" y="971.5714285714286" font-weight="800" font-size="22" fill="#000">Мастер-класс · Олег</text>
-<text x="2183.4444444444443" y="995.5714285714286" font-weight="800" font-size="22" fill="#000">Слуцкий</text>
-<text x="2183.4444444444443" y="1021.5714285714286" font-size="16" fill="#000">для детей от 10 до 99 лет</text>
+<text x="2183.4444444444443" y="971.5714285714286" font-weight="800" font-size="22" fill="#000">Синтезатор из</text>
+<text x="2183.4444444444443" y="995.5714285714286" font-weight="800" font-size="22" fill="#000">сковородки</text>
+<text x="2183.4444444444443" y="1021.5714285714286" font-size="16" fill="#000">Олег Слуцкий · от 10 до 99</text>
+<text x="2183.4444444444443" y="1040.5714285714284" font-size="16" fill="#000">лет</text>
+
+<rect x="2173.4444444444443" y="1097.4285714285716" width="241.6" height="170.9" fill="#f5f5f5" stroke="#000" stroke-width="1.6"/>
+<text x="2183.4444444444443" y="1121.4285714285716" font-family="'Courier New',monospace" font-size="16" letter-spacing="0.5" fill="#E30613">17:00 – 18:00</text>
+<text x="2183.4444444444443" y="1146.4285714285716" font-weight="800" font-size="22" fill="#000">«Чувствую движение»</text>
+<text x="2183.4444444444443" y="1170.4285714285716" font-weight="800" font-size="22" fill="#000">— шестое чувство</text>
+<text x="2183.4444444444443" y="1196.4285714285716" font-size="16" fill="#000">Склад Ума · от 6 до 12 лет</text>
 
 
 <line x1="60" y1="1662" x2="2420" y2="1662" stroke="#000" stroke-width="2.5"/>

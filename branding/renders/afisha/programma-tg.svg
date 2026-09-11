@@ -62,9 +62,11 @@
 <text x="575" y="857" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Аналоговый синтезатор · Воронов</text>
 <text x="575" y="890" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Полевые записи · улица · Чертков</text>
 <text x="575" y="923" font-family="'Courier New',monospace" font-size="20" fill="#000">18:00 H.Ruine · AV · улица</text>
-<text x="575" y="980" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· ДЕТСКАЯ ПРОГРАММА</text>
+<text x="575" y="980" font-family="'Courier New',monospace" font-size="21" letter-spacing="3" fill="#E30613">· ДЕТСКАЯ · ЗАЛ ДЕТИ АЙКЬЮ</text>
 <text x="575" y="1019" font-family="'Courier New',monospace" font-size="20" fill="#000">14:00 Мастерская звуков · 6–12 лет</text>
-<text x="575" y="1052" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Синтезатор из сковородки · 10+</text>
+<text x="575" y="1052" font-family="'Courier New',monospace" font-size="20" fill="#000">15:00 Собери свою гармошку · 6–12 лет</text>
+<text x="575" y="1085" font-family="'Courier New',monospace" font-size="20" fill="#000">16:00 Синтезатор из сковородки · 10+</text>
+<text x="575" y="1118" font-family="'Courier New',monospace" font-size="20" fill="#000">17:00 «Чувствую движение» · 6–12 лет</text>
 
 
 <line x1="60" y1="1250" x2="1020" y2="1250" stroke="#000" stroke-width="2"/>
