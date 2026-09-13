@@ -37,15 +37,14 @@
 <text x="60" y="690" font-family="'Courier New',monospace" font-size="24" fill="#000">Paratek</text>
 <text x="60" y="720" font-family="'Courier New',monospace" font-size="24" fill="#000">УралСинтМаш</text>
 <text x="60" y="750" font-family="'Courier New',monospace" font-size="24" fill="#000">Alpha1 Midi Sequencer</text>
-<text x="60" y="780" font-family="'Courier New',monospace" font-size="24" fill="#000">Радиокружок Зеленоград</text>
+<text x="60" y="780" font-family="'Courier New',monospace" font-size="24" fill="#000">СТК «Путь вперёд»</text>
 <text x="60" y="810" font-family="'Courier New',monospace" font-size="24" fill="#000">Edwards-audio</text>
 <text x="60" y="840" font-family="'Courier New',monospace" font-size="24" fill="#000">ФАЗА Электроника</text>
 <text x="60" y="870" font-family="'Courier New',monospace" font-size="24" fill="#000">Пикасо 3D</text>
 <text x="60" y="900" font-family="'Courier New',monospace" font-size="24" fill="#000">MADSOUNDFACTORY</text>
 <text x="60" y="930" font-family="'Courier New',monospace" font-size="24" fill="#000">PORKYSYNTH</text>
 <text x="60" y="960" font-family="'Courier New',monospace" font-size="24" fill="#000">Творческий центр ТРЕТИЙ ПУТЬ</text>
-<text x="60" y="990" font-family="'Courier New',monospace" font-size="24" fill="#000">«Проводочки»</text>
-<text x="60" y="1020" font-family="'Courier New',monospace" font-size="24" fill="#000">Nakedboards</text>
+<text x="60" y="990" font-family="'Courier New',monospace" font-size="24" fill="#000">Nakedboards</text>
 <text x="575" y="240" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· АРТИСТЫ</text>
 <text x="575" y="272" font-family="'Courier New',monospace" font-size="24" fill="#000">Там Огни | c0deterr0r</text>
 <text x="575" y="304" font-family="'Courier New',monospace" font-size="24" fill="#000">TiihayaRekaa</text>
@@ -73,18 +72,19 @@
 <text x="575" y="992" font-family="'Courier New',monospace" font-size="24" fill="#000">Никита Забелин</text>
 <text x="575" y="1022" font-family="'Courier New',monospace" font-size="24" fill="#000">Влад Креймер</text>
 
-<text x="60" y="1078" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· МАСТЕР-КЛАССЫ</text>
-<text x="60" y="1108" font-family="'Courier New',monospace" font-size="24" fill="#000">Воронов Егор</text>
-<text x="60" y="1138" font-family="'Courier New',monospace" font-size="24" fill="#000">Полина Шмонина</text>
-<text x="60" y="1168" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
-<text x="60" y="1198" font-family="'Courier New',monospace" font-size="24" fill="#000">Илья Чертков</text>
-<text x="60" y="1228" font-family="'Courier New',monospace" font-size="24" fill="#000">Склад Ума</text>
-<text x="575" y="1076" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ИНСТАЛЛЯЦИИ</text>
-<text x="575" y="1106" font-family="'Courier New',monospace" font-size="24" fill="#000">Анна Ходыкина</text>
-<text x="575" y="1136" font-family="'Courier New',monospace" font-size="24" fill="#000">Василий Конкрет</text>
-<text x="575" y="1166" font-family="'Courier New',monospace" font-size="24" fill="#000">Дарья Лукьянова</text>
-<text x="575" y="1196" font-family="'Courier New',monospace" font-size="24" fill="#000">Лидия Симич</text>
-<text x="575" y="1226" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
+<text x="60" y="1060" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· МАСТЕР-КЛАССЫ</text>
+<text x="60" y="1090" font-family="'Courier New',monospace" font-size="24" fill="#000">Воронов Егор</text>
+<text x="60" y="1120" font-family="'Courier New',monospace" font-size="24" fill="#000">Полина Шмонина</text>
+<text x="60" y="1150" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
+<text x="60" y="1180" font-family="'Courier New',monospace" font-size="24" fill="#000">Илья Чертков</text>
+<text x="60" y="1210" font-family="'Courier New',monospace" font-size="24" fill="#000">Склад Ума</text>
+<text x="575" y="1060" font-family="'Courier New',monospace" font-size="23" letter-spacing="4" fill="#E30613">· ИНСТАЛЛЯЦИИ</text>
+<text x="575" y="1090" font-family="'Courier New',monospace" font-size="24" fill="#000">Анна Ходыкина</text>
+<text x="575" y="1120" font-family="'Courier New',monospace" font-size="24" fill="#000">Василий Конкрет</text>
+<text x="575" y="1150" font-family="'Courier New',monospace" font-size="24" fill="#000">Дарья Лукьянова</text>
+<text x="575" y="1180" font-family="'Courier New',monospace" font-size="24" fill="#000">Лидия Симич</text>
+<text x="575" y="1210" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
+<text x="575" y="1240" font-family="'Courier New',monospace" font-size="24" fill="#000">Роман Крылов</text>
 
 <line x1="60" y1="1250" x2="1020" y2="1250" stroke="#000" stroke-width="2"/>
 <text x="60" y="1292" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
