@@ -1,7 +1,7 @@
 const fs = require('fs');
 const OUT = __dirname + '/../renders/afisha';
 
-const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards'];
+const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards','Ravzar'];
 const ARTISTS = ['Там Огни | c0deterr0r','TiihayaRekaa','М.О.У.Б.','dr.SpaceKir','Alexander Turkin','Игра с тенью','H.Ruine','Анна Пряхина','Артемий Анрилов и xandr.vasiliev','Gogidze','RUBIGO FORTUNA'];
 const LECTURES = ['Владимир Черепанов','Владимир Кабанов','Захар Лунев','Александр Григорьев','Александр Пленингер','Георгий Орлов-Давыдовский','Николай Козловский','Илья Чертков','Игорь Мирзоев','Каут Алекс','Иван Антоновский','Никита Забелин','Влад Креймер'];
 const WORKSHOPS = ['Воронов Егор','Полина Шмонина','Олег Слуцкий','Илья Чертков','Склад Ума'];
