@@ -47,15 +47,15 @@ const EV=[
   [2, 180,235,'g','Игорь Мирзоев','3D-печать в музыкальной электронике · Пикасо 3D'],
   [2, 240,295,'g','Владимир Черепанов','Медицинский звук: использование в звукоэкспериментальных целях непрофильной техники'],
   [2, 300,355,'g','Каут Алекс','Опыт малотиражной разработки · Boring modular'],
-  [3, 60, 110,'d','Там Огни | c0deterr0r',''],
-  [3, 110,160,'d','М.О.У.Б.',''],
-  [3, 160,210,'d','dr.SpaceKir',''],
-  [3, 210,260,'d','Alexander Turkin',''],
-  [3, 260,310,'d','RUBIGO FORTUNA','Раис · Казань'],
-  [4, 90, 140,'d','Игра с тенью',''],
-  [4, 150,200,'d','TiihayaRekaa',''],
-  [4, 200,240,'d','Анна Пряхина · AV',''],
-  [4, 240,300,'d','Аудиовизуальная синестезия · AV-лекция','Козловский Николай'],
+  [3, 60, 110,'h','Там Огни | c0deterr0r',''],
+  [3, 110,160,'h','М.О.У.Б.',''],
+  [3, 160,210,'h','dr.SpaceKir',''],
+  [3, 210,260,'h','Alexander Turkin',''],
+  [3, 260,310,'h','RUBIGO FORTUNA','Раис · Казань'],
+  [4, 90, 140,'h','Игра с тенью',''],
+  [4, 150,200,'h','TiihayaRekaa',''],
+  [4, 200,240,'h','Анна Пряхина · AV',''],
+  [4, 240,300,'h','Аудиовизуальная синестезия · AV-лекция','Козловский Николай'],
   [5, 120,300,'g','Полина Шмонина','Хаотический синтезатор'],
   [6, 180,360,'g','Воронов Егор','Аналоговый синтезатор на интегральной микросхеме'],
   [7, 180,280,'g','Полевые записи — прогулка','с Ильёй Чертковым (30 мин инструктаж), Владом Креймером, Павлом Чукаевым (экскурсовод)'],
@@ -115,10 +115,10 @@ let heads='';
 COLS.forEach((h,c)=>{
   const cx=CX0+c*CW+CW/2;
   const dark=DARKCOLS.includes(c);
-  if(dark) heads+=`<rect x="${CX0+c*CW+5}" y="${GY0-60}" width="${CW-10}" height="48" fill="#111111"/>\n`;
+  if(dark) heads+=`<rect x="${CX0+c*CW+5}" y="${GY0-60}" width="${CW-10}" height="48" fill="url(#th)" stroke="#000" stroke-width="1.6"/>\n`;
   const y1 = h[1] ? GY0-44 : GY0-30;
-  heads+=`<text x="${cx}" y="${y1}" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="${dark?'#FFF':'#000'}">${esc(h[0])}</text>\n`;
-  if(h[1]) heads+=`<text x="${cx}" y="${GY0-18}" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="${dark?'#FF5560':'#E30613'}">${esc(h[1])}</text>\n`;
+  heads+=`<text x="${cx}" y="${y1}" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#000">${esc(h[0])}</text>\n`;
+  if(h[1]) heads+=`<text x="${cx}" y="${GY0-18}" text-anchor="middle" font-weight="800" font-size="22" letter-spacing="0.5" fill="#E30613">${esc(h[1])}</text>\n`;
 });
 
 function shLine(x0,x1,base,q){
