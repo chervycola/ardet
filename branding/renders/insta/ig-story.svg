@@ -80,11 +80,9 @@
 <text x="60" y="1606" font-family="'Courier New',monospace" font-size="24" fill="#000">Склад Ума</text>
 <text x="60" y="1690" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ИНСТАЛЛЯЦИИ</text>
 <text x="60" y="1732" font-family="'Courier New',monospace" font-size="24" fill="#000">Анна Ходыкина</text>
-<text x="60" y="1768" font-family="'Courier New',monospace" font-size="24" fill="#000">Василий Конкрет</text>
-<text x="60" y="1804" font-family="'Courier New',monospace" font-size="24" fill="#000">Дарья Лукьянова</text>
-<text x="320" y="1732" font-family="'Courier New',monospace" font-size="24" fill="#000">Лидия Симич</text>
-<text x="320" y="1768" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
-<text x="320" y="1804" font-family="'Courier New',monospace" font-size="24" fill="#000">Роман Крылов</text>
+<text x="60" y="1768" font-family="'Courier New',monospace" font-size="24" fill="#000">Лидия Симич</text>
+<text x="60" y="1804" font-family="'Courier New',monospace" font-size="24" fill="#000">Олег Слуцкий</text>
+<text x="320" y="1732" font-family="'Courier New',monospace" font-size="24" fill="#000">Роман Крылов</text>
 <rect x="600" y="1560" width="420" height="90" fill="#E30613"/>
 <text x="618" y="1618" font-weight="800" font-size="38" letter-spacing="1" fill="#FFF">ВХОД ПО БИЛЕТАМ</text>
 <text x="600" y="1700" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">билеты — по ссылке</text>
