@@ -38,9 +38,9 @@
 <text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Резонит. Для производителей и</text>
 <text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">разработчиков творческих приборов — три</text>
 <text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">номинации.</text>
-<rect x="60" y="996" width="518" height="96" fill="#E30613"/>
-<text x="96" y="1060" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ТРИ НОМИНАЦИИ</text>
-<image x="660" y="1005" width="360" height="79" href="mono/rezonit.png" preserveAspectRatio="xMidYMid meet"/>
+<rect x="60" y="1067" width="518" height="96" fill="#E30613"/>
+<text x="96" y="1131" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ТРИ НОМИНАЦИИ</text>
+<image x="660" y="1076" width="360" height="79" href="mono/rezonit.png" preserveAspectRatio="xMidYMid meet"/>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
