@@ -39,8 +39,8 @@
 <text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">аксессуары против хаоса проводов и</text>
 <text x="60" y="944" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">тематические призы всем посетителям</text>
 <text x="60" y="1000" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">форума.</text>
-<image x="60" y="1030" width="330" height="86" href="mono/djstore.png" preserveAspectRatio="xMidYMid meet"/>
-<image x="500" y="1044" width="400" height="58" href="mono/picaso.png" preserveAspectRatio="xMidYMid meet"/>
+<image x="60" y="1072" width="330" height="86" href="mono/djstore.png" preserveAspectRatio="xMidYMid meet"/>
+<image x="500" y="1086" width="400" height="58" href="mono/picaso.png" preserveAspectRatio="xMidYMid meet"/>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
 <text x="60" y="1258" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="60" y="1286" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>

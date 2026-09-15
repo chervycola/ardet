@@ -87,7 +87,7 @@ ${content}
 const c1 = card('01', 'ФОКУС НА ЭКСПО', 'ПРИЗОВАЯ', 'ПРОГРАММА',
   bodyLines('Делаем больший фокус на экспо: создан призовой фонд памятных призов для участников. Партнёр фонда — компания Резонит. Для производителей и разработчиков творческих приборов — три номинации.', 41, 664, 38, 56) + `
 ${plate('ТРИ НОМИНАЦИИ', 996)}
-<image x="660" y="1096" width="360" height="79" href="mono/rezonit.png" preserveAspectRatio="xMidYMid meet"/>`);
+<image x="660" y="1005" width="360" height="79" href="mono/rezonit.png" preserveAspectRatio="xMidYMid meet"/>`);
 
 // 02 — номинации и как участвовать
 const noms = [['01','СЛЕДУЮЩАЯ РЕВИЗИЯ'],['02','ИНЖЕНЕРНОЕ РЕШЕНИЕ'],['03','ЦЕЛЬНОСТЬ УСТРОЙСТВА']];
@@ -105,8 +105,8 @@ ${plate('ИТОГИ — В КОНЦЕ ДНЯ', 1086)}`);
 // 03 — DJ Store и Пикасо 3D
 const c3 = card('03', 'ОБОРУДОВАНИЕ И АКСЕССУАРЫ', 'ЗВУК', 'И ПОРЯДОК',
   bodyLines('DJ Store — звуковое оборудование столов выставки и демо-зоны: безопасное прослушивание и подключение к звуковым системам. Пикасо 3D — настольные аксессуары против хаоса проводов и тематические призы всем посетителям форума.', 41, 664, 38, 56) + `
-<image x="60" y="1030" width="330" height="86" href="mono/djstore.png" preserveAspectRatio="xMidYMid meet"/>
-<image x="500" y="1044" width="400" height="58" href="mono/picaso.png" preserveAspectRatio="xMidYMid meet"/>`);
+<image x="60" y="1072" width="330" height="86" href="mono/djstore.png" preserveAspectRatio="xMidYMid meet"/>
+<image x="500" y="1086" width="400" height="58" href="mono/picaso.png" preserveAspectRatio="xMidYMid meet"/>`);
 
 // 04 — коллаборация с МИЭТ
 const c4 = card('04', 'КОЛЛАБОРАЦИЯ С УНИВЕРСИТЕТОМ', 'ПРИЗЫ', 'ОТ МИЭТ',
