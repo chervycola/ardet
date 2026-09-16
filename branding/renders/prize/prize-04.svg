@@ -37,8 +37,7 @@
 <text x="60" y="776" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">призы в коллаборации с НИУ МИЭТ.</text>
 <text x="60" y="832" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">Результаты всех номинаций объявим при</text>
 <text x="60" y="888" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">подведении итогов форума.</text>
-<rect x="60" y="944" width="360" height="104" fill="none" stroke="#000" stroke-width="3"/>
-<text x="240" y="1012" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="3" fill="#000">НИУ МИЭТ</text>
+<image x="60" y="948" width="580" height="92" href="mono/miet.png" preserveAspectRatio="xMidYMid meet"/>
 <rect x="60" y="1086" width="688" height="96" fill="#E30613"/>
 <text x="96" y="1150" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">УВИДИМСЯ НА ИТОГАХ</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>

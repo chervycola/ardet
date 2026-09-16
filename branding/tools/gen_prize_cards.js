@@ -111,8 +111,7 @@ const c3 = card('03', 'ОБОРУДОВАНИЕ И АКСЕССУАРЫ', 'ЗВ�
 // 04 — коллаборация с МИЭТ
 const c4 = card('04', 'КОЛЛАБОРАЦИЯ С УНИВЕРСИТЕТОМ', 'ПРИЗЫ', 'ОТ МИЭТ',
   bodyLines('Для лекторов, артистов и ведущих мастер-классов подготовлены эксклюзивные призы в коллаборации с НИУ МИЭТ. Результаты всех номинаций объявим при подведении итогов форума.', 41, 664, 38, 56) + `
-<rect x="60" y="944" width="360" height="104" fill="none" stroke="#000" stroke-width="3"/>
-<text x="240" y="1012" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="3" fill="#000">НИУ МИЭТ</text>
+<image x="60" y="948" width="580" height="92" href="mono/miet.png" preserveAspectRatio="xMidYMid meet"/>
 ${plate('УВИДИМСЯ НА ИТОГАХ', 1086)}`);
 
 [[1,c1],[2,c2],[3,c3],[4,c4]].forEach(([n,s])=>{
