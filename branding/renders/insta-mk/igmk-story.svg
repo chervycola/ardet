@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <pattern id="th" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#f4f4f4"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#e3e3e3" stroke-width="4"/>
+  </pattern>
+</defs>
+<rect width="1080" height="1920" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1040" height="1880" fill="none" stroke="#000" stroke-width="2"/>
+<use href="#logoD" fill="#000" transform="translate(60,56) scale(5.0)"/>
+<text x="540" y="98" text-anchor="middle" font-weight="800" font-size="54" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="1020" y="90" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#000">МАСТЕРСКИЕ</text>
+<line x1="60" y1="130" x2="1020" y2="130" stroke="#000" stroke-width="2"/>
+<text x="60" y="248" font-weight="800" font-size="88" letter-spacing="1" fill="#000">МАСТЕРСКИЕ <tspan fill="#E30613">19.09</tspan></text>
+<circle cx="60" cy="306" r="6" fill="#E30613"/>
+<polyline points="60,306 149,306 149,299 199,299 199,313 241,313 241,306 309,306 309,292 353,292 353,320 392,320 392,299 442,299 442,327 501,327 501,313 546,313 546,306 623,306 623,292 670,292 670,313 712,313 712,299 768,299 768,320 813,320 813,306 878,306 878,299 931,299 931,306 1020,306" fill="none" stroke="#000" stroke-width="3"/>
+<text x="60" y="400" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ВЗРОСЛЫМ · С ПАЯЛЬНИКОМ И БЕЗ</text>
+<text x="60" y="462" font-family="'Courier New',monospace" font-size="26" fill="#E30613">16:00</text>
+<text x="185" y="462" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Полевые записи · прогулка</text>
+<text x="185" y="496" font-family="'Courier New',monospace" font-size="23" fill="#000">Илья Чертков · улица · 3456 ₽</text>
+<text x="60" y="574" font-family="'Courier New',monospace" font-size="26" fill="#E30613">15:00</text>
+<text x="185" y="574" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Хаотический синтезатор</text>
+<text x="185" y="608" font-family="'Courier New',monospace" font-size="23" fill="#000">Полина Шмонина · МАСТ·1 · 4567 ₽</text>
+<text x="60" y="686" font-family="'Courier New',monospace" font-size="26" fill="#E30613">16:00</text>
+<text x="185" y="686" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Аналоговый синтезатор</text>
+<text x="185" y="720" font-family="'Courier New',monospace" font-size="23" fill="#000">Егор Воронов · МАСТ·2 · 4567 ₽</text>
+<text x="60" y="830" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ДЕТСКАЯ · ЗАЛ ДЕТИ АЙКЬЮ</text>
+<text x="60" y="892" font-family="'Courier New',monospace" font-size="26" fill="#E30613">14:00</text>
+<text x="185" y="892" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Мастерская звуков</text>
+<text x="185" y="926" font-family="'Courier New',monospace" font-size="23" fill="#000">6–12 лет · 876 ₽</text>
+<text x="60" y="1004" font-family="'Courier New',monospace" font-size="26" fill="#E30613">15:00</text>
+<text x="185" y="1004" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Собери свою гармошку!</text>
+<text x="185" y="1038" font-family="'Courier New',monospace" font-size="23" fill="#000">Склад Ума · бесплатно</text>
+<text x="60" y="1116" font-family="'Courier New',monospace" font-size="26" fill="#E30613">16:00</text>
+<text x="185" y="1116" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">Синтезатор из сковородки</text>
+<text x="185" y="1150" font-family="'Courier New',monospace" font-size="23" fill="#000">10–99 лет · 987 ₽</text>
+<text x="60" y="1228" font-family="'Courier New',monospace" font-size="26" fill="#E30613">17:00</text>
+<text x="185" y="1228" font-weight="800" font-size="34" letter-spacing="0.5" fill="#000">«Чувствую движение»</text>
+<text x="185" y="1262" font-family="'Courier New',monospace" font-size="23" fill="#000">Склад Ума · бесплатно</text>
+<text x="60" y="1370" font-family="'Courier New',monospace" font-size="24" fill="#000">Бесплатные занятия — с регистрацией</text>
+<text x="60" y="1406" font-family="'Courier New',monospace" font-size="24" fill="#000">на инфостойке в день форума.</text>
+<text x="60" y="1478" font-family="'Courier New',monospace" font-size="24" fill="#000">Мастер-классы оплачиваются отдельно</text>
+<text x="60" y="1514" font-family="'Courier New',monospace" font-size="24" fill="#000">от входного билета. Готовый прибор</text>
+<text x="60" y="1550" font-family="'Courier New',monospace" font-size="24" fill="#000">уходит домой с вами.</text>
+<rect x="60" y="1616" width="480" height="90" fill="#E30613"/>
+<text x="78" y="1674" font-weight="800" font-size="38" letter-spacing="1" fill="#FFF">МЕСТА ОГРАНИЧЕНЫ</text>
+<text x="600" y="1660" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">запись — по ссылке</text>
+<text x="600" y="1694" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">в шапке профиля</text>
+<text x="60" y="1770" font-family="'Courier New',monospace" font-size="20" letter-spacing="1" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ · 13:00–20:00</text>
+<line x1="60" y1="1830" x2="1020" y2="1830" stroke="#000" stroke-width="2"/>
+<text x="60" y="1872" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="1020" y="1872" text-anchor="end" font-weight="800" font-size="28" fill="#E30613">ДИСКРЕТ.РФ</text>
+</svg>
