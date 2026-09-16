@@ -32,7 +32,7 @@ function shLine(){
 <polyline points="${pts.join(' ')}" fill="none" stroke="#000" stroke-width="3"/>`;
 }
 // фото модуля: 914×2000 → колонка справа
-const PH = { x:764, y:622, w:256, h:560 };
+const PH = { x:792, y:622, w:228, h:562 };
 const body = wrap('Daisy Seed patch.Init() в отечественной оболочке: программируемая DSP-платформа на STM32. Прошивки — C++, PureData, MaxMSP и Arduino, плюс готовые от сообщества: осциллятор, модуляция, эффект или секвенсор.', 31)
   .map((l,i)=>`<text x="60" y="${664+i*52}" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">${esc(l)}</text>`).join('\n');
 
@@ -69,7 +69,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 ${headText('RAVZAR', 350, '#000')}
 ${headText('PATCH.INIT()', 492, '#E30613')}
 ${shLine()}
-<image x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" href="../../app/photos/ravzar1.png" preserveAspectRatio="xMidYMid meet"/>
+<image x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" href="ravzar-photo.png" preserveAspectRatio="xMidYMid meet"/>
 <rect x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" fill="none" stroke="#000" stroke-width="2"/>
 ${body}
 <rect x="60" y="1086" width="620" height="96" fill="#E30613"/>

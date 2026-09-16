@@ -32,8 +32,8 @@
 <text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613" textLength="960" lengthAdjust="spacingAndGlyphs">PATCH.INIT()</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
-<image x="764" y="622" width="256" height="560" href="../../app/photos/ravzar1.png" preserveAspectRatio="xMidYMid meet"/>
-<rect x="764" y="622" width="256" height="560" fill="none" stroke="#000" stroke-width="2"/>
+<image x="792" y="622" width="228" height="562" href="ravzar-photo.png" preserveAspectRatio="xMidYMid meet"/>
+<rect x="792" y="622" width="228" height="562" fill="none" stroke="#000" stroke-width="2"/>
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">Daisy Seed patch.Init() в</text>
 <text x="60" y="716" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">отечественной оболочке:</text>
 <text x="60" y="768" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">программируемая DSP-платформа</text>
