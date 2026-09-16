@@ -204,6 +204,9 @@
   .ncard .nwave{width:100%; height:auto; display:block; margin:-88px 0 4px; position:relative; z-index:0; color:var(--hair);}
   .ncard .nb{font-family:var(--mono); font-size:13.5px; line-height:1.62; color:var(--hair); margin-top:10px;}
   .ncard .nfoot{margin-top:auto; padding-top:18px; display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);}
+  .ncard .nlogos{display:flex; align-items:center; gap:20px; margin-top:16px;}
+  .ncard .nlogos img{height:32px; max-width:46%; object-fit:contain; object-position:left center;}
+  :root[data-theme="dark"] .ncard .nlogos img{filter:invert(1);}
   .cdots{position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; pointer-events:none;}
   .cdot{width:7px; height:7px; background:rgba(255,255,255,.55); border:1px solid #000;}
   .cdot.on{background:var(--red);}
@@ -259,6 +262,8 @@
   .pmedia{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; background:#000; scrollbar-width:none; border-bottom:2px solid var(--hair);}
   .pmedia::-webkit-scrollbar{display:none;}
   .pmedia img{flex:0 0 100%; scroll-snap-align:center; width:100%; aspect-ratio:4/3; object-fit:cover; display:block; filter:grayscale(.1) contrast(1.05);}
+  .pmedia.fit{background:#fff;}
+  .pmedia.fit img{aspect-ratio:4/5; object-fit:contain; filter:none;}
   .post-b{padding:12px 14px 14px;}
   .post-h{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
   .post-h .pd{font-size:11px; letter-spacing:1px; color:var(--muted); text-transform:uppercase;}
@@ -391,7 +396,7 @@
 </div>
 
 <script>
-window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","nb1":"photos/nb1.jpg","nb2":"photos/nb2.jpg","nb3":"photos/nb3.jpg","kr1":"photos/kr1.jpg","kr2":"photos/kr2.jpg","edw1":"photos/edw1.jpg","edw2":"photos/edw2.jpg","edw3":"photos/edw3.jpg","faza1":"photos/faza1.jpg","rez1":"photos/rez1.jpg","rez2":"photos/rez2.jpg","rez3":"photos/rez3.jpg","porky1":"photos/porky1.jpg","moon1":"photos/moon1.jpg","prov1":"photos/prov1.jpg","prov2":"photos/prov2.jpg","sl1":"photos/sl1.jpg","sl2":"photos/sl2.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","org_slutsky":"photos/org_slutsky.jpg","org_boykov":"photos/org_boykov.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg","lg_skladuma":"photos/lg_skladuma.png","lg_studiomarket":"photos/lg_studiomarket.png","lg_mworld":"photos/lg_mworld.png","lg_djstore":"photos/lg_djstore.png","ravzar1":"photos/ravzar1.png","lg_eightfloor":"photos/lg_eightfloor.png","lg_rezonit":"photos/lg_rezonit.png"};
+window.PHOTOS = {"ac1":"photos/ac1.jpg","ac2":"photos/ac2.jpg","alphaseq":"photos/alphaseq.jpg","arch1":"photos/arch1.jpg","arch2":"photos/arch2.jpg","astrovox":"photos/astrovox.jpg","bj":"photos/bj.jpg","bj2":"photos/bj2.jpg","bj3":"photos/bj3.jpg","hgx":"photos/hgx.jpg","hgx2":"photos/hgx2.jpg","hruine1":"photos/hruine1.jpg","laser":"photos/laser.jpg","laser1":"photos/laser1.jpg","laser2":"photos/laser2.jpg","lnlogo":"photos/lnlogo.png","lnreal":"photos/lnreal.png","moub1":"photos/moub1.jpg","para":"photos/para.jpg","para2":"photos/para2.jpg","para3":"photos/para3.jpg","shadow1":"photos/shadow1.jpg","shadow2":"photos/shadow2.jpg","spacekir1":"photos/spacekir1.jpg","sx":"photos/sx.jpg","sx2":"photos/sx2.jpg","sxlab":"photos/sxlab.jpg","tamogni1":"photos/tamogni1.jpg","tiihaya1":"photos/tiihaya1.jpg","tiihaya2":"photos/tiihaya2.jpg","tiihaya3":"photos/tiihaya3.jpg","tw":"photos/tw.jpg","tw2":"photos/tw2.jpg","tw3":"photos/tw3.jpg","tw4":"photos/tw4.jpg","vg":"photos/vg.jpg","vg1":"photos/vg1.jpg","vg2":"photos/vg2.jpg","vg3":"photos/vg3.jpg","kaledoscope":"photos/kaledoscope.jpg","unost":"photos/unost.jpg","nb1":"photos/nb1.jpg","nb2":"photos/nb2.jpg","nb3":"photos/nb3.jpg","kr1":"photos/kr1.jpg","kr2":"photos/kr2.jpg","edw1":"photos/edw1.jpg","edw2":"photos/edw2.jpg","edw3":"photos/edw3.jpg","faza1":"photos/faza1.jpg","rez1":"photos/rez1.jpg","rez2":"photos/rez2.jpg","rez3":"photos/rez3.jpg","porky1":"photos/porky1.jpg","moon1":"photos/moon1.jpg","prov1":"photos/prov1.jpg","prov2":"photos/prov2.jpg","sl1":"photos/sl1.jpg","sl2":"photos/sl2.jpg","org_novikov":"photos/org_novikov.jpg","org_grigoriev":"photos/org_grigoriev.jpg","org_slutsky":"photos/org_slutsky.jpg","org_boykov":"photos/org_boykov.jpg","tr1":"photos/tr1.jpg","mayak":"photos/mayak.jpg","pribor1":"photos/pribor1.jpg","lg_picaso":"photos/lg_picaso.svg","lg_soyuz":"photos/lg_soyuz.jpg","lg_baklazhania":"photos/lg_baklazhania.svg","lg_efemi":"photos/lg_efemi.svg","lg_angstrem":"photos/lg_angstrem.svg","lg_ioaudio":"photos/lg_ioaudio.svg","lg_flataudio":"photos/lg_flataudio.svg","lg_infoportal":"photos/lg_infoportal.svg","lg_lasernoto":"photos/lg_lasernoto.svg","lg_skladuma":"photos/lg_skladuma.png","lg_studiomarket":"photos/lg_studiomarket.png","lg_mworld":"photos/lg_mworld.png","lg_djstore":"photos/lg_djstore.png","ravzar1":"photos/ravzar1.png","lg_eightfloor":"photos/lg_eightfloor.png","lg_rezonit":"photos/lg_rezonit.png","lgm_rezonit":"photos/lgm_rezonit.png","lgm_djstore":"photos/lgm_djstore.png","lgm_picaso":"photos/lgm_picaso.png","lgm_miet":"photos/lgm_miet.png"};
 // фото лежат отдельными файлами в photos/ и подгружаются лениво
 const ORG = {
   inst: [
@@ -569,10 +574,10 @@ const POSTS = [
   { date:"15.09.2026", title:"Призовая программа",
     text:"В этом году мы усилили внимание к экспо-зоне и подготовили отдельную призовую программу для её участников. Партнёром призового фонда стала компания Резонит.\n\nДля производителей и разработчиков творческих приборов учреждены три номинации:\n\n1. Следующая ревизия\n2. Инженерное решение\n3. Цельность устройства\n\nПринять участие может любой зарегистрированный участник экспо.\n\nДостаточно представить свой проект экспертному жюри — непосредственно на стенде или во время короткой презентации на демо-сцене.\n\nПобедителей объявим в конце дня при подведении итогов форума.\n\nВместе с DJ Store мы дополнили столы экспо и демо-зону звуковым оборудованием, чтобы участники могли безопасно подключать устройства к звуковым системам и демонстрировать их посетителям.\n\nPICASO 3D изготовила настольные аксессуары, которые помогут организовать пространство стендов, провода и оборудование, а также подготовила тематические призы для посетителей форума.\n\nДля участников лектория, артистов и ведущих мастер-классов подготовлены отдельные памятные призы, созданные в коллаборации с НИУ МИЭТ.",
     cards:[
-      { k:"ФОКУС НА ЭКСПО", h:["ПРИЗОВАЯ","ПРОГРАММА"], b:"Делаем больший фокус на экспо: создан призовой фонд памятных призов для участников. Партнёр фонда — компания Резонит. Для производителей и разработчиков творческих приборов — три номинации." },
-      { k:"ДЛЯ УЧАСТНИКОВ ЭКСПО", h:["ТРИ","НОМИНАЦИИ"], b:"Следующая ревизия · Инженерное решение · Цельность устройства. Участвует любой зарегистрированный участник экспо: расскажи о проекте экспертному жюри на своём стенде или в короткой презентации на демо-сцене. Итоги — в конце дня." },
-      { k:"ОБОРУДОВАНИЕ И АКСЕССУАРЫ", h:["ЗВУК","И ПОРЯДОК"], b:"DJ Store — звуковое оборудование столов выставки и демо-зоны: безопасное прослушивание и подключение к звуковым системам. PICASO 3D — настольные аксессуары против хаоса проводов и тематические призы всем посетителям форума." },
-      { k:"КОЛЛАБОРАЦИЯ С УНИВЕРСИТЕТОМ", h:["ПРИЗЫ","ОТ МИЭТ"], b:"Для лекторов, артистов и ведущих мастер-классов подготовлены эксклюзивные призы в коллаборации с НИУ МИЭТ. Результаты всех номинаций объявим при подведении итогов форума." },
+      { k:"ФОКУС НА ЭКСПО", h:["ПРИЗОВАЯ","ПРОГРАММА"], b:"Отдельная призовая программа для участников экспо: фонд памятных призов и три номинации для производителей и разработчиков творческих приборов. Партнёр призового фонда — компания Резонит.", lg:["lgm_rezonit"] },
+      { k:"ДЛЯ УЧАСТНИКОВ ЭКСПО", h:["ТРИ","НОМИНАЦИИ"], b:"Следующая ревизия · Инженерное решение · Цельность устройства. Участвует любой зарегистрированный участник экспо: представь проект жюри на своём стенде или в короткой презентации на демо-сцене. Победителей объявим в конце дня." },
+      { k:"ОБОРУДОВАНИЕ И АКСЕССУАРЫ", h:["ЗВУК","И ПОРЯДОК"], b:"DJ Store — звуковое оборудование столов экспо и демо-зоны: безопасное подключение устройств к звуковым системам. PICASO 3D — настольные аксессуары для организации стендов и тематические призы посетителям.", lg:["lgm_djstore","lgm_picaso"] },
+      { k:"КОЛЛАБОРАЦИЯ С УНИВЕРСИТЕТОМ", h:["ПРИЗЫ","ОТ МИЭТ"], b:"Для участников лектория, артистов и ведущих мастер-классов — отдельные памятные призы, созданные в коллаборации с НИУ МИЭТ. Результаты всех номинаций — при подведении итогов форума.", lg:["lgm_miet"] },
     ],
     link:"https://flat.audio/e/2470" },
   { date:"07.09.2026", title:"Мастерские ДИСКРЕТА: собираем и слушаем руками",
@@ -1061,7 +1066,7 @@ function renderPosts(){
   if(!POSTS.length){ box.innerHTML = `<div class="pempty">${t("posts.empty")}</div>`; return; }
   box.innerHTML = POSTS.map((p,i)=>`
     <article class="post" onclick="openPost(${i})">
-      ${(p.photos&&p.photos.length)?`<div class="pmedia">${p.photos.map(k=>`<img loading="lazy" decoding="async" src="${photo(k)}" alt="">`).join("")}</div>`:""}
+      ${(p.photos&&p.photos.length)?`<div class="pmedia${p.fit?' fit':''}">${p.photos.map(k=>`<img loading="lazy" decoding="async" src="${photo(k)}" alt="">`).join("")}</div>`:""}
       <div class="post-b">
         <div class="post-h"><span class="pd">${esc(p.date||"")}</span><span class="pi">№ ${String(POSTS.length-i).padStart(2,"0")}</span></div>
         ${p.title?`<h3 class="post-title">${esc(p.title)}</h3>`:""}
@@ -1163,6 +1168,7 @@ function ncard(c, n, total){
       ${ev}
     </svg>
     <div class="nb">${esc(c.b||"")}</div>
+    ${(c.lg&&c.lg.length)?`<div class="nlogos">${c.lg.map(k=>`<img loading="lazy" decoding="async" src="${photo(k)}" alt="">`).join("")}</div>`:""}
     <div class="nfoot"><span>ДИСКРЕТ.РФ</span><span>${n} / ${total}</span></div>
   </div>`;
 }
