@@ -1,7 +1,7 @@
 const fs = require('fs');
 const OUT = __dirname + '/../renders/afisha';
 
-const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards','Ravzar','Микрофоны СОЮЗ'];
+const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards','Ravzar','Микрофоны СОЮЗ','Noisescape'];
 const ARTISTS = ['Там Огни | c0deterr0r','TiihayaRekaa','М.О.У.Б.','dr.SpaceKir','Alexander Turkin','Игра с тенью','H.Ruine','Анна Пряхина','Артемий Анрилов и xandr.vasiliev','Gogidze','RUBIGO FORTUNA'];
 const LECTURES = ['Владимир Черепанов','Владимир Кабанов','Захар Лунев','Александр Григорьев','Александр Пленингер','Георгий Орлов-Давыдовский','Николай Козловский','Илья Чертков','Игорь Мирзоев','Каут Алекс','Иван Антоновский','Никита Забелин','Влад Креймер'];
 const WORKSHOPS = ['Воронов Егор','Полина Шмонина','Олег Слуцкий','Илья Чертков','Склад Ума'];
@@ -39,7 +39,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" 
 <circle cx="60" cy="184" r="5" fill="#E30613"/>
 <polyline points="60,184 149,184 149,176 199,176 199,192 241,192 241,184 309,184 309,168 353,168 353,200 392,200 392,176 442,176 442,208 501,208 501,192 546,192 546,184 623,184 623,168 670,168 670,192 712,192 712,176 768,176 768,200 813,200 813,184 878,184 878,176 931,176 931,184 1020,184" fill="none" stroke="#000" stroke-width="2.5"/>
 
-${section(60, 240, 'ЭКСПО', EXPO, 29)}
+${section(60, 240, 'ЭКСПО', EXPO, 28)}
 ${section(575, 240, 'АРТИСТЫ', ARTISTS, 32)}
 ${section(575, 240 + 12*32 + 8, 'ЛЕКТОРИЙ', LECTURES, 30)}
 

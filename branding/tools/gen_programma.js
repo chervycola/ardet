@@ -95,7 +95,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" 
 <circle cx="60" cy="184" r="5" fill="#E30613"/>
 <polyline points="60,184 149,184 149,176 199,176 199,192 241,192 241,184 309,184 309,168 353,168 353,200 392,200 392,176 442,176 442,208 501,208 501,192 546,192 546,184 623,184 623,168 670,168 670,192 712,192 712,176 768,176 768,200 813,200 813,184 878,184 878,176 931,176 931,184 1020,184" fill="none" stroke="#000" stroke-width="2.5"/>
 
-<text x="60" y="230" font-family="'Courier New',monospace" font-size="22" letter-spacing="2" fill="#000">ЭКСПО РАБОТАЕТ 13:00–20:00 · 27 УЧАСТНИКОВ · ВХОД ПО БИЛЕТАМ</text>
+<text x="60" y="230" font-family="'Courier New',monospace" font-size="22" letter-spacing="2" fill="#000">ЭКСПО РАБОТАЕТ 13:00–20:00 · 28 УЧАСТНИКОВ · ВХОД ПО БИЛЕТАМ</text>
 
 ${col(60, LEFT, 296)}
 ${col(575, RIGHT, 296)}

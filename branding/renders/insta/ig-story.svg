@@ -19,7 +19,7 @@
 <text x="1020" y="340" text-anchor="end" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#E30613">19.09.2026</text>
 <circle cx="60" cy="290" r="6" fill="#E30613"/>
 <polyline points="60,290 149,290 149,283 199,283 199,297 241,297 241,290 309,290 309,276 353,276 353,304 392,304 392,283 442,283 442,311 501,311 501,297 546,297 546,290 623,290 623,276 670,276 670,297 712,297 712,283 768,283 768,304 813,304 813,290 878,290 878,283 931,283 931,290 1020,290" fill="none" stroke="#000" stroke-width="3"/>
-<text x="60" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ЭКСПО · 27</text>
+<text x="60" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ЭКСПО · 28</text>
 <text x="60" y="412" font-family="'Courier New',monospace" font-size="24" fill="#000">Kaleidoscope</text>
 <text x="60" y="448" font-family="'Courier New',monospace" font-size="24" fill="#000">ПРИБОР</text>
 <text x="60" y="484" font-family="'Courier New',monospace" font-size="24" fill="#000">Twang Modular</text>
@@ -47,6 +47,7 @@
 <text x="60" y="1294" font-family="'Courier New',monospace" font-size="24" fill="#000">Nakedboards</text>
 <text x="60" y="1330" font-family="'Courier New',monospace" font-size="24" fill="#000">Ravzar</text>
 <text x="60" y="1366" font-family="'Courier New',monospace" font-size="24" fill="#000">Микрофоны СОЮЗ</text>
+<text x="60" y="1402" font-family="'Courier New',monospace" font-size="24" fill="#000">Noisescape</text>
 <text x="600" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· АРТИСТЫ · 11</text>
 <text x="600" y="412" font-family="'Courier New',monospace" font-size="24" fill="#000">Там Огни | c0deterr0r</text>
 <text x="600" y="448" font-family="'Courier New',monospace" font-size="24" fill="#000">TiihayaRekaa</text>
