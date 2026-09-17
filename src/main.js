@@ -797,7 +797,9 @@ function startGame() {
   }
 }
 
-document.getElementById('entry-btn').addEventListener('click', () => {
+let entryDone = false;
+const entryEnter = () => {
+  if (entryDone) return; entryDone = true;
   document.getElementById('entry').style.display = 'none';
   const howto = document.getElementById('howto');
   if (!howto) { startGame(); return; }
@@ -817,7 +819,10 @@ document.getElementById('entry-btn').addEventListener('click', () => {
   howto.addEventListener('click', go, { once: true });
   // Delay the key listener a tick so the entry click doesn't self-trigger
   setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
-});
+};
+// pointerdown + click: в некоторых webview тап не рождает click
+document.getElementById('entry-btn').addEventListener('pointerdown', entryEnter);
+document.getElementById('entry-btn').addEventListener('click', entryEnter);
 
 // Fallback removed: canvas click handler already dispatches. Keeping #gw
 // click listener caused double-dispatch (canvas → #gw bubble), which

@@ -16508,7 +16508,9 @@ Ardet v1.0 \u2014 coming soon.
     render();
     requestAnimationFrame(loop);
   }
-  document.getElementById("entry-btn").addEventListener("click", () => {
+  var entryDone = false;
+  function entryEnter() {
+    if (entryDone) return; entryDone = true;
     document.getElementById("entry").style.display = "none";
     document.getElementById("gw").classList.add("on");
     state.transition("game");
@@ -16518,7 +16520,10 @@ Ardet v1.0 \u2014 coming soon.
       window.ArdetAudio.unlock();
       window.ArdetAudio.playOnce('title');
     }
-  });
+  }
+  // pointerdown + click: в некоторых webview тап не рождает click
+  document.getElementById("entry-btn").addEventListener("pointerdown", entryEnter);
+  document.getElementById("entry-btn").addEventListener("click", entryEnter);
   input.onClick(({ clientX, clientY }) => {
     if (state.is("menu")) {
       hideMenu();

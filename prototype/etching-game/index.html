@@ -147,7 +147,8 @@ resize();
   const t=document.getElementById('title');
   const fsb=document.getElementById('fsbtn');
   let entered=false;
-  document.getElementById('fallin').addEventListener('click',e=>{
+  // pointerdown + click: в некоторых webview тап не рождает click
+  const enter=e=>{
     if(entered) return; entered=true;
     e.stopPropagation();
     ArdetAudio.unlock();
@@ -156,7 +157,10 @@ resize();
     ArdetFS.enter();
     t.classList.add('gone');
     setTimeout(()=>{ t.remove(); },3000);
-  });
+  };
+  const fb=document.getElementById('fallin');
+  fb.addEventListener('pointerdown',enter);
+  fb.addEventListener('click',enter);
   fsb.addEventListener('click',()=>ArdetFS.enter());
   setInterval(()=>{ fsb.style.display=(ArdetFS.active||!matchMedia('(pointer:coarse)').matches)?'none':'block'; },1200);
 })();
