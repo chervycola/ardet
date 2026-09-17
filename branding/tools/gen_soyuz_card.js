@@ -70,6 +70,9 @@ ${headText('МИКРОФОНЫ', 350, '#000')}
 ${headText('СОЮЗ', 492, '#E30613')}
 ${shLine()}
 ${body}
+<text x="60" y="1022" font-family="'Courier New',monospace" font-size="32" letter-spacing="1" fill="#000">ПРОМОКОД НА БИЛЕТЫ</text>
+<rect x="452" y="980" width="168" height="60" fill="none" stroke="#E30613" stroke-width="2.5" stroke-dasharray="9 7"/>
+<text x="536" y="1023" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="34" letter-spacing="2" fill="#E30613">СОЮЗ</text>
 <rect x="60" y="1086" width="620" height="96" fill="#E30613"/>
 <text x="96" y="1150" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">СДЕЛАНО ВРУЧНУЮ</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
