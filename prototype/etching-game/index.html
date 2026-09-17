@@ -4,9 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ardet · офорт — играбельная проба</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080706">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#080706;overflow:hidden}
+  @supports (height:100dvh){ html,body{height:100dvh} }
+  /* заставка */
+  #title{position:fixed;inset:0;background:#0D0B0A;z-index:20;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    transition:opacity 2.6s ease;cursor:pointer}
+  #title.gone{opacity:0;pointer-events:none}
+  #moon{width:150px;height:150px;border-radius:50%;background:#C23B2B;position:relative;
+    box-shadow:0 0 90px rgba(194,59,43,0.25); margin-bottom:10px}
+  #moon::before{content:'';position:absolute;left:34%;top:88%;width:5px;height:44px;
+    background:linear-gradient(#C23B2B,rgba(194,59,43,0));}
+  #moon::after{content:'';position:absolute;left:60%;top:92%;width:4px;height:30px;
+    background:linear-gradient(#C23B2B,rgba(194,59,43,0));}
+  #moon i{position:absolute;inset:14%;border:3px solid rgba(126,36,26,0.5);
+    border-radius:50%;transform:rotate(-14deg) scale(1,0.94)}
+  #moon i+i{inset:30%;border-width:2px;transform:rotate(23deg) scale(0.96,1)}
+  #title h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:44px;
+    letter-spacing:0.5em;color:#D9CFB8;margin:0 0 0 0.5em}
+  #title p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;
+    color:#8A8D8F;margin:0}
+  #title .go{font-family:Montserrat,sans-serif;font-weight:300;font-size:11px;
+    letter-spacing:4px;color:#5b5f61;text-transform:uppercase;margin-top:26px;
+    animation:tpulse 3.2s ease-in-out infinite}
+  @keyframes tpulse{0%,100%{opacity:0.35}50%{opacity:0.9}}
+  /* кнопка фуллскрина */
+  #fsbtn{position:fixed;top:12px;right:50%;transform:translateX(50%);z-index:15;
+    width:34px;height:34px;background:none;border:1px solid rgba(217,207,184,0.35);
+    color:rgba(217,207,184,0.6);font-size:15px;cursor:pointer;display:none;line-height:1}
+  @media (pointer:coarse){ #fsbtn{display:block} }
   canvas{display:block;position:fixed;inset:0;touch-action:none}
   #hud{position:fixed;top:14px;left:18px;pointer-events:none;
     font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
@@ -39,6 +70,14 @@
 <div id="hint">wasd · палец — идти · e — быт</div>
 <div id="opis"><b>опись</b><span id="opistext">пусто. пока честно.</span></div>
 <div id="paper"><b id="ptitle"></b><span id="ptext"></span></div>
+<div id="title">
+  <div id="moon"><i></i><i></i></div>
+  <h1>ARDET</h1>
+  <p>мир горит. это заметил даже мох.</p>
+  <div class="go">коснись — идти</div>
+</div>
+<button id="fsbtn" title="на весь экран">⛶</button>
+<script src="../shared/ardet-audio.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // ARDET — играбельная проба. Визуально и по петле — как Don't Starve,
@@ -60,14 +99,37 @@ const cv=document.getElementById('c'), x=cv.getContext('2d');
 let CW=0,CH=0,DPR=1,zoom=1;
 const darkC=document.createElement('canvas'); const dk=darkC.getContext('2d');
 function resize(){
-  CW=innerWidth; CH=innerHeight;
+  const vv=window.visualViewport;
+  CW=vv?Math.round(vv.width):innerWidth;
+  CH=vv?Math.round(vv.height):innerHeight;
   DPR=Math.min(2,devicePixelRatio||1);
   cv.width=CW*DPR; cv.height=CH*DPR;
   cv.style.width=CW+'px'; cv.style.height=CH+'px';
   darkC.width=CW*DPR; darkC.height=CH*DPR;
   zoom=Math.max(CW/1200, CH/820, CW/WORLD.w, CH/WORLD.h);
 }
-addEventListener('resize',resize); resize();
+addEventListener('resize',resize);
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+resize();
+
+// ═══ ЗАСТАВКА: жест = звук + фуллскрин + вход ═══
+(function(){
+  const t=document.getElementById('title');
+  const fsb=document.getElementById('fsbtn');
+  let entered=false;
+  t.addEventListener('pointerdown',e=>{
+    if(entered) return; entered=true;
+    e.stopPropagation();
+    ArdetAudio.unlock();
+    ArdetAudio.setLocation('title');            // трек заставки
+    ArdetFS.enter();
+    t.classList.add('gone');
+    setTimeout(()=>{ ArdetAudio.setLocation('townlet'); },2600); // перетекает в городок
+    setTimeout(()=>{ t.remove(); },3000);
+  },{passive:false});
+  fsb.addEventListener('click',()=>ArdetFS.enter());
+  setInterval(()=>{ fsb.style.display=(ArdetFS.active||!matchMedia('(pointer:coarse)').matches)?'none':'block'; },1200);
+})();
 
 const J=i=>Math.sin(i*127.13)*43758.545%1;
 
@@ -1204,6 +1266,8 @@ function frame(now){
     shx=J(frameN*3)*amp; shy=J(frameN*7)*amp;
   }
   locEl.textContent=(player.x<1520?'городок':(player.x<2360?'за мостом':'край'))+' · '+phaseWord(ph);
+  if(ArdetAudio.unlocked)
+    ArdetAudio.setLocation(player.x<1520?'townlet':(player.x<2360?'bridge':'edge'));
 
   // статичный слой
   x.setTransform(DPR,0,0,DPR,0,0);

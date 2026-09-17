@@ -4,9 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ardet · осевое·юг — чаша на фундаменте</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080706">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#080706;overflow:hidden}
+  @supports (height:100dvh){ html,body{height:100dvh} }
+  #fsbtn{position:fixed;top:12px;right:50%;transform:translateX(50%);z-index:15;
+    width:34px;height:34px;background:none;border:1px solid rgba(217,207,184,0.35);
+    color:rgba(217,207,184,0.6);font-size:15px;cursor:pointer;display:none;line-height:1}
+  @media (pointer:coarse){ #fsbtn{display:block} }
   canvas{display:block;position:fixed;inset:0;touch-action:none}
   #hud{position:fixed;top:14px;left:18px;pointer-events:none;
     font-family:Montserrat,sans-serif;font-weight:300;font-size:10px;
@@ -31,6 +39,8 @@
 <div id="loc">чаша на фундаменте · день</div>
 <div id="hint">wasd · палец — идти · e — рассмотреть</div>
 <div id="paper"><b id="ptitle"></b><span id="ptext"></span></div>
+<button id="fsbtn" title="на весь экран">⛶</button>
+<script src="../shared/ardet-audio.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // ARDET — клетка «чаша на фундаменте», регистр «Волшебники-1977»:
@@ -56,14 +66,27 @@ const cv=document.getElementById('c'), x=cv.getContext('2d');
 let CW=0,CH=0,DPR=1,zoom=1;
 const darkC=document.createElement('canvas'); const dk=darkC.getContext('2d');
 function resize(){
-  CW=innerWidth; CH=innerHeight;
+  const vv=window.visualViewport;
+  CW=vv?Math.round(vv.width):innerWidth;
+  CH=vv?Math.round(vv.height):innerHeight;
   DPR=Math.min(2,devicePixelRatio||1);
   cv.width=CW*DPR; cv.height=CH*DPR;
   cv.style.width=CW+'px'; cv.style.height=CH+'px';
   darkC.width=CW*DPR; darkC.height=CH*DPR;
   zoom=Math.max(CW/1200, CH/820, CW/WORLD.w, CH/WORLD.h);
 }
-addEventListener('resize',resize); resize();
+addEventListener('resize',resize);
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+resize();
+// звук: разблокировка первым жестом, трек клетки
+(function(){
+  const arm=()=>{ ArdetAudio.unlock(); ArdetAudio.setLocation('axial_south');
+    removeEventListener('pointerdown',arm); removeEventListener('keydown',arm); };
+  addEventListener('pointerdown',arm); addEventListener('keydown',arm);
+  const fsb=document.getElementById('fsbtn');
+  fsb.addEventListener('click',()=>ArdetFS.enter());
+  setInterval(()=>{ fsb.style.display=(ArdetFS.active||!matchMedia('(pointer:coarse)').matches)?'none':'block'; },1200);
+})();
 
 const J=i=>Math.sin(i*127.13)*43758.545%1;
 const lerp=(a,b,k)=>a+(b-a)*k;
