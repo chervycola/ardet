@@ -33,7 +33,7 @@ function shLine(){
 }
 // фото модуля: 914×2000 → колонка справа
 const PH = { x:876, y:622, w:144, h:590 };
-const body = wrap('Конденсаторные микрофоны ручной сборки из Тулы: союз советского хай-тека и мировых стандартов качества. Капсюли делают и золотят вручную, каждый микрофон отслушивают. Сегодня СОЮЗ звучит в студиях тридцати стран мира.', 36)
+const body = wrap('Конденсаторные микрофоны ручной сборки из Тулы: союз советского хай-тека и мировых стандартов качества. Капсюли делают и золотят вручную, каждый микрофон отслушивают. Сегодня СОЮЗ звучит в студиях тридцати стран мира.', 41)
   .map((l,i)=>`<text x="60" y="${664+i*52}" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">${esc(l)}</text>`).join('\n');
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
@@ -69,8 +69,6 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 ${headText('МИКРОФОНЫ', 350, '#000')}
 ${headText('СОЮЗ', 492, '#E30613')}
 ${shLine()}
-<image x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" href="soyuz-photo.png" preserveAspectRatio="xMidYMid meet"/>
-<rect x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" fill="none" stroke="#000" stroke-width="2"/>
 ${body}
 <rect x="60" y="1086" width="620" height="96" fill="#E30613"/>
 <text x="96" y="1150" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">СДЕЛАНО ВРУЧНУЮ</text>
