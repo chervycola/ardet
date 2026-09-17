@@ -31,6 +31,9 @@ function drawCursor() {
   curCtx.fillRect(cx, cy, 1, 1);
 }
 
+let started = false;
+let lastTouch = 0;
+
 export function init() {
   // Hide until game starts
   curEl.style.display = 'none';
@@ -38,22 +41,26 @@ export function init() {
   drawCursor();
 
   document.addEventListener('mousemove', e => {
-    if (!visible) return;
+    if (!started) return;
+    if (Date.now() - lastTouch < 800) return; // синтетика после тапа
+    if (!visible) show(); // мышь вернулась — прицел вернулся (гибриды)
     curEl.style.left = (e.clientX - 10) + 'px';
     curEl.style.top = (e.clientY - 10) + 'px';
   });
 
-  // Hide on touch device
+  // Тач прячет прицел, но не навсегда — гибридные устройства
+  // переключаются между пальцем и мышью.
   window.addEventListener('touchstart', () => {
-    curEl.style.display = 'none';
-    document.body.style.cursor = 'auto';
-    visible = false;
-  }, { once: true });
+    lastTouch = Date.now();
+    hide();
+  });
 }
 
 // Show cursor (call when game starts)
 export function show() {
-  if (IS_TOUCH) return; // never on touch — no pointer to follow
+  started = true;
+  // чисто сенсорное устройство — прицела нет вовсе
+  if (IS_TOUCH && !window.matchMedia('(pointer: fine)').matches) return;
   curEl.style.display = 'block';
   visible = true;
   document.body.style.cursor = 'none';
