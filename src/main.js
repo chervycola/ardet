@@ -808,10 +808,15 @@ let entryDone = false;
 const entryEnter = () => {
   if (entryDone) return; entryDone = true;
   document.getElementById('entry').style.display = 'none';
+  // мобильная версия: жест входа — единственный шанс на фуллскрин
+  const mob = !!window.ARDET_MOBILE || 'ontouchstart' in window ||
+    (navigator.maxTouchPoints || 0) > 0;
+  if (mob && window.ArdetFS) window.ArdetFS.enter();
+  if (mob) document.documentElement.classList.add('m');
   const howto = document.getElementById('howto');
   if (!howto) { startGame(); return; }
   // Swap the key list for touch devices
-  const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+  const isMobile = mob || window.innerWidth <= 768;
   if (isMobile) {
     const d = document.getElementById('howto-desktop');
     const m = document.getElementById('howto-mobile');
@@ -823,8 +828,9 @@ const entryEnter = () => {
     document.removeEventListener('keydown', go);
     startGame();
   };
-  howto.addEventListener('click', go, { once: true });
-  // Delay the key listener a tick so the entry click doesn't self-trigger
+  // Отложить и клик, и клавиши: жест, открывший howto, не должен
+  // тем же синтетическим click тут же его закрыть (мобильный тап).
+  setTimeout(() => howto.addEventListener('click', go, { once: true }), 400);
   setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
 };
 // pointerdown + click: в некоторых webview тап не рождает click

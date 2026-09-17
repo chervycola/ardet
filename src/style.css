@@ -28,6 +28,11 @@ html, body {
   color: var(--c-bone);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
+/* мобильные браузеры: высота без учёта уезжающей адресной строки */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+  canvas#game { height: 100dvh; }
+}
 
 /* ── Game canvas ── */
 #gw {
@@ -152,6 +157,18 @@ canvas#game {
 }
 @keyframes wakecap { 0%,10%{opacity:0} 30%{opacity:0.55} 45%{opacity:0.15}
   60%{opacity:0.5} 80%{opacity:0.1} 100%{opacity:0} }
+/* на телефонах blur дорогой — облегчённое похмелье */
+@keyframes wakeblurLite {
+  0%   { filter: blur(7px)   brightness(0.35); }
+  22%  { filter: blur(5px)   brightness(0.45); }
+  40%  { filter: blur(2.5px) brightness(0.65); }
+  56%  { filter: blur(4px)   brightness(0.55); }
+  76%  { filter: blur(1px)   brightness(0.85); }
+  100% { filter: none; }
+}
+@media (pointer: coarse) {
+  #gw.wake { animation-name: wakeblurLite, wakesway; }
+}
 
 /* ── Menu ── */
 #menu {
@@ -399,7 +416,7 @@ canvas#game {
 }
 
 /* ═══ MOBILE ═══ */
-@media (max-width: 768px) {
+@media (max-width: 768px), (pointer: coarse) {
   html, body {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
