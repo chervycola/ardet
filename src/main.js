@@ -42,7 +42,6 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
-import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
@@ -51,8 +50,8 @@ import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './
 import { weather, update as updateWeather, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
 import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
-// Achievement toast removed by design law #1 («глубина не геймифицируется»):
-// unlocks are silent; the full list lives in the terminal `ach` command.
+// Achievements removed entirely by design law #1 («глубина не геймифицируется»):
+// no toasts, no counters, no ledger. The only permitted trace is the walk itself.
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
@@ -126,14 +125,11 @@ if (savedData) {
   if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
   if (savedData.collectedLore) loadCollected(savedData.collectedLore);
   if (savedData.observersSeen) savedData.observersSeen.forEach(n => flags.observersSeen.add(n));
-  if (savedData.achievements) loadUnlocked(savedData.achievements);
   if (savedData.graffiti) setGraffiti(savedData.graffiti);
   if (savedData.catSightings) loadSightings(savedData.catSightings);
   if (savedData.catUnlocked) setCatUnlocked(true);
   if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
 }
-
-initAchievements(flags, () => getCollectedCount());
 
 startAutoSave(() => ({
   player: { x: player.x, y: player.y },
@@ -141,7 +137,6 @@ startAutoSave(() => ({
   visited: Array.from(flags.visited),
   observersSeen: Array.from(flags.observersSeen),
   collectedLore: getCollectedIds(),
-  achievements: getUnlocked(),
   graffiti: getGraffiti(),
   catSightings: getSightings(),
   catUnlocked: catUnlocked(),

@@ -49,7 +49,6 @@ export const E = {
   LORE_COLLECT: 'lore.collect',
   NPC_TALK: 'npc.talk',
   OBSERVER_MET: 'observer.met',
-  ACHIEVEMENT: 'achievement.unlock',
   SAVE: 'game.save',
   LOAD: 'game.load',
   STATE_CHANGE: 'state.change',
