@@ -16,7 +16,7 @@
   /* заставка */
   #title{position:fixed;inset:0;background:#0D0B0A;z-index:20;display:flex;
     flex-direction:column;align-items:center;justify-content:center;gap:18px;
-    transition:opacity 2.6s ease;cursor:pointer}
+    transition:opacity 2.6s ease}
   #title.gone{opacity:0;pointer-events:none}
   #moon{width:150px;height:150px;border-radius:50%;background:#C23B2B;position:relative;
     box-shadow:0 0 90px rgba(194,59,43,0.25); margin-bottom:10px}
@@ -31,10 +31,35 @@
     letter-spacing:0.5em;color:#D9CFB8;margin:0 0 0 0.5em}
   #title p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;
     color:#8A8D8F;margin:0}
-  #title .go{font-family:Montserrat,sans-serif;font-weight:300;font-size:11px;
-    letter-spacing:4px;color:#5b5f61;text-transform:uppercase;margin-top:26px;
-    animation:tpulse 3.2s ease-in-out infinite}
   @keyframes tpulse{0%,100%{opacity:0.35}50%{opacity:0.9}}
+  /* вход: fall in + зеркало-афиша */
+  #entryRow{display:flex;align-items:center;gap:44px;margin-top:26px;
+    flex-wrap:wrap;justify-content:center}
+  #fallin{font-family:Montserrat,sans-serif;font-weight:300;font-size:12px;
+    letter-spacing:5px;text-transform:uppercase;color:#D9CFB8;background:none;
+    border:1px solid rgba(217,207,184,0.5);padding:15px 34px;cursor:pointer;
+    animation:tpulse 3.2s ease-in-out infinite}
+  #fallin:hover{color:#C23B2B;border-color:rgba(194,59,43,0.7);animation:none}
+  #mirror{position:relative;transform:rotate(1.4deg)}
+  #mirror .glass{width:130px;height:184px;overflow:hidden;position:relative;
+    border:2px solid rgba(217,207,184,0.55);
+    box-shadow:0 0 0 6px #0D0B0A,0 0 0 7px rgba(217,207,184,0.22),0 10px 30px rgba(0,0,0,0.5);
+    background:linear-gradient(115deg,#131211 0%,#1c1a18 45%,#131211 62%);
+    display:flex;align-items:flex-end;justify-content:center}
+  #mirror .glass::before{content:'';position:absolute;top:-40%;left:-70%;width:44%;height:180%;
+    background:linear-gradient(105deg,transparent,rgba(217,207,184,0.05),transparent);
+    transform:rotate(9deg);animation:sheen 8s ease-in-out infinite}
+  @keyframes sheen{0%,100%{left:-70%}50%{left:115%}}
+  #mirror .glass i{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);
+    width:34px;height:64px;filter:blur(1px);
+    background:radial-gradient(ellipse 50% 36% at 50% 12%,rgba(217,207,184,0.10),transparent 70%),
+      radial-gradient(ellipse 62% 70% at 50% 76%,rgba(217,207,184,0.05),transparent 75%)}
+  #mirror .glass span{font-family:Montserrat,sans-serif;font-weight:300;font-size:9px;
+    letter-spacing:3px;text-transform:uppercase;color:#8A8D8F;margin-bottom:13px}
+  #mirror b{position:absolute;top:-10px;left:50%;transform:translateX(-50%) rotate(-2deg);
+    background:linear-gradient(172deg,#EEE3CB,#E0D2B4);color:#3A3026;padding:3px 9px 4px;
+    font:500 7px Montserrat,sans-serif;letter-spacing:2px;text-transform:uppercase;
+    white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.5)}
   /* кнопка фуллскрина */
   #fsbtn{position:fixed;top:12px;right:50%;transform:translateX(50%);z-index:15;
     width:34px;height:34px;background:none;border:1px solid rgba(217,207,184,0.35);
@@ -76,7 +101,10 @@
   <div id="moon"><i></i><i></i></div>
   <h1>ARDET</h1>
   <p>мир горит. это заметил даже мох.</p>
-  <div class="go">коснись — идти</div>
+  <div id="entryRow">
+    <button id="fallin">fall in</button>
+    <div id="mirror"><div class="glass"><i></i><span>coming soon</span></div><b>афиша выступлений</b></div>
+  </div>
 </div>
 <button id="fsbtn" title="на весь экран">⛶</button>
 <script src="../shared/ardet-audio.js"></script>
@@ -119,7 +147,7 @@ resize();
   const t=document.getElementById('title');
   const fsb=document.getElementById('fsbtn');
   let entered=false;
-  t.addEventListener('pointerdown',e=>{
+  document.getElementById('fallin').addEventListener('click',e=>{
     if(entered) return; entered=true;
     e.stopPropagation();
     ArdetAudio.unlock();
@@ -128,7 +156,7 @@ resize();
     ArdetFS.enter();
     t.classList.add('gone');
     setTimeout(()=>{ t.remove(); },3000);
-  },{passive:false});
+  });
   fsb.addEventListener('click',()=>ArdetFS.enter());
   setInterval(()=>{ fsb.style.display=(ArdetFS.active||!matchMedia('(pointer:coarse)').matches)?'none':'block'; },1200);
 })();

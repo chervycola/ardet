@@ -76,6 +76,39 @@ canvas#game {
 #entry-left {
   display: flex; flex-direction: column; align-items: center; gap: 24px;
 }
+#entry { gap: 56px; }
+#entry-mirror {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+#entry-mirror-cap {
+  font-family: var(--font-pixel); font-size: 7px; color: var(--c-gold); letter-spacing: 2px;
+}
+#entry-mirror-glass {
+  width: 150px; height: 210px; position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+  border: 1px solid var(--c-crimson);
+  box-shadow: 0 0 0 3px var(--c-void), 0 0 0 4px rgba(184,134,11,0.45), 0 0 24px rgba(107,15,26,0.25);
+  background: linear-gradient(115deg, #0a0a18 0%, #14142a 45%, #0a0a18 62%);
+  overflow: hidden;
+}
+#entry-mirror-glass::before {
+  content: ''; position: absolute; top: -40%; left: -60%; width: 45%; height: 180%;
+  background: linear-gradient(105deg, transparent, rgba(232,220,200,0.06), transparent);
+  transform: rotate(8deg);
+  animation: mirrorSheen 7s ease-in-out infinite;
+}
+@keyframes mirrorSheen { 0%,100%{ left:-60% } 50%{ left:110% } }
+#entry-mirror-glass i {
+  position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 68px; filter: blur(1px);
+  background:
+    radial-gradient(ellipse 50% 36% at 50% 12%, rgba(232,220,200,0.10), transparent 70%),
+    radial-gradient(ellipse 62% 70% at 50% 76%, rgba(232,220,200,0.05), transparent 75%);
+}
+#entry-mirror-glass span {
+  font-family: var(--font-pixel); font-size: 8px; color: var(--c-ash);
+  letter-spacing: 2px; opacity: .8; margin-bottom: 16px;
+}
 
 /* ── Menu ── */
 #menu {
@@ -335,6 +368,8 @@ canvas#game {
   #entry { flex-direction: column; gap: 20px; padding: 14px; }
   #entry-btn { min-height: 44px; }
   #entry-logo { font-size: clamp(32px, 11vw, 56px); }
+  #entry-mirror-glass { width: 118px; height: 158px; }
+  #entry-mirror-glass i { bottom: 32px; width: 30px; height: 56px; }
 
   #menu {
     left: 50% !important;
