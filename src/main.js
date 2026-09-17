@@ -780,6 +780,13 @@ function startGame() {
   showCursor();
   resumeAudio();
   startAmbient();
+  // треки (ardet-tracks.js подключается страницей до бандла):
+  // жест входа разблокирует звук, заставка играет целиком,
+  // затем эфир — трек текущей зоны.
+  if (window.ArdetAudio) {
+    window.ArdetAudio.unlock();
+    window.ArdetAudio.playOnce('title');
+  }
   // Touch devices have no M key — give them an on-screen map button.
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     const mb = document.getElementById('map-btn');

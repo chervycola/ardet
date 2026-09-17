@@ -67,6 +67,8 @@ export function updateZone(zone) {
   stopNodes();
   const cfg = ZONE_CONFIGS[zone] || ZONE_CONFIGS.settlement;
   nodes = createZoneSound(cfg);
+  // треки: зона открывает свой трек и встаёт в эфир (без обрыва текущего)
+  if (window.ArdetAudio) window.ArdetAudio.setLocation(zone);
 }
 
 export function getZone(x, y) {

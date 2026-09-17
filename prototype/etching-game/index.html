@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#080706">
+<link rel="apple-touch-icon" sizes="180x180" href="../../assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../../assets/icons/favicon-32.png">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#080706;overflow:hidden}
@@ -121,10 +123,10 @@ resize();
     if(entered) return; entered=true;
     e.stopPropagation();
     ArdetAudio.unlock();
-    ArdetAudio.setLocation('title');            // трек заставки
+    ArdetAudio.playOnce('title');   // трек заставки — целиком, без обрыва
+    ArdetAudio.setLocation('townlet'); // городок встанет в эфир после него
     ArdetFS.enter();
     t.classList.add('gone');
-    setTimeout(()=>{ ArdetAudio.setLocation('townlet'); },2600); // перетекает в городок
     setTimeout(()=>{ t.remove(); },3000);
   },{passive:false});
   fsb.addEventListener('click',()=>ArdetFS.enter());
