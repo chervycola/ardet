@@ -787,6 +787,13 @@ function startGame() {
     window.ArdetAudio.unlock();
     window.ArdetAudio.playOnce('title');
   }
+  // похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают
+  gw.classList.add('wake');
+  const lids = document.createElement('div');
+  lids.id = 'wakelids';
+  lids.innerHTML = '<span>ПРИХОДИШЬ В СЕБЯ</span>';
+  document.body.appendChild(lids);
+  setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
   // Touch devices have no M key — give them an on-screen map button.
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     const mb = document.getElementById('map-btn');

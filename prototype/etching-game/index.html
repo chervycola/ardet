@@ -60,6 +60,40 @@
     background:linear-gradient(172deg,#EEE3CB,#E0D2B4);color:#3A3026;padding:3px 9px 4px;
     font:500 7px Montserrat,sans-serif;letter-spacing:2px;text-transform:uppercase;
     white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.5)}
+  /* похмельная прогрузка после fall in */
+  #c.wake{animation:wakeblur 15s ease-out forwards, wakesway 15s ease-out forwards}
+  @keyframes wakeblur{
+    0%{filter:blur(16px) brightness(0.3) saturate(0.4)}
+    12%{filter:blur(8px) brightness(0.5) saturate(0.55)}
+    22%{filter:blur(12px) brightness(0.4) saturate(0.5)}
+    40%{filter:blur(5px) brightness(0.65) saturate(0.7)}
+    56%{filter:blur(8px) brightness(0.55) saturate(0.65)}
+    76%{filter:blur(2px) brightness(0.85) saturate(0.9)}
+    100%{filter:none}}
+  @keyframes wakesway{
+    0%{transform:scale(1.09) rotate(-1.6deg)}
+    25%{transform:scale(1.07) rotate(1.1deg)}
+    50%{transform:scale(1.06) rotate(-0.7deg)}
+    75%{transform:scale(1.04) rotate(0.4deg)}
+    100%{transform:scale(1) rotate(0)}}
+  #wakelids{position:fixed;inset:0;z-index:18;pointer-events:auto}
+  #wakelids::before,#wakelids::after{content:'';position:absolute;left:-5%;right:-5%;
+    height:58%;background:#0D0B0A}
+  #wakelids::before{top:-4%;border-radius:0 0 50% 50%/0 0 16% 16%;
+    transform-origin:top;animation:lidBlink 15s ease-in-out forwards}
+  #wakelids::after{bottom:-4%;border-radius:50% 50% 0 0/16% 16% 0 0;
+    transform-origin:bottom;animation:lidBlink 15s ease-in-out forwards}
+  @keyframes lidBlink{
+    0%{transform:scaleY(1)}8%{transform:scaleY(0.3)}
+    16%{transform:scaleY(0.95)}28%{transform:scaleY(0.2)}
+    44%{transform:scaleY(0.8)}58%{transform:scaleY(0.12)}
+    68%{transform:scaleY(0.35)}84%{transform:scaleY(0.04)}
+    100%{transform:scaleY(0)}}
+  #wakelids span{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;
+    font-size:16px;color:#8A8D8F;opacity:0;animation:wakecap 15s ease-in-out forwards}
+  @keyframes wakecap{0%,10%{opacity:0}30%{opacity:0.6}45%{opacity:0.15}
+    60%{opacity:0.5}80%{opacity:0.1}100%{opacity:0}}
   /* кнопка фуллскрина */
   #fsbtn{position:fixed;top:12px;right:50%;transform:translateX(50%);z-index:15;
     width:34px;height:34px;background:none;border:1px solid rgba(217,207,184,0.35);
@@ -157,6 +191,13 @@ resize();
     ArdetFS.enter();
     t.classList.add('gone');
     setTimeout(()=>{ t.remove(); },3000);
+    // похмельная прогрузка: мир всплывает в фокус, веки моргают
+    cv.classList.add('wake');
+    const lids=document.createElement('div');
+    lids.id='wakelids';
+    lids.innerHTML='<span>...приходишь в себя...</span>';
+    document.body.appendChild(lids);
+    setTimeout(()=>{ cv.classList.remove('wake'); lids.remove(); },15600);
   };
   const fb=document.getElementById('fallin');
   fb.addEventListener('pointerdown',enter);
