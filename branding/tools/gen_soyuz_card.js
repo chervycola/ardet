@@ -33,7 +33,7 @@ function shLine(){
 }
 // фото модуля: 914×2000 → колонка справа
 const PH = { x:876, y:622, w:144, h:590 };
-const body = wrap('Конденсаторные микрофоны ручной сборки из Тулы. На экспо — 017 FET: большая диафрагма, транзисторная схема, латунный корпус с эмалью. Капсюли делают и золотят вручную, каждый микрофон отслушивают перед отправкой.', 36)
+const body = wrap('Конденсаторные микрофоны ручной сборки из Тулы: союз советского хай-тека и мировых стандартов качества. Капсюли делают и золотят вручную, каждый микрофон отслушивают. Сегодня СОЮЗ звучит в студиях тридцати стран мира.', 36)
   .map((l,i)=>`<text x="60" y="${664+i*52}" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">${esc(l)}</text>`).join('\n');
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
@@ -53,7 +53,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 <text x="540" y="72" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
 <text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">ЭКСПО</text>
 <line x1="60" y1="96" x2="1020" y2="96" stroke="#000" stroke-width="2"/>
-<text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">ДЕВАЙС № 28</text>
+<text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">ТУЛА · С 2013</text>
 <g stroke="#c9c9c9" stroke-width="2">
   <rect x="664" y="150" width="84" height="386" fill="url(#th)"/>
   <rect x="826" y="150" width="74" height="386" fill="url(#th)"/>
@@ -66,8 +66,8 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.
 </g>
 <circle cx="975" cy="214" r="9" fill="#E30613"/>
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· НОВЫЙ УЧАСТНИК ЭКСПО</text>
-${headText('СОЮЗ', 350, '#000')}
-${headText('017 FET', 492, '#E30613')}
+${headText('МИКРОФОНЫ', 350, '#000')}
+${headText('СОЮЗ', 492, '#E30613')}
 ${shLine()}
 <image x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" href="soyuz-photo.png" preserveAspectRatio="xMidYMid meet"/>
 <rect x="${PH.x}" y="${PH.y}" width="${PH.w}" height="${PH.h}" fill="none" stroke="#000" stroke-width="2"/>

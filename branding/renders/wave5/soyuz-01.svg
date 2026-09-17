@@ -15,7 +15,7 @@
 <text x="540" y="72" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
 <text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">ЭКСПО</text>
 <line x1="60" y1="96" x2="1020" y2="96" stroke="#000" stroke-width="2"/>
-<text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">ДЕВАЙС № 28</text>
+<text x="1020" y="134" text-anchor="end" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#E30613">ТУЛА · С 2013</text>
 <g stroke="#c9c9c9" stroke-width="2">
   <rect x="664" y="150" width="84" height="386" fill="url(#th)"/>
   <rect x="826" y="150" width="74" height="386" fill="url(#th)"/>
@@ -28,19 +28,19 @@
 </g>
 <circle cx="975" cy="214" r="9" fill="#E30613"/>
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· НОВЫЙ УЧАСТНИК ЭКСПО</text>
-<text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">СОЮЗ</text>
-<text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">017 FET</text>
+<text x="56" y="350" font-weight="800" font-size="140" letter-spacing="1" fill="#000">МИКРОФОНЫ</text>
+<text x="56" y="492" font-weight="800" font-size="140" letter-spacing="1" fill="#E30613">СОЮЗ</text>
 <circle cx="60" cy="576" r="6" fill="#E30613"/>
 <polyline points="60,576 149,576 149,568 199,568 199,584 241,584 241,576 309,576 309,560 353,560 353,592 392,592 392,568 442,568 442,600 501,600 501,584 546,584 546,576 623,576 623,560 670,560 670,584 712,584 712,568 768,568 768,592 813,592 813,576 878,576 878,568 931,568 931,576 1020,576" fill="none" stroke="#000" stroke-width="3"/>
 <image x="876" y="622" width="144" height="590" href="soyuz-photo.png" preserveAspectRatio="xMidYMid meet"/>
 <rect x="876" y="622" width="144" height="590" fill="none" stroke="#000" stroke-width="2"/>
 <text x="60" y="664" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">Конденсаторные микрофоны ручной</text>
-<text x="60" y="716" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">сборки из Тулы. На экспо — 017 FET:</text>
-<text x="60" y="768" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">большая диафрагма, транзисторная</text>
-<text x="60" y="820" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">схема, латунный корпус с эмалью.</text>
-<text x="60" y="872" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">Капсюли делают и золотят вручную,</text>
-<text x="60" y="924" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">каждый микрофон отслушивают перед</text>
-<text x="60" y="976" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">отправкой.</text>
+<text x="60" y="716" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">сборки из Тулы: союз советского</text>
+<text x="60" y="768" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">хай-тека и мировых стандартов</text>
+<text x="60" y="820" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">качества. Капсюли делают и золотят</text>
+<text x="60" y="872" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">вручную, каждый микрофон</text>
+<text x="60" y="924" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">отслушивают. Сегодня СОЮЗ звучит в</text>
+<text x="60" y="976" font-family="'Courier New',monospace" font-size="36" letter-spacing="0.2" fill="#000">студиях тридцати стран мира.</text>
 <rect x="60" y="1086" width="620" height="96" fill="#E30613"/>
 <text x="96" y="1150" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">СДЕЛАНО ВРУЧНУЮ</text>
 <line x1="60" y1="1214" x2="1020" y2="1214" stroke="#000" stroke-width="2"/>
