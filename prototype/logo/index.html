@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>ardet · лого</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1024" height="1024"></canvas>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ЛОГО ARDET — по эмблеме автора: гравюрный круг вертикального штриха,
+// луна и чёрный диск затмения, чёрное пламя по штриху, белые языки,
+// рогатый зверь в корнях. Оттиск 2.
+// ═══════════════════════════════════════════════════════════════════
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+const W=1024, C=512, R=470;
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+const BONE='#E9E3D5';
+// ?red=1 — оттиск с киноварной луной (красная печать)
+const MOON=new URLSearchParams(location.search).has('red')?'#C23B2B':BONE;
+
+x.fillStyle='#000'; x.fillRect(0,0,W,W);
+
+// ═══ поле: плотный вертикальный штрих сегментами ═══
+x.save();
+x.beginPath(); x.arc(C,C,R,0,7); x.clip();
+for(let col=0;col<340;col++){
+  const px=C-R+(col/340)*R*2+J(col)*1.8;
+  let y=(J(col*3)*0.5+0.5)*-40;
+  while(y<W){
+    const seg=50+Math.abs(J(col*7+y))*130;
+    const gap=2+Math.abs(J(col*11+y))*14;
+    x.strokeStyle=BONE;
+    x.globalAlpha=0.45+Math.abs(J(col*5+y))*0.5;
+    x.lineWidth=1.1+Math.abs(J(col*13+y))*1.3;
+    x.beginPath();
+    x.moveTo(px+Math.sin(y*0.006+col)*2, y);
+    x.lineTo(px+Math.sin((y+seg)*0.006+col)*2, y+seg);
+    x.stroke();
+    y+=seg+gap;
+  }
+}
+x.globalAlpha=1;
+
+// ═══ чёрные пятна-звёзды ═══
+const SPOTS=[[150,360,12],[196,540,9],[258,652,11],[170,455,7],
+  [808,306,11],[850,436,9],[862,560,12],[790,668,9],[718,206,8],[300,258,8],[604,168,7],[136,300,7],
+  [420,580,8],[700,560,7]];
+for(const [sx,sy,sr] of SPOTS){
+  x.fillStyle='#000';
+  x.beginPath();
+  for(let a=0;a<=12;a++){
+    const an=a/12*Math.PI*2, rr=sr*(0.8+Math.abs(J(a+sx))*0.4);
+    a?x.lineTo(sx+Math.cos(an)*rr,sy+Math.sin(an)*rr):x.moveTo(sx+rr,sy);
+  }
+  x.closePath(); x.fill();
+}
+
+// ═══ ЛУНА: яркий костяной диск, тень затмения въедается снизу ═══
+const MX=512,MY=330,MR=190;
+x.save();
+x.beginPath(); x.arc(MX,MY,MR,0,7); x.clip();
+// диск: сплошная кость + тонкий чёрный штрих гравировки
+x.fillStyle=MOON; x.fillRect(MX-MR,MY-MR,MR*2,MR*2);
+x.strokeStyle='#000';
+for(let col=0;col<76;col++){
+  const px=MX-MR+(col/76)*MR*2+J(col)*1.6;
+  let y=MY-MR;
+  while(y<MY+MR){
+    const seg=34+Math.abs(J(col*7+y))*80, gap=3+Math.abs(J(col*11+y))*10;
+    x.globalAlpha=0.22+Math.abs(J(col*5+y))*0.3;
+    x.lineWidth=1+Math.abs(J(col*13+y))*0.9;
+    x.beginPath(); x.moveTo(px,y); x.lineTo(px+Math.sin(y*0.01)*1.5,y+seg); x.stroke();
+    y+=seg+gap;
+  }
+}
+x.globalAlpha=1;
+// тень: чёрный диск кусает луну снизу — только внутри лунного диска
+const EX=512,EY=MY+150,ER=174;
+x.fillStyle='#000';
+x.beginPath(); x.arc(EX,EY,ER,0,7); x.fill();
+x.strokeStyle=BONE; x.lineWidth=3;
+x.beginPath(); x.arc(EX,EY,ER,Math.PI*1.02,Math.PI*1.98); x.stroke(); // кромка тени
+x.restore();
+x.strokeStyle=BONE; x.lineWidth=3.6;
+x.beginPath(); x.arc(MX,MY,MR,0,7); x.stroke();
+
+// ═══ ПЛАМЯ: чёрные языки прямо по штриху (низ круга) ═══
+function flame(fx,base,h,w,lean){
+  x.fillStyle='#000';
+  x.beginPath();
+  x.moveTo(fx-w,base);
+  x.bezierCurveTo(fx-w*1.05,base-h*0.3, fx-w*0.1+lean*0.5,base-h*0.46, fx+lean*0.8,base-h*0.72);
+  x.bezierCurveTo(fx+lean-w*0.25,base-h*0.86, fx+lean*1.05,base-h*0.96, fx+lean*1.1,base-h);
+  x.bezierCurveTo(fx+lean+w*0.4,base-h*0.8, fx+w*0.55,base-h*0.42, fx+w,base-h*0.16);
+  x.bezierCurveTo(fx+w*1.15,base-h*0.06, fx+w*1.05,base, fx+w,base);
+  x.closePath(); x.fill();
+}
+// основание огня — волнистая чёрная гряда невысоко
+x.fillStyle='#000';
+x.beginPath();
+x.moveTo(C-R,896);
+for(let px=C-R;px<=C+R;px+=36) x.lineTo(px,888+J(px)*16);
+x.lineTo(C+R,1024); x.lineTo(C-R,1024); x.closePath(); x.fill();
+// языки
+flame(200,904,160,30,10);
+flame(288,898,250,40,-18);
+flame(384,892,340,46,20);
+flame(478,890,356,44,-12);
+flame(620,892,352,46,22);
+flame(716,896,258,40,-16);
+flame(812,902,166,30,12);
+flame(338,900,170,26,8); flame(556,894,210,30,-8); flame(668,896,180,26,10);
+
+// ═══ белые языки-ленты в центре ═══
+function whiteRibbon(fx,base,h,w,lean){
+  x.fillStyle=BONE;
+  x.beginPath();
+  x.moveTo(fx-w/2,base);
+  x.bezierCurveTo(fx-w, base-h*0.35, fx+lean*0.6-w/2, base-h*0.55, fx+lean-w/3, base-h*0.85);
+  x.quadraticCurveTo(fx+lean*1.1, base-h*0.97, fx+lean*1.15, base-h);
+  x.quadraticCurveTo(fx+lean+w/4, base-h*0.86, fx+lean+w/6, base-h*0.72);
+  x.bezierCurveTo(fx+w, base-h*0.4, fx+w/2, base-h*0.15, fx+w/2,base);
+  x.closePath(); x.fill();
+}
+whiteRibbon(596,912,330,30,-46);
+whiteRibbon(652,916,240,24,44);
+
+// ═══ ЗВЕРЬ: лежит внизу слева-центра, мордой влево ═══
+const BX=330,BY=868;
+// рога — две белые ленты S-изгибом вправо
+function hornRibbon(sx,sy,len,amp,thick,phase,rot){
+  x.save(); x.translate(sx,sy); x.rotate(rot);
+  const top=[],bot=[];
+  for(let i=0;i<=24;i++){
+    const t=i/24;
+    const px=t*len;
+    const py=-Math.sin(t*Math.PI*1.25+phase)*amp - t*len*0.32;
+    const th=thick*(1-t*0.82);
+    const na=Math.atan2(
+      -Math.cos(t*Math.PI*1.25+phase)*amp*Math.PI*1.25/len - 0.32, 1);
+    top.push([px-Math.sin(na)*th, py+Math.cos(na)*th]);
+    bot.push([px+Math.sin(na)*th, py-Math.cos(na)*th]);
+  }
+  x.fillStyle=BONE;
+  x.beginPath();
+  top.forEach(([px,py],i)=> i?x.lineTo(px,py):x.moveTo(px,py));
+  bot.reverse().forEach(([px,py])=>x.lineTo(px,py));
+  x.closePath(); x.fill();
+  // чёрные насечки поперёк
+  x.strokeStyle='#000'; x.lineWidth=3;
+  bot.reverse();
+  for(let i=3;i<22;i+=3){
+    x.beginPath();
+    x.moveTo(top[i][0],top[i][1]); x.lineTo(bot[i][0],bot[i][1]);
+    x.stroke();
+  }
+  x.restore();
+}
+hornRibbon(BX+16,BY-64,272,52,14,0.2,-0.10);
+hornRibbon(BX+8,BY-46,212,38,11,0.7,0.14);
+
+// тело: чёрный холм с редким белым штрихом по спине
+const body=p=>{p.moveTo(BX-160,BY+70);
+  p.bezierCurveTo(BX-150,BY+6, BX-70,BY-44, BX+40,BY-40);
+  p.bezierCurveTo(BX+150,BY-36, BX+230,BY+16, BX+252,BY+70);
+  p.closePath();};
+x.fillStyle='#000'; x.beginPath(); body(x); x.fill();
+x.save(); x.beginPath(); body(x); x.clip();
+x.strokeStyle=BONE; x.lineWidth=1.5;
+for(let i=0;i<20;i++){
+  x.globalAlpha=0.3+Math.abs(J(i*3))*0.3;
+  const sy=BY-40+i*5.6;
+  x.beginPath();
+  x.moveTo(BX-160,sy+16);
+  x.bezierCurveTo(BX-40,sy+J(i*7)*7, BX+90,sy+J(i*5)*7, BX+252,sy+12);
+  x.stroke();
+}
+x.globalAlpha=1; x.restore();
+x.strokeStyle=BONE; x.lineWidth=2.6;
+x.beginPath(); body(x); x.stroke();
+
+// голова: овал мордой влево-вниз, курчавый мех дугами
+const HX=282,HY=800;
+const head=p=>{p.moveTo(HX-78,HY+20);
+  p.bezierCurveTo(HX-84,HY-18, HX-52,HY-52, HX-4,HY-56);
+  p.bezierCurveTo(HX+44,HY-60, HX+82,HY-30, HX+84,HY+4);
+  p.bezierCurveTo(HX+86,HY+36, HX+52,HY+58, HX+8,HY+58);
+  p.bezierCurveTo(HX-34,HY+58, HX-70,HY+46, HX-78,HY+20);
+  p.closePath();};
+x.fillStyle='#000'; x.beginPath(); head(x); x.fill();
+x.save(); x.beginPath(); head(x); x.clip();
+// завитки меха — короткие дуги рядами
+for(let row=0;row<7;row++){
+  for(let k=0;k<8;k++){
+    const cxk=HX-64+k*19+J(row*9+k)*5;
+    const cyk=HY-46+row*16+J(row+k*7)*4;
+    x.strokeStyle=BONE; x.globalAlpha=0.55+Math.abs(J(row*3+k))*0.4;
+    x.lineWidth=1.7;
+    x.beginPath();
+    x.arc(cxk,cyk,6+Math.abs(J(k*5+row))*3, Math.PI*0.15+J(k)*0.6, Math.PI*1.1+J(row)*0.5);
+    x.stroke();
+  }
+}
+x.globalAlpha=1; x.restore();
+x.strokeStyle=BONE; x.lineWidth=2.8;
+x.beginPath(); head(x); x.stroke();
+// закрытый глаз, ноздря, ухо
+x.lineWidth=4.4; x.lineCap='round';
+x.beginPath(); x.moveTo(HX-12,HY-6); x.quadraticCurveTo(HX+8,HY+2,HX+28,HY-6); x.stroke();
+x.lineWidth=3.4;
+x.beginPath(); x.moveTo(HX-60,HY+24); x.quadraticCurveTo(HX-50,HY+30,HX-40,HY+26); x.stroke();
+x.lineCap='butt';
+// ухо назад
+const ear=p=>{p.moveTo(HX+58,HY-40);
+  p.quadraticCurveTo(HX+112,HY-64, HX+122,HY-28);
+  p.quadraticCurveTo(HX+100,HY-18, HX+64,HY-26); p.closePath();};
+x.fillStyle='#000'; x.beginPath(); ear(x); x.fill();
+x.strokeStyle=BONE; x.lineWidth=2.6;
+x.beginPath(); ear(x); x.stroke();
+
+// ═══ ветви-корни: тонкие белые по самому низу ═══
+x.strokeStyle=BONE; x.lineCap='round';
+function twig(sx,sy,a,len,depth,wd){
+  if(depth<=0||len<8) return;
+  const ex=sx+Math.cos(a)*len, ey=sy+Math.sin(a)*len;
+  x.lineWidth=wd;
+  x.beginPath(); x.moveTo(sx,sy); x.lineTo(ex,ey); x.stroke();
+  twig(ex,ey,a-0.4-Math.abs(J(sx))*0.3,len*0.6,depth-1,wd*0.75);
+  twig(ex,ey,a+0.34+Math.abs(J(sy))*0.3,len*0.56,depth-1,wd*0.75);
+}
+x.globalAlpha=1;
+twig(596,936,-0.35,92,4,2.8);
+twig(690,926,-0.15,100,4,2.6);
+twig(766,916,-0.55,72,3,2.4);
+twig(206,934,-2.9,76,3,2.4);
+twig(500,946,-2.55,64,3,2.2);
+twig(836,900,-0.9,60,3,2.2);
+x.globalAlpha=1; x.lineCap='butt';
+
+x.restore(); // конец клипа круга
+
+// внешняя кромка
+x.strokeStyle=BONE; x.lineWidth=4;
+x.beginPath(); x.arc(C,C,R,0,7); x.stroke();
+</script></body></html>
