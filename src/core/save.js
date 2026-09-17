@@ -34,7 +34,7 @@ export function loadGame() {
 }
 
 export function clearSave() {
-  localStorage.removeItem(KEY);
+  try { localStorage.removeItem(KEY); } catch (e) {}
 }
 
 // Auto-save interval

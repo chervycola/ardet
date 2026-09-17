@@ -5,12 +5,13 @@
 const KEY = 'ardet_v2_sessions';
 
 export function getSessionAge() {
-  return parseInt(localStorage.getItem(KEY) || '0', 10);
+  try { return parseInt(localStorage.getItem(KEY) || '0', 10); }
+  catch (e) { return 0; } // хранилище может быть закрыто (Brave и т.п.)
 }
 
 export function incrementSession() {
   const age = getSessionAge() + 1;
-  localStorage.setItem(KEY, String(age));
+  try { localStorage.setItem(KEY, String(age)); } catch (e) {}
   return age;
 }
 

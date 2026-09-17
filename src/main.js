@@ -116,9 +116,9 @@ maybeShowBlankScreen();
 console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 100).toFixed(1)}%`);
 
 // Load saved progress
-if (localStorage.getItem('ardet_save')) {
-  localStorage.removeItem('ardet_save');
-}
+try {
+  if (localStorage.getItem('ardet_save')) localStorage.removeItem('ardet_save');
+} catch (e) {} // хранилище может быть закрыто (Brave и т.п.)
 const savedData = loadGame();
 if (savedData) {
   if (savedData.player) { player.x = savedData.player.x; player.y = savedData.player.y; }

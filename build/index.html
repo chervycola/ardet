@@ -3419,6 +3419,26 @@ canvas#game {
     rect(X, x, y + 52, 3, 2, P8.dtoxic);
     px(X, x + 1, y + 51, P8.toxic);
   }
+  // src/core/playerRef.js и силуэты дальних зданий — не попали в сборку,
+  // без них падал цикл рендера
+  var locs = locations;
+  function drawBuildingSilhouette(x, y, w, h, roofColor) {
+    rect(X, x, y, w, h, P8.dstone);
+    rect(X, x + 2, y + 2, w - 4, h - 4, "#1a1a22");
+    rect(X, x, y, w, 2, roofColor || P8.dgrey);
+    for (let wy = 10; wy < h - 8; wy += 14) {
+      for (let wx = 6; wx < w - 8; wx += 16) {
+        rect(X, x + wx, y + wy, 3, 4, "#050305");
+      }
+    }
+  }
+  function playerNearLoc(loc, r) {
+    if (!player || !loc) return false;
+    const cx = loc.x + (loc.w || 0) / 2;
+    const cy = loc.y + (loc.h || 0) / 2;
+    const dx = player.x - cx, dy = player.y - cy;
+    return dx * dx + dy * dy < r * r;
+  }
   function draw_library(x, y) {
     if (!playerNearLoc(locs.find((l) => l.id === "library"), 350)) {
       X.fillStyle = P8.dstone;
@@ -15654,11 +15674,12 @@ Pixel-adjacent but painterly. Muted brandbook palette:
   // src/core/sessionMemory.js
   var KEY2 = "ardet_v2_sessions";
   function getSessionAge() {
-    return parseInt(localStorage.getItem(KEY2) || "0", 10);
+    try { return parseInt(localStorage.getItem(KEY2) || "0", 10); }
+    catch (e) { return 0; } // хранилище может быть закрыто (Brave и т.п.)
   }
   function incrementSession() {
     const age = getSessionAge() + 1;
-    localStorage.setItem(KEY2, String(age));
+    try { localStorage.setItem(KEY2, String(age)); } catch (e) {}
     return age;
   }
   function getShiftConfig() {
