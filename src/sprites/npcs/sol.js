@@ -142,11 +142,13 @@ export function drawNPC_sol(sx, sy) {
   X.fillRect(hcx - 18, hcy - 18, 36, 36);
   X.globalAlpha = 1;
 
-  // ── 12 sun rays, slow rotation, no tapering — clean, austere ──
+  // ── 14 sun rays, slow rotation, no tapering — clean, austere ──
+  // Count is load-bearing: the look text and the art prompt both say
+  // fourteen, and the number is the figure's own ("число — последний бренд").
   const rayRot = t * 0.0008;
   X.globalAlpha = haloPulse;
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2 + rayRot;
+  for (let i = 0; i < 14; i++) {
+    const angle = (i / 14) * Math.PI * 2 + rayRot;
     const inner = 8;
     const outer = inner + 4 + Math.sin(angle * 2 + t * 0.02) * 0.8;
     for (let r = inner; r <= outer; r++) {
