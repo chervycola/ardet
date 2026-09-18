@@ -3,7 +3,7 @@ const OUT = __dirname + '/../renders/insta';
 try { fs.mkdirSync(OUT, { recursive:true }); } catch(e){}
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards','Ravzar','Микрофоны СОЮЗ','Noisescape'];
+const EXPO = ['Kaleidoscope','ПРИБОР','Twang Modular','Solyara','Лаборатория звука МАЯК','ArtCraft workshop','LaserNoto','ЭФЭМИ','MXLS','SxLab','ЯНДЕКС','Резонанс','VG Line','Unheld modular','Paratek','УралСинтМаш','Alpha1 Midi Sequencer','СТК «Путь вперёд»','Edwards-audio','ФАЗА Электроника','Пикасо 3D','MADSOUNDFACTORY','PORKYSYNTH','Творческий центр ТРЕТИЙ ПУТЬ','Nakedboards','Ravzar','Микрофоны СОЮЗ','Noisescape','Simple Way Audio'];
 const ARTISTS = ['Там Огни | c0deterr0r','TiihayaRekaa','М.О.У.Б.','dr.SpaceKir','Alexander Turkin','Игра с тенью','H.Ruine','Анна Пряхина','Артемий Анрилов и xandr.vasiliev','Gogidze','RUBIGO FORTUNA'];
 const LECTURES = ['Владимир Кабанов','Влад Креймер','Александр Пленингер','Александр Григорьев','Захар Лунев','Илья Чертков','Евгений Карло','Иван Антоновский','Игорь Мирзоев','Владимир Черепанов','Каут Алекс','Никита Забелин','Георгий Орлов-Давыдовский'];
 const WORKSHOPS = ['Полина Шмонина · хаотический синтезатор','Егор Воронов · аналоговый синтезатор','Илья Чертков · полевые записи, прогулка','Олег Слуцкий · два детских семинара','Склад Ума · два детских семинара'];
@@ -89,7 +89,7 @@ const cover = shell('01','06', `${towers}
 ${headText('СОСТАВ', 350, '#000')}
 ${headText('ФОРУМА', 492, '#E30613')}
 ${shLine(60,1020,576,8)}
-${wrap('28 участников экспо, 11 артистов на четырёх сценах, 13 лекторов, пять мастер-классов и четыре инсталляции. Полный список — в карточках. Листайте.', 41)
+${wrap('29 участников экспо, 11 артистов на четырёх сценах, 13 лекторов, пять мастер-классов и четыре инсталляции. Полный список — в карточках. Листайте.', 41)
   .map((l,i)=>`<text x="60" y="${664+i*56}" font-family="'Courier New',monospace" font-size="38" letter-spacing="0.2" fill="#000">${esc(l)}</text>`).join('\n')}
 <rect x="60" y="960" width="700" height="96" fill="#E30613"/>
 <text x="96" y="1024" font-weight="800" font-size="52" letter-spacing="1" fill="#FFF">ВЕСЬ СОСТАВ ВНУТРИ</text>`);
@@ -98,10 +98,10 @@ ${wrap('28 участников экспо, 11 артистов на четыр�
 const expo = shell('02','06', `${towers}
 <text x="60" y="206" font-family="'Courier New',monospace" font-size="27" letter-spacing="5" fill="#E30613">· ВСЁ ВКЛЮЧАЕТСЯ И ЗВУЧИТ</text>
 ${headText('ЭКСПО', 350, '#000')}
-${headText('28 УЧАСТНИКОВ', 492, '#E30613')}
+${headText('29 УЧАСТНИКОВ', 492, '#E30613')}
 ${shLine(60,1020,576,8)}
-${listBlock(60, 656, EXPO.slice(0,14), 25, 42)}
-${listBlock(560, 656, EXPO.slice(14), 25, 42)}`);
+${listBlock(60, 656, EXPO.slice(0,15), 24, 36)}
+${listBlock(560, 656, EXPO.slice(15), 24, 36)}`);
 
 // 03 · артисты
 const artists = shell('03','06', `${towers}
@@ -157,9 +157,9 @@ ${DEFS}
 <text x="60" y="236" font-weight="800" font-size="88" letter-spacing="1" fill="#000">СОСТАВ <tspan fill="#E30613">ФОРУМА</tspan></text>
 <text x="1020" y="340" text-anchor="end" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#E30613">19.09.2026</text>
 ${shLine(60,1020,290,7)}
-${secHead(60,370,'ЭКСПО · 28')}
-${listBlock(60, 412, EXPO.slice(0,14), 24, 36)}
-${listBlock(60, 412+14*36+18, EXPO.slice(14), 24, 36)}
+${secHead(60,370,'ЭКСПО · 29')}
+${listBlock(60, 412, EXPO.slice(0,15), 24, 34)}
+${listBlock(60, 412+15*34+18, EXPO.slice(15), 24, 34)}
 ${secHead(600,370,'АРТИСТЫ · 11')}
 ${listBlock(600, 412, ARTISTS.map(a=>a==='Артемий Анрилов и xandr.vasiliev'?'Анрилов и xandr.vasiliev':a), 24, 36)}
 ${secHead(600,412+11*36+30,'ЛЕКТОРИЙ · 13')}

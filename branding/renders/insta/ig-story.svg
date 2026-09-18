@@ -19,35 +19,36 @@
 <text x="1020" y="340" text-anchor="end" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#E30613">19.09.2026</text>
 <circle cx="60" cy="290" r="6" fill="#E30613"/>
 <polyline points="60,290 149,290 149,283 199,283 199,297 241,297 241,290 309,290 309,276 353,276 353,304 392,304 392,283 442,283 442,311 501,311 501,297 546,297 546,290 623,290 623,276 670,276 670,297 712,297 712,283 768,283 768,304 813,304 813,290 878,290 878,283 931,283 931,290 1020,290" fill="none" stroke="#000" stroke-width="3"/>
-<text x="60" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ЭКСПО · 28</text>
+<text x="60" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· ЭКСПО · 29</text>
 <text x="60" y="412" font-family="'Courier New',monospace" font-size="24" fill="#000">Kaleidoscope</text>
-<text x="60" y="448" font-family="'Courier New',monospace" font-size="24" fill="#000">ПРИБОР</text>
-<text x="60" y="484" font-family="'Courier New',monospace" font-size="24" fill="#000">Twang Modular</text>
-<text x="60" y="520" font-family="'Courier New',monospace" font-size="24" fill="#000">Solyara</text>
-<text x="60" y="556" font-family="'Courier New',monospace" font-size="24" fill="#000">Лаборатория звука МАЯК</text>
-<text x="60" y="592" font-family="'Courier New',monospace" font-size="24" fill="#000">ArtCraft workshop</text>
-<text x="60" y="628" font-family="'Courier New',monospace" font-size="24" fill="#000">LaserNoto</text>
-<text x="60" y="664" font-family="'Courier New',monospace" font-size="24" fill="#000">ЭФЭМИ</text>
-<text x="60" y="700" font-family="'Courier New',monospace" font-size="24" fill="#000">MXLS</text>
-<text x="60" y="736" font-family="'Courier New',monospace" font-size="24" fill="#000">SxLab</text>
-<text x="60" y="772" font-family="'Courier New',monospace" font-size="24" fill="#000">ЯНДЕКС</text>
-<text x="60" y="808" font-family="'Courier New',monospace" font-size="24" fill="#000">Резонанс</text>
-<text x="60" y="844" font-family="'Courier New',monospace" font-size="24" fill="#000">VG Line</text>
-<text x="60" y="880" font-family="'Courier New',monospace" font-size="24" fill="#000">Unheld modular</text>
-<text x="60" y="934" font-family="'Courier New',monospace" font-size="24" fill="#000">Paratek</text>
-<text x="60" y="970" font-family="'Courier New',monospace" font-size="24" fill="#000">УралСинтМаш</text>
-<text x="60" y="1006" font-family="'Courier New',monospace" font-size="24" fill="#000">Alpha1 Midi Sequencer</text>
-<text x="60" y="1042" font-family="'Courier New',monospace" font-size="24" fill="#000">СТК «Путь вперёд»</text>
-<text x="60" y="1078" font-family="'Courier New',monospace" font-size="24" fill="#000">Edwards-audio</text>
-<text x="60" y="1114" font-family="'Courier New',monospace" font-size="24" fill="#000">ФАЗА Электроника</text>
-<text x="60" y="1150" font-family="'Courier New',monospace" font-size="24" fill="#000">Пикасо 3D</text>
-<text x="60" y="1186" font-family="'Courier New',monospace" font-size="24" fill="#000">MADSOUNDFACTORY</text>
-<text x="60" y="1222" font-family="'Courier New',monospace" font-size="24" fill="#000">PORKYSYNTH</text>
-<text x="60" y="1258" font-family="'Courier New',monospace" font-size="24" fill="#000">Творческий центр ТРЕТИЙ ПУТЬ</text>
-<text x="60" y="1294" font-family="'Courier New',monospace" font-size="24" fill="#000">Nakedboards</text>
-<text x="60" y="1330" font-family="'Courier New',monospace" font-size="24" fill="#000">Ravzar</text>
-<text x="60" y="1366" font-family="'Courier New',monospace" font-size="24" fill="#000">Микрофоны СОЮЗ</text>
-<text x="60" y="1402" font-family="'Courier New',monospace" font-size="24" fill="#000">Noisescape</text>
+<text x="60" y="446" font-family="'Courier New',monospace" font-size="24" fill="#000">ПРИБОР</text>
+<text x="60" y="480" font-family="'Courier New',monospace" font-size="24" fill="#000">Twang Modular</text>
+<text x="60" y="514" font-family="'Courier New',monospace" font-size="24" fill="#000">Solyara</text>
+<text x="60" y="548" font-family="'Courier New',monospace" font-size="24" fill="#000">Лаборатория звука МАЯК</text>
+<text x="60" y="582" font-family="'Courier New',monospace" font-size="24" fill="#000">ArtCraft workshop</text>
+<text x="60" y="616" font-family="'Courier New',monospace" font-size="24" fill="#000">LaserNoto</text>
+<text x="60" y="650" font-family="'Courier New',monospace" font-size="24" fill="#000">ЭФЭМИ</text>
+<text x="60" y="684" font-family="'Courier New',monospace" font-size="24" fill="#000">MXLS</text>
+<text x="60" y="718" font-family="'Courier New',monospace" font-size="24" fill="#000">SxLab</text>
+<text x="60" y="752" font-family="'Courier New',monospace" font-size="24" fill="#000">ЯНДЕКС</text>
+<text x="60" y="786" font-family="'Courier New',monospace" font-size="24" fill="#000">Резонанс</text>
+<text x="60" y="820" font-family="'Courier New',monospace" font-size="24" fill="#000">VG Line</text>
+<text x="60" y="854" font-family="'Courier New',monospace" font-size="24" fill="#000">Unheld modular</text>
+<text x="60" y="888" font-family="'Courier New',monospace" font-size="24" fill="#000">Paratek</text>
+<text x="60" y="940" font-family="'Courier New',monospace" font-size="24" fill="#000">УралСинтМаш</text>
+<text x="60" y="974" font-family="'Courier New',monospace" font-size="24" fill="#000">Alpha1 Midi Sequencer</text>
+<text x="60" y="1008" font-family="'Courier New',monospace" font-size="24" fill="#000">СТК «Путь вперёд»</text>
+<text x="60" y="1042" font-family="'Courier New',monospace" font-size="24" fill="#000">Edwards-audio</text>
+<text x="60" y="1076" font-family="'Courier New',monospace" font-size="24" fill="#000">ФАЗА Электроника</text>
+<text x="60" y="1110" font-family="'Courier New',monospace" font-size="24" fill="#000">Пикасо 3D</text>
+<text x="60" y="1144" font-family="'Courier New',monospace" font-size="24" fill="#000">MADSOUNDFACTORY</text>
+<text x="60" y="1178" font-family="'Courier New',monospace" font-size="24" fill="#000">PORKYSYNTH</text>
+<text x="60" y="1212" font-family="'Courier New',monospace" font-size="24" fill="#000">Творческий центр ТРЕТИЙ ПУТЬ</text>
+<text x="60" y="1246" font-family="'Courier New',monospace" font-size="24" fill="#000">Nakedboards</text>
+<text x="60" y="1280" font-family="'Courier New',monospace" font-size="24" fill="#000">Ravzar</text>
+<text x="60" y="1314" font-family="'Courier New',monospace" font-size="24" fill="#000">Микрофоны СОЮЗ</text>
+<text x="60" y="1348" font-family="'Courier New',monospace" font-size="24" fill="#000">Noisescape</text>
+<text x="60" y="1382" font-family="'Courier New',monospace" font-size="24" fill="#000">Simple Way Audio</text>
 <text x="600" y="370" font-family="'Courier New',monospace" font-size="24" letter-spacing="4" fill="#E30613">· АРТИСТЫ · 11</text>
 <text x="600" y="412" font-family="'Courier New',monospace" font-size="24" fill="#000">Там Огни | c0deterr0r</text>
 <text x="600" y="448" font-family="'Courier New',monospace" font-size="24" fill="#000">TiihayaRekaa</text>
