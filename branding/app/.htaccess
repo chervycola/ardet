@@ -1,8 +1,7 @@
-# ДИСКРЕТ · правила для красивых персональных ссылок
-# Любой несуществующий путь отдаём приложению (index.html),
-# оно само откроет карточку: дискрет.рф/TiihayaRekaa, /EXTREMUM, /Paratek…
-# Реальные файлы (bot.php, photos/*) продолжают работать как раньше.
+# ДИСКРЕТ · SPA-роутинг: несуществующие пути отдаём приложению,
+# чтобы работали ссылки вида дискрет.рф/ЮНОСТЬ-4 (QR у стендов).
 RewriteEngine On
+RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [L]
+RewriteRule . index.html [L]
