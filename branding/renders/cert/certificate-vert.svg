@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <pattern id="th" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#f6f6f6"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#e3e3e3" stroke-width="4"/>
+  </pattern>
+</defs>
+<rect width="1240" height="1754" fill="#FFFFFF"/>
+<rect x="34" y="34" width="1172" height="1686" fill="none" stroke="#000" stroke-width="3"/>
+<rect x="46" y="46" width="1148" height="1662" fill="none" stroke="#000" stroke-width="1.2"/>
+
+<g stroke="#c9c9c9" stroke-width="2">
+  <rect x="800" y="130" width="82" height="320" fill="url(#th)"/>
+  <rect x="948" y="130" width="70" height="320" fill="url(#th)"/>
+</g>
+<g stroke="#E30613" stroke-width="4" stroke-linecap="round">
+  <line x1="1092" y1="160" x2="1092" y2="128"/><line x1="1092" y1="252" x2="1092" y2="284"/>
+  <line x1="1046" y1="206" x2="1014" y2="206"/><line x1="1138" y1="206" x2="1170" y2="206"/>
+  <line x1="1059" y1="173" x2="1037" y2="151"/><line x1="1125" y1="173" x2="1147" y2="151"/>
+  <line x1="1059" y1="239" x2="1037" y2="261"/><line x1="1125" y1="239" x2="1147" y2="261"/>
+</g>
+<circle cx="1092" cy="206" r="10" fill="#E30613"/>
+
+<use href="#logoD" fill="#000" transform="translate(90,96) scale(6.8)"/>
+<text x="196" y="150" font-weight="800" font-size="66" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="198" y="186" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="198" y="212" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+
+<text x="90" y="620" font-weight="800" font-size="118" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
+<text x="90" y="740" font-weight="800" font-size="118" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
+
+<circle cx="90" cy="820" r="6" fill="#E30613"/>
+<polyline points="90,820 188,820 188,812 244,812 244,828 290,828 290,820 365,820 365,804 414,804 414,836 456,836 456,812 512,812 512,844 577,844 577,828 627,828 627,820 712,820 712,804 764,804 764,828 810,828 810,812 872,812 872,836 921,836 921,820 993,820 993,812 1052,812 1052,820 1150,820" fill="none" stroke="#000" stroke-width="3"/>
+
+<text x="90" y="930" font-family="'Courier New',monospace" font-size="26" letter-spacing="3" fill="#000">НАСТОЯЩИМ ПОДТВЕРЖДАЕТСЯ, ЧТО</text>
+
+<line x1="90" y1="1056" x2="1150" y2="1056" stroke="#000" stroke-width="2"/>
+<text x="90" y="1088" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ УЧАСТНИКА</text>
+
+<text x="90" y="1180" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ</text>
+<text x="90" y="1220" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">19 СЕНТЯБРЯ 2026 ГОДА · ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
+
+<rect x="90" y="1320" width="360" height="86" fill="#E30613"/>
+<text x="114" y="1360" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
+<text x="114" y="1392" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+
+<line x1="710" y1="1388" x2="1150" y2="1388" stroke="#000" stroke-width="2"/>
+<text x="710" y="1420" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
+
+<line x1="90" y1="1580" x2="1150" y2="1580" stroke="#000" stroke-width="2.5"/>
+<text x="90" y="1624" font-family="'Courier New',monospace" font-size="19" letter-spacing="3" fill="#000">ЛЮДИ · ЗВУК · ТЕХНОЛОГИИ · ИДЕИ</text>
+<text x="1150" y="1624" text-anchor="end" font-weight="800" font-size="30" fill="#E30613">ДИСКРЕТ.РФ</text>
+</svg>

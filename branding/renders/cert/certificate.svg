@@ -12,13 +12,10 @@
 <rect width="1754" height="1240" fill="#FFFFFF"/>
 <rect x="34" y="34" width="1686" height="1172" fill="none" stroke="#000" stroke-width="3"/>
 <rect x="46" y="46" width="1662" height="1148" fill="none" stroke="#000" stroke-width="1.2"/>
-
-<!-- башни -->
 <g stroke="#c9c9c9" stroke-width="2">
   <rect x="1280" y="120" width="90" height="330" fill="url(#th)"/>
   <rect x="1442" y="120" width="76" height="330" fill="url(#th)"/>
 </g>
-<!-- солнце -->
 <g stroke="#E30613" stroke-width="4" stroke-linecap="round">
   <line x1="1600" y1="150" x2="1600" y2="118"/><line x1="1600" y1="242" x2="1600" y2="274"/>
   <line x1="1554" y1="196" x2="1522" y2="196"/><line x1="1646" y1="196" x2="1678" y2="196"/>
@@ -26,32 +23,23 @@
   <line x1="1567" y1="229" x2="1545" y2="251"/><line x1="1633" y1="229" x2="1655" y2="251"/>
 </g>
 <circle cx="1600" cy="196" r="10" fill="#E30613"/>
-
 <use href="#logoD" fill="#000" transform="translate(96,92) scale(7.5)"/>
 <text x="210" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
 <text x="212" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
-
 <text x="96" y="366" font-weight="800" font-size="128" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
 <text x="96" y="496" font-weight="800" font-size="128" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
-
 <circle cx="96" cy="570" r="6" fill="#E30613"/>
 <polyline points="96,570 241,570 241,562 323,562 323,578 390,578 390,570 501,570 501,554 573,554 573,586 636,586 636,562 718,562 718,594 814,594 814,578 887,578 887,570 1012,570 1012,554 1089,554 1089,578 1157,578 1157,562 1248,562 1248,586 1321,586 1321,570 1427,570 1427,562 1513,562 1513,570 1658,570" fill="none" stroke="#000" stroke-width="3"/>
-
 <text x="96" y="668" font-family="'Courier New',monospace" font-size="27" letter-spacing="3" fill="#000">НАСТОЯЩИМ ПОДТВЕРЖДАЕТСЯ, ЧТО</text>
-
 <line x1="96" y1="790" x2="1274" y2="790" stroke="#000" stroke-width="2"/>
 <text x="96" y="822" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ УЧАСТНИКА</text>
-
 <text x="96" y="912" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ · 19 СЕНТЯБРЯ 2026 ГОДА</text>
 <text x="96" y="952" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
-
 <rect x="1298" y="742" width="360" height="86" fill="#E30613"/>
 <text x="1322" y="782" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
 <text x="1322" y="814" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
-
 <line x1="1330" y1="990" x2="1658" y2="990" stroke="#000" stroke-width="2"/>
 <text x="1330" y="1022" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
-
 <line x1="96" y1="1096" x2="1658" y2="1096" stroke="#000" stroke-width="2.5"/>
 <text x="96" y="1138" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#000">ЛЮДИ · ЗВУК · ТЕХНОЛОГИИ · ИДЕИ</text>
 <text x="1658" y="1138" text-anchor="end" font-weight="800" font-size="30" fill="#E30613">ДИСКРЕТ.РФ</text>
