@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <pattern id="th" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#f6f6f6"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#e3e3e3" stroke-width="4"/>
+  </pattern>
+</defs>
+<rect width="1240" height="1754" fill="#f5efdf"/>
+<rect x="36" y="36" width="1168" height="1682" fill="none" stroke="#C00A10" stroke-width="10"/>
+<rect x="58" y="58" width="1124" height="1638" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+
+<polyline points="90,127 108,127 108,109 126,109 126,127 144,127 144,109 162,109 162,127 180,127 180,109 198,109 198,127 216,127 216,109 234,109 234,127 252,127 252,109 270,109 270,127 288,127 288,109 306,109 306,127 324,127 324,109 342,109 342,127 360,127 360,109 378,109 378,127 396,127 396,109 414,109 414,127 432,127 432,109 450,109 450,127 468,127 468,109 486,109 486,127 504,127 504,109 522,109 522,127 540,127 540,109 558,109 558,127 576,127 576,109 594,109 594,127 612,127 612,109 630,109 630,127 648,127 648,109 666,109 666,127 684,127 684,109 702,109 702,127 720,127 720,109 738,109 738,127 756,127 756,109 774,109 774,127 792,127 792,109 810,109 810,127 828,127 828,109 846,109 846,127 864,127 864,109 882,109 882,127 900,127 900,109 918,109 918,127 936,127 936,109 954,109 954,127 972,127 972,109 990,109 990,127 1008,127 1008,109 1026,109 1026,127 1044,127 1044,109 1062,109 1062,127 1080,127 1080,109 1098,109 1098,127 1116,127 1116,109 1134,109 1134,127 1150,127" fill="none" stroke="#C00A10" stroke-width="3"/>
+<polyline points="90,1645 108,1645 108,1627 126,1627 126,1645 144,1645 144,1627 162,1627 162,1645 180,1645 180,1627 198,1627 198,1645 216,1645 216,1627 234,1627 234,1645 252,1645 252,1627 270,1627 270,1645 288,1645 288,1627 306,1627 306,1645 324,1645 324,1627 342,1627 342,1645 360,1645 360,1627 378,1627 378,1645 396,1645 396,1627 414,1627 414,1645 432,1645 432,1627 450,1627 450,1645 468,1645 468,1627 486,1627 486,1645 504,1645 504,1627 522,1627 522,1645 540,1645 540,1627 558,1627 558,1645 576,1645 576,1627 594,1627 594,1645 612,1645 612,1627 630,1627 630,1645 648,1645 648,1627 666,1627 666,1645 684,1645 684,1627 702,1627 702,1645 720,1645 720,1627 738,1627 738,1645 756,1645 756,1627 774,1627 774,1645 792,1645 792,1627 810,1627 810,1645 828,1645 828,1627 846,1627 846,1645 864,1645 864,1627 882,1627 882,1645 900,1645 900,1627 918,1627 918,1645 936,1645 936,1627 954,1627 954,1645 972,1645 972,1627 990,1627 990,1645 1008,1645 1008,1627 1026,1627 1026,1645 1044,1645 1044,1627 1062,1627 1062,1645 1080,1645 1080,1627 1098,1627 1098,1645 1116,1645 1116,1627 1134,1627 1134,1645 1150,1645" fill="none" stroke="#C00A10" stroke-width="3"/>
+
+<use href="#logoD" fill="#C00A10" transform="translate(564,168) scale(4.2)"/>
+<text x="620" y="286" text-anchor="middle" font-weight="800" font-size="54" letter-spacing="6" fill="#1a1a1a">ДИСКРЕТ · 2026</text>
+<text x="620" y="322" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="5" fill="#1a1a1a">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="620" y="348" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="5" fill="#1a1a1a">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+
+<g stroke="#E30613" stroke-width="4.6" stroke-linecap="round">
+  <line x1="620" y1="417.1" x2="620" y2="380.3"/><line x1="620" y1="522.9" x2="620" y2="559.7"/>
+  <line x1="567.1" y1="470" x2="530.3" y2="470"/><line x1="672.9" y1="470" x2="709.7" y2="470"/>
+  <line x1="582.05" y1="432.05" x2="556.75" y2="406.75"/><line x1="657.95" y1="432.05" x2="683.25" y2="406.75"/>
+  <line x1="582.05" y1="507.95" x2="556.75" y2="533.25"/><line x1="657.95" y1="507.95" x2="683.25" y2="533.25"/>
+</g>
+<circle cx="620" cy="470" r="11.5" fill="#E30613"/>
+
+<text x="620" y="700" text-anchor="middle" font-weight="800" font-size="120" letter-spacing="10" fill="#C00A10">СЕРТИФИКАТ</text>
+<text x="620" y="778" text-anchor="middle" font-weight="800" font-size="52" letter-spacing="16" fill="#1a1a1a">УЧАСТНИКА</text>
+
+<text x="620" y="920" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#1a1a1a">НАСТОЯЩИЙ СЕРТИФИКАТ ВЫДАН</text>
+
+<line x1="220" y1="1040" x2="1020" y2="1040" stroke="#1a1a1a" stroke-width="2"/>
+<text x="620" y="1072" text-anchor="middle" font-family="'Courier New',monospace" font-size="15" letter-spacing="3" fill="#8b8371">ИМЯ И ФАМИЛИЯ</text>
+
+<text x="620" y="1160" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#1a1a1a">В ТОМ, ЧТО ОН(А) ПРИНЯЛ(А) УЧАСТИЕ</text>
+<text x="620" y="1198" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#1a1a1a">В ФОРУМЕ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ ДИСКРЕТ</text>
+<text x="620" y="1236" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="#1a1a1a">19 СЕНТЯБРЯ 2026 ГОДА · ГОРОД ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
+
+<text x="620" y="1350" text-anchor="middle" font-weight="800" font-size="34" letter-spacing="3" fill="#C00A10">СИНТЕЗИРУЕМ БОЛЬШЕ, ЧЕМ ЗВУК</text>
+
+<line x1="380" y1="1470" x2="860" y2="1470" stroke="#1a1a1a" stroke-width="2"/>
+<text x="620" y="1502" text-anchor="middle" font-family="'Courier New',monospace" font-size="15" letter-spacing="3" fill="#8b8371">ОРГКОМАНДА ФОРУМА</text>
+
+<text x="620" y="1586" text-anchor="middle" font-family="'Courier New',monospace" font-size="17" letter-spacing="4" fill="#1a1a1a">ЛЮДИ · ЗВУК · ТЕХНОЛОГИИ · ИДЕИ</text>
+</svg>
