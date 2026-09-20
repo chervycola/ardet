@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+</defs>
+<rect width="1240" height="1754" fill="#FFFFFF"/>
+<rect x="30" y="30" width="1180" height="1694" fill="none" stroke="#000" stroke-width="1.2"/>
+<rect x="150" y="56" width="1034" height="1642" fill="none" stroke="#000" stroke-width="3"/>
+
+<text transform="translate(104,1634) rotate(-90)" font-family="'Courier New',monospace" font-size="17" letter-spacing="6" fill="#000">ДИСКРЕТ · НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ · 19.09.2026</text>
+
+<use href="#logoD" fill="#000" transform="translate(190,116) scale(5.4)"/>
+<text x="242" y="160" font-weight="800" font-size="60" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="1128" y="126" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ФОРМА Д-26</text>
+<text x="1128" y="152" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#E30613">ЭКЗ. ЕДИНСТВ.</text>
+<line x1="150" y1="196" x2="1184" y2="196" stroke="#000" stroke-width="2"/>
+
+<text x="190" y="312" font-weight="800" font-size="96" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
+<text x="190" y="408" font-weight="800" font-size="96" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
+<text x="190" y="464" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#000">ФОРМУЛЯР ИЗДЕЛИЯ «УЧАСТНИК ФОРУМА»</text>
+
+<circle cx="190" cy="530" r="6" fill="#E30613"/>
+<polyline points="190,530 273,530 273,523 320,523 320,537 359,537 359,530 423,530 423,516 464,516 464,544 500,544 500,523 548,523 548,551 603,551 603,537 645,537 645,530 717,530 717,516 761,516 761,537 800,537 800,523 852,523 852,544 894,544 894,530 955,530 955,523 1005,523 1005,530 1088,530" fill="none" stroke="#000" stroke-width="3"/>
+
+<text x="190" y="600" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">НАИМЕНОВАНИЕ ИЗДЕЛИЯ</text>
+<text x="190" y="644" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#000">ЧЕЛОВЕК ТВОРЧЕСКИЙ, ПРИБОРОСТРОИТЕЛЬНЫЙ</text>
+<line x1="190" y1="660" x2="1088" y2="660" stroke="#000" stroke-width="1.6"/>
+<text x="190" y="712" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ</text>
+<text x="190" y="756" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#000"></text>
+<line x1="190" y1="772" x2="1088" y2="772" stroke="#000" stroke-width="1.6"/>
+<text x="190" y="824" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ДАТА ВЫПУСКА</text>
+<text x="190" y="868" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#000">19.09.2026</text>
+<line x1="190" y1="884" x2="610" y2="884" stroke="#000" stroke-width="1.6"/>
+<text x="668" y="824" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">МЕСТО СБОРКИ</text>
+<text x="668" y="868" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#000">ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
+<line x1="668" y1="884" x2="1088" y2="884" stroke="#000" stroke-width="1.6"/>
+<text x="190" y="936" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ПРОГРАММА ИСПЫТАНИЙ</text>
+<text x="190" y="980" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#000">ЭКСПО · ЛЕКТОРИЙ · МАСТЕРСКИЕ · ЧЕТЫРЕ СЦЕНЫ</text>
+<line x1="190" y1="996" x2="1088" y2="996" stroke="#000" stroke-width="1.6"/>
+<text x="190" y="1048" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ЗАКЛЮЧЕНИЕ</text>
+<text x="190" y="1092" font-family="'Courier New',monospace" font-size="25" letter-spacing="1" fill="#E30613" font-weight="bold">ГОДЕН(НА) К ТВОРЧЕСКОМУ САМОВЫРАЖЕНИЮ</text>
+<line x1="190" y1="1108" x2="1088" y2="1108" stroke="#000" stroke-width="1.6"/>
+
+<g transform="translate(880,1180) rotate(-8)">
+  <rect x="-160" y="-64" width="320" height="128" fill="none" stroke="#E30613" stroke-width="5"/>
+  <rect x="-150" y="-54" width="300" height="108" fill="none" stroke="#E30613" stroke-width="1.6"/>
+  <text x="0" y="-18" text-anchor="middle" font-weight="800" font-size="34" letter-spacing="4" fill="#E30613">ПРОВЕРЕНО</text>
+  <text x="0" y="14" text-anchor="middle" font-family="'Courier New',monospace" font-size="18" letter-spacing="3" fill="#E30613">ОТК · ДИСКРЕТ</text>
+  <text x="0" y="42" text-anchor="middle" font-family="'Courier New',monospace" font-size="18" letter-spacing="3" fill="#E30613">19.09.2026</text>
+</g>
+
+<text x="190" y="1180" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#000">ТЕХНИЧЕСКОЕ РЕШЕНИЕ —</text>
+<text x="190" y="1212" font-family="'Courier New',monospace" font-size="20" letter-spacing="2" fill="#000">ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
+
+<!-- основная надпись (чертёжный штамп) -->
+<g stroke="#000" stroke-width="2">
+  <rect x="150" y="1380" width="1034" height="262" fill="none" stroke-width="3"/>
+  <line x1="150" y1="1446" x2="1184" y2="1446"/>
+  <line x1="150" y1="1512" x2="1184" y2="1512"/>
+  <line x1="150" y1="1578" x2="1184" y2="1578"/>
+  <line x1="500" y1="1380" x2="500" y2="1642"/>
+  <line x1="900" y1="1380" x2="900" y2="1642"/>
+</g>
+<text x="170" y="1420" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">РАЗРАБОТАНО</text>
+<text x="520" y="1420" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ПОДПИСЬ</text>
+<text x="920" y="1420" font-family="'Courier New',monospace" font-size="14" letter-spacing="2" fill="#8a8a8a">ЛИСТ</text>
+<text x="170" y="1494" font-family="'Courier New',monospace" font-size="22" fill="#000">ОРГКОМАНДА ФОРУМА</text>
+<text x="920" y="1494" font-family="'Courier New',monospace" font-size="22" fill="#000">1 / 1</text>
+<text x="170" y="1560" font-family="'Courier New',monospace" font-size="22" fill="#000">НИУ МИЭТ</text>
+<text x="170" y="1622" font-weight="800" font-size="26" fill="#E30613">ДИСКРЕТ.РФ</text>
+<text x="920" y="1622" font-family="'Courier New',monospace" font-size="18" letter-spacing="1" fill="#000">ЛЮДИ · ЗВУК</text>
+</svg>
