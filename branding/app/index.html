@@ -427,7 +427,7 @@ const ORG = {
   ],
 }
 const EVENT = { date:"19.09.2026", place:"Зеленоград · МИЭТ", total:11, tickets:"https://flat.audio/e/2470" };
-const CONTACT = { tg:"creativeforumzel", site:"дискрет.рф", siteUrl:"https://xn--d1acii4aek.xn--p1ai", email:"contact@diskret.space" }; // EDIT
+const CONTACT = { tg:"creativeforumzel", site:"дискрет.рф", siteUrl:"https://xn--d1acii4aek.xn--p1ai", shareUrl:"https://дискрет.рф", email:"contact@diskret.space" }; // EDIT
 const LOTTERY = { prize:"Набор для сборки синт-модуля", draw:"19.09.2026 · на форуме" };   // EDIT
 
 const P = [
@@ -1394,7 +1394,7 @@ function shareCard(kind, id){
   else if(kind==="a"){ const x=A.find(v=>v.id===id); name=x?x.name:""; }
   else if(kind==="c"){ const x=C.find(v=>v.id===id); name=x?x.name:""; }
   const slug = (name||"").trim().replace(/[^A-Za-zА-Яа-яЁё0-9]+/g,"-").replace(/^-+|-+$/g,"");
-  const url = CONTACT.siteUrl + "/" + (slug ? encodeURIComponent(slug) : "?k=" + encodeURIComponent(tok));
+  const url = CONTACT.shareUrl + "/" + (slug ? slug : "?k=" + encodeURIComponent(tok));
   const txt = (name ? name + " · " : "") + "ДИСКРЕТ · 19.09.2026 · Зеленоград";
   haptic("light");
   try{ if(tg && tg.openTelegramLink){ tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent(txt)); return; } }catch(e){}
