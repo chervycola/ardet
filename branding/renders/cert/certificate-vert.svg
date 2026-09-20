@@ -25,10 +25,10 @@
 </g>
 <circle cx="1092" cy="206" r="10" fill="#E30613"/>
 
-<use href="#logoD" fill="#000" transform="translate(90,96) scale(6.8)"/>
-<text x="196" y="150" font-weight="800" font-size="66" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
-<text x="198" y="186" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
-<text x="198" y="212" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<use href="#logoD" fill="#000" transform="translate(90,102) scale(5.95)"/>
+<text x="147" y="150" font-weight="800" font-size="66" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="90" y="186" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="90" y="212" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 
 <text x="90" y="620" font-weight="800" font-size="118" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
 <text x="90" y="740" font-weight="800" font-size="118" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
@@ -44,9 +44,9 @@
 <text x="90" y="1180" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ</text>
 <text x="90" y="1220" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">19 СЕНТЯБРЯ 2026 ГОДА · ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
 
-<rect x="90" y="1320" width="360" height="86" fill="#E30613"/>
-<text x="114" y="1360" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
-<text x="114" y="1392" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<rect x="90" y="1320" width="560" height="86" fill="#E30613"/>
+<text x="114" y="1359" font-weight="800" font-size="26" fill="#FFF">ТЕХНИЧЕСКОЕ РЕШЕНИЕ —</text>
+<text x="114" y="1391" font-weight="800" font-size="26" fill="#FFF">ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 
 <line x1="710" y1="1388" x2="1150" y2="1388" stroke="#000" stroke-width="2"/>
 <text x="710" y="1420" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>

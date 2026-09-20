@@ -59,8 +59,8 @@ ${DEFS}
 </g>
 
 ${sun(620,170,1.0)}
-<use href="#logoD" fill="#000" transform="translate(556,278) scale(4.0)"/>
-<text x="620" y="392" text-anchor="middle" font-weight="800" font-size="58" letter-spacing="3" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<use href="#logoD" fill="#000" transform="translate(408,350) scale(5.25)"/>
+<text x="462" y="392" font-weight="800" font-size="58" letter-spacing="3" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
 <text x="620" y="428" text-anchor="middle" font-family="'Courier New',monospace" font-size="17" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 
 <text x="620" y="640" text-anchor="middle" font-weight="800" font-size="126" letter-spacing="4" fill="#000">СЕРТИФИКАТ</text>
@@ -77,8 +77,8 @@ ${shLine(150,1090,884,7)}
 <text x="620" y="1210" text-anchor="middle" font-family="'Courier New',monospace" font-size="25" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ</text>
 <text x="620" y="1248" text-anchor="middle" font-family="'Courier New',monospace" font-size="25" letter-spacing="2" fill="#000">19 СЕНТЯБРЯ 2026 ГОДА · ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
 
-<rect x="290" y="1310" width="660" height="92" fill="#E30613"/>
-<text x="620" y="1370" text-anchor="middle" font-weight="800" font-size="34" letter-spacing="1" fill="#FFF">СИНТЕЗИРУЕМ БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<rect x="110" y="1310" width="1020" height="92" fill="#E30613"/>
+<text x="620" y="1369" text-anchor="middle" font-weight="800" font-size="27" letter-spacing="1" fill="#FFF">ТЕХНИЧЕСКОЕ РЕШЕНИЕ — ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 
 <line x1="150" y1="1510" x2="540" y2="1510" stroke="#000" stroke-width="2"/>
 <text x="345" y="1542" text-anchor="middle" font-family="'Courier New',monospace" font-size="15" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
@@ -100,8 +100,8 @@ ${DEFS}
 ${meander(90,1150,118,9,36,RD,3)}
 ${meander(90,1150,H-118,9,36,RD,3)}
 
-<use href="#logoD" fill="${RD}" transform="translate(564,168) scale(4.2)"/>
-<text x="620" y="286" text-anchor="middle" font-weight="800" font-size="54" letter-spacing="6" fill="${BK}">ДИСКРЕТ · 2026</text>
+<use href="#logoD" fill="${RD}" transform="translate(362,247) scale(4.9)"/>
+<text x="414" y="286" font-weight="800" font-size="54" letter-spacing="6" fill="${BK}">ИСКРЕТ · 2026</text>
 <text x="620" y="322" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="5" fill="${BK}">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
 <text x="620" y="348" text-anchor="middle" font-family="'Courier New',monospace" font-size="16" letter-spacing="5" fill="${BK}">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 
@@ -119,7 +119,7 @@ ${sun(620,470,1.15)}
 <text x="620" y="1198" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="${BK}">В ФОРУМЕ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ ДИСКРЕТ</text>
 <text x="620" y="1236" text-anchor="middle" font-family="'Courier New',monospace" font-size="24" letter-spacing="2" fill="${BK}">19 СЕНТЯБРЯ 2026 ГОДА · ГОРОД ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
 
-<text x="620" y="1350" text-anchor="middle" font-weight="800" font-size="34" letter-spacing="3" fill="${RD}">СИНТЕЗИРУЕМ БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<text x="620" y="1350" text-anchor="middle" font-weight="800" font-size="27" letter-spacing="1" fill="${RD}">ТЕХНИЧЕСКОЕ РЕШЕНИЕ — ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 
 <line x1="380" y1="1470" x2="860" y2="1470" stroke="${BK}" stroke-width="2"/>
 <text x="620" y="1502" text-anchor="middle" font-family="'Courier New',monospace" font-size="15" letter-spacing="3" fill="#8b8371">ОРГКОМАНДА ФОРУМА</text>

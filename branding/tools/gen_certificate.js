@@ -45,9 +45,9 @@ ${DEFS}
   <rect x="1442" y="120" width="76" height="330" fill="url(#th)"/>
 </g>
 ${sun(1600,196)}
-<use href="#logoD" fill="#000" transform="translate(96,92) scale(7.5)"/>
-<text x="210" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
-<text x="212" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<use href="#logoD" fill="#000" transform="translate(96,95) scale(6.85)"/>
+<text x="162" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="96" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="96" y="366" font-weight="800" font-size="128" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
 <text x="96" y="496" font-weight="800" font-size="128" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
 ${shLine(96,1658,570,8)}
@@ -56,9 +56,9 @@ ${shLine(96,1658,570,8)}
 <text x="96" y="822" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ УЧАСТНИКА</text>
 <text x="96" y="912" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ · 19 СЕНТЯБРЯ 2026 ГОДА</text>
 <text x="96" y="952" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
-<rect x="1298" y="742" width="360" height="86" fill="#E30613"/>
-<text x="1322" y="782" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
-<text x="1322" y="814" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<rect x="1148" y="742" width="510" height="86" fill="#E30613"/>
+<text x="1172" y="781" font-weight="800" font-size="26" fill="#FFF">ТЕХНИЧЕСКОЕ РЕШЕНИЕ —</text>
+<text x="1172" y="813" font-weight="800" font-size="26" fill="#FFF">ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 <line x1="1330" y1="990" x2="1658" y2="990" stroke="#000" stroke-width="2"/>
 <text x="1330" y="1022" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
 <line x1="96" y1="1096" x2="1658" y2="1096" stroke="#000" stroke-width="2.5"/>
@@ -80,10 +80,10 @@ ${DEFS}
 </g>
 ${sun(1092,206)}
 
-<use href="#logoD" fill="#000" transform="translate(90,96) scale(6.8)"/>
-<text x="196" y="150" font-weight="800" font-size="66" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
-<text x="198" y="186" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
-<text x="198" y="212" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<use href="#logoD" fill="#000" transform="translate(90,102) scale(5.95)"/>
+<text x="147" y="150" font-weight="800" font-size="66" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="90" y="186" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="90" y="212" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 
 <text x="90" y="620" font-weight="800" font-size="118" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
 <text x="90" y="740" font-weight="800" font-size="118" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
@@ -98,9 +98,9 @@ ${shLine(90,1150,820,8)}
 <text x="90" y="1180" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ</text>
 <text x="90" y="1220" font-family="'Courier New',monospace" font-size="26" letter-spacing="2" fill="#000">19 СЕНТЯБРЯ 2026 ГОДА · ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
 
-<rect x="90" y="1320" width="360" height="86" fill="#E30613"/>
-<text x="114" y="1360" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
-<text x="114" y="1392" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<rect x="90" y="1320" width="560" height="86" fill="#E30613"/>
+<text x="114" y="1359" font-weight="800" font-size="26" fill="#FFF">ТЕХНИЧЕСКОЕ РЕШЕНИЕ —</text>
+<text x="114" y="1391" font-weight="800" font-size="26" fill="#FFF">ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 
 <line x1="710" y1="1388" x2="1150" y2="1388" stroke="#000" stroke-width="2"/>
 <text x="710" y="1420" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>

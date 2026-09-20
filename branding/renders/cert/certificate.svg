@@ -23,9 +23,9 @@
   <line x1="1567" y1="229" x2="1545" y2="251"/><line x1="1633" y1="229" x2="1655" y2="251"/>
 </g>
 <circle cx="1600" cy="196" r="10" fill="#E30613"/>
-<use href="#logoD" fill="#000" transform="translate(96,92) scale(7.5)"/>
-<text x="210" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
-<text x="212" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<use href="#logoD" fill="#000" transform="translate(96,95) scale(6.85)"/>
+<text x="162" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="96" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
 <text x="96" y="366" font-weight="800" font-size="128" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
 <text x="96" y="496" font-weight="800" font-size="128" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
 <circle cx="96" cy="570" r="6" fill="#E30613"/>
@@ -35,9 +35,9 @@
 <text x="96" y="822" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ УЧАСТНИКА</text>
 <text x="96" y="912" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ · 19 СЕНТЯБРЯ 2026 ГОДА</text>
 <text x="96" y="952" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
-<rect x="1298" y="742" width="360" height="86" fill="#E30613"/>
-<text x="1322" y="782" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
-<text x="1322" y="814" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+<rect x="1148" y="742" width="510" height="86" fill="#E30613"/>
+<text x="1172" y="781" font-weight="800" font-size="26" fill="#FFF">ТЕХНИЧЕСКОЕ РЕШЕНИЕ —</text>
+<text x="1172" y="813" font-weight="800" font-size="26" fill="#FFF">ИНСТРУМЕНТ САМОВЫРАЖЕНИЯ</text>
 <line x1="1330" y1="990" x2="1658" y2="990" stroke="#000" stroke-width="2"/>
 <text x="1330" y="1022" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
 <line x1="96" y1="1096" x2="1658" y2="1096" stroke="#000" stroke-width="2.5"/>
