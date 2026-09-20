@@ -1,0 +1,81 @@
+const fs = require('fs');
+const OUT = __dirname + '/../renders/cert';
+try { fs.mkdirSync(OUT, { recursive:true }); } catch(e){}
+
+// A4 альбомный · 1754×1240 (рендерить @2x = 3508×2480, 300 dpi)
+const W=1754, H=1240;
+
+function shLine(x0,x1,base,q){
+  const LV=[0,-1,1,0,-2,2,-1,3,1,0,-2,1,-1,2,0,-1,0];
+  const WD=[60,34,28,46,30,26,34,40,30,52,32,28,38,30,44,36,60];
+  const tw=WD.reduce((a,b)=>a+b,0), k=(x1-x0)/tw;
+  let x=x0, pts=[`${x0},${base+LV[0]*q}`];
+  for(let i=0;i<LV.length;i++){
+    x+=WD[i]*k;
+    pts.push(`${Math.round(x)},${base+LV[i]*q}`);
+    if(i<LV.length-1) pts.push(`${Math.round(x)},${base+LV[i+1]*q}`);
+  }
+  return `<circle cx="${x0}" cy="${base}" r="6" fill="#E30613"/>
+<polyline points="${pts.join(' ')}" fill="none" stroke="#000" stroke-width="3"/>`;
+}
+
+const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <pattern id="th" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#f6f6f6"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#e3e3e3" stroke-width="4"/>
+  </pattern>
+</defs>
+<rect width="${W}" height="${H}" fill="#FFFFFF"/>
+<rect x="34" y="34" width="${W-68}" height="${H-68}" fill="none" stroke="#000" stroke-width="3"/>
+<rect x="46" y="46" width="${W-92}" height="${H-92}" fill="none" stroke="#000" stroke-width="1.2"/>
+
+<!-- башни -->
+<g stroke="#c9c9c9" stroke-width="2">
+  <rect x="1280" y="120" width="90" height="330" fill="url(#th)"/>
+  <rect x="1442" y="120" width="76" height="330" fill="url(#th)"/>
+</g>
+<!-- солнце -->
+<g stroke="#E30613" stroke-width="4" stroke-linecap="round">
+  <line x1="1600" y1="150" x2="1600" y2="118"/><line x1="1600" y1="242" x2="1600" y2="274"/>
+  <line x1="1554" y1="196" x2="1522" y2="196"/><line x1="1646" y1="196" x2="1678" y2="196"/>
+  <line x1="1567" y1="163" x2="1545" y2="141"/><line x1="1633" y1="163" x2="1655" y2="141"/>
+  <line x1="1567" y1="229" x2="1545" y2="251"/><line x1="1633" y1="229" x2="1655" y2="251"/>
+</g>
+<circle cx="1600" cy="196" r="10" fill="#E30613"/>
+
+<use href="#logoD" fill="#000" transform="translate(96,92) scale(7.5)"/>
+<text x="210" y="150" font-weight="800" font-size="76" letter-spacing="2" fill="#000">ДИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
+<text x="212" y="186" font-family="'Courier New',monospace" font-size="19" letter-spacing="4" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+
+<text x="96" y="366" font-weight="800" font-size="128" letter-spacing="2" fill="#000">СЕРТИФИКАТ</text>
+<text x="96" y="496" font-weight="800" font-size="128" letter-spacing="2" fill="#E30613">УЧАСТНИКА</text>
+
+${shLine(96,1658,570,8)}
+
+<text x="96" y="668" font-family="'Courier New',monospace" font-size="27" letter-spacing="3" fill="#000">НАСТОЯЩИМ ПОДТВЕРЖДАЕТСЯ, ЧТО</text>
+
+<line x1="96" y1="790" x2="1274" y2="790" stroke="#000" stroke-width="2"/>
+<text x="96" y="822" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ИМЯ И ФАМИЛИЯ УЧАСТНИКА</text>
+
+<text x="96" y="912" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ПРИНЯЛ(А) УЧАСТИЕ В ФОРУМЕ ДИСКРЕТ · 19 СЕНТЯБРЯ 2026 ГОДА</text>
+<text x="96" y="952" font-family="'Courier New',monospace" font-size="27" letter-spacing="2" fill="#000">ЗЕЛЕНОГРАД · НИУ МИЭТ</text>
+
+<rect x="1298" y="742" width="360" height="86" fill="#E30613"/>
+<text x="1322" y="782" font-weight="800" font-size="30" fill="#FFF">СИНТЕЗИРУЕМ</text>
+<text x="1322" y="814" font-weight="800" font-size="30" fill="#FFF">БОЛЬШЕ, ЧЕМ ЗВУК</text>
+
+<line x1="1330" y1="990" x2="1658" y2="990" stroke="#000" stroke-width="2"/>
+<text x="1330" y="1022" font-family="'Courier New',monospace" font-size="17" letter-spacing="3" fill="#8a8a8a">ОРГКОМАНДА ФОРУМА</text>
+
+<line x1="96" y1="1096" x2="1658" y2="1096" stroke="#000" stroke-width="2.5"/>
+<text x="96" y="1138" font-family="'Courier New',monospace" font-size="20" letter-spacing="3" fill="#000">ЛЮДИ · ЗВУК · ТЕХНОЛОГИИ · ИДЕИ</text>
+<text x="1658" y="1138" text-anchor="end" font-weight="800" font-size="30" fill="#E30613">ДИСКРЕТ.РФ</text>
+</svg>`;
+
+fs.writeFileSync(`${OUT}/certificate.svg`, svg);
+console.log('certificate.svg written');
