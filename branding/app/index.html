@@ -279,6 +279,8 @@
   .lightbox.on{display:flex;}
   .lightbox img{max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-out;}
   .lbclose{position:fixed; top:calc(14px + var(--sat)); right:14px; z-index:61; background:rgba(0,0,0,.5); border:1.5px solid #fff; color:#fff; width:40px; height:40px; font-size:16px; cursor:pointer; line-height:1;}
+  .g26grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:10px;}
+  .g26grid img{width:100%; aspect-ratio:1; object-fit:cover; display:block; border:2px solid var(--hair); cursor:zoom-in; filter:grayscale(.08) contrast(1.04);}
   .lbhint{position:fixed; left:0; right:0; bottom:calc(18px + var(--sab)); text-align:center; color:rgba(255,255,255,.6); font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; pointer-events:none;}
 </style>
 <!-- Yandex.Metrika counter -->
@@ -313,6 +315,7 @@
     <nav class="menu" id="menu" hidden>
       <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
       <button class="mi" data-m="artists"><span data-t="m.artists">Артисты</span></button>
+      <button class="mi" data-m="photos26"><span data-t="m.photos26">Фото 2026</span></button>
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
@@ -874,7 +877,7 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 /* ===== ЯЗЫКИ / ПЕРЕВОД: ru · пацанский (90-е) · зумерский ===== */
 const L = {
   ru: {
-    "m.about":"О нас", "m.companies":"Компании", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
+    "m.about":"О нас", "m.companies":"Компании", "m.photos26":"Фото 2026", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
     "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Артисты", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Оргкоманда", "org.ghost":"Здесь может быть ваша организация", "org.note":"Хотите стать партнёром форума — напишите нам:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
@@ -911,7 +914,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   bratva: {
-    "m.about":"За нас", "m.companies":"Конторы", "m.feedback":"Обратка", "m.lottery":"Движуха",
+    "m.about":"За нас", "m.companies":"Конторы", "m.photos26":"Фотки 2026", "m.feedback":"Обратка", "m.lottery":"Движуха",
     "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.artists":"Кто играет", "m.orgs":"Кто держит тему", "org.inst":"Серьёзная поддержка", "org.partners":"Партнёры", "org.people":"Кто всё это держит", "org.ghost":"Тут может встать твоя контора", "org.note":"Есть желание вписаться партнёром — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
@@ -948,7 +951,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   zoomer: {
-    "m.about":"О нас", "m.companies":"Бренды", "m.feedback":"Фидбэк", "m.lottery":"Гив",
+    "m.about":"О нас", "m.companies":"Бренды", "m.photos26":"Фото 2026", "m.feedback":"Фидбэк", "m.lottery":"Гив",
     "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Лайвы", "m.orgs":"Орги и партнёры", "org.inst":"Институции", "org.partners":"Партнёры", "org.people":"Орг-тима", "org.ghost":"Тут могла быть твоя орга", "org.note":"Хочешь в коллаб — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
@@ -985,7 +988,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   soviet: {
-    "m.about":"О нас", "m.companies":"Коллективы", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
+    "m.about":"О нас", "m.companies":"Коллективы", "m.photos26":"Фотографии 2026", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
     "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.artists":"Артисты программы", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Организационный комитет", "org.ghost":"Место для вашей организации", "org.note":"По вопросам партнёрства обращаться:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
@@ -1261,6 +1264,14 @@ const MODALS = {
     const arts = A.filter(a=>a.session==="ЛАЙВ"||a.session==="AV");
     return `<div class="prods"><div class="prods-h">${t("m.artists")} · ${arts.length}</div>${arts.map(a=>`<button class="prod" onclick="closeModal();openAuthor('${a.id}')"><span class="prod-n">${esc(a.name)}</span><span class="prod-m">${a.time?esc(a.time)+" ":""}›</span></button>`).join("")}</div>`;
   } },
+  photos26: { title:"m.photos26", html:()=>{
+    let tiles="";
+    for(let i=1;i<=30;i++){
+      const nn=String(i).padStart(2,"0");
+      tiles+=`<div class="g26"><img loading="lazy" decoding="async" src="photos/f26_${nn}.jpg" alt="" onclick="openLightboxSrc(this.src)" onerror="this.parentElement.remove()"></div>`;
+    }
+    return `<div class="prods-h">${t("m.photos26")} · 19.09.2026 · МИЭТ</div><div class="g26grid">${tiles}</div>`;
+  } },
   orgs: { title:"m.orgs", html:()=>{
     const big = o => `<div class="ocard-big"><b>${esc(o.name)}</b><span class="orole">${esc(o.role)}</span>${(o.links&&o.links.length)?`<div class="dlinks">${o.links.map(l=>`<button class="dlink" onclick="openAny('${l.u}')">${esc(l.t)} ↗</button>`).join("")}</div>`:""}</div>`;
     const cell = o => { const u=(o.links&&o.links[0])?o.links[0].u:""; return `<div class="pcell${u?" tap":""}"${u?` onclick="openAny('${u}')"`:""}>${o.photo&&photo(o.photo)?`<img class="plogo${o.sq?" sq":""}" loading="lazy" src="${photo(o.photo)}" alt="">`:""}<b>${esc(o.name)}${u?" ↗":""}</b><span>${esc(o.role)}</span></div>`; };
@@ -1436,6 +1447,7 @@ function scanQR(){
   } else manualScan();
 }
 function lbOpen(){ return $("#lightbox").classList.contains("on"); }
+function openLightboxSrc(src){ if(!src) return; haptic("light"); $("#lbimg").src=src; $("#lightbox").classList.add("on"); document.body.style.overflow="hidden"; syncBack(); }
 function openLightbox(key){ const src=photo(key); if(!src) return; haptic("light"); $("#lbimg").src=src; $("#lightbox").classList.add("on"); document.body.style.overflow="hidden"; syncBack(); }
 function closeLightbox(){ $("#lightbox").classList.remove("on"); $("#lbimg").src=""; document.body.style.overflow = ($("#detail").classList.contains("on")||$("#modal").classList.contains("on")) ? "hidden" : ""; syncBack(); }
 $("#lightbox").addEventListener("click", e=>{ if(e.target.id==="lightbox"||e.target.id==="lbimg") closeLightbox(); });
