@@ -123,6 +123,9 @@ export function menuAction(action) {
   playClick();
   menuEl.classList.remove('on');
   const loc = activeLoc;
+  // меню могло закрыться между открытием и нажатием (двойной тап,
+  // синтетический click) — тогда действия нет, просто закрываемся
+  if (!loc) { hideMenu(); return; }
 
   switch (action) {
     case 'look':
