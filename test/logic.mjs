@@ -115,7 +115,8 @@ const imp = p => import(new URL(p, base));
   });
 
   test('terminal: commands map matches help text claims', () => {
-    const required = ['help','dir','ls','read','cat','whois','prompt','status','ach','map','ping','mycelium','fortune','history','clear','exit','echo','ardet'];
+    // 'ach' снята вместе с ачивками: глубина не геймифицируется
+    const required = ['help','dir','ls','read','cat','whois','prompt','status','map','ping','mycelium','fortune','history','clear','exit','echo','ardet'];
     for (const r of required) assert(typeof commands[r] === 'function', `missing: ${r}`);
   });
 }
@@ -195,7 +196,6 @@ const imp = p => import(new URL(p, base));
       visited: ['campfire', 'library', 'crater'],
       observersSeen: ['jester'],
       collectedLore: ['l1', 'l42', 'l88'],
-      achievements: ['collector', 'listener'],
       graffiti: [{ x: 100, y: 200, text: 'ардет' }],
       catSightings: 3,
       catUnlocked: true,

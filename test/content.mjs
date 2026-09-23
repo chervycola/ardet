@@ -303,53 +303,8 @@ setCtx(fakeCtx());
   });
 }
 
-// ═══ ACHIEVEMENTS ═══
-{
-  const ach = await imp('core/achievements.js');
-  const { events, E } = await imp('core/events.js');
-
-  test('achievements: init wires LORE_COLLECT → collector at 20', () => {
-    ach.loadUnlocked([]);
-    const flags = { talkedTo: new Set(), visited: new Set(), observersSeen: new Set() };
-    let loreCount = 0;
-    ach.init(flags, () => loreCount, () => 0);
-    for (let i = 0; i < 19; i++) { loreCount++; events.emit(E.LORE_COLLECT); }
-    assert(!ach.getUnlocked().includes('collector'), 'not yet at 19');
-    loreCount++; events.emit(E.LORE_COLLECT);
-    assert(ach.getUnlocked().includes('collector'), 'unlocked at 20');
-  });
-
-  test('achievements: listener fires when talkedTo reaches 5', () => {
-    ach.loadUnlocked([]);
-    const flags = { talkedTo: new Set(), visited: new Set(), observersSeen: new Set() };
-    ach.init(flags, () => 0, () => 0);
-    for (let i = 0; i < 4; i++) {
-      flags.talkedTo.add(`npc${i}`);
-      events.emit(E.NPC_TALK, `npc${i}`);
-    }
-    assert(!ach.getUnlocked().includes('listener'), 'not yet at 4');
-    flags.talkedTo.add('npc4');
-    events.emit(E.NPC_TALK, 'npc4');
-    assert(ach.getUnlocked().includes('listener'), 'unlocked at 5');
-  });
-
-  test('achievements: loadUnlocked/getUnlocked round-trip', () => {
-    ach.loadUnlocked(['collector','observers','fire']);
-    const back = ach.getUnlocked().sort();
-    assert(back.length === 3, `len ${back.length}`);
-    for (const id of ['collector','observers','fire']) {
-      assert(back.includes(id), `missing: ${id}`);
-    }
-  });
-
-  test('achievements: defs include all unlock targets', () => {
-    const defs = ach.getDefs();
-    for (const id of ['collector','archivist','listener','observers','fire','moss','terminal']) {
-      assert(defs[id], `def missing: ${id}`);
-      assert(typeof defs[id].name === 'string', `def.${id}.name bad`);
-    }
-  });
-}
+// Ачивки сняты целиком (закон: глубина не геймифицируется) —
+// вместе с ними снят и их тестовый блок.
 
 // ═══ BRAINROT FREEZE + RECOVERY ═══
 {
