@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ДИСКРЕТ · Форма Д-26</title>
+<style>
+  :root{ --bg:#fff; --ink:#0a0a0a; --muted:#6b6b68; --line:#c9c9c9; --red:#E30613; --panel:#f5f5f4;
+         --mono:'Courier New',monospace; --grotesk:'Arial Narrow','Helvetica Neue',Arial,sans-serif; }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--grotesk); font-size:16px; line-height:1.5;}
+  .wrap{max-width:760px; margin:0 auto; padding:20px 16px 80px;}
+  header{display:flex; align-items:center; gap:14px; border-bottom:2px solid var(--ink); padding:10px 0 14px; margin-bottom:8px;}
+  header svg{flex:0 0 auto;}
+  header b{font-weight:800; font-size:26px; letter-spacing:1px;}
+  header span{margin-left:auto; font-family:var(--mono); font-size:12px; letter-spacing:2px; color:var(--red);}
+  h1{font-weight:800; text-transform:uppercase; font-size:clamp(30px,7vw,44px); line-height:1; margin:22px 0 4px;}
+  h1 .r{color:var(--red);}
+  .sub{font-family:var(--mono); font-size:13px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:14px;}
+  .intro{border:2px solid var(--ink); padding:14px 16px; font-family:var(--mono); font-size:13.5px; line-height:1.6; margin:16px 0 26px;}
+  h2{font-family:var(--mono); font-weight:400; font-size:14px; letter-spacing:3px; color:var(--red); text-transform:uppercase; margin:34px 0 10px;}
+  h2::before{content:"· ";}
+  label{display:block; margin:16px 0 0;}
+  label b{display:block; font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:.4px;}
+  label b .req{color:var(--red);}
+  .hint{font-family:var(--mono); font-size:12px; color:var(--muted); line-height:1.5; margin:3px 0 6px;}
+  input[type=text],input[type=url],input[type=tel],textarea,select{
+    width:100%; border:2px solid var(--ink); background:var(--bg); color:var(--ink);
+    font-family:var(--mono); font-size:15px; padding:10px 12px; border-radius:0; outline:none;}
+  textarea{min-height:96px; resize:vertical;}
+  input:focus,textarea:focus,select:focus{border-color:var(--red);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:560px){ .row2{grid-template-columns:1fr;} }
+  .device{border:2px solid var(--ink); padding:16px; margin:18px 0; position:relative;}
+  .device .dvh{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px;}
+  .device .dvh b{font-weight:800; font-size:18px; text-transform:uppercase;}
+  .device .dvh button{background:none; border:none; color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:1px; cursor:pointer; text-transform:uppercase;}
+  .device .dvh button:hover{color:var(--red);}
+  .addbtn{display:block; width:100%; border:2px dashed var(--ink); background:none; padding:12px; font-family:var(--mono);
+    font-size:14px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin:8px 0 0;}
+  .addbtn:hover{border-color:var(--red); color:var(--red);}
+  .files{border:2px dashed var(--ink); padding:14px; text-align:center; cursor:pointer; font-family:var(--mono); font-size:13px;}
+  .files.drag{border-color:var(--red);}
+  .files input{display:none;}
+  .thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .thumbs .th{position:relative; width:84px; height:84px; border:2px solid var(--ink);}
+  .thumbs img{width:100%; height:100%; object-fit:cover; display:block;}
+  .thumbs .rm{position:absolute; top:-10px; right:-10px; width:22px; height:22px; border:2px solid var(--ink);
+    background:var(--bg); color:var(--ink); font-size:12px; line-height:1; cursor:pointer; font-family:var(--mono);}
+  .thumbs .rm:hover{background:var(--red); color:#fff; border-color:var(--red);}
+  .note{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:6px;}
+  .send{display:block; width:100%; background:var(--red); color:#fff; border:none; padding:18px;
+    font-family:var(--grotesk); font-weight:800; font-size:20px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:34px;}
+  .send:disabled{opacity:.5; cursor:wait;}
+  .err{color:var(--red); font-family:var(--mono); font-size:13px; margin-top:10px; display:none;}
+  .ok{display:none; border:3px solid var(--ink); padding:30px 24px; margin-top:30px; text-align:center;}
+  .ok b{display:block; font-weight:800; font-size:28px; text-transform:uppercase; margin-bottom:8px;}
+  .ok .stamp{display:inline-block; border:4px solid var(--red); color:var(--red); font-weight:800; font-size:22px;
+    letter-spacing:3px; padding:8px 18px; transform:rotate(-6deg); margin:14px 0; text-transform:uppercase;}
+  .ok p{font-family:var(--mono); font-size:13.5px;}
+  .hp{position:absolute; left:-9999px; opacity:0; height:0; overflow:hidden;}
+  footer{border-top:2px solid var(--ink); margin-top:44px; padding-top:12px; font-family:var(--mono);
+    font-size:12px; letter-spacing:2px; display:flex; justify-content:space-between;}
+  footer .r{color:var(--red); font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg width="34" height="34" viewBox="0 0 12 12" shape-rendering="crispEdges" fill="#0a0a0a">
+      <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+      <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+    </svg>
+    <b>ДИСКРЕТ</b>
+    <span>ФОРМА Д-26</span>
+  </header>
+
+  <h1>Формуляр <span class="r">изделия</span></h1>
+  <div class="sub">Анкета участника экспо · заполняется на проект</div>
+
+  <div class="intro">
+    Эта анкета — паспорт вашего прибора на ДИСКРЕТЕ. Из ответов мы
+    соберём карточку на сайте, афиши и посты, поэтому чем точнее и живее
+    ответы — тем лучше будет выглядеть ваш прибор. Отвечайте без
+    канцелярита, как рассказали бы коллеге у стенда.
+    Поля со звёздочкой <span style="color:#E30613">★</span> обязательны.
+  </div>
+
+  <form id="f" novalidate>
+    <div class="hp"><label>Не заполняйте это поле<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+    <h2>Автор</h2>
+    <label><b>Название проекта / бренда <span class="req">★</span></b>
+      <div class="hint">Ровно в том написании, которое считаете каноном — кириллица или латиница, регистр.</div>
+      <input type="text" name="project" required maxlength="120"></label>
+    <label><b>Имена участников <span class="req">★</span></b>
+      <div class="hint">Имя и фамилия каждого, без отчеств. По одному на строку.</div>
+      <textarea name="members" required maxlength="600"></textarea></label>
+    <div class="row2">
+      <label><b>Город</b>
+        <div class="hint">Если хотите его указывать.</div>
+        <input type="text" name="city" maxlength="80"></label>
+      <label><b>Контакт для оргкоманды <span class="req">★</span></b>
+        <div class="hint">Телефон или @ник. Не публикуется.</div>
+        <input type="text" name="contact" required maxlength="120"></label>
+    </div>
+    <label><b>Ссылки для публикации</b>
+      <div class="hint">Сайт, Telegram, VK, Bandcamp, YouTube — по одной на строку. Публикуем всё перечисленное.</div>
+      <textarea name="links" maxlength="1000"></textarea></label>
+
+    <div id="devices"></div>
+    <button type="button" class="addbtn" id="addDev">+ добавить ещё прибор</button>
+
+    <h2>Оргвопросы · не публикуются</h2>
+    <div class="row2">
+      <label><b>Место на столе, м <span class="req">★</span></b>
+        <div class="hint">Ширина × глубина, например 2 × 1.</div>
+        <input type="text" name="table" required maxlength="40"></label>
+      <label><b>Розетки, шт <span class="req">★</span></b>
+        <input type="text" name="sockets" required maxlength="20"></label>
+    </div>
+    <div class="row2">
+      <label><b>Мощность, Вт <span class="req">★</span></b>
+        <input type="text" name="power" required maxlength="40"></label>
+      <label><b>Звук</b>
+        <select name="sound">
+          <option value="">— выбрать —</option>
+          <option>наушники</option>
+          <option>свой маломощный монитор</option>
+          <option>нужно подключение к системе</option>
+        </select></label>
+    </div>
+    <label><b>Особые требования</b>
+      <input type="text" name="special" maxlength="300"></label>
+
+    <button class="send" id="send" type="submit">Отправить формуляр</button>
+    <div class="err" id="err"></div>
+  </form>
+
+  <div class="ok" id="ok">
+    <b>Формуляр принят</b>
+    <div class="stamp">ОТК · ДИСКРЕТ</div>
+    <p>Спасибо! Мы соберём карточку прибора и свяжемся с вами по
+    указанному контакту, если что-то нужно будет уточнить.</p>
+  </div>
+
+  <footer><span>ТВОРЧЕСКОЕ ПРИБОРОСТРОЕНИЕ</span><span class="r">ДИСКРЕТ.РФ</span></footer>
+</div>
+
+<script>
+const MAX_FILES = 6, MAX_MB = 15;
+let devN = 0;
+
+function deviceBlock(){
+  devN++;
+  const n = devN;
+  const d = document.createElement('section');
+  d.className = 'device';
+  d.dataset.n = n;
+  d.innerHTML = `
+    <div class="dvh"><b>Прибор ${n}</b>${n>1?'<button type="button" class="rmdev">убрать прибор</button>':''}</div>
+    <label><b>Название прибора <span class="req">★</span></b>
+      <input type="text" name="d${n}_name" required maxlength="120"></label>
+    <label><b>Что это — одной строкой <span class="req">★</span></b>
+      <div class="hint">Подзаголовок карточки, до 60 знаков: «программируемая DSP-платформа», «дрон-синтезатор на трёх осцилляторах».</div>
+      <input type="text" name="d${n}_sub" required maxlength="60"></label>
+    <label><b>Объясните прибор одним предложением человеку без единого термина <span class="req">★</span></b>
+      <div class="hint">Представьте, что рассказываете соседу по лестничной клетке. Это предложение часто становится первой строкой карточки — и лучшей.</div>
+      <textarea name="d${n}_plain" required maxlength="300"></textarea></label>
+    <label><b>Что прибор делает и как устроен <span class="req">★</span></b>
+      <div class="hint">3–5 предложений: принцип работы, схемотехника, что на борту. Здесь можно термины.</div>
+      <textarea name="d${n}_desc" required maxlength="1500"></textarea></label>
+    <label><b>В чём его особенность? <span class="req">★</span></b>
+      <div class="hint">Что в нём есть такого, чего нет у аналогов — или что вы сделали иначе и почему.</div>
+      <textarea name="d${n}_unique" required maxlength="700"></textarea></label>
+    <label><b>Характеристики списком <span class="req">★</span></b>
+      <div class="hint">Каждая с новой строки: синтез/схема, входы-выходы, управление (MIDI/CV/сенсоры), питание, корпус.</div>
+      <textarea name="d${n}_spec" required maxlength="1200"></textarea></label>
+    <label><b>Три тега <span class="req">★</span></b>
+      <div class="hint">Через запятую: DSP, eurorack, hand made, noise…</div>
+      <input type="text" name="d${n}_tags" required maxlength="120"></label>
+    <label><b>История создания <span class="req">★</span></b>
+      <div class="hint">2–4 предложения: с чего началось, какую задачу или желание решали, что пошло не по плану. Истории запоминаются лучше характеристик.</div>
+      <textarea name="d${n}_story" required maxlength="1200"></textarea></label>
+    <label><b>Что посетитель сможет сделать у стенда за две минуты? <span class="req">★</span></b>
+      <div class="hint">У нас всё можно трогать. Короткий сценарий: какую ручку крутить, что услышит, что произойдёт.</div>
+      <textarea name="d${n}_try" required maxlength="700"></textarea></label>
+    <div class="row2">
+      <label><b>Статус прибора</b>
+        <select name="d${n}_status">
+          <option value="">— выбрать —</option>
+          <option>серийный</option><option>малая серия</option>
+          <option>прототип</option><option>единственный экземпляр</option>
+        </select></label>
+      <label><b>Цена и где купить</b>
+        <div class="hint">Если продаётся.</div>
+        <input type="text" name="d${n}_price" maxlength="200"></label>
+    </div>
+    <label><b>Чего прибору не хватает до следующей ревизии?</b>
+      <div class="hint">Честный ответ. У нас есть номинация «Следующая ревизия» и годовой конкурс ревизий — этот ответ туда и ведёт.</div>
+      <textarea name="d${n}_next" maxlength="700"></textarea></label>
+    <label><b>Фотографии прибора <span class="req">★</span></b>
+      <div class="hint">3–5 кадров, длинная сторона от 1600 px, до ${MAX_MB} МБ каждый: прибор целиком на ровном фоне · деталь крупно · прибор в работе. Лучшее фото снимается у окна на листе ватмана.</div>
+      <div class="files" tabindex="0"><span>нажмите или перетащите файлы сюда</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
+      <div class="thumbs"></div></label>
+    <label><b>Демо звука или видео</b>
+      <div class="hint">Ссылка: YouTube, Bandcamp, диск. 30–60 секунд чистого звука прибора ценнее клипа.</div>
+      <input type="url" name="d${n}_demo" maxlength="300"></label>`;
+  d.querySelectorAll('.files').forEach(bindFiles);
+  const rm = d.querySelector('.rmdev');
+  if(rm) rm.addEventListener('click', ()=> d.remove());
+  return d;
+}
+
+function bindFiles(box){
+  const input = box.querySelector('input[type=file]');
+  const thumbs = box.parentElement.querySelector('.thumbs');
+  box.dataset.files = '[]';
+  const store = [];
+  box.addEventListener('click', ()=> input.click());
+  box.addEventListener('dragover', e=>{ e.preventDefault(); box.classList.add('drag'); });
+  box.addEventListener('dragleave', ()=> box.classList.remove('drag'));
+  box.addEventListener('drop', e=>{ e.preventDefault(); box.classList.remove('drag'); add(e.dataTransfer.files); });
+  input.addEventListener('change', ()=> { add(input.files); input.value=''; });
+  function add(list){
+    for(const f of list){
+      if(store.length >= MAX_FILES){ alert('Не больше '+MAX_FILES+' файлов на прибор'); break; }
+      if(!/^image\/(jpeg|png|webp)$/.test(f.type)){ alert(f.name+': только JPG, PNG или WebP'); continue; }
+      if(f.size > MAX_MB*1024*1024){ alert(f.name+': больше '+MAX_MB+' МБ'); continue; }
+      store.push(f);
+      const th = document.createElement('div'); th.className='th';
+      const img = document.createElement('img'); img.src = URL.createObjectURL(f);
+      const rm = document.createElement('button'); rm.type='button'; rm.className='rm'; rm.textContent='×';
+      rm.addEventListener('click', ()=>{ store.splice(store.indexOf(f),1); th.remove(); });
+      th.append(img, rm); thumbs.append(th);
+    }
+    box._store = store;
+  }
+  box._store = store;
+}
+
+document.getElementById('devices').append(deviceBlock());
+document.getElementById('addDev').addEventListener('click', ()=>{
+  document.getElementById('devices').append(deviceBlock());
+});
+
+document.getElementById('f').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = e.target, err = document.getElementById('err'), btn = document.getElementById('send');
+  err.style.display='none';
+  if(!f.checkValidity()){ f.reportValidity(); return; }
+  // фото обязательны в каждом блоке прибора
+  for(const dev of document.querySelectorAll('.device')){
+    const st = dev.querySelector('.files')._store || [];
+    if(st.length < 1){
+      err.textContent = 'Добавьте хотя бы одно фото для прибора '+dev.dataset.n;
+      err.style.display='block'; dev.scrollIntoView({behavior:'smooth'}); return;
+    }
+  }
+  const fd = new FormData(f);
+  document.querySelectorAll('.device').forEach(dev=>{
+    (dev.querySelector('.files')._store||[]).forEach((file,i)=>
+      fd.append('d'+dev.dataset.n+'_photo_'+(i+1), file, file.name));
+  });
+  btn.disabled = true; btn.textContent = 'Отправляем…';
+  try{
+    const r = await fetch('d26_submit.php', { method:'POST', body: fd });
+    const j = await r.json().catch(()=>({}));
+    if(r.ok && j.ok){
+      f.style.display='none';
+      document.getElementById('ok').style.display='block';
+      window.scrollTo({top:0, behavior:'smooth'});
+    } else throw new Error(j.error || ('код '+r.status));
+  }catch(ex){
+    err.textContent = 'Не удалось отправить: '+ex.message+'. Попробуйте ещё раз или напишите на contact@diskret.space';
+    err.style.display='block';
+    btn.disabled=false; btn.textContent='Отправить формуляр';
+  }
+});
+</script>
+</body>
+</html>
