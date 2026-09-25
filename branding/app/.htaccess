@@ -6,11 +6,8 @@ RewriteCond %{SERVER_PORT} !^443$
 RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L]
 # Конец редиректа
 
-# Форма Д-26: красивый адрес и лимиты загрузки
+# Форма Д-26: красивый адрес (лимиты загрузки — в .user.ini)
 RewriteRule ^d26/?$ d26.html [L]
-php_value upload_max_filesize 16M
-php_value post_max_size 100M
-php_value max_file_uploads 45
 
 # ДИСКРЕТ · SPA-роутинг: несуществующие пути отдаём приложению,
 # чтобы работали ссылки вида дискрет.рф/ЮНОСТЬ-4 (QR у стендов).
