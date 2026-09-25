@@ -480,6 +480,36 @@ const STREET = {
     ctx.fillStyle = C.ash;                         // мачта
     ctx.fillRect(x - 4, gy - 19, 1, 7);
   },
+  // молочная кухня: витрина с бутылочками, первый образец бесплатно
+  milk_kitchen(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 8, gy - 17, 16, 17);
+    ctx.fillStyle = C.bone;                        // белая вывеска
+    ctx.fillRect(x - 8, gy - 17, 16, 2);
+    ctx.fillStyle = C.black;                       // витрина
+    ctx.fillRect(x - 6, gy - 13, 12, 8);
+    ctx.fillStyle = C.bone;                        // бутылочки в ряд
+    ctx.fillRect(x - 4, gy - 10, 2, 4);
+    ctx.fillRect(x - 1, gy - 10, 2, 4);
+    ctx.fillRect(x + 2, gy - 10, 2, 4);
+    ctx.fillStyle = C.gold;                        // ярлычок «бесплатно» на первой
+    ctx.fillRect(x - 4, gy - 11, 2, 1);
+  },
+  // аптечный киоск: крест, окошко отпуска
+  pharmacy(ctx, x, gy, t) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 7, gy - 16, 14, 16);
+    const on = Math.sin(t * 0.04) > -0.6;          // крест мигает устало
+    ctx.fillStyle = on ? C.ash : C.stone;
+    ctx.fillRect(x - 1, gy - 22, 2, 6);
+    ctx.fillRect(x - 3, gy - 20, 6, 2);
+    ctx.fillStyle = C.black;                       // окошко
+    ctx.fillRect(x - 4, gy - 12, 8, 5);
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(x - 4, gy - 7, 8, 1);             // прилавок
+    ctx.fillStyle = C.paper;                       // листок побочных действий
+    ctx.fillRect(x + 4, gy - 5, 3, 4);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
