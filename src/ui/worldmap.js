@@ -14,6 +14,7 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { STREET_SHIFT, STREET_X0, STREET_END_W } from '../world/street.js';
 import { getPlayerPos, getPlayer } from '../core/playerRef.js';
 import { events } from '../core/events.js';
+import { locations } from '../world/locations.js';
 
 // ── Gate discovery state (persistable) ──
 const discovered = new Set(['gate_townlet']);
@@ -37,6 +38,15 @@ let visible = false;
 let canvas = null;
 let ctx = null;
 let rafId = 0;
+
+// ── Второй лист карты: план местности (пустошь с локациями) ──
+let view = 'world';                       // 'world' | 'local'
+let getVisitedFn = () => new Set();       // main передаёт flags.visited
+const TAB_BOX = { x: W - 150, y: 4, w: 138, h: 18 };
+const LOCAL_BOX = { x: 20, y: 44, w: W - 40, h: H - 150 };
+const LOCAL_XMAX = 3200, LOCAL_Y0 = 60, LOCAL_Y1 = 1800;
+function lx(wx) { return LOCAL_BOX.x + Math.max(0, Math.min(1, wx / LOCAL_XMAX)) * LOCAL_BOX.w; }
+function ly(wy) { return LOCAL_BOX.y + Math.max(0, Math.min(1, (wy - LOCAL_Y0) / (LOCAL_Y1 - LOCAL_Y0))) * LOCAL_BOX.h; }
 
 // Map abstract layout (1400×1560) into a top block of the canvas.
 const MAP_BOX = { x: 12, y: 30, w: W - 24, h: 540 };
@@ -67,10 +77,24 @@ function draw() {
 
   ctx.font = '8px "Press Start 2P","VT323",monospace';
   ctx.fillStyle = '#daa520';
-  ctx.fillText('КАРТА МИРА', 16, 18);
+  ctx.fillText(view === 'world' ? 'КАРТА МИРА' : 'ПЛАН МЕСТНОСТИ', 16, 18);
+  // Переключатель листов (клик / Tab)
+  ctx.fillStyle = 'rgba(184,134,11,0.14)';
+  ctx.fillRect(TAB_BOX.x, TAB_BOX.y, TAB_BOX.w, TAB_BOX.h);
+  ctx.strokeStyle = 'rgba(184,134,11,0.55)';
+  ctx.strokeRect(TAB_BOX.x + 0.5, TAB_BOX.y + 0.5, TAB_BOX.w, TAB_BOX.h);
+  ctx.font = '7px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = '#daa520';
+  ctx.fillText(view === 'world' ? '→ МЕСТНОСТЬ' : '→ МИР', TAB_BOX.x + 10, TAB_BOX.y + 13);
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.fillStyle = '#8a8d8f';
-  ctx.fillText('[M / Esc / клик мимо] закрыть · клик на вратах → быстрый переход', W - 460, 16);
+  ctx.fillText('[M/Esc] закрыть · [Tab] лист', 16, 28);
+
+  if (view === 'local') {
+    drawLocal();
+    rafId = requestAnimationFrame(draw);
+    return;
+  }
   // Sub-banner: most-recently-discovered gate
   const fresh = [...recently.entries()].sort((a, b) => b[1] - a[1])[0];
   if (fresh && (Date.now() - fresh[1] < 10000)) {
@@ -79,7 +103,7 @@ function draw() {
       const alpha = Math.min(1, 1 - (Date.now() - fresh[1]) / 10000);
       ctx.fillStyle = `rgba(218,165,32,${alpha})`;
       ctx.font = '7px "Press Start 2P","VT323",monospace';
-      ctx.fillText('→ открылись: ' + g.label.toUpperCase(), 16, 28);
+      ctx.fillText('→ открылись: ' + g.label.toUpperCase(), 16, 40);
     }
   }
 
@@ -93,6 +117,91 @@ function draw() {
   drawLegend();
 
   rafId = requestAnimationFrame(draw);
+}
+
+// ── План местности: пустошь, локации, туман непосещённого ──
+function drawLocal() {
+  const visited = getVisitedFn() || new Set();
+  // Поле
+  ctx.fillStyle = '#141009';
+  ctx.fillRect(LOCAL_BOX.x, LOCAL_BOX.y, LOCAL_BOX.w, LOCAL_BOX.h);
+  ctx.strokeStyle = '#332e22';
+  ctx.strokeRect(LOCAL_BOX.x + 0.5, LOCAL_BOX.y + 0.5, LOCAL_BOX.w, LOCAL_BOX.h);
+  // Зерно бумаги — редкие точки по детерминированной сетке
+  ctx.fillStyle = 'rgba(138,141,143,0.07)';
+  for (let gy = 0; gy < 24; gy++)
+    for (let gx = 0; gx < 30; gx++) {
+      const jx = Math.sin(gx * 127.1 + gy * 311.7) * 43758.5453 % 1;
+      if (Math.abs(jx) < 0.22)
+        ctx.fillRect(LOCAL_BOX.x + 8 + gx * (LOCAL_BOX.w - 16) / 30,
+                     LOCAL_BOX.y + 8 + gy * (LOCAL_BOX.h - 16) / 24, 1, 1);
+    }
+  // Выход на улицу — арка у восточного края
+  const gx0 = LOCAL_BOX.x + LOCAL_BOX.w - 8, gy0 = ly(760);
+  ctx.fillStyle = '#b8860b';
+  ctx.fillRect(gx0 - 3, gy0 - 6, 1, 6);
+  ctx.fillRect(gx0 + 2, gy0 - 6, 1, 6);
+  ctx.fillRect(gx0 - 3, gy0 - 7, 6, 1);
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = 'rgba(218,165,32,0.8)';
+  ctx.fillText('улица →', gx0 - 48, gy0 + 12);
+
+  // Локации: посещённые — именованные метки, прочие — слабые точки тумана
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  let shown = 0, total = 0;
+  for (const loc of locations) {
+    if (loc.x >= LOCAL_XMAX) continue;             // уличные знаки — на листе мира
+    total++;
+    const sx = lx(loc.x + (loc.w || 0) / 2), sy = ly(loc.y + (loc.h || 0) / 2);
+    if (visited.has(loc.id)) {
+      shown++;
+      ctx.fillStyle = '#daa520';
+      ctx.fillRect(sx - 1, sy - 1, 3, 3);
+      ctx.strokeStyle = '#0c0b09';
+      ctx.strokeRect(sx - 1.5, sy - 1.5, 4, 4);
+      ctx.fillStyle = 'rgba(232,220,200,0.75)';
+      const name = (loc.name || loc.id).slice(0, 20);
+      // подпись не должна вылезти за поле
+      const tw = ctx.measureText(name).width;
+      ctx.fillText(name, Math.min(sx + 5, LOCAL_BOX.x + LOCAL_BOX.w - tw - 4), sy + 3);
+    } else {
+      ctx.fillStyle = 'rgba(232,220,200,0.13)';
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+  }
+  // Игрок
+  const p = getPlayerPos();
+  if (p) {
+    const blink = ((Date.now() / 300) | 0) % 2 === 0;
+    if (blink) {
+      ctx.fillStyle = '#ff7020';
+      if (p.x < LOCAL_XMAX) {
+        ctx.fillRect(lx(p.x) - 1, ly(p.y) - 2, 3, 4);
+      } else {
+        // На улице: маркер у арки
+        ctx.fillRect(gx0 - 1, gy0 - 3, 3, 4);
+        ctx.fillStyle = 'rgba(255,112,32,0.8)';
+        ctx.fillText('ты — на улице', gx0 - 88, gy0 - 12);
+      }
+    }
+  }
+  // Сводка внизу
+  const lyy = H - 56;
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = '#8a8d8f';
+  ctx.fillText(`осмотрено мест: ${shown} из ${total}`, 16, lyy);
+  ctx.fillStyle = '#daa520';
+  ctx.fillRect(16, lyy + 10, 3, 3);
+  ctx.fillStyle = '#a8a89a';
+  ctx.fillText('посещено', 24, lyy + 15);
+  ctx.fillStyle = 'rgba(232,220,200,0.25)';
+  ctx.fillRect(96, lyy + 11, 2, 2);
+  ctx.fillStyle = '#a8a89a';
+  ctx.fillText('непосещённое (место есть — имени нет)', 104, lyy + 15);
+  ctx.fillStyle = '#ff7020';
+  ctx.fillRect(16, lyy + 24, 3, 4);
+  ctx.fillStyle = '#a8a89a';
+  ctx.fillText('ты', 24, lyy + 30);
 }
 
 // ── Continents (polygons) ──
@@ -432,7 +541,8 @@ export function toggle() {
 
 export function isOpen() { return visible; }
 
-export function init() {
+export function init(opts) {
+  if (opts && typeof opts.getVisited === 'function') getVisitedFn = opts.getVisited;
   canvas = document.getElementById('map-canvas');
   if (canvas) {
     canvas.width = W;
@@ -444,11 +554,17 @@ export function init() {
   if (el) el.addEventListener('click', (e) => {
     if (!visible || !canvas) return;
     // Translate the screen click into canvas pixel coords (canvas is
-    // CSS-scaled). If it landed on a discovered gate, fast-travel; else close.
+    // CSS-scaled). Tab box switches the sheet; a discovered gate
+    // fast-travels; anything else closes.
     const rect = canvas.getBoundingClientRect();
     const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
     const cy = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    const g = gateAt(cx, cy);
+    if (cx >= TAB_BOX.x - 4 && cx <= TAB_BOX.x + TAB_BOX.w + 4 &&
+        cy >= TAB_BOX.y - 4 && cy <= TAB_BOX.y + TAB_BOX.h + 6) {
+      view = view === 'world' ? 'local' : 'world';
+      return;
+    }
+    const g = view === 'world' ? gateAt(cx, cy) : null;
     if (g) {
       events.emit('gate.use', g);
       close();
@@ -458,6 +574,11 @@ export function init() {
   });
   document.addEventListener('keydown', (e) => {
     if (visible) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        view = view === 'world' ? 'local' : 'world';
+        return;
+      }
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' ||
           e.key === 'm' || e.key === 'M' || e.key === 'ь' || e.key === 'Ь') {
         e.preventDefault();

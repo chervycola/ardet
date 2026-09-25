@@ -68,7 +68,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
-initWorldMap();
+initWorldMap({ getVisited: () => flags.visited });
 initCursor();
 initAudio();
 
