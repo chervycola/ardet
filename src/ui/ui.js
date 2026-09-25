@@ -25,7 +25,7 @@ const menuEl = document.getElementById('menu');
 const menuInsc = document.getElementById('menu-inscription');
 let activeLoc = null;
 
-const menuInscriptions = {
+export const menuInscriptions = {
   campfire: 'огонь не спрашивает.',
   jester_home: 'смеётся. потому что альтернатива — пасть духом.',
   terminal: 'session expired. reconnect?',

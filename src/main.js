@@ -40,6 +40,7 @@ import {
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
+import { initEditor } from './ui/editor.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
@@ -71,6 +72,7 @@ initShop();
 initWorldMap({ getVisited: () => flags.visited });
 initCursor();
 initAudio();
+initEditor();
 
 // Painted assets (portraits + entry/ending scenes) — fire-and-forget
 // preload; UI code asks for them when it needs them and falls back to

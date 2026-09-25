@@ -483,3 +483,47 @@ canvas#game {
   #look { width: 95vw; }
   #entry-logo { font-size: 28px; }
 }
+
+/* ── Канцелярия · правка (текст-редактор) ── */
+#txed { position: fixed; inset: 0; z-index: 400; display: none; background: rgba(5,4,8,0.8); }
+#txed.on { display: flex; align-items: center; justify-content: center; }
+#txed-box { width: min(96vw, 980px); height: min(94vh, 700px); display: flex; flex-direction: column;
+  background: #efe4cb; color: #3a3026; box-shadow: 0 12px 50px rgba(0,0,0,.7); font-family: 'VT323', monospace; }
+#txed-head { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-bottom: 2px solid #6b0f1a; }
+#txed-head b { font-family: var(--font-pixel); font-size: 9px; letter-spacing: 2px; color: #6b0f1a; }
+#txed-count { font-size: 15px; opacity: .6; flex: 1; }
+#txed-head button { font-family: var(--font-pixel); font-size: 8px; background: none;
+  border: 1px solid rgba(58,48,38,.4); padding: 6px 10px; cursor: pointer; color: #3a3026; min-height: 34px; }
+#txed-cats { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; }
+#txed-cats button { font-size: 15px; font-family: 'VT323',monospace; background: none;
+  border: 1px solid rgba(58,48,38,.25); padding: 2px 8px; cursor: pointer; color: #3a3026; }
+#txed-cats button.on { background: #6b0f1a; color: #efe4cb; }
+#txed-search { margin: 0 10px 6px; padding: 6px 8px; font: 16px 'VT323',monospace;
+  background: rgba(255,255,255,.5); border: 1px solid rgba(58,48,38,.3); color: #3a3026; }
+#txed-body { flex: 1; display: flex; min-height: 0; }
+#txed-list { width: 44%; overflow-y: auto; border-right: 1px solid rgba(58,48,38,.25); }
+.txed-row { padding: 5px 10px; font-size: 15px; line-height: 1.25; cursor: pointer;
+  border-bottom: 1px solid rgba(58,48,38,.12); }
+.txed-row i { font-style: normal; font-size: 12px; color: #a07818; margin-right: 6px; }
+.txed-row.edited { border-left: 3px solid #b8860b; }
+.txed-row.cur { background: rgba(107,15,26,.12); }
+.txed-row:hover { background: rgba(107,15,26,.08); }
+#txed-edit { flex: 1; display: none; flex-direction: column; padding: 8px 10px; min-width: 0; }
+#txed-edit.on { display: flex; }
+#txed-label { font-size: 14px; color: #a07818; margin-bottom: 6px; }
+#txed-ta { flex: 1; resize: none; font: 17px/1.45 'VT323', monospace;
+  background: rgba(255,255,255,.55); color: #2a241c; border: 1px solid rgba(58,48,38,.35); padding: 10px; }
+#txed-btns { display: flex; gap: 8px; margin-top: 8px; }
+#txed-btns button { font-family: var(--font-pixel); font-size: 8px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid rgba(58,48,38,.4); background: none; color: #3a3026; min-height: 40px; }
+#txed-save { background: #6b0f1a; color: #efe4cb; border-color: #6b0f1a; }
+#txed-fab { position: fixed; left: 12px; top: 12px; z-index: 32; width: 38px; height: 38px;
+  background: rgba(238,227,203,0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  border: none; cursor: pointer; font-size: 18px; color: #3a3026; box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+@media (max-width: 768px), (pointer: coarse) {
+  #txed-box { width: 100vw; height: 100dvh; }
+  #txed-body { flex-direction: column; }
+  #txed-list { width: 100%; height: 38%; border-right: none; border-bottom: 1px solid rgba(58,48,38,.25); }
+  .txed-row, #txed-cats button { font-size: 17px; padding-top: 8px; padding-bottom: 8px; }
+  #txed-ta { font-size: 18px; }
+}

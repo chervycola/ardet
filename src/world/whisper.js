@@ -4,7 +4,7 @@
 import { t } from '../core/time.js';
 import { scaler } from '../render/scaler.js';
 
-const WHISPERS = {
+export const WHISPERS = {
   church: '...lasciate ogni speranza...',
   crypt: '...девять ярусов вниз...',
   lake: '...how dared... how dare...',
