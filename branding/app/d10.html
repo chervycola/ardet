@@ -50,6 +50,15 @@
     background:var(--bg); color:var(--ink); font-size:12px; line-height:1; cursor:pointer; font-family:var(--mono);}
   .thumbs .rm:hover{background:var(--red); color:#fff; border-color:var(--red);}
   .note{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:6px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
+  .chips label{margin:0; display:inline-flex; position:relative;}
+  .chips input[type=checkbox],.chips input[type=radio]{position:absolute; opacity:0; width:0; height:0;}
+  .chips span{border:2px solid var(--ink); padding:7px 12px; font-family:var(--mono); font-size:13px;
+    letter-spacing:.5px; cursor:pointer; user-select:none; white-space:nowrap;}
+  .chips input:checked+span{background:var(--red); border-color:var(--red); color:#fff;}
+  .chips input:focus-visible+span{outline:2px dashed var(--red); outline-offset:2px;}
+  .chips .oth{border:2px solid var(--ink); font-family:var(--mono); font-size:13px; padding:7px 10px; width:150px;}
+  .chips .oth:focus{border-color:var(--red); outline:none;}
   .send{display:block; width:100%; background:var(--red); color:#fff; border:none; padding:18px;
     font-family:var(--grotesk); font-weight:800; font-size:20px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:34px;}
   .send:disabled{opacity:.5; cursor:wait;}
@@ -154,6 +163,13 @@
 const MAX_FILES = 6, MAX_MB = 15;
 let devN = 0;
 
+function chips(name, opts, multi, otherPh){
+  const t = multi ? 'checkbox' : 'radio';
+  return `<div class="chips" data-group="${name}">` +
+    opts.map(o=>`<label><input type="${t}" name="${name}${multi?'[]':''}" value="${o}"><span>${o}</span></label>`).join('') +
+    (otherPh ? `<input class="oth" type="text" name="${name}_other" placeholder="${otherPh}" maxlength="60">` : '') +
+    `</div>`;
+}
 function deviceBlock(){
   devN++;
   const n = devN;
@@ -167,6 +183,17 @@ function deviceBlock(){
     <label><b>Что это — одной строкой <span class="req">★</span></b>
       <div class="hint">Подзаголовок карточки, до 60 знаков: «программируемая DSP-платформа», «дрон-синтезатор на трёх осцилляторах».</div>
       <input type="text" name="d${n}_sub" required maxlength="60"></label>
+    <label><b>Формат устройства <span class="req">★</span></b>
+      <div class="hint">Отметьте всё, что подходит.</div>
+      ${chips('d'+n+'_format', ['standalone','eurorack 3U','buchla-type 4U','serge / 4U','педаль','рэк 19"','настольный модуль','DIY-набор'], true, 'другое…')}</label>
+    <label><b>Тип устройства <span class="req">★</span></b>
+      ${chips('d'+n+'_type', ['синтезатор','процессор эффектов','секвенсор','драм-машина','семплер','микрофон','преамп / DI','контроллер','шумовая коробочка','инсталляция'], true, 'другое…')}</label>
+    <label><b>Звукоизвлечение <span class="req">★</span></b>
+      ${chips('d'+n+'_engine', ['аналог','цифра','гибрид','электроакустика / механика'], true, '')}</label>
+    <label><b>Управление</b>
+      ${chips('d'+n+'_ctrl', ['ручки и тумблеры','MIDI','CV / Gate','сенсоры: свет · касание · движение','компьютер / приложение'], true, 'другое…')}</label>
+    <label><b>Питание</b>
+      ${chips('d'+n+'_pwr', ['батарейки','USB','внешний блок питания','eurorack-шина','220 В'], false, '')}</label>
     <label><b>Объясните прибор одним предложением человеку без единого термина <span class="req">★</span></b>
       <div class="hint">Представьте, что рассказываете соседу по лестничной клетке. Это предложение часто становится первой строкой карточки — и лучшей.</div>
       <textarea name="d${n}_plain" required maxlength="300"></textarea></label>
@@ -177,7 +204,7 @@ function deviceBlock(){
       <div class="hint">Что в нём есть такого, чего нет у аналогов — или что вы сделали иначе и почему.</div>
       <textarea name="d${n}_unique" required maxlength="700"></textarea></label>
     <label><b>Характеристики списком <span class="req">★</span></b>
-      <div class="hint">Каждая с новой строки: синтез/схема, входы-выходы, управление (MIDI/CV/сенсоры), питание, корпус.</div>
+      <div class="hint">Каждая с новой строки — то, что не вошло в отметки выше: входы-выходы, диапазоны, корпус и материалы, особенности схемы.</div>
       <textarea name="d${n}_spec" required maxlength="1200"></textarea></label>
     <label><b>Три тега <span class="req">★</span></b>
       <div class="hint">Через запятую: DSP, eurorack, hand made, noise…</div>
@@ -253,6 +280,18 @@ document.getElementById('f').addEventListener('submit', async e=>{
   const f = e.target, err = document.getElementById('err'), btn = document.getElementById('send');
   err.style.display='none';
   if(!f.checkValidity()){ f.reportValidity(); return; }
+  // чипы: формат, тип и звукоизвлечение обязательны
+  for(const dev of document.querySelectorAll('.device')){
+    for(const g of ['format','type','engine']){
+      const grp = dev.querySelector(`.chips[data-group="d${dev.dataset.n}_${g}"]`);
+      const any = grp && (grp.querySelector('input:checked') || (grp.querySelector('.oth') && grp.querySelector('.oth').value.trim()));
+      if(!any){
+        err.textContent = 'Прибор '+dev.dataset.n+': отметьте хотя бы один вариант в поле «'+
+          (g==='format'?'Формат устройства':g==='type'?'Тип устройства':'Звукоизвлечение')+'»';
+        err.style.display='block'; grp.scrollIntoView({behavior:'smooth', block:'center'}); return;
+      }
+    }
+  }
   // фото обязательны в каждом блоке прибора
   for(const dev of document.querySelectorAll('.device')){
     const st = dev.querySelector('.files')._store || [];
