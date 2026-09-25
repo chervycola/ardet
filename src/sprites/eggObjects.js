@@ -232,6 +232,195 @@ const STREET = {
     ctx.fillStyle = C.wood;
     ctx.fillRect(x - 2, gy - 4, 4, 4);             // порожек
   },
+  // ── вторая волна ──
+  // игорный дом «У БОГА»: дом с вывеской-костью
+  gambling_house(ctx, x, gy, t) {
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 9, gy - 24, 18, 24);
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 8, gy - 23, 16, 22);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 2, gy - 12, 5, 12);           // дверь
+    ctx.fillStyle = C.bone;                        // кость-вывеска
+    ctx.fillRect(x - 4, gy - 30, 8, 7);
+    ctx.fillStyle = C.black;                       // точки: всегда одна
+    ctx.fillRect(x - 1, gy - 27, 1, 1);
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 1, gy - 23, 2, 2);            // подвес
+  },
+  // табачная контора: латунная вывеска, научный отдел не дымит
+  tobacco_office(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 8, gy - 22, 16, 22);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 6, gy - 17, 4, 5);            // окно
+    ctx.fillRect(x + 2, gy - 17, 4, 5);
+    ctx.fillRect(x - 2, gy - 9, 4, 9);             // дверь
+    ctx.fillStyle = C.gold;                        // латунь
+    ctx.fillRect(x - 6, gy - 21, 12, 2);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 5, gy - 21, 1, 1);            // гравировка
+    ctx.fillRect(x - 2, gy - 21, 1, 1);
+    ctx.fillRect(x + 1, gy - 21, 1, 1);
+  },
+  // бюро исправления имён: будка, зачёркнутые таблички, очередь-столбики
+  names_bureau(ctx, x, gy) {
+    ctx.fillStyle = C.plank;
+    ctx.fillRect(x - 6, gy - 15, 12, 15);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 3, gy - 11, 6, 4);            // окошко
+    ctx.fillStyle = C.paper;                       // таблички имён
+    ctx.fillRect(x - 6, gy - 19, 5, 3);
+    ctx.fillRect(x + 1, gy - 19, 5, 3);
+    ctx.fillStyle = C.crimson;                     // зачёркнуто
+    ctx.fillRect(x - 6, gy - 18, 5, 1);
+    ctx.fillStyle = C.ash;                         // очередь: столбики с верёвкой
+    ctx.fillRect(x - 12, gy - 6, 1, 6);
+    ctx.fillRect(x - 17, gy - 6, 1, 6);
+    ctx.fillRect(x - 17, gy - 6, 6, 1);
+  },
+  // клиника д-ра Детуша: тёмная дверь, латунная табличка, часы не указаны
+  detush_clinic(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 7, gy - 22, 14, 22);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 3, gy - 15, 6, 15);           // дверь
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(x - 6, gy - 19, 5, 3);            // табличка
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 5, gy - 18, 3, 1);
+    ctx.fillStyle = C.ash;                         // молоточек
+    ctx.fillRect(x + 1, gy - 10, 1, 2);
+  },
+  // сбитый указатель «ВЫХОД ИЗ ПОЛОЖЕНИЯ»: лежит остриём в землю
+  fallen_sign(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 8, gy - 3, 3, 3);             // пень столба
+    ctx.fillStyle = C.wood2;                       // сбитый щит, наклонён
+    ctx.fillRect(x - 3, gy - 6, 10, 4);
+    ctx.fillStyle = C.paper2;
+    ctx.fillRect(x - 2, gy - 5, 8, 2);
+    ctx.fillStyle = C.dark;                        // остриё в земле
+    ctx.fillRect(x + 6, gy - 3, 2, 3);
+  },
+  // «УКРЫТИЕ»: стрелка вниз, краска свежее стены
+  shelter_arrow(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 7, gy - 18, 14, 18);          // стена
+    ctx.fillStyle = C.concrete;                    // свежее пятно
+    ctx.fillRect(x - 4, gy - 15, 8, 11);
+    ctx.fillStyle = C.bone;                        // стрелка вниз
+    ctx.fillRect(x - 1, gy - 13, 2, 5);
+    ctx.fillRect(x - 3, gy - 9, 6, 1);
+    ctx.fillRect(x - 2, gy - 8, 4, 1);
+    ctx.fillRect(x - 1, gy - 7, 2, 1);
+  },
+  // рунный камень: валун со штрихами рун
+  rune_stone(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 5, gy - 14, 10, 14);
+    ctx.fillRect(x - 3, gy - 16, 6, 2);
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 5, gy - 4, 10, 4);
+    ctx.fillStyle = C.ash;                         // руны: вертикали и косые
+    ctx.fillRect(x - 3, gy - 13, 1, 6);
+    ctx.fillRect(x - 1, gy - 12, 1, 5);
+    ctx.fillRect(x + 1, gy - 13, 1, 6);
+    ctx.fillRect(x + 3, gy - 11, 1, 4);
+    ctx.fillRect(x - 2, gy - 10, 2, 1);
+  },
+  // столпный столб: колонна с пустой площадкой
+  pillar_saint(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 2, gy - 24, 4, 24);
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 3, gy - 12, 6, 1);            // пояс кладки
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 5, gy - 26, 10, 2);           // площадка
+    ctx.fillStyle = C.ash;                         // перильце
+    ctx.fillRect(x - 5, gy - 29, 1, 3);
+    ctx.fillRect(x + 4, gy - 29, 1, 3);
+    // наверху пусто — в этом и дело
+  },
+  // мастерская кинцуги: витрина, чаша с золотым швом
+  kintsugi(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 8, gy - 18, 16, 18);
+    ctx.fillStyle = C.black;                       // витрина
+    ctx.fillRect(x - 5, gy - 14, 10, 8);
+    ctx.fillStyle = C.stone2;                      // чаша
+    ctx.fillRect(x - 3, gy - 10, 6, 3);
+    ctx.fillRect(x - 2, gy - 7, 4, 1);
+    ctx.fillStyle = C.gold2;                       // золотой шов — единственный
+    ctx.fillRect(x - 1, gy - 10, 1, 3);
+    ctx.fillRect(x, gy - 8, 1, 1);
+  },
+  // котельная «КАМЧАТКА»: кирпич, труба, красное окошко
+  kamchatka(ctx, x, gy, t) {
+    ctx.fillStyle = C.brick;
+    ctx.fillRect(x - 9, gy - 16, 18, 16);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 2, gy - 10, 5, 10);           // дверь
+    const warm = Math.sin(t * 0.03) > 0;
+    ctx.fillStyle = warm ? C.crimson : '#4a0d14';  // окно кочегарки
+    ctx.fillRect(x - 7, gy - 12, 3, 3);
+    ctx.fillStyle = C.brick;
+    ctx.fillRect(x + 4, gy - 24, 4, 8);            // труба
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x + 4, gy - 25, 4, 1);
+  },
+  // прачечная № 4: витрина с барабаном
+  laundry(ctx, x, gy, t) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 8, gy - 18, 16, 18);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 6, gy - 14, 12, 9);           // витрина
+    ctx.fillStyle = C.ash;                         // барабан
+    ctx.fillRect(x - 3, gy - 12, 6, 5);
+    ctx.fillStyle = C.black;
+    const ph = (t * 0.05 | 0) % 4;                 // бельё крутится
+    const dx = [0, 1, 0, -1][ph], dy = [-1, 0, 1, 0][ph];
+    ctx.fillRect(x + dx, gy - 10 + dy, 2, 2);
+  },
+  // бюро «УТОПИЯ»: офисная дверь, буквы вывески осыпались
+  utopia_bureau(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 8, gy - 20, 16, 20);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 3, gy - 13, 6, 13);           // стеклянная дверь
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x - 2, gy - 12, 1, 11);           // блик стекла
+    ctx.fillStyle = C.bone;                        // вывеска: у_о_ия
+    ctx.fillRect(x - 6, gy - 18, 2, 2);
+    ctx.fillRect(x - 1, gy - 18, 2, 2);
+    ctx.fillRect(x + 4, gy - 18, 2, 2);
+    ctx.fillStyle = C.black;                       // тени упавших букв
+    ctx.fillRect(x - 3, gy - 2, 2, 2);
+    ctx.fillRect(x + 2, gy - 2, 2, 2);
+  },
+  // знак «ЧЕРЕПАХА ВПЕРЕДИ»: дорожный ромб с силуэтом
+  turtle_sign(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 1, gy - 14, 2, 14);
+    ctx.fillStyle = C.gold;                        // ромб
+    ctx.fillRect(x - 5, gy - 21, 10, 8);
+    ctx.fillStyle = C.dark;                        // черепаха: панцирь и голова
+    ctx.fillRect(x - 3, gy - 18, 5, 2);
+    ctx.fillRect(x + 2, gy - 17, 1, 1);
+    ctx.fillRect(x - 2, gy - 16, 1, 1);
+    ctx.fillRect(x + 1, gy - 16, 1, 1);
+  },
+  // милевой камень: столбик с числом
+  mile_stone(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 3, gy - 10, 6, 10);
+    ctx.fillRect(x - 2, gy - 12, 4, 2);
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 3, gy - 3, 6, 3);
+    ctx.fillStyle = C.dark;                        // число
+    ctx.fillRect(x - 1, gy - 9, 1, 3);
+    ctx.fillRect(x + 1, gy - 9, 1, 3);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
