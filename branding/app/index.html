@@ -316,6 +316,7 @@
       <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
       <button class="mi" data-m="artists"><span data-t="m.artists">Артисты</span></button>
       <button class="mi" data-m="photos26"><span data-t="m.photos26">Фото 2026</span></button>
+      <button class="mi" id="d26Btn"><span data-t="m.d26">Анкета участника</span> <span class="mi-tag">Д-26</span></button>
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
@@ -877,7 +878,7 @@ function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); loca
 /* ===== ЯЗЫКИ / ПЕРЕВОД: ru · пацанский (90-е) · зумерский ===== */
 const L = {
   ru: {
-    "m.about":"О нас", "m.companies":"Компании", "m.photos26":"Фото 2026", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
+    "m.about":"О нас", "m.companies":"Компании", "m.photos26":"Фото 2026", "m.d26":"Анкета участника", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
     "m.scan":"Сканировать QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Артисты", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Оргкоманда", "org.ghost":"Здесь может быть ваша организация", "org.note":"Хотите стать партнёром форума — напишите нам:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
@@ -914,7 +915,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   bratva: {
-    "m.about":"За нас", "m.companies":"Конторы", "m.photos26":"Фотки 2026", "m.feedback":"Обратка", "m.lottery":"Движуха",
+    "m.about":"За нас", "m.companies":"Конторы", "m.photos26":"Фотки 2026", "m.d26":"Заяви свой девайс", "m.feedback":"Обратка", "m.lottery":"Движуха",
     "m.scan":"Пробить QR", "m.privacy":"Политика данных", "m.theme":"Масть", "m.lang":"Базар", "m.artists":"Кто играет", "m.orgs":"Кто держит тему", "org.inst":"Серьёзная поддержка", "org.partners":"Партнёры", "org.people":"Кто всё это держит", "org.ghost":"Тут может встать твоя контора", "org.note":"Есть желание вписаться партнёром — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"по билету", "tag.spot":"стойка", "theme.light":"Светлая", "theme.dark":"Тёмная",
@@ -951,7 +952,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   zoomer: {
-    "m.about":"О нас", "m.companies":"Бренды", "m.photos26":"Фото 2026", "m.feedback":"Фидбэк", "m.lottery":"Гив",
+    "m.about":"О нас", "m.companies":"Бренды", "m.photos26":"Фото 2026", "m.d26":"Анкета участника", "m.feedback":"Фидбэк", "m.lottery":"Гив",
     "m.scan":"Скан QR", "m.privacy":"Политика данных", "m.theme":"Тема", "m.lang":"Язык", "m.artists":"Лайвы", "m.orgs":"Орги и партнёры", "org.inst":"Институции", "org.partners":"Партнёры", "org.people":"Орг-тима", "org.ghost":"Тут могла быть твоя орга", "org.note":"Хочешь в коллаб — пиши:",
     "consent.pre":"Отправляя, ты соглашаешься с", "consent.link":"политикой обработки данных",
     "tag.ticket":"ticket", "tag.spot":"spot", "theme.light":"Лайт", "theme.dark":"Дарк",
@@ -988,7 +989,7 @@ const L = {
     "lot.okTitle":"Заявка принята", "lot.kTicket":"Билет", "lot.kEntry":"Заявка №", "lot.kDraw":"Итоги"
   },
   soviet: {
-    "m.about":"О нас", "m.companies":"Коллективы", "m.photos26":"Фотографии 2026", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
+    "m.about":"О нас", "m.companies":"Коллективы", "m.photos26":"Фотографии 2026", "m.d26":"Анкета участника экспо", "m.feedback":"Обратная связь", "m.lottery":"Конкурс",
     "m.scan":"Считать QR", "m.privacy":"Политика данных", "m.theme":"Оформление", "m.lang":"Язык", "m.artists":"Артисты программы", "m.orgs":"Организаторы и партнёры", "org.inst":"Институциональная поддержка", "org.partners":"Партнёры форума", "org.people":"Организационный комитет", "org.ghost":"Место для вашей организации", "org.note":"По вопросам партнёрства обращаться:",
     "consent.pre":"Отправляя, вы соглашаетесь с", "consent.link":"политикой обработки данных",
     "tag.ticket":"билет", "tag.spot":"стенд", "theme.light":"Светлое", "theme.dark":"Тёмное",
@@ -1055,6 +1056,7 @@ function closeMenu(){ menu.hidden = true; }
 $("#menuBtn").addEventListener("click", e=>{ e.stopPropagation(); menu.hidden=!menu.hidden; haptic("light"); });
 document.addEventListener("click", e=>{ if(!menu.hidden && !menu.contains(e.target) && e.target.closest("#menuBtn")===null) closeMenu(); });
 menu.querySelectorAll(".mi[data-m]").forEach(b=> b.addEventListener("click", ()=>{ closeMenu(); openModal(b.dataset.m); }));
+$("#d26Btn").addEventListener("click", ()=>{ closeMenu(); haptic("light"); if(tg && tg.openLink){ try{ tg.openLink(CONTACT.siteUrl+"/d26"); return; }catch(e){} } window.location.href="d26.html"; });
 $("#themeToggle").addEventListener("click", e=>{ e.stopPropagation(); toggleTheme(); haptic("light"); });
 menu.querySelectorAll(".lchip").forEach(b=> b.addEventListener("click", e=>{ e.stopPropagation(); setLang(b.dataset.lang); }));
 $("#scanBtn").addEventListener("click", e=>{ e.stopPropagation(); closeMenu(); scanQR(); });
