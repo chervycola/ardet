@@ -435,6 +435,51 @@ const STREET = {
     ctx.fillStyle = C.ash;                         // блик покрытия: чистое
     ctx.fillRect(x - 3, gy - 9, 3, 1);
   },
+  // провал в мерзлоте: яма, переносимое ограждение
+  sinkhole(ctx, x, gy) {
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 10, gy - 4, 20, 4);
+    ctx.fillRect(x - 8, gy - 6, 16, 2);
+    ctx.fillStyle = C.stone2;                      // обнажённые слои
+    ctx.fillRect(x - 10, gy - 5, 2, 1);
+    ctx.fillRect(x + 8, gy - 5, 2, 1);
+    ctx.fillStyle = C.wood2;                       // ограждение, уже близко к краю
+    ctx.fillRect(x - 14, gy - 8, 1, 8);
+    ctx.fillRect(x - 14, gy - 7, 6, 1);
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(x - 13, gy - 11, 4, 3);           // табличка на колу
+  },
+  // смотровая площадка озера-карьера: помост, перила, монетоприёмник
+  overlook(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 8, gy - 8, 16, 2);            // помост
+    ctx.fillRect(x - 7, gy - 6, 2, 6);
+    ctx.fillRect(x + 5, gy - 6, 2, 6);
+    ctx.fillStyle = C.ash;                         // перила
+    ctx.fillRect(x - 8, gy - 14, 1, 6);
+    ctx.fillRect(x + 7, gy - 14, 1, 6);
+    ctx.fillRect(x - 8, gy - 14, 16, 1);
+    ctx.fillStyle = C.dark;                        // монетоприёмник-бинокль
+    ctx.fillRect(x + 2, gy - 13, 3, 5);
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(x + 3, gy - 12, 1, 1);            // щель для монеты
+  },
+  // судно в песке: корпус, крен, до воды далеко
+  ship_sand(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;                      // песчаный нанос
+    ctx.fillRect(x - 12, gy - 3, 24, 3);
+    ctx.fillStyle = C.dark;                        // корпус с креном
+    ctx.fillRect(x - 9, gy - 10, 18, 7);
+    ctx.fillRect(x - 7, gy - 12, 14, 2);
+    ctx.fillStyle = C.crimson;                     // ватерлиния — выше песка
+    ctx.fillRect(x - 9, gy - 6, 18, 1);
+    ctx.fillStyle = C.wood2;                       // рубка
+    ctx.fillRect(x - 1, gy - 16, 6, 4);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x + 1, gy - 15, 2, 2);            // окно рубки
+    ctx.fillStyle = C.ash;                         // мачта
+    ctx.fillRect(x - 4, gy - 19, 1, 7);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
@@ -523,6 +568,16 @@ const LORE = {
     ctx.fillStyle = C.paper2;
     ctx.fillRect(x - 1, y - 2, 2, 1);
     ctx.fillRect(x - 1, y, 2, 1);
+  },
+  disc(ctx, x, y) {
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x - 3, y - 3, 7, 7);
+    ctx.fillStyle = C.bone;
+    ctx.fillRect(x - 2, y - 2, 5, 5);
+    ctx.fillStyle = C.dark;                        // цветущий слой
+    ctx.fillRect(x + 1, y - 2, 2, 2);
+    ctx.fillStyle = C.black;                       // отверстие
+    ctx.fillRect(x, y, 1, 1);
   },
   stone(ctx, x, y) {
     ctx.fillStyle = C.stone;
