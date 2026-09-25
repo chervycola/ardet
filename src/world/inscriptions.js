@@ -22,6 +22,12 @@ const hiddenInscriptions = {
   altar: ['мох помнит', 'мох всегда помнил', 'ты помнишь с ним', 'подпись оформлена', 'до твоего рождения', 'продолжай'],
 };
 
+// перенос пасхального фонда — строки добавляются к своим локациям
+import { EGG_INSCRIPTIONS } from '../content/eggs_transfer.js';
+for (const [loc, lines] of Object.entries(EGG_INSCRIPTIONS)) {
+  (hiddenInscriptions[loc] = hiddenInscriptions[loc] || []).push(...lines);
+}
+
 const wallProx = {};
 
 export function updateProximity(player, locations) {

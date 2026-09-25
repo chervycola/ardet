@@ -6127,3 +6127,7 @@ Pixel-adjacent but painterly. Muted brandbook palette:
 > заранее. огонь только исполняет
 > смету.` },
 };
+
+// перенос пасхального фонда — терминальные досье
+import { EGG_TERM } from './eggs_transfer.js';
+Object.assign(termDb, EGG_TERM);

@@ -173,3 +173,7 @@ export const GATES = [
 ];
 
 export function gateById(id) { return GATES.find(g => g.id === id) || null; }
+
+// перенос пасхального фонда — узлы карты
+import { EGG_NODES } from './eggs_transfer.js';
+NODES.push(...EGG_NODES);

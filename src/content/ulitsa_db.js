@@ -321,3 +321,12 @@ export function segmentAt(x) {
 
 // Total world width
 export const STREET_END = SEGMENTS[SEGMENTS.length - 1].range[1];
+
+// перенос пасхального фонда — таблички встают в свои сегменты
+import { EGG_SIGNS } from './eggs_transfer.js';
+for (const s of EGG_SIGNS) {
+  const seg = s.segment === 'townlet' ? TOWNLET : SEGMENTS.find(g => g.id === s.segment);
+  if (!seg) continue;
+  const { segment, ...sign } = s;
+  seg.signs.push(sign);
+}
