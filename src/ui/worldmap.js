@@ -63,6 +63,25 @@ function rgba(c, a) {
   return `rgba(${(v>>16)&255},${(v>>8)&255},${v&255},${a})`;
 }
 
+// ── Зум и панорама листа (щипок/драг на тач, колесо/драг на мыши) ──
+const ZMIN = 1, ZMAX = 3;
+let zscale = 1, zx = 0, zy = 0;      // translate(zx,zy) scale(zscale)
+let gestured = false;                // жест был — ближайший click не закрывает
+function clampPan() {
+  zx = Math.min(0, Math.max(W - W * zscale, zx));
+  zy = Math.min(0, Math.max(H - H * zscale, zy));
+}
+function zoomAt(cx, cy, factor) {
+  const ns = Math.min(ZMAX, Math.max(ZMIN, zscale * factor));
+  zx = cx - (cx - zx) * (ns / zscale);
+  zy = cy - (cy - zy) * (ns / zscale);
+  zscale = ns;
+  clampPan();
+}
+function resetZoom() { zscale = 1; zx = 0; zy = 0; }
+let pendingClose = 0;                // отложенное закрытие: ждём второй тап
+function cancelPendingClose() { if (pendingClose) { clearTimeout(pendingClose); pendingClose = 0; } }
+
 function draw() {
   if (!visible || !ctx) return;
 
@@ -88,10 +107,15 @@ function draw() {
   ctx.fillText(view === 'world' ? '→ МЕСТНОСТЬ' : '→ МИР', TAB_BOX.x + 10, TAB_BOX.y + 13);
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.fillStyle = '#8a8d8f';
-  ctx.fillText('[M/Esc] закрыть · [Tab] лист', 16, 28);
+  ctx.fillText('[M/Esc] закрыть · [Tab] лист · щипок/колесо — зум', 16, 28);
 
+  ctx.save();
+  ctx.translate(zx, zy);
+  ctx.scale(zscale, zscale);
   if (view === 'local') {
     drawLocal();
+    ctx.restore();
+    drawLocalLegend();
     rafId = requestAnimationFrame(draw);
     return;
   }
@@ -114,6 +138,7 @@ function draw() {
   drawWasteAndStreet();
   drawGates();              // continental fast-travel points
   drawPlayer();
+  ctx.restore();
   drawLegend();
 
   rafId = requestAnimationFrame(draw);
@@ -123,12 +148,12 @@ function draw() {
 function drawLocal() {
   const visited = getVisitedFn() || new Set();
   // Поле
-  ctx.fillStyle = '#141009';
+  ctx.fillStyle = '#1c150b';
   ctx.fillRect(LOCAL_BOX.x, LOCAL_BOX.y, LOCAL_BOX.w, LOCAL_BOX.h);
-  ctx.strokeStyle = '#332e22';
+  ctx.strokeStyle = '#5a4c30';
   ctx.strokeRect(LOCAL_BOX.x + 0.5, LOCAL_BOX.y + 0.5, LOCAL_BOX.w, LOCAL_BOX.h);
   // Зерно бумаги — редкие точки по детерминированной сетке
-  ctx.fillStyle = 'rgba(138,141,143,0.07)';
+  ctx.fillStyle = 'rgba(138,141,143,0.1)';
   for (let gy = 0; gy < 24; gy++)
     for (let gx = 0; gx < 30; gx++) {
       const jx = Math.sin(gx * 127.1 + gy * 311.7) * 43758.5453 % 1;
@@ -155,18 +180,20 @@ function drawLocal() {
     const sx = lx(loc.x + (loc.w || 0) / 2), sy = ly(loc.y + (loc.h || 0) / 2);
     if (visited.has(loc.id)) {
       shown++;
-      ctx.fillStyle = '#daa520';
-      ctx.fillRect(sx - 1, sy - 1, 3, 3);
-      ctx.strokeStyle = '#0c0b09';
-      ctx.strokeRect(sx - 1.5, sy - 1.5, 4, 4);
-      ctx.fillStyle = 'rgba(232,220,200,0.75)';
+      ctx.fillStyle = '#0c0b09';
+      ctx.fillRect(sx - 2, sy - 2, 6, 6);       // тёмная подложка — отрыв от поля
+      ctx.fillStyle = '#f0c040';
+      ctx.fillRect(sx - 1, sy - 1, 4, 4);
+      ctx.fillStyle = 'rgba(240,228,208,0.95)';
       const name = (loc.name || loc.id).slice(0, 20);
       // подпись не должна вылезти за поле
       const tw = ctx.measureText(name).width;
-      ctx.fillText(name, Math.min(sx + 5, LOCAL_BOX.x + LOCAL_BOX.w - tw - 4), sy + 3);
+      ctx.fillText(name, Math.min(sx + 6, LOCAL_BOX.x + LOCAL_BOX.w - tw - 4), sy + 3);
     } else {
-      ctx.fillStyle = 'rgba(232,220,200,0.13)';
-      ctx.fillRect(sx, sy, 2, 2);
+      ctx.fillStyle = 'rgba(232,220,200,0.38)';
+      ctx.fillRect(sx, sy, 3, 3);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(sx + 1, sy + 1, 1, 1);
     }
   }
   // Игрок
@@ -185,23 +212,29 @@ function drawLocal() {
       }
     }
   }
-  // Сводка внизу
+  localShown = shown; localTotal = total;
+}
+
+let localShown = 0, localTotal = 0;
+function drawLocalLegend() {
   const lyy = H - 56;
+  ctx.fillStyle = 'rgba(8,6,4,0.92)';
+  ctx.fillRect(1, lyy - 12, W - 2, 54);
   ctx.font = '6px "Press Start 2P","VT323",monospace';
-  ctx.fillStyle = '#8a8d8f';
-  ctx.fillText(`осмотрено мест: ${shown} из ${total}`, 16, lyy);
-  ctx.fillStyle = '#daa520';
-  ctx.fillRect(16, lyy + 10, 3, 3);
-  ctx.fillStyle = '#a8a89a';
-  ctx.fillText('посещено', 24, lyy + 15);
-  ctx.fillStyle = 'rgba(232,220,200,0.25)';
-  ctx.fillRect(96, lyy + 11, 2, 2);
-  ctx.fillStyle = '#a8a89a';
-  ctx.fillText('непосещённое (место есть — имени нет)', 104, lyy + 15);
+  ctx.fillStyle = '#b8b8a8';
+  ctx.fillText(`осмотрено мест: ${localShown} из ${localTotal}`, 16, lyy);
+  ctx.fillStyle = '#f0c040';
+  ctx.fillRect(16, lyy + 10, 4, 4);
+  ctx.fillStyle = '#c8c8b8';
+  ctx.fillText('посещено', 26, lyy + 16);
+  ctx.fillStyle = 'rgba(232,220,200,0.4)';
+  ctx.fillRect(98, lyy + 11, 3, 3);
+  ctx.fillStyle = '#c8c8b8';
+  ctx.fillText('непосещённое (место есть — имени нет)', 108, lyy + 16);
   ctx.fillStyle = '#ff7020';
   ctx.fillRect(16, lyy + 24, 3, 4);
-  ctx.fillStyle = '#a8a89a';
-  ctx.fillText('ты', 24, lyy + 30);
+  ctx.fillStyle = '#c8c8b8';
+  ctx.fillText('ты', 26, lyy + 30);
 }
 
 // ── Continents (polygons) ──
@@ -215,13 +248,13 @@ function drawContinents() {
       if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
     }
     ctx.closePath();
-    ctx.fillStyle = '#161410';
+    ctx.fillStyle = '#262012';
     ctx.fill();
-    ctx.strokeStyle = '#332e22';
+    ctx.strokeStyle = '#6a5c3c';
     ctx.lineWidth = 1;
     ctx.stroke();
     // Label
-    ctx.fillStyle = '#4d4738';
+    ctx.fillStyle = '#9a8d64';
     ctx.font = '8px "Press Start 2P","VT323",monospace';
     ctx.fillText(c.name.toUpperCase(), ax(c.label[0]), ay(c.label[1]));
   }
@@ -265,10 +298,10 @@ function drawNodes() {
       ctx.beginPath(); ctx.arc(sx, sy, pr + 3, 0, Math.PI * 2); ctx.fill();
     }
     ctx.fillStyle = STATUS_COLORS[n.st] || '#888';
-    ctx.beginPath(); ctx.arc(sx, sy, pr, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy, pr + 0.6, 0, Math.PI * 2); ctx.fill();
     // Stroke
-    ctx.strokeStyle = '#0c0b09';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.2;
     ctx.stroke();
   }
 }
@@ -387,9 +420,9 @@ function gateAt(cx, cy) {
 // ── Our waste pocket + street strip ──
 function drawWasteAndStreet() {
   // Waste pocket inset (over Europe area for orientation)
-  ctx.fillStyle = '#241c14';
+  ctx.fillStyle = '#332818';
   ctx.fillRect(WASTE_BOX.x, WASTE_BOX.y, WASTE_BOX.w, WASTE_BOX.h);
-  ctx.strokeStyle = '#6b0f1a';
+  ctx.strokeStyle = '#a03040';
   ctx.strokeRect(WASTE_BOX.x + 0.5, WASTE_BOX.y + 0.5, WASTE_BOX.w, WASTE_BOX.h);
   ctx.fillStyle = '#b8860b';
   ctx.font = '6px "Press Start 2P","VT323",monospace';
@@ -421,10 +454,10 @@ function drawWasteAndStreet() {
     ctx.fillStyle = seg.palette.ground;
     ctx.fillRect(x0, STREET_BOX.y, x1 - x0, STREET_BOX.h);
     // Tick
-    ctx.fillStyle = 'rgba(232,220,200,0.5)';
+    ctx.fillStyle = 'rgba(232,220,200,0.75)';
     ctx.fillRect(x0, STREET_BOX.y, 1, STREET_BOX.h);
     ctx.font = '6px "Press Start 2P","VT323",monospace';
-    ctx.fillStyle = 'rgba(232,220,200,0.65)';
+    ctx.fillStyle = 'rgba(240,228,208,0.9)';
     ctx.fillText(`${seg.n}`, x0 + 2, STREET_BOX.y - 2);
   }
   ctx.strokeStyle = 'rgba(138,141,143,0.4)';
@@ -460,6 +493,8 @@ function drawPlayer() {
 // ── Legend ──
 function drawLegend() {
   const ly = H - 56;
+  ctx.fillStyle = 'rgba(8,6,4,0.92)';
+  ctx.fillRect(1, ly - 12, W - 2, 54);
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.fillStyle = '#8a8d8f';
   ctx.fillText('узлы:', 16, ly);
@@ -521,6 +556,7 @@ export function open() {
   if (visible) return;
   if (!state.is('game')) return;
   visible = true;
+  resetZoom();
   const el = document.getElementById('map');
   if (!el) return;
   el.classList.add('on');
@@ -551,27 +587,101 @@ export function init(opts) {
     ctx.imageSmoothingEnabled = false;
   }
   const el = document.getElementById('map');
+  // клиентские координаты → пиксели канваса
+  function canvasXY(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return [
+      (clientX - rect.left) * (canvas.width / rect.width),
+      (clientY - rect.top) * (canvas.height / rect.height),
+    ];
+  }
   if (el) el.addEventListener('click', (e) => {
     if (!visible || !canvas) return;
-    // Translate the screen click into canvas pixel coords (canvas is
-    // CSS-scaled). Tab box switches the sheet; a discovered gate
-    // fast-travels; anything else closes.
-    const rect = canvas.getBoundingClientRect();
-    const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const cy = (e.clientY - rect.top)  * (canvas.height / rect.height);
+    if (gestured) { gestured = false; return; }  // это был драг/щипок
+    const [cx, cy] = canvasXY(e.clientX, e.clientY);
+    // Шапка (вкладка) — в неподвижных координатах
     if (cx >= TAB_BOX.x - 4 && cx <= TAB_BOX.x + TAB_BOX.w + 4 &&
         cy >= TAB_BOX.y - 4 && cy <= TAB_BOX.y + TAB_BOX.h + 6) {
       view = view === 'world' ? 'local' : 'world';
       return;
     }
-    const g = view === 'world' ? gateAt(cx, cy) : null;
+    // Содержимое листа — через зум-трансформацию
+    const wx = (cx - zx) / zscale, wy = (cy - zy) / zscale;
+    const g = view === 'world' ? gateAt(wx, wy) : null;
     if (g) {
+      cancelPendingClose();
       events.emit('gate.use', g);
       close();
     } else {
-      close();
+      // не сразу: вдруг это первый тап двойного (зум)
+      cancelPendingClose();
+      pendingClose = setTimeout(() => { pendingClose = 0; close(); }, 480);
     }
   });
+
+  // ── Жесты карты: щипок и драг (тач), колесо (мышь), двойной тап ──
+  if (canvas) {
+    canvas.style.touchAction = 'none';
+    const pts = new Map();               // pointerId → [cx, cy]
+    let pinchDist = 0, movedTotal = 0, lastTap = 0, lastTapXY = [0, 0];
+    canvas.addEventListener('pointerdown', (e) => {
+      pts.set(e.pointerId, canvasXY(e.clientX, e.clientY));
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        pinchDist = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      }
+      if (pts.size === 1) movedTotal = 0;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId)) return;
+      const cur = canvasXY(e.clientX, e.clientY);
+      const prev = pts.get(e.pointerId);
+      pts.set(e.pointerId, cur);
+      if (pts.size === 1) {
+        const dx = cur[0] - prev[0], dy = cur[1] - prev[1];
+        movedTotal += Math.abs(dx) + Math.abs(dy);
+        if (zscale > 1 && movedTotal > 6) {
+          zx += dx; zy += dy; clampPan();
+          gestured = true;
+        }
+      } else if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        if (pinchDist > 0 && d > 0) {
+          zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, d / pinchDist);
+          gestured = true;
+        }
+        pinchDist = d;
+      }
+    });
+    const lift = (e) => {
+      if (pts.size === 1 && movedTotal < 8) {
+        // одиночный тап: двойной за 350 мс — зум туда/обратно
+        const now = performance.now();
+        const [cx, cy] = canvasXY(e.clientX, e.clientY);
+        if (now - lastTap < 450 &&
+            Math.abs(cx - lastTapXY[0]) < 40 && Math.abs(cy - lastTapXY[1]) < 40) {
+          cancelPendingClose();        // первый тап закрытия не дождётся
+          if (zscale > 1.4) resetZoom(); else zoomAt(cx, cy, 2.2 / zscale);
+          gestured = true;             // click после даблтапа не закрывает
+          lastTap = 0;
+        } else {
+          lastTap = now; lastTapXY = [cx, cy];
+        }
+      }
+      pts.delete(e.pointerId);
+      pinchDist = 0;
+    };
+    canvas.addEventListener('pointerup', lift);
+    canvas.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); pinchDist = 0; });
+    canvas.addEventListener('wheel', (e) => {
+      if (!visible) return;
+      e.preventDefault();
+      const [cx, cy] = canvasXY(e.clientX, e.clientY);
+      zoomAt(cx, cy, e.deltaY < 0 ? 1.15 : 0.87);
+    }, { passive: false });
+  }
   document.addEventListener('keydown', (e) => {
     if (visible) {
       if (e.key === 'Tab') {
