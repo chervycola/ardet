@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { loreItems } from '../content/lore.js';
 import { events, E } from '../core/events.js';
+import { drawLoreForm } from '../sprites/eggObjects.js';
 import { t } from '../core/time.js';
 import { X } from '../render/context.js';
 import { rect, hash } from '../render/draw.js';
@@ -45,6 +46,16 @@ export function drawLoreItems(cam) {
 
     // Subtle pulse
     const pulse = 0.5 + 0.5 * Math.sin(t * 0.05 + item.x * 0.01);
+
+    if (item.form && drawLoreForm(ctx, item.form, item.x, item.y, t)) {
+      // вещь на земле: сама форма + очень слабое дыхание янтаря
+      ctx.globalAlpha = 0.1 + pulse * 0.15;
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(item.x, item.y - 1, 2, 1);
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
     ctx.globalAlpha = 0.25 + pulse * 0.3;
 
     // Small amber glow

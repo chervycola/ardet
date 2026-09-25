@@ -62,6 +62,7 @@ function buildStreetLocations() {
         zone: 'street',
         look,
         streetForm: sign.form || 'plaque',
+        streetSprite: sign.sprite || null,
         streetLive: !!sign.live,
         streetSeg: seg.n,
       };

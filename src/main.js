@@ -41,6 +41,7 @@ import {
 } from './ui/worldmap.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
+import { drawEggObject } from './sprites/eggObjects.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
@@ -343,6 +344,12 @@ function drawStreetSign(ctx, loc) {
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fillRect(x - 5, gy, 10, 2);
 
+  // Именная вещь фонда — свой спрайт вместо типовой формы
+  if (loc.streetSprite && drawEggObject(ctx, loc.streetSprite, x, gy, t)) {
+    if (loc.streetLive) drawLiveScaffold(ctx, loc, x, gy);
+    return;
+  }
+
   const form = loc.streetForm;
   if (form === 'fire') {
     // Charred mound + 5 flame tongues with independent flicker.
@@ -444,21 +451,23 @@ function drawStreetSign(ctx, loc) {
   }
 
   // Live signs: flickering scaffolding + occasional static pip
-  if (loc.streetLive) {
-    ctx.strokeStyle = '#aa7818';
-    ctx.lineWidth = 1;
-    const flick = 0.5 + 0.45 * Math.sin(t * 0.05 + loc.x);
-    ctx.globalAlpha = 0.5 + flick * 0.4;
-    ctx.strokeRect(x - 11, gy - 34, 22, 34);
-    ctx.beginPath();
-    ctx.moveTo(x - 11, gy - 34);
-    ctx.lineTo(x + 11, gy);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    if (t % 90 < 6) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x - 12 + ((t * 7) % 24), gy - 36, 1, 1);
-    }
+  if (loc.streetLive) drawLiveScaffold(ctx, loc, x, gy);
+}
+
+function drawLiveScaffold(ctx, loc, x, gy) {
+  ctx.strokeStyle = '#aa7818';
+  ctx.lineWidth = 1;
+  const flick = 0.5 + 0.45 * Math.sin(t * 0.05 + loc.x);
+  ctx.globalAlpha = 0.5 + flick * 0.4;
+  ctx.strokeRect(x - 11, gy - 34, 22, 34);
+  ctx.beginPath();
+  ctx.moveTo(x - 11, gy - 34);
+  ctx.lineTo(x + 11, gy);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  if (t % 90 < 6) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x - 12 + ((t * 7) % 24), gy - 36, 1, 1);
   }
 }
 
