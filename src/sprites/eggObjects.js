@@ -421,6 +421,20 @@ const STREET = {
     ctx.fillRect(x - 1, gy - 9, 1, 3);
     ctx.fillRect(x + 1, gy - 9, 1, 3);
   },
+  // посудная лавка «НЕ ПРИЛИПАЕТ»: витрина со сковородой
+  pan_shop(ctx, x, gy, t) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 8, gy - 18, 16, 18);
+    ctx.fillStyle = C.crimson;                     // неоновая полоса вывески
+    ctx.fillRect(x - 8, gy - 18, 16, 2);
+    ctx.fillStyle = C.black;                       // витрина
+    ctx.fillRect(x - 6, gy - 14, 12, 9);
+    ctx.fillStyle = C.dark;                        // сковорода
+    ctx.fillRect(x - 4, gy - 10, 6, 3);
+    ctx.fillRect(x + 2, gy - 9, 4, 1);             // ручка
+    ctx.fillStyle = C.ash;                         // блик покрытия: чистое
+    ctx.fillRect(x - 3, gy - 9, 3, 1);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
