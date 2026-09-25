@@ -316,7 +316,7 @@
       <button class="mi" data-m="companies"><span data-t="m.companies">Компании</span></button>
       <button class="mi" data-m="artists"><span data-t="m.artists">Артисты</span></button>
       <button class="mi" data-m="photos26"><span data-t="m.photos26">Фото 2026</span></button>
-      <button class="mi" id="d26Btn"><span data-t="m.d26">Анкета участника</span> <span class="mi-tag">Д-26</span></button>
+      <button class="mi" id="d26Btn"><span data-t="m.d26">Анкета участника</span> <span class="mi-tag">Д-10</span></button>
       <button class="mi" data-m="feedback"><span data-t="m.feedback">Обратная связь</span></button>
       <button class="mi" data-m="lottery"><span data-t="m.lottery">Конкурс</span> <span class="mi-tag" data-t="tag.ticket">билет</span></button>
       <button class="mi" id="scanBtn"><span data-t="m.scan">Сканировать QR</span> <span class="mi-tag" data-t="tag.spot">стойка</span></button>
@@ -1056,7 +1056,7 @@ function closeMenu(){ menu.hidden = true; }
 $("#menuBtn").addEventListener("click", e=>{ e.stopPropagation(); menu.hidden=!menu.hidden; haptic("light"); });
 document.addEventListener("click", e=>{ if(!menu.hidden && !menu.contains(e.target) && e.target.closest("#menuBtn")===null) closeMenu(); });
 menu.querySelectorAll(".mi[data-m]").forEach(b=> b.addEventListener("click", ()=>{ closeMenu(); openModal(b.dataset.m); }));
-$("#d26Btn").addEventListener("click", ()=>{ closeMenu(); haptic("light"); if(tg && tg.openLink){ try{ tg.openLink(CONTACT.siteUrl+"/d26"); return; }catch(e){} } window.location.href="d26.html"; });
+$("#d26Btn").addEventListener("click", ()=>{ closeMenu(); haptic("light"); if(tg && tg.openLink){ try{ tg.openLink(CONTACT.siteUrl+"/d10"); return; }catch(e){} } window.location.href="d10.html"; });
 $("#themeToggle").addEventListener("click", e=>{ e.stopPropagation(); toggleTheme(); haptic("light"); });
 menu.querySelectorAll(".lchip").forEach(b=> b.addEventListener("click", e=>{ e.stopPropagation(); setLang(b.dataset.lang); }));
 $("#scanBtn").addEventListener("click", e=>{ e.stopPropagation(); closeMenu(); scanQR(); });

@@ -1,6 +1,6 @@
 <?php
-// ДИСКРЕТ · приёмник формы Д-26
-// Складывает анкету и фото в d26_inbox/<дата_проект>/ и шлёт письмо оргам.
+// ДИСКРЕТ · приёмник формы Д-10
+// Складывает анкету и фото в d10_inbox/<дата_проект>/ и шлёт письмо оргам.
 
 header('Content-Type: application/json; charset=utf-8');
 mb_internal_encoding('UTF-8');
@@ -8,7 +8,7 @@ mb_internal_encoding('UTF-8');
 const NOTIFY_EMAIL = 'contact@diskret.space';
 const MAX_FILE = 15 * 1024 * 1024;   // 15 МБ на файл
 const MAX_FILES = 40;                 // суммарно на заявку
-const INBOX = __DIR__ . '/d26_inbox';
+const INBOX = __DIR__ . '/d10_inbox';
 
 function fail($msg, $code = 400) {
   http_response_code($code);
@@ -56,7 +56,7 @@ foreach ($_FILES as $k => $f) {
 }
 
 // --- письмо оргам ---
-$sum = "Новая заявка Д-26\n\n";
+$sum = "Новая заявка Д-10\n\n";
 $sum .= 'Проект: ' . ($fields['project'] ?? '') . "\n";
 $sum .= 'Контакт: ' . ($fields['contact'] ?? '') . "\n";
 $sum .= 'Город: ' . ($fields['city'] ?? '—') . "\n";
@@ -66,7 +66,7 @@ $sum .= 'Приборы: ' . (count($devs) ? implode(' · ', $devs) : '—') . "
 $sum .= 'Фото: ' . $saved . " шт\n";
 $sum .= 'Папка: ' . basename($dir) . "\n";
 @mail(NOTIFY_EMAIL,
-  '=?UTF-8?B?' . base64_encode('Д-26 · ' . ($fields['project'] ?? 'заявка')) . '?=',
+  '=?UTF-8?B?' . base64_encode('Д-10 · ' . ($fields['project'] ?? 'заявка')) . '?=',
   $sum,
   "From: form@diskret.space\r\nContent-Type: text/plain; charset=UTF-8\r\n");
 

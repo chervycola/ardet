@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ДИСКРЕТ · Форма Д-26</title>
+<title>ДИСКРЕТ · Форма Д-10</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><rect width='16' height='16' fill='%23E30613'/><g fill='%23fff' transform='translate(2,2)'><rect x='10' y='0' width='2' height='12'/><rect x='2' y='0' width='8' height='2'/><rect x='4' y='2' width='2' height='4'/><rect x='2' y='6' width='2' height='2'/><rect x='0' y='8' width='12' height='2'/><rect x='0' y='10' width='2' height='2'/></g></svg>">
 <style>
   :root{ --bg:#fff; --ink:#0a0a0a; --muted:#6b6b68; --line:#c9c9c9; --red:#E30613; --panel:#f5f5f4;
@@ -75,7 +75,7 @@
       </svg>
       <b>ДИСКРЕТ</b>
     </a>
-    <span>ФОРМА Д-26</span>
+    <span>ФОРМА Д-10</span>
   </header>
 
   <h1>Формуляр <span class="r">изделия</span></h1>
@@ -268,7 +268,7 @@ document.getElementById('f').addEventListener('submit', async e=>{
   });
   btn.disabled = true; btn.textContent = 'Отправляем…';
   try{
-    const r = await fetch('d26_submit.php', { method:'POST', body: fd });
+    const r = await fetch('d10_submit.php', { method:'POST', body: fd });
     const j = await r.json().catch(()=>({}));
     if(r.ok && j.ok){
       f.style.display='none';

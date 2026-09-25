@@ -42,7 +42,7 @@ ${DEFS}
 
 <use href="#logoD" fill="#000" transform="translate(190,116) scale(5.4)"/>
 <text x="242" y="160" font-weight="800" font-size="60" letter-spacing="2" fill="#000">ИСКРЕТ <tspan fill="#E30613">2026</tspan></text>
-<text x="1128" y="126" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ФОРМА Д-26</text>
+<text x="1128" y="126" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#000">ФОРМА Д-10</text>
 <text x="1128" y="152" text-anchor="end" font-family="'Courier New',monospace" font-size="16" letter-spacing="3" fill="#E30613">ЭКЗ. ЕДИНСТВ.</text>
 <line x1="${RX}" y1="196" x2="${W-56}" y2="196" stroke="#000" stroke-width="2"/>
 
