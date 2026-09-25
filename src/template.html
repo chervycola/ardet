@@ -90,7 +90,9 @@
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>/* __FLAGS__ */window.ARDET_MUSIC_BASE='assets/music/';</script>
+<script>/* __FLAGS__ */window.ARDET_MUSIC_BASE='assets/music/';
+// на таче правый верхний угол занят кнопкой карты — радио левее
+if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>/* __AUDIO__ */</script>
 <script>/* __JS__ */</script>
 <!--
