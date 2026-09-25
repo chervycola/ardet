@@ -5430,16 +5430,7 @@ export function draw_altar(x, y) {
     X.fillRect(x-8,y-15,70,60);
     X.globalAlpha=1;
 
-    // ── OCCASIONAL WHISPER TEXT ──
-    if(t%500<40){
-      const whPh=(t%500)/40;
-      X.globalAlpha=(1-whPh)*.35;
-      X.fillStyle=P.toxic;X.font='5px "Press Start 2P"';
-      X.textAlign='center';
-      X.fillText('мох помнит',x+27,y+10-whPh*4);
-      X.textAlign='left';
-      X.globalAlpha=1;
-    }
+    // (летящая надпись убрана: мох помнит и без напоминаний)
 
     // ── NEARBY STANDING MUSHROOM (tall, torch-like) ──
     rect(X,x+42,y+24,1,8,P.dbone);

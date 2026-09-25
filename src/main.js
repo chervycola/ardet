@@ -797,7 +797,7 @@ function startGame() {
   gw.classList.add('wake');
   const lids = document.createElement('div');
   lids.id = 'wakelids';
-  lids.innerHTML = '<span>ПРИХОДИШЬ В СЕБЯ</span>';
+  // без подписи: пробуждение говорит само
   document.body.appendChild(lids);
   setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
   // Touch devices have no M key — give them an on-screen map button.

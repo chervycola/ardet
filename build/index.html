@@ -11287,17 +11287,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_7.X.fillStyle = aura;
         context_js_7.X.fillRect(x - 8, y - 15, 70, 60);
         context_js_7.X.globalAlpha = 1;
-        // ── OCCASIONAL WHISPER TEXT ──
-        if (time_js_10.t % 500 < 40) {
-            const whPh = (time_js_10.t % 500) / 40;
-            context_js_7.X.globalAlpha = (1 - whPh) * .35;
-            context_js_7.X.fillStyle = P.toxic;
-            context_js_7.X.font = '5px "Press Start 2P"';
-            context_js_7.X.textAlign = 'center';
-            context_js_7.X.fillText('мох помнит', x + 27, y + 10 - whPh * 4);
-            context_js_7.X.textAlign = 'left';
-            context_js_7.X.globalAlpha = 1;
-        }
+        // (летящая надпись убрана: мох помнит и без напоминаний)
         // ── NEARBY STANDING MUSHROOM (tall, torch-like) ──
         draw_js_10.rect(context_js_7.X, x + 42, y + 24, 1, 8, P.dbone);
         draw_js_10.rect(context_js_7.X, x + 41, y + 22, 3, 2, '#6b0f1a');
@@ -22510,7 +22500,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
         ],
         execute: function () {
             MSGS = [
-                'мох помнит', 'вобла не горит', 'бездна моргнула первой', 'amor fati',
+                'вобла не горит', 'бездна моргнула первой', 'amor fati',
                 'кот наливает', 'кто-то каталогизирует', 'углов стало пять',
                 'пустота — тоже персонаж', 'конденсат складывается в буквы',
                 'привратник ждёт', 'iä! iä!', 'стены читают тебя', 'коврик welcome',
@@ -23883,7 +23873,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         gw.classList.add('wake');
         const lids = document.createElement('div');
         lids.id = 'wakelids';
-        lids.innerHTML = '<span>ПРИХОДИШЬ В СЕБЯ</span>';
+        // без подписи: пробуждение говорит само
         document.body.appendChild(lids);
         setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
         // Touch devices have no M key — give them an on-screen map button.

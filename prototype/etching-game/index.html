@@ -196,7 +196,7 @@ resize();
     cv.classList.add('wake');
     const lids=document.createElement('div');
     lids.id='wakelids';
-    lids.innerHTML='<span>...приходишь в себя...</span>';
+    // без подписи: пробуждение говорит само
     document.body.appendChild(lids);
     setTimeout(()=>{ cv.classList.remove('wake'); lids.remove(); },15600);
   };
