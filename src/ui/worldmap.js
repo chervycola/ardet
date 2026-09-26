@@ -44,7 +44,7 @@ let view = 'world';                       // 'world' | 'local'
 let getVisitedFn = () => new Set();       // main передаёт flags.visited
 const TAB_BOX = { x: W - 150, y: 4, w: 138, h: 18 };
 const LOCAL_BOX = { x: 20, y: 44, w: W - 40, h: H - 150 };
-const LOCAL_XMAX = 3200, LOCAL_Y0 = 60, LOCAL_Y1 = 1800;
+const LOCAL_XMAX = 5000, LOCAL_Y0 = 0, LOCAL_Y1 = 3800;
 function lx(wx) { return LOCAL_BOX.x + Math.max(0, Math.min(1, wx / LOCAL_XMAX)) * LOCAL_BOX.w; }
 function ly(wy) { return LOCAL_BOX.y + Math.max(0, Math.min(1, (wy - LOCAL_Y0) / (LOCAL_Y1 - LOCAL_Y0))) * LOCAL_BOX.h; }
 

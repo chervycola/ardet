@@ -42,6 +42,8 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
+import { TOWN, RING_W } from './world/disc.js';
+import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
@@ -273,6 +275,7 @@ function render() {
   dyingPixels.draw(fxCtx);
   drawWeatherAdditive(fxCtx);
   drawBrainrot(fxCtx);
+  drawEdges(fxCtx);
 
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   drawWeatherOverlay(uiCtx);
@@ -584,7 +587,7 @@ const EPOCH_TITLE_LIFE = 160; // ~2.7 s
 const epochTitle = { text: '', era: '', life: 0, lastSegId: null };
 
 function updateEpochTitle() {
-  const seg = worldSegmentAt(player.x);
+  const seg = worldSegmentAt(player.x, player.y);
   const id = seg ? seg.id : null;
   if (id !== epochTitle.lastSegId) {
     epochTitle.lastSegId = id;
@@ -699,53 +702,17 @@ function updateGame() {
     player.moving = false;
   }
 
-  // Walking west past the street's edge returns through the gates
-  if (player.x > STREET_X0 - 100 && player.x < STREET_X0 + 8 && teleportFade.dir === 0) {
-    teleportWithFade(GATES_RETURN.x, GATES_RETURN.y);
-  }
-
-  updateEdgeLaw();
-
   updateWorldSystems();
-}
-
-// ═══ LAW OF THE EDGE (v3.1, soft form) ═══
-// Past the empty frame the road is gone but the corridor lets you keep
-// walking. The world objects: the picture trembles harder the deeper
-// you go, a wordless call sounds — and at the fall line the screen
-// blacks out, the phone buzzes, and you wake where you stood. Nothing
-// is taken: the terminal logs stay, the moss keeps growing, everyone
-// remembers. Pause or a step back always saves.
-const EDGE_START = 6020;   // just past the empty frame (world x)
-const EDGE_FALL = 6120;    // the fall line
-function updateEdgeLaw() {
-  if (player.x <= EDGE_START || teleportFade.dir !== 0) return;
-  const depth = Math.min(1, (player.x - EDGE_START) / (EDGE_FALL - EDGE_START));
-  // Trembling picture — small, then not small
-  if (t % Math.max(6, 24 - Math.floor(depth * 18)) === 0) {
-    camera.shake(2 + Math.floor(depth * 8));
-  }
-  // The call: no words, just an interval that promises
-  if (t % 300 === 0) playDistantSound();
-  if (player.x >= EDGE_FALL) {
-    // The phone trembles too, where hardware allows
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([90, 40, 180]);
-    }
-    camera.shake(24);
-    // Blackout → wake at the frame. Same place, same memory.
-    teleportWithFade(5985, STREET_ROAD_Y);
-  }
 }
 
 // Camera + all per-frame world systems. Shared by the normal movement
 // path and the held-finger walk branch above.
 function updateWorldSystems() {
-  // СКРОЛЛ: лента замкнута — последние триста шагов повторяются
+  // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
   if (inBrainrotLoop()) {
-    const L0 = STREET_END_W - 320, L1 = STREET_END_W - 24;
-    if (player.x > L1) { player.x -= (L1 - L0); player.tx = player.x; }
-    else if (player.x < L0) { player.x += (L1 - L0); player.tx = player.x; }
+    const L0 = TOWN.y1 + 8 * RING_W + 24, L1 = TOWN.y1 + 9 * RING_W - 16;
+    if (player.y > L1) { player.y -= (L1 - L0); player.ty = player.y; }
+    else if (player.y < L0) { player.y += (L1 - L0); player.ty = player.y; }
   }
   camera.follow(player.x + 6, player.y + 10);
   camera.update();
@@ -758,6 +725,7 @@ function updateWorldSystems() {
   updateJester(camera);
   updateProximity(player, locations);
   updatePets();
+  updateEdges(player);
   updateBrainrot(player);
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
@@ -946,17 +914,17 @@ events.on('location.use', (loc) => {
   }
   // Каркас: кольцевая равнины и СКРОЛЛ
   if (actionKey === 'branch_plain') {
-    teleportWithFade(BRANCH_PLAIN.x0 + 46, BRANCH_PLAIN.roadY);
+    teleportWithFade(BRANCH_PLAIN.x0 + 96, 640);
     return;
   }
   if (actionKey === 'branch_back') {
-    teleportWithFade(STREET_SHIFT + 812, STREET_ROAD_Y);
+    teleportWithFade(2560, TOWN.y1 + RING_W + 80);
     return;
   }
   if (actionKey === 'brainrot_enter') {
-    teleportWithFade(STREET_END_W - 170, STREET_ROAD_Y, () => {
+    teleportWithFade(2540, TOWN.y1 + 8 * RING_W + 90, () => {
       enterBrainrotLoop(() => {
-        teleportWithFade(STREET_END_W - 420, STREET_ROAD_Y, () => {
+        teleportWithFade(2540, TOWN.y1 + 7 * RING_W + 100, () => {
           showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
         });
       });

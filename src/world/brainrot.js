@@ -8,6 +8,7 @@ import { scaler } from '../render/scaler.js';
 import { MW, MH } from './terrain.js';
 import { events } from '../core/events.js';
 import { crackedGlass } from '../render/metaFx.js';
+import { edgeDepth } from './edges.js';
 
 let brainrot = 0;
 let brainrotFreeze = false;
@@ -64,7 +65,10 @@ export function update(player) {
   }
 
   const dist = getDistFromMap(player);
-  if (dist > 600) {
+  const edge = edgeDepth();
+  if (edge > 0.12) {
+    brainrot = Math.min(100, brainrot + edge * 0.9);   // стихия затягивает
+  } else if (dist > 600) {
     brainrot = Math.min(100, (dist - 600) / 30);
   } else {
     brainrot = Math.max(0, brainrot - 0.5);

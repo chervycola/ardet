@@ -1,3 +1,4 @@
+import { townDist } from '../world/disc.js';
 // ═══════════════════════════════════════
 // ZONE AMBIENT — procedural soundscapes per zone
 // ═══════════════════════════════════════
@@ -72,7 +73,7 @@ export function updateZone(zone) {
 }
 
 export function getZone(x, y) {
-  if (x > 3100) return 'street';
+  if (townDist(x, y) > 0) return 'street';
   if (y < 500) return 'forest';
   if (y > 1300) return 'toxic';
   if (x < 400) return 'quarter';

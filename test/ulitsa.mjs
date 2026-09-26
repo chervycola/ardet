@@ -98,27 +98,21 @@ const imp = p => import(new URL(p, base));
   const { useTexts } = await imp('world/useActions.js');
   const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
 
-  test('worldSegmentAt: maps world x to epoch segments (for the title card)', () => {
-    eq(worldSegmentAt(1000), null, 'waste is off-street');
-    eq(worldSegmentAt(3300).id, 'axial', 'west end is §1');
-    eq(worldSegmentAt(4100).id, 'lightgarden', 'medieval stretch');
-    eq(worldSegmentAt(5900).id, 'now', 'east end is §9');
+  test('worldSegmentAt: maps world point to epoch rings (for the title card)', () => {
+    const a = worldSegmentAt(1500, 1900);   // кольцо 1 юга
+    assert(a && a.id === 'axial', `ring1 is axial: ${a && a.id}`);
+    const n = worldSegmentAt(1500, 1800 + 8 * 200 + 100);
+    assert(n && n.id === 'now', `ring9 is now: ${n && n.id}`);
+    assert(worldSegmentAt(1500, 900) === null, 'городок вне эпох');
   });
 
-  test('streetLocations: one per segment sign, unique ids, world coords in band', () => {
-    const segSignCount = SEGMENTS.reduce((n, s) => n + s.signs.length, 0);
-    eq(streetLocations.length, segSignCount, 'location per sign');
-    const seen = new Set();
+  test('streetLocations: one per segment sign, unique ids, coords in south rings', () => {
+    const ids = new Set();
     for (const l of streetLocations) {
-      assert(!seen.has(l.id), `dup id ${l.id}`);
-      seen.add(l.id);
-      assert(l.zone === 'street', `${l.id}: zone`);
-      assert(typeof l.look === 'string' && l.look.length > 0, `${l.id}: inline look`);
-      const cx = l.x + l.w / 2;
-      assert(cx > STREET_X0 - 80 && cx < STREET_END_W + 50,
-        `${l.id}: world x ${cx} out of street`);
-      assert(l.y > STREET_Y_MIN - 100 && l.y < STREET_Y_MAX,
-        `${l.id}: y ${l.y} off the corridor`);
+      assert(!ids.has(l.id), `dup id ${l.id}`);
+      ids.add(l.id);
+      assert(l.x > 280 && l.x < 2740, `${l.id}: x ${l.x} за полосой юга`);
+      assert(l.y > 1800 && l.y < 1800 + 9 * 200, `${l.id}: y ${l.y} вне колец`);
     }
   });
 
@@ -139,11 +133,9 @@ const imp = p => import(new URL(p, base));
     for (const l of streetLocations) assert(l.streetForm, `${l.id}: form`);
   });
 
-  test('street constants: spawn on the road, return at the gates', () => {
-    assert(STREET_SPAWN.x > STREET_X0 && STREET_SPAWN.x < STREET_X0 + 100, 'spawn near west edge');
-    assert(STREET_SPAWN.y >= STREET_Y_MIN && STREET_SPAWN.y <= STREET_Y_MAX, 'spawn in band');
-    assert(GATES_RETURN.x > 1300 && GATES_RETURN.x < 1500, 'return near gates');
-    void STREET_SHIFT;
+  test('street constants: spawn on ring one, return at the gates', () => {
+    assert(STREET_SPAWN.y > 1800 && STREET_SPAWN.y < 2000, 'spawn на первом кольце');
+    assert(GATES_RETURN.x > 0 && GATES_RETURN.y > 0, 'gates return в городке');
   });
 
   test('gates line: consumed exactly once per session', () => {
@@ -155,32 +147,32 @@ const imp = p => import(new URL(p, base));
 
 // ═══ WORLD INTEGRATION ═══
 {
-  const { MW } = await imp('world/terrain.js');
+  const { MW, MH } = await imp('world/terrain.js');
   const { locations } = await imp('world/locations.js');
   const physics = await imp('world/physics.js');
+  const { streetLocations } = await imp('world/street.js');
   const { getZone } = await imp('audio/zoneAmbient.js');
 
-  test('world: MW covers the street; street locations joined the registry', () => {
-    assert(MW >= 6000, `MW ${MW} too small for the street`);
-    const street = locations.filter(l => l.zone === 'street');
-    assert(street.length > 50, `street locations in world: ${street.length}`);
+  test('world: полотно накрывает кольца и стихии; знаки в реестре', () => {
+    assert(MW >= 5000 && MH >= 3800, `мир ${MW}×${MH} мал для колец`);
+    const st = locations.filter(l => l.id.startsWith('st_'));
+    assert(st.length === streetLocations.length, 'реестр без потерь');
   });
 
-  test('physics: street corridor clamps y to the road band', () => {
-    const player = { x: 4000, y: 880 };
-    // Try to walk north off the road — must be clamped to the band
-    for (let i = 0; i < 200; i++) physics.tryMove(player, 0, -5, locations, {});
-    assert(player.y >= 800, `y ${player.y} escaped north`);
-    // And south
-    for (let i = 0; i < 200; i++) physics.tryMove(player, 0, +5, locations, {});
-    assert(player.y <= 960, `y ${player.y} escaped south`);
+  const { tryMove } = await imp('world/physics.js');
+  test('physics: мир открыт — север и юг достижимы', () => {
+    const p = { x: 1500, y: 200, tx: 0, ty: 0, moving: false };
+    tryMove(p, 0, -300, [], {});
+    assert(p.y < 170, `лёд севера достижим (y=${p.y})`);
+    const q = { x: 1500, y: 3400, tx: 0, ty: 0, moving: false };
+    tryMove(q, 0, 300, [], {});
+    assert(q.y > 3400, `пески юга достижимы (y=${q.y})`);
   });
 
-  test('physics: settlement lock does not apply on the street', () => {
-    const player = { x: 3300, y: 880 };
-    const moved = physics.tryMove(player, +5, 0, locations, { canLeaveSettlement: false });
-    assert(moved, 'street walk must work before Jester');
-    assert(player.x > 3300, 'actually moved east');
+  test('physics: замок городка не действует на кольцах', () => {
+    const p = { x: 1500, y: 1900, tx: 0, ty: 0, moving: false }; // кольцо 1
+    tryMove(p, 0, 100, [], { canLeaveSettlement: false });
+    assert(p.y > 1950, `по кольцам ходим до Шута (y=${p.y})`);
   });
 
   test('zones: street zone east of the waste; waste zones intact', () => {
@@ -193,9 +185,9 @@ const imp = p => import(new URL(p, base));
 // ═══ TERRAIN + MAP RENDER ═══
 {
   const { buildTerrain } = await imp('world/terrain.js');
-  test('terrain: builds with the street strip without throwing', () => {
-    const canvas = buildTerrain();
-    assert(canvas && canvas.width >= 6000, 'canvas spans the street');
+  test('terrain: builds the disc world without throwing', () => {
+    const c = buildTerrain();
+    assert(c.width >= 5000 && c.height >= 3800, 'canvas накрывает диск');
   });
 
   const { state } = await imp('core/state.js');

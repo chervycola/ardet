@@ -235,21 +235,23 @@ setCtx(ctx);
 // ═══ ZONE PARTITION ═══
 {
   const { getZone } = await imp('audio/zoneAmbient.js');
-  test('getZone: every point in the 3000×1800 map returns a known zone', () => {
-    const valid = new Set(['forest', 'toxic', 'quarter', 'highway', 'settlement']);
-    for (let x = 0; x <= 3000; x += 100) {
-      for (let y = 0; y <= 1800; y += 100) {
+  test('getZone: every point of the disc world returns a known zone', () => {
+    const valid = new Set(['forest', 'toxic', 'quarter', 'highway', 'settlement', 'street']);
+    for (let x = 0; x <= 5000; x += 100) {
+      for (let y = 0; y <= 3800; y += 100) {
         const z = getZone(x, y);
         assert(valid.has(z), `unknown zone "${z}" at (${x},${y})`);
       }
     }
   });
-  test('getZone: settlement is the central band', () => {
+  test('getZone: городок в центре, кольца вокруг', () => {
     eq(getZone(1000, 900), 'settlement', 'center should be settlement');
-    eq(getZone(1000, 100), 'forest', 'north → forest');
-    eq(getZone(1000, 1700), 'toxic', 'south → toxic');
-    eq(getZone(100, 900), 'quarter', 'west → quarter');
+    eq(getZone(1000, 300), 'forest', 'north strip → forest');
+    eq(getZone(1000, 1700), 'toxic', 'south strip → toxic');
+    eq(getZone(150, 900), 'quarter', 'west → quarter');
     eq(getZone(2500, 900), 'highway', 'east → highway');
+    eq(getZone(1500, 2500), 'street', 'южные кольца → эпохи');
+    eq(getZone(4000, 900), 'street', 'восточные кольца → эпохи');
   });
 }
 

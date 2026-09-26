@@ -6,8 +6,9 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { STREET_SHIFT, STREET_X0, STREET_END_W, STREET_Y_MIN, STREET_Y_MAX, STREET_ROAD_Y, BRANCH_PLAIN } from './street.js';
 
 // World width includes the street strip east of the waste.
-export const MW = 6200;
-export const MH = 1800;
+import { TOWN, RING_W, RINGS, FIRE_W, WORLD_W, WORLD_H, townDist, ringAt, southBand } from './disc.js';
+export const MW = WORLD_W;
+export const MH = WORLD_H;
 // The procedural waste only spans the original 3000 px.
 const WASTE_W = 3000;
 
@@ -114,8 +115,8 @@ export function buildTerrain() {
     ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
   }
 
-  paintStreet(ctx);
-  paintPlainRing(ctx);
+  paintRings(ctx);
+  paintEdgesElements(ctx);
   paintSurvey(ctx);
 
   return canvas;
@@ -450,4 +451,153 @@ function paintSurvey(ctx) {
   line(1350, 1745, 1650, 1745);   // юг: равнина
   line(1350, 218, 1650, 218);     // север
   line(96, 760, 96, 1040);        // запад
+}
+
+
+// ── Кольца эпох вокруг городка: время растёт наружу ──
+function paintRings(ctx) {
+  const step = 4;
+  for (let y = 0; y < MH; y += step) {
+    for (let x = 0; x < MW; x += step) {
+      const d = townDist(x + 2, y + 2);
+      if (d <= 0) continue;                        // городок нарисован пустошью
+      const n = Math.ceil(d / RING_W);
+      if (n >= 1 && n <= RINGS) {
+        const seg = SEGMENTS[n - 1];
+        ctx.fillStyle = seg.palette.ground;
+        ctx.fillRect(x, y, step, step);
+        if (hash(x, y % 97, 43) > 0.86) {
+          ctx.fillStyle = seg.palette.dust;
+          ctx.fillRect(x + 1, y + 1, 1, 1);
+        }
+        // кромка между кольцами — тонкий тёмный шов
+        if (d % RING_W < 3) {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(x, y, step, 1);
+        }
+      } else if (d <= RINGS * RING_W + FIRE_W) {
+        // кольцо огня: гарь с угольями (живой огонь — в динамике)
+        ctx.fillStyle = '#160a06';
+        ctx.fillRect(x, y, step, step);
+        if (hash(x, y % 89, 51) > 0.9) {
+          ctx.fillStyle = hash(x, y % 53, 7) > 0.5 ? '#6b0f1a' : '#3a1408';
+          ctx.fillRect(x + 1, y + 1, 2, 2);
+        }
+      }
+    }
+  }
+  // подписи эпох на южной стороне
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  for (const seg of SEGMENTS) {
+    const b = southBand(seg.n);
+    ctx.fillStyle = 'rgba(232,220,200,0.4)';
+    ctx.fillText('§' + seg.n + ' ' + seg.name, 348, b.y0 + 12);
+    ctx.fillStyle = 'rgba(138,141,143,0.35)';
+    ctx.fillText(seg.era, 348, b.y0 + 20);
+    // и на восточной — вертикально не крутим, просто у кромки
+    const ex = TOWN.x1 + (seg.n - 1) * RING_W + 6;
+    ctx.fillStyle = 'rgba(232,220,200,0.3)';
+    ctx.fillText('§' + seg.n, ex, 190);
+  }
+  // тропа юга (от врат вниз сквозь эпохи) и тропа востока
+  ctx.fillStyle = 'rgba(200,184,160,0.3)';
+  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS * RING_W; y += 10) ctx.fillRect(1498, y, 3, 5);
+  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS * RING_W; x += 10) ctx.fillRect(x, 978, 5, 3);
+  // скайлайн юга — доминанты на кромке каждого кольца
+  paintSkylineSouth(ctx);
+}
+
+// ── Стихии краёв: песок, мусор, лёд, озеро ──
+function paintEdgesElements(ctx) {
+  const OUTER = RINGS * RING_W + FIRE_W;
+  // юг: зыбучий песок
+  for (let y = TOWN.y1 + OUTER; y < MH; y += 3) {
+    for (let x = 0; x < MW; x += 6) {
+      ctx.fillStyle = ((x + y) % 12 < 6) ? '#5a4a30' : '#4e3f28';
+      ctx.fillRect(x, y, 6, 3);
+      if (hash(x, y % 71, 13) > 0.92) { ctx.fillStyle = '#7a6440'; ctx.fillRect(x + 2, y + 1, 2, 1); }
+    }
+  }
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = 'rgba(122,100,64,0.8)';
+  ctx.fillText('зыбучий песок · юг не держит', 360, TOWN.y1 + OUTER + 14);
+  // восток: куча мусора
+  for (let x = TOWN.x1 + OUTER; x < MW; x += 5) {
+    for (let y = 160; y < MH; y += 4) {
+      ctx.fillStyle = ['#221c12', '#2e2618', '#1a160e'][((x * 7 + y * 13) % 3 + 3) % 3];
+      ctx.fillRect(x, y, 5, 4);
+      if (hash(x % 91, y % 83, 17) > 0.88) { ctx.fillStyle = '#3f3320'; ctx.fillRect(x + 1, y + 1, 3, 2); }
+    }
+  }
+  ctx.fillStyle = 'rgba(150,130,90,0.7)';
+  ctx.fillText('куча мусора · восток завален', TOWN.x1 + OUTER + 8, 220);
+  // север: лёд (узкая кромка полотна)
+  for (let y = 0; y < 155; y += 3) {
+    for (let x = 0; x < TOWN.x1 + OUTER; x += 6) {
+      ctx.fillStyle = ((x - y) % 14 < 7) ? '#aec6d4' : '#98b4c4';
+      ctx.fillRect(x, y, 6, 3);
+      if (hash(x % 79, y + 5, 19) > 0.9) { ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 2, y + 1, 1, 1); }
+    }
+  }
+  ctx.fillStyle = 'rgba(60,90,110,0.85)';
+  ctx.fillText('лёд · север трескается', 360, 130);
+  // запад: токсичное озеро (кромка)
+  for (let x = 0; x < 88; x += 4) {
+    for (let y = 160; y < TOWN.y1 + OUTER; y += 4) {
+      ctx.fillStyle = ((x + y) % 10 < 5) ? '#1e3a14' : '#254a18';
+      ctx.fillRect(x, y, 4, 4);
+      if (hash(x + 3, y % 67, 23) > 0.93) { ctx.fillStyle = '#3aff1a'; ctx.fillRect(x + 1, y + 1, 1, 1); }
+    }
+  }
+}
+
+// ── Скайлайн юга: та же линия доминант, теперь вдоль колец ──
+function paintSkylineSouth(ctx) {
+  // каждый силуэт стоит у верхней кромки своего кольца, x — по эпохе
+  const at = (n, off) => ({ x: 360 + off, base: TOWN.y1 + (n - 1) * RING_W + 46 });
+  const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+  const S = '#100c08', S2 = '#181209', HOLE = '#050510';
+  { const { x, base } = at(1, 60);                       // зиккурат + обелиск
+    R(x, base - 22, 70, 22, S); R(x + 10, base - 38, 50, 38, S);
+    R(x + 20, base - 52, 30, 52, S); R(x + 28, base - 64, 14, 64, S);
+    R(x + 240, base - 80, 8, 80, S2); }
+  { const { x, base } = at(2, 130);                      // аркада
+    R(x - 8, base - 8, 116, 8, S2);
+    for (let i = 0; i < 5; i++) R(x + i * 22, base - 56, 6, 48, S);
+    R(x - 8, base - 62, 116, 6, S2); }
+  { const { x, base } = at(3, 220);                      // пагода + минарет
+    R(x + 10, base - 26, 22, 26, S); R(x + 2, base - 32, 38, 6, S2);
+    R(x + 14, base - 50, 14, 18, S); R(x + 8, base - 56, 26, 6, S2);
+    R(x + 200, base - 92, 7, 92, S2); R(x + 197, base - 64, 13, 5, S2); }
+  { const { x, base } = at(4, 310);                      // частокол + шатёр
+    for (let i = 0; i < 10; i++) R(x + i * 7, base - 26 - ((i * 37) % 9), 4, 26 + ((i * 37) % 9), S);
+    R(x + 100, base - 56, 20, 56, S); }
+  { const { x, base } = at(5, 420);                      // купол со щелью
+    R(x, base - 34, 40, 34, S);
+    ctx.fillStyle = S2; ctx.beginPath(); ctx.arc(x + 20, base - 34, 20, Math.PI, 0); ctx.fill();
+    R(x + 18, base - 54, 4, 22, '#241c10'); }
+  { const { x, base } = at(6, 540);                      // трубы + газгольдер
+    R(x, base - 88, 10, 88, S2); R(x + 44, base - 72, 12, 72, S2);
+    R(x + 120, base - 44, 54, 44, S); }
+  { const { x, base } = at(7, 660);                      // руина + водонапорка
+    R(x, base - 74, 92, 74, S);
+    for (let i = 0; i < 9; i++) R(x + i * 10, base - 74, 10, 8 + ((i * 53) % 12), HOLE);
+    R(x + 152, base - 60, 4, 60, S2); R(x + 174, base - 60, 4, 60, S2);
+    R(x + 146, base - 84, 38, 26, S); }
+  { const { x, base } = at(8, 800);                      // панельки + вышка
+    for (const [bx, bw, bh] of [[x, 46, 96], [x + 58, 38, 72]]) {
+      R(bx, base - bh, bw, bh, S);
+      for (let r2 = 0; r2 < ((bh - 14) / 12) | 0; r2++)
+        for (let c = 0; c < ((bw - 8) / 10) | 0; c++)
+          if (((r2 * 7 + c * 13 + bx) % 5) > 2.2)
+            R(bx + 5 + c * 10, base - bh + 8 + r2 * 12, 4, 5, 'rgba(255,74,255,0.13)');
+    }
+    R(x + 160, base - 98, 3, 98, S2); R(x + 173, base - 98, 3, 98, S2);
+    R(x + 166, base - 103, 4, 4, '#C23B2B'); }
+  { const { x, base } = at(9, 940);                      // стекло + кран
+    const gl = ctx.createLinearGradient(x, base - 108, x + 54, base);
+    gl.addColorStop(0, 'rgba(122,223,255,0.10)'); gl.addColorStop(1, 'rgba(10,10,24,0.9)');
+    ctx.fillStyle = gl; ctx.fillRect(x, base - 108, 54, 108);
+    R(x, base - 108, 54, 2, S2); R(x + 26, base - 108, 2, 108, S2);
+    R(x + 140, base - 94, 5, 94, S2); R(x + 106, base - 94, 84, 3, S2); }
 }

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { MW, MH } from './terrain.js';
 import { clamp } from '../render/draw.js';
+import { townDist } from './disc.js';
 
 const PLAYER_W = 14;
 const PLAYER_H = 20;
@@ -61,21 +62,16 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
   let nx = player.x + dx;
   let ny = player.y + dy;
 
-  // World bounds
-  nx = clamp(nx, 10, MW - 22);
-  ny = clamp(ny, 170, MH - 30);
+  // World bounds: мир открыт до самых стихий
+  nx = clamp(nx, 6, MW - 22);
+  ny = clamp(ny, 6, MH - 30);
 
-  // Street corridor: east of the waste the walkable band is the road
-  if (isOnStreet(nx)) {
-    ny = clamp(ny, STREET_BAND.y1, STREET_BAND.y2);
-  }
-
-  // The street is reached by the gates (made for you alone) — the
-  // settlement lock never applies there.
-  const onStreet = isOnStreet(nx) || isOnStreet(player.x);
+  // Кольца эпох (бывш. улица) открыты всегда — врата сделаны для тебя;
+  // замок городка держит только его собственные края до разговора с Шутом.
+  const onRings = townDist(nx, ny) > 0 || townDist(player.x, player.y) > 0;
 
   // Settlement lock
-  if (!canLeaveSettlement && !onStreet && !isInSettlement(nx, ny)) {
+  if (!canLeaveSettlement && !onRings && !isInSettlement(nx, ny)) {
     // Stranded outside? Allow any move that *reduces* the distance back
     // to the settlement. Covers two cases:
     //   1) the player was click-teleported to a location whose access
