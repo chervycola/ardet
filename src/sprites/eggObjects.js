@@ -510,6 +510,55 @@ const STREET = {
     ctx.fillStyle = C.paper;                       // листок побочных действий
     ctx.fillRect(x + 4, gy - 5, 3, 4);
   },
+  // веха кольцевой: столб с кольцом
+  ring_post(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 1, gy - 22, 3, 22);
+    ctx.strokeStyle = C.gold;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, gy - 27, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(x + 3, gy - 16, 4, 5);
+  },
+  // колокол без языка
+  bell_mute(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 1, gy - 24, 3, 24);
+    ctx.fillRect(x - 7, gy - 25, 15, 2);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 4, gy - 23, 9, 6);
+    ctx.fillRect(x - 5, gy - 18, 11, 2);
+    // языка нет — пусто под юбкой
+    ctx.fillStyle = C.paper;                       // расписание звона
+    ctx.fillRect(x + 5, gy - 12, 4, 5);
+  },
+  // СКРОЛЛ: эскалатор вниз, лента движется сама
+  scroll_down(ctx, x, gy, t) {
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 10, gy - 6, 20, 6);           // дыра
+    ctx.fillStyle = C.stone2;
+    const ph = (t * 0.08 | 0) % 4;
+    for (let i = 0; i < 4; i++) {                   // ступени уползают вниз
+      const off = (i + ph * 0.25) * 3;
+      ctx.fillRect(x - 8 + off, gy - 5 + off * 0.6, 8 - i, 2);
+    }
+    ctx.fillStyle = C.ash;                         // поручень
+    ctx.fillRect(x - 12, gy - 14, 2, 10);
+    ctx.fillRect(x - 12, gy - 15, 12, 2);
+    ctx.fillStyle = '#7adfff';                     // экранная подсветка из дыры
+    ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 0.1);
+    ctx.fillRect(x - 8, gy - 3, 16, 2);
+    ctx.globalAlpha = 1;
+  },
+  // колышек геодезиста со шнуром: трассировка каркаса
+  survey_peg(ctx, x, gy) {
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 1, gy - 8, 2, 8);
+    ctx.fillStyle = C.crimson;
+    ctx.fillRect(x - 2, gy - 10, 4, 3);
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(x + 2, gy - 6, 4, 3);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;

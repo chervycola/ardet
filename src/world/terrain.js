@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════
 import { rect, px, hash, clamp } from '../render/draw.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { STREET_SHIFT, STREET_X0, STREET_END_W, STREET_Y_MIN, STREET_Y_MAX, STREET_ROAD_Y } from './street.js';
+import { STREET_SHIFT, STREET_X0, STREET_END_W, STREET_Y_MIN, STREET_Y_MAX, STREET_ROAD_Y, BRANCH_PLAIN } from './street.js';
 
 // World width includes the street strip east of the waste.
 export const MW = 6200;
@@ -115,6 +115,8 @@ export function buildTerrain() {
   }
 
   paintStreet(ctx);
+  paintPlainRing(ctx);
+  paintSurvey(ctx);
 
   return canvas;
 }
@@ -165,6 +167,121 @@ const LAMP_STYLE = {
   neon:     { col: '#ff4aff', glow: [255, 74, 255], r: 18 },
   screen:   { col: '#7adfff', glow: [122, 223, 255], r: 20 },
 };
+
+// Силуэты заднего плана: по 2-3 доминанты на эпоху, чёрным по пустоте.
+// База — верх северной обочины; всё строится вверх от неё.
+function paintSkyline(ctx, base) {
+  const S = '#100c08', S2 = '#181209', HOLE = '#050510';
+  const seg = (id) => SEGMENTS.find(g => g.id === id);
+  const wx = (id, v) => seg(id).range[0] + v + STREET_SHIFT;
+  const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+
+  // §1 осевое: зиккурат ступенями + обелиск
+  { const x = wx('axial', 40);
+    R(x,      base - 22, 70, 22, S);
+    R(x + 10, base - 38, 50, 38, S);
+    R(x + 20, base - 52, 30, 52, S);
+    R(x + 28, base - 64, 14, 64, S);
+    const o = wx('axial', 214);
+    R(o, base - 80, 8, 80, S2);
+    ctx.fillStyle = S2; ctx.beginPath();
+    ctx.moveTo(o - 1, base - 80); ctx.lineTo(o + 4, base - 90); ctx.lineTo(o + 9, base - 80); ctx.fill(); }
+
+  // §2 портики: аркада из пяти колонн, архитрав и фронтон
+  { const x = wx('porticoes', 60);
+    R(x - 8, base - 8, 116, 8, S2);                 // стилобат
+    for (let i = 0; i < 5; i++) R(x + i * 22, base - 56, 6, 48, S);
+    R(x - 8, base - 62, 116, 6, S2);                // архитрав
+    ctx.fillStyle = S2; ctx.beginPath();
+    ctx.moveTo(x - 10, base - 62); ctx.lineTo(x + 50, base - 80); ctx.lineTo(x + 110, base - 62); ctx.fill(); }
+
+  // §3 сад света: пагода тремя крышами + минарет
+  { const x = wx('lightgarden', 90);
+    R(x + 10, base - 26, 22, 26, S);                // этаж 1
+    R(x + 2,  base - 32, 38, 6,  S2);               // крыша 1
+    R(x + 14, base - 50, 14, 18, S);                // этаж 2
+    R(x + 8,  base - 56, 26, 6,  S2);               // крыша 2
+    R(x + 18, base - 68, 6,  12, S);                // шпиль-этаж
+    R(x + 14, base - 72, 14, 4,  S2);               // крыша 3
+    const m = wx('lightgarden', 300);
+    R(m, base - 92, 7, 92, S2);                     // минарет
+    R(m - 3, base - 64, 13, 5, S2);                 // балкончик
+    R(m + 1, base - 98, 5, 6, S2); }
+
+  // §4 два очага: частокол + шатровая колокольня
+  { const x = wx('twohearths', 26);
+    for (let i = 0; i < 12; i++) R(x + i * 7, base - 26 - ((i * 37) % 9), 4, 26 + ((i * 37) % 9), S);
+    const k = wx('twohearths', 128);
+    R(k, base - 56, 20, 56, S);
+    ctx.fillStyle = S; ctx.beginPath();
+    ctx.moveTo(k - 4, base - 56); ctx.lineTo(k + 10, base - 84); ctx.lineTo(k + 24, base - 56); ctx.fill();
+    R(k + 9, base - 92, 2, 10, S2); }
+
+  // §5 просвещение: купол обсерватории со щелью + ротонда
+  { const x = wx('enlightenment', 80);
+    R(x, base - 34, 40, 34, S);
+    ctx.fillStyle = S2; ctx.beginPath();
+    ctx.arc(x + 20, base - 34, 20, Math.PI, 0); ctx.fill();
+    R(x + 18, base - 54, 4, 22, '#241c10');         // щель купола
+    const r = wx('enlightenment', 210);
+    for (let i = 0; i < 4; i++) R(r + i * 11, base - 34, 4, 34, S2);
+    R(r - 4, base - 40, 42, 6, S2);
+    ctx.fillStyle = S2; ctx.beginPath();
+    ctx.arc(r + 17, base - 40, 15, Math.PI, 0); ctx.fill(); }
+
+  // §6 пар и тени: две трубы со статикой дыма + газгольдер
+  { const x = wx('steamshadows', 60);
+    R(x, base - 88, 10, 88, S2);
+    R(x + 44, base - 72, 12, 72, S2);
+    R(x + 1, base - 100, 8, 10, 'rgba(138,141,143,0.16)');
+    R(x + 46, base - 84, 9, 9, 'rgba(138,141,143,0.16)');
+    const g = wx('steamshadows', 190);
+    R(g, base - 44, 54, 44, S);
+    R(g - 2, base - 47, 58, 3, S2); }
+
+  // §7 катастрофы: руина с проёмами и рваным верхом + водонапорка
+  { const x = wx('catastrophes', 50);
+    R(x, base - 74, 92, 74, S);
+    for (let i = 0; i < 9; i++) R(x + i * 10, base - 74, 10, 8 + ((i * 53) % 12), HOLE);
+    R(x + 12, base - 44, 12, 16, HOLE);
+    R(x + 44, base - 38, 14, 14, HOLE);
+    R(x + 68, base - 50, 10, 12, HOLE);
+    const w = wx('catastrophes', 250);
+    R(w + 8,  base - 60, 4, 60, S2);
+    R(w + 30, base - 60, 4, 60, S2);
+    R(w + 2,  base - 84, 38, 26, S);
+    R(w + 16, base - 90, 10, 6, S2); }
+
+  // §8 неон: панельки с решёткой окон + вышка с красным огнём
+  { const x = wx('neon', 36);
+    for (const [bx, bw, bh] of [[x, 46, 96], [x + 58, 38, 72]]) {
+      R(bx, base - bh, bw, bh, S);
+      for (let r2 = 0; r2 < ((bh - 14) / 12) | 0; r2++)
+        for (let c = 0; c < ((bw - 8) / 10) | 0; c++)
+          if (((r2 * 7 + c * 13 + bx) % 5) > 2.2)
+            R(bx + 5 + c * 10, base - bh + 8 + r2 * 12, 4, 5, 'rgba(255,74,255,0.13)');
+    }
+    const v = wx('neon', 214);
+    R(v, base - 98, 3, 98, S2);
+    R(v + 13, base - 98, 3, 98, S2);
+    R(v - 2, base - 98, 20, 2, S2);
+    R(v + 4, base - 62, 8, 2, S2);
+    R(v + 6, base - 103, 4, 4, '#C23B2B'); }
+
+  // §9 сейчас: стеклянная плоскость + кран над недостроем
+  { const x = wx('now', 50);
+    const gl = ctx.createLinearGradient(x, base - 108, x + 54, base);
+    gl.addColorStop(0, 'rgba(122,223,255,0.10)'); gl.addColorStop(1, 'rgba(10,10,24,0.9)');
+    ctx.fillStyle = gl; ctx.fillRect(x, base - 108, 54, 108);
+    R(x, base - 108, 54, 2, S2);
+    R(x + 26, base - 108, 2, 108, S2);
+    const k = wx('now', 176);
+    R(k, base - 94, 5, 94, S2);                     // башня крана
+    R(k - 34, base - 94, 84, 3, S2);                // стрела
+    R(k + 44, base - 91, 2, 24, S2);                // трос
+    R(k + 40, base - 68, 10, 8, S);                 // груз висит
+    R(k - 60, base - 30, 44, 30, HOLE); }           // недострой-проём
+}
 
 function paintStreet(ctx) {
   const x0 = STREET_X0 - 160;        // include the approach corridor
@@ -232,6 +349,10 @@ function paintStreet(ctx) {
     ctx.fillRect(wx - 1, ly - 4, 4, 3);
   }
 
+  // ── Скайлайн эпох: силуэты-доминанты на северной обочине ──
+  // Кишка перестаёт быть кишкой, когда у каждого времени есть спина.
+  paintSkyline(ctx, bandTop);
+
   // Act plaques (acts I–IV) at segment entries — gold floor signs
   ctx.font = '7px "Press Start 2P","VT323",monospace';
   for (const seg of SEGMENTS) {
@@ -266,4 +387,67 @@ function paintStreet(ctx) {
   // East edge: the road simply stops; the empty frame stands past it
   ctx.fillStyle = 'rgba(138,141,143,0.4)';
   ctx.fillText('дальше дороги нет. назад — всегда.', STREET_END_W - 6, STREET_ROAD_Y + 40);
+}
+
+
+// ── Равнинная кольцевая кольца §2: полоса предрассветья под портиками ──
+function paintPlainRing(ctx) {
+  const { x0, x1, yMin, yMax, roadY } = BRANCH_PLAIN;
+  // тропа-пунктир от портиков вниз (шов через пустоту)
+  ctx.fillStyle = 'rgba(200,184,160,0.28)';
+  const px = x0 + 252 + 12; // от кольцевой вехи улицы (vx 812)
+  for (let y = STREET_Y_MAX + 8; y < yMin - 4; y += 10) ctx.fillRect(px, y, 2, 5);
+  // полоса
+  for (let x = x0 - 30; x < x1 + 30; x += 4) {
+    ctx.fillStyle = '#20242e';
+    ctx.fillRect(x, yMin, 4, yMax - yMin);
+    if (hash(x, 5, 41) > 0.62) {
+      ctx.fillStyle = '#39404f';
+      ctx.fillRect(x + ((hash(x, 6, 11) * 3) | 0), yMin + 10 + hash(x, 7, 13) * (yMax - yMin - 20) | 0, 1, 1);
+    }
+  }
+  for (let i = 0; i < 18; i++) {
+    ctx.fillStyle = `rgba(5,5,16,${(1 - i / 18) * 0.85})`;
+    ctx.fillRect(x0 - 30, yMin + i, x1 - x0 + 60, 1);
+    ctx.fillRect(x0 - 30, yMax - i, x1 - x0 + 60, 1);
+  }
+  // дорога
+  ctx.globalAlpha = 0.3; ctx.fillStyle = '#aab2c8';
+  ctx.fillRect(x0 - 30, roadY - 9, x1 - x0 + 60, 18);
+  ctx.globalAlpha = 1;
+  // сухая трава по обочинам — короткие штрихи
+  for (let x = x0 - 20; x < x1 + 20; x += 6) {
+    if (hash(x, 8, 29) > 0.45) {
+      ctx.fillStyle = 'rgba(138,141,143,0.35)';
+      const gy = (hash(x, 9, 19) > 0.5 ? yMin + 14 : yMax - 20) + hash(x, 10, 7) * 6;
+      ctx.fillRect(x, gy | 0, 1, 5);
+    }
+  }
+  // один фонарь-свеча посередине
+  const lx = (x0 + x1) / 2 | 0, ly = yMin + 22;
+  const grad = ctx.createRadialGradient(lx + 1, ly + 30, 2, lx + 1, ly + 30, 20);
+  grad.addColorStop(0, 'rgba(218,165,32,0.28)'); grad.addColorStop(1, 'rgba(218,165,32,0)');
+  ctx.fillStyle = grad; ctx.fillRect(lx - 20, ly + 12, 40, 40);
+  ctx.fillStyle = '#14100c'; ctx.fillRect(lx, ly, 2, 30);
+  ctx.fillStyle = '#daa520'; ctx.fillRect(lx - 1, ly - 3, 4, 3);
+  // шапка полосы
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = 'rgba(232,220,200,0.4)';
+  ctx.fillText('кольцевая §2 · равнина · предрассветье', x0 - 20, yMin - 8);
+}
+
+// ── Трассировка каркаса: ряды колышков со шнуром по сторонам городка ──
+function paintSurvey(ctx) {
+  ctx.fillStyle = 'rgba(194,59,43,0.55)';
+  const line = (ax, ay, bx, by) => {
+    const steps = 16;
+    for (let i = 0; i <= steps; i++) {
+      const x = ax + (bx - ax) * i / steps, y = ay + (by - ay) * i / steps;
+      if (i % 2 === 0) ctx.fillRect(x | 0, y | 0, 2, 1);      // шнур пунктиром
+      if (i % 4 === 0) { ctx.fillStyle = '#3a2418'; ctx.fillRect(x | 0, (y - 4) | 0, 2, 5); ctx.fillStyle = 'rgba(194,59,43,0.55)'; }
+    }
+  };
+  line(1350, 1745, 1650, 1745);   // юг: равнина
+  line(1350, 218, 1650, 218);     // север
+  line(96, 760, 96, 1040);        // запад
 }

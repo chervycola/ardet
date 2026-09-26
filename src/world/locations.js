@@ -130,8 +130,11 @@ export const locations = [
 
 // The street (ulitsa) signs join the world as ordinary locations.
 // Their look texts are inline (loc.look) — see world/street.js.
-import { streetLocations } from './street.js';
+import { streetLocations, branchLocations } from './street.js';
+import { surveyLocations } from '../content/world_frame.js';
 locations.push(...streetLocations);
+locations.push(...branchLocations);
+locations.push(...surveyLocations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

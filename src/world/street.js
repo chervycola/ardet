@@ -63,10 +63,13 @@ function buildStreetLocations() {
         look,
         streetForm: sign.form || 'plaque',
         streetSprite: sign.sprite || null,
+        streetEnter: !!sign.enter,
         streetLive: !!sign.live,
         streetSeg: seg.n,
       };
-      if (sign.backyard) {
+      if (sign.enter) {
+        loc.useAction = sign.enter;             // вход-действие вместо оборота
+      } else if (sign.backyard) {
         const flipKey = `${id}_flip`;
         useTexts[flipKey] = {
           title: `${sign.name} — обратная сторона`,
@@ -81,6 +84,28 @@ function buildStreetLocations() {
 }
 
 export const streetLocations = buildStreetLocations();
+
+// ── Ветка «равнина · предрассветье»: первая поперечина радиальной
+// структуры. Параллельна портикам, ниже улицы; пустота между — проходима.
+export const BRANCH_PLAIN = { x0: 3560, x1: 3880, roadY: 1260, yMin: 1180, yMax: 1340 };
+export const branchLocations = [
+  { id: 'br_back', name: 'кольцевая веха', zone: 'street',
+    x: BRANCH_PLAIN.x0 + 12, y: BRANCH_PLAIN.roadY - 58, w: 14, h: 26,
+    streetForm: 'plaque', streetSprite: 'ring_post', useAction: 'branch_back',
+    look: `Веха кольцевой. Обратно — портики: тот же век, другая сторона света. Пешком тоже можно; пустота проходима, но не учтена.` },
+  { id: 'br_bell', name: 'столб с колоколом', zone: 'street',
+    x: BRANCH_PLAIN.x0 + 120, y: BRANCH_PLAIN.roadY - 58, w: 14, h: 26,
+    streetForm: 'plaque', streetSprite: 'bell_mute',
+    look: `Столб с колоколом. Языка нет: снят до рассвета, чтобы не будил. Расписание звона висит, пункт один: «по необходимости». Необходимости не зафиксировано.` },
+  { id: 'br_grass', name: 'сухая трава', zone: 'street',
+    x: BRANCH_PLAIN.x0 + 200, y: BRANCH_PLAIN.roadY - 52, w: 14, h: 22,
+    streetForm: 'surface',
+    look: `Трава по пояс, сухая, стоит без ветра. Роса выпадает по графику и не достаётся никому. График соблюдается.` },
+  { id: 'br_stone', name: 'милевой камень равнины', zone: 'street',
+    x: BRANCH_PLAIN.x0 + 276, y: BRANCH_PLAIN.roadY - 52, w: 14, h: 22,
+    streetForm: 'plaque', streetSprite: 'mile_stone',
+    look: `Милевой камень. Числа нет: до полудня отсюда — не мера длины. Тени тоже нет — солнце ещё не взошло. Камень ждёт. Это его работа.` },
+];
 
 // Townlet gate-post sign (the one outside the gradient) keeps living in
 // the waste as part of the gates look; not duplicated here.

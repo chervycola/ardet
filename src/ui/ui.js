@@ -10,7 +10,7 @@ import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
-const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass']);
+const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back']);
 
 // Does this location actually do something on «использовать»?
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.

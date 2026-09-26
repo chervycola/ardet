@@ -124,7 +124,7 @@ const imp = p => import(new URL(p, base));
 
   test('streetLocations: every two-sided sign registers a flip useAction', () => {
     const twoSided = allSigns().filter(s => s.backyard && s._segment !== 'townlet').length;
-    const withFlip = streetLocations.filter(l => l.useAction);
+    const withFlip = streetLocations.filter(l => l.useAction && l.useAction.endsWith('_flip'));
     eq(withFlip.length, twoSided, 'flip count matches backyard count');
     for (const l of withFlip) {
       const u = useTexts[l.useAction];

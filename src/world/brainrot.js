@@ -13,6 +13,19 @@ let brainrot = 0;
 let brainrotFreeze = false;
 let brainrotFreezeTimer = 0;
 
+// ── Петля «СКРОЛЛ»: добровольное падение. Лента крутит, растр растёт;
+// выход не подписан — остановиться. Падения милосердны.
+let loopMode = false;
+let stillFrames = 0;
+let loopExitCb = null;
+export function enterLoop(exitCb) {
+  loopMode = true; stillFrames = 0; loopExitCb = exitCb || null;
+  brainrot = Math.max(brainrot, 20);
+  events.emit('brainrot.hook');
+}
+export function inLoop() { return loopMode; }
+export function _dbg() { return { loopMode, stillFrames, brainrot: brainrot | 0 }; }
+
 function getDistFromMap(player) {
   let d = 0;
   if (player.x < 0) d += Math.abs(player.x);
@@ -23,6 +36,18 @@ function getDistFromMap(player) {
 }
 
 export function update(player) {
+  if (loopMode) {
+    brainrot = Math.min(96, brainrot + 0.16);   // растёт, но фриза нет
+    if (player.moving) stillFrames = 0; else stillFrames++;
+    if (stillFrames > 240) {                    // 4 секунды покоя — отпустило
+      loopMode = false; stillFrames = 0;
+      brainrot = Math.min(brainrot, 55);
+      const cb = loopExitCb; loopExitCb = null;
+      events.emit('brainrot.unhook');
+      if (cb) cb();
+    }
+    return;
+  }
   if (brainrotFreeze) {
     brainrotFreezeTimer++;
     // Recovery after 5 seconds (300 frames)

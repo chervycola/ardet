@@ -32,7 +32,7 @@ import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/meta
 import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
-import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_ROAD_Y, consumeGatesLine, worldSegmentAt } from './world/street.js';
+import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
   init as initWorldMap, toggle as toggleWorldMap,
   markDiscovered as discoverGate,
@@ -57,7 +57,7 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
-import { update as updateBrainrot, draw as drawBrainrot, isFrozen } from './world/brainrot.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop } from './world/brainrot.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 
@@ -741,6 +741,12 @@ function updateEdgeLaw() {
 // Camera + all per-frame world systems. Shared by the normal movement
 // path and the held-finger walk branch above.
 function updateWorldSystems() {
+  // СКРОЛЛ: лента замкнута — последние триста шагов повторяются
+  if (inBrainrotLoop()) {
+    const L0 = STREET_END_W - 320, L1 = STREET_END_W - 24;
+    if (player.x > L1) { player.x -= (L1 - L0); player.tx = player.x; }
+    else if (player.x < L0) { player.x += (L1 - L0); player.tx = player.x; }
+  }
   camera.follow(player.x + 6, player.y + 10);
   camera.update();
   camera.clampToWorld(MW, MH);
@@ -935,6 +941,25 @@ events.on('location.use', (loc) => {
       if (consumeGatesLine()) {
         showLore('Эти врата были предназначены для тебя одного. Обычно это узнают позже.');
       }
+    });
+    return;
+  }
+  // Каркас: кольцевая равнины и СКРОЛЛ
+  if (actionKey === 'branch_plain') {
+    teleportWithFade(BRANCH_PLAIN.x0 + 46, BRANCH_PLAIN.roadY);
+    return;
+  }
+  if (actionKey === 'branch_back') {
+    teleportWithFade(STREET_SHIFT + 812, STREET_ROAD_Y);
+    return;
+  }
+  if (actionKey === 'brainrot_enter') {
+    teleportWithFade(STREET_END_W - 170, STREET_ROAD_Y, () => {
+      enterBrainrotLoop(() => {
+        teleportWithFade(STREET_END_W - 420, STREET_ROAD_Y, () => {
+          showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
+        });
+      });
     });
     return;
   }

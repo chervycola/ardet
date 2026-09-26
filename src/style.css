@@ -260,10 +260,10 @@ canvas#game {
   min-height: 200px;
   max-height: 50vh;
 }
-#dlg.on { display: flex; gap: 16px; }
+#dlg.on { display: flex; gap: 16px; justify-content: center; }
 #dp { width: 80px; height: 100px; flex-shrink: 0; }
 /* колонка с прокруткой текста: кнопки ответов всегда на экране */
-#dd { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#dd { flex: 0 1 640px; display: flex; flex-direction: column; min-width: 0; }
 #dt { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
 #do { margin-top: 8px; flex-shrink: 0; }
 #dn {

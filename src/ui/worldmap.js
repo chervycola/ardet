@@ -196,6 +196,19 @@ function drawLocal() {
       ctx.fillRect(sx + 1, sy + 1, 1, 1);
     }
   }
+  // Каркас: стороны света по краям поля (форма world-map)
+  ctx.font = '6px "Press Start 2P","VT323",monospace';
+  ctx.fillStyle = 'rgba(218,165,32,0.75)';
+  ctx.fillText('юг · полдень →', LOCAL_BOX.x + LOCAL_BOX.w - 96, ly(760) - 14);
+  ctx.fillStyle = 'rgba(194,59,43,0.7)';
+  ctx.fillText('↑ север · полночь (размечено)', lx(1350), LOCAL_BOX.y + 12);
+  ctx.fillText('↓ равнина · предрассветье (размечено)', lx(1150), LOCAL_BOX.y + LOCAL_BOX.h - 6);
+  ctx.save();
+  ctx.translate(LOCAL_BOX.x + 10, ly(900));
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('запад · вечер (размечено)', -70, 0);
+  ctx.restore();
+
   // Игрок
   const p = getPlayerPos();
   if (p) {
