@@ -541,11 +541,16 @@ canvas#game {
   .txed-row, #txed-cats button { font-size: 17px; padding-top: 8px; padding-bottom: 8px; }
   #txed-ta { font-size: 18px; }
 }
+
+/* оттиск сборки — угол заставки, для сверки версий */
+#build-stamp{position:absolute; right:12px; bottom:8px;
+  font-family:'PT Mono','VT323',monospace; font-size:11px;
+  color:rgba(138,141,143,.55); letter-spacing:1px}
 </style>
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">FALL IN</button></div><div id="entry-mirror"><span id="entry-mirror-cap">АФИША ВЫСТУПЛЕНИЙ</span><div id="entry-mirror-glass"><i></i><span>COMING SOON</span></div></div></div>
+<div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">FALL IN</button></div><div id="entry-mirror"><span id="entry-mirror-cap">АФИША ВЫСТУПЛЕНИЙ</span><div id="entry-mirror-glass"><i></i><span>COMING SOON</span></div></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
@@ -619,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='645b96b · 2026-09-26';console.log('[оттиск]', '645b96b · 2026-09-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -24511,6 +24516,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             EDGE_START = 6020; // just past the empty frame (world x)
             EDGE_FALL = 6120; // the fall line
             entryDone = false;
+            { // оттиск сборки на заставке — сверка «что реально задеплоено»
+                const bs = document.getElementById('build-stamp');
+                if (bs)
+                    bs.textContent = 'оттиск ' + (window.ARDET_BUILD || 'локальный');
+            }
             entryEnter = () => {
                 if (entryDone)
                     return;

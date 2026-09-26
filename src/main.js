@@ -811,6 +811,11 @@ function startGame() {
 }
 
 let entryDone = false;
+{ // оттиск сборки на заставке — сверка «что реально задеплоено»
+  const bs = document.getElementById('build-stamp');
+  if (bs) bs.textContent = 'оттиск ' + (window.ARDET_BUILD || 'локальный');
+}
+
 const entryEnter = () => {
   if (entryDone) return; entryDone = true;
   document.getElementById('entry').style.display = 'none';

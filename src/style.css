@@ -527,3 +527,8 @@ canvas#game {
   .txed-row, #txed-cats button { font-size: 17px; padding-top: 8px; padding-bottom: 8px; }
   #txed-ta { font-size: 18px; }
 }
+
+/* оттиск сборки — угол заставки, для сверки версий */
+#build-stamp{position:absolute; right:12px; bottom:8px;
+  font-family:'PT Mono','VT323',monospace; font-size:11px;
+  color:rgba(138,141,143,.55); letter-spacing:1px}

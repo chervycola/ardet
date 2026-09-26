@@ -76,7 +76,17 @@ function bundleWithTsc() {
   return `${sys}\n${named}\n${bundle}\nSystem.import("main");`;
 }
 
+function buildStamp() {
+  try {
+    const h = require('child_process').execSync('git rev-parse --short HEAD').toString().trim();
+    const d = new Date().toISOString().slice(0, 10);
+    return `${h} · ${d}`;
+  } catch (e) { return 'без оттиска'; }
+}
+
 function renderHtml(js, flags) {
+  const stamp = buildStamp();
+  flags = `window.ARDET_BUILD='${stamp}';console.log('[оттиск]', '${stamp}');` + flags;
   const css = fs.readFileSync('src/style.css', 'utf8');
   const audio = fs.readFileSync('src/audio/ardet-tracks.js', 'utf8')
     .replace(/<\/script>/gi, '<\\/script>');
