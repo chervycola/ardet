@@ -3,16 +3,21 @@
 // эпохи — кольца-рамки вокруг него (расстояние до границы городка =
 // время), идти можно в любую сторону: наружу — вперёд по эпохам,
 // вдоль кольца — вдоль эпохи, внутрь — назад к вне-временью.
-// v1 открывает юг и восток; север и запад обрезаны краем полотна
-// (world_frame: «кольцо I размечено, пространство не раскопано»).
+// Все четыре стороны открыты; за кольцом огня — стихии краёв.
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
 
-// Прямоугольник городка (вне-время, кольцо 0)
-export const TOWN = { x0: 0, y0: 160, x1: 3000, y1: 1800 };
 export const RING_W = 200;              // ширина кольца-эпохи
 export const RINGS = SEGMENTS.length;   // 9 эпох
 export const FIRE_W = 150;              // край — кольцо огня
+export const EDGE_BAND = 350;           // стихии за огнём
+export const OFF = RINGS * RING_W + FIRE_W + EDGE_BAND;   // 2300 — поля вокруг
+
+// Прямоугольник городка (вне-время, кольцо 0) — в центре полного диска.
+// Контент городка исторически 0..3000 × 160..1800: сдвиг на чтении.
+export const SHIFT_X = OFF;             // 2300
+export const SHIFT_Y = OFF - 160;       // 2140
+export const TOWN = { x0: OFF, y0: OFF, x1: OFF + 3000, y1: OFF + 1640 };
 
 // расстояние от точки до границы городка (0 внутри)
 export function townDist(x, y) {
@@ -56,13 +61,12 @@ export function southPoint(vx) {
   const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
   const band = southBand(seg.n);
   return {
-    x: 340 + t * 2320,
+    x: TOWN.x0 + 340 + t * 2320,
     y: band.y0 + 58 + ((vx * 37) % 84),   // детерминированный разброс в кольце
     ring: seg.n,
   };
 }
 
-// границы мира v1: за огнём — полосы стихий (юг песок, восток мусор)
-export const EDGE_BAND = 350;
-export const WORLD_W = TOWN.x1 + RINGS * RING_W + FIRE_W + EDGE_BAND;  // 5300
-export const WORLD_H = TOWN.y1 + RINGS * RING_W + FIRE_W + EDGE_BAND;  // 4100
+// полный мир: кольца и стихии со всех четырёх сторон
+export const WORLD_W = TOWN.x1 + OFF;   // 7600
+export const WORLD_H = TOWN.y1 + OFF;   // 6280

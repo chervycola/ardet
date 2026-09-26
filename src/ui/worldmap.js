@@ -44,7 +44,7 @@ let view = 'world';                       // 'world' | 'local'
 let getVisitedFn = () => new Set();       // main передаёт flags.visited
 const TAB_BOX = { x: W - 150, y: 4, w: 138, h: 18 };
 const LOCAL_BOX = { x: 20, y: 44, w: W - 40, h: H - 150 };
-const LOCAL_XMAX = 5000, LOCAL_Y0 = 0, LOCAL_Y1 = 3800;
+const LOCAL_XMAX = 7600, LOCAL_Y0 = 0, LOCAL_Y1 = 6280;
 function lx(wx) { return LOCAL_BOX.x + Math.max(0, Math.min(1, wx / LOCAL_XMAX)) * LOCAL_BOX.w; }
 function ly(wy) { return LOCAL_BOX.y + Math.max(0, Math.min(1, (wy - LOCAL_Y0) / (LOCAL_Y1 - LOCAL_Y0))) * LOCAL_BOX.h; }
 
@@ -196,18 +196,13 @@ function drawLocal() {
       ctx.fillRect(sx + 1, sy + 1, 1, 1);
     }
   }
-  // Каркас: стороны света по краям поля (форма world-map)
+  // Стороны света и стихии по краям (форма world-map)
   ctx.font = '6px "Press Start 2P","VT323",monospace';
-  ctx.fillStyle = 'rgba(218,165,32,0.75)';
-  ctx.fillText('юг · полдень →', LOCAL_BOX.x + LOCAL_BOX.w - 96, ly(760) - 14);
-  ctx.fillStyle = 'rgba(194,59,43,0.7)';
-  ctx.fillText('↑ север · полночь (размечено)', lx(1350), LOCAL_BOX.y + 12);
-  ctx.fillText('↓ равнина · предрассветье (размечено)', lx(1150), LOCAL_BOX.y + LOCAL_BOX.h - 6);
-  ctx.save();
-  ctx.translate(LOCAL_BOX.x + 10, ly(900));
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('запад · вечер (размечено)', -70, 0);
-  ctx.restore();
+  ctx.fillStyle = 'rgba(194,59,43,0.75)';
+  ctx.fillText('↑ север · полночь · лёд', LOCAL_BOX.x + LOCAL_BOX.w / 2 - 70, LOCAL_BOX.y + 12);
+  ctx.fillText('↓ юг · полдень · пески', LOCAL_BOX.x + LOCAL_BOX.w / 2 - 70, LOCAL_BOX.y + LOCAL_BOX.h - 6);
+  ctx.fillText('→ восток · утро · мусор', LOCAL_BOX.x + LOCAL_BOX.w - 150, LOCAL_BOX.y + LOCAL_BOX.h / 2);
+  ctx.fillText('← запад · вечер · озеро', LOCAL_BOX.x + 6, LOCAL_BOX.y + LOCAL_BOX.h / 2);
 
   // Игрок
   const p = getPlayerPos();

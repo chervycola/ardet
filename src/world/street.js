@@ -30,7 +30,7 @@ export function worldSegmentAt(x, y) {
 
 // Where the gates drop you, and where walking west returns you
 export const STREET_SPAWN = { x: 1500, y: TOWN.y1 + 80 };
-export const GATES_RETURN = { x: 1395, y: 885 };
+export const GATES_RETURN = { x: TOWN.x0 + 1395, y: TOWN.y0 + 725 };
 
 // One-time gates line (session-scoped)
 let gatesLineShown = false;

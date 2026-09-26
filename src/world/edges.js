@@ -16,8 +16,8 @@ const OUTER = RINGS * RING_W + FIRE_W;   // 1950 — где кончается �
 export const EDGE = {
   south: { y0: TOWN.y1 + OUTER, y1: WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
   east:  { x0: TOWN.x1 + OUTER, x1: WORLD_W, elem: 'junk',      name: 'куча мусора' },
-  north: { y1: 150,  elem: 'ice',  name: 'лёд' },
-  west:  { x1: 90,   elem: 'lake', name: 'токсичное озеро' },
+  north: { y1: TOWN.y0 - OUTER, elem: 'ice',  name: 'лёд' },
+  west:  { x1: TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
 };
 
 let cur = null;      // { elem, depth 0..1 }
@@ -40,11 +40,10 @@ export function update(player) {
     cur = { elem: 'quicksand', depth: Math.min(1, (py - EDGE.south.y0) / (EDGE.south.y1 - EDGE.south.y0 - 40)) };
   } else if (px > EDGE.east.x0) {
     cur = { elem: 'junk', depth: Math.min(1, (px - EDGE.east.x0) / (EDGE.east.x1 - EDGE.east.x0 - 40)) };
-  } else if (py < EDGE.north.y1 + 170) {
-    // лёд подступает раньше кромки: полоса у северного края
-    cur = { elem: 'ice', depth: Math.min(1, (EDGE.north.y1 + 170 - py) / 190) };
-  } else if (px < EDGE.west.x1 + 120) {
-    cur = { elem: 'lake', depth: Math.min(1, (EDGE.west.x1 + 120 - px) / 200) };
+  } else if (py < EDGE.north.y1) {
+    cur = { elem: 'ice', depth: Math.min(1, (EDGE.north.y1 - py) / (EDGE.north.y1 - 40)) };
+  } else if (px < EDGE.west.x1) {
+    cur = { elem: 'lake', depth: Math.min(1, (EDGE.west.x1 - px) / (EDGE.west.x1 - 40)) };
   }
   // лёд: экран трескается по мере глубины
   if (cur && cur.elem === 'ice' && cur.depth > 0.25) {

@@ -98,12 +98,16 @@ const imp = p => import(new URL(p, base));
   const { useTexts } = await imp('world/useActions.js');
   const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
 
+  const { TOWN } = await imp('world/disc.js');
   test('worldSegmentAt: maps world point to epoch rings (for the title card)', () => {
-    const a = worldSegmentAt(1500, 1900);   // кольцо 1 юга
+    const cx = (TOWN.x0 + TOWN.x1) / 2;
+    const a = worldSegmentAt(cx, TOWN.y1 + 100);
     assert(a && a.id === 'axial', `ring1 is axial: ${a && a.id}`);
-    const n = worldSegmentAt(1500, 1800 + 8 * 200 + 100);
+    const n = worldSegmentAt(cx, TOWN.y1 + 8 * 200 + 100);
     assert(n && n.id === 'now', `ring9 is now: ${n && n.id}`);
-    assert(worldSegmentAt(1500, 900) === null, 'городок вне эпох');
+    const w = worldSegmentAt(TOWN.x0 - 300, TOWN.y0 + 400);
+    assert(w && w.id === 'porticoes', `запад кольцо 2: ${w && w.id}`);
+    assert(worldSegmentAt(cx, TOWN.y0 + 700) === null, 'городок вне эпох');
   });
 
   test('streetLocations: one per segment sign, unique ids, coords in south rings', () => {
@@ -111,8 +115,8 @@ const imp = p => import(new URL(p, base));
     for (const l of streetLocations) {
       assert(!ids.has(l.id), `dup id ${l.id}`);
       ids.add(l.id);
-      assert(l.x > 280 && l.x < 2740, `${l.id}: x ${l.x} за полосой юга`);
-      assert(l.y > 1800 && l.y < 1800 + 9 * 200, `${l.id}: y ${l.y} вне колец`);
+      assert(l.x > 2500 && l.x < 5100, `${l.id}: x ${l.x} за полосой юга`);
+      assert(l.y > 3900 && l.y < 3940 + 9 * 200, `${l.id}: y ${l.y} вне колец`);
     }
   });
 
@@ -134,7 +138,7 @@ const imp = p => import(new URL(p, base));
   });
 
   test('street constants: spawn on ring one, return at the gates', () => {
-    assert(STREET_SPAWN.y > 1800 && STREET_SPAWN.y < 2000, 'spawn на первом кольце');
+    assert(STREET_SPAWN.y > 3940 && STREET_SPAWN.y < 4160, 'spawn на первом кольце');
     assert(GATES_RETURN.x > 0 && GATES_RETURN.y > 0, 'gates return в городке');
   });
 
@@ -154,31 +158,31 @@ const imp = p => import(new URL(p, base));
   const { getZone } = await imp('audio/zoneAmbient.js');
 
   test('world: полотно накрывает кольца и стихии; знаки в реестре', () => {
-    assert(MW >= 5000 && MH >= 3800, `мир ${MW}×${MH} мал для колец`);
+    assert(MW >= 7600 && MH >= 6200, `мир ${MW}×${MH} мал для полного диска`);
     const st = locations.filter(l => l.id.startsWith('st_'));
     assert(st.length === streetLocations.length, 'реестр без потерь');
   });
 
   const { tryMove } = await imp('world/physics.js');
   test('physics: мир открыт — север и юг достижимы', () => {
-    const p = { x: 1500, y: 200, tx: 0, ty: 0, moving: false };
+    const p = { x: 3800, y: 500, tx: 0, ty: 0, moving: false };
     tryMove(p, 0, -300, [], {});
-    assert(p.y < 170, `лёд севера достижим (y=${p.y})`);
-    const q = { x: 1500, y: 3400, tx: 0, ty: 0, moving: false };
+    assert(p.y < 500, `лёд севера достижим (y=${p.y})`);
+    const q = { x: 3800, y: 5900, tx: 0, ty: 0, moving: false };
     tryMove(q, 0, 300, [], {});
-    assert(q.y > 3400, `пески юга достижимы (y=${q.y})`);
+    assert(q.y > 5900, `пески юга достижимы (y=${q.y})`);
   });
 
   test('physics: замок городка не действует на кольцах', () => {
-    const p = { x: 1500, y: 1900, tx: 0, ty: 0, moving: false }; // кольцо 1
+    const p = { x: 3800, y: 4040, tx: 0, ty: 0, moving: false }; // кольцо 1 юга
     tryMove(p, 0, 100, [], { canLeaveSettlement: false });
-    assert(p.y > 1950, `по кольцам ходим до Шута (y=${p.y})`);
+    assert(p.y > 4090, `по кольцам ходим до Шута (y=${p.y})`);
   });
 
-  test('zones: street zone east of the waste; waste zones intact', () => {
-    eq(getZone(4000, 880), 'street', 'street zone');
-    eq(getZone(1000, 900), 'settlement', 'settlement intact');
-    eq(getZone(2500, 900), 'highway', 'highway intact');
+  test('zones: кольца звучат улицей; зоны городка целы', () => {
+    eq(getZone(3800, 4500), 'street', 'южные кольца');
+    eq(getZone(3300, 3100), 'settlement', 'settlement intact');
+    eq(getZone(4800, 3100), 'highway', 'highway intact');
   });
 }
 
@@ -187,7 +191,7 @@ const imp = p => import(new URL(p, base));
   const { buildTerrain } = await imp('world/terrain.js');
   test('terrain: builds the disc world without throwing', () => {
     const c = buildTerrain();
-    assert(c.width >= 5000 && c.height >= 3800, 'canvas накрывает диск');
+    assert(c.width === 3000 && c.height === 1800, 'канвас — только городок');
   });
 
   const { state } = await imp('core/state.js');

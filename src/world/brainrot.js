@@ -9,6 +9,7 @@ import { MW, MH } from './terrain.js';
 import { events } from '../core/events.js';
 import { crackedGlass } from '../render/metaFx.js';
 import { edgeDepth } from './edges.js';
+import { TOWN } from './disc.js';
 
 let brainrot = 0;
 let brainrotFreeze = false;
@@ -57,8 +58,8 @@ export function update(player) {
       brainrotFreezeTimer = 0;
       brainrot = 50;
       // Respawn at campfire
-      player.x = 800;
-      player.y = 900;
+      player.x = TOWN.x0 + 800;
+      player.y = TOWN.y0 + 740;
       events.emit('brainrot.recover');
     }
     return;

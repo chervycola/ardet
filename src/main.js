@@ -42,7 +42,8 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W } from './world/disc.js';
+import { TOWN, RING_W, SHIFT_X, SHIFT_Y } from './world/disc.js';
+import { drawGround, drawGroundMarks } from './render/ground.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -99,7 +100,7 @@ preloadAll().then(() => {
 
 // ═══ GAME OBJECTS (must be before loadGame!) ═══
 const player = {
-  x: 800, y: 900, tx: 800, ty: 900,
+  x: TOWN.x0 + 800, y: TOWN.y0 + 740, tx: TOWN.x0 + 800, ty: TOWN.y0 + 740,
   dir: 1, moving: false, walkFrame: 0,
 };
 setPlayer(player);
@@ -156,7 +157,7 @@ function canLeaveSettlement() {
 // ═══ LIGHTING SETUP from locations ═══
 lighting.clear();
 // Player lantern — follows player
-lighting.add({ x: 800, y: 900, r: 55, color: [255, 180, 80], flicker: 0.1 });
+lighting.add({ x: TOWN.x0 + 800, y: TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
 // Location lights
 for (const loc of locations) {
   if (!loc.light) continue;
@@ -206,15 +207,16 @@ function render() {
   const uiCtx = layers.ctx('ui');
   const postCtx = layers.ctx('post');
 
-  // ── BG: terrain slice ──
+  // ── BG: аналитическая земля диска + запечённый городок поверх ──
   const camX = Math.round(camera.x);
   const camY = Math.round(camera.y);
-  const srcX = clamp(camX, 0, MW - vw);
-  const srcY = clamp(camY, 0, MH - vh);
-  const srcW = Math.min(vw, MW - srcX);
-  const srcH = Math.min(vh, MH - srcY);
-  if (srcW > 0 && srcH > 0) {
-    bgCtx.drawImage(terrainCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+  drawGround(bgCtx, camX, camY, vw, vh);
+  const tx0 = Math.max(camX, TOWN.x0), ty0 = Math.max(camY, TOWN.y0);
+  const tx1 = Math.min(camX + vw, TOWN.x1), ty1 = Math.min(camY + vh, TOWN.y1);
+  if (tx1 > tx0 && ty1 > ty0) {
+    bgCtx.drawImage(terrainCanvas,
+      tx0 - SHIFT_X, ty0 - SHIFT_Y, tx1 - tx0, ty1 - ty0,
+      tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
   }
 
   // ── BG: atmosphere ──
@@ -226,6 +228,7 @@ function render() {
   worldCtx.translate(-camX, -camY);
   setCtx(worldCtx);
 
+  drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawFootprints(worldCtx, { x: camX, y: camY });
 
   const sortedLocs = [...locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
@@ -735,7 +738,7 @@ function updateWorldSystems() {
   updateWeather(getZone(player.x, player.y));
   updateCrackTriggers(player);
 
-  if (t % 3 === 0) fireEmber(775, 795);
+  if (t % 3 === 0) fireEmber(TOWN.x0 + 775, TOWN.y0 + 635);
 }
 
 // ═══ LOOP ═══
@@ -918,13 +921,13 @@ events.on('location.use', (loc) => {
     return;
   }
   if (actionKey === 'branch_back') {
-    teleportWithFade(2560, TOWN.y1 + RING_W + 80);
+    teleportWithFade(TOWN.x0 + 2560, TOWN.y1 + RING_W + 80);
     return;
   }
   if (actionKey === 'brainrot_enter') {
-    teleportWithFade(2540, TOWN.y1 + 8 * RING_W + 90, () => {
+    teleportWithFade(TOWN.x0 + 2540, TOWN.y1 + 8 * RING_W + 90, () => {
       enterBrainrotLoop(() => {
-        teleportWithFade(2540, TOWN.y1 + 7 * RING_W + 100, () => {
+        teleportWithFade(TOWN.x0 + 2540, TOWN.y1 + 7 * RING_W + 100, () => {
           showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
         });
       });

@@ -340,8 +340,8 @@ setCtx(fakeCtx());
     assert(recovered, 'brainrot.recover event fired');
     assert(!brainrot.isFrozen(), 'no longer frozen after recovery');
     eq(levelAtRecover, 50, 'level reset to 50 at the moment of recovery');
-    eq(player.x, 800, 'respawned at campfire x');
-    eq(player.y, 900, 'respawned at campfire y');
+    eq(player.x, 3100, 'respawned at campfire x');
+    eq(player.y, 3040, 'respawned at campfire y');
   });
 }
 

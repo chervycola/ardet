@@ -130,11 +130,13 @@ export const locations = [
 
 // The street (ulitsa) signs join the world as ordinary locations.
 // Their look texts are inline (loc.look) — see world/street.js.
+// Городок исторически жил в 0..3000×160..1800 — сдвигаем в центр диска
+import { SHIFT_X, SHIFT_Y } from './disc.js';
+for (const l of locations) { l.x += SHIFT_X; l.y += SHIFT_Y; }
+
 import { streetLocations, branchLocations } from './street.js';
-import { surveyLocations } from '../content/world_frame.js';
-locations.push(...streetLocations);
+locations.push(...streetLocations);   // уже в мировых координатах диска
 locations.push(...branchLocations);
-locations.push(...surveyLocations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

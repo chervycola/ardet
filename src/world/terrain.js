@@ -48,8 +48,8 @@ function getZoneColors(zone) {
 // Build terrain once onto a large offscreen canvas
 export function buildTerrain() {
   const canvas = document.createElement('canvas');
-  canvas.width = MW;
-  canvas.height = MH;
+  canvas.width = 3000;
+  canvas.height = 1800;   // только городок: кольца рисует render/ground
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
@@ -115,9 +115,7 @@ export function buildTerrain() {
     ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
   }
 
-  paintRings(ctx);
-  paintEdgesElements(ctx);
-  paintSurvey(ctx);
+
 
   return canvas;
 }

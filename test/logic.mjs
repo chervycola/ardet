@@ -238,7 +238,7 @@ const imp = p => import(new URL(p, base));
     // could never bring the player back: 2664 - 2.4 = 2661.6, still
     // outside. The recovery slide must allow moves that REDUCE distance
     // to the settlement even if the new position is still outside.
-    const player = { x: 2664, y: 1443 };
+    const player = { x: 4964, y: 3583 };
     assert(!isInSettlement(player.x, player.y), 'precondition: outside');
 
     let frames = 0;
@@ -255,17 +255,17 @@ const imp = p => import(new URL(p, base));
   test('physics: stranded recovery only allows progress, not further drift', () => {
     // Same scenario, but trying to push further out (east, away from
     // settlement). Must be rejected.
-    const player = { x: 2664, y: 1443 };
+    const player = { x: 4964, y: 3583 };
     const moved = tryMove(player, +2.4, 0, locations, { canLeaveSettlement: false });
     assert(!moved, 'must not allow movement further away from settlement');
-    eq(player.x, 2664, 'x unchanged');
+    eq(player.x, 4964, 'x unchanged');
   });
 
   test('physics: inside settlement, trying to cross boundary is still blocked', () => {
     // The other half of the contract: a player inside the zone can't
     // walk OUT while it's locked. (Movement along the boundary should
     // still work via the original per-axis slide.)
-    const player = { x: 2649, y: 900 };  // 1 px inside east edge
+    const player = { x: 4949, y: 3040 };  // 1 px inside east edge
     assert(isInSettlement(player.x, player.y));
     const moved = tryMove(player, +5, 0, locations, { canLeaveSettlement: false });
     // Either no move (5px east crosses the line) or sliding works on y.

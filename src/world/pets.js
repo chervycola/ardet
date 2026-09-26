@@ -2,6 +2,7 @@
 // PET CROSSINGS — random cat/raven/rat cameos
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
+import { TOWN } from './disc.js';
 import { X } from '../render/context.js';
 import { scaler } from '../render/scaler.js';
 
@@ -19,10 +20,10 @@ function spawn() {
   const types = ['cat', 'raven', 'rat', 'rat', 'cat'];
   const type = types[Math.floor(Math.random() * types.length)];
   const fromLeft = Math.random() > 0.5;
-  const y = 200 + Math.random() * 1400;
+  const y = TOWN.y0 + 40 + Math.random() * 1400;
   pets.push({
     type,
-    x: fromLeft ? -20 : 3020,
+    x: fromLeft ? TOWN.x0 - 20 : TOWN.x1 + 20,
     y,
     vx: fromLeft ? (type === 'raven' ? 1.8 : type === 'cat' ? 0.9 : 1.2)
                  : (type === 'raven' ? -1.8 : type === 'cat' ? -0.9 : -1.2),

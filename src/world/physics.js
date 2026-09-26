@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════
 import { MW, MH } from './terrain.js';
 import { clamp } from '../render/draw.js';
-import { townDist } from './disc.js';
+
 
 const PLAYER_W = 14;
 const PLAYER_H = 20;
@@ -14,7 +14,8 @@ const PLAYER_MY = 16;
 // Locked until Jester is spoken to: only the far border territories where
 // the two outlier NPCs live (Dumpster Demon at 2720,200 in top-right highway,
 // Nocturnal at 1665,1685 on the southern toxic plain) and the pit/brainrot fringe.
-const SETTLEMENT = { x1: 40, x2: 2650, y1: 180, y2: 1580 };
+import { TOWN, townDist } from './disc.js';
+const SETTLEMENT = { x1: TOWN.x0 + 40, x2: TOWN.x0 + 2650, y1: TOWN.y0 + 20, y2: TOWN.y0 + 1420 };
 
 export function isInSettlement(x, y) {
   return x >= SETTLEMENT.x1 && x <= SETTLEMENT.x2 &&

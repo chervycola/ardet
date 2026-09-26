@@ -115,3 +115,7 @@ export const loreItems = [
 
 // перенос пасхального фонда — записки ложатся в общий список
 loreItems.push(...EGG_LORE);
+
+// сдвиг в центр диска (исторические координаты 0..3000×160..1800)
+import { SHIFT_X, SHIFT_Y } from '../world/disc.js';
+for (const it of loreItems) { it.x += SHIFT_X; it.y += SHIFT_Y; }
