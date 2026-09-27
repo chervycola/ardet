@@ -648,6 +648,58 @@ const STREET = {
     const ph = (t * 0.05 | 0) % 4;
     for (let i = 0; i < 3; i++) ctx.fillRect(x - 7, gy - 17 + ((i * 4 + ph) % 12), 3, 1);
   },
+  // указ о кофе: кофейник за решёткой
+  coffee_decree(ctx, x, gy) {
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 8, gy - 16, 16, 16);          // ниша указа
+    ctx.fillStyle = C.dark;                        // кофейник
+    ctx.fillRect(x - 3, gy - 11, 7, 7);
+    ctx.fillRect(x + 4, gy - 10, 3, 2);            // носик
+    ctx.fillRect(x - 2, gy - 13, 5, 2);            // крышка
+    ctx.fillStyle = C.stone2;                      // решётка
+    for (let i = -7; i <= 7; i += 4) ctx.fillRect(x + i, gy - 15, 1, 14);
+    ctx.fillStyle = C.gold;                        // замок
+    ctx.fillRect(x - 2, gy - 4, 4, 3);
+  },
+  // нора у контрфорса: тьма и угол белой перчатки
+  rabbit_hole(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 10, gy - 18, 8, 18);          // контрфорс
+    ctx.fillRect(x - 13, gy - 10, 3, 10);
+    ctx.fillStyle = C.black;                       // нора
+    ctx.beginPath(); ctx.arc(x + 4, gy - 2, 6, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = C.bone;                        // угол перчатки
+    ctx.fillRect(x + 2, gy - 4, 3, 2);
+    ctx.fillRect(x + 4, gy - 5, 2, 1);
+    ctx.fillStyle = C.stone2;                      // подметено: дуги метлы
+    ctx.fillRect(x - 2, gy + 1, 12, 1);
+  },
+  // болотный клад: чаша подо льдом, имя начищено
+  bog_bowl(ctx, x, gy, t) {
+    ctx.fillStyle = '#26323a';                     // полынья-лёд
+    ctx.fillRect(x - 10, gy - 6, 20, 6);
+    ctx.fillStyle = 'rgba(174,198,212,0.5)';       // кромка льда
+    ctx.fillRect(x - 12, gy - 7, 4, 2); ctx.fillRect(x + 8, gy - 7, 4, 2);
+    ctx.fillStyle = C.gold;                        // чаша на дне
+    ctx.fillRect(x - 4, gy - 4, 8, 3);
+    ctx.fillRect(x - 2, gy - 5, 4, 1);
+    const gl = Math.sin(t * 0.03) > 0.4;           // имя блеснуло
+    if (gl) { ctx.fillStyle = C.bone; ctx.fillRect(x - 1, gy - 3, 3, 1); }
+  },
+  // голос Экклезиаста: пустой постамент, слово в воздухе
+  voice_stand(ctx, x, gy, t) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 6, gy - 6, 12, 6);            // постамент
+    ctx.fillRect(x - 4, gy - 8, 8, 2);
+    // никого сверху; волны воздуха
+    ctx.fillStyle = 'rgba(232,220,200,0.25)';
+    const ph = (t * 0.04) % 6;
+    for (let i = 0; i < 3; i++) {
+      const r = 4 + i * 4 + ph;
+      ctx.fillRect(x - r, gy - 14, 2, 1);
+      ctx.fillRect(x + r - 1, gy - 14, 2, 1);
+    }
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
