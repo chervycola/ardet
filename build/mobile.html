@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='e785252 · 2026-09-27';console.log('[оттиск]', 'e785252 · 2026-09-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='6124198 · 2026-09-27';console.log('[оттиск]', '6124198 · 2026-09-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -1461,22 +1461,22 @@ System.register("content/eggs_transfer", [], function (exports_8, context_8) {
             // Уличные таблички: { segment, x, name, form?, facade, backyard?, whisper? }
             exports_8("EGG_SIGNS", EGG_SIGNS = [
                 { "segment": "axial", "side": "west", "x": 380, "name": "янтарный прилавок", "form": "stand", "facade": "Эмпорий. Лампы привозные, масло местное. Янтарь отпускается по весу. Кусок с мошкой взвешиванию не подлежит.", "backyard": "Над лампой вьётся вторая мошка — живая. Отличить нельзя: одна ещё летает, другая уже доехала. Первый экспонат каталога, который пока некому вести." },
-                { "segment": "axial", "side": "north", "x": 380, "name": "каменный лабиринт", "facade": "Лабиринт при стоячих камнях. Кладка в один валун высотой. Ход до середины протоптан. Снег с хода не убирается.", "backyard": "Следы наружу вдавлены легче, чем внутрь. Веками, на любом снегу. Свежая цепочка ведёт внутрь; обратной пока нет." },
-                { "segment": "porticoes", "side": "north", "x": 620, "name": "согнутые мечи", "facade": "Болото жертв. Оружие согнуто, остриями вниз. По описи болота — прочерк. С гати не сходить.", "backyard": "Выше сгиба не ржавеет ни один: вещи, умершие вместе с хозяевами, в описи не идут. Опись ведёт вода — над сгибами она не замерзает и в полночь года." },
+                { "segment": "axial", "side": "north", "x": 380, "sprite": "labyrinth", "name": "каменный лабиринт", "facade": "Лабиринт при стоячих камнях. Кладка в один валун высотой. Ход до середины протоптан. Снег с хода не убирается.", "backyard": "Следы наружу вдавлены легче, чем внутрь. Веками, на любом снегу. Свежая цепочка ведёт внутрь; обратной пока нет." },
+                { "segment": "porticoes", "side": "north", "x": 620, "sprite": "bent_swords", "name": "согнутые мечи", "facade": "Болото жертв. Оружие согнуто, остриями вниз. По описи болота — прочерк. С гати не сходить.", "backyard": "Выше сгиба не ржавеет ни один: вещи, умершие вместе с хозяевами, в описи не идут. Опись ведёт вода — над сгибами она не замерзает и в полночь года." },
                 { "segment": "porticoes", "side": "north", "x": 740, "name": "болотный клад", "facade": "Клад придонный. Посуда бронзовая, южной работы. На чаше выбито имя подразделения. Подразделение по спискам не значится. Выемке не подлежит.", "backyard": "Легион расформирован за век до того, как чаша доехала. Империя досюда не дошла — вещи дошли и остались. Чаша начищена, и лёд над ней каждую зиму встаёт чистым: кто-то следит, чтобы имя читалось." },
-                { "segment": "lightgarden", "side": "west", "x": 887, "name": "бритвенная «ОККАМ»", "form": "building", "facade": "Бритвенная «ОККАМ». Переулок за чёрным собором. Открыто с сумерек. Прейскурант — одна строка: «бритьё». Прочее не предусмотрено." },
-                { "segment": "lightgarden", "side": "west", "x": 982, "name": "зеркало лицом к стене", "facade": "Лавка при соборе. Товар: зеркало, одно. Обращено к стене. Бирка: «временно». Переучёт не назначен.", "backyard": "Рядом — леса собора, бирка «АРЕНДА: 800 ЛЕТ. ПРОДЛЕНО». Обе бирки писаны одной рукой. Пыль на раме протёрта — со стороны стены." },
+                { "segment": "lightgarden", "side": "west", "x": 887, "sprite": "barber", "name": "бритвенная «ОККАМ»", "form": "building", "facade": "Бритвенная «ОККАМ». Переулок за чёрным собором. Открыто с сумерек. Прейскурант — одна строка: «бритьё». Прочее не предусмотрено." },
+                { "segment": "lightgarden", "side": "west", "x": 982, "sprite": "mirror_wall", "name": "зеркало лицом к стене", "facade": "Лавка при соборе. Товар: зеркало, одно. Обращено к стене. Бирка: «временно». Переучёт не назначен.", "backyard": "Рядом — леса собора, бирка «АРЕНДА: 800 ЛЕТ. ПРОДЛЕНО». Обе бирки писаны одной рукой. Пыль на раме протёрта — со стороны стены." },
                 { "segment": "lightgarden", "side": "west", "x": 1077, "name": "нора у контрфорса", "facade": "Опись подворья собора: нора, одна, у подножия контрфорса. В строительных книгах не значится: не рылась и не закладывалась. Засыпка отнесена к завершению стройки.", "backyard": "В глубине — уголок белой перчатки. Чистой. Рука не достаёт, жердь тоже; в книгу находок внесено: «ткань белая, угол, один». Земля перед норой к каждому вечеру подметена. Метлы такой при соборе не числится." },
                 { "segment": "lightgarden", "side": "west", "x": 1172, "name": "молельная ниша", "form": "surface", "facade": "Опись нефа: ниша молельная, одна. Глубина по обмеру — локоть. Свеча ставится своя, огонь берётся от лампады. Сквозного хода не имеет.", "backyard": "Со стороны катакомб — та же ниша; там она тайник. Обмер и там локоть; стена по книгам — полтора. Оставленный свёрток к вечерне забран, огарок сменён целой свечой. Свеча в церковных книгах закупкой не значится." },
                 { "segment": "lightgarden", "side": "north", "x": 935, "name": "межевой рунный камень", "form": "surface", "facade": "Камень рунный, резьба в два слоя. Младшей рукой, поверх старшей: «МИР — КРУГ. КРАЙ — ОГОНЬ. СУРТ ЖДЁТ» — и стрелка. Направление проверено ходом: верное. Принят на учёт как межевой знак.", "backyard": "Промер повторён трижды: стрелка держит от центра наружу без поправки, любая дорога подтверждает. Лист межевания закрыт словом «верно». Наледь с младшей резьбы всегда счищена — рука неустановленная. Старшая ушла подо лёд." },
                 { "segment": "lightgarden", "side": "north", "x": 1125, "name": "глухая стена ставкирки", "form": "surface", "facade": "Акт зимнего дозора. Следы лап по снегу: идут от погоста, у глухой смолёной стены обрываются. Стена осмотрена: цела, сквозных ходов нет. По ту сторону снег не тронут. Зверь на приходе не числится.", "backyard": "Следы возобновляются с каждым свежим снегом, шаг в шаг по прежним. Дозорный третью зиму вносит в акт одно слово: «прежние». Смола у места обрыва на ладонь теплее стены; в акт не внесено — мера «на ладонь» поверке не подлежит." },
-                { "segment": "enlightenment", "side": "west", "x": 1590, "name": "часы без стрелок", "facade": "Часы печатни. На циферблате набрано: «ВРЕМЯ — ДЕНЬГИ». Стрелки взысканы в счёт недоимки, о чём составлен акт. Механизм исправен, завод по средам.", "backyard": "Акт подшит: «стрелки часовые, две, металл жёлтый; приняты по весу». Недоимка погашена полностью. Ход есть — показа нет; город сверяется по бою, фонарщик выходит по четвёртому. Бой взысканию не подлежал." },
+                { "segment": "enlightenment", "side": "west", "x": 1590, "sprite": "clock_bare", "name": "часы без стрелок", "facade": "Часы печатни. На циферблате набрано: «ВРЕМЯ — ДЕНЬГИ». Стрелки взысканы в счёт недоимки, о чём составлен акт. Механизм исправен, завод по средам.", "backyard": "Акт подшит: «стрелки часовые, две, металл жёлтый; приняты по весу». Недоимка погашена полностью. Ход есть — показа нет; город сверяется по бою, фонарщик выходит по четвёртому. Бой взысканию не подлежал." },
                 { "segment": "steamshadows", "side": "west", "x": 1800, "name": "стена в два почерка", "form": "surface", "facade": "«БОГ УМЕР — Ницше» — по кирпичу, почерк старый. Ниже: «НИЦШЕ УМЕР — Бог» — по бетону, почерк свежее. Стена одна. Надписи учтены в порядке поступления.", "backyard": "Шов проходит точно между почерками: кирпич кончается, бетон начинается. Верхнюю строку закрашивали дважды — к весне проступает. Нижнюю не закрашивали: наряд выписан, исполнитель не явился. Газовый рожок дотягивается до верхней; нижнюю читают со спичками. Жжёных спичек под стеной — на годы." },
                 { "segment": "steamshadows", "side": "west", "x": 1880, "name": "касса у кладбищенских ворот", "form": "kiosk", "facade": "Касса. «К МОГИЛЕ КРИТИКА КАПИТАЛА — ВХОД ПЛАТНЫЙ». Открыто с сумерек; газовый рожок над окошком зажигается к открытию. Сбор обращается на содержание могилы и ограды. Льгот не предусмотрено.", "backyard": "Книга прихода ведётся со дня открытия: билет дорожал двадцать раз, могила без изменений. Итог сведён конторской рукой: «выручка самовозрастает». Со двора в ограде расшатан прут, трава за ним протоптана; у камня свежие цветы — по книге прихода никто не проходил." },
                 { "segment": "steamshadows", "side": "west", "x": 1960, "name": "ящик в газовом переулке", "facade": "Ящик почтовый, приписан к газовому переулку. Выемка ежедневно, с сумерек. Отправления без адреса не изымаются: хранятся по месту опускания до указания адреса.", "backyard": "На хранении одно отправление. Конверт надписан «отцу», иных строк нет. Штемпель «НЕ ОТПРАВЛЯТЬ» поставлен по заявлению отправителя, заверен. Передавалось для вручения через мать; возвращено отправителю; опущено вновь. Выемка ежедневная; письмо ежедневно на месте." },
-                { "segment": "steamshadows", "side": "north", "x": 1880, "name": "скамейка Г8", "facade": "Скамейка береговая, инвентарный № Г8. Планок пять. Окраска ежегодная, до ледостава. Снег сметается по средам. Место установки: набережная, над глубиной семьдесят тысяч саженей. Промер утверждён, повторно не назначался.", "backyard": "На средней планке, поверх всех слоёв краски, резано: «РЕГИНА». В описи записи нет; при ежегодной перекраске резьбу обходят кистью — распоряжения на то не отдавалось. Иней к полуночи ложится в буквы первым. Гашению не подлежит: печать по резьбе не ложится." },
-                { "segment": "catastrophes", "side": "west", "x": 2082, "name": "велосипед у стены", "facade": "Велосипед, один, у стены. Бирка: «Клиши. не украден — оставлен». В розыскных списках не значится. Уборке не подлежит: состояние «оставлен» оформлено надлежащим порядком.", "backyard": "Пыль на раме годовая, цепь смазана свежо; в ведомости дворовых работ смазка не значится. Раз в неделю след шин уходит со двора в сумерки и к утру возвращается к стене; положение велосипеда после возврата совпадает с актом осмотра до вершка." },
-                { "segment": "catastrophes", "side": "west", "x": 2167, "name": "два бака", "facade": "Баки мусорные, два, борт к борту. Крышки закрыты. На крышках — по блюдцу. Вывоз по графику приостановлен: баки заняты. Обход вечерний; при обходе блюдца не снимать." },
+                { "segment": "steamshadows", "side": "north", "x": 1880, "sprite": "bench", "name": "скамейка Г8", "facade": "Скамейка береговая, инвентарный № Г8. Планок пять. Окраска ежегодная, до ледостава. Снег сметается по средам. Место установки: набережная, над глубиной семьдесят тысяч саженей. Промер утверждён, повторно не назначался.", "backyard": "На средней планке, поверх всех слоёв краски, резано: «РЕГИНА». В описи записи нет; при ежегодной перекраске резьбу обходят кистью — распоряжения на то не отдавалось. Иней к полуночи ложится в буквы первым. Гашению не подлежит: печать по резьбе не ложится." },
+                { "segment": "catastrophes", "side": "west", "x": 2082, "sprite": "bicycle", "name": "велосипед у стены", "facade": "Велосипед, один, у стены. Бирка: «Клиши. не украден — оставлен». В розыскных списках не значится. Уборке не подлежит: состояние «оставлен» оформлено надлежащим порядком.", "backyard": "Пыль на раме годовая, цепь смазана свежо; в ведомости дворовых работ смазка не значится. Раз в неделю след шин уходит со двора в сумерки и к утру возвращается к стене; положение велосипеда после возврата совпадает с актом осмотра до вершка." },
+                { "segment": "catastrophes", "side": "west", "x": 2167, "sprite": "two_bins", "name": "два бака", "facade": "Баки мусорные, два, борт к борту. Крышки закрыты. На крышках — по блюдцу. Вывоз по графику приостановлен: баки заняты. Обход вечерний; при обходе блюдца не снимать." },
                 { "segment": "catastrophes", "side": "west", "x": 2252, "name": "витрина конторы", "form": "surface", "facade": "Витрина конторы; освещается с сумерек. Плакат: женщина с папиросой, надпись «ФАКЕЛЫ СВОБОДЫ». Шествие согласовано; маршрут — Пятая линия, пасхальное воскресенье. Участницам закуривать в назначенных точках, по сигналу фотографов.", "backyard": "В глубине витрины — настольная книга конторы, корешком к улице: «ПРОПАГАНДА». Поверх корешка — свежая наклейка: «PUBLIC RELATIONS». Под наклейкой то же издание; тираж вырос. Наклейку подклеивают по мере отставания." },
                 { "segment": "catastrophes", "side": "west", "x": 2337, "name": "меню под стеклом конторы", "form": "surface", "facade": "Витрина конторы. За стеклом — меню закусочной: «ПЛОТНЫЙ ЗАВТРАК. Яичница с беконом. Одобрено 4500 врачами». Основание: опрос; лист подшит и хранится здесь же.", "backyard": "Опрос вела контора за этим же стеклом. Вопрос был один: полезен ли плотный завтрак. Ответивших «да» — четыре тысячи пятьсот. Бекона в вопросе нет; бекон стоял в меню до опроса. Левее, под тем же стеклом, — «ФАКЕЛЫ СВОБОДЫ». По вечерам стекло протирают снаружи; изнутри его не протирали ни разу." },
                 { "segment": "catastrophes", "side": "north", "x": 2210, "name": "гурий у корабля", "facade": "Гурий. Внутри — жестянка из-под галет, в жестянке опись на одну позицию: «ЗАПИСКА ИЗЪЯТА ДЛЯ ПРОВЕРКИ. ВЕРНЁМ». Год изъятия: не читается.", "backyard": "Проверка идёт дольше, чем шла экспедиция. Над вмёрзшими мачтами — зелёная лента сияния: единственное место севера, где у него есть цвет. Крышку жестянки кто-то прикрывает от снега после каждой метели; в описи этих работ нет." },
@@ -1991,9 +1991,32 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_10, conte
         return Math.hypot(dx, dy);
     }
     exports_10("townDist", townDist);
+    // ── пространственный шум: границы эпох рваные, как береговая линия ──
+    function gh(ix, iy) {
+        const n = Math.sin(ix * 127.1 + iy * 311.7) * 43758.5453;
+        return n - Math.floor(n);
+    }
+    function vnoise(x, y, cell) {
+        const gx = Math.floor(x / cell), gy = Math.floor(y / cell);
+        const fx = x / cell - gx, fy = y / cell - gy;
+        const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+        const a = gh(gx, gy), b = gh(gx + 1, gy), c = gh(gx, gy + 1), d = gh(gx + 1, gy + 1);
+        return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+    }
+    // расстояние с рельефом: им живут визуал, титры и стихии
+    function warpedDist(x, y) {
+        const d = townDist(x, y);
+        if (d <= 0)
+            return 0;
+        const w = (vnoise(x, y, 260) - 0.5) * 110 + (vnoise(x * 2.17, y * 2.17, 260) - 0.5) * 44;
+        // у самой кромки городка рельеф стихает, чтобы город не рвало
+        const k = Math.min(1, d / 160);
+        return Math.max(0.001, d + w * k);
+    }
+    exports_10("warpedDist", warpedDist);
     // номер кольца эпохи (1..9), 0 — городок, 10 — огонь, 11 — за краем
     function ringAt(x, y) {
-        const d = townDist(x, y);
+        const d = warpedDist(x, y);
         if (d <= 0)
             return 0;
         const n = Math.ceil(d / RING_W);
@@ -14481,6 +14504,111 @@ System.register("sprites/eggObjects", [], function (exports_37, context_37) {
                     ctx.fillStyle = C.paper;
                     ctx.fillRect(x + 2, gy - 6, 4, 3);
                 },
+                // каменный лабиринт: спираль валунов, ход внутрь
+                labyrinth(ctx, x, gy) {
+                    ctx.fillStyle = C.stone2;
+                    const pts = [[-12, 0], [-8, -6], [0, -9], [8, -6], [12, 0], [8, 5], [0, 7], [-7, 4], [-4, -2], [2, -4], [6, 0], [2, 3]];
+                    for (const [dx, dy] of pts)
+                        ctx.fillRect(x + dx, gy + dy - 6, 3, 3);
+                    ctx.fillStyle = C.bone; // след внутрь
+                    ctx.fillRect(x - 10, gy - 2, 1, 1);
+                    ctx.fillRect(x - 5, gy - 4, 1, 1);
+                    ctx.fillRect(x, gy - 6, 1, 1);
+                },
+                // согнутые мечи остриями вниз
+                bent_swords(ctx, x, gy) {
+                    ctx.fillStyle = C.ash;
+                    for (const dx of [-8, 0, 8]) {
+                        ctx.fillRect(x + dx, gy - 16, 2, 9); // клинок
+                        ctx.fillRect(x + dx + 1, gy - 7, 2, 7); // сгиб — вниз
+                        ctx.fillStyle = C.stone2;
+                        ctx.fillRect(x + dx - 2, gy - 17, 6, 2); // гарда
+                        ctx.fillStyle = C.ash;
+                    }
+                    ctx.fillStyle = '#26323a'; // вода не замерзает над остриями
+                    ctx.fillRect(x - 11, gy - 1, 26, 3);
+                },
+                // скамейка Г8: пять планок, резьба
+                bench(ctx, x, gy) {
+                    ctx.fillStyle = C.wood;
+                    for (let i = 0; i < 5; i++)
+                        ctx.fillRect(x - 10, gy - 12 + i * 2, 22, 1);
+                    ctx.fillRect(x - 9, gy - 4, 2, 4);
+                    ctx.fillRect(x + 9, gy - 4, 2, 4);
+                    ctx.fillStyle = C.bone; // резаное имя на средней планке
+                    ctx.fillRect(x - 3, gy - 8, 7, 1);
+                },
+                // зеркало лицом к стене
+                mirror_wall(ctx, x, gy) {
+                    ctx.fillStyle = C.stone;
+                    ctx.fillRect(x - 9, gy - 20, 18, 20); // стена
+                    ctx.fillStyle = C.wood2; // рама зеркала — тыльной стороной
+                    ctx.fillRect(x - 5, gy - 16, 11, 15);
+                    ctx.fillStyle = C.wood;
+                    ctx.fillRect(x - 4, gy - 15, 9, 13);
+                    ctx.fillStyle = C.paper; // бирка «временно»
+                    ctx.fillRect(x + 3, gy - 9, 4, 3);
+                },
+                // часы без стрелок
+                clock_bare(ctx, x, gy) {
+                    ctx.fillStyle = C.dark;
+                    ctx.fillRect(x - 2, gy - 18, 4, 18);
+                    ctx.fillStyle = C.paper;
+                    ctx.beginPath();
+                    ctx.arc(x, gy - 22, 7, 0, 7);
+                    ctx.fill();
+                    ctx.fillStyle = C.dark;
+                    ctx.beginPath();
+                    ctx.arc(x, gy - 22, 5, 0, 7);
+                    ctx.fill();
+                    ctx.fillStyle = C.gold; // деления есть — стрелок нет
+                    ctx.fillRect(x, gy - 27, 1, 1);
+                    ctx.fillRect(x + 4, gy - 23, 1, 1);
+                    ctx.fillRect(x, gy - 19, 1, 1);
+                    ctx.fillRect(x - 4, gy - 23, 1, 1);
+                },
+                // велосипед у стены
+                bicycle(ctx, x, gy, t) {
+                    ctx.strokeStyle = C.ash;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(x - 6, gy - 4, 4, 0, 7);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(x + 6, gy - 4, 4, 0, 7);
+                    ctx.stroke();
+                    ctx.fillStyle = C.ash;
+                    ctx.fillRect(x - 6, gy - 9, 12, 1); // рама
+                    ctx.fillRect(x - 1, gy - 12, 1, 4);
+                    ctx.fillRect(x - 3, gy - 12, 5, 1); // руль
+                    ctx.fillStyle = C.paper;
+                    ctx.fillRect(x + 8, gy - 10, 4, 3); // бирка «оставлен»
+                },
+                // два бака с блюдцами
+                two_bins(ctx, x, gy) {
+                    ctx.fillStyle = C.dark;
+                    ctx.fillRect(x - 11, gy - 12, 10, 12);
+                    ctx.fillRect(x + 1, gy - 12, 10, 12);
+                    ctx.fillStyle = C.stone2; // крышки
+                    ctx.fillRect(x - 12, gy - 14, 12, 2);
+                    ctx.fillRect(x, gy - 14, 12, 2);
+                    ctx.fillStyle = C.bone; // блюдца
+                    ctx.fillRect(x - 9, gy - 16, 6, 2);
+                    ctx.fillRect(x + 3, gy - 16, 6, 2);
+                },
+                // бритвенная «ОККАМ»: шест-спираль у двери
+                barber(ctx, x, gy, t) {
+                    ctx.fillStyle = C.stone2;
+                    ctx.fillRect(x - 8, gy - 20, 16, 20);
+                    ctx.fillStyle = C.black;
+                    ctx.fillRect(x - 2, gy - 12, 5, 12); // дверь
+                    ctx.fillStyle = C.bone; // шест
+                    ctx.fillRect(x - 7, gy - 18, 3, 12);
+                    ctx.fillStyle = C.crimson; // спираль ползёт
+                    const ph = (t * 0.05 | 0) % 4;
+                    for (let i = 0; i < 3; i++)
+                        ctx.fillRect(x - 7, gy - 17 + ((i * 4 + ph) % 12), 3, 1);
+                },
                 // ночлежка: дом, фонарь над дверью
                 night_house(ctx, x, gy, t) {
                     ctx.fillStyle = C.dark;
@@ -23219,34 +23347,62 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
 });
 System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/draw"], function (exports_51, context_51) {
     "use strict";
-    var ulitsa_db_js_6, disc_js_6, draw_js_12, OUTER, B;
+    var ulitsa_db_js_6, disc_js_6, draw_js_12, OUTER, B, FIRE_G, disc_js_7, CELL;
     var __moduleName = context_51 && context_51.id;
-    function groundColor(wx, wy) {
-        // стихии за огнём — по сторонам
-        const d = disc_js_6.townDist(wx, wy);
+    function elementColor(wx, wy) {
+        const dn = disc_js_6.TOWN.y0 - wy, ds = wy - disc_js_6.TOWN.y1, dw = disc_js_6.TOWN.x0 - wx, de = wx - disc_js_6.TOWN.x1;
+        const m = Math.max(dn, ds, dw, de);
+        if (m === ds)
+            return ((wx + wy) % 24 < 12) ? '#5a4a30' : '#4e3f28'; // песок
+        if (m === de)
+            return ['#221c12', '#2e2618', '#1a160e'][(((wx * 7 + wy * 13) / 8 | 0) % 3 + 3) % 3];
+        if (m === dn)
+            return ((wx - wy) % 28 < 14) ? '#aec6d4' : '#98b4c4'; // лёд
+        return ((wx + wy) % 20 < 10) ? '#1e3a14' : '#254a18'; // озеро
+    }
+    function ringGround(n) { return ulitsa_db_js_6.SEGMENTS[Math.max(0, Math.min(disc_js_6.RINGS, n) - 1)].palette.ground; }
+    // цвет земли с дизерингом на рваных границах: эпохи перетекают,
+    // а не сменяются по линейке
+    function groundColor(wx, wy, bx, by) {
+        const d = disc_js_6.warpedDist(wx, wy);
+        const mix = draw_js_12.hash(bx * 3 + 1, by * 3 + 2, 17);
         if (d > OUTER) {
-            if (wy > disc_js_6.TOWN.y1 + OUTER) // юг: зыбучий песок
-                return ((wx + wy) % 24 < 12) ? '#5a4a30' : '#4e3f28';
-            if (wx > disc_js_6.TOWN.x1 + OUTER) // восток: куча мусора
-                return ['#221c12', '#2e2618', '#1a160e'][(((wx * 7 + wy * 13) / 8 | 0) % 3 + 3) % 3];
-            if (wy < disc_js_6.TOWN.y0 - OUTER) // север: лёд
-                return ((wx - wy) % 28 < 14) ? '#aec6d4' : '#98b4c4';
-            return ((wx + wy) % 20 < 10) ? '#1e3a14' : '#254a18'; // запад: озеро
+            const f = (d - OUTER) / 60; // кромка стихии
+            if (f < 1 && mix > f)
+                return FIRE_G;
+            return elementColor(wx, wy);
         }
-        if (d > disc_js_6.RINGS * disc_js_6.RING_W)
-            return '#160a06'; // кольцо огня — гарь
+        if (d > disc_js_6.RINGS * disc_js_6.RING_W) {
+            const f = (d - disc_js_6.RINGS * disc_js_6.RING_W) / disc_js_6.FIRE_W; // гарь ест девятое кольцо
+            if (f < 0.4 && mix > 0.5 + f)
+                return ringGround(disc_js_6.RINGS);
+            return FIRE_G;
+        }
         const n = Math.ceil(d / disc_js_6.RING_W);
-        return ulitsa_db_js_6.SEGMENTS[Math.max(0, n - 1)].palette.ground;
+        const frac = d / disc_js_6.RING_W - (n - 1);
+        if (n < disc_js_6.RINGS && frac > 0.7) {
+            if (mix < ((frac - 0.7) / 0.3) * 0.55)
+                return ringGround(n + 1);
+        }
+        else if (n > 1 && frac < 0.3) {
+            if (mix < ((0.3 - frac) / 0.3) * 0.55)
+                return ringGround(n - 1);
+        }
+        else if (n === disc_js_6.RINGS && frac > 0.75) {
+            if (mix < ((frac - 0.75) / 0.25) * 0.4)
+                return FIRE_G;
+        }
+        return ringGround(n);
     }
     // ── земля по вьюпорту: экранные координаты ──
     function drawGround(ctx, camX, camY, vw, vh) {
         const x0 = Math.floor(camX / B) * B, y0 = Math.floor(camY / B) * B;
         for (let wy = y0; wy < camY + vh + B; wy += B) {
             for (let wx = x0; wx < camX + vw + B; wx += B) {
-                const d = disc_js_6.townDist(wx + 4, wy + 4);
-                if (d <= 0)
+                if (disc_js_6.townDist(wx + 4, wy + 4) <= 0)
                     continue; // городок блитится поверх
-                ctx.fillStyle = groundColor(wx + 4, wy + 4);
+                const d = disc_js_6.warpedDist(wx + 4, wy + 4);
+                ctx.fillStyle = groundColor(wx + 4, wy + 4, (wx / B) | 0, (wy / B) | 0);
                 ctx.fillRect(wx - camX, wy - camY, B, B);
                 // пыль/уголья/блёстки — детерминированно
                 const h = draw_js_12.hash((wx / B) | 0, (wy / B) | 0, 43);
@@ -23263,11 +23419,6 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
                     }
                     ctx.fillRect(wx - camX + ((h * 5) | 0), wy - camY + ((h * 7) | 0) % B, 2, 2);
                 }
-                // шов между кольцами
-                if (d <= disc_js_6.RINGS * disc_js_6.RING_W && d % disc_js_6.RING_W < B) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                    ctx.fillRect(wx - camX, wy - camY, B, 1);
-                }
             }
         }
     }
@@ -23280,24 +23431,22 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         for (const seg of ulitsa_db_js_6.SEGMENTS) {
             const b = disc_js_6.southBand(seg.n);
             if (vis(disc_js_6.TOWN.x0 + 340, b.y0, 400, 24)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.4)';
-                ctx.fillText(`§${seg.n} ${seg.name}`, disc_js_6.TOWN.x0 + 348, b.y0 + 12);
-                ctx.fillStyle = 'rgba(138,141,143,0.35)';
-                ctx.fillText(seg.era, disc_js_6.TOWN.x0 + 348, b.y0 + 20);
+                ctx.fillStyle = 'rgba(232,220,200,0.16)';
+                ctx.fillText(`§${seg.n}`, disc_js_6.TOWN.x0 + 348, b.y0 + 26);
             }
             const ex = disc_js_6.TOWN.x1 + (seg.n - 1) * disc_js_6.RING_W + 6;
             if (vis(ex, disc_js_6.TOWN.y0 + 20, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.3)';
+                ctx.fillStyle = 'rgba(232,220,200,0.14)';
                 ctx.fillText(`§${seg.n}`, ex, disc_js_6.TOWN.y0 + 30);
             }
             const ny = disc_js_6.TOWN.y0 - seg.n * disc_js_6.RING_W + 6;
             if (vis(disc_js_6.TOWN.x0 + 340, ny, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.3)';
+                ctx.fillStyle = 'rgba(232,220,200,0.14)';
                 ctx.fillText(`§${seg.n}`, disc_js_6.TOWN.x0 + 348, ny + 10);
             }
             const wxx = disc_js_6.TOWN.x0 - seg.n * disc_js_6.RING_W + 6;
             if (vis(wxx, disc_js_6.TOWN.y0 + 20, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.3)';
+                ctx.fillStyle = 'rgba(232,220,200,0.14)';
                 ctx.fillText(`§${seg.n}`, wxx, disc_js_6.TOWN.y0 + 30);
             }
         }
@@ -23329,6 +23478,7 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         if (vis(disc_js_6.TOWN.x0 - OUTER - 10, disc_js_6.TOWN.y0 + 60, 300, 14))
             ctx.fillText('токсичное озеро · запад', disc_js_6.TOWN.x0 - OUTER - 4, disc_js_6.TOWN.y0 + 74);
         drawSkylineSouth(ctx, vis);
+        drawTissue(ctx, cam);
     }
     exports_51("drawGroundMarks", drawGroundMarks);
     // скайлайн юга: доминанты на кромке каждого кольца
@@ -23434,6 +23584,184 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             }
         }
     }
+    function drawTissue(ctx, cam) {
+        const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
+        const gx1 = Math.ceil((cam.x + 760) / CELL), gy1 = Math.ceil((cam.y + 520) / CELL);
+        for (let gy = gy0; gy <= gy1; gy++) {
+            for (let gx = gx0; gx <= gx1; gx++) {
+                const h = draw_js_12.hash(gx + 31, gy + 57, 29);
+                if (h < 0.62)
+                    continue;
+                const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
+                const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
+                const ring = disc_js_7.ringAt(wx, wy);
+                if (ring < 1 || ring > disc_js_6.RINGS)
+                    continue;
+                const variant = ((h * 100) | 0) % 3;
+                // сторона: снег севера белит верхушки
+                const north = disc_js_6.TOWN.y0 - wy > Math.max(wy - disc_js_6.TOWN.y1, disc_js_6.TOWN.x0 - wx, wx - disc_js_6.TOWN.x1);
+                drawTissueItem(ctx, wx, wy, ring, variant, north);
+            }
+        }
+    }
+    exports_51("drawTissue", drawTissue);
+    function drawTissueItem(ctx, x, y, ring, v, north) {
+        const S = '#0f0b07', S2 = '#1a130c';
+        const R = (dx, dy, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x + dx, y + dy, w, h); };
+        switch (ring) {
+            case 1: // осевое: сырцовая кладка, черепки, вкопанный камень
+                if (v === 0) {
+                    R(0, 0, 26, 6, S);
+                    R(3, -5, 18, 5, S2);
+                    R(7, -9, 9, 4, S);
+                }
+                else if (v === 1) {
+                    R(0, 0, 8, 4, S2);
+                    R(10, 2, 6, 3, S2);
+                    R(5, 5, 7, 3, S);
+                }
+                else {
+                    R(0, -8, 6, 12, S);
+                    R(-2, 2, 10, 3, S2);
+                }
+                break;
+            case 2: // портики: колонна целая/пенёк/фронтон на земле
+                if (v === 0) {
+                    R(0, -24, 5, 24, S);
+                    R(-2, -26, 9, 3, S2);
+                    R(-2, 0, 9, 2, S2);
+                }
+                else if (v === 1) {
+                    R(0, -8, 6, 8, S);
+                    R(-2, -10, 10, 3, S2);
+                }
+                else {
+                    ctx.fillStyle = S2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + 12, y - 7);
+                    ctx.lineTo(x + 24, y);
+                    ctx.fill();
+                }
+                break;
+            case 3: // сад света: дерево-крона, арка, фонарик сада
+                if (v === 0) {
+                    R(2, -6, 3, 8, S);
+                    ctx.fillStyle = S2;
+                    ctx.beginPath();
+                    ctx.arc(x + 3, y - 11, 7, 0, 7);
+                    ctx.fill();
+                }
+                else if (v === 1) {
+                    R(0, -14, 3, 14, S);
+                    R(9, -14, 3, 14, S);
+                    R(0, -16, 12, 3, S2);
+                }
+                else {
+                    R(0, -10, 2, 10, S);
+                    R(-2, -13, 6, 4, S2);
+                }
+                break;
+            case 4: // два очага: плетень, сруб-угол, стог
+                if (v === 0) {
+                    for (let i = 0; i < 5; i++)
+                        R(i * 5, -8 - (i % 2) * 2, 2, 8 + (i % 2) * 2, S);
+                    R(-1, -6, 24, 2, S2);
+                }
+                else if (v === 1) {
+                    R(0, -10, 14, 10, S);
+                    R(-2, -12, 18, 3, S2);
+                }
+                else {
+                    ctx.fillStyle = S2;
+                    ctx.beginPath();
+                    ctx.arc(x + 6, y, 7, Math.PI, 0);
+                    ctx.fill();
+                }
+                break;
+            case 5: // просвещение: балюстрада, столб фонаря, тумба
+                if (v === 0) {
+                    for (let i = 0; i < 4; i++)
+                        R(i * 6, -8, 2, 8, S);
+                    R(-1, -10, 21, 2, S2);
+                    R(-1, 0, 21, 2, S2);
+                }
+                else if (v === 1) {
+                    R(0, -18, 2, 18, S);
+                    R(-2, -20, 6, 3, S2);
+                }
+                else {
+                    R(0, -9, 8, 9, S2);
+                    R(-1, -11, 10, 2, S);
+                }
+                break;
+            case 6: // пар и тени: труба-огрызок, кирпичная стена с окном, бочка
+                if (v === 0) {
+                    R(0, -16, 7, 16, S2);
+                    R(-1, -18, 9, 2, S);
+                }
+                else if (v === 1) {
+                    R(0, -12, 20, 12, S);
+                    R(4, -9, 5, 5, '#050510');
+                }
+                else {
+                    R(0, -8, 8, 8, S2);
+                    R(-1, -9, 10, 2, S);
+                    R(-1, -4, 10, 1, S);
+                }
+                break;
+            case 7: // катастрофы: плита с арматурой, воронка, стена-огрызок
+                if (v === 0) {
+                    R(0, -6, 18, 6, S);
+                    R(3, -12, 1, 6, '#2a2a2a');
+                    R(9, -14, 1, 8, '#2a2a2a');
+                }
+                else if (v === 1) {
+                    ctx.fillStyle = '#0a0806';
+                    ctx.beginPath();
+                    ctx.arc(x + 8, y, 9, 0, 7);
+                    ctx.fill();
+                }
+                else {
+                    R(0, -14, 12, 14, S);
+                    R(0, -14, 12, 3, '#050510');
+                }
+                break;
+            case 8: // неон: бетонный забор, столб с проводами, остов ларька
+                if (v === 0) {
+                    for (let i = 0; i < 3; i++)
+                        R(i * 9, -10, 8, 10, S);
+                    R(-1, -11, 28, 2, S2);
+                }
+                else if (v === 1) {
+                    R(0, -20, 2, 20, S);
+                    R(-6, -18, 14, 1, S2);
+                    R(-6, -15, 14, 1, S2);
+                }
+                else {
+                    R(0, -10, 12, 10, S2);
+                    R(-1, -12, 14, 2, '#3a1420');
+                }
+                break;
+            default: // сейчас: дорожный блок, стеклобетон, знак без текста
+                if (v === 0) {
+                    R(0, -6, 16, 6, '#2a2a2e');
+                    R(2, -6, 3, 6, '#3a3a40');
+                }
+                else if (v === 1) {
+                    R(0, -16, 10, 16, S);
+                    R(1, -15, 2, 14, 'rgba(122,223,255,0.15)');
+                }
+                else {
+                    R(0, -12, 2, 12, S);
+                    R(-3, -16, 8, 5, S2);
+                }
+        }
+        if (north) {
+            ctx.fillStyle = 'rgba(220,232,240,0.5)';
+            ctx.fillRect(x - 2, y - (ring === 2 ? 26 : 16), 12, 1);
+        }
+    }
     return {
         setters: [
             function (ulitsa_db_js_6_1) {
@@ -23441,6 +23769,7 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             },
             function (disc_js_6_1) {
                 disc_js_6 = disc_js_6_1;
+                disc_js_7 = disc_js_6_1;
             },
             function (draw_js_12_1) {
                 draw_js_12 = draw_js_12_1;
@@ -23449,12 +23778,14 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         execute: function () {
             OUTER = disc_js_6.RINGS * disc_js_6.RING_W + disc_js_6.FIRE_W;
             B = 8; // размер блока земли
+            FIRE_G = '#160a06';
+            CELL = 150;
         }
     };
 });
 System.register("world/edges", ["core/time", "render/context", "render/scaler", "world/disc", "render/metaFx"], function (exports_52, context_52) {
     "use strict";
-    var time_js_17, context_js_10, scaler_js_11, disc_js_7, metaFx_js_1, OUTER, EDGE, cur, crackTick;
+    var time_js_17, context_js_10, scaler_js_11, disc_js_8, metaFx_js_1, OUTER, EDGE, cur, crackTick;
     var __moduleName = context_52 && context_52.id;
     function edgeState() { return cur; }
     exports_52("edgeState", edgeState);
@@ -23475,17 +23806,14 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
     function update(player) {
         const px = player.x, py = player.y;
         cur = null;
-        if (py > EDGE.south.y0) {
-            cur = { elem: 'quicksand', depth: Math.min(1, (py - EDGE.south.y0) / (EDGE.south.y1 - EDGE.south.y0 - 40)) };
-        }
-        else if (px > EDGE.east.x0) {
-            cur = { elem: 'junk', depth: Math.min(1, (px - EDGE.east.x0) / (EDGE.east.x1 - EDGE.east.x0 - 40)) };
-        }
-        else if (py < EDGE.north.y1) {
-            cur = { elem: 'ice', depth: Math.min(1, (EDGE.north.y1 - py) / (EDGE.north.y1 - 40)) };
-        }
-        else if (px < EDGE.west.x1) {
-            cur = { elem: 'lake', depth: Math.min(1, (EDGE.west.x1 - px) / (EDGE.west.x1 - 40)) };
+        const d = disc_js_8.warpedDist(px, py);
+        if (d > OUTER) {
+            const depth = Math.min(1, (d - OUTER) / (disc_js_8.EDGE_BAND - 80));
+            // сторона — по наибольшему вылету за городок
+            const dn = disc_js_8.TOWN.y0 - py, ds = py - disc_js_8.TOWN.y1, dw = disc_js_8.TOWN.x0 - px, de = px - disc_js_8.TOWN.x1;
+            const m = Math.max(dn, ds, dw, de);
+            const elem = m === ds ? 'quicksand' : m === de ? 'junk' : m === dn ? 'ice' : 'lake';
+            cur = { elem, depth };
         }
         // лёд: экран трескается по мере глубины
         if (cur && cur.elem === 'ice' && cur.depth > 0.25) {
@@ -23578,20 +23906,20 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             function (scaler_js_11_1) {
                 scaler_js_11 = scaler_js_11_1;
             },
-            function (disc_js_7_1) {
-                disc_js_7 = disc_js_7_1;
+            function (disc_js_8_1) {
+                disc_js_8 = disc_js_8_1;
             },
             function (metaFx_js_1_1) {
                 metaFx_js_1 = metaFx_js_1_1;
             }
         ],
         execute: function () {
-            OUTER = disc_js_7.RINGS * disc_js_7.RING_W + disc_js_7.FIRE_W; // 1950 — где кончается огонь
+            OUTER = disc_js_8.RINGS * disc_js_8.RING_W + disc_js_8.FIRE_W; // 1950 — где кончается огонь
             exports_52("EDGE", EDGE = {
-                south: { y0: disc_js_7.TOWN.y1 + OUTER, y1: disc_js_7.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
-                east: { x0: disc_js_7.TOWN.x1 + OUTER, x1: disc_js_7.WORLD_W, elem: 'junk', name: 'куча мусора' },
-                north: { y1: disc_js_7.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
-                west: { x1: disc_js_7.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
+                south: { y0: disc_js_8.TOWN.y1 + OUTER, y1: disc_js_8.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
+                east: { x0: disc_js_8.TOWN.x1 + OUTER, x1: disc_js_8.WORLD_W, elem: 'junk', name: 'куча мусора' },
+                north: { y1: disc_js_8.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
+                west: { x1: disc_js_8.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
             });
             cur = null; // { elem, depth 0..1 }
             crackTick = 0;
@@ -23600,7 +23928,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
 });
 System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (exports_53, context_53) {
     "use strict";
-    var disc_js_8, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
+    var disc_js_9, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
     var __moduleName = context_53 && context_53.id;
     function createZoneSound(cfg) {
         const ctx = audio_js_2.getCtx();
@@ -23658,23 +23986,23 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
     }
     exports_53("updateZone", updateZone);
     function getZone(x, y) {
-        if (disc_js_8.townDist(x, y) > 0)
+        if (disc_js_9.townDist(x, y) > 0)
             return 'street';
-        if (y < disc_js_8.TOWN.y0 + 340)
+        if (y < disc_js_9.TOWN.y0 + 340)
             return 'forest';
-        if (y > disc_js_8.TOWN.y0 + 1140)
+        if (y > disc_js_9.TOWN.y0 + 1140)
             return 'toxic';
-        if (x < disc_js_8.TOWN.x0 + 400)
+        if (x < disc_js_9.TOWN.x0 + 400)
             return 'quarter';
-        if (x > disc_js_8.TOWN.x0 + 1800)
+        if (x > disc_js_9.TOWN.x0 + 1800)
             return 'highway';
         return 'settlement';
     }
     exports_53("getZone", getZone);
     return {
         setters: [
-            function (disc_js_8_1) {
-                disc_js_8 = disc_js_8_1;
+            function (disc_js_9_1) {
+                disc_js_9 = disc_js_9_1;
             },
             function (audio_js_2_1) {
                 audio_js_2 = audio_js_2_1;
@@ -24184,16 +24512,16 @@ System.register("ui/cursor", [], function (exports_58, context_58) {
 });
 System.register("world/pets", ["core/time", "world/disc", "render/context", "render/scaler"], function (exports_59, context_59) {
     "use strict";
-    var time_js_22, disc_js_9, context_js_12, scaler_js_15, pets, lastSpawn, P;
+    var time_js_22, disc_js_10, context_js_12, scaler_js_15, pets, lastSpawn, P;
     var __moduleName = context_59 && context_59.id;
     function spawn() {
         const types = ['cat', 'raven', 'rat', 'rat', 'cat'];
         const type = types[Math.floor(Math.random() * types.length)];
         const fromLeft = Math.random() > 0.5;
-        const y = disc_js_9.TOWN.y0 + 40 + Math.random() * 1400;
+        const y = disc_js_10.TOWN.y0 + 40 + Math.random() * 1400;
         pets.push({
             type,
-            x: fromLeft ? disc_js_9.TOWN.x0 - 20 : disc_js_9.TOWN.x1 + 20,
+            x: fromLeft ? disc_js_10.TOWN.x0 - 20 : disc_js_10.TOWN.x1 + 20,
             y,
             vx: fromLeft ? (type === 'raven' ? 1.8 : type === 'cat' ? 0.9 : 1.2)
                 : (type === 'raven' ? -1.8 : type === 'cat' ? -0.9 : -1.2),
@@ -24258,8 +24586,8 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
             function (time_js_22_1) {
                 time_js_22 = time_js_22_1;
             },
-            function (disc_js_9_1) {
-                disc_js_9 = disc_js_9_1;
+            function (disc_js_10_1) {
+                disc_js_10 = disc_js_10_1;
             },
             function (context_js_12_1) {
                 context_js_12 = context_js_12_1;
@@ -24366,7 +24694,7 @@ System.register("world/silentCat", ["core/time", "render/context", "core/events"
 });
 System.register("world/brainrot", ["core/time", "render/context", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc"], function (exports_61, context_61) {
     "use strict";
-    var time_js_24, context_js_14, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_2, edges_js_1, disc_js_10, brainrot, brainrotFreeze, brainrotFreezeTimer, loopMode, stillFrames, loopExitCb;
+    var time_js_24, context_js_14, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_2, edges_js_1, disc_js_11, brainrot, brainrotFreeze, brainrotFreezeTimer, loopMode, stillFrames, loopExitCb;
     var __moduleName = context_61 && context_61.id;
     function enterLoop(exitCb) {
         loopMode = true;
@@ -24419,8 +24747,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
                 brainrotFreezeTimer = 0;
                 brainrot = 50;
                 // Respawn at campfire
-                player.x = disc_js_10.TOWN.x0 + 800;
-                player.y = disc_js_10.TOWN.y0 + 740;
+                player.x = disc_js_11.TOWN.x0 + 800;
+                player.y = disc_js_11.TOWN.y0 + 740;
                 events_js_7.events.emit('brainrot.recover');
             }
             return;
@@ -24519,8 +24847,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             function (edges_js_1_1) {
                 edges_js_1 = edges_js_1_1;
             },
-            function (disc_js_10_1) {
-                disc_js_10 = disc_js_10_1;
+            function (disc_js_11_1) {
+                disc_js_11 = disc_js_11_1;
             }
         ],
         execute: function () {
@@ -24701,7 +25029,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "assets/loader"], function (exports_64, context_64) {
     "use strict";
-    var scaler_js_18, layers_js_1, camera_js_1, lighting_js_1, postfx_js_1, draw_js_14, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_27, player_js_1, context_js_16, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_3, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_11, ground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_28, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, EPOCH_TITLE_LIFE, epochTitle, entryDone, entryEnter;
+    var scaler_js_18, layers_js_1, camera_js_1, lighting_js_1, postfx_js_1, draw_js_14, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_27, player_js_1, context_js_16, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_3, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_12, ground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_28, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, EPOCH_TITLE_LIFE, epochTitle, entryDone, entryEnter;
     var __moduleName = context_64 && context_64.id;
     // Check if player can leave settlement
     function canLeaveSettlement() {
@@ -24725,10 +25053,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x);
         const camY = Math.round(camera_js_1.camera.y);
         ground_js_1.drawGround(bgCtx, camX, camY, vw, vh);
-        const tx0 = Math.max(camX, disc_js_11.TOWN.x0), ty0 = Math.max(camY, disc_js_11.TOWN.y0);
-        const tx1 = Math.min(camX + vw, disc_js_11.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_11.TOWN.y1);
+        const tx0 = Math.max(camX, disc_js_12.TOWN.x0), ty0 = Math.max(camY, disc_js_12.TOWN.y0);
+        const tx1 = Math.min(camX + vw, disc_js_12.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_12.TOWN.y1);
         if (tx1 > tx0 && ty1 > ty0) {
-            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_11.SHIFT_X, ty0 - disc_js_11.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
+            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_12.SHIFT_X, ty0 - disc_js_12.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
         }
         // ── BG: atmosphere ──
         atmosphere_js_1.drawBloodMoon(bgCtx, { x: camX, y: camY });
@@ -25191,7 +25519,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function updateWorldSystems() {
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
         if (brainrot_js_1.inLoop()) {
-            const L0 = disc_js_11.TOWN.y1 + 8 * disc_js_11.RING_W + 24, L1 = disc_js_11.TOWN.y1 + 9 * disc_js_11.RING_W - 16;
+            const L0 = disc_js_12.TOWN.y1 + 8 * disc_js_12.RING_W + 24, L1 = disc_js_12.TOWN.y1 + 9 * disc_js_12.RING_W - 16;
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -25220,7 +25548,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         weather_js_2.update(zoneAmbient_js_1.getZone(player.x, player.y));
         updateCrackTriggers(player);
         if (time_js_28.t % 3 === 0)
-            particles_js_1.fireEmber(disc_js_11.TOWN.x0 + 775, disc_js_11.TOWN.y0 + 635);
+            particles_js_1.fireEmber(disc_js_12.TOWN.x0 + 775, disc_js_12.TOWN.y0 + 635);
     }
     // ═══ LOOP ═══
     function loop() {
@@ -25378,8 +25706,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (eggObjects_js_2_1) {
                 eggObjects_js_2 = eggObjects_js_2_1;
             },
-            function (disc_js_11_1) {
-                disc_js_11 = disc_js_11_1;
+            function (disc_js_12_1) {
+                disc_js_12 = disc_js_12_1;
             },
             function (ground_js_1_1) {
                 ground_js_1 = ground_js_1_1;
@@ -25470,7 +25798,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
-                x: disc_js_11.TOWN.x0 + 800, y: disc_js_11.TOWN.y0 + 740, tx: disc_js_11.TOWN.x0 + 800, ty: disc_js_11.TOWN.y0 + 740,
+                x: disc_js_12.TOWN.x0 + 800, y: disc_js_12.TOWN.y0 + 740, tx: disc_js_12.TOWN.x0 + 800, ty: disc_js_12.TOWN.y0 + 740,
                 dir: 1, moving: false, walkFrame: 0,
             };
             playerRef_js_3.setPlayer(player);
@@ -25530,7 +25858,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
-            lighting_js_1.lighting.add({ x: disc_js_11.TOWN.x0 + 800, y: disc_js_11.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            lighting_js_1.lighting.add({ x: disc_js_12.TOWN.x0 + 800, y: disc_js_12.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
             // Location lights
             for (const loc of locations_js_4.locations) {
                 if (!loc.light)
@@ -25738,13 +26066,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 if (actionKey === 'branch_back') {
-                    teleportWithFade(disc_js_11.TOWN.x0 + 2560, disc_js_11.TOWN.y1 + disc_js_11.RING_W + 80);
+                    teleportWithFade(disc_js_12.TOWN.x0 + 2560, disc_js_12.TOWN.y1 + disc_js_12.RING_W + 80);
                     return;
                 }
                 if (actionKey === 'brainrot_enter') {
-                    teleportWithFade(disc_js_11.TOWN.x0 + 2540, disc_js_11.TOWN.y1 + 8 * disc_js_11.RING_W + 90, () => {
+                    teleportWithFade(disc_js_12.TOWN.x0 + 2540, disc_js_12.TOWN.y1 + 8 * disc_js_12.RING_W + 90, () => {
                         brainrot_js_1.enterLoop(() => {
-                            teleportWithFade(disc_js_11.TOWN.x0 + 2540, disc_js_11.TOWN.y1 + 7 * disc_js_11.RING_W + 100, () => {
+                            teleportWithFade(disc_js_12.TOWN.x0 + 2540, disc_js_12.TOWN.y1 + 7 * disc_js_12.RING_W + 100, () => {
                                 lorepopup_js_1.showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
                             });
                         });

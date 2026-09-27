@@ -8,7 +8,7 @@
 import { t } from '../core/time.js';
 import { X } from '../render/context.js';
 import { scaler } from '../render/scaler.js';
-import { TOWN, RINGS, RING_W, FIRE_W, WORLD_W, WORLD_H } from './disc.js';
+import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H, warpedDist } from './disc.js';
 import { crackedGlass } from '../render/metaFx.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;   // 1950 — где кончается огонь
@@ -36,14 +36,14 @@ export function slowFactor() {
 export function update(player) {
   const px = player.x, py = player.y;
   cur = null;
-  if (py > EDGE.south.y0) {
-    cur = { elem: 'quicksand', depth: Math.min(1, (py - EDGE.south.y0) / (EDGE.south.y1 - EDGE.south.y0 - 40)) };
-  } else if (px > EDGE.east.x0) {
-    cur = { elem: 'junk', depth: Math.min(1, (px - EDGE.east.x0) / (EDGE.east.x1 - EDGE.east.x0 - 40)) };
-  } else if (py < EDGE.north.y1) {
-    cur = { elem: 'ice', depth: Math.min(1, (EDGE.north.y1 - py) / (EDGE.north.y1 - 40)) };
-  } else if (px < EDGE.west.x1) {
-    cur = { elem: 'lake', depth: Math.min(1, (EDGE.west.x1 - px) / (EDGE.west.x1 - 40)) };
+  const d = warpedDist(px, py);
+  if (d > OUTER) {
+    const depth = Math.min(1, (d - OUTER) / (EDGE_BAND - 80));
+    // сторона — по наибольшему вылету за городок
+    const dn = TOWN.y0 - py, ds = py - TOWN.y1, dw = TOWN.x0 - px, de = px - TOWN.x1;
+    const m = Math.max(dn, ds, dw, de);
+    const elem = m === ds ? 'quicksand' : m === de ? 'junk' : m === dn ? 'ice' : 'lake';
+    cur = { elem, depth };
   }
   // лёд: экран трескается по мере глубины
   if (cur && cur.elem === 'ice' && cur.depth > 0.25) {

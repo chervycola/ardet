@@ -26,9 +26,31 @@ export function townDist(x, y) {
   return Math.hypot(dx, dy);
 }
 
+// ── пространственный шум: границы эпох рваные, как береговая линия ──
+function gh(ix, iy) {
+  const n = Math.sin(ix * 127.1 + iy * 311.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+function vnoise(x, y, cell) {
+  const gx = Math.floor(x / cell), gy = Math.floor(y / cell);
+  const fx = x / cell - gx, fy = y / cell - gy;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const a = gh(gx, gy), b = gh(gx + 1, gy), c = gh(gx, gy + 1), d = gh(gx + 1, gy + 1);
+  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+}
+// расстояние с рельефом: им живут визуал, титры и стихии
+export function warpedDist(x, y) {
+  const d = townDist(x, y);
+  if (d <= 0) return 0;
+  const w = (vnoise(x, y, 260) - 0.5) * 110 + (vnoise(x * 2.17, y * 2.17, 260) - 0.5) * 44;
+  // у самой кромки городка рельеф стихает, чтобы город не рвало
+  const k = Math.min(1, d / 160);
+  return Math.max(0.001, d + w * k);
+}
+
 // номер кольца эпохи (1..9), 0 — городок, 10 — огонь, 11 — за краем
 export function ringAt(x, y) {
-  const d = townDist(x, y);
+  const d = warpedDist(x, y);
   if (d <= 0) return 0;
   const n = Math.ceil(d / RING_W);
   if (n <= RINGS) return n;

@@ -559,6 +559,95 @@ const STREET = {
     ctx.fillStyle = C.paper;
     ctx.fillRect(x + 2, gy - 6, 4, 3);
   },
+  // каменный лабиринт: спираль валунов, ход внутрь
+  labyrinth(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    const pts = [[-12,0],[-8,-6],[0,-9],[8,-6],[12,0],[8,5],[0,7],[-7,4],[-4,-2],[2,-4],[6,0],[2,3]];
+    for (const [dx, dy] of pts) ctx.fillRect(x + dx, gy + dy - 6, 3, 3);
+    ctx.fillStyle = C.bone;                        // след внутрь
+    ctx.fillRect(x - 10, gy - 2, 1, 1); ctx.fillRect(x - 5, gy - 4, 1, 1);
+    ctx.fillRect(x, gy - 6, 1, 1);
+  },
+  // согнутые мечи остриями вниз
+  bent_swords(ctx, x, gy) {
+    ctx.fillStyle = C.ash;
+    for (const dx of [-8, 0, 8]) {
+      ctx.fillRect(x + dx, gy - 16, 2, 9);         // клинок
+      ctx.fillRect(x + dx + 1, gy - 7, 2, 7);      // сгиб — вниз
+      ctx.fillStyle = C.stone2;
+      ctx.fillRect(x + dx - 2, gy - 17, 6, 2);     // гарда
+      ctx.fillStyle = C.ash;
+    }
+    ctx.fillStyle = '#26323a';                     // вода не замерзает над остриями
+    ctx.fillRect(x - 11, gy - 1, 26, 3);
+  },
+  // скамейка Г8: пять планок, резьба
+  bench(ctx, x, gy) {
+    ctx.fillStyle = C.wood;
+    for (let i = 0; i < 5; i++) ctx.fillRect(x - 10, gy - 12 + i * 2, 22, 1);
+    ctx.fillRect(x - 9, gy - 4, 2, 4); ctx.fillRect(x + 9, gy - 4, 2, 4);
+    ctx.fillStyle = C.bone;                        // резаное имя на средней планке
+    ctx.fillRect(x - 3, gy - 8, 7, 1);
+  },
+  // зеркало лицом к стене
+  mirror_wall(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 9, gy - 20, 18, 20);          // стена
+    ctx.fillStyle = C.wood2;                       // рама зеркала — тыльной стороной
+    ctx.fillRect(x - 5, gy - 16, 11, 15);
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 4, gy - 15, 9, 13);
+    ctx.fillStyle = C.paper;                       // бирка «временно»
+    ctx.fillRect(x + 3, gy - 9, 4, 3);
+  },
+  // часы без стрелок
+  clock_bare(ctx, x, gy) {
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 2, gy - 18, 4, 18);
+    ctx.fillStyle = C.paper;
+    ctx.beginPath(); ctx.arc(x, gy - 22, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = C.dark;
+    ctx.beginPath(); ctx.arc(x, gy - 22, 5, 0, 7); ctx.fill();
+    ctx.fillStyle = C.gold;                        // деления есть — стрелок нет
+    ctx.fillRect(x, gy - 27, 1, 1); ctx.fillRect(x + 4, gy - 23, 1, 1);
+    ctx.fillRect(x, gy - 19, 1, 1); ctx.fillRect(x - 4, gy - 23, 1, 1);
+  },
+  // велосипед у стены
+  bicycle(ctx, x, gy, t) {
+    ctx.strokeStyle = C.ash; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(x - 6, gy - 4, 4, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + 6, gy - 4, 4, 0, 7); ctx.stroke();
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x - 6, gy - 9, 12, 1);            // рама
+    ctx.fillRect(x - 1, gy - 12, 1, 4);
+    ctx.fillRect(x - 3, gy - 12, 5, 1);            // руль
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(x + 8, gy - 10, 4, 3);            // бирка «оставлен»
+  },
+  // два бака с блюдцами
+  two_bins(ctx, x, gy) {
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 11, gy - 12, 10, 12);
+    ctx.fillRect(x + 1, gy - 12, 10, 12);
+    ctx.fillStyle = C.stone2;                      // крышки
+    ctx.fillRect(x - 12, gy - 14, 12, 2);
+    ctx.fillRect(x, gy - 14, 12, 2);
+    ctx.fillStyle = C.bone;                        // блюдца
+    ctx.fillRect(x - 9, gy - 16, 6, 2);
+    ctx.fillRect(x + 3, gy - 16, 6, 2);
+  },
+  // бритвенная «ОККАМ»: шест-спираль у двери
+  barber(ctx, x, gy, t) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 8, gy - 20, 16, 20);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 2, gy - 12, 5, 12);           // дверь
+    ctx.fillStyle = C.bone;                        // шест
+    ctx.fillRect(x - 7, gy - 18, 3, 12);
+    ctx.fillStyle = C.crimson;                     // спираль ползёт
+    const ph = (t * 0.05 | 0) % 4;
+    for (let i = 0; i < 3; i++) ctx.fillRect(x - 7, gy - 17 + ((i * 4 + ph) % 12), 3, 1);
+  },
   // ночлежка: дом, фонарь над дверью
   night_house(ctx, x, gy, t) {
     ctx.fillStyle = C.dark;
