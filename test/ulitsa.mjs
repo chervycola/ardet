@@ -98,7 +98,7 @@ const imp = p => import(new URL(p, base));
   const { useTexts } = await imp('world/useActions.js');
   const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
 
-  const { TOWN } = await imp('world/disc.js');
+  const { TOWN, ringAt } = await imp('world/disc.js');
   test('worldSegmentAt: maps world point to epoch rings (for the title card)', () => {
     const cx = (TOWN.x0 + TOWN.x1) / 2;
     const a = worldSegmentAt(cx, TOWN.y1 + 100);
@@ -115,8 +115,8 @@ const imp = p => import(new URL(p, base));
     for (const l of streetLocations) {
       assert(!ids.has(l.id), `dup id ${l.id}`);
       ids.add(l.id);
-      assert(l.x > 2500 && l.x < 5100, `${l.id}: x ${l.x} за полосой юга`);
-      assert(l.y > 3900 && l.y < 3940 + 9 * 200, `${l.id}: y ${l.y} вне колец`);
+      const ring = ringAt(l.x + 7, l.y + 13);
+      assert(ring >= 1 && ring <= 9, `${l.id}: (${l.x},${l.y}) вне колец (ring ${ring})`);
     }
   });
 

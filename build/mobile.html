@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='36b55bd · 2026-09-26';console.log('[оттиск]', '36b55bd · 2026-09-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='9c375bc · 2026-09-27';console.log('[оттиск]', '9c375bc · 2026-09-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2015,6 +2015,26 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_10, conte
         };
     }
     exports_10("southPoint", southPoint);
+    // точка знака на любой стороне: эпоха по vx, поперечное распределение
+    function sidePoint(vx, side = 'south') {
+        let seg = ulitsa_db_js_1.SEGMENTS[ulitsa_db_js_1.SEGMENTS.length - 1];
+        for (const s of ulitsa_db_js_1.SEGMENTS)
+            if (vx >= s.range[0] && vx < s.range[1]) {
+                seg = s;
+                break;
+            }
+        const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
+        const b0 = (seg.n - 1) * RING_W;
+        const jit = 58 + ((vx * 37) % 84);
+        if (side === 'north')
+            return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y0 - b0 - jit - 26, ring: seg.n };
+        if (side === 'west')
+            return { x: TOWN.x0 - b0 - jit - 14, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
+        if (side === 'east')
+            return { x: TOWN.x1 + b0 + jit, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
+        return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y1 + b0 + jit, ring: seg.n };
+    }
+    exports_10("sidePoint", sidePoint);
     return {
         setters: [
             function (ulitsa_db_js_1_1) {
@@ -2489,7 +2509,7 @@ System.register("world/street", ["content/ulitsa_db", "world/disc", "world/useAc
         for (const seg of ulitsa_db_js_2.SEGMENTS) {
             for (const sign of seg.signs) {
                 const id = `st_${i++}`;
-                const pt = disc_js_1.southPoint(sign.x);
+                const pt = disc_js_1.sidePoint(sign.x, sign.side || 'south');
                 let look = sign.facade;
                 if (sign.whisper)
                     look += `\n\n${sign.whisper}`;
@@ -2503,6 +2523,7 @@ System.register("world/street", ["content/ulitsa_db", "world/disc", "world/useAc
                     zone: 'street',
                     look,
                     streetForm: sign.form || 'plaque',
+                    streetSide: sign.side || 'south',
                     streetSprite: sign.sprite || null,
                     streetEnter: !!sign.enter,
                     streetLive: !!sign.live,

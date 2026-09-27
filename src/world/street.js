@@ -7,7 +7,7 @@
 // the gates. Epoch gradient is painted directly into the terrain.
 // ═══════════════════════════════════════
 import { TOWNLET, SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, townDist, epochAt, southPoint } from './disc.js';
+import { TOWN, RING_W, townDist, epochAt, southPoint, sidePoint } from './disc.js';
 import { useTexts } from './useActions.js';
 
 // Virtual street coords (0..3000 in ulitsa_db) → world coords.
@@ -49,7 +49,7 @@ function buildStreetLocations() {
   for (const seg of SEGMENTS) {
     for (const sign of seg.signs) {
       const id = `st_${i++}`;
-      const pt = southPoint(sign.x);
+      const pt = sidePoint(sign.x, sign.side || 'south');
       let look = sign.facade;
       if (sign.whisper) look += `\n\n${sign.whisper}`;
       if (sign.live) look += `\n\n[запись продолжается]`;
@@ -60,6 +60,7 @@ function buildStreetLocations() {
         zone: 'street',
         look,
         streetForm: sign.form || 'plaque',
+        streetSide: sign.side || 'south',
         streetSprite: sign.sprite || null,
         streetEnter: !!sign.enter,
         streetLive: !!sign.live,

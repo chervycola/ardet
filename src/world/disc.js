@@ -67,6 +67,19 @@ export function southPoint(vx) {
   };
 }
 
+// точка знака на любой стороне: эпоха по vx, поперечное распределение
+export function sidePoint(vx, side = 'south') {
+  let seg = SEGMENTS[SEGMENTS.length - 1];
+  for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
+  const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
+  const b0 = (seg.n - 1) * RING_W;
+  const jit = 58 + ((vx * 37) % 84);
+  if (side === 'north') return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y0 - b0 - jit - 26, ring: seg.n };
+  if (side === 'west')  return { x: TOWN.x0 - b0 - jit - 14, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
+  if (side === 'east')  return { x: TOWN.x1 + b0 + jit,      y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
+  return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y1 + b0 + jit, ring: seg.n };
+}
+
 // полный мир: кольца и стихии со всех четырёх сторон
 export const WORLD_W = TOWN.x1 + OFF;   // 7600
 export const WORLD_H = TOWN.y1 + OFF;   // 6280
