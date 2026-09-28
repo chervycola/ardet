@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='167d653 · 2026-09-27';console.log('[оттиск]', '167d653 · 2026-09-27');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='3e4dcef · 2026-09-28';console.log('[оттиск]', '3e4dcef · 2026-09-28');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -1982,8 +1982,12 @@ System.register("content/ulitsa_db", ["content/eggs_transfer"], function (export
 });
 System.register("world/disc", ["content/ulitsa_db"], function (exports_10, context_10) {
     "use strict";
-    var ulitsa_db_js_1, RING_W, RINGS, FIRE_W, EDGE_BAND, OFF, SHIFT_X, SHIFT_Y, TOWN, WORLD_W, WORLD_H;
+    var ulitsa_db_js_1, RING_W, RINGS, FIRE_W, EDGE_BAND, OFF, SHIFT_X, SHIFT_Y, TOWN, CORE, WORLD_W, WORLD_H;
     var __moduleName = context_10 && context_10.id;
+    function inCore(x, y) {
+        return Math.hypot(x - CORE.x, y - CORE.y) <= CORE.r;
+    }
+    exports_10("inCore", inCore);
     // расстояние от точки до границы городка (0 внутри)
     function townDist(x, y) {
         const dx = Math.max(0, TOWN.x0 - x, x - TOWN.x1);
@@ -2064,7 +2068,10 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_10, conte
         };
     }
     exports_10("southPoint", southPoint);
-    // точка знака на любой стороне: эпоха по vx, поперечное распределение
+    // точка знака на любой стороне. Раскладка кластерная: знаки кольца
+    // сходятся в 2-3 «сцены» (двор, площадь, перекрёсток) с пустотами
+    // между — против линейной сетки.
+    function h01(n) { const v = Math.sin(n * 127.13) * 43758.5453; return v - Math.floor(v); }
     function sidePoint(vx, side = 'south') {
         let seg = ulitsa_db_js_1.SEGMENTS[ulitsa_db_js_1.SEGMENTS.length - 1];
         for (const s of ulitsa_db_js_1.SEGMENTS)
@@ -2073,15 +2080,22 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_10, conte
                 break;
             }
         const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
+        const sideN = { south: 1, north: 2, west: 3, east: 4 }[side] || 1;
+        const K = 2 + (Math.floor(h01(seg.n * 13 + sideN * 7) * 2)); // 2-3 сцены
+        const ci = Math.floor(h01(vx * 7.3 + sideN) * K); // своя сцена
+        const center = 0.14 + (ci + 0.5) / K * 0.72
+            + (h01(seg.n * 31 + ci * 17 + sideN) - 0.5) * 0.16; // сцены гуляют
+        const along = Math.max(0.03, Math.min(0.97, center + (t - 0.5) * 0.16 + (h01(vx * 3.7) - 0.5) * 0.06)); // кучно внутри
+        const depth = 36 + h01(vx * 11 + ci) * 128 // глубина в кольце
+            + (h01(seg.n + ci * 29 + sideN * 3) - 0.5) * 40; // сцены на разной глубине
         const b0 = (seg.n - 1) * RING_W;
-        const jit = 58 + ((vx * 37) % 84);
         if (side === 'north')
-            return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y0 - b0 - jit - 26, ring: seg.n };
+            return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y0 - b0 - depth - 26, ring: seg.n };
         if (side === 'west')
-            return { x: TOWN.x0 - b0 - jit - 14, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
+            return { x: TOWN.x0 - b0 - depth - 14, y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
         if (side === 'east')
-            return { x: TOWN.x1 + b0 + jit, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
-        return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y1 + b0 + jit, ring: seg.n };
+            return { x: TOWN.x1 + b0 + depth, y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
+        return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y1 + b0 + depth, ring: seg.n };
     }
     exports_10("sidePoint", sidePoint);
     return {
@@ -2101,6 +2115,10 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_10, conte
             exports_10("SHIFT_X", SHIFT_X = OFF); // 2300
             exports_10("SHIFT_Y", SHIFT_Y = OFF - 160); // 2140
             exports_10("TOWN", TOWN = { x0: OFF, y0: OFF, x1: OFF + 3000, y1: OFF + 1640 });
+            // Ядро вне времени — круг вокруг места пробуждения (костёр).
+            // Остальной городок временем уже тронут: ранние и средние века
+            // живут прямо в его локациях (см. ERA_HINT в world_frame).
+            exports_10("CORE", CORE = { x: OFF + 800, y: OFF + 740, r: 430 });
             // полный мир: кольца и стихии со всех четырёх сторон
             exports_10("WORLD_W", WORLD_W = TOWN.x1 + OFF); // 7600
             exports_10("WORLD_H", WORLD_H = TOWN.y1 + OFF); // 6280
@@ -23509,20 +23527,31 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
                 ctx.fillText(`§${seg.n}`, wxx, disc_js_6.TOWN.y0 + 30);
             }
         }
+        // тропы вьются: дорога помнит, что её протаптывали, а не чертили
         ctx.fillStyle = 'rgba(200,184,160,0.3)';
         const cx = (disc_js_6.TOWN.x0 + disc_js_6.TOWN.x1) / 2, cy = (disc_js_6.TOWN.y0 + disc_js_6.TOWN.y1) / 2;
-        for (let y = disc_js_6.TOWN.y1 + 4; y < disc_js_6.TOWN.y1 + disc_js_6.RINGS * disc_js_6.RING_W; y += 10)
-            if (vis(cx, y, 4, 5))
-                ctx.fillRect(cx - 1, y, 3, 5);
-        for (let y = disc_js_6.TOWN.y0 - disc_js_6.RINGS * disc_js_6.RING_W; y < disc_js_6.TOWN.y0 - 4; y += 10)
-            if (vis(cx, y, 4, 5))
-                ctx.fillRect(cx - 1, y, 3, 5);
-        for (let x = disc_js_6.TOWN.x1 + 4; x < disc_js_6.TOWN.x1 + disc_js_6.RINGS * disc_js_6.RING_W; x += 10)
-            if (vis(x, cy, 5, 4))
-                ctx.fillRect(x, cy - 1, 5, 3);
-        for (let x = disc_js_6.TOWN.x0 - disc_js_6.RINGS * disc_js_6.RING_W; x < disc_js_6.TOWN.x0 - 4; x += 10)
-            if (vis(x, cy, 5, 4))
-                ctx.fillRect(x, cy - 1, 5, 3);
+        const wind = (d, ph) => Math.sin(d * 0.011 + ph) * (26 + d * 0.05)
+            + Math.sin(d * 0.037 + ph * 2.1) * 9;
+        for (let y = disc_js_6.TOWN.y1 + 4; y < disc_js_6.TOWN.y1 + disc_js_6.RINGS * disc_js_6.RING_W; y += 10) {
+            const wx = cx + wind(y - disc_js_6.TOWN.y1, 0.7);
+            if (vis(wx, y, 4, 5))
+                ctx.fillRect(wx - 1, y, 3, 5);
+        }
+        for (let y = disc_js_6.TOWN.y0 - disc_js_6.RINGS * disc_js_6.RING_W; y < disc_js_6.TOWN.y0 - 4; y += 10) {
+            const wx = cx + wind(disc_js_6.TOWN.y0 - y, 2.3);
+            if (vis(wx, y, 4, 5))
+                ctx.fillRect(wx - 1, y, 3, 5);
+        }
+        for (let x = disc_js_6.TOWN.x1 + 4; x < disc_js_6.TOWN.x1 + disc_js_6.RINGS * disc_js_6.RING_W; x += 10) {
+            const wy = cy + wind(x - disc_js_6.TOWN.x1, 4.1);
+            if (vis(x, wy, 5, 4))
+                ctx.fillRect(x, wy - 1, 5, 3);
+        }
+        for (let x = disc_js_6.TOWN.x0 - disc_js_6.RINGS * disc_js_6.RING_W; x < disc_js_6.TOWN.x0 - 4; x += 10) {
+            const wy = cy + wind(disc_js_6.TOWN.x0 - x, 5.6);
+            if (vis(x, wy, 5, 4))
+                ctx.fillRect(x, wy - 1, 5, 3);
+        }
         // подписи стихий
         ctx.fillStyle = 'rgba(122,100,64,0.8)';
         if (vis(disc_js_6.TOWN.x0 + 340, disc_js_6.TOWN.y1 + OUTER + 4, 500, 14))
@@ -23536,6 +23565,16 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         ctx.fillStyle = 'rgba(90,200,80,0.6)';
         if (vis(disc_js_6.TOWN.x0 - OUTER - 10, disc_js_6.TOWN.y0 + 60, 300, 14))
             ctx.fillText('токсичное озеро · запад', disc_js_6.TOWN.x0 - OUTER - 4, disc_js_6.TOWN.y0 + 74);
+        // ядро вне времени — еле заметная межа вокруг места пробуждения
+        if (vis(disc_js_7.CORE.x - disc_js_7.CORE.r, disc_js_7.CORE.y - disc_js_7.CORE.r, disc_js_7.CORE.r * 2, disc_js_7.CORE.r * 2)) {
+            ctx.strokeStyle = 'rgba(217,207,184,0.07)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 14]);
+            ctx.beginPath();
+            ctx.arc(disc_js_7.CORE.x, disc_js_7.CORE.y, disc_js_7.CORE.r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
         drawSkylineSouth(ctx, vis);
         drawTissue(ctx, cam);
     }

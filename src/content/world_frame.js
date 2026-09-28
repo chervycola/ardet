@@ -18,5 +18,22 @@ export const FRAME = {
   ],
 };
 
+// Городок: вне времени — только ядро пробуждения (disc.CORE: костёр,
+// палатка, Шут). Остальные локации городка тронуты временем — их
+// эпохи для наполнения и карты:
+export const ERA_HINT = {
+  // ядро (вне времени): campfire, tent, jester_home, elder_home, sol_home, altar
+  theater: 'porticoes', pithos: 'porticoes', cross: 'twohearths',
+  church: 'twohearths', crypt: 'twohearths', fountain: 'twohearths',
+  raven: 'twohearths', basement: 'twohearths', well: 'twohearths',
+  library: 'enlightenment', office: 'enlightenment', lantern1: 'axial',
+  watchtower: 'catastrophes', radio: 'catastrophes', train: 'catastrophes',
+  powerline: 'catastrophes', banner: 'catastrophes',
+  graffiti: 'neon', pizzeria: 'neon', vending: 'neon', billboard: 'neon',
+  overpass: 'neon', posterwall: 'neon',
+  ruins: 'now', junkyard: 'now', dumpster: 'now', bus: 'now',
+  crater: 'now', lake: 'now', exit: 'now', pipeline: 'now', pit: 'now',
+};
+
 // Исторические трассировки сняты: радиусы стали пространством.
 export const surveyLocations = [];

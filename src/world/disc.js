@@ -19,6 +19,14 @@ export const SHIFT_X = OFF;             // 2300
 export const SHIFT_Y = OFF - 160;       // 2140
 export const TOWN = { x0: OFF, y0: OFF, x1: OFF + 3000, y1: OFF + 1640 };
 
+// Ядро вне времени — круг вокруг места пробуждения (костёр).
+// Остальной городок временем уже тронут: ранние и средние века
+// живут прямо в его локациях (см. ERA_HINT в world_frame).
+export const CORE = { x: OFF + 800, y: OFF + 740, r: 430 };
+export function inCore(x, y) {
+  return Math.hypot(x - CORE.x, y - CORE.y) <= CORE.r;
+}
+
 // расстояние от точки до границы городка (0 внутри)
 export function townDist(x, y) {
   const dx = Math.max(0, TOWN.x0 - x, x - TOWN.x1);
@@ -89,17 +97,28 @@ export function southPoint(vx) {
   };
 }
 
-// точка знака на любой стороне: эпоха по vx, поперечное распределение
+// точка знака на любой стороне. Раскладка кластерная: знаки кольца
+// сходятся в 2-3 «сцены» (двор, площадь, перекрёсток) с пустотами
+// между — против линейной сетки.
+function h01(n) { const v = Math.sin(n * 127.13) * 43758.5453; return v - Math.floor(v); }
 export function sidePoint(vx, side = 'south') {
   let seg = SEGMENTS[SEGMENTS.length - 1];
   for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
   const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
+  const sideN = { south: 1, north: 2, west: 3, east: 4 }[side] || 1;
+  const K = 2 + (Math.floor(h01(seg.n * 13 + sideN * 7) * 2));       // 2-3 сцены
+  const ci = Math.floor(h01(vx * 7.3 + sideN) * K);                  // своя сцена
+  const center = 0.14 + (ci + 0.5) / K * 0.72
+    + (h01(seg.n * 31 + ci * 17 + sideN) - 0.5) * 0.16;              // сцены гуляют
+  const along = Math.max(0.03, Math.min(0.97,
+    center + (t - 0.5) * 0.16 + (h01(vx * 3.7) - 0.5) * 0.06));      // кучно внутри
+  const depth = 36 + h01(vx * 11 + ci) * 128                          // глубина в кольце
+    + (h01(seg.n + ci * 29 + sideN * 3) - 0.5) * 40;                  // сцены на разной глубине
   const b0 = (seg.n - 1) * RING_W;
-  const jit = 58 + ((vx * 37) % 84);
-  if (side === 'north') return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y0 - b0 - jit - 26, ring: seg.n };
-  if (side === 'west')  return { x: TOWN.x0 - b0 - jit - 14, y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
-  if (side === 'east')  return { x: TOWN.x1 + b0 + jit,      y: TOWN.y0 + 160 + t * 1320, ring: seg.n };
-  return { x: TOWN.x0 + 340 + t * 2320, y: TOWN.y1 + b0 + jit, ring: seg.n };
+  if (side === 'north') return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y0 - b0 - depth - 26, ring: seg.n };
+  if (side === 'west')  return { x: TOWN.x0 - b0 - depth - 14, y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
+  if (side === 'east')  return { x: TOWN.x1 + b0 + depth,      y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
+  return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y1 + b0 + depth, ring: seg.n };
 }
 
 // полный мир: кольца и стихии со всех четырёх сторон

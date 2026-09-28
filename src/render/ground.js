@@ -107,16 +107,27 @@ export function drawGroundMarks(ctx, cam) {
       ctx.fillText(`§${seg.n}`, wxx, TOWN.y0 + 30);
     }
   }
+  // тропы вьются: дорога помнит, что её протаптывали, а не чертили
   ctx.fillStyle = 'rgba(200,184,160,0.3)';
   const cx = (TOWN.x0 + TOWN.x1) / 2, cy = (TOWN.y0 + TOWN.y1) / 2;
-  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS * RING_W; y += 10)
-    if (vis(cx, y, 4, 5)) ctx.fillRect(cx - 1, y, 3, 5);
-  for (let y = TOWN.y0 - RINGS * RING_W; y < TOWN.y0 - 4; y += 10)
-    if (vis(cx, y, 4, 5)) ctx.fillRect(cx - 1, y, 3, 5);
-  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS * RING_W; x += 10)
-    if (vis(x, cy, 5, 4)) ctx.fillRect(x, cy - 1, 5, 3);
-  for (let x = TOWN.x0 - RINGS * RING_W; x < TOWN.x0 - 4; x += 10)
-    if (vis(x, cy, 5, 4)) ctx.fillRect(x, cy - 1, 5, 3);
+  const wind = (d, ph) => Math.sin(d * 0.011 + ph) * (26 + d * 0.05)
+    + Math.sin(d * 0.037 + ph * 2.1) * 9;
+  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS * RING_W; y += 10) {
+    const wx = cx + wind(y - TOWN.y1, 0.7);
+    if (vis(wx, y, 4, 5)) ctx.fillRect(wx - 1, y, 3, 5);
+  }
+  for (let y = TOWN.y0 - RINGS * RING_W; y < TOWN.y0 - 4; y += 10) {
+    const wx = cx + wind(TOWN.y0 - y, 2.3);
+    if (vis(wx, y, 4, 5)) ctx.fillRect(wx - 1, y, 3, 5);
+  }
+  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS * RING_W; x += 10) {
+    const wy = cy + wind(x - TOWN.x1, 4.1);
+    if (vis(x, wy, 5, 4)) ctx.fillRect(x, wy - 1, 5, 3);
+  }
+  for (let x = TOWN.x0 - RINGS * RING_W; x < TOWN.x0 - 4; x += 10) {
+    const wy = cy + wind(TOWN.x0 - x, 5.6);
+    if (vis(x, wy, 5, 4)) ctx.fillRect(x, wy - 1, 5, 3);
+  }
 
   // подписи стихий
   ctx.fillStyle = 'rgba(122,100,64,0.8)';
@@ -132,6 +143,14 @@ export function drawGroundMarks(ctx, cam) {
   if (vis(TOWN.x0 - OUTER - 10, TOWN.y0 + 60, 300, 14))
     ctx.fillText('токсичное озеро · запад', TOWN.x0 - OUTER - 4, TOWN.y0 + 74);
 
+  // ядро вне времени — еле заметная межа вокруг места пробуждения
+  if (vis(CORE.x - CORE.r, CORE.y - CORE.r, CORE.r * 2, CORE.r * 2)) {
+    ctx.strokeStyle = 'rgba(217,207,184,0.07)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 14]);
+    ctx.beginPath(); ctx.arc(CORE.x, CORE.y, CORE.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   drawSkylineSouth(ctx, vis);
   drawTissue(ctx, cam);
 }
@@ -189,7 +208,7 @@ function drawSkylineSouth(ctx, vis) {
 
 // ═══ Ткань застройки: рассеянные структуры эпохи по кольцам ═══
 // Таблички перестают быть фишками в поле: вокруг — обломки среды.
-import { ringAt } from '../world/disc.js';
+import { ringAt, CORE } from '../world/disc.js';
 const CELL = 150;
 export function drawTissue(ctx, cam) {
   const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
