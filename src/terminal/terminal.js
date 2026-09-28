@@ -16,9 +16,8 @@ const history = [];
 let historyIdx = -1;
 let booted = false;
 
-// File aliases: the Cartesian ".demon" file lives under a distinct key
-// because "demon" is already taken by an art-generation prompt (reachable
-// via `prompt demon`). read/cat .demon resolve here.
+// File aliases: the Cartesian ".demon" file lives under a distinct key;
+// read/cat demon and .demon resolve here.
 const FILE_ALIASES = { demon: 'demon_descartes' };
 function fileEntry(rawName) {
   const stripped = rawName.replace(/^\./, '');
@@ -73,7 +72,6 @@ const commands = {
   read <name>    — читать файл
   cat <name>     — вывести содержимое
   whois <name>   — досье
-  prompt <name>  — промт для арта
   status         — статистика странника
   map            — карта (повреждена)
   ping           — проверить связь
@@ -194,21 +192,6 @@ const commands = {
     else print(`> whois: ${name} — не найден`, '#8b0000');
   },
 
-  prompt(args) {
-    const name = args[0];
-    if (!name) {
-      print(`> prompt: для кого?
-доступные: jester, sol, elder, nocturnal,
-            archivist, moss, cat`, '#8b0000');
-      return;
-    }
-    const entry = termDb[name];
-    if (entry && /ПРОМТ/i.test(entry.text)) {
-      print(entry.text, entry.color);
-    } else {
-      print(`> промт не найден для: ${name}`, '#8b0000');
-    }
-  },
 
   status() {
     // Real numbers: session count from sessionMemory (the v2 key —

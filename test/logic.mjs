@@ -116,7 +116,7 @@ const imp = p => import(new URL(p, base));
 
   test('terminal: commands map matches help text claims', () => {
     // 'ach' снята вместе с ачивками: глубина не геймифицируется
-    const required = ['help','dir','ls','read','cat','whois','prompt','status','map','ping','mycelium','fortune','history','clear','exit','echo','ardet'];
+    const required = ['help','dir','ls','read','cat','whois','status','map','ping','mycelium','fortune','history','clear','exit','echo','ardet'];
     for (const r of required) assert(typeof commands[r] === 'function', `missing: ${r}`);
   });
 }

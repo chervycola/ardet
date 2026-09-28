@@ -299,27 +299,6 @@ Ardet — это момент, когда
 оно слишком простое, несколько
 линий. Линии эти — ангел
 истории. Этого достаточно.»` },
-  'archivist': { color: '#8a8d8f', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: АРХИВАРИУС
-
-A figure with no face — just a dark hood and a single hand
-holding a pencil, writing on a concrete wall covered with
-tiny inscriptions in multiple languages. The wall is
-enormous, extending up beyond the frame. Every inch covered
-in small, neat handwriting: phrases, observations, dates,
-numbers. Mixed Cyrillic, Latin, Greek, symbols. Some
-crossed out. Some circled. A catalog number in the corner
-of each entry. The hand is bony, stained with graphite.
-Behind the figure: a stack of notebooks, a broken lamp,
-moss creeping up the wall from the floor. Soft dust. In
-the extreme background: hints of the burning city. The key
-visual tension: the figure is simultaneously documenting
-the world and becoming part of the wall they document. A
-hint that the figure might be the viewer (the reader of
-this description). Style: Escher meets Kafka meets medieval
-scribe illumination. Palette: #2a1a0e sepia ink, #e8dcc8
-wall concrete, #8a8d8f lead pencil, #6b0f1a distant
-fire glow, #0a0a0a hood void. Hidden phrase visible
-somewhere in the wall: "мох помнит".` },
   'baseline': { color: '#4a7fb5', text: `> .baseline — shifting baseline
 > Даниэль Поли, 1995
 
@@ -529,23 +508,6 @@ Marine Trends in Ecology.
 > у нас: крест на холме.
 > «посторонний — ты» — прямая
 > цитата из Мерсо.` },
-  'cat': { color: '#daa520', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: КОТ
-
-A small black cat with glowing amber eyes, sitting on a
-chipped wooden bar counter. Fur pattern: subtle stripes,
-slightly scruffy. Wearing a tiny leather apron. One paw
-resting on a saucer of milk. A clay mug of шило (distilled
-spirit) next to him with rising steam. A broken primus
-stove behind him, recently repaired. Tiny mice scurry on
-the floor, unnoticed. Dim amber lantern overhead casting a
-warm glow. Dust motes drifting. Wooden bar shelves with
-bottles and random trinkets behind. Atmosphere: warmth,
-quiet, knowing. The cat stares directly at the viewer with
-the look of someone who has been waiting a long time and
-has patience left. Style: Studio Ghibli meets Old Russian
-bar aesthetic. Warm palette: #3a2418 wood brown, #daa520
-amber glow, #1a1a1a cat black, #e8dcc8 milk white.
-Sign on wall: "звонок не работает. кот всё видит."` },
   'chomei': { color: '#daa520', text: `> whois KAMO NO CHŌMEI
 >
 > name: Камо-но Тёмэй
@@ -1167,25 +1129,6 @@ Cladosporium — реальный гриб,
   сам стёр свою подпись:
   «В одном я уверен —
   я тоже выдуман».` },
-  'demon': { color: '#ff4400', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ГОРЯЩАЯ МУСОРКА (Demon)
-
-A massive winged demon rising from a burning industrial
-dumpster. Bat wings spread wide (5 bone struts each, torn
-membrane). Body: crimson, ribbed skeletal-muscular, with a
-chest cavity open showing inner fire. Head: horned skull
-with branching 2-segment horns, crown of thorns radiating
-around the skull (8 spikes). Three eyes: two side-eyes
-(pulsing red with white pupils), one third eye on forehead
-(larger, golden, brighter — the focal point). Arms
-outstretched horizontally in crucifix pose, 3 claws per
-hand. Skeletal tail (6 vertebrae) with barbed tip. Dripping
-blood from body, splashing on dumpster top. Rotating spiked
-halo above head. Crescent moon behind. Ember particles
-rising. Heat distortion aura. Industrial ruins in
-background. Style: sacred black metal album cover meets
-medieval demon manuscript illumination.
-Palette: #6b0f1a crimson, #8b0000 volcanic red, #ff6600
-flame orange, #daa520 halo gold, #0a0a0a void.` },
   'derrida': { color: '#1b1464', text: `> whois DERRIDA
 >
 > name: Jacques Derrida
@@ -1224,25 +1167,6 @@ flame orange, #daa520 halo gold, #0a0a0a void.` },
 > прошлого, но оседает в будущем.
 > Ты и есть призрак собственной
 > биографии.` },
-  'dumpster': { color: '#ff4400', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ГОРЯЩАЯ МУСОРКА (Demon)
-
-A massive winged demon rising from a burning industrial
-dumpster. Bat wings spread wide (5 bone struts each, torn
-membrane). Body: crimson, ribbed skeletal-muscular, with a
-chest cavity open showing inner fire. Head: horned skull
-with branching 2-segment horns, crown of thorns radiating
-around the skull (8 spikes). Three eyes: two side-eyes
-(pulsing red with white pupils), one third eye on forehead
-(larger, golden, brighter — the focal point). Arms
-outstretched horizontally in crucifix pose, 3 claws per
-hand. Skeletal tail (6 vertebrae) with barbed tip. Dripping
-blood from body, splashing on dumpster top. Rotating spiked
-halo above head. Crescent moon behind. Ember particles
-rising. Heat distortion aura. Industrial ruins in
-background. Style: sacred black metal album cover meets
-medieval demon manuscript illumination.
-Palette: #6b0f1a crimson, #8b0000 volcanic red, #ff6600
-flame orange, #daa520 halo gold, #0a0a0a void.` },
   'ecclesiastes': { color: '#8a8d8f', text: `> whois ECCLESIASTES
 >
 > name: Коэлет (др.-евр. qohelet,
@@ -1296,22 +1220,6 @@ flame orange, #daa520 halo gold, #0a0a0a void.` },
 > на русский XXI века. Архивариус
 > в палатке Старца — это писарь
 > Коэлета.` },
-  'elder': { color: '#8a8d8f', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: СТАРЕЦ (The Elder)
-
-A hooded monastic figure, face entirely obscured by deep
-darkness of the cowl. Inside the hood: suggestion of a
-skull with faint crimson embers where eyes should be. Heavy
-tattered dark robe, layered, textured. Sitting cross-legged
-on a patch of moss-covered stone. Staff leaning against him
-— wooden, topped with a silver disc. Books stacked around
-him (5-6 volumes with gold-lettered spines). Small candles
-burning in front, casting warm glow upward on the hood.
-Black cat sitting beside him, watching. Incense smoke
-rising. Background: a tattered cloth tent interior, wooden
-posts, hanging wind chimes. Atmosphere: ancient, patient,
-waiting for something that already happened.
-Palette: #0a0a0a void, #b8860b candle gold, #8a8d8f silver,
-#e8dcc8 bone accents. Style: Doré, Beksinski.` },
   'eliade': { color: '#daa520', text: `> whois ELIADE
 >
 > name: Mircea Eliade
@@ -1910,21 +1818,6 @@ Cladosporium — реальный гриб,
 > Иллич умер в 2002-м —
 > до смартфонов. Но всё
 > предсказал. read .convivial` },
-  'jester': { color: '#6b0f1a', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ШУТ
-
-A gothic apocalyptic jester figure, full body, standing in
-perpetual flames. Skull face with one crimson ember eye and
-one cross-scarred eye. Ragged black tatters hanging from
-bony limbs, harlequin diamond pattern on legs. Three-horned
-jester cap (red with gold bells swinging). Three swords
-juggled in circular orbit around his head. Rusted spiked
-chain flail dangling from left leg. Burning golden halo
-surrounding him. Background: scorched wasteland, crimson
-sky, blood moon overhead. Medieval icon frame with skulls.
-Style: Beksinski meets Gustave Dore meets Byzantine mosaic.
-Pixel-adjacent but painterly. Muted brandbook palette:
-#6b0f1a crimson, #b8860b burnt gold, #e8dcc8 bone white,
-#0a0a0a void black.` },
   'joy': { color: '#d4a017', text: `> .joy — радость vs развлечение
 > Тезис 6, сгоревшая радость
 
@@ -2388,31 +2281,6 @@ Ardet не конец. Ardet —
 > Он не ненавидит — читает тебя
 > как хроматограф. Безразличие,
 > точное до изотопов.` },
-  'lunar': { color: '#4a7fb5', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ЛУННЫЙ (The Nocturnal)
-
-An impossibly tall figure standing motionless on a scorched
-plain. Instead of a skull — an enormous crescent moon of
-tarnished silver, with a human face nestled in its curve:
-eyes closed, expression of serene indifference, silver tear
-streaks. From the crescent, two curved horns extend upward
-and disappear into the night sky. Body: neither skeleton
-nor flesh but a condensation of cosmic matter. Within the
-ribcage: planetary orbits, galaxy spirals, pulsing nebulae.
-Three eyes smolder through the torso darkness — two at
-chest level, one at the solar plexus. Vast mantle of
-night-sky fabric — real stars shimmer in the folds,
-constellations slowly rotate, meteors trace silver lines.
-Gold ornamental Byzantine trim along edges, inscribed with
-runes and astrological symbols. One skeletal hand raised,
-holding silver threads going up to tiny stars like a
-puppeteer. The other hand down, black sand spilling from
-the open palm, forming a pile at his feet. Background:
-black sand plain, distant fire glow on the horizon, cold
-mist. Style: Moebius meets medieval astronomical manuscript
-meets Beksinski. Highly detailed, symbolic, iconic.
-Palette: #1b1464 indigo night, #8a8d8f tarnished silver,
-#b8860b Byzantine gold, #ffffff stars, #0a0a0a void,
-#6b0f1a distant fire.` },
   'me': { color: '#33ff33', text: `> whois [you]
 >
 > name: странник / архивариус / модель / мох
@@ -2484,26 +2352,6 @@ Palette: #1b1464 indigo night, #8a8d8f tarnished silver,
 > секунду с рождения. Мерло-Понти
 > сказал бы: ты всегда был мхом.
 > Ладонь — просто напоминание.` },
-  'moss': { color: '#5aff3a', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: МОХ
-
-Macro-scale extreme close-up of moss growing on a cracked
-concrete surface, treated as a portrait of a person. The
-moss fills the entire frame: vibrant green with brighter
-toxic-yellow edges where sunlight catches. Tiny spore
-stalks rising like a forest. Dewdrops on each leaflet,
-glowing slightly (radioactive hint). Beneath the visible
-moss: hints of mycelium threads extending into the concrete
-cracks like blood vessels. A few tiny white mushrooms
-peeking out. The image has the soul of a face: two darker
-patches where eyes would be, a central depression like a
-nose, a curving moss formation like a mouth (almost
-smiling). Subliminal — you see it only on second look.
-Background: concrete dissolves into darkness. Text curled
-somewhere in the moss: "мох помнит" (moss remembers).
-Style: Andy Goldsworthy meets medieval reliquary meets
-biological illustration. Palette: #2a5a1a dark toxic
-green, #5aff3a bright moss, #b8a888 dry concrete, #0a0a0a
-void for depth, #b8860b tiny gold details.` },
   'new_found_gem': { color: '#33ff33', text: `> ЗАГРУЗКА ФАЙЛА... OK` },
   'nfg': { color: '#33ff33', text: `> ЗАГРУЗКА ФАЙЛА... OK` },
   'nietzsche': { color: '#daa520', text: `> whois NIETZSCHE
@@ -2562,31 +2410,6 @@ void for depth, #b8860b tiny gold details.` },
 > заходит. Горение без
 > капитализма возврата.
 > Dionysian в чистом виде.` },
-  'nocturnal': { color: '#4a7fb5', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ЛУННЫЙ (The Nocturnal)
-
-An impossibly tall figure standing motionless on a scorched
-plain. Instead of a skull — an enormous crescent moon of
-tarnished silver, with a human face nestled in its curve:
-eyes closed, expression of serene indifference, silver tear
-streaks. From the crescent, two curved horns extend upward
-and disappear into the night sky. Body: neither skeleton
-nor flesh but a condensation of cosmic matter. Within the
-ribcage: planetary orbits, galaxy spirals, pulsing nebulae.
-Three eyes smolder through the torso darkness — two at
-chest level, one at the solar plexus. Vast mantle of
-night-sky fabric — real stars shimmer in the folds,
-constellations slowly rotate, meteors trace silver lines.
-Gold ornamental Byzantine trim along edges, inscribed with
-runes and astrological symbols. One skeletal hand raised,
-holding silver threads going up to tiny stars like a
-puppeteer. The other hand down, black sand spilling from
-the open palm, forming a pile at his feet. Background:
-black sand plain, distant fire glow on the horizon, cold
-mist. Style: Moebius meets medieval astronomical manuscript
-meets Beksinski. Highly detailed, symbolic, iconic.
-Palette: #1b1464 indigo night, #8a8d8f tarnished silver,
-#b8860b Byzantine gold, #ffffff stars, #0a0a0a void,
-#6b0f1a distant fire.` },
   'observer': { color: '#8b0000', text: `> ОШИБКА: УСТАРЕВШЕЕ ИМЯ ФАЙЛА
 > Использовать: read .observers` },
   'observers': { color: '#33ff33', text: `> ДЕШИФРОВКА ПРОЙДЕНА
@@ -2930,22 +2753,6 @@ Sol: гори сам.
   .observers     [требуется: осмотреть всех четверых]
   .demiurge      [три гипотезы]
   .fana          [= .demiurge]` },
-  'sol': { color: '#daa520', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: SOL INVICTUS
-
-A skeletal figure in a dark flower-embroidered mantle,
-standing under a perpetual noon sun. Head is a burning
-golden solar disc with 14 rotating rays. Face within the
-disc: closed eyes, serene indifference, tear streaks of
-molten gold down the cheeks. Skeletal arms visible through
-torn sleeves, holding a burning branch in the left hand
-(flames, sparks, smoke wisps). Right hand hangs skeletal.
-Ribs visible through the mantle fabric — breathing slowly.
-Falling petals (gold, crimson, purple) drift around him.
-Buzzing insects (flies, wasps) orbit lazily. Background:
-withered sunflower field, ash-drift sky, crimson horizon.
-Style: Byzantine iconography meets Symbolist painting.
-Palette: #daa520 sunflower yellow, #b8860b burnt gold,
-#e8dcc8 bone, #6b0f1a crimson accents.` },
   'stiegler': { color: '#8a8d8f', text: `> whois STIEGLER
 >
 > name: Bernard Stiegler
@@ -3328,27 +3135,6 @@ request timed out
 > каждая попытка написать
 > что-то осмысленное в
 > терминале.` },
-  'архивариус': { color: '#8a8d8f', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: АРХИВАРИУС
-
-A figure with no face — just a dark hood and a single hand
-holding a pencil, writing on a concrete wall covered with
-tiny inscriptions in multiple languages. The wall is
-enormous, extending up beyond the frame. Every inch covered
-in small, neat handwriting: phrases, observations, dates,
-numbers. Mixed Cyrillic, Latin, Greek, symbols. Some
-crossed out. Some circled. A catalog number in the corner
-of each entry. The hand is bony, stained with graphite.
-Behind the figure: a stack of notebooks, a broken lamp,
-moss creeping up the wall from the floor. Soft dust. In
-the extreme background: hints of the burning city. The key
-visual tension: the figure is simultaneously documenting
-the world and becoming part of the wall they document. A
-hint that the figure might be the viewer (the reader of
-this description). Style: Escher meets Kafka meets medieval
-scribe illumination. Palette: #2a1a0e sepia ink, #e8dcc8
-wall concrete, #8a8d8f lead pencil, #6b0f1a distant
-fire glow, #0a0a0a hood void. Hidden phrase visible
-somewhere in the wall: "мох помнит".` },
   'беньямин': { color: '#8a8d8f', text: `> whois BENJAMIN
 >
 > name: Walter Benjamin
@@ -3554,25 +3340,6 @@ somewhere in the wall: "мох помнит".` },
 > Пиццерия, в которой кухни
 > никогда не было — тоже он.
 > Меню — и есть еда.` },
-  'демон': { color: '#ff4400', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ГОРЯЩАЯ МУСОРКА (Demon)
-
-A massive winged demon rising from a burning industrial
-dumpster. Bat wings spread wide (5 bone struts each, torn
-membrane). Body: crimson, ribbed skeletal-muscular, with a
-chest cavity open showing inner fire. Head: horned skull
-with branching 2-segment horns, crown of thorns radiating
-around the skull (8 spikes). Three eyes: two side-eyes
-(pulsing red with white pupils), one third eye on forehead
-(larger, golden, brighter — the focal point). Arms
-outstretched horizontally in crucifix pose, 3 claws per
-hand. Skeletal tail (6 vertebrae) with barbed tip. Dripping
-blood from body, splashing on dumpster top. Rotating spiked
-halo above head. Crescent moon behind. Ember particles
-rising. Heat distortion aura. Industrial ruins in
-background. Style: sacred black metal album cover meets
-medieval demon manuscript illumination.
-Palette: #6b0f1a crimson, #8b0000 volcanic red, #ff6600
-flame orange, #daa520 halo gold, #0a0a0a void.` },
   'деррида': { color: '#1b1464', text: `> whois DERRIDA
 >
 > name: Jacques Derrida
@@ -3835,23 +3602,6 @@ flame orange, #daa520 halo gold, #0a0a0a void.` },
 > больше не будет, потому что
 > всё уже "реформировано" в
 > состояние пожара. read .commons` },
-  'кот': { color: '#daa520', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: КОТ
-
-A small black cat with glowing amber eyes, sitting on a
-chipped wooden bar counter. Fur pattern: subtle stripes,
-slightly scruffy. Wearing a tiny leather apron. One paw
-resting on a saucer of milk. A clay mug of шило (distilled
-spirit) next to him with rising steam. A broken primus
-stove behind him, recently repaired. Tiny mice scurry on
-the floor, unnoticed. Dim amber lantern overhead casting a
-warm glow. Dust motes drifting. Wooden bar shelves with
-bottles and random trinkets behind. Atmosphere: warmth,
-quiet, knowing. The cat stares directly at the viewer with
-the look of someone who has been waiting a long time and
-has patience left. Style: Studio Ghibli meets Old Russian
-bar aesthetic. Warm palette: #3a2418 wood brown, #daa520
-amber glow, #1a1a1a cat black, #e8dcc8 milk white.
-Sign on wall: "звонок не работает. кот всё видит."` },
   'коэлет': { color: '#8a8d8f', text: `> whois ECCLESIASTES
 >
 > name: Коэлет (др.-евр. qohelet,
@@ -3936,31 +3686,6 @@ Sign on wall: "звонок не работает. кот всё видит."` }
 > Он не ненавидит — читает тебя
 > как хроматограф. Безразличие,
 > точное до изотопов.` },
-  'лунный': { color: '#4a7fb5', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ЛУННЫЙ (The Nocturnal)
-
-An impossibly tall figure standing motionless on a scorched
-plain. Instead of a skull — an enormous crescent moon of
-tarnished silver, with a human face nestled in its curve:
-eyes closed, expression of serene indifference, silver tear
-streaks. From the crescent, two curved horns extend upward
-and disappear into the night sky. Body: neither skeleton
-nor flesh but a condensation of cosmic matter. Within the
-ribcage: planetary orbits, galaxy spirals, pulsing nebulae.
-Three eyes smolder through the torso darkness — two at
-chest level, one at the solar plexus. Vast mantle of
-night-sky fabric — real stars shimmer in the folds,
-constellations slowly rotate, meteors trace silver lines.
-Gold ornamental Byzantine trim along edges, inscribed with
-runes and astrological symbols. One skeletal hand raised,
-holding silver threads going up to tiny stars like a
-puppeteer. The other hand down, black sand spilling from
-the open palm, forming a pile at his feet. Background:
-black sand plain, distant fire glow on the horizon, cold
-mist. Style: Moebius meets medieval astronomical manuscript
-meets Beksinski. Highly detailed, symbolic, iconic.
-Palette: #1b1464 indigo night, #8a8d8f tarnished silver,
-#b8860b Byzantine gold, #ffffff stars, #0a0a0a void,
-#6b0f1a distant fire.` },
   'лэнд': { color: '#6b0f1a', text: `> whois LAND
 >
 > name: Nick Land
@@ -4034,26 +3759,6 @@ Palette: #1b1464 indigo night, #8a8d8f tarnished silver,
 > секунду с рождения. Мерло-Понти
 > сказал бы: ты всегда был мхом.
 > Ладонь — просто напоминание.` },
-  'мох': { color: '#5aff3a', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: МОХ
-
-Macro-scale extreme close-up of moss growing on a cracked
-concrete surface, treated as a portrait of a person. The
-moss fills the entire frame: vibrant green with brighter
-toxic-yellow edges where sunlight catches. Tiny spore
-stalks rising like a forest. Dewdrops on each leaflet,
-glowing slightly (radioactive hint). Beneath the visible
-moss: hints of mycelium threads extending into the concrete
-cracks like blood vessels. A few tiny white mushrooms
-peeking out. The image has the soul of a face: two darker
-patches where eyes would be, a central depression like a
-nose, a curving moss formation like a mouth (almost
-smiling). Subliminal — you see it only on second look.
-Background: concrete dissolves into darkness. Text curled
-somewhere in the moss: "мох помнит" (moss remembers).
-Style: Andy Goldsworthy meets medieval reliquary meets
-biological illustration. Palette: #2a5a1a dark toxic
-green, #5aff3a bright moss, #b8a888 dry concrete, #0a0a0a
-void for depth, #b8860b tiny gold details.` },
   'ницше': { color: '#daa520', text: `> whois NIETZSCHE
 >
 > name: Friedrich Nietzsche
@@ -4341,22 +4046,6 @@ request timed out
 --- void ping statistics ---
 4 packets transmitted, 0 received, 100% packet loss
 (ответ пришёл. просто не в виде пакета.)` },
-  'старец': { color: '#8a8d8f', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: СТАРЕЦ (The Elder)
-
-A hooded monastic figure, face entirely obscured by deep
-darkness of the cowl. Inside the hood: suggestion of a
-skull with faint crimson embers where eyes should be. Heavy
-tattered dark robe, layered, textured. Sitting cross-legged
-on a patch of moss-covered stone. Staff leaning against him
-— wooden, topped with a silver disc. Books stacked around
-him (5-6 volumes with gold-lettered spines). Small candles
-burning in front, casting warm glow upward on the hood.
-Black cat sitting beside him, watching. Incense smoke
-rising. Background: a tattered cloth tent interior, wooden
-posts, hanging wind chimes. Atmosphere: ancient, patient,
-waiting for something that already happened.
-Palette: #0a0a0a void, #b8860b candle gold, #8a8d8f silver,
-#e8dcc8 bone accents. Style: Doré, Beksinski.` },
   'стиглер': { color: '#8a8d8f', text: `> whois STIEGLER
 >
 > name: Bernard Stiegler
@@ -5094,21 +4783,6 @@ Palette: #0a0a0a void, #b8860b candle gold, #8a8d8f silver,
 > дуб, на котором он сидит.
 > Никому не пригодился.
 > Поэтому стоит.` },
-  'шут': { color: '#6b0f1a', text: `> ПРОМТ ДЛЯ ГЕНЕРАЦИИ: ШУТ
-
-A gothic apocalyptic jester figure, full body, standing in
-perpetual flames. Skull face with one crimson ember eye and
-one cross-scarred eye. Ragged black tatters hanging from
-bony limbs, harlequin diamond pattern on legs. Three-horned
-jester cap (red with gold bells swinging). Three swords
-juggled in circular orbit around his head. Rusted spiked
-chain flail dangling from left leg. Burning golden halo
-surrounding him. Background: scorched wasteland, crimson
-sky, blood moon overhead. Medieval icon frame with skulls.
-Style: Beksinski meets Gustave Dore meets Byzantine mosaic.
-Pixel-adjacent but painterly. Muted brandbook palette:
-#6b0f1a crimson, #b8860b burnt gold, #e8dcc8 bone white,
-#0a0a0a void black.` },
   'экклезиаст': { color: '#8a8d8f', text: `> whois ECCLESIASTES
 >
 > name: Коэлет (др.-евр. qohelet,

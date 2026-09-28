@@ -168,13 +168,13 @@ setCtx(fakeCtx());
     }
   });
 
-  test('termDb: Package-C files present; .demon alias does not clobber art prompt', () => {
+  test('termDb: Package-C files present; no art-generation prompts leak to players', () => {
     for (const k of ['fire','demon_descartes','hatata','ishraq','timbuktu','agbogbloshie','indra']) {
       assert(termDb[k], `missing Package-C file: ${k}`);
     }
-    // The art-generation "demon" prompt must remain intact and distinct
-    assert(termDb.demon && /ПРОМТ/.test(termDb.demon.text), 'art-prompt demon clobbered');
-    assert(termDb.demon_descartes.text !== termDb.demon.text, 'demon files must be distinct');
+    // Промпты генерации картинок игроку не показываются
+    for (const [k, v] of Object.entries(termDb))
+      assert(!/ПРОМТ ДЛЯ ГЕНЕРАЦИИ/.test(v.text), `prompt leaked in terminal: ${k}`);
   });
 }
 
