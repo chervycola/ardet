@@ -716,6 +716,133 @@ const STREET = {
     ctx.fillRect(x - 6, gy - 21, 3, 3);
     ctx.fillRect(x + 4, gy - 21, 3, 3);
   },
+
+  // ── слой прикрытия: вещи, которые прячут убыль или хотят казаться иным.
+  // Нарисованное тепло — сепией, не СВЕЧОЙ: палитра не подделывается.
+  // мастерская видов: лавка, в витрине мольберт с «видом» в оконной раме
+  view_workshop(ctx, x, gy) {
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 10, gy - 24, 20, 24);
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 9, gy - 23, 18, 22);
+    ctx.fillStyle = C.paper2;                      // вывеска
+    ctx.fillRect(x - 8, gy - 27, 16, 3);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 7, gy - 19, 9, 11);           // витрина
+    ctx.fillStyle = C.ash;                         // «вид»: небо словом, облако одно
+    ctx.fillRect(x - 6, gy - 18, 7, 8);
+    ctx.fillStyle = C.bone;
+    ctx.fillRect(x - 4, gy - 17, 3, 1);            // облако
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 6, gy - 12, 7, 2);            // даль
+    ctx.fillStyle = C.wood2;                       // переплёт оконной рамы
+    ctx.fillRect(x - 3, gy - 18, 1, 8);
+    ctx.fillRect(x - 6, gy - 14, 7, 1);
+    ctx.fillStyle = C.wood2;                       // ножки мольберта
+    ctx.fillRect(x - 5, gy - 8, 1, 3);
+    ctx.fillRect(x - 1, gy - 8, 1, 3);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x + 4, gy - 13, 4, 13);           // дверь
+  },
+  // щит для снимка «на краю»: фанера на ножках, две прорези для лиц,
+  // огонь писан сепией
+  edge_board(ctx, x, gy) {
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 8, gy - 6, 1, 6);             // ножки
+    ctx.fillRect(x + 7, gy - 6, 1, 6);
+    ctx.fillStyle = C.paper2;
+    ctx.fillRect(x - 10, gy - 26, 20, 20);         // щит
+    ctx.fillStyle = C.dark;                        // обрыв
+    ctx.fillRect(x - 10, gy - 12, 12, 6);
+    ctx.fillStyle = '#3a3026';                     // огонь — сепия
+    ctx.fillRect(x + 2, gy - 12, 8, 6);
+    ctx.fillRect(x + 4, gy - 15, 2, 3);
+    ctx.fillRect(x + 7, gy - 14, 2, 2);
+    ctx.fillStyle = C.bone;                        // звёзды
+    ctx.fillRect(x - 7, gy - 24, 1, 1); ctx.fillRect(x + 6, gy - 23, 1, 1);
+    ctx.fillStyle = C.black;                       // прорези: для лица и пониже
+    ctx.fillRect(x - 5, gy - 21, 3, 4);
+    ctx.fillRect(x + 2, gy - 19, 3, 4);
+    ctx.fillStyle = '#8a8d8f';
+    ctx.fillRect(x - 13, gy - 1, 1, 1);            // столбик очереди
+    ctx.fillRect(x - 13, gy - 4, 1, 3);
+  },
+  // стена капеллы: штукатурка слоями, в трещине — кладка, нарисованная
+  plaster_wall(ctx, x, gy) {
+    const layers = [C.paper, C.paper2, C.bone, C.paper2, C.ash];
+    for (let i = 0; i < layers.length; i++) {       // слои видны по срезу
+      ctx.fillStyle = layers[i];
+      ctx.fillRect(x - 9 + i, gy - 24 + i, 18 - i, 24 - i);
+    }
+    ctx.fillStyle = C.black;                       // трещина
+    ctx.fillRect(x, gy - 20, 1, 5); ctx.fillRect(x + 1, gy - 15, 1, 4);
+    ctx.fillRect(x, gy - 11, 1, 3);
+    ctx.fillStyle = C.brick;                       // «кирпич» под штукатуркой — писан
+    ctx.fillRect(x - 3, gy - 14, 3, 2);
+    ctx.fillRect(x + 2, gy - 12, 3, 2);
+    ctx.fillStyle = C.bone;                        // расшитые белилами швы
+    ctx.fillRect(x - 3, gy - 12, 3, 1);
+    ctx.fillRect(x + 2, gy - 10, 3, 1);
+  },
+  // «ПРОДУКТЫ»: витрина с пирамидой банок, на двери — «ПЕРЕУЧЁТ»
+  can_pyramid(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 11, gy - 22, 22, 22);
+    ctx.fillStyle = C.paper2;                      // вывеска
+    ctx.fillRect(x - 10, gy - 21, 20, 3);
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 9, gy - 16, 12, 12);          // витрина
+    ctx.fillStyle = C.ash;                         // пирамида: ярусы банок
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c <= 3 - r; c++)
+        ctx.fillRect(x - 8 + r + c * 2.6, gy - 6 - r * 2.5, 2, 2);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x + 5, gy - 14, 5, 14);           // дверь
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(x + 5, gy - 11, 5, 2);            // табличка «ПЕРЕУЧЁТ»
+  },
+  // стена от дома: фотообои «берёзовая роща», под ними горячая батарея,
+  // на батарее кот — спиной к роще
+  birch_wall(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 11, gy - 28, 22, 28);
+    ctx.fillStyle = C.paper2;                      // обои
+    ctx.fillRect(x - 10, gy - 27, 20, 19);
+    ctx.fillStyle = C.bone;                        // стволы
+    for (const bx of [-8, -4, 1, 6]) ctx.fillRect(x + bx, gy - 27, 2, 19);
+    ctx.fillStyle = C.black;                       // чечевички и стык листа
+    ctx.fillRect(x - 8, gy - 22, 1, 1); ctx.fillRect(x - 3, gy - 17, 1, 1);
+    ctx.fillRect(x + 2, gy - 24, 1, 1); ctx.fillRect(x + 7, gy - 13, 1, 1);
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 1, gy - 27, 1, 19);           // стык: стволы не сошлись
+    ctx.fillStyle = '#8a8d8f';                     // батарея
+    ctx.fillRect(x - 7, gy - 7, 14, 4);
+    ctx.fillStyle = C.stone2;
+    for (let i = 0; i < 6; i++) ctx.fillRect(x - 6 + i * 2.4, gy - 7, 1, 4);
+    ctx.fillStyle = '#050404';                     // кот на батарее
+    ctx.fillRect(x - 1, gy - 10, 5, 3);
+    ctx.fillRect(x + 3, gy - 11, 2, 1);
+  },
+  // очаг на холсте: огонь в три языка сепией, котелок; в холсте — дыра
+  painted_hearth(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 10, gy - 22, 20, 22);         // стена каморки
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 8, gy - 19, 16, 16);          // подрамник
+    ctx.fillStyle = C.paper2;
+    ctx.fillRect(x - 7, gy - 18, 14, 14);          // холст
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 6, gy - 7, 12, 3);            // очаг
+    ctx.fillStyle = '#3a3026';                     // три языка — сепия
+    ctx.fillRect(x - 4, gy - 10, 2, 3); ctx.fillRect(x - 1, gy - 11, 2, 4);
+    ctx.fillRect(x + 2, gy - 10, 2, 3);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 3, gy - 15, 6, 4);            // котелок
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x, gy - 18, 1, 3);                // пар столбиком
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x, gy - 13, 1, 1);                // дыра размером с нос
+  },
 };
 
 // ── Формы записок на земле: (ctx, x, y, t) ──
