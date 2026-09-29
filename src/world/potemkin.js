@@ -154,7 +154,9 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
 
   const img = offCtx.getImageData(0, 0, W, H);
   const d = img.data;
-  const holes = k * 0.4;                     // вещь редеет растром, но не исчезает
+  // бережение не разоблачают: без подкосов и осыпи, растр лёгкий
+  const tender = !!(loc.potemkinSign && loc.potemkinSign.tender) || !!loc.potemkinTender;
+  const holes = k * (tender ? 0.18 : 0.4);    // вещь редеет растром, но не исчезает
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = (y * W + x) * 4;
@@ -163,7 +165,7 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
       const wx = x + ox, wy = y + oy;          // растр привязан к миру, не к кадру
       if (BAYER[(wy & 3) * 4 + (wx & 3)] / 16 < holes) { d[i + 3] = 0; continue; }
       const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
-      const c = ramp(0.3 + 0.62 * l);         // краска сошла — бледная некрашеная фанера
+      const c = tender ? ramp(l) : ramp(0.3 + 0.62 * l);   // фанера бледнеет; бережённое — только тише
       d[i] += (c[0] - d[i]) * k;
       d[i + 1] += (c[1] - d[i + 1]) * k;
       d[i + 2] += (c[2] - d[i + 2]) * k;
@@ -172,9 +174,9 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
   offCtx.putImageData(img, 0, 0);
 
   const cx = box.x + box.w / 2, gy = box.y + box.h;
-  drawBraces(ctx, cx, gy, box.w, box.h, k);
+  if (!tender) drawBraces(ctx, cx, gy, box.w, box.h, k);
   ctx.drawImage(off, 0, 0, W, H, ox, oy, W, H);
-  drawFlakes(ctx, loc, cx, gy, box.w, box.h, k);
+  if (!tender) drawFlakes(ctx, loc, cx, gy, box.w, box.h, k);
 }
 
 // для тестов и перезапуска мира

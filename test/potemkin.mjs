@@ -55,6 +55,7 @@ const P = await imp('world/potemkin.js');
 const { POTEMKIN_LOOKS } = await imp('content/potemkin.js');
 const { locations } = await imp('world/locations.js');
 const { SEGMENTS } = await imp('content/ulitsa_db.js');
+const { COVER_SIGNS } = await imp('content/cover_layer.js');
 
 const sign = { potemkin: 'Сзади — подпорки.' };
 const fake = { id: 'fake_1', name: 'фасад', x: 1000, y: 1000, w: 14, h: 26,
@@ -119,6 +120,22 @@ test('potemkin: рендер без холста не падает (фолбэк
   let drawn = 0;
   P.drawRevealed(fakeCtx(), fake, 1, () => { drawn++; }, { x: 980, y: 982, w: 40, h: 44 });
   eq(drawn, 1);
+});
+
+test('potemkin: бережение проявляется тихо — без подкосов (рендер не падает)', () => {
+  const tender = { ...fake, id: 'tender_1', potemkinSign: { potemkin: 'Стекло протёрто.', tender: true } };
+  let drawn = 0;
+  P.drawRevealed(fakeCtx(), tender, 1, () => { drawn++; }, { x: 980, y: 982, w: 40, h: 44 });
+  eq(drawn, 1);
+});
+
+test('potemkin: у вещей бережения со швом — тихое проявление (tender)', () => {
+  const care = ['побелённая стена в коридоре', 'двойной портрет над комодом', 'окно с банками', 'остановка в долине'];
+  for (const name of care) {
+    const s = COVER_SIGNS.find(x => x.name === name);
+    assert(s, `нет таблички ${name}`);
+    assert(s.potemkin && s.tender === true, `${name}: шов без tender`);
+  }
 });
 
 test('potemkin: все швы — непустые строки, у каждого шва табличка есть в мире', () => {

@@ -763,6 +763,8 @@ const STREET = {
     ctx.fillStyle = C.black;                       // прорези: для лица и пониже
     ctx.fillRect(x - 5, gy - 21, 3, 4);
     ctx.fillRect(x + 2, gy - 19, 3, 4);
+    ctx.fillStyle = '#E28A3A';                     // в пустую прорезь светит огонь из-за щита
+    ctx.fillRect(x - 4, gy - 18, 1, 1);
     ctx.fillStyle = '#8a8d8f';
     ctx.fillRect(x - 13, gy - 1, 1, 1);            // столбик очереди
     ctx.fillRect(x - 13, gy - 4, 1, 3);
@@ -842,6 +844,141 @@ const STREET = {
     ctx.fillRect(x, gy - 18, 1, 3);                // пар столбиком
     ctx.fillStyle = C.black;
     ctx.fillRect(x, gy - 13, 1, 1);                // дыра размером с нос
+  },
+  // конь канцлера: у коновязи — пятнистый олень с рогами, на столбе
+  // бирка «КОНЬ» с печатью киноварью
+  deer_horse(ctx, x, gy) {
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 11, gy - 14, 2, 14);          // коновязь
+    ctx.fillRect(x - 11, gy - 12, 8, 1);
+    ctx.fillStyle = C.paper;                       // бирка
+    ctx.fillRect(x - 14, gy - 19, 7, 4);
+    ctx.fillStyle = '#c23b2b';
+    ctx.fillRect(x - 9, gy - 17, 1, 1);            // печать
+    ctx.fillStyle = C.paper2;                      // олень: корпус, ноги, шея
+    ctx.fillRect(x - 3, gy - 12, 11, 5);
+    ctx.fillRect(x - 2, gy - 7, 1, 7); ctx.fillRect(x + 1, gy - 7, 1, 7);
+    ctx.fillRect(x + 5, gy - 7, 1, 7); ctx.fillRect(x + 7, gy - 7, 1, 7);
+    ctx.fillRect(x - 5, gy - 16, 3, 5);
+    ctx.fillRect(x - 7, gy - 16, 3, 2);            // морда
+    ctx.fillStyle = C.bone;                        // пятна
+    ctx.fillRect(x, gy - 11, 1, 1); ctx.fillRect(x + 3, gy - 10, 1, 1);
+    ctx.fillRect(x + 6, gy - 11, 1, 1);
+    ctx.fillStyle = C.bone;                        // рога — их видно первыми
+    ctx.fillRect(x - 5, gy - 20, 1, 4); ctx.fillRect(x - 3, gy - 21, 1, 5);
+    ctx.fillRect(x - 6, gy - 21, 1, 1); ctx.fillRect(x - 2, gy - 22, 1, 1);
+    ctx.fillRect(x - 4, gy - 19, 1, 1);
+  },
+  // мёд: одна посудина на лотке; от кольца к кольцу меньше
+  honey_pot(ctx, x, gy) {
+    ctx.fillStyle = C.wood2; ctx.fillRect(x - 8, gy - 6, 16, 2);
+    ctx.fillRect(x - 7, gy - 4, 1, 4); ctx.fillRect(x + 6, gy - 4, 1, 4);
+    ctx.fillStyle = C.brick; ctx.fillRect(x - 4, gy - 15, 8, 9);   // горшок
+    ctx.fillRect(x - 3, gy - 16, 6, 1);
+    ctx.fillStyle = C.gold; ctx.fillRect(x - 3, gy - 16, 6, 1);    // мёд до края
+    ctx.fillRect(x + 3, gy - 14, 1, 3);                            // потёк
+    ctx.fillStyle = C.paper2; ctx.fillRect(x - 4, gy - 18, 8, 2);  // крышка
+  },
+  honey_jar(ctx, x, gy) {
+    ctx.fillStyle = C.wood2; ctx.fillRect(x - 8, gy - 6, 16, 2);
+    ctx.fillRect(x - 7, gy - 4, 1, 4); ctx.fillRect(x + 6, gy - 4, 1, 4);
+    ctx.fillStyle = C.ash; ctx.fillRect(x - 2, gy - 12, 5, 6);     // склянка
+    ctx.fillStyle = C.gold; ctx.fillRect(x - 1, gy - 10, 3, 4);
+    ctx.fillStyle = C.paper; ctx.fillRect(x - 2, gy - 10, 5, 2);   // ярлык
+  },
+  honey_portion(ctx, x, gy) {
+    ctx.fillStyle = C.wood2; ctx.fillRect(x - 8, gy - 6, 16, 2);
+    ctx.fillRect(x - 7, gy - 4, 1, 4); ctx.fillRect(x + 6, gy - 4, 1, 4);
+    ctx.fillStyle = C.bone; ctx.fillRect(x - 1, gy - 8, 3, 2);     // запайка
+    ctx.fillStyle = C.gold2; ctx.fillRect(x, gy - 8, 1, 1);
+    ctx.fillStyle = C.paper; ctx.fillRect(x - 6, gy - 13, 12, 4);  // крупная надпись
+    ctx.fillStyle = C.dark;
+    for (let i = 0; i < 5; i++) ctx.fillRect(x - 5 + i * 2.2, gy - 12, 1, 2);
+  },
+  // остановка в долине: навес, скамья, трое ожидающих — куклы
+  bus_stop_dolls(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 12, gy - 22, 24, 2);          // навес
+    ctx.fillRect(x - 12, gy - 20, 1, 20); ctx.fillRect(x + 11, gy - 20, 1, 20);
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 10, gy - 7, 20, 2);           // скамья
+    const dolls = [[-8, C.wood2, C.dark], [-2, C.stone, C.paper2], [4, C.crimson, C.dark]];
+    for (const [dx, coat, hat] of dolls) {
+      ctx.fillStyle = coat; ctx.fillRect(x + dx, gy - 13, 4, 6);
+      ctx.fillStyle = C.paper2; ctx.fillRect(x + dx + 1, gy - 16, 3, 3);   // лицо-мешковина
+      ctx.fillStyle = C.black; ctx.fillRect(x + dx + 1, gy - 15, 1, 1);    // глаза-пуговицы
+      ctx.fillRect(x + dx + 3, gy - 15, 1, 1);
+      ctx.fillStyle = hat; ctx.fillRect(x + dx, gy - 17, 5, 1);
+    }
+    ctx.fillStyle = C.wood2;                       // корзина у третьей
+    ctx.fillRect(x + 8, gy - 9, 3, 2);
+  },
+  // овощной: витрина, между луком и морковью — красная полоса лозунга
+  veg_window(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.fillRect(x - 11, gy - 22, 22, 22);
+    ctx.fillStyle = C.paper2;
+    ctx.fillRect(x - 10, gy - 21, 20, 3);          // «ОВОЩИ — ФРУКТЫ»
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 9, gy - 16, 13, 12);          // витрина
+    ctx.fillStyle = '#b8807a';                     // лозунг выгорел до розового
+    ctx.fillRect(x - 8, gy - 14, 11, 2);
+    ctx.fillStyle = '#c23b2b';                     // …кроме полосы за ящиком
+    ctx.fillRect(x - 8, gy - 12, 11, 1);
+    ctx.fillStyle = C.wood2;                       // ящики
+    ctx.fillRect(x - 8, gy - 8, 5, 3); ctx.fillRect(x - 2, gy - 8, 5, 3);
+    ctx.fillStyle = C.paper;                       // лук
+    ctx.fillRect(x - 7, gy - 9, 1, 1); ctx.fillRect(x - 5, gy - 9, 1, 1);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x + 5, gy - 14, 5, 14);           // дверь
+  },
+  // избирательный участок: портьера, урна, флажок
+  polling_booth(ctx, x, gy) {
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 10, gy - 24, 20, 24);
+    ctx.fillStyle = C.crimson;                     // портьера бархатная
+    ctx.fillRect(x - 9, gy - 23, 8, 23);
+    ctx.fillStyle = C.brick;
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 8 + i * 2, gy - 23, 1, 23);
+    ctx.fillStyle = C.wood;                        // урна, опечатана
+    ctx.fillRect(x + 1, gy - 9, 7, 9);
+    ctx.fillStyle = C.black; ctx.fillRect(x + 3, gy - 9, 3, 1);
+    ctx.fillStyle = '#c23b2b'; ctx.fillRect(x + 4, gy - 6, 1, 1);
+    ctx.fillStyle = C.ash;                         // флажок
+    ctx.fillRect(x + 7, gy - 22, 1, 10);
+    ctx.fillStyle = '#c23b2b'; ctx.fillRect(x + 3, gy - 22, 4, 3);
+  },
+  // окно второго этажа: банки этикетками внутрь, к кровати
+  jars_window(ctx, x, gy) {
+    ctx.fillStyle = C.brick;
+    ctx.fillRect(x - 10, gy - 28, 20, 28);         // стена дома
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 7, gy - 24, 14, 10);          // окно
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 8, gy - 14, 16, 1);           // подоконник
+    ctx.fillStyle = C.ash;                         // банки
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 6 + i * 3.4, gy - 18, 2, 4);
+    ctx.fillStyle = C.paper;                       // к улице — изнанка этикеток, глянец
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 6 + i * 3.4, gy - 17, 2, 1);
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 2, gy - 8, 4, 8);             // дверь подъезда
+  },
+  // двойной портрет над комодом: рама с позолотой, двое плечом к плечу
+  double_portrait(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 10, gy - 26, 20, 26);         // стена избы
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(x - 7, gy - 24, 14, 11);          // рама
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x - 6, gy - 23, 12, 9);           // фон — небо (голубое): словом
+    ctx.fillStyle = C.paper2;                      // лица
+    ctx.fillRect(x - 4, gy - 21, 3, 3); ctx.fillRect(x + 1, gy - 21, 3, 3);
+    ctx.fillStyle = C.bone; ctx.fillRect(x - 4, gy - 18, 3, 3);   // кружевной воротник
+    ctx.fillStyle = C.dark; ctx.fillRect(x + 1, gy - 18, 3, 3);   // пиджак
+    ctx.fillStyle = C.wood;                        // комод
+    ctx.fillRect(x - 8, gy - 10, 16, 10);
+    ctx.fillStyle = C.wood2;
+    ctx.fillRect(x - 7, gy - 7, 14, 1); ctx.fillRect(x - 7, gy - 4, 14, 1);
   },
 };
 
