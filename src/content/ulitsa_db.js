@@ -330,3 +330,12 @@ for (const s of EGG_SIGNS) {
   const { segment, ...sign } = s;
   seg.signs.push(sign);
 }
+
+// слой прикрытия — таблички встают в свои кольца так же
+import { COVER_SIGNS } from './cover_layer.js';
+for (const s of COVER_SIGNS) {
+  const seg = s.segment === 'townlet' ? TOWNLET : SEGMENTS.find(g => g.id === s.segment);
+  if (!seg) continue;
+  const { segment, ...sign } = s;
+  seg.signs.push(sign);
+}

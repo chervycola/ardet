@@ -66,6 +66,7 @@ function buildStreetLocations() {
         streetLive: !!sign.live,
         streetSeg: seg.n,
       };
+      if (sign.potemkin) loc.potemkinSign = sign;   // подделка: шов читается живьём
       if (sign.enter) {
         loc.useAction = sign.enter;             // вход-действие вместо оборота
       } else if (sign.backyard) {

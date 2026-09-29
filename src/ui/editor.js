@@ -11,6 +11,7 @@ import { dialogues } from '../content/dialogues.js';
 import { loreItems } from '../content/lore.js';
 import { SEGMENTS, TOWNLET } from '../content/ulitsa_db.js';
 import { termDb } from '../content/terminal_db.js';
+import { POTEMKIN_LOOKS } from '../content/potemkin.js';
 import { hiddenInscriptions } from '../world/inscriptions.js';
 import { WHISPERS } from '../world/whisper.js';
 import { menuInscriptions } from './ui.js';
@@ -32,6 +33,14 @@ function catalog() {
       set: (t) => { looks[id] = t; attachContent(looks, dialogues); },
     });
   }
+  for (const id of Object.keys(POTEMKIN_LOOKS)) {
+    items.push({
+      key: `seam:${id}`, cat: 'осмотры',
+      label: `${(locations.find(l => l.id === id) || {}).name || id} · шов`,
+      get: () => POTEMKIN_LOOKS[id],
+      set: (t) => { POTEMKIN_LOOKS[id] = t; },
+    });
+  }
   for (const [locId, lines] of Object.entries(dialogues)) {
     lines.forEach((_, i) => items.push({
       key: `dlg:${locId}:${i}`, cat: 'диалоги',
@@ -44,11 +53,11 @@ function catalog() {
     const s = seg(sgId);
     if (!s) continue;
     for (const sign of s.signs) {
-      for (const f of ['facade', 'backyard']) {
+      for (const f of ['facade', 'backyard', 'potemkin']) {
         if (sign[f] === undefined) continue;
         items.push({
           key: `sign:${sgId}:${sign.x}:${f}`, cat: 'таблички',
-          label: `${s.name || sgId} · ${sign.name} · ${f === 'facade' ? 'фасад' : 'двор'}`,
+          label: `${s.name || sgId} · ${sign.name} · ${{ facade: 'фасад', backyard: 'двор', potemkin: 'шов' }[f]}`,
           get: () => sign[f],
           set: (t) => { sign[f] = t; },
         });

@@ -63,6 +63,7 @@ import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop } from './world/brainrot.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
+import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -331,8 +332,22 @@ function drawLocationPlaceholder(ctx, loc) {
   ctx.globalAlpha = 1;
 }
 
-// Location draw: real sprite if migrated, placeholder otherwise
+// Location draw: real sprite if migrated, placeholder otherwise.
+// Подделка под неподвижным взглядом проявляется (потёмкинская скорость).
 function drawLocation(ctx, loc) {
+  const k = revealOf(loc);
+  if (k > 0.01) {
+    const gy = loc.y + loc.h;
+    const box = loc.streetForm
+      ? { x: loc.x + 7 - 20, y: gy - 44, w: 40, h: 44 }
+      : { x: loc.x - 10, y: loc.y - 24, w: loc.w + 20, h: loc.h + 24 };
+    drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box);
+    return;
+  }
+  drawLocationPlain(ctx, loc);
+}
+
+function drawLocationPlain(ctx, loc) {
   if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
   const fn = locSprites['draw_' + loc.id];
   if (fn) {
@@ -737,6 +752,7 @@ function updateWorldSystems() {
   updateParticles();
   updateWeather(getZone(player.x, player.y));
   updateCrackTriggers(player);
+  updatePotemkin(player, locations, isFrozen());
 
   if (t % 3 === 0) fireEmber(TOWN.x0 + 775, TOWN.y0 + 635);
 }

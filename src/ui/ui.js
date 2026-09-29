@@ -2,6 +2,7 @@
 // UI SYSTEM — menus, panels, overlays
 // ═══════════════════════════════════════
 import { state } from '../core/state.js';
+import { lookText } from '../world/potemkin.js';
 import { events, E } from '../core/events.js';
 import { getPortrait } from '../assets/loader.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
@@ -174,7 +175,7 @@ function paginateLook(text, charsPerPage = 600) {
 export function showLook(loc) {
   state.transition('look');
 
-  const lookData = loc.look || loc.name;
+  const lookData = lookText(loc);
   lookPages = paginateLook(lookData);
   lookPageIdx = 0;
   renderLookPage();

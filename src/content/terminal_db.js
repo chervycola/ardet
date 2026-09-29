@@ -4523,3 +4523,7 @@ request timed out
 // перенос пасхального фонда — терминальные досье
 import { EGG_TERM } from './eggs_transfer.js';
 Object.assign(termDb, EGG_TERM);
+
+// слой прикрытия — досье
+import { COVER_TERM } from './cover_layer.js';
+Object.assign(termDb, COVER_TERM);
