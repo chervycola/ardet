@@ -1870,6 +1870,50 @@ export function draw_exit(x, y) {
     }
 }
 
+export function draw_rocket(x, y) {
+    // ═══ РАКЕТА ЗА ПУТЯМИ — «MARS: A FRESH START» ═══
+    // Подделка целиком (потёмкинская скорость): пламя сопел писано
+    // сепией по жести. Настоящее в ней одно — свеча пассажиров (СВЕЧА),
+    // её проявление не трогает.
+    const gy = y + 50;
+    X.globalAlpha=.35;X.fillStyle='#000';
+    X.beginPath();X.ellipse(x+11,gy,12,2,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
+    const lean = (row) => Math.floor((gy - row) / 10);   // стоит криво
+    // стабилизаторы
+    rect(X,x+3,gy-10,4,8,P.dgrey); rect(X,x+15,gy-10,4,8,P.dgrey);
+    rect(X,x+2,gy-3,2,3,P.dgrey);  rect(X,x+18,gy-3,2,3,P.dgrey);
+    // корпус, с креном
+    for (let row = y + 8; row < gy - 8; row++) {
+      const o = lean(row);
+      rect(X,x+6+o,row,10,1,P.dstone);
+      if (hash(row,0,7) > .55) px(X,x+7+o+Math.floor(hash(row,1,9)*8),row,P.rust);
+    }
+    // обтекатель
+    for (let i = 0; i < 8; i++) {
+      const o = lean(y + i);
+      const w = 2 + Math.floor(i * 1.1);
+      rect(X,x+11+o-Math.floor(w/2),y+i,w,1,P.dgrey);
+    }
+    // иллюминаторы; в среднем — свеча
+    for (const [k, ry] of [[0, y+14], [1, y+22], [2, y+30]]) {
+      const o = lean(ry);
+      rect(X,x+9+o,ry,4,4,'#0a0a0e');
+      if (k === 1) {
+        px(X,x+11+o,ry+2,'#E28A3A');
+        if (t % 50 < 38) px(X,x+11+o,ry+1,'#E28A3A');
+      }
+    }
+    // жесть вместо сопел, пламя писано сепией
+    rect(X,x+6,gy-8,11,5,P.ash);
+    X.fillStyle='#3A3026';
+    rect(X,x+7,gy-6,2,3); rect(X,x+10,gy-7,2,4); rect(X,x+13,gy-6,2,3);
+    // табличка у основания и баллончик под ней
+    rect(X,x-6,gy-12,1,12,'#1a1a1a');
+    rect(X,x-9,gy-16,8,4,P.parchment);
+    for (let i = 0; i < 3; i++) rect(X,x-8+i*2,gy-15,1,1,'#1a1a1a');
+    rect(X,x-9,gy-10,7,1,P.bone);
+}
+
 export function draw_train(x, y) {
     // ═══ RUSTED TRAIN — Platonov's Machinist Route ═══
     // Shadow

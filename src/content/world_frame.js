@@ -31,7 +31,7 @@ export const ERA_HINT = {
   powerline: 'catastrophes', banner: 'catastrophes',
   graffiti: 'neon', pizzeria: 'neon', vending: 'neon', billboard: 'neon',
   overpass: 'neon', posterwall: 'neon',
-  ruins: 'now', junkyard: 'now', dumpster: 'now', bus: 'now',
+  ruins: 'now', rocket: 'now', junkyard: 'now', dumpster: 'now', bus: 'now',
   crater: 'now', lake: 'now', exit: 'now', pipeline: 'now', pit: 'now',
 };
 

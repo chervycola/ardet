@@ -73,6 +73,7 @@ export function lookText(loc) {
 // (тёплое → пепел/кость) и прореживается растром Байера; сквозь дыры
 // видны подпорки, нарисованные позади.
 const NIGHT = [13, 11, 10], SEPIA = [58, 48, 38], ASH = [138, 141, 143], BONE = [217, 207, 184];
+const CANDLE = [226, 138, 58];   // СВЕЧА: настоящее тепло взгляду не поддаётся
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 let off = null, offCtx = null;
 
@@ -158,6 +159,7 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
     for (let x = 0; x < W; x++) {
       const i = (y * W + x) * 4;
       if (d[i + 3] === 0) continue;
+      if (d[i] === CANDLE[0] && d[i + 1] === CANDLE[1] && d[i + 2] === CANDLE[2]) continue;
       const wx = x + ox, wy = y + oy;          // растр привязан к миру, не к кадру
       if (BAYER[(wy & 3) * 4 + (wx & 3)] / 16 < holes) { d[i + 3] = 0; continue; }
       const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;

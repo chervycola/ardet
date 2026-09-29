@@ -94,6 +94,9 @@ export const locations = [
   { id: 'train', name: 'Ржавый поезд', x: 2200, y: 680, w: 120, h: 50, zone: 'highway',
     useAction: 'train_brake',
     npc: 'machinist', solid: true, light: { r: 20, color: [120, 80, 40], flicker: 0.05 } },
+  // ракета вынесена из осмотра поезда в свою вещь: подделка — она,
+  // не поезд (потёмкинская скорость проявляет только её)
+  { id: 'rocket', name: 'Ракета за путями', x: 2420, y: 560, w: 22, h: 50, zone: 'highway' },
   { id: 'bus', name: 'Разбитый автобус', x: 1900, y: 1020, w: 70, h: 40, zone: 'highway',
     useAction: 'bus_instr',
     solid: true },

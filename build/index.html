@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='95ebe3c · 2026-09-29';console.log('[оттиск]', '95ebe3c · 2026-09-29');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5528062 · 2026-09-29';console.log('[оттиск]', '5528062 · 2026-09-29');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -3505,6 +3505,9 @@ System.register("world/locations", ["world/disc", "world/street"], function (exp
                 { id: 'train', name: 'Ржавый поезд', x: 2200, y: 680, w: 120, h: 50, zone: 'highway',
                     useAction: 'train_brake',
                     npc: 'machinist', solid: true, light: { r: 20, color: [120, 80, 40], flicker: 0.05 } },
+                // ракета вынесена из осмотра поезда в свою вещь: подделка — она,
+                // не поезд (потёмкинская скорость проявляет только её)
+                { id: 'rocket', name: 'Ракета за путями', x: 2420, y: 560, w: 22, h: 50, zone: 'highway' },
                 { id: 'bus', name: 'Разбитый автобус', x: 1900, y: 1020, w: 70, h: 40, zone: 'highway',
                     useAction: 'bus_instr',
                     solid: true },
@@ -8213,6 +8216,61 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         }
     }
     exports_29("draw_exit", draw_exit);
+    function draw_rocket(x, y) {
+        // ═══ РАКЕТА ЗА ПУТЯМИ — «MARS: A FRESH START» ═══
+        // Подделка целиком (потёмкинская скорость): пламя сопел писано
+        // сепией по жести. Настоящее в ней одно — свеча пассажиров (СВЕЧА),
+        // её проявление не трогает.
+        const gy = y + 50;
+        context_js_7.X.globalAlpha = .35;
+        context_js_7.X.fillStyle = '#000';
+        context_js_7.X.beginPath();
+        context_js_7.X.ellipse(x + 11, gy, 12, 2, 0, 0, Math.PI * 2);
+        context_js_7.X.fill();
+        context_js_7.X.globalAlpha = 1;
+        const lean = (row) => Math.floor((gy - row) / 10); // стоит криво
+        // стабилизаторы
+        draw_js_10.rect(context_js_7.X, x + 3, gy - 10, 4, 8, P.dgrey);
+        draw_js_10.rect(context_js_7.X, x + 15, gy - 10, 4, 8, P.dgrey);
+        draw_js_10.rect(context_js_7.X, x + 2, gy - 3, 2, 3, P.dgrey);
+        draw_js_10.rect(context_js_7.X, x + 18, gy - 3, 2, 3, P.dgrey);
+        // корпус, с креном
+        for (let row = y + 8; row < gy - 8; row++) {
+            const o = lean(row);
+            draw_js_10.rect(context_js_7.X, x + 6 + o, row, 10, 1, P.dstone);
+            if (draw_js_10.hash(row, 0, 7) > .55)
+                draw_js_10.px(context_js_7.X, x + 7 + o + Math.floor(draw_js_10.hash(row, 1, 9) * 8), row, P.rust);
+        }
+        // обтекатель
+        for (let i = 0; i < 8; i++) {
+            const o = lean(y + i);
+            const w = 2 + Math.floor(i * 1.1);
+            draw_js_10.rect(context_js_7.X, x + 11 + o - Math.floor(w / 2), y + i, w, 1, P.dgrey);
+        }
+        // иллюминаторы; в среднем — свеча
+        for (const [k, ry] of [[0, y + 14], [1, y + 22], [2, y + 30]]) {
+            const o = lean(ry);
+            draw_js_10.rect(context_js_7.X, x + 9 + o, ry, 4, 4, '#0a0a0e');
+            if (k === 1) {
+                draw_js_10.px(context_js_7.X, x + 11 + o, ry + 2, '#E28A3A');
+                if (time_js_10.t % 50 < 38)
+                    draw_js_10.px(context_js_7.X, x + 11 + o, ry + 1, '#E28A3A');
+            }
+        }
+        // жесть вместо сопел, пламя писано сепией
+        draw_js_10.rect(context_js_7.X, x + 6, gy - 8, 11, 5, P.ash);
+        context_js_7.X.fillStyle = '#3A3026';
+        draw_js_10.rect(context_js_7.X, x + 7, gy - 6, 2, 3);
+        draw_js_10.rect(context_js_7.X, x + 10, gy - 7, 2, 4);
+        draw_js_10.rect(context_js_7.X, x + 13, gy - 6, 2, 3);
+        // табличка у основания и баллончик под ней
+        draw_js_10.rect(context_js_7.X, x - 6, gy - 12, 1, 12, '#1a1a1a');
+        draw_js_10.rect(context_js_7.X, x - 9, gy - 16, 8, 4, P.parchment);
+        for (let i = 0; i < 3; i++)
+            draw_js_10.rect(context_js_7.X, x - 8 + i * 2, gy - 15, 1, 1, '#1a1a1a');
+        draw_js_10.rect(context_js_7.X, x - 9, gy - 10, 7, 1, P.bone);
+    }
+    exports_29("draw_rocket", draw_rocket);
     function draw_train(x, y) {
         // ═══ RUSTED TRAIN — Platonov's Machinist Route ═══
         // Shadow
@@ -12552,13 +12610,15 @@ System.register("content/potemkin", [], function (exports_30, context_30) {
             // Ключ — id локации, значение — строка-шов: то, что видит терпеливый
             // неподвижный взгляд. Механика — src/world/potemkin.js.
             // ═══════════════════════════════════════
-            exports_30("POTEMKIN_LOOKS", POTEMKIN_LOOKS = {});
+            exports_30("POTEMKIN_LOOKS", POTEMKIN_LOOKS = {
+                rocket: `Сопла — лист жести, пламя по нему писано. В одном иллюминаторе горит свеча.`,
+            });
         }
     };
 });
 System.register("world/potemkin", ["core/time", "render/context", "content/potemkin"], function (exports_31, context_31) {
     "use strict";
-    var time_js_11, context_js_8, potemkin_js_1, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, fakes, NIGHT, SEPIA, ASH, BONE, BAYER, off, offCtx;
+    var time_js_11, context_js_8, potemkin_js_1, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, fakes, NIGHT, SEPIA, ASH, BONE, CANDLE, BAYER, off, offCtx;
     var __moduleName = context_31 && context_31.id;
     // Строка-шов подделки (живое чтение: правка в редакторе сразу в мире)
     function seamOf(loc) {
@@ -12700,6 +12760,8 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
                 const i = (y * W + x) * 4;
                 if (d[i + 3] === 0)
                     continue;
+                if (d[i] === CANDLE[0] && d[i + 1] === CANDLE[1] && d[i + 2] === CANDLE[2])
+                    continue;
                 const wx = x + ox, wy = y + oy; // растр привязан к миру, не к кадру
                 if (BAYER[(wy & 3) * 4 + (wx & 3)] / 16 < holes) {
                     d[i + 3] = 0;
@@ -12750,6 +12812,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
             // (тёплое → пепел/кость) и прореживается растром Байера; сквозь дыры
             // видны подпорки, нарисованные позади.
             NIGHT = [13, 11, 10], SEPIA = [58, 48, 38], ASH = [138, 141, 143], BONE = [217, 207, 184];
+            CANDLE = [226, 138, 58]; // СВЕЧА: настоящее тепло взгляду не поддаётся
             BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
             off = null, offCtx = null;
         }
@@ -13659,7 +13722,8 @@ System.register("content/looks", [], function (exports_37, context_37) {
 
 Когда-то он вёл этот поезд. Теперь поезд — его. Других дел нет.
 
-На горизонте за путями — силуэт ракеты. Ржавая, стоит криво. Табличка у основания: «MARS: A FRESH START. $250,000 / ticket.» Под табличкой, баллончиком: «Земля была бесплатной.» Пассажиры зашли. По списку — сорок один. Старт — pending. Они всё ещё внутри.`,
+На горизонте за путями — силуэт ракеты.`,
+                rocket: `Ракета за путями. Ржавая, стоит криво. Табличка у основания: «MARS: A FRESH START. $250,000 / ticket». Под табличкой, баллончиком: «Земля была бесплатной». Пассажиры зашли. По списку — сорок один. Старт — pending. Они всё ещё внутри.`,
                 vending: `Ржавая коробка с мерцающим экраном. "ОБМЕН" под слоем копоти. Монетоприёмник заварен ещё на заводе — но экран работает. Мериты: крути педали — получи еду. Еду — в энергию. Энергию — в педали. Выход: стань судьёй на шоу талантов. Талант: умение крутить. Приз: больше не крутить.`,
                 watchtower: `Деревянная платформа на четырёх ногах. Бинокль направлен внутрь поселения.
 
