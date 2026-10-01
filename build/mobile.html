@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='c4c5ed5 · 2026-10-01';console.log('[оттиск]', 'c4c5ed5 · 2026-10-01');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5535aae · 2026-10-01';console.log('[оттиск]', '5535aae · 2026-10-01');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -24624,10 +24624,111 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "assets/loader"], function (exports_68, context_68) {
+System.register("sprites/arch/index", [], function (exports_68, context_68) {
     "use strict";
-    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_14, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_28, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_12, ground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_29, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
+    var ARCH_BY_RING;
     var __moduleName = context_68 && context_68.id;
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // АРХИТЕКТУРА КОЛЕЦ — реестр модулей: кольцо → { south, east, west,
+            // north, plain: [{ name, w, h, draw(ctx, x, gy, t) }], sign: { сторона: fn } }.
+            // Раскладка по миру — src/world/architecture.js.
+            // Кольца подключаются по мере готовности (пока пусто — мир как прежде).
+            // ═══════════════════════════════════════
+            exports_68("ARCH_BY_RING", ARCH_BY_RING = {});
+        }
+    };
+});
+System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db", "world/disc"], function (exports_69, context_69) {
+    "use strict";
+    var index_js_1, ulitsa_db_js_7, disc_js_12, PER_SIDE, SIGN_CLEAR, GAP;
+    var __moduleName = context_69 && context_69.id;
+    function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
+    // точка постройки: along 0..1 вдоль стороны, depth — в полосе кольца
+    function sidePos(side, n, along, depth) {
+        const b0 = (n - 1) * disc_js_12.RING_W;
+        if (side === 'south')
+            return { x: disc_js_12.TOWN.x0 + 300 + along * 2400, gy: disc_js_12.TOWN.y1 + b0 + depth };
+        if (side === 'north')
+            return { x: disc_js_12.TOWN.x0 + 300 + along * 2400, gy: disc_js_12.TOWN.y0 - b0 - depth };
+        if (side === 'west')
+            return { x: disc_js_12.TOWN.x0 - b0 - depth, gy: disc_js_12.TOWN.y0 + 140 + along * 1360 };
+        if (side === 'east')
+            return { x: disc_js_12.TOWN.x1 + b0 + depth, gy: disc_js_12.TOWN.y0 + 140 + along * 1360 };
+        // равнина — северо-восточный угол: дуга вокруг угла городка
+        const r = b0 + depth, a = (0.22 + along * 0.56) * Math.PI / 2;
+        return { x: disc_js_12.TOWN.x1 + r * Math.cos(a), gy: disc_js_12.TOWN.y0 - r * Math.sin(a) };
+    }
+    function overlaps(a, b) {
+        return a.x - a.w / 2 - GAP < b.x + b.w / 2 && b.x - b.w / 2 - GAP < a.x + a.w / 2
+            && a.gy - a.h - GAP < b.gy && b.gy - b.h - GAP < a.gy;
+    }
+    // signs — табличные локации мира (для отступа): [{x, y, w, h}]
+    function buildArchitecture(signs = []) {
+        const out = [];
+        const signBoxes = signs.map(s => ({ x: s.x + s.w / 2, gy: s.y + s.h, w: s.w + SIGN_CLEAR * 2, h: s.h + SIGN_CLEAR }));
+        for (let n = 1; n <= disc_js_12.RINGS; n++) {
+            const seg = ulitsa_db_js_7.SEGMENTS[n - 1];
+            const arch = index_js_1.ARCH_BY_RING[seg.id];
+            if (!arch)
+                continue;
+            for (const side of ['south', 'north', 'west', 'east', 'plain']) {
+                const kinds = arch[side] || [];
+                if (!kinds.length)
+                    continue;
+                const count = side === 'plain' ? 2 + (h01(n * 5) > 0.5 ? 1 : 0) : PER_SIDE[side];
+                for (let i = 0; i < count; i++) {
+                    const kind = kinds[(i + n) % kinds.length];
+                    // несколько попыток найти место, не задевающее таблички и соседей
+                    for (let k = 0; k < 6; k++) {
+                        const seed = n * 1000 + i * 37 + k * 11 + side.length * 3;
+                        const along = (i + 0.5) / count + (h01(seed) - 0.5) * (0.8 / count);
+                        const depth = 70 + h01(seed + 5) * 70;
+                        const p = sidePos(side, n, Math.max(0.03, Math.min(0.97, along)), depth);
+                        const b = { x: p.x, gy: p.gy, w: kind.w, h: kind.h };
+                        if (signBoxes.some(s => overlaps(b, s)) || out.some(o => overlaps(b, o)))
+                            continue;
+                        out.push({ ...b, draw: kind.draw, name: kind.name, ring: n, side });
+                        break;
+                    }
+                }
+            }
+        }
+        return out;
+    }
+    exports_69("buildArchitecture", buildArchitecture);
+    // фасад табличек формы «дом» — по кольцу и стороне
+    function signFacade(ringN, side) {
+        const seg = ulitsa_db_js_7.SEGMENTS[ringN - 1];
+        const arch = seg && index_js_1.ARCH_BY_RING[seg.id];
+        return (arch && arch.sign && arch.sign[side]) || null;
+    }
+    exports_69("signFacade", signFacade);
+    return {
+        setters: [
+            function (index_js_1_1) {
+                index_js_1 = index_js_1_1;
+            },
+            function (ulitsa_db_js_7_1) {
+                ulitsa_db_js_7 = ulitsa_db_js_7_1;
+            },
+            function (disc_js_12_1) {
+                disc_js_12 = disc_js_12_1;
+            }
+        ],
+        execute: function () {
+            PER_SIDE = { south: 5, north: 5, west: 3, east: 3 };
+            SIGN_CLEAR = 46; // поодаль от табличек — их должно быть видно
+            GAP = 14; // между постройками
+        }
+    };
+});
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_70, context_70) {
+    "use strict";
+    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_14, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_28, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_13, ground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_1, mainCanvas, loader_js_2, player, flags, archDecor, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_29, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
+    var __moduleName = context_70 && context_70.id;
     // Check if player can leave settlement
     function canLeaveSettlement() {
         return flags.talkedTo.has('jester');
@@ -24650,10 +24751,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x);
         const camY = Math.round(camera_js_1.camera.y);
         ground_js_1.drawGround(bgCtx, camX, camY, vw, vh);
-        const tx0 = Math.max(camX, disc_js_12.TOWN.x0), ty0 = Math.max(camY, disc_js_12.TOWN.y0);
-        const tx1 = Math.min(camX + vw, disc_js_12.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_12.TOWN.y1);
+        const tx0 = Math.max(camX, disc_js_13.TOWN.x0), ty0 = Math.max(camY, disc_js_13.TOWN.y0);
+        const tx1 = Math.min(camX + vw, disc_js_13.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_13.TOWN.y1);
         if (tx1 > tx0 && ty1 > ty0) {
-            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_12.SHIFT_X, ty0 - disc_js_12.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
+            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_13.SHIFT_X, ty0 - disc_js_13.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
         }
         // ── BG: atmosphere ──
         atmosphere_js_1.drawBloodMoon(bgCtx, { x: camX, y: camY });
@@ -24664,10 +24765,23 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         context_js_17.setCtx(worldCtx);
         ground_js_1.drawGroundMarks(worldCtx, { x: camX, y: camY });
         atmosphere_js_1.drawFootprints(worldCtx, { x: camX, y: camY });
-        const sortedLocs = [...locations_js_4.locations].sort((a, b) => (a.y + a.h) - (b.y + b.h));
-        for (const loc of sortedLocs) {
-            if (!camera_js_1.camera.isVisible(loc.x, loc.y, loc.w, loc.h))
+        // локации и постройки эпох — вместе, по глубине
+        const drawList = [];
+        for (const loc of locations_js_4.locations) {
+            if (camera_js_1.camera.isVisible(loc.x, loc.y, loc.w, loc.h))
+                drawList.push({ k: loc.y + loc.h, loc });
+        }
+        for (const a of archDecor) {
+            if (camera_js_1.camera.isVisible(a.x - a.w / 2, a.gy - a.h, a.w, a.h))
+                drawList.push({ k: a.gy, a });
+        }
+        drawList.sort((p, q) => p.k - q.k);
+        for (const it of drawList) {
+            if (it.a) {
+                it.a.draw(worldCtx, Math.round(it.a.x), Math.round(it.a.gy), time_js_29.t);
                 continue;
+            }
+            const loc = it.loc;
             drawLocation(worldCtx, loc);
             if (loc.npc && npcDrawFn[loc.npc]) {
                 npcDrawFn[loc.npc](loc.x, loc.y);
@@ -24792,6 +24906,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return;
         }
         const form = loc.streetForm;
+        // дом табличек — в архитектуре своего кольца и стороны света
+        if (form === 'building') {
+            const facade = architecture_js_1.signFacade(loc.streetSeg, loc.streetSide);
+            if (facade) {
+                facade(ctx, x, gy, time_js_29.t);
+                if (loc.streetLive)
+                    drawLiveScaffold(ctx, loc, x, gy);
+                return;
+            }
+        }
         if (form === 'fire') {
             // Charred mound + 5 flame tongues with independent flicker.
             ctx.fillStyle = '#1a0a08';
@@ -25083,7 +25207,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function updateWorldSystems() {
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
         if (brainrot_js_1.inLoop()) {
-            const L0 = disc_js_12.TOWN.y1 + 8 * disc_js_12.RING_W + 24, L1 = disc_js_12.TOWN.y1 + 9 * disc_js_12.RING_W - 16;
+            const L0 = disc_js_13.TOWN.y1 + 8 * disc_js_13.RING_W + 24, L1 = disc_js_13.TOWN.y1 + 9 * disc_js_13.RING_W - 16;
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -25113,7 +25237,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         updateCrackTriggers(player);
         potemkin_js_4.update(player, locations_js_4.locations, brainrot_js_1.isFrozen());
         if (time_js_29.t % 3 === 0)
-            particles_js_1.fireEmber(disc_js_12.TOWN.x0 + 775, disc_js_12.TOWN.y0 + 635);
+            particles_js_1.fireEmber(disc_js_13.TOWN.x0 + 775, disc_js_13.TOWN.y0 + 635);
     }
     // ═══ LOOP ═══
     function loop() {
@@ -25271,8 +25395,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (eggObjects_js_2_1) {
                 eggObjects_js_2 = eggObjects_js_2_1;
             },
-            function (disc_js_12_1) {
-                disc_js_12 = disc_js_12_1;
+            function (disc_js_13_1) {
+                disc_js_13 = disc_js_13_1;
             },
             function (ground_js_1_1) {
                 ground_js_1 = ground_js_1_1;
@@ -25331,6 +25455,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (potemkin_js_4_1) {
                 potemkin_js_4 = potemkin_js_4_1;
             },
+            function (architecture_js_1_1) {
+                architecture_js_1 = architecture_js_1_1;
+            },
             function (loader_js_2_1) {
                 loader_js_2 = loader_js_2_1;
             }
@@ -25366,7 +25493,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
-                x: disc_js_12.TOWN.x0 + 800, y: disc_js_12.TOWN.y0 + 740, tx: disc_js_12.TOWN.x0 + 800, ty: disc_js_12.TOWN.y0 + 740,
+                x: disc_js_13.TOWN.x0 + 800, y: disc_js_13.TOWN.y0 + 740, tx: disc_js_13.TOWN.x0 + 800, ty: disc_js_13.TOWN.y0 + 740,
                 dir: 1, moving: false, walkFrame: 0,
             };
             playerRef_js_3.setPlayer(player);
@@ -25376,6 +25503,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 collectedLore: new Set(),
                 observersSeen: new Set(),
             };
+            // Постройки эпох — раскладка один раз, поодаль от табличек
+            archDecor = architecture_js_1.buildArchitecture(locations_js_4.locations.filter(l => l.streetForm));
             // Terrain (cached offscreen)
             terrainCanvas = terrain_js_5.buildTerrain();
             // Session memory
@@ -25393,7 +25522,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (savedData) {
                 if (savedData.player) {
                     // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
-                    const dOff = disc_js_12.OFF - (savedData.off || 2300);
+                    const dOff = disc_js_13.OFF - (savedData.off || 2300);
                     player.x = savedData.player.x + dOff;
                     player.y = savedData.player.y + dOff;
                 }
@@ -25415,7 +25544,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     worldmap_js_1.loadDiscovered(savedData.discoveredGates);
             }
             save_js_1.startAutoSave(() => ({
-                player: { x: player.x, y: player.y }, off: disc_js_12.OFF,
+                player: { x: player.x, y: player.y }, off: disc_js_13.OFF,
                 talkedTo: Array.from(flags.talkedTo),
                 visited: Array.from(flags.visited),
                 observersSeen: Array.from(flags.observersSeen),
@@ -25428,7 +25557,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
-            lighting_js_1.lighting.add({ x: disc_js_12.TOWN.x0 + 800, y: disc_js_12.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            lighting_js_1.lighting.add({ x: disc_js_13.TOWN.x0 + 800, y: disc_js_13.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
             // Location lights
             for (const loc of locations_js_4.locations) {
                 if (!loc.light)
@@ -25629,13 +25758,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 if (actionKey === 'branch_back') {
-                    teleportWithFade(disc_js_12.TOWN.x0 + 2560, disc_js_12.TOWN.y1 + disc_js_12.RING_W + 80);
+                    teleportWithFade(disc_js_13.TOWN.x0 + 2560, disc_js_13.TOWN.y1 + disc_js_13.RING_W + 80);
                     return;
                 }
                 if (actionKey === 'brainrot_enter') {
-                    teleportWithFade(disc_js_12.TOWN.x0 + 2540, disc_js_12.TOWN.y1 + 8 * disc_js_12.RING_W + 90, () => {
+                    teleportWithFade(disc_js_13.TOWN.x0 + 2540, disc_js_13.TOWN.y1 + 8 * disc_js_13.RING_W + 90, () => {
                         brainrot_js_1.enterLoop(() => {
-                            teleportWithFade(disc_js_12.TOWN.x0 + 2540, disc_js_12.TOWN.y1 + 7 * disc_js_12.RING_W + 100, () => {
+                            teleportWithFade(disc_js_13.TOWN.x0 + 2540, disc_js_13.TOWN.y1 + 7 * disc_js_13.RING_W + 100, () => {
                                 lorepopup_js_1.showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
                             });
                         });

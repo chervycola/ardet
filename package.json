@@ -11,7 +11,8 @@
     "test:content": "node test/content.mjs",
     "test:effects": "node test/effects.mjs",
     "test:ulitsa": "node test/ulitsa.mjs",
-    "test:potemkin": "node test/potemkin.mjs"
+    "test:potemkin": "node test/potemkin.mjs",
+    "test:architecture": "node test/architecture.mjs"
   },
   "repository": {
     "type": "git",
