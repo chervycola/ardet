@@ -7,7 +7,8 @@
 // the gates. Epoch gradient is painted directly into the terrain.
 // ═══════════════════════════════════════
 import { TOWNLET, SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, townDist, epochAt, southPoint, sidePoint } from './disc.js';
+import { TOWN, RING_W, RINGS, FIRE_W, EDGE_BAND, townDist, epochAt, southPoint, sidePoint } from './disc.js';
+import { WASTE_SIGNS } from '../content/wasteland.js';
 import { useTexts } from './useActions.js';
 
 // Virtual street coords (0..3000 in ulitsa_db) → world coords.
@@ -83,6 +84,33 @@ function buildStreetLocations() {
 }
 
 export const streetLocations = buildStreetLocations();
+
+// ── Пустошь: вещи в пустыне брейнрота за огнём (content/wasteland.js) ──
+function buildWasteLocations() {
+  const OUTER = RINGS * RING_W + FIRE_W, span = EDGE_BAND - 80;
+  return WASTE_SIGNS.map((sign, i) => {
+    const id = `ws_${i}`;
+    const dd = OUTER + sign.depth * span;
+    let x, y;
+    if (sign.side === 'south') { x = TOWN.x0 + sign.along * (TOWN.x1 - TOWN.x0); y = TOWN.y1 + dd; }
+    else if (sign.side === 'north') { x = TOWN.x0 + sign.along * (TOWN.x1 - TOWN.x0); y = TOWN.y0 - dd; }
+    else if (sign.side === 'west') { x = TOWN.x0 - dd; y = TOWN.y0 + sign.along * (TOWN.y1 - TOWN.y0); }
+    else { x = TOWN.x1 + dd; y = TOWN.y0 + sign.along * (TOWN.y1 - TOWN.y0); }
+    const loc = {
+      id, name: sign.name, x: x - 7, y, w: 14, h: 26, zone: 'street',
+      look: sign.facade + (sign.whisper ? `\n\n${sign.whisper}` : ''),
+      streetForm: sign.form || 'plaque', streetSide: sign.side,
+      streetSprite: sign.sprite || null, streetSeg: RINGS + 2,
+    };
+    if (sign.potemkin) loc.potemkinSign = sign;
+    if (sign.backyard) {
+      useTexts[`${id}_flip`] = { title: `${sign.name} — обратная сторона`, text: sign.backyard };
+      loc.useAction = `${id}_flip`;
+    }
+    return loc;
+  });
+}
+export const wasteLocations = buildWasteLocations();
 
 // ── «Равнина · предрассветье»: восточная сторона, кольцо §2.
 // В открытом мире доходишь пешком; веха — быстрый переход.

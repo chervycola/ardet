@@ -980,6 +980,116 @@ const STREET = {
     ctx.fillStyle = C.wood2;
     ctx.fillRect(x - 7, gy - 7, 14, 1); ctx.fillRect(x - 7, gy - 4, 14, 1);
   },
+  // ── пустошь за огнём ──
+  // остов перехватчика: на боку, три бака
+  wreck_car(ctx, x, gy) {
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 13, gy - 9, 26, 7);           // кузов на боку
+    ctx.fillRect(x - 9, gy - 13, 14, 4);           // кабина
+    ctx.fillStyle = C.dark;
+    ctx.fillRect(x - 3, gy - 17, 4, 4);            // нагнетатель
+    ctx.fillStyle = C.ash;
+    for (const bx of [-12, -8, 8]) ctx.fillRect(x + bx, gy - 4, 3, 3);   // баки
+    ctx.fillStyle = C.stone2;
+    ctx.beginPath(); ctx.arc(x - 7, gy - 1, 3, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 9, gy - 1, 3, 0, 7); ctx.fill();
+    ctx.fillStyle = C.bone; ctx.fillRect(x + 4, gy - 8, 1, 1);           // ржавый блик
+  },
+  // цитадель: скала в три столба, сады наверху, труба воды внизу
+  citadel(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 13, gy - 30, 7, 30); ctx.fillRect(x - 4, gy - 36, 8, 36); ctx.fillRect(x + 6, gy - 28, 7, 28);
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 12, gy - 29, 2, 28); ctx.fillRect(x - 3, gy - 35, 2, 34); ctx.fillRect(x + 7, gy - 27, 2, 26);
+    ctx.fillStyle = '#3D4A3A';                     // сады — мгла-зелень
+    ctx.fillRect(x - 13, gy - 32, 7, 2); ctx.fillRect(x - 4, gy - 38, 8, 2); ctx.fillRect(x + 6, gy - 30, 7, 2);
+    ctx.fillStyle = C.ash; ctx.fillRect(x - 1, gy - 12, 3, 4);   // труба
+    ctx.fillStyle = C.dark;
+    for (let i = 0; i < 6; i++) ctx.fillRect(x - 10 + i * 4, gy - 2, 2, 2);   // толпа с вёдрами
+  },
+  // купол-клетка: полусфера из прутьев
+  cage_dome(ctx, x, gy) {
+    ctx.strokeStyle = C.ash; ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath(); ctx.ellipse(x + 0.5, gy, Math.abs(i) * 4 + 0.5, 20, 0, Math.PI, 2 * Math.PI); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.ellipse(x + 0.5, gy - 10, 12, 3, 0, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = C.dark; ctx.fillRect(x - 13, gy - 1, 26, 1);
+  },
+  // камень с серебряным отпечатком губ, пустой баллончик
+  chrome_rock(ctx, x, gy) {
+    ctx.fillStyle = C.stone;
+    ctx.fillRect(x - 7, gy - 8, 14, 8); ctx.fillRect(x - 5, gy - 10, 10, 2);
+    ctx.fillStyle = '#c8ccd0';                     // хром
+    ctx.fillRect(x - 2, gy - 7, 4, 1); ctx.fillRect(x - 1, gy - 6, 2, 1);
+    ctx.fillStyle = C.ash; ctx.fillRect(x + 6, gy - 3, 2, 3);   // баллончик
+  },
+  // шлюз убежища: шестерня в скале
+  vault_door(ctx, x, gy) {
+    ctx.fillStyle = C.stone2;
+    ctx.fillRect(x - 14, gy - 26, 28, 26);
+    ctx.fillStyle = C.ash;
+    ctx.beginPath(); ctx.arc(x, gy - 12, 10, 0, 7); ctx.fill();
+    ctx.fillStyle = C.stone;
+    ctx.beginPath(); ctx.arc(x, gy - 12, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = C.ash;
+    for (let a = 0; a < 8; a++) {                  // зубья
+      const ang = a / 8 * Math.PI * 2;
+      ctx.fillRect(x + Math.cos(ang) * 11 - 1 | 0, gy - 12 + Math.sin(ang) * 11 - 1 | 0, 2, 2);
+    }
+    ctx.fillStyle = C.bone; ctx.fillRect(x - 2, gy - 14, 1, 3); ctx.fillRect(x, gy - 14, 2, 1);   // «12»
+    ctx.fillRect(x + 1, gy - 13, 1, 1); ctx.fillRect(x, gy - 12, 2, 1);
+    ctx.fillStyle = C.black; ctx.fillRect(x + 10, gy - 20, 1, 16);   // щель — по проекту
+  },
+  // автомат газировки: бутылка-ракета на боку
+  cola_vending(ctx, x, gy) {
+    ctx.fillStyle = '#C23B2B';
+    ctx.fillRect(x - 6, gy - 24, 12, 24);
+    ctx.fillStyle = C.dark; ctx.fillRect(x - 4, gy - 21, 8, 10);
+    ctx.fillStyle = C.bone;                        // бутылка-ракета
+    ctx.fillRect(x - 1, gy - 20, 2, 7); ctx.fillRect(x - 2, gy - 14, 4, 1);
+    ctx.fillStyle = C.ash; ctx.fillRect(x + 2, gy - 8, 2, 1);   // прорезь для крышек
+    ctx.fillStyle = C.black; ctx.fillRect(x - 4, gy - 5, 8, 3);
+  },
+  // корова о двух головах
+  brahmin(ctx, x, gy) {
+    ctx.fillStyle = C.paper2;
+    ctx.fillRect(x - 6, gy - 11, 12, 6);
+    ctx.fillRect(x - 5, gy - 5, 1, 5); ctx.fillRect(x - 2, gy - 5, 1, 5);
+    ctx.fillRect(x + 2, gy - 5, 1, 5); ctx.fillRect(x + 5, gy - 5, 1, 5);
+    ctx.fillRect(x - 10, gy - 15, 4, 4); ctx.fillRect(x + 7, gy - 15, 4, 4);   // головы в разные стороны
+    ctx.fillRect(x - 7, gy - 13, 2, 3); ctx.fillRect(x + 6, gy - 13, 2, 3);
+    ctx.fillStyle = C.bone;
+    ctx.fillRect(x - 10, gy - 16, 1, 1); ctx.fillRect(x + 10, gy - 16, 1, 1);  // рога
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(x - 3, gy - 10, 2, 2); ctx.fillRect(x + 2, gy - 9, 2, 2);     // пятна
+  },
+  // чемодан «Сад Эдема»
+  geck_case(ctx, x, gy) {
+    ctx.fillStyle = C.ash;
+    ctx.fillRect(x - 7, gy - 8, 14, 8);
+    ctx.fillStyle = C.stone; ctx.fillRect(x - 2, gy - 10, 4, 2);   // ручка
+    ctx.fillStyle = '#3D4A3A'; ctx.fillRect(x - 5, gy - 6, 4, 3);  // росток на крышке
+    ctx.fillStyle = C.bone; ctx.fillRect(x + 1, gy - 5, 4, 1);
+  },
+  // бункер-купол: бетон, амбразура
+  bunker_dome(ctx, x, gy) {
+    ctx.fillStyle = C.concrete;
+    ctx.beginPath(); ctx.ellipse(x, gy, 11, 9, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = C.ash; ctx.fillRect(x - 11, gy - 1, 22, 1);
+    ctx.fillStyle = C.black; ctx.fillRect(x - 4, gy - 5, 8, 2);    // амбразура
+    ctx.fillStyle = C.paper2; ctx.fillRect(x + 5, gy - 7, 2, 1);   // номер
+  },
+  // бункер — божья коровка
+  bunker_ladybug(ctx, x, gy) {
+    ctx.fillStyle = '#C23B2B';
+    ctx.beginPath(); ctx.ellipse(x, gy, 11, 9, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x, gy - 9, 1, 9);                 // спинка
+    for (const [dx, dy] of [[-6, -5], [-3, -7], [4, -6], [6, -3], [-7, -2], [3, -3]]) ctx.fillRect(x + dx, gy + dy, 2, 2);
+    ctx.fillRect(x - 3, gy - 3, 6, 2);             // амбразура — рот
+    ctx.fillStyle = C.paper; ctx.fillRect(x + 12, gy - 6, 4, 6);   // меню мелом
+  },
 };
 
 // ── Формы записок на земле: (ctx, x, y, t) ──

@@ -137,9 +137,10 @@ export const locations = [
 import { SHIFT_X, SHIFT_Y } from './disc.js';
 for (const l of locations) { l.x += SHIFT_X; l.y += SHIFT_Y; }
 
-import { streetLocations, branchLocations } from './street.js';
+import { streetLocations, branchLocations, wasteLocations } from './street.js';
 locations.push(...streetLocations);   // уже в мировых координатах диска
 locations.push(...branchLocations);
+locations.push(...wasteLocations);   // пустошь за огнём
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
