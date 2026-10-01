@@ -9,6 +9,7 @@
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, RING_W, RINGS } from './disc.js';
+import { ARCH_LOOKS } from '../content/arch_looks.js';
 
 function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
 
@@ -55,7 +56,8 @@ export function buildArchitecture(signs = []) {
           const p = sidePos(side, n, Math.max(0.03, Math.min(0.97, along)), depth);
           const b = { x: p.x, gy: p.gy, w: kind.w, h: kind.h };
           if (signBoxes.some(s => overlaps(b, s)) || out.some(o => overlaps(b, o))) continue;
-          out.push({ ...b, draw: kind.draw, name: kind.name, ring: n, side });
+          out.push({ ...b, draw: kind.draw, name: kind.name, ring: n, side,
+            look: ARCH_LOOKS[`${seg.id}:${side}:${kind.name}`] || null });
           break;
         }
       }
@@ -69,4 +71,21 @@ export function signFacade(ringN, side) {
   const seg = SEGMENTS[ringN - 1];
   const arch = seg && ARCH_BY_RING[seg.id];
   return (arch && arch.sign && arch.sign[side]) || null;
+}
+
+// Постройки как локации мира: подходишь — осмотр; твёрдое только
+// основание (низ силуэта), чтобы высокое можно было обойти сзади.
+export function archLocations(decor) {
+  return decor.map((d, i) => {
+    const fh = Math.max(6, Math.min(14, Math.round(d.h * 0.3)));
+    const fw = Math.round(d.w * 0.84);
+    return {
+      id: `ar_${i}`, name: d.name, zone: 'street',
+      x: Math.round(d.x - d.w / 2), y: Math.round(d.gy - d.h), w: d.w, h: d.h,
+      look: d.look || d.name,
+      archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
+      archRing: d.ring, archSide: d.side,
+      solidBox: { x: Math.round(d.x - fw / 2), y: Math.round(d.gy - fh), w: fw, h: fh },
+    };
+  });
 }

@@ -64,7 +64,7 @@ import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as 
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
-import { buildArchitecture, signFacade } from './world/architecture.js';
+import { signFacade } from './world/architecture.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -112,9 +112,6 @@ const flags = {
   collectedLore: new Set(),
   observersSeen: new Set(),
 };
-
-// Постройки эпох — раскладка один раз, поодаль от табличек
-const archDecor = buildArchitecture(locations.filter(l => l.streetForm));
 
 // Terrain (cached offscreen)
 const terrainCanvas = buildTerrain();
@@ -240,17 +237,16 @@ function render() {
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawFootprints(worldCtx, { x: camX, y: camY });
 
-  // локации и постройки эпох — вместе, по глубине
+  // локации (с постройками эпох) и странник — по глубине: за домом
+  // странника не видно, перед домом — видно
   const drawList = [];
   for (const loc of locations) {
     if (camera.isVisible(loc.x, loc.y, loc.w, loc.h)) drawList.push({ k: loc.y + loc.h, loc });
   }
-  for (const a of archDecor) {
-    if (camera.isVisible(a.x - a.w / 2, a.gy - a.h, a.w, a.h)) drawList.push({ k: a.gy, a });
-  }
+  drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
-    if (it.a) { it.a.draw(worldCtx, Math.round(it.a.x), Math.round(it.a.gy), t); continue; }
+    if (it.player) { drawPlayer(player); continue; }
     const loc = it.loc;
     drawLocation(worldCtx, loc);
     if (loc.npc && npcDrawFn[loc.npc]) {
@@ -267,7 +263,6 @@ function render() {
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
 
-  drawPlayer(player);
   drawWorldWhisper({ x: camX, y: camY });
 
   worldCtx.restore();
@@ -365,6 +360,7 @@ function drawLocation(ctx, loc) {
 }
 
 function drawLocationPlain(ctx, loc) {
+  if (loc.archDraw) { loc.archDraw(ctx, loc.archX, loc.archGy, t); return; }
   if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
   const fn = locSprites['draw_' + loc.id];
   if (fn) {

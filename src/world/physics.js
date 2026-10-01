@@ -37,15 +37,20 @@ function settlementDist(x, y) {
 }
 
 // Check collision with solid locations
-export function isBlocked(nx, ny, locations) {
-  const px1 = nx + PLAYER_MX - PLAYER_W / 2;
-  const py1 = ny + PLAYER_MY - PLAYER_H / 2;
+// solidBox — твёрдое основание (постройки эпох); из того, внутри чего
+// уже стоишь (телепорт, старый сейв), выйти можно всегда.
+function hits(x, y, b) {
+  const px1 = x + PLAYER_MX - PLAYER_W / 2;
+  const py1 = y + PLAYER_MY - PLAYER_H / 2;
+  return px1 < b.x + b.w && px1 + PLAYER_W > b.x && py1 < b.y + b.h && py1 + PLAYER_H > b.y;
+}
+export function isBlocked(nx, ny, locations, cur = null) {
   for (const l of locations) {
-    if (!l.solid) continue;
-    if (px1 < l.x + l.w && px1 + PLAYER_W > l.x &&
-        py1 < l.y + l.h && py1 + PLAYER_H > l.y) {
-      return true;
-    }
+    if (!l.solid && !l.solidBox) continue;
+    const b = l.solidBox || l;
+    if (!hits(nx, ny, b)) continue;
+    if (l.solidBox && cur && hits(cur.x, cur.y, b)) continue;
+    return true;
   }
   return false;
 }
@@ -83,15 +88,15 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
     //      smaller settlement bounds.
     if (!isInSettlement(player.x, player.y)) {
       const cur = settlementDist(player.x, player.y);
-      if (settlementDist(nx, ny) < cur && !isBlocked(nx, ny, locations)) {
+      if (settlementDist(nx, ny) < cur && !isBlocked(nx, ny, locations, player)) {
         player.x = nx; player.y = ny;
         return true;
       }
-      if (settlementDist(nx, player.y) < cur && !isBlocked(nx, player.y, locations)) {
+      if (settlementDist(nx, player.y) < cur && !isBlocked(nx, player.y, locations, player)) {
         player.x = nx;
         return true;
       }
-      if (settlementDist(player.x, ny) < cur && !isBlocked(player.x, ny, locations)) {
+      if (settlementDist(player.x, ny) < cur && !isBlocked(player.x, ny, locations, player)) {
         player.y = ny;
         return true;
       }
@@ -100,11 +105,11 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
     // Inside the zone, trying to leave — try the original per-axis slide
     const slideX = player.x + dx;
     const slideY = player.y + dy;
-    if (isInSettlement(slideX, player.y) && !isBlocked(slideX, player.y, locations)) {
+    if (isInSettlement(slideX, player.y) && !isBlocked(slideX, player.y, locations, player)) {
       player.x = clamp(slideX, 10, MW - 22);
       return true;
     }
-    if (isInSettlement(player.x, slideY) && !isBlocked(player.x, slideY, locations)) {
+    if (isInSettlement(player.x, slideY) && !isBlocked(player.x, slideY, locations, player)) {
       player.y = clamp(slideY, 170, MH - 30);
       return true;
     }
@@ -112,19 +117,19 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
   }
 
   // Collision
-  if (!isBlocked(nx, ny, locations)) {
+  if (!isBlocked(nx, ny, locations, player)) {
     player.x = nx;
     player.y = ny;
     return true;
   }
 
   // Slide along X
-  if (!isBlocked(nx, player.y, locations)) {
+  if (!isBlocked(nx, player.y, locations, player)) {
     player.x = nx;
     return true;
   }
   // Slide along Y
-  if (!isBlocked(player.x, ny, locations)) {
+  if (!isBlocked(player.x, ny, locations, player)) {
     player.y = ny;
     return true;
   }

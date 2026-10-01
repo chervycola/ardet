@@ -142,6 +142,10 @@ locations.push(...streetLocations);   // уже в мировых координ
 locations.push(...branchLocations);
 locations.push(...wasteLocations);   // пустошь за огнём
 
+// постройки эпох — твёрдые, с осмотром; поодаль от табличек
+import { buildArchitecture, archLocations } from './architecture.js';
+locations.push(...archLocations(buildArchitecture(locations.filter(l => l.streetForm))));
+
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
 // addressable like the campfire. Coordinates match their §9 sign x ranges.

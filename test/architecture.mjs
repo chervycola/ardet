@@ -112,6 +112,37 @@ test('arch: фасады табличек — по кольцу и сторон�
   eq(signFacade(11, 'south'), null, 'за огнём фасадов нет');
 });
 
+const { isBlocked } = await imp('world/physics.js');
+const { ARCH_LOOKS } = await imp('content/arch_looks.js');
+const arch = locations.filter(l => l.archDraw);
+test('arch: постройки — локации мира с собственным осмотром', () => {
+  eq(arch.length, decor.length, 'каждая постройка — локация');
+  for (const l of arch) {
+    const key = `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}`;
+    assert(ARCH_LOOKS[key], `нет осмотра ${key}`);
+    eq(l.look, ARCH_LOOKS[key]);
+  }
+});
+
+test('arch: твёрдое — только основание, внутри силуэта', () => {
+  for (const l of arch) {
+    const b = l.solidBox;
+    assert(b.x >= l.x && b.x + b.w <= l.x + l.w && b.y >= l.y && b.y + b.h <= l.y + l.h + 1, `${l.name}: основание вне силуэта`);
+    assert(b.h <= 14, `${l.name}: основание выше 14`);
+  }
+});
+
+test('arch: к каждой постройке можно подойти; сквозь основание не пройти; из него — выйти', () => {
+  for (const l of arch) {
+    const ax = l.x + l.w / 2 - 6, ay = l.y + l.h + 5;      // точка подхода (как в клике)
+    assert(!isBlocked(ax, ay, locations), `${l.name}: точка подхода занята`);
+  }
+  const l = arch[0], b = l.solidBox;
+  const inside = { x: b.x + b.w / 2 - 6, y: b.y - 10 };
+  assert(isBlocked(inside.x, inside.y, locations), 'основание твёрдое');
+  assert(!isBlocked(inside.x, inside.y + 1, locations, inside), 'изнутри основания можно выйти');
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
