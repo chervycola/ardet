@@ -235,6 +235,7 @@ setCtx(ctx);
 // ═══ ZONE PARTITION ═══
 {
   const { getZone } = await imp('audio/zoneAmbient.js');
+  const { OFF } = await imp('world/disc.js');
   test('getZone: every point of the disc world returns a known zone', () => {
     const valid = new Set(['forest', 'toxic', 'quarter', 'highway', 'settlement', 'street']);
     for (let x = 0; x <= 7600; x += 100) {
@@ -245,15 +246,16 @@ setCtx(ctx);
     }
   });
   test('getZone: городок в центре, кольца вокруг', () => {
-    eq(getZone(3300, 3100), 'settlement', 'center should be settlement');
-    eq(getZone(3300, 2500), 'forest', 'north strip → forest');
-    eq(getZone(3300, 3800), 'toxic', 'south strip → toxic');
-    eq(getZone(2450, 3100), 'quarter', 'west → quarter');
-    eq(getZone(4800, 3100), 'highway', 'east → highway');
-    eq(getZone(3800, 4500), 'street', 'южные кольца → эпохи');
-    eq(getZone(6000, 3100), 'street', 'восточные кольца → эпохи');
-    eq(getZone(3800, 1500), 'street', 'северные кольца → эпохи');
-    eq(getZone(1500, 3100), 'street', 'западные кольца → эпохи');
+    const D = OFF - 2300;   // от отступа мира
+    eq(getZone(3300 + D, 3100 + D), 'settlement', 'center should be settlement');
+    eq(getZone(3300 + D, 2500 + D), 'forest', 'north strip → forest');
+    eq(getZone(3300 + D, 3800 + D), 'toxic', 'south strip → toxic');
+    eq(getZone(2450 + D, 3100 + D), 'quarter', 'west → quarter');
+    eq(getZone(4800 + D, 3100 + D), 'highway', 'east → highway');
+    eq(getZone(3800 + D, 4500 + D), 'street', 'южные кольца → эпохи');
+    eq(getZone(6000 + D, 3100 + D), 'street', 'восточные кольца → эпохи');
+    eq(getZone(3800 + D, 1500 + D), 'street', 'северные кольца → эпохи');
+    eq(getZone(1500 + D, 3100 + D), 'street', 'западные кольца → эпохи');
   });
 }
 

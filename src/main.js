@@ -42,7 +42,7 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, SHIFT_X, SHIFT_Y } from './world/disc.js';
+import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
 import { drawGround, drawGroundMarks } from './render/ground.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
@@ -127,7 +127,11 @@ try {
 } catch (e) {} // хранилище может быть закрыто (Brave и т.п.)
 const savedData = loadGame();
 if (savedData) {
-  if (savedData.player) { player.x = savedData.player.x; player.y = savedData.player.y; }
+  if (savedData.player) {
+    // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
+    const dOff = OFF - (savedData.off || 2300);
+    player.x = savedData.player.x + dOff; player.y = savedData.player.y + dOff;
+  }
   if (savedData.talkedTo) savedData.talkedTo.forEach(n => flags.talkedTo.add(n));
   if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
   if (savedData.collectedLore) loadCollected(savedData.collectedLore);
@@ -139,7 +143,7 @@ if (savedData) {
 }
 
 startAutoSave(() => ({
-  player: { x: player.x, y: player.y },
+  player: { x: player.x, y: player.y }, off: OFF,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
   observersSeen: Array.from(flags.observersSeen),
@@ -278,11 +282,11 @@ function render() {
   dyingPixels.update();
   dyingPixels.draw(fxCtx);
   drawWeatherAdditive(fxCtx);
-  drawBrainrot(fxCtx);
   drawEdges(fxCtx);
 
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   drawWeatherOverlay(uiCtx);
+  drawBrainrot(uiCtx);
   screenMoss.update(player.moving);
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
@@ -499,7 +503,6 @@ const DEBUG_HUD = typeof location !== 'undefined' && /[?&]debug\b/.test(location
 function drawHUD(ctx) {
   drawLorePopup(ctx);
   drawIdle(ctx);
-  drawEpochTitle(ctx);
 
   if (DEBUG_HUD) {
     ctx.globalAlpha = 0.5;
@@ -532,16 +535,8 @@ function updateCrackTriggers(player) {
     lastCrackFrame = t;
   }
   lastLightning = weather.lightning;
-
-  // Wandering beyond map — tension crack
-  const offmap = (player.x < 0 || player.x > MW || player.y < 160 || player.y > MH);
-  if (offmap && t % 600 === 0 && Math.random() < 0.4) {
-    crackedGlass.add(
-      30 + Math.floor(Math.random() * (scaler.vw - 60)),
-      30 + Math.floor(Math.random() * (scaler.vh - 60)),
-    );
-    lastCrackFrame = t;
-  }
+  // Других трещин нет: экран бьётся только от молнии и от падения
+  // в брейнрот (brainrot.js) — решение автора.
 }
 
 // ═══ GAME LOGIC ═══
@@ -597,57 +592,8 @@ function drawTeleportFade(ctx) {
 }
 
 // ═══ EPOCH TITLE CARD ═══
-// Crossing into a street segment shows a large translucent title for a
-// couple of seconds — «§2 · ПОРТИКИ И САДЫ» — like zone cards in
-// action games. Re-shown every re-entry (the street is long; the
-// reminder is the point).
-const EPOCH_TITLE_LIFE = 160; // ~2.7 s
-const epochTitle = { text: '', era: '', life: 0, lastSegId: null };
-
-function updateEpochTitle() {
-  const seg = worldSegmentAt(player.x, player.y);
-  const id = seg ? seg.id : null;
-  if (id !== epochTitle.lastSegId) {
-    epochTitle.lastSegId = id;
-    if (seg) {
-      epochTitle.text = `§${seg.n} · ${seg.name.toUpperCase()}`;
-      epochTitle.era = seg.era;
-      epochTitle.life = EPOCH_TITLE_LIFE;
-    }
-  }
-  if (epochTitle.life > 0) epochTitle.life--;
-}
-
-function drawEpochTitle(ctx) {
-  if (epochTitle.life <= 0) return;
-  const total = EPOCH_TITLE_LIFE;
-  const age = total - epochTitle.life;
-  // Envelope: quick fade-in, hold, slow fade-out
-  const a = age < 20 ? age / 20 : (epochTitle.life < 50 ? epochTitle.life / 50 : 1);
-  const vw = scaler.vw;
-  const y = 54 - (age < 20 ? (20 - age) * 0.35 : 0); // slight settle-down
-  ctx.textAlign = 'center';
-  // Underline flourish
-  ctx.globalAlpha = a * 0.35;
-  ctx.fillStyle = '#b8860b';
-  ctx.fillRect(vw / 2 - 70, y + 8, 140, 1);
-  // Title
-  ctx.globalAlpha = a * 0.85;
-  ctx.fillStyle = '#e8dcc8';
-  ctx.font = '11px "Press Start 2P","VT323",monospace';
-  ctx.fillText(epochTitle.text, vw / 2, y);
-  // Era subtitle
-  ctx.globalAlpha = a * 0.5;
-  ctx.fillStyle = '#8a8d8f';
-  ctx.font = '7px "Press Start 2P","VT323",monospace';
-  ctx.fillText(epochTitle.era, vw / 2, y + 20);
-  ctx.textAlign = 'left';
-  ctx.globalAlpha = 1;
-}
-
 function updateGame() {
   updateTeleportFade();
-  updateEpochTitle();
   if (isFrozen()) { updateBrainrot(player); return; }
   if (!state.is('game')) return;
 

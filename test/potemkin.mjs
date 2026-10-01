@@ -59,7 +59,7 @@ const { COVER_SIGNS } = await imp('content/cover_layer.js');
 
 const sign = { potemkin: 'Сзади — подпорки.' };
 const fake = { id: 'fake_1', name: 'фасад', x: 1000, y: 1000, w: 14, h: 26,
-  look: 'Фасад.\n\n— обойти: «использовать» —', potemkinSign: sign };
+  look: 'Фасад.', potemkinSign: sign };
 const real = { id: 'real_1', name: 'дуб', x: 1200, y: 1000, w: 14, h: 26, look: 'Кривой дуб. Цел.' };
 const locs = [fake, real];
 const near = { x: fake.x + 1, y: fake.y + 16, moving: false };
@@ -79,13 +79,13 @@ test('potemkin: короткая остановка ничего не прояв
   eq(P.revealOf(fake), 0);
 });
 
-test('potemkin: неподвижный взгляд проявляет и даёт шов перед подсказкой «обойти»', () => {
+test('potemkin: неподвижный взгляд проявляет и даёт шов в конце осмотра', () => {
   P._reset();
   run(near, P.STILL_DELAY + 200);
   eq(P.revealOf(fake), 1);
   const txt = P.lookText(fake);
   assert(txt.includes(sign.potemkin), 'шов в осмотре');
-  assert(txt.indexOf(sign.potemkin) < txt.indexOf('— обойти'), 'подсказка остаётся последней');
+  assert(txt.endsWith(sign.potemkin), 'шов — последним абзацем');
 });
 
 test('potemkin: подойти к проявленному и осмотреть — шов помнится', () => {

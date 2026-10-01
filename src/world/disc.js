@@ -10,8 +10,8 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 export const RING_W = 200;              // ширина кольца-эпохи
 export const RINGS = SEGMENTS.length;   // 9 эпох
 export const FIRE_W = 150;              // край — кольцо огня
-export const EDGE_BAND = 350;           // стихии за огнём
-export const OFF = RINGS * RING_W + FIRE_W + EDGE_BAND;   // 2300 — поля вокруг
+export const EDGE_BAND = 1200;          // пустыня брейнрота за огнём: широкая, распад нарастает
+export const OFF = RINGS * RING_W + FIRE_W + EDGE_BAND;   // 3150 — поля вокруг
 
 // Прямоугольник городка (вне-время, кольцо 0) — в центре полного диска.
 // Контент городка исторически 0..3000 × 160..1800: сдвиг на чтении.

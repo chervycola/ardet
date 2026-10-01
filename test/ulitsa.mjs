@@ -49,6 +49,7 @@ function eq(a, b, m) { if (a !== b) throw new Error((m || 'eq') + `: ${a} !== ${
 
 const base = new URL('../src/', import.meta.url);
 const imp = p => import(new URL(p, base));
+const { OFF } = await imp('world/disc.js');
 
 // ═══ STREET DATA INTEGRITY (ulitsa_db) ═══
 {
@@ -138,7 +139,8 @@ const imp = p => import(new URL(p, base));
   });
 
   test('street constants: spawn on ring one, return at the gates', () => {
-    assert(STREET_SPAWN.y > 3940 && STREET_SPAWN.y < 4160, 'spawn на первом кольце');
+    const D = OFF - 2300;   // от отступа мира
+    assert(STREET_SPAWN.y > 3940 + D && STREET_SPAWN.y < 4160 + D, 'spawn на первом кольце');
     assert(GATES_RETURN.x > 0 && GATES_RETURN.y > 0, 'gates return в городке');
   });
 
@@ -180,9 +182,10 @@ const imp = p => import(new URL(p, base));
   });
 
   test('zones: кольца звучат улицей; зоны городка целы', () => {
-    eq(getZone(3800, 4500), 'street', 'южные кольца');
-    eq(getZone(3300, 3100), 'settlement', 'settlement intact');
-    eq(getZone(4800, 3100), 'highway', 'highway intact');
+    const D = OFF - 2300;   // от отступа мира
+    eq(getZone(3800 + D, 4500 + D), 'street', 'южные кольца');
+    eq(getZone(3300 + D, 3100 + D), 'settlement', 'settlement intact');
+    eq(getZone(4800 + D, 3100 + D), 'highway', 'highway intact');
   });
 }
 

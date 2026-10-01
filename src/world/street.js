@@ -53,7 +53,6 @@ function buildStreetLocations() {
       let look = sign.facade;
       if (sign.whisper) look += `\n\n${sign.whisper}`;
       if (sign.live) look += `\n\n[запись продолжается]`;
-      if (sign.backyard) look += `\n\n— обойти: «использовать» —`;
       const loc = {
         id, name: sign.name,
         x: pt.x - 7, y: pt.y, w: 14, h: 26,

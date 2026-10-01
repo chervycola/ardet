@@ -9,7 +9,6 @@ import { t } from '../core/time.js';
 import { X } from '../render/context.js';
 import { scaler } from '../render/scaler.js';
 import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H, warpedDist } from './disc.js';
-import { crackedGlass } from '../render/metaFx.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;   // 1950 — где кончается огонь
 
@@ -21,15 +20,14 @@ export const EDGE = {
 };
 
 let cur = null;      // { elem, depth 0..1 }
-let crackTick = 0;
 
 export function edgeState() { return cur; }
 export function edgeDepth() { return cur ? cur.depth : 0; }
 export function slowFactor() {
   if (!cur) return 1;
-  if (cur.elem === 'quicksand') return 1 - cur.depth * 0.72;   // вязнешь
-  if (cur.elem === 'lake') return 1 - cur.depth * 0.6;         // жижа
-  if (cur.elem === 'junk') return 1 - cur.depth * 0.45;        // завалы
+  if (cur.elem === 'quicksand') return 1 - cur.depth * 0.5;    // вязнешь
+  if (cur.elem === 'lake') return 1 - cur.depth * 0.42;        // жижа
+  if (cur.elem === 'junk') return 1 - cur.depth * 0.32;        // завалы
   return 1;                                                    // лёд не держит
 }
 
@@ -44,13 +42,6 @@ export function update(player) {
     const m = Math.max(dn, ds, dw, de);
     const elem = m === ds ? 'quicksand' : m === de ? 'junk' : m === dn ? 'ice' : 'lake';
     cur = { elem, depth };
-  }
-  // лёд: экран трескается по мере глубины
-  if (cur && cur.elem === 'ice' && cur.depth > 0.25) {
-    if (++crackTick > Math.max(30, 160 - cur.depth * 130)) {
-      crackTick = 0;
-      crackedGlass.add((Math.random() * scaler.vw) | 0, (Math.random() * scaler.vh * 0.7) | 0);
-    }
   }
 }
 

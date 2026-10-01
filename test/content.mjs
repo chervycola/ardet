@@ -312,36 +312,29 @@ setCtx(fakeCtx());
   const brainrot = await imp('world/brainrot.js');
   const { events } = await imp('core/events.js');
 
-  test('brainrot: full cycle — far off-map → freeze at 100 → recover after ~300 frames', () => {
-    // Single test because brainrot state is module-level and the recovery
-    // path teleports the same player object back to (800,900) and drains.
+  const { TOWN } = await imp('world/disc.js');
+  test('brainrot: распад нарастает постепенно, падение не мгновенное, после — костёр', () => {
+    // Распад идёт за глубиной: первые кадры вдали ещё не падение.
     const player = { x: -10000, y: -10000 };
-
-    // Phase A: a few frames at extreme distance must freeze immediately.
     for (let i = 0; i < 5; i++) brainrot.update(player);
-    assert(brainrot.isFrozen(), 'expected freeze after going off-map');
+    assert(!brainrot.isFrozen(), 'не падаем мгновенно — можно успеть выйти');
+    assert(brainrot.getLevel() > 0 && brainrot.getLevel() < 100, 'распад нарастает');
+    for (let i = 0; i < 400 && !brainrot.isFrozen(); i++) brainrot.update(player);
+    assert(brainrot.isFrozen(), 'дошёл до края — упал');
     eq(brainrot.getLevel(), 100, 'level pinned at 100 during freeze');
 
-    // Phase B: tick past the 300-frame recovery threshold and SNAPSHOT
-    // the level at the moment of recovery (after that the level drains
-    // naturally each frame because the player is now back on the map).
-    let recovered = false;
-    let levelAtRecover = -1;
-    const off = events.on('brainrot.recover', () => {
-      recovered = true;
-      levelAtRecover = brainrot.getLevel();
-    });
-    for (let i = 0; i < 320; i++) {
-      brainrot.update(player);
-      if (recovered) break;
-    }
+    let recovered = false, levelAtRecover = -1;
+    const off = events.on('brainrot.recover', () => { recovered = true; levelAtRecover = brainrot.getLevel(); });
+    for (let i = 0; i < 320; i++) { brainrot.update(player); if (recovered) break; }
     off();
-
     assert(recovered, 'brainrot.recover event fired');
     assert(!brainrot.isFrozen(), 'no longer frozen after recovery');
     eq(levelAtRecover, 50, 'level reset to 50 at the moment of recovery');
-    eq(player.x, 3100, 'respawned at campfire x');
-    eq(player.y, 3040, 'respawned at campfire y');
+    eq(player.x, TOWN.x0 + 800, 'respawned at campfire x');
+    eq(player.y, TOWN.y0 + 740, 'respawned at campfire y');
+    // дома распад уходит сам
+    for (let i = 0; i < 300; i++) brainrot.update(player);
+    assert(brainrot.getLevel() < 5, 'дома распад уходит');
   });
 }
 
