@@ -1072,6 +1072,23 @@ const STREET = {
     ctx.fillStyle = '#3D4A3A'; ctx.fillRect(x - 5, gy - 6, 4, 3);  // росток на крышке
     ctx.fillStyle = C.bone; ctx.fillRect(x + 1, gy - 5, 4, 1);
   },
+  // остров с бункерами: вода, скала, купола, свежая табличка на причале
+  island_bunkers(ctx, x, gy) {
+    ctx.fillStyle = '#3D4A3A';                     // вода — мгла
+    ctx.fillRect(x - 16, gy - 4, 32, 4);
+    ctx.fillStyle = C.ash;
+    for (const wx of [-14, -6, 5, 12]) ctx.fillRect(x + wx, gy - 3, 2, 1);   // рябь
+    ctx.fillStyle = C.stone2;                      // скала
+    ctx.fillRect(x - 12, gy - 9, 24, 5); ctx.fillRect(x - 8, gy - 13, 16, 4);
+    ctx.fillStyle = C.concrete;                    // купола
+    for (const bx of [-8, 0, 7]) {
+      ctx.beginPath(); ctx.ellipse(x + bx, gy - 9 - (bx === 0 ? 4 : 0), 3, 3, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    }
+    ctx.fillStyle = C.black;
+    ctx.fillRect(x - 9, gy - 10, 2, 1); ctx.fillRect(x - 1, gy - 14, 2, 1); ctx.fillRect(x + 6, gy - 10, 2, 1);
+    ctx.fillStyle = C.wood2; ctx.fillRect(x + 12, gy - 9, 1, 6);   // причал, столбик
+    ctx.fillStyle = C.bone; ctx.fillRect(x + 10, gy - 12, 6, 3);   // табличка свежее всего
+  },
   // бункер-купол: бетон, амбразура
   bunker_dome(ctx, x, gy) {
     ctx.fillStyle = C.concrete;

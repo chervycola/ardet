@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='aee83c6 · 2026-10-01';console.log('[оттиск]', 'aee83c6 · 2026-10-01');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c4c5ed5 · 2026-10-01';console.log('[оттиск]', 'c4c5ed5 · 2026-10-01');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -1713,6 +1713,7 @@ System.register("content/cover_layer", [], function (exports_9, context_9) {
                 { "segment": "neon", "side": "west", "x": 2575, "name": "бункер-купол", "sprite": "bunker_dome", "facade": "Купол бетонный, амбразура — к морю. В ведомости обороны — номер; номеров за сто семьдесят тысяч. Противник по ведомости: все. Прибытие противника не зафиксировано.", "backyard": "Испытание серии, со слов конструктора: он стоял внутри, по куполу стрелял танк. Вышел оглохшим. Серию утвердили." },
                 { "segment": "neon", "side": "west", "x": 2595, "name": "бункер — божья коровка", "sprite": "bunker_ladybug", "facade": "Купол выкрашен красным, по красному — чёрные точки. Божья коровка в рост коровы. Амбразура — рот.", "backyard": "Внутри — две табуретки и кофейник. Меню мелом: «эспрессо; вид на море — через амбразуру».", "potemkin": "Из-под красного проступает серый бетон и цифры трафарета." },
                 { "segment": "neon", "side": "west", "x": 2615, "name": "бункер для вождя", "form": "building", "facade": "Вход в гору. Пять этажей вниз, комнат за сотню. Построено для вождя — на случай. Случая не было; вождь здесь не жил.", "backyard": "Теперь музей. Вход платный, выход — по лестнице. В одной из комнат — экспозиция о слежке; кровать на месте." },
+                { "segment": "now", "side": "west", "x": 2805, "name": "остров с бункерами", "sprite": "island_bunkers", "facade": "Остров у входа в залив. Был военной базой: бетон, тоннели, бункеры — по ведомости обороны. На причале табличка — свежее всего на острове: «КУРОРТ. СКОРО».", "backyard": "Опись при передаче. Бункеров — по ведомости обороны. Тоннелей — по ведомости. Пляжей — один. Проект: фонд зятя президента; деньги фонда — в заметной части из казны другой страны. Графа «назначение»: курорт. Графа «укрытия»: не заполнена.", "potemkin": "Под свежей табличкой — бетон амбразуры. Амбразура смотрит в пролив." },
             ]);
             // Записки на земле: { x, y, id, form?, text } (исторические координаты городка)
             exports_9("COVER_LORE", COVER_LORE = [
@@ -15642,6 +15643,31 @@ System.register("sprites/eggObjects", [], function (exports_41, context_41) {
                     ctx.fillRect(x - 5, gy - 6, 4, 3); // росток на крышке
                     ctx.fillStyle = C.bone;
                     ctx.fillRect(x + 1, gy - 5, 4, 1);
+                },
+                // остров с бункерами: вода, скала, купола, свежая табличка на причале
+                island_bunkers(ctx, x, gy) {
+                    ctx.fillStyle = '#3D4A3A'; // вода — мгла
+                    ctx.fillRect(x - 16, gy - 4, 32, 4);
+                    ctx.fillStyle = C.ash;
+                    for (const wx of [-14, -6, 5, 12])
+                        ctx.fillRect(x + wx, gy - 3, 2, 1); // рябь
+                    ctx.fillStyle = C.stone2; // скала
+                    ctx.fillRect(x - 12, gy - 9, 24, 5);
+                    ctx.fillRect(x - 8, gy - 13, 16, 4);
+                    ctx.fillStyle = C.concrete; // купола
+                    for (const bx of [-8, 0, 7]) {
+                        ctx.beginPath();
+                        ctx.ellipse(x + bx, gy - 9 - (bx === 0 ? 4 : 0), 3, 3, 0, Math.PI, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = C.black;
+                    ctx.fillRect(x - 9, gy - 10, 2, 1);
+                    ctx.fillRect(x - 1, gy - 14, 2, 1);
+                    ctx.fillRect(x + 6, gy - 10, 2, 1);
+                    ctx.fillStyle = C.wood2;
+                    ctx.fillRect(x + 12, gy - 9, 1, 6); // причал, столбик
+                    ctx.fillStyle = C.bone;
+                    ctx.fillRect(x + 10, gy - 12, 6, 3); // табличка свежее всего
                 },
                 // бункер-купол: бетон, амбразура
                 bunker_dome(ctx, x, gy) {
