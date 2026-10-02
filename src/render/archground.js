@@ -9,6 +9,8 @@
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, trailPoint } from '../world/disc.js';
+import { ARCH_BY_RING } from '../sprites/arch/index.js';
+import { t as now } from '../core/time.js';
 import { hash } from './draw.js';
 
 const NIGHT = [13, 11, 10], BONE = [217, 207, 184], ASH = [138, 141, 143];
@@ -243,6 +245,8 @@ export function prepareArchGround(ensembles, locations) {
 
     // забор: двор и посёлок — буквой П, калитка спереди по тропинке
     if (st.fence && e.kind !== 'gate') fenceFor(e, st, ms, front, cx, signs, allBoxes);
+    // утварь двора: колодец, телега, стог… — из модуля кольца
+    propsFor(e, ms, signs, allBoxes);
   }
 }
 
@@ -435,10 +439,12 @@ function bake(G) {
 const MAX_BAKED = 24;
 const baked = [];
 export function drawArchGround(ctx, camX, camY, vw, vh) {
+  let budget = 1;                     // не больше одного запекания за кадр — без рывков
   for (const G of grounds) {
-    if (G.x1 < camX || G.x0 > camX + vw || G.y1 < camY || G.y0 > camY + vh) continue;
+    if (G.x1 < camX - 80 || G.x0 > camX + vw + 80 || G.y1 < camY - 80 || G.y0 > camY + vh + 80) continue;
     if (!G.canvas) {
-      if (G.canvas === false) continue;
+      if (G.canvas === false || budget <= 0) continue;
+      budget--;
       G.canvas = bake(G) || false;
       if (!G.canvas) continue;
       baked.push(G);
@@ -608,6 +614,7 @@ function fenceFor(e, st, ms, front, cx, signs, boxes) {
     for (let x = a; x < b; x += 16) {
       const len = Math.min(16, b - x);
       if (len < 3 || blocked(x, fy - 2, x + len, fy)) continue;
+      if (hash(x, fy, 7.7) < 0.14) continue;          // после пожара заборы с прорехами
       const v = (hash(x, fy, 1.3) * 3) | 0;
       archProps.push({ x: x + len / 2, gy: fy, w: len, h: H,
         draw(ctx) { const c = pieceCanvas(style, false, len, v); if (c) ctx.drawImage(c, x, fy - H); } });
@@ -618,9 +625,55 @@ function fenceFor(e, st, ms, front, cx, signs, boxes) {
     for (let y = back; y < fy; y += 12) {
       const len = Math.min(12, fy - y);
       if (len < 3 || blocked(sx - 3, y, sx + 3, y + len)) continue;
+      if (hash(sx, y, 7.7) < 0.14) continue;
       const v = (hash(sx, y, 2.1) * 3) | 0;
       archProps.push({ x: sx, gy: y + len, w: 6, h: H + len,
         draw(ctx) { const c = pieceCanvas(style, true, len, v); if (c) ctx.drawImage(c, sx - 2, y - H); } });
+    }
+  }
+}
+
+// ── утварь двора ──
+// Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
+// тропы. Не на пороге, не на табличке, не друг на друге.
+function propsFor(e, ms, signs, boxes) {
+  const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side];
+  if (!kinds || !kinds.length) return;
+  const want = e.kind === 'gate' ? 1 : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
+  const placed = [];
+  const free = (x, gy, w, h) => {
+    const x0 = x - w / 2 - 3, x1 = x + w / 2 + 3, y0 = gy - h, y1 = gy + 3;
+    for (const m of ms) if (Math.abs(x - m.x) < 16 + w / 2 && gy > m.gy - 4 && gy < m.gy + 34) return false;   // порог
+    for (const s of signs) {
+      const sx = s.x + s.w / 2, sgy = s.y + s.h;
+      if (sx > x0 - 12 && sx < x1 + 12 && sgy > y0 - 4 && sgy < y1 + 30) return false;
+    }
+    for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 + 2 && y0 < b.y1 + 2) return false;
+    for (const p of placed) if (x1 > p.x - p.w / 2 - 6 && x0 < p.x + p.w / 2 + 6 && y1 > p.gy - p.h - 2 && y0 < p.gy + 4) return false;
+    for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
+    return !onTrail(e.side, x, gy) && !onTrail(e.side, x - w / 2, gy) && !onTrail(e.side, x + w / 2, gy);
+  };
+  for (let i = 0; i < want; i++) {
+    const K = kinds[(e.id + i) % kinds.length];
+    const cands = [];
+    if (e.kind === 'gate' && e.trail) {
+      // у ворот — на обочине тропы
+      for (const m of ms) for (const dx of [-1, 1]) for (const dy of [14, 24, 6, 34]) {
+        cands.push({ x: m.x + dx * (m.w / 2 - 6), gy: m.gy + dy });
+      }
+    } else {
+      // во дворе: перед постройками, по краю фартука
+      for (const m of ms) for (const fx of [-0.42, 0.42, -0.25, 0.25, -0.55, 0.55]) for (const dy of [12, 20, 8, 28]) {
+        cands.push({ x: m.x + fx * m.w, gy: m.gy + dy });
+      }
+    }
+    for (const c of cands) {
+      const x = Math.round(c.x), gy = Math.round(c.gy);
+      if (!free(x, gy, K.w, K.h)) continue;
+      const p = { x, gy, w: K.w, h: K.h, draw(ctx) { K.draw(ctx, x, gy, now); } };
+      placed.push(p);
+      archProps.push(p);
+      break;
     }
   }
 }

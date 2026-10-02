@@ -79,6 +79,22 @@ test('arch: постройки по контракту и рисуются бе�
   }
 });
 
+test('arch: утварь дворов (props) — по контракту, если есть', () => {
+  const ctx = fakeCtx();
+  for (const [id, A] of Object.entries(ARCH_BY_RING)) {
+    if (!A.props) continue;
+    for (const s of SIDES) {
+      const ps = A.props[s] || [];
+      assert(ps.length >= 2, `${id}/${s}: утвари меньше двух`);
+      for (const it of ps) {
+        assert(typeof it.name === 'string' && it.name, `${id}/${s}: вещь без имени`);
+        assert(it.w >= 4 && it.w <= 34 && it.h >= 3 && it.h <= 34, `${id}/${s}/${it.name}: размер ${it.w}×${it.h}`);
+        it.draw(ctx, 500, 500, 100);
+      }
+    }
+  }
+});
+
 const signs = locations.filter(l => l.streetForm);
 const decor = buildArchitecture(signs);
 test('arch: в каждом кольце стоят постройки, основание — на земле своего кольца', () => {
