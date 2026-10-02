@@ -689,8 +689,15 @@ function propsFor(e, ms, signs, boxes) {
     for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
     return !onTrail(e.side, x, gy) && !onTrail(e.side, x - w / 2, gy) && !onTrail(e.side, x + w / 2, gy);
   };
+  // одна и та же вещь в один кадр не попадает
+  const seenNear = (K, x, gy) => archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
+  const used = new Set();
   for (let i = 0; i < want; i++) {
-    const K = kinds[(e.id + i) % kinds.length];
+    const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));
+    const ax = ms[0].x, ag = ms[0].gy;
+    const K = order.find(k => !seenNear(k, ax, ag));
+    if (!K) break;
+    used.add(K);
     const cands = [];
     if (e.kind === 'gate' && e.trail) {
       // у ворот — на обочине тропы
@@ -706,7 +713,7 @@ function propsFor(e, ms, signs, boxes) {
     for (const c of cands) {
       const x = Math.round(c.x), gy = Math.round(c.gy);
       if (!free(x, gy, K.w, K.h)) continue;
-      const p = { x, gy, w: K.w, h: K.h, draw(ctx) { K.draw(ctx, x, gy, now); } };
+      const p = { x, gy, w: K.w, h: K.h, name: K.name, draw(ctx) { K.draw(ctx, x, gy, now); } };
       placed.push(p);
       archProps.push(p);
       break;
