@@ -120,7 +120,7 @@ export function sidePoint(vx, side = 'south') {
   let seg = SEGMENTS[SEGMENTS.length - 1];
   for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
   const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
-  const sideN = { south: 1, north: 2, west: 3, east: 4 }[side] || 1;
+  const sideN = { south: 1, north: 2, west: 3, east: 4, plain: 5 }[side] || 1;
   const K = 2 + (Math.floor(h01(seg.n * 13 + sideN * 7) * 2));       // 2-3 сцены
   const ci = Math.floor(h01(vx * 7.3 + sideN) * K);                  // своя сцена
   const center = 0.14 + (ci + 0.5) / K * 0.72
@@ -130,6 +130,11 @@ export function sidePoint(vx, side = 'south') {
   const depth = 36 + h01(vx * 11 + ci) * 128                          // глубина в кольце
     + (h01(seg.n + ci * 29 + sideN * 3) - 0.5) * 40;                  // сцены на разной глубине
   const b0 = (seg.n - 1) * RING_W;
+  if (side === 'plain') {
+    // равнина — дуга у северо-восточного угла городка
+    const r = b0 + depth, a = (0.2 + along * 0.6) * Math.PI / 2;
+    return { x: TOWN.x1 + r * Math.cos(a), y: TOWN.y0 - r * Math.sin(a) - 13, ring: seg.n };
+  }
   if (side === 'north') return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y0 - b0 - depth - 26, ring: seg.n };
   if (side === 'west')  return { x: TOWN.x0 - b0 - depth - 14, y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
   if (side === 'east')  return { x: TOWN.x1 + b0 + depth,      y: TOWN.y0 + 140 + along * 1360, ring: seg.n };

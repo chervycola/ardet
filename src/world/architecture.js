@@ -16,7 +16,7 @@ import { ARCH_LOOKS } from '../content/arch_looks.js';
 
 function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
 
-const BAND_MARGIN = 24;   // основание — не ближе к рваной границе колец
+const BAND_MARGIN = 36;   // основание — вне шашки на рваной границе колец
 const GAP = 10;           // между постройками
 const NEAR = 360;         // радиус, в котором соседи вообще интересны
 
@@ -155,7 +155,9 @@ function gateWE(n, side, kinds, signs, placed) {
 
 // двор: постройки встают позади сцены табличек (или рядом), бок о бок
 // вид для двора: не повторять соседа — дальше всего от такой же постройки
-const SAME_FAR = 420;     // одинаковые постройки — не ближе (в один кадр не попадают)
+// одинаковые постройки в один кадр (640×360 мира) не попадают даже краем:
+// пустой перегон лучше двойника
+const FRAME_W = 640, FRAME_H = 360;
 function kindOrder(kinds, used, anchor, placed) {
   const fresh = kinds.filter(k => !used.includes(k));
   const pool = fresh.length ? fresh : kinds.slice();
@@ -167,7 +169,9 @@ function kindOrder(kinds, used, anchor, placed) {
   return pool.map((k, i) => ({ k, d: dist(k), i })).sort((a, b) => (b.d - a.d) || (a.i - b.i)).map(o => o.k);
 }
 function sameNear(b, placed) {
-  return placed.some(o => o.kind === b.kind && Math.hypot(o.x - b.x, o.gy - b.gy) < SAME_FAR);
+  return placed.some(o => o.kind === b.kind
+    && Math.abs(o.x - b.x) < FRAME_W + (o.w + b.w) / 2 - 30
+    && Math.abs(o.gy - b.gy) < FRAME_H + (o.h + b.h) / 2 - 30);
 }
 
 function yard(n, side, kinds, count, anchor, signs, placed, twins = false) {

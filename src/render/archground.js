@@ -35,7 +35,7 @@ const STYLE = {
   },
   porticoes: {
     south: S('paving', 'stone', 'shards', 0.3, 'sand'), east: S('earth', 'bamboo', 'stones', 0.5, null),
-    west: S('cobble', 'stone', 'bricks', 0.4, null), north: S('earth', 'palisade', 'stones', 0.4, 'snow'),
+    west: S('cobble', 'stone', 'bricks', 0.4, null), north: S('earth', 'stone', 'stones', 0.4, 'snow'),
     plain: S('steppe', null, 'shards', 0.8, null),
   },
   lightgarden: {
@@ -59,8 +59,8 @@ const STYLE = {
     plain: S('earth', 'picket', 'stones', 0.8, null),
   },
   catastrophes: {
-    south: S('sand', 'barbed', 'scrap', 0.2, 'sand'), east: S('rubble', 'barbed', 'bricks', 0.4, null),
-    west: S('rubble', null, 'bricks', 0.5, null), north: S('snow', 'barbed', 'scrap', 0.2, 'snow'),
+    south: S('sand', 'barbed', 'scrap', 0.2, 'sand'), east: S('rubble', null, 'bricks', 0.3, null),
+    west: S('rubble', null, 'bricks', 0.5, null), north: S('snow', 'cairn', 'scrap', 0.2, 'snow'),
     plain: S('asphalt', 'concrete', 'scrap', 0.6, null),
   },
   neon: {
@@ -76,7 +76,7 @@ const STYLE = {
 };
 // у воды и в песках — своя земля рядом с постройкой
 const WET = new Set(['Фаросский маяк', 'драккар на берегу', 'пирс над глубиной', 'затопленный фарватер',
-  'нефтяная платформа', 'библиотека у моря']);
+  'нефтяная платформа', 'библиотека у моря', 'островная обсерватория', 'павильон описи', 'мост львов']);
 const BOG = new Set(['болото жертв']);
 const ICE = new Set(['вмёрзший барк', 'хранилище семян']);
 const DUNE = new Set(['пароход в песках', 'опера в песке', 'пляж «аренда солнца»', 'игла над пустыней', 'сфинкс в лесах']);
@@ -196,8 +196,12 @@ export function prepareArchGround(ensembles, locations) {
       const kind = WET.has(m.name) ? 'water' : BOG.has(m.name) ? 'bog' : ICE.has(m.name) ? 'snow' : DUNE.has(m.name) ? 'sand' : null;
       if (!kind) continue;
       const dir = hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1;     // вода — с одной стороны
-      if (kind === 'water' || kind === 'bog') {
-        // вода — овалом сбоку, с полосой мокрого берега
+      if (kind === 'water') {
+        // море — полосой от стены в сторону, за край двора; порог сухой
+        const len = 130 + m.w * 0.6;
+        const x0 = dir > 0 ? m.x + 16 : m.x - 16 - len, x1 = dir > 0 ? m.x + 16 + len : m.x - 16;
+        patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 } });
+      } else if (kind === 'bog') {
         const rx = Math.max(26, m.w * 0.42), ry = 13;
         const ex = m.x + dir * (m.w * 0.3 + rx * 0.7), ey = m.gy + 10;
         patches.push({ kind, e: { cx: ex, cy: ey, rx, ry }, r: { x0: ex - rx, y0: ey - ry, x1: ex + rx, y1: ey + ry } });
@@ -328,6 +332,21 @@ function bake(G) {
       let col = null;
       // особая земля поверх двора
       for (const p of G.patches) {
+        if (p.sea) {
+          // берег неровный: кромка гуляет; у кромки — пена
+          const S = p.sea;
+          const edge = S.dir > 0 ? S.x0 + 6 * Math.sin(wy * 0.21) + 4 * Math.sin(wy * 0.07 + 1) : S.x1 - 6 * Math.sin(wy * 0.21) - 4 * Math.sin(wy * 0.07 + 1);
+          const inside = S.dir > 0 ? wx > edge : wx < edge;
+          if (wy < S.y0 || wy > S.y1 || wx < S.x0 - 8 || wx > S.x1 + 8) continue;
+          const dEdge = Math.abs(wx - edge);
+          const far = S.dir > 0 ? S.x1 - wx : wx - S.x0;          // к дальнему краю — растворяется
+          if (far < 0 || (far < 24 && hash(wx, wy, 8.1) > far / 24)) continue;
+          if (wy > S.y1 - 3 && hash(wx, wy, 9.3) > 0.5) continue;
+          if (inside && dEdge < 2) { col = mix(NIGHT, BONE, 0.55); break; }   // пена
+          if (inside) { col = surface('water', wx, wy, g); break; }
+          if (dEdge < 5) { col = surface('shore', wx, wy, g); break; }
+          continue;
+        }
         if (p.e) {
           const q = Math.hypot((wx - p.e.cx) / p.e.rx, (wy - p.e.cy) / p.e.ry)
             + (hash((wx / 3) | 0, (wy / 2) | 0, 5.1) - 0.5) * 0.18;
@@ -391,8 +410,8 @@ function bake(G) {
       R(m.x - m.w * 0.42 + i * 0.8, m.gy + 2 + i, Math.round(m.w * 0.84), 1, css(NIGHT, 0.26 * (1 - i / L)));
     }
   }
-  // тропинки
-  const pathCol = mix(g, BONE, 0.3);
+  // тропинки: утоптанная полоса темнее двора, края рваные
+  const pathCol = mix(g, NIGHT, 0.22);
   for (const p of G.paths) {
     const pts = p.pts || p, tail = !!p.tail;
     let total = 0;
@@ -401,10 +420,13 @@ function bake(G) {
     for (let i = 1; i < pts.length; i++) {
       const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
       const L = Math.hypot(bx - ax, by - ay);
-      for (let s = 0; s < L; s += 2) {
-        const f = s / (L || 1), px = ax + (bx - ax) * f, py = ay + (by - ay) * f;
-        const a = tail ? 0.42 * (1 - (run + s) / total) : 0.42;
-        if (hash(px | 0, py | 0, 3.7) > 0.25) R(px + (hash(px | 0, 1, 2) - 0.5) * 2, py, 2, 1, css(pathCol, a));
+      for (let s = 0; s < L; s += 1) {
+        const f = s / (L || 1), px = Math.round(ax + (bx - ax) * f), py = Math.round(ay + (by - ay) * f);
+        const k = tail ? 1 - (run + s) / total : 1;
+        if (hash(px, py, 3.7) > k + 0.15) continue;           // хвост тает
+        const a = 0.55 * Math.max(0.35, k);
+        R(px - 1, py - 1, 3, 3, css(pathCol, a));
+        if (hash(px, py, 5.9) > 0.6) R(px + (hash(px, py, 2) > 0.5 ? 2 : -2), py, 1, 1, css(pathCol, a * 0.7));
       }
       run += L;
     }
@@ -533,8 +555,8 @@ function drawFence(x, style, vert, len, H, v) {
     case 'concrete': {   // плиты с ромбиками
       if (vert) { R(1, H - 12, 4, len + 12, '#34302a'); R(1, H - 12, 4, 1, css(ASH, 0.35)); for (let y = 0; y < len; y += 14) R(1, H + y, 4, 1, '#0D0B0A'); break; }
       R(0, H - 12, len, 12, '#34302a'); R(0, H - 12, len, 1, css(ASH, 0.35));
-      for (let p = 0; p < len; p += 14) R(p, H - 12, 1, 12, '#0D0B0A');
-      for (let yy = 2; yy < 11; yy += 2) for (let p = (yy & 2) ? 2 : 0; p < len; p += 4) if (p % 14) R(p, H - 12 + yy, 1, 1, '#2a2620');
+      R(len - 1, H - 12, 1, 12, '#0D0B0A');
+      for (let yy = 2; yy < 11; yy += 2) for (let p = (yy & 2) ? 2 : 0; p < len - 1; p += 4) R(p, H - 12 + yy, 1, 1, '#2a2620');
       break;
     }
     case 'mesh': {       // рабица
@@ -613,10 +635,11 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes) {
   };
   const style = st.fence;
   const H = 16;
+  const PL = style === 'concrete' ? 14 : 16;     // кусок — по плите, без лишних швов
   // фронт: два крыла по сторонам калитки
   for (const [a, b] of [[L, gate0], [gate1, Rx]]) {
-    for (let x = a; x < b; x += 16) {
-      const len = Math.min(16, b - x);
+    for (let x = a; x < b; x += PL) {
+      const len = Math.min(PL, b - x);
       if (len < 3 || blocked(x, fy - 2, x + len, fy)) continue;
       if (hash(x, fy, 7.7) < 0.14) continue;          // после пожара заборы с прорехами
       const v = (hash(x, fy, 1.3) * 3) | 0;
@@ -680,4 +703,14 @@ function propsFor(e, ms, signs, boxes) {
       break;
     }
   }
+}
+
+// дворы и вода — чтобы ткань застройки на них не ложилась
+export function archGroundRects() {
+  const out = [];
+  for (const G of grounds) {
+    for (const r of G.rects) out.push({ x0: r.x0 - 4, y0: r.y0 - 4, x1: r.x1 + 4, y1: r.y1 + 4 });
+    for (const p of G.patches) out.push({ x0: p.r.x0, y0: p.r.y0, x1: p.r.x1, y1: p.r.y1 });
+  }
+  return out;
 }

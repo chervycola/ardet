@@ -43,8 +43,8 @@ import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistan
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
-import { drawGround, drawGroundMarks } from './render/ground.js';
-import { prepareArchGround, drawArchGround, drawArchFoot, archProps } from './render/archground.js';
+import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
+import { prepareArchGround, drawArchGround, drawArchFoot, archProps, archGroundRects } from './render/archground.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -73,6 +73,11 @@ layers.init(mainCanvas);
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
+// ткань застройки не ложится на локации (с запасом над крышей) и дворы
+setTissueBlockers([
+  ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
+  ...archGroundRects(),
+]);
 initUI();
 initMetaFx();
 initTerminal();

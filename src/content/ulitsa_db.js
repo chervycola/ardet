@@ -88,7 +88,7 @@ export const SEGMENTS = [
   {
     id: 'lightgarden', n: 3, range: [820, 1240],
     name: 'свет и сад', era: 'VI–XVI вв.',
-    palette: { sky: '#3a2a3a', ground: '#5a4634', lamp: 'lantern', dust: '#7a5236' },
+    palette: { sky: '#3a2a3a', ground: '#4e4a32', lamp: 'lantern', dust: '#3D4A3A' },
     signs: [
       { x: 860, name: 'дом без видимого источника света', form: 'building',
         facade: `Светло. Лампы нет. На полках — Авиценна, Сухраварди, Садра. Терминал внутри: .ishraq`,
@@ -261,7 +261,7 @@ export const SEGMENTS = [
   {
     id: 'now', n: 9, range: [2700, 3000],
     name: 'сейчас', era: '2000-е —',
-    palette: { sky: '#0e1a2a', ground: '#1a2030', lamp: 'screen', dust: '#4a8aaa' },
+    palette: { sky: '#0e1a2a', ground: '#1a2030', lamp: 'screen', dust: '#5c6266' },
     actSign: `АКТ IV.\nАннексируется: речь, образ. Внутренний монолог — на очереди.`,
     signs: [
       { x: 2720, name: 'Felixstowe',
@@ -340,4 +340,13 @@ for (const s of COVER_SIGNS) {
   if (!seg) continue;
   const { segment, ...sign } = s;
   seg.signs.push(sign);
+}
+
+// география: табличкам без стороны — сторона по региону текста
+import { SIGN_SIDES } from './sign_sides.js';
+for (const seg of SEGMENTS) {
+  for (const s of seg.signs) {
+    const side = !s.side && SIGN_SIDES[`${seg.id}|${s.name}`];
+    if (side) s.side = side;
+  }
 }

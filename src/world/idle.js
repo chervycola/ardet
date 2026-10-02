@@ -62,7 +62,8 @@ export function draw(ctx) {
   const vw = scaler.vw, vh = scaler.vh;
   const total = 240;
   const a = msgLife > 200 ? ((total - msgLife) / 40) : msgLife / 200;
-  const y_ = vh / 2 - 20 - ((total - msgLife) * 0.15);
+  // под ногами странника, а не на крыше за ним
+  const y_ = vh / 2 + 40 + ((total - msgLife) * 0.06);
   ctx.globalAlpha = a * 0.45;
   ctx.fillStyle = '#e8dcc8';
   ctx.font = '8px "Press Start 2P","VT323",monospace';

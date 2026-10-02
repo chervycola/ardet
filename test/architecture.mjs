@@ -138,11 +138,12 @@ test('ансамбли: у тропы на каждой стороне кажд�
   }
 });
 
-test('ансамбли: одинаковые постройки не стоят рядом (кроме двойняшек-панелек)', () => {
+test('ансамбли: одинаковые постройки не попадают в один кадр (кроме двойняшек-панелек)', () => {
   for (let i = 0; i < decor.length; i++) for (let j = i + 1; j < decor.length; j++) {
     const a = decor[i], b = decor[j];
     if (a.name !== b.name || a.ens === b.ens) continue;
-    assert(Math.hypot(a.x - b.x, a.gy - b.gy) >= 420, `${a.name} ×2 ближе 420`);
+    const together = Math.abs(a.x - b.x) < 600 && Math.abs(a.gy - b.gy) < 340;
+    assert(!together, `${a.name} ×2 в одном кадре`);
   }
 });
 

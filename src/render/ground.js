@@ -9,6 +9,8 @@ import {
   TOWN, RING_W, RINGS, FIRE_W, townDist, warpedDist, trailPoint,
 } from '../world/disc.js';
 import { hash } from './draw.js';
+import { ARCH_BY_RING } from '../sprites/arch/index.js';
+import { t as now } from '../core/time.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;
 const B = 8;                     // размер блока земли
@@ -23,6 +25,11 @@ function elementColor(wx, wy) {
 }
 const FIRE_G = '#160a06';
 function ringGround(n) { return SEGMENTS[Math.max(0, Math.min(RINGS, n) - 1)].palette.ground; }
+// северный сектор диска (лёд за огнём) — снег ложится и на кольца
+function isNorth(wx, wy) {
+  const dn = TOWN.y0 - wy;
+  return dn > 0 && dn >= Math.max(wy - TOWN.y1, TOWN.x0 - wx, wx - TOWN.x1);
+}
 
 // цвет земли с дизерингом на рваных границах: эпохи перетекают,
 // а не сменяются по линейке
@@ -41,10 +48,11 @@ function groundColor(wx, wy, bx, by) {
   }
   const n = Math.ceil(d / RING_W);
   const frac = d / RING_W - (n - 1);
-  if (n < RINGS && frac > 0.7) {
-    if (mix < ((frac - 0.7) / 0.3) * 0.55) return ringGround(n + 1);
-  } else if (n > 1 && frac < 0.3) {
-    if (mix < ((0.3 - frac) / 0.3) * 0.55) return ringGround(n - 1);
+  // шашка — узкой полосой у самой границы: середина кольца чистая
+  if (n < RINGS && frac > 0.82) {
+    if (mix < ((frac - 0.82) / 0.18) * 0.55) return ringGround(n + 1);
+  } else if (n > 1 && frac < 0.18) {
+    if (mix < ((0.18 - frac) / 0.18) * 0.55) return ringGround(n - 1);
   } else if (n === RINGS && frac > 0.75) {
     if (mix < ((frac - 0.75) / 0.25) * 0.4) return FIRE_G;
   }
@@ -60,15 +68,20 @@ export function drawGround(ctx, camX, camY, vw, vh) {
       const d = warpedDist(wx + 4, wy + 4);
       ctx.fillStyle = groundColor(wx + 4, wy + 4, (wx / B) | 0, (wy / B) | 0);
       ctx.fillRect(wx - camX, wy - camY, B, B);
-      // пыль/уголья/блёстки — детерминированно
+      // пыль/уголья/блёстки — детерминированно; на севере колец — снег
       const h = hash((wx / B) | 0, (wy / B) | 0, 43);
-      if (h > 0.84) {
+      const n = Math.ceil(d / RING_W);
+      const inRings = d <= RINGS * RING_W;
+      const snowy = inRings && n >= 3 && isNorth(wx, wy);
+      const thr = snowy ? 0.84 - 0.03 * (n - 2) : 0.84;
+      if (h > thr) {
         if (d > RINGS * RING_W && d <= OUTER) {
           ctx.fillStyle = h > 0.94 ? '#6b0f1a' : '#3a1408';   // уголья
         } else if (d > OUTER) {
           ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        } else if (snowy) {
+          ctx.fillStyle = h > 0.95 ? 'rgba(217,207,184,0.7)' : 'rgba(217,207,184,0.42)';
         } else {
-          const n = Math.ceil(d / RING_W);
           ctx.fillStyle = SEGMENTS[Math.max(0, n - 1)].palette.dust;
         }
         ctx.fillRect(wx - camX + ((h * 5) | 0), wy - camY + ((h * 7) | 0) % B, 2, 2);
@@ -125,6 +138,43 @@ export function drawGroundMarks(ctx, cam) {
 // Таблички перестают быть фишками в поле: вокруг — обломки среды.
 import { ringAt, CORE } from '../world/disc.js';
 const CELL = 150;
+// ткань не ложится на постройки, таблички и дворы
+let blockGrid = null;
+export function setTissueBlockers(boxes) {
+  blockGrid = new Map();
+  for (const b of boxes) {
+    for (let gx = Math.floor(b.x0 / CELL); gx <= Math.floor(b.x1 / CELL); gx++) {
+      for (let gy = Math.floor(b.y0 / CELL); gy <= Math.floor(b.y1 / CELL); gy++) {
+        const k = gx * 100000 + gy;
+        if (!blockGrid.has(k)) blockGrid.set(k, []);
+        blockGrid.get(k).push(b);
+      }
+    }
+  }
+}
+function tissueBlocked(x0, y0, x1, y1) {
+  if (!blockGrid) return false;
+  for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) {
+    for (let gy = Math.floor(y0 / CELL); gy <= Math.floor(y1 / CELL); gy++) {
+      const list = blockGrid.get(gx * 100000 + gy);
+      if (!list) continue;
+      for (const b of list) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 && y0 < b.y1) return true;
+    }
+  }
+  return false;
+}
+// сектор диска для ткани: юг/север/запад/восток; дуга северо-восточного
+// угла — равнина
+function sectorOf(wx, wy) {
+  if (wx > TOWN.x1 && wy < TOWN.y0) {
+    const a = Math.atan2(TOWN.y0 - wy, wx - TOWN.x1) / (Math.PI / 2);
+    if (a > 0.2 && a < 0.8) return 'plain';
+  }
+  const dn = TOWN.y0 - wy, ds = wy - TOWN.y1, dw = TOWN.x0 - wx, de = wx - TOWN.x1;
+  const m = Math.max(dn, ds, dw, de);
+  return m === dn ? 'north' : m === ds ? 'south' : m === dw ? 'west' : 'east';
+}
+
 export function drawTissue(ctx, cam) {
   const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
   const gx1 = Math.ceil((cam.x + 760) / CELL), gy1 = Math.ceil((cam.y + 520) / CELL);
@@ -136,10 +186,17 @@ export function drawTissue(ctx, cam) {
       const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
       const ring = ringAt(wx, wy);
       if (ring < 1 || ring > RINGS) continue;
+      if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) continue;
       const variant = ((h * 100) | 0) % 3;
+      // ткань — по кольцу И стороне света: утварь двора из модуля кольца
+      const side = sectorOf(wx, wy);
+      const props = ARCH_BY_RING[SEGMENTS[ring - 1].id]?.props?.[side];
+      if (props && props.length) {
+        props[((h * 977) | 0) % props.length].draw(ctx, wx + 12, wy, now);
+        continue;
+      }
       // сторона: снег севера белит верхушки
-      const north = TOWN.y0 - wy > Math.max(wy - TOWN.y1, TOWN.x0 - wx, wx - TOWN.x1);
-      drawTissueItem(ctx, wx, wy, ring, variant, north);
+      drawTissueItem(ctx, wx, wy, ring, variant, side === 'north');
     }
   }
 }
@@ -180,7 +237,7 @@ function drawTissueItem(ctx, x, y, ring, v, north) {
       break;
     case 7: // катастрофы: плита с арматурой, воронка, стена-огрызок
       if (v === 0) { R(0, -6, 18, 6, S); R(3, -12, 1, 6, '#2a2a2a'); R(9, -14, 1, 8, '#2a2a2a'); }
-      else if (v === 1) { ctx.fillStyle = '#0a0806'; ctx.beginPath(); ctx.arc(x + 8, y, 9, 0, 7); ctx.fill(); }
+      else if (v === 1) { R(0, -2, 18, 4, '#0a0806'); R(2, -3, 14, 1, '#0a0806'); R(2, 2, 14, 1, '#0a0806'); R(3, -4, 12, 1, 'rgba(217,207,184,0.35)'); }   // воронка — на земле, кромка дальнего края
       else { R(0, -14, 12, 14, S); R(0, -14, 12, 3, '#050510'); }
       break;
     case 8: // неон: бетонный забор, столб с проводами, остов ларька
@@ -190,7 +247,7 @@ function drawTissueItem(ctx, x, y, ring, v, north) {
       break;
     default: // сейчас: дорожный блок, стеклобетон, знак без текста
       if (v === 0) { R(0, -6, 16, 6, '#2a2a2e'); R(2, -6, 3, 6, '#3a3a40'); }
-      else if (v === 1) { R(0, -16, 10, 16, S); R(1, -15, 2, 14, 'rgba(122,223,255,0.15)'); }
+      else if (v === 1) { R(0, -16, 10, 16, S); R(1, -15, 2, 14, 'rgba(138,141,143,0.2)'); }
       else { R(0, -12, 2, 12, S); R(-3, -16, 8, 5, S2); }
   }
   if (north) { ctx.fillStyle = 'rgba(220,232,240,0.5)'; ctx.fillRect(x - 2, y - (ring === 2 ? 26 : 16), 12, 1); }
