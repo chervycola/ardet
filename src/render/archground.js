@@ -137,9 +137,9 @@ function surface(kind, x, y, g) {
       if (h > 0.7) return mix(g, ASH, 0.24);
       return mix(g, NIGHT, 0.12);
     case 'water':
-      if (h > 0.992) return mix(NIGHT, BONE, 0.65);                       // лунный блик
-      if (y % 3 === 0 && hash((x / 4) | 0, y, 1.7) > 0.62) return mix(NIGHT, ASH, 0.32);
-      return mix(NIGHT, g, 0.22);
+      if (h > 0.994) return mix(NIGHT, BONE, 0.6);                        // лунный блик
+      if (y % 4 === 0 && hash((x / 5) | 0, y, 1.7) > 0.78) return mix(NIGHT, ASH, 0.26);
+      return mix(NIGHT, g, 0.3);
     case 'shore':
       return h > 0.6 ? mix(g, BONE, 0.14) : mix(g, NIGHT, 0.12);
     case 'bog':
@@ -195,7 +195,9 @@ export function prepareArchGround(ensembles, locations) {
     for (const m of ms) {
       const kind = WET.has(m.name) ? 'water' : BOG.has(m.name) ? 'bog' : ICE.has(m.name) ? 'snow' : DUNE.has(m.name) ? 'sand' : null;
       if (!kind) continue;
-      const dir = hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1;     // вода — с одной стороны
+      // вода — с одной стороны: наружу от соседей по двору, у одиночки — как выпадет
+      const mid = ms.reduce((a, o) => a + o.x, 0) / ms.length;
+      const dir = ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1);
       if (kind === 'water') {
         // море — полосой от стены в сторону, за край двора; порог сухой
         const len = 130 + m.w * 0.6;
@@ -418,8 +420,11 @@ function bake(G) {
       R(m.x - m.w * 0.42 + i * 0.8, m.gy + 2 + i, Math.round(m.w * 0.84), 1, css(NIGHT, 0.26 * (1 - i / L)));
     }
   }
-  // тропинки: утоптанная полоса темнее двора, края рваные
+  // тропинки: утоптанная полоса темнее двора, края рваные; по мощёному
+  // двору тропинок нет — только от калитки наружу
   const pathCol = mix(g, NIGHT, 0.22);
+  const HARD = new Set(['paving', 'cobble', 'gravel', 'boards', 'asphalt', 'concrete', 'tile', 'rubble']);
+  const onYard = (x, y) => HARD.has(st.yard) && G.rects.some(r => x >= r.x0 - 2 && x <= r.x1 + 2 && y >= r.y0 - 2 && y <= r.y1 + 2);
   for (const p of G.paths) {
     const pts = p.pts || p, tail = !!p.tail;
     let total = 0;
@@ -430,6 +435,7 @@ function bake(G) {
       const L = Math.hypot(bx - ax, by - ay);
       for (let s = 0; s < L; s += 1) {
         const f = s / (L || 1), px = Math.round(ax + (bx - ax) * f), py = Math.round(ay + (by - ay) * f);
+        if (onYard(px, py)) continue;
         const k = tail ? 1 - (run + s) / total : 1;
         if (hash(px, py, 3.7) > k + 0.15) continue;           // хвост тает
         const a = 0.55 * Math.max(0.35, k);
