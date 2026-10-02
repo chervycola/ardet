@@ -251,7 +251,8 @@ export function prepareArchGround(ensembles, locations) {
     if (st.fence && e.kind !== 'gate') {
       // забор обходит весь мощёный двор, вместе с табличками сцены
       const yb = { x0: Math.min(...rects.map(r => r.x0)), x1: Math.max(...rects.map(r => r.x1)), y1: Math.max(...rects.map(r => r.y1)) };
-      fenceFor(e, st, ms, yb, cx, signs, allBoxes);
+      const water = patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r);
+      fenceFor(e, st, ms, yb, cx, signs, allBoxes, water);
     }
     // утварь двора: колодец, телега, стог… — из модуля кольца
     propsFor(e, ms, signs, allBoxes);
@@ -337,11 +338,14 @@ function bake(G) {
           const S = p.sea;
           const edge = S.dir > 0 ? S.x0 + 6 * Math.sin(wy * 0.21) + 4 * Math.sin(wy * 0.07 + 1) : S.x1 - 6 * Math.sin(wy * 0.21) - 4 * Math.sin(wy * 0.07 + 1);
           const inside = S.dir > 0 ? wx > edge : wx < edge;
-          if (wy < S.y0 || wy > S.y1 || wx < S.x0 - 8 || wx > S.x1 + 8) continue;
+          // верх и низ полосы тоже неровные — бухта, а не лента
+          const top = S.y0 + 3 * Math.sin(wx * 0.09) + 2 * Math.sin(wx * 0.23 + 2);
+          const bot = S.y1 - 4 - 3 * Math.sin(wx * 0.07 + 1) - 2 * Math.sin(wx * 0.19);
+          if (wy < top || wy > bot || wx < S.x0 - 8 || wx > S.x1 + 8) continue;
           const dEdge = Math.abs(wx - edge);
           const far = S.dir > 0 ? S.x1 - wx : wx - S.x0;          // к дальнему краю — растворяется
           if (far < 0 || (far < 24 && hash(wx, wy, 8.1) > far / 24)) continue;
-          if (wy > S.y1 - 3 && hash(wx, wy, 9.3) > 0.5) continue;
+          if ((wy > bot - 2 || wy < top + 1) && hash(wx, wy, 9.3) > 0.5) continue;
           if (inside && dEdge < 2) { col = mix(NIGHT, BONE, 0.55); break; }   // пена
           if (inside) { col = surface('water', wx, wy, g); break; }
           if (dEdge < 5) { col = surface('shore', wx, wy, g); break; }
@@ -612,7 +616,7 @@ function onTrail(side, x, y) {
   return false;
 }
 
-function fenceFor(e, st, ms, yb, cx, signs, boxes) {
+function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
   const L = Math.round(Math.min(yb.x0 - 4, ...ms.map(m => m.x - m.w / 2 - 14)));
   const Rx = Math.round(Math.max(yb.x1 + 4, ...ms.map(m => m.x + m.w / 2 + 14)));
   const back = Math.round(Math.min(...ms.map(m => m.gy)) - 10);
@@ -629,6 +633,7 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes) {
       if (sx > x0 - 10 && sx < x1 + 10 && sgy > y0 - 6 && sgy < y1 + 14) return true;
     }
     for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y1 - 6 && y0 < b.y1 + 2) return true;
+    for (const w of water) if (x1 > w.x0 && x0 < w.x1 && y1 > w.y0 && y0 < w.y1) return true;   // забор не по воде
     for (let x = x0; x <= x1; x += 4) if (onTrail(e.side, x, y1)) return true;
     for (let y = y0; y <= y1; y += 4) if (onTrail(e.side, x0, y)) return true;
     return false;
