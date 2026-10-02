@@ -141,6 +141,7 @@ const CELL = 150;
 // ткань не ложится на постройки, таблички и дворы
 let blockGrid = null;
 export function setTissueBlockers(boxes) {
+  cellCache.clear();
   blockGrid = new Map();
   for (const b of boxes) {
     for (let gx = Math.floor(b.x0 / CELL); gx <= Math.floor(b.x1 / CELL); gx++) {
@@ -175,28 +176,51 @@ function sectorOf(wx, wy) {
   return m === dn ? 'north' : m === ds ? 'south' : m === dw ? 'west' : 'east';
 }
 
+// клетка ткани: где лежит и что (детерминированно, без камеры; кэш)
+const cellCache = new Map();
+function tissueCell(gx, gy) {
+  const key = gx * 100000 + gy;
+  if (cellCache.has(key)) return cellCache.get(key);
+  if (cellCache.size > 6000) cellCache.clear();
+  const c = tissueCellRaw(gx, gy);
+  cellCache.set(key, c);
+  return c;
+}
+function tissueCellRaw(gx, gy) {
+  const h = hash(gx + 31, gy + 57, 29);
+  if (h < 0.62) return null;
+  const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
+  const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
+  const ring = ringAt(wx, wy);
+  if (ring < 1 || ring > RINGS) return null;
+  if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
+  const side = sectorOf(wx, wy);
+  const props = (ARCH_BY_RING[SEGMENTS[ring - 1].id]?.props?.[side] || []).filter(p => !p.unique);
+  const idx = props.length ? ((h * 977) | 0) % props.length : -1;
+  return { h, wx, wy, ring, side, props, idx };
+}
+
 export function drawTissue(ctx, cam) {
   const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
   const gx1 = Math.ceil((cam.x + 760) / CELL), gy1 = Math.ceil((cam.y + 520) / CELL);
   for (let gy = gy0; gy <= gy1; gy++) {
     for (let gx = gx0; gx <= gx1; gx++) {
-      const h = hash(gx + 31, gy + 57, 29);
-      if (h < 0.62) continue;
-      const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
-      const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
-      const ring = ringAt(wx, wy);
-      if (ring < 1 || ring > RINGS) continue;
-      if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) continue;
-      const variant = ((h * 100) | 0) % 3;
-      // ткань — по кольцу И стороне света: утварь двора из модуля кольца
-      const side = sectorOf(wx, wy);
-      const props = ARCH_BY_RING[SEGMENTS[ring - 1].id]?.props?.[side];
-      if (props && props.length) {
-        props[((h * 977) | 0) % props.length].draw(ctx, wx + 12, wy, now);
+      const c = tissueCell(gx, gy);
+      if (!c) continue;
+      // ткань — по кольцу И стороне света: утварь из модуля кольца;
+      // одна и та же вещь не лежит дважды в пределах кадра
+      if (c.idx >= 0) {
+        let dup = false;
+        for (let dy = -2; dy <= 2 && !dup; dy++) for (let dx = -4; dx <= 4 && !dup; dx++) {
+          if (!dx && !dy) continue;
+          const o = tissueCell(gx + dx, gy + dy);
+          if (o && o.idx === c.idx && o.ring === c.ring && o.side === c.side && o.h > c.h) dup = true;
+        }
+        if (!dup) c.props[c.idx].draw(ctx, c.wx + 12, c.wy, now);
         continue;
       }
       // сторона: снег севера белит верхушки
-      drawTissueItem(ctx, wx, wy, ring, variant, side === 'north');
+      drawTissueItem(ctx, c.wx, c.wy, c.ring, ((c.h * 100) | 0) % 3, c.side === 'north');
     }
   }
 }
