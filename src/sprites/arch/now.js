@@ -3,8 +3,9 @@
 // камня, экран вместо фасада, на каждой вершине — красный огонёк для
 // самолётов, которых нет. Пять культур одного «сейчас»:
 //   юг      — игла над пустыней (Бурдж-Халифа) с дюной и пальмой; новая
-//             библиотека — барабан, срезанный наискось к воде, правая
-//             стена стоит в море, под рябью — ионическая капитель
+//             библиотека — барабан, срезанный наискось к воде, гранит в
+//             знаках, шар планетария в кольце постамента; у подножия в
+//             воде — ионическая капитель
 //   восток  — пагода из стекла (Тайбэй 101) с загнутыми карнизами;
 //             экран-фасад с QR-кодом вместо товара, столб пустых световых
 //             коробов, у заклеенного метро — белый кролик мелом
@@ -13,15 +14,19 @@
 //   север   — хранилище семян (бетонный клин в теле снежной горы, полоса
 //             света); серверный ангар в сугробе под ветряком, горячий
 //             коридор в щели
-//   равнина — долгострой под замершим краном; панельная башня в тарелках
-//             и кондиционерах, на крыше вышка сотовой связи
+//   равнина — долгострой под замершим краном, растяжка «дом готов» на
+//             заборе, бытовка; панельная башня в тарелках и кондиционерах,
+//             на крыше вышка сотовой связи
+// Утварь дворов: лодка со стеклянным дном, свая прилива, солнечная панель ·
+// светофор с пустой рамкой, гашапоны, велосипед · тумбы, самокат, зарядка ·
+// снегоход, кабельный барабан, тарелка · поддоны кирпича, ларёк, грибок.
 // Пиксель-арт: fillRect по целым; дуг нет.
 
 const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026',
   DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328',
-  STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', GOLD = '#b8860b',
-  PAPER2 = '#b0a284';
+  STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a',
+  PAPER = '#c8b89a', PAPER2 = '#b0a284';
 
 function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
 
@@ -69,43 +74,52 @@ function burj(c, x, gy, t) {
   // шпиль
   R(c, ASH, X - 1, G - 114, 2, 10); R(c, BONE, X, G - 119, 1, 5);
   beacon(c, X, G - 120, t);
-  // подиум
-  R(c, STONE2, X - 21, G - 5, 42, 5); R(c, ASH, X - 21, G - 6, 42, 1); R(c, N, X - 18, G - 4, 10, 2);
+  // подиум торгового центра двумя крыльями; между ними — вход в лобби под рост
+  R(c, STONE2, X - 21, G - 5, 17, 5); R(c, STONE2, X + 5, G - 5, 16, 5);
+  R(c, ASH, X - 21, G - 6, 17, 1); R(c, ASH, X + 5, G - 6, 16, 1); R(c, N, X - 18, G - 4, 10, 2);
+  R(c, N, X - 3, G - 18, 6, 18); R(c, ASH, X - 4, G - 19, 8, 1); R(c, ASH, X, G - 17, 1, 17);
   palm(c, X + 17, G - 21, G - 6);
 }
 
 // новая библиотека у моря: барабан читального зала, срезанный наискось к
-// воде, кровля в пиле фонарей; глухая гранитная стена в насечках всех
-// письменностей; рядом шар планетария с кольцом и пальма; правая стена
-// стоит в воде, под рябью — ионическая капитель
+// воде, — кровля ровной лесенкой; глухая гранитная стена в насечках всех
+// письменностей; вход под рост. Слева шар планетария сидит в кольце
+// постамента, у земли; пальма. Море рисует двор; у подножия, в воде, —
+// ионическая капитель двумя волютами
 function library(c, x, gy) {
-  const L = Math.round(x) - 46, G = Math.round(gy);
-  // шар планетария на кольце
-  const sx = L + 9, sy = G - 11;
-  for (const [dy, hw, hh] of [[-7, 2, 1], [-6, 4, 1], [-5, 5, 1], [-4, 6, 2], [-2, 7, 5], [3, 6, 2], [5, 4, 2], [7, 2, 1]]) R(c, STONE2, sx - hw, sy + dy, hw * 2 + 1, hh);
-  R(c, BONE, sx - 4, sy - 6, 3, 1); R(c, BONE, sx - 6, sy - 4, 1, 3);
-  R(c, ASH, sx - 9, sy + 1, 19, 1);                   // кольцо
-  R(c, CONC, sx - 3, G - 3, 7, 3);                    // постамент
-  // барабан: кровля сходит к морю пиксель на шаг, над шагами — зубцы фонарей
-  const x0 = L + 22;
-  for (let i = 0; i < 15; i++) {
-    const ta = G - 37 + i, px = x0 + i * 4, gran = i < 4;
-    R(c, gran ? STONE : STONE2, px, ta, 4, G - ta);
-    R(c, gran ? BONE : ASH, px, ta, 4, 1);
-    if (i > 4) R(c, BONE, px + 1, ta - 1, 1, 1);
+  const L = Math.round(x) - 48, G = Math.round(gy);
+  // шар планетария, низ утоплен в кольцо постамента
+  const sx = L + 10, sy = G - 12;
+  for (const [dy, hw] of [[-9, 1], [-8, 4], [-7, 6], [-6, 7], [-5, 7], [-4, 8], [-3, 8], [-2, 9], [-1, 9], [0, 9], [1, 9], [2, 9], [3, 8], [4, 8], [5, 7], [6, 7], [7, 6]]) {
+    R(c, STONE2, sx - hw, sy + dy, hw * 2 + 1, 1);
   }
-  R(c, BONE, x0, G - 37, 1, 37);                      // торец гранитной стены
-  R(c, ASH, x0 + 59, G - 23, 1, 15);                  // кромка стены в воде
+  R(c, BONE, sx - 4, sy - 8, 4, 1); R(c, BONE, sx - 6, sy - 7, 2, 1); R(c, BONE, sx - 8, sy - 5, 1, 4);
+  R(c, ASH, sx + 8, sy - 3, 1, 7);
+  R(c, ASH, L, G - 5, 21, 1); R(c, CONC, L + 1, G - 4, 19, 4); R(c, ASH, L + 1, G - 4, 1, 4);
+  palm(c, L + 22, G - 27, G, false);
+  // барабан: кровля сходит к морю ровной лесенкой — 2 px вбок, 1 вниз
+  const x0 = L + 24;
+  for (let i = 0; i < 30; i++) {
+    const ta = G - 48 + i, px = x0 + i * 2, gran = i < 12;
+    R(c, gran ? STONE : STONE2, px, ta, 2, G - ta);
+    R(c, gran ? BONE : ASH, px, ta, 2, 1);
+  }
+  R(c, BONE, x0, G - 48, 1, 48);                      // торец гранитной стены
+  R(c, ASH, x0 + 59, G - 19, 1, 19);                  // кромка стены у воды
   // насечки в граните: строки знаков без языка
+  c.fillStyle = ASH;
+  for (const [gx, gyy] of [[2, 40], [5, 40], [9, 40], [2, 34], [6, 34], [10, 34], [15, 34], [19, 34],
+    [3, 28], [7, 28], [12, 28], [16, 28], [21, 28], [2, 22], [6, 22], [11, 22], [15, 22], [20, 22]]) c.fillRect(x0 + gx, G - gyy, 2, 1);
+  // вход под рост, ленточные окна читального зала по скату
+  R(c, N, x0 + 26, G - 18, 6, 18); R(c, ASH, x0 + 25, G - 19, 8, 1);
   c.fillStyle = N;
-  for (const [gx, gyy] of [[3, 31], [9, 31], [6, 25], [3, 19]]) c.fillRect(x0 + gx, G - gyy, 2, 1);
-  // ленточное окно читального зала
-  for (let k = 0; k < 4; k++) c.fillRect(x0 + 21 + k * 8, G - 20 + k, 3, 2);
-  palm(c, L + 19, G - 24, G, false);                       // пальма между шаром и стеной
-  // море поверх подножия стены: рябь, под ней капитель
-  R(c, N, L + 60, G - 8, 32, 8);
-  c.fillStyle = ASH; for (const [wx, wy] of [[61, 8], [72, 8], [83, 8], [69, 6]]) c.fillRect(L + wx, G - wy, 4, 1);
-  R(c, ASH, L + 82, G - 3, 7, 1); R(c, ASH, L + 81, G - 2, 2, 1); R(c, ASH, L + 87, G - 2, 2, 1);
+  for (let k = 0; k < 6; k++) c.fillRect(x0 + 37 + k * 4, G - 26 + k * 2, 2, 3);
+  // капитель в воде у подножия: абака и две волюты, рябь поверх
+  R(c, ASH, L + 85, G - 4, 10, 1);
+  R(c, ASH, L + 85, G - 3, 1, 2); R(c, ASH, L + 87, G - 3, 1, 2); R(c, ASH, L + 86, G - 2, 1, 1);
+  R(c, ASH, L + 92, G - 3, 1, 2); R(c, ASH, L + 94, G - 3, 1, 2); R(c, ASH, L + 93, G - 2, 1, 1);
+  R(c, ASH, L + 89, G - 2, 2, 1);
+  R(c, ASH, L + 84, G - 6, 3, 1); R(c, ASH, L + 91, G - 7, 4, 1);
 }
 
 // ── ВОСТОК ───────────────────────────────────────────────────────────
@@ -113,7 +127,8 @@ function library(c, x, gy) {
 // монета-жуи у основания, шпиль с огоньком
 function taipei(c, x, gy, t) {
   const X = Math.round(x), G = Math.round(gy);
-  R(c, CONC, X - 14, G - 4, 28, 4); R(c, ASH, X - 14, G - 5, 28, 1);    // подиум
+  R(c, CONC, X - 14, G - 4, 11, 4); R(c, CONC, X + 3, G - 4, 11, 4);    // подиум
+  R(c, ASH, X - 14, G - 5, 11, 1); R(c, ASH, X + 3, G - 5, 11, 1);
   // ствол
   for (const [a, hw] of [[4, 11], [12, 10], [20, 9], [28, 8]]) { R(c, MIST, X - hw, G - a - 8, hw * 2, 8); R(c, BONE, X - hw, G - a - 8, 1, 8); }
   R(c, N, X - 4, G - 36, 1, 32); R(c, N, X + 3, G - 36, 1, 32);
@@ -130,6 +145,8 @@ function taipei(c, x, gy, t) {
     c.fillRect(X - 10, yb - 9, 1, 1); c.fillRect(X + 9, yb - 9, 1, 1);    // загнутые концы карниза
     c.fillRect(X - 8, yb - 4, 1, 4);                  // лунная грань
   }
+  // вход в лобби под рост
+  R(c, N, X - 3, G - 20, 6, 20); R(c, ASH, X - 4, G - 21, 8, 1);
   // верх: ярусы и шпиль
   R(c, MIST, X - 5, G - 106, 10, 6); R(c, ASH, X - 5, G - 106, 10, 1);
   R(c, MIST, X - 3, G - 110, 6, 4); R(c, ASH, X - 3, G - 110, 6, 1);
@@ -168,7 +185,7 @@ function screenTower(c, x, gy, t) {
   // камера на углу экрана — смотрит вниз, на прохожего
   R(c, ASH, L + 55, G - 80, 3, 2); R(c, ASH, L + 56, G - 78, 1, 2);
   // дверь и штабель пакетов доставки
-  R(c, N, L + 44, G - 10, 6, 10); R(c, ASH, L + 43, G - 11, 8, 1);
+  R(c, N, L + 44, G - 18, 6, 18); R(c, ASH, L + 43, G - 19, 8, 1);
   R(c, PAPER2, L + 51, G - 3, 6, 3); R(c, SEP, L + 51, G - 2, 6, 1);
   R(c, PAPER2, L + 52, G - 6, 5, 3); R(c, PAPER2, L + 51, G - 9, 5, 3); R(c, SEP, L + 51, G - 8, 5, 1);
   // вход метро: навес, заклеенный проём, кролик мелом
@@ -180,33 +197,35 @@ function screenTower(c, x, gy, t) {
 
 // ── ЗАПАД ────────────────────────────────────────────────────────────
 // «огурец»: пуля из стекла, шире всего на трети высоты, макушка оживалом;
-// по ней вьются три сплошные тёмные ленты-спирали; верхушка — линза
+// выше собора третьего кольца. По ней вьются три сплошные тёмные
+// ленты-спирали; кромки костью с обеих сторон; верхушка — линза
 function gherkin(c, x, gy) {
-  const X = Math.round(x), G = Math.round(gy), H = 88, S = 4;
+  const X = Math.round(x), G = Math.round(gy), H = 124, S = 4;
+  R(c, STONE2, X - 19, G - 1, 38, 1);                 // плита площади
   const rows = [];
   for (let yb = 0; yb < H; yb += S) {
     const u = (yb + S / 2) / H;
-    const hw = u < 0.3 ? 12 + 3 * u / 0.3 : 15 * Math.pow(Math.max(0, 1 - ((u - 0.3) / 0.72) ** 1.7), 0.6);
+    const hw = u < 0.3 ? 14 + 4 * u / 0.3 : 18 * Math.pow(Math.max(0, 1 - ((u - 0.3) / 0.72) ** 1.7), 0.6);
     rows.push([yb, Math.max(2, Math.round(hw))]);
   }
-  for (const [yb, hw] of rows) { R(c, BONE, X - hw, G - yb - S, hw * 2, S); R(c, CONC, X - hw + 1, G - yb - S, hw * 2 - 1, S); }
+  for (const [yb, hw] of rows) { R(c, BONE, X - hw, G - yb - S, hw * 2, S); R(c, CONC, X - hw + 1, G - yb - S, hw * 2 - 2, S); }
   // три спирали тёмного стекла: видны только на лицевой стороне
   c.fillStyle = N;
   for (const [yb, hw] of rows) {
     for (let k = 0; k < 3; k++) {
-      const th = k * 2.094 + yb * 0.06;
+      const th = k * 2.094 + yb * 0.045;
       const cs = Math.cos(th);
       if (cs < 0.2) continue;
-      const bw = Math.max(1, Math.round(5 * cs));
+      const bw = Math.max(1, Math.round(6 * cs));
       let px = Math.round(X + hw * Math.sin(th) - bw / 2);
-      px = Math.max(X - hw + 1, Math.min(X + hw - bw, px));
+      px = Math.max(X - hw + 1, Math.min(X + hw - 1 - bw, px));
       c.fillRect(px, G - yb - S, bw, S);
     }
   }
+  // вход в лобби под рост
+  R(c, N, X - 3, G - 18, 6, 18); R(c, ASH, X - 4, G - 19, 8, 1); R(c, ASH, X, G - 17, 1, 17);
   // линза-верхушка
   R(c, N, X - 2, G - H - 2, 4, 2); R(c, ASH, X - 1, G - H - 3, 2, 1);
-  // плита площади
-  R(c, STONE2, X - 16, G - 1, 32, 1);
 }
 
 // стеклянная башня: тёмная навесная стена в высоких витражах, макушка
@@ -220,23 +239,23 @@ function glassTower(c, x, gy, t) {
   R(c, ASH, L + 43, G - 111, 1, 8);
   beacon(c, L + 43, G - 112, t, 55);
   // стойки и редкие пояса: высокие витражи, а не клетка окон
-  c.fillStyle = STONE2; for (let k = 1; k < 8; k++) c.fillRect(L + 6 + k * 5, G - 92, 1, 80);
-  c.fillStyle = STONE; for (let y = G - 85; y < G - 13; y += 8) c.fillRect(L + 7, y, 39, 1);
+  c.fillStyle = STONE2; for (let k = 1; k < 8; k++) c.fillRect(L + 6 + k * 5, G - 92, 1, 72);
+  c.fillStyle = STONE; for (let y = G - 85; y < G - 21; y += 8) c.fillRect(L + 7, y, 39, 1);
   // блики: штрихи на одной диагонали и параллельный ряд точек
   c.fillStyle = ASH;
-  for (let k = 0; k < 8; k++) { c.fillRect(L + 8 + k * 5, G - 22 - k * 8, 2, 1); if (k < 6) c.fillRect(L + 18 + k * 5, G - 22 - k * 8, 1, 1); }
+  for (let k = 0; k < 8; k++) { c.fillRect(L + 8 + k * 5, G - 26 - k * 8, 2, 1); if (k < 6) c.fillRect(L + 18 + k * 5, G - 26 - k * 8, 1, 1); }
   // светится один этаж — не весь
   R(c, CANDLE, L + 17, G - 57, 23, 2);
-  R(c, BONE, L + 6, G - 92, 1, 80);                   // лунная кромка
-  // лобби двойной высоты
-  R(c, ASH, L + 4, G - 13, 44, 1);
-  R(c, N, L + 6, G - 12, 40, 12);
-  c.fillStyle = STONE2; for (const k of [14, 30, 38]) c.fillRect(L + 6 + k, G - 12, 1, 12);
+  R(c, BONE, L + 6, G - 92, 1, 92);                   // лунная кромка
+  // лобби двойной высоты — под рост
+  R(c, ASH, L + 4, G - 21, 44, 1);
+  R(c, N, L + 7, G - 20, 39, 20);
+  c.fillStyle = STONE2; for (const k of [14, 30, 38]) c.fillRect(L + 6 + k, G - 20, 1, 20);
   // дерево в кадке
-  R(c, STONE, L + 21, G - 3, 5, 3); R(c, WOOD2, L + 23, G - 7, 1, 4);
-  R(c, MIST, L + 19, G - 11, 9, 4); R(c, MIST, L + 21, G - 12, 5, 1);
+  R(c, STONE, L + 21, G - 3, 5, 3); R(c, WOOD2, L + 23, G - 9, 1, 6);
+  R(c, MIST, L + 19, G - 14, 9, 5); R(c, MIST, L + 21, G - 15, 5, 1);
   // камера на кронштейне — смотрит на дерево
-  R(c, ASH, L + 31, G - 11, 4, 2); R(c, ASH, L + 35, G - 12, 1, 3); R(c, CIN, L + 31, G - 10, 1, 1);
+  R(c, ASH, L + 31, G - 18, 4, 2); R(c, ASH, L + 35, G - 19, 1, 3); R(c, CIN, L + 31, G - 17, 1, 1);
 }
 
 // ── СЕВЕР ────────────────────────────────────────────────────────────
@@ -260,7 +279,7 @@ function seedVault(c, x, gy) {
   R(c, BONE, L + 36, G - 32, 9, 2); R(c, ASH, L + 36, G - 29, 9, 1);
   R(c, BONE, L + 37, G - 28, 1, 1); R(c, BONE, L + 40, G - 28, 1, 1); R(c, BONE, L + 43, G - 28, 1, 1);
   // дверь, снег у подножия
-  R(c, N, L + 37, G - 12, 6, 12); R(c, ASH, L + 36, G - 13, 8, 1);
+  R(c, N, L + 37, G - 18, 6, 18); R(c, ASH, L + 36, G - 19, 8, 1);
   R(c, BONE, L, G - 2, 30, 2); R(c, BONE, L + 45, G - 2, 39, 2);
 }
 
@@ -282,18 +301,26 @@ function dataCenter(c, x, gy, t) {
   // ангар
   R(c, CONC, L + 26, G - 30, 68, 30);
   R(c, BONE, L + 25, G - 32, 69, 2); R(c, BONE, L + 26, G - 30, 1, 30);
-  // две заборные панели: тёмный проём, горизонтальные ламели
-  for (const px of [L + 34, L + 70]) {
-    R(c, ASH, px - 1, G - 27, 20, 1); R(c, N, px, G - 26, 18, 20);
-    c.fillStyle = STONE2; for (let k = 0; k < 7; k++) c.fillRect(px, G - 25 + k * 3, 18, 1);
-  }
+  // окно машинного зала: стойки рядами, на стойках точки-статусы костью,
+  // два диода киноварью
+  const rx = L + 34;
+  R(c, ASH, rx - 1, G - 27, 20, 1); R(c, N, rx, G - 26, 18, 20);
+  c.fillStyle = STONE2; for (let k = 0; k < 4; k++) c.fillRect(rx + 1 + k * 4, G - 25, 3, 18);
+  c.fillStyle = BONE;
+  for (const [dx, dy] of [[2, 23], [6, 20], [10, 24], [14, 18], [2, 15], [10, 13], [14, 11], [6, 10]]) c.fillRect(rx + dx, G - dy, 1, 1);
+  if ((t | 0) % 120 < 90) R(c, CIN, rx + 6, G - 16, 1, 1);
+  R(c, CIN, rx + 14, G - 22, 1, 1);
+  // заборная панель: тёмный проём, горизонтальные ламели
+  R(c, ASH, L + 69, G - 27, 20, 1); R(c, N, L + 70, G - 26, 18, 20);
+  c.fillStyle = STONE2; for (let k = 0; k < 7; k++) c.fillRect(L + 70, G - 25 + k * 3, 18, 1);
   // три чиллера на кровле: короб с тёмным теплообменником, сверху два кожуха вентиляторов
   for (const fx of [L + 32, L + 52, L + 72]) {
     R(c, STONE, fx, G - 37, 9, 5); R(c, N, fx + 1, G - 35, 7, 2);
     R(c, ASH, fx + 1, G - 38, 3, 1); R(c, ASH, fx + 5, G - 38, 3, 1);
   }
-  // кот у тёплого чиллера
-  R(c, DARK, L + 83, G - 35, 4, 3); R(c, DARK, L + 83, G - 37, 2, 2); R(c, DARK, L + 83, G - 38, 1, 1); R(c, DARK, L + 87, G - 34, 1, 3);
+  // кот у крайнего чиллера — силуэт пеплом
+  R(c, ASH, L + 83, G - 35, 4, 3); R(c, ASH, L + 83, G - 37, 2, 2); R(c, ASH, L + 83, G - 38, 1, 1); R(c, ASH, L + 85, G - 38, 1, 1);
+  R(c, ASH, L + 87, G - 34, 1, 3);
   // дверь горячего коридора, приоткрыта
   R(c, N, L + 57, G - 18, 8, 18); R(c, ASH, L + 56, G - 19, 10, 1);
   R(c, CANDLE, L + 60, G - 17, 1, 17);
@@ -328,16 +355,23 @@ function unfinished(c, x, gy, t) {
   hline(c, ASH, L + 14, G - 112, L + 62, G - 107);
   hline(c, ASH, L + 11, G - 111, L + 3, G - 105);
   R(c, CONC, L + 1, G - 103, 7, 5); R(c, ASH, L + 1, G - 103, 7, 1);
-  R(c, GOLD, L + 16, G - 103, 4, 4); R(c, N, L + 17, G - 102, 2, 2);   // кабина
+  R(c, STONE, L + 16, G - 103, 4, 4); R(c, ASH, L + 16, G - 103, 4, 1); R(c, N, L + 17, G - 102, 2, 2);   // кабина
   // крюк и плита
   R(c, ASH, L + 66, G - 105, 1, 21); R(c, STONE, L + 65, G - 84, 3, 2);
   R(c, ASH, L + 61, G - 82, 5, 1); R(c, ASH, L + 66, G - 82, 5, 1);
   R(c, CONC, L + 58, G - 81, 16, 4); R(c, BONE, L + 58, G - 81, 16, 1);
-  // забор из профнастила, на нём граффити
-  R(c, STONE2, L + 20, G - 9, 72, 9); R(c, ASH, L + 20, G - 9, 72, 1);
-  c.fillStyle = DARK; for (let k = 0; k < 7; k++) c.fillRect(L + 22 + k * 11, G - 8, 1, 8);
-  R(c, MIST, L + 40, G - 6, 4, 2); R(c, MIST, L + 43, G - 7, 3, 1); R(c, MIST, L + 46, G - 5, 5, 2); R(c, MIST, L + 50, G - 7, 2, 2);
-  R(c, BONE, L + 74, G - 6, 3, 1);
+  // забор из профнастила; на нём растяжка «дом готов»: светлое полотно,
+  // на нём домик под небом пеплом — без букв
+  R(c, STONE2, L + 34, G - 10, 58, 10); R(c, ASH, L + 34, G - 10, 58, 1);
+  c.fillStyle = DARK; for (let k = 0; k < 5; k++) c.fillRect(L + 36 + k * 12, G - 9, 1, 9);
+  R(c, PAPER2, L + 50, G - 9, 30, 7);
+  R(c, ASH, L + 51, G - 8, 28, 3);                    // небо
+  R(c, CONC, L + 58, G - 6, 12, 4); R(c, CONC, L + 60, G - 7, 8, 1);   // дом
+  R(c, N, L + 60, G - 5, 2, 1); R(c, N, L + 64, G - 5, 2, 1); R(c, CIN, L + 67, G - 4, 1, 1);   // окна, цветы
+  // бытовка-вагончик у забора: окно горит
+  R(c, WOOD2, L + 17, G - 11, 15, 9); R(c, ASH, L + 16, G - 12, 17, 1); R(c, ASH, L + 17, G - 11, 1, 9);
+  R(c, CANDLE, L + 20, G - 9, 4, 3); R(c, N, L + 26, G - 9, 3, 7);
+  R(c, DARK, L + 18, G - 2, 3, 2); R(c, DARK, L + 28, G - 2, 3, 2);
 }
 
 // панельная башня: семнадцать этажей, эркер стояком, разношёрстное
@@ -376,36 +410,36 @@ function panelTower(c, x, gy) {
   R(c, CANDLE, L + 47, G - 41, 4, 2);
   c.fillStyle = ASH; for (const [wx, f] of [[9, 4], [40, 7], [16, 14]]) c.fillRect(L + wx, G - 95 + f * 6, 4, 2);
   // подъезд с козырьком
-  R(c, ASH, L + 24, G - 8, 12, 1); R(c, N, L + 27, G - 7, 6, 7);
+  R(c, ASH, L + 24, G - 19, 12, 1); R(c, N, L + 27, G - 18, 6, 18);
 }
 
 // ── ФАСАДЫ ТАБЛИЧЕК 18×30 ────────────────────────────────────────────
 // юг: плоская крыша, из неё торчит арматура «под следующий этаж»,
-// чёрный бак для воды, окно со ставнями, кондиционер
+// чёрный бак для воды, окно со ставнями, кондиционер; дверь под рост
 function signSouth(c, x, gy) {
   const L = Math.round(x) - 9, G = Math.round(gy);
   c.fillStyle = ASH; for (const rx of [1, 4, 13, 16]) c.fillRect(L + rx, G - 30, 1, 7);
   R(c, CONC, L + 1, G - 25, 2, 2); R(c, CONC, L + 15, G - 25, 2, 2);
   R(c, DARK, L + 6, G - 28, 6, 5); R(c, ASH, L + 6, G - 28, 6, 1);   // бак
   R(c, CONC, L, G - 23, 18, 23); R(c, BONE, L, G - 23, 18, 1); R(c, BONE, L, G - 23, 1, 23);
-  R(c, N, L + 6, G - 20, 6, 6); R(c, WOOD2, L + 4, G - 20, 2, 6); R(c, WOOD2, L + 12, G - 20, 2, 6);
-  R(c, PAPER2, L + 7, G - 13, 4, 2);                  // кондиционер
-  R(c, N, L + 3, G - 10, 5, 10); R(c, ASH, L + 2, G - 11, 7, 1);
-  R(c, ASH, L + 13, G - 15, 3, 2); R(c, ASH, L + 15, G - 13, 1, 1);  // тарелка
+  R(c, N, L + 10, G - 21, 5, 5); R(c, WOOD2, L + 8, G - 21, 2, 5); R(c, WOOD2, L + 15, G - 21, 2, 5);
+  R(c, PAPER2, L + 10, G - 14, 4, 2);                 // кондиционер
+  R(c, N, L + 2, G - 18, 5, 18); R(c, ASH, L + 1, G - 19, 7, 1);
+  R(c, ASH, L + 13, G - 10, 3, 2); R(c, ASH, L + 15, G - 8, 1, 1);  // тарелка
 }
 
-// восток: узкий дом-карандаш с тёмной ролставней; на тротуаре, через
-// полоску земли, — светящийся торговый автомат выше ставни: единственное
+// восток: узкий дом-карандаш с тёмной ролставней под рост; на тротуаре,
+// через полоску земли, — светящийся торговый автомат: единственное
 // светлое пятно фасада; у ставни два картонных пакета доставки
 function signEast(c, x, gy, t) {
   const L = Math.round(x) - 9, G = Math.round(gy);
   // дом
   R(c, CONC, L + 8, G - 30, 10, 30); R(c, ASH, L + 8, G - 30, 10, 1); R(c, BONE, L + 8, G - 30, 1, 30);
-  R(c, N, L + 10, G - 27, 6, 3); R(c, N, L + 10, G - 21, 6, 3);
-  R(c, STONE, L + 14, G - 17, 3, 2); R(c, ASH, L + 15, G - 17, 1, 2);   // кондиционер
+  R(c, N, L + 10, G - 27, 6, 3);
+  R(c, STONE, L + 14, G - 22, 3, 2); R(c, ASH, L + 15, G - 22, 1, 2);   // кондиционер
   // ролставня: тёмная, короб пеплом, ламели чуть светлее полотна
-  R(c, STONE2, L + 9, G - 12, 9, 12); R(c, ASH, L + 9, G - 12, 9, 1);
-  c.fillStyle = STONE; for (let k = 1; k < 4; k++) c.fillRect(L + 9, G - 12 + k * 3, 9, 1);
+  R(c, STONE2, L + 9, G - 18, 9, 18); R(c, ASH, L + 9, G - 18, 9, 1);
+  c.fillStyle = STONE; for (let k = 1; k < 6; k++) c.fillRect(L + 9, G - 18 + k * 3, 9, 1);
   R(c, WOOD2, L + 13, G - 3, 4, 3); R(c, SEP, L + 13, G - 2, 4, 1);    // пакеты
   // автомат: светлая шапка, тёмное стекло, три ряда бутылок, щель выдачи
   R(c, STONE, L, G - 17, 7, 17); R(c, PAPER2, L, G - 17, 7, 1);
@@ -419,45 +453,327 @@ function signEast(c, x, gy, t) {
 function signWest(c, x, gy) {
   const L = Math.round(x) - 9, G = Math.round(gy);
   R(c, BRICK, L + 1, G - 28, 16, 28); R(c, BONE, L, G - 29, 18, 1); R(c, BONE, L + 1, G - 28, 1, 28);
-  R(c, N, L + 4, G - 25, 4, 5); R(c, N, L + 11, G - 25, 4, 5);
-  R(c, ASH, L + 13, G - 18, 3, 2); R(c, ASH, L + 16, G - 19, 1, 3); R(c, CIN, L + 13, G - 17, 1, 1);   // камера
-  R(c, ASH, L + 2, G - 16, 15, 1);
-  R(c, N, L + 3, G - 15, 7, 9); R(c, PAPER2, L + 4, G - 13, 4, 3);    // витрина и табличка
-  R(c, N, L + 11, G - 15, 5, 15); R(c, ASH, L + 14, G - 8, 1, 2);     // дверь
+  R(c, N, L + 4, G - 26, 4, 4); R(c, N, L + 11, G - 26, 4, 4);
+  R(c, ASH, L + 13, G - 21, 3, 2); R(c, ASH, L + 16, G - 22, 1, 3); R(c, CIN, L + 13, G - 20, 1, 1);   // камера
+  R(c, ASH, L + 2, G - 19, 15, 1);
+  R(c, N, L + 3, G - 17, 7, 9); R(c, PAPER2, L + 4, G - 15, 4, 3);    // витрина и табличка
+  R(c, N, L + 11, G - 18, 5, 18); R(c, ASH, L + 14, G - 9, 1, 2);     // дверь под рост
   // крыса с чемоданом — тонкий трафарет с просветами, уходит влево из кадра
-  R(c, BONE, L + 3, G - 3, 2, 2); R(c, BONE, L + 4, G - 4, 1, 1);     // чемодан и ручка
-  R(c, BONE, L + 6, G - 3, 1, 1);                                      // голова
-  R(c, BONE, L + 7, G - 2, 3, 1);                                      // тело
-  R(c, BONE, L + 10, G - 1, 2, 1);                                     // хвост
+  R(c, BONE, L + 2, G - 3, 2, 2); R(c, BONE, L + 3, G - 4, 1, 1);     // чемодан и ручка
+  R(c, BONE, L + 5, G - 3, 1, 1);                                      // голова
+  R(c, BONE, L + 6, G - 2, 3, 1);                                      // тело
+  R(c, BONE, L + 9, G - 1, 2, 1);                                      // хвост
 }
 
-// север: чёрный скандинавский дом без свесов, панорамное окно,
-// наружный блок теплового насоса, снег
+// север: чёрный скандинавский дом без свесов, панорамное окно, дверь под
+// рост, наружный блок теплового насоса, снег
 function signNorth(c, x, gy, t) {
   const L = Math.round(x) - 9, G = Math.round(gy);
-  for (let k = 0; k < 6; k++) { R(c, BONE, L + 8 - k, G - 30 + k * 2, 2 + k * 2, 2); if (k) R(c, WOOD, L + 9 - k, G - 30 + k * 2, k * 2, 2); }
-  R(c, WOOD, L + 2, G - 18, 14, 18);
-  c.fillStyle = DARK; for (let k = 0; k < 5; k++) c.fillRect(L + 3 + k * 3, G - 18, 1, 18);
-  R(c, BONE, L + 2, G - 18, 1, 18);
-  R(c, N, L + 4, G - 16, 8, 9); R(c, ASH, L + 4, G - 16, 8, 1); R(c, STONE2, L + 8, G - 15, 1, 8);
-  R(c, CANDLE, L + 5, G - 11, 2, 2);
-  R(c, N, L + 13, G - 10, 3, 10);
+  for (const [k, x0, w] of [[0, 8, 2], [1, 7, 4], [2, 5, 8], [3, 4, 10], [4, 2, 14]]) {
+    R(c, BONE, L + x0, G - 30 + k * 2, w, 2);
+    if (w > 2) R(c, WOOD, L + x0 + 1, G - 30 + k * 2, w - 2, 2);
+  }
+  R(c, WOOD, L + 2, G - 20, 14, 20);
+  c.fillStyle = DARK; for (let k = 0; k < 5; k++) c.fillRect(L + 3 + k * 3, G - 20, 1, 20);
+  R(c, BONE, L + 2, G - 20, 1, 20);
+  R(c, N, L + 4, G - 17, 7, 9); R(c, ASH, L + 4, G - 17, 7, 1); R(c, STONE2, L + 7, G - 16, 1, 8);
+  R(c, CANDLE, L + 5, G - 12, 2, 2);
+  R(c, N, L + 12, G - 18, 3, 18);
   R(c, ASH, L + 16, G - 6, 2, 4); R(c, N, L + 16, G - 5, 1, 2);     // тепловой насос
-  R(c, N, L + 6, G - 23, 2, 3);
-  R(c, BONE, L, G - 2, 6, 2); R(c, BONE, L + 12, G - 1, 6, 1);
+  R(c, N, L + 8, G - 25, 2, 2);
+  R(c, BONE, L, G - 2, 4, 2); R(c, BONE, L + 15, G - 1, 3, 1);
+}
+
+// ── УТВАРЬ ДВОРОВ ───────────────────────────────────────────────────
+// Трафарет: строки сверху вниз, символ — краска из PAL, '.' — пусто; низ
+// стоит на земле gy, середина — на x. Собирается в прямоугольники один раз:
+// одинаковые отрезки соседних строк склеиваются по вертикали.
+const PAL = {
+  N, B: BONE, A: ASH, M: MIST, C: CANDLE, K: CIN, S: SEP, 1: DARK, w: WOOD, W: WOOD2,
+  s: STONE, t: STONE2, x: BRICK, c: CONC, p: PAPER, P: PAPER2,
+};
+const STAMPS = new Map();
+function stamp(c, x, gy, art) {
+  let rs = STAMPS.get(art);
+  if (!rs) {
+    rs = []; let open = new Map();
+    art.forEach((row, y) => {
+      const next = new Map();
+      for (let i = 0; i < row.length;) {
+        const ch = row[i];
+        if (ch === '.') { i++; continue; }
+        let e = i; while (e < row.length && row[e] === ch) e++;
+        const k = ch + ',' + i + ',' + e, r = open.get(k);
+        if (r) { r[4]++; next.set(k, r); } else { const nr = [PAL[ch], i, y, e - i, 1]; rs.push(nr); next.set(k, nr); }
+        i = e;
+      }
+      open = next;
+    });
+    STAMPS.set(art, rs);
+  }
+  const L = Math.round(x - art[0].length / 2), T = Math.round(gy) - art.length;
+  for (const [col, rx, ry, rw, rh] of rs) { c.fillStyle = col; c.fillRect(L + rx, T + ry, rw, rh); }
+}
+// вещь по трафарету: пустые края по бокам срезаются, w×h — по рисунку
+function art(name, rows) {
+  let lo = Infinity, hi = -1;
+  for (const r of rows) for (let i = 0; i < r.length; i++) if (r[i] !== '.') { lo = Math.min(lo, i); hi = Math.max(hi, i); }
+  const t = rows.map(r => r.slice(lo, hi + 1));
+  return { name, w: t[0].length, h: t.length, draw: (c, x, gy) => stamp(c, x, gy, t) };
+}
+
+// юг — пирс над фундаментом: лодка со стеклянным дном, свая с отметками
+// прилива, солнечная панель на стойке
+const GLASSBOAT = [
+  '....BBBBBBBBBBBBBBBB........',
+  '....A..............A........',
+  '....A..............A....11..',
+  'AAAAAAAAAAAAAAAAAAAAAAAA111.',
+  '.PPPPPPPPPPPPPPPPPPPPPPPA11.',
+  '..PPPPPPPPPPPPPPPPPPPPPP.1..',
+  '...AAAAAAAAAAAAAAAAAAAAA.1..',
+  '.........................A..',
+];
+const TIDEPOST = [
+  '..AA....',
+  '.AWWw...',
+  '.AWWwBB.',
+  '.AWWw...',
+  '.AWWwB..',
+  '.AWWw...',
+  '.AWWwBB.',
+  '.AWWw...',
+  '.AWWwB..',
+  '.AWWw...',
+  '.AWWwBBB',
+  '.AWWw...',
+  'AAAAAA..',
+  '.AWWwB..',
+  '.AWWw...',
+  '.AWWwBB.',
+  '.AWWw...',
+  '.AWWwB..',
+  '.AWWw...',
+  '.AWWwBBB',
+  '.AWWw...',
+  '.AMWw...',
+  'MAMMwM..',
+  '.MWMMw..',
+  'MMMMMMM.',
+];
+const SOLAR = [
+  '....AAAAAAAAAAAAAA',
+  '....A111111111111A',
+  '...A111111111111A.',
+  '...AAAAAAAAAAAAAA.',
+  '..A111111111111A..',
+  '..A111111111111A..',
+  '.AAAAAAAAAAAAAAA..',
+  '.......A1.........',
+  '.......A1..A......',
+  '.......A1.A.......',
+  '.......A1A........',
+  '.......A1.........',
+  '.....AAA11A.......',
+];
+// восток — плоский новый мир: светофор с пустой рамкой, гашапоны,
+// прокатный велосипед
+const WALKSIGN = [
+  '.11111.',
+  '1NNNNN1',
+  '1NKKKN1',
+  '1NKNKN1',
+  '1NKNKN1',
+  '1NKKKN1',
+  '1NNNNN1',
+  '1NtttN1',
+  '1NtNtN1',
+  '1NtttN1',
+  '1NNNNN1',
+  '.11111.',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '...A1..',
+  '..AA11.',
+  '.AAA111',
+];
+function gacha(c, x, gy) {
+  const L = Math.round(x) - 8, G = Math.round(gy);
+  for (const [mx, k] of [[0, 0], [9, 1]]) {
+    R(c, STONE, L + mx, G - 9, 7, 9); R(c, ASH, L + mx, G - 9, 1, 9);
+    R(c, ASH, L + mx + 2, G - 7, 3, 3); R(c, N, L + mx + 3, G - 6, 1, 1);
+    R(c, N, L + mx + 2, G - 3, 3, 2);
+    R(c, ASH, L + mx, G - 16, 7, 7); R(c, N, L + mx + 1, G - 15, 5, 5);
+    R(c, BONE, L + mx + 1 + k, G - 12, 2, 2); R(c, k ? MIST : CIN, L + mx + 3, G - 11, 2, 2); R(c, PAPER2, L + mx + 2 + k, G - 15, 2, 2);
+  }
+}
+function bike(c, x, gy) {
+  const L = Math.round(x) - 8, G = Math.round(gy);
+  // колёса кольцами, втулки
+  for (const wx of [0, 11]) {
+    R(c, ASH, L + wx + 1, G - 5, 3, 1); R(c, ASH, L + wx + 1, G - 1, 3, 1);
+    R(c, ASH, L + wx, G - 4, 1, 3); R(c, ASH, L + wx + 4, G - 4, 1, 3); R(c, N, L + wx + 2, G - 3, 1, 1);
+  }
+  // рама киноварью — единственный цвет; седло, руль, корзина
+  R(c, CIN, L + 8, G - 3, 5, 1); R(c, CIN, L + 8, G - 7, 1, 4); R(c, CIN, L + 4, G - 7, 5, 1);
+  R(c, CIN, L + 5, G - 6, 1, 1); R(c, CIN, L + 6, G - 5, 1, 1); R(c, CIN, L + 7, G - 4, 1, 1);
+  R(c, ASH, L + 3, G - 7, 1, 4);
+  R(c, N, L + 7, G - 8, 4, 1);
+  R(c, ASH, L + 2, G - 9, 3, 1); R(c, ASH, L, G - 8, 3, 3); R(c, N, L + 1, G - 7, 1, 1);
+}
+// запад — стеклянный даунтаун: антитаранные тумбы, самокат, зарядка машин
+const BOLLARDS = [
+  '.BA.....BA.....BA.',
+  'BAA1...BAA1...BAA1',
+  'BAA1...BAA1...BAA1',
+  'PPPP...PPPP...PPPP',
+  'BAA1...BAA1...BAA1',
+  'BAA1...BAA1...BAA1',
+  'BAA1...BAA1...BAA1',
+  'AAA1...AAA1...AAA1',
+];
+const ESCOOTER = [
+  '..AAAA......',
+  '....A1......',
+  '....A1......',
+  '....AK......',
+  '....A1......',
+  '....A1......',
+  '....A1......',
+  '....A1......',
+  '....A1......',
+  '....A1......',
+  '....A1......',
+  '...A11......',
+  '..A1AAAAAAAA',
+  '.A1A1111111A',
+  'A111A.....A1',
+  '.AAA.......A',
+];
+const CHARGER = [
+  '.AAAAA...',
+  'AcccccA..',
+  'AN111NA..',
+  'AN1B1NA..',
+  'ANNNNNA..',
+  'AcccccA..',
+  'Acc1ccA11',
+  'Acc1ccA.1',
+  'AcccccA.1',
+  'AcccccA.1',
+  'AcccccA.1',
+  'AcccccA.1',
+  'AcccccA.1',
+  'AcccccA1.',
+  'AcccccA..',
+  'AcccccA..',
+  'AcccccA..',
+  'AcccccA..',
+  'AAAAAAA..',
+];
+// север — горячий коридор: снегоход, кабельный барабан, тарелка на шесте
+const SNOWMOBILE = [
+  '.....AA.................',
+  '....A.A.....111.........',
+  '...AAAAAAA111111111.....',
+  '..APPPPPPPPPPPPPPPPP....',
+  '.BPPPPPPPPPPPPPPPPPPP...',
+  '..PPPPP11111111111111...',
+  '....1..1ANANANANANA1....',
+  '....1..11111111111111...',
+  'A...1...................',
+  '.AAAAAAAA...............',
+];
+function cableDrum(c, x, gy) {
+  const L = Math.round(x) - 8, G = Math.round(gy);
+  // щека катушки кругом из полос, обод пеплом сверху-слева, ступица
+  R(c, WOOD2, L + 3, G - 13, 7, 1); R(c, WOOD2, L + 1, G - 12, 11, 2); R(c, WOOD2, L, G - 10, 13, 6);
+  R(c, WOOD2, L + 1, G - 4, 11, 2); R(c, WOOD2, L + 3, G - 2, 7, 1);
+  R(c, ASH, L + 3, G - 13, 7, 1); R(c, ASH, L + 1, G - 12, 2, 1); R(c, ASH, L, G - 10, 1, 6); R(c, ASH, L + 1, G - 4, 1, 2);
+  R(c, N, L + 12, G - 10, 1, 6); R(c, N, L + 10, G - 3, 2, 1);
+  R(c, N, L + 5, G - 8, 3, 3); R(c, ASH, L + 6, G - 7, 1, 1);
+  // кабель сходит по земле — к ветряку
+  R(c, N, L + 9, G - 1, 7, 1); R(c, ASH, L + 9, G - 2, 1, 1);
+}
+const DISH = [
+  '........BBB...',
+  '......AAAAA...',
+  '....AA11111A..',
+  '...A1111111A..',
+  '..A1111111A...',
+  '..A111111A..A.',
+  '...A1111A..A..',
+  '....AAAA..1...',
+  '......A.......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '......A1......',
+  '.....AA11.....',
+  '....AAA111....',
+];
+// равнина — панельная тишина: поддоны кирпича, ларёк, грибок песочницы
+const BRICKS = [
+  'AAAAAAAA.AAAAAAAA.',
+  'xxxxxxxA.xxxxxxxA.',
+  'xxxxxxxA.xxxxxxxA.',
+  'AAAAAAAA.AAAAAAAA.',
+  'xxxxxxxA.xxxxxxxA.',
+  'xxxxxxxA.xxxxxxxA.',
+  'AAAAAAAA.AAAAAAAA.',
+  'WW.WW.WW.WW.WW.WW.',
+  'WWWWWWWW.WWWWWWWW.',
+];
+function kiosk(c, x, gy) {
+  const L = Math.round(x) - 10, G = Math.round(gy);
+  R(c, CONC, L + 1, G - 19, 18, 19);
+  R(c, DARK, L, G - 22, 20, 3); R(c, ASH, L, G - 22, 20, 1);
+  R(c, PAPER2, L + 2, G - 18, 16, 3);                 // вывеска — пустая
+  R(c, ASH, L + 1, G - 19, 1, 19);
+  R(c, N, L + 3, G - 14, 14, 9);
+  c.fillStyle = ASH; for (const gx of [7, 11]) c.fillRect(L + gx, G - 14, 1, 9);
+  R(c, ASH, L + 3, G - 10, 14, 1);
+  c.fillStyle = BONE; for (const bx of [4, 9, 13, 15]) c.fillRect(L + bx, G - 13, 1, 2);
+  c.fillStyle = PAPER2; for (const bx of [5, 8, 14]) c.fillRect(L + bx, G - 8, 1, 2);
+  R(c, CANDLE, L + 13, G - 4, 3, 2);                  // окошко продавца — тёплое
+  R(c, ASH, L + 12, G - 2, 5, 1);
+}
+function sandbox(c, x, gy) {
+  const L = Math.round(x) - 10, G = Math.round(gy);
+  // песочница: короб из досок, песок
+  R(c, WOOD2, L, G - 3, 20, 3); R(c, ASH, L, G - 4, 20, 1); R(c, PAPER2, L + 1, G - 5, 18, 1);
+  // грибок: столб, шляпка киноварью в белых пятнах
+  R(c, ASH, L + 9, G - 15, 2, 10);
+  R(c, CIN, L + 6, G - 20, 8, 1); R(c, CIN, L + 3, G - 19, 14, 2); R(c, CIN, L + 1, G - 17, 18, 2);
+  R(c, SEP, L + 2, G - 15, 16, 1);
+  c.fillStyle = BONE; for (const [bx, by] of [[5, 18], [10, 19], [14, 17], [3, 16], [8, 16]]) c.fillRect(L + bx, G - by, 2, 1);
 }
 
 export const ARCH = {
   south: [
     { name: 'игла над пустыней', w: 68, h: 120, draw: burj },
-    { name: 'библиотека у моря', w: 92, h: 38, draw: library },
+    { name: 'библиотека у моря', w: 96, h: 48, draw: library },
   ],
   east: [
     { name: 'стеклянная пагода', w: 30, h: 120, draw: taipei },
     { name: 'экран-фасад', w: 60, h: 96, draw: screenTower },
   ],
   west: [
-    { name: '«огурец»', w: 34, h: 92, draw: gherkin },
+    { name: '«огурец»', w: 38, h: 128, draw: gherkin },
     { name: 'стеклянная башня', w: 46, h: 112, draw: glassTower },
   ],
   north: [
@@ -469,4 +785,11 @@ export const ARCH = {
     { name: 'панельная башня', w: 52, h: 118, draw: panelTower },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
+  props: {
+    south: [art('лодка со стеклянным дном', GLASSBOAT), art('свая с отметками прилива', TIDEPOST), art('солнечная панель', SOLAR)],
+    east: [art('светофор с пустой рамкой', WALKSIGN), { name: 'гашапоны', w: 16, h: 16, draw: gacha }, { name: 'прокатный велосипед', w: 16, h: 9, draw: bike }],
+    west: [art('антитаранные тумбы', BOLLARDS), art('электросамокат', ESCOOTER), art('зарядка для машин', CHARGER)],
+    north: [art('снегоход', SNOWMOBILE), { name: 'кабельный барабан', w: 16, h: 13, draw: cableDrum }, art('тарелка на шесте', DISH)],
+    plain: [art('поддоны кирпича', BRICKS), { name: 'ларёк', w: 20, h: 22, draw: kiosk }, { name: 'грибок песочницы', w: 20, h: 20, draw: sandbox }],
+  },
 };

@@ -258,8 +258,8 @@ export function prepareArchGround(ensembles, locations) {
       const water = patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r);
       fenceFor(e, st, ms, yb, cx, signs, allBoxes, water);
     }
-    // утварь двора: колодец, телега, стог… — из модуля кольца
-    propsFor(e, ms, signs, allBoxes);
+    // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
+    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r));
   }
 }
 
@@ -672,7 +672,7 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // ── утварь двора ──
 // Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
 // тропы. Не на пороге, не на табличке, не друг на друге.
-function propsFor(e, ms, signs, boxes) {
+function propsFor(e, ms, signs, boxes, water = []) {
   const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side];
   if (!kinds || !kinds.length) return;
   const want = e.kind === 'gate' ? 1 : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
@@ -685,6 +685,7 @@ function propsFor(e, ms, signs, boxes) {
       if (sx > x0 - 12 && sx < x1 + 12 && sgy > y0 - 4 && sgy < y1 + 30) return false;
     }
     for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 + 2 && y0 < b.y1 + 2) return false;
+    for (const w of water) if (x1 > w.x0 && x0 < w.x1 && y1 > w.y0 && y0 < w.y1) return false;
     for (const p of placed) if (x1 > p.x - p.w / 2 - 6 && x0 < p.x + p.w / 2 + 6 && y1 > p.gy - p.h - 2 && y0 < p.gy + 4) return false;
     for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
     return !onTrail(e.side, x, gy) && !onTrail(e.side, x - w / 2, gy) && !onTrail(e.side, x + w / 2, gy);
