@@ -21,9 +21,10 @@ const GAP = 10;           // между постройками
 const NEAR = 360;         // радиус, в котором соседи вообще интересны
 
 // ── проверки места ──
+let margin = BAND_MARGIN;
 function inBand(n, x, y) {
   const d = warpedDist(x, y);
-  return d > (n - 1) * RING_W + BAND_MARGIN && d < n * RING_W - BAND_MARGIN;
+  return d > (n - 1) * RING_W + margin && d < n * RING_W - margin;
 }
 // земля под всем основанием — своего кольца (рельеф границ учтён)
 function baseOK(n, b) {
@@ -195,6 +196,12 @@ function yard(n, side, kinds, count, anchor, signs, placed, twins = false) {
           cands.push({ x: prev.x + dx, gy: prev.gy + tilt + dy, s: gap + Math.abs(dy) + (dir < 0 ? 4 : 0) });
         }
       }
+      // двойняшке — место вдоль кольца по диагонали, пусть и через двор
+      if (twins && prev && anchor.slope) {
+        for (const dir of [-1, 1]) for (let d = 90; d <= 200; d += 6) for (const dy of [0, -6, 6]) {
+          cands.push({ x: prev.x + dir * d, gy: prev.gy + dir * d * anchor.slope + dy, s: d * 0.3 + Math.abs(dy) });
+        }
+      }
       // вокруг якоря: позади сцены — предпочтительно
       for (let dy = -96; dy <= 36; dy += 6) {
         for (let dx = -168; dx <= 168; dx += 12) {
@@ -297,7 +304,11 @@ export function buildEnsembles(signs = []) {
       const count = kinds.length + (seg.id === 'neon' ? 1 : 0);
       const r = (n - 1) * RING_W + 100, ang = (0.42 + h01(n * 9) * 0.16) * Math.PI / 2;
       const anchor = { x: TOWN.x1 + r * Math.cos(ang), gy: TOWN.y0 - r * Math.sin(ang), pref: 0, slope: Math.cos(ang) / Math.sin(ang) };
-      const members = yard(n, 'plain', kinds, count, anchor, signs, buildings, seg.id === 'neon');
+      // двойняшкам на узкой диагонали — чуть ближе к границе колец
+      const twins = seg.id === 'neon';
+      if (twins) margin = 24;
+      const members = yard(n, 'plain', kinds, count, anchor, signs, buildings, twins);
+      margin = BAND_MARGIN;
       add(n, 'plain', 'plain', members, { trail: null });
     }
   }
