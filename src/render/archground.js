@@ -244,7 +244,11 @@ export function prepareArchGround(ensembles, locations) {
     for (const m of ms) m.loc.archFoot = footFor(m, st, g, ms.length);
 
     // забор: двор и посёлок — буквой П, калитка спереди по тропинке
-    if (st.fence && e.kind !== 'gate') fenceFor(e, st, ms, front, cx, signs, allBoxes);
+    if (st.fence && e.kind !== 'gate') {
+      // забор обходит весь мощёный двор, вместе с табличками сцены
+      const yb = { x0: Math.min(...rects.map(r => r.x0)), x1: Math.max(...rects.map(r => r.x1)), y1: Math.max(...rects.map(r => r.y1)) };
+      fenceFor(e, st, ms, yb, cx, signs, allBoxes);
+    }
     // утварь двора: колодец, телега, стог… — из модуля кольца
     propsFor(e, ms, signs, allBoxes);
   }
@@ -586,12 +590,12 @@ function onTrail(side, x, y) {
   return false;
 }
 
-function fenceFor(e, st, ms, front, cx, signs, boxes) {
-  const L = Math.round(Math.min(...ms.map(m => m.x - m.w / 2)) - 14);
-  const Rx = Math.round(Math.max(...ms.map(m => m.x + m.w / 2)) + 14);
+function fenceFor(e, st, ms, yb, cx, signs, boxes) {
+  const L = Math.round(Math.min(yb.x0 - 4, ...ms.map(m => m.x - m.w / 2 - 14)));
+  const Rx = Math.round(Math.max(yb.x1 + 4, ...ms.map(m => m.x + m.w / 2 + 14)));
   const back = Math.round(Math.min(...ms.map(m => m.gy)) - 10);
-  // фронт — перед табличками двора, если они тут
-  let fy = Math.round(front + 8);
+  // фронт — по краю двора, перед табличками
+  let fy = Math.round(yb.y1 + 6);
   for (const s of signs) {
     const sx = s.x + s.w / 2, sgy = s.y + s.h;
     if (sx > L && sx < Rx && sgy > back && sgy + 10 > fy && sgy < fy + 40) fy = Math.round(sgy + 12);
