@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='562b171 · 2026-10-02';console.log('[оттиск]', '562b171 · 2026-10-02');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='bfef8bc · 2026-10-02';console.log('[оттиск]', 'bfef8bc · 2026-10-02');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -1986,7 +1986,7 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
                 {
                     id: 'enlightenment', n: 5, range: [1440, 1740],
                     name: 'мелкий шрифт', era: 'XVIII век',
-                    palette: { sky: '#403626', ground: '#4a3e2a', lamp: 'gas', dust: '#7a6242' },
+                    palette: { sky: '#403626', ground: '#46443c', lamp: 'gas', dust: '#7a6242' },
                     signs: [
                         { x: 1480, name: 'стоящие часы',
                             facade: `По этим часам сверяли город. Город сменил имя. Часы стоят; стрелки закреплены на половине четвёртого.` },
@@ -2011,7 +2011,7 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
                 {
                     id: 'steamshadows', n: 6, range: [1740, 2020],
                     name: 'пар и тени', era: 'XIX век',
-                    palette: { sky: '#3a2818', ground: '#4a3622', lamp: 'tungsten', dust: '#8a6232' },
+                    palette: { sky: '#3a2818', ground: '#40281c', lamp: 'tungsten', dust: '#8a6232' },
                     actSign: `АКТ I.\nАннексировано: мышечный труд, ландшафт.`,
                     signs: [
                         { x: 1780, name: 'читальный зал Британского музея',
@@ -15178,6 +15178,8 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                 look: d.look || d.name,
                 archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
                 archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+                // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
+                archChar: Math.max(0, Math.min(1, (disc_js_3.warpedDist(d.x, d.gy) - (disc_js_3.RINGS * disc_js_3.RING_W - 130)) / 110)),
                 // доминанта: огонь, видный из соседнего кольца; шов подделки; зеркало
                 ...(d.kind && d.kind.landmark ? {
                     archLandmark: true,
@@ -34663,9 +34665,12 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8))
             return null;
         const side = sectorOf(wx, wy);
-        const props = (index_js_2.ARCH_BY_RING[ulitsa_db_js_7.SEGMENTS[ring - 1].id]?.props?.[side] || []).filter(p => !p.unique);
+        // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
+        const d = disc_js_7.warpedDist(wx, wy), frac = d / disc_js_7.RING_W - (ring - 1);
+        const pr = ring > 1 && frac < 0.22 && draw_js_12.hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
+        const props = (index_js_2.ARCH_BY_RING[ulitsa_db_js_7.SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique);
         const idx = props.length ? ((h * 977) | 0) % props.length : -1;
-        return { h, wx, wy, ring, side, props, idx };
+        return { h, wx, wy, ring, side, props, idx, pr };
     }
     function drawTissue(ctx, cam) {
         const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
@@ -34684,11 +34689,15 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
                             if (!dx && !dy)
                                 continue;
                             const o = tissueCell(gx + dx, gy + dy);
-                            if (o && o.idx === c.idx && o.ring === c.ring && o.side === c.side && o.h > c.h)
+                            if (o && o.idx === c.idx && o.pr === c.pr && o.side === c.side && o.h > c.h)
                                 dup = true;
                         }
-                    if (!dup)
+                    if (!dup) {
+                        if (c.pr !== c.ring)
+                            ctx.globalAlpha = 0.72; // обломок прошлой эпохи — выцвел
                         c.props[c.idx].draw(ctx, c.wx + 12, c.wy, time_js_18.t);
+                        ctx.globalAlpha = 1;
+                    }
                     continue;
                 }
                 // сторона: снег севера белит верхушки
@@ -35153,6 +35162,23 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
         }
         return out;
     }
+    // копоть у кольца огня: тёмные пятна снизу вверх, редкая искра
+    function drawArchChar(ctx, loc) {
+        const k = loc.archChar;
+        if (!k)
+            return;
+        const x0 = loc.archX - loc.w / 2, gy = loc.archGy;
+        const n = Math.round(loc.w * loc.h / 50 * k);
+        ctx.fillStyle = '#0D0B0A';
+        for (let i = 0; i < n; i++) {
+            const hx = draw_js_13.hash(i, loc.archX, 3.3), hy = draw_js_13.hash(loc.archGy, i, 5.7);
+            const y = gy - Math.pow(hy, 1.8) * loc.h * (0.4 + 0.6 * k); // копоть гуще у земли
+            ctx.globalAlpha = 0.35 + 0.4 * draw_js_13.hash(i, 9, 1.1);
+            ctx.fillRect(Math.round(x0 + hx * loc.w), Math.round(y), 1 + (draw_js_13.hash(i, 2, 8) > 0.7 ? 1 : 0), 1);
+        }
+        ctx.globalAlpha = 1;
+    }
+    exports_69("drawArchChar", drawArchChar);
     function drawArchFoot(ctx, loc) {
         const f = loc.archFoot;
         if (!f)
@@ -37547,6 +37573,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 loc.archDraw(ctx, loc.archX, loc.archGy, time_js_31.t);
             if (loc.archMirror)
                 drawMirrorCandle(ctx, loc);
+            archground_js_1.drawArchChar(ctx, loc);
             archground_js_1.drawArchFoot(ctx, loc);
             return;
         }

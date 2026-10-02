@@ -195,9 +195,12 @@ function tissueCellRaw(gx, gy) {
   if (ring < 1 || ring > RINGS) return null;
   if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
   const side = sectorOf(wx, wy);
-  const props = (ARCH_BY_RING[SEGMENTS[ring - 1].id]?.props?.[side] || []).filter(p => !p.unique);
+  // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
+  const d = warpedDist(wx, wy), frac = d / RING_W - (ring - 1);
+  const pr = ring > 1 && frac < 0.22 && hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
+  const props = (ARCH_BY_RING[SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique);
   const idx = props.length ? ((h * 977) | 0) % props.length : -1;
-  return { h, wx, wy, ring, side, props, idx };
+  return { h, wx, wy, ring, side, props, idx, pr };
 }
 
 export function drawTissue(ctx, cam) {
@@ -214,9 +217,13 @@ export function drawTissue(ctx, cam) {
         for (let dy = -2; dy <= 2 && !dup; dy++) for (let dx = -4; dx <= 4 && !dup; dx++) {
           if (!dx && !dy) continue;
           const o = tissueCell(gx + dx, gy + dy);
-          if (o && o.idx === c.idx && o.ring === c.ring && o.side === c.side && o.h > c.h) dup = true;
+          if (o && o.idx === c.idx && o.pr === c.pr && o.side === c.side && o.h > c.h) dup = true;
         }
-        if (!dup) c.props[c.idx].draw(ctx, c.wx + 12, c.wy, now);
+        if (!dup) {
+          if (c.pr !== c.ring) ctx.globalAlpha = 0.72;      // обломок прошлой эпохи — выцвел
+          c.props[c.idx].draw(ctx, c.wx + 12, c.wy, now);
+          ctx.globalAlpha = 1;
+        }
         continue;
       }
       // сторона: снег севера белит верхушки

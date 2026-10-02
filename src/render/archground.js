@@ -303,6 +303,22 @@ function footFor(m, st, g, n) {
   return out;
 }
 
+// копоть у кольца огня: тёмные пятна снизу вверх, редкая искра
+export function drawArchChar(ctx, loc) {
+  const k = loc.archChar;
+  if (!k) return;
+  const x0 = loc.archX - loc.w / 2, gy = loc.archGy;
+  const n = Math.round(loc.w * loc.h / 50 * k);
+  ctx.fillStyle = '#0D0B0A';
+  for (let i = 0; i < n; i++) {
+    const hx = hash(i, loc.archX, 3.3), hy = hash(loc.archGy, i, 5.7);
+    const y = gy - Math.pow(hy, 1.8) * loc.h * (0.4 + 0.6 * k);     // копоть гуще у земли
+    ctx.globalAlpha = 0.35 + 0.4 * hash(i, 9, 1.1);
+    ctx.fillRect(Math.round(x0 + hx * loc.w), Math.round(y), 1 + (hash(i, 2, 8) > 0.7 ? 1 : 0), 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function drawArchFoot(ctx, loc) {
   const f = loc.archFoot;
   if (!f) return;

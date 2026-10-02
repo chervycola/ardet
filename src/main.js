@@ -44,7 +44,7 @@ import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
-import { prepareArchGround, drawArchGround, drawArchFoot, archProps, archGroundRects } from './render/archground.js';
+import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
 import { archWindowLights } from './render/archlights.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
@@ -394,6 +394,7 @@ function drawLocationPlain(ctx, loc) {
       ctx.restore();
     } else loc.archDraw(ctx, loc.archX, loc.archGy, t);
     if (loc.archMirror) drawMirrorCandle(ctx, loc);
+    drawArchChar(ctx, loc);
     drawArchFoot(ctx, loc);
     return;
   }

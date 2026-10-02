@@ -136,7 +136,7 @@ export const SEGMENTS = [
   {
     id: 'enlightenment', n: 5, range: [1440, 1740],
     name: 'мелкий шрифт', era: 'XVIII век',
-    palette: { sky: '#403626', ground: '#4a3e2a', lamp: 'gas', dust: '#7a6242' },
+    palette: { sky: '#403626', ground: '#46443c', lamp: 'gas', dust: '#7a6242' },
     signs: [
       { x: 1480, name: 'стоящие часы',
         facade: `По этим часам сверяли город. Город сменил имя. Часы стоят; стрелки закреплены на половине четвёртого.` },
@@ -162,7 +162,7 @@ export const SEGMENTS = [
   {
     id: 'steamshadows', n: 6, range: [1740, 2020],
     name: 'пар и тени', era: 'XIX век',
-    palette: { sky: '#3a2818', ground: '#4a3622', lamp: 'tungsten', dust: '#8a6232' },
+    palette: { sky: '#3a2818', ground: '#40281c', lamp: 'tungsten', dust: '#8a6232' },
     actSign: `АКТ I.\nАннексировано: мышечный труд, ландшафт.`,
     signs: [
       { x: 1780, name: 'читальный зал Британского музея',

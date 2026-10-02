@@ -371,6 +371,8 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+      // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
+      archChar: Math.max(0, Math.min(1, (warpedDist(d.x, d.gy) - (RINGS * RING_W - 130)) / 110)),
       // доминанта: огонь, видный из соседнего кольца; шов подделки; зеркало
       ...(d.kind && d.kind.landmark ? {
         archLandmark: true,
