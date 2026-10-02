@@ -224,13 +224,17 @@ export function prepareArchGround(ensembles, locations) {
         }
       }
     } else {
-      const gate = [cx, front + 6];
+      // калитка — там, где в заборе проём (фронт двора), иначе перед домами
+      const fenced = !!st.fence;
+      const gy0 = fenced ? Math.max(...rects.map(r => r.y1)) + 8 : front + 6;
+      const gate = [cx, gy0];
       for (const m of ms) paths.push([[m.x, m.gy + 3], [m.x, m.gy + 10], [(m.x + gate[0]) / 2, (m.gy + 10 + gate[1]) / 2], gate]);
-      // хвост — к тропе (или к городку), тает
+      // хвост — из калитки прямо, потом к тропе (или к городку), тает
       let tx, ty;
-      if (tr) { tx = tr.x; ty = tr.y; } else { tx = cx - 400; ty = front + 300; }
-      const L = Math.hypot(tx - gate[0], ty - gate[1]) || 1, k = Math.min(1, 90 / L);
-      paths.push({ tail: true, pts: [gate, [gate[0] + (tx - gate[0]) * k * 0.5, gate[1] + (ty - gate[1]) * k * 0.5 + 6], [gate[0] + (tx - gate[0]) * k, gate[1] + (ty - gate[1]) * k]] });
+      if (tr) { tx = tr.x; ty = tr.y; } else { tx = cx - 400; ty = gy0 + 300; }
+      const out = [gate[0], gate[1] + 10];
+      const L = Math.hypot(tx - out[0], ty - out[1]) || 1, k = Math.min(1, 80 / L);
+      paths.push({ tail: true, pts: [gate, out, [out[0] + (tx - out[0]) * k * 0.5, out[1] + (ty - out[1]) * k * 0.5 + 4], [out[0] + (tx - out[0]) * k, out[1] + (ty - out[1]) * k]] });
     }
 
     // границы холста
