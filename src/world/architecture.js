@@ -258,8 +258,9 @@ export function buildEnsembles(signs = []) {
     const arch = ARCH_BY_RING[seg.id];
     if (!arch) continue;
     // доминанта кольца — первой, на дороге стороны своего региона
-    const L = arch.landmark;
-    if (L && L.side) {
+    const LS = [].concat(arch.landmark || [], arch.landmarks || []);
+    for (const L of LS) {
+      if (!L || !L.side) continue;
       const D = (n - 1) * RING_W + 120, sgn = n % 2 ? -1 : 1;
       let anchor;
       if (L.side === 'plain') {
