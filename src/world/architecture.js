@@ -203,8 +203,10 @@ function yard(n, side, kinds, count, anchor, signs, placed, twins = false) {
         }
       }
       // вокруг якоря: позади сцены — предпочтительно
-      for (let dy = -96; dy <= 36; dy += 6) {
-        for (let dx = -168; dx <= 168; dx += 12) {
+      // доминанте ищем место шире: она крупнее, а ворота уже стоят
+      const k = K.landmark ? 2.6 : 1, kx = K.landmark ? 6 : 1;
+      for (let dy = -96 * k; dy <= 36 * k; dy += 6) {
+        for (let dx = -168 * kx; dx <= 168 * kx; dx += 12) {
           cands.push({ x: anchor.x + dx, gy: anchor.gy + dy, s: 40 + Math.abs(dx) * 0.8 + Math.abs(dy - anchor.pref) * 1.4 });
         }
       }
@@ -212,7 +214,7 @@ function yard(n, side, kinds, count, anchor, signs, placed, twins = false) {
       for (const c of cands) {
         const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K };
         if (!twins && sameNear(b, all)) continue;
-        if (fits(n, side, b, near, all)) { out.push(b); done = true; break; }
+        if (fits(n, side, b, K.landmark ? signs : near, all)) { out.push(b); done = true; break; }
       }
       if (done) break;
     }
@@ -257,10 +259,10 @@ export function buildEnsembles(signs = []) {
     const seg = SEGMENTS[n - 1];
     const arch = ARCH_BY_RING[seg.id];
     if (!arch) continue;
-    // доминанта кольца — первой, на дороге стороны своего региона
-    const LS = [].concat(arch.landmark || [], arch.landmarks || []);
-    for (const L of LS) {
-      if (!L || !L.side) continue;
+    // доминанты кольца — на дороге стороны своего региона, после ворот
+    const LS = [].concat(arch.landmark || [], arch.landmarks || []).filter(L => L && L.side);
+    const placeLandmarks = side => { for (const L of LS) {
+      if (L.side !== side) continue;
       const D = (n - 1) * RING_W + 120, sgn = n % 2 ? -1 : 1;
       let anchor;
       if (L.side === 'plain') {
@@ -275,7 +277,7 @@ export function buildEnsembles(signs = []) {
       const kind = { ...L, landmark: true };
       const got = yard(n, L.side, [kind], 1, anchor, signs, buildings);
       add(n, L.side, 'landmark', got, { trail: L.side === 'plain' ? null : trailPoint(L.side, D) });
-    }
+    } };
     for (const side of ['south', 'north', 'west', 'east']) {
       const kinds = kindsFor(arch, side, n);
       if (!kinds.length) continue;
@@ -288,6 +290,7 @@ export function buildEnsembles(signs = []) {
         gate = yard(n, side, kinds, 2, { x: p.x, gy: p.y, pref: -36 }, signs, buildings);
       }
       add(n, side, 'gate', gate, { trail: trailPoint(side, mid) });
+      placeLandmarks(side);
 
       // дворы за сценами табличек: дальние от тропы — первыми
       const tp = trailPoint(side, mid);
@@ -330,6 +333,7 @@ export function buildEnsembles(signs = []) {
       margin = BAND_MARGIN;
       add(n, 'plain', 'plain', members, { trail: null });
     }
+    placeLandmarks('plain');
   }
   // повтор вида на той же стороне — зеркально: «такой же», а не копия.
   // Двойняшки одного двора — нет: одинаковые дома одинаковы до последнего окна
@@ -372,7 +376,7 @@ export function archLocations(decor) {
         archLandmark: true,
         archLight: d.kind.light || null,
         archMirror: d.kind.mirror || null,
-        ...(d.kind.potemkin ? { potemkin: d.kind.potemkin } : {}),
+        ...(d.kind.potemkin ? { potemkin: d.kind.potemkin, potemkinTender: !!d.kind.tender } : {}),
       } : {}),
       solidBox: { x: Math.round(d.x - fw / 2), y: Math.round(d.gy - fh), w: fw, h: fh },
     };

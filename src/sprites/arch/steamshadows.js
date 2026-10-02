@@ -798,7 +798,48 @@ function signNorth(ctx, x, gy) {
   f(B, 0, 1, 18, 1);
 }
 
+// ═══ ДОМИНАНТА · запад · башня на двадцать лет ═══
+// Ажур — контуром: между кромками видно небо. Четыре ноги расходятся аркой
+// (под ней проходят в рост), три яруса, на вершине маяк; выше — мачта.
+function towerBeacon(ctx, x, gy, t) {
+  const f = pen(ctx, x, gy, 72);
+  const hwAt = dy => 2 + 33 * Math.exp(-dy / 48);
+  // внутренняя кромка ног: арка под первым ярусом, просвет между первым и вторым
+  const inAt = dy => dy < 30 ? Math.round(21 * Math.sqrt(1 - (dy / 30) ** 2))
+    : dy > 38 && dy < 98 ? Math.round(11 * (98 - dy) / 60) : 0;
+  let prev = Math.round(hwAt(0));
+  for (let dy = 4; dy <= 172; dy += dy < 100 ? 4 : 6) {
+    const step = dy <= 100 ? 4 : 6, hw = Math.round(hwAt(dy)), sw = Math.max(2, prev - hw + 1);
+    f(A, 36 - hw, dy, sw, step);                 // лунная кромка
+    f(D2, 36 + hw - sw, dy, sw, step);           // теневая кромка
+    const g = inAt(dy);
+    if (g > 0) { const iw = Math.max(1, Math.round(inAt(dy - step) - g) + 1); f(RB, 36 - g - iw, dy, iw, step); f(D2, 36 + g, dy, iw, step); }
+    prev = hw;
+  }
+  // каменные опоры ног
+  f(D4, 2, 6, 12, 6); f(null, 58, 6, 12, 6); f(P2, 2, 6, 12, 1); f(null, 58, 6, 12, 1);
+  // стяжки решётки по стволу
+  for (const dy of [54, 86, 112, 136, 156]) { const hw = Math.round(hwAt(dy)); f(RB, 36 - hw + 1, dy, 2 * hw - 2, 1); }
+  for (const dy of [18, 46]) { const hw = Math.round(hwAt(dy)); f(RB, 36 - hw + 2, dy, 6, 1); f(null, 36 + hw - 8, dy, 6, 1); }
+  // ярусы: первый — с галереей, второй, третий — у вершины
+  f(D2, 15, 37, 42, 5); f(P2, 15, 37, 42, 1); f(N, 18, 34, 36, 1);
+  f(D2, 24, 73, 24, 3); f(P2, 24, 73, 24, 1);
+  f(D2, 31, 174, 10, 4); f(P2, 31, 174, 10, 1);
+  // маяк: фонарный зал, колпак, мачта
+  f(D1, 33, 183, 6, 9);
+  f(C, 34, 182, 4, 4);
+  if (((t || 0) / 13 | 0) % 5 === 2) f(S, 34, 182, 1, 1);
+  f(A, 32, 185, 8, 2); f(null, 34, 187, 4, 2);
+  f(A, 35, 199, 2, 12);
+}
+
 export const ARCH = {
+  // ── ДОМИНАНТА · запад: ажурная башня, маяк на вершине ──
+  landmark: {
+    name: 'Эйфелева башня', side: 'west', w: 72, h: 200,
+    light: { dx: 0, dy: -180, r: 90 },
+    draw: towerBeacon,
+  },
   south: [
     { name: 'пароход в песках', w: 108, h: 66, draw: canalSteamer },
     { name: 'опера в песке', w: 92, h: 72, draw: sandOpera },
