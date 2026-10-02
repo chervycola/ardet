@@ -95,6 +95,21 @@ test('arch: утварь дворов (props) — по контракту, ес�
   }
 });
 
+test('доминанты: по контракту, каждая — одна, на стороне своего региона, с огнём', () => {
+  const ctx = fakeCtx();
+  for (const seg of SEGMENTS) {
+    const L = ARCH_BY_RING[seg.id].landmark;
+    if (!L) continue;
+    assert(SIDES.includes(L.side), `${seg.id}: доминанта без стороны`);
+    assert(L.w >= 40 && L.w <= 170 && L.h >= 100 && L.h <= 220, `${seg.id}/${L.name}: размер ${L.w}×${L.h}`);
+    assert(L.light && typeof L.light.dy === 'number', `${seg.id}/${L.name}: нет огня`);
+    L.draw(ctx, 500, 500, 100);
+    const placed = locations.filter(l => l.archLandmark && l.archRing === seg.n);
+    eq(placed.length, 1, `${seg.id}: доминанта встала ${placed.length} раз`);
+    eq(placed[0].archSide, L.side, `${seg.id}: доминанта не на своей стороне`);
+  }
+});
+
 const signs = locations.filter(l => l.streetForm);
 const decor = buildArchitecture(signs);
 test('arch: в каждом кольце стоят постройки, основание — на земле своего кольца', () => {

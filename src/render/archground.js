@@ -254,7 +254,7 @@ export function prepareArchGround(ensembles, locations) {
     for (const m of ms) m.loc.archFoot = footFor(m, st, g, ms.length);
 
     // забор: двор и посёлок — буквой П, калитка спереди по тропинке
-    if (st.fence && e.kind !== 'gate') {
+    if (st.fence && e.kind !== 'gate' && e.kind !== 'landmark') {
       // забор обходит весь мощёный двор, вместе с табличками сцены
       const yb = { x0: Math.min(...rects.map(r => r.x0)), x1: Math.max(...rects.map(r => r.x1)), y1: Math.max(...rects.map(r => r.y1)) };
       const water = patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r);

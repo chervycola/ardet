@@ -257,6 +257,24 @@ export function buildEnsembles(signs = []) {
     const seg = SEGMENTS[n - 1];
     const arch = ARCH_BY_RING[seg.id];
     if (!arch) continue;
+    // доминанта кольца — первой, на дороге стороны своего региона
+    const L = arch.landmark;
+    if (L && L.side) {
+      const D = (n - 1) * RING_W + 120, sgn = n % 2 ? -1 : 1;
+      let anchor;
+      if (L.side === 'plain') {
+        const ang = (n % 2 ? 0.28 : 0.72) * Math.PI / 2, r = (n - 1) * RING_W + 110;
+        anchor = { x: TOWN.x1 + r * Math.cos(ang), gy: TOWN.y0 - r * Math.sin(ang), pref: 0 };
+      } else {
+        const p = trailPoint(L.side, D);
+        anchor = (L.side === 'south' || L.side === 'north')
+          ? { x: p.x + sgn * (L.w / 2 + 40), gy: p.y, pref: 0 }
+          : { x: p.x, gy: p.y - 24, pref: 0 };
+      }
+      const kind = { ...L, landmark: true };
+      const got = yard(n, L.side, [kind], 1, anchor, signs, buildings);
+      add(n, L.side, 'landmark', got, { trail: L.side === 'plain' ? null : trailPoint(L.side, D) });
+    }
     for (const side of ['south', 'north', 'west', 'east']) {
       const kinds = kindsFor(arch, side, n);
       if (!kinds.length) continue;
@@ -348,6 +366,13 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+      // доминанта: огонь, видный из соседнего кольца; шов подделки; зеркало
+      ...(d.kind && d.kind.landmark ? {
+        archLandmark: true,
+        archLight: d.kind.light || null,
+        archMirror: d.kind.mirror || null,
+        ...(d.kind.potemkin ? { potemkin: d.kind.potemkin } : {}),
+      } : {}),
       solidBox: { x: Math.round(d.x - fw / 2), y: Math.round(d.gy - fh), w: fw, h: fh },
     };
   });

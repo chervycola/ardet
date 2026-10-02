@@ -184,6 +184,17 @@ for (const loc of locations) {
   });
 }
 
+// Огни доминант колец — видны из соседнего кольца
+for (const loc of locations) {
+  const L = loc.archLight;
+  if (!L) continue;
+  lighting.add({
+    x: loc.archX + (L.dx || 0), y: loc.archGy + (L.dy || 0),
+    r: L.r || 70, color: L.color || [226, 138, 58],
+    flicker: L.flicker ?? 0.12, bloom: true,
+  });
+}
+
 // ═══ TIME ═══
 import { t } from './core/time.js';
 // Day cycle: 0 = midnight, 0.5 = noon, 1 = midnight again
@@ -378,6 +389,7 @@ function drawLocationPlain(ctx, loc) {
       loc.archDraw(ctx, loc.archX, loc.archGy, t);
       ctx.restore();
     } else loc.archDraw(ctx, loc.archX, loc.archGy, t);
+    if (loc.archMirror) drawMirrorCandle(ctx, loc);
     drawArchFoot(ctx, loc);
     return;
   }
@@ -388,6 +400,23 @@ function drawLocationPlain(ctx, loc) {
   } else {
     drawLocationPlaceholder(ctx, loc);
   }
+}
+
+// Зеркальная стена отражает единственный тёплый свет рядом — свечу странника
+function drawMirrorCandle(ctx, loc) {
+  const M = loc.archMirror;
+  const px = player.x + 6, feet = player.y + 24;
+  const d = feet - loc.archGy;
+  if (d < -4 || d > 160 || Math.abs(px - loc.archX) > loc.w / 2 + 40) return;
+  const x0 = loc.archX + M.x0, x1 = loc.archX + M.x1;
+  if (px < x0 + 1 || px > x1 - 2) return;
+  const top = loc.archGy + M.y0, bot = loc.archGy + M.y1;
+  const ry = Math.round(Math.max(top + 2, Math.min(bot - 6, bot - 8 - d * 0.25)));
+  const rx = Math.round(px);
+  ctx.globalAlpha = 0.85 - Math.min(0.5, d / 320);
+  ctx.fillStyle = '#3a3026'; ctx.fillRect(rx - 1, ry, 3, 7);       // силуэт, тусклый
+  ctx.fillStyle = '#E28A3A'; ctx.fillRect(rx, ry + 3, 1, 2);       // свеча
+  ctx.globalAlpha = 1;
 }
 
 // ═══ STREET SIGNS — small pixel landmarks by form ═══
