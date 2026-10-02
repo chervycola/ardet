@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import {
-  TOWN, RING_W, RINGS, FIRE_W, OFF, WORLD_W, WORLD_H, townDist, warpedDist, southBand,
+  TOWN, RING_W, RINGS, FIRE_W, townDist, warpedDist, trailPoint,
 } from '../world/disc.js';
 import { hash } from './draw.js';
 
@@ -84,49 +84,16 @@ export function drawGroundMarks(ctx, cam) {
   const vis = (x, y, w, h) =>
     x + w > cam.x && x < cam.x + 720 && y + h > cam.y && y < cam.y + 460;
 
-  // подписи эпох: юг и восток; тропы на 4 стороны
-  for (const seg of SEGMENTS) {
-    const b = southBand(seg.n);
-    if (vis(TOWN.x0 + 340, b.y0, 400, 24)) {
-      ctx.fillStyle = 'rgba(232,220,200,0.16)';
-      ctx.fillText(`§${seg.n}`, TOWN.x0 + 348, b.y0 + 26);
-    }
-    const ex = TOWN.x1 + (seg.n - 1) * RING_W + 6;
-    if (vis(ex, TOWN.y0 + 20, 40, 12)) {
-      ctx.fillStyle = 'rgba(232,220,200,0.14)';
-      ctx.fillText(`§${seg.n}`, ex, TOWN.y0 + 30);
-    }
-    const ny = TOWN.y0 - seg.n * RING_W + 6;
-    if (vis(TOWN.x0 + 340, ny, 40, 12)) {
-      ctx.fillStyle = 'rgba(232,220,200,0.14)';
-      ctx.fillText(`§${seg.n}`, TOWN.x0 + 348, ny + 10);
-    }
-    const wxx = TOWN.x0 - seg.n * RING_W + 6;
-    if (vis(wxx, TOWN.y0 + 20, 40, 12)) {
-      ctx.fillStyle = 'rgba(232,220,200,0.14)';
-      ctx.fillText(`§${seg.n}`, wxx, TOWN.y0 + 30);
-    }
-  }
-  // тропы вьются: дорога помнит, что её протаптывали, а не чертили
+  // тропы на четыре стороны (эпохи без подписей: их читают по постройкам)
   ctx.fillStyle = 'rgba(200,184,160,0.3)';
-  const cx = (TOWN.x0 + TOWN.x1) / 2, cy = (TOWN.y0 + TOWN.y1) / 2;
-  const wind = (d, ph) => Math.sin(d * 0.011 + ph) * (26 + d * 0.05)
-    + Math.sin(d * 0.037 + ph * 2.1) * 9;
-  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS * RING_W; y += 10) {
-    const wx = cx + wind(y - TOWN.y1, 0.7);
-    if (vis(wx, y, 4, 5)) ctx.fillRect(wx - 1, y, 3, 5);
-  }
-  for (let y = TOWN.y0 - RINGS * RING_W; y < TOWN.y0 - 4; y += 10) {
-    const wx = cx + wind(TOWN.y0 - y, 2.3);
-    if (vis(wx, y, 4, 5)) ctx.fillRect(wx - 1, y, 3, 5);
-  }
-  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS * RING_W; x += 10) {
-    const wy = cy + wind(x - TOWN.x1, 4.1);
-    if (vis(x, wy, 5, 4)) ctx.fillRect(x, wy - 1, 5, 3);
-  }
-  for (let x = TOWN.x0 - RINGS * RING_W; x < TOWN.x0 - 4; x += 10) {
-    const wy = cy + wind(TOWN.x0 - x, 5.6);
-    if (vis(x, wy, 5, 4)) ctx.fillRect(x, wy - 1, 5, 3);
+  const span = RINGS * RING_W;
+  for (let d = 4; d < span; d += 10) {
+    const s = trailPoint('south', d), n = trailPoint('north', d);
+    if (vis(s.x, s.y, 4, 5)) ctx.fillRect(s.x - 1, s.y, 3, 5);
+    if (vis(n.x, n.y - 5, 4, 5)) ctx.fillRect(n.x - 1, n.y - 5, 3, 5);
+    const e = trailPoint('east', d), w = trailPoint('west', d);
+    if (vis(e.x, e.y, 5, 4)) ctx.fillRect(e.x, e.y - 1, 5, 3);
+    if (vis(w.x - 5, w.y, 5, 4)) ctx.fillRect(w.x - 5, w.y - 1, 5, 3);
   }
 
   // подписи стихий

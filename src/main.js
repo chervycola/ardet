@@ -8,7 +8,7 @@ import { lighting, lightParticles } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
-import { locations, attachContent } from './world/locations.js';
+import { locations, attachContent, archEnsembles } from './world/locations.js';
 import { tryMove, findLocationAt, isInSettlement } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
@@ -44,6 +44,7 @@ import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
 import { drawGround, drawGroundMarks } from './render/ground.js';
+import { prepareArchGround, drawArchGround, drawArchFoot, archProps } from './render/archground.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -71,6 +72,7 @@ const mainCanvas = document.getElementById('game');
 layers.init(mainCanvas);
 input.init(mainCanvas);
 attachContent(looks, dialogues);
+prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
 initUI();
 initMetaFx();
 initTerminal();
@@ -234,19 +236,24 @@ function render() {
   worldCtx.translate(-camX, -camY);
   setCtx(worldCtx);
 
+  drawArchGround(worldCtx, camX, camY, vw, vh);   // дворы, тени, тропинки под постройками
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawFootprints(worldCtx, { x: camX, y: camY });
 
-  // локации (с постройками эпох) и странник — по глубине: за домом
-  // странника не видно, перед домом — видно
+  // локации (с постройками эпох), заборы дворов и странник — по глубине:
+  // за домом странника не видно, перед домом — видно
   const drawList = [];
   for (const loc of locations) {
     if (camera.isVisible(loc.x, loc.y, loc.w, loc.h)) drawList.push({ k: loc.y + loc.h, loc });
+  }
+  for (const p of archProps) {
+    if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });
   }
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.player) { drawPlayer(player); continue; }
+    if (it.prop) { it.prop.draw(worldCtx); continue; }
     const loc = it.loc;
     drawLocation(worldCtx, loc);
     if (loc.npc && npcDrawFn[loc.npc]) {
@@ -360,7 +367,15 @@ function drawLocation(ctx, loc) {
 }
 
 function drawLocationPlain(ctx, loc) {
-  if (loc.archDraw) { loc.archDraw(ctx, loc.archX, loc.archGy, t); return; }
+  if (loc.archDraw) {
+    if (loc.archFlip) {                     // повтор вида — зеркально
+      ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1);
+      loc.archDraw(ctx, loc.archX, loc.archGy, t);
+      ctx.restore();
+    } else loc.archDraw(ctx, loc.archX, loc.archGy, t);
+    drawArchFoot(ctx, loc);
+    return;
+  }
   if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
   const fn = locSprites['draw_' + loc.id];
   if (fn) {
@@ -653,6 +668,7 @@ function updateGame() {
     player.tx = player.x;
     player.ty = player.y;
     player.moving = true;
+    player.walkTo = null;
     if (move.x > 0) player.dir = 1;
     else if (move.x < 0) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
@@ -665,8 +681,13 @@ function updateGame() {
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < 2) {
       player.moving = false;
-      // Check if we arrived at a location
-      const loc = findLocationAt(player.x, player.y, locations);
+      // Check if we arrived at a location: та, к которой шли, — если
+      // дошли до её порога; иначе ближайшая
+      const want = player.walkTo;
+      player.walkTo = null;
+      const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
+        && Math.abs(player.y - (want.y + want.h + 5)) < 4;
+      const loc = atWant ? want : findLocationAt(player.x, player.y, locations);
       if (loc) {
         flags.visited.add(loc.id);
         events.emit(E.LOCATION_VISIT, loc);
@@ -842,11 +863,13 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
       player.tx = px_;
       player.ty = py_;
       player.moving = true;
+      player.walkTo = loc;
     }
   } else {
     player.tx = pos.x;
     player.ty = pos.y;
     player.moving = true;
+    player.walkTo = null;
   }
 });
 

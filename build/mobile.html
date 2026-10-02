@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='a85ea36 · 2026-10-02';console.log('[оттиск]', 'a85ea36 · 2026-10-02');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='d7e19c9 · 2026-10-02';console.log('[оттиск]', 'd7e19c9 · 2026-10-02');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2080,7 +2080,7 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
 });
 System.register("world/disc", ["content/ulitsa_db"], function (exports_11, context_11) {
     "use strict";
-    var ulitsa_db_js_1, RING_W, RINGS, FIRE_W, EDGE_BAND, OFF, SHIFT_X, SHIFT_Y, TOWN, CORE, WORLD_W, WORLD_H;
+    var ulitsa_db_js_1, RING_W, RINGS, FIRE_W, EDGE_BAND, OFF, SHIFT_X, SHIFT_Y, TOWN, CORE, TRAIL_PH, WORLD_W, WORLD_H;
     var __moduleName = context_11 && context_11.id;
     function inCore(x, y) {
         return Math.hypot(x - CORE.x, y - CORE.y) <= CORE.r;
@@ -2136,6 +2136,22 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_11, conte
         return ulitsa_db_js_1.SEGMENTS[n - 1];
     }
     exports_11("epochAt", epochAt);
+    function trailWind(d, ph) {
+        return Math.sin(d * 0.011 + ph) * (26 + d * 0.05) + Math.sin(d * 0.037 + ph * 2.1) * 9;
+    }
+    exports_11("trailWind", trailWind);
+    function trailPoint(side, d) {
+        const cx = (TOWN.x0 + TOWN.x1) / 2, cy = (TOWN.y0 + TOWN.y1) / 2;
+        const w = trailWind(d, TRAIL_PH[side] ?? 0);
+        if (side === 'south')
+            return { x: cx + w, y: TOWN.y1 + d };
+        if (side === 'north')
+            return { x: cx + w, y: TOWN.y0 - d };
+        if (side === 'east')
+            return { x: TOWN.x1 + d, y: cy + w };
+        return { x: TOWN.x0 - d, y: cy + w };
+    }
+    exports_11("trailPoint", trailPoint);
     // раскладка южной стороны: полоса эпохи n по нижней кромке
     function southBand(n) {
         const d0 = (n - 1) * RING_W, d1 = n * RING_W;
@@ -2217,6 +2233,9 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_11, conte
             // Остальной городок временем уже тронут: ранние и средние века
             // живут прямо в его локациях (см. ERA_HINT в world_frame).
             exports_11("CORE", CORE = { x: OFF + 800, y: OFF + 740, r: 430 });
+            // тропы из городка на четыре стороны: вьются — дорога помнит, что её
+            // протаптывали, а не чертили. d — расстояние от кромки городка.
+            TRAIL_PH = { south: 0.7, north: 2.3, east: 4.1, west: 5.6 };
             // полный мир: кольца и стихии со всех четырёх сторон
             exports_11("WORLD_W", WORLD_W = TOWN.x1 + OFF); // 7600
             exports_11("WORLD_H", WORLD_H = TOWN.y1 + OFF); // 6280
@@ -10376,61 +10395,326 @@ System.register("content/arch_looks", [], function (exports_26, context_26) {
 });
 System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db", "world/disc", "content/arch_looks"], function (exports_27, context_27) {
     "use strict";
-    var index_js_1, ulitsa_db_js_4, disc_js_3, arch_looks_js_1, PER_SIDE, SIGN_CLEAR, GAP;
+    var index_js_1, ulitsa_db_js_4, disc_js_3, arch_looks_js_1, BAND_MARGIN, GAP, NEAR, SAME_FAR;
     var __moduleName = context_27 && context_27.id;
     function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
-    // точка постройки: along 0..1 вдоль стороны, depth — в полосе кольца
-    function sidePos(side, n, along, depth) {
-        const b0 = (n - 1) * disc_js_3.RING_W;
-        if (side === 'south')
-            return { x: disc_js_3.TOWN.x0 + 300 + along * 2400, gy: disc_js_3.TOWN.y1 + b0 + depth };
-        if (side === 'north')
-            return { x: disc_js_3.TOWN.x0 + 300 + along * 2400, gy: disc_js_3.TOWN.y0 - b0 - depth };
-        if (side === 'west')
-            return { x: disc_js_3.TOWN.x0 - b0 - depth, gy: disc_js_3.TOWN.y0 + 140 + along * 1360 };
-        if (side === 'east')
-            return { x: disc_js_3.TOWN.x1 + b0 + depth, gy: disc_js_3.TOWN.y0 + 140 + along * 1360 };
-        // равнина — северо-восточный угол: дуга вокруг угла городка
-        const r = b0 + depth, a = (0.22 + along * 0.56) * Math.PI / 2;
-        return { x: disc_js_3.TOWN.x1 + r * Math.cos(a), gy: disc_js_3.TOWN.y0 - r * Math.sin(a) };
+    // ── проверки места ──
+    function inBand(n, x, y) {
+        const d = disc_js_3.warpedDist(x, y);
+        return d > (n - 1) * disc_js_3.RING_W + BAND_MARGIN && d < n * disc_js_3.RING_W - BAND_MARGIN;
     }
-    function overlaps(a, b) {
+    // земля под всем основанием — своего кольца (рельеф границ учтён)
+    function baseOK(n, b) {
+        return inBand(n, b.x - b.w / 2 + 3, b.gy) && inBand(n, b.x, b.gy) && inBand(n, b.x + b.w / 2 - 3, b.gy);
+    }
+    // табличка — вещь перед глазами: постройка её не заслоняет и не стоит
+    // у неё на пороге (иначе клик и подход путаются)
+    function signClash(b, s) {
+        const sx = s.x + s.w / 2, sgy = s.y + s.h;
+        const dx = Math.abs(sx - b.x);
+        if (dx >= b.w / 2 + 20)
+            return false; // в стороне
+        if (sgy <= b.gy - b.h - 2)
+            return false; // позади, над крышей
+        if (sgy >= b.gy + 24 && (dx >= 22 || sgy >= b.gy + 44))
+            return false; // впереди, не на пороге
+        return true;
+    }
+    function boxClash(a, b) {
         return a.x - a.w / 2 - GAP < b.x + b.w / 2 && b.x - b.w / 2 - GAP < a.x + a.w / 2
-            && a.gy - a.h - GAP < b.gy && b.gy - b.h - GAP < a.gy;
+            && a.gy - a.h - 4 < b.gy && b.gy - b.h - 4 < a.gy;
     }
-    // signs — табличные локации мира (для отступа): [{x, y, w, h}]
-    function buildArchitecture(signs = []) {
+    // порог (подход к двери) — не под чужой стеной
+    function porchClash(a, b) {
+        const px0 = a.x - 12, px1 = a.x + 12, py0 = a.gy, py1 = a.gy + 28;
+        return px0 < b.x + b.w / 2 && b.x - b.w / 2 < px1 && py0 < b.gy && b.gy - b.h < py1;
+    }
+    // тропа не уходит за стену и не упирается в основание
+    function trailClash(side, b) {
+        if (side === 'plain')
+            return false;
+        if (side === 'south' || side === 'north') {
+            for (let y = b.gy - b.h; y <= b.gy + 8; y += 4) {
+                const d = side === 'south' ? y - disc_js_3.TOWN.y1 : disc_js_3.TOWN.y0 - y;
+                if (d < 0)
+                    continue;
+                if (Math.abs(disc_js_3.trailPoint(side, d).x - b.x) < b.w / 2 + 8)
+                    return true;
+            }
+            return false;
+        }
+        for (let x = b.x - b.w / 2 - 6; x <= b.x + b.w / 2 + 6; x += 4) {
+            const d = side === 'east' ? x - disc_js_3.TOWN.x1 : disc_js_3.TOWN.x0 - x;
+            if (d < 0)
+                continue;
+            const ty = disc_js_3.trailPoint(side, d).y;
+            if (ty > b.gy - b.h - 6 && ty < b.gy + 10)
+                return true;
+        }
+        return false;
+    }
+    // ── раскладка ──
+    // поворот видов по кольцу: у соседних колец ансамбли начинаются с разного
+    function kindsFor(arch, side, n) {
+        const ks = arch[side] || [];
+        if (!ks.length)
+            return ks;
+        const r = n % ks.length;
+        return ks.slice(r).concat(ks.slice(0, r));
+    }
+    // стоит ли постройка b здесь: кольцо, таблички, соседи, тропа
+    function fits(n, side, b, signs, placed) {
+        if (!baseOK(n, b))
+            return false;
+        // городок вне времени не застраивают: силуэт — снаружи
+        if (b.x + b.w / 2 > disc_js_3.TOWN.x0 - 4 && b.x - b.w / 2 < disc_js_3.TOWN.x1 + 4
+            && b.gy > disc_js_3.TOWN.y0 - 4 && b.gy - b.h < disc_js_3.TOWN.y1 + 4)
+            return false;
+        for (const s of signs)
+            if (signClash(b, s))
+                return false;
+        for (const o of placed) {
+            if (Math.abs(o.x - b.x) > NEAR || Math.abs(o.gy - b.gy) > NEAR)
+                continue;
+            if (boxClash(b, o) || porchClash(b, o) || porchClash(o, b))
+                return false;
+        }
+        return !trailClash(side, b);
+    }
+    function nearSigns(signs, x, y) {
+        return signs.filter(s => Math.abs(s.x - x) < NEAR && Math.abs(s.y - y) < NEAR);
+    }
+    // ворота юга/севера: тропа вертикальна — постройки слева и справа от неё
+    function gateNS(n, side, kinds, signs, placed) {
+        const A = kinds[0], B = kinds[1] || kinds[0];
+        for (const D of [100, 88, 112, 76, 124, 64, 136, 52, 148]) {
+            for (const gap of [18, 28, 40, 56, 76]) {
+                const d = (n - 1) * disc_js_3.RING_W + D;
+                const p = disc_js_3.trailPoint(side, d);
+                const st = Math.round((h01(n * 7 + D) - 0.5) * 18); // ворота не по линейке
+                const a = { x: Math.round(p.x - gap - A.w / 2), gy: Math.round(p.y + st), w: A.w, h: A.h, kind: A };
+                const b = { x: Math.round(p.x + gap + B.w / 2), gy: Math.round(p.y - st), w: B.w, h: B.h, kind: B };
+                const near = nearSigns(signs, p.x, p.y);
+                const okA = fits(n, side, a, near, placed);
+                const okB = okA && fits(n, side, b, near, [...placed, a]);
+                if (okA && okB)
+                    return [a, b];
+            }
+        }
+        return [];
+    }
+    // ворота запада/востока: тропа горизонтальна — бок о бок по северной
+    // обочине, а если не помещаются — улицей по обе стороны тропы
+    function gateWE(n, side, kinds, signs, placed) {
+        const A = kinds[0], B = kinds[1] || kinds[0];
+        const xAt = d => side === 'east' ? disc_js_3.TOWN.x1 + d : disc_js_3.TOWN.x0 - d;
+        const dOf = x => side === 'east' ? x - disc_js_3.TOWN.x1 : disc_js_3.TOWN.x0 - x;
+        // тропа на ширине постройки: самая высокая и самая низкая точки
+        const span = (x, w) => {
+            let lo = Infinity, hi = -Infinity;
+            for (let xx = x - w / 2 - 6; xx <= x + w / 2 + 6; xx += 4) {
+                const ty = disc_js_3.trailPoint(side, Math.max(0, dOf(xx))).y;
+                lo = Math.min(lo, ty);
+                hi = Math.max(hi, ty);
+            }
+            return [lo, hi];
+        };
+        const tries = [];
+        for (const [Da, Db] of [[58, 136], [50, 124], [68, 146], [44, 112]])
+            tries.push({ Da, Db, row: true });
+        for (const [Da, Db] of [[96, 104], [84, 116], [108, 92], [72, 128], [120, 80]])
+            tries.push({ Da, Db, row: false });
+        for (const tr of tries) {
+            for (const lift of [0, 10, 22]) {
+                const xa = Math.round(xAt((n - 1) * disc_js_3.RING_W + tr.Da)), xb = Math.round(xAt((n - 1) * disc_js_3.RING_W + tr.Db));
+                const a = { x: xa, gy: Math.round(span(xa, A.w)[0] - 12 - lift), w: A.w, h: A.h, kind: A };
+                let b;
+                if (tr.row) {
+                    if (Math.abs(xa - xb) < (A.w + B.w) / 2 + GAP)
+                        continue;
+                    b = { x: xb, gy: Math.round(span(xb, B.w)[0] - 12 - lift - h01(n * 3 + tr.Da) * 8), w: B.w, h: B.h, kind: B };
+                }
+                else {
+                    b = { x: xb, gy: Math.round(span(xb, B.w)[1] + 12 + lift + B.h), w: B.w, h: B.h, kind: B };
+                }
+                const near = nearSigns(signs, (xa + xb) / 2, a.gy);
+                if (fits(n, side, a, near, placed) && fits(n, side, b, near, [...placed, a]))
+                    return [a, b];
+            }
+        }
+        return [];
+    }
+    function kindOrder(kinds, used, anchor, placed) {
+        const fresh = kinds.filter(k => !used.includes(k));
+        const pool = fresh.length ? fresh : kinds.slice();
+        const dist = k => {
+            let d = Infinity;
+            for (const o of placed)
+                if (o.kind === k)
+                    d = Math.min(d, Math.hypot(o.x - anchor.x, o.gy - anchor.gy));
+            return d;
+        };
+        return pool.map((k, i) => ({ k, d: dist(k), i })).sort((a, b) => (b.d - a.d) || (a.i - b.i)).map(o => o.k);
+    }
+    function sameNear(b, placed) {
+        return placed.some(o => o.kind === b.kind && Math.hypot(o.x - b.x, o.gy - b.gy) < SAME_FAR);
+    }
+    function yard(n, side, kinds, count, anchor, signs, placed, twins = false) {
         const out = [];
-        const signBoxes = signs.map(s => ({ x: s.x + s.w / 2, gy: s.y + s.h, w: s.w + SIGN_CLEAR * 2, h: s.h + SIGN_CLEAR }));
+        const near = nearSigns(signs, anchor.x, anchor.gy);
+        for (let i = 0; i < count; i++) {
+            const all = [...placed, ...out];
+            let done = false;
+            const used = out.map(o => o.kind);
+            // двойняшки: лишний дом — копия первого (одинаковые дома в одинаковых дворах)
+            const order = twins && kinds.every(k => used.includes(k)) ? kinds : kindOrder(kinds, used, anchor, all);
+            for (const K of order) {
+                const cands = [];
+                const prev = out[out.length - 1];
+                if (prev) {
+                    // рядом с предыдущей — слева или справа, чуть вглубь или вперёд
+                    for (const dir of [1, -1])
+                        for (const gap of [GAP + 2, GAP + 12, GAP + 26])
+                            for (const dy of [0, -10, 10, -22, 18]) {
+                                const dx = dir * (prev.w / 2 + gap + K.w / 2);
+                                // на дуге равнины соседи идут вдоль кольца — наискось
+                                const tilt = anchor.slope ? dx * anchor.slope : 0;
+                                cands.push({ x: prev.x + dx, gy: prev.gy + tilt + dy, s: gap + Math.abs(dy) + (dir < 0 ? 4 : 0) });
+                            }
+                }
+                // вокруг якоря: позади сцены — предпочтительно
+                for (let dy = -96; dy <= 36; dy += 6) {
+                    for (let dx = -168; dx <= 168; dx += 12) {
+                        cands.push({ x: anchor.x + dx, gy: anchor.gy + dy, s: 40 + Math.abs(dx) * 0.8 + Math.abs(dy - anchor.pref) * 1.4 });
+                    }
+                }
+                cands.sort((p, q) => p.s - q.s);
+                for (const c of cands) {
+                    const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K };
+                    if (!twins && sameNear(b, all))
+                        continue;
+                    if (fits(n, side, b, near, all)) {
+                        out.push(b);
+                        done = true;
+                        break;
+                    }
+                }
+                if (done)
+                    break;
+            }
+        }
+        return out;
+    }
+    // сцены табличек кольца на стороне: группы по ходу стороны
+    function signScenes(signs, n, side) {
+        const mine = signs.filter(s => s.streetSeg === n && s.streetSide === side);
+        if (!mine.length)
+            return [];
+        const key = s => (side === 'south' || side === 'north') ? s.x + s.w / 2 : s.y + s.h;
+        mine.sort((a, b) => key(a) - key(b));
+        const groups = [[mine[0]]];
+        for (let i = 1; i < mine.length; i++) {
+            if (key(mine[i]) - key(mine[i - 1]) > 140)
+                groups.push([]);
+            groups[groups.length - 1].push(mine[i]);
+        }
+        return groups.map(g => {
+            const xs = g.map(s => s.x + s.w / 2), gys = g.map(s => s.y + s.h);
+            return { signs: g, x: (Math.min(...xs) + Math.max(...xs)) / 2, top: Math.min(...gys), bottom: Math.max(...gys) };
+        });
+    }
+    // signs — табличные локации мира: [{x, y, w, h, streetSeg, streetSide}]
+    function buildEnsembles(signs = []) {
+        const buildings = [], ensembles = [];
+        const add = (n, side, kind, members, extra = {}) => {
+            if (!members.length)
+                return;
+            const seg = ulitsa_db_js_4.SEGMENTS[n - 1];
+            const id = ensembles.length;
+            const idx = [];
+            for (const m of members) {
+                idx.push(buildings.length);
+                buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: m.kind.draw, name: m.kind.name,
+                    ring: n, side, ens: id, look: arch_looks_js_1.ARCH_LOOKS[`${seg.id}:${side}:${m.kind.name}`] || null });
+            }
+            ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });
+        };
         for (let n = 1; n <= disc_js_3.RINGS; n++) {
             const seg = ulitsa_db_js_4.SEGMENTS[n - 1];
             const arch = index_js_1.ARCH_BY_RING[seg.id];
             if (!arch)
                 continue;
-            for (const side of ['south', 'north', 'west', 'east', 'plain']) {
-                const kinds = arch[side] || [];
+            for (const side of ['south', 'north', 'west', 'east']) {
+                const kinds = kindsFor(arch, side, n);
                 if (!kinds.length)
                     continue;
-                const count = side === 'plain' ? 2 + (h01(n * 5) > 0.5 ? 1 : 0) : PER_SIDE[side];
-                for (let i = 0; i < count; i++) {
-                    const kind = kinds[(i + n) % kinds.length];
-                    // несколько попыток найти место, не задевающее таблички и соседей
-                    for (let k = 0; k < 6; k++) {
-                        const seed = n * 1000 + i * 37 + k * 11 + side.length * 3;
-                        const along = (i + 0.5) / count + (h01(seed) - 0.5) * (0.8 / count);
-                        const depth = 70 + h01(seed + 5) * 70;
-                        const p = sidePos(side, n, Math.max(0.03, Math.min(0.97, along)), depth);
-                        const b = { x: p.x, gy: p.gy, w: kind.w, h: kind.h };
-                        if (signBoxes.some(s => overlaps(b, s)) || out.some(o => overlaps(b, o)))
-                            continue;
-                        out.push({ ...b, draw: kind.draw, name: kind.name, ring: n, side,
-                            look: arch_looks_js_1.ARCH_LOOKS[`${seg.id}:${side}:${kind.name}`] || null });
-                        break;
+                // ворота у тропы
+                const mid = (n - 1) * disc_js_3.RING_W + 100;
+                let gate = (side === 'south' || side === 'north' ? gateNS : gateWE)(n, side, kinds, signs, buildings);
+                if (!gate.length) {
+                    // у тропы сцена табличек — ворота встают за ней, как двор у дороги
+                    const p = disc_js_3.trailPoint(side, mid);
+                    gate = yard(n, side, kinds, 2, { x: p.x, gy: p.y, pref: -36 }, signs, buildings);
+                }
+                add(n, side, 'gate', gate, { trail: disc_js_3.trailPoint(side, mid) });
+                // дворы за сценами табличек: дальние от тропы — первыми
+                const tp = disc_js_3.trailPoint(side, mid);
+                const along = p => (side === 'south' || side === 'north') ? p.x : p.gy;
+                const scenes = signScenes(signs, n, side)
+                    .sort((a, b) => Math.abs(along({ x: b.x, gy: b.top }) - along({ x: tp.x, gy: tp.y }))
+                    - Math.abs(along({ x: a.x, gy: a.top }) - along({ x: tp.x, gy: tp.y })));
+                const big = side === 'south' || side === 'north';
+                const sizes = big ? [Math.min(3, Math.max(2, kinds.length)), 1] : [kinds.length > 2 ? 2 : 1];
+                const yk = kinds.slice(2).concat(kinds.slice(0, 2)); // во двор — третий вид, если есть
+                for (let i = 0; i < sizes.length; i++) {
+                    let anchor;
+                    if (scenes[i]) {
+                        anchor = { x: scenes[i].x, gy: scenes[i].top, pref: -40 };
                     }
+                    else {
+                        // сцены нет — двор на пустом перегоне, по другую сторону от ворот
+                        const a = 0.22 + 0.56 * (h01(n * 11 + i * 5 + side.length) > 0.5 ? 1 : 0);
+                        const D = (n - 1) * disc_js_3.RING_W + 100;
+                        if (side === 'south')
+                            anchor = { x: disc_js_3.TOWN.x0 + a * (disc_js_3.TOWN.x1 - disc_js_3.TOWN.x0), gy: disc_js_3.TOWN.y1 + D, pref: 0 };
+                        else if (side === 'north')
+                            anchor = { x: disc_js_3.TOWN.x0 + a * (disc_js_3.TOWN.x1 - disc_js_3.TOWN.x0), gy: disc_js_3.TOWN.y0 - D, pref: 0 };
+                        else if (side === 'east')
+                            anchor = { x: disc_js_3.TOWN.x1 + D, gy: disc_js_3.TOWN.y0 + a * (disc_js_3.TOWN.y1 - disc_js_3.TOWN.y0), pref: 0 };
+                        else
+                            anchor = { x: disc_js_3.TOWN.x0 - D, gy: disc_js_3.TOWN.y0 + a * (disc_js_3.TOWN.y1 - disc_js_3.TOWN.y0), pref: 0 };
+                    }
+                    const rot = yk.slice(i).concat(yk.slice(0, i));
+                    const members = yard(n, side, rot, sizes[i], anchor, signs, buildings);
+                    add(n, side, 'yard', members, { signs: scenes[i] ? scenes[i].signs.map(s => s.id) : [], trail: tp });
                 }
             }
+            // равнина — посёлок на дуге северо-восточного угла
+            const kinds = kindsFor(arch, 'plain', n);
+            if (kinds.length) {
+                // в неоне панельки двойняшки — микрорайон одинаковых домов
+                const count = kinds.length + (seg.id === 'neon' ? 1 : 0);
+                const r = (n - 1) * disc_js_3.RING_W + 100, ang = (0.42 + h01(n * 9) * 0.16) * Math.PI / 2;
+                const anchor = { x: disc_js_3.TOWN.x1 + r * Math.cos(ang), gy: disc_js_3.TOWN.y0 - r * Math.sin(ang), pref: 0, slope: Math.cos(ang) / Math.sin(ang) };
+                const members = yard(n, 'plain', kinds, count, anchor, signs, buildings, seg.id === 'neon');
+                add(n, 'plain', 'plain', members, { trail: null });
+            }
         }
-        return out;
+        // повтор вида на той же стороне — зеркально: «такой же», а не копия.
+        // Двойняшки одного двора — нет: одинаковые дома одинаковы до последнего окна
+        const seen = new Map();
+        for (const b of buildings) {
+            const k = `${b.ring}:${b.side}:${b.name}`;
+            const prev = seen.get(k) || [];
+            b.flip = prev.length % 2 === 1 && !prev.some(o => o.ens === b.ens);
+            seen.set(k, [...prev, b]);
+        }
+        return { buildings, ensembles };
+    }
+    exports_27("buildEnsembles", buildEnsembles);
+    // совместимость: только постройки
+    function buildArchitecture(signs = []) {
+        return buildEnsembles(signs).buildings;
     }
     exports_27("buildArchitecture", buildArchitecture);
     // фасад табличек формы «дом» — по кольцу и стороне
@@ -10451,7 +10735,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                 x: Math.round(d.x - d.w / 2), y: Math.round(d.gy - d.h), w: d.w, h: d.h,
                 look: d.look || d.name,
                 archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
-                archRing: d.ring, archSide: d.side,
+                archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
                 solidBox: { x: Math.round(d.x - fw / 2), y: Math.round(d.gy - fh), w: fw, h: fh },
             };
         });
@@ -10473,9 +10757,12 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             }
         ],
         execute: function () {
-            PER_SIDE = { south: 5, north: 5, west: 3, east: 3 };
-            SIGN_CLEAR = 46; // поодаль от табличек — их должно быть видно
-            GAP = 14; // между постройками
+            BAND_MARGIN = 24; // основание — не ближе к рваной границе колец
+            GAP = 10; // между постройками
+            NEAR = 360; // радиус, в котором соседи вообще интересны
+            // двор: постройки встают позади сцены табличек (или рядом), бок о бок
+            // вид для двора: не повторять соседа — дальше всего от такой же постройки
+            SAME_FAR = 420; // одинаковые постройки — не ближе (в один кадр не попадают)
         }
     };
 });
@@ -10487,7 +10774,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
 // Location draw functions live in src/sprites/locations/
 System.register("world/locations", ["world/disc", "world/street", "world/architecture"], function (exports_28, context_28) {
     "use strict";
-    var locations, disc_js_4, street_js_2, architecture_js_1, locationById;
+    var locations, disc_js_4, street_js_2, architecture_js_1, ARCH, archEnsembles, locationById;
     var __moduleName = context_28 && context_28.id;
     // Attach content (look texts + dialogues) — called from main after imports
     function attachContent(looks, dialogues) {
@@ -10641,7 +10928,9 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
             locations.push(...street_js_2.streetLocations); // уже в мировых координатах диска
             locations.push(...street_js_2.branchLocations);
             locations.push(...street_js_2.wasteLocations); // пустошь за огнём
-            locations.push(...architecture_js_1.archLocations(architecture_js_1.buildArchitecture(locations.filter(l => l.streetForm))));
+            ARCH = architecture_js_1.buildEnsembles(locations.filter(l => l.streetForm));
+            locations.push(...architecture_js_1.archLocations(ARCH.buildings));
+            exports_28("archEnsembles", archEnsembles = ARCH.ensembles);
             // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
             // They are full burning landmarks, not just plaques: lit, animated, and
             // addressable like the campfire. Coordinates match their §9 sign x ranges.
@@ -10802,6 +11091,17 @@ System.register("world/physics", ["world/terrain", "render/draw", "world/disc"],
     exports_29("tryMove", tryMove);
     // Find location under a world point (for clicks)
     function findLocationAt(gx, gy, locations, margin = 24) {
+        // точное попадание — в самую маленькую вещь: табличка перед домом
+        // важнее дома за ней
+        let hit = null, hitArea = Infinity;
+        for (const l of locations) {
+            if (gx >= l.x && gx <= l.x + l.w && gy >= l.y && gy <= l.y + l.h && l.w * l.h < hitArea) {
+                hitArea = l.w * l.h;
+                hit = l;
+            }
+        }
+        if (hit)
+            return hit;
         let best = null;
         let bestDist = Infinity;
         for (const l of locations) {
@@ -29799,53 +30099,20 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
     function drawGroundMarks(ctx, cam) {
         ctx.font = '6px "Press Start 2P","VT323",monospace';
         const vis = (x, y, w, h) => x + w > cam.x && x < cam.x + 720 && y + h > cam.y && y < cam.y + 460;
-        // подписи эпох: юг и восток; тропы на 4 стороны
-        for (const seg of ulitsa_db_js_7.SEGMENTS) {
-            const b = disc_js_7.southBand(seg.n);
-            if (vis(disc_js_7.TOWN.x0 + 340, b.y0, 400, 24)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.16)';
-                ctx.fillText(`§${seg.n}`, disc_js_7.TOWN.x0 + 348, b.y0 + 26);
-            }
-            const ex = disc_js_7.TOWN.x1 + (seg.n - 1) * disc_js_7.RING_W + 6;
-            if (vis(ex, disc_js_7.TOWN.y0 + 20, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.14)';
-                ctx.fillText(`§${seg.n}`, ex, disc_js_7.TOWN.y0 + 30);
-            }
-            const ny = disc_js_7.TOWN.y0 - seg.n * disc_js_7.RING_W + 6;
-            if (vis(disc_js_7.TOWN.x0 + 340, ny, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.14)';
-                ctx.fillText(`§${seg.n}`, disc_js_7.TOWN.x0 + 348, ny + 10);
-            }
-            const wxx = disc_js_7.TOWN.x0 - seg.n * disc_js_7.RING_W + 6;
-            if (vis(wxx, disc_js_7.TOWN.y0 + 20, 40, 12)) {
-                ctx.fillStyle = 'rgba(232,220,200,0.14)';
-                ctx.fillText(`§${seg.n}`, wxx, disc_js_7.TOWN.y0 + 30);
-            }
-        }
-        // тропы вьются: дорога помнит, что её протаптывали, а не чертили
+        // тропы на четыре стороны (эпохи без подписей: их читают по постройкам)
         ctx.fillStyle = 'rgba(200,184,160,0.3)';
-        const cx = (disc_js_7.TOWN.x0 + disc_js_7.TOWN.x1) / 2, cy = (disc_js_7.TOWN.y0 + disc_js_7.TOWN.y1) / 2;
-        const wind = (d, ph) => Math.sin(d * 0.011 + ph) * (26 + d * 0.05)
-            + Math.sin(d * 0.037 + ph * 2.1) * 9;
-        for (let y = disc_js_7.TOWN.y1 + 4; y < disc_js_7.TOWN.y1 + disc_js_7.RINGS * disc_js_7.RING_W; y += 10) {
-            const wx = cx + wind(y - disc_js_7.TOWN.y1, 0.7);
-            if (vis(wx, y, 4, 5))
-                ctx.fillRect(wx - 1, y, 3, 5);
-        }
-        for (let y = disc_js_7.TOWN.y0 - disc_js_7.RINGS * disc_js_7.RING_W; y < disc_js_7.TOWN.y0 - 4; y += 10) {
-            const wx = cx + wind(disc_js_7.TOWN.y0 - y, 2.3);
-            if (vis(wx, y, 4, 5))
-                ctx.fillRect(wx - 1, y, 3, 5);
-        }
-        for (let x = disc_js_7.TOWN.x1 + 4; x < disc_js_7.TOWN.x1 + disc_js_7.RINGS * disc_js_7.RING_W; x += 10) {
-            const wy = cy + wind(x - disc_js_7.TOWN.x1, 4.1);
-            if (vis(x, wy, 5, 4))
-                ctx.fillRect(x, wy - 1, 5, 3);
-        }
-        for (let x = disc_js_7.TOWN.x0 - disc_js_7.RINGS * disc_js_7.RING_W; x < disc_js_7.TOWN.x0 - 4; x += 10) {
-            const wy = cy + wind(disc_js_7.TOWN.x0 - x, 5.6);
-            if (vis(x, wy, 5, 4))
-                ctx.fillRect(x, wy - 1, 5, 3);
+        const span = disc_js_7.RINGS * disc_js_7.RING_W;
+        for (let d = 4; d < span; d += 10) {
+            const s = disc_js_7.trailPoint('south', d), n = disc_js_7.trailPoint('north', d);
+            if (vis(s.x, s.y, 4, 5))
+                ctx.fillRect(s.x - 1, s.y, 3, 5);
+            if (vis(n.x, n.y - 5, 4, 5))
+                ctx.fillRect(n.x - 1, n.y - 5, 3, 5);
+            const e = disc_js_7.trailPoint('east', d), w = disc_js_7.trailPoint('west', d);
+            if (vis(e.x, e.y, 5, 4))
+                ctx.fillRect(e.x, e.y - 1, 5, 3);
+            if (vis(w.x - 5, w.y, 5, 4))
+                ctx.fillRect(w.x - 5, w.y - 1, 5, 3);
         }
         // подписи стихий
         ctx.fillStyle = 'rgba(122,100,64,0.8)';
@@ -30176,14 +30443,830 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         }
     };
 });
-System.register("world/edges", ["core/time", "render/context", "render/scaler", "world/disc"], function (exports_68, context_68) {
+System.register("render/archground", ["content/ulitsa_db", "world/disc", "render/draw"], function (exports_68, context_68) {
     "use strict";
-    var time_js_18, context_js_11, scaler_js_11, disc_js_9, OUTER, EDGE, cur;
+    var ulitsa_db_js_8, disc_js_9, draw_js_13, NIGHT, BONE, ASH, MIST, SEPIA, SAND, BAYER, bayer, S, STYLE, WET, BOG, ICE, DUNE, grounds, archProps, JUNK, MAX_BAKED, baked, pieceCache;
     var __moduleName = context_68 && context_68.id;
+    function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
+    function css(c, a = 1) {
+        const r = c[0] | 0, g = c[1] | 0, b = c[2] | 0;
+        return a >= 1 ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},${a})`;
+    }
+    // ── поверхности двора: (x, y, g) → цвет или null ──
+    function surface(kind, x, y, g) {
+        const h = draw_js_13.hash(x, y, 7.1);
+        switch (kind) {
+            case 'earth':
+                if (h > 0.9)
+                    return mix(g, NIGHT, 0.28);
+                if (h > 0.84)
+                    return mix(g, BONE, 0.16);
+                return mix(g, BONE, 0.07);
+            case 'steppe': return null;
+            case 'paving': {
+                const row = Math.floor(y / 5), col = Math.floor((x + (row & 1) * 4) / 9);
+                const sh = draw_js_13.hash(col, row, 3.3);
+                if (sh < 0.1)
+                    return null; // плиту вынули
+                if (y % 5 === 0 || (x + (row & 1) * 4) % 9 === 0)
+                    return mix(g, NIGHT, 0.26);
+                if (sh > 0.86 && h > 0.7)
+                    return mix(g, NIGHT, 0.2); // трещина
+                return mix(g, BONE, 0.05 + sh * 0.06);
+            }
+            case 'cobble': {
+                const row = y >> 1, ox = (row & 1) * 1;
+                if ((y & 1) === 1 || (x + ox) % 3 === 2)
+                    return mix(g, NIGHT, 0.24);
+                return mix(g, ASH, 0.08 + draw_js_13.hash(((x + ox) / 3) | 0, row, 5.5) * 0.08);
+            }
+            case 'gravel':
+                if (y % 3 === 0)
+                    return mix(g, BONE, 0.2);
+                return h > 0.8 ? mix(g, NIGHT, 0.2) : mix(g, BONE, 0.08);
+            case 'sand':
+                if (Math.sin(x * 0.32 + y * 1.4 + Math.sin(x * 0.07) * 3) > 0.82)
+                    return mix(g, SAND, 0.34);
+                return mix(g, SAND, 0.16);
+            case 'snow':
+                return h > 0.93 ? mix(g, BONE, 0.38) : mix(g, BONE, 0.55);
+            case 'boards': {
+                const row = Math.floor(y / 3);
+                if (y % 3 === 2)
+                    return mix(NIGHT, g, 0.4);
+                const off = (draw_js_13.hash(row, 1, 9.9) * 20) | 0;
+                if ((x + off) % 17 === 0)
+                    return mix(NIGHT, g, 0.5); // стык досок
+                return draw_js_13.hash(((x + off) / 17) | 0, row, 4.4) > 0.5 ? [58, 40, 24] : [42, 38, 32];
+            }
+            case 'asphalt':
+                if (h > 0.97)
+                    return mix(g, ASH, 0.12); // щебёнка
+                return mix(g, NIGHT, 0.3);
+            case 'concrete': {
+                if (y % 7 === 0 || x % 14 === 0)
+                    return mix(g, NIGHT, 0.28);
+                return mix(g, ASH, 0.09 + draw_js_13.hash((x / 14) | 0, (y / 7) | 0, 2.2) * 0.06);
+            }
+            case 'tile': {
+                // плитка — новенькая; посреди — перекладывают: песок под снятой
+                const bx = Math.floor(x / 24), by = Math.floor(y / 12);
+                if (draw_js_13.hash(bx, by, 8.8) > 0.9)
+                    return mix(g, SAND, 0.26);
+                if (y % 3 === 0 || x % 4 === 0)
+                    return mix(g, NIGHT, 0.2);
+                return mix(g, ASH, 0.2);
+            }
+            case 'rubble':
+                if (h > 0.9)
+                    return [58, 36, 24];
+                if (h > 0.7)
+                    return mix(g, ASH, 0.24);
+                return mix(g, NIGHT, 0.12);
+            case 'water':
+                if (h > 0.992)
+                    return mix(NIGHT, BONE, 0.65); // лунный блик
+                if (y % 3 === 0 && draw_js_13.hash((x / 4) | 0, y, 1.7) > 0.62)
+                    return mix(NIGHT, ASH, 0.32);
+                return mix(NIGHT, g, 0.22);
+            case 'shore':
+                return h > 0.6 ? mix(g, BONE, 0.14) : mix(g, NIGHT, 0.12);
+            case 'bog':
+                if (h > 0.88)
+                    return mix(MIST, g, 0.3); // кочка
+                return mix(NIGHT, MIST, 0.45);
+            default: return mix(g, BONE, 0.07);
+        }
+    }
+    // ── геометрия ансамбля ──
+    function rectDist(r, x, y) {
+        const dx = Math.max(r.x0 - x, 0, x - r.x1), dy = Math.max(r.y0 - y, 0, y - r.y1);
+        return Math.hypot(dx, dy);
+    }
+    // sign ids → локации; trail — точка тропы рядом с ансамблем
+    function prepareArchGround(ensembles, locations) {
+        grounds.length = 0;
+        archProps.length = 0;
+        const byId = new Map(locations.map(l => [l.id, l]));
+        const arch = locations.filter(l => l.archDraw);
+        const allBoxes = arch.map(l => ({ x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }));
+        const signs = locations.filter(l => l.streetForm);
+        for (const e of ensembles) {
+            const st = STYLE[e.ringId]?.[e.side];
+            if (!st)
+                continue;
+            const g = hex(ulitsa_db_js_8.SEGMENTS[e.ring - 1].palette.ground);
+            const members = arch.filter(l => l.archEns === e.id);
+            if (!members.length)
+                continue;
+            const ms = members.map(l => ({ x: l.archX, gy: l.archGy, w: l.w, h: l.h, name: l.name, loc: l }));
+            ms.sort((a, b) => a.x - b.x);
+            // двор: фартуки перед постройками + перемычки между соседями
+            const rects = ms.map(m => ({ x0: m.x - m.w / 2 - 8, y0: m.gy - 8, x1: m.x + m.w / 2 + 8, y1: m.gy + 22 }));
+            for (let i = 1; i < ms.length; i++) {
+                const a = ms[i - 1], b = ms[i];
+                if (b.x - b.w / 2 - (a.x + a.w / 2) < 70) {
+                    rects.push({ x0: a.x, y0: Math.min(a.gy, b.gy) - 4, x1: b.x, y1: Math.max(a.gy, b.gy) + 20 });
+                }
+            }
+            // таблички сцены — на земле двора, если рядом
+            const ss = (e.signs || []).map(id => byId.get(id)).filter(Boolean);
+            const near = ss.filter(s => ms.some(m => Math.abs(s.x + 7 - m.x) < m.w / 2 + 90 && Math.abs(s.y + s.h - m.gy) < 110));
+            if (near.length && e.kind !== 'gate') {
+                const xs = near.map(s => s.x + s.w / 2), ys = near.map(s => s.y + s.h);
+                rects.push({ x0: Math.min(...xs) - 12, y0: Math.min(...ys) - 6, x1: Math.max(...xs) + 12, y1: Math.max(...ys) + 8 });
+            }
+            // особая земля у отдельных построек
+            const patches = [];
+            for (const m of ms) {
+                const kind = WET.has(m.name) ? 'water' : BOG.has(m.name) ? 'bog' : ICE.has(m.name) ? 'snow' : DUNE.has(m.name) ? 'sand' : null;
+                if (!kind)
+                    continue;
+                const dir = draw_js_13.hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1; // вода — с одной стороны
+                if (kind === 'water' || kind === 'bog') {
+                    // вода — овалом сбоку, с полосой мокрого берега
+                    const rx = Math.max(26, m.w * 0.42), ry = 13;
+                    const ex = m.x + dir * (m.w * 0.3 + rx * 0.7), ey = m.gy + 10;
+                    patches.push({ kind, e: { cx: ex, cy: ey, rx, ry }, r: { x0: ex - rx, y0: ey - ry, x1: ex + rx, y1: ey + ry } });
+                }
+                else
+                    patches.push({ kind, r: { x0: m.x - m.w / 2 - 14, y0: m.gy - 10, x1: m.x + m.w / 2 + 14, y1: m.gy + 24 } });
+            }
+            // тропинки: от дверей — к тропе (ворота) или к калитке двора и дальше
+            const paths = [];
+            const front = Math.max(...ms.map(m => m.gy)) + 24;
+            const cx = (ms[0].x + ms[ms.length - 1].x) / 2;
+            const tr = e.trail;
+            if (e.kind === 'gate' && tr) {
+                for (const m of ms) {
+                    if (e.side === 'south' || e.side === 'north') {
+                        paths.push([[m.x, m.gy + 3], [m.x, m.gy + 12], [(m.x + tr.x) / 2, m.gy + 15], [tr.x, m.gy + 16]]);
+                    }
+                    else if (m.gy < tr.y) {
+                        paths.push([[m.x, m.gy + 3], [m.x + 3, (m.gy + tr.y) / 2], [m.x + 6, tr.y]]);
+                    }
+                    else {
+                        paths.push([[m.x, m.gy + 3], [m.x - 4, m.gy + 14], [m.x - 14, m.gy + 22]]);
+                    }
+                }
+            }
+            else {
+                const gate = [cx, front + 6];
+                for (const m of ms)
+                    paths.push([[m.x, m.gy + 3], [m.x, m.gy + 10], [(m.x + gate[0]) / 2, (m.gy + 10 + gate[1]) / 2], gate]);
+                // хвост — к тропе (или к городку), тает
+                let tx, ty;
+                if (tr) {
+                    tx = tr.x;
+                    ty = tr.y;
+                }
+                else {
+                    tx = cx - 400;
+                    ty = front + 300;
+                }
+                const L = Math.hypot(tx - gate[0], ty - gate[1]) || 1, k = Math.min(1, 90 / L);
+                paths.push({ tail: true, pts: [gate, [gate[0] + (tx - gate[0]) * k * 0.5, gate[1] + (ty - gate[1]) * k * 0.5 + 6], [gate[0] + (tx - gate[0]) * k, gate[1] + (ty - gate[1]) * k]] });
+            }
+            // границы холста
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            const grow = (a, b, c, d) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, d); };
+            for (const r of rects)
+                grow(r.x0 - 8, r.y0 - 8, r.x1 + 8, r.y1 + 8);
+            for (const p of patches)
+                grow(p.r.x0 - 8, p.r.y0 - 8, p.r.x1 + 8, p.r.y1 + 8);
+            for (const p of paths)
+                for (const [px, py] of (p.pts || p))
+                    grow(px - 4, py - 4, px + 4, py + 4);
+            for (const m of ms)
+                grow(m.x - m.w / 2 - 20, m.gy - 12, m.x + m.w / 2 + 24, m.gy + 30);
+            x0 = Math.floor(x0);
+            y0 = Math.floor(y0);
+            x1 = Math.ceil(x1);
+            y1 = Math.ceil(y1);
+            grounds.push({ e, st, g, ms, rects, patches, paths, x0, y0, x1, y1, canvas: null });
+            // у стены: сугроб / нанос / бурьян / обломки — после постройки
+            for (const m of ms)
+                m.loc.archFoot = footFor(m, st, g, ms.length);
+            // забор: двор и посёлок — буквой П, калитка спереди по тропинке
+            if (st.fence && e.kind !== 'gate')
+                fenceFor(e, st, ms, front, cx, signs, allBoxes);
+        }
+    }
+    exports_68("prepareArchGround", prepareArchGround);
+    // ── у стены ──
+    function footFor(m, st, g, n) {
+        const out = [];
+        const x0 = Math.round(m.x - m.w / 2) + 2, x1 = Math.round(m.x + m.w / 2) - 2, gy = m.gy;
+        const seed = m.x * 0.37 + m.gy * 0.11;
+        if (st.drift === 'snow' || ICE.has(m.name)) {
+            // сугроб у стены — по ветру выше слева
+            let x = x0;
+            while (x < x1) {
+                const run = 3 + ((draw_js_13.hash(x, gy, seed) * 6) | 0);
+                const hh = 1 + ((draw_js_13.hash(x, gy, seed + 1) * 3) | 0);
+                if (draw_js_13.hash(x, gy, seed + 2) > 0.18)
+                    out.push([x, gy - hh + 1, Math.min(run, x1 - x), hh, css(BONE, 0.82)]);
+                x += run;
+            }
+        }
+        else if (st.drift === 'sand' || DUNE.has(m.name)) {
+            let x = x0;
+            const W = Math.max(1, x1 - x0);
+            while (x < x1) {
+                const run = 4 + ((draw_js_13.hash(x, gy, seed) * 5) | 0);
+                const f = 1 - (x - x0) / W; // ветер с запада: нанос слева
+                const hh = 1 + Math.round(f * 3 * draw_js_13.hash(x, gy, seed + 3) + f);
+                out.push([x, gy - hh + 1, Math.min(run, x1 - x), hh, css(mix(g, SAND, 0.42))]);
+                x += run;
+            }
+        }
+        // бурьян у стены
+        const tufts = Math.round((m.w / 14) * st.weeds) + (n > 1 ? 0 : 1);
+        const weed = st.drift === 'snow' ? mix(MIST, BONE, 0.35) : st.drift === 'sand' ? [90, 82, 54] : MIST;
+        for (let i = 0; i < tufts; i++) {
+            const tx = Math.round(x0 + draw_js_13.hash(i, gy, seed + 4) * (x1 - x0));
+            const th = 2 + ((draw_js_13.hash(i, gy, seed + 5) * 4) | 0);
+            out.push([tx, gy - th + 1, 1, th, css(weed)]);
+            out.push([tx + 1, gy - th + 2, 1, th - 1, css(weed)]);
+            if (draw_js_13.hash(i, gy, seed + 6) > 0.6)
+                out.push([tx - 1, gy - th + 3, 1, th - 2, css(mix(weed, ASH, 0.3))]);
+        }
+        return out;
+    }
+    function drawArchFoot(ctx, loc) {
+        const f = loc.archFoot;
+        if (!f)
+            return;
+        for (const r of f) {
+            ctx.fillStyle = r[4];
+            ctx.fillRect(r[0], r[1], r[2], r[3]);
+        }
+    }
+    exports_68("drawArchFoot", drawArchFoot);
+    // ── запекание ──
+    function bake(G) {
+        const doc = typeof document !== 'undefined' ? document : null;
+        if (!doc || !doc.createElement)
+            return null;
+        const W = G.x1 - G.x0, H = G.y1 - G.y0;
+        const c = doc.createElement('canvas');
+        if (!c.getContext)
+            return null;
+        c.width = W;
+        c.height = H;
+        const x = c.getContext('2d');
+        if (!x || !x.createImageData)
+            return null;
+        const img = x.createImageData(W, H), d = img.data;
+        const { st, g } = G;
+        for (let py = 0; py < H; py++) {
+            for (let px = 0; px < W; px++) {
+                const wx = px + G.x0, wy = py + G.y0;
+                let col = null;
+                // особая земля поверх двора
+                for (const p of G.patches) {
+                    if (p.e) {
+                        const q = Math.hypot((wx - p.e.cx) / p.e.rx, (wy - p.e.cy) / p.e.ry)
+                            + (draw_js_13.hash((wx / 3) | 0, (wy / 2) | 0, 5.1) - 0.5) * 0.18;
+                        if (q < 0.86) {
+                            col = surface(p.kind, wx, wy, g);
+                            break;
+                        }
+                        if (q < 1.02) {
+                            col = surface(p.kind === 'water' ? 'shore' : 'bog', wx, wy, g);
+                            break;
+                        }
+                        continue;
+                    }
+                    const dd = rectDist(p.r, wx, wy);
+                    if (dd > 8)
+                        continue;
+                    const cov = 1 - dd / 8 - (draw_js_13.hash(wx, wy, 6.6) - 0.5) * 0.5;
+                    if (cov > bayer(wx, wy)) {
+                        col = surface(p.kind, wx, wy, g);
+                        break;
+                    }
+                }
+                if (!col && st.yard !== 'steppe') {
+                    let dd = Infinity;
+                    for (const r of G.rects) {
+                        dd = Math.min(dd, rectDist(r, wx, wy));
+                        if (dd === 0)
+                            break;
+                    }
+                    if (dd < 7) {
+                        const cov = 1 - dd / 7 - (draw_js_13.hash(wx, wy, 2.9) - 0.5) * 0.6;
+                        if (cov > bayer(wx, wy))
+                            col = surface(st.yard, wx, wy, g);
+                    }
+                }
+                if (!col)
+                    continue;
+                const i = (py * W + px) * 4;
+                d[i] = col[0];
+                d[i + 1] = col[1];
+                d[i + 2] = col[2];
+                d[i + 3] = 215;
+            }
+        }
+        x.putImageData(img, 0, 0);
+        x.translate(-G.x0, -G.y0);
+        const R = (a, b, w, h, cl) => { x.fillStyle = cl; x.fillRect(Math.round(a), Math.round(b), w, h); };
+        // трещины и лужи по асфальту и бетону — ломаной, не узором
+        if (st.yard === 'asphalt' || st.yard === 'concrete' || st.yard === 'tile') {
+            const crack = css(mix(g, NIGHT, 0.6), 0.8);
+            const nC = st.yard === 'tile' ? 1 : 3;
+            for (let k = 0; k < nC; k++) {
+                const r0 = G.rects[k % G.rects.length];
+                let cx = r0.x0 + draw_js_13.hash(k, 1, G.x0) * (r0.x1 - r0.x0), cy = r0.y0 + draw_js_13.hash(k, 2, G.y0) * (r0.y1 - r0.y0);
+                for (let i = 0; i < 22; i++) {
+                    R(cx, cy, 1, 1, crack);
+                    cx += draw_js_13.hash(k, i, 3.3) > 0.3 ? 1 : -1;
+                    cy += draw_js_13.hash(i, k, 4.4) > 0.6 ? 1 : draw_js_13.hash(i, k, 5.5) > 0.7 ? -1 : 0;
+                    if (draw_js_13.hash(i, k, 6.6) > 0.93)
+                        break;
+                }
+            }
+            if (st.yard === 'asphalt') {
+                for (let k = 0; k < 2; k++) {
+                    const r0 = G.rects[(k + 1) % G.rects.length];
+                    const px = Math.round(r0.x0 + 8 + draw_js_13.hash(k, 7, G.x0) * Math.max(1, r0.x1 - r0.x0 - 16));
+                    const py = Math.round(r0.y0 + 6 + draw_js_13.hash(k, 8, G.y0) * Math.max(1, r0.y1 - r0.y0 - 10));
+                    const pw = 6 + ((draw_js_13.hash(k, 9, 1) * 8) | 0);
+                    R(px - pw / 2, py, pw, 2, css(NIGHT, 0.85));
+                    R(px - pw / 2 + 2, py - 1, pw - 4, 1, css(NIGHT, 0.85));
+                    R(px - pw / 2 + 1, py, 2, 1, css(ASH, 0.35)); // отблеск
+                }
+            }
+        }
+        // тени: у подножия и короткая отброшенная — луна за постройками
+        for (const m of G.ms) {
+            R(m.x - m.w * 0.46, m.gy - 1, Math.round(m.w * 0.92), 3, css(NIGHT, 0.45));
+            const L = Math.max(3, Math.min(12, Math.round(m.h * 0.12)));
+            for (let i = 0; i < L; i++) {
+                R(m.x - m.w * 0.42 + i * 0.8, m.gy + 2 + i, Math.round(m.w * 0.84), 1, css(NIGHT, 0.26 * (1 - i / L)));
+            }
+        }
+        // тропинки
+        const pathCol = mix(g, BONE, 0.3);
+        for (const p of G.paths) {
+            const pts = p.pts || p, tail = !!p.tail;
+            let total = 0;
+            for (let i = 1; i < pts.length; i++)
+                total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+            let run = 0;
+            for (let i = 1; i < pts.length; i++) {
+                const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+                const L = Math.hypot(bx - ax, by - ay);
+                for (let s = 0; s < L; s += 2) {
+                    const f = s / (L || 1), px = ax + (bx - ax) * f, py = ay + (by - ay) * f;
+                    const a = tail ? 0.42 * (1 - (run + s) / total) : 0.42;
+                    if (draw_js_13.hash(px | 0, py | 0, 3.7) > 0.25)
+                        R(px + (draw_js_13.hash(px | 0, 1, 2) - 0.5) * 2, py, 2, 1, css(pathCol, a));
+                }
+                run += L;
+            }
+        }
+        // сор вокруг
+        const junk = JUNK[st.junk] || JUNK.stones;
+        for (const m of G.ms) {
+            const n = Math.round(m.w / 7);
+            for (let i = 0; i < n; i++) {
+                const hx = draw_js_13.hash(i, m.gy, m.x * 0.1), hy = draw_js_13.hash(m.x, i, 4.2);
+                const ox = m.x + (hx - 0.5) * (m.w + 40), oy = m.gy + 2 + hy * 22;
+                const cl = junk[(draw_js_13.hash(i, 3, m.x) * junk.length) | 0];
+                const big = draw_js_13.hash(i, 9, m.gy) > 0.7;
+                R(ox, oy, big ? 2 : 1, 1, css(cl, 0.85));
+                if (big && draw_js_13.hash(i, 5, m.x) > 0.5)
+                    R(ox + 1, oy - 1, 1, 1, css(mix(cl, BONE, 0.2), 0.7));
+            }
+        }
+        // трава пучками по краю двора (на равнине — ковыль по всей земле)
+        const steppe = st.yard === 'steppe';
+        const tuftCol = st.drift === 'snow' ? mix(MIST, BONE, 0.3) : steppe ? [90, 82, 54] : MIST;
+        const nT = Math.round(((G.x1 - G.x0) * (G.y1 - G.y0)) / 900 * st.weeds);
+        for (let i = 0; i < nT; i++) {
+            const px = G.x0 + draw_js_13.hash(i, 7, G.x0) * (G.x1 - G.x0), py = G.y0 + draw_js_13.hash(i, 11, G.y0) * (G.y1 - G.y0);
+            let dd = Infinity;
+            for (const r of G.rects)
+                dd = Math.min(dd, rectDist(r, px, py));
+            if (!steppe && (dd < 2 || dd > 16))
+                continue; // по кромке, не посреди двора
+            if (G.ms.some(m => px > m.x - m.w / 2 && px < m.x + m.w / 2 && py > m.gy - m.h && py < m.gy))
+                continue;
+            const th = 1 + ((draw_js_13.hash(i, 13, 1) * 3) | 0);
+            R(px, py - th, 1, th, css(tuftCol, 0.9));
+            R(px + 1, py - th + 1, 1, th - 1 || 1, css(tuftCol, 0.7));
+        }
+        return c;
+    }
+    function drawArchGround(ctx, camX, camY, vw, vh) {
+        for (const G of grounds) {
+            if (G.x1 < camX || G.x0 > camX + vw || G.y1 < camY || G.y0 > camY + vh)
+                continue;
+            if (!G.canvas) {
+                if (G.canvas === false)
+                    continue;
+                G.canvas = bake(G) || false;
+                if (!G.canvas)
+                    continue;
+                baked.push(G);
+                if (baked.length > MAX_BAKED) {
+                    const old = baked.shift();
+                    old.canvas = null;
+                }
+            }
+            ctx.drawImage(G.canvas, G.x0, G.y0);
+        }
+    }
+    exports_68("drawArchGround", drawArchGround);
+    function pieceCanvas(style, vert, len, v) {
+        const key = `${style}:${vert ? 1 : 0}:${len}:${v}`;
+        let c = pieceCache.get(key);
+        if (c !== undefined)
+            return c;
+        const doc = typeof document !== 'undefined' ? document : null;
+        c = null;
+        if (doc && doc.createElement) {
+            const H = 16;
+            const cv = doc.createElement('canvas');
+            if (cv.getContext) {
+                cv.width = vert ? 6 : len;
+                cv.height = vert ? len + H : H;
+                const x = cv.getContext('2d');
+                if (x) {
+                    drawFence(x, style, vert, len, H, v);
+                    c = cv;
+                }
+            }
+        }
+        pieceCache.set(key, c);
+        return c;
+    }
+    // рисует кусок в локальных координатах: низ — y = H (горизонтальный)
+    // или y = H..H+len (боковой, столбы сверху вниз)
+    function drawFence(x, style, vert, len, H, v) {
+        const R = (a, b, w, h, cl) => { x.fillStyle = cl; x.fillRect(a, b, w, h); };
+        const hv = (i, s) => draw_js_13.hash(i, v, s);
+        const posts = (step, fn) => {
+            if (vert)
+                for (let y = 0; y < len; y += step)
+                    fn(2, H + y, y);
+            else
+                for (let p = 0; p < len; p += step)
+                    fn(p, H, p);
+        };
+        switch (style) {
+            case 'stone': { // низкая кладка
+                if (vert) {
+                    R(1, H - 5, 4, len + 5, '#3a3328');
+                    R(1, H - 5, 4, 1, css(ASH, 0.45));
+                    for (let y = 0; y < len; y += 4)
+                        R(1, H + y, 4, 1, '#2a2620');
+                    break;
+                }
+                R(0, H - 5, len, 5, '#3a3328');
+                for (let p = 0; p < len; p++)
+                    if (hv(p, 1) > 0.15)
+                        R(p, H - 5 - (hv(p, 2) > 0.8 ? 1 : 0), 1, 1, css(ASH, 0.45));
+                for (let p = 0; p < len; p += 4)
+                    R(p + (hv(p, 3) > 0.5 ? 1 : 0), H - 3, 1, 2, '#2a2620');
+                break;
+            }
+            case 'palisade': { // частокол, заострённый
+                if (vert) {
+                    R(1, H - 11, 3, len + 11, '#241c14');
+                    for (let y = 0; y < len; y += 2)
+                        R(1 + (y & 2 ? 1 : 0), H - 12 + y, 1, 1, '#3a2818');
+                    break;
+                }
+                for (let p = 0; p < len; p += 3) {
+                    const hh = 10 + (hv(p, 1) * 3 | 0);
+                    R(p, H - hh, 2, hh, '#241c14');
+                    R(p, H - hh - 1, 1, 1, '#3a2818');
+                    if (hv(p, 2) > 0.6)
+                        R(p, H - hh + 2, 1, hh - 3, '#3a2818');
+                }
+                break;
+            }
+            case 'wattle': { // плетень
+                posts(vert ? 4 : 6, (a, b) => R(a, b - 9, 1, 9, '#241c14'));
+                if (vert) {
+                    R(2, H - 7, 1, len + 6, '#3a2818');
+                    break;
+                }
+                for (const yy of [2, 4, 6])
+                    for (let p = (yy / 2) & 1 ? 0 : 2; p < len; p += 4)
+                        R(p, H - yy, 3, 1, (p / 4) & 1 ? '#3a2818' : '#2a2620');
+                break;
+            }
+            case 'picket': { // штакетник
+                if (vert) {
+                    for (let y = 0; y < len; y += 3)
+                        R(2, H + y - 7, 1, 7, '#5a5236');
+                    R(2, H - 5, 1, len + 2, '#34302a');
+                    break;
+                }
+                R(0, H - 2, len, 1, '#34302a');
+                R(0, H - 5, len, 1, '#34302a');
+                for (let p = 0; p < len; p += 3)
+                    if (hv(p, 1) > 0.12) {
+                        R(p, H - 7, 1, 7, '#5a5236');
+                        R(p, H - 8, 1, 1, '#6a6246');
+                    }
+                break;
+            }
+            case 'iron': { // кованая решётка на цоколе
+                if (vert) {
+                    R(1, H - 2, 4, len + 2, '#3a3328');
+                    for (let y = 0; y < len; y += 3)
+                        R(2, H + y - 10, 1, 9, '#0D0B0A');
+                    R(2, H - 10, 1, len, '#0D0B0A');
+                    break;
+                }
+                R(0, H - 2, len, 2, '#3a3328');
+                R(0, H - 9, len, 1, '#0D0B0A');
+                for (let p = 1; p < len; p += 3) {
+                    R(p, H - 10, 1, 8, '#0D0B0A');
+                    R(p, H - 11, 1, 1, css(ASH, 0.6));
+                }
+                break;
+            }
+            case 'brick': {
+                if (vert) {
+                    R(1, H - 8, 4, len + 8, '#3a2418');
+                    R(1, H - 9, 4, 1, '#4a3020');
+                    for (let y = 0; y < len; y += 3)
+                        R(1, H + y - 6, 4, 1, '#2a1a12');
+                    break;
+                }
+                R(0, H - 8, len, 8, '#3a2418');
+                R(0, H - 9, len, 1, '#4a3020');
+                for (let r = 0; r < 3; r++) {
+                    R(0, H - 8 + r * 3 + 2, len, 1, '#2a1a12');
+                    for (let p = (r & 1) * 2; p < len; p += 4)
+                        R(p, H - 8 + r * 3, 1, 2, '#2a1a12');
+                }
+                break;
+            }
+            case 'concrete': { // плиты с ромбиками
+                if (vert) {
+                    R(1, H - 12, 4, len + 12, '#34302a');
+                    R(1, H - 12, 4, 1, css(ASH, 0.35));
+                    for (let y = 0; y < len; y += 14)
+                        R(1, H + y, 4, 1, '#0D0B0A');
+                    break;
+                }
+                R(0, H - 12, len, 12, '#34302a');
+                R(0, H - 12, len, 1, css(ASH, 0.35));
+                for (let p = 0; p < len; p += 14)
+                    R(p, H - 12, 1, 12, '#0D0B0A');
+                for (let yy = 2; yy < 11; yy += 2)
+                    for (let p = (yy & 2) ? 2 : 0; p < len; p += 4)
+                        if (p % 14)
+                            R(p, H - 12 + yy, 1, 1, '#2a2620');
+                break;
+            }
+            case 'mesh': { // рабица
+                posts(vert ? 12 : 12, (a, b) => R(a, b - 10, 1, 10, css(ASH, 0.55)));
+                if (vert) {
+                    for (let y = 0; y < len; y += 2)
+                        R(2, H + y - 8, 1, 6, css(ASH, 0.18));
+                    break;
+                }
+                R(0, H - 10, len, 1, css(ASH, 0.4));
+                for (let yy = 1; yy < 9; yy++)
+                    for (let p = yy & 1; p < len; p += 2)
+                        R(p, H - 10 + yy, 1, 1, css(ASH, 0.16));
+                break;
+            }
+            case 'barbed': { // колючка на кривых столбах
+                posts(vert ? 8 : 10, (a, b, i) => R(a + (draw_js_13.hash(i, v, 1) > 0.6 ? 1 : 0), b - 9, 1, 9, '#241c14'));
+                if (vert) {
+                    R(2, H - 7, 1, len + 4, css(ASH, 0.45));
+                    R(3, H - 4, 1, len + 4, css(ASH, 0.35));
+                    break;
+                }
+                for (const yy of [3, 6, 8]) {
+                    R(0, H - yy, len, 1, css(ASH, 0.5));
+                    for (let p = 1; p < len; p += 3)
+                        R(p, H - yy - (p & 1 ? 1 : -1), 1, 1, css(ASH, 0.5));
+                }
+                break;
+            }
+            case 'hoarding': { // стройзабор, на нём напечатано светлое будущее
+                if (vert) {
+                    R(1, H - 13, 3, len + 13, '#2a2620');
+                    for (let y = 0; y < len; y += 10)
+                        R(1, H + y, 3, 1, '#0D0B0A');
+                    break;
+                }
+                R(0, H - 13, len, 13, '#2a2620');
+                R(1, H - 12, len - 2, 9, '#3a3328');
+                for (let p = 0; p < len; p += 16)
+                    R(p, H - 13, 1, 13, '#0D0B0A');
+                // печать: домик и деревце — серым, без тепла
+                const ox = 3 + ((hv(0, 6) * Math.max(1, len - 12)) | 0);
+                R(ox, H - 8, 5, 4, css(ASH, 0.5));
+                R(ox + 1, H - 10, 3, 2, css(ASH, 0.5));
+                R(ox + 2, H - 7, 1, 2, '#3a3328');
+                R(ox + 8, H - 9, 3, 3, css(ASH, 0.4));
+                R(ox + 9, H - 6, 1, 2, css(ASH, 0.4));
+                break;
+            }
+            case 'bamboo': {
+                if (vert) {
+                    R(2, H - 11, 1, len + 11, '#3a3328');
+                    for (let y = 0; y < len; y += 3)
+                        R(2, H + y - 6, 1, 1, '#b0a284');
+                    break;
+                }
+                for (let p = 0; p < len; p += 3) {
+                    R(p, H - 11, 1, 11, '#3a3328');
+                    R(p, H - 4 - (p % 2), 1, 1, '#b0a284');
+                    R(p, H - 8 - (p % 2), 1, 1, '#b0a284');
+                }
+                R(0, H - 3, len, 1, '#241c14');
+                R(0, H - 9, len, 1, '#241c14');
+                break;
+            }
+            case 'cairn': { // межа из камней
+                posts(vert ? 10 : 9, (a, b) => { R(a - 1, b - 3, 4, 3, '#34302a'); R(a, b - 5, 2, 2, css(ASH, 0.5)); });
+                break;
+            }
+        }
+    }
+    // тропа рядом с точкой (забор её не перегораживает)
+    function onTrail(side, x, y) {
+        if (side === 'south' || side === 'north') {
+            const d = side === 'south' ? y - disc_js_9.TOWN.y1 : disc_js_9.TOWN.y0 - y;
+            return d >= 0 && Math.abs(disc_js_9.trailPoint(side, d).x - x) < 10;
+        }
+        if (side === 'east' || side === 'west') {
+            const d = side === 'east' ? x - disc_js_9.TOWN.x1 : disc_js_9.TOWN.x0 - x;
+            return d >= 0 && Math.abs(disc_js_9.trailPoint(side, d).y - y) < 10;
+        }
+        return false;
+    }
+    function fenceFor(e, st, ms, front, cx, signs, boxes) {
+        const L = Math.round(Math.min(...ms.map(m => m.x - m.w / 2)) - 14);
+        const Rx = Math.round(Math.max(...ms.map(m => m.x + m.w / 2)) + 14);
+        const back = Math.round(Math.min(...ms.map(m => m.gy)) - 10);
+        // фронт — перед табличками двора, если они тут
+        let fy = Math.round(front + 8);
+        for (const s of signs) {
+            const sx = s.x + s.w / 2, sgy = s.y + s.h;
+            if (sx > L && sx < Rx && sgy > back && sgy + 10 > fy && sgy < fy + 40)
+                fy = Math.round(sgy + 12);
+        }
+        const gate0 = Math.round(cx - 12), gate1 = Math.round(cx + 12);
+        const blocked = (x0, y0, x1, y1) => {
+            for (const s of signs) {
+                const sx = s.x + s.w / 2, sgy = s.y + s.h;
+                if (sx > x0 - 10 && sx < x1 + 10 && sgy > y0 - 6 && sgy < y1 + 14)
+                    return true;
+            }
+            for (const b of boxes)
+                if (x1 > b.x0 && x0 < b.x1 && y1 > b.y1 - 6 && y0 < b.y1 + 2)
+                    return true;
+            for (let x = x0; x <= x1; x += 4)
+                if (onTrail(e.side, x, y1))
+                    return true;
+            for (let y = y0; y <= y1; y += 4)
+                if (onTrail(e.side, x0, y))
+                    return true;
+            return false;
+        };
+        const style = st.fence;
+        const H = 16;
+        // фронт: два крыла по сторонам калитки
+        for (const [a, b] of [[L, gate0], [gate1, Rx]]) {
+            for (let x = a; x < b; x += 16) {
+                const len = Math.min(16, b - x);
+                if (len < 3 || blocked(x, fy - 2, x + len, fy))
+                    continue;
+                const v = (draw_js_13.hash(x, fy, 1.3) * 3) | 0;
+                archProps.push({ x: x + len / 2, gy: fy, w: len, h: H,
+                    draw(ctx) { const c = pieceCanvas(style, false, len, v); if (c)
+                        ctx.drawImage(c, x, fy - H); } });
+            }
+        }
+        // бока: от фронта вглубь, до задов построек
+        for (const sx of [L, Rx]) {
+            for (let y = back; y < fy; y += 12) {
+                const len = Math.min(12, fy - y);
+                if (len < 3 || blocked(sx - 3, y, sx + 3, y + len))
+                    continue;
+                const v = (draw_js_13.hash(sx, y, 2.1) * 3) | 0;
+                archProps.push({ x: sx, gy: y + len, w: 6, h: H + len,
+                    draw(ctx) { const c = pieceCanvas(style, true, len, v); if (c)
+                        ctx.drawImage(c, sx - 2, y - H); } });
+            }
+        }
+    }
+    return {
+        setters: [
+            function (ulitsa_db_js_8_1) {
+                ulitsa_db_js_8 = ulitsa_db_js_8_1;
+            },
+            function (disc_js_9_1) {
+                disc_js_9 = disc_js_9_1;
+            },
+            function (draw_js_13_1) {
+                draw_js_13 = draw_js_13_1;
+            }
+        ],
+        execute: function () {
+            NIGHT = [13, 11, 10], BONE = [217, 207, 184], ASH = [138, 141, 143];
+            MIST = [61, 74, 58], SEPIA = [58, 48, 38], SAND = [176, 162, 132];
+            BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+            bayer = (x, y) => (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+            // ── стиль: двор · забор · сор · трава (0..1) · у стены ──
+            S = (yard, fence, junk, weeds, drift) => ({ yard, fence, junk, weeds, drift });
+            STYLE = {
+                axial: {
+                    south: S('paving', 'stone', 'shards', 0.3, 'sand'), east: S('earth', 'bamboo', 'stones', 0.5, null),
+                    west: S('earth', 'palisade', 'stones', 0.6, null), north: S('earth', 'cairn', 'stones', 0.3, 'snow'),
+                    plain: S('steppe', null, 'bones', 0.9, null),
+                },
+                porticoes: {
+                    south: S('paving', 'stone', 'shards', 0.3, 'sand'), east: S('earth', 'bamboo', 'stones', 0.5, null),
+                    west: S('cobble', 'stone', 'bricks', 0.4, null), north: S('earth', 'palisade', 'stones', 0.4, 'snow'),
+                    plain: S('steppe', null, 'shards', 0.8, null),
+                },
+                lightgarden: {
+                    south: S('paving', 'brick', 'shards', 0.2, 'sand'), east: S('gravel', 'bamboo', 'stones', 0.3, null),
+                    west: S('cobble', 'stone', 'stones', 0.4, null), north: S('earth', 'palisade', 'stones', 0.3, 'snow'),
+                    plain: S('earth', 'wattle', 'stones', 0.7, null),
+                },
+                twohearths: {
+                    south: S('paving', 'brick', 'shards', 0.2, 'sand'), east: S('gravel', 'bamboo', 'stones', 0.3, null),
+                    west: S('cobble', 'brick', 'bricks', 0.4, null), north: S('earth', 'stone', 'stones', 0.3, 'snow'),
+                    plain: S('earth', 'palisade', 'stones', 0.7, null),
+                },
+                enlightenment: {
+                    south: S('sand', null, 'shards', 0.1, 'sand'), east: S('paving', 'brick', 'paper', 0.3, null),
+                    west: S('cobble', 'iron', 'paper', 0.3, null), north: S('gravel', 'picket', 'stones', 0.3, 'snow'),
+                    plain: S('paving', 'iron', 'stones', 0.4, null),
+                },
+                steamshadows: {
+                    south: S('sand', null, 'scrap', 0.1, 'sand'), east: S('boards', 'iron', 'scrap', 0.3, null),
+                    west: S('cobble', 'brick', 'bricks', 0.4, null), north: S('boards', 'picket', 'scrap', 0.3, 'snow'),
+                    plain: S('earth', 'picket', 'stones', 0.8, null),
+                },
+                catastrophes: {
+                    south: S('sand', 'barbed', 'scrap', 0.2, 'sand'), east: S('rubble', 'barbed', 'bricks', 0.4, null),
+                    west: S('rubble', null, 'bricks', 0.5, null), north: S('snow', 'barbed', 'scrap', 0.2, 'snow'),
+                    plain: S('asphalt', 'concrete', 'scrap', 0.6, null),
+                },
+                neon: {
+                    south: S('sand', 'mesh', 'cans', 0.2, 'sand'), east: S('asphalt', 'mesh', 'cans', 0.3, null),
+                    west: S('asphalt', 'mesh', 'paper', 0.4, null), north: S('concrete', 'mesh', 'scrap', 0.2, 'snow'),
+                    plain: S('asphalt', 'concrete', 'glass', 0.8, null),
+                },
+                now: {
+                    south: S('tile', 'hoarding', 'cans', 0.1, 'sand'), east: S('tile', 'mesh', 'paper', 0.1, null),
+                    west: S('tile', 'hoarding', 'cans', 0.2, null), north: S('concrete', 'mesh', 'scrap', 0.2, 'snow'),
+                    plain: S('tile', 'hoarding', 'glass', 0.5, null),
+                },
+            };
+            // у воды и в песках — своя земля рядом с постройкой
+            WET = new Set(['Фаросский маяк', 'драккар на берегу', 'пирс над глубиной', 'затопленный фарватер',
+                'нефтяная платформа', 'библиотека у моря']);
+            BOG = new Set(['болото жертв']);
+            ICE = new Set(['вмёрзший барк', 'хранилище семян']);
+            DUNE = new Set(['пароход в песках', 'опера в песке', 'пляж «аренда солнца»', 'игла над пустыней', 'сфинкс в лесах']);
+            grounds = []; // запекаемая земля ансамблей
+            exports_68("archProps", archProps = []); // куски заборов: { x, gy, w, h, draw(ctx) }
+            // ── сор ──
+            JUNK = {
+                shards: [[107, 82, 54], [58, 36, 24], ASH],
+                stones: [[52, 48, 42], [42, 38, 32], mix(ASH, NIGHT, 0.3)],
+                bones: [mix(BONE, NIGHT, 0.35), [176, 162, 132]],
+                bricks: [[58, 36, 24], [74, 48, 32]],
+                scrap: [ASH, NIGHT, [58, 51, 40]],
+                glass: [mix(BONE, NIGHT, 0.2), ASH],
+                paper: [mix(BONE, NIGHT, 0.45), [200, 184, 154]],
+                cans: [ASH, mix(ASH, NIGHT, 0.4), [194, 59, 43]],
+            };
+            // LRU: запечённые холсты живут, пока нужны
+            MAX_BAKED = 24;
+            baked = [];
+            // ── заборы ──
+            // кусок забора: горизонтальный (вдоль x) или боковой (вдоль y — в глубину)
+            pieceCache = new Map();
+        }
+    };
+});
+System.register("world/edges", ["core/time", "render/context", "render/scaler", "world/disc"], function (exports_69, context_69) {
+    "use strict";
+    var time_js_18, context_js_11, scaler_js_11, disc_js_10, OUTER, EDGE, cur;
+    var __moduleName = context_69 && context_69.id;
     function edgeState() { return cur; }
-    exports_68("edgeState", edgeState);
+    exports_69("edgeState", edgeState);
     function edgeDepth() { return cur ? cur.depth : 0; }
-    exports_68("edgeDepth", edgeDepth);
+    exports_69("edgeDepth", edgeDepth);
     function slowFactor() {
         if (!cur)
             return 1;
@@ -30195,21 +31278,21 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             return 1 - cur.depth * 0.32; // завалы
         return 1; // лёд не держит
     }
-    exports_68("slowFactor", slowFactor);
+    exports_69("slowFactor", slowFactor);
     function update(player) {
         const px = player.x, py = player.y;
         cur = null;
-        const d = disc_js_9.warpedDist(px, py);
+        const d = disc_js_10.warpedDist(px, py);
         if (d > OUTER) {
-            const depth = Math.min(1, (d - OUTER) / (disc_js_9.EDGE_BAND - 80));
+            const depth = Math.min(1, (d - OUTER) / (disc_js_10.EDGE_BAND - 80));
             // сторона — по наибольшему вылету за городок
-            const dn = disc_js_9.TOWN.y0 - py, ds = py - disc_js_9.TOWN.y1, dw = disc_js_9.TOWN.x0 - px, de = px - disc_js_9.TOWN.x1;
+            const dn = disc_js_10.TOWN.y0 - py, ds = py - disc_js_10.TOWN.y1, dw = disc_js_10.TOWN.x0 - px, de = px - disc_js_10.TOWN.x1;
             const m = Math.max(dn, ds, dw, de);
             const elem = m === ds ? 'quicksand' : m === de ? 'junk' : m === dn ? 'ice' : 'lake';
             cur = { elem, depth };
         }
     }
-    exports_68("update", update);
+    exports_69("update", update);
     // ── оверлеи стихий (экранные координаты) ──
     function draw(ctx) {
         if (!cur || cur.depth <= 0.02)
@@ -30280,7 +31363,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             }
         }
     }
-    exports_68("draw", draw);
+    exports_69("draw", draw);
     return {
         setters: [
             function (time_js_18_1) {
@@ -30292,26 +31375,26 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             function (scaler_js_11_1) {
                 scaler_js_11 = scaler_js_11_1;
             },
-            function (disc_js_9_1) {
-                disc_js_9 = disc_js_9_1;
+            function (disc_js_10_1) {
+                disc_js_10 = disc_js_10_1;
             }
         ],
         execute: function () {
-            OUTER = disc_js_9.RINGS * disc_js_9.RING_W + disc_js_9.FIRE_W; // 1950 — где кончается огонь
-            exports_68("EDGE", EDGE = {
-                south: { y0: disc_js_9.TOWN.y1 + OUTER, y1: disc_js_9.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
-                east: { x0: disc_js_9.TOWN.x1 + OUTER, x1: disc_js_9.WORLD_W, elem: 'junk', name: 'куча мусора' },
-                north: { y1: disc_js_9.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
-                west: { x1: disc_js_9.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
+            OUTER = disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W; // 1950 — где кончается огонь
+            exports_69("EDGE", EDGE = {
+                south: { y0: disc_js_10.TOWN.y1 + OUTER, y1: disc_js_10.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
+                east: { x0: disc_js_10.TOWN.x1 + OUTER, x1: disc_js_10.WORLD_W, elem: 'junk', name: 'куча мусора' },
+                north: { y1: disc_js_10.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
+                west: { x1: disc_js_10.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
             });
             cur = null; // { elem, depth 0..1 }
         }
     };
 });
-System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (exports_69, context_69) {
+System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (exports_70, context_70) {
     "use strict";
-    var disc_js_10, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
-    var __moduleName = context_69 && context_69.id;
+    var disc_js_11, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
+    var __moduleName = context_70 && context_70.id;
     function createZoneSound(cfg) {
         const ctx = audio_js_2.getCtx();
         if (!ctx)
@@ -30366,25 +31449,25 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
         if (window.ArdetAudio)
             window.ArdetAudio.setLocation(zone);
     }
-    exports_69("updateZone", updateZone);
+    exports_70("updateZone", updateZone);
     function getZone(x, y) {
-        if (disc_js_10.townDist(x, y) > 0)
+        if (disc_js_11.townDist(x, y) > 0)
             return 'street';
-        if (y < disc_js_10.TOWN.y0 + 340)
+        if (y < disc_js_11.TOWN.y0 + 340)
             return 'forest';
-        if (y > disc_js_10.TOWN.y0 + 1140)
+        if (y > disc_js_11.TOWN.y0 + 1140)
             return 'toxic';
-        if (x < disc_js_10.TOWN.x0 + 400)
+        if (x < disc_js_11.TOWN.x0 + 400)
             return 'quarter';
-        if (x > disc_js_10.TOWN.x0 + 1800)
+        if (x > disc_js_11.TOWN.x0 + 1800)
             return 'highway';
         return 'settlement';
     }
-    exports_69("getZone", getZone);
+    exports_70("getZone", getZone);
     return {
         setters: [
-            function (disc_js_10_1) {
-                disc_js_10 = disc_js_10_1;
+            function (disc_js_11_1) {
+                disc_js_11 = disc_js_11_1;
             },
             function (audio_js_2_1) {
                 audio_js_2 = audio_js_2_1;
@@ -30404,10 +31487,10 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
         }
     };
 });
-System.register("world/wandering", ["core/time", "render/context", "sprites/npcs/jester", "world/terrain"], function (exports_70, context_70) {
+System.register("world/wandering", ["core/time", "render/context", "sprites/npcs/jester", "world/terrain"], function (exports_71, context_71) {
     "use strict";
     var time_js_19, context_js_12, jester_js_1, terrain_js_2, jesterPos, jesterTarget, jesterWait, jesterDir, jesterMoving, jesterGraffiti, JESTER_PHRASES;
-    var __moduleName = context_70 && context_70.id;
+    var __moduleName = context_71 && context_71.id;
     function updateJester(camera) {
         if (jesterWait > 0) {
             jesterWait--;
@@ -30439,7 +31522,7 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
                 jesterDir = dx > 0 ? 1 : -1;
         }
     }
-    exports_70("updateJester", updateJester);
+    exports_71("updateJester", updateJester);
     function drawJesterWandering(camera, locations) {
         const sx = Math.floor(jesterPos.x - camera.x);
         const sy = Math.floor(jesterPos.y - camera.y);
@@ -30453,7 +31536,7 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
             return;
         jester_js_1.drawNPC_jester(jesterPos.x, jesterPos.y, { moving: jesterMoving, dir: jesterDir });
     }
-    exports_70("drawJesterWandering", drawJesterWandering);
+    exports_71("drawJesterWandering", drawJesterWandering);
     function drawJesterGraffiti(camera) {
         const ctx = context_js_12.X;
         ctx.font = '6px "Press Start 2P","VT323",monospace';
@@ -30464,14 +31547,14 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
         }
         ctx.globalAlpha = 1;
     }
-    exports_70("drawJesterGraffiti", drawJesterGraffiti);
+    exports_71("drawJesterGraffiti", drawJesterGraffiti);
     function getGraffiti() { return jesterGraffiti.slice(0, 15); }
-    exports_70("getGraffiti", getGraffiti);
+    exports_71("getGraffiti", getGraffiti);
     function setGraffiti(list) {
         jesterGraffiti.length = 0;
         list.forEach(g => jesterGraffiti.push(g));
     }
-    exports_70("setGraffiti", setGraffiti);
+    exports_71("setGraffiti", setGraffiti);
     return {
         setters: [
             function (time_js_19_1) {
@@ -30506,10 +31589,10 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
         }
     };
 });
-System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], function (exports_71, context_71) {
+System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], function (exports_72, context_72) {
     "use strict";
     var time_js_20, scaler_js_12, audio_js_3, MSGS, idleTimer, currentMsg, msgLife;
-    var __moduleName = context_71 && context_71.id;
+    var __moduleName = context_72 && context_72.id;
     function update(isMoving) {
         if (isMoving) {
             idleTimer = 0;
@@ -30524,7 +31607,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
             audio_js_3.playDistantSound();
         }
     }
-    exports_71("update", update);
+    exports_72("update", update);
     function draw(ctx) {
         if (msgLife <= 0)
             return;
@@ -30541,7 +31624,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
         ctx.globalAlpha = 1;
         msgLife--;
     }
-    exports_71("draw", draw);
+    exports_72("draw", draw);
     return {
         setters: [
             function (time_js_20_1) {
@@ -30594,10 +31677,10 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
         }
     };
 });
-System.register("render/particles", ["core/time", "render/scaler"], function (exports_72, context_72) {
+System.register("render/particles", ["core/time", "render/scaler"], function (exports_73, context_73) {
     "use strict";
     var time_js_21, scaler_js_13, particles, MAX;
-    var __moduleName = context_72 && context_72.id;
+    var __moduleName = context_73 && context_73.id;
     function emit(x, y, count, config = {}) {
         const { color = '#8a8d8f', speed = 0.5, life = 40, size = 1, gravity = 0, spread = Math.PI * 2, angle = -Math.PI / 2, fadeOut = true, } = config;
         for (let i = 0; i < count && particles.length < MAX; i++) {
@@ -30617,7 +31700,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
             particles[particles.length - 1].maxLife = particles[particles.length - 1].life;
         }
     }
-    exports_72("emit", emit);
+    exports_73("emit", emit);
     function update() {
         for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
@@ -30629,7 +31712,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
                 particles.splice(i, 1);
         }
     }
-    exports_72("update", update);
+    exports_73("update", update);
     function draw(ctx, camera) {
         for (const p of particles) {
             const sx = Math.floor(p.x - camera.x);
@@ -30643,7 +31726,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
         }
         ctx.globalAlpha = 1;
     }
-    exports_72("draw", draw);
+    exports_73("draw", draw);
     // Convenience: footstep dust
     function footstepDust(x, y) {
         emit(x + 7, y + 22, 1, {
@@ -30655,7 +31738,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
             angle: -Math.PI / 2,
         });
     }
-    exports_72("footstepDust", footstepDust);
+    exports_73("footstepDust", footstepDust);
     // Convenience: lore pickup sparkle
     function pickupSparkle(x, y) {
         emit(x, y, 8, {
@@ -30667,7 +31750,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
             gravity: 0.02,
         });
     }
-    exports_72("pickupSparkle", pickupSparkle);
+    exports_73("pickupSparkle", pickupSparkle);
     // Convenience: fire embers
     function fireEmber(x, y) {
         emit(x, y, 1, {
@@ -30680,7 +31763,7 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
             gravity: -0.005,
         });
     }
-    exports_72("fireEmber", fireEmber);
+    exports_73("fireEmber", fireEmber);
     return {
         setters: [
             function (time_js_21_1) {
@@ -30696,10 +31779,10 @@ System.register("render/particles", ["core/time", "render/scaler"], function (ex
         }
     };
 });
-System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw"], function (exports_73, context_73) {
+System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw"], function (exports_74, context_74) {
     "use strict";
-    var time_js_22, scaler_js_14, draw_js_13, footprints, MAX_FOOTPRINTS, lastFootprint, SMOKE_COUNT;
-    var __moduleName = context_73 && context_73.id;
+    var time_js_22, scaler_js_14, draw_js_14, footprints, MAX_FOOTPRINTS, lastFootprint, SMOKE_COUNT;
+    var __moduleName = context_74 && context_74.id;
     function addFootprint(x, y) {
         if (time_js_22.t - lastFootprint < 12)
             return; // throttle
@@ -30708,7 +31791,7 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
             footprints.shift();
         footprints.push({ x: Math.floor(x + 5), y: Math.floor(y + 20), age: 0 });
     }
-    exports_73("addFootprint", addFootprint);
+    exports_74("addFootprint", addFootprint);
     function drawFootprints(ctx, camera) {
         for (const fp of footprints) {
             fp.age++;
@@ -30725,13 +31808,13 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
         while (footprints.length > 0 && footprints[0].age > 600)
             footprints.shift();
     }
-    exports_73("drawFootprints", drawFootprints);
+    exports_74("drawFootprints", drawFootprints);
     function drawSmokeClouds(ctx, camera) {
         ctx.globalAlpha = 0.08;
         for (let i = 0; i < SMOKE_COUNT; i++) {
-            const x = draw_js_13.hash(i, 0, 1) * 3000 + Math.sin(time_js_22.t * 0.001 + i * 2) * 40;
-            const y = 400 + draw_js_13.hash(i, 0, 2) * 1000 + Math.cos(time_js_22.t * 0.0008 + i) * 30;
-            const r = 40 + draw_js_13.hash(i, 0, 3) * 60;
+            const x = draw_js_14.hash(i, 0, 1) * 3000 + Math.sin(time_js_22.t * 0.001 + i * 2) * 40;
+            const y = 400 + draw_js_14.hash(i, 0, 2) * 1000 + Math.cos(time_js_22.t * 0.0008 + i) * 30;
+            const r = 40 + draw_js_14.hash(i, 0, 3) * 60;
             const sx = x - camera.x, sy = y - camera.y;
             if (sx < -r || sx > scaler_js_14.scaler.vw + r || sy < -r || sy > scaler_js_14.scaler.vh + r)
                 continue;
@@ -30742,7 +31825,7 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
         }
         ctx.globalAlpha = 1;
     }
-    exports_73("drawSmokeClouds", drawSmokeClouds);
+    exports_74("drawSmokeClouds", drawSmokeClouds);
     // ── BLOOD MOON ──
     function drawBloodMoon(ctx, camera) {
         const moonX = 100 - camera.x * 0.05;
@@ -30769,7 +31852,7 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
         ctx.fill();
         ctx.globalAlpha = 1;
     }
-    exports_73("drawBloodMoon", drawBloodMoon);
+    exports_74("drawBloodMoon", drawBloodMoon);
     return {
         setters: [
             function (time_js_22_1) {
@@ -30778,8 +31861,8 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
             function (scaler_js_14_1) {
                 scaler_js_14 = scaler_js_14_1;
             },
-            function (draw_js_13_1) {
-                draw_js_13 = draw_js_13_1;
+            function (draw_js_14_1) {
+                draw_js_14 = draw_js_14_1;
             }
         ],
         execute: function () {
@@ -30795,10 +31878,10 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
 // ═══════════════════════════════════════
 // CUSTOM CURSOR — pixel-art crosshair
 // ═══════════════════════════════════════
-System.register("ui/cursor", [], function (exports_74, context_74) {
+System.register("ui/cursor", [], function (exports_75, context_75) {
     "use strict";
     var curEl, curCtx, visible, IS_TOUCH, started, lastTouch;
-    var __moduleName = context_74 && context_74.id;
+    var __moduleName = context_75 && context_75.id;
     // Draw pixel-art cursor once
     function drawCursor() {
         curCtx.clearRect(0, 0, 20, 20);
@@ -30834,7 +31917,7 @@ System.register("ui/cursor", [], function (exports_74, context_74) {
             hide();
         });
     }
-    exports_74("init", init);
+    exports_75("init", init);
     // Show cursor (call when game starts)
     function show() {
         started = true;
@@ -30845,14 +31928,14 @@ System.register("ui/cursor", [], function (exports_74, context_74) {
         visible = true;
         document.body.style.cursor = 'none';
     }
-    exports_74("show", show);
+    exports_75("show", show);
     // Hide cursor
     function hide() {
         curEl.style.display = 'none';
         visible = false;
         document.body.style.cursor = 'auto';
     }
-    exports_74("hide", hide);
+    exports_75("hide", hide);
     // Change cursor appearance
     function setMode(mode) {
         curCtx.clearRect(0, 0, 20, 20);
@@ -30874,7 +31957,7 @@ System.register("ui/cursor", [], function (exports_74, context_74) {
             drawCursor(); // default
         }
     }
-    exports_74("setMode", setMode);
+    exports_75("setMode", setMode);
     return {
         setters: [],
         execute: function () {
@@ -30892,18 +31975,18 @@ System.register("ui/cursor", [], function (exports_74, context_74) {
         }
     };
 });
-System.register("world/pets", ["core/time", "world/disc", "render/context", "render/scaler"], function (exports_75, context_75) {
+System.register("world/pets", ["core/time", "world/disc", "render/context", "render/scaler"], function (exports_76, context_76) {
     "use strict";
-    var time_js_23, disc_js_11, context_js_13, scaler_js_15, pets, lastSpawn, P;
-    var __moduleName = context_75 && context_75.id;
+    var time_js_23, disc_js_12, context_js_13, scaler_js_15, pets, lastSpawn, P;
+    var __moduleName = context_76 && context_76.id;
     function spawn() {
         const types = ['cat', 'raven', 'rat', 'rat', 'cat'];
         const type = types[Math.floor(Math.random() * types.length)];
         const fromLeft = Math.random() > 0.5;
-        const y = disc_js_11.TOWN.y0 + 40 + Math.random() * 1400;
+        const y = disc_js_12.TOWN.y0 + 40 + Math.random() * 1400;
         pets.push({
             type,
-            x: fromLeft ? disc_js_11.TOWN.x0 - 20 : disc_js_11.TOWN.x1 + 20,
+            x: fromLeft ? disc_js_12.TOWN.x0 - 20 : disc_js_12.TOWN.x1 + 20,
             y,
             vx: fromLeft ? (type === 'raven' ? 1.8 : type === 'cat' ? 0.9 : 1.2)
                 : (type === 'raven' ? -1.8 : type === 'cat' ? -0.9 : -1.2),
@@ -30926,7 +32009,7 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
             }
         }
     }
-    exports_75("update", update);
+    exports_76("update", update);
     function draw(camera) {
         const ctx = context_js_13.X;
         for (const p of pets) {
@@ -30962,14 +32045,14 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
             }
         }
     }
-    exports_75("draw", draw);
+    exports_76("draw", draw);
     return {
         setters: [
             function (time_js_23_1) {
                 time_js_23 = time_js_23_1;
             },
-            function (disc_js_11_1) {
-                disc_js_11 = disc_js_11_1;
+            function (disc_js_12_1) {
+                disc_js_12 = disc_js_12_1;
             },
             function (context_js_13_1) {
                 context_js_13 = context_js_13_1;
@@ -30990,10 +32073,10 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
         }
     };
 });
-System.register("world/silentCat", ["core/time", "render/context", "core/events"], function (exports_76, context_76) {
+System.register("world/silentCat", ["core/time", "render/context", "core/events"], function (exports_77, context_77) {
     "use strict";
     var time_js_24, context_js_14, events_js_6, sightings, fifthUnlocked, spots;
-    var __moduleName = context_76 && context_76.id;
+    var __moduleName = context_77 && context_77.id;
     function draw(player, camera, locations) {
         const ctx = context_js_14.X;
         const P = { cat: '#050404', amber: '#daa520' };
@@ -31035,19 +32118,19 @@ System.register("world/silentCat", ["core/time", "render/context", "core/events"
             }
         }
     }
-    exports_76("draw", draw);
+    exports_77("draw", draw);
     function getSightings() { return Array.from(sightings); }
-    exports_76("getSightings", getSightings);
+    exports_77("getSightings", getSightings);
     function loadSightings(arr) {
         sightings.clear();
         if (arr)
             arr.forEach(s => sightings.add(s));
     }
-    exports_76("loadSightings", loadSightings);
+    exports_77("loadSightings", loadSightings);
     function isUnlocked() { return fifthUnlocked; }
-    exports_76("isUnlocked", isUnlocked);
+    exports_77("isUnlocked", isUnlocked);
     function setUnlocked(v) { fifthUnlocked = v; }
-    exports_76("setUnlocked", setUnlocked);
+    exports_77("setUnlocked", setUnlocked);
     return {
         setters: [
             function (time_js_24_1) {
@@ -31074,10 +32157,10 @@ System.register("world/silentCat", ["core/time", "render/context", "core/events"
         }
     };
 });
-System.register("world/brainrot", ["core/time", "render/context", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers"], function (exports_77, context_77) {
+System.register("world/brainrot", ["core/time", "render/context", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers"], function (exports_78, context_78) {
     "use strict";
-    var time_js_25, context_js_15, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_12, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
-    var __moduleName = context_77 && context_77.id;
+    var time_js_25, context_js_15, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_13, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
+    var __moduleName = context_78 && context_78.id;
     function enterLoop(exitCb) {
         loopMode = true;
         stillFrames = 0;
@@ -31085,11 +32168,11 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
         brainrot = Math.max(brainrot, 20);
         events_js_7.events.emit('brainrot.hook');
     }
-    exports_77("enterLoop", enterLoop);
+    exports_78("enterLoop", enterLoop);
     function inLoop() { return loopMode; }
-    exports_77("inLoop", inLoop);
+    exports_78("inLoop", inLoop);
     function _dbg() { return { loopMode, stillFrames, brainrot: brainrot | 0 }; }
-    exports_77("_dbg", _dbg);
+    exports_78("_dbg", _dbg);
     function getDistFromMap(player) {
         let d = 0;
         if (player.x < 0)
@@ -31129,8 +32212,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
                 brainrotFreezeTimer = 0;
                 brainrot = 50;
                 // Respawn at campfire
-                player.x = disc_js_12.TOWN.x0 + 800;
-                player.y = disc_js_12.TOWN.y0 + 740;
+                player.x = disc_js_13.TOWN.x0 + 800;
+                player.y = disc_js_13.TOWN.y0 + 740;
                 events_js_7.events.emit('brainrot.recover');
             }
             return;
@@ -31162,7 +32245,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             events_js_7.events.emit('brainrot.freeze');
         }
     }
-    exports_77("update", update);
+    exports_78("update", update);
     function rasterPattern(ctx, level) {
         if (patterns.has(level))
             return patterns.get(level);
@@ -31255,7 +32338,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
         }
         ctx.globalAlpha = 1;
     }
-    exports_77("draw", draw);
+    exports_78("draw", draw);
     function drawFall(ctx, kind, f) {
         const vw = scaler_js_16.scaler.vw, vh = scaler_js_16.scaler.vh;
         const a = Math.min(1, f / 0.62); // анимация; потом — подпись
@@ -31365,11 +32448,11 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
         ctx.globalAlpha = 1;
     }
     function fallKindOf() { return fallKind; }
-    exports_77("fallKindOf", fallKindOf);
+    exports_78("fallKindOf", fallKindOf);
     function isFrozen() { return brainrotFreeze; }
-    exports_77("isFrozen", isFrozen);
+    exports_78("isFrozen", isFrozen);
     function getLevel() { return brainrot; }
-    exports_77("getLevel", getLevel);
+    exports_78("getLevel", getLevel);
     return {
         setters: [
             function (time_js_25_1) {
@@ -31393,15 +32476,15 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             function (edges_js_1_1) {
                 edges_js_1 = edges_js_1_1;
             },
-            function (disc_js_12_1) {
-                disc_js_12 = disc_js_12_1;
+            function (disc_js_13_1) {
+                disc_js_13 = disc_js_13_1;
             },
             function (layers_js_1_1) {
                 layers_js_1 = layers_js_1_1;
             }
         ],
         execute: function () {
-            exports_77("FALL_AT", FALL_AT = 0.97); // падение — только у дальнего края пустыни
+            exports_78("FALL_AT", FALL_AT = 0.97); // падение — только у дальнего края пустыни
             brainrot = 0;
             brainrotFreeze = false;
             brainrotFreezeTimer = 0;
@@ -31424,18 +32507,18 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
         }
     };
 });
-System.register("world/ending", ["render/scaler", "core/time"], function (exports_78, context_78) {
+System.register("world/ending", ["render/scaler", "core/time"], function (exports_79, context_79) {
     "use strict";
     var scaler_js_17, time_js_26, active, phase, timer, TEXTS;
-    var __moduleName = context_78 && context_78.id;
+    var __moduleName = context_79 && context_79.id;
     function trigger() {
         active = true;
         phase = 0;
         timer = 0;
     }
-    exports_78("trigger", trigger);
+    exports_79("trigger", trigger);
     function isActive() { return active; }
-    exports_78("isActive", isActive);
+    exports_79("isActive", isActive);
     function draw(ctx) {
         if (!active)
             return;
@@ -31463,7 +32546,7 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
         }
         ctx.globalAlpha = 1;
     }
-    exports_78("draw", draw);
+    exports_79("draw", draw);
     return {
         setters: [
             function (scaler_js_17_1) {
@@ -31491,10 +32574,10 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
         }
     };
 });
-System.register("world/monsters", ["core/time", "render/context", "world/terrain"], function (exports_79, context_79) {
+System.register("world/monsters", ["core/time", "render/context", "world/terrain"], function (exports_80, context_80) {
     "use strict";
     var time_js_27, context_js_16, terrain_js_4, monsters, lastSpawn;
-    var __moduleName = context_79 && context_79.id;
+    var __moduleName = context_80 && context_80.id;
     function getDistFromMap(player) {
         let d = 0;
         if (player.x < 0)
@@ -31539,7 +32622,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
             }
         }
     }
-    exports_79("update", update);
+    exports_80("update", update);
     function draw(camera) {
         const ctx = context_js_16.X;
         for (const m of monsters) {
@@ -31567,9 +32650,9 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
             ctx.globalAlpha = 1;
         }
     }
-    exports_79("draw", draw);
+    exports_80("draw", draw);
     function getCount() { return monsters.length; }
-    exports_79("getCount", getCount);
+    exports_80("getCount", getCount);
     return {
         setters: [
             function (time_js_27_1) {
@@ -31588,10 +32671,10 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_80, context_80) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "render/archground", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_81, context_81) {
     "use strict";
-    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_14, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_28, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_13, ground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_29, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
-    var __moduleName = context_80 && context_80.id;
+    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_15, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_28, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_14, ground_js_1, archground_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_2, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_3, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_29, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
+    var __moduleName = context_81 && context_81.id;
     // Check if player can leave settlement
     function canLeaveSettlement() {
         return flags.talkedTo.has('jester');
@@ -31614,10 +32697,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x);
         const camY = Math.round(camera_js_1.camera.y);
         ground_js_1.drawGround(bgCtx, camX, camY, vw, vh);
-        const tx0 = Math.max(camX, disc_js_13.TOWN.x0), ty0 = Math.max(camY, disc_js_13.TOWN.y0);
-        const tx1 = Math.min(camX + vw, disc_js_13.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_13.TOWN.y1);
+        const tx0 = Math.max(camX, disc_js_14.TOWN.x0), ty0 = Math.max(camY, disc_js_14.TOWN.y0);
+        const tx1 = Math.min(camX + vw, disc_js_14.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_14.TOWN.y1);
         if (tx1 > tx0 && ty1 > ty0) {
-            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_13.SHIFT_X, ty0 - disc_js_13.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
+            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_14.SHIFT_X, ty0 - disc_js_14.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
         }
         // ── BG: atmosphere ──
         atmosphere_js_1.drawBloodMoon(bgCtx, { x: camX, y: camY });
@@ -31626,20 +32709,29 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         worldCtx.save();
         worldCtx.translate(-camX, -camY);
         context_js_17.setCtx(worldCtx);
+        archground_js_1.drawArchGround(worldCtx, camX, camY, vw, vh); // дворы, тени, тропинки под постройками
         ground_js_1.drawGroundMarks(worldCtx, { x: camX, y: camY });
         atmosphere_js_1.drawFootprints(worldCtx, { x: camX, y: camY });
-        // локации (с постройками эпох) и странник — по глубине: за домом
-        // странника не видно, перед домом — видно
+        // локации (с постройками эпох), заборы дворов и странник — по глубине:
+        // за домом странника не видно, перед домом — видно
         const drawList = [];
         for (const loc of locations_js_4.locations) {
             if (camera_js_1.camera.isVisible(loc.x, loc.y, loc.w, loc.h))
                 drawList.push({ k: loc.y + loc.h, loc });
+        }
+        for (const p of archground_js_1.archProps) {
+            if (camera_js_1.camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2))
+                drawList.push({ k: p.gy, prop: p });
         }
         drawList.push({ k: player.y + 24, player: true });
         drawList.sort((p, q) => p.k - q.k);
         for (const it of drawList) {
             if (it.player) {
                 player_js_1.drawPlayer(player);
+                continue;
+            }
+            if (it.prop) {
+                it.prop.draw(worldCtx);
                 continue;
             }
             const loc = it.loc;
@@ -31717,7 +32809,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             nocturnal_home: '#4a4a7a',
         };
         const color = colors[loc.id] || '#444';
-        draw_js_14.rect(ctx, loc.x, loc.y, loc.w, loc.h, color);
+        draw_js_15.rect(ctx, loc.x, loc.y, loc.w, loc.h, color);
         // Small label when camera is close
         ctx.fillStyle = '#e8dcc8';
         ctx.font = '6px "Press Start 2P","VT323",monospace';
@@ -31741,7 +32833,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     }
     function drawLocationPlain(ctx, loc) {
         if (loc.archDraw) {
-            loc.archDraw(ctx, loc.archX, loc.archGy, time_js_29.t);
+            if (loc.archFlip) { // повтор вида — зеркально
+                ctx.save();
+                ctx.translate(2 * loc.archX, 0);
+                ctx.scale(-1, 1);
+                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_29.t);
+                ctx.restore();
+            }
+            else
+                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_29.t);
+            archground_js_1.drawArchFoot(ctx, loc);
             return;
         }
         if (loc.streetForm) {
@@ -32026,6 +33127,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             player.tx = player.x;
             player.ty = player.y;
             player.moving = true;
+            player.walkTo = null;
             if (move.x > 0)
                 player.dir = 1;
             else if (move.x < 0)
@@ -32042,8 +33144,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 2) {
                 player.moving = false;
-                // Check if we arrived at a location
-                const loc = physics_js_1.findLocationAt(player.x, player.y, locations_js_4.locations);
+                // Check if we arrived at a location: та, к которой шли, — если
+                // дошли до её порога; иначе ближайшая
+                const want = player.walkTo;
+                player.walkTo = null;
+                const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
+                    && Math.abs(player.y - (want.y + want.h + 5)) < 4;
+                const loc = atWant ? want : physics_js_1.findLocationAt(player.x, player.y, locations_js_4.locations);
                 if (loc) {
                     flags.visited.add(loc.id);
                     events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
@@ -32071,7 +33178,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function updateWorldSystems() {
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
         if (brainrot_js_1.inLoop()) {
-            const L0 = disc_js_13.TOWN.y1 + 8 * disc_js_13.RING_W + 24, L1 = disc_js_13.TOWN.y1 + 9 * disc_js_13.RING_W - 16;
+            const L0 = disc_js_14.TOWN.y1 + 8 * disc_js_14.RING_W + 24, L1 = disc_js_14.TOWN.y1 + 9 * disc_js_14.RING_W - 16;
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -32101,7 +33208,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         updateCrackTriggers(player);
         potemkin_js_4.update(player, locations_js_4.locations, brainrot_js_1.isFrozen());
         if (time_js_29.t % 3 === 0)
-            particles_js_1.fireEmber(disc_js_13.TOWN.x0 + 775, disc_js_13.TOWN.y0 + 635);
+            particles_js_1.fireEmber(disc_js_14.TOWN.x0 + 775, disc_js_14.TOWN.y0 + 635);
     }
     // ═══ LOOP ═══
     function loop() {
@@ -32165,8 +33272,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (postfx_js_1_1) {
                 postfx_js_1 = postfx_js_1_1;
             },
-            function (draw_js_14_1) {
-                draw_js_14 = draw_js_14_1;
+            function (draw_js_15_1) {
+                draw_js_15 = draw_js_15_1;
             },
             function (terrain_js_5_1) {
                 terrain_js_5 = terrain_js_5_1;
@@ -32259,11 +33366,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (eggObjects_js_2_1) {
                 eggObjects_js_2 = eggObjects_js_2_1;
             },
-            function (disc_js_13_1) {
-                disc_js_13 = disc_js_13_1;
+            function (disc_js_14_1) {
+                disc_js_14 = disc_js_14_1;
             },
             function (ground_js_1_1) {
                 ground_js_1 = ground_js_1_1;
+            },
+            function (archground_js_1_1) {
+                archground_js_1 = archground_js_1_1;
             },
             function (edges_js_2_1) {
                 edges_js_2 = edges_js_2_1;
@@ -32332,6 +33442,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             layers_js_2.layers.init(mainCanvas);
             input_js_2.input.init(mainCanvas);
             locations_js_4.attachContent(looks_js_2.looks, dialogues_js_2.dialogues);
+            archground_js_1.prepareArchGround(locations_js_4.archEnsembles, locations_js_4.locations); // земля под постройками эпох
             ui_js_2.initUI();
             metaFx_js_2.initMetaFx();
             terminal_js_1.init();
@@ -32357,7 +33468,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
-                x: disc_js_13.TOWN.x0 + 800, y: disc_js_13.TOWN.y0 + 740, tx: disc_js_13.TOWN.x0 + 800, ty: disc_js_13.TOWN.y0 + 740,
+                x: disc_js_14.TOWN.x0 + 800, y: disc_js_14.TOWN.y0 + 740, tx: disc_js_14.TOWN.x0 + 800, ty: disc_js_14.TOWN.y0 + 740,
                 dir: 1, moving: false, walkFrame: 0,
             };
             playerRef_js_3.setPlayer(player);
@@ -32384,7 +33495,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (savedData) {
                 if (savedData.player) {
                     // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
-                    const dOff = disc_js_13.OFF - (savedData.off || 2300);
+                    const dOff = disc_js_14.OFF - (savedData.off || 2300);
                     player.x = savedData.player.x + dOff;
                     player.y = savedData.player.y + dOff;
                 }
@@ -32406,7 +33517,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     worldmap_js_1.loadDiscovered(savedData.discoveredGates);
             }
             save_js_1.startAutoSave(() => ({
-                player: { x: player.x, y: player.y }, off: disc_js_13.OFF,
+                player: { x: player.x, y: player.y }, off: disc_js_14.OFF,
                 talkedTo: Array.from(flags.talkedTo),
                 visited: Array.from(flags.visited),
                 observersSeen: Array.from(flags.observersSeen),
@@ -32419,7 +33530,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
-            lighting_js_1.lighting.add({ x: disc_js_13.TOWN.x0 + 800, y: disc_js_13.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            lighting_js_1.lighting.add({ x: disc_js_14.TOWN.x0 + 800, y: disc_js_14.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
             // Location lights
             for (const loc of locations_js_4.locations) {
                 if (!loc.light)
@@ -32554,12 +33665,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                         player.tx = px_;
                         player.ty = py_;
                         player.moving = true;
+                        player.walkTo = loc;
                     }
                 }
                 else {
                     player.tx = pos.x;
                     player.ty = pos.y;
                     player.moving = true;
+                    player.walkTo = null;
                 }
             });
             // ═══ EVENT HANDLERS ═══
@@ -32620,13 +33733,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 if (actionKey === 'branch_back') {
-                    teleportWithFade(disc_js_13.TOWN.x0 + 2560, disc_js_13.TOWN.y1 + disc_js_13.RING_W + 80);
+                    teleportWithFade(disc_js_14.TOWN.x0 + 2560, disc_js_14.TOWN.y1 + disc_js_14.RING_W + 80);
                     return;
                 }
                 if (actionKey === 'brainrot_enter') {
-                    teleportWithFade(disc_js_13.TOWN.x0 + 2540, disc_js_13.TOWN.y1 + 8 * disc_js_13.RING_W + 90, () => {
+                    teleportWithFade(disc_js_14.TOWN.x0 + 2540, disc_js_14.TOWN.y1 + 8 * disc_js_14.RING_W + 90, () => {
                         brainrot_js_1.enterLoop(() => {
-                            teleportWithFade(disc_js_13.TOWN.x0 + 2540, disc_js_13.TOWN.y1 + 7 * disc_js_13.RING_W + 100, () => {
+                            teleportWithFade(disc_js_14.TOWN.x0 + 2540, disc_js_14.TOWN.y1 + 7 * disc_js_14.RING_W + 100, () => {
                                 lorepopup_js_1.showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
                             });
                         });

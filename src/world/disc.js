@@ -72,6 +72,21 @@ export function epochAt(x, y) {
   return SEGMENTS[n - 1];
 }
 
+// тропы из городка на четыре стороны: вьются — дорога помнит, что её
+// протаптывали, а не чертили. d — расстояние от кромки городка.
+const TRAIL_PH = { south: 0.7, north: 2.3, east: 4.1, west: 5.6 };
+export function trailWind(d, ph) {
+  return Math.sin(d * 0.011 + ph) * (26 + d * 0.05) + Math.sin(d * 0.037 + ph * 2.1) * 9;
+}
+export function trailPoint(side, d) {
+  const cx = (TOWN.x0 + TOWN.x1) / 2, cy = (TOWN.y0 + TOWN.y1) / 2;
+  const w = trailWind(d, TRAIL_PH[side] ?? 0);
+  if (side === 'south') return { x: cx + w, y: TOWN.y1 + d };
+  if (side === 'north') return { x: cx + w, y: TOWN.y0 - d };
+  if (side === 'east') return { x: TOWN.x1 + d, y: cy + w };
+  return { x: TOWN.x0 - d, y: cy + w };
+}
+
 // раскладка южной стороны: полоса эпохи n по нижней кромке
 export function southBand(n) {
   const d0 = (n - 1) * RING_W, d1 = n * RING_W;

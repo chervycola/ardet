@@ -142,9 +142,12 @@ locations.push(...streetLocations);   // уже в мировых координ
 locations.push(...branchLocations);
 locations.push(...wasteLocations);   // пустошь за огнём
 
-// постройки эпох — твёрдые, с осмотром; поодаль от табличек
-import { buildArchitecture, archLocations } from './architecture.js';
-locations.push(...archLocations(buildArchitecture(locations.filter(l => l.streetForm))));
+// постройки эпох — ансамблями (ворота у тропы, дворы за табличками);
+// твёрдые, с осмотром
+import { buildEnsembles, archLocations } from './architecture.js';
+const ARCH = buildEnsembles(locations.filter(l => l.streetForm));
+locations.push(...archLocations(ARCH.buildings));
+export const archEnsembles = ARCH.ensembles;
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

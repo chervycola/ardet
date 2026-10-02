@@ -139,6 +139,15 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
 
 // Find location under a world point (for clicks)
 export function findLocationAt(gx, gy, locations, margin = 24) {
+  // точное попадание — в самую маленькую вещь: табличка перед домом
+  // важнее дома за ней
+  let hit = null, hitArea = Infinity;
+  for (const l of locations) {
+    if (gx >= l.x && gx <= l.x + l.w && gy >= l.y && gy <= l.y + l.h && l.w * l.h < hitArea) {
+      hitArea = l.w * l.h; hit = l;
+    }
+  }
+  if (hit) return hit;
   let best = null;
   let bestDist = Infinity;
   for (const l of locations) {

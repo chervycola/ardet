@@ -51,9 +51,9 @@ const imp = p => import(new URL(p, base));
 const { setCtx } = await imp('render/context.js');
 setCtx(fakeCtx());
 const { ARCH_BY_RING } = await imp('sprites/arch/index.js');
-const { buildArchitecture, signFacade } = await imp('world/architecture.js');
-const { locations } = await imp('world/locations.js');
-const { TOWN, RING_W, townDist } = await imp('world/disc.js');
+const { buildArchitecture, buildEnsembles, signFacade } = await imp('world/architecture.js');
+const { locations, archEnsembles } = await imp('world/locations.js');
+const { TOWN, RING_W, townDist, ringAt, trailPoint } = await imp('world/disc.js');
 const { SEGMENTS } = await imp('content/ulitsa_db.js');
 
 const SIDES = ['south', 'east', 'west', 'north', 'plain'];
@@ -81,23 +81,64 @@ test('arch: постройки по контракту и рисуются бе�
 
 const signs = locations.filter(l => l.streetForm);
 const decor = buildArchitecture(signs);
-test('arch: в каждом кольце стоят постройки, каждая — в полосе своего кольца', () => {
+test('arch: в каждом кольце стоят постройки, основание — на земле своего кольца', () => {
   for (let n = 1; n <= 9; n++) {
     const inRing = decor.filter(d => d.ring === n);
     assert(inRing.length >= 10, `кольцо ${n}: построек ${inRing.length}`);
     for (const d of inRing) {
-      const r = Math.ceil(townDist(d.x, d.gy) / RING_W);
-      eq(r, n, `${d.name} (${d.side}) стоит в кольце ${r}, а не ${n}`);
+      for (const x of [d.x - d.w / 2 + 3, d.x, d.x + d.w / 2 - 3]) {
+        const r = ringAt(x, d.gy);
+        eq(r, n, `${d.name} (${d.side}) стоит на земле кольца ${r}, а не ${n}`);
+      }
     }
   }
 });
 
-test('arch: постройки не заслоняют таблички', () => {
+test('arch: городок вне времени не застроен', () => {
+  for (const d of decor) {
+    const inside = d.x + d.w / 2 > TOWN.x0 && d.x - d.w / 2 < TOWN.x1 && d.gy > TOWN.y0 && d.gy - d.h < TOWN.y1;
+    assert(!inside, `${d.name} залезает в городок`);
+  }
+});
+
+test('arch: постройки не заслоняют таблички (табличка — впереди или над крышей)', () => {
   for (const d of decor) for (const s of signs) {
     const sx = s.x + s.w / 2, sgy = s.y + s.h;
-    const clashX = Math.abs(d.x - sx) < d.w / 2 + 10;
-    const clashY = sgy > d.gy - d.h - 10 && sgy - s.h < d.gy + 10;
-    assert(!(clashX && clashY), `${d.name} заслоняет «${s.name}»`);
+    if (Math.abs(d.x - sx) >= d.w / 2 + 12) continue;          // в стороне
+    const ahead = sgy >= d.gy + 24, overRoof = sgy <= d.gy - d.h - 2;
+    assert(ahead || overRoof, `${d.name} заслоняет «${s.name}»`);
+  }
+});
+
+test('ансамбли: у тропы на каждой стороне каждого кольца — ворота эпохи', () => {
+  for (let n = 1; n <= 9; n++) for (const side of ['south', 'north', 'west', 'east']) {
+    const g = archEnsembles.find(e => e.ring === n && e.side === side && e.kind === 'gate');
+    assert(g && g.members.length >= 1, `кольцо ${n}/${side}: нет ворот`);
+    const tp = trailPoint(side, (n - 1) * RING_W + 100);
+    for (const i of g.members) {
+      const d = decor[i];
+      assert(Math.hypot(d.x - tp.x, d.gy - tp.y) < 240, `кольцо ${n}/${side}: ${d.name} далеко от тропы`);
+    }
+  }
+});
+
+test('ансамбли: одинаковые постройки не стоят рядом (кроме двойняшек-панелек)', () => {
+  for (let i = 0; i < decor.length; i++) for (let j = i + 1; j < decor.length; j++) {
+    const a = decor[i], b = decor[j];
+    if (a.name !== b.name || a.ens === b.ens) continue;
+    assert(Math.hypot(a.x - b.x, a.gy - b.gy) >= 420, `${a.name} ×2 ближе 420`);
+  }
+});
+
+test('ансамбли: постройки двора — рядом друг с другом', () => {
+  for (const e of archEnsembles) {
+    if (e.members.length < 2) continue;
+    for (const i of e.members) {
+      const d = decor[i];
+      const others = e.members.filter(j => j !== i).map(j => decor[j]);
+      const gap = Math.min(...others.map(o => Math.abs(o.x - d.x) - (o.w + d.w) / 2));
+      assert(gap < 200, `${d.name}: оторвана от своего ансамбля (${Math.round(gap)})`);
+    }
   }
 });
 
@@ -141,6 +182,33 @@ test('arch: к каждой постройке можно подойти; скв
   const inside = { x: b.x + b.w / 2 - 6, y: b.y - 10 };
   assert(isBlocked(inside.x, inside.y, locations), 'основание твёрдое');
   assert(!isBlocked(inside.x, inside.y + 1, locations, inside), 'изнутри основания можно выйти');
+});
+
+const { prepareArchGround, archProps, drawArchFoot, drawArchGround } = await imp('render/archground.js');
+test('земля: у каждой постройки — обвязка у стены, рисуется без ошибок', () => {
+  prepareArchGround(archEnsembles, locations);
+  const ctx = fakeCtx();
+  for (const l of arch) {
+    assert(Array.isArray(l.archFoot), `${l.name}: нет обвязки`);
+    drawArchFoot(ctx, l);
+  }
+  drawArchGround(ctx, 0, 0, 99999, 99999);       // без холста — тихо пропускает
+});
+
+test('земля: заборы не перегораживают тропы и не встают на таблички', () => {
+  assert(archProps.length > 50, `кусков забора мало: ${archProps.length}`);
+  for (const p of archProps) {
+    for (const s of signs) {
+      const sx = s.x + s.w / 2, sgy = s.y + s.h;
+      const hit = Math.abs(sx - p.x) < p.w / 2 + 6 && Math.abs(sgy - p.gy) < 6;
+      assert(!hit, `забор на табличке «${s.name}»`);
+    }
+    for (const side of ['south', 'north']) {
+      const d = side === 'south' ? p.gy - TOWN.y1 : TOWN.y0 - p.gy;
+      if (d < 0 || p.x < TOWN.x0 || p.x > TOWN.x1) continue;
+      assert(Math.abs(trailPoint(side, d).x - p.x) >= 6, `забор на тропе ${side}`);
+    }
+  }
 });
 
 // ═══ REPORT ═══
