@@ -689,8 +689,10 @@ function propsFor(e, ms, signs, boxes) {
     for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
     return !onTrail(e.side, x, gy) && !onTrail(e.side, x - w / 2, gy) && !onTrail(e.side, x + w / 2, gy);
   };
-  // одна и та же вещь в один кадр не попадает
-  const seenNear = (K, x, gy) => archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
+  // одна и та же вещь в один кадр не попадает; примета эпохи (unique) —
+  // одна на сторону кольца
+  const seenNear = (K, x, gy) => (K.unique && archProps.some(p => p.name === K.name))
+    || archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
   const used = new Set();
   for (let i = 0; i < want; i++) {
     const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));

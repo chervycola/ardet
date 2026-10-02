@@ -671,7 +671,7 @@ export const ARCH = {
     south: [
       { name: 'колодец-журавль у канала', w: 28, h: 28, draw: shaduf },
       { name: 'жертвенник огня', w: 14, h: 22, draw: fireAltar },
-      { name: 'фонарь на посохе', w: 10, h: 26, draw: lantern },
+      { name: 'фонарь на посохе', w: 10, h: 26, unique: true, draw: lantern },
     ],
     east: [
       { name: 'колодец с воротом', w: 22, h: 24, draw: windlassWell },

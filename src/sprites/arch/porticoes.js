@@ -720,7 +720,7 @@ export const ARCH = {
     south: [
       { name: 'амфоры в песке', w: 22, h: 12, draw: amphoraStack },
       { name: 'причальная тумба', w: 16, h: 12, draw: bollard },
-      { name: 'пустой пьедестал', w: 12, h: 16, draw: pedestal },
+      { name: 'пустой пьедестал', w: 12, h: 16, unique: true, draw: pedestal },
     ],
     east: [
       { name: 'корзины земли с коромыслом', w: 24, h: 11, draw: yokeBaskets },

@@ -827,7 +827,7 @@ export const ARCH = {
     plain: [
       { name: 'будка часового', w: 12, h: 26, draw: sentryBox },
       { name: 'шлагбаум заставы', w: 30, h: 12, draw: barrierPole },
-      { name: 'ёлка на подпорке', w: 14, h: 22, draw: proppedTree },
+      { name: 'ёлка на подпорке', w: 14, h: 22, unique: true, draw: proppedTree },
     ],
   },
 };

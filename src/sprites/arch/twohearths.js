@@ -773,7 +773,7 @@ export const ARCH = {
     ],
     west: [
       {
-        name: 'тюльпан в горшке', w: 10, h: 15,
+        name: 'тюльпан в горшке', w: 10, h: 15, unique: true,
         draw(c, x, gy) {
           const X = Math.round(x), G = Math.round(gy);
           // ящик-подставка, горшок, один пёстрый цветок

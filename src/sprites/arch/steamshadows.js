@@ -834,7 +834,7 @@ export const ARCH = {
     west: [
       { name: 'велосипед-«паук»', w: 26, h: 18, draw: pennyFarthing },
       { name: 'почтовая тумба', w: 8, h: 15, draw: pillarBox },
-      { name: 'колонка без рычага', w: 12, h: 19, draw: pumpNoHandle },
+      { name: 'колонка без рычага', w: 12, h: 19, unique: true, draw: pumpNoHandle },
     ],
     north: [
       { name: 'нарты с каяком', w: 30, h: 8, draw: kayakSledge },
