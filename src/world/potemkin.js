@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { setCtx } from '../render/context.js';
-import { POTEMKIN_LOOKS } from '../content/potemkin.js';
+import { POTEMKIN_LOOKS, POTEMKIN_TENDER } from '../content/potemkin.js';
 
 export const STILL_DELAY = 150;   // кадров неподвижности до первого шва (~2.5 с)
 export const RISE = 1 / 90;       // проявление — полторы секунды
@@ -155,7 +155,7 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
   const img = offCtx.getImageData(0, 0, W, H);
   const d = img.data;
   // бережение не разоблачают: без подкосов и осыпи, растр лёгкий
-  const tender = !!(loc.potemkinSign && loc.potemkinSign.tender) || !!loc.potemkinTender;
+  const tender = !!(loc.potemkinSign && loc.potemkinSign.tender) || !!loc.potemkinTender || POTEMKIN_TENDER.has(loc.id);
   const holes = k * (tender ? 0.18 : 0.4);    // вещь редеет растром, но не исчезает
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
