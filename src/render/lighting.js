@@ -38,7 +38,10 @@ export const lighting = {
       const maxR = L.r * 2.5;
       if (sx < -maxR || sx > vw + maxR || sy < -maxR || sy > vh + maxR) continue;
 
-      const flick = L.flicker ? (1 - L.flicker * 0.5 + Math.sin(t * 0.07 + L.x * 0.1) * L.flicker * 0.5) : 1;
+      // свеча дрожит неровно, лампа — плавно
+      const flick = L.candle
+        ? 0.8 + 0.12 * Math.sin(t * 0.21 + L.x * 1.3) + 0.08 * Math.sin(t * 0.53 + L.y * 1.7)
+        : L.flicker ? (1 - L.flicker * 0.5 + Math.sin(t * 0.07 + L.x * 0.1) * L.flicker * 0.5) : 1;
       const intensity = (L.intensity || 1) * flick;
       const [r, g, b] = L.color || [255, 200, 100];
 

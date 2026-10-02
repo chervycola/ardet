@@ -45,6 +45,7 @@ import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, archProps, archGroundRects } from './render/archground.js';
+import { archWindowLights } from './render/archlights.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
@@ -194,6 +195,9 @@ for (const loc of locations) {
     flicker: L.flicker ?? 0.12, bloom: true,
   });
 }
+
+// Свет окон: где в постройке или утвари нарисована свеча — там и светит
+for (const L of archWindowLights(locations, archProps)) lighting.add(L);
 
 // ═══ TIME ═══
 import { t } from './core/time.js';

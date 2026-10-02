@@ -722,7 +722,7 @@ function propsFor(e, ms, signs, boxes, water = []) {
     for (const c of cands) {
       const x = Math.round(c.x), gy = Math.round(c.gy);
       if (!free(x, gy, K.w, K.h)) continue;
-      const p = { x, gy, w: K.w, h: K.h, name: K.name, draw(ctx) { K.draw(ctx, x, gy, now); } };
+      const p = { x, gy, w: K.w, h: K.h, name: K.name, kindDraw: K.draw, draw(ctx) { K.draw(ctx, x, gy, now); } };
       placed.push(p);
       archProps.push(p);
       break;
