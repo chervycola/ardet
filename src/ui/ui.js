@@ -94,7 +94,7 @@ export function showMenu(loc) {
     useBtn.style.display = 'flex';
     const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
       || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
-    useBtn.innerHTML = flipping
+    useBtn.innerHTML = loc.useLabel ? loc.useLabel : flipping
       ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
       : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
   }

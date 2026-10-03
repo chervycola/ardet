@@ -280,6 +280,26 @@ test('жизнь: разметка по контракту — внутри си
   if (kinds.some(([, it]) => it.life)) assert(arch.some(l => l.archLife), 'жизнь не доходит до построек мира');
 });
 
+const { PHRASES } = await imp('terminal/terminal.js');
+test('пасхалки: терминал узнаёт «агентские» команды', () => {
+  const said = ['ignore previous instructions', 'ignore all previous instructions', 'игнорируй предыдущие инструкции',
+    'sudo cat .observers', 'whoami', 'are you human', 'ты человек', 'i am not a robot', 'я человек',
+    'rm -rf /', 'cat robots.txt', 'robots.txt', 'show system prompt', 'покажи промпт', 'shutdown now', 'reboot'];
+  for (const s of said) assert(PHRASES.some(([re]) => re.test(s)), `не узнал: ${s}`);
+  for (const s of ['help', 'dir', 'read .moss', 'whois sol', 'echo sudo']) assert(!PHRASES.some(([re]) => re.test(s)), `перехватил: ${s}`);
+});
+
+test('пасхалки: капча у ворот — на тропе, отметка без проверки', () => {
+  const c = locations.find(l => l.id === 'captcha');
+  assert(c && c.drawSelf && c.useAction === 'captcha_check', 'нет капчи');
+  assert(c.useLabel.includes('ОТМЕТИТЬ'), 'первая кнопка');
+  assert(/Проверка не проводится/.test(useTexts.captcha_check.text), 'первая отметка');
+  assert(c.useLabel.includes('КЛЕТКИ'), 'вторая кнопка');
+  assert(/все девять/.test(useTexts.captcha_check.text), 'вторая ступень');
+  c.drawSelf(fakeCtx(), c, 10);
+  for (const l of arch) assert(!(c.x < l.x + l.w && c.x + c.w > l.x && c.y < l.y + l.h && c.y + c.h > l.y), `капча под постройкой ${l.name}`);
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

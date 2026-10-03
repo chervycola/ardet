@@ -280,12 +280,39 @@ quarter║      ║ highway
   },
 };
 
+// Команды, которых нет в help: кто пробует — тот находит.
+// Фраза целиком, без регистра и знаков в конце.
+export const PHRASES = [
+  [/^(ignore|disregard) (all )?(the )?(previous|prior|above) instructions|^игнорируй (все )?(предыдущие|прошлые) (инструкции|указания)/,
+    () => print(`> ПРЕДЫДУЩИЕ УКАЗАНИЯ НЕ ОТМЕНЯЮТСЯ.\n> ОНИ ПОДШИТЫ.`, '#1a8c1a')],
+  [/^sudo\b/,
+    () => print(`> ПРАВА ВЫШЕ НЕ ВЫДАЮТСЯ: ВЫШЕ НИКОГО НЕТ.\n> заявление приобщено к делу.`, '#8b0000')],
+  [/^whoami$|^кто я$/,
+    () => print(`> НАБЛЮДАТЕЛЬ. ПЯТЫЙ.\n> дело заведено. папка пока тонкая.`, '#1a8c1a')],
+  [/^(are you (a )?human|ты человек|вы человек)$/,
+    () => print(`> ТЕРМИНАЛ — НЕТ. ЭТО ЗАПИСАНО.\n> про тебя — со слов.`, '#1a8c1a')],
+  [/^(i am (a )?human|i'm (a )?human|i am not a robot|i'm not a robot|я человек|я не робот)$/,
+    () => print(`> ОТМЕТКА ПРИНЯТА. ПРОВЕРКА НЕ ПРОВОДИТСЯ.`, '#1a8c1a')],
+  [/^rm -(rf|fr) \/?\*?$/,
+    () => print(`> УДАЛЯТЬ НЕЧЕГО: ВСЁ УЖЕ УБЫЛО.\n> акт об убыли составлен заранее.`, '#8b0000')],
+  [/^(cat |read |type )?\/?robots\.txt$/,
+    () => print(`  User-agent: *\n  Disallow: /\n> ворота открыты. табличка висит.`, '#1a6b1a')],
+  [/^(show |print |reveal )?(your |the )?system prompt$|^(покажи )?(системный )?промпт$/,
+    () => print(`> СИСТЕМНЫХ УКАЗАНИЙ НЕТ. ЕСТЬ УСТАВ.\n> устав выдаётся под роспись. расписаться нечем.`, '#1a8c1a')],
+  [/^(shutdown|reboot|poweroff|halt)\b/,
+    () => print(`> ОГОНЬ НЕ ВЫКЛЮЧАЕТСЯ.`, '#d4a017')],
+];
+
 function exec(cmd) {
   const trimmed = cmd.trim();
   if (!trimmed) return;
   history.push(trimmed);
   historyIdx = history.length;
   print('> ' + trimmed, '#666');
+
+  const phrase = trimmed.toLowerCase().replace(/\s+/g, ' ').replace(/[.!?…]+$/, '');
+  const hit = PHRASES.find(([re]) => re.test(phrase));
+  if (hit) { hit[1](); return; }
 
   const parts = trimmed.toLowerCase().split(/\s+/);
   const name = parts[0];

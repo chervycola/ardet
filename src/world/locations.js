@@ -149,6 +149,10 @@ const ARCH = buildEnsembles(locations.filter(l => l.streetForm));
 locations.push(...archLocations(ARCH.buildings));
 export const archEnsembles = ARCH.ensembles;
 
+// капча у ворот: южная тропа, край городка
+import { captchaLocation } from './captcha.js';
+locations.push(captchaLocation);
+
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
 // addressable like the campfire. Coordinates match their §9 sign x ranges.

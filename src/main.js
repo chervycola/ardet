@@ -401,6 +401,7 @@ function drawLocationPlain(ctx, loc) {
     return;
   }
   if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
+  if (loc.drawSelf) { loc.drawSelf(ctx, loc, t); return; }
   const fn = locSprites['draw_' + loc.id];
   if (fn) {
     fn(loc.x, loc.y);
