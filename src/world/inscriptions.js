@@ -29,10 +29,16 @@ for (const [loc, lines] of Object.entries(EGG_INSCRIPTIONS)) {
 }
 
 const wallProx = {};
+// локации по id — один раз (надписей на постройках эпох сотня)
+let byId = null;
+const locOf = (locations, id) => {
+  if (!byId || byId.size !== locations.length) byId = new Map(locations.map(l => [l.id, l]));
+  return byId.get(id);
+};
 
 export function updateProximity(player, locations) {
   for (const locId of Object.keys(hiddenInscriptions)) {
-    const l = locations.find(ll => ll.id === locId);
+    const l = locOf(locations, locId);
     if (!l) continue;
     const dx = player.x - (l.x + l.w / 2);
     const dy = player.y - (l.y + l.h / 2);
@@ -48,7 +54,7 @@ export function draw(camera, locations) {
   for (const locId of Object.keys(hiddenInscriptions)) {
     const prox = wallProx[locId] || 0;
     if (prox < 60) continue;
-    const l = locations.find(ll => ll.id === locId);
+    const l = locOf(locations, locId);
     if (!l) continue;
     const sx = l.x - camera.x;
     const sy = l.y - camera.y;
@@ -66,8 +72,10 @@ export function draw(camera, locations) {
       ctx.fillStyle = locId === 'altar' ? P.toxic :
                       (locId === 'graffiti' ? P.crimson :
                        (locId === 'church' ? P.damber : P.bone));
-      const lx = l.x + 4 + (i % 2) * (l.w - 50);
-      const ly = l.y - 8 + Math.floor(i / 2) * 7;
+      // на постройке эпохи — по стене, в нижней трети, строка под строкой
+      const onWall = !!l.archDraw;
+      const lx = onWall ? l.x + 3 + (i % 2) * Math.max(0, l.w - 60) : l.x + 4 + (i % 2) * (l.w - 50);
+      const ly = onWall ? l.y + Math.round(l.h * 0.62) + i * 6 : l.y - 8 + Math.floor(i / 2) * 7;
       ctx.fillText(lines[i], lx, ly);
       ctx.globalAlpha = 1;
     }

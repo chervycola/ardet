@@ -14,6 +14,8 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, RING_W, RINGS, warpedDist, trailPoint } from './disc.js';
 import { ARCH_LOOKS } from '../content/arch_looks.js';
 import { ARCH_BACKS } from '../content/arch_backs.js';
+import { ARCH_WALLS } from '../content/arch_walls.js';
+import { hiddenInscriptions } from './inscriptions.js';
 import { useTexts } from './useActions.js';
 
 function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
@@ -369,6 +371,8 @@ export function archLocations(decor) {
     const bk = ARCH_BACKS[`${SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
     const around = bk && bk.back ? `ar_${i}_around` : null;
     if (around) useTexts[around] = { title: `${d.name} — с изнанки`, text: bk.back };
+    const wall = ARCH_WALLS[`${SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+    if (wall && wall.length) hiddenInscriptions[`ar_${i}`] = wall;
     const fh = Math.max(6, Math.min(14, Math.round(d.h * 0.3)));
     const fw = Math.round(d.w * 0.84);
     return {
