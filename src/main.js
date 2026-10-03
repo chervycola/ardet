@@ -424,6 +424,115 @@ function drawMirrorCandle(ctx, loc) {
   ctx.globalAlpha = 1;
 }
 
+// ═══ ТАБЛИЧКИ ПО ЭПОХАМ ═══
+// Форма та же (табличка, стойка, ларёк, стена), материал — века:
+// древность — камень, средние века и XVII — дерево, XVIII–XIX — чугун и
+// крашеная доска, XX — эмаль, неон — эмаль и жесть, «сейчас» — табло.
+function eraOf(n) {
+  if (n <= 2) return 'stone';
+  if (n <= 4) return 'wood';
+  if (n <= 6) return 'iron';
+  if (n <= 8) return 'enamel';
+  if (n === 9) return 'led';
+  return null;
+}
+function drawEraSign(ctx, form, ring, x, gy, loc) {
+  const era = eraOf(ring);
+  if (!era || form === 'fire') return false;
+  const R = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(a, b, w, h); };
+  const STONE = '#3a3328', STONE2 = '#34302a', EDGE = '#8A8D8F', BONE = '#D9CFB8', NIGHT = '#0D0B0A';
+  const WOOD = '#3a2818', WOOD2 = '#241c14', IRON = '#15100c', SEP = '#3A3026', CIN = '#C23B2B';
+  const plaque = form === 'plaque' || !form;
+  if (era === 'stone') {
+    if (plaque) {          // стела на цоколе, строки вырезаны
+      R(x - 6, gy - 3, 13, 3, STONE2); R(x - 4, gy - 21, 9, 18, STONE);
+      R(x - 4, gy - 21, 1, 18, EDGE); R(x - 3, gy - 22, 7, 1, STONE);
+      for (let i = 0; i < 4; i++) R(x - 2, gy - 18 + i * 3, 5, 1, NIGHT);
+    } else if (form === 'stand') {   // каменный стол-жертвенник
+      R(x - 7, gy - 10, 14, 3, STONE); R(x - 7, gy - 10, 14, 1, EDGE);
+      R(x - 5, gy - 7, 3, 7, STONE2); R(x + 2, gy - 7, 3, 7, STONE2);
+    } else if (form === 'kiosk') {   // прилавок под холстом
+      R(x - 8, gy - 17, 16, 3, SEP); R(x - 8, gy - 17, 16, 1, EDGE); R(x - 7, gy - 14, 1, 14, WOOD2); R(x + 6, gy - 14, 1, 14, WOOD2);
+      R(x - 6, gy - 7, 12, 3, STONE); R(x - 6, gy - 7, 12, 1, EDGE);
+    } else if (form === 'surface') { // кладка из блоков
+      R(x - 8, gy - 16, 16, 16, STONE);
+      for (let r = 0; r < 4; r++) R(x - 8, gy - 16 + r * 4, 16, 1, STONE2);
+      R(x - 8, gy - 16, 16, 1, EDGE);
+    } else return false;
+    return true;
+  }
+  if (era === 'wood') {
+    if (plaque) {          // доска на столбе, гвозди
+      R(x, gy - 14, 2, 14, WOOD2); R(x - 5, gy - 19, 12, 7, WOOD);
+      R(x - 5, gy - 19, 12, 1, EDGE); R(x - 4, gy - 17, 1, 1, EDGE); R(x + 5, gy - 17, 1, 1, EDGE);
+      R(x - 3, gy - 16, 8, 1, SEP);
+    } else if (form === 'stand') {   // пюпитр
+      R(x - 6, gy - 15, 12, 4, WOOD); R(x - 6, gy - 15, 12, 1, EDGE);
+      R(x - 1, gy - 11, 2, 11, WOOD2); R(x - 4, gy - 1, 8, 1, WOOD2);
+    } else if (form === 'kiosk') {   // лавка со ставней
+      R(x - 7, gy - 14, 14, 14, WOOD2); R(x - 8, gy - 16, 16, 2, WOOD); R(x - 8, gy - 16, 16, 1, EDGE);
+      R(x - 5, gy - 10, 10, 5, NIGHT); R(x - 5, gy - 5, 10, 1, WOOD);
+    } else if (form === 'surface') { // тёсаная стена
+      R(x - 8, gy - 16, 16, 16, WOOD2);
+      for (let c = 0; c < 4; c++) R(x - 8 + c * 4, gy - 16, 1, 16, WOOD);
+      R(x - 8, gy - 16, 16, 1, EDGE);
+    } else return false;
+    return true;
+  }
+  if (era === 'iron') {
+    if (plaque) {          // чугунный столб, крашеная доска в раме
+      R(x, gy - 15, 2, 15, IRON); R(x - 1, gy - 2, 4, 2, IRON);
+      R(x - 6, gy - 21, 14, 7, IRON); R(x - 5, gy - 20, 12, 5, '#c8b89a');
+      R(x - 4, gy - 18, 10, 1, SEP); R(x + 1, gy - 23, 1, 2, IRON);
+    } else if (form === 'stand') {   // мольберт с афишей
+      R(x - 5, gy - 18, 10, 10, '#c8b89a'); R(x - 5, gy - 18, 10, 1, IRON);
+      R(x - 4, gy - 15, 8, 1, SEP); R(x - 4, gy - 12, 6, 1, SEP);
+      R(x - 5, gy - 8, 1, 8, IRON); R(x + 4, gy - 8, 1, 8, IRON);
+    } else if (form === 'kiosk') {   // тумба с куполком
+      R(x - 5, gy - 16, 10, 16, IRON); R(x - 4, gy - 14, 8, 9, '#c8b89a');
+      R(x - 6, gy - 18, 12, 2, IRON); R(x - 1, gy - 20, 2, 2, IRON);
+      R(x - 3, gy - 12, 6, 1, SEP); R(x - 3, gy - 9, 5, 1, SEP);
+    } else if (form === 'surface') { // кирпич
+      R(x - 8, gy - 16, 16, 16, '#3a2418');
+      for (let r = 0; r < 5; r++) R(x - 8, gy - 16 + r * 3 + 2, 16, 1, '#2a1a12');
+    } else return false;
+    return true;
+  }
+  if (era === 'enamel') {
+    if (plaque) {          // эмалевая табличка: светлое поле, тёмный кант, сколы
+      R(x, gy - 14, 2, 14, '#2a2620'); R(x - 6, gy - 20, 14, 8, NIGHT);
+      R(x - 5, gy - 19, 12, 6, BONE); R(x - 4, gy - 17, 10, 1, NIGHT); R(x - 4, gy - 15, 7, 1, NIGHT);
+      R(x + 4, gy - 19, 2, 2, NIGHT);
+    } else if (form === 'stand') {   // доска объявлений, листки
+      R(x - 7, gy - 17, 14, 11, '#2a2620'); R(x - 6, gy - 16, 5, 4, BONE); R(x, gy - 15, 5, 5, '#c8b89a');
+      R(x - 5, gy - 10, 4, 3, BONE); R(x - 6, gy - 6, 1, 6, '#2a2620'); R(x + 5, gy - 6, 1, 6, '#2a2620');
+    } else if (form === 'kiosk') {   // ларёк со стеклом
+      R(x - 7, gy - 15, 14, 15, '#2a2620'); R(x - 6, gy - 13, 12, 6, '#34302a');
+      R(x - 6, gy - 13, 12, 1, EDGE); R(x - 8, gy - 16, 16, 1, CIN); R(x - 2, gy - 6, 4, 6, NIGHT);
+    } else if (form === 'surface') { // бетонная стена
+      R(x - 8, gy - 16, 16, 16, '#34302a'); R(x - 8, gy - 16, 16, 1, EDGE);
+      R(x, gy - 16, 1, 16, NIGHT);
+    } else return false;
+    return true;
+  }
+  // led: табло — тёмное стекло, строки пепла, бегущая точка
+  const tick = Math.floor(t / 12);
+  if (plaque || form === 'stand') {
+    const top = plaque ? gy - 21 : gy - 17;
+    if (plaque) R(x, gy - 13, 2, 13, '#2a2620'); else { R(x - 6, gy - 6, 1, 6, '#2a2620'); R(x + 5, gy - 6, 1, 6, '#2a2620'); }
+    R(x - 7, top, 15, 9, NIGHT); R(x - 7, top, 15, 1, '#2a2620');
+    for (let i = 0; i < 3; i++) R(x - 5, top + 2 + i * 2, 11 - ((i * 3 + tick) % 5), 1, EDGE);
+    R(x - 5 + (tick % 11), top + 7, 1, 1, BONE);
+  } else if (form === 'kiosk') {   // стеклянный куб, экран заказа
+    R(x - 7, gy - 15, 14, 15, '#1a2030'); R(x - 7, gy - 15, 14, 1, EDGE); R(x - 7, gy - 15, 1, 15, EDGE);
+    R(x - 4, gy - 11, 8, 5, NIGHT); R(x - 3, gy - 10, (tick % 6) + 1, 1, EDGE);
+  } else if (form === 'surface') {
+    R(x - 8, gy - 16, 16, 16, NIGHT); R(x - 8, gy - 16, 16, 1, EDGE);
+    for (let i = 0; i < 4; i++) R(x - 6, gy - 13 + i * 3, 12 - ((i + tick) % 4) * 2, 1, '#34302a');
+  } else return false;
+  return true;
+}
+
 // ═══ STREET SIGNS — small pixel landmarks by form ═══
 function drawStreetSign(ctx, loc) {
   const x = loc.x + 7;            // anchor center
@@ -496,6 +605,12 @@ function drawStreetSign(ctx, loc) {
     ctx.fillStyle = grad;
     ctx.fillRect(x - 30, gy - 30, 60, 36);
     // Live status scaffolding outline (already drawn below for live signs)
+    return;
+  }
+
+  // табличка в материале своей эпохи: стела → доска → чугун → эмаль → табло
+  if (form !== 'building' && drawEraSign(ctx, form, loc.streetSeg, x, gy, loc)) {
+    if (loc.streetLive) drawLiveScaffold(ctx, loc, x, gy);
     return;
   }
 
