@@ -13,6 +13,8 @@ import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, RING_W, RINGS, warpedDist, trailPoint } from './disc.js';
 import { ARCH_LOOKS } from '../content/arch_looks.js';
+import { ARCH_BACKS } from '../content/arch_backs.js';
+import { useTexts } from './useActions.js';
 
 function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
 
@@ -363,6 +365,10 @@ export function signFacade(ringN, side) {
 // основание (низ силуэта), чтобы высокое можно было обойти сзади.
 export function archLocations(decor) {
   return decor.map((d, i) => {
+    // изнанка: обойти постройку; шов — если постройка сама притворство
+    const bk = ARCH_BACKS[`${SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+    const around = bk && bk.back ? `ar_${i}_around` : null;
+    if (around) useTexts[around] = { title: `${d.name} — с изнанки`, text: bk.back };
     const fh = Math.max(6, Math.min(14, Math.round(d.h * 0.3)));
     const fw = Math.round(d.w * 0.84);
     return {
@@ -371,6 +377,8 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+      ...(around ? { useAction: around } : {}),
+      ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
       // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
       archChar: Math.max(0, Math.min(1, (warpedDist(d.x, d.gy) - (RINGS * RING_W - 130)) / 110)),
       // доминанта: огонь, видный из соседнего кольца; шов подделки; зеркало

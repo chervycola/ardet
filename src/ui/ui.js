@@ -92,9 +92,10 @@ export function showMenu(loc) {
     useBtn.style.display = 'none';
   } else {
     useBtn.style.display = 'flex';
-    const flipping = loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip');
+    const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
+      || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
     useBtn.innerHTML = flipping
-      ? '<i>↺</i>ОБОЙТИ ЗНАК'
+      ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
       : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
   }
 

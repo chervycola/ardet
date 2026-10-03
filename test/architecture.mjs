@@ -245,6 +245,17 @@ test('земля: заборы не перегораживают тропы и �
   }
 });
 
+const { ARCH_BACKS } = await imp('content/arch_backs.js');
+const { useTexts } = await imp('world/useActions.js');
+test('изнанка: у каждой постройки — «обойти» с текстом (когда изнанки написаны)', () => {
+  if (!Object.keys(ARCH_BACKS).length) return;
+  for (const l of arch) {
+    const key = `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}`;
+    assert(ARCH_BACKS[key] && ARCH_BACKS[key].back, `нет изнанки ${key}`);
+    assert(l.useAction && useTexts[l.useAction] && useTexts[l.useAction].text, `${key}: «обойти» не подключено`);
+  }
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
