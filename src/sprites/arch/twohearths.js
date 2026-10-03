@@ -179,6 +179,7 @@ export const ARCH = {
   landmark: {
     name: 'Тадж-Махал', side: 'east', w: 120, h: 190,
     light: { dx: 0, dy: -82, r: 80 },
+    life: { birds: [[16, 23, -107]] },
     draw: tajMahal,
   },
   // ── ЮГ · Исфахан и стамбульская кофейня ──
@@ -228,6 +229,7 @@ export const ARCH = {
     },
     {
       name: 'кофейня с бадгиром', w: 64, h: 66,
+      life: { smoke: [[-21, -64]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // приземистый дом с плоской кровлей и аркадой
@@ -262,6 +264,7 @@ export const ARCH = {
   east: [
     {
       name: 'хижина Басё', w: 66, h: 46,
+      life: { smoke: [[11, -43]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy), H = X + 11;
         // стены; сёдзи с решёткой кумико; одна створка отодвинута — очаг тлеет
@@ -350,14 +353,12 @@ export const ARCH = {
   west: [
     {
       name: 'дом с печью', w: 32, h: 88,
+      life: { smoke: [[9, -80]] },
       draw(c, x, gy, t) {
         const X = Math.round(x), G = Math.round(gy);
         // труба за щипцом и дым печи
         R(c, D1, X + 7, G - 78, 4, 12);
         R(c, ASH, X + 6, G - 79, 6, 1);
-        const p = ph(t, 26, 3);
-        R(c, ASH, X + 9 + p, G - 83 - p, 2, 2);
-        R(c, ASH, X + 12 + p, G - 87 + (p >> 1), 2, 1);
         // кирпичный корпус, узкий и высокий
         R(c, BRICK, X - 14, G - 56, 28, 56);
         R(c, BONE, X - 14, G - 56, 28, 1);
@@ -453,6 +454,7 @@ export const ARCH = {
   north: [
     {
       name: 'островная обсерватория', w: 80, h: 70,
+      life: { smoke: [[9, -48]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // корпус-усадьба: кирпич, снег на карнизе, вальмовая кровля с трубой — жильё, не неф
@@ -462,9 +464,6 @@ export const ARCH = {
         R(c, BONE, X - 20, G - 41, 36, 1);                // снег на коньке
         R(c, ASH, X - 24, G - 35, 2, 1); R(c, ASH, X - 22, G - 38, 2, 1);
         R(c, D1, X + 8, G - 46, 3, 6); R(c, BONE, X + 7, G - 47, 5, 1);
-        c.globalAlpha = 0.45;
-        R(c, ASH, X + 10, G - 51, 3, 2); R(c, ASH, X + 13, G - 54, 3, 2);
-        c.globalAlpha = 1;
         R(c, BRICK, X - 22, G - 30, 40, 30);
         R(c, BONE, X - 22, G - 30, 1, 30);
         R(c, BONE, X - 23, G - 32, 42, 2);
@@ -610,6 +609,7 @@ export const ARCH = {
     },
     {
       name: 'острог с ямой', w: 92, h: 80,
+      life: { birds: [[-24, 20, -35]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // тын выше человека: брёвна по 5 px, острия на G-35/36, на остриях пепел

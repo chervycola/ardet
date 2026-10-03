@@ -1010,9 +1010,10 @@ export const ARCH = {
     name: 'Останкинская башня', side: 'plain', w: 72, h: 200,
     light: { dx: -1, dy: -199, r: 90, color: [194, 59, 43] },
     draw: ostankino,
+    life: { blink: [[-5, -120, 'K', 23, 0.35]] },
   },
   south: [
-    { name: 'отель-пластина', w: 96, h: 96, draw: hotel },
+    { name: 'отель-пластина', w: 96, h: 96, draw: hotel, life: { birds: [[-22, 1, -80, 'K']] } },
     { name: 'пляж «аренда солнца»', w: 76, h: 52, draw: beach },
     { name: 'кофейня Махфуза', w: 64, h: 62, draw: cafe },
   ],
@@ -1022,16 +1023,16 @@ export const ARCH = {
   ],
   west: [
     { name: 'колесо обозрения', w: 88, h: 92, draw: wheel },
-    { name: 'щит с ковбоями', w: 76, h: 58, draw: billboard },
+    { name: 'щит с ковбоями', w: 76, h: 58, draw: billboard, life: { blink: [[29, -57, 'S', 150, 0.12]] } },
   ],
   north: [
-    { name: 'нефтяная платформа', w: 84, h: 96, draw: rig },
+    { name: 'нефтяная платформа', w: 84, h: 96, draw: rig, life: { smoke: [[38, -87]] } },
     { name: 'мебельный ангар', w: 96, h: 64, draw: warehouse },
     { name: 'домик Хёвди', w: 76, h: 74, draw: hofdi },
   ],
   plain: [
-    { name: 'панельная девятиэтажка', w: 76, h: 87, draw: panel },
-    { name: 'кочегарка «Камчатка»', w: 96, h: 58, draw: boiler },
+    { name: 'панельная девятиэтажка', w: 76, h: 87, draw: panel, life: { birds: [[-12, 2, -74]] } },
+    { name: 'кочегарка «Камчатка»', w: 96, h: 58, draw: boiler, life: { smoke: [[-27, -56]] } },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {

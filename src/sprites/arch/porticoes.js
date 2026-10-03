@@ -713,28 +713,29 @@ export const ARCH = {
     name: 'Фаросский маяк', side: 'south', w: 72, h: 196,
     light: { dx: 0, dy: -170, r: 80 },
     draw: pharos,
+    life: { smoke: [[8, -176]], birds: [[13, 17, -110, 'K']] },
     tender: true,           // маяк настоящий: проявляется только надпись, без подпорок
     potemkin: 'На доске у двери по штукатурке — имя царя. Где штукатурка осыпалась, из камня проступает другое имя, вырезанное глубже.',
   },
   south: [
     { name: 'Пантеон', w: 86, h: 54, draw: pantheon },
-    { name: 'сад Эпикура', w: 56, h: 50, draw: epicurusGarden },
+    { name: 'сад Эпикура', w: 56, h: 50, draw: epicurusGarden, life: { birds: [[-5, 14, -19]] } },
   ],
   east: [
     { name: 'пещерный храм-чайтья', w: 80, h: 62, draw: chaitya },
-    { name: 'стена в лесах', w: 96, h: 68, draw: greatWall },
+    { name: 'стена в лесах', w: 96, h: 68, draw: greatWall, life: { smoke: [[7, -66]] } },
   ],
   west: [
-    { name: 'башня лимеса', w: 56, h: 72, draw: limesTower },
+    { name: 'башня лимеса', w: 56, h: 72, draw: limesTower, life: { birds: [[9, 12, -55]] } },
     { name: 'акведук', w: 96, h: 56, draw: aqueduct },
   ],
   north: [
-    { name: 'брох', w: 44, h: 70, draw: broch },
+    { name: 'брох', w: 44, h: 70, draw: broch, life: { birds: [[-14, -9, -67]] } },
     { name: 'болото жертв', w: 64, h: 48, draw: bog },
   ],
   plain: [
     { name: 'портик фактории', w: 64, h: 50, draw: factoryPortico },
-    { name: 'юрта у таможенного камня', w: 116, h: 42, draw: customs },
+    { name: 'юрта у таможенного камня', w: 116, h: 42, draw: customs, life: { smoke: [[-34, -36]] } },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {

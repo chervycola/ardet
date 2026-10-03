@@ -266,6 +266,7 @@ export const ARCH = {
   landmark: {
     name: 'Айя-София', side: 'south', w: 160, h: 160,
     light: { dx: 0, dy: -109, r: 80 },
+    life: { birds: [[-9, -6, -126]] },
     draw(c, x, gy, t) {
       const X = Math.round(x), G = Math.round(gy);
       // минареты: ствол, два балкона, конус-карандаш
@@ -509,6 +510,7 @@ export const ARCH = {
   west: [
     {
       name: 'чёрный собор', w: 84, h: 120,
+      life: { birds: [[34, 37, -92]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // средний неф: щипец, роза, галерея, портал
@@ -592,6 +594,7 @@ export const ARCH = {
   north: [
     {
       name: 'ставкирка', w: 58, h: 88,
+      life: { birds: [[4, 6, -53]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // смоляная кровля: кромка костью по левому скату (луна слева)
@@ -633,6 +636,7 @@ export const ARCH = {
     },
     {
       name: 'драккар на берегу', w: 86, h: 64,
+      life: { flag: [[0, -64, 6, 'V']] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         // корпус-полумесяц клинкером: к штевням борт поднимается
@@ -679,6 +683,7 @@ export const ARCH = {
   plain: [
     {
       name: 'белокаменный храм', w: 42, h: 86,
+      life: { birds: [[-15, -11, -45]] },
       draw(c, x, gy) {
         const X = Math.round(x), G = Math.round(gy);
         R(c, ST2, X - 21, G - 3, 42, 3);

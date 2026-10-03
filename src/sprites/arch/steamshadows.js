@@ -68,9 +68,6 @@ function canalSteamer(ctx, x, gy) {
   const f = pen(ctx, x, gy, 108);
   const dune = (l, top, w) => { f(D2, l, top, w, top); f(P1, l, top, w, 1); };
   // за дальним валом — второй пароход той же колонны: мачты, труба, дым
-  ctx.globalAlpha = 0.45;
-  f(A, 95, 31, 5, 2); f(null, 90, 34, 5, 2);
-  ctx.globalAlpha = 1;
   f(A, 97, 40, 1, 24); f(null, 95, 37, 5, 1);
   f(A, 105, 36, 1, 20); f(null, 103, 33, 5, 1);
   f(D2, 100, 28, 3, 10); f(N, 100, 28, 3, 2);
@@ -82,9 +79,6 @@ function canalSteamer(ctx, x, gy) {
   f(D1, 2, 24, 18, 2); f(P2, 2, 24, 18, 1);
   f(D2, 3, 28, 16, 4); f(P2, 3, 28, 16, 1);
   f(B, 6, 29, 1, 1); f(null, 10, 29, 1, 1); f(null, 15, 29, 1, 1);
-  // дым из трубы — ветер с моря, клубы влево
-  f(D4, 50, 57, 10, 5); f(null, 42, 61, 10, 5); f(null, 35, 64, 9, 4);
-  f(A, 51, 57, 7, 1); f(null, 43, 61, 7, 1); f(null, 36, 64, 6, 1);
   // корпус: видна только верхняя треть — остальное ниже песка
   f(D1, 24, 26, 62, 14);
   f(null, 84, 29, 7, 17);          // приподнятый нос
@@ -209,9 +203,6 @@ function machineOffice(ctx, x, gy) {
   f(RB, 75, 56, 5, 56); f(A, 75, 56, 1, 56); f(D1, 79, 56, 1, 56);
   f(D1, 75, 40, 5, 1); f(null, 75, 24, 5, 1);
   f(B, 74, 58, 7, 2);
-  ctx.globalAlpha = 0.4;
-  f(A, 79, 62, 4, 2); f(null, 83, 64, 3, 2);
-  ctx.globalAlpha = 1;
   // зал: кирпич в заполнении деревянного каркаса, западные окна в рамах
   f(RB, 7, 28, 60, 28);
   for (const p of [7, 14, 21, 52, 59, 66]) f(D1, p, 28, 1, 28);
@@ -260,9 +251,6 @@ function machineOffice(ctx, x, gy) {
 // ───────────────────────── ЗАПАД ─────────────────────────
 function spinningMill(ctx, x, gy) {
   const f = pen(ctx, x, gy, 84);
-  // дым — шлейф к закату
-  f(D4, 70, 97, 12, 5); f(null, 59, 99, 13, 5); f(null, 49, 100, 11, 4);
-  f(A, 71, 97, 9, 1); f(null, 60, 99, 10, 1); f(null, 50, 100, 8, 1);
   // труба
   f(RB, 72, 44, 11, 44);
   f(null, 73, 88, 9, 44);
@@ -838,27 +826,28 @@ export const ARCH = {
   landmark: {
     name: 'Эйфелева башня', side: 'west', w: 72, h: 200,
     light: { dx: 0, dy: -180, r: 90 },
+    life: { flag: [[0, -199, 6, 'V']] },
     draw: towerBeacon,
   },
   south: [
-    { name: 'пароход в песках', w: 108, h: 66, draw: canalSteamer },
+    { name: 'пароход в песках', w: 108, h: 66, life: { smoke: [[2, -53], [47, -29]] }, draw: canalSteamer },
     { name: 'опера в песке', w: 92, h: 72, draw: sandOpera },
   ],
   east: [
     { name: 'вокзал двух часов', w: 92, h: 74, draw: giyofuStation },
-    { name: 'контора перевода машин', w: 96, h: 64, draw: machineOffice },
+    { name: 'контора перевода машин', w: 96, h: 64, life: { smoke: [[29, -59]] }, draw: machineOffice },
   ],
   west: [
-    { name: 'прядильня с трубой', w: 84, h: 100, draw: spinningMill },
+    { name: 'прядильня с трубой', w: 84, h: 100, life: { smoke: [[34, -93]] }, draw: spinningMill },
     { name: 'читальный зал', w: 84, h: 66, draw: readingRoom },
   ],
   north: [
     { name: 'контора «Либо/Либо»', w: 74, h: 66, draw: eitherOrOffice },
-    { name: 'пирс над глубиной', w: 92, h: 46, draw: depthPier },
+    { name: 'пирс над глубиной', w: 92, h: 46, life: { birds: [[2, 8, -11, 'K']] }, draw: depthPier },
   ],
   plain: [
     { name: 'станция с водокачкой', w: 96, h: 62, draw: waterTowerStation },
-    { name: 'дом с мезонином', w: 92, h: 60, draw: mezzanineHouse },
+    { name: 'дом с мезонином', w: 92, h: 60, life: { smoke: [[-20, -33]] }, draw: mezzanineHouse },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {

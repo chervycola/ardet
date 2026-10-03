@@ -917,14 +917,15 @@ export const ARCH = {
     name: 'Дворец Советов', side: 'plain', w: 110, h: 198,
     light: { dx: 23, dy: -112, r: 90 },
     draw: palaceSoviets,
+    life: { smoke: [[15, -61]] },
     potemkin: 'Гранит и колонны написаны на щитах, щиты стоят на подкосах. В проёме за ними — котлован, над котлованом пар, как над тёплой водой.',
   },
   south: [
-    { name: 'затопленный фарватер', w: 92, h: 41, draw: sunkenFairway },
+    { name: 'затопленный фарватер', w: 92, h: 41, draw: sunkenFairway, life: { birds: [[-25, -2, -27, 'K']] } },
     { name: 'вышка с факелом', w: 72, h: 86, draw: flareDerrick },
   ],
   east: [
-    { name: 'купол-остов', w: 84, h: 70, draw: bareDome },
+    { name: 'купол-остов', w: 84, h: 70, draw: bareDome, life: { birds: [[10, 18, -33]] } },
     { name: 'мост львов', w: 96, h: 42, draw: lionBridge },
   ],
   west: [
@@ -932,12 +933,12 @@ export const ARCH = {
     { name: 'собор с обломком шпиля', w: 52, h: 114, draw: brokenSpire },
   ],
   north: [
-    { name: 'вмёрзший барк', w: 84, h: 84, draw: frozenBarque },
+    { name: 'вмёрзший барк', w: 84, h: 84, draw: frozenBarque, life: { smoke: [[6, -28]] } },
     { name: 'мачта дирижабля', w: 100, h: 83, draw: airshipMast },
   ],
   plain: [
     { name: 'сталинская высотка', w: 76, h: 128, draw: stalinTower },
-    { name: 'градирня и цех', w: 96, h: 88, draw: coolingWorks },
+    { name: 'градирня и цех', w: 96, h: 88, draw: coolingWorks, life: { smoke: [[35, -87]] } },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {

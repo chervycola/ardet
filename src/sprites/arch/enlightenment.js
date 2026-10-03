@@ -401,9 +401,6 @@ function orangery(ctx, x, gy) {
   f(null, 18, 30, 5, 2); f(null, 89, 30, 5, 2);
   // на левом крыле — труба печи, дымок: печи топят всю зиму
   f(D1, 31, 33, 2, 5); f(B, 30, 34, 4, 1);
-  ctx.globalAlpha = 0.45;
-  f(A, 33, 37, 3, 2); f(null, 36, 40, 3, 2);
-  ctx.globalAlpha = 1;
   f(D5, 18, 22, 76, 22);
   f(P2, 18, 22, 76, 1);
   // высокие окна: стекло пеплом, переплёт костью, за стеклом — лимоны в кадках
@@ -831,6 +828,7 @@ export const ARCH = {
   landmark: {
     name: 'пирамида в лесах', side: 'south', w: 160, h: 140,
     light: { dx: 21, dy: -85, r: 80 },
+    life: { flag: [[0, -136, 5, 'K']] },
     draw: pyramidScaffold,
   },
   south: [
@@ -842,16 +840,16 @@ export const ARCH = {
     { name: 'экзаменационные кельи', w: 94, h: 64, draw: examCells },
   ],
   west: [
-    { name: 'печатня', w: 70, h: 80, draw: printingHouse },
+    { name: 'печатня', w: 70, h: 80, life: { smoke: [[-19, -81]] }, draw: printingHouse },
     { name: 'ратуша с часами', w: 72, h: 88, draw: townHall },
   ],
   north: [
-    { name: 'обсерватория', w: 62, h: 76, draw: observatory },
-    { name: 'оранжерея Линнея', w: 94, h: 44, draw: orangery },
+    { name: 'обсерватория', w: 62, h: 76, life: { smoke: [[1, -47]] }, draw: observatory },
+    { name: 'оранжерея Линнея', w: 94, h: 44, life: { smoke: [[-15, -35]] }, draw: orangery },
   ],
   plain: [
     { name: 'шпиль с ангелом', w: 34, h: 120, draw: spire },
-    { name: 'потёмкинский фасад', w: 96, h: 40, draw: potemkin },
+    { name: 'потёмкинский фасад', w: 96, h: 40, life: { birds: [[32, 34, -38]] }, draw: potemkin },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {

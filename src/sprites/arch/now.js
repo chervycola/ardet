@@ -826,30 +826,32 @@ export const ARCH = {
       light: { dx: -44, dy: -85, r: 80 },
       mirror: { x0: -70, x1: 70, y0: -148, y1: -9 },
       draw: theLine,
+      life: { birds: [[-66, -51, -8]] },
     },
     {
       name: 'Всемирное семенохранилище', side: 'north', w: 130, h: 162,
       light: { dx: 31, dy: -47, r: 80 },
       draw: seedVault,
+      life: { blink: [[28, -39, 'S', 70, 0.5]] },
     },
   ],
   south: [
     { name: 'игла над пустыней', w: 68, h: 120, draw: burj },
-    { name: 'библиотека у моря', w: 96, h: 48, draw: library },
+    { name: 'библиотека у моря', w: 96, h: 48, draw: library, life: { birds: [[37, 43, -3, 'K']] } },
   ],
   east: [
     { name: 'стеклянная пагода', w: 30, h: 120, draw: taipei },
-    { name: 'экран-фасад', w: 60, h: 96, draw: screenTower },
+    { name: 'экран-фасад', w: 60, h: 96, draw: screenTower, life: { blink: [[27, -79, 'V', 120, 0.5]] } },
   ],
   west: [
     { name: '«огурец»', w: 38, h: 128, draw: gherkin },
     { name: 'стеклянная башня', w: 46, h: 112, draw: glassTower },
   ],
   north: [
-    { name: 'серверный ангар', w: 94, h: 98, draw: dataCenter },
+    { name: 'серверный ангар', w: 94, h: 98, draw: dataCenter, life: { smoke: [[-13, -39], [31, -39]] } },
   ],
   plain: [
-    { name: 'долгострой с краном', w: 92, h: 112, draw: unfinished },
+    { name: 'долгострой с краном', w: 92, h: 112, draw: unfinished, life: { birds: [[-1, 7, -71]] } },
     { name: 'панельная башня', w: 52, h: 118, draw: panelTower },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },

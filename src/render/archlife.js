@@ -4,7 +4,8 @@
 //   smoke: [[dx, dy]]              — устье трубы; струйка уходит вверх по ветру
 //   flag:  [[dx, dy, len, 'V']]    — верх древка; полотнище по ветру (V/K/P/M/S)
 //   blink: [[dx, dy, 'S', period, duty]] — огонёк: горит duty доли периода
-//   birds: [[dx0, dx1, dy]]        — конёк, где сидят птицы; взлетают от странника
+//   birds: [[dx0, dx1, dy, 'K'?]]  — конёк, где сидят птицы; взлетают от странника;
+//                                    цвет необязателен (чайки — K, по умолчанию чёрные)
 // dx, dy — от центра основания (x, gy), как в рисунке постройки.
 // Ветер один на весь мир — к востоку.
 // ═══════════════════════════════════════
@@ -15,13 +16,13 @@ function hash(n) { n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n ^= n >>> 4; n 
 
 // дым: клубки рождаются в устье, растут, сносятся ветром и тают
 function drawSmoke(ctx, x, y, t, seed) {
-  const LIFE = 150, N = 7;
+  const LIFE = 150, N = 10;
   for (let i = 0; i < N; i++) {
     const age = (t * 0.6 + i * LIFE / N + seed * 13) % LIFE, k = age / LIFE;
     const px = Math.round(x + age * 0.16 + Math.sin(age * 0.07 + i * 1.7 + seed) * 1.5 * k * 2);
     const py = Math.round(y - 1 - age * 0.32);
-    const s = 1 + Math.floor(k * 3);
-    ctx.globalAlpha = 0.42 * (1 - k) * Math.min(1, age / 8);
+    const s = 2 + Math.floor(k * 3);
+    ctx.globalAlpha = 0.7 * (1 - k) * Math.min(1, age / 8);
     ctx.fillStyle = SMOKE;
     ctx.fillRect(px - (s >> 1), py - (s >> 1), s, s);
   }
@@ -57,8 +58,8 @@ function flockOf(key, perch, seed) {
     const h = hash(seed * 31 + i);
     birds.push({
       px: x0 + (h % Math.max(1, x1 - x0 + 1)), py: dy,
-      ex: (h & 1 ? 1 : -1) * (60 + (h >> 3) % 60), ey: -70 - (h >> 7) % 50,
-      delay: (h >> 11) % 14,
+      ex: (h & 1 ? 1 : -1) * (60 + (h >>> 3) % 60), ey: -70 - (h >>> 7) % 50,
+      delay: (h >>> 11) % 14,
     });
   }
   f = { birds, s: 0, gone: 0 };
@@ -67,10 +68,11 @@ function flockOf(key, perch, seed) {
 }
 
 function drawBirds(ctx, x, gy, perch, t, seed, near, key) {
+  const col = COL[perch[3]] || BIRD;
   const f = flockOf(key, perch, seed);
   if (near) { f.s = Math.min(1.2, f.s + 0.02); f.gone = 0; }
   else if (f.s > 0) { if (++f.gone > 360) f.s = Math.max(0, f.s - 0.008); }
-  ctx.fillStyle = BIRD;
+  ctx.fillStyle = col;
   f.birds.forEach((b, i) => {
     const s = Math.max(0, Math.min(1, f.s * 1.2 - b.delay / 40));
     if (s >= 1) return;
@@ -99,7 +101,7 @@ export function drawArchLife(ctx, loc, t, walker) {
   if (L.birds) {
     const near = walker && Math.abs(walker.x - x) < loc.w / 2 + 34 && walker.y > gy - loc.h - 30 && walker.y < gy + 50;
     L.birds.forEach((p, i) => {
-      const perch = sx > 0 ? p : [-p[1], -p[0], p[2]];
+      const perch = sx > 0 ? p : [-p[1], -p[0], p[2], p[3]];
       drawBirds(ctx, x, gy, perch, t, seed + i * 11, near, loc.id + ':' + i);
     });
   }

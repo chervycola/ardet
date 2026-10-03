@@ -691,9 +691,10 @@ export const ARCH = {
     name: 'зиккурат Этеменанки', side: 'south', w: 150, h: 150,
     light: { dx: 0, dy: -132, r: 80 },
     draw: etemenanki,
+    life: { birds: [[-72, -63, -32]] },
   },
   south: [
-    { name: 'пилон с обелиском', w: 96, h: 88, draw: pylon },
+    { name: 'пилон с обелиском', w: 96, h: 88, draw: pylon, life: { flag: [[25, -88, 5, 'K']] } },
     { name: 'дорический храм', w: 92, h: 76, draw: doric },
   ],
   east: [
@@ -701,15 +702,15 @@ export const ARCH = {
     { name: 'ступа', w: 96, h: 58, draw: stupa },
   ],
   west: [
-    { name: 'круглый дом', w: 64, h: 54, draw: roundhouse },
-    { name: 'святилище с черепами', w: 96, h: 58, draw: skullshrine },
+    { name: 'круглый дом', w: 64, h: 54, draw: roundhouse, life: { smoke: [[0, -49]] } },
+    { name: 'святилище с черепами', w: 96, h: 58, draw: skullshrine, life: { birds: [[-3, 12, -44]] } },
   ],
   north: [
     { name: 'каменная ладья и сейд', w: 92, h: 34, draw: shipstones },
-    { name: 'вежа с бубном', w: 64, h: 58, draw: vezha },
+    { name: 'вежа с бубном', w: 64, h: 58, draw: vezha, life: { smoke: [[-11, -36]] } },
   ],
   plain: [
-    { name: 'курган с каменной бабой', w: 92, h: 36, draw: kurgan },
+    { name: 'курган с каменной бабой', w: 92, h: 36, draw: kurgan, life: { birds: [[-6, -2, -15]] } },
     { name: 'кибитка', w: 64, h: 40, draw: kibitka },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
