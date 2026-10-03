@@ -256,6 +256,30 @@ test('изнанка: у каждой постройки — «обойти» с
   }
 });
 
+const { drawArchLife } = await imp('render/archlife.js');
+test('жизнь: разметка по контракту — внутри силуэта постройки, рисуется без ошибок', () => {
+  const ctx = fakeCtx();
+  const kinds = [];
+  for (const [id, A] of Object.entries(ARCH_BY_RING)) {
+    for (const s of SIDES) for (const it of A[s]) kinds.push([`${id}/${s}/${it.name}`, it]);
+    for (const L of [].concat(A.landmark || [])) kinds.push([`${id}/landmark/${L.name}`, L]);
+  }
+  const COLS = ['V', 'K', 'P', 'M', 'S', 'N'];
+  for (const [key, it] of kinds) {
+    const L = it.life;
+    if (!L) continue;
+    const inside = (dx, dy, m = 4) => Math.abs(dx) <= it.w / 2 + m && dy <= 0 && dy >= -it.h - m;
+    for (const p of L.smoke || []) assert(inside(p[0], p[1]), `${key}: дым вне постройки ${p}`);
+    for (const p of L.flag || []) assert(inside(p[0], p[1]) && p[2] >= 2 && p[2] <= 16 && COLS.includes(p[3]), `${key}: флаг ${p}`);
+    for (const p of L.blink || []) assert(inside(p[0], p[1]) && COLS.includes(p[2]) && p[3] > 0, `${key}: огонёк ${p}`);
+    for (const p of L.birds || []) assert(inside(p[0], p[2]) && inside(p[1], p[2]) && p[0] <= p[1], `${key}: птицы ${p}`);
+    const loc = { id: key, archLife: L, archX: 500, archGy: 500, w: it.w, h: it.h };
+    for (const t of [0, 50, 999]) drawArchLife(ctx, loc, t, { x: 500, y: 500 });
+    drawArchLife(ctx, { ...loc, archFlip: true }, 10, null);
+  }
+  if (kinds.some(([, it]) => it.life)) assert(arch.some(l => l.archLife), 'жизнь не доходит до построек мира');
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

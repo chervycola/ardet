@@ -381,6 +381,7 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+      archLife: (d.kind && d.kind.life) || null,
       ...(around ? { useAction: around } : {}),
       ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
       // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
