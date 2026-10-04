@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ca42952 · 2026-10-04';console.log('[оттиск]', 'ca42952 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c2b7c73 · 2026-10-04';console.log('[оттиск]', 'c2b7c73 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -28447,7 +28447,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
 });
 System.register("ui/lorepopup", ["render/scaler", "core/time"], function (exports_63, context_63) {
     "use strict";
-    var scaler_js_9, time_js_15, TYPE_SPEED, READ_SPEED, BURN_SPEED, MIN_HOLD, TAIL_FADE, state;
+    var scaler_js_9, time_js_15, TYPE_SPEED, READ_SPEED, BURN_SPEED, MIN_HOLD, TAIL_FADE, state, mirrorEl, mirrorText;
     var __moduleName = context_63 && context_63.id;
     function computeLife(text) {
         const n = text.length;
@@ -28455,6 +28455,18 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         const hold = Math.max(MIN_HOLD, Math.floor(n * READ_SPEED));
         const burnTime = n * BURN_SPEED;
         return typeTime + hold + burnTime + TAIL_FADE;
+    }
+    function mirror(text) {
+        if (typeof document === 'undefined' || text === mirrorText)
+            return;
+        if (!mirrorEl) {
+            mirrorEl = document.createElement('div');
+            mirrorEl.id = 'lore-live';
+            mirrorEl.setAttribute('aria-live', 'polite');
+            mirrorEl.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden';
+            document.body.appendChild(mirrorEl);
+        }
+        mirrorEl.textContent = mirrorText = text;
     }
     function showLore(text, live = false) {
         state.text = text;
@@ -28473,8 +28485,11 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
     function isActive() { return state.life > 0; }
     exports_63("isActive", isActive);
     function draw(ctx) {
-        if (state.life <= 0)
+        if (state.life <= 0) {
+            if (mirrorText)
+                mirror('');
             return;
+        }
         const elapsed = time_js_15.t - state.startFrame;
         const totalLen = state.text.length;
         const typeDone = Math.floor(elapsed / TYPE_SPEED);
@@ -28489,6 +28504,7 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
                 burnCount = Math.min(totalLen, Math.floor(burnElapsed / BURN_SPEED));
         }
         const visStart = burnCount;
+        mirror(state.text.slice(visStart, charCount));
         const visEnd = charCount;
         const visible = state.text.substring(visStart, visEnd);
         // Panel — capped at 40% of the viewport height; long texts scroll
@@ -28617,6 +28633,10 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
                 totalLife: 0,
                 startFrame: 0,
             };
+            // Текстовое зеркало: то, что сейчас напечатано на холсте, — для экранных
+            // дикторов (aria-live) и для охотника, который читает экран. Только
+            // видимая часть: чего не допечатано или уже сгорело, там нет.
+            mirrorEl = null, mirrorText = null;
             // Keyboard dismiss — Space / Enter / Escape close the panel early.
             if (typeof document !== 'undefined' && document.addEventListener) {
                 document.addEventListener('keydown', (e) => {

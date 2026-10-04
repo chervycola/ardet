@@ -28,11 +28,27 @@
 import { createInterface } from 'node:readline';
 import { mkdirSync, appendFileSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
-const URL_ = arg('--url', pathToFileURL(resolve(here, '../build/index.html')).href + '?stream');
+// без --url — своя раздача репозитория по http: с file:// браузер не пускает музыку
+async function localUrl() {
+  const { createServer } = await import('node:http');
+  const { readFile } = await import('node:fs/promises');
+  const root = resolve(here, '..');
+  const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mp3': 'audio/mpeg',
+    '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.woff2': 'font/woff2' };
+  const srv = createServer(async (req, res) => {
+    const p = resolve(root, '.' + decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (!p.startsWith(root)) { res.statusCode = 403; return res.end(); }
+    try { const b = await readFile(p); res.setHeader('content-type', TYPES[p.slice(p.lastIndexOf('.'))] || 'application/octet-stream'); res.end(b); }
+    catch { res.statusCode = 404; res.end(); }
+  });
+  await new Promise(r => srv.listen(0, '127.0.0.1', r));
+  return `http://127.0.0.1:${srv.address().port}/build/index.html?stream`;
+}
+const URL_ = arg('--url', null) || await localUrl();
 const OUT = resolve(arg('--out', join('hunt-runs', new Date().toISOString().replace(/[:.]/g, '-'))));
 const HEADED = process.argv.includes('--headed');
 
@@ -76,7 +92,14 @@ async function observe() {
     let panel = '';
     if (vis(document.getElementById('look'))) panel = txt('lt') + '\n' + txt('lb');
     else if (vis(document.getElementById('dlg'))) panel = txt('dn') + '\n' + txt('dt') + '\n' + txt('do');
-    else if (vis(document.getElementById('term'))) panel = txt('to').split('\n').slice(-24).join('\n');
+    else if (vis(document.getElementById('term'))) {
+      // терминал: всё, что вывела последняя команда (от её эха до конца)
+      const lines = txt('to').split('\n'), cmd = window.__huntLastTyped;
+      let i = cmd ? lines.lastIndexOf('> ' + cmd) : -1;
+      panel = lines.slice(i >= 0 ? i : -60).join('\n');
+    }
+    const lore = txt('lore-live');               // бумажка, которая печатается внизу экрана
+    if (lore) panel = (panel ? panel + '\n\n' : '') + '[бумажка] ' + lore;
     const m = document.getElementById('menu');
     const menu = vis(m) ? [...m.querySelectorAll('[data-a]')]
       .filter(b => getComputedStyle(b).display !== 'none')
@@ -110,8 +133,14 @@ async function act(cmd) {
       await page.waitForFunction(() => !document.getElementById('term').classList.contains('on')
         || /ГОТОВ/.test(document.getElementById('to').innerText), null, { timeout: 6000 }).catch(() => {});
       break;
-    case 'type': await page.fill('#ti', String(cmd.text || '')); await page.press('#ti', 'Enter'); break;
-    case 'next': await page.keyboard.press('Space'); break;
+    case 'type':
+      await page.evaluate(v => { window.__huntLastTyped = v.trim(); }, String(cmd.text || ''));
+      await page.fill('#ti', String(cmd.text || '')); await page.press('#ti', 'Enter'); break;
+    case 'next':                          // в разговоре — «Продолжить…»/«Уйти»; иначе пробел
+      if (await page.evaluate(() => document.getElementById('dlg').classList.contains('on'))) {
+        await page.click('#do button', { timeout: 2000 });
+      } else await page.keyboard.press('Space');
+      break;
     case 'observe': break;
     default: throw new Error('неизвестное действие: ' + cmd.do);
   }

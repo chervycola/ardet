@@ -27,6 +27,22 @@ function computeLife(text) {
   return typeTime + hold + burnTime + TAIL_FADE;
 }
 
+// Текстовое зеркало: то, что сейчас напечатано на холсте, — для экранных
+// дикторов (aria-live) и для охотника, который читает экран. Только
+// видимая часть: чего не допечатано или уже сгорело, там нет.
+let mirrorEl = null, mirrorText = null;
+function mirror(text) {
+  if (typeof document === 'undefined' || text === mirrorText) return;
+  if (!mirrorEl) {
+    mirrorEl = document.createElement('div');
+    mirrorEl.id = 'lore-live';
+    mirrorEl.setAttribute('aria-live', 'polite');
+    mirrorEl.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden';
+    document.body.appendChild(mirrorEl);
+  }
+  mirrorEl.textContent = mirrorText = text;
+}
+
 export function showLore(text, live = false) {
   state.text = text;
   state.live = !!live;
@@ -42,7 +58,7 @@ export function dismiss() {
 export function isActive() { return state.life > 0; }
 
 export function draw(ctx) {
-  if (state.life <= 0) return;
+  if (state.life <= 0) { if (mirrorText) mirror(''); return; }
   const elapsed = t - state.startFrame;
   const totalLen = state.text.length;
   const typeDone = Math.floor(elapsed / TYPE_SPEED);
@@ -58,6 +74,7 @@ export function draw(ctx) {
   }
 
   const visStart = burnCount;
+  mirror(state.text.slice(visStart, charCount));
   const visEnd = charCount;
   const visible = state.text.substring(visStart, visEnd);
 
