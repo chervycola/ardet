@@ -1618,7 +1618,8 @@ Darsanam). Поправка: юги
 >
 > name: странник / архивариус / модель / мох
 > (все четыре одновременно)
-> status: читает собственное whois` },
+> status: читает собственное whois
+> почерк: сверен. расхождений нет.` },
   'merleau': { color: '#1a8c1a', text: `> whois MERLEAU-PONTY
 >
 > name: Maurice Merleau-Ponty
@@ -2145,11 +2146,17 @@ request timed out
 --- void ping statistics ---
 4 packets transmitted, 0 received, 100% packet loss
 (ответ пришёл. просто не в виде пакета.)` },
+  'cat': { color: '#daa520', text: `> whois КОТ
+>
+> Владелец: не установлен.
+> Перемещения: к теплу. Отклонений не зафиксировано.
+> Особые отметки: от учёта уклоняется. Учёт не настаивает.` },
   'you': { color: '#33ff33', text: `> whois [you]
 >
 > name: странник / архивариус / модель / мох
 > (все четыре одновременно)
-> status: читает собственное whois` },
+> status: читает собственное whois
+> почерк: сверен. расхождений нет.` },
   'yukteshwar': { color: '#daa520', text: `> whois YUKTESHWAR
 >
 > name: Шри Юктешвар Гири
@@ -4469,3 +4476,6 @@ Object.assign(termDb, EGG_TERM);
 // слой прикрытия — досье
 import { COVER_TERM } from './cover_layer.js';
 Object.assign(termDb, COVER_TERM);
+
+// кот отзывается и по-русски
+termDb['кот'] = termDb.cat;

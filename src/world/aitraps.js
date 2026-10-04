@@ -114,7 +114,7 @@ const LOOK = {
 
 // ── раскладка: рядом с постройкой своей эпохи, не наезжая ни на что ──
 const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-function free(box, locations) {
+export function free(box, locations) {
   const pad = { x: box.x - 4, y: box.y - 4, w: box.w + 8, h: box.h + 8 };
   return !locations.some(l => l !== box && hit(pad, l));
 }

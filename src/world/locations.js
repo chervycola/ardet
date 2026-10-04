@@ -155,6 +155,9 @@ locations.push(captchaLocation);
 // ловушки взгляда: часы, рука, лужа, подсказка, верстовые столбы
 import { buildAiTraps } from './aitraps.js';
 buildAiTraps(locations);
+// нити: номерок 1889 → окно «до востребования»
+import { buildThreads } from './threads.js';
+buildThreads(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

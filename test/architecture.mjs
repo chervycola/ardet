@@ -326,6 +326,21 @@ test('стрим: по умолчанию выключен; опись счит�
   eq(caseNumber(new Date(2026, 9, 4, 6, 5)), '5/261004-0605');
 });
 
+const { termDb } = await imp('content/terminal_db.js');
+test('нити: номерок 1889 → окно «до востребования»; почерк; кот', () => {
+  const mail = locations.find(l => l.id === 'mail_1889');
+  assert(mail && mail.drawSelf && mail.useAction === 'mail_1889', 'нет окна выдачи');
+  eq(ringAt(mail.x + mail.w / 2, mail.y + mail.h), 6, 'окно — в кольце 6');
+  assert(/Без номерка/.test(useTexts.mail_1889.text), 'без театра письма не дают');
+  assert(/1889/.test(useTexts.theater_stage.text) && /Рука знакомая/.test(useTexts.theater_stage.text), 'театр: номерок и подпись');
+  assert(/каждое имя в истории/.test(useTexts.mail_1889.text), 'после театра письмо выдают');
+  assert(mail.useLabel.includes('НОМЕРОК'), 'кнопка после театра');
+  assert(termDb.cat && termDb['кот'] === termDb.cat, 'досье кота');
+  assert(/почерк: сверен/.test(termDb.you.text), 'whois you — почерк');
+  const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  for (const l of locations) assert(l === mail || !hit(mail, l), `окно наезжает на ${l.id}`);
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
