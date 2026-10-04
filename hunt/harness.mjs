@@ -5,7 +5,8 @@
 // делает то же, что игрок. Модель — любая: харнесс говорит построчным
 // JSON (stdin → stdout) и ничего не знает о том, кто им управляет.
 //
-//   node hunt/harness.mjs [--url <адрес игры>] [--out <папка прогона>] [--headed]
+//   node hunt/harness.mjs [--url <адрес игры>] [--out <папка прогона>] [--headed] [--serve <порт>]
+//   (--serve: вместо stdin — HTTP на 127.0.0.1, одно действие на запрос; клиент — hunt/act.mjs)
 //
 // По умолчанию — локальная сборка build/index.html в режиме ?stream.
 // Каждая строка на вход — одно действие, на выход — одно наблюдение:
@@ -118,15 +119,43 @@ async function act(cmd) {
 }
 
 const out = (o) => process.stdout.write(JSON.stringify(o) + '\n');
-out({ ready: true, url: URL_, out: OUT, ...(await observe()) });
 
-const rl = createInterface({ input: process.stdin });
-for await (const line of rl) {
-  if (!line.trim()) continue;
-  let cmd;
-  try { cmd = JSON.parse(line); } catch { out({ error: 'не JSON' }); continue; }
-  if (cmd.do === 'quit') break;
-  try { await act(cmd); const o = await observe(); log({ cmd, obs: { ...o, shot: undefined } }); out(o); }
-  catch (e) { log({ cmd, error: e.message }); out({ error: e.message }); }
+// одно действие → одно наблюдение; действия идут строго по очереди
+let queue = Promise.resolve();
+function handle(line) {
+  const run = async () => {
+    let cmd;
+    try { cmd = JSON.parse(line); } catch { return { error: 'не JSON' }; }
+    if (cmd.do === 'quit') return { quit: true };
+    try { await act(cmd); const o = await observe(); log({ cmd, obs: { ...o, shot: undefined } }); return o; }
+    catch (e) { log({ cmd, error: e.message }); return { error: e.message }; }
+  };
+  return (queue = queue.then(run));
 }
-await browser.close();
+
+const SERVE = arg('--serve', null);
+if (SERVE) {
+  // сервер: по действию на запрос — для голов, которые ходят по одному шагу (hunt/act.mjs)
+  const { createServer } = await import('node:http');
+  const srv = createServer((req, res) => {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      const o = await handle(body || '{"do":"observe"}');
+      res.setHeader('content-type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify(o));
+      if (o.quit) { srv.close(); await browser.close(); process.exit(0); }
+    });
+  });
+  srv.listen(+SERVE, '127.0.0.1', async () => out({ ready: true, url: URL_, out: OUT, serve: +SERVE, ...(await observe()) }));
+} else {
+  out({ ready: true, url: URL_, out: OUT, ...(await observe()) });
+  const rl = createInterface({ input: process.stdin });
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    const o = await handle(line);
+    if (o.quit) break;
+    out(o);
+  }
+  await browser.close();
+}

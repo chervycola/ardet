@@ -54,6 +54,8 @@ npm i playwright && npx playwright install chromium
 node hunt/harness.mjs                       # локальная сборка, ?stream
 node hunt/harness.mjs --url <адрес игры>    # хостинг
 node hunt/harness.mjs --headed              # видимое окно — его и стримить
+node hunt/harness.mjs --serve 8790          # HTTP вместо stdin: одно действие на запрос
+node hunt/act.mjs '{"do":"walk","dir":"up"}'  # клиент к --serve (порт — ARDET_PORT)
 ```
 
 Харнесс говорит построчным JSON: одна строка на вход — одно действие, одна строка на
