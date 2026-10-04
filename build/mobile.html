@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='1f20287 · 2026-10-04';console.log('[оттиск]', '1f20287 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='26d033c · 2026-10-04';console.log('[оттиск]', '26d033c · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -25698,7 +25698,7 @@ System.register("audio/audio", [], function (exports_57, context_57) {
 });
 System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets/loader", "ui/transitions", "audio/audio", "core/input", "world/useActions"], function (exports_58, context_58) {
     "use strict";
-    var state_js_1, potemkin_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_1, input_js_1, useActions_js_5, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, dlgEl, dlgLines, dlgIndex, dlgLoc;
+    var state_js_1, potemkin_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_1, input_js_1, useActions_js_5, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookTitle, dlgEl, dlgLines, dlgIndex, dlgLoc;
     var __moduleName = context_58 && context_58.id;
     // Does this location actually do something on «использовать»?
     // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -25814,6 +25814,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
     }
     function showLook(loc) {
         state_js_1.state.transition('look');
+        lookTitle = (loc && loc.name) || '';
         const lookData = potemkin_js_2.lookText(loc);
         lookPages = paginateLook(lookData);
         lookPageIdx = 0;
@@ -25830,7 +25831,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
         const lt = document.getElementById('lt');
         const lb = document.getElementById('lb');
         const ind = document.getElementById('look-page');
-        lt.textContent = activeLoc ? activeLoc.name : '';
+        lt.textContent = lookTitle || (activeLoc ? activeLoc.name : '');
         lb.textContent = lookPages[lookPageIdx] || '';
         if (ind) {
             if (lookPages.length > 1) {
@@ -26064,6 +26065,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
             lookEl = document.getElementById('look');
             lookPages = [];
             lookPageIdx = 0;
+            lookTitle = ''; // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
             // ── DIALOGUE ──
             dlgEl = document.getElementById('dlg');
             dlgLines = [];

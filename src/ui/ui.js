@@ -156,6 +156,7 @@ export function menuAction(action) {
 const lookEl = document.getElementById('look');
 let lookPages = [];
 let lookPageIdx = 0;
+let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
 
 // Paginate long text
 function paginateLook(text, charsPerPage = 600) {
@@ -175,6 +176,7 @@ function paginateLook(text, charsPerPage = 600) {
 
 export function showLook(loc) {
   state.transition('look');
+  lookTitle = (loc && loc.name) || '';
 
   const lookData = lookText(loc);
   lookPages = paginateLook(lookData);
@@ -195,7 +197,7 @@ function renderLookPage() {
   const lb = document.getElementById('lb');
   const ind = document.getElementById('look-page');
 
-  lt.textContent = activeLoc ? activeLoc.name : '';
+  lt.textContent = lookTitle || (activeLoc ? activeLoc.name : '');
   lb.textContent = lookPages[lookPageIdx] || '';
 
   if (ind) {
