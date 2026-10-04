@@ -45,6 +45,7 @@ import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { drawArchLife } from './render/archlife.js';
+import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
 import { archWindowLights } from './render/archlights.js';
 import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
@@ -85,6 +86,7 @@ initMetaFx();
 initTerminal();
 initShop();
 initWorldMap({ getVisited: () => flags.visited });
+
 initCursor();
 initAudio();
 initEditor();
@@ -135,7 +137,7 @@ console.log(`[session] visit #${sessionAge} | desat ${(shiftCfg.desaturation * 1
 try {
   if (localStorage.getItem('ardet_save')) localStorage.removeItem('ardet_save');
 } catch (e) {} // хранилище может быть закрыто (Brave и т.п.)
-const savedData = loadGame();
+const savedData = STREAM ? null : loadGame();   // стрим — чистый забег
 if (savedData) {
   if (savedData.player) {
     // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
@@ -152,7 +154,7 @@ if (savedData) {
   if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
 }
 
-startAutoSave(() => ({
+if (!STREAM) startAutoSave(() => ({
   player: { x: player.x, y: player.y }, off: OFF,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
@@ -163,6 +165,8 @@ startAutoSave(() => ({
   catUnlocked: catUnlocked(),
   discoveredGates: getDiscoveredGates(),
 }));
+
+initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
 
 // Check if player can leave settlement
 function canLeaveSettlement() {

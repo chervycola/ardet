@@ -317,6 +317,15 @@ test('пасхалки: ловушки взгляда — в своих эпох
   }
 });
 
+const { STREAM, countable, caseNumber, tallyLine } = await imp('ui/stream.js');
+test('стрим: по умолчанию выключен; опись считает вещи мира; номер дела', () => {
+  eq(STREAM, false);
+  const n = countable(locations).length;
+  assert(n > 300 && n <= locations.length, `опись: ${n}`);
+  eq(tallyLine(3, n), `ОПИСЬ НАЙДЕННОГО: 3 ИЗ ${n}. ОСТАТОК УЧТЁН.`);
+  eq(caseNumber(new Date(2026, 9, 4, 6, 5)), '5/261004-0605');
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
