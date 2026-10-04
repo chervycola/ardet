@@ -843,12 +843,13 @@ function updateGame() {
     if (dist < 2) {
       player.moving = false;
       // Check if we arrived at a location: та, к которой шли, — если
-      // дошли до её порога; иначе ближайшая
+      // дошли до её порога; иначе ближайшая. Шли просто по земле — меню
+      // не открываем: мимо вещи можно пройти, не останавливаясь.
       const want = player.walkTo;
       player.walkTo = null;
       const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
         && Math.abs(player.y - (want.y + want.h + 5)) < 4;
-      const loc = atWant ? want : findLocationAt(player.x, player.y, locations);
+      const loc = atWant ? want : (want ? findLocationAt(player.x, player.y, locations) : null);
       if (loc) {
         flags.visited.add(loc.id);
         events.emit(E.LOCATION_VISIT, loc);

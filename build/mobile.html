@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='fb030e9 · 2026-10-04';console.log('[оттиск]', 'fb030e9 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='de71609 · 2026-10-04';console.log('[оттиск]', 'de71609 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -38033,12 +38033,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (dist < 2) {
                 player.moving = false;
                 // Check if we arrived at a location: та, к которой шли, — если
-                // дошли до её порога; иначе ближайшая
+                // дошли до её порога; иначе ближайшая. Шли просто по земле — меню
+                // не открываем: мимо вещи можно пройти, не останавливаясь.
                 const want = player.walkTo;
                 player.walkTo = null;
                 const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
                     && Math.abs(player.y - (want.y + want.h + 5)) < 4;
-                const loc = atWant ? want : physics_js_1.findLocationAt(player.x, player.y, locations_js_4.locations);
+                const loc = atWant ? want : (want ? physics_js_1.findLocationAt(player.x, player.y, locations_js_4.locations) : null);
                 if (loc) {
                     flags.visited.add(loc.id);
                     events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
