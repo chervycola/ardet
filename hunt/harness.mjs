@@ -80,12 +80,17 @@ await page.waitForTimeout(17000);       // вступление идёт сам�
 
 const DIRS = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
 let step = 0;
+let lastHash = '';
 
 // только видимое: открытые панели и меню
 async function observe() {
   step++;
   const shot = join(OUT, String(step).padStart(4, '0') + '.png');
-  await page.screenshot({ path: shot });
+  const buf = await page.screenshot({ path: shot });
+  // экран не изменился с прошлого шага — значит, никуда не сдвинулся (упёрся)
+  const { createHash } = await import('node:crypto');
+  const hash = createHash('md5').update(buf).digest('hex');
+  const same = hash === lastHash; lastHash = hash;
   const seen = await page.evaluate(() => {
     const vis = el => el && el.classList.contains('on');
     const txt = id => { const el = document.getElementById(id); return el ? el.innerText.trim() : ''; };
@@ -107,7 +112,7 @@ async function observe() {
     const tally = document.getElementById('stream-tally');
     return { panel, menu, tally: tally ? tally.innerText.trim() : '' };
   });
-  return { step, shot, ...seen, t: Date.now() };
+  return { step, shot, ...seen, ...(same ? { same: true } : {}), t: Date.now() };
 }
 
 async function act(cmd) {
@@ -128,6 +133,9 @@ async function act(cmd) {
         null, { timeout: Math.min(15000, cmd.wait || 6000) }).catch(() => {});
       break;
     case 'menu':
+      if (!(await page.evaluate(() => document.getElementById('menu').classList.contains('on')))) {
+        throw new Error('меню не открыто: сначала подойди к вещи (click)');
+      }
       await page.click(`#menu [data-a="${cmd.action}"]`, { timeout: 2000 });
       // терминал сначала загружается — ждём приглашения, как ждал бы игрок
       await page.waitForFunction(() => !document.getElementById('term').classList.contains('on')

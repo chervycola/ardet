@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='26d033c · 2026-10-04';console.log('[оттиск]', '26d033c · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='3345c38 · 2026-10-04';console.log('[оттиск]', '3345c38 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -16196,7 +16196,7 @@ System.register("world/physics", ["world/terrain", "render/draw", "world/disc"],
     exports_39("isOnStreet", isOnStreet);
     // Try to move player, respecting collisions + boundaries
     function tryMove(player, dx, dy, locations, opts = {}) {
-        const { canLeaveSettlement = true } = opts;
+        const { canLeaveSettlement = true, onLock = null } = opts;
         let nx = player.x + dx;
         let ny = player.y + dy;
         // World bounds: мир открыт до самых стихий
@@ -16232,7 +16232,10 @@ System.register("world/physics", ["world/terrain", "render/draw", "world/disc"],
                 }
                 return false;
             }
-            // Inside the zone, trying to leave — try the original per-axis slide
+            // Inside the zone, trying to leave — замок молча не держит: говорит
+            if (onLock)
+                onLock();
+            // try the original per-axis slide
             const slideX = player.x + dx;
             const slideY = player.y + dy;
             if (isInSettlement(slideX, player.y) && !isBlocked(slideX, player.y, locations, player)) {
@@ -36870,8 +36873,14 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_92, context_92) {
     "use strict";
-    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_15, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_30, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_17, ground_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, time_js_31, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
+    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_15, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_30, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_17, ground_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, lockHintAt, time_js_31, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
     var __moduleName = context_92 && context_92.id;
+    function lockHint() {
+        if (time_js_30.t - lockHintAt < 1800)
+            return;
+        lockHintAt = time_js_30.t;
+        lorepopup_js_1.showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра».');
+    }
     // Check if player can leave settlement
     function canLeaveSettlement() {
         return flags.talkedTo.has('jester');
@@ -37518,7 +37527,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (hd > 8) {
                 const spd = 2.4;
                 physics_js_1.tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations_js_4.locations, {
-                    canLeaveSettlement: canLeaveSettlement(),
+                    canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
                 });
                 player.tx = player.x;
                 player.ty = player.y;
@@ -37543,7 +37552,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (move.active) {
             const spd = input_js_2.input.isDown('sprint') ? 4 : 2.4;
             physics_js_1.tryMove(player, move.x * spd, move.y * spd, locations_js_4.locations, {
-                canLeaveSettlement: canLeaveSettlement(),
+                canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
             });
             player.tx = player.x;
             player.ty = player.y;
@@ -37586,7 +37595,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 else if (dx < -1)
                     player.dir = -1;
                 physics_js_1.tryMove(player, dx / dist * spd, dy / dist * spd, locations_js_4.locations, {
-                    canLeaveSettlement: canLeaveSettlement(),
+                    canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
                 });
             }
         }
@@ -37965,6 +37974,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     discoveredGates: worldmap_js_1.getDiscovered(),
                 }));
             stream_js_1.initStream({ locations: locations_js_4.locations, getVisited: () => flags.visited, getFrames: () => time_js_30.t });
+            // Замок городка объясняет себя голосом мира — не чаще раза в полминуты
+            lockHintAt = -99999;
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
@@ -38101,8 +38112,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     // locked starting area (e.g. Pizzeria sits at the highway border).
                     // Otherwise a near-click would teleport the player out of the zone
                     // and movement would jam against the boundary.
-                    if (!canLeaveSettlement() && !physics_js_1.isInSettlement(px_, py_))
+                    if (!canLeaveSettlement() && !physics_js_1.isInSettlement(px_, py_)) {
+                        lockHint();
                         return;
+                    }
                     const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
                     if (dist < 85) {
                         // Close enough — blink-step to the location, then open the menu

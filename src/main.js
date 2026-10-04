@@ -168,6 +168,14 @@ if (!STREAM) startAutoSave(() => ({
 
 initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
 
+// Замок городка объясняет себя голосом мира — не чаще раза в полминуты
+let lockHintAt = -99999;
+function lockHint() {
+  if (_t - lockHintAt < 1800) return;
+  lockHintAt = _t;
+  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра».');
+}
+
 // Check if player can leave settlement
 function canLeaveSettlement() {
   return flags.talkedTo.has('jester');
@@ -802,7 +810,7 @@ function updateGame() {
     if (hd > 8) {
       const spd = 2.4;
       tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations, {
-        canLeaveSettlement: canLeaveSettlement(),
+        canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
       });
       player.tx = player.x;
       player.ty = player.y;
@@ -824,7 +832,7 @@ function updateGame() {
   if (move.active) {
     const spd = input.isDown('sprint') ? 4 : 2.4;
     tryMove(player, move.x * spd, move.y * spd, locations, {
-      canLeaveSettlement: canLeaveSettlement(),
+      canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
     });
     player.tx = player.x;
     player.ty = player.y;
@@ -860,7 +868,7 @@ function updateGame() {
       if (dx > 1) player.dir = 1;
       else if (dx < -1) player.dir = -1;
       tryMove(player, dx / dist * spd, dy / dist * spd, locations, {
-        canLeaveSettlement: canLeaveSettlement(),
+        canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
       });
     }
   } else {
@@ -1010,7 +1018,7 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
     // locked starting area (e.g. Pizzeria sits at the highway border).
     // Otherwise a near-click would teleport the player out of the zone
     // and movement would jam against the boundary.
-    if (!canLeaveSettlement() && !isInSettlement(px_, py_)) return;
+    if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
     const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
 
     if (dist < 85) {

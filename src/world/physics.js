@@ -63,7 +63,7 @@ export function isOnStreet(x) { return x > STREET_EDGE_X; }
 
 // Try to move player, respecting collisions + boundaries
 export function tryMove(player, dx, dy, locations, opts = {}) {
-  const { canLeaveSettlement = true } = opts;
+  const { canLeaveSettlement = true, onLock = null } = opts;
 
   let nx = player.x + dx;
   let ny = player.y + dy;
@@ -102,7 +102,9 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
       }
       return false;
     }
-    // Inside the zone, trying to leave — try the original per-axis slide
+    // Inside the zone, trying to leave — замок молча не держит: говорит
+    if (onLock) onLock();
+    // try the original per-axis slide
     const slideX = player.x + dx;
     const slideY = player.y + dy;
     if (isInSettlement(slideX, player.y) && !isBlocked(slideX, player.y, locations, player)) {
