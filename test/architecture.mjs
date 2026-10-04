@@ -341,6 +341,15 @@ test('нити: номерок 1889 → окно «до востребовани
   for (const l of locations) assert(l === mail || !hit(mail, l), `окно наезжает на ${l.id}`);
 });
 
+test('камеры: на западной тропе, в неоне одна, в «сейчас» одиннадцать', () => {
+  const c8 = locations.find(l => l.id === 'cams_8'), c9 = locations.find(l => l.id === 'cams_9');
+  assert(c8 && c9, 'нет столбов с камерами');
+  eq(ringAt(c8.x + c8.w / 2, c8.y + c8.h), 8); eq(ringAt(c9.x + c9.w / 2, c9.y + c9.h), 9);
+  assert(c8.x < TOWN.x0 && c9.x < TOWN.x0, 'не на западе');
+  eq(c8.camCount, 1); eq(c9.camCount, 11);
+  for (const c of [c8, c9]) { c.drawSelf(fakeCtx(), c, 50); assert(/ВЕДЁТСЯ ВИДЕОНАБЛЮДЕНИЕ/.test(c.look)); }
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

@@ -37,7 +37,7 @@ export const WHISPERS = {
   pit: '...братишка... покушать...',
   nocturnal: '......(тишина)......',
   theater: '...одну сцену. одиннадцать лет...',
-  altar: '...приложи ладонь. мох ждал.',
+  altar: '...приложи ладонь... мох ждал...',
   posterwall: '...выход был заперт снаружи...',
   banner: '...coming soon...',
   // ── PHILOSOPHY PHASE 1 / PACKAGE A + G ──

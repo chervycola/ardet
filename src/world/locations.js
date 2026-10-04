@@ -158,6 +158,9 @@ buildAiTraps(locations);
 // нити: номерок 1889 → окно «до востребования»
 import { buildThreads } from './threads.js';
 buildThreads(locations);
+// камеры на западной тропе: в неоне одна, в «сейчас» — столб, облепленный камерами
+import { buildCameras } from './cameras.js';
+buildCameras(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
@@ -169,7 +172,7 @@ locations.push({
   streetLive: true,
   look: `Туман лежит на холмах, как лежал до города. Под ним горячо.
 
-Четыре лихорадки: золото сорок девятого, доткомы, крипта, ИИ. Аннексия речи пишется здесь, сейчас.
+Четыре лихорадки: золото сорок девятого, доткомы, крипта, ИИ.
 
 Туман старше всех лихорадок.
 
@@ -182,9 +185,9 @@ locations.push({
   x: 5858, y: 840, w: 28, h: 36,
   streetForm: 'fire',
   streetLive: true,
-  look: `Январь 2025: город спектакля горел в прямом эфире.
+  look: `Январь 2025: город горел в прямом эфире.
 
-Причину ищут в проводах. Суды идут.
+Причины ищут: в проводах, в поджоге. Суды идут.
 
 Майк Дэвис, историк этого города, написал ещё в девяносто восьмом: Малибу горит по проекту.
 
