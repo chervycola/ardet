@@ -152,6 +152,9 @@ export const archEnsembles = ARCH.ensembles;
 // капча у ворот: южная тропа, край городка
 import { captchaLocation } from './captcha.js';
 locations.push(captchaLocation);
+// ловушки взгляда: часы, рука, лужа, подсказка, верстовые столбы
+import { buildAiTraps } from './aitraps.js';
+buildAiTraps(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

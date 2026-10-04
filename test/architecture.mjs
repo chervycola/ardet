@@ -300,6 +300,23 @@ test('пасхалки: капча у ворот — на тропе, отмет
   for (const l of arch) assert(!(c.x < l.x + l.w && c.x + c.w > l.x && c.y < l.y + l.h && c.y + c.h > l.y), `капча под постройкой ${l.name}`);
 });
 
+test('пасхалки: ловушки взгляда — в своих эпохах, ни на что не наезжают', () => {
+  const traps = locations.filter(l => l.id.startsWith('trap_'));
+  const want = { trap_clock: 5, trap_raphael: 4, trap_karakurt: 9, trap_puddle: 2 };
+  for (const [id, n] of Object.entries(want)) {
+    const l = traps.find(t => t.id === id);
+    assert(l, `нет ${id}`);
+    eq(ringAt(l.x + l.w / 2, l.y + l.h), n, `${id}: кольцо`);
+  }
+  for (let n = 1; n <= 9; n++) assert(traps.some(t => t.id === `trap_mile_${n}`), `нет столба в кольце ${n}`);
+  const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  for (const t of traps) {
+    assert(t.look && t.drawSelf, `${t.id}: без осмотра или рисунка`);
+    t.drawSelf(fakeCtx(), t, 100);
+    for (const l of locations) assert(l === t || !hit(t, l), `${t.id} наезжает на ${l.id}`);
+  }
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
