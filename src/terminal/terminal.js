@@ -18,7 +18,7 @@ let booted = false;
 
 // File aliases: the Cartesian ".demon" file lives under a distinct key;
 // read/cat demon and .demon resolve here.
-const FILE_ALIASES = { demon: 'demon_descartes' };
+const FILE_ALIASES = { demon: 'demon_descartes', moss: 'moss_file', ardet: 'ardet_file' };
 function fileEntry(rawName) {
   const stripped = rawName.replace(/^\./, '');
   const key = FILE_ALIASES[stripped] || stripped;

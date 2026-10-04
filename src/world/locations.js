@@ -161,6 +161,9 @@ buildThreads(locations);
 // камеры на западной тропе: в неоне одна, в «сейчас» — столб, облепленный камерами
 import { buildCameras } from './cameras.js';
 buildCameras(locations);
+// нити, волна 2: луна на учёте, часы по кольцам, колодец и объявление у котлована
+import { buildThreads2 } from './threads2.js';
+buildThreads2(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

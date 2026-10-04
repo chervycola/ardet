@@ -350,6 +350,21 @@ test('камеры: на западной тропе, в неоне одна, в
   for (const c of [c8, c9]) { c.drawSelf(fakeCtx(), c, 50); assert(/ВЕДЁТСЯ ВИДЕОНАБЛЮДЕНИЕ/.test(c.look)); }
 });
 
+test('нити, волна 2: луна, часы по кольцам, котлован; досье героев в терминале', () => {
+  const want = { luna_tag: 0, clock_nail: 7, clock_board: 9, kotlovan_well: 7, kotlovan_notice: 7 };
+  const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  for (const [id, n] of Object.entries(want)) {
+    const l = locations.find(x => x.id === id);
+    assert(l && l.look && l.drawSelf, `нет ${id}`);
+    eq(ringAt(l.x + l.w / 2, l.y + l.h), n, `${id}: кольцо`);
+    l.drawSelf(fakeCtx(), l, 40);
+    for (const o of locations) assert(o === l || !hit(l, o), `${id} наезжает на ${o.id}`);
+  }
+  assert(/Приказы руководства не обсуждаются/.test(locations.find(x => x.id === 'luna_tag').look));
+  for (const k of ['jester', 'шут', 'sol', 'elder', 'старец', 'archivist', 'nocturnal', 'moss', 'луна', 'moss_file', 'ardet_file', 'pizzeria_key', 'cat_saucer', 'archivist_log', 'moss_weights'])
+    assert(termDb[k] && termDb[k].text, `нет досье ${k}`);
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

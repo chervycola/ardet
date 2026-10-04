@@ -119,7 +119,7 @@ export function free(box, locations) {
   return !locations.some(l => l !== box && hit(pad, l));
 }
 
-function besideBuilding(locations, ring, side, w, h, extra) {
+export function besideBuilding(locations, ring, side, w, h, extra) {
   const cand = locations.filter(l => l.archDraw && l.archRing === ring && l.archSide === side
     && (!extra.name || l.name === extra.name));
   for (const b of cand) for (const dir of [1, -1]) for (const gap of [10, 24, 40]) {
