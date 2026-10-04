@@ -7,7 +7,7 @@ import { scaler } from '../render/scaler.js';
 export const WHISPERS = {
   church: '...lasciate ogni speranza...',
   crypt: '...девять ярусов вниз...',
-  lake: '...how dared... how dare...',
+  lake: '...удочку оставь... всё равно запрещено...',
   cross: '...круг не размыкается...',
   raven: '...не корми с руки... он запомнит...',
   pizzeria: '...47 столов... welcome куда?...',
