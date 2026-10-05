@@ -34,7 +34,7 @@ import { init as initTerminal, open as openTerminal } from './terminal/terminal.
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
-  init as initWorldMap, toggle as toggleWorldMap,
+  init as initWorldMap, toggle as toggleWorldMap, isOpen as isMapOpen,
   markDiscovered as discoverGate,
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
@@ -799,6 +799,7 @@ function updateGame() {
   updateTeleportFade();
   if (isFrozen()) { updateBrainrot(player); return; }
   if (!state.is('game')) return;
+  if (isMapOpen()) return;                 // карта открыта — стрелки двигают лист, не героя
 
   // Held-finger walk (mobile): while a finger stays down, walk toward
   // it continuously. A short tap still dispatches as a click.
@@ -1092,6 +1093,7 @@ events.on('location.use', (loc) => {
   const actionKey = loc.useAction || loc.id;
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
+    if (!canLeaveSettlement()) { lockHint(); return; }
     teleportWithFade(STREET_SPAWN.x, STREET_SPAWN.y, () => {
       // First-pass quiet line via the lore popup (dismissable, can't trap).
       if (consumeGatesLine()) {
@@ -1102,7 +1104,7 @@ events.on('location.use', (loc) => {
   }
   // Каркас: кольцевая равнины и СКРОЛЛ
   if (actionKey === 'branch_plain') {
-    teleportWithFade(BRANCH_PLAIN.x0 + 96, 640);
+    teleportWithFade(BRANCH_PLAIN.x0 + 96, BRANCH_PLAIN.y0 + 80);
     return;
   }
   if (actionKey === 'branch_back') {

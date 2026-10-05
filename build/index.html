@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='8217cf4 · 2026-10-05';console.log('[оттиск]', '8217cf4 · 2026-10-05');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='0db7269 · 2026-10-05';console.log('[оттиск]', '0db7269 · 2026-10-05');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2813,7 +2813,7 @@ System.register("world/street", ["content/ulitsa_db", "world/disc", "content/was
             exports_15("STREET_Y_MAX", STREET_Y_MAX = 960);
             exports_15("STREET_ROAD_Y", STREET_ROAD_Y = 880); // road centerline
             // Where the gates drop you, and where walking west returns you
-            exports_15("STREET_SPAWN", STREET_SPAWN = { x: 1500, y: disc_js_1.TOWN.y1 + 80 });
+            exports_15("STREET_SPAWN", STREET_SPAWN = { x: disc_js_1.TOWN.x0 + 1500, y: disc_js_1.TOWN.y1 + 80 }); // южная тропа, первое кольцо
             exports_15("GATES_RETURN", GATES_RETURN = { x: disc_js_1.TOWN.x0 + 1395, y: disc_js_1.TOWN.y0 + 725 });
             // One-time gates line (session-scoped)
             gatesLineShown = false;
@@ -2821,22 +2821,22 @@ System.register("world/street", ["content/ulitsa_db", "world/disc", "content/was
             exports_15("wasteLocations", wasteLocations = buildWasteLocations());
             // ── «Равнина · предрассветье»: восточная сторона, кольцо §2.
             // В открытом мире доходишь пешком; веха — быстрый переход.
-            exports_15("BRANCH_PLAIN", BRANCH_PLAIN = { x0: disc_js_1.TOWN.x1 + disc_js_1.RING_W, x1: disc_js_1.TOWN.x1 + 2 * disc_js_1.RING_W, y0: 560, y1: 1120, roadY: 850 });
+            exports_15("BRANCH_PLAIN", BRANCH_PLAIN = { x0: disc_js_1.TOWN.x1 + disc_js_1.RING_W, x1: disc_js_1.TOWN.x1 + 2 * disc_js_1.RING_W, y0: 560 + disc_js_1.SHIFT_Y, y1: 1120 + disc_js_1.SHIFT_Y, roadY: 850 + disc_js_1.SHIFT_Y });
             exports_15("branchLocations", branchLocations = [
                 { id: 'br_back', name: 'кольцевая веха', zone: 'street',
-                    x: BRANCH_PLAIN.x0 + 86, y: 600, w: 14, h: 26,
+                    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 40, w: 14, h: 26,
                     streetForm: 'plaque', streetSprite: 'ring_post', useAction: 'branch_back',
                     look: `Веха кольцевой. Обратно — портики: тот же век, другая сторона света. Пешком тоже можно; пустота проходима, но не учтена.` },
                 { id: 'br_bell', name: 'столб с колоколом', zone: 'street',
-                    x: BRANCH_PLAIN.x0 + 86, y: 760, w: 14, h: 26,
+                    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 140, w: 14, h: 26,
                     streetForm: 'plaque', streetSprite: 'bell_mute',
                     look: `Столб с колоколом. Языка нет: снят до рассвета, чтобы не будил. Расписание звона висит, пункт один: «по необходимости». Необходимости не зафиксировано.` },
                 { id: 'br_grass', name: 'сухая трава', zone: 'street',
-                    x: BRANCH_PLAIN.x0 + 86, y: 920, w: 14, h: 22,
+                    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 240, w: 14, h: 22,
                     streetForm: 'surface',
                     look: `Трава по пояс, сухая, стоит без ветра. Роса выпадает по графику и не достаётся никому. График соблюдается.` },
                 { id: 'br_stone', name: 'милевой камень равнины', zone: 'street',
-                    x: BRANCH_PLAIN.x0 + 86, y: 1070, w: 14, h: 22,
+                    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 330, w: 14, h: 22,
                     streetForm: 'plaque', streetSprite: 'mile_stone',
                     look: `Милевой камень. Числа нет: до полудня отсюда — не мера длины. Тени тоже нет — солнце ещё не взошло. Камень ждёт. Это его работа.` },
             ]);
@@ -32583,7 +32583,7 @@ System.register("content/worldmap_db", ["content/eggs_transfer"], function (expo
 });
 System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ulitsa_db", "world/disc", "world/physics", "core/playerRef", "core/events", "world/locations"], function (exports_72, context_72) {
     "use strict";
-    var state_js_4, worldmap_db_js_1, ulitsa_db_js_5, disc_js_10, physics_js_1, playerRef_js_2, events_js_5, locations_js_2, discovered, recently, W, H, DPR, visible, canvas, ctx, rafId, NIGHT, BONE, ASH, MIST, CANDLE, CINNABAR, F_TITLE, F_TEXT, F_SMALL, view, getVisitedFn, getLockedFn, TABS, TAB_Y, TAB_H, MAPB, SIDE, PAD, EXT, LS, LOX, LOY, lx, ly, AS, AOX, AOY, ax, ay, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, localShown, localTotal, knownRings, here;
+    var state_js_4, worldmap_db_js_1, ulitsa_db_js_5, disc_js_10, physics_js_1, playerRef_js_2, events_js_5, locations_js_2, discovered, recently, W, H, DPR, visible, canvas, ctx, rafId, NIGHT, BONE, ASH, MIST, CANDLE, CINNABAR, F_TITLE, F_TEXT, F_SMALL, view, getVisitedFn, getLockedFn, TABS, TAB_Y, TAB_H, TAB_Y_, MAPB, BTNS, SIDE, PAD, EXT, LS, LOX, LOY, lx, ly, AS, AOX, AOY, ax, ay, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, MID, localShown, localTotal, knownRings, here;
     var __moduleName = context_72 && context_72.id;
     function isDiscovered(id) { return discovered.has(id); }
     exports_72("isDiscovered", isDiscovered);
@@ -32656,7 +32656,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         }
         // подвал: клавиши
         ctx.fillStyle = ASH;
-        ctx.fillText('Tab — другой лист · колесо / щипок — ближе · M, Esc, пробел — закрыть', 16, H - 12);
+        ctx.fillText('тащи — двигать · колесо, щипок, +/− — масштаб · стрелки — сдвиг · Tab — лист · Esc — закрыть', 16, H - 12);
         // поле листа — под зумом, с обрезкой по рамке
         ctx.save();
         ctx.beginPath();
@@ -32675,8 +32675,40 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             drawLocalSide();
         else
             drawWorldSide();
+        drawButtons();
         rafId = requestAnimationFrame(draw);
     }
+    function drawButtons() {
+        ctx.font = F_TEXT;
+        for (const b of BTNS) {
+            const dim = (b.id === 'in' && zscale >= ZMAX) || (b.id === 'out' && zscale <= ZMIN) || (b.id === 'reset' && zscale === 1);
+            ctx.fillStyle = rgba(NIGHT, 0.85);
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.strokeStyle = dim ? rgba(ASH, 0.3) : rgba(BONE, 0.6);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
+            ctx.fillStyle = dim ? rgba(ASH, 0.4) : BONE;
+            ctx.fillText(b.label, b.x + (b.w - ctx.measureText(b.label).width) / 2, b.y + b.h / 2 + 5);
+        }
+        if (zscale > 1) {
+            ctx.font = F_SMALL;
+            ctx.fillStyle = ASH;
+            const t = '×' + zscale.toFixed(1);
+            ctx.fillText(t, BTNS[0].x - ctx.measureText(t).width - 8, BTNS[0].y + 17);
+        }
+    }
+    function btnAt(cx, cy) { return BTNS.find(b => cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h) || null; }
+    function pressBtn(id) {
+        if (id === 'in')
+            zoomAt(...MID(), 1.4);
+        else if (id === 'out')
+            zoomAt(...MID(), 1 / 1.4);
+        else if (id === 'reset')
+            resetZoom();
+        else if (id === 'close')
+            close();
+    }
+    function pan(dx, dy) { zx += dx; zy += dy; clampPan(); }
     // ── План местности ──
     function roundRect(x0, y0, x1, y1, r) {
         ctx.beginPath();
@@ -32771,10 +32803,11 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         ctx.font = F_SMALL;
         const boxes = [];
         for (const [sx, sy, loc] of marks) {
+            const q = 1 / Math.sqrt(zscale); // при зуме метки не раздуваются
             ctx.fillStyle = NIGHT;
-            ctx.fillRect(sx - 2.5, sy - 2.5, 5, 5);
+            ctx.fillRect(sx - 2.5 * q, sy - 2.5 * q, 5 * q, 5 * q);
             ctx.fillStyle = BONE;
-            ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+            ctx.fillRect(sx - 1.5 * q, sy - 1.5 * q, 3 * q, 3 * q);
         }
         // подписи — сколько влезет без наложений; остальные видны при зуме
         const fs = 15 / zscale;
@@ -32784,6 +32817,8 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             const tw = ctx.measureText(name).width;
             const tx = Math.min(sx + 5, MAPB.x + MAPB.w - tw - 3);
             const b = { x: tx - 1, y: sy - fs * 0.6, w: tw + 2, h: fs * 0.9 };
+            if (sx + 5 > MAPB.x + MAPB.w - tw - 3 && zscale > 1)
+                continue;
             if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y))
                 continue;
             boxes.push(b);
@@ -33151,36 +33186,37 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             el.addEventListener('click', (e) => {
                 if (!visible || !canvas)
                     return;
+                if (e.target !== canvas) {
+                    close();
+                    return;
+                } // клик мимо листа — закрыть
                 if (gestured) {
                     gestured = false;
                     return;
                 } // это был драг/щипок
                 const [cx, cy] = canvasXY(e.clientX, e.clientY);
+                const btn = btnAt(cx, cy);
+                if (btn) {
+                    pressBtn(btn.id);
+                    return;
+                }
                 // Шапка (вкладки) — в неподвижных координатах
                 const tab = TABS.find(t => cx >= t.x - 4 && cx <= t.x + t.w + 4 && cy >= TAB_Y - 6 && cy <= TAB_Y + TAB_H + 6);
                 if (tab) {
-                    cancelPendingClose();
                     if (view !== tab.view) {
                         view = tab.view;
                         resetZoom();
                     }
                     return;
                 }
-                // колонка справа — не закрывает
-                if (cx >= SIDE.x - 8)
+                if (cx < MAPB.x || cx > MAPB.x + MAPB.w || cy < MAPB.y || cy > MAPB.y + MAPB.h)
                     return;
-                // Содержимое листа — через зум-трансформацию
+                // поле листа — через зум-трансформацию; клик по полю лист не закрывает
                 const wx = (cx - zx) / zscale, wy = (cy - zy) / zscale;
                 const g = view === 'world' ? gateAt(wx, wy) : null;
                 if (g) {
-                    cancelPendingClose();
                     events_js_5.events.emit('gate.use', g);
                     close();
-                }
-                else {
-                    // не сразу: вдруг это первый тап двойного (зум)
-                    cancelPendingClose();
-                    pendingClose = setTimeout(() => { pendingClose = 0; close(); }, 480);
                 }
             });
         // ── Жесты карты: щипок и драг (тач), колесо (мышь), двойной тап ──
@@ -33211,10 +33247,9 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                     const dx = cur[0] - prev[0], dy = cur[1] - prev[1];
                     movedTotal += Math.abs(dx) + Math.abs(dy);
                     if (zscale > 1 && movedTotal > 6) {
-                        zx += dx;
-                        zy += dy;
-                        clampPan();
+                        pan(dx, dy);
                         gestured = true;
+                        canvas.style.cursor = 'grabbing';
                     }
                 }
                 else if (pts.size === 2) {
@@ -33249,6 +33284,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                 }
                 pts.delete(e.pointerId);
                 pinchDist = 0;
+                canvas.style.cursor = '';
             };
             canvas.addEventListener('pointerup', lift);
             canvas.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); pinchDist = 0; });
@@ -33266,6 +33302,30 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                     e.preventDefault();
                     view = view === 'world' ? 'local' : 'world';
                     resetZoom();
+                    return;
+                }
+                const k = e.key.toLowerCase();
+                if (k === '+' || k === '=') {
+                    e.preventDefault();
+                    pressBtn('in');
+                    return;
+                }
+                if (k === '-' || k === '_') {
+                    e.preventDefault();
+                    pressBtn('out');
+                    return;
+                }
+                if (k === '0') {
+                    e.preventDefault();
+                    pressBtn('reset');
+                    return;
+                }
+                const PAN = { arrowleft: [1, 0], a: [1, 0], 'ф': [1, 0], arrowright: [-1, 0], d: [-1, 0], 'в': [-1, 0],
+                    arrowup: [0, 1], w: [0, 1], 'ц': [0, 1], arrowdown: [0, -1], s: [0, -1], 'ы': [0, -1] };
+                if (PAN[k]) {
+                    e.preventDefault();
+                    const st = e.shiftKey ? 120 : 50;
+                    pan(PAN[k][0] * st, PAN[k][1] * st);
                     return;
                 }
                 if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' ||
@@ -33331,8 +33391,15 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                 { view: 'local', label: 'ПЛАН МЕСТНОСТИ', x: 560, w: 180 },
                 { view: 'world', label: 'КАРТА МИРА', x: 750, w: 150 },
             ];
-            TAB_Y = 10, TAB_H = 22;
+            TAB_Y = 10, TAB_H = 22, TAB_Y_ = 10;
             MAPB = { x: 16, y: 44, w: 640, h: 520 }; // поле листа
+            // кнопки листа: приблизить, отдалить, сброс — в правом нижнем углу поля; ✕ — в шапке
+            BTNS = [
+                { id: 'in', label: '+', x: MAPB.x + MAPB.w - 86, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+                { id: 'out', label: '−', x: MAPB.x + MAPB.w - 58, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+                { id: 'reset', label: '⟲', x: MAPB.x + MAPB.w - 30, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+                { id: 'close', label: '✕', x: 912, y: TAB_Y_, w: 32, h: 22 },
+            ];
             SIDE = { x: 672, y: 44, w: 272, h: 520 }; // колонка справа
             // План местности: диск колец вокруг городка, без лишней пустыни
             PAD = disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W + 300;
@@ -33348,10 +33415,11 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             ax = mx => AOX + mx * AS;
             ay = my => AOY + my * AS;
             // ── Зум и панорама листа (щипок/драг на тач, колесо/драг на мыши) ──
-            ZMIN = 1, ZMAX = 3;
+            ZMIN = 1, ZMAX = 6;
             zscale = 1, zx = 0, zy = 0; // translate(zx,zy) scale(zscale), в логических точках
             gestured = false; // жест был — ближайший click не закрывает
             pendingClose = 0; // отложенное закрытие: ждём второй тап
+            MID = () => [MAPB.x + MAPB.w / 2, MAPB.y + MAPB.h / 2];
             localShown = 0, localTotal = 0, knownRings = new Set(), here = 0;
         }
     };
@@ -37552,6 +37620,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         if (!state_js_6.state.is('game'))
             return;
+        if (worldmap_js_1.isOpen())
+            return; // карта открыта — стрелки двигают лист, не героя
         // Held-finger walk (mobile): while a finger stays down, walk toward
         // it continuously. A short tap still dispatches as a click.
         const held = input_js_2.input.getHeldTouch();
@@ -38238,6 +38308,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 const actionKey = loc.useAction || loc.id;
                 // The gates teleport onto the street: one road, gradient of epochs
                 if (actionKey === 'gates_pass') {
+                    if (!canLeaveSettlement()) {
+                        lockHint();
+                        return;
+                    }
                     teleportWithFade(street_js_3.STREET_SPAWN.x, street_js_3.STREET_SPAWN.y, () => {
                         // First-pass quiet line via the lore popup (dismissable, can't trap).
                         if (street_js_3.consumeGatesLine()) {
@@ -38248,7 +38322,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }
                 // Каркас: кольцевая равнины и СКРОЛЛ
                 if (actionKey === 'branch_plain') {
-                    teleportWithFade(street_js_3.BRANCH_PLAIN.x0 + 96, 640);
+                    teleportWithFade(street_js_3.BRANCH_PLAIN.x0 + 96, street_js_3.BRANCH_PLAIN.y0 + 80);
                     return;
                 }
                 if (actionKey === 'branch_back') {

@@ -55,8 +55,15 @@ const TABS = [
   { view: 'local', label: 'ПЛАН МЕСТНОСТИ', x: 560, w: 180 },
   { view: 'world', label: 'КАРТА МИРА', x: 750, w: 150 },
 ];
-const TAB_Y = 10, TAB_H = 22;
+const TAB_Y = 10, TAB_H = 22, TAB_Y_ = 10;
 const MAPB = { x: 16, y: 44, w: 640, h: 520 };     // поле листа
+// кнопки листа: приблизить, отдалить, сброс — в правом нижнем углу поля; ✕ — в шапке
+const BTNS = [
+  { id: 'in', label: '+', x: MAPB.x + MAPB.w - 86, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+  { id: 'out', label: '−', x: MAPB.x + MAPB.w - 58, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+  { id: 'reset', label: '⟲', x: MAPB.x + MAPB.w - 30, y: MAPB.y + MAPB.h - 30, w: 24, h: 24 },
+  { id: 'close', label: '✕', x: 912, y: TAB_Y_, w: 32, h: 22 },
+];
 const SIDE = { x: 672, y: 44, w: 272, h: 520 };    // колонка справа
 
 // План местности: диск колец вокруг городка, без лишней пустыни
@@ -85,7 +92,7 @@ function mix(c, k) {                      // притушить цвет к но
 }
 
 // ── Зум и панорама листа (щипок/драг на тач, колесо/драг на мыши) ──
-const ZMIN = 1, ZMAX = 3;
+const ZMIN = 1, ZMAX = 6;
 let zscale = 1, zx = 0, zy = 0;      // translate(zx,zy) scale(zscale), в логических точках
 let gestured = false;                // жест был — ближайший click не закрывает
 function clampPan() {
@@ -130,7 +137,7 @@ function draw() {
   }
   // подвал: клавиши
   ctx.fillStyle = ASH;
-  ctx.fillText('Tab — другой лист · колесо / щипок — ближе · M, Esc, пробел — закрыть', 16, H - 12);
+  ctx.fillText('тащи — двигать · колесо, щипок, +/− — масштаб · стрелки — сдвиг · Tab — лист · Esc — закрыть', 16, H - 12);
 
   // поле листа — под зумом, с обрезкой по рамке
   ctx.save();
@@ -142,9 +149,36 @@ function draw() {
   ctx.strokeStyle = rgba(ASH, 0.35);
   ctx.strokeRect(MAPB.x + 0.5, MAPB.y + 0.5, MAPB.w, MAPB.h);
   if (view === 'local') drawLocalSide(); else drawWorldSide();
+  drawButtons();
 
   rafId = requestAnimationFrame(draw);
 }
+
+function drawButtons() {
+  ctx.font = F_TEXT;
+  for (const b of BTNS) {
+    const dim = (b.id === 'in' && zscale >= ZMAX) || (b.id === 'out' && zscale <= ZMIN) || (b.id === 'reset' && zscale === 1);
+    ctx.fillStyle = rgba(NIGHT, 0.85); ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.strokeStyle = dim ? rgba(ASH, 0.3) : rgba(BONE, 0.6); ctx.lineWidth = 1;
+    ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
+    ctx.fillStyle = dim ? rgba(ASH, 0.4) : BONE;
+    ctx.fillText(b.label, b.x + (b.w - ctx.measureText(b.label).width) / 2, b.y + b.h / 2 + 5);
+  }
+  if (zscale > 1) {
+    ctx.font = F_SMALL; ctx.fillStyle = ASH;
+    const t = '×' + zscale.toFixed(1);
+    ctx.fillText(t, BTNS[0].x - ctx.measureText(t).width - 8, BTNS[0].y + 17);
+  }
+}
+function btnAt(cx, cy) { return BTNS.find(b => cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h) || null; }
+const MID = () => [MAPB.x + MAPB.w / 2, MAPB.y + MAPB.h / 2];
+function pressBtn(id) {
+  if (id === 'in') zoomAt(...MID(), 1.4);
+  else if (id === 'out') zoomAt(...MID(), 1 / 1.4);
+  else if (id === 'reset') resetZoom();
+  else if (id === 'close') close();
+}
+function pan(dx, dy) { zx += dx; zy += dy; clampPan(); }
 
 // ── План местности ──
 function roundRect(x0, y0, x1, y1, r) {
@@ -228,8 +262,9 @@ function drawLocal() {
   ctx.font = F_SMALL;
   const boxes = [];
   for (const [sx, sy, loc] of marks) {
-    ctx.fillStyle = NIGHT; ctx.fillRect(sx - 2.5, sy - 2.5, 5, 5);
-    ctx.fillStyle = BONE; ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+    const q = 1 / Math.sqrt(zscale);            // при зуме метки не раздуваются
+    ctx.fillStyle = NIGHT; ctx.fillRect(sx - 2.5 * q, sy - 2.5 * q, 5 * q, 5 * q);
+    ctx.fillStyle = BONE; ctx.fillRect(sx - 1.5 * q, sy - 1.5 * q, 3 * q, 3 * q);
   }
   // подписи — сколько влезет без наложений; остальные видны при зуме
   const fs = 15 / zscale;
@@ -239,6 +274,7 @@ function drawLocal() {
     const tw = ctx.measureText(name).width;
     const tx = Math.min(sx + 5, MAPB.x + MAPB.w - tw - 3);
     const b = { x: tx - 1, y: sy - fs * 0.6, w: tw + 2, h: fs * 0.9 };
+    if (sx + 5 > MAPB.x + MAPB.w - tw - 3 && zscale > 1) continue;
     if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)) continue;
     boxes.push(b);
     ctx.fillStyle = rgba(NIGHT, 0.7); ctx.fillRect(b.x - 1, b.y, b.w + 1, b.h);
@@ -509,25 +545,19 @@ export function init(opts) {
   }
   if (el) el.addEventListener('click', (e) => {
     if (!visible || !canvas) return;
-    if (gestured) { gestured = false; return; }  // это был драг/щипок
+    if (e.target !== canvas) { close(); return; }   // клик мимо листа — закрыть
+    if (gestured) { gestured = false; return; }    // это был драг/щипок
     const [cx, cy] = canvasXY(e.clientX, e.clientY);
+    const btn = btnAt(cx, cy);
+    if (btn) { pressBtn(btn.id); return; }
     // Шапка (вкладки) — в неподвижных координатах
     const tab = TABS.find(t => cx >= t.x - 4 && cx <= t.x + t.w + 4 && cy >= TAB_Y - 6 && cy <= TAB_Y + TAB_H + 6);
-    if (tab) { cancelPendingClose(); if (view !== tab.view) { view = tab.view; resetZoom(); } return; }
-    // колонка справа — не закрывает
-    if (cx >= SIDE.x - 8) return;
-    // Содержимое листа — через зум-трансформацию
+    if (tab) { if (view !== tab.view) { view = tab.view; resetZoom(); } return; }
+    if (cx < MAPB.x || cx > MAPB.x + MAPB.w || cy < MAPB.y || cy > MAPB.y + MAPB.h) return;
+    // поле листа — через зум-трансформацию; клик по полю лист не закрывает
     const wx = (cx - zx) / zscale, wy = (cy - zy) / zscale;
     const g = view === 'world' ? gateAt(wx, wy) : null;
-    if (g) {
-      cancelPendingClose();
-      events.emit('gate.use', g);
-      close();
-    } else {
-      // не сразу: вдруг это первый тап двойного (зум)
-      cancelPendingClose();
-      pendingClose = setTimeout(() => { pendingClose = 0; close(); }, 480);
-    }
+    if (g) { events.emit('gate.use', g); close(); }
   });
 
   // ── Жесты карты: щипок и драг (тач), колесо (мышь), двойной тап ──
@@ -553,8 +583,9 @@ export function init(opts) {
         const dx = cur[0] - prev[0], dy = cur[1] - prev[1];
         movedTotal += Math.abs(dx) + Math.abs(dy);
         if (zscale > 1 && movedTotal > 6) {
-          zx += dx; zy += dy; clampPan();
+          pan(dx, dy);
           gestured = true;
+          canvas.style.cursor = 'grabbing';
         }
       } else if (pts.size === 2) {
         const [a, b] = [...pts.values()];
@@ -583,6 +614,7 @@ export function init(opts) {
       }
       pts.delete(e.pointerId);
       pinchDist = 0;
+      canvas.style.cursor = '';
     };
     canvas.addEventListener('pointerup', lift);
     canvas.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); pinchDist = 0; });
@@ -601,6 +633,13 @@ export function init(opts) {
         resetZoom();
         return;
       }
+      const k = e.key.toLowerCase();
+      if (k === '+' || k === '=') { e.preventDefault(); pressBtn('in'); return; }
+      if (k === '-' || k === '_') { e.preventDefault(); pressBtn('out'); return; }
+      if (k === '0') { e.preventDefault(); pressBtn('reset'); return; }
+      const PAN = { arrowleft: [1, 0], a: [1, 0], 'ф': [1, 0], arrowright: [-1, 0], d: [-1, 0], 'в': [-1, 0],
+        arrowup: [0, 1], w: [0, 1], 'ц': [0, 1], arrowdown: [0, -1], s: [0, -1], 'ы': [0, -1] };
+      if (PAN[k]) { e.preventDefault(); const st = e.shiftKey ? 120 : 50; pan(PAN[k][0] * st, PAN[k][1] * st); return; }
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' ||
           e.key === 'm' || e.key === 'M' || e.key === 'ь' || e.key === 'Ь') {
         e.preventDefault();

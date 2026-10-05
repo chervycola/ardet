@@ -7,7 +7,7 @@
 // the gates. Epoch gradient is painted directly into the terrain.
 // ═══════════════════════════════════════
 import { TOWNLET, SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, RINGS, FIRE_W, EDGE_BAND, townDist, epochAt, southPoint, sidePoint } from './disc.js';
+import { TOWN, RING_W, RINGS, FIRE_W, EDGE_BAND, SHIFT_Y, townDist, epochAt, southPoint, sidePoint } from './disc.js';
 import { WASTE_SIGNS } from '../content/wasteland.js';
 import { useTexts } from './useActions.js';
 
@@ -30,7 +30,7 @@ export function worldSegmentAt(x, y) {
 }
 
 // Where the gates drop you, and where walking west returns you
-export const STREET_SPAWN = { x: 1500, y: TOWN.y1 + 80 };
+export const STREET_SPAWN = { x: TOWN.x0 + 1500, y: TOWN.y1 + 80 };   // южная тропа, первое кольцо
 export const GATES_RETURN = { x: TOWN.x0 + 1395, y: TOWN.y0 + 725 };
 
 // One-time gates line (session-scoped)
@@ -114,22 +114,22 @@ export const wasteLocations = buildWasteLocations();
 
 // ── «Равнина · предрассветье»: восточная сторона, кольцо §2.
 // В открытом мире доходишь пешком; веха — быстрый переход.
-export const BRANCH_PLAIN = { x0: TOWN.x1 + RING_W, x1: TOWN.x1 + 2 * RING_W, y0: 560, y1: 1120, roadY: 850 };
+export const BRANCH_PLAIN = { x0: TOWN.x1 + RING_W, x1: TOWN.x1 + 2 * RING_W, y0: 560 + SHIFT_Y, y1: 1120 + SHIFT_Y, roadY: 850 + SHIFT_Y };
 export const branchLocations = [
   { id: 'br_back', name: 'кольцевая веха', zone: 'street',
-    x: BRANCH_PLAIN.x0 + 86, y: 600, w: 14, h: 26,
+    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 40, w: 14, h: 26,
     streetForm: 'plaque', streetSprite: 'ring_post', useAction: 'branch_back',
     look: `Веха кольцевой. Обратно — портики: тот же век, другая сторона света. Пешком тоже можно; пустота проходима, но не учтена.` },
   { id: 'br_bell', name: 'столб с колоколом', zone: 'street',
-    x: BRANCH_PLAIN.x0 + 86, y: 760, w: 14, h: 26,
+    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 140, w: 14, h: 26,
     streetForm: 'plaque', streetSprite: 'bell_mute',
     look: `Столб с колоколом. Языка нет: снят до рассвета, чтобы не будил. Расписание звона висит, пункт один: «по необходимости». Необходимости не зафиксировано.` },
   { id: 'br_grass', name: 'сухая трава', zone: 'street',
-    x: BRANCH_PLAIN.x0 + 86, y: 920, w: 14, h: 22,
+    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 240, w: 14, h: 22,
     streetForm: 'surface',
     look: `Трава по пояс, сухая, стоит без ветра. Роса выпадает по графику и не достаётся никому. График соблюдается.` },
   { id: 'br_stone', name: 'милевой камень равнины', zone: 'street',
-    x: BRANCH_PLAIN.x0 + 86, y: 1070, w: 14, h: 22,
+    x: BRANCH_PLAIN.x0 + 86, y: BRANCH_PLAIN.y0 + 330, w: 14, h: 22,
     streetForm: 'plaque', streetSprite: 'mile_stone',
     look: `Милевой камень. Числа нет: до полудня отсюда — не мера длины. Тени тоже нет — солнце ещё не взошло. Камень ждёт. Это его работа.` },
 ];
