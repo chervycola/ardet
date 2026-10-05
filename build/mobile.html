@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3345c38 · 2026-10-04';console.log('[оттиск]', '3345c38 · 2026-10-04');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c537fff · 2026-10-05';console.log('[оттиск]', 'c537fff · 2026-10-05');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -25701,7 +25701,7 @@ System.register("audio/audio", [], function (exports_57, context_57) {
 });
 System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets/loader", "ui/transitions", "audio/audio", "core/input", "world/useActions"], function (exports_58, context_58) {
     "use strict";
-    var state_js_1, potemkin_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_1, input_js_1, useActions_js_5, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookTitle, dlgEl, dlgLines, dlgIndex, dlgLoc;
+    var state_js_1, potemkin_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_1, input_js_1, useActions_js_5, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, dlgEl, dlgLines, dlgIndex, dlgLoc;
     var __moduleName = context_58 && context_58.id;
     // Does this location actually do something on «использовать»?
     // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -25833,21 +25833,32 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
     function renderLookPage() {
         const lt = document.getElementById('lt');
         const lb = document.getElementById('lb');
-        const ind = document.getElementById('look-page');
+        let ind = document.getElementById('look-page');
+        if (!ind && lookEl) { // в разметке его не было — указатель не показывался никогда
+            ind = document.createElement('div');
+            ind.id = 'look-page';
+            ind.style.cssText = 'margin-top:10px;text-align:right;font-size:0.75em;opacity:0.55;letter-spacing:0.05em';
+            lookEl.appendChild(ind);
+        }
+        lookShownAt = performance.now();
         lt.textContent = lookTitle || (activeLoc ? activeLoc.name : '');
         lb.textContent = lookPages[lookPageIdx] || '';
         if (ind) {
             if (lookPages.length > 1) {
                 const isLast = lookPageIdx >= lookPages.length - 1;
-                ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length + (isLast ? '  ✕' : '  →');
+                ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length
+                    + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + ' · esc ✕';
                 ind.style.display = 'block';
             }
             else {
-                ind.style.display = 'none';
+                ind.textContent = 'пробел / esc — закрыть';
+                ind.style.display = 'block';
             }
         }
     }
     function advanceOrCloseLook() {
+        if (performance.now() - lookShownAt < 250)
+            return false;
         if (lookPageIdx < lookPages.length - 1) {
             lookPageIdx++;
             renderLookPage();
@@ -25968,8 +25979,21 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
                 else if (state_js_1.state.is('dialogue'))
                     closeDialogue();
             }
-            if ((e.key === ' ' || e.key === 'Enter') && state_js_1.state.is('look')) {
+            if ((e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') && state_js_1.state.is('look')) {
+                e.preventDefault();
                 advanceOrCloseLook();
+            }
+            if ((e.key === 'ArrowLeft' || e.key === 'Backspace') && state_js_1.state.is('look') && lookPageIdx > 0) {
+                e.preventDefault();
+                lookPageIdx--;
+                renderLookPage();
+            }
+            if ((e.key === ' ' || e.key === 'Enter') && state_js_1.state.is('dialogue')) {
+                const btn = document.querySelector('#do button'); // «Продолжить…» или «Уйти»
+                if (btn) {
+                    e.preventDefault();
+                    btn.click();
+                }
             }
         });
         // Swipe on look panel
@@ -26068,6 +26092,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "core/events", "assets
             lookEl = document.getElementById('look');
             lookPages = [];
             lookPageIdx = 0;
+            lookShownAt = 0; // клик в ту же долю секунды, что открыл страницу, не листает её
             lookTitle = ''; // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
             // ── DIALOGUE ──
             dlgEl = document.getElementById('dlg');
@@ -28657,6 +28682,17 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
             state.life = TAIL_FADE;
     }
     exports_66("dismiss", dismiss);
+    // первый клик — допечатать сразу (не терять недочитанное), второй — убрать
+    function skipOrDismiss() {
+        const typed = Math.floor((time_js_15.t - state.startFrame) / TYPE_SPEED);
+        if (typed < state.text.length) {
+            state.startFrame = time_js_15.t - state.text.length * TYPE_SPEED;
+            state.life = state.totalLife - state.text.length * TYPE_SPEED;
+            return;
+        }
+        dismiss();
+    }
+    exports_66("skipOrDismiss", skipOrDismiss);
     function isActive() { return state.life > 0; }
     exports_66("isActive", isActive);
     function draw(ctx) {
@@ -38086,6 +38122,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // Fallback removed: canvas click handler already dispatches. Keeping #gw
             // click listener caused double-dispatch (canvas → #gw bubble), which
             // flashed the menu open+closed on the same click.
+            // Бумажка внизу: пробел / enter / esc — допечатать, потом убрать
+            document.addEventListener('keydown', e => {
+                if (!lorepopup_js_1.isActive() || !state_js_6.state.is('game'))
+                    return;
+                if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape')
+                    lorepopup_js_1.skipOrDismiss();
+            });
             // Touch: walk toward clicked point
             input_js_2.input.onClick(({ clientX, clientY, originalEvent }) => {
                 if (originalEvent)
@@ -38100,9 +38143,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 // Lore popup eats the first click: dismiss, don't walk
                 if (lorepopup_js_1.isActive()) {
-                    lorepopup_js_1.dismiss();
+                    lorepopup_js_1.skipOrDismiss();
                     return;
-                }
+                } // первый клик допечатывает, второй убирает
                 const pos = input_js_2.input.screenToWorld(clientX, clientY, camera_js_1.camera);
                 const loc = physics_js_1.findLocationAt(pos.x, pos.y, locations_js_4.locations);
                 if (loc) {

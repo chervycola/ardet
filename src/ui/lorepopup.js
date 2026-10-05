@@ -55,6 +55,16 @@ export function showLore(text, live = false) {
 export function dismiss() {
   if (state.life > TAIL_FADE) state.life = TAIL_FADE;
 }
+// первый клик — допечатать сразу (не терять недочитанное), второй — убрать
+export function skipOrDismiss() {
+  const typed = Math.floor((t - state.startFrame) / TYPE_SPEED);
+  if (typed < state.text.length) {
+    state.startFrame = t - state.text.length * TYPE_SPEED;
+    state.life = state.totalLife - state.text.length * TYPE_SPEED;
+    return;
+  }
+  dismiss();
+}
 export function isActive() { return state.life > 0; }
 
 export function draw(ctx) {

@@ -156,6 +156,7 @@ export function menuAction(action) {
 const lookEl = document.getElementById('look');
 let lookPages = [];
 let lookPageIdx = 0;
+let lookShownAt = 0;   // клик в ту же долю секунды, что открыл страницу, не листает её
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
 
 // Paginate long text
@@ -195,7 +196,14 @@ export function showLook(loc) {
 function renderLookPage() {
   const lt = document.getElementById('lt');
   const lb = document.getElementById('lb');
-  const ind = document.getElementById('look-page');
+  let ind = document.getElementById('look-page');
+  if (!ind && lookEl) {          // в разметке его не было — указатель не показывался никогда
+    ind = document.createElement('div');
+    ind.id = 'look-page';
+    ind.style.cssText = 'margin-top:10px;text-align:right;font-size:0.75em;opacity:0.55;letter-spacing:0.05em';
+    lookEl.appendChild(ind);
+  }
+  lookShownAt = performance.now();
 
   lt.textContent = lookTitle || (activeLoc ? activeLoc.name : '');
   lb.textContent = lookPages[lookPageIdx] || '';
@@ -203,15 +211,18 @@ function renderLookPage() {
   if (ind) {
     if (lookPages.length > 1) {
       const isLast = lookPageIdx >= lookPages.length - 1;
-      ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length + (isLast ? '  ✕' : '  →');
+      ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length
+        + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + ' · esc ✕';
       ind.style.display = 'block';
     } else {
-      ind.style.display = 'none';
+      ind.textContent = 'пробел / esc — закрыть';
+      ind.style.display = 'block';
     }
   }
 }
 
 export function advanceOrCloseLook() {
+  if (performance.now() - lookShownAt < 250) return false;
   if (lookPageIdx < lookPages.length - 1) {
     lookPageIdx++;
     renderLookPage();
@@ -341,8 +352,17 @@ export function initUI() {
       else if (state.is('menu')) hideMenu();
       else if (state.is('dialogue')) closeDialogue();
     }
-    if ((e.key === ' ' || e.key === 'Enter') && state.is('look')) {
+    if ((e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') && state.is('look')) {
+      e.preventDefault();
       advanceOrCloseLook();
+    }
+    if ((e.key === 'ArrowLeft' || e.key === 'Backspace') && state.is('look') && lookPageIdx > 0) {
+      e.preventDefault();
+      lookPageIdx--; renderLookPage();
+    }
+    if ((e.key === ' ' || e.key === 'Enter') && state.is('dialogue')) {
+      const btn = document.querySelector('#do button');     // «Продолжить…» или «Уйти»
+      if (btn) { e.preventDefault(); btn.click(); }
     }
   });
 

@@ -29,7 +29,7 @@ import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadC
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
-import { showLore, draw as drawLorePopup, dismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
+import { showLore, draw as drawLorePopup, skipOrDismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
@@ -1000,6 +1000,12 @@ document.getElementById('entry-btn').addEventListener('click', entryEnter);
 // click listener caused double-dispatch (canvas → #gw bubble), which
 // flashed the menu open+closed on the same click.
 
+// Бумажка внизу: пробел / enter / esc — допечатать, потом убрать
+document.addEventListener('keydown', e => {
+  if (!loreActive() || !state.is('game')) return;
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') dismissLore();
+});
+
 // Touch: walk toward clicked point
 input.onClick(({ clientX, clientY, originalEvent }) => {
   if (originalEvent) originalEvent.stopPropagation();
@@ -1007,7 +1013,7 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (state.is('look') || state.is('dialogue')) return;
   if (!state.is('game')) return;
   // Lore popup eats the first click: dismiss, don't walk
-  if (loreActive()) { dismissLore(); return; }
+  if (loreActive()) { dismissLore(); return; }   // первый клик допечатывает, второй убирает
 
   const pos = input.screenToWorld(clientX, clientY, camera);
   const loc = findLocationAt(pos.x, pos.y, locations);
