@@ -532,7 +532,8 @@ III. САМАЯ ТЁМНАЯ.
 > vaporwave. он назвал это
 > медленной отменой будущего.
 >
-> см. .fisher` },
+> будущее: отложено.
+> срок отсрочки: не указан.` },
   'fromm': { color: '#4a7fb5', text: `> whois FROMM
 >
 > name: Erich Fromm
@@ -1955,7 +1956,8 @@ request timed out
 > vaporwave. он назвал это
 > медленной отменой будущего.
 >
-> см. .fisher` },
+> будущее: отложено.
+> срок отсрочки: не указан.` },
   'фромм': { color: '#4a7fb5', text: `> whois FROMM
 >
 > name: Erich Fromm
