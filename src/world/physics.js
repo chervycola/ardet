@@ -15,7 +15,7 @@ const PLAYER_MY = 16;
 // the two outlier NPCs live (Dumpster Demon at 2720,200 in top-right highway,
 // Nocturnal at 1665,1685 on the southern toxic plain) and the pit/brainrot fringe.
 import { TOWN, townDist } from './disc.js';
-const SETTLEMENT = { x1: TOWN.x0 + 40, x2: TOWN.x0 + 2650, y1: TOWN.y0 + 20, y2: TOWN.y0 + 1420 };
+export const SETTLEMENT = { x1: TOWN.x0 + 40, x2: TOWN.x0 + 2650, y1: TOWN.y0 + 20, y2: TOWN.y0 + 1420 };
 
 export function isInSettlement(x, y) {
   return x >= SETTLEMENT.x1 && x <= SETTLEMENT.x2 &&

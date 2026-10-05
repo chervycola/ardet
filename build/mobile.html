@@ -395,10 +395,9 @@ canvas#game {
 }
 #map.on { display: flex; }
 #map-canvas {
-  width: min(94vw, 1100px);
+  width: min(96vw, calc(94vh * 1.6), 1240px);
   height: auto;
-  max-height: 92vh;
-  image-rendering: pixelated;
+  aspect-ratio: 960 / 600;
   border: 1px solid rgba(107,15,26,0.4);
   background: #08060a;
 }
@@ -624,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='27f3fa3 · 2026-10-05';console.log('[оттиск]', '27f3fa3 · 2026-10-05');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='8217cf4 · 2026-10-05';console.log('[оттиск]', '8217cf4 · 2026-10-05');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -16313,7 +16312,7 @@ System.register("world/physics", ["world/terrain", "render/draw", "world/disc"],
             PLAYER_H = 20;
             PLAYER_MX = 6; // margin x (for hitbox offset)
             PLAYER_MY = 16;
-            SETTLEMENT = { x1: disc_js_8.TOWN.x0 + 40, x2: disc_js_8.TOWN.x0 + 2650, y1: disc_js_8.TOWN.y0 + 20, y2: disc_js_8.TOWN.y0 + 1420 };
+            exports_39("SETTLEMENT", SETTLEMENT = { x1: disc_js_8.TOWN.x0 + 40, x2: disc_js_8.TOWN.x0 + 2650, y1: disc_js_8.TOWN.y0 + 20, y2: disc_js_8.TOWN.y0 + 1420 });
             // Street corridor — east of the waste the world narrows to one road.
             // Kept in sync with world/street.js constants.
             STREET_EDGE_X = 3100;
@@ -32582,9 +32581,9 @@ System.register("content/worldmap_db", ["content/eggs_transfer"], function (expo
         }
     };
 });
-System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ulitsa_db", "world/street", "core/playerRef", "core/events", "world/locations"], function (exports_72, context_72) {
+System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ulitsa_db", "world/disc", "world/physics", "core/playerRef", "core/events", "world/locations"], function (exports_72, context_72) {
     "use strict";
-    var state_js_4, worldmap_db_js_1, ulitsa_db_js_5, street_js_3, playerRef_js_2, events_js_5, locations_js_2, discovered, recently, W, H, visible, canvas, ctx, rafId, view, getVisitedFn, TAB_BOX, LOCAL_BOX, LOCAL_XMAX, LOCAL_Y0, LOCAL_Y1, MAP_BOX, STREET_BOX, WASTE_BOX, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, localShown, localTotal;
+    var state_js_4, worldmap_db_js_1, ulitsa_db_js_5, disc_js_10, physics_js_1, playerRef_js_2, events_js_5, locations_js_2, discovered, recently, W, H, DPR, visible, canvas, ctx, rafId, NIGHT, BONE, ASH, MIST, CANDLE, CINNABAR, F_TITLE, F_TEXT, F_SMALL, view, getVisitedFn, getLockedFn, TABS, TAB_Y, TAB_H, MAPB, SIDE, PAD, EXT, LS, LOX, LOY, lx, ly, AS, AOX, AOY, ax, ay, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, localShown, localTotal, knownRings, here;
     var __moduleName = context_72 && context_72.id;
     function isDiscovered(id) { return discovered.has(id); }
     exports_72("isDiscovered", isDiscovered);
@@ -32606,17 +32605,18 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         return true;
     }
     exports_72("markDiscovered", markDiscovered);
-    function lx(wx) { return LOCAL_BOX.x + Math.max(0, Math.min(1, wx / LOCAL_XMAX)) * LOCAL_BOX.w; }
-    function ly(wy) { return LOCAL_BOX.y + Math.max(0, Math.min(1, (wy - LOCAL_Y0) / (LOCAL_Y1 - LOCAL_Y0))) * LOCAL_BOX.h; }
-    function ax(mx) { return MAP_BOX.x + (mx / worldmap_db_js_1.MAP_W) * MAP_BOX.w; }
-    function ay(my) { return MAP_BOX.y + (my / worldmap_db_js_1.MAP_H) * MAP_BOX.h; }
     function rgba(c, a) {
         const v = parseInt(c.slice(1), 16);
         return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${a})`;
     }
+    function mix(c, k) {
+        const v = parseInt(c.slice(1), 16), n = parseInt(NIGHT.slice(1), 16);
+        const ch = s => Math.round(((v >> s) & 255) * k + ((n >> s) & 255) * (1 - k));
+        return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+    }
     function clampPan() {
-        zx = Math.min(0, Math.max(W - W * zscale, zx));
-        zy = Math.min(0, Math.max(H - H * zscale, zy));
+        zx = Math.min(MAPB.x * (1 - zscale), Math.max(MAPB.x + MAPB.w - (MAPB.x + MAPB.w) * zscale, zx));
+        zy = Math.min(MAPB.y * (1 - zscale), Math.max(MAPB.y + MAPB.h - (MAPB.y + MAPB.h) * zscale, zy));
     }
     function zoomAt(cx, cy, factor) {
         const ns = Math.min(ZMAX, Math.max(ZMIN, zscale * factor));
@@ -32630,490 +32630,469 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         clearTimeout(pendingClose);
         pendingClose = 0;
     } }
+    function base() { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
     function draw() {
         if (!visible || !ctx)
             return;
-        // Frame
-        ctx.fillStyle = 'rgba(8,6,4,0.97)';
+        base();
+        ctx.fillStyle = NIGHT;
         ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = 'rgba(107,15,26,0.55)';
+        ctx.strokeStyle = rgba(CINNABAR, 0.5);
         ctx.lineWidth = 1;
         ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-        ctx.fillStyle = '#b8860b';
-        ctx.fillRect(1, 1, W - 2, 1);
-        ctx.font = '8px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = '#daa520';
-        ctx.fillText(view === 'world' ? 'КАРТА МИРА' : 'ПЛАН МЕСТНОСТИ', 16, 18);
-        // Переключатель листов (клик / Tab)
-        ctx.fillStyle = 'rgba(184,134,11,0.14)';
-        ctx.fillRect(TAB_BOX.x, TAB_BOX.y, TAB_BOX.w, TAB_BOX.h);
-        ctx.strokeStyle = 'rgba(184,134,11,0.55)';
-        ctx.strokeRect(TAB_BOX.x + 0.5, TAB_BOX.y + 0.5, TAB_BOX.w, TAB_BOX.h);
-        ctx.font = '7px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = '#daa520';
-        ctx.fillText(view === 'world' ? '→ МЕСТНОСТЬ' : '→ МИР', TAB_BOX.x + 10, TAB_BOX.y + 13);
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = '#8a8d8f';
-        ctx.fillText('[M/Esc] закрыть · [Tab] лист · щипок/колесо — зум', 16, 28);
+        // шапка: название листа и вкладки
+        ctx.font = F_TITLE;
+        ctx.fillStyle = BONE;
+        ctx.fillText('КАРТА', 18, 27);
+        ctx.font = F_SMALL;
+        for (const t of TABS) {
+            const on = t.view === view;
+            ctx.fillStyle = on ? rgba(CANDLE, 0.16) : 'transparent';
+            ctx.fillRect(t.x, TAB_Y, t.w, TAB_H);
+            ctx.strokeStyle = on ? CANDLE : rgba(ASH, 0.5);
+            ctx.strokeRect(t.x + 0.5, TAB_Y + 0.5, t.w, TAB_H);
+            ctx.fillStyle = on ? CANDLE : ASH;
+            ctx.fillText(t.label, t.x + (t.w - ctx.measureText(t.label).width) / 2, TAB_Y + 16);
+        }
+        // подвал: клавиши
+        ctx.fillStyle = ASH;
+        ctx.fillText('Tab — другой лист · колесо / щипок — ближе · M, Esc, пробел — закрыть', 16, H - 12);
+        // поле листа — под зумом, с обрезкой по рамке
         ctx.save();
-        ctx.translate(zx, zy);
-        ctx.scale(zscale, zscale);
-        if (view === 'local') {
+        ctx.beginPath();
+        ctx.rect(MAPB.x, MAPB.y, MAPB.w, MAPB.h);
+        ctx.clip();
+        ctx.setTransform(DPR * zscale, 0, 0, DPR * zscale, DPR * zx, DPR * zy);
+        if (view === 'local')
             drawLocal();
-            ctx.restore();
-            drawLocalLegend();
-            rafId = requestAnimationFrame(draw);
-            return;
-        }
-        // Sub-banner: most-recently-discovered gate
-        const fresh = [...recently.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (fresh && (Date.now() - fresh[1] < 10000)) {
-            const g = worldmap_db_js_1.gateById(fresh[0]);
-            if (g) {
-                const alpha = Math.min(1, 1 - (Date.now() - fresh[1]) / 10000);
-                ctx.fillStyle = `rgba(218,165,32,${alpha})`;
-                ctx.font = '7px "Press Start 2P","VT323",monospace';
-                ctx.fillText('→ открылись: ' + g.label.toUpperCase(), 16, 40);
-            }
-        }
-        drawContinents();
-        drawThreads();
-        drawNodes();
-        drawOverlays(); // tunnels / museums / precipices
-        drawWasteAndStreet();
-        drawGates(); // continental fast-travel points
-        drawPlayer();
+        else
+            drawWorld();
         ctx.restore();
-        drawLegend();
+        base();
+        ctx.strokeStyle = rgba(ASH, 0.35);
+        ctx.strokeRect(MAPB.x + 0.5, MAPB.y + 0.5, MAPB.w, MAPB.h);
+        if (view === 'local')
+            drawLocalSide();
+        else
+            drawWorldSide();
         rafId = requestAnimationFrame(draw);
     }
-    // ── План местности: пустошь, локации, туман непосещённого ──
+    // ── План местности ──
+    function roundRect(x0, y0, x1, y1, r) {
+        ctx.beginPath();
+        ctx.moveTo(x0 + r, y0);
+        ctx.arcTo(x1, y0, x1, y1, r);
+        ctx.arcTo(x1, y1, x0, y1, r);
+        ctx.arcTo(x0, y1, x0, y0, r);
+        ctx.arcTo(x0, y0, x1, y0, r);
+        ctx.closePath();
+    }
+    function ringRect(d) { roundRect(lx(disc_js_10.TOWN.x0 - d), ly(disc_js_10.TOWN.y0 - d), lx(disc_js_10.TOWN.x1 + d), ly(disc_js_10.TOWN.y1 + d), Math.max(0.1, d * LS)); }
     function drawLocal() {
         const visited = getVisitedFn() || new Set();
-        // Поле
-        ctx.fillStyle = '#1c150b';
-        ctx.fillRect(LOCAL_BOX.x, LOCAL_BOX.y, LOCAL_BOX.w, LOCAL_BOX.h);
-        ctx.strokeStyle = '#5a4c30';
-        ctx.strokeRect(LOCAL_BOX.x + 0.5, LOCAL_BOX.y + 0.5, LOCAL_BOX.w, LOCAL_BOX.h);
-        // Зерно бумаги — редкие точки по детерминированной сетке
-        ctx.fillStyle = 'rgba(138,141,143,0.1)';
-        for (let gy = 0; gy < 24; gy++)
-            for (let gx = 0; gx < 30; gx++) {
-                const jx = Math.sin(gx * 127.1 + gy * 311.7) * 43758.5453 % 1;
-                if (Math.abs(jx) < 0.22)
-                    ctx.fillRect(LOCAL_BOX.x + 8 + gx * (LOCAL_BOX.w - 16) / 30, LOCAL_BOX.y + 8 + gy * (LOCAL_BOX.h - 16) / 24, 1, 1);
+        const p = playerRef_js_2.getPlayerPos();
+        here = p ? disc_js_10.ringAt(p.x, p.y) : 0;
+        knownRings = new Set([here]);
+        for (const loc of locations_js_2.locations)
+            if (visited.has(loc.id))
+                knownRings.add(disc_js_10.ringAt(loc.x + (loc.w || 0) / 2, loc.y + (loc.h || 0)));
+        // за краем — пустыня
+        ctx.fillStyle = '#16110c';
+        ctx.fillRect(MAPB.x, MAPB.y, MAPB.w, MAPB.h);
+        // кольцо огня
+        ringRect(disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W);
+        ctx.fillStyle = mix(CINNABAR, knownRings.has(disc_js_10.RINGS + 1) ? 0.45 : 0.22);
+        ctx.fill();
+        // эпохи: снаружи внутрь; неизвестные — тёмные, только контур
+        for (let n = disc_js_10.RINGS; n >= 1; n--) {
+            ringRect(n * disc_js_10.RING_W);
+            ctx.fillStyle = knownRings.has(n) ? mix(ulitsa_db_js_5.SEGMENTS[n - 1].palette.ground, 0.85) : '#1d1813';
+            ctx.fill();
+            ctx.strokeStyle = n === here ? CANDLE : rgba(ASH, 0.28);
+            ctx.lineWidth = n === here ? 1.2 : 0.6;
+            ctx.stroke();
+        }
+        // городок
+        ctx.fillStyle = '#2a1e14';
+        ctx.fillRect(lx(disc_js_10.TOWN.x0), ly(disc_js_10.TOWN.y0), (disc_js_10.TOWN.x1 - disc_js_10.TOWN.x0) * LS, (disc_js_10.TOWN.y1 - disc_js_10.TOWN.y0) * LS);
+        ctx.strokeStyle = rgba(BONE, 0.7);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(lx(disc_js_10.TOWN.x0), ly(disc_js_10.TOWN.y0), (disc_js_10.TOWN.x1 - disc_js_10.TOWN.x0) * LS, (disc_js_10.TOWN.y1 - disc_js_10.TOWN.y0) * LS);
+        // номера колец — по северо-западной диагонали
+        ctx.font = F_SMALL;
+        for (let n = 1; n <= disc_js_10.RINGS; n++) {
+            const d = (n - 0.5) * disc_js_10.RING_W, r = n * disc_js_10.RING_W * LS, off = (r - d * LS);
+            const cx = lx(disc_js_10.TOWN.x0) - (r - off) * 0.7071 - 0, cy = ly(disc_js_10.TOWN.y0) - (r - off) * 0.7071;
+            ctx.fillStyle = n === here ? CANDLE : knownRings.has(n) ? BONE : rgba(ASH, 0.6);
+            const s = String(n);
+            ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy + 5);
+        }
+        // тропы на четыре стороны
+        ctx.fillStyle = rgba(BONE, 0.45);
+        for (const side of ['north', 'south', 'east', 'west'])
+            for (let d = 0; d < disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W; d += 45) {
+                const t = disc_js_10.trailPoint(side, d);
+                ctx.fillRect(lx(t.x) - 0.6, ly(t.y) - 0.6, 1.2, 1.2);
             }
-        // Выход на улицу — арка у восточного края
-        const gx0 = LOCAL_BOX.x + LOCAL_BOX.w - 8, gy0 = ly(760);
-        ctx.fillStyle = '#b8860b';
-        ctx.fillRect(gx0 - 3, gy0 - 6, 1, 6);
-        ctx.fillRect(gx0 + 2, gy0 - 6, 1, 6);
-        ctx.fillRect(gx0 - 3, gy0 - 7, 6, 1);
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = 'rgba(218,165,32,0.8)';
-        ctx.fillText('улица →', gx0 - 48, gy0 + 12);
-        // Локации: посещённые — именованные метки, прочие — слабые точки тумана
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
+        // ядро вне времени и костёр
+        ctx.strokeStyle = rgba(CANDLE, 0.35);
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.arc(lx(disc_js_10.CORE.x), ly(disc_js_10.CORE.y), disc_js_10.CORE.r * LS, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = CANDLE;
+        ctx.fillRect(lx(disc_js_10.CORE.x) - 1.5, ly(disc_js_10.CORE.y) - 1.5, 3, 3);
+        // замок на выходе
+        if (getLockedFn()) {
+            ctx.setLineDash([3, 2]);
+            ctx.strokeStyle = CINNABAR;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(lx(physics_js_1.SETTLEMENT.x1), ly(physics_js_1.SETTLEMENT.y1), (physics_js_1.SETTLEMENT.x2 - physics_js_1.SETTLEMENT.x1) * LS, (physics_js_1.SETTLEMENT.y2 - physics_js_1.SETTLEMENT.y1) * LS);
+            ctx.setLineDash([]);
+        }
+        // места: осмотренные — с именем, прочие — слабая точка
         let shown = 0, total = 0;
+        const marks = [];
         for (const loc of locations_js_2.locations) {
-            if (loc.x >= LOCAL_XMAX)
-                continue; // уличные знаки — на листе мира
             total++;
             const sx = lx(loc.x + (loc.w || 0) / 2), sy = ly(loc.y + (loc.h || 0) / 2);
-            if (visited.has(loc.id)) {
+            if (visited.has(loc.id))
                 shown++;
-                ctx.fillStyle = '#0c0b09';
-                ctx.fillRect(sx - 2, sy - 2, 6, 6); // тёмная подложка — отрыв от поля
-                ctx.fillStyle = '#f0c040';
-                ctx.fillRect(sx - 1, sy - 1, 4, 4);
-                ctx.fillStyle = 'rgba(240,228,208,0.95)';
-                const name = (loc.name || loc.id).slice(0, 20);
-                // подпись не должна вылезти за поле
-                const tw = ctx.measureText(name).width;
-                ctx.fillText(name, Math.min(sx + 6, LOCAL_BOX.x + LOCAL_BOX.w - tw - 4), sy + 3);
+            if (sx < MAPB.x + 2 || sx > MAPB.x + MAPB.w - 2 || sy < MAPB.y + 2 || sy > MAPB.y + MAPB.h - 2)
+                continue;
+            if (visited.has(loc.id)) {
+                marks.push([sx, sy, loc]);
             }
             else {
-                ctx.fillStyle = 'rgba(232,220,200,0.38)';
-                ctx.fillRect(sx, sy, 3, 3);
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(sx + 1, sy + 1, 1, 1);
+                ctx.fillStyle = rgba(BONE, 0.22);
+                ctx.fillRect(sx - 0.5, sy - 0.5, 1, 1);
             }
         }
-        // Стороны света и стихии по краям (форма world-map)
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = 'rgba(194,59,43,0.75)';
-        ctx.fillText('↑ север · полночь · лёд', LOCAL_BOX.x + LOCAL_BOX.w / 2 - 70, LOCAL_BOX.y + 12);
-        ctx.fillText('↓ юг · полдень · пески', LOCAL_BOX.x + LOCAL_BOX.w / 2 - 70, LOCAL_BOX.y + LOCAL_BOX.h - 6);
-        ctx.fillText('→ восток · утро · мусор', LOCAL_BOX.x + LOCAL_BOX.w - 150, LOCAL_BOX.y + LOCAL_BOX.h / 2);
-        ctx.fillText('← запад · вечер · озеро', LOCAL_BOX.x + 6, LOCAL_BOX.y + LOCAL_BOX.h / 2);
-        // Игрок
-        const p = playerRef_js_2.getPlayerPos();
+        ctx.font = F_SMALL;
+        const boxes = [];
+        for (const [sx, sy, loc] of marks) {
+            ctx.fillStyle = NIGHT;
+            ctx.fillRect(sx - 2.5, sy - 2.5, 5, 5);
+            ctx.fillStyle = BONE;
+            ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+        }
+        // подписи — сколько влезет без наложений; остальные видны при зуме
+        const fs = 15 / zscale;
+        ctx.font = `${fs}px VT323,monospace`;
+        for (const [sx, sy, loc] of marks) {
+            const name = (loc.name || loc.id).slice(0, 24);
+            const tw = ctx.measureText(name).width;
+            const tx = Math.min(sx + 5, MAPB.x + MAPB.w - tw - 3);
+            const b = { x: tx - 1, y: sy - fs * 0.6, w: tw + 2, h: fs * 0.9 };
+            if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y))
+                continue;
+            boxes.push(b);
+            ctx.fillStyle = rgba(NIGHT, 0.7);
+            ctx.fillRect(b.x - 1, b.y, b.w + 1, b.h);
+            ctx.fillStyle = BONE;
+            ctx.fillText(name, tx, sy + fs * 0.25);
+        }
+        // ты
+        if (p && ((Date.now() / 300) | 0) % 2 === 0) {
+            const px = lx(p.x), py = ly(p.y);
+            ctx.fillStyle = NIGHT;
+            ctx.fillRect(px - 3, py - 3, 7, 7);
+            ctx.fillStyle = CANDLE;
+            ctx.fillRect(px - 2, py - 2, 5, 5);
+        }
         if (p) {
-            const blink = ((Date.now() / 300) | 0) % 2 === 0;
-            if (blink) {
-                ctx.fillStyle = '#ff7020';
-                if (p.x < LOCAL_XMAX) {
-                    ctx.fillRect(lx(p.x) - 1, ly(p.y) - 2, 3, 4);
-                }
-                else {
-                    // На улице: маркер у арки
-                    ctx.fillRect(gx0 - 1, gy0 - 3, 3, 4);
-                    ctx.fillStyle = 'rgba(255,112,32,0.8)';
-                    ctx.fillText('ты — на улице', gx0 - 88, gy0 - 12);
-                }
-            }
+            ctx.font = `${15 / zscale}px VT323,monospace`;
+            const px = lx(p.x), py = ly(p.y), tw = ctx.measureText('ты').width;
+            ctx.fillStyle = rgba(NIGHT, 0.75);
+            ctx.fillRect(px - tw - 7, py - 6, tw + 3, 10);
+            ctx.fillStyle = CANDLE;
+            ctx.fillText('ты', px - tw - 6, py + 3);
         }
         localShown = shown;
         localTotal = total;
     }
-    function drawLocalLegend() {
-        const lyy = H - 56;
-        ctx.fillStyle = 'rgba(8,6,4,0.92)';
-        ctx.fillRect(1, lyy - 12, W - 2, 54);
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = '#b8b8a8';
-        ctx.fillText(`осмотрено мест: ${localShown} из ${localTotal}`, 16, lyy);
-        ctx.fillStyle = '#f0c040';
-        ctx.fillRect(16, lyy + 10, 4, 4);
-        ctx.fillStyle = '#c8c8b8';
-        ctx.fillText('посещено', 26, lyy + 16);
-        ctx.fillStyle = 'rgba(232,220,200,0.4)';
-        ctx.fillRect(98, lyy + 11, 3, 3);
-        ctx.fillStyle = '#c8c8b8';
-        ctx.fillText('непосещённое (место есть — имени нет)', 108, lyy + 16);
-        ctx.fillStyle = '#ff7020';
-        ctx.fillRect(16, lyy + 24, 3, 4);
-        ctx.fillStyle = '#c8c8b8';
-        ctx.fillText('ты', 26, lyy + 30);
+    function sideText(lines, y) {
+        for (const [txt, col, font] of lines) {
+            if (txt === null) {
+                y += 8;
+                continue;
+            }
+            ctx.font = font || F_TEXT;
+            ctx.fillStyle = col || BONE;
+            for (const ln of wrap(txt, SIDE.w - 8)) {
+                ctx.fillText(ln, SIDE.x, y);
+                y += font === F_SMALL ? 16 : 18;
+            }
+        }
+        return y;
     }
-    // ── Continents (polygons) ──
-    function drawContinents() {
+    function wrap(txt, maxW) {
+        const out = [];
+        let cur = '';
+        for (const w of txt.split(' ')) {
+            const t = cur ? cur + ' ' + w : w;
+            if (ctx.measureText(t).width > maxW && cur) {
+                out.push(cur);
+                cur = w;
+            }
+            else
+                cur = t;
+        }
+        if (cur)
+            out.push(cur);
+        return out;
+    }
+    function whereName(n) {
+        if (n === 0)
+            return 'городок';
+        if (n <= disc_js_10.RINGS)
+            return `кольцо ${n} · ${ulitsa_db_js_5.SEGMENTS[n - 1].name}`;
+        return n === disc_js_10.RINGS + 1 ? 'кольцо огня' : 'за краем';
+    }
+    function drawLocalSide() {
+        const L = [
+            ['ТЫ: ' + whereName(here), CANDLE],
+            [`осмотрено мест: ${localShown} из ${localTotal}`, ASH, F_SMALL],
+            [null],
+            ['КОЛЬЦА ОТ ГОРОДКА', ASH, F_SMALL],
+        ];
+        for (let n = 1; n <= disc_js_10.RINGS; n++) {
+            const s = ulitsa_db_js_5.SEGMENTS[n - 1], k = knownRings.has(n);
+            L.push([`${n}  ${k ? s.name : '· · ·'}${k && s.era ? ' · ' + s.era : ''}`, n === here ? CANDLE : k ? BONE : ASH, F_SMALL]);
+        }
+        L.push([`за девятым — огонь, за огнём — край`, ASH, F_SMALL]);
+        L.push([null]);
+        let y = sideText(L, SIDE.y + 14);
+        if (getLockedFn()) {
+            y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_SMALL]], y);
+        }
+        // легенда
+        y = Math.max(y + 6, SIDE.y + SIDE.h - 86);
+        ctx.font = F_SMALL;
+        const leg = [
+            [() => { ctx.fillStyle = BONE; ctx.fillRect(SIDE.x + 2, y - 7, 4, 4); }, 'осмотрено'],
+            [() => { ctx.fillStyle = rgba(BONE, 0.4); ctx.fillRect(SIDE.x + 3, y - 6, 2, 2); }, 'место есть, имени нет'],
+            [() => { ctx.fillStyle = CANDLE; ctx.fillRect(SIDE.x + 1, y - 8, 6, 6); }, 'ты'],
+            [() => { ctx.strokeStyle = rgba(CANDLE, 0.6); ctx.beginPath(); ctx.arc(SIDE.x + 4, y - 5, 4, 0, Math.PI * 2); ctx.stroke(); }, 'круг у костра — вне времени'],
+            [() => { ctx.fillStyle = rgba(BONE, 0.6); for (let i = 0; i < 3; i++)
+                    ctx.fillRect(SIDE.x + i * 3, y - 5, 1.5, 1.5); }, 'тропы на четыре стороны'],
+        ];
+        for (const [icon, label] of leg) {
+            icon();
+            ctx.fillStyle = ASH;
+            ctx.fillText(label, SIDE.x + 14, y);
+            y += 16;
+        }
+    }
+    // ── Карта мира ──
+    function drawWorld() {
+        // материки
         for (const c of worldmap_db_js_1.CONTINENTS) {
             const pts = c.pts.split(' ').map(p => p.split(',').map(Number));
             ctx.beginPath();
-            for (let i = 0; i < pts.length; i++) {
-                const [px, py] = pts[i];
-                const sx = ax(px), sy = ay(py);
-                if (i === 0)
-                    ctx.moveTo(sx, sy);
-                else
-                    ctx.lineTo(sx, sy);
-            }
+            pts.forEach(([px, py], i) => i ? ctx.lineTo(ax(px), ay(py)) : ctx.moveTo(ax(px), ay(py)));
             ctx.closePath();
-            ctx.fillStyle = '#262012';
+            ctx.fillStyle = '#211b13';
             ctx.fill();
-            ctx.strokeStyle = '#6a5c3c';
+            ctx.strokeStyle = rgba(ASH, 0.6);
             ctx.lineWidth = 1;
             ctx.stroke();
-            // Label
-            ctx.fillStyle = '#9a8d64';
-            ctx.font = '8px "Press Start 2P","VT323",monospace';
-            ctx.fillText(c.name.toUpperCase(), ax(c.label[0]), ay(c.label[1]));
         }
-    }
-    // ── Threads (dashed polylines through grouped nodes) ──
-    function drawThreads() {
+        // нити
         const groups = {};
-        for (const n of worldmap_db_js_1.NODES) {
-            for (const t of n.thr) {
+        for (const n of worldmap_db_js_1.NODES)
+            for (const t of n.thr)
                 (groups[t] = groups[t] || []).push(n);
-            }
-        }
         ctx.setLineDash([3, 3]);
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.8;
         for (const [name, ns] of Object.entries(groups)) {
             if (ns.length < 2)
                 continue;
-            ctx.strokeStyle = rgba(worldmap_db_js_1.THREAD_COLORS[name] || '#777777', 0.55);
+            ctx.strokeStyle = rgba(worldmap_db_js_1.THREAD_COLORS[name] || ASH, 0.45);
             ctx.beginPath();
-            for (let i = 0; i < ns.length; i++) {
-                const sx = ax(ns[i].x), sy = ay(ns[i].y);
-                if (i === 0)
-                    ctx.moveTo(sx, sy);
-                else
-                    ctx.lineTo(sx, sy);
-            }
+            ns.forEach((n, i) => i ? ctx.lineTo(ax(n.x), ay(n.y)) : ctx.moveTo(ax(n.x), ay(n.y)));
             ctx.stroke();
         }
         ctx.setLineDash([]);
-    }
-    // ── Nodes ──
-    function drawNodes() {
-        for (const n of worldmap_db_js_1.NODES) {
-            const sx = ax(n.x), sy = ay(n.y);
-            const isStart = n.st === 'start';
-            const isLive = n.st === 'live';
-            const r = isStart ? 4 : isLive ? 3 : 2.4;
-            // Live pulse: gentle radius bob
-            const pr = isLive ? r + 1 + Math.sin(Date.now() * 0.004) * 1.2 : r;
-            // Halo for live
-            if (isLive) {
-                ctx.fillStyle = rgba(worldmap_db_js_1.STATUS_COLORS[n.st], 0.18);
-                ctx.beginPath();
-                ctx.arc(sx, sy, pr + 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.fillStyle = worldmap_db_js_1.STATUS_COLORS[n.st] || '#888';
-            ctx.beginPath();
-            ctx.arc(sx, sy, pr + 0.6, 0, Math.PI * 2);
-            ctx.fill();
-            // Stroke
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-        }
-    }
-    // ── Tunnels / museums / precipices ──
-    function drawOverlays() {
-        // Tunnels — curved dotted lines between two nodes, gold
+        // туннели
         ctx.setLineDash([1, 2]);
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = rgba(CANDLE, 0.7);
         for (const tn of worldmap_db_js_1.TUNNELS) {
             const a = worldmap_db_js_1.nodeById(tn.a), b = worldmap_db_js_1.nodeById(tn.b);
             if (!a || !b)
                 continue;
-            const ax_ = ax(a.x), ay_ = ay(a.y), bx_ = ax(b.x), by_ = ay(b.y);
-            const mx = (ax_ + bx_) / 2 + (by_ - ay_) * 0.18;
-            const my = (ay_ + by_) / 2 - (bx_ - ax_) * 0.05;
-            ctx.strokeStyle = 'rgba(184,134,11,0.75)';
+            const x0 = ax(a.x), y0 = ay(a.y), x1 = ax(b.x), y1 = ay(b.y);
             ctx.beginPath();
-            ctx.moveTo(ax_, ay_);
-            ctx.quadraticCurveTo(mx, my, bx_, by_);
+            ctx.moveTo(x0, y0);
+            ctx.quadraticCurveTo((x0 + x1) / 2 + (y1 - y0) * 0.18, (y0 + y1) / 2 - (x1 - x0) * 0.05, x1, y1);
             ctx.stroke();
-            // Tunnel mouths — small "⌒"
-            ctx.fillStyle = '#daa520';
-            ctx.fillRect(ax_ - 2, ay_ - 1, 4, 1);
-            ctx.fillRect(bx_ - 2, by_ - 1, 4, 1);
         }
         ctx.setLineDash([]);
-        // Museums — small hollow squares at the node, behind everything else
-        ctx.strokeStyle = '#9b8cf0';
-        ctx.lineWidth = 1;
-        for (const m of worldmap_db_js_1.MUSEUMS) {
-            const n = worldmap_db_js_1.nodeById(m.at);
-            if (!n)
-                continue;
-            const sx = ax(n.x), sy = ay(n.y);
-            ctx.strokeRect(sx - 5, sy - 5, 10, 10);
-            // Roof line
+        // узлы
+        for (const n of worldmap_db_js_1.NODES) {
+            const live = n.st === 'live', r = n.st === 'start' ? 3.5 : live ? 2.6 : 2;
+            const pr = live ? r + 0.6 + Math.sin(Date.now() * 0.004) * 0.8 : r;
+            ctx.fillStyle = worldmap_db_js_1.STATUS_COLORS[n.st] || ASH;
             ctx.beginPath();
-            ctx.moveTo(sx - 6, sy - 5);
-            ctx.lineTo(sx, sy - 8);
-            ctx.lineTo(sx + 6, sy - 5);
+            ctx.arc(ax(n.x), ay(n.y), pr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = NIGHT;
+            ctx.lineWidth = 1;
             ctx.stroke();
         }
-        // Precipices — small crimson chevron pointing down from the node
-        ctx.fillStyle = '#8b2d2d';
-        for (const p of worldmap_db_js_1.PRECIPICES) {
-            const n = worldmap_db_js_1.nodeById(p.at);
+        // музеи и пропасти
+        ctx.strokeStyle = worldmap_db_js_1.STATUS_COLORS.start;
+        ctx.lineWidth = 0.8;
+        for (const m of worldmap_db_js_1.MUSEUMS) {
+            const n = worldmap_db_js_1.nodeById(m.at);
+            if (n)
+                ctx.strokeRect(ax(n.x) - 5, ay(n.y) - 5, 10, 10);
+        }
+        ctx.fillStyle = CINNABAR;
+        for (const pr of worldmap_db_js_1.PRECIPICES) {
+            const n = worldmap_db_js_1.nodeById(pr.at);
             if (!n)
                 continue;
-            const sx = ax(n.x), sy = ay(n.y) + 9;
+            const sx = ax(n.x), sy = ay(n.y) + 7;
             ctx.beginPath();
             ctx.moveTo(sx - 4, sy);
             ctx.lineTo(sx + 4, sy);
             ctx.lineTo(sx, sy + 4);
             ctx.closePath();
             ctx.fill();
-            // Dotted falling line
-            for (let i = 0; i < 3; i++) {
-                ctx.fillRect(sx, sy + 6 + i * 3, 1, 1);
-            }
+        }
+        // названия материков — поверх, крупно
+        ctx.font = `${17 / zscale}px VT323,monospace`;
+        for (const c of worldmap_db_js_1.CONTINENTS) {
+            const t = c.name.toUpperCase(), tw = ctx.measureText(t).width;
+            const tx = Math.min(ax(c.label[0]), MAPB.x + MAPB.w - tw - 4);
+            ctx.fillStyle = rgba(NIGHT, 0.6);
+            ctx.fillRect(tx - 2, ay(c.label[1]) - 13 / zscale, tw + 4, 16 / zscale);
+            ctx.fillStyle = BONE;
+            ctx.fillText(t, tx, ay(c.label[1]));
+        }
+        drawGates();
+        // городок: здесь ты
+        const g = worldmap_db_js_1.nodeById('gorodok');
+        if (g && ((Date.now() / 300) | 0) % 2 === 0) {
+            ctx.strokeStyle = CANDLE;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(ax(g.x), ay(g.y), 7, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        if (g) {
+            ctx.font = `${15 / zscale}px VT323,monospace`;
+            ctx.fillStyle = CANDLE;
+            ctx.fillText('ты здесь', ax(g.x) + 10, ay(g.y) + 4);
         }
     }
-    // ── Gates: small arches on each continent ──
-    // Discovered gates render bright and clickable; hidden ones show as a
-    // faint dotted "?" near where they're expected to be — enough hint to
-    // feel that the world is bigger than what you see, not so much that
-    // they trivialize their own discovery.
+    // Врата: найденные — яркая арка (клик — переход), прочие — бледный «?»
     function drawGates() {
         const now = Date.now();
+        ctx.font = `${15 / zscale}px VT323,monospace`;
         for (const g of worldmap_db_js_1.GATES) {
             const sx = ax(g.x), sy = ay(g.y);
-            const known = discovered.has(g.id);
-            if (!known) {
-                // Faint dotted ghost — only on continents where the player has
-                // shown some commitment (>=1 lore or any conversation). Without
-                // any progress, hidden gates are invisible.
-                ctx.fillStyle = 'rgba(155,140,90,0.18)';
-                ctx.fillText('?', sx - 2, sy + 3);
+            if (!discovered.has(g.id)) {
+                ctx.fillStyle = rgba(ASH, 0.35);
+                ctx.fillText('?', sx - 3, sy + 4);
                 continue;
             }
-            // New-discovery pulse for ~6 s after reveal
             const t = recently.has(g.id) ? (now - recently.get(g.id)) / 1000 : 99;
-            const pulse = t < 6 ? (1 + Math.sin(now * 0.012) * 0.5) : 0;
-            // Halo
-            if (pulse) {
-                ctx.fillStyle = `rgba(218,165,32,${0.18 + pulse * 0.12})`;
+            if (t < 6) {
+                ctx.fillStyle = rgba(CANDLE, 0.18 + (1 + Math.sin(now * 0.012)) * 0.08);
                 ctx.beginPath();
-                ctx.arc(sx, sy - 2, 8 + pulse * 2, 0, Math.PI * 2);
+                ctx.arc(sx, sy - 3, 10, 0, Math.PI * 2);
                 ctx.fill();
             }
-            // Arch: two pillars + lintel
-            ctx.fillStyle = '#b8860b';
-            ctx.fillRect(sx - 4, sy - 6, 1, 6); // left pillar
-            ctx.fillRect(sx + 3, sy - 6, 1, 6); // right pillar
-            ctx.fillRect(sx - 4, sy - 7, 8, 1); // lintel
-            // Cap
-            ctx.fillStyle = '#daa520';
-            ctx.fillRect(sx - 5, sy - 8, 10, 1);
-            // Opening — dark inside
-            ctx.fillStyle = '#0c0a08';
-            ctx.fillRect(sx - 2, sy - 5, 5, 5);
-            // Tiny ember dot for the active arch
-            ctx.fillStyle = '#ff7020';
-            ctx.fillRect(sx, sy - 3, 1, 1);
+            ctx.fillStyle = CANDLE;
+            ctx.fillRect(sx - 4, sy - 7, 1.5, 7);
+            ctx.fillRect(sx + 2.5, sy - 7, 1.5, 7);
+            ctx.fillRect(sx - 5, sy - 8.5, 10, 1.5);
+            ctx.fillStyle = NIGHT;
+            ctx.fillRect(sx - 2.5, sy - 7, 5, 7);
         }
     }
-    // Returns the gate id under (cx,cy) in canvas pixel space, or null.
+    // Врата под точкой (логические координаты поля, до зума) — или null.
     function gateAt(cx, cy) {
         for (const g of worldmap_db_js_1.GATES) {
             if (!discovered.has(g.id))
                 continue;
             const sx = ax(g.x), sy = ay(g.y);
-            if (Math.abs(cx - sx) <= 8 && Math.abs(cy - (sy - 3)) <= 9)
+            if (Math.abs(cx - sx) <= 9 && Math.abs(cy - (sy - 3)) <= 10)
                 return g;
         }
         return null;
     }
-    // ── Our waste pocket + street strip ──
-    function drawWasteAndStreet() {
-        // Waste pocket inset (over Europe area for orientation)
-        ctx.fillStyle = '#332818';
-        ctx.fillRect(WASTE_BOX.x, WASTE_BOX.y, WASTE_BOX.w, WASTE_BOX.h);
-        ctx.strokeStyle = '#a03040';
-        ctx.strokeRect(WASTE_BOX.x + 0.5, WASTE_BOX.y + 0.5, WASTE_BOX.w, WASTE_BOX.h);
-        ctx.fillStyle = '#b8860b';
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillText('пустошь', WASTE_BOX.x + 4, WASTE_BOX.y - 2);
-        // Gates marker inside
-        ctx.fillStyle = '#daa520';
-        ctx.fillRect(WASTE_BOX.x + WASTE_BOX.w - 8, WASTE_BOX.y + WASTE_BOX.h / 2 - 1, 2, 4);
-        ctx.fillStyle = 'rgba(218,165,32,0.7)';
-        ctx.fillText('врата', WASTE_BOX.x + WASTE_BOX.w - 26, WASTE_BOX.y + WASTE_BOX.h + 8);
-        // Dotted connector from the gates to the street strip
-        ctx.strokeStyle = 'rgba(184,134,11,0.6)';
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(WASTE_BOX.x + WASTE_BOX.w, WASTE_BOX.y + WASTE_BOX.h / 2);
-        ctx.lineTo(STREET_BOX.x, STREET_BOX.y + STREET_BOX.h / 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        // Street strip (epoch bands)
-        ctx.fillStyle = '#daa520';
-        ctx.font = '7px "Press Start 2P","VT323",monospace';
-        ctx.fillText('УЛИЦА — 9 эпох → сейчас', STREET_BOX.x, STREET_BOX.y - 6);
-        for (const seg of ulitsa_db_js_5.SEGMENTS) {
-            const t0 = (seg.range[0] + street_js_3.STREET_SHIFT - street_js_3.STREET_X0) / (street_js_3.STREET_END_W - street_js_3.STREET_X0);
-            const t1 = (seg.range[1] + street_js_3.STREET_SHIFT - street_js_3.STREET_X0) / (street_js_3.STREET_END_W - street_js_3.STREET_X0);
-            const x0 = STREET_BOX.x + t0 * STREET_BOX.w;
-            const x1 = STREET_BOX.x + t1 * STREET_BOX.w;
-            ctx.fillStyle = seg.palette.ground;
-            ctx.fillRect(x0, STREET_BOX.y, x1 - x0, STREET_BOX.h);
-            // Tick
-            ctx.fillStyle = 'rgba(232,220,200,0.75)';
-            ctx.fillRect(x0, STREET_BOX.y, 1, STREET_BOX.h);
-            ctx.font = '6px "Press Start 2P","VT323",monospace';
-            ctx.fillStyle = 'rgba(240,228,208,0.9)';
-            ctx.fillText(`${seg.n}`, x0 + 2, STREET_BOX.y - 2);
+    function drawWorldSide() {
+        const L = [];
+        const fresh = [...recently.entries()].sort((a, b) => b[1] - a[1])[0];
+        if (fresh && Date.now() - fresh[1] < 10000) {
+            const g = worldmap_db_js_1.gateById(fresh[0]);
+            if (g)
+                L.push(['открылись: ' + g.label, CANDLE], [null]);
         }
-        ctx.strokeStyle = 'rgba(138,141,143,0.4)';
-        ctx.strokeRect(STREET_BOX.x + 0.5, STREET_BOX.y + 0.5, STREET_BOX.w, STREET_BOX.h);
-        // End labels
-        ctx.fillStyle = 'rgba(138,141,143,0.55)';
-        ctx.fillText('осевое', STREET_BOX.x, STREET_BOX.y + STREET_BOX.h + 10);
-        ctx.fillText('сейчас →', STREET_BOX.x + STREET_BOX.w - 56, STREET_BOX.y + STREET_BOX.h + 10);
-    }
-    // ── Player marker ──
-    function drawPlayer() {
-        const p = playerRef_js_2.getPlayerPos();
-        if (!p)
-            return;
-        const blink = ((Date.now() / 300) | 0) % 2 === 0;
-        if (!blink)
-            return;
-        ctx.fillStyle = '#ff7020';
-        if (p.x > street_js_3.STREET_X0 - 100) {
-            // On the street
-            const t = Math.max(0, Math.min(1, (p.x - street_js_3.STREET_X0) / (street_js_3.STREET_END_W - street_js_3.STREET_X0)));
-            const mx = STREET_BOX.x + t * STREET_BOX.w;
-            ctx.fillRect(mx - 1, STREET_BOX.y + STREET_BOX.h / 2 - 2, 3, 4);
-        }
-        else {
-            // Inside the waste pocket
-            const t = Math.min(1, p.x / 3000);
-            const ty = Math.max(0, Math.min(1, (p.y - 160) / (1800 - 160)));
-            const mx = WASTE_BOX.x + t * WASTE_BOX.w;
-            const my = WASTE_BOX.y + ty * WASTE_BOX.h;
-            ctx.fillRect(mx - 1, my - 1, 3, 3);
-        }
-    }
-    // ── Legend ──
-    function drawLegend() {
-        const ly = H - 56;
-        ctx.fillStyle = 'rgba(8,6,4,0.92)';
-        ctx.fillRect(1, ly - 12, W - 2, 54);
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.fillStyle = '#8a8d8f';
-        ctx.fillText('узлы:', 16, ly);
-        const items = [
-            ['start', 'старт'],
-            ['hearth', 'очаг'],
-            ['live', 'продолжается'],
-            ['natural', 'нерукотв.'],
-            ['closed', 'закрыто'],
-            ['ghost', '(?)'],
-        ];
-        let lx = 56;
-        for (const [k, label] of items) {
-            ctx.fillStyle = worldmap_db_js_1.STATUS_COLORS[k];
+        L.push(['ВРАТА', ASH, F_SMALL]);
+        const known = worldmap_db_js_1.GATES.filter(g => discovered.has(g.id));
+        for (const g of known)
+            L.push([g.label, BONE], [g.note, ASH, F_SMALL]);
+        const hidden = worldmap_db_js_1.GATES.length - known.length;
+        if (hidden)
+            L.push([`ещё не найдено: ${hidden}`, ASH, F_SMALL]);
+        L.push(['клик по арке — переход', ASH, F_SMALL], [null], ['УЗЛЫ', ASH, F_SMALL]);
+        let y = sideText(L, SIDE.y + 14);
+        ctx.font = F_SMALL;
+        const st = [['start', 'старт'], ['hearth', 'очаг'], ['live', 'продолжается'], ['natural', 'нерукотворный'], ['closed', 'закрыто'], ['ghost', 'предполагается']];
+        for (let i = 0; i < st.length; i++) {
+            const cx = SIDE.x + (i % 2) * 136, cy = y + Math.floor(i / 2) * 16;
+            ctx.fillStyle = worldmap_db_js_1.STATUS_COLORS[st[i][0]];
             ctx.beginPath();
-            ctx.arc(lx, ly - 2, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx + 4, cy - 4, 3, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#a8a89a';
-            ctx.fillText(label, lx + 5, ly);
-            lx += ctx.measureText(label).width + 22;
+            ctx.fillStyle = ASH;
+            ctx.fillText(st[i][1], cx + 12, cy);
         }
-        // Overlay legend
-        ctx.fillStyle = '#8a8d8f';
-        ctx.fillText('оверлеи:', 16, ly + 16);
-        ctx.strokeStyle = '#9b8cf0';
-        ctx.strokeRect(60, ly + 11, 6, 6);
-        ctx.fillStyle = '#a8a89a';
-        ctx.fillText('музей', 70, ly + 17);
-        ctx.fillStyle = '#8b2d2d';
-        ctx.beginPath();
-        ctx.moveTo(124, ly + 12);
-        ctx.lineTo(132, ly + 12);
-        ctx.lineTo(128, ly + 17);
-        ctx.fill();
-        ctx.fillStyle = '#a8a89a';
-        ctx.fillText('пропасть', 138, ly + 17);
-        ctx.strokeStyle = '#daa520';
-        ctx.setLineDash([1, 2]);
-        ctx.beginPath();
-        ctx.moveTo(210, ly + 14);
-        ctx.lineTo(232, ly + 14);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#a8a89a';
-        ctx.fillText('туннель', 236, ly + 17);
-        // Threads hint
-        ctx.fillStyle = '#8a8d8f';
-        ctx.fillText('нити:', 16, ly + 32);
-        let tx = 60;
-        for (const [name, col] of Object.entries(worldmap_db_js_1.THREAD_COLORS)) {
-            ctx.strokeStyle = col;
-            ctx.setLineDash([3, 3]);
+        y += 56;
+        ctx.fillStyle = ASH;
+        ctx.fillText('НИТИ', SIDE.x, y);
+        y += 16;
+        const th = Object.entries(worldmap_db_js_1.THREAD_COLORS);
+        for (let i = 0; i < th.length; i++) {
+            const cx = SIDE.x + (i % 2) * 136, cy = y + Math.floor(i / 2) * 16;
+            ctx.strokeStyle = th[i][1];
+            ctx.setLineDash([3, 2]);
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(tx, ly + 28);
-            ctx.lineTo(tx + 12, ly + 28);
+            ctx.moveTo(cx, cy - 4);
+            ctx.lineTo(cx + 10, cy - 4);
             ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = '#a8a89a';
-            ctx.fillText(name, tx + 16, ly + 31);
-            tx += 16 + ctx.measureText(name).width + 18;
+            ctx.fillStyle = ASH;
+            ctx.fillText(th[i][0], cx + 14, cy);
         }
+        y += Math.ceil(th.length / 2) * 16 + 8;
+        ctx.strokeStyle = worldmap_db_js_1.STATUS_COLORS.start;
+        ctx.strokeRect(SIDE.x + 1, y - 9, 8, 8);
+        ctx.fillStyle = ASH;
+        ctx.fillText('музей', SIDE.x + 14, y);
+        ctx.fillStyle = CINNABAR;
+        ctx.beginPath();
+        ctx.moveTo(SIDE.x + 137, y - 8);
+        ctx.lineTo(SIDE.x + 145, y - 8);
+        ctx.lineTo(SIDE.x + 141, y - 3);
+        ctx.fill();
+        ctx.fillStyle = ASH;
+        ctx.fillText('пропасть', SIDE.x + 150, y);
+        y += 16;
+        ctx.strokeStyle = rgba(CANDLE, 0.8);
+        ctx.setLineDash([1, 2]);
+        ctx.beginPath();
+        ctx.moveTo(SIDE.x, y - 4);
+        ctx.lineTo(SIDE.x + 10, y - 4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = ASH;
+        ctx.fillText('туннель', SIDE.x + 14, y);
     }
     // ── Public API ──
     function open() {
@@ -33151,20 +33130,21 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
     function init(opts) {
         if (opts && typeof opts.getVisited === 'function')
             getVisitedFn = opts.getVisited;
+        if (opts && typeof opts.getLocked === 'function')
+            getLockedFn = opts.getLocked;
         canvas = document.getElementById('map-canvas');
         if (canvas) {
-            canvas.width = W;
-            canvas.height = H;
+            canvas.width = W * DPR;
+            canvas.height = H * DPR;
             ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = false;
         }
         const el = document.getElementById('map');
-        // клиентские координаты → пиксели канваса
+        // клиентские координаты → логические точки листа
         function canvasXY(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             return [
-                (clientX - rect.left) * (canvas.width / rect.width),
-                (clientY - rect.top) * (canvas.height / rect.height),
+                (clientX - rect.left) * (W / rect.width),
+                (clientY - rect.top) * (H / rect.height),
             ];
         }
         if (el)
@@ -33176,12 +33156,19 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                     return;
                 } // это был драг/щипок
                 const [cx, cy] = canvasXY(e.clientX, e.clientY);
-                // Шапка (вкладка) — в неподвижных координатах
-                if (cx >= TAB_BOX.x - 4 && cx <= TAB_BOX.x + TAB_BOX.w + 4 &&
-                    cy >= TAB_BOX.y - 4 && cy <= TAB_BOX.y + TAB_BOX.h + 6) {
-                    view = view === 'world' ? 'local' : 'world';
+                // Шапка (вкладки) — в неподвижных координатах
+                const tab = TABS.find(t => cx >= t.x - 4 && cx <= t.x + t.w + 4 && cy >= TAB_Y - 6 && cy <= TAB_Y + TAB_H + 6);
+                if (tab) {
+                    cancelPendingClose();
+                    if (view !== tab.view) {
+                        view = tab.view;
+                        resetZoom();
+                    }
                     return;
                 }
+                // колонка справа — не закрывает
+                if (cx >= SIDE.x - 8)
+                    return;
                 // Содержимое листа — через зум-трансформацию
                 const wx = (cx - zx) / zscale, wy = (cy - zy) / zscale;
                 const g = view === 'world' ? gateAt(wx, wy) : null;
@@ -33278,6 +33265,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
                 if (e.key === 'Tab') {
                     e.preventDefault();
                     view = view === 'world' ? 'local' : 'world';
+                    resetZoom();
                     return;
                 }
                 if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter' ||
@@ -33305,8 +33293,11 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             function (ulitsa_db_js_5_1) {
                 ulitsa_db_js_5 = ulitsa_db_js_5_1;
             },
-            function (street_js_3_1) {
-                street_js_3 = street_js_3_1;
+            function (disc_js_10_1) {
+                disc_js_10 = disc_js_10_1;
+            },
+            function (physics_js_1_1) {
+                physics_js_1 = physics_js_1_1;
             },
             function (playerRef_js_2_1) {
                 playerRef_js_2 = playerRef_js_2_1;
@@ -33322,29 +33313,46 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             // ── Gate discovery state (persistable) ──
             discovered = new Set(['gate_townlet']);
             recently = new Map(); // gate id → timestamp of discovery (for pulse)
-            W = 720, H = 800; // canvas pixel size (logical)
+            // ── Лист: 960×600 логических точек, подложка ×2 — текст читается ──
+            W = 960, H = 600, DPR = 2;
             visible = false;
             canvas = null;
             ctx = null;
             rafId = 0;
-            // ── Второй лист карты: план местности (пустошь с локациями) ──
-            view = 'world'; // 'world' | 'local'
+            // палитра канона
+            NIGHT = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A', CANDLE = '#E28A3A', CINNABAR = '#C23B2B';
+            F_TITLE = '10px "Press Start 2P",monospace';
+            F_TEXT = '17px VT323,monospace';
+            F_SMALL = '15px VT323,monospace';
+            view = 'local'; // 'local' — план местности, 'world' — карта мира
             getVisitedFn = () => new Set(); // main передаёт flags.visited
-            TAB_BOX = { x: W - 150, y: 4, w: 138, h: 18 };
-            LOCAL_BOX = { x: 20, y: 44, w: W - 40, h: H - 150 };
-            LOCAL_XMAX = 7600, LOCAL_Y0 = 0, LOCAL_Y1 = 6280;
-            // Map abstract layout (1400×1560) into a top block of the canvas.
-            MAP_BOX = { x: 12, y: 30, w: W - 24, h: 540 };
-            STREET_BOX = { x: 30, y: MAP_BOX.y + MAP_BOX.h + 36, w: W - 60, h: 32 };
-            // Waste pocket — shown as a small inset on top of Europe so the player
-            // knows where they actually are in the world.
-            WASTE_BOX = { x: 384, y: 380, w: 80, h: 56 };
+            getLockedFn = () => false; // выход из городка закрыт?
+            TABS = [
+                { view: 'local', label: 'ПЛАН МЕСТНОСТИ', x: 560, w: 180 },
+                { view: 'world', label: 'КАРТА МИРА', x: 750, w: 150 },
+            ];
+            TAB_Y = 10, TAB_H = 22;
+            MAPB = { x: 16, y: 44, w: 640, h: 520 }; // поле листа
+            SIDE = { x: 672, y: 44, w: 272, h: 520 }; // колонка справа
+            // План местности: диск колец вокруг городка, без лишней пустыни
+            PAD = disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W + 300;
+            EXT = { x0: disc_js_10.TOWN.x0 - PAD, y0: disc_js_10.TOWN.y0 - PAD, x1: disc_js_10.TOWN.x1 + PAD, y1: disc_js_10.TOWN.y1 + PAD };
+            LS = Math.min(MAPB.w / (EXT.x1 - EXT.x0), MAPB.h / (EXT.y1 - EXT.y0));
+            LOX = MAPB.x + (MAPB.w - (EXT.x1 - EXT.x0) * LS) / 2;
+            LOY = MAPB.y + (MAPB.h - (EXT.y1 - EXT.y0) * LS) / 2;
+            lx = wx => LOX + (wx - EXT.x0) * LS;
+            ly = wy => LOY + (wy - EXT.y0) * LS;
+            // Карта мира: абстрактное поле 1400×1560 по центру поля листа
+            AS = Math.min(MAPB.w / worldmap_db_js_1.MAP_W, MAPB.h / worldmap_db_js_1.MAP_H);
+            AOX = MAPB.x + (MAPB.w - worldmap_db_js_1.MAP_W * AS) / 2, AOY = MAPB.y + (MAPB.h - worldmap_db_js_1.MAP_H * AS) / 2;
+            ax = mx => AOX + mx * AS;
+            ay = my => AOY + my * AS;
             // ── Зум и панорама листа (щипок/драг на тач, колесо/драг на мыши) ──
             ZMIN = 1, ZMAX = 3;
-            zscale = 1, zx = 0, zy = 0; // translate(zx,zy) scale(zscale)
+            zscale = 1, zx = 0, zy = 0; // translate(zx,zy) scale(zscale), в логических точках
             gestured = false; // жест был — ближайший click не закрывает
             pendingClose = 0; // отложенное закрытие: ждём второй тап
-            localShown = 0, localTotal = 0;
+            localShown = 0, localTotal = 0, knownRings = new Set(), here = 0;
         }
     };
 });
@@ -33780,10 +33788,10 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
 });
 System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/draw", "sprites/arch/index", "core/time"], function (exports_75, context_75) {
     "use strict";
-    var ulitsa_db_js_7, disc_js_10, draw_js_12, index_js_2, time_js_18, OUTER, B, FIRE_G, disc_js_11, CELL, blockGrid, cellCache;
+    var ulitsa_db_js_7, disc_js_11, draw_js_12, index_js_2, time_js_18, OUTER, B, FIRE_G, disc_js_12, CELL, blockGrid, cellCache;
     var __moduleName = context_75 && context_75.id;
     function elementColor(wx, wy) {
-        const dn = disc_js_10.TOWN.y0 - wy, ds = wy - disc_js_10.TOWN.y1, dw = disc_js_10.TOWN.x0 - wx, de = wx - disc_js_10.TOWN.x1;
+        const dn = disc_js_11.TOWN.y0 - wy, ds = wy - disc_js_11.TOWN.y1, dw = disc_js_11.TOWN.x0 - wx, de = wx - disc_js_11.TOWN.x1;
         const m = Math.max(dn, ds, dw, de);
         if (m === ds)
             return ((wx + wy) % 24 < 12) ? '#5a4a30' : '#4e3f28'; // песок
@@ -33793,16 +33801,16 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             return ((wx - wy) % 28 < 14) ? '#aec6d4' : '#98b4c4'; // лёд
         return ((wx + wy) % 20 < 10) ? '#1e3a14' : '#254a18'; // озеро
     }
-    function ringGround(n) { return ulitsa_db_js_7.SEGMENTS[Math.max(0, Math.min(disc_js_10.RINGS, n) - 1)].palette.ground; }
+    function ringGround(n) { return ulitsa_db_js_7.SEGMENTS[Math.max(0, Math.min(disc_js_11.RINGS, n) - 1)].palette.ground; }
     // северный сектор диска (лёд за огнём) — снег ложится и на кольца
     function isNorth(wx, wy) {
-        const dn = disc_js_10.TOWN.y0 - wy;
-        return dn > 0 && dn >= Math.max(wy - disc_js_10.TOWN.y1, disc_js_10.TOWN.x0 - wx, wx - disc_js_10.TOWN.x1);
+        const dn = disc_js_11.TOWN.y0 - wy;
+        return dn > 0 && dn >= Math.max(wy - disc_js_11.TOWN.y1, disc_js_11.TOWN.x0 - wx, wx - disc_js_11.TOWN.x1);
     }
     // цвет земли с дизерингом на рваных границах: эпохи перетекают,
     // а не сменяются по линейке
     function groundColor(wx, wy, bx, by) {
-        const d = disc_js_10.warpedDist(wx, wy);
+        const d = disc_js_11.warpedDist(wx, wy);
         const mix = draw_js_12.hash(bx * 3 + 1, by * 3 + 2, 17);
         if (d > OUTER) {
             const f = (d - OUTER) / 60; // кромка стихии
@@ -33810,16 +33818,16 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
                 return FIRE_G;
             return elementColor(wx, wy);
         }
-        if (d > disc_js_10.RINGS * disc_js_10.RING_W) {
-            const f = (d - disc_js_10.RINGS * disc_js_10.RING_W) / disc_js_10.FIRE_W; // гарь ест девятое кольцо
+        if (d > disc_js_11.RINGS * disc_js_11.RING_W) {
+            const f = (d - disc_js_11.RINGS * disc_js_11.RING_W) / disc_js_11.FIRE_W; // гарь ест девятое кольцо
             if (f < 0.4 && mix > 0.5 + f)
-                return ringGround(disc_js_10.RINGS);
+                return ringGround(disc_js_11.RINGS);
             return FIRE_G;
         }
-        const n = Math.ceil(d / disc_js_10.RING_W);
-        const frac = d / disc_js_10.RING_W - (n - 1);
+        const n = Math.ceil(d / disc_js_11.RING_W);
+        const frac = d / disc_js_11.RING_W - (n - 1);
         // шашка — узкой полосой у самой границы: середина кольца чистая
-        if (n < disc_js_10.RINGS && frac > 0.82) {
+        if (n < disc_js_11.RINGS && frac > 0.82) {
             if (mix < ((frac - 0.82) / 0.18) * 0.55)
                 return ringGround(n + 1);
         }
@@ -33827,7 +33835,7 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             if (mix < ((0.18 - frac) / 0.18) * 0.55)
                 return ringGround(n - 1);
         }
-        else if (n === disc_js_10.RINGS && frac > 0.75) {
+        else if (n === disc_js_11.RINGS && frac > 0.75) {
             if (mix < ((frac - 0.75) / 0.25) * 0.4)
                 return FIRE_G;
         }
@@ -33838,19 +33846,19 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         const x0 = Math.floor(camX / B) * B, y0 = Math.floor(camY / B) * B;
         for (let wy = y0; wy < camY + vh + B; wy += B) {
             for (let wx = x0; wx < camX + vw + B; wx += B) {
-                if (disc_js_10.townDist(wx + 4, wy + 4) <= 0)
+                if (disc_js_11.townDist(wx + 4, wy + 4) <= 0)
                     continue; // городок блитится поверх
-                const d = disc_js_10.warpedDist(wx + 4, wy + 4);
+                const d = disc_js_11.warpedDist(wx + 4, wy + 4);
                 ctx.fillStyle = groundColor(wx + 4, wy + 4, (wx / B) | 0, (wy / B) | 0);
                 ctx.fillRect(wx - camX, wy - camY, B, B);
                 // пыль/уголья/блёстки — детерминированно; на севере колец — снег
                 const h = draw_js_12.hash((wx / B) | 0, (wy / B) | 0, 43);
-                const n = Math.ceil(d / disc_js_10.RING_W);
-                const inRings = d <= disc_js_10.RINGS * disc_js_10.RING_W;
+                const n = Math.ceil(d / disc_js_11.RING_W);
+                const inRings = d <= disc_js_11.RINGS * disc_js_11.RING_W;
                 const snowy = inRings && n >= 3 && isNorth(wx, wy);
                 const thr = snowy ? 0.84 - 0.03 * (n - 2) : 0.84;
                 if (h > thr) {
-                    if (d > disc_js_10.RINGS * disc_js_10.RING_W && d <= OUTER) {
+                    if (d > disc_js_11.RINGS * disc_js_11.RING_W && d <= OUTER) {
                         ctx.fillStyle = h > 0.94 ? '#6b0f1a' : '#3a1408'; // уголья
                     }
                     else if (d > OUTER) {
@@ -33874,14 +33882,14 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         const vis = (x, y, w, h) => x + w > cam.x && x < cam.x + 720 && y + h > cam.y && y < cam.y + 460;
         // тропы на четыре стороны (эпохи без подписей: их читают по постройкам)
         ctx.fillStyle = 'rgba(200,184,160,0.3)';
-        const span = disc_js_10.RINGS * disc_js_10.RING_W;
+        const span = disc_js_11.RINGS * disc_js_11.RING_W;
         for (let d = 4; d < span; d += 10) {
-            const s = disc_js_10.trailPoint('south', d), n = disc_js_10.trailPoint('north', d);
+            const s = disc_js_11.trailPoint('south', d), n = disc_js_11.trailPoint('north', d);
             if (vis(s.x, s.y, 4, 5))
                 ctx.fillRect(s.x - 1, s.y, 3, 5);
             if (vis(n.x, n.y - 5, 4, 5))
                 ctx.fillRect(n.x - 1, n.y - 5, 3, 5);
-            const e = disc_js_10.trailPoint('east', d), w = disc_js_10.trailPoint('west', d);
+            const e = disc_js_11.trailPoint('east', d), w = disc_js_11.trailPoint('west', d);
             if (vis(e.x, e.y, 5, 4))
                 ctx.fillRect(e.x, e.y - 1, 5, 3);
             if (vis(w.x - 5, w.y, 5, 4))
@@ -33889,24 +33897,24 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
         }
         // подписи стихий
         ctx.fillStyle = 'rgba(122,100,64,0.8)';
-        if (vis(disc_js_10.TOWN.x0 + 340, disc_js_10.TOWN.y1 + OUTER + 4, 500, 14))
-            ctx.fillText('зыбучий песок · юг не держит', disc_js_10.TOWN.x0 + 348, disc_js_10.TOWN.y1 + OUTER + 16);
+        if (vis(disc_js_11.TOWN.x0 + 340, disc_js_11.TOWN.y1 + OUTER + 4, 500, 14))
+            ctx.fillText('зыбучий песок · юг не держит', disc_js_11.TOWN.x0 + 348, disc_js_11.TOWN.y1 + OUTER + 16);
         ctx.fillStyle = 'rgba(150,130,90,0.7)';
-        if (vis(disc_js_10.TOWN.x1 + OUTER + 4, disc_js_10.TOWN.y0 + 40, 300, 14))
-            ctx.fillText('куча мусора · восток завален', disc_js_10.TOWN.x1 + OUTER + 10, disc_js_10.TOWN.y0 + 52);
+        if (vis(disc_js_11.TOWN.x1 + OUTER + 4, disc_js_11.TOWN.y0 + 40, 300, 14))
+            ctx.fillText('куча мусора · восток завален', disc_js_11.TOWN.x1 + OUTER + 10, disc_js_11.TOWN.y0 + 52);
         ctx.fillStyle = 'rgba(60,90,110,0.85)';
-        if (vis(disc_js_10.TOWN.x0 + 340, disc_js_10.TOWN.y0 - OUTER - 18, 400, 14))
-            ctx.fillText('лёд · север трескается', disc_js_10.TOWN.x0 + 348, disc_js_10.TOWN.y0 - OUTER - 6);
+        if (vis(disc_js_11.TOWN.x0 + 340, disc_js_11.TOWN.y0 - OUTER - 18, 400, 14))
+            ctx.fillText('лёд · север трескается', disc_js_11.TOWN.x0 + 348, disc_js_11.TOWN.y0 - OUTER - 6);
         ctx.fillStyle = 'rgba(90,200,80,0.6)';
-        if (vis(disc_js_10.TOWN.x0 - OUTER - 10, disc_js_10.TOWN.y0 + 60, 300, 14))
-            ctx.fillText('токсичное озеро · запад', disc_js_10.TOWN.x0 - OUTER - 4, disc_js_10.TOWN.y0 + 74);
+        if (vis(disc_js_11.TOWN.x0 - OUTER - 10, disc_js_11.TOWN.y0 + 60, 300, 14))
+            ctx.fillText('токсичное озеро · запад', disc_js_11.TOWN.x0 - OUTER - 4, disc_js_11.TOWN.y0 + 74);
         // ядро вне времени — еле заметная межа вокруг места пробуждения
-        if (vis(disc_js_11.CORE.x - disc_js_11.CORE.r, disc_js_11.CORE.y - disc_js_11.CORE.r, disc_js_11.CORE.r * 2, disc_js_11.CORE.r * 2)) {
+        if (vis(disc_js_12.CORE.x - disc_js_12.CORE.r, disc_js_12.CORE.y - disc_js_12.CORE.r, disc_js_12.CORE.r * 2, disc_js_12.CORE.r * 2)) {
             ctx.strokeStyle = 'rgba(217,207,184,0.07)';
             ctx.lineWidth = 2;
             ctx.setLineDash([4, 14]);
             ctx.beginPath();
-            ctx.arc(disc_js_11.CORE.x, disc_js_11.CORE.y, disc_js_11.CORE.r, 0, Math.PI * 2);
+            ctx.arc(disc_js_12.CORE.x, disc_js_12.CORE.y, disc_js_12.CORE.r, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
         }
@@ -33946,12 +33954,12 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
     // сектор диска для ткани: юг/север/запад/восток; дуга северо-восточного
     // угла — равнина
     function sectorOf(wx, wy) {
-        if (wx > disc_js_10.TOWN.x1 && wy < disc_js_10.TOWN.y0) {
-            const a = Math.atan2(disc_js_10.TOWN.y0 - wy, wx - disc_js_10.TOWN.x1) / (Math.PI / 2);
+        if (wx > disc_js_11.TOWN.x1 && wy < disc_js_11.TOWN.y0) {
+            const a = Math.atan2(disc_js_11.TOWN.y0 - wy, wx - disc_js_11.TOWN.x1) / (Math.PI / 2);
             if (a > 0.2 && a < 0.8)
                 return 'plain';
         }
-        const dn = disc_js_10.TOWN.y0 - wy, ds = wy - disc_js_10.TOWN.y1, dw = disc_js_10.TOWN.x0 - wx, de = wx - disc_js_10.TOWN.x1;
+        const dn = disc_js_11.TOWN.y0 - wy, ds = wy - disc_js_11.TOWN.y1, dw = disc_js_11.TOWN.x0 - wx, de = wx - disc_js_11.TOWN.x1;
         const m = Math.max(dn, ds, dw, de);
         return m === dn ? 'north' : m === ds ? 'south' : m === dw ? 'west' : 'east';
     }
@@ -33971,14 +33979,14 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             return null;
         const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
         const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
-        const ring = disc_js_11.ringAt(wx, wy);
-        if (ring < 1 || ring > disc_js_10.RINGS)
+        const ring = disc_js_12.ringAt(wx, wy);
+        if (ring < 1 || ring > disc_js_11.RINGS)
             return null;
         if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8))
             return null;
         const side = sectorOf(wx, wy);
         // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
-        const d = disc_js_10.warpedDist(wx, wy), frac = d / disc_js_10.RING_W - (ring - 1);
+        const d = disc_js_11.warpedDist(wx, wy), frac = d / disc_js_11.RING_W - (ring - 1);
         const pr = ring > 1 && frac < 0.22 && draw_js_12.hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
         const props = (index_js_2.ARCH_BY_RING[ulitsa_db_js_7.SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique);
         const idx = props.length ? ((h * 977) | 0) % props.length : -1;
@@ -34180,9 +34188,9 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             function (ulitsa_db_js_7_1) {
                 ulitsa_db_js_7 = ulitsa_db_js_7_1;
             },
-            function (disc_js_10_1) {
-                disc_js_10 = disc_js_10_1;
-                disc_js_11 = disc_js_10_1;
+            function (disc_js_11_1) {
+                disc_js_11 = disc_js_11_1;
+                disc_js_12 = disc_js_11_1;
             },
             function (draw_js_12_1) {
                 draw_js_12 = draw_js_12_1;
@@ -34195,7 +34203,7 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "render/dra
             }
         ],
         execute: function () {
-            OUTER = disc_js_10.RINGS * disc_js_10.RING_W + disc_js_10.FIRE_W;
+            OUTER = disc_js_11.RINGS * disc_js_11.RING_W + disc_js_11.FIRE_W;
             B = 8; // размер блока земли
             FIRE_G = '#160a06';
             CELL = 150;
@@ -34395,7 +34403,7 @@ System.register("ui/stream", [], function (exports_77, context_77) {
 });
 System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprites/arch/index", "core/time", "render/draw"], function (exports_78, context_78) {
     "use strict";
-    var ulitsa_db_js_8, disc_js_12, index_js_3, time_js_19, draw_js_13, NIGHT, BONE, ASH, MIST, SEPIA, SAND, BAYER, bayer, S, STYLE, WET, BOG, ICE, DUNE, grounds, archProps, JUNK, MAX_BAKED, baked, pieceCache;
+    var ulitsa_db_js_8, disc_js_13, index_js_3, time_js_19, draw_js_13, NIGHT, BONE, ASH, MIST, SEPIA, SAND, BAYER, bayer, S, STYLE, WET, BOG, ICE, DUNE, grounds, archProps, JUNK, MAX_BAKED, baked, pieceCache;
     var __moduleName = context_78 && context_78.id;
     function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
     function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
@@ -35123,12 +35131,12 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
     // тропа рядом с точкой (забор её не перегораживает)
     function onTrail(side, x, y) {
         if (side === 'south' || side === 'north') {
-            const d = side === 'south' ? y - disc_js_12.TOWN.y1 : disc_js_12.TOWN.y0 - y;
-            return d >= 0 && Math.abs(disc_js_12.trailPoint(side, d).x - x) < 10;
+            const d = side === 'south' ? y - disc_js_13.TOWN.y1 : disc_js_13.TOWN.y0 - y;
+            return d >= 0 && Math.abs(disc_js_13.trailPoint(side, d).x - x) < 10;
         }
         if (side === 'east' || side === 'west') {
-            const d = side === 'east' ? x - disc_js_12.TOWN.x1 : disc_js_12.TOWN.x0 - x;
-            return d >= 0 && Math.abs(disc_js_12.trailPoint(side, d).y - y) < 10;
+            const d = side === 'east' ? x - disc_js_13.TOWN.x1 : disc_js_13.TOWN.x0 - x;
+            return d >= 0 && Math.abs(disc_js_13.trailPoint(side, d).y - y) < 10;
         }
         return false;
     }
@@ -35286,8 +35294,8 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
             function (ulitsa_db_js_8_1) {
                 ulitsa_db_js_8 = ulitsa_db_js_8_1;
             },
-            function (disc_js_12_1) {
-                disc_js_12 = disc_js_12_1;
+            function (disc_js_13_1) {
+                disc_js_13 = disc_js_13_1;
             },
             function (index_js_3_1) {
                 index_js_3 = index_js_3_1;
@@ -35488,7 +35496,7 @@ System.register("render/archlights", [], function (exports_79, context_79) {
 });
 System.register("world/edges", ["core/time", "render/context", "render/scaler", "world/disc"], function (exports_80, context_80) {
     "use strict";
-    var time_js_20, context_js_11, scaler_js_11, disc_js_13, OUTER, EDGE, cur;
+    var time_js_20, context_js_11, scaler_js_11, disc_js_14, OUTER, EDGE, cur;
     var __moduleName = context_80 && context_80.id;
     function edgeState() { return cur; }
     exports_80("edgeState", edgeState);
@@ -35509,11 +35517,11 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
     function update(player) {
         const px = player.x, py = player.y;
         cur = null;
-        const d = disc_js_13.warpedDist(px, py);
+        const d = disc_js_14.warpedDist(px, py);
         if (d > OUTER) {
-            const depth = Math.min(1, (d - OUTER) / (disc_js_13.EDGE_BAND - 80));
+            const depth = Math.min(1, (d - OUTER) / (disc_js_14.EDGE_BAND - 80));
             // сторона — по наибольшему вылету за городок
-            const dn = disc_js_13.TOWN.y0 - py, ds = py - disc_js_13.TOWN.y1, dw = disc_js_13.TOWN.x0 - px, de = px - disc_js_13.TOWN.x1;
+            const dn = disc_js_14.TOWN.y0 - py, ds = py - disc_js_14.TOWN.y1, dw = disc_js_14.TOWN.x0 - px, de = px - disc_js_14.TOWN.x1;
             const m = Math.max(dn, ds, dw, de);
             const elem = m === ds ? 'quicksand' : m === de ? 'junk' : m === dn ? 'ice' : 'lake';
             cur = { elem, depth };
@@ -35602,17 +35610,17 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             function (scaler_js_11_1) {
                 scaler_js_11 = scaler_js_11_1;
             },
-            function (disc_js_13_1) {
-                disc_js_13 = disc_js_13_1;
+            function (disc_js_14_1) {
+                disc_js_14 = disc_js_14_1;
             }
         ],
         execute: function () {
-            OUTER = disc_js_13.RINGS * disc_js_13.RING_W + disc_js_13.FIRE_W; // 1950 — где кончается огонь
+            OUTER = disc_js_14.RINGS * disc_js_14.RING_W + disc_js_14.FIRE_W; // 1950 — где кончается огонь
             exports_80("EDGE", EDGE = {
-                south: { y0: disc_js_13.TOWN.y1 + OUTER, y1: disc_js_13.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
-                east: { x0: disc_js_13.TOWN.x1 + OUTER, x1: disc_js_13.WORLD_W, elem: 'junk', name: 'куча мусора' },
-                north: { y1: disc_js_13.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
-                west: { x1: disc_js_13.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
+                south: { y0: disc_js_14.TOWN.y1 + OUTER, y1: disc_js_14.WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },
+                east: { x0: disc_js_14.TOWN.x1 + OUTER, x1: disc_js_14.WORLD_W, elem: 'junk', name: 'куча мусора' },
+                north: { y1: disc_js_14.TOWN.y0 - OUTER, elem: 'ice', name: 'лёд' },
+                west: { x1: disc_js_14.TOWN.x0 - OUTER, elem: 'lake', name: 'токсичное озеро' },
             });
             cur = null; // { elem, depth 0..1 }
         }
@@ -35620,7 +35628,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
 });
 System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (exports_81, context_81) {
     "use strict";
-    var disc_js_14, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
+    var disc_js_15, audio_js_2, currentZone, nodes, ZONE_CONFIGS;
     var __moduleName = context_81 && context_81.id;
     function createZoneSound(cfg) {
         const ctx = audio_js_2.getCtx();
@@ -35678,23 +35686,23 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
     }
     exports_81("updateZone", updateZone);
     function getZone(x, y) {
-        if (disc_js_14.townDist(x, y) > 0)
+        if (disc_js_15.townDist(x, y) > 0)
             return 'street';
-        if (y < disc_js_14.TOWN.y0 + 340)
+        if (y < disc_js_15.TOWN.y0 + 340)
             return 'forest';
-        if (y > disc_js_14.TOWN.y0 + 1140)
+        if (y > disc_js_15.TOWN.y0 + 1140)
             return 'toxic';
-        if (x < disc_js_14.TOWN.x0 + 400)
+        if (x < disc_js_15.TOWN.x0 + 400)
             return 'quarter';
-        if (x > disc_js_14.TOWN.x0 + 1800)
+        if (x > disc_js_15.TOWN.x0 + 1800)
             return 'highway';
         return 'settlement';
     }
     exports_81("getZone", getZone);
     return {
         setters: [
-            function (disc_js_14_1) {
-                disc_js_14 = disc_js_14_1;
+            function (disc_js_15_1) {
+                disc_js_15 = disc_js_15_1;
             },
             function (audio_js_2_1) {
                 audio_js_2 = audio_js_2_1;
@@ -36205,16 +36213,16 @@ System.register("ui/cursor", [], function (exports_86, context_86) {
 });
 System.register("world/pets", ["core/time", "world/disc", "render/context", "render/scaler"], function (exports_87, context_87) {
     "use strict";
-    var time_js_25, disc_js_15, context_js_13, scaler_js_15, pets, lastSpawn, P;
+    var time_js_25, disc_js_16, context_js_13, scaler_js_15, pets, lastSpawn, P;
     var __moduleName = context_87 && context_87.id;
     function spawn() {
         const types = ['cat', 'raven', 'rat', 'rat', 'cat'];
         const type = types[Math.floor(Math.random() * types.length)];
         const fromLeft = Math.random() > 0.5;
-        const y = disc_js_15.TOWN.y0 + 40 + Math.random() * 1400;
+        const y = disc_js_16.TOWN.y0 + 40 + Math.random() * 1400;
         pets.push({
             type,
-            x: fromLeft ? disc_js_15.TOWN.x0 - 20 : disc_js_15.TOWN.x1 + 20,
+            x: fromLeft ? disc_js_16.TOWN.x0 - 20 : disc_js_16.TOWN.x1 + 20,
             y,
             vx: fromLeft ? (type === 'raven' ? 1.8 : type === 'cat' ? 0.9 : 1.2)
                 : (type === 'raven' ? -1.8 : type === 'cat' ? -0.9 : -1.2),
@@ -36279,8 +36287,8 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
             function (time_js_25_1) {
                 time_js_25 = time_js_25_1;
             },
-            function (disc_js_15_1) {
-                disc_js_15 = disc_js_15_1;
+            function (disc_js_16_1) {
+                disc_js_16 = disc_js_16_1;
             },
             function (context_js_13_1) {
                 context_js_13 = context_js_13_1;
@@ -36387,7 +36395,7 @@ System.register("world/silentCat", ["core/time", "render/context", "core/events"
 });
 System.register("world/brainrot", ["core/time", "render/context", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers"], function (exports_89, context_89) {
     "use strict";
-    var time_js_27, context_js_15, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_16, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
+    var time_js_27, context_js_15, scaler_js_16, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_17, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
     var __moduleName = context_89 && context_89.id;
     function enterLoop(exitCb) {
         loopMode = true;
@@ -36440,8 +36448,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
                 brainrotFreezeTimer = 0;
                 brainrot = 50;
                 // Respawn at campfire
-                player.x = disc_js_16.TOWN.x0 + 800;
-                player.y = disc_js_16.TOWN.y0 + 740;
+                player.x = disc_js_17.TOWN.x0 + 800;
+                player.y = disc_js_17.TOWN.y0 + 740;
                 events_js_7.events.emit('brainrot.recover');
             }
             return;
@@ -36704,8 +36712,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             function (edges_js_1_1) {
                 edges_js_1 = edges_js_1_1;
             },
-            function (disc_js_16_1) {
-                disc_js_16 = disc_js_16_1;
+            function (disc_js_17_1) {
+                disc_js_17 = disc_js_17_1;
             },
             function (layers_js_1_1) {
                 layers_js_1 = layers_js_1_1;
@@ -36899,9 +36907,9 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "render/ground", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_92, context_92) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "assets/loader"], function (exports_92, context_92) {
     "use strict";
-    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_15, terrain_js_5, locations_js_4, physics_js_1, state_js_6, events_js_8, input_js_2, time_js_30, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_4, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_17, ground_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, lockHintAt, time_js_31, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
+    var scaler_js_18, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, draw_js_15, terrain_js_5, locations_js_4, physics_js_2, state_js_6, events_js_8, input_js_2, time_js_30, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_2, locSprites, ui_js_2, looks_js_2, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_3, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_4, editor_js_1, eggObjects_js_2, disc_js_18, ulitsa_db_js_9, ground_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_2, particles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, mainCanvas, loader_js_2, player, flags, terrainCanvas, sessionAge, shiftCfg, savedData, lockHintAt, time_js_31, DAY_LENGTH, DAY_START_OFFSET, npcDrawFn, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, entryDone, entryEnter;
     var __moduleName = context_92 && context_92.id;
     function lockHint() {
         if (time_js_30.t - lockHintAt < 1800)
@@ -36931,10 +36939,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x);
         const camY = Math.round(camera_js_1.camera.y);
         ground_js_1.drawGround(bgCtx, camX, camY, vw, vh);
-        const tx0 = Math.max(camX, disc_js_17.TOWN.x0), ty0 = Math.max(camY, disc_js_17.TOWN.y0);
-        const tx1 = Math.min(camX + vw, disc_js_17.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_17.TOWN.y1);
+        const tx0 = Math.max(camX, disc_js_18.TOWN.x0), ty0 = Math.max(camY, disc_js_18.TOWN.y0);
+        const tx1 = Math.min(camX + vw, disc_js_18.TOWN.x1), ty1 = Math.min(camY + vh, disc_js_18.TOWN.y1);
         if (tx1 > tx0 && ty1 > ty0) {
-            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_17.SHIFT_X, ty0 - disc_js_17.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
+            bgCtx.drawImage(terrainCanvas, tx0 - disc_js_18.SHIFT_X, ty0 - disc_js_18.SHIFT_Y, tx1 - tx0, ty1 - ty0, tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
         }
         // ── BG: atmosphere ──
         atmosphere_js_1.drawBloodMoon(bgCtx, { x: camX, y: camY });
@@ -37554,7 +37562,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const hd = Math.sqrt(hdx * hdx + hdy * hdy);
             if (hd > 8) {
                 const spd = 2.4;
-                physics_js_1.tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations_js_4.locations, {
+                physics_js_2.tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations_js_4.locations, {
                     canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
                 });
                 player.tx = player.x;
@@ -37579,7 +37587,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const move = input_js_2.input.getMove();
         if (move.active) {
             const spd = input_js_2.input.isDown('sprint') ? 4 : 2.4;
-            physics_js_1.tryMove(player, move.x * spd, move.y * spd, locations_js_4.locations, {
+            physics_js_2.tryMove(player, move.x * spd, move.y * spd, locations_js_4.locations, {
                 canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
             });
             player.tx = player.x;
@@ -37609,7 +37617,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 player.walkTo = null;
                 const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
                     && Math.abs(player.y - (want.y + want.h + 5)) < 4;
-                const loc = atWant ? want : (want ? physics_js_1.findLocationAt(player.x, player.y, locations_js_4.locations) : null);
+                const loc = atWant ? want : (want ? physics_js_2.findLocationAt(player.x, player.y, locations_js_4.locations) : null);
                 if (loc) {
                     flags.visited.add(loc.id);
                     events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
@@ -37622,7 +37630,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     player.dir = 1;
                 else if (dx < -1)
                     player.dir = -1;
-                physics_js_1.tryMove(player, dx / dist * spd, dy / dist * spd, locations_js_4.locations, {
+                physics_js_2.tryMove(player, dx / dist * spd, dy / dist * spd, locations_js_4.locations, {
                     canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
                 });
             }
@@ -37637,7 +37645,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function updateWorldSystems() {
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
         if (brainrot_js_1.inLoop()) {
-            const L0 = disc_js_17.TOWN.y1 + 8 * disc_js_17.RING_W + 24, L1 = disc_js_17.TOWN.y1 + 9 * disc_js_17.RING_W - 16;
+            const L0 = disc_js_18.TOWN.y1 + 8 * disc_js_18.RING_W + 24, L1 = disc_js_18.TOWN.y1 + 9 * disc_js_18.RING_W - 16;
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -37667,7 +37675,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         updateCrackTriggers(player);
         potemkin_js_4.update(player, locations_js_4.locations, brainrot_js_1.isFrozen());
         if (time_js_31.t % 3 === 0)
-            particles_js_1.fireEmber(disc_js_17.TOWN.x0 + 775, disc_js_17.TOWN.y0 + 635);
+            particles_js_1.fireEmber(disc_js_18.TOWN.x0 + 775, disc_js_18.TOWN.y0 + 635);
     }
     // ═══ LOOP ═══
     function loop() {
@@ -37740,8 +37748,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (locations_js_4_1) {
                 locations_js_4 = locations_js_4_1;
             },
-            function (physics_js_1_1) {
-                physics_js_1 = physics_js_1_1;
+            function (physics_js_2_1) {
+                physics_js_2 = physics_js_2_1;
             },
             function (state_js_6_1) {
                 state_js_6 = state_js_6_1;
@@ -37810,8 +37818,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (shop_js_1_1) {
                 shop_js_1 = shop_js_1_1;
             },
-            function (street_js_4_1) {
-                street_js_4 = street_js_4_1;
+            function (street_js_3_1) {
+                street_js_3 = street_js_3_1;
             },
             function (worldmap_js_1_1) {
                 worldmap_js_1 = worldmap_js_1_1;
@@ -37825,8 +37833,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (eggObjects_js_2_1) {
                 eggObjects_js_2 = eggObjects_js_2_1;
             },
-            function (disc_js_17_1) {
-                disc_js_17 = disc_js_17_1;
+            function (disc_js_18_1) {
+                disc_js_18 = disc_js_18_1;
+            },
+            function (ulitsa_db_js_9_1) {
+                ulitsa_db_js_9 = ulitsa_db_js_9_1;
             },
             function (ground_js_1_1) {
                 ground_js_1 = ground_js_1_1;
@@ -37920,7 +37931,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             metaFx_js_2.initMetaFx();
             terminal_js_1.init();
             shop_js_1.initShop();
-            worldmap_js_1.init({ getVisited: () => flags.visited });
+            worldmap_js_1.init({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement() });
             cursor_js_1.init();
             audio_js_4.initAudio();
             editor_js_1.initEditor();
@@ -37941,7 +37952,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
-                x: disc_js_17.TOWN.x0 + 800, y: disc_js_17.TOWN.y0 + 740, tx: disc_js_17.TOWN.x0 + 800, ty: disc_js_17.TOWN.y0 + 740,
+                x: disc_js_18.TOWN.x0 + 800, y: disc_js_18.TOWN.y0 + 740, tx: disc_js_18.TOWN.x0 + 800, ty: disc_js_18.TOWN.y0 + 740,
                 dir: 1, moving: false, walkFrame: 0,
             };
             playerRef_js_3.setPlayer(player);
@@ -37968,7 +37979,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (savedData) {
                 if (savedData.player) {
                     // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
-                    const dOff = disc_js_17.OFF - (savedData.off || 2300);
+                    const dOff = disc_js_18.OFF - (savedData.off || 2300);
                     player.x = savedData.player.x + dOff;
                     player.y = savedData.player.y + dOff;
                 }
@@ -37991,7 +38002,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             }
             if (!stream_js_1.STREAM)
                 save_js_1.startAutoSave(() => ({
-                    player: { x: player.x, y: player.y }, off: disc_js_17.OFF,
+                    player: { x: player.x, y: player.y }, off: disc_js_18.OFF,
                     talkedTo: Array.from(flags.talkedTo),
                     visited: Array.from(flags.visited),
                     observersSeen: Array.from(flags.observersSeen),
@@ -38007,7 +38018,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
-            lighting_js_1.lighting.add({ x: disc_js_17.TOWN.x0 + 800, y: disc_js_17.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            lighting_js_1.lighting.add({ x: disc_js_18.TOWN.x0 + 800, y: disc_js_18.TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
             // Location lights
             for (const loc of locations_js_4.locations) {
                 if (!loc.light)
@@ -38139,7 +38150,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 } // первый клик допечатывает, второй убирает
                 const pos = input_js_2.input.screenToWorld(clientX, clientY, camera_js_1.camera);
-                const loc = physics_js_1.findLocationAt(pos.x, pos.y, locations_js_4.locations);
+                const loc = physics_js_2.findLocationAt(pos.x, pos.y, locations_js_4.locations);
                 if (loc) {
                     const px_ = loc.x + loc.w / 2 - 6;
                     const py_ = loc.y + loc.h + 5;
@@ -38147,7 +38158,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     // locked starting area (e.g. Pizzeria sits at the highway border).
                     // Otherwise a near-click would teleport the player out of the zone
                     // and movement would jam against the boundary.
-                    if (!canLeaveSettlement() && !physics_js_1.isInSettlement(px_, py_)) {
+                    if (!canLeaveSettlement() && !physics_js_2.isInSettlement(px_, py_)) {
                         lockHint();
                         return;
                     }
@@ -38204,7 +38215,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             events_js_8.events.on('gate.use', (gate) => {
                 if (!gate || !gate.target)
                     return;
-                teleportWithFade(gate.target.x, gate.target.y);
+                if (!canLeaveSettlement()) {
+                    lockHint();
+                    return;
+                }
+                // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
+                const vx = gate.target.x - street_js_3.STREET_SHIFT;
+                const seg = ulitsa_db_js_9.SEGMENTS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || ulitsa_db_js_9.SEGMENTS[ulitsa_db_js_9.SEGMENTS.length - 1];
+                const p = disc_js_18.trailPoint('south', (Math.max(1, seg.n) - 0.5) * disc_js_18.RING_W);
+                teleportWithFade(p.x, p.y);
             });
             events_js_8.events.on(events_js_8.E.LORE_COLLECT, (item) => {
                 lorepopup_js_1.showLore(item.text, item.live);
@@ -38219,9 +38238,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 const actionKey = loc.useAction || loc.id;
                 // The gates teleport onto the street: one road, gradient of epochs
                 if (actionKey === 'gates_pass') {
-                    teleportWithFade(street_js_4.STREET_SPAWN.x, street_js_4.STREET_SPAWN.y, () => {
+                    teleportWithFade(street_js_3.STREET_SPAWN.x, street_js_3.STREET_SPAWN.y, () => {
                         // First-pass quiet line via the lore popup (dismissable, can't trap).
-                        if (street_js_4.consumeGatesLine()) {
+                        if (street_js_3.consumeGatesLine()) {
                             lorepopup_js_1.showLore('Эти врата были предназначены для тебя одного. Обычно это узнают позже.');
                         }
                     });
@@ -38229,17 +38248,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }
                 // Каркас: кольцевая равнины и СКРОЛЛ
                 if (actionKey === 'branch_plain') {
-                    teleportWithFade(street_js_4.BRANCH_PLAIN.x0 + 96, 640);
+                    teleportWithFade(street_js_3.BRANCH_PLAIN.x0 + 96, 640);
                     return;
                 }
                 if (actionKey === 'branch_back') {
-                    teleportWithFade(disc_js_17.TOWN.x0 + 2560, disc_js_17.TOWN.y1 + disc_js_17.RING_W + 80);
+                    teleportWithFade(disc_js_18.TOWN.x0 + 2560, disc_js_18.TOWN.y1 + disc_js_18.RING_W + 80);
                     return;
                 }
                 if (actionKey === 'brainrot_enter') {
-                    teleportWithFade(disc_js_17.TOWN.x0 + 2540, disc_js_17.TOWN.y1 + 8 * disc_js_17.RING_W + 90, () => {
+                    teleportWithFade(disc_js_18.TOWN.x0 + 2540, disc_js_18.TOWN.y1 + 8 * disc_js_18.RING_W + 90, () => {
                         brainrot_js_1.enterLoop(() => {
-                            teleportWithFade(disc_js_17.TOWN.x0 + 2540, disc_js_17.TOWN.y1 + 7 * disc_js_17.RING_W + 100, () => {
+                            teleportWithFade(disc_js_18.TOWN.x0 + 2540, disc_js_18.TOWN.y1 + 7 * disc_js_18.RING_W + 100, () => {
                                 lorepopup_js_1.showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
                             });
                         });

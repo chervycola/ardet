@@ -381,10 +381,9 @@ canvas#game {
 }
 #map.on { display: flex; }
 #map-canvas {
-  width: min(94vw, 1100px);
+  width: min(96vw, calc(94vh * 1.6), 1240px);
   height: auto;
-  max-height: 92vh;
-  image-rendering: pixelated;
+  aspect-ratio: 960 / 600;
   border: 1px solid rgba(107,15,26,0.4);
   background: #08060a;
 }

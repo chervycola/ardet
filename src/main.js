@@ -42,7 +42,8 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF } from './world/disc.js';
+import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF, trailPoint } from './world/disc.js';
+import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
@@ -85,7 +86,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
-initWorldMap({ getVisited: () => flags.visited });
+initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement() });
 
 initCursor();
 initAudio();
@@ -1074,7 +1075,12 @@ events.on('terminal.read', (key) => {
 // Fast-travel through a gate: teleport to its world target.
 events.on('gate.use', (gate) => {
   if (!gate || !gate.target) return;
-  teleportWithFade(gate.target.x, gate.target.y);
+  if (!canLeaveSettlement()) { lockHint(); return; }
+  // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
+  const vx = gate.target.x - STREET_SHIFT;
+  const seg = EPOCHS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || EPOCHS[EPOCHS.length - 1];
+  const p = trailPoint('south', (Math.max(1, seg.n) - 0.5) * RING_W);
+  teleportWithFade(p.x, p.y);
 });
 events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text, item.live);
