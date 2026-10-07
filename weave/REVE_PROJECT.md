@@ -1,83 +1,132 @@
-# ARDET · ОСНОВНОЙ ПРОМТ ПРОЕКТА (Reve)
+# ARDET · ОСНОВНОЙ ПРОМТ ПРОЕКТА (Reve) · вер. 2
 ### база для сборки всей иллюстрации: заглавный · персонаж · город · пасхалки
 
-Источник канона — ветка `claude/philosophy-architecture-update-oDemg`:
-`weave/STYLE_LOCK.md` (стиль + анти-слоп + регистр Бакши),
-`src/assets/NEUROSTYLE_ROTAPRINT.md` (растровый регистр печати),
-`weave/SYMBOL_SHEET.md` и `weave/MOTIFS.md` (фонд пасхалок и мотивов).
+Канон — ветка `claude/philosophy-architecture-update-oDemg`:
+`weave/STYLE_LOCK.md`, `src/assets/NEUROSTYLE_ROTAPRINT.md`,
+`weave/SYMBOL_SHEET.md`, `weave/MOTIFS.md`.
 
-Промт ниже — ДНК проекта: кладётся один раз в описание проекта, дальше
-к нему дописывается только сюжет кадра (хуки — в конце файла).
+Вер. 2 — после сверки по 10 референсам автора (07.10). Три решения
+автора, которые переписали норму:
+1. запрет насыщенности снят, но заливка — не везде, а в острых моментах;
+2. синий, токсично-зелёный и шоколадный допущены малыми дозами;
+3. зерно — по эпохам, его накладывает игра; генерация даёт чистую
+   пластину. Вторые печатные краски и прочие эффекты продумываем позже.
+
+---
+
+## Главный принцип, снявший противоречие
+
+**Красный — не акцент и не среда, а вторая печатная краска.** Во всех
+референсах он кладётся плашкой отдельным прогоном; разная только площадь.
+Поэтому вместо запрета — регулятор:
+
+| покрытие | что красит | когда |
+|---|---|---|
+| 1–3 % | две точки-индикатора | холодные, мёртвые сцены |
+| 5–10 % | диск луны/солнца с потёками, полоса неба | норма мира |
+| 20–30 % | одна группа объектов целиком | акцентная сцена |
+| 60–90 % | весь воздух кадра залит | **только острые моменты** |
+
+Заливка 60–90 % — расходный приём. Если она в каждом кадре, она не
+значит ничего.
+
+---
 
 ## Основной промт — RU
 
 > ARDET — один иллюстрированный мир. Каждое изображение здесь — страница
 > одного и того же разорённого архива.
 >
-> МАТЕРИАЛ: очень тёмная винтажная гравюра-меццотинта, оттиск со
-> состаренной печатной пластины — видимые царапины, пятна краски,
-> неровный прокат, плотное зерно плёнки. Никакого цифрового глянца, 3D
-> и чистых векторных линий.
+> МАТЕРИАЛ: это оттиск, а не живопись. Очень тёмная винтажная гравюра,
+> линогравюра и меццотинта со состаренной пластины — видимые царапины
+> пластины, пятна краски, неровный прокат, просвечивающая бумага. Для
+> самых тёмных интерьеров допустим угольный рисунок. Никакого цифрового
+> глянца, 3D, чистых векторных линий и фотореализма.
 >
-> ТОН: глубокая плоская чернота держит кадр. Свет — КОСТЬ #D9CFB8,
-> никогда не чисто белый. Полутон — ПЕПЕЛ #8A8D8F. Огромное пустое
-> пространство: кадр больше дышит, чем показывает.
+> ТОН: глубокая плоская чернота держит конструкцию кадра. Свет — КОСТЬ
+> #D9CFB8, никогда не чисто белый. Полутон — ПЕПЕЛ #8A8D8F. Огромное
+> пустое пространство.
 >
-> ЦВЕТ: мир монохромный, кроме огня и луны. КИНОВАРЬ #C23B2B — кровавая
-> луна с грубыми потёками и кольцевыми мазками, как печатный брак; это
-> печать мира. БАГРОВЫЙ #6b0f1a — для тяжёлого красного. От одного до
-> трёх крошечных ЯНТАРНЫХ #E28A3A тёплых пятен на кадр (окно, щель
-> двери, уголёк) — больше ничто не тёплое. Ни яркого зелёного, ни синего
-> оттенка, ни насыщенных цветов.
+> КРАСКА ПЕРВАЯ, ЧЁРНАЯ: весь рисунок, штриховка и силуэты.
+>
+> КРАСКА ВТОРАЯ, КРАСНАЯ: ложится плашкой отдельным прогоном, а не
+> подкраской. КИНОВАРЬ #C23B2B — на освещённых поверхностях и дисках;
+> БАГРОВЫЙ #6b0f1a — воздух и дальние планы. Площадь задаёт сцена: от
+> двух точек-индикаторов через диск луны с потёками и одну группу
+> объектов, напечатанную целиком красным, до полной заливки воздуха
+> кадра. Полная заливка — только для острых моментов.
+>
+> КРАСКА ТРЕТЬЯ, РЕДКАЯ: не больше одной на кадр и не больше нескольких
+> процентов площади. ИНДИГО #1b1464 — вода, лёд, экраны. ТОКСИЧНЫЙ
+> ЗЕЛЁНЫЙ #8CC63F — только как свечение: химия, свалка, аварийные лампы.
+> ШОКОЛАДНАЯ УМБРА #4A3426 — дерево, кожа, сепия ранних эпох.
+> Приглушённый оливково-шалфейный #5A5F4A — трава и мох.
+>
+> ТЁПЛОЕ: от одного до трёх крошечных ЯНТАРНЫХ #E28A3A огней на кадр —
+> окно, щель двери, уголёк. Тепло не растрируется и не растекается.
 >
 > ГЛУБИНА (во всех экстерьерах): 3–4 плана в духе рисованных задников
 > 1977 года — огромное градиентное небо с тусклым диском в верхней трети
-> или половине кадра, дальний силуэтный план, тающий в дымке, средний
-> план, где что-то живёт (караван, руины, дым), тёмный передний
-> силуэтный план поверх низа (травы, камни). По горизонту — тонкая
-> киноварная кромка света. Действие сжато в узкую полосу, небо владеет
-> кадром.
+> или половине, дальний силуэтный план в дымке, средний план, где
+> что-то живёт, тёмный передний силуэтный план поверх низа. По горизонту
+> тонкая киноварная кромка света. Действие сжато в узкую полосу.
 >
 > ОБИТАТЕЛИ: крошечный одинокий путник в капюшоне для масштаба, всегда
 > маленький. Силуэт чёрного кота где-нибудь, часто там, где его не ждут.
-> Птицы — только на улице и только 3–5 вразнобой либо одна, сидящая на
-> краю кадра; никаких стай-галочек. В интерьерах вместо птиц — крупные
-> бледные мотыльки в столбе света.
+> Птицы только на улице и только 3–5 вразнобой либо одна на краю кадра;
+> никаких стай-галочек. В интерьерах вместо птиц — крупные бледные
+> мотыльки в столбе света.
 >
 > ВЕЩИ: всё лежит так, будто забыто, а не выложено на витрину. Вещь
-> здесь становится документом: бирки, штампы, ведомости, номерные
-> ярлыки, краска поверх старой краски, табличка поверх таблички.
+> становится документом: бирки, штампы, ведомости, номерные ярлыки,
+> краска поверх старой краски, табличка поверх таблички.
 >
-> ФОРМАТ: во весь кадр, без рамки, без бумажных полей, без подписи
-> художника, без читаемого текста и букв.
+> ЗЕРНО: ровное и умеренное — собственная фактура пластины. Не запекать
+> тяжёлый растр, дизеринг и слой царапин: их накладывает игра по эпохе.
+>
+> ФОРМАТ: мир — во весь кадр, без полей. Процарапанная рамка и бумажные
+> поля — только у изображений-документов. Без подписи художника, без
+> читаемого текста и букв.
 
 ## Основной промт — EN (то, что идёт в Reve)
 
 > ARDET — a single illustrated world. Every image is one page of the same
 > ruined archive.
 >
-> MEDIUM: very dark vintage etching and mezzotint pulled from an aged
-> printing plate — visible scratches, ink stains, uneven inking, heavy
-> film grain. Never digital gloss, never 3D, never clean vector lines.
+> MEDIUM: a print, not a painting. Very dark vintage etching, linocut and
+> mezzotint pulled from an aged plate — visible plate scratches, ink
+> stains, uneven inking, the paper showing through. Charcoal drawing is
+> allowed for the darkest interiors. Never digital gloss, never 3D, never
+> clean vector lines, never photographic rendering.
 >
-> VALUE: deep flat blacks dominate the frame. Light is BONE #D9CFB8,
-> never pure white. Halftones are ASH GREY #8A8D8F. Vast negative space;
-> the image breathes more than it shows.
+> VALUE: deep flat blacks carry the structure of the frame. Light is BONE
+> #D9CFB8, never pure white. Halftones are ASH GREY #8A8D8F. Vast
+> negative space.
 >
-> COLOR: the world is monochrome except for fire and the moon. CINNABAR
-> #C23B2B — a blood-red moon with rough drips and ring-shaped brush marks
-> like a printing fault; it is the seal of this world. DEEP CRIMSON
-> #6b0f1a for heavier reds. One to three tiny AMBER #E28A3A warm lights
-> per frame (a window, a door crack, an ember) — nothing else is warm.
-> No bright green, no blue tint, no saturated colors.
+> FIRST INK, BLACK: all drawing, hatching and silhouettes.
+>
+> SECOND INK, RED: laid down as a flat plate in its own pass, never as a
+> tint. CINNABAR #C23B2B on lit surfaces and discs; DEEP CRIMSON #6b0f1a
+> for air and far planes. Its coverage is set by the scene: from two
+> indicator dots, through a moon disc with drips, through one group of
+> objects printed entirely red, to the whole air of the frame flooded.
+> Full flooding is reserved for charged moments.
+>
+> THIRD INK, RARE: at most one per frame and never more than a few
+> percent of the area. INDIGO #1b1464 for water, ice and screens. TOXIC
+> GREEN #8CC63F only as a glow — chemistry, landfill, emergency lamps.
+> CHOCOLATE UMBER #4A3426 for wood, leather and the sepia of early
+> epochs. Muted sage #5A5F4A for grass and moss.
+>
+> WARM: one to three tiny AMBER #E28A3A lights per frame — a window, a
+> door crack, an ember. Warmth never dithers and never spreads.
 >
 > DEPTH (all exteriors): 3–4 layers in the manner of 1977 hand-painted
 > animation backgrounds — a vast gradient sky holding a dim disc in the
 > upper third to half, a far silhouette layer fading into haze, a middle
-> layer where something lives (a caravan, ruins, smoke), a dark foreground
-> silhouette layer over the bottom (grasses, stones). A thin cinnabar
-> rim-light along the horizon. Action is compressed into a narrow band;
-> the sky owns the frame.
+> layer where something lives, a dark foreground silhouette layer over
+> the bottom. A thin cinnabar rim-light along the horizon. Action is
+> compressed into a narrow band; the sky owns the frame.
 >
 > INHABITANTS: a tiny lone hooded traveller for scale, always small. A
 > black cat silhouette somewhere, often where it does not belong. Birds
@@ -89,20 +138,62 @@
 > A thing becomes a document here: tags, stamps, ledgers, numbered
 > labels, paint over older paint, a sign nailed over a sign.
 >
-> FORMAT: full-bleed, no frame, no paper border, no artist signature,
-> no readable text or letters anywhere.
+> GRAIN: even and moderate — the plate's own texture only. Do not bake in
+> heavy raster, dithering or scratch overlays; those are applied later
+> per epoch.
+>
+> FORMAT: full-bleed for the world. A scratched border with paper margins
+> only for images that are documents. No artist signature, no readable
+> text or letters anywhere.
+
+---
+
+## Рамка — по регистрам (решение 07.10)
+
+`STYLE_LOCK` требовал full-bleed, но три из пяти лайкнутых автором
+кадров — с процарапанной рамкой и полями, и рамка там несущая. Поэтому
+не отменяем, а разводим по смыслу:
+
+- **мир** (городок, пустошь, интерьеры, задники) — full-bleed, без
+  полей: зритель внутри;
+- **оттиск, приложенный к делу** (портреты персонажей, осмотры
+  предметов, пасхалки) — процарапанная рамка и бумажные поля: зритель
+  смотрит на документ.
+
+Следствие: локнутые 26.07 портреты в `weave/characters/` (Машинист,
+Мусорка-демон, Шут) сделаны с рамкой и попадают во второй регистр
+законно. Перегенерация не нужна.
 
 ## Анти-слоп (негатив проекта)
-
-Датасетные красивости — брак, даже если «получилось красиво». Признак:
-деталь лежит на первой странице пинтереста по запросу dark academia /
-gothic.
 
 > no glasses resting on an open book, no flock of checkmark-birds by the
 > moon, no candelabra with painterly wax drips, no cobweb in the corner,
 > no violin, no globe by the window, nothing arranged neatly for display,
-> no bright green, no blue tint, no saturated colors, no neon, no lens
-> flare, no text, no letters, no signature, no frame, no border
+> no neon glow, no lens flare, no text, no letters, no signature
+
+Запрет на насыщенность и на синий/зелёный СНЯТ (07.10) — заменён
+дозировкой выше. Признак слопа прежний: деталь с первой страницы
+пинтереста по запросу dark academia / gothic.
+
+---
+
+## Что добавляет игра, а не генерация
+
+Фиксируем сейчас, чтобы не запекать это в картинки:
+
+| эффект | кто кладёт | примечание |
+|---|---|---|
+| зерно по эпохе | движок | ранние эпохи грубее, поздние чище; шкалу продумываем отдельно |
+| растр Байера 8×8, 4 краски | движок | регистр печати, `NEUROSTYLE_ROTAPRINT.md` |
+| царапины и осыпающиеся края | движок | слой треска, включать вспышками |
+| рамка документа | движок или генерация | в документах можно и запечь |
+| киноварная печать-штамп в углу | только игра | канон: надписи и штампы ставим сами |
+| вторые печатные краски по эпохам | **TODO** | продумываем позже |
+
+Генерация отдаёт чистую пластину: ровное умеренное зерно и всё. Если
+запечь тяжёлый растр, эпохальный слой ляжет поверх и кадр замылится.
+
+---
 
 ## Хуки по разделам (дописываются к ДНК)
 
@@ -111,37 +202,28 @@ circles radiating from the center of the moon — dense rings on the disc
 itself, a vast halo of rings spreading across the sky, and the horizon as
 the outermost ring of the same family, sagging at the center and sweeping
 up toward the moon at both edges like a wide-angle lens. A tiny town
-silhouette with one steeple at the bottom. Top third left empty.`
+silhouette with one steeple at the bottom. Top third left empty. Red
+coverage: 10%.`
 
 **ПЕРСОНАЖ.** `+ Single figure, full height, almost empty background with
 only a thin wasteland horizon. The figure holds the frame. Two arms only
-— multiple arms belong to the Jester alone. Hierarchic icon scale applies
-in scenes, not here: no second figure in a portrait.`
+— multiple arms belong to the Jester alone. No second figure in a
+portrait. Document register: scratched border and paper margins.`
 
-**ГОРОД.** `+ Exterior of a small timeless town at long evening, the full
-3–4 layer depth, roads entering and exiting the frame, open gates
-overgrown with grass, a bonfire with a bull skull on a pole, a stone
-well, a dead street lantern, moss between cobblestones. Exactly three
-warm spots in the frame, no more.`
+**ГОРОД.** `+ Exterior of a small timeless town at long evening, full 3–4
+layer depth, roads entering and exiting the frame, open gates overgrown
+with grass, a bonfire with a bull skull on a pole, a stone well, a dead
+street lantern, moss between cobblestones. Exactly three warm spots.
+Red coverage: 5–10%, moon and a band of sky.`
 
-**ПАСХАЛКИ.** Предмет-метонимия: несёт мем без подписи, одна
-деталь-удар, лежит как забытый. `+ Close study of a single object in the
-same world, shot like evidence attached to a case file: the object
-slightly off-center on a worn surface, one amber light raking across it,
-everything else near-black. No hands, no people.`
+**ПАСХАЛКИ.** `+ Close study of a single object, shot like evidence
+attached to a case file: the object slightly off-center on a worn
+surface, one amber light raking across it, everything else near-black.
+No hands, no people. Document register: scratched border. Red coverage:
+1–3%.`
 Фонд — `weave/SYMBOL_SHEET.md`: кофейник за решёткой с замком; нора, из
 неё угол белой перчатки; чаша подо льдом с начищенным именем; пустой
 постамент и волны воздуха; пюпитр с одной свечой и снегом; тетрадь с
 воткнутым гусиным пером; табличка поверх таблички с отогнутым краем;
 циферблат без стрелок; кусок янтаря и живая мошка над ним; окошко кассы
 с бесконечной лентой билетов; ящик с углом конверта в щели.
-
-## Расхождение, требующее решения автора
-
-`STYLE_LOCK v1` запрещает рамку (`full-bleed, no frame, no paper
-border`). Локнутые 26.07 портреты в `weave/characters/` (Машинист,
-Мусорка-демон, Шут) сделаны С двойной красно-охристой рамкой и по новому
-канону вне стиля. Либо перегенерить их без рамки, либо сознательно
-развести два регистра: мир — full-bleed, «приложенные к делу» оттиски —
-в рамке (это согласуется с растровым регистром из
-`NEUROSTYLE_ROTAPRINT.md`). Решение за автором.
