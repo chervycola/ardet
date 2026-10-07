@@ -8,6 +8,10 @@ import { lighting, lightParticles } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { ink } from './render/ink.js';
 import { plate } from './render/plate.js';
+import { lofi, LOFI_NAMES } from './render/lofi.js';
+import { toxic } from './world/toxic.js';
+import { stumble } from './world/stumble.js';
+import { updateGeiger } from './audio/geiger.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
@@ -252,8 +256,9 @@ function render() {
   const postCtx = layers.ctx('post');
 
   // ── BG: аналитическая земля диска + запечённый городок поверх ──
-  const camX = Math.round(camera.x);
-  const camY = Math.round(camera.y);
+  const shk = stumble.shake();             // телефон жужжит — кадр подрагивает
+  const camX = Math.round(camera.x) + shk.x;
+  const camY = Math.round(camera.y) + shk.y;
   drawGround(bgCtx, camX, camY, vw, vh);
   const tx0 = Math.max(camX, TOWN.x0), ty0 = Math.max(camY, TOWN.y0);
   const tx1 = Math.min(camX + vw, TOWN.x1), ty1 = Math.min(camY + vh, TOWN.y1);
@@ -278,6 +283,7 @@ function render() {
   drawArchGround(worldCtx, camX, camY, vw, vh);   // дворы, тени, тропинки под постройками
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawFootprints(worldCtx, { x: camX, y: camY });
+  stumble.drawStones(worldCtx);
 
   // локации (с постройками эпох), заборы дворов и странник — по глубине:
   // за домом странника не видно, перед домом — видно
@@ -291,7 +297,13 @@ function render() {
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
-    if (it.player) { drawPlayer(player); continue; }
+    if (it.player) {
+      const so = stumble.offset();
+      worldCtx.save(); worldCtx.translate(so.x, so.y);
+      drawPlayer(player);
+      worldCtx.restore();
+      continue;
+    }
     if (it.prop) { it.prop.draw(worldCtx); continue; }
     const loc = it.loc;
     drawLocation(worldCtx, loc);
@@ -308,6 +320,7 @@ function render() {
   drawSilentCat(player, { x: camX, y: camY }, locations);
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
+  toxic.drawWorld(worldCtx, { x: camX, y: camY }, locations);
 
   drawWorldWhisper({ x: camX, y: camY });
 
@@ -370,7 +383,14 @@ function render() {
 // красным; огонь и брейнрот заливают воздух; за краем красное гаснет.
 let jesterFirstTalk = false;          // первая встреча с Шутом — острый момент
 const NO_PLATE = /[?&]noplate\b/.test(location.search);
-layers.inkPass = (ctx, main) => { ink.composite(ctx, main); if (!NO_PLATE) plate.composite(ctx); };
+layers.inkPass = (ctx, main) => {
+  ink.composite(ctx, main);
+  if (!NO_PLATE) plate.composite(ctx);
+  ctx.save(); ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
+  toxic.drawScreen(ctx);                 // код сочится сквозь кадр
+  ctx.restore();
+  lofi.composite(ctx, main);             // сбой копии — последним, ловит всё под интерфейсом
+};
 // шторм пластины: непогода, молния, брейнрот; O (Щ) — проверка руками
 let stormTest = /[?&]storm\b/.test(location.search);
 function plateStorm() {
@@ -409,7 +429,11 @@ function inkScene(camX, camY) {
       : l.name === anchor.name))));
   } else if (ink.level !== 2) ink.setGroup([]);
   ink.update();
-  plate.update(player.x + 6, player.y + 24, plateStorm());
+  const st = plateStorm();
+  plate.update(player.x + 6, player.y + 24, st);
+  const tx = toxic.update(player.x + 6, player.y + 24, locations, (isFrozen() || inBrainrotLoop()) ? 0.9 : 0);
+  updateGeiger(tx);
+  lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= RINGS ? 0.25 : 0)));
 }
 
 // Placeholder draw function — will be replaced with proper sprites
@@ -857,6 +881,7 @@ function updateGame() {
   if (isFrozen()) { updateBrainrot(player); return; }
   if (!state.is('game')) return;
   if (isMapOpen()) return;                 // карта открыта — стрелки двигают лист, не героя
+  if (stumble.update(player)) { updateWorldSystems(); return; }   // оступился — шаг пропал
 
   // Held-finger walk (mobile): while a finger stays down, walk toward
   // it continuously. A short tap still dispatches as a click.
@@ -1200,9 +1225,15 @@ window.onerror = (msg, src, line, col, err) => {
 };
 // build 1776974120
 
-// Вторая краска — ручной регулятор для проверки: I (Ш) — авто → 0 → 1 → 2 → 3 → авто
+// Проверка эффектов руками: I (Ш) — вторая краска авто → 0..3; O (Щ) — шторм пластины;
+// L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться
 document.addEventListener('keydown', e => {
   if (!state.is('game') || e.repeat) return;
   if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
+  if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д') ink.note('ЛОУ-ФАЙ · ' + LOFI_NAMES[lofi.cycle()]);
+  if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') {
+    toxic.setTest(!toxic.isTest()); ink.note(toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');
+  }
+  if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л') stumble.trigger(player);
   if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') { stormTest = !stormTest; ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ'); }
 });
