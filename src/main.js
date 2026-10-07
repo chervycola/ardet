@@ -432,7 +432,9 @@ function inkScene(camX, camY) {
   ink.update();
   const st = plateStorm();
   plate.update(player.x + 6, player.y + 24, st);
-  const tx = toxic.update(player.x + 6, player.y + 24, locations, (isFrozen() || inBrainrotLoop()) ? 0.9 : 0);
+  // токсичная окраина городка — фон для прибора; брейнрот — почти предел
+  const toxBase = (isFrozen() || inBrainrotLoop()) ? 0.9 : getZone(player.x + 6, player.y + 24) === 'toxic' ? 0.18 : 0;
+  const tx = toxic.update(player.x + 6, player.y + 24, locations, toxBase);
   updateGeiger(tx);
   lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= RINGS ? 0.25 : 0)));
 }

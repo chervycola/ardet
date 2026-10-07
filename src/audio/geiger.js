@@ -1,20 +1,26 @@
 // ═══════════════════════════════════════
-// СЧЁТЧИК ГЕЙГЕРА — щелчки, частота растёт с токсичностью места.
-// Иногда (не чаще раза в 120 с) трещит и там, где чисто: прибор старый, фон — везде.
-// В ядовитых местах щёлкает непрерывно — это не событие, а показания.
+// СЧЁТЧИК ГЕЙГЕРА — работает только там, где есть что мерить:
+// токсичная окраина городка, ядовитые места, век катастроф, огонь,
+// край, брейнрот. В чистых местах прибор молчит (громкость уходит плавно).
+// Частота не ровная: идёт за токсичностью с инерцией (нарастает быстрее,
+// спадает медленнее) и сама плывёт волнами. Изредка, не чаще раза
+// в 120 с, — приступ: щелчки разгоняются и стихают.
 // ═══════════════════════════════════════
 import { getCtx } from './audio.js';
 
-let out = null, clickBuf = null;
-const GAP = 120000;                 // фоновый приступ — не чаще раза в 120 с
-let episodeUntil = 0, episodeRate = 0, nextEpisode = 0;
+const VOL = 0.2;                     // общая громкость прибора (было 0.4)
+const GAP = 120000;                  // приступ — не чаще раза в 120 с
+let out = null, clickBuf = null, on = false;
+let rate = 0;                        // текущая частота, щелчков в секунду
+let drift = 1, driftV = 0;           // волна: медленно плывущий множитель
+let surgeAt = 0, surgeLen = 0, surgePeak = 0, nextSurge = 0;
 
 function setup() {
   const ctx = getCtx();
   if (!ctx) return null;
   if (!out) {
     out = ctx.createGain();
-    out.gain.value = 0.4;
+    out.gain.value = 0;
     out.connect(ctx.destination);
     // щелчок: 5 мс шума с резким спадом
     const n = Math.floor(ctx.sampleRate * 0.005);
@@ -25,9 +31,7 @@ function setup() {
   return ctx;
 }
 
-function click(when) {
-  const ctx = setup();
-  if (!ctx || ctx.state !== 'running') return;
+function click(ctx, when) {
   const src = ctx.createBufferSource();
   src.buffer = clickBuf;
   const bp = ctx.createBiquadFilter();
@@ -35,28 +39,46 @@ function click(when) {
   bp.frequency.value = 2400 + Math.random() * 1800;
   bp.Q.value = 0.9;
   const g = ctx.createGain();
-  g.gain.value = 0.07 + Math.random() * 0.09;
+  g.gain.value = 0.06 + Math.random() * 0.07;
   src.connect(bp); bp.connect(g); g.connect(out);
   src.start(when);
 }
 
-// tox: 0..1 у ног; вызывать раз в кадр (60 к/с)
+// tox: 0..1 у ног (0 — место чистое, прибор молчит); вызывать раз в кадр (60 к/с)
 export function updateGeiger(tox, now = performance.now()) {
-  const ctx = getCtx();
+  const ctx = setup();
   if (!ctx || ctx.state !== 'running') return;
-  // фоновые приступы: раз в полторы-четыре минуты, пару секунд
-  if (!nextEpisode) nextEpisode = now + GAP + Math.random() * 60000;
-  if (now > nextEpisode) {
-    episodeUntil = now + 1500 + Math.random() * 2500;
-    episodeRate = 2 + Math.random() * 6;
-    nextEpisode = now + GAP + Math.random() * 120000;   // раз в 2–4 мин
+
+  // включён ли прибор здесь: плавный заход и уход громкости
+  const want = tox > 0.05;
+  if (want !== on) {
+    on = want;
+    out.gain.cancelScheduledValues(ctx.currentTime);
+    out.gain.setTargetAtTime(on ? VOL : 0, ctx.currentTime, on ? 0.35 : 0.8);
   }
-  let rate = tox > 0.04 ? 0.4 + Math.pow(tox, 1.5) * 28 : 0;      // щелчков в секунду
-  if (now < episodeUntil) rate = Math.max(rate, episodeRate);
-  if (rate <= 0) return;
+
+  // волна: случайное блуждание множителя 0.35..1.5, период — секунды
+  driftV += (Math.random() - 0.5) * 0.004 - (drift - 0.9) * 0.0012;
+  driftV *= 0.985;
+  drift = Math.max(0.35, Math.min(1.5, drift + driftV));
+
+  // приступ: разгон и спад по синусу, только там, где прибор работает
+  if (!nextSurge) nextSurge = now + GAP * (1 + Math.random() * 0.5);
+  if (on && now > nextSurge) {
+    surgeAt = now; surgeLen = 3000 + Math.random() * 4000; surgePeak = 6 + Math.random() * 10;
+    nextSurge = now + GAP + Math.random() * GAP;      // раз в 2–4 мин
+  }
+  let surge = 0;
+  if (now - surgeAt < surgeLen) surge = Math.sin(Math.PI * (now - surgeAt) / surgeLen) * surgePeak;
+
+  // цель — от токсичности; к ней с инерцией: вверх ~1,5 с, вниз ~3 с
+  const target = on ? (0.3 + Math.pow(tox, 1.5) * 24) * drift + surge : 0;
+  rate += (target - rate) * (target > rate ? 0.011 : 0.0055);
+  if (rate < 0.02) { rate = 0; return; }
+
   // пуассон: сколько щелчков в этом кадре, и где внутри него
   const lam = rate / 60;
   let k = 0, p = Math.exp(-lam), s = p, u = Math.random();
   while (u > s && k < 8) { k++; p *= lam / k; s += p; }
-  for (let i = 0; i < k; i++) click(ctx.currentTime + Math.random() / 60);
+  for (let i = 0; i < k; i++) click(ctx, ctx.currentTime + Math.random() / 60);
 }

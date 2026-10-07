@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='89150c6 · 2026-10-07';console.log('[оттиск]', '89150c6 · 2026-10-07');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='27f9b6e · 2026-10-07';console.log('[оттиск]', '27f9b6e · 2026-10-07');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -3479,7 +3479,7 @@ System.register("world/stumble", ["audio/audio", "world/disc"], function (export
 });
 System.register("audio/geiger", ["audio/audio"], function (exports_18, context_18) {
     "use strict";
-    var audio_js_2, out, clickBuf, GAP, episodeUntil, episodeRate, nextEpisode;
+    var audio_js_2, VOL, GAP, out, clickBuf, on, rate, drift, driftV, surgeAt, surgeLen, surgePeak, nextSurge;
     var __moduleName = context_18 && context_18.id;
     function setup() {
         const ctx = audio_js_2.getCtx();
@@ -3487,7 +3487,7 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
             return null;
         if (!out) {
             out = ctx.createGain();
-            out.gain.value = 0.4;
+            out.gain.value = 0;
             out.connect(ctx.destination);
             // щелчок: 5 мс шума с резким спадом
             const n = Math.floor(ctx.sampleRate * 0.005);
@@ -3498,10 +3498,7 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
         }
         return ctx;
     }
-    function click(when) {
-        const ctx = setup();
-        if (!ctx || ctx.state !== 'running')
-            return;
+    function click(ctx, when) {
         const src = ctx.createBufferSource();
         src.buffer = clickBuf;
         const bp = ctx.createBiquadFilter();
@@ -3509,30 +3506,47 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
         bp.frequency.value = 2400 + Math.random() * 1800;
         bp.Q.value = 0.9;
         const g = ctx.createGain();
-        g.gain.value = 0.07 + Math.random() * 0.09;
+        g.gain.value = 0.06 + Math.random() * 0.07;
         src.connect(bp);
         bp.connect(g);
         g.connect(out);
         src.start(when);
     }
-    // tox: 0..1 у ног; вызывать раз в кадр (60 к/с)
+    // tox: 0..1 у ног (0 — место чистое, прибор молчит); вызывать раз в кадр (60 к/с)
     function updateGeiger(tox, now = performance.now()) {
-        const ctx = audio_js_2.getCtx();
+        const ctx = setup();
         if (!ctx || ctx.state !== 'running')
             return;
-        // фоновые приступы: раз в полторы-четыре минуты, пару секунд
-        if (!nextEpisode)
-            nextEpisode = now + GAP + Math.random() * 60000;
-        if (now > nextEpisode) {
-            episodeUntil = now + 1500 + Math.random() * 2500;
-            episodeRate = 2 + Math.random() * 6;
-            nextEpisode = now + GAP + Math.random() * 120000; // раз в 2–4 мин
+        // включён ли прибор здесь: плавный заход и уход громкости
+        const want = tox > 0.05;
+        if (want !== on) {
+            on = want;
+            out.gain.cancelScheduledValues(ctx.currentTime);
+            out.gain.setTargetAtTime(on ? VOL : 0, ctx.currentTime, on ? 0.35 : 0.8);
         }
-        let rate = tox > 0.04 ? 0.4 + Math.pow(tox, 1.5) * 28 : 0; // щелчков в секунду
-        if (now < episodeUntil)
-            rate = Math.max(rate, episodeRate);
-        if (rate <= 0)
+        // волна: случайное блуждание множителя 0.35..1.5, период — секунды
+        driftV += (Math.random() - 0.5) * 0.004 - (drift - 0.9) * 0.0012;
+        driftV *= 0.985;
+        drift = Math.max(0.35, Math.min(1.5, drift + driftV));
+        // приступ: разгон и спад по синусу, только там, где прибор работает
+        if (!nextSurge)
+            nextSurge = now + GAP * (1 + Math.random() * 0.5);
+        if (on && now > nextSurge) {
+            surgeAt = now;
+            surgeLen = 3000 + Math.random() * 4000;
+            surgePeak = 6 + Math.random() * 10;
+            nextSurge = now + GAP + Math.random() * GAP; // раз в 2–4 мин
+        }
+        let surge = 0;
+        if (now - surgeAt < surgeLen)
+            surge = Math.sin(Math.PI * (now - surgeAt) / surgeLen) * surgePeak;
+        // цель — от токсичности; к ней с инерцией: вверх ~1,5 с, вниз ~3 с
+        const target = on ? (0.3 + Math.pow(tox, 1.5) * 24) * drift + surge : 0;
+        rate += (target - rate) * (target > rate ? 0.011 : 0.0055);
+        if (rate < 0.02) {
+            rate = 0;
             return;
+        }
         // пуассон: сколько щелчков в этом кадре, и где внутри него
         const lam = rate / 60;
         let k = 0, p = Math.exp(-lam), s = p, u = Math.random();
@@ -3542,7 +3556,7 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
             s += p;
         }
         for (let i = 0; i < k; i++)
-            click(ctx.currentTime + Math.random() / 60);
+            click(ctx, ctx.currentTime + Math.random() / 60);
     }
     exports_18("updateGeiger", updateGeiger);
     return {
@@ -3552,9 +3566,12 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
             }
         ],
         execute: function () {
-            out = null, clickBuf = null;
-            GAP = 120000; // фоновый приступ — не чаще раза в 120 с
-            episodeUntil = 0, episodeRate = 0, nextEpisode = 0;
+            VOL = 0.2; // общая громкость прибора (было 0.4)
+            GAP = 120000; // приступ — не чаще раза в 120 с
+            out = null, clickBuf = null, on = false;
+            rate = 0; // текущая частота, щелчков в секунду
+            drift = 1, driftV = 0; // волна: медленно плывущий множитель
+            surgeAt = 0, surgeLen = 0, surgePeak = 0, nextSurge = 0;
         }
     };
 });
@@ -38289,7 +38306,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ink_js_2.ink.update();
         const st = plateStorm();
         plate_js_3.plate.update(player.x + 6, player.y + 24, st);
-        const tx = toxic_js_1.toxic.update(player.x + 6, player.y + 24, locations_js_4.locations, (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop()) ? 0.9 : 0);
+        // токсичная окраина городка — фон для прибора; брейнрот — почти предел
+        const toxBase = (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop()) ? 0.9 : zoneAmbient_js_1.getZone(player.x + 6, player.y + 24) === 'toxic' ? 0.18 : 0;
+        const tx = toxic_js_1.toxic.update(player.x + 6, player.y + 24, locations_js_4.locations, toxBase);
         geiger_js_1.updateGeiger(tx);
         lofi_js_1.lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= disc_js_21.RINGS ? 0.25 : 0)));
     }
