@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════
 import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
+import { plate } from './plate.js';
 
 const NIGHT = [13, 11, 10], CRIMSON = [107, 15, 26], CINNABAR = [194, 59, 43], BONE = [217, 207, 184];
 const HOT = [226, 96, 70];          // киноварь на свету — светлее, но ещё красная
@@ -23,7 +24,7 @@ let override = null;                    // ручной регулятор (кл
 let flood = 0, band = 1, groupA = 0;    // плавные доли ступеней
 let group = [];                         // вещи, отпечатанные красным
 let pulseUntil = 0, pulseLevel = 3;     // короткий острый момент
-let shownAt = -1e9;                     // подпись регулятора
+let shownAt = -1e9, noteTxt = '';       // подпись регулятора
 let small = null, smallCtx = null, groupC = null, groupCtx = null;
 
 try {
@@ -48,6 +49,7 @@ export const ink = {
   pulse(ms, n = 3) { pulseUntil = performance.now() + ms; pulseLevel = n; },
   setGroup(locs) { group = locs || []; },
   cycle() {
+    noteTxt = '';
     override = override === null ? 0 : override >= 3 ? null : override + 1;
     shownAt = performance.now();
   },
@@ -82,7 +84,7 @@ export const ink = {
     g.addColorStop(0, '#6b0f1a'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.fillRect(mx - 42, my - 42, 84, 84);
     // диск — ровная плашка, без бликов; приводка гуляет на точку
-    const off = (Math.floor(t / 97) % 7 === 0) ? 1 : 0;
+    const off = plate.misreg() + ((Math.floor(t / 97) % 7 === 0) ? 1 : 0);
     ctx.globalAlpha = 0.9 * a;
     ctx.fillStyle = '#C23B2B';
     ctx.beginPath(); ctx.arc(mx + off, my, 9, 0, Math.PI * 2); ctx.fill();
@@ -132,12 +134,13 @@ export const ink = {
     }
     // группа: красная форма со сдвигом приводки
     if (groupA > 0 && groupC) {
+      const mr = Math.max(1, plate.misreg());
       ctx.globalAlpha = groupA;
       ctx.globalCompositeOperation = 'multiply';
-      ctx.drawImage(groupC, 0, 0, W, H, s, 0, W * s, H * s);
+      ctx.drawImage(groupC, 0, 0, W, H, mr * s, 0, W * s, H * s);
       ctx.globalCompositeOperation = 'screen';
       ctx.globalAlpha = groupA * 0.55;
-      ctx.drawImage(groupC, 0, 0, W, H, s, 0, W * s, H * s);
+      ctx.drawImage(groupC, 0, 0, W, H, mr * s, 0, W * s, H * s);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
@@ -181,7 +184,7 @@ export const ink = {
     const age = performance.now() - shownAt;
     if (age > 2200) return;
     const L = this.effective();
-    const txt = override === null
+    const txt = noteTxt ? noteTxt : override === null
       ? `ВТОРАЯ КРАСКА · АВТО · ${INK_NAMES[L]}${reason ? ' — ' + reason : ''}`
       : `ВТОРАЯ КРАСКА · ${L} · ${INK_NAMES[L]} · ${COVER[L]}`;
     ctx.save();
@@ -195,6 +198,7 @@ export const ink = {
     ctx.restore();
   },
   tint() { return band; },            // доля красного в общей подкраске кадра
+  note(txt) { noteTxt = txt; shownAt = performance.now(); },
   getReason() { return reason; },
   isOverride() { return override !== null; },
 };

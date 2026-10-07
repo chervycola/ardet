@@ -7,6 +7,7 @@ import { camera } from './render/camera.js';
 import { lighting, lightParticles } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { ink } from './render/ink.js';
+import { plate } from './render/plate.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
@@ -367,13 +368,28 @@ function render() {
 // ═══ ВТОРАЯ КРАСКА: острые моменты ═══
 // норма — луна и полоса неба; осмотр печатает вещь (и её родню в кадре)
 // красным; огонь и брейнрот заливают воздух; за краем красное гаснет.
-layers.inkPass = (ctx, main) => ink.composite(ctx, main);
+let jesterFirstTalk = false;          // первая встреча с Шутом — острый момент
+const NO_PLATE = /[?&]noplate\b/.test(location.search);
+layers.inkPass = (ctx, main) => { ink.composite(ctx, main); if (!NO_PLATE) plate.composite(ctx); };
+// шторм пластины: непогода, молния, брейнрот; O (Щ) — проверка руками
+let stormTest = /[?&]storm\b/.test(location.search);
+function plateStorm() {
+  let st = 0;
+  if (weather.state !== 'clear') st += weather.intensity * (weather.state === 'sandstorm' ? 0.9 : 0.6);
+  if (weather.lightning > 28) st += 1;
+  if (isFrozen() || inBrainrotLoop()) st += 0.6;
+  if (stormTest) st += 1;
+  return Math.min(1, st);
+}
 function inkScene(camX, camY) {
   ink.beginFrame();
   const ring = ringAt(player.x + 6, player.y + 24);
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
   if (isFrozen() || inBrainrotLoop()) ink.want(3, 'брейнрот');
+  if (jesterFirstTalk && !state.is('dialogue') && !state.is('menu')) jesterFirstTalk = false;
+  if (jesterFirstTalk) ink.want(3, 'первый разговор с Шутом');
+  if (isEndingActive()) ink.want(3, 'финал');
   const focus = getActiveLoc();
   if (focus) ink.want(2, 'осмотр');
   // группа: вещь в фокусе (или, при ручной проверке, ближайшая постройка) и её родня в кадре
@@ -393,6 +409,7 @@ function inkScene(camX, camY) {
       : l.name === anchor.name))));
   } else if (ink.level !== 2) ink.setGroup([]);
   ink.update();
+  plate.update(player.x + 6, player.y + 24, plateStorm());
 }
 
 // Placeholder draw function — will be replaced with proper sprites
@@ -1093,6 +1110,7 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
 
 // ═══ EVENT HANDLERS ═══
 events.on(E.NPC_TALK, (npcId) => {
+  if (npcId === 'jester' && !flags.talkedTo.has('jester')) jesterFirstTalk = true;
   flags.talkedTo.add(npcId);
   if (npcId === 'jester') discoverGate('gate_europe');
 });
@@ -1186,4 +1204,5 @@ window.onerror = (msg, src, line, col, err) => {
 document.addEventListener('keydown', e => {
   if (!state.is('game') || e.repeat) return;
   if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
+  if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') { stormTest = !stormTest; ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ'); }
 });

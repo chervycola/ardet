@@ -4,6 +4,7 @@
 import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
 import { ink } from './ink.js';
+import { plate } from './plate.js';
 
 export const postfx = {
   // Color grading: crimson shadows, gold highlights, indigo mids
@@ -55,7 +56,9 @@ export const postfx = {
   // CRT scanlines — subtle retro feel
   scanlines(ctx) {
     const vw = scaler.vw, vh = scaler.vh;
-    ctx.globalAlpha = 0.03;
+    const a = plate.scan();                  // развёртка — только у экранных эпох
+    if (a <= 0.001) return;
+    ctx.globalAlpha = a;
     ctx.fillStyle = '#000';
     for (let y = 0; y < vh; y += 3) {
       ctx.fillRect(0, y, vw, 1);
@@ -81,8 +84,10 @@ export const postfx = {
   chromaticAberration(ctx) {
     // Only when moving or brainrot
     const vw = scaler.vw, vh = scaler.vh;
-    const shift = 0.5 + Math.sin(t * 0.005) * 0.3;
-    ctx.globalAlpha = 0.03;
+    const st = plate.storm();                // расхождение красок — только в шторм
+    if (st <= 0.05) return;
+    const shift = 0.5 + Math.sin(t * 0.005) * 0.3 + st;
+    ctx.globalAlpha = 0.03 * st;
     ctx.globalCompositeOperation = 'screen';
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(-shift, 0, vw, vh);
@@ -97,7 +102,7 @@ export const postfx = {
     this.colorGrade(ctx);
     this.vignette(ctx);
     this.scanlines(ctx);
-    this.grain(ctx);
+    // зерно кладёт пластина (render/plate.js) — по эпохе
     this.chromaticAberration(ctx);
   },
 };
