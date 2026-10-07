@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3eca274 · 2026-10-07';console.log('[оттиск]', '3eca274 · 2026-10-07');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='89150c6 · 2026-10-07';console.log('[оттиск]', '89150c6 · 2026-10-07');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -641,6 +641,7 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
 //   ArdetAudio.unlock()        — в первом жесте (заставка)
 //   ArdetAudio.playOnce('title') — трек заставки (после него — эфир)
 //   ArdetAudio.setLocation(id) — локация сменилась (не обрывает)
+//   ArdetAudio.open(id)        — событие открыло трек (брейнрот): следующим
 //   ArdetFS.enter()            — на весь экран
 // ═══════════════════════════════════════════════════════════════════
 (function(){
@@ -657,6 +658,8 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
     forest:      { file:'forest.mp3',      name:'лес',        hz:42,  fifth:true,  noise:0.06 },
     toxic:       { file:'toxic.mp3',       name:'зона',       hz:70,  fifth:false, noise:0.10 },
     quarter:     { file:'quarter.mp3',     name:'квартал',    hz:38,  fifth:false, noise:0.07 },
+    // открывается падением в брейнрот (не локацией)
+    brainrot:    { file:'brainrot.mp3',    name:'брейнрот',   hz:41.2,fifth:false, noise:0.16 },
   };
   const VOL=0.5;                 // мастер; треки авторские — не душим
   const DRONE_LEN=90;            // сек «длительности» заглушки
@@ -844,6 +847,12 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
       locationId=id;
       if(unlocked && !current && !loadingId) startTrack(id); // тишина — начинаем
       // если что-то играет — доиграет; локация подхватится после
+    },
+    open(id){                           // событие открыло трек: в коллекцию + сыграть следующим
+      if(!TRACKS[id]) return;               // (текущий не обрывается — доиграет)
+      if(!collection.has(id)){ collection.add(id); saveCol(); ui.refresh(); }
+      radioPick=id;
+      if(unlocked && !current && !loadingId) startTrack(nextId());
     },
     get unlocked(){ return unlocked; },
     get nowPlaying(){ return current?current.id:null; },
@@ -2825,7 +2834,7 @@ System.register("render/postfx", ["render/scaler", "core/time", "render/ink", "r
 });
 System.register("render/lofi", ["render/scaler"], function (exports_14, context_14) {
     "use strict";
-    var scaler_js_7, KINDS, ev, next, snap, snapCtx, cyc, LOFI_NAMES, lofi;
+    var scaler_js_7, KINDS, ev, GAP, next, since, snap, snapCtx, cyc, LOFI_NAMES, lofi;
     var __moduleName = context_14 && context_14.id;
     function buf() {
         const W = scaler_js_7.scaler.vw, H = scaler_js_7.scaler.vh;
@@ -2856,21 +2865,24 @@ System.register("render/lofi", ["render/scaler"], function (exports_14, context_
         execute: function () {
             KINDS = ['hold', 'crush', 'tear', 'bits'];
             ev = null; // { kind, left, ... }
-            next = 2400 + Math.random() * 2400;
+            GAP = 7200; // не чаще раза в 120 с (кадров при 60 к/с)
+            next = GAP + Math.random() * 3600, since = 0;
             snap = null, snapCtx = null, cyc = -1;
             exports_14("LOFI_NAMES", LOFI_NAMES = { hold: 'стоп-кадр', crush: 'крупа', tear: 'разрыв', bits: 'разрядность' });
             exports_14("lofi", lofi = {
                 // pressure: 0..1 — шторм, яд, экранная эпоха поднимают частоту
                 update(pressure) {
+                    since++;
                     if (ev) {
                         if (--ev.left <= 0)
                             ev = null;
                         return;
                     }
-                    next -= 1 + pressure * 6;
-                    if (next <= 0) {
+                    next -= 1 + pressure * 2;
+                    if (next <= 0 && since >= GAP) {
                         start();
-                        next = 2700 + Math.random() * 3600; // база: раз в 45–105 с
+                        since = 0;
+                        next = GAP + Math.random() * 7200; // раз в 2–4 мин; давление сокращает ожидание, но не паузу
                     }
                 },
                 trigger(kind) { start(kind); return ev.kind; },
@@ -3211,7 +3223,7 @@ System.register("audio/audio", [], function (exports_16, context_16) {
 });
 System.register("world/stumble", ["audio/audio", "world/disc"], function (exports_17, context_17) {
     "use strict";
-    var audio_js_1, disc_js_3, DUR, walked, lastX, lastY, need, anim, dir, shake, buzzAt, stones, stumble;
+    var audio_js_1, disc_js_3, KINDS, GAP, walked, lastX, lastY, since, need, anim, dur, kind, dir, shake, buzzAt, cyc, stones, stumble;
     var __moduleName = context_17 && context_17.id;
     function thud() {
         const ctx = audio_js_1.getCtx();
@@ -3237,6 +3249,45 @@ System.register("world/stumble", ["audio/audio", "world/disc"], function (export
         s.connect(sg);
         sg.connect(ctx.destination);
         s.start(ctx.currentTime + 0.18);
+    }
+    function noise(ctx, sec, shape, type, freq, vol, at) {
+        const n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++)
+            d[i] = (Math.random() * 2 - 1) * shape(i / n, i);
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        s.buffer = b;
+        f.type = type;
+        f.frequency.value = freq;
+        g.gain.value = vol;
+        s.connect(f);
+        f.connect(g);
+        g.connect(ctx.destination);
+        s.start(ctx.currentTime + (at || 0));
+    }
+    function pitSound() {
+        const ctx = audio_js_1.getCtx();
+        if (!ctx || ctx.state !== 'running')
+            return;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(80, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(34, ctx.currentTime + 0.22);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.26);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.27);
+        // земля осыпается следом
+        noise(ctx, 0.5, k => Math.pow(1 - k, 2) * (0.4 + Math.random() * 0.6), 'lowpass', 700, 0.1, 0.12);
+    }
+    function fossilSound() {
+        const ctx = audio_js_1.getCtx();
+        if (!ctx || ctx.state !== 'running')
+            return;
+        // сухой хруст: несколько трещин подряд
+        noise(ctx, 0.22, (k, i) => Math.pow(1 - k, 3) * ((i % 900) < 120 ? 1 : 0.15), 'highpass', 1800, 0.14);
+        noise(ctx, 0.12, k => Math.pow(1 - k, 4), 'bandpass', 900, 0.08, 0.09);
     }
     function buzz() {
         try {
@@ -3279,15 +3330,17 @@ System.register("world/stumble", ["audio/audio", "world/disc"], function (export
             }
         ],
         execute: function () {
-            DUR = 26; // кадров на рывок и выпрямление
-            walked = 0, lastX = null, lastY = null;
-            need = 3000 + Math.random() * 5000;
-            anim = 0, dir = 1, shake = 0, buzzAt = 0;
-            stones = [];
+            KINDS = { stone: { dur: 26, name: 'камень' }, pit: { dur: 50, name: 'яма' }, fossil: { dur: 32, name: 'окаменелая какаха' } };
+            GAP = 7200; // не чаще раза в 120 с (кадров при 60 к/с)
+            walked = 0, lastX = null, lastY = null, since = 0;
+            need = 2000 + Math.random() * 4000;
+            anim = 0, dur = 26, kind = 'stone', dir = 1, shake = 0, buzzAt = 0, cyc = -1;
+            stones = []; // следы: камешки, ямы, окаменелости
             exports_17("stumble", stumble = {
                 // вызывать раз в кадр до движения; true — пока спотыкаешься (ход заблокирован)
                 update(player) {
                     const px = player.x, py = player.y;
+                    since++;
                     if (lastX !== null && player.moving && !disc_js_3.inCore(px + 6, py + 24))
                         walked += Math.hypot(px - lastX, py - lastY);
                     lastX = px;
@@ -3312,41 +3365,111 @@ System.register("world/stumble", ["audio/audio", "world/disc"], function (export
                         anim--;
                         return true;
                     }
-                    if (walked > need && player.moving) {
+                    if (walked > need && since >= GAP && player.moving) {
                         this.trigger(player);
                         return true;
                     }
                     return false;
                 },
-                trigger(player) {
+                // k — вид (для проверки руками); без него — по жребию: камень чаще
+                trigger(player, k) {
                     walked = 0;
-                    need = 3000 + Math.random() * 5000;
-                    anim = DUR;
+                    since = 0;
+                    need = 2000 + Math.random() * 4000;
+                    const r = Math.random();
+                    kind = k || (r < 0.5 ? 'stone' : r < 0.75 ? 'pit' : 'fossil');
+                    dur = KINDS[kind].dur;
+                    anim = dur;
                     dir = player.dir || 1;
-                    stones.push({ x: player.x + 6 + dir * 5, y: player.y + 23, vx: dir * 1.6, roll: 14, life: 900 });
-                    thud();
-                    buzzAt = 40 + (Math.random() * 30 | 0);
+                    const fx = player.x + 6, fy = player.y + 23;
+                    if (kind === 'stone') {
+                        stones.push({ kind, x: fx + dir * 5, y: fy, vx: dir * 1.6, roll: 14, life: 900 });
+                        thud();
+                    }
+                    if (kind === 'pit') {
+                        stones.push({ kind, x: fx, y: fy + 1, vx: 0, roll: 0, life: 900 });
+                        pitSound();
+                    }
+                    if (kind === 'fossil') {
+                        stones.push({ kind, x: fx + dir * 8, y: fy + 1, vx: 0, roll: 0, life: 900 });
+                        fossilSound();
+                    }
+                    buzzAt = (kind === 'pit' ? 60 : 40) + (Math.random() * 30 | 0);
+                    return KINDS[kind].name;
                 },
-                // смещение фигуры: клевок вперёд и вниз, потом выпрямиться
+                // по очереди — для проверки руками
+                cycle(player) { cyc = (cyc + 1) % 3; return this.trigger(player, ['stone', 'pit', 'fossil'][cyc]); },
+                // смещение фигуры: камень — клевок вперёд; яма — просесть и выбраться; какаха — нога едет назад
                 offset() {
                     if (anim <= 0)
                         return { x: 0, y: 0 };
-                    const k = 1 - anim / DUR;
+                    const k = 1 - anim / dur;
+                    if (kind === 'pit') {
+                        const p = k < 0.15 ? k / 0.15 : k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
+                        return { x: Math.round(dir * p), y: Math.round(5 * p) };
+                    }
                     const p = k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75;
+                    if (kind === 'fossil')
+                        return { x: Math.round(-dir * 3 * p), y: Math.round(p) };
                     return { x: Math.round(dir * 3 * p), y: Math.round(2 * p) };
                 },
                 // дрожь кадра, пока жужжит телефон
                 shake() { return shake > 0 ? { x: (shake % 4 < 2 ? 1 : -1), y: 0 } : { x: 0, y: 0 }; },
+                // пока проседаешь в яму — её край рисуется поверх фигуры: ноги в яме
+                drawFront(ctx) {
+                    if (anim <= 0 || kind !== 'pit')
+                        return;
+                    const s = stones[stones.length - 1];
+                    if (!s || s.kind !== 'pit')
+                        return;
+                    const x = Math.round(s.x), y = Math.round(s.y);
+                    ctx.fillStyle = '#0D0B0A';
+                    ctx.fillRect(x - 6, y - 1, 13, 4);
+                    ctx.fillStyle = '#4A3426';
+                    ctx.fillRect(x - 6, y + 3, 13, 1);
+                    ctx.fillRect(x - 7, y, 1, 2);
+                    ctx.fillRect(x + 7, y, 1, 2);
+                },
                 drawStones(ctx) {
                     for (const s of stones) {
-                        const a = Math.min(1, s.life / 60);
+                        const a = Math.min(1, s.life / 60), x = Math.round(s.x), y = Math.round(s.y);
                         ctx.globalAlpha = a;
-                        ctx.fillStyle = '#0D0B0A';
-                        ctx.fillRect(Math.round(s.x) - 1, Math.round(s.y) + 1, 4, 1);
-                        ctx.fillStyle = '#8A8D8F';
-                        ctx.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 1, 3, 2);
-                        ctx.fillStyle = '#D9CFB8';
-                        ctx.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 1, 1, 1);
+                        if (s.kind === 'pit') { // яма: тёмный овал с кромкой
+                            ctx.fillStyle = '#0D0B0A';
+                            ctx.fillRect(x - 5, y - 1, 11, 3);
+                            ctx.fillRect(x - 4, y - 2, 9, 5);
+                            ctx.fillStyle = '#4A3426';
+                            ctx.fillRect(x - 5, y - 2, 1, 1);
+                            ctx.fillRect(x + 5, y - 2, 1, 1);
+                            ctx.fillRect(x - 3, y + 3, 7, 1);
+                        }
+                        else if (s.kind === 'fossil') { // окаменелость: витой конус, умбра с костяным бликом
+                            ctx.fillStyle = '#0D0B0A';
+                            ctx.fillRect(x - 3, y + 1, 7, 1);
+                            ctx.fillStyle = '#4A3426';
+                            ctx.fillRect(x - 3, y - 1, 7, 2);
+                            ctx.fillRect(x - 2, y - 3, 5, 2);
+                            ctx.fillRect(x - 1, y - 5, 3, 2);
+                            ctx.fillRect(x, y - 6, 1, 1);
+                            ctx.fillStyle = '#8A8D8F';
+                            ctx.fillRect(x - 2, y - 1, 5, 1);
+                            ctx.fillRect(x - 1, y - 3, 3, 1);
+                            ctx.fillStyle = '#D9CFB8';
+                            ctx.fillRect(x - 1, y - 5, 1, 1);
+                            if (s.life > 840) {
+                                ctx.fillStyle = '#D9CFB8';
+                                ctx.fillRect(x + 3, y - 2, 1, 1);
+                                ctx.fillRect(x - 4, y - 3, 1, 1);
+                            } // крошки хруста
+                        }
+                        else {
+                            ctx.fillStyle = '#0D0B0A';
+                            ctx.fillRect(x - 1, y + 1, 4, 1);
+                            ctx.fillStyle = '#8A8D8F';
+                            ctx.fillRect(x - 1, y - 1, 3, 2);
+                            ctx.fillStyle = '#D9CFB8';
+                            ctx.fillRect(x - 1, y - 1, 1, 1);
+                        }
                     }
                     ctx.globalAlpha = 1;
                 },
@@ -3356,7 +3479,7 @@ System.register("world/stumble", ["audio/audio", "world/disc"], function (export
 });
 System.register("audio/geiger", ["audio/audio"], function (exports_18, context_18) {
     "use strict";
-    var audio_js_2, out, clickBuf, episodeUntil, episodeRate, nextEpisode;
+    var audio_js_2, out, clickBuf, GAP, episodeUntil, episodeRate, nextEpisode;
     var __moduleName = context_18 && context_18.id;
     function setup() {
         const ctx = audio_js_2.getCtx();
@@ -3399,11 +3522,11 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
             return;
         // фоновые приступы: раз в полторы-четыре минуты, пару секунд
         if (!nextEpisode)
-            nextEpisode = now + 40000 + Math.random() * 60000;
+            nextEpisode = now + GAP + Math.random() * 60000;
         if (now > nextEpisode) {
             episodeUntil = now + 1500 + Math.random() * 2500;
             episodeRate = 2 + Math.random() * 6;
-            nextEpisode = now + 90000 + Math.random() * 150000;
+            nextEpisode = now + GAP + Math.random() * 120000; // раз в 2–4 мин
         }
         let rate = tox > 0.04 ? 0.4 + Math.pow(tox, 1.5) * 28 : 0; // щелчков в секунду
         if (now < episodeUntil)
@@ -3430,6 +3553,7 @@ System.register("audio/geiger", ["audio/audio"], function (exports_18, context_1
         ],
         execute: function () {
             out = null, clickBuf = null;
+            GAP = 120000; // фоновый приступ — не чаще раза в 120 с
             episodeUntil = 0, episodeRate = 0, nextEpisode = 0;
         }
     };
@@ -38043,6 +38167,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 worldCtx.translate(so.x, so.y);
                 player_js_1.drawPlayer(player);
                 worldCtx.restore();
+                stumble_js_1.stumble.drawFront(worldCtx);
                 continue;
             }
             if (it.prop) {
@@ -39365,6 +39490,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }
             });
             // ═══ EVENT HANDLERS ═══
+            // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)
+            events_js_8.events.on('brainrot.freeze', () => { if (window.ArdetAudio && window.ArdetAudio.open)
+                window.ArdetAudio.open('brainrot'); });
+            events_js_8.events.on('brainrot.hook', () => { if (window.ArdetAudio && window.ArdetAudio.open)
+                window.ArdetAudio.open('brainrot'); });
             events_js_8.events.on(events_js_8.E.NPC_TALK, (npcId) => {
                 if (npcId === 'jester' && !flags.talkedTo.has('jester'))
                     jesterFirstTalk = true;
@@ -39490,7 +39620,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     ink_js_2.ink.note(toxic_js_1.toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');
                 }
                 if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л')
-                    stumble_js_1.stumble.trigger(player);
+                    ink_js_2.ink.note('ОСТУПИЛСЯ · ' + stumble_js_1.stumble.cycle(player));
                 if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') {
                     stormTest = !stormTest;
                     ink_js_2.ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ');

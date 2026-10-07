@@ -4,13 +4,14 @@
 //   крупа      — разрешение проседает втрое
 //   разрыв     — полосы строк съезжают вбок
 //   разрядность— цвета сжимаются до восьми ступеней на канал (полосы вместо переходов)
-// Сбои редкие; чаще в шторм, в яде и в экранных эпохах.
+// Сбои редкие: не чаще раза в 120 с; в шторм, в яде и в экранных эпохах — ближе к этому пределу.
 // ═══════════════════════════════════════
 import { scaler } from './scaler.js';
 
 const KINDS = ['hold', 'crush', 'tear', 'bits'];
 let ev = null;                       // { kind, left, ... }
-let next = 2400 + Math.random() * 2400;
+const GAP = 7200;                    // не чаще раза в 120 с (кадров при 60 к/с)
+let next = GAP + Math.random() * 3600, since = 0;
 let snap = null, snapCtx = null, cyc = -1;
 export const LOFI_NAMES = { hold: 'стоп-кадр', crush: 'крупа', tear: 'разрыв', bits: 'разрядность' };
 
@@ -36,11 +37,12 @@ function start(kind) {
 export const lofi = {
   // pressure: 0..1 — шторм, яд, экранная эпоха поднимают частоту
   update(pressure) {
+    since++;
     if (ev) { if (--ev.left <= 0) ev = null; return; }
-    next -= 1 + pressure * 6;
-    if (next <= 0) {
-      start();
-      next = 2700 + Math.random() * 3600;          // база: раз в 45–105 с
+    next -= 1 + pressure * 2;
+    if (next <= 0 && since >= GAP) {
+      start(); since = 0;
+      next = GAP + Math.random() * 7200;           // раз в 2–4 мин; давление сокращает ожидание, но не паузу
     }
   },
   trigger(kind) { start(kind); return ev.kind; },

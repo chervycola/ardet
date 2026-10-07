@@ -13,6 +13,7 @@
 //   ArdetAudio.unlock()        — в первом жесте (заставка)
 //   ArdetAudio.playOnce('title') — трек заставки (после него — эфир)
 //   ArdetAudio.setLocation(id) — локация сменилась (не обрывает)
+//   ArdetAudio.open(id)        — событие открыло трек (брейнрот): следующим
 //   ArdetFS.enter()            — на весь экран
 // ═══════════════════════════════════════════════════════════════════
 (function(){
@@ -29,6 +30,8 @@
     forest:      { file:'forest.mp3',      name:'лес',        hz:42,  fifth:true,  noise:0.06 },
     toxic:       { file:'toxic.mp3',       name:'зона',       hz:70,  fifth:false, noise:0.10 },
     quarter:     { file:'quarter.mp3',     name:'квартал',    hz:38,  fifth:false, noise:0.07 },
+    // открывается падением в брейнрот (не локацией)
+    brainrot:    { file:'brainrot.mp3',    name:'брейнрот',   hz:41.2,fifth:false, noise:0.16 },
   };
   const VOL=0.5;                 // мастер; треки авторские — не душим
   const DRONE_LEN=90;            // сек «длительности» заглушки
@@ -216,6 +219,12 @@
       locationId=id;
       if(unlocked && !current && !loadingId) startTrack(id); // тишина — начинаем
       // если что-то играет — доиграет; локация подхватится после
+    },
+    open(id){                           // событие открыло трек: в коллекцию + сыграть следующим
+      if(!TRACKS[id]) return;               // (текущий не обрывается — доиграет)
+      if(!collection.has(id)){ collection.add(id); saveCol(); ui.refresh(); }
+      radioPick=id;
+      if(unlocked && !current && !loadingId) startTrack(nextId());
     },
     get unlocked(){ return unlocked; },
     get nowPlaying(){ return current?current.id:null; },

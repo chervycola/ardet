@@ -302,6 +302,7 @@ function render() {
       worldCtx.save(); worldCtx.translate(so.x, so.y);
       drawPlayer(player);
       worldCtx.restore();
+      stumble.drawFront(worldCtx);
       continue;
     }
     if (it.prop) { it.prop.draw(worldCtx); continue; }
@@ -1134,6 +1135,9 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
 });
 
 // ═══ EVENT HANDLERS ═══
+// падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)
+events.on('brainrot.freeze', () => { if (window.ArdetAudio && window.ArdetAudio.open) window.ArdetAudio.open('brainrot'); });
+events.on('brainrot.hook', () => { if (window.ArdetAudio && window.ArdetAudio.open) window.ArdetAudio.open('brainrot'); });
 events.on(E.NPC_TALK, (npcId) => {
   if (npcId === 'jester' && !flags.talkedTo.has('jester')) jesterFirstTalk = true;
   flags.talkedTo.add(npcId);
@@ -1234,6 +1238,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') {
     toxic.setTest(!toxic.isTest()); ink.note(toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');
   }
-  if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л') stumble.trigger(player);
+  if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л') ink.note('ОСТУПИЛСЯ · ' + stumble.cycle(player));
   if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') { stormTest = !stormTest; ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ'); }
 });

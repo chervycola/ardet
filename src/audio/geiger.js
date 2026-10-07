@@ -1,10 +1,12 @@
 // ═══════════════════════════════════════
 // СЧЁТЧИК ГЕЙГЕРА — щелчки, частота растёт с токсичностью места.
-// Иногда трещит и там, где чисто: прибор старый, фон — везде.
+// Иногда (не чаще раза в 120 с) трещит и там, где чисто: прибор старый, фон — везде.
+// В ядовитых местах щёлкает непрерывно — это не событие, а показания.
 // ═══════════════════════════════════════
 import { getCtx } from './audio.js';
 
 let out = null, clickBuf = null;
+const GAP = 120000;                 // фоновый приступ — не чаще раза в 120 с
 let episodeUntil = 0, episodeRate = 0, nextEpisode = 0;
 
 function setup() {
@@ -43,11 +45,11 @@ export function updateGeiger(tox, now = performance.now()) {
   const ctx = getCtx();
   if (!ctx || ctx.state !== 'running') return;
   // фоновые приступы: раз в полторы-четыре минуты, пару секунд
-  if (!nextEpisode) nextEpisode = now + 40000 + Math.random() * 60000;
+  if (!nextEpisode) nextEpisode = now + GAP + Math.random() * 60000;
   if (now > nextEpisode) {
     episodeUntil = now + 1500 + Math.random() * 2500;
     episodeRate = 2 + Math.random() * 6;
-    nextEpisode = now + 90000 + Math.random() * 150000;
+    nextEpisode = now + GAP + Math.random() * 120000;   // раз в 2–4 мин
   }
   let rate = tox > 0.04 ? 0.4 + Math.pow(tox, 1.5) * 28 : 0;      // щелчков в секунду
   if (now < episodeUntil) rate = Math.max(rate, episodeRate);
