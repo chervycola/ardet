@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
+import { ink } from './ink.js';
 
 export const postfx = {
   // Color grading: crimson shadows, gold highlights, indigo mids
@@ -11,7 +12,7 @@ export const postfx = {
 
     // Layer 1: warm crimson in shadows
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.06;
+    ctx.globalAlpha = 0.06 * ink.tint();     // гаснет вместе со второй краской
     ctx.fillStyle = '#6b1a1a';
     ctx.fillRect(0, 0, vw, vh);
     ctx.globalAlpha = 1;
@@ -46,7 +47,7 @@ export const postfx = {
     // Slight crimson edge (inner ring)
     const grd2 = ctx.createRadialGradient(vw / 2, vh / 2, vw * 0.5, vw / 2, vh / 2, vw * 0.9);
     grd2.addColorStop(0, 'rgba(0,0,0,0)');
-    grd2.addColorStop(1, 'rgba(107,15,26,0.08)');
+    grd2.addColorStop(1, `rgba(107,15,26,${0.08 * ink.tint()})`);
     ctx.fillStyle = grd2;
     ctx.fillRect(0, 0, vw, vh);
   },

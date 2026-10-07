@@ -79,6 +79,9 @@ export const layers = {
     ctx.drawImage(this.canvas('fx'), 0, 0);
     ctx.globalCompositeOperation = 'source-over';
 
+    // вторая краска: красная форма поверх отпечатанного кадра, до интерфейса
+    if (this.inkPass) this.inkPass(ctx, this.main);
+
     // ui: normal, on top
     ctx.drawImage(this.canvas('ui'), 0, 0);
 

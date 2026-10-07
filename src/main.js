@@ -6,6 +6,7 @@ import { layers } from './render/layers.js';
 import { camera } from './render/camera.js';
 import { lighting, lightParticles } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
+import { ink } from './render/ink.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
@@ -42,7 +43,7 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, SHIFT_X, SHIFT_Y, OFF, trailPoint } from './world/disc.js';
+import { TOWN, RING_W, RINGS, SHIFT_X, SHIFT_Y, OFF, trailPoint, ringAt } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { drawArchLife } from './render/archlife.js';
@@ -261,8 +262,11 @@ function render() {
       tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
   }
 
+  // ── вторая краска: чего просит сцена ──
+  inkScene(camX, camY);
+
   // ── BG: atmosphere ──
-  drawBloodMoon(bgCtx, { x: camX, y: camY });
+  ink.drawMoon(bgCtx, { x: camX, y: camY });
   drawSmokeClouds(bgCtx, { x: camX, y: camY });
 
   // ── WORLD: locations + player ──
@@ -308,6 +312,10 @@ function render() {
 
   worldCtx.restore();
 
+  // группа второй краски — те же вещи, отдельным прогоном
+  ink.drawGroup((c, loc) => { setCtx(c); drawLocation(c, loc); }, camX, camY);
+  setCtx(worldCtx);
+
   // ── LIGHT: additive lighting ──
   if (lighting.sources[0]) {
     lighting.sources[0].x = player.x + 6;
@@ -339,6 +347,7 @@ function render() {
   screenMoss.update(player.moving);
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
+  ink.drawLabel(uiCtx);
 
   // ── POST: grading + vignette ──
   postfx.apply(postCtx);
@@ -353,6 +362,37 @@ function render() {
   }
 
   layers.composite();
+}
+
+// ═══ ВТОРАЯ КРАСКА: острые моменты ═══
+// норма — луна и полоса неба; осмотр печатает вещь (и её родню в кадре)
+// красным; огонь и брейнрот заливают воздух; за краем красное гаснет.
+layers.inkPass = (ctx, main) => ink.composite(ctx, main);
+function inkScene(camX, camY) {
+  ink.beginFrame();
+  const ring = ringAt(player.x + 6, player.y + 24);
+  if (ring === RINGS + 2) ink.want(0, 'за краем');
+  if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
+  if (isFrozen() || inBrainrotLoop()) ink.want(3, 'брейнрот');
+  const focus = getActiveLoc();
+  if (focus) ink.want(2, 'осмотр');
+  // группа: вещь в фокусе (или, при ручной проверке, ближайшая постройка) и её родня в кадре
+  let anchor = focus;
+  if (!anchor && ink.isOverride() && ink.level === 2) {
+    let bd = 1e9;
+    for (const l of locations) {
+      if (!l.archDraw) continue;
+      const d = Math.hypot(l.archX - player.x, l.archGy - player.y);
+      if (d < bd) { bd = d; anchor = l; }
+    }
+  }
+  if (anchor && ink.level === 2) {
+    const inView = l => l.x + l.w > camX && l.x < camX + scaler.vw && l.y + l.h > camY - 60 && l.y < camY + scaler.vh;
+    ink.setGroup(locations.filter(l => l === anchor || (inView(l) && (anchor.archDraw
+      ? l.archDraw && l.archRing === anchor.archRing && l.archSide === anchor.archSide
+      : l.name === anchor.name))));
+  } else if (ink.level !== 2) ink.setGroup([]);
+  ink.update();
 }
 
 // Placeholder draw function — will be replaced with proper sprites
@@ -1094,6 +1134,7 @@ events.on('location.use', (loc) => {
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }
+    ink.pulse(1600, 3);                      // выход из вне-времени — острый момент
     teleportWithFade(STREET_SPAWN.x, STREET_SPAWN.y, () => {
       // First-pass quiet line via the lore popup (dismissable, can't trap).
       if (consumeGatesLine()) {
@@ -1140,3 +1181,9 @@ window.onerror = (msg, src, line, col, err) => {
   document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:14px">ARDET ERROR:\n' + msg + '\nLine: ' + line + '\n\n' + (err && err.stack || '') + '</pre>';
 };
 // build 1776974120
+
+// Вторая краска — ручной регулятор для проверки: I (Ш) — авто → 0 → 1 → 2 → 3 → авто
+document.addEventListener('keydown', e => {
+  if (!state.is('game') || e.repeat) return;
+  if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
+});
