@@ -24,7 +24,10 @@ function noise2(x, y) {
   return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
 }
 
-const ANG0 = Math.random() * Math.PI * 2;    // откуда в этот раз преобладает
+// ?wind=0.8 — проверка руками: ветер не слабее этой силы и дует на восток
+let FORCE = null;
+try { const q = new URLSearchParams(location.search).get('wind'); if (q !== null && !isNaN(+q)) FORCE = Math.max(0, Math.min(1.5, +q)); } catch (e) {}
+const ANG0 = FORCE !== null ? 0 : Math.random() * Math.PI * 2;    // откуда в этот раз преобладает
 let step = 0, base = 0.22, swell = 1, ca = 1, sa = 0;
 
 export const wind = {
@@ -37,7 +40,7 @@ export const wind = {
   update(weatherState, intensity, ring, inCore) {
     step++;
     // направление гуляет на ±75° вокруг преобладающего, за минуты
-    this.ang = ANG0 + (noise2(step / 4200, 3.7) - 0.5) * 2.6;
+    this.ang = ANG0 + (noise2(step / 4200, 3.7) - 0.5) * (FORCE !== null ? 0.6 : 2.6);
     ca = Math.cos(this.ang); sa = Math.sin(this.ang);
     // сила: погода, затем место
     let target = 0.1 + 0.3 * noise2(step / 2600, 9.1);
@@ -46,6 +49,7 @@ export const wind = {
     if (ring === RINGS + 1) target += 0.2;                 // огонь тянет воздух
     if (ring >= RINGS + 2) target = Math.max(target, 0.55); // за краем дует всегда
     if (inCore) target *= 0.55;                            // у костра тише
+    if (FORCE !== null) target = Math.max(target, FORCE);
     base += (target - base) * 0.004;                       // ~4 с на перемену
     // общий набег — весь кадр то сильнее, то слабее (секунды)
     swell = 0.82 + 0.36 * noise2(step / 260, 5.5);

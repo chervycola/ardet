@@ -16,6 +16,8 @@ import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { updateWindSound } from './audio/windSound.js';
+import { stepHangs } from './world/hang.js';
+import { stepMechs, crankWell } from './world/mechanisms.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
@@ -414,6 +416,8 @@ function stepFx() {
   wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
   updateWindSound(wind.at(player.x + 6, player.y + 10).s);
   stepGrass(player);
+  stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
+  stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
@@ -1214,6 +1218,8 @@ events.on(E.LORE_COLLECT, (item) => {
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
+  // колодец у котлована: крутить ворот (world/mechanisms.js)
+  if (actionKey === 'well_crank') { crankWell(`well:${loc.id}`); return; }
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }

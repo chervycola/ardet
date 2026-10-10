@@ -24,6 +24,8 @@
 // снегоход, кабельный барабан, тарелка · поддоны кирпича, ларёк, грибок.
 // Пиксель-арт: fillRect по целым; дуг нет.
 
+import { hang, tipOf, drawRope } from '../../world/hang.js';
+import { rotor } from '../../world/mechanisms.js';
 const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026',
   DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328',
@@ -270,12 +272,9 @@ function dataCenter(c, x, gy, t) {
   // ветряк: мачта, гондола, три лопасти
   const hx = L + 20, hy = G - 76;
   R(c, ASH, hx - 1, hy + 2, 2, G - hy - 2); R(c, BONE, hx - 1, hy + 2, 1, G - hy - 2); R(c, ASH, hx - 2, G - 6, 4, 6);
-  R(c, ASH, hx - 2, hy - 1, 7, 3);
-  R(c, ASH, hx, hy - 22, 1, 21);
-  hline(c, ASH, hx - 1, hy + 1, hx - 19, hy + 11);
-  hline(c, ASH, hx + 1, hy + 1, hx + 19, hy + 11);
-  R(c, BONE, hx - 1, hy - 1, 2, 2);
-  beacon(c, hx + 4, hy - 2, t, 10);
+  // ротор крутит ветер: разгоняется и выбегает не сразу, гондола ищет ветер
+  const rt = rotor(c, `rotor:${L}:${G}`, hx, hy, 20, { blade: ASH, hub: BONE, nac: ASH });
+  beacon(c, rt.bx, hy - 2, t, 10);
   // ангар
   R(c, CONC, L + 26, G - 30, 68, 30);
   R(c, BONE, L + 25, G - 32, 69, 2); R(c, BONE, L + 26, G - 30, 1, 30);
@@ -334,10 +333,13 @@ function unfinished(c, x, gy, t) {
   hline(c, ASH, L + 11, G - 111, L + 3, G - 105);
   R(c, CONC, L + 1, G - 103, 7, 5); R(c, ASH, L + 1, G - 103, 7, 1);
   R(c, STONE, L + 16, G - 103, 4, 4); R(c, ASH, L + 16, G - 103, 4, 1); R(c, N, L + 17, G - 102, 2, 2);   // кабина
-  // крюк и плита
-  R(c, ASH, L + 66, G - 105, 1, 21); R(c, STONE, L + 65, G - 84, 3, 2);
-  R(c, ASH, L + 61, G - 82, 5, 1); R(c, ASH, L + 66, G - 82, 5, 1);
-  R(c, CONC, L + 58, G - 81, 16, 4); R(c, BONE, L + 58, G - 81, 16, 1);
+  // крюк и плита на тросе: тяжёлая — ветер раскачивает её медленно и долго
+  const hk = hang(`crane:${L}:${G}`, L + 66, G - 105, 21, { segs: 3, sail: 0.02, damp: 0.997, gy: G, r: 8 });
+  drawRope(c, hk.pts, ASH);
+  const tp = tipOf(hk), kx = Math.round(tp.x), ky = Math.round(tp.y);
+  R(c, STONE, kx - 1, ky, 3, 2);                                       // крюк
+  R(c, ASH, kx - 5, ky + 2, 5, 1); R(c, ASH, kx, ky + 2, 5, 1);        // стропы
+  R(c, CONC, kx - 8, ky + 3, 16, 4); R(c, BONE, kx - 8, ky + 3, 16, 1);
   // забор из профнастила; на нём растяжка «дом готов»: светлое полотно,
   // на нём домик под небом пеплом — без букв
   R(c, STONE2, L + 34, G - 10, 58, 10); R(c, ASH, L + 34, G - 10, 58, 1);
@@ -848,10 +850,10 @@ export const ARCH = {
     { name: 'стеклянная башня', w: 46, h: 112, draw: glassTower },
   ],
   north: [
-    { name: 'серверный ангар', w: 94, h: 98, draw: dataCenter, life: { smoke: [[-13, -39], [31, -39]] } },
+    { name: 'серверный ангар', w: 94, h: 98, noFlip: true, draw: dataCenter, life: { smoke: [[-13, -39], [31, -39]] } },
   ],
   plain: [
-    { name: 'долгострой с краном', w: 92, h: 112, draw: unfinished, life: { birds: [[-1, 7, -71]] } },
+    { name: 'долгострой с краном', w: 92, h: 112, noFlip: true, draw: unfinished, life: { birds: [[-1, 7, -71]] } },
     { name: 'панельная башня', w: 52, h: 118, draw: panelTower },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },

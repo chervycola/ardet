@@ -4,6 +4,8 @@
 // эталоны и правка автора.
 // ═══════════════════════════════════════
 import { free, besideBuilding } from './aitraps.js';
+import { well } from './mechanisms.js';
+import { hang, tipOf } from './hang.js';
 
 const N = '#0D0B0A', K = '#D9CFB8', P = '#8A8D8F', V = '#C23B2B', D1 = '#15100c', D2 = '#241c14', D3 = '#2a2620', C1 = '#c8b89a';
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
@@ -37,15 +39,32 @@ function drawBoard(ctx, loc, t) {            // табло без времени
   R(ctx, x - 7, gy - 14, ((t >> 3) % 14) + 1, 1, P);          // бегущая строка
 }
 
-function drawWell(ctx, loc) {                // колодец с воротом, цепь блестит
+function drawWell(ctx, loc) {                // колодец с воротом: крутишь — ведро идёт вверх
   const x = loc.x + loc.w / 2, gy = loc.y + loc.h;
+  const m = well(`well:${loc.id}`);
   shadow(ctx, x, gy, 18);
-  R(ctx, x - 8, gy - 8, 16, 8, D2); R(ctx, x - 8, gy - 8, 16, 1, P);
   R(ctx, x - 7, gy - 20, 1, 12, D1); R(ctx, x + 6, gy - 20, 1, 12, D1);
   R(ctx, x - 8, gy - 21, 16, 2, D2); R(ctx, x - 4, gy - 17, 8, 2, D3);   // крыша и ворот
-  R(ctx, x + 7, gy - 17, 2, 1, D1);                                       // ручка
-  R(ctx, x, gy - 15, 1, 6, K);                                            // цепь до блеска
-  R(ctx, x - 1, gy - 10, 3, 2, P);                                        // ведро
+  R(ctx, x - 4 + ((((m.crank * 1.3) % 8) + 8) % 8 | 0), gy - 17, 1, 2, D1); // метка: барабан крутится
+  // ручка ходит по кругу
+  R(ctx, x + 4, gy - 16, 3, 1, D1);
+  R(ctx, x + 7 + Math.round(Math.cos(m.crank)), gy - 16 + Math.round(Math.sin(m.crank) * 2), 2, 1, D1);
+  // цепь до блеска и ведро на ней: длина цепи — от глубины, наверху качается
+  const top = gy - 15, rim = gy - 8, len = 1 + m.d * 26;
+  const b = hang(`wellb:${loc.id}`, x + 0.5, top, len, { sail: 0.02, damp: 0.993, gy, r: 2 });
+  b.len = len;
+  if (m.kick) { tipOf(b).x += 1.2; m.kick = false; }   // пришло наверх рывком — качнулось
+  const t = tipOf(b), bx = Math.round(t.x), by = Math.round(t.y);
+  const n = Math.max(1, by - top);
+  ctx.fillStyle = K;
+  for (let i = 0; i < n; i++) {
+    const cy = top + i;
+    if (cy >= rim) break;                               // ниже сруба цепь не видно
+    ctx.fillRect(Math.round(x + (bx - x) * i / n), cy, 1, 1);
+  }
+  for (let k = 0; k < 2; k++) if (by + k < rim) R(ctx, bx - 1, by + k, 3, 1, P);   // ведро
+  // сруб спереди — закрывает шахту
+  R(ctx, x - 8, gy - 8, 16, 8, D2); R(ctx, x - 8, gy - 8, 16, 1, P);
 }
 
 function drawNotice(ctx, loc) {              // столб с объявлением, отрывные язычки
@@ -67,6 +86,8 @@ const NAME = {
   luna_tag: 'бирка у костра', clock_nail: 'гвоздь от часов', clock_board: 'табло',
   kotlovan_well: 'колодец', kotlovan_notice: 'объявление на столбе',
 };
+// колодец: ворот можно крутить (world/mechanisms.js)
+const USE = { kotlovan_well: { useAction: 'well_crank', useLabel: '<i>↻</i>КРУТИТЬ ВОРОТ' } };
 const DRAW = { luna_tag: drawTag, clock_nail: drawNail, clock_board: drawBoard, kotlovan_well: drawWell, kotlovan_notice: drawNotice };
 
 // рядом с вещью-якорем: справа/слева на одной земле, не наезжая
@@ -83,7 +104,7 @@ function near(anchor, w, h, locations, gaps = [12, 26, 44, 64], dirs = [1, -1]) 
 export function buildThreads2(locations) {
   const add = (id, box) => {
     if (!box) return;
-    locations.push({ id, name: NAME[id], zone: 'street', ...box, look: LOOK[id], drawSelf: DRAW[id] });
+    locations.push({ id, name: NAME[id], zone: 'street', ...box, look: LOOK[id], drawSelf: DRAW[id], ...(USE[id] || {}) });
   };
   const fire = locations.find(l => l.id === 'campfire');
   if (fire) add('luna_tag', near(fire, 10, 16, locations, [16, 30, 44], [-1, 1]));   // от Шута — на другую сторону

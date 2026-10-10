@@ -4,6 +4,7 @@
 // Палитра старой игры; правило фонда: вещь стоит в тени, не подсвечивается.
 // ═══════════════════════════════════════
 
+import { hang, angleOf } from '../world/hang.js';
 const C = {
   dark: '#15100c', wood: '#241c14', wood2: '#3a2418', plank: '#3a2818',
   stone: '#3a3328', stone2: '#2a2620', brick: '#3a1c14', concrete: '#34302a',
@@ -525,9 +526,12 @@ const STREET = {
     ctx.fillStyle = C.wood;
     ctx.fillRect(x - 1, gy - 24, 3, 24);
     ctx.fillRect(x - 7, gy - 25, 15, 2);
+    // качается на перекладине — от ветра, от прохожего; звона нет: языка нет
+    const b = hang(`bellmute:${x}:${gy}`, x + 0.5, gy - 23, 4, { sail: 0.02, damp: 0.997, gy, r: 5 });
+    const s = Math.sin(angleOf(b));
     ctx.fillStyle = C.dark;
-    ctx.fillRect(x - 4, gy - 23, 9, 6);
-    ctx.fillRect(x - 5, gy - 18, 11, 2);
+    for (let k = 0; k < 6; k++) ctx.fillRect(x - 4 + Math.round(s * (k + 1)), gy - 23 + k, 9, 1);
+    ctx.fillRect(x - 5 + Math.round(s * 7), gy - 18, 11, 2);
     // языка нет — пусто под юбкой
     ctx.fillStyle = C.paper;                       // расписание звона
     ctx.fillRect(x + 5, gy - 12, 4, 5);

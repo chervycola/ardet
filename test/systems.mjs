@@ -259,6 +259,67 @@ setCtx(ctx);
   });
 }
 
+// ═══ ПОДВЕСЫ И МЕХАНИЗМЫ ═══
+{
+  const W = await imp('world/wind.js');
+  const H = await imp('world/hang.js');
+  const M = await imp('world/mechanisms.js');
+  const calm = () => { W.wind.s = 0; W.wind.x = 0; W.wind.y = 0; };
+  // прогнать подвес n шагов (каждый шаг «виден» — как при отрисовке)
+  const run = (key, len, n, opt, each) => {
+    for (let i = 0; i < n; i++) { const h = H.hang(key, 0, 0, len, opt); H.stepHangs(null); if (each) each(h, i); }
+    return H.hang(key, 0, 0, len, opt);
+  };
+  test('подвес: в штиль после толчка успокаивается и висит отвесно', () => {
+    H._reset(); calm();
+    const h = H.hang('t1', 0, 0, 10, { damp: 0.995 });
+    H.tipOf(h).x += 3;
+    run('t1', 10, 900, { damp: 0.995 });
+    const tp = H.tipOf(H.hang('t1', 0, 0, 10));
+    assert(Math.abs(tp.x) < 0.3, `не успокоился: x=${tp.x.toFixed(2)}`);
+    assert(Math.abs(tp.y - 10) < 0.3, `длина не держится: y=${tp.y.toFixed(2)}`);
+  });
+  test('подвес: длинный трос качается медленнее короткого (период ~ √длины)', () => {
+    H._reset(); calm();
+    const period = (key, len) => {
+      const h = H.hang(key, 0, 0, len, { damp: 1 });
+      H.tipOf(h).x += len * 0.2;
+      let last = null, crosses = [];
+      run(key, len, 1200, { damp: 1 }, (hh, i) => {
+        const x = H.tipOf(hh).x;
+        if (last !== null && last < 0 && x >= 0) crosses.push(i);
+        last = x;
+      });
+      return (crosses[crosses.length - 1] - crosses[0]) / (crosses.length - 1);
+    };
+    const r = period('long', 20) / period('short', 5);
+    assert(r > 1.7 && r < 2.3, `отношение периодов ${r.toFixed(2)} вместо ~2`);
+  });
+  test('подвес: ветер отводит его по ветру', () => {
+    H._reset(); calm();
+    W.wind.s = 0.6;                       // направление по умолчанию — на восток
+    const h = run('t3', 8, 600, { sail: 0.04 });
+    assert(H.tipOf(h).x > 0.5, `не отклонился: x=${H.tipOf(h).x.toFixed(2)}`);
+    calm();
+  });
+  test('маховик: ремень без проскальзывания — шкив быстрее в R/r раз', () => {
+    for (let i = 0; i < 240; i++) { M.flywheel('fw', { R: 8, r: 3, puff: null }); M.stepMechs(); }
+    const m = M.flywheel('fw', { R: 8, r: 3, puff: null });
+    const k = m.thp / m.th;
+    assert(Math.abs(k - 8 / 3) < 0.01, `передаточное ${k.toFixed(3)} вместо 2.667`);
+  });
+  test('ворот: крутишь — ведро наверх, потом падает назад; пока работает — второй раз не крутится', () => {
+    const m = M.well('wtest');
+    eq(M.crankWell('wtest'), true, 'первый оборот');
+    eq(M.crankWell('wtest'), false, 'пока работает — нет');
+    let n = 0;
+    while (m.st !== 'top' && n++ < 2000) M.stepMechs();
+    eq(m.d, 0, 'наверху ведро у ворота');
+    while (m.st !== 'idle' && n++ < 4000) M.stepMechs();
+    eq(m.d, 1, 'упало на дно');
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

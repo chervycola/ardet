@@ -24,6 +24,7 @@
 // курильница-дин, камень тайху; портшез, тачка с листами, шахматы на скамье;
 // поленница, парник, сани; будка часового, шлагбаум, ёлка на подпорке.
 
+import { hang, tipOf, drawRope } from '../../world/hang.js';
 const N = '#0D0B0A', B = '#D9CFB8', A = '#8A8D8F', M = '#3D4A3A', C = '#E28A3A', K = '#C23B2B', S = '#3A3026';
 const D1 = '#15100c', D2 = '#241c14', D3 = '#2a2620', D4 = '#34302a', D5 = '#3a3328';
 const RB = '#3a2418', RR = '#3a1c14', GD = '#b8860b', P1 = '#c8b89a', P2 = '#b0a284';
@@ -276,12 +277,18 @@ function printingHouse(ctx, x, gy, t) {
   f(N, 42, 19, 8, 19);
   f(B, 42, 22, 8, 3); f(N, 43, 21, 6, 2);         // веерное окно
   f(P2, 48, 10, 1, 1);
-  // кронштейн вывески: доска пуста
+  // кронштейн вывески: доска пуста; висит на двух цепочках и качается
   f(D1, 60, 32, 10, 1);
-  f(A, 62, 31, 1, 2); f(null, 68, 31, 1, 2);
-  f(A, 61, 29, 9, 6);              // железная рамка
-  f(D2, 62, 28, 7, 4);
-  f(P2, 62, 28, 7, 1);             // кромка доски
+  {
+    const L0 = Math.round(x - 35), G0 = Math.round(gy);
+    const sg = hang(`sign:${L0}:${G0}`, L0 + 65.5, G0 - 31, 3, { sail: 0.045, damp: 0.994, gy: G0, r: 5 });
+    const tp = tipOf(sg), ox = Math.round(tp.x - (L0 + 65.5)), oy = Math.round(tp.y - (G0 - 28));
+    drawRope(ctx, [{ x: L0 + 62, y: G0 - 31 }, { x: L0 + 62 + ox, y: G0 - 30 + oy }], A);
+    drawRope(ctx, [{ x: L0 + 68, y: G0 - 31 }, { x: L0 + 68 + ox, y: G0 - 30 + oy }], A);
+    f(A, 61 + ox, 29 - oy, 9, 6);    // железная рамка
+    f(D2, 62 + ox, 28 - oy, 7, 4);
+    f(P2, 62 + ox, 28 - oy, 7, 1);   // кромка доски
+  }
 }
 
 function townHall(ctx, x, gy) {
@@ -729,11 +736,16 @@ function signEast(ctx, x, gy) {
   f(N, 3, 14, 5, 14);
   f(P2, 2, 14, 7, 5);              // норэн — светлая ткань шире проёма
   f(N, 4, 12, 1, 3); f(null, 6, 12, 1, 3);
-  // фонарь-тётин на кронштейне под навесом
+  // фонарь-тётин на кронштейне под навесом: висит, покачивается
   f(D1, 15, 15, 2, 1);
-  f(null, 16, 14, 2, 1);
-  f(P1, 16, 13, 2, 3);
-  f(D1, 16, 10, 2, 1);
+  {
+    const L0 = Math.round(x - 9), G0 = Math.round(gy);
+    const lt = hang(`chochin:${L0}:${G0}`, L0 + 17, G0 - 14, 2.5, { sail: 0.035, damp: 0.994, gy: G0, r: 2 });
+    const ox = Math.round(tipOf(lt).x - (L0 + 17));
+    f(D1, 16 + ox, 14, 2, 1);
+    f(P1, 16 + ox, 13, 2, 3);
+    f(D1, 16 + ox, 10, 2, 1);
+  }
 }
 
 function signWest(ctx, x, gy) {
@@ -840,7 +852,7 @@ export const ARCH = {
     { name: 'экзаменационные кельи', w: 94, h: 64, draw: examCells },
   ],
   west: [
-    { name: 'печатня', w: 70, h: 80, life: { smoke: [[-19, -81]] }, draw: printingHouse },
+    { name: 'печатня', w: 70, h: 80, noFlip: true, life: { smoke: [[-19, -81]] }, draw: printingHouse },
     { name: 'ратуша с часами', w: 72, h: 88, draw: townHall },
   ],
   north: [

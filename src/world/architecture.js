@@ -346,6 +346,7 @@ export function buildEnsembles(signs = []) {
     const k = `${b.ring}:${b.side}:${b.name}`;
     const prev = seen.get(k) || [];
     b.flip = prev.length % 2 === 1 && !prev.some(o => o.ens === b.ens);
+    if (b.kind && b.kind.noFlip) b.flip = false;     // механизмы и подвесы считают ветер по миру
     seen.set(k, [...prev, b]);
   }
   return { buildings, ensembles };
