@@ -12,6 +12,10 @@ import { lofi, LOFI_NAMES } from './render/lofi.js';
 import { toxic } from './world/toxic.js';
 import { stumble } from './world/stumble.js';
 import { updateGeiger } from './audio/geiger.js';
+import { wind } from './world/wind.js';
+import { SURF, surfaceAt } from './world/surface.js';
+import { drawGrass, stepGrass } from './render/grass.js';
+import { updateWindSound } from './audio/windSound.js';
 import { rect, clamp } from './render/draw.js';
 import { buildTerrain, MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
@@ -48,7 +52,7 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, RINGS, SHIFT_X, SHIFT_Y, OFF, trailPoint, ringAt } from './world/disc.js';
+import { TOWN, RING_W, RINGS, SHIFT_X, SHIFT_Y, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { drawArchLife } from './render/archlife.js';
@@ -122,6 +126,8 @@ preloadAll().then(() => {
 const player = {
   x: TOWN.x0 + 800, y: TOWN.y0 + 740, tx: TOWN.x0 + 800, ty: TOWN.y0 + 740,
   dir: 1, moving: false, walkFrame: 0,
+  vx: 0, vy: 0,          // скорость: догоняет желаемую с инерцией поверхности
+  auto: false,           // идёт сам к точке клика (tx, ty)
 };
 setPlayer(player);
 const flags = {
@@ -268,9 +274,6 @@ function render() {
       tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
   }
 
-  // ── вторая краска: чего просит сцена ──
-  inkScene(camX, camY);
-
   // ── BG: atmosphere ──
   ink.drawMoon(bgCtx, { x: camX, y: camY });
   drawSmokeClouds(bgCtx, { x: camX, y: camY });
@@ -284,6 +287,7 @@ function render() {
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawFootprints(worldCtx, { x: camX, y: camY });
   stumble.drawStones(worldCtx);
+  if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
 
   // локации (с постройками эпох), заборы дворов и странник — по глубине:
   // за домом странника не видно, перед домом — видно
@@ -321,7 +325,7 @@ function render() {
   drawSilentCat(player, { x: camX, y: camY }, locations);
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
-  toxic.drawWorld(worldCtx, { x: camX, y: camY }, locations);
+  toxic.drawWorld(worldCtx);
 
   drawWorldWhisper({ x: camX, y: camY });
 
@@ -345,13 +349,11 @@ function render() {
 
   // Atmospheric particles in lit areas (render on world layer for depth)
   const camObj = { x: camX, y: camY };
-  lightParticles.update(camObj, lighting.sources);
   lightParticles.draw(worldCtx, camObj);
 
   // ── FX (additive): rain streaks, lightning, cracks, dying pixels ──
   const fxCtx = layers.ctx('fx');
   crackedGlass.draw(fxCtx);
-  dyingPixels.update();
   dyingPixels.draw(fxCtx);
   drawWeatherAdditive(fxCtx);
   drawEdges(fxCtx);
@@ -359,7 +361,6 @@ function render() {
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   drawWeatherOverlay(uiCtx);
   drawBrainrot(uiCtx);
-  screenMoss.update(player.moving);
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
   ink.drawLabel(uiCtx);
@@ -384,6 +385,7 @@ function render() {
 // красным; огонь и брейнрот заливают воздух; за краем красное гаснет.
 let jesterFirstTalk = false;          // первая встреча с Шутом — острый момент
 const NO_PLATE = /[?&]noplate\b/.test(location.search);
+const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравнения и слабых машин
 layers.inkPass = (ctx, main) => {
   ink.composite(ctx, main);
   if (!NO_PLATE) plate.composite(ctx);
@@ -402,9 +404,17 @@ function plateStorm() {
   if (stormTest) st += 1;
   return Math.min(1, st);
 }
-function inkScene(camX, camY) {
-  ink.beginFrame();
+// ═══ ШАГ ЭФФЕКТОВ ═══
+// Всё, что живёт во времени помимо updateGame: ветер, вторая краска,
+// пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
+// разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
+function stepFx() {
+  const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
+  wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
+  updateWindSound(wind.at(player.x + 6, player.y + 10).s);
+  stepGrass(player);
+  ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
   if (isFrozen() || inBrainrotLoop()) ink.want(3, 'брейнрот');
@@ -437,6 +447,12 @@ function inkScene(camX, camY) {
   const tx = toxic.update(player.x + 6, player.y + 24, locations, toxBase);
   updateGeiger(tx);
   lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= RINGS ? 0.25 : 0)));
+  toxic.step(camX, camY, locations, wind);
+  // частицы света, умирающие пиксели, мох по краям экрана
+  if (lighting.sources[0]) { lighting.sources[0].x = player.x + 6; lighting.sources[0].y = player.y + 10; }
+  lightParticles.update({ x: camX, y: camY }, lighting.sources);
+  dyingPixels.update();
+  screenMoss.update(player.moving);
 }
 
 // Placeholder draw function — will be replaced with proper sprites
@@ -854,7 +870,7 @@ function updateTeleportFade() {
     if (tgt) {
       player.x = tgt.x; player.y = tgt.y;
       player.tx = tgt.x; player.ty = tgt.y;
-      player.moving = false;
+      player.moving = false; player.auto = false; player.vx = 0; player.vy = 0;
       camera.x = player.x - scaler.vw / 2;
       camera.y = player.y - scaler.vh / 2;
       camera.targetX = camera.x; camera.targetY = camera.y;
@@ -878,65 +894,66 @@ function drawTeleportFade(ctx) {
   ctx.globalAlpha = 1;
 }
 
+// ═══ ХОД С ИНЕРЦИЕЙ ═══
+// Клавиши, палец или автоход задают желаемую скорость; настоящая догоняет
+// её с разгоном и торможением поверхности под ногами (world/surface.js):
+// на льду отпустил — едешь, в песке за краем вязнешь, по тропе чуть быстрее.
+let surfName = 'ground';
+function stopHero() { player.vx = 0; player.vy = 0; }
+function heroStep(dvx, dvy) {
+  const S = SURF[surfName];
+  const cur = Math.hypot(player.vx, player.vy), want = Math.hypot(dvx, dvy);
+  const rate = want > 0.01 && want >= cur - 0.01 ? S.accel : S.decel;
+  const ex = dvx - player.vx, ey = dvy - player.vy, el = Math.hypot(ex, ey);
+  if (el <= rate) { player.vx = dvx; player.vy = dvy; }
+  else { player.vx += ex / el * rate; player.vy += ey / el * rate; }
+  if (want < 0.01 && Math.hypot(player.vx, player.vy) < 0.03) { stopHero(); return 0; }
+  const ox = player.x, oy = player.y;
+  tryMove(player, player.vx, player.vy, locations, {
+    canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
+  });
+  // упёрся — скорость по этой оси гаснет до того, что вышло на деле
+  const mx = player.x - ox, my = player.y - oy;
+  if (Math.abs(mx - player.vx) > 0.01) player.vx = mx;
+  if (Math.abs(my - player.vy) > 0.01) player.vy = my;
+  const sp = Math.hypot(mx, my);
+  if (sp > 0.05) {
+    if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
+    events.emit(E.PLAYER_MOVE, player);
+    if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp') footstepDust(player.x, player.y);
+    addFootprint(player.x, player.y, S.print);
+  }
+  return sp;
+}
+
 // ═══ EPOCH TITLE CARD ═══
 function updateGame() {
   updateTeleportFade();
-  if (isFrozen()) { updateBrainrot(player); return; }
-  if (!state.is('game')) return;
-  if (isMapOpen()) return;                 // карта открыта — стрелки двигают лист, не героя
-  if (stumble.update(player)) { updateWorldSystems(); return; }   // оступился — шаг пропал
+  if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
+  if (!state.is('game')) { stopHero(); return; }
+  if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
+  if (stumble.update(player)) { stopHero(); updateWorldSystems(); return; }   // оступился — шаг пропал
+  surfName = surfaceAt(player.x + 6, player.y + 24, locations);
+  const S = SURF[surfName];
 
-  // Held-finger walk (mobile): while a finger stays down, walk toward
-  // it continuously. A short tap still dispatches as a click.
+  // желаемая скорость: палец (держат), клавиши, автоход к цели
   const held = input.getHeldTouch();
+  const move = input.getMove();
+  let dvx = 0, dvy = 0, steering = false;
   if (held) {
     const pos = input.screenToWorld(held.x, held.y, camera);
-    const hdx = pos.x - (player.x + 6);
-    const hdy = pos.y - (player.y + 10);
-    const hd = Math.sqrt(hdx * hdx + hdy * hdy);
-    if (hd > 8) {
-      const spd = 2.4;
-      tryMove(player, (hdx / hd) * spd, (hdy / hd) * spd, locations, {
-        canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
-      });
-      player.tx = player.x;
-      player.ty = player.y;
-      player.moving = true;
-      if (hdx > 1) player.dir = 1;
-      else if (hdx < -1) player.dir = -1;
-      events.emit(E.PLAYER_MOVE, player);
-      if (t % 8 === 0) footstepDust(player.x, player.y);
-      addFootprint(player.x, player.y);
-    } else {
-      player.moving = false;
-    }
-    // Skip keyboard/auto-walk branches while the finger is down.
-    updateWorldSystems();
-    return;
-  }
-
-  const move = input.getMove();
-  if (move.active) {
-    const spd = input.isDown('sprint') ? 4 : 2.4;
-    tryMove(player, move.x * spd, move.y * spd, locations, {
-      canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
-    });
-    player.tx = player.x;
-    player.ty = player.y;
-    player.moving = true;
-    player.walkTo = null;
-    if (move.x > 0) player.dir = 1;
-    else if (move.x < 0) player.dir = -1;
-    events.emit(E.PLAYER_MOVE, player);
-    if (t % 8 === 0) footstepDust(player.x, player.y);
-    addFootprint(player.x, player.y);
-  } else if (player.moving) {
-    // Auto-walk toward target
-    const dx = player.tx - player.x;
-    const dy = player.ty - player.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const hdx = pos.x - (player.x + 6), hdy = pos.y - (player.y + 10), hd = Math.hypot(hdx, hdy);
+    player.auto = false; player.walkTo = null;
+    if (hd > 8) { const spd = 2.4 * S.max; dvx = hdx / hd * spd; dvy = hdy / hd * spd; steering = true; }
+  } else if (move.active) {
+    const spd = (input.isDown('sprint') ? 4 : 2.4) * S.max;
+    dvx = move.x * spd; dvy = move.y * spd; steering = true;
+    player.auto = false; player.walkTo = null;
+  } else if (player.auto) {
+    const dx = player.tx - player.x, dy = player.ty - player.y, dist = Math.hypot(dx, dy);
     if (dist < 2) {
-      player.moving = false;
+      player.auto = false;
+      stopHero();
       // Check if we arrived at a location: та, к которой шли, — если
       // дошли до её порога; иначе ближайшая. Шли просто по земле — меню
       // не открываем: мимо вещи можно пройти, не останавливаясь.
@@ -951,16 +968,13 @@ function updateGame() {
         showMenu(loc);
       }
     } else {
-      const spd = 2.4;
-      if (dx > 1) player.dir = 1;
-      else if (dx < -1) player.dir = -1;
-      tryMove(player, dx / dist * spd, dy / dist * spd, locations, {
-        canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
-      });
+      // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже
+      const spd = Math.min(2.4 * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15);
+      dvx = dx / dist * spd; dvy = dy / dist * spd; steering = true;
     }
-  } else {
-    player.moving = false;
   }
+  const sp = heroStep(dvx, dvy);
+  player.moving = steering || sp > 0.05;
 
   updateWorldSystems();
 }
@@ -999,12 +1013,30 @@ function updateWorldSystems() {
   if (t % 3 === 0) fireEmber(TOWN.x0 + 775, TOWN.y0 + 635);
 }
 
-// ═══ LOOP ═══
-function loop() {
-  tick();
-  updateGame();
-  render();
+// ═══ LOOP: ровный шаг ═══
+// Мир считается шагами по 1/60 с, сколько бы кадров ни давал экран: на 120 Гц
+// он не бежит вдвое быстрее, на 30 Гц не ползёт вдвое медленнее, и «не чаще
+// раза в 120 с» остаётся 120 секундами. Кадр рисуется, когда прошёл хотя бы
+// один шаг; вкладка спала — долг не копим (не больше 4 шагов за кадр).
+const STEP = 1000 / 60, SLACK = 2, MAX_STEPS = 4;
+let lastNow = 0, acc = 0;
+function loop(now) {
   requestAnimationFrame(loop);
+  if (typeof now !== 'number') now = performance.now();
+  if (!lastNow) lastNow = now;
+  acc += Math.min(250, Math.max(0, now - lastNow));
+  lastNow = now;
+  if (acc < STEP - SLACK) return;              // экран чаще 60 Гц — этот кадр пропускаем
+  let n = 0;
+  while (acc >= STEP - SLACK && n < MAX_STEPS) {
+    tick();
+    updateGame();
+    stepFx();
+    acc -= STEP;
+    n++;
+  }
+  if (n === MAX_STEPS && acc > STEP) acc = 0;
+  render();
 }
 
 // ═══ ENTRY → HOW-TO → GAME ═══
@@ -1126,12 +1158,14 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
       player.tx = px_;
       player.ty = py_;
       player.moving = true;
+      player.auto = true;
       player.walkTo = loc;
     }
   } else {
     player.tx = pos.x;
     player.ty = pos.y;
     player.moving = true;
+    player.auto = true;
     player.walkTo = null;
   }
 });

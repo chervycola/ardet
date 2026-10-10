@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { scaler } from './scaler.js';
+import { wind } from '../world/wind.js';
 
 const particles = [];
 const MAX = 300;
@@ -17,6 +18,7 @@ export function emit(x, y, count, config = {}) {
     spread = Math.PI * 2,
     angle = -Math.PI / 2,
     fadeOut = true,
+    windK = 0.35,          // насколько сносит ветром (дым и угли — сильнее, искры — слабее)
   } = config;
 
   for (let i = 0; i < count && particles.length < MAX; i++) {
@@ -32,6 +34,7 @@ export function emit(x, y, count, config = {}) {
       color,
       gravity,
       fadeOut,
+      windK,
     });
     particles[particles.length - 1].maxLife = particles[particles.length - 1].life;
   }
@@ -40,8 +43,9 @@ export function emit(x, y, count, config = {}) {
 export function update() {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
+    // ветер общий для мира: частица набирает его скорость не сразу
+    p.x += p.vx + wind.x * p.windK;
+    p.y += p.vy + wind.y * p.windK * 0.5;
     p.vy += p.gravity;
     p.life--;
     if (p.life <= 0) particles.splice(i, 1);
@@ -68,6 +72,7 @@ export function footstepDust(x, y) {
     color: '#3a3a2a',
     speed: 0.3,
     life: 25,
+    windK: 0.6,
     size: 1,
     spread: Math.PI,
     angle: -Math.PI / 2,
@@ -83,6 +88,7 @@ export function pickupSparkle(x, y) {
     size: 1,
     spread: Math.PI * 2,
     gravity: 0.02,
+    windK: 0.15,
   });
 }
 
@@ -96,5 +102,6 @@ export function fireEmber(x, y) {
     spread: Math.PI * 0.5,
     angle: -Math.PI / 2,
     gravity: -0.005,
+    windK: 0.9,
   });
 }

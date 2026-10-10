@@ -7,20 +7,26 @@
 //   birds: [[dx0, dx1, dy, 'K'?]]  — конёк, где сидят птицы; взлетают от странника;
 //                                    цвет необязателен (чайки — K, по умолчанию чёрные)
 // dx, dy — от центра основания (x, gy), как в рисунке постройки.
-// Ветер один на весь мир — к востоку.
+// Ветер один на весь мир (world/wind.js): дым сносит, флаги вытягивает по нему.
 // ═══════════════════════════════════════
+import { wind } from '../world/wind.js';
+
 const COL = { V: '#C23B2B', K: '#D9CFB8', P: '#8A8D8F', M: '#3D4A3A', S: '#E28A3A', N: '#0D0B0A' };
 const SMOKE = '#8A8D8F', BIRD = '#0D0B0A';
 
 function hash(n) { n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n ^= n >>> 4; n *= 0x27d4eb2d; return (n ^ (n >>> 15)) >>> 0; }
 
-// дым: клубки рождаются в устье, растут, сносятся ветром и тают
+// дым: клубки рождаются в устье, растут, сносятся ветром и тают;
+// в штиль поднимается столбом, в ветер ложится, порыв гнёт струйку
 function drawSmoke(ctx, x, y, t, seed) {
   const LIFE = 150, N = 10;
+  const w = wind.at(x, y);
+  const lift = 0.32 / (1 + w.s * 1.6);                 // сильный ветер прижимает дым
   for (let i = 0; i < N; i++) {
     const age = (t * 0.6 + i * LIFE / N + seed * 13) % LIFE, k = age / LIFE;
-    const px = Math.round(x + age * 0.16 + Math.sin(age * 0.07 + i * 1.7 + seed) * 1.5 * k * 2);
-    const py = Math.round(y - 1 - age * 0.32);
+    const drift = age * w.x * 0.55 * Math.min(1, age / 25); // ветер подхватывает не сразу
+    const px = Math.round(x + drift + Math.sin(age * 0.07 + i * 1.7 + seed) * 1.5 * k * 2);
+    const py = Math.round(y - 1 - age * lift + age * w.y * 0.12);
     const s = 2 + Math.floor(k * 3);
     ctx.globalAlpha = 0.7 * (1 - k) * Math.min(1, age / 8);
     ctx.fillStyle = SMOKE;
@@ -29,14 +35,19 @@ function drawSmoke(ctx, x, y, t, seed) {
   ctx.globalAlpha = 1;
 }
 
-// флаг: столбцы полотнища, волна бежит от древка
+// флаг: полотнище вытягивается по ветру, волна бежит от древка;
+// в штиль обвисает, в бурю бьётся чаще и шире
 function drawFlag(ctx, x, y, len, col, t, seed) {
   const h = Math.max(2, Math.round(len * 0.6));
+  const w = wind.at(x, y), dir = w.x < 0 ? -1 : 1;
+  const ext = Math.max(0.3, Math.min(1, Math.abs(w.x) * 2.2 + 0.15)); // насколько вытянут
   ctx.fillStyle = COL[col] || col || COL.P;
   for (let c = 0; c < len; c++) {
-    const amp = Math.min(1.5, c / 3);
-    const off = Math.round(Math.sin(t * 0.09 + seed - c * 0.8) * amp);
-    ctx.fillRect(x + 1 + c, y + off, 1, h - (c === len - 1 && len > 3 ? 1 : 0));
+    const amp = Math.min(1.5, c / 3) * (0.5 + w.s * 1.1);
+    const off = Math.round(Math.sin(t * (0.05 + w.s * 0.12) + seed - c * 0.8) * amp);
+    const droop = Math.round(c * (1 - ext) * 0.9);     // обвисший край ниже
+    const cx = dir > 0 ? x + 1 + Math.round(c * ext) : x - 1 - Math.round(c * ext);
+    ctx.fillRect(cx, y + off + droop, 1, h - (c === len - 1 && len > 3 ? 1 : 0));
   }
 }
 

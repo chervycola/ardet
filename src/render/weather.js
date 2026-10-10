@@ -5,6 +5,7 @@
 import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
 import { hash, rect } from './draw.js';
+import { wind } from '../world/wind.js';
 
 const STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' };
 
@@ -125,8 +126,8 @@ export function update(zone) {
     weather.intensity = Math.max(weather.targetIntensity, weather.intensity - ramp * 0.7);
   }
 
-  // Update wind with lazy drift
-  weather.windX = 0.3 + 0.9 * Math.sin(t * 0.0013);
+  // ветер один на весь мир (world/wind.js): дождь косит и песок несёт по нему
+  weather.windX = wind.x * 1.6;
 
   // Update particles based on state + intensity
   if (weather.state === STATE.TOXIC_RAIN || weather.intensity > 0) updateRain();
@@ -207,7 +208,7 @@ function updateSand() {
       weather.sandParts.push({
         x: -20 + Math.random() * (vw + 40),
         y: Math.random() * vh,
-        vx: 1.4 + Math.random() * 2.2,
+        vx: (wind.x < 0 ? -1 : 1) * (1.4 + Math.random() * 2.2),   // песок летит по ветру
         vy: -0.3 + Math.random() * 0.6,
         life: 220 + Math.floor(Math.random() * 120),
         size: 1 + Math.floor(Math.random() * 2),
@@ -220,7 +221,7 @@ function updateSand() {
     p.x += p.vx + weather.windX * 0.9;
     p.y += p.vy + Math.sin(t * 0.02 + p.life * 0.1) * 0.3;
     p.life--;
-    if (p.x > vw + 30 || p.life <= 0) weather.sandParts.splice(i, 1);
+    if (p.x > vw + 30 || p.x < -30 || p.life <= 0) weather.sandParts.splice(i, 1);
   }
   if (!spawning && weather.sandParts.length > 0) {
     for (let k = 0; k < 4; k++) weather.sandParts.pop();

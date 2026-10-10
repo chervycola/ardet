@@ -153,6 +153,8 @@ export function setTissueBlockers(boxes) {
     }
   }
 }
+// занято ли место постройкой, табличкой, двором (для травы и ткани)
+export function groundBlocked(x0, y0, x1, y1) { return tissueBlocked(x0, y0, x1, y1); }
 function tissueBlocked(x0, y0, x1, y1) {
   if (!blockGrid) return false;
   for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) {

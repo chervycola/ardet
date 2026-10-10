@@ -5,6 +5,7 @@
 import { rect, px } from '../render/draw.js';
 import { X } from '../render/context.js';
 import { t } from '../core/time.js';
+import { wind } from '../world/wind.js';
 
 const P = {
   void: '#050408',
@@ -31,7 +32,11 @@ export function drawPlayer(player) {
   const breath = Math.sin(t * 0.015) * 0.5;
   const sway = Math.sin(t * 0.02) * 0.6;
   const firePulse = 0.7 + 0.3 * Math.sin(t * 0.18);
-  const fireFlicker = 0.85 + 0.15 * Math.sin(t * 0.45 + Math.sin(t * 0.1) * 2);
+  // ветер и ход: подол отстаёт от движения и уходит по ветру, огонь в порыв дрожит
+  const w = wind.at(x + 6, y + 12), vx = player.vx || 0;
+  const trail = Math.max(-2.5, Math.min(2.5, w.x * 2.4 - vx * 0.7));
+  const lean = Math.max(-1, Math.min(1, Math.round(vx * 0.45)));       // клонится в сторону хода
+  const fireFlicker = 0.85 + (0.15 + w.s * 0.25) * Math.sin(t * (0.45 + w.s * 0.3) + Math.sin(t * 0.1) * 2);
 
   // ═══ SHADOW (oval below the floating figure) ═══
   ctx.globalAlpha = 0.4;
@@ -59,15 +64,16 @@ export function drawPlayer(player) {
   // Mid cloak
   rect(ctx, cbx + 0, y + 11 - bob, 13, 7, P.cloakMid);
   rect(ctx, cbx + 1, y + 12 - bob, 11, 6, P.cloakDark);
-  // Lower hem — uneven, flares, drifts in the wind
-  const hemPh = Math.sin(t * 0.06) * 0.5;
-  rect(ctx, cbx - 1, y + 18 - bob, 15, 4, P.cloakMid);
-  rect(ctx, cbx + 0, y + 19 - bob, 13, 3, P.cloakDark);
+  // Lower hem — uneven, flares; отстаёт от хода и треплется на ветру
+  const hemPh = Math.sin(t * (0.06 + w.s * 0.16)) * (0.5 + w.s * 0.8);
+  const hx0 = cbx + Math.round(trail);                                  // подол сносит целиком
+  rect(ctx, hx0 - 1, y + 18 - bob, 15, 4, P.cloakMid);
+  rect(ctx, hx0 + 0, y + 19 - bob, 13, 3, P.cloakDark);
   // Hem ripple (edge highlights suggesting folds)
-  px(ctx, cbx - 1, y + 21 - bob + hemPh, P.cloakEdge);
-  px(ctx, cbx + 4, y + 22 - bob, P.cloakEdge);
-  px(ctx, cbx + 8, y + 22 - bob - hemPh, P.cloakEdge);
-  px(ctx, cbx + 13, y + 21 - bob + hemPh, P.cloakEdge);
+  px(ctx, hx0 - 1 + (trail < -1 ? -1 : 0), y + 21 - bob + hemPh, P.cloakEdge);
+  px(ctx, hx0 + 4, y + 22 - bob, P.cloakEdge);
+  px(ctx, hx0 + 8, y + 22 - bob - hemPh, P.cloakEdge);
+  px(ctx, hx0 + 13 + (trail > 1 ? 1 : 0), y + 21 - bob + hemPh, P.cloakEdge);
   // Vertical cloak fold line
   rect(ctx, cbx + 6, y + 7 - bob, 1, 14, P.void);
 
@@ -89,12 +95,12 @@ export function drawPlayer(player) {
     const sp = (t / 8) % 3;
     ctx.globalAlpha = 0.7;
     ctx.fillStyle = P.ember;
-    ctx.fillRect(fx_ + 1 + Math.sin(t * 0.1) * 2, fy_ - 2 - sp, 1, 1);
+    ctx.fillRect(Math.round(fx_ + 1 + Math.sin(t * 0.1) * 2 + w.x * sp * 2.5), fy_ - 2 - sp, 1, 1);   // искру сносит
     ctx.globalAlpha = 1;
   }
 
   // ═══ HOOD — dramatic, deep shadow, obscures face ═══
-  const hx = cbx + 2;
+  const hx = cbx + 2 + lean;
   const hy = y - 3 - bob;
   rect(ctx, hx - 1, hy + 1, 11, 6, P.void);
   rect(ctx, hx, hy, 9, 6, P.cloakDark);

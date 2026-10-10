@@ -6,30 +6,44 @@ import { scaler } from './scaler.js';
 import { hash } from './draw.js';
 
 // ── FOOTPRINTS ──
+// След ставится по пройденному пути (шаг ~9 точек), а не по кадрам: быстрый
+// ход — те же шаги, только чаще. Вид следа — по поверхности (world/surface.js):
+// в песке глубокий и долгий, в грязи тёмный, на снегу синеватый, в гари — чёрный,
+// на льду, в болоте и в мусоре следа нет.
 const footprints = [];
-const MAX_FOOTPRINTS = 80;
-let lastFootprint = 0;
+const MAX_FOOTPRINTS = 120;
+const STRIDE = 9;
+let lastX = null, lastY = null, side = 0;
+const PRINT = {
+  soft: { col: '#1a1810', a: 0.15, life: 600, w: 3, h: 2 },
+  deep: { col: '#20160a', a: 0.38, life: 1500, w: 3, h: 3 },
+  mud:  { col: '#0b1008', a: 0.42, life: 1200, w: 3, h: 2 },
+  snow: { col: '#2a3440', a: 0.32, life: 1400, w: 2, h: 2 },
+  ash:  { col: '#050302', a: 0.32, life: 900,  w: 3, h: 2 },
+};
 
-export function addFootprint(x, y) {
-  if (t - lastFootprint < 12) return; // throttle
-  lastFootprint = t;
+export function addFootprint(x, y, kind = 'soft') {
+  if (lastX !== null && Math.hypot(x - lastX, y - lastY) < STRIDE) return;
+  lastX = x; lastY = y;
+  const P = PRINT[kind];
+  if (!P) return;                         // лёд, болото, мусор — следа нет
   if (footprints.length >= MAX_FOOTPRINTS) footprints.shift();
-  footprints.push({ x: Math.floor(x + 5), y: Math.floor(y + 20), age: 0 });
+  side ^= 1;                              // левая — правая
+  footprints.push({ x: Math.floor(x + 4 + side * 4), y: Math.floor(y + 20 + side), age: 0, P });
 }
 
 export function drawFootprints(ctx, camera) {
   for (const fp of footprints) {
     fp.age++;
-    const fade = Math.max(0, 1 - fp.age / 600);
+    const fade = Math.max(0, 1 - fp.age / fp.P.life);
     if (fade <= 0) continue;
-    ctx.globalAlpha = fade * 0.15;
-    ctx.fillStyle = '#1a1810';
-    ctx.fillRect(fp.x - camera.x, fp.y - camera.y, 3, 2);
-    ctx.fillRect(fp.x - camera.x + 5, fp.y - camera.y + 1, 3, 2);
+    ctx.globalAlpha = fade * fp.P.a;
+    ctx.fillStyle = fp.P.col;
+    ctx.fillRect(fp.x - camera.x, fp.y - camera.y, fp.P.w, fp.P.h);
   }
   ctx.globalAlpha = 1;
   // Cleanup old
-  while (footprints.length > 0 && footprints[0].age > 600) footprints.shift();
+  while (footprints.length > 0 && footprints[0].age > footprints[0].P.life) footprints.shift();
 }
 
 // ── SMOKE CLOUDS ──
