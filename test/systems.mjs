@@ -412,6 +412,82 @@ setCtx(ctx);
   });
 }
 
+// ═══ ВОРОНЫ ═══
+{
+  const R = await imp('world/ravens.js');
+  const W = await imp('world/wind.js');
+  const calm = () => { W.wind.s = 0; W.wind.x = 0; W.wind.y = 0; };
+  const run = (p, n, each) => { for (let i = 0; i < n; i++) { if (each) each(i); R.stepRavens(p, [], null); } };
+  const centre = f => f.birds.reduce((a, b) => ({ x: a.x + b.x / f.birds.length, y: a.y + b.y / f.birds.length }), { x: 0, y: 0 });
+  test('вороны: к стоящему поодаль привыкают — не взлетают', () => {
+    R._reset(false); calm();
+    const f = R._spawn(5000, 5000, 5);
+    const p = { x: 5000 - 6 - 75, y: 5000 - 22, vx: 0, vy: 0 };
+    run(p, 900);
+    assert(f.birds.every(b => b.st === 'ground'), 'взлетели без причины');
+  });
+  test('вороны: бегущий поднимает всю стаю по цепочке; садятся дальше от него', () => {
+    R._reset(false); calm();
+    const f = R._spawn(5000, 5000, 5);
+    const p = { x: 5000 - 6 - 140, y: 5000 - 22, vx: 4, vy: 0 };
+    const c0 = centre(f);
+    let maxUp = 0, maxZ = 0;
+    run(p, 40, () => { p.x += 4; });
+    p.vx = 0;
+    run(p, 1500, () => {
+      maxUp = Math.max(maxUp, f.birds.filter(b => b.st === 'fly').length);
+      maxZ = Math.max(maxZ, ...f.birds.map(b => b.z));
+    });
+    eq(maxUp, 5, 'взлетели не все');
+    assert(maxZ > 20, `низко: ${maxZ.toFixed(1)}`);
+    assert(f.birds.every(b => b.st === 'ground' && b.z === 0), 'не сели');
+    eq(f.st, 'calm', 'стая не успокоилась');
+    const c1 = centre(f), pf = { x: p.x + 6, y: p.y + 22 };
+    assert(Math.hypot(c1.x - pf.x, c1.y - pf.y) > Math.hypot(c0.x - pf.x, c0.y - pf.y) + 100, 'сели не дальше');
+  });
+  test('вороны: шум (упал странник) поднимает стаю в радиусе, дальнюю — нет', () => {
+    R._reset(false); calm();
+    const a = R._spawn(5000, 5000, 4), b = R._spawn(5600, 5000, 4);
+    const p = { x: 4900, y: 4980, vx: 0, vy: 0 };
+    R.startleRavens(p.x + 6, p.y + 22, 150);
+    run(p, 60);
+    assert(a.birds.some(x => x.st === 'fly'), 'ближняя не взлетела');
+    assert(b.birds.every(x => x.st === 'ground'), 'дальняя взлетела');
+  });
+}
+
+// ═══ МАРЕВО ═══
+{
+  const Hz = await imp('render/haze.js');
+  const W = await imp('world/wind.js');
+  const D = await imp('world/disc.js');
+  test('марево: пламя не трогает (ниже основания столба — ни сдвига), выше — дрожит', () => {
+    W.wind.s = 0; W.wind.x = 0; W.wind.y = 0;
+    const c = { x: 100, y0: 200, H: 48, w0: 8, grow: 0.27, amp: 1.6, lean: 0 };
+    let below = 0, above = 0;
+    for (let tt = 0; tt < 400; tt += 7) for (let x = 80; x <= 120; x += 2) {
+      for (let y = 200; y < 230; y++) below += Math.abs(Hz.shiftAt(c, x, y, tt));
+      for (let y = 160; y < 196; y++) above += Math.abs(Hz.shiftAt(c, x, y, tt));
+    }
+    eq(below, 0, 'пламя дрожит');
+    assert(above > 50, `над огнём не дрожит: ${above}`);
+  });
+  test('марево: столб клонится по ветру', () => {
+    const c = { x: 100, y0: 200, H: 48, w0: 8, grow: 0.27, amp: 1.6, lean: 0.5 };
+    let sx = 0, n = 0;
+    for (let tt = 0; tt < 2000; tt += 3) for (let x = 60; x <= 160; x++) if (Hz.shiftAt(c, x, 170, tt)) { sx += x; n++; }
+    assert(n > 0 && sx / n > 110, `не клонится: середина ${n ? (sx / n).toFixed(1) : '—'}`);
+  });
+  test('марево: жар — в кольце огня, в городке и за краем нет', () => {
+    const TOWN = D.TOWN, mid = (TOWN.x0 + TOWN.x1) / 2;
+    eq(Hz.heatAt(mid, (TOWN.y0 + TOWN.y1) / 2), 0, 'в городке');
+    let hot = 0;
+    for (let d = 1790; d <= 1960; d += 10) hot = Math.max(hot, Hz.heatAt(mid, TOWN.y1 + d));
+    eq(hot, 1, 'в огне не жарко');
+    eq(Hz.heatAt(mid, TOWN.y1 + 2600), 0, 'за краем');
+  });
+}
+
 // ═══ РИСУНОК В МИРЕ: контекст уже сдвинут камерой ═══
 {
   const T = await imp('core/time.js');

@@ -16,6 +16,7 @@ import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
+import { hazeView, hazeComposite } from './render/haze.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -76,6 +77,7 @@ import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
+import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir } from './world/ravens.js';
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
@@ -292,6 +294,7 @@ function render() {
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawPuddles(worldCtx, camX, camY, vw, vh, locations, player);   // лужи после дождя, круги
   drawFootprints(worldCtx, { x: camX, y: camY });
+  drawRavenShadows(worldCtx, camX, camY, vw, vh);   // тени летящих ворон — на земле
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
 
@@ -306,11 +309,13 @@ function render() {
   }
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
+  for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
     if (it.cat) { drawCat(worldCtx, it.cat, player); continue; }
+    if (it.raven) { drawRaven(worldCtx, it.raven); continue; }
     if (it.player) {
       const so = stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);
@@ -334,11 +339,13 @@ function render() {
   drawPets({ x: camX, y: camY });
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
+  drawRavensAir(worldCtx, camX, camY, vw, vh);      // летящие вороны — в воздухе, над всем
   toxic.drawWorld(worldCtx);
 
   drawWorldWhisper({ x: camX, y: camY });
 
   worldCtx.restore();
+  hazeView(camX, camY, vw, vh, locations);   // марево: над костром, над Sol, в гари — сдвинет кадр при сборке
 
   // группа второй краски — те же вещи, отдельным прогоном
   ink.drawGroup((c, loc) => { setCtx(c); drawLocation(c, loc); }, camX, camY);
@@ -397,6 +404,7 @@ let jesterFirstTalk = false;          // первая встреча с Шуто
 const NO_PLATE = /[?&]noplate\b/.test(location.search);
 const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравнения и слабых машин
 layers.inkPass = (ctx, main) => {
+  hazeComposite(ctx, main);              // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);
   if (!NO_PLATE) plate.composite(ctx);
   ctx.save(); ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
@@ -427,6 +435,7 @@ function stepFx() {
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
+  stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
   ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
@@ -912,7 +921,7 @@ function drawTeleportFade(ctx) {
 // Клавиши, палец или автоход задают желаемую скорость; настоящая догоняет
 // её с разгоном и торможением поверхности под ногами (world/surface.js):
 // на льду отпустил — едешь, в песке за краем вязнешь, по тропе чуть быстрее.
-let surfName = 'ground';
+let surfName = 'ground', stumbling = false;
 function stopHero() { player.vx = 0; player.vy = 0; }
 // у костра земля в золе: ближе 40 точек к огню
 let fireLoc;
@@ -957,7 +966,10 @@ function updateGame() {
   if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { stopHero(); return; }
   if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
-  if (stumble.update(player)) { stopHero(); updateWorldSystems(); return; }   // оступился — шаг пропал
+  const fell = stumble.update(player);
+  if (fell && !stumbling) startleRavens(player.x + 6, player.y + 22, 150);   // упал — вороны в округе взлетают
+  stumbling = fell;
+  if (fell) { stopHero(); updateWorldSystems(); return; }   // оступился — шаг пропал
   surfName = surfaceAt(player.x + 6, player.y + 24, locations);
   const S = SURF[surfName];
 

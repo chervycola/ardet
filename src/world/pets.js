@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════
-// PET CROSSINGS — random cat/raven/rat cameos
+// PET CROSSINGS — random cat/rat cameos (вороны — своим модулем, world/ravens.js)
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { TOWN } from './disc.js';
@@ -11,13 +11,12 @@ let lastSpawn = 0;
 
 const P = {
   cat: '#050404',
-  raven: '#0a0a0a',
   rat: '#3a2418',
   amber: '#daa520',
 };
 
 function spawn() {
-  const types = ['cat', 'raven', 'rat', 'rat', 'cat'];
+  const types = ['cat', 'rat', 'rat', 'cat'];
   const type = types[Math.floor(Math.random() * types.length)];
   const fromLeft = Math.random() > 0.5;
   const y = TOWN.y0 + 40 + Math.random() * 1400;
@@ -25,8 +24,7 @@ function spawn() {
     type,
     x: fromLeft ? TOWN.x0 - 20 : TOWN.x1 + 20,
     y,
-    vx: fromLeft ? (type === 'raven' ? 1.8 : type === 'cat' ? 0.9 : 1.2)
-                 : (type === 'raven' ? -1.8 : type === 'cat' ? -0.9 : -1.2),
+    vx: (fromLeft ? 1 : -1) * (type === 'cat' ? 0.9 : 1.2),
     life: 600,
     bobPhase: Math.random() * Math.PI * 2,
   });
@@ -42,7 +40,8 @@ export function update() {
     const p = pets[i];
     p.x += p.vx;
     p.life--;
-    if (p.life <= 0 || p.x < -50 || p.x > 3050) {
+    // границы — городка (старые 0…3000 остались от мира до сдвига и убивали зверя сразу)
+    if (p.life <= 0 || p.x < TOWN.x0 - 60 || p.x > TOWN.x1 + 60) {
       pets.splice(i, 1);
     }
   }
@@ -65,13 +64,6 @@ export function draw(camera) {
       ctx.fillRect(wx + 5, wy + 2, 1, 1);
       // Eye
       if (t % 60 < 55) ctx.fillStyle = P.amber, ctx.fillRect(wx + 5, wy + 1, 1, 1);
-    } else if (p.type === 'raven') {
-      // Flying raven with wing flap
-      const wingUp = (t + p.bobPhase * 10) % 20 < 10;
-      ctx.fillStyle = P.raven;
-      ctx.fillRect(wx, wy, 4, 2);
-      ctx.fillRect(wx - 1, wy - (wingUp ? 1 : 0), 6, 1);
-      ctx.fillRect(wx + 3, wy + 2, 2, 1); // tail
     } else if (p.type === 'rat') {
       ctx.fillStyle = P.rat;
       ctx.fillRect(wx, wy, 4, 2);
