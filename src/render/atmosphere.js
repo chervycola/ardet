@@ -9,7 +9,8 @@ import { hash } from './draw.js';
 // След ставится по пройденному пути (шаг ~9 точек), а не по кадрам: быстрый
 // ход — те же шаги, только чаще. Вид следа — по поверхности (world/surface.js):
 // в песке глубокий и долгий, в грязи тёмный, на снегу синеватый, в гари — чёрный,
-// на льду, в болоте и в мусоре следа нет.
+// на льду, в болоте и в мусоре следа нет. Из лужи вышел — несколько шагов
+// мокрых, тёмных (render/puddles.js).
 const footprints = [];
 const MAX_FOOTPRINTS = 120;
 const STRIDE = 9;
@@ -20,30 +21,34 @@ const PRINT = {
   mud:  { col: '#0b1008', a: 0.42, life: 1200, w: 3, h: 2 },
   snow: { col: '#2a3440', a: 0.32, life: 1400, w: 2, h: 2 },
   ash:  { col: '#050302', a: 0.32, life: 900,  w: 3, h: 2 },
+  wet:  { col: '#0D0B0A', a: 0.5,  life: 900,  w: 3, h: 2, hi: '#3D4A3A' },   // тёмный, с блеском воды
 };
 
+// true — след поставлен (шаг пройден и поверхность его держит)
 export function addFootprint(x, y, kind = 'soft') {
-  if (lastX !== null && Math.hypot(x - lastX, y - lastY) < STRIDE) return;
+  if (lastX !== null && Math.hypot(x - lastX, y - lastY) < STRIDE) return false;
   lastX = x; lastY = y;
   const P = PRINT[kind];
-  if (!P) return;                         // лёд, болото, мусор — следа нет
+  if (!P) return false;                   // лёд, болото, мусор — следа нет
   if (footprints.length >= MAX_FOOTPRINTS) footprints.shift();
   side ^= 1;                              // левая — правая
-  footprints.push({ x: Math.floor(x + 4 + side * 4), y: Math.floor(y + 20 + side), age: 0, P });
+  footprints.push({ x: Math.floor(x + 4 + side * 4), y: Math.floor(y + 20 + side), born: t, P });
+  return true;
 }
 
 export function drawFootprints(ctx, camera) {
   for (const fp of footprints) {
-    fp.age++;
-    const fade = Math.max(0, 1 - fp.age / fp.P.life);
+    const fade = Math.max(0, 1 - (t - fp.born) / fp.P.life);   // возраст — в шагах мира, не в кадрах
     if (fade <= 0) continue;
+    if (fp.x < camera.x - 4 || fp.x > camera.x + scaler.vw + 4 || fp.y < camera.y - 4 || fp.y > camera.y + scaler.vh + 4) continue;
     ctx.globalAlpha = fade * fp.P.a;
     ctx.fillStyle = fp.P.col;
-    ctx.fillRect(fp.x - camera.x, fp.y - camera.y, fp.P.w, fp.P.h);
+    ctx.fillRect(fp.x, fp.y, fp.P.w, fp.P.h);               // контекст мира уже сдвинут камерой
+    if (fp.P.hi) { ctx.globalAlpha = fade * 0.6; ctx.fillStyle = fp.P.hi; ctx.fillRect(fp.x + 1, fp.y, 1, 1); }
   }
   ctx.globalAlpha = 1;
   // Cleanup old
-  while (footprints.length > 0 && footprints[0].age > footprints[0].P.life) footprints.shift();
+  while (footprints.length > 0 && t - footprints[0].born > footprints[0].P.life) footprints.shift();
 }
 
 // ── SMOKE CLOUDS ──

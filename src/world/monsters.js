@@ -57,27 +57,28 @@ export function draw(camera) {
   for (const m of monsters) {
     const sx = Math.floor(m.x - camera.x);
     const sy = Math.floor(m.y - camera.y);
+    const wx = Math.floor(m.x), wy = Math.floor(m.y);   // контекст мира уже сдвинут камерой
     const pulse = Math.sin(t * 0.03 + m.phase) * 0.3;
 
     // Shadow
     ctx.globalAlpha = 0.4;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(sx + m.size / 2, sy + m.size * 1.5 + 5, m.size * 0.5, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(wx + m.size / 2, wy + m.size * 1.5 + 5, m.size * 0.5, 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Body — dark, shifting shape
     ctx.globalAlpha = 0.6 + pulse * 0.2;
     ctx.fillStyle = '#1a0508';
-    ctx.fillRect(sx, sy, m.size, m.size * 1.5);
+    ctx.fillRect(wx, wy, m.size, m.size * 1.5);
     ctx.fillStyle = '#3a0a10';
-    ctx.fillRect(sx + 1, sy + 1, m.size - 2, m.size - 1);
+    ctx.fillRect(wx + 1, wy + 1, m.size - 2, m.size - 1);
 
     // Eyes — red
     if (m.size > 3) {
       ctx.fillStyle = '#ff2020';
-      ctx.fillRect(sx + 1, sy + 2, 1, 1);
-      ctx.fillRect(sx + m.size - 2, sy + 2, 1, 1);
+      ctx.fillRect(wx + 1, wy + 2, 1, 1);
+      ctx.fillRect(wx + m.size - 2, wy + 2, 1, 1);
     }
 
     ctx.globalAlpha = 1;

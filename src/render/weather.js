@@ -53,6 +53,14 @@ export const weather = {
   windX: 0.4,
 };
 
+// ?rain — дождь сразу и надолго (проверка руками: лужи, круги от капель)
+try {
+  if (/[?&]rain\b/.test(location.search)) {
+    weather.state = STATE.TOXIC_RAIN; weather.currentDuration = 36000; weather.nextCheck = 36000;
+    weather.lastStartAt[STATE.TOXIC_RAIN] = 0;
+  }
+} catch (e) {}
+
 const MAX_RAIN = 90;
 const MAX_SAND = 140;
 const MAX_PUDDLES = 30;

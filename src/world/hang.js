@@ -25,6 +25,9 @@ let frame = 0;
 //   gy    — земля под подвесом (странник задевает, только стоя рядом по глубине)
 //   r     — полуширина тела (столкновения, касание)
 //   group, tone — колокола одной рамы и их тон (без тона — молчит)
+//   pin2  — второй конец тоже прибит {x, y} (гирлянда между опорами);
+//           gy2 — земля под ним (глубина по тросу — между gy и gy2)
+//   lift  — тяга снизу {x, r, k}: над огнём горячий воздух поднимает и треплет
 export function hang(key, ax, ay, len, opt = {}) {
   let h = REG.get(key);
   if (!h) {
@@ -33,10 +36,17 @@ export function hang(key, ax, ay, len, opt = {}) {
       const y = ay + len * i / segs;
       pts.push({ x: ax, y, ox: ax, oy: y });
     }
+    if (opt.pin2) {                       // гирлянда: начальная форма — прямая между опорами
+      for (let i = 0; i <= segs; i++) {
+        const k = i / segs, x = ax + (opt.pin2.x - ax) * k, y = ay + (opt.pin2.y - ay) * k;
+        pts[i] = { x, y, ox: x, oy: y };
+      }
+    }
     h = {
       ax, ay, len, segs, pts, seen: frame,
       sail: opt.sail ?? 0.03, damp: opt.damp ?? 0.995, gy: opt.gy ?? ay + len,
       r: opt.r ?? 2, group: opt.group || null, tone: opt.tone || 0,
+      pin2: opt.pin2 || null, gy2: opt.gy2 ?? null, lift: opt.lift || null,
     };
     REG.set(key, h);
   }
@@ -59,15 +69,22 @@ function sim(h, player) {
     const vx = (p.x - p.ox) * h.damp, vy = (p.y - p.oy) * h.damp;
     // ветер тянет к своей скорости: в штиль висит, в порыв уходит и качается
     const fx = h.sail * (w.x * 2.2 - vx);
+    let fy = 0;
+    if (h.lift) {                                    // над огнём: тяга вверх и трёпка
+      const d = Math.abs(p.x - h.lift.x);
+      if (d < h.lift.r) { const k = 1 - d / h.lift.r; fy -= h.lift.k * k; p.x += (Math.random() - 0.5) * 0.25 * k; }
+    }
     p.ox = p.x; p.oy = p.y;
     p.x += vx + fx;
-    p.y += vy + G;
+    p.y += vy + G + fy;
   }
   // странник проходит сквозь — задевает: толчок по его ходу
-  if (player && Math.abs(player.y + 24 - h.gy) < 12) {
+  if (player) {
     const x0 = player.x - 1 - h.r, x1 = player.x + 14 + h.r, y0 = player.y - 4, y1 = player.y + 22;
     for (let i = 1; i < n; i++) {
       const p = P[i];
+      const gy = h.gy2 === null ? h.gy : h.gy + (h.gy2 - h.gy) * i / (n - 1);   // глубина точки троса
+      if (Math.abs(player.y + 24 - gy) >= 12) continue;
       if (p.x > x0 && p.x < x1 && p.y > y0 && p.y < y1) {
         p.x += (player.vx || 0) * 0.45 + (p.x < player.x + 6 ? -0.2 : 0.2);
       }
@@ -75,17 +92,21 @@ function sim(h, player) {
   }
   // связи: звенья держат длину, опора прибита
   const seg = h.len / h.segs;
+  const last = P[n - 1];
   for (let it = 0; it < 4; it++) {
     P[0].x = h.ax; P[0].y = h.ay;
+    if (h.pin2) { last.x = h.pin2.x; last.y = h.pin2.y; }
     for (let i = 0; i < n - 1; i++) {
       const a = P[i], b = P[i + 1];
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-4;
       const k = (d - seg) / d;
       if (i === 0) { b.x -= dx * k; b.y -= dy * k; }
+      else if (h.pin2 && i === n - 2) { a.x += dx * k; a.y += dy * k; }   // второй конец прибит — тянется только трос
       else { a.x += dx * k * 0.5; a.y += dy * k * 0.5; b.x -= dx * k * 0.5; b.y -= dy * k * 0.5; }
     }
   }
   P[0].x = h.ax; P[0].y = h.ay;
+  if (h.pin2) { last.x = h.pin2.x; last.y = h.pin2.y; }
 }
 
 // колокола одной рамы: разойтись, а если ударились заметно — звякнуть

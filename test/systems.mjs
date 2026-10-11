@@ -320,6 +320,124 @@ setCtx(ctx);
   });
 }
 
+// ═══ ГИРЛЯНДА И КОТ ═══
+{
+  const W = await imp('world/wind.js');
+  const H = await imp('world/hang.js');
+  const C = await imp('world/silentCat.js');
+  const calm = () => { W.wind.s = 0; W.wind.x = 0; W.wind.y = 0; };
+  test('гирлянда: оба конца прибиты, середина провисает, над огнём тяга приподнимает', () => {
+    H._reset(); calm();
+    const b = { x: 100, y: 0 };
+    // середина — средняя за последние 200 шагов (над огнём трос треплет)
+    const hang2 = (key, lift) => {
+      let h, mid = 0;
+      for (let i = 0; i < 1100; i++) {
+        h = H.hang(key, 0, 0, 105, { segs: 12, pin2: b, damp: 0.99, lift }); H.stepHangs(null);
+        if (i >= 900) mid += h.pts[6].y / 200;
+      }
+      return { P: h.pts, mid };
+    };
+    const { P, mid } = hang2('g1', null);
+    assert(P[0].x === 0 && P[0].y === 0, 'левая опора сдвинулась');
+    assert(P[12].x === 100 && P[12].y === 0, 'правая опора сдвинулась');
+    assert(mid > 8, `середина не провисает: ${mid.toFixed(1)}`);
+    // трос не растягивается: середину тяга поднимает немного, за счёт боков
+    const L = hang2('g2', { x: 50, r: 26, k: 0.05 });
+    assert(L.mid < mid - 0.5, `тяга не поднимает: ${L.mid.toFixed(2)} против ${mid.toFixed(2)}`);
+  });
+  // костёр в (1000, 1000): кот сидит у (982, 1030), лапы — (984, 1033)
+  const locs = [{ id: 'campfire', x: 1000, y: 1000, w: 55, h: 50 }];
+  const cat = () => C._cats()[0];
+  test('кот: к тому, кто стоит тихо, подходит и садится у ног', () => {
+    C._reset(); calm();
+    const p = { x: 940, y: 1015, vx: 0, vy: 0 };
+    for (let i = 0; i < 600; i++) C.stepCats(p, locs);
+    eq(cat().st, 'warm', 'сидит у тепла');
+    const d = Math.hypot(cat().x + 2 - (p.x + 6), cat().y + 3 - (p.y + 22));
+    assert(d < 14, `сел далеко: ${d.toFixed(1)}`);
+    assert(C.getSightings().includes('campfire'), 'кота не заметили');
+  });
+  test('кот: от бегущего отскакивает прочь, потом возвращается на место', () => {
+    C._reset(); calm();
+    const p = { x: 900, y: 1011, vx: 4, vy: 0 };
+    let fled = false, dStart = 0, dEnd = 0;
+    for (let i = 0; i < 40 && !fled; i++) {
+      p.x += 4; C.stepCats(p, locs);
+      if (cat().st === 'flee') { fled = true; dStart = Math.hypot(cat().x - p.x, cat().y - p.y); }
+    }
+    assert(fled, 'не отскочил');
+    p.vx = 0;
+    for (let i = 0; i < 6; i++) C.stepCats(p, locs);
+    dEnd = Math.hypot(cat().x - p.x, cat().y - p.y);
+    assert(dEnd > dStart, `не прочь: ${dStart.toFixed(1)} → ${dEnd.toFixed(1)}`);
+    p.x = 640;                                       // ушёл далеко, но кот ещё считается
+    for (let i = 0; i < 2000; i++) C.stepCats(p, locs);
+    eq(cat().st, 'sit', 'сидит');
+    assert(cat().x === cat().hx && cat().y === cat().hy, `не дома: ${cat().x.toFixed(1)},${cat().y.toFixed(1)}`);
+  });
+}
+
+// ═══ ЛУЖИ ═══
+{
+  const Pd = await imp('render/puddles.js');
+  const firstPuddle = () => {
+    for (let i = 36; i < 60; i++) for (let j = 36; j < 50; j++) { const q = Pd._cellAt(i, j, []); if (q) return { p: q, i, j }; }
+    return null;
+  };
+  const DRY = { state: 'clear', intensity: 0 }, CAM = { x: 0, y: 0, vw: 1, vh: 1 };
+  test('лужи: стоят на тех же местах; сухо — не видно, после дождя — видно', () => {
+    Pd._set(0);
+    const f = firstPuddle();
+    assert(f, 'ни одной лужи в городке');
+    eq(Pd._cellAt(f.i, f.j, []), f.p, 'та же лужа');
+    eq(Pd._sizeOf(f.p), null, 'сухо, а лужа видна');
+    Pd._set(1);
+    assert(Pd._sizeOf(f.p), 'после дождя лужи нет');
+  });
+  test('лужи: наступил — мокрые следы восемь шагов; без дождя высыхают за 3,5 минуты', () => {
+    Pd._set(1);
+    const { p } = firstPuddle();
+    const pl = { x: p.x - 6 - 28.8, y: p.y - 23, vx: 2.4, vy: 0 };   // шаг ляжет точно в середину лужи
+    for (let i = 0; i < 16 && !Pd._state().wetSteps; i++) { pl.x += 2.4; Pd.stepPuddles(pl, 'ground', DRY, CAM, []); }
+    eq(Pd._state().wetSteps, 8, 'ноги не намокли');
+    assert(Pd._state().ripples > 0, 'кругов нет');
+    eq(Pd.wetKind('soft'), 'wet', 'след не мокрый');
+    eq(Pd.wetKind(null), null, 'где следа нет — нет и мокрого');
+    for (let i = 0; i < 8; i++) Pd.usedWet();
+    eq(Pd.wetKind('soft'), 'soft', 'не просохли');
+    pl.vx = 0;
+    for (let i = 0; i < 12700; i++) Pd.stepPuddles(pl, 'ground', DRY, CAM, []);
+    eq(Pd._state().wet, 0, 'не высохло');
+  });
+}
+
+// ═══ РИСУНОК В МИРЕ: контекст уже сдвинут камерой ═══
+{
+  const T = await imp('core/time.js');
+  const Wh = await imp('world/whisper.js');
+  const At = await imp('render/atmosphere.js');
+  const rec = () => {
+    const calls = [], c = fakeCtx();
+    c.fillText = (s, x, y) => calls.push(['text', x, y]);
+    c.fillRect = (x, y) => calls.push(['rect', x, y]);
+    return { c, calls };
+  };
+  test('мир: шёпот и следы рисуются в координатах мира, камеру второй раз не вычитают', () => {
+    while (T.t < 11000) T.tick();                    // шёпот — не раньше трёх минут
+    const loc = { id: 'campfire', x: 5000, y: 5000, w: 50, h: 50 };
+    Wh.check({ x: 5000, y: 5010, moving: false }, [loc]);
+    const cam = { x: 4990, y: 5000 };
+    const r1 = rec(); Wh.draw(r1.c, cam);
+    const tx = r1.calls.find(k => k[0] === 'text');
+    assert(tx && Math.abs(tx[1] - 5025) < 1, `шёпот не там: x=${tx && tx[1]}`);
+    At.addFootprint(5000, 5000, 'soft');
+    const r2 = rec(); At.drawFootprints(r2.c, cam);
+    const fr = r2.calls.find(k => k[0] === 'rect');
+    assert(fr && fr[1] >= 5000 && fr[2] >= 5019, `след не там: ${fr && fr.slice(1).join(',')}`);
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

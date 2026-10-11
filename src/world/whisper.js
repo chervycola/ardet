@@ -75,8 +75,10 @@ export function check(player, locations) {
 export function draw(ctx, camera) {
   if (whisper.life <= 0) return;
   const total = 360;
-  const sx = whisper.x - camera.x;
-  const sy = whisper.y - camera.y - ((total - whisper.life) * 0.12);
+  // контекст мира уже сдвинут камерой — рисуем в координатах мира
+  const sx = whisper.x;
+  const sy = whisper.y - ((total - whisper.life) * 0.12);
+  void camera;
   const a = whisper.life > 300 ? ((total - whisper.life) / 60) : whisper.life / 300;
   ctx.globalAlpha = a * 0.35;
   ctx.fillStyle = '#e8dcc8';

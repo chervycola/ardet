@@ -15,6 +15,7 @@ import { updateGeiger } from './audio/geiger.js';
 import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
+import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -67,14 +68,15 @@ import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, set
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
 import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
-import { update as updateParticles, draw as drawParticles, footstepDust, pickupSparkle, fireEmber } from './render/particles.js';
+import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
+import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
 import { weather, update as updateWeather, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
 import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
-import { draw as drawSilentCat, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
+import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop } from './world/brainrot.js';
@@ -94,6 +96,7 @@ setTissueBlockers([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
 ]);
+initBunting(locations);                        // флаги Шута: гирлянда от фонаря к шесту
 initUI();
 initMetaFx();
 initTerminal();
@@ -287,6 +290,7 @@ function render() {
 
   drawArchGround(worldCtx, camX, camY, vw, vh);   // дворы, тени, тропинки под постройками
   drawGroundMarks(worldCtx, { x: camX, y: camY });
+  drawPuddles(worldCtx, camX, camY, vw, vh, locations, player);   // лужи после дождя, круги
   drawFootprints(worldCtx, { x: camX, y: camY });
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
@@ -300,9 +304,13 @@ function render() {
   for (const p of archProps) {
     if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });
   }
+  for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
+  for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
+    if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
+    if (it.cat) { drawCat(worldCtx, it.cat, player); continue; }
     if (it.player) {
       const so = stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);
@@ -324,7 +332,6 @@ function render() {
   drawJesterGraffiti({ x: camX, y: camY });
   drawJesterWandering({ x: camX, y: camY }, locations);
   drawPets({ x: camX, y: camY });
-  drawSilentCat(player, { x: camX, y: camY }, locations);
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
   toxic.drawWorld(worldCtx);
@@ -357,6 +364,7 @@ function render() {
   const fxCtx = layers.ctx('fx');
   crackedGlass.draw(fxCtx);
   dyingPixels.draw(fxCtx);
+  drawCatEyes(fxCtx, camX, camY, player);   // глаза кота отражают огонь странника
   drawWeatherAdditive(fxCtx);
   drawEdges(fxCtx);
 
@@ -418,6 +426,8 @@ function stepFx() {
   stepGrass(player);
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
+  stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
+  stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
   ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
@@ -904,6 +914,12 @@ function drawTeleportFade(ctx) {
 // на льду отпустил — едешь, в песке за краем вязнешь, по тропе чуть быстрее.
 let surfName = 'ground';
 function stopHero() { player.vx = 0; player.vy = 0; }
+// у костра земля в золе: ближе 40 точек к огню
+let fireLoc;
+function nearFire() {
+  if (fireLoc === undefined) fireLoc = locations.find(l => l.id === 'campfire') || null;
+  return !!fireLoc && Math.hypot(player.x + 6 - (fireLoc.x + 18), player.y + 23 - (fireLoc.y + 20)) < 40;
+}
 function heroStep(dvx, dvy) {
   const S = SURF[surfName];
   const cur = Math.hypot(player.vx, player.vy), want = Math.hypot(dvx, dvy);
@@ -925,7 +941,12 @@ function heroStep(dvx, dvy) {
     if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp') footstepDust(player.x, player.y);
-    addFootprint(player.x, player.y, S.print);
+    // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
+    const kind = wetKind(S.print);
+    if (addFootprint(player.x, player.y, kind)) {
+      if (kind === 'wet') usedWet();
+      if (surfName === 'ash' || nearFire()) ashPuff(player.x + 6, player.y + 23, sp);
+    }
   }
   return sp;
 }

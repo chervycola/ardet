@@ -57,13 +57,22 @@ export function draw(ctx, camera) {
     const sx = Math.floor(p.x - camera.x);
     const sy = Math.floor(p.y - camera.y);
     if (sx < -10 || sx > scaler.vw + 10 || sy < -10 || sy > scaler.vh + 10) continue;
+    const wx = Math.floor(p.x), wy = Math.floor(p.y);   // контекст мира уже сдвинут камерой
 
     const alpha = p.fadeOut ? Math.min(1, p.life / (p.maxLife * 0.3)) : 1;
     ctx.globalAlpha = alpha * 0.6;
     ctx.fillStyle = p.color;
-    ctx.fillRect(sx, sy, p.size, p.size);
+    ctx.fillRect(wx, wy, p.size, p.size);
   }
   ctx.globalAlpha = 1;
+}
+
+// пепел из-под ног: в гари и у костра — серое облачко, его сносит ветром
+export function ashPuff(x, y, sp = 1) {
+  emit(x, y, sp > 3 ? 4 : 2, {
+    color: '#8A8D8F', speed: 0.25 + sp * 0.06, life: 50, windK: 0.75,
+    spread: 1.4, angle: -Math.PI / 2, gravity: -0.002,
+  });
 }
 
 // Convenience: footstep dust

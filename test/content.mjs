@@ -345,24 +345,21 @@ setCtx(fakeCtx());
   const { locations } = await imp('world/locations.js');
 
   test('silentCat: 4 sightings → fifth-watcher unlock event', () => {
-    cat.loadSightings([]);
-    cat.setUnlocked(false);
-    let unlocked = false;
+    cat._reset();
+    let unlocked = false, early = false;
     const off = events.on('cat.unlocked', () => { unlocked = true; });
 
-    const spots = ['campfire','terminal','tent','nocturnal','raven'];
+    cat.stepCats({ x: 0, y: 0, vx: 0, vy: 0 }, locations);          // коты расселись по местам
+    const homes = cat._cats().slice(0, 4);
+    eq(homes.length, 4, 'four cat spots');
     // Visit 4 cat spots — must NOT unlock yet for first 3
-    for (let i = 0; i < 4; i++) {
-      const l = locations.find(ll => ll.id === spots[i]);
-      // Use the spot offsets from silentCat.js (the cat sits at l.x+ox, l.y+oy)
-      const offs = [
-        { ox: -8, oy: 28 },{ ox: 44, oy: 0 },{ ox: 52, oy: 40 },
-        { ox: 48, oy: 85 },{ ox: 8, oy: 18 },
-      ];
-      const player = { x: l.x + offs[i].ox, y: l.y + offs[i].oy };
-      cat.draw(player, { x: 0, y: 0 }, locations);
-    }
+    homes.forEach((c, i) => {
+      // стоит в двадцати точках над котом: лапы кота (hx+2, hy+3), ноги странника (x+6, y+22)
+      cat.stepCats({ x: c.hx + 2 - 6, y: c.hy + 3 - 22 - 20, vx: 0, vy: 0 }, locations);
+      if (i < 3 && unlocked) early = true;
+    });
     off();
+    assert(!early, 'unlocked before the fourth sighting');
     assert(unlocked, 'expected cat.unlocked after 4 sightings');
     assert(cat.isUnlocked(), 'isUnlocked true');
     eq(cat.getSightings().length, 4, '4 sightings recorded');
