@@ -456,6 +456,38 @@ setCtx(ctx);
   });
 }
 
+// ═══ КОТ И ВОРОНЫ ═══
+{
+  const C = await imp('world/silentCat.js');
+  const R = await imp('world/ravens.js');
+  const W = await imp('world/wind.js');
+  test('кот охотится: крадётся к стае, прыгает — стая взлетает прочь от кота; промах, домой', () => {
+    W.wind.s = 0; W.wind.x = 0; W.wind.y = 0;
+    C._reset(); R._reset(false);
+    const locs = [{ id: 'campfire', x: 1000, y: 1000, w: 55, h: 50 }];   // кот дома у (982, 1030)
+    const p = { x: 620, y: 1010, vx: 0, vy: 0 };                          // странник поодаль слева, стоит
+    C.stepCats(p, locs);
+    const f = R._spawn(982 - 90, 1033, 4);                                // стая слева от кота
+    const seen = new Set();
+    let flewFromCat = false;
+    for (let i = 0; i < 6000; i++) {
+      C.stepCats(p, locs); R.stepRavens(p, locs, null);
+      const cat = C._cats()[0];
+      seen.add(cat.st);
+      if (!flewFromCat && f.birds.some(b => b.st === 'fly')) {
+        const bird = f.birds.find(b => b.st === 'fly');
+        flewFromCat = bird.vx < 0;                                         // кот справа, странник слева — летят влево: от кота
+      }
+      if (seen.has('miss') && cat.st === 'sit') break;
+    }
+    for (const st of ['stalk', 'pounce', 'miss', 'back']) assert(seen.has(st), `не было: ${st} (${[...seen].join(',')})`);
+    assert(flewFromCat, 'стая не взлетела прочь от кота');
+    const cat = C._cats()[0];
+    eq(cat.st, 'sit', 'не вернулся');
+    assert(Math.hypot(cat.x - cat.hx, cat.y - cat.hy) < 1, 'не дома');
+  });
+}
+
 // ═══ МАРЕВО ═══
 {
   const Hz = await imp('render/haze.js');
@@ -485,6 +517,39 @@ setCtx(ctx);
     for (let d = 1790; d <= 1960; d += 10) hot = Math.max(hot, Hz.heatAt(mid, TOWN.y1 + d));
     eq(hot, 1, 'в огне не жарко');
     eq(Hz.heatAt(mid, TOWN.y1 + 2600), 0, 'за краем');
+  });
+}
+
+// ═══ СУТКИ И ТЕНИ ═══
+{
+  const Sk = await imp('world/sky.js');
+  const Sh = await imp('render/shadows.js');
+  test('сутки: фазы по канону (день 42 / сумерки 13 / ночь 37 / рассвет 8), начало на 0.30', () => {
+    eq(Sk.phaseAt(0), 0.3, 'начало');
+    eq(Sk.skyAt(0.0).name, 'день'); eq(Sk.skyAt(0.41).name, 'день');
+    eq(Sk.skyAt(0.43).name, 'сумерки'); eq(Sk.skyAt(0.54).name, 'сумерки');
+    eq(Sk.skyAt(0.56).name, 'ночь'); eq(Sk.skyAt(0.91).name, 'ночь');
+    eq(Sk.skyAt(0.93).name, 'рассвет');
+    assert(Sk.skyAt(0.21).light > Sk.skyAt(0.38).light && Sk.skyAt(0.38).light > Sk.skyAt(0.7).light, 'свет не по суткам');
+    eq(Sk.skyAt(0.7).light, 0.4, 'ночь');
+    eq(Math.round(Sk.phaseAt(Sk.DAY_LEN) * 100) / 100, 0.3, 'сутки не замкнулись');
+  });
+  test('тени: утром на запад, вечером на восток, в полдень коротко назад; ночью бледные от луны', () => {
+    const morning = Sk.shadowAt(0.04), noon = Sk.shadowAt(0.21), evening = Sk.shadowAt(0.38), night = Sk.shadowAt(0.7);
+    assert(morning.dx < -0.5, `утро: ${morning.dx.toFixed(2)}`);
+    assert(evening.dx > 0.5, `вечер: ${evening.dx.toFixed(2)}`);
+    assert(Math.abs(noon.dx) < 0.05 && noon.dy < 0 && Math.hypot(noon.dx, noon.dy) < 0.4, 'полдень');
+    assert(evening.a >= morning.a, 'вечер не гуще утра');
+    eq(night.from, 'луна');
+    assert(night.a > 0 && night.a < evening.a, 'ночь не бледнее вечера');
+  });
+  test('тени: силуэт ложится от подножия — низ маски на месте, верх уходит на (dx, dy)·высоту', () => {
+    const m = { x0: 100, y0: 50, base: 90, w: 20 };
+    const [a, b, c, d, e, f] = Sh.shadowTransform(m, 0, 0, 1.5, -0.4, 0, 0);
+    const at = (u, v) => [a * u + c * v + e, b * u + d * v + f];
+    const [bx, by] = at(5, 40), [tx, ty] = at(5, 0);
+    assert(Math.abs(bx - 105) < 1e-9 && Math.abs(by - 90) < 1e-9, `подножие: ${bx},${by}`);
+    assert(Math.abs(tx - (105 + 1.5 * 40)) < 1e-9 && Math.abs(ty - (90 - 0.4 * 40)) < 1e-9, `верх: ${tx},${ty}`);
   });
 }
 

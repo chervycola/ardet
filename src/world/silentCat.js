@@ -10,11 +10,16 @@
 //   Голову держит к страннику, хвост гуляет по ветру. Молчит.
 //   Глаза отражают огонь странника: ближе он — ярче (как у настоящих
 //   котов: светится не глаз, а то, что в нём отражается).
+//   Вороны рядом с домом — охота: крадётся пригнувшись, замирает, прыгает с
+//   полутора шагов — стая взлетает прочь от него; промах (всегда): сидит,
+//   хвост хлещет, смотрит вслед, потом домой. Мимо сидящих ворон пройдёт —
+//   взлетят.
 // Считаются только коты рядом со странником; рисуются по глубине, в мире.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { events } from '../core/events.js';
 import { wind } from './wind.js';
+import { calmRavenNear, startleRavens } from './ravens.js';
 
 const sightings = new Set();
 let fifthUnlocked = false;
@@ -33,6 +38,8 @@ const NEAR = 420;          // дальше от странника кот не �
 const STILL = 150;         // столько шагов тишины — и кот идёт греться (2,5 с)
 const LEASH = 90;          // дальше этого от дома не уходит
 const SIGHT = 40;          // ближе — заметил
+const HUNT = 150;          // ворон видит отсюда; дальше этого от дома не охотится
+const POUNCE = 16;         // отсюда — прыжок
 let cats = null, still = 0, solids = [], fire = null;
 
 function init(locations) {
@@ -44,6 +51,7 @@ function init(locations) {
     cats.push({
       id: s.loc, hx, hy, x: hx, y: hy, st: 'sit', tm: 0, dir: 1, fx: 0, fy: 0, run: 0, walk: 0,
       ph: Math.random() * 100, blink: 120 + Math.floor(Math.random() * 300), shut: 0, slow: false,
+      look: 30, prey: null, preyF: null, freeze: 0, lookX: null,
       perch: { x: l.x, y: l.y, w: l.w, h: l.h, k: l.y + l.h + 0.5 },   // сидит на вещи — рисуется поверх неё
       eyes: [], eyesT: -1,
     });
@@ -55,11 +63,11 @@ function init(locations) {
 
 // лапы кота — (x+2, y+3); из того, внутри чего уже сидит, выйти можно
 const inBox = (b, px, py) => px >= b.x && px < b.x + b.w && py >= b.y && py < b.y + b.h;
-function blockedFrom(c, x, y) {
+function blockedFrom(c, x, y, leash = LEASH) {
   const px = x + 2, py = y + 3, cx = c.x + 2, cy = c.y + 3;
   for (const b of solids) if (inBox(b, px, py) && !inBox(b, cx, cy)) return true;
   if (fire && Math.hypot(px - fire.x, py - fire.y) < fire.r) return true;
-  return Math.hypot(x - c.hx, y - c.hy) > LEASH;
+  return Math.hypot(x - c.hx, y - c.hy) > leash;
 }
 
 // отскок: прочь от странника, а если там стена — вбок
@@ -99,7 +107,7 @@ export function stepCats(player, locations) {
   for (const c of cats) {
     const dx = c.x + 2 - px, dy = c.y + 3 - py, d = Math.hypot(dx, dy);
     if (d > NEAR && Math.hypot(c.hx - px, c.hy - py) > NEAR) {  // далеко: дома, не считается
-      c.x = c.hx; c.y = c.hy; c.st = 'sit';
+      c.x = c.hx; c.y = c.hy; c.st = 'sit'; c.prey = null;
       continue;
     }
     if (d < SIGHT && !sightings.has(c.id)) {
@@ -131,7 +139,43 @@ export function stepCats(player, locations) {
         if (--c.tm <= 0) c.st = wantsWarm ? 'come' : 'back';
         break;
       case 'sit':
-        if (wantsWarm) c.st = 'come';
+        if (wantsWarm) { c.st = 'come'; break; }
+        if (d > 40 && --c.look <= 0) {                           // оглядывается: нет ли ворон
+          c.look = 30;
+          const prey = calmRavenNear(c.x + 2, c.y + 3, HUNT);
+          if (prey && Math.hypot(prey.b.x - c.hx, prey.b.y - c.hy) < HUNT) {
+            c.st = 'stalk'; c.prey = prey.b; c.preyF = prey.f; c.tm = 40 + Math.floor(Math.random() * 60); c.freeze = 0;
+          }
+        }
+        break;
+      case 'stalk': {                                            // крадётся, замирает
+        const b = c.prey;
+        if (!b || b.st !== 'ground' || c.preyF.st !== 'calm') { c.st = 'miss'; c.tm = 90; break; }
+        c.lookX = b.x;
+        if (c.freeze > 0) { c.freeze--; break; }
+        if (--c.tm <= 0) { c.freeze = 40 + Math.floor(Math.random() * 50); c.tm = 50 + Math.floor(Math.random() * 70); break; }
+        const ex = b.x - (c.x + 2), ey = b.y - (c.y + 3), e = Math.hypot(ex, ey) || 1;
+        if (e < POUNCE) {                                        // прыжок — стая взлетает от кота
+          c.st = 'pounce'; c.fx = ex / e; c.fy = ey / e; c.run = Math.min(16, e + 4); c.dir = ex >= 0 ? 1 : -1;
+          startleRavens(b.x, b.y, 60, c.x + 2, c.y + 3);
+          break;
+        }
+        const nx = c.x + ex / e * 0.16, ny = c.y + ey / e * 0.16;
+        if (blockedFrom(c, nx, ny, HUNT)) { c.st = 'miss'; c.tm = 90; break; }
+        c.x = nx; c.y = ny; c.walk += 0.16;
+        if (Math.abs(ex) > 0.5) c.dir = ex > 0 ? 1 : -1;
+        break;
+      }
+      case 'pounce': {
+        const nx = c.x + c.fx * 2.6, ny = c.y + c.fy * 2.6;
+        if (!blockedFrom(c, nx, ny, HUNT)) { c.x = nx; c.y = ny; c.walk += 2.6; }
+        c.run -= 2.6;
+        if (c.run <= 0) { c.st = 'miss'; c.tm = 150 + Math.floor(Math.random() * 60); }
+        break;
+      }
+      case 'miss':                                               // промах: сидит, хвост хлещет, смотрит вслед
+        if (c.preyF) { const f = c.preyF; c.lookX = f.tx; }
+        if (--c.tm <= 0) { c.st = 'back'; c.prey = null; c.preyF = null; c.lookX = null; }
         break;
       case 'back':
         if (wantsWarm) { c.st = 'come'; break; }
@@ -149,6 +193,10 @@ export function stepCats(player, locations) {
         if (d > 30) { c.st = 'wait'; c.tm = 120; }               // ушёл — посидит и домой
         break;
     }
+    // идёт мимо сидящих ворон — взлетят; бежит — тем более
+    if ((c.st === 'back' || c.st === 'come' || c.st === 'flee') && t % 10 === 0) {
+      startleRavens(c.x + 2, c.y + 3, c.st === 'flee' ? 30 : 18, c.x + 2, c.y + 3);
+    }
   }
 }
 
@@ -164,7 +212,18 @@ export function drawCat(ctx, c, player) {
   const x = Math.round(c.x), y = Math.round(c.y);
   const w = wind.at(c.x, c.y);
   ctx.fillStyle = CAT;
-  if (c.st === 'flee' || c.st === 'back' || c.st === 'come') {
+  if (c.st === 'stalk') {                                       // крадётся: низко, голова прижата, хвост подрагивает
+    const D = c.dir;
+    const at = (dx, dy, wd = 1) => ctx.fillRect(D > 0 ? x - 1 + dx : x + 5 - dx - (wd - 1), y + dy, wd, 1);
+    at(1, 1, 3); at(0, 2, 6); at(5, 1, 2); at(5, 0);              // спина, брюхо, голова, ухо
+    if (c.freeze > 0 || Math.floor(c.walk / 1.5) % 2) { at(1, 3); at(4, 3); } else { at(2, 3); at(3, 3); }
+    at(-1, 2); at(-2, 2); at(-3, (t + Math.floor(c.ph * 10)) % 40 < 6 ? 1 : 2);
+    ctx.fillStyle = RIM; at(1, 2, 3);
+    ctx.fillStyle = EYE; at(6, 1);
+    c.eyes = [[D > 0 ? x + 5 : x - 1, y + 1]]; c.eyesT = t;
+    return;
+  }
+  if (c.st === 'flee' || c.st === 'back' || c.st === 'come' || c.st === 'pounce') {
     // на ходу — сбоку: нос по ходу, хвост трубой назад
     const D = c.dir;
     const at = (dx, dy, wd = 1) => ctx.fillRect(D > 0 ? x - 1 + dx : x + 5 - dx - (wd - 1), y + dy, wd, 1);
@@ -179,7 +238,7 @@ export function drawCat(ctx, c, player) {
     return;
   }
   // сидит: голова к страннику — левее, прямо, правее; хвост — с другой стороны
-  const pdx = player.x + 6 - (c.x + 2);
+  const pdx = (c.st === 'miss' && c.lookX !== null ? c.lookX : player.x + 6) - (c.x + 2);   // промах — смотрит вслед стае
   const hx = pdx < -6 ? 0 : pdx > 6 ? 2 : 1, side = pdx >= 0 ? 1 : -1;
   ctx.fillRect(x, y + 1, 5, 3);
   ctx.fillRect(x + hx, y, 3, 1);
@@ -187,7 +246,7 @@ export function drawCat(ctx, c, player) {
   // хвост: у тепла лежит вокруг лап, в обиде — торчит и дёргается, так — гуляет по ветру
   let a;
   if (c.st === 'warm') a = Math.sin(t * 0.03 + c.ph) > 0.85 ? 0.5 : 0;
-  else if (c.st === 'wait') a = 1.1 + 0.35 * Math.sin(t * 0.35 + c.ph);
+  else if (c.st === 'wait' || c.st === 'miss') a = 1.1 + 0.35 * Math.sin(t * 0.35 + c.ph);
   else a = 0.35 + 0.25 * Math.sin(t * 0.025 + c.ph) + w.x * side * 0.8;
   a = Math.max(0, Math.min(1.5, a));
   const tb = side > 0 ? x - 1 : x + 5;

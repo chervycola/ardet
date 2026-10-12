@@ -17,6 +17,8 @@ import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
 import { hazeView, hazeComposite } from './render/haze.js';
+import { castShadows, maskFrom } from './render/shadows.js';
+import { phaseAt, skyAt, shadowAt } from './world/sky.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -234,18 +236,63 @@ for (const L of archWindowLights(locations, archProps)) lighting.add(L);
 
 // ═══ TIME ═══
 import { t } from './core/time.js';
-// Day cycle: 0 = midnight, 0.5 = noon, 1 = midnight again
-// Full cycle = 43200 frames @ 60fps = 12 min (6 min day + 6 min night)
-const DAY_LENGTH = 43200;
-// Start the session mid-morning, not at exact midnight — with no
-// offset t=0 gave dayCycle 0 and every first impression was the
-// darkest frame the game can produce.
-const DAY_START_OFFSET = 0.3; // fraction of a full cycle
+// Сутки — по канону v3.3 (world/sky.js): день 42% → сумерки 13% → ночь 37% →
+// рассвет 8%, 12 минут, начало на 0.30 — «день клонится к вечеру».
 
-function getDayCycle() {
-  const phase = ((t / DAY_LENGTH) + DAY_START_OFFSET) % 1;
-  // Sinusoidal: 0 at midnight, 1 at noon
-  return 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+// ═══ ТЕНИ ═══
+// кто отбрасывает: локации (кроме плоского), утварь эпох, странник. Маска —
+// один раз из рисунка вещи (render/shadows.js); здесь — как её нарисовать.
+const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle']);
+const LIGHTS = new Set(['campfire', 'sol_home']);   // сами светят — тени не отбрасывают (Sol горит с основания)
+const casterOf = new Map();
+function locCaster(loc) {
+  let c = casterOf.get(loc);
+  if (!c) {
+    c = { key: loc, ox: 0, oy: 0,
+      build: () => maskFrom(g => {
+        setCtx(g); drawLocation(g, loc);
+        if (loc.npc && npcDrawFn[loc.npc]) npcDrawFn[loc.npc](loc.x, loc.y);
+        setCtx(layers.ctx('world'));
+      }, loc.x - 30, loc.y - 70, loc.w + 60, loc.y + loc.h) };
+    casterOf.set(loc, c);
+  }
+  return c;
+}
+function propCaster(p) {
+  let c = casterOf.get(p);
+  if (!c) {
+    c = { key: p, ox: 0, oy: 0, build: () => maskFrom(g => { setCtx(g); p.draw(g); setCtx(layers.ctx('world')); },
+      Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
+    casterOf.set(p, c);
+  }
+  return c;
+}
+const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
+  setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
+}, -6, -10, 26, 23) };
+function shadowCasters(camX, camY, vw, vh) {
+  const pad = 170, out = [];
+  for (const loc of locations) {
+    if (loc.x + loc.w < camX - pad || loc.x > camX + vw + pad || loc.y + loc.h < camY - 40 || loc.y - 80 > camY + vh + pad) continue;
+    if (FLAT.has(loc.id) || LIGHTS.has(loc.id)) continue;
+    out.push(locCaster(loc));
+  }
+  for (const p of archProps) {
+    if (p.x + p.w < camX - pad || p.x - p.w > camX + vw + pad || p.gy < camY - 40 || p.gy - p.h > camY + vh + pad) continue;
+    out.push(propCaster(p));
+  }
+  heroCaster.ox = player.x; heroCaster.oy = player.y;
+  out.push(heroCaster);
+  return out;
+}
+let fireLocS;
+function fireShadow(sk, camX, camY, vw, vh) {
+  if (fireLocS === undefined) fireLocS = locations.find(l => l.id === 'campfire') || null;
+  if (!fireLocS) return null;
+  const x = fireLocS.x + 18, y = fireLocS.y + 20, r = 120;
+  if (x + r < camX || x - r > camX + vw || y + r < camY || y - r > camY + vh) return null;
+  const sun = sk.sun ? Math.min(1, sk.sun.elev / 0.35) : 0;     // днём тени от огня съедает солнце
+  return { x, y, r, a: 0.55 * (1 - sun) };
 }
 
 // NPC draw dispatch
@@ -297,6 +344,10 @@ function render() {
   drawRavenShadows(worldCtx, camX, camY, vw, vh);   // тени летящих ворон — на земле
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
+  if (!NO_SHADOW) {                                 // тени по времени суток и от костра
+    const sk = skyAt(phaseAt(t));
+    castShadows(worldCtx, camX, camY, vw, vh, shadowCasters(camX, camY, vw, vh), shadowAt(phaseAt(t)), fireShadow(sk, camX, camY, vw, vh));
+  }
 
   // локации (с постройками эпох), заборы дворов и странник — по глубине:
   // за домом странника не видно, перед домом — видно
@@ -356,11 +407,10 @@ function render() {
     lighting.sources[0].x = player.x + 6;
     lighting.sources[0].y = player.y + 10;
   }
-  const dayCycle = getDayCycle();
   // Readability floor: night was 0.28 (28% brightness through the
   // multiply layer) — dramatic on a desk, near-black on a phone in
   // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
-  const ambient = 0.40 + dayCycle * 0.42;
+  const ambient = skyAt(phaseAt(t)).light;      // сутки по канону: 0.40 ночь … 0.82 полдень
   lighting.render(lightCtx, { x: camX, y: camY }, ambient);
 
   // Atmospheric particles in lit areas (render on world layer for depth)
@@ -403,6 +453,7 @@ function render() {
 let jesterFirstTalk = false;          // первая встреча с Шутом — острый момент
 const NO_PLATE = /[?&]noplate\b/.test(location.search);
 const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравнения и слабых машин
+const NO_SHADOW = /[?&]noshadow\b/.test(location.search); // тени по времени суток — выключить (сравнить)
 layers.inkPass = (ctx, main) => {
   hazeComposite(ctx, main);              // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);

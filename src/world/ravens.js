@@ -116,7 +116,7 @@ function pickTarget(f, px, py, locations) {
 }
 function startle(f, px, py, first, locations, d) {
   if (f.st !== 'calm') return;
-  f.st = 'up';
+  f.st = 'up'; f.thx = px; f.thy = py;                           // откуда угроза — прочь от неё
   const tg = pickTarget(f, px, py, locations);
   f.tx = tg.x; f.ty = tg.y;
   for (const b of f.birds) {
@@ -135,7 +135,7 @@ function takeoff(b, px, py) {
 // ── шаг одной птицы ──
 function stepGround(b, f, px, py, ps, pvx, pvy) {
   const dx = b.x - px, dy = b.y - py, d = Math.hypot(dx, dy);
-  if (b.delay > 0 && --b.delay === 0) { takeoff(b, px, py); return; }
+  if (b.delay > 0 && --b.delay === 0) { takeoff(b, f.thx, f.thy); return; }
   if (b.hop) {                                                   // прыжок: дугой, 12 шагов
     const h = b.hop;
     h.k++; b.x += h.dx / h.n; b.y += h.dy / h.n; b.z = 2.5 * Math.sin(Math.PI * h.k / h.n);
@@ -192,8 +192,41 @@ function stepFly(b, f) {
 }
 
 // шум у странника — упал, гром: стаи в радиусе r поднимаются
-let pendingStartle = null;
-export function startleRavens(x, y, r) { pendingStartle = { x, y, r }; }
+// (fx, fy) — откуда угроза (прочь от неё и полетят); без них — от странника
+const pending = [];
+export function startleRavens(x, y, r, fx, fy) { pending.push({ x, y, r, fx, fy }); }
+
+// ближайшая спокойная птица на земле — для кота
+export function calmRavenNear(x, y, maxD) {
+  let best = null;
+  for (const f of flocks.values()) {
+    if (f.empty || f.st !== 'calm') continue;
+    for (const b of f.birds) {
+      if (b.st !== 'ground') continue;
+      const d = Math.hypot(b.x - x, b.y - y);
+      if (d < maxD && (!best || d < best.d)) best = { b, f, d };
+    }
+  }
+  return best;
+}
+
+// стаи на своих местах всегда: у Гнезда Ворона — его стая
+let anchors = null;
+function anchorFlocks(locations, px, py) {
+  if (!anchors) {
+    anchors = [];
+    const nest = locations.find(l => l.id === 'raven');
+    if (nest) {
+      for (const [ox, oy] of [[40, 30], [60, 10], [20, 50], [-40, 40]]) {
+        const x = nest.x + nest.w + ox, y = nest.y + nest.h + oy;
+        if (freeSpot(x, y, locations)) { anchors.push({ key: 'nest', x, y }); break; }
+      }
+    }
+  }
+  for (const a of anchors) {
+    if (!flocks.has(a.key) && Math.hypot(a.x - px, a.y - py) < NEAR) flocks.set(a.key, makeFlock(a.key, a.x, a.y, 5, 77));
+  }
+}
 
 // шаг мира
 export function stepRavens(player, locations, weather) {
@@ -205,7 +238,10 @@ export function stepRavens(player, locations, weather) {
   lastFlash = flash ? 1 : 0;
   // стаи вокруг
   const ci = Math.floor(px / CELL), cj = Math.floor(py / CELL);
-  if (grid) for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) flockAt(i, j, locations);
+  if (grid) {
+    for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) flockAt(i, j, locations);
+    anchorFlocks(locations, px, py);
+  }
   for (const [key, f] of flocks) {
     if (f.empty) { if (Math.abs(f.i - ci) > 3 || Math.abs(f.j - cj) > 3) flocks.delete(key); continue; }
     const c = center(f), dc = Math.hypot(c.x - px, c.y - py);
@@ -215,9 +251,10 @@ export function stepRavens(player, locations, weather) {
     if (f.st === 'calm') {
       for (const b of f.birds) {
         const dx = b.x - px, dy = b.y - py, d = Math.hypot(dx, dy);
-        const loud = pendingStartle && Math.hypot(b.x - pendingStartle.x, b.y - pendingStartle.y) < pendingStartle.r;
+        const loud = pending.find(q => Math.hypot(b.x - q.x, b.y - q.y) < q.r);
         if (d < 30 || (ps > 3 && d < 95) || (ps > 1.2 && d < 50 && pvx * dx + pvy * dy > 0) || loud) {
-          startle(f, px, py, b, locations, d);
+          const from = loud && loud.fx !== undefined ? loud : null;      // угроза не от странника — кот
+          startle(f, from ? from.fx : px, from ? from.fy : py, b, locations, d);
           break;
         }
       }
@@ -230,7 +267,7 @@ export function stepRavens(player, locations, weather) {
     // редкое карканье с земли — не чаще раза в 120 с
     if (f.st === 'calm' && dc < 260 && t - lastCaw > 7200 && Math.random() < 0.0015) { lastCaw = t; caw(near(dc, 0.016)); }
   }
-  pendingStartle = null;
+  pending.length = 0;
   // пролёт над головой: одиночка или пара, высоко, по ветру
   if (--nextOver <= 0) {
     nextOver = 7200 + Math.floor(Math.random() * 7200);
@@ -318,6 +355,6 @@ export function drawRavensAir(ctx, camX, camY, vw, vh) {
 }
 
 // для тестов
-export function _reset(g = true) { flocks.clear(); overs.length = 0; pendingStartle = null; grid = g; nextOver = 1e9; lastFlash = 0; }
+export function _reset(g = true) { flocks.clear(); overs.length = 0; pending.length = 0; grid = g; nextOver = 1e9; lastFlash = 0; anchors = null; }
 export function _spawn(x, y, n) { const k = -1 - flocks.size, f = makeFlock(k, x, y, n, 1); flocks.set(k, f); return f; }
 export const _flocks = () => flocks;
