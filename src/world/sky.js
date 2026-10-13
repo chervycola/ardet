@@ -19,6 +19,7 @@ try {
 } catch (e) {}
 
 const smooth = k => { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
+const MOON = Math.SQRT1_2;                     // тень от луны на 45°: на земле — длиной в вещь (по глубине экран вдвое)
 
 export const phaseAt = step => ((step / DAY_LEN) + START) % 1;
 export const dayIndex = step => Math.floor(step / DAY_LEN + START);   // номер суток (жребий событий — раз в сутки)
@@ -45,7 +46,8 @@ export function skyAt(p) {
 //   гаснет; в полдень короткая, назад (на север); экран сжат по глубине вдвое;
 //   свет — костяной («вечер — костяной штрих»)
 //   луна: слабая, прочь от луны (она на северо-востоке) — вниз-влево;
-//   свет — болотная мгла («луна вместо солнца»)
+//   честная (канон Г-10): длиной в саму вещь — луна стоит на 45° и всю ночь
+//   не ходит, тень не дышит; свет — болотная мгла («луна вместо солнца»)
 export function shadowAt(p) {
   const s = skyAt(p);
   if (s.sun) {
@@ -55,5 +57,5 @@ export function shadowAt(p) {
     return { dx: -Math.cos(az) * L, dy: -Math.max(0.32, Math.sin(az) * 0.5) * L, a: 0.6 * k,
       wash: 0.14 * k, washCol: '#D9CFB8', from: 'солнце' };
   }
-  return { dx: -0.35, dy: 0.22, a: 0.28 * s.moon, wash: 0.1 * s.moon, washCol: '#3D4A3A', from: 'луна' };
+  return { dx: -MOON, dy: MOON / 2, a: 0.28 * s.moon, wash: 0.1 * s.moon, washCol: '#3D4A3A', from: 'луна' };
 }

@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='384d99e · 2026-10-13';console.log('[оттиск]', '384d99e · 2026-10-13');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='a86bb40 · 2026-10-13';console.log('[оттиск]', 'a86bb40 · 2026-10-13');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -16323,7 +16323,7 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
 });
 System.register("render/shadows", [], function (exports_39, context_39) {
     "use strict";
-    var BUILD_PER_FRAME, SHADE, masks, sunC, sunX, fireC, fireX, outC, outX, _masks;
+    var BUILD_PER_FRAME, SHADE, FIRE_EXAG, FIRE_L_MAX, FIRE_GROW, GROW_H, FIRE_BREATH, FIRE_REACH, CANDLE, masks, sunC, sunX, fireC, fireX, outC, outX, _masks;
     var __moduleName = context_39 && context_39.id;
     function layer(c, vw, vh) {
         if (!c)
@@ -16375,10 +16375,43 @@ System.register("render/shadows", [], function (exports_39, context_39) {
         return [1, 0, -dx, -dy, m.x0 + ox + dx * H - camX, m.base + oy + dy * H - camY];
     }
     exports_39("shadowTransform", shadowTransform);
-    // докуда достаёт тень (для отсечения)
-    function reaches(m, ox, oy, dx, dy, camX, camY, vw, vh) {
+    // костровая тень вещи: { dx, dy, grow } — куда и насколько длинна (на точку высоты) и
+    // на сколько шире к голове; null — вещь далеко от огня или в самом огне.
+    // От огня прочь: направление — от костра к подножию вещи; ближе к огню — длиннее;
+    // огонь вспыхнул (breath → 1) — тень выросла, опал — съёжилась
+    function fireCast(m, ox, oy, fire) {
+        const bx = m.x0 + ox + m.w / 2, by = m.base + oy;
+        const ex = bx - fire.x, ey = by - fire.y, d = Math.hypot(ex, ey);
+        if (d <= 6 || d >= fire.r)
+            return null;
+        const br = 1 + FIRE_BREATH * (fire.breath || 0);
+        const L = Math.min(FIRE_L_MAX, (0.9 + 16 / Math.max(10, d)) * FIRE_EXAG) * br;
+        // по глубине — не тоньше трети длины: иначе тень сбоку от огня сплющится в линию
+        const dx = ex / d * L, dy = (ey > 2 ? 1 : -1) * Math.max(Math.abs(ey / d) * 0.6, 0.32) * L;
+        return { dx, dy, grow: FIRE_GROW * (0.4 + 0.6 * (1 - d / fire.r)) * br };
+    }
+    exports_39("fireCast", fireCast);
+    // тень, растущая к голове: маска — полосами по высоте, каждая шире нижней
+    // (grow — на сколько шире на высоте GROW_H; низ остаётся у подножия как есть).
+    // [{ tr, v0, v1 }] — преобразование холста и строки маски [v0, v1)
+    function grownBands(m, ox, oy, dx, dy, grow, camX, camY) {
+        const H = m.base - m.y0, n = Math.max(1, Math.min(8, Math.round(m.h / 8))), cx = m.w / 2;
+        const out = [];
+        for (let k = 0; k < n; k++) {
+            const v0 = Math.floor(k * m.h / n), v1 = Math.floor((k + 1) * m.h / n);
+            if (v1 <= v0)
+                continue;
+            const S = 1 + grow * Math.min(1.2, Math.max(0, H - (v0 + v1) / 2) / GROW_H);
+            // полосы заходят друг на друга на строку — на стыках без швов (слой непрозрачный, двойного нет)
+            out.push({ tr: [S, 0, -dx, -dy, m.x0 + ox + cx * (1 - S) + dx * H - camX, m.base + oy + dy * H - camY], v0: Math.max(0, v0 - 1), v1 });
+        }
+        return out;
+    }
+    exports_39("grownBands", grownBands);
+    // докуда достаёт тень (для отсечения); pad — запас вбок (тень шире вещи)
+    function reaches(m, ox, oy, dx, dy, camX, camY, vw, vh, pad = 0) {
         const H = m.base - m.y0;
-        const x0 = m.x0 + ox + Math.min(0, dx * H), x1 = m.x0 + ox + m.w + Math.max(0, dx * H);
+        const x0 = m.x0 + ox + Math.min(0, dx * H) - pad, x1 = m.x0 + ox + m.w + Math.max(0, dx * H) + pad;
         const y0 = m.base + oy + Math.min(0, dy * H), y1 = m.base + oy + Math.max(0, dy * H) + 1;
         return x1 > camX && x0 < camX + vw && y1 > camY && y0 < camY + vh;
     }
@@ -16394,7 +16427,8 @@ System.register("render/shadows", [], function (exports_39, context_39) {
     }
     // тени кадра. casters: [{ key, ox, oy, build, noFire, fx, fy }] — build() строит маску
     // (один раз), ox/oy — сдвиг маски в мире (странник ходит; дома стоят на нуле).
-    // sun: { dx, dy, a, wash, washCol }; fire: { x, y, r, a } | null — костёр.
+    // sun: { dx, dy, a, wash, washCol }; fire: { x, y, r, a, wash, breath } | null — костёр
+    // (breath −1…1 — где пламя в своём дыхании; x уже с тем, куда оно клонится).
     // Свет светила кладётся на землю тонким слоем, тени из него вырезаны — так
     // тень читается и на тёмной земле.
     function castShadows(ctx, camX, camY, vw, vh, casters, sun, fire) {
@@ -16428,23 +16462,36 @@ System.register("render/shadows", [], function (exports_39, context_39) {
                 anySun = true;
             }
             if (doFire && !c.noFire) {
-                // от огня прочь: направление — от костра к подножию вещи; ближе к огню — длиннее
-                const bx = m.x0 + c.ox + m.w / 2, by = m.base + c.oy;
-                const ex = bx - fire.x, ey = by - fire.y, d = Math.hypot(ex, ey);
-                if (d > 6 && d < fire.r) {
-                    const L = Math.min(2.2, 0.9 + 16 / Math.max(10, d));
-                    // по глубине — не тоньше трети длины: иначе тень сбоку от огня сплющится в линию
-                    const fdx = ex / d * L, fdy = (ey > 2 ? 1 : -1) * Math.max(Math.abs(ey / d) * 0.6, 0.32) * L;
-                    if (reaches(m, c.ox, c.oy, fdx, fdy, camX, camY, vw, vh)) {
-                        fireX.globalAlpha = 1 - d / fire.r; // дальше от огня — бледнее
-                        fireX.setTransform(...shadowTransform(m, c.ox, c.oy, fdx, fdy, camX, camY));
-                        fireX.drawImage(m.canvas, 0, 0);
-                        anyFire = true;
+                const f = fireCast(m, c.ox, c.oy, fire);
+                if (f && reaches(m, c.ox, c.oy, f.dx, f.dy, camX, camY, vw, vh, m.w * f.grow * 0.6)) {
+                    for (const b of grownBands(m, c.ox, c.oy, f.dx, f.dy, f.grow, camX, camY)) {
+                        fireX.setTransform(...b.tr);
+                        fireX.drawImage(m.canvas, 0, b.v0, m.w, b.v1 - b.v0, 0, b.v0, m.w, b.v1 - b.v0);
                     }
+                    anyFire = true;
                 }
             }
         }
-        // всё — в один слой кадра (свет, поверх тени светила, поверх тени огня), на землю — один раз
+        // свет огня — круг вокруг него (за кругом ни света, ни тени огня): всё огненное — только в нём
+        const fx = doFire ? fire.x - camX : 0, fy = doFire ? fire.y - camY : 0;
+        const R = doFire ? fire.r * FIRE_REACH * (1 + FIRE_BREATH * (fire.breath || 0)) : 0;
+        const bx = Math.max(0, Math.floor(fx - R)), by = Math.max(0, Math.floor(fy - R));
+        const bw = Math.min(vw, Math.ceil(fx + R)) - bx, bh = Math.min(vh, Math.ceil(fy + R)) - by;
+        const inRing = doFire && bw > 0 && bh > 0;
+        if (anyFire && inRing) {
+            // свет огня гаснет с расстоянием — и тень с ним: у подножия гуще, дальний конец бледнее
+            // (стираем обратным кругом: так трогается только круг огня, не весь кадр)
+            fireX.setTransform(1, 0, 0, 1, 0, 0);
+            fireX.globalCompositeOperation = 'destination-out';
+            const gr = fireX.createRadialGradient(fx, fy, 0, fx, fy, R);
+            gr.addColorStop(0, 'rgba(0,0,0,0)');
+            gr.addColorStop(1, 'rgba(0,0,0,1)');
+            fireX.fillStyle = gr;
+            fireX.fillRect(bx, by, bw, bh);
+            fireX.globalCompositeOperation = 'source-over';
+        }
+        // всё — в один слой кадра, на землю — один раз. Сначала оба света, потом обе тени:
+        // у огня лунная тень не тонет в его свете — спор виден
         outC = layer(outC, vw, vh);
         outX = outC.getContext('2d');
         outX.setTransform(1, 0, 0, 1, 0, 0);
@@ -16454,17 +16501,30 @@ System.register("render/shadows", [], function (exports_39, context_39) {
             outX.globalAlpha = sun.wash;
             outX.fillStyle = sun.washCol;
             outX.fillRect(0, 0, vw, vh);
+            outX.globalAlpha = 1;
+        }
+        if (inRing && fire.wash > 0.003) {
+            // свет огня на земле — тёплый круг: у огня светлее всего, к краю на нет; тени огня из него вырезаны
+            const gw = outX.createRadialGradient(fx, fy, 0, fx, fy, R);
+            gw.addColorStop(0, `rgba(${CANDLE},${fire.wash})`);
+            gw.addColorStop(0.45, `rgba(${CANDLE},${fire.wash * 0.45})`);
+            gw.addColorStop(1, `rgba(${CANDLE},0)`);
+            outX.fillStyle = gw;
+            outX.fillRect(bx, by, bw, bh);
+            if (anyFire) {
+                outX.globalCompositeOperation = 'destination-out';
+                outX.drawImage(fireC, bx, by, bw, bh, bx, by, bw, bh);
+                outX.globalCompositeOperation = 'source-over';
+            }
         }
         if (anySun) {
             sunX.setTransform(1, 0, 0, 1, 0, 0);
             outX.globalAlpha = sun.a;
             outX.drawImage(sunC, 0, 0);
         }
-        if (anyFire) {
-            fireX.setTransform(1, 0, 0, 1, 0, 0);
-            fireX.globalAlpha = 1;
+        if (anyFire && inRing) {
             outX.globalAlpha = fire.a;
-            outX.drawImage(fireC, 0, 0);
+            outX.drawImage(fireC, bx, by, bw, bh, bx, by, bw, bh);
         }
         outX.globalAlpha = 1;
         ctx.drawImage(outC, camX, camY);
@@ -16481,12 +16541,27 @@ System.register("render/shadows", [], function (exports_39, context_39) {
             // по солнцу: утром на запад, вечером на восток, длинная и густая; в полдень
             // короткая, назад; ночью — бледная, от луны. У костра — свои тени: от огня
             // прочь, ночью гуще, днём их съедает солнце.
+            // Два спорящих света (канон Г-10, IRONY_DEVICES): ночью у вещи у костра две
+            // тени, и в размере они не сходятся. Лунная — неподвижная и честная: какая
+            // вещь, такая и тень. Костровая — дышащая и преувеличивающая: длиннее и к
+            // голове шире (свет низкий и близкий — что дальше от земли, то он раздувает
+            // сильнее), вспыхивает и опадает с пламенем и качается, куда клонится огонь;
+            // гаснет вместе с его светом — дальний конец бледнее. Свет огня тоже лежит на
+            // земле (тёплый круг, тени из него вырезаны): у луны свет — мгла, у огня — свеча,
+            // и спор видно ещё и цветом.
             // Две тени от двух светил складываются; тени одного светила друг на друга
             // не темнеют (общий слой, одна прозрачность).
             // Плоское (кратер, русло, лужа) тени не отбрасывает.
             // ═══════════════════════════════════════
             BUILD_PER_FRAME = 6;
             SHADE = [13, 11, 10]; // НОЧЬ
+            FIRE_EXAG = 1.3; // костёр преувеличивает: тень длиннее, чем вышло бы по высоте
+            FIRE_L_MAX = 2.8; // но не до края кадра
+            FIRE_GROW = 0.35; // к голове шире (у самого огня — почти на столько)
+            GROW_H = 40; // на какой высоте раздувает в полную силу
+            FIRE_BREATH = 0.12; // дыхание: длина и рост гуляют с пламенем
+            FIRE_REACH = 1.25; // докуда достаёт свет огня (в долях радиуса теней)
+            CANDLE = '226,138,58'; // СВЕЧА — свет огня на земле
             masks = new Map();
             sunC = null, sunX = null, fireC = null, fireX = null, outC = null, outX = null;
             exports_39("_masks", _masks = () => masks);
@@ -16495,7 +16570,7 @@ System.register("render/shadows", [], function (exports_39, context_39) {
 });
 System.register("world/sky", [], function (exports_40, context_40) {
     "use strict";
-    var DAY_LEN, DAY, DUSK, NIGHT, START, smooth, phaseAt, dayIndex;
+    var DAY_LEN, DAY, DUSK, NIGHT, START, smooth, MOON, phaseAt, dayIndex;
     var __moduleName = context_40 && context_40.id;
     // что в небе на фазе p
     function skyAt(p) {
@@ -16520,7 +16595,8 @@ System.register("world/sky", [], function (exports_40, context_40) {
     //   гаснет; в полдень короткая, назад (на север); экран сжат по глубине вдвое;
     //   свет — костяной («вечер — костяной штрих»)
     //   луна: слабая, прочь от луны (она на северо-востоке) — вниз-влево;
-    //   свет — болотная мгла («луна вместо солнца»)
+    //   честная (канон Г-10): длиной в саму вещь — луна стоит на 45° и всю ночь
+    //   не ходит, тень не дышит; свет — болотная мгла («луна вместо солнца»)
     function shadowAt(p) {
         const s = skyAt(p);
         if (s.sun) {
@@ -16530,7 +16606,7 @@ System.register("world/sky", [], function (exports_40, context_40) {
             return { dx: -Math.cos(az) * L, dy: -Math.max(0.32, Math.sin(az) * 0.5) * L, a: 0.6 * k,
                 wash: 0.14 * k, washCol: '#D9CFB8', from: 'солнце' };
         }
-        return { dx: -0.35, dy: 0.22, a: 0.28 * s.moon, wash: 0.1 * s.moon, washCol: '#3D4A3A', from: 'луна' };
+        return { dx: -MOON, dy: MOON / 2, a: 0.28 * s.moon, wash: 0.1 * s.moon, washCol: '#3D4A3A', from: 'луна' };
     }
     exports_40("shadowAt", shadowAt);
     return {
@@ -16558,6 +16634,7 @@ System.register("world/sky", [], function (exports_40, context_40) {
             }
             catch (e) { }
             smooth = k => { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
+            MOON = Math.SQRT1_2; // тень от луны на 45°: на земле — длиной в вещь (по глубине экран вдвое)
             exports_40("phaseAt", phaseAt = step => ((step / DAY_LEN) + START) % 1);
             exports_40("dayIndex", dayIndex = step => Math.floor(step / DAY_LEN + START)); // номер суток (жребий событий — раз в сутки)
         }
@@ -36805,12 +36882,12 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
 });
 System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"], function (exports_93, context_93) {
     "use strict";
-    var time_js_24, scaler_js_17, redNoon_js_2, WHISPERS, whisper, lastWhisperEnd, COOLDOWN;
+    var time_js_24, scaler_js_17, redNoon_js_2, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd;
     var __moduleName = context_93 && context_93.id;
     // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
     // null — день, свет не нужен
     function check(player, locations, litAt = null) {
-        if (whisper.life > 0)
+        if (whisper.text)
             return;
         if (redNoon_js_2.redNoon.active)
             return; // красный полдень: шёпоты молчат
@@ -36825,38 +36902,173 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
                 // ночью шёпоты живут только у света: в темноте мир не отвечает
                 if (litAt && !l.light && !litAt(l.x + l.w / 2, l.y + l.h / 2))
                     continue;
-                whisper = {
-                    text: WHISPERS[l.id],
-                    life: 360,
-                    x: l.x + l.w / 2,
-                    y: l.y - 10,
-                };
+                whisper = { text: WHISPERS[l.id], x: l.x + l.w / 2, y: l.y - 10, t0: time_js_24.t, prep: null };
                 break;
             }
         }
     }
     exports_93("check", check);
+    // путь пера по одной букве: с верхней левой точки — к ближайшей соседней,
+    // по возможности не сворачивая (штрих, а не строчка за строчкой)
+    function penPath(cells) {
+        const left = cells.slice(), out = [];
+        if (!left.length)
+            return out;
+        let k = 0;
+        for (let i = 1; i < left.length; i++)
+            if (left[i].y < left[k].y || (left[i].y === left[k].y && left[i].x < left[k].x))
+                k = i;
+        let cur = left.splice(k, 1)[0], dx = 0, dy = 0;
+        out.push(cur);
+        while (left.length) {
+            let bi = 0, bs = Infinity;
+            for (let i = 0; i < left.length; i++) {
+                const ex = left[i].x - cur.x, ey = left[i].y - cur.y;
+                const d = Math.max(Math.abs(ex), Math.abs(ey));
+                const turn = dx || dy ? 1 - (ex * dx + ey * dy) / (Math.hypot(ex, ey) * Math.hypot(dx, dy)) : 0;
+                const sc = d + 0.3 * turn + (ey < 0 ? 0.05 : 0); // ближе, прямее, сверху вниз
+                if (sc < bs) {
+                    bs = sc;
+                    bi = i;
+                }
+            }
+            const nx = left.splice(bi, 1)[0];
+            dx = nx.x - cur.x;
+            dy = nx.y - cur.y;
+            cur = nx;
+            out.push(cur);
+        }
+        return out;
+    }
+    exports_93("penPath", penPath);
+    // строка — в клетки штриха по буквам и расписание пера (при первом показе)
+    function prepare(text) {
+        let full = null;
+        try {
+            full = document.createElement('canvas');
+        }
+        catch (e) {
+            return null;
+        }
+        const g = full && full.getContext && full.getContext('2d', { willReadFrequently: true });
+        if (!g)
+            return null;
+        const s = Math.max(1, Math.round(scaler_js_17.scaler.scale) || 1), fp = FONT_PX * s, font = `${fp}px ${FONT}`;
+        g.font = font;
+        const tw = g.measureText(text).width, B = Math.round(fp * 1.15);
+        const cw = Math.ceil((tw + 2 * s) / s), ch = Math.ceil((B + fp * 0.5) / s);
+        full.width = cw * s;
+        full.height = ch * s;
+        g.font = font;
+        g.fillStyle = INK;
+        g.textBaseline = 'alphabetic';
+        g.fillText(text, s, B);
+        const chars = Array.from(text), ext = []; // где кончается каждая буква (точки холста)
+        for (let i = 0; i <= chars.length; i++)
+            ext.push(s + g.measureText(chars.slice(0, i).join('')).width);
+        const d = g.getImageData(0, 0, full.width, full.height).data, W = full.width;
+        const per = chars.map(() => []);
+        for (let cy = 0; cy < ch; cy++)
+            for (let cx = 0; cx < cw; cx++) {
+                let ink = 0;
+                for (let y = 0; y < s && !ink; y++)
+                    for (let x = 0; x < s; x++)
+                        if (d[((cy * s + y) * W + cx * s + x) * 4 + 3]) {
+                            ink = 1;
+                            break;
+                        }
+                if (!ink)
+                    continue;
+                const mx = (cx + 0.5) * s;
+                let i = 0;
+                while (i < chars.length - 1 && mx >= ext[i + 1])
+                    i++;
+                per[i].push({ x: cx, y: cy });
+            }
+        const cells = [], times = [];
+        let time = 0;
+        chars.forEach((c, i) => {
+            if (!per[i].length) {
+                time += c === ' ' ? SPACE : 1;
+                return;
+            }
+            for (const q of penPath(per[i])) {
+                cells.push(q);
+                times.push(Math.floor(time));
+                time += 1 / PEN;
+            }
+            time += LIFT;
+        });
+        const sheet = document.createElement('canvas');
+        sheet.width = full.width;
+        sheet.height = full.height;
+        return { full, sheet, sg: sheet.getContext('2d'), s, cells, times, next: 0, write: Math.ceil(time), wl: cw, base: B / s };
+    }
     function draw(ctx, camera) {
-        if (whisper.life <= 0)
+        void camera; // контекст мира уже сдвинут камерой — рисуем в координатах мира
+        if (!whisper.text)
             return;
-        const total = 360;
-        // контекст мира уже сдвинут камерой — рисуем в координатах мира
-        const sx = whisper.x;
-        const sy = whisper.y - ((total - whisper.life) * 0.12);
-        void camera;
-        const a = whisper.life > 300 ? ((total - whisper.life) / 60) : whisper.life / 300;
-        ctx.globalAlpha = a * 0.35;
-        ctx.fillStyle = '#e8dcc8';
-        ctx.font = '6px "Press Start 2P","VT323",monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(whisper.text, sx, sy);
-        ctx.textAlign = 'left';
-        ctx.globalAlpha = 1;
-        whisper.life--;
-        if (whisper.life <= 0)
+        const w = whisper;
+        if (!w.prep) {
+            w.prep = prepare(w.text);
+            if (!w.prep) { // без холста — строка дописывается по буквам целиком
+                ctx.font = `${FONT_PX}px ${FONT}`;
+                w.prep = { write: Array.from(w.text).length * LETTER, wl: ctx.measureText(w.text).width, plain: true };
+            }
+        }
+        const P = w.prep;
+        let a = time_js_24.t - w.t0;
+        if (redNoon_js_2.redNoon.active && a < P.write + HOLD) { // полдень: недописанное так и гаснет недописанным
+            if (w.cut === undefined)
+                w.cut = Math.min(a, P.write);
+            w.t0 = time_js_24.t - P.write - HOLD;
+            a = P.write + HOLD;
+        }
+        const wrote = w.cut === undefined ? a : w.cut; // докуда дошло перо
+        if (a >= P.write + HOLD + FADE) {
+            whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
             lastWhisperEnd = time_js_24.t;
+            return;
+        }
+        const fade = a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE;
+        const sy = w.y - Math.max(0, a - P.write - HOLD) * 0.12; // выцветая, уходит вверх
+        if (P.plain) {
+            const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
+            ctx.globalAlpha = DRY_A * fade;
+            ctx.fillStyle = INK;
+            ctx.font = `${FONT_PX}px ${FONT}`;
+            ctx.textAlign = 'left';
+            ctx.fillText(Array.from(w.text).slice(0, n).join(''), w.x - P.wl / 2, sy);
+            ctx.globalAlpha = 1;
+            return;
+        }
+        // перо: дописать клетки, до которых дошло
+        while (P.next < P.cells.length && P.times[P.next] <= wrote) {
+            const c = P.cells[P.next++];
+            P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
+        }
+        const s = P.s;
+        const x0 = Math.round((w.x - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
+        ctx.globalAlpha = DRY_A * fade;
+        ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
+        // свежие чернила светлее — сохнут за WET шагов
+        for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
+            const c = P.cells[i];
+            ctx.globalAlpha = WET_A * (1 - (a - P.times[i]) / WET) * fade;
+            ctx.drawImage(P.full, c.x * s, c.y * s, s, s, x0 + c.x, y0 + c.y, 1, 1);
+        }
+        if (P.next > 0 && P.next < P.cells.length && w.cut === undefined) { // кончик пера — пока пишет
+            const c = P.cells[P.next - 1];
+            ctx.globalAlpha = NIB_A * fade;
+            ctx.fillStyle = NIB;
+            ctx.fillRect(x0 + c.x, y0 + c.y, 1, 1);
+        }
+        ctx.globalAlpha = 1;
     }
     exports_93("draw", draw);
+    // для проверок
+    function _reset() { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; lastWhisperEnd = -COOLDOWN; }
+    exports_93("_reset", _reset);
     return {
         setters: [
             function (time_js_24_1) {
@@ -36913,9 +37125,23 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
                 pithos: '...жильё без ипотеки... солнца не заслоняй...',
                 gates: '...обычно это узнают позже...',
             });
-            whisper = { text: '', life: 0, x: 0, y: 0 };
+            INK = '#e8dcc8'; // чернила шёпота
+            NIB = '#D9CFB8'; // кончик пера — КОСТЬ
+            FONT_PX = 6, FONT = '"Press Start 2P","VT323",monospace';
+            PEN = 1.6; // скорость пера: клеток штриха за шаг
+            LIFT = 2, SPACE = 5; // перо оторвалось между буквами; на пробеле медлит
+            LETTER = 6; // без холста (проверки) — шагов на букву
+            HOLD = 90, FADE = 240; // дописал — постоял полторы секунды, выцветает четыре
+            WET = 12; // сколько шагов сохнут свежие чернила
+            DRY_A = 0.35, WET_A = 0.3, NIB_A = 0.75; // сухое, свежее сверху, кончик
+            COOLDOWN = 10800; // ~3 минуты между шёпотами
+            whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
             lastWhisperEnd = 0;
-            COOLDOWN = 10800; // ~3 minutes
+            try {
+                if (/[?&]whisper\b/.test(location.search))
+                    lastWhisperEnd = -COOLDOWN;
+            }
+            catch (e) { }
         }
     };
 });
@@ -41022,7 +41248,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (x + r < camX || x - r > camX + vw || y + r < camY || y - r > camY + vh)
             return null;
         const sun = sk.sun ? Math.min(1, sk.sun.elev / 0.35) : 0; // днём тени от огня съедает солнце
-        return { x, y, r, a: 0.55 * (1 - sun) };
+        // огонь дышит (канон Г-10): вспыхивает и опадает в такт своему свечению — та же
+        // волна, что у света (render/lighting.js), — и клонится то вправо, то влево, как пламя
+        const breath = Math.sin(time_js_38.t * 0.07 + (fireLocS.x + fireLocS.w / 2) * 0.1);
+        const sway = Math.sin(time_js_38.t * 0.025 + 2.2) * 3;
+        const k = (1 - sun) * (1 + 0.1 * breath);
+        return { x: x + sway, y, r, a: 0.62 * k, wash: 0.24 * k, breath };
     }
     // ═══ RENDER ═══
     function render() {
@@ -41063,8 +41294,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const sun = sky_js_1.shadowAt(sky_js_1.phaseAt(time_js_38.t)), fs = fireShadow(sk, camX, camY, vw, vh);
             sun.a *= fade;
             sun.wash *= fade;
-            if (fs)
+            if (fs) {
                 fs.a *= fade;
+                fs.wash *= fade;
+            }
             shadows_js_1.castShadows(worldCtx, camX, camY, vw, vh, shadowCasters(camX, camY, vw, vh), sun, fs);
         }
         // локации (с постройками эпох), заборы дворов и странник — по глубине:

@@ -551,6 +551,34 @@ setCtx(ctx);
     assert(Math.abs(bx - 105) < 1e-9 && Math.abs(by - 90) < 1e-9, `подножие: ${bx},${by}`);
     assert(Math.abs(tx - (105 + 1.5 * 40)) < 1e-9 && Math.abs(ty - (90 - 0.4 * 40)) < 1e-9, `верх: ${tx},${ty}`);
   });
+  // на земле по глубине экран сжат вдвое: длина тени на земле — hypot(dx, 2·dy)
+  const ground = f => Math.hypot(f.dx, f.dy * 2);
+  test('два света: лунная тень всю ночь та же и длиной в вещь; костровая длиннее и дышит с огнём', () => {
+    const n1 = Sk.shadowAt(0.6), n2 = Sk.shadowAt(0.85);
+    assert(n1.dx === n2.dx && n1.dy === n2.dy && n1.a === n2.a, 'лунная ходит');
+    assert(Math.abs(ground(n1) - 1) < 1e-9, `лунная не в рост вещи: ${ground(n1).toFixed(2)}`);
+    const m = { x0: -6, y0: -10, base: 23, w: 26, h: 33 };          // странник
+    const fire = { x: 30, y: -10, r: 120 };                         // огонь — северо-восточнее, в сорока точках
+    const at = breath => Sh.fireCast(m, 0, 0, { ...fire, breath });
+    const f0 = at(0), up = at(1), down = at(-1);
+    assert(ground(f0) > 1.5 * ground(n1), `костровая не преувеличивает: ${ground(f0).toFixed(2)}`);
+    assert(ground(up) > ground(f0) && ground(f0) > ground(down), 'костровая не дышит');
+    assert(up.grow > f0.grow && f0.grow > down.grow && down.grow > 0, 'к голове не шире');
+    assert(f0.dx < 0 && f0.dy > 0, 'не от огня прочь');
+    eq(Sh.fireCast(m, 0, 0, { ...fire, x: 600 }), null, 'далеко от огня — а тень есть');
+  });
+  test('два света: костровая тень растёт к голове — подножие на месте, верх шире, строки все', () => {
+    const m = { x0: 100, y0: 50, base: 90, w: 20, h: 40 };
+    const bands = Sh.grownBands(m, 0, 0, 1, 0.5, 0.3, 0, 0);
+    const top = bands[0], low = bands[bands.length - 1];
+    const at = (tr, u, v) => [tr[0] * u + tr[2] * v + tr[4], tr[1] * u + tr[3] * v + tr[5]];
+    const [bx, by] = at(low.tr, 10, 40);
+    assert(Math.abs(bx - 110) < 1e-9 && Math.abs(by - 90) < 1e-9, `подножие ушло: ${bx},${by}`);
+    assert(low.tr[0] < 1.05 && top.tr[0] > 1.2, `рост: низ ${low.tr[0].toFixed(2)}, верх ${top.tr[0].toFixed(2)}`);
+    const rows = new Set();
+    for (const b of bands) for (let v = b.v0; v < b.v1; v++) rows.add(v);
+    eq(rows.size, 40, 'не все строки маски');
+  });
 }
 
 // ═══ КРАСНЫЙ ПОЛДЕНЬ ═══
@@ -579,6 +607,7 @@ setCtx(ctx);
   const Pen = await imp('render/pen.js');
   const Wh = await imp('world/whisper.js');
   const T = await imp('core/time.js');
+  const RNoon = await imp('world/redNoon.js');
   test('перо: к ночи исписалось, на рассвете обмакнули; днём сухости нет', () => {
     assert(Math.abs(Pen.pressAt(0) - 1.15) < 1e-9, 'утро не свежее');
     assert(Math.abs(Pen.pressAt(0.99999) - Pen.pressAt(0)) < 0.01, 'рассвет не сходится с утром');
@@ -607,8 +636,55 @@ setCtx(ctx);
     eq(said(), false, 'в темноте мир ответил');
     Wh.check(p, [loc], () => true);
     eq(said(), true, 'у света шёпота нет');
-    for (let i = 0; i < 400; i++) Wh.draw(fakeCtx(), cam);  // дожить шёпот и выдержать паузу — следующим тестам
-    const t0 = T.t; while (T.t < t0 + 11000) T.tick();
+    Wh._reset();                                            // следующим тестам — без шёпота и паузы
+  });
+  test('шёпоты пишутся: буква за буквой, сразу чернилами; дописал — постоял, выцвел и ушёл вверх', () => {
+    Wh._reset();
+    const loc = { id: 'campfire', x: 7000, y: 7000, w: 40, h: 40 }, text = Wh.WHISPERS.campfire;
+    Wh.check({ x: 7000, y: 7010, moving: false }, [loc]);
+    const seen = [];
+    for (let i = 0; i < 3000; i++) {
+      const c = fakeCtx(); let got = null;
+      c.fillText = (str, x, y) => { got = { str, a: c.globalAlpha, y }; };
+      Wh.draw(c, null);
+      if (!got) break;
+      seen.push(got);
+      T.tick();
+    }
+    assert(seen.length > 0 && seen.length < 3000, `шёпот не кончился: ${seen.length}`);
+    assert(seen[0].str.length === 1, `сразу вся строка: «${seen[0].str}»`);
+    assert(seen[0].a > 0.3, `проявляется, а не пишется: ${seen[0].a}`);
+    for (let i = 1; i < seen.length; i++) assert(seen[i].str.length >= seen[i - 1].str.length && text.startsWith(seen[i].str), 'пишет не по порядку');
+    const full = seen.findIndex(k => k.str === text);
+    assert(full > 60, `дописал слишком быстро: ${full}`);
+    assert(seen.slice(full, full + 60).every(k => k.a > 0.3), 'дописал — и сразу гаснет');
+    const last = seen[seen.length - 1];
+    assert(last.a < 0.02 && last.y < seen[full].y - 10, 'не выцвел и не ушёл вверх');
+    Wh._reset();
+  });
+  test('шёпоты: красный полдень — недописанное гаснет, дальше не пишется', () => {
+    const RN = RNoon;
+    Wh._reset(); RN._reset();
+    Wh.check({ x: 7000, y: 7010, moving: false }, [{ id: 'campfire', x: 7000, y: 7000, w: 40, h: 40 }]);
+    const out = () => { const c = fakeCtx(); let got = null; c.fillText = str => { got = { str, a: c.globalAlpha }; }; Wh.draw(c, null); T.tick(); return got; };
+    for (let i = 0; i < 30; i++) out();
+    const before = out();
+    RN.triggerRedNoon(T.t - 30); RN.stepRedNoon(T.t, 0.21, 99);
+    assert(RN.redNoon.active, 'полдень не настал');
+    let n = 0, k;
+    while ((k = out()) && n < 1000) { assert(k.str.length <= before.str.length + 1, 'в полдень дописывает'); n++; }
+    assert(n > 0 && n <= 245, `гаснет не так: ${n} шагов`);
+    RN._reset(); Wh._reset();
+  });
+  test('перо идёт по штриху: с верхней точки — к соседней, ничего не пропускает', () => {
+    const L = [[2, 3], [0, 1], [0, 3], [1, 3], [0, 0], [0, 2]].map(([x, y]) => ({ x, y }));   // «L», вразброс
+    const p = Wh.penPath(L);
+    eq(p.length, L.length, 'потеряло точки');
+    assert(p[0].x === 0 && p[0].y === 0, 'начало не сверху');
+    for (let i = 1; i < p.length; i++) {
+      const d = Math.max(Math.abs(p[i].x - p[i - 1].x), Math.abs(p[i].y - p[i - 1].y));
+      eq(d, 1, `перо прыгнуло: ${i}`);
+    }
   });
 }
 
@@ -625,12 +701,14 @@ setCtx(ctx);
   };
   test('мир: шёпот и следы рисуются в координатах мира, камеру второй раз не вычитают', () => {
     while (T.t < 11000) T.tick();                    // шёпот — не раньше трёх минут
+    Wh._reset();
     const loc = { id: 'campfire', x: 5000, y: 5000, w: 50, h: 50 };
     Wh.check({ x: 5000, y: 5010, moving: false }, [loc]);
     const cam = { x: 4990, y: 5000 };
     const r1 = rec(); Wh.draw(r1.c, cam);
     const tx = r1.calls.find(k => k[0] === 'text');
-    assert(tx && Math.abs(tx[1] - 5025) < 1, `шёпот не там: x=${tx && tx[1]}`);
+    // перо пишет слева направо: строка начинается на полстроки левее места (ширина строки — 10)
+    assert(tx && Math.abs(tx[1] - (5025 - 10 / 2)) < 1, `шёпот не там: x=${tx && tx[1]}`);
     At.addFootprint(5000, 5000, 'soft');
     const r2 = rec(); At.drawFootprints(r2.c, cam);
     const fr = r2.calls.find(k => k[0] === 'rect');

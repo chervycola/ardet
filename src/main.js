@@ -317,7 +317,12 @@ function fireShadow(sk, camX, camY, vw, vh) {
   const x = fireLocS.x + 18, y = fireLocS.y + 20, r = 120;
   if (x + r < camX || x - r > camX + vw || y + r < camY || y - r > camY + vh) return null;
   const sun = sk.sun ? Math.min(1, sk.sun.elev / 0.35) : 0;     // днём тени от огня съедает солнце
-  return { x, y, r, a: 0.55 * (1 - sun) };
+  // огонь дышит (канон Г-10): вспыхивает и опадает в такт своему свечению — та же
+  // волна, что у света (render/lighting.js), — и клонится то вправо, то влево, как пламя
+  const breath = Math.sin(t * 0.07 + (fireLocS.x + fireLocS.w / 2) * 0.1);
+  const sway = Math.sin(t * 0.025 + 2.2) * 3;
+  const k = (1 - sun) * (1 + 0.1 * breath);
+  return { x: x + sway, y, r, a: 0.62 * k, wash: 0.24 * k, breath };
 }
 
 // NPC draw dispatch
@@ -372,7 +377,7 @@ function render() {
   if (!NO_SHADOW) {                                 // тени по времени суток и от костра
     const sk = skyAt(phaseAt(t)), fade = 1 - redNoon.k;     // красный полдень — час без теней
     const sun = shadowAt(phaseAt(t)), fs = fireShadow(sk, camX, camY, vw, vh);
-    sun.a *= fade; sun.wash *= fade; if (fs) fs.a *= fade;
+    sun.a *= fade; sun.wash *= fade; if (fs) { fs.a *= fade; fs.wash *= fade; }
     castShadows(worldCtx, camX, camY, vw, vh, shadowCasters(camX, camY, vw, vh), sun, fs);
   }
 
