@@ -574,6 +574,44 @@ setCtx(ctx);
   });
 }
 
+// ═══ ПЕРО И ШЁПОТЫ У СВЕТА ═══
+{
+  const Pen = await imp('render/pen.js');
+  const Wh = await imp('world/whisper.js');
+  const T = await imp('core/time.js');
+  test('перо: к ночи исписалось, на рассвете обмакнули; днём сухости нет', () => {
+    assert(Math.abs(Pen.pressAt(0) - 1.15) < 1e-9, 'утро не свежее');
+    assert(Math.abs(Pen.pressAt(0.99999) - Pen.pressAt(0)) < 0.01, 'рассвет не сходится с утром');
+    assert(Pen.pressAt(0.7) < Pen.pressAt(0.4) && Pen.pressAt(0.9) < Pen.pressAt(0.7), 'к ночи не тоньше');
+    eq(Pen.dryOf(Pen.pressAt(0.2)), 0, 'днём сухо');
+    assert(Pen.dryOf(Pen.pressAt(0.85)) > 0.8, 'ночью перо не сухое');
+  });
+  test('перо: толщина линий умножается на нажим, читается — как задали', () => {
+    let native = null;
+    class Ctx {}
+    Object.defineProperty(Ctx.prototype, 'lineWidth', { get() { return native; }, set(v) { native = v; }, configurable: true });
+    const c = new Ctx();
+    Pen.installPen(c);
+    Pen.setPress(0.6);
+    c.lineWidth = 2;
+    assert(Math.abs(native - 1.2) < 1e-9, `в холст ушло ${native}`);
+    eq(c.lineWidth, 2, 'читается не то, что задали');
+    Pen.setPress(1);
+  });
+  test('шёпоты: ночью — только у чужого света; днём — как раньше', () => {
+    while (T.t < 30000) T.tick();                          // после паузы между шёпотами
+    const loc = { id: 'church', x: 6000, y: 6000, w: 40, h: 40 };
+    const p = { x: 6000, y: 6010, moving: false };
+    const cam = { x: 5990, y: 5900 }, said = () => { const r = []; const c = fakeCtx(); c.fillText = s => r.push(s); Wh.draw(c, cam); return r.length > 0; };
+    Wh.check(p, [loc], () => false);
+    eq(said(), false, 'в темноте мир ответил');
+    Wh.check(p, [loc], () => true);
+    eq(said(), true, 'у света шёпота нет');
+    for (let i = 0; i < 400; i++) Wh.draw(fakeCtx(), cam);  // дожить шёпот и выдержать паузу — следующим тестам
+    const t0 = T.t; while (T.t < t0 + 11000) T.tick();
+  });
+}
+
 // ═══ РИСУНОК В МИРЕ: контекст уже сдвинут камерой ═══
 {
   const T = await imp('core/time.js');

@@ -53,7 +53,9 @@ let whisper = { text: '', life: 0, x: 0, y: 0 };
 let lastWhisperEnd = 0;
 const COOLDOWN = 10800; // ~3 minutes
 
-export function check(player, locations) {
+// litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
+// null — день, свет не нужен
+export function check(player, locations, litAt = null) {
   if (whisper.life > 0) return;
   if (redNoon.active) return;                    // красный полдень: шёпоты молчат
   if (t - lastWhisperEnd < COOLDOWN) return;
@@ -63,6 +65,8 @@ export function check(player, locations) {
     const dx = player.x - l.x - l.w / 2;
     const dy = player.y - l.y - l.h / 2;
     if (Math.sqrt(dx * dx + dy * dy) < 70 && !player.moving) {
+      // ночью шёпоты живут только у света: в темноте мир не отвечает
+      if (litAt && !l.light && !litAt(l.x + l.w / 2, l.y + l.h / 2)) continue;
       whisper = {
         text: WHISPERS[l.id],
         life: 360,

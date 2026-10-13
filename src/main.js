@@ -20,6 +20,7 @@ import { hazeView, hazeComposite } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
 import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
 import { redNoon, stepRedNoon, triggerRedNoon } from './world/redNoon.js';
+import { pressAt, setPress, installPen, penComposite } from './render/pen.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -93,6 +94,7 @@ import { signFacade } from './world/architecture.js';
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
 layers.init(mainCanvas);
+installPen(layers.ctx('world')); installPen(layers.ctx('bg'));   // перо: толщина штриха — по нажиму суток
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
@@ -286,6 +288,28 @@ function shadowCasters(camX, camY, vw, vh) {
   out.push(heroCaster);
   return out;
 }
+// тёплые огни в кадре (точки кадра) — для пера: огонь всегда сплошной
+let warmSpots = [];
+function warmIn(camX, camY, vw, vh) {
+  const out = [];
+  for (const L of lighting.sources) {
+    const c = L.color || [255, 180, 80];
+    if (c[0] < c[1] + 30) continue;                 // не тёплый (экран терминала, луна)
+    const x = L.x - camX, y = L.y - camY, r = Math.max(6, L.r * 0.5);
+    if (x + r < 0 || x - r > vw || y + r < 0 || y - r > vh) continue;
+    out.push({ x, y, r });
+  }
+  return out;
+}
+// светит ли в точке чужой свет (не уголь в груди — он источник номер ноль)
+function litAt(x, y) {
+  const S = lighting.sources;
+  for (let i = 1; i < S.length; i++) {
+    const L = S[i], R = L.r * 1.2;
+    if (Math.abs(L.x - x) < R && Math.abs(L.y - y) < R && Math.hypot(L.x - x, L.y - y) < R) return true;
+  }
+  return false;
+}
 let fireLocS;
 function fireShadow(sk, camX, camY, vw, vh) {
   if (fireLocS === undefined) fireLocS = locations.find(l => l.id === 'campfire') || null;
@@ -402,6 +426,7 @@ function render() {
 
   worldCtx.restore();
   hazeView(camX, camY, vw, vh, locations, redNoon.k);   // марево: над костром, над Sol, в гари, в полдень — везде
+  warmSpots = warmIn(camX, camY, vw, vh);           // тёплые огни кадра — перо их не трогает
 
   // группа второй краски — те же вещи, отдельным прогоном
   ink.drawGroup((c, loc) => { setCtx(c); drawLocation(c, loc); }, camX, camY);
@@ -462,6 +487,7 @@ const NO_SHADOW = /[?&]noshadow\b/.test(location.search); // тени по вр�
 layers.inkPass = (ctx, main) => {
   hazeComposite(ctx, main);              // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);
+  penComposite(ctx, main, warmSpots);    // перо к ночи сухое: светлый штрих рвётся, огонь — сплошной
   if (!NO_PLATE) plate.composite(ctx);
   ctx.save(); ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
   toxic.drawScreen(ctx);                 // код сочится сквозь кадр
@@ -493,6 +519,7 @@ function stepFx() {
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
+  setPress(pressAt(phaseAt(t)));          // перо: к ночи исписалось, на рассвете обмакнули
   // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
   stepRedNoon(t, phaseAt(t), dayIndex(t));
   {
@@ -1104,7 +1131,7 @@ function updateWorldSystems() {
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving);
-  checkWhisper(player, locations);
+  checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
   updateParticles();
   updateWeather(getZone(player.x, player.y));
   updateCrackTriggers(player);
