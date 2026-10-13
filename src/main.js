@@ -18,7 +18,8 @@ import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
 import { hazeView, hazeComposite } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
-import { phaseAt, skyAt, shadowAt } from './world/sky.js';
+import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
+import { redNoon, stepRedNoon, triggerRedNoon } from './world/redNoon.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -345,8 +346,10 @@ function render() {
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
   if (!NO_SHADOW) {                                 // тени по времени суток и от костра
-    const sk = skyAt(phaseAt(t));
-    castShadows(worldCtx, camX, camY, vw, vh, shadowCasters(camX, camY, vw, vh), shadowAt(phaseAt(t)), fireShadow(sk, camX, camY, vw, vh));
+    const sk = skyAt(phaseAt(t)), fade = 1 - redNoon.k;     // красный полдень — час без теней
+    const sun = shadowAt(phaseAt(t)), fs = fireShadow(sk, camX, camY, vw, vh);
+    sun.a *= fade; sun.wash *= fade; if (fs) fs.a *= fade;
+    castShadows(worldCtx, camX, camY, vw, vh, shadowCasters(camX, camY, vw, vh), sun, fs);
   }
 
   // локации (с постройками эпох), заборы дворов и странник — по глубине:
@@ -383,8 +386,10 @@ function render() {
     }
   }
 
-  drawLoreItems({ x: camX, y: camY });
-  drawInscriptions({ x: camX, y: camY }, locations);
+  if (!redNoon.active) {                            // красный полдень: пасхалки прячутся
+    drawLoreItems({ x: camX, y: camY });
+    drawInscriptions({ x: camX, y: camY }, locations);
+  }
   drawJesterGraffiti({ x: camX, y: camY });
   drawJesterWandering({ x: camX, y: camY }, locations);
   drawPets({ x: camX, y: camY });
@@ -396,7 +401,7 @@ function render() {
   drawWorldWhisper({ x: camX, y: camY });
 
   worldCtx.restore();
-  hazeView(camX, camY, vw, vh, locations);   // марево: над костром, над Sol, в гари — сдвинет кадр при сборке
+  hazeView(camX, camY, vw, vh, locations, redNoon.k);   // марево: над костром, над Sol, в гари, в полдень — везде
 
   // группа второй краски — те же вещи, отдельным прогоном
   ink.drawGroup((c, loc) => { setCtx(c); drawLocation(c, loc); }, camX, camY);
@@ -481,13 +486,20 @@ function stepFx() {
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
   wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
-  updateWindSound(wind.at(player.x + 6, player.y + 10).s);
+  updateWindSound(wind.at(player.x + 6, player.y + 10).s * (1 - 0.8 * redNoon.k));   // в полдень в ушах тихо
   stepGrass(player);
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
+  // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
+  stepRedNoon(t, phaseAt(t), dayIndex(t));
+  {
+    const sx = player.x + 6, sy = player.y + 24, ds = sy - TOWN.y1;
+    const south = ds > 0 && ds >= Math.max(TOWN.y0 - sy, TOWN.x0 - sx, sx - TOWN.x1);
+    ink.noon(redNoon.k * (south ? 0.25 : 1));
+  }
   ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
@@ -879,7 +891,7 @@ const DEBUG_HUD = typeof location !== 'undefined' && /[?&]debug\b/.test(location
 
 function drawHUD(ctx) {
   drawLorePopup(ctx);
-  drawIdle(ctx);
+  if (!redNoon.active) drawIdle(ctx);             // в полдень мир молчит
 
   if (DEBUG_HUD) {
     ctx.globalAlpha = 0.5;
@@ -1081,7 +1093,7 @@ function updateWorldSystems() {
   camera.clampToWorld(MW, MH);
 
   // Check for lore pickup
-  checkLorePickup(player);
+  if (!redNoon.active) checkLorePickup(player);
 
   // Update world-level systems
   updateJester(camera);
@@ -1091,7 +1103,7 @@ function updateWorldSystems() {
   updateBrainrot(player);
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
-  updateIdle(player.moving);
+  if (!redNoon.active) updateIdle(player.moving);
   checkWhisper(player, locations);
   updateParticles();
   updateWeather(getZone(player.x, player.y));
@@ -1356,7 +1368,8 @@ window.onerror = (msg, src, line, col, err) => {
 // build 1776974120
 
 // Проверка эффектов руками: I (Ш) — вторая краска авто → 0..3; O (Щ) — шторм пластины;
-// L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться
+// L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться;
+// N (Т) — красный полдень
 document.addEventListener('keydown', e => {
   if (!state.is('game') || e.repeat) return;
   if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
@@ -1366,4 +1379,5 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л') ink.note('ОСТУПИЛСЯ · ' + stumble.cycle(player));
   if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') { stormTest = !stormTest; ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ'); }
+  if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') { triggerRedNoon(t); ink.note('КРАСНЫЙ ПОЛДЕНЬ'); }
 });

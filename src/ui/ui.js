@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { state } from '../core/state.js';
 import { lookText } from '../world/potemkin.js';
+import { redNoon, smear } from '../world/redNoon.js';
 import { events, E } from '../core/events.js';
 import { getPortrait } from '../assets/loader.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
@@ -73,7 +74,8 @@ export function showMenu(loc) {
 
   // Inscription
   if (menuInscriptions[loc.id]) {
-    menuInsc.textContent = '« ' + menuInscriptions[loc.id] + ' »';
+    const insc = menuInscriptions[loc.id];
+    menuInsc.textContent = '« ' + (redNoon.k > 0.5 ? smear(insc) : insc) + ' »';   // в полдень таблички нечитаемы
     menuInsc.classList.add('on');
   } else {
     menuInsc.classList.remove('on');
@@ -205,8 +207,10 @@ function renderLookPage() {
   }
   lookShownAt = performance.now();
 
-  lt.textContent = lookTitle || (activeLoc ? activeLoc.name : '');
-  lb.textContent = lookPages[lookPageIdx] || '';
+  // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
+  const blind = redNoon.k > 0.5 ? smear : (x => x);
+  lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
+  lb.textContent = blind(lookPages[lookPageIdx] || '');
 
   if (ind) {
     if (lookPages.length > 1) {

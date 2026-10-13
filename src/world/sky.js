@@ -21,6 +21,7 @@ try {
 const smooth = k => { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
 
 export const phaseAt = step => ((step / DAY_LEN) + START) % 1;
+export const dayIndex = step => Math.floor(step / DAY_LEN + START);   // номер суток (жребий событий — раз в сутки)
 
 // что в небе на фазе p
 export function skyAt(p) {

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { scaler } from '../render/scaler.js';
+import { redNoon } from './redNoon.js';
 
 export const WHISPERS = {
   church: '...lasciate ogni speranza...',
@@ -54,6 +55,7 @@ const COOLDOWN = 10800; // ~3 minutes
 
 export function check(player, locations) {
   if (whisper.life > 0) return;
+  if (redNoon.active) return;                    // красный полдень: шёпоты молчат
   if (t - lastWhisperEnd < COOLDOWN) return;
 
   for (const l of locations) {

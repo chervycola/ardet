@@ -51,7 +51,8 @@ export function heatAt(x, y) {
 }
 
 // кадр: где что дрожит (вызывать из render, до сборки слоёв)
-export function hazeView(camX, camY, vw, vh, locations) {
+// noon — красный полдень (0…1): марево по всему кадру
+export function hazeView(camX, camY, vw, vh, locations, noon = 0) {
   cam = { x: camX, y: camY };
   cols = [];
   if (OFF) return;
@@ -65,7 +66,7 @@ export function hazeView(camX, camY, vw, vh, locations) {
   const j0 = Math.floor((camY - 20) / PATCH), j1 = Math.floor((camY + vh + 60) / PATCH);
   for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
     const px = i * PATCH + 20 + hash(i, j, 2.7) * (PATCH - 40), py = j * PATCH + 30 + hash(i, j, 4.1) * (PATCH - 40);
-    const heat = heatAt(px, py);
+    const heat = Math.max(heatAt(px, py), noon * 0.9);
     if (heat <= 0) continue;
     const breath = Math.sin(t * (0.004 + hash(i, j, 6.3) * 0.004) + hash(i, j, 8.9) * 6.28);
     if (breath <= 0.15) continue;

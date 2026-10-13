@@ -15,6 +15,7 @@ import { plate } from './plate.js';
 
 const NIGHT = [13, 11, 10], CRIMSON = [107, 15, 26], CINNABAR = [194, 59, 43], BONE = [217, 207, 184];
 const HOT = [226, 96, 70];          // киноварь на свету — светлее, но ещё красная
+const NOON = [163, 45, 45];         // ПОЛДЕНЬ #A32D2D — красный полдень (ART_BIBLE)
 const BLACK_SHARE = 0.38;           // доля кадра под чёрной формой при заливке
 export const INK_NAMES = ['индикаторы', 'норма', 'группа', 'заливка'];
 const COVER = ['1–3 %', '5–10 %', '20–30 %', '60–90 %'];
@@ -24,6 +25,7 @@ let override = null;                    // ручной регулятор (кл
 let flood = 0, band = 1, groupA = 0;    // плавные доли ступеней
 let group = [];                         // вещи, отпечатанные красным
 let pulseUntil = 0, pulseLevel = 3;     // короткий острый момент
+let noonK = 0;                          // красный полдень (world/redNoon.js): 0…1
 let shownAt = -1e9, noteTxt = '';       // подпись регулятора
 let small = null, smallCtx = null, groupC = null, groupCtx = null;
 
@@ -42,12 +44,52 @@ function buffers() {
   }
 }
 
+// лицо солнца — является в красный полдень (ART_BIBLE): гротескное, строгое;
+// венок колосьев, трещины позолоты; едва различимо — строки дрожат в мареве
+function sunFace(ctx, s, W, H, a) {
+  const cx = Math.round(W * 0.5), cy = Math.round(H * 0.27), R = Math.round(Math.min(W, H) * 0.2);
+  const wob = y => Math.round(Math.sin(y * 0.35 + t * 0.12) * 1.2);
+  const run = (x0, x1, y, col, al) => { ctx.globalAlpha = al * a; ctx.fillStyle = col; ctx.fillRect(x0 + wob(y), y, Math.max(1, x1 - x0), 1); };
+  ctx.save(); ctx.setTransform(s, 0, 0, s, 0, 0);
+  for (let dy = -R; dy <= R; dy++) {                              // диск — чуть светлее заливки
+    const hw = Math.round(Math.sqrt(R * R - dy * dy));
+    run(cx - hw, cx + hw, cy + dy, '#B83838', 0.07);
+  }
+  for (let i = 0; i < 30; i++) {                                  // венок: колосья косо по кромке
+    const g = i / 30 * Math.PI * 2;
+    for (let r = R + 2; r < R + 9; r++) {
+      const q = g + (r - R) * 0.05;
+      run(Math.round(cx + Math.cos(q) * r), Math.round(cx + Math.cos(q) * r) + 1, Math.round(cy + Math.sin(q) * r), '#7E1F1F', 0.14);
+    }
+  }
+  const dark = '#5E1414';
+  for (const ex of [-1, 1]) {                                     // глаза: тяжёлые веки, пустые
+    const x = cx + ex * Math.round(R * 0.36), y = cy - Math.round(R * 0.12);
+    [[0, 3], [1, 6], [2, 8], [3, 6], [4, 3]].forEach(([dy, w]) => run(x - (w >> 1), x + (w >> 1) + 1, y + dy - 2, dark, 0.2));
+    run(x - 5, x + 6, y - 5, dark, 0.15);                          // бровь — строго
+  }
+  for (let y = cy - Math.round(R * 0.04); y < cy + Math.round(R * 0.22); y++) run(cx, cx + 1, y, dark, 0.18);   // нос
+  const my = cy + Math.round(R * 0.42), mw = Math.round(R * 0.32);
+  run(cx - mw, cx + mw, my, dark, 0.2);                           // рот — уголки вниз
+  run(cx - mw - 2, cx - mw, my + 1, dark, 0.2); run(cx + mw, cx + mw + 2, my + 1, dark, 0.2);
+  for (const [a0, len] of [[0.6, 0.55], [2.4, 0.4], [4.1, 0.5]]) { // трещины позолоты — от кромки внутрь
+    let x = cx + Math.cos(a0) * R, y = cy + Math.sin(a0) * R;
+    for (let i = 0; i < R * len; i++) {
+      x -= Math.cos(a0) + Math.sin(i * 1.7) * 0.6; y -= Math.sin(a0) + Math.cos(i * 1.3) * 0.6;
+      run(Math.round(x), Math.round(x) + 1, Math.round(y), dark, 0.15);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
 export const ink = {
   // сцена сообщает, чего хочет; побеждает самое сильное за кадр
   want(n, why) { if (n > level || (n === 0 && level === 1 && !reason)) { level = n; reason = why || ''; } },
   // острый момент на ms миллисекунд (замок, проход врат)
   pulse(ms, n = 3) { pulseUntil = performance.now() + ms; pulseLevel = n; },
   setGroup(locs) { group = locs || []; },
+  noon(v) { noonK = v; },                // красный полдень: доля плоской киновари
   cycle() {
     noteTxt = '';
     override = override === null ? 0 : override >= 3 ? null : override + 1;
@@ -144,39 +186,51 @@ export const ink = {
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
     }
-    // заливка: делёж кадра на две формы — чёрную и красную
-    if (flood > 0) {
+    // заливка: делёж кадра на две формы — чёрную и красную;
+    // красный полдень: всё в одну плоскую краску, от формы — едва след
+    if (flood > 0 || noonK > 0) {
       buffers();
       smallCtx.imageSmoothingEnabled = false;
       smallCtx.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, W, H);
       const img = smallCtx.getImageData(0, 0, W, H), d = img.data;
-      const f = flood, n = d.length / 4;
-      // порог чёрной формы — по самому кадру: тёмная треть остаётся графикой
-      const hist = new Uint32Array(64);
-      for (let i = 0; i < d.length; i += 16) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 10]++;
-      let acc = 0, p0 = 0, p1 = 63; const tot = n / 4;
-      for (let k = 0; k < 64; k++) { acc += hist[k]; if (acc < tot * BLACK_SHARE) p0 = k; if (acc < tot * 0.97) p1 = k; }
-      const lo = (p0 + 0.5) / 64, hi = Math.max(lo + 0.06, (p1 + 1) / 64);
+      const f = flood, nk = noonK, n = d.length / 4;
+      let lo = 0, hi = 1;
+      if (f > 0) {
+        // порог чёрной формы — по самому кадру: тёмная треть остаётся графикой
+        const hist = new Uint32Array(64);
+        for (let i = 0; i < d.length; i += 16) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 10]++;
+        let acc = 0, p0 = 0, p1 = 63; const tot = n / 4;
+        for (let k = 0; k < 64; k++) { acc += hist[k]; if (acc < tot * BLACK_SHARE) p0 = k; if (acc < tot * 0.97) p1 = k; }
+        lo = (p0 + 0.5) / 64; hi = Math.max(lo + 0.06, (p1 + 1) / 64);
+      }
       for (let i = 0; i < d.length; i += 4) {
-        const r = d[i], gr = d[i + 1], b = d[i + 2];
-        // горячее ядро — огонь и свеча — единственное не-красное
+        let r = d[i], gr = d[i + 1], b = d[i + 2];
+        // горячее ядро — огонь и свеча — единственное не-красное (и в полдень: видно одно тепло)
         if (r > 170 && gr > 90 && b < 120 && r - b > 80) continue;
-        const L = (0.299 * r + 0.587 * gr + 0.114 * b) / 255;
-        let o;
-        if (L > 0.78) o = BONE;                               // белое прожигает красное
-        else if (L <= lo) o = NIGHT;                          // чёрная графика поверх красного
-        else {
-          const u = Math.min(1, (L - lo) / (hi - lo));
-          o = u < 0.12 ? mix(NIGHT, CRIMSON, u / 0.12, null, 1)   // кромка: в красное через багровый
-            : u < 0.75 ? mix(CRIMSON, CINNABAR, Math.min(1, (u - 0.12) / 0.35), null, 1)
-            : mix(CINNABAR, HOT, (u - 0.75) / 0.25 * 0.6, null, 1);
+        if (f > 0) {
+          const L = (0.299 * r + 0.587 * gr + 0.114 * b) / 255;
+          let o;
+          if (L > 0.78) o = BONE;                               // белое прожигает красное
+          else if (L <= lo) o = NIGHT;                          // чёрная графика поверх красного
+          else {
+            const u = Math.min(1, (L - lo) / (hi - lo));
+            o = u < 0.12 ? mix(NIGHT, CRIMSON, u / 0.12, null, 1)   // кромка: в красное через багровый
+              : u < 0.75 ? mix(CRIMSON, CINNABAR, Math.min(1, (u - 0.12) / 0.35), null, 1)
+              : mix(CINNABAR, HOT, (u - 0.75) / 0.25 * 0.6, null, 1);
+          }
+          r += (o[0] - r) * f; gr += (o[1] - gr) * f; b += (o[2] - b) * f;
         }
-        d[i] = r + (o[0] - r) * f; d[i + 1] = gr + (o[1] - gr) * f; d[i + 2] = b + (o[2] - b) * f;
+        if (nk > 0) {                                           // ни чёрного, ни белого: свет плоский
+          const m = 0.86 + 0.28 * (0.299 * r + 0.587 * gr + 0.114 * b) / 255;
+          r += (NOON[0] * m - r) * nk; gr += (NOON[1] * m - gr) * nk; b += (NOON[2] * m - b) * nk;
+        }
+        d[i] = r; d[i + 1] = gr; d[i + 2] = b;
       }
       smallCtx.putImageData(img, 0, 0);
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(small, 0, 0, W, H, 0, 0, W * s, H * s);
     }
+    if (noonK > 0.02) sunFace(ctx, s, W, H, noonK);
   },
 
   // подпись регулятора — только когда его крутят руками
