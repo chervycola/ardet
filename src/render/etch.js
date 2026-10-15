@@ -18,6 +18,7 @@
 import { TOWN, RING_W, RINGS, warpedDist } from '../world/disc.js';
 import { heightAt, sideWarp, sideOf, landDist, landRing, townWarp, townZoneOf, OUTER } from '../world/relief.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
+import { stampPaths, OV } from './etchPaths.js';
 
 export const TILE = 128;
 const ST = 4, NS = TILE / ST + 2;            // узлы высот: шаг 4 точки (+ запас справа и снизу)
@@ -85,7 +86,7 @@ const ZXn = new Float32Array(NW * NW), ZYn = new Float32Array(NW * NW);
 const Gb = new Uint8Array(NS * NS);
 export function bakeData(tx, ty) {
   const x0 = tx * TILE, y0 = ty * TILE, A = TILE * TILE;
-  const m = new Uint8Array(A), c = new Uint8Array(A), dir = new Uint8Array(A);
+  const m = new Uint8Array(A), c = new Uint8Array(A), dir = new Uint8Array(A), ov = new Uint8Array(A);
   for (let j = 0; j < NS; j++) for (let i = 0; i < NS; i++) Hn[j * NS + i] = heightAt(x0 + i * ST, y0 + j * ST);
   for (let j = 0; j < NW; j++) for (let i = 0; i < NW; i++) {
     const X = x0 + i * WS, Y = y0 + j * WS, k = j * NW + i;
@@ -155,7 +156,8 @@ export function bakeData(tx, ty) {
       c[k] = bits;
     }
   }
-  return { mat: m, cls: c, dir };
+  stampPaths(x0, y0, TILE, ov, c);                                     // дороги, река, дуги — поверх
+  return { mat: m, cls: c, dir, ov };
 }
 
 const bil = (A, q, u, v) => A[q] + (A[q + 1] - A[q]) * u + (A[q + NW] - A[q]) * v + (A[q] - A[q + 1] - A[q + NW] + A[q + NW + 1]) * u * v;
@@ -190,7 +192,7 @@ setLight(L);
 
 // ── покраска плитки при нынешнем свете → RGBA ──
 export function paintData(d, out) {
-  const { mat: m, cls: c, dir } = d, A = m.length;
+  const { mat: m, cls: c, dir, ov } = d, A = m.length;
   const day = L.day, night = L.night, press = L.press;
   let r = 0, g = 0, b = 0;
   const put = (col, a) => { r += (col[0] - r) * a; g += (col[1] - g) * a; b += (col[2] - b) * a; };
@@ -222,6 +224,7 @@ export function paintData(d, out) {
       if (bits & 16) put(BONE, 0.55);
       if (bits & 32) put(M.dust, 0.8);
     }
+    if (ov && ov[k]) { const V = OV[ov[k]]; if (V.a >= 1) { r = V.col[0]; g = V.col[1]; b = V.col[2]; } else put(V.col, V.a); }
     const o = k * 4;
     out[o] = r; out[o + 1] = g; out[o + 2] = b; out[o + 3] = 255;
   }

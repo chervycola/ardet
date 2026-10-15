@@ -6,7 +6,7 @@
 // Стоят по средней линии кольца, с разбросом поперёк — кромки кольца
 // неровные сами (по рельефу), костры их не выравнивают.
 // ═══════════════════════════════════════
-import { TOWN, RINGS, RING_W, FIRE_W, warpedDist } from '../world/disc.js';
+import { RINGS, RING_W, FIRE_W, warpedDist, rimPoint, rimPerim } from '../world/disc.js';
 import { wind } from '../world/wind.js';
 
 const D0 = RINGS * RING_W + FIRE_W * 0.5;     // средняя линия кольца
@@ -15,29 +15,13 @@ const C = '#C23B2B', S = '#E28A3A', N = '#0D0B0A', CHAR = '#1d0d07';
 
 function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
 
-// точка на линии, отстоящей от прямоугольника городка на D (скруглённые углы), по длине s
-function along(s, D) {
-  const W = TOWN.x1 - TOWN.x0, H = TOWN.y1 - TOWN.y0, Q = Math.PI * D / 2;
-  const segs = [
-    [W, u => ({ x: TOWN.x0 + u, y: TOWN.y0 - D, nx: 0, ny: -1 })],
-    [Q, u => { const a = Math.PI / 2 - u / D; return { x: TOWN.x1 + D * Math.cos(a), y: TOWN.y0 - D * Math.sin(a), nx: Math.cos(a), ny: -Math.sin(a) }; }],
-    [H, u => ({ x: TOWN.x1 + D, y: TOWN.y0 + u, nx: 1, ny: 0 })],
-    [Q, u => { const a = -u / D; return { x: TOWN.x1 + D * Math.cos(a), y: TOWN.y1 - D * Math.sin(a), nx: Math.cos(a), ny: -Math.sin(a) }; }],
-    [W, u => ({ x: TOWN.x1 - u, y: TOWN.y1 + D, nx: 0, ny: 1 })],
-    [Q, u => { const a = -Math.PI / 2 - u / D; return { x: TOWN.x0 + D * Math.cos(a), y: TOWN.y1 - D * Math.sin(a), nx: Math.cos(a), ny: -Math.sin(a) }; }],
-    [H, u => ({ x: TOWN.x0 - D, y: TOWN.y1 - u, nx: -1, ny: 0 })],
-    [Q, u => { const a = Math.PI - u / D; return { x: TOWN.x0 + D * Math.cos(a), y: TOWN.y0 - D * Math.sin(a), nx: Math.cos(a), ny: -Math.sin(a) }; }],
-  ];
-  for (const [len, f] of segs) { if (s <= len) return f(s); s -= len; }
-  return segs[0][1](0);
-}
-const PERIM = 2 * (TOWN.x1 - TOWN.x0) + 2 * (TOWN.y1 - TOWN.y0) + 2 * Math.PI * D0;
+const PERIM = rimPerim(D0);
 
 export const fireSites = [];
 {
   let s = 40, i = 0;
   while (s < PERIM - GAP * 0.6) {
-    const p = along(s, D0);
+    const p = rimPoint(s, D0);
     // поперёк линии — разброс; рваную границу (warpedDist) догоняем по нормали
     const want = D0 + (h01(i * 3 + 1) - 0.5) * FIRE_W * 0.5;
     let x = p.x, y = p.y;
@@ -46,6 +30,11 @@ export const fireSites = [];
     s += GAP + (h01(i * 3 + 3) - 0.5) * GAP_J * 2;
     i++;
   }
+}
+
+// дорога проходит огонь насквозь — на ней костров нет (main убирает после прокладки)
+export function fireSitesAvoid(test) {
+  for (let i = fireSites.length - 1; i >= 0; i--) if (test(fireSites[i].x, fireSites[i].y)) fireSites.splice(i, 1);
 }
 
 // свет костров — для освещения (main добавляет при запуске)

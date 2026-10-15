@@ -22,8 +22,10 @@ import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
 import { redNoon, stepRedNoon, triggerRedNoon } from './world/redNoon.js';
 import { pressAt, setPress, getPress, installPen, penComposite } from './render/pen.js';
 import { drawEtchedGround } from './render/etch.js';
-import { setReliefFlats } from './world/relief.js';
-import { fireLights, fireSitesInView, drawFireSite } from './render/fireRing.js';
+import { setReliefFlats, setReliefCarve } from './world/relief.js';
+import { fireLights, fireSitesInView, drawFireSite, fireSitesAvoid } from './render/fireRing.js';
+import { buildArteries, riverCarve, onArtery } from './world/arteries.js';
+import { buildArteryProps, arteryPropsIn } from './render/arteryProps.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -101,7 +103,17 @@ installPen(layers.ctx('world')); installPen(layers.ctx('bg'));   // перо: т
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
+// артерии — дороги, река, дуги, линия неба — в обход построек, дворов, табличек и утвари
+buildArteries([
+  ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
+  ...archGroundRects(),
+  ...archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
+], [...locations, ...archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
+  .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит
+setReliefCarve(riverCarve);                    // река промыла себе долину
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
+buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
+fireSitesAvoid((x, y) => onArtery(x, y, 18));  // дорога проходит огонь насквозь
 // ткань застройки не ложится на локации (с запасом над крышей) и дворы
 setTissueBlockers([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
@@ -287,6 +299,7 @@ function shadowCasters(camX, camY, vw, vh) {
     if (p.x + p.w < camX - pad || p.x - p.w > camX + vw + pad || p.gy < camY - 40 || p.gy - p.h > camY + vh + pad) continue;
     out.push(propCaster(p));
   }
+  for (const p of arteryPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!p.noShadow) out.push(propCaster(p));
   heroCaster.ox = player.x; heroCaster.oy = player.y;
   out.push(heroCaster);
   return out;
@@ -396,6 +409,7 @@ function render() {
   for (const p of archProps) {
     if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });
   }
+  for (const p of arteryPropsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 80)) drawList.push({ k: p.gy, prop: p });   // акведуки, ЛЭП, мосты
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
@@ -1052,7 +1066,7 @@ function heroStep(dvx, dvy) {
   if (sp > 0.05) {
     if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
-    if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp') footstepDust(player.x, player.y);
+    if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
     const kind = wetKind(S.print);
     if (addFootprint(player.x, player.y, kind)) {

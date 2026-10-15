@@ -141,6 +141,37 @@ export function sidePoint(vx, side = 'south') {
   return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y1 + b0 + depth, ring: seg.n };
 }
 
+// ── обход вокруг городка на расстоянии D (скруглённые углы), по часовой
+// стрелке от левого конца северной кромки: точка по длине s, длина обхода,
+// и где на обходе точка (доля 0…1)
+export const rimPerim = D => 2 * (TOWN.x1 - TOWN.x0) + 2 * (TOWN.y1 - TOWN.y0) + 2 * Math.PI * D;
+export function rimPoint(s, D) {
+  const W = TOWN.x1 - TOWN.x0, H = TOWN.y1 - TOWN.y0, Q = Math.PI * D / 2;
+  s = ((s % rimPerim(D)) + rimPerim(D)) % rimPerim(D);
+  const arc = (cx, cy, a) => ({ x: cx + D * Math.cos(a), y: cy - D * Math.sin(a), nx: Math.cos(a), ny: -Math.sin(a) });
+  if (s <= W) return { x: TOWN.x0 + s, y: TOWN.y0 - D, nx: 0, ny: -1 };
+  s -= W; if (s <= Q) return arc(TOWN.x1, TOWN.y0, Math.PI / 2 - s / D);
+  s -= Q; if (s <= H) return { x: TOWN.x1 + D, y: TOWN.y0 + s, nx: 1, ny: 0 };
+  s -= H; if (s <= Q) return arc(TOWN.x1, TOWN.y1, -s / D);
+  s -= Q; if (s <= W) return { x: TOWN.x1 - s, y: TOWN.y1 + D, nx: 0, ny: 1 };
+  s -= W; if (s <= Q) return arc(TOWN.x0, TOWN.y1, -Math.PI / 2 - s / D);
+  s -= Q; if (s <= H) return { x: TOWN.x0 - D, y: TOWN.y1 - s, nx: -1, ny: 0 };
+  s -= H; return arc(TOWN.x0, TOWN.y0, Math.PI - s / D);
+}
+export function rimFrac(x, y, D) {
+  const W = TOWN.x1 - TOWN.x0, H = TOWN.y1 - TOWN.y0, Q = Math.PI * D / 2, P = rimPerim(D);
+  let s;
+  if (y < TOWN.y0 && x >= TOWN.x0 && x <= TOWN.x1) s = x - TOWN.x0;
+  else if (x > TOWN.x1 && y < TOWN.y0) s = W + (Math.PI / 2 - Math.atan2(TOWN.y0 - y, x - TOWN.x1)) * D;
+  else if (x > TOWN.x1 && y <= TOWN.y1) s = W + Q + (y - TOWN.y0);
+  else if (x > TOWN.x1) s = W + Q + H - Math.atan2(TOWN.y1 - y, x - TOWN.x1) * D;
+  else if (y > TOWN.y1 && x >= TOWN.x0) s = W + 2 * Q + H + (TOWN.x1 - x);
+  else if (y > TOWN.y1) s = 2 * W + 2 * Q + H + (-Math.PI / 2 - Math.atan2(TOWN.y1 - y, x - TOWN.x0)) * D;
+  else if (y >= TOWN.y0) s = 2 * W + 3 * Q + H + (TOWN.y1 - y);
+  else s = 2 * W + 3 * Q + 2 * H + (Math.PI - Math.atan2(TOWN.y0 - y, x - TOWN.x0)) * D;
+  return (((s / P) % 1) + 1) % 1;
+}
+
 // полный мир: кольца и стихии со всех четырёх сторон
 export const WORLD_W = TOWN.x1 + OFF;   // 7600
 export const WORLD_H = TOWN.y1 + OFF;   // 6280

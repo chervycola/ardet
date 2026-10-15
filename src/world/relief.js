@@ -77,7 +77,7 @@ function kurgans(x, y) {
 }
 
 // вал со рвом вокруг городка; у выходов троп — проход
-const EXITS = ['south', 'north', 'east', 'west'].map(s => trailPoint(s, 0));
+const EXITS = [...['south', 'north', 'east', 'west'].map(s => trailPoint(s, 0)), { x: TOWN.x1, y: TOWN.y0 }];   // и угол равнины
 export function rampartAt(x, y, d) {
   if (d <= 0 || d > 48) return 0;
   let gate = 1;
@@ -115,8 +115,11 @@ export function heightRaw(x, y) {
   }
   if (W.w > 0.01) h += W.w * k * 34 * vn(x / 300, y / 150, 9);    // запад: высокие холмы
   if (W.p > 0.01) h += W.p * k * (-0.55 * (h - 30) + kurgans(x, y));   // равнина: степь и курганы
-  return h + rampartAt(x, y, d);
+  return h + rampartAt(x, y, d) - (carve ? carve(x, y) : 0);         // река промыла себе долину
 }
+// долина реки (world/arteries.js: riverCarve) — когда река проложена
+let carve = null;
+export function setReliefCarve(fn) { carve = fn; }
 
 // ── под дворами построек земля выровнена: высота тянется к высоте середины двора ──
 const FG = 256, FALL = 22;

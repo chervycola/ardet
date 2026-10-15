@@ -64,7 +64,8 @@ const near = (d, base) => base * Math.max(0, 1 - d / 380);
 // ── места ──
 function freeSpot(x, y, locations) {
   if (inCore(x, y)) return false;
-  if (surfaceAt(x, y, locations) === 'swamp') return false;
+  const sf = surfaceAt(x, y, locations);
+  if (sf === 'swamp' || sf === 'water') return false;
   return !locations.some(l => x + 14 > l.x && x - 14 < l.x + l.w && y + 10 > l.y && y - 14 < l.y + l.h);
 }
 function chanceAt(x, y) {

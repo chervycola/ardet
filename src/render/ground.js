@@ -1,10 +1,11 @@
 // ═══════════════════════════════════════
-// GROUND — разметка на земле открытого мира: тропы, подписи стихий, межа
-// ядра и ткань застройки (утварь эпох в поле). Саму землю — кольца,
-// городок, кольцо огня, стихии — рисует render/etch.js штрихом по рельефу.
+// GROUND — разметка на земле открытого мира: подписи стихий, межа ядра и
+// ткань застройки (утварь эпох в поле). Саму землю — кольца, городок,
+// кольцо огня, стихии, дороги и реку — рисует render/etch.js штрихом по рельефу.
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, RINGS, FIRE_W, warpedDist, trailPoint } from '../world/disc.js';
+import { TOWN, RING_W, RINGS, FIRE_W, warpedDist } from '../world/disc.js';
+import { onArtery } from '../world/arteries.js';
 import { hash } from './draw.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { t as now } from '../core/time.js';
@@ -12,23 +13,12 @@ import { scaler } from './scaler.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;
 
-// ── надписи, тропы и скайлайн — мировые координаты (ctx уже с камерой) ──
+// ── надписи стихий и межа ядра — мировые координаты (ctx уже с камерой);
+// дороги, река и дуги лежат в самой земле (render/etchPaths.js) ──
 export function drawGroundMarks(ctx, cam) {
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   const vis = (x, y, w, h) =>
     x + w > cam.x && x < cam.x + scaler.vw + 80 && y + h > cam.y && y < cam.y + scaler.vh + 100;
-
-  // тропы на четыре стороны (эпохи без подписей: их читают по постройкам)
-  ctx.fillStyle = 'rgba(200,184,160,0.3)';
-  const span = RINGS * RING_W;
-  for (let d = 4; d < span; d += 10) {
-    const s = trailPoint('south', d), n = trailPoint('north', d);
-    if (vis(s.x, s.y, 4, 5)) ctx.fillRect(s.x - 1, s.y, 3, 5);
-    if (vis(n.x, n.y - 5, 4, 5)) ctx.fillRect(n.x - 1, n.y - 5, 3, 5);
-    const e = trailPoint('east', d), w = trailPoint('west', d);
-    if (vis(e.x, e.y, 5, 4)) ctx.fillRect(e.x, e.y - 1, 5, 3);
-    if (vis(w.x - 5, w.y, 5, 4)) ctx.fillRect(w.x - 5, w.y - 1, 5, 3);
-  }
 
   // подписи стихий
   ctx.fillStyle = 'rgba(122,100,64,0.8)';
@@ -117,6 +107,7 @@ function tissueCellRaw(gx, gy) {
   const ring = ringAt(wx, wy);
   if (ring < 1 || ring > RINGS) return null;
   if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
+  if (onArtery(wx + 2, wy, 10) || onArtery(wx + 14, wy, 10) || onArtery(wx + 26, wy, 10)) return null;   // не на дороге и не в реке
   const side = sectorOf(wx, wy);
   // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
   const d = warpedDist(wx, wy), frac = d / RING_W - (ring - 1);

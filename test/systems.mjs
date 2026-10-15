@@ -440,7 +440,7 @@ setCtx(ctx);
     });
     eq(maxUp, 5, 'взлетели не все');
     assert(maxZ > 20, `низко: ${maxZ.toFixed(1)}`);
-    assert(f.birds.every(b => b.st === 'ground' && b.z === 0), 'не сели');
+    assert(f.birds.every(b => b.st === 'ground' && (b.z === 0 || b.hop)), 'не сели');   // подскок на земле — тоже сели
     eq(f.st, 'calm', 'стая не успокоилась');
     const c1 = centre(f), pf = { x: p.x + 6, y: p.y + 22 };
     assert(Math.hypot(c1.x - pf.x, c1.y - pf.y) > Math.hypot(c0.x - pf.x, c0.y - pf.y) + 100, 'сели не дальше');
@@ -791,6 +791,119 @@ setCtx(ctx);
     const r2 = rec(); At.drawFootprints(r2.c, cam);
     const fr = r2.calls.find(k => k[0] === 'rect');
     assert(fr && fr[1] >= 5000 && fr[2] >= 5019, `след не там: ${fr && fr.slice(1).join(',')}`);
+  });
+}
+
+// ═══ АРТЕРИИ: дороги, река, дуги, линия неба ═══
+{
+  const A = await imp('world/arteries.js');
+  const D = await imp('world/disc.js');
+  const R = await imp('world/relief.js');
+  const M = await imp('world/locations.js');
+  const AG = await imp('render/archground.js');
+  const EP = await imp('render/etchPaths.js');
+  const F = await imp('render/fireRing.js');
+  const AP = await imp('render/arteryProps.js');
+  AG.prepareArchGround(M.archEnsembles, M.locations);
+  const L = M.locations;
+  const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
+  A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 }))],
+    [...L, ...AG.archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
+  const line = id => A.lines.find(l => l.id === id);
+  const runs = arr => { const o = []; for (const v of arr) if (o[o.length - 1] !== v) o.push(v); return o; };
+  const cross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
+  const crossings = (P, Q) => { let n = 0; for (let i = 0; i < P.length - 1; i++) { if (!P[i].st) continue; for (let j = 0; j < Q.length - 1; j++) if (Q[j].st && cross(P[i], P[i + 1], Q[j], Q[j + 1])) n++; } return n; };
+  const river = line('river');
+  test('дороги: тропа → мостовая → брусчатка → асфальт → трасса; в огне умирают в обратном порядке', () => {
+    const want = ['trail', 'paved', 'cobble', 'asphalt', 'highway', 'asphalt', 'cobble', 'trail'];
+    for (const side of ['south', 'north', 'east', 'west', 'plain']) {
+      const st = runs(line('road:' + side).pts.map(p => p.st)).filter(Boolean);
+      eq(st.join(' > '), want.join(' > '), `дорога ${side}`);
+    }
+    eq(A.roadStage(D.RING_W * 9 + D.FIRE_W * 0.95), null, 'у самого края дороги нет');
+  });
+  test('река: спираль — каждое кольцо и каждая сторона по разу; ручей → акведук → ручей → канал → труба → сухое русло', () => {
+    eq(runs(river.pts.map(p => D.ringAt(p.x, p.y))).join(','), '1,2,3,4,5,6,7,8,9,10', 'кольца по ходу');
+    const sides = runs(river.pts.map(p => R.sideAt(p.x, p.y)));
+    eq(sides.length, 5, `стороны по ходу: ${sides}`);
+    eq(new Set(sides).size, 5, `сторона дважды: ${sides}`);
+    eq(runs(river.pts.map(p => p.st)).filter(Boolean).join(' > '), 'stream > aqueduct > stream > canal > pipe > dry', 'стадии');
+    assert(D.townDist(river.pts[0].x, river.pts[0].y) < 120, 'родник не у городка');
+  });
+  test('река: каждую дорогу переходит по разу; вода — мост, поднятое — дорога понизу', () => {
+    for (const side of ['south', 'north', 'east', 'west', 'plain']) eq(crossings(line('road:' + side).pts, river.pts), 1, `дорога ${side} × река`);
+    assert(A.bridges.length >= 2, `мостов ${A.bridges.length}`);
+    for (const b of A.bridges) assert(['stone', 'iron', 'concrete', 'rail'].includes(b.style), 'мост без эпохи');
+    // мост есть ровно там, где дорога переходит воду
+    const wet = [];
+    for (const side of ['south', 'north', 'east', 'west', 'plain']) {
+      const P = line('road:' + side).pts;
+      for (let i = 0; i < P.length - 1; i++) for (let j = 0; j < river.pts.length - 1; j++) {
+        const c = river.pts[j];
+        if ((c.st === 'stream' || c.st === 'canal') && cross(P[i], P[i + 1], c, river.pts[j + 1])) wet.push(P[i]);
+      }
+    }
+    for (const p of wet) assert(A.bridges.some(b => Math.hypot(b.x - p.x, b.y - p.y) < 20), `переход воды без моста у (${p.x | 0},${p.y | 0})`);
+  });
+  test('дуги: от дороги до дороги по своему кольцу, на швах сторон — площадки узлов', () => {
+    const ring = { silk: 1, caravan: 3, winter: 3, portage: 3, rail: 6, net: 9 };
+    for (const [id, n] of Object.entries(ring)) {
+      const P = line('arc:' + id).pts;
+      const inRing = P.filter(p => D.ringAt(p.x, p.y) === n).length / P.length;
+      assert(inRing > 0.9, `дуга ${id}: в своём кольце ${(inRing * 100).toFixed(0)}%`);
+      if (id === 'net') { assert(Math.hypot(P[0].x - P[P.length - 1].x, P[0].y - P[P.length - 1].y) < 40, 'сеть — не кольцо'); continue; }
+      for (const end of [P[0], P[P.length - 1]]) assert(A.onArtery(end.x, end.y, 2, line('arc:' + id)), `дуга ${id} не упирается в дорогу`);
+    }
+    eq(A.nodes.length, 6, 'площадок узлов');
+    const ORDER = ['north', 'plain', 'east', 'south', 'west'];
+    for (const n of A.nodes) {
+      const arc = A.lines.find(l => l.kind === 'arc' && l.name === n.road);
+      assert(arc && A.onArtery(n.x, n.y, 1), `площадка «${n.road}» не на своей дуге`);
+      const i = ORDER.indexOf(n.pair[0]), j = ORDER.indexOf(n.pair[1]);
+      eq((i + 1) % 5, j, `узел ${n.pair} — не смежные стороны`);
+    }
+  });
+  test('под ногами: дорога — тропа, ручей — вброд, мост и брод — посуху, на севере вода — лёд', () => {
+    const road = line('road:south').pts[40];
+    eq(A.surfaceOf(road.x, road.y), 'path', 'на дороге');
+    const wet = river.pts.find(p => p.st === 'stream' && !p.ice && !A.fordAt(p.s) && !A.onArtery(p.x, p.y, 20, river));
+    eq(A.surfaceOf(wet.x, wet.y), 'water', 'в ручье');
+    for (const b of A.bridges) eq(A.surfaceOf(b.x, b.y), 'path', 'на мосту');
+    assert(A.fords.length >= 2, `бродов ${A.fords.length}`);
+    for (const f of A.fords) eq(A.surfaceOf(f.x, f.y), 'path', 'на броде');
+    const ice = river.pts.find(p => p.ice && !A.onArtery(p.x, p.y, 20, river));
+    assert(ice && R.sideAt(ice.x, ice.y) === 'north', 'лёд не на севере');
+    eq(A.surfaceOf(ice.x, ice.y), 'ice', 'на льду');
+    eq(A.surfaceOf(D.TOWN.x0 + 500, D.TOWN.y0 + 500), null, 'в городке артерий нет');
+  });
+  test('земля: дорога ложится в плитку без горизонталей, над водой — настил моста', () => {
+    const T = 128, out = new Uint8Array(T * T), cls = new Uint8Array(T * T).fill(5);
+    const b = A.bridges.find(q => q.style !== 'rail') || A.bridges[0];
+    const x0 = Math.floor(b.x / T) * T, y0 = Math.floor(b.y / T) * T;
+    assert(EP.stampPaths(x0, y0, T, out, cls), 'плитка без артерий');
+    const k = Math.round(b.y - y0) * T + Math.round(b.x - x0), o = EP.OV[out[k]];
+    assert(o && o.a === 1 && o.col.join() === [0x4a, 0x46, 0x3f].join(), `у моста не настил: ${o && o.col}`);
+    eq(cls[k], 0, 'на мосту горизонталь');
+    let paths = 0, clean = 0;
+    for (let q = 0; q < T * T; q++) if (out[q]) { paths++; if (cls[q] === 0) clean++; }
+    eq(clean, paths, 'на полотне остался штрих');
+  });
+  test('линия неба: акведук → аркады → столбы → ЛЭП → эстакада; опоры не на постройках', () => {
+    for (const side of ['south', 'north', 'east', 'west', 'plain']) {
+      const S = line('sky:' + side);
+      eq(runs(S.pts.map(p => p.st)).filter(Boolean).join(' > '), 'aqueduct > arcade > poles > pylons > flyover', `линия неба ${side}`);
+      for (const p of S.pts) if (p.ok) assert(!L.some(l => p.x > l.x && p.x < l.x + l.w && p.y > l.y && p.y < l.y + l.h), `опора в постройке у (${p.x | 0},${p.y | 0})`);
+    }
+    AP.buildArteryProps();
+    assert(AP.arteryProps.length > 300, `поднятого ${AP.arteryProps.length}`);
+    for (const p of AP.arteryProps) assert(p.h > 0 && p.w > 0 && Number.isFinite(p.gy), 'кусок без рамки');
+    const view = AP.arteryPropsIn(line('sky:east').pts[60].x - 320, line('sky:east').pts[60].y - 180, line('sky:east').pts[60].x + 320, line('sky:east').pts[60].y + 180);
+    assert(view.length > 0, 'в кадре у линии неба пусто');
+  });
+  test('кольцо огня: дорога проходит огонь насквозь — костров на ней нет', () => {
+    F.fireSitesAvoid((x, y) => A.onArtery(x, y, 18));
+    for (const f of F.fireSites) assert(!A.onArtery(f.x, f.y, 10), `костёр на дороге (${f.x},${f.y})`);
+    assert(F.fireSites.length > 30, `костров ${F.fireSites.length}`);
   });
 }
 

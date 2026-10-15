@@ -108,6 +108,7 @@ export function stepPuddles(player, surfName, weather, cam, locations) {
   walked = 0;
   const fx = player.x + 6, fy = player.y + 23;
   if (surfName === 'swamp') { ring(fx, fy, 5, 40); return; }
+  if (surfName === 'water') { ring(fx, fy, 6, 38); wetSteps = 10; plip(sp); return; }   // вброд: круги, плеск, потом мокрые следы
   if (wet <= 0) return;
   const p = cellAt(Math.floor(fx / CELL), Math.floor(fy / CELL), locations);
   const s = p && sizeOf(p);

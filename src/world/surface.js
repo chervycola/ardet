@@ -6,9 +6,11 @@
 //   decel — как быстро гаснет, когда отпустил (или поворачиваешь против хода);
 //   max   — доля обычной скорости; print — какой след остаётся.
 // Лёд держит плохо: отпустил — едешь. Песок за краем и болото вязнут.
-// Тропа чуть быстрее: по ней ходили.
+// Дорога чуть быстрее: по ней ходили (артерии — world/arteries.js: дороги,
+// дуги, мосты, броды); ручей и канал переходят вброд — медленно, по колено.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, FIRE_W, warpedDist, trailPoint } from './disc.js';
+import { TOWN, RING_W, RINGS, FIRE_W, warpedDist } from './disc.js';
+import { surfaceOf } from './arteries.js';
 
 export const SURF = {
   ground: { name: 'земля',   accel: 0.30, decel: 0.40, max: 1.00, print: 'soft' },
@@ -20,6 +22,7 @@ export const SURF = {
   swamp:  { name: 'болото',  accel: 0.09, decel: 0.60, max: 0.62, print: null },
   rubble: { name: 'мусор',   accel: 0.22, decel: 0.45, max: 0.82, print: null },
   ash:    { name: 'гарь',    accel: 0.26, decel: 0.40, max: 0.92, print: 'ash' },
+  water:  { name: 'вброд',   accel: 0.11, decel: 0.62, max: 0.55, print: null },
 };
 
 const OUTER = RINGS * RING_W + FIRE_W;
@@ -31,19 +34,6 @@ function sector(x, y) {
   const dn = TOWN.y0 - y, ds = y - TOWN.y1, dw = TOWN.x0 - x, de = x - TOWN.x1;
   const m = Math.max(dn, ds, dw, de);
   return m === dn ? 'north' : m === ds ? 'south' : m === dw ? 'west' : 'east';
-}
-
-// на тропе ли: тропа вьётся от кромки городка на четыре стороны
-function onTrail(x, y, side) {
-  let d, along, across;
-  if (side === 'south') { d = y - TOWN.y1; across = x; }
-  else if (side === 'north') { d = TOWN.y0 - y; across = x; }
-  else if (side === 'east') { d = x - TOWN.x1; across = y; }
-  else { d = TOWN.x0 - x; across = y; }
-  if (d < 0 || d > RINGS * RING_W) return false;
-  const p = trailPoint(side, d);
-  along = side === 'south' || side === 'north' ? p.x : p.y;
-  return Math.abs(across - along) < 6;
 }
 
 // имя материала в точке мира (ноги странника — x+6, y+24)
@@ -60,9 +50,10 @@ export function surfaceAt(x, y, locations) {
   }
   const side = sector(x, y);
   if (d > OUTER) return { south: 'sand', north: 'ice', west: 'swamp', east: 'rubble' }[side];
+  const art = surfaceOf(x, y);                              // дорога, мост, брод, вода реки
+  if (art) return art;
   if (d > RINGS * RING_W) return 'ash';
   const n = Math.ceil(d / RING_W);
   if (side === 'north' && n >= 3) return 'snow';            // земля севера белая — см. ground.js
-  if (onTrail(x, y, side)) return 'path';
   return 'ground';
 }
