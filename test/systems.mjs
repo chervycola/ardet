@@ -907,6 +907,123 @@ setCtx(ctx);
   });
 }
 
+// ═══ РАСТИТЕЛЬНОСТЬ, ПОЛЯ, ПРИМЕТЫ (идут после артерий: их обходят) ═══
+{
+  const A = await imp('world/arteries.js');
+  const D = await imp('world/disc.js');
+  const R = await imp('world/relief.js');
+  const RT = await imp('world/routes.js');
+  const F = await imp('world/flora.js');
+  const FD = await imp('world/fields.js');
+  const LM = await imp('world/landmarks.js');
+  const AG = await imp('render/archground.js');
+  const EP = await imp('render/etchPaths.js');
+  FD.buildFields(AG.archGroundRects());
+  LM.buildLandmarks();
+  F.buildFlora(LM.landmarkBoxes(), LM.landmarks.filter(l => l.kind === 'oasis'));
+  const river = A.lines.find(l => l.kind === 'river');
+  const ALLEYS = new Set(['poplar', 'birch', 'palm']);
+  test('растительность: вид по стороне и эпохе; не на постройках, дорогах и реке', () => {
+    assert(F.flora.length > 800, `растений ${F.flora.length}`);
+    for (const t of F.flora) {
+      if (t.sp === 'reed') continue;
+      assert(!RT.blockedAt(A.artBlock, t.x, t.gy), `${t.sp} на постройке или во дворе (${t.x},${t.gy})`);
+      assert(!A.onArtery(t.x, t.gy, 2), `${t.sp} на дороге или в реке (${t.x},${t.gy})`);
+      const ok = F.KINDS[t.side].rows[t.ring - 1].some(e => e.sp === t.sp) || ALLEYS.has(t.sp);
+      assert(ok, `${t.sp} не растёт на стороне ${t.side} в кольце ${t.ring}`);
+    }
+  });
+  test('рощи и поляны: лес запада гуще юга; в кадре не чаща', () => {
+    const count = (side, n) => F.flora.filter(t => t.side === side && t.ring <= n && t.sp !== 'reed').length;
+    assert(count('west', 2) > 3 * count('south', 2), `запад ${count('west', 2)}, юг ${count('south', 2)}`);
+    let worst = 0;
+    for (const t of F.flora) worst = Math.max(worst, F.floraIn(t.x - 320, t.gy - 180, t.x + 320, t.gy + 180).length);
+    assert(worst < 160, `в кадре ${worst} растений`);
+    // к краю растительность отступает: в девятом кольце меньше, чем во втором
+    assert(F.flora.filter(t => t.ring === 9).length < F.flora.filter(t => t.ring === 2).length / 3, 'к огню не редеет');
+  });
+  test('камыш — по берегу ручья, не на льду', () => {
+    const reeds = F.flora.filter(t => t.sp === 'reed');
+    assert(reeds.length > 10, `камыша ${reeds.length}`);
+    for (const r of reeds) {
+      let best = Infinity, near = null;
+      for (const p of river.pts) { const d = Math.hypot(p.x - r.x, p.y - r.gy); if (d < best) { best = d; near = p; } }
+      assert(best < 12 && near.st === 'stream' && !near.ice, `камыш не у ручья: ${best.toFixed(1)} ${near.st}`);
+    }
+  });
+  test('поля: у жилья и дорог, своим видом; не на дорогах и не на постройках; борозды — в землю, склон виден', () => {
+    assert(FD.fields.length > 20, `полей ${FD.fields.length}`);
+    const kinds = new Set(FD.fields.map(f => f.kind));
+    for (const k of ['paddy', 'garden', 'strip']) assert(kinds.has(k), `нет полей «${k}»`);
+    for (const f of FD.fields) {
+      assert(!A.onArtery(f.cx, f.cy, 2), 'поле на дороге');
+      assert(!RT.blockedAt(A.artBlock, f.cx, f.cy), 'поле на постройке');
+      assert(FD.fieldAt(f.cx, f.cy) === f, 'середина поля — не в поле');
+    }
+    const f = FD.fields.find(q => q.kind === 'strip' || q.kind === 'plow') || FD.fields[0];
+    const T = 128, out = new Uint8Array(T * T), cls = new Uint8Array(T * T).fill(5);
+    const x0 = Math.floor(f.cx / T) * T, y0 = Math.floor(f.cy / T) * T;
+    EP.stampPaths(x0, y0, T, out, cls);
+    let inF = 0, marked = 0, kept = 0;
+    for (let k = 0; k < T * T; k++) {
+      const x = x0 + (k % T), y = y0 + ((k / T) | 0);
+      if (FD.inField(f, x, y) < 3 || A.onArtery(x, y, 3)) continue;
+      inF++;
+      if (out[k]) marked++;
+      if (out[k] && EP.OV[out[k]].a < 1 && cls[k] === 5) kept++;
+    }
+    assert(inF > 50 && marked / inF > 0.3, `борозд мало: ${marked} из ${inF}`);
+    assert(kept > 0, 'под бороздами пропал штрих склона');
+  });
+  test('приметы у реки: дерево у родника, вмёрзшая мельница, шлюз, задвижка, лодка в сухом русле', () => {
+    const near = (kind, pred, r) => LM.landmarks.filter(l => l.kind === kind).some(l => river.pts.some(p => pred(p) && Math.hypot(p.x - l.x, p.y - l.gy) < r));
+    assert(near('clootie', p => p === river.pts[2], 30), 'у родника нет дерева');
+    assert(near('frozenMill', p => p.st === 'stream' && p.ice, 30), 'мельница не у ручья подо льдом');
+    assert(near('locks', p => p.st === 'canal' && !p.ice, 6), 'шлюз не на канале');
+    assert(near('valve', p => p.st === 'pipe', 16), 'задвижка не на трубе');
+    assert(near('boat', p => p.st === 'dry', 6), 'лодка не в сухом русле');
+  });
+  test('приметы на вершинах — выше округи; у дорог — там, где примыкает дуга', () => {
+    const HILLS = new Set(['seid', 'cairn', 'menhir', 'calvary', 'windmill', 'semaphore', 'stupa', 'pillbox', 'turbine', 'celltower']);
+    let n = 0;
+    for (const l of LM.landmarks) {
+      if (!HILLS.has(l.kind)) continue;
+      n++;
+      const h = R.heightAt(l.x, l.gy);
+      let lower = 0;
+      for (let k = 0; k < 8; k++) if (R.heightAt(l.x + Math.cos(k * Math.PI / 4) * 50, l.gy + Math.sin(k * Math.PI / 4) * 25) < h + 1.5) lower++;
+      assert(lower >= 7, `${l.kind} (${l.x},${l.gy}) не на вершине: ниже — ${lower} из 8`);
+    }
+    assert(n >= 25, `примет на вершинах ${n}`);
+    const ways = LM.landmarks.filter(l => ['herm', 'khachkar', 'watertower', 'busstop'].includes(l.kind));
+    assert(ways.length >= 8, `придорожных ${ways.length}`);
+    for (const w of ways) assert(A.nearRoad(w.x, w.gy, 90), `${w.kind} не у дороги`);
+    for (const l of LM.landmarks) assert(!A.onArtery(l.x, l.gy, 0, river) || ['iceHole', 'locks', 'barge', 'boat'].includes(l.kind), `${l.kind} на дороге`);
+  });
+  test('пустота не случайна: в углах колец 1–6 голых кадров не больше половины', () => {
+    const T = D.TOWN;
+    let s = 4242; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (const [cx, cy, name] of [[T.x1, T.y1, 'ЮВ'], [T.x0, T.y1, 'ЮЗ'], [T.x0, T.y0, 'СЗ']]) {
+      for (let n = 1; n <= 6; n++) {
+        let bare = 0, v = 0;
+        for (let k = 0; k < 24; k++) {
+          const a = (0.15 + 0.7 * rnd()) * Math.PI / 2, r = (n - 1 + rnd()) * D.RING_W;
+          const x = cx + (cx > T.x0 ? 1 : -1) * Math.cos(a) * r, y = cy + (cy > T.y0 ? 1 : -1) * Math.sin(a) * r;
+          if (D.ringAt(x, y) !== n) continue;
+          v++;
+          const x0 = x - 320, y0 = y - 180, x1 = x + 320, y1 = y + 180;
+          const trees = F.floraIn(x0, y0, x1, y1).filter(t => t.sp !== 'reed' && t.sp !== 'bush').length;
+          const lms = LM.landmarks.some(l => l.x > x0 && l.x < x1 && l.gy > y0 && l.gy < y1);
+          const flds = FD.fieldsIn(x0, y0, x1, y1).length;
+          const props = AG.archProps.some(p => p.x > x0 && p.x < x1 && p.gy > y0 && p.gy < y1);
+          if (trees < 3 && !lms && !flds && !props) bare++;
+        }
+        assert(v < 6 || bare / v <= 0.5, `угол ${name}, кольцо ${n}: голых кадров ${bare} из ${v}`);
+      }
+    }
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

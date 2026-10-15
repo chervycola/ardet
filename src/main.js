@@ -26,6 +26,11 @@ import { setReliefFlats, setReliefCarve } from './world/relief.js';
 import { fireLights, fireSitesInView, drawFireSite, fireSitesAvoid } from './render/fireRing.js';
 import { buildArteries, riverCarve, onArtery } from './world/arteries.js';
 import { buildArteryProps, arteryPropsIn } from './render/arteryProps.js';
+import { buildFlora, floraIn } from './world/flora.js';
+import { buildFields } from './world/fields.js';
+import { buildLandmarks, landmarks, landmarkBoxes } from './world/landmarks.js';
+import { buildLandmarkProps, landmarkPropsIn } from './render/landmarkProps.js';
+import { drawTree, treeCaster } from './render/floraProps.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
@@ -113,6 +118,9 @@ buildArteries([
 setReliefCarve(riverCarve);                    // река промыла себе долину
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
 buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
+buildFields(archGroundRects());                // поля у дворов и вдоль дорог — бороздами в землю
+buildLandmarks(); buildLandmarkProps();        // приметы: у реки, на вершинах, где дуга примыкает к дороге
+buildFlora(landmarkBoxes(), landmarks.filter(l => l.kind === 'oasis'));   // рощи, аллеи, камыш, пальмы оазисов
 fireSitesAvoid((x, y) => onArtery(x, y, 18));  // дорога проходит огонь насквозь
 // ткань застройки не ложится на локации (с запасом над крышей) и дворы
 setTissueBlockers([
@@ -288,6 +296,8 @@ function propCaster(p) {
 const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
   setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
 }, -6, -10, 26, 23) };
+const LOW = new Set(['reed', 'bush', 'stump']);       // низкое тени по солнцу не кладёт (трава и камни — тоже)
+const FLATLM = new Set(['iceHole', 'boat', 'oasis']);   // приметы вровень с землёй
 function shadowCasters(camX, camY, vw, vh) {
   const pad = 170, out = [];
   for (const loc of locations) {
@@ -300,6 +310,8 @@ function shadowCasters(camX, camY, vw, vh) {
     out.push(propCaster(p));
   }
   for (const p of arteryPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!p.noShadow) out.push(propCaster(p));
+  for (const tr of floraIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!LOW.has(tr.sp)) out.push(treeCaster(tr, maskFrom));
+  for (const p of landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, t)) if (!FLATLM.has(p.kind)) out.push(propCaster(p));
   heroCaster.ox = player.x; heroCaster.oy = player.y;
   out.push(heroCaster);
   return out;
@@ -410,6 +422,8 @@ function render() {
     if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });
   }
   for (const p of arteryPropsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 80)) drawList.push({ k: p.gy, prop: p });   // акведуки, ЛЭП, мосты
+  for (const tr of floraIn(camX - 18, camY - 4, camX + vw + 18, camY + vh + 46)) drawList.push({ k: tr.gy, tree: tr });   // рощи и камыш
+  for (const p of landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, t)) drawList.push({ k: p.gy, prop: p });   // приметы
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
@@ -421,6 +435,7 @@ function render() {
     if (it.cat) { drawCat(worldCtx, it.cat, player); continue; }
     if (it.raven) { drawRaven(worldCtx, it.raven); continue; }
     if (it.fire) { drawFireSite(worldCtx, it.fire, t); continue; }
+    if (it.tree) { drawTree(worldCtx, it.tree, t); continue; }
     if (it.player) {
       const so = stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);

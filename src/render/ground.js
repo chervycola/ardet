@@ -5,7 +5,8 @@
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, RING_W, RINGS, FIRE_W, warpedDist } from '../world/disc.js';
-import { onArtery } from '../world/arteries.js';
+import { onArtery, nearRoad } from '../world/arteries.js';
+import { sideAt } from '../world/relief.js';
 import { hash } from './draw.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { t as now } from '../core/time.js';
@@ -77,18 +78,6 @@ function tissueBlocked(x0, y0, x1, y1) {
   }
   return false;
 }
-// сектор диска для ткани: юг/север/запад/восток; дуга северо-восточного
-// угла — равнина
-function sectorOf(wx, wy) {
-  if (wx > TOWN.x1 && wy < TOWN.y0) {
-    const a = Math.atan2(TOWN.y0 - wy, wx - TOWN.x1) / (Math.PI / 2);
-    if (a > 0.2 && a < 0.8) return 'plain';
-  }
-  const dn = TOWN.y0 - wy, ds = wy - TOWN.y1, dw = TOWN.x0 - wx, de = wx - TOWN.x1;
-  const m = Math.max(dn, ds, dw, de);
-  return m === dn ? 'north' : m === ds ? 'south' : m === dw ? 'west' : 'east';
-}
-
 // клетка ткани: где лежит и что (детерминированно, без камеры; кэш)
 const cellCache = new Map();
 function tissueCell(gx, gy) {
@@ -101,20 +90,33 @@ function tissueCell(gx, gy) {
 }
 function tissueCellRaw(gx, gy) {
   const h = hash(gx + 31, gy + 57, 29);
-  if (h < 0.62) return null;
+  if (h < 0.5) return null;
   const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
   const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
   const ring = ringAt(wx, wy);
   if (ring < 1 || ring > RINGS) return null;
   if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
   if (onArtery(wx + 2, wy, 10) || onArtery(wx + 14, wy, 10) || onArtery(wx + 26, wy, 10)) return null;   // не на дороге и не в реке
-  const side = sectorOf(wx, wy);
+  // жильё тянется к дорогам: у дороги ткань гуще, в чистом поле — реже
+  if (!nearRoad(wx + 12, wy, 230) && h < 0.76) return null;
+  const side = sideAt(wx + 12, wy);                     // сторона — по рваному шву: в углах колец стороны мешаются
   // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
   const d = warpedDist(wx, wy), frac = d / RING_W - (ring - 1);
   const pr = ring > 1 && frac < 0.22 && hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
   const props = (ARCH_BY_RING[SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique);
   const idx = props.length ? ((h * 977) | 0) % props.length : -1;
   return { h, wx, wy, ring, side, props, idx, pr };
+}
+
+// клетки ткани в прямоугольнике мира (для замеров и тестов)
+export function tissueIn(x0, y0, x1, y1) {
+  const out = [];
+  for (let gy = Math.floor(y0 / CELL); gy <= Math.floor(y1 / CELL); gy++)
+    for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) {
+      const c = tissueCell(gx, gy);
+      if (c && c.wx >= x0 && c.wx < x1 && c.wy >= y0 && c.wy < y1) out.push(c);
+    }
+  return out;
 }
 
 export function drawTissue(ctx, cam) {

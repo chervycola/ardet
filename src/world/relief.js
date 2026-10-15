@@ -76,6 +76,19 @@ function kurgans(x, y) {
   return s;
 }
 
+// вершины курганов в прямоугольнике мира (приметы ставят на них бабу, крест, знак);
+// курганы есть только на равнине — вес стороны решает main через sideAt
+export function kurgansIn(x0, y0, x1, y1) {
+  const out = [];
+  for (let j = Math.floor(y0 * 2 / KC) - 1; j <= Math.floor(y1 * 2 / KC) + 1; j++) for (let i = Math.floor(x0 / KC) - 1; i <= Math.floor(x1 / KC) + 1; i++) {
+    if (gh(i, j, 11) < 0.55) continue;
+    const cx = (i + 0.2 + 0.6 * gh(i, j, 12)) * KC, cy = (j + 0.2 + 0.6 * gh(i, j, 13)) * KC / 2;
+    if (cx < x0 || cx >= x1 || cy < y0 || cy >= y1) continue;
+    out.push({ x: cx, y: cy, R: 16 + 14 * gh(i, j, 14), H: 14 + 12 * gh(i, j, 15) });
+  }
+  return out;
+}
+
 // вал со рвом вокруг городка; у выходов троп — проход
 const EXITS = [...['south', 'north', 'east', 'west'].map(s => trailPoint(s, 0)), { x: TOWN.x1, y: TOWN.y0 }];   // и угол равнины
 export function rampartAt(x, y, d) {

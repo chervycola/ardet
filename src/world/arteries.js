@@ -65,6 +65,7 @@ export const lines = [];        // { kind, id, pts: [{x, y, s, d, st, hw}] }
 export const bridges = [];      // { x, y, ax, ay (вдоль дороги), len, hw, style }
 export const nodes = [];        // площадки узлов { x, y, road, pair }
 export const fords = [];        // броды ручья: камни поперёк { x, y, s }
+export let artBlock = null;     // сетка занятости после прокладки (постройки, дворы, утварь; дороги — проходимы)
 
 // ── сетка отрезков для поиска рядом; у реки — своя (долина: каждая точка рельефа) ──
 const G = 128, grid = new Map(), rgrid = new Map(), CARVE_R = 42;
@@ -145,6 +146,22 @@ export function onArtery(x, y, margin = 0, skip = null) {
         const st = t < 0.5 ? a.st : b.st;
         if (!st || st === 'poles' || st === 'pylons') continue;
         if (d <= (a.hw + (b.hw - a.hw) * t) + margin) return true;
+      }
+    }
+  }
+  return false;
+}
+// у дороги ли (дорога или кольцевая дуга в r точках) — жильё тянется к дорогам
+export function nearRoad(x, y, r) {
+  for (let gi = Math.floor((x - r) / G); gi <= Math.floor((x + r) / G); gi++) {
+    for (let gj = Math.floor((y - r) / G); gj <= Math.floor((y + r) / G); gj++) {
+      const L = grid.get(gi * 100000 + gj);
+      if (!L) continue;
+      for (const { line, i } of L) {
+        if (line.kind !== 'road' && line.kind !== 'arc') continue;
+        const a = line.pts[i];
+        if (!a.st) continue;
+        if (segDist(x, y, a, line.pts[i + 1]).d <= r) return true;
       }
     }
   }
@@ -397,6 +414,7 @@ export function buildArteries(boxes, feet = []) {
     fords.push({ x: p.x, y: p.y, s: p.s });
     last = p.s;
   }
+  artBlock = B;
   return { lines, bridges, nodes, fords };
 }
 

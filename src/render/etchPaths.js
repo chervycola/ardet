@@ -11,6 +11,7 @@
 // Свет суток штрих меняет, а мощёное — нет: это краска, а не рельеф.
 // ═══════════════════════════════════════
 import { segmentsIn, segDist, nodes, skyRun, RAISED, fordAt } from '../world/arteries.js';
+import { fieldsIn, inField } from '../world/fields.js';
 import { RING_W, RINGS } from '../world/disc.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -38,6 +39,11 @@ const O = {
   shade: ov(NIGHT, 0.33), deck: ov('#4a463f', 1), deckEdge: ov('#2a2622', 1),
   ice: ov(mixc(MGLA, ASH, 0.42), 1), iceDeep: ov(mixc(MGLA, NIGHT, 0.3), 1), iceCrack: ov(mixc(ASH, BONE, 0.6), 1), iceShine: ov(BONE, 1),
   stone: ov('#8a8477', 1), stoneTop: ov('#bdb5a4', 1), stoneWet: ov(NIGHT, 0.5), ripple: ov(mixc(MGLA, BONE, 0.55), 1),
+  // поля: смешиваются с землёй — горизонтали склона под ними видны
+  furrow: ov(NIGHT, 0.36), furrowFaint: ov(NIGHT, 0.14), ridge: ov(BONE, 0.14), meza: ov(MGLA, 0.5), stub: ov(BONE, 0.26),
+  track: ov(NIGHT, 0.42), weed: ov(MGLA, 0.45),
+  paddy: ov(mixc(MGLA, BONE, 0.22), 1), paddyGlint: ov(mixc(MGLA, BONE, 0.55), 1), dike: ov(NIGHT, 0.4), rice: ov(mixc(MGLA, NIGHT, 0.25), 1),
+  tea: ov(mixc(MGLA, NIGHT, 0.3), 1), teaLit: ov(mixc(MGLA, BONE, 0.28), 1), aryk: ov(mixc(MGLA, NIGHT, 0.6), 1), plant: ov(MGLA, 0.85),
   pad: ov(BONE, 0.2), padEdge: ov(NIGHT, 0.3), platform: ov('#5a5650', 1),
 };
 
@@ -149,6 +155,44 @@ function river(st, u, v, hw, x, y, ice) {
   return 0;
 }
 
+// край поля гуляет на пару точек (плавно, по шуму)
+function wob(x, y, s) {
+  const a = Math.floor(x / 9), b = Math.floor(y / 6), fx = x / 9 - a, fy = y / 6 - b;
+  const v00 = ih(a, b, s), v10 = ih(a + 1, b, s), v01 = ih(a, b + 1, s), v11 = ih(a + 1, b + 1, s);
+  const v = v00 + (v10 - v00) * fx + (v01 - v00) * fy + (v00 - v10 - v01 + v11) * fx * fy;
+  return (v - 0.5) * 5;
+}
+// поле по виду: u — вдоль борозд, w — поперёк; edge — до края (межа, вал чека)
+function field(f, x, y, edge) {
+  const rx = x - f.cx, ry = y - f.cy, u = rx * f.ux + ry * f.uy, w = rx * f.nx + ry * f.ny;
+  if (edge < 1.5) return f.kind === 'paddy' ? O.dike : f.kind === 'fallow' ? (ih(x, y, 71) < 0.5 ? O.weed : 0) : O.meza;
+  switch (f.kind) {
+    case 'plow': case 'plot': { const k = fract(w / 3); return k < 0.33 ? O.furrow : k < 0.5 ? O.ridge : 0; }
+    case 'strip': {                                                    // чересполосица: полосы через межу — пашня и жнивьё
+      const sw = (w + 400) / 12;
+      if (fract(sw) < 0.09) return O.meza;
+      if (Math.floor(sw) & 1) { const k = fract(w / 3); return k < 0.33 ? O.furrow : 0; }
+      return fract(u / 4) < 0.25 && fract(w / 2.5) < 0.4 ? O.stub : 0;
+    }
+    case 'kolkhoz': {                                                  // поле до горизонта, по нему колея трактора
+      if (Math.abs(fract((w + 600) / 40) - 0.5) < 0.05) return O.track;
+      const k = fract(w / 3.4); return k < 0.3 ? O.furrow : k < 0.45 ? O.ridge : 0;
+    }
+    case 'fallow':                                                     // заброшено: борозды тают, лезет сорняк
+      if (ih(x, y, 61) < 0.07) return O.weed;
+      return fract(w / 3) < 0.22 && ih(x >> 1, y, 63) < 0.55 ? O.furrowFaint : 0;
+    case 'paddy':                                                      // рисовый чек: вода, валы, ряды ростков
+      if (fract((w + 200) / 22) < 0.08 || fract((u + 400) / 44) < 0.045) return O.dike;
+      if (fract(u / 3) < 0.34 && fract(w / 4) < 0.25) return O.rice;
+      return ih(x, y >> 1, 67) < 0.03 ? O.paddyGlint : O.paddy;
+    case 'tea': { const rw = fract(w / 7); return rw < 0.55 ? (rw < 0.16 ? O.teaLit : O.tea) : 0; }   // ряды стриженых кустов
+    case 'garden':                                                     // делянка у арыка: вода вдоль края, ростки рядами
+      if (w > f.b * 0.72) return O.aryk;
+      return fract(w / 4) < 0.3 && fract(u / 3) < 0.5 ? O.plant : 0;
+  }
+  return 0;
+}
+
 // буферы плитки: ближайшая линия своего слоя (числами — без мусора на каждую точку)
 const STAGES = [null, 'trail', 'paved', 'cobble', 'asphalt', 'highway', 'silk', 'caravan', 'winter', 'portage', 'rail', 'net',
   'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover'];
@@ -160,7 +204,8 @@ const LAYER = { river: 0, sky: 1, arc: 2, road: 3 };
 export function stampPaths(x0, y0, T, out, cls) {
   const segs = segmentsIn(x0 - 12, y0 - 12, x0 + T + 12, y0 + T + 12);
   const pads = nodes.filter(n => n.x > x0 - 20 && n.x < x0 + T + 20 && n.y > y0 - 14 && n.y < y0 + T + 14);
-  if (!segs.length && !pads.length) return false;
+  const flds = fieldsIn(x0, y0, x0 + T, y0 + T);
+  if (!segs.length && !pads.length && !flds.length) return false;
   if (N !== T * T) {
     N = T * T;
     bD = new Float32Array(N * 4); bU = new Float32Array(N * 4); bV = new Float32Array(N * 4);
@@ -201,7 +246,12 @@ export function stampPaths(x0, y0, T, out, cls) {
   let any = false;
   for (let k = 0; k < N; k++) {
     const x = x0 + (k % T), y = y0 + ((k / T) | 0);
-    let o = 0;
+    let o = 0, fo = 0;
+    for (const f of flds) {                                           // поле — под дорогами и рекой
+      if (x < f.x0 || x > f.x1 || y < f.y0 || y > f.y1) continue;
+      const e = inField(f, x, y) + wob(x, y, f.seed);                  // межа гуляет: поле не по линейке
+      if (e >= 0) { fo = field(f, x, y, e); break; }
+    }
     if (bD[k] < Infinity && bS[k]) o = river(STAGES[bS[k]], bU[k], bV[k], bH[k], x, y, (bF[k] & 2) !== 0) || o;
     const st0 = bD[k] < Infinity ? STAGES[bS[k]] : null;
     const wet = (st0 === 'stream' || st0 === 'canal') && Math.abs(bV[k]) <= bH[k] + 1;
@@ -224,6 +274,7 @@ export function stampPaths(x0, y0, T, out, cls) {
       if (e <= 1) o = e > 0.72 ? O.padEdge : n.road === 'железная дорога' ? O.platform : O.pad;
     }
     if (o) { out[k] = o; cls[k] = 0; any = true; }                    // на мощёном и в воде — без горизонталей
+    else if (fo) { out[k] = fo; any = true; if (OV[fo].a >= 1) cls[k] = 0; }   // поле: борозды поверх штриха склона
   }
   return any;
 }
