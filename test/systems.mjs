@@ -581,6 +581,84 @@ setCtx(ctx);
   });
 }
 
+// ═══ ЗЕМЛЯ ШТРИХОМ: рельеф, швы, кольцо огня ═══
+{
+  const R = await imp('world/relief.js');
+  const E = await imp('render/etch.js');
+  const D = await imp('world/disc.js');
+  const F = await imp('render/fireRing.js');
+  const T = D.TOWN, cx = (T.x0 + T.x1) / 2;
+  let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const slope = (x, y) => Math.hypot(R.heightAt(x + 1, y) - R.heightAt(x, y), (R.heightAt(x, y + 1) - R.heightAt(x, y)) / 2);
+  const avg = f => { let s = 0; for (let k = 0; k < 400; k++) { const [x, y] = f(); s += slope(x, y); } return s / 400; };
+  test('рельеф: юг в дюнах круче степи равнины, городок почти ровный; у троп вал разрыт', () => {
+    const town = avg(() => [T.x0 + 200 + rnd() * 2600, T.y0 + 200 + rnd() * 1240]);
+    const south = avg(() => [cx - 900 + rnd() * 1800, T.y1 + 1100 + rnd() * 400]);
+    const plain = avg(() => { const a = (0.35 + 0.3 * rnd()) * Math.PI / 2, r = 900 + rnd() * 300; return [T.x1 + r * Math.cos(a), T.y0 - r * Math.sin(a)]; });
+    assert(town < plain && plain < south, `крутизна: городок ${town.toFixed(3)}, равнина ${plain.toFixed(3)}, юг ${south.toFixed(3)}`);
+    const out = { south: [0, 10], north: [0, -10], east: [10, 0], west: [-10, 0] };
+    for (const [s, [dx, dy]] of Object.entries(out)) {
+      const e = D.trailPoint(s, 0);
+      eq(R.rampartAt(e.x + dx, e.y + dy, 10), 0, `у тропы ${s} вал не разрыт`);
+    }
+    assert(R.rampartAt(cx + 700, T.y1 + 10, 10) > 10, 'вала нет');
+  });
+  test('земля: эпохи сшиты по рельефу — чужая краска только у шва, не дальше языка', () => {
+    let off = 0, n = 0;
+    for (let k = 0; k < 6000; k++) {
+      const x = rnd() * D.WORLD_W, y = rnd() * D.WORLD_H, a = D.ringAt(x, y);
+      if (a < 1 || a > 9) continue;
+      n++;
+      const b = R.landAt(x, y);
+      if (a === b) continue;
+      off++;
+      const d = D.warpedDist(x, y), edge = Math.min(d % D.RING_W, D.RING_W - d % D.RING_W);
+      assert(edge <= R.TONGUE / 2 + 1, `краска эпохи ${b} в ${edge.toFixed(0)} точках от шва (кольцо ${a})`);
+      eq(Math.abs(a - b), 1, 'через кольцо');
+    }
+    assert(off > 0 && off / n < 0.08, `языков ${off} из ${n}`);
+  });
+  test('земля: стороны сходятся неровным швом, а не по диагонали', () => {
+    const got = new Set();
+    for (let r = 300; r < 1800; r += 50) got.add(R.sideAt(T.x0 - r, T.y1 + r));   // ровно по диагонали юго-запада
+    assert(got.has('south') && got.has('west'), `по диагонали всё одно: ${[...got]}`);
+    let flips = 0;
+    for (let r = 300; r < 1800; r += 2) if (R.sideAt(T.x0 - r, T.y1 + r) !== R.sideAt(T.x0 - r - 2, T.y1 + r + 2)) flips++;
+    assert(flips < 30, `шов рваный, как растр: ${flips}`);
+  });
+  test('земля штрихом: днём горизонталь темнеет на склоне от солнца, ночью — костью на склоне к луне', () => {
+    const m = 8 + 2 * 5 + 1;                                      // кольцо 3, юг
+    const d = { mat: new Uint8Array([m, m]), cls: new Uint8Array([1, 1]), dir: new Uint8Array([(0 << 2) | 3, (8 << 2) | 3]) };
+    const B = E.MATS[m].base, b = B[0] + B[1] + B[2], lum = (o, k) => o[k * 4] + o[k * 4 + 1] + o[k * 4 + 2];
+    const out = new Uint8ClampedArray(8);
+    E.setLight({ ang: 0, day: 1, night: 0, press: 1 }); E.paintData(d, out);   // солнце с востока
+    assert(lum(out, 1) < b - 30, `склон от солнца не темнеет: ${lum(out, 1)} при ${b}`);
+    assert(lum(out, 0) >= b - 5, 'склон к солнцу темнеет');
+    E.setLight({ ang: 0, day: 0, night: 1, press: 1 }); E.paintData(d, out);
+    assert(lum(out, 0) > b + 60, `ночью на склоне к луне нет кости: ${lum(out, 0)}`);
+    assert(Math.abs(lum(out, 1) - b) < 3, 'ночью теневой склон не в черноте');
+  });
+  test('земля: у кромки городка нет щели — вплотную городок и первое кольцо', () => {
+    for (const [tx, ty, horiz] of [[Math.floor(T.x1 / E.TILE), Math.floor((T.y0 + 600) / E.TILE), 1], [Math.floor((T.x0 + 900) / E.TILE), Math.floor(T.y1 / E.TILE), 0]]) {
+      const d = E.bakeData(tx, ty);
+      const e = horiz ? T.x1 - tx * E.TILE : T.y1 - ty * E.TILE;
+      for (let q = 0; q < E.TILE; q++) {
+        const inK = horiz ? q * E.TILE + e - 1 : (e - 1) * E.TILE + q, outK = horiz ? q * E.TILE + e : e * E.TILE + q;
+        assert(d.mat[inK] < 8, 'у самой кромки внутри — не земля городка');
+        assert(d.mat[outK] >= 8 && d.mat[outK] < 56, 'у самой кромки снаружи — не первое кольцо');
+      }
+    }
+  });
+  test('кольцо огня: костры — в огне, не чаще трёх на кадр', () => {
+    assert(F.fireSites.length > 30, `костров ${F.fireSites.length}`);
+    for (const f of F.fireSites) eq(D.ringAt(f.x, f.y), 10, `костёр (${f.x},${f.y}) не в огне`);
+    for (const f of F.fireSites) {
+      const near = F.fireSites.filter(g => Math.abs(g.x - f.x) < 320 && Math.abs(g.y - f.y) < 180).length;
+      assert(near <= 3, `в кадре вокруг (${f.x},${f.y}) костров ${near}`);
+    }
+  });
+}
+
 // ═══ КРАСНЫЙ ПОЛДЕНЬ ═══
 {
   const RN = await imp('world/redNoon.js');

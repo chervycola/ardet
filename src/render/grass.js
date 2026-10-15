@@ -12,6 +12,7 @@ import { hash } from './draw.js';
 import { groundBlocked } from './ground.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { t } from '../core/time.js';
+import { scaler } from './scaler.js';
 
 const CELL = 10;
 // доля клеток с пучком по кольцу (индекс — номер кольца)
@@ -80,7 +81,7 @@ export function stepGrass(player) {
 
 export function drawGrass(ctx, cam, player) {
   const gx0 = Math.floor((cam.x - 8) / CELL), gy0 = Math.floor((cam.y - 4) / CELL);
-  const gx1 = Math.ceil((cam.x + 648) / CELL), gy1 = Math.ceil((cam.y + 372) / CELL);
+  const gx1 = Math.ceil((cam.x + scaler.vw + 8) / CELL), gy1 = Math.ceil((cam.y + scaler.vh + 12) / CELL);
   const fx = player.x + 6, fy = player.y + 23;
   const live = [...trail, { x: fx, y: fy, age: 0 }];
   for (let gy = gy0; gy <= gy1; gy++) {

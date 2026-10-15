@@ -1,101 +1,22 @@
 // ═══════════════════════════════════════
-// GROUND — аналитическая земля открытого мира: кольца эпох, кольцо
-// огня и стихии краёв рисуются по вьюпорту каждый кадр (мир любого
-// размера без запечённого полотна). Городок блитится поверх из
-// своего запечённого канваса (main).
+// GROUND — разметка на земле открытого мира: тропы, подписи стихий, межа
+// ядра и ткань застройки (утварь эпох в поле). Саму землю — кольца,
+// городок, кольцо огня, стихии — рисует render/etch.js штрихом по рельефу.
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import {
-  TOWN, RING_W, RINGS, FIRE_W, townDist, warpedDist, trailPoint,
-} from '../world/disc.js';
+import { TOWN, RING_W, RINGS, FIRE_W, warpedDist, trailPoint } from '../world/disc.js';
 import { hash } from './draw.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { t as now } from '../core/time.js';
+import { scaler } from './scaler.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;
-const B = 8;                     // размер блока земли
-
-function elementColor(wx, wy) {
-  const dn = TOWN.y0 - wy, ds = wy - TOWN.y1, dw = TOWN.x0 - wx, de = wx - TOWN.x1;
-  const m = Math.max(dn, ds, dw, de);
-  if (m === ds) return ((wx + wy) % 24 < 12) ? '#5a4a30' : '#4e3f28';          // песок
-  if (m === de) return ['#221c12', '#2e2618', '#1a160e'][(((wx * 7 + wy * 13) / 8 | 0) % 3 + 3) % 3];
-  if (m === dn) return ((wx - wy) % 28 < 14) ? '#aec6d4' : '#98b4c4';          // лёд
-  return ((wx + wy) % 20 < 10) ? '#1e3a14' : '#254a18';                        // озеро
-}
-const FIRE_G = '#160a06';
-function ringGround(n) { return SEGMENTS[Math.max(0, Math.min(RINGS, n) - 1)].palette.ground; }
-// северный сектор диска (лёд за огнём) — снег ложится и на кольца
-function isNorth(wx, wy) {
-  const dn = TOWN.y0 - wy;
-  return dn > 0 && dn >= Math.max(wy - TOWN.y1, TOWN.x0 - wx, wx - TOWN.x1);
-}
-
-// цвет земли с дизерингом на рваных границах: эпохи перетекают,
-// а не сменяются по линейке
-function groundColor(wx, wy, bx, by) {
-  const d = warpedDist(wx, wy);
-  const mix = hash(bx * 3 + 1, by * 3 + 2, 17);
-  if (d > OUTER) {
-    const f = (d - OUTER) / 60;                    // кромка стихии
-    if (f < 1 && mix > f) return FIRE_G;
-    return elementColor(wx, wy);
-  }
-  if (d > RINGS * RING_W) {
-    const f = (d - RINGS * RING_W) / FIRE_W;       // гарь ест девятое кольцо
-    if (f < 0.4 && mix > 0.5 + f) return ringGround(RINGS);
-    return FIRE_G;
-  }
-  const n = Math.ceil(d / RING_W);
-  const frac = d / RING_W - (n - 1);
-  // шашка — узкой полосой у самой границы: середина кольца чистая
-  if (n < RINGS && frac > 0.82) {
-    if (mix < ((frac - 0.82) / 0.18) * 0.55) return ringGround(n + 1);
-  } else if (n > 1 && frac < 0.18) {
-    if (mix < ((0.18 - frac) / 0.18) * 0.55) return ringGround(n - 1);
-  } else if (n === RINGS && frac > 0.75) {
-    if (mix < ((frac - 0.75) / 0.25) * 0.4) return FIRE_G;
-  }
-  return ringGround(n);
-}
-
-// ── земля по вьюпорту: экранные координаты ──
-export function drawGround(ctx, camX, camY, vw, vh) {
-  const x0 = Math.floor(camX / B) * B, y0 = Math.floor(camY / B) * B;
-  for (let wy = y0; wy < camY + vh + B; wy += B) {
-    for (let wx = x0; wx < camX + vw + B; wx += B) {
-      if (townDist(wx + 4, wy + 4) <= 0) continue;   // городок блитится поверх
-      const d = warpedDist(wx + 4, wy + 4);
-      ctx.fillStyle = groundColor(wx + 4, wy + 4, (wx / B) | 0, (wy / B) | 0);
-      ctx.fillRect(wx - camX, wy - camY, B, B);
-      // пыль/уголья/блёстки — детерминированно; на севере колец — снег
-      const h = hash((wx / B) | 0, (wy / B) | 0, 43);
-      const n = Math.ceil(d / RING_W);
-      const inRings = d <= RINGS * RING_W;
-      const snowy = inRings && n >= 3 && isNorth(wx, wy);
-      const thr = snowy ? 0.84 - 0.03 * (n - 2) : 0.84;
-      if (h > thr) {
-        if (d > RINGS * RING_W && d <= OUTER) {
-          ctx.fillStyle = h > 0.94 ? '#6b0f1a' : '#3a1408';   // уголья
-        } else if (d > OUTER) {
-          ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        } else if (snowy) {
-          ctx.fillStyle = h > 0.95 ? 'rgba(217,207,184,0.7)' : 'rgba(217,207,184,0.42)';
-        } else {
-          ctx.fillStyle = SEGMENTS[Math.max(0, n - 1)].palette.dust;
-        }
-        ctx.fillRect(wx - camX + ((h * 5) | 0), wy - camY + ((h * 7) | 0) % B, 2, 2);
-      }
-
-    }
-  }
-}
 
 // ── надписи, тропы и скайлайн — мировые координаты (ctx уже с камерой) ──
 export function drawGroundMarks(ctx, cam) {
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   const vis = (x, y, w, h) =>
-    x + w > cam.x && x < cam.x + 720 && y + h > cam.y && y < cam.y + 460;
+    x + w > cam.x && x < cam.x + scaler.vw + 80 && y + h > cam.y && y < cam.y + scaler.vh + 100;
 
   // тропы на четыре стороны (эпохи без подписей: их читают по постройкам)
   ctx.fillStyle = 'rgba(200,184,160,0.3)';
@@ -116,7 +37,7 @@ export function drawGroundMarks(ctx, cam) {
   ctx.fillStyle = 'rgba(150,130,90,0.7)';
   if (vis(TOWN.x1 + OUTER + 4, TOWN.y0 + 40, 300, 14))
     ctx.fillText('куча мусора · восток завален', TOWN.x1 + OUTER + 10, TOWN.y0 + 52);
-  ctx.fillStyle = 'rgba(60,90,110,0.85)';
+  ctx.fillStyle = 'rgba(138,141,143,0.85)';         // лёд — пеплом (голубой вне палитры)
   if (vis(TOWN.x0 + 340, TOWN.y0 - OUTER - 18, 400, 14))
     ctx.fillText('лёд · север трескается', TOWN.x0 + 348, TOWN.y0 - OUTER - 6);
   ctx.fillStyle = 'rgba(90,200,80,0.6)';
@@ -207,7 +128,7 @@ function tissueCellRaw(gx, gy) {
 
 export function drawTissue(ctx, cam) {
   const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
-  const gx1 = Math.ceil((cam.x + 760) / CELL), gy1 = Math.ceil((cam.y + 520) / CELL);
+  const gx1 = Math.ceil((cam.x + scaler.vw + 120) / CELL), gy1 = Math.ceil((cam.y + scaler.vh + 160) / CELL);
   for (let gy = gy0; gy <= gy1; gy++) {
     for (let gx = gx0; gx <= gx1; gx++) {
       const c = tissueCell(gx, gy);

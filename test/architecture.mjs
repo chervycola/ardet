@@ -365,6 +365,18 @@ test('нити, волна 2: луна, часы по кольцам, котло
     assert(termDb[k] && termDb[k].text, `нет досье ${k}`);
 });
 
+test('пожары §9 (Сан-Франциско, Лос-Анджелес) — в девятом кольце запада, не во льду за огнём', () => {
+  for (const id of ['fire_sf', 'fire_la']) {
+    const l = locations.find(x => x.id === id);
+    eq(ringAt(l.x + l.w / 2, l.y + l.h), 9, `${id}: кольцо`);
+    assert(l.x + l.w < TOWN.x0, `${id}: не на западе`);
+    for (const o of locations) {
+      if (o === l || o.id === 'fire_sf' || o.id === 'fire_la') continue;
+      assert(!(l.x < o.x + o.w && l.x + l.w > o.x && l.y < o.y + o.h && l.y + l.h > o.y), `${id} наезжает на ${o.id}`);
+    }
+  }
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

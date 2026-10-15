@@ -167,10 +167,34 @@ buildThreads2(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
-// addressable like the campfire. Coordinates match their §9 sign x ranges.
+// addressable like the campfire. Их эпоха — §9, «сейчас»; сторона — запад
+// («стеклянный даунтаун, трасса»): первое свободное место в полосе девятого
+// кольца, не на тропе, не на чужом дворе (раньше стояли по старым
+// координатам улицы — во льду за огнём).
+import { TOWN as TW, RING_W as RW, ringAt as ringOf, trailPoint as trailAt } from './disc.js';
+function firePlace() {
+  const busy = (x, y, w, h) => locations.some(l => {
+    const big = !!l.archDraw, mx = big ? 80 : 40, below = big ? 140 : 40;
+    return x < l.x + l.w + mx && x + w > l.x - mx && y < l.y + l.h + below && y + h > l.y - 60;
+  });
+  for (const along of [0.62, 0.7, 0.54, 0.78, 0.46, 0.86, 0.38, 0.3, 0.22]) {
+    for (const depth of [70, 110, 150, 40]) {
+      const x = Math.round(TW.x0 - 8 * RW - depth - 58), y = Math.round(TW.y0 + 140 + along * 1360);
+      if (ringOf(x, y + 36) !== 9 || ringOf(x + 58, y + 36) !== 9) continue;
+      let nearTrail = false;
+      for (let d = 1500; d <= 1850; d += 10) {
+        const p = trailAt('west', d);
+        if (Math.abs(p.x - x - 29) < 70 && Math.abs(p.y - y - 18) < 50) { nearTrail = true; break; }
+      }
+      if (!nearTrail && !busy(x, y, 58, 36)) return { x, y };
+    }
+  }
+  return { x: TW.x0 - 8 * RW - 120, y: TW.y0 + 900 };
+}
+const FIRE_AT = firePlace();
 locations.push({
   id: 'fire_sf', name: 'Пожар Сан-Франциско', zone: 'street',
-  x: 5828, y: 840, w: 28, h: 36,
+  x: FIRE_AT.x, y: FIRE_AT.y, w: 28, h: 36,
   streetForm: 'fire',
   streetLive: true,
   look: `Туман лежит на холмах, как лежал до города. Под ним горячо.
@@ -185,7 +209,7 @@ locations.push({
 
 locations.push({
   id: 'fire_la', name: 'Пожар Лос-Анджелеса', zone: 'street',
-  x: 5858, y: 840, w: 28, h: 36,
+  x: FIRE_AT.x + 30, y: FIRE_AT.y, w: 28, h: 36,
   streetForm: 'fire',
   streetLive: true,
   look: `Январь 2025: город горел в прямом эфире.

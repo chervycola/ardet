@@ -20,12 +20,15 @@ import { hazeView, hazeComposite } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
 import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
 import { redNoon, stepRedNoon, triggerRedNoon } from './world/redNoon.js';
-import { pressAt, setPress, installPen, penComposite } from './render/pen.js';
+import { pressAt, setPress, getPress, installPen, penComposite } from './render/pen.js';
+import { drawEtchedGround } from './render/etch.js';
+import { setReliefFlats } from './world/relief.js';
+import { fireLights, fireSitesInView, drawFireSite } from './render/fireRing.js';
 import { updateWindSound } from './audio/windSound.js';
 import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
 import { rect, clamp } from './render/draw.js';
-import { buildTerrain, MW, MH } from './world/terrain.js';
+import { MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles } from './world/locations.js';
 import { tryMove, findLocationAt, isInSettlement } from './world/physics.js';
 import { state } from './core/state.js';
@@ -60,9 +63,9 @@ import {
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, RINGS, SHIFT_X, SHIFT_Y, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
+import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
-import { drawGround, drawGroundMarks, setTissueBlockers } from './render/ground.js';
+import { drawGroundMarks, setTissueBlockers } from './render/ground.js';
 import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
@@ -98,6 +101,7 @@ installPen(layers.ctx('world')); installPen(layers.ctx('bg'));   // перо: т
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
+setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
 // ткань застройки не ложится на локации (с запасом над крышей) и дворы
 setTissueBlockers([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
@@ -148,9 +152,6 @@ const flags = {
   collectedLore: new Set(),
   observersSeen: new Set(),
 };
-
-// Terrain (cached offscreen)
-const terrainCanvas = buildTerrain();
 
 // Session memory
 const sessionAge = incrementSession();
@@ -236,6 +237,8 @@ for (const loc of locations) {
 
 // Свет окон: где в постройке или утвари нарисована свеча — там и светит
 for (const L of archWindowLights(locations, archProps)) lighting.add(L);
+// костры кольца огня
+for (const L of fireLights()) lighting.add(L);
 
 // ═══ TIME ═══
 import { t } from './core/time.js';
@@ -325,6 +328,16 @@ function fireShadow(sk, camX, camY, vw, vh) {
   return { x: x + sway, y, r, a: 0.62 * k, wash: 0.24 * k, breath };
 }
 
+// свет для земли штрихом: откуда светит (угол на земле — против тени, по глубине
+// вдвое), сила дня (низкое солнце — резче; у горизонта гаснет), сила луны, нажим пера.
+// Красный полдень — час без теней: штрих теряет свет вместе с тенями
+function groundLight() {
+  const p = phaseAt(t), sk = skyAt(p), sh = shadowAt(p), fade = 1 - redNoon.k;
+  let day = 0;
+  if (sk.sun) { const e = sk.sun.elev, k = Math.min(1, e / 0.12); day = k * k * (3 - 2 * k) * (1.25 - 0.55 * e) * fade; }
+  return { ang: Math.atan2(-sh.dy * 2, -sh.dx), day, night: sk.moon * fade, press: getPress() };
+}
+
 // NPC draw dispatch
 const npcDrawFn = {
   jester: drawNPC_jester,
@@ -345,18 +358,11 @@ function render() {
   const uiCtx = layers.ctx('ui');
   const postCtx = layers.ctx('post');
 
-  // ── BG: аналитическая земля диска + запечённый городок поверх ──
+  // ── BG: земля штрихом по рельефу — весь диск и городок ──
   const shk = stumble.shake();             // телефон жужжит — кадр подрагивает
   const camX = Math.round(camera.x) + shk.x;
   const camY = Math.round(camera.y) + shk.y;
-  drawGround(bgCtx, camX, camY, vw, vh);
-  const tx0 = Math.max(camX, TOWN.x0), ty0 = Math.max(camY, TOWN.y0);
-  const tx1 = Math.min(camX + vw, TOWN.x1), ty1 = Math.min(camY + vh, TOWN.y1);
-  if (tx1 > tx0 && ty1 > ty0) {
-    bgCtx.drawImage(terrainCanvas,
-      tx0 - SHIFT_X, ty0 - SHIFT_Y, tx1 - tx0, ty1 - ty0,
-      tx0 - camX, ty0 - camY, tx1 - tx0, ty1 - ty0);
-  }
+  drawEtchedGround(bgCtx, camX, camY, vw, vh, groundLight());
 
   // ── BG: atmosphere ──
   ink.drawMoon(bgCtx, { x: camX, y: camY });
@@ -393,12 +399,14 @@ function render() {
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
+  for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
     if (it.cat) { drawCat(worldCtx, it.cat, player); continue; }
     if (it.raven) { drawRaven(worldCtx, it.raven); continue; }
+    if (it.fire) { drawFireSite(worldCtx, it.fire, t); continue; }
     if (it.player) {
       const so = stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);

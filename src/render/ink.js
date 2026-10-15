@@ -168,9 +168,9 @@ export const ink = {
     // норма: полоса неба по верху кадра, багровым
     if (band > 0.01) {
       const g = ctx.createLinearGradient(0, 0, 0, H * 0.16 * s);
-      g.addColorStop(0, `rgba(107,15,26,${0.55 * band})`);
-      g.addColorStop(0.7, `rgba(107,15,26,${0.18 * band})`);
-      g.addColorStop(1, 'rgba(107,15,26,0)');
+      g.addColorStop(0, `rgba(194,59,43,${0.34 * band})`);          // киноварью (прежний багровый — вне палитры)
+      g.addColorStop(0.7, `rgba(194,59,43,${0.1 * band})`);
+      g.addColorStop(1, 'rgba(194,59,43,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W * s, H * 0.16 * s);
     }

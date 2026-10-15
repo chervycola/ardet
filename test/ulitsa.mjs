@@ -191,10 +191,14 @@ const { OFF } = await imp('world/disc.js');
 
 // ═══ TERRAIN + MAP RENDER ═══
 {
-  const { buildTerrain } = await imp('world/terrain.js');
-  test('terrain: builds the disc world without throwing', () => {
-    const c = buildTerrain();
-    assert(c.width === 3000 && c.height === 1800, 'канвас — только городок');
+  const E = await imp('render/etch.js');
+  const Dd = await imp('world/disc.js');
+  test('земля: плитки по всему диску — городок, кольца, огонь, край — все с краской', () => {
+    const T = Dd.TOWN, cx = (T.x0 + T.x1) / 2;
+    for (const y of [T.y0 + 800, T.y1 + 300, T.y1 + 1000, T.y1 + 1875, T.y1 + 2400]) {
+      const d = E.bakeData(Math.floor(cx / E.TILE), Math.floor(y / E.TILE));
+      for (const m of d.mat) assert(E.MATS[m], `краски ${m} нет`);
+    }
   });
 
   const { state } = await imp('core/state.js');
