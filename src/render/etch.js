@@ -16,9 +16,10 @@
 // десятков готовых плиток вместо тысяч квадратов.
 // ═══════════════════════════════════════
 import { TOWN, RING_W, RINGS, warpedDist } from '../world/disc.js';
-import { heightAt, sideWarp, sideOf, landDist, landRing, townWarp, townZoneOf, OUTER } from '../world/relief.js';
+import { heightAt, sideWarp, sideOf, landDist, landRing, townWarp, townZoneOf, townEdge, OUTER } from '../world/relief.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { stampPaths, OV } from './etchPaths.js';
+import { stampTown } from './etchTown.js';
 
 export const TILE = 128;
 const ST = 4, NS = TILE / ST + 2;            // узлы высот: шаг 4 точки (+ запас справа и снизу)
@@ -37,12 +38,12 @@ export const LAND = 1, TOWNK = 2, FIRE = 3, EDGE = 4;
 export const MATS = [];
 const mat = (i, o) => { MATS[i] = o; };
 {
-  // зоны городка — их прежние краски (лес, отрава, квартал, шоссе, посёлок), без телешума
-  const Z = [['#0e1a08', '#1a2812', '#0a1204', '#1e2a16'], ['#1a2a0e', '#0e1a04', '#2a3a1a', '#0a1408'],
-    ['#1a1824', '#14101e', '#241e2a', '#0e0c18'], ['#2a2015', '#1a1408', '#3a2a18', '#14100a'],
-    ['#1a1810', '#141208', '#0e0c06', '#1e1a12']];
-  Z.forEach((cs, i) => {
-    const c = cs.map(hex), base = [0, 1, 2].map(k => Math.round(c.reduce((s, v) => s + v[k], 0) / 4));
+  // зоны городка — в краски канона (прежние были ядовито-зелёной и сиреневой):
+  // лес — мгла, отрава — мгла с пеплом, квартал — каменная пыль, шоссе — щебень
+  // с сепией, посёлок — утоптанная земля; фактура зон — render/etchTown.js
+  const SEPIA = hex('#3A3026');
+  const Z = [mix(NIGHT, MGLA, 0.6), mix(mix(NIGHT, MGLA, 0.55), ASH, 0.1), mix(NIGHT, ASH, 0.24), mix(mix(NIGHT, SEPIA, 0.72), ASH, 0.08), mix(NIGHT, SEPIA, 0.66)];
+  Z.forEach((base, i) => {
     mat(i, { kind: TOWNK, base, dark: mix(base, NIGHT, 0.6), soft: mix(base, NIGHT, 0.4),
       lite: mix(base, BONE, 0.2), dust: mix(ASH, base, 0.45), dens: 0.8, liteK: 1, snow: false });
   });
@@ -82,17 +83,21 @@ function ih(x, y, s) {
 // 8 пылинка, 16 снег, 32 уголёк; dir — куда смотрит склон (16 румбов) и крутизна (4)
 const Hn = new Float32Array(NS * NS), Hp = new Float32Array((TILE + 1) * (TILE + 1));
 const Dn = new Float32Array(NW * NW), SXn = new Float32Array(NW * NW), SYn = new Float32Array(NW * NW);
-const ZXn = new Float32Array(NW * NW), ZYn = new Float32Array(NW * NW);
+const ZXn = new Float32Array(NW * NW), ZYn = new Float32Array(NW * NW), TEn = new Float32Array(NW * NW);
 const Gb = new Uint8Array(NS * NS);
 export function bakeData(tx, ty) {
   const x0 = tx * TILE, y0 = ty * TILE, A = TILE * TILE;
   const m = new Uint8Array(A), c = new Uint8Array(A), dir = new Uint8Array(A), ov = new Uint8Array(A);
   for (let j = 0; j < NS; j++) for (let i = 0; i < NS; i++) Hn[j * NS + i] = heightAt(x0 + i * ST, y0 + j * ST);
+  // у кромки городка — живая линия вала (world/relief.js: townEdge), по узлам швов
+  const nearEdge = x0 < TOWN.x1 + 140 && x0 + TILE > TOWN.x0 - 140 && y0 < TOWN.y1 + 140 && y0 + TILE > TOWN.y0 - 140
+    && !(x0 > TOWN.x0 + 100 && x0 + TILE < TOWN.x1 - 100 && y0 > TOWN.y0 + 100 && y0 + TILE < TOWN.y1 - 100);
   for (let j = 0; j < NW; j++) for (let i = 0; i < NW; i++) {
     const X = x0 + i * WS, Y = y0 + j * WS, k = j * NW + i;
     Dn[k] = warpedDist(X, Y);
     const s = sideWarp(X, Y); SXn[k] = s[0]; SYn[k] = s[1];
     const z = townWarp(X, Y); ZXn[k] = z[0]; ZYn[k] = z[1];
+    if (nearEdge) TEn[k] = townEdge(X, Y);
   }
   // склон по клеткам высот: куда падает (на земле — по глубине вдвое) и как круто
   for (let j = 0; j < NS - 1; j++) for (let i = 0; i < NS - 1; i++) {
@@ -122,11 +127,12 @@ export function bakeData(tx, ty) {
       const g = Gb[cj * NS + ((px / ST) | 0)];
       dir[k] = g;
       let mt, bits = 0;
-      if (x >= TOWN.x0 && x < TOWN.x1 && y >= TOWN.y0 && y < TOWN.y1) {
+      const inTown = nearEdge ? bil(TEn, q, u, v) < 0 : x >= TOWN.x0 && x < TOWN.x1 && y >= TOWN.y0 && y < TOWN.y1;
+      if (inTown) {
         mt = townZoneOf(x + bil(ZXn, q, u, v), y + bil(ZYn, q, u, v));
         if (ih(x >> 1, y >> 1, 3) < 0.012) bits |= 32;                     // пепел по городку
       } else {
-        const ld = landDist(bil(Dn, q, u, v), h), r = landRing(ld);
+        const ld = landDist(bil(Dn, q, u, v), h), r = Math.max(1, landRing(ld));   // за живой кромкой — уже первое кольцо
         if (r >= 1 && r <= RINGS) {
           const sd = sideOf(x + bil(SXn, q, u, v), y + bil(SYn, q, u, v));
           mt = 8 + (r - 1) * 5 + sd;
@@ -157,6 +163,7 @@ export function bakeData(tx, ty) {
     }
   }
   stampPaths(x0, y0, TILE, ov, c);                                     // дороги, река, дуги — поверх
+  stampTown(x0, y0, TILE, m, ov);                                      // фактура зон городка — под ними
   return { mat: m, cls: c, dir, ov };
 }
 
@@ -253,9 +260,9 @@ function rough(ctx, tx, ty, camX, camY) {
   for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
     const x = tx * TILE + i * 32 + 16, y = ty * TILE + j * 32 + 16;
     let M;
-    if (x >= TOWN.x0 && x < TOWN.x1 && y >= TOWN.y0 && y < TOWN.y1) M = MATS[4];
+    if (townEdge(x, y) < 0) M = MATS[townZoneOf(x, y)];
     else {
-      const r = landRing(landDist(warpedDist(x, y), heightAt(x, y)));
+      const r = Math.max(1, landRing(landDist(warpedDist(x, y), heightAt(x, y))));
       const s = sideWarp(x, y);
       M = r >= 1 && r <= RINGS ? MATS[8 + (r - 1) * 5 + sideOf(x + s[0], y + s[1])] : r === RINGS + 1 ? MATS[56] : MATS[66];
     }

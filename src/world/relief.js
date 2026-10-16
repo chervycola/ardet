@@ -103,12 +103,24 @@ export function rampartAt(x, y, d) {
   return gate * (bank - ditch);
 }
 
+// живая кромка городка: вал идёт не по стороне прямоугольника, а гуляет на
+// ±40 точек (три волны: долгая, средняя, мелкая); у выходов троп — ровно,
+// проход на месте. Знаковая: < 0 — внутри
+export function townEdge(x, y) {
+  const dx = Math.max(TOWN.x0 - x, x - TOWN.x1), dy = Math.max(TOWN.y0 - y, y - TOWN.y1);
+  const sd = dx > 0 || dy > 0 ? Math.hypot(Math.max(0, dx), Math.max(0, dy)) : Math.max(dx, dy);
+  if (sd > 120 || sd < -80) return sd;
+  let e = (vn(x / 230, y / 230, 41) - 0.5) * 46 + (vn(x / 90, y / 90, 43) - 0.5) * 26 + (vn(x / 34, y / 34, 47) - 0.5) * 8;
+  for (const g of EXITS) { const r = Math.hypot(x - g.x, y - g.y); if (r < 44) e *= sm(16, 44, r); }   // проход в вале — на месте
+  return sd + e;
+}
+
 // высота без выравнивания под дворами
 export function heightRaw(x, y) {
   const base = 0.66 * vn(x / 240, y / 120, 1) + 0.29 * vn(x / 95, y / 48, 2) + 0.05 * vn(x / 34, y / 17, 5);
   let h = 60 * base;
-  const d = townDist(x, y);
-  if (d <= 0) return 30 + (h - 30) * 0.4;                         // городок почти ровный
+  const d = townDist(x, y), te = townEdge(x, y);
+  if (d <= 0) return 30 + (h - 30) * 0.4 + rampartAt(x, y, te);   // городок почти ровный; вал — по живой кромке
   const [ox, oy] = sideWarp(x, y);
   const W = weights(x + ox, y + oy);
   const k = sm(0, 220, d), ring = d / RING_W;                      // от кромки городка формы набирают силу
@@ -128,7 +140,7 @@ export function heightRaw(x, y) {
   }
   if (W.w > 0.01) h += W.w * k * 34 * vn(x / 300, y / 150, 9);    // запад: высокие холмы
   if (W.p > 0.01) h += W.p * k * (-0.55 * (h - 30) + kurgans(x, y));   // равнина: степь и курганы
-  return h + rampartAt(x, y, d) - (carve ? carve(x, y) : 0);         // река промыла себе долину
+  return h + rampartAt(x, y, te) - (carve ? carve(x, y) : 0);        // река промыла себе долину
 }
 // долина реки (world/arteries.js: riverCarve) — когда река проложена
 let carve = null;

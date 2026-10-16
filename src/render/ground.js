@@ -30,7 +30,7 @@ export function drawGroundMarks(ctx, cam) {
   ctx.fillStyle = 'rgba(138,141,143,0.85)';         // лёд — пеплом (голубой вне палитры)
   if (vis(TOWN.x0 + 340, TOWN.y0 - OUTER - 18, 400, 14))
     ctx.fillText('лёд · север трескается', TOWN.x0 + 348, TOWN.y0 - OUTER - 6);
-  ctx.fillStyle = 'rgba(90,200,80,0.6)';
+  ctx.fillStyle = 'rgba(124,127,105,0.7)';            // мглой: неона в палитре нет
   if (vis(TOWN.x0 - OUTER - 10, TOWN.y0 + 60, 300, 14))
     ctx.fillText('токсичное озеро · запад', TOWN.x0 - OUTER - 4, TOWN.y0 + 74);
 

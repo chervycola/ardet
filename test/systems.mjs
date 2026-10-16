@@ -638,16 +638,25 @@ setCtx(ctx);
     assert(lum(out, 0) > b + 60, `ночью на склоне к луне нет кости: ${lum(out, 0)}`);
     assert(Math.abs(lum(out, 1) - b) < 3, 'ночью теневой склон не в черноте');
   });
-  test('земля: у кромки городка нет щели — вплотную городок и первое кольцо', () => {
+  test('земля: у кромки городка нет щели — городок сразу переходит в первое кольцо, кромка живая', () => {
+    const shifts = new Set();
     for (const [tx, ty, horiz] of [[Math.floor(T.x1 / E.TILE), Math.floor((T.y0 + 600) / E.TILE), 1], [Math.floor((T.x0 + 900) / E.TILE), Math.floor(T.y1 / E.TILE), 0]]) {
       const d = E.bakeData(tx, ty);
       const e = horiz ? T.x1 - tx * E.TILE : T.y1 - ty * E.TILE;
-      for (let q = 0; q < E.TILE; q++) {
-        const inK = horiz ? q * E.TILE + e - 1 : (e - 1) * E.TILE + q, outK = horiz ? q * E.TILE + e : e * E.TILE + q;
-        assert(d.mat[inK] < 8, 'у самой кромки внутри — не земля городка');
-        assert(d.mat[outK] >= 8 && d.mat[outK] < 56, 'у самой кромки снаружи — не первое кольцо');
+      for (let q = 0; q < E.TILE; q += 4) {
+        // поперёк кромки: городок, потом кольцо — один раз, без третьего между ними
+        let seen = 'town', at = null;
+        for (let p = Math.max(0, e - 46); p <= Math.min(E.TILE - 1, e + 46); p++) {
+          const m = d.mat[horiz ? q * E.TILE + p : p * E.TILE + q];
+          assert(m < 56, `у кромки городка щель (краска ${m})`);
+          if (m >= 8) { if (seen === 'town') { seen = 'ring'; at = p - e; } }
+          else assert(seen === 'town', 'за кромкой снова городок');
+        }
+        assert(at !== null && Math.abs(at) <= 44, `кромка далеко от вала: ${at}`);
+        shifts.add(Math.round(at / 4));
       }
     }
+    assert(shifts.size >= 4, 'кромка городка — по линейке');
   });
   test('кольцо огня: костры — в огне, не чаще трёх на кадр', () => {
     assert(F.fireSites.length > 30, `костров ${F.fireSites.length}`);
@@ -1174,6 +1183,55 @@ setCtx(ctx);
     const o = loc('office');
     assert(o.light && o.light.color[0] > 200 && o.light.color[2] < 90, 'окно №3 не тёплое');
     assert(o.light.dx < o.w / 2 && o.light.dy > 10, 'свет не у окна');
+  });
+}
+
+// ═══ ГОРОДОК: ПЯТЬ ЗОН (weave/TOWN.md) ═══
+{
+  const D = await imp('world/disc.js');
+  const M = await imp('world/locations.js');
+  const R = await imp('world/relief.js');
+  const E = await imp('render/etch.js');
+  const fs = await import('fs');
+  const T = D.TOWN;
+  const hsv = ([r, g, b]) => {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0;
+    let h = 0;
+    if (mx > mn) { if (mx === r) h = ((g - b) / (mx - mn)) % 6; else if (mx === g) h = (b - r) / (mx - mn) + 2; else h = (r - g) / (mx - mn) + 4; h = (h * 60 + 360) % 360; }
+    return { h, sat, v: mx / 255 };
+  };
+  const neon = c => { const q = hsv(c); return q.sat > 0.5 && q.v > 0.35 && q.h > 70 && q.h < 320; };
+  const THIRD = [140, 198, 63];                                    // третья краска — код (weave/INK.md)
+  test('свет мест: без неона и синего; в городке тёплое — костёр, окно №3 и горящая мусорка', () => {
+    for (const l of M.locations) {
+      const L = l.light;
+      if (!L) continue;
+      const c = L.color, third = Math.abs(c[0] / c[1] - THIRD[0] / THIRD[1]) < 0.12 && l.id === 'terminal';
+      assert(!neon(c) || third, `свет «${l.name}» вне палитры: ${c}`);
+      const cx = l.x + l.w / 2, cy = l.y + l.h / 2, inTown = cx > T.x0 && cx < T.x1 && cy > T.y0 && cy < T.y1;
+      const warm = c[0] > 200 && c[2] < 90;
+      if (inTown && warm) assert(['campfire', 'office', 'dumpster'].includes(l.id), `тёплый свет «${l.name}» — сверх канона`);
+    }
+  });
+  test('старые рисунки мест: в общей палитре нет неона и синего', () => {
+    const src = fs.readFileSync(new URL('../src/sprites/locations/index.js', import.meta.url), 'utf8');
+    const P = src.slice(src.indexOf('const P = {'), src.indexOf('};', src.indexOf('const P = {')));
+    const bad = [];
+    for (const m of P.matchAll(/(\w+):\s*'#([0-9a-fA-F]{6})'/g)) {
+      const n = parseInt(m[2], 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+      if (neon(c) && !(m[1] === 'term' && c.join() === THIRD.join())) bad.push(m[1] + ' #' + m[2]);
+    }
+    eq(bad.length, 0, 'неон в палитре: ' + bad.join(', '));
+  });
+  test('земля городка: у каждой зоны своя фактура, артерий она не трогает', () => {
+    const pick = { 0: [T.x0 + 900, T.y0 + 100], 1: [T.x0 + 1000, T.y0 + 1400], 2: [T.x0 + 160, T.y0 + 700], 3: [T.x0 + 2300, T.y0 + 900], 4: [T.x0 + 1100, T.y0 + 700] };
+    for (const [z, [x, y]] of Object.entries(pick)) {
+      const d = E.bakeData(Math.floor(x / E.TILE), Math.floor(y / E.TILE));
+      let own = 0, tex = 0;
+      for (let k = 0; k < d.mat.length; k++) if (d.mat[k] === +z) { own++; if (d.ov[k]) tex++; }
+      assert(own > 2000, `зона ${R.TOWN_ZONES[z]}: в плитке своей земли ${own}`);
+      assert(tex / own > 0.002 && tex / own < 0.5, `зона ${R.TOWN_ZONES[z]}: фактуры ${(tex / own * 100).toFixed(1)}%`);
+    }
   });
 }
 

@@ -13,20 +13,20 @@ const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
   ash: '#8a8d8f', bone: '#e8dcc8', dbone: '#c8b8a8',
   crimson: '#6b0f1a', gold: '#b8860b', amber: '#daa520', damber: '#a07818',
-  term: '#1a8c1a', termd: '#0a4a0a',
+  term: '#8CC63F', termd: '#33431a',          // экран терминала — третья краска (код), weave/INK.md
   dwood: '#1a0e06', f1: '#ff6600', f2: '#ff3300',
-  toxic: '#3aff1a', g1: '#1a1810', g2: '#141208',
+  toxic: '#747963', g1: '#1a1810', g2: '#141208',   // яд — мглой с налётом, без неона (канон)
   fg1: '#0e1a08', fg2: '#1a2812', tg1: '#1a2a0e',
   // ported from monolith — referenced w/o ||-fallback
   rust: '#6b0f1a', drust: '#4a0a12',
   blood: '#8b0000', volcanic: '#8b0000',
-  dtoxic: '#1a3a0a', btoxic: '#5a8a2a',
-  stone: '#4a4a52', lstone: '#8a8d8f',
+  dtoxic: '#2f372c', btoxic: '#505948',
+  stone: '#4a4844', lstone: '#8a8d8f',
   wood: '#4a3a2a', lwood: '#6a5a42',
-  lgrey: '#b8c8c0',
+  lgrey: '#bdb7a8',
   f3: '#8b0000', f4: '#b8860b',
   g3: '#16100a',
-  indigo: '#1b1464', celestial: '#4a7fb5',
+  indigo: '#252b22', celestial: '#6b726d',          // синего в палитре нет: глубь — мглой, небо в воде — пеплом
   sunflower: '#daa520',
   parchment: '#e8d8b0',
 };
