@@ -45,7 +45,7 @@ export function skyStage(d) {
 // полуширина на земле
 export const HW = {
   trail: 2.5, paved: 4, cobble: 5, asphalt: 6, highway: 7,
-  stream: 4, aqueduct: 3, canal: 7, pipe: 2.5, dry: 6,
+  stream: 4, aqueduct: 3, canal: 7, pipe: 2.5, dry: 6, bed: 7,
   silk: 3.5, caravan: 3.5, winter: 3, portage: 3.5, rail: 4, net: 6,
   arcade: 3, poles: 0, pylons: 0, flyover: 5,
 };
@@ -343,6 +343,12 @@ function finish(kind, id, pts, stageOf, extra = {}) {
   lines.push(line);
   index(line);
   return line;
+}
+
+// линия, проложенная руками, а не трассировщиком (русло городка): точки —
+// [x, y], стадия на всю длину одна; ложится в землю и в поиск рядом, как прочие
+export function addLine(kind, id, pts, st) {
+  return finish(kind, id, resample(smoothPts(resample(pts.map(([x, y]) => ({ x, y })), 6), 4), 6), () => st);
 }
 
 const SIDE4 = ['south', 'north', 'east', 'west'], SIDE5 = [...SIDE4, 'plain'];

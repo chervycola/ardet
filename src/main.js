@@ -74,6 +74,9 @@ import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/di
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGroundMarks, setTissueBlockers, buildTissue, tissueThingsIn } from './render/ground.js';
 import { thingCaster } from './render/things.js';
+import { buildTown, onBridge } from './world/town.js';
+import { bridgePieces } from './render/townProps.js';
+import { drawCastle, stepCastle, castleSeen } from './render/castle.js';
 import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
@@ -116,6 +119,7 @@ buildArteries([
   ...archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
 ], [...locations, ...archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
   .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит
+buildTown();                                   // городок по канону: высохшее русло через посёлок, мост над ним
 setReliefCarve(riverCarve);                    // река промыла себе долину
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
 buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
@@ -237,8 +241,8 @@ lighting.add({ x: TOWN.x0 + 800, y: TOWN.y0 + 740, r: 55, color: [255, 180, 80],
 for (const loc of locations) {
   if (!loc.light) continue;
   lighting.add({
-    x: loc.x + loc.w / 2,
-    y: loc.y + loc.h / 2,
+    x: loc.x + (loc.light.dx ?? loc.w / 2),          // свет — откуда светит (окно), иначе — середина
+    y: loc.y + (loc.light.dy ?? loc.h / 2),
     r: loc.light.r,
     color: loc.light.color,
     flicker: loc.light.flicker,
@@ -315,6 +319,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const tr of floraIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!LOW.has(tr.sp)) out.push(treeCaster(tr, maskFrom));
   for (const p of landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, t)) if (!FLATLM.has(p.kind)) out.push(propCaster(p));
   for (const T of tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));   // ткань поля
+  for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
   heroCaster.ox = player.x; heroCaster.oy = player.y;
   out.push(heroCaster);
   return out;
@@ -391,6 +396,8 @@ function render() {
   const camX = Math.round(camera.x) + shk.x;
   const camY = Math.round(camera.y) + shk.y;
   drawEtchedGround(bgCtx, camX, camY, vw, vh, groundLight());
+  // замок-погода: над городком, в полосе неба; буря и красный полдень его прячут
+  if (!NO_CASTLE) drawCastle(bgCtx, { x: camX, y: camY }, vw, vh, castleSeen(weather.state !== 'clear' ? weather.intensity : 0, redNoon.k));
 
   // ── BG: atmosphere ──
   ink.drawMoon(bgCtx, { x: camX, y: camY });
@@ -428,6 +435,7 @@ function render() {
   for (const tr of floraIn(camX - 18, camY - 4, camX + vw + 18, camY + vh + 46)) drawList.push({ k: tr.gy, tree: tr });   // рощи и камыш
   for (const p of landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, t)) drawList.push({ k: p.gy, prop: p });   // приметы
   for (const T of tissueThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40)) drawList.push({ k: T.gy, prop: T });   // ткань поля — стоит в земле
+  for (const p of bridgePieces()) if (camera.isVisible(p.x - p.w / 2, p.gy - p.h, p.w, p.h + 4)) drawList.push({ k: p.gy, prop: p });   // мост: дальние перила — за странником, ближние — перед
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
@@ -530,6 +538,7 @@ let jesterFirstTalk = false;          // первая встреча с Шуто
 const NO_PLATE = /[?&]noplate\b/.test(location.search);
 const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравнения и слабых машин
 const NO_SHADOW = /[?&]noshadow\b/.test(location.search); // тени по времени суток — выключить (сравнить)
+const NO_CASTLE = /[?&]nocastle\b/.test(location.search); // замок-погода и крыши — выключить (сравнить)
 layers.inkPass = (ctx, main) => {
   hazeComposite(ctx, main);              // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);
@@ -562,6 +571,7 @@ function stepFx() {
   stepGrass(player);
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
+  stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);

@@ -4,6 +4,7 @@
 import { rect, px, dither, hash } from '../../render/draw.js';
 import { X } from '../../render/context.js';
 import { t } from '../../core/time.js';
+import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 import { drawDumpsterDemon } from '../npcs/dumpster.js';
@@ -4070,14 +4071,14 @@ export function draw_riverbed(x, y) {
     // Animated puddle reflection
     const shimmer=Math.sin(t*.004)*.3+.3;
     X.globalAlpha=shimmer*.15;
-    X.fillStyle='#4466aa';
+    X.fillStyle='#3D4A3A';             // мгла: вода стоит небом, синего в палитре нет
     X.beginPath();X.ellipse(x+30,y+15,12,4,0,0,Math.PI*2);X.fill();
     X.globalAlpha=1;
     // Occasional ripple
     if(t%120<30){
       const ripR=(t%120)*0.5;
       X.globalAlpha=.1*(1-(t%120)/30);
-      X.strokeStyle='#6688cc';X.lineWidth=1;
+      X.strokeStyle='#D9CFB8';X.lineWidth=1;
       X.beginPath();X.arc(x+30,y+15,ripR,0,Math.PI*2);X.stroke();
       X.globalAlpha=1;
     }
@@ -5891,7 +5892,11 @@ export function draw_lantern1(x, y) {
   X.beginPath(); X.moveTo(x + 3, y + 2); X.lineTo(x + 6, y + 6); X.stroke();
 }
 
-// Office — bureaucratic building, window №3, solid
+// Office — bureaucratic building, window №3, solid.
+// Окно №3 светится всю ночь — тёплое пятно II (ART_BIBLE §04): свет сплошной,
+// за решёткой — пишущий силуэт, перо ходит; раз в сутки, строго по расписанию,
+// перерыв: силуэт выпрямился, у губ чашка (world_folk: «Чай третьего окна»).
+// Рядом — доска объявлений: листки без слов, один оборван.
 export function draw_office(x, y) {
   // Body
   rect(X, x, y + 6, 52, 40, P.dstone);
@@ -5899,11 +5904,22 @@ export function draw_office(x, y) {
   // Flat roof
   rect(X, x - 2, y + 2, 56, 5, '#2a2a30');
   rect(X, x - 2, y + 2, 56, 1, P.stone);
-  // Window №3 — small barred opening
-  rect(X, x + 6, y + 16, 14, 12, '#0a0a0e');
-  rect(X, x + 7, y + 17, 12, 10, '#141422');
+  // Window №3 — lit, a figure writing behind the bars
+  const N = '#0D0B0A';
+  rect(X, x + 6, y + 16, 14, 12, N);
+  rect(X, x + 7, y + 17, 12, 10, '#E28A3A');
+  const ph = phaseAt(t), tea = ph > 0.62 && ph < 0.635;
+  if (tea) {
+    rect(X, x + 10, y + 19, 3, 3, N); rect(X, x + 9, y + 22, 6, 4, N);     // выпрямился
+    rect(X, x + 13, y + 21, 2, 2, N);                                     // чашка у губ
+  } else {
+    rect(X, x + 9, y + 21, 3, 3, N); rect(X, x + 8, y + 24, 7, 2, N);      // склонился над листом
+    const pen = (t >> 4) % 4;
+    px(X, x + 14 + (pen < 2 ? pen : 4 - pen), y + 25, N);                 // перо ходит
+  }
+  rect(X, x + 7, y + 26, 12, 1, N);                                       // конторка
   // Bars
-  px(X, x + 10, y + 16, P.dgrey); px(X, x + 14, y + 16, P.dgrey); px(X, x + 18, y + 16, P.dgrey);
+  for (const bx of [10, 14, 18]) rect(X, x + bx, y + 17, 1, 10, P.dgrey);
   rect(X, x + 6, y + 21, 14, 1, P.dgrey);
   // "№3" plate
   X.fillStyle = P.bone; X.font = '5px "Press Start 2P","VT323",monospace';
@@ -5917,11 +5933,22 @@ export function draw_office(x, y) {
   rect(X, x + 30, y + 45, 4, 1, P.parchment);
   rect(X, x + 36, y + 46, 3, 1, P.parchment);
   X.globalAlpha = 1;
+  // Доска объявлений у стены: два столба, доска, листки — строки штрихом, без слов
+  const bx = x + 55, g = y + 46;
+  rect(X, bx + 1, g - 13, 1, 13, '#241c14'); rect(X, bx + 12, g - 13, 1, 13, '#241c14');
+  rect(X, bx, g - 17, 14, 9, '#3a2818'); rect(X, bx, g - 17, 14, 1, '#b0a284'); rect(X, bx + 13, g - 16, 1, 8, '#8A8D8F');
+  rect(X, bx + 1, g - 16, 4, 6, '#D9CFB8');
+  for (const ly of [-15, -13, -11]) rect(X, bx + 2, g + ly, 2, 1, '#3a3328');
+  rect(X, bx + 6, g - 15, 3, 5, '#c8b89a'); rect(X, bx + 7, g - 14, 1, 1, '#3a3328'); rect(X, bx + 7, g - 12, 1, 1, '#3a3328');
+  rect(X, bx + 10, g - 16, 3, 3, '#D9CFB8'); px(X, bx + 12, g - 14, '#3a2818');   // оборван угол
+  px(X, bx + 3, g - 16, '#C23B2B');                                        // кнопка
 }
 
-// Gates — always open, the porter gone, panels held by no one
+// Gates — always open, the porter gone, panels held by no one.
+// Створки вросли (ART_BIBLE §04): ветер их не двигает, у низа — трава и вьюн;
+// за ними небо едва теплеет — свечой; сразу за вратами — первое блюдце молока
 export function draw_gates(x, y) {
-  const drift = Math.sin(t * 0.003) * 0.4; // wind pushes the open panels
+  const drift = 0;                         // вросли — не качаются
   // Two stone pillars
   rect(X, x, y + 4, 7, 52, P.stone);
   rect(X, x + 33, y + 4, 7, 52, P.stone);
@@ -5954,7 +5981,15 @@ export function draw_gates(x, y) {
   }
   // The gap between — open, leads to the waste
   X.globalAlpha = 0.15;
-  X.fillStyle = P.amber;
+  X.fillStyle = '#E28A3A';                 // небо едва теплеет — свечой
   X.fillRect(x + 8, y + 10, 24, 46);
   X.globalAlpha = 1;
+  // вросли: трава у низа створок, вьюн по нижней перекладине
+  for (const [bx, s] of [[x - 6, 1], [x + 46, -1]]) {
+    for (const [dx, h] of [[0, 4], [1, 3], [2, 5], [4, 3], [5, 4]]) rect(X, bx + dx * s, y + 56 - h, 1, h, '#3D4A3A');
+    px(X, bx + 2 * s, y + 51, '#7a806e'); px(X, bx + 5 * s, y + 52, '#7a806e');
+    for (let k = 0; k < 6; k++) px(X, bx + s * (2 + k * 1.6 | 0), y + 51 - k * 2, '#3D4A3A');
+  }
+  // первое блюдце молока — сразу за порогом
+  rect(X, x + 19, y + 54, 7, 1, '#8A8D8F'); rect(X, x + 20, y + 53, 5, 1, '#D9CFB8');
 }

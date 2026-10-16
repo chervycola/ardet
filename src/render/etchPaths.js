@@ -36,6 +36,7 @@ const O = {
   wetEdge: ov(mixc(MGLA, BONE, 0.3), 1),
   cwater: ov(mixc(MGLA, NIGHT, 0.62), 1), cwall: ov('#57534c', 1), ctop: ov('#6e6a60', 1),
   dry: ov(BONE, 0.2), dcrack: ov(NIGHT, 0.45), dbank: ov(NIGHT, 0.28),
+  bedFloor: ov(NIGHT, 0.14), bedDark: ov(NIGHT, 0.58), bedLit: ov(BONE, 0.42), bedScree: ov(NIGHT, 0.34), bedPebble: ov(BONE, 0.46),
   shade: ov(NIGHT, 0.33), deck: ov('#4a463f', 1), deckEdge: ov('#2a2622', 1),
   ice: ov(mixc(MGLA, ASH, 0.42), 1), iceDeep: ov(mixc(MGLA, NIGHT, 0.3), 1), iceCrack: ov(mixc(ASH, BONE, 0.6), 1), iceShine: ov(BONE, 1),
   stone: ov('#8a8477', 1), stoneTop: ov('#bdb5a4', 1), stoneWet: ov(NIGHT, 0.5), ripple: ov(mixc(MGLA, BONE, 0.55), 1),
@@ -150,6 +151,15 @@ function river(st, u, v, hw, x, y, ice) {
       const ju = fract(cu + 0.4 * ih(Math.floor(cv), 0, 37)), jv = fract(cv + 0.3 * ih(Math.floor(cu), 1, 39));
       return ju < 0.13 || jv < 0.16 ? O.dcrack : O.dry;
     }
+    case 'bed': {                                                     // высохшее русло городка: берег в тени и берег к свету,
+      if (av > hw + 1.5) return 0;                                    // осыпь, галька, редкий ил в трещинах; дно светлее земли
+      if (v < -hw + 1.5) return O.bedDark;                            // (русло положено так, что v > 0 — берег к свету)
+      if (v > hw - 0.8) return v > hw + 0.6 ? O.dbank : O.bedLit;
+      if (v < -hw + 3.5 && ih(x >> 1, y >> 1, 81) < 0.5) return O.bedScree;
+      if (ih(x, y, 83) < 0.06) return O.bedPebble;
+      if (fract(u / 9 + 0.3 * ih(Math.floor(v / 2), 0, 85)) < 0.07 && ih(x >> 2, y >> 2, 87) < 0.35) return O.dcrack;
+      return O.bedFloor;
+    }
     case 'aqueduct': case 'pipe': return av <= hw + 1 ? O.shade : 0;   // поднятое — на земле тень
   }
   return 0;
@@ -195,7 +205,7 @@ function field(f, x, y, edge) {
 
 // буферы плитки: ближайшая линия своего слоя (числами — без мусора на каждую точку)
 const STAGES = [null, 'trail', 'paved', 'cobble', 'asphalt', 'highway', 'silk', 'caravan', 'winter', 'portage', 'rail', 'net',
-  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover'];
+  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover', 'bed'];
 const SCODE = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 let N = 0, bD, bU, bV, bH, bF, bS;
 const LAYER = { river: 0, sky: 1, arc: 2, road: 3 };

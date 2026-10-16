@@ -1124,6 +1124,59 @@ setCtx(ctx);
   });
 }
 
+// ═══ ГОРОДОК ПО КАНОНУ: русло, мост, замок-погода, окно №3 ═══
+{
+  const A = await imp('world/arteries.js');
+  const D = await imp('world/disc.js');
+  const M = await imp('world/locations.js');
+  const TW = await imp('world/town.js');
+  const C = await imp('render/castle.js');
+  if (!A.lines.some(l => l.id === 'river:town')) TW.buildTown();
+  const bed = A.lines.find(l => l.id === 'river:town');
+  const loc = id => M.locations.find(l => l.id === id);
+  test('городок: высохшее русло — в посёлке, сухое, кончается лужицей «Высохшего русла», мест не задевает', () => {
+    assert(bed && bed.pts.length > 50, 'русла нет');
+    for (const p of bed.pts) {
+      assert(p.x > D.TOWN.x0 && p.x < D.TOWN.x1 && p.y > D.TOWN.y0 && p.y < D.TOWN.y1, `русло вне городка (${p.x | 0},${p.y | 0})`);
+      eq(p.st, 'bed', 'стадия');
+    }
+    const rb = loc('riverbed'), end = bed.pts[bed.pts.length - 1];
+    assert(Math.abs(end.x - (rb.x + rb.w / 2)) < 30 && Math.abs(end.y - (rb.y + rb.h / 2)) < 20, 'русло не доходит до лужицы');
+    for (const l of M.locations) {
+      if (l.id === 'riverbed') continue;
+      for (const p of bed.pts) assert(!(p.x > l.x - 12 && p.x < l.x + l.w + 12 && p.y > l.y - 12 && p.y < l.y + l.h + 12), `русло задевает «${l.name}» (${p.x | 0},${p.y | 0})`);
+    }
+    assert(A.surfaceOf(bed.pts[40].x, bed.pts[40].y) !== 'water', 'в сухом русле вода');
+  });
+  test('мост: поперёк русла; с него в кадре и врата (и на телефоне стоймя)', () => {
+    const B = TW.BRIDGE, g = loc('gates');
+    const near = bed.pts.reduce((a, p) => Math.abs(p.y - (B.gy - 3)) < Math.abs(a.y - (B.gy - 3)) ? p : a);
+    assert(Math.abs(near.x - B.x) <= 2, `мост мимо русла: ${B.x} и ${near.x | 0}`);
+    assert(B.half * 2 > near.hw * 2 + 10, 'мост короче русла');
+    const dx = g.x + g.w / 2 - B.x, dy = g.y + g.h / 2 - B.gy;
+    assert(Math.abs(dx) < 180 && Math.abs(dy) < 170, `врата не видно с моста: ${dx | 0}, ${dy | 0}`);
+    assert(TW.onBridge(B.x, B.gy - 3), 'на середине моста — не на мосту');
+    assert(!TW.onBridge(B.x + B.half + 6, B.gy - 3) && !TW.onBridge(B.x, B.gy + 12), 'на мосту — и мимо него');
+  });
+  test('замок-погода: туман приходит и уходит; буря и красный полдень прячут; на мосту расходится', () => {
+    for (let k = 0; k < 400; k++) C.stepCastle(false);
+    const v0 = C.castleSeen(0, 0);
+    assert(v0 >= 0 && v0 <= 1, `видимость ${v0}`);
+    eq(C.castleSeen(1, 0), 0, 'в бурю виден');
+    eq(C.castleSeen(0, 1), 0, 'в красный полдень виден');
+    for (let k = 0; k < 300; k++) C.stepCastle(true);
+    assert(C.castleClear() > 0.99, `с моста туман не разошёлся: ${C.castleClear()}`);
+    assert(C.castleSeen(0, 0) > 0.99, 'с моста замок не виден');
+    for (let k = 0; k < 600; k++) C.stepCastle(false);
+    assert(C.castleClear() < 0.01, 'туман не вернулся');
+  });
+  test('окно №3: светится — тёплым, у окна; одно из трёх тёплых пятен городка', () => {
+    const o = loc('office');
+    assert(o.light && o.light.color[0] > 200 && o.light.color[2] < 90, 'окно №3 не тёплое');
+    assert(o.light.dx < o.w / 2 && o.light.dy > 10, 'свет не у окна');
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

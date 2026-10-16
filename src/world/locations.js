@@ -41,7 +41,7 @@ export const locations = [
     light: { r: 20, color: [184, 134, 11], flicker: 0.03 } },
   { id: 'riverbed', name: 'Высохшее русло', x: 900, y: 1050, w: 60, h: 30, zone: 'settlement',
     useAction: 'riverbed_dig',
-    light: { r: 12, color: [60, 80, 120], flicker: 0.02 } },
+    light: { r: 12, color: [61, 74, 58], flicker: 0.02 } },
   { id: 'crater', name: 'Кратер', x: 1025, y: 830, w: 50, h: 40, zone: 'settlement',
     useAction: 'crater_coin' },
 
@@ -49,7 +49,7 @@ export const locations = [
   { id: 'pithos', name: 'Пифос', x: 700, y: 845, w: 24, h: 16, zone: 'settlement' },
   { id: 'lantern1', name: 'Погасший фонарь', x: 690, y: 720, w: 10, h: 44, zone: 'settlement' },
   { id: 'office', name: 'Канцелярия', x: 1080, y: 720, w: 52, h: 46, zone: 'settlement',
-    solid: true },
+    solid: true, light: { r: 22, color: [226, 138, 58], flicker: 0.04, dx: 13, dy: 22 } },   // окно №3 — всю ночь
   { id: 'gates', name: 'Врата', x: 1380, y: 820, w: 40, h: 56, zone: 'settlement',
     useAction: 'gates_pass' },
 
