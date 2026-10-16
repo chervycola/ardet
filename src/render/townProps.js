@@ -4,7 +4,10 @@
 // дальние перила с настилом — за странником, ближние — перед ним (на мосту
 // стоят). Свет слева, кромка пеплом справа.
 // ═══════════════════════════════════════
-import { BRIDGE } from '../world/town.js';
+import { BRIDGE, FOUNDATIONS, LAMPS, CARS, BUFFER } from '../world/town.js';
+import { thing, wearOf } from './things.js';
+import { quarterLamp, quarterRuin } from '../sprites/quarter.js';
+import { carWreck, bufferStop } from '../sprites/highway.js';
 
 const NI = '#0D0B0A', AS = '#8A8D8F';
 const K0 = '#15100c', K1 = '#241c14', K3 = '#34302a', K4 = '#3a3328', BR2 = '#3a2818', L2 = '#b0a284';
@@ -52,4 +55,38 @@ export function bridgePieces() {
   };
   pieces = [piece(g - B.deep, B.deep + 11, q => far(q, X, g, B.half, B.deep)), piece(g + 1, 10, q => near(q, X, g, B.half))];
   return pieces;
+}
+
+// ── квартал и шоссе (world/town.js): на фундаментах — огрызки стен, трубы,
+// арки; вдоль главных — мёртвые фонари; вдоль трассы — брошенные машины, за
+// поездом — тупик. Вещи в земле (render/things.js): тень касания, щебень у
+// подошвы, сколы, мох старого камня; фонарь не кренится — гнётся
+let things = null;
+function buildThings() {
+  const out = [];
+  for (const f of FOUNDATIONS) {
+    const R = f.ruin;
+    if (!R) continue;
+    const K = quarterRuin(R.kind, f.seed, R.w);
+    out.push(thing({ x: R.x, gy: R.gy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'town',
+      wear: wearOf({ ring: 1, era: 3, side: 'plain', d: 0, seed: f.seed, foot: 'grit' }) }));
+  }
+  for (const m of LAMPS) {
+    const K = quarterLamp(m.v), wear = wearOf({ ring: 1, era: 5, side: 'plain', d: 0, seed: m.x * 7 + m.gy, foot: 'grit' });
+    wear.lean = 0;
+    out.push(thing({ x: m.x, gy: m.gy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'town', wear }));
+  }
+  for (const m of CARS) {
+    const K = carWreck(m.v);
+    out.push(thing({ x: m.x, gy: m.gy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'town',
+      wear: wearOf({ ring: 1, era: 8, side: 'plain', d: 0, seed: m.x * 3 + m.gy * 5, foot: 'grit' }) }));
+  }
+  const B = bufferStop;
+  out.push(thing({ x: BUFFER.x, gy: BUFFER.gy, w: B.w, h: B.h, draw: B.draw, name: B.name, kind: 'town',
+    wear: wearOf({ ring: 1, era: 6, side: 'plain', d: 0, seed: 77, foot: 'grit' }) }));
+  return out;
+}
+export function townThingsIn(x0, y0, x1, y1) {
+  if (!things) things = buildThings();
+  return things.filter(T => T.x + T.w / 2 + 6 > x0 && T.x - T.w / 2 - 6 < x1 && T.gy + 3 > y0 && T.gy - T.h - 6 < y1);
 }

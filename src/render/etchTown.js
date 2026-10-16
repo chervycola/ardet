@@ -8,10 +8,12 @@
 // ═══════════════════════════════════════
 import { OV } from './etchPaths.js';
 import { TOWN } from '../world/disc.js';
+import { FOUNDATIONS } from '../world/town.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const mix = (a, b, k) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * k));
-const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A');
+const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
+const STONE = mix(mix(ASH, SEPIA, 0.35), NIGHT, 0.25);
 const tov = (col, a) => { OV.push({ col, a }); return OV.length - 1; };
 const T = {
   needle: tov(mix(MGLA, NIGHT, 0.25), 0.6), twig: tov(NIGHT, 0.45), bark: tov(BONE, 0.13),
@@ -19,6 +21,9 @@ const T = {
   stone: tov(ASH, 0.34), dust: tov(BONE, 0.07),
   gravel: tov(ASH, 0.26), oil: tov(NIGHT, 0.34),
   straw: tov(BONE, 0.17), pebble: tov(NIGHT, 0.3),
+  // фундаменты квартала: верх кладки к свету, грань к нам, тень; внутри — щебень
+  fTop: tov(mix(STONE, NIGHT, 0.22), 1), fLit: tov(STONE, 1), fFace: tov(NIGHT, 0.5), fShade: tov(NIGHT, 0.3),
+  fFloor: tov(NIGHT, 0.14), fRubble: tov(mix(STONE, NIGHT, 0.12), 1), fTile: tov(BONE, 0.06),
 };
 // зоны (world/relief.js: TOWN_ZONES): 0 лес, 1 отрава, 2 квартал, 3 шоссе, 4 посёлок
 const FOREST = 0, TOXIC = 1, QUARTER = 2, HIGHWAY = 3, SETTLE = 4;
@@ -27,6 +32,47 @@ function ih(x, y, s) {
   let h = (x * 374761393 + y * 668265263 + s * 2246822519) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+// фундамент: низкая кладка в два камня — верх к свету (западная стена и
+// северный край светлее), грань к нам у северной и южной стен, тень — справа
+// и снизу; проломы кусками, дверь — в фасаде (к улице); внутри щебень, у иных
+// остаток плиточного пола
+function foundation(f, put) {
+  const { x0, y0, x1, y1, seed } = f, Z = QUARTER;
+  // стены: у иного дома какой-то нет вовсе (кроме фасада); проломы кусками по 5
+  const gone = { n: 0, s: 0, w: 0, e: 0 };
+  for (const k of ['n', 's', 'w', 'e']) gone[k] = k !== f.face && ih(seed, k.charCodeAt(0), 149) < 0.22;
+  const gapAt = (side, i) => {
+    if (gone[side]) return true;
+    if (f.face === side && Math.abs(i - f.door) <= 3) return true;    // дверь
+    return ih(seed + side.charCodeAt(0), (i + (seed & 3)) / 5 | 0, 151) < 0.3;   // пролом
+  };
+  const stone = (x, y, lit) => put(x, y, Z, lit && ih(x, y, 155) < 0.5 ? T.fLit : T.fTop);
+  for (let x = x0; x <= x1; x++) {
+    const i = x - x0;
+    if (!gapAt('n', i)) {
+      stone(x, y0, true); stone(x, y0 + 1, false);
+      if (x > x0 + 1 && x < x1 - 1) put(x, y0 + 2, Z, T.fFace);
+      if (ih(x, y0, 161) < 0.16) stone(x, y0 - 1, true);               // камень выпирает
+    } else if (!gone.n && ih(x, y0, 163) < 0.3) put(x, y0 + 1 + (ih(x, y0, 165) < 0.5 ? 1 : 0), Z, T.fRubble);   // в проломе — осыпь
+    if (!gapAt('s', i)) {
+      stone(x, y1 - 1, true); stone(x, y1, false); put(x, y1 + 1, Z, T.fFace); put(x, y1 + 2, Z, T.fShade);
+      if (ih(x, y1, 167) < 0.12) stone(x, y1 - 2, false);
+    } else if (!gone.s && ih(x, y1, 169) < 0.3) put(x, y1 + (ih(x, y1, 171) < 0.5 ? 1 : 0), Z, T.fRubble);
+  }
+  for (let y = y0; y <= y1; y++) {
+    const i = y - y0;
+    if (!gapAt('w', i)) { stone(x0, y, true); stone(x0 + 1, y, false); if (ih(x0, y, 173) < 0.14) stone(x0 - 1, y, true); }
+    else if (!gone.w && ih(x0, y, 175) < 0.25) put(x0 + 1, y, Z, T.fRubble);
+    if (!gapAt('e', i)) { stone(x1 - 1, y, false); put(x1, y, Z, T.fTop); put(x1 + 1, y, Z, T.fShade); if (ih(x1, y, 177) < 0.14) put(x1 + 2, y, Z, T.fShade); }
+    else if (!gone.e && ih(x1, y, 179) < 0.25) put(x1, y, Z, T.fRubble);
+  }
+  const tiled = seed % 3 === 0;
+  for (let y = y0 + 3; y < y1 - 1; y++) for (let x = x0 + 2; x < x1 - 1; x++) {
+    const h = ih(x, y, 157);
+    put(x, y, Z, h < 0.045 ? T.fRubble : h < 0.07 ? T.pebble : tiled && ((x + (y >> 1)) & 3) === 0 && ih(x >> 2, y >> 1, 159) < 0.55 ? T.fTile : T.fFloor);
+  }
 }
 
 // накладки зон в плитку: x0, y0 — угол, S — сторона; mat — краски (зоны городка < 8);
@@ -41,6 +87,8 @@ export function stampTown(x0, y0, S, mat, out) {
     if (mat[k] === z && !out[k]) out[k] = o;
   };
   const line = (x, y, dx, dy, n, z, o) => { for (let i = 0; i < n; i++) put(Math.round(x + dx * i), Math.round(y + dy * i), z, o); };
+  // фундаменты домов квартала (world/town.js) — раньше крошек, чтобы те их не пятнали
+  for (const f of FOUNDATIONS) if (f.x1 + 3 >= x0 && f.x0 - 3 < x0 + S && f.y1 + 3 >= y0 && f.y0 - 3 < y0 + S) foundation(f, put);
   // штрихи и крошки — по клеткам 6×6, с запасом за край плитки (стыков нет)
   const C = 6;
   for (let cy = Math.floor(y0 / C) - 1; cy <= Math.floor((y0 + S) / C) + 1; cy++) {

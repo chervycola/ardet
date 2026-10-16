@@ -818,6 +818,7 @@ setCtx(ctx);
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
   A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 }))],
     [...L, ...AG.archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
+  (await imp('world/town.js')).buildTown();                       // как в main.js: русло, тропы и улицы городка — сразу за артериями
   const line = id => A.lines.find(l => l.id === id);
   const runs = arr => { const o = []; for (const v of arr) if (o[o.length - 1] !== v) o.push(v); return o; };
   const cross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
@@ -929,13 +930,14 @@ setCtx(ctx);
   const EP = await imp('render/etchPaths.js');
   FD.buildFields(AG.archGroundRects());
   LM.buildLandmarks();
-  F.buildFlora(LM.landmarkBoxes(), LM.landmarks.filter(l => l.kind === 'oasis'));
+  const ML = (await imp('world/locations.js')).locations;
+  F.buildFlora([...LM.landmarkBoxes(), ...ML.map(l => ({ x0: l.x - 10, y0: l.y - 8, x1: l.x + l.w + 10, y1: l.y + l.h + 10 }))], LM.landmarks.filter(l => l.kind === 'oasis'));   // как в main.js
   const river = A.lines.find(l => l.kind === 'river');
   const ALLEYS = new Set(['poplar', 'birch', 'palm']);
   test('растительность: вид по стороне и эпохе; не на постройках, дорогах и реке', () => {
     assert(F.flora.length > 800, `растений ${F.flora.length}`);
     for (const t of F.flora) {
-      if (t.sp === 'reed') continue;
+      if (t.sp === 'reed' || t.town) continue;                     // Мёртвый лес городка — своим тестом
       assert(!RT.blockedAt(A.artBlock, t.x, t.gy), `${t.sp} на постройке или во дворе (${t.x},${t.gy})`);
       assert(!A.onArtery(t.x, t.gy, 2), `${t.sp} на дороге или в реке (${t.x},${t.gy})`);
       const ok = F.KINDS[t.side].rows[t.ring - 1].some(e => e.sp === t.sp) || ALLEYS.has(t.sp);
@@ -1223,6 +1225,40 @@ setCtx(ctx);
     }
     eq(bad.length, 0, 'неон в палитре: ' + bad.join(', '));
   });
+  const F = await imp('world/flora.js');
+  const A = await imp('world/arteries.js');
+  const loc = id => M.locations.find(l => l.id === id);
+  test('Мёртвый лес: сухостой рощами — только сухое, в зоне леса, не на местах, не на валу и не на тропе', () => {
+    const wood = F.flora.filter(t => t.town);
+    assert(wood.length > 200, `сухостоя ${wood.length}`);
+    const DEAD = new Set(['dead', 'deadspruce', 'snag', 'stump', 'log']), seen = new Set();
+    for (const t of wood) {
+      assert(DEAD.has(t.sp), `живое в Мёртвом лесу: ${t.sp}`);
+      seen.add(t.sp);
+      const [wx, wy] = R.townWarp(t.x, t.gy);
+      eq(R.townZoneOf(t.x + wx, t.gy + wy), 0, `${t.sp} вне леса (${t.x},${t.gy})`);
+      assert(R.townEdge(t.x, t.gy) < -10, `${t.sp} на валу (${t.x},${t.gy})`);
+      assert(!A.onArtery(t.x, t.gy, 2), `${t.sp} на тропе (${t.x},${t.gy})`);
+      for (const l of M.locations) assert(!(t.x > l.x - 2 && t.x < l.x + l.w + 2 && t.gy > l.y - 2 && t.gy < l.y + l.h + 4), `${t.sp} на «${l.name}»`);
+    }
+    eq(seen.size, DEAD.size, 'не все виды сухостоя');
+    // рощами: в окне 200×120 бывает и чаща, и пусто
+    const counts = [];
+    for (let y = T.y0 + 40; y < T.y0 + 300; y += 120) for (let x = T.x0 + 100; x < T.x1 - 300; x += 200)
+      counts.push(wood.filter(t => t.x >= x && t.x < x + 200 && t.gy >= y && t.gy < y + 120).length);
+    assert(Math.max(...counts) > 4 * Math.max(1, Math.min(...counts)), `ровно, не рощами: ${Math.min(...counts)}..${Math.max(...counts)}`);
+  });
+  test('тропа к кресту: от костра — в Мёртвый лес — к подножию креста на холме', () => {
+    const P = A.lines.find(l => l.id === 'road:town-cross'), cr = loc('cross'), fire = loc('campfire');
+    assert(P && P.pts.length > 20, 'тропы нет');
+    const a = P.pts[0], b = P.pts[P.pts.length - 1];
+    assert(Math.hypot(a.x - (fire.x + fire.w / 2), a.y - (fire.y + fire.h)) < 120, `тропа не от костра: ${a.x | 0},${a.y | 0}`);
+    assert(Math.abs(b.x - (cr.x + cr.w / 2)) < 16 && b.y > cr.y + cr.h - 4 && b.y < cr.y + cr.h + 16, `тропа не у креста: ${b.x | 0},${b.y | 0}`);
+    for (const p of P.pts) {
+      eq(p.st, 'trail', 'тропа — не тропа');
+      for (const l of M.locations) assert(!(p.x > l.x + 2 && p.x < l.x + l.w - 2 && p.y > l.y + 2 && p.y < l.y + l.h - 6), `тропа сквозь «${l.name}» (${p.x | 0},${p.y | 0})`);
+    }
+  });
   test('земля городка: у каждой зоны своя фактура, артерий она не трогает', () => {
     const pick = { 0: [T.x0 + 900, T.y0 + 100], 1: [T.x0 + 1000, T.y0 + 1400], 2: [T.x0 + 160, T.y0 + 700], 3: [T.x0 + 2300, T.y0 + 900], 4: [T.x0 + 1100, T.y0 + 700] };
     for (const [z, [x, y]] of Object.entries(pick)) {
@@ -1232,6 +1268,165 @@ setCtx(ctx);
       assert(own > 2000, `зона ${R.TOWN_ZONES[z]}: в плитке своей земли ${own}`);
       assert(tex / own > 0.002 && tex / own < 0.5, `зона ${R.TOWN_ZONES[z]}: фактуры ${(tex / own * 100).toFixed(1)}%`);
     }
+  });
+}
+
+// ═══ КВАРТАЛ ГОРОДКА: улицы, фундаменты, огрызки стен, мёртвые фонари ═══
+{
+  const A = await imp('world/arteries.js');
+  const M = await imp('world/locations.js');
+  const TW = await imp('world/town.js');
+  const Q = await imp('sprites/quarter.js');
+  const near = (x, y, r, L) => A.onArtery(x, y, r) && (!L || L.pts.some(p => Math.hypot(p.x - x, p.y - y) < r + 8));
+  const boxes = M.locations.map(l => ({ x0: l.x + 2, y0: l.y + 2, x1: l.x + l.w - 2, y1: l.y + l.h - 2, name: l.name }));
+  test('квартал: улицы сеткой — от западных ворот, мощёные в руинах, мест не задевают', () => {
+    const west = A.lines.find(l => l.id === 'road:west').pts[0];
+    for (const [id] of TW.STREETS) {
+      const L = A.lines.find(l => l.id === id);
+      assert(L && L.pts.length > 10, `улицы ${id} нет`);
+      for (const p of L.pts) {
+        assert(['street', 'lane'].includes(p.st), `${id}: стадия ${p.st}`);
+        const inside = [0, 24, -24].some(d => TW.inQuarter(p.x - d, p.y));           // на краю квартала — к соседу: к библиотеке, к посёлку
+        assert(inside || Math.hypot(p.x - west.x, p.y - west.y) < 70 || A.lines.some(o => o.id !== id && o.id.startsWith('road:q-') && near(p.x, p.y, 2, o)), `${id} вне квартала (${p.x | 0},${p.y | 0})`);
+        for (const b of boxes) assert(!(p.x > b.x0 && p.x < b.x1 && p.y > b.y0 && p.y < b.y1), `${id} сквозь «${b.name}»`);
+      }
+      // сетка: каждая улица упирается в другую или пересекает её
+      const others = A.lines.filter(o => o.id !== id && o.id.startsWith('road:q-'));
+      assert(L.pts.some(p => others.some(o => o.pts.some(q => Math.hypot(q.x - p.x, q.y - p.y) < 6))), `${id} ни с чем не сходится`);
+    }
+    const main = A.lines.find(l => l.id === 'road:q-main').pts[0];
+    assert(Math.hypot(main.x - west.x, main.y - west.y) < 8, `главная не от ворот: ${main.x | 0},${main.y | 0}`);
+    eq(A.surfaceOf(main.x + 60, A.lines.find(l => l.id === 'road:q-main').pts.find(p => p.x > main.x + 60).y), 'path', 'по улице не идётся');
+  });
+  test('фундаменты: вдоль улиц фасадом к ним, в квартале; не на улице, не на местах, не друг на друге', () => {
+    const F = TW.FOUNDATIONS;
+    assert(F.length >= 20, `фундаментов ${F.length}`);
+    for (const f of F) {
+      for (const [x, y] of [[f.x0, f.y0], [f.x1, f.y0], [f.x0, f.y1], [f.x1, f.y1]]) assert(TW.inQuarter(x, y), `фундамент вне квартала (${x},${y})`);
+      for (let x = f.x0; x <= f.x1; x += 2) for (let y = f.y0; y <= f.y1; y += 2) assert(!A.onArtery(x, y, 1), `фундамент на улице (${x},${y})`);
+      for (const b of boxes) assert(!(f.x0 < b.x1 + 6 && f.x1 > b.x0 - 6 && f.y0 < b.y1 + 6 && f.y1 > b.y0 - 6), `фундамент на «${b.name}»`);
+      for (const g of F) if (g !== f) assert(!(f.x0 < g.x1 + 2 && f.x1 > g.x0 - 2 && f.y0 < g.y1 + 2 && f.y1 > g.y0 - 2), 'фундаменты друг на друге');
+      const mx = (f.x0 + f.x1) / 2, my = (f.y0 + f.y1) / 2;
+      const [fx, fy, dx, dy] = { n: [mx, f.y0, 0, -1], s: [mx, f.y1, 0, 1], w: [f.x0, my, -1, 0], e: [f.x1, my, 1, 0] }[f.face];
+      let ok = false;
+      for (let k = 1; k <= 16 && !ok; k++) ok = A.onArtery(fx + dx * k, fy + dy * k, 0);
+      assert(ok, `фасад (${f.face}) не к улице: ${f.x0},${f.y0}`);
+    }
+    const kinds = new Set(F.map(f => f.ruin?.kind).filter(Boolean));
+    for (const k of ['wall', 'chimney', 'arch']) assert(kinds.has(k), `нет: ${k}`);
+    assert(F.filter(f => !f.ruin).length > F.length * 0.2, 'пустых фундаментов мало: дом снесён до земли — тоже руина');
+  });
+  test('мёртвые фонари: у бордюра главных, не на мостовой; огрызки и фонари — краски канона, не горят', () => {
+    assert(TW.LAMPS.length >= 6, `фонарей ${TW.LAMPS.length}`);
+    for (const m of TW.LAMPS) {
+      assert(!A.onArtery(m.x, m.gy, 0), `фонарь на мостовой (${m.x},${m.gy})`);
+      assert(A.onArtery(m.x, m.gy, 5), `фонарь не у улицы (${m.x},${m.gy})`);
+      assert(TW.inQuarter(m.x, m.gy), 'фонарь вне квартала');
+    }
+    const OK = new Set(['#0D0B0A', '#D9CFB8', '#8A8D8F', '#3D4A3A', '#15100c', '#241c14', '#2a2620', '#34302a', '#3a3328', '#3a2818', '#c8b89a', '#b0a284', '#474442', '#5e5e5d', '#33302e'].map(c => c.toLowerCase()));
+    const kinds = [...Array.from({ length: 20 }, (_, v) => Q.quarterLamp(v)), ...[0, 1, 2, 3, 4, 5].flatMap(v => [Q.quarterRuin('wall', v, 16 + v * 4), Q.quarterRuin('chimney', v), Q.quarterRuin('arch', v)])];
+    for (const K of kinds) {
+      const log = [];
+      const ctx = new Proxy({ canvas: { width: 1, height: 1 } }, {
+        get(t, k) { if (k in t) return t[k]; return (...a) => { log.push([k, ...a]); }; },
+        set(t, k, v) { log.push(['=' + k, v]); return true; },
+      });
+      K.draw(ctx, 100, 200);
+      for (const [k, ...a] of log) {
+        if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `«${K.name}»: краска ${a[0]} вне палитры`);
+        if (k !== 'fillRect') continue;
+        const [x, y, w, h] = a;
+        assert(x >= 100 - K.w / 2 - 1 && x + w <= 100 + K.w / 2 + 1, `«${K.name}» вылез вбок: ${x}..${x + w}`);
+        assert(y >= 200 - K.h - 1 && y + h <= 200, `«${K.name}» вылез по высоте: ${y}..${y + h}`);
+      }
+    }
+  });
+}
+
+// ═══ ШОССЕ ГОРОДКА: трасса, эстакада, рельсы к поезду, машины ═══
+{
+  const A = await imp('world/arteries.js');
+  const M = await imp('world/locations.js');
+  const TW = await imp('world/town.js');
+  const AP = await imp('render/arteryProps.js');
+  const HS = await imp('sprites/highway.js');
+  const LS = await imp('sprites/locations/index.js');
+  const loc = id => M.locations.find(l => l.id === id);
+  const line = id => A.lines.find(l => l.id === id);
+  const hw = line('road:town-highway'), rail = line('arc:town-rail'), fly = line('sky:town-flyover');
+  const crosses = (P, Q) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); for (let i = 0; i < P.length - 1; i++) for (let j = 0; j < Q.length - 1; j++) { const a = P[i], b = P[i + 1], c = Q[j], d = Q[j + 1]; if (o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b)) return true; } return false; };
+  const boxes = (skip = []) => M.locations.filter(l => !skip.includes(l.id)).map(l => ({ x0: l.x + 2, y0: l.y + 2, x1: l.x + l.w - 2, y1: l.y + l.h - 2, name: l.name }));
+  const inside = (p, B) => B.find(b => p.x > b.x0 && p.x < b.x1 && p.y > b.y0 && p.y < b.y1);
+  test('шоссе: брошенная трасса от восточных ворот мимо «Выхода в Пустошь» к посёлку; мест не задевает', () => {
+    assert(hw && hw.pts.length > 100, 'трассы нет');
+    const gate = line('road:east').pts[0], a = hw.pts[0], b = hw.pts[hw.pts.length - 1];
+    assert(Math.hypot(a.x - gate.x, a.y - gate.y) < 10, `трасса не от ворот: ${a.x | 0},${a.y | 0}`);
+    const ex = loc('exit'), foot = { x: ex.x + ex.w / 2, y: ex.y + ex.h };
+    const near = hw.pts.reduce((m, p) => Math.min(m, Math.hypot(p.x - foot.x, p.y - foot.y)), 1e9);
+    assert(near < 30, `«Выход в Пустошь» не у трассы: ${near | 0}`);
+    assert(b.x < ex.x - 100, 'трасса не доходит до посёлка');
+    const B = boxes();
+    for (const p of hw.pts) { eq(p.st, 'motorway', 'стадия'); const hit = inside(p, B); assert(!hit, `трасса сквозь «${hit && hit.name}»`); }
+    eq(A.surfaceOf(hw.pts[60].x, hw.pts[60].y), 'path', 'по трассе не идётся');
+  });
+  test('эстакада: от «Обрушенного моста» над рельсами и трассой; опоры не на полотне и не на местах; конец рухнул', () => {
+    assert(fly && fly.pts.every(p => p.st === 'flyover'), 'эстакады нет');
+    const ov = loc('overpass'), a = fly.pts[0];
+    assert(Math.abs(a.x - (ov.x + ov.w)) < 4 && Math.abs(a.y - (ov.y + ov.h)) < 4, `эстакада не от моста: ${a.x | 0},${a.y | 0}`);
+    assert(crosses(fly.pts, hw.pts), 'эстакада не над трассой');
+    assert(crosses(fly.pts, rail.pts), 'эстакада не над рельсами');
+    const len = fly.pts[fly.pts.length - 1].s - a.s, n = Math.max(1, Math.round(len / 38)), B = boxes();
+    for (let k = 0; k <= n; k++) {
+      const s = a.s + len * k / n, p = fly.pts.find(q => q.s >= s - 1e-6) || fly.pts[fly.pts.length - 1];
+      if (k === 0) { assert(p.ok, 'у моста опоры нет'); continue; }
+      for (const L of [hw, rail]) assert(!L.pts.some(q => Math.hypot(q.x - p.x, q.y - p.y) < q.hw + 2), `опора на полотне (${p.x | 0},${p.y | 0})`);
+      const hit = inside(p, B); assert(!hit, `опора на «${hit && hit.name}»`);
+    }
+    assert(!fly.pts[fly.pts.length - 1].ok && fly.pts.some(p => p.ok), 'конец эстакады не обрушен');
+    const mid = fly.pts[fly.pts.length >> 1];
+    assert(AP.arteryPropsIn(mid.x - 60, mid.y - 60, mid.x + 60, mid.y + 60).length > 0, 'пролётов нет');
+  });
+  test('рельсы к поезду: под поездом, на восток до вала; за поездом тупик', () => {
+    assert(rail && rail.pts.every(p => p.st === 'rail'), 'рельсов нет');
+    const tr = loc('train');
+    assert(rail.pts.some(p => p.x > tr.x + 10 && p.x < tr.x + tr.w - 10 && Math.abs(p.y - (tr.y + tr.h - 5)) < 3), 'рельсы не под поездом');
+    assert(rail.pts[rail.pts.length - 1].x > 6000, 'до вала не доходят');
+    assert(Math.abs(TW.BUFFER.x - rail.pts[0].x) < 8 && TW.BUFFER.x < tr.x, 'тупика нет');
+    const B = boxes(['train', 'powerline']);
+    for (const p of rail.pts) { const hit = inside(p, B); assert(!hit, `рельсы сквозь «${hit && hit.name}»`); }
+  });
+  test('машины: вдоль трассы — на обочине и на полосе; не на рельсах и не под опорами; краски канона', () => {
+    assert(TW.CARS.length >= 6, `машин ${TW.CARS.length}`);
+    const B = boxes();
+    for (const c of TW.CARS) {
+      const d = hw.pts.reduce((m, p) => Math.min(m, Math.hypot(p.x - c.x, p.y - c.gy)), 1e9);
+      assert(d < 18, `машина не у трассы (${c.x},${c.gy}): ${d | 0}`);
+      assert(!rail.pts.some(p => Math.hypot(p.x - c.x, p.y - c.gy) < 10), 'машина на рельсах');
+      assert(!fly.pts.some(p => Math.hypot(p.x - c.x, p.y - c.gy) < 9), 'машина под опорой эстакады');
+      const hit = inside({ x: c.x, y: c.gy }, B); assert(!hit, `машина на «${hit && hit.name}»`);
+    }
+    const OK = new Set(HS.HIGHWAY_COLORS.map(c => c.toLowerCase()));
+    for (const K of [...Array.from({ length: 60 }, (_, v) => HS.carWreck(v)), HS.bufferStop]) {
+      const log = [];
+      const ctx = new Proxy({ canvas: { width: 1, height: 1 } }, { get(t, k) { if (k in t) return t[k]; return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+      K.draw(ctx, 100, 200);
+      for (const [k, ...a] of log) {
+        if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `«${K.name}»: краска ${a[0]}`);
+        if (k !== 'fillRect') continue;
+        const [x, y, w, h] = a;
+        assert(x >= 100 - K.w / 2 - 1 && x + w <= 100 + K.w / 2 + 1, `«${K.name}» вылез вбок: ${x}..${x + w}`);
+        assert(y >= 200 - K.h - 1 && y + h <= 200, `«${K.name}» вылез по высоте: ${y}..${y + h}`);
+      }
+    }
+    for (const c of HS.HIGHWAY_COLORS) { const n = parseInt(c.slice(1), 16), r = n >> 16, b = n & 255; assert(!(r > 200 && b < 90), `тёплое в машинах: ${c}`); }
+  });
+  test('«Обрушенный мост»: у эстакады есть тело — опоры, настил, рухнувший пролёт, канат', () => {
+    const ov = loc('overpass'), log = [];
+    const ctx = new Proxy({ canvas: { width: 1, height: 1 }, globalAlpha: 1 }, { get(t, k) { if (k in t) return t[k]; return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+    setCtx(ctx); LS.draw_overpass(ov.x, ov.y); setCtx(fakeCtx());
+    const rects = log.filter(e => e[0] === 'fillRect');
+    assert(rects.length > 120, `мост пуст: ${rects.length} мазков`);
+    for (const [, x, y, w, h] of rects) assert(x >= ov.x - 2 && x + w <= ov.x + ov.w + 2 && y >= ov.y - 2 && y + h <= ov.y + ov.h + 2, `мост вылез за место: ${x},${y}`);
   });
 }
 

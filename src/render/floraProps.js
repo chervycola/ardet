@@ -170,6 +170,36 @@ const DRAW = {
     }
     if (snow) R(c, K, x - 1, g - h, 2, 1);
   },
+  // сухая ель: тонкий ствол, ветки-огрызки свисают, к верху короче; кое-где обломаны
+  deadspruce(c, x, g, v) {
+    const h = 26 + (v % 3) * 3;
+    R(c, K0, x, g - h, 1, h); R(c, K0, x + 1, g - q(h * 0.7), 1, q(h * 0.7)); R(c, P, x, g - h + 3, 1, h - 9);
+    for (let y = 6; y < h - 1; y += 2 + (y % 3 === 0 ? 1 : 0)) {
+      const len = Math.max(1, q((h - y) / h * 6 * (0.6 + 0.4 * hh(v, y, 3))));
+      for (const s of [-1, 1]) {
+        if (hh(v + s, y, 5) < 0.28) continue;                              // ветка обломана
+        for (let k = 1; k <= len; k++) R(c, K0, x + (s > 0 ? 1 : 0) + s * k, g - y + (k >> 1), 1, 1);
+      }
+    }
+    R(c, K0, x - 2, g - 2, 5, 2);
+  },
+  // обломанный ствол: зубчатый слом, светлая щепа, сучок, корни
+  snag(c, x, g, v) {
+    const h = 10 + (v % 3) * 3;
+    R(c, BARK, x - 1, g - h, 3, h); R(c, P, x - 1, g - h, 1, h); R(c, K0, x + 1, g - h, 1, h);
+    R(c, BARK, x - 1, g - h - 2, 1, 2); R(c, BARK, x + 1, g - h - 1, 1, 1); R(c, L2, x, g - h, 1, 1);
+    R(c, K0, x + 2, g - q(h * 0.6), 2, 1); R(c, K0, x - 3, g - 2, 7, 2);
+  },
+  // бурелом: ствол лёжа, верх к свету; на одном конце — вывороченный корень диском; сучья торчат; мох по низу
+  log(c, x, g, v) {
+    const L = 22 + (v % 3) * 3, s = v % 2 ? 1 : -1, x0 = x - (L >> 1);
+    R(c, BARK, x0, g - 4, L, 3); R(c, L2, x0, g - 4, L, 1); R(c, K0, x0, g - 1, L, 1);
+    const rx = s > 0 ? x0 + L : x0 - 2;
+    R(c, K1, rx, g - 9, 3, 9); R(c, BARK, rx + 1, g - 8, 1, 7); R(c, P, rx, g - 9, 1, 3);
+    R(c, K0, rx - 1, g - 10, 1, 2); R(c, K0, rx + 3, g - 11, 1, 3); R(c, K0, rx + 1, g - 12, 1, 2);
+    for (let k = 0; k < 3; k++) { const bx = x0 + 4 + q(hh(v, k, 7) * (L - 9)); R(c, K0, bx, g - 7, 1, 3); R(c, K0, bx + s, g - 8, 1, 1); }
+    R(c, FM, x0 + 3, g - 2, 5, 1); R(c, FM, x0 + L - 9, g - 2, 3, 1);
+  },
   stump(c, x, g, v) {
     R(c, BARK, x - 3, g - 4, 6, 4); R(c, L2, x - 3, g - 5, 6, 1); R(c, K1, x - 1, g - 5, 2, 1); R(c, K1, x - 4, g - 1, 8, 1);
   },
@@ -177,8 +207,8 @@ const DRAW = {
     blob(c, x, g - 4, 5, 3, v, v % 2 ? LEAF : DRY, snow);
   },
 };
-const FLEX = { oak: 0.25, birch: 0.6, spruce: 0.2, pine: 0.35, cypress: 0.3, palm: 0.55, olive: 0.2, bamboo: 0.9, willow: 0.5, poplar: 0.45, fruit: 0.3, street: 0.3, dead: 0.05, stump: 0, bush: 0.25 };
-const CROWN = { oak: 12, birch: 10, spruce: 8, pine: 10, cypress: 6, palm: 14, olive: 5, bamboo: 12, willow: 8, poplar: 8, fruit: 5, street: 9, dead: 99, stump: 99, bush: 99 };   // где кончается ствол (снизу)
+const FLEX = { oak: 0.25, birch: 0.6, spruce: 0.2, pine: 0.35, cypress: 0.3, palm: 0.55, olive: 0.2, bamboo: 0.9, willow: 0.5, poplar: 0.45, fruit: 0.3, street: 0.3, dead: 0.05, stump: 0, bush: 0.25, deadspruce: 0.04, snag: 0, log: 0 };
+const CROWN = { oak: 12, birch: 10, spruce: 8, pine: 10, cypress: 6, palm: 14, olive: 5, bamboo: 12, willow: 8, poplar: 8, fruit: 5, street: 9, dead: 99, stump: 99, bush: 99, deadspruce: 99, snag: 99, log: 99 };   // где кончается ствол (снизу)
 
 // холст вида и варианта
 const cache = new Map();

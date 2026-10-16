@@ -75,7 +75,7 @@ import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGroundMarks, setTissueBlockers, buildTissue, tissueThingsIn } from './render/ground.js';
 import { thingCaster } from './render/things.js';
 import { buildTown, onBridge } from './world/town.js';
-import { bridgePieces } from './render/townProps.js';
+import { bridgePieces, townThingsIn } from './render/townProps.js';
 import { drawCastle, stepCastle, castleSeen } from './render/castle.js';
 import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
@@ -125,7 +125,8 @@ setReliefFlats(archGroundRects());             // под дворами и во�
 buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
 buildFields(archGroundRects());                // поля у дворов и вдоль дорог — бороздами в землю
 buildLandmarks(); buildLandmarkProps();        // приметы: у реки, на вершинах, где дуга примыкает к дороге
-buildFlora(landmarkBoxes(), landmarks.filter(l => l.kind === 'oasis'));   // рощи, аллеи, камыш, пальмы оазисов
+buildFlora([...landmarkBoxes(), ...locations.map(l => ({ x0: l.x - 10, y0: l.y - 8, x1: l.x + l.w + 10, y1: l.y + l.h + 10 }))],
+  landmarks.filter(l => l.kind === 'oasis'));   // рощи, аллеи, камыш, пальмы оазисов; у мест — поляны
 fireSitesAvoid((x, y) => onArtery(x, y, 18));  // дорога проходит огонь насквозь
 // ткань застройки не ложится на локации (с запасом над крышей) и дворы
 setTissueBlockers([
@@ -302,7 +303,7 @@ function propCaster(p) {
 const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
   setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
 }, -6, -10, 26, 23) };
-const LOW = new Set(['reed', 'bush', 'stump']);       // низкое тени по солнцу не кладёт (трава и камни — тоже)
+const LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag']);   // низкое тени по солнцу не кладёт (трава и камни — тоже)
 const FLATLM = new Set(['iceHole', 'boat', 'oasis']);   // приметы вровень с землёй
 function shadowCasters(camX, camY, vw, vh) {
   const pad = 170, out = [];
@@ -319,6 +320,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const tr of floraIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!LOW.has(tr.sp)) out.push(treeCaster(tr, maskFrom));
   for (const p of landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, t)) if (!FLATLM.has(p.kind)) out.push(propCaster(p));
   for (const T of tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));   // ткань поля
+  for (const T of townThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));     // квартал: стены, фонари
   for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
   heroCaster.ox = player.x; heroCaster.oy = player.y;
   out.push(heroCaster);
@@ -435,6 +437,7 @@ function render() {
   for (const tr of floraIn(camX - 18, camY - 4, camX + vw + 18, camY + vh + 46)) drawList.push({ k: tr.gy, tree: tr });   // рощи и камыш
   for (const p of landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, t)) drawList.push({ k: p.gy, prop: p });   // приметы
   for (const T of tissueThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40)) drawList.push({ k: T.gy, prop: T });   // ткань поля — стоит в земле
+  for (const T of townThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40)) drawList.push({ k: T.gy, prop: T });     // квартал городка
   for (const p of bridgePieces()) if (camera.isVisible(p.x - p.w / 2, p.gy - p.h, p.w, p.h + 4)) drawList.push({ k: p.gy, prop: p });   // мост: дальние перила — за странником, ближние — перед
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });

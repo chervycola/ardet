@@ -157,6 +157,7 @@ export function buildLandmarks() {
   for (const L of lines) {
     if (L.kind !== 'arc') continue;
     const kind = WAY[L.id.slice(4)];
+    if (!kind) continue;                                     // ветки городка — без знака эпохи
     const ends = L.id === 'arc:net' ? netCrossings(L) : [L.pts[0], L.pts[L.pts.length - 1]];
     let i = 0;
     for (const e of ends) {
@@ -197,7 +198,7 @@ function dirAt(P, i) {
 function netCrossings(net) {
   const out = [];
   for (const L of lines) {
-    if (L.kind !== 'road') continue;
+    if (L.kind !== 'road' || L.town) continue;
     let best = null, bd = Infinity;
     for (const p of L.pts) { const dd = Math.abs(p.d - 1730); if (dd < bd) { bd = dd; best = p; } }
     if (best) out.push(best);

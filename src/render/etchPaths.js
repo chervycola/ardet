@@ -15,7 +15,7 @@ import { fieldsIn, inField } from '../world/fields.js';
 import { RING_W, RINGS } from '../world/disc.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A');
+const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
 
 // накладки: col — краска; a — доля (1 — краской поверх, меньше — смешать с землёй)
 export const OV = [null];
@@ -46,6 +46,14 @@ const O = {
   paddy: ov(mixc(MGLA, BONE, 0.22), 1), paddyGlint: ov(mixc(MGLA, BONE, 0.55), 1), dike: ov(NIGHT, 0.4), rice: ov(mixc(MGLA, NIGHT, 0.25), 1),
   tea: ov(mixc(MGLA, NIGHT, 0.3), 1), teaLit: ov(mixc(MGLA, BONE, 0.28), 1), aryk: ov(mixc(MGLA, NIGHT, 0.6), 1), plant: ov(MGLA, 0.85),
   pad: ov(BONE, 0.2), padEdge: ov(NIGHT, 0.3), platform: ov('#5a5650', 1),
+  // улицы квартала — брусчатка в руинах: камень пеплом с сепией, шов ночью
+  qcob1: ov(mixc(mixc(ASH, SEPIA, 0.3), NIGHT, 0.4), 1), qcob2: ov(mixc(mixc(ASH, SEPIA, 0.3), NIGHT, 0.5), 1),
+  qcob3: ov(mixc(mixc(ASH, BONE, 0.15), NIGHT, 0.3), 1), qjoint: ov(mixc(NIGHT, SEPIA, 0.4), 1),
+  qkerb: ov(mixc(ASH, NIGHT, 0.55), 1), qtrod: ov(BONE, 0.1),
+  // брошенная трасса городка: асфальт темнее земли шоссе, разметка выцвела в кость
+  masph: ov(mixc(NIGHT, ASH, 0.18), 1), masph2: ov(mixc(NIGHT, ASH, 0.25), 1), mcrack: ov(mixc(NIGHT, ASH, 0.04), 1),
+  mweed: ov(mixc(MGLA, NIGHT, 0.3), 1), mrim: ov(mixc(NIGHT, ASH, 0.1), 1), mline: ov(mixc(BONE, NIGHT, 0.55), 1),
+  mshoulder: ov(mixc(mixc(ASH, SEPIA, 0.5), NIGHT, 0.45), 1),
 };
 
 function ih(x, y, s) {
@@ -54,6 +62,11 @@ function ih(x, y, s) {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 const fract = v => v - Math.floor(v);
+function vn2(x, y, s) {                                             // плавный шум пятнами
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  const a = ih(xi, yi, s), b = ih(xi + 1, yi, s), c = ih(xi, yi + 1, s), d = ih(xi + 1, yi + 1, s);
+  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+}
 
 // дорога по стадии: u — вдоль, v — поперёк (со знаком), hw — полуширина; fire — в кольце огня (рвань)
 function road(st, u, v, hw, x, y, fire) {
@@ -81,6 +94,30 @@ function road(st, u, v, hw, x, y, fire) {
       if (av < 0.6 && (u % 12) < 6 && !fire) return O.mark;
       if (ih(Math.floor(u / 7), Math.floor(v), 13) < 0.08 && ih(x, y, 17) < 0.5) return O.crack;
       return O.asph;
+    case 'street': case 'lane': {
+      // улица квартала городка: брусчатка в руинах — камни выбиты (в прорехе
+      // земля), бордюр с прорехами; где мостовую разобрали пятном — утоптано
+      const ru = Math.min(1, Math.max(0, (vn2(x / 46, y / 46, 71) - 0.5) * 3.2) + (st === 'lane' ? 0.12 : 0));
+      if (av > hw - 0.8) return ih(Math.floor(u / 4), v > 0 ? 3 : 4, 61) < 0.78 - ru * 0.6 ? O.qkerb : 0;
+      const row = Math.floor((v + hw) / 2), uu = u / 3 + (row & 1) * 0.5, h = ih(Math.floor(uu), row, 63);
+      if (h < 0.08 + ru * 0.9) return ih(x, y, 67) < 0.05 ? O.pebble : ru > 0.45 ? O.qtrod : 0;
+      if (fract(uu) < 0.3 || fract((v + hw) / 2) < 0.3) return O.qjoint;
+      return h > 0.93 ? O.qcob3 : h > 0.55 ? O.qcob1 : O.qcob2;
+    }
+    case 'motorway': {
+      // брошенная трасса городка: асфальт в сетке трещин, в трещинах трава; ямы
+      // до земли; разметка стёрта — от осевой мазки, край — кусками; где
+      // разбито сильнее (пятнами) — всего больше
+      const ru = Math.max(0, (vn2(x / 60, y / 60, 81) - 0.45) * 2.2);
+      if (av > hw - 0.8) return ih(Math.floor(u / 6), v > 0 ? 5 : 6, 83) < 0.72 - ru * 0.5 ? O.mshoulder : 0;
+      const pot = vn2(u / 9, v / 3 + 40, 85);
+      if (pot > 0.86 - ru * 0.1) return pot > 0.9 - ru * 0.1 ? 0 : O.mrim;          // яма: кромка и земля на дне
+      const cu = fract(u / 13 + 0.35 * vn2(u / 20, v / 4, 87)), cv = fract((v + hw) / 4.7 + 0.4 * vn2(u / 7, v / 5, 89));
+      if (cu < 0.06 || (cv < 0.1 && ih(Math.floor(u / 5), Math.floor((v + hw) / 4.7), 91) < 0.4)) return ih(x, y, 93) < 0.22 + ru * 0.4 ? O.mweed : O.mcrack;
+      if (av > hw - 2 && av <= hw - 1.1 && ih(Math.floor(u / 3), v > 0 ? 7 : 8, 95) < 0.55 - ru * 0.45) return O.mline;   // край
+      if (av < 0.6 && (u % 14) < 7 && ih(Math.floor(u / 14), 9, 97) < 0.6 - ru * 0.5) return O.mline;                    // осевая
+      return ih(x, y, 99) < 0.08 ? O.masph2 : O.masph;
+    }
     case 'highway':
       if (av > hw - 0.8) return O.shoulder;
       if (av > hw - 1.9) return O.mark;                                // сплошная по краю
@@ -205,7 +242,7 @@ function field(f, x, y, edge) {
 
 // буферы плитки: ближайшая линия своего слоя (числами — без мусора на каждую точку)
 const STAGES = [null, 'trail', 'paved', 'cobble', 'asphalt', 'highway', 'silk', 'caravan', 'winter', 'portage', 'rail', 'net',
-  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover', 'bed'];
+  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover', 'bed', 'street', 'lane', 'motorway'];
 const SCODE = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 let N = 0, bD, bU, bV, bH, bF, bS;
 const LAYER = { river: 0, sky: 1, arc: 2, road: 3 };

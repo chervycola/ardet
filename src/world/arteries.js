@@ -48,6 +48,8 @@ export const HW = {
   stream: 4, aqueduct: 3, canal: 7, pipe: 2.5, dry: 6, bed: 7,
   silk: 3.5, caravan: 3.5, winter: 3, portage: 3.5, rail: 4, net: 6,
   arcade: 3, poles: 0, pylons: 0, flyover: 5,
+  street: 5, lane: 4,                                         // улицы квартала городка: главные и переулки
+  motorway: 7,                                                // брошенная трасса городка
 };
 // на земле — по ней ходят; поднятое — проходишь понизу (на земле только тень)
 export const RAISED = new Set(['aqueduct', 'pipe', 'arcade', 'poles', 'pylons', 'flyover']);
@@ -345,10 +347,12 @@ function finish(kind, id, pts, stageOf, extra = {}) {
   return line;
 }
 
-// линия, проложенная руками, а не трассировщиком (русло городка): точки —
-// [x, y], стадия на всю длину одна; ложится в землю и в поиск рядом, как прочие
+// линия городка, проложенная руками, а не трассировщиком (русло, тропы, улицы):
+// точки — [x, y], стадия на всю длину одна; ложится в землю и в поиск рядом, как
+// прочие; town — чтобы приметы, поля и аллеи колец её не считали своей дорогой
+export const shapeLine = pts => resample(smoothPts(resample(pts.map(([x, y]) => ({ x, y })), 6), 4), 6);   // точки линии — как ляжет
 export function addLine(kind, id, pts, st) {
-  return finish(kind, id, resample(smoothPts(resample(pts.map(([x, y]) => ({ x, y })), 6), 4), 6), () => st);
+  return finish(kind, id, shapeLine(pts), () => st, { town: true });
 }
 
 const SIDE4 = ['south', 'north', 'east', 'west'], SIDE5 = [...SIDE4, 'plain'];

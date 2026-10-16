@@ -11,7 +11,7 @@
 // Рисунок — render/floraProps.js.
 // ═══════════════════════════════════════
 import { TOWN, RING_W, RINGS, WORLD_W, WORLD_H, warpedDist } from './disc.js';
-import { sideAt } from './relief.js';
+import { sideAt, townZoneOf, townWarp, townEdge } from './relief.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
 import { fieldAt } from './fields.js';
@@ -77,6 +77,7 @@ export const SIZE = {
   oak: [26, 34], birch: [14, 30], spruce: [16, 32], pine: [24, 30], cypress: [8, 30], palm: [22, 32],
   olive: [18, 18], bamboo: [14, 34], willow: [24, 26], poplar: [10, 40], fruit: [14, 16], street: [12, 22],
   dead: [18, 26], stump: [8, 5], bush: [12, 8], reed: [8, 12],
+  deadspruce: [16, 34], snag: [8, 18], log: [36, 11],          // Мёртвый лес городка: сухая ель, обломанный ствол, бурелом
 };
 // аллеи вдоль дорог: в каких кольцах какой стороны дорогу обсаживали
 const ALLEY = { west: { 5: 'poplar', 6: 'poplar' }, plain: { 5: 'poplar', 6: 'birch', 8: 'poplar' }, south: { 6: 'palm' }, east: {}, north: {} };
@@ -190,6 +191,30 @@ export function buildFlora(skip = [], oases = []) {
     // вид — пятнами (дубрава, ельник, березняк), изредка вперемешку
     const patch = vn(x / 150, y / 90, 43) * 2.3 + 0.1, sp = pick(K.rows[ring - 1], h01(gx, gy, 5) < 0.2 ? h01(gx, gy, 4) : patch - Math.floor(patch));
     add(sp, x, y, ring, side, h01(gx, gy, 6));
+  }
+  // 4) Мёртвый лес городка (зона леса, world/relief.js): сухостой рощами — сухие ели,
+  //    голые деревья, обломанные стволы, пни, бурелом. У мест — поляны (их боксы — в skip);
+  //    трассировщик держит весь городок занятым — здесь своя проверка места
+  const town = (sp, x, gy, seed) => {
+    x = Math.round(x); gy = Math.round(gy);
+    const r = Math.max(3, SIZE[sp][0] * 0.3);
+    if (onArtery(x, gy, r + 3) || taken(grid, x, gy, r)) return false;
+    for (const b of skip) if (x > b.x0 - r && x < b.x1 + r && gy > b.y0 && gy < b.y1 + 4) return false;
+    put(grid, { sp, x, gy, v: Math.floor(seed * 6), ring: 0, side: 'town', snow: false, town: true }, r);
+    return true;
+  };
+  const TF = 20, FOREST = [['dead', 40], ['deadspruce', 28], ['snag', 12], ['stump', 12], ['log', 8]].map(([sp, w]) => ({ sp, w }));
+  for (let y = TOWN.y0 + 14; y < TOWN.y0 + 520; y += TF) for (let x = TOWN.x0 + 14; x < TOWN.x1 - 14; x += TF) {
+    const gx = Math.round(x / TF), gy = Math.round(y / TF);
+    const px = x + (h01(gx, gy, 51) - 0.5) * TF * 0.8, py = y + (h01(gx, gy, 52) - 0.5) * TF * 0.8;
+    if (townEdge(px, py) > -12) continue;                                   // не на валу
+    const [wx, wy] = townWarp(px, py);
+    if (townZoneOf(px + wx, py + wy) !== 0) continue;                       // только в лесу
+    const g = grove(px * 1.4, py * 1.4);
+    let p = g > 0.5 ? Math.min(0.28, 0.12 + (g - 0.5) * 1.3) : 0.018;       // рощами; между ними — редкий сухостой
+    p *= 0.4 + 1.2 * vn(px / 40, py / 26, 53);
+    if (h01(gx, gy, 54) > p) continue;
+    town(pick(FOREST, h01(gx, gy, 55)), px, py, h01(gx, gy, 56));
   }
   flora.sort((a, b) => a.gy - b.gy);
   for (const t of flora) {
