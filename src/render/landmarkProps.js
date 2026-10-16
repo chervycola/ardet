@@ -8,6 +8,8 @@
 // ═══════════════════════════════════════
 import { landmarks, LM_SIZE } from '../world/landmarks.js';
 import { wind } from '../world/wind.js';
+import { warpedDist } from '../world/disc.js';
+import { thing, wearOf } from './things.js';
 
 const N = '#0D0B0A', K = '#D9CFB8', P = '#8A8D8F', V = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328', L2 = '#b0a284';
@@ -254,14 +256,22 @@ const DRAW = {
   },
 };
 
-// приметы — кусками с глубиной, как утварь дворов
+// приметы — кусками с глубиной, как утварь дворов; стоят в земле (render/things.js):
+// тень касания и земля стороны у подошвы. Рисуются каждый кадр — в них живое
+const LOOSE = new Set(['iceHole', 'boat', 'oasis', 'barge', 'locks']);   // на воде и вровень с землёй — без подножия
 export const landmarkProps = [];
 export function buildLandmarkProps() {
   landmarkProps.length = 0;
   for (const l of landmarks) {
     const [w, h] = LM_SIZE[l.kind], d = DRAW[l.kind];
     if (!d) continue;
-    landmarkProps.push({ x: l.x, gy: l.gy + 2, w: w + 6, h: h + 4, kind: l.kind, lm: l, draw(ctx) { d(ctx, l, stepNow); } });
+    const p = { x: l.x, gy: l.gy + 2, w: w + 6, h: h + 4, kind: l.kind, lm: l, draw(ctx) { d(ctx, l, stepNow); } };
+    if (!LOOSE.has(l.kind)) {
+      const T = thing({ x: l.x, gy: l.gy, w, h, live: true, draw: c => d(c, l, stepNow), kind: 'landmark',
+        wear: wearOf({ ring: l.ring, side: l.side, d: warpedDist(l.x, l.gy), seed: (l.seed | 0) + 7 }) });
+      p.draw = T.draw;
+    }
+    landmarkProps.push(p);
   }
   return landmarkProps;
 }

@@ -1024,6 +1024,106 @@ setCtx(ctx);
   });
 }
 
+// ═══ ВЕЩЬ В ЗЕМЛЕ И НЕ КОПИИ (ткань поля — после рощ, полей и примет) ═══
+{
+  const D = await imp('world/disc.js');
+  const M = await imp('world/locations.js');
+  const AG = await imp('render/archground.js');
+  const GR = await imp('render/ground.js');
+  const TH = await imp('render/things.js');
+  const FD = await imp('world/fields.js');
+  const F = await imp('world/flora.js');
+  const LM = await imp('world/landmarks.js');
+  const H = await imp('world/hang.js');
+  const ART = await imp('world/arteries.js');
+  const { ARCH_BY_RING } = await imp('sprites/arch/index.js');
+  const { FRAGMENTS } = await imp('sprites/fragments.js');
+  const { SEGMENTS } = await imp('content/ulitsa_db.js');
+  GR.setTissueBlockers([...M.locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })), ...AG.archGroundRects()]);
+  const yard = AG.archProps.filter(p => p.name);
+  const tissue = GR.buildTissue(yard);
+  // холст-самописец: что и чем рисовали
+  const rec = () => {
+    const log = [];
+    const ctx = new Proxy({ canvas: { width: 1, height: 1 } }, {
+      get(t, k) { if (k in t) return t[k]; return (...a) => { log.push([k, ...a]); return k === 'measureText' ? { width: 1 } : String(k).startsWith('create') ? { addColorStop: noop } : undefined; }; },
+      set(t, k, v) { log.push(['=' + k, v]); return true; },
+    });
+    return { log, ctx };
+  };
+  test('утварь: живое (огонь, вода, подвес) помечено live — его не запекают', () => {
+    for (const A of Object.values(ARCH_BY_RING)) for (const L of Object.values(A.props || {})) for (const p of L) {
+      const n0 = H._count(), a = rec(), b = rec();
+      p.draw(a.ctx, 500, 500, 0); p.draw(b.ctx, 500, 500, 37);
+      const live = H._count() > n0 || JSON.stringify(a.log) !== JSON.stringify(b.log);
+      assert(!live || p.live, `«${p.name}» живая, а не помечена live`);
+    }
+  });
+  test('обломки эпох: по три на кольцо, рисунок в своей рамке, краски канона', () => {
+    const OK = new Set(['#0D0B0A', '#D9CFB8', '#8A8D8F', '#3D4A3A', '#15100c', '#241c14', '#2a2620', '#34302a', '#3a3328', '#3a2818', '#c8b89a', '#b0a284'].map(c => c.toLowerCase()));
+    eq(FRAGMENTS.length, D.RINGS, 'колец');
+    for (const ring of FRAGMENTS) {
+      eq(ring.length, 3, 'обломков на кольцо');
+      for (const f of ring) {
+        const r = rec(); f.draw(r.ctx, 100, 200, 0);
+        for (const [k, ...a] of r.log) {
+          if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `«${f.name}»: краска ${a[0]} вне палитры`);
+          if (k !== 'fillRect') continue;
+          const [x, y, w, h] = a;
+          assert(x >= 100 - f.w / 2 - 1 && x + w <= 100 + f.w / 2 + 1, `«${f.name}» вылез вбок: ${x}..${x + w}`);
+          assert(y >= 200 - f.h - 1 && y + h <= 200, `«${f.name}» вылез по высоте: ${y}..${y + h}`);
+        }
+      }
+    }
+  });
+  test('ткань поля: вид своего кольца и стороны или обломок эпохи; не живое, не тёплое, не примета эпохи', () => {
+    assert(tissue.length > 200, `вещей ткани ${tissue.length}`);
+    for (const it of tissue) {
+      const own = ARCH_BY_RING[SEGMENTS[it.pr - 1].id].props[it.side] || [];
+      const K = own.find(p => p.name === it.kind) || FRAGMENTS[it.pr - 1].find(f => f.name === it.kind);
+      assert(K, `«${it.kind}» не из кольца ${it.pr} стороны ${it.side}`);
+      assert(!K.live && !K.unique, `«${it.kind}» — живое или примета эпохи`);
+      assert(!['кальян', 'самовар на столике', 'фонарь', 'лоток-ятай', 'ларёк'].includes(it.kind), `«${it.kind}» тёплое — брошенным не лежит`);
+    }
+  });
+  test('не копии: одна и та же вещь в кадр дважды не попадает — ни в поле, ни рядом с двором', () => {
+    const all = [...tissue.map(it => ({ x: it.thing.x, y: it.wy, d: it.thing.src, n: it.kind })), ...yard.map(p => ({ x: p.x, y: p.gy, d: p.kindDraw, n: p.name }))];
+    for (let i = 0; i < tissue.length; i++) for (let j = i + 1; j < all.length; j++) {
+      const a = all[i], b = all[j];
+      if (a.d !== b.d) continue;
+      assert(Math.abs(a.x - b.x) >= 640 || Math.abs(a.y - b.y) >= 360, `«${a.n}» дважды в кадре: (${a.x},${a.y}) и (${b.x},${b.y})`);
+    }
+  });
+  test('ткань поля: не в поле, не на примете, не под деревом, не на дороге', () => {
+    for (const it of tissue) {
+      const x = it.thing.x, y = it.wy;
+      assert((FD.fieldAt(x, y)?.kind ?? 'fallow') === 'fallow', `«${it.kind}» в поле (${x},${y})`);
+      assert(!F.floraIn(x - 18, y - 8, x + 18, y + 8).length, `«${it.kind}» под деревом (${x},${y})`);
+      for (const b of LM.landmarkBoxes()) assert(!(x + 16 > b.x0 && x - 16 < b.x1 && y + 4 > b.y0 && y - 30 < b.y1), `«${it.kind}» на примете (${x},${y})`);
+      assert(GR.tissueThingsIn(x - 1, y - 1, x + 1, y + 1).includes(it.thing), 'вещь не находится в своём кадре');
+      assert(!ART.onArtery(x, y, 4), `«${it.kind}» на дороге или в реке (${x},${y})`);
+    }
+  });
+  test('износ: старое глубже в земле, двор — нет; север под снегом, юг в песке, у огня копоть', () => {
+    const w = o => TH.wearOf({ side: 'west', d: 300, seed: 5, ...o });
+    let prev = Infinity;
+    for (let era = 1; era <= 9; era++) { const b = w({ ring: era }).bury; assert(b <= prev + 1e-9, `кольцо ${era} глубже прошлого`); prev = b; }
+    assert(w({ ring: 1 }).bury > 0.15, 'осевое не в земле');
+    eq(w({ ring: 7 }).bury, 0, 'катастрофы в земле');
+    eq(w({ ring: 1, yard: true }).bury, 0, 'во дворе вещь в землю не уходит');
+    assert(w({ ring: 4, old: true }).bury > w({ ring: 4 }).bury, 'обломок прошлой эпохи не глубже');
+    eq(TH.wearOf({ ring: 3, side: 'north', d: 500, seed: 1 }).foot, 'snow', 'север');
+    eq(TH.wearOf({ ring: 3, side: 'south', d: 500, seed: 1 }).foot, 'sand', 'юг');
+    assert(TH.wearOf({ ring: 9, side: 'east', d: D.RINGS * D.RING_W - 10, seed: 1 }).soot > 0.9, 'у огня без копоти');
+    eq(TH.wearOf({ ring: 9, side: 'east', d: 1500, seed: 1 }).soot, 0, 'копоть вдали от огня');
+    assert(w({ ring: 1 }).moss > w({ ring: 6 }).moss, 'мох в старом не гуще');
+    eq(TH.wearOf({ ring: 1, side: 'south', d: 100, seed: 1 }).moss, 0, 'мох в пустыне');
+    const sig = new Set();
+    for (let s = 0; s < 60; s++) { const o = TH.wearOf({ ring: 2, side: 'west', d: 300, seed: s }); sig.add([o.bury.toFixed(3), o.lean, o.chips].join()); }
+    assert(sig.size > 40, `разных зёрен ${sig.size} из 60`);
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

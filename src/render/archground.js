@@ -8,10 +8,10 @@
 // асфальт, бетон, плитка; у воды — вода.
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, trailPoint } from '../world/disc.js';
+import { TOWN, trailPoint, warpedDist } from '../world/disc.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
-import { t as now } from '../core/time.js';
 import { hash } from './draw.js';
+import { thing, wearOf } from './things.js';
 
 const NIGHT = [13, 11, 10], BONE = [217, 207, 184], ASH = [138, 141, 143];
 const MIST = [61, 74, 58], SEPIA = [58, 48, 38], SAND = [176, 162, 132];
@@ -735,7 +735,13 @@ function propsFor(e, ms, signs, boxes, water = []) {
     for (const c of cands) {
       const x = Math.round(c.x), gy = Math.round(c.gy);
       if (!free(x, gy, K.w, K.h)) continue;
-      const p = { x, gy, w: K.w, h: K.h, name: K.name, kindDraw: K.draw, draw(ctx) { K.draw(ctx, x, gy, now); } };
+      // вещь стоит в земле двора (render/things.js): тень касания, у подошвы —
+      // сугроб или нанос, если у стен двора они есть; износ — по эпохе и огню
+      const drift = STYLE[e.ringId]?.[e.side]?.drift;
+      const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, name: K.name, kind: 'yard',
+        wear: wearOf({ ring: e.ring, side: e.side, d: warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true,
+          foot: drift === 'snow' ? 'snow' : drift === 'sand' ? 'sand' : 'yard' }) });
+      const p = { x, gy, w: K.w, h: K.h, name: K.name, kindDraw: K.draw, thing: T, draw: T.draw };
       placed.push(p);
       archProps.push(p);
       break;

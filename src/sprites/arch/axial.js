@@ -728,17 +728,17 @@ export const ARCH = {
   props: {
     south: [
       { name: 'колодец-журавль у канала', w: 28, h: 28, draw: shaduf },
-      { name: 'жертвенник огня', w: 14, h: 22, draw: fireAltar },
-      { name: 'фонарь на посохе', w: 10, h: 26, unique: true, draw: lantern },
+      { name: 'жертвенник огня', live: true, w: 14, h: 22, draw: fireAltar },
+      { name: 'фонарь на посохе', live: true, w: 10, h: 26, unique: true, draw: lantern },
     ],
     east: [
       { name: 'колодец с воротом', w: 22, h: 24, draw: windlassWell },
       { name: 'весы пошлины', w: 22, h: 18, draw: tollScales },
-      { name: 'колокола на раме', w: 26, h: 20, draw: chimeBells },
+      { name: 'колокола на раме', live: true, w: 26, h: 20, draw: chimeBells },
     ],
     west: [
       { name: 'колесница', w: 30, h: 16, draw: chariot },
-      { name: 'прилавок с лампами', w: 24, h: 12, draw: lampStall },
+      { name: 'прилавок с лампами', live: true, w: 24, h: 12, draw: lampStall },
       { name: 'ткацкий станок', w: 16, h: 26, draw: loom },
     ],
     north: [

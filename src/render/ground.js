@@ -9,7 +9,6 @@ import { onArtery, nearRoad } from '../world/arteries.js';
 import { sideAt } from '../world/relief.js';
 import { hash } from './draw.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
-import { t as now } from '../core/time.js';
 import { scaler } from './scaler.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;
@@ -43,13 +42,25 @@ export function drawGroundMarks(ctx, cam) {
     ctx.beginPath(); ctx.arc(CORE.x, CORE.y, CORE.r, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
   }
-  drawTissue(ctx, cam);
 }
 
-// ═══ Ткань застройки: рассеянные структуры эпохи по кольцам ═══
-// Таблички перестают быть фишками в поле: вокруг — обломки среды.
-import { ringAt, CORE } from '../world/disc.js';
+// ═══ Ткань застройки: утварь эпохи в поле ═══
+// Таблички перестают быть фишками в поле: вокруг — обломки среды. Это та же
+// утварь, что во дворах (модуль кольца и стороны), только брошенная: стоит в
+// земле (render/things.js), старое — глубже; рядом с ней — обломки эпохи
+// (кладка, колонна, сруб, бочка, плита с арматурой…). Одна и та же вещь в
+// кадр дважды не попадает: вид выбирается при сборке мира так, чтобы не
+// повторить соседей и утварь ближних дворов; где все виды уже стоят рядом —
+// пусто. Живое (огонь, лампа, вода, подвес) брошенным не бывает — в ткань
+// не идёт.
+import { ringAt, CORE, WORLD_W, WORLD_H } from '../world/disc.js';
+import { fieldAt } from '../world/fields.js';
+import { floraIn } from '../world/flora.js';
+import { landmarkBoxes } from '../world/landmarks.js';
+import { thing, wearOf } from './things.js';
+import { FRAGMENTS } from '../sprites/fragments.js';
 const CELL = 150;
+const FRAME_X = 640, FRAME_Y = 360;   // «один кадр»: ближе — повтор видно
 // ткань не ложится на постройки, таблички и дворы
 let blockGrid = null;
 export function setTissueBlockers(boxes) {
@@ -78,7 +89,7 @@ function tissueBlocked(x0, y0, x1, y1) {
   }
   return false;
 }
-// клетка ткани: где лежит и что (детерминированно, без камеры; кэш)
+// клетка ткани: где лежит (детерминированно, без камеры; кэш)
 const cellCache = new Map();
 function tissueCell(gx, gy) {
   const key = gx * 100000 + gy;
@@ -91,8 +102,8 @@ function tissueCell(gx, gy) {
 function tissueCellRaw(gx, gy) {
   const h = hash(gx + 31, gy + 57, 29);
   if (h < 0.5) return null;
-  const wx = gx * CELL + 20 + ((h * 991) % (CELL - 60));
-  const wy = gy * CELL + 24 + ((h * 733) % (CELL - 60));
+  const wx = Math.round(gx * CELL + 20 + ((h * 991) % (CELL - 60)));
+  const wy = Math.round(gy * CELL + 24 + ((h * 733) % (CELL - 60)));
   const ring = ringAt(wx, wy);
   if (ring < 1 || ring > RINGS) return null;
   if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
@@ -103,99 +114,95 @@ function tissueCellRaw(gx, gy) {
   // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
   const d = warpedDist(wx, wy), frac = d / RING_W - (ring - 1);
   const pr = ring > 1 && frac < 0.22 && hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
-  const props = (ARCH_BY_RING[SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique);
-  const idx = props.length ? ((h * 977) | 0) % props.length : -1;
-  return { h, wx, wy, ring, side, props, idx, pr };
+  return { h, wx, wy, ring, side, pr, d, gx, gy };
 }
 
-// клетки ткани в прямоугольнике мира (для замеров и тестов)
+// виды ткани кольца и стороны: утварь модуля (кроме приметы эпохи, живого и
+// тёплого), за ней — обломки эпохи
+function kindsOf(pr, side) {
+  const own = (ARCH_BY_RING[SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique && !p.live && !warmKind(p));
+  return [...own, ...FRAGMENTS[pr - 1]];
+}
+// тёплое (огонь, свеча, лампа) брошенным в поле не лежит: тёплых пятен в кадре
+// не больше трёх, и все они — у жилья. Узнаю по краскам рисунка (без холста)
+const WARM = new Map();
+function warmKind(K) {
+  if (WARM.has(K.draw)) return WARM.get(K.draw);
+  let hot = false;
+  const look = v => {
+    if (typeof v !== 'string') return;
+    let c = null;
+    const m = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (m) { const h = m[1].length === 3 ? m[1].replace(/./g, ch => ch + ch) : m[1]; const n = parseInt(h, 16); c = [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    const r = v.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)/i);
+    if (r) c = [+r[1], +r[2], +r[3]];
+    if (c && c[0] > 200 && c[2] < 90) hot = true;          // та же мерка, что у теней: огонь
+  };
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? { width: 1, height: 1 } : k in t ? t[k]
+      : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop: (o, c) => look(c) })
+      : k === 'measureText' ? () => ({ width: 1 }) : () => {},
+    set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') look(v); t[k] = v; return true; },
+  });
+  try { K.draw(ctx, 0, 0, 0); } catch (e) { /* рисунок без холста не обязан работать */ }
+  WARM.set(K.draw, hot);
+  return hot;
+}
+
+// ── сборка ткани: один раз, после дворов, полей, примет и рощ ──
+// yard — утварь дворов ({ x, gy, kindDraw }): её вид рядом тоже занят
+const tissue = [];                 // { wx, wy, ring, side, pr, kind, thing }
+const tgrid = new Map();
+export function buildTissue(yard = []) {
+  tissue.length = 0; tgrid.clear();
+  const near = [...yard.map(p => ({ x: p.x, y: p.gy, draw: p.kindDraw }))];
+  const lms = landmarkBoxes();
+  const gx1 = Math.ceil(WORLD_W / CELL), gy1 = Math.ceil(WORLD_H / CELL);
+  for (let gy = 0; gy <= gy1; gy++) for (let gx = 0; gx <= gx1; gx++) {
+    const c = tissueCell(gx, gy);
+    if (!c) continue;
+    const cx = c.wx + 12;
+    // не в поле (кроме заброшенного), не на примете, не под деревом
+    if ((fieldAt(cx, c.wy)?.kind ?? 'fallow') !== 'fallow' || (fieldAt(c.wx, c.wy)?.kind ?? 'fallow') !== 'fallow') continue;
+    if (lms.some(b => cx + 16 > b.x0 && cx - 16 < b.x1 && c.wy + 4 > b.y0 && c.wy - 30 < b.y1)) continue;
+    if (floraIn(cx - 18, c.wy - 8, cx + 18, c.wy + 8).length) continue;
+    // вид: первый по зерну, которого нет в кадре вокруг; нет такого — пусто
+    const kinds = kindsOf(c.pr, c.side);
+    if (!kinds.length) continue;
+    const taken = new Set();
+    for (const o of near) if (Math.abs(o.x - cx) < FRAME_X && Math.abs(o.y - c.wy) < FRAME_Y) taken.add(o.draw);
+    const s0 = (c.h * 977) | 0;
+    let K = null;
+    for (let i = 0; i < kinds.length && !K; i++) { const k = kinds[(s0 + i) % kinds.length]; if (!taken.has(k.draw)) K = k; }
+    if (!K) continue;
+    const seed = (gx * 7349 + gy * 3571) >>> 0;
+    const T = thing({ x: cx, gy: c.wy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'tissue',
+      wear: wearOf({ ring: c.ring, era: c.pr, side: c.side, d: c.d, seed, old: c.pr !== c.ring }) });
+    const it = { wx: c.wx, wy: c.wy, ring: c.ring, side: c.side, pr: c.pr, kind: K.name, thing: T };
+    tissue.push(it);
+    near.push({ x: cx, y: c.wy, draw: K.draw });
+    const key = Math.floor(cx / CELL) * 100000 + Math.floor(c.wy / CELL);
+    if (!tgrid.has(key)) tgrid.set(key, []);
+    tgrid.get(key).push(it);
+  }
+  return tissue;
+}
+
+// ткань в прямоугольнике мира (для замеров и тестов)
 export function tissueIn(x0, y0, x1, y1) {
+  return tissueThings(x0, y0, x1, y1);
+}
+// вещи ткани, задевающие прямоугольник (для кадра: по глубине, с тенью)
+export function tissueThingsIn(x0, y0, x1, y1) {
+  return tissueThings(x0 - 24, y0, x1 + 24, y1 + 40).map(it => it.thing)
+    .filter(T => T.x + T.w / 2 + 6 > x0 && T.x - T.w / 2 - 6 < x1 && T.gy + 3 > y0 && T.gy - T.h - 6 < y1);
+}
+function tissueThings(x0, y0, x1, y1) {
   const out = [];
   for (let gy = Math.floor(y0 / CELL); gy <= Math.floor(y1 / CELL); gy++)
     for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) {
-      const c = tissueCell(gx, gy);
-      if (c && c.wx >= x0 && c.wx < x1 && c.wy >= y0 && c.wy < y1) out.push(c);
+      const L = tgrid.get(gx * 100000 + gy);
+      if (L) for (const it of L) if (it.thing.x >= x0 && it.thing.x < x1 && it.wy >= y0 && it.wy < y1) out.push(it);
     }
   return out;
-}
-
-export function drawTissue(ctx, cam) {
-  const gx0 = Math.floor((cam.x - 60) / CELL), gy0 = Math.floor((cam.y - 100) / CELL);
-  const gx1 = Math.ceil((cam.x + scaler.vw + 120) / CELL), gy1 = Math.ceil((cam.y + scaler.vh + 160) / CELL);
-  for (let gy = gy0; gy <= gy1; gy++) {
-    for (let gx = gx0; gx <= gx1; gx++) {
-      const c = tissueCell(gx, gy);
-      if (!c) continue;
-      // ткань — по кольцу И стороне света: утварь из модуля кольца;
-      // одна и та же вещь не лежит дважды в пределах кадра
-      if (c.idx >= 0) {
-        let dup = false;
-        for (let dy = -2; dy <= 2 && !dup; dy++) for (let dx = -4; dx <= 4 && !dup; dx++) {
-          if (!dx && !dy) continue;
-          const o = tissueCell(gx + dx, gy + dy);
-          if (o && o.idx === c.idx && o.pr === c.pr && o.side === c.side && o.h > c.h) dup = true;
-        }
-        if (!dup) {
-          if (c.pr !== c.ring) ctx.globalAlpha = 0.72;      // обломок прошлой эпохи — выцвел
-          c.props[c.idx].draw(ctx, c.wx + 12, c.wy, now);
-          ctx.globalAlpha = 1;
-        }
-        continue;
-      }
-      // сторона: снег севера белит верхушки
-      drawTissueItem(ctx, c.wx, c.wy, c.ring, ((c.h * 100) | 0) % 3, c.side === 'north');
-    }
-  }
-}
-
-function drawTissueItem(ctx, x, y, ring, v, north) {
-  const S = '#0f0b07', S2 = '#1a130c';
-  const R = (dx, dy, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x + dx, y + dy, w, h); };
-  switch (ring) {
-    case 1: // осевое: сырцовая кладка, черепки, вкопанный камень
-      if (v === 0) { R(0, 0, 26, 6, S); R(3, -5, 18, 5, S2); R(7, -9, 9, 4, S); }
-      else if (v === 1) { R(0, 0, 8, 4, S2); R(10, 2, 6, 3, S2); R(5, 5, 7, 3, S); }
-      else { R(0, -8, 6, 12, S); R(-2, 2, 10, 3, S2); }
-      break;
-    case 2: // портики: колонна целая/пенёк/фронтон на земле
-      if (v === 0) { R(0, -24, 5, 24, S); R(-2, -26, 9, 3, S2); R(-2, 0, 9, 2, S2); }
-      else if (v === 1) { R(0, -8, 6, 8, S); R(-2, -10, 10, 3, S2); }
-      else { ctx.fillStyle = S2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 12, y - 7); ctx.lineTo(x + 24, y); ctx.fill(); }
-      break;
-    case 3: // сад света: дерево-крона, арка, фонарик сада
-      if (v === 0) { R(2, -6, 3, 8, S); ctx.fillStyle = S2; ctx.beginPath(); ctx.arc(x + 3, y - 11, 7, 0, 7); ctx.fill(); }
-      else if (v === 1) { R(0, -14, 3, 14, S); R(9, -14, 3, 14, S); R(0, -16, 12, 3, S2); }
-      else { R(0, -10, 2, 10, S); R(-2, -13, 6, 4, S2); }
-      break;
-    case 4: // два очага: плетень, сруб-угол, стог
-      if (v === 0) { for (let i = 0; i < 5; i++) R(i * 5, -8 - (i % 2) * 2, 2, 8 + (i % 2) * 2, S); R(-1, -6, 24, 2, S2); }
-      else if (v === 1) { R(0, -10, 14, 10, S); R(-2, -12, 18, 3, S2); }
-      else { ctx.fillStyle = S2; ctx.beginPath(); ctx.arc(x + 6, y, 7, Math.PI, 0); ctx.fill(); }
-      break;
-    case 5: // просвещение: балюстрада, столб фонаря, тумба
-      if (v === 0) { for (let i = 0; i < 4; i++) R(i * 6, -8, 2, 8, S); R(-1, -10, 21, 2, S2); R(-1, 0, 21, 2, S2); }
-      else if (v === 1) { R(0, -18, 2, 18, S); R(-2, -20, 6, 3, S2); }
-      else { R(0, -9, 8, 9, S2); R(-1, -11, 10, 2, S); }
-      break;
-    case 6: // пар и тени: труба-огрызок, кирпичная стена с окном, бочка
-      if (v === 0) { R(0, -16, 7, 16, S2); R(-1, -18, 9, 2, S); }
-      else if (v === 1) { R(0, -12, 20, 12, S); R(4, -9, 5, 5, '#050510'); }
-      else { R(0, -8, 8, 8, S2); R(-1, -9, 10, 2, S); R(-1, -4, 10, 1, S); }
-      break;
-    case 7: // катастрофы: плита с арматурой, воронка, стена-огрызок
-      if (v === 0) { R(0, -6, 18, 6, S); R(3, -12, 1, 6, '#2a2a2a'); R(9, -14, 1, 8, '#2a2a2a'); }
-      else if (v === 1) { R(0, -2, 18, 4, '#0a0806'); R(2, -3, 14, 1, '#0a0806'); R(2, 2, 14, 1, '#0a0806'); R(3, -4, 12, 1, 'rgba(217,207,184,0.35)'); }   // воронка — на земле, кромка дальнего края
-      else { R(0, -14, 12, 14, S); R(0, -14, 12, 3, '#050510'); }
-      break;
-    case 8: // неон: бетонный забор, столб с проводами, остов ларька
-      if (v === 0) { for (let i = 0; i < 3; i++) R(i * 9, -10, 8, 10, S); R(-1, -11, 28, 2, S2); }
-      else if (v === 1) { R(0, -20, 2, 20, S); R(-6, -18, 14, 1, S2); R(-6, -15, 14, 1, S2); }
-      else { R(0, -10, 12, 10, S2); R(-1, -12, 14, 2, '#3a1420'); }
-      break;
-    default: // сейчас: дорожный блок, стеклобетон, знак без текста
-      if (v === 0) { R(0, -6, 16, 6, '#2a2a2e'); R(2, -6, 3, 6, '#3a3a40'); }
-      else if (v === 1) { R(0, -16, 10, 16, S); R(1, -15, 2, 14, 'rgba(138,141,143,0.2)'); }
-      else { R(0, -12, 2, 12, S); R(-3, -16, 8, 5, S2); }
-  }
-  if (north) { ctx.fillStyle = 'rgba(220,232,240,0.5)'; ctx.fillRect(x - 2, y - (ring === 2 ? 26 : 16), 12, 1); }
 }

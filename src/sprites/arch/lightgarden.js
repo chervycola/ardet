@@ -835,10 +835,10 @@ export const ARCH = {
     south: [
       { name: 'нория', w: 30, h: 28, draw: noria },
       { name: 'кувшины у дорожки', w: 20, h: 13, draw: jugs },
-      { name: 'фонтан-чаша', w: 18, h: 14, draw: fountain },
+      { name: 'фонтан-чаша', live: true, w: 18, h: 14, draw: fountain },
     ],
     east: [
-      { name: 'каменный фонарь', w: 12, h: 22, draw: toro },
+      { name: 'каменный фонарь', live: true, w: 12, h: 22, draw: toro },
       { name: 'каменная чаша с жёлобом', w: 18, h: 12, draw: tsukubai },
       { name: 'поленница и зола', w: 26, h: 14, draw: woodpile },
     ],

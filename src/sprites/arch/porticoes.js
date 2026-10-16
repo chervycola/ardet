@@ -751,7 +751,7 @@ export const ARCH = {
     ],
     west: [
       { name: 'сундук с кодексами', w: 16, h: 13, draw: bookChest },
-      { name: 'жаровня', w: 12, h: 12, draw: brazier },
+      { name: 'жаровня', live: true, w: 12, h: 12, draw: brazier },
       { name: 'бочки', w: 22, h: 13, draw: barrels },
     ],
     north: [

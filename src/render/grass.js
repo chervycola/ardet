@@ -39,6 +39,9 @@ function palette(n, side) {
   return (PAL[key] = { base: css(base), tip: css(tip) });
 }
 
+// цвета травы кольца и стороны — для кочек у подошвы вещей (render/things.js)
+export const grassPalette = (n, side) => palette(n, side);
+
 function sector(x, y) {
   const dn = TOWN.y0 - y, ds = y - TOWN.y1, dw = TOWN.x0 - x, de = x - TOWN.x1;
   const m = Math.max(dn, ds, dw, de);

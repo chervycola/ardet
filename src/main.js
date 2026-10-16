@@ -72,7 +72,8 @@ import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
-import { drawGroundMarks, setTissueBlockers } from './render/ground.js';
+import { drawGroundMarks, setTissueBlockers, buildTissue, tissueThingsIn } from './render/ground.js';
+import { thingCaster } from './render/things.js';
 import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
@@ -127,6 +128,7 @@ setTissueBlockers([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
 ]);
+buildTissue(archProps.filter(p => p.name));    // утварь эпох в поле: не повторяет соседей и ближние дворы
 initBunting(locations);                        // флаги Шута: гирлянда от фонаря к шесту
 initUI();
 initMetaFx();
@@ -312,6 +314,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const p of arteryPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!p.noShadow) out.push(propCaster(p));
   for (const tr of floraIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) if (!LOW.has(tr.sp)) out.push(treeCaster(tr, maskFrom));
   for (const p of landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, t)) if (!FLATLM.has(p.kind)) out.push(propCaster(p));
+  for (const T of tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));   // ткань поля
   heroCaster.ox = player.x; heroCaster.oy = player.y;
   out.push(heroCaster);
   return out;
@@ -424,6 +427,7 @@ function render() {
   for (const p of arteryPropsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 80)) drawList.push({ k: p.gy, prop: p });   // акведуки, ЛЭП, мосты
   for (const tr of floraIn(camX - 18, camY - 4, camX + vw + 18, camY + vh + 46)) drawList.push({ k: tr.gy, tree: tr });   // рощи и камыш
   for (const p of landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, t)) drawList.push({ k: p.gy, prop: p });   // приметы
+  for (const T of tissueThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40)) drawList.push({ k: T.gy, prop: T });   // ткань поля — стоит в земле
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
