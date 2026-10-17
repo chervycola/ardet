@@ -50,6 +50,7 @@ export const HW = {
   arcade: 3, poles: 0, pylons: 0, flyover: 5,
   street: 5, lane: 4,                                         // улицы квартала городка: главные и переулки
   motorway: 7,                                                // брошенная трасса городка
+  path: 2,                                                    // тропинка городка — к дальним местам
 };
 // на земле — по ней ходят; поднятое — проходишь понизу (на земле только тень)
 export const RAISED = new Set(['aqueduct', 'pipe', 'arcade', 'poles', 'pylons', 'flyover']);

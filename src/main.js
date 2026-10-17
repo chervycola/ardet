@@ -303,7 +303,7 @@ function propCaster(p) {
 const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
   setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
 }, -6, -10, 26, 23) };
-const LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag']);   // низкое тени по солнцу не кладёт (трава и камни — тоже)
+const LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag', 'deadreed']);   // низкое тени по солнцу не кладёт (трава и камни — тоже)
 const FLATLM = new Set(['iceHole', 'boat', 'oasis']);   // приметы вровень с землёй
 function shadowCasters(camX, camY, vw, vh) {
   const pad = 170, out = [];

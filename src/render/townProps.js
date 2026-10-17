@@ -4,10 +4,11 @@
 // дальние перила с настилом — за странником, ближние — перед ним (на мосту
 // стоят). Свет слева, кромка пеплом справа.
 // ═══════════════════════════════════════
-import { BRIDGE, FOUNDATIONS, LAMPS, CARS, BUFFER } from '../world/town.js';
+import { BRIDGE, FOUNDATIONS, LAMPS, CARS, BUFFER, PIPES } from '../world/town.js';
 import { thing, wearOf } from './things.js';
 import { quarterLamp, quarterRuin } from '../sprites/quarter.js';
 import { carWreck, bufferStop } from '../sprites/highway.js';
+import { pipePiece, pipeElbow } from '../sprites/toxic.js';
 
 const NI = '#0D0B0A', AS = '#8A8D8F';
 const K0 = '#15100c', K1 = '#241c14', K3 = '#34302a', K4 = '#3a3328', BR2 = '#3a2818', L2 = '#b0a284';
@@ -57,10 +58,11 @@ export function bridgePieces() {
   return pieces;
 }
 
-// ── квартал и шоссе (world/town.js): на фундаментах — огрызки стен, трубы,
-// арки; вдоль главных — мёртвые фонари; вдоль трассы — брошенные машины, за
-// поездом — тупик. Вещи в земле (render/things.js): тень касания, щебень у
-// подошвы, сколы, мох старого камня; фонарь не кренится — гнётся
+// ── квартал, шоссе, отрава (world/town.js): на фундаментах — огрызки стен,
+// трубы, арки; вдоль главных — мёртвые фонари; вдоль трассы — брошенные
+// машины, за поездом — тупик; от трубопровода к озеру — ржавые трубы. Вещи в
+// земле (render/things.js): тень касания, щебень у подошвы, сколы, мох
+// старого камня; фонарь и труба не кренятся
 let things = null;
 function buildThings() {
   const out = [];
@@ -80,6 +82,11 @@ function buildThings() {
     const K = carWreck(m.v);
     out.push(thing({ x: m.x, gy: m.gy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'town',
       wear: wearOf({ ring: 1, era: 8, side: 'plain', d: 0, seed: m.x * 3 + m.gy * 5, foot: 'grit' }) }));
+  }
+  for (const p of PIPES) {
+    const K = p.kind === 'elbow' ? pipeElbow(p.H) : pipePiece(p.kind, p.x, p.L), wear = wearOf({ ring: 1, era: 7, side: 'plain', d: 0, seed: p.x * 5 + 3, foot: 'grit' });
+    wear.lean = 0; wear.bury = 0;                                     // труба на опорах: не кренится и не тонет
+    out.push(thing({ x: p.x, gy: p.gy, w: K.w, h: K.h, draw: K.draw, name: K.name, kind: 'town', wear }));
   }
   const B = bufferStop;
   out.push(thing({ x: BUFFER.x, gy: BUFFER.gy, w: B.w, h: B.h, draw: B.draw, name: B.name, kind: 'town',

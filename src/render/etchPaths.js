@@ -54,6 +54,7 @@ const O = {
   masph: ov(mixc(NIGHT, ASH, 0.18), 1), masph2: ov(mixc(NIGHT, ASH, 0.25), 1), mcrack: ov(mixc(NIGHT, ASH, 0.04), 1),
   mweed: ov(mixc(MGLA, NIGHT, 0.3), 1), mrim: ov(mixc(NIGHT, ASH, 0.1), 1), mline: ov(mixc(BONE, NIGHT, 0.55), 1),
   mshoulder: ov(mixc(mixc(ASH, SEPIA, 0.5), NIGHT, 0.45), 1),
+  path: ov(BONE, 0.2),                                                // тропинка городка
 };
 
 function ih(x, y, s) {
@@ -76,6 +77,10 @@ function road(st, u, v, hw, x, y, fire) {
     case 'trail':
       if (ih(x, y, 7) < 0.06) return O.pebble;
       return av > hw - 0.8 ? O.trailEdge : O.trail;
+    case 'path':                                                     // тропинка городка: узко, край рвётся, местами теряется в земле
+      if (ih(Math.floor(u / 7), 3, 33) < 0.12) return 0;
+      if (av > hw - 0.7) return ih(x >> 1, y >> 1, 35) < 0.5 ? O.trailEdge : 0;
+      return ih(x, y, 37) < 0.05 ? O.pebble : O.path;
     case 'paved': {
       if (av > hw - 0.8) return O.kerb;
       const row = Math.floor((v + hw) / 3.6), uu = u / 5.2 + (row & 1) * 0.5, cell = Math.floor(uu);
@@ -242,7 +247,7 @@ function field(f, x, y, edge) {
 
 // буферы плитки: ближайшая линия своего слоя (числами — без мусора на каждую точку)
 const STAGES = [null, 'trail', 'paved', 'cobble', 'asphalt', 'highway', 'silk', 'caravan', 'winter', 'portage', 'rail', 'net',
-  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover', 'bed', 'street', 'lane', 'motorway'];
+  'stream', 'aqueduct', 'canal', 'pipe', 'dry', 'arcade', 'poles', 'pylons', 'flyover', 'bed', 'street', 'lane', 'motorway', 'path'];
 const SCODE = Object.fromEntries(STAGES.map((s, i) => [s, i]));
 let N = 0, bD, bU, bV, bH, bF, bS;
 const LAYER = { river: 0, sky: 1, arc: 2, road: 3 };

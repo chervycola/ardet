@@ -8,12 +8,12 @@
 // ═══════════════════════════════════════
 import { OV } from './etchPaths.js';
 import { TOWN } from '../world/disc.js';
-import { FOUNDATIONS } from '../world/town.js';
+import { FOUNDATIONS, PUDDLES, LOT } from '../world/town.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const mix = (a, b, k) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * k));
 const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
-const STONE = mix(mix(ASH, SEPIA, 0.35), NIGHT, 0.25);
+const STONE = mix(mix(ASH, SEPIA, 0.35), NIGHT, 0.25), FILM = mix(MGLA, NIGHT, 0.28);
 const tov = (col, a) => { OV.push({ col, a }); return OV.length - 1; };
 const T = {
   needle: tov(mix(MGLA, NIGHT, 0.25), 0.6), twig: tov(NIGHT, 0.45), bark: tov(BONE, 0.13),
@@ -24,6 +24,12 @@ const T = {
   // фундаменты квартала: верх кладки к свету, грань к нам, тень; внутри — щебень
   fTop: tov(mix(STONE, NIGHT, 0.22), 1), fLit: tov(STONE, 1), fFace: tov(NIGHT, 0.5), fShade: tov(NIGHT, 0.3),
   fFloor: tov(NIGHT, 0.14), fRubble: tov(mix(STONE, NIGHT, 0.12), 1), fTile: tov(BONE, 0.06),
+  // лужи отравы: плёнка мглой, радужные полосы — пеплом, костью, киноварью; блик неба; мокрая кромка, соль
+  pFilm: tov(FILM, 1), pDeep: tov(mix(MGLA, NIGHT, 0.5), 1), pSheenA: tov(mix(FILM, ASH, 0.38), 1), pSheenB: tov(mix(FILM, BONE, 0.22), 1),
+  pSheenR: tov(mix(FILM, hex('#C23B2B'), 0.32), 1), pGlint: tov(mix(MGLA, BONE, 0.55), 1), pRim: tov(NIGHT, 0.5), pSalt: tov(BONE, 0.1),
+  // стоянка: асфальт пятнами, разметка выцвела в кость, трещины с травой, масло, бордюр
+  lotA: tov(mix(NIGHT, ASH, 0.19), 1), lotB: tov(mix(NIGHT, ASH, 0.24), 1), lotLine: tov(mix(BONE, NIGHT, 0.62), 1), lotCrack: tov(mix(NIGHT, ASH, 0.05), 1),
+  lotWeed: tov(mix(MGLA, NIGHT, 0.3), 1), lotOil: tov(mix(NIGHT, ASH, 0.1), 1), lotKerb: tov(mix(ASH, NIGHT, 0.5), 1),
 };
 // зоны (world/relief.js: TOWN_ZONES): 0 лес, 1 отрава, 2 квартал, 3 шоссе, 4 посёлок
 const FOREST = 0, TOXIC = 1, QUARTER = 2, HIGHWAY = 3, SETTLE = 4;
@@ -75,6 +81,48 @@ function foundation(f, put) {
   }
 }
 
+// лужа отравы: неровный эллипс (вдвое площе по глубине); плёнка, к середине
+// темнее; радужные полосы наискось — пеплом и костью, одна — киноварью; блик
+// неба у дальнего левого края; мокрая кромка с прорехами, за ней — соль
+function puddle(p, put) {
+  const Z = TOXIC, R = p.r, ry = 0.45;
+  for (let dy = -Math.ceil(R * ry * 1.8); dy <= Math.ceil(R * ry * 1.8); dy++) for (let dx = -Math.ceil(R * 1.8); dx <= Math.ceil(R * 1.8); dx++) {
+    const a = Math.atan2(dy / ry, dx), rr = R * (1 + 0.15 * Math.sin(3 * a + p.seed) + 0.1 * Math.sin(5 * a + 2 * p.seed));
+    const e = (dx / rr) ** 2 + (dy / (rr * ry)) ** 2, x = p.x + dx, y = p.y + dy;
+    if (e > 2.9) continue;
+    if (e > 1.85) { if (ih(x, y, 181) < 0.14) put(x, y, Z, T.pSalt); continue; }
+    if (e > 1) { if (ih(x, y, 183) < 0.93) put(x, y, Z, T.pRim); continue; }
+    const band = (dx * 0.35 + dy * 1.5 + p.seed * 1.7) / 3.2, f = band - Math.floor(band), k = (Math.floor(band) % 5 + 5) % 5;
+    let o = e < 0.25 ? T.pDeep : T.pFilm;
+    if (f < 0.28 && e < 0.85) o = k === 0 ? T.pSheenA : k === 2 ? T.pSheenB : k === 3 && p.seed % 3 === 1 ? T.pSheenR : o;
+    if (dy === -Math.round(rr * ry * 0.5) && dx > -rr * 0.65 && dx < -rr * 0.1) o = T.pGlint;          // блик неба — штрихом у дальнего края
+    put(x, y, Z, o);
+  }
+}
+
+// стоянка у «Вавилона»: край рваный, асфальт пятнами; три ряда мест — белые
+// полосы выцвели и рвутся, по краю ряда — линия; трещины сеткой, в них трава;
+// масло — пятнами на местах; бордюр по краю кусками
+function lot(x0, y0, S, put) {
+  const Z = HIGHWAY, L = LOT, cw = (L.x1 - L.x0) / 2, ch = (L.y1 - L.y0) / 2, mx = L.x0 + cw, my = L.y0 + ch;
+  const ROWS = [[L.y0 + 6, L.y0 + 36], [L.y0 + 62, L.y0 + 92], [L.y0 + 112, L.y1 - 6]];   // ряды мест: от и до
+  for (let y = Math.max(y0, L.y0 - 6); y < Math.min(y0 + S, L.y1 + 6); y++) for (let x = Math.max(x0, L.x0 - 6); x < Math.min(x0 + S, L.x1 + 6); x++) {
+    const e = Math.max(Math.abs(x - mx) / cw, Math.abs(y - my) / ch) + (ih(x >> 3, y >> 3, 191) - 0.5) * 0.07 + (ih(x >> 1, y >> 1, 192) - 0.5) * 0.025;
+    if (e > 1 || (e > 0.9 && ih(x >> 2, y >> 2, 194) < 0.3)) continue;                 // край осыпается, у кромки асфальт выкрошен
+    let o = ih(x >> 3, y >> 3, 193) < 0.3 ? T.lotB : T.lotA;
+    if (e > 0.985 && ih(x >> 2, y >> 1, 195) < 0.6) o = T.lotKerb;
+    const row = ROWS.find(([a, b]) => y >= a && y <= b);
+    if (row) {
+      const sx = (x - L.x0) % 14;
+      if ((sx === 0 || y === row[0] || y === row[1]) && ih(x >> 1, y >> 2, 197) < 0.62) o = T.lotLine;
+      else if (sx > 3 && sx < 11 && ih((x - L.x0) / 14 | 0, row[0], 199) < 0.18 && Math.abs(y - (row[0] + row[1]) / 2) < 6) o = T.lotOil;
+    }
+    const cu = (x * 0.13 + 0.4 * Math.sin(y * 0.11 + x * 0.02)) % 1, cv = (y * 0.09 + 0.5 * Math.sin(x * 0.07)) % 1;
+    if ((cu < 0.04 || (cv < 0.035 && ih(x >> 3, y >> 3, 201) < 0.5)) && e < 0.97) o = ih(x, y, 203) < 0.3 ? T.lotWeed : T.lotCrack;
+    put(x, y, Z, o);
+  }
+}
+
 // накладки зон в плитку: x0, y0 — угол, S — сторона; mat — краски (зоны городка < 8);
 // out — накладки (свободное — 0)
 export function stampTown(x0, y0, S, mat, out) {
@@ -87,8 +135,10 @@ export function stampTown(x0, y0, S, mat, out) {
     if (mat[k] === z && !out[k]) out[k] = o;
   };
   const line = (x, y, dx, dy, n, z, o) => { for (let i = 0; i < n; i++) put(Math.round(x + dx * i), Math.round(y + dy * i), z, o); };
-  // фундаменты домов квартала (world/town.js) — раньше крошек, чтобы те их не пятнали
+  // фундаменты домов квартала и лужи отравы (world/town.js) — раньше крошек, чтобы те их не пятнали
   for (const f of FOUNDATIONS) if (f.x1 + 3 >= x0 && f.x0 - 3 < x0 + S && f.y1 + 3 >= y0 && f.y0 - 3 < y0 + S) foundation(f, put);
+  for (const p of PUDDLES) if (p.x + p.r * 1.8 >= x0 && p.x - p.r * 1.8 < x0 + S && p.y + p.r >= y0 && p.y - p.r < y0 + S) puddle(p, put);
+  if (LOT.x1 + 6 >= x0 && LOT.x0 - 6 < x0 + S && LOT.y1 + 6 >= y0 && LOT.y0 - 6 < y0 + S) lot(x0, y0, S, put);
   // штрихи и крошки — по клеткам 6×6, с запасом за край плитки (стыков нет)
   const C = 6;
   for (let cy = Math.floor(y0 / C) - 1; cy <= Math.floor((y0 + S) / C) + 1; cy++) {

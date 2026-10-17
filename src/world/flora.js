@@ -12,6 +12,8 @@
 // ═══════════════════════════════════════
 import { TOWN, RING_W, RINGS, WORLD_W, WORLD_H, warpedDist } from './disc.js';
 import { sideAt, townZoneOf, townWarp, townEdge } from './relief.js';
+import { PUDDLES } from './town.js';
+import { locations } from './locations.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
 import { fieldAt } from './fields.js';
@@ -78,6 +80,7 @@ export const SIZE = {
   olive: [18, 18], bamboo: [14, 34], willow: [24, 26], poplar: [10, 40], fruit: [14, 16], street: [12, 22],
   dead: [18, 26], stump: [8, 5], bush: [12, 8], reed: [8, 12],
   deadspruce: [16, 34], snag: [8, 18], log: [36, 11],          // Мёртвый лес городка: сухая ель, обломанный ствол, бурелом
+  deadreed: [12, 15],                                            // мёртвый камыш у отравы
 };
 // аллеи вдоль дорог: в каких кольцах какой стороны дорогу обсаживали
 const ALLEY = { west: { 5: 'poplar', 6: 'poplar' }, plain: { 5: 'poplar', 6: 'birch', 8: 'poplar' }, south: { 6: 'palm' }, east: {}, north: {} };
@@ -200,7 +203,7 @@ export function buildFlora(skip = [], oases = []) {
     const r = Math.max(3, SIZE[sp][0] * 0.3);
     if (onArtery(x, gy, r + 3) || taken(grid, x, gy, r)) return false;
     for (const b of skip) if (x > b.x0 - r && x < b.x1 + r && gy > b.y0 && gy < b.y1 + 4) return false;
-    put(grid, { sp, x, gy, v: Math.floor(seed * 6), ring: 0, side: 'town', snow: false, town: true }, r);
+    put(grid, { sp, x, gy, v: Math.floor(seed * 6), ring: 0, side: 'town', snow: false, town: 'forest' }, r);
     return true;
   };
   const TF = 20, FOREST = [['dead', 40], ['deadspruce', 28], ['snag', 12], ['stump', 12], ['log', 8]].map(([sp, w]) => ({ sp, w }));
@@ -215,6 +218,29 @@ export function buildFlora(skip = [], oases = []) {
     p *= 0.4 + 1.2 * vn(px / 40, py / 26, 53);
     if (h01(gx, gy, 54) > p) continue;
     town(pick(FOREST, h01(gx, gy, 55)), px, py, h01(gx, gy, 56));
+  }
+  // 5) мёртвый камыш отравы: по берегу Токсичного озера — кустами, гуще с юга и
+  //    запада; у луж с плёнкой — по кромке. Не на тропах, не друг на друге
+  const reed = (x, gy, seed) => {
+    x = Math.round(x); gy = Math.round(gy);
+    if (onArtery(x, gy, 5) || taken(grid, x, gy, 4)) return;
+    put(grid, { sp: 'deadreed', x, gy, v: Math.floor(seed * 6), ring: 0, side: 'town', snow: false, town: 'toxic' }, 4);
+  };
+  const lake = locations.find(l => l.id === 'lake');
+  if (lake) {
+    const cx = lake.x + 51, cy = lake.y + 30;                               // гладь озера (sprites/locations: draw_lake)
+    for (let k = 0; k < 64; k++) {
+      const a = k / 64 * Math.PI * 2, s = Math.sin(a), c = Math.cos(a);
+      const want = 0.12 + 0.45 * Math.max(0, s) + 0.3 * Math.max(0, -c);      // юг и запад гуще, север — редко
+      if (h01(k, 3, 91) > want) continue;
+      const rr = 1.04 + h01(k, 4, 93) * 0.16;
+      reed(cx + c * 50 * rr, cy + s * 29 * rr + 2, h01(k, 5, 95));
+    }
+  }
+  for (const p of PUDDLES) for (let k = 0; k < 3; k++) {
+    if (h01(p.x, k, 97) < 0.35) continue;
+    const a = h01(p.x, k, 99) * Math.PI * 2;
+    reed(p.x + Math.cos(a) * p.r * 1.25, p.y + Math.sin(a) * p.r * 0.6 + 1, h01(p.y, k, 101));
   }
   flora.sort((a, b) => a.gy - b.gy);
   for (const t of flora) {

@@ -190,7 +190,7 @@ export function draw_campfire(x, y) {
       const fy=y+18-i*2.5-Math.abs(Math.sin(f*1.3+i*.6))*4;
       const s=Math.max(1,6-Math.floor(i*.4));
       X.globalAlpha=1-i*.06;
-      rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#ffeecc','#fff','#fff','#fff'][i]);
+      rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#D9CFB8','#D9CFB8','#D9CFB8','#D9CFB8'][i]);
     }
     X.globalAlpha=1;
 
@@ -512,7 +512,7 @@ export function draw_library(x, y) {
         if(hash(b,row+x,11)>.3){
           const bx=x+15+b*2.4;
           const bh=3+Math.floor(hash(b,row,22)*4);
-          const bc=[P.crimson,'#2a1a0a','#1a2a1a',P.dwood,P.damber,P.indigo,'#3a1a08','#0a1a2a','#2a0a2a'][Math.floor(hash(b,row,44)*9)];
+          const bc=[P.crimson,'#2a1a0a','#1a2a1a',P.dwood,P.damber,P.indigo,'#3a1a08','#1b1e18','#2a2620'][Math.floor(hash(b,row,44)*9)];
           rect(X,bx,sy_+6-bh,2,bh,bc);
           if(hash(b,row,55)>.6)px(X,bx,sy_+6-bh+1,P.gold);
         }
@@ -825,7 +825,7 @@ export function draw_tent(x, y) {
     // ── BOOKS STACKED on left ──
     rect(X,x+10,y+42,6,2,'#2a1a08');
     rect(X,x+10,y+44,6,2,'#4a1a0a');
-    rect(X,x+10,y+46,6,2,'#1b1464');
+    rect(X,x+10,y+46,6,2,'#252b22');
     rect(X,x+10,y+48,6,2,'#3a2a18');
     // Gold lettering on spines
     px(X,x+12,y+43,P.gold);
@@ -925,7 +925,7 @@ export function draw_graffiti(x, y) {
     X.fillStyle='#6b0f1a';
     rect(X,x+40,y+4,2,4);rect(X,x+40,y+5,4,1);rect(X,x+42,y+4,2,4);
     // Small "Z" crossed out (red strike)
-    X.fillStyle='#1b1464';
+    X.fillStyle='#252b22';
     rect(X,x+46,y+4,4,1);rect(X,x+48,y+5,2,1);rect(X,x+46,y+6,2,1);rect(X,x+46,y+7,4,1);
     X.strokeStyle='#6b0f1a';X.lineWidth=1;
     X.beginPath();X.moveTo(x+45,y+3);X.lineTo(x+51,y+9);X.stroke();
@@ -1064,18 +1064,18 @@ export function draw_radio(x, y) {
     rect(X,x+33,y+80,6,4,'#0a0a10');
     // Screen — bright and endlessly scrolling
     const scrollY=(t*.1)%12;
-    X.fillStyle='#1e3a5f';
-    rect(X,x+33,y+80,6,3,'#1e3a5f');
+    X.fillStyle='#2f372c';
+    rect(X,x+33,y+80,6,3,'#2f372c');
     // Scrolling "feed" lines
-    X.fillStyle='#4a7fb5';
+    X.fillStyle='#8A8D8F';
     for(let i=0;i<4;i++){
       const fy=y+80+((i*4-scrollY/3)%4);
-      rect(X,x+33,fy,6,1,i%2?'#4a7fb5':'#3a6fa5');
+      rect(X,x+33,fy,6,1,i%2?'#8A8D8F':'#6b726d');
     }
     // Glow
     X.globalAlpha=.2+.1*Math.sin(t*.05);
     const phGlow=X.createRadialGradient(x+36,y+82,0,x+36,y+82,14);
-    phGlow.addColorStop(0,'rgba(74,127,181,1)');
+    phGlow.addColorStop(0,'rgba(138,141,143,1)');
     phGlow.addColorStop(1,'rgba(0,0,0,0)');
     X.fillStyle=phGlow;X.fillRect(x+22,y+68,28,22);
     X.globalAlpha=1;
@@ -1121,11 +1121,11 @@ export function draw_radio(x, y) {
     X.beginPath();X.moveTo(x-4,y+84);X.lineTo(x-2,y+88);X.stroke();
     X.strokeStyle='#4a1a1a';
     X.beginPath();X.moveTo(x-5,y+84);X.lineTo(x-7,y+88);X.stroke();
-    X.strokeStyle='#1a1a4a';
+    X.strokeStyle='#1b1e18';
     X.beginPath();X.moveTo(x-3,y+84);X.lineTo(x+1,y+87);X.stroke();
 
     // Stickers on the side (CA / SCL / AIQ)
-    rect(X,x-7,y+71,5,2,'#4a7fb5');
+    rect(X,x-7,y+71,5,2,'#8A8D8F');
     X.fillStyle=P.bone;X.font='3px "Press Start 2P"';
     X.globalAlpha=.7;
     X.fillText('SCL',x-7,y+73);
@@ -1137,12 +1137,12 @@ export function draw_radio(x, y) {
     X.fillText('CA',x-7,y+76);
     X.globalAlpha=1;
     // Red X through both stickers
-    X.strokeStyle='#ffffff';X.lineWidth=1;
+    X.strokeStyle='#D9CFB8';X.lineWidth=1;
     X.beginPath();X.moveTo(x-7,y+71);X.lineTo(x-2,y+76);X.stroke();
     X.beginPath();X.moveTo(x-2,y+71);X.lineTo(x-7,y+76);X.stroke();
     // New label "the algorithm ≠ neutral"
     rect(X,x-7,y+78,5,2,'#0a0a0a');
-    X.fillStyle='#4a7fb5';
+    X.fillStyle='#8A8D8F';
     X.globalAlpha=.6;
     X.fillText('ALG≠',x-7,y+80);
     X.globalAlpha=1;
@@ -1194,7 +1194,7 @@ export function draw_radio(x, y) {
     X.globalAlpha=1;
 
     // ── Troll farm sticker — IRA St.Petersburg ──
-    rect(X,x+24,y+68,4,3,'#1b1464');
+    rect(X,x+24,y+68,4,3,'#252b22');
     X.fillStyle='#e8dcc8';
     X.globalAlpha=.5;
     X.fillText('IRA',x+25,y+71);
@@ -1366,8 +1366,8 @@ export function draw_cross(x, y) {
     const ribSway=Math.sin(t*.02)*2;
     rect(X,x+3+ribSway*.2,y+16,1,5,'#6b0f1a');
     rect(X,x+4+ribSway*.3,y+18,1,4,'#4a0a12');
-    rect(X,x+24+ribSway*.2,y+16,1,6,'#1b1464');
-    rect(X,x+23+ribSway*.3,y+18,1,4,'#0e0a38');
+    rect(X,x+24+ribSway*.2,y+16,1,6,'#252b22');
+    rect(X,x+23+ribSway*.3,y+18,1,4,'#1b1e18');
 }
 
 export function draw_raven(x, y) {
@@ -1449,14 +1449,14 @@ export function draw_raven(x, y) {
     px(X,x+22,y+5,P.dstone);
     // Glass shard (opalescent)
     rect(X,x+24,y+7,2,1,P.celestial);
-    px(X,x+25,y+6,'#aaccff');
+    px(X,x+25,y+6,'#D9CFB8');
     // Red fragment (jewel?)
     px(X,x+18,y+7,P.crimson);
     px(X,x+19,y+7,P.volcanic);
     // Tooth
     px(X,x+15,y+4,P.bone);
     // Eye (glass eye?)
-    rect(X,x+28,y+6,2,2,'#ccccff');
+    rect(X,x+28,y+6,2,2,'#D9CFB8');
     px(X,x+28,y+6,'#050505');
     // NECRONOMICON — the book
     rect(X,x+13,y+8,5,3,'#0a0a0a');
@@ -1554,7 +1554,7 @@ export function draw_lake(x, y) {
       const slCx=x+20+i*14+Math.sin(t*.01+i)*3;
       const slCy=y+25+Math.cos(t*.008+i)*4;
       X.globalAlpha=.25+.15*Math.sin(t*.02+i);
-      const slColor=['#6b0f1a','#daa520','#4a7fb5','#1b1464','#8a6408'][i];
+      const slColor=['#C23B2B','#D9CFB8','#8A8D8F','#5a6b56','#3A3026'][i];   // радуга нефти — в красках канона: киноварь, кость, пепел, мгла, сепия
       X.beginPath();X.ellipse(slCx,slCy,5+Math.sin(slPhase*Math.PI*2)*2,2,slPhase*Math.PI,0,Math.PI*2);
       X.fillStyle=slColor;X.fill();
       X.globalAlpha=1;
@@ -1609,24 +1609,24 @@ export function draw_lake(x, y) {
     X.beginPath();X.ellipse(fishX,fishY,5,2,0,0,Math.PI*2);X.fill();
     // Rainbow scales — each pixel a different color
     px(X,fishX-2,fishY-1,'#6b0f1a');
-    px(X,fishX-1,fishY-1,P.amber);
-    px(X,fishX,fishY-1,'#daa520');
-    px(X,fishX+1,fishY-1,'#4a7fb5');
-    px(X,fishX+2,fishY-1,'#1b1464');
-    px(X,fishX-2,fishY,'#8b0000');
-    px(X,fishX-1,fishY,P.damber);
-    px(X,fishX,fishY,P.gold);
+    px(X,fishX-1,fishY-1,'#C23B2B');
+    px(X,fishX,fishY-1,'#D9CFB8');
+    px(X,fishX+1,fishY-1,'#8A8D8F');
+    px(X,fishX+2,fishY-1,'#3D4A3A');
+    px(X,fishX-2,fishY,'#6b0f1a');
+    px(X,fishX-1,fishY,'#b0a284');
+    px(X,fishX,fishY,'#D9CFB8');
     px(X,fishX+1,fishY,P.celestial);
     px(X,fishX+2,fishY,P.indigo);
     // Eye (the optimist's eye)
-    px(X,fishX+2*fishDir,fishY-1,'#fff');
+    px(X,fishX+2*fishDir,fishY-1,'#D9CFB8');                  // глаз — костью: чистого белого в каноне нет
     // Tail (wiggling)
     const tailPh=Math.sin(t*.04);
-    rect(X,fishX-6*fishDir,fishY-1+tailPh,2,3,'#4a7fb5');
-    px(X,fishX-7*fishDir,fishY-1+tailPh*2,'#1b1464');
+    rect(X,fishX-6*fishDir,fishY-1+tailPh,2,3,'#8A8D8F');
+    px(X,fishX-7*fishDir,fishY-1+tailPh*2,'#3D4A3A');
     // Dorsal fin
-    px(X,fishX,fishY-2,'#1b1464');
-    px(X,fishX+1,fishY-2,'#0e0a38');
+    px(X,fishX,fishY-2,'#3D4A3A');
+    px(X,fishX+1,fishY-2,'#252b22');
     // Bubbles coming from fish mouth
     if(t%30<15){
       px(X,fishX+4*fishDir,fishY,P.btoxic);
@@ -1636,8 +1636,8 @@ export function draw_lake(x, y) {
     // Faint rainbow aura around the fish
     X.globalAlpha=.08+.04*Math.sin(t*.01);
     const fishGrad=X.createRadialGradient(fishX,fishY,0,fishX,fishY,15);
-    fishGrad.addColorStop(0,'rgba(218,165,32,.8)');
-    fishGrad.addColorStop(.5,'rgba(74,127,181,.4)');
+    fishGrad.addColorStop(0,'rgba(217,207,184,.6)');
+    fishGrad.addColorStop(.5,'rgba(61,74,58,.4)');
     fishGrad.addColorStop(1,'rgba(0,0,0,0)');
     X.fillStyle=fishGrad;X.fillRect(fishX-15,fishY-15,30,30);
     X.globalAlpha=1;
@@ -1647,9 +1647,9 @@ export function draw_lake(x, y) {
     rect(X,x+69,y+21,6,10,'#3a2a0a');
     dither(X,x+69,y+22,6,8,P.rust,'#2a1a08',.4);
     // Radiation symbol
-    rect(X,x+71,y+24,2,1,P.amber);
-    rect(X,x+71,y+27,2,1,P.amber);
-    rect(X,x+72,y+25,1,2,P.amber);
+    rect(X,x+71,y+24,2,1,'#D9CFB8');
+    rect(X,x+71,y+27,2,1,'#D9CFB8');
+    rect(X,x+72,y+25,1,2,'#D9CFB8');
     // Leaking
     X.globalAlpha=.6;
     rect(X,x+70,y+31,2,3,P.btoxic);
@@ -2164,7 +2164,7 @@ export function draw_bus(x, y) {
     X.moveTo(x+53,y+10);X.lineTo(x+52,y+5);
     X.stroke();
     // Central impact point
-    px(X,x+53,y+10,'#fff');
+    px(X,x+53,y+10,'#D9CFB8');
 
     // ── DOOR (folding, ajar) ──
     rect(X,x+50,y+18,8,12,'#1a1a20');
@@ -2246,7 +2246,7 @@ export function draw_bus(x, y) {
     // ── VAULT-BOY BOBBLEHEAD on dashboard ──
     // Through windshield
     rect(X,x+52,y+14,2,2,'#8a6408');
-    rect(X,x+52,y+16,2,1,'#1b1464'); // vault suit blue
+    rect(X,x+52,y+16,2,1,'#252b22'); // vault suit blue
     // Smile (even-in-apocalypse)
     px(X,x+52,y+15,'#0a0a0a');
 
@@ -2315,7 +2315,7 @@ export function draw_bus(x, y) {
     X.globalAlpha=1;
 
     // ── PILE of small SCHOOL BACKPACKS at back of bus ──
-    const packColors=['#6b0f1a','#1b1464','#4a1a8a','#2a6a1a','#8a6408'];
+    const packColors=['#6b0f1a','#252b22','#3a2818','#3D4A3A','#8a6408'];
     for(let i=0;i<5;i++){
       const pbx=x+4+i*3;
       const pby=y+24+i%2*2;
@@ -2370,7 +2370,7 @@ export function draw_bus(x, y) {
 
     // ── MEMORIAL BOTTLE OF WATER near flowers ──
     // (the tradition — empty bottles commemorating hostages denied water)
-    rect(X,x+12,y+36,2,4,'#4a7fb5');
+    rect(X,x+12,y+36,2,4,'#8A8D8F');
     rect(X,x+12,y+36,2,1,P.lgrey);
     // Empty — no fill
     px(X,x+13,y+38,'#0a0a0a');
@@ -2493,7 +2493,7 @@ export function draw_junkyard(x, y) {
     rect(X,x+14,y+49,3,3,P.crimson);
     px(X,x+15,y+48,'#2a1806'); // stem
     // Book
-    rect(X,x+20,y+49,3,2,'#1b1464');
+    rect(X,x+20,y+49,3,2,'#252b22');
     // Idea (lightbulb silhouette)
     rect(X,x+26,y+49,2,2,P.amber);
     px(X,x+27,y+48,P.damber);
@@ -2505,7 +2505,7 @@ export function draw_junkyard(x, y) {
       const rx=x+24+i*5;
       const ry=y+75;
       X.globalAlpha=.2+.1*Math.sin(t*.01+i);
-      px(X,rx,ry,['#6b0f1a','#daa520','#4a7fb5','#1b1464','#4a0a12','#8a6408'][i]);
+      px(X,rx,ry,['#6b0f1a','#daa520','#8A8D8F','#252b22','#4a0a12','#8a6408'][i]);
       X.globalAlpha=1;
     }
 
@@ -2722,7 +2722,7 @@ export function draw_church(x, y) {
     X.fillStyle=P.dstone;
     X.beginPath();X.arc(roseX,roseY,3,0,Math.PI*2);X.fill();
     // Stained glass panels — 6 colored triangular shards
-    const roseColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8a5aaa'];
+    const roseColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8A8D8F'];
     for(let sp=0;sp<6;sp++){
       const a=sp/6*Math.PI*2+Math.PI/6;
       const gx=roseX+Math.cos(a)*5;
@@ -2767,7 +2767,7 @@ export function draw_church(x, y) {
       rect(X,wx+4,wy+2,8,1,P.dstone);
       rect(X,wx+6,wy,4,1,P.dstone);
       // Stained glass fragments (more this time)
-      const glassColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8a5aaa'];
+      const glassColors=[P.crimson,P.indigo,P.gold,P.celestial,P.volcanic,'#8A8D8F'];
       for(let g=0;g<10;g++){
         if(hash(g,i+x,66)>.3){
           const gx=wx+2+hash(g,i,77)*12;
@@ -3309,13 +3309,13 @@ export function draw_crypt(x, y) {
       const fogY=y+12+fogPhase*18;
       const fogX=x+10+Math.sin(t*.01+i)*3;
       X.globalAlpha=(1-fogPhase)*.25;
-      rect(X,fogX,fogY,8+i,2,'#5a7a9a');
+      rect(X,fogX,fogY,8+i,2,'#6b726d');
       X.globalAlpha=1;
     }
     // Extra cold breath at step level
     if(t%40<20){
       X.globalAlpha=.1;
-      rect(X,x+8,y+14,20,3,'#aaccff');
+      rect(X,x+8,y+14,20,3,'#D9CFB8');
       X.globalAlpha=1;
     }
 
@@ -3364,7 +3364,7 @@ export function draw_dumpster(x, y) {
     dither(X,x+2,y+14,36,20,P.drust,'#2a1a1a',.5);
     rect(X,x-2,y+6,36,5,P.dgrey);rect(X,x+30,y+2,8,8,P.ash);
     const f=t*.03;
-    for(let i=0;i<12;i++){const fx=x+8+Math.sin(f+i*.9)*8;const fy=y+8-i*2-Math.abs(Math.sin(f*1.4+i*.7))*4;const s=Math.max(1,6-Math.floor(i*.4));X.globalAlpha=1-i*.06;rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#ffeecc','#fff'][i]);};X.globalAlpha=1;
+    for(let i=0;i<12;i++){const fx=x+8+Math.sin(f+i*.9)*8;const fy=y+8-i*2-Math.abs(Math.sin(f*1.4+i*.7))*4;const s=Math.max(1,6-Math.floor(i*.4));X.globalAlpha=1-i*.06;rect(X,fx,fy,s,s,[P.f3,P.f3,P.f1,P.f1,P.f4,P.f4,P.f2,P.f2,P.f2,P.f2,'#D9CFB8','#D9CFB8'][i]);};X.globalAlpha=1;
     for(let i=0;i<4;i++){const sx=x+15+Math.sin(t*.005+i*1.5)*12;const sy=y-10-(t*.02+i*8)%30;X.globalAlpha=Math.max(0,.2-(t*.02+i*8)%30/30);rect(X,sx,sy,3,2,P.ash);};X.globalAlpha=1;
     rect(X,x+5,y+30,30,1,P.blood);rect(X,x+8,y+33,24,1,P.blood);
 }
@@ -3503,9 +3503,9 @@ export function draw_pizzeria(x, y) {
       // Hot spots
       if(blink2){
         X.globalAlpha=.9;
-        px(X,x+3,y-13,'#ffffff');
-        px(X,x+3,y-9,'#ffffff');
-        px(X,x+3,y-5,'#ffffff');
+        px(X,x+3,y-13,'#D9CFB8');
+        px(X,x+3,y-9,'#D9CFB8');
+        px(X,x+3,y-5,'#D9CFB8');
         X.globalAlpha=1;
       }
     }else{
@@ -3815,7 +3815,7 @@ export function draw_pizzeria(x, y) {
 
     // ── TELEGRAM STICKER on door — @ardet_mirror ──
     rect(X,x+39,y+62,7,3,P.bone);
-    X.fillStyle='#4a7fb5';X.font='3px "Press Start 2P"';
+    X.fillStyle='#8A8D8F';X.font='3px "Press Start 2P"';
     X.globalAlpha=.7;
     X.fillText('@',x+40,y+65);
     X.globalAlpha=1;
@@ -3904,7 +3904,7 @@ export function draw_pizzeria(x, y) {
           px(X,b.bx+5,b.by+2,'#c0c0c0');
           px(X,b.bx+6,b.by+2,'#8a8a8a');
           // Aluminum disc glint
-          px(X,b.bx+4,b.by+3,'#ffffff');
+          px(X,b.bx+4,b.by+3,'#D9CFB8');
         }else if(b.kind==='usb'){
           // 3 USB flash drives — no cases, exposed PCB green
           rect(X,b.bx+1,b.by+2,2,1,'#0a3a0a'); // PCB green
@@ -3925,9 +3925,9 @@ export function draw_pizzeria(x, y) {
           rect(X,b.bx+1,b.by+2,7,2,P.bone);
           // Crayon marks — sun, smile, stick figure
           px(X,b.bx+2,b.by+2,P.gold); // sun
-          px(X,b.bx+3,b.by+2,'#ffcc00');
+          px(X,b.bx+3,b.by+2,'#D9CFB8');
           px(X,b.bx+5,b.by+3,P.crimson); // mouth
-          px(X,b.bx+6,b.by+2,'#1a8a1a'); // tree
+          px(X,b.bx+6,b.by+2,'#3D4A3A'); // tree
           px(X,b.bx+4,b.by+3,'#0a0a0a'); // stick figure
         }else if(b.kind==='tape'){
           // Magnetic tape cassette
@@ -3968,7 +3968,7 @@ export function draw_pizzeria(x, y) {
     // ── Empty BTC WALLET address paper beside pile ──
     rect(X,x+132,y+84,8,3,'#d8c8a8');
     rect(X,x+132,y+84,8,1,'#b8a888');
-    X.fillStyle='#4a7fb5';
+    X.fillStyle='#8A8D8F';
     X.font='3px "Press Start 2P"';
     X.globalAlpha=.6;
     X.fillText('bc1q...',x+133,y+86);
@@ -4273,7 +4273,7 @@ export function draw_billboard(x, y) {
       rect(X,apx+1,apy+3,3,1,'#0a0604');
       // Hat / accessory
       if(gi%3===0)rect(X,apx+1,apy,3,1,'#6b0f1a');
-      else if(gi%3===1)rect(X,apx+1,apy,3,1,'#1b1464');
+      else if(gi%3===1)rect(X,apx+1,apy,3,1,'#252b22');
       else rect(X,apx+1,apy,3,1,P.gold);
       // Nail in center-top
       px(X,apx+2,apy,P.ash);
@@ -4372,7 +4372,7 @@ export function draw_powerline(x, y) {
       const sparkX=x+15+hash(t%180,0,1)*10;
       const sparkY=y+35+hash(t%180,0,2)*5;
       X.globalAlpha=.7;
-      px(X,sparkX,sparkY,P.f2);px(X,sparkX+1,sparkY-1,'#fff');
+      px(X,sparkX,sparkY,P.f2);px(X,sparkX+1,sparkY-1,'#D9CFB8');
       X.globalAlpha=.3;
       X.beginPath();X.arc(sparkX,sparkY,4,0,Math.PI*2);X.fillStyle=P.amber;X.fill();
       X.globalAlpha=1;
@@ -4531,9 +4531,9 @@ export function draw_ruins(x, y) {
     // Tiny blue flame (primus is REPAIRED and burning)
     const prFl=Math.sin(t*.15)*.5;
     X.globalAlpha=.8;
-    px(X,prX+2+prFl*.3,prY-2,'#4a7fb5');
-    px(X,prX+3+prFl*.3,prY-3,'#8acfff');
-    px(X,prX+3+prFl*.3,prY-2,'#4a7fb5');
+    px(X,prX+2+prFl*.3,prY-2,'#8A8D8F');
+    px(X,prX+3+prFl*.3,prY-3,'#D9CFB8');
+    px(X,prX+3+prFl*.3,prY-2,'#8A8D8F');
     X.globalAlpha=1;
     // "починил" scratched beside primus
     X.globalAlpha=.4;X.fillStyle=P.bone;X.font='3px "Press Start 2P"';
@@ -4681,7 +4681,7 @@ export function draw_ruins(x, y) {
     // Laundry line with tattered clothes
     const lsw=Math.sin(t*.015)*1;
     rect(X,x+52+lsw,y+30,3,3,'#6b0f1a');
-    rect(X,x+57+lsw*.5,y+30,2,2,'#1b1464');
+    rect(X,x+57+lsw*.5,y+30,2,2,'#252b22');
     rect(X,x+61+lsw*.3,y+30,2,3,'#b8860b');
     // Plant pot on balcony
     rect(X,x+49,y+28,2,2,P.rust);
@@ -4704,8 +4704,8 @@ export function draw_ruins(x, y) {
     rect(X,x+70,y+5,1,4,P.dgrey);
     rect(X,x+83,y+5,1,4,P.dgrey);
     // Blue tarp sagging
-    rect(X,x+71,y+5,12,3,'#1b1464');
-    rect(X,x+71,y+5,12,1,'#2a2478');
+    rect(X,x+71,y+5,12,3,'#252b22');
+    rect(X,x+71,y+5,12,1,'#252b22');
     // Tarp fold
     rect(X,x+75,y+7,4,1,'#0a0a22');
     // Tied rope
@@ -4821,13 +4821,13 @@ export function draw_ruins(x, y) {
     // Domofon (intercom) with wires
     rect(X,x+64,y+bldH-10,3,5,'#2a2a2a');
     px(X,x+65,y+bldH-9,P.crimson);
-    px(X,x+65,y+bldH-7,'#4a7fb5');
+    px(X,x+65,y+bldH-7,'#8A8D8F');
     // Dangling wire
     rect(X,x+65,y+bldH-4,1,3,'#1a1a22');
     // Glow from within (TV flicker blue)
     if(t%40<20){
       X.globalAlpha=.3;
-      X.fillStyle='#4a7fb5';
+      X.fillStyle='#8A8D8F';
       rect(X,x+53,y+bldH-12,8,4);
       X.globalAlpha=1;
     }
@@ -4957,9 +4957,9 @@ export function draw_pipeline(x, y) {
     X.fillText('NS1 2011',x+24,y+11);
     X.globalAlpha=1;
     // Gazprom label torn off (only scraps)
-    rect(X,x+50,y+3,4,2,'#4a7fb5');
-    rect(X,x+54,y+3,2,1,'#1a3a6a'); // torn edge
-    px(X,x+56,y+4,'#4a7fb5');
+    rect(X,x+50,y+3,4,2,'#b0a284');   // обрывок этикетки — бумагой (синего в каноне нет)
+    rect(X,x+54,y+3,2,1,'#3a3328'); // torn edge
+    px(X,x+56,y+4,'#b0a284');
 
     // ── EXPLOSION BREACH — gaping hole on right side (replaces leak #3 visual) ──
     // Jagged outward-curled hole
@@ -5156,7 +5156,7 @@ export function draw_watchtower(x, y) {
     X.beginPath();X.moveTo(x+21,y+6);X.lineTo(x+22,y+8);X.stroke();
     // Animated lens glint
     if(t%90<6){
-      X.globalAlpha=.6;px(X,x+14,y+5,'#fff');px(X,x+20,y+5,'#fff');X.globalAlpha=1;
+      X.globalAlpha=.6;px(X,x+14,y+5,'#D9CFB8');px(X,x+20,y+5,'#D9CFB8');X.globalAlpha=1;
     }
 
     // ── OPEN JOURNAL on platform beside archivist ──
@@ -5222,23 +5222,23 @@ export function draw_watchtower(x, y) {
 
     // ── STICKER LOGOS on side of tower (PRISM/XKEYSCORE/etc) ──
     // PRISM prism triangle logo
-    X.fillStyle='#4a7fb5';
+    X.fillStyle='#8A8D8F';
     X.beginPath();
     X.moveTo(x-2,y+20);
     X.lineTo(x+1,y+17);
     X.lineTo(x+1,y+23);
     X.closePath();X.fill();
     // Rainbow refraction line
-    X.strokeStyle='#8acfff';X.lineWidth=1;
+    X.strokeStyle='#D9CFB8';X.lineWidth=1;
     X.beginPath();X.moveTo(x+1,y+20);X.lineTo(x+4,y+19);X.stroke();
     X.strokeStyle='#a8ffcf';
     X.beginPath();X.moveTo(x+1,y+20);X.lineTo(x+4,y+20);X.stroke();
-    X.strokeStyle='#ffa8cf';
+    X.strokeStyle='#C23B2B';
     X.beginPath();X.moveTo(x+1,y+20);X.lineTo(x+4,y+21);X.stroke();
     X.lineWidth=1;
 
     // NSA seal (tiny circle with eagle)
-    rect(X,x-3,y+27,4,4,'#0a1a4a');
+    rect(X,x-3,y+27,4,4,'#1b1e18');
     px(X,x-2,y+28,P.gold);
     px(X,x-1,y+28,P.gold);
     px(X,x-2,y+29,P.gold);
@@ -5471,7 +5471,7 @@ export function draw_altar(x, y) {
       const pulse=.7+.3*Math.sin(t*.008+i*.5);
       X.globalAlpha=pulse;
       px(X,mx,my,P.btoxic);
-      if(hash(i,0,33)>.6)px(X,mx,my-1,'#6aaa4a');
+      if(hash(i,0,33)>.6)px(X,mx,my-1,'#5d675a');
       X.globalAlpha=1;
     }
 
@@ -5676,7 +5676,7 @@ export function draw_posterwall(x, y) {
     // Layered posters — different sizes, colors, overlapping
     const posters=[
       {px:3,py:3,pw:18,ph:22,c:'#3a0a08',tc:P.amber},   // crimson poster
-      {px:20,py:2,pw:20,ph:25,c:'#1b1464',tc:P.bone},    // indigo poster
+      {px:20,py:2,pw:20,ph:25,c:'#252b22',tc:P.bone},    // indigo poster
       {px:38,py:4,pw:22,ph:20,c:'#0a0a0a',tc:'#8b0000'}, // black poster
       {px:5,py:24,pw:25,ph:18,c:'#2a1a08',tc:P.gold},    // burnt poster
       {px:32,py:22,pw:28,ph:20,c:'#1a0c20',tc:P.celestial}, // purple poster
