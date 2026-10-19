@@ -276,6 +276,9 @@ import { t } from './core/time.js';
 // кто отбрасывает: локации (кроме плоского), утварь эпох, странник. Маска —
 // один раз из рисунка вещи (render/shadows.js); здесь — как её нарисовать.
 const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle']);
+// лежат в земле — рисуются под всем, что стоит (иначе песок равнины Лунного
+// ложится поверх самого Лунного: его место ниже по глубине, чем край равнины)
+const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'trap_puddle']);
 const LIGHTS = new Set(['campfire', 'sol_home']);   // сами светят — тени не отбрасывают (Sol горит с основания)
 const casterOf = new Map();
 function locCaster(loc) {
@@ -427,8 +430,8 @@ function render() {
   // локации (с постройками эпох), заборы дворов и странник — по глубине:
   // за домом странника не видно, перед домом — видно
   const drawList = [];
-  for (const loc of locations) {
-    if (camera.isVisible(loc.x, loc.y, loc.w, loc.h)) drawList.push({ k: loc.y + loc.h, loc });
+  for (const loc of locations) {             // с запасом: столбы, флаги, пар выходят за рамку места
+    if (camera.isVisible(loc.x - 32, loc.y - 64, loc.w + 64, loc.h + 72)) drawList.push({ k: GROUND.has(loc.id) ? loc.y - 1e6 : loc.y + loc.h, loc });
   }
   for (const p of archProps) {
     if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });
@@ -690,7 +693,7 @@ function drawLocationPlain(ctx, loc) {
   const fn = locSprites['draw_' + loc.id];
   if (fn) {
     fn(loc.x, loc.y);
-  } else {
+  } else if (!loc.npc) {                     // дом фигуры — сама фигура: без цветной заглушки и подписи
     drawLocationPlaceholder(ctx, loc);
   }
 }

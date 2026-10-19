@@ -1,227 +1,101 @@
 // ═══════════════════════════════════════
-// SOL INVICTUS — the still flame.
-// A robed standing figure made mostly of layered fire, with a bronze
-// solar disc for a head. He doesn't move much; he burns, calmly. Heat
-// shimmers around him; embers fall instead of petals.
+// SOL INVICTUS — по осмотру и ART_BIBLE §05. «Вместо головы — пылающий диск.
+// Четырнадцать лучей медленно вращаются. Под диском — лицо: закрытые глаза,
+// золотые потёки, замершие на щеках. Через прорехи в мантии видны рёбра.
+// Дышат — один вдох на четыре твоих. В руке — ветка. Горит, не сгорает. У ног —
+// вторая ветка. Та уже сгорела, не заметив.» По библии: гротескное строгое
+// лицо, увядающий венок колосьев, трещины позолоты, подсолнух с черепом в
+// сердцевине; «золото через дерево к тлену» — позолота по тёмному дереву
+// мантии, к подолу — тлен и пепел. Золото — только его (канон). Число лучей
+// несущее: четырнадцать («число — последний бренд»). Пиксель к пикселю.
 // ═══════════════════════════════════════
-import { rect, px } from '../../render/draw.js';
 import { t } from '../../core/time.js';
 import { X } from '../../render/context.js';
 
-const P = {
-  void: '#050408',
-  shadow: '#0a0a0a',
-  bronze: '#7a4a14',
-  bronzeMid: '#a06820',
-  gold: '#b8860b',
-  goldHi: '#daa520',
-  sunflower: '#f4d03f',
-  bone: '#e8dcc8',
-  dbone: '#c8b8a8',
-  // Fire palette (cold dim → hot core)
-  fireDeep: '#3a0808',
-  fireDim:  '#7a1410',
-  fireMid:  '#c83018',
-  fireHot:  '#ff7820',
-  fireBright: '#ffb040',
-  fireCore: '#fff4c8',
-};
+const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', SV = '#E28A3A', KV = '#C23B2B';
+const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328';
+const BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', SEP = '#3A3026';
+const GOLD = '#b8860b', GOLD_HI = '#daa520', BRONZE = '#7a4a14', BRONZE_M = '#a06820';   // золото Sol — канон
+const q = Math.round;
+const r = (x, y, w = 1, h = 1, c) => { X.fillStyle = c; X.fillRect(q(x), q(y), w, h); };
+function hh(a, b, s) {
+  let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
 
 let npcProximity = 0;
 export function setProximity(v) { npcProximity = v; }
 
 export function drawNPC_sol(sx, sy) {
-  // Anchor: ~28px wide, ~52px tall.
-  const breath = Math.sin(t * 0.008) * 0.5;
-  const sway = Math.sin(t * 0.003) * 0.4;
-  const flameClock1 = t * 0.06;
-  const flameClock2 = t * 0.09;
-  const haloPulse = 0.78 + 0.22 * Math.sin(t * 0.005);
-  const by = sy;
-  const bx = sx + sway;
-  const cx = bx + 14;
-
-  // ═══ HEAT-WARMED GROUND ═══
-  X.globalAlpha = 0.18 + 0.08 * Math.sin(t * 0.04);
-  const ground = X.createRadialGradient(cx, by + 50, 4, cx, by + 50, 28);
-  ground.addColorStop(0, P.fireBright);
-  ground.addColorStop(0.5, 'rgba(200,48,24,0.4)');
-  ground.addColorStop(1, 'rgba(0,0,0,0)');
-  X.fillStyle = ground;
-  X.fillRect(cx - 30, by + 36, 60, 22);
-  X.globalAlpha = 1;
-
-  // ═══ SHADOW ═══
-  X.globalAlpha = 0.32;
-  X.fillStyle = '#000';
-  X.beginPath();
-  X.ellipse(cx, by + 50, 12, 2.6, 0, 0, Math.PI * 2);
-  X.fill();
-  X.globalAlpha = 1;
-
-  // ═══ BODY = COLUMN OF FIRE ═══
-  // Drawn in vertical bands. Each band has its own clock so the flame
-  // never settles into a clean shape. The outline is roughly:
-  //   shoulders narrow → torso wider → tapers to a candle base.
-  // Width profile per row (top-to-bottom). Index 0 = below the head.
-  const rows = 28;
-  const baseY = by + 14;
-  // For each row, pick a half-width that breathes
-  for (let i = 0; i < rows; i++) {
-    const y_ = baseY + i;
-    // Body taper: shoulders 5, mid 7, hem 4
-    const taper = i < 4 ? 5
-                : i < 12 ? 5 + (i - 4) * 0.25
-                : i < 20 ? 7 - (i - 12) * 0.05
-                : 7 - (i - 20) * 0.5;
-    const wob = Math.sin(flameClock1 + i * 0.5) * 0.6 + Math.cos(flameClock2 + i * 0.3) * 0.4;
-    const halfW = Math.max(2, Math.floor(taper + wob + breath * 0.3));
-
-    // Outermost band — dim red
-    rect(X, cx - halfW, y_, halfW * 2, 1, P.fireDim);
-    // Mid band
-    if (halfW >= 3) rect(X, cx - halfW + 1, y_, halfW * 2 - 2, 1, P.fireMid);
-    // Hot band
-    if (halfW >= 4) rect(X, cx - halfW + 2, y_, halfW * 2 - 4, 1, P.fireHot);
-    // Bright core (only in the upper torso, like a candle wick area)
-    if (halfW >= 5 && i > 1 && i < 16) {
-      rect(X, cx - 1, y_, 2, 1, P.fireBright);
+  const cx = q(sx) + 14, y0 = q(sy), G = y0 + 44;
+  const breath = Math.sin(t * Math.PI * 2 / 960) > 0.3 ? 1 : 0;        // вдох на четыре твоих — шестнадцать секунд
+  // ── у ног: сгоревшая ветка — уголь и пепел ──
+  for (let k = 0; k < 9; k++) r(cx - 13 + k, G - 1 + (k > 5 ? 1 : 0), 1, 1, k % 3 ? K0 : K1);
+  r(cx - 10, G - 2, 1, 1, K0); r(cx - 8, G - 3, 1, 2, K0); r(cx - 6, G - 2, 1, 1, K1);
+  for (const dx of [-12, -9, -7]) r(cx + dx, G - 2, 1, 1, AS);
+  X.globalAlpha = 0.4; r(cx - 8, G, 17, 1, NI); X.globalAlpha = 1;
+  // ── мантия: позолота по тёмному дереву, к подолу — тлен ──
+  for (let k = 0; k <= 29; k++) {
+    const y = y0 + 15 + k, w = q(5 + k * 0.14), rag = k > 26 ? q(hh(k, 1, 3) * 2) : 0;
+    r(cx - w + rag, y, 2 * w - rag, 1, BR2);
+    for (let x = cx - w + rag + 1; x < cx + w - 1; x++) {
+      const edge = 8 + q(hh(x, 1, 5) * 5);                              // где позолота кончилась — рвано
+      if (k < edge) r(x, y, 1, 1, x < cx - w + 3 ? GOLD_HI : GOLD);
+      else if (k < edge + 6 && hh(x, y, 11) < 0.1) r(x, y, 1, 1, GOLD);   // хлопья позолоты
+      else if (k > 20 && hh(x, y, 7) < 0.06 + (k - 20) * 0.025) r(x, y, 1, 1, AS);   // пепел к подолу
+      else if (k > 14 && hh(x, y, 9) < 0.16) r(x, y, 1, 1, SEP);         // тлен
     }
-    // Occasional very bright pixel — flame leap
-    if (i > 0 && i < 14 && Math.random() > 0.93) {
-      px(X, cx + (Math.random() < 0.5 ? -1 : 1), y_, P.fireCore);
-    }
+    r(cx - w + rag, y, 1, 1, k < 10 ? GOLD_HI : L2); r(cx + w - 1, y, 1, 1, AS);
+    if (k > 9) for (const f of [-0.45, 0.35]) r(cx + q(f * w), y, 1, 1, K1);   // складки
   }
-
-  // ═══ INNER SKELETAL OUTLINE — visible faintly through the flame ═══
-  // Static silhouette that suggests a robed body inside the burn.
-  X.globalAlpha = 0.32;
-  // Spine
-  rect(X, cx, by + 16, 1, 22, P.bone);
-  // Ribs
-  for (let i = 0; i < 5; i++) {
-    const ribY = by + 18 + i * 3;
-    const ribW = 6 - Math.abs(i - 2) * 0.5;
-    rect(X, cx - ribW, ribY, ribW * 2, 1, P.dbone);
+  for (const [x1, y1, n, d] of [[-5, 16, 5, 1], [1, 17, 4, -1], [-2, 21, 4, 1], [3, 22, 3, 1]]) for (let k = 0; k < n; k++) r(cx + x1 + k, y0 + y1 + ((k * d) >> 1), 1, 1, BRONZE);   // трещины позолоты
+  // прорехи — видны рёбра; дышат
+  for (const [hx, hy, hw, hl] of [[cx - 4, y0 + 21, 3, 6], [cx + 2, y0 + 27, 3, 5]]) {
+    r(hx - 1, hy - 1, hw + 2, hl + 2, BR2); r(hx, hy, hw, hl, NI);
+    for (let k = 1; k < hl - 1; k += 2) r(hx - (breath && k > 1 ? 1 : 0), hy + k, hw + (breath ? 1 : 0), 1, k === 1 ? BO : L1);
   }
-  // Pelvis hint
-  rect(X, cx - 3, by + 35, 7, 1, P.dbone);
-  X.globalAlpha = 1;
-
-  // ═══ CANDLE-BASE PUDDLE — wax/melted bronze at his feet ═══
-  const baseW = 12;
-  rect(X, cx - baseW / 2, by + 42, baseW, 4, P.fireDeep);
-  rect(X, cx - baseW / 2 + 1, by + 42, baseW - 2, 1, P.fireDim);
-  // Highlights — molten ridges
-  for (let i = 0; i < 3; i++) {
-    const px_ = cx - 4 + i * 4 + Math.sin(t * 0.04 + i) * 0.5;
-    px(X, px_, by + 43, P.fireMid);
+  // подсолнух-застёжка: золотые лепестки, в сердцевине — череп
+  const fx = cx, fy = y0 + 18;
+  r(fx - 3, fy - 2, 7, 5, BR2); r(fx - 2, fy - 3, 5, 7, BR2);           // тёмная подложка — золото на золоте не видно
+  for (let a = 0; a < 8; a++) { const u = a / 8 * Math.PI * 2; r(fx + q(Math.cos(u) * 3), fy + q(Math.sin(u) * 2.4), 1, 1, a < 4 ? GOLD : GOLD_HI); }
+  r(fx - 1, fy - 1, 3, 3, K1);
+  r(fx - 1, fy - 1, 3, 1, BO); r(fx, fy, 1, 1, BO); r(fx - 1, fy + 1, 1, 1, L1); r(fx + 1, fy + 1, 1, 1, L1);   // череп: свод, переносица, челюсть
+  // левая рука — из рукава кость
+  r(cx - 8, y0 + 28, 2, 3, BR2); r(cx - 8, y0 + 31, 1, 2, BO); r(cx - 7, y0 + 31, 1, 1, L1);
+  // правая рука держит ветку: горит, не сгорает
+  r(cx + 6, y0 + 18, 2, 12, BR2); r(cx + 7, y0 + 18, 1, 12, AS);
+  r(cx + 7, y0 + 29, 2, 2, BO);
+  const tw = [[9, 28], [10, 26], [10, 24], [11, 22], [12, 20], [12, 18], [13, 16]];
+  for (const [dx, dy] of tw) r(cx + dx, y0 + dy, 1, 2, K1);
+  r(cx + 11, y0 + 21, 2, 1, K1); r(cx + 13, y0 + 20, 1, 1, K1); r(cx + 9, y0 + 23, 1, 1, K1);
+  const fl = (t >> 3) & 3;
+  for (const [dx, dy, ph] of [[13, 15, 0], [14, 19, 2], [8, 22, 1]]) {
+    const h = 1 + ((fl + ph) & 1);
+    r(cx + dx, y0 + dy - h, 1, h, SV); r(cx + dx, y0 + dy, 1, 1, KV);
   }
-
-  // ═══ HEAT SHIMMER — wavy displacement above shoulders ═══
-  X.globalAlpha = 0.22;
-  for (let i = 0; i < 6; i++) {
-    const sy_ = by + 8 - i;
-    const off = Math.sin(t * 0.07 + i * 0.8) * 4;
-    rect(X, cx + off - 5, sy_, 10, 1, P.fireHot);
-  }
-  X.globalAlpha = 1;
-
-  // ═══ SOLAR DISC HEAD ═══
-  const headTilt = Math.sin(t * 0.004) * 0.6;
-  const hcx = cx + headTilt;
-  const hcy = by + 6;
-
-  // Outer halo glow
-  X.globalAlpha = haloPulse * 0.35;
-  const halo = X.createRadialGradient(hcx, hcy, 4, hcx, hcy, 18);
-  halo.addColorStop(0, P.sunflower);
-  halo.addColorStop(0.5, 'rgba(218,165,32,0.5)');
-  halo.addColorStop(1, 'rgba(0,0,0,0)');
-  X.fillStyle = halo;
-  X.fillRect(hcx - 18, hcy - 18, 36, 36);
-  X.globalAlpha = 1;
-
-  // ── 14 sun rays, slow rotation, no tapering — clean, austere ──
-  // Count is load-bearing: the look text and the art prompt both say
-  // fourteen, and the number is the figure's own ("число — последний бренд").
-  const rayRot = t * 0.0008;
-  X.globalAlpha = haloPulse;
+  // ── диск вместо головы: четырнадцать лучей медленно вращаются ──
+  const hcx = cx, hcy = y0 + 7, rot = t * 0.0008;
   for (let i = 0; i < 14; i++) {
-    const angle = (i / 14) * Math.PI * 2 + rayRot;
-    const inner = 8;
-    const outer = inner + 4 + Math.sin(angle * 2 + t * 0.02) * 0.8;
-    for (let r = inner; r <= outer; r++) {
-      const rx = Math.round(hcx + Math.cos(angle) * r);
-      const ry = Math.round(hcy + Math.sin(angle) * r);
-      px(X, rx, ry, r < inner + 2 ? P.gold : P.sunflower);
-    }
+    const a = i / 14 * Math.PI * 2 + rot;
+    for (let k = 8; k <= 11; k++) r(hcx + Math.cos(a) * k, hcy + Math.sin(a) * k, 1, 1, k < 10 ? GOLD : GOLD_HI);
   }
-  X.globalAlpha = 1;
-
-  // Disc body — bronze with darker rim
-  X.fillStyle = P.bronze;
-  X.beginPath(); X.arc(hcx, hcy, 8, 0, Math.PI * 2); X.fill();
-  X.fillStyle = P.bronzeMid;
-  X.beginPath(); X.arc(hcx, hcy, 6.5, 0, Math.PI * 2); X.fill();
-  X.fillStyle = P.gold;
-  X.beginPath(); X.arc(hcx, hcy, 4.5, 0, Math.PI * 2); X.fill();
-
-  // ── FACE — closed eyes, small mouth, tear-streak of light ──
-  // Closed eye arcs (just three pixels each)
-  px(X, hcx - 3, hcy - 1, P.bronze);
-  px(X, hcx - 2, hcy - 2, P.bronze);
-  px(X, hcx - 1, hcy - 1, P.bronze);
-  px(X, hcx + 1, hcy - 1, P.bronze);
-  px(X, hcx + 2, hcy - 2, P.bronze);
-  px(X, hcx + 3, hcy - 1, P.bronze);
-  // Calm mouth
-  px(X, hcx - 1, hcy + 2, P.bronze);
-  px(X, hcx, hcy + 2, P.bronze);
-  px(X, hcx + 1, hcy + 2, P.bronze);
-  // Bright tear-streaks running down the face — light as wound
-  X.globalAlpha = 0.7;
-  rect(X, hcx - 3, hcy + 1, 1, 4, P.fireBright);
-  rect(X, hcx + 3, hcy + 1, 1, 4, P.fireBright);
-  px(X, hcx - 3, hcy + 5, P.fireCore);
-  px(X, hcx + 3, hcy + 5, P.fireCore);
-  X.globalAlpha = 1;
-
-  // ═══ FALLING EMBERS — replace the old falling-petals ═══
-  const emberCount = 5 + Math.floor(npcProximity * 4);
-  for (let i = 0; i < emberCount; i++) {
-    const ph = ((t * 0.0035 * (1 + npcProximity * 0.3)) + i * 0.21) % 1;
-    if (ph < 0.93) {
-      const ex = cx - 6 + i * 2 + Math.sin(ph * 10 + i * 1.2) * 4;
-      const ey = by + 6 + ph * 50;
-      X.globalAlpha = 0.6 * (1 - ph * 0.9);
-      const ec = i % 3 === 0 ? P.fireCore : (i % 2 ? P.fireBright : P.fireHot);
-      px(X, ex, ey, ec);
-      // Trailing dim ember
-      X.globalAlpha *= 0.4;
-      px(X, ex, ey - 1, P.fireDim);
-      X.globalAlpha = 1;
-    }
+  for (let dy = -7; dy <= 7; dy++) {
+    const w = q(Math.sqrt(Math.max(0, 52 - dy * dy)));
+    r(hcx - w, hcy + dy, 2 * w + 1, 1, BRONZE);
+    if (w > 1) r(hcx - w + 1, hcy + dy, 2 * w - 1, 1, dy < -2 ? GOLD_HI : GOLD);
+    if (w > 1) r(hcx - w + 1, hcy + dy, 1, 1, dy < 3 ? BO : GOLD_HI);   // блик слева
   }
-
-  // ═══ RISING SMOKE/HEAT WISPS from shoulders ═══
-  for (let i = 0; i < 4; i++) {
-    const wph = ((t * 0.012 + i * 0.27) % 1);
-    const wx = cx - 5 + i * 3 + Math.sin(t * 0.01 + i * 1.3) * 2;
-    const wy = by + 14 - wph * 22;
-    X.globalAlpha = (1 - wph) * 0.18;
-    rect(X, wx, wy, 2, 2, '#3a2a18');
-    X.globalAlpha = 1;
-  }
-
-  // ═══ PROXIMITY: gentle warning — burn stronger when watched ═══
-  if (npcProximity > 0.2) {
-    X.globalAlpha = npcProximity * 0.18 + 0.05 * Math.sin(t * 0.04);
-    const watcher = X.createRadialGradient(cx, by + 22, 6, cx, by + 22, 30 + npcProximity * 8);
-    watcher.addColorStop(0, P.fireHot);
-    watcher.addColorStop(1, 'rgba(0,0,0,0)');
-    X.fillStyle = watcher;
-    X.fillRect(cx - 35, by - 10, 70, 60);
-    X.globalAlpha = 1;
+  for (const [dx, dy, l] of [[-5, -3, 3], [3, -5, 2], [4, 2, 3], [-4, 4, 2]]) for (let k = 0; k < l; k++) r(hcx + dx + k, hcy + dy + (k & 1), 1, 1, BRONZE_M);   // трещины позолоты
+  // лицо под диском: тяжёлые закрытые веки, нос, рот прямой, уголки вниз; потёки застыли
+  r(hcx - 4, hcy, 3, 1, BRONZE); r(hcx + 2, hcy, 3, 1, BRONZE); r(hcx - 4, hcy - 1, 3, 1, BRONZE_M); r(hcx + 2, hcy - 1, 3, 1, BRONZE_M);
+  r(hcx, hcy, 1, 3, BRONZE); r(hcx - 1, hcy + 3, 1, 1, BRONZE_M);
+  r(hcx - 2, hcy + 5, 5, 1, BRONZE); r(hcx - 3, hcy + 6, 1, 1, BRONZE); r(hcx + 3, hcy + 6, 1, 1, BRONZE);
+  for (const dx of [-3, 3]) { r(hcx + dx, hcy + 1, 1, 3, BRONZE_M); r(hcx + dx, hcy + 4, 1, 1, L1); r(hcx + dx - Math.sign(dx), hcy + 2, 1, 1, BRONZE_M); }   // потёки застыли
+  // ── увядающий венок колосьев — под диском, ворохом; колосья никнут ──
+  for (let i = 0; i < 9; i++) {
+    const a = Math.PI * (0.12 + i * 0.095), wilt = hh(i, 4, 3) < 0.4, ex = hcx + Math.cos(a) * 8, ey = hcy + Math.sin(a) * 7;
+    const dx = Math.cos(a) * (wilt ? 0.6 : 1), dy = Math.sin(a) + (wilt ? 0.9 : 0.2);
+    for (let k = 0; k < 6; k++) r(ex + dx * k, ey + dy * k, k < 3 ? 1 : 2, 1, k < 3 ? (wilt ? K4 : BRONZE_M) : wilt ? SEP : k === 5 ? L1 : L2);   // стебель, колос
   }
 }

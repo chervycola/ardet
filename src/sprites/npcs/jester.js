@@ -1,365 +1,130 @@
 // ═══════════════════════════════════════
-// THE JESTER — half-Shiva: three arms (one from behind), juggles daggers
+// ШУТ — по осмотру и ART_BIBLE §05. «Шут стоит у костра и пошатывается,
+// сдвигая центр тяжести. Если смотреть долго — замечаешь редкое моргание.
+// В одной руке — кинжал. В другой держит пику, на которой подпекается над
+// костром человеческий скальп. Лицо белое, губы красные. Улыбка — не
+// результат, а форма.» По библии: колпак с тремя рогами, ромбы арлекина,
+// хвост с лезвием, горящий нимб, крест в глазнице, игральные карты-надгробия.
+// Багрянец на чёрном: киноварь и ночь, кость; тепло — только язычки нимба.
+// У костра пика протянута над огнём; на ходу (world/wandering.js) — на плече.
+// Пиксель к пикселю; свет слева, кромка пеплом справа.
 // ═══════════════════════════════════════
-import { rect, px, dither } from '../../render/draw.js';
 import { t } from '../../core/time.js';
 import { X } from '../../render/context.js';
 
-const P = {
-  d1: '#0a0a0a',
-  dgrey: '#2a2a2a',
-  ash: '#8a8d8f',
-  bone: '#e8dcc8',
-  dbone: '#c8b8a8',
-  crimson: '#6b0f1a',
-  dcrimson: '#3a0810',
-  gold: '#b8860b',
-  amber: '#daa520',
-  sunflower: '#f4d03f',
-  steel: '#b8b8c8',
-  bladeEdge: '#ffffff',
-};
+const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', SV = '#E28A3A', KV = '#C23B2B';
+const K0 = '#15100c', K1 = '#241c14', K4 = '#3a3328';
+const BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S0 = '#474442';
+const q = Math.round;
+const r = (x, y, w = 1, h = 1, c) => { X.fillStyle = c; X.fillRect(q(x), q(y), w, h); };
+const line = (x0, y0, x1, y1, c) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let k = 0; k <= n; k++) r(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n, 1, 1, c); };
 
 let npcProximity = 0;
 export function setProximity(v) { npcProximity = v; }
 
-// ── Juggling pattern ──
-// Three daggers in a 3-ball cascade. Each dagger has a phase 120° apart.
-// Hands cycle: L → R → BACK → L → R → BACK ...
-// We compute the world position of a dagger as it travels along the parabolic
-// throw arc between two hands.
-const TOSS_PERIOD = 120; // frames per half-cycle (one toss)
-const ARMS = 3;
-
-// Returns { x, y, angle } for a dagger at frame f given index i (0..2).
-function daggerPos(f, i, hands) {
-  // Positive modulo: f can be negative (motion-blur samples f = t - 2 on the
-  // first frames), and JS % keeps the sign of the dividend, which would yield
-  // a negative handIdx and index hands[] out of bounds.
-  const period = TOSS_PERIOD * ARMS;
-  const phase = (((f + (i * TOSS_PERIOD * 2 / ARMS)) % period) + period) % period;
-  const handIdx = Math.floor(phase / TOSS_PERIOD);
-  const localT = (phase % TOSS_PERIOD) / TOSS_PERIOD; // 0..1
-  const fromHand = hands[handIdx % ARMS];
-  const toHand = hands[(handIdx + 1) % ARMS];
-  // Parabolic toss
-  const x = fromHand.x + (toHand.x - fromHand.x) * localT;
-  const y = fromHand.y + (toHand.y - fromHand.y) * localT - Math.sin(localT * Math.PI) * 18;
-  // Spinning blade — full revolution per toss
-  const angle = localT * Math.PI * 2 + i * Math.PI * 0.7;
-  return { x, y, angle };
+// карта-надгробие: воткнута в землю, чуть набок
+function card(x, g, lean, pip) {
+  r(x - 1, g - 6, 5, 7, K1);
+  for (let k = 0; k < 5; k++) r(x + (k < 2 ? lean : 0), g - 5 + k, 3, 1, k === 0 ? BO : L1);
+  r(x + 1 + (lean > 0 ? 1 : 0), g - 4, 1, 2, pip);
+  r(x - 1, g, 5, 1, K0);
 }
-
-function drawDagger(cx, cy, angle) {
-  // Pixel-art dagger ~7px long, drawn rotated.
-  const cosA = Math.cos(angle), sinA = Math.sin(angle);
-  // Length 0..6 along blade axis (0 = pommel, 6 = tip)
-  // -1..1 perpendicular
-  const segments = [
-    // pos along, perp, color
-    [-1, 0, P.gold],         // pommel
-    [0, 0, P.dgrey],          // hilt
-    [1, 0, P.dgrey],          // hilt
-    [2, 0, P.gold],           // crossguard center
-    [2, -1, P.gold],          // crossguard left
-    [2, 1, P.gold],           // crossguard right
-    [3, 0, P.steel],          // blade
-    [4, 0, P.steel],
-    [5, 0, P.bladeEdge],
-    [6, 0, P.bladeEdge],      // tip
-  ];
-  for (const [along, perp, color] of segments) {
-    const x = Math.round(cx + along * cosA - perp * sinA);
-    const y = Math.round(cy + along * sinA + perp * cosA);
-    px(X, x, y, color);
-  }
-}
-
 export function drawNPC_jester(jx, jy, opts = {}) {
-  // opts: { moving: bool, dir: -1|+1 } — set by the wandering controller.
-  // moving=true → walk cycle; otherwise idle weight-shift.
-  const moving = !!opts.moving;
-  const dir = opts.dir || 1;
-
-  // ── Clocks ──
-  // Walk cycle has its own faster phase when moving so legs read as steps.
-  // Idle keeps a slow body sway that never completely settles.
-  const walkPhase = moving ? Math.sin(t * 0.18) : 0;
-  const walkPhaseQ = moving ? Math.cos(t * 0.18) : 0;     // 90° offset
-  const walkBob = moving ? Math.abs(Math.sin(t * 0.18)) * 1.6 : 0;
-  const idleSway = Math.sin(t * 0.004) * (moving ? 0.3 : 1.0);
-  const breath = Math.sin(t * 0.01) * 0.7;
-  const bodyBob = moving ? walkBob : Math.sin(t * 0.007) * 1.2;
-
-  // Sprite anchor: ~24px wide centered on jx+12.
-  const by = jy + bodyBob;
-  const bx = jx + idleSway;
-  const cx = bx + 12;
-
-  // ═══ SHADOW ═══
-  X.globalAlpha = 0.3;
-  X.fillStyle = '#000';
-  X.beginPath();
-  X.ellipse(cx, jy + 50, 11 + Math.abs(idleSway) + (moving ? 0.6 : 0), 2.5, 0, 0, Math.PI * 2);
-  X.fill();
+  const home = opts.moving === undefined, moving = !!opts.moving;
+  const x0 = q(jx), y0 = q(jy);
+  // пошатывается: таз в одну сторону, плечи — в другую, голова запаздывает
+  const sw = Math.sin(t * 0.0045), hip = moving ? 0 : q(sw), sh = moving ? 0 : -q(sw * 0.8), hd = moving ? 0 : q(Math.sin(t * 0.0045 - 0.8));
+  const step = moving ? Math.sin(t * 0.18) : 0, bob = moving ? q(Math.abs(step) * 1.5) : 0;
+  const cx = x0 + 12, by = y0 - bob, G = y0 + 46;
+  // ── у костра: карты-надгробия в земле ──
+  if (home) { card(x0 - 6, G - 2, 1, KV); card(x0 + 24, G - 3, -1, NI); }
+  X.globalAlpha = 0.3; r(cx - 7, G, 14, 1, NI); X.globalAlpha = 1;
+  // ── горящий нимб — за головой: кольцо киновари, язычки свечой ──
+  const hx = cx - 4 + sh + hd, hy = by + 1;
+  for (let a = 0; a < 44; a++) {
+    const u = a / 44 * Math.PI * 2, rx = hx + 4 + Math.cos(u) * 9, ry = hy + 4 + Math.sin(u) * 8;
+    r(rx, ry, 1, 1, a % 6 === (t >> 4) % 6 ? K1 : KV);
+  }
+  for (let i = 0; i < 4; i++) {                                         // язычки по верху кольца
+    const u = Math.PI * (1.2 + i * 0.2), h = 1 + (((t >> 3) + i * 3) % 3 === 0 ? 1 : 0);
+    r(hx + 4 + Math.cos(u) * 9, hy + 4 + Math.sin(u) * 8 - h, 1, h, SV);
+  }
+  // ── хвост с лезвием — из-за спины, вьётся ──
+  const tw = Math.sin(t * 0.01) * (moving ? 3 : 1.5);
+  let px0 = cx + 4 + hip, py0 = by + 27;
+  for (let k = 1; k <= 12; k++) {
+    const nx = cx + 4 + hip + k * 0.9 + Math.sin(k * 0.5) * 1.5 + tw * k / 12, ny = by + 27 + k * 0.9 - (k > 8 ? (k - 8) * 1.4 : 0);
+    line(px0, py0, nx, ny, NI); px0 = nx; py0 = ny;
+  }
+  r(px0, py0 - 3, 1, 3, AS); r(px0 + 1, py0 - 2, 1, 2, BO); r(px0 - 1, py0 - 1, 1, 1, S0);   // лезвие
+  // ── ноги: трико в два цвета; на ходу — шаг ──
+  const lL = moving ? q(Math.max(0, step) * 3) : 0, lR = moving ? q(Math.max(0, -step) * 3) : 0;
+  r(cx - 5 + hip, by + 28, 3, 16 - lL, NI); r(cx + 2 + hip, by + 28, 3, 16 - lR, KV);
+  for (let k = 0; k < 7; k++) { r(cx - 4 + hip, by + 29 + k * 2, 1, 1, KV); r(cx + 3 + hip, by + 29 + k * 2, 1, 1, NI); }
+  r(cx - 5 + hip, by + 28, 1, 16 - lL, K4); r(cx + 4 + hip, by + 28, 1, 16 - lR, AS);
+  // башмаки с загнутыми носами и бубенцами
+  const fL = by + 44 - lL, fR = by + 44 - lR;
+  r(cx - 7 + hip, fL, 5, 2, NI); r(cx - 9 + hip, fL - 1, 3, 2, NI); r(cx - 10 + hip, fL - 2, 1, 1, NI); r(cx - 11 + hip, fL - 3, 1, 1, L2);
+  r(cx + 2 + hip, fR, 5, 2, NI); r(cx + 6 + hip, fR - 1, 3, 2, NI); r(cx + 9 + hip, fR - 2, 1, 1, NI); r(cx + 10 + hip, fR - 3, 1, 1, L2);
+  // ── камзол: ромбы арлекина ──
+  const tx = cx - 5 + q((hip + sh) / 2), ty = by + 14;
+  for (let yy = 0; yy < 14; yy++) for (let xx = 0; xx < 11; xx++) {
+    const u = (xx + 0.5) / 6, v = (yy + 4.5) / 9, d = (Math.floor(u + v) + Math.floor(u - v + 8)) & 1;   // ромб: шесть в ширину, девять в высоту
+    r(tx + xx, ty + yy, 1, 1, d ? KV : NI);
+  }
+  r(tx, ty, 1, 14, BO); r(tx + 10, ty, 1, 14, AS);                       // свет слева, кромка пеплом
+  r(tx, ty + 12, 11, 1, K1); r(tx + 5, ty + 12, 1, 1, L2);               // пояс, пряжка
+  // ворот зубцами: кость и киноварь
+  for (let k = 0; k < 6; k++) { r(tx - 1 + k * 2, ty - 1, 2, 1, k & 1 ? KV : BO); r(tx + k * 2, ty, 1, 1, k & 1 ? KV : BO); }
+  // ── руки: в одной кинжал, в другой пика ──
+  const sL = { x: tx - 1, y: ty + 2 }, sR = { x: tx + 11, y: ty + 2 };
+  const swing = moving ? q(step * 2) : 0;
+  // правая — кинжал остриём вниз
+  const hR = { x: sR.x + 2 - swing, y: sR.y + 9 };
+  line(sR.x, sR.y, hR.x, hR.y, NI); line(sR.x + 1, sR.y, hR.x + 1, hR.y, KV);
+  r(hR.x, hR.y, 2, 1, BO);
+  r(hR.x - 1, hR.y + 1, 4, 1, L2); r(hR.x, hR.y + 2, 1, 4, AS); r(hR.x + 1, hR.y + 2, 1, 3, BO); r(hR.x, hR.y + 6, 1, 1, S0);
+  // левая — пика: у костра над огнём, скальп подпекается; на ходу — на плече
+  const hL = home ? { x: sL.x - 4, y: sL.y + 3 } : { x: sL.x - 1 + swing, y: sL.y + 6 };
+  line(sL.x, sL.y, hL.x, hL.y, NI); line(sL.x + 1, sL.y + 1, hL.x + 1, hL.y, KV);
+  const tip = home ? { x: hL.x - 30, y: hL.y - 13 } : { x: hL.x + 9, y: hL.y - 24 };
+  const tail = home ? { x: hL.x + 4, y: hL.y + 2 } : { x: hL.x - 3, y: hL.y + 8 };
+  line(tail.x, tail.y, tip.x, tip.y, BR2);
+  line(tail.x, tail.y - 1, tip.x, tip.y - 1, home ? L2 : BR2);
+  r(hL.x, hL.y, 2, 2, BO);
+  const dx = Math.sign(tip.x - tail.x), dy = Math.sign(tip.y - tail.y);
+  r(tip.x + dx, tip.y + dy, 1, 1, AS); r(tip.x + dx * 2, tip.y + dy * 2, 1, 1, S0);   // наконечник
+  // скальп: прядь волос, исподом — киноварь
+  const sx = tip.x + (home ? 3 : -1), sy = tip.y + 1;
+  r(sx - 1, sy, 4, 2, K1); r(sx - 1, sy + 2, 1, 2, K1); r(sx + 1, sy + 2, 1, 3, K1); r(sx + 2, sy + 2, 1, 1, K1);
+  r(sx, sy + 1, 2, 1, KV);
+  if (home) for (let i = 0; i < 3; i++) {                               // подпекается: дымок
+    const a = ((t * 0.4 + i * 20) % 60) / 60;
+    X.globalAlpha = 0.35 * (1 - a); r(sx + q(Math.sin(a * 6 + i) * 1.5), sy - 2 - q(a * 14), 1, 1, AS);
+  }
   X.globalAlpha = 1;
-
-  // ═══ LEGS — alternating walk cycle when moving, idle weight-shift otherwise ═══
-  // Each leg has its own lift offset and knee bend per step.
-  // legL > 0 → left leg lifted (bent and shorter)
-  const legL = moving ? Math.max(0, walkPhase) * 3 : 0;
-  const legR = moving ? Math.max(0, -walkPhase) * 3 : 0;
-  // Idle: slight weight shift that bends one knee at a time
-  const idleLBend = moving ? 0 : Math.max(0, Math.sin(t * 0.005)) * 0.8;
-  const idleRBend = moving ? 0 : Math.max(0, -Math.sin(t * 0.005)) * 0.8;
-
-  // Left leg — base length 16, shortened by lift/bend
-  const lLen = 16 - legL - idleLBend;
-  rect(X, bx + 7, by + 28 + idleLBend, 3, lLen, P.d1);
-  for (let i = 0; i < 6; i++) {
-    const dc = i % 2 === 0 ? P.crimson : P.bone;
-    const dy = i * 2 - legL;
-    if (by + 30 + dy + idleLBend < by + 28 + idleLBend + lLen) {
-      px(X, bx + 8, by + 30 + dy + idleLBend, dc);
-    }
-  }
-  // Right leg
-  const rLen = 16 - legR - idleRBend;
-  rect(X, bx + 14, by + 28 + idleRBend, 3, rLen, P.d1);
-  for (let i = 0; i < 6; i++) {
-    const dc = i % 2 === 0 ? P.bone : P.crimson;
-    const dy = i * 2 - legR;
-    if (by + 30 + dy + idleRBend < by + 28 + idleRBend + rLen) {
-      px(X, bx + 15, by + 30 + dy + idleRBend, dc);
-    }
-  }
-
-  // ═══ POINTED CURLED SHOES with bells — follow leg lift ═══
-  // Left shoe (lifts when legL > 0)
-  const lFootY = by + 44 - legL;
-  rect(X, bx + 5, lFootY, 5, 2, P.d1);
-  rect(X, bx + 3, lFootY - 1, 3, 2, P.d1);
-  px(X, bx + 2, lFootY - 2, P.d1);
-  const bellL = Math.sin(t * 0.012) * 1 + (moving ? walkPhaseQ * 1.2 : 0);
-  px(X, bx + 1, lFootY - 3 + bellL, P.gold);
-  px(X, bx + 2, lFootY - 3 + bellL, P.sunflower);
-  // Right shoe (lifts when legR > 0)
-  const rFootY = by + 44 - legR;
-  rect(X, bx + 14, rFootY, 5, 2, P.d1);
-  rect(X, bx + 18, rFootY - 1, 3, 2, P.d1);
-  px(X, bx + 21, rFootY - 2, P.d1);
-  const bellR = Math.sin(t * 0.011 + 1.5) * 1 - (moving ? walkPhaseQ * 1.2 : 0);
-  px(X, bx + 22, rFootY - 3 + bellR, P.gold);
-  px(X, bx + 23, rFootY - 3 + bellR, P.sunflower);
-
-  // Dust kick when a foot plants (walk only)
-  if (moving) {
-    const planting = Math.abs(walkPhase) > 0.85;
-    if (planting && t % 4 === 0) {
-      X.globalAlpha = 0.3;
-      X.fillStyle = '#3a2a18';
-      const planted = walkPhase > 0 ? rFootY : lFootY;
-      const plantedX = walkPhase > 0 ? bx + 16 : bx + 7;
-      X.fillRect(plantedX - 1 + Math.random() * 3, planted + 2, 1, 1);
-      X.globalAlpha = 1;
-    }
-  }
-
-  // ═══ TORSO — narrow harlequin doublet ═══
-  // Main body block
-  rect(X, bx + 7, by + 14 - breath, 11, 14 + breath, P.d1);
-  dither(X, bx + 8, by + 15 - breath, 9, 12 + breath, P.crimson, P.d1, 0.45);
-  // Center diamond stripe
-  for (let i = 0; i < 6; i++) {
-    px(X, bx + 12, by + 15 + i * 2 - breath, P.bone);
-    px(X, bx + 12, by + 16 + i * 2 - breath, P.crimson);
-  }
-  // Belt
-  rect(X, bx + 7, by + 26, 11, 1, P.dgrey);
-  px(X, bx + 12, by + 26, P.gold);
-
-  // ═══ THREE-ARM SHIVA SETUP ═══
-  // Hand positions form a triangle in screen space; daggers cycle between them.
-  // When walking the whole triangle gets a counter-bob to the body so the
-  // juggle stays cohesive while the torso bounces.
-  const armSway = Math.sin(t * 0.008) * 0.5;
-  const armSway2 = Math.cos(t * 0.011) * 0.5;
-  // Walking adds an exaggerated swing on the front arms — left swings
-  // back when right leg swings forward, classic counter-arm motion.
-  const walkArm = moving ? walkPhase * 2.5 : 0;
-  const walkArmRise = moving ? walkPhaseQ * 0.8 : 0;
-  // Left front hand
-  const handL = {
-    x: cx - 9 + armSway + walkArm,
-    y: by + 10 - armSway2 + walkArmRise,
-  };
-  // Right front hand (counter-swing)
-  const handR = {
-    x: cx + 9 - armSway - walkArm,
-    y: by + 10 + armSway2 - walkArmRise,
-  };
-  // Back hand — slight bob with body, plus its own slow gesture
-  const handB = {
-    x: cx + Math.sin(t * 0.01) * 2 + (moving ? walkPhase * 0.8 : 0),
-    y: by - 4 + Math.cos(t * 0.01) * 1.5,
-  };
-  const hands = [handL, handR, handB];
-
-  // Draw shoulders
-  rect(X, bx + 5, by + 14 - breath, 3, 3, P.d1);
-  rect(X, bx + 16, by + 14 - breath, 3, 3, P.d1);
-
-  // ── BACK ARM (drawn FIRST so it sits behind torso/head) ──
-  // Curves up from behind the body and reaches over
-  X.strokeStyle = P.dcrimson;
-  X.lineWidth = 2;
-  X.beginPath();
-  // Origin: behind the spine, just below the head
-  const backOrigin = { x: cx + 1, y: by + 12 - breath };
-  // Control point arcs up and behind
-  X.moveTo(backOrigin.x, backOrigin.y);
-  X.bezierCurveTo(
-    backOrigin.x + 4, backOrigin.y - 6,
-    handB.x + 3, handB.y - 4,
-    handB.x, handB.y,
-  );
-  X.stroke();
-  X.lineWidth = 1;
-  // Stripe along the back arm (suggests harlequin sleeve)
-  X.strokeStyle = P.bone;
-  X.globalAlpha = 0.6;
-  X.beginPath();
-  X.moveTo(backOrigin.x, backOrigin.y);
-  X.bezierCurveTo(
-    backOrigin.x + 4, backOrigin.y - 6,
-    handB.x + 3, handB.y - 4,
-    handB.x, handB.y,
-  );
-  X.stroke();
-  X.globalAlpha = 1;
-  // Hand
-  px(X, handB.x, handB.y, P.bone);
-  px(X, handB.x - 1, handB.y, P.dbone);
-
-  // ═══ HEAD — narrow skull, jester mask ═══
-  // Head leans in the direction of motion when walking
-  const headTilt = Math.sin(t * 0.006) * 1.2 + (moving ? dir * 0.8 : 0);
-  const hx = bx + 7 + headTilt * 0.2;
-  const hy = by + 1;
-  rect(X, hx, hy, 10, 11, P.bone);
-  rect(X, hx + 1, hy + 1, 8, 9, '#2a2018');
-  // Sunken cheeks
-  px(X, hx, hy + 5, '#c8b8a0');
-  px(X, hx + 9, hy + 5, '#c8b8a0');
-  // Eyes — crimson embers
-  px(X, hx + 2, hy + 4, P.crimson);
-  px(X, hx + 3, hy + 4, P.crimson);
-  px(X, hx + 6, hy + 4, P.crimson);
-  px(X, hx + 7, hy + 4, P.crimson);
-  X.globalAlpha = 0.25 + 0.1 * Math.sin(t * 0.01);
-  px(X, hx + 2, hy + 3, P.crimson);
-  px(X, hx + 7, hy + 3, P.crimson);
-  X.globalAlpha = 1;
-  // Painted tear (jester makeup)
-  px(X, hx + 3, hy + 5, P.crimson);
-  // Nose hole
-  px(X, hx + 4, hy + 7, P.d1);
-  px(X, hx + 5, hy + 7, P.d1);
-  // Grin
-  for (let i = 0; i < 6; i++) px(X, hx + 2 + i, hy + 9, i % 2 ? P.bone : P.d1);
-  rect(X, hx + 2, hy + 10, 6, 1, '#2a2018');
-
-  // ═══ JESTER CAP — three horns with bells ═══
-  rect(X, hx - 1, hy - 1, 12, 3, P.crimson);
-  dither(X, hx, hy - 1, 10, 2, P.d1, P.crimson, 0.3);
-  // Horn 1 — left
-  const h1s = Math.sin(t * 0.009) * 2;
-  rect(X, hx - 3 + h1s * 0.2, hy - 3, 4, 3, P.crimson);
-  rect(X, hx - 5 + h1s * 0.4, hy - 6, 3, 4, P.crimson);
-  rect(X, hx - 7 + h1s * 0.6, hy - 9, 2, 4, P.crimson);
-  const bell1Bob = Math.sin(t * 0.012 + 0.3) * 1.3;
-  px(X, hx - 8 + h1s * 0.7, hy - 10 + bell1Bob, P.gold);
-  px(X, hx - 7 + h1s * 0.7, hy - 10 + bell1Bob, P.gold);
-  px(X, hx - 8 + h1s * 0.7, hy - 9 + bell1Bob, P.sunflower);
-  // Horn 2 — center, tallest
-  const h2s = Math.sin(t * 0.011 + 1) * 1.5;
-  rect(X, hx + 3, hy - 4, 4, 3, P.crimson);
-  rect(X, hx + 3 + h2s * 0.15, hy - 8, 3, 5, P.crimson);
-  rect(X, hx + 3 + h2s * 0.25, hy - 12, 3, 5, P.crimson);
-  const bell2Bob = Math.sin(t * 0.01 + 1.5) * 1.2;
-  px(X, hx + 4 + h2s * 0.3, hy - 13 + bell2Bob, P.gold);
-  px(X, hx + 5 + h2s * 0.3, hy - 13 + bell2Bob, P.gold);
-  px(X, hx + 4 + h2s * 0.3, hy - 12 + bell2Bob, P.sunflower);
-  // Horn 3 — right
-  const h3s = Math.sin(t * 0.008 + 2.5) * 2;
-  rect(X, hx + 9 + h3s * 0.2, hy - 3, 4, 3, P.crimson);
-  rect(X, hx + 12 + h3s * 0.4, hy - 6, 3, 4, P.crimson);
-  rect(X, hx + 14 + h3s * 0.6, hy - 9, 2, 4, P.crimson);
-  const bell3Bob = Math.sin(t * 0.013 + 2) * 1.3;
-  px(X, hx + 16 + h3s * 0.7, hy - 10 + bell3Bob, P.gold);
-  px(X, hx + 15 + h3s * 0.7, hy - 10 + bell3Bob, P.gold);
-  px(X, hx + 16 + h3s * 0.7, hy - 9 + bell3Bob, P.sunflower);
-
-  // ── TWO FRONT ARMS — drawn AFTER head so they sit on top ──
-  // Left arm
-  X.strokeStyle = P.d1;
-  X.lineWidth = 2;
-  const lShoulder = { x: bx + 6, y: by + 16 - breath };
-  X.beginPath();
-  X.moveTo(lShoulder.x, lShoulder.y);
-  X.quadraticCurveTo(lShoulder.x - 3, by + 12, handL.x, handL.y);
-  X.stroke();
-  // Sleeve diamonds
-  X.lineWidth = 1;
-  X.strokeStyle = P.crimson;
-  X.beginPath();
-  X.moveTo(lShoulder.x, lShoulder.y);
-  X.quadraticCurveTo(lShoulder.x - 3, by + 12, handL.x, handL.y);
-  X.stroke();
-  px(X, handL.x, handL.y, P.bone);
-  // Right arm
-  X.lineWidth = 2;
-  X.strokeStyle = P.d1;
-  const rShoulder = { x: bx + 18, y: by + 16 - breath };
-  X.beginPath();
-  X.moveTo(rShoulder.x, rShoulder.y);
-  X.quadraticCurveTo(rShoulder.x + 3, by + 12, handR.x, handR.y);
-  X.stroke();
-  X.lineWidth = 1;
-  X.strokeStyle = P.bone;
-  X.beginPath();
-  X.moveTo(rShoulder.x, rShoulder.y);
-  X.quadraticCurveTo(rShoulder.x + 3, by + 12, handR.x, handR.y);
-  X.stroke();
-  px(X, handR.x, handR.y, P.bone);
-
-  // ═══ DAGGERS — three of them, in cascade ═══
-  for (let i = 0; i < 3; i++) {
-    const d = daggerPos(t, i, hands);
-    drawDagger(d.x, d.y, d.angle);
-    // Faint motion blur trail
-    if (i === 0) {
-      X.globalAlpha = 0.18;
-      const prev = daggerPos(t - 2, i, hands);
-      drawDagger(prev.x, prev.y, prev.angle);
-      X.globalAlpha = 1;
-    }
-  }
-
-  // ═══ MENACING AURA on proximity ═══
-  X.globalAlpha = 0.08 + 0.05 * Math.sin(t * 0.007) + npcProximity * 0.1;
-  X.strokeStyle = P.crimson;
-  X.lineWidth = 1;
-  X.beginPath();
-  X.arc(cx, by + 18, 20 + npcProximity * 4, 0, Math.PI * 2);
-  X.stroke();
-  X.globalAlpha = 1;
-
-  // ═══ "ХА!" laugh on proximity ═══
+  // ── голова: лицо белое, губы красные — улыбка как форма; крест в глазнице ──
+  r(hx - 1, hy, 10, 11, K0);
+  r(hx, hy + 1, 8, 9, BO); r(hx, hy + 1, 1, 9, L1); r(hx + 7, hy + 2, 1, 7, L2);
+  r(hx + 1, hy + 3, 3, 4, K0); r(hx + 2, hy + 3, 1, 4, KV); r(hx + 1, hy + 4, 3, 1, KV);   // глазница, в ней крест
+  const blink = t % 900 < 6;
+  if (blink) r(hx + 5, hy + 4, 2, 1, K1); else { r(hx + 5, hy + 3, 2, 2, K0); r(hx + 5, hy + 4, 1, 1, KV); }   // моргает редко
+  r(hx + 3, hy + 6, 1, 1, L2);                                           // нос
+  r(hx + 1, hy + 8, 6, 1, KV); r(hx, hy + 7, 1, 1, KV); r(hx + 7, hy + 7, 1, 1, KV); r(hx + 2, hy + 9, 4, 1, KV);   // губы — улыбка
+  r(hx + 2, hy + 8, 4, 1, NI);
+  // ── колпак: три рога с бубенцами ──
+  r(hx - 1, hy - 1, 10, 2, KV); r(hx - 1, hy - 1, 10, 1, K1); r(hx - 1, hy, 1, 1, BO);
+  const hs = Math.sin(t * 0.009) * (moving ? 1.5 : 0.8);
+  const horn = (pts, c) => { for (const [ax, ay] of pts) r(hx + ax, hy + ay, 2, 2, c); };
+  horn([[-1, -3], [-3, -5], [-5, -7], [-6 + q(hs), -9]], KV);
+  horn([[3, -3], [3, -5], [3, -7], [3 + q(hs * 0.5), -10]], NI);
+  horn([[7, -3], [9, -5], [11, -7], [12 + q(hs), -9]], KV);
+  for (const [bx, bb] of [[-7 + q(hs), -10], [3 + q(hs * 0.5), -12], [14 + q(hs), -10]]) { r(hx + bx, hy + bb, 2, 1, L2); r(hx + bx, hy + bb + 1, 1, 1, AS); }
+  // ── «ХА!» вблизи ──
   if (npcProximity > 0.3 && t % 80 < 20) {
     const laughPh = (t % 80) / 20;
     X.globalAlpha = (1 - laughPh) * npcProximity * 0.7;
-    X.fillStyle = P.crimson;
+    X.fillStyle = KV;
     X.font = '6px "Press Start 2P"';
     X.fillText('ХА!', cx + 12 - laughPh * 2, hy - 10 - laughPh * 4);
     X.globalAlpha = 1;

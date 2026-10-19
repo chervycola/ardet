@@ -1268,6 +1268,20 @@ setCtx(ctx);
     }
     eq(bad.length, 0, 'вне канона: ' + [...new Set(bad)].join(', '));
   });
+  test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
+    const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js']) {
+      const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
+      for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
+        const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+        const blue = c[2] > c[0] + 25 && c[2] > c[1] + 8, white = c.every(v => v > 240);
+        if ((blue || white || neon(c)) && h !== THIRD.map(v => v.toString(16)).join('')) bad.push(f + ' #' + h);
+        if (GOLDS.includes(h) && !f.endsWith('sol.js')) bad.push(f + ': золото #' + h);
+      }
+      assert(!/createLinearGradient|createRadialGradient|\.arc\(|\.ellipse\(|bezierCurveTo|quadraticCurveTo|\.stroke\(\)/.test(src), `${f}: векторное — только точки`);
+    }
+    eq(bad.length, 0, 'вне канона: ' + bad.join(', '));
+  });
   test('земля городка: у каждой зоны своя фактура, артерий она не трогает', () => {
     const pick = { 0: [T.x0 + 900, T.y0 + 100], 1: [T.x0 + 1000, T.y0 + 1400], 2: [T.x0 + 160, T.y0 + 700], 3: [T.x0 + 2300, T.y0 + 900], 4: [T.x0 + 1100, T.y0 + 700] };
     for (const [z, [x, y]] of Object.entries(pick)) {
