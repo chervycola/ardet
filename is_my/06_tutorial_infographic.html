@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IS MY — от концепта до прибора</title>
 <style>
   :root{
@@ -105,6 +110,8 @@
     @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(201,106,74,.08);}}
   }
 </style>
+</head>
+<body>
 
 <div class="wrap">
 
@@ -117,7 +124,7 @@
     <span class="lbl"><span class="led amber"></span><b>EDITION</b>&nbsp; 13 экз. с провенансом</span>
     <span class="lbl"><span class="led green"></span><b>ФОРМАТ</b>&nbsp; Eurorack 3U · 20HP · ±12V</span>
     <span class="lbl"><b>СВЯЗЬ</b>&nbsp; один кабель USB-C</span>
-    <span class="lbl"><b>СТАТУС</b>&nbsp; документация готова → прототип</span>
+    <span class="lbl"><b>СТАТУС</b>&nbsp; вычитка (07) → этап 0 → прототип</span>
   </div>
 </header>
 
@@ -225,9 +232,11 @@
         <text x="290" y="114" fill="#c9a374" font-size="8">SATURATE</text>
         <text x="290" y="126" fill="#8fb3c0" font-size="8">FILTER</text>
         <line x1="252" y1="272" x2="285" y2="272" stroke="#5c4a26"/>
-        <text x="290" y="268" fill="#8a837a" font-size="8">8× CV-in c</text>
-        <text x="290" y="279" fill="#8a837a" font-size="8">аттенювер-</text>
-        <text x="290" y="290" fill="#8a837a" font-size="8">торами</text>
+        <text x="290" y="262" fill="#8a837a" font-size="8">8× CV-in:</text>
+        <text x="290" y="273" fill="#8a837a" font-size="8">DRIVE/BIAS —</text>
+        <text x="290" y="284" fill="#8a837a" font-size="8">аттенюверт.,</text>
+        <text x="290" y="295" fill="#8a837a" font-size="8">остальные —</text>
+        <text x="290" y="306" fill="#8a837a" font-size="8">ручка + CV</text>
         <line x1="252" y1="335" x2="285" y2="335" stroke="#3a5560"/>
         <text x="290" y="332" fill="#7fa3b0" font-size="8">USB-C:</text>
         <text x="290" y="343" fill="#8a837a" font-size="8">пульт сюда</text>
@@ -556,10 +565,10 @@
     <tr><td><b>Правый стик ↑</b></td><td>CUTOFF</td><td>rate — «открыл и стоит»</td><td>ручка CUTOFF на модуле</td></tr>
     <tr><td><b>Правый стик ↔</b></td><td>RESO</td><td>momentary — вокруг базы</td><td>ручка RESO</td></tr>
     <tr><td><b>Слайдер 3-поз</b></td><td>MODE</td><td>SHAPER · RING · GATE</td><td>смена под мьютом, без щелчка</td></tr>
-    <tr><td><b>RTH / Fn</b></td><td>ARM / LINK</td><td>toggle</td><td>LED-зеркало на пульте и модуле</td></tr>
+    <tr><td><b>RTH / Fn</b></td><td>ARM / LINK</td><td>toggle</td><td>ARM — LED на пульте и модуле; LINK — без индикации</td></tr>
     <tr><td><b>Shutter</b></td><td>GATE</td><td>momentary, нота C2</td><td>дублируется CV-выходом GATE</td></tr>
     <tr><td><b>Колёсико</b></td><td>→ MIX</td><td>назначаемый CC#20</td><td>нормаль на вход MIX</td></tr>
-    <tr><td><b>Ручки модуля</b></td><td>LEVEL · TONE · HPF · MIX · BASS</td><td>аналог, вне MIDI</td><td>+ CV-входы с перехватом</td></tr>
+    <tr><td><b>Ручки модуля</b></td><td>LEVEL · TONE · HPF · MIX · BASS</td><td>аналог, вне MIDI</td><td>+ CV-входы с перехватом (у BASS джека нет)</td></tr>
   </table>
   </div>
 </section>
@@ -572,7 +581,9 @@
     <div class="row"><span class="n">III</span><span><b>Звук первичен.</b> Если модуль не работает как инструмент — концепция его не вытащит.</span></div>
     <div class="row"><span class="n">IV</span><span><b>Часть линейки.</b> Архитектура живёт в общем потоке System Suicide, не отдельным объектом.</span></div>
   </div>
-  <div class="lbl" style="margin-top:28px">IS MY · SYSTEM SUICIDE №8 · рабочие документы: 01_concept → 05_pult_dji_c5 + firmware/ · ветка claude/jolly-gates-KxAP2</div>
+  <div class="lbl" style="margin-top:28px">IS MY · SYSTEM SUICIDE №8 · рабочие документы: 01_concept → 07_review_and_plan + firmware/ · ветка claude/jolly-gates-KxAP2</div>
 </footer>
 
 </div>
+</body>
+</html>
