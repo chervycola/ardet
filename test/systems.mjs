@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/player.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];

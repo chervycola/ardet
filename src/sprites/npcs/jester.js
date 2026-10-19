@@ -6,7 +6,9 @@
 // результат, а форма.» По библии: колпак с тремя рогами, ромбы арлекина,
 // хвост с лезвием, горящий нимб, крест в глазнице, игральные карты-надгробия.
 // Багрянец на чёрном: киноварь и ночь, кость; тепло — только язычки нимба.
-// У костра пика протянута над огнём; на ходу (world/wandering.js) — на плече.
+// По слову автора вертит пику и пару кинжалов: у костра подпекает скальп над
+// огнём, потом крутит пику; на ходу (world/wandering.js) крутит не переставая;
+// кинжалы по очереди взлетают с правой руки.
 // Пиксель к пикселю; свет слева, кромка пеплом справа.
 // ═══════════════════════════════════════
 import { t } from '../../core/time.js';
@@ -29,6 +31,13 @@ function card(x, g, lean, pip) {
   r(x + 1 + (lean > 0 ? 1 : 0), g - 4, 1, 2, pip);
   r(x - 1, g, 5, 1, K0);
 }
+// кинжал по оси: навершие, рукоять, гарда, клинок; a — куда смотрит остриё
+function dagger(cx, cy, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  for (const [k, p, col] of [[-2, 0, L2], [-1, 0, K1], [0, 0, K1], [1, -1, L2], [1, 0, L2], [1, 1, L2], [2, 0, AS], [3, 0, AS], [4, 0, BO], [5, 0, BO]]) r(cx + k * c - p * s, cy + k * s + p * c, 1, 1, col);
+}
+const TWIRL = 420, ROAST = 260;                                          // цикл у костра: семь секунд, из них подпекает четыре с третью
+const DAG = 64;                                                          // кинжал: взлёт, оборот с половиной, в руке
 export function drawNPC_jester(jx, jy, opts = {}) {
   const home = opts.moving === undefined, moving = !!opts.moving;
   const x0 = q(jx), y0 = q(jy);
@@ -76,33 +85,20 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   r(tx, ty + 12, 11, 1, K1); r(tx + 5, ty + 12, 1, 1, L2);               // пояс, пряжка
   // ворот зубцами: кость и киноварь
   for (let k = 0; k < 6; k++) { r(tx - 1 + k * 2, ty - 1, 2, 1, k & 1 ? KV : BO); r(tx + k * 2, ty, 1, 1, k & 1 ? KV : BO); }
-  // ── руки: в одной кинжал, в другой пика ──
+  // ── руки: левая вертит пику, правая — два кинжала ──
   const sL = { x: tx - 1, y: ty + 2 }, sR = { x: tx + 11, y: ty + 2 };
   const swing = moving ? q(step * 2) : 0;
-  // правая — кинжал остриём вниз
-  const hR = { x: sR.x + 2 - swing, y: sR.y + 9 };
-  line(sR.x, sR.y, hR.x, hR.y, NI); line(sR.x + 1, sR.y, hR.x + 1, hR.y, KV);
-  r(hR.x, hR.y, 2, 1, BO);
-  r(hR.x - 1, hR.y + 1, 4, 1, L2); r(hR.x, hR.y + 2, 1, 4, AS); r(hR.x + 1, hR.y + 2, 1, 3, BO); r(hR.x, hR.y + 6, 1, 1, S0);
-  // левая — пика: у костра над огнём, скальп подпекается; на ходу — на плече
-  const hL = home ? { x: sL.x - 4, y: sL.y + 3 } : { x: sL.x - 1 + swing, y: sL.y + 6 };
+  // пика: у костра держит над огнём — подпекает, потом перехватывает за середину и крутит
+  // два оборота; на ходу крутит не переставая
+  const ph = t % TWIRL, HOLD = Math.atan2(-13, -30);
+  let ang = HOLD, spin = 0;
+  if (moving) { ang = HOLD + t * 0.09; spin = 1; }
+  else if (ph >= ROAST) { const u = (ph - ROAST) / (TWIRL - ROAST), e = u * u * (3 - 2 * u); ang = HOLD + e * Math.PI * 4; spin = Math.sin(u * Math.PI); }
+  const hL = { x: sL.x - 4 + q(Math.cos(ang * 2) * spin), y: sL.y + 3 + q(Math.sin(ang * 2) * spin) };   // кисть ходит кругом
   line(sL.x, sL.y, hL.x, hL.y, NI); line(sL.x + 1, sL.y + 1, hL.x + 1, hL.y, KV);
-  const tip = home ? { x: hL.x - 30, y: hL.y - 13 } : { x: hL.x + 9, y: hL.y - 24 };
-  const tail = home ? { x: hL.x + 4, y: hL.y + 2 } : { x: hL.x - 3, y: hL.y + 8 };
-  line(tail.x, tail.y, tip.x, tip.y, BR2);
-  line(tail.x, tail.y - 1, tip.x, tip.y - 1, home ? L2 : BR2);
-  r(hL.x, hL.y, 2, 2, BO);
-  const dx = Math.sign(tip.x - tail.x), dy = Math.sign(tip.y - tail.y);
-  r(tip.x + dx, tip.y + dy, 1, 1, AS); r(tip.x + dx * 2, tip.y + dy * 2, 1, 1, S0);   // наконечник
-  // скальп: прядь волос, исподом — киноварь
-  const sx = tip.x + (home ? 3 : -1), sy = tip.y + 1;
-  r(sx - 1, sy, 4, 2, K1); r(sx - 1, sy + 2, 1, 2, K1); r(sx + 1, sy + 2, 1, 3, K1); r(sx + 2, sy + 2, 1, 1, K1);
-  r(sx, sy + 1, 2, 1, KV);
-  if (home) for (let i = 0; i < 3; i++) {                               // подпекается: дымок
-    const a = ((t * 0.4 + i * 20) % 60) / 60;
-    X.globalAlpha = 0.35 * (1 - a); r(sx + q(Math.sin(a * 6 + i) * 1.5), sy - 2 - q(a * 14), 1, 1, AS);
-  }
-  X.globalAlpha = 1;
+  // правая подбрасывает: в такт кинжалам кисть чуть вверх
+  const hR = { x: sR.x + 2 - swing, y: sR.y + 9 - (((t % DAG) / DAG) < 0.12 ? 1 : 0) };
+  line(sR.x, sR.y, hR.x, hR.y, NI); line(sR.x + 1, sR.y, hR.x + 1, hR.y, KV);
   // ── голова: лицо белое, губы красные — улыбка как форма; крест в глазнице ──
   r(hx - 1, hy, 10, 11, K0);
   r(hx, hy + 1, 8, 9, BO); r(hx, hy + 1, 1, 9, L1); r(hx + 7, hy + 2, 1, 7, L2);
@@ -120,6 +116,36 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   horn([[3, -3], [3, -5], [3, -7], [3 + q(hs * 0.5), -10]], NI);
   horn([[7, -3], [9, -5], [11, -7], [12 + q(hs), -9]], KV);
   for (const [bx, bb] of [[-7 + q(hs), -10], [3 + q(hs * 0.5), -12], [14 + q(hs), -10]]) { r(hx + bx, hy + bb, 2, 1, L2); r(hx + bx, hy + bb + 1, 1, 1, AS); }
+  // ── пика — перед ним: древко, наконечник, скальп; на быстром обороте — след ──
+  const ca = Math.cos(ang), sa = Math.sin(ang), grip = 7 + 12 * spin;  // хват ползёт к середине
+  const tip = { x: hL.x + ca * (38 - grip), y: hL.y + sa * (38 - grip) }, tail = { x: hL.x - ca * grip, y: hL.y - sa * grip };
+  if (spin > 0.6) {
+    X.globalAlpha = 0.25;
+    for (const dA of [-0.35, -0.7]) { const c2 = Math.cos(ang + dA), s2 = Math.sin(ang + dA); r(hL.x + c2 * (37 - grip), hL.y + s2 * (37 - grip), 1, 1, L2); r(hL.x - c2 * grip, hL.y - s2 * grip, 1, 1, L2); }
+    X.globalAlpha = 1;
+  }
+  line(tail.x, tail.y, tip.x, tip.y, BR2);
+  if (Math.abs(sa) < 0.7) line(tail.x, tail.y - 1, tip.x, tip.y - 1, L2); else line(tail.x - 1, tail.y, tip.x - 1, tip.y, L2);   // кромка к свету
+  r(hL.x, hL.y, 2, 2, BO);                                               // кулак
+  r(tip.x + ca, tip.y + sa, 1, 1, AS); r(tip.x + ca * 2, tip.y + sa * 2, 1, 1, S0);   // наконечник
+  // скальп: висит, когда держит; на обороте прядь летит наружу
+  const hx2 = ca * spin, hy2 = sa * spin + (1 - spin), hn = Math.hypot(hx2, hy2) || 1;
+  const sx = tip.x - ca, sy = tip.y - sa;
+  r(sx - 1, sy, 3, 2, K1); r(sx, sy + 1, 2, 1, KV);
+  for (const off of [-1, 0, 1]) for (let k = 1; k <= 3; k++) r(sx + off * (1 - spin) + hx2 / hn * k, sy + 1 + hy2 / hn * k + off * spin, 1, 1, K1);
+  if (!moving && ph < ROAST) for (let i = 0; i < 3; i++) {             // подпекается: дымок
+    const u = ((t * 0.4 + i * 20) % 60) / 60;
+    X.globalAlpha = 0.35 * (1 - u); r(sx + q(Math.sin(u * 6 + i) * 1.5), sy - 2 - q(u * 14), 1, 1, AS);
+  }
+  X.globalAlpha = 1;
+  // ── два кинжала: по очереди взлетают с правой руки, вертятся, ложатся обратно ──
+  for (let i = 0; i < 2; i++) {
+    const u = ((t + i * DAG / 2) % DAG) / DAG;
+    if (u < 0.78) {
+      const a = u / 0.78, side = i ? 1 : -1;
+      dagger(hR.x + 1 + q(Math.sin(a * Math.PI) * 3 * side), hR.y - 2 - q(Math.sin(a * Math.PI) * 15), a * Math.PI * 3 + i * 1.3);
+    } else dagger(hR.x + 1, hR.y + 1, Math.PI / 2);                     // в руке — остриём вниз
+  }
   // ── «ХА!» вблизи ──
   if (npcProximity > 0.3 && t % 80 < 20) {
     const laughPh = (t % 80) / 20;

@@ -279,6 +279,19 @@ const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturna
 // лежат в земле — рисуются под всем, что стоит (иначе песок равнины Лунного
 // ложится поверх самого Лунного: его место ниже по глубине, чем край равнины)
 const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'trap_puddle']);
+// сидят внутри другого места — рисуются сразу после него (Старец — в палатке;
+// кот на стопке книг — ещё позже: сидящий на вещи берёт её глубину +0,5, world/silentCat.js)
+const INSIDE = { elder_home: 'tent' }, insideHost = new Map();
+function depthOf(loc) {
+  if (GROUND.has(loc.id)) return loc.y - 1e6;
+  const hid = INSIDE[loc.id];
+  if (hid) {
+    let h = insideHost.get(hid);
+    if (!h) { h = locations.find(l => l.id === hid); insideHost.set(hid, h); }
+    if (h) return Math.max(loc.y + loc.h, h.y + h.h + 0.25);
+  }
+  return loc.y + loc.h;
+}
 const LIGHTS = new Set(['campfire', 'sol_home']);   // сами светят — тени не отбрасывают (Sol горит с основания)
 const casterOf = new Map();
 function locCaster(loc) {
@@ -431,7 +444,7 @@ function render() {
   // за домом странника не видно, перед домом — видно
   const drawList = [];
   for (const loc of locations) {             // с запасом: столбы, флаги, пар выходят за рамку места
-    if (camera.isVisible(loc.x - 32, loc.y - 64, loc.w + 64, loc.h + 72)) drawList.push({ k: GROUND.has(loc.id) ? loc.y - 1e6 : loc.y + loc.h, loc });
+    if (camera.isVisible(loc.x - 32, loc.y - 64, loc.w + 64, loc.h + 72)) drawList.push({ k: depthOf(loc), loc });
   }
   for (const p of archProps) {
     if (camera.isVisible(p.x - p.w / 2 - 2, p.gy - p.h, p.w + 4, p.h + 2)) drawList.push({ k: p.gy, prop: p });

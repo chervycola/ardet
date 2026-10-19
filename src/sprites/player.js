@@ -1,130 +1,66 @@
 // ═══════════════════════════════════════
-// PLAYER sprite — the wanderer: floating cloaked figure with chest-fire
-// No visible arms or legs — just a robed silhouette glowing from within.
+// СТРАННИК — по ART_BIBLE §05. «Лица нет — капюшон и тьма; рваная ткань
+// слоями, как оперение; огонёк у сердца... следы на пыли — единственная
+// биография.» Плащ — три яруса рваной ткани, кончики перьями; капюшон — тьма,
+// в ней никого. Один тёплый огонёк у сердца — свеча, без растра; свет вокруг
+// даёт слой света (lighting.sources[0]). Подол отстаёт от хода и уходит по
+// ветру; ярусы колышутся каждый в свой черёд. Свет слева, кромка пеплом справа.
+// Рамка рисунка прежняя: x..x+14, y−4..y+23 (тень героя, main.js).
 // ═══════════════════════════════════════
-import { rect, px } from '../render/draw.js';
 import { X } from '../render/context.js';
 import { t } from '../core/time.js';
 import { wind } from '../world/wind.js';
 
-const P = {
-  void: '#050408',
-  shadow: '#0a0a0a',
-  cloakDark: '#12101a',
-  cloakMid: '#1e1a28',
-  cloakEdge: '#2a2032',
-  // Chest fire palette (from core to halo)
-  fireCore: '#fff4c8',
-  fireHot:  '#ffb040',
-  fireMid:  '#e06018',
-  fireDim:  '#7a1410',
-  ember:    '#ff8030',
-};
+const NI = '#0D0B0A', AS = '#8A8D8F', SV = '#E28A3A', KV = '#C23B2B', L1 = '#c8b89a';
+const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328', S2 = '#33302e';
+const q = Math.round;
+const r = (x, y, w = 1, h = 1, c) => { X.fillStyle = c; X.fillRect(q(x), q(y), w, h); };
 
-export function drawPlayer(player) {
-  const ctx = X;
-  const x = Math.floor(player.x);
-  const y = Math.floor(player.y);
-  const dir = player.dir || 1;
-  const moving = player.moving;
-  // Float bob — gentler than walking, since there are no legs to animate
-  const bob = Math.sin(t * 0.04) * 1.2 + (moving ? Math.abs(Math.sin(t * 0.18)) * 0.6 : 0);
-  const breath = Math.sin(t * 0.015) * 0.5;
-  const sway = Math.sin(t * 0.02) * 0.6;
-  const firePulse = 0.7 + 0.3 * Math.sin(t * 0.18);
-  // ветер и ход: подол отстаёт от движения и уходит по ветру, огонь в порыв дрожит
-  const w = wind.at(x + 6, y + 12), vx = player.vx || 0;
-  const trail = Math.max(-2.5, Math.min(2.5, w.x * 2.4 - vx * 0.7));
-  const lean = Math.max(-1, Math.min(1, Math.round(vx * 0.45)));       // клонится в сторону хода
-  const fireFlicker = 0.85 + (0.15 + w.s * 0.25) * Math.sin(t * (0.45 + w.s * 0.3) + Math.sin(t * 0.1) * 2);
-
-  // ═══ SHADOW (oval below the floating figure) ═══
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.ellipse(x + 7, y + 23, 7, 2.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Chest fire warms the ground
-  ctx.globalAlpha = 0.18 * firePulse;
-  const fireGlow = ctx.createRadialGradient(x + 6, y + 11, 1, x + 6, y + 11, 22);
-  fireGlow.addColorStop(0, P.fireHot);
-  fireGlow.addColorStop(0.5, 'rgba(224,96,24,0.4)');
-  fireGlow.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = fireGlow;
-  ctx.fillRect(x - 16, y - 6, 44, 34);
-  ctx.globalAlpha = 1;
-
-  // ═══ CLOAK BODY — narrow at top, flared, tapers to a hem above the ground ═══
-  const cbx = x + sway;
-  // Upper torso
-  rect(ctx, cbx + 1, y + 5 - bob + breath, 11, 6, P.cloakMid);
-  rect(ctx, cbx + 2, y + 6 - bob + breath, 9, 5, P.cloakDark);
-  // Mid cloak
-  rect(ctx, cbx + 0, y + 11 - bob, 13, 7, P.cloakMid);
-  rect(ctx, cbx + 1, y + 12 - bob, 11, 6, P.cloakDark);
-  // Lower hem — uneven, flares; отстаёт от хода и треплется на ветру
-  const hemPh = Math.sin(t * (0.06 + w.s * 0.16)) * (0.5 + w.s * 0.8);
-  const hx0 = cbx + Math.round(trail);                                  // подол сносит целиком
-  rect(ctx, hx0 - 1, y + 18 - bob, 15, 4, P.cloakMid);
-  rect(ctx, hx0 + 0, y + 19 - bob, 13, 3, P.cloakDark);
-  // Hem ripple (edge highlights suggesting folds)
-  px(ctx, hx0 - 1 + (trail < -1 ? -1 : 0), y + 21 - bob + hemPh, P.cloakEdge);
-  px(ctx, hx0 + 4, y + 22 - bob, P.cloakEdge);
-  px(ctx, hx0 + 8, y + 22 - bob - hemPh, P.cloakEdge);
-  px(ctx, hx0 + 13 + (trail > 1 ? 1 : 0), y + 21 - bob + hemPh, P.cloakEdge);
-  // Vertical cloak fold line
-  rect(ctx, cbx + 6, y + 7 - bob, 1, 14, P.void);
-
-  // ═══ CHEST FIRE — pulsing ember in the heart of the cloak ═══
-  const fx_ = cbx + 5;
-  const fy_ = y + 9 - bob;
-  ctx.globalAlpha = 0.55 * firePulse;
-  rect(ctx, fx_ - 1, fy_, 5, 4, P.fireDim);
-  ctx.globalAlpha = 0.75 * firePulse;
-  rect(ctx, fx_, fy_, 3, 3, P.fireMid);
-  ctx.globalAlpha = 0.9 * fireFlicker;
-  rect(ctx, fx_ + 1, fy_, 1, 3, P.fireHot);
-  px(ctx, fx_ + 1, fy_ - 1, P.fireCore);
-  px(ctx, fx_ + 1, fy_ + 1, P.fireCore);
-  ctx.globalAlpha = 1;
-
-  // Rising ember sparks from chest — occasional
-  if (t % 8 === 0 && Math.random() > 0.4) {
-    const sp = (t / 8) % 3;
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = P.ember;
-    ctx.fillRect(Math.round(fx_ + 1 + Math.sin(t * 0.1) * 2 + w.x * sp * 2.5), fy_ - 2 - sp, 1, 1);   // искру сносит
-    ctx.globalAlpha = 1;
+// ярус плаща: x0..x0+w, от y0 вниз на h; кончики — перьями разной длины; низ сносит на off
+const TIP = [0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 0, 1, 3, 0, 2, 1];
+function tier(x0, y0, w, h, off, ph) {
+  for (let k = 0; k < w; k++) {
+    const u = k / (w - 1), len = h + TIP[(k + ph) % TIP.length], xx = x0 + k;
+    for (let j = 0; j < len; j++) {
+      const v = j / len, sx = q(off * v * (0.5 + u * 0.5));              // низ отстаёт сильнее верха
+      const c = j === 0 ? (u < 0.35 ? K4 : u > 0.9 ? AS : K2)            // верхний край ловит свет
+        : j === len - 1 ? (k & 1 ? K0 : K2)                              // кончик пера
+        : u < 0.15 ? K2 : u > 0.92 ? S2 : v < 0.4 ? K2 : K1;
+      r(xx + sx, y0 + j, 1, 1, c);
+    }
   }
-
-  // ═══ HOOD — dramatic, deep shadow, obscures face ═══
-  const hx = cbx + 2 + lean;
-  const hy = y - 3 - bob;
-  rect(ctx, hx - 1, hy + 1, 11, 6, P.void);
-  rect(ctx, hx, hy, 9, 6, P.cloakDark);
-  rect(ctx, hx - 1, hy + 5, 11, 3, P.cloakMid);
-  px(ctx, hx - 1, hy + 4, P.cloakMid);
-  px(ctx, hx + 9, hy + 4, P.cloakMid);
-  rect(ctx, hx + 1, hy + 2, 7, 5, P.void);
-
-  // ═══ FACE VOID with two faint ember eyes ═══
-  const eyeY = hy + 4;
-  const eyePulse = 0.55 + 0.25 * Math.sin(t * 0.12);
-  ctx.globalAlpha = eyePulse;
-  px(ctx, hx + 3, eyeY, P.ember);
-  px(ctx, hx + 5, eyeY, P.ember);
-  ctx.globalAlpha = eyePulse * 0.7;
-  ctx.fillStyle = P.fireHot;
-  ctx.fillRect(hx + 3, eyeY, 1, 1);
-  ctx.fillRect(hx + 5, eyeY, 1, 1);
-  ctx.globalAlpha = 1;
-  if (t % 260 < 5) {
-    ctx.fillStyle = P.void;
-    ctx.fillRect(hx + 2, eyeY, 5, 1);
-  }
-  // dir is intentionally unused — the face is a void, no asymmetry
-  void dir;
 }
-
+export function drawPlayer(player) {
+  const x = Math.floor(player.x), y = Math.floor(player.y);
+  const moving = player.moving;
+  const bob = q(Math.sin(t * 0.04) * 1.2 + (moving ? Math.abs(Math.sin(t * 0.18)) * 0.6 : 0));
+  const sway = q(Math.sin(t * 0.02) * 0.6);
+  const w = wind.at(x + 6, y + 12), vx = player.vx || 0;
+  const trail = Math.max(-2.5, Math.min(2.5, w.x * 2.4 - vx * 0.7));     // подол отстаёт и уходит по ветру
+  const lean = Math.max(-1, Math.min(1, q(vx * 0.45)));
+  const flick = (0.15 + w.s * 0.25) * Math.sin(t * (0.45 + w.s * 0.3) + Math.sin(t * 0.1) * 2);
+  const cx = x + sway, top = y - bob;
+  // следы и тень — у земли
+  X.globalAlpha = 0.35; r(x + 1, y + 23, 12, 1, NI); X.globalAlpha = 1;
+  // ── ярусы плаща снизу вверх: подол, середина, оплечье ──
+  const ph = (t >> 4) & 7;
+  tier(cx - 2, top + 15, 18, 6, trail, ph);
+  r(cx - 1, top + 15, 16, 1, K0);                                        // тень от среднего яруса
+  tier(cx - 1, top + 9, 16, 6, trail * 0.55 + Math.sin(t * 0.05) * 0.4, ph + 5);
+  r(cx, top + 9, 14, 1, K0);                                             // тень от оплечья
+  tier(cx + 1, top + 4, 12, 5, trail * 0.25, ph + 9);
+  // ── огонёк у сердца: свеча, сплошной; в порыв дрожит ──
+  const fx = cx + 5 + lean, fy = top + 9;
+  r(fx, fy + 1, 2, 2, KV);
+  r(fx, fy, 2, 2, SV);
+  r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), SV);
+  if (flick > 0.3) r(fx, fy, 1, 1, L1);                                  // в порыв вспыхивает
+  if (t % 9 === 0 && ((t / 9) % 3 | 0) === 0) { X.globalAlpha = 0.6; r(fx + q(w.x * 3), fy - 3, 1, 1, SV); X.globalAlpha = 1; }   // искру сносит
+  // ── капюшон: лица нет — тьма ──
+  const hx = cx + 2 + lean, hy = top - 4;
+  r(hx + 4, hy - 2, 1, 1, K2); r(hx + 3, hy - 1, 3, 1, K2);                // острие клобука
+  r(hx + 1, hy, 7, 1, K2); r(hx, hy + 1, 9, 8, K1);
+  r(hx, hy + 1, 1, 7, K4); r(hx + 1, hy, 2, 1, K4); r(hx + 8, hy + 2, 1, 6, AS);   // к свету; кромка пеплом
+  r(hx + 2, hy + 3, 5, 5, NI); r(hx + 3, hy + 2, 3, 1, NI); r(hx + 2, hy + 8, 5, 1, NI);   // тьма — лица нет
+  for (const k of [0, 2, 5, 7]) r(hx + k, hy + 9, 1, 1 + (k & 1), K1);     // рваный край на оплечье
+}
