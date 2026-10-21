@@ -164,6 +164,16 @@ const BANDS = {
     if (d > H - 2) return K2;
     return hh(x, d, 71) < 0.05 ? S2 : S0;
   },
+  granite(x, d, H) {                                                    // гранит: зерно, следы шпуров от взрывной проходки
+    if (d <= 2) return K2;
+    if (d > H - 2) return K1;
+    if (d > H - 7) return hh(x, d, 66) < 0.2 ? K2 : K3;
+    const sx = x % 11;
+    if (sx === 0 && d < H - 9) return K3;                               // шпур — полутрубка
+    if (sx === 1 && d < H - 9) return S1;
+    const n = hh(x, d, 65);
+    return n < 0.1 ? S1 : n < 0.18 ? K3 : n > 0.975 ? AS : S0;
+  },
   loop(x, d, H) {                                                       // станция: гладкие панели, мёртвая лента диодов, свод в тень
     if (d <= 2) return K2;
     if (d <= 5) return S2;                                              // плинтус
@@ -179,11 +189,11 @@ const BANDS = {
 };
 const SIDE = {
   lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1],
+  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1],
 };
 const LIPS = {
   lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1],
+  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1],
 };
 const FLOORS = {
   lime(x, y, R) {                                                       // каменные плиты
@@ -196,6 +206,7 @@ const FLOORS = {
   brick(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 93); return n > 0.997 ? L2 : n > 0.988 ? S1 : n < 0.04 ? S2 : S0; },   // мука по бетону
   frost(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
   wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5) return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; },   // вода
+  granite(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
   loop(x, y, R) {                                                       // платформа на одну машину — плитка, тактильная полоса, бордюр; дальше полоса посадки
     const fy = y - R.y0;
     if (fy === 0) return K1;
@@ -409,6 +420,23 @@ function wallThing(th) {
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем
     case 'u_frost_line': scrawl(x + 2, y + 7, 34, 1, BO, 32, 4); break;
     case 'u_godot': godot(th); break;
+    case 'u_spiral': spiral(th); break;
+    case 'u_onkalo_sign': {                                             // плита: семь языков и рисунок — лицо в ужасе
+      r(x + 2, y + 4, 80, 34, K2); r(x + 3, y + 5, 78, 32, S1); r(x + 3, y + 5, 78, 1, L2); r(x + 80, y + 6, 1, 31, S0);
+      for (let k = 0; k < 7; k++) {
+        const yy = y + 8 + k * 4;
+        if (k === 4) { for (let i = 0; i < 12; i++) if (hh(i, k, 51) < 0.85) { r(x + 7 + i * 4, yy, 3, 3, K1); r(x + 8 + i * 4, yy + 1, 1, 1, S1); } continue; }   // иероглифы
+        if (k === 5) { for (let i = 0; i < 46; i++) { r(x + 53 - i, yy + 1 + (hh(i, k, 52) < 0.3 ? -1 : 0), 1, 1, K1); if (hh(i, k, 53) < 0.12) r(x + 53 - i, yy - 1 + (i & 2), 1, 1, K1); } continue; }   // вязь справа налево, с точками
+        for (let i = 0; i < 46; i++) if (hh(i, k, 54 + k) < 0.66 && (i + k) % (4 + (k % 3)) !== 0) r(x + 7 + i, yy, 1, 2, K1);   // строки букв
+      }
+      // рисунок: лицо в ужасе — овал, глаза, рот кругом; руки к щекам
+      const fx = x + 64, fy = y + 10;
+      for (const [dx, dy] of [[3, 0], [4, 0], [5, 0], [2, 1], [6, 1], [1, 2], [7, 2], [1, 3], [7, 3], [1, 4], [7, 4], [1, 5], [7, 5], [1, 6], [7, 6], [2, 7], [6, 7], [2, 8], [6, 8], [3, 9], [4, 9], [5, 9]]) r(fx + dx, fy + dy, 1, 1, K1);
+      r(fx + 3, fy + 3, 1, 1, K1); r(fx + 5, fy + 3, 1, 1, K1); r(fx + 4, fy + 5, 1, 2, K1); r(fx + 3, fy + 6, 1, 1, K1); r(fx + 5, fy + 6, 1, 1, K1);
+      r(fx - 1, fy + 4, 1, 4, K1); r(fx + 9, fy + 4, 1, 4, K1);
+      for (let i = 0; i < 9; i++) r(fx + i, fy + 14 + (i & 1), 1, 1, K1);  // под лицом — волна: «опасно»
+      break;
+    }
     case 'u_board': {                                                   // табло перекидное: «следующее отправление — скоро»
       r(x + 10, y, 1, 6, S2); r(x + 50, y, 1, 6, S2);                   // висит на тягах
       r(x, y + 6, 60, 26, K2); r(x + 1, y + 7, 58, 24, K1); r(x, y + 6, 60, 1, S0);
@@ -495,6 +523,33 @@ function godot(th) {
 
 // зал поверх линии (станция): там своей стены у трубы нет
 const overLine = (a, b) => ROOMS.some(R => R.x0 < b && R.x1 > a && R.y0 < LINE.y0 && R.y1 > LINE.y0);
+
+// ═══ ОНКАЛО: шахта посреди зала, ход спиралью вниз ═══
+// Смотришь в шахту сверху: видна дальняя стена, по ней виток за витком
+// спускается пандус — уступы дугой, каждый ниже и темнее; спираль — уступ
+// идёт под уклон с запада на восток. Внизу — темнота. Обод к свету слева.
+function spiral(th) {
+  const cx = th.x + th.w / 2, cy = th.y + th.h / 2, R = th.w / 2 - 2, TURN = 12;
+  for (let x = Math.floor(cx - R - 2); x <= Math.ceil(cx + R + 2); x++) {
+    const dx = x + 0.5 - cx;
+    for (let y = Math.floor(cy - R - 2); y <= Math.ceil(cy + R + 2); y++) {
+      const dy = y + 0.5 - cy, d = Math.hypot(dx, dy);
+      if (d > R + 2) continue;
+      if (d > R - 1) { r(x, y, 1, 1, dy < 0 ? (dx < 0 ? AS : S1) : d > R + 1 ? K1 : K2); continue; }   // обод
+      const h = Math.sqrt(Math.max(0, R * R - dx * dx));
+      const z = y - (cy - h) - 6 * (dx + R) / (2 * R);                 // глубина по дальней стене; уклон витка
+      if (z < 0) { r(x, y, 1, 1, K2); continue; }
+      const u = ((z % TURN) + TURN) % TURN, deep = z / TURN;
+      let c;
+      if (u < 1.2) c = deep < 1.5 ? S1 : deep < 3.5 ? S0 : deep < 5.5 ? K3 : K2;   // уступ пандуса
+      else if (u < 2.4) c = deep < 3.5 ? S2 : K2;                       // кромка — в тень
+      else c = deep < 1.5 ? S0 : deep < 3 ? S2 : deep < 4.5 ? K3 : deep < 6 ? K2 : deep < 7.5 ? K1 : NI;   // стена шахты
+      r(x, y, 1, 1, c);
+    }
+  }
+  // вход на пандус — с запада: обод разомкнут, полоса уходит вниз
+  for (let k = 0; k < 10; k++) r(cx - R - 1 + q(k * 0.6), cy - 4 + k, 4, 1, k < 4 ? S0 : S2);
+}
 
 // ═══ ДЕКОР: номера колец, ниши, ручеёк талой воды ═══
 function decor(cl) {

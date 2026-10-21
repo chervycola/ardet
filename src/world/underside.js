@@ -32,6 +32,7 @@ export const TUBES = [
   { id: 'celld', ns: true, x0: 2050, y0: 450, y1: 640, top: 'corner', bot: 'portal', outer: 'right' },
   // забой: проходка встала — туннель кончается машиной (щит «Годо»)
   { id: 'godot', ns: true, x0: 1340, y0: 250, y1: 450, top: 'dead', bot: 'portal' },
+  { id: 'onkalod', ns: true, x0: 1600, y0: 480, y1: 700, top: 'open', bot: 'portal' },
 ];
 
 // ── комнаты ── (пол x0..x1 × y0..y1 или многоугольник по часовой; wh — стена)
@@ -44,7 +45,11 @@ export const ROOMS = [
   { id: 'wd', name: 'Криосклеп «WD»', x0: 760, y0: 248, x1: 900, y1: 336, wh: 40, mat: 'frost', surf: 'snow' },
   // станция Loop под стоянкой «Вавилона»: зал поверх линии, платформа на одну машину
   { id: 'station', name: 'Станция Loop «Вавилон»', x0: 1760, y0: 400, x1: 1960, y1: 500, wh: 44, mat: 'loop', surf: 'path' },
+  // Онкало: зал в граните, посередине — шахта, ход спиралью вниз
+  { id: 'onkalo', name: 'Онкало', x0: 1480, y0: 700, x1: 1780, y1: 890, wh: 44, mat: 'granite', surf: 'ground' },
 ];
+// провалы в полу — встать нельзя (шахта Онкало)
+export const HOLES = [{ x: 1630, y: 800, r: 60 }];
 for (const R of ROOMS) if (R.poly) {
   R.x0 = Math.min(...R.poly.map(p => p[0])); R.x1 = Math.max(...R.poly.map(p => p[0]));
   R.y0 = Math.min(...R.poly.map(p => p[1])); R.y1 = Math.max(...R.poly.map(p => p[1]));
@@ -90,6 +95,9 @@ const TH = [
   // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
   { id: 'u_car', room: 'station', x: 1814, y: 424, w: 76, h: 56, at: [1850, 488], solid: [1818, 446, 1884, 471] },
   { id: 'u_board', room: 'station', wall: true, x: 1880, y: 356, w: 60, h: 34, at: [1910, 410] },
+  // Онкало: шахта посреди зала (запекается) и плита с надписью на стене
+  { id: 'u_spiral', room: 'onkalo', wall: true, x: 1572, y: 742, w: 116, h: 116, at: [1630, 872] },
+  { id: 'u_onkalo_sign', room: 'onkalo', wall: true, x: 1658, y: 660, w: 84, h: 40, at: [1700, 712] },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
@@ -141,6 +149,7 @@ function onFloor(x, y) {
 }
 export function walkable(x, y) {
   if (!onFloor(x, y)) return false;
+  for (const h of HOLES) if (Math.hypot(x - h.x, y - h.y) < h.r) return false;
   for (const s of SOLIDS) if (x > s[0] - 5 && x < s[2] + 5 && y > s[1] - 2 && y < s[3] + 2) return false;
   return true;
 }
