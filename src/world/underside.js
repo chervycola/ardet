@@ -7,6 +7,8 @@
 // «WD». Вход — пасхалка, не кнопка: спуск открывается повторным
 // «использовать» после сцены места. Подъём — по лестнице своей комнаты,
 // обычно далеко от того места, где спустился: тоннели сшивают несмежное.
+// Ещё один выход — в один конец: поезд метро разреза эпох по билету «до
+// колодца. туда.» выводит к колодцу у площади городка (world/townWell.js).
 // Свет — уголёк странника: под землёй он тускнеет (не гаснет), в
 // криосклепе — вдвое быстрее и без тепла.
 // Здесь — план (трубы, комнаты, вещи), где можно стоять, путь по клику,
@@ -131,6 +133,8 @@ const TH = [
   { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470] },
   { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
   { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
+  // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
+  { id: 'u_ticket', room: 'tube', x: 1662, y: 436, w: 16, h: 12, at: [1672, 470], useAction: 'under_ticket', useLabel: '<i>◆</i>ВЗЯТЬ' },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
@@ -147,6 +151,8 @@ export const THINGS = TH.map(th => {
   return o;
 });
 export const thingById = id => THINGS.find(th => th.id === id);
+// что сейчас есть внизу: билета на скамье нет, пока не прошёл поезд
+export const thingsNow = () => (under.bench ? THINGS : THINGS.filter(th => th.id !== 'u_ticket'));
 // где встать у вещи — точка героя (ноги — x+6, y+23)
 export function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
 
@@ -305,6 +311,9 @@ export const under = {
   hiss: 0,                // репродуктор шипит (шагов)
   train: 0,               // поезд за спиной идёт (шаг прохода; 0 — нет)
   still: 0, px: 0, py: 0, // сколько стоит на месте
+  bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
+  ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
+  ride: false,            // поезд забрал — main выводит к колодцу городка
   // шаг: уголёк тускнеет за четыре минуты (круг света сжимается на четверть, не гаснет); в криосклепе — вдвое быстрее
   step(fx, fy) {
     this.steps++;
@@ -323,24 +332,40 @@ export const under = {
       if (Math.random() < 0.6) { this.say = '— Отбой. Всем спасибо. Все свободны.'; this.hiss = 150; }
     }
     // метро: поезд приходит к тому, кто не смотрит в тоннель — стоит спиной, не шевелясь
-    // (канон «Поезд за спиной»); шевельнулся — поезда не было
+    // (канон «Поезд за спиной»); шевельнулся — поезда не было. Прошёл — на скамье рядом
+    // лежит билет «до колодца. туда.»; с билетом в кармане поезд не проходит мимо:
+    // забирает, в один конец — к колодцу городка
     if (this.train > 0) {
       if (mv > 0.05) this.train = 0;
-      else if (++this.train > 240) { this.train = 0; this.say = 'Что-то длинное прошло сзади и стихло.'; }
-    } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.heard.has('metro')) {
+      else if (++this.train > 240) {
+        this.train = 0;
+        if (this.ticket) this.ride = true;
+        else { this.say = 'Что-то длинное прошло сзади и стихло. На скамье рядом лежит картонный билет.'; this.bench = true; }
+      }
+    } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
   },
+  // взял билет со скамьи
+  takeTicket() {
+    if (!this.bench) return false;
+    this.bench = false; this.ticket = true;
+    return true;
+  },
+  // доехал до колодца: билет в один конец погашен
+  arrive() { this.ride = false; this.ticket = false; },
   enter(retX, retY) {
     this.active = true; this.ret = { x: retX, y: retY }; this.ember = 1; this.cold = 0; this.steps = 0;
     this.heard.clear(); this.say = null; this.hiss = 0; this.train = 0; this.still = 0;
+    this.bench = false; this.ride = false;
   },
-  leave() { this.active = false; this.cold = 0; },
-  save() { return { seen: [...this.seen], found: [...this.found] }; },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; },
+  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
   load(d) {
     if (!d) return;
     (d.seen || []).forEach(k => this.seen.add(k));
     (d.found || []).forEach(k => this.found.add(k));
+    if (d.ticket) this.ticket = true;
   },
 };
 

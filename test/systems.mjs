@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
@@ -1665,8 +1665,32 @@ setCtx(ctx);
     eq(U.under.train, 0, 'поезд пошёл второй раз за спуск');
     U.under.enter(0, 0);
     for (let i = 0; i < 560; i++) U.under.step(1698, 466);
-    eq(U.under.say, 'Что-то длинное прошло сзади и стихло.', 'строка поезда');
+    eq(U.under.say, 'Что-то длинное прошло сзади и стихло. На скамье рядом лежит картонный билет.', 'строка поезда');
     U.under.leave(); U.under.say = null;
+  });
+  test('изнанка: билет «до колодца. туда.» — лежит на скамье после поезда, с ним поезд забирает в один конец', () => {
+    const W = U.under;
+    W.ticket = false; W.enter(0, 0);
+    assert(!U.thingsNow().some(th => th.id === 'u_ticket'), 'билет на скамье до поезда');
+    for (let i = 0; i < 560; i++) W.step(1698, 466);
+    assert(W.bench && U.thingsNow().some(th => th.id === 'u_ticket'), 'поезд прошёл — билета нет');
+    const tk = U.thingById('u_ticket');
+    assert(Math.abs(tk.at[0] - 1698) < 40, 'у билета не услышать поезда');
+    assert(tk.useAction === 'under_ticket' && /до колодца\. туда\./.test(tk.look) && /одинаковые/.test(tk.look), 'билет без канона');
+    assert(W.takeTicket() && W.ticket && !W.bench && !W.takeTicket(), 'билет не взялся');
+    W.say = null;
+    for (let i = 0; i < 560 && !W.ride; i++) W.step(1690, 466);    // стоит дальше — поезд не проходит мимо
+    assert(W.ride, 'с билетом поезд не забрал');
+    eq(W.say, null, 'забрал — строки нет');
+    eq(JSON.parse(JSON.stringify(W.save())).ticket, true, 'билет не сохраняется');
+    W.arrive();
+    assert(!W.ticket && !W.ride, 'билет не погашен');
+    W.enter(0, 0);
+    for (let i = 0; i < 560; i++) W.step(1698, 466);
+    assert(W.bench, 'новый спуск — нового билета нет');
+    W.leave();
+    assert(!W.bench && !U.thingsNow().some(th => th.id === 'u_ticket'), 'наверху билет остался на скамье');
+    W.load({ ticket: true }); assert(W.ticket, 'билет не загрузился'); W.ticket = false; W.say = null;
   });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
@@ -1678,6 +1702,80 @@ setCtx(ctx);
     UR.drawUnderFx(c, 640, 360);
     U.under.cold = 0;
     setCtx(ctx);
+  });
+}
+
+// ═══ КОЛОДЕЦ У ПЛОЩАДИ: ведро общего дна, сюда выходит метро изнанки ═══
+{
+  const M = await imp('world/locations.js');
+  const TWL = await imp('world/townWell.js');
+  const MX = await imp('world/mechanisms.js');
+  const D = await imp('world/disc.js');
+  const A = await imp('world/arteries.js');
+  const w = M.locations.find(l => l.id === 'town_well'), fire = M.locations.find(l => l.id === 'campfire');
+  test('колодец у площади: у круга костра, в городке, ни на кого не налез, у тропы', () => {
+    assert(w && w.zone === 'settlement' && w.useAction === 'town_well_crank', 'колодца нет');
+    eq(TWL.townWell(), w, 'колодец не тот');
+    const d = Math.hypot(w.x + w.w / 2 - (fire.x + fire.w / 2), w.y + w.h - (fire.y + fire.h));
+    assert(d > 60 && d < 220, `колодец не у площади: ${Math.round(d)} от костра`);
+    const T = D.TOWN;
+    assert(w.x > T.x0 && w.x + w.w < T.x1 && w.y > T.y0 && w.y + w.h < T.y1, 'колодец вне городка');
+    for (const l of M.locations) {
+      if (l === w) continue;
+      assert(!(l.x < w.x + w.w + 4 && l.x + l.w > w.x - 4 && l.y < w.y + w.h + 4 && l.y + l.h > w.y - 4), `колодец налез на «${l.name}»`);
+    }
+    const a = TWL.wellAccess(), fx = a.x + 6, fy = a.y + 23;
+    let near = 1e9;
+    for (const L of A.lines) if (L.town && L.kind === 'road') for (const p of L.pts) near = Math.min(near, Math.hypot(p.x - fx, p.y - fy));
+    assert(near < 24, `от колодца до тропы ${Math.round(near)}`);
+    assert(/собака, поднявшая голову/.test(w.look) && /мокрая/.test(w.look) && /тяжёлым/.test(w.look), 'осмотр не по канону');
+  });
+  test('колодец у площади: ворот — тяжёлое ведро, в нём потери по очереди с биркой; мимо прошёл — ворот поскрипел', () => {
+    const got = [];
+    TWL.loadTownWell({ q: 0 });
+    for (let k = 0; k < 4; k++) {
+      assert(TWL.crankTownWell(t => got.push(t)), 'ворот не крутится');
+      assert(!TWL.crankTownWell(() => {}), 'ворот крутится дважды');
+      let n = 0;
+      while (MX.well('well:town_well').st !== 'idle' && n++ < 2000) MX.stepMechs();
+      assert(n < 2000, 'ведро не вернулось');
+      assert(n > 400, `ведро не тяжёлое: ${n} шагов`);
+    }
+    eq(got.length, 4, 'потерь');
+    for (let k = 0; k < 4; k++) {
+      eq(got[k], TWL.LOST[k % TWL.LOST.length], 'не по очереди');
+      assert(/ВОЗВРАЩЕНО\. ВЛАДЕЛЕЦ ВЫБЫЛ/.test(got[k]), 'без бирки');
+    }
+    eq(TWL.saveTownWell().q, 4, 'очередь не сохраняется');
+    const p = { x: w.x + w.w / 2 - 6 - 120, y: w.y + w.h + 5, moving: true };
+    for (let k = 0; k < 120; k++) { p.x += 2; TWL.stepTownWell(p); }
+    MX.stepMechs();
+    eq(MX.well('well:town_well').st, 'nod', 'мимо прошёл — ворот молчит');
+    for (let k = 0; k < 80; k++) MX.stepMechs();
+    eq(MX.well('well:town_well').st, 'idle', 'ворот не вернулся');
+    for (let k = 0; k < 120; k++) { p.x -= 2; TWL.stepTownWell(p); }
+    MX.stepMechs();
+    eq(MX.well('well:town_well').st, 'idle', 'ворот скрипит на каждом шаге');
+  });
+  test('колодец у площади: рисунок — точки краской канона, в своей рамке', () => {
+    const OK = new Set(['#0D0B0A', '#D9CFB8', '#8A8D8F', '#3D4A3A', '#C23B2B', '#15100c', '#241c14', '#2a2620', '#34302a', '#3a3328', '#3a2818', '#c8b89a', '#474442', '#5e5e5d', '#33302e'].map(c => c.toLowerCase()));
+    const m = MX.well('well:town_well');
+    for (const [st, d] of [['idle', 1], ['top', 0]]) {
+      m.st = st; m.d = d;
+      const log = [];
+      const ctx = new Proxy({}, {
+        get(t, k) { return (...a) => { log.push([k, ...a]); }; },
+        set(t, k, v) { log.push(['=' + k, v]); return true; },
+      });
+      for (let k = 0; k < 3; k++) w.drawSelf(ctx, w, 37 + k);
+      for (const [k, ...a] of log) {
+        if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `колодец: краска ${a[0]} вне палитры`);
+        if (k !== 'fillRect') continue;
+        const [x, y, ww, hh] = a;
+        assert(x >= w.x - 2 && x + ww <= w.x + w.w + 4 && y >= w.y - 3 && y + hh <= w.y + w.h + 1, `колодец вылез из рамки: ${x},${y} ${ww}×${hh}`);
+      }
+    }
+    m.st = 'idle'; m.d = 1;
   });
 }
 

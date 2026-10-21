@@ -164,6 +164,9 @@ buildCameras(locations);
 // нити, волна 2: луна на учёте, часы по кольцам, колодец и объявление у котлована
 import { buildThreads2 } from './threads2.js';
 buildThreads2(locations);
+// колодец у площади: ведро общего дна; сюда выходит метро изнанки
+import { buildTownWell } from './townWell.js';
+buildTownWell(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

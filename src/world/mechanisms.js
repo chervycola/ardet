@@ -13,7 +13,9 @@
 //                  минуту, «местные» идут плавно и отстают на свою долготу;
 //   ворот        — странник: крутишь — ведро поднимается (пустое, лёгкое),
 //                  наверху качается, потом падает назад — ворот раскручивается
-//                  сам, внизу глухо: воды нет.
+//                  сам, внизу глухо: воды нет. У колодца у площади ведро
+//                  тяжёлое, а ворот сам поскрипывает на пол-оборота, когда
+//                  проходишь мимо (world/townWell.js).
 // Считаются только видимые (как подвесы); ворот — пока работает.
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
@@ -141,24 +143,47 @@ export function stationClock(ctx, cx, cy, kind, col) {
 }
 
 // ═══ ВОРОТ КОЛОДЦА ═══
-// d — глубина ведра: 0 — под самым воротом, 1 — на дне
-export function well(key) {
-  return reg(key, 'well', { st: 'idle', d: 1, crank: 0, v: 0, top: 0, ph: 0 });
+// d — глубина ведра: 0 — под самым воротом, 1 — на дне. heavy — ведро тяжёлое
+// (колодец у площади): идёт вверх вдвое медленнее, ворот скрипит ниже, наверху
+// ведро висит дольше. onTop — что сделать, когда ведро пришло наверх
+export function well(key, heavy = false) {
+  const m = reg(key, 'well', { st: 'idle', d: 1, crank: 0, v: 0, top: 0, ph: 0, nod: 0, c0: 0 });
+  if (heavy) m.heavy = true;
+  return m;
 }
-export function crankWell(key) {
+export function crankWell(key, onTop = null) {
+  const m = well(key);
+  if (m.st === 'nod') { m.crank = m.c0; m.d = 1; m.st = 'idle'; }
+  if (m.st !== 'idle') return false;
+  m.st = 'wind'; m.onTop = onTop;
+  return true;
+}
+// сам поскрипывает на пол-оборота и обратно — как собака, поднявшая голову
+export function nodWell(key) {
   const m = well(key);
   if (m.st !== 'idle') return false;
-  m.st = 'wind';
+  m.st = 'nod'; m.nod = 0; m.c0 = m.crank;
   return true;
 }
 function stepWell(m) {
   if (m.st === 'wind') {                            // крутят: ведро идёт вверх, ворот скрипит
-    m.d = Math.max(0, m.d - 0.0075);
-    m.crank += 0.16;
-    if (Math.floor(m.crank / Math.PI) !== Math.floor((m.crank - 0.16) / Math.PI)) tick(620, 'bandpass', 0.05, 0.06);
-    if (m.d <= 0) { m.st = 'top'; m.top = 0; m.kick = true; }
-  } else if (m.st === 'top') {                      // наверху: пустое, качается
-    if (++m.top > 80) { m.st = 'drop'; m.v = 0; }
+    const v = m.heavy ? 0.0038 : 0.0075, w = m.heavy ? 0.1 : 0.16;
+    m.d = Math.max(0, m.d - v);
+    m.crank += w;
+    if (Math.floor(m.crank / Math.PI) !== Math.floor((m.crank - w) / Math.PI)) tick(m.heavy ? 390 : 620, 'bandpass', 0.05, m.heavy ? 0.1 : 0.06);
+    if (m.d <= 0) {
+      m.st = 'top'; m.top = 0; m.kick = true;
+      if (m.onTop) { const f = m.onTop; m.onTop = null; f(); }
+    }
+  } else if (m.st === 'top') {                      // наверху: качается
+    if (++m.top > (m.heavy ? 240 : 80)) { m.st = 'drop'; m.v = 0; }
+  } else if (m.st === 'nod') {                      // пол-оборота вперёд, постоял, назад
+    const k = ++m.nod / 70;
+    const s = k < 0.4 ? Math.sin(k / 0.4 * Math.PI / 2) : k < 0.6 ? 1 : Math.cos((k - 0.6) / 0.4 * Math.PI / 2);
+    m.crank = m.c0 + Math.PI * s;
+    if (m.nod === 1) tick(330, 'bandpass', 0.045, 0.14);
+    if (m.nod === 43) tick(290, 'bandpass', 0.03, 0.1);
+    if (m.nod >= 70) { m.crank = m.c0; m.st = 'idle'; }
   } else if (m.st === 'drop') {                     // отпустили: падает, ворот раскручивается сам
     m.v = Math.min(0.03, m.v + 0.0009);
     m.d += m.v;

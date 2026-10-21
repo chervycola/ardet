@@ -50,7 +50,7 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
-import { showMenu, hideMenu, initUI, getActiveLoc, showLook, menuInscriptions } from './ui/ui.js';
+import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions } from './ui/ui.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
@@ -104,7 +104,8 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, UW, UH, THINGS as UNDER_THINGS, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { under, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
 
@@ -209,6 +210,7 @@ if (savedData) {
   if (savedData.catUnlocked) setCatUnlocked(true);
   if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
   if (savedData.under) under.load(savedData.under);
+  if (savedData.well) loadTownWell(savedData.well);
 }
 
 if (!STREAM) startAutoSave(() => ({
@@ -223,6 +225,7 @@ if (!STREAM) startAutoSave(() => ({
   catUnlocked: catUnlocked(),
   discoveredGates: getDiscoveredGates(),
   under: under.save(),
+  well: saveTownWell(),
 }));
 setPosOverride(() => (under.active ? under.ret : null));   // карта мира: странник там, где спустился
 Object.assign(menuInscriptions, UNDER_INSC);
@@ -600,6 +603,7 @@ function stepFx() {
   stepGrass(player);
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
+  stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
@@ -1096,8 +1100,9 @@ function drawTeleportFade(ctx) {
 // ═══ ИЗНАНКА: спуск, подъём, ходьба, кадр ═══
 // Отдельная карта под городком (world/underside.js). Спуск — повторное
 // «использовать» после сцены места; подъём — лестница своей комнаты, обычно
-// далеко от входа. Пока внизу — мира сверху нет: ни неба, ни погоды, ни
-// ворон; свет — уголёк странника; время идёт, как шло.
+// далеко от входа, или поезд метро по билету — к колодцу у площади. Пока
+// внизу — мира сверху нет: ни неба, ни погоды, ни ворон; свет — уголёк
+// странника; время идёт, как шло.
 let surfaceLights = null;
 function goUnder(stairId) {
   const th = thingById(stairId);
@@ -1118,17 +1123,32 @@ function goUp(th) {
   if (!loc) return;
   const px_ = loc.x + loc.w / 2 - 6, py_ = loc.y + loc.h + 5;
   if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
-  teleportWithFade(px_, py_, () => {
-    under.leave();
-    muteRedNoon(false);
-    if (surfaceLights) lighting.sources = surfaceLights;
-    surfaceLights = null;
-    player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined;
+  teleportWithFade(px_, py_, surface);
+}
+// наверх: свет и звук мира возвращаются
+function surface() {
+  under.leave();
+  muteRedNoon(false);
+  if (surfaceLights) lighting.sources = surfaceLights;
+  surfaceLights = null;
+  player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined;
+}
+// поезд метро забрал (билет «до колодца. туда.»): выход — у колодца у площади, билет погашен
+function rideToWell() {
+  const a = wellAccess();
+  if (!a) { under.ride = false; return; }
+  under.arrive();
+  teleportWithFade(a.x, a.y, () => {
+    const f = getActiveLoc();                       // поезд забрал посреди осмотра — окно вещи изнанки закрыть
+    if (f && f.under) { if (state.is('menu')) hideMenu(); else if (state.is('look')) closeLook(); }
+    surface();
+    stirTownWell();                                 // ворот поскрипел: кто-то вышел
+    showLore('Обратных не выдаём. Обратно все и так доезжают.');
   });
 }
 // клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
 function walkUnder(gx, gy) {
-  const th = findLocationAt(gx, gy, UNDER_THINGS, 6);
+  const th = findLocationAt(gx, gy, thingsNow(), 6);
   const path = th ? pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : pathTo(player.x + 6, player.y + 23, gx, gy);
   if (!path || !path.length) return;
   const w = path.shift();
@@ -1162,6 +1182,7 @@ function stepFxUnder() {
   if (under.say) { showLore(under.say); under.say = null; }
   if (under.train === 1) playDistantSound();
   if (under.train > 40 && under.train < 200 && under.train % 24 === 0) camera.shake(8);
+  if (under.ride) rideToWell();
   stepUnderLife(player);
   lighting.sources = underLights(player.x + 6, player.y + 10);
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
@@ -1200,12 +1221,12 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud)
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro)
 {
   const m = /[?&]under(?:=(\w+))?/.exec(location.search);
   if (m) {
     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
-      godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks' }[m[1]] || 'u_up_pizzeria';
+      godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro' }[m[1]] || 'u_up_pizzeria';
     setTimeout(() => goUnder(spot), 0);
   }
 }
@@ -1567,8 +1588,15 @@ events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: билет со скамьи метро — в карман
+  if (actionKey === 'under_ticket') {
+    if (under.takeTicket()) { showLore('«до колодца. туда.»'); playPickup(); pickupSparkle(loc.x + 7, loc.y + 6); }
+    return;
+  }
   // колодец у котлована: крутить ворот (world/mechanisms.js)
   if (actionKey === 'well_crank') { crankWell(`well:${loc.id}`); return; }
+  // колодец у площади: тяжёлое ведро — в нём чья-то давняя потеря (world/townWell.js)
+  if (actionKey === 'town_well_crank') { crankTownWell(showLore); return; }
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }

@@ -975,6 +975,11 @@ const FLOOR_DRAW = {
   sofa,
   u_tape: tape,
   u_car: car,
+  u_ticket() {                                                          // билет на сиденье скамьи метро: картон, ближний край
+    if (!under.bench) return;
+    const gy = LINE.y0;
+    r(1667, gy - 8, 5, 1, BO); r(1668, gy - 7, 4, 1, L2); r(1669, gy - 8, 1, 1, L2);
+  },
   u_chests(th) { chest(342, 308, false); chest(360, 308, true); chest(378, 308, false); },
   chestsWest() { chest(238, 308, false); chest(256, 308, false); chest(274, 308, false); },
   u_pot(th) {                                                           // котелок у двери, полный; дужка
