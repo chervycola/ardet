@@ -71,6 +71,15 @@ const COOLDOWN = 10800;                         // ~3 минуты между ш
 let whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
 let lastWhisperEnd = 0;
 try { if (/[?&]whisper\b/.test(location.search)) lastWhisperEnd = -COOLDOWN; } catch (e) {}
+// места, которым сейчас молчать: у них свой шёпот по случаю (ночью у пифоса — мох)
+export const hush = new Set();
+// шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень
+export function sayAt(text, x, y) {
+  if (whisper.text || redNoon.active) return false;
+  whisper = { text, x, y, t0: t, prep: null };
+  return true;
+}
+export const whisperText = () => whisper.text;
 
 // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
 // null — день, свет не нужен
@@ -80,7 +89,7 @@ export function check(player, locations, litAt = null) {
   if (t - lastWhisperEnd < COOLDOWN) return;
 
   for (const l of locations) {
-    if (!WHISPERS[l.id]) continue;
+    if (!WHISPERS[l.id] || hush.has(l.id)) continue;
     const dx = player.x - l.x - l.w / 2;
     const dy = player.y - l.y - l.h / 2;
     if (Math.sqrt(dx * dx + dy * dy) < 70 && !player.moving) {

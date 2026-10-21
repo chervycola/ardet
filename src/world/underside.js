@@ -9,6 +9,8 @@
 // обычно далеко от того места, где спустился: тоннели сшивают несмежное.
 // Ещё один выход — в один конец: поезд метро разреза эпох по билету «до
 // колодца. туда.» выводит к колодцу у площади городка (world/townWell.js).
+// Глубоко под всем — ход мха (U6): от дна пифоса к норе у подножия огня, с
+// линией не сшит; идти по нему — в такт сердцу (двери наверху — world/mossway.js).
 // Свет — уголёк странника: под землёй он тускнеет (не гаснет), в
 // криосклепе — вдвое быстрее и без тепла.
 // Здесь — план (трубы, комнаты, вещи), где можно стоять, путь по клику,
@@ -16,7 +18,7 @@
 // ═══════════════════════════════════════
 import { UNDER_TEXT } from '../content/underside.js';
 
-export const UW = 2400, UH = 1100;            // карта, точки
+export const UW = 2400, UH = 1440;            // карта, точки (ниже 1100 — один ход мха)
 // труба Boring: пол с запада на восток высотой FH или с севера на юг шириной
 // FW; за полом — дальняя половина трубы (WH), спереди — срез обделки (LIP);
 // у трубы с севера на юг — боковые стенки по SW; кольцо обделки — RING точек
@@ -67,6 +69,12 @@ for (const R of ROOMS) if (R.poly) {
 }
 // холодная жила (канон U7: кабельный коллектор) — от крипты к криосклепу
 export const VEIN = { id: 'vein', x0: 440, x1: 760, y0: 282, fh: 24, wh: 22 };
+// ход мха (канон U6: «пифос — лечь и уснуть» → «нора у подножия огня»): круглый
+// лаз, стены в подушках мха. Не труба — нора: пол вьётся (mossY — верх пола в
+// столбце x). С линией не сшит: свой ход, глубоко под остальными, — войти можно
+// только из пифоса или из норы. От dry до конца мох сухой и тёплый
+export const MOSS = { id: 'moss', x0: 420, x1: 1320, base: 1270, fh: 22, wh: 22, dry: 1224 };
+export const mossY = x => MOSS.base + Math.round(9 * Math.sin((x - MOSS.x0) / 70) + 5 * Math.sin((x - MOSS.x0) / 31 + 1.3));
 
 // ── разрез эпох: линия — самый новый слой — режет старые ходы насквозь (канон
 // U2–U5, сцены — из ритуалов тоннелей); в дальней стене виден срез, ход старого
@@ -137,6 +145,10 @@ const TH = [
   { id: 'u_ticket', room: 'tube', x: 1662, y: 436, w: 16, h: 12, at: [1672, 470], useAction: 'under_ticket', useLabel: '<i>◆</i>ВЗЯТЬ' },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
+  // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
+  { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
+  { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
+  { id: 'u_up_burrow', room: 'moss', wall: true, stair: 'burrow', steps: 0, x: MOSS.x1 - 34, y: mossY(MOSS.x1 - 21) - 28, w: 26, h: 28, at: [MOSS.x1 - 21, mossY(MOSS.x1 - 21) + 12], up: 'burrow' },
 ];
 // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере;
 // в облаке — дальний ряд стоек, правая часть ближнего, бассейн водопада, кадки
@@ -163,6 +175,8 @@ export const DESCENTS = {
   crypt_descend: 'u_up_crypt',
   church_candle: 'u_up_church',
   pizzeria_enter: 'u_up_pizzeria',
+  pithos_lie: 'u_up_pithos',          // ход мха: лечь в пифос и уснуть (world/mossway.js)
+  burrow_down: 'u_up_burrow',         // нора у подножия огня
 };
 
 // ── где можно стоять ── (ноги x, y; запас — на полу плаща у стен)
@@ -181,6 +195,7 @@ function onFloor(x, y) {
     if (x >= tb.x0 + 7 && x <= tb.x0 + T.FW - 7 && y >= top && y <= bot) return true;
   }
   if (x >= VEIN.x0 - 8 && x <= VEIN.x1 + 8 && y >= VEIN.y0 + 3 && y <= VEIN.y0 + VEIN.fh - 2) return true;
+  if (x >= MOSS.x0 + 6 && x <= MOSS.x1 - 6) { const y0 = mossY(x); if (y >= y0 + 3 && y <= y0 + MOSS.fh - 2) return true; }
   for (const R of ROOMS) {
     if (R.poly) {
       if (inPoly(x - 5, y, R.poly) && inPoly(x + 5, y, R.poly) && inPoly(x, y - 3, R.poly) && inPoly(x, y + 2, R.poly)) return true;
@@ -210,11 +225,13 @@ export function placeAt(x, y) {
     if (R.poly ? inPoly(x, y, R.poly) : (x >= R.x0 && x <= R.x1 && y >= R.y0 - 4 && y <= R.y1 + 2)) return R.id;
   }
   if (x >= VEIN.x0 && x <= VEIN.x1 && y >= VEIN.y0 - 4 && y <= VEIN.y0 + VEIN.fh + 2) return 'vein';
+  if (x >= MOSS.x0 - 6 && x <= MOSS.x1 + 6 && Math.abs(y - mossY(x) - MOSS.fh / 2) < MOSS.fh) return 'moss';
   return 'tube';
 }
 export function surfaceUnder(x, y) {
   const at = placeAt(x, y);
   if (at === 'tube') return 'path';                  // полотно ровное: по нему ездили
+  if (at === 'moss') return 'moss';                  // мох глушит шаги начисто
   if (at === 'vein') return coldAt(x, y) > 0.5 ? 'snow' : 'ground';
   return ROOMS.find(R => R.id === at).surf;
 }
@@ -297,6 +314,67 @@ export function pathTo(fx, fy, gx, gy) {
   return out;
 }
 
+// ── ход мха: шаг по стуку сердца (канон U6, ритуал «Шаг по стуку сердца») ──
+// Мох глушит шаги начисто; идти можно только в такт сердцу. Сердце бьётся раз в
+// секунду: прошёл за удар не больше шага — мох вспыхивает бледно-зелёным под ногой
+// и ровно на шаг вперёд. Кто спешит, идёт в темноте: превышение гасится, и свет
+// вернётся, когда отдышишься (два спокойных удара). Кто останавливается, слышит,
+// как мох растёт, — и мох у ног правда прибавляется. У норы мох сухой и тёплый:
+// последний участок светится сам, провожая, — как ни иди
+export const HEART = 60, STRIDE = 40, GLOW = 54;   // удар — раз в 60 шагов; шаг — до 40 точек за удар; вспышка гаснет за 54
+export const MOSS_LINE = 'Скорость хода — один пульс в секунду. Превышение гасится.';
+export const moss = {
+  t: 0, bx: -1, by: 0,    // часы сердца; где стоял на прошлом ударе
+  breath: 0,              // сбился — сколько спокойных ударов до света
+  dark: false,            // свет погашен: превышение
+  told: false,            // реплика про превышение — раз за спуск
+  still: 0,               // сколько стоит
+  beat: false,            // в этот шаг ударило сердце (main стукнет)
+  grow: false,            // в этот шаг мох прибавил (main прошуршит)
+  pulse: 0,               // вспышка уголька на ударе 0..1
+  k: 0,                   // насколько внутри хода 0..1 (плавно): свет уголька сжимается
+  glows: [],              // вспышки мха { x, y, life, warm }
+  sprouts: [],            // мох, выросший у ног, пока стоял { x, y, tall }
+  reset() {
+    this.t = 0; this.bx = -1; this.breath = 0; this.dark = false; this.told = false; this.still = 0;
+    this.beat = false; this.grow = false; this.pulse = 0; this.k = 0; this.glows.length = 0; this.sprouts.length = 0;
+  },
+  // шаг: here — в ходе мха, mv — сколько прошёл за шаг; вернёт строку мира или null
+  step(fx, fy, here, mv) {
+    this.k += ((here ? 1 : 0) - this.k) * 0.06;
+    this.beat = false; this.grow = false; this.pulse *= 0.88;
+    for (let i = this.glows.length - 1; i >= 0; i--) if (--this.glows[i].life <= 0) this.glows.splice(i, 1);
+    if (!here) { this.t = 0; this.bx = -1; this.still = 0; return null; }
+    if (this.bx < 0) { this.bx = fx; this.by = fy; }
+    this.still = mv > 0.05 ? 0 : this.still + 1;
+    if (this.still > 90 && this.still % 40 === 0) {                   // стоишь — мох растёт
+      this.grow = true;
+      if (this.sprouts.length < 70) {
+        const sx = Math.round(fx - 10 + Math.random() * 20), y0 = mossY(sx);
+        this.sprouts.push({ x: sx, y: Math.max(y0 + 2, Math.min(y0 + MOSS.fh - 2, Math.round(fy - 4 + Math.random() * 8))), tall: Math.random() < 0.4 });
+      }
+    }
+    if (++this.t % HEART) return null;
+    this.beat = true; this.pulse = 1;                                    // удар сердца
+    const dx = fx - this.bx, dy = fy - this.by, d = Math.hypot(dx, dy);
+    this.bx = fx; this.by = fy;
+    const dry = fx >= MOSS.dry;
+    if (!dry && d > STRIDE) {                                          // спешишь — превышение гасится
+      this.breath = 2; this.dark = true;
+      if (this.told) return null;
+      this.told = true;
+      return MOSS_LINE;
+    }
+    if (!dry && this.breath > 0 && --this.breath > 0) return null;     // отдышаться
+    this.dark = false;
+    if (d < 2 && !dry) return null;                                    // стоишь — нового шага нет
+    const ux = d >= 2 ? dx / d : 1, uy = d >= 2 ? dy / d : 0;
+    this.glows.push({ x: fx, y: fy, life: GLOW, warm: dry });
+    this.glows.push({ x: fx + ux * 16, y: fy + uy * 16, life: GLOW, warm: dry });   // ровно на один шаг вперёд
+    return null;
+  },
+};
+
 // ── состояние ──
 export const under = {
   active: false,
@@ -325,6 +403,8 @@ export const under = {
     const mv = Math.hypot(fx - this.px, fy - this.py); this.px = fx; this.py = fy;
     this.still = mv > 0.05 ? 0 : this.still + 1;
     if (this.hiss > 0) this.hiss--;
+    const said = moss.step(fx, fy, at === 'moss', mv);                  // ход мха: сердце
+    if (said) this.say = said;
     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
@@ -358,8 +438,9 @@ export const under = {
     this.active = true; this.ret = { x: retX, y: retY }; this.ember = 1; this.cold = 0; this.steps = 0;
     this.heard.clear(); this.say = null; this.hiss = 0; this.train = 0; this.still = 0;
     this.bench = false; this.ride = false;
+    moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
   load(d) {
     if (!d) return;
@@ -371,17 +452,27 @@ export const under = {
 
 // свет под землёй: уголёк — единственное тёплое (сердцевина), вокруг — круг,
 // в котором видно породу; зелёная лампа гауптвахты стоит ровно и не мигает
-// (канон «ПЕРЕДАЧА»); в криосклепе тепла нет: огонёк холодный, круг меньше
+// (канон «ПЕРЕДАЧА»); в криосклепе тепла нет: огонёк холодный, круг меньше.
+// В ходе мха уголёк почти не нужен: круг сжимается, светят вспышки мха; на ударе
+// сердца огонёк вспыхивает; спешишь — темно; у норы сверху — отсвет огня
 const EMBER = [226, 138, 58], COLD = [138, 141, 143], FILL = [232, 220, 198], FILL_C = [176, 180, 182];
+const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120, 64];
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 export function underLights(px, py) {
-  const k = under.cold, e = under.ember;
-  return [
-    { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k), color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: 1.1 - 0.3 * k },
-    { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 },
+  const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
+  const L = [
+    { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k) * (1 - 0.3 * m) * dk, color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: (1.1 - 0.3 * k) * (1 + 0.5 * moss.pulse * m) },
+    { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k) * (1 - 0.78 * m), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 * (1 - 0.55 * m) },
     { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
     { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 },   // окно-экран бункера: лес светит
     { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 },   // облако: свет искусственный, ровный
   ];
+  if (m > 0.01) {
+    if (!moss.dark) L.push({ x: px, y: py + 12, r: 26, color: MOSS_PALE, flicker: 0, intensity: 0.75 * m });   // мох под ногой чуть светится сам
+    for (const g of moss.glows) { const a = g.life / GLOW; L.push({ x: g.x, y: g.y - 3, r: 26 + 18 * a, color: g.warm ? MOSS_WARM : MOSS_PALE, flicker: 0, intensity: 2.8 * a * m }); }
+    for (let x = MOSS.dry + 14; x < MOSS.x1 - 24; x += 30) L.push({ x, y: mossY(x) + 10, r: 30, color: MOSS_WARM, flicker: 0.05, intensity: 0.9 * m });   // сухой мох тлеет сам
+    L.push({ x: MOSS.x1 - 21, y: mossY(MOSS.x1 - 21) - 14, r: 76, color: FIRE, flicker: 0.2, intensity: 1.5 * m });   // нора: сверху — огонь
+  }
+  return L;
 }
 export const UNDER_AMBIENT = 0.16;

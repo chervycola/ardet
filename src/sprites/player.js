@@ -56,7 +56,7 @@ export function drawPlayer(player) {
   r(fx, fy + 1, 2, 2, F0);
   r(fx, fy, 2, 2, F);
   if (!low) r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), F);
-  if (flick > 0.3 && !ice) r(fx, fy, 1, 1, L1);                          // в порыв вспыхивает
+  if ((flick > 0.3 || (player.pulse || 0) > 0.45) && !ice) r(fx, fy, 1, 1, L1);   // в порыв вспыхивает; в ходе мха — на ударе сердца
   if (!ice && t % 9 === 0 && ((t / 9) % 3 | 0) === 0) { X.globalAlpha = 0.6; r(fx + q(w.x * 3), fy - 3, 1, 1, SV); X.globalAlpha = 1; }   // искру сносит
   // ── капюшон: лица нет — тьма ──
   const hx = cx + 2 + lean, hy = top - 4;

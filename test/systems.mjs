@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js', 'world/mossway.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
@@ -1588,11 +1588,17 @@ setCtx(ctx);
   const M = await imp('world/locations.js');
   const UA = await imp('world/useActions.js');
   const TX = await imp('content/underside.js');
-  test('изнанка: у каждой вещи есть где встать, и от любой лестницы дойти до любой вещи', () => {
+  const MW = await imp('world/mossway.js');
+  const AR = await imp('world/arteries.js');
+  const WH = await imp('world/whisper.js');
+  const D = await imp('world/disc.js');
+  test('изнанка: у каждой вещи есть где встать; от любой лестницы дойти до любой вещи своего хода, ход мха с линией не сшит', () => {
     for (const th of U.THINGS) assert(U.walkable(th.at[0], th.at[1]), `${th.id}: у вещи не встать (${th.at})`);
-    const stairs = U.THINGS.filter(th => th.up);
+    const stairs = U.THINGS.filter(th => th.up), net = th => (th.room === 'moss' ? 'moss' : 'line');
+    eq(stairs.filter(th => net(th) === 'moss').map(th => th.up).sort().join(), 'burrow,pithos', 'выходы хода мха');
     for (const a of stairs) for (const b of U.THINGS) {
       const path = U.pathTo(a.at[0], a.at[1], b.at[0], b.at[1]);
+      if (net(a) !== net(b)) { assert(!path, `${a.id} → ${b.id}: ход мха сшит с линией`); continue; }
       assert(path && path.length, `${a.id} → ${b.id}: пути нет`);
       const end = path[path.length - 1];
       assert(Math.hypot(end.x - b.at[0], end.y - b.at[1]) < 1, `${a.id} → ${b.id}: путь кончился не у вещи`);
@@ -1692,6 +1698,77 @@ setCtx(ctx);
     assert(!W.bench && !U.thingsNow().some(th => th.id === 'u_ticket'), 'наверху билет остался на скамье');
     W.load({ ticket: true }); assert(W.ticket, 'билет не загрузился'); W.ticket = false; W.say = null;
   });
+  test('изнанка: ход мха — шаг по стуку сердца: в такт мох светится на шаг вперёд, спешка гасит свет, стоишь — мох растёт, у норы светится сам', () => {
+    const W = U.under, Mo = U.moss, fy = x => U.mossY(x) + 12;
+    let x = U.MOSS.x0 + 30;
+    W.enter(0, 0); W.say = null;
+    eq(U.placeAt(x, fy(x)), 'moss', 'ход мха'); eq(U.surfaceUnder(x, fy(x)), 'moss', 'под ногой не мох');
+    for (let i = 0; i < 200; i++) W.step(x, fy(x));                // стоит
+    eq(Mo.glows.length, 0, 'стоишь — вспыхнуло');
+    assert(Mo.sprouts.length > 0 && Mo.sprouts.every(sp => U.placeAt(sp.x, sp.y) === 'moss'), 'стоишь — мох не растёт у ног');
+    let lit = 0;
+    for (let i = 0; i < 300; i++) {                                 // в такт: 18 точек за удар
+      x += 0.3; W.step(x, fy(x));
+      if (Mo.beat) {
+        eq(Mo.glows.length, 2, 'на ударе — под ногой и на шаг вперёд');
+        const [a, b] = Mo.glows;
+        assert(Math.abs(a.x - x) < 0.01 && b.x - a.x > 15 && b.x - a.x < 17 && !a.warm, 'вспышка не на шаг вперёд');
+        lit++;
+      }
+    }
+    assert(lit >= 4 && !Mo.dark && W.say === null, 'в такт — темно');
+    for (let i = 0; i < 70; i++) { x += 2; W.step(x, fy(x)); }       // спешит
+    assert(Mo.dark && Mo.glows.length === 0, 'спешка не погасила свет');
+    eq(W.say, U.MOSS_LINE, 'реплика о превышении'); W.say = null;
+    for (let i = 0; i < 70; i++) { x += 2; W.step(x, fy(x)); }
+    eq(W.say, null, 'реплика второй раз за спуск');
+    let calm = 0;                                                   // отдышаться: свет — на втором спокойном ударе
+    for (let i = 0; i < 400 && calm < 2; i++) {
+      const pb = Mo.bx;
+      x += 0.3; W.step(x, fy(x));
+      if (!Mo.beat) continue;
+      if (Math.hypot(x - pb, 0) > U.STRIDE) { calm = 0; assert(Mo.dark, 'спешка — светло'); continue; }
+      calm++;
+      if (calm === 1) assert(Mo.dark && Mo.glows.length === 0, 'свет вернулся с первого спокойного удара');
+      else assert(!Mo.dark && Mo.glows.length === 2, 'не отдышался за два удара');
+    }
+    eq(calm, 2, 'спокойных ударов');
+    x = U.MOSS.dry + 20;                                            // у норы: как ни иди — светится, тёплым
+    for (let i = 0; i < 61; i++) { x += 1.2; W.step(x, fy(x)); }
+    assert(!Mo.dark && Mo.glows.length >= 2 && Mo.glows.every(g => g.warm), 'у норы мох не светится сам');
+    assert(U.underLights(x, fy(x) - 13).some(L => L.color[0] > 190 && L.color[2] < 80), 'у норы нет отсвета огня');
+    W.leave();
+    eq(Mo.k, 0, 'наверху — ход мха'); eq(Mo.glows.length, 0, 'вспышки остались');
+  });
+  test('ход мха: пифос шепчет ночью тому, кто задержался, — раз за ночь; потом у пифоса «ЛЕЧЬ» и «УСНУТЬ»; нора у подножия огня', () => {
+    const p = M.locations.find(l => l.id === 'pithos'), b = M.locations.find(l => l.id === 'burrow');
+    U.under.seen.delete('pithos_whisper'); U.under.seen.delete('pithos_lie'); MW._resetMossway(); WH._reset();
+    assert(p.useAction === 'pithos_lie' && !p.useShown(), 'до шёпота у пифоса есть действие');
+    const pl = { x: p.x + p.w / 2 - 6, y: p.y + p.h + 5, moving: false };
+    for (let i = 0; i < 400; i++) MW.stepMossway(pl, false, 1);
+    assert(!U.under.seen.has('pithos_whisper') && !WH.hush.has('pithos'), 'днём шепчет мох');
+    for (let i = 0; i < 400; i++) MW.stepMossway({ ...pl, moving: true }, true, 1);
+    assert(!U.under.seen.has('pithos_whisper'), 'шепчет проходящему мимо');
+    for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 1);
+    eq(WH.whisperText(), MW.MOSS_WHISPER, 'шёпот мха');
+    assert(U.under.seen.has('pithos_whisper') && p.useShown() && WH.hush.has('pithos') && /ЛЕЧЬ/.test(p.useLabel), 'после шёпота нет «лечь»');
+    WH._reset();
+    for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 1);
+    eq(WH.whisperText(), '', 'шёпот повторился за ночь');
+    for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 2);
+    eq(WH.whisperText(), MW.MOSS_WHISPER, 'другой ночью — снова');
+    U.under.seen.add('pithos_lie'); assert(/УСНУТЬ/.test(p.useLabel), 'второй раз — не «уснуть»');
+    const bx = b.x + b.w / 2, by = b.y + b.h, R9 = D.RINGS;
+    assert(D.ringAt(bx, by) === R9 && D.ringAt(bx, by + 28) === R9 && D.ringAt(bx, by + 70) === R9 + 1, 'нора не у подножия огня');
+    assert(b.useAction === 'burrow_down' && b.look && b.drawSelf, 'нора без спуска');
+    assert(AR.lines.length > 0 && !AR.onArtery(bx, by - 4, 6), 'нора на дороге');
+    for (const l of M.locations) if (l !== b) assert(!(l.x < b.x + b.w + 8 && l.x + l.w > b.x - 8 && l.y < b.y + b.h + 8 && l.y + l.h > b.y - 8), `нора налезла на «${l.name}»`);
+    const log = [];
+    const ctx = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+    b.drawSelf(ctx, b, 0);
+    for (const [k, x, y, w, h] of log) if (k === 'fillRect') assert(x >= b.x - 1 && x + w <= b.x + b.w + 1 && y >= b.y - 1 && y + h <= b.y + b.h + 1, `нора вылезла из рамки: ${x},${y}`);
+    U.under.seen.delete('pithos_whisper'); U.under.seen.delete('pithos_lie'); MW._resetMossway(); WH._reset(); WH.hush.delete('pithos');
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
@@ -1700,6 +1777,10 @@ setCtx(ctx);
     UR.drawUnderWorld(c, 820 - 320, 290 - 180, 640, 360, p, () => {});
     UR.drawUnderThing(c, U.thingById('u_plaque')); UR.drawUnderThing(c, U.thingById('u_capsule'));
     UR.drawUnderFx(c, 640, 360);
+    U.moss.glows.push({ x: U.MOSS.x0 + 60, y: U.mossY(U.MOSS.x0 + 60) + 12, life: 40, warm: false }); U.moss.sprouts.push({ x: U.MOSS.x0 + 50, y: U.mossY(U.MOSS.x0 + 50) + 10, tall: true });
+    UR.drawUnderWorld(c, U.MOSS.x0 - 20, U.MOSS.base - 180, 640, 360, { x: U.MOSS.x0 + 54, y: U.mossY(U.MOSS.x0 + 60) - 11, dir: 1 }, () => {});
+    for (const id of ['u_moss', 'u_up_pithos', 'u_up_burrow']) UR.drawUnderThing(c, U.thingById(id));
+    U.moss.reset();
     U.under.cold = 0;
     setCtx(ctx);
   });

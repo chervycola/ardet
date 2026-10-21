@@ -67,7 +67,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -104,7 +104,8 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { stepMossway } from './world/mossway.js';
 import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
@@ -604,6 +605,7 @@ function stepFx() {
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
+  stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t));   // пифос ночью шепчет тому, кто задержался
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
@@ -1131,7 +1133,7 @@ function surface() {
   muteRedNoon(false);
   if (surfaceLights) lighting.sources = surfaceLights;
   surfaceLights = null;
-  player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined;
+  player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined; player.pulse = 0;
 }
 // поезд метро забрал (билет «до колодца. туда.»): выход — у колодца у площади, билет погашен
 function rideToWell() {
@@ -1183,6 +1185,9 @@ function stepFxUnder() {
   if (under.train === 1) playDistantSound();
   if (under.train > 40 && under.train < 200 && under.train % 24 === 0) camera.shake(8);
   if (under.ride) rideToWell();
+  // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
+  if (moss.beat && moss.k > 0.5) playHeart();
+  if (moss.grow) playMossGrow();
   stepUnderLife(player);
   lighting.sources = underLights(player.x + 6, player.y + 10);
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
@@ -1200,7 +1205,7 @@ function renderUnder() {
   worldCtx.save();
   worldCtx.translate(-camX, -camY);
   setCtx(worldCtx);
-  player.cold = under.cold; player.ember = under.ember;
+  player.cold = under.cold; player.ember = under.ember; player.pulse = moss.k > 0.5 ? moss.pulse : 0;
   drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); });
   drawParticles(worldCtx, { x: camX, y: camY });
   worldCtx.restore();
@@ -1208,7 +1213,7 @@ function renderUnder() {
   warmSpots = warmIn(camX, camY, vw, vh);           // в криосклепе огонёк холодный — беречь перу нечего
   ink.drawGroup((c, th) => drawUnderThing(c, th), camX, camY);
   setCtx(worldCtx);
-  lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT);
+  lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT * (1 - 0.6 * moss.k));   // в ходе мха видно только то, что светит
   lightParticles.draw(worldCtx, { x: camX, y: camY });
   crackedGlass.draw(fxCtx);
   dyingPixels.draw(fxCtx);
@@ -1221,12 +1226,13 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro)
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow)
 {
   const m = /[?&]under(?:=(\w+))?/.exec(location.search);
   if (m) {
     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
-      godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro' }[m[1]] || 'u_up_pizzeria';
+      godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
+      moss: 'u_up_pithos', burrow: 'u_up_burrow' }[m[1]] || 'u_up_pizzeria';
     setTimeout(() => goUnder(spot), 0);
   }
 }
@@ -1264,7 +1270,7 @@ function heroStep(dvx, dvy) {
   if (sp > 0.05) {
     if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
     events.emit(E.PLAYER_MOVE, player);
-    if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water') footstepDust(player.x, player.y);
+    if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
     // (под землёй следы остаются в пыли — render/underside.js)
     const kind = under.active ? null : wetKind(S.print);

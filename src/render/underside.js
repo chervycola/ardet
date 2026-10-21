@@ -6,7 +6,8 @@
 // боковые стенки. Где труба входит в стену — круглый проём с ободом кольца.
 // Комнаты — своим материалом: известняк крипты, казённая краска гауптвахты,
 // мокрый бетон подвала, кирпич «Вавилона», иней криосклепа; жила — бетон
-// коллектора и кабели на кронштейнах.
+// коллектора и кабели на кронштейнах. Ход мха — круглый лаз в подушках мха,
+// свет в нём — вспышки мха под ногой, в такт сердцу.
 // Неподвижное запекается кусками по 256 точек (видимые — сразу, соседний —
 // впрок, по одному за кадр); живое — поверх: вещи на полу по глубине,
 // перемычки круглых проёмов, следы в пыли, вода, иней, который тает кольцом
@@ -14,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -22,6 +23,7 @@ const L1 = '#c8b89a', L2 = '#b0a284', BR2 = '#3a2818';
 const S0 = '#474442', S1 = '#5e5e5d', S2 = '#33302e';
 const MG_L = '#4d5a49', MG_D = '#2f372c', TI = '#8CC63F';
 const RUST = '#4a3420', RUST_L = '#6b4a2c';
+const GLOW_G = '#9DB08A', GLOW_W = '#C8A070';     // мох светится: живой — бледно-зелёным, сухой у норы — тёплым
 const q = Math.round;
 let G = null;                                      // холст, куда рисуем сейчас
 const r = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(q(x), q(y), w, h); };
@@ -450,6 +452,81 @@ function veinFloor(cl) {
   });
 }
 
+// ═══ ХОД МХА: круглый лаз, стены в подушках мха (канон U6) ═══
+// Подушки — кочками по дальней стене в три ряда: верх и левый бок к свету, низ в
+// тень, между ними чёрные щели, под сводом порода. Пол — ковёр мха, ближний срез —
+// мох свисает прядями. У норы мох сухой и тёплый: рыжее и светлее (переход — 48 точек)
+const CUSH = [], CB = 8, CBK = new Map();
+{
+  let k = 0;
+  for (let x = MOSS.x0 - 6; x < MOSS.x1 + 6; k++) {
+    const r0 = 3.2 + hh(k, 1, 121) * 3.4;
+    CUSH.push({ x: x + hh(k, 2, 121) * 3, d: 3 + hh(k, 3, 121) * 7, r: r0 });
+    CUSH.push({ x: x + 2 + hh(k, 5, 121) * 4, d: 9 + hh(k, 6, 121) * (MOSS.wh - 15), r: r0 * 0.9 });
+    CUSH.push({ x: x + 1 + hh(k, 7, 121) * 5, d: MOSS.wh - 7 + hh(k, 8, 121) * 2, r: r0 * 0.7 });   // под сводом — помельче
+    x += r0 * (1.15 + hh(k, 4, 121) * 0.45);
+  }
+  for (const c of CUSH) {
+    const b = Math.floor(c.x / CB);
+    for (let i = b - 1; i <= b + 1; i++) { if (!CBK.has(i)) CBK.set(i, []); CBK.get(i).push(c); }
+  }
+}
+const mossDry = x => Math.max(0, Math.min(1, (x - MOSS.dry + 24) / 48));
+function mossBand(x, d, H) {
+  if (d > H - 2) return K1;                                             // свод в тени
+  if (d > H - 5) return hh(x, d, 122) < 0.3 ? K2 : K1;                  // порода под сводом
+  let best = 0, cu = null;
+  for (const c of CBK.get(Math.floor(x / CB)) || []) {
+    const sc = c.r - Math.hypot(x + 0.5 - c.x, (d - c.d) * 1.2);
+    if (sc > best) { best = sc; cu = c; }
+  }
+  const dry = hh(x, d, 123) < mossDry(x);
+  if (!cu) return d < 3 ? K2 : K1;                                      // щель между подушками
+  const v = (d - cu.d) / cu.r, u = (x + 0.5 - cu.x) / cu.r;
+  if (best < 0.9) return dry ? K2 : MG_D;                               // край подушки
+  if (v > 0.4 || (u < -0.35 && v > -0.1)) return dry ? (hh(x, d, 133) < 0.15 ? L2 : RUST_L) : MG_L;   // верх и левый бок — к свету
+  if (v < -0.45) return dry ? BR2 : MG_D;                               // низ — в тени
+  return dry ? RUST : hh(x, d, 124) < 0.08 ? MG_L : MG;
+}
+function mossWalls(cl) {
+  for (let x = Math.max(MOSS.x0, cl.x0); x < Math.min(MOSS.x1, cl.x1); x++) {
+    const y0 = mossY(x);
+    col(x, y0 - MOSS.wh, y0, cl, y => mossBand(x, y0 - y, MOSS.wh));
+  }
+}
+const MOSS_LIP = [MG_L, MG, MG_D, K2, K1], DRY_LIP = [RUST_L, RUST, BR2, K2, K1];
+function mossLip(cl) {
+  for (let x = Math.max(MOSS.x0 - 6, cl.x0); x < Math.min(MOSS.x1 + 6, cl.x1); x++) {
+    const yb = mossY(Math.max(MOSS.x0, Math.min(MOSS.x1 - 1, x))) + MOSS.fh, dry = hh(x, 0, 125) < mossDry(x);
+    const lp = dry ? DRY_LIP : MOSS_LIP, hang = hh(x, 1, 126) < 0.2 ? 1 + q(hh(x, 2, 126) * 2) : 0;
+    col(x, yb, yb + T.LIP + hang, cl, y => { const row = y - yb; return row < T.LIP ? lp[row] : dry ? BR2 : MG_D; });   // пряди свисают
+  }
+}
+function mossFloor(cl) {
+  for (let x = Math.max(MOSS.x0, cl.x0); x < Math.min(MOSS.x1, cl.x1); x++) {
+    const y0 = mossY(x);
+    col(x, y0, y0 + MOSS.fh, cl, y => {
+      const fy = y - y0, dry = hh(x, y, 127) < mossDry(x), n = hh(x >> 1, y >> 1, 128), f = hh(x, y, 134);   // комками по 2 точки
+      if (fy === 0) return K1;
+      if (fy === 1) return dry ? BR2 : K2;
+      if (dry) return f < 0.03 ? L2 : n < 0.38 ? RUST_L : RUST;          // сухой, тёплый
+      return f < 0.025 ? MG_L : n < 0.45 ? MG : MG_D;                    // ковёр мха
+    });
+  }
+}
+// торцы лаза — стенка мха, к своду скруглена
+const MOSS_END = [K2, MG_D, MG, MG, MG_D, K1], DRY_END = [K2, BR2, RUST, RUST_L, RUST, K1], END_CUT = [0, 0, 0, 1, 2, 4];
+function mossEnds(cl) {
+  for (const east of [false, true]) {
+    const y0 = mossY(east ? MOSS.x1 - 1 : MOSS.x0), pal = east ? DRY_END : MOSS_END;
+    for (let i = 0; i < 6; i++) {
+      const x = east ? MOSS.x1 + i : MOSS.x0 - 1 - i;
+      col(x, y0 - MOSS.wh + END_CUT[i], y0 + MOSS.fh + T.LIP, cl, () => pal[i]);
+    }
+  }
+}
+const inMossChunk = cl => cl.x1 > MOSS.x0 - 12 && cl.x0 < MOSS.x1 + 12 && cl.y1 > MOSS.base - 60 && cl.y0 < MOSS.base + 60;
+
 // ═══ КРУГЛЫЙ ПРОЁМ: стена хозяина вне круга и обод кольца ═══
 function hostBand(host, x, y) {
   if (host.ew) return ewBandColor(host, x, y);
@@ -517,6 +594,24 @@ function stair(th) {
     r(ox, gy - 1, ow, 1, K1);
     return;
   }
+  if (kind === 'pithos' || kind === 'burrow') {                         // ход мха: круглая дыра наверх — в пифос (глина) или в нору (сухой мох; сверху — отсвет огня)
+    const cx = x + w / 2, R0 = (w - 4) / 2, top = y + 2, ay = top + R0;
+    const rim = kind === 'pithos' ? [RUST_L, RUST] : [RUST_L, BR2];
+    for (let yy = top; yy < gy; yy++) for (let xx = x + 2; xx < x + w - 2; xx++) {
+      const dx = xx + 0.5 - cx, d = yy < ay ? Math.hypot(dx, yy + 0.5 - ay) : Math.abs(dx);
+      if (d > R0) continue;
+      const warm = kind === 'burrow' && yy < top + 9 && hh(xx, yy, 135) < 0.55 - (yy - top) * 0.06;   // в норе сверху — отсвет огня
+      r(xx, yy, 1, 1, d > R0 - 2 ? (dx < 0 ? rim[0] : rim[1]) : warm ? (yy < top + 5 ? RUST_L : RUST) : NI);
+    }
+    for (let i = 0; i < 5; i++) {                                       // корни ступенями вверх
+      const sy = gy - 3 - i * 5, half = q(R0 - 3 - i * 0.6);
+      if (sy < top + 6) break;
+      r(q(cx - half + hh(i, x, 128) * 2), sy, half * 2 - 1, 1, BR2); r(q(cx - half + 1), sy + 1, half * 2 - 3, 1, K1);
+    }
+    if (kind === 'pithos') { r(q(cx - 4), top + 3, 8, 2, RUST); r(q(cx), top + 3, 1, 1, L1); }   // над головой — дно пифоса, щёлка
+    else for (let k = 0; k < 4; k++) r(q(cx - 3 + k * 2), top + 3, 1, 1, k === 1 ? KV : L2);       // в щели над норой — угли огня
+    return;
+  }
   const PAL = {
     stone: [S1, S2, S0, K3], rock: [K4, K2, K3, K1], concrete: [S0, S2, S1, K3], wood: [RUST_L, BR2, RUST, K1],
   }[kind];
@@ -536,10 +631,19 @@ function stair(th) {
   if (kind === 'wood') { r(ox + 4, top + 1, ow - 8, 1, L2); r(ox + 4, top + 1, 1, 3, K1); r(ox + ow - 5, top + 1, 1, 3, K1); }   // люк наверху
   if (kind === 'concrete') for (let i = 0; i < ow; i++) if (hh(i, x, 4) < 0.7) r(ox + i, gy - 2, 1, 1, MG_D);   // вода на нижней
 }
+const CL_ALL = { x0: -1e9, y0: -1e9, x1: 1e9, y1: 1e9 };
 function wallThing(th) {
   if (th.stair) { stair(th); return; }
   const { x, y, w, h } = th;
   switch (th.id) {
+    case 'u_moss': {                                                    // мох на стене: подушки; коробочки спор на тонких ножках
+      for (let xx = x; xx < x + w; xx++) { const y0 = mossY(xx); col(xx, y0 - MOSS.wh, y0, CL_ALL, yy => mossBand(xx, y0 - yy, MOSS.wh)); }
+      for (let k = 0; k < 9; k++) {
+        const sx = q(x + 3 + k * 6.4 + hh(k, 1, 130) * 3), sy = mossY(sx) - 7 - q(hh(k, 2, 130) * 9);
+        r(sx, sy, 1, 3, MG_L); r(sx, sy - 1, 1, 1, L1);
+      }
+      break;
+    }
     case 'u_plaque': {                                                  // табличка на первом кольце и маркер под ней
       r(x, y, 14, 9, S1); r(x, y, 14, 1, L2); r(x + 13, y + 1, 1, 8, S2); r(x, y + 8, 14, 1, K2);
       r(x + 1, y + 1, 1, 1, K1); r(x + 12, y + 1, 1, 1, K1); r(x + 1, y + 7, 1, 1, K1); r(x + 12, y + 7, 1, 1, K1);   // болты
@@ -815,6 +919,7 @@ function drawStatic(cl) {
   for (const tb of NS) nsWalls(tb, cl);
   for (const R of ROOMS) roomFloor(R, cl);
   veinFloor(cl); ewFloor(LINE, cl);
+  if (inMossChunk(cl)) { mossWalls(cl); mossLip(cl); mossFloor(cl); mossEnds(cl); }
   for (const tb of NS) nsFloor(tb, cl);
   for (const p of PORTALS) arch(p, cl);
   for (const th of THINGS) if (th.wall && th.x < cl.x1 && th.x + th.w > cl.x0 && th.y < cl.y1 && th.y + th.h > cl.y0) wallThing(th);
@@ -1047,7 +1152,7 @@ export function stepUnderLife(p) {
   const fx = p.x + 6, fy = p.y + 23;
   // следы: каждые 7 точек пути, левый-правый
   if (!lastPrint || Math.hypot(fx - lastPrint.x, fy - lastPrint.y) > 7) {
-    if (lastPrint && !inWater(fx, fy)) {
+    if (lastPrint && !inWater(fx, fy) && placeAt(fx, fy) !== 'moss') {   // мох глушит шаги начисто — и следов не держит
       printSide ^= 1;
       prints.push({ x: q(fx + (printSide ? -2 : 1)), y: q(fy - 1 + printSide) });
       if (prints.length > 900) prints.shift();
@@ -1182,6 +1287,24 @@ function floorLife(g, camX, camY, vw, vh, p) {
   if (under.hiss > 0) {
     const sx = CUTS.find(c => c.id === 'shelter').x0 + 82, sy = LINE.y0 - 14;
     for (let k = 0; k < 4; k++) { G.globalAlpha = 0.5; r(sx - 6 + q(Math.random() * 12), sy - 6 + q(Math.random() * 10), 1, 1, Math.random() < 0.5 ? AS : S2); }
+    G.globalAlpha = 1;
+  }
+  // ход мха: вспышки — под ногой и на шаг вперёд; мох, выросший у ног; сухой у норы тлеет сам
+  if (camY + vh > MOSS.base - 40 && camY < MOSS.base + 50) {
+    for (const g of moss.glows) {
+      const a = g.life / GLOW, gx = q(g.x), gyy = q(g.y);
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -9; dx <= 9; dx++) {
+        const f = 1 - Math.hypot(dx / 9, dy / 4), yy = gyy + dy, y0 = mossY(gx + dx);
+        if (f <= 0 || hh(gx + dx, yy, 131) > f * 2 || yy < y0 + 1 || yy > y0 + MOSS.fh - 1) continue;
+        G.globalAlpha = a * (0.35 + 0.6 * f); r(gx + dx, yy, 1, 1, g.warm ? GLOW_W : GLOW_G);
+      }
+    }
+    G.globalAlpha = 1;
+    for (const sp of moss.sprouts) { r(sp.x, sp.y, 1, 1, MG_L); if (sp.tall) r(sp.x, sp.y - 1, 1, 1, MG); }
+    for (let x = MOSS.dry; x < MOSS.x1 - 2; x += 3) {
+      const y0 = mossY(x), k = 0.5 + 0.5 * Math.sin(t * 0.03 + x * 0.21);
+      G.globalAlpha = (0.1 + 0.16 * k) * mossDry(x); r(x, y0 + 3 + q(hh(x, 0, 132) * (MOSS.fh - 6)), 1, 1, GLOW_W);
+    }
     G.globalAlpha = 1;
   }
   // брызги капель — на полу

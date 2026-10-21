@@ -55,6 +55,40 @@ export function playPickup() {
   osc.stop(ctx.currentTime + 0.3);
 }
 
+// Ход мха: стук сердца — глухое «тук-тук», раз в секунду
+export function playHeart() {
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  for (const [dt, f, v] of [[0, 64, 0.05], [0.16, 54, 0.032]]) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f, t0 + dt);
+    o.frequency.exponentialRampToValueAtTime(f * 0.62, t0 + dt + 0.13);
+    g.gain.setValueAtTime(0.0001, t0 + dt);
+    g.gain.exponentialRampToValueAtTime(v, t0 + dt + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.17);
+    o.connect(g); g.connect(masterGain);
+    o.start(t0 + dt); o.stop(t0 + dt + 0.2);
+  }
+}
+
+// Ход мха: мох растёт — будто очень медленно рвут очень мягкую бумагу:
+// волокна лопаются по одному, тихо, нарастает и стихает
+export function playMossGrow() {
+  if (!ctx) return;
+  const n = Math.floor(ctx.sampleRate * 0.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  let v = 0;
+  for (let i = 0; i < n; i++) {
+    const env = Math.sin(Math.PI * i / n);
+    if (Math.random() < 0.0016 * env) v = Math.random() * 2 - 1;
+    v *= 0.93;
+    d[i] = v * env;
+  }
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = 2600 + Math.random() * 1400; f.Q.value = 0.8; g.gain.value = 0.06;
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+}
+
 // Menu click
 export function playClick() {
   if (!ctx) return;

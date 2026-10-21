@@ -23,6 +23,7 @@ export const SURF = {
   rubble: { name: 'мусор',   accel: 0.22, decel: 0.45, max: 0.82, print: null },
   ash:    { name: 'гарь',    accel: 0.26, decel: 0.40, max: 0.92, print: 'ash' },
   water:  { name: 'вброд',   accel: 0.11, decel: 0.62, max: 0.55, print: null },
+  moss:   { name: 'мох',     accel: 0.20, decel: 0.55, max: 0.85, print: null },   // ход мха: мягко, нога вязнет и встаёт сразу
 };
 
 const OUTER = RINGS * RING_W + FIRE_W;

@@ -18,6 +18,7 @@ const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
 function hasUseAction(loc) {
   if (loc.id === 'terminal') return true;
+  if (loc.useShown && !loc.useShown()) return false;   // пасхалка: действие проявляется не сразу (пифос — после шёпота)
   const key = loc.useAction || loc.id;
   return SPECIAL_USE.has(key) || !!useTexts[key];
 }
