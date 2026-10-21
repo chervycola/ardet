@@ -121,7 +121,7 @@ const TH = [
   { id: 'u_water', room: 'base', x: 1188, y: 846, w: 34, h: 14, at: [1205, 868] },
   // холодная жила и криосклеп
   { id: 'u_frost', room: 'vein', wall: true, x: 616, y: 262, w: 68, h: 18, at: [650, 294] },
-  { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256] },
+  { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256], useAction: 'under_read', useLabel: '<i>❄</i>ДОЧИТАТЬ, НЕ ВЫДОХНУВ' },
   { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
   { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
   // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
@@ -195,6 +195,30 @@ export const NICHE_HUSH = 280;                                       // 40 ша�
 }
 // уголёк проходит мимо ниш: ноги у стены, под рядами
 const nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+
+// ── опись инеем (канон, ритуал «Опись инеем», U7): на стенах холодной жилы иней сам
+// выписывает опись — перечень того, что идущий хотел бы сохранить навсегда. Каждый
+// выдох стирает одну строку. Дочитал строку до конца, не выдохнув, — сохранил: она
+// переходит в опись криосклепа (сохраняется). Стоишь — дыхание задержано, до пяти
+// секунд; идёшь — выдох раз в полторы. У самого криосклепа над дверью всегда стоит
+// чужая строка, недостёртая кем-то прежним; сохранить её можно тоже — здесь это
+// считается хорошим тоном
+export const FROST = [                                               // строки по стене жилы, с запада к криосклепу
+  { x: 520, text: '1. кличка собаки во дворе' },                     // нов.
+  { x: 575, text: '2. мамин почерк на банках' },                     // нов.
+  { x: 630, text: '3. запах подъезда в дождь' },                     // канон
+  { x: 685, text: '4. свет в окне напротив' },                       // нов.
+];
+export const FROST_FOREIGN = '1. пусть подождёт';                    // канон: чужая, над дверью криосклепа
+export const FROST_LINE = 'Хранение бессрочное. Перечень уточняется дыханием.';
+const readTime = text => Array.from(text).length * 9 + 30;           // перо инея пишет строку — столько читать
+export const HOLD_BREATH = 300, BREATH = 80;                         // стоишь — задержал дыхание; идёшь — выдох
+{
+  const th = thingById('u_frost_line');
+  th.useShown = () => !under.kept.has(FROST_FOREIGN) && !under.frost;
+  const cap = thingById('u_capsule'), base = cap.look;
+  Object.defineProperty(cap, 'look', { get: () => (under.kept.size ? base + '\n\nВ описи криосклепа: ' + [...under.kept].map(s => '«' + s + '»').join(', ') + '. Хранение бессрочное.' : base), configurable: true, enumerable: true });
+}
 
 // ── гербарий темноты (канон, ритуал «Гербарий темноты», U2): катакомбы идут под
 // садом света, корни сада прорастают сквозь свод. Поднёс уголёк к белой стене — на
@@ -623,6 +647,12 @@ export const under = {
   picked: false,          // тень за этот спуск снята
   shadow: false,          // тень цветка в кармане — до первого дневного света
   upper: null,            // «верхняя» вещь { id, t }: тёплая, дневная, отвечающая
+  breath: 0,              // шагов с последнего выдоха (на холоде)
+  exhale: false,          // выдох на этом шаге — пар изо рта
+  frost: null,            // иней пишет строку { i, x, y, text, t, n } — читаешь
+  frostDone: new Set(),   // строки этого спуска: дочитаны или стёрты выдохом
+  kept: new Set(),        // опись криосклепа: сохранённые строки (сохраняется)
+  keptSaid: false,
   after: null,            // строка мира — когда закроется окно сцены
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
@@ -643,7 +673,7 @@ export const under = {
     // шёпоты: гуще, чем наверху; в криосклепе — впервые тихо
     if (this.hushF > 0) this.hushF--;
     if (this.hushS > 0) this.hushS = Math.max(0, this.hushS - mv);
-    if (at === 'wd' && !this.wdTold) { this.wdTold = true; this.say = WD_SILENCE; this.quench = true; this.whisper = null; }
+    if (at === 'wd' && !this.wdTold) { this.wdTold = true; this.say = WD_SILENCE; if (!this.frost) { this.quench = true; this.whisper = null; } }   // иней — не голос
     // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
     this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
     // вдох на пороге: подул — через секунду тоннель отвечает вдохом, ещё через полторы — строка
@@ -682,6 +712,24 @@ export const under = {
         this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 };   // ждёт перо, не перебивая
       }
     }
+    // дыхание на холоде: идёшь — выдох раз в полторы секунды; стоишь — задержано, до пяти
+    this.exhale = false;
+    if (this.cold > 0.25) { if (++this.breath >= (this.still > 2 ? HOLD_BREATH : BREATH)) { this.breath = 0; this.exhale = true; } }
+    else this.breath = 0;
+    // опись инеем: подошёл к строке — иней пишет её; дочитал, не выдохнув, — сохранил
+    if (!this.frost && at === 'vein') {
+      const i = FROST.findIndex(f => Math.abs(fx - f.x) < 30 && !this.kept.has(f.text) && !this.frostDone.has(f.text));
+      if (i >= 0) this.readFrost(FROST[i].x, VEIN.y0 - 11, FROST[i].text);
+    }
+    if (this.frost) {
+      const f = this.frost, d = Math.hypot(fx - f.x, fy - f.y - 20);
+      if ((this.exhale && d < 90) || d > 110) {                         // выдохнул или ушёл — строка тает
+        this.frostDone.add(f.text); this.frost = null; this.quench = true; this.whisper = null;
+      } else if (++f.t >= f.n) {
+        this.frostDone.add(f.text); this.kept.add(f.text); this.frost = null;
+        if (!this.keptSaid) { this.keptSaid = true; this.say = FROST_LINE; }
+      }
+    }
     // гербарий темноты: тень на извёстке держится, пока уголёк рядом; «верхняя» вещь — минуту
     if (this.bloom) { this.bloom.t++; if (Math.abs(fx - this.bloom.x) > 70 || !(fy > L0.y0 - 4 && fy < L0.y0 + T.FH + 4)) this.bloom = null; }
     if (this.upper) {
@@ -718,6 +766,14 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // иней пишет строку — читаешь её, пока не выдохнешь
+  readFrost(x, y, text) {
+    if (this.frost || this.kept.has(text)) return false;
+    this.frost = { x, y, text, t: 0, n: readTime(text) };
+    this.whisper = { text, x, y, keep: true, frost: true };
+    this.breath = 0; this.exhale = false;                             // увидел строку — вдохнул и читаешь
+    return true;
   },
   // у белой стены катакомб: поднёс уголёк — тень раскрылась; ещё раз — снял её
   herb(fx) {
@@ -787,10 +843,11 @@ export const under = {
     this.niche = null; this.nicheWoke = false; this.trail = null; this.trailT = 0;
     this.boats.length = 0; this.calm = 0; this.read = false; this.after = null;
     this.bloom = null; this.picked = false; this.upper = null;
+    this.breath = 0; this.exhale = false; this.frost = null; this.frostDone.clear(); this.keptSaid = false;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; moss.reset(); },
-  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed }; },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; moss.reset(); },
+  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept] }; },
   load(d) {
     if (!d) return;
     (d.seen || []).forEach(k => this.seen.add(k));
@@ -798,6 +855,7 @@ export const under = {
     if (d.ticket) this.ticket = true;
     (d.called || []).forEach(k => this.called.add(k));
     if (d.signed) this.signed = true;
+    (d.kept || []).forEach(k => this.kept.add(k));
   },
 };
 

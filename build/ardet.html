@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='f14f1e1 · 2026-10-21';console.log('[оттиск]', 'f14f1e1 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c85b53d · 2026-10-21';console.log('[оттиск]', 'c85b53d · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -19600,7 +19600,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, BLOOM_LINE, HERB_LINE, UPPER, CAT, JOURNAL_TEXT, DRILL_LINE, OFF_LINE, SIGNED_LOOK, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, DAYLIGHT, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, FROST, FROST_FOREIGN, FROST_LINE, readTime, HOLD_BREATH, BREATH, BLOOM_LINE, HERB_LINE, UPPER, CAT, JOURNAL_TEXT, DRILL_LINE, OFF_LINE, SIGNED_LOOK, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, DAYLIGHT, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // второе действие вещи: у порога — подуть на уголёк (пока не поздоровался); с тенью
     // цветка в кармане — положить её на вещь
@@ -20074,7 +20074,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_water', room: 'base', x: 1188, y: 846, w: 34, h: 14, at: [1205, 868] },
                 // холодная жила и криосклеп
                 { id: 'u_frost', room: 'vein', wall: true, x: 616, y: 262, w: 68, h: 18, at: [650, 294] },
-                { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256] },
+                { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256], useAction: 'under_read', useLabel: '<i>❄</i>ДОЧИТАТЬ, НЕ ВЫДОХНУВ' },
                 { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
                 { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
                 // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
@@ -20145,6 +20145,29 @@ System.register("world/underside", ["content/underside", "core/time"], function 
             }
             // уголёк проходит мимо ниш: ноги у стены, под рядами
             nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+            // ── опись инеем (канон, ритуал «Опись инеем», U7): на стенах холодной жилы иней сам
+            // выписывает опись — перечень того, что идущий хотел бы сохранить навсегда. Каждый
+            // выдох стирает одну строку. Дочитал строку до конца, не выдохнув, — сохранил: она
+            // переходит в опись криосклепа (сохраняется). Стоишь — дыхание задержано, до пяти
+            // секунд; идёшь — выдох раз в полторы. У самого криосклепа над дверью всегда стоит
+            // чужая строка, недостёртая кем-то прежним; сохранить её можно тоже — здесь это
+            // считается хорошим тоном
+            exports_56("FROST", FROST = [
+                { x: 520, text: '1. кличка собаки во дворе' }, // нов.
+                { x: 575, text: '2. мамин почерк на банках' }, // нов.
+                { x: 630, text: '3. запах подъезда в дождь' }, // канон
+                { x: 685, text: '4. свет в окне напротив' }, // нов.
+            ]);
+            exports_56("FROST_FOREIGN", FROST_FOREIGN = '1. пусть подождёт'); // канон: чужая, над дверью криосклепа
+            exports_56("FROST_LINE", FROST_LINE = 'Хранение бессрочное. Перечень уточняется дыханием.');
+            readTime = text => Array.from(text).length * 9 + 30; // перо инея пишет строку — столько читать
+            exports_56("HOLD_BREATH", HOLD_BREATH = 300), exports_56("BREATH", BREATH = 80); // стоишь — задержал дыхание; идёшь — выдох
+            {
+                const th = thingById('u_frost_line');
+                th.useShown = () => !under.kept.has(FROST_FOREIGN) && !under.frost;
+                const cap = thingById('u_capsule'), base = cap.look;
+                Object.defineProperty(cap, 'look', { get: () => (under.kept.size ? base + '\n\nВ описи криосклепа: ' + [...under.kept].map(s => '«' + s + '»').join(', ') + '. Хранение бессрочное.' : base), configurable: true, enumerable: true });
+            }
             // ── гербарий темноты (канон, ритуал «Гербарий темноты», U2): катакомбы идут под
             // садом света, корни сада прорастают сквозь свод. Поднёс уголёк к белой стене — на
             // известняке раскрывается тень цветка, цветущего прямо сейчас наверху: пиона,
@@ -20388,6 +20411,12 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 picked: false, // тень за этот спуск снята
                 shadow: false, // тень цветка в кармане — до первого дневного света
                 upper: null, // «верхняя» вещь { id, t }: тёплая, дневная, отвечающая
+                breath: 0, // шагов с последнего выдоха (на холоде)
+                exhale: false, // выдох на этом шаге — пар изо рта
+                frost: null, // иней пишет строку { i, x, y, text, t, n } — читаешь
+                frostDone: new Set(), // строки этого спуска: дочитаны или стёрты выдохом
+                kept: new Set(), // опись криосклепа: сохранённые строки (сохраняется)
+                keptSaid: false,
                 after: null, // строка мира — когда закроется окно сцены
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
@@ -20418,9 +20447,11 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     if (at === 'wd' && !this.wdTold) {
                         this.wdTold = true;
                         this.say = WD_SILENCE;
-                        this.quench = true;
-                        this.whisper = null;
-                    }
+                        if (!this.frost) {
+                            this.quench = true;
+                            this.whisper = null;
+                        }
+                    } // иней — не голос
                     // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
                     this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
                     // вдох на пороге: подул — через секунду тоннель отвечает вдохом, ещё через полторы — строка
@@ -20467,6 +20498,40 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         else {
                             this.trailT = 900 + Math.floor(Math.random() * 600);
                             this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 }; // ждёт перо, не перебивая
+                        }
+                    }
+                    // дыхание на холоде: идёшь — выдох раз в полторы секунды; стоишь — задержано, до пяти
+                    this.exhale = false;
+                    if (this.cold > 0.25) {
+                        if (++this.breath >= (this.still > 2 ? HOLD_BREATH : BREATH)) {
+                            this.breath = 0;
+                            this.exhale = true;
+                        }
+                    }
+                    else
+                        this.breath = 0;
+                    // опись инеем: подошёл к строке — иней пишет её; дочитал, не выдохнув, — сохранил
+                    if (!this.frost && at === 'vein') {
+                        const i = FROST.findIndex(f => Math.abs(fx - f.x) < 30 && !this.kept.has(f.text) && !this.frostDone.has(f.text));
+                        if (i >= 0)
+                            this.readFrost(FROST[i].x, VEIN.y0 - 11, FROST[i].text);
+                    }
+                    if (this.frost) {
+                        const f = this.frost, d = Math.hypot(fx - f.x, fy - f.y - 20);
+                        if ((this.exhale && d < 90) || d > 110) { // выдохнул или ушёл — строка тает
+                            this.frostDone.add(f.text);
+                            this.frost = null;
+                            this.quench = true;
+                            this.whisper = null;
+                        }
+                        else if (++f.t >= f.n) {
+                            this.frostDone.add(f.text);
+                            this.kept.add(f.text);
+                            this.frost = null;
+                            if (!this.keptSaid) {
+                                this.keptSaid = true;
+                                this.say = FROST_LINE;
+                            }
                         }
                     }
                     // гербарий темноты: тень на извёстке держится, пока уголёк рядом; «верхняя» вещь — минуту
@@ -20525,6 +20590,16 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.heard.add('metro');
                         this.train = 1;
                     }
+                },
+                // иней пишет строку — читаешь её, пока не выдохнешь
+                readFrost(x, y, text) {
+                    if (this.frost || this.kept.has(text))
+                        return false;
+                    this.frost = { x, y, text, t: 0, n: readTime(text) };
+                    this.whisper = { text, x, y, keep: true, frost: true };
+                    this.breath = 0;
+                    this.exhale = false; // увидел строку — вдохнул и читаешь
+                    return true;
                 },
                 // у белой стены катакомб: поднёс уголёк — тень раскрылась; ещё раз — снял её
                 herb(fx) {
@@ -20647,10 +20722,15 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.bloom = null;
                     this.picked = false;
                     this.upper = null;
+                    this.breath = 0;
+                    this.exhale = false;
+                    this.frost = null;
+                    this.frostDone.clear();
+                    this.keptSaid = false;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; moss.reset(); },
-                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed }; },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; moss.reset(); },
+                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept] }; },
                 load(d) {
                     if (!d)
                         return;
@@ -20661,6 +20741,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     (d.called || []).forEach(k => this.called.add(k));
                     if (d.signed)
                         this.signed = true;
+                    (d.kept || []).forEach(k => this.kept.add(k));
                 },
             });
             // свет под землёй: уголёк — единственное тёплое (сердцевина), вокруг — круг,
@@ -33754,7 +33835,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
@@ -47738,7 +47819,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             }
         }
         // пар изо рта — в холоде
-        if (underside_js_3.under.cold > 0.25 && time_js_39.t % 80 === 0) {
+        if (underside_js_3.under.exhale) { // выдох — дыхание считает изнанка (опись инеем)
             for (let k = 0; k < 5; k++)
                 puffs.push({ x: p.x + 7 + (p.dir || 1) * 3, y: p.y - 1, vx: (p.dir || 1) * (0.1 + Math.random() * 0.15), vy: -0.08 - Math.random() * 0.06, life: 70 + k * 6 });
         }
@@ -50755,6 +50836,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     goUp(loc);
                     return;
                 } // изнанка: лестница своей комнаты
+                // изнанка: дочитать чужую строку инея над дверью криосклепа, не выдохнув
+                if (actionKey === 'under_read') {
+                    underside_js_4.under.readFrost(loc.x + loc.w / 2, loc.y + 12, underside_js_4.FROST_FOREIGN);
+                    return;
+                }
                 // изнанка: поднести уголёк к белой стене катакомб — тень цветка; ещё раз — снять её
                 if (actionKey === 'under_herb') {
                     underside_js_4.under.herb(player.x + 6);

@@ -104,7 +104,7 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
@@ -1629,6 +1629,8 @@ events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: дочитать чужую строку инея над дверью криосклепа, не выдохнув
+  if (actionKey === 'under_read') { under.readFrost(loc.x + loc.w / 2, loc.y + 12, FROST_FOREIGN); return; }
   // изнанка: поднести уголёк к белой стене катакомб — тень цветка; ещё раз — снять её
   if (actionKey === 'under_herb') { under.herb(player.x + 6); return; }
   // изнанка: расписаться в журнале учений убежища

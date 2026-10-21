@@ -1197,7 +1197,7 @@ export function stepUnderLife(p) {
     if (d.y >= d.gy) { d.y = d.gy; d.splash = 1; }
   }
   // пар изо рта — в холоде
-  if (under.cold > 0.25 && t % 80 === 0) {
+  if (under.exhale) {                                                  // выдох — дыхание считает изнанка (опись инеем)
     for (let k = 0; k < 5; k++) puffs.push({ x: p.x + 7 + (p.dir || 1) * 3, y: p.y - 1, vx: (p.dir || 1) * (0.1 + Math.random() * 0.15), vy: -0.08 - Math.random() * 0.06, life: 70 + k * 6 });
   }
   for (let i = puffs.length - 1; i >= 0; i--) { const u = puffs[i]; u.x += u.vx; u.y += u.vy; u.vx *= 0.99; if (--u.life <= 0) puffs.splice(i, 1); }

@@ -2021,6 +2021,51 @@ setCtx(ctx);
     W.shadow = true; W.leave(); assert(W.shadow, 'тень пропала под землёй');
     W.shadow = false; W.say = null; W.whisper = null;
   });
+  test('изнанка: опись инеем — дочитал строку, не выдохнув, — она в описи криосклепа; выдох стирает строку; чужую сохранить можно тоже', () => {
+    const W = U.under, cap = U.thingById('u_capsule'), fl = U.thingById('u_frost_line');
+    W.kept.clear(); W.enter(0, 0); W.say = null;
+    eq(U.FROST[2].text, '3. запах подъезда в дождь', 'строка канона'); eq(U.FROST_FOREIGN, '1. пусть подождёт', 'чужая строка канона');
+    for (const f of U.FROST) assert(f.x - 75 >= U.VEIN.x0 && f.x + 75 <= U.VEIN.x1 && U.placeAt(f.x, U.VEIN.y0 + 12) === 'vein', 'строка вне жилы: ' + f.text);
+    // дыхание на холоде: идёшь — выдох раз в 80 шагов; стоишь — задержано
+    W.cold = 1; let ex = 0, x = 700;
+    for (let i = 0; i < 400; i++) { x += i & 1 ? 0.5 : -0.5; W.step(x, 294); if (W.exhale) ex++; }
+    assert(ex >= 4 && ex <= 6, 'идёшь — выдохов ' + ex);
+    ex = 0; for (let i = 0; i < 280; i++) { W.step(x, 294); if (W.exhale) ex++; }
+    assert(ex <= 1, 'стоишь — а дышишь: ' + ex);
+    W.leave(); W.enter(0, 0); W.say = null; W.px = 470; W.py = 294;
+    // тёплый конец жилы: подошёл, постоял — сохранил
+    let f = U.FROST[0]; W.step(f.x, 294);
+    assert(W.frost && W.frost.text === f.text && W.whisper && W.whisper.frost && W.whisper.keep, 'иней не пишет строку');
+    W.whisper = null;
+    for (let i = 0; i < 400 && W.frost; i++) W.step(f.x, 294);
+    assert(W.kept.has(f.text), 'дочитал — не сохранилось');
+    eq(W.say, U.FROST_LINE, 'реплика'); eq(U.FROST_LINE, 'Хранение бессрочное. Перечень уточняется дыханием.', 'реплика канона'); W.say = null;
+    // холод: идёшь мимо — выдох стирает строку
+    f = U.FROST[2]; W.cold = 1;
+    let fx = f.x - 20; W.px = fx; W.step(fx, 294);
+    assert(W.frost && W.frost.text === f.text, 'строка 3 не пишется');
+    for (let i = 0; i < 120 && W.frost; i++) { fx += 0.3; W.step(fx, 294); W.cold = 1; }
+    assert(!W.frost && !W.kept.has(f.text) && W.frostDone.has(f.text) && W.quench, 'выдох не стёр строку');
+    W.quench = false;
+    for (let i = 0; i < 60; i++) W.step(f.x, 294);
+    assert(!W.frost, 'стёртая строка пишется снова за спуск');
+    W.leave(); W.enter(0, 0); W.say = null; W.px = f.x - 200; W.py = 294; W.cold = 1; W.breath = 200;
+    W.step(f.x, 294); W.cold = 1;                                    // пришёл издалека, на выдохе — строка всё равно начинается с вдоха
+    assert(W.frost, 'выдох на подходе стёр строку, не дав начать');
+    for (let i = 0; i < 400 && W.frost; i++) { W.step(f.x, 294); W.cold = 1; }
+    assert(W.kept.has(f.text), 'стоял, не выдохнул — а строка не сохранилась');
+    // чужая строка над дверью криосклепа
+    assert(fl.useShown() && /ДОЧИТАТЬ, НЕ ВЫДОХНУВ/.test(fl.useLabel), 'чужую не дочитать');
+    W.whisper = null; W.px = 786; W.py = 256; W.step(786, 256); W.say = null; W.quench = false;
+    assert(W.readFrost(fl.x + fl.w / 2, fl.y + 12, U.FROST_FOREIGN), 'чужая не читается');
+    assert(W.whisper && W.whisper.text === U.FROST_FOREIGN, 'иней не пишет чужую');
+    for (let i = 0; i < 400 && W.frost; i++) { W.step(786, 256); assert(!W.quench, 'криосклеп погасил иней'); }
+    assert(W.kept.has(U.FROST_FOREIGN) && !fl.useShown(), 'чужая не сохранилась');
+    assert(/В описи криосклепа: .*«3\. запах подъезда в дождь».*«1\. пусть подождёт»/.test(cap.look), 'опись криосклепа пуста: ' + cap.look.slice(-120));
+    eq(JSON.parse(JSON.stringify(W.save())).kept.length, 3, 'опись не сохраняется');
+    W.leave(); W.kept.clear(); W.load({ kept: ['3. запах подъезда в дождь'] }); assert(W.kept.size === 1, 'опись не загрузилась');
+    W.kept.clear(); W.cold = 0; W.say = null; W.whisper = null; W.quench = false;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
