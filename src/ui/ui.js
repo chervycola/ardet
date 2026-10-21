@@ -144,13 +144,15 @@ export function menuAction(action) {
       events.emit(E.LOCATION_LOOK, loc);
       showLook(loc);
       break;
+    // сначала закрыть меню, потом действие: оно может открыть своё окно (сцена, лавка,
+    // терминал) — иначе меню, закрываясь, вернуло бы игру, а окно осталось висеть
     case 'use':
-      events.emit('location.use', loc);
       hideMenu();
+      events.emit('location.use', loc);
       break;
     case 'alt':
-      events.emit('location.alt', loc);
       hideMenu();
+      events.emit('location.alt', loc);
       break;
     case 'talk':
       if (loc.npc) {
