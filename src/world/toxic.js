@@ -1,8 +1,11 @@
 // ═══════════════════════════════════════
 // ТОКСИК — поле токсичности и просачивание бинарного кода.
 // Код сочится из ядовитых мест (озеро, трубопровод, подвал, свалка,
-// пропасть) и ползёт по земле, мигая 0/1. Где яда много — сочится уже
-// сквозь кадр: струйки цифр стекают сверху и от осыпавшихся краёв.
+// пропасть) и ползёт по земле, мигая 0/1. Не дождём сквозь кадр (слово
+// автора): где яда много, изредка — не чаще раза в две минуты — кусок кода
+// срывается с земли, летит на зрителя, растёт и бьёт в экран: держится на
+// стекле, цифры перещёлкиваются, потом осыпается по точке. Стекло не
+// трескается — экран бьётся только от молнии и от брейнрота (решение автора).
 // Третья краска: ТОКСИЧНЫЙ ЗЕЛЁНЫЙ #8CC63F — только свечение, мало.
 // ═══════════════════════════════════════
 import { ringAt, RINGS } from './disc.js';
@@ -13,24 +16,27 @@ const GLYPH = { 0: ['111', '101', '101', '101', '111'], 1: ['010', '110', '010',
 const TOXIC_IDS = new Set(['lake', 'pipeline', 'basement', 'dumpster', 'pit', 'toxic_dump']);
 
 let sources = null;
-let tox = 0, toxTest = false;
-try { toxTest = /[?&]tox\b/.test(location.search); } catch (e) {}
-const streams = [], drips = [];
+let tox = 0, toxTest = false, burstTest = false;
+try { toxTest = /[?&]tox\b/.test(location.search); burstTest = /[?&]toxburst\b/.test(location.search); } catch (e) {}
+const streams = [];
 let frame = 0;
+// прорыв: один за раз, между прорывами — не меньше двух минут (7200 шагов)
+const GAP = 7200, LIFT = 24, FLY = 60, HOLD = 150, PEEL = 270;
+let burst = null, lastBurst = -GAP;
 
 function srcList(locations) {
   if (!sources) sources = locations.filter(l => l.zone === 'toxic' || TOXIC_IDS.has(l.id));
   return sources;
 }
 
-function glyph(ctx, x, y, bit, a) {
+function glyph(ctx, x, y, bit, a, S = 1) {
   const g = GLYPH[bit];
   ctx.globalAlpha = a * 0.9;
   ctx.fillStyle = HALO;
-  ctx.fillRect(x - 1, y - 1, 5, 7);
+  ctx.fillRect(x - S, y - S, 5 * S, 7 * S);
   ctx.globalAlpha = a;
   ctx.fillStyle = GREEN;
-  for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r][c] === '1') ctx.fillRect(x + c, y + r, 1, 1);
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r][c] === '1') ctx.fillRect(x + c * S, y + r * S, S, S);
 }
 
 export const toxic = {
@@ -83,24 +89,38 @@ export const toxic = {
         if (Math.random() < 0.02) g.b ^= 1;           // цифра перещёлкивается
       }
     }
-    // сквозь кадр: струйки сверху и от краёв, когда яда много
-    const want = tox > 0.45 ? Math.floor((tox - 0.45) * 16) + 1 : 0;
-    if (drips.length < want && Math.random() < 0.05) {
-      const fromEdge = Math.random() < 0.35;
-      drips.push({
-        x: fromEdge ? (Math.random() < 0.5 ? 4 + Math.random() * 10 : W - 14 + Math.random() * 10) : 8 + Math.random() * (W - 16),
-        y: fromEdge ? Math.random() * H * 0.6 : -6, v: 0.25 + Math.random() * 0.35,
-        len: 4 + (Math.random() * 7 | 0), bits: [], stop: H * (0.35 + Math.random() * 0.6), fade: 0,
-      });
+    // прорыв: кусок кода срывается с земли у источника и бьёт в экран
+    if (!burst && tox > 0.45 && frame - lastBurst > (burstTest ? 180 : GAP) && Math.random() < (burstTest ? 0.05 : 0.0006 * (tox - 0.4) * 10)) {
+      let wx0 = null, wy0 = null;
+      const near = streams.filter(s => s.trail.length && s.x > camX && s.x < camX + W && s.y > camY && s.y < camY + H);
+      if (near.length) { const g = near[(Math.random() * near.length) | 0].trail.slice(-1)[0]; wx0 = g.x; wy0 = g.y; }
+      else for (const l of srcList(locations)) if (l.x + l.w > camX && l.x < camX + W && l.y + l.h > camY && l.y < camY + H) { wx0 = l.x + l.w / 2; wy0 = l.y + l.h / 2; break; }
+      if (wx0 !== null) {
+        const n = 4 + ((Math.random() * 4) | 0), side = Math.random() < 0.5 ? -1 : 1;
+        burst = {
+          wx: wx0, wy: wy0, t: 0, S: Math.max(3, Math.round(H / 64)),
+          bits: Array.from({ length: n }, () => (Math.random() < 0.5 ? 0 : 1)), rows: n > 5 ? 2 : 1,
+          tx: W / 2 + side * (W * (0.12 + Math.random() * 0.22)), ty: H * (0.22 + Math.random() * 0.4),
+          fall: [],
+        };
+        lastBurst = frame;
+      }
     }
-    const dx = wind ? wind.x * 0.12 : 0;              // ветер клонит струйку вбок
-    for (let i = drips.length - 1; i >= 0; i--) {
-      const d = drips[i];
-      if (d.y < d.stop) { d.y += d.v; d.x += dx; } else d.fade++;
-      if (d.fade > 120 || (want === 0 && (d.fade += 2) > 120)) { drips.splice(i, 1); continue; }
-      while (d.bits.length < d.len) d.bits.push(Math.random() < 0.5 ? 0 : 1);
-      if (Math.random() < 0.08) d.bits[(Math.random() * d.len) | 0] ^= 1;
-      d.lean = dx * 7;                                 // хвост струйки отстаёт по ветру
+    if (burst) {
+      const B = burst;
+      B.t++;
+      B.sx = B.wx - camX; B.sy = B.wy - camY;                          // где он сорвался — на экране сейчас
+      if (B.t > HOLD && B.t < HOLD + 3) {                               // осыпается: по точке, каждая в свой черёд
+        const S = B.S, cols = Math.ceil(B.bits.length / B.rows);
+        B.bits.forEach((bit, k) => {
+          const gx = B.tx + ((k % cols) - cols / 2) * 4 * S, gy = B.ty + ((k / cols) | 0) * 7 * S;
+          GLYPH[bit].forEach((row, rr) => { for (let c = 0; c < 3; c++) if (row[c] === '1') B.fall.push({ x: gx + c * S, y: gy + rr * S, v: 0, d: (Math.random() * 60) | 0 }); });
+        });
+      }
+      if (B.t > HOLD) for (const f of B.fall) if (B.t - HOLD > f.d) { f.v += 0.12; f.y += f.v; f.x += wind ? wind.x * 0.3 : 0; }
+      if (B.t > HOLD && B.t < PEEL && Math.random() < 0.08) B.bits[(Math.random() * B.bits.length) | 0] ^= 1;   // перещёлкивается
+      if (B.t >= HOLD && B.t < HOLD + 40 && Math.random() < 0.1) B.bits[(Math.random() * B.bits.length) | 0] ^= 1;
+      if (B.t > PEEL) burst = null;
     }
   },
 
@@ -115,15 +135,24 @@ export const toxic = {
     ctx.globalAlpha = 1;
   },
 
-  // ── рисунок: струйки сквозь кадр (экранные координаты) ──
+  // ── рисунок: прорыв в экран (экранные координаты) ──
   drawScreen(ctx) {
-    for (const d of drips) {
-      for (let k = 0; k < d.len; k++) {
-        const y = Math.round(d.y) - k * 7;
-        if (y < -6) break;
-        const a = (1 - k / d.len) * (1 - d.fade / 120) * 0.7;
-        glyph(ctx, Math.round(d.x - (d.lean || 0) * k / d.len), y, d.bits[k], a);
-      }
+    const B = burst;
+    if (!B) return;
+    const cols = Math.ceil(B.bits.length / B.rows);
+    if (B.t <= FLY) {                                                    // срывается и летит на зрителя — растёт
+      const lift = Math.min(1, B.t / LIFT), u = B.t <= LIFT ? 0 : (B.t - LIFT) / (FLY - LIFT), e = u * u;
+      const S = Math.max(1, Math.round(1 + (B.S - 1) * e));
+      const cx = Math.round(B.sx + (B.tx - B.sx) * e), cy = Math.round(B.sy - lift * 6 + (B.ty - (B.sy - 6)) * e);
+      B.bits.forEach((bit, k) => glyph(ctx, cx + ((k % cols) - cols / 2) * 4 * S, cy + ((k / cols) | 0) * 7 * S, bit, 0.35 + 0.6 * lift, S));
+    } else if (B.t <= HOLD) {                                            // ударил в стекло: держится, дрожит в ударе
+      const S = B.S, jit = B.t < FLY + 6 ? (B.t & 1 ? S : -S) : 0;
+      const a = B.t < FLY + 4 ? 1 : 0.85;
+      B.bits.forEach((bit, k) => glyph(ctx, Math.round(B.tx + ((k % cols) - cols / 2) * 4 * S) + jit, Math.round(B.ty + ((k / cols) | 0) * 7 * S), bit, a, S));
+    } else {                                                             // осыпается по точке
+      const S = B.S, k = (B.t - HOLD) / (PEEL - HOLD);
+      ctx.fillStyle = GREEN;
+      for (const f of B.fall) { ctx.globalAlpha = Math.max(0, 0.85 * (1 - k) * (B.t - HOLD > f.d ? 0.8 : 1)); ctx.fillRect(Math.round(f.x), Math.round(f.y), S, S); }
     }
     ctx.globalAlpha = 1;
   },
