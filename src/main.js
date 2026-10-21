@@ -606,6 +606,7 @@ function stepFx() {
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
   stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t));   // пифос ночью шепчет тому, кто задержался
+  if (under.shadow && skyAt(phaseAt(t)).sun) under.shadow = false;   // тень цветка держится до первого дневного света
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
@@ -1616,14 +1617,20 @@ events.on(E.LORE_COLLECT, (item) => {
   playPickup();
   pickupSparkle(item.x, item.y);
 });
-// второе действие вещи: изнанка — у лестницы подуть на уголёк (ритуал «Вдох на пороге»)
+// второе действие вещи: изнанка — у лестницы подуть на уголёк (ритуал «Вдох на пороге»);
+// с тенью цветка в кармане — положить её на вещь («Гербарий темноты»)
 events.on('location.alt', (loc) => {
-  if (loc.alt === 'under_greet' && under.greet()) playBlow();
+  const a = loc.altNow && loc.altNow();
+  if (!a) return;
+  if (a.key === 'under_greet' && under.greet()) playBlow();
+  if (a.key === 'under_lay') under.lay(loc);
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: поднести уголёк к белой стене катакомб — тень цветка; ещё раз — снять её
+  if (actionKey === 'under_herb') { under.herb(player.x + 6); return; }
   // изнанка: расписаться в журнале учений убежища
   if (actionKey === 'under_sign') { if (under.sign()) showLook({ name: 'Журнал учений', look: JOURNAL_TEXT }); return; }
   // изнанка: выловить кораблик из канала и прочитать заявление вслух

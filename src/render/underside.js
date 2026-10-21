@@ -15,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -1306,6 +1306,11 @@ function floorLife(g, camX, camY, vw, vh, p) {
         G.globalAlpha = 0.5 * a; r(mx - 11 + (k % 22), LINE.y0 - 16, 4, 6, AS); r(mx - 11 + ((k + 11) % 22), LINE.y0 - 16, 4, 6, S1); G.globalAlpha = 1;
       }
     } }
+  // гербарий темноты: уголёк у белой стены — на извёстке раскрывается тень пиона, крупная, дышащая
+  if (under.bloom && under.bloom.x > camX - 20 && under.bloom.x < camX + vw + 20) {
+    const k = Math.min(1, under.bloom.t / 90), open = k * k * (3 - 2 * k);
+    peonyShadow(q(under.bloom.x), LINE.y0 - 17, (6.5 + 0.5 * Math.sin(t * 0.05)) * open, 0.65 * open);
+  }
   // убежище: уголёк отражается в стекле противогазного шкафа; расписался — подпись в журнале,
   // гермодверь приоткрыта (открылась без скрипа)
   { const c = CUTS.find(k => k.id === 'shelter'), gy = LINE.y0, kx = c.x1 - 15;
@@ -1374,6 +1379,11 @@ function airLife(g, camX, camY, vw, vh, p) {
     }
     G.globalAlpha = 1;
   }
+  // «верхняя» вещь: на ней лежит тень цветка — минуту
+  if (under.upper) {
+    const th = THINGS.find(o => o.id === under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
+    if (th && th.x + th.w > camX && th.x < camX + vw) peonyShadow(q(th.x + th.w / 2), q(th.y + th.h / 2) - 2, 3.5 + 0.3 * Math.sin(t * 0.05), 0.4 * a);
+  }
   // перекличка ниш: проснувшаяся ниша выдыхает — пыль из зева, пока шепчет имя
   if (under.niche && !under.niche.done && under.niche.t < 240) {
     const n = nicheOf(under.niche.name), u = under.niche.t;
@@ -1412,6 +1422,24 @@ function wade(g, p) {
     for (let a = 0; a < 12; a++) { const an = a / 12 * Math.PI * 2; r(fx + Math.cos(an) * R, wl + Math.sin(an) * R * 0.4, 1, 1, MG_L); }
     G.globalAlpha = 1;
   }
+}
+
+// тень пиона по камню: шапка лепестков с зубчатым краем и прожилкой, стебель, два листа
+function peonyShadow(bx, by, R, a) {
+  if (a <= 0.01 || R < 1) return;
+  G.globalAlpha = a;
+  const RR = Math.ceil(R + 1);
+  for (let dy = -RR; dy <= RR; dy++) for (let dx = -RR; dx <= RR; dx++) {
+    const d = Math.hypot(dx, dy * 1.1), an = Math.atan2(dy, dx);
+    if (d > R * (0.82 + 0.18 * Math.cos(6 * an + 0.4) * Math.cos(3 * an))) continue;
+    if (d > R * 0.4 && d < R * 0.55 && (Math.floor(an * 2.5 + 9) & 1)) continue;   // лепестки внахлёст — просвет
+    r(bx + dx, by + dy, 1, 1, K1);
+  }
+  const s0 = by + q(R * 0.8);
+  for (let j = 1; j <= q(R * 1.3); j++) r(bx + q(Math.sin(j * 0.35) * 0.8), s0 + j, 1, 1, K1);   // стебель
+  const ly = s0 + q(R * 0.7);
+  r(bx - 3, ly, 3, 1, K1); r(bx - 4, ly - 1, 1, 1, K1); r(bx + 1, ly + 1, 3, 1, K1); r(bx + 4, ly, 1, 1, K1);   // листья
+  G.globalAlpha = 1;
 }
 
 // ═══ КАДР ИЗНАНКИ ═══

@@ -12,7 +12,7 @@ import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
-const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign']);
+const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb']);
 
 // Does this location actually do something on «использовать»?
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -105,9 +105,9 @@ export function showMenu(loc) {
 
   // второе действие вещи — проявляется по случаю (изнанка: у лестницы — подуть на уголёк)
   const altBtn = menuEl.querySelector('[data-a="alt"]');
-  const alt = !!loc.alt && (!loc.altShown || loc.altShown());
+  const alt = loc.altNow ? loc.altNow() : null;
   altBtn.style.display = alt ? 'flex' : 'none';
-  if (alt) altBtn.innerHTML = loc.altLabel;
+  if (alt) altBtn.innerHTML = alt.label;
 
   // Position near last mouse position on desktop; mobile CSS handles centering.
   if (window.innerWidth > 768) {

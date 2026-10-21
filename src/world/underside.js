@@ -16,7 +16,7 @@
 // Здесь — план (трубы, комнаты, вещи), где можно стоять, путь по клику,
 // состояние; рисунок — render/underside.js, тексты — content/underside.js.
 // ═══════════════════════════════════════
-import { UNDER_TEXT } from '../content/underside.js';
+import { UNDER_TEXT, UNDER_INSC } from '../content/underside.js';
 import { t } from '../core/time.js';
 
 export const UW = 2400, UH = 1440;            // карта, точки (ниже 1100 — один ход мха)
@@ -139,7 +139,7 @@ const TH = [
   // облако: стойки — два ряда (вещь — ближний ряд; дальний и пальмы — без осмотра)
   { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
   // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
-  { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
+  { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470], useAction: 'under_herb' },
   { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
   { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470], useAction: 'under_sign', useLabel: '<i>✎</i>РАСПИСАТЬСЯ В ЖУРНАЛЕ' },
   { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
@@ -160,14 +160,19 @@ export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792],
 export const THINGS = TH.map(th => {
   const tx = UNDER_TEXT[th.id] || { name: th.id, look: '' };
   const o = { ...th, name: tx.name, look: tx.look, zone: 'under', under: true };
-  if (th.up) {
-    o.useAction = 'under_up'; o.useLabel = '<i>↑</i>ПОДНЯТЬСЯ';
-    o.alt = 'under_greet'; o.altLabel = '<i>☼</i>ПОДУТЬ НА УГОЛЁК'; o.altShown = () => !under.greeted && !under.greetT;   // вдох на пороге
-  }
+  if (th.up) { o.useAction = 'under_up'; o.useLabel = '<i>↑</i>ПОДНЯТЬСЯ'; }
+  o.altNow = () => altOf(o);                                          // второе действие — по случаю
   if (th.solid) SOLIDS.push(th.solid);
   return o;
 });
 export const thingById = id => THINGS.find(th => th.id === id);
+// второе действие вещи: у порога — подуть на уголёк (пока не поздоровался); с тенью
+// цветка в кармане — положить её на вещь
+export function altOf(th) {
+  if (th.up && !under.greeted && !under.greetT) return { key: 'under_greet', label: '<i>☼</i>ПОДУТЬ НА УГОЛЁК' };
+  if (under.shadow && !(under.upper && under.upper.id === th.id)) return { key: 'under_lay', label: '<i>✿</i>ПОЛОЖИТЬ ТЕНЬ ЦВЕТКА' };
+  return null;
+}
 
 // ── перекличка ниш (канон, ритуал «Перекличка ниш», U1): в стене крипты ниши с
 // именами дремлют веками; уголёк будит по одной за проход. Ниша шепчет своё имя —
@@ -190,6 +195,31 @@ export const NICHE_HUSH = 280;                                       // 40 ша�
 }
 // уголёк проходит мимо ниш: ноги у стены, под рядами
 const nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+
+// ── гербарий темноты (канон, ритуал «Гербарий темноты», U2): катакомбы идут под
+// садом света, корни сада прорастают сквозь свод. Поднёс уголёк к белой стене — на
+// известняке раскрывается тень цветка, цветущего прямо сейчас наверху: пиона,
+// крупная, дышащая. Отошёл — гаснет. Тень можно снять со стены: держится в кармане
+// до первого дневного света. Положенная на любую вещь изнанки, она на минуту делает
+// её «верхней» — тёплой, дневной, отвечающей. Одна тень за проход
+export const BLOOM_LINE = 'На извёстке раскрывается тень пиона — крупная, дышащая.';
+export const HERB_LINE = 'Сорвано в темноте. Наверху не заметят недостачи.';
+export const UPPER = 3600;                                           // минута «верхней» вещи
+const CAT = CUTS.find(c => c.id === 'catacomb');
+{
+  const th = thingById('u_cut_catacomb');
+  th.useShown = () => !under.picked;
+  Object.defineProperty(th, 'useLabel', { get: () => (under.bloom ? '<i>✋</i>СНЯТЬ ТЕНЬ ЦВЕТКА' : '<i>☼</i>ПОДНЕСТИ УГОЛЁК К СТЕНЕ'), configurable: true, enumerable: true });
+}
+// что вещь отвечает, став «верхней»: своя надпись; нет её — шёпот своего места;
+// нет и его — начало своего осмотра
+export function answerOf(th) {
+  const insc = UNDER_INSC[th.id];
+  if (insc) return '...' + insc.replace(/[.…]+$/, '') + '...';
+  const key = th.id.startsWith('u_cut_') ? th.id.slice(6) : th.id === 'u_godot' ? 'godot' : th.room;
+  if (MURMURS[key]) return MURMURS[key][0];
+  return '...' + th.look.split(/[.:—]/)[0].trim().toLowerCase() + '...';
+}
 
 // ── вечный отбой (канон, ритуал «Вечный отбой», U4): убежище раз в неведомый час
 // объявляет отбой тревоги, которой не было, — десятилетиями радуется, что не
@@ -589,6 +619,10 @@ export const under = {
   calm: 0,                // вода тиха: шагов (прочитал заявление)
   read: false,            // заявление за этот спуск прочитано
   signed: false,          // расписался в журнале учений (сохраняется)
+  bloom: null,            // тень пиона на извёстке катакомб { t, x } — пока уголёк рядом
+  picked: false,          // тень за этот спуск снята
+  shadow: false,          // тень цветка в кармане — до первого дневного света
+  upper: null,            // «верхняя» вещь { id, t }: тёплая, дневная, отвечающая
   after: null,            // строка мира — когда закроется окно сцены
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
@@ -648,6 +682,13 @@ export const under = {
         this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 };   // ждёт перо, не перебивая
       }
     }
+    // гербарий темноты: тень на извёстке держится, пока уголёк рядом; «верхняя» вещь — минуту
+    if (this.bloom) { this.bloom.t++; if (Math.abs(fx - this.bloom.x) > 70 || !(fy > L0.y0 - 4 && fy < L0.y0 + T.FH + 4)) this.bloom = null; }
+    if (this.upper) {
+      const u = this.upper, th = thingById(u.id);
+      if (--u.t <= 0) this.upper = null;
+      else if (u.t === UPPER - 1800 && th && !this.silent(at)) this.whisper = { text: answerOf(th), x: th.x + th.w / 2, y: th.y - 4, wait: 600 };   // и ещё раз
+    }
     // флотилия входящих: кораблики плывут по каналу; прочитал заявление — минуту вода тиха
     if (this.calm > 0) this.calm--;
     this.flow += this.calm ? 0.06 : 0.25;
@@ -677,6 +718,26 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // у белой стены катакомб: поднёс уголёк — тень раскрылась; ещё раз — снял её
+  herb(fx) {
+    if (this.picked) return null;
+    if (!this.bloom) {
+      const cx = (CAT.x0 + CAT.x1) / 2, side = fx < cx ? -1 : 1;        // рядом с угольком, на белой стене — мимо заваленного хода
+      let bx = fx + side * 22;
+      if (Math.abs(bx - cx) < 18) bx = cx + side * 24;
+      this.bloom = { t: 0, x: Math.max(CAT.x0 + 10, Math.min(CAT.x1 - 10, bx)) }; this.say = BLOOM_LINE;
+      return 'bloom';
+    }
+    this.bloom = null; this.picked = true; this.shadow = true; this.say = HERB_LINE;
+    return 'pick';
+  },
+  // положил тень цветка на вещь изнанки: на минуту она «верхняя» — и отвечает
+  lay(th) {
+    if (!this.shadow || !th) return false;
+    this.shadow = false; this.upper = { id: th.id, t: UPPER };
+    this.whisper = { text: answerOf(th), x: th.x + th.w / 2, y: th.y - 4, keep: true };
+    return true;
   },
   // расписался в журнале учений — единственная запись за век
   sign() {
@@ -725,9 +786,10 @@ export const under = {
     this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null;
     this.niche = null; this.nicheWoke = false; this.trail = null; this.trailT = 0;
     this.boats.length = 0; this.calm = 0; this.read = false; this.after = null;
+    this.bloom = null; this.picked = false; this.upper = null;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; moss.reset(); },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed }; },
   load(d) {
     if (!d) return;
@@ -746,6 +808,7 @@ export const under = {
 // сердца огонёк вспыхивает; спешишь — темно; у норы сверху — отсвет огня
 const EMBER = [226, 138, 58], COLD = [138, 141, 143], FILL = [232, 220, 198], FILL_C = [176, 180, 182];
 const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120, 64];
+const DAYLIGHT = [222, 198, 150];                    // «верхняя» вещь: свет дня сверху — костяной, тёплый
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 export function underLights(px, py) {
   const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
@@ -759,6 +822,10 @@ export function underLights(px, py) {
     { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 },   // окно-экран бункера: лес светит
     { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 },   // облако: свет искусственный, ровный
   ];
+  if (under.upper) {                                                  // «верхняя» вещь: тёплый дневной свет на минуту
+    const th = thingById(under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
+    if (th) L.push({ x: th.x + th.w / 2, y: th.y + th.h / 2, r: 70, color: DAYLIGHT, flicker: 0, intensity: 1.7 * a });
+  }
   if (m > 0.01) {
     if (!moss.dark) L.push({ x: px, y: py + 12, r: 26, color: MOSS_PALE, flicker: 0, intensity: 0.75 * m });   // мох под ногой чуть светится сам
     for (const g of moss.glows) { const a = g.life / GLOW; L.push({ x: g.x, y: g.y - 3, r: 26 + 18 * a, color: g.warm ? MOSS_WARM : MOSS_PALE, flicker: 0, intensity: 2.8 * a * m }); }
