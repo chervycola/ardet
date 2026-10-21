@@ -52,6 +52,9 @@ export function heatAt(x, y) {
 
 // кадр: где что дрожит (вызывать из render, до сборки слоёв)
 // noon — красный полдень (0…1): марево по всему кадру
+// изнанка: под землёй марева нет — столбы прошлого кадра не тянем
+export function hazeOff() { cols = []; }
+
 export function hazeView(camX, camY, vw, vh, locations, noon = 0) {
   cam = { x: camX, y: camY };
   cols = [];

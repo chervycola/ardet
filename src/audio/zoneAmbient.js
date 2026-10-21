@@ -14,6 +14,7 @@ const ZONE_CONFIGS = {
   highway:    { freq: 48, type: 'triangle', filterFreq: 120, gain: 0.009 },
   quarter:    { freq: 38, type: 'sine', filterFreq: 80, gain: 0.007 },
   street:     { freq: 60, type: 'triangle', filterFreq: 90, gain: 0.007 },
+  under:      { freq: 31, type: 'sine', filterFreq: 70, gain: 0.011 },   // изнанка: гул породы
 };
 
 function createZoneSound(cfg) {

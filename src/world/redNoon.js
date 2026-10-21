@@ -19,10 +19,12 @@ try { force = /[?&]rednoon\b/.test(location.search); } catch (e) {}
 
 const smooth = v => { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
 
+let muted = false;                             // под землёй солнца нет — полдня не видно (world/underside.js)
 export const redNoon = {
-  get k() { return k; },                       // 0…1 — насколько полдень сейчас
-  get active() { return k > 0.01; },
+  get k() { return muted ? 0 : k; },           // 0…1 — насколько полдень сейчас
+  get active() { return !muted && k > 0.01; },
 };
+export function muteRedNoon(on) { muted = !!on; }
 
 // шаг: step — шаг мира, phase — фаза суток, day — номер суток (world/sky.js)
 export function stepRedNoon(step, phase, day, rnd = Math.random) {

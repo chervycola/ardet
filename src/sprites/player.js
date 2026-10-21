@@ -50,12 +50,14 @@ export function drawPlayer(player) {
   r(cx, top + 9, 14, 1, K0);                                             // тень от оплечья
   tier(cx + 1, top + 4, 12, 5, trail * 0.25, ph + 9);
   // ── огонёк у сердца: свеча, сплошной; в порыв дрожит ──
+  // в криосклепе тёплого нет (канон U7) — огонёк пеплом; под землёй тускнеет — язычок ниже
+  const ice = (player.cold || 0) > 0.5, F = ice ? AS : SV, F0 = ice ? S2 : KV, low = player.ember !== undefined && player.ember < 0.3;
   const fx = cx + 5 + lean, fy = top + 9;
-  r(fx, fy + 1, 2, 2, KV);
-  r(fx, fy, 2, 2, SV);
-  r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), SV);
-  if (flick > 0.3) r(fx, fy, 1, 1, L1);                                  // в порыв вспыхивает
-  if (t % 9 === 0 && ((t / 9) % 3 | 0) === 0) { X.globalAlpha = 0.6; r(fx + q(w.x * 3), fy - 3, 1, 1, SV); X.globalAlpha = 1; }   // искру сносит
+  r(fx, fy + 1, 2, 2, F0);
+  r(fx, fy, 2, 2, F);
+  if (!low) r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), F);
+  if (flick > 0.3 && !ice) r(fx, fy, 1, 1, L1);                          // в порыв вспыхивает
+  if (!ice && t % 9 === 0 && ((t / 9) % 3 | 0) === 0) { X.globalAlpha = 0.6; r(fx + q(w.x * 3), fy - 3, 1, 1, SV); X.globalAlpha = 1; }   // искру сносит
   // ── капюшон: лица нет — тьма ──
   const hx = cx + 2 + lean, hy = top - 4;
   r(hx + 4, hy - 2, 1, 1, K2); r(hx + 3, hy - 1, 3, 1, K2);                // острие клобука

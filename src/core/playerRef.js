@@ -6,7 +6,12 @@ let _player = null;
 export function setPlayer(p) { _player = p; }
 
 export function getPlayer() { return _player; }
+// изнанка (world/underside.js): на карте мира странник там, где спустился
+let _posOverride = null;
+export function setPosOverride(fn) { _posOverride = fn; }
 export function getPlayerPos() {
+  const o = _posOverride && _posOverride();
+  if (o) return { x: o.x, y: o.y };
   return _player ? { x: _player.x, y: _player.y } : null;
 }
 

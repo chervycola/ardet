@@ -26,6 +26,7 @@ let flood = 0, band = 1, groupA = 0;    // плавные доли ступен�
 let group = [];                         // вещи, отпечатанные красным
 let pulseUntil = 0, pulseLevel = 3;     // короткий острый момент
 let noonK = 0;                          // красный полдень (world/redNoon.js): 0…1
+let skyOn = true;                       // под землёй неба нет — полосы неба тоже (world/underside.js)
 let shownAt = -1e9, noteTxt = '';       // подпись регулятора
 let small = null, smallCtx = null, groupC = null, groupCtx = null;
 
@@ -90,6 +91,7 @@ export const ink = {
   pulse(ms, n = 3) { pulseUntil = performance.now() + ms; pulseLevel = n; },
   setGroup(locs) { group = locs || []; },
   noon(v) { noonK = v; },                // красный полдень: доля плоской киновари
+  sky(on) { skyOn = !!on; },
   cycle() {
     noteTxt = '';
     override = override === null ? 0 : override >= 3 ? null : override + 1;
@@ -108,7 +110,7 @@ export const ink = {
     const L = this.effective();
     const k = 0.08;
     flood += ((L === 3 ? 1 : 0) - flood) * k;
-    band += ((L >= 1 ? 1 : 0) - band) * k;
+    band += ((L >= 1 && skyOn ? 1 : 0) - band) * k;
     groupA += ((L === 2 ? 1 : 0) - groupA) * k;
     if (flood < 0.003) flood = 0;
     if (groupA < 0.003) groupA = 0;

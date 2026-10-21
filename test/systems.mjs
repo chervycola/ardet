@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
@@ -1578,6 +1578,81 @@ setCtx(ctx);
         assert(!/rgba\(\s*74\s*,\s*127/.test(c), `«${l.name}»: синее в ореоле`);
       }
     }
+  });
+}
+
+// ═══ ИЗНАНКА: отдельная карта, трубы Boring, спуски и подъёмы ═══
+{
+  const U = await imp('world/underside.js');
+  const UR = await imp('render/underside.js');
+  const M = await imp('world/locations.js');
+  const UA = await imp('world/useActions.js');
+  const TX = await imp('content/underside.js');
+  test('изнанка: у каждой вещи есть где встать, и от любой лестницы дойти до любой вещи', () => {
+    for (const th of U.THINGS) assert(U.walkable(th.at[0], th.at[1]), `${th.id}: у вещи не встать (${th.at})`);
+    const stairs = U.THINGS.filter(th => th.up);
+    for (const a of stairs) for (const b of U.THINGS) {
+      const path = U.pathTo(a.at[0], a.at[1], b.at[0], b.at[1]);
+      assert(path && path.length, `${a.id} → ${b.id}: пути нет`);
+      const end = path[path.length - 1];
+      assert(Math.hypot(end.x - b.at[0], end.y - b.at[1]) < 1, `${a.id} → ${b.id}: путь кончился не у вещи`);
+      let px = a.at[0], py = a.at[1];
+      for (const w of path) {                                     // каждый отрезок — по полу
+        const n = Math.max(1, Math.ceil(Math.hypot(w.x - px, w.y - py) / 2));
+        for (let k = 0; k <= n; k++) assert(U.walkable(px + (w.x - px) * k / n, py + (w.y - py) * k / n), `${a.id} → ${b.id}: путь сквозь породу у (${Math.round(px)},${Math.round(py)})`);
+        px = w.x; py = w.y;
+      }
+    }
+  });
+  test('изнанка: спуск — повторное «использовать» у места со сценой; лестница выводит к нему же', () => {
+    for (const [key, stair] of Object.entries(U.DESCENTS)) {
+      assert(UA.useTexts[key], `спуск ${key}: нет сцены наверху`);
+      const th = U.thingById(stair);
+      assert(th && th.up && th.useAction === 'under_up', `спуск ${key}: нет лестницы ${stair}`);
+      const loc = M.locations.find(l => l.id === th.up);
+      assert(loc && (loc.useAction || loc.id) === key, `лестница ${stair}: наверху не «${key}»`);
+    }
+    const ups = U.THINGS.filter(th => th.up).map(th => th.id).sort();
+    eq(ups.join(), Object.values(U.DESCENTS).sort().join(), 'лестница без спуска');
+  });
+  test('изнанка: ходьба по клавишам не уводит в породу; круглые проёмы стоят в стенах', () => {
+    const p = { x: 2184, y: 625, vx: 0, vy: 0 };
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 6000; i++) {
+      const a = rnd() * Math.PI * 2;
+      U.underMove(p, Math.cos(a) * 2.4, Math.sin(a) * 2.4);
+      assert(U.walkable(p.x + 6, p.y + 23), `шаг ${i}: в породе (${p.x.toFixed(1)},${p.y.toFixed(1)})`);
+    }
+    for (const P of U.PORTALS) assert(P.host && P.H >= U.T.WH && P.R * 2 <= U.T.FW + 2 * U.T.SW, `проём ${P.tube.id}: без стены`);
+    eq(U.PORTALS.length, 4, 'проёмов');
+  });
+  test('изнанка: холод — только в жиле и криосклепе; в криосклепе тепла нет совсем', () => {
+    eq(U.coldAt(1200, 465), 0, 'линия'); eq(U.coldAt(834, 300), 1, 'криосклеп');
+    assert(U.coldAt(740, 294) > 0.5 && U.coldAt(500, 294) === 0, 'жила стынет к востоку');
+    U.under.cold = 1;
+    const L = U.underLights(834, 300);
+    for (const l of L.slice(0, 2)) assert(l.color[0] < l.color[1] + 30, 'в криосклепе тёплый свет: ' + l.color);
+    U.under.cold = 0;
+    assert(U.underLights(100, 100)[0].color[0] > U.underLights(100, 100)[0].color[1] + 30, 'уголёк не тёплый');
+    eq(U.surfaceUnder(1200, 465), 'path', 'полотно'); eq(U.surfaceUnder(1200, 840), 'water', 'подвал');
+  });
+  test('изнанка: тексты есть у всех вещей, шутка про Boring — на табличке первого кольца', () => {
+    for (const th of U.THINGS) assert(th.name && th.look && th.look.length > 20, `${th.id}: без текста`);
+    const pl = U.thingById('u_plaque');
+    assert(/BORING COMPANY/.test(pl.look) && /улитк/.test(pl.look) && /Гэри/.test(pl.look), 'шутки нет');
+    assert(/кремирован/.test(U.thingById('u_capsule').look) && /охлаждается/.test(U.thingById('u_capsule').look), 'криосклеп без канона U7');
+    for (const id of Object.keys(TX.UNDER_INSC)) assert(U.thingById(id), 'надпись без вещи: ' + id);
+  });
+  test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
+    const c = fakeCtx(); setCtx(c);
+    const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
+    U.under.cold = 1;
+    for (let i = 0; i < 40; i++) { tick(); UR.stepUnderLife(p); }
+    UR.drawUnderWorld(c, 820 - 320, 290 - 180, 640, 360, p, () => {});
+    UR.drawUnderThing(c, U.thingById('u_plaque')); UR.drawUnderThing(c, U.thingById('u_capsule'));
+    UR.drawUnderFx(c, 640, 360);
+    U.under.cold = 0;
+    setCtx(ctx);
   });
 }
 

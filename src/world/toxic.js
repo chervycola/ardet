@@ -44,6 +44,9 @@ export const toxic = {
   isTest() { return toxTest; },
   level() { return tox; },
 
+  // изнанка: яда нет и прорывов нет — счётчик стихает
+  hush() { tox += (0 - tox) * 0.05; burst = null; },
+
   // токсичность у ног: 0..1
   update(px, py, locations, extra = 0) {
     frame++;

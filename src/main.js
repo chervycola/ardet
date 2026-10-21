@@ -16,10 +16,10 @@ import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
-import { hazeView, hazeComposite } from './render/haze.js';
+import { hazeView, hazeComposite, hazeOff } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
 import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
-import { redNoon, stepRedNoon, triggerRedNoon } from './world/redNoon.js';
+import { redNoon, stepRedNoon, triggerRedNoon, muteRedNoon } from './world/redNoon.js';
 import { pressAt, setPress, getPress, installPen, penComposite } from './render/pen.js';
 import { drawEtchedGround } from './render/etch.js';
 import { setReliefFlats, setReliefCarve } from './world/relief.js';
@@ -50,12 +50,12 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
-import { showMenu, hideMenu, initUI, getActiveLoc, showLook } from './ui/ui.js';
+import { showMenu, hideMenu, initUI, getActiveLoc, showLook, menuInscriptions } from './ui/ui.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
-import { setPlayer } from './core/playerRef.js';
+import { setPlayer, setPosOverride } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
 import { showLore, draw as drawLorePopup, skipOrDismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
@@ -104,6 +104,9 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
+import { under, UW, UH, THINGS as UNDER_THINGS, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife } from './render/underside.js';
+import { UNDER_INSC } from './content/underside.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -205,10 +208,12 @@ if (savedData) {
   if (savedData.catSightings) loadSightings(savedData.catSightings);
   if (savedData.catUnlocked) setCatUnlocked(true);
   if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
+  if (savedData.under) under.load(savedData.under);
 }
 
 if (!STREAM) startAutoSave(() => ({
-  player: { x: player.x, y: player.y }, off: OFF,
+  // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
+  player: under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
   observersSeen: Array.from(flags.observersSeen),
@@ -217,7 +222,10 @@ if (!STREAM) startAutoSave(() => ({
   catSightings: getSightings(),
   catUnlocked: catUnlocked(),
   discoveredGates: getDiscoveredGates(),
+  under: under.save(),
 }));
+setPosOverride(() => (under.active ? under.ret : null));   // карта мира: странник там, где спустился
+Object.assign(menuInscriptions, UNDER_INSC);
 
 initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
 
@@ -400,6 +408,7 @@ const npcDrawFn = {
 
 // ═══ RENDER ═══
 function render() {
+  if (under.active) { renderUnder(); return; }
   const vw = scaler.vw, vh = scaler.vh;
   layers.clearAll();
 
@@ -583,6 +592,7 @@ function plateStorm() {
 // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
 function stepFx() {
+  if (under.active) { stepFxUnder(); return; }
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
   wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
@@ -602,6 +612,7 @@ function stepFx() {
     const south = ds > 0 && ds >= Math.max(TOWN.y0 - sy, TOWN.x0 - sx, sx - TOWN.x1);
     ink.noon(redNoon.k * (south ? 0.25 : 1));
   }
+  ink.sky(true);
   ink.beginFrame();
   if (ring === RINGS + 2) ink.want(0, 'за краем');
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
@@ -1082,6 +1093,118 @@ function drawTeleportFade(ctx) {
   ctx.globalAlpha = 1;
 }
 
+// ═══ ИЗНАНКА: спуск, подъём, ходьба, кадр ═══
+// Отдельная карта под городком (world/underside.js). Спуск — повторное
+// «использовать» после сцены места; подъём — лестница своей комнаты, обычно
+// далеко от входа. Пока внизу — мира сверху нет: ни неба, ни погоды, ни
+// ворон; свет — уголёк странника; время идёт, как шло.
+let surfaceLights = null;
+function goUnder(stairId) {
+  const th = thingById(stairId);
+  if (!th) return;
+  const a = accessOf(th), retX = player.x, retY = player.y;
+  teleportWithFade(a.x, a.y, () => {
+    under.enter(retX, retY);
+    muteRedNoon(true);
+    if (!surfaceLights) surfaceLights = lighting.sources;
+    lighting.sources = underLights(player.x + 6, player.y + 10);
+    resetUnderLife();
+    player.path = null; player.walkTo = null;
+    camera.clampToWorld(UW, UH);
+  });
+}
+function goUp(th) {
+  const loc = locations.find(l => l.id === th.up);
+  if (!loc) return;
+  const px_ = loc.x + loc.w / 2 - 6, py_ = loc.y + loc.h + 5;
+  if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
+  teleportWithFade(px_, py_, () => {
+    under.leave();
+    muteRedNoon(false);
+    if (surfaceLights) lighting.sources = surfaceLights;
+    surfaceLights = null;
+    player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined;
+  });
+}
+// клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
+function walkUnder(gx, gy) {
+  const th = findLocationAt(gx, gy, UNDER_THINGS, 6);
+  const path = th ? pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : pathTo(player.x + 6, player.y + 23, gx, gy);
+  if (!path || !path.length) return;
+  const w = path.shift();
+  player.path = path;
+  player.tx = w.x - 6; player.ty = w.y - 23;
+  player.moving = true; player.auto = true;
+  player.walkTo = th || null;
+}
+// шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
+function stepFxUnder() {
+  const camX = Math.round(camera.x), camY = Math.round(camera.y);
+  wind.update('clear', 0, 0, true);                 // сквозняк вместо ветра
+  updateWindSound(0.04);
+  setPress(pressAt(phaseAt(t)));                    // перо устаёт по-прежнему: оно не от неба
+  stepRedNoon(t, phaseAt(t), dayIndex(t));
+  ink.noon(0);
+  ink.sky(false);
+  ink.beginFrame();
+  ink.want(0, 'изнанка');
+  if (isEndingActive()) ink.want(3, 'финал');
+  const focus = getActiveLoc();
+  if (focus) ink.want(2, 'осмотр');
+  ink.setGroup(focus && focus.under && ink.level === 2 ? [focus] : []);
+  ink.update();
+  plate.update(under.ret ? under.ret.x + 6 : player.x, under.ret ? under.ret.y + 24 : player.y, 0);   // зерно — городка: тут вне времени
+  toxic.hush();
+  updateGeiger(toxic.level());
+  lofi.update(0);
+  under.step(player.x + 6, player.y + 23);
+  stepUnderLife(player);
+  lighting.sources = underLights(player.x + 6, player.y + 10);
+  lightParticles.update({ x: camX, y: camY }, lighting.sources);
+  dyingPixels.update();
+  screenMoss.update(player.moving);
+}
+function renderUnder() {
+  const vw = scaler.vw, vh = scaler.vh;
+  layers.clearAll();
+  const bgCtx = layers.ctx('bg'), worldCtx = layers.ctx('world'), lightCtx = layers.ctx('light');
+  const fxCtx = layers.ctx('fx'), uiCtx = layers.ctx('ui'), postCtx = layers.ctx('post');
+  const camX = Math.round(camera.x), camY = Math.round(camera.y);
+  bgCtx.fillStyle = '#0D0B0A';
+  bgCtx.fillRect(0, 0, vw, vh);
+  worldCtx.save();
+  worldCtx.translate(-camX, -camY);
+  setCtx(worldCtx);
+  player.cold = under.cold; player.ember = under.ember;
+  drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); });
+  drawParticles(worldCtx, { x: camX, y: camY });
+  worldCtx.restore();
+  hazeOff();
+  warmSpots = warmIn(camX, camY, vw, vh);           // в криосклепе огонёк холодный — беречь перу нечего
+  ink.drawGroup((c, th) => drawUnderThing(c, th), camX, camY);
+  setCtx(worldCtx);
+  lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT);
+  lightParticles.draw(worldCtx, { x: camX, y: camY });
+  crackedGlass.draw(fxCtx);
+  dyingPixels.draw(fxCtx);
+  drawUnderFx(fxCtx, vw, vh);                       // иней на стекле — в криосклепе
+  screenMoss.draw(uiCtx);
+  drawHUD(uiCtx);
+  ink.drawLabel(uiCtx);
+  postfx.apply(postCtx);
+  drawTeleportFade(postCtx);
+  if (isEndingActive()) drawEnding(postCtx);
+  layers.composite();
+}
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd)
+{
+  const m = /[?&]under(?:=(\w+))?/.exec(location.search);
+  if (m) {
+    const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule' }[m[1]] || 'u_up_pizzeria';
+    setTimeout(() => goUnder(spot), 0);
+  }
+}
+
 // ═══ ХОД С ИНЕРЦИЕЙ ═══
 // Клавиши, палец или автоход задают желаемую скорость; настоящая догоняет
 // её с разгоном и торможением поверхности под ногами (world/surface.js):
@@ -1103,7 +1226,8 @@ function heroStep(dvx, dvy) {
   else { player.vx += ex / el * rate; player.vy += ey / el * rate; }
   if (want < 0.01 && Math.hypot(player.vx, player.vy) < 0.03) { stopHero(); return 0; }
   const ox = player.x, oy = player.y;
-  tryMove(player, player.vx, player.vy, locations, {
+  if (under.active) underMove(player, player.vx, player.vy);
+  else tryMove(player, player.vx, player.vy, locations, {
     canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
   });
   // упёрся — скорость по этой оси гаснет до того, что вышло на деле
@@ -1116,8 +1240,9 @@ function heroStep(dvx, dvy) {
     events.emit(E.PLAYER_MOVE, player);
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
-    const kind = wetKind(S.print);
-    if (addFootprint(player.x, player.y, kind)) {
+    // (под землёй следы остаются в пыли — render/underside.js)
+    const kind = under.active ? null : wetKind(S.print);
+    if (kind !== null && addFootprint(player.x, player.y, kind)) {
       if (kind === 'wet') usedWet();
       if (surfName === 'ash' || nearFire()) ashPuff(player.x + 6, player.y + 23, sp);
     }
@@ -1131,11 +1256,11 @@ function updateGame() {
   if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { stopHero(); return; }
   if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
-  const fell = stumble.update(player);
+  const fell = under.active ? false : stumble.update(player);   // полотно ровное — под землёй не оступишься
   if (fell && !stumbling) startleRavens(player.x + 6, player.y + 22, 150);   // упал — вороны в округе взлетают
   stumbling = fell;
   if (fell) { stopHero(); updateWorldSystems(); return; }   // оступился — шаг пропал
-  surfName = surfaceAt(player.x + 6, player.y + 24, locations);
+  surfName = under.active ? surfaceUnder(player.x + 6, player.y + 23) : surfaceAt(player.x + 6, player.y + 24, locations);
   const S = SURF[surfName];
 
   // желаемая скорость: палец (держат), клавиши, автоход к цели
@@ -1152,8 +1277,13 @@ function updateGame() {
     dvx = move.x * spd; dvy = move.y * spd; steering = true;
     player.auto = false; player.walkTo = null;
   } else if (player.auto) {
+    // путь с поворотами (изнанка): дошёл до поворота — бери следующий
+    while (player.path && player.path.length && Math.hypot(player.tx - player.x, player.ty - player.y) < 3) {
+      const w = player.path.shift(); player.tx = w.x - 6; player.ty = w.y - 23;
+    }
+    const last = !(player.path && player.path.length);
     const dx = player.tx - player.x, dy = player.ty - player.y, dist = Math.hypot(dx, dy);
-    if (dist < 2) {
+    if (dist < 2 && last) {
       player.auto = false;
       stopHero();
       // Check if we arrived at a location: та, к которой шли, — если
@@ -1161,17 +1291,21 @@ function updateGame() {
       // не открываем: мимо вещи можно пройти, не останавливаясь.
       const want = player.walkTo;
       player.walkTo = null;
-      const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
-        && Math.abs(player.y - (want.y + want.h + 5)) < 4;
-      const loc = atWant ? want : (want ? findLocationAt(player.x, player.y, locations) : null);
-      if (loc) {
-        flags.visited.add(loc.id);
-        events.emit(E.LOCATION_VISIT, loc);
-        showMenu(loc);
+      if (want && want.under) showMenu(want);                 // вещь изнанки: путь вёл к ней
+      else {
+        const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
+          && Math.abs(player.y - (want.y + want.h + 5)) < 4;
+        const loc = atWant ? want : (want ? findLocationAt(player.x, player.y, locations) : null);
+        if (loc) {
+          flags.visited.add(loc.id);
+          events.emit(E.LOCATION_VISIT, loc);
+          showMenu(loc);
+        }
       }
     } else {
-      // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже
-      const spd = Math.min(2.4 * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15);
+      // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже;
+      // на повороте пути не тормозим
+      const spd = last ? Math.min(2.4 * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15) : 2.4 * S.max;
       dvx = dx / dist * spd; dvy = dy / dist * spd; steering = true;
     }
   }
@@ -1184,6 +1318,15 @@ function updateGame() {
 // Camera + all per-frame world systems. Shared by the normal movement
 // path and the held-finger walk branch above.
 function updateWorldSystems() {
+  if (under.active) {                       // изнанка: своя карта, мира сверху здесь нет
+    camera.follow(player.x + 6, player.y + 10);
+    camera.update();
+    camera.clampToWorld(UW, UH);
+    updateZone('under');
+    if (!redNoon.active) updateIdle(player.moving);
+    updateParticles();
+    return;
+  }
   // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
   if (inBrainrotLoop()) {
     const L0 = TOWN.y1 + 8 * RING_W + 24, L1 = TOWN.y1 + 9 * RING_W - 16;
@@ -1337,6 +1480,8 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (loreActive()) { dismissLore(); return; }   // первый клик допечатывает, второй убирает
 
   const pos = input.screenToWorld(clientX, clientY, camera);
+  if (under.active) { walkUnder(pos.x, pos.y); return; }
+  player.path = null;
   const loc = findLocationAt(pos.x, pos.y, locations);
   if (loc) {
     const px_ = loc.x + loc.w / 2 - 6;
@@ -1416,6 +1561,7 @@ events.on(E.LORE_COLLECT, (item) => {
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
+  if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
   // колодец у котлована: крутить ворот (world/mechanisms.js)
   if (actionKey === 'well_crank') { crankWell(`well:${loc.id}`); return; }
   // The gates teleport onto the street: one road, gradient of epochs
@@ -1455,8 +1601,12 @@ events.on('location.use', (loc) => {
   if (actionKey === 'shop3') { openShop('shop3'); return; }
   // Look-based actions
   const action = useTexts[actionKey];
+  // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
+  const down = DESCENTS[actionKey];
+  if (down && under.seen.has(actionKey)) { goUnder(down); return; }
   if (action) {
     showLook({ name: action.title, look: action.text });
+    if (down) under.seen.add(actionKey);
   }
 });
 
