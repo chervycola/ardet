@@ -1624,7 +1624,7 @@ setCtx(ctx);
       assert(U.walkable(p.x + 6, p.y + 23), `шаг ${i}: в породе (${p.x.toFixed(1)},${p.y.toFixed(1)})`);
     }
     for (const P of U.PORTALS) assert(P.host && P.H >= U.T.WH && P.R * 2 <= U.T.FW + 2 * U.T.SW, `проём ${P.tube.id}: без стены`);
-    eq(U.PORTALS.length, 4, 'проёмов');
+    eq(U.PORTALS.length, U.TUBES.filter(tb => tb.bot === 'portal').length, 'проёмов');
   });
   test('изнанка: холод — только в жиле и криосклепе; в криосклепе тепла нет совсем', () => {
     eq(U.coldAt(1200, 465), 0, 'линия'); eq(U.coldAt(834, 300), 1, 'криосклеп');

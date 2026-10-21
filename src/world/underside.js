@@ -23,13 +23,15 @@ export const T = { FH: 30, WH: 26, LIP: 5, FW: 30, SW: 8, RING: 20 };
 // ── трубы ──
 // концы трубы с севера на юг: corner — поворот (свод линии закрывает верх),
 // open — выходит в пол комнаты или линии, portal — входит в стену круглым
-// проёмом (стена хозяина — над проёмом)
+// проёмом (стена хозяина — над проёмом), dead — тупик: там стоит щит
 export const TUBES = [
   { id: 'line', ew: true, x0: 190, x1: 2080, y0: 450 },
   { id: 'west', ns: true, x0: 190, y0: 450, y1: 830, top: 'corner', bot: 'portal', outer: 'left' },
   { id: 'cryptd', ns: true, x0: 300, y0: 350, y1: 450, top: 'open', bot: 'portal' },
   { id: 'based', ns: true, x0: 1200, y0: 480, y1: 780, top: 'open', bot: 'portal' },
   { id: 'celld', ns: true, x0: 2050, y0: 450, y1: 640, top: 'corner', bot: 'portal', outer: 'right' },
+  // забой: проходка встала — туннель кончается машиной (щит «Годо»)
+  { id: 'godot', ns: true, x0: 1340, y0: 250, y1: 450, top: 'dead', bot: 'portal' },
 ];
 
 // ── комнаты ── (пол x0..x1 × y0..y1 или многоугольник по часовой; wh — стена)
@@ -83,6 +85,8 @@ const TH = [
   { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256] },
   { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
   { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
+  // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
+  { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
 // вторая группа ларей — без осмотра, только мешает пройти
 export const SOLIDS = [[236, 298, 292, 308]];
@@ -119,7 +123,7 @@ function inPoly(x, y, P) {
 function onFloor(x, y) {
   for (const tb of TUBES) {
     if (tb.ew) { if (x >= tb.x0 + 5 && x <= tb.x1 - 5 && y >= tb.y0 + 3 && y <= tb.y0 + T.FH - 2) return true; continue; }
-    const top = tb.top === 'corner' ? tb.y0 + 3 : tb.y0 - 6, bot = tb.y1 + 6;
+    const top = tb.top === 'corner' || tb.top === 'dead' ? tb.y0 + 3 : tb.y0 - 6, bot = tb.y1 + 6;
     if (x >= tb.x0 + 7 && x <= tb.x0 + T.FW - 7 && y >= top && y <= bot) return true;
   }
   if (x >= VEIN.x0 - 8 && x <= VEIN.x1 + 8 && y >= VEIN.y0 + 3 && y <= VEIN.y0 + VEIN.fh - 2) return true;

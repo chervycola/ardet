@@ -275,9 +275,12 @@ const FONT = {
   О: ['.XX.', 'X..X', 'X..X', 'X..X', '.XX.'], В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], Е: ['XXX', 'X..', 'XX.', 'X..', 'XXX'],
   Н: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], И: ['X..X', 'X..X', 'X.XX', 'XX.X', 'X..X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'],
   Т: ['XXX', '.X.', '.X.', '.X.', '.X.'], ',': ['.', '.', '.', 'X', 'X'], ' ': ['..', '..', '..', '..', '..'],
+  К: ['X.X', 'X.X', 'XX.', 'X.X', 'X.X'], Л: ['.XXX', '.X.X', '.X.X', '.X.X', 'XX.X'], Ь: ['X..', 'X..', 'XX.', 'X.X', 'XX.'],
+  А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], Ш: ['X.X.X', 'X.X.X', 'X.X.X', 'X.X.X', 'XXXXX'], Б: ['XXX', 'X..', 'XX.', 'X.X', 'XX.'],
+  Я: ['.XX', 'X.X', '.XX', 'X.X', 'X.X'], '—': ['....', '....', 'XXXX', '....', '....'],
   I: ['XXX', '.X.', '.X.', '.X.', 'XXX'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], '!': ['X', 'X', 'X', '.', 'X'],
   S: ['.XX', 'X..', '.X.', '..X', 'XX.'], H: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], U: ['X.X', 'X.X', 'X.X', 'X.X', 'XXX'],
-  B: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], D: ['XX.', 'X.X', 'X.X', 'X.X', 'XX.'], '-': ['...', '...', 'XXX', '...', '...'], W: ['X...X', 'X...X', 'X.X.X', 'X.X.X', '.X.X.'],
+  B: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], D: ['XX.', 'X.X', 'X.X', 'X.X', 'XX.'], G: ['.XX', 'X..', 'X.X', 'X.X', '.XX'], O: ['.X.', 'X.X', 'X.X', 'X.X', '.X.'], T: ['XXX', '.X.', '.X.', '.X.', '.X.'], '-': ['...', '...', 'XXX', '...', '...'], W: ['X...X', 'X...X', 'X.X.X', 'X.X.X', '.X.X.'],
   0: ['XXX', 'X.X', 'X.X', 'X.X', 'XXX'], 1: ['.X', 'XX', '.X', '.X', '.X'], 2: ['XX.', '..X', '.X.', 'X..', 'XXX'],
   3: ['XX.', '..X', '.X.', '..X', 'XX.'], 4: ['X.X', 'X.X', 'XXX', '..X', '..X'], 5: ['XXX', 'X..', 'XX.', '..X', 'XX.'],
   6: ['.XX', 'X..', 'XX.', 'X.X', '.X.'], 7: ['XXX', '..X', '.X.', '.X.', '.X.'], 8: ['.X.', 'X.X', '.X.', 'X.X', '.X.'], 9: ['.X.', 'X.X', '.XX', '..X', 'XX.'],
@@ -384,6 +387,7 @@ function wallThing(th) {
     }
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем
     case 'u_frost_line': scrawl(x + 2, y + 7, 34, 1, BO, 32, 4); break;
+    case 'u_godot': godot(th); break;
     case 'u_meter': {                                                   // счётчик; провод — вниз к капсуле
       r(x + 4, y + 4, 14, 18, K2); r(x + 5, y + 5, 12, 16, S2); r(x + 5, y + 5, 12, 1, S0);
       r(x + 7, y + 8, 8, 3, AS);                                        // окошко диска (метка — живая)
@@ -394,13 +398,79 @@ function wallThing(th) {
   }
 }
 
+// ═══ ЩИТ «ГОДО»: проходка встала ═══
+// Видно сзади: туннель кончается машиной. Щит — цилиндр во всю выработку,
+// уходит к забою; у самой породы чуть шире — режущая голова. Хвост щита —
+// круг к зрителю: обод, кольцо эректора, домкраты по кругу, в чёрной середине —
+// шнек. Перед хвостом на полотне — гентри: рама, лента, пульт со стопкой
+// графиков. На борту трафаретом — GODOT, ниже краской от руки: «сколько
+// делал — столько ошибался» (слово автора). Свет слева.
+function godot(th) {
+  const tb = TUBES.find(tb => tb.id === 'godot'), cx = tb.x0 + T.FW / 2, yb = tb.y0, R = T.FW / 2 + T.SW, L = 44;
+  const yc = yb - L;                                                    // земля у забоя
+  // режущая голова у породы: обод шире щита
+  for (let x = cx - R - 2; x <= cx + R + 2; x++) {
+    const dx = x + 0.5 - cx, h2 = Math.sqrt(Math.max(0, (R + 2) ** 2 - dx * dx)), h = Math.abs(dx) < R ? Math.sqrt(R * R - dx * dx) : 0;
+    for (let y = Math.round(yc - R - h2); y < Math.round(yc - R - h) + 1; y++) r(x, y, 1, 1, Math.abs(dx) < R * 0.4 ? S2 : K3);
+  }
+  // щит: верх цилиндра уходит к забою — полоса по дуге; середина к свету; кольцевые рёбра
+  for (let x = cx - R; x < cx + R; x++) {
+    const dx = x + 0.5 - cx, h = Math.sqrt(Math.max(0, R * R - dx * dx)), u = Math.abs(dx) / R;
+    const c = dx < 0 ? (u < 0.25 ? AS : u < 0.6 ? S1 : u < 0.88 ? S0 : S2) : (u < 0.2 ? S1 : u < 0.55 ? S0 : u < 0.85 ? S2 : K2);
+    const y0 = Math.round(yc - R - h), y1 = Math.round(yb - R - h);
+    r(x, y0, 1, y1 - y0, c);
+    for (let k = 1; k < 4; k++) r(x, y0 + k * 11, 1, 1, K2);           // рёбра
+    if (hh(x, 3, 41) < 0.12) r(x, y0 + 2 + q(hh(x, 4, 41) * (L - 4)), 1, 1, RUST);   // ржа
+  }
+  write('GODOT', cx - 9, yc - R - R + 4, L2, 0.06, 40);                 // на борту — трафаретом
+  // ниже — краской от руки (слово автора)
+  ['СКОЛЬКО', 'ДЕЛАЛ —', 'СТОЛЬКО', 'ОШИБАЛСЯ'].forEach((s, i) => {
+    const w = [...s].reduce((a, ch) => a + (FONT[ch] || FONT[' '])[0].length + 1, -1);
+    write(s, cx - (w >> 1) + (i & 1), yc - R - R + 12 + i * 6, BO, 0.05, 44 + i);
+  });
+  // хвост щита: круг к зрителю
+  const fy = yb - R;
+  for (let y = yb - 2 * R; y < yb; y++) for (let x = cx - R; x < cx + R; x++) {
+    const dx = x + 0.5 - cx, dy = y + 0.5 - fy, d = Math.hypot(dx, dy);
+    if (d > R) continue;
+    let c;
+    if (d > R - 2) c = dx + dy < -6 ? AS : dx + dy < 6 ? S1 : S2;       // обод: слева сверху к свету
+    else if (d > R - 6) c = hh(x, y, 42) < 0.08 ? K2 : S0;              // юбка хвоста
+    else if (d > R - 8) c = K2;                                          // щётки уплотнения
+    else if (d > R - 11) c = S2;
+    else if (d > R - 13) c = K2;                                         // кольцо эректора
+    else c = K1;                                                          // чёрная середина
+    r(x, y, 1, 1, c);
+  }
+  for (let k = 0; k < 8; k++) {                                         // домкраты по кругу
+    const a = (k + 0.5) / 8 * Math.PI * 2, x = q(cx + Math.cos(a) * (R - 9.5)), y = q(fy + Math.sin(a) * (R - 9.5));
+    r(x - 1, y - 1, 3, 3, K2); r(x - 1, y - 1, 1, 1, AS);
+  }
+  for (let k = 0; k < 14; k++) {                                        // шнек: из середины вниз-вправо
+    const x = cx - 5 + k, y = fy - 6 + k;
+    r(x, y, 3, 2, k % 3 ? K3 : S2);
+  }
+  // гентри перед хвостом: рама на четырёх стойках, лента посередине, пульт справа
+  const gy0 = yb + 12, gy1 = yb + 34, H = 20;
+  for (let i = 0; i < 26; i++) if (hh(i, 1, 43) < 0.5) r(cx - 14 + i, yb + 2 + q(hh(i, 2, 43) * 36), 1, 1, hh(i, 3, 43) < 0.5 ? K4 : K3);   // порода с ленты
+  for (const [px, py] of [[cx - 13, gy0], [cx + 11, gy0]]) { r(px, py - H, 2, H, K2); r(px, py - H, 1, H, S1); }
+  r(cx - 13, gy0 - H, 26, 2, K2); r(cx - 13, gy0 - H, 26, 1, S0);       // дальняя поперечина
+  r(cx - 13, gy0 - H, 2, gy1 - gy0, K2); r(cx + 11, gy0 - H, 2, gy1 - gy0, K2);   // продольные балки
+  r(cx - 3, yb - 10, 6, gy1 - yb + 2, K1);                              // лента — от хвоста к нам
+  for (let y = yb - 9; y < gy1 - 8; y += 4) r(cx - 3, y, 6, 1, S2);
+  r(cx + 4, gy1 - 12, 7, 2, S0); r(cx + 4, gy1 - 12, 7, 1, S1); r(cx + 5, gy1 - 10, 1, 4, K2); r(cx + 9, gy1 - 10, 1, 4, K2);   // пульт
+  r(cx + 5, gy1 - 14, 5, 2, L2); r(cx + 6, gy1 - 15, 4, 1, BO); r(cx + 5, gy1 - 13, 5, 1, K2);   // стопка графиков
+  for (const [px, py] of [[cx - 13, gy1], [cx + 11, gy1]]) { r(px, py - H, 2, H, K2); r(px, py - H, 1, H, S1); }
+  r(cx - 13, gy1 - H, 26, 2, K2); r(cx - 13, gy1 - H, 26, 1, S0);       // ближняя поперечина
+}
+
 // ═══ ДЕКОР: номера колец, ниши, ручеёк талой воды ═══
 function decor(cl) {
   const L = LINE;
   // номера колец — трафаретом, каждое десятое (счёт — от «Вавилона»: там первое)
   for (let v = 0; v < L.x1 - L.x0; v += T.RING) {
     const k = v / T.RING + 10, x = L.x1 - v;
-    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4) continue;
+    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4)) continue;
     write(String(k), x - 14, L.y0 - 14, L2, 0.15, k);
   }
   // аварийные ниши с мёртвым телефоном
@@ -468,16 +538,6 @@ function drawStaticView(g, camX, camY, vw, vh) {
     chunk(i, j); return;
   }
 }
-// кусок неподвижного рисунка — для второй краски (осмотр вещи на стене)
-function blitStatic(g, x, y, w, h) {
-  for (let j = Math.floor(y / CH); j <= Math.floor((y + h - 1) / CH); j++) for (let i = Math.floor(x / CH); i <= Math.floor((x + w - 1) / CH); i++) {
-    const c = chunk(i, j);
-    if (!c) continue;
-    const sx = Math.max(x, i * CH), sy = Math.max(y, j * CH), ex = Math.min(x + w, (i + 1) * CH), ey = Math.min(y + h, (j + 1) * CH);
-    if (ex > sx && ey > sy) g.drawImage(c, sx - i * CH, sy - j * CH, ex - sx, ey - sy, sx, sy, ex - sx, ey - sy);
-  }
-}
-
 // ═══ ВЕЩИ НА ПОЛУ (по глубине с героем) ═══
 const ARCHS = new Map();
 function archSprite(g, p) {                       // перемычка проёма — поверх героя, когда он за стеной
@@ -724,10 +784,10 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
   airLife(g, camX, camY, vw, vh, p);
 }
 
-// вторая краска: осмотренная вещь целиком (на стене — кусок запечённого)
+// вторая краска: осмотренная вещь целиком — только её точки, без породы вокруг
 export function drawUnderThing(g, th) {
   G = g;
-  if (th.wall) { blitStatic(g, th.x - 2, th.y - 2, th.w + 4, th.h + 4); return; }
+  if (th.wall) { wallThing(th); return; }
   const f = FLOOR_DRAW[th.id];
   if (f) f(th);
 }
