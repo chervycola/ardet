@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='10d1586 · 2026-10-21';console.log('[оттиск]', '10d1586 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='aecbe68 · 2026-10-21';console.log('[оттиск]', 'aecbe68 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -44628,6 +44628,9 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 u_graffiti: { name: 'Надпись на стене', look: `На стене — граффити: «Iä! Iä! Shub—». Надпись обрывается.` },
                 // нов.
                 u_up_basement: { name: 'Бетонный спуск', look: `Бетонный спуск наверх.` },
+                // ── станция Loop «Вавилон» (черновик проекта, принят) ──
+                u_car: { name: 'Машина', look: `Круглый туннель, ровный, как вычерченный. Платформа на одну машину. Машина белая, двери открыты. За рулём водитель: автопилоту положен человек.` },
+                u_board: { name: 'Табло', look: `Табло: «Следующее отправление — скоро». Табло не меняли.` },
                 // ── забой: проходческий щит (первая машина Boring Company звалась Godot) ──
                 u_godot: { name: 'Щит «Годо»', look: `Туннель кончается машиной. На борту — GODOT, ниже краской от руки: «сколько делал — столько ошибался». Режущая голова упёрлась в породу и стоит.
 
@@ -44652,6 +44655,8 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 u_frost: 'хранение бессрочное. перечень уточняется дыханием.',
                 u_capsule: 'ноль тёплых пятен.',
                 u_godot: 'сегодня не придёт. завтра — наверняка.',
+                u_board: 'скоро.',
+                u_car: 'водитель на месте.',
             });
         }
     };
@@ -44893,6 +44898,8 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'base', name: 'Затопленный подвал', poly: [[1110, 780], [1300, 780], [1330, 858], [1205, 912], [1080, 858]], wh: 38, mat: 'wet', surf: 'water' },
                 { id: 'cellar', name: 'Подвал «Вавилона»', x0: 1960, y0: 640, x1: 2220, y1: 730, wh: 40, mat: 'brick', surf: 'ground' },
                 { id: 'wd', name: 'Криосклеп «WD»', x0: 760, y0: 248, x1: 900, y1: 336, wh: 40, mat: 'frost', surf: 'snow' },
+                // станция Loop под стоянкой «Вавилона»: зал поверх линии, платформа на одну машину
+                { id: 'station', name: 'Станция Loop «Вавилон»', x0: 1760, y0: 400, x1: 1960, y1: 500, wh: 44, mat: 'loop', surf: 'path' },
             ]);
             for (const R of ROOMS)
                 if (R.poly) {
@@ -44937,6 +44944,9 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256] },
                 { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
                 { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
+                // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
+                { id: 'u_car', room: 'station', x: 1814, y: 424, w: 76, h: 56, at: [1850, 488], solid: [1818, 446, 1884, 471] },
+                { id: 'u_board', room: 'station', wall: true, x: 1880, y: 356, w: 60, h: 34, at: [1910, 410] },
                 // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
                 { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
             ];
@@ -45013,7 +45023,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_137, context_137) {
     "use strict";
-    var time_js_38, underside_js_2, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, FLOORS, yAt, FONT, scrawl, CH, NX, NY, chunks, ARCHS, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, frost, frostScreen, fsW, fsH;
+    var time_js_38, underside_js_2, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, FLOORS, yAt, FONT, scrawl, overLine, CH, NX, NY, chunks, ARCHS, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, frost, frostScreen, fsW, fsH;
     var __moduleName = context_137 && context_137.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -45379,6 +45389,29 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             case 'u_godot':
                 godot(th);
                 break;
+            case 'u_board': { // табло перекидное: «следующее отправление — скоро»
+                r(x + 10, y, 1, 6, S2);
+                r(x + 50, y, 1, 6, S2); // висит на тягах
+                r(x, y + 6, 60, 26, K2);
+                r(x + 1, y + 7, 58, 24, K1);
+                r(x, y + 6, 60, 1, S0);
+                for (let i = 0; i < 13; i++) {
+                    r(x + 4 + i * 4, y + 10, 3, 5, K2);
+                    r(x + 4 + i * 4, y + 12, 3, 1, K1);
+                    if (hh(i, 0, 46) < 0.8)
+                        r(x + 5 + i * 4, y + 11, 1, 3, S2);
+                }
+                for (let i = 0; i < 5; i++) {
+                    r(x + 9 + i * 9, y + 18, 7, 9, K2);
+                    r(x + 9 + i * 9, y + 22, 7, 1, K1);
+                }
+                let lx = x + 10;
+                for (const ch of 'СКОРО') {
+                    write(ch, lx, y + 20, L2, 0, 47);
+                    lx += 9;
+                }
+                break;
+            }
             case 'u_meter': { // счётчик; провод — вниз к капсуле
                 r(x + 4, y + 4, 14, 18, K2);
                 r(x + 5, y + 5, 12, 16, S2);
@@ -45491,9 +45524,16 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         // номера колец — трафаретом, каждое десятое (счёт — от «Вавилона»: там первое)
         for (let v = 0; v < L.x1 - L.x0; v += underside_js_2.T.RING) {
             const k = v / underside_js_2.T.RING + 10, x = L.x1 - v;
-            if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || underside_js_2.PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4))
+            if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || underside_js_2.PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4) || overLine(x - 16, x + 2))
                 continue;
             write(String(k), x - 14, L.y0 - 14, L2, 0.15, k);
+        }
+        // станция: имя на стене
+        if (cl.x0 < 1815 && cl.x1 > 1770 && cl.y0 < 380 && cl.y1 > 364) {
+            r(1772, 366, 40, 11, S2);
+            r(1773, 367, 38, 9, S1);
+            r(1773, 367, 38, 1, AS);
+            write('ВАВИЛОН', 1777, 369, K1);
         }
         // аварийные ниши с мёртвым телефоном
         for (const nx of [760, 1560]) {
@@ -45640,6 +45680,63 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             r(x + 7, gy - 5, 3, 1, K1); // на пустом — прочерк
         r(x, gy - 1, 16, 1, K1);
     }
+    // машина Loop: белая, двери открыты, за рулём водитель. Видна боком (как дома
+    // городка — фасадом), смотрит на восток; свет слева. Фары мёртвые, марок нет.
+    function car(th) {
+        const X0 = th.solid[0], B = th.solid[3]; // нос — на востоке, низ — по земле у края
+        const p = (x, y, w, h, c) => r(X0 + x, B + y, w, h, c);
+        G.globalAlpha = 0.5;
+        p(2, -1, 62, 2, K1);
+        G.globalAlpha = 1; // тень
+        // кабина: задняя стойка, окна, средняя, лобовое; крыша сверху
+        for (let k = 0; k < 9; k++) {
+            const y = -13 - k, xr = 16 + q(k * 0.7), xf = 48 - q(k * 0.8); // наклон стоек
+            p(xr, y, 2, 1, BO);
+            p(xf - 1, y, 2, 1, BO);
+            p(xr + 2, y, xf - xr - 3, 1, k > 6 ? S0 : S2); // стекло тусклое
+        }
+        p(33, -21, 2, 9, BO); // средняя стойка
+        p(22, -22, 20, 1, AS);
+        p(21, -21, 22, 1, BO); // крыша
+        for (let k = 0; k < 5; k++)
+            p(37 + k, -19 + k, 1, 1, S0); // блик на стекле
+        // водитель за рулём: голова и плечи в проёме передней двери, руль
+        p(40, -19, 3, 4, K1);
+        p(41, -20, 2, 1, K1);
+        p(40, -19, 1, 1, S0);
+        p(38, -15, 6, 4, K1);
+        p(44, -15, 2, 1, S2);
+        p(45, -16, 1, 2, S2);
+        // кузов: борт, пояс к свету, порог; капот и багажник — верх светлее
+        p(1, -12, 64, 8, L1);
+        p(1, -12, 64, 1, BO);
+        p(48, -13, 16, 1, BO);
+        p(2, -13, 15, 1, BO);
+        p(0, -11, 1, 6, S1);
+        p(65, -11, 1, 6, S0);
+        p(1, -5, 64, 1, S1);
+        p(2, -4, 62, 1, K2);
+        p(63, -11, 2, 2, S1);
+        p(1, -10, 2, 2, S2); // фары и стопы — мёртвые
+        // проёмы дверей открыты — внутри темно
+        p(20, -12, 13, 7, K1);
+        p(35, -12, 12, 7, K1);
+        // колёса в арках
+        for (const wx of [13, 52]) {
+            p(wx - 5, -9, 11, 2, K2);
+            p(wx - 4, -7, 9, 7, K1);
+            p(wx - 1, -5, 3, 3, S1);
+            p(wx, -4, 1, 1, AS);
+        }
+        // открытые двери — к зрителю, на петлях у передних кромок
+        for (const [hx, w] of [[47, 9], [33, 8]])
+            for (let k = 0; k < w; k++) {
+                const x = hx - k, d = q(k * 0.75);
+                p(x, -18 + d, 1, 6, k === 0 ? BO : S2); // окно двери
+                p(x, -12 + d, 1, 7, k === w - 1 ? S1 : k === 0 ? BO : L1); // панель
+                p(x, -5 + d, 1, 1, K2);
+            }
+    }
     function frostDots() {
         if (frost)
             return frost;
@@ -45735,7 +45832,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         const L = LINE, ex = p.x + 7, ey = p.y + 10;
         if (ey > L.y0 - 30 && ey < L.y0 + underside_js_2.T.FH + 10) {
             for (let x = Math.floor((ex - 70) / 3) * 3; x < ex + 70; x += 3) {
-                if (x < L.x0 || x >= L.x1 || underside_js_2.PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R))
+                if (x < L.x0 || x >= L.x1 || underside_js_2.PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R) || overLine(x, x + 1))
                     continue;
                 const k = 1 - Math.abs(x - ex) / 70;
                 G.globalAlpha = k * k * 0.75 * (0.5 + 0.5 * underside_js_2.under.ember);
@@ -46018,14 +46115,34 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                         return K2;
                     return hh(x, d, 71) < 0.05 ? S2 : S0;
                 },
+                loop(x, d, H) {
+                    if (d <= 2)
+                        return K2;
+                    if (d <= 5)
+                        return S2; // плинтус
+                    if (d === 31)
+                        return x % 3 === 0 ? K1 : K2; // лента диодов — мёртвая
+                    if (d > H - 2)
+                        return K1;
+                    if (d > H - 8)
+                        return hh(x, d, 64) < 0.15 ? K2 : S2;
+                    if (d > 31)
+                        return S0;
+                    const px = (x - 1760) % 26;
+                    if (px === 0)
+                        return K2; // шов панелей
+                    if (px === 1)
+                        return AS;
+                    return hh(x, d, 63) < 0.04 ? S0 : S1;
+                },
             };
             SIDE = {
                 lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1],
+                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1],
             };
             LIPS = {
                 lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1],
+                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1],
             };
             FLOORS = {
                 lime(x, y, R) {
@@ -46047,6 +46164,21 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
                 wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5)
                     return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; }, // вода
+                loop(x, y, R) {
+                    const fy = y - R.y0;
+                    if (fy === 0)
+                        return K1;
+                    if (fy < 13)
+                        return (x - R.x0) % 16 === 0 || fy === 6 ? K2 : hh(x, y, 98) < 0.04 ? S0 : S1;
+                    if (fy === 13)
+                        return x % 2 ? L2 : S0;
+                    if (fy === 14)
+                        return AS;
+                    if (fy === 15)
+                        return K2;
+                    const n = hh(x, y, 99);
+                    return n < 0.03 ? K4 : n < 0.045 ? S1 : S0;
+                },
             };
             yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
             // ═══ ПИКСЕЛЬНЫЕ БУКВЫ (мел, баллончик, трафарет цифр) ═══
@@ -46071,12 +46203,15 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                         if (hh(x, j, seed) < 0.62 && (x - x0) % step !== step - 1)
                             r(x, y0 + j * 3, 1, 1, c);
             };
+            // зал поверх линии (станция): там своей стены у трубы нет
+            overLine = (a, b) => underside_js_2.ROOMS.some(R => R.x0 < b && R.x1 > a && R.y0 < LINE.y0 && R.y1 > LINE.y0);
             // ═══ ЗАПЕКАНИЕ КУСКАМИ ═══
             CH = 256, NX = Math.ceil(underside_js_2.UW / CH), NY = Math.ceil(underside_js_2.UH / CH);
             chunks = new Map();
             // ═══ ВЕЩИ НА ПОЛУ (по глубине с героем) ═══
             ARCHS = new Map();
             FLOOR_DRAW = {
+                u_car: car,
                 u_chests(th) { chest(342, 308, false); chest(360, 308, true); chest(378, 308, false); },
                 chestsWest() { chest(238, 308, false); chest(256, 308, false); chest(274, 308, false); },
                 u_pot(th) {

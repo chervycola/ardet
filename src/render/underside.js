@@ -164,14 +164,26 @@ const BANDS = {
     if (d > H - 2) return K2;
     return hh(x, d, 71) < 0.05 ? S2 : S0;
   },
+  loop(x, d, H) {                                                       // станция: гладкие панели, мёртвая лента диодов, свод в тень
+    if (d <= 2) return K2;
+    if (d <= 5) return S2;                                              // плинтус
+    if (d === 31) return x % 3 === 0 ? K1 : K2;                         // лента диодов — мёртвая
+    if (d > H - 2) return K1;
+    if (d > H - 8) return hh(x, d, 64) < 0.15 ? K2 : S2;
+    if (d > 31) return S0;
+    const px = (x - 1760) % 26;
+    if (px === 0) return K2;                                            // шов панелей
+    if (px === 1) return AS;
+    return hh(x, d, 63) < 0.04 ? S0 : S1;
+  },
 };
 const SIDE = {
   lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1],
+  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1],
 };
 const LIPS = {
   lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1],
+  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1],
 };
 const FLOORS = {
   lime(x, y, R) {                                                       // каменные плиты
@@ -184,6 +196,15 @@ const FLOORS = {
   brick(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 93); return n > 0.997 ? L2 : n > 0.988 ? S1 : n < 0.04 ? S2 : S0; },   // мука по бетону
   frost(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
   wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5) return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; },   // вода
+  loop(x, y, R) {                                                       // платформа на одну машину — плитка, тактильная полоса, бордюр; дальше полоса посадки
+    const fy = y - R.y0;
+    if (fy === 0) return K1;
+    if (fy < 13) return (x - R.x0) % 16 === 0 || fy === 6 ? K2 : hh(x, y, 98) < 0.04 ? S0 : S1;
+    if (fy === 13) return x % 2 ? L2 : S0;
+    if (fy === 14) return AS;
+    if (fy === 15) return K2;
+    const n = hh(x, y, 99); return n < 0.03 ? K4 : n < 0.045 ? S1 : S0;
+  },
 };
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
@@ -388,6 +409,14 @@ function wallThing(th) {
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем
     case 'u_frost_line': scrawl(x + 2, y + 7, 34, 1, BO, 32, 4); break;
     case 'u_godot': godot(th); break;
+    case 'u_board': {                                                   // табло перекидное: «следующее отправление — скоро»
+      r(x + 10, y, 1, 6, S2); r(x + 50, y, 1, 6, S2);                   // висит на тягах
+      r(x, y + 6, 60, 26, K2); r(x + 1, y + 7, 58, 24, K1); r(x, y + 6, 60, 1, S0);
+      for (let i = 0; i < 13; i++) { r(x + 4 + i * 4, y + 10, 3, 5, K2); r(x + 4 + i * 4, y + 12, 3, 1, K1); if (hh(i, 0, 46) < 0.8) r(x + 5 + i * 4, y + 11, 1, 3, S2); }
+      for (let i = 0; i < 5; i++) { r(x + 9 + i * 9, y + 18, 7, 9, K2); r(x + 9 + i * 9, y + 22, 7, 1, K1); }
+      let lx = x + 10; for (const ch of 'СКОРО') { write(ch, lx, y + 20, L2, 0, 47); lx += 9; }
+      break;
+    }
     case 'u_meter': {                                                   // счётчик; провод — вниз к капсуле
       r(x + 4, y + 4, 14, 18, K2); r(x + 5, y + 5, 12, 16, S2); r(x + 5, y + 5, 12, 1, S0);
       r(x + 7, y + 8, 8, 3, AS);                                        // окошко диска (метка — живая)
@@ -464,14 +493,22 @@ function godot(th) {
   r(cx - 13, gy1 - H, 26, 2, K2); r(cx - 13, gy1 - H, 26, 1, S0);       // ближняя поперечина
 }
 
+// зал поверх линии (станция): там своей стены у трубы нет
+const overLine = (a, b) => ROOMS.some(R => R.x0 < b && R.x1 > a && R.y0 < LINE.y0 && R.y1 > LINE.y0);
+
 // ═══ ДЕКОР: номера колец, ниши, ручеёк талой воды ═══
 function decor(cl) {
   const L = LINE;
   // номера колец — трафаретом, каждое десятое (счёт — от «Вавилона»: там первое)
   for (let v = 0; v < L.x1 - L.x0; v += T.RING) {
     const k = v / T.RING + 10, x = L.x1 - v;
-    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4)) continue;
+    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4) || overLine(x - 16, x + 2)) continue;
     write(String(k), x - 14, L.y0 - 14, L2, 0.15, k);
+  }
+  // станция: имя на стене
+  if (cl.x0 < 1815 && cl.x1 > 1770 && cl.y0 < 380 && cl.y1 > 364) {
+    r(1772, 366, 40, 11, S2); r(1773, 367, 38, 9, S1); r(1773, 367, 38, 1, AS);
+    write('ВАВИЛОН', 1777, 369, K1);
   }
   // аварийные ниши с мёртвым телефоном
   for (const nx of [760, 1560]) {
@@ -569,7 +606,43 @@ function chest(x, gy, open) {                     // ларь: крышка св
   if (open) r(x + 7, gy - 5, 3, 1, K1);                                 // на пустом — прочерк
   r(x, gy - 1, 16, 1, K1);
 }
+// машина Loop: белая, двери открыты, за рулём водитель. Видна боком (как дома
+// городка — фасадом), смотрит на восток; свет слева. Фары мёртвые, марок нет.
+function car(th) {
+  const X0 = th.solid[0], B = th.solid[3];                              // нос — на востоке, низ — по земле у края
+  const p = (x, y, w, h, c) => r(X0 + x, B + y, w, h, c);
+  G.globalAlpha = 0.5; p(2, -1, 62, 2, K1); G.globalAlpha = 1;          // тень
+  // кабина: задняя стойка, окна, средняя, лобовое; крыша сверху
+  for (let k = 0; k < 9; k++) {
+    const y = -13 - k, xr = 16 + q(k * 0.7), xf = 48 - q(k * 0.8);     // наклон стоек
+    p(xr, y, 2, 1, BO); p(xf - 1, y, 2, 1, BO);
+    p(xr + 2, y, xf - xr - 3, 1, k > 6 ? S0 : S2);                      // стекло тусклое
+  }
+  p(33, -21, 2, 9, BO);                                                 // средняя стойка
+  p(22, -22, 20, 1, AS); p(21, -21, 22, 1, BO);                         // крыша
+  for (let k = 0; k < 5; k++) p(37 + k, -19 + k, 1, 1, S0);             // блик на стекле
+  // водитель за рулём: голова и плечи в проёме передней двери, руль
+  p(40, -19, 3, 4, K1); p(41, -20, 2, 1, K1); p(40, -19, 1, 1, S0);
+  p(38, -15, 6, 4, K1); p(44, -15, 2, 1, S2); p(45, -16, 1, 2, S2);
+  // кузов: борт, пояс к свету, порог; капот и багажник — верх светлее
+  p(1, -12, 64, 8, L1); p(1, -12, 64, 1, BO); p(48, -13, 16, 1, BO); p(2, -13, 15, 1, BO);
+  p(0, -11, 1, 6, S1); p(65, -11, 1, 6, S0);
+  p(1, -5, 64, 1, S1); p(2, -4, 62, 1, K2);
+  p(63, -11, 2, 2, S1); p(1, -10, 2, 2, S2);                            // фары и стопы — мёртвые
+  // проёмы дверей открыты — внутри темно
+  p(20, -12, 13, 7, K1); p(35, -12, 12, 7, K1);
+  // колёса в арках
+  for (const wx of [13, 52]) { p(wx - 5, -9, 11, 2, K2); p(wx - 4, -7, 9, 7, K1); p(wx - 1, -5, 3, 3, S1); p(wx, -4, 1, 1, AS); }
+  // открытые двери — к зрителю, на петлях у передних кромок
+  for (const [hx, w] of [[47, 9], [33, 8]]) for (let k = 0; k < w; k++) {
+    const x = hx - k, d = q(k * 0.75);
+    p(x, -18 + d, 1, 6, k === 0 ? BO : S2);                             // окно двери
+    p(x, -12 + d, 1, 7, k === w - 1 ? S1 : k === 0 ? BO : L1);          // панель
+    p(x, -5 + d, 1, 1, K2);
+  }
+}
 const FLOOR_DRAW = {
+  u_car: car,
   u_chests(th) { chest(342, 308, false); chest(360, 308, true); chest(378, 308, false); },
   chestsWest() { chest(238, 308, false); chest(256, 308, false); chest(274, 308, false); },
   u_pot(th) {                                                           // котелок у двери, полный; дужка
@@ -679,7 +752,7 @@ function floorLife(g, camX, camY, vw, vh, p) {
   const L = LINE, ex = p.x + 7, ey = p.y + 10;
   if (ey > L.y0 - 30 && ey < L.y0 + T.FH + 10) {
     for (let x = Math.floor((ex - 70) / 3) * 3; x < ex + 70; x += 3) {
-      if (x < L.x0 || x >= L.x1 || PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R)) continue;
+      if (x < L.x0 || x >= L.x1 || PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R) || overLine(x, x + 1)) continue;
       const k = 1 - Math.abs(x - ex) / 70;
       G.globalAlpha = k * k * 0.75 * (0.5 + 0.5 * under.ember); r(x, L.y0 - 15, 1, 1, AS);
     }

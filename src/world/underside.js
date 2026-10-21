@@ -42,6 +42,8 @@ export const ROOMS = [
   { id: 'base', name: 'Затопленный подвал', poly: [[1110, 780], [1300, 780], [1330, 858], [1205, 912], [1080, 858]], wh: 38, mat: 'wet', surf: 'water' },
   { id: 'cellar', name: 'Подвал «Вавилона»', x0: 1960, y0: 640, x1: 2220, y1: 730, wh: 40, mat: 'brick', surf: 'ground' },
   { id: 'wd', name: 'Криосклеп «WD»', x0: 760, y0: 248, x1: 900, y1: 336, wh: 40, mat: 'frost', surf: 'snow' },
+  // станция Loop под стоянкой «Вавилона»: зал поверх линии, платформа на одну машину
+  { id: 'station', name: 'Станция Loop «Вавилон»', x0: 1760, y0: 400, x1: 1960, y1: 500, wh: 44, mat: 'loop', surf: 'path' },
 ];
 for (const R of ROOMS) if (R.poly) {
   R.x0 = Math.min(...R.poly.map(p => p[0])); R.x1 = Math.max(...R.poly.map(p => p[0]));
@@ -85,6 +87,9 @@ const TH = [
   { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256] },
   { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
   { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
+  // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
+  { id: 'u_car', room: 'station', x: 1814, y: 424, w: 76, h: 56, at: [1850, 488], solid: [1818, 446, 1884, 471] },
+  { id: 'u_board', room: 'station', wall: true, x: 1880, y: 356, w: 60, h: 34, at: [1910, 410] },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
