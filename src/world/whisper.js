@@ -81,6 +81,8 @@ export function sayAt(text, x, y, faint = false, follow = null) {
   whisper = { text, x, y, t0: t, prep: null, k: faint ? 0.5 : 1, follow };
   return true;
 }
+// шёпот отходит в сторону, к стене (вдох на пороге): перестаёт идти следом
+export function drift(x, y) { if (whisper.text && whisper.follow) whisper.follow = () => [x, y]; }
 // шаг мира: шёпот, что идёт следом, догоняет — мягко
 export function stepWhisper() {
   const w = whisper;

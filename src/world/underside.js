@@ -17,6 +17,7 @@
 // состояние; рисунок — render/underside.js, тексты — content/underside.js.
 // ═══════════════════════════════════════
 import { UNDER_TEXT } from '../content/underside.js';
+import { t } from '../core/time.js';
 
 export const UW = 2400, UH = 1440;            // карта, точки (ниже 1100 — один ход мха)
 // труба Boring: пол с запада на восток высотой FH или с севера на юг шириной
@@ -158,7 +159,10 @@ export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792],
 export const THINGS = TH.map(th => {
   const tx = UNDER_TEXT[th.id] || { name: th.id, look: '' };
   const o = { ...th, name: tx.name, look: tx.look, zone: 'under', under: true };
-  if (th.up) { o.useAction = 'under_up'; o.useLabel = '<i>↑</i>ПОДНЯТЬСЯ'; }
+  if (th.up) {
+    o.useAction = 'under_up'; o.useLabel = '<i>↑</i>ПОДНЯТЬСЯ';
+    o.alt = 'under_greet'; o.altLabel = '<i>☼</i>ПОДУТЬ НА УГОЛЁК'; o.altShown = () => !under.greeted && !under.greetT;   // вдох на пороге
+  }
   if (th.solid) SOLIDS.push(th.solid);
   return o;
 });
@@ -314,6 +318,72 @@ export function pathTo(fx, fy, gx, gy) {
   return out;
 }
 
+// ── до выхода: сколько клеток пути до ближней лестницы (обход в ширину от всех сразу) ──
+let exitD = null;
+function buildExits() {
+  if (!grid) buildGrid();
+  exitD = new Int32Array(GW * GH).fill(-1);
+  let qh = 0, qt = 0;
+  for (const th of TH) if (th.up) { const c = nearestCell(th.at[0], th.at[1]); if (c >= 0 && exitD[c] < 0) { exitD[c] = 0; queue[qt++] = c; } }
+  while (qh < qt) {
+    const c = queue[qh++], i = c % GW, j = (c - i) / GW;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const ni = i + di, nj = j + dj;
+      if (ni < 0 || nj < 0 || ni >= GW || nj >= GH) continue;
+      const n = nj * GW + ni;
+      if (!grid[n] || exitD[n] >= 0) continue;
+      exitD[n] = exitD[c] + 1; queue[qt++] = n;
+    }
+  }
+}
+// -1 — не дойти (порода)
+export function exitDist(x, y) {
+  if (!exitD) buildExits();
+  const c = nearestCell(x, y, 3);
+  return c < 0 ? -1 : exitD[c];
+}
+// развилки: где штрек с севера или с юга входит в линию
+const L0 = TUBES[0];
+export const FORKS = [];
+for (const tb of TUBES) if (tb.ns && (tb.y1 === L0.y0 || tb.y0 === L0.y0 + T.FH)) {
+  const x = tb.x0 + T.FW / 2;
+  if (!FORKS.some(f => Math.abs(f.x - x) < 30)) FORKS.push({ x, y: L0.y0 + T.FH / 2 });
+}
+const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+// на развилке огонёк тянется к ближнему выходу: куда шагнуть — {x, y}; не развилка — null
+export function tugAt(fx, fy) {
+  const f = FORKS.find(f => Math.abs(fx - f.x) < 26 && Math.abs(fy - f.y) < 26);
+  if (!f) return null;
+  let best = null, bd = exitDist(f.x, f.y);
+  for (const [x, y] of DIRS) { const d = exitDist(f.x + x * 30, f.y + y * 30); if (d >= 0 && d < bd) { bd = d; best = { x, y }; } }
+  return best;
+}
+// в глубину — от порога: куда уходит путь к середине своего хода (линии или хода мха)
+export function deepAt(fx, fy) {
+  const moss = placeAt(fx, fy) === 'moss', gx = moss ? (MOSS.x0 + MOSS.x1) / 2 : (L0.x0 + L0.x1) / 2;
+  const path = pathTo(fx, fy, gx, moss ? mossY(gx) + 12 : L0.y0 + T.FH / 2);
+  const w = path && path[0], d = w ? Math.hypot(w.x - fx, w.y - fy) : 0;
+  return d > 0.5 ? { x: (w.x - fx) / d, y: (w.y - fy) / d } : { x: 0, y: 1 };
+}
+
+// ── вдох на пороге (канон, ритуал «Вдох на пороге», U1–U7): ритуал вежливости всей
+// изнанки. У лестницы — порога хода — подуть на уголёк. Через секунду из глубины
+// отвечает долгий втягивающий вдох: пламя встаёт свечкой, сквозняк тянет внутрь,
+// шёпоты отходят к стенам. Один раз за спуск; после обмена дыханием уголёк горит
+// ровнее, чужие сквозняки его не трогают, на развилках огонёк чуть тянется к выходу —
+// не ведёт, но подсказывает. Не поздороваться можно: тогда шёпоты идут вплотную
+export const GREET_LINE = 'Посетитель поздоровался. Отмечено всеми.';
+// чужие сквозняки у уголька 0..1: крипта раз в шесть секунд выдыхает вверх по
+// ступеням (пыль — render/underside.js), из тоннеля метро тянет, поезд дует
+function draftAt(fx, fy, train) {
+  let k = 0;
+  const st = TH.find(th => th.id === 'u_up_crypt'), ph = t % 360;
+  if (ph < 50 && Math.hypot(fx - st.at[0], fy - st.at[1]) < 70) k = 1 - 0.5 * ph / 50;
+  if (fy > L0.y0 && fy < L0.y0 + T.FH + 2 && Math.abs(fx - 1724) < 90) k = Math.max(k, 0.35);
+  if (train > 40 && train < 220) k = 1;
+  return k;
+}
+
 // ── ход мха: шаг по стуку сердца (канон U6, ритуал «Шаг по стуку сердца») ──
 // Мох глушит шаги начисто; идти можно только в такт сердцу. Сердце бьётся раз в
 // секунду: прошёл за удар не больше шага — мох вспыхивает бледно-зелёным под ногой
@@ -407,7 +477,7 @@ const MURMUR_AT = [
 ];
 // где шёпоту встать у стены: дальняя стена над полом — в зале, в жиле, на линии
 // (вдоль, не за край); в штреке с севера на юг — в боковой стенке, сбоку
-function wallSpot(fx, fy, x) {
+export function wallSpot(fx, fy, x) {
   const at = placeAt(fx, fy), L = TUBES[0], R = ROOMS.find(r => r.id === at);
   const fit = (a, b) => Math.max(a + 40, Math.min(b - 40, x));
   if (R) return [fit(R.x0, R.x1), R.y0 - Math.round(R.wh / 2)];
@@ -446,6 +516,11 @@ export const under = {
   quench: false,          // погасить шёпот, что пишется (тишина)
   wdTold: false,          // в криосклепе сказано: «Шёпотов нет»
   tick: 0,                // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
+  greetT: 0,              // вдох на пороге: шаг обмена дыханием (0 — нет)
+  flare: 0,               // пламя встало свечкой (0..1, опадает за три секунды)
+  inhale: null,           // тоннель вдохнул { x, y, dx, dy } — main даёт звук, пыль внутрь, шёпоты к стенам
+  draft: 0,               // чужой сквозняк у уголька 0..1 (поздоровался — не трогает)
+  tug: null,              // на развилке огонёк тянется к выходу { x, y }
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
   ride: false,            // поезд забрал — main выводит к колодцу городка
@@ -468,6 +543,17 @@ export const under = {
     if (at === 'wd' && !this.wdTold) { this.wdTold = true; this.say = WD_SILENCE; this.quench = true; this.whisper = null; }
     // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
     this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
+    // вдох на пороге: подул — через секунду тоннель отвечает вдохом, ещё через полторы — строка
+    if (this.greetT > 0) {
+      if (++this.greetT === 60) {
+        this.greeted = true; this.flare = 1;
+        const d = deepAt(fx, fy);
+        this.inhale = { x: fx, y: fy - 13, dx: d.x, dy: d.y };
+      } else if (this.greetT >= 150) { this.greetT = 0; this.say = GREET_LINE; }
+    }
+    if (this.flare > 0) this.flare = Math.max(0, this.flare - 1 / 180);
+    this.draft = this.greeted ? 0 : draftAt(fx, fy, this.train);
+    this.tug = this.greeted ? tugAt(fx, fy) : null;
     if (--this.murmur <= 0) {
       this.murmur = 1200 + Math.floor(Math.random() * 1200);
       if (!this.silent(at)) this.whisper = murmurAt(fx, fy, this.greeted);
@@ -493,6 +579,12 @@ export const under = {
       this.heard.add('metro'); this.train = 1;
     }
   },
+  // подул на уголёк у порога (раз за спуск): ответ — в step
+  greet() {
+    if (this.greeted || this.greetT) return false;
+    this.greetT = 1;
+    return true;
+  },
   // тишина: в криосклепе, в ходе мха, в окнах тишины ритуалов
   silent(at) { return at === 'wd' || at === 'moss' || this.hushF > 0 || this.hushS > 0; },
   // взял билет со скамьи
@@ -508,9 +600,10 @@ export const under = {
     this.heard.clear(); this.say = null; this.hiss = 0; this.train = 0; this.still = 0;
     this.bench = false; this.ride = false;
     this.murmur = 900; this.hushF = 0; this.hushS = 0; this.greeted = false; this.whisper = null; this.quench = false; this.wdTold = false; this.tick = 0;
+    this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; moss.reset(); },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
   load(d) {
     if (!d) return;
@@ -530,9 +623,12 @@ const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 export function underLights(px, py) {
   const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
+  // вдох на пороге: пламя встало свечкой (fl), после — ровнее; чужой сквозняк (g) прибивает
+  // огонёк, пока не поздоровался; на развилке огонёк тянется к выходу
+  const fl = under.flare, g = under.draft, tg = under.tug, ex = px + (tg ? tg.x * 3 : 0), ey = py + (tg ? tg.y * 3 : 0);
   const L = [
-    { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k) * (1 - 0.3 * m) * dk, color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: (1.1 - 0.3 * k) * (1 + 0.5 * moss.pulse * m) },
-    { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k) * (1 - 0.78 * m), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 * (1 - 0.55 * m) },
+    { x: ex, y: ey, r: (40 + 22 * e) * (1 - 0.35 * k) * (1 - 0.3 * m) * dk * (1 - 0.3 * g) * (1 + 0.45 * fl), color: mix(EMBER, COLD, k), flicker: (under.greeted ? 0.03 : 0.1 + 0.25 * g) * (1 - k), intensity: (1.1 - 0.3 * k) * (1 + 0.5 * moss.pulse * m) * (1 + 0.4 * fl) },
+    { x: ex, y: ey, r: (118 + 42 * e) * (1 - 0.3 * k) * (1 - 0.78 * m) * (1 - 0.18 * g) * (1 + 0.25 * fl), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 * (1 - 0.55 * m) },
     { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
     { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 },   // окно-экран бункера: лес светит
     { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 },   // облако: свет искусственный, ровный

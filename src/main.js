@@ -67,7 +67,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -86,7 +86,7 @@ import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
-import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper } from './world/whisper.js';
+import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
@@ -104,10 +104,10 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
-import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife } from './render/underside.js';
+import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
 
 // ═══ INIT ═══
@@ -1136,6 +1136,7 @@ function surface() {
   if (surfaceLights) lighting.sources = surfaceLights;
   surfaceLights = null;
   player.path = null; player.walkTo = null; player.cold = 0; player.ember = undefined; player.pulse = 0;
+  player.flare = 0; player.tug = null; player.steady = false; player.gust = 0;
 }
 // поезд метро забрал (билет «до колодца. туда.»): выход — у колодца у площади, билет погашен
 function rideToWell() {
@@ -1196,6 +1197,15 @@ function stepFxUnder() {
     under.whisper = null;
   }
   stepWhisper();
+  // вдох на пороге: тоннель ответил — долгий вдох, пыль уходит внутрь, шёпот у уха отходит к стене
+  if (under.inhale) {
+    const h = under.inhale;
+    playInhale();
+    inhaleDust(h.x, h.y, h.dx, h.dy);
+    const [wx, wy] = wallSpot(player.x + 6, player.y + 23, player.x + 6 + (Math.random() < 0.5 ? -64 : 64));
+    driftWhisper(wx, wy);
+    under.inhale = null;
+  }
   // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
   if (moss.beat && moss.k > 0.5) playHeart();
   if (moss.grow) playMossGrow();
@@ -1218,6 +1228,7 @@ function renderUnder() {
   worldCtx.translate(-camX, -camY);
   setCtx(worldCtx);
   player.cold = under.cold; player.ember = under.ember; player.pulse = moss.k > 0.5 ? moss.pulse : 0;
+  player.flare = under.flare; player.tug = under.tug; player.steady = under.greeted; player.gust = under.draft;
   drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); });
   drawParticles(worldCtx, { x: camX, y: camY });
   drawWhisper(worldCtx, { x: camX, y: camY });
@@ -1602,6 +1613,10 @@ events.on(E.LORE_COLLECT, (item) => {
   showLore(item.text, item.live);
   playPickup();
   pickupSparkle(item.x, item.y);
+});
+// второе действие вещи: изнанка — у лестницы подуть на уголёк (ритуал «Вдох на пороге»)
+events.on('location.alt', (loc) => {
+  if (loc.alt === 'under_greet' && under.greet()) playBlow();
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }

@@ -1125,6 +1125,14 @@ const drips = [];
 const puffs = [];
 const boats = [];                                  // кораблики из заявлений — по каналу под полотном
 const draft = [];                                  // сквозняк метро и пыль от поезда
+const breath = [];                                 // вдох на пороге: сквозняк тянет пыль от уголька в глубину
+// тоннель вдохнул (ритуал «Вдох на пороге»): пыль у уголька уходит внутрь, в (dx, dy)
+export function inhaleDust(x, y, dx, dy) {
+  for (let k = 0; k < 26; k++) {
+    const v = 0.35 + Math.random() * 0.45;
+    breath.push({ x: x + (Math.random() - 0.5) * 26, y: y + (Math.random() - 0.5) * 16, vx: dx * v + (Math.random() - 0.5) * 0.1, vy: dy * v + (Math.random() - 0.5) * 0.1, life: 70 + q(Math.random() * 70), w: k * 3 });
+  }
+}
 let frost = null;                                  // иней: точки, тают у уголька, отрастают
 function frostDots() {
   if (frost) return frost;
@@ -1186,6 +1194,7 @@ export function stepUnderLife(p) {
       : { x: mx - 20 + Math.random() * 40, y: LINE.y0 + 4 + Math.random() * 20, vx: 0, vy: -0.12, life: 160 });
   }
   for (let i = draft.length - 1; i >= 0; i--) { const d = draft[i]; d.x += d.vx; d.y += d.vy; if (--d.life <= 0) draft.splice(i, 1); }
+  for (let i = breath.length - 1; i >= 0; i--) { const d = breath[i]; if (d.w > 0) { d.w--; continue; } d.x += d.vx; d.y += d.vy; d.vx *= 1.01; d.vy *= 1.01; if (--d.life <= 0) breath.splice(i, 1); }
   // иней тает кольцом вокруг уголька и отрастает, когда отойдёшь
   if (under.cold > 0.05 || placeAt(fx, fy) === 'vein' || placeAt(fx, fy) === 'wd') {
     const R = 22, ex = p.x + 7, ey = p.y + 10;
@@ -1320,6 +1329,11 @@ function airLife(g, camX, camY, vw, vh, p) {
   G = g;
   for (const d of drips) if (!d.splash) { G.globalAlpha = 0.7; r(d.x, d.y, 1, 2, AS); G.globalAlpha = 1; }
   for (const u of puffs) { G.globalAlpha = Math.min(0.35, u.life / 160); r(u.x, u.y, 1 + (u.life < 40 ? 1 : 0), 1, BO); }
+  for (const d of breath) if (!d.w) {                 // пылинка со следом: сквозняк виден по тому, что все летят в одну сторону
+    const a = Math.min(0.6, d.life / 70);
+    G.globalAlpha = a; r(d.x, d.y, 1, 1, BO);
+    G.globalAlpha = a * 0.45; r(d.x - d.vx * 2.5, d.y - d.vy * 2.5, 1, 1, BO); r(d.x - d.vx * 5, d.y - d.vy * 5, 1, 1, AS);
+  }
   G.globalAlpha = 1;
   // крипта дышит: раз в шесть секунд воздух уходит вверх по ступеням — пыль следом
   const st = THINGS.find(th => th.id === 'u_up_crypt'), ph = t % 360;
@@ -1431,4 +1445,4 @@ export function drawUnderFx(fx, vw, vh) {
 }
 
 // сброс живого при входе: прошлые следы остаются (пыль помнит), капли и пар — нет
-export function resetUnderLife() { drips.length = 0; puffs.length = 0; lastPrint = null; }
+export function resetUnderLife() { drips.length = 0; puffs.length = 0; breath.length = 0; lastPrint = null; }

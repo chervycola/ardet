@@ -103,6 +103,12 @@ export function showMenu(loc) {
       : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
   }
 
+  // второе действие вещи — проявляется по случаю (изнанка: у лестницы — подуть на уголёк)
+  const altBtn = menuEl.querySelector('[data-a="alt"]');
+  const alt = !!loc.alt && (!loc.altShown || loc.altShown());
+  altBtn.style.display = alt ? 'flex' : 'none';
+  if (alt) altBtn.innerHTML = loc.altLabel;
+
   // Position near last mouse position on desktop; mobile CSS handles centering.
   if (window.innerWidth > 768) {
     menuEl.style.left = Math.min(input.mouseX, window.innerWidth - 200) + 'px';
@@ -140,6 +146,10 @@ export function menuAction(action) {
       break;
     case 'use':
       events.emit('location.use', loc);
+      hideMenu();
+      break;
+    case 'alt':
+      events.emit('location.alt', loc);
       hideMenu();
       break;
     case 'talk':

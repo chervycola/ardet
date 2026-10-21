@@ -89,6 +89,27 @@ export function playMossGrow() {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start();
 }
 
+// Вдох на пороге: подул на уголёк — короткий мягкий выдох
+export function playBlow() {
+  if (!ctx) return;
+  noiseBreath(0.42, 0.05, 0.25, 900, 700, 0.045);
+}
+// ...и из глубины отвечает долгий втягивающий вдох: шум нарастает и светлеет, обрывается
+export function playInhale() {
+  if (!ctx) return;
+  noiseBreath(2.3, 1.9, 0.12, 260, 1500, 0.07);
+}
+// дыхание: шум сквозь фильтр — нарастает за rise, стихает за fall; фильтр едет f0 → f1
+function noiseBreath(dur, rise, fall, f0, f1, vol) {
+  const n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t0 = ctx.currentTime;
+  s.buffer = b; f.type = 'lowpass'; f.Q.value = 0.7;
+  f.frequency.setValueAtTime(f0, t0); f.frequency.linearRampToValueAtTime(f1, t0 + rise);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + rise); g.gain.linearRampToValueAtTime(0.0001, t0 + Math.min(dur, rise + fall));
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
+}
+
 // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
 let tock = false;
 export function playTick(v) {

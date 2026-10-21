@@ -1832,6 +1832,68 @@ setCtx(ctx);
     assert(Math.abs(WH.whisperAt()[0] - px) < 12 && WH.whisperAt()[1] === 50, 'шёпот у уха отстал: ' + WH.whisperAt());
     WH._reset();
   });
+  test('изнанка: вдох на пороге — подул на уголёк у лестницы, через секунду тоннель вдыхает; раз за спуск', () => {
+    const W = U.under, stairs = U.THINGS.filter(th => th.up);
+    W.enter(0, 0); W.say = null;
+    for (const th of stairs) assert(th.alt === 'under_greet' && /ПОДУТЬ НА УГОЛЁК/.test(th.altLabel) && th.altShown(), `${th.id}: у порога не подуть`);
+    assert(!U.THINGS.some(th => !th.up && th.alt), 'подуть — не у порога');
+    const st = U.thingById('u_up_crypt'), [fx, fy] = st.at;
+    assert(W.greet() && !W.greet(), 'подул дважды');
+    assert(!st.altShown(), 'подул — а «подуть» осталось');
+    for (let i = 0; i < 58; i++) W.step(fx, fy);
+    assert(!W.greeted && !W.inhale, 'тоннель ответил раньше секунды');
+    W.step(fx, fy); W.step(fx, fy);
+    assert(W.greeted && W.inhale && W.flare > 0.98, 'тоннель не вдохнул');
+    const h = W.inhale;
+    assert(Math.abs(Math.hypot(h.dx, h.dy) - 1) < 0.01, 'сквозняк без направления');
+    assert(U.exitDist(fx + h.dx * 40, fy + h.dy * 40) > U.exitDist(fx, fy), 'сквозняк тянет не внутрь');
+    W.inhale = null;
+    for (let i = 0; i < 100 && !W.say; i++) W.step(fx, fy);
+    eq(W.say, U.GREET_LINE, 'строка вдоха'); W.say = null;
+    eq(U.GREET_LINE, 'Посетитель поздоровался. Отмечено всеми.', 'реплика канона');
+    for (let i = 0; i < 200; i++) W.step(fx, fy);
+    eq(W.flare, 0, 'свечка не опала');
+    assert(!W.greet(), 'второй раз за спуск');
+    for (const th of stairs) assert(!th.altShown(), 'поздоровался — «подуть» осталось');
+    W.leave(); W.enter(0, 0);
+    assert(!W.greeted && stairs.every(th => th.altShown()), 'новый спуск — уже поздоровался');
+    for (const th of stairs) {                                       // у каждого порога — внутрь, к середине своего хода
+      const d = U.deepAt(th.at[0], th.at[1]);
+      assert(Math.abs(Math.hypot(d.x, d.y) - 1) < 0.01, `${th.id}: глубины нет`);
+    }
+    W.leave(); W.say = null;
+  });
+  test('изнанка: после вдоха огонёк ровнее — чужие сквозняки не трогают; на развилках тянется к выходу', () => {
+    const W = U.under, st = U.thingById('u_up_crypt'), [fx, fy] = st.at;
+    eq(U.FORKS.length, 6, 'развилок');
+    for (const f of U.FORKS) {
+      assert(U.walkable(f.x, f.y), 'развилка в породе');
+      const g = U.tugAt(f.x, f.y);
+      assert(g, 'на развилке огонёк никуда не тянется: ' + f.x);
+      assert(U.exitDist(f.x + g.x * 30, f.y + g.y * 30) < U.exitDist(f.x, f.y), 'тянется не к выходу: ' + f.x);
+    }
+    eq(U.tugAt(1135, 465), null, 'не развилка — тянется');
+    W.enter(0, 0); W.say = null;
+    let gust = 0;
+    for (let i = 0; i < 400; i++) { tick(); W.step(fx, fy); gust = Math.max(gust, W.draft); }
+    assert(gust > 0.9, 'крипта выдыхает — уголёк не чувствует');
+    const r0 = () => U.underLights(fx, fy - 13)[0].r;
+    let lo = Infinity, hi = 0;
+    for (let i = 0; i < 400; i++) { tick(); W.step(fx, fy); const r = r0(); lo = Math.min(lo, r); hi = Math.max(hi, r); }
+    assert(hi - lo > 8, 'сквозняк не прибивает огонёк');
+    W.step(1135, 465); eq(W.tug, null, 'не поздоровался — огонёк тянется');
+    W.step(1215, 465); eq(W.tug, null, 'не поздоровался — на развилке тянется');
+    W.greet(); for (let i = 0; i < 200; i++) { tick(); W.step(fx, fy); }
+    assert(W.greeted, 'не поздоровался');
+    for (let i = 0; i < 400; i++) { tick(); W.step(fx, fy); eq(W.draft, 0, 'поздоровался — сквозняк трогает'); }
+    assert(U.underLights(fx, fy - 13)[0].flicker < 0.05, 'горит не ровнее');
+    W.step(1215, 465);
+    assert(W.tug && W.tug.y === 1, 'на развилке у затопленного подвала огонёк не тянется вниз');
+    const L = U.underLights(1215, 452)[0];
+    assert(L.y > 452, 'свет не тянется вслед за огоньком');
+    W.step(1135, 465); eq(W.tug, null, 'между развилками — тянется');
+    W.leave(); W.say = null;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };

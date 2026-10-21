@@ -38,7 +38,8 @@ export function drawPlayer(player) {
   const w = wind.at(x + 6, y + 12), vx = player.vx || 0;
   const trail = Math.max(-2.5, Math.min(2.5, w.x * 2.4 - vx * 0.7));     // подол отстаёт и уходит по ветру
   const lean = Math.max(-1, Math.min(1, q(vx * 0.45)));
-  const flick = (0.15 + w.s * 0.25) * Math.sin(t * (0.45 + w.s * 0.3) + Math.sin(t * 0.1) * 2);
+  // огонёк дрожит в порыв; под землёй его прибивает чужой сквозняк (gust), а после вдоха на пороге горит ровнее (steady)
+  const flick = (0.15 + w.s * 0.25 + 0.3 * (player.gust || 0)) * (player.steady ? 0.35 : 1) * Math.sin(t * (0.45 + w.s * 0.3 + 0.4 * (player.gust || 0)) + Math.sin(t * 0.1) * 2);
   const cx = x + sway, top = y - bob;
   // следы и тень — у земли
   X.globalAlpha = 0.35; r(x + 1, y + 23, 12, 1, NI); X.globalAlpha = 1;
@@ -55,9 +56,13 @@ export function drawPlayer(player) {
   const fx = cx + 5 + lean, fy = top + 9;
   r(fx, fy + 1, 2, 2, F0);
   r(fx, fy, 2, 2, F);
-  if (!low) r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), F);
+  // язычок: пламя встало свечкой (flare) — выше; на развилке тянется к выходу (tug)
+  const up = Math.round(3 * (player.flare || 0)), tg = player.tug, tx = tg ? (tg.x > 0 ? 2 : tg.x < 0 ? -1 : 0) : 0, ty = tg && tg.y < 0 ? 1 : 0;
+  if (!low || up) r(fx + (tg && tg.x ? tx : (flick > 0.1 ? 1 : 0)), fy - 1 - (flick > 0.25 ? 1 : 0) - up - ty, 1, 1 + (flick > 0.25 ? 1 : 0) + up + ty, F);
   if ((flick > 0.3 || (player.pulse || 0) > 0.45) && !ice) r(fx, fy, 1, 1, L1);   // в порыв вспыхивает; в ходе мха — на ударе сердца
-  if (!ice && t % 9 === 0 && ((t / 9) % 3 | 0) === 0) { X.globalAlpha = 0.6; r(fx + q(w.x * 3), fy - 3, 1, 1, SV); X.globalAlpha = 1; }   // искру сносит
+  if (!ice && t % 9 === 0 && ((t / 9) % 3 | 0) === 0) {                 // искру сносит ветром; на развилке — тянет к выходу
+    X.globalAlpha = 0.6; r(fx + (tg ? tg.x * 4 : q(w.x * 3)), fy - 3 + (tg ? tg.y * 6 : 0), 1, 1, SV); X.globalAlpha = 1;
+  }
   // ── капюшон: лица нет — тьма ──
   const hx = cx + 2 + lean, hy = top - 4;
   r(hx + 4, hy - 2, 1, 1, K2); r(hx + 3, hy - 1, 3, 1, K2);                // острие клобука

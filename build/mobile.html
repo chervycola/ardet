@@ -572,6 +572,7 @@ canvas#game {
   <div id="menu-inscription"></div>
   <div class="mi" data-a="look"><i>☠</i>ОСМОТРЕТЬ</div>
   <div class="mi" data-a="use"><i>✋</i>ИСПОЛЬЗОВАТЬ</div>
+  <div class="mi" data-a="alt"><i>☼</i>ПОДУТЬ</div>
   <div class="mi" data-a="talk"><i>💬</i>ГОВОРИТЬ</div>
   <div class="mi" data-a="listen"><i>♫</i>СЛУШАТЬ</div>
   <div class="mi" data-a="take"><i>◆</i>ВЗЯТЬ</div>
@@ -623,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='235ee64 · 2026-10-21';console.log('[оттиск]', '235ee64 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='1c61001 · 2026-10-21';console.log('[оттиск]', '1c61001 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -3373,6 +3374,40 @@ System.register("audio/audio", [], function (exports_16, context_16) {
         s.start();
     }
     exports_16("playMossGrow", playMossGrow);
+    // Вдох на пороге: подул на уголёк — короткий мягкий выдох
+    function playBlow() {
+        if (!ctx)
+            return;
+        noiseBreath(0.42, 0.05, 0.25, 900, 700, 0.045);
+    }
+    exports_16("playBlow", playBlow);
+    // ...и из глубины отвечает долгий втягивающий вдох: шум нарастает и светлеет, обрывается
+    function playInhale() {
+        if (!ctx)
+            return;
+        noiseBreath(2.3, 1.9, 0.12, 260, 1500, 0.07);
+    }
+    exports_16("playInhale", playInhale);
+    // дыхание: шум сквозь фильтр — нарастает за rise, стихает за fall; фильтр едет f0 → f1
+    function noiseBreath(dur, rise, fall, f0, f1, vol) {
+        const n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++)
+            d[i] = Math.random() * 2 - 1;
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t0 = ctx.currentTime;
+        s.buffer = b;
+        f.type = 'lowpass';
+        f.Q.value = 0.7;
+        f.frequency.setValueAtTime(f0, t0);
+        f.frequency.linearRampToValueAtTime(f1, t0 + rise);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(vol, t0 + rise);
+        g.gain.linearRampToValueAtTime(0.0001, t0 + Math.min(dur, rise + fall));
+        s.connect(f);
+        f.connect(g);
+        g.connect(masterGain);
+        s.start(t0);
+        s.stop(t0 + dur);
+    }
     function playTick(v) {
         if (!ctx || v <= 0.01)
             return;
@@ -19557,9 +19592,9 @@ System.register("content/underside", [], function (exports_55, context_55) {
         }
     };
 });
-System.register("world/underside", ["content/underside"], function (exports_56, context_56) {
+System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // где встать у вещи — точка героя (ноги — x+6, y+23)
     function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
@@ -19764,6 +19799,78 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
         return out;
     }
     exports_56("pathTo", pathTo);
+    function buildExits() {
+        if (!grid)
+            buildGrid();
+        exitD = new Int32Array(GW * GH).fill(-1);
+        let qh = 0, qt = 0;
+        for (const th of TH)
+            if (th.up) {
+                const c = nearestCell(th.at[0], th.at[1]);
+                if (c >= 0 && exitD[c] < 0) {
+                    exitD[c] = 0;
+                    queue[qt++] = c;
+                }
+            }
+        while (qh < qt) {
+            const c = queue[qh++], i = c % GW, j = (c - i) / GW;
+            for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const ni = i + di, nj = j + dj;
+                if (ni < 0 || nj < 0 || ni >= GW || nj >= GH)
+                    continue;
+                const n = nj * GW + ni;
+                if (!grid[n] || exitD[n] >= 0)
+                    continue;
+                exitD[n] = exitD[c] + 1;
+                queue[qt++] = n;
+            }
+        }
+    }
+    // -1 — не дойти (порода)
+    function exitDist(x, y) {
+        if (!exitD)
+            buildExits();
+        const c = nearestCell(x, y, 3);
+        return c < 0 ? -1 : exitD[c];
+    }
+    exports_56("exitDist", exitDist);
+    // на развилке огонёк тянется к ближнему выходу: куда шагнуть — {x, y}; не развилка — null
+    function tugAt(fx, fy) {
+        const f = FORKS.find(f => Math.abs(fx - f.x) < 26 && Math.abs(fy - f.y) < 26);
+        if (!f)
+            return null;
+        let best = null, bd = exitDist(f.x, f.y);
+        for (const [x, y] of DIRS) {
+            const d = exitDist(f.x + x * 30, f.y + y * 30);
+            if (d >= 0 && d < bd) {
+                bd = d;
+                best = { x, y };
+            }
+        }
+        return best;
+    }
+    exports_56("tugAt", tugAt);
+    // в глубину — от порога: куда уходит путь к середине своего хода (линии или хода мха)
+    function deepAt(fx, fy) {
+        const moss = placeAt(fx, fy) === 'moss', gx = moss ? (MOSS.x0 + MOSS.x1) / 2 : (L0.x0 + L0.x1) / 2;
+        const path = pathTo(fx, fy, gx, moss ? mossY(gx) + 12 : L0.y0 + T.FH / 2);
+        const w = path && path[0], d = w ? Math.hypot(w.x - fx, w.y - fy) : 0;
+        return d > 0.5 ? { x: (w.x - fx) / d, y: (w.y - fy) / d } : { x: 0, y: 1 };
+    }
+    exports_56("deepAt", deepAt);
+    // чужие сквозняки у уголька 0..1: крипта раз в шесть секунд выдыхает вверх по
+    // ступеням (пыль — render/underside.js), из тоннеля метро тянет, поезд дует
+    function draftAt(fx, fy, train) {
+        let k = 0;
+        const st = TH.find(th => th.id === 'u_up_crypt'), ph = time_js_6.t % 360;
+        if (ph < 50 && Math.hypot(fx - st.at[0], fy - st.at[1]) < 70)
+            k = 1 - 0.5 * ph / 50;
+        if (fy > L0.y0 && fy < L0.y0 + T.FH + 2 && Math.abs(fx - 1724) < 90)
+            k = Math.max(k, 0.35);
+        if (train > 40 && train < 220)
+            k = 1;
+        return k;
+    }
     // где шёпоту встать у стены: дальняя стена над полом — в зале, в жиле, на линии
     // (вдоль, не за край); в штреке с севера на юг — в боковой стенке, сбоку
     function wallSpot(fx, fy, x) {
@@ -19777,6 +19884,7 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
             return [fit(L.x0, L.x1 + T.FW), L.y0 - 13];
         return [x, fy - 20];
     }
+    exports_56("wallSpot", wallSpot);
     function murmurAt(fx, fy, greeted) {
         let best = null, bd = 420;
         for (const a of MURMUR_AT) {
@@ -19797,9 +19905,12 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
     exports_56("murmurAt", murmurAt);
     function underLights(px, py) {
         const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
+        // вдох на пороге: пламя встало свечкой (fl), после — ровнее; чужой сквозняк (g) прибивает
+        // огонёк, пока не поздоровался; на развилке огонёк тянется к выходу
+        const fl = under.flare, g = under.draft, tg = under.tug, ex = px + (tg ? tg.x * 3 : 0), ey = py + (tg ? tg.y * 3 : 0);
         const L = [
-            { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k) * (1 - 0.3 * m) * dk, color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: (1.1 - 0.3 * k) * (1 + 0.5 * moss.pulse * m) },
-            { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k) * (1 - 0.78 * m), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 * (1 - 0.55 * m) },
+            { x: ex, y: ey, r: (40 + 22 * e) * (1 - 0.35 * k) * (1 - 0.3 * m) * dk * (1 - 0.3 * g) * (1 + 0.45 * fl), color: mix(EMBER, COLD, k), flicker: (under.greeted ? 0.03 : 0.1 + 0.25 * g) * (1 - k), intensity: (1.1 - 0.3 * k) * (1 + 0.5 * moss.pulse * m) * (1 + 0.4 * fl) },
+            { x: ex, y: ey, r: (118 + 42 * e) * (1 - 0.3 * k) * (1 - 0.78 * m) * (1 - 0.18 * g) * (1 + 0.25 * fl), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 * (1 - 0.55 * m) },
             { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
             { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 }, // окно-экран бункера: лес светит
             { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 }, // облако: свет искусственный, ровный
@@ -19822,6 +19933,9 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
         setters: [
             function (underside_js_1_1) {
                 underside_js_1 = underside_js_1_1;
+            },
+            function (time_js_6_1) {
+                time_js_6 = time_js_6_1;
             }
         ],
         execute: function () {
@@ -19965,6 +20079,9 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                 if (th.up) {
                     o.useAction = 'under_up';
                     o.useLabel = '<i>↑</i>ПОДНЯТЬСЯ';
+                    o.alt = 'under_greet';
+                    o.altLabel = '<i>☼</i>ПОДУТЬ НА УГОЛЁК';
+                    o.altShown = () => !under.greeted && !under.greetT; // вдох на пороге
                 }
                 if (th.solid)
                     SOLIDS.push(th.solid);
@@ -19988,6 +20105,25 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
             C = 4, GW = Math.ceil(UW / C), GH = Math.ceil(UH / C);
             grid = null, prev = null, stamp = null, mark = 0, queue = null;
             cellOf = (x, y) => { const i = Math.floor(x / C), j = Math.floor(y / C); return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
+            // ── до выхода: сколько клеток пути до ближней лестницы (обход в ширину от всех сразу) ──
+            exitD = null;
+            // развилки: где штрек с севера или с юга входит в линию
+            L0 = TUBES[0];
+            exports_56("FORKS", FORKS = []);
+            for (const tb of TUBES)
+                if (tb.ns && (tb.y1 === L0.y0 || tb.y0 === L0.y0 + T.FH)) {
+                    const x = tb.x0 + T.FW / 2;
+                    if (!FORKS.some(f => Math.abs(f.x - x) < 30))
+                        FORKS.push({ x, y: L0.y0 + T.FH / 2 });
+                }
+            DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            // ── вдох на пороге (канон, ритуал «Вдох на пороге», U1–U7): ритуал вежливости всей
+            // изнанки. У лестницы — порога хода — подуть на уголёк. Через секунду из глубины
+            // отвечает долгий втягивающий вдох: пламя встаёт свечкой, сквозняк тянет внутрь,
+            // шёпоты отходят к стенам. Один раз за спуск; после обмена дыханием уголёк горит
+            // ровнее, чужие сквозняки его не трогают, на развилках огонёк чуть тянется к выходу —
+            // не ведёт, но подсказывает. Не поздороваться можно: тогда шёпоты идут вплотную
+            exports_56("GREET_LINE", GREET_LINE = 'Посетитель поздоровался. Отмечено всеми.');
             // ── ход мха: шаг по стуку сердца (канон U6, ритуал «Шаг по стуку сердца») ──
             // Мох глушит шаги начисто; идти можно только в такт сердцу. Сердце бьётся раз в
             // секунду: прошёл за удар не больше шага — мох вспыхивает бледно-зелёным под ногой
@@ -20128,6 +20264,11 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                 quench: false, // погасить шёпот, что пишется (тишина)
                 wdTold: false, // в криосклепе сказано: «Шёпотов нет»
                 tick: 0, // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
+                greetT: 0, // вдох на пороге: шаг обмена дыханием (0 — нет)
+                flare: 0, // пламя встало свечкой (0..1, опадает за три секунды)
+                inhale: null, // тоннель вдохнул { x, y, dx, dy } — main даёт звук, пыль внутрь, шёпоты к стенам
+                draft: 0, // чужой сквозняк у уголька 0..1 (поздоровался — не трогает)
+                tug: null, // на развилке огонёк тянется к выходу { x, y }
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
                 ride: false, // поезд забрал — main выводит к колодцу городка
@@ -20162,6 +20303,23 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                     }
                     // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
                     this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
+                    // вдох на пороге: подул — через секунду тоннель отвечает вдохом, ещё через полторы — строка
+                    if (this.greetT > 0) {
+                        if (++this.greetT === 60) {
+                            this.greeted = true;
+                            this.flare = 1;
+                            const d = deepAt(fx, fy);
+                            this.inhale = { x: fx, y: fy - 13, dx: d.x, dy: d.y };
+                        }
+                        else if (this.greetT >= 150) {
+                            this.greetT = 0;
+                            this.say = GREET_LINE;
+                        }
+                    }
+                    if (this.flare > 0)
+                        this.flare = Math.max(0, this.flare - 1 / 180);
+                    this.draft = this.greeted ? 0 : draftAt(fx, fy, this.train);
+                    this.tug = this.greeted ? tugAt(fx, fy) : null;
                     if (--this.murmur <= 0) {
                         this.murmur = 1200 + Math.floor(Math.random() * 1200);
                         if (!this.silent(at))
@@ -20198,6 +20356,13 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                         this.train = 1;
                     }
                 },
+                // подул на уголёк у порога (раз за спуск): ответ — в step
+                greet() {
+                    if (this.greeted || this.greetT)
+                        return false;
+                    this.greetT = 1;
+                    return true;
+                },
                 // тишина: в криосклепе, в ходе мха, в окнах тишины ритуалов
                 silent(at) { return at === 'wd' || at === 'moss' || this.hushF > 0 || this.hushS > 0; },
                 // взял билет со скамьи
@@ -20231,9 +20396,14 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                     this.quench = false;
                     this.wdTold = false;
                     this.tick = 0;
+                    this.greetT = 0;
+                    this.flare = 0;
+                    this.inhale = null;
+                    this.draft = 0;
+                    this.tug = null;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; moss.reset(); },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; moss.reset(); },
                 save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
                 load(d) {
                     if (!d)
@@ -20327,7 +20497,7 @@ System.register("world/redNoon", [], function (exports_57, context_57) {
 });
 System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"], function (exports_58, context_58) {
     "use strict";
-    var time_js_6, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
+    var time_js_7, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
     var __moduleName = context_58 && context_58.id;
     // шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень;
     // faint — на границе слышимости (чернила вдвое бледнее); follow() → [x, y] — шёпот
@@ -20335,10 +20505,14 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
     function sayAt(text, x, y, faint = false, follow = null) {
         if (whisper.text || redNoon_js_1.redNoon.active)
             return false;
-        whisper = { text, x, y, t0: time_js_6.t, prep: null, k: faint ? 0.5 : 1, follow };
+        whisper = { text, x, y, t0: time_js_7.t, prep: null, k: faint ? 0.5 : 1, follow };
         return true;
     }
     exports_58("sayAt", sayAt);
+    // шёпот отходит в сторону, к стене (вдох на пороге): перестаёт идти следом
+    function drift(x, y) { if (whisper.text && whisper.follow)
+        whisper.follow = () => [x, y]; }
+    exports_58("drift", drift);
     // шаг мира: шёпот, что идёт следом, догоняет — мягко
     function stepWhisper() {
         const w = whisper;
@@ -20358,11 +20532,11 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
             return;
         } // перо ещё не коснулось
-        const a = time_js_6.t - w.t0;
+        const a = time_js_7.t - w.t0;
         if (a >= w.prep.write + HOLD)
             return;
         w.cut = Math.min(a, w.prep.write);
-        w.t0 = time_js_6.t - w.prep.write - HOLD;
+        w.t0 = time_js_7.t - w.prep.write - HOLD;
         w.quenched = true;
     }
     exports_58("quench", quench);
@@ -20371,7 +20545,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
         if (!whisper.text)
             return;
         whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
-        lastWhisperEnd = time_js_6.t;
+        lastWhisperEnd = time_js_7.t;
     }
     exports_58("clear", clear);
     // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
@@ -20381,7 +20555,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             return;
         if (redNoon_js_1.redNoon.active)
             return; // красный полдень: шёпоты молчат
-        if (time_js_6.t - lastWhisperEnd < COOLDOWN)
+        if (time_js_7.t - lastWhisperEnd < COOLDOWN)
             return;
         for (const l of locations) {
             if (!WHISPERS[l.id] || hush.has(l.id))
@@ -20392,7 +20566,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
                 // ночью шёпоты живут только у света: в темноте мир не отвечает
                 if (litAt && !l.light && !litAt(l.x + l.w / 2, l.y + l.h / 2))
                     continue;
-                whisper = { text: WHISPERS[l.id], x: l.x + l.w / 2, y: l.y - 10, t0: time_js_6.t, prep: null };
+                whisper = { text: WHISPERS[l.id], x: l.x + l.w / 2, y: l.y - 10, t0: time_js_7.t, prep: null };
                 break;
             }
         }
@@ -20507,17 +20681,17 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             }
         }
         const P = w.prep;
-        let a = time_js_6.t - w.t0;
+        let a = time_js_7.t - w.t0;
         if (redNoon_js_1.redNoon.active && a < P.write + HOLD) { // полдень: недописанное так и гаснет недописанным
             if (w.cut === undefined)
                 w.cut = Math.min(a, P.write);
-            w.t0 = time_js_6.t - P.write - HOLD;
+            w.t0 = time_js_7.t - P.write - HOLD;
             a = P.write + HOLD;
         }
         const wrote = w.cut === undefined ? a : w.cut; // докуда дошло перо
         if (a >= P.write + HOLD + FADE) {
             whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
-            lastWhisperEnd = time_js_6.t;
+            lastWhisperEnd = time_js_7.t;
             return;
         }
         const fade = (a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
@@ -20561,8 +20735,8 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
     exports_58("_reset", _reset);
     return {
         setters: [
-            function (time_js_6_1) {
-                time_js_6 = time_js_6_1;
+            function (time_js_7_1) {
+                time_js_7 = time_js_7_1;
             },
             function (scaler_js_11_1) {
                 scaler_js_11 = scaler_js_11_1;
@@ -22082,7 +22256,7 @@ System.register("world/landmarks", ["world/disc", "world/relief", "world/arterie
 });
 System.register("render/things", ["world/disc", "content/ulitsa_db", "render/grass", "core/time"], function (exports_65, context_65) {
     "use strict";
-    var disc_js_20, ulitsa_db_js_4, grass_js_1, time_js_7, NI, BO, AS, MG, L1, L2, K0, K1, K2, K4, EDGE, SOOT, PX, PT, PB, css, mix, GROUND, BURY, DAMP, baked, solid, mixPx, setPx;
+    var disc_js_20, ulitsa_db_js_4, grass_js_1, time_js_8, NI, BO, AS, MG, L1, L2, K0, K1, K2, K4, EDGE, SOOT, PX, PT, PB, css, mix, GROUND, BURY, DAMP, baked, solid, mixPx, setPx;
     var __moduleName = context_65 && context_65.id;
     function ground(ring) {
         if (GROUND[ring])
@@ -22155,7 +22329,7 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
             const U = canvas(W, H), O = canvas(W, H);
             contact(U.getContext('2d'), foot, G);
             footing(O.getContext('2d'), foot, G, W0, 0, rng(W0.seed * 13 + 5));
-            out = { U, O, draw(ctx) { ctx.drawImage(U, X0, Y0); T.src(ctx, T.x, T.gy, time_js_7.t); ctx.drawImage(O, X0, Y0); } };
+            out = { U, O, draw(ctx) { ctx.drawImage(U, X0, Y0); T.src(ctx, T.x, T.gy, time_js_8.t); ctx.drawImage(O, X0, Y0); } };
         }
         else {
             const R = rng(W0.seed * 31 + 17);
@@ -22424,8 +22598,8 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
             function (grass_js_1_1) {
                 grass_js_1 = grass_js_1_1;
             },
-            function (time_js_7_1) {
-                time_js_7 = time_js_7_1;
+            function (time_js_8_1) {
+                time_js_8 = time_js_8_1;
             }
         ],
         execute: function () {
@@ -23139,7 +23313,7 @@ System.register("render/ground", ["content/ulitsa_db", "world/disc", "world/arte
 });
 System.register("render/grass", ["world/wind", "world/disc", "render/draw", "render/ground", "world/arteries", "world/fields", "content/ulitsa_db", "core/time", "render/scaler"], function (exports_68, context_68) {
     "use strict";
-    var wind_js_4, disc_js_23, draw_js_2, ground_js_1, arteries_js_7, fields_js_4, ulitsa_db_js_6, time_js_8, scaler_js_13, CELL, DENS, MIST, DRY, DARK, PAL, grassPalette, cache, trail;
+    var wind_js_4, disc_js_23, draw_js_2, ground_js_1, arteries_js_7, fields_js_4, ulitsa_db_js_6, time_js_9, scaler_js_13, CELL, DENS, MIST, DRY, DARK, PAL, grassPalette, cache, trail;
     var __moduleName = context_68 && context_68.id;
     function rgb(h) { const v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
     function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
@@ -23194,7 +23368,7 @@ System.register("render/grass", ["world/wind", "world/disc", "render/draw", "ren
             p.age++;
         while (trail.length && trail[0].age > 42)
             trail.shift();
-        if (player.moving && (time_js_8.t & 1) === 0)
+        if (player.moving && (time_js_9.t & 1) === 0)
             trail.push({ x: player.x + 6, y: player.y + 23, age: 0 });
         if (trail.length > 24)
             trail.shift();
@@ -23212,7 +23386,7 @@ System.register("render/grass", ["world/wind", "world/disc", "render/draw", "ren
                     continue;
                 const w = wind_js_4.wind.at(c.x, c.y);
                 // ветер клонит, порыв качает; в бурю дрожь чаще и шире
-                let lean = w.x * 4.2 + Math.sin(time_js_8.t * (0.05 + w.s * 0.22) + c.ph) * (0.25 + w.s * 0.9);
+                let lean = w.x * 4.2 + Math.sin(time_js_9.t * (0.05 + w.s * 0.22) + c.ph) * (0.25 + w.s * 0.9);
                 // странник: пучок отклоняется от него и приминается; выпрямляется не сразу
                 let flat = 0;
                 if (Math.abs(c.x - fx) < 70 && Math.abs(c.y - fy) < 70) {
@@ -23268,8 +23442,8 @@ System.register("render/grass", ["world/wind", "world/disc", "render/draw", "ren
             function (ulitsa_db_js_6_1) {
                 ulitsa_db_js_6 = ulitsa_db_js_6_1;
             },
-            function (time_js_8_1) {
-                time_js_8 = time_js_8_1;
+            function (time_js_9_1) {
+                time_js_9 = time_js_9_1;
             },
             function (scaler_js_13_1) {
                 scaler_js_13 = scaler_js_13_1;
@@ -23293,7 +23467,7 @@ System.register("render/grass", ["world/wind", "world/disc", "render/draw", "ren
 });
 System.register("render/bunting", ["world/hang", "world/wind", "core/time"], function (exports_69, context_69) {
     "use strict";
-    var hang_js_7, wind_js_5, time_js_9, CIN, BONE, ROPE, POLE, POLE_LIT, POLE_H, SEGS, SLACK, LIFT_R, geo, buntingPasses, _geo;
+    var hang_js_7, wind_js_5, time_js_10, CIN, BONE, ROPE, POLE, POLE_LIT, POLE_H, SEGS, SLACK, LIFT_R, geo, buntingPasses, _geo;
     var __moduleName = context_69 && context_69.id;
     function initBunting(locations) {
         geo = null;
@@ -23354,14 +23528,14 @@ System.register("render/bunting", ["world/hang", "world/wind", "core/time"], fun
         }
         for (let i = i0; i <= i1; i++) {
             const p = P[i], w = wind_js_5.wind.at(p.x, geo.gyA);
-            let lean = w.x * 2.4 + Math.sin(time_js_9.t * (0.12 + w.s * 0.3) + i * 1.7) * (0.5 + w.s * 0.9);
+            let lean = w.x * 2.4 + Math.sin(time_js_10.t * (0.12 + w.s * 0.3) + i * 1.7) * (0.5 + w.s * 0.9);
             let len = 4;
             if (geo.fireX !== null) { // над огнём флажок задирает тягой
                 const d = Math.abs(p.x - geo.fireX);
                 if (d < LIFT_R) {
                     const k = 1 - d / LIFT_R;
                     len = Math.round(4 - k * 7.5);
-                    lean += Math.sin(time_js_9.t * 0.5 + i) * k * 1.5;
+                    lean += Math.sin(time_js_10.t * 0.5 + i) * k * 1.5;
                 }
             }
             if (len === 0)
@@ -23385,8 +23559,8 @@ System.register("render/bunting", ["world/hang", "world/wind", "core/time"], fun
             function (wind_js_5_1) {
                 wind_js_5 = wind_js_5_1;
             },
-            function (time_js_9_1) {
-                time_js_9 = time_js_9_1;
+            function (time_js_10_1) {
+                time_js_10 = time_js_10_1;
             }
         ],
         execute: function () {
@@ -23402,7 +23576,7 @@ System.register("render/bunting", ["world/hang", "world/wind", "core/time"], fun
 });
 System.register("render/haze", ["core/time", "render/scaler", "world/wind", "world/disc", "render/draw"], function (exports_70, context_70) {
     "use strict";
-    var time_js_10, scaler_js_14, wind_js_6, disc_js_24, draw_js_3, OFF, CH, PATCH, FIRE_IN, FIRE_OUT, buf, bctx, cam, cols, _cols;
+    var time_js_11, scaler_js_14, wind_js_6, disc_js_24, draw_js_3, OFF, CH, PATCH, FIRE_IN, FIRE_OUT, buf, bctx, cam, cols, _cols;
     var __moduleName = context_70 && context_70.id;
     // столб: x, y0 — где начинается (над пламенем), H — высота, w0 — полуширина
     // у основания, grow — на сколько шире к верху, amp — сила, lean — наклон
@@ -23464,7 +23638,7 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
                 const heat = Math.max(heatAt(px, py), noon * 0.9);
                 if (heat <= 0)
                     continue;
-                const breath = Math.sin(time_js_10.t * (0.004 + draw_js_3.hash(i, j, 6.3) * 0.004) + draw_js_3.hash(i, j, 8.9) * 6.28);
+                const breath = Math.sin(time_js_11.t * (0.004 + draw_js_3.hash(i, j, 6.3) * 0.004) + draw_js_3.hash(i, j, 8.9) * 6.28);
                 if (breath <= 0.15)
                     continue;
                 cols.push(column(px, py, 26, 12, 0.35, 1.2 * heat * Math.min(1, (breath - 0.15) * 2.5)));
@@ -23504,7 +23678,7 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
                 const wy = vy + cam.y;
                 let run = 0, rx = 0; // соседние куски с одним сдвигом — одним вызовом
                 for (let vx = r.x0; vx <= r.x1; vx += CH) {
-                    const sh = vx < r.x1 ? shiftAt(c, vx + CH / 2 + cam.x, wy, time_js_10.t) : 0;
+                    const sh = vx < r.x1 ? shiftAt(c, vx + CH / 2 + cam.x, wy, time_js_11.t) : 0;
                     if (sh === run && sh)
                         continue;
                     if (run)
@@ -23518,8 +23692,8 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
     exports_70("hazeComposite", hazeComposite);
     return {
         setters: [
-            function (time_js_10_1) {
-                time_js_10 = time_js_10_1;
+            function (time_js_11_1) {
+                time_js_11 = time_js_11_1;
             },
             function (scaler_js_14_1) {
                 scaler_js_14 = scaler_js_14_1;
@@ -23866,7 +24040,7 @@ System.register("world/sky", [], function (exports_72, context_72) {
 });
 System.register("render/pen", ["core/time", "render/scaler"], function (exports_73, context_73) {
     "use strict";
-    var time_js_11, scaler_js_15, DAY, DUSK, NIGHT, GAP, DOTS, OFF, press, baseC, baseX, workC, workX, builtKey, smooth, dryOf, getPress;
+    var time_js_12, scaler_js_15, DAY, DUSK, NIGHT, GAP, DOTS, OFF, press, baseC, baseX, workC, workX, builtKey, smooth, dryOf, getPress;
     var __moduleName = context_73 && context_73.id;
     // нажим по фазе: рассвет — свежий (1.15), к концу дня 0.95, к ночи 0.7,
     // к утру 0.55 (исписалось); на рассвете обмакнули — снова 1.15
@@ -23936,7 +24110,7 @@ System.register("render/pen", ["core/time", "render/scaler"], function (exports_
         if (dry <= 0.02)
             return;
         const s = main.width / scaler_js_15.scaler.vw, W = scaler_js_15.scaler.vw, H = scaler_js_15.scaler.vh;
-        const B = base(W, H, dry, Math.floor(time_js_11.t / 8) % 64);
+        const B = base(W, H, dry, Math.floor(time_js_12.t / 8) % 64);
         if (!workC) {
             workC = document.createElement('canvas');
             workX = workC.getContext('2d');
@@ -23963,8 +24137,8 @@ System.register("render/pen", ["core/time", "render/scaler"], function (exports_
     exports_73("penComposite", penComposite);
     return {
         setters: [
-            function (time_js_11_1) {
-                time_js_11 = time_js_11_1;
+            function (time_js_12_1) {
+                time_js_12 = time_js_12_1;
             },
             function (scaler_js_15_1) {
                 scaler_js_15 = scaler_js_15_1;
@@ -27656,7 +27830,7 @@ System.register("core/input", ["render/scaler"], function (exports_86, context_8
 });
 System.register("sprites/player", ["render/context", "core/time", "world/wind"], function (exports_87, context_87) {
     "use strict";
-    var context_js_2, time_js_12, wind_js_10, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, q, r, TIP;
+    var context_js_2, time_js_13, wind_js_10, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, q, r, TIP;
     var __moduleName = context_87 && context_87.id;
     function tier(x0, y0, w, h, off, ph) {
         for (let k = 0; k < w; k++) {
@@ -27673,22 +27847,23 @@ System.register("sprites/player", ["render/context", "core/time", "world/wind"],
     function drawPlayer(player) {
         const x = Math.floor(player.x), y = Math.floor(player.y);
         const moving = player.moving;
-        const bob = q(Math.sin(time_js_12.t * 0.04) * 1.2 + (moving ? Math.abs(Math.sin(time_js_12.t * 0.18)) * 0.6 : 0));
-        const sway = q(Math.sin(time_js_12.t * 0.02) * 0.6);
+        const bob = q(Math.sin(time_js_13.t * 0.04) * 1.2 + (moving ? Math.abs(Math.sin(time_js_13.t * 0.18)) * 0.6 : 0));
+        const sway = q(Math.sin(time_js_13.t * 0.02) * 0.6);
         const w = wind_js_10.wind.at(x + 6, y + 12), vx = player.vx || 0;
         const trail = Math.max(-2.5, Math.min(2.5, w.x * 2.4 - vx * 0.7)); // подол отстаёт и уходит по ветру
         const lean = Math.max(-1, Math.min(1, q(vx * 0.45)));
-        const flick = (0.15 + w.s * 0.25) * Math.sin(time_js_12.t * (0.45 + w.s * 0.3) + Math.sin(time_js_12.t * 0.1) * 2);
+        // огонёк дрожит в порыв; под землёй его прибивает чужой сквозняк (gust), а после вдоха на пороге горит ровнее (steady)
+        const flick = (0.15 + w.s * 0.25 + 0.3 * (player.gust || 0)) * (player.steady ? 0.35 : 1) * Math.sin(time_js_13.t * (0.45 + w.s * 0.3 + 0.4 * (player.gust || 0)) + Math.sin(time_js_13.t * 0.1) * 2);
         const cx = x + sway, top = y - bob;
         // следы и тень — у земли
         context_js_2.X.globalAlpha = 0.35;
         r(x + 1, y + 23, 12, 1, NI);
         context_js_2.X.globalAlpha = 1;
         // ── ярусы плаща снизу вверх: подол, середина, оплечье ──
-        const ph = (time_js_12.t >> 4) & 7;
+        const ph = (time_js_13.t >> 4) & 7;
         tier(cx - 2, top + 15, 18, 6, trail, ph);
         r(cx - 1, top + 15, 16, 1, K0); // тень от среднего яруса
-        tier(cx - 1, top + 9, 16, 6, trail * 0.55 + Math.sin(time_js_12.t * 0.05) * 0.4, ph + 5);
+        tier(cx - 1, top + 9, 16, 6, trail * 0.55 + Math.sin(time_js_13.t * 0.05) * 0.4, ph + 5);
         r(cx, top + 9, 14, 1, K0); // тень от оплечья
         tier(cx + 1, top + 4, 12, 5, trail * 0.25, ph + 9);
         // ── огонёк у сердца: свеча, сплошной; в порыв дрожит ──
@@ -27697,15 +27872,17 @@ System.register("sprites/player", ["render/context", "core/time", "world/wind"],
         const fx = cx + 5 + lean, fy = top + 9;
         r(fx, fy + 1, 2, 2, F0);
         r(fx, fy, 2, 2, F);
-        if (!low)
-            r(fx + (flick > 0.1 ? 1 : 0), fy - 1 - (flick > 0.25 ? 1 : 0), 1, 1 + (flick > 0.25 ? 1 : 0), F);
+        // язычок: пламя встало свечкой (flare) — выше; на развилке тянется к выходу (tug)
+        const up = Math.round(3 * (player.flare || 0)), tg = player.tug, tx = tg ? (tg.x > 0 ? 2 : tg.x < 0 ? -1 : 0) : 0, ty = tg && tg.y < 0 ? 1 : 0;
+        if (!low || up)
+            r(fx + (tg && tg.x ? tx : (flick > 0.1 ? 1 : 0)), fy - 1 - (flick > 0.25 ? 1 : 0) - up - ty, 1, 1 + (flick > 0.25 ? 1 : 0) + up + ty, F);
         if ((flick > 0.3 || (player.pulse || 0) > 0.45) && !ice)
             r(fx, fy, 1, 1, L1); // в порыв вспыхивает; в ходе мха — на ударе сердца
-        if (!ice && time_js_12.t % 9 === 0 && ((time_js_12.t / 9) % 3 | 0) === 0) {
+        if (!ice && time_js_13.t % 9 === 0 && ((time_js_13.t / 9) % 3 | 0) === 0) { // искру сносит ветром; на развилке — тянет к выходу
             context_js_2.X.globalAlpha = 0.6;
-            r(fx + q(w.x * 3), fy - 3, 1, 1, SV);
+            r(fx + (tg ? tg.x * 4 : q(w.x * 3)), fy - 3 + (tg ? tg.y * 6 : 0), 1, 1, SV);
             context_js_2.X.globalAlpha = 1;
-        } // искру сносит
+        }
         // ── капюшон: лица нет — тьма ──
         const hx = cx + 2 + lean, hy = top - 4;
         r(hx + 4, hy - 2, 1, 1, K2);
@@ -27727,8 +27904,8 @@ System.register("sprites/player", ["render/context", "core/time", "world/wind"],
             function (context_js_2_1) {
                 context_js_2 = context_js_2_1;
             },
-            function (time_js_12_1) {
-                time_js_12 = time_js_12_1;
+            function (time_js_13_1) {
+                time_js_13 = time_js_13_1;
             },
             function (wind_js_10_1) {
                 wind_js_10 = wind_js_10_1;
@@ -27746,7 +27923,7 @@ System.register("sprites/player", ["render/context", "core/time", "world/wind"],
 });
 System.register("sprites/npcs/jester", ["core/time", "render/context"], function (exports_88, context_88) {
     "use strict";
-    var time_js_13, context_js_3, NI, BO, AS, SV, KV, K0, K1, K3, K4, BR2, L1, L2, S0, S1, q, r, line, npcProximity, WEAPONS, KINDS, THROW, HIGH;
+    var time_js_14, context_js_3, NI, BO, AS, SV, KV, K0, K1, K3, K4, BR2, L1, L2, S0, S1, q, r, line, npcProximity, WEAPONS, KINDS, THROW, HIGH;
     var __moduleName = context_88 && context_88.id;
     function setProximity(v) { npcProximity = v; }
     exports_88("setProximity", setProximity);
@@ -27767,8 +27944,8 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         const home = opts.moving === undefined, moving = !!opts.moving;
         const x0 = q(jx), y0 = q(jy);
         // пошатывается: таз в одну сторону, плечи — в другую, голова запаздывает
-        const sw = Math.sin(time_js_13.t * 0.0045), hip = moving ? 0 : q(sw), sh = moving ? 0 : -q(sw * 0.8), hd = moving ? 0 : q(Math.sin(time_js_13.t * 0.0045 - 0.8));
-        const step = moving ? Math.sin(time_js_13.t * 0.18) : 0, bob = moving ? q(Math.abs(step) * 1.5) : 0;
+        const sw = Math.sin(time_js_14.t * 0.0045), hip = moving ? 0 : q(sw), sh = moving ? 0 : -q(sw * 0.8), hd = moving ? 0 : q(Math.sin(time_js_14.t * 0.0045 - 0.8));
+        const step = moving ? Math.sin(time_js_14.t * 0.18) : 0, bob = moving ? q(Math.abs(step) * 1.5) : 0;
         const cx = x0 + 12, by = y0 - bob, G = y0 + 46;
         // ── у костра: карты-надгробия в земле ──
         if (home) {
@@ -27782,14 +27959,14 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         const hx = cx - 4 + sh + hd, hy = by + 1;
         for (let a = 0; a < 44; a++) {
             const u = a / 44 * Math.PI * 2, rx = hx + 4 + Math.cos(u) * 9, ry = hy + 4 + Math.sin(u) * 8;
-            r(rx, ry, 1, 1, a % 6 === (time_js_13.t >> 4) % 6 ? K1 : KV);
+            r(rx, ry, 1, 1, a % 6 === (time_js_14.t >> 4) % 6 ? K1 : KV);
         }
         for (let i = 0; i < 4; i++) { // язычки по верху кольца
-            const u = Math.PI * (1.2 + i * 0.2), h = 1 + (((time_js_13.t >> 3) + i * 3) % 3 === 0 ? 1 : 0);
+            const u = Math.PI * (1.2 + i * 0.2), h = 1 + (((time_js_14.t >> 3) + i * 3) % 3 === 0 ? 1 : 0);
             r(hx + 4 + Math.cos(u) * 9, hy + 4 + Math.sin(u) * 8 - h, 1, h, SV);
         }
         // ── хвост с лезвием — из-за спины, вьётся ──
-        const tw = Math.sin(time_js_13.t * 0.01) * (moving ? 3 : 1.5);
+        const tw = Math.sin(time_js_14.t * 0.01) * (moving ? 3 : 1.5);
         let px0 = cx + 4 + hip, py0 = by + 27;
         for (let k = 1; k <= 12; k++) {
             const nx = cx + 4 + hip + k * 0.9 + Math.sin(k * 0.5) * 1.5 + tw * k / 12, ny = by + 27 + k * 0.9 - (k > 8 ? (k - 8) * 1.4 : 0);
@@ -27838,7 +28015,7 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         }
         // ── руки: обе жонглируют — кисть подаётся в такт броску ──
         const sL = { x: tx - 1, y: ty + 2 }, sR = { x: tx + 11, y: ty + 2 };
-        const swing = moving ? q(step * 1.5) : 0, beat = (time_js_13.t % (THROW / 1.5 | 0)) / (THROW / 1.5 | 0), even = Math.floor(time_js_13.t / (THROW / 1.5 | 0)) & 1;
+        const swing = moving ? q(step * 1.5) : 0, beat = (time_js_14.t % (THROW / 1.5 | 0)) / (THROW / 1.5 | 0), even = Math.floor(time_js_14.t / (THROW / 1.5 | 0)) & 1;
         const hL = { x: sL.x - 6 + swing, y: sL.y + 9 - (even === 0 && beat < 0.3 ? 1 : 0) }; // руки в стороны, у пояса
         const hR = { x: sR.x + 6 - swing, y: sR.y + 9 - (even === 1 && beat < 0.3 ? 1 : 0) };
         line(sL.x, sL.y, hL.x, hL.y, NI);
@@ -27853,7 +28030,7 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         r(hx + 1, hy + 3, 3, 4, K0);
         r(hx + 2, hy + 3, 1, 4, KV);
         r(hx + 1, hy + 4, 3, 1, KV); // глазница, в ней крест
-        const blink = time_js_13.t % 900 < 6;
+        const blink = time_js_14.t % 900 < 6;
         if (blink)
             r(hx + 5, hy + 4, 2, 1, K1);
         else {
@@ -27870,7 +28047,7 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         r(hx - 1, hy - 1, 10, 2, KV);
         r(hx - 1, hy - 1, 10, 1, K1);
         r(hx - 1, hy, 1, 1, BO);
-        const hs = Math.sin(time_js_13.t * 0.009) * (moving ? 1.5 : 0.8);
+        const hs = Math.sin(time_js_14.t * 0.009) * (moving ? 1.5 : 0.8);
         const horn = (pts, c) => { for (const [ax, ay] of pts)
             r(hx + ax, hy + ay, 2, 2, c); };
         horn([[-1, -3], [-3, -5], [-5, -7], [-6 + q(hs), -9]], KV);
@@ -27885,15 +28062,15 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         r(hR.x, hR.y, 2, 2, BO); // кулаки
         const LOOP = THROW * 2;
         for (let i = 0; i < 3; i++) {
-            const tt = time_js_13.t + i * LOOP / 3, ph = tt % LOOP, toR = ph < THROW, u = (ph % THROW) / THROW;
+            const tt = time_js_14.t + i * LOOP / 3, ph = tt % LOOP, toR = ph < THROW, u = (ph % THROW) / THROW;
             const a = toR ? hL : hR, b = toR ? hR : hL, H = toR ? HIGH : HIGH - 5; // встречные дуги — на разной высоте, над головой
             const cx2 = a.x + 1 + (b.x - a.x) * u, cy2 = a.y - 1 + (b.y - a.y) * u - Math.sin(u * Math.PI) * H;
             const kind = KINDS[(Math.floor(tt / LOOP / 3) * 2 + i * 2) % KINDS.length];
             weapon(kind, cx2, cy2, u * Math.PI * 2 * (toR ? 1 : -1) + i * 2.1 - Math.PI / 2);
         }
         // ── «ХА!» вблизи ──
-        if (npcProximity > 0.3 && time_js_13.t % 80 < 20) {
-            const laughPh = (time_js_13.t % 80) / 20;
+        if (npcProximity > 0.3 && time_js_14.t % 80 < 20) {
+            const laughPh = (time_js_14.t % 80) / 20;
             context_js_3.X.globalAlpha = (1 - laughPh) * npcProximity * 0.7;
             context_js_3.X.fillStyle = KV;
             context_js_3.X.font = '6px "Press Start 2P"';
@@ -27904,8 +28081,8 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
     exports_88("drawNPC_jester", drawNPC_jester);
     return {
         setters: [
-            function (time_js_13_1) {
-                time_js_13 = time_js_13_1;
+            function (time_js_14_1) {
+                time_js_14 = time_js_14_1;
             },
             function (context_js_3_1) {
                 context_js_3 = context_js_3_1;
@@ -27935,7 +28112,7 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
 });
 System.register("sprites/npcs/sol", ["core/time", "render/context"], function (exports_89, context_89) {
     "use strict";
-    var time_js_14, context_js_4, NI, BO, AS, SV, KV, K0, K1, K2, K4, BR2, L1, L2, SEP, GOLD, GOLD_HI, BRONZE, BRONZE_M, q, r, npcProximity;
+    var time_js_15, context_js_4, NI, BO, AS, SV, KV, K0, K1, K2, K4, BR2, L1, L2, SEP, GOLD, GOLD_HI, BRONZE, BRONZE_M, q, r, npcProximity;
     var __moduleName = context_89 && context_89.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -27946,7 +28123,7 @@ System.register("sprites/npcs/sol", ["core/time", "render/context"], function (e
     exports_89("setProximity", setProximity);
     function drawNPC_sol(sx, sy) {
         const cx = q(sx) + 14, y0 = q(sy), G = y0 + 44;
-        const breath = Math.sin(time_js_14.t * Math.PI * 2 / 960) > 0.3 ? 1 : 0; // вдох на четыре твоих — шестнадцать секунд
+        const breath = Math.sin(time_js_15.t * Math.PI * 2 / 960) > 0.3 ? 1 : 0; // вдох на четыре твоих — шестнадцать секунд
         // ── у ног: сгоревшая ветка — уголь и пепел ──
         for (let k = 0; k < 9; k++)
             r(cx - 13 + k, G - 1 + (k > 5 ? 1 : 0), 1, 1, k % 3 ? K0 : K1);
@@ -28016,14 +28193,14 @@ System.register("sprites/npcs/sol", ["core/time", "render/context"], function (e
         r(cx + 11, y0 + 21, 2, 1, K1);
         r(cx + 13, y0 + 20, 1, 1, K1);
         r(cx + 9, y0 + 23, 1, 1, K1);
-        const fl = (time_js_14.t >> 3) & 3;
+        const fl = (time_js_15.t >> 3) & 3;
         for (const [dx, dy, ph] of [[13, 15, 0], [14, 19, 2], [8, 22, 1]]) {
             const h = 1 + ((fl + ph) & 1);
             r(cx + dx, y0 + dy - h, 1, h, SV);
             r(cx + dx, y0 + dy, 1, 1, KV);
         }
         // ── диск вместо головы: четырнадцать лучей медленно вращаются ──
-        const hcx = cx, hcy = y0 + 7, rot = time_js_14.t * 0.0008;
+        const hcx = cx, hcy = y0 + 7, rot = time_js_15.t * 0.0008;
         for (let i = 0; i < 14; i++) {
             const a = i / 14 * Math.PI * 2 + rot;
             for (let k = 8; k <= 11; k++)
@@ -28066,8 +28243,8 @@ System.register("sprites/npcs/sol", ["core/time", "render/context"], function (e
     exports_89("drawNPC_sol", drawNPC_sol);
     return {
         setters: [
-            function (time_js_14_1) {
-                time_js_14 = time_js_14_1;
+            function (time_js_15_1) {
+                time_js_15 = time_js_15_1;
             },
             function (context_js_4_1) {
                 context_js_4 = context_js_4_1;
@@ -28086,7 +28263,7 @@ System.register("sprites/npcs/sol", ["core/time", "render/context"], function (e
 });
 System.register("sprites/npcs/elder", ["core/time", "render/context"], function (exports_90, context_90) {
     "use strict";
-    var time_js_15, context_js_5, NI, BO, AS, MG, K0, K1, K2, K3, K4, BR2, L1, L2, S0, S1, S2, q, r, npcProximity;
+    var time_js_16, context_js_5, NI, BO, AS, MG, K0, K1, K2, K3, K4, BR2, L1, L2, S0, S1, S2, q, r, npcProximity;
     var __moduleName = context_90 && context_90.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -28109,9 +28286,9 @@ System.register("sprites/npcs/elder", ["core/time", "render/context"], function 
     }
     function drawNPC_elder(ex, ey) {
         const x0 = q(ex), y0 = q(ey), cx = x0 + 12;
-        const breath = Math.sin(time_js_15.t * 0.005) > 0.55 ? 1 : 0; // вдох — плечи на точку
+        const breath = Math.sin(time_js_16.t * 0.005) > 0.55 ? 1 : 0; // вдох — плечи на точку
         // ── перо: пишет по строке, возвращается, макает ──
-        const P = 360, qp = (time_js_15.t % P) / P, writing = qp < 0.6, prog = writing ? qp / 0.6 : 1;
+        const P = 360, qp = (time_js_16.t % P) / P, writing = qp < 0.6, prog = writing ? qp / 0.6 : 1;
         let qx, qy;
         if (writing) {
             qx = cx - 4 + prog * 8;
@@ -28195,7 +28372,7 @@ System.register("sprites/npcs/elder", ["core/time", "render/context"], function 
         r(hx - 1, hy + 9, 13, 2, K1);
         r(hx - 1, hy + 9, 1, 2, K4); // капюшон лёг на плечи
         // если долго смотреть — кажется, что из-под капюшона смотрят глаза
-        const g = time_js_15.t % 2400;
+        const g = time_js_16.t % 2400;
         if (g < 150) {
             context_js_5.X.globalAlpha = 0.55 * Math.sin(g / 150 * Math.PI);
             r(hx + 3, hy + 6, 1, 1, AS);
@@ -28206,8 +28383,8 @@ System.register("sprites/npcs/elder", ["core/time", "render/context"], function 
     exports_90("drawNPC_elder", drawNPC_elder);
     return {
         setters: [
-            function (time_js_15_1) {
-                time_js_15 = time_js_15_1;
+            function (time_js_16_1) {
+                time_js_16 = time_js_16_1;
             },
             function (context_js_5_1) {
                 context_js_5 = context_js_5_1;
@@ -28225,7 +28402,7 @@ System.register("sprites/npcs/elder", ["core/time", "render/context"], function 
 });
 System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], function (exports_91, context_91) {
     "use strict";
-    var time_js_16, context_js_6, NI, BO, AS, K0, K1, K2, S0, S1, S2, q, r, npcProximity, TOP, H, halfW;
+    var time_js_17, context_js_6, NI, BO, AS, K0, K1, K2, S0, S1, S2, q, r, npcProximity, TOP, H, halfW;
     var __moduleName = context_91 && context_91.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -28245,7 +28422,7 @@ System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], funct
                 context_js_6.X.globalAlpha = 0.5 * (1 - u) * (1 - u);
                 r(xx, sy - k, 1, 1, AS);
             }
-            const run = (time_js_16.t * 0.25 + i * 37) % L; // блеск бежит вверх по нити
+            const run = (time_js_17.t * 0.25 + i * 37) % L; // блеск бежит вверх по нити
             context_js_6.X.globalAlpha = 0.7 * (1 - run / L);
             r(sx + dx * run / L + Math.sin(run / L * Math.PI) * (i - 1.5) * 1.5, sy - run, 1, 1, BO);
         });
@@ -28265,7 +28442,7 @@ System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], funct
         // звёзды плаща: стоят на месте, мерцают каждая в свой черёд
         for (let i = 0; i < 34; i++) {
             const k = 4 + q(hh(i, 3, 7) * (H - 7)), w = halfW(k) - 1.5, sx = cx + q((hh(i, 3, 9) * 2 - 1) * w), sy = y0 + TOP + k;
-            const bright = hh(i, 3, 11) < 0.22, on = hh(i, Math.floor((time_js_16.t + i * 53) / 140), 13) > 0.18;
+            const bright = hh(i, 3, 11) < 0.22, on = hh(i, Math.floor((time_js_17.t + i * 53) / 140), 13) > 0.18;
             if (on)
                 r(sx, sy, 1, 1, bright ? BO : hh(i, 3, 15) < 0.5 ? AS : S0);
         }
@@ -28292,7 +28469,7 @@ System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], funct
         r(hx - 1, hy + 2, 1, 2, S0);
         r(hx + 1, hy + 2, 1, 2, S0); // пальцы раскрыты
         for (let yy = hy + 3; yy < G - 2; yy++) { // струя: ровно, без остановки
-            const g = (yy - hy + Math.floor(time_js_16.t / 2)) % 4;
+            const g = (yy - hy + Math.floor(time_js_17.t / 2)) % 4;
             r(hx + (yy > G - 7 && g === 1 ? 1 : 0), yy, 1, 1, g === 0 ? S0 : g === 2 ? S2 : K0);
         }
         r(hx - 3, G - 2, 7, 1, NI);
@@ -28334,8 +28511,8 @@ System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], funct
     exports_91("drawNPC_nocturnal", drawNPC_nocturnal);
     return {
         setters: [
-            function (time_js_16_1) {
-                time_js_16 = time_js_16_1;
+            function (time_js_17_1) {
+                time_js_17 = time_js_17_1;
             },
             function (context_js_6_1) {
                 context_js_6 = context_js_6_1;
@@ -28355,19 +28532,19 @@ System.register("sprites/npcs/nocturnal", ["core/time", "render/context"], funct
 });
 System.register("sprites/npcs/dumpster", ["core/time", "render/context"], function (exports_92, context_92) {
     "use strict";
-    var time_js_17, context_js_7, NI, SV, KV, K0, q, r, npcProximity;
+    var time_js_18, context_js_7, NI, SV, KV, K0, q, r, npcProximity;
     var __moduleName = context_92 && context_92.id;
     function setProximity(v) { npcProximity = v; }
     exports_92("setProximity", setProximity);
     function drawDumpsterDemon(dx, dy) {
-        const p = time_js_17.t % 720;
+        const p = time_js_18.t % 720;
         if (p >= 150)
             return;
         const k = Math.sin(p / 150 * Math.PI), x = q(dx), y = q(dy);
         // огонь поднимается — в нём лицо
         context_js_7.X.globalAlpha = k;
         for (let i = 0; i < 5; i++) {
-            const h = q(8 + 6 * k + Math.sin(time_js_17.t * 0.2 + i) * 2);
+            const h = q(8 + 6 * k + Math.sin(time_js_18.t * 0.2 + i) * 2);
             r(x + 14 + i * 4, y + 9 - h, 3, h, i & 1 ? SV : KV);
         }
         r(x + 16, y - 3, 4, 3, NI);
@@ -28381,8 +28558,8 @@ System.register("sprites/npcs/dumpster", ["core/time", "render/context"], functi
     exports_92("drawDumpsterDemon", drawDumpsterDemon);
     return {
         setters: [
-            function (time_js_17_1) {
-                time_js_17 = time_js_17_1;
+            function (time_js_18_1) {
+                time_js_18 = time_js_18_1;
             },
             function (context_js_7_1) {
                 context_js_7 = context_js_7_1;
@@ -28436,7 +28613,7 @@ System.register("core/playerRef", [], function (exports_93, context_93) {
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef"], function (exports_94, context_94) {
     "use strict";
-    var context_js_8, time_js_18, sky_js_1, wind_js_11, playerRef_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, FX, FY, PIKE, CLAY, CLAY_L, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL;
+    var context_js_8, time_js_19, sky_js_1, wind_js_11, playerRef_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, FX, FY, PIKE, CLAY, CLAY_L, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL;
     var __moduleName = context_94 && context_94.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -28632,7 +28809,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function rect3(x, y) {
         r(x + 6, y + 16, 14, 12, NI);
         r(x + 7, y + 17, 12, 10, SV);
-        const ph = sky_js_1.phaseAt(time_js_18.t), tea = ph > 0.62 && ph < 0.635;
+        const ph = sky_js_1.phaseAt(time_js_19.t), tea = ph > 0.62 && ph < 0.635;
         if (tea) {
             r(x + 10, y + 19, 3, 3, NI);
             r(x + 9, y + 22, 6, 4, NI);
@@ -28641,7 +28818,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         else {
             r(x + 9, y + 21, 3, 3, NI);
             r(x + 8, y + 24, 7, 2, NI);
-            const pen = (time_js_18.t >> 4) % 4;
+            const pen = (time_js_19.t >> 4) % 4;
             r(x + 14 + (pen < 2 ? pen : 4 - pen), y + 25, 1, 1, NI);
         }
         r(x + 7, y + 26, 12, 1, NI);
@@ -29038,7 +29215,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         // пар из трубы — идёт, как шёл; сносит ветром, тает
         const sx = x + 8, sy = y + 7 + lean(8);
         for (let i = 0; i < 8; i++) {
-            const age = (time_js_18.t * 0.3 + i * 12) % 96, k = age / 96;
+            const age = (time_js_19.t * 0.3 + i * 12) % 96, k = age / 96;
             context_js_8.X.globalAlpha = (1 - k) * 0.55;
             r(sx + q(age * wind_js_11.wind.x * 0.5 + Math.sin(age * 0.12 + i) * 1.2), sy - q(age * 0.25), 1 + q(k * 3), 1 + q(k * 2), k < 0.3 ? BO : L2);
         }
@@ -29145,13 +29322,13 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function shadowFigure(x, fy, kind, act) {
         if (kind === 'laugh') { // смеётся: голова назад, рука на животе, трясётся
-            const b = act && (time_js_18.t >> 2) & 1 ? 1 : 0;
+            const b = act && (time_js_19.t >> 2) & 1 ? 1 : 0;
             man(x, fy - b, act ? -1 : 0);
             r(x + 3, fy - 4 - b, 1, 1, NI);
         }
         else if (kind === 'burn') { // горит: всегда, в свой черёд — выше
             man(x, fy);
-            const f = act ? 2 + ((time_js_18.t >> 3) % 2) : (time_js_18.t >> 4) % 2;
+            const f = act ? 2 + ((time_js_19.t >> 3) % 2) : (time_js_19.t >> 4) % 2;
             r(x + 1, fy - 8 - f, 1, f + 1, SV);
             if (f > 1) {
                 r(x, fy - 8, 1, 1, KV);
@@ -29161,7 +29338,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         else if (kind === 'sit') { // сидит на камне; в свой черёд кивает
             r(x - 1, fy - 2, 3, 2, K3);
             r(x - 1, fy - 2, 3, 1, S0);
-            const n = act && (time_js_18.t >> 5) & 1 ? 1 : 0;
+            const n = act && (time_js_19.t >> 5) & 1 ? 1 : 0;
             r(x + 1 + n, fy - 7, 1, 1, NI);
             r(x, fy - 6, 3, 3, NI);
             r(x + 3, fy - 3, 2, 1, NI);
@@ -29175,11 +29352,11 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_theater(x, y) {
         bake('theater', x, y, -4, 0, 90, 60, theaterBody);
-        while (time_js_18.t - SHOW.t0 >= showLen(SHOW.k)) {
+        while (time_js_19.t - SHOW.t0 >= showLen(SHOW.k)) {
             SHOW.t0 += showLen(SHOW.k);
             SHOW.k++;
         }
-        const ph = (time_js_18.t - SHOW.t0) / showLen(SHOW.k), turn = Math.floor(ph * 4); // смех, огонь, сидит, тишина — все замирают
+        const ph = (time_js_19.t - SHOW.t0) / showLen(SHOW.k), turn = Math.floor(ph * 4); // смех, огонь, сидит, тишина — все замирают
         const fy = y + TH.cy + 1;
         shadowFigure(x + 30, fy, 'laugh', turn === 0);
         shadowFigure(x + 36, fy - 1, 'burn', turn === 1);
@@ -29191,7 +29368,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(zx, zy - 4, 3, 3, NI);
         r(zx + 3, zy - 2, 1, 2, NI);
         r(zx - 1, zy - 2, 1, 2, NI); // голова, плечи, колени
-        const glow = time_js_18.t % 7200 < 480, blink = glow ? time_js_18.t % 50 < 6 : time_js_18.t % 230 < 7;
+        const glow = time_js_19.t % 7200 < 480, blink = glow ? time_js_19.t % 50 < 6 : time_js_19.t % 230 < 7;
         if (!blink) {
             r(zx, zy - 5, 1, 1, L2);
             r(zx + 2, zy - 5, 1, 1, L2);
@@ -29272,7 +29449,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_terminal(x, y) {
         bake('terminal', x, y, -2, 0, 54, 49, terminalBody);
         // экран живёт: мерцает, строки не прочесть, курсор мигает
-        const fl = 0.78 + 0.12 * Math.sin(time_js_18.t * 0.006) + (time_js_18.t % 397 < 3 ? -0.3 : 0);
+        const fl = 0.78 + 0.12 * Math.sin(time_js_19.t * 0.006) + (time_js_19.t % 397 < 3 ? -0.3 : 0);
         context_js_8.X.globalAlpha = 0.06 * fl;
         r(x + 19, y + 7, 24, 19, TI);
         r(x + 13, y + 28, 22, 3, TI);
@@ -29288,7 +29465,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(cx, y + ly, w, 1, row === 3 ? TI : TD);
                 cx += w + (hh(k, s0, 15) < 0.3 ? 2 : 1);
             }
-            if (row === 3 && (time_js_18.t >> 5) & 1)
+            if (row === 3 && (time_js_19.t >> 5) & 1)
                 r(cx + 1, y + ly - 1, 2, 2, TI); // курсор
             row++;
         }
@@ -29343,7 +29520,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_powerline(x, y) {
         bake('powerline', x, y, -30, -60, 92, 46, () => { HUNG = powerBody(); });
         // оборванный провод — с повисшей траверсы через вагон к ногам; гудит — дрожит
-        const [hx, hy] = HUNG, hum = time_js_18.t % 240 < 70 ? ((time_js_18.t >> 1) & 1) : 0;
+        const [hx, hy] = HUNG, hum = time_js_19.t % 240 < 70 ? ((time_js_19.t >> 1) & 1) : 0;
         const pts = [[hx, hy], [hx - 4, 6], [hx - 8, 14], [hx - 10, 27], [hx - 16 + hum, 35], [hx - 24 + hum, 43], [16, 47]]; // через бок вагона, по днищу вниз, к ногам
         for (let i = 0; i < pts.length - 1; i++) {
             const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.max(Math.abs(bx - ax), Math.abs(by - ay));
@@ -29572,7 +29749,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_campfire(x, y) {
         bake('campfire', x, y, -14, -36, 74, 77, campfireBody);
         // кровь с нижнего рога полумесяца: капля набухает, срывается, падает в огонь
-        const dk = (time_js_18.t % 360) / 360, hx = x + 22, hy = y - 17;
+        const dk = (time_js_19.t % 360) / 360, hx = x + 22, hy = y - 17;
         if (dk < 0.55) {
             const L = 1 + q(dk / 0.55 * 2);
             r(hx, hy, 1, L, BLOOD);
@@ -29589,7 +29766,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(hx, hy, 1, 1, BLOOD);
         // лицо на пике подпекается: дымок по ветру
         for (let i = 0; i < 3; i++) {
-            const u = ((time_js_18.t * 0.4 + i * 20) % 60) / 60;
+            const u = ((time_js_19.t * 0.4 + i * 20) % 60) / 60;
             context_js_8.X.globalAlpha = 0.35 * (1 - u);
             r(x + PIKE.tip[0] + q(Math.sin(u * 6 + i) * 1.5 + u * wind_js_11.wind.x * 10), y + PIKE.tip[1] - 2 - q(u * 14), 1, 1, AS);
         }
@@ -29598,28 +29775,28 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(x + 6, y + 22, 14, 2, SV);
         r(x + 5, y + 23, 16, 1, KV);
         for (let i = 0; i < 6; i++) {
-            const fx = x + 6 + i * 2.4, f = 0.5 + 0.5 * Math.sin(time_js_18.t * (0.09 + i * 0.017) + i * 2.3) * Math.sin(time_js_18.t * 0.031 + i);
+            const fx = x + 6 + i * 2.4, f = 0.5 + 0.5 * Math.sin(time_js_19.t * (0.09 + i * 0.017) + i * 2.3) * Math.sin(time_js_19.t * 0.031 + i);
             const H = q(5 + (i > 0 && i < 5 ? 9 : 4) * Math.abs(f)), base = y + 22;
             for (let k = 0; k < H; k++) {
-                const u = k / H, sway = q(Math.sin(time_js_18.t * 0.06 + i * 1.3 + k * 0.35) * u * 2 + wind_js_11.wind.x * u * 3);
+                const u = k / H, sway = q(Math.sin(time_js_19.t * 0.06 + i * 1.3 + k * 0.35) * u * 2 + wind_js_11.wind.x * u * 3);
                 r(fx + sway, base - k, u < 0.45 ? 2 : 1, 1, u < 0.55 ? SV : KV);
             }
-            if (((time_js_18.t >> 2) + i) % 5 === 0)
+            if (((time_js_19.t >> 2) + i) % 5 === 0)
                 r(fx + 1, base - H - 2, 1, 1, KV); // язык отрывается
         }
         for (let i = 0; i < 6; i++) {
-            const on = Math.sin(time_js_18.t * 0.05 + i * 2.1) > -0.2;
+            const on = Math.sin(time_js_19.t * 0.05 + i * 2.1) > -0.2;
             if (on)
                 r(x + 8 + q(hh(i, 9, 3) * 18), y + 24 + q(hh(i, 9, 5) * 4), 1, 1, i & 1 ? SV : KV);
         } // угли
         // искры к луне и дым по ветру
         for (let i = 0; i < 5; i++) {
-            const a = ((time_js_18.t * 0.5 + i * 23) % 70) / 70;
+            const a = ((time_js_19.t * 0.5 + i * 23) % 70) / 70;
             context_js_8.X.globalAlpha = (1 - a) * 0.8;
             r(x + FX - 4 + q(Math.sin(a * 5 + i * 2) * 4 + a * wind_js_11.wind.x * 20), y + 8 - q(a * 34), 1, 1, a < 0.4 ? SV : KV);
         }
         for (let i = 0; i < 6; i++) {
-            const age = (time_js_18.t * 0.25 + i * 16) % 96, k = age / 96;
+            const age = (time_js_19.t * 0.25 + i * 16) % 96, k = age / 96;
             context_js_8.X.globalAlpha = (1 - k) * 0.3;
             r(x + FX - 2 + q(age * wind_js_11.wind.x * 0.5 + Math.sin(age * 0.1 + i) * 2), y + 6 - q(age * 0.3), 1 + q(k * 3), 1 + q(k * 2), AS);
         }
@@ -29992,8 +30169,8 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('library', x, y, -2, 1, 110, 83, libraryBody);
         // страницы шевелятся на ветру: вьются меж колонн, переворачиваются
         for (let i = 0; i < 5; i++) {
-            const a = time_js_18.t * (0.006 + i * 0.0013) + i * 2.1, px = x + 20 + i * 16 + Math.sin(a) * 6 + wind_js_11.wind.x * 8, py = y + 38 + Math.sin(a * 1.7 + i) * 9 + i * 3;
-            const flip = ((time_js_18.t >> 3) + i) & 1;
+            const a = time_js_19.t * (0.006 + i * 0.0013) + i * 2.1, px = x + 20 + i * 16 + Math.sin(a) * 6 + wind_js_11.wind.x * 8, py = y + 38 + Math.sin(a * 1.7 + i) * 9 + i * 3;
+            const flip = ((time_js_19.t >> 3) + i) & 1;
             r(px, py, flip ? 2 : 1, 2, flip ? BO : L1);
         }
     }
@@ -30081,10 +30258,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_fountain(x, y) {
         bake('fountain', x, y, -1, 0, 54, 46, fountainBody);
         // жижа дышит: пузырь раз в несколько секунд
-        const b = time_js_18.t % 300;
+        const b = time_js_19.t % 300;
         if (b < 40) {
             const k = b / 40;
-            r(x + 22 + (time_js_18.t / 300 | 0) % 6, y + 29 - q(k * 1.5), 1 + (k > 0.6 ? 1 : 0), 1, k < 0.8 ? MG_L : MG_D);
+            r(x + 22 + (time_js_19.t / 300 | 0) % 6, y + 29 - q(k * 1.5), 1 + (k > 0.6 ? 1 : 0), 1, k < 0.8 ? MG_L : MG_D);
         }
     }
     exports_94("draw_fountain", draw_fountain);
@@ -30219,7 +30396,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_radio(x, y) {
         bake('radio', x, y, -8, -1, 56, 82, radioBody);
         // красный огонь на верхушке — мигает одиннадцать лет подряд
-        if (time_js_18.t % 120 < 50) {
+        if (time_js_19.t % 120 < 50) {
             r(x + 19, y + 3, 3, 2, KV);
             r(x + 20, y + 2, 1, 1, KV);
             context_js_8.X.globalAlpha = 0.25;
@@ -30230,7 +30407,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(x + 20, y + 3, 1, 2, BLOOD);
         // телефон у основания: лента едет сама
         r(x + 15, y + 77, 4, 2, K0);
-        r(x + 16, y + 77, 2, 1, (time_js_18.t >> 4) & 1 ? '#8CC63F' : TD);
+        r(x + 16, y + 77, 2, 1, (time_js_19.t >> 4) & 1 ? '#8CC63F' : TD);
     }
     exports_94("draw_radio", draw_radio);
     // ── ПАЛАТКА СТАРЦА ──
@@ -30446,7 +30623,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_pizzeria(x, y) {
         bake('pizzeria', x, y, 0, 5, 142, 85, pizzeriaBody);
         // «В» мигает одиннадцать лет; мёртвые по очереди искрят
-        const m = time_js_18.t % 150, on = m < 96 || (m > 104 && m < 112);
+        const m = time_js_19.t % 150, on = m < 96 || (m > 104 && m < 112);
         if (on) {
             glyph('В', x + SIGN_X, y + SIGN_Y, KV, SV);
             context_js_8.X.globalAlpha = 0.18;
@@ -30456,12 +30633,12 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         else
             glyph('В', x + SIGN_X, y + SIGN_Y, BLOOD);
         for (let i = 1; i < SIGN.length; i++) {
-            const p = (time_js_18.t + i * 517) % 3600;
+            const p = (time_js_19.t + i * 517) % 3600;
             if (p < 5)
                 r(x + SIGN_X + i * 5 + (p & 3), y + SIGN_Y + 1 + (i & 3), 1, 1, BO);
         }
         // печь внутри тёплая — зев чуть дышит
-        if ((time_js_18.t >> 5) & 1)
+        if ((time_js_19.t >> 5) & 1)
             r(x + 57, y + 68, 2, 1, KV);
     }
     exports_94("draw_pizzeria", draw_pizzeria);
@@ -30620,7 +30797,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_watchtower(x, y) {
         bake('watchtower', x, y, 0, 6, 31, 55, towerBody);
         for (let i = 0; i < 3; i++) { // термос ещё тёплый
-            const u = ((time_js_18.t * 0.3 + i * 22) % 66) / 66;
+            const u = ((time_js_19.t * 0.3 + i * 22) % 66) / 66;
             context_js_8.X.globalAlpha = 0.4 * (1 - u);
             r(x + 20 + q(Math.sin(u * 5 + i) + u * wind_js_11.wind.x * 6), y + 9 - q(u * 10), 1, 1, BO);
         }
@@ -30712,9 +30889,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_junkyard(x, y) {
         bake('junkyard', x, y, 0, 12, 91, 59, junkBody);
         // гудит: плита пресса ходит, корпус дрожит; из жёлоба — куб
-        const p = (time_js_18.t % 240) / 240, press = q(Math.sin(p * Math.PI * 2) * 2 + 2);
+        const p = (time_js_19.t % 240) / 240, press = q(Math.sin(p * Math.PI * 2) * 2 + 2);
         r(x + 4, y + 26 + press, 20, 1, K1);
-        if (time_js_18.t % 6 < 3)
+        if (time_js_19.t % 6 < 3)
             r(x + 25, y + 30, 1, 1, S1);
     }
     exports_94("draw_junkyard", draw_junkyard);
@@ -30808,7 +30985,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_bus(x, y) {
         bake('bus', x, y, 0, 0, 75, 41, busBody);
         // раз в одиннадцать секунд — «учебная тревога»: рупор дрожит
-        if (time_js_18.t % 660 < 50 && (time_js_18.t & 2))
+        if (time_js_19.t % 660 < 50 && (time_js_19.t & 2))
             r(x + 58, y + 2, 1, 3, S1);
     }
     exports_94("draw_bus", draw_bus);
@@ -31044,7 +31221,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_lake(x, y) {
         bake('lake', x, y, -2, 0, 106, 62, lakeBody);
         // живая рыба: раз в восемь секунд показывается, радужная, — и уходит
-        const p = time_js_18.t % 480;
+        const p = time_js_19.t % 480;
         if (p < 120) {
             const u = p / 120, fx = x + 34 + q(u * 30), fy = y + 30 + q(Math.sin(u * Math.PI) * -3);
             context_js_8.X.globalAlpha = Math.sin(u * Math.PI);
@@ -31099,13 +31276,13 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('altar', x, y, -4, 4, 64, 42, altarBody);
         const { cx, cy } = ALT;
         // мох дышит: кайма поднимается и опадает
-        if (Math.sin(time_js_18.t * 0.012) > 0.2)
+        if (Math.sin(time_js_19.t * 0.012) > 0.2)
             for (let k = 0; k < 18; k++) {
                 const a = k / 18 * Math.PI * 2;
                 r(x + cx + Math.cos(a) * 13, y + cy - 1 + Math.sin(a) * 5, 1, 1, MG_L);
             }
         // узор на мху — смещается раз в десять секунд
-        const sh = Math.floor(time_js_18.t / 600);
+        const sh = Math.floor(time_js_19.t / 600);
         for (let k = 0; k < 7; k++) {
             const m = MOSS_MARKS[(k + sh) % 3], mx = x + cx - 9 + ((k * 5 + sh * 2) % 19), my = y + cy - 3 + ((k * 3 + sh) % 6);
             for (const [dx, dy] of m)
@@ -31182,24 +31359,24 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('dumpster', x, y, -9, 2, 59, 43, dumpsterBody);
         // раскалённый край: тлеет пятнами
         for (let k = 0; k < 40; k += 2)
-            if (hh(k, (time_js_18.t >> 4) & 7, 3) < 0.6)
-                r(x + 4 + k, y + 11 + (k % 4 === 0 ? 1 : 0), 2, 1, hh(k, time_js_18.t >> 4, 5) < 0.3 ? SV : KV);
+            if (hh(k, (time_js_19.t >> 4) & 7, 3) < 0.6)
+                r(x + 4 + k, y + 11 + (k % 4 === 0 ? 1 : 0), 2, 1, hh(k, time_js_19.t >> 4, 5) < 0.3 ? SV : KV);
         // огонь: языки над краем, сплошные; искры; дым по ветру
         for (let i = 0; i < 9; i++) {
-            const fx = x + 7 + i * 4, f = 0.5 + 0.5 * Math.sin(time_js_18.t * (0.1 + i * 0.013) + i * 1.9) * Math.sin(time_js_18.t * 0.027 + i);
+            const fx = x + 7 + i * 4, f = 0.5 + 0.5 * Math.sin(time_js_19.t * (0.1 + i * 0.013) + i * 1.9) * Math.sin(time_js_19.t * 0.027 + i);
             const H = q(6 + (i > 1 && i < 7 ? 10 : 4) * Math.abs(f));
             for (let k = 0; k < H; k++) {
-                const u = k / H, sway = q(Math.sin(time_js_18.t * 0.07 + i + k * 0.3) * u * 2 + wind_js_11.wind.x * u * 4);
+                const u = k / H, sway = q(Math.sin(time_js_19.t * 0.07 + i + k * 0.3) * u * 2 + wind_js_11.wind.x * u * 4);
                 r(fx + sway, y + 11 - k, u < 0.4 ? 3 : u < 0.75 ? 2 : 1, 1, u < 0.5 ? SV : KV);
             }
         }
         for (let i = 0; i < 5; i++) {
-            const a = ((time_js_18.t * 0.6 + i * 19) % 60) / 60;
+            const a = ((time_js_19.t * 0.6 + i * 19) % 60) / 60;
             context_js_8.X.globalAlpha = 1 - a;
             r(x + 12 + i * 6 + q(Math.sin(a * 6 + i) * 3 + a * wind_js_11.wind.x * 16), y + 2 - q(a * 30), 1, 1, a < 0.4 ? SV : KV);
         }
         for (let i = 0; i < 6; i++) {
-            const age = (time_js_18.t * 0.3 + i * 16) % 96, k = age / 96;
+            const age = (time_js_19.t * 0.3 + i * 16) % 96, k = age / 96;
             context_js_8.X.globalAlpha = (1 - k) * 0.35;
             r(x + 22 + q(age * wind_js_11.wind.x * 0.5 + Math.sin(age * 0.1 + i) * 3), y - 4 - q(age * 0.32), 2 + q(k * 4), 1 + q(k * 2), K1);
         }
@@ -31211,8 +31388,8 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             function (context_js_8_1) {
                 context_js_8 = context_js_8_1;
             },
-            function (time_js_18_1) {
-                time_js_18 = time_js_18_1;
+            function (time_js_19_1) {
+                time_js_19 = time_js_19_1;
             },
             function (sky_js_1_1) {
                 sky_js_1 = sky_js_1_1;
@@ -31356,7 +31533,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
 });
 System.register("sprites/locations/index", ["render/draw", "render/context", "core/time", "world/sky", "core/playerRef", "world/locations", "sprites/locations/canon"], function (exports_95, context_95) {
     "use strict";
-    var draw_js_6, context_js_9, time_js_19, sky_js_2, playerRef_js_2, locations_js_3, P, npcProximity, OV_C, OV_D, OV_L, OV_R;
+    var draw_js_6, context_js_9, time_js_20, sky_js_2, playerRef_js_2, locations_js_3, P, npcProximity, OV_C, OV_D, OV_L, OV_R;
     var __moduleName = context_95 && context_95.id;
     function drawBuildingSilhouette(x, y, w, h, roofColor) {
         draw_js_6.rect(context_js_9.X, x, y, w, h, P.dstone);
@@ -31384,7 +31561,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.dither(context_js_9.X, x + 3, y + 20, 8, 18, P.rust, P.ash, .35);
         draw_js_6.dither(context_js_9.X, x + 26, y + 28, 7, 16, P.drust, P.ash, .3);
         // Top display — flickering
-        const fl = draw_js_6.hash(0, time_js_19.t * .012, 77) > .08 ? 1 : .2;
+        const fl = draw_js_6.hash(0, time_js_20.t * .012, 77) > .08 ? 1 : .2;
         context_js_9.X.globalAlpha = fl;
         draw_js_6.rect(context_js_9.X, x + 6, y + 4, 24, 16, '#0a0a1a');
         // "ОБМЕН" label
@@ -31404,7 +31581,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             // One window has a mouse inside
             if (i === 1) {
                 draw_js_6.rect(context_js_9.X, x + 9, y + 26, 2, 1, '#1a1a1a'); // mouse body
-                if (time_js_19.t % 12 < 6)
+                if (time_js_20.t % 12 < 6)
                     draw_js_6.px(context_js_9.X, x + 9, y + 26, '#6b0f1a'); // eye
             }
             // Another has a coin stuck
@@ -31580,7 +31757,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, x + 35, y + 39, 2, 3, P.dgrey);
         draw_js_6.px(context_js_9.X, x + 35, y + 38, P.ash);
         // Small spray mist
-        if (time_js_19.t % 80 < 20) {
+        if (time_js_20.t % 80 < 20) {
             context_js_9.X.globalAlpha = .2;
             draw_js_6.px(context_js_9.X, x + 36, y + 37, '#6b0f1a');
             draw_js_6.px(context_js_9.X, x + 37, y + 36, '#6b0f1a');
@@ -31693,7 +31870,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.px(context_js_9.X, x + 15, y + 9, P.dtoxic);
         draw_js_6.px(context_js_9.X, x + 16, y + 8, P.toxic);
         // ── THE RAVEN itself (large, on branch, looking at you) ──
-        const ravenBob = Math.sin(time_js_19.t * .01) * .3;
+        const ravenBob = Math.sin(time_js_20.t * .01) * .3;
         const ravenX = x + 30, ravenY = y + 8 + ravenBob;
         // Body
         draw_js_6.rect(context_js_9.X, ravenX, ravenY, 8, 5, '#050505');
@@ -31713,12 +31890,12 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, ravenX + 2, ravenY + 5, 1, 2, '#1a1006');
         draw_js_6.rect(context_js_9.X, ravenX + 5, ravenY + 5, 1, 2, '#1a1006');
         // Feathers detail
-        if (time_js_19.t % 80 < 40) {
+        if (time_js_20.t % 80 < 40) {
             draw_js_6.px(context_js_9.X, ravenX + 3, ravenY, '#1a1a1a');
             draw_js_6.px(context_js_9.X, ravenX + 5, ravenY + 2, '#1a1a1a');
         }
         // Occasional wing flap
-        if (time_js_19.t % 300 < 8) {
+        if (time_js_20.t % 300 < 8) {
             draw_js_6.rect(context_js_9.X, ravenX - 3, ravenY - 2, 12, 2, '#050505');
             draw_js_6.rect(context_js_9.X, ravenX - 4, ravenY - 1, 14, 1, '#0a0a0a');
         }
@@ -31736,7 +31913,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.px(context_js_9.X, fx + 1, fy - 1, '#1a1a1a');
         }
         // ── OCCASIONAL "NEVERMORE" whisper (animated subtle text) ──
-        if (time_js_19.t % 500 < 50) {
+        if (time_js_20.t % 500 < 50) {
             context_js_9.X.globalAlpha = .2;
             context_js_9.X.fillStyle = P.crimson;
             context_js_9.X.font = '4px "Press Start 2P"';
@@ -31783,13 +31960,13 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.rect(context_js_9.X, stX, stY + 2, stW, 1, '#020202');
         }
         // Water at bottom — pulsing toxic glow
-        context_js_9.X.globalAlpha = .5 + .1 * Math.sin(time_js_19.t * .02);
+        context_js_9.X.globalAlpha = .5 + .1 * Math.sin(time_js_20.t * .02);
         draw_js_6.rect(context_js_9.X, x + 12, y + 37, 26, 5, P.dtoxic);
         draw_js_6.rect(context_js_9.X, x + 13, y + 38, 24, 3, P.toxic);
         context_js_9.X.globalAlpha = 1;
         // Water ripples
         for (let i = 0; i < 3; i++) {
-            const rph = ((time_js_19.t * .02 + i * .33) % 1);
+            const rph = ((time_js_20.t * .02 + i * .33) % 1);
             context_js_9.X.globalAlpha = (1 - rph) * .3;
             context_js_9.X.strokeStyle = P.btoxic;
             context_js_9.X.lineWidth = 1;
@@ -31799,7 +31976,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             context_js_9.X.globalAlpha = 1;
         }
         // Glowing rune on wall — slow pulse
-        const rPulse = .4 + .3 * Math.sin(time_js_19.t * .006);
+        const rPulse = .4 + .3 * Math.sin(time_js_20.t * .006);
         context_js_9.X.globalAlpha = rPulse;
         context_js_9.X.fillStyle = '#6b0f1a';
         // Triangle
@@ -31818,8 +31995,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         }
         // Cold air/fog from inside (rising)
         for (let i = 0; i < 3; i++) {
-            const fph = ((time_js_19.t * .008 + i * .33) % 1);
-            const fx = x + 18 + i * 6 + Math.sin(time_js_19.t * .01 + i) * 2;
+            const fph = ((time_js_20.t * .008 + i * .33) % 1);
+            const fx = x + 18 + i * 6 + Math.sin(time_js_20.t * .01 + i) * 2;
             const fy = y + 12 - fph * 8;
             context_js_9.X.globalAlpha = (1 - fph) * .25;
             draw_js_6.rect(context_js_9.X, fx, fy, 3, 1, '#4a7a5a');
@@ -31835,8 +32012,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, x + 14, y + 6, 1, 1); // !
         draw_js_6.rect(context_js_9.X, x + 14, y + 8, 1, 1);
         // Drop of water dripping from frame
-        if (time_js_19.t % 60 < 20) {
-            const dY = y + 9 + (time_js_19.t % 60) * .4;
+        if (time_js_20.t % 60 < 20) {
+            const dY = y + 9 + (time_js_20.t % 60) * .4;
             context_js_9.X.globalAlpha = .5;
             draw_js_6.px(context_js_9.X, x + 20, dY, P.toxic);
             context_js_9.X.globalAlpha = 1;
@@ -31905,12 +32082,12 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, x + 20, y - 3, 1, 1, '#1a0e06');
         draw_js_6.rect(context_js_9.X, x + 20, y - 1, 1, 1, '#1a0e06');
         // Crow perched on sign
-        if (time_js_19.t % 500 < 480) {
+        if (time_js_20.t % 500 < 480) {
             draw_js_6.rect(context_js_9.X, x + 25, y - 21, 2, 1, '#050505');
             draw_js_6.px(context_js_9.X, x + 24, y - 21, '#050505'); // beak
             draw_js_6.px(context_js_9.X, x + 25, y - 22, '#050505'); // head
             // Occasional eye glint
-            if (time_js_19.t % 10 < 3)
+            if (time_js_20.t % 10 < 3)
                 draw_js_6.px(context_js_9.X, x + 25, y - 21, P.amber);
         }
         // Old bones at base of sign
@@ -31918,7 +32095,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.px(context_js_9.X, x + 8, y + 17, P.dbone);
         draw_js_6.rect(context_js_9.X, x + 6, y + 19, 3, 1, P.dbone);
         // Wind-blown leaflet stuck to post
-        const lfSway = Math.sin(time_js_19.t * .02) * .5;
+        const lfSway = Math.sin(time_js_20.t * .02) * .5;
         draw_js_6.rect(context_js_9.X, x + 13 + lfSway, y - 2, 3, 3, P.parchment);
         draw_js_6.rect(context_js_9.X, x + 13 + lfSway, y - 2, 3, 1, '#3a2a18');
         // Small boot footprints heading away (into the distance)
@@ -31968,7 +32145,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.rect(context_js_9.X, x + 9 + o, ry, 4, 4, '#0a0a0e');
             if (k === 1) {
                 draw_js_6.px(context_js_9.X, x + 11 + o, ry + 2, '#E28A3A');
-                if (time_js_19.t % 50 < 38)
+                if (time_js_20.t % 50 < 38)
                     draw_js_6.px(context_js_9.X, x + 11 + o, ry + 1, '#E28A3A');
             }
         }
@@ -32017,7 +32194,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.px(context_js_9.X, x + 17, y + 1, '#0a0a0e');
         draw_js_6.px(context_js_9.X, x + 18, y + 2, '#0a0a0e');
         // ── IRON GATE (ajar, swinging slightly) ──
-        const gateSwing = Math.sin(time_js_19.t * .004) * .5;
+        const gateSwing = Math.sin(time_js_20.t * .004) * .5;
         draw_js_6.rect(context_js_9.X, x + 5 + gateSwing, y + 4, 2, 32, P.dgrey);
         // Gate bars
         for (let i = 0; i < 5; i++) {
@@ -32060,15 +32237,15 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_9.X.globalAlpha = 1;
         // ── COLD AIR / FOG POURING OUT ──
         for (let i = 0; i < 4; i++) {
-            const fogPhase = ((time_js_19.t * .008 + i * .25) % 1);
+            const fogPhase = ((time_js_20.t * .008 + i * .25) % 1);
             const fogY = y + 12 + fogPhase * 18;
-            const fogX = x + 10 + Math.sin(time_js_19.t * .01 + i) * 3;
+            const fogX = x + 10 + Math.sin(time_js_20.t * .01 + i) * 3;
             context_js_9.X.globalAlpha = (1 - fogPhase) * .25;
             draw_js_6.rect(context_js_9.X, fogX, fogY, 8 + i, 2, '#6b726d');
             context_js_9.X.globalAlpha = 1;
         }
         // Extra cold breath at step level
-        if (time_js_19.t % 40 < 20) {
+        if (time_js_20.t % 40 < 20) {
             context_js_9.X.globalAlpha = .1;
             draw_js_6.rect(context_js_9.X, x + 8, y + 14, 20, 3, '#D9CFB8');
             context_js_9.X.globalAlpha = 1;
@@ -32094,12 +32271,12 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, x + 40, y + 36, 3, 1, '#3a3a42');
         // ── TORCH flickering beside gate ──
         draw_js_6.rect(context_js_9.X, x - 2, y + 8, 2, 12, P.dwood);
-        const trFlick = Math.sin(time_js_19.t * .06) * .5;
+        const trFlick = Math.sin(time_js_20.t * .06) * .5;
         draw_js_6.px(context_js_9.X, x - 1 + trFlick, y + 6, P.f2);
         draw_js_6.px(context_js_9.X, x - 1 + trFlick, y + 5, P.f1);
         draw_js_6.px(context_js_9.X, x - 1 + trFlick, y + 4, '#ffffcc');
         // Torch glow
-        context_js_9.X.globalAlpha = .15 + .05 * Math.sin(time_js_19.t * .03);
+        context_js_9.X.globalAlpha = .15 + .05 * Math.sin(time_js_20.t * .03);
         const tGlow = context_js_9.X.createRadialGradient(x - 1, y + 6, 0, x - 1, y + 6, 16);
         tGlow.addColorStop(0, 'rgba(255,100,20,1)');
         tGlow.addColorStop(1, 'rgba(0,0,0,0)');
@@ -32156,7 +32333,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_6.rect(context_js_9.X, x + 75, top + 3, 3, 1, OV_R);
         // арматура свисает с восточного слома — качается
         for (let i = 0; i < 3; i++) {
-            const sw = Math.round(Math.sin(time_js_19.t * .005 + i * 2) * 1.4);
+            const sw = Math.round(Math.sin(time_js_20.t * .005 + i * 2) * 1.4);
             for (let k = 0; k < 7 + i * 2; k++)
                 draw_js_6.px(context_js_9.X, x + 79 + i * 3 + (k > 3 ? sw : 0), top + 6 + k, OV_R);
         }
@@ -32170,7 +32347,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         }
         context_js_9.X.globalAlpha = 1;
         // верёвка свисает с восточного края, конец перетёрт
-        const sw = Math.round(Math.sin(time_js_19.t * .003) * 1.2);
+        const sw = Math.round(Math.sin(time_js_20.t * .003) * 1.2);
         for (let k = 0; k < 14; k++)
             draw_js_6.px(context_js_9.X, x + 91 + (k > 6 ? sw : 0), top + 6 + k, '#8a857a');
         draw_js_6.px(context_js_9.X, x + 90 + sw, top + 20, '#8a857a');
@@ -32178,8 +32355,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         // труба под настилом, разбита у слома — капает
         draw_js_6.rect(context_js_9.X, x + 18, top + 7, 27, 2, '#241c14');
         draw_js_6.px(context_js_9.X, x + 18, top + 7, '#8a857a');
-        if (time_js_19.t % 90 < 20) {
-            const dropY = top + 9 + (time_js_19.t % 90) * 1.2;
+        if (time_js_20.t % 90 < 20) {
+            const dropY = top + 9 + (time_js_20.t % 90) * 1.2;
             context_js_9.X.globalAlpha = .5;
             draw_js_6.px(context_js_9.X, x + 44, dropY, P.toxic);
             context_js_9.X.globalAlpha = 1;
@@ -32198,7 +32375,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
     exports_95("draw_overpass", draw_overpass);
     function draw_riverbed(x, y) {
         // Animated puddle reflection
-        const shimmer = Math.sin(time_js_19.t * .004) * .3 + .3;
+        const shimmer = Math.sin(time_js_20.t * .004) * .3 + .3;
         context_js_9.X.globalAlpha = shimmer * .15;
         context_js_9.X.fillStyle = '#3D4A3A'; // мгла: вода стоит небом, синего в палитре нет
         context_js_9.X.beginPath();
@@ -32206,9 +32383,9 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_9.X.fill();
         context_js_9.X.globalAlpha = 1;
         // Occasional ripple
-        if (time_js_19.t % 120 < 30) {
-            const ripR = (time_js_19.t % 120) * 0.5;
-            context_js_9.X.globalAlpha = .1 * (1 - (time_js_19.t % 120) / 30);
+        if (time_js_20.t % 120 < 30) {
+            const ripR = (time_js_20.t % 120) * 0.5;
+            context_js_9.X.globalAlpha = .1 * (1 - (time_js_20.t % 120) / 30);
             context_js_9.X.strokeStyle = '#D9CFB8';
             context_js_9.X.lineWidth = 1;
             context_js_9.X.beginPath();
@@ -32233,7 +32410,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.rect(context_js_9.X, ex_, ey_, 3, 2, draw_js_6.hash(i, 0, 22) > .5 ? P.dstone : P.dgrey);
         }
         // Green glow from below
-        const pulse = .04 + .03 * Math.sin(time_js_19.t * .004);
+        const pulse = .04 + .03 * Math.sin(time_js_20.t * .004);
         context_js_9.X.globalAlpha = pulse;
         context_js_9.X.beginPath();
         context_js_9.X.ellipse(x + 20, y + 15, 15, 8, 0, 0, Math.PI * 2);
@@ -32241,10 +32418,10 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_9.X.fill();
         context_js_9.X.globalAlpha = 1;
         // Faint steam
-        if (time_js_19.t % 40 < 20) {
-            const steamY = y + 10 - ((time_js_19.t % 40) * .3);
+        if (time_js_20.t % 40 < 20) {
+            const steamY = y + 10 - ((time_js_20.t % 40) * .3);
             context_js_9.X.globalAlpha = .06;
-            draw_js_6.rect(context_js_9.X, x + 16 + Math.sin(time_js_19.t * .01) * 3, steamY, 4, 2, '#2a4a1a');
+            draw_js_6.rect(context_js_9.X, x + 16 + Math.sin(time_js_20.t * .01) * 3, steamY, 4, 2, '#2a4a1a');
             context_js_9.X.globalAlpha = 1;
         }
     }
@@ -32280,7 +32457,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             }
         });
         // Peeling corner on top poster
-        const peel = Math.sin(time_js_19.t * .008) * 1.5;
+        const peel = Math.sin(time_js_20.t * .008) * 1.5;
         draw_js_6.rect(context_js_9.X, x + 58 + peel, y + 5, 3, 4, P.dstone);
         // ═══════════════════════════════════════════
         // ── 5 FIRE-MEMORIAL POSTERS with WAX SEALS ──
@@ -32341,7 +32518,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.px(context_js_9.X, cdx + 1, cdy - 7, '#ffffcc');
             context_js_9.X.globalAlpha = 1;
             // Cheap amber glow (plain rect, no gradient)
-            context_js_9.X.globalAlpha = .08 + .02 * Math.sin(time_js_19.t * .1 + ci);
+            context_js_9.X.globalAlpha = .08 + .02 * Math.sin(time_js_20.t * .1 + ci);
             draw_js_6.rect(context_js_9.X, cdx - 3, cdy - 8, 9, 6, P.amber);
             context_js_9.X.globalAlpha = 1;
         }
@@ -32392,8 +32569,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_6.rect(context_js_9.X, x + 276, wy, 2, 1, P.ash);
         }
         // Banner fabric — animated wave
-        const wave = Math.sin(time_js_19.t * .005) * 3;
-        const wave2 = Math.sin(time_js_19.t * .007 + 1) * 2;
+        const wave = Math.sin(time_js_20.t * .005) * 3;
+        const wave2 = Math.sin(time_js_20.t * .007 + 1) * 2;
         // Fabric background — warm parchment
         draw_js_6.rect(context_js_9.X, x + 4, y - 12 + wave * .3, 268, 118 + Math.abs(wave), '#2a1e10');
         draw_js_6.rect(context_js_9.X, x + 6, y - 10 + wave * .3, 264, 114 + Math.abs(wave), '#3a2a14');
@@ -32455,8 +32632,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         // Bottom fringe — fabric tassels waving
         for (let i = 0; i < 20; i++) {
             const fx = x + 14 + i * 13;
-            const fy = y + 104 + wave * .3 + Math.abs(wave) + Math.sin(time_js_19.t * .01 + i * .7) * 2;
-            const fh = 4 + Math.sin(time_js_19.t * .012 + i * .5) * 2;
+            const fy = y + 104 + wave * .3 + Math.abs(wave) + Math.sin(time_js_20.t * .01 + i * .7) * 2;
+            const fh = 4 + Math.sin(time_js_20.t * .012 + i * .5) * 2;
             draw_js_6.rect(context_js_9.X, fx, fy, 4, fh, '#3a2a14');
             draw_js_6.rect(context_js_9.X, fx + 1, fy + fh, 2, 2, '#2a1e10');
         }
@@ -32482,8 +32659,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             function (context_js_9_1) {
                 context_js_9 = context_js_9_1;
             },
-            function (time_js_19_1) {
-                time_js_19 = time_js_19_1;
+            function (time_js_20_1) {
+                time_js_20 = time_js_20_1;
             },
             function (sky_js_2_1) {
                 sky_js_2 = sky_js_2_1;
@@ -32587,7 +32764,7 @@ System.register("content/potemkin", [], function (exports_96, context_96) {
 });
 System.register("world/potemkin", ["core/time", "render/context", "content/potemkin"], function (exports_97, context_97) {
     "use strict";
-    var time_js_20, context_js_10, potemkin_js_1, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, fakes, NIGHT, SEPIA, ASH, BONE, CANDLE, BAYER, off, offCtx;
+    var time_js_21, context_js_10, potemkin_js_1, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, fakes, NIGHT, SEPIA, ASH, BONE, CANDLE, BAYER, off, offCtx;
     var __moduleName = context_97 && context_97.id;
     // Строка-шов подделки (живое чтение: правка в редакторе сразу в мире)
     function seamOf(loc) {
@@ -32617,7 +32794,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
             else
                 reveal.delete(loc.id);
             if (nk >= SEAM_AT)
-                seenAt.set(loc.id, time_js_20.t);
+                seenAt.set(loc.id, time_js_21.t);
         }
     }
     exports_97("update", update);
@@ -32627,7 +32804,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
         if (revealOf(loc) >= SEAM_AT)
             return true;
         const at = seenAt.get(loc.id);
-        return at !== undefined && time_js_20.t - at <= SEAM_MEMORY;
+        return at !== undefined && time_js_21.t - at <= SEAM_MEMORY;
     }
     exports_97("seamVisible", seamVisible);
     // Текст осмотра: шов — только терпеливому взгляду; подсказка «обойти»
@@ -32688,10 +32865,10 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
         const seed = h01(loc.id);
         ctx.fillStyle = '#D9CFB8';
         for (let i = 0; i < 4; i++) {
-            const ph = (time_js_20.t * 0.012 + i * 0.27 + seed) % 1;
+            const ph = (time_js_21.t * 0.012 + i * 0.27 + seed) % 1;
             const x = cx - w / 2 + ((seed * 97 + i * 13.7) % 1) * w;
             ctx.globalAlpha = k * (1 - ph) * 0.8;
-            ctx.fillRect(Math.round(x + Math.sin(time_js_20.t * 0.03 + i) * 1.5), Math.round(gy - h + ph * h), 1, 1);
+            ctx.fillRect(Math.round(x + Math.sin(time_js_21.t * 0.03 + i) * 1.5), Math.round(gy - h + ph * h), 1, 1);
         }
         ctx.globalAlpha = 1;
     }
@@ -32759,8 +32936,8 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
     exports_97("_reset", _reset);
     return {
         setters: [
-            function (time_js_20_1) {
-                time_js_20 = time_js_20_1;
+            function (time_js_21_1) {
+                time_js_21 = time_js_21_1;
             },
             function (context_js_10_1) {
                 context_js_10 = context_js_10_1;
@@ -33007,6 +33184,12 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
                 : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
         }
+        // второе действие вещи — проявляется по случаю (изнанка: у лестницы — подуть на уголёк)
+        const altBtn = menuEl.querySelector('[data-a="alt"]');
+        const alt = !!loc.alt && (!loc.altShown || loc.altShown());
+        altBtn.style.display = alt ? 'flex' : 'none';
+        if (alt)
+            altBtn.innerHTML = loc.altLabel;
         // Position near last mouse position on desktop; mobile CSS handles centering.
         if (window.innerWidth > 768) {
             menuEl.style.left = Math.min(input_js_1.input.mouseX, window.innerWidth - 200) + 'px';
@@ -33046,6 +33229,10 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 break;
             case 'use':
                 events_js_1.events.emit('location.use', loc);
+                hideMenu();
+                break;
+            case 'alt':
+                events_js_1.events.emit('location.alt', loc);
                 hideMenu();
                 break;
             case 'talk':
@@ -35296,7 +35483,7 @@ System.register("sprites/eggObjects", ["world/hang"], function (exports_104, con
 });
 System.register("world/lore", ["content/lore", "core/events", "sprites/eggObjects", "core/time", "render/context", "render/draw"], function (exports_105, context_105) {
     "use strict";
-    var lore_js_1, events_js_2, eggObjects_js_1, time_js_21, context_js_11, draw_js_7, collected;
+    var lore_js_1, events_js_2, eggObjects_js_1, time_js_22, context_js_11, draw_js_7, collected;
     var __moduleName = context_105 && context_105.id;
     // Track player proximity and pickup
     function checkLorePickup(player) {
@@ -35336,8 +35523,8 @@ System.register("world/lore", ["content/lore", "core/events", "sprites/eggObject
             const sx = item.x - cam.x;
             const sy = item.y - cam.y;
             // Subtle pulse
-            const pulse = 0.5 + 0.5 * Math.sin(time_js_21.t * 0.05 + item.x * 0.01);
-            if (item.form && eggObjects_js_1.drawLoreForm(ctx, item.form, item.x, item.y, time_js_21.t)) {
+            const pulse = 0.5 + 0.5 * Math.sin(time_js_22.t * 0.05 + item.x * 0.01);
+            if (item.form && eggObjects_js_1.drawLoreForm(ctx, item.form, item.x, item.y, time_js_22.t)) {
                 // вещь на земле: сама форма + очень слабое дыхание янтаря
                 ctx.globalAlpha = 0.1 + pulse * 0.15;
                 ctx.fillStyle = '#b8860b';
@@ -35368,8 +35555,8 @@ System.register("world/lore", ["content/lore", "core/events", "sprites/eggObject
             function (eggObjects_js_1_1) {
                 eggObjects_js_1 = eggObjects_js_1_1;
             },
-            function (time_js_21_1) {
-                time_js_21 = time_js_21_1;
+            function (time_js_22_1) {
+                time_js_22 = time_js_22_1;
             },
             function (context_js_11_1) {
                 context_js_11 = context_js_11_1;
@@ -35454,7 +35641,7 @@ System.register("core/save", ["core/events"], function (exports_106, context_106
 });
 System.register("render/metaFx", ["render/scaler", "core/time"], function (exports_107, context_107) {
     "use strict";
-    var scaler_js_17, time_js_22, screenMoss, crackedGlass, dyingPixels, tabMessages, titleInterval, originalTitle;
+    var scaler_js_17, time_js_23, screenMoss, crackedGlass, dyingPixels, tabMessages, titleInterval, originalTitle;
     var __moduleName = context_107 && context_107.id;
     function initTabTitle() {
         originalTitle = document.title;
@@ -35483,8 +35670,8 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
             function (scaler_js_17_1) {
                 scaler_js_17 = scaler_js_17_1;
             },
-            function (time_js_22_1) {
-                time_js_22 = time_js_22_1;
+            function (time_js_23_1) {
+                time_js_23 = time_js_23_1;
             }
         ],
         execute: function () {
@@ -35512,7 +35699,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                         return;
                     }
                     this.idleGrowth = Math.min(1, this.idleGrowth + 0.0002);
-                    if (this.idleGrowth > 0.08 && this.cells.length < this.maxCells && time_js_22.t % 12 === 0) {
+                    if (this.idleGrowth > 0.08 && this.cells.length < this.maxCells && time_js_23.t % 12 === 0) {
                         const edge = Math.floor(Math.random() * 4);
                         let nx, ny;
                         if (edge === 0) {
@@ -35594,7 +35781,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                         }
                         lines.push({ angle, len, branches });
                     }
-                    this.cracks.push({ origin: { x: ox, y: oy }, lines, t: time_js_22.t });
+                    this.cracks.push({ origin: { x: ox, y: oy }, lines, t: time_js_23.t });
                 },
                 clear() { this.cracks = []; },
                 draw(ctx) {
@@ -35603,11 +35790,11 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                     ctx.save();
                     ctx.lineWidth = 1;
                     for (const c of this.cracks) {
-                        const age = Math.min(1, (time_js_22.t - c.t) / 30);
+                        const age = Math.min(1, (time_js_23.t - c.t) / 30);
                         for (const line of c.lines) {
                             const ex = c.origin.x + Math.cos(line.angle) * line.len * age;
                             const ey = c.origin.y + Math.sin(line.angle) * line.len * age;
-                            ctx.globalAlpha = 0.35 + 0.1 * Math.sin(time_js_22.t * 0.003);
+                            ctx.globalAlpha = 0.35 + 0.1 * Math.sin(time_js_23.t * 0.003);
                             ctx.strokeStyle = 'rgba(200,200,200,0.6)';
                             ctx.beginPath();
                             ctx.moveTo(c.origin.x, c.origin.y);
@@ -35645,9 +35832,9 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                 lastDeath: 0,
                 interval: 3600, // ~60 sec @ 60fps
                 update() {
-                    if (time_js_22.t - this.lastDeath < this.interval)
+                    if (time_js_23.t - this.lastDeath < this.interval)
                         return;
-                    this.lastDeath = time_js_22.t;
+                    this.lastDeath = time_js_23.t;
                     if (this.dead.length >= 200)
                         return;
                     this.dead.push({
@@ -35679,7 +35866,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
 });
 System.register("ui/lorepopup", ["render/scaler", "core/time"], function (exports_108, context_108) {
     "use strict";
-    var scaler_js_18, time_js_23, TYPE_SPEED, READ_SPEED, BURN_SPEED, MIN_HOLD, TAIL_FADE, state, mirrorEl, mirrorText;
+    var scaler_js_18, time_js_24, TYPE_SPEED, READ_SPEED, BURN_SPEED, MIN_HOLD, TAIL_FADE, state, mirrorEl, mirrorText;
     var __moduleName = context_108 && context_108.id;
     function computeLife(text) {
         const n = text.length;
@@ -35705,7 +35892,7 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         state.live = !!live;
         state.totalLife = computeLife(text);
         state.life = state.totalLife;
-        state.startFrame = time_js_23.t;
+        state.startFrame = time_js_24.t;
     }
     exports_108("showLore", showLore);
     // Dismiss on click / key — the panel must never trap the screen.
@@ -35716,9 +35903,9 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
     exports_108("dismiss", dismiss);
     // первый клик — допечатать сразу (не терять недочитанное), второй — убрать
     function skipOrDismiss() {
-        const typed = Math.floor((time_js_23.t - state.startFrame) / TYPE_SPEED);
+        const typed = Math.floor((time_js_24.t - state.startFrame) / TYPE_SPEED);
         if (typed < state.text.length) {
-            state.startFrame = time_js_23.t - state.text.length * TYPE_SPEED;
+            state.startFrame = time_js_24.t - state.text.length * TYPE_SPEED;
             state.life = state.totalLife - state.text.length * TYPE_SPEED;
             return;
         }
@@ -35733,7 +35920,7 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
                 mirror('');
             return;
         }
-        const elapsed = time_js_23.t - state.startFrame;
+        const elapsed = time_js_24.t - state.startFrame;
         const totalLen = state.text.length;
         const typeDone = Math.floor(elapsed / TYPE_SPEED);
         const charCount = Math.min(totalLen, typeDone);
@@ -35824,7 +36011,7 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         // keep `line` semantics for the typing cursor below
         ly -= LINE_H;
         // Cursor
-        if (!fullyTyped && time_js_23.t % 40 < 20) {
+        if (!fullyTyped && time_js_24.t % 40 < 20) {
             const cursorX = x_ + 10 + line.length * CHAR_W;
             ctx.fillStyle = '#1a8c1a';
             ctx.fillRect(cursorX, ly - FONT_SIZE, 5, FONT_SIZE + 1);
@@ -35834,12 +36021,12 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         // softly blinking cursor. Status only — no timer, no auto-update (Phase 2).
         if (state.live && fullyTyped && burnCount === 0) {
             const sy = ly + LINE_H;
-            ctx.globalAlpha = a * (0.45 + 0.2 * Math.sin(time_js_23.t * 0.06));
+            ctx.globalAlpha = a * (0.45 + 0.2 * Math.sin(time_js_24.t * 0.06));
             ctx.fillStyle = '#7a6a3a';
             ctx.font = '7px "Press Start 2P","VT323",monospace';
             ctx.fillText('— запись продолжается', x_ + 10, sy);
             // Blinking cursor block at the end of the line
-            if (time_js_23.t % 50 < 25) {
+            if (time_js_24.t % 50 < 25) {
                 ctx.fillStyle = '#b8860b';
                 ctx.fillRect(x_ + 10 + 21 * 7, sy - 6, 4, 7);
             }
@@ -35858,8 +36045,8 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
             function (scaler_js_18_1) {
                 scaler_js_18 = scaler_js_18_1;
             },
-            function (time_js_23_1) {
-                time_js_23 = time_js_23_1;
+            function (time_js_24_1) {
+                time_js_24 = time_js_24_1;
             }
         ],
         execute: function () {
@@ -38997,7 +39184,7 @@ System.register("core/sessionMemory", [], function (exports_110, context_110) {
 });
 System.register("terminal/terminal", ["core/state", "core/events", "content/terminal_db", "world/lore", "core/sessionMemory", "core/time"], function (exports_111, context_111) {
     "use strict";
-    var state_js_2, events_js_4, terminal_db_js_1, lore_js_2, sessionMemory_js_1, time_js_24, termEl, inputEl, outputEl, history, historyIdx, booted, FILE_ALIASES, commands, PHRASES, _test;
+    var state_js_2, events_js_4, terminal_db_js_1, lore_js_2, sessionMemory_js_1, time_js_25, termEl, inputEl, outputEl, history, historyIdx, booted, FILE_ALIASES, commands, PHRASES, _test;
     var __moduleName = context_111 && context_111.id;
     function fileEntry(rawName) {
         const stripped = rawName.replace(/^\./, '');
@@ -39155,8 +39342,8 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
             function (sessionMemory_js_1_1) {
                 sessionMemory_js_1 = sessionMemory_js_1_1;
             },
-            function (time_js_24_1) {
-                time_js_24 = time_js_24_1;
+            function (time_js_25_1) {
+                time_js_25 = time_js_25_1;
             }
         ],
         execute: function () {
@@ -39302,7 +39489,7 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
                     // the old 'ardet_visits' read always lied), fragments from the
                     // lore module, and session time from the frame counter.
                     const visits = Math.max(1, sessionMemory_js_1.getSessionAge());
-                    const mins = Math.floor(time_js_24.t / 3600);
+                    const mins = Math.floor(time_js_25.t / 3600);
                     print(`СТАТУС СТРАННИКА:
   визит:     ${visits}
   фрагменты: ${lore_js_2.getCollectedCount()}/${lore_js_2.getTotalCount()}
@@ -41563,7 +41750,7 @@ System.register("render/townProps", ["world/town", "render/things", "sprites/qua
 });
 System.register("render/castle", ["world/disc", "world/wind", "core/time"], function (exports_120, context_120) {
     "use strict";
-    var disc_js_34, wind_js_12, time_js_25, NI, BO, AS, MG, css, mix, BODY, HATCH, LIT, RIM, HILL, HILLH, HX, W, H, art, RW, RH, roofs, clear, vaneA, drift;
+    var disc_js_34, wind_js_12, time_js_26, NI, BO, AS, MG, css, mix, BODY, HATCH, LIT, RIM, HILL, HILLH, HX, W, H, art, RW, RH, roofs, clear, vaneA, drift;
     var __moduleName = context_120 && context_120.id;
     // шум для погоды: плавный, на минуты
     function n1(x, s) {
@@ -41721,7 +41908,7 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
     // видимость: погода (минуты), буря и дождь прячут, красный полдень стирает
     function castleSeen(storm = 0, noon = 0) {
         // туман приходит и уходит: волна минут в семь (в начале ясно) и шум поверх
-        const cyc = 0.5 + 0.5 * Math.cos(time_js_25.t / (60 * 60 * 7) * Math.PI * 2), w = n1(time_js_25.t / 6000, 3);
+        const cyc = 0.5 + 0.5 * Math.cos(time_js_26.t / (60 * 60 * 7) * Math.PI * 2), w = n1(time_js_26.t / 6000, 3);
         const base = Math.max(0, Math.min(1, cyc * 0.75 + w * 0.5 - 0.15));
         const v = Math.max(0.15 + 0.85 * base * base * (3 - 2 * base), clear);
         return v * (1 - storm) * (1 - noon);
@@ -41757,7 +41944,7 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
             ctx.fillRect(fx, fy - 4, 1, 1);
         // туман: клочья полосами, идут по ветру; где густо — прячет
         for (let k = 0; k < 3; k++) {
-            const by = y0 + 18 + k * 11 + Math.round(Math.sin(time_js_25.t * 0.0007 + k * 2) * 3), dens = 0.5 + 0.5 * n1(time_js_25.t / 5200 + k * 3.1, 7 + k);
+            const by = y0 + 18 + k * 11 + Math.round(Math.sin(time_js_26.t * 0.0007 + k * 2) * 3), dens = 0.5 + 0.5 * n1(time_js_26.t / 5200 + k * 3.1, 7 + k);
             for (let x = -4; x < W + 8; x += 2) {
                 const q = n1((x + drift * (1 + k * 0.4)) / 23 + k * 40, 11 + k);
                 const a = Math.max(0, q - 0.35) * dens * (1 - clear) * 0.5;
@@ -41780,8 +41967,8 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
                 continue;
             // кот на крышах — чаще, чем геометрически возможно (§04, подмигивание):
             // раз в две с половиной минуты полминуты сидит на коньке; бывает — на двух сразу
-            const cyc = Math.floor(time_js_25.t / 9000);
-            if (time_js_25.t % 9000 < 1800 && p.peaks.length) {
+            const cyc = Math.floor(time_js_26.t / 9000);
+            if (time_js_26.t % 9000 < 1800 && p.peaks.length) {
                 const n = cyc % 3 === 2 ? 2 : 1;
                 for (let j = 0; j < n; j++) {
                     const pk = p.peaks[Math.floor(n1(cyc * 3.7 + j * 11, 21) * p.peaks.length) % p.peaks.length];
@@ -41797,7 +41984,7 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
             }
             // дым из трубы: клубы поднимаются, их сносит ветер, тают
             for (let i = 0; i < 9; i++) {
-                const age = (time_js_25.t * 0.35 + i * 11) % 99, k = age / 99;
+                const age = (time_js_26.t * 0.35 + i * 11) % 99, k = age / 99;
                 const sx = rx + p.chimney.x + Math.round(age * wind_js_12.wind.x * 0.5 + Math.sin(age * 0.15 + i) * 1.5), sy = ry + p.y0 + p.chimney.y - 6 - Math.round(age * 0.22);
                 ctx.globalAlpha = (1 - k) * 0.6 * town;
                 ctx.fillStyle = css(mix(AS, BO, 0.45));
@@ -41813,8 +42000,8 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
             function (wind_js_12_1) {
                 wind_js_12 = wind_js_12_1;
             },
-            function (time_js_25_1) {
-                time_js_25 = time_js_25_1;
+            function (time_js_26_1) {
+                time_js_26 = time_js_26_1;
             }
         ],
         execute: function () {
@@ -43125,7 +43312,7 @@ System.register("render/archlights", [], function (exports_124, context_124) {
 });
 System.register("world/edges", ["core/time", "render/context", "render/scaler", "world/disc"], function (exports_125, context_125) {
     "use strict";
-    var time_js_26, context_js_12, scaler_js_19, disc_js_36, OUTER, EDGE, cur;
+    var time_js_27, context_js_12, scaler_js_19, disc_js_36, OUTER, EDGE, cur;
     var __moduleName = context_125 && context_125.id;
     function edgeState() { return cur; }
     exports_125("edgeState", edgeState);
@@ -43171,7 +43358,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             ctx.fillStyle = g;
             ctx.fillRect(0, vh - h, vw, h);
             for (let i = 0; i < 14; i++) { // рябь песка
-                const sx = ((i * 97 + time_js_26.t * (0.4 + d)) % vw) | 0;
+                const sx = ((i * 97 + time_js_27.t * (0.4 + d)) % vw) | 0;
                 ctx.fillStyle = 'rgba(160,130,80,0.35)';
                 ctx.fillRect(sx, vh - ((i * 53) % h) | 0, 6, 1);
             }
@@ -43192,7 +43379,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             ctx.fillStyle = charge > 0.3 ? '#e8dcc8' : '#C23B2B';
             if (charge > 0.01)
                 ctx.fillRect(bx + 2, by + 2, (20 * charge) | 0, 6);
-            if (charge < 0.3 && (time_js_26.t / 20 | 0) % 2 === 0) {
+            if (charge < 0.3 && (time_js_27.t / 20 | 0) % 2 === 0) {
                 ctx.font = '6px "Press Start 2P","VT323",monospace';
                 ctx.fillStyle = '#C23B2B';
                 ctx.fillText('LOW', bx - 24, by + 9);
@@ -43208,7 +43395,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             ctx.fillStyle = g;
             ctx.fillRect(0, vh - h, vw, h);
             for (let i = 0; i < 8; i++) { // пузыри
-                const ph = (time_js_26.t * 0.02 + i * 0.7) % 1;
+                const ph = (time_js_27.t * 0.02 + i * 0.7) % 1;
                 ctx.fillStyle = `rgba(120,255,80,${(1 - ph) * 0.4 * d})`;
                 ctx.fillRect(((i * 131) % vw) | 0, (vh - ph * h) | 0, 2, 2);
             }
@@ -43221,7 +43408,7 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
             for (let i = 0; i < n; i++) {
                 const side = i % 2 === 0;
                 const jx = side ? ((i * 89) % (vw * 0.18)) : vw - ((i * 89) % (vw * 0.18)) - 6;
-                const jy = ((i * 157 + time_js_26.t * 0.2) % vh) | 0;
+                const jy = ((i * 157 + time_js_27.t * 0.2) % vh) | 0;
                 ctx.fillStyle = ['#2a241c', '#3a2e1e', '#1c1812'][i % 3];
                 ctx.fillRect(jx | 0, jy, 4 + (i % 4), 3 + (i % 3));
             }
@@ -43230,8 +43417,8 @@ System.register("world/edges", ["core/time", "render/context", "render/scaler", 
     exports_125("draw", draw);
     return {
         setters: [
-            function (time_js_26_1) {
-                time_js_26 = time_js_26_1;
+            function (time_js_27_1) {
+                time_js_27 = time_js_27_1;
             },
             function (context_js_12_1) {
                 context_js_12 = context_js_12_1;
@@ -43354,7 +43541,7 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
 });
 System.register("world/wandering", ["core/time", "render/context", "sprites/npcs/jester", "world/terrain"], function (exports_127, context_127) {
     "use strict";
-    var time_js_27, context_js_13, jester_js_1, terrain_js_2, jesterPos, jesterTarget, jesterWait, jesterDir, jesterMoving, jesterGraffiti, JESTER_PHRASES;
+    var time_js_28, context_js_13, jester_js_1, terrain_js_2, jesterPos, jesterTarget, jesterWait, jesterDir, jesterMoving, jesterGraffiti, JESTER_PHRASES;
     var __moduleName = context_127 && context_127.id;
     function updateJester(camera) {
         if (jesterWait > 0) {
@@ -43422,8 +43609,8 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
     exports_127("setGraffiti", setGraffiti);
     return {
         setters: [
-            function (time_js_27_1) {
-                time_js_27 = time_js_27_1;
+            function (time_js_28_1) {
+                time_js_28 = time_js_28_1;
             },
             function (context_js_13_1) {
                 context_js_13 = context_js_13_1;
@@ -43456,7 +43643,7 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
 });
 System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], function (exports_128, context_128) {
     "use strict";
-    var time_js_28, scaler_js_20, audio_js_8, MSGS, idleTimer, currentMsg, msgLife;
+    var time_js_29, scaler_js_20, audio_js_8, MSGS, idleTimer, currentMsg, msgLife;
     var __moduleName = context_128 && context_128.id;
     function update(isMoving) {
         if (isMoving) {
@@ -43493,8 +43680,8 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
     exports_128("draw", draw);
     return {
         setters: [
-            function (time_js_28_1) {
-                time_js_28 = time_js_28_1;
+            function (time_js_29_1) {
+                time_js_29 = time_js_29_1;
             },
             function (scaler_js_20_1) {
                 scaler_js_20 = scaler_js_20_1;
@@ -43545,7 +43732,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
 });
 System.register("render/puddles", ["core/time", "render/draw", "render/particles", "world/surface", "audio/audio"], function (exports_129, context_129) {
     "use strict";
-    var time_js_29, draw_js_9, particles_js_2, surface_js_1, audio_js_9, CELL, WET_UP, WET_DOWN, STRIDE, WATER, EDGE, SKY, GLINT, cells, ripples, wet, wetSteps, walked, lastPlip, inside, ring, wetKind, _state, _cellAt, _sizeOf;
+    var time_js_30, draw_js_9, particles_js_2, surface_js_1, audio_js_9, CELL, WET_UP, WET_DOWN, STRIDE, WATER, EDGE, SKY, GLINT, cells, ripples, wet, wetSteps, walked, lastPlip, inside, ring, wetKind, _state, _cellAt, _sizeOf;
     var __moduleName = context_129 && context_129.id;
     // лужа клетки (или null): место, размер, порог наполнения
     function cellAt(i, j, locations) {
@@ -43589,9 +43776,9 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
     }
     // плеск: короткий «плюх» вниз по тону и шорох воды; тихо
     function plip(sp) {
-        if (time_js_29.t - lastPlip < 10)
+        if (time_js_30.t - lastPlip < 10)
             return;
-        lastPlip = time_js_29.t;
+        lastPlip = time_js_30.t;
         const ctx = audio_js_9.getCtx();
         if (!ctx || ctx.state !== 'running')
             return;
@@ -43696,7 +43883,7 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
                 const hw0 = Math.max(1, Math.round(s.rx * 0.6));
                 ctx.fillRect(p.x - hw0, p.y - s.ry + 1, hw0 * 2, 1);
                 if (inside(p, s, gx, gy)) {
-                    ctx.globalAlpha = (0.35 + 0.2 * Math.sin(time_js_29.t * 0.3)) * s.f;
+                    ctx.globalAlpha = (0.35 + 0.2 * Math.sin(time_js_30.t * 0.3)) * s.f;
                     ctx.fillStyle = GLINT;
                     ctx.fillRect(gx, gy, 1, 2);
                 }
@@ -43721,8 +43908,8 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
     exports_129("_set", _set);
     return {
         setters: [
-            function (time_js_29_1) {
-                time_js_29 = time_js_29_1;
+            function (time_js_30_1) {
+                time_js_30 = time_js_30_1;
             },
             function (draw_js_9_1) {
                 draw_js_9 = draw_js_9_1;
@@ -43765,7 +43952,7 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
 });
 System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw"], function (exports_130, context_130) {
     "use strict";
-    var time_js_30, scaler_js_21, draw_js_10, footprints, MAX_FOOTPRINTS, STRIDE, lastX, lastY, side, PRINT, SMOKE_COUNT;
+    var time_js_31, scaler_js_21, draw_js_10, footprints, MAX_FOOTPRINTS, STRIDE, lastX, lastY, side, PRINT, SMOKE_COUNT;
     var __moduleName = context_130 && context_130.id;
     // true — след поставлен (шаг пройден и поверхность его держит)
     function addFootprint(x, y, kind = 'soft') {
@@ -43779,13 +43966,13 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
         if (footprints.length >= MAX_FOOTPRINTS)
             footprints.shift();
         side ^= 1; // левая — правая
-        footprints.push({ x: Math.floor(x + 4 + side * 4), y: Math.floor(y + 20 + side), born: time_js_30.t, P });
+        footprints.push({ x: Math.floor(x + 4 + side * 4), y: Math.floor(y + 20 + side), born: time_js_31.t, P });
         return true;
     }
     exports_130("addFootprint", addFootprint);
     function drawFootprints(ctx, camera) {
         for (const fp of footprints) {
-            const fade = Math.max(0, 1 - (time_js_30.t - fp.born) / fp.P.life); // возраст — в шагах мира, не в кадрах
+            const fade = Math.max(0, 1 - (time_js_31.t - fp.born) / fp.P.life); // возраст — в шагах мира, не в кадрах
             if (fade <= 0)
                 continue;
             if (fp.x < camera.x - 4 || fp.x > camera.x + scaler_js_21.scaler.vw + 4 || fp.y < camera.y - 4 || fp.y > camera.y + scaler_js_21.scaler.vh + 4)
@@ -43801,15 +43988,15 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
         }
         ctx.globalAlpha = 1;
         // Cleanup old
-        while (footprints.length > 0 && time_js_30.t - footprints[0].born > footprints[0].P.life)
+        while (footprints.length > 0 && time_js_31.t - footprints[0].born > footprints[0].P.life)
             footprints.shift();
     }
     exports_130("drawFootprints", drawFootprints);
     function drawSmokeClouds(ctx, camera) {
         ctx.globalAlpha = 0.08;
         for (let i = 0; i < SMOKE_COUNT; i++) {
-            const x = draw_js_10.hash(i, 0, 1) * 3000 + Math.sin(time_js_30.t * 0.001 + i * 2) * 40;
-            const y = 400 + draw_js_10.hash(i, 0, 2) * 1000 + Math.cos(time_js_30.t * 0.0008 + i) * 30;
+            const x = draw_js_10.hash(i, 0, 1) * 3000 + Math.sin(time_js_31.t * 0.001 + i * 2) * 40;
+            const y = 400 + draw_js_10.hash(i, 0, 2) * 1000 + Math.cos(time_js_31.t * 0.0008 + i) * 30;
             const r = 40 + draw_js_10.hash(i, 0, 3) * 60;
             const sx = x - camera.x, sy = y - camera.y;
             if (sx < -r || sx > scaler_js_21.scaler.vw + r || sy < -r || sy > scaler_js_21.scaler.vh + r)
@@ -43826,7 +44013,7 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
     function drawBloodMoon(ctx, camera) {
         const moonX = 100 - camera.x * 0.05;
         const moonY = 30 - camera.y * 0.02;
-        const pulse = 0.85 + 0.15 * Math.sin(time_js_30.t * 0.003);
+        const pulse = 0.85 + 0.15 * Math.sin(time_js_31.t * 0.003);
         // Outer glow
         ctx.globalAlpha = 0.12 * pulse;
         const grd = ctx.createRadialGradient(moonX, moonY, 5, moonX, moonY, 40);
@@ -43851,8 +44038,8 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
     exports_130("drawBloodMoon", drawBloodMoon);
     return {
         setters: [
-            function (time_js_30_1) {
-                time_js_30 = time_js_30_1;
+            function (time_js_31_1) {
+                time_js_31 = time_js_31_1;
             },
             function (scaler_js_21_1) {
                 scaler_js_21 = scaler_js_21_1;
@@ -43887,13 +44074,13 @@ System.register("render/atmosphere", ["core/time", "render/scaler", "render/draw
 });
 System.register("render/weather", ["render/scaler", "core/time", "render/draw", "world/wind"], function (exports_131, context_131) {
     "use strict";
-    var scaler_js_22, time_js_31, draw_js_11, wind_js_14, STATE, COOLDOWN, RAMP, weather, MAX_RAIN, MAX_SAND, MAX_PUDDLES;
+    var scaler_js_22, time_js_32, draw_js_11, wind_js_14, STATE, COOLDOWN, RAMP, weather, MAX_RAIN, MAX_SAND, MAX_PUDDLES;
     var __moduleName = context_131 && context_131.id;
     // Zone → preferred weather. Rain gets longer durations (2-4 min) so it can
     // ease in drop-by-drop and taper out. Sandstorm is punchier (25s-60s).
     // Returns null if the chosen type is still on cooldown.
     function rollWeather(zone) {
-        const onCooldown = (st) => (time_js_31.t - weather.lastStartAt[st]) < COOLDOWN[st];
+        const onCooldown = (st) => (time_js_32.t - weather.lastStartAt[st]) < COOLDOWN[st];
         const wantRain = zone === 'toxic' || zone === 'forest';
         const wantSand = zone === 'highway' || zone === 'quarter';
         if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) {
@@ -43930,7 +44117,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             if (r) {
                 weather.state = r.state;
                 weather.currentDuration = r.duration;
-                weather.lastStartAt[r.state] = time_js_31.t;
+                weather.lastStartAt[r.state] = time_js_32.t;
             }
             // Poll again in 30s regardless (cheap) — cooldowns handle the real gating
             weather.nextCheck = 1800;
@@ -44032,7 +44219,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
     function updateSand() {
         const vw = scaler_js_22.scaler.vw, vh = scaler_js_22.scaler.vh;
         const spawning = weather.state === STATE.SANDSTORM;
-        if (spawning && weather.sandParts.length < MAX_SAND && time_js_31.t % 2 === 0) {
+        if (spawning && weather.sandParts.length < MAX_SAND && time_js_32.t % 2 === 0) {
             const batch = 2 + Math.floor(weather.intensity * 3);
             for (let i = 0; i < batch; i++) {
                 weather.sandParts.push({
@@ -44049,7 +44236,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         for (let i = weather.sandParts.length - 1; i >= 0; i--) {
             const p = weather.sandParts[i];
             p.x += p.vx + weather.windX * 0.9;
-            p.y += p.vy + Math.sin(time_js_31.t * 0.02 + p.life * 0.1) * 0.3;
+            p.y += p.vy + Math.sin(time_js_32.t * 0.02 + p.life * 0.1) * 0.3;
             p.life--;
             if (p.x > vw + 30 || p.x < -30 || p.life <= 0)
                 weather.sandParts.splice(i, 1);
@@ -44082,12 +44269,12 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
                 ctx.fillRect(p.x | 0, p.y | 0, 1, 1);
             ctx.globalAlpha = 1;
             // Geiger static sparks
-            if (time_js_31.t % 6 < 2 && weather.intensity > 0.5) {
+            if (time_js_32.t % 6 < 2 && weather.intensity > 0.5) {
                 ctx.fillStyle = '#9aff5a';
                 for (let i = 0; i < 4; i++) {
                     ctx.globalAlpha = 0.2;
-                    const sx_ = (draw_js_11.hash(i, time_js_31.t, 11) * scaler_js_22.scaler.vw) | 0;
-                    const sy_ = (draw_js_11.hash(i, time_js_31.t, 22) * scaler_js_22.scaler.vh) | 0;
+                    const sx_ = (draw_js_11.hash(i, time_js_32.t, 11) * scaler_js_22.scaler.vw) | 0;
+                    const sy_ = (draw_js_11.hash(i, time_js_32.t, 22) * scaler_js_22.scaler.vh) | 0;
                     ctx.fillRect(sx_, sy_, 1, 1);
                 }
                 ctx.globalAlpha = 1;
@@ -44142,7 +44329,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         // RAIN — green tint overhead + puddle marks
         if (weather.state === STATE.TOXIC_RAIN || (weather.intensity > 0 && weather.rainParts.length > 0)) {
             // Faint poisonous green tint
-            ctx.globalAlpha = (0.08 + 0.025 * Math.sin(time_js_31.t * 0.02)) * weather.intensity;
+            ctx.globalAlpha = (0.08 + 0.025 * Math.sin(time_js_32.t * 0.02)) * weather.intensity;
             ctx.fillStyle = '#1a3a08';
             ctx.fillRect(0, 0, vw, vh);
             // Puddles (screen-space, simple)
@@ -44165,7 +44352,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         // SANDSTORM — red dust haze, obscures visibility
         if (weather.state === STATE.SANDSTORM || weather.sandParts.length > 0) {
             // Base reddish darkening
-            ctx.globalAlpha = (0.16 + 0.04 * Math.sin(time_js_31.t * 0.01)) * weather.intensity;
+            ctx.globalAlpha = (0.16 + 0.04 * Math.sin(time_js_32.t * 0.01)) * weather.intensity;
             ctx.fillStyle = '#3a0a08';
             ctx.fillRect(0, 0, vw, vh);
             // Radial fog — closes in at the edges
@@ -44191,9 +44378,9 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             const streakCount = 6;
             for (let i = 0; i < streakCount; i++) {
                 ctx.globalAlpha = 0.1 * weather.intensity;
-                const dy = (draw_js_11.hash(i, time_js_31.t * 0.03, 33) * vh) | 0;
+                const dy = (draw_js_11.hash(i, time_js_32.t * 0.03, 33) * vh) | 0;
                 const dw = 20 + ((draw_js_11.hash(i, 0, 44) * 40) | 0);
-                const dx = ((time_js_31.t * 0.6 + i * 80) % (vw + dw)) - dw;
+                const dx = ((time_js_32.t * 0.6 + i * 80) % (vw + dw)) - dw;
                 ctx.fillStyle = '#8b4a1a';
                 ctx.fillRect(dx, dy, dw, 1);
             }
@@ -44211,8 +44398,8 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             function (scaler_js_22_1) {
                 scaler_js_22 = scaler_js_22_1;
             },
-            function (time_js_31_1) {
-                time_js_31 = time_js_31_1;
+            function (time_js_32_1) {
+                time_js_32 = time_js_32_1;
             },
             function (draw_js_11_1) {
                 draw_js_11 = draw_js_11_1;
@@ -44380,7 +44567,7 @@ System.register("ui/cursor", [], function (exports_132, context_132) {
 });
 System.register("world/pets", ["core/time", "world/disc", "render/context", "render/scaler"], function (exports_133, context_133) {
     "use strict";
-    var time_js_32, disc_js_38, context_js_14, scaler_js_23, pets, lastSpawn, P;
+    var time_js_33, disc_js_38, context_js_14, scaler_js_23, pets, lastSpawn, P;
     var __moduleName = context_133 && context_133.id;
     function spawn() {
         const types = ['cat', 'rat', 'rat', 'cat'];
@@ -44398,8 +44585,8 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
     }
     function update() {
         // Spawn rate: every 5-15 seconds
-        if (time_js_32.t - lastSpawn > 300 + Math.random() * 600 && pets.length < 3) {
-            lastSpawn = time_js_32.t;
+        if (time_js_33.t - lastSpawn > 300 + Math.random() * 600 && pets.length < 3) {
+            lastSpawn = time_js_33.t;
             spawn();
         }
         for (let i = pets.length - 1; i >= 0; i--) {
@@ -44429,7 +44616,7 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
                 ctx.fillRect(wx + 1, wy, 3, 1);
                 ctx.fillRect(wx + 5, wy + 2, 1, 1);
                 // Eye
-                if (time_js_32.t % 60 < 55)
+                if (time_js_33.t % 60 < 55)
                     ctx.fillStyle = P.amber, ctx.fillRect(wx + 5, wy + 1, 1, 1);
             }
             else if (p.type === 'rat') {
@@ -44444,8 +44631,8 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
     exports_133("draw", draw);
     return {
         setters: [
-            function (time_js_32_1) {
-                time_js_32 = time_js_32_1;
+            function (time_js_33_1) {
+                time_js_33 = time_js_33_1;
             },
             function (disc_js_38_1) {
                 disc_js_38 = disc_js_38_1;
@@ -44470,7 +44657,7 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
 });
 System.register("world/ravens", ["core/time", "render/draw", "world/wind", "world/disc", "world/surface", "audio/audio"], function (exports_134, context_134) {
     "use strict";
-    var time_js_33, draw_js_12, wind_js_15, disc_js_39, surface_js_2, audio_js_10, CELL, NEAR, FORGET, LEASH, BIRD, SHEEN, flocks, overs, nextOver, lastCaw, lastFlash, grid, near, pending, anchors, ravenDepth, _flocks;
+    var time_js_34, draw_js_12, wind_js_15, disc_js_39, surface_js_2, audio_js_10, CELL, NEAR, FORGET, LEASH, BIRD, SHEEN, flocks, overs, nextOver, lastCaw, lastFlash, grid, near, pending, anchors, ravenDepth, _flocks;
     var __moduleName = context_134 && context_134.id;
     // ── звук ──
     function flutter(vol) {
@@ -44796,8 +44983,8 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             if (f.st === 'up' && !up && f.birds.every(b => b.delay <= 0))
                 f.st = 'calm';
             // редкое карканье с земли — не чаще раза в 120 с
-            if (f.st === 'calm' && dc < 260 && time_js_33.t - lastCaw > 7200 && Math.random() < 0.0015) {
-                lastCaw = time_js_33.t;
+            if (f.st === 'calm' && dc < 260 && time_js_34.t - lastCaw > 7200 && Math.random() < 0.0015) {
+                lastCaw = time_js_34.t;
                 caw(near(dc, 0.016));
             }
         }
@@ -44941,8 +45128,8 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
     exports_134("_spawn", _spawn);
     return {
         setters: [
-            function (time_js_33_1) {
-                time_js_33 = time_js_33_1;
+            function (time_js_34_1) {
+                time_js_34 = time_js_34_1;
             },
             function (draw_js_12_1) {
                 draw_js_12 = draw_js_12_1;
@@ -44982,7 +45169,7 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
 });
 System.register("world/silentCat", ["core/time", "core/events", "world/wind", "world/ravens"], function (exports_135, context_135) {
     "use strict";
-    var time_js_34, events_js_6, wind_js_16, ravens_js_1, sightings, fifthUnlocked, spots, CAT, RIM, EYE, NEAR, STILL, LEASH, SIGHT, HUNT, POUNCE, cats, still, solids, fire, inBox, catDepth, _cats;
+    var time_js_35, events_js_6, wind_js_16, ravens_js_1, sightings, fifthUnlocked, spots, CAT, RIM, EYE, NEAR, STILL, LEASH, SIGHT, HUNT, POUNCE, cats, still, solids, fire, inBox, catDepth, _cats;
     var __moduleName = context_135 && context_135.id;
     function init(locations) {
         cats = [];
@@ -45231,7 +45418,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                     break;
             }
             // идёт мимо сидящих ворон — взлетят; бежит — тем более
-            if ((c.st === 'back' || c.st === 'come' || c.st === 'flee') && time_js_34.t % 10 === 0) {
+            if ((c.st === 'back' || c.st === 'come' || c.st === 'flee') && time_js_35.t % 10 === 0) {
                 ravens_js_1.startleRavens(c.x + 2, c.y + 3, c.st === 'flee' ? 30 : 18, c.x + 2, c.y + 3);
             }
         }
@@ -45265,13 +45452,13 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             }
             at(-1, 2);
             at(-2, 2);
-            at(-3, (time_js_34.t + Math.floor(c.ph * 10)) % 40 < 6 ? 1 : 2);
+            at(-3, (time_js_35.t + Math.floor(c.ph * 10)) % 40 < 6 ? 1 : 2);
             ctx.fillStyle = RIM;
             at(1, 2, 3);
             ctx.fillStyle = EYE;
             at(6, 1);
             c.eyes = [[D > 0 ? x + 5 : x - 1, y + 1]];
-            c.eyesT = time_js_34.t;
+            c.eyesT = time_js_35.t;
             return;
         }
         if (c.st === 'flee' || c.st === 'back' || c.st === 'come' || c.st === 'pounce') {
@@ -45290,7 +45477,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 at(2, 3);
                 at(3, 3);
             }
-            const sw = Math.round(Math.sin(time_js_34.t * 0.2 + c.ph) * 0.6 - w.x * D * 0.9);
+            const sw = Math.round(Math.sin(time_js_35.t * 0.2 + c.ph) * 0.6 - w.x * D * 0.9);
             at(-1, 0);
             at(-2 + Math.min(0, sw), -1 + Math.max(0, sw));
             ctx.fillStyle = RIM;
@@ -45299,7 +45486,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             ctx.fillStyle = EYE;
             at(5, 0);
             c.eyes = [[D > 0 ? x + 4 : x, y]];
-            c.eyesT = time_js_34.t;
+            c.eyesT = time_js_35.t;
             return;
         }
         // сидит: голова к страннику — левее, прямо, правее; хвост — с другой стороны
@@ -45312,11 +45499,11 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         // хвост: у тепла лежит вокруг лап, в обиде — торчит и дёргается, так — гуляет по ветру
         let a;
         if (c.st === 'warm')
-            a = Math.sin(time_js_34.t * 0.03 + c.ph) > 0.85 ? 0.5 : 0;
+            a = Math.sin(time_js_35.t * 0.03 + c.ph) > 0.85 ? 0.5 : 0;
         else if (c.st === 'wait' || c.st === 'miss')
-            a = 1.1 + 0.35 * Math.sin(time_js_34.t * 0.35 + c.ph);
+            a = 1.1 + 0.35 * Math.sin(time_js_35.t * 0.35 + c.ph);
         else
-            a = 0.35 + 0.25 * Math.sin(time_js_34.t * 0.025 + c.ph) + w.x * side * 0.8;
+            a = 0.35 + 0.25 * Math.sin(time_js_35.t * 0.025 + c.ph) + w.x * side * 0.8;
         a = Math.max(0, Math.min(1.5, a));
         const tb = side > 0 ? x - 1 : x + 5;
         for (let k = 0; k < 4; k++)
@@ -45326,7 +45513,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         ctx.fillRect(side > 0 ? x + 4 : x, y + 1, 1, 3);
         ctx.fillRect(side > 0 ? x + hx + 2 : x + hx, y - 1, 1, 1); // ухо к огню
         // глаза: моргнул — нет; медленно моргает — прикрыты
-        c.eyesT = time_js_34.t;
+        c.eyesT = time_js_35.t;
         c.eyes = [];
         if (c.shut > 0 && !c.slow)
             return;
@@ -45347,7 +45534,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             return;
         const fx0 = player.x + 6, fy0 = player.y + 10;
         for (const c of cats) {
-            if (c.eyesT !== time_js_34.t || !c.eyes.length)
+            if (c.eyesT !== time_js_35.t || !c.eyes.length)
                 continue;
             for (const [ex, ey] of c.eyes) {
                 const d = Math.hypot(ex - fx0, ey - fy0);
@@ -45378,8 +45565,8 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
     exports_135("_reset", _reset);
     return {
         setters: [
-            function (time_js_34_1) {
-                time_js_34 = time_js_34_1;
+            function (time_js_35_1) {
+                time_js_35 = time_js_35_1;
             },
             function (events_js_6_1) {
                 events_js_6 = events_js_6_1;
@@ -45421,7 +45608,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
 });
 System.register("world/brainrot", ["core/time", "render/context", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers"], function (exports_136, context_136) {
     "use strict";
-    var time_js_35, context_js_15, scaler_js_24, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_40, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
+    var time_js_36, context_js_15, scaler_js_24, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_40, layers_js_1, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, loopExitCb, NIGHT, BAYER, patterns, POPUPS;
     var __moduleName = context_136 && context_136.id;
     function enterLoop(exitCb) {
         loopMode = true;
@@ -45544,7 +45731,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
         }
         const k = brainrot / 100;
         const bg = layers_js_1.layers.canvas('bg'), world = layers_js_1.layers.canvas('world');
-        const tick = time_js_35.t >> 2; // распад дёргается рывками, не плывёт
+        const tick = time_js_36.t >> 2; // распад дёргается рывками, не плывёт
         // строки рвутся и съезжают
         if (k > 0.35) {
             const n = Math.floor((k - 0.35) * 22);
@@ -45609,7 +45796,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             const h = vh * Math.min(1, a * 1.08);
             for (let i = 0; i < 900; i++) {
                 const x = rnd(i * 3.1) * vw | 0;
-                const y = vh - rnd(i * 7.7 + (time_js_35.t >> 3)) * h | 0;
+                const y = vh - rnd(i * 7.7 + (time_js_36.t >> 3)) * h | 0;
                 ctx.fillStyle = i % 3 ? '#D9CFB8' : '#3A3026';
                 ctx.globalAlpha = 0.5 + 0.5 * rnd(i);
                 ctx.fillRect(x, y, 1, 1);
@@ -45650,7 +45837,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             const world = layers_js_1.layers.canvas('world'), bg = layers_js_1.layers.canvas('bg');
             const sc = scaler_js_24.scaler.scale || 1;
             for (let y = 0; y < vh; y += 3) {
-                const dx = Math.sin(y * 0.09 + time_js_35.t * 0.12) * (2 + a * 10);
+                const dx = Math.sin(y * 0.09 + time_js_36.t * 0.12) * (2 + a * 10);
                 if (bg && bg.width)
                     ctx.drawImage(bg, 0, y * sc, bg.width, 3 * sc, dx, y, vw, 3);
                 if (world && world.width)
@@ -45662,7 +45849,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             ctx.fillRect(0, vh - h, vw, h);
             ctx.globalAlpha = 0.7;
             for (let i = 0; i < 30; i++) {
-                const ph = (time_js_35.t * 0.015 + rnd(i)) % 1;
+                const ph = (time_js_36.t * 0.015 + rnd(i)) % 1;
                 ctx.fillStyle = '#5aa83a';
                 ctx.fillRect(rnd(i * 5) * vw | 0, vh - ph * h | 0, 2, 2);
             }
@@ -45700,7 +45887,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
             ctx.globalAlpha = Math.min(0.92, (f - 0.55) * 3);
             ctx.fillStyle = NIGHT;
             ctx.fillRect(0, vh / 2 - 14, vw, 22);
-            ctx.globalAlpha = Math.min(1, (f - 0.55) * 3) * (0.75 + 0.25 * Math.sin(time_js_35.t * 0.05));
+            ctx.globalAlpha = Math.min(1, (f - 0.55) * 3) * (0.75 + 0.25 * Math.sin(time_js_36.t * 0.05));
             ctx.fillStyle = '#C23B2B';
             ctx.font = '10px "Press Start 2P","VT323",monospace';
             ctx.textAlign = 'center';
@@ -45717,8 +45904,8 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
     exports_136("getLevel", getLevel);
     return {
         setters: [
-            function (time_js_35_1) {
-                time_js_35 = time_js_35_1;
+            function (time_js_36_1) {
+                time_js_36 = time_js_36_1;
             },
             function (context_js_15_1) {
                 context_js_15 = context_js_15_1;
@@ -45771,7 +45958,7 @@ System.register("world/brainrot", ["core/time", "render/context", "render/scaler
 });
 System.register("world/ending", ["render/scaler", "core/time"], function (exports_137, context_137) {
     "use strict";
-    var scaler_js_25, time_js_36, active, phase, timer, TEXTS;
+    var scaler_js_25, time_js_37, active, phase, timer, TEXTS;
     var __moduleName = context_137 && context_137.id;
     function trigger() {
         active = true;
@@ -45814,8 +46001,8 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
             function (scaler_js_25_1) {
                 scaler_js_25 = scaler_js_25_1;
             },
-            function (time_js_36_1) {
-                time_js_36 = time_js_36_1;
+            function (time_js_37_1) {
+                time_js_37 = time_js_37_1;
             }
         ],
         execute: function () {
@@ -45838,7 +46025,7 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
 });
 System.register("world/monsters", ["core/time", "render/context", "world/terrain"], function (exports_138, context_138) {
     "use strict";
-    var time_js_37, context_js_16, terrain_js_4, monsters, lastSpawn;
+    var time_js_38, context_js_16, terrain_js_4, monsters, lastSpawn;
     var __moduleName = context_138 && context_138.id;
     function getDistFromMap(player) {
         let d = 0;
@@ -45855,8 +46042,8 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
     function update(player) {
         const dist = getDistFromMap(player);
         // Spawn monsters when far from map
-        if (dist > 300 && time_js_37.t - lastSpawn > 120 && monsters.length < 8) {
-            lastSpawn = time_js_37.t;
+        if (dist > 300 && time_js_38.t - lastSpawn > 120 && monsters.length < 8) {
+            lastSpawn = time_js_38.t;
             const angle = Math.random() * Math.PI * 2;
             const spawnDist = 100 + Math.random() * 60;
             monsters.push({
@@ -45891,7 +46078,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
             const sx = Math.floor(m.x - camera.x);
             const sy = Math.floor(m.y - camera.y);
             const wx = Math.floor(m.x), wy = Math.floor(m.y); // контекст мира уже сдвинут камерой
-            const pulse = Math.sin(time_js_37.t * 0.03 + m.phase) * 0.3;
+            const pulse = Math.sin(time_js_38.t * 0.03 + m.phase) * 0.3;
             // Shadow
             ctx.globalAlpha = 0.4;
             ctx.fillStyle = '#000';
@@ -45918,8 +46105,8 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
     exports_138("getCount", getCount);
     return {
         setters: [
-            function (time_js_37_1) {
-                time_js_37 = time_js_37_1;
+            function (time_js_38_1) {
+                time_js_38 = time_js_38_1;
             },
             function (context_js_16_1) {
                 context_js_16 = context_js_16_1;
@@ -45936,7 +46123,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_139, context_139) {
     "use strict";
-    var time_js_38, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, boats, draft, frost, frostScreen, fsW, fsH;
+    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, boats, draft, breath, frost, frostScreen, fsW, fsH;
     var __moduleName = context_139 && context_139.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -47159,7 +47346,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         for (let u = 0; u < 7; u++) {
             const y = gy - 23 + u * 3;
             r(x + 2, y, 8, 2, K2);
-            const ph = Math.floor(time_js_38.t / (14 + ((id * 7 + u * 13) % 23)));
+            const ph = Math.floor(time_js_39.t / (14 + ((id * 7 + u * 13) % 23)));
             if (hh(id, u, ph) < 0.55)
                 r(x + 3, y, 1, 1, TI);
             if (hh(id + 50, u, ph) < 0.25)
@@ -47196,6 +47383,14 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         r(x + 2, gy - 2, 2, 2, K1);
         r(x + 54, gy - 2, 2, 2, K1);
     }
+    // тоннель вдохнул (ритуал «Вдох на пороге»): пыль у уголька уходит внутрь, в (dx, dy)
+    function inhaleDust(x, y, dx, dy) {
+        for (let k = 0; k < 26; k++) {
+            const v = 0.35 + Math.random() * 0.45;
+            breath.push({ x: x + (Math.random() - 0.5) * 26, y: y + (Math.random() - 0.5) * 16, vx: dx * v + (Math.random() - 0.5) * 0.1, vy: dy * v + (Math.random() - 0.5) * 0.1, life: 70 + q(Math.random() * 70), w: k * 3 });
+        }
+    }
+    exports_139("inhaleDust", inhaleDust);
     function frostDots() {
         if (frost)
             return frost;
@@ -47254,7 +47449,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             }
         }
         // пар изо рта — в холоде
-        if (underside_js_3.under.cold > 0.25 && time_js_38.t % 80 === 0) {
+        if (underside_js_3.under.cold > 0.25 && time_js_39.t % 80 === 0) {
             for (let k = 0; k < 5; k++)
                 puffs.push({ x: p.x + 7 + (p.dir || 1) * 3, y: p.y - 1, vx: (p.dir || 1) * (0.1 + Math.random() * 0.15), vy: -0.08 - Math.random() * 0.06, life: 70 + k * 6 });
         }
@@ -47289,6 +47484,19 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             d.y += d.vy;
             if (--d.life <= 0)
                 draft.splice(i, 1);
+        }
+        for (let i = breath.length - 1; i >= 0; i--) {
+            const d = breath[i];
+            if (d.w > 0) {
+                d.w--;
+                continue;
+            }
+            d.x += d.vx;
+            d.y += d.vy;
+            d.vx *= 1.01;
+            d.vy *= 1.01;
+            if (--d.life <= 0)
+                breath.splice(i, 1);
         }
         // иней тает кольцом вокруг уголька и отрастает, когда отойдёшь
         if (underside_js_3.under.cold > 0.05 || underside_js_3.placeAt(fx, fy) === 'vein' || underside_js_3.placeAt(fx, fy) === 'wd') {
@@ -47327,10 +47535,10 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         const B = underside_js_3.ROOMS.find(R => R.id === 'base');
         if (B.x1 > camX && B.x0 < camX + vw && B.y1 > camY && B.y0 < camY + vh) {
             for (let k = 0; k < 26; k++) {
-                const x = B.x0 + 20 + q(hh(k, 5, 38) * (B.x1 - B.x0 - 40) + Math.sin(time_js_38.t * 0.01 + k) * 6), y = B.y0 + 12 + q(hh(k, 6, 38) * (B.y1 - B.y0 - 30));
+                const x = B.x0 + 20 + q(hh(k, 5, 38) * (B.x1 - B.x0 - 40) + Math.sin(time_js_39.t * 0.01 + k) * 6), y = B.y0 + 12 + q(hh(k, 6, 38) * (B.y1 - B.y0 - 30));
                 if (!underside_js_3.inWater(x, y) || !underside_js_3.inWater(x + 6, y))
                     continue;
-                G.globalAlpha = 0.35 + 0.25 * Math.sin(time_js_38.t * 0.03 + k * 1.7);
+                G.globalAlpha = 0.35 + 0.25 * Math.sin(time_js_39.t * 0.03 + k * 1.7);
                 r(x, y, 4 + (k % 3), 1, k % 4 ? MG_L : AS);
             }
             G.globalAlpha = 1;
@@ -47340,11 +47548,11 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             for (let i = 0; i < 28; i++) {
                 const x = 1691 + i, sp = 1 + (i % 3);
                 for (let y = 160; y < 200; y++)
-                    if (((y - time_js_38.t * sp) & 7) < 2 && hh(i, y >> 2, 58) < 0.7)
+                    if (((y - time_js_39.t * sp) & 7) < 2 && hh(i, y >> 2, 58) < 0.7)
                         r(x, y, 1, 1, (y + i) % 5 ? AS : BO);
             }
             for (let k = 0; k < 6; k++) {
-                const x = 1690 + ((time_js_38.t >> 2) + k * 9) % 30;
+                const x = 1690 + ((time_js_39.t >> 2) + k * 9) % 30;
                 r(x, 203 + (k & 1) * 2, 3, 1, AS);
             }
         }
@@ -47360,15 +47568,15 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 }
                 r(sx, sy + 13, 74, 11, MG);
                 for (let k = 0; k < 7; k++) {
-                    const tx = sx + 4 + k * 11, sw = Math.sin(time_js_38.t * 0.018 + k * 1.3) * 1.2;
+                    const tx = sx + 4 + k * 11, sw = Math.sin(time_js_39.t * 0.018 + k * 1.3) * 1.2;
                     for (let j = 0; j < 11; j++) {
                         const w = 1 + (j >> 1);
                         r(tx + q(sw * (1 - j / 11)) - (w >> 1), sy + 7 + j, w, 1, MG_D);
                     }
                     r(tx, sy + 18, 1, 5, K2);
                 }
-                if ((time_js_38.t >> 6) % 9 === 0)
-                    r(sx + ((time_js_38.t >> 1) % 74), sy + 3, 2, 1, K2); // птица пролетела
+                if ((time_js_39.t >> 6) % 9 === 0)
+                    r(sx + ((time_js_39.t >> 1) % 74), sy + 3, 2, 1, K2); // птица пролетела
                 G.globalAlpha = 0.25;
                 for (let y = sy; y < sy + 24; y += 2)
                     r(sx, y, 74, 1, K1);
@@ -47377,7 +47585,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         }
         // ручеёк талой воды в крипте: блик бежит к жиле
         {
-            const x = 396 + ((time_js_38.t >> 1) % 56), y = 304 + q(Math.sin(x * 0.27) * 1.5) - (x > 430 ? 6 : q((x - 396) / 6));
+            const x = 396 + ((time_js_39.t >> 1) % 56), y = 304 + q(Math.sin(x * 0.27) * 1.5) - (x > 430 ? 6 : q((x - 396) / 6));
             G.globalAlpha = 0.6;
             r(x, y, 1, 1, MG_L);
             G.globalAlpha = 1;
@@ -47397,7 +47605,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             const sw = underside_js_3.CUTS.find(c => c.id === 'sewer'), gx0 = sw.x0 + 40, y0 = LINE.y0 + 3, H = underside_js_3.T.FH - 6;
             if (gx0 < camX + vw && gx0 + 24 > camX) {
                 for (let k = 0; k < 14; k++) {
-                    const x = gx0 + ((k * 7) % 24), y = y0 + q((time_js_38.t * 0.25 + k * 9) % H);
+                    const x = gx0 + ((k * 7) % 24), y = y0 + q((time_js_39.t * 0.25 + k * 9) % H);
                     if ((x - gx0) % 3 && y !== y0 + (H >> 1)) {
                         G.globalAlpha = 0.55;
                         r(x, y, 1, 1, k & 1 ? MG_L : MG);
@@ -47412,8 +47620,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                         r(x, y, 1, 1, c);
                     }
                 }
-                if (time_js_38.t % 90 < 40) {
-                    const k = (time_js_38.t % 90) / 40;
+                if (time_js_39.t % 90 < 40) {
+                    const k = (time_js_39.t % 90) / 40;
                     G.globalAlpha = 0.25 * (1 - k);
                     r(gx0 + 4 + q(k * 10), y0 - q(k * 14), 2, 1, BO);
                     G.globalAlpha = 1;
@@ -47467,7 +47675,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     r(sp.x, sp.y - 1, 1, 1, MG);
             }
             for (let x = underside_js_3.MOSS.dry; x < underside_js_3.MOSS.x1 - 2; x += 3) {
-                const y0 = underside_js_3.mossY(x), k = 0.5 + 0.5 * Math.sin(time_js_38.t * 0.03 + x * 0.21);
+                const y0 = underside_js_3.mossY(x), k = 0.5 + 0.5 * Math.sin(time_js_39.t * 0.03 + x * 0.21);
                 G.globalAlpha = (0.1 + 0.16 * k) * mossDry(x);
                 r(x, y0 + 3 + q(hh(x, 0, 132) * (underside_js_3.MOSS.fh - 6)), 1, 1, GLOW_W);
             }
@@ -47497,9 +47705,18 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             G.globalAlpha = Math.min(0.35, u.life / 160);
             r(u.x, u.y, 1 + (u.life < 40 ? 1 : 0), 1, BO);
         }
+        for (const d of breath)
+            if (!d.w) { // пылинка со следом: сквозняк виден по тому, что все летят в одну сторону
+                const a = Math.min(0.6, d.life / 70);
+                G.globalAlpha = a;
+                r(d.x, d.y, 1, 1, BO);
+                G.globalAlpha = a * 0.45;
+                r(d.x - d.vx * 2.5, d.y - d.vy * 2.5, 1, 1, BO);
+                r(d.x - d.vx * 5, d.y - d.vy * 5, 1, 1, AS);
+            }
         G.globalAlpha = 1;
         // крипта дышит: раз в шесть секунд воздух уходит вверх по ступеням — пыль следом
-        const st = underside_js_3.THINGS.find(th => th.id === 'u_up_crypt'), ph = time_js_38.t % 360;
+        const st = underside_js_3.THINGS.find(th => th.id === 'u_up_crypt'), ph = time_js_39.t % 360;
         if (ph < 50 && st.x > camX - 20 && st.x < camX + vw + 20) {
             for (let k = 0; k < 8; k++) {
                 const u = (ph + k * 6) / 50;
@@ -47513,12 +47730,12 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         // метка диска счётчика крутится
         const m = underside_js_3.THINGS.find(th => th.id === 'u_meter');
         if (m.x > camX - 20 && m.x < camX + vw)
-            r(m.x + 7 + ((time_js_38.t >> 3) % 8), m.y + 9, 1, 1, K1);
+            r(m.x + 7 + ((time_js_39.t >> 3) % 8), m.y + 9, 1, 1, K1);
         // пар над котелком — несут каждый вечер, ещё тёплый
         const pot = underside_js_3.THINGS.find(th => th.id === 'u_pot');
         if (pot.x > camX - 20 && pot.x < camX + vw + 20) {
             for (let k = 0; k < 3; k++) {
-                const u = ((time_js_38.t + k * 40) % 120) / 120;
+                const u = ((time_js_39.t + k * 40) % 120) / 120;
                 G.globalAlpha = 0.25 * (1 - u);
                 r(pot.x + 6 + q(Math.sin(u * 6 + k) * 2), pot.y - 1 - q(u * 12), 1, 1, BO);
             }
@@ -47531,14 +47748,14 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         const fx = p.x + 6, fy = p.y + 23;
         if (!underside_js_3.inWater(fx, fy))
             return;
-        const wl = q(fy - 9 + Math.sin(time_js_38.t * 0.08) * 0.6);
+        const wl = q(fy - 9 + Math.sin(time_js_39.t * 0.08) * 0.6);
         r(p.x - 3, wl, 20, fy - wl + 1, MG);
         G.globalAlpha = 0.8;
         r(p.x - 4, wl, 22, 1, MG_L);
         G.globalAlpha = 1;
         if (p.moving)
             for (let k = 0; k < 2; k++) {
-                const s = ((time_js_38.t + k * 20) % 40) / 40, R = 8 + s * 10;
+                const s = ((time_js_39.t + k * 20) % 40) / 40, R = 8 + s * 10;
                 G.globalAlpha = 0.5 * (1 - s);
                 for (let a = 0; a < 12; a++) {
                     const an = a / 12 * Math.PI * 2;
@@ -47639,12 +47856,12 @@ System.register("render/underside", ["core/time", "world/underside"], function (
     }
     exports_139("drawUnderFx", drawUnderFx);
     // сброс живого при входе: прошлые следы остаются (пыль помнит), капли и пар — нет
-    function resetUnderLife() { drips.length = 0; puffs.length = 0; lastPrint = null; }
+    function resetUnderLife() { drips.length = 0; puffs.length = 0; breath.length = 0; lastPrint = null; }
     exports_139("resetUnderLife", resetUnderLife);
     return {
         setters: [
-            function (time_js_38_1) {
-                time_js_38 = time_js_38_1;
+            function (time_js_39_1) {
+                time_js_39 = time_js_39_1;
             },
             function (underside_js_3_1) {
                 underside_js_3 = underside_js_3_1;
@@ -48038,6 +48255,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             puffs = [];
             boats = []; // кораблики из заявлений — по каналу под полотном
             draft = []; // сквозняк метро и пыль от поезда
+            breath = []; // вдох на пороге: сквозняк тянет пыль от уголька в глубину
             frost = null; // иней: точки, тают у уголька, отрастают
             // иней на стекле: растр инверсией — светлые точки нарастают из углов кадра
             // перьями, вдоль краёв — тоньше (слой fx, складывается); середина чистая
@@ -48047,12 +48265,12 @@ System.register("render/underside", ["core/time", "world/underside"], function (
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "assets/loader"], function (exports_140, context_140) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_17, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_3, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_6, events_js_8, input_js_2, time_js_39, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, editor_js_1, eggObjects_js_2, disc_js_41, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_4, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_3, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, time_js_40, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_17, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_3, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_6, events_js_8, input_js_2, time_js_40, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, editor_js_1, eggObjects_js_2, disc_js_41, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_4, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_3, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, time_js_41, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
     var __moduleName = context_140 && context_140.id;
     function lockHint() {
-        if (time_js_39.t - lockHintAt < 1800)
+        if (time_js_40.t - lockHintAt < 1800)
             return;
-        lockHintAt = time_js_39.t;
+        lockHintAt = time_js_40.t;
         lorepopup_js_1.showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра».');
     }
     // Check if player can leave settlement
@@ -48117,7 +48335,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         for (const tr of flora_js_3.floraIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad))
             if (!LOW.has(tr.sp))
                 out.push(floraProps_js_1.treeCaster(tr, shadows_js_1.maskFrom));
-        for (const p of landmarkProps_js_1.landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, time_js_40.t))
+        for (const p of landmarkProps_js_1.landmarkPropsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad, time_js_41.t))
             if (!FLATLM.has(p.kind))
                 out.push(propCaster(p));
         for (const T of ground_js_2.tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad))
@@ -48166,8 +48384,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const sun = sk.sun ? Math.min(1, sk.sun.elev / 0.35) : 0; // днём тени от огня съедает солнце
         // огонь дышит (канон Г-10): вспыхивает и опадает в такт своему свечению — та же
         // волна, что у света (render/lighting.js), — и клонится то вправо, то влево, как пламя
-        const breath = Math.sin(time_js_40.t * 0.07 + (fireLocS.x + fireLocS.w / 2) * 0.1);
-        const sway = Math.sin(time_js_40.t * 0.025 + 2.2) * 3;
+        const breath = Math.sin(time_js_41.t * 0.07 + (fireLocS.x + fireLocS.w / 2) * 0.1);
+        const sway = Math.sin(time_js_41.t * 0.025 + 2.2) * 3;
         const k = (1 - sun) * (1 + 0.1 * breath);
         return { x: x + sway, y, r, a: 0.62 * k, wash: 0.24 * k, breath };
     }
@@ -48175,7 +48393,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // вдвое), сила дня (низкое солнце — резче; у горизонта гаснет), сила луны, нажим пера.
     // Красный полдень — час без теней: штрих теряет свет вместе с тенями
     function groundLight() {
-        const p = sky_js_3.phaseAt(time_js_40.t), sk = sky_js_3.skyAt(p), sh = sky_js_3.shadowAt(p), fade = 1 - redNoon_js_3.redNoon.k;
+        const p = sky_js_3.phaseAt(time_js_41.t), sk = sky_js_3.skyAt(p), sh = sky_js_3.shadowAt(p), fade = 1 - redNoon_js_3.redNoon.k;
         let day = 0;
         if (sk.sun) {
             const e = sk.sun.elev, k = Math.min(1, e / 0.12);
@@ -48220,8 +48438,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (!NO_GRASS)
             grass_js_2.drawGrass(worldCtx, { x: camX, y: camY }, player); // трава гнётся по ветру и расступается
         if (!NO_SHADOW) { // тени по времени суток и от костра
-            const sk = sky_js_3.skyAt(sky_js_3.phaseAt(time_js_40.t)), fade = 1 - redNoon_js_3.redNoon.k; // красный полдень — час без теней
-            const sun = sky_js_3.shadowAt(sky_js_3.phaseAt(time_js_40.t)), fs = fireShadow(sk, camX, camY, vw, vh);
+            const sk = sky_js_3.skyAt(sky_js_3.phaseAt(time_js_41.t)), fade = 1 - redNoon_js_3.redNoon.k; // красный полдень — час без теней
+            const sun = sky_js_3.shadowAt(sky_js_3.phaseAt(time_js_41.t)), fs = fireShadow(sk, camX, camY, vw, vh);
             sun.a *= fade;
             sun.wash *= fade;
             if (fs) {
@@ -48245,7 +48463,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             drawList.push({ k: p.gy, prop: p }); // акведуки, ЛЭП, мосты
         for (const tr of flora_js_3.floraIn(camX - 18, camY - 4, camX + vw + 18, camY + vh + 46))
             drawList.push({ k: tr.gy, tree: tr }); // рощи и камыш
-        for (const p of landmarkProps_js_1.landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, time_js_40.t))
+        for (const p of landmarkProps_js_1.landmarkPropsIn(camX - 20, camY - 4, camX + vw + 20, camY + vh + 40, time_js_41.t))
             drawList.push({ k: p.gy, prop: p }); // приметы
         for (const T of ground_js_2.tissueThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40))
             drawList.push({ k: T.gy, prop: T }); // ткань поля — стоит в земле
@@ -48278,11 +48496,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 continue;
             }
             if (it.fire) {
-                fireRing_js_1.drawFireSite(worldCtx, it.fire, time_js_40.t);
+                fireRing_js_1.drawFireSite(worldCtx, it.fire, time_js_41.t);
                 continue;
             }
             if (it.tree) {
-                floraProps_js_1.drawTree(worldCtx, it.tree, time_js_40.t);
+                floraProps_js_1.drawTree(worldCtx, it.tree, time_js_41.t);
                 continue;
             }
             if (it.player) {
@@ -48330,7 +48548,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // Readability floor: night was 0.28 (28% brightness through the
         // multiply layer) — dramatic on a desk, near-black on a phone in
         // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
-        const ambient = sky_js_3.skyAt(sky_js_3.phaseAt(time_js_40.t)).light; // сутки по канону: 0.40 ночь … 0.82 полдень
+        const ambient = sky_js_3.skyAt(sky_js_3.phaseAt(time_js_41.t)).light; // сутки по канону: 0.40 ночь … 0.82 полдень
         lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, ambient);
         // Atmospheric particles in lit areas (render on world layer for depth)
         const camObj = { x: camX, y: camY };
@@ -48388,14 +48606,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         hang_js_9.stepHangs(player); // подвесы: колокола, вывески, плита на кране
         mechanisms_js_5.stepMechs(); // механизмы: флюгер, ветряк, маховик, ворот
         townWell_js_2.stepTownWell(player); // колодец у площади: мимо прошёл — ворот поскрипел
-        mossway_js_2.stepMossway(player, sky_js_3.skyAt(sky_js_3.phaseAt(time_js_40.t)).moon > 0.5, sky_js_3.dayIndex(time_js_40.t)); // пифос ночью шепчет тому, кто задержался
+        mossway_js_2.stepMossway(player, sky_js_3.skyAt(sky_js_3.phaseAt(time_js_41.t)).moon > 0.5, sky_js_3.dayIndex(time_js_41.t)); // пифос ночью шепчет тому, кто задержался
         castle_js_1.stepCastle(!player.moving && town_js_4.onBridge(player.x + 6, player.y + 23)); // кто стоит на мосту, тому туман расходится
         silentCat_js_1.stepCats(player, locations_js_6.locations); // кот: пугается бегущего, к стоящему идёт греться
         ravens_js_2.stepRavens(player, locations_js_6.locations, weather_js_1.weather); // вороны: стаи взлетают от шагов, падения, грома
         puddles_js_1.stepPuddles(player, surfName, weather_js_1.weather, { x: camX, y: camY, vw: scaler_js_26.scaler.vw, vh: scaler_js_26.scaler.vh }, locations_js_6.locations);
-        pen_js_1.setPress(pen_js_1.pressAt(sky_js_3.phaseAt(time_js_40.t))); // перо: к ночи исписалось, на рассвете обмакнули
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_3.phaseAt(time_js_41.t))); // перо: к ночи исписалось, на рассвете обмакнули
         // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
-        redNoon_js_3.stepRedNoon(time_js_40.t, sky_js_3.phaseAt(time_js_40.t), sky_js_3.dayIndex(time_js_40.t));
+        redNoon_js_3.stepRedNoon(time_js_41.t, sky_js_3.phaseAt(time_js_41.t), sky_js_3.dayIndex(time_js_41.t));
         {
             const sx = player.x + 6, sy = player.y + 24, ds = sy - disc_js_41.TOWN.y1;
             const south = ds > 0 && ds >= Math.max(disc_js_41.TOWN.y0 - sy, disc_js_41.TOWN.x0 - sx, sx - disc_js_41.TOWN.x1);
@@ -48506,14 +48724,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 ctx.save();
                 ctx.translate(2 * loc.archX, 0);
                 ctx.scale(-1, 1);
-                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_40.t);
+                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_41.t);
                 ctx.restore();
             }
             else
-                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_40.t);
+                loc.archDraw(ctx, loc.archX, loc.archGy, time_js_41.t);
             if (loc.archMirror)
                 drawMirrorCandle(ctx, loc);
-            archlife_js_1.drawArchLife(ctx, loc, time_js_40.t, { x: player.x + 6, y: player.y + 24 });
+            archlife_js_1.drawArchLife(ctx, loc, time_js_41.t, { x: player.x + 6, y: player.y + 24 });
             archground_js_1.drawArchChar(ctx, loc);
             archground_js_1.drawArchFoot(ctx, loc);
             return;
@@ -48523,7 +48741,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return;
         }
         if (loc.drawSelf) {
-            loc.drawSelf(ctx, loc, time_js_40.t);
+            loc.drawSelf(ctx, loc, time_js_41.t);
             return;
         }
         const fn = locSprites['draw_' + loc.id];
@@ -48712,7 +48930,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return true;
         }
         // led: табло — тёмное стекло, строки пепла, бегущая точка
-        const tick = Math.floor(time_js_40.t / 12);
+        const tick = Math.floor(time_js_41.t / 12);
         if (plaque || form === 'stand') {
             const top = plaque ? gy - 21 : gy - 17;
             if (plaque)
@@ -48752,7 +48970,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
         ctx.fillRect(x - 5, gy, 10, 2);
         // Именная вещь фонда — свой спрайт вместо типовой формы
-        if (loc.streetSprite && eggObjects_js_2.drawEggObject(ctx, loc.streetSprite, x, gy, time_js_40.t)) {
+        if (loc.streetSprite && eggObjects_js_2.drawEggObject(ctx, loc.streetSprite, x, gy, time_js_41.t)) {
             if (loc.streetLive)
                 drawLiveScaffold(ctx, loc, x, gy);
             return;
@@ -48762,7 +48980,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (form === 'building') {
             const facade = architecture_js_2.signFacade(loc.streetSeg, loc.streetSide);
             if (facade) {
-                facade(ctx, x, gy, time_js_40.t);
+                facade(ctx, x, gy, time_js_41.t);
                 if (loc.streetLive)
                     drawLiveScaffold(ctx, loc, x, gy);
                 return;
@@ -48777,12 +48995,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // Embers
             for (let i = 0; i < 4; i++) {
                 const ex = x - 7 + i * 4;
-                ctx.fillStyle = (time_js_40.t * 0.04 + i) % 1 < 0.5 ? '#ff7020' : '#aa3008';
+                ctx.fillStyle = (time_js_41.t * 0.04 + i) % 1 < 0.5 ? '#ff7020' : '#aa3008';
                 ctx.fillRect(ex, gy - 4, 1, 1);
             }
             // Flame body (layered)
-            const flick = Math.sin(time_js_40.t * 0.18) * 1.4;
-            const flick2 = Math.sin(time_js_40.t * 0.27 + 1.6) * 0.9;
+            const flick = Math.sin(time_js_41.t * 0.18) * 1.4;
+            const flick2 = Math.sin(time_js_41.t * 0.27 + 1.6) * 0.9;
             // Outer dim
             ctx.fillStyle = '#6b0f1a';
             ctx.fillRect(x - 7, gy - 12 + flick * 0.5, 14, 6);
@@ -48799,9 +49017,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             ctx.fillRect(x, gy - 26 + flick2, 1, 4);
             // Rising sparks
             for (let i = 0; i < 6; i++) {
-                const sp = ((time_js_40.t * 0.04 + i * 0.18) % 1);
+                const sp = ((time_js_41.t * 0.04 + i * 0.18) % 1);
                 if (sp < 0.92) {
-                    const sx = x + Math.sin(time_js_40.t * 0.05 + i) * 4;
+                    const sx = x + Math.sin(time_js_41.t * 0.05 + i) * 4;
                     const sy = gy - 24 - sp * 24;
                     ctx.globalAlpha = (1 - sp) * 0.85;
                     ctx.fillStyle = i % 2 ? '#ff7020' : '#ffb040';
@@ -48882,7 +49100,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function drawLiveScaffold(ctx, loc, x, gy) {
         ctx.strokeStyle = '#aa7818';
         ctx.lineWidth = 1;
-        const flick = 0.5 + 0.45 * Math.sin(time_js_40.t * 0.05 + loc.x);
+        const flick = 0.5 + 0.45 * Math.sin(time_js_41.t * 0.05 + loc.x);
         ctx.globalAlpha = 0.5 + flick * 0.4;
         ctx.strokeRect(x - 11, gy - 34, 22, 34);
         ctx.beginPath();
@@ -48890,9 +49108,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ctx.lineTo(x + 11, gy);
         ctx.stroke();
         ctx.globalAlpha = 1;
-        if (time_js_40.t % 90 < 6) {
+        if (time_js_41.t % 90 < 6) {
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(x - 12 + ((time_js_40.t * 7) % 24), gy - 36, 1, 1);
+            ctx.fillRect(x - 12 + ((time_js_41.t * 7) % 24), gy - 36, 1, 1);
         }
     }
     function drawHUD(ctx) {
@@ -48913,12 +49131,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         whisper_js_3.draw(worldCtx, camObj);
     }
     function updateCrackTriggers(player) {
-        if (time_js_40.t - lastCrackFrame < 240)
+        if (time_js_41.t - lastCrackFrame < 240)
             return; // cooldown 4s min between cracks
         // Lightning strike → rare glass crack
         if (weather_js_1.weather.lightning > 34 && lastLightning < 34 && Math.random() < 0.35) {
             metaFx_js_2.crackedGlass.add(20 + Math.floor(Math.random() * (scaler_js_26.scaler.vw - 40)), 20 + Math.floor(Math.random() * (scaler_js_26.scaler.vh - 40)));
-            lastCrackFrame = time_js_40.t;
+            lastCrackFrame = time_js_41.t;
         }
         lastLightning = weather_js_1.weather.lightning;
         // Других трещин нет: экран бьётся только от молнии и от падения
@@ -49016,6 +49234,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.cold = 0;
         player.ember = undefined;
         player.pulse = 0;
+        player.flare = 0;
+        player.tug = null;
+        player.steady = false;
+        player.gust = 0;
     }
     // поезд метро забрал (билет «до колодца. туда.»): выход — у колодца у площади, билет погашен
     function rideToWell() {
@@ -49057,8 +49279,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
         wind_js_17.wind.update('clear', 0, 0, true); // сквозняк вместо ветра
         windSound_js_1.updateWindSound(0.04);
-        pen_js_1.setPress(pen_js_1.pressAt(sky_js_3.phaseAt(time_js_40.t))); // перо устаёт по-прежнему: оно не от неба
-        redNoon_js_3.stepRedNoon(time_js_40.t, sky_js_3.phaseAt(time_js_40.t), sky_js_3.dayIndex(time_js_40.t));
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_3.phaseAt(time_js_41.t))); // перо устаёт по-прежнему: оно не от неба
+        redNoon_js_3.stepRedNoon(time_js_41.t, sky_js_3.phaseAt(time_js_41.t), sky_js_3.dayIndex(time_js_41.t));
         ink_js_2.ink.noon(0);
         ink_js_2.ink.sky(false);
         ink_js_2.ink.beginFrame();
@@ -49098,6 +49320,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             underside_js_4.under.whisper = null;
         }
         whisper_js_3.stepWhisper();
+        // вдох на пороге: тоннель ответил — долгий вдох, пыль уходит внутрь, шёпот у уха отходит к стене
+        if (underside_js_4.under.inhale) {
+            const h = underside_js_4.under.inhale;
+            audio_js_11.playInhale();
+            underside_js_5.inhaleDust(h.x, h.y, h.dx, h.dy);
+            const [wx, wy] = underside_js_4.wallSpot(player.x + 6, player.y + 23, player.x + 6 + (Math.random() < 0.5 ? -64 : 64));
+            whisper_js_3.drift(wx, wy);
+            underside_js_4.under.inhale = null;
+        }
         // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
         if (underside_js_4.moss.beat && underside_js_4.moss.k > 0.5)
             audio_js_11.playHeart();
@@ -49125,6 +49356,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.cold = underside_js_4.under.cold;
         player.ember = underside_js_4.under.ember;
         player.pulse = underside_js_4.moss.k > 0.5 ? underside_js_4.moss.pulse : 0;
+        player.flare = underside_js_4.under.flare;
+        player.tug = underside_js_4.under.tug;
+        player.steady = underside_js_4.under.greeted;
+        player.gust = underside_js_4.under.draft;
         underside_js_5.drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { context_js_17.setCtx(worldCtx); player_js_1.drawPlayer(player); });
         particles_js_3.draw(worldCtx, { x: camX, y: camY });
         whisper_js_3.draw(worldCtx, { x: camX, y: camY });
@@ -49190,7 +49425,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             else if (mx < -0.15)
                 player.dir = -1;
             events_js_8.events.emit(events_js_8.E.PLAYER_MOVE, player);
-            if (time_js_40.t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss')
+            if (time_js_41.t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss')
                 particles_js_3.footstepDust(player.x, player.y);
             // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
             // (под землёй следы остаются в пыли — render/underside.js)
@@ -49339,12 +49574,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         zoneAmbient_js_1.updateZone(zoneAmbient_js_1.getZone(player.x, player.y));
         if (!redNoon_js_3.redNoon.active)
             idle_js_1.update(player.moving);
-        whisper_js_3.check(player, locations_js_6.locations, sky_js_3.skyAt(sky_js_3.phaseAt(time_js_40.t)).moon > 0.5 ? litAt : null); // ночью — только у света
+        whisper_js_3.check(player, locations_js_6.locations, sky_js_3.skyAt(sky_js_3.phaseAt(time_js_41.t)).moon > 0.5 ? litAt : null); // ночью — только у света
         particles_js_3.update();
         weather_js_1.update(zoneAmbient_js_1.getZone(player.x, player.y));
         updateCrackTriggers(player);
         potemkin_js_4.update(player, locations_js_6.locations, brainrot_js_1.isFrozen());
-        if (time_js_40.t % 3 === 0)
+        if (time_js_41.t % 3 === 0)
             particles_js_3.fireEmber(disc_js_41.TOWN.x0 + 775, disc_js_41.TOWN.y0 + 635);
     }
     function loop(now) {
@@ -49359,7 +49594,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return; // экран чаще 60 Гц — этот кадр пропускаем
         let n = 0;
         while (acc >= STEP - SLACK && n < MAX_STEPS) {
-            time_js_39.tick();
+            time_js_40.tick();
             updateGame();
             stepFx();
             acc -= STEP;
@@ -49529,9 +49764,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (input_js_2_1) {
                 input_js_2 = input_js_2_1;
             },
-            function (time_js_39_1) {
-                time_js_39 = time_js_39_1;
-                time_js_40 = time_js_39_1;
+            function (time_js_40_1) {
+                time_js_40 = time_js_40_1;
+                time_js_41 = time_js_40_1;
             },
             function (player_js_1_1) {
                 player_js_1 = player_js_1_1;
@@ -49843,7 +50078,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }));
             playerRef_js_4.setPosOverride(() => (underside_js_4.under.active ? underside_js_4.under.ret : null)); // карта мира: странник там, где спустился
             Object.assign(ui_js_2.menuInscriptions, underside_js_6.UNDER_INSC);
-            stream_js_1.initStream({ locations: locations_js_6.locations, getVisited: () => flags.visited, getFrames: () => time_js_39.t });
+            stream_js_1.initStream({ locations: locations_js_6.locations, getVisited: () => flags.visited, getFrames: () => time_js_40.t });
             // Замок городка объясняет себя голосом мира — не чаще раза в полминуты
             lockHintAt = -99999;
             // ═══ LIGHTING SETUP from locations ═══
@@ -50145,6 +50380,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 audio_js_11.playPickup();
                 particles_js_3.pickupSparkle(item.x, item.y);
             });
+            // второе действие вещи: изнанка — у лестницы подуть на уголёк (ритуал «Вдох на пороге»)
+            events_js_8.events.on('location.alt', (loc) => {
+                if (loc.alt === 'under_greet' && underside_js_4.under.greet())
+                    audio_js_11.playBlow();
+            });
             events_js_8.events.on('location.use', (loc) => {
                 if (loc.id === 'terminal') {
                     terminal_js_1.open();
@@ -50263,7 +50503,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     ink_js_2.ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ');
                 }
                 if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') {
-                    redNoon_js_3.triggerRedNoon(time_js_40.t);
+                    redNoon_js_3.triggerRedNoon(time_js_41.t);
                     ink_js_2.ink.note('КРАСНЫЙ ПОЛДЕНЬ');
                 }
             });
