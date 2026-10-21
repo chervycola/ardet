@@ -109,6 +109,7 @@ const TH = [
   { id: 'u_up_church', room: 'crypt', wall: true, stair: 'door', steps: 9, x: 196, y: 208, w: 28, h: 42, at: [210, 256], up: 'church' },
   { id: 'u_up_crypt', room: 'crypt', wall: true, stair: 'stone', steps: 9, x: 398, y: 208, w: 28, h: 42, at: [412, 256], up: 'crypt' },
   { id: 'u_chests', room: 'crypt', x: 340, y: 280, w: 56, h: 28, at: [368, 318], solid: [340, 298, 396, 308] },
+  { id: 'u_niches', room: 'crypt', wall: true, x: 228, y: 212, w: 64, h: 32, at: [260, 256], useAction: 'under_call' },
   // гауптвахта
   { id: 'u_door_cell', room: 'guard', wall: true, x: 240, y: 792, w: 28, h: 38, at: [254, 838] },
   { id: 'u_pot', room: 'guard', x: 266, y: 830, w: 14, h: 12, at: [273, 852] },
@@ -167,6 +168,28 @@ export const THINGS = TH.map(th => {
   return o;
 });
 export const thingById = id => THINGS.find(th => th.id === id);
+
+// ── перекличка ниш (канон, ритуал «Перекличка ниш», U1): в стене крипты ниши с
+// именами дремлют веками; уголёк будит по одной за проход. Ниша шепчет своё имя —
+// единственное, что у неё осталось. Повторил вслух — ниша умолкает утешенной: её
+// наконец вызвали по списку; шёпоты гаснут на 40 шагов вперёд, а сама она больше не
+// просыпается (сохраняется). Промолчал — ниша не обидится, но имя идёт следом до
+// самого выхода, тихо, на границе слышимости
+export const NICHES = [];
+for (let row = 0; row < 2; row++) for (let c = 0; c < 5; c++) NICHES.push({ x: 230 + c * 13, y: 216 + row * 14, w: 9, h: 6 });
+// имя первой — канон («...Агафья»); остальные — нов.
+export const NICHE_NAMES = ['Агафья', 'Фёкла', 'Прокопий', 'Пелагея', 'Евлампий', 'Акулина', 'Мокей', 'Феврония', 'Савватий', 'Устинья'];
+const NICHE_ORDER = [6, 2, 8, 0, 4, 9, 3, 7, 1, 5];                  // какая ниша чьё имя держит
+export const nicheOf = name => NICHES[NICHE_ORDER[NICHE_NAMES.indexOf(name)]];
+export const NICHE_LINE = 'Присутствие отмечено. Можно не приходить больше никогда.';
+export const NICHE_HUSH = 280;                                       // 40 шагов вперёд — по следу в 7 точек
+{
+  const th = thingById('u_niches');
+  th.useShown = () => !!under.niche && !under.niche.done;
+  Object.defineProperty(th, 'useLabel', { get: () => '<i>…</i>ПОВТОРИТЬ: «' + (under.niche ? under.niche.name : '').toUpperCase() + '»', configurable: true, enumerable: true });
+}
+// уголёк проходит мимо ниш: ноги у стены, под рядами
+const nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
 // что сейчас есть внизу: билета на скамье нет, пока не прошёл поезд
 export const thingsNow = () => (under.bench ? THINGS : THINGS.filter(th => th.id !== 'u_ticket'));
 // где встать у вещи — точка героя (ноги — x+6, y+23)
@@ -490,7 +513,7 @@ export function murmurAt(fx, fy, greeted) {
   for (const a of MURMUR_AT) { const d = Math.hypot(a.x - fx, a.y - fy); if (d < bd) { bd = d; best = a; } }
   if (!best) return null;
   const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];
-  if (!greeted) return { text, x: fx + Math.round((Math.random() - 0.5) * 8), y: fy - 32, key: best.key, ear: true };   // вплотную, идёт следом
+  if (!greeted) { const ox = Math.round((Math.random() - 0.5) * 8); return { text, x: fx + ox, y: fy - 32, ox, oy: -32, key: best.key, ear: true }; }   // вплотную, идёт следом
   const side = Math.random() < 0.5 ? -1 : 1, [x, y] = wallSpot(fx, fy, fx + side * (50 + Math.round(Math.random() * 30)));
   return { text, x, y, key: best.key };                                                                    // у стены
 }
@@ -512,7 +535,8 @@ export const under = {
   murmur: 900,            // шагов до следующего шёпота
   hushF: 0, hushS: 0,     // окна тишины: шагов мира; точек пути (ритуалы)
   greeted: false,         // поздоровался на пороге — шёпоты держатся стен (за спуск)
-  whisper: null,          // шёпот к записи { text, x, y, faint, ear } — main отдаёт перу; ear — идёт следом
+  whisper: null,          // шёпот к записи { text, x, y, faint, ear, keep, wait } — main отдаёт перу; ear — идёт следом,
+                          // keep — важнее (недописанное гаснет), wait — ждёт свободного пера столько шагов
   quench: false,          // погасить шёпот, что пишется (тишина)
   wdTold: false,          // в криосклепе сказано: «Шёпотов нет»
   tick: 0,                // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
@@ -521,6 +545,10 @@ export const under = {
   inhale: null,           // тоннель вдохнул { x, y, dx, dy } — main даёт звук, пыль внутрь, шёпоты к стенам
   draft: 0,               // чужой сквозняк у уголька 0..1 (поздоровался — не трогает)
   tug: null,              // на развилке огонёк тянется к выходу { x, y }
+  niche: null,            // перекличка ниш: проснулась { name, t, done } — за спуск одна
+  nicheWoke: false,
+  called: new Set(),      // ниши, вызванные по списку, — молчат навсегда (сохраняется)
+  trail: null, trailT: 0, // промолчал — имя идёт следом до выхода
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
   ride: false,            // поезд забрал — main выводит к колодцу городка
@@ -556,7 +584,28 @@ export const under = {
     this.tug = this.greeted ? tugAt(fx, fy) : null;
     if (--this.murmur <= 0) {
       this.murmur = 1200 + Math.floor(Math.random() * 1200);
-      if (!this.silent(at)) this.whisper = murmurAt(fx, fy, this.greeted);
+      if (!this.silent(at) && !(this.whisper && (this.whisper.keep || this.whisper.wait))) this.whisper = murmurAt(fx, fy, this.greeted);
+    }
+    // перекличка ниш: уголёк проплывает мимо — одна ниша выдыхает имя
+    if (!this.nicheWoke && at === 'crypt' && mv > 0.05 && nearNiches(fx, fy)) {
+      this.nicheWoke = true;
+      const name = NICHE_NAMES.find(n => !this.called.has(n));
+      if (name) {
+        const n = nicheOf(name);
+        this.niche = { name, t: 0, done: false };
+        const R = ROOMS.find(r => r.id === 'crypt');                  // имя — над рядами, по тёмному своду: на камне не прочесть
+        this.whisper = { text: '...' + name, x: n.x + n.w / 2, y: R.y0 - R.wh - 3, keep: true };
+      }
+    }
+    if (this.niche && !this.niche.done && ++this.niche.t > 300 && (at !== 'crypt' || this.niche.t > 1800)) {
+      this.trail = this.niche.name; this.trailT = 600; this.niche = null;   // промолчал
+    }
+    if (this.trail && --this.trailT <= 0) {
+      if (this.silent(at) || this.whisper) this.trailT = 60;             // занято или тихо — чуть погодя
+      else {
+        this.trailT = 900 + Math.floor(Math.random() * 600);
+        this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 };   // ждёт перо, не перебивая
+      }
     }
     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
@@ -578,6 +627,14 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // повторил имя проснувшейся ниши вслух: её вызвали по списку
+  callNiche() {
+    const n = this.niche;
+    if (!n || n.done) return false;
+    n.done = true; this.called.add(n.name);
+    this.hushS = NICHE_HUSH; this.quench = true; this.whisper = null; this.say = NICHE_LINE;
+    return true;
   },
   // подул на уголёк у порога (раз за спуск): ответ — в step
   greet() {
@@ -601,15 +658,17 @@ export const under = {
     this.bench = false; this.ride = false;
     this.murmur = 900; this.hushF = 0; this.hushS = 0; this.greeted = false; this.whisper = null; this.quench = false; this.wdTold = false; this.tick = 0;
     this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null;
+    this.niche = null; this.nicheWoke = false; this.trail = null; this.trailT = 0;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; moss.reset(); },
-  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; moss.reset(); },
+  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
   load(d) {
     if (!d) return;
     (d.seen || []).forEach(k => this.seen.add(k));
     (d.found || []).forEach(k => this.found.add(k));
     if (d.ticket) this.ticket = true;
+    (d.called || []).forEach(k => this.called.add(k));
   },
 };
 

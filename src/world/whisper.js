@@ -64,6 +64,7 @@ const PEN = 1.6;                                // скорость пера: к
 const LIFT = 2, SPACE = 5;                      // перо оторвалось между буквами; на пробеле медлит
 const LETTER = 6;                               // без холста (проверки) — шагов на букву
 const HOLD = 90, FADE = 240;                    // дописал — постоял полторы секунды, выцветает четыре
+const QUENCH = 80;                              // погашенный — выцветает за полторы
 const WET = 12;                                 // сколько шагов сохнут свежие чернила
 const DRY_A = 0.35, WET_A = 0.3, NIB_A = 0.75;  // сухое, свежее сверху, кончик
 const COOLDOWN = 10800;                         // ~3 минуты между шёпотами
@@ -99,7 +100,7 @@ export function quench() {
   if (!w.prep) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; return; }   // перо ещё не коснулось
   const a = t - w.t0;
   if (a >= w.prep.write + HOLD) return;
-  w.cut = Math.min(a, w.prep.write); w.t0 = t - w.prep.write - HOLD; w.quenched = true;
+  w.cut = Math.min(a, w.prep.write); w.quenched = true; w.qt = t;
 }
 // смена карты (спуск, подъём): шёпот остаётся там, где был сказан
 export function clear() {
@@ -209,9 +210,10 @@ export function draw(ctx, camera) {
     w.t0 = t - P.write - HOLD; a = P.write + HOLD;
   }
   const wrote = w.cut === undefined ? a : w.cut;  // докуда дошло перо
-  if (a >= P.write + HOLD + FADE) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; lastWhisperEnd = t; return; }
-  const fade = (a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
-  const sy = w.y - Math.max(0, a - P.write - HOLD) * 0.12;     // выцветая, уходит вверх
+  const qa = w.quenched ? t - w.qt : 0;           // погашен: выцветает быстрее, с того места, где был
+  if (w.quenched ? qa >= QUENCH : a >= P.write + HOLD + FADE) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; lastWhisperEnd = t; return; }
+  const fade = (w.quenched ? 1 - qa / QUENCH : a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
+  const sy = w.y - (w.quenched ? qa : Math.max(0, a - P.write - HOLD)) * 0.12;     // выцветая, уходит вверх
   if (P.plain) {
     const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
     ctx.globalAlpha = DRY_A * fade; ctx.fillStyle = INK; ctx.font = `${FONT_PX}px ${FONT}`;

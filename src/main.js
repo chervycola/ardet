@@ -86,7 +86,7 @@ import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
-import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper } from './world/whisper.js';
+import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper, whisperText } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
@@ -1192,9 +1192,10 @@ function stepFxUnder() {
   if (under.quench) { quenchWhisper(); under.quench = false; }
   const w = under.whisper;
   if (w) {
-    const dx = w.x - (player.x + 6), dy = w.y - (player.y + 23);
-    sayAt(w.text, w.x, w.y, w.faint, w.ear ? () => [player.x + 6 + dx, player.y + 23 + dy] : null);
-    under.whisper = null;
+    // своё (keep — ниша шепчет имя) важнее: недописанное гаснет, перо ждёт
+    if (w.keep && whisperText() && !w.asked) { quenchWhisper(); w.asked = true; }
+    const ear = w.ear ? () => [player.x + 6 + w.ox, player.y + 23 + w.oy] : null, [sx, sy] = ear ? ear() : [w.x, w.y];
+    if (sayAt(w.text, sx, sy, w.faint, ear) || !(w.keep || w.wait-- > 0)) under.whisper = null;
   }
   stepWhisper();
   // вдох на пороге: тоннель ответил — долгий вдох, пыль уходит внутрь, шёпот у уха отходит к стене
@@ -1622,6 +1623,8 @@ events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: повторить имя проснувшейся ниши — её вызвали по списку
+  if (actionKey === 'under_call') { under.callNiche(); return; }
   // изнанка: билет со скамьи метро — в карман
   if (actionKey === 'under_ticket') {
     if (under.takeTicket()) { showLore('«до колодца. туда.»'); playPickup(); pickupSparkle(loc.x + 7, loc.y + 6); }

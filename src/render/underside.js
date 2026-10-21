@@ -15,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -663,6 +663,16 @@ function wallThing(th) {
       r(x + 4, y + 14, 8, 1, K2);                                       // адрес, стёртый ногтем
       r(x + 20, y + 6, 16, 12, AS); r(x + 35, y + 7, 1, 11, S0);
       scrawl(x + 22, y + 8, 12, 3, K2, 26, 4);
+      break;
+    }
+    case 'u_niches': {                                                  // ниши в известняке рядами; под каждой — имя царапиной
+      NICHES.forEach((n, i) => {
+        r(n.x - 1, n.y - 1, n.w + 2, 1, S1); r(n.x - 1, n.y, 1, n.h, S0);   // кромка: свет слева сверху
+        r(n.x, n.y, n.w, n.h, NI); r(n.x, n.y, n.w, 1, K1); r(n.x, n.y + 1, 1, n.h - 1, K0);   // глубина, свод ниши
+        r(n.x + n.w, n.y, 1, n.h + 1, K2); r(n.x - 1, n.y + n.h, n.w + 2, 1, S2);   // тень справа, плита порога
+        scrawl(n.x + 1, n.y + n.h + 2, n.w - 2, 1, AS, 40 + i, 3);       // имя
+        if (hh(i, 3, 41) < 0.5) r(n.x + 2 + q(hh(i, 4, 41) * 4), n.y + n.h + 1, 1, 2 + q(hh(i, 5, 41) * 3), S2);   // потёк свечного века
+      });
       break;
     }
     case 'u_tiers': {                                                   // табличка яруса
@@ -1343,6 +1353,16 @@ function airLife(g, camX, camY, vw, vh, p) {
       if (u > 1) continue;
       G.globalAlpha = 0.3 * (1 - u);
       r(st.x + 6 + q(hh(k, 7, 39) * 16), st.y + st.h - 2 - q(u * 30), 1, 1, BO);
+    }
+    G.globalAlpha = 1;
+  }
+  // перекличка ниш: проснувшаяся ниша выдыхает — пыль из зева, пока шепчет имя
+  if (under.niche && !under.niche.done && under.niche.t < 240) {
+    const n = nicheOf(under.niche.name), u = under.niche.t;
+    for (let k = 0; k < 6; k++) {
+      const s = ((u + k * 23) % 90) / 90;
+      G.globalAlpha = 0.35 * (1 - s) * (1 - u / 240);
+      r(n.x + 2 + q(hh(k, 9, 42) * 5) + q(s * (hh(k, 8, 42) - 0.5) * 8), n.y + n.h - 1 + q(s * 9), 1, 1, BO);
     }
     G.globalAlpha = 1;
   }

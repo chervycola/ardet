@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='1c61001 · 2026-10-21';console.log('[оттиск]', '1c61001 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='93f7456 · 2026-10-21';console.log('[оттиск]', '93f7456 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -19490,6 +19490,10 @@ System.register("content/underside", [], function (exports_55, context_55) {
                 u_tiers: { name: 'Таблички ярусов', look: `На каждом ярусе табличка. Ярус 1: «некрещёные — ожидание продлено». Ярус 4: «скупцы и расточители — взаимозачёт произведён». Ярус 9: «предатели — хранятся во льду. Лёд кончается.»` },
                 // нов.: дверь изнутри
                 u_up_church: { name: 'Дверь в церковь', look: `Дверь. За ней — девять ступеней наверх, в церковь. С этой стороны над дверью ничего не написано.` },
+                // перекличка ниш (канон U1, ритуал «Перекличка ниш»: свод, потёки, «уголёк будит по одной за проход»)
+                u_niches: { name: 'Ниши с именами', look: `В известняке, рядами, — тёмные прямоугольники в потёках свечного века. Под каждым процарапано имя, у каждой ниши — только оно и осталось.
+
+Ниши дремлют веками. Уголёк будит по одной за проход.` },
                 u_up_crypt: { name: 'Каменные ступени', look: `Каменные ступени уходят наверх, ко входу в крипту. Воздух тянет вверх ровными толчками, раз в шесть секунд.` },
                 // ── гауптвахта под Пропастью ──
                 u_door_cell: { name: 'Дверь камеры', look: `Дверь камеры, обитая железом. Над ней лампа: зелёный свет стоит ровно и не мигает.
@@ -19594,7 +19598,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // где встать у вещи — точка героя (ноги — x+6, y+23)
     function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
@@ -19897,8 +19901,10 @@ System.register("world/underside", ["content/underside", "core/time"], function 
         if (!best)
             return null;
         const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];
-        if (!greeted)
-            return { text, x: fx + Math.round((Math.random() - 0.5) * 8), y: fy - 32, key: best.key, ear: true }; // вплотную, идёт следом
+        if (!greeted) {
+            const ox = Math.round((Math.random() - 0.5) * 8);
+            return { text, x: fx + ox, y: fy - 32, ox, oy: -32, key: best.key, ear: true };
+        } // вплотную, идёт следом
         const side = Math.random() < 0.5 ? -1 : 1, [x, y] = wallSpot(fx, fy, fx + side * (50 + Math.round(Math.random() * 30)));
         return { text, x, y, key: best.key }; // у стены
     }
@@ -20027,6 +20033,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_up_church', room: 'crypt', wall: true, stair: 'door', steps: 9, x: 196, y: 208, w: 28, h: 42, at: [210, 256], up: 'church' },
                 { id: 'u_up_crypt', room: 'crypt', wall: true, stair: 'stone', steps: 9, x: 398, y: 208, w: 28, h: 42, at: [412, 256], up: 'crypt' },
                 { id: 'u_chests', room: 'crypt', x: 340, y: 280, w: 56, h: 28, at: [368, 318], solid: [340, 298, 396, 308] },
+                { id: 'u_niches', room: 'crypt', wall: true, x: 228, y: 212, w: 64, h: 32, at: [260, 256], useAction: 'under_call' },
                 // гауптвахта
                 { id: 'u_door_cell', room: 'guard', wall: true, x: 240, y: 792, w: 28, h: 38, at: [254, 838] },
                 { id: 'u_pot', room: 'guard', x: 266, y: 830, w: 14, h: 12, at: [273, 852] },
@@ -20088,6 +20095,29 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 return o;
             }));
             exports_56("thingById", thingById = id => THINGS.find(th => th.id === id));
+            // ── перекличка ниш (канон, ритуал «Перекличка ниш», U1): в стене крипты ниши с
+            // именами дремлют веками; уголёк будит по одной за проход. Ниша шепчет своё имя —
+            // единственное, что у неё осталось. Повторил вслух — ниша умолкает утешенной: её
+            // наконец вызвали по списку; шёпоты гаснут на 40 шагов вперёд, а сама она больше не
+            // просыпается (сохраняется). Промолчал — ниша не обидится, но имя идёт следом до
+            // самого выхода, тихо, на границе слышимости
+            exports_56("NICHES", NICHES = []);
+            for (let row = 0; row < 2; row++)
+                for (let c = 0; c < 5; c++)
+                    NICHES.push({ x: 230 + c * 13, y: 216 + row * 14, w: 9, h: 6 });
+            // имя первой — канон («...Агафья»); остальные — нов.
+            exports_56("NICHE_NAMES", NICHE_NAMES = ['Агафья', 'Фёкла', 'Прокопий', 'Пелагея', 'Евлампий', 'Акулина', 'Мокей', 'Феврония', 'Савватий', 'Устинья']);
+            NICHE_ORDER = [6, 2, 8, 0, 4, 9, 3, 7, 1, 5]; // какая ниша чьё имя держит
+            exports_56("nicheOf", nicheOf = name => NICHES[NICHE_ORDER[NICHE_NAMES.indexOf(name)]]);
+            exports_56("NICHE_LINE", NICHE_LINE = 'Присутствие отмечено. Можно не приходить больше никогда.');
+            exports_56("NICHE_HUSH", NICHE_HUSH = 280); // 40 шагов вперёд — по следу в 7 точек
+            {
+                const th = thingById('u_niches');
+                th.useShown = () => !!under.niche && !under.niche.done;
+                Object.defineProperty(th, 'useLabel', { get: () => '<i>…</i>ПОВТОРИТЬ: «' + (under.niche ? under.niche.name : '').toUpperCase() + '»', configurable: true, enumerable: true });
+            }
+            // уголёк проходит мимо ниш: ноги у стены, под рядами
+            nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
             // что сейчас есть внизу: билета на скамье нет, пока не прошёл поезд
             exports_56("thingsNow", thingsNow = () => (under.bench ? THINGS : THINGS.filter(th => th.id !== 'u_ticket')));
             // спуски городка: ключ «использовать» → лестница внизу (там и встаёшь)
@@ -20260,7 +20290,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 murmur: 900, // шагов до следующего шёпота
                 hushF: 0, hushS: 0, // окна тишины: шагов мира; точек пути (ритуалы)
                 greeted: false, // поздоровался на пороге — шёпоты держатся стен (за спуск)
-                whisper: null, // шёпот к записи { text, x, y, faint, ear } — main отдаёт перу; ear — идёт следом
+                whisper: null, // шёпот к записи { text, x, y, faint, ear, keep, wait } — main отдаёт перу; ear — идёт следом,
+                // keep — важнее (недописанное гаснет), wait — ждёт свободного пера столько шагов
                 quench: false, // погасить шёпот, что пишется (тишина)
                 wdTold: false, // в криосклепе сказано: «Шёпотов нет»
                 tick: 0, // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
@@ -20269,6 +20300,10 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 inhale: null, // тоннель вдохнул { x, y, dx, dy } — main даёт звук, пыль внутрь, шёпоты к стенам
                 draft: 0, // чужой сквозняк у уголька 0..1 (поздоровался — не трогает)
                 tug: null, // на развилке огонёк тянется к выходу { x, y }
+                niche: null, // перекличка ниш: проснулась { name, t, done } — за спуск одна
+                nicheWoke: false,
+                called: new Set(), // ниши, вызванные по списку, — молчат навсегда (сохраняется)
+                trail: null, trailT: 0, // промолчал — имя идёт следом до выхода
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
                 ride: false, // поезд забрал — main выводит к колодцу городка
@@ -20322,8 +20357,32 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.tug = this.greeted ? tugAt(fx, fy) : null;
                     if (--this.murmur <= 0) {
                         this.murmur = 1200 + Math.floor(Math.random() * 1200);
-                        if (!this.silent(at))
+                        if (!this.silent(at) && !(this.whisper && (this.whisper.keep || this.whisper.wait)))
                             this.whisper = murmurAt(fx, fy, this.greeted);
+                    }
+                    // перекличка ниш: уголёк проплывает мимо — одна ниша выдыхает имя
+                    if (!this.nicheWoke && at === 'crypt' && mv > 0.05 && nearNiches(fx, fy)) {
+                        this.nicheWoke = true;
+                        const name = NICHE_NAMES.find(n => !this.called.has(n));
+                        if (name) {
+                            const n = nicheOf(name);
+                            this.niche = { name, t: 0, done: false };
+                            const R = ROOMS.find(r => r.id === 'crypt'); // имя — над рядами, по тёмному своду: на камне не прочесть
+                            this.whisper = { text: '...' + name, x: n.x + n.w / 2, y: R.y0 - R.wh - 3, keep: true };
+                        }
+                    }
+                    if (this.niche && !this.niche.done && ++this.niche.t > 300 && (at !== 'crypt' || this.niche.t > 1800)) {
+                        this.trail = this.niche.name;
+                        this.trailT = 600;
+                        this.niche = null; // промолчал
+                    }
+                    if (this.trail && --this.trailT <= 0) {
+                        if (this.silent(at) || this.whisper)
+                            this.trailT = 60; // занято или тихо — чуть погодя
+                        else {
+                            this.trailT = 900 + Math.floor(Math.random() * 600);
+                            this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 }; // ждёт перо, не перебивая
+                        }
                     }
                     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
                     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
@@ -20355,6 +20414,19 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.heard.add('metro');
                         this.train = 1;
                     }
+                },
+                // повторил имя проснувшейся ниши вслух: её вызвали по списку
+                callNiche() {
+                    const n = this.niche;
+                    if (!n || n.done)
+                        return false;
+                    n.done = true;
+                    this.called.add(n.name);
+                    this.hushS = NICHE_HUSH;
+                    this.quench = true;
+                    this.whisper = null;
+                    this.say = NICHE_LINE;
+                    return true;
                 },
                 // подул на уголёк у порога (раз за спуск): ответ — в step
                 greet() {
@@ -20401,10 +20473,14 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.inhale = null;
                     this.draft = 0;
                     this.tug = null;
+                    this.niche = null;
+                    this.nicheWoke = false;
+                    this.trail = null;
+                    this.trailT = 0;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; moss.reset(); },
-                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; moss.reset(); },
+                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
                 load(d) {
                     if (!d)
                         return;
@@ -20412,6 +20488,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     (d.found || []).forEach(k => this.found.add(k));
                     if (d.ticket)
                         this.ticket = true;
+                    (d.called || []).forEach(k => this.called.add(k));
                 },
             });
             // свет под землёй: уголёк — единственное тёплое (сердцевина), вокруг — круг,
@@ -20497,7 +20574,7 @@ System.register("world/redNoon", [], function (exports_57, context_57) {
 });
 System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"], function (exports_58, context_58) {
     "use strict";
-    var time_js_7, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
+    var time_js_7, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, QUENCH, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
     var __moduleName = context_58 && context_58.id;
     // шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень;
     // faint — на границе слышимости (чернила вдвое бледнее); follow() → [x, y] — шёпот
@@ -20536,8 +20613,8 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
         if (a >= w.prep.write + HOLD)
             return;
         w.cut = Math.min(a, w.prep.write);
-        w.t0 = time_js_7.t - w.prep.write - HOLD;
         w.quenched = true;
+        w.qt = time_js_7.t;
     }
     exports_58("quench", quench);
     // смена карты (спуск, подъём): шёпот остаётся там, где был сказан
@@ -20689,13 +20766,14 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             a = P.write + HOLD;
         }
         const wrote = w.cut === undefined ? a : w.cut; // докуда дошло перо
-        if (a >= P.write + HOLD + FADE) {
+        const qa = w.quenched ? time_js_7.t - w.qt : 0; // погашен: выцветает быстрее, с того места, где был
+        if (w.quenched ? qa >= QUENCH : a >= P.write + HOLD + FADE) {
             whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
             lastWhisperEnd = time_js_7.t;
             return;
         }
-        const fade = (a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
-        const sy = w.y - Math.max(0, a - P.write - HOLD) * 0.12; // выцветая, уходит вверх
+        const fade = (w.quenched ? 1 - qa / QUENCH : a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
+        const sy = w.y - (w.quenched ? qa : Math.max(0, a - P.write - HOLD)) * 0.12; // выцветая, уходит вверх
         if (P.plain) {
             const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
             ctx.globalAlpha = DRY_A * fade;
@@ -20796,6 +20874,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             LIFT = 2, SPACE = 5; // перо оторвалось между буквами; на пробеле медлит
             LETTER = 6; // без холста (проверки) — шагов на букву
             HOLD = 90, FADE = 240; // дописал — постоял полторы секунды, выцветает четыре
+            QUENCH = 80; // погашенный — выцветает за полторы
             WET = 12; // сколько шагов сохнут свежие чернила
             DRY_A = 0.35, WET_A = 0.3, NIB_A = 0.75; // сухое, свежее сверху, кончик
             COOLDOWN = 10800; // ~3 минуты между шёпотами
@@ -33500,7 +33579,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
@@ -46728,6 +46807,21 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 scrawl(x + 22, y + 8, 12, 3, K2, 26, 4);
                 break;
             }
+            case 'u_niches': { // ниши в известняке рядами; под каждой — имя царапиной
+                underside_js_3.NICHES.forEach((n, i) => {
+                    r(n.x - 1, n.y - 1, n.w + 2, 1, S1);
+                    r(n.x - 1, n.y, 1, n.h, S0); // кромка: свет слева сверху
+                    r(n.x, n.y, n.w, n.h, NI);
+                    r(n.x, n.y, n.w, 1, K1);
+                    r(n.x, n.y + 1, 1, n.h - 1, K0); // глубина, свод ниши
+                    r(n.x + n.w, n.y, 1, n.h + 1, K2);
+                    r(n.x - 1, n.y + n.h, n.w + 2, 1, S2); // тень справа, плита порога
+                    scrawl(n.x + 1, n.y + n.h + 2, n.w - 2, 1, AS, 40 + i, 3); // имя
+                    if (hh(i, 3, 41) < 0.5)
+                        r(n.x + 2 + q(hh(i, 4, 41) * 4), n.y + n.h + 1, 1, 2 + q(hh(i, 5, 41) * 3), S2); // потёк свечного века
+                });
+                break;
+            }
             case 'u_tiers': { // табличка яруса
                 r(x + 2, y + 2, 34, 14, S1);
                 r(x + 2, y + 2, 34, 1, L2);
@@ -47724,6 +47818,16 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     continue;
                 G.globalAlpha = 0.3 * (1 - u);
                 r(st.x + 6 + q(hh(k, 7, 39) * 16), st.y + st.h - 2 - q(u * 30), 1, 1, BO);
+            }
+            G.globalAlpha = 1;
+        }
+        // перекличка ниш: проснувшаяся ниша выдыхает — пыль из зева, пока шепчет имя
+        if (underside_js_3.under.niche && !underside_js_3.under.niche.done && underside_js_3.under.niche.t < 240) {
+            const n = underside_js_3.nicheOf(underside_js_3.under.niche.name), u = underside_js_3.under.niche.t;
+            for (let k = 0; k < 6; k++) {
+                const s = ((u + k * 23) % 90) / 90;
+                G.globalAlpha = 0.35 * (1 - s) * (1 - u / 240);
+                r(n.x + 2 + q(hh(k, 9, 42) * 5) + q(s * (hh(k, 8, 42) - 0.5) * 8), n.y + n.h - 1 + q(s * 9), 1, 1, BO);
             }
             G.globalAlpha = 1;
         }
@@ -49315,9 +49419,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         const w = underside_js_4.under.whisper;
         if (w) {
-            const dx = w.x - (player.x + 6), dy = w.y - (player.y + 23);
-            whisper_js_3.sayAt(w.text, w.x, w.y, w.faint, w.ear ? () => [player.x + 6 + dx, player.y + 23 + dy] : null);
-            underside_js_4.under.whisper = null;
+            // своё (keep — ниша шепчет имя) важнее: недописанное гаснет, перо ждёт
+            if (w.keep && whisper_js_3.whisperText() && !w.asked) {
+                whisper_js_3.quench();
+                w.asked = true;
+            }
+            const ear = w.ear ? () => [player.x + 6 + w.ox, player.y + 23 + w.oy] : null, [sx, sy] = ear ? ear() : [w.x, w.y];
+            if (whisper_js_3.sayAt(w.text, sx, sy, w.faint, ear) || !(w.keep || w.wait-- > 0))
+                underside_js_4.under.whisper = null;
         }
         whisper_js_3.stepWhisper();
         // вдох на пороге: тоннель ответил — долгий вдох, пыль уходит внутрь, шёпот у уха отходит к стене
@@ -50395,6 +50504,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     goUp(loc);
                     return;
                 } // изнанка: лестница своей комнаты
+                // изнанка: повторить имя проснувшейся ниши — её вызвали по списку
+                if (actionKey === 'under_call') {
+                    underside_js_4.under.callNiche();
+                    return;
+                }
                 // изнанка: билет со скамьи метро — в карман
                 if (actionKey === 'under_ticket') {
                     if (underside_js_4.under.takeTicket()) {

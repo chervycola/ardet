@@ -1894,6 +1894,50 @@ setCtx(ctx);
     W.step(1135, 465); eq(W.tug, null, 'между развилками — тянется');
     W.leave(); W.say = null;
   });
+  test('изнанка: перекличка ниш — уголёк будит одну за проход; повторил имя — утешена, тишина на 40 шагов; промолчал — имя идёт следом', () => {
+    const W = U.under, th = U.thingById('u_niches'), R = U.ROOMS.find(r => r.id === 'crypt');
+    for (const n of U.NICHES) assert(n.x >= th.x && n.x + n.w <= th.x + th.w && n.y >= th.y && n.y + n.h + 3 <= th.y + th.h && n.y > R.y0 - R.wh, 'ниша вне стены');
+    for (const o of U.THINGS) if (o !== th && o.wall && o.room === 'crypt') assert(o.x >= th.x + th.w || o.x + o.w <= th.x, 'ниши налезли на ' + o.id);
+    eq(U.NICHE_NAMES[0], 'Агафья', 'первое имя — канон');
+    eq(new Set(U.NICHE_NAMES.map(U.nicheOf)).size, U.NICHE_NAMES.length, 'у двух имён одна ниша');
+    W.called.clear(); W.enter(0, 0); W.say = null; W.px = 260; W.py = 256;
+    assert(!th.useShown(), 'ниши спят — а «повторить» есть');
+    for (let i = 0; i < 100; i++) W.step(260, 256);                  // стоит у ниш — не будит
+    eq(W.niche, null, 'стоящий разбудил');
+    W.step(262, 256);
+    assert(W.niche && W.niche.name === 'Агафья', 'уголёк прошёл мимо — ниша спит');
+    const n = U.nicheOf('Агафья');
+    assert(W.whisper && W.whisper.text === '...Агафья' && W.whisper.keep && Math.abs(W.whisper.x - n.x - n.w / 2) < 1, 'ниша не шепчет имя');
+    W.whisper = null;
+    assert(th.useShown() && /«АГАФЬЯ»/.test(th.useLabel), '«повторить» нет');
+    for (let x = 262; x < 290; x++) W.step(x, 256);
+    eq(W.niche.name, 'Агафья', 'за проход проснулась вторая');
+    assert(W.callNiche() && !W.callNiche(), 'повторил дважды');
+    eq(W.say, U.NICHE_LINE, 'реплика'); W.say = null;
+    eq(U.NICHE_LINE, 'Присутствие отмечено. Можно не приходить больше никогда.', 'реплика канона');
+    assert(W.quench && W.called.has('Агафья') && !th.useShown(), 'утешенная ниша не умолкла');
+    W.quench = false;
+    let x = 1000; W.px = x; W.py = 465;                              // шёпоты гаснут на 40 шагов вперёд
+    for (; x < 1000 + U.NICHE_HUSH - 4; x += 2) { W.murmur = 1; W.step(x, 465); assert(!W.whisper, 'утешили — а шёпот через ' + (x - 1000)); }
+    for (let i = 0; i < 6; i++) { x += 2; W.step(x, 465); }
+    W.whisper = null; W.murmur = 1; W.step(x, 465);
+    assert(W.whisper, 'после 40 шагов шёпоты не вернулись');
+    W.leave(); W.enter(0, 0); W.say = null;
+    W.step(260, 256); W.step(262, 256);
+    eq(W.niche && W.niche.name, 'Фёкла', 'утешенная проснулась снова');
+    for (let i = 0; i < 320; i++) W.step(1200, 465);                // промолчал: ушёл из крипты
+    eq(W.niche, null, 'ушёл — окно не закрылось'); eq(W.trail, 'Фёкла', 'имя не идёт следом');
+    let got = 0;
+    for (let i = 0; i < 3000; i++) {
+      W.whisper = null; W.step(1200, 465);
+      if (W.whisper && W.whisper.text === '...Фёкла') { got++; assert(W.whisper.faint && W.whisper.ear, 'имя следом — не тихо и не у уха'); }
+    }
+    assert(got >= 2, 'имя следом не слышно: ' + got);
+    eq(JSON.parse(JSON.stringify(W.save())).called.join(), 'Агафья', 'вызванные не сохраняются');
+    W.leave(); eq(W.trail, null, 'наверху имя всё идёт');
+    W.called.clear(); W.load({ called: ['Агафья'] }); assert(W.called.has('Агафья'), 'вызванные не загрузились');
+    W.called.clear(); W.whisper = null; W.say = null;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
