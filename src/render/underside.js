@@ -14,7 +14,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, PORTALS, THINGS, under, placeAt, coldAt, inWater } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -72,7 +72,9 @@ function rock(cl) {
 const BAND = [K2, S2, S0, S0, S1, S1, S1, S1, S1, S1, S1, S1, S1, S1, S1, S1, S1, S0, S0, S0, S2, S2, K3, K3, K2, K1];
 function ringOf(L, x) { const v = L.x1 - x; return { k: Math.floor(v / T.RING), u: ((v % T.RING) + T.RING) % T.RING }; }
 function ewBandColor(L, x, y) {
-  const d = L.y0 - y, { k, u } = ringOf(L, x);
+  const d = L.y0 - y, cut = cutAt(x);
+  if (cut) return cutBand(cut, x, d);                                   // разрез эпох: тут обделка не сомкнулась
+  const { k, u } = ringOf(L, x);
   if (u === 0 && d > 2 && d < T.WH) return K2;                          // шов колец
   if (u === T.RING - 1 && d > 4 && d < 20) return AS;                   // кромка кольца к свету
   const lj = k & 1 ? 8 : 12;
@@ -90,10 +92,130 @@ const TLIP = [S2, S0, S1, S1, AS, K2, K1];
 function ewWalls(L, cl) { rows(L.x0, L.x1, L.y0 - T.WH, L.y0, cl, (x, y) => ewBandColor(L, x, y)); }
 function ewLip(L, cl) {
   rows(L.x0, L.x1, L.y0 + T.FH, L.y0 + T.FH + TLIP.length, cl, (x, y) => {
-    const row = y - L.y0 - T.FH;
+    const row = y - L.y0 - T.FH, cut = cutAt(x);
+    if (cut) return cutLip(cut, x, row);
     return ringOf(L, x).u === 0 && row < 5 ? K2 : TLIP[row];
   });
 }
+// ═══ РАЗРЕЗ ЭПОХ ═══
+// Где линия прошла сквозь старый ход, обделка не сомкнулась: в дальней стене —
+// срез старого слоя своим материалом, края — торцы последних колец (светлая
+// кромка); посередине ход старого слоя уходит в стену и закрыт. Спереди, в срезе
+// ближней половины, — тот же слой; канализация течёт под полотном.
+function cutBand(c, x, d) {
+  const u = x - c.x0, w = c.x1 - c.x0;
+  if (u < 2 || u >= w - 2) return u === 0 || u === w - 1 ? K2 : AS;    // торец кольца
+  switch (c.id) {
+    case 'catacomb': {                                                 // белый известняк кладкой; под сводом — корни сада
+      if (d > 23) return hh(x, d, 101) < 0.35 ? BR2 : K2;
+      const course = Math.floor((d - 1) / 5), v = (d - 1) % 5;
+      if (v === 4 || (x + course * 7) % 13 === 0) return S0;
+      const n = hh(x, d, 102); return n < 0.08 ? S1 : n > 0.97 ? BO : L2;
+    }
+    case 'sewer': {                                                    // кирпич свода, понизу мокрый
+      const course = Math.floor((d - 1) / 3), v = (d - 1) % 3;
+      if (v === 2 || (x + (course & 1 ? 3 : 0)) % 7 === 0) return K1;
+      if (d < 7) return hh(x, d, 103) < 0.35 ? MG_D : BR2;
+      return hh(x, d, 104) < 0.08 ? BR2 : RUST;
+    }
+    case 'shelter': {                                                  // бетон в метр, торцы арматуры; за ним — убежище: зелёная краска, побелка
+      if (u < 16 || u >= w - 16) {
+        if ((d === 6 || d === 18) && x % 5 === 0) return K1;
+        if ((d === 6 || d === 18) && x % 5 === 1) return RUST;
+        const n = hh(x, d, 105); return n < 0.12 ? S1 : n < 0.2 ? K3 : S0;
+      }
+      if (d < 16) return hh(x, d, 106) < 0.05 ? MG_D : MG;
+      if (d === 16) return K1;
+      if (d > 24) return K2;
+      return hh(x, d, 107) < 0.05 ? S0 : AS;
+    }
+    case 'metro': {                                                    // плитка станции, полоса потемнее
+      if ((u % 5) === 0 || ((d - 1) % 4) === 3) return S2;
+      if (d >= 9 && d <= 12) return S1;
+      if (d > 23) return K3;
+      return hh(x, d, 108) < 0.06 ? S1 : L2;
+    }
+  }
+  return S0;
+}
+function cutLip(c, x, row) {
+  if (row === 0) return S2;
+  if (row >= TLIP.length - 2) return TLIP[row];
+  const u = x - c.x0;
+  if (c.id === 'sewer' && u >= 40 && u < 64) return hh(x, row, 109) < 0.2 ? MG_D : K1;   // канал уходит под ближний срез
+  return cutBand(c, x, 4 + row * 3);
+}
+// череп 5×5: глазницы, зубы
+function skull(x, y) {
+  r(x + 1, y, 3, 1, L1); r(x, y + 1, 5, 1, BO); r(x, y + 2, 5, 1, BO); r(x + 1, y + 2, 1, 1, K1); r(x + 3, y + 2, 1, 1, K1);
+  r(x, y + 3, 5, 1, L1); r(x + 1, y + 4, 1, 1, L2); r(x + 3, y + 4, 1, 1, L2);
+}
+function cutThing(th) {
+  const c = CUTS.find(k => 'u_cut_' + k.id === th.id), gy = LINE.y0, cx = c.x0 + 52;
+  rows(c.x0, c.x1, gy - T.WH, gy, { x0: -1e9, y0: -1e9, x1: 1e9, y1: 1e9 }, (x, y) => cutBand(c, x, gy - y));   // для второй краски — весь срез
+  if (c.id === 'catacomb') {
+    for (let x = cx - 12; x < cx + 12; x++) {                          // ход: арка, внутри темно
+      const dx = x + 0.5 - cx, top = 12 + Math.sqrt(Math.max(0, 144 - dx * dx)) * 0.5;
+      for (let d = 1; d < top; d++) r(x, gy - d, 1, 1, Math.abs(dx) > 10.5 ? S0 : d > top - 2 ? K2 : K1);
+    }
+    r(cx - 9, gy - 14, 1, 13, S2); r(cx + 8, gy - 14, 1, 13, K2);       // стенки хода сходятся
+    for (let k = 0; k < 34; k++) {                                     // завал
+      const x = cx - 11 + q(hh(k, 1, 110) * 22), h = 8 - Math.abs(x - cx) * 0.55;
+      if (h < 1) continue;
+      const n = hh(k, 3, 110);
+      r(x, gy - 1 - q(hh(k, 2, 110) * h), 2, 1, n < 0.4 ? L2 : n < 0.7 ? S1 : K3);
+    }
+    for (const [xa, xb] of [[c.x0 + 4, cx - 14], [cx + 14, c.x1 - 4]]) {
+      for (let x = xa; x + 5 <= xb; x += 6) skull(x, gy - 19);          // черепа рядами
+      for (let x = xa; x + 2 <= xb; x += 3) { r(x, gy - 11, 2, 2, L1); r(x + 1, gy - 8, 2, 2, BO); r(x + 1, gy - 10, 1, 1, S0); }   // кости торцами, кладкой
+    }
+    for (let k = 0; k < 6; k++) {                                      // корни сада свисают сквозь свод
+      let x = c.x0 + 8 + k * 16 + q(hh(k, 4, 111) * 6);
+      const len = 4 + q(hh(k, 5, 111) * 7);
+      for (let j = 0; j < len; j++) { r(x, gy - 26 + j, 1, 1, j < len - 2 ? BR2 : K4); if (hh(k, j, 112) < 0.25) x += hh(k, j, 113) < 0.5 ? -1 : 1; }
+    }
+    for (let x = cx + 16; x < c.x1 - 3; x++) if (hh(x, 0, 114) < 0.6 && (x - cx) % 4 !== 3) r(x, gy - 24, 1, 1, BO);   // мел — обрезан кольцом
+  } else if (c.id === 'sewer') {
+    for (let d = 1; d <= 23; d++) {                                    // свод яйцом: узкий низ, широкий круглый верх; кольцо клинчатого кирпича
+      const hw = q(d >= 13 ? Math.sqrt(Math.max(0, 121 - (d - 13) * (d - 13))) : 11 * Math.pow(d / 13, 0.6));
+      if (!hw) continue;
+      r(cx - hw - 2, gy - d, 2, 1, d & 1 ? RUST_L : BR2); r(cx + hw, gy - d, 2, 1, d & 1 ? BR2 : RUST_L);
+      r(cx - hw, gy - d, 2 * hw, 1, d < 5 ? (hh(d, 0, 115) < 0.3 ? MG : MG_D) : K1);   // внутри темно, понизу — чёрная вода
+    }
+    const gx0 = cx - 12;                                               // решётка в полотне: поверх канала
+    r(gx0 - 1, gy + 2, 26, T.FH - 4, S2); r(gx0 - 1, gy + 2, 26, 1, AS);
+    r(gx0, gy + 3, 24, T.FH - 6, K1);
+    for (let x = gx0; x < gx0 + 24; x += 3) r(x, gy + 3, 1, T.FH - 6, K2);
+    r(gx0, gy + 3 + ((T.FH - 6) >> 1), 24, 1, K2);
+  } else if (c.id === 'shelter') {
+    r(cx - 11, gy - 18, 22, 18, K2);                                   // гермодверь: рама, полотно, задрайки
+    r(cx - 10, gy - 17, 20, 17, S1); r(cx - 10, gy - 17, 20, 1, AS); r(cx - 10, gy - 17, 1, 17, AS); r(cx + 9, gy - 16, 1, 16, S0);
+    r(cx - 10, gy - 17, 2, 1, K2); r(cx + 8, gy - 17, 2, 1, K2);       // углы скруглены
+    for (const yy of [gy - 13, gy - 5]) { r(cx + 3, yy, 6, 2, K2); r(cx + 3, yy, 6, 1, S0); }   // рычаги задраек
+    r(cx - 9, gy - 14, 2, 3, K2); r(cx - 9, gy - 6, 2, 3, K2);         // петли
+    write('ВЫХОД', cx - 11, gy - 24, K1, 0.05, 116);
+    r(cx + 15, gy - 24, 1, 5, K1); r(cx + 14, gy - 20, 3, 1, K1); r(cx + 15, gy - 19, 1, 1, K1);   // стрелка — в дверь
+    const sx = c.x0 + 82, sy = gy - 14;                                 // репродуктор: чёрная тарелка на кронштейне
+    r(sx - 1, sy - 8, 1, 4, K2);
+    for (const [dx, dy] of [[-2, -4], [-1, -4], [0, -4], [1, -4], [2, -4], [-3, -3], [3, -3], [-4, -2], [4, -2], [-4, -1], [4, -1], [-4, 0], [4, 0], [-3, 1], [3, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]]) r(sx + dx, sy + dy, 1, 1, S2);
+    r(sx - 3, sy - 3, 7, 5, K1); r(sx - 2, sy - 4, 5, 1, K1); r(sx - 2, sy + 1, 5, 1, K1); r(sx, sy - 1, 1, 1, S2);
+  } else if (c.id === 'metro') {
+    const mx = c.x0 + 76;                                              // тоннель: круглый, рельсы сходятся
+    for (let d = 1; d <= 22; d++) {
+      const dy = d - 10, hw = q(Math.sqrt(Math.max(0, 144 - dy * dy)));
+      if (!hw) continue;
+      r(mx - hw - 1, gy - d, 1, 1, AS); r(mx + hw, gy - d, 1, 1, S1);
+      r(mx - hw, gy - d, 2 * hw, 1, d < 3 ? K2 : NI);
+    }
+    for (let d = 1; d < 9; d++) { r(mx - 7 + q(d * 0.5), gy - d, 1, 1, S2); r(mx + 6 - q(d * 0.5), gy - d, 1, 1, S2); }   // рельсы
+    r(c.x0 + 2, gy - 3, 58, 1, AS); r(c.x0 + 2, gy - 2, 58, 2, K2); r(c.x0 + 2, gy - 4, 58, 1, L2);   // край платформы
+    r(c.x0 + 8, gy - 8, 22, 2, RUST_L); r(c.x0 + 8, gy - 12, 22, 3, RUST); r(c.x0 + 9, gy - 6, 1, 2, K2); r(c.x0 + 28, gy - 6, 1, 2, K2);   // скамья
+    r(c.x0 + 13, gy - 25, 1, 3, S2); r(c.x0 + 41, gy - 25, 1, 3, S2);   // табло без цифр — на тягах
+    r(c.x0 + 11, gy - 22, 33, 9, S2); r(c.x0 + 12, gy - 21, 31, 7, K1);
+    for (let i = 0; i < 6; i++) r(c.x0 + 14 + i * 5, gy - 20, 4, 5, K2);
+  }
+}
+
 function slab(x, y, rowOrCol, len, tracks) {
   if (rowOrCol === 0 || rowOrCol === len - 1) return K2;                // паз у стены
   if (rowOrCol === 1 || rowOrCol === len - 2) return S2;
@@ -361,6 +483,7 @@ const FONT = {
   Я: ['.XX', 'X.X', '.XX', 'X.X', 'X.X'], '—': ['....', '....', 'XXXX', '....', '....'],
   I: ['XXX', '.X.', '.X.', '.X.', 'XXX'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], '!': ['X', 'X', 'X', '.', 'X'],
   S: ['.XX', 'X..', '.X.', '..X', 'XX.'], H: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], U: ['X.X', 'X.X', 'X.X', 'X.X', 'XXX'],
+  Ы: ['X..X', 'X..X', 'XX.X', 'X.XX', 'XX.X'], Х: ['X.X', 'X.X', '.X.', 'X.X', 'X.X'],
   Г: ['XXX', 'X..', 'X..', 'X..', 'X..'], 'м': ['...', '...', 'X.X', 'XXX', 'X.X'],
   B: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], D: ['XX.', 'X.X', 'X.X', 'X.X', 'XX.'], G: ['.XX', 'X..', 'X.X', 'X.X', '.XX'], O: ['.X.', 'X.X', 'X.X', 'X.X', '.X.'], T: ['XXX', '.X.', '.X.', '.X.', '.X.'], '-': ['...', '...', 'XXX', '...', '...'], W: ['X...X', 'X...X', 'X.X.X', 'X.X.X', '.X.X.'],
   0: ['XXX', 'X.X', 'X.X', 'X.X', 'XXX'], 1: ['.X', 'XX', '.X', '.X', '.X'], 2: ['XX.', '..X', '.X.', 'X..', 'XXX'],
@@ -470,6 +593,7 @@ function wallThing(th) {
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем
     case 'u_frost_line': scrawl(x + 2, y + 7, 34, 1, BO, 32, 4); break;
     case 'u_godot': godot(th); break;
+    case 'u_cut_catacomb': case 'u_cut_sewer': case 'u_cut_shelter': case 'u_cut_metro': cutThing(th); break;
     case 'u_spiral': spiral(th); break;
     case 'u_screen': {                                                  // окно-экран: рама, шторы; лес — живой, поверх
       r(x + 2, y + 4, 80, 30, RUST); r(x + 2, y + 4, 80, 1, RUST_L); r(x + 81, y + 5, 1, 29, BR2);
@@ -642,7 +766,7 @@ function decor(cl) {
   // номера колец — трафаретом, каждое десятое (счёт — от «Вавилона»: там первое)
   for (let v = 0; v < L.x1 - L.x0; v += T.RING) {
     const k = v / T.RING + 10, x = L.x1 - v;
-    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4) || overLine(x - 16, x + 2)) continue;
+    if (k % 10 || x < cl.x0 - 20 || x > cl.x1 + 4 || PORTALS.some(P => P.host === L && x > P.cx - P.R - 4 && x - 16 < P.cx + P.R + 4) || overLine(x - 16, x + 2) || cutAt(x - 16) || cutAt(x)) continue;
     write(String(k), x - 14, L.y0 - 14, L2, 0.15, k);
   }
   // Кольская: на стене трафаретом — СГ-3 и глубина
@@ -889,6 +1013,8 @@ const prints = [];                                 // следы в пыли —
 let lastPrint = null, printSide = 0;
 const drips = [];
 const puffs = [];
+const boats = [];                                  // кораблики из заявлений — по каналу под полотном
+const draft = [];                                  // сквозняк метро и пыль от поезда
 let frost = null;                                  // иней: точки, тают у уголька, отрастают
 function frostDots() {
   if (frost) return frost;
@@ -939,6 +1065,17 @@ export function stepUnderLife(p) {
     for (let k = 0; k < 5; k++) puffs.push({ x: p.x + 7 + (p.dir || 1) * 3, y: p.y - 1, vx: (p.dir || 1) * (0.1 + Math.random() * 0.15), vy: -0.08 - Math.random() * 0.06, life: 70 + k * 6 });
   }
   for (let i = puffs.length - 1; i >= 0; i--) { const u = puffs[i]; u.x += u.vx; u.y += u.vy; u.vx *= 0.99; if (--u.life <= 0) puffs.splice(i, 1); }
+  // разрез эпох: кораблики плывут по каналу — из свода, под решёткой, под ближний срез
+  const sw = CUTS.find(c => c.id === 'sewer'), scx = sw.x0 + 52;
+  if (Math.abs(fx - scx) < 300 && boats.length < 2 && Math.random() < 0.004) boats.push({ x: scx - 2 + q(Math.random() * 4), y: LINE.y0 - 4 });
+  for (let i = boats.length - 1; i >= 0; i--) { const b = boats[i]; b.y += 0.13; b.x += Math.sin(b.y * 0.3) * 0.05; if (b.y > LINE.y0 + T.FH + 6) boats.splice(i, 1); }
+  // метро: сквозняк тянет пыль в тоннель; поезд — выдувает её наружу
+  const mt = CUTS.find(c => c.id === 'metro'), mx = mt.x0 + 76;
+  if (Math.abs(fx - mx) < 300 && draft.length < (under.train ? 24 : 5) && Math.random() < (under.train ? 0.5 : 0.03)) {
+    draft.push(under.train ? { x: mx - 10 + Math.random() * 20, y: LINE.y0 - 4, vx: (Math.random() - 0.5) * 0.6, vy: 0.5 + Math.random() * 0.6, life: 50 }
+      : { x: mx - 20 + Math.random() * 40, y: LINE.y0 + 4 + Math.random() * 20, vx: 0, vy: -0.12, life: 160 });
+  }
+  for (let i = draft.length - 1; i >= 0; i--) { const d = draft[i]; d.x += d.vx; d.y += d.vy; if (--d.life <= 0) draft.splice(i, 1); }
   // иней тает кольцом вокруг уголька и отрастает, когда отойдёшь
   if (under.cold > 0.05 || placeAt(fx, fy) === 'vein' || placeAt(fx, fy) === 'wd') {
     const R = 22, ex = p.x + 7, ey = p.y + 10;
@@ -960,7 +1097,7 @@ function floorLife(g, camX, camY, vw, vh, p) {
   const L = LINE, ex = p.x + 7, ey = p.y + 10;
   if (ey > L.y0 - 30 && ey < L.y0 + T.FH + 10) {
     for (let x = Math.floor((ex - 70) / 3) * 3; x < ex + 70; x += 3) {
-      if (x < L.x0 || x >= L.x1 || PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R) || overLine(x, x + 1)) continue;
+      if (x < L.x0 || x >= L.x1 || PORTALS.some(P => P.host === L && Math.abs(x - P.cx) <= P.R) || overLine(x, x + 1) || cutAt(x)) continue;
       const k = 1 - Math.abs(x - ex) / 70;
       G.globalAlpha = k * k * 0.75 * (0.5 + 0.5 * under.ember); r(x, L.y0 - 15, 1, 1, AS);
     }
@@ -1007,6 +1144,39 @@ function floorLife(g, camX, camY, vw, vh, p) {
       if (f.a < 0.05 || f.x < camX || f.x > camX + vw || f.y < camY || f.y > camY + vh) continue;
       G.globalAlpha = f.a * 0.65; r(f.x, f.y, 1, 1, f.c);
     }
+    G.globalAlpha = 1;
+  }
+  // разрез эпох: вода под решёткой канализации бежит, кораблики, пар с запада
+  { const sw = CUTS.find(c => c.id === 'sewer'), gx0 = sw.x0 + 40, y0 = LINE.y0 + 3, H = T.FH - 6;
+    if (gx0 < camX + vw && gx0 + 24 > camX) {
+      for (let k = 0; k < 14; k++) {
+        const x = gx0 + ((k * 7) % 24), y = y0 + q((t * 0.25 + k * 9) % H);
+        if ((x - gx0) % 3 && y !== y0 + (H >> 1)) { G.globalAlpha = 0.55; r(x, y, 1, 1, k & 1 ? MG_L : MG); }
+      }
+      G.globalAlpha = 1;
+      for (const b of boats) {                                          // кораблик: парус и корпус, решётка поверх
+        for (const [dx, dy, c] of [[1, -1, BO], [0, 0, L2], [1, 0, BO], [2, 0, L2]]) {
+          const x = q(b.x + dx), y = q(b.y + dy);
+          if (y >= y0 && y < y0 + H && ((x - gx0) % 3 === 0 || y === y0 + (H >> 1))) continue;
+          r(x, y, 1, 1, c);
+        }
+      }
+      if (t % 90 < 40) { const k = (t % 90) / 40; G.globalAlpha = 0.25 * (1 - k); r(gx0 + 4 + q(k * 10), y0 - q(k * 14), 2, 1, BO); G.globalAlpha = 1; }   // пар
+    } }
+  // метро: пыль — в тоннель (сквозняк) или из него (поезд); в тоннеле — свет окон прошёл
+  { const mt = CUTS.find(c => c.id === 'metro'), mx = mt.x0 + 76;
+    if (mx - 20 < camX + vw && mx + 20 > camX) {
+      for (const d of draft) { G.globalAlpha = Math.min(0.4, d.life / 60); r(d.x, d.y, 1, 1, BO); }
+      G.globalAlpha = 1;
+      if (under.train > 30 && under.train < 210) {
+        const k = (under.train * 3) % 40, a = Math.sin(Math.PI * (under.train - 30) / 180);
+        G.globalAlpha = 0.5 * a; r(mx - 11 + (k % 22), LINE.y0 - 16, 4, 6, AS); r(mx - 11 + ((k + 11) % 22), LINE.y0 - 16, 4, 6, S1); G.globalAlpha = 1;
+      }
+    } }
+  // убежище: репродуктор шипит
+  if (under.hiss > 0) {
+    const sx = CUTS.find(c => c.id === 'shelter').x0 + 82, sy = LINE.y0 - 14;
+    for (let k = 0; k < 4; k++) { G.globalAlpha = 0.5; r(sx - 6 + q(Math.random() * 12), sy - 6 + q(Math.random() * 10), 1, 1, Math.random() < 0.5 ? AS : S2); }
     G.globalAlpha = 1;
   }
   // брызги капель — на полу

@@ -66,6 +66,17 @@ for (const R of ROOMS) if (R.poly) {
 // холодная жила (канон U7: кабельный коллектор) — от крипты к криосклепу
 export const VEIN = { id: 'vein', x0: 440, x1: 760, y0: 282, fh: 24, wh: 22 };
 
+// ── разрез эпох: линия — самый новый слой — режет старые ходы насквозь (канон
+// U2–U5, сцены — из ритуалов тоннелей); в дальней стене виден срез, ход старого
+// слоя уходит в стену и закрыт: завал, вода под решёткой, гермодверь, тоннель
+export const CUTS = [
+  { id: 'catacomb', x0: 398, x1: 502 },   // U2 катакомбы: белый известняк, черепа, корни сада
+  { id: 'sewer', x0: 858, x1: 962 },      // U3 канализация: кирпичный свод яйцом, чёрная вода, кораблики
+  { id: 'shelter', x0: 1408, x1: 1512 },  // U4 бомбоубежище: бетон в метр, гермодверь «ВЫХОД», репродуктор
+  { id: 'metro', x0: 1648, x1: 1748 },    // U5 метро: плитка, табло без цифр, тоннель со сквозняком
+];
+export const cutAt = x => CUTS.find(c => x >= c.x0 && x < c.x1) || null;
+
 // круглые проёмы: низ трубы с севера на юг входит в стену хозяина —
 // комнаты или линии (тогда проём — в дальней половине трубы)
 export const PORTALS = TUBES.filter(tb => tb.bot === 'portal').map(tb => {
@@ -115,6 +126,11 @@ const TH = [
   { id: 'u_cans', room: 'bunker', wall: true, x: 528, y: 680, w: 76, h: 40, at: [566, 732] },
   // облако: стойки — два ряда (вещь — ближний ряд; дальний и пальмы — без осмотра)
   { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
+  // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
+  { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
+  { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470] },
+  { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
+  { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
@@ -284,6 +300,11 @@ export const under = {
   ember: 1,               // уголёк 0..1: тускнеет под землёй, не гаснет
   cold: 0,                // холод у ног 0..1 (плавно)
   steps: 0,               // шагов под землёй (для огонька и пыли)
+  heard: new Set(),       // что уже прозвучало за этот спуск (убежище, метро)
+  say: null,              // строка мира — main покажет бумажкой внизу
+  hiss: 0,                // репродуктор шипит (шагов)
+  train: 0,               // поезд за спиной идёт (шаг прохода; 0 — нет)
+  still: 0, px: 0, py: 0, // сколько стоит на месте
   // шаг: уголёк тускнеет за четыре минуты (круг света сжимается на четверть, не гаснет); в криосклепе — вдвое быстрее
   step(fx, fy) {
     this.steps++;
@@ -292,9 +313,27 @@ export const under = {
     this.ember = Math.max(0, this.ember - (1 + (c > 0.9 ? 1 : 0)) / (60 * 240));
     const at = placeAt(fx, fy);
     if (at !== 'tube') this.found.add(at);
+    const mv = Math.hypot(fx - this.px, fy - this.py); this.px = fx; this.py = fy;
+    this.still = mv > 0.05 ? 0 : this.still + 1;
+    if (this.hiss > 0) this.hiss--;
+    // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
+    const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
+    if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
+      this.heard.add('shelter');
+      if (Math.random() < 0.6) { this.say = '— Отбой. Всем спасибо. Все свободны.'; this.hiss = 150; }
+    }
+    // метро: поезд приходит к тому, кто не смотрит в тоннель — стоит спиной, не шевелясь
+    // (канон «Поезд за спиной»); шевельнулся — поезда не было
+    if (this.train > 0) {
+      if (mv > 0.05) this.train = 0;
+      else if (++this.train > 240) { this.train = 0; this.say = 'Что-то длинное прошло сзади и стихло.'; }
+    } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.heard.has('metro')) {
+      this.heard.add('metro'); this.train = 1;
+    }
   },
   enter(retX, retY) {
     this.active = true; this.ret = { x: retX, y: retY }; this.ember = 1; this.cold = 0; this.steps = 0;
+    this.heard.clear(); this.say = null; this.hiss = 0; this.train = 0; this.still = 0;
   },
   leave() { this.active = false; this.cold = 0; },
   save() { return { seen: [...this.seen], found: [...this.found] }; },

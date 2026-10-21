@@ -1158,6 +1158,10 @@ function stepFxUnder() {
   updateGeiger(toxic.level());
   lofi.update(0);
   under.step(player.x + 6, player.y + 23);
+  // разрез эпох: голоса старых слоёв — бумажкой внизу; поезд за спиной гудит и трясёт кадр
+  if (under.say) { showLore(under.say); under.say = null; }
+  if (under.train === 1) playDistantSound();
+  if (under.train > 40 && under.train < 200 && under.train % 24 === 0) camera.shake(8);
   stepUnderLife(player);
   lighting.sources = underLights(player.x + 6, player.y + 10);
   lightParticles.update({ x: camX, y: camY }, lighting.sources);

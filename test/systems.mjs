@@ -1643,6 +1643,31 @@ setCtx(ctx);
     assert(/кремирован/.test(U.thingById('u_capsule').look) && /охлаждается/.test(U.thingById('u_capsule').look), 'криосклеп без канона U7');
     for (const id of Object.keys(TX.UNDER_INSC)) assert(U.thingById(id), 'надпись без вещи: ' + id);
   });
+  test('изнанка: разрез эпох — четыре старых хода в стене линии; отбой — раз за спуск; поезд — только стоящему', () => {
+    eq(U.CUTS.map(c => c.id).join(), 'catacomb,sewer,shelter,metro', 'срезы');
+    for (const c of U.CUTS) {
+      assert(U.thingById('u_cut_' + c.id), `срез ${c.id}: нет вещи`);
+      for (const P of U.PORTALS) assert(P.cx + P.R < c.x0 || P.cx - P.R > c.x1, `срез ${c.id} лезет в проём ${P.tube.id}`);
+      assert(!U.ROOMS.some(R => R.x0 < c.x1 && R.x1 > c.x0 && R.y0 < U.TUBES[0].y0 && R.y1 > U.TUBES[0].y0), `срез ${c.id} — в зале поверх линии`);
+    }
+    const r0 = Math.random; Math.random = () => 0.1;
+    U.under.enter(0, 0);
+    for (let i = 0; i < 3; i++) U.under.step(1460, 466);
+    eq(U.under.say, '— Отбой. Всем спасибо. Все свободны.', 'отбой'); U.under.say = null;
+    for (let i = 0; i < 30; i++) U.under.step(1460 + (i & 1), 466);
+    eq(U.under.say, null, 'отбой второй раз');
+    Math.random = r0;
+    for (let i = 0; i < 310; i++) U.under.step(1698, 466);          // стоит у метро
+    assert(U.under.train > 0, 'поезд не пошёл');
+    U.under.step(1702, 466);                                       // шевельнулся — поезда не было
+    eq(U.under.train, 0, 'поезд не отменился'); eq(U.under.say, null, 'строка после отмены');
+    for (let i = 0; i < 400; i++) U.under.step(1702, 466);
+    eq(U.under.train, 0, 'поезд пошёл второй раз за спуск');
+    U.under.enter(0, 0);
+    for (let i = 0; i < 560; i++) U.under.step(1698, 466);
+    eq(U.under.say, 'Что-то длинное прошло сзади и стихло.', 'строка поезда');
+    U.under.leave(); U.under.say = null;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
