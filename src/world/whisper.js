@@ -73,13 +73,38 @@ let lastWhisperEnd = 0;
 try { if (/[?&]whisper\b/.test(location.search)) lastWhisperEnd = -COOLDOWN; } catch (e) {}
 // места, которым сейчас молчать: у них свой шёпот по случаю (ночью у пифоса — мох)
 export const hush = new Set();
-// шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень
-export function sayAt(text, x, y) {
+// шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень;
+// faint — на границе слышимости (чернила вдвое бледнее); follow() → [x, y] — шёпот
+// идёт следом (вплотную, у уха), не отставая и не забегая вперёд
+export function sayAt(text, x, y, faint = false, follow = null) {
   if (whisper.text || redNoon.active) return false;
-  whisper = { text, x, y, t0: t, prep: null };
+  whisper = { text, x, y, t0: t, prep: null, k: faint ? 0.5 : 1, follow };
   return true;
 }
+// шаг мира: шёпот, что идёт следом, догоняет — мягко
+export function stepWhisper() {
+  const w = whisper;
+  if (!w.text || !w.follow) return;
+  const [x, y] = w.follow();
+  w.x += (x - w.x) * 0.12; w.y += (y - w.y) * 0.12;
+}
 export const whisperText = () => whisper.text;
+export const whisperAt = () => [whisper.x, whisper.y];
+// погасить: недописанный гаснет недописанным, дописанный — выцветает сразу
+export function quench() {
+  const w = whisper;
+  if (!w.text || w.quenched) return;
+  if (!w.prep) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; return; }   // перо ещё не коснулось
+  const a = t - w.t0;
+  if (a >= w.prep.write + HOLD) return;
+  w.cut = Math.min(a, w.prep.write); w.t0 = t - w.prep.write - HOLD; w.quenched = true;
+}
+// смена карты (спуск, подъём): шёпот остаётся там, где был сказан
+export function clear() {
+  if (!whisper.text) return;
+  whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
+  lastWhisperEnd = t;
+}
 
 // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
 // null — день, свет не нужен
@@ -183,7 +208,7 @@ export function draw(ctx, camera) {
   }
   const wrote = w.cut === undefined ? a : w.cut;  // докуда дошло перо
   if (a >= P.write + HOLD + FADE) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; lastWhisperEnd = t; return; }
-  const fade = a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE;
+  const fade = (a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
   const sy = w.y - Math.max(0, a - P.write - HOLD) * 0.12;     // выцветая, уходит вверх
   if (P.plain) {
     const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);

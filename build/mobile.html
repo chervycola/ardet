@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='cc34ff0 · 2026-10-21';console.log('[оттиск]', 'cc34ff0 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='235ee64 · 2026-10-21';console.log('[оттиск]', '235ee64 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -3270,7 +3270,7 @@ System.register("world/toxic", ["world/disc", "render/scaler"], function (export
 // ═══════════════════════════════════════
 System.register("audio/audio", [], function (exports_16, context_16) {
     "use strict";
-    var ctx, masterGain, ambientNode;
+    var ctx, masterGain, tock, ambientNode;
     var __moduleName = context_16 && context_16.id;
     function initAudio() {
         if (ctx)
@@ -3373,6 +3373,25 @@ System.register("audio/audio", [], function (exports_16, context_16) {
         s.start();
     }
     exports_16("playMossGrow", playMossGrow);
+    function playTick(v) {
+        if (!ctx || v <= 0.01)
+            return;
+        const n = Math.floor(ctx.sampleRate * 0.012), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.18));
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        tock = !tock;
+        s.buffer = b;
+        f.type = 'lowpass';
+        f.frequency.value = tock ? 1500 : 1900;
+        f.Q.value = 2;
+        g.gain.value = 0.05 * v;
+        s.connect(f);
+        f.connect(g);
+        g.connect(masterGain);
+        s.start();
+    }
+    exports_16("playTick", playTick);
     // Menu click
     function playClick() {
         if (!ctx)
@@ -3442,6 +3461,8 @@ System.register("audio/audio", [], function (exports_16, context_16) {
         execute: function () {
             ctx = null;
             masterGain = null;
+            // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
+            tock = false;
             // Ambient drone (background)
             ambientNode = null;
         }
@@ -19538,7 +19559,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, HEART, STRIDE, GLOW, MOSS_LINE, moss, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
+    var underside_js_1, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // где встать у вещи — точка героя (ноги — x+6, y+23)
     function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
@@ -19743,6 +19764,37 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
         return out;
     }
     exports_56("pathTo", pathTo);
+    // где шёпоту встать у стены: дальняя стена над полом — в зале, в жиле, на линии
+    // (вдоль, не за край); в штреке с севера на юг — в боковой стенке, сбоку
+    function wallSpot(fx, fy, x) {
+        const at = placeAt(fx, fy), L = TUBES[0], R = ROOMS.find(r => r.id === at);
+        const fit = (a, b) => Math.max(a + 40, Math.min(b - 40, x));
+        if (R)
+            return [fit(R.x0, R.x1), R.y0 - Math.round(R.wh / 2)];
+        if (at === 'vein')
+            return [fit(VEIN.x0, VEIN.x1), VEIN.y0 - 11];
+        if (fy > L.y0 - 4 && fy < L.y0 + T.FH + 4)
+            return [fit(L.x0, L.x1 + T.FW), L.y0 - 13];
+        return [x, fy - 20];
+    }
+    function murmurAt(fx, fy, greeted) {
+        let best = null, bd = 420;
+        for (const a of MURMUR_AT) {
+            const d = Math.hypot(a.x - fx, a.y - fy);
+            if (d < bd) {
+                bd = d;
+                best = a;
+            }
+        }
+        if (!best)
+            return null;
+        const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];
+        if (!greeted)
+            return { text, x: fx + Math.round((Math.random() - 0.5) * 8), y: fy - 32, key: best.key, ear: true }; // вплотную, идёт следом
+        const side = Math.random() < 0.5 ? -1 : 1, [x, y] = wallSpot(fx, fy, fx + side * (50 + Math.round(Math.random() * 30)));
+        return { text, x, y, key: best.key }; // у стены
+    }
+    exports_56("murmurAt", murmurAt);
     function underLights(px, py) {
         const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
         const L = [
@@ -20025,6 +20077,36 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                     return null;
                 },
             });
+            // ── шёпоты изнанки (канон: «в изнанке шёпоты гуще»; в криосклепе — ни одного) ──
+            // Шёпот — обрывок строки ближнего места: его же надпись, его осмотр; перо пишет
+            // её рядом (world/whisper.js). Внизу — раз в 20–40 секунд, чаще, чем наверху. Не
+            // поздоровался на пороге — шёпоты идут вплотную, у самого уха; поздоровался —
+            // держатся стен. Молчат в криосклепе, в ходе мха (там не шёпот, а рост) и в окнах
+            // тишины ритуалов
+            exports_56("MURMURS", MURMURS = {
+                crypt: ['...лёд кончается...', '...место держат...', '...ожидание продлено...', '...девять ярусов вниз...'],
+                guard: ['...братишка... покушать...', '...отбой...'],
+                base: ['...углов пять...', '...звонить три раза...', '...iä! iä!...'],
+                cellar: ['...две пиццы...', '...верни стену...', '...47 столов...'],
+                station: ['...скоро...', '...водитель на месте...'],
+                onkalo: ['...здесь нет ничего ценного...'],
+                kola: ['...звуки...', '...дальше не пустили...'],
+                bunker: ['...годен до...', '...конец света перенесли...'],
+                cloud: ['...облака здесь нет...'],
+                vein: ['...пусть подождёт...'],
+                godot: ['...на следующей неделе...'],
+                catacomb: ['...гербаризация без описи...'],
+                sewer: ['...прошу разъяснить...'],
+                shelter: ['...все свободны...'],
+                metro: ['...обратно все и так доезжают...'],
+            });
+            exports_56("WD_SILENCE", WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)');
+            MURMUR_AT = [
+                ...ROOMS.filter(R => MURMURS[R.id]).map(R => ({ key: R.id, x: (R.x0 + R.x1) / 2, y: (R.y0 + R.y1) / 2 })),
+                ...CUTS.map(c => ({ key: c.id, x: (c.x0 + c.x1) / 2, y: TUBES[0].y0 + 15 })),
+                { key: 'vein', x: (VEIN.x0 + VEIN.x1) / 2, y: VEIN.y0 + 12 },
+                { key: 'godot', x: 1355, y: 300 },
+            ];
             // ── состояние ──
             exports_56("under", under = {
                 active: false,
@@ -20039,6 +20121,13 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                 hiss: 0, // репродуктор шипит (шагов)
                 train: 0, // поезд за спиной идёт (шаг прохода; 0 — нет)
                 still: 0, px: 0, py: 0, // сколько стоит на месте
+                murmur: 900, // шагов до следующего шёпота
+                hushF: 0, hushS: 0, // окна тишины: шагов мира; точек пути (ритуалы)
+                greeted: false, // поздоровался на пороге — шёпоты держатся стен (за спуск)
+                whisper: null, // шёпот к записи { text, x, y, faint, ear } — main отдаёт перу; ear — идёт следом
+                quench: false, // погасить шёпот, что пишется (тишина)
+                wdTold: false, // в криосклепе сказано: «Шёпотов нет»
+                tick: 0, // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
                 ride: false, // поезд забрал — main выводит к колодцу городка
@@ -20060,6 +20149,24 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                     const said = moss.step(fx, fy, at === 'moss', mv); // ход мха: сердце
                     if (said)
                         this.say = said;
+                    // шёпоты: гуще, чем наверху; в криосклепе — впервые тихо
+                    if (this.hushF > 0)
+                        this.hushF--;
+                    if (this.hushS > 0)
+                        this.hushS = Math.max(0, this.hushS - mv);
+                    if (at === 'wd' && !this.wdTold) {
+                        this.wdTold = true;
+                        this.say = WD_SILENCE;
+                        this.quench = true;
+                        this.whisper = null;
+                    }
+                    // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
+                    this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
+                    if (--this.murmur <= 0) {
+                        this.murmur = 1200 + Math.floor(Math.random() * 1200);
+                        if (!this.silent(at))
+                            this.whisper = murmurAt(fx, fy, this.greeted);
+                    }
                     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
                     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
                     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
@@ -20091,6 +20198,8 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                         this.train = 1;
                     }
                 },
+                // тишина: в криосклепе, в ходе мха, в окнах тишины ритуалов
+                silent(at) { return at === 'wd' || at === 'moss' || this.hushF > 0 || this.hushS > 0; },
                 // взял билет со скамьи
                 takeTicket() {
                     if (!this.bench)
@@ -20114,9 +20223,17 @@ System.register("world/underside", ["content/underside"], function (exports_56, 
                     this.still = 0;
                     this.bench = false;
                     this.ride = false;
+                    this.murmur = 900;
+                    this.hushF = 0;
+                    this.hushS = 0;
+                    this.greeted = false;
+                    this.whisper = null;
+                    this.quench = false;
+                    this.wdTold = false;
+                    this.tick = 0;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; moss.reset(); },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; moss.reset(); },
                 save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
                 load(d) {
                     if (!d)
@@ -20210,16 +20327,53 @@ System.register("world/redNoon", [], function (exports_57, context_57) {
 });
 System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"], function (exports_58, context_58) {
     "use strict";
-    var time_js_6, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText;
+    var time_js_6, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
     var __moduleName = context_58 && context_58.id;
-    // шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень
-    function sayAt(text, x, y) {
+    // шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень;
+    // faint — на границе слышимости (чернила вдвое бледнее); follow() → [x, y] — шёпот
+    // идёт следом (вплотную, у уха), не отставая и не забегая вперёд
+    function sayAt(text, x, y, faint = false, follow = null) {
         if (whisper.text || redNoon_js_1.redNoon.active)
             return false;
-        whisper = { text, x, y, t0: time_js_6.t, prep: null };
+        whisper = { text, x, y, t0: time_js_6.t, prep: null, k: faint ? 0.5 : 1, follow };
         return true;
     }
     exports_58("sayAt", sayAt);
+    // шаг мира: шёпот, что идёт следом, догоняет — мягко
+    function stepWhisper() {
+        const w = whisper;
+        if (!w.text || !w.follow)
+            return;
+        const [x, y] = w.follow();
+        w.x += (x - w.x) * 0.12;
+        w.y += (y - w.y) * 0.12;
+    }
+    exports_58("stepWhisper", stepWhisper);
+    // погасить: недописанный гаснет недописанным, дописанный — выцветает сразу
+    function quench() {
+        const w = whisper;
+        if (!w.text || w.quenched)
+            return;
+        if (!w.prep) {
+            whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
+            return;
+        } // перо ещё не коснулось
+        const a = time_js_6.t - w.t0;
+        if (a >= w.prep.write + HOLD)
+            return;
+        w.cut = Math.min(a, w.prep.write);
+        w.t0 = time_js_6.t - w.prep.write - HOLD;
+        w.quenched = true;
+    }
+    exports_58("quench", quench);
+    // смена карты (спуск, подъём): шёпот остаётся там, где был сказан
+    function clear() {
+        if (!whisper.text)
+            return;
+        whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
+        lastWhisperEnd = time_js_6.t;
+    }
+    exports_58("clear", clear);
     // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
     // null — день, свет не нужен
     function check(player, locations, litAt = null) {
@@ -20366,7 +20520,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             lastWhisperEnd = time_js_6.t;
             return;
         }
-        const fade = a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE;
+        const fade = (a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
         const sy = w.y - Math.max(0, a - P.write - HOLD) * 0.12; // выцветая, уходит вверх
         if (P.plain) {
             const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
@@ -20481,6 +20635,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             // места, которым сейчас молчать: у них свой шёпот по случаю (ночью у пифоса — мох)
             exports_58("hush", hush = new Set());
             exports_58("whisperText", whisperText = () => whisper.text);
+            exports_58("whisperAt", whisperAt = () => [whisper.x, whisper.y]);
         }
     };
 });
@@ -48826,6 +48981,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const a = underside_js_4.accessOf(th), retX = player.x, retY = player.y;
         teleportWithFade(a.x, a.y, () => {
             underside_js_4.under.enter(retX, retY);
+            whisper_js_3.clear(); // шёпот сверху остался наверху
             redNoon_js_3.muteRedNoon(true);
             if (!surfaceLights)
                 surfaceLights = lighting_js_1.lighting.sources;
@@ -48850,6 +49006,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // наверх: свет и звук мира возвращаются
     function surface() {
         underside_js_4.under.leave();
+        whisper_js_3.clear();
         redNoon_js_3.muteRedNoon(false);
         if (surfaceLights)
             lighting_js_1.lighting.sources = surfaceLights;
@@ -48929,11 +49086,25 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             camera_js_1.camera.shake(8);
         if (underside_js_4.under.ride)
             rideToWell();
+        // шёпоты изнанки: перо пишет их рядом; у уха — идут следом; тишина гасит недописанный
+        if (underside_js_4.under.quench) {
+            whisper_js_3.quench();
+            underside_js_4.under.quench = false;
+        }
+        const w = underside_js_4.under.whisper;
+        if (w) {
+            const dx = w.x - (player.x + 6), dy = w.y - (player.y + 23);
+            whisper_js_3.sayAt(w.text, w.x, w.y, w.faint, w.ear ? () => [player.x + 6 + dx, player.y + 23 + dy] : null);
+            underside_js_4.under.whisper = null;
+        }
+        whisper_js_3.stepWhisper();
         // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
         if (underside_js_4.moss.beat && underside_js_4.moss.k > 0.5)
             audio_js_11.playHeart();
         if (underside_js_4.moss.grow)
             audio_js_11.playMossGrow();
+        if (underside_js_4.under.tick)
+            audio_js_11.playTick(underside_js_4.under.tick);
         underside_js_5.stepUnderLife(player);
         lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 6, player.y + 10);
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
@@ -48956,6 +49127,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.pulse = underside_js_4.moss.k > 0.5 ? underside_js_4.moss.pulse : 0;
         underside_js_5.drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { context_js_17.setCtx(worldCtx); player_js_1.drawPlayer(player); });
         particles_js_3.draw(worldCtx, { x: camX, y: camY });
+        whisper_js_3.draw(worldCtx, { x: camX, y: camY });
         worldCtx.restore();
         haze_js_1.hazeOff();
         warmSpots = warmIn(camX, camY, vw, vh); // в криосклепе огонёк холодный — беречь перу нечего

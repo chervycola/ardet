@@ -89,6 +89,18 @@ export function playMossGrow() {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start();
 }
 
+// Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
+let tock = false;
+export function playTick(v) {
+  if (!ctx || v <= 0.01) return;
+  const n = Math.floor(ctx.sampleRate * 0.012), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.18));
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  tock = !tock;
+  s.buffer = b; f.type = 'lowpass'; f.frequency.value = tock ? 1500 : 1900; f.Q.value = 2; g.gain.value = 0.05 * v;
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+}
+
 // Menu click
 export function playClick() {
   if (!ctx) return;

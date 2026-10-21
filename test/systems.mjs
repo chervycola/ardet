@@ -1769,6 +1769,69 @@ setCtx(ctx);
     for (const [k, x, y, w, h] of log) if (k === 'fillRect') assert(x >= b.x - 1 && x + w <= b.x + b.w + 1 && y >= b.y - 1 && y + h <= b.y + b.h + 1, `нора вылезла из рамки: ${x},${y}`);
     U.under.seen.delete('pithos_whisper'); U.under.seen.delete('pithos_lie'); MW._resetMossway(); WH._reset(); WH.hush.delete('pithos');
   });
+  test('изнанка: шёпоты гуще, чем наверху — раз в 20–40 секунд, обрывки строк ближнего места; без «вдоха» — у уха', () => {
+    const W = U.under, norm = s => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    const corpus = norm([...Object.values(TX.UNDER_TEXT).map(v => v.look), ...Object.values(TX.UNDER_INSC), ...Object.values(WH.WHISPERS), '— Отбой. Всем спасибо. Все свободны.'].join(' | '));
+    for (const [key, lines] of Object.entries(U.MURMURS)) {
+      assert(U.ROOMS.some(R => R.id === key) || U.CUTS.some(c => c.id === key) || key === 'vein' || key === 'godot', 'шёпот без места: ' + key);
+      for (const l of lines) assert(corpus.includes(norm(l)), `шёпот не из строк места: ${l}`);
+    }
+    W.enter(0, 0); W.say = null;
+    const at = [], fx = 300, fy = 300;                              // крипта
+    for (let i = 1; i <= 12000; i++) { W.step(fx, fy); if (W.whisper) { at.push([i, W.whisper]); W.whisper = null; } }
+    eq(at[0][0], 900, 'первый шёпот — через 15 секунд');
+    for (let i = 1; i < at.length; i++) { const d = at[i][0] - at[i - 1][0]; assert(d >= 1200 && d <= 2400, 'между шёпотами ' + d); }
+    for (const [, w] of at) {
+      assert(U.MURMURS.crypt.includes(w.text), 'в крипте — чужой шёпот: ' + w.text);
+      assert(Math.abs(w.x - fx) <= 4 && w.y === fy - 32 && w.ear, 'не поздоровался — а шёпот не у уха');
+    }
+    eq(W.say, null, 'шёпот — бумажкой');
+    W.greeted = true; W.murmur = 1;
+    W.step(fx, fy);
+    const R = U.ROOMS.find(r => r.id === 'crypt');
+    assert(W.whisper && !W.whisper.ear && Math.abs(W.whisper.x - fx) >= 40 && W.whisper.x >= R.x0 + 40 && W.whisper.x <= R.x1 - 40 && W.whisper.y === R.y0 - R.wh / 2, 'поздоровался — шёпот не у стены');
+    W.whisper = null; W.murmur = 1;
+    W.step(1200, 465);                                               // линия: у дальней стены, не за краем
+    assert(W.whisper && W.whisper.y === U.TUBES[0].y0 - 13, 'на линии шёпот не на стене');
+    W.whisper = null; W.leave();
+    W.enter(0, 0); eq(W.greeted, false, 'новый спуск — уже поздоровался');
+    W.leave();
+  });
+  test('изнанка: тишина — в криосклепе ни одного шёпота, слышно уголёк; в ходе мха — рост; окна тишины ритуалов', () => {
+    const W = U.under;
+    W.enter(0, 0); W.say = null; W.ember = 0.6;
+    const ticks = [];
+    for (let i = 0; i < 6000; i++) { W.step(834, 300); assert(!W.whisper, 'в криосклепе шёпот'); if (W.tick) ticks.push(W.tick); if (i === 0) { eq(W.say, U.WD_SILENCE, 'тишина криосклепа'); assert(W.quench, 'недописанный шёпот не гаснет'); W.say = null; W.quench = false; } }
+    eq(W.say, null, '«Шёпотов нет» — второй раз');
+    // уголёк 0.6 в криосклепе тускнеет вдвое быстрее — за 72 секунды: 144 тика по полсекунды, потом тихо
+    assert(ticks.length >= 140 && ticks.length <= 146, 'уголёк тикает: ' + ticks.length);
+    for (let i = 1; i < ticks.length; i++) assert(ticks[i] <= ticks[i - 1], 'тиканье громче');
+    assert(ticks[0] > 0.55 && ticks[ticks.length - 1] < 0.01, 'тиканье не тускнеет вместе с угольком: ' + ticks[ticks.length - 1]);
+    eq(W.tick, 0, 'совсем тихо — а тикает');
+    W.step(1200, 465); eq(W.tick, 0, 'тикает вне криосклепа');
+    W.enter(0, 0); W.say = null;
+    for (let i = 0; i < 3000; i++) { const x = U.MOSS.x0 + 30; W.step(x, U.mossY(x) + 12); assert(!W.whisper, 'в ходе мха шёпот'); }
+    W.say = null;
+    for (const [k, v] of [['hushF', 600], ['hushS', 40]]) {
+      W.enter(0, 0); W.say = null; W[k] = v; W.murmur = 1;
+      W.step(300, 300);
+      assert(!W.whisper, 'окно тишины — шёпот: ' + k);
+    }
+    W.hushF = 0; W.hushS = 40;
+    for (let x = 1000; x < 1050; x++) W.step(x, 465);                // тишина на 40 точек пути
+    eq(W.hushS, 0, 'тишина не кончилась через 40 точек');
+    W.leave(); W.say = null;
+    WH._reset();
+    assert(WH.sayAt('...x...', 0, 0, true) && !WH.sayAt('...y...', 0, 0), 'перо занято — а пишет');
+    WH.quench(); eq(WH.whisperText(), '', 'не тронутый пером шёпот не погас');
+    WH.sayAt('...x...', 0, 0); WH.clear(); eq(WH.whisperText(), '', 'спуск — шёпот сверху остался');
+    WH._reset();
+    let px = 100;                                                   // у уха — идёт следом
+    WH.sayAt('...x...', px, 50, false, () => [px, 50]);
+    for (let i = 0; i < 120; i++) { px += 1; WH.stepWhisper(); }
+    assert(Math.abs(WH.whisperAt()[0] - px) < 12 && WH.whisperAt()[1] === 50, 'шёпот у уха отстал: ' + WH.whisperAt());
+    WH._reset();
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };

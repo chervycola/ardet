@@ -67,7 +67,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -86,7 +86,7 @@ import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
-import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
+import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
@@ -1112,6 +1112,7 @@ function goUnder(stairId) {
   const a = accessOf(th), retX = player.x, retY = player.y;
   teleportWithFade(a.x, a.y, () => {
     under.enter(retX, retY);
+    clearWhisper();                                 // шёпот сверху остался наверху
     muteRedNoon(true);
     if (!surfaceLights) surfaceLights = lighting.sources;
     lighting.sources = underLights(player.x + 6, player.y + 10);
@@ -1130,6 +1131,7 @@ function goUp(th) {
 // наверх: свет и звук мира возвращаются
 function surface() {
   under.leave();
+  clearWhisper();
   muteRedNoon(false);
   if (surfaceLights) lighting.sources = surfaceLights;
   surfaceLights = null;
@@ -1185,9 +1187,19 @@ function stepFxUnder() {
   if (under.train === 1) playDistantSound();
   if (under.train > 40 && under.train < 200 && under.train % 24 === 0) camera.shake(8);
   if (under.ride) rideToWell();
+  // шёпоты изнанки: перо пишет их рядом; у уха — идут следом; тишина гасит недописанный
+  if (under.quench) { quenchWhisper(); under.quench = false; }
+  const w = under.whisper;
+  if (w) {
+    const dx = w.x - (player.x + 6), dy = w.y - (player.y + 23);
+    sayAt(w.text, w.x, w.y, w.faint, w.ear ? () => [player.x + 6 + dx, player.y + 23 + dy] : null);
+    under.whisper = null;
+  }
+  stepWhisper();
   // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
   if (moss.beat && moss.k > 0.5) playHeart();
   if (moss.grow) playMossGrow();
+  if (under.tick) playTick(under.tick);
   stepUnderLife(player);
   lighting.sources = underLights(player.x + 6, player.y + 10);
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
@@ -1208,6 +1220,7 @@ function renderUnder() {
   player.cold = under.cold; player.ember = under.ember; player.pulse = moss.k > 0.5 ? moss.pulse : 0;
   drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); });
   drawParticles(worldCtx, { x: camX, y: camY });
+  drawWhisper(worldCtx, { x: camX, y: camY });
   worldCtx.restore();
   hazeOff();
   warmSpots = warmIn(camX, camY, vw, vh);           // в криосклепе огонёк холодный — беречь перу нечего

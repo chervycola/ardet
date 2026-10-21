@@ -375,6 +375,56 @@ export const moss = {
   },
 };
 
+// ── шёпоты изнанки (канон: «в изнанке шёпоты гуще»; в криосклепе — ни одного) ──
+// Шёпот — обрывок строки ближнего места: его же надпись, его осмотр; перо пишет
+// её рядом (world/whisper.js). Внизу — раз в 20–40 секунд, чаще, чем наверху. Не
+// поздоровался на пороге — шёпоты идут вплотную, у самого уха; поздоровался —
+// держатся стен. Молчат в криосклепе, в ходе мха (там не шёпот, а рост) и в окнах
+// тишины ритуалов
+export const MURMURS = {
+  crypt: ['...лёд кончается...', '...место держат...', '...ожидание продлено...', '...девять ярусов вниз...'],
+  guard: ['...братишка... покушать...', '...отбой...'],
+  base: ['...углов пять...', '...звонить три раза...', '...iä! iä!...'],
+  cellar: ['...две пиццы...', '...верни стену...', '...47 столов...'],
+  station: ['...скоро...', '...водитель на месте...'],
+  onkalo: ['...здесь нет ничего ценного...'],
+  kola: ['...звуки...', '...дальше не пустили...'],
+  bunker: ['...годен до...', '...конец света перенесли...'],
+  cloud: ['...облака здесь нет...'],
+  vein: ['...пусть подождёт...'],
+  godot: ['...на следующей неделе...'],
+  catacomb: ['...гербаризация без описи...'],
+  sewer: ['...прошу разъяснить...'],
+  shelter: ['...все свободны...'],
+  metro: ['...обратно все и так доезжают...'],
+};
+export const WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)';
+const MURMUR_AT = [
+  ...ROOMS.filter(R => MURMURS[R.id]).map(R => ({ key: R.id, x: (R.x0 + R.x1) / 2, y: (R.y0 + R.y1) / 2 })),
+  ...CUTS.map(c => ({ key: c.id, x: (c.x0 + c.x1) / 2, y: TUBES[0].y0 + 15 })),
+  { key: 'vein', x: (VEIN.x0 + VEIN.x1) / 2, y: VEIN.y0 + 12 },
+  { key: 'godot', x: 1355, y: 300 },
+];
+// где шёпоту встать у стены: дальняя стена над полом — в зале, в жиле, на линии
+// (вдоль, не за край); в штреке с севера на юг — в боковой стенке, сбоку
+function wallSpot(fx, fy, x) {
+  const at = placeAt(fx, fy), L = TUBES[0], R = ROOMS.find(r => r.id === at);
+  const fit = (a, b) => Math.max(a + 40, Math.min(b - 40, x));
+  if (R) return [fit(R.x0, R.x1), R.y0 - Math.round(R.wh / 2)];
+  if (at === 'vein') return [fit(VEIN.x0, VEIN.x1), VEIN.y0 - 11];
+  if (fy > L.y0 - 4 && fy < L.y0 + T.FH + 4) return [fit(L.x0, L.x1 + T.FW), L.y0 - 13];
+  return [x, fy - 20];
+}
+export function murmurAt(fx, fy, greeted) {
+  let best = null, bd = 420;
+  for (const a of MURMUR_AT) { const d = Math.hypot(a.x - fx, a.y - fy); if (d < bd) { bd = d; best = a; } }
+  if (!best) return null;
+  const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];
+  if (!greeted) return { text, x: fx + Math.round((Math.random() - 0.5) * 8), y: fy - 32, key: best.key, ear: true };   // вплотную, идёт следом
+  const side = Math.random() < 0.5 ? -1 : 1, [x, y] = wallSpot(fx, fy, fx + side * (50 + Math.round(Math.random() * 30)));
+  return { text, x, y, key: best.key };                                                                    // у стены
+}
+
 // ── состояние ──
 export const under = {
   active: false,
@@ -389,6 +439,13 @@ export const under = {
   hiss: 0,                // репродуктор шипит (шагов)
   train: 0,               // поезд за спиной идёт (шаг прохода; 0 — нет)
   still: 0, px: 0, py: 0, // сколько стоит на месте
+  murmur: 900,            // шагов до следующего шёпота
+  hushF: 0, hushS: 0,     // окна тишины: шагов мира; точек пути (ритуалы)
+  greeted: false,         // поздоровался на пороге — шёпоты держатся стен (за спуск)
+  whisper: null,          // шёпот к записи { text, x, y, faint, ear } — main отдаёт перу; ear — идёт следом
+  quench: false,          // погасить шёпот, что пишется (тишина)
+  wdTold: false,          // в криосклепе сказано: «Шёпотов нет»
+  tick: 0,                // уголёк тикает у сердца (криосклеп): громкость этого шага; 0 — тихо
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
   ride: false,            // поезд забрал — main выводит к колодцу городка
@@ -405,6 +462,16 @@ export const under = {
     if (this.hiss > 0) this.hiss--;
     const said = moss.step(fx, fy, at === 'moss', mv);                  // ход мха: сердце
     if (said) this.say = said;
+    // шёпоты: гуще, чем наверху; в криосклепе — впервые тихо
+    if (this.hushF > 0) this.hushF--;
+    if (this.hushS > 0) this.hushS = Math.max(0, this.hushS - mv);
+    if (at === 'wd' && !this.wdTold) { this.wdTold = true; this.say = WD_SILENCE; this.quench = true; this.whisper = null; }
+    // в криосклепе слышно уголёк: тикает и тускнеет вместе с ним — совсем тихо, значит, засиделся
+    this.tick = at === 'wd' && this.steps % 30 === 0 ? this.ember : 0;
+    if (--this.murmur <= 0) {
+      this.murmur = 1200 + Math.floor(Math.random() * 1200);
+      if (!this.silent(at)) this.whisper = murmurAt(fx, fy, this.greeted);
+    }
     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
@@ -426,6 +493,8 @@ export const under = {
       this.heard.add('metro'); this.train = 1;
     }
   },
+  // тишина: в криосклепе, в ходе мха, в окнах тишины ритуалов
+  silent(at) { return at === 'wd' || at === 'moss' || this.hushF > 0 || this.hushS > 0; },
   // взял билет со скамьи
   takeTicket() {
     if (!this.bench) return false;
@@ -438,9 +507,10 @@ export const under = {
     this.active = true; this.ret = { x: retX, y: retY }; this.ember = 1; this.cold = 0; this.steps = 0;
     this.heard.clear(); this.say = null; this.hiss = 0; this.train = 0; this.still = 0;
     this.bench = false; this.ride = false;
+    this.murmur = 900; this.hushF = 0; this.hushS = 0; this.greeted = false; this.whisper = null; this.quench = false; this.wdTold = false; this.tick = 0;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; moss.reset(); },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket }; },
   load(d) {
     if (!d) return;
