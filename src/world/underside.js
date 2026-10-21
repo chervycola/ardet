@@ -34,6 +34,7 @@ export const TUBES = [
   { id: 'godot', ns: true, x0: 1340, y0: 250, y1: 450, top: 'dead', bot: 'portal' },
   { id: 'onkalod', ns: true, x0: 1600, y0: 480, y1: 700, top: 'open', bot: 'portal' },
   { id: 'kolad', ns: true, x0: 1055, y0: 300, y1: 450, top: 'open', bot: 'portal' },
+  { id: 'bunkerd', ns: true, x0: 640, y0: 480, y1: 720, top: 'open', bot: 'portal' },
 ];
 
 // ── комнаты ── (пол x0..x1 × y0..y1 или многоугольник по часовой; wh — стена)
@@ -50,6 +51,8 @@ export const ROOMS = [
   { id: 'onkalo', name: 'Онкало', x0: 1480, y0: 700, x1: 1780, y1: 890, wh: 44, mat: 'granite', surf: 'ground' },
   // Кольская сверхглубокая: буровой цех, устье под стальной крышкой
   { id: 'kola', name: 'Кольская сверхглубокая', x0: 980, y0: 200, x1: 1160, y1: 300, wh: 40, mat: 'drill', surf: 'ground' },
+  // бункер на всякий случай: квартира в бывшей ракетной шахте, пятнадцатый этаж вниз
+  { id: 'bunker', name: 'Бункер на всякий случай', x0: 520, y0: 720, x1: 820, y1: 850, wh: 44, mat: 'condo', surf: 'ground' },
 ];
 // провалы в полу — встать нельзя (шахта Онкало)
 export const HOLES = [{ x: 1630, y: 800, r: 60 }];
@@ -104,11 +107,14 @@ const TH = [
   // Кольская: устье в полу (запекается), магнитофон на табурете — по глубине
   { id: 'u_kola', room: 'kola', wall: true, x: 1058, y: 240, w: 24, h: 24, at: [1070, 274], solid: [1060, 244, 1080, 262] },
   { id: 'u_tape', room: 'kola', x: 1094, y: 234, w: 18, h: 22, at: [1112, 270], solid: [1094, 248, 1110, 256] },
+  // бункер: окно-экран и полки с запасами на стене
+  { id: 'u_screen', room: 'bunker', wall: true, x: 698, y: 680, w: 84, h: 36, at: [740, 732] },
+  { id: 'u_cans', room: 'bunker', wall: true, x: 528, y: 680, w: 76, h: 40, at: [566, 732] },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
 ];
-// вторая группа ларей — без осмотра, только мешает пройти
-export const SOLIDS = [[236, 298, 292, 308]];
+// без осмотра, только мешает пройти: вторая группа ларей, диван в бункере
+export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792]];
 
 export const THINGS = TH.map(th => {
   const tx = UNDER_TEXT[th.id] || { name: th.id, look: '' };
@@ -303,6 +309,7 @@ export function underLights(px, py) {
     { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k), color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: 1.1 - 0.3 * k },
     { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 },
     { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
+    { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 },   // окно-экран бункера: лес светит
   ];
 }
 export const UNDER_AMBIENT = 0.16;

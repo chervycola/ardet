@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='f992c48 · 2026-10-21';console.log('[оттиск]', 'f992c48 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='e5baf7d · 2026-10-21';console.log('[оттиск]', 'e5baf7d · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -44640,6 +44640,10 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 // ── Кольская сверхглубокая, СГ-3 (черновик проекта, принят; число болтов убрано) ──
                 u_kola: { name: 'Устье', look: `Устье, заваренное стальной крышкой, болты по кругу. Глубина — 12 262 метра. Дальше не пустили.` },
                 u_tape: { name: 'Магнитофон', look: `Магнитофон, кассета подписана: «звуки». Плёнка вытянута наружу. Слушали, пока не перестали.` },
+                // ── бункер на всякий случай: квартиры в ракетной шахте (черновик проекта, принят;
+                //    запасы — на пять лет, как у настоящего; в черновике было двадцать) ──
+                u_screen: { name: 'Окно', look: `Пятнадцать этажей вниз, в бывшей ракетной шахте. Окно — экран с видом на лес. Лес шевелится.` },
+                u_cans: { name: 'Запасы', look: `Запасов — на пять лет, на банках даты. Место куплено в 2012-м. Конец света перенесли.` },
                 // ── забой: проходческий щит (первая машина Boring Company звалась Godot) ──
                 u_godot: { name: 'Щит «Годо»', look: `Туннель кончается машиной. На борту — GODOT, ниже краской от руки: «сколько делал — столько ошибался». Режущая голова упёрлась в породу и стоит.
 
@@ -44669,6 +44673,8 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 u_onkalo_sign: 'это не место почёта.',
                 u_kola: '12 262.',
                 u_tape: 'звуки.',
+                u_screen: 'лес шевелится. ветра нет.',
+                u_cans: 'годен до.',
             });
         }
     };
@@ -44877,6 +44883,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
             { x: px, y: py, r: (40 + 22 * e) * (1 - 0.35 * k), color: mix(EMBER, COLD, k), flicker: 0.1 * (1 - k), intensity: 1.1 - 0.3 * k },
             { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 },
             { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
+            { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 }, // окно-экран бункера: лес светит
         ];
     }
     exports_136("underLights", underLights);
@@ -44906,6 +44913,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'godot', ns: true, x0: 1340, y0: 250, y1: 450, top: 'dead', bot: 'portal' },
                 { id: 'onkalod', ns: true, x0: 1600, y0: 480, y1: 700, top: 'open', bot: 'portal' },
                 { id: 'kolad', ns: true, x0: 1055, y0: 300, y1: 450, top: 'open', bot: 'portal' },
+                { id: 'bunkerd', ns: true, x0: 640, y0: 480, y1: 720, top: 'open', bot: 'portal' },
             ]);
             // ── комнаты ── (пол x0..x1 × y0..y1 или многоугольник по часовой; wh — стена)
             exports_136("ROOMS", ROOMS = [
@@ -44921,6 +44929,8 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'onkalo', name: 'Онкало', x0: 1480, y0: 700, x1: 1780, y1: 890, wh: 44, mat: 'granite', surf: 'ground' },
                 // Кольская сверхглубокая: буровой цех, устье под стальной крышкой
                 { id: 'kola', name: 'Кольская сверхглубокая', x0: 980, y0: 200, x1: 1160, y1: 300, wh: 40, mat: 'drill', surf: 'ground' },
+                // бункер на всякий случай: квартира в бывшей ракетной шахте, пятнадцатый этаж вниз
+                { id: 'bunker', name: 'Бункер на всякий случай', x0: 520, y0: 720, x1: 820, y1: 850, wh: 44, mat: 'condo', surf: 'ground' },
             ]);
             // провалы в полу — встать нельзя (шахта Онкало)
             exports_136("HOLES", HOLES = [{ x: 1630, y: 800, r: 60 }]);
@@ -44976,11 +44986,14 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 // Кольская: устье в полу (запекается), магнитофон на табурете — по глубине
                 { id: 'u_kola', room: 'kola', wall: true, x: 1058, y: 240, w: 24, h: 24, at: [1070, 274], solid: [1060, 244, 1080, 262] },
                 { id: 'u_tape', room: 'kola', x: 1094, y: 234, w: 18, h: 22, at: [1112, 270], solid: [1094, 248, 1110, 256] },
+                // бункер: окно-экран и полки с запасами на стене
+                { id: 'u_screen', room: 'bunker', wall: true, x: 698, y: 680, w: 84, h: 36, at: [740, 732] },
+                { id: 'u_cans', room: 'bunker', wall: true, x: 528, y: 680, w: 76, h: 40, at: [566, 732] },
                 // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
                 { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
             ];
-            // вторая группа ларей — без осмотра, только мешает пройти
-            exports_136("SOLIDS", SOLIDS = [[236, 298, 292, 308]]);
+            // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере
+            exports_136("SOLIDS", SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792]]);
             exports_136("THINGS", THINGS = TH.map(th => {
                 const tx = underside_js_1.UNDER_TEXT[th.id] || { name: th.id, look: '' };
                 const o = { ...th, name: tx.name, look: tx.look, zone: 'under', under: true };
@@ -45421,6 +45434,37 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             case 'u_spiral':
                 spiral(th);
                 break;
+            case 'u_screen': { // окно-экран: рама, шторы; лес — живой, поверх
+                r(x + 2, y + 4, 80, 30, RUST);
+                r(x + 2, y + 4, 80, 1, RUST_L);
+                r(x + 81, y + 5, 1, 29, BR2);
+                r(x + 5, y + 7, 74, 24, K1);
+                for (let i = 0; i < 6; i++) {
+                    r(x + i, y + 2, 1, 33, i & 1 ? L1 : L2);
+                    r(x + 79 + i, y + 2, 1, 33, i & 1 ? L2 : L1);
+                } // шторы
+                r(x - 1, y + 1, 87, 2, S2); // карниз
+                break;
+            }
+            case 'u_cans': { // стеллаж: банки рядами, на каждой — дата
+                r(x + 2, y + 2, 2, 38, S2);
+                r(x + 72, y + 2, 2, 38, S2);
+                for (let sh = 0; sh < 3; sh++) {
+                    const sy = y + 12 + sh * 12;
+                    r(x + 2, sy, 72, 2, S0);
+                    r(x + 2, sy, 72, 1, AS);
+                    for (let k = 0; k < 16; k++) {
+                        if (hh(k, sh, 71) < 0.12)
+                            continue; // где-то уже брали
+                        const cx = x + 5 + k * 4;
+                        r(cx, sy - 6, 3, 6, S1);
+                        r(cx, sy - 6, 3, 1, AS);
+                        r(cx, sy - 4, 3, 2, L2);
+                        r(cx + 1, sy - 3, 1, 1, K2);
+                    }
+                }
+                break;
+            }
             case 'u_kola': { // устье: крышка заварена, болты по кругу, ржа
                 const cx = x + 12, cy = y + 12;
                 G.globalAlpha = 0.5;
@@ -45665,6 +45709,24 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             write('СГ-3', 994, 172, L2, 0.12, 49);
             write('12262 м', 1110, 172, L2, 0.12, 50);
         }
+        // бункер: этаж и гермодверь у входа — круглая, открыта
+        if (cl.x0 < 816 && cl.x1 > 604 && cl.y0 < 720 && cl.y1 > 676) {
+            r(790, 684, 22, 11, S2);
+            r(791, 685, 20, 9, S1);
+            write('-15', 795, 687, K1);
+            const dx0 = 618, dy0 = 702;
+            for (let yy = dy0 - 12; yy <= dy0 + 12; yy++)
+                for (let xx = dx0 - 12; xx <= dx0 + 12; xx++) {
+                    const d = Math.hypot(xx + 0.5 - dx0, (yy + 0.5 - dy0) * 1.1);
+                    if (d > 12)
+                        continue;
+                    r(xx, yy, 1, 1, d > 10.5 ? (xx < dx0 ? AS : S2) : d > 9 ? K2 : d < 3 ? S2 : hh(xx, yy, 72) < 0.05 ? RUST : S1);
+                }
+            for (let k = 0; k < 8; k++) {
+                const a = k / 8 * Math.PI * 2;
+                r(q(dx0 + Math.cos(a) * 7), q(dy0 + Math.sin(a) * 7 / 1.1), 1, 1, K1);
+            } // засовы
+        }
         // станция: имя на стене
         if (cl.x0 < 1815 && cl.x1 > 1770 && cl.y0 < 380 && cl.y1 > 364) {
             r(1772, 366, 40, 11, S2);
@@ -45897,6 +45959,24 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         for (let k = 0; k < 6; k++)
             r(x + 3 - k, gy - 8 + k, 1, 1, K1); // плёнка с края стола вниз
     }
+    // диван в бункере — спинкой к нам, лицом к окну-экрану
+    function sofa() {
+        const x = 716, gy = 792;
+        G.globalAlpha = 0.5;
+        r(x + 1, gy - 1, 58, 2, K1);
+        G.globalAlpha = 1;
+        r(x, gy - 14, 58, 12, L1);
+        r(x, gy - 14, 58, 1, BO);
+        r(x, gy - 3, 58, 1, S1);
+        for (let k = 1; k < 3; k++)
+            r(x + k * 19, gy - 13, 1, 9, L2); // подушки
+        r(x - 2, gy - 11, 4, 10, L2);
+        r(x + 56, gy - 11, 4, 10, L2);
+        r(x - 2, gy - 11, 4, 1, BO);
+        r(x + 56, gy - 11, 4, 1, BO); // подлокотники
+        r(x + 2, gy - 2, 2, 2, K1);
+        r(x + 54, gy - 2, 2, 2, K1);
+    }
     function frostDots() {
         if (frost)
             return frost;
@@ -46012,6 +46092,33 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             }
             G.globalAlpha = 1;
         }
+        // бункер: на экране лес шевелится (небо, дальний лес, ближние ели качаются), строки экрана
+        {
+            const s = underside_js_2.THINGS.find(th => th.id === 'u_screen'), sx = s.x + 5, sy = s.y + 7;
+            if (sx < camX + vw && sx + 74 > camX && sy < camY + vh && sy + 24 > camY) {
+                r(sx, sy, 74, 9, S1);
+                r(sx, sy + 9, 74, 4, AS);
+                for (let i = 0; i < 74; i++) {
+                    const h = 3 + q(hh(i >> 2, 1, 73) * 3);
+                    r(sx + i, sy + 13 - h, 1, h, MG_L);
+                }
+                r(sx, sy + 13, 74, 11, MG);
+                for (let k = 0; k < 7; k++) {
+                    const tx = sx + 4 + k * 11, sw = Math.sin(time_js_38.t * 0.018 + k * 1.3) * 1.2;
+                    for (let j = 0; j < 11; j++) {
+                        const w = 1 + (j >> 1);
+                        r(tx + q(sw * (1 - j / 11)) - (w >> 1), sy + 7 + j, w, 1, MG_D);
+                    }
+                    r(tx, sy + 18, 1, 5, K2);
+                }
+                if ((time_js_38.t >> 6) % 9 === 0)
+                    r(sx + ((time_js_38.t >> 1) % 74), sy + 3, 2, 1, K2); // птица пролетела
+                G.globalAlpha = 0.25;
+                for (let y = sy; y < sy + 24; y += 2)
+                    r(sx, y, 74, 1, K1);
+                G.globalAlpha = 1;
+            }
+        }
         // ручеёк талой воды в крипте: блик бежит к жиле
         {
             const x = 396 + ((time_js_38.t >> 1) % 56), y = 304 + q(Math.sin(x * 0.27) * 1.5) - (x > 430 ? 6 : q((x - 396) / 6));
@@ -46116,6 +46223,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 list.push({ k: th.solid ? th.solid[3] : th.y + th.h, th });
         if (camX < 300 && camX + vw > 230 && camY < 320 && camY + vh > 280)
             list.push({ k: 308, west: true });
+        if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776)
+            list.push({ k: 792, sofa: true });
         for (const P of underside_js_2.PORTALS)
             if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh)
                 list.push({ k: P.yb, arch: P });
@@ -46133,6 +46242,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 archSprite(g, it.arch);
             else if (it.west)
                 FLOOR_DRAW.chestsWest();
+            else if (it.sofa)
+                sofa();
             else
                 FLOOR_DRAW[it.th.id](it.th);
         }
@@ -46275,6 +46386,21 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                         return K2;
                     return hh(x, d, 71) < 0.05 ? S2 : S0;
                 },
+                condo(x, d, H) {
+                    if (d <= 2)
+                        return K2;
+                    if (d > H - 2)
+                        return K1;
+                    if (d > H - 5)
+                        return K3;
+                    if (d < 18)
+                        return (x - 520) % 7 === 0 ? K1 : d === 17 ? RUST_L : hh(x, d, 69) < 0.06 ? BR2 : RUST;
+                    if (d === 18)
+                        return AS;
+                    if (d === 19)
+                        return S0;
+                    return hh(x, d, 70) < 0.04 ? S1 : L2;
+                },
                 drill(x, d, H) {
                     if (d <= 2)
                         return K2;
@@ -46331,11 +46457,11 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             };
             SIDE = {
                 lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1],
+                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1],
             };
             LIPS = {
                 lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1],
+                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1],
             };
             STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]]; // масло у станка и у устья
             FLOORS = {
@@ -46361,6 +46487,17 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 granite(x, y, R) { const fy = y - R.y0; if (fy === 0)
                     return K1; if (fy === 1)
                     return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
+                condo(x, y, R) {
+                    const fy = y - R.y0;
+                    if (fy === 0)
+                        return K1;
+                    if (fy === 1)
+                        return K2;
+                    const u = (x - R.x0) % 12, v = fy % 12;
+                    if (Math.abs(u - 6) + Math.abs(v - 6) === 5)
+                        return RUST;
+                    return hh(x, y, 85) < 0.05 ? K3 : BR2;
+                },
                 drill(x, y, R) {
                     const fy = y - R.y0;
                     if (fy === 0)
@@ -46423,6 +46560,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             // ═══ ВЕЩИ НА ПОЛУ (по глубине с героем) ═══
             ARCHS = new Map();
             FLOOR_DRAW = {
+                sofa,
                 u_tape: tape,
                 u_car: car,
                 u_chests(th) { chest(342, 308, false); chest(360, 308, true); chest(378, 308, false); },

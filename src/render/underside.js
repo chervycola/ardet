@@ -164,6 +164,15 @@ const BANDS = {
     if (d > H - 2) return K2;
     return hh(x, d, 71) < 0.05 ? S2 : S0;
   },
+  condo(x, d, H) {                                                      // квартира: снизу деревянные панели, поручень, выше — бежевая штукатурка
+    if (d <= 2) return K2;
+    if (d > H - 2) return K1;
+    if (d > H - 5) return K3;
+    if (d < 18) return (x - 520) % 7 === 0 ? K1 : d === 17 ? RUST_L : hh(x, d, 69) < 0.06 ? BR2 : RUST;
+    if (d === 18) return AS;
+    if (d === 19) return S0;
+    return hh(x, d, 70) < 0.04 ? S1 : L2;
+  },
   drill(x, d, H) {                                                      // буровой цех: бетон, труба по стене на кронштейнах, ржавые потёки
     if (d <= 2) return K2;
     if (d > H - 2) return K1;
@@ -200,11 +209,11 @@ const BANDS = {
 };
 const SIDE = {
   lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1],
+  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1],
 };
 const LIPS = {
   lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1],
+  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1],
 };
 const STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]];   // масло у станка и у устья
 const FLOORS = {
@@ -219,6 +228,12 @@ const FLOORS = {
   frost(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
   wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5) return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; },   // вода
   granite(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
+  condo(x, y, R) {                                                      // ковёр: тёмный, ромбом
+    const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2;
+    const u = (x - R.x0) % 12, v = fy % 12;
+    if (Math.abs(u - 6) + Math.abs(v - 6) === 5) return RUST;
+    return hh(x, y, 85) < 0.05 ? K3 : BR2;
+  },
   drill(x, y, R) {                                                      // бетон в масляных пятнах
     const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2;
     for (const [sx, sy, sr] of STAINS) { const d = Math.hypot(x - sx, (y - sy) * 1.4); if (d < sr + hh(x, y, 88) * 2.5 - 1) return d < sr * 0.5 ? K2 : K3; }
@@ -439,6 +454,26 @@ function wallThing(th) {
     case 'u_frost_line': scrawl(x + 2, y + 7, 34, 1, BO, 32, 4); break;
     case 'u_godot': godot(th); break;
     case 'u_spiral': spiral(th); break;
+    case 'u_screen': {                                                  // окно-экран: рама, шторы; лес — живой, поверх
+      r(x + 2, y + 4, 80, 30, RUST); r(x + 2, y + 4, 80, 1, RUST_L); r(x + 81, y + 5, 1, 29, BR2);
+      r(x + 5, y + 7, 74, 24, K1);
+      for (let i = 0; i < 6; i++) { r(x + i, y + 2, 1, 33, i & 1 ? L1 : L2); r(x + 79 + i, y + 2, 1, 33, i & 1 ? L2 : L1); }   // шторы
+      r(x - 1, y + 1, 87, 2, S2);                                       // карниз
+      break;
+    }
+    case 'u_cans': {                                                    // стеллаж: банки рядами, на каждой — дата
+      r(x + 2, y + 2, 2, 38, S2); r(x + 72, y + 2, 2, 38, S2);
+      for (let sh = 0; sh < 3; sh++) {
+        const sy = y + 12 + sh * 12;
+        r(x + 2, sy, 72, 2, S0); r(x + 2, sy, 72, 1, AS);
+        for (let k = 0; k < 16; k++) {
+          if (hh(k, sh, 71) < 0.12) continue;                           // где-то уже брали
+          const cx = x + 5 + k * 4;
+          r(cx, sy - 6, 3, 6, S1); r(cx, sy - 6, 3, 1, AS); r(cx, sy - 4, 3, 2, L2); r(cx + 1, sy - 3, 1, 1, K2);
+        }
+      }
+      break;
+    }
     case 'u_kola': {                                                    // устье: крышка заварена, болты по кругу, ржа
       const cx = x + 12, cy = y + 12;
       G.globalAlpha = 0.5; r(cx - 10, cy + 6, 21, 4, K1); G.globalAlpha = 1;
@@ -598,6 +633,17 @@ function decor(cl) {
     write('СГ-3', 994, 172, L2, 0.12, 49);
     write('12262 м', 1110, 172, L2, 0.12, 50);
   }
+  // бункер: этаж и гермодверь у входа — круглая, открыта
+  if (cl.x0 < 816 && cl.x1 > 604 && cl.y0 < 720 && cl.y1 > 676) {
+    r(790, 684, 22, 11, S2); r(791, 685, 20, 9, S1); write('-15', 795, 687, K1);
+    const dx0 = 618, dy0 = 702;
+    for (let yy = dy0 - 12; yy <= dy0 + 12; yy++) for (let xx = dx0 - 12; xx <= dx0 + 12; xx++) {
+      const d = Math.hypot(xx + 0.5 - dx0, (yy + 0.5 - dy0) * 1.1);
+      if (d > 12) continue;
+      r(xx, yy, 1, 1, d > 10.5 ? (xx < dx0 ? AS : S2) : d > 9 ? K2 : d < 3 ? S2 : hh(xx, yy, 72) < 0.05 ? RUST : S1);
+    }
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; r(q(dx0 + Math.cos(a) * 7), q(dy0 + Math.sin(a) * 7 / 1.1), 1, 1, K1); }   // засовы
+  }
   // станция: имя на стене
   if (cl.x0 < 1815 && cl.x1 > 1770 && cl.y0 < 380 && cl.y1 > 364) {
     r(1772, 366, 40, 11, S2); r(1773, 367, 38, 9, S1); r(1773, 367, 38, 1, AS);
@@ -746,7 +792,17 @@ function tape(th) {
   r(x + 5, gy - 13, 5, 1, L2);                                          // наклейка: «звуки»
   for (let k = 0; k < 6; k++) r(x + 3 - k, gy - 8 + k, 1, 1, K1);       // плёнка с края стола вниз
 }
+// диван в бункере — спинкой к нам, лицом к окну-экрану
+function sofa() {
+  const x = 716, gy = 792;
+  G.globalAlpha = 0.5; r(x + 1, gy - 1, 58, 2, K1); G.globalAlpha = 1;
+  r(x, gy - 14, 58, 12, L1); r(x, gy - 14, 58, 1, BO); r(x, gy - 3, 58, 1, S1);
+  for (let k = 1; k < 3; k++) r(x + k * 19, gy - 13, 1, 9, L2);         // подушки
+  r(x - 2, gy - 11, 4, 10, L2); r(x + 56, gy - 11, 4, 10, L2); r(x - 2, gy - 11, 4, 1, BO); r(x + 56, gy - 11, 4, 1, BO);   // подлокотники
+  r(x + 2, gy - 2, 2, 2, K1); r(x + 54, gy - 2, 2, 2, K1);
+}
 const FLOOR_DRAW = {
+  sofa,
   u_tape: tape,
   u_car: car,
   u_chests(th) { chest(342, 308, false); chest(360, 308, true); chest(378, 308, false); },
@@ -875,6 +931,20 @@ function floorLife(g, camX, camY, vw, vh, p) {
     }
     G.globalAlpha = 1;
   }
+  // бункер: на экране лес шевелится (небо, дальний лес, ближние ели качаются), строки экрана
+  { const s = THINGS.find(th => th.id === 'u_screen'), sx = s.x + 5, sy = s.y + 7;
+    if (sx < camX + vw && sx + 74 > camX && sy < camY + vh && sy + 24 > camY) {
+      r(sx, sy, 74, 9, S1); r(sx, sy + 9, 74, 4, AS);
+      for (let i = 0; i < 74; i++) { const h = 3 + q(hh(i >> 2, 1, 73) * 3); r(sx + i, sy + 13 - h, 1, h, MG_L); }
+      r(sx, sy + 13, 74, 11, MG);
+      for (let k = 0; k < 7; k++) {
+        const tx = sx + 4 + k * 11, sw = Math.sin(t * 0.018 + k * 1.3) * 1.2;
+        for (let j = 0; j < 11; j++) { const w = 1 + (j >> 1); r(tx + q(sw * (1 - j / 11)) - (w >> 1), sy + 7 + j, w, 1, MG_D); }
+        r(tx, sy + 18, 1, 5, K2);
+      }
+      if ((t >> 6) % 9 === 0) r(sx + ((t >> 1) % 74), sy + 3, 2, 1, K2);   // птица пролетела
+      G.globalAlpha = 0.25; for (let y = sy; y < sy + 24; y += 2) r(sx, y, 74, 1, K1); G.globalAlpha = 1;
+    } }
   // ручеёк талой воды в крипте: блик бежит к жиле
   { const x = 396 + ((t >> 1) % 56), y = 304 + q(Math.sin(x * 0.27) * 1.5) - (x > 430 ? 6 : q((x - 396) / 6)); G.globalAlpha = 0.6; r(x, y, 1, 1, MG_L); G.globalAlpha = 1; }
   // иней
@@ -950,6 +1020,7 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
   const seen = th => th.x + th.w > camX - 8 && th.x < camX + vw + 8 && th.y + th.h > camY - 30 && th.y < camY + vh + 8;
   for (const th of THINGS) if (!th.wall && FLOOR_DRAW[th.id] && seen(th)) list.push({ k: th.solid ? th.solid[3] : th.y + th.h, th });
   if (camX < 300 && camX + vw > 230 && camY < 320 && camY + vh > 280) list.push({ k: 308, west: true });
+  if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776) list.push({ k: 792, sofa: true });
   for (const P of PORTALS) if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh) list.push({ k: P.yb, arch: P });
   list.push({ k: p.y + 23, hero: true });
   list.sort((a, b) => a.k - b.k);
@@ -958,6 +1029,7 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
     G = g;
     if (it.arch) archSprite(g, it.arch);
     else if (it.west) FLOOR_DRAW.chestsWest();
+    else if (it.sofa) sofa();
     else FLOOR_DRAW[it.th.id](it.th);
   }
   airLife(g, camX, camY, vw, vh, p);
