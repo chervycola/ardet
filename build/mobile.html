@@ -623,7 +623,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='e5baf7d · 2026-10-21';console.log('[оттиск]', 'e5baf7d · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='931ebe7 · 2026-10-21';console.log('[оттиск]', '931ebe7 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -44644,6 +44644,8 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 //    запасы — на пять лет, как у настоящего; в черновике было двадцать) ──
                 u_screen: { name: 'Окно', look: `Пятнадцать этажей вниз, в бывшей ракетной шахте. Окно — экран с видом на лес. Лес шевелится.` },
                 u_cans: { name: 'Запасы', look: `Запасов — на пять лет, на банках даты. Место куплено в 2012-м. Конец света перенесли.` },
+                // ── облако: дата-центр в убежище гражданской обороны (черновик проекта, принят) ──
+                u_racks: { name: 'Стойки', look: `Стойки серверов, гул ровный. Водопад по стене, пальмы в кадках, свет искусственный. Здесь хранится облако. Облака здесь нет.` },
                 // ── забой: проходческий щит (первая машина Boring Company звалась Godot) ──
                 u_godot: { name: 'Щит «Годо»', look: `Туннель кончается машиной. На борту — GODOT, ниже краской от руки: «сколько делал — столько ошибался». Режущая голова упёрлась в породу и стоит.
 
@@ -44675,6 +44677,7 @@ System.register("content/underside", [], function (exports_135, context_135) {
                 u_tape: 'звуки.',
                 u_screen: 'лес шевелится. ветра нет.',
                 u_cans: 'годен до.',
+                u_racks: 'облака здесь нет.',
             });
         }
     };
@@ -44884,6 +44887,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
             { x: px, y: py, r: (118 + 42 * e) * (1 - 0.3 * k), color: mix(FILL, FILL_C, k), flicker: 0, intensity: 2.1 },
             { x: 254, y: 797, r: 50, color: [77, 90, 73], flicker: 0, intensity: 1.6 },
             { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 }, // окно-экран бункера: лес светит
+            { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 }, // облако: свет искусственный, ровный
         ];
     }
     exports_136("underLights", underLights);
@@ -44914,6 +44918,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'onkalod', ns: true, x0: 1600, y0: 480, y1: 700, top: 'open', bot: 'portal' },
                 { id: 'kolad', ns: true, x0: 1055, y0: 300, y1: 450, top: 'open', bot: 'portal' },
                 { id: 'bunkerd', ns: true, x0: 640, y0: 480, y1: 720, top: 'open', bot: 'portal' },
+                { id: 'cloudd', ns: true, x0: 1590, y0: 330, y1: 450, top: 'open', bot: 'portal' },
             ]);
             // ── комнаты ── (пол x0..x1 × y0..y1 или многоугольник по часовой; wh — стена)
             exports_136("ROOMS", ROOMS = [
@@ -44931,6 +44936,8 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 { id: 'kola', name: 'Кольская сверхглубокая', x0: 980, y0: 200, x1: 1160, y1: 300, wh: 40, mat: 'drill', surf: 'ground' },
                 // бункер на всякий случай: квартира в бывшей ракетной шахте, пятнадцатый этаж вниз
                 { id: 'bunker', name: 'Бункер на всякий случай', x0: 520, y0: 720, x1: 820, y1: 850, wh: 44, mat: 'condo', surf: 'ground' },
+                // облако: дата-центр в убежище гражданской обороны — стойки рядами, водопад по стене
+                { id: 'cloud', name: 'Облако', x0: 1440, y0: 200, x1: 1740, y1: 330, wh: 46, mat: 'shelter', surf: 'ground' },
             ]);
             // провалы в полу — встать нельзя (шахта Онкало)
             exports_136("HOLES", HOLES = [{ x: 1630, y: 800, r: 60 }]);
@@ -44989,11 +44996,15 @@ System.register("world/underside", ["content/underside"], function (exports_136,
                 // бункер: окно-экран и полки с запасами на стене
                 { id: 'u_screen', room: 'bunker', wall: true, x: 698, y: 680, w: 84, h: 36, at: [740, 732] },
                 { id: 'u_cans', room: 'bunker', wall: true, x: 528, y: 680, w: 76, h: 40, at: [566, 732] },
+                // облако: стойки — два ряда (вещь — ближний ряд; дальний и пальмы — без осмотра)
+                { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
                 // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
                 { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
             ];
-            // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере
-            exports_136("SOLIDS", SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792]]);
+            // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере;
+            // в облаке — дальний ряд стоек, правая часть ближнего, бассейн водопада, кадки
+            exports_136("SOLIDS", SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792],
+                [1458, 254, 1702, 264], [1638, 292, 1702, 302], [1686, 200, 1724, 210], [1666, 208, 1678, 216], [1722, 208, 1734, 216]]);
             exports_136("THINGS", THINGS = TH.map(th => {
                 const tx = underside_js_1.UNDER_TEXT[th.id] || { name: th.id, look: '' };
                 const o = { ...th, name: tx.name, look: tx.look, zone: 'under', under: true };
@@ -45065,7 +45076,7 @@ System.register("world/underside", ["content/underside"], function (exports_136,
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_137, context_137) {
     "use strict";
-    var time_js_38, underside_js_2, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, FONT, scrawl, overLine, CH, NX, NY, chunks, ARCHS, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, frost, frostScreen, fsW, fsH;
+    var time_js_38, underside_js_2, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, FONT, scrawl, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, frost, frostScreen, fsW, fsH;
     var __moduleName = context_137 && context_137.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -45709,6 +45720,18 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             write('СГ-3', 994, 172, L2, 0.12, 49);
             write('12262 м', 1110, 172, L2, 0.12, 50);
         }
+        // облако: ниша водопада в стене и бассейн у стены
+        if (cl.x0 < 1730 && cl.x1 > 1680 && cl.y0 < 212 && cl.y1 > 150) {
+            r(1690, 158, 30, 42, K1);
+            r(1689, 157, 32, 1, S1);
+            r(1689, 158, 1, 42, S1);
+            r(1720, 158, 1, 42, S2);
+            r(1686, 199, 38, 11, S1);
+            r(1686, 199, 38, 1, AS);
+            r(1688, 201, 34, 7, MG);
+            r(1688, 201, 34, 1, MG_L);
+            r(1686, 209, 38, 1, K2);
+        }
         // бункер: этаж и гермодверь у входа — круглая, открыта
         if (cl.x0 < 816 && cl.x1 > 604 && cl.y0 < 720 && cl.y1 > 676) {
             r(790, 684, 22, 11, S2);
@@ -45959,6 +45982,34 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         for (let k = 0; k < 6; k++)
             r(x + 3 - k, gy - 8 + k, 1, 1, K1); // плёнка с края стола вниз
     }
+    // стойка серверов: шкаф, юниты; огоньки — код, мигают (третья краска, мало)
+    function rack(x, gy, id) {
+        r(x, gy - 26, 12, 26, K1);
+        r(x, gy - 26, 12, 1, S2);
+        r(x, gy - 25, 1, 25, K2);
+        r(x + 11, gy - 25, 1, 25, K1);
+        for (let u = 0; u < 7; u++) {
+            const y = gy - 23 + u * 3;
+            r(x + 2, y, 8, 2, K2);
+            const ph = Math.floor(time_js_38.t / (14 + ((id * 7 + u * 13) % 23)));
+            if (hh(id, u, ph) < 0.55)
+                r(x + 3, y, 1, 1, TI);
+            if (hh(id + 50, u, ph) < 0.25)
+                r(x + 5, y, 1, 1, BO);
+        }
+        r(x, gy - 1, 12, 1, K2);
+    }
+    // пальма в кадке
+    function palm(x, gy) {
+        r(x - 4, gy - 6, 9, 6, RUST);
+        r(x - 4, gy - 6, 9, 1, RUST_L);
+        r(x + 4, gy - 5, 1, 5, BR2);
+        r(x, gy - 18, 1, 12, BR2);
+        r(x - 1, gy - 12, 1, 1, RUST);
+        for (const [dx, dy, dir] of [[-1, -18, -1], [1, -18, 1], [0, -19, -1], [0, -19, 1]])
+            for (let k = 0; k < 7; k++)
+                r(x + dx + dir * k, gy + dy + q(k * k * 0.12) - (dy === -19 ? 1 : 0), 1, 1, k < 2 ? MG_L : MG);
+    }
     // диван в бункере — спинкой к нам, лицом к окну-экрану
     function sofa() {
         const x = 716, gy = 792;
@@ -46091,6 +46142,19 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 r(x, y, 4 + (k % 3), 1, k % 4 ? MG_L : AS);
             }
             G.globalAlpha = 1;
+        }
+        // облако: водопад по стене — струи бегут вниз, в бассейне рябь
+        if (camX < 1724 && camX + vw > 1686 && camY < 212 && camY + vh > 150) {
+            for (let i = 0; i < 28; i++) {
+                const x = 1691 + i, sp = 1 + (i % 3);
+                for (let y = 160; y < 200; y++)
+                    if (((y - time_js_38.t * sp) & 7) < 2 && hh(i, y >> 2, 58) < 0.7)
+                        r(x, y, 1, 1, (y + i) % 5 ? AS : BO);
+            }
+            for (let k = 0; k < 6; k++) {
+                const x = 1690 + ((time_js_38.t >> 2) + k * 9) % 30;
+                r(x, 203 + (k & 1) * 2, 3, 1, AS);
+            }
         }
         // бункер: на экране лес шевелится (небо, дальний лес, ближние ели качаются), строки экрана
         {
@@ -46225,6 +46289,9 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             list.push({ k: 308, west: true });
         if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776)
             list.push({ k: 792, sofa: true });
+        if (camX < 1745 && camX + vw > 1440 && camY < 300 && camY + vh > 190) {
+            list.push({ k: 264, racksN: true }, { k: 216, palm: 1672 }, { k: 216, palm: 1728 });
+        }
         for (const P of underside_js_2.PORTALS)
             if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh)
                 list.push({ k: P.yb, arch: P });
@@ -46244,6 +46311,10 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 FLOOR_DRAW.chestsWest();
             else if (it.sofa)
                 sofa();
+            else if (it.racksN)
+                FLOOR_DRAW.racksN();
+            else if (it.palm)
+                palm(it.palm, 216);
             else
                 FLOOR_DRAW[it.th.id](it.th);
         }
@@ -46386,6 +46457,22 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                         return K2;
                     return hh(x, d, 71) < 0.05 ? S2 : S0;
                 },
+                shelter(x, d, H) {
+                    if (d <= 2)
+                        return K2;
+                    if (d > H - 2)
+                        return K1;
+                    if (d === H - 6 || d === H - 5)
+                        return (x - 1440) % 30 < 12 ? BO : K2; // лампы
+                    if (d > H - 8)
+                        return K3;
+                    const gx = (x - 1440) % 60;
+                    if (gx > 6 && gx < 20 && d > 14 && d < 26)
+                        return (d & 1) ? K2 : S2; // решётка вентиляции
+                    if (d === 8)
+                        return S2; // шов панелей
+                    return hh(x, d, 59) < 0.05 ? S2 : S0;
+                },
                 condo(x, d, H) {
                     if (d <= 2)
                         return K2;
@@ -46457,11 +46544,11 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             };
             SIDE = {
                 lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1],
+                brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1], shelter: [K2, S2, S0, S1, S0, K1],
             };
             LIPS = {
                 lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1],
+                brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1], shelter: [S1, S0, S2, K2, K1],
             };
             STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]]; // масло у станка и у устья
             FLOORS = {
@@ -46487,6 +46574,19 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 granite(x, y, R) { const fy = y - R.y0; if (fy === 0)
                     return K1; if (fy === 1)
                     return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
+                shelter(x, y, R) {
+                    const fy = y - R.y0;
+                    if (fy === 0)
+                        return K1;
+                    if (fy === 1)
+                        return K2;
+                    const u = (x - R.x0) % 12, v = fy % 12;
+                    if (u === 0 || v === 0)
+                        return K2;
+                    if (fy > 66 && fy < 92 && u % 3 === 1 && v % 3 === 1)
+                        return S2; // перфорированные — в проходе между рядами
+                    return hh(x, y, 84) < 0.04 ? S0 : S1;
+                },
                 condo(x, y, R) {
                     const fy = y - R.y0;
                     if (fy === 0)
@@ -46559,7 +46659,16 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             chunks = new Map();
             // ═══ ВЕЩИ НА ПОЛУ (по глубине с героем) ═══
             ARCHS = new Map();
+            RACKS_N = [], RACKS_S = [];
+            for (let x = 1460; x + 12 <= 1702; x += 14)
+                RACKS_N.push(x);
+            for (let x = 1460; x + 12 <= 1572; x += 14)
+                RACKS_S.push(x);
+            for (let x = 1640; x + 12 <= 1702; x += 14)
+                RACKS_S.push(x);
             FLOOR_DRAW = {
+                u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
+                racksN() { RACKS_N.forEach((x, i) => rack(x, 264, i)); },
                 sofa,
                 u_tape: tape,
                 u_car: car,
@@ -48462,11 +48571,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // далеко от входа. Пока внизу — мира сверху нет: ни неба, ни погоды, ни
             // ворон; свет — уголёк странника; время идёт, как шло.
             surfaceLights = null;
-            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd)
+            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud)
             {
                 const m = /[?&]under(?:=(\w+))?/.exec(location.search);
                 if (m) {
-                    const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule' }[m[1]] || 'u_up_pizzeria';
+                    const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
+                        godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks' }[m[1]] || 'u_up_pizzeria';
                     setTimeout(() => goUnder(spot), 0);
                 }
             }

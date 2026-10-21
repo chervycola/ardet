@@ -164,6 +164,16 @@ const BANDS = {
     if (d > H - 2) return K2;
     return hh(x, d, 71) < 0.05 ? S2 : S0;
   },
+  shelter(x, d, H) {                                                    // убежище: толстый бетон, решётки вентиляции; под потолком — лампы дневного света
+    if (d <= 2) return K2;
+    if (d > H - 2) return K1;
+    if (d === H - 6 || d === H - 5) return (x - 1440) % 30 < 12 ? BO : K2;   // лампы
+    if (d > H - 8) return K3;
+    const gx = (x - 1440) % 60;
+    if (gx > 6 && gx < 20 && d > 14 && d < 26) return (d & 1) ? K2 : S2;   // решётка вентиляции
+    if (d === 8) return S2;                                             // шов панелей
+    return hh(x, d, 59) < 0.05 ? S2 : S0;
+  },
   condo(x, d, H) {                                                      // квартира: снизу деревянные панели, поручень, выше — бежевая штукатурка
     if (d <= 2) return K2;
     if (d > H - 2) return K1;
@@ -209,11 +219,11 @@ const BANDS = {
 };
 const SIDE = {
   lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
-  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1],
+  brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1], shelter: [K2, S2, S0, S1, S0, K1],
 };
 const LIPS = {
   lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
-  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1],
+  brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1], shelter: [S1, S0, S2, K2, K1],
 };
 const STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]];   // масло у станка и у устья
 const FLOORS = {
@@ -228,6 +238,13 @@ const FLOORS = {
   frost(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
   wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5) return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; },   // вода
   granite(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
+  shelter(x, y, R) {                                                    // фальшпол дата-центра: плитки, в проходах — с дырочками
+    const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2;
+    const u = (x - R.x0) % 12, v = fy % 12;
+    if (u === 0 || v === 0) return K2;
+    if (fy > 66 && fy < 92 && u % 3 === 1 && v % 3 === 1) return S2;   // перфорированные — в проходе между рядами
+    return hh(x, y, 84) < 0.04 ? S0 : S1;
+  },
   condo(x, y, R) {                                                      // ковёр: тёмный, ромбом
     const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2;
     const u = (x - R.x0) % 12, v = fy % 12;
@@ -633,6 +650,11 @@ function decor(cl) {
     write('СГ-3', 994, 172, L2, 0.12, 49);
     write('12262 м', 1110, 172, L2, 0.12, 50);
   }
+  // облако: ниша водопада в стене и бассейн у стены
+  if (cl.x0 < 1730 && cl.x1 > 1680 && cl.y0 < 212 && cl.y1 > 150) {
+    r(1690, 158, 30, 42, K1); r(1689, 157, 32, 1, S1); r(1689, 158, 1, 42, S1); r(1720, 158, 1, 42, S2);
+    r(1686, 199, 38, 11, S1); r(1686, 199, 38, 1, AS); r(1688, 201, 34, 7, MG); r(1688, 201, 34, 1, MG_L); r(1686, 209, 38, 1, K2);
+  }
   // бункер: этаж и гермодверь у входа — круглая, открыта
   if (cl.x0 < 816 && cl.x1 > 604 && cl.y0 < 720 && cl.y1 > 676) {
     r(790, 684, 22, 11, S2); r(791, 685, 20, 9, S1); write('-15', 795, 687, K1);
@@ -792,6 +814,28 @@ function tape(th) {
   r(x + 5, gy - 13, 5, 1, L2);                                          // наклейка: «звуки»
   for (let k = 0; k < 6; k++) r(x + 3 - k, gy - 8 + k, 1, 1, K1);       // плёнка с края стола вниз
 }
+// стойка серверов: шкаф, юниты; огоньки — код, мигают (третья краска, мало)
+function rack(x, gy, id) {
+  r(x, gy - 26, 12, 26, K1); r(x, gy - 26, 12, 1, S2); r(x, gy - 25, 1, 25, K2); r(x + 11, gy - 25, 1, 25, K1);
+  for (let u = 0; u < 7; u++) {
+    const y = gy - 23 + u * 3;
+    r(x + 2, y, 8, 2, K2);
+    const ph = Math.floor(t / (14 + ((id * 7 + u * 13) % 23)));
+    if (hh(id, u, ph) < 0.55) r(x + 3, y, 1, 1, TI);
+    if (hh(id + 50, u, ph) < 0.25) r(x + 5, y, 1, 1, BO);
+  }
+  r(x, gy - 1, 12, 1, K2);
+}
+const RACKS_N = [], RACKS_S = [];
+for (let x = 1460; x + 12 <= 1702; x += 14) RACKS_N.push(x);
+for (let x = 1460; x + 12 <= 1572; x += 14) RACKS_S.push(x);
+for (let x = 1640; x + 12 <= 1702; x += 14) RACKS_S.push(x);
+// пальма в кадке
+function palm(x, gy) {
+  r(x - 4, gy - 6, 9, 6, RUST); r(x - 4, gy - 6, 9, 1, RUST_L); r(x + 4, gy - 5, 1, 5, BR2);
+  r(x, gy - 18, 1, 12, BR2); r(x - 1, gy - 12, 1, 1, RUST);
+  for (const [dx, dy, dir] of [[-1, -18, -1], [1, -18, 1], [0, -19, -1], [0, -19, 1]]) for (let k = 0; k < 7; k++) r(x + dx + dir * k, gy + dy + q(k * k * 0.12) - (dy === -19 ? 1 : 0), 1, 1, k < 2 ? MG_L : MG);
+}
 // диван в бункере — спинкой к нам, лицом к окну-экрану
 function sofa() {
   const x = 716, gy = 792;
@@ -802,6 +846,8 @@ function sofa() {
   r(x + 2, gy - 2, 2, 2, K1); r(x + 54, gy - 2, 2, 2, K1);
 }
 const FLOOR_DRAW = {
+  u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
+  racksN() { RACKS_N.forEach((x, i) => rack(x, 264, i)); },
   sofa,
   u_tape: tape,
   u_car: car,
@@ -931,6 +977,14 @@ function floorLife(g, camX, camY, vw, vh, p) {
     }
     G.globalAlpha = 1;
   }
+  // облако: водопад по стене — струи бегут вниз, в бассейне рябь
+  if (camX < 1724 && camX + vw > 1686 && camY < 212 && camY + vh > 150) {
+    for (let i = 0; i < 28; i++) {
+      const x = 1691 + i, sp = 1 + (i % 3);
+      for (let y = 160; y < 200; y++) if (((y - t * sp) & 7) < 2 && hh(i, y >> 2, 58) < 0.7) r(x, y, 1, 1, (y + i) % 5 ? AS : BO);
+    }
+    for (let k = 0; k < 6; k++) { const x = 1690 + ((t >> 2) + k * 9) % 30; r(x, 203 + (k & 1) * 2, 3, 1, AS); }
+  }
   // бункер: на экране лес шевелится (небо, дальний лес, ближние ели качаются), строки экрана
   { const s = THINGS.find(th => th.id === 'u_screen'), sx = s.x + 5, sy = s.y + 7;
     if (sx < camX + vw && sx + 74 > camX && sy < camY + vh && sy + 24 > camY) {
@@ -1021,6 +1075,9 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
   for (const th of THINGS) if (!th.wall && FLOOR_DRAW[th.id] && seen(th)) list.push({ k: th.solid ? th.solid[3] : th.y + th.h, th });
   if (camX < 300 && camX + vw > 230 && camY < 320 && camY + vh > 280) list.push({ k: 308, west: true });
   if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776) list.push({ k: 792, sofa: true });
+  if (camX < 1745 && camX + vw > 1440 && camY < 300 && camY + vh > 190) {
+    list.push({ k: 264, racksN: true }, { k: 216, palm: 1672 }, { k: 216, palm: 1728 });
+  }
   for (const P of PORTALS) if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh) list.push({ k: P.yb, arch: P });
   list.push({ k: p.y + 23, hero: true });
   list.sort((a, b) => a.k - b.k);
@@ -1030,6 +1087,8 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
     if (it.arch) archSprite(g, it.arch);
     else if (it.west) FLOOR_DRAW.chestsWest();
     else if (it.sofa) sofa();
+    else if (it.racksN) FLOOR_DRAW.racksN();
+    else if (it.palm) palm(it.palm, 216);
     else FLOOR_DRAW[it.th.id](it.th);
   }
   airLife(g, camX, camY, vw, vh, p);
