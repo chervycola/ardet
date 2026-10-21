@@ -1967,6 +1967,26 @@ setCtx(ctx);
     W.enter(0, 0); assert(!W.read, 'новый спуск — уже прочитано');
     W.leave(); W.say = null; W.whisper = null;
   });
+  test('изнанка: вечный отбой — расписался в журнале учений; репродуктор больше не шипит, гермодверь без скрипа', () => {
+    const W = U.under, th = U.thingById('u_cut_shelter');
+    W.signed = false; W.enter(0, 0); W.say = null;
+    assert(/журнал учений/.test(th.look) && /явился \/ убыл/.test(th.look) && /противогазного шкафа/.test(th.look), 'у среза нет журнала');
+    assert(th.useShown() && /РАСПИСАТЬСЯ В ЖУРНАЛЕ/.test(th.useLabel), '«расписаться» нет');
+    const r0 = Math.random; Math.random = () => 0.1;
+    for (let i = 0; i < 3; i++) W.step(1460, 466);
+    eq(W.say, U.OFF_LINE, 'отбой'); assert(W.hiss > 0, 'репродуктор не шипит'); W.say = null;
+    assert(W.sign() && !W.sign(), 'расписался дважды');
+    eq(W.after, U.DRILL_LINE, 'реплика'); eq(U.DRILL_LINE, 'Учения прошли успешно: никто не пришёл, никто не пострадал.', 'реплика канона');
+    assert(/Единственная запись за век/.test(U.JOURNAL_TEXT) && /сорок какого-то года/.test(U.JOURNAL_TEXT), 'сцена без канона');
+    assert(!th.useShown() && /открылась без скрипа/.test(th.look) && /проверяющим/.test(th.look), 'убежище не считает проверяющим');
+    W.after = null; W.leave(); W.enter(0, 0); W.say = null;
+    for (let i = 0; i < 3; i++) W.step(1460, 466);
+    eq(W.say, U.OFF_LINE, 'проверяющему отбой не объявили'); eq(W.hiss, 0, 'при проверяющем шипит');
+    Math.random = r0;
+    eq(JSON.parse(JSON.stringify(W.save())).signed, true, 'подпись не сохраняется');
+    W.signed = false; W.load({ signed: true }); assert(W.signed, 'подпись не загрузилась');
+    W.signed = false; W.leave(); W.say = null;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };

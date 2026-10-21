@@ -23,7 +23,8 @@ const L1 = '#c8b89a', L2 = '#b0a284', BR2 = '#3a2818';
 const S0 = '#474442', S1 = '#5e5e5d', S2 = '#33302e';
 const MG_L = '#4d5a49', MG_D = '#2f372c', TI = '#8CC63F';
 const RUST = '#4a3420', RUST_L = '#6b4a2c';
-const GLOW_G = '#9DB08A', GLOW_W = '#C8A070';     // мох светится: живой — бледно-зелёным, сухой у норы — тёплым
+const GLOW_G = '#9DB08A', GLOW_W = '#C8A070';
+const EMBER_G = '#E28A3A';                         // отблеск уголька — цвет масляного фонаря канона     // мох светится: живой — бледно-зелёным, сухой у норы — тёплым
 const q = Math.round;
 let G = null;                                      // холст, куда рисуем сейчас
 const r = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(q(x), q(y), w, h); };
@@ -197,6 +198,14 @@ function cutThing(th) {
     r(cx - 9, gy - 14, 2, 3, K2); r(cx - 9, gy - 6, 2, 3, K2);         // петли
     write('ВЫХОД', cx - 11, gy - 24, K1, 0.05, 116);
     r(cx + 15, gy - 24, 1, 5, K1); r(cx + 14, gy - 20, 3, 1, K1); r(cx + 15, gy - 19, 1, 1, K1);   // стрелка — в дверь
+    const tx = c.x0 + 8;                                               // столик у среза, на нём журнал учений — раскрыт
+    r(tx, gy - 9, 22, 2, RUST_L); r(tx, gy - 7, 22, 1, RUST); r(tx + 1, gy - 6, 1, 6, RUST); r(tx + 20, gy - 6, 1, 6, RUST);
+    r(tx + 5, gy - 11, 12, 2, L2); r(tx + 5, gy - 11, 12, 1, L1); r(tx + 10, gy - 11, 1, 2, S1);
+    for (const gx of [tx + 6, tx + 12]) r(gx, gy - 10, 3, 1, AS);       // графы «явился / убыл» — пусты
+    const kx = c.x1 - 15;                                              // противогазный шкаф: стекло, за ним маски
+    r(kx, gy - 21, 11, 21, S2); r(kx + 1, gy - 20, 9, 19, K1); r(kx + 1, gy - 20, 9, 1, S0); r(kx + 5, gy - 20, 1, 19, S2);
+    for (const [mx, my] of [[kx + 2, gy - 16], [kx + 7, gy - 16], [kx + 2, gy - 8], [kx + 7, gy - 8]]) { r(mx, my, 2, 3, MG_D); r(mx, my + 3, 2, 1, K2); }
+    r(kx + 1, gy - 19, 1, 6, S0);                                      // блик на стекле — к свету
     const sx = c.x0 + 82, sy = gy - 14;                                 // репродуктор: чёрная тарелка на кронштейне
     r(sx - 1, sy - 8, 1, 4, K2);
     for (const [dx, dy] of [[-2, -4], [-1, -4], [0, -4], [1, -4], [2, -4], [-3, -3], [3, -3], [-4, -2], [4, -2], [-4, -1], [4, -1], [-4, 0], [4, 0], [-3, 1], [3, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]]) r(sx + dx, sy + dy, 1, 1, S2);
@@ -1295,6 +1304,20 @@ function floorLife(g, camX, camY, vw, vh, p) {
       if (under.train > 30 && under.train < 210) {
         const k = (under.train * 3) % 40, a = Math.sin(Math.PI * (under.train - 30) / 180);
         G.globalAlpha = 0.5 * a; r(mx - 11 + (k % 22), LINE.y0 - 16, 4, 6, AS); r(mx - 11 + ((k + 11) % 22), LINE.y0 - 16, 4, 6, S1); G.globalAlpha = 1;
+      }
+    } }
+  // убежище: уголёк отражается в стекле противогазного шкафа; расписался — подпись в журнале,
+  // гермодверь приоткрыта (открылась без скрипа)
+  { const c = CUTS.find(k => k.id === 'shelter'), gy = LINE.y0, kx = c.x1 - 15;
+    if (c.x1 > camX && c.x0 < camX + vw && camY < gy && camY + vh > gy - 30) {
+      const d = Math.abs(p.x + 6 - (kx + 5));
+      if (d < 110 && Math.abs(p.y + 23 - (gy + 15)) < 40) {
+        G.globalAlpha = 0.7 * (1 - d / 110);                         // одна тёплая искра, едет по стеклу вслед за угольком
+        r(kx + 3 + q(Math.max(-1, Math.min(1, (p.x + 6 - kx - 5) / 40))), gy - 13, 1, 1, EMBER_G); G.globalAlpha = 1;
+      }
+      if (under.signed) {
+        r(c.x0 + 14, gy - 10, 2, 1, K1); r(c.x0 + 15, gy - 11, 1, 1, K1);   // подпись в графе «явился»
+        r(c.x0 + 41, gy - 17, 2, 17, NI); r(c.x0 + 43, gy - 17, 1, 17, K2);   // щель приоткрытой гермодвери
       }
     } }
   // убежище: репродуктор шипит

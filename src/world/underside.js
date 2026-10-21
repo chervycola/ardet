@@ -141,7 +141,7 @@ const TH = [
   // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
   { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
   { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
-  { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
+  { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470], useAction: 'under_sign', useLabel: '<i>✎</i>РАСПИСАТЬСЯ В ЖУРНАЛЕ' },
   { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
   // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
   { id: 'u_ticket', room: 'tube', x: 1662, y: 436, w: 16, h: 12, at: [1672, 470], useAction: 'under_ticket', useLabel: '<i>◆</i>ВЗЯТЬ' },
@@ -190,6 +190,24 @@ export const NICHE_HUSH = 280;                                       // 40 ша�
 }
 // уголёк проходит мимо ниш: ноги у стены, под рядами
 const nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+
+// ── вечный отбой (канон, ритуал «Вечный отбой», U4): убежище раз в неведомый час
+// объявляет отбой тревоги, которой не было, — десятилетиями радуется, что не
+// понадобилось, и хочет, чтобы это кто-нибудь заверил. У среза — столик с журналом
+// учений. Расписался — единственная запись за век: репродуктор при этом страннике
+// больше не шипит, гермодверь в сторону неона открылась без скрипа — убежище
+// считает его своим проверяющим (сохраняется)
+export const JOURNAL_TEXT = `Журнал учений. Графы «явился / убыл» пусты с сорок какого-то года.
+
+Расписываешься. Единственная запись за век.`;
+export const DRILL_LINE = 'Учения прошли успешно: никто не пришёл, никто не пострадал.';
+export const OFF_LINE = '— Отбой. Всем спасибо. Все свободны.';
+const SIGNED_LOOK = 'Гермодверь в сторону неона приоткрыта: открылась без скрипа. Убежище считает тебя своим проверяющим.';
+{
+  const th = thingById('u_cut_shelter'), base = th.look;
+  th.useShown = () => !under.signed;
+  Object.defineProperty(th, 'look', { get: () => (under.signed ? base + '\n\n' + SIGNED_LOOK : base), configurable: true, enumerable: true });
+}
 
 // ── флотилия входящих (канон, ритуал «Флотилия входящих», U3): по каналу под
 // полотном плывут кораблики из заявлений, которые канцелярия так и не приняла.
@@ -570,6 +588,7 @@ export const under = {
   flow: 0,                // вода канала: сколько пробежала (рисунок)
   calm: 0,                // вода тиха: шагов (прочитал заявление)
   read: false,            // заявление за этот спуск прочитано
+  signed: false,          // расписался в журнале учений (сохраняется)
   after: null,            // строка мира — когда закроется окно сцены
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
@@ -642,7 +661,7 @@ export const under = {
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
       this.heard.add('shelter');
-      if (Math.random() < 0.6) { this.say = '— Отбой. Всем спасибо. Все свободны.'; this.hiss = 150; }
+      if (Math.random() < 0.6) { this.say = OFF_LINE; this.hiss = this.signed ? 0 : 150; }   // проверяющему — без шипения
     }
     // метро: поезд приходит к тому, кто не смотрит в тоннель — стоит спиной, не шевелясь
     // (канон «Поезд за спиной»); шевельнулся — поезда не было. Прошёл — на скамье рядом
@@ -658,6 +677,12 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // расписался в журнале учений — единственная запись за век
+  sign() {
+    if (this.signed) return false;
+    this.signed = true; this.after = DRILL_LINE;
+    return true;
   },
   // выловил кораблик и прочитал заявление вслух (одно за спуск)
   fishBoat() {
@@ -703,13 +728,14 @@ export const under = {
     moss.reset();
   },
   leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; moss.reset(); },
-  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
+  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed }; },
   load(d) {
     if (!d) return;
     (d.seen || []).forEach(k => this.seen.add(k));
     (d.found || []).forEach(k => this.found.add(k));
     if (d.ticket) this.ticket = true;
     (d.called || []).forEach(k => this.called.add(k));
+    if (d.signed) this.signed = true;
   },
 };
 

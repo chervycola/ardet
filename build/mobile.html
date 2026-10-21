@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='46fde64 · 2026-10-21';console.log('[оттиск]', '46fde64 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='bf5a671 · 2026-10-21';console.log('[оттиск]', 'bf5a671 · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -19538,7 +19538,9 @@ System.register("content/underside", [], function (exports_55, context_55) {
 Мимо уголька проходит кораблик из бланка в клетку; на борту видно: «Прошу разъяснить, куда девается...» — дальше размыто.` },
                 u_cut_shelter: { name: 'Срез: убежище', look: `Кольца прошли сквозь стену бомбоубежища: бетон в метр толщиной, арматура срезана заподлицо. За срезом — зелёная стена и гермодверь, над ней трафарет «ВЫХОД».
 
-В углу чёрная тарелка репродуктора. Иногда она прочищает горло и объявляет отбой тревоги, которой не было.` },
+В углу чёрная тарелка репродуктора. Иногда она прочищает горло и объявляет отбой тревоги, которой не было.
+
+У среза — столик, на нём журнал учений: графы «явился / убыл» пусты с сорок какого-то года. Уголёк отражается в стекле противогазного шкафа.` },
                 u_cut_metro: { name: 'Срез: метро', look: `Кольца прошли над станцией метро. В срезе — плитка, край платформы, скамья, табло без цифр.
 
 Из тоннеля тянет сквозняком. Далёкий свет не приближается.` },
@@ -19598,7 +19600,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, JOURNAL_TEXT, DRILL_LINE, OFF_LINE, SIGNED_LOOK, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // где встать у вещи — точка героя (ноги — x+6, y+23)
     function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
@@ -20065,7 +20067,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
                 { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
                 { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
-                { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
+                { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470], useAction: 'under_sign', useLabel: '<i>✎</i>РАСПИСАТЬСЯ В ЖУРНАЛЕ' },
                 { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
                 // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
                 { id: 'u_ticket', room: 'tube', x: 1662, y: 436, w: 16, h: 12, at: [1672, 470], useAction: 'under_ticket', useLabel: '<i>◆</i>ВЗЯТЬ' },
@@ -20118,6 +20120,23 @@ System.register("world/underside", ["content/underside", "core/time"], function 
             }
             // уголёк проходит мимо ниш: ноги у стены, под рядами
             nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+            // ── вечный отбой (канон, ритуал «Вечный отбой», U4): убежище раз в неведомый час
+            // объявляет отбой тревоги, которой не было, — десятилетиями радуется, что не
+            // понадобилось, и хочет, чтобы это кто-нибудь заверил. У среза — столик с журналом
+            // учений. Расписался — единственная запись за век: репродуктор при этом страннике
+            // больше не шипит, гермодверь в сторону неона открылась без скрипа — убежище
+            // считает его своим проверяющим (сохраняется)
+            exports_56("JOURNAL_TEXT", JOURNAL_TEXT = `Журнал учений. Графы «явился / убыл» пусты с сорок какого-то года.
+
+Расписываешься. Единственная запись за век.`);
+            exports_56("DRILL_LINE", DRILL_LINE = 'Учения прошли успешно: никто не пришёл, никто не пострадал.');
+            exports_56("OFF_LINE", OFF_LINE = '— Отбой. Всем спасибо. Все свободны.');
+            SIGNED_LOOK = 'Гермодверь в сторону неона приоткрыта: открылась без скрипа. Убежище считает тебя своим проверяющим.';
+            {
+                const th = thingById('u_cut_shelter'), base = th.look;
+                th.useShown = () => !under.signed;
+                Object.defineProperty(th, 'look', { get: () => (under.signed ? base + '\n\n' + SIGNED_LOOK : base), configurable: true, enumerable: true });
+            }
             // ── флотилия входящих (канон, ритуал «Флотилия входящих», U3): по каналу под
             // полотном плывут кораблики из заявлений, которые канцелярия так и не приняла.
             // Выловил и прочитал вслух — заявление наконец услышано. Одно за спуск; минуту
@@ -20324,6 +20343,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 flow: 0, // вода канала: сколько пробежала (рисунок)
                 calm: 0, // вода тиха: шагов (прочитал заявление)
                 read: false, // заявление за этот спуск прочитано
+                signed: false, // расписался в журнале учений (сохраняется)
                 after: null, // строка мира — когда закроется окно сцены
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
@@ -20423,9 +20443,9 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
                         this.heard.add('shelter');
                         if (Math.random() < 0.6) {
-                            this.say = '— Отбой. Всем спасибо. Все свободны.';
-                            this.hiss = 150;
-                        }
+                            this.say = OFF_LINE;
+                            this.hiss = this.signed ? 0 : 150;
+                        } // проверяющему — без шипения
                     }
                     // метро: поезд приходит к тому, кто не смотрит в тоннель — стоит спиной, не шевелясь
                     // (канон «Поезд за спиной»); шевельнулся — поезда не было. Прошёл — на скамье рядом
@@ -20448,6 +20468,14 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.heard.add('metro');
                         this.train = 1;
                     }
+                },
+                // расписался в журнале учений — единственная запись за век
+                sign() {
+                    if (this.signed)
+                        return false;
+                    this.signed = true;
+                    this.after = DRILL_LINE;
+                    return true;
                 },
                 // выловил кораблик и прочитал заявление вслух (одно за спуск)
                 fishBoat() {
@@ -20534,7 +20562,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     moss.reset();
                 },
                 leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; moss.reset(); },
-                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
+                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed }; },
                 load(d) {
                     if (!d)
                         return;
@@ -20543,6 +20571,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     if (d.ticket)
                         this.ticket = true;
                     (d.called || []).forEach(k => this.called.add(k));
+                    if (d.signed)
+                        this.signed = true;
                 },
             });
             // свет под землёй: уголёк — единственное тёплое (сердцевина), вокруг — круг,
@@ -33635,7 +33665,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
@@ -46258,7 +46288,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_139, context_139) {
     "use strict";
-    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
+    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
     var __moduleName = context_139 && context_139.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -46499,6 +46529,26 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             r(cx + 15, gy - 24, 1, 5, K1);
             r(cx + 14, gy - 20, 3, 1, K1);
             r(cx + 15, gy - 19, 1, 1, K1); // стрелка — в дверь
+            const tx = c.x0 + 8; // столик у среза, на нём журнал учений — раскрыт
+            r(tx, gy - 9, 22, 2, RUST_L);
+            r(tx, gy - 7, 22, 1, RUST);
+            r(tx + 1, gy - 6, 1, 6, RUST);
+            r(tx + 20, gy - 6, 1, 6, RUST);
+            r(tx + 5, gy - 11, 12, 2, L2);
+            r(tx + 5, gy - 11, 12, 1, L1);
+            r(tx + 10, gy - 11, 1, 2, S1);
+            for (const gx of [tx + 6, tx + 12])
+                r(gx, gy - 10, 3, 1, AS); // графы «явился / убыл» — пусты
+            const kx = c.x1 - 15; // противогазный шкаф: стекло, за ним маски
+            r(kx, gy - 21, 11, 21, S2);
+            r(kx + 1, gy - 20, 9, 19, K1);
+            r(kx + 1, gy - 20, 9, 1, S0);
+            r(kx + 5, gy - 20, 1, 19, S2);
+            for (const [mx, my] of [[kx + 2, gy - 16], [kx + 7, gy - 16], [kx + 2, gy - 8], [kx + 7, gy - 8]]) {
+                r(mx, my, 2, 3, MG_D);
+                r(mx, my + 3, 2, 1, K2);
+            }
+            r(kx + 1, gy - 19, 1, 6, S0); // блик на стекле — к свету
             const sx = c.x0 + 82, sy = gy - 14; // репродуктор: чёрная тарелка на кронштейне
             r(sx - 1, sy - 8, 1, 4, K2);
             for (const [dx, dy] of [[-2, -4], [-1, -4], [0, -4], [1, -4], [2, -4], [-3, -3], [3, -3], [-4, -2], [4, -2], [-4, -1], [4, -1], [-4, 0], [4, 0], [-3, 1], [3, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]])
@@ -47785,6 +47835,25 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 }
             }
         }
+        // убежище: уголёк отражается в стекле противогазного шкафа; расписался — подпись в журнале,
+        // гермодверь приоткрыта (открылась без скрипа)
+        {
+            const c = underside_js_3.CUTS.find(k => k.id === 'shelter'), gy = LINE.y0, kx = c.x1 - 15;
+            if (c.x1 > camX && c.x0 < camX + vw && camY < gy && camY + vh > gy - 30) {
+                const d = Math.abs(p.x + 6 - (kx + 5));
+                if (d < 110 && Math.abs(p.y + 23 - (gy + 15)) < 40) {
+                    G.globalAlpha = 0.7 * (1 - d / 110); // одна тёплая искра, едет по стеклу вслед за угольком
+                    r(kx + 3 + q(Math.max(-1, Math.min(1, (p.x + 6 - kx - 5) / 40))), gy - 13, 1, 1, EMBER_G);
+                    G.globalAlpha = 1;
+                }
+                if (underside_js_3.under.signed) {
+                    r(c.x0 + 14, gy - 10, 2, 1, K1);
+                    r(c.x0 + 15, gy - 11, 1, 1, K1); // подпись в графе «явился»
+                    r(c.x0 + 41, gy - 17, 2, 17, NI);
+                    r(c.x0 + 43, gy - 17, 1, 17, K2); // щель приоткрытой гермодвери
+                }
+            }
+        }
         // убежище: репродуктор шипит
         if (underside_js_3.under.hiss > 0) {
             const sx = underside_js_3.CUTS.find(c => c.id === 'shelter').x0 + 82, sy = LINE.y0 - 14;
@@ -48023,7 +48092,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             S0 = '#474442', S1 = '#5e5e5d', S2 = '#33302e';
             MG_L = '#4d5a49', MG_D = '#2f372c', TI = '#8CC63F';
             RUST = '#4a3420', RUST_L = '#6b4a2c';
-            GLOW_G = '#9DB08A', GLOW_W = '#C8A070'; // мох светится: живой — бледно-зелёным, сухой у норы — тёплым
+            GLOW_G = '#9DB08A', GLOW_W = '#C8A070';
+            EMBER_G = '#E28A3A'; // отблеск уголька — цвет масляного фонаря канона     // мох светится: живой — бледно-зелёным, сухой у норы — тёплым
             q = Math.round;
             G = null; // холст, куда рисуем сейчас
             r = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(q(x), q(y), w, h); };
@@ -50552,6 +50622,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     goUp(loc);
                     return;
                 } // изнанка: лестница своей комнаты
+                // изнанка: расписаться в журнале учений убежища
+                if (actionKey === 'under_sign') {
+                    if (underside_js_4.under.sign())
+                        ui_js_2.showLook({ name: 'Журнал учений', look: underside_js_4.JOURNAL_TEXT });
+                    return;
+                }
                 // изнанка: выловить кораблик из канала и прочитать заявление вслух
                 if (actionKey === 'under_fish') {
                     if (underside_js_4.under.fishBoat())

@@ -104,7 +104,7 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
@@ -1624,6 +1624,8 @@ events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: расписаться в журнале учений убежища
+  if (actionKey === 'under_sign') { if (under.sign()) showLook({ name: 'Журнал учений', look: JOURNAL_TEXT }); return; }
   // изнанка: выловить кораблик из канала и прочитать заявление вслух
   if (actionKey === 'under_fish') { if (under.fishBoat()) showLook({ name: 'Кораблик', look: FLEET_TEXT }); return; }
   // изнанка: повторить имя проснувшейся ниши — её вызвали по списку
