@@ -1133,7 +1133,6 @@ const prints = [];                                 // следы в пыли —
 let lastPrint = null, printSide = 0;
 const drips = [];
 const puffs = [];
-const boats = [];                                  // кораблики из заявлений — по каналу под полотном
 const draft = [];                                  // сквозняк метро и пыль от поезда
 const breath = [];                                 // вдох на пороге: сквозняк тянет пыль от уголька в глубину
 // тоннель вдохнул (ритуал «Вдох на пороге»): пыль у уголька уходит внутрь, в (dx, dy)
@@ -1193,10 +1192,6 @@ export function stepUnderLife(p) {
     for (let k = 0; k < 5; k++) puffs.push({ x: p.x + 7 + (p.dir || 1) * 3, y: p.y - 1, vx: (p.dir || 1) * (0.1 + Math.random() * 0.15), vy: -0.08 - Math.random() * 0.06, life: 70 + k * 6 });
   }
   for (let i = puffs.length - 1; i >= 0; i--) { const u = puffs[i]; u.x += u.vx; u.y += u.vy; u.vx *= 0.99; if (--u.life <= 0) puffs.splice(i, 1); }
-  // разрез эпох: кораблики плывут по каналу — из свода, под решёткой, под ближний срез
-  const sw = CUTS.find(c => c.id === 'sewer'), scx = sw.x0 + 52;
-  if (Math.abs(fx - scx) < 300 && boats.length < 2 && Math.random() < 0.004) boats.push({ x: scx - 2 + q(Math.random() * 4), y: LINE.y0 - 4 });
-  for (let i = boats.length - 1; i >= 0; i--) { const b = boats[i]; b.y += 0.13; b.x += Math.sin(b.y * 0.3) * 0.05; if (b.y > LINE.y0 + T.FH + 6) boats.splice(i, 1); }
   // метро: сквозняк тянет пыль в тоннель; поезд — выдувает её наружу
   const mt = CUTS.find(c => c.id === 'metro'), mx = mt.x0 + 76;
   if (Math.abs(fx - mx) < 300 && draft.length < (under.train ? 24 : 5) && Math.random() < (under.train ? 0.5 : 0.03)) {
@@ -1279,11 +1274,11 @@ function floorLife(g, camX, camY, vw, vh, p) {
   { const sw = CUTS.find(c => c.id === 'sewer'), gx0 = sw.x0 + 40, y0 = LINE.y0 + 3, H = T.FH - 6;
     if (gx0 < camX + vw && gx0 + 24 > camX) {
       for (let k = 0; k < 14; k++) {
-        const x = gx0 + ((k * 7) % 24), y = y0 + q((t * 0.25 + k * 9) % H);
+        const x = gx0 + ((k * 7) % 24), y = y0 + q((under.flow + k * 9) % H);   // прочитал заявление — вода течёт тише
         if ((x - gx0) % 3 && y !== y0 + (H >> 1)) { G.globalAlpha = 0.55; r(x, y, 1, 1, k & 1 ? MG_L : MG); }
       }
       G.globalAlpha = 1;
-      for (const b of boats) {                                          // кораблик: парус и корпус, решётка поверх
+      for (const b of under.boats) {                                    // кораблик: парус и корпус, решётка поверх
         for (const [dx, dy, c] of [[1, -1, BO], [0, 0, L2], [1, 0, BO], [2, 0, L2]]) {
           const x = q(b.x + dx), y = q(b.y + dy);
           if (y >= y0 && y < y0 + H && ((x - gx0) % 3 === 0 || y === y0 + (H >> 1))) continue;

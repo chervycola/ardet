@@ -1938,6 +1938,35 @@ setCtx(ctx);
     W.called.clear(); W.load({ called: ['Агафья'] }); assert(W.called.has('Агафья'), 'вызванные не загрузились');
     W.called.clear(); W.whisper = null; W.say = null;
   });
+  test('изнанка: флотилия входящих — выловил кораблик, прочитал вслух; минуту вода тиха и шёпотов нет совсем; одно за спуск', () => {
+    const W = U.under, th = U.thingById('u_cut_sewer'), [ax, ay] = th.at;
+    W.enter(0, 0); W.say = null;
+    assert(Math.abs(ax - U.SEWER_X) < 30, 'у канала не встать');
+    for (let i = 0; i < 4000; i++) W.step(2000, 465);
+    eq(W.boats.length, 0, 'кораблики — далеко от канала');
+    let seen = false;
+    for (let i = 0; i < 6000 && !seen; i++) { W.step(ax, ay); seen = th.useShown(); }
+    assert(seen && /ВЫЛОВИТЬ КОРАБЛИК/.test(th.useLabel), 'кораблик прошёл — а выловить нечего');
+    const b0 = W.boats.find(b => b.y > U.TUBES[0].y0 - 2), y0 = b0.y;
+    const f0 = W.flow; W.step(ax, ay); assert(b0.y - y0 > 0.1, 'кораблик стоит');
+    const n0 = W.boats.length, run = W.flow - f0;
+    assert(W.fishBoat(), 'не выловил'); assert(!W.fishBoat(), 'второе заявление за спуск');
+    eq(W.boats.length, n0 - 1, 'кораблик остался в канале');
+    eq(W.after, U.FLEET_LINE, 'реплика'); eq(U.FLEET_LINE, 'Ваше обращение зарегистрировано течением.', 'реплика канона');
+    assert(/Прошу разъяснить, куда девается\.\.\./.test(U.FLEET_TEXT) && /двумя пальцами/.test(U.FLEET_TEXT), 'сцена без канона');
+    assert(W.quench && !th.useShown(), 'прочитал — шёпот не погас или «выловить» осталось');
+    W.quench = false; W.after = null;
+    const f1 = W.flow; W.step(ax, ay);
+    assert(W.flow - f1 < run / 3, 'вода не тише');
+    for (let i = 0; i < U.CALM - 10; i++) { W.murmur = 1; W.step(ax, ay); assert(!W.whisper, 'тихая вода — а шёпот'); }
+    assert(W.boats.every(b => b.y < U.TUBES[0].y0 + 30), 'кораблики не еле движутся');
+    for (let i = 0; i < 20; i++) W.step(ax, ay);
+    eq(W.calm, 0, 'вода тиха дольше минуты');
+    W.murmur = 1; W.step(ax, ay); assert(W.whisper, 'минута прошла — шёпотов нет');
+    W.leave(); eq(W.boats.length, 0, 'наверху кораблики плывут');
+    W.enter(0, 0); assert(!W.read, 'новый спуск — уже прочитано');
+    W.leave(); W.say = null; W.whisper = null;
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };

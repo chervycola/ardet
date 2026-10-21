@@ -104,7 +104,7 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
@@ -1185,6 +1185,7 @@ function stepFxUnder() {
   under.step(player.x + 6, player.y + 23);
   // разрез эпох: голоса старых слоёв — бумажкой внизу; поезд за спиной гудит и трясёт кадр
   if (under.say) { showLore(under.say); under.say = null; }
+  if (under.after && state.is('game')) { showLore(under.after); under.after = null; }   // строка после сцены
   if (under.train === 1) playDistantSound();
   if (under.train > 40 && under.train < 200 && under.train % 24 === 0) camera.shake(8);
   if (under.ride) rideToWell();
@@ -1623,6 +1624,8 @@ events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
+  // изнанка: выловить кораблик из канала и прочитать заявление вслух
+  if (actionKey === 'under_fish') { if (under.fishBoat()) showLook({ name: 'Кораблик', look: FLEET_TEXT }); return; }
   // изнанка: повторить имя проснувшейся ниши — её вызвали по списку
   if (actionKey === 'under_call') { under.callNiche(); return; }
   // изнанка: билет со скамьи метро — в карман

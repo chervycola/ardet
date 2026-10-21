@@ -140,7 +140,7 @@ const TH = [
   { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
   // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
   { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
-  { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470] },
+  { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
   { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
   { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
   // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
@@ -190,6 +190,23 @@ export const NICHE_HUSH = 280;                                       // 40 ша�
 }
 // уголёк проходит мимо ниш: ноги у стены, под рядами
 const nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+
+// ── флотилия входящих (канон, ритуал «Флотилия входящих», U3): по каналу под
+// полотном плывут кораблики из заявлений, которые канцелярия так и не приняла.
+// Выловил и прочитал вслух — заявление наконец услышано. Одно за спуск; минуту
+// вода течёт заметно тише, кораблики еле движутся, и шёпоты не слышны совсем —
+// единственная полная тишина на всей изнанке
+export const SEWER_X = 910;                                          // канал под решёткой
+export const FLEET_TEXT = `Мимо уголька проходит кораблик из бланка в клетку. На борту видно: «Прошу разъяснить, куда девается...» — дальше размыто.
+
+Вылавливаешь его двумя пальцами и читаешь вслух. Вода течёт заметно тише.`;
+export const FLEET_LINE = 'Ваше обращение зарегистрировано течением.';
+export const CALM = 3600;                                            // минута тихой воды
+const inChannel = b => b.y > L0.y0 - 2 && b.y < L0.y0 + T.FH;
+{
+  const th = thingById('u_cut_sewer');
+  th.useShown = () => !under.read && under.boats.some(inChannel);   // ловить — только когда кораблик проходит
+}
 // что сейчас есть внизу: билета на скамье нет, пока не прошёл поезд
 export const thingsNow = () => (under.bench ? THINGS : THINGS.filter(th => th.id !== 'u_ticket'));
 // где встать у вещи — точка героя (ноги — x+6, y+23)
@@ -549,6 +566,11 @@ export const under = {
   nicheWoke: false,
   called: new Set(),      // ниши, вызванные по списку, — молчат навсегда (сохраняется)
   trail: null, trailT: 0, // промолчал — имя идёт следом до выхода
+  boats: [],              // кораблики из заявлений по каналу { x, y }
+  flow: 0,                // вода канала: сколько пробежала (рисунок)
+  calm: 0,                // вода тиха: шагов (прочитал заявление)
+  read: false,            // заявление за этот спуск прочитано
+  after: null,            // строка мира — когда закроется окно сцены
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
   ticket: false,          // билет «до колодца. туда.» в кармане (сохраняется)
   ride: false,            // поезд забрал — main выводит к колодцу городка
@@ -607,6 +629,15 @@ export const under = {
         this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 };   // ждёт перо, не перебивая
       }
     }
+    // флотилия входящих: кораблики плывут по каналу; прочитал заявление — минуту вода тиха
+    if (this.calm > 0) this.calm--;
+    this.flow += this.calm ? 0.06 : 0.25;
+    if (!this.calm && Math.abs(fx - SEWER_X) < 300 && this.boats.length < 2 && Math.random() < 0.004) this.boats.push({ x: SEWER_X - 2 + Math.round(Math.random() * 4), y: L0.y0 - 4 });
+    for (let i = this.boats.length - 1; i >= 0; i--) {
+      const b = this.boats[i];
+      b.y += this.calm ? 0.03 : 0.13; b.x += Math.sin(b.y * 0.3) * 0.05;
+      if (b.y > L0.y0 + T.FH + 6) this.boats.splice(i, 1);
+    }
     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
@@ -627,6 +658,15 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // выловил кораблик и прочитал заявление вслух (одно за спуск)
+  fishBoat() {
+    if (this.read) return false;
+    const i = this.boats.findIndex(inChannel);
+    if (i < 0) return false;
+    this.boats.splice(i, 1);
+    this.read = true; this.calm = CALM; this.hushF = CALM; this.quench = true; this.whisper = null; this.after = FLEET_LINE;
+    return true;
   },
   // повторил имя проснувшейся ниши вслух: её вызвали по списку
   callNiche() {
@@ -659,9 +699,10 @@ export const under = {
     this.murmur = 900; this.hushF = 0; this.hushS = 0; this.greeted = false; this.whisper = null; this.quench = false; this.wdTold = false; this.tick = 0;
     this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null;
     this.niche = null; this.nicheWoke = false; this.trail = null; this.trailT = 0;
+    this.boats.length = 0; this.calm = 0; this.read = false; this.after = null;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; moss.reset(); },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
   load(d) {
     if (!d) return;

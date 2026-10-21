@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='93f7456 · 2026-10-21';console.log('[оттиск]', '93f7456 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='46fde64 · 2026-10-21';console.log('[оттиск]', '46fde64 · 2026-10-21');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -19598,7 +19598,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // где встать у вещи — точка героя (ноги — x+6, y+23)
     function accessOf(th) { return { x: th.at[0] - 6, y: th.at[1] - 23 }; }
@@ -20064,7 +20064,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
                 // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
                 { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470] },
-                { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470] },
+                { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
                 { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470] },
                 { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
                 // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
@@ -20118,6 +20118,22 @@ System.register("world/underside", ["content/underside", "core/time"], function 
             }
             // уголёк проходит мимо ниш: ноги у стены, под рядами
             nearNiches = (fx, fy) => fx > 220 && fx < 300 && fy < 286;
+            // ── флотилия входящих (канон, ритуал «Флотилия входящих», U3): по каналу под
+            // полотном плывут кораблики из заявлений, которые канцелярия так и не приняла.
+            // Выловил и прочитал вслух — заявление наконец услышано. Одно за спуск; минуту
+            // вода течёт заметно тише, кораблики еле движутся, и шёпоты не слышны совсем —
+            // единственная полная тишина на всей изнанке
+            exports_56("SEWER_X", SEWER_X = 910); // канал под решёткой
+            exports_56("FLEET_TEXT", FLEET_TEXT = `Мимо уголька проходит кораблик из бланка в клетку. На борту видно: «Прошу разъяснить, куда девается...» — дальше размыто.
+
+Вылавливаешь его двумя пальцами и читаешь вслух. Вода течёт заметно тише.`);
+            exports_56("FLEET_LINE", FLEET_LINE = 'Ваше обращение зарегистрировано течением.');
+            exports_56("CALM", CALM = 3600); // минута тихой воды
+            inChannel = b => b.y > L0.y0 - 2 && b.y < L0.y0 + T.FH;
+            {
+                const th = thingById('u_cut_sewer');
+                th.useShown = () => !under.read && under.boats.some(inChannel); // ловить — только когда кораблик проходит
+            }
             // что сейчас есть внизу: билета на скамье нет, пока не прошёл поезд
             exports_56("thingsNow", thingsNow = () => (under.bench ? THINGS : THINGS.filter(th => th.id !== 'u_ticket')));
             // спуски городка: ключ «использовать» → лестница внизу (там и встаёшь)
@@ -20304,6 +20320,11 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 nicheWoke: false,
                 called: new Set(), // ниши, вызванные по списку, — молчат навсегда (сохраняется)
                 trail: null, trailT: 0, // промолчал — имя идёт следом до выхода
+                boats: [], // кораблики из заявлений по каналу { x, y }
+                flow: 0, // вода канала: сколько пробежала (рисунок)
+                calm: 0, // вода тиха: шагов (прочитал заявление)
+                read: false, // заявление за этот спуск прочитано
+                after: null, // строка мира — когда закроется окно сцены
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
                 ticket: false, // билет «до колодца. туда.» в кармане (сохраняется)
                 ride: false, // поезд забрал — main выводит к колодцу городка
@@ -20384,6 +20405,19 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                             this.whisper = { text: '...' + this.trail, x: fx, y: fy - 32, ox: 0, oy: -32, faint: true, ear: true, wait: 600 }; // ждёт перо, не перебивая
                         }
                     }
+                    // флотилия входящих: кораблики плывут по каналу; прочитал заявление — минуту вода тиха
+                    if (this.calm > 0)
+                        this.calm--;
+                    this.flow += this.calm ? 0.06 : 0.25;
+                    if (!this.calm && Math.abs(fx - SEWER_X) < 300 && this.boats.length < 2 && Math.random() < 0.004)
+                        this.boats.push({ x: SEWER_X - 2 + Math.round(Math.random() * 4), y: L0.y0 - 4 });
+                    for (let i = this.boats.length - 1; i >= 0; i--) {
+                        const b = this.boats[i];
+                        b.y += this.calm ? 0.03 : 0.13;
+                        b.x += Math.sin(b.y * 0.3) * 0.05;
+                        if (b.y > L0.y0 + T.FH + 6)
+                            this.boats.splice(i, 1);
+                    }
                     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
                     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
                     if (onLine && Math.abs(fx - 1460) < 50 && !this.heard.has('shelter')) {
@@ -20414,6 +20448,22 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.heard.add('metro');
                         this.train = 1;
                     }
+                },
+                // выловил кораблик и прочитал заявление вслух (одно за спуск)
+                fishBoat() {
+                    if (this.read)
+                        return false;
+                    const i = this.boats.findIndex(inChannel);
+                    if (i < 0)
+                        return false;
+                    this.boats.splice(i, 1);
+                    this.read = true;
+                    this.calm = CALM;
+                    this.hushF = CALM;
+                    this.quench = true;
+                    this.whisper = null;
+                    this.after = FLEET_LINE;
+                    return true;
                 },
                 // повторил имя проснувшейся ниши вслух: её вызвали по списку
                 callNiche() {
@@ -20477,9 +20527,13 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.nicheWoke = false;
                     this.trail = null;
                     this.trailT = 0;
+                    this.boats.length = 0;
+                    this.calm = 0;
+                    this.read = false;
+                    this.after = null;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; moss.reset(); },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; moss.reset(); },
                 save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called] }; },
                 load(d) {
                     if (!d)
@@ -33306,13 +33360,15 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 events_js_1.events.emit(events_js_1.E.LOCATION_LOOK, loc);
                 showLook(loc);
                 break;
+            // сначала закрыть меню, потом действие: оно может открыть своё окно (сцена, лавка,
+            // терминал) — иначе меню, закрываясь, вернуло бы игру, а окно осталось висеть
             case 'use':
-                events_js_1.events.emit('location.use', loc);
                 hideMenu();
+                events_js_1.events.emit('location.use', loc);
                 break;
             case 'alt':
-                events_js_1.events.emit('location.alt', loc);
                 hideMenu();
+                events_js_1.events.emit('location.alt', loc);
                 break;
             case 'talk':
                 if (loc.npc) {
@@ -33579,7 +33635,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
@@ -46202,7 +46258,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_139, context_139) {
     "use strict";
-    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, boats, draft, breath, frost, frostScreen, fsW, fsH;
+    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
     var __moduleName = context_139 && context_139.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -47555,17 +47611,6 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             if (--u.life <= 0)
                 puffs.splice(i, 1);
         }
-        // разрез эпох: кораблики плывут по каналу — из свода, под решёткой, под ближний срез
-        const sw = underside_js_3.CUTS.find(c => c.id === 'sewer'), scx = sw.x0 + 52;
-        if (Math.abs(fx - scx) < 300 && boats.length < 2 && Math.random() < 0.004)
-            boats.push({ x: scx - 2 + q(Math.random() * 4), y: LINE.y0 - 4 });
-        for (let i = boats.length - 1; i >= 0; i--) {
-            const b = boats[i];
-            b.y += 0.13;
-            b.x += Math.sin(b.y * 0.3) * 0.05;
-            if (b.y > LINE.y0 + underside_js_3.T.FH + 6)
-                boats.splice(i, 1);
-        }
         // метро: сквозняк тянет пыль в тоннель; поезд — выдувает её наружу
         const mt = underside_js_3.CUTS.find(c => c.id === 'metro'), mx = mt.x0 + 76;
         if (Math.abs(fx - mx) < 300 && draft.length < (underside_js_3.under.train ? 24 : 5) && Math.random() < (underside_js_3.under.train ? 0.5 : 0.03)) {
@@ -47699,14 +47744,14 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             const sw = underside_js_3.CUTS.find(c => c.id === 'sewer'), gx0 = sw.x0 + 40, y0 = LINE.y0 + 3, H = underside_js_3.T.FH - 6;
             if (gx0 < camX + vw && gx0 + 24 > camX) {
                 for (let k = 0; k < 14; k++) {
-                    const x = gx0 + ((k * 7) % 24), y = y0 + q((time_js_39.t * 0.25 + k * 9) % H);
+                    const x = gx0 + ((k * 7) % 24), y = y0 + q((underside_js_3.under.flow + k * 9) % H); // прочитал заявление — вода течёт тише
                     if ((x - gx0) % 3 && y !== y0 + (H >> 1)) {
                         G.globalAlpha = 0.55;
                         r(x, y, 1, 1, k & 1 ? MG_L : MG);
                     }
                 }
                 G.globalAlpha = 1;
-                for (const b of boats) { // кораблик: парус и корпус, решётка поверх
+                for (const b of underside_js_3.under.boats) { // кораблик: парус и корпус, решётка поверх
                     for (const [dx, dy, c] of [[1, -1, BO], [0, 0, L2], [1, 0, BO], [2, 0, L2]]) {
                         const x = q(b.x + dx), y = q(b.y + dy);
                         if (y >= y0 && y < y0 + H && ((x - gx0) % 3 === 0 || y === y0 + (H >> 1)))
@@ -48357,7 +48402,6 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             lastPrint = null, printSide = 0;
             drips = [];
             puffs = [];
-            boats = []; // кораблики из заявлений — по каналу под полотном
             draft = []; // сквозняк метро и пыль от поезда
             breath = []; // вдох на пороге: сквозняк тянет пыль от уголька в глубину
             frost = null; // иней: точки, тают у уголька, отрастают
@@ -49406,6 +49450,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lorepopup_js_1.showLore(underside_js_4.under.say);
             underside_js_4.under.say = null;
         }
+        if (underside_js_4.under.after && state_js_6.state.is('game')) {
+            lorepopup_js_1.showLore(underside_js_4.under.after);
+            underside_js_4.under.after = null;
+        } // строка после сцены
         if (underside_js_4.under.train === 1)
             audio_js_11.playDistantSound();
         if (underside_js_4.under.train > 40 && underside_js_4.under.train < 200 && underside_js_4.under.train % 24 === 0)
@@ -50504,6 +50552,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     goUp(loc);
                     return;
                 } // изнанка: лестница своей комнаты
+                // изнанка: выловить кораблик из канала и прочитать заявление вслух
+                if (actionKey === 'under_fish') {
+                    if (underside_js_4.under.fishBoat())
+                        ui_js_2.showLook({ name: 'Кораблик', look: underside_js_4.FLEET_TEXT });
+                    return;
+                }
                 // изнанка: повторить имя проснувшейся ниши — её вызвали по списку
                 if (actionKey === 'under_call') {
                     underside_js_4.under.callNiche();
