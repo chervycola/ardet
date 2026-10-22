@@ -15,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER, KAPT, STOVE, CHANNEL } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER, KAPT, STOVE, CHANNEL, HERMO } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -515,6 +515,25 @@ FLOORS.sewer = (x, y, R) => {
   return n < 0.06 ? MG_D : n < 0.1 ? K3 : n > 0.99 ? RUST_L : BR2;        // мокрый кирпич бровки
 };
 
+// ── U4, бомбоубежище: понизу зелёная масляная краска, по краске тёмная полоса, выше побелка,
+// облезлая до бетона; под потолком тень. Пол — бетонная стяжка со швами ──
+BANDS.u4 = (x, d, H) => {
+  if (d <= 2) return K2;
+  if (d > H - 3) return K1;
+  if (d > H - 8) return hh(x, d, 180) < 0.2 ? K2 : K3;
+  if (d < 16) return hh(x, d, 181) < 0.05 ? MG_D : MG;
+  if (d === 16) return K1;
+  const n = hh(x, d, 182); return n < 0.05 ? S0 : n < 0.07 ? S1 : AS;
+};
+SIDE.u4 = [K2, MG_D, MG, MG, MG_D, K1]; LIPS.u4 = [S1, S0, S2, K2, K1];
+FLOORS.u4 = (x, y, R) => {
+  const fy = y - R.y0;
+  if (fy === 0) return K1;
+  if (fy === 1) return K2;
+  if ((x - R.x0) % 40 === 0 && hh(x, y >> 3, 184) < 0.7) return K3;    // швы стяжки
+  const n = hh(x, y, 185); return n < 0.05 ? S2 : n > 0.988 ? S1 : S0;
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -677,6 +696,7 @@ function arch(p, cl) {
 
 // ═══ ПИКСЕЛЬНЫЕ БУКВЫ (мел, баллончик, трафарет цифр) ═══
 const FONT = {
+  Ц: ['X.X.', 'X.X.', 'X.X.', 'XXXX', '...X'],
   Д: ['.XXX.', '.X.X.', '.X.X.', 'XXXXX', 'X...X'], У: ['X..X', 'X..X', '.XXX', '...X', 'XXX.'], Р: ['XX.', 'X.X', 'XX.', 'X..', 'X..'],
   О: ['.XX.', 'X..X', 'X..X', 'X..X', '.XX.'], В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], Е: ['XXX', 'X..', 'XX.', 'X..', 'XXX'],
   Н: ['X.X', 'X.X', 'XXX', 'X.X', 'X.X'], И: ['X..X', 'X..X', 'X.XX', 'XX.X', 'X..X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'],
@@ -744,6 +764,37 @@ function stair(th) {
       for (let k = -8; k <= 8; k++) { const hw = q(Math.sqrt(64 - k * k) * 0.45); r(cx + k, top + 3 - hw, 1, 2 * hw + 1, Math.abs(k) > 6 ? K2 : (k & 1 ? S2 : K3)); }
       r(cx - 8, top + 3, 1, 1, AS); r(cx + 8, top + 3, 1, 1, S1);
     }
+    return;
+  }
+  if (kind === 'cellar') {                                              // U4: бетонные ступени наверх — к стальной двери подвала завода, крашенной зелёным
+    r(ox - 2, top - 2, ow + 4, gy - top + 2, S0); r(ox + ow, top - 1, 2, gy - top + 1, S2); r(ox - 2, top - 2, ow + 4, 1, S1);
+    r(ox, top, ow, gy - top, NI);
+    for (let i = 0; i < 6; i++) {
+      const sy = gy - 1 - i * 4;
+      if (sy - 3 < top + 14) break;
+      r(ox + i, sy - 1, ow - 2 * i, 2, i < 2 ? S0 : i < 4 ? S2 : K3); r(ox + i, sy + 1, ow - 2 * i, 1, K1);
+    }
+    const dx = q(ox + ow / 2 - 6);                                       // наверху дверь: сталь, зелёная краска, рычаг задвижки
+    r(dx, top + 1, 12, 13, MG_D); r(dx + 1, top + 2, 10, 11, MG); r(dx + 1, top + 2, 10, 1, MG_L);
+    r(dx + 7, top + 7, 3, 1, AS); r(dx + 7, top + 8, 1, 1, S2); r(dx, top + 14, 12, 1, K1);
+    return;
+  }
+  if (kind === 'carriage') {                                            // U4: задний торец вагона 89 6 упёрся в тамбур — указатель маршрута, складная дверь, ступенька
+    const bx = x + 4, bw = w - 8;
+    r(bx - 2, top - 3, bw + 4, gy - top + 3, K1);                       // бетон тамбура вокруг торца выломан
+    for (let k = 0; k < 7; k++) r(bx - 3 + q(hh(k, x, 186) * (bw + 4)), top - 4 + (k & 1) * (gy - top), 2, 1, K2);
+    r(bx, top + 1, bw, gy - top - 5, RUST_L); r(bx + 1, top, bw - 2, 1, RUST_L);   // торец: краска выцвела; углы скруглены
+    r(bx + bw - 2, top + 1, 2, gy - top - 5, RUST); r(bx, top + 1, 1, gy - top - 5, L2);   // свет слева, тень справа
+    r(bx, top + 10, bw, 1, L2); r(bx, gy - 6, bw, 1, BR2);              // кремовый пояс, низ
+    const mx = q(bx + bw / 2 - 8);
+    r(mx, top + 2, 16, 7, K1); write('89 6', mx + 1, top + 3, L2);      // указатель маршрута — номер вагона
+    const dx = q(bx + bw / 2 - 7);                                       // складная дверь: две створки, стекло — красный отсвет вывески
+    r(dx, top + 12, 14, gy - top - 16, K2);
+    for (const lx of [dx + 1, dx + 8]) {
+      r(lx, top + 13, 5, gy - top - 18, S0); r(lx + 1, top + 14, 3, 8, NI);
+      r(lx + 1, top + 15, 1, 2, KV); r(lx + 2, top + 18, 1, 1, KV);
+    }
+    r(bx + 2, gy - 4, bw - 4, 3, S2); r(bx + 2, gy - 4, bw - 4, 1, AS); r(bx + 2, gy - 1, bw - 4, 1, K1);   // ступенька в вагон
     return;
   }
   if (kind === 'gothic') {                                              // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба
@@ -818,6 +869,19 @@ function wallThing(th) {
   if (th.stair) { stair(th); return; }
   const { x, y, w, h } = th;
   switch (th.id) {
+    case 'u_kartoteka': {                                               // картотека до горизонта: ящики выдвинуты все — сверху видны карточки
+      const gy = y + h;
+      r(x, y + 7, w, gy - y - 7, BR2); r(x, y + 6, w, 1, K2); r(x, gy - 2, w, 2, K2);   // корпус, карниз, цоколь
+      for (let row = 0; row < 5; row++) for (let col = 0; col * 8 + 7 <= w; col++) {
+        const dx = x + col * 8 + 1, dy = y + 8 + row * 6;
+        r(dx, dy, 7, 2, hh(col, row, 187) < 0.3 ? L1 : L2);             // карточки торчат из выдвинутого ящика
+        r(dx, dy + 2, 7, 3, RUST_L); r(dx + 6, dy + 2, 1, 3, RUST);       // лицо ящика
+        r(dx + 2, dy + 2, 3, 1, L2); r(dx + 3, dy + 4, 1, 1, K1);         // бирка, ручка
+      }
+      r(x + w - 26, y, 24, 7, BO); r(x + w - 26, y + 6, 24, 1, L2);     // на торце табличка
+      write('ОТЦЫ', x + w - 24, y + 1, K1);
+      return;
+    }
     case 'u_moss': {                                                    // мох на стене: подушки; коробочки спор на тонких ножках
       for (let xx = x; xx < x + w; xx++) { const y0 = mossY(xx); col(xx, y0 - MOSS.wh, y0, CL_ALL, yy => mossBand(xx, y0 - yy, MOSS.wh)); }
       for (let k = 0; k < 9; k++) {
@@ -1182,6 +1246,14 @@ function drawStaticView(g, camX, camY, vw, vh) {
     chunk(i, j); return;
   }
 }
+// гермодверь открыта: над проёмом стена и косяки — поверх героя, когда он в проёме
+function hermoLintel() {
+  const c = CUTS.find(k => k.id === 'shelter'), gy = LINE.y0, cx = HERMO.cx;
+  for (let y = gy - T.WH; y < gy - 17; y++) for (let x = cx - 12; x < cx + 12; x++) r(x, y, 1, 1, cutBand(c, x, gy - y));
+  for (const x0 of [cx - 12, cx + 10]) for (let y = gy - 17; y < gy; y++) for (let x = x0; x < x0 + 2; x++) r(x, y, 1, 1, cutBand(c, x, gy - y));
+  r(cx - 11, gy - 18, 22, 1, K2); r(cx - 11, gy - 18, 1, 18, K2); r(cx + 10, gy - 18, 1, 18, K2);
+  write('ВЫХОД', cx - 11, gy - 24, K1, 0.05, 116);
+}
 // ═══ ВЕЩИ НА ПОЛУ (по глубине с героем) ═══
 const ARCHS = new Map();
 function archSprite(g, p) {                       // перемычка проёма — поверх героя, когда он за стеной
@@ -1387,8 +1459,16 @@ function rootPillar(th) {
   }
   r(q(cx - 4), gy, 9, 1, K1);
 }
+// скамьи вдоль стены убежища: на всех, кто придёт по тревоге; краска на сиденьях целая
+function benches(th) {
+  const { x, w } = th, sy = th.solid[1];
+  r(x, sy - 2, w, 2, RUST_L); r(x, sy - 2, w, 1, L2); r(x, sy, w, 3, BR2); r(x, sy + 3, w, 1, K1);   // сиденье: доски, торец
+  for (let lx = x + 3; lx < x + w - 2; lx += 19) { r(lx, sy + 4, 2, 5, K2); r(lx + 1, sy + 4, 1, 5, K1); }
+  G.globalAlpha = 0.4; r(x + 2, sy + 9, w - 2, 1, K0); G.globalAlpha = 1;
+}
 const FLOOR_DRAW = {
   u_roots: rootPillar,
+  u_benches: benches,
   u_duty_log: dutyTable,
   u_watchman: dutyMan,
   u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
@@ -1634,7 +1714,10 @@ function floorLife(g, camX, camY, vw, vh, p) {
       }
       if (under.signed) {
         r(c.x0 + 14, gy - 10, 2, 1, K1); r(c.x0 + 15, gy - 11, 1, 1, K1);   // подпись в графе «явился»
-        r(c.x0 + 41, gy - 17, 2, 17, NI); r(c.x0 + 43, gy - 17, 1, 17, K2);   // щель приоткрытой гермодвери
+        const cx = HERMO.cx;                                             // гермодверь открыта в тамбур: проём тёмный, за порогом пол уходит вглубь
+        r(cx - 10, gy - 17, 20, 17, NI);
+        for (let k = 0; k < 6; k++) r(cx - 9 + k, gy - 1 - k, 18 - 2 * k, 1, k < 2 ? S2 : K2);
+        r(cx - 10, gy - 17, 3, 17, S0); r(cx - 10, gy - 17, 1, 17, AS); r(cx - 7, gy - 16, 1, 15, K1);   // полотно ушло к петлям, видно ребром
       }
     } }
   // убежище: репродуктор шипит
@@ -1780,12 +1863,14 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
     list.push({ k: 264, racksN: true }, { k: 216, palm: 1672 }, { k: 216, palm: 1728 });
   }
   for (const P of PORTALS) if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh) list.push({ k: P.yb, arch: P });
+  if (under.signed && HERMO.cx + 14 > camX && HERMO.cx - 14 < camX + vw && LINE.y0 > camY && LINE.y0 - T.WH < camY + vh) list.push({ k: LINE.y0, hermo: true });
   list.push({ k: p.y + 23, hero: true });
   list.sort((a, b) => a.k - b.k);
   for (const it of list) {
     if (it.hero) { drawHero(); wade(g, p); G = g; continue; }
     G = g;
     if (it.arch) archSprite(g, it.arch);
+    else if (it.hermo) hermoLintel();
     else if (it.west) FLOOR_DRAW.chestsWest();
     else if (it.sofa) sofa();
     else if (it.stove) stove();

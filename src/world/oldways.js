@@ -14,6 +14,10 @@
 //  · U3 «канализация»: газовый переулок пара и теней (запад) — один горящий фонарь, рельсы
 //    вагона 89 6 поперёк мостовой, решётка у фонаря; выход — люк на территории завода
 //    века катастроф (равнина: дуга у северо-восточного угла городка), у градирни.
+//  · U4 «бомбоубежище»: спуск в подвал завода (век катастроф, равнина) — бетонный приямок,
+//    на стене плакат с улыбкой; в подвале банка «1961. НЕ ОТКРЫВАТЬ», за ней дверь вниз.
+//    Выход — задняя дверь вагона 89 6, вкопанного тупиком во дворе-колодце города-сот
+//    (неон, восток); снаружи она заперта, пока убежище не признало странника проверяющим.
 // ═══════════════════════════════════════
 import { TOWN, ringAt, trailPoint } from './disc.js';
 
@@ -21,7 +25,7 @@ const NI = '#0D0B0A', AS = '#8A8D8F';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a';
 const BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#5e5e5d', S2 = '#33302e';
 const RUST = '#4a3420', RUST_L = '#6b4a2c', KV = '#C23B2B', B3 = '#3a1c14', D4 = '#34302a', D5 = '#3a3328';
-const SV = '#E28A3A', MG_D = '#2f372c';
+const SV = '#E28A3A', MG_D = '#2f372c', MG = '#3D4A3A', BO = '#D9CFB8', S0 = '#474442';
 const q = Math.round;
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 const sideOf = (x, y) => {
@@ -170,7 +174,68 @@ function drawHatch(ctx, loc) {
 }
 const HATCH_LOOK = 'Люк на территории завода. Чугунная крышка; литые буквы по кругу стёрты подошвами до гладкого. Из-под крышки тянет водой.';
 
-let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null;
+// ── U4, вход: спуск в подвал завода — бетонный приямок, ступени вниз, внизу стальная дверь,
+//    крашенная зелёным; на стенке приямка — плакат с улыбкой, отслаивается (канон клетки:
+//    Гагарин — «плакат с улыбкой, отслаивающийся со стены; в погребе банка «1961. НЕ ОТКРЫВАТЬ»») ──
+const BW_ = 30, BH_ = 26;
+function drawCellar(ctx, loc) {
+  const x = loc.x, gy = loc.y + loc.h;
+  ctx.globalAlpha = 0.45; R(ctx, x + 3, gy, BW_ - 3, 1, K0); ctx.globalAlpha = 1;
+  R(ctx, x, gy - 26, BW_, 3, K3); R(ctx, x, gy - 26, BW_, 1, S1);       // козырёк над приямком
+  R(ctx, x + 3, gy - 23, BW_ - 6, 10, S2);                               // дальняя стенка приямка
+  R(ctx, x + 12, gy - 22, 9, 9, MG_D); R(ctx, x + 13, gy - 21, 7, 8, MG); R(ctx, x + 13, gy - 21, 7, 1, S0);   // дверь внизу: сталь, зелёная
+  R(ctx, x + 18, gy - 17, 1, 1, AS);
+  R(ctx, x + 4, gy - 22, 6, 8, L2); R(ctx, x + 4, gy - 22, 1, 8, L1);  // плакат с улыбкой
+  R(ctx, x + 5, gy - 21, 4, 3, S1); R(ctx, x + 6, gy - 20, 2, 2, L1); R(ctx, x + 6, gy - 17, 3, 1, BR2);
+  R(ctx, x + 8, gy - 22, 2, 1, S2); R(ctx, x + 9, gy - 21, 1, 1, S2); R(ctx, x + 8, gy - 21, 1, 1, L1);   // угол отслоился, загнулся
+  for (let i = 0; i < 4; i++) {                                          // ступени вниз: к двери уже и темнее
+    const sy = gy - 13 + i * 3, ins = 3 - i;
+    R(ctx, x + 4 + ins, sy, BW_ - 8 - 2 * ins, 2, i < 1 ? K3 : i < 2 ? S2 : S0); R(ctx, x + 4 + ins, sy + 2, BW_ - 8 - 2 * ins, 1, K1);
+    R(ctx, x + 4, sy, ins, 3, K2); R(ctx, x + BW_ - 4 - ins, sy, ins, 3, K1);   // внутренние стенки приямка — в тени
+  }
+  for (const wx of [x + 1, x + BW_ - 4]) { R(ctx, wx, gy - 23, 3, 22, S0); R(ctx, wx, gy - 23, 3, 1, S1); }   // боковины приямка
+  R(ctx, x + 1, gy - 23, 1, 22, S1); R(ctx, x + BW_ - 2, gy - 23, 1, 22, K2);
+  R(ctx, x, gy - 1, BW_, 1, K2);
+}
+const CELLAR_LOOK = 'Спуск в подвал завода: бетонный приямок, ступени вниз, внизу стальная дверь. На стенке приямка — плакат с улыбкой; отслаивается, угол загнулся.';
+
+// ── U4, выход: вагон 89 6 — «внизу тупиком вкопан» во дворе-колодце города-сот (канон кадра);
+//    рельсы подходят к нему и кончаются (Г4: рельсы — в трёх эпохах, вагон — только в неоне);
+//    на боку меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ» (А10); сверху капают кондиционеры ──
+const VW_ = 62, VH_ = 42;
+const DIG = { 8: ['XXX', 'X.X', 'XXX', 'X.X', 'XXX'], 9: ['XXX', 'X.X', 'XXX', '..X', 'XXX'], 6: ['XXX', 'X..', 'XXX', 'X.X', 'XXX'],
+  В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'], Я: ['.XX', 'X.X', '.XX', '.XX', 'X.X'] };
+function letters(ctx, word, x, y, c) {
+  for (const ch of word) { const g = DIG[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === 'X') R(ctx, x + i, y + j, 1, 1, c); }); x += 4; }
+}
+function drawCarriage(ctx, loc, t) {
+  const x = loc.x, gy = loc.y + loc.h, bx = x + 10, bw = VW_ - 12, top = gy - 30;
+  ctx.globalAlpha = 0.45; R(ctx, bx + 2, gy, bw, 1, K0); ctx.globalAlpha = 1;
+  for (const ry of [gy - 4, gy - 1]) R(ctx, x, ry, 12, 1, S1);           // рельсы подходят — и кончаются
+  for (let k = 0; k < 3; k++) R(ctx, x + 1 + k * 4, gy - 5, 1, 5, K2);
+  R(ctx, bx + 1, top, bw - 2, 2, S2); R(ctx, bx + 1, top, bw - 2, 1, S1);   // крыша; дуга токоприёмника опущена
+  R(ctx, bx + 14, top - 3, 18, 1, S1); R(ctx, bx + 14, top - 2, 1, 2, S2); R(ctx, bx + 31, top - 2, 1, 2, S2);
+  R(ctx, bx, top + 2, bw, 22, RUST_L); R(ctx, bx, top + 2, 1, 22, L2); R(ctx, bx + bw - 2, top + 2, 2, 22, RUST);   // кузов: краска выцвела
+  for (let k = 0; k < 6; k++) { const wx = bx + 3 + k * 7; R(ctx, wx, top + 4, 5, 6, K1); R(ctx, wx, top + 4, 5, 1, S2); }   // окна
+  R(ctx, bx + bw - 8, top + 4, 6, 18, K2); R(ctx, bx + bw - 7, top + 5, 4, 7, K1); R(ctx, bx + bw - 5, top + 5, 1, 16, K2);   // задняя дверь: складная, закрыта
+  R(ctx, bx, top + 11, bw - 9, 1, L2);                                    // кремовый пояс
+  letters(ctx, '89 6', bx + 3, top + 14, L2);                            // номер на борту
+  for (const [cx, cy] of [[bx + 25, top + 16], [bx + 35, top + 19]]) {   // меловые знаки: круг с лучами
+    for (const [dx, dy] of [[0, -2], [1, -2], [2, -1], [2, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]) R(ctx, cx + dx, cy + dy, 1, 1, L1);
+    R(ctx, cx - 3, cy - 1, 1, 1, L2); R(ctx, cx + 4, cy, 1, 1, L2); R(ctx, cx + 1, cy + 3, 1, 1, L2);
+  }
+  letters(ctx, 'ВАСЯ', bx + 23, top + 15, BO);                            // поверх — выцарапано
+  R(ctx, bx - 1, gy - 7, bw + 2, 7, K3); R(ctx, bx - 1, gy - 7, bw + 2, 1, S2);   // вкопан: низ кузова в насыпи
+  for (let k = 0; k < 9; k++) R(ctx, bx + q(k * bw / 9) + 2, gy - 5 + (k & 1), 2, 1, BR2);
+  for (let k = 0; k < 3; k++) {                                          // сверху капают кондиционеры
+    const ph = ((t || 0) * 0.9 + k * 23) % 60, dx = bx + 8 + k * 15;
+    if (ph < 12) R(ctx, dx, loc.y + q(ph * (top - loc.y - 2) / 12), 1, 2, AS);
+    else if (ph < 16) R(ctx, dx - 1, top - 1, 3, 1, S1);
+  }
+}
+const CARRIAGE_LOOK = 'Двор-колодец: внизу тупиком вкопан вагон 89 6. Рельсы подходят к нему и кончаются. На боку — меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ». Сверху капают кондиционеры.';
+
+let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
   stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', 500).x);
@@ -225,5 +290,25 @@ export function buildOldways(locations) {
     useAction: 'factory_hatch_down', useLabel: '<i>↓</i>ЛЮК',
   };
   locations.push(hatch);
+  // U4, вход: спуск в подвал — тоже у градирни и цеха, в стороне от люка
+  const cp = placeIn(locations, 7, 'plain', BW_, BH_, works) || { x: TOWN.x1 + 1060, gy: TOWN.y0 - 960 };
+  cellar = {
+    id: 'factory_cellar', name: 'Спуск в подвал завода', zone: 'street',
+    x: cp.x, y: cp.gy - BH_, w: BW_, h: BH_,
+    look: CELLAR_LOOK, drawSelf: drawCellar,
+    useAction: 'cellar_door', useLabel: '<i>↓</i>В ПОДВАЛ',
+  };
+  locations.push(cellar);
+  // U4, выход: вагон 89 6 — во дворе-колодце, у его громкоговорителя
+  const yard = locations.find(l => l.name === 'громкоговоритель двора-колодца')
+    || archOf(locations, 8, 'east', 'город-соты', TOWN.x1);
+  const vp = placeIn(locations, 8, 'east', VW_, VH_, yard) || { x: TOWN.x1 + 1500, gy: TOWN.y0 + 900 };
+  carriage = {
+    id: 'carriage_89', name: 'Вагон 89 6', zone: 'street',
+    x: vp.x, y: vp.gy - VH_, w: VW_, h: VH_, solidBox: { x: vp.x + 10, y: vp.gy - 8, w: VW_ - 12, h: 6 },
+    look: CARRIAGE_LOOK, drawSelf: drawCarriage,
+    useAction: 'carriage_back', useLabel: '<i>↓</i>ЗАДНЯЯ ДВЕРЬ',
+  };
+  locations.push(carriage);
 }
-export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch });
+export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage });

@@ -87,9 +87,20 @@ export const ROOMS = [
   // заявлений, не выловленные на линии, плывут дальше — с настоящей серьёзностью
   { id: 'u3n', name: 'Канализация', x0: 872, y0: 470, x1: 928, y1: 1000, wh: 30, mat: 'sewer', surf: 'path' },
   { id: 'u3', name: 'Канализация', x0: 700, y0: 980, x1: 1320, y1: 1032, wh: 46, mat: 'sewer', surf: 'path' },
+  // U4 «бомбоубежище» (канон: дверь в подвале, век катастроф · равнина → задняя дверь вагона
+  // 89 6, неон · восток): линия прошла сквозь убежище — в срезе журнал учений и гермодверь
+  // «ВЫХОД». На юг, к зрителю, убежище открыто: коридор от среза в зал — зелёная краска,
+  // побелка, скамьи вдоль; вдоль стены картотека «ОТЦЫ…» (канон Ж29: у бомбоубежища U4), на
+  // западе ступени в подвал завода. На север — гермодверь: открывается тому, кто расписался в
+  // журнале (канон ритуала); за ней тамбур, в его стену упёрся задним торцом вагон 89 6
+  { id: 'u4n', name: 'Бомбоубежище', x0: 1440, y0: 470, x1: 1484, y1: 584, wh: 30, mat: 'u4', surf: 'ground' },
+  { id: 'u4', name: 'Бомбоубежище', x0: 1250, y0: 574, x1: 1580, y1: 640, wh: 44, mat: 'u4', surf: 'ground' },
+  { id: 'u4s', name: 'Тамбур убежища', x0: 1390, y0: 388, x1: 1570, y1: 424, wh: 36, mat: 'u4', surf: 'ground' },
 ];
 // канал: вода чёрная, в неё не шагнуть — по бровке; поперёк галереи сток уходит под настил
 export const CHANNEL = { x0: 898, x1: 922, y0: 488, yJoin: 978, gx0: 708, gx1: 1312, gy0: 1012, gy1: 1028 };
+// гермодверь U4 в дальней стене среза убежища: проём — проход в тамбур, пока дверь открыта
+export const HERMO = { cx: 1460, x0: 1452, x1: 1468, y0: 404, y1: 456 };
 export const KAPT = ROOMS.find(R => R.id === 'kapt');
 // печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
 export const STOVE = { x: 744, y: 316 };
@@ -197,6 +208,11 @@ const TH = [
   // U3: скобы к решётке у газового фонаря; скобы к люку завода
   { id: 'u_up_gaslamp', room: 'u3', wall: true, stair: 'grate', steps: 0, x: 712, y: 938, w: 28, h: 42, at: [726, 996], up: 'gas_grate' },
   { id: 'u_up_hatch', room: 'u3', wall: true, stair: 'hatch', steps: 0, x: 1280, y: 938, w: 28, h: 42, at: [1294, 996], up: 'factory_hatch' },
+  // U4: ступени в подвал завода; картотека вдоль стены; скамьи; в тамбуре — задний торец вагона
+  { id: 'u_up_cellar', room: 'u4', wall: true, stair: 'cellar', steps: 0, x: 1258, y: 530, w: 30, h: 44, at: [1273, 592], up: 'factory_cellar' },
+  { id: 'u_kartoteka', room: 'u4', wall: true, x: 1298, y: 532, w: 134, h: 40, at: [1365, 592] },
+  { id: 'u_benches', room: 'u4', x: 1494, y: 568, w: 80, h: 22, at: [1534, 600], solid: [1494, 580, 1574, 588] },
+  { id: 'u_up_carriage', room: 'u4s', wall: true, stair: 'carriage', steps: 0, x: 1516, y: 350, w: 40, h: 38, at: [1536, 406], up: 'carriage_89' },
   // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
   { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
   { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
@@ -364,7 +380,12 @@ export const DESCENTS = {
   cathedral_crypt: 'u_up_cathedral',  // U2: чёрный собор — в крипту (второе действие)
   gas_grate_down: 'u_up_gaslamp',     // U3: решётка у газового фонаря
   factory_hatch_down: 'u_up_hatch',   // U3: люк на территории завода
+  cellar_door: 'u_up_cellar',         // U4: дверь в подвале завода
+  carriage_back: 'u_up_carriage',     // U4: задняя дверь вагона 89 6 — открыта только проверяющему
 };
+// спуск, закрытый до поры: задняя дверь вагона заперта с той стороны, пока странник не
+// расписался в журнале учений (убежище открывает дверь в сторону неона своему проверяющему)
+export const LOCKED = { carriage_back: () => !under.signed };
 
 // ── где можно стоять ── (ноги x, y; запас — на полу плаща у стен)
 function inPoly(x, y, P) {
@@ -388,6 +409,7 @@ function onFloor(x, y) {
       if (inPoly(x - 5, y, R.poly) && inPoly(x + 5, y, R.poly) && inPoly(x, y - 3, R.poly) && inPoly(x, y + 2, R.poly)) return true;
     } else if (x >= R.x0 + 6 && x <= R.x1 - 6 && y >= R.y0 + 3 && y <= R.y1 - 2) return true;
   }
+  if (under.signed && x >= HERMO.x0 && x <= HERMO.x1 && y >= HERMO.y0 && y <= HERMO.y1) return true;   // гермодверь открыта
   return false;
 }
 export function walkable(x, y) {
@@ -433,11 +455,20 @@ export const inWater = (x, y) => placeAt(x, y) === 'base';
 
 // ── путь по клику: сетка по 4 точки, обход в ширину, прямые без лишних углов ──
 const C = 4, GW = Math.ceil(UW / C), GH = Math.ceil(UH / C);
-let grid = null, prev = null, stamp = null, mark = 0, queue = null;
+let grid = null, prev = null, stamp = null, mark = 0, queue = null, gridOpen = false;
 function buildGrid() {
   grid = new Uint8Array(GW * GH);
   for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) grid[j * GW + i] = walkable(i * C + 2, j * C + 2) ? 1 : 0;
   prev = new Int32Array(GW * GH); stamp = new Uint32Array(GW * GH); queue = new Int32Array(GW * GH);
+  gridOpen = under.signed;
+}
+// сетка знает, открыта ли гермодверь: открылась — переписать клетки проёма
+function ensureGrid() {
+  if (!grid) { buildGrid(); return; }
+  if (gridOpen === under.signed) return;
+  gridOpen = under.signed;
+  for (let j = Math.floor((HERMO.y0 - 4) / C); j <= Math.ceil((HERMO.y1 + 4) / C); j++)
+    for (let i = Math.floor((HERMO.x0 - 4) / C); i <= Math.ceil((HERMO.x1 + 4) / C); i++) grid[j * GW + i] = walkable(i * C + 2, j * C + 2) ? 1 : 0;
 }
 const cellOf = (x, y) => { const i = Math.floor(x / C), j = Math.floor(y / C); return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
 function nearestCell(x, y, rmax = 40) {
@@ -462,7 +493,7 @@ function clearLine(ax, ay, bx, by) {
 }
 // от ног (fx, fy) к точке (gx, gy): точки поворотов для ног; null — не дойти
 export function pathTo(fx, fy, gx, gy) {
-  if (!grid) buildGrid();
+  ensureGrid();
   const s = nearestCell(fx, fy, 4), g = nearestCell(gx, gy);
   if (s < 0 || g < 0) return null;
   mark++;
@@ -504,7 +535,7 @@ export function pathTo(fx, fy, gx, gy) {
 // ── до выхода: сколько клеток пути до ближней лестницы (обход в ширину от всех сразу) ──
 let exitD = null;
 function buildExits() {
-  if (!grid) buildGrid();
+  ensureGrid();
   exitD = new Int32Array(GW * GH).fill(-1);
   let qh = 0, qt = 0;
   for (const th of TH) if (th.up) { const c = nearestCell(th.at[0], th.at[1]); if (c >= 0 && exitD[c] < 0) { exitD[c] = 0; queue[qt++] = c; } }
@@ -654,6 +685,8 @@ export const MURMURS = {
   u1c: ['...выше вода не поднималась...'],
   u2: ['...гербаризация без описи...', '...для рукописей, которые жгли...'],
   u3: ['...прошу разъяснить...', '...ваше обращение зарегистрировано течением...'],
+  u4: ['...все свободны...', '...не закрывать ящики...'],
+  u4s: ['...открывается без скрипа...'],
 };
 export const WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)';
 const MURMUR_AT = [
@@ -986,6 +1019,7 @@ const EMBER = [226, 138, 58], COLD = [138, 141, 143], FILL = [232, 220, 198], FI
 const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120, 64];
 const DAYLIGHT = [222, 198, 150];                    // «верхняя» вещь: свет дня сверху — костяной, тёплый
 const GASLIGHT = [214, 146, 80];                     // газовый фонарь над решёткой U3
+const SIGN = [194, 70, 50];                          // живая вывеска двора-колодца — киноварью, сквозь стекло задней двери вагона
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 // sky — небо над городком { day 0..1, moon 0..1 }: видно только из сухой цистерны нилометра
 export function underLights(px, py, sky = null) {
@@ -1003,6 +1037,7 @@ export function underLights(px, py, sky = null) {
   L.push({ x: STOVE.x - 6, y: STOVE.y - 4, r: 74, color: FIRE, flicker: 0.18, intensity: 2.1 });   // печка Дежурного: тепло, приставленное сторожить мороз
   L.push({ x: STOVE.x, y: STOVE.y + 1, r: 24, color: EMBER, flicker: 0.3, intensity: 1.6 });       // жар у дверцы
   L.push({ x: 726, y: 952, r: 48, color: GASLIGHT, flicker: 0.12, intensity: 1.15 });   // U3: сквозь решётку светит газовый фонарь — один, горит всегда
+  L.push({ x: 1536, y: 372, r: 38, color: SIGN, flicker: 0.1, intensity: 0.9 });        // U4: в тамбуре — красный отсвет в стекле задней двери вагона
   if (sky && (sky.day > 0.02 || sky.moon > 0.02)) {                  // U1: сухая цистерна открыта небу — сверху свет дня, ночью — луны
     const d = sky.day || 0;
     L.push({ x: 918, y: 44, r: 66, color: d > 0.02 ? DAYLIGHT : COLD, flicker: 0, intensity: d > 0.02 ? 1.3 * d : 0.8 * sky.moon });

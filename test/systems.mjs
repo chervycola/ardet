@@ -1593,6 +1593,7 @@ setCtx(ctx);
   const WH = await imp('world/whisper.js');
   const D = await imp('world/disc.js');
   test('изнанка: у каждой вещи есть где встать; от любой лестницы дойти до любой вещи своего хода, ход мха с линией не сшит', () => {
+    const was = U.under.signed; U.under.signed = true;              // гермодверь U4 открыта: сеть — целиком
     for (const th of U.THINGS) assert(U.walkable(th.at[0], th.at[1]), `${th.id}: у вещи не встать (${th.at})`);
     const stairs = U.THINGS.filter(th => th.up), net = th => (th.room === 'moss' ? 'moss' : 'line');
     eq(stairs.filter(th => net(th) === 'moss').map(th => th.up).sort().join(), 'burrow,pithos', 'выходы хода мха');
@@ -1609,6 +1610,7 @@ setCtx(ctx);
         px = w.x; py = w.y;
       }
     }
+    U.under.signed = was;
   });
   test('изнанка: спуск — повторное «использовать» у места со сценой; лестница выводит к нему же', () => {
     for (const [key, stair] of Object.entries(U.DESCENTS)) {
@@ -2556,6 +2558,7 @@ setCtx(ctx);
   const M = await imp('world/locations.js');
   const OW = await imp('world/oldways.js');
   const UA = await imp('world/useActions.js');
+  const TX = await imp('content/underside.js');
   const DS = await imp('world/disc.js');
   const T0 = DS.TOWN;
   const sideOf = (x, y) => { const dn = T0.y0 - y, ds = y - T0.y1, dw = T0.x0 - x, de = x - T0.x1, m = Math.max(dn, ds, dw, de); return m === ds ? 'south' : m === dn ? 'north' : m === dw ? 'west' : 'east'; };
@@ -2692,6 +2695,59 @@ setCtx(ctx);
     assert(maxY < C.gy1, 'кораблик проплыл сквозь пол');
     W.leave(); eq(W.drift.length, 0, 'наверху кораблики плывут');
     W.say = null; W.whisper = null;
+  });
+  test('U4 «бомбоубежище»: спуск в подвал завода (катастрофы, равнина); выход — задняя дверь вагона 89 6 во дворе-колодце (неон, восток)', () => {
+    const { cellar: c, carriage: v } = OW.oldways();
+    assert(c && M.locations.includes(c), 'спуска в подвал нет');
+    const cx = c.x + c.w / 2, cy = c.y + c.h;
+    eq(DS.ringAt(cx, cy), 7, 'подвал не в веке катастроф'); assert(cx > T0.x1 && cy < T0.y0, 'подвал не на равнине');
+    const works = M.locations.filter(l => l.archDraw && l.name === 'градирня и цех' && l.archRing === 7)
+      .reduce((a, l) => Math.min(a, Math.hypot(l.archX - cx, l.archGy - cy)), 1e9);
+    assert(works < 400, `подвал далеко от завода: ${Math.round(works)}`);
+    assert(/плакат с улыбкой/.test(c.look) && /отслаивается/.test(c.look), 'осмотр подвала не по канону');
+    eq(c.useAction, 'cellar_door', 'в подвал не спуститься');
+    assert(/1961\. НЕ ОТКРЫВАТЬ/.test(UA.useTexts.cellar_door.text), 'в подвале нет банки 1961-го');
+    eq(upOf(U.thingById('u_up_cellar')), c, 'ступени выводят не в подвал завода');
+    assert(v && M.locations.includes(v), 'вагона нет');
+    const vx = v.x + v.w / 2, vy = v.y + v.h;
+    eq(DS.ringAt(vx, vy), 8, 'вагон не в неоне'); eq(sideOf(vx, vy), 'east', 'вагон не на востоке');
+    const yard = M.locations.find(l => l.name === 'громкоговоритель двора-колодца');
+    if (yard) assert(Math.hypot(yard.x + yard.w / 2 - vx, yard.y + yard.h - vy) < 400, 'вагон не во дворе-колодце');
+    assert(/тупиком вкопан вагон 89 6/.test(v.look) && /ЗДЕСЬ БЫЛ ВАСЯ/.test(v.look), 'осмотр вагона не по канону');
+    eq(v.useAction, 'carriage_back', 'у вагона нет задней двери');
+    eq(upOf(U.thingById('u_up_carriage')), v, 'тамбур выводит не к вагону');
+    for (const n of [c, v]) for (const l of M.locations) if (l !== n) assert(!(l.x < n.x + n.w + 6 && l.x + l.w > n.x - 6 && l.y < n.y + n.h + 6 && l.y + l.h > n.y - 6), `${n.name} налез на «${l.name}»`);
+    for (const n of [c, v]) {
+      const log = [], ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, val) { log.push(['=' + kk, val]); return true; } });
+      for (const tt of [0, 7, 31]) n.drawSelf(ctx, n, tt);
+      for (const [kk, x, y, w, hh] of log) if (kk === 'fillRect') assert(x >= n.x - 1 && x + w <= n.x + n.w + 1 && y >= n.y - 1 && y + hh <= n.y + n.h + 1, `${n.name} вылез из рамки: ${x},${y} ${w}×${hh}`);
+    }
+  });
+  test('U4: убежище открыто на юг от среза — зал, скамьи, картотека «ОТЦЫ…», ступени в подвал завода', () => {
+    const cut = U.thingById('u_cut_shelter'), up = U.thingById('u_up_cellar'), k = U.thingById('u_kartoteka'), b = U.thingById('u_benches');
+    for (const th of [up, k, b]) assert(U.pathTo(cut.at[0], cut.at[1], th.at[0], th.at[1]), `от среза к ${th.id} не пройти`);
+    for (const th of [up, k, b]) eq(U.placeAt(th.at[0], th.at[1]), 'u4', `${th.id} — не в убежище`);
+    assert(/ОТЦЫ\. К ВОСКРЕШЕНИЮ\. НЕ ЗАКРЫВАТЬ ЯЩИКИ/.test(TX.UNDER_TEXT.u_kartoteka.look) && /до горизонта/.test(TX.UNDER_TEXT.u_kartoteka.look), 'картотека не по канону');
+    assert(!U.walkable((b.solid[0] + b.solid[2]) / 2, (b.solid[1] + b.solid[3]) / 2), 'сквозь скамьи проходят');
+    eq(U.placeAt(1462, 530), 'u4n', 'коридор от среза — не убежище');
+  });
+  test('U4: гермодверь «ВЫХОД» — в сторону неона; открывается тому, кто расписался в журнале; снаружи задняя дверь вагона до того заперта', () => {
+    const W = U.under, was = W.signed, cut = U.thingById('u_cut_shelter'), v = U.thingById('u_up_carriage'), H = U.HERMO;
+    W.signed = false;
+    assert(!U.pathTo(cut.at[0], cut.at[1], v.at[0], v.at[1]), 'к вагону прошёл сквозь закрытую гермодверь');
+    assert(!U.walkable(H.cx, 438), 'в закрытой гермодвери стоят');
+    assert(U.LOCKED.carriage_back(), 'задняя дверь вагона не заперта');
+    assert(UA.useTexts.carriage_back_locked && /заперта с той стороны/.test(UA.useTexts.carriage_back_locked.text), 'нет сцены запертой двери');
+    W.signed = true;
+    const path = U.pathTo(cut.at[0], cut.at[1], v.at[0], v.at[1]);
+    assert(path, 'расписался — а гермодверь закрыта');
+    assert(path.some(w => w.y < 424) && U.walkable(H.cx, 438), 'путь к вагону не сквозь гермодверь');
+    assert(!U.LOCKED.carriage_back(), 'проверяющему задняя дверь заперта');
+    assert(/открывается без скрипа/.test(UA.useTexts.carriage_back.text), 'дверь со скрипом');
+    eq(U.placeAt(v.at[0], v.at[1]), 'u4s', 'задняя дверь вагона — не в тамбуре');
+    W.signed = false;
+    assert(!U.pathTo(cut.at[0], cut.at[1], v.at[0], v.at[1]), 'сетка пути не закрыла дверь обратно');
+    W.signed = was;
   });
 }
 
