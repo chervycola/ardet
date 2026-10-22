@@ -65,6 +65,15 @@ export const ROOMS = [
   // каптёрка Дежурного (CONTENT_POOL «Дежурный криосклепа»): ниша в коллекторе перед дверью склепа;
   // дальняя стена — та же, что у жилы; единственное тёплое место на маршруте U7
   { id: 'kapt', name: 'Каптёрка Дежурного', x0: 696, y0: 282, x1: 756, y1: 330, wh: 22, mat: 'collector', surf: 'ground' },
+  // ── старые ходы с колец эпох (канон UNDERSIDE, волна 4): тоннели сшивают несмежное ──
+  // U1 «крипта» (канон: ставкирка света и сада, север → нилометр осевого юга): от северной
+  // стены девятого яруса вверх, к штреку под верхней кромкой карты; с запада — лестница к
+  // дверце за алтарём ставкирки, с востока — сухая цистерна нилометра. Кладка штрека стареет
+  // к востоку: ставы, известняк, песчаник — ход идёт назад по времени, с третьего кольца на первое.
+  // Порядок важен: стена штрека ложится поверх боковин подхода, цистерна — поверх торца штрека
+  { id: 'u1n', name: 'Ход крипты', x0: 340, y0: 90, x1: 384, y1: 262, wh: 40, mat: 'u1', surf: 'ground' },
+  { id: 'u1', name: 'Ход крипты', x0: 84, y0: 90, x1: 868, y1: 126, wh: 40, mat: 'u1', surf: 'ground' },
+  { id: 'u1c', name: 'Сухая цистерна нилометра', poly: [[868, 64], [940, 64], [958, 82], [958, 124], [940, 142], [868, 142], [852, 124], [852, 82]], wh: 54, mat: 'nile', surf: 'ground' },
 ];
 export const KAPT = ROOMS.find(R => R.id === 'kapt');
 // печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
@@ -159,6 +168,12 @@ const TH = [
   { id: 'u_ticket', room: 'tube', x: 1662, y: 436, w: 16, h: 12, at: [1672, 470], useAction: 'under_ticket', useLabel: '<i>◆</i>ВЗЯТЬ' },
   // забой: щит стоит в конце штрека, гентри с лентой — на полотне (неподвижен — запекается)
   { id: 'u_godot', room: 'tube', wall: true, x: 1328, y: 156, w: 54, h: 132, at: [1355, 300], solid: [1336, 250, 1374, 288] },
+  // U1: лестница к дверце за алтарём ставкирки; шов кладки, где известняк стареет в песчаник;
+  // в сухой цистерне — шкала паводков и винтовая лестница наверх, в нилометр
+  { id: 'u_up_stave', room: 'u1', wall: true, stair: 'tar', steps: 9, x: 92, y: 52, w: 30, h: 38, at: [107, 104], up: 'stave' },
+  { id: 'u_u1_seam', room: 'u1', wall: true, x: 618, y: 56, w: 44, h: 32, at: [640, 104] },
+  { id: 'u_nilo_scale', room: 'u1c', wall: true, x: 872, y: 14, w: 20, h: 50, at: [884, 92] },
+  { id: 'u_up_nilometer', room: 'u1c', wall: true, stair: 'spiral', steps: 0, x: 900, y: 14, w: 36, h: 50, at: [918, 92], up: 'nilometer' },
   // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
   { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
   { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
@@ -319,6 +334,8 @@ export const DESCENTS = {
   pizzeria_enter: 'u_up_pizzeria',
   pithos_lie: 'u_up_pithos',          // ход мха: лечь в пифос и уснуть (world/mossway.js)
   burrow_down: 'u_up_burrow',         // нора у подножия огня
+  stave_altar: 'u_up_stave',          // U1: ставкирка — дверца за алтарём (второе действие; world/oldways.js)
+  nilometer_down: 'u_up_nilometer',   // U1: нилометр — винтовая лестница вниз
 };
 
 // ── где можно стоять ── (ноги x, y; запас — на полу плаща у стен)
@@ -605,6 +622,8 @@ export const MURMURS = {
   sewer: ['...прошу разъяснить...'],
   shelter: ['...все свободны...'],
   metro: ['...обратно все и так доезжают...'],
+  u1: ['...место держат...', '...каждый ряд кончается в своём веке...'],
+  u1c: ['...выше вода не поднималась...'],
 };
 export const WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)';
 const MURMUR_AT = [
@@ -928,7 +947,8 @@ const EMBER = [226, 138, 58], COLD = [138, 141, 143], FILL = [232, 220, 198], FI
 const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120, 64];
 const DAYLIGHT = [222, 198, 150];                    // «верхняя» вещь: свет дня сверху — костяной, тёплый
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
-export function underLights(px, py) {
+// sky — небо над городком { day 0..1, moon 0..1 }: видно только из сухой цистерны нилометра
+export function underLights(px, py, sky = null) {
   const k = under.cold, e = under.ember, m = moss.k, dk = moss.dark ? 1 - 0.45 * m : 1;
   // вдох на пороге: пламя встало свечкой (fl), после — ровнее; чужой сквозняк (g) прибивает
   // огонёк, пока не поздоровался; на развилке огонёк тянется к выходу
@@ -942,6 +962,10 @@ export function underLights(px, py) {
   ];
   L.push({ x: STOVE.x - 6, y: STOVE.y - 4, r: 74, color: FIRE, flicker: 0.18, intensity: 2.1 });   // печка Дежурного: тепло, приставленное сторожить мороз
   L.push({ x: STOVE.x, y: STOVE.y + 1, r: 24, color: EMBER, flicker: 0.3, intensity: 1.6 });       // жар у дверцы
+  if (sky && (sky.day > 0.02 || sky.moon > 0.02)) {                  // U1: сухая цистерна открыта небу — сверху свет дня, ночью — луны
+    const d = sky.day || 0;
+    L.push({ x: 918, y: 44, r: 66, color: d > 0.02 ? DAYLIGHT : COLD, flicker: 0, intensity: d > 0.02 ? 1.3 * d : 0.8 * sky.moon });
+  }
   if (under.upper) {                                                  // «верхняя» вещь: тёплый дневной свет на минуту
     const th = thingById(under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
     if (th) L.push({ x: th.x + th.w / 2, y: th.y + th.h / 2, r: 70, color: DAYLIGHT, flicker: 0, intensity: 1.7 * a });

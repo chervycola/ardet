@@ -403,6 +403,68 @@ const FLOORS = {
     const n = hh(x, y, 99); return n < 0.03 ? K4 : n < 0.045 ? S1 : S0;
   },
 };
+// ── U1, ход крипты: кладка стареет к востоку — ставы, известняк крипты, песчаник; ход идёт
+// назад по времени, с третьего кольца на первое. Шов эпох неровный: свой у каждого ряда ──
+const U1_B1 = 300, U1_B2 = 640;
+const u1Edge = (b, k, s) => b + q((hh(k, 0, s) - 0.5) * 26);
+function sand(x, d, H) {                                                // песчаник: блоки рядами, верх и левый край к свету
+  if (d > H - 2) return K2;
+  if (d > H - 7) return hh(x, d, 141) < 0.15 ? K2 : K3;
+  const course = Math.floor((d - 1) / 10), u = (d - 1) % 10;
+  if (u === 9) return K2;
+  const bx = (x + course * 17) % 28;
+  if (bx === 0) return K2;
+  if (bx === 1 || u === 8) return L2;
+  const n = hh(x, d, 142);
+  return n < 0.06 ? RUST : n > 0.985 ? L1 : RUST_L;
+}
+BANDS.u1 = (x, d, H) => {
+  if (x < u1Edge(U1_B1, Math.floor((d - 1) / 8), 143)) {                 // ставы: брёвна стоймя, чёрные от смолы
+    if (d <= 2) return K1;
+    if (d > H - 4) return d > H - 2 ? K1 : K3;                           // обвязка поверху
+    const sx = x % 8;
+    if (sx === 0) return K0;
+    if (sx === 1) return K3;
+    return hh(x >> 1, d >> 2, 144) < 0.08 ? K1 : K2;
+  }
+  if (x < u1Edge(U1_B2, Math.floor((d - 1) / 10), 145)) return BANDS.lime(x, d, H);
+  return sand(x, d, H);
+};
+// сухая цистерна нилометра: внизу глыбы старше любой дороги диска, выше песчаник; следы
+// паводков — гуще книзу, выше — ни одного
+const FLOODS = new Set([13, 15, 17, 20, 23, 27, 32]);
+BANDS.nile = (x, d, H) => {
+  if (d <= 12) {
+    if (d <= 1) return K1;
+    const bx = (x + (d > 6 ? 23 : 0)) % 46;
+    if (bx === 0 || d === 6 || d === 12) return K3;
+    if (bx === 1 || d === 11 || d === 5) return S1;
+    return hh(x, d, 146) < 0.07 ? K3 : S0;
+  }
+  if (FLOODS.has(d) && hh(x >> 2, d, 147) < 0.8) return MG_D;
+  return sand(x, d, H);
+};
+SIDE.u1 = SIDE.lime; LIPS.u1 = LIPS.lime;
+LIPS.nile = [L2, RUST_L, BR2, K2, K1];
+FLOORS.u1 = (x, y, R) => {
+  if (x < u1Edge(U1_B2, Math.floor((y - R.y0) / 10), 148)) return FLOORS.lime(x, y, R);
+  if (y === R.y0) return K1;
+  const n = hh(x, y, 149);
+  return n < 0.05 ? BR2 : n > 0.988 ? L2 : RUST;                         // под ногами — пыль песчаника
+};
+FLOORS.nile = (x, y) => {                                               // дно сухой цистерны: ил высох и растрескался плитками, края загнулись
+  const gx = Math.floor(x / 10), gy = Math.floor(y / 8);
+  let d1 = 1e9, d2 = 1e9, own = 0;
+  for (let j = gy - 1; j <= gy + 1; j++) for (let i = gx - 1; i <= gx + 1; i++) {
+    const cx = i * 10 + hh(i, j, 151) * 10, cy = j * 8 + hh(i, j, 152) * 8, d = Math.hypot(x + 0.5 - cx, (y + 0.5 - cy) * 1.2);
+    if (d < d1) { d2 = d1; d1 = d; own = i * 31 + j; } else if (d < d2) d2 = d;
+  }
+  const e = d2 - d1;
+  if (e < 1.1) return K1;                                               // трещина
+  if (e < 2.3) return y % 2 ? RUST_L : L2;                               // край плитки загнулся — к свету
+  return hh(own, 0, 153) < 0.35 ? RUST : BR2;
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -608,6 +670,28 @@ function stair(th) {
     r(ox, gy - 1, ow, 1, K1);
     return;
   }
+  if (kind === 'tar') {                                                 // U1: ступени к дверце за алтарём ставкирки — рама из смолёных брёвен
+    r(ox - 2, top - 2, ow + 4, gy - top + 2, K3); r(ox + ow, top - 1, 2, gy - top + 1, K1); r(ox - 2, top - 2, ow + 4, 1, K4);
+    r(ox, top, ow, gy - top, NI);
+    for (let i = 0; i < 6; i++) {                                       // ступени вверх, в темноту
+      const sy = gy - 1 - i * 4;
+      if (sy - 3 < top + 10) break;
+      r(ox + i, sy - 1, ow - 2 * i, 2, i < 2 ? K4 : i < 4 ? K3 : K2); r(ox + i, sy + 1, ow - 2 * i, 1, K1);
+    }
+    const dx = q(ox + ow / 2 - 5);                                       // наверху дверца: низкая, доски; под ней щель
+    r(dx, top + 1, 10, 8, K2); r(dx + 3, top + 1, 1, 8, K1); r(dx + 6, top + 1, 1, 8, K1); r(dx, top + 9, 10, 1, L2);
+    return;
+  }
+  if (kind === 'spiral') {                                              // U1: винтовая лестница нилометра — прорезь витком по стене шахты, наверху небо
+    for (let k = 0; k < h - 4; k++) {                                    // прорезь идёт вверх и вправо, ступени — светлой проступью
+      const yy = gy - 2 - k, xx = x + 3 + q(k * (w - 16) / (h - 4));
+      r(xx, yy, 10, 1, NI);
+      r(xx - 1, yy, 1, 1, K2); r(xx + 10, yy, 1, 1, S2);
+      if (k % 4 === 0) { r(xx, yy, 10, 1, L2); r(xx, yy - 1 < gy - h ? yy : yy - 1, 10, 1, K1); }
+    }
+    r(x + w - 14, y, 12, 2, L1); r(x + w - 14, y + 2, 12, 1, L2);       // наверху устье открыто небу: светлый край
+    return;
+  }
   if (kind === 'pithos' || kind === 'burrow') {                         // ход мха: круглая дыра наверх — в пифос (глина) или в нору (сухой мох; сверху — отсвет огня)
     const cx = x + w / 2, R0 = (w - 4) / 2, top = y + 2, ay = top + R0;
     const rim = kind === 'pithos' ? [RUST_L, RUST] : [RUST_L, BR2];
@@ -729,6 +813,18 @@ function wallThing(th) {
       r(vx - 1, y + 5, 2, 10, MG_D); r(vx + 12, y + 5, 2, 10, MG_D); r(vx - 1, y + 5, 1, 10, MG);   // рукава
       for (let j = 0; j < 4; j++) r(vx + 1, y + 7 + j * 3, 11, 1, K1);  // стёжка
       r(vx + 6, y + 4, 1, 12, K1); r(vx + 5, y + 2, 3, 1, K1);          // борт, ворот
+      break;
+    }
+    case 'u_u1_seam': {                                                 // шов кладки: трещина там, где известняк стареет в песчаник
+      for (let j = 0; j < h - 2; j++) { const cx = x + 22 + q(Math.sin(j * 0.6) * 1.5 + (hh(j, 0, 155) - 0.5) * 2); r(cx, y + 2 + j, 1, 1, j % 5 === 2 ? K1 : K0); }
+      break;
+    }
+    case 'u_nilo_scale': {                                              // шкала паводков: желобок с насечками — гуще книзу, выше ни одной; мелом приписано
+      const gx = x + 7;
+      r(gx, y + 4, 6, h - 16, K3); r(gx - 1, y + 4, 1, h - 16, S1);
+      let yy = y + h - 14;
+      for (const st of [2, 2, 3, 3, 4, 5, 6, 7]) { r(gx, yy, 6, 1, L2); r(gx + 6, yy, 2, 1, K2); yy -= st; }
+      scrawl(x + 1, y + 6, 18, 2, L1, 154, 4);                          // «выше вода не поднималась»
       break;
     }
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем

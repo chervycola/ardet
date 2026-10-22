@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js', 'world/mossway.js', 'world/beyond.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js', 'world/mossway.js', 'world/beyond.js', 'world/oldways.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
@@ -1615,8 +1615,9 @@ setCtx(ctx);
       assert(UA.useTexts[key], `спуск ${key}: нет сцены наверху`);
       const th = U.thingById(stair);
       assert(th && th.up && th.useAction === 'under_up', `спуск ${key}: нет лестницы ${stair}`);
-      const loc = M.locations.find(l => l.id === th.up);
-      assert(loc && (loc.useAction || loc.id) === key, `лестница ${stair}: наверху не «${key}»`);
+      const loc = M.locations.find(l => l.id === th.up || l.upKey === th.up);   // постройка кольца — по своему ключу
+      const alt = loc && loc.altNow && loc.altNow();
+      assert(loc && ((loc.useAction || loc.id) === key || (alt && alt.key === key)), `лестница ${stair}: наверху не «${key}»`);
     }
     const ups = U.THINGS.filter(th => th.up).map(th => th.id).sort();
     eq(ups.join(), Object.values(U.DESCENTS).sort().join(), 'лестница без спуска');
@@ -2546,6 +2547,63 @@ setCtx(ctx);
     const town = { x: 4650, y: 4000, moving: false };
     for (let i = 0; i < 400; i++) { EDG.update(town); BRT.update(town); }
     eq(BRT.getLevel(), 0, 'распад не отпустил');
+  });
+}
+
+// ═══ СТАРЫЕ ХОДЫ С КОЛЕЦ ЭПОХ (канон UNDERSIDE, волна 4; weave/UNDERGROUND.md) ═══
+{
+  const U = await imp('world/underside.js');
+  const M = await imp('world/locations.js');
+  const OW = await imp('world/oldways.js');
+  const UA = await imp('world/useActions.js');
+  const DS = await imp('world/disc.js');
+  const T0 = DS.TOWN;
+  const sideOf = (x, y) => { const dn = T0.y0 - y, ds = y - T0.y1, dw = T0.x0 - x, de = x - T0.x1, m = Math.max(dn, ds, dw, de); return m === ds ? 'south' : m === dn ? 'north' : m === dw ? 'west' : 'east'; };
+  const upOf = th => M.locations.find(l => l.id === th.up || l.upKey === th.up);
+  test('U1 «крипта»: за алтарём ставкирки (свет и сад, север) — дверца вниз; выход — нилометр осевого юга', () => {
+    const { stave, nilometer: n } = OW.oldways();
+    assert(stave && stave.archDraw && stave.name === 'ставкирка', 'ставкирки нет');
+    eq(stave.archRing, 3, 'ставкирка не в «свете и саде»'); eq(stave.archSide, 'north', 'ставкирка не на севере');
+    const alt = stave.altNow();
+    eq(alt.key, 'stave_altar', 'за алтарь — не второе действие');
+    assert(/^ar_\d+_around$/.test(stave.useAction), 'ставкирку больше не обойти');
+    eq(U.DESCENTS.stave_altar, 'u_up_stave', 'дверца не ведёт к лестнице хода');
+    eq(upOf(U.thingById('u_up_stave')), stave, 'лестница хода выводит не к ставкирке');
+    assert(n && M.locations.includes(n), 'нилометра нет среди мест');
+    const nx = n.x + n.w / 2, ny = n.y + n.h;
+    eq(DS.ringAt(nx, ny), 1, 'нилометр не в осевом'); eq(sideOf(nx, ny), 'south', 'нилометр не на юге');
+    eq(n.useAction, 'nilometer_down', 'нилометр без спуска');
+    assert(/сухая цистерна у бассейна/.test(n.look) && /больше не поднимается/.test(n.look), 'осмотр нилометра не по канону');
+    assert(UA.useTexts.nilometer_down && UA.useTexts.stave_altar, 'сцен спуска нет');
+    eq(upOf(U.thingById('u_up_nilometer')), n, 'винтовая лестница выводит не к нилометру');
+    for (const l of M.locations) if (l !== n) assert(!(l.x < n.x + n.w + 6 && l.x + l.w > n.x - 6 && l.y < n.y + n.h + 6 && l.y + l.h > n.y - 6), `нилометр налез на «${l.name}»`);
+  });
+  test('U1: внизу ход крипты — от девятого яруса к дверце за алтарём и к сухой цистерне; кладка стареет к востоку', () => {
+    const crypt = U.thingById('u_up_crypt'), stv = U.thingById('u_up_stave'), nil = U.thingById('u_up_nilometer');
+    for (const [a, b] of [[crypt, stv], [crypt, nil], [stv, nil]]) {
+      const path = U.pathTo(a.at[0], a.at[1], b.at[0], b.at[1]);
+      assert(path && path.length, `${a.id} → ${b.id}: не пройти`);
+    }
+    eq(U.placeAt(stv.at[0], stv.at[1]), 'u1', 'дверца — не в ходе крипты');
+    eq(U.placeAt(nil.at[0], nil.at[1]), 'u1c', 'винтовая лестница — не в цистерне');
+    eq(U.placeAt(900, 100), 'u1c', 'середина цистерны');
+    assert(U.MURMURS.u1c.some(l => /выше вода не поднималась/.test(l)), 'цистерна шепчет не своё');
+    const R = U.ROOMS.find(r => r.id === 'u1');
+    assert(R.x1 - R.x0 > 600, 'ход короткий');
+  });
+  test('U1: сухая цистерна открыта небу — днём свет сверху, ночью — луны; без неба — темно', () => {
+    const at = L => L.filter(l => Math.abs(l.x - 918) < 2 && Math.abs(l.y - 44) < 2);
+    eq(at(U.underLights(900, 100)).length, 0, 'свет неба без неба');
+    const d = at(U.underLights(900, 100, { day: 1, moon: 0 })), n = at(U.underLights(900, 100, { day: 0, moon: 1 }));
+    eq(d.length, 1, 'днём сверху темно'); eq(n.length, 1, 'ночью луны нет');
+    assert(d[0].intensity > n[0].intensity, 'луна ярче дня');
+  });
+  test('U1: нилометр — точки краской канона, в своей рамке', () => {
+    const n = OW.oldways().nilometer, log = [];
+    const ctx = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+    n.drawSelf(ctx, n, 0);
+    for (const [k, x, y, w, h] of log) if (k === 'fillRect') assert(x >= n.x - 1 && x + w <= n.x + n.w + 3 && y >= n.y - 1 && y + h <= n.y + n.h + 1, `нилометр вылез из рамки: ${x},${y} ${w}×${h}`);
+    assert(log.filter(([k]) => k === 'fillRect').length > 60, 'нилометр почти не нарисован');
   });
 }
 

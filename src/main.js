@@ -1140,7 +1140,7 @@ function goUnder(stairId) {
   });
 }
 function goUp(th) {
-  const loc = locations.find(l => l.id === th.up);
+  const loc = locations.find(l => l.id === th.up || l.upKey === th.up);   // постройки колец — по своему ключу (world/oldways.js)
   if (!loc) return;
   const px_ = loc.x + loc.w / 2 - 6, py_ = loc.y + loc.h + 5;
   if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
@@ -1233,7 +1233,8 @@ function stepFxUnder() {
   if (under.crackle) playCrackle(under.crackle);                    // печка Дежурного трещит
   if (under.pourSnd) playPour();                                    // кипяток — в гранёный стакан
   stepUnderLife(player);
-  lighting.sources = underLights(player.x + 6, player.y + 10);
+  const skyNow = skyAt(phaseAt(t));                                 // из сухой цистерны нилометра видно небо
+  lighting.sources = underLights(player.x + 6, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving);
@@ -1272,13 +1273,13 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt)
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer)
 {
   const m = /[?&]under(?:=(\w+))?/.exec(location.search);
   if (m) {
     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
       godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
-      moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman' }[m[1]] || 'u_up_pizzeria';
+      moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman', stave: 'u_up_stave', nilometer: 'u_up_nilometer' }[m[1]] || 'u_up_pizzeria';
     setTimeout(() => goUnder(spot), 0);
   }
 }
@@ -1647,6 +1648,7 @@ events.on('location.alt', (loc) => {
   if (!a) return;
   if (a.key === 'under_greet' && under.greet()) playBlow();
   if (a.key === 'under_lay') under.lay(loc);
+  if (a.key === 'stave_altar') sceneOrDown(a.key);   // U1: за алтарём ставкирки — дверца вниз
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
@@ -1709,15 +1711,17 @@ events.on('location.use', (loc) => {
   if (actionKey === 'shop2') { openShop('shop2'); return; }
   if (actionKey === 'shop3') { openShop('shop3'); return; }
   // Look-based actions
-  const action = useTexts[actionKey];
-  // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
-  const down = DESCENTS[actionKey];
+  sceneOrDown(actionKey);
+});
+// спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
+function sceneOrDown(actionKey) {
+  const action = useTexts[actionKey], down = DESCENTS[actionKey];
   if (down && under.seen.has(actionKey)) { goUnder(down); return; }
   if (action) {
     showLook({ name: action.title, look: action.text });
     if (down) under.seen.add(actionKey);
   }
-});
+}
 
 console.log(`ARDET V2 | viewport ${scaler.vw}×${scaler.vh} | scale ${scaler.scale}x | ${locations.length} locations`);
 requestAnimationFrame(loop);

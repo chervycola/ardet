@@ -173,6 +173,9 @@ buildMossway(locations);
 // за кольцом, север: столб утерянного горизонта у северной тропы
 import { buildBeyond } from './beyond.js';
 buildBeyond(locations);
+// старые ходы с колец эпох (изнанка, волна 4): концы наверху — ставкирка, нилометр…
+import { buildOldways } from './oldways.js';
+buildOldways(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and
