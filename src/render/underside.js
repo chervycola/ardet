@@ -465,6 +465,31 @@ FLOORS.nile = (x, y) => {                                               // дн�
   return hh(own, 0, 153) < 0.35 ? RUST : BR2;
 };
 
+// ── U2, катакомбы под садом света: известняк кладкой, черепа поясом, ниже кости торцами;
+// под сводом — корни сада (как в срезе на линии) ──
+const SKULL = ['.LLL.', 'BBBBB', 'BkBkB', 'LLLLL', '.l.l.'];
+BANDS.cata = (x, d, H) => {
+  if (d > H - 3) return hh(x >> 1, 0, 160) < 0.3 ? BR2 : K2;
+  if (d > H - 9) { const rl = 3 + q(hh(x, 2, 161) * 6); return hh(x, 1, 161) < 0.1 && d > H - 3 - rl ? (d & 1 ? BR2 : K4) : hh(x, d, 162) < 0.2 ? K2 : K3; }   // корни сада свисают сквозь свод
+  if (d >= 15 && d <= 19) {                                             // черепа рядами
+    const c = SKULL[19 - d][x % 6];
+    return c === 'L' ? L1 : c === 'B' ? BO : c === 'k' ? K1 : c === 'l' ? L2 : S0;
+  }
+  if (d >= 8 && d <= 11) {                                              // кости торцами, кладкой
+    const v = (d - 8) % 2, u = (x + (d > 9 ? 1 : 0)) % 3;
+    return u === 2 ? S0 : v ? L1 : BO;
+  }
+  const course = Math.floor((d - 1) / 5), v = (d - 1) % 5;              // белый известняк кладкой
+  if (v === 4 || (x + course * 7) % 13 === 0) return S0;
+  const n = hh(x, d, 163); return n < 0.08 ? S1 : n > 0.97 ? BO : L2;
+};
+SIDE.cata = [K2, S2, S0, S0, S2, K1]; LIPS.cata = [L2, S0, S2, K2, K1];
+FLOORS.cata = (x, y, R) => {                                            // утоптанная земля, в ней костяная крошка
+  if (y === R.y0) return K1;
+  const n = hh(x, y, 164);
+  return n < 0.012 ? L2 : n < 0.05 ? K3 : n > 0.985 ? RUST : BR2;
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -680,6 +705,26 @@ function stair(th) {
     }
     const dx = q(ox + ow / 2 - 5);                                       // наверху дверца: низкая, доски; под ней щель
     r(dx, top + 1, 10, 8, K2); r(dx + 3, top + 1, 1, 8, K1); r(dx + 6, top + 1, 1, 8, K1); r(dx, top + 9, 10, 1, L2);
+    return;
+  }
+  if (kind === 'gothic') {                                              // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба
+    const cx = x + w / 2, half = ow / 2 + 2;
+    for (let yy = top - 4; yy < gy; yy++) {
+      const u = Math.max(0, Math.min(1, (yy - top + 4) / 14)), hw = q(half * Math.sqrt(u));   // стрельчатый верх
+      if (hw < 1) continue;
+      r(q(cx - hw), yy, 2 * hw, 1, S1); r(q(cx + hw) - 2, yy, 2, 1, S2);
+      if (hw > 3) r(q(cx - hw) + 2, yy, 2 * hw - 4, 1, NI);
+    }
+    for (let i = 0; i < 6; i++) {                                       // ступени вверх, в темноту
+      const sy = gy - 1 - i * 4;
+      if (sy - 3 < top + 12) break;
+      r(ox + i + 1, sy - 1, ow - 2 * i - 2, 2, i < 2 ? S1 : i < 4 ? S0 : K3); r(ox + i + 1, sy + 1, ow - 2 * i - 2, 1, K1);
+    }
+    for (let k = 0; k < 3; k++) {                                       // наверху за проёмом — стеллаж погреба: полки, бутылки
+      const sy = top + 3 + k * 4;
+      r(q(cx - 6), sy, 12, 1, BR2);
+      for (let b = 0; b < 5; b++) r(q(cx - 5) + b * 2 + (k & 1), sy - 2, 1, 2, hh(b, k, 165) < 0.3 ? MG_D : K3);
+    }
     return;
   }
   if (kind === 'spiral') {                                              // U1: винтовая лестница нилометра — прорезь витком по стене шахты, наверху небо
@@ -1286,7 +1331,25 @@ function dutyMan(th) {                                                 // Деж
   if (g < 150) { G.globalAlpha = 0.55 * Math.sin(g / 150 * Math.PI); r(hx + 3, hy + 6, 1, 1, AS); r(hx + 7, hy + 6, 1, 1, AS); G.globalAlpha = 1; }
 }
 
+// U2: столб корней посреди хода — как колонна недостроенного портика (канон ритуала
+// «Гербарий темноты»): корни сада сплелись от свода до пола, у пола расходятся
+function rootPillar(th) {
+  const cx = th.x + th.w / 2, top = th.y, gy = th.solid[3];
+  for (let k = 0; k < 4; k++) {                                         // пряди вьются вокруг оси
+    for (let y = top; y < gy; y++) {
+      const ph = (y - top) * 0.21 + k * 1.57, dx = Math.sin(ph) * 3.2, front = Math.cos(ph) > 0;
+      r(q(cx + dx - 1), y, 2, 1, front ? (dx < 0 ? RUST_L : RUST) : BR2);
+      if (front && hh(k, y, 166) < 0.12) r(q(cx + dx - 1), y, 1, 1, K4);
+    }
+  }
+  for (let k = 0; k < 6; k++) {                                         // у пола корни расходятся
+    const dir = k < 3 ? -1 : 1, len = 3 + q(hh(k, 1, 167) * 5);
+    for (let i = 0; i < len; i++) r(q(cx + dir * (2 + i)), gy - 1 + (i > len / 2 ? 1 : 0) - (k % 3 === 0 ? 1 : 0), 1, 1, i < len - 1 ? BR2 : K4);
+  }
+  r(q(cx - 4), gy, 9, 1, K1);
+}
 const FLOOR_DRAW = {
+  u_roots: rootPillar,
   u_duty_log: dutyTable,
   u_watchman: dutyMan,
   u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },

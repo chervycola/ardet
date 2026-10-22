@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='d9b7968 · 2026-10-22';console.log('[оттиск]', 'd9b7968 · 2026-10-22');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5f7e86c · 2026-10-22';console.log('[оттиск]', '5f7e86c · 2026-10-22');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -17443,6 +17443,15 @@ System.register("world/useActions", [], function (exports_40, context_40) {
                 'nilometer_down': { title: `ВИНТОВАЯ ЛЕСТНИЦА`, text: `Ты спускаешься по винтовой лестнице вдоль шкалы паводков. Отметки идут навстречу — всё гуще.
 
 Внизу кладка старше любой дороги диска.` },
+                // U2 «катакомбы»: канон — «дорога вглубь… тень портика расчерчена на платные полосы; в
+                // глубине — тёмная дверь»; «винный погреб, за стеллажом вторая дверь: для вина и для
+                // рукописей, которые жгли» (пасхалка В2); «полосы никто не взимает», «ниже погреба» — нов.
+                'colonnade_door': { title: `ВГЛУБЬ`, text: `Ты идёшь вглубь колоннады, мимо прилавков, по платным полосам тени. Плату никто не взимает: прилавки пусты, бирки на месте.
+
+В глубине — тёмная дверь. За ней ступени вниз; оттуда тянет известью и корнями.` },
+                'cathedral_crypt': { title: `КРИПТА СОБОРА`, text: `Ступени ведут в крипту. Там винный погреб; за стеллажом — вторая дверь: для вина и для рукописей, которые жгли.
+
+За второй дверью ступени идут ниже погреба.` },
                 'crater_coin': { title: `ПОДНЯТЬ МОНЕТУ`, text: `Ты садишься на корточки. Монета вплавлена в песок. Ты тянешь. Не идёт.
 
 Ты тянешь сильнее. Палец соскальзывает с гладкой поверхности — ни орла, ни решки, ни ребра. Просто диск. Загадать на него нечего.
@@ -19687,6 +19696,11 @@ System.register("content/underside", [], function (exports_55, context_55) {
 Внизу кладка старше любой дороги диска. Река, которую он мерил, больше не поднимается.` },
                 // нов.
                 u_up_nilometer: { name: 'Винтовая лестница', look: `Винтовая лестница витком по стене шахты, наверх. Там — сухой колодец нилометра, осевой юг. Оттуда видно небо.` },
+                // U2 «катакомбы»: тёмная дверь колоннады (портики, юг) → крипта собора (свет и сад, запад).
+                // Столб корней — канон ритуала «Гербарий темноты»; погреб — пасхалка В2; дверь изнутри — нов.
+                u_up_colonnade: { name: 'Тёмная дверь', look: `Каменные ступени наверх, к тёмной двери в глубине колоннады. Сверху тянет зноем: там тень продают полосами.` },
+                u_roots: { name: 'Столб корней', look: `Столб корней посреди хода, как колонна недостроенного портика. Корни сада света проросли сквозь свод и дошли до пола.` },
+                u_up_cathedral: { name: 'Ступени в крипту собора', look: `Ступени наверх, в крипту чёрного собора. Там винный погреб; за стеллажом вторая дверь — для вина и для рукописей, которые жгли.` },
             });
             // строчка над меню — как у мест наверху (ui/ui.js: menuInscriptions)
             exports_55("UNDER_INSC", UNDER_INSC = {
@@ -19715,6 +19729,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
                 u_moss: 'скорость хода — один пульс в секунду. превышение гасится.',
                 u_up_pithos: '...я мягче, чем числюсь...',
                 u_nilo_scale: 'выше вода не поднималась.',
+                u_up_cathedral: 'для вина и для рукописей, которые жгли.',
             });
         }
     };
@@ -20154,6 +20169,12 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u1n', name: 'Ход крипты', x0: 340, y0: 90, x1: 384, y1: 262, wh: 40, mat: 'u1', surf: 'ground' },
                 { id: 'u1', name: 'Ход крипты', x0: 84, y0: 90, x1: 868, y1: 126, wh: 40, mat: 'u1', surf: 'ground' },
                 { id: 'u1c', name: 'Сухая цистерна нилометра', poly: [[868, 64], [940, 64], [958, 82], [958, 124], [940, 142], [868, 142], [852, 124], [852, 82]], wh: 54, mat: 'nile', surf: 'ground' },
+                // U2 «катакомбы» (канон: тёмная дверь в глубине красной колоннады, портики · юг → крипта
+                // собора, свет и сад · запад): линия режет их насквозь — на север ход завален (срез), на юг,
+                // к зрителю, открыт: от среза вниз, в галерею-оссуарий под садом света; с запада — ступени к
+                // тёмной двери колоннады, с востока — в крипту чёрного собора
+                { id: 'u2n', name: 'Катакомбы', x0: 404, y0: 470, x1: 448, y1: 620, wh: 30, mat: 'cata', surf: 'ground' },
+                { id: 'u2', name: 'Катакомбы', x0: 236, y0: 610, x1: 500, y1: 650, wh: 46, mat: 'cata', surf: 'ground' },
             ]);
             exports_56("KAPT", KAPT = ROOMS.find(R => R.id === 'kapt'));
             // печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
@@ -20254,6 +20275,11 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_u1_seam', room: 'u1', wall: true, x: 618, y: 56, w: 44, h: 32, at: [640, 104] },
                 { id: 'u_nilo_scale', room: 'u1c', wall: true, x: 872, y: 14, w: 20, h: 50, at: [884, 92] },
                 { id: 'u_up_nilometer', room: 'u1c', wall: true, stair: 'spiral', steps: 0, x: 900, y: 14, w: 36, h: 50, at: [918, 92], up: 'nilometer' },
+                // U2: ступени к тёмной двери колоннады; столб корней посреди хода (канон ритуала); ступени
+                // в крипту собора
+                { id: 'u_up_colonnade', room: 'u2', wall: true, stair: 'stone', steps: 9, x: 244, y: 570, w: 30, h: 40, at: [259, 626], up: 'colonnade' },
+                { id: 'u_roots', room: 'u2', x: 324, y: 572, w: 14, h: 66, at: [331, 646], solid: [326, 628, 336, 636] },
+                { id: 'u_up_cathedral', room: 'u2', wall: true, stair: 'gothic', steps: 9, x: 460, y: 566, w: 32, h: 44, at: [476, 626], up: 'cathedral' },
                 // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
                 { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
                 { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
@@ -20396,6 +20422,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 burrow_down: 'u_up_burrow', // нора у подножия огня
                 stave_altar: 'u_up_stave', // U1: ставкирка — дверца за алтарём (второе действие; world/oldways.js)
                 nilometer_down: 'u_up_nilometer', // U1: нилометр — винтовая лестница вниз
+                colonnade_door: 'u_up_colonnade', // U2: красная колоннада — тёмная дверь в глубине
+                cathedral_crypt: 'u_up_cathedral', // U2: чёрный собор — в крипту (второе действие)
             });
             exports_56("inWater", inWater = (x, y) => placeAt(x, y) === 'base');
             // ── путь по клику: сетка по 4 точки, обход в ширину, прямые без лишних углов ──
@@ -20534,6 +20562,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 metro: ['...обратно все и так доезжают...'],
                 u1: ['...место держат...', '...каждый ряд кончается в своём веке...'],
                 u1c: ['...выше вода не поднималась...'],
+                u2: ['...гербаризация без описи...', '...для рукописей, которые жгли...'],
             });
             exports_56("WD_SILENCE", WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)');
             MURMUR_AT = [
@@ -22028,7 +22057,7 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
 });
 System.register("world/oldways", ["world/disc"], function (exports_61, context_61) {
     "use strict";
-    var disc_js_16, NI, AS, K0, K1, K2, K3, BR2, L1, L2, S1, S2, RUST, RUST_L, R, sideOf, NW, NH, NILO_LOOK, nilometer, stave, oldways;
+    var disc_js_16, NI, AS, K0, K1, K2, K3, BR2, L1, L2, S1, S2, RUST, RUST_L, KV, B3, D4, D5, R, sideOf, NW, NH, NILO_LOOK, archOf, CW, CH, COLON_LOOK, nilometer, stave, colonnade, cathedral, oldways;
     var __moduleName = context_61 && context_61.id;
     function drawNilometer(ctx, loc) {
         const x = loc.x, gy = loc.y + loc.h;
@@ -22070,43 +22099,91 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
         R(ctx, x + 8, gy - 6, 2, 1, S2);
         R(ctx, x + 23, gy - 2, 3, 1, S2); // выщербины
     }
-    // где встать нилометру: первое кольцо, юг; не на чужом дворе, не у табличек, не на дороге;
-    // ближе к пилону с обелиском — египетское у египетского
-    function niloPlace(locations) {
+    // где встать месту w×h в клетке «кольцо n · сторона»: не на чужом дворе, не у табличек, не на
+    // радиальной тропе; ближе к anchor (постройке-соседке по смыслу)
+    function placeIn(locations, n, side, w, h, anchor) {
         const arch = locations.filter(l => l.archDraw), small = locations.filter(l => !l.archDraw);
-        const pylon = arch.find(l => l.archRing === 1 && l.archSide === 'south' && l.name === 'пилон с обелиском' && l.archX < (disc_js_16.TOWN.x0 + disc_js_16.TOWN.x1) / 2);
         const busy = (x0, gy) => {
-            const x1 = x0 + NW, y0 = gy - NH;
+            const x1 = x0 + w, y0 = gy - h;
             if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50))
                 return true;
             if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30))
                 return true;
-            for (let d = 0; d <= 200; d += 10)
-                if (Math.abs(disc_js_16.trailPoint('south', d).x - (x0 + NW / 2)) < 60 && Math.abs(disc_js_16.TOWN.y1 + d - gy) < 30)
+            const cx = x0 + w / 2;
+            for (let d = 0; d <= 1900; d += 10) { // радиальная тропа своей стороны
+                const p = disc_js_16.trailPoint(side === 'plain' ? 'north' : side, d);
+                if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40)
                     return true;
+            }
             return false;
         };
-        const cands = [];
-        for (let x = disc_js_16.TOWN.x0 + 120; x < disc_js_16.TOWN.x1 - 120; x += 12)
-            for (let gy = disc_js_16.TOWN.y1 + 70; gy <= disc_js_16.TOWN.y1 + 170; gy += 10) {
-                if (disc_js_16.ringAt(x + NW / 2, gy) !== 1 || sideOf(x + NW / 2, gy) !== 'south' || busy(x, gy))
+        const cands = [], R0 = 200 * (n - 1) + 70, R1 = 200 * n - 30;
+        const box = side === 'south' ? [disc_js_16.TOWN.x0 + 120, disc_js_16.TOWN.x1 - 120, disc_js_16.TOWN.y1 + R0, disc_js_16.TOWN.y1 + R1]
+            : side === 'north' ? [disc_js_16.TOWN.x0 + 120, disc_js_16.TOWN.x1 - 120, disc_js_16.TOWN.y0 - R1, disc_js_16.TOWN.y0 - R0]
+                : side === 'west' ? [disc_js_16.TOWN.x0 - R1, disc_js_16.TOWN.x0 - R0, disc_js_16.TOWN.y0 + 120, disc_js_16.TOWN.y1 - 60]
+                    : [disc_js_16.TOWN.x1 + R0, disc_js_16.TOWN.x1 + R1, disc_js_16.TOWN.y0 + 120, disc_js_16.TOWN.y1 - 60];
+        for (let x = box[0]; x < box[1]; x += 12)
+            for (let gy = box[2]; gy <= box[3]; gy += 10) {
+                if (disc_js_16.ringAt(x + w / 2, gy) !== n || sideOf(x + w / 2, gy) !== side || busy(x, gy))
                     continue;
-                cands.push({ x, gy, d: pylon ? Math.hypot(x + NW / 2 - pylon.archX, gy - pylon.archGy) : 0 });
+                cands.push({ x, gy, d: anchor ? Math.hypot(x + w / 2 - anchor.archX, gy - anchor.archGy) : 0 });
             }
         cands.sort((a, b) => a.d - b.d);
-        return cands[0] || { x: disc_js_16.TOWN.x0 + 600, gy: disc_js_16.TOWN.y1 + 120 };
+        return cands[0] || null;
+    }
+    function drawColonnade(ctx, loc) {
+        const x = loc.x, gy = loc.y + loc.h;
+        ctx.globalAlpha = 0.45;
+        R(ctx, x + 6, gy, CW - 4, 1, K0);
+        ctx.globalAlpha = 1;
+        R(ctx, x + 2, gy - 40, CW - 4, 34, K2); // задняя стена в тени портика
+        for (let y = gy - 40; y < gy - 6; y += 6)
+            R(ctx, x + 2, y, CW - 4, 1, D4);
+        R(ctx, x + 29, gy - 26, 9, 20, NI);
+        R(ctx, x + 28, gy - 27, 11, 1, D5);
+        R(ctx, x + 28, gy - 26, 1, 20, D5); // тёмная дверь в глубине
+        for (const bx of [6, 18, 42, 54]) { // прилавки первой витрины
+            R(ctx, x + bx, gy - 13, 8, 2, RUST_L);
+            R(ctx, x + bx, gy - 11, 8, 5, RUST);
+            R(ctx, x + bx, gy - 13, 8, 1, L2);
+            for (let i = 0; i < 3; i++)
+                R(ctx, x + bx + 1 + i * 3, gy - 15, 2, 2, i === 1 ? L2 : BR2);
+        }
+        // пол в тени: полосы платные — через шесть точек, у каждой бирка
+        R(ctx, x + 1, gy - 6, CW - 2, 4, K1);
+        for (let px = x + 4; px < x + CW - 2; px += 6) {
+            R(ctx, px, gy - 6, 1, 4, L2);
+            R(ctx, px + 1, gy - 5, 2, 1, L1);
+        }
+        R(ctx, x, gy - 2, CW, 2, L2);
+        R(ctx, x, gy - 2, CW, 1, L1);
+        R(ctx, x + CW - 1, gy - 2, 1, 2, AS); // ступень
+        for (const cx of [4, 16, 28, 38, 50, 62]) { // колонны: киноварь, тень справа
+            R(ctx, x + cx - 1, gy - 38, 3, 32, KV);
+            R(ctx, x + cx + 1, gy - 38, 1, 32, B3);
+            R(ctx, x + cx - 2, gy - 40, 5, 2, L2);
+            R(ctx, x + cx - 2, gy - 40, 5, 1, L1); // капитель
+            R(ctx, x + cx - 2, gy - 7, 5, 1, L2); // база
+        }
+        R(ctx, x, gy - 45, CW, 5, L2);
+        R(ctx, x, gy - 45, CW, 1, L1);
+        R(ctx, x, gy - 42, CW, 1, D4); // архитрав
+        R(ctx, x - 1, gy - 47, CW + 2, 2, L1);
+        R(ctx, x + CW, gy - 47, 1, 7, AS);
+        R(ctx, x + CW - 1, gy - 45, 1, 5, AS); // карниз; кромка пеплом
+        for (let fx = x + 3; fx < x + CW - 3; fx += 4)
+            R(ctx, fx, gy - 44, 2, 1, KV); // киноварный фриз
     }
     function buildOldways(locations) {
         // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
-        const tr = disc_js_16.trailPoint('north', 500).x;
-        stave = locations.filter(l => l.archDraw && l.archRing === 3 && l.archSide === 'north' && l.name === 'ставкирка')
-            .sort((a, b) => Math.abs(a.archX - tr) - Math.abs(b.archX - tr))[0] || null;
+        stave = archOf(locations, 3, 'north', 'ставкирка', disc_js_16.trailPoint('north', 500).x);
         if (stave) {
             stave.upKey = 'stave'; // сюда выводит лестница хода крипты
             stave.altNow = () => ({ key: 'stave_altar', label: '<i>✝</i>ЗА АЛТАРЬ' });
         }
-        // U1, выход: нилометр
-        const p = niloPlace(locations);
+        // U1, выход: нилометр — у пилона с обелиском: египетское у египетского
+        const pylon = archOf(locations, 1, 'south', 'пилон с обелиском', disc_js_16.TOWN.x0);
+        const p = placeIn(locations, 1, 'south', NW, NH, pylon) || { x: disc_js_16.TOWN.x0 + 600, gy: disc_js_16.TOWN.y1 + 120 };
         nilometer = {
             id: 'nilometer', name: 'Нилометр', zone: 'street',
             x: p.x, y: p.gy - NH, w: NW, h: NH, solidBox: { x: p.x + 2, y: p.gy - 8, w: NW - 4, h: 8 },
@@ -22114,6 +22191,22 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             useAction: 'nilometer_down', useLabel: '<i>↓</i>ВИНТОВАЯ ЛЕСТНИЦА',
         };
         locations.push(nilometer);
+        // U2, вход: красная колоннада — у сада Эпикура: тень бесплатна только за его калиткой
+        const garden = archOf(locations, 2, 'south', 'сад Эпикура', disc_js_16.TOWN.x1);
+        const c = placeIn(locations, 2, 'south', CW, CH, garden) || { x: disc_js_16.TOWN.x0 + 1800, gy: disc_js_16.TOWN.y1 + 320 };
+        colonnade = {
+            id: 'colonnade', name: 'Красная колоннада', zone: 'street',
+            x: c.x, y: c.gy - CH, w: CW, h: CH, solidBox: { x: c.x, y: c.gy - 7, w: CW, h: 7 },
+            look: COLON_LOOK, drawSelf: drawColonnade,
+            useAction: 'colonnade_door', useLabel: '<i>→</i>ВГЛУБЬ',
+        };
+        locations.push(colonnade);
+        // U2, выход: крипта чёрного собора — у западной тропы
+        cathedral = archOf(locations, 3, 'west', 'чёрный собор', 0);
+        if (cathedral) {
+            cathedral.upKey = 'cathedral';
+            cathedral.altNow = () => ({ key: 'cathedral_crypt', label: '<i>✝</i>В КРИПТУ' });
+        }
     }
     exports_61("buildOldways", buildOldways);
     return {
@@ -22126,7 +22219,7 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             NI = '#0D0B0A', AS = '#8A8D8F';
             K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a';
             BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#5e5e5d', S2 = '#33302e';
-            RUST = '#4a3420', RUST_L = '#6b4a2c';
+            RUST = '#4a3420', RUST_L = '#6b4a2c', KV = '#C23B2B', B3 = '#3a1c14', D4 = '#34302a', D5 = '#3a3328';
             R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
             sideOf = (x, y) => {
                 const dn = disc_js_16.TOWN.y0 - y, ds = y - disc_js_16.TOWN.y1, dw = disc_js_16.TOWN.x0 - x, de = x - disc_js_16.TOWN.x1, m = Math.max(dn, ds, dw, de);
@@ -22139,8 +22232,17 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             // мел над верхней; слева по стенке — ступени витком вниз, в темноту
             NW = 34, NH = 26;
             NILO_LOOK = 'Нилометр — сухая цистерна у бассейна. Колодец со шкалой паводков; по стене — винтовая лестница вниз. Река, которую он мерил, больше не поднимается.';
-            nilometer = null, stave = null;
-            exports_61("oldways", oldways = () => ({ nilometer, stave }));
+            archOf = (locations, ring, side, name, nearX) => locations.filter(l => l.archDraw && l.archRing === ring && l.archSide === side && l.name === name)
+                .sort((a, b) => Math.abs(a.archX - nearX) - Math.abs(b.archX - nearX))[0] || null;
+            // ── U2: красная колоннада — «дорога вглубь, между колоннами прилавки первой витрины; тень
+            //    портика расчерчена на платные полосы; в глубине — тёмная дверь» (канон) ──
+            // Рисунок: шесть киноварных колонн на ступени, архитрав с карнизом; за колоннами — задняя
+            // стена в тени, в средней ячейке тёмная дверь; в боковых — прилавки; пол в тени портика
+            // расчерчен полосами с бирками цены. Свет слева, кромка пеплом справа
+            CW = 66, CH = 48;
+            COLON_LOOK = 'Красная колоннада: дорога вглубь, между колоннами прилавки первой витрины. Тень портика расчерчена на платные полосы. В глубине — тёмная дверь.';
+            nilometer = null, stave = null, colonnade = null, cathedral = null;
+            exports_61("oldways", oldways = () => ({ nilometer, stave, colonnade, cathedral }));
         }
     };
 });
@@ -34780,6 +34882,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 town_well: 'возвращено. владелец выбыл.',
                 horizon_pole: 'нашедшему — вернуть.',
                 nilometer: 'река больше не поднимается.',
+                colonnade: 'тень расчерчена на платные полосы.',
                 overpass: 'тишина — было общим. продано. органа нет.',
                 riverbed: 'дед помнил реку. отец — ручей. сын — лужу. внук — пыль.',
                 billboard: 'галочка — бог после бога.',
@@ -47402,7 +47505,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_141, context_141) {
     "use strict";
-    var time_js_40, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, U1_B1, U1_B2, u1Edge, FLOODS, yAt, inBay, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, pouring, flare, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
+    var time_js_40, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, U1_B1, U1_B2, u1Edge, FLOODS, SKULL, yAt, inBay, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, pouring, flare, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
     var __moduleName = context_141 && context_141.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -47955,6 +48058,32 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             r(dx + 3, top + 1, 1, 8, K1);
             r(dx + 6, top + 1, 1, 8, K1);
             r(dx, top + 9, 10, 1, L2);
+            return;
+        }
+        if (kind === 'gothic') { // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба
+            const cx = x + w / 2, half = ow / 2 + 2;
+            for (let yy = top - 4; yy < gy; yy++) {
+                const u = Math.max(0, Math.min(1, (yy - top + 4) / 14)), hw = q(half * Math.sqrt(u)); // стрельчатый верх
+                if (hw < 1)
+                    continue;
+                r(q(cx - hw), yy, 2 * hw, 1, S1);
+                r(q(cx + hw) - 2, yy, 2, 1, S2);
+                if (hw > 3)
+                    r(q(cx - hw) + 2, yy, 2 * hw - 4, 1, NI);
+            }
+            for (let i = 0; i < 6; i++) { // ступени вверх, в темноту
+                const sy = gy - 1 - i * 4;
+                if (sy - 3 < top + 12)
+                    break;
+                r(ox + i + 1, sy - 1, ow - 2 * i - 2, 2, i < 2 ? S1 : i < 4 ? S0 : K3);
+                r(ox + i + 1, sy + 1, ow - 2 * i - 2, 1, K1);
+            }
+            for (let k = 0; k < 3; k++) { // наверху за проёмом — стеллаж погреба: полки, бутылки
+                const sy = top + 3 + k * 4;
+                r(q(cx - 6), sy, 12, 1, BR2);
+                for (let b = 0; b < 5; b++)
+                    r(q(cx - 5) + b * 2 + (k & 1), sy - 2, 1, 2, hh(b, k, 165) < 0.3 ? MG_D : K3);
+            }
             return;
         }
         if (kind === 'spiral') { // U1: винтовая лестница нилометра — прорезь витком по стене шахты, наверху небо
@@ -48960,6 +49089,25 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             G.globalAlpha = 1;
         }
     }
+    // U2: столб корней посреди хода — как колонна недостроенного портика (канон ритуала
+    // «Гербарий темноты»): корни сада сплелись от свода до пола, у пола расходятся
+    function rootPillar(th) {
+        const cx = th.x + th.w / 2, top = th.y, gy = th.solid[3];
+        for (let k = 0; k < 4; k++) { // пряди вьются вокруг оси
+            for (let y = top; y < gy; y++) {
+                const ph = (y - top) * 0.21 + k * 1.57, dx = Math.sin(ph) * 3.2, front = Math.cos(ph) > 0;
+                r(q(cx + dx - 1), y, 2, 1, front ? (dx < 0 ? RUST_L : RUST) : BR2);
+                if (front && hh(k, y, 166) < 0.12)
+                    r(q(cx + dx - 1), y, 1, 1, K4);
+            }
+        }
+        for (let k = 0; k < 6; k++) { // у пола корни расходятся
+            const dir = k < 3 ? -1 : 1, len = 3 + q(hh(k, 1, 167) * 5);
+            for (let i = 0; i < len; i++)
+                r(q(cx + dir * (2 + i)), gy - 1 + (i > len / 2 ? 1 : 0) - (k % 3 === 0 ? 1 : 0), 1, 1, i < len - 1 ? BR2 : K4);
+        }
+        r(q(cx - 4), gy, 9, 1, K1);
+    }
     // тоннель вдохнул (ритуал «Вдох на пороге»): пыль у уголька уходит внутрь, в (dx, dy)
     function inhaleDust(x, y, dx, dy) {
         for (let k = 0; k < 26; k++) {
@@ -49847,6 +49995,38 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     return y % 2 ? RUST_L : L2; // край плитки загнулся — к свету
                 return hh(own, 0, 153) < 0.35 ? RUST : BR2;
             };
+            // ── U2, катакомбы под садом света: известняк кладкой, черепа поясом, ниже кости торцами;
+            // под сводом — корни сада (как в срезе на линии) ──
+            SKULL = ['.LLL.', 'BBBBB', 'BkBkB', 'LLLLL', '.l.l.'];
+            BANDS.cata = (x, d, H) => {
+                if (d > H - 3)
+                    return hh(x >> 1, 0, 160) < 0.3 ? BR2 : K2;
+                if (d > H - 9) {
+                    const rl = 3 + q(hh(x, 2, 161) * 6);
+                    return hh(x, 1, 161) < 0.1 && d > H - 3 - rl ? (d & 1 ? BR2 : K4) : hh(x, d, 162) < 0.2 ? K2 : K3;
+                } // корни сада свисают сквозь свод
+                if (d >= 15 && d <= 19) { // черепа рядами
+                    const c = SKULL[19 - d][x % 6];
+                    return c === 'L' ? L1 : c === 'B' ? BO : c === 'k' ? K1 : c === 'l' ? L2 : S0;
+                }
+                if (d >= 8 && d <= 11) { // кости торцами, кладкой
+                    const v = (d - 8) % 2, u = (x + (d > 9 ? 1 : 0)) % 3;
+                    return u === 2 ? S0 : v ? L1 : BO;
+                }
+                const course = Math.floor((d - 1) / 5), v = (d - 1) % 5; // белый известняк кладкой
+                if (v === 4 || (x + course * 7) % 13 === 0)
+                    return S0;
+                const n = hh(x, d, 163);
+                return n < 0.08 ? S1 : n > 0.97 ? BO : L2;
+            };
+            SIDE.cata = [K2, S2, S0, S0, S2, K1];
+            LIPS.cata = [L2, S0, S2, K2, K1];
+            FLOORS.cata = (x, y, R) => {
+                if (y === R.y0)
+                    return K1;
+                const n = hh(x, y, 164);
+                return n < 0.012 ? L2 : n < 0.05 ? K3 : n > 0.985 ? RUST : BR2;
+            };
             yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
             inBay = x => x >= underside_js_3.KAPT.x0 - 6 && x < underside_js_3.KAPT.x1 + 6; // каптёрка: срез жилы там не нужен — пол уходит дальше
             // ═══ ХОД МХА: круглый лаз, стены в подушках мха (канон U6) ═══
@@ -49924,6 +50104,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             pouring = () => underside_js_3.under.duty.st === 'pour' && underside_js_3.under.duty.t >= 30 && underside_js_3.under.duty.t < 66;
             flare = () => (time_js_40.t % 600 < 90 && underside_js_3.under.duty.st === 'sit' ? Math.sin(Math.PI * (time_js_40.t % 600) / 90) : 0); // подкинул в печку
             FLOOR_DRAW = {
+                u_roots: rootPillar,
                 u_duty_log: dutyTable,
                 u_watchman: dutyMan,
                 u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
@@ -51984,13 +52165,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // внизу — мира сверху нет: ни неба, ни погоды, ни ворон; свет — уголёк
             // странника; время идёт, как шло.
             surfaceLights = null;
-            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer)
+            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral)
             {
                 const m = /[?&]under(?:=(\w+))?/.exec(location.search);
                 if (m) {
                     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
                         godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
-                        moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman', stave: 'u_up_stave', nilometer: 'u_up_nilometer' }[m[1]] || 'u_up_pizzeria';
+                        moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman', stave: 'u_up_stave', nilometer: 'u_up_nilometer', colonnade: 'u_up_colonnade', cathedral: 'u_up_cathedral' }[m[1]] || 'u_up_pizzeria';
                     setTimeout(() => goUnder(spot), 0);
                 }
             }
@@ -52189,8 +52370,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     audio_js_11.playBlow();
                 if (a.key === 'under_lay')
                     underside_js_4.under.lay(loc);
-                if (a.key === 'stave_altar')
-                    sceneOrDown(a.key); // U1: за алтарём ставкирки — дверца вниз
+                if (underside_js_4.DESCENTS[a.key])
+                    sceneOrDown(a.key); // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
             });
             events_js_8.events.on('location.use', (loc) => {
                 if (loc.id === 'terminal') {

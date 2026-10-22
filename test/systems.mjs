@@ -2598,12 +2598,39 @@ setCtx(ctx);
     eq(d.length, 1, 'днём сверху темно'); eq(n.length, 1, 'ночью луны нет');
     assert(d[0].intensity > n[0].intensity, 'луна ярче дня');
   });
-  test('U1: нилометр — точки краской канона, в своей рамке', () => {
-    const n = OW.oldways().nilometer, log = [];
-    const ctx = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
-    n.drawSelf(ctx, n, 0);
-    for (const [k, x, y, w, h] of log) if (k === 'fillRect') assert(x >= n.x - 1 && x + w <= n.x + n.w + 3 && y >= n.y - 1 && y + h <= n.y + n.h + 1, `нилометр вылез из рамки: ${x},${y} ${w}×${h}`);
-    assert(log.filter(([k]) => k === 'fillRect').length > 60, 'нилометр почти не нарисован');
+  test('U1, U2: места наверху — точки в своей рамке', () => {
+    for (const k of ['nilometer', 'colonnade']) {
+      const n = OW.oldways()[k], log = [];
+      const ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, v) { log.push(['=' + kk, v]); return true; } });
+      n.drawSelf(ctx, n, 0);
+      for (const [kk, x, y, w, h] of log) if (kk === 'fillRect') assert(x >= n.x - 2 && x + w <= n.x + n.w + 3 && y >= n.y - 1 && y + h <= n.y + n.h + 1, `${n.name} вылез из рамки: ${x},${y} ${w}×${h}`);
+      assert(log.filter(([kk]) => kk === 'fillRect').length > 60, `${n.name} почти не нарисован`);
+    }
+  });
+  test('U2 «катакомбы»: тёмная дверь в глубине красной колоннады (портики, юг); выход — крипта чёрного собора (свет и сад, запад)', () => {
+    const { colonnade: c, cathedral: cat } = OW.oldways();
+    assert(c && M.locations.includes(c), 'колоннады нет');
+    const cx = c.x + c.w / 2, cy = c.y + c.h;
+    eq(DS.ringAt(cx, cy), 2, 'колоннада не в портиках'); eq(sideOf(cx, cy), 'south', 'колоннада не на юге');
+    const garden = M.locations.filter(l => l.archDraw && l.name === 'сад Эпикура' && l.archRing === 2)
+      .reduce((a, l) => Math.min(a, Math.hypot(l.archX - cx, l.archGy - cy)), 1e9);
+    assert(garden < 400, `сад Эпикура далеко от колоннады: ${Math.round(garden)}`);
+    assert(/платные полосы/.test(c.look) && /тёмная дверь/.test(c.look), 'осмотр колоннады не по канону');
+    eq(c.useAction, 'colonnade_door', 'колоннада без спуска');
+    eq(upOf(U.thingById('u_up_colonnade')), c, 'ступени выводят не к колоннаде');
+    for (const l of M.locations) if (l !== c) assert(!(l.x < c.x + c.w + 6 && l.x + l.w > c.x - 6 && l.y < c.y + c.h + 6 && l.y + l.h > c.y - 6), `колоннада налезла на «${l.name}»`);
+    assert(cat && cat.archDraw && cat.name === 'чёрный собор' && cat.archRing === 3 && cat.archSide === 'west', 'собора нет');
+    eq(cat.altNow().key, 'cathedral_crypt', 'в крипту — не второе действие собора');
+    eq(upOf(U.thingById('u_up_cathedral')), cat, 'ступени выводят не к собору');
+    assert(/для рукописей, которые жгли/.test(UA.useTexts.cathedral_crypt.text), 'погреб не по канону');
+  });
+  test('U2: внизу катакомбы открыты на юг от среза — галерея-оссуарий, столб корней посреди хода', () => {
+    const cut = U.thingById('u_cut_catacomb'), col = U.thingById('u_up_colonnade'), cat = U.thingById('u_up_cathedral');
+    for (const b of [col, cat]) assert(U.pathTo(cut.at[0], cut.at[1], b.at[0], b.at[1]), `от среза к ${b.id} не пройти`);
+    eq(U.placeAt(col.at[0], col.at[1]), 'u2', 'ступени — не в катакомбах'); eq(U.placeAt(cat.at[0], cat.at[1]), 'u2', 'стрельчатый проём — не в катакомбах');
+    const roots = U.thingById('u_roots');
+    assert(roots && !roots.wall && !U.walkable(331, 632), 'сквозь столб корней проходят');
+    assert(U.walkable(331, 616) && U.walkable(331, 646), 'столб перегородил ход');
   });
 }
 
