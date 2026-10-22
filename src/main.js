@@ -105,11 +105,14 @@ import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEndin
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
+import { startNet, stepNet, netVote, mute, net } from './net/net.js';
+import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } from './render/net.js';
+import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -150,6 +153,7 @@ initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettle
 initCursor();
 initAudio();
 initEditor();
+initNetUI(showLore);                           // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
 
 // Painted assets (portraits + entry/ending scenes) — fire-and-forget
 // preload; UI code asks for them when it needs them and falls back to
@@ -448,6 +452,7 @@ function render() {
   drawGroundMarks(worldCtx, { x: camX, y: camY });
   drawPuddles(worldCtx, camX, camY, vw, vh, locations, player);   // лужи после дождя, круги
   drawFootprints(worldCtx, { x: camX, y: camY });
+  drawNotes(worldCtx, camX, camY, vw, vh);          // записки других странников — на земле
   drawRavenShadows(worldCtx, camX, camY, vw, vh);   // тени летящих ворон — на земле
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
@@ -477,6 +482,7 @@ function render() {
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
   for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
+  for (const o of othersToDraw(worldCtx, 'surface', camX, camY, vw, vh)) drawList.push({ k: o.k, other: o });   // другие странники — тенью
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
@@ -485,6 +491,7 @@ function render() {
     if (it.raven) { drawRaven(worldCtx, it.raven); continue; }
     if (it.fire) { drawFireSite(worldCtx, it.fire, t); continue; }
     if (it.tree) { drawTree(worldCtx, it.tree, t); continue; }
+    if (it.other) { it.other.draw(); continue; }
     if (it.player) {
       const so = stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);
@@ -515,6 +522,7 @@ function render() {
   toxic.drawWorld(worldCtx);
 
   drawWorldWhisper({ x: camX, y: camY });
+  drawVoices(worldCtx, 'surface', player);          // сказанное рядом — пером над тем, кто сказал
 
   worldCtx.restore();
   hazeView(camX, camY, vw, vh, locations, redNoon.k);   // марево: над костром, над Sol, в гари, в полдень — везде
@@ -533,7 +541,10 @@ function render() {
   // multiply layer) — dramatic on a desk, near-black on a phone in
   // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
   const ambient = skyAt(phaseAt(t)).light;      // сутки по канону: 0.40 ночь … 0.82 полдень
+  const lit = lighting.sources, theirs = otherLights('surface', camX, camY, vw, vh);   // чужие огоньки — только на этот кадр
+  if (theirs.length) lighting.sources = lit.concat(theirs);
   lighting.render(lightCtx, { x: camX, y: camY }, ambient);
+  lighting.sources = lit;
 
   // Atmospheric particles in lit areas (render on world layer for depth)
   const camObj = { x: camX, y: camY };
@@ -605,6 +616,7 @@ function plateStorm() {
 // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
 function stepFx() {
+  stepNet(player, under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг
   if (under.active) { stepFxUnder(); return; }
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
@@ -1171,6 +1183,7 @@ function rideToWell() {
 }
 // клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
 function walkUnder(gx, gy) {
+  if (netClick(gx, gy, 'under')) return;
   const th = findLocationAt(gx, gy, thingsNow(), 6);
   const path = th ? pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : pathTo(player.x + 6, player.y + 23, gx, gy);
   if (!path || !path.length) return;
@@ -1179,6 +1192,21 @@ function walkUnder(gx, gy) {
   player.tx = w.x - 6; player.ty = w.y - 23;
   player.moving = true; player.auto = true;
   player.walkTo = th || null;
+}
+// клик по другому страннику — меню сразу (не слушать можно и издали); по записке — подойти и прочесть
+function netClick(x, y, layer) {
+  if (!net.on) return false;
+  const o = otherAt(layer, x, y);
+  if (o) { showMenu(otherMenu(o)); return true; }
+  const n = layer === 'surface' ? noteAt(x, y) : null;
+  if (!n) return false;
+  const nm = noteMenu(n), sx = n.x - 6 - 12, sy = n.y - 23;         // встать слева: подол записку не закроет
+  if (Math.hypot(player.x - sx, player.y - sy) < 8) { showMenu(nm); return true; }
+  if (!canLeaveSettlement() && !isInSettlement(sx, sy)) { lockHint(); return true; }
+  player.tx = sx; player.ty = sy;
+  player.moving = true; player.auto = true;
+  player.walkTo = nm;
+  return true;
 }
 // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
 function stepFxUnder() {
@@ -1252,15 +1280,20 @@ function renderUnder() {
   setCtx(worldCtx);
   player.cold = under.cold; player.ember = under.ember; player.pulse = moss.k > 0.5 ? moss.pulse : 0;
   player.flare = under.flare; player.tug = under.tug; player.steady = under.greeted; player.gust = under.draft;
-  drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); });
+  drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { setCtx(worldCtx); drawPlayer(player); },
+    othersToDraw(worldCtx, 'under', camX, camY, vw, vh, coldAt));   // другие странники в трубах
   drawParticles(worldCtx, { x: camX, y: camY });
   drawWhisper(worldCtx, { x: camX, y: camY });
+  drawVoices(worldCtx, 'under', player);
   worldCtx.restore();
   hazeOff();
   warmSpots = warmIn(camX, camY, vw, vh);           // в криосклепе огонёк холодный — беречь перу нечего
   ink.drawGroup((c, th) => drawUnderThing(c, th), camX, camY);
   setCtx(worldCtx);
+  const lit = lighting.sources, theirs = otherLights('under', camX, camY, vw, vh, coldAt);
+  if (theirs.length) lighting.sources = lit.concat(theirs);
   lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT * (1 - 0.6 * moss.k));   // в ходе мха видно только то, что светит
+  lighting.sources = lit;
   lightParticles.draw(worldCtx, { x: camX, y: camY });
   crackedGlass.draw(fxCtx);
   dyingPixels.draw(fxCtx);
@@ -1372,7 +1405,7 @@ function updateGame() {
       // не открываем: мимо вещи можно пройти, не останавливаясь.
       const want = player.walkTo;
       player.walkTo = null;
-      if (want && want.under) showMenu(want);                 // вещь изнанки: путь вёл к ней
+      if (want && (want.under || want.net)) showMenu(want);   // вещь изнанки, записка: путь вёл к ней
       else {
         const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
           && Math.abs(player.y - (want.y + want.h + 5)) < 4;
@@ -1479,6 +1512,7 @@ function startGame() {
   showCursor();
   resumeAudio();
   startAmbient();
+  startNet().then(refreshNetUI, () => {});         // есть ли кто ещё в мире — мир от ответа не ждёт
   // треки (ardet-tracks.js подключается страницей до бандла):
   // жест входа разблокирует звук, заставка играет целиком,
   // затем эфир — трек текущей зоны.
@@ -1545,6 +1579,13 @@ document.getElementById('entry-btn').addEventListener('click', entryEnter);
 // click listener caused double-dispatch (canvas → #gw bubble), which
 // flashed the menu open+closed on the same click.
 
+// Enter — сказать вслух: услышат те, кто рядом. Ловится раньше всех (capture): окно
+// осмотра, бумажка и карта закрываются тем же Enter — тогда говорить не о чем
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.repeat || !net.on || !state.is('game') || loreActive() || isMapOpen()) return;
+  if (openNetInput('say')) e.preventDefault();
+}, true);
+
 // Бумажка внизу: пробел / enter / esc — допечатать, потом убрать
 document.addEventListener('keydown', e => {
   if (!loreActive() || !state.is('game')) return;
@@ -1563,6 +1604,7 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   const pos = input.screenToWorld(clientX, clientY, camera);
   if (under.active) { walkUnder(pos.x, pos.y); return; }
   player.path = null;
+  if (netClick(pos.x, pos.y, 'surface')) return;   // другой странник, записка на земле
   const loc = findLocationAt(pos.x, pos.y, locations);
   if (loc) {
     const px_ = loc.x + loc.w / 2 - 6;
@@ -1652,10 +1694,15 @@ events.on('location.alt', (loc) => {
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
   if (a.key === 'town_well_give' && giveTownWell()) { const s = useTexts.town_well_give; showLook({ name: s.title, look: s.text }); }   // своё — в ведро общего дна
+  // чужая записка: пожаловаться — у себя больше не увидишь; три жалобы — не увидит никто
+  if (a.key === 'net_report') netVote(loc.net, 'report').then(r => showLore(r.error && r.error !== 'twice' ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }
   const actionKey = loc.useAction || loc.id;
+  // сеть странников: заверить чужую записку — красная точка печати; не слушать встречного (ui/netui.js)
+  if (actionKey === 'net_cert') { netVote(loc.net, 'cert').then(r => showLore(r.error ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Заверено. На записке теперь красная точка печати.')); return; }
+  if (actionKey === 'net_mute') { const off = !net.muted.has(loc.net); mute(loc.net, off); showLore(off ? 'Слова этого странника больше не доходят.' : 'Этого странника снова слышно.'); return; }
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
   // изнанка: дочитать чужую строку инея над дверью криосклепа, не выдохнув
   if (actionKey === 'under_read') { under.readFrost(loc.x + loc.w / 2, loc.y + 12, FROST_FOREIGN); return; }

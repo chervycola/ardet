@@ -1907,7 +1907,7 @@ function peonyShadow(bx, by, R, a) {
 
 // ═══ КАДР ИЗНАНКИ ═══
 // g — холст мира (уже сдвинут на камеру); drawHero рисует странника
-export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
+export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero, extras = []) {
   G = g;
   drawStaticView(g, camX, camY, vw, vh);
   floorLife(g, camX, camY, vw, vh, p);
@@ -1923,9 +1923,11 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
   for (const P of PORTALS) if (P.cx + P.R > camX && P.cx - P.R < camX + vw && P.yb > camY && P.yb - P.H < camY + vh) list.push({ k: P.yb, arch: P });
   if (under.signed && HERMO.cx + 14 > camX && HERMO.cx - 14 < camX + vw && LINE.y0 > camY && LINE.y0 - T.WH < camY + vh) list.push({ k: LINE.y0, hermo: true });
   list.push({ k: p.y + 23, hero: true });
+  for (const e of extras) list.push({ k: e.k, extra: e });          // чужие странники (render/net.js)
   list.sort((a, b) => a.k - b.k);
   for (const it of list) {
     if (it.hero) { drawHero(); wade(g, p); G = g; continue; }
+    if (it.extra) { it.extra.draw(); G = g; continue; }
     G = g;
     if (it.arch) archSprite(g, it.arch);
     else if (it.hermo) hermoLintel();

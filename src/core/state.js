@@ -2,18 +2,19 @@
 // STATE MACHINE — formal game states
 // ═══════════════════════════════════════
 
-const STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'];
+const STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'typing'];
 
 // Valid transitions (from → to)
 const TRANSITIONS = {
   entry: ['game'],
-  game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'],
+  game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'typing'],
   menu: ['game', 'look', 'dialogue', 'terminal', 'shop'],
   look: ['game', 'menu'],
   dialogue: ['game'],
   terminal: ['game'],
   shop: ['game'],
   ending: ['game'],  // allow reset
+  typing: ['game'],  // сеть: пишешь записку или слово (ui/netui.js)
 };
 
 class StateMachine {

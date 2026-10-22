@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='26c594f · 2026-10-22';console.log('[оттиск]', '26c594f · 2026-10-22');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='ef301dc · 2026-10-22';console.log('[оттиск]', 'ef301dc · 2026-10-22');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -21391,7 +21391,7 @@ System.register("world/redNoon", [], function (exports_58, context_58) {
 });
 System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"], function (exports_59, context_59) {
     "use strict";
-    var time_js_8, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, QUENCH, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt;
+    var time_js_8, scaler_js_11, redNoon_js_1, WHISPERS, INK, NIB, FONT_PX, FONT, PEN, LIFT, SPACE, LETTER, HOLD, FADE, QUENCH, WET, DRY_A, WET_A, NIB_A, COOLDOWN, whisper, lastWhisperEnd, hush, whisperText, whisperAt, PEN_HOLD, PEN_FADE;
     var __moduleName = context_59 && context_59.id;
     // шёпот по случаю, не по расписанию: пишется, если перо свободно и не красный полдень;
     // faint — на границе слышимости (чернила вдвое бледнее); follow() → [x, y] — шёпот
@@ -21562,18 +21562,57 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
         sheet.height = full.height;
         return { full, sheet, sg: sheet.getContext('2d'), s, cells, times, next: 0, write: Math.ceil(time), wl: cw, base: B / s };
     }
+    // строка для пера: клетки штриха и расписание; без холста — дописывается по буквам целиком
+    function preparePen(ctx, text) {
+        const P = prepare(text);
+        if (P)
+            return P;
+        ctx.font = `${FONT_PX}px ${FONT}`;
+        return { write: Array.from(text).length * LETTER, wl: ctx.measureText(text).width, plain: true };
+    }
+    exports_59("preparePen", preparePen);
+    // перо по готовой строке P с центром cx и строкой на sy: дописать клетки до wrote,
+    // сухие чернила — с fade, свежие светлее; кончик пера — пока пишет (nib)
+    function penDraw(ctx, P, text, cx, sy, a, wrote, fade, nib = true) {
+        if (P.plain) {
+            const n = Math.min(Array.from(text).length, Math.floor(wrote / LETTER) + 1);
+            ctx.globalAlpha = Math.min(1, DRY_A * fade);
+            ctx.fillStyle = INK;
+            ctx.font = `${FONT_PX}px ${FONT}`;
+            ctx.textAlign = 'left';
+            ctx.fillText(Array.from(text).slice(0, n).join(''), cx - P.wl / 2, sy);
+            ctx.globalAlpha = 1;
+            return;
+        }
+        while (P.next < P.cells.length && P.times[P.next] <= wrote) {
+            const c = P.cells[P.next++];
+            P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
+        }
+        const s = P.s;
+        const x0 = Math.round((cx - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
+        ctx.globalAlpha = Math.min(1, DRY_A * fade); // речь гуще шёпота (fade > 1) — альфа сверх единицы холст бы пропустил
+        ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
+        for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
+            const c = P.cells[i];
+            ctx.globalAlpha = Math.min(1, WET_A * (1 - (a - P.times[i]) / WET) * fade);
+            ctx.drawImage(P.full, c.x * s, c.y * s, s, s, x0 + c.x, y0 + c.y, 1, 1);
+        }
+        if (nib && P.next > 0 && P.next < P.cells.length) {
+            const c = P.cells[P.next - 1];
+            ctx.globalAlpha = Math.min(1, NIB_A * fade);
+            ctx.fillStyle = NIB;
+            ctx.fillRect(x0 + c.x, y0 + c.y, 1, 1);
+        }
+        ctx.globalAlpha = 1;
+    }
+    exports_59("penDraw", penDraw);
     function draw(ctx, camera) {
         void camera; // контекст мира уже сдвинут камерой — рисуем в координатах мира
         if (!whisper.text)
             return;
         const w = whisper;
-        if (!w.prep) {
-            w.prep = prepare(w.text);
-            if (!w.prep) { // без холста — строка дописывается по буквам целиком
-                ctx.font = `${FONT_PX}px ${FONT}`;
-                w.prep = { write: Array.from(w.text).length * LETTER, wl: ctx.measureText(w.text).width, plain: true };
-            }
-        }
+        if (!w.prep)
+            w.prep = preparePen(ctx, w.text);
         const P = w.prep;
         let a = time_js_8.t - w.t0;
         if (redNoon_js_1.redNoon.active && a < P.write + HOLD) { // полдень: недописанное так и гаснет недописанным
@@ -21591,38 +21630,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
         }
         const fade = (w.quenched ? 1 - qa / QUENCH : a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
         const sy = w.y - (w.quenched ? qa : Math.max(0, a - P.write - HOLD)) * 0.12; // выцветая, уходит вверх
-        if (P.plain) {
-            const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
-            ctx.globalAlpha = DRY_A * fade;
-            ctx.fillStyle = INK;
-            ctx.font = `${FONT_PX}px ${FONT}`;
-            ctx.textAlign = 'left';
-            ctx.fillText(Array.from(w.text).slice(0, n).join(''), w.x - P.wl / 2, sy);
-            ctx.globalAlpha = 1;
-            return;
-        }
-        // перо: дописать клетки, до которых дошло
-        while (P.next < P.cells.length && P.times[P.next] <= wrote) {
-            const c = P.cells[P.next++];
-            P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
-        }
-        const s = P.s;
-        const x0 = Math.round((w.x - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
-        ctx.globalAlpha = DRY_A * fade;
-        ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
-        // свежие чернила светлее — сохнут за WET шагов
-        for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
-            const c = P.cells[i];
-            ctx.globalAlpha = WET_A * (1 - (a - P.times[i]) / WET) * fade;
-            ctx.drawImage(P.full, c.x * s, c.y * s, s, s, x0 + c.x, y0 + c.y, 1, 1);
-        }
-        if (P.next > 0 && P.next < P.cells.length && w.cut === undefined) { // кончик пера — пока пишет
-            const c = P.cells[P.next - 1];
-            ctx.globalAlpha = NIB_A * fade;
-            ctx.fillStyle = NIB;
-            ctx.fillRect(x0 + c.x, y0 + c.y, 1, 1);
-        }
-        ctx.globalAlpha = 1;
+        penDraw(ctx, P, w.text, w.x, sy, a, wrote, fade, w.cut === undefined);
     }
     exports_59("draw", draw);
     // для проверок
@@ -21706,6 +21714,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon"]
             exports_59("hush", hush = new Set());
             exports_59("whisperText", whisperText = () => whisper.text);
             exports_59("whisperAt", whisperAt = () => [whisper.x, whisper.y]);
+            exports_59("PEN_HOLD", PEN_HOLD = HOLD), exports_59("PEN_FADE", PEN_FADE = FADE);
         }
     };
 });
@@ -29458,17 +29467,18 @@ System.register("core/state", [], function (exports_86, context_86) {
     return {
         setters: [],
         execute: function () {
-            STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'];
+            STATES = ['entry', 'game', 'menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'typing'];
             // Valid transitions (from → to)
             TRANSITIONS = {
                 entry: ['game'],
-                game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending'],
+                game: ['menu', 'look', 'dialogue', 'terminal', 'shop', 'ending', 'typing'],
                 menu: ['game', 'look', 'dialogue', 'terminal', 'shop'],
                 look: ['game', 'menu'],
                 dialogue: ['game'],
                 terminal: ['game'],
                 shop: ['game'],
                 ending: ['game'], // allow reset
+                typing: ['game'], // сеть: пишешь записку или слово (ui/netui.js)
             };
             StateMachine = class StateMachine {
                 constructor() {
@@ -35403,12 +35413,15 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
             activeLoc = null;
             exports_103("menuInscriptions", menuInscriptions = {
+                net_note: 'почерк чужой.', // сеть странников (ui/netui.js)
+                net_note_mine: 'почерк свой.',
+                net_other: 'идёт своей дорогой.',
                 campfire: 'огонь не спрашивает.',
                 jester_home: 'смеётся. потому что альтернатива.',
                 terminal: 'session expired. reconnect?',
@@ -50322,7 +50335,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
     }
     // ═══ КАДР ИЗНАНКИ ═══
     // g — холст мира (уже сдвинут на камеру); drawHero рисует странника
-    function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
+    function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero, extras = []) {
         G = g;
         drawStaticView(g, camX, camY, vw, vh);
         floorLife(g, camX, camY, vw, vh, p);
@@ -50346,11 +50359,18 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         if (underside_js_3.under.signed && underside_js_3.HERMO.cx + 14 > camX && underside_js_3.HERMO.cx - 14 < camX + vw && LINE.y0 > camY && LINE.y0 - underside_js_3.T.WH < camY + vh)
             list.push({ k: LINE.y0, hermo: true });
         list.push({ k: p.y + 23, hero: true });
+        for (const e of extras)
+            list.push({ k: e.k, extra: e }); // чужие странники (render/net.js)
         list.sort((a, b) => a.k - b.k);
         for (const it of list) {
             if (it.hero) {
                 drawHero();
                 wade(g, p);
+                G = g;
+                continue;
+            }
+            if (it.extra) {
+                it.extra.draw();
                 G = g;
                 continue;
             }
@@ -51048,10 +51068,936 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "assets/loader"], function (exports_142, context_142) {
+System.register("net/config", [], function (exports_142, context_142) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_6, events_js_8, input_js_2, time_js_42, player_js_1, context_js_17, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_43, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_4, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_3, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, time_js_43, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var SUPABASE_URL, SUPABASE_KEY;
     var __moduleName = context_142 && context_142.id;
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // СЕТЬ СТРАННИКОВ — куда стучаться (weave/NET.md).
+            // Адрес проекта Supabase и его публичный ключ (anon / publishable): ключ публичный
+            // по замыслу — доступ режут правила базы (server/supabase.sql). Пусто — мир для
+            // одного, как раньше. ?net=local — проверка без сервера: вкладки одного браузера
+            // видят друг друга, записки лежат в localStorage. ?net=off — выключить.
+            // ═══════════════════════════════════════
+            exports_142("SUPABASE_URL", SUPABASE_URL = '');
+            exports_142("SUPABASE_KEY", SUPABASE_KEY = '');
+        }
+    };
+});
+System.register("net/filter", [], function (exports_143, context_143) {
+    "use strict";
+    var SAY_MAX, NOTE_MAX, PRE, ROOTS, MAT, EN, LINK, bar, dirty;
+    var __moduleName = context_143 && context_143.id;
+    function clean(text, max = SAY_MAX) {
+        let s = String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim();
+        s = Array.from(s).slice(0, max).join('');
+        return s.replace(MAT, bar).replace(EN, bar).replace(LINK, bar);
+    }
+    exports_143("clean", clean);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // ЧТО МОЖНО СКАЗАТЬ И ОСТАВИТЬ — длина, без управляющих знаков и ссылок; брань
+            // вымарывается, как в канцелярии: чёрным по слову. Чистит и отправитель, и
+            // получатель (чужой клиент мог не почистить); записки сверх того проверяет база.
+            // ═══════════════════════════════════════
+            exports_143("SAY_MAX", SAY_MAX = 120), exports_143("NOTE_MAX", NOTE_MAX = 140);
+            // корни — с начала слова, с приставками: «корабля» и «рубля» не трогаем
+            PRE = '(?:за|вы|на|до|от|у|по|при|раз|рас|съ|объ|отъ|подъ|разъ|изъ|въ|об|пере|под|недо|ни)?';
+            ROOTS = '(?:ху[йеёяи]|пизд|п[иі]зд|[её]б[аеуиоы]|бля|мудак|мудил|пид[оа]р|шлюх|гандон|залуп|сучар)';
+            MAT = new RegExp(`(?<![\\p{L}])${PRE}${ROOTS}[\\p{L}]*`, 'giu');
+            EN = /\b(?:fuck\w*|cunt\w*|nigg\w*|fagg?ot\w*)/gi;
+            LINK = /(?:https?:\/\/|www\.)\S+|[\p{L}\d-]+\.(?:com|ru|net|org|io|me|gg|xyz|su|рф)(?![\p{L}\d])(?:\/\S*)?|@\w{3,}/giu; // адрес — и «сайт.рф», но не «текст.rubles»
+            bar = w => '█'.repeat(Math.min(6, Math.max(2, Array.from(w).length)));
+            // было ли что вымарывать (база записку с бранью не примет — не тратить попытку)
+            exports_143("dirty", dirty = text => clean(text, 10000) !== String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim());
+        }
+    };
+});
+System.register("net/local", ["net/filter"], function (exports_144, context_144) {
+    "use strict";
+    var filter_js_1, KEY, AGE, HIDE, PER_DAY, read, write;
+    var __moduleName = context_144 && context_144.id;
+    function localTransport(me) {
+        const ch = typeof BroadcastChannel === 'function' ? new BroadcastChannel('ardet-net') : null;
+        const H = { pos: [], say: [], leave: [], note: [] };
+        if (ch)
+            ch.onmessage = e => { const m = e.data; if (m && m.id !== me && H[m.t])
+                for (const f of H[m.t])
+                    f(m); };
+        const post = m => { if (ch)
+            ch.postMessage({ ...m, id: me }); };
+        return {
+            kind: 'local', uid: me,
+            async start() { return !!ch; },
+            on(ev, f) { H[ev].push(f); },
+            sendPos(p) { post({ t: 'pos', ...p }); },
+            sendSay(s) { post({ t: 'say', ...s }); },
+            sendNote(n) { post({ t: 'note', ...n }); },
+            stop() { post({ t: 'leave' }); if (ch)
+                ch.close(); },
+            async notesIn(b) {
+                const now = Date.now();
+                return read().filter(n => !n.hidden && now - n.created < AGE && n.layer === b.layer && n.x >= b.x0 && n.x <= b.x1 && n.y >= b.y0 && n.y <= b.y1)
+                    .sort((a, c) => c.created - a.created).slice(0, 80);
+            },
+            async addNote(n) {
+                const list = read(), now = Date.now();
+                if (!n.text || Array.from(n.text).length > filter_js_1.NOTE_MAX)
+                    return { error: 'length' };
+                if (list.filter(q => q.author === me && now - q.created < 86400e3).length >= PER_DAY)
+                    return { error: 'quota' };
+                const note = { id: 'L' + now.toString(36) + Math.random().toString(36).slice(2, 6), author: me, x: n.x, y: n.y, layer: n.layer, text: n.text, created: now, certs: 0, reports: 0, voters: [], hidden: false };
+                list.push(note);
+                write(list);
+                return note;
+            },
+            async vote(id, kind) {
+                const list = read(), n = list.find(q => q.id === id);
+                if (!n)
+                    return { error: 'gone' };
+                const tag = kind + ':' + me;
+                if (n.author === me || n.voters.includes(tag))
+                    return { error: 'twice' };
+                n.voters.push(tag);
+                if (kind === 'cert')
+                    n.certs++;
+                else {
+                    n.reports++;
+                    if (n.reports >= HIDE)
+                        n.hidden = true;
+                }
+                write(list);
+                return { certs: n.certs, hidden: n.hidden };
+            },
+        };
+    }
+    exports_144("localTransport", localTransport);
+    return {
+        setters: [
+            function (filter_js_1_1) {
+                filter_js_1 = filter_js_1_1;
+            }
+        ],
+        execute: function () {
+            KEY = 'ardet-net-notes', AGE = 30 * 86400e3, HIDE = 3, PER_DAY = 10;
+            read = () => { try {
+                return JSON.parse(localStorage.getItem(KEY) || '[]');
+            }
+            catch (e) {
+                return [];
+            } };
+            write = list => { try {
+                localStorage.setItem(KEY, JSON.stringify(list));
+            }
+            catch (e) { } };
+        }
+    };
+});
+System.register("net/supabase", [], function (exports_145, context_145) {
+    "use strict";
+    var TOPIC, SKEY;
+    var __moduleName = context_145 && context_145.id;
+    function supabaseTransport(url, key, tab) {
+        const base = url.replace(/\/+$/, ''), wsUrl = base.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(key) + '&vsn=1.0.0';
+        const H = { pos: [], say: [], leave: [], note: [] };
+        let session = null, ws = null, ref = 0, jr = null, joined = false, hb = null, refreshT = null, retry = 0, stopped = false;
+        // до входа — только apikey: новый publishable-ключ не JWT, в Authorization ему не место
+        const hdr = () => (session ? { apikey: key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' } : { apikey: key, 'Content-Type': 'application/json' });
+        const call = (path, opt = {}) => fetch(base + path, opt).catch(() => null);
+        function keep(s) {
+            session = s;
+            try {
+                localStorage.setItem(SKEY, JSON.stringify({ refresh_token: s.refresh_token }));
+            }
+            catch (e) { }
+            clearTimeout(refreshT); // токен — продлить за две минуты до конца; каналу сказать новый
+            refreshT = setTimeout(async () => { if (await refresh())
+                send('access_token', { access_token: session.access_token }); }, Math.max(30, (s.expires_in || 3600) - 120) * 1000);
+        }
+        async function refresh() {
+            let rt = session && session.refresh_token;
+            if (!rt) {
+                try {
+                    rt = (JSON.parse(localStorage.getItem(SKEY) || 'null') || {}).refresh_token;
+                }
+                catch (e) { }
+            }
+            if (!rt)
+                return false;
+            const r = await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: rt }) });
+            if (!r || !r.ok)
+                return false;
+            keep(await r.json());
+            return true;
+        }
+        async function signIn() {
+            if (await refresh())
+                return true;
+            const r = await call('/auth/v1/signup', { method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: {} }) });
+            if (!r || !r.ok)
+                return false;
+            keep(await r.json());
+            return true;
+        }
+        function send(event, payload) {
+            if (!ws || ws.readyState !== 1 || !joined)
+                return;
+            ws.send(JSON.stringify({ topic: TOPIC, event, payload, ref: String(++ref), join_ref: jr }));
+        }
+        function connect() {
+            if (stopped)
+                return;
+            ws = new WebSocket(wsUrl);
+            joined = false;
+            ws.onopen = () => {
+                if (stopped) {
+                    ws.close();
+                    return;
+                } // ушёл, пока стучался
+                retry = 0;
+                jr = String(++ref);
+                ws.send(JSON.stringify({ topic: TOPIC, event: 'phx_join', ref: jr, join_ref: jr, payload: {
+                        config: { broadcast: { self: false, ack: false }, presence: { key: tab, enabled: true }, postgres_changes: [], private: false },
+                        access_token: session.access_token
+                    } }));
+                clearInterval(hb);
+                hb = setInterval(() => { if (ws && ws.readyState === 1)
+                    ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(++ref) })); }, 25000);
+            };
+            ws.onmessage = e => {
+                let m = null;
+                try {
+                    m = JSON.parse(e.data);
+                }
+                catch (er) {
+                    return;
+                }
+                if (!m || m.topic !== TOPIC)
+                    return;
+                if (m.event === 'phx_reply' && !joined && m.ref === jr) {
+                    if (m.payload && m.payload.status === 'ok') {
+                        joined = true;
+                        send('presence', { type: 'presence', event: 'track', payload: { tab } });
+                    }
+                    return;
+                }
+                if (m.event === 'broadcast' && m.payload) {
+                    const p = m.payload.payload || {}, hs = H[m.payload.event];
+                    if (hs && p.id && p.id !== tab)
+                        for (const h of hs)
+                            h(p);
+                    return;
+                }
+                if (m.event === 'presence_diff' && m.payload && m.payload.leaves)
+                    for (const k of Object.keys(m.payload.leaves))
+                        if (k !== tab)
+                            for (const h of H.leave)
+                                h({ id: k });
+            };
+            ws.onclose = () => { joined = false; clearInterval(hb); if (!stopped)
+                setTimeout(connect, Math.min(30000, 1000 * 2 ** retry++)); };
+            ws.onerror = () => { };
+        }
+        const bc = (event, payload) => send('broadcast', { type: 'broadcast', event, payload: { ...payload, id: tab } });
+        const stamp = n => ({ ...n, created: Date.parse(n.created_at) });
+        return {
+            kind: 'supabase',
+            get uid() { return session && session.user ? session.user.id : null; },
+            async start() { if (!(await signIn()))
+                return false; connect(); return true; },
+            on(ev, f) { H[ev].push(f); },
+            sendPos(p) { bc('pos', p); },
+            sendSay(s) { bc('say', s); },
+            sendNote(n) { bc('note', n); },
+            stop() { bc('leave', {}); stopped = true; clearInterval(hb); clearTimeout(refreshT); if (ws)
+                ws.close(); },
+            async notesIn(b) {
+                const q = `select=id,x,y,layer,text,certs,created_at,author&layer=eq.${b.layer}&x=gte.${b.x0 | 0}&x=lte.${b.x1 | 0}&y=gte.${b.y0 | 0}&y=lte.${b.y1 | 0}&order=created_at.desc&limit=80`;
+                const r = await call('/rest/v1/notes?' + q, { headers: hdr() });
+                return r && r.ok ? (await r.json()).map(stamp) : [];
+            },
+            async addNote(n) {
+                const r = await call('/rest/v1/notes', { method: 'POST', headers: { ...hdr(), Prefer: 'return=representation' }, body: JSON.stringify({ x: Math.round(n.x), y: Math.round(n.y), layer: n.layer, text: n.text }) });
+                if (!r)
+                    return { error: 'net' };
+                if (!r.ok)
+                    return { error: r.status === 401 || r.status === 403 ? 'quota' : 'refused' }; // лимит — правило доступа; брань, длина — проверка базы
+                const rows = await r.json();
+                return stamp(rows[0]);
+            },
+            async vote(id, kind) {
+                const r = await call('/rest/v1/note_votes', { method: 'POST', headers: { ...hdr(), Prefer: 'return=minimal' }, body: JSON.stringify({ note_id: id, kind }) });
+                if (!r)
+                    return { error: 'net' };
+                if (r.status === 409)
+                    return { error: 'twice' };
+                return r.ok ? {} : { error: 'refused' };
+            },
+        };
+    }
+    exports_145("supabaseTransport", supabaseTransport);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // SUPABASE — без библиотек. Вход анонимный (GoTrue: /auth/v1/signup без почты,
+            // сессия продлевается refresh-токеном); записки и отметки — PostgREST
+            // (/rest/v1/notes, /rest/v1/note_votes; правила — server/supabase.sql); шаги и
+            // речь — Realtime, канал Phoenix: broadcast — шаги, слова и весть о новой записке,
+            // presence — кто ушёл.
+            // Сеть легла — переподключение с нарастающей паузой; мир от этого не зависит.
+            // ═══════════════════════════════════════
+            TOPIC = 'realtime:ardet-world', SKEY = 'ardet-net-session';
+        }
+    };
+});
+System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter"], function (exports_146, context_146) {
+    "use strict";
+    var config_js_1, local_js_1, supabase_js_1, filter_js_2, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, notesIn;
+    var __moduleName = context_146 && context_146.id;
+    function tabId() {
+        try {
+            const k = sessionStorage.getItem('ardet-net-tab');
+            if (k)
+                return k;
+        }
+        catch (e) { }
+        const k = 'w' + Math.random().toString(36).slice(2, 10);
+        try {
+            sessionStorage.setItem('ardet-net-tab', k);
+        }
+        catch (e) { }
+        return k;
+    }
+    function pickTransport(search, tab) {
+        if (/[?&]net=off\b/.test(search))
+            return null;
+        if (/[?&]net=local\b/.test(search))
+            return local_js_1.localTransport(tab);
+        if (config_js_1.SUPABASE_URL && config_js_1.SUPABASE_KEY)
+            return supabase_js_1.supabaseTransport(config_js_1.SUPABASE_URL, config_js_1.SUPABASE_KEY, tab);
+        return null;
+    }
+    exports_146("pickTransport", pickTransport);
+    // T — транспорт (для проверок — свой); без него — по адресу страницы
+    async function startNet(T = null) {
+        const search = typeof location !== 'undefined' ? location.search : '';
+        net.tab = net.tab || tabId();
+        net.T = T || pickTransport(search, net.tab);
+        if (!net.T)
+            return false;
+        try {
+            for (const k of JSON.parse(localStorage.getItem(MUTE_KEY) || '[]'))
+                net.muted.add(k);
+        }
+        catch (e) { }
+        try {
+            for (const k of JSON.parse(localStorage.getItem(GONE_KEY) || '[]'))
+                net.gone.add(k);
+        }
+        catch (e) { }
+        net.T.on('pos', m => {
+            const o = net.others.get(m.id);
+            if (!o) {
+                net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, heard: net.t });
+                return;
+            }
+            const jump = o.layer !== m.layer || Math.hypot(o.x - m.x, o.y - m.y) > 400, dt = Math.max(1, net.t - o.heard);
+            if (jump) {
+                o.x = m.x;
+                o.y = m.y;
+            } // спустился, поднялся, переехал — там и стоит
+            // идёт — куда и как быстро, по двум последним точкам: между вестями шаг досчитывается
+            o.vx = m.moving && !jump ? (m.x - o.rx) / dt : 0;
+            o.vy = m.moving && !jump ? (m.y - o.ry) / dt : 0;
+            Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, heard: net.t });
+        });
+        net.T.on('say', m => {
+            const o = net.others.get(m.id), text = filter_js_2.clean(m.text, filter_js_2.SAY_MAX);
+            if (!o || !text || net.muted.has(m.id))
+                return;
+            if (net.last && (o.layer !== net.last.layer || Math.hypot(o.x - net.last.x, o.y - net.last.y) > HEAR))
+                return; // далеко — не слышно
+            voice(m.id, text);
+        });
+        net.T.on('leave', m => { net.others.delete(m.id); net.voices = net.voices.filter(v => v.who !== m.id); });
+        // рядом оставили записку — видна сразу, не дожидаясь подгрузки; правила те же, что у базы:
+        // раз в минуту и у ног того, кто оставил (чужой клиент мог бы слать что угодно)
+        net.T.on('note', m => {
+            const o = net.others.get(m.id), text = filter_js_2.clean(m.text, filter_js_2.NOTE_MAX);
+            if (!o || o.layer !== 'surface' || !text || m.nid == null || net.gone.has(m.nid) || net.notes.has(m.nid))
+                return;
+            if (net.t - (o.notedAt ?? -1e9) < NOTE_GAP || Math.hypot(m.x - o.x, m.y - o.y) > 40)
+                return;
+            o.notedAt = net.t;
+            net.notes.set(m.nid, { id: m.nid, x: m.x, y: m.y, layer: 'surface', text, certs: 0, created: Date.now(), mine: false });
+        });
+        const ok = await net.T.start();
+        net.on = !!ok;
+        net.kind = ok ? net.T.kind : null;
+        if (typeof window !== 'undefined' && window.addEventListener)
+            window.addEventListener('pagehide', () => { if (net.on)
+                net.T.stop(); });
+        return net.on;
+    }
+    exports_146("startNet", startNet);
+    function voice(who, text) {
+        net.voices = net.voices.filter(v => v.who !== who); // новое слово стирает прежнее у того же странника
+        net.voices.push({ who, text, t0: net.t });
+    }
+    // шаг: p — странник {x, y, dir, moving}, layer — 'surface' | 'under'
+    function stepNet(p, layer) {
+        net.t++;
+        if (!net.on)
+            return;
+        const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving };
+        // весть — когда сдвинулся с посланной точки; встал или пошёл — сразу; стоишь — изредка: «я тут»
+        const S = net.sentPos, gap = net.t - net.sent;
+        const turned = S && S.moving !== me.moving, moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
+        if ((moved && gap >= SEND_EVERY) || (turned && gap >= 4) || gap >= IDLE_EVERY) {
+            net.T.sendPos(me);
+            net.sent = net.t;
+            net.sentPos = me;
+        }
+        net.last = me;
+        for (const [k, o] of net.others) {
+            if (net.t - o.heard > LOST) {
+                net.others.delete(k);
+                continue;
+            }
+            if (net.t - o.heard < 2 * SEND_EVERY) {
+                o.tx += o.vx;
+                o.ty += o.vy;
+            } // досчитать шаг — не дальше двух вестей
+            o.x += (o.tx - o.x) * 0.25;
+            o.y += (o.ty - o.y) * 0.25; // к своей точке — плавно
+        }
+        net.voices = net.voices.filter(v => net.t - v.t0 < VOICE_LIFE);
+        if (layer === 'surface' && !net.fetching && (!net.fetched || Math.hypot(me.x - net.fetched.x, me.y - net.fetched.y) > FETCH_R / 2 || net.t - net.fetched.t > 3600))
+            fetchNotes(me);
+    }
+    exports_146("stepNet", stepNet);
+    async function fetchNotes(me) {
+        net.fetching = true;
+        net.fetched = { x: me.x, y: me.y, t: net.t };
+        const list = await net.T.notesIn({ layer: 'surface', x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R });
+        for (const [id, n] of net.notes)
+            if (Math.abs(n.x - me.x) > 2 * FETCH_R || Math.abs(n.y - me.y) > 2 * FETCH_R)
+                net.notes.delete(id); // далёкие — забыть: вернёшься — подгрузятся
+        for (const n of list)
+            if (!net.gone.has(n.id))
+                net.notes.set(n.id, { ...net.notes.get(n.id), ...n, text: filter_js_2.clean(n.text, filter_js_2.NOTE_MAX), mine: n.author === net.T.uid });
+        net.fetching = false;
+    }
+    // сказать: слышат те, кто рядом; своё — тоже пишется пером над собой
+    function netSay(text) {
+        if (!net.on)
+            return { error: 'off' };
+        const s = filter_js_2.clean(text, filter_js_2.SAY_MAX);
+        if (!s)
+            return { error: 'empty' };
+        if (net.t - net.saidAt < SAY_GAP)
+            return { error: 'soon' };
+        net.saidAt = net.t;
+        net.T.sendSay({ text: s });
+        voice('me', s);
+        return { text: s };
+    }
+    exports_146("netSay", netSay);
+    // записка у ног: брань база не примет — не тратить попытку
+    async function netLeaveNote(text) {
+        if (!net.on || !net.last)
+            return { error: 'off' };
+        if (net.last.layer !== 'surface')
+            return { error: 'under' };
+        const s = filter_js_2.clean(text, filter_js_2.NOTE_MAX);
+        if (!s)
+            return { error: 'empty' };
+        if (filter_js_2.dirty(text) || s.includes('█'))
+            return { error: 'dirty' };
+        if (net.t - net.notedAt < NOTE_GAP)
+            return { error: 'soon' };
+        const at = { x: net.last.x, y: net.last.y + 4 };
+        const r = await net.T.addNote({ ...at, layer: 'surface', text: s });
+        if (r.error)
+            return r;
+        net.notedAt = net.t;
+        net.notes.set(r.id, { ...r, text: s, mine: true });
+        if (net.T.sendNote)
+            net.T.sendNote({ nid: r.id, ...at, text: s }); // тем, кто рядом, — сразу
+        return r;
+    }
+    exports_146("netLeaveNote", netLeaveNote);
+    // заверить / пожаловаться: по разу на записку; своя — нельзя
+    async function netVote(id, kind) {
+        const n = net.notes.get(id);
+        if (!net.on || !n || n.mine)
+            return { error: 'mine' };
+        if (n[kind + 'ed'])
+            return { error: 'twice' };
+        const r = await net.T.vote(id, kind);
+        if (r.error && r.error !== 'twice')
+            return r;
+        n[kind + 'ed'] = true;
+        if (kind === 'cert' && !r.error)
+            n.certs = (n.certs || 0) + 1;
+        if (kind === 'report') { // пожаловался — у себя больше не видишь
+            net.notes.delete(id);
+            net.gone.add(id);
+            try {
+                localStorage.setItem(GONE_KEY, JSON.stringify([...net.gone].slice(-500)));
+            }
+            catch (e) { }
+        }
+        return r;
+    }
+    exports_146("netVote", netVote);
+    function mute(tab, on = true) {
+        if (on)
+            net.muted.add(tab);
+        else
+            net.muted.delete(tab);
+        net.voices = net.voices.filter(v => !net.muted.has(v.who));
+        try {
+            localStorage.setItem(MUTE_KEY, JSON.stringify([...net.muted].slice(-200)));
+        }
+        catch (e) { }
+    }
+    exports_146("mute", mute);
+    // кто стоит в рамке на этом слое
+    function othersIn(layer, x0, y0, x1, y1) {
+        const out = [];
+        for (const [tab, o] of net.others)
+            if (o.layer === layer && o.x > x0 && o.x < x1 && o.y > y0 && o.y < y1)
+                out.push({ tab, ...o });
+        return out;
+    }
+    exports_146("othersIn", othersIn);
+    // для проверок
+    function _resetNet() {
+        if (net.T && net.on)
+            net.T.stop();
+        Object.assign(net, { on: false, kind: null, T: null, t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false, voices: [] });
+        net.others.clear();
+        net.notes.clear();
+        net.muted.clear();
+        net.gone.clear();
+    }
+    exports_146("_resetNet", _resetNet);
+    return {
+        setters: [
+            function (config_js_1_1) {
+                config_js_1 = config_js_1_1;
+            },
+            function (local_js_1_1) {
+                local_js_1 = local_js_1_1;
+            },
+            function (supabase_js_1_1) {
+                supabase_js_1 = supabase_js_1_1;
+            },
+            function (filter_js_2_1) {
+                filter_js_2 = filter_js_2_1;
+            }
+        ],
+        execute: function () {
+            exports_146("HEAR", HEAR = 260), exports_146("LOST", LOST = 600), exports_146("SAY_GAP", SAY_GAP = 120), exports_146("NOTE_GAP", NOTE_GAP = 3600), exports_146("FETCH_R", FETCH_R = 700), exports_146("VOICE_LIFE", VOICE_LIFE = 1500); // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
+            SEND_EVERY = 20, IDLE_EVERY = 120, MUTE_KEY = 'ardet-net-muted', GONE_KEY = 'ardet-net-reported';
+            exports_146("net", net = {
+                on: false, kind: null, tab: null, T: null,
+                others: new Map(), // tab → { x, y, tx, ty, layer, dir, moving, heard }
+                notes: new Map(), // id → { id, x, y, layer, text, certs, created, mine }
+                voices: [], // { who: tab | 'me', text, t0 } — сказанное рядом, пишется пером
+                muted: new Set(),
+                gone: new Set(), // записки, на которые пожаловался: у себя их больше не видно
+                t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false,
+            });
+            exports_146("notesIn", notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n.layer === 'surface' && n.x > x0 && n.x < x1 && n.y > y0 && n.y < y1));
+        }
+    };
+});
+System.register("render/net", ["sprites/player", "render/context", "world/whisper", "net/net"], function (exports_147, context_147) {
+    "use strict";
+    var player_js_1, context_js_17, whisper_js_3, net_js_1, K0, L1, L2, BO, S2, KV, GHOST, SPEED, AGE, READ, WRAP, LINE, buf;
+    var __moduleName = context_147 && context_147.id;
+    function sheet() {
+        if (buf !== null)
+            return buf;
+        try {
+            buf = document.createElement('canvas');
+            buf.width = 40;
+            buf.height = 46;
+            if (!buf.getContext)
+                buf = false;
+        }
+        catch (e) {
+            buf = false;
+        }
+        return buf;
+    }
+    // чужой странник тенью: рисунок героя — в отдельный лист, лист — с прозрачностью;
+    // в криосклепе и у него огонёк пеплом (cold)
+    function ghost(ctx, o, cold) {
+        const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold };
+        if (!b) {
+            context_js_17.setCtx(ctx);
+            player_js_1.drawPlayer({ ...fig, x: o.x - 6, y: o.y - 23 });
+            return;
+        }
+        const g = b.getContext('2d');
+        g.clearRect(0, 0, b.width, b.height);
+        context_js_17.setCtx(g);
+        player_js_1.drawPlayer(fig);
+        context_js_17.setCtx(ctx);
+        ctx.globalAlpha = GHOST;
+        ctx.drawImage(b, Math.round(o.x - 6 - 14), Math.round(o.y - 23 - 16));
+        ctx.globalAlpha = 1;
+    }
+    // чужие — по глубине вместе с миром: { k, draw }; coldAt — холод под землёй (world/underside.js)
+    function othersToDraw(ctx, layer, camX, camY, vw, vh, coldAt = null) {
+        if (!net_js_1.net.on)
+            return [];
+        return net_js_1.othersIn(layer, camX - 20, camY - 10, camX + vw + 20, camY + vh + 40)
+            .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0) }));
+    }
+    exports_147("othersToDraw", othersToDraw);
+    // огонёк у сердца чужого светит, как свой, только слабее; в инее тёплого нет (канон U7)
+    function otherLights(layer, camX, camY, vw, vh, coldAt = null) {
+        if (!net_js_1.net.on)
+            return [];
+        const out = [];
+        for (const o of net_js_1.othersIn(layer, camX - 80, camY - 80, camX + vw + 80, camY + vh + 80)) {
+            if (coldAt && coldAt(o.x, o.y) > 0.5)
+                continue;
+            out.push({ x: o.x, y: o.y - 13, r: layer === 'under' ? 34 : 30, color: [255, 180, 80], flicker: 0.1, intensity: 0.8 });
+        }
+        return out;
+    }
+    exports_147("otherLights", otherLights);
+    // записки на земле
+    function drawNotes(ctx, camX, camY, vw, vh) {
+        if (!net_js_1.net.on)
+            return;
+        const now = Date.now();
+        for (const n of net_js_1.notesIn(camX - 8, camY - 8, camX + vw + 8, camY + vh + 8)) {
+            const x = Math.round(n.x) - 3, y = Math.round(n.y) - 2, old = Math.min(1, Math.max(0, (now - (n.created || now)) / AGE));
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = K0;
+            ctx.fillRect(x + 1, y + 4, 6, 1);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = old > 0.5 ? L2 : L1;
+            ctx.fillRect(x, y, 6, 4);
+            ctx.fillStyle = old > 0.5 ? S2 : L2;
+            ctx.fillRect(x + 3, y, 1, 4);
+            ctx.fillRect(x, y + 2, 6, 1); // сгибы
+            ctx.fillStyle = BO;
+            ctx.fillRect(x, y, 2, 1);
+            if (n.mine) {
+                ctx.fillStyle = S2;
+                ctx.fillRect(x + 5, y, 1, 1);
+            } // свой — загнут угол
+            if (n.certs > 0) {
+                ctx.fillStyle = KV;
+                ctx.fillRect(x + 4, y + 3, 1, 1);
+            } // заверено
+        }
+    }
+    exports_147("drawNotes", drawNotes);
+    // где записка под кликом
+    function noteAt(x, y) {
+        let best = null, bd = 7;
+        for (const n of net_js_1.notesIn(x - 8, y - 8, x + 8, y + 8)) {
+            const d = Math.hypot(n.x - x, n.y - y);
+            if (d < bd) {
+                bd = d;
+                best = n;
+            }
+        }
+        return best;
+    }
+    exports_147("noteAt", noteAt);
+    // где чужой странник под кликом (фигура — над ногами)
+    function otherAt(layer, x, y) {
+        let best = null, bd = 13;
+        for (const o of net_js_1.othersIn(layer, x - 20, y - 10, x + 20, y + 34)) {
+            const d = Math.hypot(o.x - x, o.y - 11 - y);
+            if (d < bd) {
+                bd = d;
+                best = o;
+            }
+        }
+        return best;
+    }
+    exports_147("otherAt", otherAt);
+    // строки по словам — не шире WRAP знаков
+    function wrap(text, n = WRAP) {
+        const out = [];
+        let cur = '';
+        for (const w of text.split(' ')) {
+            const word = Array.from(w).length > n ? Array.from(w).slice(0, n).join('') : w;
+            if (cur && Array.from(cur + ' ' + word).length > n) {
+                out.push(cur);
+                cur = word;
+            }
+            else
+                cur = cur ? cur + ' ' + word : word;
+        }
+        if (cur)
+            out.push(cur);
+        return out;
+    }
+    exports_147("wrap", wrap);
+    // слова — пером над головой, строка за строкой: своё — над собой, чужое — над тем, кто сказал.
+    // Двое рядом — позднее слово поднимается над ранним (lift) и, поднявшись, уже не опускается
+    function drawVoices(ctx, layer, me) {
+        if (!net_js_1.net.on)
+            return;
+        const boxes = [];
+        for (const v of net_js_1.net.voices) {
+            const o = v.who === 'me' ? { x: me.x + 6, y: me.y + 23, layer } : net_js_1.net.others.get(v.who);
+            if (!o || o.layer !== layer)
+                continue;
+            if (!v.preps)
+                v.preps = wrap(v.text).map(l => ({ l, P: whisper_js_3.preparePen(ctx, l) }));
+            const total = v.preps.reduce((s, q) => s + q.P.write, 0), a = (net_js_1.net.t - v.t0) * SPEED;
+            if (a >= total + whisper_js_3.PEN_HOLD + whisper_js_3.PEN_FADE) {
+                v.done = true;
+                continue;
+            }
+            const fade = (a < total + whisper_js_3.PEN_HOLD ? 1 : 1 - (a - total - whisper_js_3.PEN_HOLD) / whisper_js_3.PEN_FADE) * READ;
+            const rise = Math.max(0, a - total - whisper_js_3.PEN_HOLD) * 0.12, h = v.preps.length * LINE, w = Math.max(0, ...v.preps.map(q => q.P.wl));
+            let top = o.y - 34 - (v.preps.length - 1) * LINE - rise - (v.lift || 0);
+            for (let k = 0; k < boxes.length; k++) {
+                const b = boxes[k];
+                if (Math.abs(b.cx - o.x) < (b.w + w) / 2 + 4 && top - LINE < b.bot && top - LINE + h > b.top) {
+                    v.lift = (v.lift || 0) + (top - LINE + h) - b.top + 2;
+                    top = b.top - h - 2 + LINE;
+                    k = -1;
+                }
+            }
+            boxes.push({ cx: o.x, w, top: top - LINE, bot: top - LINE + h });
+            let start = 0;
+            v.preps.forEach(({ l, P }, i) => {
+                const wr = a - start;
+                if (wr > 0)
+                    whisper_js_3.penDraw(ctx, P, l, o.x, top + i * LINE, wr, wr, fade, true);
+                start += P.write;
+            });
+        }
+        net_js_1.net.voices = net_js_1.net.voices.filter(v => !v.done);
+    }
+    exports_147("drawVoices", drawVoices);
+    return {
+        setters: [
+            function (player_js_1_1) {
+                player_js_1 = player_js_1_1;
+            },
+            function (context_js_17_1) {
+                context_js_17 = context_js_17_1;
+            },
+            function (whisper_js_3_1) {
+                whisper_js_3 = whisper_js_3_1;
+            },
+            function (net_js_1_1) {
+                net_js_1 = net_js_1_1;
+            }
+        ],
+        execute: function () {
+            K0 = '#15100c', L1 = '#c8b89a', L2 = '#b0a284', BO = '#D9CFB8', S2 = '#33302e', KV = '#C23B2B';
+            GHOST = 0.55, SPEED = 2, AGE = 30 * 86400e3, READ = 2.2, WRAP = 30, LINE = 8;
+            buf = null;
+        }
+    };
+});
+System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (exports_148, context_148) {
+    "use strict";
+    var state_js_6, net_js_2, filter_js_3, wrap, box, field, title, count, okBtn, mode, paper, NOTE_ERR, SAY_ERR, isTyping, DAY, VOTE_ERR;
+    var __moduleName = context_148 && context_148.id;
+    function build() {
+        if (wrap || typeof document === 'undefined' || !document.body)
+            return;
+        const css = document.createElement('style');
+        css.textContent = `
+  #ardetNetWrap{position:fixed;top:48px;right:12px;z-index:30;display:none;gap:6px}
+  #ardetNetWrap button,#ardetNetBox button{background:rgba(238,227,203,0.55);color:#3A3026;border:none;
+    padding:7px 11px 8px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3);
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    font:500 9px Montserrat,sans-serif;letter-spacing:3px;text-transform:uppercase}
+  #ardetNetWrap button:active,#ardetNetBox button:active{background:rgba(238,227,203,0.78)}
+  #ardetNetWrap b{color:#C23B2B;font-weight:500}
+  #ardetNetBox{position:fixed;left:50%;bottom:16%;transform:translateX(-50%);z-index:40;display:none;
+    width:min(520px,90vw);background:rgba(238,227,203,0.92);color:#3A3026;padding:12px 14px 10px;
+    box-shadow:0 8px 26px rgba(0,0,0,.45)}
+  #ardetNetBox h4{margin:0 0 8px;font:500 8px Montserrat,sans-serif;letter-spacing:3px;color:#C23B2B;text-transform:uppercase}
+  #ardetNetBox textarea{width:100%;box-sizing:border-box;resize:none;border:none;border-bottom:1px solid rgba(58,48,38,.3);
+    background:transparent;color:#2a2620;font:20px VT323,monospace;line-height:1.1;outline:none}
+  #ardetNetBox .row{display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-top:8px}
+  #ardetNetBox .n{margin-right:auto;font:12px VT323,monospace;opacity:.6}
+  #ardetNetBox button{box-shadow:none;background:rgba(58,48,38,.12)}
+  .m #ardetNetWrap{top:calc(62px + env(safe-area-inset-top))}
+  .m #ardetNetBox{bottom:auto;top:9%}`; /* телефон: ниже кнопки карты; строка — над клавиатурой */
+        document.head.appendChild(css);
+        wrap = document.createElement('div');
+        wrap.id = 'ardetNetWrap';
+        const noteBtn = document.createElement('button');
+        noteBtn.id = 'ardetNoteBtn';
+        noteBtn.innerHTML = '<b>✎</b> записка';
+        const sayBtn = document.createElement('button');
+        sayBtn.id = 'ardetSayBtn';
+        sayBtn.innerHTML = '<b>❝</b> сказать';
+        sayBtn.title = 'Enter';
+        noteBtn.addEventListener('click', e => { e.stopPropagation(); open('note'); });
+        sayBtn.addEventListener('click', e => { e.stopPropagation(); open('say'); });
+        wrap.appendChild(noteBtn);
+        wrap.appendChild(sayBtn);
+        box = document.createElement('div');
+        box.id = 'ardetNetBox';
+        box.innerHTML = '<h4></h4><textarea rows="2" spellcheck="false" autocomplete="off"></textarea><div class="row"><span class="n"></span><button data-a="cancel">отмена</button><button data-a="ok"></button></div>';
+        title = box.querySelector('h4');
+        field = box.querySelector('textarea');
+        count = box.querySelector('.n');
+        okBtn = box.querySelector('[data-a="ok"]');
+        box.addEventListener('click', e => e.stopPropagation());
+        box.querySelector('[data-a="cancel"]').addEventListener('click', close);
+        okBtn.addEventListener('click', submit);
+        field.addEventListener('input', () => { count.textContent = `${Array.from(field.value).length} / ${mode === 'note' ? filter_js_3.NOTE_MAX : filter_js_3.SAY_MAX}`; });
+        field.addEventListener('keydown', e => {
+            e.stopPropagation(); // клавиши — в строку, не в мир
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+            }
+            else if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submit();
+            }
+        });
+        document.body.appendChild(wrap);
+        document.body.appendChild(box);
+    }
+    function initNetUI(onPaper) {
+        if (onPaper)
+            paper = onPaper;
+        if (typeof document === 'undefined')
+            return;
+        if (document.readyState !== 'loading')
+            build();
+        else
+            document.addEventListener('DOMContentLoaded', build);
+    }
+    exports_148("initNetUI", initNetUI);
+    // кнопки — когда сеть есть
+    function refreshNetUI() { if (wrap)
+        wrap.style.display = net_js_2.net.on ? 'flex' : 'none'; }
+    exports_148("refreshNetUI", refreshNetUI);
+    function open(m) {
+        if (!net_js_2.net.on || !box || mode || !state_js_6.state.is('game'))
+            return false;
+        if (!state_js_6.state.transition('typing'))
+            return false;
+        mode = m;
+        title.textContent = m === 'note' ? 'записка — останется здесь, её найдут' : 'сказать — услышат те, кто рядом';
+        okBtn.textContent = m === 'note' ? 'оставить' : 'сказать';
+        field.value = '';
+        field.maxLength = m === 'note' ? filter_js_3.NOTE_MAX : filter_js_3.SAY_MAX;
+        count.textContent = `0 / ${field.maxLength}`;
+        box.style.display = 'block';
+        setTimeout(() => field.focus(), 0);
+        return true;
+    }
+    exports_148("open", open);
+    function close() {
+        if (!mode)
+            return;
+        mode = null;
+        box.style.display = 'none';
+        field.blur();
+        state_js_6.state.transition('game');
+    }
+    exports_148("close", close);
+    function noteMenu(n) {
+        const d = Math.floor((Date.now() - (n.created || Date.now())) / DAY);
+        const paperAge = d < 1 ? 'Бумага свежая.' : d < 10 ? 'Бумага чуть пожелтела.' : 'Бумага жёлтая, сгибы в пыли.';
+        return {
+            id: n.mine ? 'net_note_mine' : 'net_note', net: n.id, name: 'Записка',
+            x: n.x - 3, y: n.y - 2, w: 6, h: 4,
+            look: `Записка, сложенная вчетверо. ${paperAge} Почерк ${n.mine ? 'свой' : 'чужой'}:\n\n«${n.text}»`
+                + (n.certs > 0 ? `\n\nЗаверено: ${n.certs}.` : ''),
+            useAction: 'net_cert', useLabel: '<i>✓</i>ЗАВЕРИТЬ',
+            useShown: () => !n.mine && !n.certed,
+            altNow: () => (n.mine || n.reported ? null : { key: 'net_report', label: '<i>✕</i>ПОЖАЛОВАТЬСЯ' }),
+        };
+    }
+    exports_148("noteMenu", noteMenu);
+    function otherMenu(o) {
+        return {
+            id: 'net_other', net: o.tab, name: 'Странник',
+            x: o.x - 6, y: o.y - 23, w: 12, h: 23,
+            look: 'Другой странник. Капюшон и тьма, как у тебя; огонёк у сердца — свой. Что скажет — слышно, только если стоять рядом.',
+            useAction: 'net_mute', useLabel: net_js_2.net.muted.has(o.tab) ? '<i>◉</i>СЛУШАТЬ' : '<i>◌</i>НЕ СЛУШАТЬ',
+        };
+    }
+    exports_148("otherMenu", otherMenu);
+    async function submit() {
+        const m = mode, text = field.value;
+        if (!m)
+            return;
+        close();
+        if (!text.trim())
+            return;
+        if (m === 'say') {
+            const r = net_js_2.netSay(text);
+            if (r.error && SAY_ERR[r.error])
+                paper(SAY_ERR[r.error]);
+            return;
+        }
+        const r = await net_js_2.netLeaveNote(text);
+        paper(r.error ? NOTE_ERR[r.error] || NOTE_ERR.refused : 'Записка оставлена здесь. Её найдут.');
+    }
+    return {
+        setters: [
+            function (state_js_6_1) {
+                state_js_6 = state_js_6_1;
+            },
+            function (net_js_2_1) {
+                net_js_2 = net_js_2_1;
+            },
+            function (filter_js_3_1) {
+                filter_js_3 = filter_js_3_1;
+            }
+        ],
+        execute: function () {
+            wrap = null, box = null, field = null, title = null, count = null, okBtn = null, mode = null, paper = () => { };
+            NOTE_ERR = {
+                soon: 'Записку — не чаще раза в минуту.',
+                quota: 'На сегодня записок довольно: канцелярия примет завтра.',
+                dirty: 'Канцелярия такое не принимает.',
+                refused: 'Канцелярия не приняла записку.',
+                net: 'Записка не дошла: нет связи.',
+                under: 'Под землёй записки не держатся: оставь наверху.',
+            };
+            SAY_ERR = { soon: 'Прежние слова ещё пишутся.' };
+            exports_148("isTyping", isTyping = () => !!mode);
+            // записка и встречный — в меню, как места (ui/ui.js); действия разбирает main.js
+            DAY = 86400e3;
+            exports_148("VOTE_ERR", VOTE_ERR = {
+                mine: 'Своё не заверяют.',
+                twice: 'Эта записка тобой уже заверена.',
+                gone: 'Записки уже нет.',
+                refused: 'Канцелярия не приняла.',
+                net: 'Не дошло: нет связи.',
+            });
+        }
+    };
+});
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "assets/loader"], function (exports_149, context_149) {
+    "use strict";
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_42, player_js_2, context_js_18, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_43, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_4, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, time_js_43, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var __moduleName = context_149 && context_149.id;
     function lockHint() {
         if (time_js_42.t - lockHintAt < 1800)
             return;
@@ -51082,11 +52028,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (!c) {
             c = { key: loc, ox: 0, oy: 0,
                 build: () => shadows_js_1.maskFrom(g => {
-                    context_js_17.setCtx(g);
+                    context_js_18.setCtx(g);
                     drawLocation(g, loc);
                     if (loc.npc && npcDrawFn[loc.npc])
                         npcDrawFn[loc.npc](loc.x, loc.y);
-                    context_js_17.setCtx(layers_js_2.layers.ctx('world'));
+                    context_js_18.setCtx(layers_js_2.layers.ctx('world'));
                 }, loc.x - 30, loc.y - 70, loc.w + 60, loc.y + loc.h) };
             casterOf.set(loc, c);
         }
@@ -51095,7 +52041,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function propCaster(p) {
         let c = casterOf.get(p);
         if (!c) {
-            c = { key: p, ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => { context_js_17.setCtx(g); p.draw(g); context_js_17.setCtx(layers_js_2.layers.ctx('world')); }, Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
+            c = { key: p, ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => { context_js_18.setCtx(g); p.draw(g); context_js_18.setCtx(layers_js_2.layers.ctx('world')); }, Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
             casterOf.set(p, c);
         }
         return c;
@@ -51214,11 +52160,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // ── WORLD: locations + player ──
         worldCtx.save();
         worldCtx.translate(-camX, -camY);
-        context_js_17.setCtx(worldCtx);
+        context_js_18.setCtx(worldCtx);
         archground_js_1.drawArchGround(worldCtx, camX, camY, vw, vh); // дворы, тени, тропинки под постройками
         ground_js_2.drawGroundMarks(worldCtx, { x: camX, y: camY });
         puddles_js_1.drawPuddles(worldCtx, camX, camY, vw, vh, locations_js_6.locations, player); // лужи после дождя, круги
         atmosphere_js_1.drawFootprints(worldCtx, { x: camX, y: camY });
+        net_js_4.drawNotes(worldCtx, camX, camY, vw, vh); // записки других странников — на земле
         ravens_js_2.drawRavenShadows(worldCtx, camX, camY, vw, vh); // тени летящих ворон — на земле
         stumble_js_1.stumble.drawStones(worldCtx);
         if (!NO_GRASS)
@@ -51266,6 +52213,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             drawList.push({ k: ravens_js_2.ravenDepth(b), raven: b });
         for (const f of fireRing_js_1.fireSitesInView(camX, camY, vw, vh))
             drawList.push({ k: f.y, fire: f }); // костры кольца огня
+        for (const o of net_js_4.othersToDraw(worldCtx, 'surface', camX, camY, vw, vh))
+            drawList.push({ k: o.k, other: o }); // другие странники — тенью
         drawList.push({ k: player.y + 24, player: true });
         drawList.sort((p, q) => p.k - q.k);
         for (const it of drawList) {
@@ -51289,11 +52238,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 floraProps_js_1.drawTree(worldCtx, it.tree, time_js_43.t);
                 continue;
             }
+            if (it.other) {
+                it.other.draw();
+                continue;
+            }
             if (it.player) {
                 const so = stumble_js_1.stumble.offset();
                 worldCtx.save();
                 worldCtx.translate(so.x, so.y);
-                player_js_1.drawPlayer(player);
+                player_js_2.drawPlayer(player);
                 worldCtx.restore();
                 stumble_js_1.stumble.drawFront(worldCtx);
                 continue;
@@ -51321,12 +52274,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ravens_js_2.drawRavensAir(worldCtx, camX, camY, vw, vh); // летящие вороны — в воздухе, над всем
         toxic_js_2.toxic.drawWorld(worldCtx);
         drawWorldWhisper({ x: camX, y: camY });
+        net_js_4.drawVoices(worldCtx, 'surface', player); // сказанное рядом — пером над тем, кто сказал
         worldCtx.restore();
         haze_js_1.hazeView(camX, camY, vw, vh, locations_js_6.locations, redNoon_js_3.redNoon.k); // марево: над костром, над Sol, в гари, в полдень — везде
         warmSpots = warmIn(camX, camY, vw, vh); // тёплые огни кадра — перо их не трогает
         // группа второй краски — те же вещи, отдельным прогоном
-        ink_js_2.ink.drawGroup((c, loc) => { context_js_17.setCtx(c); drawLocation(c, loc); }, camX, camY);
-        context_js_17.setCtx(worldCtx);
+        ink_js_2.ink.drawGroup((c, loc) => { context_js_18.setCtx(c); drawLocation(c, loc); }, camX, camY);
+        context_js_18.setCtx(worldCtx);
         // ── LIGHT: additive lighting ──
         if (lighting_js_1.lighting.sources[0]) {
             lighting_js_1.lighting.sources[0].x = player.x + 6;
@@ -51336,7 +52290,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // multiply layer) — dramatic on a desk, near-black on a phone in
         // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
         const ambient = sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).light; // сутки по канону: 0.40 ночь … 0.82 полдень
+        const lit = lighting_js_1.lighting.sources, theirs = net_js_4.otherLights('surface', camX, camY, vw, vh); // чужие огоньки — только на этот кадр
+        if (theirs.length)
+            lighting_js_1.lighting.sources = lit.concat(theirs);
         lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, ambient);
+        lighting_js_1.lighting.sources = lit;
         // Atmospheric particles in lit areas (render on world layer for depth)
         const camObj = { x: camX, y: camY };
         lighting_js_1.lightParticles.draw(worldCtx, camObj);
@@ -51384,6 +52342,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
     // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
     function stepFx() {
+        net_js_3.stepNet(player, underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг
         if (underside_js_4.under.active) {
             stepFxUnder();
             return;
@@ -51398,7 +52357,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         townWell_js_2.stepTownWell(player); // колодец у площади: мимо прошёл — ворот поскрипел
         mossway_js_2.stepMossway(player, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).moon > 0.5, sky_js_4.dayIndex(time_js_43.t)); // пифос ночью шепчет тому, кто задержался
         // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
-        beyond_js_2.beyond.step(player.x + 6, player.y + 23, player.moving, !state_js_6.state.is('game'));
+        beyond_js_2.beyond.step(player.x + 6, player.y + 23, player.moving, !state_js_7.state.is('game'));
         player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond_js_2.beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12; // садится смотреть; шагнул — встал
         player.visor = beyond_js_2.beyond.visor; // у столба: ладонь козырьком, пока черта видна
         beyond_js_2.stepPozemka(camX, camY, scaler_js_26.scaler.vw, scaler_js_26.scaler.vh);
@@ -51434,7 +52393,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             ink_js_2.ink.want(3, 'кольцо огня');
         if (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop())
             ink_js_2.ink.want(3, 'брейнрот');
-        if (jesterFirstTalk && !state_js_6.state.is('dialogue') && !state_js_6.state.is('menu'))
+        if (jesterFirstTalk && !state_js_7.state.is('dialogue') && !state_js_7.state.is('menu'))
             jesterFirstTalk = false;
         if (jesterFirstTalk)
             ink_js_2.ink.want(3, 'первый разговор с Шутом');
@@ -51928,14 +52887,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             ctx.globalAlpha = 0.5;
             ctx.fillStyle = '#1a8c1a';
             ctx.font = '6px "Press Start 2P","VT323",monospace';
-            ctx.fillText(`[${state_js_6.state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler_js_26.scaler.vh - 4);
+            ctx.fillText(`[${state_js_7.state.current}] ${Math.floor(player.x)},${Math.floor(player.y)}`, 4, scaler_js_26.scaler.vh - 4);
             ctx.globalAlpha = 1;
         }
     }
     // Whisper is on world layer (positioned in world coords)
     function drawWorldWhisper(camObj) {
         const worldCtx = layers_js_2.layers.ctx('world');
-        whisper_js_3.draw(worldCtx, camObj);
+        whisper_js_4.draw(worldCtx, camObj);
     }
     function updateCrackTriggers(player) {
         if (time_js_43.t - lastCrackFrame < 240)
@@ -52006,7 +52965,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const a = underside_js_4.accessOf(th), retX = player.x, retY = player.y;
         teleportWithFade(a.x, a.y, () => {
             underside_js_4.under.enter(retX, retY);
-            whisper_js_3.clear(); // шёпот сверху остался наверху
+            whisper_js_4.clear(); // шёпот сверху остался наверху
             redNoon_js_3.muteRedNoon(true);
             if (!surfaceLights)
                 surfaceLights = lighting_js_1.lighting.sources;
@@ -52031,7 +52990,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // наверх: свет и звук мира возвращаются
     function surface() {
         underside_js_4.under.leave();
-        whisper_js_3.clear();
+        whisper_js_4.clear();
         redNoon_js_3.muteRedNoon(false);
         if (surfaceLights)
             lighting_js_1.lighting.sources = surfaceLights;
@@ -52057,9 +53016,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         teleportWithFade(a.x, a.y, () => {
             const f = ui_js_2.getActiveLoc(); // поезд забрал посреди осмотра — окно вещи изнанки закрыть
             if (f && f.under) {
-                if (state_js_6.state.is('menu'))
+                if (state_js_7.state.is('menu'))
                     ui_js_2.hideMenu();
-                else if (state_js_6.state.is('look'))
+                else if (state_js_7.state.is('look'))
                     ui_js_2.closeLook();
             }
             surface();
@@ -52069,6 +53028,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     }
     // клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
     function walkUnder(gx, gy) {
+        if (netClick(gx, gy, 'under'))
+            return;
         const th = physics_js_2.findLocationAt(gx, gy, underside_js_4.thingsNow(), 6);
         const path = th ? underside_js_4.pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : underside_js_4.pathTo(player.x + 6, player.y + 23, gx, gy);
         if (!path || !path.length)
@@ -52080,6 +53041,34 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.moving = true;
         player.auto = true;
         player.walkTo = th || null;
+    }
+    // клик по другому страннику — меню сразу (не слушать можно и издали); по записке — подойти и прочесть
+    function netClick(x, y, layer) {
+        if (!net_js_3.net.on)
+            return false;
+        const o = net_js_4.otherAt(layer, x, y);
+        if (o) {
+            ui_js_2.showMenu(netui_js_1.otherMenu(o));
+            return true;
+        }
+        const n = layer === 'surface' ? net_js_4.noteAt(x, y) : null;
+        if (!n)
+            return false;
+        const nm = netui_js_1.noteMenu(n), sx = n.x - 6 - 12, sy = n.y - 23; // встать слева: подол записку не закроет
+        if (Math.hypot(player.x - sx, player.y - sy) < 8) {
+            ui_js_2.showMenu(nm);
+            return true;
+        }
+        if (!canLeaveSettlement() && !physics_js_2.isInSettlement(sx, sy)) {
+            lockHint();
+            return true;
+        }
+        player.tx = sx;
+        player.ty = sy;
+        player.moving = true;
+        player.auto = true;
+        player.walkTo = nm;
+        return true;
     }
     // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
     function stepFxUnder() {
@@ -52109,7 +53098,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lorepopup_js_1.showLore(underside_js_4.under.say);
             underside_js_4.under.say = null;
         }
-        if (underside_js_4.under.after && state_js_6.state.is('game')) {
+        if (underside_js_4.under.after && state_js_7.state.is('game')) {
             lorepopup_js_1.showLore(underside_js_4.under.after);
             underside_js_4.under.after = null;
         } // строка после сцены
@@ -52121,28 +53110,28 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             rideToWell();
         // шёпоты изнанки: перо пишет их рядом; у уха — идут следом; тишина гасит недописанный
         if (underside_js_4.under.quench) {
-            whisper_js_3.quench();
+            whisper_js_4.quench();
             underside_js_4.under.quench = false;
         }
         const w = underside_js_4.under.whisper;
         if (w) {
             // своё (keep — ниша шепчет имя) важнее: недописанное гаснет, перо ждёт
-            if (w.keep && whisper_js_3.whisperText() && !w.asked) {
-                whisper_js_3.quench();
+            if (w.keep && whisper_js_4.whisperText() && !w.asked) {
+                whisper_js_4.quench();
                 w.asked = true;
             }
             const ear = w.ear ? () => [player.x + 6 + w.ox, player.y + 23 + w.oy] : null, [sx, sy] = ear ? ear() : [w.x, w.y];
-            if (whisper_js_3.sayAt(w.text, sx, sy, w.faint, ear) || !(w.keep || w.wait-- > 0))
+            if (whisper_js_4.sayAt(w.text, sx, sy, w.faint, ear) || !(w.keep || w.wait-- > 0))
                 underside_js_4.under.whisper = null;
         }
-        whisper_js_3.stepWhisper();
+        whisper_js_4.stepWhisper();
         // вдох на пороге: тоннель ответил — долгий вдох, пыль уходит внутрь, шёпот у уха отходит к стене
         if (underside_js_4.under.inhale) {
             const h = underside_js_4.under.inhale;
             audio_js_11.playInhale();
             underside_js_5.inhaleDust(h.x, h.y, h.dx, h.dy);
             const [wx, wy] = underside_js_4.wallSpot(player.x + 6, player.y + 23, player.x + 6 + (Math.random() < 0.5 ? -64 : 64));
-            whisper_js_3.drift(wx, wy);
+            whisper_js_4.drift(wx, wy);
             underside_js_4.under.inhale = null;
         }
         // ход мха: сердце стучит раз в секунду; стоишь — слышно, как растёт мох
@@ -52173,7 +53162,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         bgCtx.fillRect(0, 0, vw, vh);
         worldCtx.save();
         worldCtx.translate(-camX, -camY);
-        context_js_17.setCtx(worldCtx);
+        context_js_18.setCtx(worldCtx);
         player.cold = underside_js_4.under.cold;
         player.ember = underside_js_4.under.ember;
         player.pulse = underside_js_4.moss.k > 0.5 ? underside_js_4.moss.pulse : 0;
@@ -52181,15 +53170,20 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.tug = underside_js_4.under.tug;
         player.steady = underside_js_4.under.greeted;
         player.gust = underside_js_4.under.draft;
-        underside_js_5.drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { context_js_17.setCtx(worldCtx); player_js_1.drawPlayer(player); });
+        underside_js_5.drawUnderWorld(worldCtx, camX, camY, vw, vh, player, () => { context_js_18.setCtx(worldCtx); player_js_2.drawPlayer(player); }, net_js_4.othersToDraw(worldCtx, 'under', camX, camY, vw, vh, underside_js_4.coldAt)); // другие странники в трубах
         particles_js_3.draw(worldCtx, { x: camX, y: camY });
-        whisper_js_3.draw(worldCtx, { x: camX, y: camY });
+        whisper_js_4.draw(worldCtx, { x: camX, y: camY });
+        net_js_4.drawVoices(worldCtx, 'under', player);
         worldCtx.restore();
         haze_js_1.hazeOff();
         warmSpots = warmIn(camX, camY, vw, vh); // в криосклепе огонёк холодный — беречь перу нечего
         ink_js_2.ink.drawGroup((c, th) => underside_js_5.drawUnderThing(c, th), camX, camY);
-        context_js_17.setCtx(worldCtx);
+        context_js_18.setCtx(worldCtx);
+        const lit = lighting_js_1.lighting.sources, theirs = net_js_4.otherLights('under', camX, camY, vw, vh, underside_js_4.coldAt);
+        if (theirs.length)
+            lighting_js_1.lighting.sources = lit.concat(theirs);
         lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, underside_js_4.UNDER_AMBIENT * (1 - 0.6 * underside_js_4.moss.k)); // в ходе мха видно только то, что светит
+        lighting_js_1.lighting.sources = lit;
         lighting_js_1.lightParticles.draw(worldCtx, { x: camX, y: camY });
         metaFx_js_2.crackedGlass.draw(fxCtx);
         metaFx_js_2.dyingPixels.draw(fxCtx);
@@ -52268,7 +53262,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             brainrot_js_1.update(player);
             return;
         }
-        if (!state_js_6.state.is('game')) {
+        if (!state_js_7.state.is('game')) {
             stopHero();
             return;
         }
@@ -52328,8 +53322,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 // не открываем: мимо вещи можно пройти, не останавливаясь.
                 const want = player.walkTo;
                 player.walkTo = null;
-                if (want && want.under)
-                    ui_js_2.showMenu(want); // вещь изнанки: путь вёл к ней
+                if (want && (want.under || want.net))
+                    ui_js_2.showMenu(want); // вещь изнанки, записка: путь вёл к ней
                 else {
                     const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
                         && Math.abs(player.y - (want.y + want.h + 5)) < 4;
@@ -52395,7 +53389,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         zoneAmbient_js_1.updateZone(zoneAmbient_js_1.getZone(player.x, player.y));
         if (!redNoon_js_3.redNoon.active)
             idle_js_1.update(player.moving);
-        whisper_js_3.check(player, locations_js_6.locations, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).moon > 0.5 ? litAt : null); // ночью — только у света
+        whisper_js_4.check(player, locations_js_6.locations, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).moon > 0.5 ? litAt : null); // ночью — только у света
         particles_js_3.update();
         weather_js_1.update(zoneAmbient_js_1.getZone(player.x, player.y));
         updateCrackTriggers(player);
@@ -52436,10 +53430,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const gw = document.getElementById('gw');
         gw.classList.add('on');
         gw.style.opacity = '1'; // force visible
-        state_js_6.state.transition('game');
+        state_js_7.state.transition('game');
         cursor_js_1.show();
         audio_js_11.resumeAudio();
         audio_js_11.startAmbient();
+        net_js_3.startNet().then(netui_js_1.refreshNetUI, () => { }); // есть ли кто ещё в мире — мир от ответа не ждёт
         // треки (ardet-tracks.js подключается страницей до бандла):
         // жест входа разблокирует звук, заставка играет целиком,
         // затем эфир — трек текущей зоны.
@@ -52594,8 +53589,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (physics_js_2_1) {
                 physics_js_2 = physics_js_2_1;
             },
-            function (state_js_6_1) {
-                state_js_6 = state_js_6_1;
+            function (state_js_7_1) {
+                state_js_7 = state_js_7_1;
             },
             function (events_js_8_1) {
                 events_js_8 = events_js_8_1;
@@ -52607,11 +53602,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 time_js_42 = time_js_42_1;
                 time_js_43 = time_js_42_1;
             },
-            function (player_js_1_1) {
-                player_js_1 = player_js_1_1;
+            function (player_js_2_1) {
+                player_js_2 = player_js_2_1;
             },
-            function (context_js_17_1) {
-                context_js_17 = context_js_17_1;
+            function (context_js_18_1) {
+                context_js_18 = context_js_18_1;
             },
             function (jester_js_2_1) {
                 jester_js_2 = jester_js_2_1;
@@ -52727,8 +53722,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (idle_js_1_1) {
                 idle_js_1 = idle_js_1_1;
             },
-            function (whisper_js_3_1) {
-                whisper_js_3 = whisper_js_3_1;
+            function (whisper_js_4_1) {
+                whisper_js_4 = whisper_js_4_1;
             },
             function (particles_js_3_1) {
                 particles_js_3 = particles_js_3_1;
@@ -52790,6 +53785,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (underside_js_6_1) {
                 underside_js_6 = underside_js_6_1;
             },
+            function (net_js_3_1) {
+                net_js_3 = net_js_3_1;
+            },
+            function (net_js_4_1) {
+                net_js_4 = net_js_4_1;
+            },
+            function (netui_js_1_1) {
+                netui_js_1 = netui_js_1_1;
+            },
             function (loader_js_2_1) {
                 loader_js_2 = loader_js_2_1;
             }
@@ -52834,6 +53838,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             cursor_js_1.init();
             audio_js_11.initAudio();
             editor_js_1.initEditor();
+            netui_js_1.initNetUI(lorepopup_js_1.showLore); // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
             loader_js_2.preloadAll().then(() => {
                 // Once the entry painting is in cache, mount it as the #entry
                 // background; the existing logo + button markup stays on top.
@@ -52972,14 +53977,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             LIGHTS = new Set(['campfire', 'sol_home']); // сами светят — тени не отбрасывают (Sol горит с основания)
             casterOf = new Map();
             heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => {
-                    context_js_17.setCtx(g);
-                    player_js_1.drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 });
-                    context_js_17.setCtx(layers_js_2.layers.ctx('world'));
+                    context_js_18.setCtx(g);
+                    player_js_2.drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 });
+                    context_js_18.setCtx(layers_js_2.layers.ctx('world'));
                 }, -6, -10, 26, 23) };
             heroSitCaster = { key: 'странник сидя', ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => {
-                    context_js_17.setCtx(g);
-                    player_js_1.drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0, sit: 1 });
-                    context_js_17.setCtx(layers_js_2.layers.ctx('world'));
+                    context_js_18.setCtx(g);
+                    player_js_2.drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0, sit: 1 });
+                    context_js_18.setCtx(layers_js_2.layers.ctx('world'));
                 }, -8, -10, 30, 23) };
             LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag', 'deadreed']); // низкое тени по солнцу не кладёт (трава и камни — тоже)
             FLATLM = new Set(['iceHole', 'boat', 'oasis']); // приметы вровень с землёй
@@ -53110,9 +54115,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // Fallback removed: canvas click handler already dispatches. Keeping #gw
             // click listener caused double-dispatch (canvas → #gw bubble), which
             // flashed the menu open+closed on the same click.
+            // Enter — сказать вслух: услышат те, кто рядом. Ловится раньше всех (capture): окно
+            // осмотра, бумажка и карта закрываются тем же Enter — тогда говорить не о чем
+            window.addEventListener('keydown', e => {
+                if (e.key !== 'Enter' || e.repeat || !net_js_3.net.on || !state_js_7.state.is('game') || lorepopup_js_1.isActive() || worldmap_js_1.isOpen())
+                    return;
+                if (netui_js_1.open('say'))
+                    e.preventDefault();
+            }, true);
             // Бумажка внизу: пробел / enter / esc — допечатать, потом убрать
             document.addEventListener('keydown', e => {
-                if (!lorepopup_js_1.isActive() || !state_js_6.state.is('game'))
+                if (!lorepopup_js_1.isActive() || !state_js_7.state.is('game'))
                     return;
                 if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape')
                     lorepopup_js_1.skipOrDismiss();
@@ -53121,13 +54134,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             input_js_2.input.onClick(({ clientX, clientY, originalEvent }) => {
                 if (originalEvent)
                     originalEvent.stopPropagation();
-                if (state_js_6.state.is('menu')) {
+                if (state_js_7.state.is('menu')) {
                     ui_js_2.hideMenu();
                     return;
                 }
-                if (state_js_6.state.is('look') || state_js_6.state.is('dialogue'))
+                if (state_js_7.state.is('look') || state_js_7.state.is('dialogue'))
                     return;
-                if (!state_js_6.state.is('game'))
+                if (!state_js_7.state.is('game'))
                     return;
                 // Lore popup eats the first click: dismiss, don't walk
                 if (lorepopup_js_1.isActive()) {
@@ -53140,6 +54153,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 player.path = null;
+                if (netClick(pos.x, pos.y, 'surface'))
+                    return; // другой странник, записка на земле
                 const loc = physics_js_2.findLocationAt(pos.x, pos.y, locations_js_6.locations);
                 if (loc) {
                     const px_ = loc.x + loc.w / 2 - 6;
@@ -53193,7 +54208,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // Дежурный криосклепа: что скажет — решает изнанка (строка описи дошла до него — назовёт её)
             events_js_8.events.on(events_js_8.E.NPC_TALK, (npcId, loc) => {
-                if (npcId === 'watchman' && loc && state_js_6.state.is('menu'))
+                if (npcId === 'watchman' && loc && state_js_7.state.is('menu'))
                     loc.talkLines = underside_js_4.under.talk();
             });
             events_js_8.events.on(events_js_8.E.OBSERVER_MET, (npcId) => {
@@ -53250,6 +54265,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     const s = useActions_js_6.useTexts.town_well_give;
                     ui_js_2.showLook({ name: s.title, look: s.text });
                 } // своё — в ведро общего дна
+                // чужая записка: пожаловаться — у себя больше не увидишь; три жалобы — не увидит никто
+                if (a.key === 'net_report')
+                    net_js_3.netVote(loc.net, 'report').then(r => lorepopup_js_1.showLore(r.error && r.error !== 'twice' ? netui_js_1.VOTE_ERR[r.error] || netui_js_1.VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));
             });
             events_js_8.events.on('location.use', (loc) => {
                 if (loc.id === 'terminal') {
@@ -53257,6 +54275,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 const actionKey = loc.useAction || loc.id;
+                // сеть странников: заверить чужую записку — красная точка печати; не слушать встречного (ui/netui.js)
+                if (actionKey === 'net_cert') {
+                    net_js_3.netVote(loc.net, 'cert').then(r => lorepopup_js_1.showLore(r.error ? netui_js_1.VOTE_ERR[r.error] || netui_js_1.VOTE_ERR.refused : 'Заверено. На записке теперь красная точка печати.'));
+                    return;
+                }
+                if (actionKey === 'net_mute') {
+                    const off = !net_js_3.net.muted.has(loc.net);
+                    net_js_3.mute(loc.net, off);
+                    lorepopup_js_1.showLore(off ? 'Слова этого странника больше не доходят.' : 'Этого странника снова слышно.');
+                    return;
+                }
                 if (actionKey === 'under_up') {
                     goUp(loc);
                     return;
@@ -53373,7 +54402,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться;
             // N (Т) — красный полдень
             document.addEventListener('keydown', e => {
-                if (!state_js_6.state.is('game') || e.repeat)
+                if (!state_js_7.state.is('game') || e.repeat)
                     return;
                 if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш')
                     ink_js_2.ink.cycle();

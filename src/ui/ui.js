@@ -12,7 +12,7 @@ import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
-const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look']);
+const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute']);
 
 // Does this location actually do something on «использовать»?
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -29,6 +29,9 @@ const menuInsc = document.getElementById('menu-inscription');
 let activeLoc = null;
 
 export const menuInscriptions = {
+  net_note: 'почерк чужой.',                 // сеть странников (ui/netui.js)
+  net_note_mine: 'почерк свой.',
+  net_other: 'идёт своей дорогой.',
   campfire: 'огонь не спрашивает.',
   jester_home: 'смеётся. потому что альтернатива.',
   terminal: 'session expired. reconnect?',

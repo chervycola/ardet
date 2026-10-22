@@ -192,17 +192,51 @@ function prepare(text) {
   return { full, sheet, sg: sheet.getContext('2d'), s, cells, times, next: 0, write: Math.ceil(time), wl: cw, base: B / s };
 }
 
+// строка для пера: клетки штриха и расписание; без холста — дописывается по буквам целиком
+export function preparePen(ctx, text) {
+  const P = prepare(text);
+  if (P) return P;
+  ctx.font = `${FONT_PX}px ${FONT}`;
+  return { write: Array.from(text).length * LETTER, wl: ctx.measureText(text).width, plain: true };
+}
+export const PEN_HOLD = HOLD, PEN_FADE = FADE;
+// перо по готовой строке P с центром cx и строкой на sy: дописать клетки до wrote,
+// сухие чернила — с fade, свежие светлее; кончик пера — пока пишет (nib)
+export function penDraw(ctx, P, text, cx, sy, a, wrote, fade, nib = true) {
+  if (P.plain) {
+    const n = Math.min(Array.from(text).length, Math.floor(wrote / LETTER) + 1);
+    ctx.globalAlpha = Math.min(1, DRY_A * fade); ctx.fillStyle = INK; ctx.font = `${FONT_PX}px ${FONT}`;
+    ctx.textAlign = 'left';
+    ctx.fillText(Array.from(text).slice(0, n).join(''), cx - P.wl / 2, sy);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  while (P.next < P.cells.length && P.times[P.next] <= wrote) {
+    const c = P.cells[P.next++];
+    P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
+  }
+  const s = P.s;
+  const x0 = Math.round((cx - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
+  ctx.globalAlpha = Math.min(1, DRY_A * fade);       // речь гуще шёпота (fade > 1) — альфа сверх единицы холст бы пропустил
+  ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
+  for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
+    const c = P.cells[i];
+    ctx.globalAlpha = Math.min(1, WET_A * (1 - (a - P.times[i]) / WET) * fade);
+    ctx.drawImage(P.full, c.x * s, c.y * s, s, s, x0 + c.x, y0 + c.y, 1, 1);
+  }
+  if (nib && P.next > 0 && P.next < P.cells.length) {
+    const c = P.cells[P.next - 1];
+    ctx.globalAlpha = Math.min(1, NIB_A * fade); ctx.fillStyle = NIB;
+    ctx.fillRect(x0 + c.x, y0 + c.y, 1, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function draw(ctx, camera) {
   void camera;                                    // контекст мира уже сдвинут камерой — рисуем в координатах мира
   if (!whisper.text) return;
   const w = whisper;
-  if (!w.prep) {
-    w.prep = prepare(w.text);
-    if (!w.prep) {                                // без холста — строка дописывается по буквам целиком
-      ctx.font = `${FONT_PX}px ${FONT}`;
-      w.prep = { write: Array.from(w.text).length * LETTER, wl: ctx.measureText(w.text).width, plain: true };
-    }
-  }
+  if (!w.prep) w.prep = preparePen(ctx, w.text);
   const P = w.prep;
   let a = t - w.t0;
   if (redNoon.active && a < P.write + HOLD) {     // полдень: недописанное так и гаснет недописанным
@@ -214,35 +248,7 @@ export function draw(ctx, camera) {
   if (w.quenched ? qa >= QUENCH : a >= P.write + HOLD + FADE) { whisper = { text: '', x: 0, y: 0, t0: 0, prep: null }; lastWhisperEnd = t; return; }
   const fade = (w.quenched ? 1 - qa / QUENCH : a < P.write + HOLD ? 1 : 1 - (a - P.write - HOLD) / FADE) * (w.k ?? 1);
   const sy = w.y - (w.quenched ? qa : Math.max(0, a - P.write - HOLD)) * 0.12;     // выцветая, уходит вверх
-  if (P.plain) {
-    const n = Math.min(Array.from(w.text).length, Math.floor(wrote / LETTER) + 1);
-    ctx.globalAlpha = DRY_A * fade; ctx.fillStyle = INK; ctx.font = `${FONT_PX}px ${FONT}`;
-    ctx.textAlign = 'left';
-    ctx.fillText(Array.from(w.text).slice(0, n).join(''), w.x - P.wl / 2, sy);
-    ctx.globalAlpha = 1;
-    return;
-  }
-  // перо: дописать клетки, до которых дошло
-  while (P.next < P.cells.length && P.times[P.next] <= wrote) {
-    const c = P.cells[P.next++];
-    P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
-  }
-  const s = P.s;
-  const x0 = Math.round((w.x - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
-  ctx.globalAlpha = DRY_A * fade;
-  ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
-  // свежие чернила светлее — сохнут за WET шагов
-  for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
-    const c = P.cells[i];
-    ctx.globalAlpha = WET_A * (1 - (a - P.times[i]) / WET) * fade;
-    ctx.drawImage(P.full, c.x * s, c.y * s, s, s, x0 + c.x, y0 + c.y, 1, 1);
-  }
-  if (P.next > 0 && P.next < P.cells.length && w.cut === undefined) {   // кончик пера — пока пишет
-    const c = P.cells[P.next - 1];
-    ctx.globalAlpha = NIB_A * fade; ctx.fillStyle = NIB;
-    ctx.fillRect(x0 + c.x, y0 + c.y, 1, 1);
-  }
-  ctx.globalAlpha = 1;
+  penDraw(ctx, P, w.text, w.x, sy, a, wrote, fade, w.cut === undefined);
 }
 
 // для проверок
