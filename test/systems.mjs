@@ -2772,6 +2772,35 @@ setCtx(ctx);
     assert(U.pathTo(esc.at[0], esc.at[1], 1698, 465), 'от эскалатора не встать спиной к тоннелю (поезд за спиной)');
     assert(/сквозняком/.test(UA.useTexts.metro_sealed.text), 'снизу не тянет тоннелем');
   });
+  test('U7, вход холодной жилы: морозилка в подсобке парка (неон, запад) — пуста, иней стрелкой вниз; рядом подстанция «ПРОЧЕЕ — 100%»', () => {
+    const { freezer: f } = OW.oldways();
+    assert(f && M.locations.includes(f), 'подсобки нет');
+    const fx = f.x + f.w / 2, fy = f.y + f.h;
+    eq(DS.ringAt(fx, fy), 8, 'подсобка не в неоне'); eq(sideOf(fx, fy), 'west', 'подсобка не на западе');
+    const plate = M.locations.find(l => l.name === 'морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»');
+    if (plate) assert(Math.hypot(plate.x + plate.w / 2 - fx, plate.y + plate.h - fy) < 300, 'подсобка далеко от таблички морозилки');
+    assert(/ЖДЁТ ЛУЧШИХ ВРЕМЁН/.test(f.look) && /ПРОЧЕЕ — 100%/.test(f.look) && /стрелка счётчика крутится/.test(f.look), 'осмотр подсобки не по канону');
+    eq(f.useAction, 'freezer_down', 'морозилку не открыть');
+    assert(/иней лёг стрелкой вниз/.test(UA.useTexts.freezer_down.text) && /Пусто/.test(UA.useTexts.freezer_down.text), 'в морозилке не канон');
+    eq(U.DESCENTS.freezer_down, 'u_up_freezer', 'морозилка ведёт не в лаз');
+    const up = U.thingById('u_up_freezer');
+    eq(upOf(up), f, 'лаз выводит не в подсобку');
+    for (const l of M.locations) if (l !== f) assert(!(l.x < f.x + f.w + 6 && l.x + l.w > f.x - 6 && l.y < f.y + f.h + 6 && l.y + l.h > f.y - 6), `подсобка налезла на «${l.name}»`);
+    const draw = tt => { const log = [], ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, val) { log.push(['=' + kk, val]); return true; } }); f.drawSelf(ctx, f, tt); return log; };
+    for (const tt of [0, 13, 40]) for (const [kk, x, y, w, hh] of draw(tt)) if (kk === 'fillRect') assert(x >= f.x - 1 && x + w <= f.x + f.w + 1 && y >= f.y - 1 && y + hh <= f.y + f.h + 1, `подсобка вылезла из рамки: ${x},${y} ${w}×${hh}`);
+    assert(JSON.stringify(draw(0)) !== JSON.stringify(draw(13)), 'стрелка счётчика стоит');
+  });
+  test('U7: от дна морозилки лаз в иней спускается в холодную жилу — к Дежурному, к криосклепу и к крипте', () => {
+    const up = U.thingById('u_up_freezer');
+    eq(U.placeAt(up.at[0], up.at[1]), 'u7n', 'дно морозилки — не над лазом');
+    for (const id of ['u_capsule', 'u_watchman', 'u_up_crypt', 'u_frost']) {
+      const b = U.thingById(id);
+      assert(U.pathTo(up.at[0], up.at[1], b.at[0], b.at[1]), `от морозилки к ${id} не пройти`);
+    }
+    assert(U.coldAt(582, 240) > 0.5, 'в лазе под морозилкой тепло');
+    eq(U.surfaceUnder(582, 240), 'snow', 'в лазе не иней под ногами');
+    assert(/прочее/.test(TX.UNDER_TEXT.u_up_freezer.look) && /под лёд/.test(TX.UNDER_TEXT.u_up_freezer.look), 'кабели «прочего» не уходят под лёд');
+  });
 }
 
 // ═══ REPORT ═══

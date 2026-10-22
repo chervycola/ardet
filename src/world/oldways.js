@@ -21,6 +21,9 @@
 //  · U5 «метро»: заклеенный вход метро в фасаде-панели проспекта-экрана (сейчас, восток):
 //    ленты крест-накрест, над входом полустёрто LASCIATE, рядом мелом белый кролик. Внизу —
 //    вестибюль и платформа; выход — колодец городка, поездом (ритуал «Поезд за спиной»).
+//  · U7 «холодная жила», вход: подсобка парка закрытого праздника (неон, запад) — морозилка
+//    «ЖДЁТ ЛУЧШИХ ВРЕМЁН», пустая, иней на задней стенке стрелкой вниз; рядом гудит подстанция
+//    «ПРОЧЕЕ — 100%». От дна морозилки лаз спускается в жилу, к криосклепу «WD».
 // ═══════════════════════════════════════
 import { TOWN, ringAt, trailPoint } from './disc.js';
 
@@ -267,7 +270,39 @@ function drawMetro(ctx, loc) {
 const RABBIT = ['.X.X....', '.X.X....', '.XXX....', 'X...X...', '.XXX.XX.', '.X.....X', 'X......X', '.XXXXXX.'];
 const METRO_LOOK = 'Заклеенный вход метро: проём крест-накрест в бумажных лентах. Над входом полустёрто: LASCIATE OGNI SPERANZA. Рядом мелом — белый кролик.';
 
-let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null;
+// ── U7, вход: подсобка парка — морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН» (пуста, иней на задней стенке
+//    стрелкой вниз; на крышке круглые следы от бутылок); рядом гудит подстанция «ПАРК — 0% ·
+//    ОСВЕЩЕНИЕ — 0% · ПРОЧЕЕ — 100%», «прочее» подчёркнуто, стрелка счётчика крутится (канон
+//    клетки, К19, К19а). Иней на крыше подсобки — нов.: единственная холодная крыша квартала ──
+const PW_ = 48, PH_ = 34;
+function drawFreezerShed(ctx, loc, t) {
+  const x = loc.x, gy = loc.y + loc.h;
+  ctx.globalAlpha = 0.45; R(ctx, x + 3, gy, PW_ - 2, 1, K0); ctx.globalAlpha = 1;
+  R(ctx, x, gy - 30, 30, 4, K3); R(ctx, x, gy - 30, 30, 1, S1);          // крыша-плита
+  for (let k = 0; k < 14; k++) R(ctx, x + 1 + q(worn(k, 1) * 28), gy - 30 + q(worn(k, 2) * 3), 1, 1, k & 1 ? BO : AS);   // иней на крыше
+  R(ctx, x + 1, gy - 26, 28, 26, BR2);                                   // задняя стена: доски
+  for (let bx = x + 5; bx < x + 28; bx += 5) R(ctx, bx, gy - 26, 1, 26, K1);
+  R(ctx, x, gy - 26, 2, 26, RUST); R(ctx, x + 28, gy - 26, 2, 26, K2);   // стойки
+  const fx = x + 5, fy = gy - 12;                                        // морозилка-ларь: эмаль, крышка сверху
+  R(ctx, fx, fy, 20, 11, L2); R(ctx, fx, fy, 1, 11, L1); R(ctx, fx + 19, fy, 1, 11, S1);
+  R(ctx, fx - 1, fy - 4, 22, 4, L1); R(ctx, fx - 1, fy - 1, 22, 1, S1); R(ctx, fx - 1, fy - 4, 22, 1, BO);
+  for (const ox of [fx + 4, fx + 12]) { R(ctx, ox, fy - 3, 3, 1, S1); R(ctx, ox, fy - 2, 1, 1, S1); R(ctx, ox + 2, fy - 2, 1, 1, S1); }   // круглые следы от бутылок
+  R(ctx, fx + 7, fy + 3, 6, 3, BO); R(ctx, fx + 8, fy + 4, 4, 1, K3);    // бирка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»
+  R(ctx, fx, gy - 1, 20, 1, K2);
+  R(ctx, fx + 20, fy + 7, 11, 1, K1);                                    // кабель к подстанции
+  const sx = x + 31, sh = 22;                                            // подстанция: шкаф, табличка нагрузки, счётчик
+  R(ctx, sx, gy - sh, 16, sh, S0); R(ctx, sx, gy - sh, 16, 1, AS); R(ctx, sx, gy - sh, 1, sh, S1); R(ctx, sx + 15, gy - sh, 1, sh, K2);
+  R(ctx, sx + 2, gy - sh + 3, 12, 6, L2);
+  for (const ly of [gy - sh + 4, gy - sh + 6]) for (let k = 0; k < 10; k += 2) R(ctx, sx + 3 + k, ly, 1, 1, K3);
+  R(ctx, sx + 3, gy - sh + 8, 6, 1, K1);                                 // «прочее» подчёркнуто
+  for (const [dx, dy] of [[2, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3], [0, 4]]) R(ctx, sx + 11 + dx, gy - sh + 10 + dy, 1, 1, KV);   // молния «не влезай»
+  const mx = sx + 6, my = gy - 7, a = (t || 0) * 0.12;                   // счётчик: стрелка крутится
+  R(ctx, mx - 3, my - 3, 7, 7, S2); R(ctx, mx - 2, my - 2, 5, 5, L1);
+  R(ctx, mx + q(Math.cos(a) * 2), my + q(Math.sin(a) * 2), 1, 1, K1); R(ctx, mx, my, 1, 1, K1);
+}
+const FREEZER_LOOK = 'Подсобка парка: морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН», пустая; на крышке круглые следы от бутылок. Рядом гудит подстанция: «ПАРК — 0% · ОСВЕЩЕНИЕ — 0% · ПРОЧЕЕ — 100%», «прочее» кем-то подчёркнуто; стрелка счётчика крутится. На крыше подсобки — иней.';
+
+let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null, freezer = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
   stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', 500).x);
@@ -352,5 +387,15 @@ export function buildOldways(locations) {
     useAction: 'metro_sealed', useLabel: '<i>↓</i>ПОД ЛЕНТУ',
   };
   locations.push(metro);
+  // U7, вход: подсобка с морозилкой — у таблички «морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»» парка
+  const plate = locations.find(l => l.name === 'морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»') || archOf(locations, 8, 'west', 'колесо обозрения', TOWN.x0);
+  const fp = placeIn(locations, 8, 'west', PW_, PH_, plate) || { x: TOWN.x0 - 1560, gy: TOWN.y0 + 900 };
+  freezer = {
+    id: 'park_freezer', name: 'Подсобка парка', zone: 'street',
+    x: fp.x, y: fp.gy - PH_, w: PW_, h: PH_, solidBox: { x: fp.x, y: fp.gy - 6, w: PW_, h: 5 },
+    look: FREEZER_LOOK, drawSelf: drawFreezerShed,
+    useAction: 'freezer_down', useLabel: '<i>❄</i>МОРОЗИЛКА',
+  };
+  locations.push(freezer);
 }
-export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro });
+export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro, freezer });

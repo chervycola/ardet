@@ -62,6 +62,7 @@ export const menuInscriptions = {
   factory_cellar: '1961. не открывать.',
   carriage_89: 'здесь был вася.',
   metro_sealed: 'lasciate ogni sp…',
+  park_freezer: 'ждёт лучших времён.',
   overpass: 'тишина — было общим. продано. органа нет.',
   riverbed: 'дед помнил реку. отец — ручей. сын — лужу. внук — пыль.',
   billboard: 'галочка — бог после бога.',

@@ -553,6 +553,15 @@ FLOORS.u5 = (x, y, R) => {
   return odd ? (n < 0.06 ? S2 : S0) : (n < 0.06 ? S0 : S1);
 };
 
+// ── U7, лаз под морозилкой: стена коллектора, как в жиле, но в инее; по боковым стенам вниз
+// уходят кабели «прочего». Пол — бетон в изморози ──
+BANDS.u7 = (x, d, H) => { const c = veinBand(x, d, H); return c === S0 && hh(x, d, 193) < 0.1 ? (hh(x, d, 194) < 0.4 ? BO : AS) : c; };
+SIDE.u7 = [K2, AS, K1, S2, S0, K1]; LIPS.u7 = [AS, S0, S2, K2, K1];
+FLOORS.u7 = (x, y, R) => {
+  if (y === R.y0) return K1;
+  const n = hh(x, y, 195); return n < 0.05 ? AS : n < 0.08 ? S2 : S0;
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -814,6 +823,17 @@ function stair(th) {
       r(lx + 1, top + 15, 1, 2, KV); r(lx + 2, top + 18, 1, 1, KV);
     }
     r(bx + 2, gy - 4, bw - 4, 3, S2); r(bx + 2, gy - 4, bw - 4, 1, AS); r(bx + 2, gy - 1, bw - 4, 1, K1);   // ступенька в вагон
+    return;
+  }
+  if (kind === 'freezer') {                                             // U7: над головой дно морозилки — эмаль в инее; скобы вверх; иней лёг стрелкой вниз
+    const cx = q(x + w / 2);
+    r(cx - 8, top + 7, 16, gy - top - 7, K1);                           // ниша под скобами
+    for (let sy = gy - 4; sy > top + 10; sy -= 5) { r(cx - 6, sy, 12, 1, AS); r(cx - 6, sy + 1, 12, 1, S2); r(cx - 7, sy - 1, 1, 3, S2); r(cx + 6, sy - 1, 1, 3, K2); }
+    r(cx - 10, top, 20, 7, L2); r(cx - 10, top, 20, 1, L1); r(cx - 10, top + 6, 20, 1, S1);   // дно морозилки: эмаль снизу
+    for (let k = 0; k < 9; k++) r(cx - 9 + q(hh(k, x, 196) * 18), top + 1 + q(hh(k, x, 197) * 5), 1, 1, BO);
+    const ax = cx + 11;                                                  // иней стрелкой вниз
+    for (let k = 0; k < 14; k++) r(ax, top + 9 + k, 1, 1, k % 3 ? BO : AS);
+    for (let k = 1; k <= 4; k++) { r(ax - k, top + 22 - k, 1, 1, BO); r(ax + k, top + 22 - k, 1, 1, BO); }
     return;
   }
   if (kind === 'escalator') {                                           // U5: эскалатор стоит — рифлёные ступени вверх, к верху уже; лампы балюстрады мёртвые
@@ -1581,6 +1601,8 @@ function frostDots() {
     const e = Math.min(x - W.x0, W.x1 - x, y - W.y0, W.y1 - y);
     return 0.015 + 0.08 * Math.max(0, 1 - e / 18);                      // пол: у стен гуще
   });
+  const U7 = ROOMS.find(R => R.id === 'u7n');                         // лаз под морозилкой: иней от дна морозилки до жилы
+  add(U7.x0 - 6, U7.x1 + 6, U7.y0 - U7.wh, U7.y1, (x, y) => (y < U7.y0 || x < U7.x0 || x >= U7.x1 ? 0.08 : 0.025));
   const vk = x => (x >= KAPT.x0 - 2 && x < KAPT.x1 + 4 ? 0 : Math.max(0, (x - VEIN.x0 - 80) / (VEIN.x1 - VEIN.x0 - 80)) * Math.min(1, Math.abs(x - KAPT.x0) / 18));   // у печки Дежурного инея нет
   add(VEIN.x0 + 80, VEIN.x1, VEIN.y0 - VEIN.wh, VEIN.y0 + VEIN.fh, (x, y) => (y < VEIN.y0 ? 0.09 : 0.03) * vk(x));
   return frost;
