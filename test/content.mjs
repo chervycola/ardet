@@ -139,7 +139,7 @@ setCtx(fakeCtx());
 
   test('useActions: every useAction resolves to a handler or known special', () => {
     const specials = new Set(['terminal','shop1','shop2','shop3',
-      'gates_pass','branch_plain','branch_back','brainrot_enter','well_crank','town_well_crank']);
+      'gates_pass','branch_plain','branch_back','brainrot_enter','well_crank','town_well_crank','horizon_look']);
     const missing = [];
     for (const l of locations) {
       if (!l.useAction) continue;

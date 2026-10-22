@@ -2322,11 +2322,147 @@ setCtx(ctx);
     let m = 0;
     for (let i = 0; i < 400; i++) { BY.beyond.step(4650, 4000, true); if (BY.beyond.murmur > 0) m++; }
     eq(m, 0, 'бормочет в городке');
-    BY.beyond.hK = 1;
-    for (let i = 0; i < 400; i++) { BY.beyond.step(N.x, N.y, true); if (BY.beyond.murmur > 0) m++; }
+    assert(BY.beyond.lookHorizon(), 'горизонт не открылся');
+    for (let i = 0; i < BY.HOR; i++) { tick(); BY.beyond.step(N.x, N.y, false); if (BY.beyond.murmur > 0 && BY.beyond.hAge > BY.HOR_IN + 1 && BY.beyond.hT > BY.HOR_OUT) m++; }
     eq(m, 0, 'бормочет при горизонте');
     BY._resetBeyond();
   });
+  {
+    const LOC = (await imp('world/locations.js')).locations, W2 = (await imp('world/wind.js')).wind;
+    test('за кольцом: столб у северной тропы, на трети пустыни; одинокий; действие — из-под ладони', () => {
+      const p = BY.horizonPole();
+      assert(p && LOC.includes(p), 'столба нет среди мест');
+      const gx = p.x + 6, gy = p.y + p.h, d = BY.northDepth(gx, gy);
+      assert(d >= 0.29 && d < 0.33, `глубина столба ${d}`);
+      const tr = DSC.trailPoint('north', T0.y0 - gy);
+      assert(Math.abs(tr.x - gx) < 90, `от тропы далеко: ${Math.round(tr.x - gx)}`);
+      eq(p.useAction, 'horizon_look', 'действие');
+      assert(/Утерян горизонт\. Нашедшему — вернуть/.test(p.look) && /растр съедает линию/.test(p.look), 'осмотр не по канону');
+      for (const l of LOC) if (l !== p) assert(Math.hypot(l.x - p.x, l.y - p.y) > 300, `рядом ${l.id} — не одинокий`);
+    });
+    test('за кольцом: столб — точки краской канона, в рамке тени; бланк трепещет, при горизонте замер', () => {
+      const p = BY.horizonPole(), OK = new Set(['#15100c', '#2a2620', '#34302a', '#3a3328', '#3a2818', '#241c14', '#c8b89a', '#D9CFB8', '#8A8D8F', '#C23B2B'].map(c => c.toLowerCase()));
+      const shot = tt => {
+        const log = [];
+        const g = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+        p.drawSelf(g, p, tt);
+        for (const [k, ...a] of log) {
+          if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `столб: краска ${a[0]} вне палитры`);
+          if (k === 'fillRect') assert(a[0] >= p.x - 30 && a[0] + a[2] <= p.x + p.w + 30 && a[1] >= p.y - 70 && a[1] + a[3] <= p.y + p.h + 1, `столб вылез: ${a}`);
+          assert(!/arc|ellipse|stroke|Gradient/.test(k), `столб: векторное ${k}`);
+        }
+        return JSON.stringify(log);
+      };
+      W2.s = 0.7; BY.beyond.hK = 0;
+      const a = [3, 9, 17, 26].map(shot);
+      assert(new Set(a).size > 1, 'бланк не трепещет');
+      BY.beyond.hK = 1;
+      const b = [3, 9, 17, 26].map(shot);
+      eq(new Set(b).size, 1, 'при горизонте трепещет');
+      BY.beyond.hK = 0;
+    });
+  }
+  test('за кольцом: горизонт — прорезается, держится семь секунд, уходит; строка про вынос — не чаще раза в 45 с', () => {
+    BY._resetBeyond();
+    stand(5);
+    assert(BY.beyond.lookHorizon(), 'не открылся');
+    assert(!BY.beyond.lookHorizon(), 'открылся дважды');
+    stand(1);
+    assert(BY.beyond.visor, 'ладонь не поднята');
+    assert(BY.beyond.hK > 0 && BY.beyond.hK < 0.1, `прорезается сразу: ${BY.beyond.hK}`);
+    stand(BY.HOR_IN);
+    eq(BY.beyond.hK, 1, 'не прорезался');
+    eq(BY.beyond.pic, null, 'смотрит на черту — а собирает кадр');
+    stand(BY.HOR - BY.HOR_IN - BY.HOR_OUT - 2);
+    eq(BY.beyond.hK, 1, 'ушёл раньше');
+    stand(BY.HOR_OUT / 2);
+    assert(BY.beyond.hK > 0.3 && BY.beyond.hK < 0.7, `уходит не плавно: ${BY.beyond.hK}`);
+    eq(BY.beyond.say, null, 'строка раньше конца');
+    stand(BY.HOR_OUT / 2 + 1);
+    eq(BY.beyond.hK, 0, 'не ушёл');
+    assert(!BY.beyond.visor, 'ладонь не опущена');
+    eq(BY.beyond.say, BY.HOR_LINE, 'строки нет');
+    BY.beyond.say = null;
+    assert(BY.beyond.lookHorizon(), 'второй раз не открылся');
+    stand(BY.HOR + 1);
+    eq(BY.beyond.say, null, 'строка чаще раза в 45 секунд');
+    stand(BY.STILL0 + 1);
+    assert(BY.beyond.pic, 'после горизонта песчинка не выбирается');
+  });
+  test('за кольцом: шагнул с горизонтом — ладонь опущена, черта уходит за секунду: вынос не предусмотрен', () => {
+    BY._resetBeyond();
+    stand(BY.STILL0 + BY.GRAIN + 300);
+    const P = BY.beyond.pic;
+    assert(P && !P.gone, 'кадра нет');
+    BY.beyond.lookHorizon();
+    eq(P.gone && P.gone.kind, 'sigh', 'недосмотренный кадр не ушёл со вздохом');
+    assert(BY.beyond.sighSnd, 'вздоха нет');
+    BY.beyond.sighSnd = false;
+    stand(BY.HOR_IN + 10);
+    tick(); BY.beyond.step(N.x + 1, N.y, true);
+    assert(!BY.beyond.visor, 'шагнул — ладонь у лба');
+    for (let i = 0; i < BY.HOR_OUT - 2; i++) { tick(); BY.beyond.step(N.x + i, N.y, true); }
+    assert(BY.beyond.hK > 0, 'ушёл раньше секунды');
+    for (let i = 0; i < 3; i++) { tick(); BY.beyond.step(N.x + i, N.y, true); }
+    eq(BY.beyond.hK, 0, 'унёс горизонт с собой');
+    eq(BY.beyond.say, BY.HOR_LINE, 'про вынос не сказано');
+    BY._resetBeyond();
+  });
+  test('за кольцом: горизонт — черта во всю ширину на пятой части кадра, вечер над ней; распад редеет', () => {
+    const OK = new Set(['#0d0b0a', '#e28a3a', '#d9cfb8', '#8a8d8f', '#2a2620']);
+    const run = () => {
+      const log = [];
+      const g = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+      BY.drawHorizon(g, 640, 360);
+      return log;
+    };
+    BY._resetBeyond();
+    eq(run().length, 0, 'горизонт без взгляда');
+    BY.beyond.lookHorizon();
+    stand(BY.HOR_IN + 30);
+    const log = run();
+    let fill = '';
+    for (const [k, ...a] of log) {
+      if (k === '=fillStyle') { fill = String(a[0]).toLowerCase(); assert(OK.has(fill), `горизонт: краска ${a[0]} вне палитры`); }
+      if (k === 'fillRect') assert(a[1] >= 0 && a[1] + a[3] <= 360 * 0.2 + 60, `горизонт ниже поля: ${a}`);
+    }
+    assert(log.some(([k, x, y, w, h], i) => k === 'fillRect' && x === 0 && y === 72 && w === 640 && h === 1 && log.slice(0, i).reverse().find(([kk]) => kk === '=fillStyle')[1] === '#0D0B0A'), 'черты нет');
+    const warm = log.filter(([k], i) => k === 'fillRect' && log.slice(0, i).reverse().find(([kk]) => kk === '=fillStyle')[1] === '#E28A3A');
+    assert(warm.length > 0 && warm.every(([, , y, , h]) => y >= 72 - 3 && y + h <= 72), 'тёплое — не у самой черты');
+    // распад редеет: пепел распада тоньше
+    const deep = { x: N.x, y: N.y - 300, moving: false };
+    for (let i = 0; i < 300; i++) { EDG.update(deep); BRT.update(deep); }
+    const ash = d => {
+      BRT.dampBrainrot(d);
+      const L = [];
+      const g = new Proxy({}, { get(t, k) { if (/^create/.test(k)) return () => ({ addColorStop: noop }); return (...a) => { L.push([k, ...a]); }; }, set(t, k, v) { L.push(['=' + k, v]); return true; } });
+      BRT.draw(g);
+      let al = 0, a0 = 0;
+      for (const [k, v] of L) { if (k === '=globalAlpha') al = v; if (k === '=fillStyle' && v === '#8A8D8F') a0 = al; }
+      return a0;
+    };
+    const full = ash(0), calm = ash(1);
+    assert(full > 0.04 && calm < full * 0.3, `пепел распада: ${full} → ${calm}`);
+    BRT.dampBrainrot(0);
+    const town = { x: 4650, y: 4000, moving: false };
+    for (let i = 0; i < 400; i++) { EDG.update(town); BRT.update(town); }
+    BY._resetBeyond();
+  });
+  {
+    const PL = await imp('sprites/player.js');
+    const draw = visor => {
+      const L = [];
+      const g = new Proxy({}, { get(t, k) { return k === 'fillRect' ? (...a) => L.push(['fillRect', ...a]) : noop; }, set(t, k, v) { if (k === 'fillStyle') L.push(['=fillStyle', v]); return true; } });
+      setCtx(g); PL.drawPlayer({ x: 100, y: 100, moving: false, vx: 0, vy: 0, visor }); setCtx(ctx);
+      return L;
+    };
+    test('за кольцом: ладонь козырьком — локоть в сторону, ладонь над тьмой капюшона', () => {
+      const a = draw(false), b = draw(true);
+      const x1 = L => Math.max(...L.filter(([k]) => k === 'fillRect').map(([, x, , w]) => x + w));
+      assert(x1(b) >= x1(a), `локоть не в сторону: ${x1(a)} → ${x1(b)}`);
+      assert(b.length > a.length + 6, 'ладони не видно');
+    });
+  }
   const WND = (await imp('world/wind.js')).wind;
   const cam = p => ({ x: p.x - 320, y: p.y - 180 });
   const sweep = (p, k) => { const c = cam(p); for (let i = 0; i < k; i++) { tick(); BY.stepPozemka(c.x, c.y, 640, 360); } return c; };

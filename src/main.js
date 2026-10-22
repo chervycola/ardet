@@ -68,7 +68,7 @@ import {
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
 import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh } from './audio/audio.js';
-import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings } from './world/beyond.js';
+import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -100,7 +100,7 @@ import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawR
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
-import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings } from './world/brainrot.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot } from './world/brainrot.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
@@ -550,7 +550,9 @@ function render() {
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   drawWeatherOverlay(uiCtx);
   setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
+  dampBrainrot(beyond.hK);                          // горизонт виден — распад редеет
   drawBrainrot(uiCtx);
+  drawHorizon(uiCtx, vw, vh);                       // столб за кольцом: черта далеко впереди, над ней вечер
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
   ink.drawLabel(uiCtx);
@@ -607,7 +609,7 @@ function stepFx() {
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
   wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
-  updateWindSound(wind.at(player.x + 6, player.y + 10).s * (1 - 0.8 * redNoon.k));   // в полдень в ушах тихо
+  updateWindSound(wind.at(player.x + 6, player.y + 10).s * (1 - 0.8 * redNoon.k) * (1 - 0.75 * beyond.hK));   // в полдень в ушах тихо; при горизонте — тоже
   stepGrass(player);
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
@@ -616,9 +618,10 @@ function stepFx() {
   // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
   beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'));
   player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть; шагнул — встал
+  player.visor = beyond.visor;                       // у столба: ладонь козырьком, пока черта видна
   stepPozemka(camX, camY, scaler.vw, scaler.vh);
   if (beyond.murmur) playMurmur(beyond.murmur);
-  if (beyond.sighSnd) playSigh();
+  if (beyond.sighSnd) { playSigh(); beyond.sighSnd = false; }
   if (beyond.say) { showLore(beyond.say); beyond.say = null; }
   if (under.shadow && skyAt(phaseAt(t)).sun) under.shadow = false;   // тень цветка держится до первого дневного света
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
@@ -1668,6 +1671,8 @@ events.on('location.use', (loc) => {
   if (actionKey === 'well_crank') { crankWell(`well:${loc.id}`); return; }
   // колодец у площади: тяжёлое ведро — в нём чья-то давняя потеря (world/townWell.js)
   if (actionKey === 'town_well_crank') { crankTownWell(showLore); return; }
+  // столб за кольцом: посмотреть из-под ладони — черта горизонта на несколько секунд (world/beyond.js)
+  if (actionKey === 'horizon_look') { beyond.lookHorizon(); return; }
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }

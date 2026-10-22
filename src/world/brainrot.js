@@ -117,6 +117,9 @@ function rnd(n) { const v = Math.sin(n * 91.7 + 13.1) * 43758.5453; return v - M
 // расступаются. Прямоугольники в точках кадра; кладутся заново каждый кадр.
 let holes = [];
 export function setClearings(list) { holes = list || []; }
+// горизонт виден (столб за кольцом) — пустыня на миг просто вечер в поле: распад редеет
+let damp = 0;
+export function dampBrainrot(v) { damp = Math.max(0, Math.min(1, v || 0)); }
 function fillAround(ctx, vw, vh) {
   if (!holes.length) { ctx.fillRect(0, 0, vw, vh); return; }
   ctx.save();
@@ -137,7 +140,8 @@ export function draw(ctx) {
 
   if (brainrotFreeze) { drawFall(ctx, fallKind, brainrotFreezeTimer / FALL_LEN); return; }
 
-  const k = brainrot / 100;
+  const k = brainrot / 100 * (1 - 0.85 * damp);
+  if (k <= 0) return;
   const bg = layers.canvas('bg'), world = layers.canvas('world');
   const tick = t >> 2;                       // распад дёргается рывками, не плывёт
 

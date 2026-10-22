@@ -170,6 +170,9 @@ buildTownWell(locations);
 // ход мха (изнанка U6): пифос шепчет ночью и пускает лечь; нора у подножия огня
 import { buildMossway } from './mossway.js';
 buildMossway(locations);
+// за кольцом, север: столб утерянного горизонта у северной тропы
+import { buildBeyond } from './beyond.js';
+buildBeyond(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

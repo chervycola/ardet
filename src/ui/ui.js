@@ -12,7 +12,7 @@ import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
-const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read']);
+const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look']);
 
 // Does this location actually do something on «использовать»?
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -54,6 +54,7 @@ export const menuInscriptions = {
   pizzeria: '47 столов. одно блюдо. welcome куда?',
   crater: 'монета уже упала. результат — ребро.',
   town_well: 'возвращено. владелец выбыл.',
+  horizon_pole: 'нашедшему — вернуть.',
   overpass: 'тишина — было общим. продано. органа нет.',
   riverbed: 'дед помнил реку. отец — ручей. сын — лужу. внук — пыль.',
   billboard: 'галочка — бог после бога.',

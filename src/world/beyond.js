@@ -10,9 +10,15 @@
 //    старую картинку, чью-то, не свою; держится, пока держится взгляд. Кадр нельзя
 //    унести, можно только досмотреть: досмотренный до конца рассыпается тихо,
 //    недосмотренный — со вздохом.
+//  · Столб утерянного горизонта: единственный столб в пустыне, на кнопке бланк без
+//    входящего номера «Утерян горизонт. Нашедшему — вернуть». Горизонта за кольцом
+//    нет — растр съедает линию. Посмотришь из-под ладони — далеко впереди на
+//    несколько секунд прорезается тонкая твёрдая черта, и пустыня становится просто
+//    вечером в поле: растр не бормочет, позёмка ложится, бумажка не трепещет.
+//    Шагнул — черта уходит: пользоваться на месте, вынос не предусмотрен.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, warpedDist } from './disc.js';
+import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, warpedDist, trailPoint } from './disc.js';
 import { wind } from './wind.js';
 
 const OUTER = RINGS * RING_W + FIRE_W;                 // где кончается огонь
@@ -97,6 +103,9 @@ function hh(a, b, s) {
 export const PIC_LINE = 'Изображение восстановлено частично. Полностью не бывает.';
 export const STILL0 = 60, GRAIN = 120, BUILD = 3600, HOLD = 600;    // встал; выбрал песчинку; минута; досмотреть
 const MISS = 0.13;                                                   // столько крошки не возвращается никогда
+export const HOR_LINE = 'Нашедшему горизонт просьба пользоваться на месте. Вынос не предусмотрен.';
+export const HOR = 420, HOR_IN = 45, HOR_OUT = 60;                  // семь секунд; прорезается, уходит
+const HOR_SAY = 2700;                                                // строка — не чаще раза в сорок пять секунд
 
 // ── состояние ──
 export const beyond = {
@@ -105,23 +114,46 @@ export const beyond = {
   pic: null,             // кадр: { x, y, k, t, px: [...], gone: { kind, t } | null }
   picN: 0,               // какую картинку соберёт следующей
   murmur: 0,             // бормотание на этом шаге (громкость; 0 — тихо)
-  sighSnd: false,        // недосмотренный рассыпался — вздох
+  sighSnd: false,        // недосмотренный рассыпался — вздох (main услышит и сбросит)
   seated: false,         // странник сел смотреть («садится, выбирает песчинку»)
   hK: 0,                 // видимость горизонта 0..1 (ритуал «Столб утерянного горизонта»)
+  hT: 0,                 // горизонт: сколько шагов ещё виден
+  hAge: 0,               // …и сколько уже
+  visor: false,          // ладонь козырьком
+  dropped: false,        // ладонь опустил, шагнул — черта уходит
+  saidAt: -1e9,          // когда последний раз выходила строка про вынос
   say: null,             // строка мира — main покажет бумажкой
   // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть
   step(fx, fy, moving, paused = false) {
     const dep = northDepth(fx, fy), here = dep > 0.03 && dep < 0.92;
     this.depth = dep;
-    this.sighSnd = false;
     // позёмка бормочет: обломки слов, гуще к краю; горизонт виден — молчит
     this.murmur = here && Math.random() < 0.22 ? (0.35 + 0.65 * dep) * (1 - this.hK) : 0;
     if (paused) return;
-    this.still = moving ? 0 : this.still + 1;                      // неподвижный взгляд на одну песчинку
+    this.horizon(moving);
+    this.still = moving || this.hT > 0 ? 0 : this.still + 1;       // неподвижный взгляд на одну песчинку (не на черту)
     this.look(here, moving, fx, fy);
     const Q = this.pic;
     // странник сидит, пока смотрит: от выбранной песчинки до тихого конца и отдыха после
     this.seated = here && !moving && (Q ? !Q.gone || Q.gone.kind === 'quiet' : this.still < 0);
+  },
+  // горизонт: прорезается за HOR_IN, держится, уходит за HOR_OUT; шагнул — уходит сразу
+  horizon(moving) {
+    if (this.hT > 0) {
+      this.hAge++;
+      if (moving && !this.dropped) { this.dropped = true; this.hT = Math.min(this.hT, HOR_OUT); }
+      if (--this.hT <= 0 && t - this.saidAt > HOR_SAY) { this.say = HOR_LINE; this.saidAt = t; }
+    }
+    this.hK = this.hT > 0 ? Math.min(1, this.hAge / HOR_IN, this.hT / HOR_OUT) : 0;
+    this.visor = this.hT > 0 && !this.dropped;
+  },
+  // посмотреть из-под ладони (столб): на песчинку больше не смотришь — недосмотренный кадр уходит
+  lookHorizon() {
+    if (this.hT > 0) return false;
+    this.hT = HOR; this.hAge = 0; this.dropped = false; this.still = 0;
+    const P = this.pic;
+    if (P && !P.gone) { if (P.t > GRAIN) this.scatter('sigh'); else this.pic = null; }
+    return true;
   },
   look(here, moving, fx, fy) {
     const P = this.pic;
@@ -142,7 +174,10 @@ export const beyond = {
     P.gone = { kind, t: kind === 'quiet' ? 150 : 70, t0: kind === 'quiet' ? 150 : 70 };
     if (kind === 'sigh') this.sighSnd = true;
   },
-  reset() { this.pic = null; this.still = 0; this.murmur = 0; this.sighSnd = false; this.seated = false; this.say = null; this.depth = -1; },
+  reset() {
+    this.pic = null; this.still = 0; this.murmur = 0; this.sighSnd = false; this.seated = false; this.say = null; this.depth = -1;
+    this.hT = 0; this.hAge = 0; this.hK = 0; this.visor = false; this.dropped = false;
+  },
 };
 // кадр у ног: песчинка — в середине; крошка прилетает по ветру, с наветренной стороны
 function makePic(x, y, k) {
@@ -266,5 +301,88 @@ export function drawBeyondWorld(ctx, camX, camY, vw, vh) {
   }
   ctx.globalAlpha = 1;
 }
+
+// ═══ СТОЛБ УТЕРЯННОГО ГОРИЗОНТА ═══
+// горизонт — поверх кадра (слой интерфейса, точки кадра): далеко впереди тонкая твёрдая
+// черта; над ней вечер — пепел, к черте кость штрихами пластины, у самой черты полоска
+// свечи (тепло не растрируется); под ней поле — штрих реже к нам. Черта прорезается
+// от середины. Растр распада при этом редеет (brainrot.dampBrainrot).
+const NI = '#0D0B0A', SV = '#E28A3A', BO = '#D9CFB8';
+// штрих пластины: линия с просветами, как на гравюре (не по линейке)
+function hatch(ctx, y, vw, n) {
+  for (let x = 0, j = 0; x < vw; j++) {
+    const len = 24 + Math.floor(hh(n, j, 3) * 70), gap = 3 + Math.floor(hh(n, j, 5) * 14);
+    ctx.fillRect(x, y, Math.min(len, vw - x), 1);
+    x += len + gap;
+  }
+}
+export function drawHorizon(ctx, vw, vh) {
+  const k = beyond.hK;
+  if (k <= 0) return;
+  const H = Math.round(vh * 0.2), top = Math.round(H * 0.45);
+  const half = Math.round(vw / 2 * Math.min(1, beyond.hAge / 24)), x0 = Math.round(vw / 2) - half;
+  ctx.globalAlpha = 0.75 * k; ctx.fillStyle = AS; ctx.fillRect(0, 0, vw, top);   // пепел сверху — сквозь него ещё мир
+  ctx.globalAlpha = 0.9 * k; ctx.fillStyle = BO; ctx.fillRect(0, top, vw, H - top);
+  ctx.fillStyle = AS;                                                   // пепел уходит в кость штрихами: к черте реже
+  let n = 0;
+  for (let y = top, s = 2; y < H - 6; y += s, s = Math.min(7, s + 0.6)) hatch(ctx, Math.round(y), vw, n++);
+  ctx.fillStyle = SV;                                                   // последний свет — у черты, кверху гаснет
+  for (const [i, a] of [[1, 0.6], [2, 0.3], [3, 0.12]]) { ctx.globalAlpha = a * k; ctx.fillRect(x0, H - i, half * 2, 1); }
+  ctx.fillStyle = AS;                                                   // поле под чертой: темнее неба, к нам светлеет
+  for (let i = 0; i < 5; i++) { ctx.globalAlpha = 0.3 * k * (1 - i / 5); ctx.fillRect(0, H + 1 + i * 6, vw, 6); }
+  ctx.fillStyle = INK[0];                                               // борозды поля: у черты густо, к нам реже
+  for (let i = 0, y = H + 2; i < 7; i++, y += 2 + i * 2) { ctx.globalAlpha = 0.55 * k * (1 - i / 7); hatch(ctx, y, vw, 40 + i); }
+  ctx.globalAlpha = k; ctx.fillStyle = NI;                              // черта: тонкая, твёрдая, прорезается от середины
+  ctx.fillRect(x0, H, half * 2, 1);
+  ctx.globalAlpha = 1;
+}
+
+// столб: чуть накренился; бланк на кнопке трепещет по ветру, черта видна — замер
+const POLE_LOOK = 'Единственный столб в пустыне. Стоит чуть накренившись; вокруг никого на все стороны — и самих сторон нет. К столбу кнопкой прижат бланк без входящего номера: «Утерян горизонт. Нашедшему — вернуть». Горизонта за кольцом действительно нет — растр съедает линию.';
+const PO_H = 46, LEAN = 3, FORM = 27;                                 // высота; накрен к верху; бланк — на этой высоте
+const K0 = '#15100c', K2 = '#2a2620', K4 = '#3a3328', BR2 = '#3a2818', L1 = '#c8b89a', KV = '#C23B2B';
+const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+function drawPole(ctx, loc, tt) {
+  const x = loc.x + 4, gy = loc.y + loc.h, lx = j => x + Math.round(j * LEAN / PO_H);
+  ctx.globalAlpha = 0.45; R(ctx, x - 1, gy, 9, 1, K0); R(ctx, x + 3, gy - 1, 5, 1, K0); ctx.globalAlpha = 1;   // тень — вправо
+  for (const [dx, c] of [[-2, AS], [-1, INK[1]], [3, INK[2]], [4, AS]]) R(ctx, x + dx, gy - 1, 1, 1, c);       // крошка у основания
+  for (let j = 0; j < PO_H; j++) {                                       // ствол: свет слева, тень справа, трещины
+    const xx = lx(j), y = gy - 1 - j;
+    R(ctx, xx, y, 1, 1, j % 9 === 4 ? K2 : BR2); R(ctx, xx + 1, y, 1, 1, (j * 7) % 11 === 3 ? K0 : K2); R(ctx, xx + 2, y, 1, 1, K1);
+  }
+  const tx = lx(PO_H);
+  R(ctx, tx - 1, gy - 1 - PO_H, 4, 1, K4); R(ctx, tx + 2, gy - 1 - PO_H, 1, 1, AS);   // спил сверху
+  // бланк на кнопке: по краю пепел (на костяной земле иначе не виден), справа тень;
+  // ниже кнопки трепещет по ветру — тем сильнее, чем ниже; горизонт виден — замер
+  const fx = lx(FORM) - 3, fy = gy - 1 - FORM - 10, amp = Math.min(1.6, 0.5 + (wind.s || 0) * 1.6) * (1 - beyond.hK);
+  for (let r = 0; r < 10; r++) {
+    const off = r < 2 ? 0 : Math.round(Math.sin(tt * 0.31 + r * 0.7) * amp * r / 9 + Math.sin(tt * 0.83 + r) * amp * 0.3 * (r / 9));
+    const x = fx + off, y = fy + r, edge = r === 0 || r === 9;
+    R(ctx, x, y, 8, 1, edge ? AS : BO);
+    if (!edge) { R(ctx, x, y, 1, 1, AS); R(ctx, x + 7, y, 1, 1, AS); }
+    ctx.globalAlpha = 0.5; R(ctx, x + 8, y + 1, 1, 1, K0); ctx.globalAlpha = 1;
+    if (r === 3) R(ctx, x + 2, y, 4, 1, K2);                           // «Утерян горизонт.»
+    if (r === 5) R(ctx, x + 1, y, 5, 1, INK[2]);                       // «Нашедшему —
+    if (r === 6) R(ctx, x + 1, y, 3, 1, INK[2]);                       //  вернуть»
+    if (r === 8) R(ctx, x + 4, y, 2, 1, L1);                           // графа номера — пустая
+  }
+  R(ctx, fx + 3, fy + 1, 1, 1, KV); R(ctx, fx + 4, fy + 2, 1, 1, K0);   // кнопка и её тень
+}
+let pole = null;
+// у северной тропы, за огнём на треть пустыни: столб видно с тропы
+export function buildBeyond(locations) {
+  const p = trailPoint('north', RINGS * RING_W + FIRE_W + 300), x = Math.round(p.x + 46);
+  let gy = Math.round(p.y);
+  for (let y = TOWN.y0; y > 0; y -= 2) if (northDepth(x, y) >= 0.3) { gy = y; break; }
+  pole = {
+    id: 'horizon_pole', name: 'Столб утерянного горизонта', zone: 'street',
+    x: x - 4, y: gy - PO_H - 2, w: 12, h: PO_H + 2, solidBox: { x: x - 1, y: gy - 3, w: 5, h: 3 },
+    look: POLE_LOOK, drawSelf: drawPole,
+    useAction: 'horizon_look', useLabel: '<i>―</i>ПОСМОТРЕТЬ ИЗ-ПОД ЛАДОНИ',
+  };
+  locations.push(pole);
+}
+export const horizonPole = () => pole;
+
 export const _grains = () => grains;
-export function _resetBeyond() { beyond.reset(); beyond.picN = 0; beyond.hK = 0; grains.length = 0; }
+export function _resetBeyond() { beyond.reset(); beyond.picN = 0; beyond.saidAt = -1e9; grains.length = 0; }
