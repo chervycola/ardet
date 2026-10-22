@@ -213,11 +213,13 @@ const laneOn = m => hh(m, Math.floor(t / 300), 11) < 0.4;          // какие
 // куда метёт: ветер у земли, по вертикали кадра — сжат, как всё на равнине
 function drift() { const a = wind.ang || 0, x = Math.cos(a), y = Math.sin(a) * 0.6, l = Math.hypot(x, y) || 1; return [x / l, y / l, l]; }
 // крошка встаёт в ближнюю живую прядь; живых рядом нет — метёт одна
-function toLane(g, [ux, uy]) {
+// (прядь, в которую крошку унесло бы за кадр, — не её: box — кадр с запасом)
+function toLane(g, [ux, uy], box) {
   const w = g.x * -uy + g.y * ux, m0 = Math.round(w / LANE);
   for (const d of [0, 1, -1, 2, -2]) if (laneOn(m0 + d)) {
-    const dw = (m0 + d) * LANE + (Math.random() - 0.5) * 4 - w;
-    g.x -= uy * dw; g.y += ux * dw; g.m = m0 + d; return;
+    const dw = (m0 + d) * LANE + (Math.random() - 0.5) * 4 - w, x = g.x - uy * dw, y = g.y + ux * dw;
+    if (x < box[0] || x > box[1] || y < box[2] || y > box[3]) continue;
+    g.x = x; g.y = y; g.m = m0 + d; return;
   }
   g.m = null;
 }
@@ -226,19 +228,20 @@ export function stepPozemka(camX, camY, vw, vh) {
   const dep = Math.max(northDepth(camX + vw / 2, camY + vh / 2), northDepth(camX + vw / 2, camY + vh));
   const want = dep > 0 ? Math.round(110 + 260 * dep) : 0;
   const D = drift(), [ux, uy, l] = D, calm = 1 - beyond.hK, sp = (0.5 + (wind.s || 0)) * calm * l;
+  const box = [camX - 8, camX + vw + 8, camY - 8, camY + vh + 8];
   while (grains.length > want) grains.pop();
-  while (grains.length < want) { const g = { x: camX + Math.random() * vw, y: camY + Math.random() * vh, v: 0.8 + Math.random() * 1.3, ph: Math.random() * 6.28, m: null }; toLane(g, D); grains.push(g); }
+  while (grains.length < want) { const g = { x: camX + Math.random() * vw, y: camY + Math.random() * vh, v: 0.8 + Math.random() * 1.3, ph: Math.random() * 6.28, m: null }; toLane(g, D, box); grains.push(g); }
   for (const g of grains) {
     g.x += ux * g.v * sp + Math.sin(t * 0.05 + g.ph) * 0.15 * calm;
     g.y += uy * g.v * sp + Math.cos(t * 0.04 + g.ph) * 0.1 * calm;
     // вылетела из кадра — заходит с наветренной стороны, в прядь; кадр прыгнул — крошка уже по всему кадру
     const far = g.x < camX - 64 || g.x > camX + vw + 64 || g.y < camY - 64 || g.y > camY + vh + 64;
-    if (far) { g.x = camX + Math.random() * vw; g.y = camY + Math.random() * vh; toLane(g, D); }
+    if (far) { g.x = camX + Math.random() * vw; g.y = camY + Math.random() * vh; toLane(g, D, box); }
     else if (g.x < camX - 8 || g.x > camX + vw + 8 || g.y < camY - 8 || g.y > camY + vh + 8) {
       const side = Math.abs(ux) * vh / (Math.abs(ux) * vh + Math.abs(uy) * vw + 1e-6);   // с какой кромки сколько заходит
       if (Math.random() < side) { g.x = ux > 0 ? camX - 6 : camX + vw + 6; g.y = camY + Math.random() * vh; }
       else { g.y = uy > 0 ? camY - 6 : camY + vh + 6; g.x = camX + Math.random() * vw; }
-      toLane(g, D);
+      toLane(g, D, box);
     }
   }
 }
