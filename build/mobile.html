@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='c85b53d · 2026-10-21';console.log('[оттиск]', 'c85b53d · 2026-10-21');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='4b6670c · 2026-10-22';console.log('[оттиск]', '4b6670c · 2026-10-22');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -3408,6 +3408,48 @@ System.register("audio/audio", [], function (exports_16, context_16) {
         s.start(t0);
         s.stop(t0 + dur);
     }
+    // Каптёрка Дежурного: печка трещит — щелчок полена, глухой, рядом громче (v 0..1)
+    function playCrackle(v) {
+        if (!ctx || v <= 0.02)
+            return;
+        const n = Math.floor(ctx.sampleRate * 0.03), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.12));
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        s.buffer = b;
+        f.type = 'bandpass';
+        f.frequency.value = 900 + Math.random() * 900;
+        f.Q.value = 1.2;
+        g.gain.value = 0.05 * v;
+        s.connect(f);
+        f.connect(g);
+        g.connect(masterGain);
+        s.start();
+    }
+    exports_16("playCrackle", playCrackle);
+    // ...и кипяток льётся в гранёный стакан: струйка, тон поднимается — стакан наполняется
+    function playPour() {
+        if (!ctx)
+            return;
+        const dur = 0.55, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < n; i++)
+            d[i] = Math.random() * 2 - 1;
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t0 = ctx.currentTime;
+        s.buffer = b;
+        f.type = 'bandpass';
+        f.Q.value = 6;
+        f.frequency.setValueAtTime(700, t0);
+        f.frequency.linearRampToValueAtTime(1600, t0 + dur);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(0.035, t0 + 0.06);
+        g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+        s.connect(f);
+        f.connect(g);
+        g.connect(masterGain);
+        s.start(t0);
+        s.stop(t0 + dur);
+    }
+    exports_16("playPour", playPour);
     function playTick(v) {
         if (!ctx || v <= 0.01)
             return;
@@ -19560,6 +19602,15 @@ System.register("content/underside", [], function (exports_55, context_55) {
                 u_capsule: { name: 'Капсула', look: `Капсула под инеем. На табличке две буквы: WD. Тёплых пятен — ноль.
 
 По документам — кремирован. По счетам — охлаждается.` },
+                // ── каптёрка Дежурного (CONTENT_POOL «Дежурный криосклепа»: сцена и суть почти
+                //    дословно; «капюшон, лица не видно» — нов.: его играет Старец, у труппы лиц нет) ──
+                u_watchman: { name: 'Дежурный', look: `Каптёрка перед дверью склепа: катушка от кабеля вместо стола, чайник, ватник на гвозде. Дежурный топит печку рядом с единственным холодом мира — тепло, приставленное сторожить мороз. Капюшон, лица не видно.
+
+Должность сократили в девяносто четвёртом, а график дежурств расписан до 2087-го. Отменить смены некому — вот он и ходит.` },
+                u_duty_log: { name: 'Журнал дежурств', look: `Журнал на катушке. Подписей нет — одни прочерки: подписи не положено, ставки нет, а дежурство есть.
+
+Прочерки начинаются не с его прихода. Он продолжает чью-то честность.` },
+                u_vatnik: { name: 'Ватник на гвозде', look: `Ватник на гвозде. Рядом — график дежурств: расписан до 2087-го. Отменить смены некому.` },
                 // нов.
                 u_meter: { name: 'Счётчик', look: `Счётчик электроэнергии крутится. Платит фонд. Фонд — тоже под инеем.` },
                 // ── ход мха (канон U6 и ритуал «Шаг по стуку сердца»: сцена почти дословно) ──
@@ -19578,6 +19629,8 @@ System.register("content/underside", [], function (exports_55, context_55) {
                 u_door_wood: 'углов — пять. вчера было четыре.',
                 u_frost: 'хранение бессрочное. перечень уточняется дыханием.',
                 u_capsule: 'ноль тёплых пятен.',
+                u_duty_log: 'прочерк — это я.',
+                u_vatnik: 'график дежурств — до 2087-го.',
                 u_godot: 'сегодня не придёт. завтра — наверняка.',
                 u_board: 'скоро.',
                 u_car: 'водитель на месте.',
@@ -19600,7 +19653,7 @@ System.register("content/underside", [], function (exports_55, context_55) {
 });
 System.register("world/underside", ["content/underside", "core/time"], function (exports_56, context_56) {
     "use strict";
-    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, FROST, FROST_FOREIGN, FROST_LINE, readTime, HOLD_BREATH, BREATH, BLOOM_LINE, HERB_LINE, UPPER, CAT, JOURNAL_TEXT, DRILL_LINE, OFF_LINE, SIGNED_LOOK, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, DAYLIGHT, mix, UNDER_AMBIENT;
+    var underside_js_1, time_js_6, UW, UH, T, TUBES, ROOMS, KAPT, STOVE, HOLES, VEIN, MOSS, mossY, CUTS, cutAt, PORTALS, TH, SOLIDS, THINGS, thingById, NICHES, NICHE_NAMES, NICHE_ORDER, nicheOf, NICHE_LINE, NICHE_HUSH, nearNiches, FROST, FROST_FOREIGN, FROST_LINE, readTime, HOLD_BREATH, BREATH, DUTY, DUTY_POUR, DUTY_SHIFT, DUTY_LINE, metLine, BLOOM_LINE, HERB_LINE, UPPER, CAT, JOURNAL_TEXT, DRILL_LINE, OFF_LINE, SIGNED_LOOK, SEWER_X, FLEET_TEXT, FLEET_LINE, CALM, inChannel, thingsNow, DESCENTS, inWater, C, GW, GH, grid, prev, stamp, mark, queue, cellOf, exitD, L0, FORKS, DIRS, GREET_LINE, HEART, STRIDE, GLOW, MOSS_LINE, moss, MURMURS, WD_SILENCE, MURMUR_AT, under, EMBER, COLD, FILL, FILL_C, MOSS_PALE, MOSS_WARM, FIRE, DAYLIGHT, mix, UNDER_AMBIENT;
     var __moduleName = context_56 && context_56.id;
     // второе действие вещи: у порога — подуть на уголёк (пока не поздоровался); с тенью
     // цветка в кармане — положить её на вещь
@@ -19726,7 +19779,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
         if (at === 'wd')
             return 1;
         if (at === 'vein')
-            return Math.max(0, Math.min(0.7, (x - 520) / (VEIN.x1 - 520) * 0.7));
+            return Math.max(0, Math.min(0.7, (x - 520) / (KAPT.x0 - 520) * 0.7)); // к каптёрке стынет; в ней тепло
         return 0;
     }
     exports_56("coldAt", coldAt);
@@ -19945,6 +19998,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
             { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 }, // окно-экран бункера: лес светит
             { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 }, // облако: свет искусственный, ровный
         ];
+        L.push({ x: STOVE.x - 6, y: STOVE.y - 4, r: 74, color: FIRE, flicker: 0.18, intensity: 2.1 }); // печка Дежурного: тепло, приставленное сторожить мороз
+        L.push({ x: STOVE.x, y: STOVE.y + 1, r: 24, color: EMBER, flicker: 0.3, intensity: 1.6 }); // жар у дверцы
         if (under.upper) { // «верхняя» вещь: тёплый дневной свет на минуту
             const th = thingById(under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
             if (th)
@@ -20014,7 +20069,13 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'bunker', name: 'Бункер на всякий случай', x0: 520, y0: 720, x1: 820, y1: 850, wh: 44, mat: 'condo', surf: 'ground' },
                 // облако: дата-центр в убежище гражданской обороны — стойки рядами, водопад по стене
                 { id: 'cloud', name: 'Облако', x0: 1440, y0: 200, x1: 1740, y1: 330, wh: 46, mat: 'shelter', surf: 'ground' },
+                // каптёрка Дежурного (CONTENT_POOL «Дежурный криосклепа»): ниша в коллекторе перед дверью склепа;
+                // дальняя стена — та же, что у жилы; единственное тёплое место на маршруте U7
+                { id: 'kapt', name: 'Каптёрка Дежурного', x0: 696, y0: 282, x1: 756, y1: 330, wh: 22, mat: 'collector', surf: 'ground' },
             ]);
+            exports_56("KAPT", KAPT = ROOMS.find(R => R.id === 'kapt'));
+            // печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
+            exports_56("STOVE", STOVE = { x: 744, y: 316 });
             // провалы в полу — встать нельзя (шахта Онкало)
             exports_56("HOLES", HOLES = [{ x: 1630, y: 800, r: 60 }]);
             for (const R of ROOMS)
@@ -20077,6 +20138,11 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256], useAction: 'under_read', useLabel: '<i>❄</i>ДОЧИТАТЬ, НЕ ВЫДОХНУВ' },
                 { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
                 { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
+                // каптёрка: на стене ватник на гвозде и график дежурств; катушка от кабеля вместо стола
+                // (журнал, гранёный стакан); Дежурный на табурете между катушкой и печкой
+                { id: 'u_vatnik', room: 'kapt', wall: true, x: 704, y: 262, w: 33, h: 19, at: [718, 290] },
+                { id: 'u_duty_log', room: 'kapt', x: 700, y: 300, w: 22, h: 26, at: [711, 300], solid: [701, 310, 721, 324] },
+                { id: 'u_watchman', room: 'kapt', npc: 'watchman', x: 720, y: 286, w: 17, h: 41, at: [729, 300], solid: [723, 318, 733, 327] },
                 // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
                 { id: 'u_car', room: 'station', x: 1814, y: 424, w: 76, h: 56, at: [1850, 488], solid: [1818, 446, 1884, 471] },
                 { id: 'u_board', room: 'station', wall: true, x: 1880, y: 356, w: 60, h: 34, at: [1910, 410] },
@@ -20107,7 +20173,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
             ];
             // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере;
             // в облаке — дальний ряд стоек, правая часть ближнего, бассейн водопада, кадки
-            exports_56("SOLIDS", SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792],
+            exports_56("SOLIDS", SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792], [737, 309, 752, 325],
                 [1458, 254, 1702, 264], [1638, 292, 1702, 302], [1686, 200, 1724, 210], [1666, 208, 1678, 216], [1722, 208, 1734, 216]]);
             exports_56("THINGS", THINGS = TH.map(th => {
                 const tx = underside_js_1.UNDER_TEXT[th.id] || { name: th.id, look: '' };
@@ -20168,6 +20234,19 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 const cap = thingById('u_capsule'), base = cap.look;
                 Object.defineProperty(cap, 'look', { get: () => (under.kept.size ? base + '\n\nВ описи криосклепа: ' + [...under.kept].map(s => '«' + s + '»').join(', ') + '. Хранение бессрочное.' : base), configurable: true, enumerable: true });
             }
+            // ── Дежурный криосклепа (CONTENT_POOL, житель; в труппе его играет Старец): долг без
+            // нанимателя. Должность сократили в девяносто четвёртом, а график дежурств расписан
+            // до 2087-го; отменить смены некому — вот он и ходит. Топит печку рядом с
+            // единственным холодом мира: тепло, приставленное сторожить мороз. На шаги выходит без
+            // удивления, будто по графику ждал именно сейчас; наливает кипяток в гранёный стакан,
+            // ставит на край катушки, не спрашивая. У его печки уголёк отходит. Строка описи
+            // инеем, сохранённая в прошлый спуск, встречает странника здесь: он называет её
+            exports_56("DUTY", DUTY = { x: 728, y: 322 }); // его табурет
+            exports_56("DUTY_POUR", DUTY_POUR = '— Погрейтесь перед. Там — не положено.');
+            exports_56("DUTY_SHIFT", DUTY_SHIFT = 'Должность сократили в девяносто четвёртом. График дежурств — до 2087-го. Отменить смены некому.'); // канон («Суть») — от первого лица
+            exports_56("DUTY_LINE", DUTY_LINE = 'Расписаться не могу — ставку сократили. Ставлю прочерк. Прочерк — это я.');
+            exports_56("metLine", metLine = s => `Ваше дошло. В описи криосклепа: «${s}». Хранение бессрочное.`); // нов.
+            thingById('u_watchman').talkName = 'Дежурный криосклепа';
             // ── гербарий темноты (канон, ритуал «Гербарий темноты», U2): катакомбы идут под
             // садом света, корни сада прорастают сквозь свод. Поднёс уголёк к белой стене — на
             // известняке раскрывается тень цветка, цветущего прямо сейчас наверху: пиона,
@@ -20416,6 +20495,11 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 frost: null, // иней пишет строку { i, x, y, text, t, n } — читаешь
                 frostDone: new Set(), // строки этого спуска: дочитаны или стёрты выдохом
                 kept: new Set(), // опись криосклепа: сохранённые строки (сохраняется)
+                keptNow: new Set(), // сохранённые в этот спуск — встретят у Дежурного в другой
+                met: new Set(), // строки, что уже встретили странника у Дежурного (сохраняется)
+                duty: { st: 'sit', t: 0, poured: false, glass: 0, away: 0 }, // Дежурный: сидит, вышел, наливает, ждёт
+                crackle: 0, // печка трещит: громкость этого шага
+                pourSnd: false, // кипяток льётся в стакан — на этом шаге
                 keptSaid: false,
                 after: null, // строка мира — когда закроется окно сцены
                 bench: false, // на скамье метро лежит билет: поезд прошёл, а своего билета нет
@@ -20428,6 +20512,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.cold += (c - this.cold) * 0.03;
                     this.ember = Math.max(0, this.ember - (1 + (c > 0.9 ? 1 : 0)) / (60 * 240));
                     const at = placeAt(fx, fy);
+                    if (at === 'kapt')
+                        this.ember = Math.min(1, this.ember + 1 / (60 * 12)); // у печки Дежурного уголёк отходит
                     if (at !== 'tube')
                         this.found.add(at);
                     const mv = Math.hypot(fx - this.px, fy - this.py);
@@ -20471,6 +20557,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.flare = Math.max(0, this.flare - 1 / 180);
                     this.draft = this.greeted ? 0 : draftAt(fx, fy, this.train);
                     this.tug = this.greeted ? tugAt(fx, fy) : null;
+                    this.stepDuty(fx, fy, mv);
                     if (--this.murmur <= 0) {
                         this.murmur = 1200 + Math.floor(Math.random() * 1200);
                         if (!this.silent(at) && !(this.whisper && (this.whisper.keep || this.whisper.wait)))
@@ -20527,6 +20614,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         else if (++f.t >= f.n) {
                             this.frostDone.add(f.text);
                             this.kept.add(f.text);
+                            this.keptNow.add(f.text);
                             this.frost = null;
                             if (!this.keptSaid) {
                                 this.keptSaid = true;
@@ -20590,6 +20678,61 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                         this.heard.add('metro');
                         this.train = 1;
                     }
+                },
+                // Дежурный: на шаги выходит; не спрашивая, наливает кипяток в гранёный стакан
+                stepDuty(fx, fy, mv) {
+                    const D = this.duty, dd = Math.hypot(fx - DUTY.x, fy - DUTY.y);
+                    D.t++;
+                    this.pourSnd = false;
+                    if (D.poured)
+                        D.glass++; // кипяток остывает
+                    if (D.st === 'sit') {
+                        if (dd < 90 && mv > 0.05) {
+                            D.st = 'up';
+                            D.t = 0;
+                        }
+                    }
+                    else if (D.st === 'up') {
+                        if (D.t >= 36) {
+                            D.st = D.poured ? 'wait' : 'pour';
+                            D.t = 0;
+                        }
+                    }
+                    else if (D.st === 'pour') {
+                        if (D.t === 36)
+                            this.pourSnd = true;
+                        if (D.t >= 80) {
+                            D.st = 'wait';
+                            D.t = 0;
+                            D.poured = true;
+                            D.glass = 0;
+                            this.say = DUTY_POUR;
+                        }
+                    }
+                    else if (D.st === 'wait') {
+                        if (dd > 150) {
+                            if (++D.away > 600) {
+                                D.st = 'sit';
+                                D.t = 0;
+                                D.away = 0;
+                            }
+                        } // ушёл — сел обратно
+                        else
+                            D.away = 0;
+                    }
+                    const ds = Math.hypot(fx - STOVE.x, fy - STOVE.y); // печка трещит — слышно рядом
+                    this.crackle = ds < 120 && Math.random() < 0.025 ? 1 - ds / 120 : 0;
+                },
+                // заговорил с Дежурным: строка описи, сохранённая в прошлый спуск, дошла до него — одна за раз
+                talk() {
+                    const lines = [];
+                    const s = [...this.kept].find(k => !this.met.has(k) && !this.keptNow.has(k));
+                    if (s) {
+                        this.met.add(s);
+                        lines.push(metLine(s));
+                    }
+                    lines.push(DUTY_SHIFT, DUTY_LINE);
+                    return lines;
                 },
                 // иней пишет строку — читаешь её, пока не выдохнешь
                 readFrost(x, y, text) {
@@ -20727,10 +20870,14 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     this.frost = null;
                     this.frostDone.clear();
                     this.keptSaid = false;
+                    this.keptNow.clear();
+                    this.duty = { st: 'sit', t: 0, poured: false, glass: 0, away: 0 };
+                    this.crackle = 0;
+                    this.pourSnd = false;
                     moss.reset();
                 },
-                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; moss.reset(); },
-                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept] }; },
+                leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; this.crackle = 0; this.pourSnd = false; moss.reset(); },
+                save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept], met: [...this.met] }; },
                 load(d) {
                     if (!d)
                         return;
@@ -20742,6 +20889,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                     if (d.signed)
                         this.signed = true;
                     (d.kept || []).forEach(k => this.kept.add(k));
+                    (d.met || []).forEach(k => this.met.add(k));
                 },
             });
             // свет под землёй: уголёк — единственное тёплое (сердцевина), вокруг — круг,
@@ -33329,6 +33477,7 @@ System.register("assets/manifest", [], function (exports_98, context_98) {
                 jester: 'assets/portraits/jester.png',
                 sol: 'assets/portraits/sol.png',
                 elder: 'assets/portraits/elder.png',
+                watchman: 'assets/portraits/elder.png', // труппа: Дежурного криосклепа играет Старец
                 nocturnal: 'assets/portraits/nocturnal.png',
                 dumpster: 'assets/portraits/dumpster.png',
                 machinist: 'assets/portraits/machinist.png', // Train NPC, no canonical prompt — paint TBD
@@ -46458,7 +46607,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/underside", ["core/time", "world/underside"], function (exports_139, context_139) {
     "use strict";
-    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
+    var time_js_39, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, yAt, inBay, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, pouring, flare, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
     var __moduleName = context_139 && context_139.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -46852,14 +47001,14 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         return hh(x, d, 81) < 0.05 ? S2 : S0;
     }
     function veinWalls(cl) { rows(underside_js_3.VEIN.x0, underside_js_3.VEIN.x1, underside_js_3.VEIN.y0 - underside_js_3.VEIN.wh, underside_js_3.VEIN.y0, cl, (x, y) => veinBand(x, underside_js_3.VEIN.y0 - y, underside_js_3.VEIN.wh)); }
-    function veinLip(cl) { rows(underside_js_3.VEIN.x0, underside_js_3.VEIN.x1, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh + underside_js_3.T.LIP, cl, (x, y) => LIPS.frost[y - underside_js_3.VEIN.y0 - underside_js_3.VEIN.fh]); }
+    function veinLip(cl) { rows(underside_js_3.VEIN.x0, underside_js_3.VEIN.x1, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh + underside_js_3.T.LIP, cl, (x, y) => (inBay(x) ? null : LIPS.frost[y - underside_js_3.VEIN.y0 - underside_js_3.VEIN.fh])); }
     function veinFloor(cl) {
         rows(underside_js_3.VEIN.x0 - 6, underside_js_3.VEIN.x1 + 6, underside_js_3.VEIN.y0, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh, cl, (x, y) => {
             const row = y - underside_js_3.VEIN.y0;
             if (row === 0)
                 return K1;
-            if (row === underside_js_3.VEIN.fh - 3)
-                return K1; // водосток
+            if (row === underside_js_3.VEIN.fh - 3 && !(x >= underside_js_3.KAPT.x0 && x < underside_js_3.KAPT.x1))
+                return K1; // водосток (в каптёрке — пол дальше)
             return hh(x, y, 97) < 0.04 ? S2 : S0;
         });
     }
@@ -47144,6 +47293,31 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 write('SHUB-', x + 2, y + 12, AS, 0.08, 30);
                 r(x + 5, y + 17, 1, 3, AS);
                 r(x + 13, y + 17, 1, 2, AS); // потёки
+                break;
+            }
+            case 'u_vatnik': { // график дежурств на кнопках и ватник на гвозде
+                r(x + 1, y + 3, 12, 13, L2);
+                r(x + 1, y + 3, 12, 1, BO);
+                r(x + 12, y + 4, 1, 12, S1); // лист
+                for (let j = 0; j < 4; j++)
+                    r(x + 2, y + 6 + j * 3, 10, 1, S1); // графы
+                for (let i = 0; i < 3; i++)
+                    r(x + 4 + i * 3, y + 5, 1, 10, S1);
+                r(x + 2, y + 4, 6, 1, K2);
+                r(x + 1, y + 3, 1, 1, KV);
+                r(x + 12, y + 3, 1, 1, KV); // шапка, кнопки
+                const vx = x + 20; // ватник: плечи, рукава висят, стёжка
+                r(vx + 6, y + 1, 1, 1, AS); // гвоздь
+                r(vx + 3, y + 2, 7, 2, MG_D);
+                r(vx + 1, y + 4, 11, 12, MG_D);
+                r(vx + 1, y + 4, 11, 1, MG);
+                r(vx - 1, y + 5, 2, 10, MG_D);
+                r(vx + 12, y + 5, 2, 10, MG_D);
+                r(vx - 1, y + 5, 1, 10, MG); // рукава
+                for (let j = 0; j < 4; j++)
+                    r(vx + 1, y + 7 + j * 3, 11, 1, K1); // стёжка
+                r(vx + 6, y + 4, 1, 12, K1);
+                r(vx + 5, y + 2, 3, 1, K1); // борт, ворот
                 break;
             }
             case 'u_frost':
@@ -47753,6 +47927,174 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         r(x + 2, gy - 2, 2, 2, K1);
         r(x + 54, gy - 2, 2, 2, K1);
     }
+    function kettle(x, y, tilt) {
+        r(x, y + 1, 6, 4, K3);
+        r(x, y + 1, 6, 1, S2);
+        r(x + 1, y + 2, 1, 2, S0);
+        r(x + 2, y, 2, 1, S2);
+        r(x + 2, y - 1, 1, 1, AS);
+        if (tilt) {
+            r(x - 1, y + 3, 1, 1, K3);
+            r(x - 2, y + 4, 1, 1, K3);
+        }
+        else {
+            r(x - 1, y + 2, 1, 1, K3);
+            r(x - 2, y + 1, 1, 1, K3);
+        }
+        r(x + 1, y - 2, 4, 1, K2);
+        r(x, y - 1, 1, 1, K2);
+        r(x + 5, y - 1, 1, 1, K2);
+    }
+    function stove() {
+        const x = 738, y = 309, f = flare();
+        for (let yy = 252; yy < y; yy++) {
+            r(x + 10, yy, 2, 1, (yy - 252) % 9 === 0 ? S2 : K2);
+            r(x + 10, yy, 1, 1, (yy - 252) % 9 === 0 ? AS : S2);
+        } // труба, стыки
+        r(x + 1, y + 13, 1, 3, K1);
+        r(x + 12, y + 13, 1, 3, K1); // ножки
+        r(x, y, 14, 13, K2);
+        r(x + 1, y, 13, 1, S2);
+        r(x, y + 1, 1, 12, S2);
+        r(x + 13, y + 1, 1, 12, K1);
+        r(x - 1, y - 1, 16, 1, K1);
+        r(x, y - 1, 14, 1, S2); // плита
+        for (const [dx, dy] of [[2, 2], [11, 2], [2, 11], [11, 11]])
+            r(x + dx, y + dy, 1, 1, AS); // заклёпки
+        r(x + 3, y + 4, 8, 6, K1);
+        r(x + 3, y + 4, 8, 1, S2); // дверца
+        const k = 0.55 + 0.25 * Math.sin(time_js_39.t * 0.21) + 0.15 * Math.sin(time_js_39.t * 0.53 + 1) + 0.5 * f; // жар в щели дверцы
+        G.globalAlpha = Math.min(1, k);
+        r(x + 4, y + 7, 6, 1, KV);
+        G.globalAlpha = Math.min(1, k * 0.8);
+        r(x + 5, y + 7, 3, 1, EMBER_G);
+        G.globalAlpha = Math.min(1, 0.35 * k);
+        r(x + 4, y + 8, 6, 1, KV);
+        G.globalAlpha = 1;
+        if (!pouring() && !(underside_js_3.under.duty.st === 'pour' && underside_js_3.under.duty.t >= 24 && underside_js_3.under.duty.t < 30))
+            kettle(x + 2, y - 6, false); // чайник на печке
+    }
+    function dutyTable(th) {
+        const cx = 711, ty = 312;
+        for (let dx = -9; dx <= 9; dx++) {
+            const h = q(2 * Math.sqrt(Math.max(0, 1 - (dx / 9.5) ** 2)));
+            r(cx + dx, 322, 1, 1 + h, dx < -5 ? RUST : BR2);
+        } // нижняя щека
+        r(cx - 4, ty + 2, 9, 8, BR2);
+        r(cx - 4, ty + 2, 1, 8, RUST);
+        r(cx + 4, ty + 2, 1, 8, K1); // барабан
+        for (const dx of [-2, 0, 2])
+            r(cx + dx, ty + 3, 1, 6, K1); // обрывки кабеля, намотка
+        for (let dx = -9; dx <= 9; dx++) { // верхняя щека — столешница
+            const h = q(3 * Math.sqrt(Math.max(0, 1 - (dx / 9.5) ** 2)));
+            r(cx + dx, ty - h, 1, 2 * h + 1, dx < -4 ? RUST_L : RUST);
+            r(cx + dx, ty + h, 1, 1, K1);
+        }
+        r(cx - 8, ty - 1, 7, 2, L1);
+        r(cx - 8, ty - 1, 7, 1, BO);
+        r(cx - 5, ty - 1, 1, 2, K2); // журнал раскрыт
+        for (const [dx, dy] of [[-7, 0], [-3, 0], [-7, 1]])
+            r(cx + dx, ty + dy, 2, 1, K2); // прочерки
+        const gx = cx + 5, gy = ty - 5, full = underside_js_3.under.duty.poured; // гранёный стакан на краю
+        r(gx, gy, 3, 4, AS);
+        r(gx + 1, gy, 1, 4, S1);
+        r(gx, gy, 3, 1, BO);
+        r(gx, gy + 3, 3, 1, S2);
+        if (full) {
+            r(gx + 1, gy + 1, 1, 2, BO);
+        }
+        if (pouring()) { // кипяток льётся
+            G.globalAlpha = 0.75;
+            r(gx + 1, gy - 3, 1, 3, BO);
+            G.globalAlpha = 1;
+        }
+    }
+    function dutyMan(th) {
+        const D = underside_js_3.under.duty, up = D.st === 'wait' || D.st === 'pour' || (D.st === 'up' && D.t >= 18);
+        const cx = 728, breath = Math.sin(time_js_39.t * 0.005) > 0.55 ? 1 : 0;
+        // табурет
+        r(cx - 5, 318, 11, 2, RUST);
+        r(cx - 5, 318, 11, 1, RUST_L);
+        r(cx - 4, 320, 1, 7, K1);
+        r(cx + 4, 320, 1, 7, K1);
+        let hy;
+        if (!up) { // сидит, ссутулившись: колени к печке, голени отвесно, руки к теплу
+            for (let k = 0; k < 4; k++) {
+                const y = 314 + k, w = 5 + k;
+                r(cx - 5, y, w + 5 + 4, 1, k ? K1 : K2);
+                r(cx - 5, y, 1, 1, K4);
+            } // подол на коленях
+            r(cx + 3, 318, 2, 7, K1);
+            r(cx + 7, 318, 2, 7, K1);
+            r(cx + 2, 325, 4, 2, K0);
+            r(cx + 6, 325, 4, 2, K0); // голени, сапоги
+            r(cx + 3, 318, 1, 6, K2);
+            r(cx + 7, 318, 1, 6, K2);
+            for (let k = 0; k < 9; k++) {
+                const y = 305 + k - breath, w = 4 + q(k * 0.25);
+                r(cx - w - 1, y, 2 * w + 1, 1, K1);
+                r(cx - w - 1, y, 1, 1, K4);
+                r(cx + w - 1, y, 1, 1, AS);
+            } // стан
+            const f = flare(), reach = q(3 * f); // руки к печке; подкинул — тянется
+            r(cx + 3, 311, 4 + reach, 2, K1);
+            r(cx + 7 + reach, 311, 2, 2, L1);
+            hy = 296 - breath;
+        }
+        else { // встал: вышел к проходу, без удивления
+            const fy = 311;
+            for (let k = 0; k < 12; k++) {
+                const y = fy - 12 + k, w = 5 + q(k * 0.25);
+                r(cx - w, y, 2 * w, 1, K1);
+                r(cx - w, y, 1, 1, K4);
+                r(cx + w - 1, y, 1, 1, AS);
+            }
+            r(cx - 3, fy - 1, 3, 2, K0);
+            r(cx + 1, fy - 1, 3, 2, K0); // сапоги
+            for (let k = 0; k < 10; k++) {
+                const y = fy - 22 + k - breath, w = 4 + q(k * 0.2);
+                r(cx - w - 1, y, 2 * w + 1, 1, K1);
+                r(cx - w - 1, y, 1, 1, K4);
+                r(cx + w - 1, y, 1, 1, AS);
+            }
+            if (D.st === 'pour') { // тянется к печке за чайником — и льёт над стаканом
+                if (D.t < 30) {
+                    const k = Math.min(1, D.t / 20);
+                    r(cx + 4, fy - 15, 2 + q(6 * k), 2, K1);
+                    r(cx + 6 + q(6 * k), fy - 15, 2, 2, L1);
+                }
+                else if (D.t < 66) {
+                    r(cx - 6, fy - 16, 3, 2, K1);
+                    r(cx - 7, fy - 15, 2, 2, L1);
+                    kettle(cx - 9, fy - 12, true);
+                } // носик — над стаканом
+            }
+            else {
+                r(cx - 6, fy - 12, 2, 2, L1);
+                r(cx + 5, fy - 12, 2, 2, L1);
+            } // руки вдоль
+            hy = fy - 31 - breath;
+        }
+        // капюшон: лица нет — тьма (как у Старца: это он и есть)
+        const hx = cx - 5;
+        r(hx + 3, hy, 5, 1, K2);
+        r(hx + 1, hy + 1, 9, 1, K2);
+        r(hx, hy + 2, 11, 8, K1);
+        r(hx, hy + 2, 1, 7, K4);
+        r(hx + 1, hy + 1, 2, 1, K4);
+        r(hx + 10, hy + 3, 1, 6, AS);
+        r(hx + 2, hy + 4, 7, 6, NI);
+        r(hx + 3, hy + 3, 5, 1, NI);
+        r(hx - 1, hy + 9, 13, 2, K1);
+        r(hx - 1, hy + 9, 1, 2, K4);
+        const g = (time_js_39.t + 900) % 2400; // изредка — будто глаза
+        if (g < 150) {
+            G.globalAlpha = 0.55 * Math.sin(g / 150 * Math.PI);
+            r(hx + 3, hy + 6, 1, 1, AS);
+            r(hx + 7, hy + 6, 1, 1, AS);
+            G.globalAlpha = 1;
+        }
+    }
     // тоннель вдохнул (ритуал «Вдох на пороге»): пыль у уголька уходит внутрь, в (dx, dy)
     function inhaleDust(x, y, dx, dy) {
         for (let k = 0; k < 26; k++) {
@@ -47781,7 +48123,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             const e = Math.min(x - W.x0, W.x1 - x, y - W.y0, W.y1 - y);
             return 0.015 + 0.08 * Math.max(0, 1 - e / 18); // пол: у стен гуще
         });
-        const vk = x => Math.max(0, (x - underside_js_3.VEIN.x0 - 80) / (underside_js_3.VEIN.x1 - underside_js_3.VEIN.x0 - 80));
+        const vk = x => (x >= underside_js_3.KAPT.x0 - 2 && x < underside_js_3.KAPT.x1 + 4 ? 0 : Math.max(0, (x - underside_js_3.VEIN.x0 - 80) / (underside_js_3.VEIN.x1 - underside_js_3.VEIN.x0 - 80)) * Math.min(1, Math.abs(x - underside_js_3.KAPT.x0) / 18)); // у печки Дежурного инея нет
         add(underside_js_3.VEIN.x0 + 80, underside_js_3.VEIN.x1, underside_js_3.VEIN.y0 - underside_js_3.VEIN.wh, underside_js_3.VEIN.y0 + underside_js_3.VEIN.fh, (x, y) => (y < underside_js_3.VEIN.y0 ? 0.09 : 0.03) * vk(x));
         return frost;
     }
@@ -48116,6 +48458,22 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             if (th && th.x + th.w > camX && th.x < camX + vw)
                 peonyShadow(q(th.x + th.w / 2), q(th.y + th.h / 2) - 2, 3.5 + 0.3 * Math.sin(time_js_39.t * 0.05), 0.4 * a);
         }
+        // каптёрка: над стаканом кипятка пар (остывает за три минуты), из носика чайника — струйка
+        if (camX < 760 && camX + vw > 700 && camY < 330 && camY + vh > 260) {
+            const D = underside_js_3.under.duty;
+            if (D.poured && D.glass < 10800)
+                for (let k = 0; k < 3; k++) {
+                    const u = ((time_js_39.t + k * 37) % 110) / 110;
+                    G.globalAlpha = 0.3 * (1 - u) * (1 - D.glass / 10800);
+                    r(717 + q(Math.sin(u * 5 + k) * 1.5), 306 - q(u * 13), 1, 1, BO);
+                }
+            if (D.st !== 'pour' && time_js_39.t % 160 < 60) {
+                const u = (time_js_39.t % 160) / 60;
+                G.globalAlpha = 0.22 * (1 - u);
+                r(738 - q(u * 3), 304 - q(u * 9), 1, 1, BO);
+            }
+            G.globalAlpha = 1;
+        }
         // перекличка ниш: проснувшаяся ниша выдыхает — пыль из зева, пока шепчет имя
         if (underside_js_3.under.niche && !underside_js_3.under.niche.done && underside_js_3.under.niche.t < 240) {
             const n = underside_js_3.nicheOf(underside_js_3.under.niche.name), u = underside_js_3.under.niche.t;
@@ -48203,6 +48561,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             list.push({ k: 308, west: true });
         if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776)
             list.push({ k: 792, sofa: true });
+        if (camX < 760 && camX + vw > 730 && camY < 330 && camY + vh > 250)
+            list.push({ k: 325, stove: true }); // буржуйка каптёрки
         if (camX < 1745 && camX + vw > 1440 && camY < 300 && camY + vh > 190) {
             list.push({ k: 264, racksN: true }, { k: 216, palm: 1672 }, { k: 216, palm: 1728 });
         }
@@ -48225,6 +48585,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 FLOOR_DRAW.chestsWest();
             else if (it.sofa)
                 sofa();
+            else if (it.stove)
+                stove();
             else if (it.racksN)
                 FLOOR_DRAW.racksN();
             else if (it.palm)
@@ -48437,6 +48799,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     const n = hh(x, d, 65);
                     return n < 0.1 ? S1 : n < 0.18 ? K3 : n > 0.975 ? AS : S0;
                 },
+                collector(x, d, H) { return veinBand(x, d, H); }, // каптёрка: дальняя стена — та же, что у жилы
                 loop(x, d, H) {
                     if (d <= 2)
                         return K2;
@@ -48461,10 +48824,12 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             SIDE = {
                 lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
                 brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1], shelter: [K2, S2, S0, S1, S0, K1],
+                collector: [K2, S2, S0, S0, S2, K1],
             };
             LIPS = {
                 lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
                 brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1], shelter: [S1, S0, S2, K2, K1],
+                collector: [AS, S0, S2, K2, K1],
             };
             STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]]; // масло у станка и у устья
             FLOORS = {
@@ -48485,6 +48850,8 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     return K2; const n = hh(x, y, 93); return n > 0.997 ? L2 : n > 0.988 ? S1 : n < 0.04 ? S2 : S0; }, // мука по бетону
                 frost(x, y, R) { const fy = y - R.y0; if (fy === 0)
                     return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
+                collector(x, y, R) { const fy = y - R.y0; if (fy === 0)
+                    return K1; return hh(x, y, 97) < 0.04 ? S2 : S0; }, // бетон, как в жиле: без шва
                 wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5)
                     return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; }, // вода
                 granite(x, y, R) { const fy = y - R.y0; if (fy === 0)
@@ -48545,6 +48912,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 },
             };
             yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
+            inBay = x => x >= underside_js_3.KAPT.x0 - 6 && x < underside_js_3.KAPT.x1 + 6; // каптёрка: срез жилы там не нужен — пол уходит дальше
             // ═══ ХОД МХА: круглый лаз, стены в подушках мха (канон U6) ═══
             // Подушки — кочками по дальней стене в три ряда: верх и левый бок к свету, низ в
             // тень, между ними чёрные щели, под сводом порода. Пол — ковёр мха, ближний срез —
@@ -48612,7 +48980,16 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                 RACKS_S.push(x);
             for (let x = 1640; x + 12 <= 1702; x += 14)
                 RACKS_S.push(x);
+            // ═══ КАПТЁРКА ДЕЖУРНОГО: катушка вместо стола, печка, чайник, сам Дежурный ═══
+            // Дежурного играет Старец (труппа): капюшон, лица нет — тьма, изредка в ней будто
+            // глаза. Сидит на табурете между катушкой и печкой, руки к теплу, изредка подкидывает
+            // в печку. На шаги встаёт; берёт с печки чайник, наливает кипяток в гранёный стакан
+            // на краю катушки
+            pouring = () => underside_js_3.under.duty.st === 'pour' && underside_js_3.under.duty.t >= 30 && underside_js_3.under.duty.t < 66;
+            flare = () => (time_js_39.t % 600 < 90 && underside_js_3.under.duty.st === 'sit' ? Math.sin(Math.PI * (time_js_39.t % 600) / 90) : 0); // подкинул в печку
             FLOOR_DRAW = {
+                u_duty_log: dutyTable,
+                u_watchman: dutyMan,
                 u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
                 racksN() { RACKS_N.forEach((x, i) => rack(x, 264, i)); },
                 sofa,
@@ -49771,6 +50148,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             audio_js_11.playMossGrow();
         if (underside_js_4.under.tick)
             audio_js_11.playTick(underside_js_4.under.tick);
+        if (underside_js_4.under.crackle)
+            audio_js_11.playCrackle(underside_js_4.under.crackle); // печка Дежурного трещит
+        if (underside_js_4.under.pourSnd)
+            audio_js_11.playPour(); // кипяток — в гранёный стакан
         underside_js_5.stepUnderLife(player);
         lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 6, player.y + 10);
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
@@ -50625,13 +51006,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // внизу — мира сверху нет: ни неба, ни погоды, ни ворон; свет — уголёк
             // странника; время идёт, как шло.
             surfaceLights = null;
-            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow)
+            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt)
             {
                 const m = /[?&]under(?:=(\w+))?/.exec(location.search);
                 if (m) {
                     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
                         godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
-                        moss: 'u_up_pithos', burrow: 'u_up_burrow' }[m[1]] || 'u_up_pizzeria';
+                        moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman' }[m[1]] || 'u_up_pizzeria';
                     setTimeout(() => goUnder(spot), 0);
                 }
             }
@@ -50776,6 +51157,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 flags.talkedTo.add(npcId);
                 if (npcId === 'jester')
                     worldmap_js_1.markDiscovered('gate_europe');
+            });
+            // Дежурный криосклепа: что скажет — решает изнанка (строка описи дошла до него — назовёт её)
+            events_js_8.events.on(events_js_8.E.NPC_TALK, (npcId, loc) => {
+                if (npcId === 'watchman' && loc && state_js_6.state.is('menu'))
+                    loc.talkLines = underside_js_4.under.talk();
             });
             events_js_8.events.on(events_js_8.E.OBSERVER_MET, (npcId) => {
                 flags.observersSeen.add(npcId);

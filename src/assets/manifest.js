@@ -12,6 +12,7 @@ export const PORTRAITS = {
   jester:    'assets/portraits/jester.png',
   sol:       'assets/portraits/sol.png',
   elder:     'assets/portraits/elder.png',
+  watchman:  'assets/portraits/elder.png',     // труппа: Дежурного криосклепа играет Старец
   nocturnal: 'assets/portraits/nocturnal.png',
   dumpster:  'assets/portraits/dumpster.png',
   machinist: 'assets/portraits/machinist.png',  // Train NPC, no canonical prompt — paint TBD

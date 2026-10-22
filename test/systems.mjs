@@ -1634,7 +1634,8 @@ setCtx(ctx);
   });
   test('изнанка: холод — только в жиле и криосклепе; в криосклепе тепла нет совсем', () => {
     eq(U.coldAt(1200, 465), 0, 'линия'); eq(U.coldAt(834, 300), 1, 'криосклеп');
-    assert(U.coldAt(740, 294) > 0.5 && U.coldAt(500, 294) === 0, 'жила стынет к востоку');
+    assert(U.coldAt(690, 294) > 0.5 && U.coldAt(500, 294) === 0, 'жила стынет к востоку');
+    eq(U.placeAt(726, 300), 'kapt', 'перед криосклепом — каптёрка'); eq(U.coldAt(726, 300), 0, 'в каптёрке Дежурного холодно');
     U.under.cold = 1;
     const L = U.underLights(834, 300);
     for (const l of L.slice(0, 2)) assert(l.color[0] < l.color[1] + 30, 'в криосклепе тёплый свет: ' + l.color);
@@ -2027,7 +2028,7 @@ setCtx(ctx);
     eq(U.FROST[2].text, '3. запах подъезда в дождь', 'строка канона'); eq(U.FROST_FOREIGN, '1. пусть подождёт', 'чужая строка канона');
     for (const f of U.FROST) assert(f.x - 75 >= U.VEIN.x0 && f.x + 75 <= U.VEIN.x1 && U.placeAt(f.x, U.VEIN.y0 + 12) === 'vein', 'строка вне жилы: ' + f.text);
     // дыхание на холоде: идёшь — выдох раз в 80 шагов; стоишь — задержано
-    W.cold = 1; let ex = 0, x = 700;
+    W.cold = 1; let ex = 0, x = 660;
     for (let i = 0; i < 400; i++) { x += i & 1 ? 0.5 : -0.5; W.step(x, 294); if (W.exhale) ex++; }
     assert(ex >= 4 && ex <= 6, 'идёшь — выдохов ' + ex);
     ex = 0; for (let i = 0; i < 280; i++) { W.step(x, 294); if (W.exhale) ex++; }
@@ -2066,6 +2067,57 @@ setCtx(ctx);
     W.leave(); W.kept.clear(); W.load({ kept: ['3. запах подъезда в дождь'] }); assert(W.kept.size === 1, 'опись не загрузилась');
     W.kept.clear(); W.cold = 0; W.say = null; W.whisper = null; W.quench = false;
   });
+  test('изнанка: каптёрка Дежурного перед криосклепом — тепло; на шаги он выходит и наливает кипяток; у печки уголёк отходит', () => {
+    const W = U.under, K = U.KAPT, man = U.thingById('u_watchman'), log = U.thingById('u_duty_log');
+    assert(K && K.x0 > U.VEIN.x0 && K.x1 <= U.VEIN.x1 && K.y0 === U.VEIN.y0, 'каптёрка не в коллекторе перед криосклепом');
+    for (const x of [K.x0 + 8, (K.x0 + K.x1) / 2, K.x1 - 8]) assert(U.walkable(x, U.VEIN.y0 + 12), 'проход к криосклепу через каптёрку закрыт: ' + x);
+    assert(U.pathTo(600, 294, 834, 306), 'из жилы в криосклеп — не пройти');
+    for (const th of [man, log]) assert(U.walkable(th.at[0], th.at[1]), th.id + ': не подойти');
+    eq(U.coldAt(U.STOVE.x - 20, U.STOVE.y), 0, 'у печки холодно'); assert(U.coldAt(834, 300) === 1, 'криосклеп оттаял');
+    assert(U.underLights(726, 300).some(L => L.color[0] > 190 && L.color[2] < 80 && Math.hypot(L.x - U.STOVE.x, L.y - U.STOVE.y) < 12), 'печка не светит');
+    assert(man.npc === 'watchman' && man.talkName === 'Дежурный криосклепа', 'Дежурный не житель');
+    assert(/катушка от кабеля вместо стола/.test(man.look) && /ватник на гвозде/.test(man.look) && /2087/.test(man.look), 'Дежурный без канона');
+    assert(/продолжает чью-то честность/.test(log.look) && /прочерки/.test(log.look), 'журнал без канона');
+    eq(U.DUTY_LINE, 'Расписаться не могу — ставку сократили. Ставлю прочерк. Прочерк — это я.', 'реплика канона');
+    W.enter(0, 0); W.say = null; W.px = 600; W.py = 294;
+    for (const f of U.FROST) W.kept.add(f.text);                     // опись инеем здесь ни при чём
+    for (let i = 0; i < 60; i++) W.step(600, 294);
+    eq(W.duty.st, 'sit', 'издалека встал');
+    W.px = 680; W.py = 294; for (let i = 0; i < 60; i++) W.step(680, 294);   // стоит рядом, не шагая (пришёл издалека — шаг был один)
+    W.duty = { st: 'sit', t: 0, poured: false, glass: 0, away: 0 }; W.px = 680; W.py = 294;
+    for (let i = 0; i < 60; i++) W.step(680, 294);
+    eq(W.duty.st, 'sit', 'стоящий — а он вышел');
+    let x = 680, pour = 0;
+    for (let i = 0; i < 20; i++) { x += 0.6; W.step(x, 294); }
+    eq(W.duty.st, 'up', 'на шаги не вышел');
+    for (let i = 0; i < 200; i++) { W.step(x, 294); if (W.pourSnd) pour++; }
+    assert(W.duty.poured && W.duty.st === 'wait' && pour === 1, 'кипяток не налил');
+    eq(W.say, U.DUTY_POUR, 'не сказал «погрейтесь»'); eq(U.DUTY_POUR, '— Погрейтесь перед. Там — не положено.', 'реплика сцены канона'); W.say = null;
+    for (let i = 0; i < 700; i++) W.step(500, 294);
+    eq(W.duty.st, 'sit', 'ушёл — а он стоит');
+    for (let i = 0; i < 20; i++) { x += 0.6; W.step(x, 294); }
+    for (let i = 0; i < 200; i++) W.step(x, 294);
+    eq(W.say, null, 'налил второй раз за спуск');
+    W.ember = 0.3; for (let i = 0; i < 600; i++) W.step(726, 300);
+    assert(W.ember > 0.75, 'у печки уголёк не отходит: ' + W.ember.toFixed(2));
+    W.kept.clear(); W.leave(); W.say = null;
+  });
+  test('изнанка: Дежурный говорит по канону; строка описи инеем, сохранённая в прошлый спуск, встречает странника у него — раз', () => {
+    const W = U.under;
+    W.kept.clear(); W.met.clear(); W.enter(0, 0);
+    let lines = W.talk();
+    eq(lines.join('|'), [U.DUTY_SHIFT, U.DUTY_LINE].join('|'), 'разговор');
+    W.kept.add('3. запах подъезда в дождь'); W.keptNow.add('3. запах подъезда в дождь');
+    eq(W.talk().length, 2, 'строка встретила в тот же спуск');
+    W.leave(); W.enter(0, 0);
+    lines = W.talk();
+    eq(lines[0], U.metLine('3. запах подъезда в дождь'), 'строка описи не дошла до Дежурного');
+    assert(/Хранение бессрочное/.test(lines[0]), 'встреча без канона описи');
+    eq(W.talk().length, 2, 'одна и та же строка встречает дважды');
+    eq(JSON.parse(JSON.stringify(W.save())).met.join(), '3. запах подъезда в дождь', 'встречи не сохраняются');
+    W.met.clear(); W.load({ met: ['3. запах подъезда в дождь'] }); assert(W.met.size === 1, 'встречи не загрузились');
+    W.kept.clear(); W.met.clear(); W.keptNow.clear(); W.leave();
+  });
   test('изнанка: кадр рисуется без холста (тесты) и без ошибок; иней тает у уголька', () => {
     const c = fakeCtx(); setCtx(c);
     const p = { x: 828, y: 283, dir: 1, moving: true, vx: 1, vy: 0 };
@@ -2077,6 +2129,12 @@ setCtx(ctx);
     U.moss.glows.push({ x: U.MOSS.x0 + 60, y: U.mossY(U.MOSS.x0 + 60) + 12, life: 40, warm: false }); U.moss.sprouts.push({ x: U.MOSS.x0 + 50, y: U.mossY(U.MOSS.x0 + 50) + 10, tall: true });
     UR.drawUnderWorld(c, U.MOSS.x0 - 20, U.MOSS.base - 180, 640, 360, { x: U.MOSS.x0 + 54, y: U.mossY(U.MOSS.x0 + 60) - 11, dir: 1 }, () => {});
     for (const id of ['u_moss', 'u_up_pithos', 'u_up_burrow']) UR.drawUnderThing(c, U.thingById(id));
+    for (const st of ['sit', 'up', 'pour', 'wait']) for (const tt of [0, 20, 40, 70]) {   // каптёрка: Дежурный во всех видах
+      U.under.duty = { st, t: tt, poured: tt > 40, glass: 10, away: 0 };
+      UR.drawUnderWorld(c, 700 - 320, 300 - 180, 640, 360, { x: 690, y: 271, dir: 1 }, () => {});
+      for (const id of ['u_watchman', 'u_duty_log', 'u_vatnik']) UR.drawUnderThing(c, U.thingById(id));
+    }
+    U.under.duty = { st: 'sit', t: 0, poured: false, glass: 0, away: 0 };
     U.moss.reset();
     U.under.cold = 0;
     setCtx(ctx);

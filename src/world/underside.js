@@ -12,7 +12,8 @@
 // Глубоко под всем — ход мха (U6): от дна пифоса к норе у подножия огня, с
 // линией не сшит; идти по нему — в такт сердцу (двери наверху — world/mossway.js).
 // Свет — уголёк странника: под землёй он тускнеет (не гаснет), в
-// криосклепе — вдвое быстрее и без тепла.
+// криосклепе — вдвое быстрее и без тепла; у печки Дежурного перед криосклепом
+// отходит (каптёрка — единственное тёплое место на маршруте U7).
 // Здесь — план (трубы, комнаты, вещи), где можно стоять, путь по клику,
 // состояние; рисунок — render/underside.js, тексты — content/underside.js.
 // ═══════════════════════════════════════
@@ -61,7 +62,13 @@ export const ROOMS = [
   { id: 'bunker', name: 'Бункер на всякий случай', x0: 520, y0: 720, x1: 820, y1: 850, wh: 44, mat: 'condo', surf: 'ground' },
   // облако: дата-центр в убежище гражданской обороны — стойки рядами, водопад по стене
   { id: 'cloud', name: 'Облако', x0: 1440, y0: 200, x1: 1740, y1: 330, wh: 46, mat: 'shelter', surf: 'ground' },
+  // каптёрка Дежурного (CONTENT_POOL «Дежурный криосклепа»): ниша в коллекторе перед дверью склепа;
+  // дальняя стена — та же, что у жилы; единственное тёплое место на маршруте U7
+  { id: 'kapt', name: 'Каптёрка Дежурного', x0: 696, y0: 282, x1: 756, y1: 330, wh: 22, mat: 'collector', surf: 'ground' },
 ];
+export const KAPT = ROOMS.find(R => R.id === 'kapt');
+// печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
+export const STOVE = { x: 744, y: 316 };
 // провалы в полу — встать нельзя (шахта Онкало)
 export const HOLES = [{ x: 1630, y: 800, r: 60 }];
 for (const R of ROOMS) if (R.poly) {
@@ -124,6 +131,11 @@ const TH = [
   { id: 'u_frost_line', room: 'wd', wall: true, x: 766, y: 216, w: 38, h: 16, at: [786, 256], useAction: 'under_read', useLabel: '<i>❄</i>ДОЧИТАТЬ, НЕ ВЫДОХНУВ' },
   { id: 'u_meter', room: 'wd', wall: true, x: 860, y: 212, w: 22, h: 28, at: [870, 256] },
   { id: 'u_capsule', room: 'wd', x: 808, y: 262, w: 52, h: 32, at: [834, 306], solid: [808, 276, 860, 296] },
+  // каптёрка: на стене ватник на гвозде и график дежурств; катушка от кабеля вместо стола
+  // (журнал, гранёный стакан); Дежурный на табурете между катушкой и печкой
+  { id: 'u_vatnik', room: 'kapt', wall: true, x: 704, y: 262, w: 33, h: 19, at: [718, 290] },
+  { id: 'u_duty_log', room: 'kapt', x: 700, y: 300, w: 22, h: 26, at: [711, 300], solid: [701, 310, 721, 324] },
+  { id: 'u_watchman', room: 'kapt', npc: 'watchman', x: 720, y: 286, w: 17, h: 41, at: [729, 300], solid: [723, 318, 733, 327] },
   // станция Loop: машина на полотне (по глубине — за ней платформа), табло на стене
   { id: 'u_car', room: 'station', x: 1814, y: 424, w: 76, h: 56, at: [1850, 488], solid: [1818, 446, 1884, 471] },
   { id: 'u_board', room: 'station', wall: true, x: 1880, y: 356, w: 60, h: 34, at: [1910, 410] },
@@ -154,7 +166,7 @@ const TH = [
 ];
 // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере;
 // в облаке — дальний ряд стоек, правая часть ближнего, бассейн водопада, кадки
-export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792],
+export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792], [737, 309, 752, 325],
   [1458, 254, 1702, 264], [1638, 292, 1702, 302], [1686, 200, 1724, 210], [1666, 208, 1678, 216], [1722, 208, 1734, 216]];
 
 export const THINGS = TH.map(th => {
@@ -219,6 +231,20 @@ export const HOLD_BREATH = 300, BREATH = 80;                         // стои
   const cap = thingById('u_capsule'), base = cap.look;
   Object.defineProperty(cap, 'look', { get: () => (under.kept.size ? base + '\n\nВ описи криосклепа: ' + [...under.kept].map(s => '«' + s + '»').join(', ') + '. Хранение бессрочное.' : base), configurable: true, enumerable: true });
 }
+
+// ── Дежурный криосклепа (CONTENT_POOL, житель; в труппе его играет Старец): долг без
+// нанимателя. Должность сократили в девяносто четвёртом, а график дежурств расписан
+// до 2087-го; отменить смены некому — вот он и ходит. Топит печку рядом с
+// единственным холодом мира: тепло, приставленное сторожить мороз. На шаги выходит без
+// удивления, будто по графику ждал именно сейчас; наливает кипяток в гранёный стакан,
+// ставит на край катушки, не спрашивая. У его печки уголёк отходит. Строка описи
+// инеем, сохранённая в прошлый спуск, встречает странника здесь: он называет её
+export const DUTY = { x: 728, y: 322 };                                // его табурет
+export const DUTY_POUR = '— Погрейтесь перед. Там — не положено.';
+export const DUTY_SHIFT = 'Должность сократили в девяносто четвёртом. График дежурств — до 2087-го. Отменить смены некому.';   // канон («Суть») — от первого лица
+export const DUTY_LINE = 'Расписаться не могу — ставку сократили. Ставлю прочерк. Прочерк — это я.';
+export const metLine = s => `Ваше дошло. В описи криосклепа: «${s}». Хранение бессрочное.`;   // нов.
+thingById('u_watchman').talkName = 'Дежурный криосклепа';
 
 // ── гербарий темноты (канон, ритуал «Гербарий темноты», U2): катакомбы идут под
 // садом света, корни сада прорастают сквозь свод. Поднёс уголёк к белой стене — на
@@ -355,7 +381,7 @@ export function surfaceUnder(x, y) {
 export function coldAt(x, y) {
   const at = placeAt(x, y);
   if (at === 'wd') return 1;
-  if (at === 'vein') return Math.max(0, Math.min(0.7, (x - 520) / (VEIN.x1 - 520) * 0.7));
+  if (at === 'vein') return Math.max(0, Math.min(0.7, (x - 520) / (KAPT.x0 - 520) * 0.7));   // к каптёрке стынет; в ней тепло
   return 0;
 }
 export const inWater = (x, y) => placeAt(x, y) === 'base';
@@ -652,6 +678,11 @@ export const under = {
   frost: null,            // иней пишет строку { i, x, y, text, t, n } — читаешь
   frostDone: new Set(),   // строки этого спуска: дочитаны или стёрты выдохом
   kept: new Set(),        // опись криосклепа: сохранённые строки (сохраняется)
+  keptNow: new Set(),     // сохранённые в этот спуск — встретят у Дежурного в другой
+  met: new Set(),         // строки, что уже встретили странника у Дежурного (сохраняется)
+  duty: { st: 'sit', t: 0, poured: false, glass: 0, away: 0 },   // Дежурный: сидит, вышел, наливает, ждёт
+  crackle: 0,             // печка трещит: громкость этого шага
+  pourSnd: false,         // кипяток льётся в стакан — на этом шаге
   keptSaid: false,
   after: null,            // строка мира — когда закроется окно сцены
   bench: false,           // на скамье метро лежит билет: поезд прошёл, а своего билета нет
@@ -664,6 +695,7 @@ export const under = {
     this.cold += (c - this.cold) * 0.03;
     this.ember = Math.max(0, this.ember - (1 + (c > 0.9 ? 1 : 0)) / (60 * 240));
     const at = placeAt(fx, fy);
+    if (at === 'kapt') this.ember = Math.min(1, this.ember + 1 / (60 * 12));   // у печки Дежурного уголёк отходит
     if (at !== 'tube') this.found.add(at);
     const mv = Math.hypot(fx - this.px, fy - this.py); this.px = fx; this.py = fy;
     this.still = mv > 0.05 ? 0 : this.still + 1;
@@ -687,6 +719,7 @@ export const under = {
     if (this.flare > 0) this.flare = Math.max(0, this.flare - 1 / 180);
     this.draft = this.greeted ? 0 : draftAt(fx, fy, this.train);
     this.tug = this.greeted ? tugAt(fx, fy) : null;
+    this.stepDuty(fx, fy, mv);
     if (--this.murmur <= 0) {
       this.murmur = 1200 + Math.floor(Math.random() * 1200);
       if (!this.silent(at) && !(this.whisper && (this.whisper.keep || this.whisper.wait))) this.whisper = murmurAt(fx, fy, this.greeted);
@@ -726,7 +759,7 @@ export const under = {
       if ((this.exhale && d < 90) || d > 110) {                         // выдохнул или ушёл — строка тает
         this.frostDone.add(f.text); this.frost = null; this.quench = true; this.whisper = null;
       } else if (++f.t >= f.n) {
-        this.frostDone.add(f.text); this.kept.add(f.text); this.frost = null;
+        this.frostDone.add(f.text); this.kept.add(f.text); this.keptNow.add(f.text); this.frost = null;
         if (!this.keptSaid) { this.keptSaid = true; this.say = FROST_LINE; }
       }
     }
@@ -766,6 +799,31 @@ export const under = {
     } else if (onLine && Math.abs(fx - 1698) < 40 && this.still > 300 && !this.ride && (this.ticket || !this.heard.has('metro'))) {
       this.heard.add('metro'); this.train = 1;
     }
+  },
+  // Дежурный: на шаги выходит; не спрашивая, наливает кипяток в гранёный стакан
+  stepDuty(fx, fy, mv) {
+    const D = this.duty, dd = Math.hypot(fx - DUTY.x, fy - DUTY.y);
+    D.t++; this.pourSnd = false;
+    if (D.poured) D.glass++;                                          // кипяток остывает
+    if (D.st === 'sit') { if (dd < 90 && mv > 0.05) { D.st = 'up'; D.t = 0; } }
+    else if (D.st === 'up') { if (D.t >= 36) { D.st = D.poured ? 'wait' : 'pour'; D.t = 0; } }
+    else if (D.st === 'pour') {
+      if (D.t === 36) this.pourSnd = true;
+      if (D.t >= 80) { D.st = 'wait'; D.t = 0; D.poured = true; D.glass = 0; this.say = DUTY_POUR; }
+    } else if (D.st === 'wait') {
+      if (dd > 150) { if (++D.away > 600) { D.st = 'sit'; D.t = 0; D.away = 0; } }   // ушёл — сел обратно
+      else D.away = 0;
+    }
+    const ds = Math.hypot(fx - STOVE.x, fy - STOVE.y);                 // печка трещит — слышно рядом
+    this.crackle = ds < 120 && Math.random() < 0.025 ? 1 - ds / 120 : 0;
+  },
+  // заговорил с Дежурным: строка описи, сохранённая в прошлый спуск, дошла до него — одна за раз
+  talk() {
+    const lines = [];
+    const s = [...this.kept].find(k => !this.met.has(k) && !this.keptNow.has(k));
+    if (s) { this.met.add(s); lines.push(metLine(s)); }
+    lines.push(DUTY_SHIFT, DUTY_LINE);
+    return lines;
   },
   // иней пишет строку — читаешь её, пока не выдохнешь
   readFrost(x, y, text) {
@@ -844,10 +902,11 @@ export const under = {
     this.boats.length = 0; this.calm = 0; this.read = false; this.after = null;
     this.bloom = null; this.picked = false; this.upper = null;
     this.breath = 0; this.exhale = false; this.frost = null; this.frostDone.clear(); this.keptSaid = false;
+    this.keptNow.clear(); this.duty = { st: 'sit', t: 0, poured: false, glass: 0, away: 0 }; this.crackle = 0; this.pourSnd = false;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; moss.reset(); },
-  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept] }; },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; this.crackle = 0; this.pourSnd = false; moss.reset(); },
+  save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept], met: [...this.met] }; },
   load(d) {
     if (!d) return;
     (d.seen || []).forEach(k => this.seen.add(k));
@@ -856,6 +915,7 @@ export const under = {
     (d.called || []).forEach(k => this.called.add(k));
     if (d.signed) this.signed = true;
     (d.kept || []).forEach(k => this.kept.add(k));
+    (d.met || []).forEach(k => this.met.add(k));
   },
 };
 
@@ -880,6 +940,8 @@ export function underLights(px, py) {
     { x: 740, y: 702, r: 64, color: [118, 140, 108], flicker: 0.04, intensity: 1.3 },   // окно-экран бункера: лес светит
     { x: 1590, y: 262, r: 130, color: [196, 200, 194], flicker: 0, intensity: 1.15 },   // облако: свет искусственный, ровный
   ];
+  L.push({ x: STOVE.x - 6, y: STOVE.y - 4, r: 74, color: FIRE, flicker: 0.18, intensity: 2.1 });   // печка Дежурного: тепло, приставленное сторожить мороз
+  L.push({ x: STOVE.x, y: STOVE.y + 1, r: 24, color: EMBER, flicker: 0.3, intensity: 1.6 });       // жар у дверцы
   if (under.upper) {                                                  // «верхняя» вещь: тёплый дневной свет на минуту
     const th = thingById(under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
     if (th) L.push({ x: th.x + th.w / 2, y: th.y + th.h / 2, r: 70, color: DAYLIGHT, flicker: 0, intensity: 1.7 * a });

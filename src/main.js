@@ -67,7 +67,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour } from './audio/audio.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -1213,6 +1213,8 @@ function stepFxUnder() {
   if (moss.beat && moss.k > 0.5) playHeart();
   if (moss.grow) playMossGrow();
   if (under.tick) playTick(under.tick);
+  if (under.crackle) playCrackle(under.crackle);                    // печка Дежурного трещит
+  if (under.pourSnd) playPour();                                    // кипяток — в гранёный стакан
   stepUnderLife(player);
   lighting.sources = underLights(player.x + 6, player.y + 10);
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
@@ -1253,13 +1255,13 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow)
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt)
 {
   const m = /[?&]under(?:=(\w+))?/.exec(location.search);
   if (m) {
     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
       godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
-      moss: 'u_up_pithos', burrow: 'u_up_burrow' }[m[1]] || 'u_up_pizzeria';
+      moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman' }[m[1]] || 'u_up_pizzeria';
     setTimeout(() => goUnder(spot), 0);
   }
 }
@@ -1584,6 +1586,10 @@ events.on(E.NPC_TALK, (npcId) => {
   if (npcId === 'jester' && !flags.talkedTo.has('jester')) jesterFirstTalk = true;
   flags.talkedTo.add(npcId);
   if (npcId === 'jester') discoverGate('gate_europe');
+});
+// Дежурный криосклепа: что скажет — решает изнанка (строка описи дошла до него — назовёт её)
+events.on(E.NPC_TALK, (npcId, loc) => {
+  if (npcId === 'watchman' && loc && state.is('menu')) loc.talkLines = under.talk();
 });
 events.on(E.OBSERVER_MET, (npcId) => {
   flags.observersSeen.add(npcId);

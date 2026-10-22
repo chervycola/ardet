@@ -110,6 +110,27 @@ function noiseBreath(dur, rise, fall, f0, f1, vol) {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
 }
 
+// Каптёрка Дежурного: печка трещит — щелчок полена, глухой, рядом громче (v 0..1)
+export function playCrackle(v) {
+  if (!ctx || v <= 0.02) return;
+  const n = Math.floor(ctx.sampleRate * 0.03), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.12));
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = 900 + Math.random() * 900; f.Q.value = 1.2; g.gain.value = 0.05 * v;
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+}
+// ...и кипяток льётся в гранёный стакан: струйка, тон поднимается — стакан наполняется
+export function playPour() {
+  if (!ctx) return;
+  const dur = 0.55, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t0 = ctx.currentTime;
+  s.buffer = b; f.type = 'bandpass'; f.Q.value = 6;
+  f.frequency.setValueAtTime(700, t0); f.frequency.linearRampToValueAtTime(1600, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.035, t0 + 0.06); g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
+}
+
 // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
 let tock = false;
 export function playTick(v) {

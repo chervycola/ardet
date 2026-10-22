@@ -15,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER, KAPT, STOVE } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -337,6 +337,7 @@ const BANDS = {
     const n = hh(x, d, 65);
     return n < 0.1 ? S1 : n < 0.18 ? K3 : n > 0.975 ? AS : S0;
   },
+  collector(x, d, H) { return veinBand(x, d, H); },                    // каптёрка: дальняя стена — та же, что у жилы
   loop(x, d, H) {                                                       // станция: гладкие панели, мёртвая лента диодов, свод в тень
     if (d <= 2) return K2;
     if (d <= 5) return S2;                                              // плинтус
@@ -353,10 +354,12 @@ const BANDS = {
 const SIDE = {
   lime: [K2, S2, S0, S0, S2, K1], army: [K2, MG_D, MG, MG, MG_D, K1], wet: [K2, MG_D, S2, S2, K3, K1],
   brick: [K1, BR2, RUST, RUST, BR2, K1], frost: [K2, S2, S2, S2, K3, K1], loop: [K2, S0, S1, S1, S0, K1], granite: [K2, K3, S0, S0, K3, K1], drill: [K2, S2, S0, S0, S2, K1], condo: [K2, RUST, RUST_L, RUST_L, RUST, K1], shelter: [K2, S2, S0, S1, S0, K1],
+  collector: [K2, S2, S0, S0, S2, K1],
 };
 const LIPS = {
   lime: [S1, S0, S2, K2, K1], army: [S1, S0, S2, K2, K1], wet: [MG_L, MG_D, S2, K2, K1],
   brick: [RUST_L, RUST, BR2, K2, K1], frost: [AS, S0, S2, K2, K1], loop: [AS, S1, S0, K2, K1], granite: [S1, S0, K3, K2, K1], drill: [S1, S0, S2, K2, K1], condo: [L2, S1, S0, K2, K1], shelter: [S1, S0, S2, K2, K1],
+  collector: [AS, S0, S2, K2, K1],
 };
 const STAINS = [[1012, 232, 9], [1122, 282, 7], [1038, 287, 5], [1138, 214, 5], [1090, 266, 4]];   // масло у станка и у устья
 const FLOORS = {
@@ -369,6 +372,7 @@ const FLOORS = {
   army(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 92); return n < 0.04 ? S2 : n > 0.985 ? S1 : S0; },
   brick(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 93); return n > 0.997 ? L2 : n > 0.988 ? S1 : n < 0.04 ? S2 : S0; },   // мука по бетону
   frost(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 94) < 0.05 ? S2 : S0; },
+  collector(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; return hh(x, y, 97) < 0.04 ? S2 : S0; },   // бетон, как в жиле: без шва
   wet(x, y) { if (y % 7 === 0 && hh(x >> 2, y, 95) < 0.5) return MG_L; return hh(x, y, 96) > 0.996 ? AS : MG; },   // вода
   granite(x, y, R) { const fy = y - R.y0; if (fy === 0) return K1; if (fy === 1) return K2; const n = hh(x, y, 89); return n < 0.06 ? K3 : n > 0.985 ? S1 : S0; },
   shelter(x, y, R) {                                                    // фальшпол дата-центра: плитки, в проходах — с дырочками
@@ -451,12 +455,13 @@ function veinBand(x, d, H) {
   return hh(x, d, 81) < 0.05 ? S2 : S0;
 }
 function veinWalls(cl) { rows(VEIN.x0, VEIN.x1, VEIN.y0 - VEIN.wh, VEIN.y0, cl, (x, y) => veinBand(x, VEIN.y0 - y, VEIN.wh)); }
-function veinLip(cl) { rows(VEIN.x0, VEIN.x1, VEIN.y0 + VEIN.fh, VEIN.y0 + VEIN.fh + T.LIP, cl, (x, y) => LIPS.frost[y - VEIN.y0 - VEIN.fh]); }
+const inBay = x => x >= KAPT.x0 - 6 && x < KAPT.x1 + 6;               // каптёрка: срез жилы там не нужен — пол уходит дальше
+function veinLip(cl) { rows(VEIN.x0, VEIN.x1, VEIN.y0 + VEIN.fh, VEIN.y0 + VEIN.fh + T.LIP, cl, (x, y) => (inBay(x) ? null : LIPS.frost[y - VEIN.y0 - VEIN.fh])); }
 function veinFloor(cl) {
   rows(VEIN.x0 - 6, VEIN.x1 + 6, VEIN.y0, VEIN.y0 + VEIN.fh, cl, (x, y) => {
     const row = y - VEIN.y0;
     if (row === 0) return K1;
-    if (row === VEIN.fh - 3) return K1;                                 // водосток
+    if (row === VEIN.fh - 3 && !(x >= KAPT.x0 && x < KAPT.x1)) return K1;   // водосток (в каптёрке — пол дальше)
     return hh(x, y, 97) < 0.04 ? S2 : S0;
   });
 }
@@ -711,6 +716,19 @@ function wallThing(th) {
       r(x + 6, y + 2, 1, 1, AS); r(x + 8, y + 2, 1, 1, AS); r(x + 18, y + 2, 1, 1, AS); r(x + 20, y + 2, 1, 1, AS);   // точки над «а»
       write('SHUB-', x + 2, y + 12, AS, 0.08, 30);
       r(x + 5, y + 17, 1, 3, AS); r(x + 13, y + 17, 1, 2, AS);          // потёки
+      break;
+    }
+    case 'u_vatnik': {                                                  // график дежурств на кнопках и ватник на гвозде
+      r(x + 1, y + 3, 12, 13, L2); r(x + 1, y + 3, 12, 1, BO); r(x + 12, y + 4, 1, 12, S1);   // лист
+      for (let j = 0; j < 4; j++) r(x + 2, y + 6 + j * 3, 10, 1, S1);  // графы
+      for (let i = 0; i < 3; i++) r(x + 4 + i * 3, y + 5, 1, 10, S1);
+      r(x + 2, y + 4, 6, 1, K2); r(x + 1, y + 3, 1, 1, KV); r(x + 12, y + 3, 1, 1, KV);   // шапка, кнопки
+      const vx = x + 20;                                                // ватник: плечи, рукава висят, стёжка
+      r(vx + 6, y + 1, 1, 1, AS);                                       // гвоздь
+      r(vx + 3, y + 2, 7, 2, MG_D); r(vx + 1, y + 4, 11, 12, MG_D); r(vx + 1, y + 4, 11, 1, MG);
+      r(vx - 1, y + 5, 2, 10, MG_D); r(vx + 12, y + 5, 2, 10, MG_D); r(vx - 1, y + 5, 1, 10, MG);   // рукава
+      for (let j = 0; j < 4; j++) r(vx + 1, y + 7 + j * 3, 11, 1, K1);  // стёжка
+      r(vx + 6, y + 4, 1, 12, K1); r(vx + 5, y + 2, 3, 1, K1);          // борт, ворот
       break;
     }
     case 'u_frost': scrawl(x + 2, y + 4, 62, 3, BO, 31, 4); break;      // опись инеем
@@ -1093,7 +1111,88 @@ function sofa() {
   r(x - 2, gy - 11, 4, 10, L2); r(x + 56, gy - 11, 4, 10, L2); r(x - 2, gy - 11, 4, 1, BO); r(x + 56, gy - 11, 4, 1, BO);   // подлокотники
   r(x + 2, gy - 2, 2, 2, K1); r(x + 54, gy - 2, 2, 2, K1);
 }
+// ═══ КАПТЁРКА ДЕЖУРНОГО: катушка вместо стола, печка, чайник, сам Дежурный ═══
+// Дежурного играет Старец (труппа): капюшон, лица нет — тьма, изредка в ней будто
+// глаза. Сидит на табурете между катушкой и печкой, руки к теплу, изредка подкидывает
+// в печку. На шаги встаёт; берёт с печки чайник, наливает кипяток в гранёный стакан
+// на краю катушки
+const pouring = () => under.duty.st === 'pour' && under.duty.t >= 30 && under.duty.t < 66;
+const flare = () => (t % 600 < 90 && under.duty.st === 'sit' ? Math.sin(Math.PI * (t % 600) / 90) : 0);   // подкинул в печку
+function kettle(x, y, tilt) {                                          // эмалированный чайник: корпус, крышка, носик, дужка
+  r(x, y + 1, 6, 4, K3); r(x, y + 1, 6, 1, S2); r(x + 1, y + 2, 1, 2, S0);
+  r(x + 2, y, 2, 1, S2); r(x + 2, y - 1, 1, 1, AS);
+  if (tilt) { r(x - 1, y + 3, 1, 1, K3); r(x - 2, y + 4, 1, 1, K3); } else { r(x - 1, y + 2, 1, 1, K3); r(x - 2, y + 1, 1, 1, K3); }
+  r(x + 1, y - 2, 4, 1, K2); r(x, y - 1, 1, 1, K2); r(x + 5, y - 1, 1, 1, K2);
+}
+function stove() {                                                     // буржуйка: железо, заклёпки, дверца с жаром; труба — в темноту
+  const x = 738, y = 309, f = flare();
+  for (let yy = 252; yy < y; yy++) { r(x + 10, yy, 2, 1, (yy - 252) % 9 === 0 ? S2 : K2); r(x + 10, yy, 1, 1, (yy - 252) % 9 === 0 ? AS : S2); }   // труба, стыки
+  r(x + 1, y + 13, 1, 3, K1); r(x + 12, y + 13, 1, 3, K1);             // ножки
+  r(x, y, 14, 13, K2); r(x + 1, y, 13, 1, S2); r(x, y + 1, 1, 12, S2); r(x + 13, y + 1, 1, 12, K1);
+  r(x - 1, y - 1, 16, 1, K1); r(x, y - 1, 14, 1, S2);                  // плита
+  for (const [dx, dy] of [[2, 2], [11, 2], [2, 11], [11, 11]]) r(x + dx, y + dy, 1, 1, AS);   // заклёпки
+  r(x + 3, y + 4, 8, 6, K1); r(x + 3, y + 4, 8, 1, S2);                 // дверца
+  const k = 0.55 + 0.25 * Math.sin(t * 0.21) + 0.15 * Math.sin(t * 0.53 + 1) + 0.5 * f;   // жар в щели дверцы
+  G.globalAlpha = Math.min(1, k); r(x + 4, y + 7, 6, 1, KV); G.globalAlpha = Math.min(1, k * 0.8); r(x + 5, y + 7, 3, 1, EMBER_G);
+  G.globalAlpha = Math.min(1, 0.35 * k); r(x + 4, y + 8, 6, 1, KV); G.globalAlpha = 1;
+  if (!pouring() && !(under.duty.st === 'pour' && under.duty.t >= 24 && under.duty.t < 30)) kettle(x + 2, y - 6, false);   // чайник на печке
+}
+function dutyTable(th) {                                               // катушка от кабеля вместо стола: щёки, барабан; журнал, стакан
+  const cx = 711, ty = 312;
+  for (let dx = -9; dx <= 9; dx++) { const h = q(2 * Math.sqrt(Math.max(0, 1 - (dx / 9.5) ** 2))); r(cx + dx, 322, 1, 1 + h, dx < -5 ? RUST : BR2); }   // нижняя щека
+  r(cx - 4, ty + 2, 9, 8, BR2); r(cx - 4, ty + 2, 1, 8, RUST); r(cx + 4, ty + 2, 1, 8, K1);   // барабан
+  for (const dx of [-2, 0, 2]) r(cx + dx, ty + 3, 1, 6, K1);           // обрывки кабеля, намотка
+  for (let dx = -9; dx <= 9; dx++) {                                   // верхняя щека — столешница
+    const h = q(3 * Math.sqrt(Math.max(0, 1 - (dx / 9.5) ** 2)));
+    r(cx + dx, ty - h, 1, 2 * h + 1, dx < -4 ? RUST_L : RUST); r(cx + dx, ty + h, 1, 1, K1);
+  }
+  r(cx - 8, ty - 1, 7, 2, L1); r(cx - 8, ty - 1, 7, 1, BO); r(cx - 5, ty - 1, 1, 2, K2);   // журнал раскрыт
+  for (const [dx, dy] of [[-7, 0], [-3, 0], [-7, 1]]) r(cx + dx, ty + dy, 2, 1, K2);         // прочерки
+  const gx = cx + 5, gy = ty - 5, full = under.duty.poured;           // гранёный стакан на краю
+  r(gx, gy, 3, 4, AS); r(gx + 1, gy, 1, 4, S1); r(gx, gy, 3, 1, BO); r(gx, gy + 3, 3, 1, S2);
+  if (full) { r(gx + 1, gy + 1, 1, 2, BO); }
+  if (pouring()) {                                                     // кипяток льётся
+    G.globalAlpha = 0.75; r(gx + 1, gy - 3, 1, 3, BO); G.globalAlpha = 1;
+  }
+}
+function dutyMan(th) {                                                 // Дежурный: сидит у печки или стоит; капюшон, лица нет
+  const D = under.duty, up = D.st === 'wait' || D.st === 'pour' || (D.st === 'up' && D.t >= 18);
+  const cx = 728, breath = Math.sin(t * 0.005) > 0.55 ? 1 : 0;
+  // табурет
+  r(cx - 5, 318, 11, 2, RUST); r(cx - 5, 318, 11, 1, RUST_L); r(cx - 4, 320, 1, 7, K1); r(cx + 4, 320, 1, 7, K1);
+  let hy;
+  if (!up) {                                                           // сидит, ссутулившись: колени к печке, голени отвесно, руки к теплу
+    for (let k = 0; k < 4; k++) { const y = 314 + k, w = 5 + k; r(cx - 5, y, w + 5 + 4, 1, k ? K1 : K2); r(cx - 5, y, 1, 1, K4); }   // подол на коленях
+    r(cx + 3, 318, 2, 7, K1); r(cx + 7, 318, 2, 7, K1); r(cx + 2, 325, 4, 2, K0); r(cx + 6, 325, 4, 2, K0);   // голени, сапоги
+    r(cx + 3, 318, 1, 6, K2); r(cx + 7, 318, 1, 6, K2);
+    for (let k = 0; k < 9; k++) { const y = 305 + k - breath, w = 4 + q(k * 0.25); r(cx - w - 1, y, 2 * w + 1, 1, K1); r(cx - w - 1, y, 1, 1, K4); r(cx + w - 1, y, 1, 1, AS); }   // стан
+    const f = flare(), reach = q(3 * f);                               // руки к печке; подкинул — тянется
+    r(cx + 3, 311, 4 + reach, 2, K1); r(cx + 7 + reach, 311, 2, 2, L1);
+    hy = 296 - breath;
+  } else {                                                             // встал: вышел к проходу, без удивления
+    const fy = 311;
+    for (let k = 0; k < 12; k++) { const y = fy - 12 + k, w = 5 + q(k * 0.25); r(cx - w, y, 2 * w, 1, K1); r(cx - w, y, 1, 1, K4); r(cx + w - 1, y, 1, 1, AS); }
+    r(cx - 3, fy - 1, 3, 2, K0); r(cx + 1, fy - 1, 3, 2, K0);          // сапоги
+    for (let k = 0; k < 10; k++) { const y = fy - 22 + k - breath, w = 4 + q(k * 0.2); r(cx - w - 1, y, 2 * w + 1, 1, K1); r(cx - w - 1, y, 1, 1, K4); r(cx + w - 1, y, 1, 1, AS); }
+    if (D.st === 'pour') {                                             // тянется к печке за чайником — и льёт над стаканом
+      if (D.t < 30) { const k = Math.min(1, D.t / 20); r(cx + 4, fy - 15, 2 + q(6 * k), 2, K1); r(cx + 6 + q(6 * k), fy - 15, 2, 2, L1); }
+      else if (D.t < 66) { r(cx - 6, fy - 16, 3, 2, K1); r(cx - 7, fy - 15, 2, 2, L1); kettle(cx - 9, fy - 12, true); }   // носик — над стаканом
+    } else { r(cx - 6, fy - 12, 2, 2, L1); r(cx + 5, fy - 12, 2, 2, L1); }   // руки вдоль
+    hy = fy - 31 - breath;
+  }
+  // капюшон: лица нет — тьма (как у Старца: это он и есть)
+  const hx = cx - 5;
+  r(hx + 3, hy, 5, 1, K2); r(hx + 1, hy + 1, 9, 1, K2); r(hx, hy + 2, 11, 8, K1);
+  r(hx, hy + 2, 1, 7, K4); r(hx + 1, hy + 1, 2, 1, K4); r(hx + 10, hy + 3, 1, 6, AS);
+  r(hx + 2, hy + 4, 7, 6, NI); r(hx + 3, hy + 3, 5, 1, NI);
+  r(hx - 1, hy + 9, 13, 2, K1); r(hx - 1, hy + 9, 1, 2, K4);
+  const g = (t + 900) % 2400;                                          // изредка — будто глаза
+  if (g < 150) { G.globalAlpha = 0.55 * Math.sin(g / 150 * Math.PI); r(hx + 3, hy + 6, 1, 1, AS); r(hx + 7, hy + 6, 1, 1, AS); G.globalAlpha = 1; }
+}
+
 const FLOOR_DRAW = {
+  u_duty_log: dutyTable,
+  u_watchman: dutyMan,
   u_racks() { RACKS_S.forEach((x, i) => rack(x, 302, 100 + i)); },
   racksN() { RACKS_N.forEach((x, i) => rack(x, 264, i)); },
   sofa,
@@ -1168,7 +1267,7 @@ function frostDots() {
     const e = Math.min(x - W.x0, W.x1 - x, y - W.y0, W.y1 - y);
     return 0.015 + 0.08 * Math.max(0, 1 - e / 18);                      // пол: у стен гуще
   });
-  const vk = x => Math.max(0, (x - VEIN.x0 - 80) / (VEIN.x1 - VEIN.x0 - 80));
+  const vk = x => (x >= KAPT.x0 - 2 && x < KAPT.x1 + 4 ? 0 : Math.max(0, (x - VEIN.x0 - 80) / (VEIN.x1 - VEIN.x0 - 80)) * Math.min(1, Math.abs(x - KAPT.x0) / 18));   // у печки Дежурного инея нет
   add(VEIN.x0 + 80, VEIN.x1, VEIN.y0 - VEIN.wh, VEIN.y0 + VEIN.fh, (x, y) => (y < VEIN.y0 ? 0.09 : 0.03) * vk(x));
   return frost;
 }
@@ -1384,6 +1483,16 @@ function airLife(g, camX, camY, vw, vh, p) {
     const th = THINGS.find(o => o.id === under.upper.id), u = under.upper.t, a = Math.min(1, u / 240, (UPPER - u) / 60);
     if (th && th.x + th.w > camX && th.x < camX + vw) peonyShadow(q(th.x + th.w / 2), q(th.y + th.h / 2) - 2, 3.5 + 0.3 * Math.sin(t * 0.05), 0.4 * a);
   }
+  // каптёрка: над стаканом кипятка пар (остывает за три минуты), из носика чайника — струйка
+  if (camX < 760 && camX + vw > 700 && camY < 330 && camY + vh > 260) {
+    const D = under.duty;
+    if (D.poured && D.glass < 10800) for (let k = 0; k < 3; k++) {
+      const u = ((t + k * 37) % 110) / 110;
+      G.globalAlpha = 0.3 * (1 - u) * (1 - D.glass / 10800); r(717 + q(Math.sin(u * 5 + k) * 1.5), 306 - q(u * 13), 1, 1, BO);
+    }
+    if (D.st !== 'pour' && t % 160 < 60) { const u = (t % 160) / 60; G.globalAlpha = 0.22 * (1 - u); r(738 - q(u * 3), 304 - q(u * 9), 1, 1, BO); }
+    G.globalAlpha = 1;
+  }
   // перекличка ниш: проснувшаяся ниша выдыхает — пыль из зева, пока шепчет имя
   if (under.niche && !under.niche.done && under.niche.t < 240) {
     const n = nicheOf(under.niche.name), u = under.niche.t;
@@ -1453,6 +1562,7 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
   for (const th of THINGS) if (!th.wall && FLOOR_DRAW[th.id] && seen(th)) list.push({ k: th.solid ? th.solid[3] : th.y + th.h, th });
   if (camX < 300 && camX + vw > 230 && camY < 320 && camY + vh > 280) list.push({ k: 308, west: true });
   if (camX < 780 && camX + vw > 712 && camY < 795 && camY + vh > 776) list.push({ k: 792, sofa: true });
+  if (camX < 760 && camX + vw > 730 && camY < 330 && camY + vh > 250) list.push({ k: 325, stove: true });   // буржуйка каптёрки
   if (camX < 1745 && camX + vw > 1440 && camY < 300 && camY + vh > 190) {
     list.push({ k: 264, racksN: true }, { k: 216, palm: 1672 }, { k: 216, palm: 1728 });
   }
@@ -1465,6 +1575,7 @@ export function drawUnderWorld(g, camX, camY, vw, vh, p, drawHero) {
     if (it.arch) archSprite(g, it.arch);
     else if (it.west) FLOOR_DRAW.chestsWest();
     else if (it.sofa) sofa();
+    else if (it.stove) stove();
     else if (it.racksN) FLOOR_DRAW.racksN();
     else if (it.palm) palm(it.palm, 216);
     else FLOOR_DRAW[it.th.id](it.th);
