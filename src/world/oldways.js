@@ -18,6 +18,9 @@
 //    на стене плакат с улыбкой; в подвале банка «1961. НЕ ОТКРЫВАТЬ», за ней дверь вниз.
 //    Выход — задняя дверь вагона 89 6, вкопанного тупиком во дворе-колодце города-сот
 //    (неон, восток); снаружи она заперта, пока убежище не признало странника проверяющим.
+//  · U5 «метро»: заклеенный вход метро в фасаде-панели проспекта-экрана (сейчас, восток):
+//    ленты крест-накрест, над входом полустёрто LASCIATE, рядом мелом белый кролик. Внизу —
+//    вестибюль и платформа; выход — колодец городка, поездом (ритуал «Поезд за спиной»).
 // ═══════════════════════════════════════
 import { TOWN, ringAt, trailPoint } from './disc.js';
 
@@ -204,9 +207,13 @@ const CELLAR_LOOK = 'Спуск в подвал завода: бетонный �
 //    на боку меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ» (А10); сверху капают кондиционеры ──
 const VW_ = 62, VH_ = 42;
 const DIG = { 8: ['XXX', 'X.X', 'XXX', 'X.X', 'XXX'], 9: ['XXX', 'X.X', 'XXX', '..X', 'XXX'], 6: ['XXX', 'X..', 'XXX', 'X.X', 'XXX'],
-  В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'], Я: ['.XX', 'X.X', '.XX', '.XX', 'X.X'] };
-function letters(ctx, word, x, y, c) {
-  for (const ch of word) { const g = DIG[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === 'X') R(ctx, x + i, y + j, 1, 1, c); }); x += 4; }
+  В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'], Я: ['.XX', 'X.X', '.XX', '.XX', 'X.X'],
+  L: ['X..', 'X..', 'X..', 'X..', 'XXX'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], S: ['.XX', 'X..', '.X.', '..X', 'XX.'], C: ['.XX', 'X..', 'X..', 'X..', '.XX'],
+  I: ['XXX', '.X.', '.X.', '.X.', 'XXX'], T: ['XXX', '.X.', '.X.', '.X.', '.X.'], E: ['XXX', 'X..', 'XX.', 'X..', 'XXX'] };
+// wear — доля стёртых точек (надпись полустёрта): какие стёрлись — по месту, не по кадру
+const worn = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function letters(ctx, word, x, y, c, wear = 0) {
+  for (const ch of word) { const g = DIG[ch]; if (g) g.forEach((row, j) => { for (let i = 0; i < 3; i++) if (row[i] === 'X' && worn(x + i, y + j) >= wear) R(ctx, x + i, y + j, 1, 1, c); }); x += 4; }
 }
 function drawCarriage(ctx, loc, t) {
   const x = loc.x, gy = loc.y + loc.h, bx = x + 10, bw = VW_ - 12, top = gy - 30;
@@ -235,7 +242,32 @@ function drawCarriage(ctx, loc, t) {
 }
 const CARRIAGE_LOOK = 'Двор-колодец: внизу тупиком вкопан вагон 89 6. Рельсы подходят к нему и кончаются. На боку — меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ». Сверху капают кондиционеры.';
 
-let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null;
+// ── U5, вход: заклеенный вход метро в фасаде-панели проспекта-экрана (канон кадра «плоский
+//    новый мир»): проём крест-накрест в бумажных лентах, над входом полустёрто LASCIATE OGNI
+//    SPERANZA (А12), справа мелом белый кролик (Б1); красная «М» над входом погашена ──
+const MW_ = 50, MH_ = 36;
+function drawMetro(ctx, loc) {
+  const x = loc.x, gy = loc.y + loc.h;
+  ctx.globalAlpha = 0.45; R(ctx, x + 3, gy, MW_ - 2, 1, K0); ctx.globalAlpha = 1;
+  R(ctx, x, gy - 36, MW_, 36, S0); R(ctx, x, gy - 36, MW_, 1, S1); R(ctx, x, gy - 36, 1, 36, S1); R(ctx, x + MW_ - 1, gy - 36, 1, 36, K2);   // фасад-панель
+  for (const sx of [x + 12, x + 25, x + 38]) R(ctx, sx, gy - 35, 1, 11, K2);   // швы панелей
+  R(ctx, x + 1, gy - 24, MW_ - 2, 1, K2);
+  for (const [dx, dy] of [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [2, 2], [3, 1], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]]) R(ctx, x + 3 + dx, gy - 34 + dy, 1, 1, KV);   // «М»
+  letters(ctx, 'LASCIATE', x + 10, gy - 33, L2, 0.35);                  // полустёрто
+  R(ctx, x + 9, gy - 23, 30, 1, S1); R(ctx, x + 9, gy - 22, 1, 22, S1); R(ctx, x + 38, gy - 22, 1, 22, K2);   // рама проёма
+  R(ctx, x + 10, gy - 22, 28, 22, NI);
+  for (let i = 0; i < 5; i++) { const sy = gy - 3 - i * 4, ins = i * 2; R(ctx, x + 11 + ins, sy, 26 - 2 * ins, 2, i < 1 ? S1 : i < 2 ? S2 : i < 3 ? K3 : K2); }   // ступени вниз, в темноту
+  for (let k = 0; k <= 26; k++) {                                        // ленты крест-накрест; верхний край второй отклеился
+    R(ctx, x + 11 + k, gy - 21 + q(k * 19 / 26), 1, 2, L1);
+    if (k < 20) R(ctx, x + 11 + k, gy - 3 - q(k * 19 / 26), 1, 2, L2);
+  }
+  R(ctx, x + 31, gy - 17, 2, 5, L2); R(ctx, x + 32, gy - 12, 1, 2, L1); // отклеившийся край висит
+  RABBIT.forEach((row, j) => { for (let i = 0; i < row.length; i++) if (row[i] === 'X') R(ctx, x + 41 + i, gy - 19 + j, 1, 1, BO); });   // белый кролик мелом
+}
+const RABBIT = ['.X.X....', '.X.X....', '.XXX....', 'X...X...', '.XXX.XX.', '.X.....X', 'X......X', '.XXXXXX.'];
+const METRO_LOOK = 'Заклеенный вход метро: проём крест-накрест в бумажных лентах. Над входом полустёрто: LASCIATE OGNI SPERANZA. Рядом мелом — белый кролик.';
+
+let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
   stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', 500).x);
@@ -310,5 +342,15 @@ export function buildOldways(locations) {
     useAction: 'carriage_back', useLabel: '<i>↓</i>ЗАДНЯЯ ДВЕРЬ',
   };
   locations.push(carriage);
+  // U5, вход: заклеенный вход метро — у экрана-фасада проспекта
+  const screen = archOf(locations, 9, 'east', 'экран-фасад', TOWN.x1);
+  const mp = placeIn(locations, 9, 'east', MW_, MH_, screen) || { x: TOWN.x1 + 1700, gy: TOWN.y0 + 900 };
+  metro = {
+    id: 'metro_sealed', name: 'Заклеенный вход метро', zone: 'street',
+    x: mp.x, y: mp.gy - MH_, w: MW_, h: MH_, solidBox: { x: mp.x, y: mp.gy - 6, w: MW_, h: 5 },
+    look: METRO_LOOK, drawSelf: drawMetro,
+    useAction: 'metro_sealed', useLabel: '<i>↓</i>ПОД ЛЕНТУ',
+  };
+  locations.push(metro);
 }
-export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage });
+export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro });

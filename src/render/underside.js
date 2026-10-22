@@ -534,6 +534,25 @@ FLOORS.u4 = (x, y, R) => {
   const n = hh(x, y, 185); return n < 0.05 ? S2 : n > 0.988 ? S1 : S0;
 };
 
+// ── U5, метро: плитка станции, полоса потемнее; под сводом тень. Пол — гранит в шахматку ──
+BANDS.u5 = (x, d, H) => {
+  if (d <= 2) return K2;
+  if (d > H - 3) return K1;
+  if (d > H - 8) return hh(x, d, 190) < 0.2 ? K2 : K3;
+  if (x % 5 === 0 || (d - 1) % 4 === 3) return S2;
+  if (d >= 9 && d <= 12) return S1;
+  return hh(x, d, 191) < 0.06 ? S1 : L2;
+};
+SIDE.u5 = [K2, S2, S0, S0, S2, K1]; LIPS.u5 = [S1, S0, S2, K2, K1];
+FLOORS.u5 = (x, y, R) => {
+  const fy = y - R.y0;
+  if (fy === 0) return K1;
+  if (fy === 1) return K2;
+  if ((x - R.x0) % 10 === 0 || fy % 10 === 0) return K2;
+  const odd = (Math.floor((x - R.x0) / 10) + Math.floor(fy / 10)) & 1, n = hh(x, y, 192);
+  return odd ? (n < 0.06 ? S2 : S0) : (n < 0.06 ? S0 : S1);
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -795,6 +814,23 @@ function stair(th) {
       r(lx + 1, top + 15, 1, 2, KV); r(lx + 2, top + 18, 1, 1, KV);
     }
     r(bx + 2, gy - 4, bw - 4, 3, S2); r(bx + 2, gy - 4, bw - 4, 1, AS); r(bx + 2, gy - 1, bw - 4, 1, K1);   // ступенька в вагон
+    return;
+  }
+  if (kind === 'escalator') {                                           // U5: эскалатор стоит — рифлёные ступени вверх, к верху уже; лампы балюстрады мёртвые
+    r(ox - 2, top - 2, ow + 4, gy - top + 2, S0); r(ox - 2, top - 2, ow + 4, 1, S1); r(ox + ow, top - 1, 2, gy - top + 1, S2);
+    r(ox, top, ow, gy - top, NI);
+    const px = q(ox + ow / 2 - 7);                                       // наверху заклеенный вход: крест-накрест ленты, сквозь бумагу светло
+    r(px, top + 1, 14, 6, K2);
+    for (let k = 0; k < 14; k++) { r(px + k, top + 1 + q(k * 5 / 13), 1, 1, L2); r(px + k, top + 6 - q(k * 5 / 13), 1, 1, L1); }
+    for (let i = 0; i < 8; i++) {
+      const sy = gy - 2 - i * 4, ins = 2 + i;
+      if (sy - 3 < top + 8) break;
+      r(ox + ins, sy - 1, ow - 2 * ins, 2, i < 3 ? S1 : i < 6 ? S2 : K3);
+      for (let k = ox + ins + 1; k < ox + ow - ins; k += 2) r(k, sy - 1, 1, 1, K2);   // рифление
+      r(ox + ins, sy + 1, ow - 2 * ins, 1, K1);
+      r(ox + ins - 2, sy - 3, 2, 5, S0); r(ox + ow - ins, sy - 3, 2, 5, S2);   // балюстрады сходятся кверху
+      if (!(i & 1)) { r(ox + ins - 2, sy - 3, 1, 1, AS); r(ox + ow - ins + 1, sy - 3, 1, 1, S1); }   // лампы-торшеры, мёртвые
+    }
     return;
   }
   if (kind === 'gothic') {                                              // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба

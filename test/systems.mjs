@@ -2749,6 +2749,29 @@ setCtx(ctx);
     assert(!U.pathTo(cut.at[0], cut.at[1], v.at[0], v.at[1]), 'сетка пути не закрыла дверь обратно');
     W.signed = was;
   });
+  test('U5 «метро»: заклеенный вход метро на проспекте-экране (сейчас, восток) — кролик мелом, полустёртое LASCIATE; внизу вестибюль, эскалатор, платформа', () => {
+    const { metro: m } = OW.oldways();
+    assert(m && M.locations.includes(m), 'заклеенного входа нет');
+    const mx = m.x + m.w / 2, my = m.y + m.h;
+    eq(DS.ringAt(mx, my), 9, 'вход не в «сейчас»'); eq(sideOf(mx, my), 'east', 'вход не на востоке');
+    const screen = M.locations.filter(l => l.archDraw && l.name === 'экран-фасад' && l.archRing === 9)
+      .reduce((a, l) => Math.min(a, Math.hypot(l.archX - mx, l.archGy - my)), 1e9);
+    assert(screen < 400, `вход далеко от проспекта-экрана: ${Math.round(screen)}`);
+    assert(/LASCIATE OGNI SPERANZA/.test(m.look) && /белый кролик/.test(m.look) && /Заклеенный вход метро/.test(m.look), 'осмотр входа не по канону');
+    eq(m.useAction, 'metro_sealed', 'под ленту не пролезть');
+    eq(U.DESCENTS.metro_sealed, 'u_up_metro', 'вход ведёт не к эскалатору');
+    const esc = U.thingById('u_up_metro');
+    eq(upOf(esc), m, 'эскалатор выводит не к заклеенному входу');
+    eq(U.placeAt(esc.at[0], esc.at[1]), 'u5', 'эскалатор — не в вестибюле');
+    for (const l of M.locations) if (l !== m) assert(!(l.x < m.x + m.w + 6 && l.x + l.w > m.x - 6 && l.y < m.y + m.h + 6 && l.y + l.h > m.y - 6), `вход налез на «${l.name}»`);
+    const log = [], ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, val) { log.push(['=' + kk, val]); return true; } });
+    m.drawSelf(ctx, m, 0);
+    for (const [kk, x, y, w, hh] of log) if (kk === 'fillRect') assert(x >= m.x - 1 && x + w <= m.x + m.w + 1 && y >= m.y - 1 && y + hh <= m.y + m.h + 1, `вход вылез из рамки: ${x},${y} ${w}×${hh}`);
+    const cut = U.thingById('u_cut_metro');
+    assert(U.pathTo(esc.at[0], esc.at[1], cut.at[0], cut.at[1]), 'от эскалатора к платформе не пройти');
+    assert(U.pathTo(esc.at[0], esc.at[1], 1698, 465), 'от эскалатора не встать спиной к тоннелю (поезд за спиной)');
+    assert(/сквозняком/.test(UA.useTexts.metro_sealed.text), 'снизу не тянет тоннелем');
+  });
 }
 
 // ═══ REPORT ═══

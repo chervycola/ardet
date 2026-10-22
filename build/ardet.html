@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='7aa9d51 · 2026-10-22';console.log('[оттиск]', '7aa9d51 · 2026-10-22');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='ea70b8f · 2026-10-22';console.log('[оттиск]', 'ea70b8f · 2026-10-22');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -17474,6 +17474,12 @@ System.register("world/useActions", [], function (exports_40, context_40) {
                 'carriage_back_locked': { title: `ЗАДНЯЯ ДВЕРЬ`, text: `Ты проходишь вагон насквозь, к задней двери. Дверь не поддаётся: заперта с той стороны.
 
 Из щели тянет бетоном. Там ждут, чтобы кто-нибудь заверил.` },
+                // U5 «метро»: канон — «заклеенный вход метро с белым кроликом и полустёртым LASCIATE»
+                // (кадр «плоский новый мир»; пасхалки Б1, А12); внизу — сквозняк тоннеля (ритуал «Поезд за
+                // спиной»). Ленты, эскалатор — нов.
+                'metro_sealed': { title: `ЗАКЛЕЕННЫЙ ВХОД`, text: `Вход заклеен крест-накрест бумажными лентами; бумага старая, край отклеился. Ты пролезаешь под лентой.
+
+Эскалатор стоит. Снизу тянет сквозняком.` },
                 'crater_coin': { title: `ПОДНЯТЬ МОНЕТУ`, text: `Ты садишься на корточки. Монета вплавлена в песок. Ты тянешь. Не идёт.
 
 Ты тянешь сильнее. Палец соскальзывает с гладкой поверхности — ни орла, ни решки, ни ребра. Просто диск. Загадать на него нечего.
@@ -19736,6 +19742,9 @@ System.register("content/underside", [], function (exports_55, context_55) {
 Ящики выдвинуты все. В каждом — карточки: имя и годы.` },
                 u_benches: { name: 'Скамьи', look: `Скамьи вдоль стен — на всех, кто придёт по тревоге. Краска на сиденьях целая: никто не пришёл.` },
                 u_up_carriage: { name: 'Задняя дверь вагона', look: `Задний торец вагона 89 6: вагон вкопан тупиком и упёрся в тамбур. Складная дверь открывается без скрипа. В стекле — красный отсвет: наверху, во дворе-колодце, горит одна живая вывеска.` },
+                // U5 «метро»: заклеенный вход (сейчас, восток) → вестибюль → платформа среза → поездом к колодцу
+                // городка. Эскалатор — нов.
+                u_up_metro: { name: 'Эскалатор', look: `Эскалатор стоит. Ступени вверх, в темноту; лампы на балюстраде мёртвые. Наверху — заклеенный вход: сквозь бумагу светло.` },
             });
             // строчка над меню — как у мест наверху (ui/ui.js: menuInscriptions)
             exports_55("UNDER_INSC", UNDER_INSC = {
@@ -20243,6 +20252,12 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u4n', name: 'Бомбоубежище', x0: 1440, y0: 470, x1: 1484, y1: 584, wh: 30, mat: 'u4', surf: 'ground' },
                 { id: 'u4', name: 'Бомбоубежище', x0: 1250, y0: 574, x1: 1580, y1: 640, wh: 44, mat: 'u4', surf: 'ground' },
                 { id: 'u4s', name: 'Тамбур убежища', x0: 1390, y0: 388, x1: 1570, y1: 424, wh: 36, mat: 'u4', surf: 'ground' },
+                // U5 «метро» (канон: заклеенный вход метро, сейчас · восток → колодец городка): линия прошла
+                // над станцией — в срезе платформа, скамья, табло без цифр, тоннель. На юг, к зрителю, от
+                // платформы переход в вестибюль: плитка, гранит; в стене — эскалатор, он стоит; наверху
+                // заклеенный вход. Дальше, к колодцу городка, — поездом (ритуал «Поезд за спиной»)
+                { id: 'u5n', name: 'Метро', x0: 1660, y0: 470, x1: 1704, y1: 570, wh: 30, mat: 'u5', surf: 'ground' },
+                { id: 'u5', name: 'Метро, вестибюль', x0: 1650, y0: 562, x1: 1790, y1: 612, wh: 40, mat: 'u5', surf: 'ground' },
             ]);
             // канал: вода чёрная, в неё не шагнуть — по бровке; поперёк галереи сток уходит под настил
             exports_56("CHANNEL", CHANNEL = { x0: 898, x1: 922, y0: 488, yJoin: 978, gx0: 708, gx1: 1312, gy0: 1012, gy1: 1028 });
@@ -20360,6 +20375,8 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 { id: 'u_kartoteka', room: 'u4', wall: true, x: 1298, y: 532, w: 134, h: 40, at: [1365, 592] },
                 { id: 'u_benches', room: 'u4', x: 1494, y: 568, w: 80, h: 22, at: [1534, 600], solid: [1494, 580, 1574, 588] },
                 { id: 'u_up_carriage', room: 'u4s', wall: true, stair: 'carriage', steps: 0, x: 1516, y: 350, w: 40, h: 38, at: [1536, 406], up: 'carriage_89' },
+                // U5: эскалатор в вестибюле — наверх, к заклеенному входу
+                { id: 'u_up_metro', room: 'u5', wall: true, stair: 'escalator', steps: 0, x: 1730, y: 518, w: 40, h: 44, at: [1750, 580], up: 'metro_sealed' },
                 // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
                 { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
                 { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
@@ -20509,6 +20526,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 factory_hatch_down: 'u_up_hatch', // U3: люк на территории завода
                 cellar_door: 'u_up_cellar', // U4: дверь в подвале завода
                 carriage_back: 'u_up_carriage', // U4: задняя дверь вагона 89 6 — открыта только проверяющему
+                metro_sealed: 'u_up_metro', // U5: заклеенный вход метро
             });
             // спуск, закрытый до поры: задняя дверь вагона заперта с той стороны, пока странник не
             // расписался в журнале учений (убежище открывает дверь в сторону неона своему проверяющему)
@@ -20654,6 +20672,7 @@ System.register("world/underside", ["content/underside", "core/time"], function 
                 u3: ['...прошу разъяснить...', '...ваше обращение зарегистрировано течением...'],
                 u4: ['...все свободны...', '...не закрывать ящики...'],
                 u4s: ['...открывается без скрипа...'],
+                u5: ['...обратно все и так доезжают...', '...сквозь бумагу светло...'],
             });
             exports_56("WD_SILENCE", WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)');
             MURMUR_AT = [
@@ -22175,7 +22194,7 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
 });
 System.register("world/oldways", ["world/disc"], function (exports_61, context_61) {
     "use strict";
-    var disc_js_16, NI, AS, K0, K1, K2, K3, BR2, L1, L2, S1, S2, RUST, RUST_L, KV, B3, D4, D5, SV, MG_D, MG, BO, S0, q, R, sideOf, NW, NH, NILO_LOOK, archOf, CW, CH, COLON_LOOK, GW_, GH_, GAS_LOOK, HW_, HH_, HATCH_LOOK, BW_, BH_, CELLAR_LOOK, VW_, VH_, DIG, CARRIAGE_LOOK, nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, oldways;
+    var disc_js_16, NI, AS, K0, K1, K2, K3, BR2, L1, L2, S1, S2, RUST, RUST_L, KV, B3, D4, D5, SV, MG_D, MG, BO, S0, q, R, sideOf, NW, NH, NILO_LOOK, archOf, CW, CH, COLON_LOOK, GW_, GH_, GAS_LOOK, HW_, HH_, HATCH_LOOK, BW_, BH_, CELLAR_LOOK, VW_, VH_, DIG, worn, CARRIAGE_LOOK, MW_, MH_, RABBIT, METRO_LOOK, nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro, oldways;
     var __moduleName = context_61 && context_61.id;
     function drawNilometer(ctx, loc) {
         const x = loc.x, gy = loc.y + loc.h;
@@ -22381,12 +22400,12 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
         R(ctx, x + BW_ - 2, gy - 23, 1, 22, K2);
         R(ctx, x, gy - 1, BW_, 1, K2);
     }
-    function letters(ctx, word, x, y, c) {
+    function letters(ctx, word, x, y, c, wear = 0) {
         for (const ch of word) {
             const g = DIG[ch];
             if (g)
                 g.forEach((row, j) => { for (let i = 0; i < 3; i++)
-                    if (row[i] === 'X')
+                    if (row[i] === 'X' && worn(x + i, y + j) >= wear)
                         R(ctx, x + i, y + j, 1, 1, c); });
             x += 4;
         }
@@ -22437,6 +22456,40 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             else if (ph < 16)
                 R(ctx, dx - 1, top - 1, 3, 1, S1);
         }
+    }
+    function drawMetro(ctx, loc) {
+        const x = loc.x, gy = loc.y + loc.h;
+        ctx.globalAlpha = 0.45;
+        R(ctx, x + 3, gy, MW_ - 2, 1, K0);
+        ctx.globalAlpha = 1;
+        R(ctx, x, gy - 36, MW_, 36, S0);
+        R(ctx, x, gy - 36, MW_, 1, S1);
+        R(ctx, x, gy - 36, 1, 36, S1);
+        R(ctx, x + MW_ - 1, gy - 36, 1, 36, K2); // фасад-панель
+        for (const sx of [x + 12, x + 25, x + 38])
+            R(ctx, sx, gy - 35, 1, 11, K2); // швы панелей
+        R(ctx, x + 1, gy - 24, MW_ - 2, 1, K2);
+        for (const [dx, dy] of [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [2, 2], [3, 1], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]])
+            R(ctx, x + 3 + dx, gy - 34 + dy, 1, 1, KV); // «М»
+        letters(ctx, 'LASCIATE', x + 10, gy - 33, L2, 0.35); // полустёрто
+        R(ctx, x + 9, gy - 23, 30, 1, S1);
+        R(ctx, x + 9, gy - 22, 1, 22, S1);
+        R(ctx, x + 38, gy - 22, 1, 22, K2); // рама проёма
+        R(ctx, x + 10, gy - 22, 28, 22, NI);
+        for (let i = 0; i < 5; i++) {
+            const sy = gy - 3 - i * 4, ins = i * 2;
+            R(ctx, x + 11 + ins, sy, 26 - 2 * ins, 2, i < 1 ? S1 : i < 2 ? S2 : i < 3 ? K3 : K2);
+        } // ступени вниз, в темноту
+        for (let k = 0; k <= 26; k++) { // ленты крест-накрест; верхний край второй отклеился
+            R(ctx, x + 11 + k, gy - 21 + q(k * 19 / 26), 1, 2, L1);
+            if (k < 20)
+                R(ctx, x + 11 + k, gy - 3 - q(k * 19 / 26), 1, 2, L2);
+        }
+        R(ctx, x + 31, gy - 17, 2, 5, L2);
+        R(ctx, x + 32, gy - 12, 1, 2, L1); // отклеившийся край висит
+        RABBIT.forEach((row, j) => { for (let i = 0; i < row.length; i++)
+            if (row[i] === 'X')
+                R(ctx, x + 41 + i, gy - 19 + j, 1, 1, BO); }); // белый кролик мелом
     }
     function buildOldways(locations) {
         // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
@@ -22512,6 +22565,16 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             useAction: 'carriage_back', useLabel: '<i>↓</i>ЗАДНЯЯ ДВЕРЬ',
         };
         locations.push(carriage);
+        // U5, вход: заклеенный вход метро — у экрана-фасада проспекта
+        const screen = archOf(locations, 9, 'east', 'экран-фасад', disc_js_16.TOWN.x1);
+        const mp = placeIn(locations, 9, 'east', MW_, MH_, screen) || { x: disc_js_16.TOWN.x1 + 1700, gy: disc_js_16.TOWN.y0 + 900 };
+        metro = {
+            id: 'metro_sealed', name: 'Заклеенный вход метро', zone: 'street',
+            x: mp.x, y: mp.gy - MH_, w: MW_, h: MH_, solidBox: { x: mp.x, y: mp.gy - 6, w: MW_, h: 5 },
+            look: METRO_LOOK, drawSelf: drawMetro,
+            useAction: 'metro_sealed', useLabel: '<i>↓</i>ПОД ЛЕНТУ',
+        };
+        locations.push(metro);
     }
     exports_61("buildOldways", buildOldways);
     return {
@@ -22567,10 +22630,20 @@ System.register("world/oldways", ["world/disc"], function (exports_61, context_6
             //    на боку меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ» (А10); сверху капают кондиционеры ──
             VW_ = 62, VH_ = 42;
             DIG = { 8: ['XXX', 'X.X', 'XXX', 'X.X', 'XXX'], 9: ['XXX', 'X.X', 'XXX', '..X', 'XXX'], 6: ['XXX', 'X..', 'XXX', 'X.X', 'XXX'],
-                В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'], Я: ['.XX', 'X.X', '.XX', '.XX', 'X.X'] };
+                В: ['XX.', 'X.X', 'XX.', 'X.X', 'XX.'], А: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], С: ['.XX', 'X..', 'X..', 'X..', '.XX'], Я: ['.XX', 'X.X', '.XX', '.XX', 'X.X'],
+                L: ['X..', 'X..', 'X..', 'X..', 'XXX'], A: ['.X.', 'X.X', 'XXX', 'X.X', 'X.X'], S: ['.XX', 'X..', '.X.', '..X', 'XX.'], C: ['.XX', 'X..', 'X..', 'X..', '.XX'],
+                I: ['XXX', '.X.', '.X.', '.X.', 'XXX'], T: ['XXX', '.X.', '.X.', '.X.', '.X.'], E: ['XXX', 'X..', 'XX.', 'X..', 'XXX'] };
+            // wear — доля стёртых точек (надпись полустёрта): какие стёрлись — по месту, не по кадру
+            worn = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
             CARRIAGE_LOOK = 'Двор-колодец: внизу тупиком вкопан вагон 89 6. Рельсы подходят к нему и кончаются. На боку — меловые знаки, поверх выцарапано «ЗДЕСЬ БЫЛ ВАСЯ». Сверху капают кондиционеры.';
-            nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null;
-            exports_61("oldways", oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage }));
+            // ── U5, вход: заклеенный вход метро в фасаде-панели проспекта-экрана (канон кадра «плоский
+            //    новый мир»): проём крест-накрест в бумажных лентах, над входом полустёрто LASCIATE OGNI
+            //    SPERANZA (А12), справа мелом белый кролик (Б1); красная «М» над входом погашена ──
+            MW_ = 50, MH_ = 36;
+            RABBIT = ['.X.X....', '.X.X....', '.XXX....', 'X...X...', '.XXX.XX.', '.X.....X', 'X......X', '.XXXXXX.'];
+            METRO_LOOK = 'Заклеенный вход метро: проём крест-накрест в бумажных лентах. Над входом полустёрто: LASCIATE OGNI SPERANZA. Рядом мелом — белый кролик.';
+            nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null;
+            exports_61("oldways", oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro }));
         }
     };
 });
@@ -35215,6 +35288,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 factory_hatch: 'завод работает. на что — уже не помнит.',
                 factory_cellar: '1961. не открывать.',
                 carriage_89: 'здесь был вася.',
+                metro_sealed: 'lasciate ogni sp…',
                 overpass: 'тишина — было общим. продано. органа нет.',
                 riverbed: 'дед помнил реку. отец — ручей. сын — лужу. внук — пыль.',
                 billboard: 'галочка — бог после бога.',
@@ -48465,6 +48539,34 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             r(bx + 2, gy - 1, bw - 4, 1, K1); // ступенька в вагон
             return;
         }
+        if (kind === 'escalator') { // U5: эскалатор стоит — рифлёные ступени вверх, к верху уже; лампы балюстрады мёртвые
+            r(ox - 2, top - 2, ow + 4, gy - top + 2, S0);
+            r(ox - 2, top - 2, ow + 4, 1, S1);
+            r(ox + ow, top - 1, 2, gy - top + 1, S2);
+            r(ox, top, ow, gy - top, NI);
+            const px = q(ox + ow / 2 - 7); // наверху заклеенный вход: крест-накрест ленты, сквозь бумагу светло
+            r(px, top + 1, 14, 6, K2);
+            for (let k = 0; k < 14; k++) {
+                r(px + k, top + 1 + q(k * 5 / 13), 1, 1, L2);
+                r(px + k, top + 6 - q(k * 5 / 13), 1, 1, L1);
+            }
+            for (let i = 0; i < 8; i++) {
+                const sy = gy - 2 - i * 4, ins = 2 + i;
+                if (sy - 3 < top + 8)
+                    break;
+                r(ox + ins, sy - 1, ow - 2 * ins, 2, i < 3 ? S1 : i < 6 ? S2 : K3);
+                for (let k = ox + ins + 1; k < ox + ow - ins; k += 2)
+                    r(k, sy - 1, 1, 1, K2); // рифление
+                r(ox + ins, sy + 1, ow - 2 * ins, 1, K1);
+                r(ox + ins - 2, sy - 3, 2, 5, S0);
+                r(ox + ow - ins, sy - 3, 2, 5, S2); // балюстрады сходятся кверху
+                if (!(i & 1)) {
+                    r(ox + ins - 2, sy - 3, 1, 1, AS);
+                    r(ox + ow - ins + 1, sy - 3, 1, 1, S1);
+                } // лампы-торшеры, мёртвые
+            }
+            return;
+        }
         if (kind === 'gothic') { // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба
             const cx = x + w / 2, half = ow / 2 + 2;
             for (let yy = top - 4; yy < gy; yy++) {
@@ -50572,6 +50674,33 @@ System.register("render/underside", ["core/time", "world/underside"], function (
                     return K3; // швы стяжки
                 const n = hh(x, y, 185);
                 return n < 0.05 ? S2 : n > 0.988 ? S1 : S0;
+            };
+            // ── U5, метро: плитка станции, полоса потемнее; под сводом тень. Пол — гранит в шахматку ──
+            BANDS.u5 = (x, d, H) => {
+                if (d <= 2)
+                    return K2;
+                if (d > H - 3)
+                    return K1;
+                if (d > H - 8)
+                    return hh(x, d, 190) < 0.2 ? K2 : K3;
+                if (x % 5 === 0 || (d - 1) % 4 === 3)
+                    return S2;
+                if (d >= 9 && d <= 12)
+                    return S1;
+                return hh(x, d, 191) < 0.06 ? S1 : L2;
+            };
+            SIDE.u5 = [K2, S2, S0, S0, S2, K1];
+            LIPS.u5 = [S1, S0, S2, K2, K1];
+            FLOORS.u5 = (x, y, R) => {
+                const fy = y - R.y0;
+                if (fy === 0)
+                    return K1;
+                if (fy === 1)
+                    return K2;
+                if ((x - R.x0) % 10 === 0 || fy % 10 === 0)
+                    return K2;
+                const odd = (Math.floor((x - R.x0) / 10) + Math.floor(fy / 10)) & 1, n = hh(x, y, 192);
+                return odd ? (n < 0.06 ? S2 : S0) : (n < 0.06 ? S0 : S1);
             };
             yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
             inBay = x => x >= underside_js_3.KAPT.x0 - 6 && x < underside_js_3.KAPT.x1 + 6; // каптёрка: срез жилы там не нужен — пол уходит дальше
@@ -52718,14 +52847,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // внизу — мира сверху нет: ни неба, ни погоды, ни ворон; свет — уголёк
             // странника; время идёт, как шло.
             surfaceLights = null;
-            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral|gaslamp|hatch|cellar|carriage)
+            // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral|gaslamp|hatch|cellar|carriage|escalator)
             {
                 const m = /[?&]under(?:=(\w+))?/.exec(location.search);
                 if (m) {
                     const spot = { crypt: 'u_up_crypt', church: 'u_up_church', pit: 'u_up_pit', basement: 'u_up_basement', wd: 'u_capsule',
                         godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
                         moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman', stave: 'u_up_stave', nilometer: 'u_up_nilometer', colonnade: 'u_up_colonnade', cathedral: 'u_up_cathedral',
-                        gaslamp: 'u_up_gaslamp', hatch: 'u_up_hatch', cellar: 'u_up_cellar', carriage: 'u_up_carriage' }[m[1]] || 'u_up_pizzeria';
+                        gaslamp: 'u_up_gaslamp', hatch: 'u_up_hatch', cellar: 'u_up_cellar', carriage: 'u_up_carriage',
+                        escalator: 'u_up_metro' }[m[1]] || 'u_up_pizzeria';
                     setTimeout(() => goUnder(spot), 0);
                 }
             }
