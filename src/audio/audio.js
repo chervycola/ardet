@@ -110,6 +110,31 @@ function noiseBreath(dur, rise, fall, f0, f1, vol) {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
 }
 
+// За кольцом: позёмка растра бормочет — не слова, а обломки слов: слог шума сквозь два
+// форманта, на границе слуха (v 0..1)
+export function playMurmur(v) {
+  if (!ctx || v <= 0.02) return;
+  const dur = 0.06 + Math.random() * 0.08, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / n);
+  const s = ctx.createBufferSource(), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b;
+  f1.type = 'bandpass'; f1.frequency.value = 300 + Math.random() * 500; f1.Q.value = 5;
+  f2.type = 'bandpass'; f2.frequency.value = 900 + Math.random() * 1300; f2.Q.value = 6;
+  g.gain.value = 0.022 * v;
+  s.connect(f1); s.connect(f2); f1.connect(g); f2.connect(g); g.connect(masterGain); s.start();
+}
+// ...недосмотренный кадр рассыпается со вздохом
+export function playSigh() {
+  if (!ctx) return;
+  const dur = 1.2, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t0 = ctx.currentTime;
+  s.buffer = b; f.type = 'lowpass'; f.Q.value = 0.8;
+  f.frequency.setValueAtTime(950, t0); f.frequency.exponentialRampToValueAtTime(230, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.06, t0 + 0.16); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
+}
+
 // Каптёрка Дежурного: печка трещит — щелчок полена, глухой, рядом громче (v 0..1)
 export function playCrackle(v) {
   if (!ctx || v <= 0.02) return;

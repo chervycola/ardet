@@ -1270,7 +1270,7 @@ setCtx(ctx);
   });
   test('места и фигуры по канону: краски без синего, белого и неона, золото — только у Sol, без векторных фигур', () => {
     const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14'], bad = [];
-    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js', 'world/mossway.js']) {
+    for (const f of ['sprites/locations/canon.js', 'sprites/npcs/nocturnal.js', 'sprites/npcs/sol.js', 'sprites/npcs/jester.js', 'sprites/npcs/elder.js', 'sprites/npcs/dumpster.js', 'sprites/player.js', 'render/underside.js', 'world/townWell.js', 'world/mossway.js', 'world/beyond.js']) {
       const src = fs.readFileSync(new URL('../src/' + f, import.meta.url), 'utf8');
       for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
         const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
@@ -2212,6 +2212,204 @@ setCtx(ctx);
       }
     }
     m.st = 'idle'; m.d = 1;
+  });
+}
+
+// ═══ ЗА КОЛЬЦОМ: позёмка растра на северной равнине (weave/UNDERGROUND.md, ритуалы за кольцом) ═══
+{
+  const BY = await imp('world/beyond.js');
+  const DSC = await imp('world/disc.js');
+  const EDG = await imp('world/edges.js');
+  const BRT = await imp('world/brainrot.js');
+  const T0 = DSC.TOWN, OUT = DSC.RINGS * DSC.RING_W + DSC.FIRE_W;
+  const N = { x: 4650, y: T0.y0 - OUT - 300 };                     // север за огнём, четверть пустыни
+  const stand = (k, p = N, paused = false) => { for (let i = 0; i < k; i++) { tick(); BY.beyond.step(p.x, p.y, false, paused); } };
+  test('за кольцом: северная пустыня — только север и только за огнём, глубже — глубже', () => {
+    const d = BY.northDepth(N.x, N.y);
+    assert(d > 0.1 && d < 0.5, `глубина ${d}`);
+    assert(BY.northDepth(N.x, N.y - 400) > d, 'к краю не глубже');
+    eq(BY.northDepth(4650, 4000), -1, 'городок');
+    eq(BY.northDepth(4650, T0.y0 - OUT + 100), -1, 'кольцо огня');
+    eq(BY.northDepth(4650, T0.y1 + OUT + 300), -1, 'юг');
+    eq(BY.northDepth(T0.x0 - OUT - 300, 3900), -1, 'запад');
+    eq(BY.northDepth(T0.x1 + OUT + 300, 3900), -1, 'восток');
+  });
+  test('за кольцом: старые картинки — чьи-то, первая по канону; поле бумаги и не пусто', () => {
+    eq(BY.PICS[0].name, 'кухня, клеёнка, чей-то локоть', 'первая — не канон');
+    for (let k = 0; k < BY.PICS.length; k++) {
+      const px = BY.picPixels(k), tones = new Map();
+      eq(px.length, BY.PIC_W * BY.PIC_H, `картинка ${k}: точек`);
+      for (const [x, y, c] of px) {
+        tones.set(c, (tones.get(c) || 0) + 1);
+        if (x === 0 || y === 0 || x === BY.PIC_W - 1 || y === BY.PIC_H - 1) eq(c, 5, `картинка ${k}: поле бумаги`);
+      }
+      assert(tones.size >= 5, `картинка ${k}: тонов ${tones.size}`);
+      assert((tones.get(1) || 0) > 40, `картинка ${k}: теней ${tones.get(1) || 0}`);
+    }
+  });
+  test('за кольцом: встал и смотришь — минута, кадр собран; досмотрел — тихо и строка; потом следующий', () => {
+    BY._resetBeyond();
+    stand(BY.STILL0 - 1);
+    eq(BY.beyond.pic, null, 'кадр раньше, чем встал');
+    stand(1);
+    const P = BY.beyond.pic;
+    assert(P && P.k === 0, 'песчинка не выбрана');
+    eq(P.x, Math.round(N.x + 30), 'песчинка не сбоку');
+    assert(BY.beyond.seated, 'выбрал песчинку — не сел');
+    stand(BY.GRAIN + BY.BUILD / 2);
+    assert(Math.abs(BY.picProgress(P) - 0.5) < 0.01, `полминуты — ${BY.picProgress(P)}`);
+    stand(BY.BUILD / 2 + BY.HOLD - 1);
+    assert(!P.gone, 'рассыпался до конца');
+    eq(BY.beyond.say, null, 'строка раньше конца');
+    stand(1);
+    eq(P.gone && P.gone.kind, 'quiet', 'досмотренный — не тихо');
+    eq(BY.beyond.say, BY.PIC_LINE, 'строки нет');
+    assert(!BY.beyond.sighSnd, 'досмотренный вздыхает');
+    BY.beyond.say = null;
+    stand(150);
+    eq(BY.beyond.pic, null, 'не рассыпался');
+    assert(BY.beyond.seated, 'досмотрел — вскочил');
+    stand(300 + BY.STILL0);
+    assert(BY.beyond.pic && BY.beyond.pic.k === 1, 'следующий кадр — не следующая картинка');
+  });
+  test('за кольцом: шагнул — недосмотренный со вздохом; не успел выбрать — без вздоха; меню — кадр ждёт', () => {
+    BY._resetBeyond();
+    stand(BY.STILL0 + 30);
+    tick(); BY.beyond.step(N.x + 1, N.y, true);
+    eq(BY.beyond.pic, null, 'песчинка без кадра — держится');
+    assert(!BY.beyond.sighSnd, 'вздох без кадра');
+    stand(BY.STILL0 + BY.GRAIN + 200);
+    const P = BY.beyond.pic, t0 = P.t;
+    stand(100, N, true);
+    eq(P.t, t0, 'в меню собирается');
+    assert(!P.gone, 'меню рассыпало');
+    tick(); BY.beyond.step(N.x + 1, N.y, true);
+    eq(P.gone && P.gone.kind, 'sigh', 'шагнул — не вздох');
+    assert(BY.beyond.sighSnd, 'вздоха не слышно');
+    assert(!BY.beyond.seated, 'шагнул — сидит');
+    eq(BY.beyond.say, null, 'недосмотренному — строка');
+    // ушёл с севера стоя (телепорт) — тоже вздох
+    BY._resetBeyond();
+    stand(BY.STILL0 + BY.GRAIN + 10);
+    const S = { x: 4650, y: T0.y1 + OUT + 300 };
+    stand(1, S);
+    eq(BY.beyond.pic && BY.beyond.pic.gone && BY.beyond.pic.gone.kind, 'sigh', 'унёсся с севера — без вздоха');
+    BY._resetBeyond();
+    stand(BY.STILL0 * 3, S);
+    eq(BY.beyond.pic, null, 'на юге собирается кадр');
+  });
+  {
+    const PL = await imp('sprites/player.js');
+    const box = sit => {
+      const b = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
+      const g = new Proxy({}, { get(t, k) { return k === 'fillRect' ? (x, y, w, h) => { b.x0 = Math.min(b.x0, x); b.x1 = Math.max(b.x1, x + w); b.y0 = Math.min(b.y0, y); b.y1 = Math.max(b.y1, y + h); } : noop; }, set() { return true; } });
+      setCtx(g); PL.drawPlayer({ x: 100, y: 100, moving: false, vx: 0, vy: 0, sit }); setCtx(ctx);
+      return b;
+    };
+    test('за кольцом: странник садится смотреть — ниже и шире, подол на земле', () => {
+      const a = box(0), b = box(1);
+      assert(b.y0 >= a.y0 + 5, `сел не ниже: ${a.y0} → ${b.y0}`);
+      assert(b.x1 - b.x0 > a.x1 - a.x0, 'подол не лёг шире');
+      assert(b.y1 <= 125 && b.y1 >= 121, `подол не на земле: ${b.y1}`);
+      assert(b.x0 >= 92 && b.x1 <= 122, `вылез из рамки тени: ${b.x0}..${b.x1}`);
+    });
+  }
+  test('за кольцом: позёмка бормочет на севере, в городке молчит; горизонт виден — молчит', () => {
+    BY._resetBeyond();
+    let n = 0;
+    for (let i = 0; i < 400; i++) { BY.beyond.step(N.x, N.y, true); if (BY.beyond.murmur > 0) n++; }
+    assert(n > 40 && n < 160, `обломков слов ${n} из 400`);
+    let m = 0;
+    for (let i = 0; i < 400; i++) { BY.beyond.step(4650, 4000, true); if (BY.beyond.murmur > 0) m++; }
+    eq(m, 0, 'бормочет в городке');
+    BY.beyond.hK = 1;
+    for (let i = 0; i < 400; i++) { BY.beyond.step(N.x, N.y, true); if (BY.beyond.murmur > 0) m++; }
+    eq(m, 0, 'бормочет при горизонте');
+    BY._resetBeyond();
+  });
+  const WND = (await imp('world/wind.js')).wind;
+  const cam = p => ({ x: p.x - 320, y: p.y - 180 });
+  const sweep = (p, k) => { const c = cam(p); for (let i = 0; i < k; i++) { tick(); BY.stepPozemka(c.x, c.y, 640, 360); } return c; };
+  test('за кольцом: позёмка метёт по ветру прядями, гуще к краю; горизонт — ложится; на юге её нет', () => {
+    BY._resetBeyond();
+    WND.ang = 0; WND.s = 0.6;
+    const c = sweep(N, 300), G = BY._grains(), n0 = G.length;
+    const dep = Math.max(BY.northDepth(c.x + 320, c.y + 180), BY.northDepth(c.x + 320, c.y + 360));
+    eq(n0, Math.round(110 + 260 * dep), 'крошки в кадре');
+    for (const g of G) assert(g.x >= c.x - 8 && g.x <= c.x + 648 && g.y >= c.y - 8 && g.y <= c.y + 368, 'крошка вне кадра');
+    const was = G.map(g => [g.x, g.y]);
+    sweep(N, 1);
+    let dx = 0, dy = 0, k = 0;
+    G.forEach((g, i) => { const ddx = g.x - was[i][0]; if (Math.abs(ddx) < 20) { dx += ddx; dy += g.y - was[i][1]; k++; } });
+    assert(dx / k > 0.5, `по ветру на восток — ${(dx / k).toFixed(2)}`);
+    assert(Math.abs(dy / k) < 0.2, `поперёк ветра — ${(dy / k).toFixed(2)}`);
+    const lanes = new Map();
+    for (const g of G) if (g.m !== null) lanes.set(g.m, (lanes.get(g.m) || 0) + 1);
+    const inLanes = [...lanes.values()].reduce((a, b) => a + b, 0);
+    assert(inLanes / n0 > 0.8, `в прядях ${inLanes} из ${n0}`);
+    assert(inLanes / lanes.size >= 4, `прядь — ${(inLanes / lanes.size).toFixed(1)} крошки`);
+    sweep({ x: N.x, y: N.y - 500 }, 2);
+    assert(BY._grains().length > n0 + 60, `к краю не гуще: ${BY._grains().length} против ${n0}`);
+    BY.beyond.hK = 1;
+    const still = BY._grains().map(g => [g.x, g.y]);
+    sweep({ x: N.x, y: N.y - 500 }, 5);
+    BY._grains().forEach((g, i) => assert(g.x === still[i][0] && g.y === still[i][1], 'при горизонте метёт'));
+    BY.beyond.hK = 0;
+    sweep({ x: 4650, y: T0.y1 + OUT + 300 }, 2);
+    eq(BY._grains().length, 0, 'позёмка на юге');
+    BY._resetBeyond();
+  });
+  test('за кольцом: рисунок — тушью и сепией палитры; окно в растре — вокруг песчинки, потом по кадру', () => {
+    const OK = new Set(['#2a2620', '#34302a', '#3a3328', '#8A8D8F', '#241c14', '#3a2818', '#b0a284', '#D9CFB8', '#c8b89a', '#6b4a2c'].map(c => c.toLowerCase()));
+    BY._resetBeyond();
+    WND.ang = 0.7; WND.s = 0.7;
+    const c = sweep(N, 120);
+    stand(BY.STILL0 + 50);
+    const P = BY.beyond.pic, log = [];
+    const ctx = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+    const hole = BY.clearings(c.x, c.y);
+    eq(hole.length, 1, 'окна у песчинки нет');
+    eq(JSON.stringify(hole[0]), JSON.stringify({ x: P.x - 3 - c.x, y: P.y - 3 - c.y, w: 7, h: 7 }), 'окно не вокруг песчинки');
+    for (const tt of [50, BY.GRAIN + BY.BUILD * 0.4, BY.GRAIN + BY.BUILD + 10]) {
+      P.t = tt;
+      BY.drawBeyondWorld(ctx, c.x, c.y, 640, 360);
+    }
+    const full = BY.clearings(c.x, c.y)[0];
+    eq(JSON.stringify(full), JSON.stringify({ x: P.ox - 1 - c.x, y: P.oy - 1 - c.y, w: BY.PIC_W + 2, h: BY.PIC_H + 2 }), 'окно не по кадру');
+    BY.beyond.scatter('sigh');
+    for (let i = 0; i < 40; i++) { P.gone.t--; BY.drawBeyondWorld(ctx, c.x, c.y, 640, 360); }
+    assert(BY.clearings(c.x, c.y)[0].w < full.w, 'окно не затягивается');
+    P.gone.t = 0;
+    eq(BY.clearings(c.x, c.y).length, 0, 'окно осталось');
+    let rects = 0;
+    for (const [k, ...a] of log) {
+      if (k === '=fillStyle') assert(OK.has(String(a[0]).toLowerCase()), `позёмка: краска ${a[0]} вне палитры`);
+      if (k === 'fillRect') { rects++; assert(a[0] > c.x - 100 && a[0] < c.x + 740 && a[1] > c.y - 100 && a[1] < c.y + 460, `точка вне кадра: ${a[0]},${a[1]}`); }
+      assert(!/arc|ellipse|stroke|Gradient/.test(k), `позёмка: векторное ${k}`);
+    }
+    assert(rects > 1000, `точек ${rects}`);
+    BY._resetBeyond();
+    eq(BY.clearings(c.x, c.y).length, 0, 'окно без кадра');
+  });
+  test('за кольцом: распад расступается над собранным кадром — пепел и растр мимо окна', () => {
+    const deep = { x: N.x, y: N.y - 300, moving: false };
+    for (let i = 0; i < 300; i++) { EDG.update(deep); BRT.update(deep); }
+    assert(BRT.getLevel() > 20, `распада ${BRT.getLevel()}`);
+    const draw = () => {
+      const log = [];
+      const ctx = new Proxy({}, { get(t, k) { if (/^create/.test(k)) return () => ({ addColorStop: noop }); return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+      BRT.draw(ctx);
+      return log;
+    };
+    eq(draw().filter(([k]) => k === 'clip').length, 0, 'окно без кадра');
+    BRT.setClearings([{ x: 100, y: 80, w: 38, h: 29 }]);
+    const log = draw();
+    assert(log.some(([k]) => k === 'clip'), 'распад не обходит окно');
+    assert(log.some(([k, x, y]) => k === 'moveTo' && x === 100 && y === 80), 'окно не там');
+    BRT.setClearings([]);
+    const town = { x: 4650, y: 4000, moving: false };
+    for (let i = 0; i < 400; i++) { EDG.update(town); BRT.update(town); }
+    eq(BRT.getLevel(), 0, 'распад не отпустил');
   });
 }
 

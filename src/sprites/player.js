@@ -40,14 +40,16 @@ export function drawPlayer(player) {
   const lean = Math.max(-1, Math.min(1, q(vx * 0.45)));
   // огонёк дрожит в порыв; под землёй его прибивает чужой сквозняк (gust), а после вдоха на пороге горит ровнее (steady)
   const flick = (0.15 + w.s * 0.25 + 0.3 * (player.gust || 0)) * (player.steady ? 0.35 : 1) * Math.sin(t * (0.45 + w.s * 0.3 + 0.4 * (player.gust || 0)) + Math.sin(t * 0.1) * 2);
-  const cx = x + sway, top = y - bob;
+  // сел (за кольцом — смотреть на песчинку): ниже на шесть точек, середина короче, подол лёг на землю шире
+  const sit = player.sit || 0, sk = q(3 * sit);
+  const cx = x + sway, top = y - q(bob * (1 - 0.5 * sit)) + 2 * sk;
   // следы и тень — у земли
-  X.globalAlpha = 0.35; r(x + 1, y + 23, 12, 1, NI); X.globalAlpha = 1;
+  X.globalAlpha = 0.35; r(x + 1 - sk, y + 23, 12 + 2 * sk, 1, NI); X.globalAlpha = 1;
   // ── ярусы плаща снизу вверх: подол, середина, оплечье ──
   const ph = (t >> 4) & 7;
-  tier(cx - 2, top + 15, 18, 6, trail, ph);
-  r(cx - 1, top + 15, 16, 1, K0);                                        // тень от среднего яруса
-  tier(cx - 1, top + 9, 16, 6, trail * 0.55 + Math.sin(t * 0.05) * 0.4, ph + 5);
+  tier(cx - 2 - q(2 * sit), top + 15 - sk, 18 + q(4 * sit), 6 - sk, trail, ph);
+  r(cx - 1, top + 15 - sk, 16, 1, K0);                                   // тень от среднего яруса
+  tier(cx - 1, top + 9, 16, 6 - sk, trail * 0.55 + Math.sin(t * 0.05) * 0.4, ph + 5);
   r(cx, top + 9, 14, 1, K0);                                             // тень от оплечья
   tier(cx + 1, top + 4, 12, 5, trail * 0.25, ph + 9);
   // ── огонёк у сердца: свеча, сплошной; в порыв дрожит ──

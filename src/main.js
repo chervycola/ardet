@@ -67,7 +67,8 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh } from './audio/audio.js';
+import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
 import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
@@ -99,7 +100,7 @@ import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawR
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
-import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop } from './world/brainrot.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings } from './world/brainrot.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
@@ -331,6 +332,9 @@ function propCaster(p) {
 const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
   setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
 }, -6, -10, 26, 23) };
+const heroSitCaster = { key: 'странник сидя', ox: 0, oy: 0, build: () => maskFrom(g => {
+  setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0, sit: 1 }); setCtx(layers.ctx('world'));
+}, -8, -10, 30, 23) };
 const LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag', 'deadreed']);   // низкое тени по солнцу не кладёт (трава и камни — тоже)
 const FLATLM = new Set(['iceHole', 'boat', 'oasis']);   // приметы вровень с землёй
 function shadowCasters(camX, camY, vw, vh) {
@@ -350,8 +354,9 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const T of tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));   // ткань поля
   for (const T of townThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));     // квартал: стены, фонари
   for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
-  heroCaster.ox = player.x; heroCaster.oy = player.y;
-  out.push(heroCaster);
+  const hero = (player.sit || 0) > 0.5 ? heroSitCaster : heroCaster;   // сел — и тень села
+  hero.ox = player.x; hero.oy = player.y;
+  out.push(hero);
   return out;
 }
 // тёплые огни в кадре (точки кадра) — для пера: огонь всегда сплошной
@@ -505,6 +510,7 @@ function render() {
   drawPets({ x: camX, y: camY });
   drawMonsters({ x: camX, y: camY });
   drawParticles(worldCtx, { x: camX, y: camY });
+  drawBeyondWorld(worldCtx, camX, camY, vw, vh);    // за кольцом: позёмка растра, собранный кадр
   drawRavensAir(worldCtx, camX, camY, vw, vh);      // летящие вороны — в воздухе, над всем
   toxic.drawWorld(worldCtx);
 
@@ -543,6 +549,7 @@ function render() {
 
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   drawWeatherOverlay(uiCtx);
+  setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
   drawBrainrot(uiCtx);
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
@@ -606,6 +613,13 @@ function stepFx() {
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
   stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t));   // пифос ночью шепчет тому, кто задержался
+  // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
+  beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'));
+  player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть; шагнул — встал
+  stepPozemka(camX, camY, scaler.vw, scaler.vh);
+  if (beyond.murmur) playMurmur(beyond.murmur);
+  if (beyond.sighSnd) playSigh();
+  if (beyond.say) { showLore(beyond.say); beyond.say = null; }
   if (under.shadow && skyAt(phaseAt(t)).sun) under.shadow = false;   // тень цветка держится до первого дневного света
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
   stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться

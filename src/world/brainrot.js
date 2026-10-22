@@ -113,6 +113,18 @@ function rasterPattern(ctx, level) {
   return p;
 }
 function rnd(n) { const v = Math.sin(n * 91.7 + 13.1) * 43758.5453; return v - Math.floor(v); }
+// окна без распада: где картинку собрали обратно (позёмка за кольцом), растр и пепел
+// расступаются. Прямоугольники в точках кадра; кладутся заново каждый кадр.
+let holes = [];
+export function setClearings(list) { holes = list || []; }
+function fillAround(ctx, vw, vh) {
+  if (!holes.length) { ctx.fillRect(0, 0, vw, vh); return; }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, vw, vh);
+  for (const h of holes) { ctx.moveTo(h.x, h.y); ctx.lineTo(h.x, h.y + h.h); ctx.lineTo(h.x + h.w, h.y + h.h); ctx.lineTo(h.x + h.w, h.y); ctx.closePath(); }
+  ctx.clip(); ctx.fillRect(0, 0, vw, vh);
+  ctx.restore();
+}
 function copyStrip(ctx, src, sy, h, dx) {
   if (!src || !src.width) return;
   const sc = scaler.scale || 1;
@@ -154,12 +166,12 @@ export function draw(ctx) {
   if (k > 0.15) {
     const level = Math.min(14, Math.round((k - 0.15) / 0.85 * 14));
     const p = level > 0 && rasterPattern(ctx, level);
-    if (p) { ctx.globalAlpha = 0.7; ctx.fillStyle = p; ctx.fillRect(0, 0, vw, vh); }
+    if (p) { ctx.globalAlpha = 0.7; ctx.fillStyle = p; fillAround(ctx, vw, vh); }
   }
   // цвет уходит в пепел
   ctx.globalAlpha = k * 0.22;
   ctx.fillStyle = '#8A8D8F';
-  ctx.fillRect(0, 0, vw, vh);
+  fillAround(ctx, vw, vh);
   // провалы кадра
   if (k > 0.8) {
     const n = Math.floor((k - 0.8) * 25);
