@@ -80,7 +80,16 @@ export const ROOMS = [
   // тёмной двери колоннады, с востока — в крипту чёрного собора
   { id: 'u2n', name: 'Катакомбы', x0: 404, y0: 470, x1: 448, y1: 620, wh: 30, mat: 'cata', surf: 'ground' },
   { id: 'u2', name: 'Катакомбы', x0: 236, y0: 610, x1: 500, y1: 650, wh: 46, mat: 'cata', surf: 'ground' },
+  // U3 «канализация» (канон: решётка у газового фонаря, пар и тени · запад → люк на
+  // территории завода, век катастроф · равнина): канал уходит под полотно линии и выходит
+  // южнее стоком; по бровке вдоль чёрной воды — вниз, в кирпичную галерею; на западе скобы к
+  // решётке у фонаря (сквозь неё светит газ), на востоке — к люку завода. Кораблики из
+  // заявлений, не выловленные на линии, плывут дальше — с настоящей серьёзностью
+  { id: 'u3n', name: 'Канализация', x0: 872, y0: 470, x1: 928, y1: 1000, wh: 30, mat: 'sewer', surf: 'path' },
+  { id: 'u3', name: 'Канализация', x0: 700, y0: 980, x1: 1320, y1: 1032, wh: 46, mat: 'sewer', surf: 'path' },
 ];
+// канал: вода чёрная, в неё не шагнуть — по бровке; поперёк галереи сток уходит под настил
+export const CHANNEL = { x0: 898, x1: 922, y0: 488, yJoin: 978, gx0: 708, gx1: 1312, gy0: 1012, gy1: 1028 };
 export const KAPT = ROOMS.find(R => R.id === 'kapt');
 // печка-буржуйка каптёрки: тепло, приставленное сторожить мороз; у неё уголёк отходит
 export const STOVE = { x: 744, y: 316 };
@@ -185,6 +194,9 @@ const TH = [
   { id: 'u_up_colonnade', room: 'u2', wall: true, stair: 'stone', steps: 9, x: 244, y: 570, w: 30, h: 40, at: [259, 626], up: 'colonnade' },
   { id: 'u_roots', room: 'u2', x: 324, y: 572, w: 14, h: 66, at: [331, 646], solid: [326, 628, 336, 636] },
   { id: 'u_up_cathedral', room: 'u2', wall: true, stair: 'gothic', steps: 9, x: 460, y: 566, w: 32, h: 44, at: [476, 626], up: 'cathedral' },
+  // U3: скобы к решётке у газового фонаря; скобы к люку завода
+  { id: 'u_up_gaslamp', room: 'u3', wall: true, stair: 'grate', steps: 0, x: 712, y: 938, w: 28, h: 42, at: [726, 996], up: 'gas_grate' },
+  { id: 'u_up_hatch', room: 'u3', wall: true, stair: 'hatch', steps: 0, x: 1280, y: 938, w: 28, h: 42, at: [1294, 996], up: 'factory_hatch' },
   // ход мха: дно пифоса (наверх — в пифос), мох на стене, нора у подножия огня
   { id: 'u_up_pithos', room: 'moss', wall: true, stair: 'pithos', steps: 0, x: 428, y: mossY(441) - 28, w: 26, h: 28, at: [441, mossY(441) + 12], up: 'pithos' },
   { id: 'u_moss', room: 'moss', wall: true, x: 820, y: mossY(850) - 21, w: 60, h: 19, at: [850, mossY(850) + 12] },
@@ -193,7 +205,8 @@ const TH = [
 // без осмотра, только мешает пройти: вторая группа ларей, диван в бункере;
 // в облаке — дальний ряд стоек, правая часть ближнего, бассейн водопада, кадки
 export const SOLIDS = [[236, 298, 292, 308], [716, 780, 774, 792], [737, 309, 752, 325],
-  [1458, 254, 1702, 264], [1638, 292, 1702, 302], [1686, 200, 1724, 210], [1666, 208, 1678, 216], [1722, 208, 1734, 216]];
+  [1458, 254, 1702, 264], [1638, 292, 1702, 302], [1686, 200, 1724, 210], [1666, 208, 1678, 216], [1722, 208, 1734, 216],
+  [CHANNEL.x0, CHANNEL.y0, CHANNEL.x1, CHANNEL.yJoin], [CHANNEL.gx0, CHANNEL.gy0, CHANNEL.gx1, CHANNEL.gy1]];   // канал U3
 
 export const THINGS = TH.map(th => {
   const tx = UNDER_TEXT[th.id] || { name: th.id, look: '' };
@@ -349,6 +362,8 @@ export const DESCENTS = {
   nilometer_down: 'u_up_nilometer',   // U1: нилометр — винтовая лестница вниз
   colonnade_door: 'u_up_colonnade',   // U2: красная колоннада — тёмная дверь в глубине
   cathedral_crypt: 'u_up_cathedral',  // U2: чёрный собор — в крипту (второе действие)
+  gas_grate_down: 'u_up_gaslamp',     // U3: решётка у газового фонаря
+  factory_hatch_down: 'u_up_hatch',   // U3: люк на территории завода
 };
 
 // ── где можно стоять ── (ноги x, y; запас — на полу плаща у стен)
@@ -638,6 +653,7 @@ export const MURMURS = {
   u1: ['...место держат...', '...каждый ряд кончается в своём веке...'],
   u1c: ['...выше вода не поднималась...'],
   u2: ['...гербаризация без описи...', '...для рукописей, которые жгли...'],
+  u3: ['...прошу разъяснить...', '...ваше обращение зарегистрировано течением...'],
 };
 export const WD_SILENCE = '(Шёпотов нет. Впервые слышно уголёк у сердца: тикает тихо, как часы под подушкой.)';
 const MURMUR_AT = [
@@ -698,6 +714,7 @@ export const under = {
   called: new Set(),      // ниши, вызванные по списку, — молчат навсегда (сохраняется)
   trail: null, trailT: 0, // промолчал — имя идёт следом до выхода
   boats: [],              // кораблики из заявлений по каналу { x, y }
+  drift: [],              // …и те, что не выловили: плывут дальше стоком U3, к заводу
   flow: 0,                // вода канала: сколько пробежала (рисунок)
   calm: 0,                // вода тиха: шагов (прочитал заявление)
   read: false,            // заявление за этот спуск прочитано
@@ -810,7 +827,15 @@ export const under = {
     for (let i = this.boats.length - 1; i >= 0; i--) {
       const b = this.boats[i];
       b.y += this.calm ? 0.03 : 0.13; b.x += Math.sin(b.y * 0.3) * 0.05;
-      if (b.y > L0.y0 + T.FH + 6) this.boats.splice(i, 1);
+      if (b.y > L0.y0 + T.FH + 6) { this.boats.splice(i, 1); if (this.drift.length < 6) this.drift.push(b); }   // не выловили — плывёт дальше стоком
+    }
+    // U3: сток на юг, потом галерея на восток — к заводу; течение несёт с настоящей серьёзностью
+    const sp = this.calm ? 0.05 : 0.2, mid = (CHANNEL.gy0 + CHANNEL.gy1) / 2;
+    for (let i = this.drift.length - 1; i >= 0; i--) {
+      const b = this.drift[i];
+      if (!b.east) { b.y = Math.min(mid, b.y + sp); b.x += ((CHANNEL.x0 + CHANNEL.x1) / 2 - b.x) * 0.02 + Math.sin(b.y * 0.2) * 0.05; b.east = b.y >= mid; }
+      else { b.x += sp * 1.1; b.y = mid + Math.sin(b.x * 0.15) * 1.2; }
+      if (b.x > CHANNEL.gx1 - 4) this.drift.splice(i, 1);
     }
     // разрез эпох: убежище раз в неведомый час объявляет отбой (канон «Вечный отбой»)
     const L = TUBES[0], onLine = fy > L.y0 && fy < L.y0 + T.FH + 2;
@@ -932,13 +957,13 @@ export const under = {
     this.murmur = 900; this.hushF = 0; this.hushS = 0; this.greeted = false; this.whisper = null; this.quench = false; this.wdTold = false; this.tick = 0;
     this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null;
     this.niche = null; this.nicheWoke = false; this.trail = null; this.trailT = 0;
-    this.boats.length = 0; this.calm = 0; this.read = false; this.after = null;
+    this.boats.length = 0; this.drift.length = 0; this.calm = 0; this.read = false; this.after = null;
     this.bloom = null; this.picked = false; this.upper = null;
     this.breath = 0; this.exhale = false; this.frost = null; this.frostDone.clear(); this.keptSaid = false;
     this.keptNow.clear(); this.duty = { st: 'sit', t: 0, poured: false, glass: 0, away: 0 }; this.crackle = 0; this.pourSnd = false;
     moss.reset();
   },
-  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; this.crackle = 0; this.pourSnd = false; moss.reset(); },
+  leave() { this.active = false; this.cold = 0; this.bench = false; this.train = 0; this.whisper = null; this.tick = 0; this.greetT = 0; this.flare = 0; this.inhale = null; this.draft = 0; this.tug = null; this.niche = null; this.trail = null; this.boats.length = 0; this.drift.length = 0; this.calm = 0; this.after = null; this.bloom = null; this.upper = null; this.frost = null; this.exhale = false; this.crackle = 0; this.pourSnd = false; moss.reset(); },
   save() { return { seen: [...this.seen], found: [...this.found], ticket: this.ticket, called: [...this.called], signed: this.signed, kept: [...this.kept], met: [...this.met] }; },
   load(d) {
     if (!d) return;
@@ -960,6 +985,7 @@ export const under = {
 const EMBER = [226, 138, 58], COLD = [138, 141, 143], FILL = [232, 220, 198], FILL_C = [176, 180, 182];
 const MOSS_PALE = [157, 176, 138], MOSS_WARM = [200, 160, 112], FIRE = [200, 120, 64];
 const DAYLIGHT = [222, 198, 150];                    // «верхняя» вещь: свет дня сверху — костяной, тёплый
+const GASLIGHT = [214, 146, 80];                     // газовый фонарь над решёткой U3
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 // sky — небо над городком { day 0..1, moon 0..1 }: видно только из сухой цистерны нилометра
 export function underLights(px, py, sky = null) {
@@ -976,6 +1002,7 @@ export function underLights(px, py, sky = null) {
   ];
   L.push({ x: STOVE.x - 6, y: STOVE.y - 4, r: 74, color: FIRE, flicker: 0.18, intensity: 2.1 });   // печка Дежурного: тепло, приставленное сторожить мороз
   L.push({ x: STOVE.x, y: STOVE.y + 1, r: 24, color: EMBER, flicker: 0.3, intensity: 1.6 });       // жар у дверцы
+  L.push({ x: 726, y: 952, r: 48, color: GASLIGHT, flicker: 0.12, intensity: 1.15 });   // U3: сквозь решётку светит газовый фонарь — один, горит всегда
   if (sky && (sky.day > 0.02 || sky.moon > 0.02)) {                  // U1: сухая цистерна открыта небу — сверху свет дня, ночью — луны
     const d = sky.day || 0;
     L.push({ x: 918, y: 44, r: 66, color: d > 0.02 ? DAYLIGHT : COLD, flicker: 0, intensity: d > 0.02 ? 1.3 * d : 0.8 * sky.moon });

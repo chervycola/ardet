@@ -2632,6 +2632,67 @@ setCtx(ctx);
     assert(roots && !roots.wall && !U.walkable(331, 632), 'сквозь столб корней проходят');
     assert(U.walkable(331, 616) && U.walkable(331, 646), 'столб перегородил ход');
   });
+  test('U3 «канализация»: решётка у газового фонаря (пар и тени, запад); выход — люк на территории завода (катастрофы, равнина)', () => {
+    const { gaslamp: g, hatch: h } = OW.oldways();
+    assert(g && M.locations.includes(g), 'фонаря нет');
+    const gx = g.x + g.w / 2, gy = g.y + g.h;
+    eq(DS.ringAt(gx, gy), 6, 'фонарь не в паре и тенях'); eq(sideOf(gx, gy), 'west', 'фонарь не на западе');
+    assert(/один горящий фонарь/.test(g.look) && /89 6/.test(g.look) && /решётка/.test(g.look), 'осмотр переулка не по канону');
+    assert(g.light && g.light.r > 0, 'фонарь не горит');
+    const box = M.locations.find(l => l.name === 'ящик в газовом переулке');
+    if (box) assert(Math.hypot(box.x + box.w / 2 - gx, box.y + box.h - gy) < 500, 'фонарь далеко от газового переулка');
+    eq(g.useAction, 'gas_grate_down', 'у фонаря нет спуска');
+    eq(U.DESCENTS.gas_grate_down, 'u_up_gaslamp', 'решётка ведёт не к скобам');
+    eq(upOf(U.thingById('u_up_gaslamp')), g, 'скобы выводят не к фонарю');
+    assert(h && M.locations.includes(h), 'люка нет');
+    const hx = h.x + h.w / 2, hy = h.y + h.h;
+    eq(DS.ringAt(hx, hy), 7, 'люк не в веке катастроф');
+    assert(hx > T0.x1 && hy < T0.y0, 'люк не на равнине');
+    const works = M.locations.filter(l => l.archDraw && l.name === 'градирня и цех' && l.archRing === 7)
+      .reduce((a, l) => Math.min(a, Math.hypot(l.archX - hx, l.archGy - hy)), 1e9);
+    assert(works < 400, `люк далеко от завода: ${Math.round(works)}`);
+    eq(h.useAction, 'factory_hatch_down', 'люк не открыть');
+    eq(upOf(U.thingById('u_up_hatch')), h, 'скобы выводят не к люку');
+    assert(UA.useTexts.gas_grate_down && UA.useTexts.factory_hatch_down, 'сцен спуска нет');
+    for (const n of [g, h]) for (const l of M.locations) if (l !== n) assert(!(l.x < n.x + n.w + 6 && l.x + l.w > n.x - 6 && l.y < n.y + n.h + 6 && l.y + l.h > n.y - 6), `${n.name} налез на «${l.name}»`);
+    for (const n of [g, h]) {
+      const log = [], ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, v) { log.push(['=' + kk, v]); return true; } });
+      n.drawSelf(ctx, n, 0);
+      for (const [kk, x, y, w, hh] of log) if (kk === 'fillRect') assert(x >= n.x - 1 && x + w <= n.x + n.w + 1 && y >= n.y - 1 && y + hh <= n.y + n.h + 1, `${n.name} вылез из рамки: ${x},${y} ${w}×${hh}`);
+    }
+  });
+  test('U3: внизу канал уходит под полотно и выходит стоком — по бровке к галерее; через сток — по настилу; в воду не шагнуть', () => {
+    const cut = U.thingById('u_cut_sewer'), gl = U.thingById('u_up_gaslamp'), ht = U.thingById('u_up_hatch'), C = U.CHANNEL;
+    for (const b of [gl, ht]) assert(U.pathTo(cut.at[0], cut.at[1], b.at[0], b.at[1]), `от среза к ${b.id} не пройти`);
+    assert(U.pathTo(gl.at[0], gl.at[1], ht.at[0], ht.at[1]), 'по галерее из конца в конец не пройти');
+    eq(U.placeAt(gl.at[0], gl.at[1]), 'u3', 'скобы к решётке — не в канализации'); eq(U.placeAt(ht.at[0], ht.at[1]), 'u3', 'скобы к люку — не в канализации');
+    eq(U.placeAt(886, 700), 'u3n', 'бровка вдоль стока — не канализация');
+    assert(U.walkable(886, 700), 'по бровке не пройти');
+    assert(!U.walkable((C.x0 + C.x1) / 2, 700), 'шагнул в сток');
+    assert(!U.walkable(1000, (C.gy0 + C.gy1) / 2), 'шагнул в воду галереи');
+    assert(U.walkable((C.x0 + C.x1) / 2, C.gy0 - 10), 'настила над стоком нет');
+    assert(C.x0 > cut.at[0] - 60 && C.x1 < cut.at[0] + 60, 'сток не под решёткой полотна');
+  });
+  test('U3: кораблики, которых не выловили, плывут дальше — сток на юг, галерея на восток, к заводу', () => {
+    const W = U.under, L0 = U.TUBES[0], C = U.CHANNEL;
+    W.enter(0, 0); W.say = null;
+    W.boats.push({ x: U.SEWER_X, y: L0.y0 + U.T.FH + 5.95 });
+    W.step(2000, 465);
+    eq(W.boats.length, 0, 'кораблик застрял под полотном'); eq(W.drift.length, 1, 'не выловленный кораблик пропал');
+    const b = W.drift[0];
+    let turned = false, maxY = 0;
+    for (let i = 0; i < 20000 && W.drift.length; i++) {
+      W.step(2000, 465);
+      maxY = Math.max(maxY, b.y);
+      if (!turned && b.east) turned = true;
+      if (!turned) assert(b.x > C.x0 && b.x < C.x1, 'кораблик вылез из стока');
+      else assert(b.y > C.gy0 && b.y < C.gy1, 'кораблик вылез из галереи');
+    }
+    assert(turned, 'кораблик не дошёл до галереи'); eq(W.drift.length, 0, 'кораблик не уплыл к заводу');
+    assert(maxY < C.gy1, 'кораблик проплыл сквозь пол');
+    W.leave(); eq(W.drift.length, 0, 'наверху кораблики плывут');
+    W.say = null; W.whisper = null;
+  });
 }
 
 // ═══ REPORT ═══

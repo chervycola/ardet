@@ -15,7 +15,7 @@
 // Только точки — без векторных фигур и градиентов.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER, KAPT, STOVE } from '../world/underside.js';
+import { UW, UH, T, TUBES, ROOMS, VEIN, MOSS, mossY, moss, GLOW, PORTALS, THINGS, CUTS, cutAt, under, placeAt, coldAt, inWater, NICHES, nicheOf, UPPER, KAPT, STOVE, CHANNEL } from '../world/underside.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -490,6 +490,31 @@ FLOORS.cata = (x, y, R) => {                                            // ут�
   return n < 0.012 ? L2 : n < 0.05 ? K3 : n > 0.985 ? RUST : BR2;
 };
 
+// ── U3, канализация: кирпичный свод, понизу мокрый; бровка вдоль чёрной воды; где сток
+// входит в галерею — настил поверх ──
+BANDS.sewer = (x, d, H) => {
+  if (d > H - 3) return K2;
+  if (d > H - 8) return hh(x, d, 170) < 0.25 ? K2 : BR2;                 // свод уходит в тень
+  const course = Math.floor((d - 1) / 3), v = (d - 1) % 3;
+  if (v === 2 || (x + (course & 1 ? 3 : 0)) % 7 === 0) return K1;
+  if (d < 8) return hh(x, d, 171) < 0.35 ? MG_D : BR2;                    // понизу мокро
+  return hh(x, d, 172) < 0.08 ? BR2 : RUST;
+};
+SIDE.sewer = [K1, BR2, RUST, RUST, BR2, K1]; LIPS.sewer = [RUST_L, RUST, BR2, K2, K1];
+const water = (x, y) => (y % 5 === 0 && hh(x >> 2, y, 173) < 0.4 ? MG_D : hh(x, y, 174) > 0.994 ? MG : K1);   // чёрная вода
+FLOORS.sewer = (x, y, R) => {
+  const C = CHANNEL, ns = R.y1 - R.y0 > R.x1 - R.x0;
+  if (ns ? x >= C.x0 && x < C.x1 && y >= C.y0 : y >= C.gy0 && y < C.gy1 && x >= C.gx0 && x < C.gx1) {
+    if (ns ? x === C.x0 || x === C.x1 - 1 : y === C.gy0) return S2;      // край канала
+    return water(x, y);
+  }
+  if (!ns && x >= C.x0 && x < C.x1 && y < C.gy0) return (x - C.x0) % 4 === 0 ? K1 : y % 6 === 0 ? K2 : S2;   // настил над стоком
+  if (y === R.y0) return K1;
+  if (ns ? x === C.x0 - 1 : y === C.gy0 - 1) return AS;                  // бровка к свету
+  const n = hh(x, y, 175);
+  return n < 0.06 ? MG_D : n < 0.1 ? K3 : n > 0.99 ? RUST_L : BR2;        // мокрый кирпич бровки
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -705,6 +730,20 @@ function stair(th) {
     }
     const dx = q(ox + ow / 2 - 5);                                       // наверху дверца: низкая, доски; под ней щель
     r(dx, top + 1, 10, 8, K2); r(dx + 3, top + 1, 1, 8, K1); r(dx + 6, top + 1, 1, 8, K1); r(dx, top + 9, 10, 1, L2);
+    return;
+  }
+  if (kind === 'grate' || kind === 'hatch') {                           // U3: скобы по кирпичу наверх — к решётке у газового фонаря или к люку завода
+    const cx = q(x + w / 2);
+    r(cx - 7, top + 6, 14, gy - top - 6, K1);                            // ниша под скобами
+    for (let sy = gy - 4; sy > top + 9; sy -= 5) { r(cx - 5, sy, 10, 1, AS); r(cx - 5, sy + 1, 10, 1, S2); r(cx - 6, sy - 1, 1, 3, S2); r(cx + 5, sy - 1, 1, 3, K2); }
+    if (kind === 'grate') {                                              // наверху решётка: сквозь прутья — газовый свет
+      r(cx - 9, top, 18, 7, K2);
+      for (let k = 0; k < 8; k++) r(cx - 8 + k * 2, top + 1, 1, 5, k % 2 ? GLOW_W : K1);
+      r(cx - 9, top + 6, 18, 1, S1);
+    } else {                                                             // наверху люк: чугунный круг, крышка на месте, по краю щель
+      for (let k = -8; k <= 8; k++) { const hw = q(Math.sqrt(64 - k * k) * 0.45); r(cx + k, top + 3 - hw, 1, 2 * hw + 1, Math.abs(k) > 6 ? K2 : (k & 1 ? S2 : K3)); }
+      r(cx - 8, top + 3, 1, 1, AS); r(cx + 8, top + 3, 1, 1, S1);
+    }
     return;
   }
   if (kind === 'gothic') {                                              // U2: ступени в крипту чёрного собора — стрельчатый проём; наверху стеллаж погреба
@@ -1553,6 +1592,21 @@ function floorLife(g, camX, camY, vw, vh, p) {
         }
       }
       if (t % 90 < 40) { const k = (t % 90) / 40; G.globalAlpha = 0.25 * (1 - k); r(gx0 + 4 + q(k * 10), y0 - q(k * 14), 2, 1, BO); G.globalAlpha = 1; }   // пар
+    } }
+  // U3: сток и галерея — рябь бежит по течению; кораблики, которых не выловили, плывут к заводу
+  { const C = CHANNEL;
+    if (C.x1 > camX && C.x0 < camX + vw && camY + vh > C.y0 && camY < C.gy1) {
+      G.globalAlpha = 0.5;
+      for (let k = 0; k < 40; k++) {
+        const y = C.y0 + q((under.flow * 1.4 + k * 13) % (C.gy0 - C.y0)), x = C.x0 + 2 + ((k * 7) % (C.x1 - C.x0 - 4));
+        if (y > camY && y < camY + vh) r(x, y, 1, 1, k & 1 ? MG_L : MG);
+      }
+      for (let k = 0; k < 60; k++) {
+        const x = C.gx0 + q((under.flow * 1.6 + k * 11) % (C.gx1 - C.gx0)), y = C.gy0 + 2 + ((k * 5) % (C.gy1 - C.gy0 - 3));
+        if (x > camX && x < camX + vw) r(x, y, 1, 1, k & 1 ? MG_L : MG);
+      }
+      G.globalAlpha = 1;
+      for (const b of under.drift) for (const [dx, dy, c] of [[1, -1, BO], [0, 0, L2], [1, 0, BO], [2, 0, L2]]) r(q(b.x + dx), q(b.y + dy), 1, 1, c);
     } }
   // метро: пыль — в тоннель (сквозняк) или из него (поезд); в тоннеле — свет окон прошёл
   { const mt = CUTS.find(c => c.id === 'metro'), mx = mt.x0 + 76;

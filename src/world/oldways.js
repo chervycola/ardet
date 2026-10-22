@@ -11,6 +11,9 @@
 //  · U2 «катакомбы»: красная колоннада портиков (юг) — в глубине тёмная дверь; выход —
 //    крипта чёрного собора света и сада (запад; второе действие собора): винный погреб,
 //    за стеллажом вторая дверь — для вина и для рукописей, которые жгли.
+//  · U3 «канализация»: газовый переулок пара и теней (запад) — один горящий фонарь, рельсы
+//    вагона 89 6 поперёк мостовой, решётка у фонаря; выход — люк на территории завода
+//    века катастроф (равнина: дуга у северо-восточного угла городка), у градирни.
 // ═══════════════════════════════════════
 import { TOWN, ringAt, trailPoint } from './disc.js';
 
@@ -18,6 +21,8 @@ const NI = '#0D0B0A', AS = '#8A8D8F';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a';
 const BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#5e5e5d', S2 = '#33302e';
 const RUST = '#4a3420', RUST_L = '#6b4a2c', KV = '#C23B2B', B3 = '#3a1c14', D4 = '#34302a', D5 = '#3a3328';
+const SV = '#E28A3A', MG_D = '#2f372c';
+const q = Math.round;
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 const sideOf = (x, y) => {
   const dn = TOWN.y0 - y, ds = y - TOWN.y1, dw = TOWN.x0 - x, de = x - TOWN.x1, m = Math.max(dn, ds, dw, de);
@@ -76,10 +81,15 @@ function placeIn(locations, n, side, w, h, anchor) {
   const box = side === 'south' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y1 + R0, TOWN.y1 + R1]
     : side === 'north' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y0 - R1, TOWN.y0 - R0]
     : side === 'west' ? [TOWN.x0 - R1, TOWN.x0 - R0, TOWN.y0 + 120, TOWN.y1 - 60]
+    : side === 'plain' ? [TOWN.x1, TOWN.x1 + R1, TOWN.y0 - R1, TOWN.y0]
     : [TOWN.x1 + R0, TOWN.x1 + R1, TOWN.y0 + 120, TOWN.y1 - 60];
+  // равнина — дуга у северо-восточного угла: середина дуги, не к её краям
+  const inSide = (x, y) => side !== 'plain' ? sideOf(x, y) === side
+    : x > TOWN.x1 && y < TOWN.y0 && Math.atan2(TOWN.y0 - y, x - TOWN.x1) > 0.15 * Math.PI && Math.atan2(TOWN.y0 - y, x - TOWN.x1) < 0.35 * Math.PI;
+  const ax = anchor ? anchor.archX ?? anchor.x + anchor.w / 2 : 0, ay = anchor ? anchor.archGy ?? anchor.y + anchor.h : 0;
   for (let x = box[0]; x < box[1]; x += 12) for (let gy = box[2]; gy <= box[3]; gy += 10) {
-    if (ringAt(x + w / 2, gy) !== n || sideOf(x + w / 2, gy) !== side || busy(x, gy)) continue;
-    cands.push({ x, gy, d: anchor ? Math.hypot(x + w / 2 - anchor.archX, gy - anchor.archGy) : 0 });
+    if (ringAt(x + w / 2, gy) !== n || !inSide(x + w / 2, gy) || busy(x, gy)) continue;
+    cands.push({ x, gy, d: anchor ? Math.hypot(x + w / 2 - ax, gy - ay) : 0 });
   }
   cands.sort((a, b) => a.d - b.d);
   return cands[0] || null;
@@ -118,7 +128,49 @@ function drawColonnade(ctx, loc) {
 }
 const COLON_LOOK = 'Красная колоннада: дорога вглубь, между колоннами прилавки первой витрины. Тень портика расчерчена на платные полосы. В глубине — тёмная дверь.';
 
-let nilometer = null, stave = null, colonnade = null, cathedral = null;
+// ── U3: газовый переулок — «один горящий фонарь, рельсы вагона 89 6 поперёк мостовой,
+//    решётка канализации у фонаря» (канон) ──
+// Рисунок: чугунный столб с фонарём (стёкла горят — тепло не растрируется, сплошное),
+// перекладина для лестницы фонарщика; у подножия — решётка в мостовой; поперёк — рельсы
+const GW_ = 34, GH_ = 54;
+function drawGasLamp(ctx, loc) {
+  const x = loc.x, gy = loc.y + loc.h;
+  for (let xx = x; xx < x + GW_; xx += 4) for (let yy = gy - 6; yy < gy; yy += 3) {   // мостовая
+    const sx = xx + ((yy >> 1) & 2);
+    R(ctx, sx, yy, Math.min(3, x + GW_ - sx), 2, (xx + yy) % 3 ? S2 : K3);
+  }
+  for (const [ax, bx] of [[x + 1, x + 9], [x + 7, x + 15]]) for (let k = 0; k < 7; k++) R(ctx, ax + q((bx - ax) * k / 7), gy - 1 - k, 2, 1, k & 1 ? AS : S1);   // рельсы поперёк мостовой
+  R(ctx, x + 15, gy - 6, 16, 5, S1); R(ctx, x + 16, gy - 5, 14, 3, K1);  // решётка у фонаря
+  for (let k = 0; k < 7; k++) R(ctx, x + 17 + k * 2, gy - 5, 1, 3, K3);
+  const px = x + 9;                                                      // столб: литое основание, ствол, перекладина
+  R(ctx, px - 2, gy - 9, 6, 3, K2); R(ctx, px - 1, gy - 11, 4, 2, K3);
+  R(ctx, px, gy - 44, 2, 33, K2); R(ctx, px, gy - 44, 1, 33, K3);
+  R(ctx, px - 4, gy - 38, 10, 1, K2);
+  R(ctx, px - 3, gy - 46, 8, 2, K2); R(ctx, px - 2, gy - 52, 6, 6, SV); R(ctx, px - 1, gy - 51, 4, 4, L1);   // фонарь горит: один
+  R(ctx, px - 3, gy - 53, 8, 1, K2); R(ctx, px - 1, gy - 54, 4, 1, K2); R(ctx, px + 1, gy - 52, 1, 6, K3);
+  ctx.globalAlpha = 0.45; R(ctx, px + 3, gy, 12, 1, K0); ctx.globalAlpha = 1;
+}
+const GAS_LOOK = 'Газовый переулок: один горящий фонарь. Поперёк мостовой — рельсы, на рельсе клеймо «89 6»; вагона нет. У фонаря — решётка канализации, снизу тянет паром.';
+
+// ── U3, выход: люк на территории завода — чугунная крышка у градирни ──
+const HW_ = 24, HH_ = 15;
+function drawHatch(ctx, loc) {
+  const cx = loc.x + HW_ / 2, cy = loc.y + 7;
+  for (let k = -11; k <= 11; k++) {                                      // обойма: край к свету сверху, снизу тень
+    const hw = q(Math.sqrt(121 - k * k) * 0.5), x = q(cx + k);
+    R(ctx, x, cy - hw, 1, 2 * hw + 1, K2);
+    R(ctx, x, cy - hw, 1, 1, k < 4 ? S1 : S2); R(ctx, x, cy + hw, 1, 1, K0);
+  }
+  for (let k = -8; k <= 8; k++) {                                        // крышка: литые рёбра решёткой, в пазах грязь
+    const hw = q(Math.sqrt(64 - k * k) * 0.5), x = q(cx + k);
+    for (let yy = cy - hw; yy <= cy + hw; yy++) R(ctx, x, yy, 1, 1, (k + 8) % 3 === 0 || (yy - cy + 9) % 3 === 0 ? K1 : k < 0 && yy < cy ? S2 : K3);
+  }
+  R(ctx, q(cx - 5), cy - 3, 2, 1, AS); R(ctx, q(cx - 2), cy - 3, 1, 1, S1);   // блик: буквы по кругу стёрты до гладкого
+  ctx.globalAlpha = 0.5; R(ctx, q(cx - 10), cy + 7, 20, 1, MG_D); ctx.globalAlpha = 1;   // сырость у края
+}
+const HATCH_LOOK = 'Люк на территории завода. Чугунная крышка; литые буквы по кругу стёрты подошвами до гладкого. Из-под крышки тянет водой.';
+
+let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
   stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', 500).x);
@@ -152,5 +204,26 @@ export function buildOldways(locations) {
     cathedral.upKey = 'cathedral';
     cathedral.altNow = () => ({ key: 'cathedral_crypt', label: '<i>✝</i>В КРИПТУ' });
   }
+  // U3, вход: газовый фонарь — у таблички «ящик в газовом переулке»
+  const box = locations.find(l => l.name === 'ящик в газовом переулке') || null;
+  const g = placeIn(locations, 6, 'west', GW_, GH_, box) || { x: TOWN.x0 - 1100, gy: TOWN.y0 + 600 };
+  gaslamp = {
+    id: 'gas_grate', name: 'Газовый фонарь', zone: 'street',
+    x: g.x, y: g.gy - GH_, w: GW_, h: GH_, solidBox: { x: g.x + 6, y: g.gy - 9, w: 8, h: 4 },
+    look: GAS_LOOK, drawSelf: drawGasLamp,
+    useAction: 'gas_grate_down', useLabel: '<i>↓</i>РЕШЁТКА',
+    light: { r: 44, color: [226, 150, 80], flicker: 0.06, dx: 10, dy: 5 },   // один горящий фонарь
+  };
+  locations.push(gaslamp);
+  // U3, выход: люк — у градирни и цеха
+  const works = archOf(locations, 7, 'plain', 'градирня и цех', TOWN.x1);
+  const hp = placeIn(locations, 7, 'plain', HW_, HH_, works) || { x: TOWN.x1 + 1000, gy: TOWN.y0 - 900 };
+  hatch = {
+    id: 'factory_hatch', name: 'Люк на территории завода', zone: 'street',
+    x: hp.x, y: hp.gy - HH_, w: HW_, h: HH_,
+    look: HATCH_LOOK, drawSelf: drawHatch,
+    useAction: 'factory_hatch_down', useLabel: '<i>↓</i>ЛЮК',
+  };
+  locations.push(hatch);
 }
-export const oldways = () => ({ nilometer, stave, colonnade, cathedral });
+export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch });
