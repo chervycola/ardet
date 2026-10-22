@@ -8,12 +8,19 @@
 // «ВОЗВРАЩЕНО. ВЛАДЕЛЕЦ ВЫБЫЛ». Очередь общая: в порядке потери, не в порядке
 // нужды. Ворот и ведро — world/mechanisms.js, цепь — подвес (world/hang.js),
 // осмотр — content/looks.js.
+// Своё можно отдать (канон): «положи в ведро, опусти; наутро в описи строка
+// «принято на дно. очередь общая»». Поднятое ведро ждёт, пока странник рядом;
+// второе действие — отдать своё, не глядя; ведро уходит вниз. Строка в описи на
+// стойке ворота появляется со следующим утром (сутки — world/sky.js); вышел из
+// игры — утро прошло без тебя. До утра отдать второй раз нечего.
 // Рисунок: каменный сруб кольцом (свет слева, кромка пеплом справа), на нём
 // две стойки под двускатной крышей, между ними ворот, справа ручка.
 // ═══════════════════════════════════════
-import { well, crankWell, nodWell } from './mechanisms.js';
+import { well, crankWell, nodWell, dropWell } from './mechanisms.js';
 import { hang, tipOf } from './hang.js';
 import { looks } from '../content/looks.js';
+import { dayIndex } from './sky.js';
+import { t as clock } from '../core/time.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -34,6 +41,8 @@ export const LOST = [
   'В ведре — оловянный солдатик без ружья. На нём бирка канцелярии: «ВОЗВРАЩЕНО. ВЛАДЕЛЕЦ ВЫБЫЛ».',
 ];
 let queue = 0;                                    // сколько уже поднято
+export const OPIS_LINE = 'принято на дно. очередь общая';
+let given = 0, logged = 0, pending = -1;          // отдано своего; строк в описи; сутки последнего (ждёт утра; -1 — не ждёт)
 
 // ── рисунок ── сруб: эллипс верха с центром на gy-11 (полуоси 10 и 3), проём
 // внутри (7 и 2), стенка высотой 8; цепь и ведро ниже переднего края проёма не
@@ -122,6 +131,7 @@ function drawTownWell(ctx, loc, t) {
     if (f < 24) { const dy = q(f * f * 0.03); if (by + 8 + dy < clip) R(ctx, bx, by + 8 + dy, 1, 1, BO); }
   }
   layer(ctx, 'front', x, gy, frontPart);
+  if (logged) { R(ctx, x + 7, gy - 20, 4, 5, L1); R(ctx, x + 7, gy - 20, 4, 1, BO); R(ctx, x + 8, gy - 18, 2, 1, S2); R(ctx, x + 8, gy - 16, 2, 1, S2); R(ctx, x + 9, gy - 20, 1, 1, K1); }   // опись канцелярии на стойке
   // ручка ворота: ось через правую стойку, колено ходит по кругу
   const ax = x + 10, ay = gy - 26, ex = ax + 1 + q(Math.cos(m.crank)), eyy = ay + q(Math.sin(m.crank) * 3);
   R(ctx, ax, ay, 1, 1, K1);
@@ -139,10 +149,27 @@ export function buildTownWell(locations) {
   loc = {
     id: 'town_well', name: 'Колодец у площади', zone: 'settlement',
     x, y: gy - 36, w: 24, h: 36, solidBox: { x: x + 2, y: gy - 7, w: 20, h: 7 },
-    look: looks.town_well, drawSelf: drawTownWell,
-    useAction: 'town_well_crank', useLabel: '<i>↻</i>КРУТИТЬ ВОРОТ',
+    drawSelf: drawTownWell, useAction: 'town_well_crank',
   };
+  let base = looks.town_well;                      // осмотр переписывают из словаря (locations.attachContent) — опись дописывается к нему
+  Object.defineProperty(loc, 'look', { get: () => base + opisText(), set: v => { base = v; }, enumerable: true, configurable: true });
+  Object.defineProperty(loc, 'useLabel', { get: () => (well(KEY, true).st === 'top' ? '<i>↓</i>ОПУСТИТЬ ВЕДРО' : '<i>↻</i>КРУТИТЬ ВОРОТ'), enumerable: true, configurable: true });
+  loc.altNow = () => (canGive() ? { key: 'town_well_give', label: '<i>↓</i>ОТДАТЬ СВОЁ' } : null);
   locations.push(loc);
+}
+const lines = n => (n % 10 === 1 && n % 100 !== 11 ? 'строка' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'строки' : 'строк');
+function opisText() {
+  if (!logged) return '';
+  return logged === 1 ? `\n\nНа стойке ворота — опись канцелярии, в ней одна строка: «${OPIS_LINE}».`
+    : `\n\nНа стойке ворота — опись канцелярии: ${logged} ${lines(logged)}, все одинаковые: «${OPIS_LINE}».`;
+}
+// отдать своё: только в поднятое ведро и не чаще, чем приходит утро
+export const canGive = () => well(KEY, true).st === 'top' && pending < 0;
+export function giveTownWell() {
+  if (!canGive()) return false;
+  given++; pending = dayIndex(clock);
+  dropWell(KEY);
+  return true;
 }
 export const townWell = () => loc;
 // где встать у колодца — точка героя (как у всякого места: под ним)
@@ -150,6 +177,7 @@ export const wellAccess = () => (loc ? { x: loc.x + loc.w / 2 - 6, y: loc.y + lo
 
 // крутишь ворот: тяжёлое ведро приходит наверх — в нём следующая потеря из очереди
 export function crankTownWell(say) {
+  if (dropWell(KEY)) return true;                  // ведро наверху — ворот отпускает его вниз
   well(KEY, true);
   return crankWell(KEY, () => { say(LOST[queue % LOST.length]); queue++; });
 }
@@ -162,6 +190,8 @@ export function stepTownWell(p) {
   const was = near;
   near = d < 46;
   if (near && !was && p.moving && !quiet) { well(KEY, true); if (nodWell(KEY)) quiet = 600; }
+  well(KEY, true).hold = near;                     // поднятое ведро ждёт, пока ты рядом
+  if (pending >= 0 && dayIndex(clock) > pending) { logged = given; pending = -1; }   // наутро — строка в описи
 }
 // кто-то вышел из колодца (метро изнанки): ворот поскрипел, ведро качнулось
 export function stirTownWell() {
@@ -170,5 +200,12 @@ export function stirTownWell() {
   m.kick = true;
   quiet = 600;
 }
-export const saveTownWell = () => ({ q: queue });
-export function loadTownWell(d) { if (d && Number.isFinite(d.q)) queue = Math.max(0, d.q | 0); }
+export const saveTownWell = () => ({ q: queue, g: given, l: logged, p: pending >= 0 });
+export function loadTownWell(d) {
+  if (!d) return;
+  if (Number.isFinite(d.q)) queue = Math.max(0, d.q | 0);
+  given = Number.isFinite(d.g) ? Math.max(0, d.g | 0) : 0;
+  logged = Number.isFinite(d.l) ? Math.min(given, Math.max(0, d.l | 0)) : 0;
+  if (d.p) logged = given;                         // отдал и вышел — утро прошло без тебя
+  pending = -1;
+}

@@ -107,7 +107,7 @@ import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemk
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
-import { crankTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
+import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
 
@@ -1651,6 +1651,7 @@ events.on('location.alt', (loc) => {
   if (a.key === 'under_greet' && under.greet()) playBlow();
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
+  if (a.key === 'town_well_give' && giveTownWell()) { const s = useTexts.town_well_give; showLook({ name: s.title, look: s.text }); }   // своё — в ведро общего дна
 });
 events.on('location.use', (loc) => {
   if (loc.id === 'terminal') { openTerminal(); return; }

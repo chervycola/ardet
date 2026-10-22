@@ -158,6 +158,13 @@ export function crankWell(key, onTop = null) {
   m.st = 'wind'; m.onTop = onTop;
   return true;
 }
+// отпустить ворот: ведро наверху уходит вниз
+export function dropWell(key) {
+  const m = well(key);
+  if (m.st !== 'top') return false;
+  m.st = 'drop'; m.v = 0; m.hold = false;
+  return true;
+}
 // сам поскрипывает на пол-оборота и обратно — как собака, поднявшая голову
 export function nodWell(key) {
   const m = well(key);
@@ -175,7 +182,8 @@ function stepWell(m) {
       m.st = 'top'; m.top = 0; m.kick = true;
       if (m.onTop) { const f = m.onTop; m.onTop = null; f(); }
     }
-  } else if (m.st === 'top') {                      // наверху: качается
+  } else if (m.st === 'top') {                      // наверху: качается; ждёт, пока держат (hold)
+    if (m.hold) m.top = 0;
     if (++m.top > (m.heavy ? 240 : 80)) { m.st = 'drop'; m.v = 0; }
   } else if (m.st === 'nod') {                      // пол-оборота вперёд, постоял, назад
     const k = ++m.nod / 70;

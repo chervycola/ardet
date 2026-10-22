@@ -2151,6 +2151,10 @@ setCtx(ctx);
   const MX = await imp('world/mechanisms.js');
   const D = await imp('world/disc.js');
   const A = await imp('world/arteries.js');
+  const TM = await imp('core/time.js');
+  const SKY = await imp('world/sky.js');
+  const UAW = await imp('world/useActions.js');
+  const LK = await imp('content/looks.js');
   const w = M.locations.find(l => l.id === 'town_well'), fire = M.locations.find(l => l.id === 'campfire');
   test('колодец у площади: у круга костра, в городке, ни на кого не налез, у тропы', () => {
     assert(w && w.zone === 'settlement' && w.useAction === 'town_well_crank', 'колодца нет');
@@ -2215,6 +2219,45 @@ setCtx(ctx);
       }
     }
     m.st = 'idle'; m.d = 1;
+  });
+  test('колодец у площади: своё можно отдать — в поднятое ведро, опустить; наутро в описи строка «принято на дно. очередь общая»', () => {
+    M.attachContent(LK.looks, {});                                 // main переписывает осмотры мест из словаря — опись не должна мешать
+    assert(/собака, поднявшая голову/.test(w.look), 'осмотр колодца потерян');
+    const m = MX.well('well:town_well'), near = { x: w.x + w.w / 2 - 6, y: w.y + w.h - 18, moving: false }, far = { x: w.x - 300, y: w.y + 200, moving: false };
+    TWL.loadTownWell({ q: 0 }); m.st = 'idle'; m.d = 1; m.hold = false;
+    const up = () => { assert(TWL.crankTownWell(() => {}), 'ворот не крутится'); let n = 0; while (m.st !== 'top' && n++ < 2000) { TWL.stepTownWell(near); MX.stepMechs(); } assert(m.st === 'top', 'ведро не поднялось'); };
+    TWL.stepTownWell(near);
+    eq(w.altNow(), null, 'отдать — в ведро, которое внизу');
+    up();
+    for (let k = 0; k < 600; k++) { TWL.stepTownWell(near); MX.stepMechs(); }
+    eq(m.st, 'top', 'ведро не ждёт, пока странник рядом');
+    assert(/ОПУСТИТЬ ВЕДРО/.test(w.useLabel), 'ворот не отпускает ведро');
+    eq(w.altNow().key, 'town_well_give', 'своё не отдать');
+    assert(/отдают не глядя/.test(UAW.useTexts.town_well_give.text) && /отпускаешь ворот/.test(UAW.useTexts.town_well_give.text), 'сцена не та');
+    const day0 = SKY.dayIndex(TM.t);
+    assert(TWL.giveTownWell(), 'не отдал'); eq(m.st, 'drop', 'ведро со своим не ушло вниз');
+    assert(!TWL.giveTownWell(), 'отдал дважды');
+    for (let k = 0; k < 2000 && m.st !== 'idle'; k++) { TWL.stepTownWell(near); MX.stepMechs(); }
+    TWL.stepTownWell(near);
+    assert(!/принято на дно/.test(w.look), 'строка в описи — до утра');
+    up();
+    eq(w.altNow(), null, 'до утра отдать второй раз');
+    TWL.stepTownWell(far);
+    for (let k = 0; k < 400; k++) MX.stepMechs();
+    eq(m.st, 'idle', 'ушёл — а ведро висит');
+    let n = 0;
+    while (SKY.dayIndex(TM.t) <= day0 && n++ < SKY.DAY_LEN + 2) TM.tick();
+    TWL.stepTownWell(far);
+    assert(/опись канцелярии, в ней одна строка: «принято на дно\. очередь общая»/.test(w.look), 'наутро строки нет: ' + w.look.slice(-120));
+    const s1 = TWL.saveTownWell(); eq(s1.g, 1, 'отданное не сохраняется'); eq(s1.l, 1, 'строка не сохраняется'); eq(s1.p, false, 'утро не наступило');
+    up(); assert(TWL.giveTownWell(), 'наутро своё снова не отдать');
+    const s2 = TWL.saveTownWell(); eq(s2.p, true, 'не ждёт утра');
+    TWL.loadTownWell(s2);
+    assert(/2 строки, все одинаковые/.test(w.look), 'вышел из игры — утро не прошло');
+    const log = [], ctx = new Proxy({}, { get(t, k) { return (...a) => { log.push([k, ...a]); }; }, set(t, k, v) { log.push(['=' + k, v]); return true; } });
+    w.drawSelf(ctx, w, 5);
+    for (const [k, x, y, ww, hh] of log) if (k === 'fillRect') assert(x >= w.x - 2 && x + ww <= w.x + w.w + 4 && y >= w.y - 3 && y + hh <= w.y + w.h + 1, `опись вылезла из рамки: ${x},${y}`);
+    TWL.loadTownWell({ q: 0 }); m.st = 'idle'; m.d = 1; m.hold = false;
   });
 }
 
