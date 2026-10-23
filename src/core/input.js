@@ -28,6 +28,7 @@ class Input {
     this.clickHandlers = [];
     this.touchHandlers = [];
     this.touch = null; // { x, y, startX, startY, startT, moved }
+    this.lastTouchT = 0;
   }
 
   init(canvas) {
@@ -49,9 +50,17 @@ class Input {
     canvas.addEventListener('click', e => {
       this._dispatchClick(e.clientX, e.clientY, 'mouse', e);
     });
+    // правая кнопка — «использовать» (weave/ROADMAP И3); долгий тап телефона тоже
+    // рождает contextmenu — палец держат, чтобы идти, не чтобы использовать
+    canvas.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      if (this.touch || Date.now() - this.lastTouchT < 1000) return;
+      this._dispatchClick(e.clientX, e.clientY, 'mouse', e, 'use');
+    });
 
     // Touch — hold to walk, tap to interact
     canvas.addEventListener('touchstart', e => {
+      this.lastTouchT = Date.now();
       if (e.touches.length > 1) { e.preventDefault(); return; }
       const t0 = e.touches[0];
       this.touch = {
@@ -77,6 +86,7 @@ class Input {
 
     canvas.addEventListener('touchend', e => {
       e.preventDefault();
+      this.lastTouchT = Date.now();
       const t0 = e.changedTouches[0];
       const wasTap = this.touch
         && !this.touch.moved
@@ -120,9 +130,10 @@ class Input {
     };
   }
 
-  _dispatchClick(clientX, clientY, type, originalEvent) {
+  // intent — что сделать с вещью, когда дойдёшь: null — как обычно, 'use' — правая кнопка
+  _dispatchClick(clientX, clientY, type, originalEvent, intent = null) {
     for (const h of this.clickHandlers) {
-      try { h({ clientX, clientY, type, originalEvent }); }
+      try { h({ clientX, clientY, type, originalEvent, intent }); }
       catch (e) { console.error('[input] click handler error:', e); }
     }
   }

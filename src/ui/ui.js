@@ -114,11 +114,7 @@ export function showMenu(loc) {
     useBtn.style.display = 'none';
   } else {
     useBtn.style.display = 'flex';
-    const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
-      || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
-    useBtn.innerHTML = loc.useLabel ? loc.useLabel : flipping
-      ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
-      : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+    useBtn.innerHTML = useMenuLabel(loc);
   }
 
   // второе действие вещи — проявляется по случаю (изнанка: у лестницы — подуть на уголёк)
@@ -149,7 +145,31 @@ export function hideMenu() {
 
 export function getActiveLoc() { return activeLoc; }
 
-export function menuAction(action) {
+// Действие в один клик (weave/ROADMAP И3): что можно сделать с вещью — пункты меню
+// без «отмены»; одно — сразу оно, больше — меню.
+export function menuActions(loc) {
+  const acts = ['look'];
+  if (hasUseAction(loc)) acts.push('use');
+  if (loc.altNow && loc.altNow()) acts.push('alt');
+  if (loc.npc) acts.push('talk');
+  return acts;
+}
+// intent — с клавиш E/F и правой кнопки: 'look' или 'use' (у человека «использовать» —
+// заговорить). Второе действие (подуть, пожаловаться) — только из меню: случайно не
+// жалуются. Путь тот же, что из меню: события, окна и звук — те же.
+export function openThing(loc, intent = null) {
+  const acts = menuActions(loc);
+  let act = null;
+  if (intent === 'look') act = 'look';
+  else if (intent === 'use') act = acts.includes('use') ? 'use' : acts.includes('talk') ? 'talk' : acts.length === 1 ? 'look' : null;
+  else if (acts.length === 1) act = acts[0];
+  if (!act) { showMenu(loc); return; }
+  activeLoc = loc;
+  state.transition('menu');
+  menuAction(act, true);
+}
+
+export function menuAction(action, direct = false) {
   playClick();
   menuEl.classList.remove('on');
   const loc = activeLoc;
@@ -160,7 +180,7 @@ export function menuAction(action) {
   switch (action) {
     case 'look':
       events.emit(E.LOCATION_LOOK, loc);
-      showLook(loc);
+      showLook(loc, direct);
       break;
     // сначала закрыть меню, потом действие: оно может открыть своё окно (сцена, лавка,
     // терминал) — иначе меню, закрываясь, вернуло бы игру, а окно осталось висеть
@@ -192,10 +212,15 @@ let lookPages = [];
 let lookPageIdx = 0;
 let lookShownAt = 0;   // клик в ту же долю секунды, что открыл страницу, не листает её
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
+let lookInsc = '';    // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
+let lookLoc = null;   // вещь, которую осматривают: F из осмотра — использовать её же
 
-export function showLook(loc) {
+// direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
+export function showLook(loc, direct = false) {
   state.transition('look');
   lookTitle = (loc && loc.name) || '';
+  lookInsc = direct && loc ? menuInscriptions[loc.id] || '' : '';
+  lookLoc = activeLoc && activeLoc === loc ? loc : null;
 
   const lookData = lookText(loc);
   const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -224,23 +249,55 @@ function renderLookPage() {
   }
   lookShownAt = performance.now();
 
+  let insc = document.getElementById('look-insc');
+  if (!insc && lookEl && lt) {
+    insc = document.createElement('div');
+    insc.id = 'look-insc';       // вид — style.css
+    lt.after(insc);
+  }
+
   // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
   const noon = redNoon.k > 0.5, blind = noon ? smear : (x => x);
   lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
   lb.textContent = blind(lookPages[lookPageIdx] || '');
   lb.classList.toggle('blind', noon);
+  if (insc) {
+    const on = !!lookInsc && lookPageIdx === 0;
+    insc.textContent = on ? '« ' + blind(lookInsc) + ' »' : '';
+    insc.style.display = on ? 'block' : 'none';
+  }
 
   if (ind) {
+    // F — второе дело той же вещи: обойти знак, использовать, заговорить (клавиатура)
+    const fine = !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+    const f = fine && lookLoc ? nextWord(lookLoc) : '';
+    const fHint = f ? ' · F — ' + f : '';
     if (lookPages.length > 1) {
       const isLast = lookPageIdx >= lookPages.length - 1;
       ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length
-        + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + ' · esc ✕';
+        + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + fHint + ' · esc ✕';
       ind.style.display = 'block';
     } else {
-      ind.textContent = 'пробел / esc — закрыть';
+      ind.textContent = 'пробел / esc — закрыть' + fHint;
       ind.style.display = 'block';
     }
   }
+}
+
+// подпись «использовать» у вещи на кнопке меню: обойти знак, обойти постройку или своё
+function useMenuLabel(loc) {
+  const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
+    || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
+  return loc.useLabel ? loc.useLabel : flipping
+    ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
+    : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+}
+// что сделает F у осмотренной вещи — словом для подсказки; нечего — пусто
+function nextWord(loc) {
+  const acts = menuActions(loc);
+  if (acts.includes('use')) return useMenuLabel(loc).replace(/<i>.*?<\/i>/, '').toLowerCase();
+  if (acts.includes('talk')) return 'говорить';
+  return '';
 }
 
 export function advanceOrCloseLook() {
@@ -258,6 +315,8 @@ export function closeLook() {
   lookEl.classList.remove('on');
   state.transition('game');
   activeLoc = null;
+  lookLoc = null;
+  lookInsc = '';
   lookPages = [];
   lookPageIdx = 0;
 }
@@ -385,6 +444,20 @@ export function initUI() {
     if ((e.key === ' ' || e.key === 'Enter') && state.is('dialogue')) {
       const btn = document.querySelector('#do button');     // «Продолжить…» или «Уйти»
       if (btn) { e.preventDefault(); btn.click(); }
+    }
+    // E — осмотреть, F — использовать (обойти, заговорить): в меню и из окна осмотра.
+    // По месту клавиши, не по букве: в русской раскладке те же У и А
+    const k = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;
+    if (!k || e.repeat || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;   // уже сделано в игре (main.js)
+    if (state.is('menu') && activeLoc) {
+      const acts = menuActions(activeLoc);
+      const act = k === 'look' ? 'look' : acts.includes('use') ? 'use' : acts.includes('talk') ? 'talk' : null;
+      if (act) { e.preventDefault(); menuAction(act); }
+    } else if (state.is('look') && k === 'use' && lookLoc && nextWord(lookLoc)) {
+      e.preventDefault();
+      const l = lookLoc;
+      closeLook();
+      openThing(l, 'use');
     }
   });
 

@@ -280,6 +280,15 @@ canvas#game {
 }
 /* красный полдень: буквы точками — точке шаг буквы, строки не съёживаются */
 #lb.blind { letter-spacing: 0.3em; }
+/* надпись меню, когда меню пропущено (одно действие, клавиша E) — под заголовком */
+#look-insc {
+  display: none;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--c-gold);
+  margin: -6px 0 12px;
+  opacity: 0.85;
+}
 #look-page {
   margin-top: 14px;
   text-align: right;
@@ -599,6 +608,8 @@ canvas#game {
       <span class="ht-k">WASD / стрелки</span><span class="ht-v">идти</span>
       <span class="ht-k">shift</span><span class="ht-v">быстрее</span>
       <span class="ht-k">клик</span><span class="ht-v">подойти · осмотреть</span>
+      <span class="ht-k">правый клик</span><span class="ht-v">подойти · использовать</span>
+      <span class="ht-k">E · F</span><span class="ht-v">осмотреть · использовать, что рядом</span>
       <span class="ht-k">M</span><span class="ht-v">карта мира</span>
       <span class="ht-k">esc</span><span class="ht-v">закрыть · назад</span>
     </div>
@@ -666,7 +677,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='46b38ed · 2026-10-23';console.log('[оттиск]', '46b38ed · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='3cf270b · 2026-10-23';console.log('[оттиск]', '3cf270b · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -30340,6 +30351,7 @@ System.register("core/input", ["render/scaler"], function (exports_90, context_9
                     this.clickHandlers = [];
                     this.touchHandlers = [];
                     this.touch = null; // { x, y, startX, startY, startT, moved }
+                    this.lastTouchT = 0;
                 }
                 init(canvas) {
                     // Keyboard
@@ -30359,8 +30371,17 @@ System.register("core/input", ["render/scaler"], function (exports_90, context_9
                     canvas.addEventListener('click', e => {
                         this._dispatchClick(e.clientX, e.clientY, 'mouse', e);
                     });
+                    // правая кнопка — «использовать» (weave/ROADMAP И3); долгий тап телефона тоже
+                    // рождает contextmenu — палец держат, чтобы идти, не чтобы использовать
+                    canvas.addEventListener('contextmenu', e => {
+                        e.preventDefault();
+                        if (this.touch || Date.now() - this.lastTouchT < 1000)
+                            return;
+                        this._dispatchClick(e.clientX, e.clientY, 'mouse', e, 'use');
+                    });
                     // Touch — hold to walk, tap to interact
                     canvas.addEventListener('touchstart', e => {
+                        this.lastTouchT = Date.now();
                         if (e.touches.length > 1) {
                             e.preventDefault();
                             return;
@@ -30388,6 +30409,7 @@ System.register("core/input", ["render/scaler"], function (exports_90, context_9
                     }, { passive: false });
                     canvas.addEventListener('touchend', e => {
                         e.preventDefault();
+                        this.lastTouchT = Date.now();
                         const t0 = e.changedTouches[0];
                         const wasTap = this.touch
                             && !this.touch.moved
@@ -30431,10 +30453,11 @@ System.register("core/input", ["render/scaler"], function (exports_90, context_9
                             this.clickHandlers.splice(i, 1);
                     };
                 }
-                _dispatchClick(clientX, clientY, type, originalEvent) {
+                // intent — что сделать с вещью, когда дойдёшь: null — как обычно, 'use' — правая кнопка
+                _dispatchClick(clientX, clientY, type, originalEvent, intent = null) {
                     for (const h of this.clickHandlers) {
                         try {
-                            h({ clientX, clientY, type, originalEvent });
+                            h({ clientX, clientY, type, originalEvent, intent });
                         }
                         catch (e) {
                             console.error('[input] click handler error:', e);
@@ -35897,7 +35920,7 @@ System.register("ui/stream", [], function (exports_106, context_106) {
 });
 System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core/events", "assets/loader", "ui/transitions", "audio/audio", "core/input", "world/useActions", "ui/pages", "ui/stream"], function (exports_107, context_107) {
     "use strict";
-    var state_js_1, potemkin_js_2, redNoon_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_6, input_js_1, useActions_js_5, pages_js_1, stream_js_1, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, dlgEl, dlgLines, dlgIndex, dlgLoc;
+    var state_js_1, potemkin_js_2, redNoon_js_2, events_js_1, loader_js_1, transitions_js_1, audio_js_6, input_js_1, useActions_js_5, pages_js_1, stream_js_1, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, lookInsc, lookLoc, dlgEl, dlgLines, dlgIndex, dlgLoc;
     var __moduleName = context_107 && context_107.id;
     // Does this location actually do something on «использовать»?
     // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -35935,11 +35958,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         }
         else {
             useBtn.style.display = 'flex';
-            const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
-                || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
-            useBtn.innerHTML = loc.useLabel ? loc.useLabel : flipping
-                ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
-                : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+            useBtn.innerHTML = useMenuLabel(loc);
         }
         // второе действие вещи — проявляется по случаю (изнанка: у лестницы — подуть на уголёк)
         const altBtn = menuEl.querySelector('[data-a="alt"]');
@@ -35969,7 +35988,41 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
     exports_107("hideMenu", hideMenu);
     function getActiveLoc() { return activeLoc; }
     exports_107("getActiveLoc", getActiveLoc);
-    function menuAction(action) {
+    // Действие в один клик (weave/ROADMAP И3): что можно сделать с вещью — пункты меню
+    // без «отмены»; одно — сразу оно, больше — меню.
+    function menuActions(loc) {
+        const acts = ['look'];
+        if (hasUseAction(loc))
+            acts.push('use');
+        if (loc.altNow && loc.altNow())
+            acts.push('alt');
+        if (loc.npc)
+            acts.push('talk');
+        return acts;
+    }
+    exports_107("menuActions", menuActions);
+    // intent — с клавиш E/F и правой кнопки: 'look' или 'use' (у человека «использовать» —
+    // заговорить). Второе действие (подуть, пожаловаться) — только из меню: случайно не
+    // жалуются. Путь тот же, что из меню: события, окна и звук — те же.
+    function openThing(loc, intent = null) {
+        const acts = menuActions(loc);
+        let act = null;
+        if (intent === 'look')
+            act = 'look';
+        else if (intent === 'use')
+            act = acts.includes('use') ? 'use' : acts.includes('talk') ? 'talk' : acts.length === 1 ? 'look' : null;
+        else if (acts.length === 1)
+            act = acts[0];
+        if (!act) {
+            showMenu(loc);
+            return;
+        }
+        activeLoc = loc;
+        state_js_1.state.transition('menu');
+        menuAction(act, true);
+    }
+    exports_107("openThing", openThing);
+    function menuAction(action, direct = false) {
         audio_js_6.playClick();
         menuEl.classList.remove('on');
         const loc = activeLoc;
@@ -35982,7 +36035,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         switch (action) {
             case 'look':
                 events_js_1.events.emit(events_js_1.E.LOCATION_LOOK, loc);
-                showLook(loc);
+                showLook(loc, direct);
                 break;
             // сначала закрыть меню, потом действие: оно может открыть своё окно (сцена, лавка,
             // терминал) — иначе меню, закрываясь, вернуло бы игру, а окно осталось висеть
@@ -36009,9 +36062,12 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         }
     }
     exports_107("menuAction", menuAction);
-    function showLook(loc) {
+    // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
+    function showLook(loc, direct = false) {
         state_js_1.state.transition('look');
         lookTitle = (loc && loc.name) || '';
+        lookInsc = direct && loc ? menuInscriptions[loc.id] || '' : '';
+        lookLoc = activeLoc && activeLoc === loc ? loc : null;
         const lookData = potemkin_js_2.lookText(loc);
         const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
         const m = pages_js_1.pageMeasure(window.innerWidth, window.innerHeight, coarse, stream_js_1.STREAM);
@@ -36036,23 +36092,55 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             lookEl.appendChild(ind);
         }
         lookShownAt = performance.now();
+        let insc = document.getElementById('look-insc');
+        if (!insc && lookEl && lt) {
+            insc = document.createElement('div');
+            insc.id = 'look-insc'; // вид — style.css
+            lt.after(insc);
+        }
         // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
         const noon = redNoon_js_2.redNoon.k > 0.5, blind = noon ? redNoon_js_2.smear : (x => x);
         lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
         lb.textContent = blind(lookPages[lookPageIdx] || '');
         lb.classList.toggle('blind', noon);
+        if (insc) {
+            const on = !!lookInsc && lookPageIdx === 0;
+            insc.textContent = on ? '« ' + blind(lookInsc) + ' »' : '';
+            insc.style.display = on ? 'block' : 'none';
+        }
         if (ind) {
+            // F — второе дело той же вещи: обойти знак, использовать, заговорить (клавиатура)
+            const fine = !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+            const f = fine && lookLoc ? nextWord(lookLoc) : '';
+            const fHint = f ? ' · F — ' + f : '';
             if (lookPages.length > 1) {
                 const isLast = lookPageIdx >= lookPages.length - 1;
                 ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length
-                    + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + ' · esc ✕';
+                    + (isLast ? '   пробел — закрыть' : '   пробел — дальше · ← назад') + fHint + ' · esc ✕';
                 ind.style.display = 'block';
             }
             else {
-                ind.textContent = 'пробел / esc — закрыть';
+                ind.textContent = 'пробел / esc — закрыть' + fHint;
                 ind.style.display = 'block';
             }
         }
+    }
+    // подпись «использовать» у вещи на кнопке меню: обойти знак, обойти постройку или своё
+    function useMenuLabel(loc) {
+        const flipping = (loc.streetForm && loc.useAction && loc.useAction.endsWith('_flip'))
+            || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
+        return loc.useLabel ? loc.useLabel : flipping
+            ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
+            : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+    }
+    // что сделает F у осмотренной вещи — словом для подсказки; нечего — пусто
+    function nextWord(loc) {
+        const acts = menuActions(loc);
+        if (acts.includes('use'))
+            return useMenuLabel(loc).replace(/<i>.*?<\/i>/, '').toLowerCase();
+        if (acts.includes('talk'))
+            return 'говорить';
+        return '';
     }
     function advanceOrCloseLook() {
         if (performance.now() - lookShownAt < 250)
@@ -36070,6 +36158,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         lookEl.classList.remove('on');
         state_js_1.state.transition('game');
         activeLoc = null;
+        lookLoc = null;
+        lookInsc = '';
         lookPages = [];
         lookPageIdx = 0;
     }
@@ -36192,6 +36282,25 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                     e.preventDefault();
                     btn.click();
                 }
+            }
+            // E — осмотреть, F — использовать (обойти, заговорить): в меню и из окна осмотра.
+            // По месту клавиши, не по букве: в русской раскладке те же У и А
+            const k = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;
+            if (!k || e.repeat || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey)
+                return; // уже сделано в игре (main.js)
+            if (state_js_1.state.is('menu') && activeLoc) {
+                const acts = menuActions(activeLoc);
+                const act = k === 'look' ? 'look' : acts.includes('use') ? 'use' : acts.includes('talk') ? 'talk' : null;
+                if (act) {
+                    e.preventDefault();
+                    menuAction(act);
+                }
+            }
+            else if (state_js_1.state.is('look') && k === 'use' && lookLoc && nextWord(lookLoc)) {
+                e.preventDefault();
+                const l = lookLoc;
+                closeLook();
+                openThing(l, 'use');
             }
         });
         // Swipe on look panel
@@ -36318,6 +36427,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             lookPageIdx = 0;
             lookShownAt = 0; // клик в ту же долю секунды, что открыл страницу, не листает её
             lookTitle = ''; // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
+            lookInsc = ''; // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
+            lookLoc = null; // вещь, которую осматривают: F из осмотра — использовать её же
             // ── DIALOGUE ──
             dlgEl = document.getElementById('dlg');
             dlgLines = [];
@@ -53655,7 +53766,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "assets/loader"], function (exports_156, context_156) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter, DEV;
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter, HAND, DEV;
     var __moduleName = context_156 && context_156.id;
     function lockHint() {
         if (time_js_43.t - lockHintAt < 1800)
@@ -53703,8 +53814,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function enterHouse() { teleportWithFade(house_js_2.ENTRY.x - 6, house_js_2.ENTRY.y - 23, () => intoHouse(house_js_2.ENTRY.x, house_js_2.ENTRY.y, false)); }
     function leaveHouse() { const d = house_js_2.doorOutside(); teleportWithFade(d.x, d.y, outOfHouse); }
     // клик в доме: к вещи — до места у неё, из комнаты в сени — через проём
-    function walkHouse(gx, gy) {
-        const th = physics_js_2.findLocationAt(gx, gy, house_js_2.houseThings(!sky_js_4.skyAt(sky_js_4.phaseAt(time_js_44.t)).sun), 4);
+    function walkHouse(gx, gy, at = null) {
+        const th = at || physics_js_2.findLocationAt(gx, gy, house_js_2.houseThings(!sky_js_4.skyAt(sky_js_4.phaseAt(time_js_44.t)).sun), 4);
         const path = th ? house_js_2.houseRoute(player.x + 6, player.y + 23, th.at[0], th.at[1]) : house_js_2.houseRoute(player.x + 6, player.y + 23, gx, gy);
         if (!path.length)
             return;
@@ -54752,10 +54863,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         });
     }
     // клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
-    function walkUnder(gx, gy) {
-        if (netClick(gx, gy, 'under'))
+    function walkUnder(gx, gy, at = null) {
+        if (!at && netClick(gx, gy, 'under'))
             return;
-        const th = physics_js_2.findLocationAt(gx, gy, underside_js_4.thingsNow(), 6);
+        const th = at || physics_js_2.findLocationAt(gx, gy, underside_js_4.thingsNow(), 6);
         const path = th ? underside_js_4.pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : underside_js_4.pathTo(player.x + 6, player.y + 23, gx, gy);
         if (!path || !path.length)
             return;
@@ -54775,7 +54886,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // смотрит вдаль, а ты рядом за кольцом и сам не смотришь — можно посмотреть туда же
         const join = o && o.look && layer === 'surface' && beyond_js_2.beyond.depth > 0.03 && beyond_js_2.beyond.hT <= 0 && Math.hypot(o.x - player.x - 6, o.y - player.y - 23) < net_js_3.SIGHT;
         if (o) {
-            ui_js_2.showMenu(netui_js_1.otherMenu(o, join));
+            ui_js_2.openThing(netui_js_1.otherMenu(o, join), player.walkIntent);
             return true;
         }
         const n = layer === 'surface' ? net_js_4.noteAt(x, y) : null;
@@ -54783,7 +54894,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return false;
         const nm = netui_js_1.noteMenu(n), sx = n.x - 6 - 12, sy = n.y - 23; // встать слева: подол записку не закроет
         if (Math.hypot(player.x - sx, player.y - sy) < 8) {
-            ui_js_2.showMenu(nm);
+            ui_js_2.openThing(nm, player.walkIntent);
             return true;
         }
         if (!canLeaveSettlement() && !physics_js_2.isInSettlement(sx, sy)) {
@@ -55114,19 +55225,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 // Check if we arrived at a location: та, к которой шли, — если
                 // дошли до её порога; иначе ближайшая. Шли просто по земле — меню
                 // не открываем: мимо вещи можно пройти, не останавливаясь.
-                const want = player.walkTo;
+                const want = player.walkTo, intent = player.walkIntent;
                 player.walkTo = null;
+                player.walkIntent = null;
                 if (want && (want.under || want.net || want.house))
-                    ui_js_2.showMenu(want); // вещь изнанки, дома, записка: путь вёл к ней
+                    ui_js_2.openThing(want, intent); // вещь изнанки, дома, записка: путь вёл к ней
                 else {
                     const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
                         && Math.abs(player.y - (want.y + want.h + 5)) < 4;
                     const loc = atWant ? want : (want ? physics_js_2.findLocationAt(player.x, player.y, locations_js_6.locations) : null);
-                    if (loc) {
-                        flags.visited.add(loc.id);
-                        events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
-                        ui_js_2.showMenu(loc);
-                    }
+                    if (loc)
+                        arriveAt(loc, intent);
                 }
             }
             else {
@@ -55271,6 +55380,69 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // без подписи: пробуждение говорит само
         document.body.appendChild(lids);
         setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+    }
+    // к вещи: близко — шаг-мигание к её порогу, далеко — дойти; у порога — её дело
+    // (одно действие — сразу, больше — меню; ui.js openThing)
+    function approach(loc) {
+        const px_ = loc.x + loc.w / 2 - 6;
+        const py_ = loc.y + loc.h + 5;
+        // Block click-routing to locations whose access point is outside the
+        // locked starting area (e.g. Pizzeria sits at the highway border).
+        // Otherwise a near-click would teleport the player out of the zone
+        // and movement would jam against the boundary.
+        if (!canLeaveSettlement() && !physics_js_2.isInSettlement(px_, py_)) {
+            lockHint();
+            return;
+        }
+        const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+        const intent = player.walkIntent;
+        if (dist < 3)
+            arriveAt(loc, intent); // уже стоишь у порога — мигать некуда
+        else if (dist < 85)
+            teleportWithFade(px_, py_, () => arriveAt(loc, intent));
+        else {
+            player.tx = px_;
+            player.ty = py_;
+            player.moving = true;
+            player.auto = true;
+            player.walkTo = loc;
+        }
+    }
+    function arriveAt(loc, intent = null) {
+        flags.visited.add(loc.id);
+        events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
+        ui_js_2.openThing(loc, intent);
+    }
+    function thingAtHand() {
+        const fx = player.x + 6, fy = player.y + 23;
+        // от ног до вещи: до её прямоугольника вместе с местом, где у неё стоят
+        const reach = (l, ax, ay) => {
+            const x0 = Math.min(l.x, ax), x1 = Math.max(l.x + l.w, ax), y0 = Math.min(l.y, ay), y1 = Math.max(l.y + l.h, ay);
+            return Math.hypot(Math.max(x0 - fx, 0, fx - x1), Math.max(y0 - fy, 0, fy - y1));
+        };
+        let best = null, bd = HAND, ba = Infinity;
+        const take = (th, d, kind) => {
+            const a = th.w * th.h;
+            if (d < bd || (d === bd && a < ba)) {
+                best = { th, kind };
+                bd = d;
+                ba = a;
+            } // вплотную к двум — меньшая: табличка важнее дома
+        };
+        if (house_js_2.house.active)
+            for (const th of house_js_2.houseThings(!sky_js_4.skyAt(sky_js_4.phaseAt(time_js_44.t)).sun))
+                take(th, reach(th, th.at[0], th.at[1]), 'house');
+        else if (underside_js_4.under.active)
+            for (const th of underside_js_4.thingsNow())
+                take(th, reach(th, th.at[0], th.at[1]), 'under');
+        else {
+            for (const l of locations_js_6.locations)
+                take(l, reach(l, l.x + l.w / 2, l.y + l.h + 28), 'surface');
+            if (net_js_3.net.on)
+                for (const n of net_js_3.notesIn(fx - HAND, fy - HAND, fx + HAND, fy + HAND))
+                    take({ x: n.x - 3, y: n.y - 2, w: 6, h: 4, note: n }, Math.hypot(n.x - fx, n.y - fy), 'note');
+        }
+        return best;
     }
     // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
     function sceneOrDown(actionKey) {
@@ -55975,7 +56147,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     lorepopup_js_1.skipOrDismiss();
             });
             // Touch: walk toward clicked point
-            input_js_2.input.onClick(({ clientX, clientY, originalEvent }) => {
+            input_js_2.input.onClick(({ clientX, clientY, originalEvent, intent }) => {
                 if (originalEvent)
                     originalEvent.stopPropagation();
                 if (state_js_7.state.is('menu')) {
@@ -55992,6 +56164,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 } // первый клик допечатывает, второй убирает
                 const pos = input_js_2.input.screenToWorld(clientX, clientY, camera_js_1.camera);
+                player.walkIntent = intent || null; // правая кнопка: дойти и использовать
                 if (house_js_2.house.active) {
                     walkHouse(pos.x, pos.y);
                     return;
@@ -56004,41 +56177,42 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (netClick(pos.x, pos.y, 'surface'))
                     return; // другой странник, записка на земле
                 const loc = physics_js_2.findLocationAt(pos.x, pos.y, locations_js_6.locations);
-                if (loc) {
-                    const px_ = loc.x + loc.w / 2 - 6;
-                    const py_ = loc.y + loc.h + 5;
-                    // Block click-routing to locations whose access point is outside the
-                    // locked starting area (e.g. Pizzeria sits at the highway border).
-                    // Otherwise a near-click would teleport the player out of the zone
-                    // and movement would jam against the boundary.
-                    if (!canLeaveSettlement() && !physics_js_2.isInSettlement(px_, py_)) {
-                        lockHint();
-                        return;
-                    }
-                    const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
-                    if (dist < 85) {
-                        // Close enough — blink-step to the location, then open the menu
-                        teleportWithFade(px_, py_, () => {
-                            flags.visited.add(loc.id);
-                            events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
-                            ui_js_2.showMenu(loc);
-                        });
-                    }
-                    else {
-                        // Walk toward it
-                        player.tx = px_;
-                        player.ty = py_;
-                        player.moving = true;
-                        player.auto = true;
-                        player.walkTo = loc;
-                    }
-                }
+                if (loc)
+                    approach(loc);
                 else {
                     player.tx = pos.x;
                     player.ty = pos.y;
                     player.moving = true;
                     player.auto = true;
                     player.walkTo = null;
+                }
+            });
+            // вещь под рукой — для E и F: ближняя, не дальше пары шагов (дома и в изнанке — вещи
+            // своего полотна, наверху — места и записки на земле)
+            HAND = 60;
+            // E — осмотреть, F — использовать то, что под рукой (weave/ROADMAP И3); в меню и в окне
+            // осмотра те же клавиши ловит ui.js. По месту клавиши: в русской раскладке — У и А
+            document.addEventListener('keydown', e => {
+                const intent = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;
+                if (!intent || e.repeat || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey)
+                    return;
+                if (!state_js_7.state.is('game') || lorepopup_js_1.isActive() || worldmap_js_1.isOpen())
+                    return;
+                const hand = thingAtHand();
+                if (!hand)
+                    return;
+                e.preventDefault();
+                player.walkIntent = intent;
+                const { th, kind } = hand;
+                if (kind === 'house')
+                    walkHouse(th.at[0], th.at[1], th);
+                else if (kind === 'under')
+                    walkUnder(th.at[0], th.at[1], th);
+                else if (kind === 'note')
+                    netClick(th.note.x, th.note.y, 'surface');
+                else {
+                    player.path = null;
+                    approach(th);
                 }
             });
             // ═══ EVENT HANDLERS ═══

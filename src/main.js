@@ -50,7 +50,7 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
-import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions } from './ui/ui.js';
+import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing } from './ui/ui.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
@@ -111,7 +111,7 @@ import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
-import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT } from './net/net.js';
+import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT, notesIn } from './net/net.js';
 import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } from './render/net.js';
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
@@ -323,8 +323,8 @@ function outOfHouse() {
 function enterHouse() { teleportWithFade(ENTRY.x - 6, ENTRY.y - 23, () => intoHouse(ENTRY.x, ENTRY.y, false)); }
 function leaveHouse() { const d = doorOutside(); teleportWithFade(d.x, d.y, outOfHouse); }
 // клик в доме: к вещи — до места у неё, из комнаты в сени — через проём
-function walkHouse(gx, gy) {
-  const th = findLocationAt(gx, gy, houseThings(!skyAt(phaseAt(t)).sun), 4);
+function walkHouse(gx, gy, at = null) {
+  const th = at || findLocationAt(gx, gy, houseThings(!skyAt(phaseAt(t)).sun), 4);
   const path = th ? houseRoute(player.x + 6, player.y + 23, th.at[0], th.at[1]) : houseRoute(player.x + 6, player.y + 23, gx, gy);
   if (!path.length) return;
   const w = path.shift();
@@ -1242,9 +1242,9 @@ function rideToWell() {
   });
 }
 // клик под землёй: к вещи — по трубам до её места; в пустоту — к ближайшему, куда можно встать
-function walkUnder(gx, gy) {
-  if (netClick(gx, gy, 'under')) return;
-  const th = findLocationAt(gx, gy, thingsNow(), 6);
+function walkUnder(gx, gy, at = null) {
+  if (!at && netClick(gx, gy, 'under')) return;
+  const th = at || findLocationAt(gx, gy, thingsNow(), 6);
   const path = th ? pathTo(player.x + 6, player.y + 23, th.at[0], th.at[1]) : pathTo(player.x + 6, player.y + 23, gx, gy);
   if (!path || !path.length) return;
   const w = path.shift();
@@ -1259,11 +1259,11 @@ function netClick(x, y, layer) {
   const o = otherAt(layer, x, y);
   // смотрит вдаль, а ты рядом за кольцом и сам не смотришь — можно посмотреть туда же
   const join = o && o.look && layer === 'surface' && beyond.depth > 0.03 && beyond.hT <= 0 && Math.hypot(o.x - player.x - 6, o.y - player.y - 23) < SIGHT;
-  if (o) { showMenu(otherMenu(o, join)); return true; }
+  if (o) { openThing(otherMenu(o, join), player.walkIntent); return true; }
   const n = layer === 'surface' ? noteAt(x, y) : null;
   if (!n) return false;
   const nm = noteMenu(n), sx = n.x - 6 - 12, sy = n.y - 23;         // встать слева: подол записку не закроет
-  if (Math.hypot(player.x - sx, player.y - sy) < 8) { showMenu(nm); return true; }
+  if (Math.hypot(player.x - sx, player.y - sy) < 8) { openThing(nm, player.walkIntent); return true; }
   if (!canLeaveSettlement() && !isInSettlement(sx, sy)) { lockHint(); return true; }
   player.tx = sx; player.ty = sy;
   player.moving = true; player.auto = true;
@@ -1527,18 +1527,14 @@ function updateGame() {
       // Check if we arrived at a location: та, к которой шли, — если
       // дошли до её порога; иначе ближайшая. Шли просто по земле — меню
       // не открываем: мимо вещи можно пройти, не останавливаясь.
-      const want = player.walkTo;
-      player.walkTo = null;
-      if (want && (want.under || want.net || want.house)) showMenu(want);   // вещь изнанки, дома, записка: путь вёл к ней
+      const want = player.walkTo, intent = player.walkIntent;
+      player.walkTo = null; player.walkIntent = null;
+      if (want && (want.under || want.net || want.house)) openThing(want, intent);   // вещь изнанки, дома, записка: путь вёл к ней
       else {
         const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
           && Math.abs(player.y - (want.y + want.h + 5)) < 4;
         const loc = atWant ? want : (want ? findLocationAt(player.x, player.y, locations) : null);
-        if (loc) {
-          flags.visited.add(loc.id);
-          events.emit(E.LOCATION_VISIT, loc);
-          showMenu(loc);
-        }
+        if (loc) arriveAt(loc, intent);
       }
     } else {
       // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже;
@@ -1738,7 +1734,7 @@ document.addEventListener('keydown', e => {
 });
 
 // Touch: walk toward clicked point
-input.onClick(({ clientX, clientY, originalEvent }) => {
+input.onClick(({ clientX, clientY, originalEvent, intent }) => {
   if (originalEvent) originalEvent.stopPropagation();
   if (state.is('menu')) { hideMenu(); return; }
   if (state.is('look') || state.is('dialogue')) return;
@@ -1747,43 +1743,88 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (loreActive()) { dismissLore(); return; }   // первый клик допечатывает, второй убирает
 
   const pos = input.screenToWorld(clientX, clientY, camera);
+  player.walkIntent = intent || null;              // правая кнопка: дойти и использовать
   if (house.active) { walkHouse(pos.x, pos.y); return; }
   if (under.active) { walkUnder(pos.x, pos.y); return; }
   player.path = null;
   if (netClick(pos.x, pos.y, 'surface')) return;   // другой странник, записка на земле
   const loc = findLocationAt(pos.x, pos.y, locations);
-  if (loc) {
-    const px_ = loc.x + loc.w / 2 - 6;
-    const py_ = loc.y + loc.h + 5;
-    // Block click-routing to locations whose access point is outside the
-    // locked starting area (e.g. Pizzeria sits at the highway border).
-    // Otherwise a near-click would teleport the player out of the zone
-    // and movement would jam against the boundary.
-    if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
-    const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
-
-    if (dist < 85) {
-      // Close enough — blink-step to the location, then open the menu
-      teleportWithFade(px_, py_, () => {
-        flags.visited.add(loc.id);
-        events.emit(E.LOCATION_VISIT, loc);
-        showMenu(loc);
-      });
-    } else {
-      // Walk toward it
-      player.tx = px_;
-      player.ty = py_;
-      player.moving = true;
-      player.auto = true;
-      player.walkTo = loc;
-    }
-  } else {
+  if (loc) approach(loc);
+  else {
     player.tx = pos.x;
     player.ty = pos.y;
     player.moving = true;
     player.auto = true;
     player.walkTo = null;
   }
+});
+
+// к вещи: близко — шаг-мигание к её порогу, далеко — дойти; у порога — её дело
+// (одно действие — сразу, больше — меню; ui.js openThing)
+function approach(loc) {
+  const px_ = loc.x + loc.w / 2 - 6;
+  const py_ = loc.y + loc.h + 5;
+  // Block click-routing to locations whose access point is outside the
+  // locked starting area (e.g. Pizzeria sits at the highway border).
+  // Otherwise a near-click would teleport the player out of the zone
+  // and movement would jam against the boundary.
+  if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
+  const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+  const intent = player.walkIntent;
+  if (dist < 3) arriveAt(loc, intent);              // уже стоишь у порога — мигать некуда
+  else if (dist < 85) teleportWithFade(px_, py_, () => arriveAt(loc, intent));
+  else {
+    player.tx = px_;
+    player.ty = py_;
+    player.moving = true;
+    player.auto = true;
+    player.walkTo = loc;
+  }
+}
+function arriveAt(loc, intent = null) {
+  flags.visited.add(loc.id);
+  events.emit(E.LOCATION_VISIT, loc);
+  openThing(loc, intent);
+}
+
+// вещь под рукой — для E и F: ближняя, не дальше пары шагов (дома и в изнанке — вещи
+// своего полотна, наверху — места и записки на земле)
+const HAND = 60;
+function thingAtHand() {
+  const fx = player.x + 6, fy = player.y + 23;
+  // от ног до вещи: до её прямоугольника вместе с местом, где у неё стоят
+  const reach = (l, ax, ay) => {
+    const x0 = Math.min(l.x, ax), x1 = Math.max(l.x + l.w, ax), y0 = Math.min(l.y, ay), y1 = Math.max(l.y + l.h, ay);
+    return Math.hypot(Math.max(x0 - fx, 0, fx - x1), Math.max(y0 - fy, 0, fy - y1));
+  };
+  let best = null, bd = HAND, ba = Infinity;
+  const take = (th, d, kind) => {
+    const a = th.w * th.h;
+    if (d < bd || (d === bd && a < ba)) { best = { th, kind }; bd = d; ba = a; }   // вплотную к двум — меньшая: табличка важнее дома
+  };
+  if (house.active) for (const th of houseThings(!skyAt(phaseAt(t)).sun)) take(th, reach(th, th.at[0], th.at[1]), 'house');
+  else if (under.active) for (const th of thingsNow()) take(th, reach(th, th.at[0], th.at[1]), 'under');
+  else {
+    for (const l of locations) take(l, reach(l, l.x + l.w / 2, l.y + l.h + 28), 'surface');
+    if (net.on) for (const n of notesIn(fx - HAND, fy - HAND, fx + HAND, fy + HAND)) take({ x: n.x - 3, y: n.y - 2, w: 6, h: 4, note: n }, Math.hypot(n.x - fx, n.y - fy), 'note');
+  }
+  return best;
+}
+// E — осмотреть, F — использовать то, что под рукой (weave/ROADMAP И3); в меню и в окне
+// осмотра те же клавиши ловит ui.js. По месту клавиши: в русской раскладке — У и А
+document.addEventListener('keydown', e => {
+  const intent = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;
+  if (!intent || e.repeat || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!state.is('game') || loreActive() || isMapOpen()) return;
+  const hand = thingAtHand();
+  if (!hand) return;
+  e.preventDefault();
+  player.walkIntent = intent;
+  const { th, kind } = hand;
+  if (kind === 'house') walkHouse(th.at[0], th.at[1], th);
+  else if (kind === 'under') walkUnder(th.at[0], th.at[1], th);
+  else if (kind === 'note') netClick(th.note.x, th.note.y, 'surface');
+  else { player.path = null; approach(th); }
 });
 
 // ═══ EVENT HANDLERS ═══

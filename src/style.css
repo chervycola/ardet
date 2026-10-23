@@ -266,6 +266,15 @@ canvas#game {
 }
 /* красный полдень: буквы точками — точке шаг буквы, строки не съёживаются */
 #lb.blind { letter-spacing: 0.3em; }
+/* надпись меню, когда меню пропущено (одно действие, клавиша E) — под заголовком */
+#look-insc {
+  display: none;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--c-gold);
+  margin: -6px 0 12px;
+  opacity: 0.85;
+}
 #look-page {
   margin-top: 14px;
   text-align: right;
