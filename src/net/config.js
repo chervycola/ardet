@@ -5,5 +5,5 @@
 // одного, как раньше. ?net=local — проверка без сервера: вкладки одного браузера
 // видят друг друга, записки лежат в localStorage. ?net=off — выключить.
 // ═══════════════════════════════════════
-export const SUPABASE_URL = '';
-export const SUPABASE_KEY = '';
+export const SUPABASE_URL = 'https://vchfdhhlcjhnxiivtfpr.supabase.co';
+export const SUPABASE_KEY = 'sb_publishable_lXY8h_gi37sZLixPqonEqw_YZmZrA7L';
