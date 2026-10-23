@@ -657,7 +657,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ce647e2 · 2026-10-23';console.log('[оттиск]', 'ce647e2 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='f70c617 · 2026-10-23';console.log('[оттиск]', 'f70c617 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -35380,7 +35380,7 @@ System.register("ui/pages", [], function (exports_104, context_104) {
         const font = mob ? 17 : stream ? 24 : 20, lh = font * (mob ? 1.5 : 1.6);
         const perLine = Math.max(20, Math.floor(box / (font * 0.55)));
         const vh = mob ? (w <= 768 && h <= 500 ? 0.85 : 0.75) : 0.84; // max-height окна — те же медиа-правила
-        const lines = Math.floor((vh * h - (mob ? 130 : 140)) / lh);
+        const lines = Math.floor((vh * h - (mob ? 130 : stream ? 170 : 140)) / lh);
         return { budget: Math.max(mob ? 240 : 600, Math.min(1500, lines * perLine)), nl: Math.round(perLine / 2) };
     }
     exports_104("pageMeasure", pageMeasure);

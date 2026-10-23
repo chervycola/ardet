@@ -34,6 +34,6 @@ export function pageMeasure(w, h, coarse = false, stream = false) {
   const font = mob ? 17 : stream ? 24 : 20, lh = font * (mob ? 1.5 : 1.6);
   const perLine = Math.max(20, Math.floor(box / (font * 0.55)));
   const vh = mob ? (w <= 768 && h <= 500 ? 0.85 : 0.75) : 0.84;      // max-height окна — те же медиа-правила
-  const lines = Math.floor((vh * h - (mob ? 130 : 140)) / lh);
+  const lines = Math.floor((vh * h - (mob ? 130 : stream ? 170 : 140)) / lh);
   return { budget: Math.max(mob ? 240 : 600, Math.min(1500, lines * perLine)), nl: Math.round(perLine / 2) };
 }
