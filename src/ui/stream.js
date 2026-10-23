@@ -26,7 +26,9 @@ export function initStream({ locations, getVisited, getFrames }) {
   document.body.classList.add('stream');
   const css = document.createElement('style');
   css.textContent = `
-    body.stream #dlg { zoom: 1.3; }
+    body.stream #dt { font-size: 24px; }
+    body.stream #dn { font-size: 14px; }
+    body.stream #dd { flex-basis: 960px; }
     body.stream #look { width: min(860px, 94vw); }
     body.stream #look h3 { font-size: 14px; }
     body.stream #lb { font-size: 24px; }

@@ -284,7 +284,7 @@ export function startDialogue(loc) {
 }
 
 function drawPortrait(npcId) {
-  // The #dpc canvas is 80×100; an Higgsfield 1024×1280 painting drawn
+  // The #dpc canvas is 104×130; an Higgsfield 1024×1280 painting drawn
   // into it with nearest-neighbour reads as a detailed pixel icon —
   // this is the bridge between the painterly style and the game art.
   const c = document.getElementById('dpc');
