@@ -1598,7 +1598,7 @@ function updateWorldSystems() {
   if (!redNoon.active) checkLorePickup(player);
 
   // тихое подаёт голос: вещь в тени рядом — шорох или скрип с её стороны (world/quietSound.js)
-  if (_t % 12 === 0) stepQuietVoices();
+  if (_t % 12 === 0) { stepQuietVoices(); stepNoonPaper(); }
 
   // Update world-level systems
   updateJester(camera);
@@ -1873,6 +1873,13 @@ document.addEventListener('keydown', e => {
   else if (kind === 'note') netClick(th.note.x, th.note.y, 'surface');
   else { player.path = null; approach(th); }
 });
+
+// красный полдень — бумага цвета неба (style.css, body.noon; канон ART_BIBLE §03)
+let noonPaper = false;
+function stepNoonPaper() {
+  const on = redNoon.k > 0.5;
+  if (on !== noonPaper) { noonPaper = on; document.body.classList.toggle('noon', on); }
+}
 
 // ═══ ТИХОЕ ПОДАЁТ ГОЛОС (world/quietSound.js) ═══
 const QUIET = locations.filter(l => l.quiet);

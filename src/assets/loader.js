@@ -56,6 +56,9 @@ export function getPortrait(npcId) {
   return null;
 }
 
+// любая картинка по пути от корня ассетов (окна диалога — weave/WINDOWS.md)
+export const loadAsset = path => probe(path);
+
 // то же, но дождаться: портрет пришёл позже, чем открылся разговор
 export function loadPortrait(npcId) {
   const path = PORTRAITS[npcId];

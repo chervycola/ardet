@@ -197,7 +197,7 @@ const TH = [
   { id: 'u_racks', room: 'cloud', x: 1458, y: 228, w: 244, h: 76, at: [1605, 280], solid: [1458, 292, 1572, 302] },
   // разрез эпох: срезы старых ходов в стене линии (решётка канализации — в полотне)
   { id: 'u_cut_catacomb', room: 'tube', wall: true, x: 398, y: 424, w: 104, h: 26, at: [450, 470], useAction: 'under_herb' },
-  { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✋</i>ВЫЛОВИТЬ КОРАБЛИК' },
+  { id: 'u_cut_sewer', room: 'tube', wall: true, x: 858, y: 424, w: 104, h: 26, at: [884, 470], useAction: 'under_fish', useLabel: '<i>✦</i>ВЫЛОВИТЬ КОРАБЛИК' },
   { id: 'u_cut_shelter', room: 'tube', wall: true, x: 1408, y: 424, w: 104, h: 26, at: [1460, 470], useAction: 'under_sign', useLabel: '<i>✎</i>РАСПИСАТЬСЯ В ЖУРНАЛЕ' },
   { id: 'u_cut_metro', room: 'tube', wall: true, x: 1648, y: 424, w: 100, h: 26, at: [1690, 470] },
   // билет на скамье метро — лежит, только когда поезд прошёл (рисуется живым, не запекается)
@@ -328,7 +328,7 @@ const CAT = CUTS.find(c => c.id === 'catacomb');
 {
   const th = thingById('u_cut_catacomb');
   th.useShown = () => !under.picked;
-  Object.defineProperty(th, 'useLabel', { get: () => (under.bloom ? '<i>✋</i>СНЯТЬ ТЕНЬ ЦВЕТКА' : '<i>☼</i>ПОДНЕСТИ УГОЛЁК К СТЕНЕ'), configurable: true, enumerable: true });
+  Object.defineProperty(th, 'useLabel', { get: () => (under.bloom ? '<i>✦</i>СНЯТЬ ТЕНЬ ЦВЕТКА' : '<i>☼</i>ПОДНЕСТИ УГОЛЁК К СТЕНЕ'), configurable: true, enumerable: true });
 }
 // что вещь отвечает, став «верхней»: своя надпись; нет её — шёпот своего места;
 // нет и его — начало своего осмотра

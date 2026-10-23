@@ -5,7 +5,9 @@ import { state } from '../core/state.js';
 import { lookText } from '../world/potemkin.js';
 import { redNoon, smear } from '../world/redNoon.js';
 import { events, E } from '../core/events.js';
-import { getPortrait, loadPortrait } from '../assets/loader.js';
+import { getPortrait, loadPortrait, loadAsset } from '../assets/loader.js';
+import { t } from '../core/time.js';
+import { phaseAt, skyAt, dayIndex } from '../world/sky.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
 import { input } from '../core/input.js';
@@ -125,8 +127,8 @@ export function showMenu(loc) {
 
   // Position near last mouse position on desktop; mobile CSS handles centering.
   if (window.innerWidth > 768) {
-    menuEl.style.left = Math.min(input.mouseX, window.innerWidth - 200) + 'px';
-    menuEl.style.top = Math.min(input.mouseY, window.innerHeight - 260) + 'px';
+    menuEl.style.left = Math.min(input.mouseX, window.innerWidth - 270) + 'px';
+    menuEl.style.top = Math.min(input.mouseY, window.innerHeight - 330) + 'px';
   } else {
     menuEl.style.left = '';
     menuEl.style.top = '';
@@ -290,7 +292,7 @@ function useMenuLabel(loc) {
     || (loc.archDraw && loc.useAction && loc.useAction.endsWith('_around'));
   return loc.useLabel ? loc.useLabel : flipping
     ? (loc.archDraw ? '<i>↺</i>ОБОЙТИ' : '<i>↺</i>ОБОЙТИ ЗНАК')
-    : '<i>✋</i>ИСПОЛЬЗОВАТЬ';
+    : '<i>✦</i>ИСПОЛЬЗОВАТЬ';
 }
 // что сделает F у осмотренной вещи — словом для подсказки; нечего — пусто
 function nextWord(loc) {
@@ -371,13 +373,30 @@ function drawPortrait(npcId) {
   ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
+// шапка протокола (ART_BIBLE §06: «Протокол беседы · Шут · вечер третий · у костра»):
+// с кем — и когда: час суток и какие по счёту сутки этого захода
+const ORD = {
+  m: ['первый', 'второй', 'третий', 'четвёртый', 'пятый', 'шестой', 'седьмой', 'восьмой', 'девятый', 'десятый'],
+  f: ['первая', 'вторая', 'третья', 'четвёртая', 'пятая', 'шестая', 'седьмая', 'восьмая', 'девятая', 'десятая'],
+  p: ['первые', 'вторые', 'третьи', 'четвёртые', 'пятые', 'шестые', 'седьмые', 'восьмые', 'девятые', 'десятые'],
+};
+const GEN = { 'день': 'm', 'рассвет': 'm', 'ночь': 'f', 'сумерки': 'p' };
+export function protocolWhen(phase, day) {
+  const ord = ORD[GEN[phase] || 'm'];
+  return day >= 1 && day <= ord.length ? `${phase} ${ord[day - 1]}` : `${phase} № ${day}`;
+}
+
 function typeLine() {
   const nameEl = document.getElementById('dn');
   const textEl = document.getElementById('dt');
   const optsEl = document.getElementById('do');
 
   if (dlgLoc) {
-    nameEl.textContent = dlgLoc.talkName || dlgLoc.name || '';
+    nameEl.innerHTML = '';
+    const who = document.createElement('span'), when = document.createElement('span');
+    who.className = 'dn-who'; who.textContent = 'Протокол беседы · ' + (dlgLoc.talkName || dlgLoc.name || '');
+    when.className = 'dn-when'; when.textContent = protocolWhen(skyAt(phaseAt(t)).name, dayIndex(t) + 1);
+    nameEl.append(who, when);
     drawPortrait(dlgLoc.npc);
   }
   textEl.textContent = dlgLines[dlgIndex] || '';
@@ -395,6 +414,10 @@ function typeLine() {
     btn.textContent = 'Уйти';
     btn.onclick = closeDialogue;
     optsEl.appendChild(btn);
+    const note = document.createElement('div');                       // канон §06: пометка на полях
+    note.className = 'dmarg';
+    note.textContent = 'пометка на полях: свидетель от подписи уклонился';
+    optsEl.appendChild(note);
   }
 }
 
@@ -409,8 +432,26 @@ export function closeDialogue() {
   dlgIndex = 0;
 }
 
+// окно диалога из картин автора (weave/WINDOWS.md): рамка режется на девять частей,
+// фактура — плиткой; файлов нет — бумага по style.css. ?dlg=protocol|etching|ember
+const DLG_SKIN = (() => {
+  try { return (/[?&]dlg=(protocol|etching|ember)\b/.exec(location.search) || [])[1] || 'protocol'; }
+  catch (e) { return 'protocol'; }
+})();
+function dlgSkin() {
+  if (!dlgEl) return;
+  dlgEl.classList.add('skin-' + DLG_SKIN);
+  loadAsset(`assets/ui/dlg-${DLG_SKIN}-frame.png`).then(img => {
+    if (!img) return;
+    dlgEl.style.setProperty('--dlg-frame', `url("${img.src}")`);
+    dlgEl.classList.add('framed');
+  });
+  loadAsset(`assets/ui/dlg-${DLG_SKIN}-tile.png`).then(img => { if (img) dlgEl.style.setProperty('--dlg-tile', `url("${img.src}")`); });
+}
+
 // ── INIT: wire up menu buttons ──
 export function initUI() {
+  dlgSkin();
   document.querySelectorAll('.mi').forEach(el => {
     el.addEventListener('click', e => {
       e.stopPropagation();
