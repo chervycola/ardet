@@ -5,10 +5,13 @@
 // ═══════════════════════════════════════
 export const ARCH_WALLS = {
   "axial:east:застава на перевале": ["XI CHU YANG GUAN","WU GU REN"],
+  "axial:east:застава на перевале#2": ["QUAN JUN GENG JIN YI BEI JIU","YANG GUAN SAN DIE"],
   "axial:plain:курган с каменной бабой": ["ЗДЕСЬ БЫЛ ВАСЯ"],
   "axial:south:дорический храм": ["ΛΕΑΓΡΟΣ ΚΑΛΟΣ","BYRON"],
+  "axial:south:дорический храм#2": ["ΚΥΡΙΕ ΒΟΗΘΕΙ","ΖΩΠΥΡΟΣ ΕΝΘΑΔΕ"],
   "axial:south:зиккурат Этеменанки": ["MENE MENE","TEKEL UPHARSIN"],
   "axial:south:пилон с обелиском": ["ΕΓΡΑΦΕ Δ ΑΜΕ ΑΡΧΩΝ","AN 6 DE LA RÉPUBLIQUE"],
+  "axial:south:пилон с обелиском#2": ["ΕΘΑΥΜΑΣΑ","IC XC"],
   "catastrophes:east:купол-остов": ["HAHA WA BUJI","NINOSHIMA E"],
   "catastrophes:east:мост львов": ["1937·VII·7","DAO CI YI YOU"],
   "catastrophes:north:вмёрзший барк": ["FRAM","85°57'N 1895"],
