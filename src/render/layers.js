@@ -82,6 +82,9 @@ export const layers = {
     // вторая краска: красная форма поверх отпечатанного кадра, до интерфейса
     if (this.inkPass) this.inkPass(ctx, this.main);
 
+    // пробуждение: мир собирается, как цифра после сбоя (render/wakefx.js) — до интерфейса
+    if (this.wakePass) this.wakePass(ctx, this.main);
+
     // ui: normal, on top
     ctx.drawImage(this.canvas('ui'), 0, 0);
 

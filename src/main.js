@@ -115,11 +115,13 @@ import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } fro
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
 import { drawHouseWorld } from './render/house.js';
+import { wakefx, wakePass } from './render/wakefx.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
 layers.init(mainCanvas);
 installPen(layers.ctx('world')); installPen(layers.ctx('bg'));   // перо: толщина штриха — по нажиму суток
+layers.wakePass = (ctx, main) => wakePass(ctx, main, scaler.scale);   // пробуждение в мире цифры
 input.init(mainCanvas);
 attachContent(looks, dialogues);
 buildHouse(locations);                         // дом пробуждения — в центре старого города (квартал); дороги и фундаменты его обходят
@@ -1649,10 +1651,12 @@ function startGame() {
   }
 }
 
-// похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают (вход в мир и пробуждение после падения)
+// похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают, тело шатает и трясёт,
+// а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения)
 function wakeFx() {
   const gw = document.getElementById('gw');
   if (!gw || document.getElementById('wakelids')) return;
+  wakefx.start();
   gw.classList.add('wake');
   const lids = document.createElement('div');
   lids.id = 'wakelids';

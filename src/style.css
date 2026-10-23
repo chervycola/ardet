@@ -116,22 +116,27 @@ canvas#game {
 }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
-#gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-out forwards; }
+#gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
+/* муть — слабее, чем была: размывает мир теперь сам кадр, блоками, как цифра после сбоя (render/wakefx.js) */
 @keyframes wakeblur {
-  0%   { filter: blur(16px) brightness(0.3) saturate(0.4); }
-  12%  { filter: blur(8px)  brightness(0.5) saturate(0.55); }
-  22%  { filter: blur(12px) brightness(0.4) saturate(0.5); }
-  40%  { filter: blur(5px)  brightness(0.65) saturate(0.7); }
-  56%  { filter: blur(8px)  brightness(0.55) saturate(0.65); }
-  76%  { filter: blur(2px)  brightness(0.85) saturate(0.9); }
+  0%   { filter: blur(5px)   brightness(0.3) saturate(0.4); }
+  12%  { filter: blur(3px)   brightness(0.5) saturate(0.55); }
+  22%  { filter: blur(5px)   brightness(0.4) saturate(0.5); }
+  40%  { filter: blur(2px)   brightness(0.65) saturate(0.7); }
+  56%  { filter: blur(4px)   brightness(0.55) saturate(0.65); }
+  76%  { filter: blur(1px)   brightness(0.85) saturate(0.9); }
   100% { filter: none; }
 }
+/* шатание: голову ведёт маятником — сперва широко, к концу затихает (дрожь — в кадре, render/wakefx.js) */
 @keyframes wakesway {
-  0%   { transform: scale(1.09) rotate(-1.6deg); }
-  25%  { transform: scale(1.07) rotate(1.1deg); }
-  50%  { transform: scale(1.06) rotate(-0.7deg); }
-  75%  { transform: scale(1.04) rotate(0.4deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0%   { transform: scale(1.11) rotate(-3deg)   translate(-1.4%, 0.7%); }
+  9%   { transform: scale(1.10) rotate(2.6deg)  translate(1.1%, -0.5%); }
+  20%  { transform: scale(1.09) rotate(-2.3deg) translate(-0.9%, 0.6%); }
+  32%  { transform: scale(1.08) rotate(1.7deg)  translate(0.7%, -0.4%); }
+  46%  { transform: scale(1.06) rotate(-1.2deg) translate(-0.5%, 0.3%); }
+  60%  { transform: scale(1.04) rotate(0.8deg)  translate(0.3%, -0.2%); }
+  76%  { transform: scale(1.02) rotate(-0.4deg) translate(-0.1%, 0.1%); }
+  100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
 #wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
 #wakelids::before, #wakelids::after {
@@ -159,15 +164,19 @@ canvas#game {
   60%{opacity:0.5} 80%{opacity:0.1} 100%{opacity:0} }
 /* на телефонах blur дорогой — облегчённое похмелье */
 @keyframes wakeblurLite {
-  0%   { filter: blur(7px)   brightness(0.35); }
-  22%  { filter: blur(5px)   brightness(0.45); }
-  40%  { filter: blur(2.5px) brightness(0.65); }
-  56%  { filter: blur(4px)   brightness(0.55); }
-  76%  { filter: blur(1px)   brightness(0.85); }
+  0%   { filter: blur(3px)   brightness(0.35); }
+  22%  { filter: blur(3px)   brightness(0.45); }
+  40%  { filter: blur(1.5px) brightness(0.65); }
+  56%  { filter: blur(2.5px) brightness(0.55); }
+  76%  { filter: blur(0.5px) brightness(0.85); }
   100% { filter: none; }
 }
 @media (pointer: coarse) {
   #gw.wake { animation-name: wakeblurLite, wakesway; }
+}
+/* «меньше движения» в системе — без шатания (и без дрожи и рывков в кадре) */
+@media (prefers-reduced-motion: reduce) {
+  #gw.wake { animation-name: wakeblurLite; }
 }
 
 /* ── Menu ── */

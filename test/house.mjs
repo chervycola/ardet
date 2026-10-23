@@ -15,7 +15,8 @@ function eq(a, b, m) { if (a !== b) throw new Error((m || 'eq') + `: ${JSON.stri
 const grad = () => ({ addColorStop: noop });
 function fakeCtx() {
   return { globalAlpha: 1, fillStyle: '#000', fillRect: noop, drawImage: noop, save: noop, restore: noop, translate: noop,
-    clearRect: noop, beginPath: noop, fill: noop, createLinearGradient: grad, createRadialGradient: grad, measureText: () => ({ width: 10 }) };
+    clearRect: noop, beginPath: noop, fill: noop, createLinearGradient: grad, createRadialGradient: grad, measureText: () => ({ width: 10 }),
+    setTransform: noop, fillText: noop, rect: noop, clip: noop, font: '', textBaseline: 'alphabetic', imageSmoothingEnabled: false };
 }
 const base = new URL('../src/', import.meta.url);
 const imp = p => import(new URL(p, base));
@@ -104,6 +105,46 @@ await test('дом: кадр ночью и днём, с ботинками и б
   RH.drawHouseWorld(fakeCtx(), { x: H.ENTRY.x - 6, y: H.ENTRY.y - 23 }, () => drawn++, { sun: { elev: 0.4 }, moon: 0 });
   H.house.leave();
   eq(drawn, 2, 'герой нарисован в каждом кадре');
+});
+
+// ── пробуждение в мире цифры (render/wakefx.js) ──
+const WF = await imp('render/wakefx.js');
+await test('пробуждение: пятнадцать секунд, как муть и веки; подгрузки — на открытии век (lidBlink 8, 28, 58, 84%)', () => {
+  eq(WF.LEN, 900, '15 с по 60 шагов');
+  eq(JSON.stringify(WF.OPEN), JSON.stringify([0.08, 0.28, 0.58, 0.84].map(k => Math.round(k * 900))));
+});
+await test('пробуждение: мир собирается блоками — крупно, мельче, до точки; строка развёртки идёт сверху вниз', () => {
+  let last = 99;
+  for (let a = 0; a < 330; a += 5) {
+    const D = WF.decodeAt(a);
+    if (WF.OPEN.some(o => a >= o && a < o + 16)) continue;
+    assert(D.b <= last, 'не крупнее прежнего: ' + a);
+    assert(D.prev >= D.b && D.k >= 0 && D.k <= 1, 'ниже строки — крупнее');
+    last = D.b;
+  }
+  eq(WF.decodeAt(0).b, 16); eq(WF.decodeAt(340).b, 1); eq(WF.decodeAt(900).b, 1, 'после — чисто');
+  for (const o of WF.OPEN) { assert(WF.decodeAt(o + 1).b >= 2, 'веки открылись — подгрузка'); eq(WF.decodeAt(o + 20).b, o + 20 < 330 ? WF.decodeAt(o + 20).b : 1); }
+  assert(WF.decodeAt(100).k > WF.decodeAt(85).k, 'строка движется вниз');
+});
+await test('пробуждение: дрожь всплесками целыми точками; рывки строк и код — в начале и на открытии век; «меньше движения» — без них', () => {
+  let shaken = 0, still = 0;
+  for (let a = 0; a < 900; a++) { const [x, y] = WF.tremorAt(a, 7); assert(Math.abs(x) <= 2 && Math.abs(y) <= 2 && Number.isInteger(x) && Number.isInteger(y)); if (x || y) shaken++; else still++; }
+  assert(shaken > 50 && still > 300, 'всплесками: ' + shaken + '/' + still);
+  assert(WF.slicesAt(30, 360, 7).length >= 1, 'в начале рвёт');
+  eq(WF.slicesAt(400, 360, 7).length, 0, 'между — тихо');
+  assert(WF.slicesAt(WF.OPEN[2] + 2, 360, 7).length >= 1, 'на открытии век — рвёт');
+  const code = WF.codeAt(40, 640, 360, 7);
+  assert(code.length >= 1 && code.every(c => /^[01]+$/.test(c.s) && c.x >= 0 && c.y >= 0 && c.y < 360), 'двоичный код в кадре');
+  eq(WF.codeAt(400, 640, 360, 7).length, 0);
+  for (const a of [10, 40, WF.OPEN[1] + 3]) { eq(WF.tremorAt(a, 7, true).join(), '0,0'); eq(WF.slicesAt(a, 360, 7, true).length, 0); eq(WF.codeAt(a, 640, 360, 7, true).length, 0); }
+  let flips = 0, prev = '';
+  for (let a = 0; a < 60; a++) { const k = JSON.stringify(WF.codeAt(a, 640, 360, 7)); if (k !== prev) flips++; prev = k; }
+  assert(flips <= 9, 'код меняется не чаще раза в восемь кадров: ' + flips);
+});
+await test('пробуждение: проход без холста (проверки) — без ошибок', () => {
+  WF.wakefx.start();
+  WF.wakePass(fakeCtx(), null, 2);
+  WF.wakePass(fakeCtx(), { width: 1280, height: 720 }, 2);
 });
 
 const passed = results.filter(r => r.status === 'pass').length;
