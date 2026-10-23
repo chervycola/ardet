@@ -571,7 +571,7 @@ function render() {
   drawParticles(worldCtx, { x: camX, y: camY });
   drawBeyondWorld(worldCtx, camX, camY, vw, vh);    // за кольцом: позёмка растра, собранный кадр
   drawRavensAir(worldCtx, camX, camY, vw, vh);      // летящие вороны — в воздухе, над всем
-  toxic.drawWorld(worldCtx);
+  toxic.setView(camX, camY);                        // протёртое ядом — по камере этого кадра (рисуется поверх печати)
 
   drawWorldWhisper({ x: camX, y: camY });
   drawVoices(worldCtx, 'surface', player);          // сказанное рядом — пером над тем, кто сказал
@@ -648,9 +648,7 @@ layers.inkPass = (ctx, main) => {
   ink.composite(ctx, main);
   penComposite(ctx, main, warmSpots);    // перо к ночи сухое: светлый штрих рвётся, огонь — сплошной
   if (!NO_PLATE) plate.composite(ctx);
-  ctx.save(); ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
-  toxic.drawScreen(ctx);                 // код сочится сквозь кадр
-  ctx.restore();
+  toxic.composite(ctx, main, redNoon.k > 0.5);   // яд истончает картинку: сквозь неё — машина за экраном
   lofi.composite(ctx, main);             // сбой копии — последним, ловит всё под интерфейсом
 };
 // шторм пластины: непогода, молния, брейнрот; O (Щ) — проверка руками
