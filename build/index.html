@@ -331,8 +331,9 @@ canvas#game {
   max-height: 65vh;
 }
 #dlg.on { display: flex; gap: 21px; justify-content: center; }
-#dp { width: 104px; height: 130px; flex-shrink: 0; }
-#dpc { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+/* портрет — оттиск 4:5; нет картины — рамки нет (ui.js drawPortrait) */
+#dp { width: 168px; height: 210px; flex-shrink: 0; align-self: flex-start; }
+#dpc { display: block; width: 100%; height: 100%; }
 /* колонка с прокруткой текста: кнопки ответов всегда на экране */
 #dd { flex: 0 1 832px; display: flex; flex-direction: column; min-width: 0; }
 #dt { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -540,7 +541,7 @@ canvas#game {
     max-height: 45vh;
     padding: 12px 16px;
   }
-  #dp { width: 64px; height: 86px; font-size: 16px; }
+  #dp { width: 72px; height: 90px; font-size: 16px; }
   #dn { font-size: 10px; margin-bottom: 6px; }
   #dt { font-size: 17px; line-height: 1.5; }
   .dopt { font-size: 10px; min-height: 44px; padding: 10px 0; }
@@ -645,7 +646,7 @@ canvas#game {
   <div class="mi" data-a="cancel"><i>✕</i>ОТМЕНА</div>
 </div>
 <div id="look"><h3 id="lt"></h3><div id="lb"></div><div id="li"></div></div>
-<div id="dlg"><div id="dp"><canvas id="dpc" width="104" height="130"></canvas></div><div id="dd"><div id="dn"></div><div id="dt"></div><div id="do"></div></div></div>
+<div id="dlg"><div id="dp" style="display:none"><canvas id="dpc" width="168" height="210"></canvas></div><div id="dd"><div id="dn"></div><div id="dt"></div><div id="do"></div></div></div>
 <div id="term"><input id="ti" type="text" autocomplete="off" spellcheck="false"><div id="to"></div></div>
 <div id="map"><canvas id="map-canvas"></canvas></div>
 <button id="map-btn" aria-label="Карта мира">M</button>
@@ -690,7 +691,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='62e3d94 · 2026-10-23';console.log('[оттиск]', '62e3d94 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='adc1f62 · 2026-10-23';console.log('[оттиск]', 'adc1f62 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -35662,7 +35663,9 @@ System.register("assets/manifest", [], function (exports_102, context_102) {
         setters: [],
         execute: function () {
             // Portraits drawn into the #dpc canvas next to NPC dialogue. Keyed by
-            // the NPC id from locations.js (loc.npc).
+            // the NPC id from locations.js (loc.npc). Files go into the repo-root
+            // assets/portraits/ (next to assets/music, assets/icons); what to paint
+            // and how — weave/PORTRAITS.md. No file — no frame (ui.js drawPortrait).
             exports_102("PORTRAITS", PORTRAITS = {
                 jester: 'assets/portraits/jester.png',
                 sol: 'assets/portraits/sol.png',
@@ -35670,7 +35673,7 @@ System.register("assets/manifest", [], function (exports_102, context_102) {
                 watchman: 'assets/portraits/elder.png', // труппа: Дежурного криосклепа играет Старец
                 nocturnal: 'assets/portraits/nocturnal.png',
                 dumpster: 'assets/portraits/dumpster.png',
-                machinist: 'assets/portraits/machinist.png', // Train NPC, no canonical prompt — paint TBD
+                machinist: 'assets/portraits/machinist.png', // машинист ржавого поезда (промт — weave/PORTRAITS.md)
                 // The next two are non-NPC archetypes but show up in look panels /
                 // terminal entries — kept here so the same loader can serve them.
                 archivist: 'assets/portraits/archivist.png',
@@ -35689,8 +35692,15 @@ System.register("assets/loader", ["assets/manifest"], function (exports_103, con
     "use strict";
     var manifest_js_1, cache, pending, _test;
     var __moduleName = context_103 && context_103.id;
+    // Где лежат картины: на сайте — assets/ рядом со страницей (как музыка и значки),
+    // в локальной сборке build/index.html — ../assets/ (корневая папка репозитория).
+    // window.ARDET_ASSET_BASE — свой адрес, если положили иначе.
+    function bases() {
+        const own = typeof window !== 'undefined' && window.ARDET_ASSET_BASE;
+        return [own, '', '../'].filter(b => b !== false && b !== null && b !== undefined);
+    }
     // Probe an image path. Returns the loaded Image on success, or null
-    // once we've confirmed the file isn't there.
+    // once we've confirmed the file isn't there (under every base).
     function probe(path) {
         if (cache.has(path))
             return Promise.resolve(cache.get(path));
@@ -35702,10 +35712,19 @@ System.register("assets/loader", ["assets/manifest"], function (exports_103, con
                 resolve(null);
                 return;
             }
-            const img = new Image();
-            img.onload = () => { cache.set(path, img); resolve(img); };
-            img.onerror = () => { cache.set(path, null); resolve(null); };
-            img.src = path;
+            const list = bases();
+            const next = i => {
+                if (i >= list.length) {
+                    cache.set(path, null);
+                    resolve(null);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => { cache.set(path, img); resolve(img); };
+                img.onerror = () => next(i + 1);
+                img.src = list[i] + path;
+            };
+            next(0);
         });
         pending.set(path, p);
         return p;
@@ -35724,6 +35743,12 @@ System.register("assets/loader", ["assets/manifest"], function (exports_103, con
         return null;
     }
     exports_103("getPortrait", getPortrait);
+    // то же, но дождаться: портрет пришёл позже, чем открылся разговор
+    function loadPortrait(npcId) {
+        const path = manifest_js_1.PORTRAITS[npcId];
+        return path ? probe(path) : Promise.resolve(null);
+    }
+    exports_103("loadPortrait", loadPortrait);
     function getScene(id) {
         const path = manifest_js_1.SCENES[id];
         if (!path)
@@ -36191,29 +36216,39 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         typeLine();
     }
     exports_107("startDialogue", startDialogue);
+    // Портрет — оттиск на бумаге рядом с протоколом беседы (ART_BIBLE: «крупные лица — только
+    // оттиски-портреты»). Картины нет — нет и рамки: пустой прямоугольник читался как
+    // недогрузка (weave/ROADMAP Г1). Пришла позже, чем открылся разговор, — встаёт сразу.
+    // Рисуется в точках экрана (рамка × плотность экрана), с мягким уменьшением: картина
+    // большая (1024×1280), рамка — 168×210.
     function drawPortrait(npcId) {
-        // The #dpc canvas is 104×130; an Higgsfield 1024×1280 painting drawn
-        // into it with nearest-neighbour reads as a detailed pixel icon —
-        // this is the bridge between the painterly style and the game art.
-        const c = document.getElementById('dpc');
+        const c = document.getElementById('dpc'), frame = document.getElementById('dp');
         if (!c)
             return;
-        const ctx = c.getContext('2d');
-        ctx.clearRect(0, 0, c.width, c.height);
         const img = loader_js_1.getPortrait(npcId);
+        if (frame)
+            frame.style.display = img ? '' : 'none';
         if (!img) {
-            // No painting yet — leave the frame empty (the existing dlg
-            // border + bone-color background already reads as an icon slot).
-            ctx.fillStyle = '#0a0810';
-            ctx.fillRect(0, 0, c.width, c.height);
+            loader_js_1.loadPortrait(npcId).then(im => { if (im && dlgLoc && dlgLoc.npc === npcId)
+                drawPortrait(npcId); });
             return;
         }
-        ctx.imageSmoothingEnabled = false;
+        const box = c.getBoundingClientRect();
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const W = Math.max(1, Math.round((box.width || 168) * dpr)), H = Math.max(1, Math.round((box.height || 210) * dpr));
+        if (c.width !== W || c.height !== H) {
+            c.width = W;
+            c.height = H;
+        }
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         // Cover-fit: scale up the shorter side so the painting fills the
         // 4:5 frame, then center-crop the longer side.
-        const r = Math.max(c.width / img.width, c.height / img.height);
+        const r = Math.max(W / img.width, H / img.height);
         const w = img.width * r, h = img.height * r;
-        ctx.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h);
+        ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
     }
     function typeLine() {
         const nameEl = document.getElementById('dn');

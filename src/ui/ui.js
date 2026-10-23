@@ -5,7 +5,7 @@ import { state } from '../core/state.js';
 import { lookText } from '../world/potemkin.js';
 import { redNoon, smear } from '../world/redNoon.js';
 import { events, E } from '../core/events.js';
-import { getPortrait } from '../assets/loader.js';
+import { getPortrait, loadPortrait } from '../assets/loader.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
 import { input } from '../core/input.js';
@@ -342,28 +342,33 @@ export function startDialogue(loc) {
   typeLine();
 }
 
+// Портрет — оттиск на бумаге рядом с протоколом беседы (ART_BIBLE: «крупные лица — только
+// оттиски-портреты»). Картины нет — нет и рамки: пустой прямоугольник читался как
+// недогрузка (weave/ROADMAP Г1). Пришла позже, чем открылся разговор, — встаёт сразу.
+// Рисуется в точках экрана (рамка × плотность экрана), с мягким уменьшением: картина
+// большая (1024×1280), рамка — 168×210.
 function drawPortrait(npcId) {
-  // The #dpc canvas is 104×130; an Higgsfield 1024×1280 painting drawn
-  // into it with nearest-neighbour reads as a detailed pixel icon —
-  // this is the bridge between the painterly style and the game art.
-  const c = document.getElementById('dpc');
+  const c = document.getElementById('dpc'), frame = document.getElementById('dp');
   if (!c) return;
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, c.width, c.height);
   const img = getPortrait(npcId);
+  if (frame) frame.style.display = img ? '' : 'none';
   if (!img) {
-    // No painting yet — leave the frame empty (the existing dlg
-    // border + bone-color background already reads as an icon slot).
-    ctx.fillStyle = '#0a0810';
-    ctx.fillRect(0, 0, c.width, c.height);
+    loadPortrait(npcId).then(im => { if (im && dlgLoc && dlgLoc.npc === npcId) drawPortrait(npcId); });
     return;
   }
-  ctx.imageSmoothingEnabled = false;
+  const box = c.getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.max(1, Math.round((box.width || 168) * dpr)), H = Math.max(1, Math.round((box.height || 210) * dpr));
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   // Cover-fit: scale up the shorter side so the painting fills the
   // 4:5 frame, then center-crop the longer side.
-  const r = Math.max(c.width / img.width, c.height / img.height);
+  const r = Math.max(W / img.width, H / img.height);
   const w = img.width * r, h = img.height * r;
-  ctx.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h);
+  ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
 }
 
 function typeLine() {

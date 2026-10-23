@@ -317,8 +317,9 @@ canvas#game {
   max-height: 65vh;
 }
 #dlg.on { display: flex; gap: 21px; justify-content: center; }
-#dp { width: 104px; height: 130px; flex-shrink: 0; }
-#dpc { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+/* портрет — оттиск 4:5; нет картины — рамки нет (ui.js drawPortrait) */
+#dp { width: 168px; height: 210px; flex-shrink: 0; align-self: flex-start; }
+#dpc { display: block; width: 100%; height: 100%; }
 /* колонка с прокруткой текста: кнопки ответов всегда на экране */
 #dd { flex: 0 1 832px; display: flex; flex-direction: column; min-width: 0; }
 #dt { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -526,7 +527,7 @@ canvas#game {
     max-height: 45vh;
     padding: 12px 16px;
   }
-  #dp { width: 64px; height: 86px; font-size: 16px; }
+  #dp { width: 72px; height: 90px; font-size: 16px; }
   #dn { font-size: 10px; margin-bottom: 6px; }
   #dt { font-size: 17px; line-height: 1.5; }
   .dopt { font-size: 10px; min-height: 44px; padding: 10px 0; }

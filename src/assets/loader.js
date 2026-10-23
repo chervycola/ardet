@@ -11,8 +11,16 @@ import { PORTRAITS, SCENES } from './manifest.js';
 const cache = new Map();        // path → Image | null (null = known missing)
 const pending = new Map();      // path → Promise<Image|null>
 
+// Где лежат картины: на сайте — assets/ рядом со страницей (как музыка и значки),
+// в локальной сборке build/index.html — ../assets/ (корневая папка репозитория).
+// window.ARDET_ASSET_BASE — свой адрес, если положили иначе.
+function bases() {
+  const own = typeof window !== 'undefined' && window.ARDET_ASSET_BASE;
+  return [own, '', '../'].filter(b => b !== false && b !== null && b !== undefined);
+}
+
 // Probe an image path. Returns the loaded Image on success, or null
-// once we've confirmed the file isn't there.
+// once we've confirmed the file isn't there (under every base).
 function probe(path) {
   if (cache.has(path)) return Promise.resolve(cache.get(path));
   if (pending.has(path)) return pending.get(path);
@@ -22,10 +30,15 @@ function probe(path) {
       resolve(null);
       return;
     }
-    const img = new Image();
-    img.onload = () => { cache.set(path, img); resolve(img); };
-    img.onerror = () => { cache.set(path, null); resolve(null); };
-    img.src = path;
+    const list = bases();
+    const next = i => {
+      if (i >= list.length) { cache.set(path, null); resolve(null); return; }
+      const img = new Image();
+      img.onload = () => { cache.set(path, img); resolve(img); };
+      img.onerror = () => next(i + 1);
+      img.src = list[i] + path;
+    };
+    next(0);
   });
   pending.set(path, p);
   return p;
@@ -41,6 +54,12 @@ export function getPortrait(npcId) {
   // Kick off the load; first frame after this will get the image.
   probe(path);
   return null;
+}
+
+// то же, но дождаться: портрет пришёл позже, чем открылся разговор
+export function loadPortrait(npcId) {
+  const path = PORTRAITS[npcId];
+  return path ? probe(path) : Promise.resolve(null);
 }
 
 export function getScene(id) {

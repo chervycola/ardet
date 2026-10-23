@@ -7,7 +7,9 @@
 // ═══════════════════════════════════════
 
 // Portraits drawn into the #dpc canvas next to NPC dialogue. Keyed by
-// the NPC id from locations.js (loc.npc).
+// the NPC id from locations.js (loc.npc). Files go into the repo-root
+// assets/portraits/ (next to assets/music, assets/icons); what to paint
+// and how — weave/PORTRAITS.md. No file — no frame (ui.js drawPortrait).
 export const PORTRAITS = {
   jester:    'assets/portraits/jester.png',
   sol:       'assets/portraits/sol.png',
@@ -15,7 +17,7 @@ export const PORTRAITS = {
   watchman:  'assets/portraits/elder.png',     // труппа: Дежурного криосклепа играет Старец
   nocturnal: 'assets/portraits/nocturnal.png',
   dumpster:  'assets/portraits/dumpster.png',
-  machinist: 'assets/portraits/machinist.png',  // Train NPC, no canonical prompt — paint TBD
+  machinist: 'assets/portraits/machinist.png',  // машинист ржавого поезда (промт — weave/PORTRAITS.md)
   // The next two are non-NPC archetypes but show up in look panels /
   // terminal entries — kept here so the same loader can serve them.
   archivist: 'assets/portraits/archivist.png',
