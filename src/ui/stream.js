@@ -26,7 +26,10 @@ export function initStream({ locations, getVisited, getFrames }) {
   document.body.classList.add('stream');
   const css = document.createElement('style');
   css.textContent = `
-    body.stream #look, body.stream #dlg { zoom: 1.3; }
+    body.stream #dlg { zoom: 1.3; }
+    body.stream #look { width: min(860px, 94vw); }
+    body.stream #look h3 { font-size: 14px; }
+    body.stream #lb { font-size: 24px; }
     body.stream #to div { font-size: 11px !important; }
     #stream-tally { position: fixed; left: 12px; bottom: 12px; z-index: 50; pointer-events: none;
       font-family: "Press Start 2P", monospace; font-size: 10px; line-height: 1.8;

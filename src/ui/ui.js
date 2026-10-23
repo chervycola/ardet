@@ -10,6 +10,8 @@ import { fadeIn, scaleIn, slideUp } from './transitions.js';
 import { playClick } from '../audio/audio.js';
 import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
+import { paginate, pageMeasure } from './pages.js';
+import { STREAM } from './stream.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -191,28 +193,14 @@ let lookPageIdx = 0;
 let lookShownAt = 0;   // клик в ту же долю секунды, что открыл страницу, не листает её
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
 
-// Paginate long text
-function paginateLook(text, charsPerPage = 600) {
-  if (text.length <= charsPerPage) return [text];
-  const pages = [];
-  let remaining = text;
-  while (remaining.length > 0) {
-    let cut = Math.min(remaining.length, charsPerPage);
-    // Try to cut at paragraph break
-    const parBreak = remaining.lastIndexOf('\n\n', cut);
-    if (parBreak > cut * 0.4) cut = parBreak + 2;
-    pages.push(remaining.slice(0, cut));
-    remaining = remaining.slice(cut);
-  }
-  return pages;
-}
-
 export function showLook(loc) {
   state.transition('look');
   lookTitle = (loc && loc.name) || '';
 
   const lookData = lookText(loc);
-  lookPages = paginateLook(lookData);
+  const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const m = pageMeasure(window.innerWidth, window.innerHeight, coarse, STREAM);
+  lookPages = paginate(lookData, m.budget, m.nl);
   lookPageIdx = 0;
   renderLookPage();
 
@@ -231,16 +219,16 @@ function renderLookPage() {
   let ind = document.getElementById('look-page');
   if (!ind && lookEl) {          // в разметке его не было — указатель не показывался никогда
     ind = document.createElement('div');
-    ind.id = 'look-page';
-    ind.style.cssText = 'margin-top:10px;text-align:right;font-size:0.75em;opacity:0.55;letter-spacing:0.05em';
+    ind.id = 'look-page';        // вид — style.css
     lookEl.appendChild(ind);
   }
   lookShownAt = performance.now();
 
   // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
-  const blind = redNoon.k > 0.5 ? smear : (x => x);
+  const noon = redNoon.k > 0.5, blind = noon ? smear : (x => x);
   lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
   lb.textContent = blind(lookPages[lookPageIdx] || '');
+  lb.classList.toggle('blind', noon);
 
   if (ind) {
     if (lookPages.length > 1) {

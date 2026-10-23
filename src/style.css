@@ -12,6 +12,8 @@
   --c-toxic: #2a5a1a;
 
   --font-pixel: 'Press Start 2P', monospace;
+  /* книжный — текст осмотра: высокий, для долгого чтения; без сети — системная антиква */
+  --font-book: 'Literata', 'PT Serif', Georgia, 'Times New Roman', serif;
   --space-xs: 4px;
   --space-s: 8px;
   --space-m: 16px;
@@ -231,10 +233,10 @@ canvas#game {
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(107,15,26,0.4);
   border-top: 2px solid var(--c-gold);
-  padding: 18px 22px;
-  max-width: 400px;
-  width: 400px;
-  max-height: 70vh;
+  padding: 24px 34px 18px;
+  max-width: 92vw;
+  width: min(720px, 92vw);
+  max-height: 84vh;
   overflow-y: auto;
   font-size: 10px;
   line-height: 2;
@@ -244,14 +246,35 @@ canvas#game {
 }
 #look.on { display: block; }
 #look h3 {
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 1px;
   color: var(--c-gold);
-  margin-bottom: var(--space-s);
+  margin-bottom: 14px;
   border-bottom: 1px solid var(--c-gold);
-  padding-bottom: var(--space-xs);
+  padding-bottom: 8px;
+}
+/* текст — книжным, с абзацами как написаны; пиксельные — заголовок и служебные строки */
+#lb {
+  font-family: var(--font-book);
+  font-size: 20px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+}
+/* красный полдень: буквы точками — точке шаг буквы, строки не съёживаются */
+#lb.blind { letter-spacing: 0.3em; }
+#look-page {
+  margin-top: 14px;
+  text-align: right;
+  font-size: 8px;
+  opacity: 0.55;
+  letter-spacing: 0.05em;
 }
 #li {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--c-ash);
   margin-top: var(--space-s);
   text-align: right;
@@ -457,13 +480,14 @@ canvas#game {
 
   #look {
     max-width: 92vw;
-    width: 340px;
+    width: min(92vw, 480px);
     font-size: 11px;
     line-height: 1.8;
     max-height: 75vh;
     padding: 14px 16px;
   }
-  #look h3 { font-size: 12px; }
+  #look h3 { font-size: 12px; margin-bottom: 10px; }
+  #lb { font-size: 17px; line-height: 1.5; }
 
   #dlg {
     height: auto;

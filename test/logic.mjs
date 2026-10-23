@@ -355,6 +355,30 @@ const imp = p => import(new URL(p, base));
   });
 }
 
+// ═══ СТРАНИЦЫ ОСМОТРА (ui/pages.js) ═══
+{
+  const { paginate, pageMeasure, NL_COST } = await imp('ui/pages.js');
+  test('осмотр: страницы — без потерь, в меру окна, по абзацу или по пробелу, слово не рвётся', () => {
+    const para = 'Слово за словом ложится строка, и ни одна не рвётся посередине. '.repeat(9).trim();
+    const text = [para, para, 'Агора 300 м →    место казни 350 м →', para].join('\n\n');
+    const pages = paginate(text, 600);
+    eq(pages.join(''), text, 'текст собран из страниц без потерь');
+    assert(pages.length >= 3, `страниц ${pages.length}`);
+    const cost = s => s.length + (s.match(/\n/g) || []).length * NL_COST;
+    for (const p of pages) {
+      assert(cost(p) <= 600, `страница сверх меры: ${cost(p)}`);
+      assert(/(\n\n| )$/.test(p) || p === pages[pages.length - 1], `страница кончается посреди слова: «…${p.slice(-12)}»`);
+    }
+    assert(pages.some(p => p.includes('Агора 300 м →    место казни')), 'пробелы указателя целы');
+    eq(paginate('коротко', 600).length, 1);
+    const big = pageMeasure(1920, 1000), lap = pageMeasure(1366, 650), phone = pageMeasure(390, 844, true);
+    assert(big.budget > lap.budget, 'выше окно — больше знаков');
+    assert(lap.budget >= 600 && pageMeasure(3840, 2160).budget <= 1500, 'мера в пределах');
+    assert(phone.nl < big.nl, 'на телефоне строка короче — перенос дешевле');
+    assert(phone.budget >= 600, `телефон держит не меньше прежнего: ${phone.budget}`);
+  });
+}
+
 // ═══════════════════════════════════════
 // REPORT
 // ═══════════════════════════════════════
