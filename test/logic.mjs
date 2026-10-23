@@ -379,6 +379,28 @@ const imp = p => import(new URL(p, base));
   });
 }
 
+// ── тихое подаёт голос (world/quietSound.js) ──
+{
+  const QS = await imp('world/quietSound.js');
+  test('тихое подаёт голос: ближняя неосмотренная вещь в тени, со своей стороны; осмотренная молчит; не чаще меры', () => {
+    const sign = { id: 's', quiet: true, x: 90, y: 0, w: 20, h: 20 };          // подножие (100, 20)
+    const hut = { id: 'h', quiet: true, archDraw: () => {}, archX: -60, archGy: 20, x: -80, y: -20, w: 40, h: 40 };
+    const loud = { id: 'l', x: 0, y: 0, w: 10, h: 10 };
+    const none = () => false, last = new Map();
+    let q = QS.quietVoice([sign, hut, loud], 0, 20, 1000, none, last);
+    eq(q.l.id, 'h', 'ближняя'); eq(q.kind, 'creak', 'постройка скрипит'); assert(q.pan < 0, 'слева — слева');
+    q = QS.quietVoice([sign, loud], 0, 20, 1000, none, last);
+    eq(q.kind, 'rustle', 'табличка шуршит'); assert(q.pan > 0 && q.v > 0 && q.v <= 1, 'справа, громкость в мере');
+    eq(QS.quietVoice([sign], 0, 20, 1000, id => id === 's', last), null, 'осмотренная молчит');
+    eq(QS.quietVoice([loud], 0, 20, 1000, none, last), null, 'громкая — не тихая');
+    eq(QS.quietVoice([sign], 400, 20, 1000, none, last), null, 'далеко — не слышно');
+    last.set('s', 900);
+    eq(QS.quietVoice([sign], 0, 20, 1000, none, last), null, 'своя мера: недавно звучала');
+    eq(QS.quietVoice([sign], 0, 20, 900 + QS.OWN, none, last, 900 + QS.OWN - 10), null, 'общая мера: только что звучала другая');
+    assert(QS.quietVoice([sign], 0, 20, 900 + QS.OWN, none, last, 0), 'прошло — снова отзывается');
+  });
+}
+
 // ── повторный осмотр (world/relook.js): точнее, вариант по обстановке ──
 {
   const RL = await imp('world/relook.js');

@@ -168,6 +168,39 @@ export function playTick(v) {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start();
 }
 
+// стерео: откуда звук — слева или справа от странника (pan -1..1)
+function toOut(node, pan) {
+  if (ctx.createStereoPanner && pan) { const p = ctx.createStereoPanner(); p.pan.value = pan; node.connect(p); p.connect(masterGain); }
+  else node.connect(masterGain);
+}
+// Тихая табличка в тени: жесть шуршит под ветром — три-пять сухих зёрен шума (v 0..1)
+export function playRustle(v, pan = 0) {
+  if (!ctx || v <= 0.02) return;
+  const t0 = ctx.currentTime, grains = 3 + Math.floor(Math.random() * 3);
+  for (let k = 0; k < grains; k++) {
+    const dur = 0.03 + Math.random() * 0.05, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / n);
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), at = t0 + k * (0.07 + Math.random() * 0.09);
+    s.buffer = b; f.type = 'bandpass'; f.frequency.value = 2200 + Math.random() * 2200; f.Q.value = 2.5;
+    g.gain.value = 0.03 * v;
+    s.connect(f); f.connect(g); toOut(g, pan); s.start(at); s.stop(at + dur);
+  }
+}
+// Тихая постройка в тени: петля или ставня скрипит — тон ползёт вниз, с дрожью (v 0..1)
+export function playCreak(v, pan = 0, pitch = 1) {
+  if (!ctx || v <= 0.02) return;
+  const t0 = ctx.currentTime, dur = 0.45 + Math.random() * 0.3;
+  const o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(230 * pitch, t0); o.frequency.exponentialRampToValueAtTime(140 * pitch, t0 + dur);
+  lfo.frequency.value = 22 + Math.random() * 10; lg.gain.value = 9 * pitch;   // дрожь трения
+  lfo.connect(lg); lg.connect(o.frequency);
+  f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 3;
+  g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.018 * v, t0 + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(f); f.connect(g); toOut(g, pan);
+  o.start(t0); lfo.start(t0); o.stop(t0 + dur); lfo.stop(t0 + dur);
+}
+
 // Menu click
 export function playClick() {
   if (!ctx) return;

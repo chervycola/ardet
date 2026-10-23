@@ -51,7 +51,8 @@ import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
 import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing } from './ui/ui.js';
-import { noteLook, noteUse, relookText, saveRelook, loadRelook } from './world/relook.js';
+import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount } from './world/relook.js';
+import { quietVoice } from './world/quietSound.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
@@ -68,7 +69,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak } from './audio/audio.js';
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
@@ -1591,6 +1592,9 @@ function updateWorldSystems() {
   // Check for lore pickup
   if (!redNoon.active) checkLorePickup(player);
 
+  // тихое подаёт голос: вещь в тени рядом — шорох или скрип с её стороны (world/quietSound.js)
+  if (_t % 12 === 0) stepQuietVoices();
+
   // Update world-level systems
   updateJester(camera);
   updateProximity(player, locations);
@@ -1862,6 +1866,19 @@ document.addEventListener('keydown', e => {
   else if (kind === 'note') netClick(th.note.x, th.note.y, 'surface');
   else { player.path = null; approach(th); }
 });
+
+// ═══ ТИХОЕ ПОДАЁТ ГОЛОС (world/quietSound.js) ═══
+const QUIET = locations.filter(l => l.quiet);
+const quietHeard = new Map();
+let quietLast = -Infinity;
+function stepQuietVoices() {
+  if (redNoon.k > 0.5 || !QUIET.length) return;          // полдень — мир без голоса вещей
+  const q = quietVoice(QUIET, player.x + 6, player.y + 23, _t, id => lookCount(id) > 0, quietHeard, quietLast);
+  if (!q) return;
+  quietHeard.set(q.l.id, _t); quietLast = _t;
+  if (q.kind === 'rustle') playRustle(q.v * Math.min(1.4, 0.7 + wind.s), q.pan);
+  else playCreak(q.v, q.pan, 0.8 + ((q.l.id.length * 37) % 9) / 20);
+}
 
 // ═══ ПОВТОРНЫЙ ОСМОТР (world/relook.js) ═══
 // вещь осмотрели — счёт; что-то с ней сделали — отметка; второй раз — текст точнее,
