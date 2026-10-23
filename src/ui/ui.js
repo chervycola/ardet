@@ -67,7 +67,7 @@ export const menuInscriptions = {
   nilometer: 'река больше не поднимается.',
   colonnade: 'тень расчерчена на платные полосы.',
   gas_grate: 'один горящий фонарь.',
-  factory_hatch: 'завод работает. на что — уже не помнит.',
+  factory_hatch: 'завод работает. на кого — уже не помнит.',
   factory_cellar: '1961. не открывать.',
   carriage_89: 'здесь был вася.',
   metro_sealed: 'lasciate ogni sp…',
