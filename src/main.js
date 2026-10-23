@@ -51,6 +51,7 @@ import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
 import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing } from './ui/ui.js';
+import { noteLook, noteUse, relookText, saveRelook, loadRelook } from './world/relook.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
@@ -103,7 +104,7 @@ import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot } from './world/brainrot.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
-import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
+import { update as updatePotemkin, revealOf, drawRevealed, setRelook } from './world/potemkin.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt } from './world/underside.js';
@@ -229,6 +230,7 @@ if (savedData) {
   if (savedData.discoveredGates) loadDiscoveredGates(savedData.discoveredGates);
   if (savedData.under) under.load(savedData.under);
   if (savedData.well) loadTownWell(savedData.well);
+  if (savedData.looks) loadRelook(savedData.looks);
 }
 
 // первое пробуждение странника было — дальше короткие (wakeFx)
@@ -247,6 +249,7 @@ if (!STREAM) startAutoSave(() => ({
   under: under.save(),
   well: saveTownWell(),
   woke: wokeOnce,
+  looks: saveRelook(),
 }));
 setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
@@ -1859,6 +1862,23 @@ document.addEventListener('keydown', e => {
   else if (kind === 'note') netClick(th.note.x, th.note.y, 'surface');
   else { player.path = null; approach(th); }
 });
+
+// ═══ ПОВТОРНЫЙ ОСМОТР (world/relook.js) ═══
+// вещь осмотрели — счёт; что-то с ней сделали — отметка; второй раз — текст точнее,
+// вариант по обстановке: сутки, погода, ветер
+const SKY_TAG = { 'день': 'day', 'сумерки': 'dusk', 'ночь': 'night', 'рассвет': 'dawn' };
+function lookTags() {
+  const tags = new Set();
+  const sky = skyAt(phaseAt(t));
+  if (SKY_TAG[sky.name]) tags.add(SKY_TAG[sky.name]);
+  if (weather.intensity > 0.3 && weather.state === 'toxicRain') tags.add('rain');
+  if (weather.intensity > 0.3 && weather.state === 'sandstorm') tags.add('sand');
+  if (wind.s > 0.45) tags.add('wind');
+  return tags;
+}
+events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) noteLook(loc.id); });
+events.on('location.use', loc => { if (loc && loc.id) noteUse(loc.id); });
+setRelook(loc => relookText(loc.id, lookTags()));
 
 // ═══ EVENT HANDLERS ═══
 // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)

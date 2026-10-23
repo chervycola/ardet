@@ -379,6 +379,42 @@ const imp = p => import(new URL(p, base));
   });
 }
 
+// ── повторный осмотр (world/relook.js): точнее, вариант по обстановке ──
+{
+  const RL = await imp('world/relook.js');
+  const { RELOOKS } = await imp('content/relooks.js');
+  test('повторный осмотр: первый — свой текст; второй — точнее, по обстановке; виденное не повторяется, пока есть новое', () => {
+    RL._resetRelook();
+    const night = new Set(['night']), day = new Set(['day']);
+    RL.noteLook('campfire');
+    eq(RL.relookText('campfire', night), null, 'первый осмотр — свой текст');
+    RL.noteLook('campfire');
+    assert(/полумесяц не уходит/.test(RL.relookText('campfire', night)), 'ночью — ночной вариант');
+    RL.noteLook('campfire');
+    assert(/девятнадцать/.test(RL.relookText('campfire', night)), 'третий ночью — ещё не виденный');
+    RL.noteLook('campfire');
+    assert(/мерку помнит рука/.test(RL.relookText('campfire', day)), 'днём — то, что ещё не видел');
+    RL.noteUse('campfire'); RL.noteLook('campfire');
+    assert(/без описи/.test(RL.relookText('campfire', day)), 'сделал что-то с вещью — об этом');
+    eq(RL.relookText('nothing_here', night), null, 'нет вариантов — свой текст');
+    const saved = JSON.parse(JSON.stringify(RL.saveRelook()));
+    RL._resetRelook(); RL.loadRelook(saved);
+    eq(RL.lookCount('campfire'), 5, 'счёт помнит сохранение');
+    assert(RL.wasUsed('campfire'), 'тронутое помнит сохранение');
+    RL._resetRelook();
+  });
+  test('повторный осмотр: у каждой вещи есть вариант без условий; метки — из известных; тексты не пустые', () => {
+    const TAGS = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind', 'used', 'n3']);
+    for (const [id, list] of Object.entries(RELOOKS)) {
+      assert(list.some(v => !v.if || !v.if.length), `${id}: нет варианта на любую обстановку`);
+      for (const v of list) {
+        assert(typeof v.text === 'string' && v.text.length > 20, `${id}: пустой текст`);
+        for (const tg of v.if || []) assert(TAGS.has(tg), `${id}: неизвестная метка ${tg}`);
+      }
+    }
+  });
+}
+
 // ═══════════════════════════════════════
 // REPORT
 // ═══════════════════════════════════════

@@ -56,10 +56,14 @@ export function seamVisible(loc) {
   return at !== undefined && t - at <= SEAM_MEMORY;
 }
 
+// повторный осмотр (world/relook.js): main.js даёт текст точнее, когда вещь уже видели
+let relookOf = null;
+export function setRelook(fn) { relookOf = fn; }
+
 // Текст осмотра: шов — только терпеливому взгляду; подсказка «обойти»
 // остаётся последней строкой.
 export function lookText(loc) {
-  const base = loc.look || loc.name;
+  const base = (relookOf && loc && loc.id && relookOf(loc)) || loc.look || loc.name;
   const seam = seamOf(loc);
   if (!seam || !seamVisible(loc)) return base;
   const HINT = '\n\n— обойти:';

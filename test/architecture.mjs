@@ -264,6 +264,11 @@ test('земля: заборы не перегораживают тропы и �
   }
 });
 
+const { RELOOKS } = await imp('content/relooks.js');
+test('повторный осмотр: каждая вещь пробника — место мира', () => {
+  for (const id of Object.keys(RELOOKS)) assert(locations.some(l => l.id === id), `нет места ${id}`);
+});
+
 const ARCH_BACKS = ARCH_BACKS_ALL;
 test('изнанка: у каждой постройки — «обойти» с текстом (когда изнанки написаны)', () => {
   if (!Object.keys(ARCH_BACKS).length) return;
