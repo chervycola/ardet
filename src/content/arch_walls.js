@@ -64,7 +64,9 @@ export const ARCH_WALLS = {
   "steamshadows:west:Эйфелева башня": ["LAVOISIER · AMPÈRE","CAUCHY · LAPLACE","INUTILE ET MONSTRUEUSE"],
   "twohearths:east:хижина Басё": ["kusa no to mo","sumikawaru yo zo","hina no ie"],
   "twohearths:north:островная обсерватория": ["NON HABERI SED ESSE"],
+  "twohearths:north:островная обсерватория#2": ["NE FRUSTRA VIXISSE VIDEAR","SUSPICIENDO DESPICIO"],
   "twohearths:plain:острог с ямой": ["МАРКОВНА, ДО САМЫЯ","СМЕРТИ!","ИНО ЕЩЁ ПОБРЕДЁМ"],
   "twohearths:plain:шатровая церковь": ["ГОСПОДИ ПОМОЗИ РАБУ","СВОЕМУ ИВАНУ","СКЛАД № 2"],
   "twohearths:west:мастерская линз": ["DEUS SIVE NATURA"],
+  "twohearths:west:мастерская линз#2": ["NULLIUS IN VERBA","DIERTGENS"],
 };
