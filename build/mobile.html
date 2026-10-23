@@ -633,7 +633,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='dd0ad95 · 2026-10-23';console.log('[оттиск]', 'dd0ad95 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='43d1e58 · 2026-10-23';console.log('[оттиск]', '43d1e58 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -22516,27 +22516,36 @@ System.register("world/oldways", ["world/disc"], function (exports_62, context_6
     // где встать месту w×h в клетке «кольцо n · сторона»: не на чужом дворе, не у табличек, не на
     // радиальной тропе; ближе к anchor (постройке-соседке по смыслу)
     function placeIn(locations, n, side, w, h, anchor) {
-        const arch = locations.filter(l => l.archDraw), small = locations.filter(l => !l.archDraw);
-        const busy = (x0, gy) => {
-            const x1 = x0 + w, y0 = gy - h;
-            if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50))
-                return true;
-            if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30))
-                return true;
-            const cx = x0 + w / 2;
-            for (let d = 0; d <= disc_js_17.RINGS_D + 100; d += 10) { // радиальная тропа своей стороны
-                const p = disc_js_17.trailPoint(side === 'plain' ? 'north' : side, d);
-                if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40)
-                    return true;
-            }
-            return false;
-        };
         const cands = [], R0 = disc_js_17.ringD(n, 70), R1 = disc_js_17.ringD(n, 170);
         const box = side === 'south' ? [disc_js_17.TOWN.x0 + 120, disc_js_17.TOWN.x1 - 120, disc_js_17.TOWN.y1 + R0, disc_js_17.TOWN.y1 + R1]
             : side === 'north' ? [disc_js_17.TOWN.x0 + 120, disc_js_17.TOWN.x1 - 120, disc_js_17.TOWN.y0 - R1, disc_js_17.TOWN.y0 - R0]
                 : side === 'west' ? [disc_js_17.TOWN.x0 - R1, disc_js_17.TOWN.x0 - R0, disc_js_17.TOWN.y0 + 120, disc_js_17.TOWN.y1 - 60]
                     : side === 'plain' ? [disc_js_17.TOWN.x1, disc_js_17.TOWN.x1 + R1, disc_js_17.TOWN.y0 - R1, disc_js_17.TOWN.y0]
                         : [disc_js_17.TOWN.x1 + R0, disc_js_17.TOWN.x1 + R1, disc_js_17.TOWN.y0 + 120, disc_js_17.TOWN.y1 - 60];
+        // соседи — только те, что могут задеть рамку поиска (кольца просторны: мест много, рамка большая)
+        const near = locations.filter(l => l.x < box[1] + w + 80 && l.x + l.w > box[0] - 80 && l.y < box[3] + 80 && l.y + l.h > box[2] - h - 80);
+        const arch = near.filter(l => l.archDraw), small = near.filter(l => !l.archDraw);
+        // радиальная тропа своей стороны: точки через 10, рядом с местом — по её же расстоянию от городка
+        const ts = side === 'plain' ? 'north' : side, TP = [];
+        for (let d = 0; d <= disc_js_17.RINGS_D + 100; d += 10)
+            TP.push(disc_js_17.trailPoint(ts, d));
+        const onTrail = (cx, gy) => {
+            const d = ts === 'south' ? gy - disc_js_17.TOWN.y1 : ts === 'north' ? disc_js_17.TOWN.y0 - gy : ts === 'east' ? cx - disc_js_17.TOWN.x1 : disc_js_17.TOWN.x0 - cx, r = ts === 'south' || ts === 'north' ? 40 : 60;
+            for (let i = Math.max(0, Math.floor((d - r) / 10)); i <= Math.min(TP.length - 1, Math.ceil((d + r) / 10)); i++) {
+                const p = TP[i];
+                if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40)
+                    return true;
+            }
+            return false;
+        };
+        const busy = (x0, gy) => {
+            const x1 = x0 + w, y0 = gy - h;
+            if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50))
+                return true;
+            if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30))
+                return true;
+            return onTrail(x0 + w / 2, gy);
+        };
         // равнина — дуга у северо-восточного угла: середина дуги, не к её краям
         const inSide = (x, y) => side !== 'plain' ? sideOf(x, y) === side
             : x > disc_js_17.TOWN.x1 && y < disc_js_17.TOWN.y0 && Math.atan2(disc_js_17.TOWN.y0 - y, x - disc_js_17.TOWN.x1) > 0.15 * Math.PI && Math.atan2(disc_js_17.TOWN.y0 - y, x - disc_js_17.TOWN.x1) < 0.35 * Math.PI;
@@ -23309,7 +23318,7 @@ System.register("world/townPaths", [], function (exports_64, context_64) {
 });
 System.register("world/town", ["world/arteries", "world/relief", "world/locations", "world/disc", "world/townPaths"], function (exports_65, context_65) {
     "use strict";
-    var arteries_js_3, relief_js_3, locations_js_1, disc_js_20, townPaths_js_1, BED, BRIDGE, CROSS_PATH, STREETS, FOUNDATIONS, LAMPS, inQuarter, HIGHWAY, RAIL, BUFFER, FLY, CARS, LOT, flyover, PATHS, PATH_ID, PG, NPC, TRUNK, PIPES, PUDDLES, inToxic;
+    var arteries_js_3, relief_js_3, locations_js_1, disc_js_20, townPaths_js_1, BED, BRIDGE, CROSS_PATH, STREETS, FOUNDATIONS, LAMPS, inQuarter, HIGHWAY, RAIL, BUFFER, FLY, CARS, LOT, flyover, flyFit, PATHS, PATH_ID, PG, NPC, TRUNK, PIPES, PUDDLES, inToxic;
     var __moduleName = context_65 && context_65.id;
     function hq(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -23433,6 +23442,7 @@ System.register("world/town", ["world/arteries", "world/relief", "world/location
                                 break search;
                             }
                         }
+        exports_65("flyFit", flyFit = best);
         exports_65("flyover", flyover = arteries_js_3.addLine('sky', 'sky:town-flyover', best, 'flyover'));
         // обрыв: две последние опоры рухнули — пролёт висит консолью, арматура торчит
         const F = flyover.pts, len = F[F.length - 1].s - F[0].s, n = Math.max(1, Math.round(len / 38)), cut = F[0].s + len * (n - 1) / n - 3;
@@ -23683,8 +23693,8 @@ System.register("world/town", ["world/arteries", "world/relief", "world/location
         const B = locations_js_1.locations.filter(l => l.x < disc_js_20.TOWN.x1 && l.x + l.w > disc_js_20.TOWN.x0 && l.y < disc_js_20.TOWN.y1 && l.y + l.h > disc_js_20.TOWN.y0);
         for (const [, , pts] of list)
             for (const [x, y] of pts) {
-                if (x < disc_js_20.TOWN.x0 || x > disc_js_20.TOWN.x1 || y < disc_js_20.TOWN.y0 || y > disc_js_20.TOWN.y1)
-                    return false;
+                if (x < disc_js_20.TOWN.x0 - PG || x > disc_js_20.TOWN.x1 + PG || y < disc_js_20.TOWN.y0 - PG || y > disc_js_20.TOWN.y1 + PG)
+                    return false; // крайний ряд клеток выходит за кромку
                 for (const l of B)
                     if (x > l.x && x < l.x + l.w && y > l.y && y < l.y + l.h)
                         return false;
@@ -23777,12 +23787,13 @@ System.register("world/town", ["world/arteries", "world/relief", "world/location
             exports_65("HIGHWAY", HIGHWAY = [[6156, 3955], [6060, 3950], [5950, 3938], [5820, 3922], [5700, 3908], [5560, 3898], [5420, 3893], [5300, 3893], [5200, 3897], [5100, 3903], [5000, 3908], [4968, 3909]].map(disc_js_20.oldPt));
             exports_65("RAIL", RAIL = [[5334, 3715], [5480, 3715], [5640, 3715], [5800, 3716], [5950, 3718], [6082, 3720]].map(disc_js_20.oldPt));
             exports_65("BUFFER", BUFFER = { x: disc_js_20.oldX(5338), gy: disc_js_20.oldY(3718) }); // тупик за поездом
-            FLY = [[5530, 3660], [5612, 3684], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5980, 4022]].map(disc_js_20.oldPt);
+            FLY = [[5520, 3660], [5612, 3652], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5981.75, 4023.65]].map(disc_js_20.oldPt); // подобрано под городок ×1,25
             exports_65("CARS", CARS = []); // { x, gy, v, lot } — lot: брошена на стоянке
             // стоянка у «Вавилона»: пустота с причиной — асфальт с выцветшей разметкой мест,
             // трещины, масляные пятна; ставить здесь больше некому (render/etchTown.js)
             exports_65("LOT", LOT = (() => { const cx = disc_js_20.oldX(5440), cy = disc_js_20.oldY(4182.5); return { x0: cx - 260, y0: cy - 72.5, x1: cx + 260, y1: cy + 72.5 }; })()); // стоянка той же величины
             exports_65("flyover", flyover = null);
+            exports_65("flyFit", flyFit = null); // опорные точки эстакады, как легли (для запекания в FLY)
             // ── тропы: где ходят — там тропа. Линии желания: путь по клеткам 8×8 через
             // городок; натоптанное (улицы, трасса, прежние тропы) дешевле — тропы сходятся
             // в сеть; кочки, лужи, бурьян пятнами дороже — тропа петляет; места,

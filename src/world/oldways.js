@@ -77,24 +77,32 @@ const NILO_LOOK = 'Нилометр — сухая цистерна у басс�
 // где встать месту w×h в клетке «кольцо n · сторона»: не на чужом дворе, не у табличек, не на
 // радиальной тропе; ближе к anchor (постройке-соседке по смыслу)
 function placeIn(locations, n, side, w, h, anchor) {
-  const arch = locations.filter(l => l.archDraw), small = locations.filter(l => !l.archDraw);
-  const busy = (x0, gy) => {
-    const x1 = x0 + w, y0 = gy - h;
-    if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50)) return true;
-    if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30)) return true;
-    const cx = x0 + w / 2;
-    for (let d = 0; d <= RINGS_D + 100; d += 10) {                     // радиальная тропа своей стороны
-      const p = trailPoint(side === 'plain' ? 'north' : side, d);
-      if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40) return true;
-    }
-    return false;
-  };
   const cands = [], R0 = ringD(n, 70), R1 = ringD(n, 170);
   const box = side === 'south' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y1 + R0, TOWN.y1 + R1]
     : side === 'north' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y0 - R1, TOWN.y0 - R0]
     : side === 'west' ? [TOWN.x0 - R1, TOWN.x0 - R0, TOWN.y0 + 120, TOWN.y1 - 60]
     : side === 'plain' ? [TOWN.x1, TOWN.x1 + R1, TOWN.y0 - R1, TOWN.y0]
     : [TOWN.x1 + R0, TOWN.x1 + R1, TOWN.y0 + 120, TOWN.y1 - 60];
+  // соседи — только те, что могут задеть рамку поиска (кольца просторны: мест много, рамка большая)
+  const near = locations.filter(l => l.x < box[1] + w + 80 && l.x + l.w > box[0] - 80 && l.y < box[3] + 80 && l.y + l.h > box[2] - h - 80);
+  const arch = near.filter(l => l.archDraw), small = near.filter(l => !l.archDraw);
+  // радиальная тропа своей стороны: точки через 10, рядом с местом — по её же расстоянию от городка
+  const ts = side === 'plain' ? 'north' : side, TP = [];
+  for (let d = 0; d <= RINGS_D + 100; d += 10) TP.push(trailPoint(ts, d));
+  const onTrail = (cx, gy) => {
+    const d = ts === 'south' ? gy - TOWN.y1 : ts === 'north' ? TOWN.y0 - gy : ts === 'east' ? cx - TOWN.x1 : TOWN.x0 - cx, r = ts === 'south' || ts === 'north' ? 40 : 60;
+    for (let i = Math.max(0, Math.floor((d - r) / 10)); i <= Math.min(TP.length - 1, Math.ceil((d + r) / 10)); i++) {
+      const p = TP[i];
+      if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40) return true;
+    }
+    return false;
+  };
+  const busy = (x0, gy) => {
+    const x1 = x0 + w, y0 = gy - h;
+    if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50)) return true;
+    if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30)) return true;
+    return onTrail(x0 + w / 2, gy);
+  };
   // равнина — дуга у северо-восточного угла: середина дуги, не к её краям
   const inSide = (x, y) => side !== 'plain' ? sideOf(x, y) === side
     : x > TOWN.x1 && y < TOWN.y0 && Math.atan2(TOWN.y0 - y, x - TOWN.x1) > 0.15 * Math.PI && Math.atan2(TOWN.y0 - y, x - TOWN.x1) < 0.35 * Math.PI;

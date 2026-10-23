@@ -120,12 +120,13 @@ function buildQuarter(streets) {
 export const HIGHWAY = [[6156, 3955], [6060, 3950], [5950, 3938], [5820, 3922], [5700, 3908], [5560, 3898], [5420, 3893], [5300, 3893], [5200, 3897], [5100, 3903], [5000, 3908], [4968, 3909]].map(oldPt);
 export const RAIL = [[5334, 3715], [5480, 3715], [5640, 3715], [5800, 3716], [5950, 3718], [6082, 3720]].map(oldPt);
 export const BUFFER = { x: oldX(5338), gy: oldY(3718) };            // тупик за поездом
-const FLY = [[5530, 3660], [5612, 3684], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5980, 4022]].map(oldPt);
+const FLY = [[5520, 3660], [5612, 3652], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5981.75, 4023.65]].map(oldPt);   // подобрано под городок ×1,25
 export const CARS = [];                                  // { x, gy, v, lot } — lot: брошена на стоянке
 // стоянка у «Вавилона»: пустота с причиной — асфальт с выцветшей разметкой мест,
 // трещины, масляные пятна; ставить здесь больше некому (render/etchTown.js)
 export const LOT = (() => { const cx = oldX(5440), cy = oldY(4182.5); return { x0: cx - 260, y0: cy - 72.5, x1: cx + 260, y1: cy + 72.5 }; })();   // стоянка той же величины
 export let flyover = null;
+export let flyFit = null;                 // опорные точки эстакады, как легли (для запекания в FLY)
 
 function buildHighway() {
   const hw = addLine('road', 'road:town-highway', HIGHWAY, 'motorway');
@@ -152,6 +153,7 @@ function buildHighway() {
     const P = FLY.map(([x, y], i) => i === 1 ? [x + bx, y + by] : i === FLY.length - 1 ? [x + (ex - px) / el * d * sg, y + (ey - py) / el * d * sg] : [x, y]);
     if (fits(P)) { best = P; break search; }
   }
+  flyFit = best;
   flyover = addLine('sky', 'sky:town-flyover', best, 'flyover');
   // обрыв: две последние опоры рухнули — пролёт висит консолью, арматура торчит
   const F = flyover.pts, len = F[F.length - 1].s - F[0].s, n = Math.max(1, Math.round(len / 38)), cut = F[0].s + len * (n - 1) / n - 3;
@@ -344,7 +346,7 @@ function buildToxic() {
 function pathsFit(list) {
   const B = locations.filter(l => l.x < TOWN.x1 && l.x + l.w > TOWN.x0 && l.y < TOWN.y1 && l.y + l.h > TOWN.y0);
   for (const [, , pts] of list) for (const [x, y] of pts) {
-    if (x < TOWN.x0 || x > TOWN.x1 || y < TOWN.y0 || y > TOWN.y1) return false;
+    if (x < TOWN.x0 - PG || x > TOWN.x1 + PG || y < TOWN.y0 - PG || y > TOWN.y1 + PG) return false;   // крайний ряд клеток выходит за кромку
     for (const l of B) if (x > l.x && x < l.x + l.w && y > l.y && y < l.y + l.h) return false;
   }
   return list.length > 0;

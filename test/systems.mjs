@@ -836,6 +836,7 @@ setCtx(ctx);
   const EP = await imp('render/etchPaths.js');
   const F = await imp('render/fireRing.js');
   const AP = await imp('render/arteryProps.js');
+  (await imp('world/house.js')).buildHouse(M.locations);         // как в main.js: дом пробуждения — до артерий и троп
   AG.prepareArchGround(M.archEnsembles, M.locations);
   const L = M.locations;
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
