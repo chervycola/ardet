@@ -63,7 +63,7 @@ export const ARCH_WALLS = {
   "porticoes:east:стена в лесах": ["ZHANG SAN DAOCI YI YOU","BU DAO CHANGCHENG","FEI HAO HAN"],
   "porticoes:north:брох": ["IORSALAFARAR BRUTU","INGIGERTH ER","ALLRA KVENNA VAENST"],
   "porticoes:north:брох#2": ["INGIBIORG HIN FAGRA EKKIA","LANGT ER SIDAN"],
-  "porticoes:north:брох#3": ["RYNSTR FYRIR VESTAN HAF","HERMUNDR HARDAXI REIST"],
+  "porticoes:north:брох#3": ["RYNSTR FYRIR VESTAN HAF","HERMUNDR HARDEKSI REIST"],
   "porticoes:south:Пантеон": ["QUOD NON FECERUNT","BARBARI,","FECERUNT BARBERINI"],
   "porticoes:south:Пантеон#2": ["ILLE HIC EST RAPHAEL","S·MARIA AD MARTYRES"],
   "porticoes:south:Фаросский маяк": ["ΣΩΣΤΡΑΤΟΣ ΚΝΙΔΙΟΣ","ΘΕΟΙΣ ΣΩΤΗΡΣΙ"],
