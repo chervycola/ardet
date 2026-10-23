@@ -413,9 +413,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       assert(!l.streetLive && !l.streetEnter && !l.potemkinSign && l.name !== 'стенд эвфемизма', `в тени «${l.name}»`);
     }
   });
-  test('география по описи клеток: семь табличек юга — на своих сторонах', () => {
+  test('география по описи клеток: одиннадцать табличек юга — на своих сторонах', () => {
     const want = { 'porticoes|милевой камень': 'west', 'catastrophes|бюро исправления имён': 'east', 'catastrophes|узкая дверь без таблички': 'east',
-      'catastrophes|пароход': 'plain', 'now|стеклянный офис в 2 ночи': 'west', 'now|дверь ледника': 'north', 'now|судно на стоянке': 'plain' };
+      'catastrophes|пароход': 'plain', 'now|стеклянный офис в 2 ночи': 'west', 'now|дверь ледника': 'north', 'now|судно на стоянке': 'plain',
+      'catastrophes|чемодан': 'west', 'catastrophes|бомбоубежище': 'plain', 'now|провал': 'north', 'now|бюро «УТОПИЯ»': 'plain' };
     for (const [k, side] of Object.entries(want)) {
       eq(SIGN_SIDES[k], side, k);
       const [seg, name] = k.split('|'), n = SEGMENTS.findIndex(s => s.id === seg) + 1;
