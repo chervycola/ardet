@@ -7,22 +7,62 @@
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
 
-export const RING_W = 200;              // ширина кольца-эпохи
+// Кольца — по длительности эпохи (weave/SCALE.md, вариант Б): ширина — по
+// логарифму лет эпохи (600, 800, 1100, трижды по 100, 60, 40, 25), в сумме
+// 3150. Долгие древние шире и пустее, короткие новые уже и гуще: «просветы
+// часты» в начале, «шум нарастает к краю». Внутри кольца — по дате: начало
+// эпохи у внутренней кромки, конец у внешней.
 export const RINGS = SEGMENTS.length;   // 9 эпох
+export const RING_WS = [449, 469, 491, 323, 323, 323, 287, 259, 226];
+export const RING_EDGE = RING_WS.reduce((a, w) => (a.push(a[a.length - 1] + w), a), [0]);   // кромки колец: 0 … 3150
+export const RINGS_D = RING_EDGE[RINGS];   // 3150 — где начинается огонь
 export const FIRE_W = 150;              // край — кольцо огня
 export const EDGE_BAND = 1200;          // пустыня брейнрота за огнём: широкая, распад нарастает
-export const OFF = RINGS * RING_W + FIRE_W + EDGE_BAND;   // 3150 — поля вокруг
+export const OFF = RINGS_D + FIRE_W + EDGE_BAND;   // 4500 — поля вокруг
+
+// кольцо по расстоянию от кромки городка: 0 — городок, 1..9 — эпохи, 10 — огонь, 11 — за краем
+export function ringOfD(d) {
+  if (d <= 0) return 0;
+  for (let n = 1; n <= RINGS; n++) if (d <= RING_EDGE[n]) return n;
+  return d <= RINGS_D + FIRE_W ? RINGS + 1 : RINGS + 2;
+}
+// ── прежняя мера: кольца по 200 точек. Раскладка колец писалась в ней: отступ D
+// от внутренней кромки кольца n (0…200) встаёт на ту же долю нынешнего кольца;
+// огонь и пустыня за ним — те же точки
+export const OLD_RW = 200;
+export function newD(od) {
+  if (od <= 0) return od;
+  const R = RINGS * OLD_RW;
+  if (od >= R) return RINGS_D + od - R;
+  const n = Math.ceil(od / OLD_RW);
+  return RING_EDGE[n - 1] + (od - (n - 1) * OLD_RW) * RING_WS[n - 1] / OLD_RW;
+}
+export function oldD(d) {
+  if (d <= 0) return d;
+  if (d >= RINGS_D) return RINGS * OLD_RW + d - RINGS_D;
+  const n = ringOfD(d);
+  return (n - 1) * OLD_RW + (d - RING_EDGE[n - 1]) * OLD_RW / RING_WS[n - 1];
+}
+export const ringD = (n, D) => RING_EDGE[n - 1] + D * RING_WS[n - 1] / OLD_RW;   // отступ D прежней меры — в кольце n
+export const ringFrac = d => oldD(d) / OLD_RW;   // мера колец сплошь: 0 у городка, n — на внешней кромке кольца n
 
 // Прямоугольник городка (вне-время, кольцо 0) — в центре полного диска.
-// Контент городка исторически 0..3000 × 160..1800: сдвиг на чтении.
-export const SHIFT_X = OFF;             // 2300
-export const SHIFT_Y = OFF - 160;       // 2140
-export const TOWN = { x0: OFF, y0: OFF, x1: OFF + 3000, y1: OFF + 1640 };
+// Городок ×1,25 (вариант Б): прежняя раскладка растягивается от угла,
+// размеры вещей прежние. Контент мест исторически — 0..3000 × 160..1800;
+// линии, проложенные руками, — в мировых точках прежнего поля (3150)
+export const TS = 1.25;
+export const TOWN = { x0: OFF, y0: OFF, x1: OFF + 3000 * TS, y1: OFF + 1640 * TS };
+export const townX = x => TOWN.x0 + x * TS;             // контент городка → мир
+export const townY = y => TOWN.y0 + (y - 160) * TS;
+export const OLD_OFF = 3150;
+export const oldX = x => TOWN.x0 + (x - OLD_OFF) * TS;  // прежний мир (городок) → нынешний
+export const oldY = y => TOWN.y0 + (y - OLD_OFF) * TS;
+export const oldPt = ([x, y]) => [oldX(x), oldY(y)];
 
 // Ядро вне времени — круг вокруг места пробуждения (костёр).
 // Остальной городок временем уже тронут: ранние и средние века
 // живут прямо в его локациях (см. ERA_HINT в world_frame).
-export const CORE = { x: OFF + 800, y: OFF + 740, r: 430 };
+export const CORE = { x: townX(800), y: townY(900), r: 430 * TS };
 export function inCore(x, y) {
   return Math.hypot(x - CORE.x, y - CORE.y) <= CORE.r;
 }
@@ -58,12 +98,7 @@ export function warpedDist(x, y) {
 
 // номер кольца эпохи (1..9), 0 — городок, 10 — огонь, 11 — за краем
 export function ringAt(x, y) {
-  const d = warpedDist(x, y);
-  if (d <= 0) return 0;
-  const n = Math.ceil(d / RING_W);
-  if (n <= RINGS) return n;
-  if (d <= RINGS * RING_W + FIRE_W) return RINGS + 1;
-  return RINGS + 2;
+  return ringOfD(warpedDist(x, y));
 }
 
 export function epochAt(x, y) {
@@ -76,7 +111,7 @@ export function epochAt(x, y) {
 // протаптывали, а не чертили. d — расстояние от кромки городка.
 const TRAIL_PH = { south: 0.7, north: 2.3, east: 4.1, west: 5.6 };
 export function trailWind(d, ph) {
-  return Math.sin(d * 0.011 + ph) * (26 + d * 0.05) + Math.sin(d * 0.037 + ph * 2.1) * 9;
+  return Math.sin(d * 0.011 + ph) * (26 + d * 0.03) + Math.sin(d * 0.037 + ph * 2.1) * 9;   // к огню размах ~120, как до просторных колец
 }
 export function trailPoint(side, d) {
   const cx = (TOWN.x0 + TOWN.x1) / 2, cy = (TOWN.y0 + TOWN.y1) / 2;
@@ -89,13 +124,11 @@ export function trailPoint(side, d) {
 
 // раскладка южной стороны: полоса эпохи n по нижней кромке
 export function southBand(n) {
-  const d0 = (n - 1) * RING_W, d1 = n * RING_W;
-  return { y0: TOWN.y1 + d0, y1: TOWN.y1 + d1 };
+  return { y0: TOWN.y1 + RING_EDGE[n - 1], y1: TOWN.y1 + RING_EDGE[n] };
 }
 // восточная сторона: полоса эпохи n по правой кромке
 export function eastBand(n) {
-  const d0 = (n - 1) * RING_W, d1 = n * RING_W;
-  return { x0: TOWN.x1 + d0, x1: TOWN.x1 + d1 };
+  return { x0: TOWN.x1 + RING_EDGE[n - 1], x1: TOWN.x1 + RING_EDGE[n] };
 }
 
 // прогресс vx (виртуальная координата старой улицы 220..3000) →
@@ -104,10 +137,9 @@ export function southPoint(vx) {
   let seg = SEGMENTS[SEGMENTS.length - 1];
   for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
   const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
-  const band = southBand(seg.n);
   return {
-    x: TOWN.x0 + 340 + t * 2320,
-    y: band.y0 + 58 + ((vx * 37) % 84),   // детерминированный разброс в кольце
+    x: townX(340 + t * 2320),
+    y: TOWN.y1 + ringD(seg.n, 58 + ((vx * 37) % 84)),   // детерминированный разброс в кольце
     ring: seg.n,
   };
 }
@@ -127,18 +159,19 @@ export function sidePoint(vx, side = 'south') {
     + (h01(seg.n * 31 + ci * 17 + sideN) - 0.5) * 0.16;              // сцены гуляют
   const along = Math.max(0.03, Math.min(0.97,
     center + (t - 0.5) * 0.16 + (h01(vx * 3.7) - 0.5) * 0.06));      // кучно внутри
-  const depth = 36 + h01(vx * 11 + ci) * 128                          // глубина в кольце
+  const depth = 36 + h01(vx * 11 + ci) * 128                          // глубина в кольце (прежняя мера)
     + (h01(seg.n + ci * 29 + sideN * 3) - 0.5) * 40;                  // сцены на разной глубине
-  const b0 = (seg.n - 1) * RING_W;
+  const r = ringD(seg.n, depth);
   if (side === 'plain') {
     // равнина — дуга у северо-восточного угла городка
-    const r = b0 + depth, a = (0.2 + along * 0.6) * Math.PI / 2;
+    const a = (0.2 + along * 0.6) * Math.PI / 2;
     return { x: TOWN.x1 + r * Math.cos(a), y: TOWN.y0 - r * Math.sin(a) - 13, ring: seg.n };
   }
-  if (side === 'north') return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y0 - b0 - depth - 26, ring: seg.n };
-  if (side === 'west')  return { x: TOWN.x0 - b0 - depth - 14, y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
-  if (side === 'east')  return { x: TOWN.x1 + b0 + depth,      y: TOWN.y0 + 140 + along * 1360, ring: seg.n };
-  return { x: TOWN.x0 + 300 + along * 2400, y: TOWN.y1 + b0 + depth, ring: seg.n };
+  const ax = TOWN.x0 + (300 + along * 2400) * TS, ay = TOWN.y0 + (140 + along * 1360) * TS;
+  if (side === 'north') return { x: ax, y: TOWN.y0 - r - 26, ring: seg.n };
+  if (side === 'west')  return { x: TOWN.x0 - r - 14, y: ay, ring: seg.n };
+  if (side === 'east')  return { x: TOWN.x1 + r,      y: ay, ring: seg.n };
+  return { x: ax, y: TOWN.y1 + r, ring: seg.n };
 }
 
 // ── обход вокруг городка на расстоянии D (скруглённые углы), по часовой
@@ -173,5 +206,35 @@ export function rimFrac(x, y, D) {
 }
 
 // полный мир: кольца и стихии со всех четырёх сторон
-export const WORLD_W = TOWN.x1 + OFF;   // 7600
-export const WORLD_H = TOWN.y1 + OFF;   // 6280
+export const WORLD_W = TOWN.x1 + OFF;   // 12750
+export const WORLD_H = TOWN.y1 + OFF;   // 11050
+
+// ── перенос точки прежней геометрии (кольца по 200, городок 3000×1640 при поле
+// off) в нынешнюю: в городке — от угла ×1,25; снаружи — от ближайшей точки
+// кромки городка по той же прямой, расстояние — по долям колец. Им живут
+// сохранения и записки странников, оставленные до просторных колец
+export const GEO = 2;
+const OLD_TW = 3000, OLD_TH = 1640;
+export function fromOldGeo(x, y, off = OLD_OFF) {
+  const X = x + OLD_OFF - off, Y = y + OLD_OFF - off;
+  const cx = Math.max(OLD_OFF, Math.min(OLD_OFF + OLD_TW, X)), cy = Math.max(OLD_OFF, Math.min(OLD_OFF + OLD_TH, Y));
+  const vx = X - cx, vy = Y - cy, d = Math.hypot(vx, vy);
+  const k = d > 0 ? newD(d) / d : 1;
+  return { x: oldX(cx) + vx * k, y: oldY(cy) + vy * k };
+}
+export function toOldGeo(x, y) {
+  const cx = Math.max(TOWN.x0, Math.min(TOWN.x1, x)), cy = Math.max(TOWN.y0, Math.min(TOWN.y1, y));
+  const vx = x - cx, vy = y - cy, d = Math.hypot(vx, vy);
+  const k = d > 0 ? oldD(d) / d : 1;
+  return { x: OLD_OFF + (cx - TOWN.x0) / TS + vx * k, y: OLD_OFF + (cy - TOWN.y0) / TS + vy * k };
+}
+
+// площадь кольца n (скруглённый прямоугольник вокруг городка) и во сколько раз
+// она больше прежней: заполнение по площади (рощи, поля, ткань) редеет во
+// столько же раз — чисел столько же, пустоты между ними больше
+const ringArea = (W, H, d0, d1) => 2 * (W + H) * (d1 - d0) + Math.PI * (d1 * d1 - d0 * d0);
+export const RING_GROW = RING_WS.map((w, i) => ringArea(TOWN.x1 - TOWN.x0, TOWN.y1 - TOWN.y0, RING_EDGE[i], RING_EDGE[i + 1])
+  / ringArea(OLD_TW, OLD_TH, i * OLD_RW, (i + 1) * OLD_RW));
+export const thinAt = n => (n >= 1 && n <= RINGS ? 1 / RING_GROW[n - 1] : 1);
+// во сколько раз кольцо n шире прежнего: линия поперёк кольца (дорога, река) длиннее во столько же
+export const stretchAt = n => (n >= 1 && n <= RINGS ? RING_WS[n - 1] / OLD_RW : 1);

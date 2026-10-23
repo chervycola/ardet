@@ -13,14 +13,14 @@
 // Запекается один раз, при первом показе. Живое (огонь, лампа, вода, подвес)
 // рисуется каждый кадр — запекается только земля под ним и у подошвы.
 // ═══════════════════════════════════════
-import { RING_W, RINGS } from '../world/disc.js';
+import { RINGS, RINGS_D } from '../world/disc.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { grassPalette } from './grass.js';
 import { t as now } from '../core/time.js';
 
 const NI = [13, 11, 10], BO = [217, 207, 184], AS = [138, 141, 143], MG = [61, 74, 58];
 const L1 = [200, 184, 154], L2 = [176, 162, 132], K0 = [21, 16, 12], K1 = [36, 28, 20], K2 = [42, 38, 32], K4 = [58, 51, 40];
-const EDGE = RINGS * RING_W;          // где начинается кольцо огня
+const EDGE = RINGS_D;                 // где начинается кольцо огня
 const SOOT = 150;                     // копоть — на столько точек до огня
 const PX = 5, PT = 6, PB = 3;         // поля холста: вбок (крен, сугроб), сверху (снег), снизу (тень)
 const css = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;

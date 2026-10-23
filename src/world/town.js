@@ -12,16 +12,19 @@
 import { addLine, onArtery, shapeLine, lines } from './arteries.js';
 import { townZoneOf, townWarp, townEdge } from './relief.js';
 import { locations } from './locations.js';
-import { TOWN, trailPoint } from './disc.js';
+import { TOWN, TS, oldPt, oldX, oldY, trailPoint } from './disc.js';
 import { TOWN_PATHS } from './townPaths.js';
 
+// Линии ниже проложены руками в прежней раскладке городка (поле 3150, 3000×1640);
+// на чтении — от угла ×1,25 (disc.js: oldPt): тянутся пролёты, не ширина полотна
+
 // русло: от горы под вышкой — мимо врат — под мост — в лужицу у «Высохшего русла»
-export const BED = [[4706, 3700], [4618, 3716], [4520, 3756], [4468, 3836], [4446, 3926], [4402, 4002], [4288, 4042], [4168, 4058], [4094, 4056]];
+export const BED = [[4706, 3700], [4618, 3716], [4520, 3756], [4468, 3836], [4446, 3926], [4402, 4002], [4288, 4042], [4168, 4058], [4094, 4056]].map(oldPt);
 // мост поперёк русла: середина, линия земли у ближнего края, полудлина, глубина настила
-export const BRIDGE = { x: 4446, gy: 3946, half: 20, deep: 7 };
+export const BRIDGE = { x: oldX(4446), gy: oldY(3946), half: 20, deep: 7 };
 
 // тропа к кресту на холме: от костра — между библиотекой и домом №7 — в Мёртвый лес
-export const CROSS_PATH = [[3884, 3806], [3846, 3788], [3804, 3764], [3760, 3722], [3742, 3640], [3748, 3560], [3782, 3478], [3830, 3410], [3862, 3348]];
+export const CROSS_PATH = [[3884, 3806], [3846, 3788], [3804, 3764], [3760, 3722], [3742, 3640], [3748, 3560], [3782, 3478], [3830, 3410], [3862, 3348]].map(oldPt);
 
 // ── квартал: старые улицы мощёные, брусчатка в руинах (render/etchPaths.js:
 // street — главные, lane — переулки). Главная — от западных ворот, где
@@ -36,7 +39,7 @@ export const STREETS = [
   ['road:q-lower', [[3214, 4166], [3300, 4165], [3414, 4166], [3506, 4164]], 'lane'],
   ['road:q-west', [[3256, 3994], [3255, 4080], [3257, 4165]], 'lane'],
   ['road:q-north', [[3300, 3735], [3299, 3640], [3301, 3526]], 'lane'],
-];
+].map(([id, pts, st]) => [id, pts.map(oldPt), st]);
 // фундамент: x0..x1 × y0..y1; face — сторона фасада (к улице): n, s, w, e;
 // door — середина двери по фасаду; ruin — что стоит: wall (участок стены по
 // северной стене: x, w), chimney, arch (в двери фасада) или ничего
@@ -114,14 +117,14 @@ function buildQuarter(streets) {
 // места), дальше пролёты на опорах идут над рельсами и трассой и обрываются
 // арматурой (render/arteryProps.js: flyover). Рельсы — от поезда на восток до
 // вала, за поездом — тупик. Вдоль обочин — брошенные машины (render/townProps.js)
-export const HIGHWAY = [[6156, 3955], [6060, 3950], [5950, 3938], [5820, 3922], [5700, 3908], [5560, 3898], [5420, 3893], [5300, 3893], [5200, 3897], [5100, 3903], [5000, 3908], [4968, 3909]];
-export const RAIL = [[5334, 3715], [5480, 3715], [5640, 3715], [5800, 3716], [5950, 3718], [6082, 3720]];
-export const BUFFER = { x: 5338, gy: 3718 };            // тупик за поездом
-const FLY = [[5530, 3660], [5612, 3684], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5980, 4022]];
+export const HIGHWAY = [[6156, 3955], [6060, 3950], [5950, 3938], [5820, 3922], [5700, 3908], [5560, 3898], [5420, 3893], [5300, 3893], [5200, 3897], [5100, 3903], [5000, 3908], [4968, 3909]].map(oldPt);
+export const RAIL = [[5334, 3715], [5480, 3715], [5640, 3715], [5800, 3716], [5950, 3718], [6082, 3720]].map(oldPt);
+export const BUFFER = { x: oldX(5338), gy: oldY(3718) };            // тупик за поездом
+const FLY = [[5530, 3660], [5612, 3684], [5670, 3740], [5748, 3810], [5830, 3884], [5912, 3958], [5980, 4022]].map(oldPt);
 export const CARS = [];                                  // { x, gy, v, lot } — lot: брошена на стоянке
 // стоянка у «Вавилона»: пустота с причиной — асфальт с выцветшей разметкой мест,
 // трещины, масляные пятна; ставить здесь больше некому (render/etchTown.js)
-export const LOT = { x0: 5180, y0: 4110, x1: 5700, y1: 4255 };
+export const LOT = (() => { const cx = oldX(5440), cy = oldY(4182.5); return { x0: cx - 260, y0: cy - 72.5, x1: cx + 260, y1: cy + 72.5 }; })();   // стоянка той же величины
 export let flyover = null;
 
 function buildHighway() {
@@ -141,9 +144,11 @@ function buildHighway() {
     }
     return true;
   };
+  const ov = locations.find(l => l.id === 'overpass');
+  if (ov) FLY[0] = [ov.x + ov.w, ov.y + ov.h];                         // от края «Обрушенного моста»
   let best = FLY;                                                      // подобрано заранее; перебор — если рельсы или трасса сдвинутся
   const [ex, ey] = FLY[FLY.length - 1], [px, py] = FLY[FLY.length - 2], el = Math.hypot(ex - px, ey - py);
-  if (!fits(FLY)) search: for (let r = 0; r <= 24; r += 2) for (const [bx, by] of [[0, r], [0, -r], [r, 0], [-r, 0]]) for (let d = 0; d <= 60; d += 3) for (const sg of [1, -1]) {
+  if (!fits(FLY)) search: for (let r = 0; r <= 40; r += 2) for (const [bx, by] of [[0, r], [0, -r], [r, 0], [-r, 0]]) for (let d = 0; d <= 120; d += 3) for (const sg of [1, -1]) {
     const P = FLY.map(([x, y], i) => i === 1 ? [x + bx, y + by] : i === FLY.length - 1 ? [x + (ex - px) / el * d * sg, y + (ey - py) / el * d * sg] : [x, y]);
     if (fits(P)) { best = P; break search; }
   }
@@ -159,7 +164,7 @@ function buildHighway() {
     const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, side = hq(j, 7, 31) < 0.5 ? -1 : 1;
     const off = (hq(j, 7, 33) < 0.25 ? p.hw * 0.3 : p.hw + 3 + hq(j, 7, 35) * 6) * side;
     const x = Math.round(p.x - dy / l * off), gy = Math.round(p.y + dx / l * off);
-    s += 70 + hq(j, 7, 37) * 80;
+    s += (70 + hq(j, 7, 37) * 80) * TS;                                  // трасса длиннее — машин столько же
     if (LB.some(q => x > q.x0 - 22 && x < q.x1 + 22 && gy > q.y0 - 4 && gy < q.y1 + 14)) continue;
     if (CARS.some(c => Math.abs(c.x - x) < 44 && Math.abs(c.gy - gy) < 14)) continue;
     if (onArtery(x, gy, 4, hw)) continue;                                // не на рельсах и не под опорой эстакады
@@ -307,10 +312,10 @@ function buildToxic() {
   const big = locations.find(l => l.id === 'pipeline'), lake = locations.find(l => l.id === 'lake');
   if (!big || !lake) return;
   const xa = big.x + big.w + 1, g1 = big.y + 18, xs = lake.x - 6, g2 = lake.y + 20, xe = Math.round((xa + xs) / 2 + 30);
-  const n1 = Math.max(1, Math.round((xe - 2 - xa) / 34)), L1 = (xe - 2 - xa) / n1;
+  const n1 = Math.max(1, Math.round((xe - 2 - xa) / (34 * TS))), L1 = (xe - 2 - xa) / n1;   // пролёт длиннее — кусков столько же
   ['pipe', 'valve', 'broken', 'pipe', 'pipe'].slice(0, n1).forEach((kind, i) => PIPES.push({ x: Math.round(xa + L1 * (i + 0.5)), gy: g1, kind, L: Math.round(L1) - 1 }));
   PIPES.push({ x: xe, gy: g2, kind: 'elbow', H: g2 - g1 });
-  const n2 = Math.max(1, Math.round((xs - xe - 3) / 36)), L2 = (xs - xe - 3) / n2;
+  const n2 = Math.max(1, Math.round((xs - xe - 3) / (36 * TS))), L2 = (xs - xe - 3) / n2;
   for (let i = 0; i < n2; i++) PIPES.push({ x: Math.round(xe + 3 + L2 * (i + 0.5)), gy: g2, kind: i === n2 - 1 ? 'outlet' : 'leak', L: Math.round(L2) - 1 });
   // лужи: под течью, под проломом, у стока; потом — в низинах, не на тропах и не у мест
   for (const p of PIPES) {
@@ -320,7 +325,7 @@ function buildToxic() {
   }
   const LB = locations.map(l => ({ x0: l.x - 16, y0: l.y - 12, x1: l.x + l.w + 16, y1: l.y + l.h + 16 }));
   const cands = [];
-  for (let y = TOWN.y0 + 1160; y < TOWN.y1 - 40; y += 36) for (let x = TOWN.x0 + 60; x < TOWN.x1 - 60; x += 36) {
+  for (let y = TOWN.y0 + 1160 * TS; y < TOWN.y1 - 40; y += 36) for (let x = TOWN.x0 + 60; x < TOWN.x1 - 60; x += 36) {
     const px = x + (hq(x, y, 71) - 0.5) * 30, py = y + (hq(x, y, 73) - 0.5) * 24;
     cands.push({ x: Math.round(px), y: Math.round(py), v: vq(px / 170, py / 90, 75) });
   }
@@ -330,7 +335,7 @@ function buildToxic() {
     const r = 9 + Math.round(hq(c.x, c.y, 77) * 11);
     if (!inToxic(c.x - r, c.y) || !inToxic(c.x + r, c.y) || onArtery(c.x, c.y, r + 6)) continue;
     if (LB.some(b => c.x + r > b.x0 && c.x - r < b.x1 && c.y + r * 0.5 > b.y0 && c.y - r * 0.5 < b.y1)) continue;
-    if (PUDDLES.some(p => Math.hypot(p.x - c.x, (p.y - c.y) * 1.6) < 150)) continue;
+    if (PUDDLES.some(p => Math.hypot(p.x - c.x, (p.y - c.y) * 1.6) < 150 * TS)) continue;
     PUDDLES.push({ x: c.x, y: c.y, r, seed: PUDDLES.length * 13 + 1 });
   }
 }

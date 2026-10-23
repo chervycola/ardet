@@ -11,7 +11,7 @@ import {
   STATUS_COLORS, THREAD_COLORS, nodeById, gateById,
 } from '../content/worldmap_db.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, CORE, RINGS, RING_W, FIRE_W, ringAt, trailPoint } from '../world/disc.js';
+import { TOWN, CORE, RINGS, RINGS_D, RING_EDGE, FIRE_W, ringD, ringAt, trailPoint } from '../world/disc.js';
 import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
 import { events } from '../core/events.js';
@@ -67,7 +67,7 @@ const BTNS = [
 const SIDE = { x: 672, y: 44, w: 272, h: 520 };    // колонка справа
 
 // План местности: диск колец вокруг городка, без лишней пустыни
-const PAD = RINGS * RING_W + FIRE_W + 300;
+const PAD = RINGS_D + FIRE_W + 300;
 const EXT = { x0: TOWN.x0 - PAD, y0: TOWN.y0 - PAD, x1: TOWN.x1 + PAD, y1: TOWN.y1 + PAD };
 const LS = Math.min(MAPB.w / (EXT.x1 - EXT.x0), MAPB.h / (EXT.y1 - EXT.y0));
 const LOX = MAPB.x + (MAPB.w - (EXT.x1 - EXT.x0) * LS) / 2;
@@ -202,12 +202,12 @@ function drawLocal() {
   ctx.fillStyle = '#16110c';
   ctx.fillRect(MAPB.x, MAPB.y, MAPB.w, MAPB.h);
   // кольцо огня
-  ringRect(RINGS * RING_W + FIRE_W);
+  ringRect(RINGS_D + FIRE_W);
   ctx.fillStyle = mix(CINNABAR, knownRings.has(RINGS + 1) ? 0.45 : 0.22);
   ctx.fill();
   // эпохи: снаружи внутрь; неизвестные — тёмные, только контур
   for (let n = RINGS; n >= 1; n--) {
-    ringRect(n * RING_W);
+    ringRect(RING_EDGE[n]);
     ctx.fillStyle = knownRings.has(n) ? mix(SEGMENTS[n - 1].palette.ground, 0.85) : '#1d1813';
     ctx.fill();
     ctx.strokeStyle = n === here ? CANDLE : rgba(ASH, 0.28);
@@ -222,8 +222,8 @@ function drawLocal() {
   // номера колец — по северо-западной диагонали
   ctx.font = F_SMALL;
   for (let n = 1; n <= RINGS; n++) {
-    const d = (n - 0.5) * RING_W, r = n * RING_W * LS, off = (r - d * LS) ;
-    const cx = lx(TOWN.x0) - (r - off) * 0.7071 - 0, cy = ly(TOWN.y0) - (r - off) * 0.7071;
+    const d = ringD(n, 100) * LS;                       // середина кольца
+    const cx = lx(TOWN.x0) - d * 0.7071, cy = ly(TOWN.y0) - d * 0.7071;
     ctx.fillStyle = n === here ? CANDLE : knownRings.has(n) ? BONE : rgba(ASH, 0.6);
     const s = String(n);
     ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy + 5);
@@ -231,7 +231,7 @@ function drawLocal() {
   // тропы на четыре стороны
   ctx.fillStyle = rgba(BONE, 0.45);
   for (const side of ['north', 'south', 'east', 'west'])
-    for (let d = 0; d < RINGS * RING_W + FIRE_W; d += 45) {
+    for (let d = 0; d < RINGS_D + FIRE_W; d += 45) {
       const t = trailPoint(side, d);
       ctx.fillRect(lx(t.x) - 0.6, ly(t.y) - 0.6, 1.2, 1.2);
     }

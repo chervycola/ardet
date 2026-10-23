@@ -99,14 +99,14 @@ const { OFF } = await imp('world/disc.js');
   const { useTexts } = await imp('world/useActions.js');
   const { SEGMENTS, allSigns } = await imp('content/ulitsa_db.js');
 
-  const { TOWN, ringAt } = await imp('world/disc.js');
+  const { TOWN, ringAt, ringD } = await imp('world/disc.js');
   test('worldSegmentAt: maps world point to epoch rings (for the title card)', () => {
     const cx = (TOWN.x0 + TOWN.x1) / 2;
     const a = worldSegmentAt(cx, TOWN.y1 + 100);
     assert(a && a.id === 'axial', `ring1 is axial: ${a && a.id}`);
-    const n = worldSegmentAt(cx, TOWN.y1 + 8 * 200 + 100);
+    const n = worldSegmentAt(cx, TOWN.y1 + ringD(9, 100));
     assert(n && n.id === 'now', `ring9 is now: ${n && n.id}`);
-    const w = worldSegmentAt(TOWN.x0 - 300, TOWN.y0 + 400);
+    const w = worldSegmentAt(TOWN.x0 - ringD(2, 100), TOWN.y0 + 400);
     assert(w && w.id === 'porticoes', `запад кольцо 2: ${w && w.id}`);
     assert(worldSegmentAt(cx, TOWN.y0 + 700) === null, 'городок вне эпох');
   });
@@ -139,8 +139,8 @@ const { OFF } = await imp('world/disc.js');
   });
 
   test('street constants: spawn on ring one, return at the gates', () => {
-    const D = OFF - 2300;   // от отступа мира
-    assert(STREET_SPAWN.y > 3940 + D && STREET_SPAWN.y < 4160 + D, 'spawn на первом кольце');
+    eq(ringAt(STREET_SPAWN.x, STREET_SPAWN.y), 1, 'spawn на первом кольце');
+    assert(STREET_SPAWN.y > TOWN.y1, 'spawn — к югу от городка');
     assert(GATES_RETURN.x > 0 && GATES_RETURN.y > 0, 'gates return в городке');
   });
 
@@ -158,6 +158,9 @@ const { OFF } = await imp('world/disc.js');
   const physics = await imp('world/physics.js');
   const { streetLocations } = await imp('world/street.js');
   const { getZone } = await imp('audio/zoneAmbient.js');
+  // точки записаны в мире прежнего поля (2300); ныне кольца по длительности эпохи, городок ×1,25
+  const { fromOldGeo } = await imp('world/disc.js');
+  const was = (x, y) => fromOldGeo(x, y, 2300);
 
   test('world: полотно накрывает кольца и стихии; знаки в реестре', () => {
     assert(MW >= 7600 && MH >= 6200, `мир ${MW}×${MH} мал для полного диска`);
@@ -176,16 +179,16 @@ const { OFF } = await imp('world/disc.js');
   });
 
   test('physics: замок городка не действует на кольцах', () => {
-    const p = { x: 3800, y: 4040, tx: 0, ty: 0, moving: false }; // кольцо 1 юга
+    const p = { ...was(3800, 4040), tx: 0, ty: 0, moving: false }, y0 = p.y; // кольцо 1 юга (прежнее поле 2300)
     tryMove(p, 0, 100, [], { canLeaveSettlement: false });
-    assert(p.y > 4090, `по кольцам ходим до Шута (y=${p.y})`);
+    assert(p.y > y0 + 50, `по кольцам ходим до Шута (y=${p.y})`);
   });
 
   test('zones: кольца звучат улицей; зоны городка целы', () => {
-    const D = OFF - 2300;   // от отступа мира
-    eq(getZone(3800 + D, 4500 + D), 'street', 'южные кольца');
-    eq(getZone(3300 + D, 3100 + D), 'settlement', 'settlement intact');
-    eq(getZone(4800 + D, 3100 + D), 'highway', 'highway intact');
+    const at = (x, y) => { const p = was(x, y); return getZone(p.x, p.y); };
+    eq(at(3800, 4500), 'street', 'южные кольца');
+    eq(at(3300, 3100), 'settlement', 'settlement intact');
+    eq(at(4800, 3100), 'highway', 'highway intact');
   });
 }
 
@@ -195,7 +198,7 @@ const { OFF } = await imp('world/disc.js');
   const Dd = await imp('world/disc.js');
   test('земля: плитки по всему диску — городок, кольца, огонь, край — все с краской', () => {
     const T = Dd.TOWN, cx = (T.x0 + T.x1) / 2;
-    for (const y of [T.y0 + 800, T.y1 + 300, T.y1 + 1000, T.y1 + 1875, T.y1 + 2400]) {
+    for (const y of [T.y0 + 800, T.y1 + Dd.ringD(1, 150), T.y1 + Dd.ringD(5, 100), T.y1 + Dd.RINGS_D + 75, T.y1 + Dd.RINGS_D + Dd.FIRE_W + 450]) {   // городок, кольца, огонь, край
       const d = E.bakeData(Math.floor(cx / E.TILE), Math.floor(y / E.TILE));
       for (const m of d.mat) assert(E.MATS[m], `краски ${m} нет`);
     }

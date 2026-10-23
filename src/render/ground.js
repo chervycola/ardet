@@ -4,14 +4,14 @@
 // кольцо огня, стихии, дороги и реку — рисует render/etch.js штрихом по рельефу.
 // ═══════════════════════════════════════
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, RINGS, FIRE_W, warpedDist } from '../world/disc.js';
+import { TOWN, RINGS, RINGS_D, FIRE_W, warpedDist, ringFrac, thinAt } from '../world/disc.js';
 import { onArtery, nearRoad } from '../world/arteries.js';
 import { sideAt } from '../world/relief.js';
 import { hash } from './draw.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { scaler } from './scaler.js';
 
-const OUTER = RINGS * RING_W + FIRE_W;
+const OUTER = RINGS_D + FIRE_W;
 
 // ── надписи стихий и межа ядра — мировые координаты (ctx уже с камерой);
 // дороги, река и дуги лежат в самой земле (render/etchPaths.js) ──
@@ -106,13 +106,14 @@ function tissueCellRaw(gx, gy) {
   const wy = Math.round(gy * CELL + 24 + ((h * 733) % (CELL - 60)));
   const ring = ringAt(wx, wy);
   if (ring < 1 || ring > RINGS) return null;
+  if (hash(gx, gy, 83) > thinAt(ring)) return null;     // кольцо просторнее прежнего — ткани столько же, пустоты больше
   if (tissueBlocked(wx - 6, wy - 30, wx + 32, wy + 8)) return null;
   if (onArtery(wx + 2, wy, 10) || onArtery(wx + 14, wy, 10) || onArtery(wx + 26, wy, 10)) return null;   // не на дороге и не в реке
   // жильё тянется к дорогам: у дороги ткань гуще, в чистом поле — реже
   if (!nearRoad(wx + 12, wy, 230) && h < 0.76) return null;
   const side = sideAt(wx + 12, wy);                     // сторона — по рваному шву: в углах колец стороны мешаются
   // шов эпох: у внутренней кромки кольца лежат обломки прошлой эпохи
-  const d = warpedDist(wx, wy), frac = d / RING_W - (ring - 1);
+  const d = warpedDist(wx, wy), frac = ringFrac(d) - (ring - 1);
   const pr = ring > 1 && frac < 0.22 && hash(gx, gy, 71) > 0.35 ? ring - 1 : ring;
   return { h, wx, wy, ring, side, pr, d, gx, gy };
 }

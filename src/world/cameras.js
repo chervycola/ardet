@@ -3,7 +3,7 @@
 // камера смотрит на дорогу, в «сейчас» столб облеплен камерами, и
 // у каждой мигает красный глаз. Табличка одна и та же.
 // ═══════════════════════════════════════
-import { trailPoint, ringAt, RING_W } from './disc.js';
+import { trailPoint, ringAt, ringD } from './disc.js';
 import { free } from './aitraps.js';
 
 const N = '#0D0B0A', K = '#D9CFB8', P = '#8A8D8F', V = '#C23B2B', D1 = '#15100c', D3 = '#2a2620';
@@ -47,7 +47,7 @@ export function buildCameras(locations) {
   for (const [ring, count] of [[8, 1], [9, 11]]) {
     const h = count > 1 ? 34 : 26, w = count > 1 ? 20 : 12;
     for (const dd of [0.5, 0.35, 0.65, 0.2, 0.8]) {
-      const p = trailPoint('west', (ring - 1 + dd) * RING_W);
+      const p = trailPoint('west', ringD(ring, dd * 200));
       const box = { x: Math.round(p.x - w / 2), y: Math.round(p.y) - 10 - h, w, h };
       if (ringAt(box.x + w / 2, box.y + h) !== ring || !free(box, locations)) continue;
       locations.push({

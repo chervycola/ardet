@@ -71,7 +71,7 @@ import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistan
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, RING_W, RINGS, OFF, trailPoint, ringAt, inCore } from './world/disc.js';
+import { TOWN, TS, CORE, RINGS, OFF, GEO, fromOldGeo, ringD, trailPoint, ringAt, inCore } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGroundMarks, setTissueBlockers, buildTissue, tissueThingsIn } from './render/ground.js';
 import { thingCaster } from './render/things.js';
@@ -182,7 +182,7 @@ preloadAll().then(() => {
 
 // ═══ GAME OBJECTS (must be before loadGame!) ═══
 const player = {
-  x: TOWN.x0 + 800, y: TOWN.y0 + 740, tx: TOWN.x0 + 800, ty: TOWN.y0 + 740,
+  x: CORE.x, y: CORE.y, tx: CORE.x, ty: CORE.y,
   dir: 1, moving: false, walkFrame: 0,
   vx: 0, vy: 0,          // скорость: догоняет желаемую с инерцией поверхности
   auto: false,           // идёт сам к точке клика (tx, ty)
@@ -208,9 +208,15 @@ try {
 const savedData = STREAM ? null : loadGame();   // стрим — чистый забег
 if (savedData) {
   if (savedData.player) {
-    // поля мира могли стать шире: сдвиг по разнице отступов (старые сейвы — 2300)
-    const dOff = OFF - (savedData.off || 2300);
-    player.x = savedData.player.x + dOff; player.y = savedData.player.y + dOff;
+    // кольца стали просторнее (geo 2): прежнее место — по долям колец, городок от угла;
+    // а поля мира могли стать шире — сдвиг по разнице отступов (старые сейвы — 2300)
+    if (savedData.geo === GEO) {
+      const dOff = OFF - (savedData.off || OFF);
+      player.x = savedData.player.x + dOff; player.y = savedData.player.y + dOff;
+    } else {
+      const p = fromOldGeo(savedData.player.x, savedData.player.y, savedData.off || 2300);
+      player.x = p.x; player.y = p.y;
+    }
   }
   if (savedData.talkedTo) savedData.talkedTo.forEach(n => flags.talkedTo.add(n));
   if (savedData.visited) savedData.visited.forEach(id => flags.visited.add(id));
@@ -226,7 +232,7 @@ if (savedData) {
 
 if (!STREAM) startAutoSave(() => ({
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-  player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF,
+  player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
   observersSeen: Array.from(flags.observersSeen),
@@ -256,10 +262,12 @@ function canLeaveSettlement() {
   return flags.talkedTo.has('jester');
 }
 
+const FIRE = locations.find(l => l.id === 'campfire');   // искры над костром (stepWorld)
+
 // ═══ LIGHTING SETUP from locations ═══
 lighting.clear();
 // Player lantern — follows player
-lighting.add({ x: TOWN.x0 + 800, y: TOWN.y0 + 740, r: 55, color: [255, 180, 80], flicker: 0.1 });
+lighting.add({ x: CORE.x, y: CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
 // Location lights
 for (const loc of locations) {
   if (!loc.light) continue;
@@ -1563,7 +1571,7 @@ function updateWorldSystems() {
   }
   // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
   if (inBrainrotLoop()) {
-    const L0 = TOWN.y1 + 8 * RING_W + 24, L1 = TOWN.y1 + 9 * RING_W - 16;
+    const L0 = TOWN.y1 + ringD(9, 24), L1 = TOWN.y1 + ringD(9, 184);
     if (player.y > L1) { player.y -= (L1 - L0); player.ty = player.y; }
     else if (player.y < L0) { player.y += (L1 - L0); player.ty = player.y; }
   }
@@ -1589,7 +1597,7 @@ function updateWorldSystems() {
   updateCrackTriggers(player);
   updatePotemkin(player, locations, isFrozen());
 
-  if (t % 3 === 0) fireEmber(TOWN.x0 + 775, TOWN.y0 + 635);
+  if (t % 3 === 0 && FIRE) fireEmber(FIRE.x + 25, FIRE.y + 15);
 }
 
 // ═══ LOOP: ровный шаг ═══
@@ -1808,7 +1816,7 @@ events.on('gate.use', (gate) => {
   // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
   const vx = gate.target.x - STREET_SHIFT;
   const seg = EPOCHS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || EPOCHS[EPOCHS.length - 1];
-  const p = trailPoint('south', (Math.max(1, seg.n) - 0.5) * RING_W);
+  const p = trailPoint('south', ringD(Math.max(1, seg.n), 100));
   teleportWithFade(p.x, p.y);
 });
 events.on(E.LORE_COLLECT, (item) => {
@@ -1873,17 +1881,17 @@ events.on('location.use', (loc) => {
   }
   // Каркас: кольцевая равнины и СКРОЛЛ
   if (actionKey === 'branch_plain') {
-    teleportWithFade(BRANCH_PLAIN.x0 + 96, BRANCH_PLAIN.y0 + 80);
+    teleportWithFade(TOWN.x1 + ringD(2, 96), BRANCH_PLAIN.y0 + 80 * TS);
     return;
   }
   if (actionKey === 'branch_back') {
-    teleportWithFade(TOWN.x0 + 2560, TOWN.y1 + RING_W + 80);
+    teleportWithFade(TOWN.x0 + 2560 * TS, TOWN.y1 + ringD(2, 80));
     return;
   }
   if (actionKey === 'brainrot_enter') {
-    teleportWithFade(TOWN.x0 + 2540, TOWN.y1 + 8 * RING_W + 90, () => {
+    teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(9, 90), () => {
       enterBrainrotLoop(() => {
-        teleportWithFade(TOWN.x0 + 2540, TOWN.y1 + 7 * RING_W + 100, () => {
+        teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(8, 100), () => {
           showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
         });
       });

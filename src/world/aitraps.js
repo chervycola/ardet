@@ -4,7 +4,7 @@
 // верстовые столбы. Каждая стоит в своей эпохе; осмотр ничего не
 // объясняет — считает смотрящий.
 // ═══════════════════════════════════════
-import { trailPoint, ringAt, RING_W } from './disc.js';
+import { trailPoint, ringAt, ringD } from './disc.js';
 
 const N = '#0D0B0A', K = '#D9CFB8', P = '#8A8D8F', S = '#E28A3A', V = '#C23B2B', M = '#3D4A3A';
 const D1 = '#15100c', D2 = '#241c14', D3 = '#2a2620', D4 = '#34302a', C1 = '#c8b89a';
@@ -152,7 +152,7 @@ export function buildAiTraps(locations) {
   // верстовые столбы — на южной тропе, по одному в каждом кольце
   for (let n = 1; n <= 9; n++) {
     for (const dd of [0.5, 0.35, 0.65, 0.2, 0.8]) {
-      const p = trailPoint('south', (n - 1 + dd) * RING_W);
+      const p = trailPoint('south', ringD(n, dd * 200));
       const box = { x: Math.round(p.x + 10), y: Math.round(p.y) - 18, w: 13, h: 18 };
       if (ringAt(box.x, box.y + box.h) === n && free(box, locations)) {
         add(`trap_mile_${n}`, 'верстовой столб', box, drawMilestone, LOOK.milestone);

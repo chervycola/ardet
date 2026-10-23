@@ -21,6 +21,7 @@ import { hang, tipOf } from './hang.js';
 import { looks } from '../content/looks.js';
 import { dayIndex } from './sky.js';
 import { t as clock } from '../core/time.js';
+import { TS } from './disc.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -145,7 +146,7 @@ let loc = null;
 export function buildTownWell(locations) {
   const fire = locations.find(l => l.id === 'campfire');
   if (!fire) return;
-  const x = fire.x + 168, gy = fire.y + fire.h + 30;
+  const x = Math.round(fire.x + 168 * TS), gy = Math.round(fire.y + fire.h + 30 * TS);   // площадь растянута с городком
   loc = {
     id: 'town_well', name: 'Колодец у площади', zone: 'settlement',
     x, y: gy - 36, w: 24, h: 36, solidBox: { x: x + 2, y: gy - 7, w: 20, h: 7 },

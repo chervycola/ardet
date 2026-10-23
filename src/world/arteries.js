@@ -18,28 +18,28 @@
 // Прокладывается при запуске в обход построек, дворов и табличек
 // (world/routes.js): прежняя раскладка не сдвигается.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, FIRE_W, OFF, WORLD_W, WORLD_H, warpedDist, townDist, trailPoint, trailWind, rimPoint, rimPerim, rimFrac } from './disc.js';
+import { TOWN, RINGS, RINGS_D, RING_EDGE, FIRE_W, WORLD_W, WORLD_H, warpedDist, townDist, trailPoint, trailWind, rimPoint, rimPerim, rimFrac, ringOfD, ringD } from './disc.js';
 import { makeBlock, route, resample, freeNear, blockedAt } from './routes.js';
 import { sideAt } from './relief.js';
 
-export const OUTER = RINGS * RING_W + FIRE_W;
+export const OUTER = RINGS_D + FIRE_W;
 const CX = (TOWN.x0 + TOWN.x1) / 2;
 
 // ── стадии по эпохе (расстояние d — то же, что у колец) ──
 export function roadStage(d) {
-  if (d > RINGS * RING_W) {                                   // кольцо огня: умирает в обратном порядке
-    const f = (d - RINGS * RING_W) / FIRE_W;
+  if (d > RINGS_D) {                                          // кольцо огня: умирает в обратном порядке
+    const f = (d - RINGS_D) / FIRE_W;
     return f < 0.3 ? 'asphalt' : f < 0.6 ? 'cobble' : f < 0.9 ? 'trail' : null;
   }
-  const n = Math.max(1, Math.ceil(d / RING_W));
+  const n = Math.max(1, ringOfD(d));
   return n === 1 ? 'trail' : n <= 3 ? 'paved' : n <= 6 ? 'cobble' : n <= 8 ? 'asphalt' : 'highway';
 }
 export function riverStage(d) {
-  const n = Math.max(1, Math.ceil(d / RING_W));
+  const n = Math.max(1, ringOfD(d));
   return n === 1 || n === 3 ? 'stream' : n === 2 ? 'aqueduct' : n <= 6 ? 'canal' : n <= 8 ? 'pipe' : 'dry';
 }
 export function skyStage(d) {
-  const n = Math.max(1, Math.ceil(d / RING_W));
+  const n = Math.max(1, ringOfD(d));
   return n <= 2 ? 'aqueduct' : n <= 5 ? 'arcade' : n === 6 ? 'poles' : n <= 8 ? 'pylons' : 'flyover';
 }
 // полуширина на земле
@@ -227,14 +227,14 @@ const ARCS = [
   { id: 'portage', n: 3, from: 'plain', to: 'east', name: 'волок', seams: [['plain', 'east']] },
   { id: 'rail', n: 6, from: 'north', to: 'east', name: 'железная дорога', seams: [['north', 'plain'], ['plain', 'east']] },
   { id: 'net', n: 9, from: 'south', to: 'south', name: 'сеть', full: true, seams: [] },
-].map(A => ({ ...A, D: (A.n - 0.5) * RING_W + (A.id === 'net' ? 30 : A.id === 'rail' ? 62 : 0) }));
+].map(A => ({ ...A, D: ringD(A.n, 100 + (A.id === 'net' ? 30 : A.id === 'rail' ? 62 : 0)) }));
 
 // спираль реки: родник — у юго-западного угла городка, на западной стороне
 // шва; по часовой: запад → север → равнина → восток → юг, к сухому руслу
 // в кольце огня — не доходя до шва, откуда начала: каждая сторона по разу.
 // Наружу река уходит неровно: у кольцевых дуг — круто (дугу переходит
 // один раз и поперёк), между ними — полого.
-const R0 = 50, R1 = RINGS * RING_W + FIRE_W * 0.6, SPAN = 0.87;
+const R0 = 50, R1 = RINGS_D + FIRE_W * 0.6, SPAN = 0.85;           // углы колец теперь длинны: шов юг|запад у огня — на 0,70 оборота
 function riverD() {
   // доля оборота на каждую точку расстояния: у дуг мало
   const n = Math.ceil(R1 - R0), F = new Float32Array(n + 1);
@@ -242,6 +242,8 @@ function riverD() {
     const D = R0 + k;
     let w = 1;
     for (const A of ARCS) { const x = (D - A.D) / 70; if (Math.abs(x) < 1) w = Math.min(w, 1 - 0.85 * (1 - x * x)); }
+    // кромку эпохи и огня — тоже круто и поперёк: кромка рваная (±80), полого её не перейти по разу
+    for (let k = 1; k <= RINGS; k++) { const x = (D - RING_EDGE[k]) / 130; if (Math.abs(x) < 1) w = Math.min(w, 1 - 0.85 * (1 - x * x)); }
     F[k] = F[k - 1] + w;
   }
   for (let k = 0; k <= n; k++) F[k] /= F[n];
@@ -254,13 +256,13 @@ function riverD() {
 }
 function riverIdeal() {
   const f0 = seamFrac(['south', 'west'], R0) + 0.012, Dof = riverD(), out = [];
-  const N = 1400;
+  const N = 2000, LEN = 9000 * rimPerim((R0 + R1) / 2) / 15375;       // меандр — в точках земли, а не в долях оборота
   for (let k = 0; k <= N; k++) {
     const t = k / N, D = Dof(t), f = (f0 + SPAN * t) % 1;
     const p = rimAt(f, D);
     // меандр: ручей и сухое русло вьются, канал и труба — прямее
     const st = riverStage(D), m = st === 'stream' || st === 'dry' ? 1 : 0.25;
-    const s = t * 9000, off = m * (22 * Math.sin(s / 95) + 9 * Math.sin(s / 41 + 1.3));
+    const s = t * LEN, off = m * (22 * Math.sin(s / 95) + 9 * Math.sin(s / 41 + 1.3));
     out.push({ x: p.x + p.nx * off, y: p.y + p.ny * off * 0.6 });
   }
   return out;
@@ -282,7 +284,7 @@ function skyIdeal(road, off) {
   for (let i = 0; i < P.length; i += 2) {
     const a = P[Math.max(0, i - 2)], b = P[Math.min(P.length - 1, i + 2)];
     const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
-    if (P[i].d < 40 || P[i].d > RINGS * RING_W) continue;
+    if (P[i].d < 40 || P[i].d > RINGS_D) continue;
     out.push({ x: P[i].x - dy / L * off, y: P[i].y + dx / L * off * 0.6 });   // off > 0 — по правую руку от идущего наружу
   }
   return out;
@@ -378,7 +380,7 @@ export function buildArteries(boxes, feet = []) {
   const rIdeal = riverIdeal();
   rIdeal[0] = freeNear(B, rIdeal[0]);
   const river = finish('river', 'river', route(B, rIdeal, { every: 240, pad: 130, smooth: 3, wide: false, dist: townDist, slack: 60 }), d => d > OUTER ? null : riverStage(d));
-  for (const p of river.pts) p.ice = WATER.has(p.st) && p.d > 2 * RING_W && sideAt(p.x, p.y) === 'north';   // на севере вода стоит льдом
+  for (const p of river.pts) p.ice = WATER.has(p.st) && p.d > RING_EDGE[2] && sideAt(p.x, p.y) === 'north';   // на севере вода стоит льдом
   // кольцевые дуги: D — середина кольца
   for (const A of ARCS) {
     const D = A.D, ideal = arcIdeal(D, joint(B, roads[A.from], D, 1), joint(B, roads[A.to], D, -1), A.full);
@@ -393,7 +395,7 @@ export function buildArteries(boxes, feet = []) {
   for (const side of SIDE5) {
     const off = skyOffset(B, { side, pts: smoothPts(roads[side].pts, 30) }), pts = skyLine(roads[side], off);
     if (pts.length < 3) continue;
-    const L = finish('sky', 'sky:' + side, pts, d => d > RINGS * RING_W ? null : skyStage(d), { side, off });
+    const L = finish('sky', 'sky:' + side, pts, d => d > RINGS_D ? null : skyStage(d), { side, off });
     // опора не встаёт на постройку, двор и на поднятое русло (два акведука не скрещиваются — один обрушен)
     for (const p of L.pts) p.ok = !blockedAt(B, p.x, p.y) && !raisedRiverNear(river, p.x, p.y, 26);
   }
@@ -409,7 +411,7 @@ export function buildArteries(boxes, feet = []) {
         if (!WATER.has(c.st) || !cross(a, b, c, e)) continue;
         const ax = b.x - a.x, ay = b.y - a.y, al = Math.hypot(ax, ay) || 1;
         if (bridges.some(br => Math.hypot(br.x - a.x, br.y - a.y) < 30)) continue;
-        const n = Math.ceil(a.d / RING_W);
+        const n = ringOfD(a.d);
         bridges.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, ax: ax / al, ay: ay / al, len: c.hw * 2 + 10, hw: a.hw + 1,
           style: L.id === 'arc:rail' ? 'rail' : n <= 5 ? 'stone' : n === 6 ? 'iron' : 'concrete', ring: n, by: L.id, s: c.s });
       }

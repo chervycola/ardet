@@ -24,6 +24,7 @@ const H = await imp('world/house.js');
 const RH = await imp('render/house.js');
 const { STREETS, inQuarter } = await imp('world/town.js');
 const { locations } = await imp('world/locations.js');
+const { oldY } = await imp('world/disc.js');
 
 await test('дом: проснулся — на полу перед своей кроватью; вошёл — на пороге', () => {
   assert(H.walkable(H.WAKE.x, H.WAKE.y), 'место пробуждения — на полу');
@@ -92,7 +93,7 @@ await test('дом снаружи: угол главной улицы кварт
   const church = STREETS.find(s => s[0] === 'road:q-church')[1], cx = church.reduce((s, p) => s + p[0], 0) / church.length;
   assert(h.x > cx && h.x - cx < 30, 'к востоку от улицы у церкви, рядом');
   const d = H.doorOutside();
-  assert(Math.abs(d.y + 23 - 3990) < 30, 'дверь — к главной улице');
+  assert(Math.abs(d.y + 23 - oldY(3990)) < 30, 'дверь — к главной улице');   // главная улица квартала — у y 3990 прежнего поля
   assert(inQuarter(h.x + h.w / 2, h.y + h.h / 2), 'в квартале');
   for (const l of locations) if (l.id !== 'wake_house') assert(!(h.x < l.x + l.w && h.x + h.w > l.x && h.y < l.y + l.h && h.y + h.h > l.y), 'не налезает на ' + l.id);
   h.drawSelf(fakeCtx(), h, 0);

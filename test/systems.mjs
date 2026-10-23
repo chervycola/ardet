@@ -235,7 +235,7 @@ setCtx(ctx);
 // ═══ ZONE PARTITION ═══
 {
   const { getZone } = await imp('audio/zoneAmbient.js');
-  const { OFF } = await imp('world/disc.js');
+  const DSC0 = await imp('world/disc.js');
   test('getZone: every point of the disc world returns a known zone', () => {
     const valid = new Set(['forest', 'toxic', 'quarter', 'highway', 'settlement', 'street']);
     for (let x = 0; x <= 7600; x += 100) {
@@ -245,17 +245,40 @@ setCtx(ctx);
       }
     }
   });
+  test('диск: кольца по длительности эпохи — шире у городка, уже к огню; перенос прежних точек обратим и держит кольцо', () => {
+    const D = DSC0;
+    eq(D.RING_EDGE.length, 10); eq(D.RINGS_D, 3150); eq(D.OFF, D.RINGS_D + D.FIRE_W + D.EDGE_BAND);
+    for (let n = 1; n <= 9; n++) eq(D.ringOfD(D.ringD(n, 100)), n, `середина кольца ${n}`);
+    assert(D.RING_WS[0] > D.RING_WS[3] && D.RING_WS[3] > D.RING_WS[8], 'древние шире новых');
+    for (const od of [1, 150, 200, 777, 1799, 1800, 1900, 2600]) assert(Math.abs(D.oldD(D.newD(od)) - od) < 1e-6, `обратимо ${od}`);
+    eq(D.ringOfD(D.newD(1799)), 9); eq(D.ringOfD(D.newD(1801)), 10, 'огонь'); eq(D.ringOfD(D.newD(1951)), 11, 'за краем');
+    // прежнее поле 3150: место у костра и знаки колец встают туда же по смыслу
+    const fire = DSC0.fromOldGeo(3950, 3890), C = DSC0.CORE;
+    assert(Math.hypot(fire.x - C.x, fire.y - C.y) < 1, 'середина ядра — у нового ядра');
+    let same = 0, n = 0;
+    for (let k = 0; k < 400; k++) {
+      const a = k * 2.399, r = 30 + (k * 37 % 1760);                   // прежние кольца 1–9 вокруг прежнего городка
+      const x = 4650 + Math.cos(a) * (1500 + r), y = 3970 + Math.sin(a) * (820 + r);
+      const dx = Math.max(0, 3150 - x, x - 6150), dy = Math.max(0, 3150 - y, y - 4790), od = Math.hypot(dx, dy);
+      if (od < 20 || od > 1780 || od % 200 < 20 || od % 200 > 180) continue;   // у рваной кромки — не в счёт
+      const q = DSC0.fromOldGeo(x, y), back = DSC0.toOldGeo(q.x, q.y);
+      assert(Math.hypot(back.x - x, back.y - y) < 0.01, 'туда и обратно');
+      n++; if (DSC0.ringOfD(DSC0.townDist(q.x, q.y)) === Math.ceil(od / 200)) same++;
+    }
+    assert(n > 100 && same === n, `кольцо при переносе: ${same} из ${n}`);
+  });
   test('getZone: городок в центре, кольца вокруг', () => {
-    const D = OFF - 2300;   // от отступа мира
-    eq(getZone(3300 + D, 3100 + D), 'settlement', 'center should be settlement');
-    eq(getZone(3300 + D, 2500 + D), 'forest', 'north strip → forest');
-    eq(getZone(3300 + D, 3800 + D), 'toxic', 'south strip → toxic');
-    eq(getZone(2450 + D, 3100 + D), 'quarter', 'west → quarter');
-    eq(getZone(4800 + D, 3100 + D), 'highway', 'east → highway');
-    eq(getZone(3800 + D, 4500 + D), 'street', 'южные кольца → эпохи');
-    eq(getZone(6000 + D, 3100 + D), 'street', 'восточные кольца → эпохи');
-    eq(getZone(3800 + D, 1500 + D), 'street', 'северные кольца → эпохи');
-    eq(getZone(1500 + D, 3100 + D), 'street', 'западные кольца → эпохи');
+    // точки — в мире прежнего поля (2300): перенос по долям колец, городок ×1,25 (world/disc.js)
+    const zoneWas = (x, y) => { const p = DSC0.fromOldGeo(x, y, 2300); return getZone(p.x, p.y); };
+    eq(zoneWas(3300, 3100), 'settlement', 'center should be settlement');
+    eq(zoneWas(3300, 2500), 'forest', 'north strip → forest');
+    eq(zoneWas(3300, 3800), 'toxic', 'south strip → toxic');
+    eq(zoneWas(2450, 3100), 'quarter', 'west → quarter');
+    eq(zoneWas(4800, 3100), 'highway', 'east → highway');
+    eq(zoneWas(3800, 4500), 'street', 'южные кольца → эпохи');
+    eq(zoneWas(6000, 3100), 'street', 'восточные кольца → эпохи');
+    eq(zoneWas(3800, 1500), 'street', 'северные кольца → эпохи');
+    eq(zoneWas(1500, 3100), 'street', 'западные кольца → эпохи');
   });
 }
 
@@ -514,9 +537,9 @@ setCtx(ctx);
     const TOWN = D.TOWN, mid = (TOWN.x0 + TOWN.x1) / 2;
     eq(Hz.heatAt(mid, (TOWN.y0 + TOWN.y1) / 2), 0, 'в городке');
     let hot = 0;
-    for (let d = 1790; d <= 1960; d += 10) hot = Math.max(hot, Hz.heatAt(mid, TOWN.y1 + d));
+    for (let d = D.RINGS_D - 10; d <= D.RINGS_D + D.FIRE_W + 10; d += 10) hot = Math.max(hot, Hz.heatAt(mid, TOWN.y1 + d));
     eq(hot, 1, 'в огне не жарко');
-    eq(Hz.heatAt(mid, TOWN.y1 + 2600), 0, 'за краем');
+    eq(Hz.heatAt(mid, TOWN.y1 + D.RINGS_D + D.FIRE_W + 650), 0, 'за краем');
   });
 }
 
@@ -612,7 +635,7 @@ setCtx(ctx);
       const b = R.landAt(x, y);
       if (a === b) continue;
       off++;
-      const d = D.warpedDist(x, y), edge = Math.min(d % D.RING_W, D.RING_W - d % D.RING_W);
+      const d = D.warpedDist(x, y), edge = Math.min(...D.RING_EDGE.map(e => Math.abs(d - e)));
       assert(edge <= R.TONGUE / 2 + 1, `краска эпохи ${b} в ${edge.toFixed(0)} точках от шва (кольцо ${a})`);
       eq(Math.abs(a - b), 1, 'через кольцо');
     }
@@ -830,7 +853,7 @@ setCtx(ctx);
       const st = runs(line('road:' + side).pts.map(p => p.st)).filter(Boolean);
       eq(st.join(' > '), want.join(' > '), `дорога ${side}`);
     }
-    eq(A.roadStage(D.RING_W * 9 + D.FIRE_W * 0.95), null, 'у самого края дороги нет');
+    eq(A.roadStage(D.RINGS_D + D.FIRE_W * 0.95), null, 'у самого края дороги нет');
   });
   test('река: спираль — каждое кольцо и каждая сторона по разу; ручей → акведук → ручей → канал → труба → сухое русло', () => {
     eq(runs(river.pts.map(p => D.ringAt(p.x, p.y))).join(','), '1,2,3,4,5,6,7,8,9,10', 'кольца по ходу');
@@ -1011,14 +1034,18 @@ setCtx(ctx);
     for (const w of ways) assert(A.nearRoad(w.x, w.gy, 90), `${w.kind} не у дороги`);
     for (const l of LM.landmarks) assert(!A.onArtery(l.x, l.gy, 0, river) || ['iceHole', 'locks', 'barge', 'boat'].includes(l.kind), `${l.kind} на дороге`);
   });
-  test('пустота не случайна: в углах колец 1–6 голых кадров не больше половины', () => {
+  // Кольца просторнее прежнего (weave/SCALE.md, вариант Б): заполнения столько же на
+  // площади вдвое-вчетверо больше, кадр стал меньше кольца — между находками пусто
+  // нарочно. Угол кольца не мёртв: хоть каждый десятый кадр — с рощей, полем,
+  // приметой или утварью (лес держится углов — world/flora.js)
+  test('пустота не случайна: углы колец 1–6 не мертвы — голых кадров не больше 90%', () => {
     const T = D.TOWN;
     let s = 4242; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
     for (const [cx, cy, name] of [[T.x1, T.y1, 'ЮВ'], [T.x0, T.y1, 'ЮЗ'], [T.x0, T.y0, 'СЗ']]) {
       for (let n = 1; n <= 6; n++) {
         let bare = 0, v = 0;
         for (let k = 0; k < 24; k++) {
-          const a = (0.15 + 0.7 * rnd()) * Math.PI / 2, r = (n - 1 + rnd()) * D.RING_W;
+          const a = (0.15 + 0.7 * rnd()) * Math.PI / 2, r = D.ringD(n, rnd() * 200);
           const x = cx + (cx > T.x0 ? 1 : -1) * Math.cos(a) * r, y = cy + (cy > T.y0 ? 1 : -1) * Math.sin(a) * r;
           if (D.ringAt(x, y) !== n) continue;
           v++;
@@ -1029,7 +1056,7 @@ setCtx(ctx);
           const props = AG.archProps.some(p => p.x > x0 && p.x < x1 && p.gy > y0 && p.gy < y1);
           if (trees < 3 && !lms && !flds && !props) bare++;
         }
-        assert(v < 6 || bare / v <= 0.5, `угол ${name}, кольцо ${n}: голых кадров ${bare} из ${v}`);
+        assert(v < 6 || bare / v <= 0.9, `угол ${name}, кольцо ${n}: голых кадров ${bare} из ${v}`);
       }
     }
   });
@@ -1125,7 +1152,7 @@ setCtx(ctx);
     assert(w({ ring: 4, old: true }).bury > w({ ring: 4 }).bury, 'обломок прошлой эпохи не глубже');
     eq(TH.wearOf({ ring: 3, side: 'north', d: 500, seed: 1 }).foot, 'snow', 'север');
     eq(TH.wearOf({ ring: 3, side: 'south', d: 500, seed: 1 }).foot, 'sand', 'юг');
-    assert(TH.wearOf({ ring: 9, side: 'east', d: D.RINGS * D.RING_W - 10, seed: 1 }).soot > 0.9, 'у огня без копоти');
+    assert(TH.wearOf({ ring: 9, side: 'east', d: D.RINGS_D - 10, seed: 1 }).soot > 0.9, 'у огня без копоти');
     eq(TH.wearOf({ ring: 9, side: 'east', d: 1500, seed: 1 }).soot, 0, 'копоть вдали от огня');
     assert(w({ ring: 1 }).moss > w({ ring: 6 }).moss, 'мох в старом не гуще');
     eq(TH.wearOf({ ring: 1, side: 'south', d: 100, seed: 1 }).moss, 0, 'мох в пустыне');
@@ -1283,7 +1310,7 @@ setCtx(ctx);
     eq(bad.length, 0, 'вне канона: ' + bad.join(', '));
   });
   test('земля городка: у каждой зоны своя фактура, артерий она не трогает', () => {
-    const pick = { 0: [T.x0 + 900, T.y0 + 100], 1: [T.x0 + 1000, T.y0 + 1400], 2: [T.x0 + 160, T.y0 + 700], 3: [T.x0 + 2300, T.y0 + 900], 4: [T.x0 + 1100, T.y0 + 700] };
+    const S = 1.25, pick = { 0: [T.x0 + 900 * S, T.y0 + 100 * S], 1: [T.x0 + 1000 * S, T.y0 + 1400 * S], 2: [T.x0 + 160 * S, T.y0 + 700 * S], 3: [T.x0 + 2300 * S, T.y0 + 900 * S], 4: [T.x0 + 1100 * S, T.y0 + 700 * S] };   // городок ×1,25 от угла
     for (const [z, [x, y]] of Object.entries(pick)) {
       const d = E.bakeData(Math.floor(x / E.TILE), Math.floor(y / E.TILE));
       let own = 0, tex = 0;
@@ -2267,16 +2294,16 @@ setCtx(ctx);
   const DSC = await imp('world/disc.js');
   const EDG = await imp('world/edges.js');
   const BRT = await imp('world/brainrot.js');
-  const T0 = DSC.TOWN, OUT = DSC.RINGS * DSC.RING_W + DSC.FIRE_W;
-  const N = { x: 4650, y: T0.y0 - OUT - 300 };                     // север за огнём, четверть пустыни
+  const T0 = DSC.TOWN, OUT = DSC.RINGS_D + DSC.FIRE_W;
+  const N = { x: (T0.x0 + T0.x1) / 2, y: T0.y0 - OUT - 300 };      // север за огнём, четверть пустыни
   const stand = (k, p = N, paused = false) => { for (let i = 0; i < k; i++) { tick(); BY.beyond.step(p.x, p.y, false, paused); } };
   test('за кольцом: северная пустыня — только север и только за огнём, глубже — глубже', () => {
     const d = BY.northDepth(N.x, N.y);
     assert(d > 0.1 && d < 0.5, `глубина ${d}`);
     assert(BY.northDepth(N.x, N.y - 400) > d, 'к краю не глубже');
-    eq(BY.northDepth(4650, 4000), -1, 'городок');
-    eq(BY.northDepth(4650, T0.y0 - OUT + 100), -1, 'кольцо огня');
-    eq(BY.northDepth(4650, T0.y1 + OUT + 300), -1, 'юг');
+    eq(BY.northDepth(DSC.oldX(4650), DSC.oldY(4000)), -1, 'городок');
+    eq(BY.northDepth((T0.x0 + T0.x1) / 2, T0.y0 - OUT + 100), -1, 'кольцо огня');
+    eq(BY.northDepth((T0.x0 + T0.x1) / 2, T0.y1 + OUT + 300), -1, 'юг');
     eq(BY.northDepth(T0.x0 - OUT - 300, 3900), -1, 'запад');
     eq(BY.northDepth(T0.x1 + OUT + 300, 3900), -1, 'восток');
   });
@@ -2337,7 +2364,7 @@ setCtx(ctx);
     // ушёл с севера стоя (телепорт) — тоже вздох
     BY._resetBeyond();
     stand(BY.STILL0 + BY.GRAIN + 10);
-    const S = { x: 4650, y: T0.y1 + OUT + 300 };
+    const S = { x: (T0.x0 + T0.x1) / 2, y: T0.y1 + OUT + 300 };
     stand(1, S);
     eq(BY.beyond.pic && BY.beyond.pic.gone && BY.beyond.pic.gone.kind, 'sigh', 'унёсся с севера — без вздоха');
     BY._resetBeyond();
@@ -2366,7 +2393,7 @@ setCtx(ctx);
     for (let i = 0; i < 400; i++) { BY.beyond.step(N.x, N.y, true); if (BY.beyond.murmur > 0) n++; }
     assert(n > 40 && n < 160, `обломков слов ${n} из 400`);
     let m = 0;
-    for (let i = 0; i < 400; i++) { BY.beyond.step(4650, 4000, true); if (BY.beyond.murmur > 0) m++; }
+    for (let i = 0; i < 400; i++) { BY.beyond.step(DSC.oldX(4650), DSC.oldY(4000), true); if (BY.beyond.murmur > 0) m++; }
     eq(m, 0, 'бормочет в городке');
     assert(BY.beyond.lookHorizon(), 'горизонт не открылся');
     for (let i = 0; i < BY.HOR; i++) { tick(); BY.beyond.step(N.x, N.y, false); if (BY.beyond.murmur > 0 && BY.beyond.hAge > BY.HOR_IN + 1 && BY.beyond.hT > BY.HOR_OUT) m++; }
@@ -2490,7 +2517,7 @@ setCtx(ctx);
     const full = ash(0), calm = ash(1);
     assert(full > 0.04 && calm < full * 0.3, `пепел распада: ${full} → ${calm}`);
     BRT.dampBrainrot(0);
-    const town = { x: 4650, y: 4000, moving: false };
+    const town = { x: DSC.oldX(4650), y: DSC.oldY(4000), moving: false };
     for (let i = 0; i < 400; i++) { EDG.update(town); BRT.update(town); }
     BY._resetBeyond();
   });
@@ -2537,7 +2564,7 @@ setCtx(ctx);
     sweep({ x: N.x, y: N.y - 500 }, 5);
     BY._grains().forEach((g, i) => assert(g.x === still[i][0] && g.y === still[i][1], 'при горизонте метёт'));
     BY.beyond.hK = 0;
-    sweep({ x: 4650, y: T0.y1 + OUT + 300 }, 2);
+    sweep({ x: (T0.x0 + T0.x1) / 2, y: T0.y1 + OUT + 300 }, 2);
     eq(BY._grains().length, 0, 'позёмка на юге');
     BY._resetBeyond();
   });
@@ -2589,7 +2616,7 @@ setCtx(ctx);
     assert(log.some(([k]) => k === 'clip'), 'распад не обходит окно');
     assert(log.some(([k, x, y]) => k === 'moveTo' && x === 100 && y === 80), 'окно не там');
     BRT.setClearings([]);
-    const town = { x: 4650, y: 4000, moving: false };
+    const town = { x: DSC.oldX(4650), y: DSC.oldY(4000), moving: false };
     for (let i = 0; i < 400; i++) { EDG.update(town); BRT.update(town); }
     eq(BRT.getLevel(), 0, 'распад не отпустил');
   });

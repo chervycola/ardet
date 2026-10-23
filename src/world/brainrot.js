@@ -9,7 +9,7 @@ import { MW, MH } from './terrain.js';
 import { events } from '../core/events.js';
 import { crackedGlass } from '../render/metaFx.js';
 import { edgeDepth, edgeState } from './edges.js';
-import { TOWN } from './disc.js';
+import { CORE } from './disc.js';
 import { layers } from '../render/layers.js';
 
 export const FALL_AT = 0.97;   // падение — только у дальнего края пустыни
@@ -63,8 +63,8 @@ export function update(player) {
       brainrotFreezeTimer = 0;
       brainrot = 50;
       // Respawn at campfire
-      player.x = TOWN.x0 + 800;
-      player.y = TOWN.y0 + 740;
+      player.x = CORE.x;
+      player.y = CORE.y;
       events.emit('brainrot.recover');
     }
     return;

@@ -11,13 +11,13 @@
 import { t } from '../core/time.js';
 import { scaler } from './scaler.js';
 import { wind } from '../world/wind.js';
-import { warpedDist, RINGS, RING_W, FIRE_W } from '../world/disc.js';
+import { warpedDist, RINGS_D, FIRE_W } from '../world/disc.js';
 import { hash } from './draw.js';
 
 const OFF = /[?&]nohaze\b/.test(typeof location !== 'undefined' ? location.search : '');
 const CH = 4;                                  // ширина куска, точек
 const PATCH = 150;                             // сетка пятен в гари
-const FIRE_IN = RINGS * RING_W, FIRE_OUT = RINGS * RING_W + FIRE_W;
+const FIRE_IN = RINGS_D, FIRE_OUT = RINGS_D + FIRE_W;
 let buf = null, bctx = null;
 let cam = { x: 0, y: 0 }, cols = [];
 

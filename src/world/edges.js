@@ -8,9 +8,9 @@
 import { t } from '../core/time.js';
 import { X } from '../render/context.js';
 import { scaler } from '../render/scaler.js';
-import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H, warpedDist } from './disc.js';
+import { TOWN, RINGS_D, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H, warpedDist } from './disc.js';
 
-const OUTER = RINGS * RING_W + FIRE_W;   // 1950 — где кончается огонь
+const OUTER = RINGS_D + FIRE_W;   // 3300 — где кончается огонь
 
 export const EDGE = {
   south: { y0: TOWN.y1 + OUTER, y1: WORLD_H, elem: 'quicksand', name: 'зыбучий песок' },

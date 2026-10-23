@@ -12,7 +12,7 @@
 // ═══════════════════════════════════════
 import { segmentsIn, segDist, nodes, skyRun, RAISED, fordAt } from '../world/arteries.js';
 import { fieldsIn, inField } from '../world/fields.js';
-import { RING_W, RINGS } from '../world/disc.js';
+import { RINGS_D } from '../world/disc.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
@@ -273,7 +273,7 @@ export function stampPaths(x0, y0, T, out, cls) {
     const py0 = Math.max(0, Math.floor(Math.min(a.y, b.y) - ext) - y0), py1 = Math.min(T - 1, Math.ceil(Math.max(a.y, b.y) + ext) - y0);
     if (px0 > px1 || py0 > py1) continue;
     const lx = b.x - a.x, ly = b.y - a.y, len = Math.hypot(lx, ly) || 1, L2 = len * len, ext2 = ext * ext;
-    const fireA = a.d > RINGS * RING_W, fireB = b.d > RINGS * RING_W, iceA = a.ice ? 2 : 0, iceB = b.ice ? 2 : 0;
+    const fireA = a.d > RINGS_D, fireB = b.d > RINGS_D, iceA = a.ice ? 2 : 0, iceB = b.ice ? 2 : 0;
     const sA = SCODE[a.st || b.st] || 0, sB = SCODE[b.st || a.st] || 0, base = L * N;
     for (let py = py0; py <= py1; py++) {
       const y = y0 + py, ry = y - a.y;

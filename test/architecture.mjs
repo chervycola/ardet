@@ -53,7 +53,7 @@ setCtx(fakeCtx());
 const { ARCH_BY_RING } = await imp('sprites/arch/index.js');
 const { buildArchitecture, buildEnsembles, signFacade } = await imp('world/architecture.js');
 const { locations, archEnsembles } = await imp('world/locations.js');
-const { TOWN, RING_W, townDist, ringAt, trailPoint } = await imp('world/disc.js');
+const { TOWN, ringD, townDist, ringAt, trailPoint } = await imp('world/disc.js');
 const { SEGMENTS } = await imp('content/ulitsa_db.js');
 
 const SIDES = ['south', 'east', 'west', 'north', 'plain'];
@@ -147,7 +147,7 @@ test('ансамбли: у тропы на каждой стороне кажд�
   for (let n = 1; n <= 9; n++) for (const side of ['south', 'north', 'west', 'east']) {
     const g = archEnsembles.find(e => e.ring === n && e.side === side && e.kind === 'gate');
     assert(g && g.members.length >= 1, `кольцо ${n}/${side}: нет ворот`);
-    const tp = trailPoint(side, (n - 1) * RING_W + 100);
+    const tp = trailPoint(side, ringD(n, 100));
     for (const i of g.members) {
       const d = decor[i];
       assert(Math.hypot(d.x - tp.x, d.gy - tp.y) < 240, `кольцо ${n}/${side}: ${d.name} далеко от тропы`);

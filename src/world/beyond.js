@@ -21,10 +21,10 @@
 //    и растр не копится — самый простой способ не потеряться за кольцом.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, warpedDist, trailPoint } from './disc.js';
+import { TOWN, RINGS_D, FIRE_W, EDGE_BAND, warpedDist, trailPoint } from './disc.js';
 import { wind } from './wind.js';
 
-const OUTER = RINGS * RING_W + FIRE_W;                 // где кончается огонь
+const OUTER = RINGS_D + FIRE_W;                        // где кончается огонь
 
 // глубина в северной пустыне 0..1; не север или не за огнём — -1
 export function northDepth(x, y) {
@@ -384,7 +384,7 @@ function drawPole(ctx, loc, tt) {
 let pole = null;
 // у северной тропы, за огнём на треть пустыни: столб видно с тропы
 export function buildBeyond(locations) {
-  const p = trailPoint('north', RINGS * RING_W + FIRE_W + 300), x = Math.round(p.x + 46);
+  const p = trailPoint('north', OUTER + 300), x = Math.round(p.x + 46);
   let gy = Math.round(p.y);
   for (let y = TOWN.y0; y > 0; y -= 2) if (northDepth(x, y) >= 0.3) { gy = y; break; }
   pole = {

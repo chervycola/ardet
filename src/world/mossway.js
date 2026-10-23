@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════
 import { under } from './underside.js';
 import { sayAt, hush } from './whisper.js';
-import { TOWN, RINGS, ringAt } from './disc.js';
+import { TOWN, RINGS, RINGS_D, ringD, ringAt } from './disc.js';
 
 const NI = '#0D0B0A', AS = '#8A8D8F', MG = '#3D4A3A';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -50,14 +50,14 @@ function burrowPlace(locations) {
   const busy = (x, y) => locations.some(l => x > l.x - 60 && x < l.x + l.w + 60 && y > l.y - 80 && y < l.y + l.h + 60);
   for (const along of [0.46, 0.5, 0.42, 0.54, 0.38, 0.62, 0.3, 0.7]) {
     const x = Math.round(TOWN.x0 + along * (TOWN.x1 - TOWN.x0));
-    for (let d = 1700; d <= 1800; d += 4) {
+    for (let d = ringD(RINGS, 100); d <= RINGS_D; d += 4) {
       const y = TOWN.y1 + d;
       if (ringAt(x, y) !== RINGS || ringAt(x, y + 30) !== RINGS || ringAt(x, y + 70) !== RINGS + 1) continue;
       if (!busy(x, y)) return { x, y };
       break;
     }
   }
-  return { x: Math.round(TOWN.x0 + 0.46 * (TOWN.x1 - TOWN.x0)), y: TOWN.y1 + 1760 };
+  return { x: Math.round(TOWN.x0 + 0.46 * (TOWN.x1 - TOWN.x0)), y: Math.round(TOWN.y1 + ringD(RINGS, 160)) };
 }
 
 let pithos = null, burrow = null;

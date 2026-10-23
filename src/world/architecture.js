@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, RING_W, RINGS, warpedDist, trailPoint } from './disc.js';
+import { TOWN, RINGS, RINGS_D, RING_EDGE, ringD, warpedDist, trailPoint } from './disc.js';
 import { ARCH_LOOKS } from '../content/arch_looks.js';
 import { ARCH_BACKS } from '../content/arch_backs.js';
 import { ARCH_WALLS } from '../content/arch_walls.js';
@@ -28,7 +28,7 @@ const NEAR = 360;         // радиус, в котором соседи воо
 let margin = BAND_MARGIN;
 function inBand(n, x, y) {
   const d = warpedDist(x, y);
-  return d > (n - 1) * RING_W + margin && d < n * RING_W - margin;
+  return d > RING_EDGE[n - 1] + margin && d < RING_EDGE[n] - margin;
 }
 // земля под всем основанием — своего кольца (рельеф границ учтён)
 function baseOK(n, b) {
@@ -108,7 +108,7 @@ function gateNS(n, side, kinds, signs, placed) {
   const A = kinds[0], B = kinds[1] || kinds[0];
   for (const D of [100, 88, 112, 76, 124, 64, 136, 52, 148]) {
     for (const gap of [18, 28, 40, 56, 76]) {
-      const d = (n - 1) * RING_W + D;
+      const d = ringD(n, D);
       const p = trailPoint(side, d);
       const st = Math.round((h01(n * 7 + D) - 0.5) * 18);     // ворота не по линейке
       const a = { x: Math.round(p.x - gap - A.w / 2), gy: Math.round(p.y + st), w: A.w, h: A.h, kind: A };
@@ -142,7 +142,7 @@ function gateWE(n, side, kinds, signs, placed) {
   for (const [Da, Db] of [[96, 104], [84, 116], [108, 92], [72, 128], [120, 80]]) tries.push({ Da, Db, row: false });
   for (const tr of tries) {
     for (const lift of [0, 10, 22]) {
-      const xa = Math.round(xAt((n - 1) * RING_W + tr.Da)), xb = Math.round(xAt((n - 1) * RING_W + tr.Db));
+      const xa = Math.round(xAt(ringD(n, tr.Da))), xb = Math.round(xAt(ringD(n, tr.Db)));
       const a = { x: xa, gy: Math.round(span(xa, A.w)[0] - 12 - lift), w: A.w, h: A.h, kind: A };
       let b;
       if (tr.row) {
@@ -267,10 +267,10 @@ export function buildEnsembles(signs = []) {
     const LS = [].concat(arch.landmark || [], arch.landmarks || []).filter(L => L && L.side);
     const placeLandmarks = side => { for (const L of LS) {
       if (L.side !== side) continue;
-      const D = (n - 1) * RING_W + 120, sgn = n % 2 ? -1 : 1;
+      const D = ringD(n, 120), sgn = n % 2 ? -1 : 1;
       let anchor;
       if (L.side === 'plain') {
-        const ang = (n % 2 ? 0.28 : 0.72) * Math.PI / 2, r = (n - 1) * RING_W + 110;
+        const ang = (n % 2 ? 0.28 : 0.72) * Math.PI / 2, r = ringD(n, 110);
         anchor = { x: TOWN.x1 + r * Math.cos(ang), gy: TOWN.y0 - r * Math.sin(ang), pref: 0 };
       } else {
         const p = trailPoint(L.side, D);
@@ -286,7 +286,7 @@ export function buildEnsembles(signs = []) {
       const kinds = kindsFor(arch, side, n);
       if (!kinds.length) continue;
       // ворота у тропы
-      const mid = (n - 1) * RING_W + 100;
+      const mid = ringD(n, 100);
       let gate = (side === 'south' || side === 'north' ? gateNS : gateWE)(n, side, kinds, signs, buildings);
       if (!gate.length) {
         // у тропы сцена табличек — ворота встают за ней, как двор у дороги
@@ -312,7 +312,7 @@ export function buildEnsembles(signs = []) {
         } else {
           // сцены нет — двор на пустом перегоне, по другую сторону от ворот
           const a = 0.22 + 0.56 * (h01(n * 11 + i * 5 + side.length) > 0.5 ? 1 : 0);
-          const D = (n - 1) * RING_W + 100;
+          const D = ringD(n, 100);
           if (side === 'south') anchor = { x: TOWN.x0 + a * (TOWN.x1 - TOWN.x0), gy: TOWN.y1 + D, pref: 0 };
           else if (side === 'north') anchor = { x: TOWN.x0 + a * (TOWN.x1 - TOWN.x0), gy: TOWN.y0 - D, pref: 0 };
           else if (side === 'east') anchor = { x: TOWN.x1 + D, gy: TOWN.y0 + a * (TOWN.y1 - TOWN.y0), pref: 0 };
@@ -328,7 +328,7 @@ export function buildEnsembles(signs = []) {
     if (kinds.length) {
       // в неоне панельки двойняшки — микрорайон одинаковых домов
       const count = kinds.length + (seg.id === 'neon' ? 1 : 0);
-      const r = (n - 1) * RING_W + 100, ang = (0.42 + h01(n * 9) * 0.16) * Math.PI / 2;
+      const r = ringD(n, 100), ang = (0.42 + h01(n * 9) * 0.16) * Math.PI / 2;
       const anchor = { x: TOWN.x1 + r * Math.cos(ang), gy: TOWN.y0 - r * Math.sin(ang), pref: 0, slope: Math.cos(ang) / Math.sin(ang) };
       // двойняшкам на узкой диагонали — чуть ближе к границе колец
       const twins = seg.id === 'neon';
@@ -386,7 +386,7 @@ export function archLocations(decor) {
       ...(around ? { useAction: around } : {}),
       ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
       // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
-      archChar: Math.max(0, Math.min(1, (warpedDist(d.x, d.gy) - (RINGS * RING_W - 130)) / 110)),
+      archChar: Math.max(0, Math.min(1, (warpedDist(d.x, d.gy) - (RINGS_D - 130)) / 110)),
       // доминанта: огонь, видный из соседнего кольца; шов подделки; зеркало
       ...(d.kind && d.kind.landmark ? {
         archLandmark: true,

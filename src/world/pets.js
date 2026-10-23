@@ -19,7 +19,7 @@ function spawn() {
   const types = ['cat', 'rat', 'rat', 'cat'];
   const type = types[Math.floor(Math.random() * types.length)];
   const fromLeft = Math.random() > 0.5;
-  const y = TOWN.y0 + 40 + Math.random() * 1400;
+  const y = TOWN.y0 + 40 + Math.random() * (TOWN.y1 - TOWN.y0 - 240);
   pets.push({
     type,
     x: fromLeft ? TOWN.x0 - 20 : TOWN.x1 + 20,

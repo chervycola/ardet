@@ -4,11 +4,11 @@
 // за кольцом огня — стихии краёв (world/edges.js). Этот лист хранит
 // смысловую раскладку сторон для картин и раскопа пространств.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H } from '../world/disc.js';
+import { TOWN, RING_WS, RING_EDGE, RINGS, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H } from '../world/disc.js';
 
 export const FRAME = {
   center: { ...TOWN, id: 'townlet', state: 'occupied' },
-  ringW: RING_W, rings: RINGS, fireW: FIRE_W, edgeBand: EDGE_BAND,
+  ringWs: RING_WS, ringEdge: RING_EDGE, rings: RINGS, fireW: FIRE_W, edgeBand: EDGE_BAND,
   world: { w: WORLD_W, h: WORLD_H },
   sides: [
     { id: 'south_noon',    side: 'юг · полдень',            axis: 'south', element: 'зыбучий песок',   state: 'occupied', note: 'таблички девяти эпох, скайлайн, СКРОЛЛ на кольце 9' },

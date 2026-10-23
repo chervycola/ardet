@@ -9,7 +9,7 @@
 // Дорога чуть быстрее: по ней ходили (артерии — world/arteries.js: дороги,
 // дуги, мосты, броды); ручей и канал переходят вброд — медленно, по колено.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, FIRE_W, warpedDist } from './disc.js';
+import { TOWN, RINGS_D, FIRE_W, warpedDist, ringOfD } from './disc.js';
 import { surfaceOf } from './arteries.js';
 
 export const SURF = {
@@ -26,7 +26,7 @@ export const SURF = {
   moss:   { name: 'мох',     accel: 0.20, decel: 0.55, max: 0.85, print: null },   // ход мха: мягко, нога вязнет и встаёт сразу
 };
 
-const OUTER = RINGS * RING_W + FIRE_W;
+const OUTER = RINGS_D + FIRE_W;
 const MUD_IDS = new Set(['lake', 'pipeline', 'basement', 'pit', 'dumpster']);
 let mudSrc = null;
 
@@ -53,8 +53,8 @@ export function surfaceAt(x, y, locations) {
   if (d > OUTER) return { south: 'sand', north: 'ice', west: 'swamp', east: 'rubble' }[side];
   const art = surfaceOf(x, y);                              // дорога, мост, брод, вода реки
   if (art) return art;
-  if (d > RINGS * RING_W) return 'ash';
-  const n = Math.ceil(d / RING_W);
+  if (d > RINGS_D) return 'ash';
+  const n = ringOfD(d);
   if (side === 'north' && n >= 3) return 'snow';            // земля севера белая — см. ground.js
   return 'ground';
 }

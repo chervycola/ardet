@@ -312,7 +312,7 @@ setCtx(fakeCtx());
   const brainrot = await imp('world/brainrot.js');
   const { events } = await imp('core/events.js');
 
-  const { TOWN } = await imp('world/disc.js');
+  const { CORE } = await imp('world/disc.js');
   test('brainrot: распад нарастает постепенно, падение не мгновенное, после — костёр', () => {
     // Распад идёт за глубиной: первые кадры вдали ещё не падение.
     const player = { x: -10000, y: -10000 };
@@ -330,8 +330,8 @@ setCtx(fakeCtx());
     assert(recovered, 'brainrot.recover event fired');
     assert(!brainrot.isFrozen(), 'no longer frozen after recovery');
     eq(levelAtRecover, 50, 'level reset to 50 at the moment of recovery');
-    eq(player.x, TOWN.x0 + 800, 'respawned at campfire x');
-    eq(player.y, TOWN.y0 + 740, 'respawned at campfire y');
+    eq(player.x, CORE.x, 'respawned at campfire x');
+    eq(player.y, CORE.y, 'respawned at campfire y');
     // дома распад уходит сам
     for (let i = 0; i < 300; i++) brainrot.update(player);
     assert(brainrot.getLevel() < 5, 'дома распад уходит');

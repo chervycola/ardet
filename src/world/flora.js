@@ -10,7 +10,7 @@
 // двор, утварь, дорогу, реку и опору линии неба; камыш — по берегу ручья.
 // Рисунок — render/floraProps.js.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, WORLD_W, WORLD_H, warpedDist } from './disc.js';
+import { TOWN, TS, RINGS_D, RING_WS, RING_EDGE, WORLD_W, WORLD_H, warpedDist, ringOfD, thinAt } from './disc.js';
 import { sideAt, townZoneOf, townWarp, townEdge } from './relief.js';
 import { PUDDLES } from './town.js';
 import { locations } from './locations.js';
@@ -97,6 +97,23 @@ function vn(x, y, s) {
 // где роща: пятна по шуму (по глубине кадр сжат — пятна вытянуты по x);
 // пятно — в полкадра, между пятнами поляны: в кадре и лес, и пустота
 const grove = (x, y) => 0.6 * vn(x / 230, y / 135, 31) + 0.4 * vn(x / 80, y / 48, 37);
+// рощ на кольце столько же, сколько было до просторных колец (disc.js: thinAt):
+// роща той же густоты, а встают они пятнами крупнее рощи — лесные края и
+// открытые; доля края, где рощи есть, — по площади кольца. Порог — по выборке
+// самого шума (его значения не ровны: у середины чаще). Лес держится углов
+// колец — там сходятся две стороны и ничьё жильё не стоит; у мест сторон его
+// свели (в сумме рощ столько же)
+const wood = (x, y) => vn(x / 320, y / 190, 39);
+const WOODQ = (() => { const v = []; for (let i = 0; i < 4096; i++) v.push(wood(h01(i, 1, 61) * 4000, h01(i, 2, 61) * 4000)); return v.sort((a, b) => a - b); })();
+const woodAt = keep => WOODQ[Math.min(WOODQ.length - 1, Math.floor(keep * WOODQ.length))];
+const cornerAt = (x, y) => sm(-240, 0, Math.min(Math.max(TOWN.x0 - x, x - TOWN.x1), Math.max(TOWN.y0 - y, y - TOWN.y1)));
+const CORNER_F = RING_WS.map((w, i) => {                                   // доля углов в площади кольца
+  const d0 = RING_EDGE[i], d1 = RING_EDGE[i + 1], c = Math.PI * (d1 * d1 - d0 * d0);
+  return c / (c + 2 * (TOWN.x1 - TOWN.x0 + TOWN.y1 - TOWN.y0) * w);
+});
+const CB = 1.5;
+const keepAt = (ring, x, y) => Math.min(0.92, thinAt(ring) * (1 + CB * cornerAt(x, y)) / (1 + CB * CORNER_F[ring - 1]));
+const sm = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
 
 function pick(list, r) {
   let sum = 0;
@@ -155,7 +172,7 @@ export function buildFlora(skip = [], oases = []) {
     if (L.kind !== 'road') continue;
     let last = -1e9;
     for (let i = 2; i < L.pts.length - 2; i++) {
-      const p = L.pts[i], n = Math.ceil(p.d / RING_W), side = sideAt(p.x, p.y), sp = ALLEY[side]?.[n];
+      const p = L.pts[i], n = ringOfD(p.d), side = sideAt(p.x, p.y), sp = ALLEY[side]?.[n];
       if (!sp || p.s - last < 26) continue;
       const a = L.pts[i - 2], b = L.pts[i + 2], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
       const off = p.hw + 8;
@@ -175,20 +192,20 @@ export function buildFlora(skip = [], oases = []) {
     const r = 3;
     if (artBlock && blockedAt(artBlock, x, y)) continue;
     if (onArtery(x, y, 0, river) || taken(grid, x, y, r)) continue;
-    put(grid, { sp: 'reed', x: Math.round(x), gy: Math.round(y), v: Math.floor(h01(i, 3, 11) * 6), ring: Math.ceil(p.d / RING_W), side: sideAt(x, y), snow: false }, r);
+    put(grid, { sp: 'reed', x: Math.round(x), gy: Math.round(y), v: Math.floor(h01(i, 3, 11) * 6), ring: ringOfD(p.d), side: sideAt(x, y), snow: false }, r);
   }
   // 3) рощи и одиночные деревья: сетка 22 точки со сдвигом
   const C = 22;
   for (let gy = 0; gy < WORLD_H / C; gy++) for (let gx = 0; gx < WORLD_W / C; gx++) {
     const x = (gx + 0.15 + 0.7 * h01(gx, gy, 1)) * C, y = (gy + 0.15 + 0.7 * h01(gx, gy, 2)) * C;
     const d = warpedDist(x, y);
-    if (d <= 30 || d > RINGS * RING_W - 12) continue;
-    const ring = Math.ceil(d / RING_W), side = sideAt(x, y), K = KINDS[side];
-    const dn = K.dens[ring - 1], g = grove(x, y), thr = 1 - 0.42 * dn;     // гуще лес — больше рощ
+    if (d <= 30 || d > RINGS_D - 12) continue;
+    const ring = ringOfD(d), side = sideAt(x, y), K = KINDS[side], keep = keepAt(ring, x, y);
+    const q = woodAt(keep), dn = K.dens[ring - 1], g = grove(x, y) - 0.6 * sm(q - 0.05, q + 0.05, wood(x, y)), thr = 1 - 0.42 * dn;   // гуще лес — больше рощ
     const r = h01(gx, gy, 3);
     let p;
     if (g > thr) p = Math.min(0.55, 0.2 + (g - thr) * 3.5) * Math.min(1, 0.45 + dn);   // в роще: к середине гуще
-    else p = 0.009 * dn;                                                    // поляна: изредка одно дерево
+    else p = 0.009 * dn * keep;                                             // поляна: изредка одно дерево
     p *= 0.35 + 1.3 * vn(x / 46, y / 28, 41);                               // куртинами, а не посыпкой
     if (r > p) continue;
     // вид — пятнами (дубрава, ельник, березняк), изредка вперемешку
@@ -207,7 +224,7 @@ export function buildFlora(skip = [], oases = []) {
     return true;
   };
   const TF = 20, FOREST = [['dead', 40], ['deadspruce', 28], ['snag', 12], ['stump', 12], ['log', 8]].map(([sp, w]) => ({ sp, w }));
-  for (let y = TOWN.y0 + 14; y < TOWN.y0 + 520; y += TF) for (let x = TOWN.x0 + 14; x < TOWN.x1 - 14; x += TF) {
+  for (let y = TOWN.y0 + 14; y < TOWN.y0 + 520 * TS; y += TF) for (let x = TOWN.x0 + 14; x < TOWN.x1 - 14; x += TF) {
     const gx = Math.round(x / TF), gy = Math.round(y / TF);
     const px = x + (h01(gx, gy, 51) - 0.5) * TF * 0.8, py = y + (h01(gx, gy, 52) - 0.5) * TF * 0.8;
     if (townEdge(px, py) > -12) continue;                                   // не на валу

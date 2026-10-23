@@ -6,7 +6,7 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { STREET_SHIFT, STREET_X0, STREET_END_W, STREET_Y_MIN, STREET_Y_MAX, STREET_ROAD_Y, BRANCH_PLAIN } from './street.js';
 
 // World width includes the street strip east of the waste.
-import { TOWN, RING_W, RINGS, FIRE_W, WORLD_W, WORLD_H, townDist, ringAt, southBand } from './disc.js';
+import { TOWN, RINGS, RINGS_D, RING_EDGE, FIRE_W, WORLD_W, WORLD_H, townDist, ringAt, ringOfD, ringD, southBand } from './disc.js';
 export const MW = WORLD_W;
 export const MH = WORLD_H;
 // The procedural waste only spans the original 3000 px.
@@ -369,7 +369,7 @@ function paintRings(ctx) {
     for (let x = 0; x < MW; x += step) {
       const d = townDist(x + 2, y + 2);
       if (d <= 0) continue;                        // городок нарисован пустошью
-      const n = Math.ceil(d / RING_W);
+      const n = ringOfD(d);
       if (n >= 1 && n <= RINGS) {
         const seg = SEGMENTS[n - 1];
         ctx.fillStyle = seg.palette.ground;
@@ -379,11 +379,11 @@ function paintRings(ctx) {
           ctx.fillRect(x + 1, y + 1, 1, 1);
         }
         // кромка между кольцами — тонкий тёмный шов
-        if (d % RING_W < 3) {
+        if (d - RING_EDGE[n - 1] < 3) {
           ctx.fillStyle = 'rgba(0,0,0,0.35)';
           ctx.fillRect(x, y, step, 1);
         }
-      } else if (d <= RINGS * RING_W + FIRE_W) {
+      } else if (d <= RINGS_D + FIRE_W) {
         // кольцо огня: гарь с угольями (живой огонь — в динамике)
         ctx.fillStyle = '#160a06';
         ctx.fillRect(x, y, step, step);
@@ -403,21 +403,21 @@ function paintRings(ctx) {
     ctx.fillStyle = 'rgba(138,141,143,0.35)';
     ctx.fillText(seg.era, 348, b.y0 + 20);
     // и на восточной — вертикально не крутим, просто у кромки
-    const ex = TOWN.x1 + (seg.n - 1) * RING_W + 6;
+    const ex = TOWN.x1 + RING_EDGE[seg.n - 1] + 6;
     ctx.fillStyle = 'rgba(232,220,200,0.3)';
     ctx.fillText('§' + seg.n, ex, 190);
   }
   // тропа юга (от врат вниз сквозь эпохи) и тропа востока
   ctx.fillStyle = 'rgba(200,184,160,0.3)';
-  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS * RING_W; y += 10) ctx.fillRect(1498, y, 3, 5);
-  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS * RING_W; x += 10) ctx.fillRect(x, 978, 5, 3);
+  for (let y = TOWN.y1 + 4; y < TOWN.y1 + RINGS_D; y += 10) ctx.fillRect(1498, y, 3, 5);
+  for (let x = TOWN.x1 + 4; x < TOWN.x1 + RINGS_D; x += 10) ctx.fillRect(x, 978, 5, 3);
   // скайлайн юга — доминанты на кромке каждого кольца
   paintSkylineSouth(ctx);
 }
 
 // ── Стихии краёв: песок, мусор, лёд, озеро ──
 function paintEdgesElements(ctx) {
-  const OUTER = RINGS * RING_W + FIRE_W;
+  const OUTER = RINGS_D + FIRE_W;
   // юг: зыбучий песок
   for (let y = TOWN.y1 + OUTER; y < MH; y += 3) {
     for (let x = 0; x < MW; x += 6) {
@@ -462,7 +462,7 @@ function paintEdgesElements(ctx) {
 // ── Скайлайн юга: та же линия доминант, теперь вдоль колец ──
 function paintSkylineSouth(ctx) {
   // каждый силуэт стоит у верхней кромки своего кольца, x — по эпохе
-  const at = (n, off) => ({ x: 360 + off, base: TOWN.y1 + (n - 1) * RING_W + 46 });
+  const at = (n, off) => ({ x: 360 + off, base: TOWN.y1 + ringD(n, 46) });
   const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
   const S = '#100c08', S2 = '#181209', HOLE = '#050510';
   { const { x, base } = at(1, 60);                       // зиккурат + обелиск

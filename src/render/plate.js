@@ -12,7 +12,7 @@
 //               зерно гуще, царапины чаще, приводка пляшет, кляксы
 // ═══════════════════════════════════════
 import { scaler } from './scaler.js';
-import { warpedDist, RING_W, RINGS, FIRE_W } from '../world/disc.js';
+import { warpedDist, RINGS, RINGS_D, FIRE_W, ringFrac } from '../world/disc.js';
 
 // профиль по кольцам: 0 — городок, 1..9 — эпохи, 10 — огонь, 11 — за краем
 //            зерно  ячейка царапин/мин  края  бумага приводка развёртка
@@ -51,9 +51,8 @@ function h(x, y, s) {
 function ringF(x, y) {
   const d = warpedDist(x, y);
   if (d <= 0) return 0;
-  const r = d / RING_W;
-  if (r <= RINGS) return r;
-  const over = d - RINGS * RING_W;
+  if (d <= RINGS_D) return ringFrac(d);
+  const over = d - RINGS_D;
   return over <= FIRE_W ? RINGS + over / FIRE_W : Math.min(RINGS + 2, RINGS + 1 + (over - FIRE_W) / 300);
 }
 

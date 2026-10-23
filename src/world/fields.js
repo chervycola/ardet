@@ -6,7 +6,7 @@
 // ложится в землю бороздами (render/etchPaths.js) — штрихом: по полю видно,
 // куда шёл плуг. К краю диска поля заброшены: борозды тают, межа зарастает.
 // ═══════════════════════════════════════
-import { RING_W, RINGS, WORLD_W, WORLD_H, warpedDist } from './disc.js';
+import { RINGS_D, WORLD_W, WORLD_H, warpedDist, ringOfD, thinAt, stretchAt } from './disc.js';
 import { sideAt } from './relief.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
@@ -56,8 +56,8 @@ function fieldFree(f, own) {
   for (let u = -0.9; u <= 0.91; u += 0.3) for (let w = -0.9; w <= 0.91; w += 0.45) {
     const x = f.cx + f.ux * f.a * u + f.nx * f.b * w, y = f.cy + f.uy * f.a * u + f.ny * f.b * w, d = warpedDist(x, y);
     n++;
-    if (d <= 20 || d > RINGS * RING_W) return false;
-    if (Math.ceil(d / RING_W) !== f.ring) off++;
+    if (d <= 20 || d > RINGS_D) return false;
+    if (ringOfD(d) !== f.ring) off++;
     if (artBlock && blockedAt(artBlock, x, y)) return false;
     if (onArtery(x, y, 6)) return false;
     for (const g of own) if (inField(g, x, y) >= -8) return false;
@@ -70,8 +70,8 @@ export function buildFields(yards = []) {
   fields.length = 0; grid.clear();
   const tryAt = (cx, cy, ang, seed) => {
     const d = warpedDist(cx, cy);
-    if (d <= 30 || d > RINGS * RING_W - 20) return false;
-    const ring = Math.ceil(d / RING_W), side = sideAt(cx, cy), c = CROP[side]?.[ring - 1];
+    if (d <= 30 || d > RINGS_D - 20) return false;
+    const ring = ringOfD(d), side = sideAt(cx, cy), c = CROP[side]?.[ring - 1];
     if (!c) return false;
     const f = makeField(c[0], cx, cy, ang, seed, ring, side);
     if (!fieldFree(f, fields)) return false;
@@ -84,7 +84,7 @@ export function buildFields(yards = []) {
     k++;
     const cx = (y.x0 + y.x1) / 2, cy = (y.y0 + y.y1) / 2, d = warpedDist(cx, cy);
     if (d <= 30) continue;
-    const ring = Math.ceil(d / RING_W), side = sideAt(cx, cy), c = CROP[side]?.[ring - 1];
+    const ring = ringOfD(d), side = sideAt(cx, cy), c = CROP[side]?.[ring - 1];
     if (!c || h01(k, 0, 1) > 0.3 * c[1]) continue;
     for (let t = 0; t < 14; t++) {
       const a = h01(k, t, 2) * Math.PI * 2, r = 70 + h01(k, t, 3) * 200;
@@ -95,8 +95,8 @@ export function buildFields(yards = []) {
   for (const L of lines) {
     if (L.kind !== 'road') continue;
     for (let i = 10; i < L.pts.length - 10; i += 5) {
-      const p = L.pts[i], n = Math.ceil(p.d / RING_W), side = sideAt(p.x, p.y), c = CROP[side]?.[n - 1];
-      if (!c || h01(i, L.pts.length, 9) > 0.14 * c[1]) continue;
+      const p = L.pts[i], n = ringOfD(p.d), side = sideAt(p.x, p.y), c = CROP[side]?.[n - 1];
+      if (!c || h01(i, L.pts.length, 9) > 0.14 * c[1] / stretchAt(n)) continue;       // дорога через кольцо длиннее — полос столько же
       const a = L.pts[i - 3], b = L.pts[i + 3], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
       for (let t = 0; t < 4; t++) {
         const sgn = h01(i, t, 11) < 0.5 ? -1 : 1, off = p.hw + 14 + DIM[c[0]][1] * 1.1 + h01(i, t, 15) * 160;
@@ -108,9 +108,9 @@ export function buildFields(yards = []) {
   for (let gy = 0; gy < WORLD_H / 170; gy++) for (let gx = 0; gx < WORLD_W / 170; gx++) {
     const x = (gx + 0.5) * 170 + (h01(gx, gy, 21) - 0.5) * 120, y = (gy + 0.5) * 170 + (h01(gx, gy, 22) - 0.5) * 120;
     const d = warpedDist(x, y);
-    if (d <= 30 || d > RINGS * RING_W) continue;
-    const ring = Math.ceil(d / RING_W), c = CROP[sideAt(x, y)]?.[ring - 1];
-    if (!c || !['kolkhoz', 'paddy', 'strip', 'tea'].includes(c[0]) || h01(gx, gy, 23) > 0.09 * c[1]) continue;
+    if (d <= 30 || d > RINGS_D) continue;
+    const ring = ringOfD(d), c = CROP[sideAt(x, y)]?.[ring - 1];
+    if (!c || !['kolkhoz', 'paddy', 'strip', 'tea'].includes(c[0]) || h01(gx, gy, 23) > 0.09 * c[1] * thinAt(ring)) continue;   // кольцо просторнее — полей столько же
     tryAt(x, y, (h01(gx, gy, 24) - 0.5) * 0.8, gx * 31 + gy);
   }
   for (const f of fields) {

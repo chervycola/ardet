@@ -133,9 +133,13 @@ export const locations = [
 
 // The street (ulitsa) signs join the world as ordinary locations.
 // Their look texts are inline (loc.look) — see world/street.js.
-// Городок исторически жил в 0..3000×160..1800 — сдвигаем в центр диска
-import { SHIFT_X, SHIFT_Y } from './disc.js';
-for (const l of locations) { l.x += SHIFT_X; l.y += SHIFT_Y; }
+// Городок исторически жил в 0..3000×160..1800 — в центр диска, ×1,25 от угла:
+// растут промежутки, не вещи — место стоит той же серединой подножия
+import { townX, townY } from './disc.js';
+for (const l of locations) {
+  const cx = townX(l.x + l.w / 2), gy = townY(l.y + l.h);
+  l.x = Math.round(cx - l.w / 2); l.y = Math.round(gy - l.h);
+}
 
 import { streetLocations, branchLocations, wasteLocations } from './street.js';
 locations.push(...streetLocations);   // уже в мировых координатах диска
@@ -183,7 +187,7 @@ buildOldways(locations);
 // («стеклянный даунтаун, трасса»): первое свободное место в полосе девятого
 // кольца, не на тропе, не на чужом дворе (раньше стояли по старым
 // координатам улицы — во льду за огнём).
-import { TOWN as TW, RING_W as RW, ringAt as ringOf, trailPoint as trailAt } from './disc.js';
+import { TOWN as TW, TS as TWS, RINGS_D as RD, ringD as ringDepth, ringAt as ringOf, trailPoint as trailAt } from './disc.js';
 function firePlace() {
   const busy = (x, y, w, h) => locations.some(l => {
     const big = !!l.archDraw, mx = big ? 80 : 40, below = big ? 140 : 40;
@@ -191,17 +195,17 @@ function firePlace() {
   });
   for (const along of [0.62, 0.7, 0.54, 0.78, 0.46, 0.86, 0.38, 0.3, 0.22]) {
     for (const depth of [70, 110, 150, 40]) {
-      const x = Math.round(TW.x0 - 8 * RW - depth - 58), y = Math.round(TW.y0 + 140 + along * 1360);
+      const x = Math.round(TW.x0 - ringDepth(9, depth) - 58), y = Math.round(TW.y0 + (140 + along * 1360) * TWS);
       if (ringOf(x, y + 36) !== 9 || ringOf(x + 58, y + 36) !== 9) continue;
       let nearTrail = false;
-      for (let d = 1500; d <= 1850; d += 10) {
+      for (let d = ringDepth(8, 100); d <= RD + 50; d += 10) {
         const p = trailAt('west', d);
         if (Math.abs(p.x - x - 29) < 70 && Math.abs(p.y - y - 18) < 50) { nearTrail = true; break; }
       }
       if (!nearTrail && !busy(x, y, 58, 36)) return { x, y };
     }
   }
-  return { x: TW.x0 - 8 * RW - 120, y: TW.y0 + 900 };
+  return { x: TW.x0 - ringDepth(9, 120), y: TW.y0 + 900 * TWS };
 }
 const FIRE_AT = firePlace();
 locations.push({

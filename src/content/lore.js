@@ -232,6 +232,6 @@ loreItems.push(...EGG_LORE);
 import { COVER_LORE } from './cover_layer.js';
 loreItems.push(...COVER_LORE);
 
-// сдвиг в центр диска (исторические координаты 0..3000×160..1800)
-import { SHIFT_X, SHIFT_Y } from '../world/disc.js';
-for (const it of loreItems) { it.x += SHIFT_X; it.y += SHIFT_Y; }
+// в центр диска (исторические координаты 0..3000×160..1800), городок ×1,25 от угла
+import { townX, townY } from '../world/disc.js';
+for (const it of loreItems) { it.x = Math.round(townX(it.x)); it.y = Math.round(townY(it.y)); }

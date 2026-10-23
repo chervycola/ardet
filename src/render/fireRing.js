@@ -6,10 +6,10 @@
 // Стоят по средней линии кольца, с разбросом поперёк — кромки кольца
 // неровные сами (по рельефу), костры их не выравнивают.
 // ═══════════════════════════════════════
-import { RINGS, RING_W, FIRE_W, warpedDist, rimPoint, rimPerim } from '../world/disc.js';
+import { RINGS_D, FIRE_W, warpedDist, rimPoint, rimPerim } from '../world/disc.js';
 import { wind } from '../world/wind.js';
 
-const D0 = RINGS * RING_W + FIRE_W * 0.5;     // средняя линия кольца
+const D0 = RINGS_D + FIRE_W * 0.5;            // средняя линия кольца
 const GAP = 330, GAP_J = 110;                  // шаг костров по линии и его разброс
 const C = '#C23B2B', S = '#E28A3A', N = '#0D0B0A', CHAR = '#1d0d07';
 

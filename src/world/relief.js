@@ -13,9 +13,11 @@
 // граница резкая, без растра («швы по кромкам без фейдов»).
 // Только для рисунка: логика колец (ringAt) прежняя — постройки стоят там же.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, FIRE_W, townDist, warpedDist, trailPoint } from './disc.js';
+import { TOWN, TS, OLD_OFF, RINGS_D, FIRE_W, townDist, warpedDist, trailPoint, ringOfD, ringFrac } from './disc.js';
+// городок нарисован в прежней раскладке (×1,25 от угла): его шумы — там же, размах — ×1,25
+const oldTX = x => OLD_OFF + (x - TOWN.x0) / TS, oldTY = y => OLD_OFF + (y - TOWN.y0) / TS;
 
-export const OUTER = RINGS * RING_W + FIRE_W;
+export const OUTER = RINGS_D + FIRE_W;
 export const SIDES = ['north', 'south', 'west', 'east', 'plain'];
 
 const sm = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
@@ -110,7 +112,8 @@ export function townEdge(x, y) {
   const dx = Math.max(TOWN.x0 - x, x - TOWN.x1), dy = Math.max(TOWN.y0 - y, y - TOWN.y1);
   const sd = dx > 0 || dy > 0 ? Math.hypot(Math.max(0, dx), Math.max(0, dy)) : Math.max(dx, dy);
   if (sd > 120 || sd < -80) return sd;
-  let e = (vn(x / 230, y / 230, 41) - 0.5) * 46 + (vn(x / 90, y / 90, 43) - 0.5) * 26 + (vn(x / 34, y / 34, 47) - 0.5) * 8;
+  const ox = oldTX(x), oy = oldTY(y);
+  let e = ((vn(ox / 230, oy / 230, 41) - 0.5) * 46 + (vn(ox / 90, oy / 90, 43) - 0.5) * 26 + (vn(ox / 34, oy / 34, 47) - 0.5) * 8) * TS;
   for (const g of EXITS) { const r = Math.hypot(x - g.x, y - g.y); if (r < 44) e *= sm(16, 44, r); }   // проход в вале — на месте
   return sd + e;
 }
@@ -123,7 +126,7 @@ export function heightRaw(x, y) {
   if (d <= 0) return 30 + (h - 30) * 0.4 + rampartAt(x, y, te);   // городок почти ровный; вал — по живой кромке
   const [ox, oy] = sideWarp(x, y);
   const W = weights(x + ox, y + oy);
-  const k = sm(0, 220, d), ring = d / RING_W;                      // от кромки городка формы набирают силу
+  const k = sm(0, 220, d), ring = ringFrac(d);                      // от кромки городка формы набирают силу
   if (W.s > 0.01) {                                                // юг: дюны — гребни вдоль, ветвятся; полями
     const r = 1 - Math.abs(2 * vn(x / 130, y / 16, 6) - 1);         // острый гребень, вытянут по x
     const r2 = 1 - Math.abs(2 * vn(x / 60, y / 9, 16) - 1);
@@ -188,21 +191,21 @@ export function landDist(d, h) {
 // какая земля: 0 — городок, 1..9 — эпохи, 10 — огонь, 11 — за краем
 export function landRing(ld) {
   if (ld <= 0) return 0;
-  if (ld <= RINGS * RING_W) return Math.ceil(ld / RING_W);
-  return ld <= OUTER ? RINGS + 1 : RINGS + 2;
+  return ringOfD(ld);
 }
 export function landAt(x, y) { return landRing(landDist(warpedDist(x, y), heightAt(x, y))); }
 
 // ── зоны городка (как у звука, audio/zoneAmbient), но с неровными кромками ──
 export function townWarp(x, y) {
-  return [(vn(x / 150, y / 150, 21) - 0.5) * 130 + (vn(x / 55, y / 55, 23) - 0.5) * 36,
-    (vn(x / 150, y / 150, 22) - 0.5) * 100 + (vn(x / 55, y / 55, 24) - 0.5) * 28];
+  const ox = oldTX(x), oy = oldTY(y);
+  return [((vn(ox / 150, oy / 150, 21) - 0.5) * 130 + (vn(ox / 55, oy / 55, 23) - 0.5) * 36) * TS,
+    ((vn(ox / 150, oy / 150, 22) - 0.5) * 100 + (vn(ox / 55, oy / 55, 24) - 0.5) * 28) * TS];
 }
 export const TOWN_ZONES = ['forest', 'toxic', 'quarter', 'highway', 'settlement'];
 export function townZoneOf(wx, wy) {
-  if (wy < TOWN.y0 + 340) return 0;
-  if (wy > TOWN.y0 + 1140) return 1;
-  if (wx < TOWN.x0 + 400) return 2;
-  if (wx > TOWN.x0 + 1800) return 3;
+  if (wy < TOWN.y0 + 340 * TS) return 0;
+  if (wy > TOWN.y0 + 1140 * TS) return 1;
+  if (wx < TOWN.x0 + 400 * TS) return 2;
+  if (wx > TOWN.x0 + 1800 * TS) return 3;
   return 4;
 }

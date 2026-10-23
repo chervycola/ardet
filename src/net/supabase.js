@@ -6,7 +6,7 @@
 // presence — кто ушёл.
 // Сеть легла — переподключение с нарастающей паузой; мир от этого не зависит.
 // ═══════════════════════════════════════
-const TOPIC = 'realtime:ardet-world', SKEY = 'ardet-net-session';
+const TOPIC = 'realtime:ardet-world-2', SKEY = 'ardet-net-session';   // мир просторных колец — свой канал: прежние клиенты в другой геометрии
 
 export function supabaseTransport(url, key, tab) {
   const base = url.replace(/\/+$/, ''), wsUrl = base.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(key) + '&vsn=1.0.0';

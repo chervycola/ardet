@@ -11,7 +11,7 @@ const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]');
 const write = list => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} };
 
 export function localTransport(me) {
-  const ch = typeof BroadcastChannel === 'function' ? new BroadcastChannel('ardet-net') : null;
+  const ch = typeof BroadcastChannel === 'function' ? new BroadcastChannel('ardet-net-2') : null;
   const H = { pos: [], say: [], leave: [], note: [] };
   if (ch) ch.onmessage = e => { const m = e.data; if (m && m.id !== me && H[m.t]) for (const f of H[m.t]) f(m); };
   const post = m => { if (ch) ch.postMessage({ ...m, id: me }); };

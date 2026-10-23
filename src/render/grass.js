@@ -7,7 +7,7 @@
 // у западного озера выше, на юге суше и реже.
 // ═══════════════════════════════════════
 import { wind } from '../world/wind.js';
-import { warpedDist, RING_W, RINGS, TOWN } from '../world/disc.js';
+import { warpedDist, RINGS_D, TOWN, ringOfD } from '../world/disc.js';
 import { hash } from './draw.js';
 import { groundBlocked } from './ground.js';
 import { onArtery } from '../world/arteries.js';
@@ -58,8 +58,8 @@ function tuft(gx, gy) {
   c = null;
   const x = gx * CELL + ((hash(gx, gy, 13) * CELL) | 0), y = gy * CELL + ((hash(gx, gy, 17) * CELL) | 0);
   const d = warpedDist(x, y);
-  if (d > 0 && d <= RINGS * RING_W - 10) {
-    const n = Math.ceil(d / RING_W), side = sector(x, y);
+  if (d > 0 && d <= RINGS_D - 10) {
+    const n = ringOfD(d), side = sector(x, y);
     const dens = DENS[n] * (side === 'south' ? 0.6 : side === 'west' ? 1.3 : side === 'north' ? 0.5 : 1);
     if (!(side === 'north' && n >= 3) && hash(gx, gy, 91) < dens && !groundBlocked(x - 4, y - 9, x + 4, y + 1) && !onArtery(x, y, 2) && (fieldAt(x, y)?.kind ?? 'fallow') === 'fallow') {
       const h = hash(gx, gy, 29), k = 3 + ((h * 7) | 0) % 3, tall = side === 'west' ? 2 : 0;

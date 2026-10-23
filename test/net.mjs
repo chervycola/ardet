@@ -117,13 +117,15 @@ await test('локальный: записки — длина, 10 в сутки,
 });
 
 // ── net.js на подставном транспорте ──
+// в базе записки просторных колец лежат со сдвигом X по x; без сдвига — прежней геометрии
+const X = 1e6;
 function fakeT(uid = 'ME') {
   const H = { pos: [], say: [], leave: [], note: [] };
   const T = {
     kind: 'fake', uid, H, sent: { pos: [], say: [], note: [] }, db: [], votes: [],
     async start() { return true; }, on(ev, f) { H[ev].push(f); },
     sendPos(p) { T.sent.pos.push(p); }, sendSay(s) { T.sent.say.push(s); }, sendNote(n) { T.sent.note.push(n); }, stop() { T.stopped = true; },
-    async notesIn(b) { T.fetches = (T.fetches || 0) + 1; return T.db.filter(n => n.layer === b.layer && n.x >= b.x0 && n.x <= b.x1 && n.y >= b.y0 && n.y <= b.y1); },
+    async notesIn(b) { if (b.x0 > X / 2) T.fetches = (T.fetches || 0) + 1; return T.db.filter(n => n.layer === b.layer && n.x >= b.x0 && n.x <= b.x1 && n.y >= b.y0 && n.y <= b.y1); },   // подгрузка — по запросу записок новой геометрии
     async addNote(n) { const r = { id: 'n' + T.db.length, ...n, author: uid, created: Date.now(), certs: 0 }; T.db.push(r); return r; },
     async vote(id, kind) { T.votes.push([id, kind]); return {}; },
     emit(ev, m) { for (const f of H[ev]) f(m); },
@@ -231,7 +233,8 @@ await test('net: записка — у ног и наверху; брань не
   const r = await N.netLeaveNote('  Здесь   было тепло ');
   assert(r.id, 'оставлена');
   eq(T.db[0].text, 'Здесь было тепло');
-  eq(T.db[0].x, 300); eq(T.db[0].y, 304);
+  eq(T.db[0].x, 300 + X, 'в базе — со сдвигом новой геометрии'); eq(T.db[0].y, 304);
+  eq(N.net.notes.get(r.id).x, 300, 'у себя — в мире');
   assert(N.net.notes.get(r.id).mine, 'своя');
   eq((await N.netLeaveNote('ещё одна')).error, 'soon');
   for (let i = 0; i < N.NOTE_GAP; i++) N.stepNet(P(300, 300), 'surface');
@@ -257,7 +260,7 @@ await test('net: записку, оставленную рядом, видно �
 });
 await test('net: записки вокруг подгружаются наверху; отошёл — заново; под землёй — нет', async () => {
   const T = await fresh();
-  T.db.push({ id: 'x1', x: 400, y: 400, layer: 'surface', text: 'чужая, с хуйнёй', author: 'OTHER', created: Date.now(), certs: 2 });
+  T.db.push({ id: 'x1', x: 400 + X, y: 400, layer: 'surface', text: 'чужая, с хуйнёй', author: 'OTHER', created: Date.now(), certs: 2 });
   N.stepNet(P(300, 300), 'under');
   await flush();
   eq(T.fetches || 0, 0, 'под землёй не грузит');
@@ -279,10 +282,21 @@ await test('net: записки вокруг подгружаются навер
   await flush();
   assert(N.net.notes.has('x1'), 'вернулся — снова лежит');
 });
+await test('net: записка прежней геометрии (до просторных колец) ищется по своим координатам и встаёт на своё место', async () => {
+  const T = await fresh();
+  const D = await import(new URL('../src/world/disc.js', import.meta.url));
+  const old = { x: 4100, y: 3900 }, p = D.fromOldGeo(old.x, old.y);   // у костра прежнего городка (поле 3150)
+  T.db.push({ id: 'o1', x: old.x, y: old.y, layer: 'surface', text: 'давняя', author: 'OTHER', created: Date.now() - 5 * 86400e3, certs: 0 });
+  T.db.push({ id: 'o2', x: p.x, y: p.y, layer: 'surface', text: 'не та', author: 'OTHER', created: Date.now(), certs: 0 });   // прежняя, но в прежнем мире далеко
+  N.stepNet(P(Math.round(p.x), Math.round(p.y)), 'surface'); await flush();
+  const n = N.net.notes.get('o1');
+  assert(n && Math.abs(n.x - p.x) < 1 && Math.abs(n.y - p.y) < 1, 'перенесена: ' + (n && [n.x, n.y]));
+  assert(!N.net.notes.has('o2'), 'без сдвига — прежняя геометрия: в прежнем мире она далеко');
+});
 await test('net: заверить — по разу, своё нельзя; пожаловался — пропала и не вернётся при подгрузке', async () => {
   const T = await fresh();
-  T.db.push({ id: 'x1', x: 400, y: 400, layer: 'surface', text: 'чужая', author: 'OTHER', created: Date.now(), certs: 0 });
-  T.db.push({ id: 'x2', x: 420, y: 400, layer: 'surface', text: 'другая', author: 'OTHER', created: Date.now(), certs: 0 });
+  T.db.push({ id: 'x1', x: 400 + X, y: 400, layer: 'surface', text: 'чужая', author: 'OTHER', created: Date.now(), certs: 0 });
+  T.db.push({ id: 'x2', x: 420 + X, y: 400, layer: 'surface', text: 'другая', author: 'OTHER', created: Date.now(), certs: 0 });
   N.stepNet(P(400, 400), 'surface'); await flush();
   const mine = await N.netLeaveNote('своя');
   eq((await N.netVote(mine.id, 'cert')).error, 'mine');
@@ -317,7 +331,7 @@ await test('экран: чужие — только в кадре и на сво
 });
 await test('экран: записки на земле, клик по записке, перенос слов', async () => {
   const T = await fresh();
-  T.db.push({ id: 'x1', x: 200, y: 200, layer: 'surface', text: 'чужая', author: 'OTHER', created: Date.now() - 20 * 86400e3, certs: 1 });
+  T.db.push({ id: 'x1', x: 200 + X, y: 200, layer: 'surface', text: 'чужая', author: 'OTHER', created: Date.now() - 20 * 86400e3, certs: 1 });
   N.stepNet(P(200, 200), 'surface'); await flush();
   R.drawNotes(fakeCtx(), 0, 0, 480, 270);
   eq(R.noteAt(203, 201).id, 'x1');
@@ -471,23 +485,23 @@ await test('supabase: анонимный вход, канал, шаги и ух�
   const ws = FakeWS.all[0];
   eq(ws.url, 'wss://proj.supabase.co/realtime/v1/websocket?apikey=KEY&vsn=1.0.0');
   const join = ws.sent[0];
-  eq(join.topic, 'realtime:ardet-world'); eq(join.event, 'phx_join');
+  eq(join.topic, 'realtime:ardet-world-2'); eq(join.event, 'phx_join');
   eq(join.payload.config.presence.key, 'tab1'); eq(join.payload.access_token, 'AT1');
   eq(join.payload.config.broadcast.self, false);
   T.sendPos({ x: 1, y: 2 });
   eq(ws.sent.length, 1, 'до ответа на вход — молчит');
-  ws.recv({ topic: 'realtime:ardet-world', event: 'phx_reply', ref: join.ref, payload: { status: 'ok', response: {} } });
+  ws.recv({ topic: 'realtime:ardet-world-2', event: 'phx_reply', ref: join.ref, payload: { status: 'ok', response: {} } });
   const track = ws.sent[1];
   eq(track.event, 'presence'); eq(track.payload.event, 'track');
   T.sendPos({ x: 1, y: 2, layer: 'surface' });
   const b = ws.sent[2];
   eq(b.event, 'broadcast'); eq(b.payload.type, 'broadcast'); eq(b.payload.event, 'pos');
   eq(b.payload.payload.id, 'tab1'); eq(b.payload.payload.x, 1); eq(b.join_ref, join.ref);
-  ws.recv({ topic: 'realtime:ardet-world', event: 'broadcast', payload: { type: 'broadcast', event: 'pos', payload: { id: 'tab2', x: 5, y: 6 } } });
-  ws.recv({ topic: 'realtime:ardet-world', event: 'broadcast', payload: { type: 'broadcast', event: 'pos', payload: { id: 'tab1', x: 9, y: 9 } } });
+  ws.recv({ topic: 'realtime:ardet-world-2', event: 'broadcast', payload: { type: 'broadcast', event: 'pos', payload: { id: 'tab2', x: 5, y: 6 } } });
+  ws.recv({ topic: 'realtime:ardet-world-2', event: 'broadcast', payload: { type: 'broadcast', event: 'pos', payload: { id: 'tab1', x: 9, y: 9 } } });
   ws.recv({ topic: 'other', event: 'broadcast', payload: { type: 'broadcast', event: 'pos', payload: { id: 'tab3', x: 9, y: 9 } } });
   eq(got.pos.length, 1, 'чужое — да, своё и с чужого канала — нет'); eq(got.pos[0].id, 'tab2');
-  ws.recv({ topic: 'realtime:ardet-world', event: 'presence_diff', payload: { joins: {}, leaves: { tab2: { metas: [] }, tab1: { metas: [] } } } });
+  ws.recv({ topic: 'realtime:ardet-world-2', event: 'presence_diff', payload: { joins: {}, leaves: { tab2: { metas: [] }, tab1: { metas: [] } } } });
   eq(got.leave.length, 1); eq(got.leave[0].id, 'tab2');
   T.stop();
   eq(ws.sent.at(-1).payload.event, 'leave', 'уходя — сказал');

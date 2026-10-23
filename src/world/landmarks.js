@@ -14,7 +14,7 @@
 // Без надписей: приметы молчат, их читают по месту. Рисунок —
 // render/landmarkProps.js.
 // ═══════════════════════════════════════
-import { RING_W, RINGS, WORLD_W, WORLD_H, warpedDist } from './disc.js';
+import { RINGS, RINGS_D, WORLD_W, WORLD_H, warpedDist, ringOfD, ringD, stretchAt } from './disc.js';
 import { sideAt, heightAt, kurgansIn } from './relief.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
@@ -46,7 +46,7 @@ function freeFor(kind, x, gy, extra = 0, skip = null) {
 }
 function place(kind, x, gy, seed, extra = {}) {
   const d = warpedDist(x, gy);
-  landmarks.push({ kind, x: Math.round(x), gy: Math.round(gy), ring: Math.ceil(d / RING_W), side: sideAt(x, gy), seed, ...extra });
+  landmarks.push({ kind, x: Math.round(x), gy: Math.round(gy), ring: ringOfD(d), side: sideAt(x, gy), seed, ...extra });
 }
 
 // вершина: выше всего вокруг на кольце в 50 точек (местный верх), с запасом
@@ -79,23 +79,25 @@ export function buildLandmarks() {
     const at = p => P.indexOf(p);
     const spring = P[2];
     if (spring) bank(spring, 2, 16, 'clootie', 1);
-    const ice3 = along(p => p.st === 'stream' && p.ice), c4 = along(p => p.st === 'canal' && p.ice && Math.ceil(p.d / RING_W) === 4, 0.4);
+    const ice3 = along(p => p.st === 'stream' && p.ice), c4 = along(p => p.st === 'canal' && p.ice && ringOfD(p.d) === 4, 0.4);
     if (ice3) bank(ice3, at(ice3), ice3.hw + 13, 'frozenMill', 2);
     if (c4) place('iceHole', c4.x, c4.y + 1, 3);
     const lock = along(p => p.st === 'canal' && !p.ice && sideAt(p.x, p.y) === 'plain', 0.55);
     if (lock) place('locks', lock.x, lock.y, 4, { ax: 0, ay: 0, ...dirAt(P, at(lock)) });
     const barge = along(p => p.st === 'canal' && sideAt(p.x, p.y) === 'east', 0.5);
     if (barge) bank(barge, at(barge), barge.hw - 4, 'barge', 5);
-    const valve = along(p => p.st === 'pipe', 0.18);
-    if (valve) bank(valve, at(valve), 9, 'valve', 6);
-    const boat = along(p => p.st === 'dry' && Math.ceil(p.d / RING_W) === 9, 0.45);
+    for (const f of [0.18, 0.3, 0.42, 0.55, 0.68]) {                  // задвижка — на трубе, где у берега свободно
+      const valve = along(p => p.st === 'pipe', f);
+      if (valve && bank(valve, at(valve), 9, 'valve', 6)) break;
+    }
+    const boat = along(p => p.st === 'dry' && ringOfD(p.d) === 9, 0.45);
     if (boat) place('boat', boat.x, boat.y + 2, 7, dirAt(P, at(boat)));
   }
   // 2) на курганах равнины: бабы → кресты → знаки
   const kurgans = kurgansIn(0, 0, WORLD_W, WORLD_H).filter(k => sideAt(k.x, k.y) === 'plain');
   const byRing = {};
   for (const k of kurgans) {
-    const d = warpedDist(k.x, k.y), n = Math.ceil(d / RING_W);
+    const d = warpedDist(k.x, k.y), n = ringOfD(d);
     if (d <= 40 || n > RINGS) continue;
     (byRing[n] || (byRing[n] = [])).push(k);
   }
@@ -130,10 +132,11 @@ export function buildLandmarks() {
     H[9] = ['celltower', 2];
   }
   const cand = {};
-  for (let k = 0; k < 16000; k++) {
+  const TRIES = Math.round(16000 * WORLD_W * WORLD_H / (9300 * 7940));   // проб на площадь — как в прежнем мире
+  for (let k = 0; k < TRIES; k++) {
     const x = h01(k, 1, 31) * WORLD_W, y = h01(k, 2, 31) * WORLD_H, d = warpedDist(x, y);
-    if (d <= 60 || d > RINGS * RING_W - 30) continue;
-    const ring = Math.ceil(d / RING_W), side = sideAt(x, y), want = HILL[side]?.[ring];
+    if (d <= 60 || d > RINGS_D - 30) continue;
+    const ring = ringOfD(d), side = sideAt(x, y), want = HILL[side]?.[ring];
     if (!want) continue;
     const s = summit(x, y), low = want[0] === 'oasis';
     const score = low ? -s.rise : s.rise;
@@ -176,7 +179,7 @@ export function buildLandmarks() {
     let last = -1e9;
     for (let i = 4; i < L.pts.length - 4; i += 3) {
       const p = L.pts[i];
-      if (Math.ceil(p.d / RING_W) !== 8 || p.s - last < 260 || h01(i, 3, 41) > 0.35) continue;
+      if (ringOfD(p.d) !== 8 || p.s - last < 260 * stretchAt(8) || h01(i, 3, 41) > 0.35) continue;   // щитов столько же на длинной дороге
       const a = L.pts[i - 3], b = L.pts[i + 3], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
       for (const k of [1, -1]) {
         const x = p.x - dy / l * (p.hw + 14) * k, y = p.y + dx / l * (p.hw + 14) * k;
@@ -194,13 +197,14 @@ function dirAt(P, i) {
   const a = P[Math.max(0, i - 2)], b = P[Math.min(P.length - 1, i + 2)], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
   return { ax: dx / l, ay: dy / l };
 }
-// где сеть пересекает дороги сторон
+// где сеть пересекает дороги сторон (сеть — кольцо «сейчас», чуть наружу от середины: arteries.js)
+const NET_D = ringD(9, 130);
 function netCrossings(net) {
   const out = [];
   for (const L of lines) {
     if (L.kind !== 'road' || L.town) continue;
     let best = null, bd = Infinity;
-    for (const p of L.pts) { const dd = Math.abs(p.d - 1730); if (dd < bd) { bd = dd; best = p; } }
+    for (const p of L.pts) { const dd = Math.abs(p.d - NET_D); if (dd < bd) { bd = dd; best = p; } }
     if (best) out.push(best);
   }
   return out;

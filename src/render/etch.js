@@ -15,7 +15,7 @@
 // перекрашиваются, когда свет повернул (четыре за кадр); кадр — несколько
 // десятков готовых плиток вместо тысяч квадратов.
 // ═══════════════════════════════════════
-import { TOWN, RING_W, RINGS, warpedDist } from '../world/disc.js';
+import { TOWN, RINGS, warpedDist } from '../world/disc.js';
 import { heightAt, sideWarp, sideOf, landDist, landRing, townWarp, townZoneOf, townEdge, OUTER } from '../world/relief.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
 import { stampPaths, OV } from './etchPaths.js';

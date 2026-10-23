@@ -11,7 +11,7 @@
 // туман расходится (§04: «мост — с него видно и замок, и врата»).
 // Окна — тёмные всегда. На башне флюгер — крест (Г6), поворачивается по ветру.
 // ═══════════════════════════════════════
-import { TOWN } from '../world/disc.js';
+import { TOWN, TS } from '../world/disc.js';
 import { wind } from '../world/wind.js';
 import { t } from '../core/time.js';
 
@@ -22,7 +22,7 @@ const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k | 0, a[1] + (b[1] - a[1]) * k
 // гора — темнее замка, штрих по склону к свету реже
 const BODY = mix(NI, MG, 0.8), HATCH = mix(MG, BO, 0.42), LIT = mix(AS, BO, 0.6), RIM = mix(MG, AS, 0.55);
 const HILL = mix(NI, MG, 0.55), HILLH = mix(MG, BO, 0.3);
-const HX = (TOWN.x0 + TOWN.x1) / 2 - 500;      // над чем висит: середина посёлка
+const HX = (TOWN.x0 + TOWN.x1) / 2 - 500 * TS; // над чем висит: середина посёлка
 const W = 150, H = 50;                         // холст горы с замком; низ — линия горы
 
 // шум для погоды: плавный, на минуты
@@ -169,7 +169,7 @@ export function castleSeen(storm = 0, noon = 0) {
 // ── рисунок: ctx — экранный (фон, без камеры) ──
 export function drawCastle(ctx, cam, vw, vh, seen) {
   // висит над городком: чем дальше в сторону, тем сильнее он в той стороне, где городок
-  const cx = cam.x + vw / 2, off = -Math.tanh((cx - HX) / 1800) * 0.36 * vw, town = inTown(cx, cam.y + vh / 2);
+  const cx = cam.x + vw / 2, off = -Math.tanh((cx - HX) / (1800 * TS)) * 0.36 * vw, town = inTown(cx, cam.y + vh / 2);
   if (seen <= 0.01 && town <= 0.01) return;
   const A = art || build();
   const x0 = Math.round(vw * 0.56 + off - W / 2), y0 = Math.round(Math.min(vh * 0.14, 50) - H);

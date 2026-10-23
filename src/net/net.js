@@ -16,6 +16,20 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
+import { fromOldGeo, toOldGeo } from '../world/disc.js';
+
+// Кольца стали просторнее (geo 2, world/disc.js): записки новой геометрии лежат в базе
+// со сдвигом по x — прежние клиенты их не видят и не путают; прежние записки ищутся
+// по своим координатам и переносятся так же, как сохранения (fromOldGeo)
+const NOTE_X = 1e6;
+function oldBox(b) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const fx of [0, 0.5, 1]) for (const fy of [0, 0.5, 1]) {
+    const p = toOldGeo(b.x0 + (b.x1 - b.x0) * fx, b.y0 + (b.y1 - b.y0) * fy);
+    x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
+  }
+  return { x0: x0 - 40, y0: y0 - 40, x1: x1 + 40, y1: y1 + 40 };
+}
 
 export const SIGHT = 320;                     // смотреть вдаль вдвоём — не дальше, чем видно друг друга
 export const HEAR = 260, LOST = 600, SAY_GAP = 120, NOTE_GAP = 3600, FETCH_R = 700, VOICE_LIFE = 1500;   // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
@@ -108,7 +122,11 @@ export function stepNet(p, layer) {
 async function fetchNotes(me) {
   net.fetching = true;
   net.fetched = { x: me.x, y: me.y, t: net.t };
-  const list = await net.T.notesIn({ layer: 'surface', x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R });
+  const b = { x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R };
+  const fresh = await net.T.notesIn({ layer: 'surface', ...b, x0: b.x0 + NOTE_X, x1: b.x1 + NOTE_X });
+  const old = await net.T.notesIn({ layer: 'surface', ...oldBox(b) });
+  const list = [...fresh.map(n => ({ ...n, x: n.x - NOTE_X })),
+    ...old.filter(n => n.x < NOTE_X / 2).map(n => ({ ...n, ...fromOldGeo(n.x, n.y) })).filter(n => n.x > b.x0 && n.x < b.x1 && n.y > b.y0 && n.y < b.y1)];
   for (const [id, n] of net.notes) if (Math.abs(n.x - me.x) > 2 * FETCH_R || Math.abs(n.y - me.y) > 2 * FETCH_R) net.notes.delete(id);   // далёкие — забыть: вернёшься — подгрузятся
   for (const n of list) if (!net.gone.has(n.id)) net.notes.set(n.id, { ...net.notes.get(n.id), ...n, text: clean(n.text, NOTE_MAX), mine: n.author === net.T.uid });
   net.fetching = false;
@@ -133,8 +151,9 @@ export async function netLeaveNote(text) {
   if (dirty(text) || s.includes('█')) return { error: 'dirty' };
   if (net.t - net.notedAt < NOTE_GAP) return { error: 'soon' };
   const at = { x: net.last.x, y: net.last.y + 4 };
-  const r = await net.T.addNote({ ...at, layer: 'surface', text: s });
-  if (r.error) return r;
+  const r0 = await net.T.addNote({ x: at.x + NOTE_X, y: at.y, layer: 'surface', text: s });
+  if (r0.error) return r0;
+  const r = { ...r0, x: r0.x - NOTE_X };
   net.notedAt = net.t;
   net.notes.set(r.id, { ...r, text: s, mine: true });
   if (net.T.sendNote) net.T.sendNote({ nid: r.id, ...at, text: s });   // тем, кто рядом, — сразу
