@@ -238,6 +238,11 @@ locations.push({
   light: { r: 105, color: [255, 90, 30], flicker: 0.2 },
 });
 
+// проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
+// в тени, проступает вблизи (world/depth.js; weave/SCALE.md)
+import { passDepth } from './depth.js';
+export const depthPass = passDepth(locations, ARCH.ensembles);
+
 // Quick lookup by id
 export const locationById = {};
 for (const loc of locations) locationById[loc.id] = loc;

@@ -377,6 +377,54 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   }
 });
 
+// ═══ ГЛУБИНА (world/depth.js; weave/SCALE.md) ═══
+{
+  const DP = await imp('world/depth.js');
+  const { archWindowLights } = await imp('render/archlights.js');
+  const { SIGN_SIDES } = await imp('content/sign_sides.js');
+  const cellOf = l => l.archDraw ? l.archRing + ':' + l.archSide : null;
+  test('глубина: громких построек на виду — не больше трёх на клетку (первый ансамбль клетки — на виду целиком), прочие — ансамблями в тени', () => {
+    const cells = {};
+    for (const l of locations) { const c = cellOf(l); if (c) (cells[c] = cells[c] || []).push(l); }
+    let quiet = 0;
+    for (const [c, list] of Object.entries(cells)) {
+      const loud = list.filter(l => !l.quiet), first = loud.length ? loud[0].archEns : null;
+      const extra = loud.filter(l => l.archEns !== first).length, firstN = loud.length - extra;
+      assert(firstN + extra <= DP.LOUD_PER_CELL || extra === 0, `${c}: на виду ${loud.length}`);
+      const ens = new Map(); for (const l of list) { if (!ens.has(l.archEns)) ens.set(l.archEns, new Set()); ens.get(l.archEns).add(!!l.quiet); }
+      for (const [e, v] of ens) assert(v.size === 1, `${c}: ансамбль ${e} разорван тенью`);
+      quiet += list.filter(l => l.quiet).length;
+      // доминанта и ворота — на виду, если хоть кто-то на виду
+      for (const l of list) if (l.quiet) assert(archEnsembles[l.archEns].kind !== 'landmark', `${c}: доминанта в тени`);
+    }
+    assert(quiet >= 30, `в тени построек ${quiet}`);
+  });
+  test('глубина: в тени — без своего света: ни огня доминанты, ни свечей в окнах', () => {
+    const lights = archWindowLights(locations, []);
+    for (const l of locations.filter(l => l.quiet && l.archDraw)) {
+      assert(!lights.some(L => Math.abs(L.x - l.archX) <= l.w / 2 + 1 && L.y <= l.archGy + 1 && L.y >= l.archGy - l.h - 1), `свеча в окне тихой «${l.name}»`);
+    }
+  });
+  test('глубина: позиций на виду — не больше пятнадцати на клетку; в тень уходят не живые, не входы, не швы, не серии', () => {
+    const cells = {};
+    for (const l of locations) { if (!DP.positional(l)) continue; const c = DP.cellOf(l); if (c) (cells[c] = cells[c] || []).push(l); }
+    for (const [c, list] of Object.entries(cells)) assert(list.filter(l => !l.quiet).length <= DP.SEEN_PER_CELL, `${c}: на виду ${list.filter(l => !l.quiet).length}`);
+    for (const l of locations.filter(l => l.quiet && l.streetForm)) {
+      assert(!l.streetLive && !l.streetEnter && !l.potemkinSign && l.name !== 'стенд эвфемизма', `в тени «${l.name}»`);
+    }
+  });
+  test('география по описи клеток: семь табличек юга — на своих сторонах', () => {
+    const want = { 'porticoes|милевой камень': 'west', 'catastrophes|бюро исправления имён': 'east', 'catastrophes|узкая дверь без таблички': 'east',
+      'catastrophes|пароход': 'plain', 'now|стеклянный офис в 2 ночи': 'west', 'now|дверь ледника': 'north', 'now|судно на стоянке': 'plain' };
+    for (const [k, side] of Object.entries(want)) {
+      eq(SIGN_SIDES[k], side, k);
+      const [seg, name] = k.split('|'), n = SEGMENTS.findIndex(s => s.id === seg) + 1;
+      const l = locations.find(q => q.streetSeg === n && q.name === name);
+      assert(l && l.streetSide === side, `${k}: в мире на стороне ${l && l.streetSide}`);
+    }
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

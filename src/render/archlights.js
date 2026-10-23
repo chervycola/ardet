@@ -60,7 +60,7 @@ export function archWindowLights(locations, props) {
     x, y, r: Math.min(40, 20 + n * 2), color: CANDLE, flicker: 0.3, candle: true, intensity: 2,
   });
   for (const l of locations) {
-    if (!l.archDraw) continue;
+    if (!l.archDraw || l.quiet) continue;                 // постройка в тени (глубина II) — окна тёмные
     for (const s of candleSpots(l.archDraw, l.w, l.h)) {
       if (l.archLight && Math.abs(s.dx - (l.archLight.dx || 0)) < 6 && Math.abs(s.dy - l.archLight.dy) < 6) continue;
       add(l.archX + (l.archFlip ? -s.dx : s.dx), l.archGy + s.dy, s.n);

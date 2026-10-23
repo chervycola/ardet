@@ -104,6 +104,7 @@ import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as 
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed } from './world/potemkin.js';
+import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
@@ -270,7 +271,7 @@ lighting.clear();
 lighting.add({ x: CORE.x, y: CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
 // Location lights
 for (const loc of locations) {
-  if (!loc.light) continue;
+  if (!loc.light || loc.quiet) continue;                 // глубина II — без своего света
   lighting.add({
     x: loc.x + (loc.light.dx ?? loc.w / 2),          // свет — откуда светит (окно), иначе — середина
     y: loc.y + (loc.light.dy ?? loc.h / 2),
@@ -284,7 +285,7 @@ for (const loc of locations) {
 // Огни доминант колец — видны из соседнего кольца
 for (const loc of locations) {
   const L = loc.archLight;
-  if (!L) continue;
+  if (!L || loc.quiet) continue;
   lighting.add({
     x: loc.archX + (L.dx || 0), y: loc.archGy + (L.dy || 0),
     r: L.r || 70, color: L.color || [226, 138, 58],
@@ -783,6 +784,14 @@ function drawLocation(ctx, loc) {
       ? { x: loc.x + 7 - 20, y: gy - 44, w: 40, h: 44 }
       : { x: loc.x - 10, y: loc.y - 24, w: loc.w + 20, h: loc.h + 24 };
     drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box);
+    return;
+  }
+  // глубина II (world/depth.js): в тени; подошёл — проступает
+  if (loc.quiet) {
+    const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
+    const box = loc.archDraw ? { x: loc.archX - loc.w / 2 - 6, y: loc.archGy - loc.h - 14, w: loc.w + 12, h: loc.h + 20 }
+      : { x: loc.x + 7 - 24, y: loc.y + loc.h - 52, w: 48, h: 56 };
+    drawQuiet(ctx, box, quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy)), c => drawLocationPlain(c, loc));
     return;
   }
   drawLocationPlain(ctx, loc);
