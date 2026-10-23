@@ -691,7 +691,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='2489b5f · 2026-10-23';console.log('[оттиск]', '2489b5f · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='42043ea · 2026-10-23';console.log('[оттиск]', '42043ea · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -18328,6 +18328,8 @@ System.register("content/arch_looks", [], function (exports_43, context_43) {
             // ОСМОТРЫ ПОСТРОЕК ЭПОХ — ключ «кольцо:сторона:имя постройки»
             // (имена — из src/sprites/arch/<кольцо>.js). Постройки — твёрдые
             // локации мира: подходишь, смотришь (src/world/architecture.js).
+            // Вторая такая же постройка клетки — «ключ#2» (третья — «#3»): свой
+            // текст, если написан; нет — общий. Так же изнанки и надписи.
             // ═══════════════════════════════════════
             exports_43("ARCH_LOOKS", ARCH_LOOKS = {
                 "axial:east:застава на перевале": "Застава в ущелье. Стена глинобитная, трамбовка слоями. Ворота на запад открыты, створки вросли в землю — закрыть не пробовали. В будке смотрителя на огне чайник. Чашек две.",
@@ -18377,6 +18379,7 @@ System.register("content/arch_looks", [], function (exports_43, context_43) {
                 "neon:north:нефтяная платформа": "Полупогружная платформа: стоит на понтонах, держится на якорях; факел на стреле горит ровно. По документам — судно. Ходить не ходит.",
                 "neon:plain:кочегарка «Камчатка»": "Полуподвал: ступени вниз, окно топки у самой земли, уголь кучей. По штатному расписанию — оператор котельной, сутки через трое. Трое суток расписанием не охвачены.",
                 "neon:plain:панельная девятиэтажка": "Девятиэтажка. Швы между панелями промазаны, потом ещё раз, тем же серым поверх серого. Антенны на крыше смотрят в одну сторону. Горит одна кухня, на шестом. Там говорят тихо, но до утра.",
+                "neon:plain:панельная девятиэтажка#2": "Вторая такая же, окнами к первой. Швы не промазаны ни разу, в них трава. Не горит ни одно окно. Напротив, на шестом, говорят до утра; здесь свет не зажигают — так лучше слышно.",
                 "neon:south:кофейня Махфуза": "Кофейня старого квартала. Столик у входа держат за постоянным: бирка, чашка, кофе долит. Хозяин доливает каждое утро. Вязь над витриной погасла — адрес и так знают.",
                 "neon:south:отель-пластина": "Отель у моря, балконы гребёнкой. Вывеска на крыше теряет по букве; пока читается «H LID Y». Оспины на углу не заштукатурены. В одном окне натрий: номер не сдан, свет не выключен.",
                 "neon:south:пляж «аренда солнца»": "Прокат: зонт, шезлонг, солнце. У солнца над будкой не хватает одного луча; в прейскуранте оно по-прежнему целое. Шезлонги свободны все.",
@@ -18501,6 +18504,7 @@ System.register("content/arch_backs", [], function (exports_44, context_44) {
                 "neon:plain:Останкинская башня": { "back": "С тыла, у одной из ног, служебная дверь и лифт для своих. В ветер игла ходит наверху на несколько метров; ресторан об этом не объявляет." },
                 "neon:plain:кочегарка «Камчатка»": { "back": "С тыла угольный люк и лопата, черенок вытерт до блеска. Стену над люком закрашивают раз в год; к весне на ней снова не хватает места. У люка, на тёплом, сидит кот." },
                 "neon:plain:панельная девятиэтажка": { "back": "Сзади балконы: лыжи, банки, прошлогодняя ёлка, на шестом — пишущая машинка под клеёнкой." },
+                "neon:plain:панельная девятиэтажка#2": { "back": "Сзади, у глухой стены, стоит «Волга». Шторка на заднем стекле задёрнута, мотор тёплый. Тёплый с восемьдесят первого." },
                 "neon:south:кофейня Махфуза": { "back": "С переулка дверь в кухню и жаровня. Кофе для столика с биркой варят первым, до открытия, к вечеру выливают под фикус. Фикус у кофейни лучший в квартале." },
                 "neon:south:отель-пластина": { "back": "Сзади лифтовая шахта открыта на все этажи, тросы срезаны. Бассейн во дворе засыпан; из него растёт инжир." },
                 "neon:south:пляж «аренда солнца»": { "back": "За будкой склад: зонты сложены, шезлонги стопкой, запасной луч в целлофане. Прокатчик на смене один и сидит спереди." },
@@ -18599,6 +18603,7 @@ System.register("content/arch_walls", [], function (exports_45, context_45) {
                 "neon:plain:Останкинская башня": ["НЕ ВЛЕЗАЙ — УБЬЁТ"],
                 "neon:plain:кочегарка «Камчатка»": ["ЦОЙ ЖИВ", "КИНО", "Виктор, мы с тобой"],
                 "neon:plain:панельная девятиэтажка": ["ЗДЕСЬ БЫЛ ВАСЯ", "СПАРТАК — ЧЕМПИОН", "Лена + Серёжа"],
+                "neon:plain:панельная девятиэтажка#2": ["Лена + Дима", "КИНО", "ВИТЯ, ВЕРНИ КАССЕТУ"],
                 "neon:west:колесо обозрения": ["ОТКРЫТИЕ 1 МАЯ", "СТАЛКЕР БЫЛ ТУТ"],
                 "now:plain:долгострой с краном": ["СДАЧА — IV КВ.", "КАКОГО ГОДА?"],
                 "porticoes:east:стена в лесах": ["ZHANG SAN DAOCI YI YOU", "BU DAO CHANGCHENG", "FEI HAO HAN"],
@@ -18738,7 +18743,7 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
 });
 System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db", "world/disc", "content/arch_looks", "content/arch_backs", "content/arch_walls", "world/inscriptions", "world/useActions"], function (exports_48, context_48) {
     "use strict";
-    var index_js_1, ulitsa_db_js_3, disc_js_10, arch_looks_js_1, arch_backs_js_1, arch_walls_js_1, inscriptions_js_1, useActions_js_2, BAND_MARGIN, GAP, NEAR, margin, FRAME_W, FRAME_H;
+    var index_js_1, ulitsa_db_js_3, disc_js_10, arch_looks_js_1, arch_backs_js_1, arch_walls_js_1, inscriptions_js_1, useActions_js_2, BAND_MARGIN, GAP, NEAR, margin, FRAME_W, FRAME_H, archKey, own;
     var __moduleName = context_48 && context_48.id;
     function h01(n) { const v = Math.sin(n * 127.13 + 7.7) * 43758.5453; return v - Math.floor(v); }
     function inBand(n, x, y) {
@@ -18977,9 +18982,9 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             return { signs: g, x: (Math.min(...xs) + Math.max(...xs)) / 2, top: Math.min(...gys), bottom: Math.max(...gys) };
         });
     }
-    // signs — табличные локации мира: [{x, y, w, h, streetSeg, streetSide}]
     function buildEnsembles(signs = []) {
         const buildings = [], ensembles = [];
+        const nth = new Map();
         const add = (n, side, kind, members, extra = {}) => {
             if (!members.length)
                 return;
@@ -18988,8 +18993,10 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             const idx = [];
             for (const m of members) {
                 idx.push(buildings.length);
+                const key = archKey(seg.id, side, m.kind.name), k = (nth.get(key) || 0) + 1;
+                nth.set(key, k);
                 buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: m.kind.draw, name: m.kind.name,
-                    ring: n, side, ens: id, look: arch_looks_js_1.ARCH_LOOKS[`${seg.id}:${side}:${m.kind.name}`] || null });
+                    ring: n, side, ens: id, nth: k, look: own(arch_looks_js_1.ARCH_LOOKS, seg.id, side, m.kind.name, k) || null });
             }
             ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });
         };
@@ -19115,11 +19122,12 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
     function archLocations(decor) {
         return decor.map((d, i) => {
             // изнанка: обойти постройку; шов — если постройка сама притворство
-            const bk = arch_backs_js_1.ARCH_BACKS[`${ulitsa_db_js_3.SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+            const rid = ulitsa_db_js_3.SEGMENTS[d.ring - 1].id;
+            const bk = own(arch_backs_js_1.ARCH_BACKS, rid, d.side, d.name, d.nth || 1);
             const around = bk && bk.back ? `ar_${i}_around` : null;
             if (around)
                 useActions_js_2.useTexts[around] = { title: `${d.name} — с изнанки`, text: bk.back };
-            const wall = arch_walls_js_1.ARCH_WALLS[`${ulitsa_db_js_3.SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+            const wall = own(arch_walls_js_1.ARCH_WALLS, rid, d.side, d.name, d.nth || 1);
             if (wall && wall.length)
                 inscriptions_js_1.hiddenInscriptions[`ar_${i}`] = wall;
             const fh = Math.max(6, Math.min(14, Math.round(d.h * 0.3)));
@@ -19129,7 +19137,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                 x: Math.round(d.x - d.w / 2), y: Math.round(d.gy - d.h), w: d.w, h: d.h,
                 look: d.look || d.name,
                 archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
-                archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+                archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip, archNth: d.nth || 1,
                 archLife: (d.kind && d.kind.life) || null,
                 ...(around ? { useAction: around } : {}),
                 ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
@@ -19185,6 +19193,11 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             // одинаковые постройки в один кадр (640×360 мира) не попадают даже краем:
             // пустой перегон лучше двойника
             FRAME_W = 640, FRAME_H = 360;
+            // signs — табличные локации мира: [{x, y, w, h, streetSeg, streetSide}]
+            // одинаковые постройки клетки — второй и третий экземпляр со своим текстом: ключ#2, ключ#3
+            // (осмотр, изнанка, надписи); своего нет — общий
+            exports_48("archKey", archKey = (ringId, side, name, nth = 1) => `${ringId}:${side}:${name}` + (nth > 1 ? '#' + nth : ''));
+            own = (table, ringId, side, name, nth) => (nth > 1 && table[archKey(ringId, side, name, nth)]) || table[archKey(ringId, side, name)];
         }
     };
 });

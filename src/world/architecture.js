@@ -244,8 +244,14 @@ function signScenes(signs, n, side) {
 }
 
 // signs — табличные локации мира: [{x, y, w, h, streetSeg, streetSide}]
+// одинаковые постройки клетки — второй и третий экземпляр со своим текстом: ключ#2, ключ#3
+// (осмотр, изнанка, надписи); своего нет — общий
+export const archKey = (ringId, side, name, nth = 1) => `${ringId}:${side}:${name}` + (nth > 1 ? '#' + nth : '');
+const own = (table, ringId, side, name, nth) => (nth > 1 && table[archKey(ringId, side, name, nth)]) || table[archKey(ringId, side, name)];
+
 export function buildEnsembles(signs = []) {
   const buildings = [], ensembles = [];
+  const nth = new Map();
   const add = (n, side, kind, members, extra = {}) => {
     if (!members.length) return;
     const seg = SEGMENTS[n - 1];
@@ -253,8 +259,10 @@ export function buildEnsembles(signs = []) {
     const idx = [];
     for (const m of members) {
       idx.push(buildings.length);
+      const key = archKey(seg.id, side, m.kind.name), k = (nth.get(key) || 0) + 1;
+      nth.set(key, k);
       buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: m.kind.draw, name: m.kind.name,
-        ring: n, side, ens: id, look: ARCH_LOOKS[`${seg.id}:${side}:${m.kind.name}`] || null });
+        ring: n, side, ens: id, nth: k, look: own(ARCH_LOOKS, seg.id, side, m.kind.name, k) || null });
     }
     ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });
   };
@@ -369,10 +377,11 @@ export function signFacade(ringN, side) {
 export function archLocations(decor) {
   return decor.map((d, i) => {
     // изнанка: обойти постройку; шов — если постройка сама притворство
-    const bk = ARCH_BACKS[`${SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+    const rid = SEGMENTS[d.ring - 1].id;
+    const bk = own(ARCH_BACKS, rid, d.side, d.name, d.nth || 1);
     const around = bk && bk.back ? `ar_${i}_around` : null;
     if (around) useTexts[around] = { title: `${d.name} — с изнанки`, text: bk.back };
-    const wall = ARCH_WALLS[`${SEGMENTS[d.ring - 1].id}:${d.side}:${d.name}`];
+    const wall = own(ARCH_WALLS, rid, d.side, d.name, d.nth || 1);
     if (wall && wall.length) hiddenInscriptions[`ar_${i}`] = wall;
     const fh = Math.max(6, Math.min(14, Math.round(d.h * 0.3)));
     const fw = Math.round(d.w * 0.84);
@@ -381,7 +390,7 @@ export function archLocations(decor) {
       x: Math.round(d.x - d.w / 2), y: Math.round(d.gy - d.h), w: d.w, h: d.h,
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
-      archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip,
+      archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip, archNth: d.nth || 1,
       archLife: (d.kind && d.kind.life) || null,
       ...(around ? { useAction: around } : {}),
       ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),

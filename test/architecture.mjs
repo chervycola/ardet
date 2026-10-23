@@ -189,14 +189,33 @@ test('arch: фасады табличек — по кольцу и сторон�
 
 const { isBlocked } = await imp('world/physics.js');
 const { ARCH_LOOKS } = await imp('content/arch_looks.js');
+const { ARCH_BACKS: ARCH_BACKS_ALL } = await imp('content/arch_backs.js');
+const { ARCH_WALLS: ARCH_WALLS_ALL } = await imp('content/arch_walls.js');
+const { useTexts } = await imp('world/useActions.js');
 const arch = locations.filter(l => l.archDraw);
 test('arch: постройки — локации мира с собственным осмотром', () => {
   eq(arch.length, decor.length, 'каждая постройка — локация');
   for (const l of arch) {
     const key = `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}`;
     assert(ARCH_LOOKS[key], `нет осмотра ${key}`);
-    eq(l.look, ARCH_LOOKS[key]);
+    eq(l.look, (l.archNth > 1 && ARCH_LOOKS[key + '#' + l.archNth]) || ARCH_LOOKS[key]);
   }
+});
+
+test('arch: одинаковые постройки клетки — у второго свой текст (ключ#2), где написан; ключи #n — к живой постройке', () => {
+  for (const [name, table] of [['осмотр', ARCH_LOOKS], ['изнанка', ARCH_BACKS_ALL], ['надписи', ARCH_WALLS_ALL]]) {
+    for (const k of Object.keys(table)) {
+      const m = /^(.*)#(\d+)$/.exec(k);
+      if (!m) continue;
+      assert(+m[2] >= 2 && table[m[1]], `${name}: ${k} без общей строки`);
+      assert(arch.some(l => `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}` === m[1] && l.archNth === +m[2]), `${name}: ${k} — такой постройки нет`);
+    }
+  }
+  // слово автора: две панельные девятиэтажки одного двора — не под копирку
+  const panels = arch.filter(l => l.name === 'панельная девятиэтажка');
+  eq(panels.length, 2, 'девятиэтажек');
+  assert(panels[0].look !== panels[1].look, 'одинаковый осмотр');
+  assert(useTexts[panels[0].useAction].text !== useTexts[panels[1].useAction].text, 'одинаковая изнанка');
 });
 
 test('arch: твёрдое — только основание, внутри силуэта', () => {
@@ -245,8 +264,7 @@ test('земля: заборы не перегораживают тропы и �
   }
 });
 
-const { ARCH_BACKS } = await imp('content/arch_backs.js');
-const { useTexts } = await imp('world/useActions.js');
+const ARCH_BACKS = ARCH_BACKS_ALL;
 test('изнанка: у каждой постройки — «обойти» с текстом (когда изнанки написаны)', () => {
   if (!Object.keys(ARCH_BACKS).length) return;
   for (const l of arch) {
