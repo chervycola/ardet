@@ -35,6 +35,8 @@ export function loadCollected(ids) {
 }
 
 export function getCollectedIds() { return Array.from(collected); }
+// текст записки — перечитать в описи найденного (ui/inventory.js)
+export function loreTextOf(id) { const it = loreItems.find(i => i.id === id); return it ? it.text : null; }
 
 // Render uncollected lore items as small glowing specs on the ground
 export function drawLoreItems(cam) {

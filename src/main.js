@@ -55,7 +55,8 @@ import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount } from
 import { quietVoice } from './world/quietSound.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
-import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds } from './world/lore.js';
+import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds, loreTextOf } from './world/lore.js';
+import { initInventory } from './ui/inventory.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer, setPosOverride } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
@@ -108,7 +109,7 @@ import { update as updateMonsters, draw as drawMonsters } from './world/monsters
 import { update as updatePotemkin, revealOf, drawRevealed, setRelook } from './world/potemkin.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt } from './world/underside.js';
+import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
@@ -1669,6 +1670,8 @@ function startGame() {
       mb.classList.add('on');
       mb.addEventListener('click', () => toggleWorldMap());
     }
+    const ib = document.getElementById('inv-btn');   // опись найденного (ui/inventory.js)
+    if (ib) ib.classList.add('on');
   }
 }
 
@@ -1880,6 +1883,31 @@ function stepQuietVoices() {
   else playCreak(q.v, q.pan, 0.8 + ((q.l.id.length * 37) % 9) / 20);
 }
 
+// ═══ ОПИСЬ НАЙДЕННОГО (ui/inventory.js) ═══
+// записки — по номерам в порядке находки; ходы изнанки — какие открылись; где был внизу;
+// обряды — что сделано (изнанка помнит, колодец помнит)
+const UNDER_PLACES = { catacomb: 'Катакомбы', sewer: 'Канализация', shelter: 'Бомбоубежище', metro: 'Метро', vein: 'Холодная жила', moss: 'Ход мха' };
+const placeBelow = id => UNDER_PLACES[id] || (ROOMS.find(R => R.id === id) || {}).name || null;
+const cap = s => s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s;
+function inventoryData() {
+  const notes = getCollectedIds().map(id => loreTextOf(id)).filter(Boolean).map((text, i) => ({ n: i + 1, text }));
+  const ways = [...under.seen].filter(k => DESCENTS[k]).map(k => {
+    const th = thingById(DESCENTS[k]), t = useTexts[k];
+    return `${cap(t ? t.title : k)} → ${(th && placeBelow(th.room)) || 'вниз'}`;
+  });
+  const rooms = [...new Set([...under.found].map(placeBelow).filter(Boolean))];
+  const rites = [];
+  if (under.called.size) rites.push(`Перекличка ниш — имён повторено: ${under.called.size}.`);
+  if (under.signed) rites.push('Журнал учений — расписался.');
+  if (under.kept.size) rites.push(`Опись инеем — строк сбережено: ${under.kept.size}.`);
+  if (under.met.size) rites.push(`Дежурный назвал сбережённое: ${under.met.size}.`);
+  if (under.ticket) rites.push('Билет «до колодца. туда.» — в кармане.');
+  const given = (saveTownWell() || {}).g | 0;
+  if (given) rites.push(`Ведро общего дна — своё отдано: ${given}.`);
+  return { notes, total: getTotalCount(), ways, rooms, rites };
+}
+initInventory(inventoryData, () => !loreActive() && !isMapOpen());
+
 // ═══ ПОВТОРНЫЙ ОСМОТР (world/relook.js) ═══
 // вещь осмотрели — счёт; что-то с ней сделали — отметка; второй раз — текст точнее,
 // вариант по обстановке: сутки, погода, ветер
@@ -2044,13 +2072,13 @@ window.onerror = (msg, src, line, col, err) => {
 // build 1776974120
 
 // Проверка эффектов руками — только с ?dev в адресе: в рабочей сборке случайное нажатие
-// ломало настроение и выглядело как сбой игры. I (Ш) — вторая краска авто → 0..3;
+// ломало настроение и выглядело как сбой игры. U (Г) — вторая краска авто → 0..3 (I — опись);
 // O (Щ) — шторм пластины; L (Д) — сбой лоу-фай; T (Е) — токсик (протёрто и счётчик);
 // K (Л) — оступиться; N (Т) — красный полдень
 const DEV = /[?&]dev\b/.test(location.search);
 if (DEV) document.addEventListener('keydown', e => {
   if (!state.is('game') || e.repeat) return;
-  if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
+  if (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г') ink.cycle();
   if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д') ink.note('ЛОУ-ФАЙ · ' + LOFI_NAMES[lofi.cycle()]);
   if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') {
     toxic.setTest(!toxic.isTest()); ink.note(toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');

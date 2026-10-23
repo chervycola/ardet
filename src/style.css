@@ -472,6 +472,97 @@ canvas#game {
 }
 #map-btn:active { background: rgba(107,15,26,0.4); }
 #map-btn.on { display: flex; }
+/* опись найденного: кнопка «§» — под картой, только на телефоне (ui/inventory.js) */
+#inv-btn {
+  position: fixed;
+  top: calc(62px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 250;
+  font-family: var(--font-book);
+  font-size: 20px;
+  color: var(--c-gold);
+  background: rgba(10,8,6,0.72);
+  border: 1px solid rgba(184,134,11,0.5);
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#inv-btn:active { background: rgba(107,15,26,0.4); }
+#inv-btn.on { display: flex; }
+
+/* ── Опись найденного — бланк: бумага поверх ночи встык, сепия, печать криво (ART_BIBLE §01, §06) ── */
+#inv {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  display: none;
+  z-index: 230;
+  padding: 26px 34px 18px;
+  background: #E8DCC3;
+  color: #3A3026;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+  -webkit-overflow-scrolling: touch;
+}
+#inv.on { display: block; }
+#inv .inv-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px dashed rgba(58,48,38,0.55);
+  padding-bottom: 8px; margin-bottom: 12px;
+}
+#inv .inv-title { font-family: var(--font-pixel); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+#inv .inv-sheet { font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px; opacity: 0.7; }
+#inv .inv-h {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  margin: 14px 0 6px; opacity: 0.8;
+}
+#inv .inv-h:first-child { margin-top: 0; }
+#inv .inv-row {
+  display: flex; gap: 12px; align-items: baseline;
+  font-family: var(--font-book); font-size: 17px; line-height: 1.45;
+  padding: 3px 0;
+  border-bottom: 1px dotted rgba(58,48,38,0.25);
+}
+#inv .inv-row[data-inv] { cursor: pointer; }
+#inv .inv-row[data-inv]:hover { background: rgba(194,59,43,0.08); }
+#inv .inv-n { font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; min-width: 52px; opacity: 0.75; }
+#inv .inv-t { min-width: 0; overflow-wrap: break-word; }
+#inv .inv-empty { opacity: 0.55; font-style: italic; }
+#inv .inv-note {
+  font-family: var(--font-book); font-size: 20px; line-height: 1.6;
+  white-space: pre-wrap; overflow-wrap: break-word; margin: 6px 0 12px;
+}
+#inv .inv-foot { font-family: var(--font-book); font-size: 14px; font-style: italic; margin-top: 14px; opacity: 0.75; }
+#inv .inv-stamp {
+  position: absolute; top: 14px; right: 22%;
+  transform: rotate(-6deg);
+  border: 2px solid #C23B2B; color: #C23B2B;
+  padding: 3px 8px;
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  opacity: 0.78; pointer-events: none;
+}
+#inv .inv-nav {
+  display: flex; justify-content: flex-end; gap: 18px; margin-top: 14px;
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+}
+#inv .inv-nav span { cursor: pointer; padding: 6px 0; }
+#inv .inv-nav span.off { opacity: 0.3; pointer-events: none; }
+/* телефон: бланк ниже кнопок карты и описи; печать — под итогом, не поверх строк */
+@media (max-width: 768px) {
+  #inv {
+    width: 92vw; padding: 18px 16px 12px;
+    top: calc(112px + env(safe-area-inset-top)); transform: translateX(-50%);
+    max-height: calc(100vh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  #inv .inv-row { font-size: 15px; }
+  #inv .inv-note { font-size: 17px; line-height: 1.5; }
+  #inv .inv-stamp { position: static; display: inline-block; margin-top: 10px; transform: rotate(-4deg); }
+}
 
 /* ── Custom cursor ── */
 #cur {

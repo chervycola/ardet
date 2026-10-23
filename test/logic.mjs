@@ -379,6 +379,28 @@ const imp = p => import(new URL(p, base));
   });
 }
 
+// ── опись найденного (ui/inventory.js) ──
+{
+  const INV = await imp('ui/inventory.js');
+  test('опись найденного: записки по номерам, пустые графы не скрываются, заголовок не висит в конце листа', () => {
+    const d = { notes: [{ n: 1, text: 'Конверт без адреса. Внутри — письмо «Отцу», дописанное двадцать раз, по строке в год.' }, { n: 2, text: 'Коротко.' }], total: 132, ways: [], rooms: ['Крипта, девятый ярус'], rites: ['Журнал учений — расписался.'] };
+    const L = INV.inventoryLines(d);
+    eq(L[0].h, 'Записки');
+    eq(L[1].n, '№ 001'); assert(L[1].text.endsWith('…') && L[1].text.length <= 66, 'первые слова записки');
+    eq(L[2].text, 'Коротко.');
+    assert(L[3].empty && L[3].n === '№ 003–132' && /графы не заполнены/.test(L[3].text), 'пустые графы — строкой с номерами');
+    assert(L.some(l => l.h === 'Ходы изнанки') && L.some(l => l.empty && l.text === 'графа не заполнена'), 'пустая графа ходов — не скрыта');
+    assert(L.some(l => l.text === 'Крипта, девятый ярус') && L.some(l => l.text === 'Журнал учений — расписался.'), 'где был и обряды');
+    for (const per of [4, 5, 6, 7]) {
+      const P = INV.inventoryPages(L, per);
+      eq(P.flat().length, L.length, 'ничего не потеряно');
+      for (const p of P) { assert(p.length <= per, 'лист не длиннее меры'); assert(!p[p.length - 1].h, 'заголовок графы — последней строкой листа'); }
+    }
+    const all = { notes: Array.from({ length: 132 }, (_, i) => ({ n: i + 1, text: 'x' })), total: 132, ways: [], rooms: [], rites: [] };
+    assert(!INV.inventoryLines(all).some(l => /не заполнен/.test(l.text) && l.n), 'всё найдено — пустых граф записок нет');
+  });
+}
+
 // ── тихое подаёт голос (world/quietSound.js) ──
 {
   const QS = await imp('world/quietSound.js');

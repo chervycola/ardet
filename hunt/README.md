@@ -21,7 +21,7 @@
 - читать текст, который сейчас открыт на экране: осмотр, диалог, терминал, меню;
 - нажимать клавиши и кликать мышью, как человек: WASD или стрелки — идти, Shift —
   быстрее, клик — подойти и осмотреть, правый клик — подойти и использовать, E и F —
-  осмотреть и использовать то, что рядом, M — карта, Esc — назад;
+  осмотреть и использовать то, что рядом, M — карта, I — опись найденного, Esc — назад;
 - печатать в терминал всё, что придёт в голову;
 - вести свой дневник находок и комментировать вслух.
 
@@ -97,7 +97,7 @@ For anyone who lets a model roam ardet and streams it.
 - **Allowed:** screenshots, reading whatever text is open on screen (look, dialogue,
   terminal, menu), keyboard and mouse like a human (WASD/arrows, Shift, click to approach
   and look, right-click to approach and use, E/F to look at or use what is at hand, M for
-  the map, Esc), typing anything into the terminal.
+  the map, I for the inventory of finds, Esc), typing anything into the terminal.
 - **Not allowed:** reading the source, the build or the registries; touching game state
   (localStorage, page variables, console, network); teleports and time hacks; chat
   telling the model where things are.
