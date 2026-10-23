@@ -8,7 +8,9 @@
 // Багрянец на чёрном: киноварь и ночь, кость; тепло — только язычки нимба.
 // По слову автора жонглирует: три вещи каскадом из руки в руку, оружие разное —
 // кинжал, топорик, серп, булава, тесак; каждая вертится в полёте, раз в
-// несколько кругов одна меняется на другую. Пика с лицом воткнута в землю у
+// несколько кругов одна меняется на другую. Руки — естественными движениями
+// (слово автора, 23.10): кисть ловит снаружи, подхватывает ковшом, бросает у
+// середины; локти у тела. Пика с лицом воткнута в землю у
 // костра (рисуется с костром, sprites/locations/canon.js). На ходу
 // (world/wandering.js) жонглирует так же.
 // Пиксель к пикселю; свет слева, кромка пеплом справа.
@@ -46,7 +48,27 @@ function weapon(kind, cx, cy, a) {
   const c = Math.cos(a), s = Math.sin(a);
   for (const [k, p, col] of WEAPONS[kind]) r(cx + k * c - p * s, cy + k * s + p * c, 1, 1, col);
 }
-const THROW = 54, HIGH = 34;                                             // бросок: из руки в руку за девять десятых секунды, выше головы
+// каскад: вещь летит FLY шагов (выше головы), в руке лежит HOLD; бросок каждые S шагов,
+// руки по очереди — каждая бросает раз в 2S; вещь возвращается в ту же руку через 2(FLY+HOLD)
+const FLY = 45, HOLD = 30, S = (FLY + HOLD) / 3, HIGH = 34;
+// точки петли кисти от плеча: бросок — у пояса ближе к середине, ловля — снаружи и чуть
+// выше, низ подхвата — между ними; dir — наружу (−1 левая, +1 правая)
+const hand = (sh, dir) => ({ throwP: { x: sh.x + dir * 2, y: sh.y + 8 }, catchP: { x: sh.x + dir * 8, y: sh.y + 6 }, low: { x: sh.x + dir * 5, y: sh.y + 11 } });
+// где кисть сейчас: пустая — от броска наружу и чуть вверх к ловле; с вещью — подхват
+// вниз и к середине, к броску. off — сдвиг фазы (правая — на шаг броска позже)
+function handAt(sh, dir, time, off, swing) {
+  const P = hand(sh, dir), Hc = 2 * S, ph = ((time - off) % Hc + Hc) % Hc;
+  let x, y;
+  if (ph < Hc - HOLD) {                                                  // пустая: наружу, навстречу
+    const u = ph / (Hc - HOLD);
+    x = P.throwP.x + (P.catchP.x - P.throwP.x) * u; y = P.throwP.y + (P.catchP.y - P.throwP.y) * u - Math.sin(u * Math.PI) * 2;
+  } else {                                                               // с вещью: подхват ковшом
+    const v = (ph - (Hc - HOLD)) / HOLD, cx = 2 * P.low.x - (P.catchP.x + P.throwP.x) / 2, cy = 2 * P.low.y - (P.catchP.y + P.throwP.y) / 2;
+    x = (1 - v) * (1 - v) * P.catchP.x + 2 * (1 - v) * v * cx + v * v * P.throwP.x;
+    y = (1 - v) * (1 - v) * P.catchP.y + 2 * (1 - v) * v * cy + v * v * P.throwP.y;
+  }
+  return { x: q(x + swing), y: q(y) };
+}
 export function drawNPC_jester(jx, jy, opts = {}) {
   const home = opts.moving === undefined, moving = !!opts.moving;
   const x0 = q(jx), y0 = q(jy);
@@ -94,13 +116,21 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   r(tx, ty + 12, 11, 1, K1); r(tx + 5, ty + 12, 1, 1, L2);               // пояс, пряжка
   // ворот зубцами: кость и киноварь
   for (let k = 0; k < 6; k++) { r(tx - 1 + k * 2, ty - 1, 2, 1, k & 1 ? KV : BO); r(tx + k * 2, ty, 1, 1, k & 1 ? KV : BO); }
-  // ── руки: обе жонглируют — кисть подаётся в такт броску ──
+  // ── руки: жонглируют по-настоящему (слово автора: «естественными движениями») ──
+  // каждая кисть ходит петлёй: ловит снаружи, несёт вещь вниз и к середине,
+  // бросает у пояса, пустая уходит наружу и чуть вверх — навстречу следующей;
+  // локти у тела, ходит предплечье; руки — в противофазе (cascade)
   const sL = { x: tx - 1, y: ty + 2 }, sR = { x: tx + 11, y: ty + 2 };
-  const swing = moving ? q(step * 1.5) : 0, beat = (t % (THROW / 1.5 | 0)) / (THROW / 1.5 | 0), even = Math.floor(t / (THROW / 1.5 | 0)) & 1;
-  const hL = { x: sL.x - 6 + swing, y: sL.y + 9 - (even === 0 && beat < 0.3 ? 1 : 0) };   // руки в стороны, у пояса
-  const hR = { x: sR.x + 6 - swing, y: sR.y + 9 - (even === 1 && beat < 0.3 ? 1 : 0) };
-  line(sL.x, sL.y, hL.x, hL.y, NI); line(sL.x + 1, sL.y + 1, hL.x + 1, hL.y, KV);
-  line(sR.x, sR.y, hR.x, hR.y, NI); line(sR.x + 1, sR.y, hR.x + 1, hR.y, KV);
+  const swing = moving ? q(step * 1.5) : 0;
+  const hL = handAt(sL, -1, t, 0, swing), hR = handAt(sR, 1, t, S, -swing);
+  const arm = (sh, h, dir) => {                                          // плечо → локоть у тела → кисть
+    const el = { x: sh.x + dir * 2 + (h.x - sh.x - dir * 5) * 0.3, y: sh.y + 6 + (h.y - sh.y - 9) * 0.25 };
+    line(sh.x, sh.y, el.x, el.y, KV); line(sh.x + dir, sh.y + 1, el.x + dir, el.y, NI);   // плечо: киноварь, тень снаружи
+    line(el.x, el.y, h.x, h.y, NI); line(el.x - dir, el.y, h.x - dir, h.y, dir < 0 ? K4 : AS);   // предплечье: чёрное, кромка
+    const cf = { x: el.x + (h.x - el.x) * 0.7, y: el.y + (h.y - el.y) * 0.7 };
+    r(cf.x, cf.y, 1, 1, BO); r(cf.x - dir, cf.y, 1, 1, L1);              // манжета костью — у кисти, как ворот
+  };
+  arm(sL, hL, -1); arm(sR, hR, 1);
   // ── голова: лицо белое, губы красные — улыбка как форма; крест в глазнице ──
   r(hx - 1, hy, 10, 11, K0);
   r(hx, hy + 1, 8, 9, BO); r(hx, hy + 1, 1, 9, L1); r(hx + 7, hy + 2, 1, 7, L2);
@@ -118,15 +148,22 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   horn([[3, -3], [3, -5], [3, -7], [3 + q(hs * 0.5), -10]], NI);
   horn([[7, -3], [9, -5], [11, -7], [12 + q(hs), -9]], KV);
   for (const [bx, bb] of [[-7 + q(hs), -10], [3 + q(hs * 0.5), -12], [14 + q(hs), -10]]) { r(hx + bx, hy + bb, 2, 1, L2); r(hx + bx, hy + bb + 1, 1, 1, AS); }
-  // ── каскад: три вещи накрест из руки в руку; каждая вертится; раз в три круга — другое оружие ──
+  // ── каскад: три вещи накрест из руки в руку; каждая вертится в полёте, в руке лежит
+  //    остриём вверх; раз в шесть бросков у каждой — другое оружие, одинаковых нет ──
   r(hL.x, hL.y, 2, 2, BO); r(hR.x, hR.y, 2, 2, BO);                      // кулаки
-  const LOOP = THROW * 2;
+  const k0 = Math.floor(t / S);
   for (let i = 0; i < 3; i++) {
-    const tt = t + i * LOOP / 3, ph = tt % LOOP, toR = ph < THROW, u = (ph % THROW) / THROW;
-    const a = toR ? hL : hR, b = toR ? hR : hL, H = toR ? HIGH : HIGH - 5;   // встречные дуги — на разной высоте, над головой
-    const cx2 = a.x + 1 + (b.x - a.x) * u, cy2 = a.y - 1 + (b.y - a.y) * u - Math.sin(u * Math.PI) * H;
-    const kind = KINDS[(Math.floor(tt / LOOP / 3) * 2 + i * 2) % KINDS.length];
-    weapon(kind, cx2, cy2, u * Math.PI * 2 * (toR ? 1 : -1) + i * 2.1 - Math.PI / 2);
+    const k = k0 - (((k0 - i) % 3) + 3) % 3, dt = t - k * S, n = (k - i) / 3;   // последний бросок этой вещи
+    const fromL = (k & 1) === 0, a = fromL ? hand(sL, -1) : hand(sR, 1), b = fromL ? hand(sR, 1) : hand(sL, -1);
+    const kind = KINDS[(((Math.floor(n / 6) * 3 + i) % KINDS.length) + KINDS.length) % KINDS.length];
+    if (dt < FLY) {                                                      // в полёте: от точки броска к точке ловли
+      const u = dt / FLY, H = fromL ? HIGH : HIGH - 5;                   // встречные дуги — на разной высоте
+      const wx = a.throwP.x + swing * (fromL ? 1 : -1) + (b.catchP.x - a.throwP.x) * u, wy = a.throwP.y + (b.catchP.y - a.throwP.y) * u - Math.sin(u * Math.PI) * H;
+      weapon(kind, wx + 1, wy - 1, u * Math.PI * 2 * (fromL ? 1 : -1) + i * 2.1 - Math.PI / 2);
+    } else {                                                             // в руке: несут к броску
+      const h = fromL ? hR : hL;
+      weapon(kind, h.x + 1, h.y - 2, -Math.PI / 2 + (fromL ? 0.25 : -0.25));
+    }
   }
   // ── «ХА!» вблизи ──
   if (npcProximity > 0.3 && t % 80 < 20) {
