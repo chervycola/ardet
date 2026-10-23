@@ -1483,6 +1483,10 @@ function heroStep(dvx, dvy) {
   const sp = Math.hypot(mx, my);
   if (sp > 0.05) {
     if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
+    // куда смотрит (sprites/player.js): вверх — спиной к зрителю, вниз — лицом, вбок — в профиль;
+    // по диагонали — как был (слово автора)
+    if (Math.abs(my) > Math.abs(mx) * 1.15) player.face = my < 0 ? 'N' : 'S';
+    else if (Math.abs(mx) > Math.abs(my) * 1.15) player.face = mx > 0 ? 'E' : 'W';
     events.emit(E.PLAYER_MOVE, player);
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
