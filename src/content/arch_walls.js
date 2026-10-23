@@ -52,6 +52,7 @@ export const ARCH_WALLS = {
   "lightgarden:plain:белокаменный храм": ["ГОСПОДИ ПОМОЗИ","РАБУ СВОЕМУ"],
   "lightgarden:south:Айя-София": ["ΚΥΡΙΕ ΒΟΗΘΕΙ","HALFTAN","ARNI"],
   "neon:east:город-соты": ["GAU LUNG WONG DAI","DENTIST 2/F →"],
+  "neon:east:город-соты#2": ["NAAM MUN","FISHBALLS ↓"],
   "neon:plain:Останкинская башня": ["НЕ ВЛЕЗАЙ — УБЬЁТ"],
   "neon:plain:кочегарка «Камчатка»": ["ЦОЙ ЖИВ","КИНО","Виктор, мы с тобой"],
   "neon:plain:панельная девятиэтажка": ["ЗДЕСЬ БЫЛ ВАСЯ","СПАРТАК — ЧЕМПИОН","Лена + Серёжа"],
