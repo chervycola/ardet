@@ -413,15 +413,18 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       assert(!l.streetLive && !l.streetEnter && !l.potemkinSign && l.name !== 'стенд эвфемизма', `в тени «${l.name}»`);
     }
   });
-  test('география по описи клеток: одиннадцать табличек юга — на своих сторонах', () => {
+  test('география по описи клеток: семнадцать имён табличек юга — на своих сторонах (пары — вместе)', () => {
     const want = { 'porticoes|милевой камень': 'west', 'catastrophes|бюро исправления имён': 'east', 'catastrophes|узкая дверь без таблички': 'east',
       'catastrophes|пароход': 'plain', 'now|стеклянный офис в 2 ночи': 'west', 'now|дверь ледника': 'north', 'now|судно на стоянке': 'plain',
-      'catastrophes|чемодан': 'west', 'catastrophes|бомбоубежище': 'plain', 'now|провал': 'north', 'now|бюро «УТОПИЯ»': 'plain' };
+      'catastrophes|чемодан': 'west', 'catastrophes|бомбоубежище': 'plain', 'now|провал': 'north', 'now|бюро «УТОПИЯ»': 'plain',
+      'lightgarden|скит': 'north', 'twohearths|журнал наблюдений': 'north', 'enlightenment|стоящие часы': 'west',
+      'neon|прачечная № 4': 'east', 'neon|ломбард': 'west', 'now|дверь «ARDET»': 'east' };
     for (const [k, side] of Object.entries(want)) {
       eq(SIGN_SIDES[k], side, k);
       const [seg, name] = k.split('|'), n = SEGMENTS.findIndex(s => s.id === seg) + 1;
-      const l = locations.find(q => q.streetSeg === n && q.name === name);
-      assert(l && l.streetSide === side, `${k}: в мире на стороне ${l && l.streetSide}`);
+      const all = locations.filter(q => q.streetSeg === n && q.name === name);
+      assert(all.length, `${k}: нет в мире`);
+      for (const l of all) assert(l.streetSide === side, `${k}: в мире на стороне ${l.streetSide}`);
     }
   });
 }
