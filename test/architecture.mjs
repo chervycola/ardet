@@ -207,7 +207,8 @@ test('arch: одинаковые постройки клетки — у втор
     for (const k of Object.keys(table)) {
       const m = /^(.*)#(\d+)$/.exec(k);
       if (!m) continue;
-      assert(+m[2] >= 2 && table[m[1]], `${name}: ${k} без общей строки`);
+      // надпись может быть только у второго: общей строки у стены нет — и не надо
+      assert(+m[2] >= 2 && (table[m[1]] || table === ARCH_WALLS_ALL), `${name}: ${k} без общей строки`);
       assert(arch.some(l => `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}` === m[1] && l.archNth === +m[2]), `${name}: ${k} — такой постройки нет`);
     }
   }
