@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ef301dc · 2026-10-22';console.log('[оттиск]', 'ef301dc · 2026-10-22');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='0a5e2e7 · 2026-10-23';console.log('[оттиск]', '0a5e2e7 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -21828,7 +21828,7 @@ System.register("world/mossway", ["world/underside", "world/whisper", "world/dis
 });
 System.register("world/beyond", ["core/time", "world/disc", "world/wind"], function (exports_61, context_61) {
     "use strict";
-    var time_js_9, disc_js_15, wind_js_4, OUTER, PIC_W, PIC_H, ell, seg, PICS, PIX, picPixels, PIC_LINE, STILL0, GRAIN, BUILD, HOLD, MISS, HOR_LINE, HOR, HOR_IN, HOR_OUT, HOR_SAY, beyond, picProgress, TONE, INK, AS, K1, grains, LANE, laneOn, NI, SV, BO, POLE_LOOK, PO_H, LEAN, FORM, K0, K2, K4, BR2, L1, KV, R, pole, horizonPole, _grains;
+    var time_js_9, disc_js_15, wind_js_4, OUTER, PIC_W, PIC_H, ell, seg, PICS, PIX, picPixels, PIC_LINE, STILL0, GRAIN, BUILD, HOLD, MISS, HOR_LINE, HOR_TWO, HOR, HOR_IN, HOR_OUT, HOR_SAY, beyond, picProgress, TONE, INK, AS, K1, grains, LANE, laneOn, NI, SV, BO, POLE_LOOK, PO_H, LEAN, FORM, K0, K2, K4, BR2, L1, KV, R, pole, horizonPole, _grains;
     var __moduleName = context_61 && context_61.id;
     // глубина в северной пустыне 0..1; не север или не за огнём — -1
     function northDepth(x, y) {
@@ -22025,7 +22025,7 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
         if (k <= 0)
             return;
         const H = Math.round(vh * 0.2), top = Math.round(H * 0.45);
-        const half = Math.round(vw / 2 * Math.min(1, beyond.hAge / 24)), x0 = Math.round(vw / 2) - half;
+        const half = Math.round(vw / 2 * (beyond.shared ? 1 : Math.min(1, beyond.hAge / 24))), x0 = Math.round(vw / 2) - half; // двое — черта во всю ширину
         ctx.globalAlpha = 0.75 * k;
         ctx.fillStyle = AS;
         ctx.fillRect(0, 0, vw, top); // пепел сверху — сквозь него ещё мир
@@ -22222,6 +22222,7 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
             exports_61("STILL0", STILL0 = 60), exports_61("GRAIN", GRAIN = 120), exports_61("BUILD", BUILD = 3600), exports_61("HOLD", HOLD = 600); // встал; выбрал песчинку; минута; досмотреть
             MISS = 0.13; // столько крошки не возвращается никогда
             exports_61("HOR_LINE", HOR_LINE = 'Нашедшему горизонт просьба пользоваться на месте. Вынос не предусмотрен.');
+            exports_61("HOR_TWO", HOR_TWO = 'Горизонт выдан на двоих. Вынос не предусмотрен.'); // нов.: смотрели двое
             exports_61("HOR", HOR = 420), exports_61("HOR_IN", HOR_IN = 45), exports_61("HOR_OUT", HOR_OUT = 60); // семь секунд; прорезается, уходит
             HOR_SAY = 2700; // строка — не чаще раза в сорок пять секунд
             // ── состояние ──
@@ -22238,36 +22239,47 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
                 hAge: 0, // …и сколько уже
                 visor: false, // ладонь козырьком
                 dropped: false, // ладонь опустил, шагнул — черта уходит
+                shared: false, // смотрят двое — черта держится, пока оба смотрят
+                sharedEver: false, // в этот раз смотрели вдвоём (строка после — своя)
                 saidAt: -1e9, // когда последний раз выходила строка про вынос
                 say: null, // строка мира — main покажет бумажкой
-                // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть
-                step(fx, fy, moving, paused = false) {
+                // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть;
+                // together — рядом кто-то смотрит из-под ладони туда же (сеть странников)
+                step(fx, fy, moving, paused = false, together = false) {
                     const dep = northDepth(fx, fy), here = dep > 0.03 && dep < 0.92;
                     this.depth = dep;
                     // позёмка бормочет: обломки слов, гуще к краю; горизонт виден — молчит
                     this.murmur = here && Math.random() < 0.22 ? (0.35 + 0.65 * dep) * (1 - this.hK) : 0;
                     if (paused)
                         return;
-                    this.horizon(moving);
+                    this.horizon(moving, together);
                     this.still = moving || this.hT > 0 ? 0 : this.still + 1; // неподвижный взгляд на одну песчинку (не на черту)
                     this.look(here, moving, fx, fy);
                     const Q = this.pic;
                     // странник сидит, пока смотрит: от выбранной песчинки до тихого конца и отдыха после
                     this.seated = here && !moving && (Q ? !Q.gone || Q.gone.kind === 'quiet' : this.still < 0);
                 },
-                // горизонт: прорезается за HOR_IN, держится, уходит за HOR_OUT; шагнул — уходит сразу
-                horizon(moving) {
+                // горизонт: прорезается за HOR_IN, держится, уходит за HOR_OUT; шагнул — уходит сразу;
+                // смотрят двое — не убывает, пока оба смотрят
+                horizon(moving, together = false) {
                     if (this.hT > 0) {
                         this.hAge++;
                         if (moving && !this.dropped) {
                             this.dropped = true;
                             this.hT = Math.min(this.hT, HOR_OUT);
                         }
-                        if (--this.hT <= 0 && time_js_9.t - this.saidAt > HOR_SAY) {
-                            this.say = HOR_LINE;
+                        this.shared = together && !this.dropped;
+                        if (this.shared) {
+                            this.sharedEver = true;
+                            this.hT = Math.max(this.hT, HOR_OUT);
+                        } // и в полную силу
+                        else if (--this.hT <= 0 && time_js_9.t - this.saidAt > HOR_SAY) {
+                            this.say = this.sharedEver ? HOR_TWO : HOR_LINE;
                             this.saidAt = time_js_9.t;
                         }
                     }
+                    else
+                        this.shared = false;
                     this.hK = this.hT > 0 ? Math.min(1, this.hAge / HOR_IN, this.hT / HOR_OUT) : 0;
                     this.visor = this.hT > 0 && !this.dropped;
                 },
@@ -22279,6 +22291,7 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
                     this.hAge = 0;
                     this.dropped = false;
                     this.still = 0;
+                    this.sharedEver = false;
                     const P = this.pic;
                     if (P && !P.gone) {
                         if (P.t > GRAIN)
@@ -22334,6 +22347,8 @@ System.register("world/beyond", ["core/time", "world/disc", "world/wind"], funct
                     this.hK = 0;
                     this.visor = false;
                     this.dropped = false;
+                    this.shared = false;
+                    this.sharedEver = false;
                 },
             });
             // сколько кадра собрано 0..1
@@ -51358,7 +51373,7 @@ System.register("net/supabase", [], function (exports_145, context_145) {
 });
 System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter"], function (exports_146, context_146) {
     "use strict";
-    var config_js_1, local_js_1, supabase_js_1, filter_js_2, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, notesIn;
+    var config_js_1, local_js_1, supabase_js_1, filter_js_2, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, notesIn;
     var __moduleName = context_146 && context_146.id;
     function tabId() {
         try {
@@ -51404,7 +51419,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         net.T.on('pos', m => {
             const o = net.others.get(m.id);
             if (!o) {
-                net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, heard: net.t });
+                net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, sitK: m.sit ? 1 : 0, heard: net.t });
                 return;
             }
             const jump = o.layer !== m.layer || Math.hypot(o.x - m.x, o.y - m.y) > 400, dt = Math.max(1, net.t - o.heard);
@@ -51415,7 +51430,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             // идёт — куда и как быстро, по двум последним точкам: между вестями шаг досчитывается
             o.vx = m.moving && !jump ? (m.x - o.rx) / dt : 0;
             o.vy = m.moving && !jump ? (m.y - o.ry) / dt : 0;
-            Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, heard: net.t });
+            Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, heard: net.t });
         });
         net.T.on('say', m => {
             const o = net.others.get(m.id), text = filter_js_2.clean(m.text, filter_js_2.SAY_MAX);
@@ -51450,15 +51465,16 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         net.voices = net.voices.filter(v => v.who !== who); // новое слово стирает прежнее у того же странника
         net.voices.push({ who, text, t0: net.t });
     }
-    // шаг: p — странник {x, y, dir, moving}, layer — 'surface' | 'under'
+    // шаг: p — странник {x, y, dir, moving, visor, sit}, layer — 'surface' | 'under'
     function stepNet(p, layer) {
         net.t++;
         if (!net.on)
             return;
-        const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving };
+        // ладонь козырьком и «сел смотреть» — тоже видно другим (за кольцом)
+        const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving, look: !!p.visor, sit: (p.sit || 0) > 0.5 ? 1 : 0 };
         // весть — когда сдвинулся с посланной точки; встал или пошёл — сразу; стоишь — изредка: «я тут»
         const S = net.sentPos, gap = net.t - net.sent;
-        const turned = S && S.moving !== me.moving, moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
+        const turned = S && (S.moving !== me.moving || S.look !== me.look || S.sit !== me.sit), moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
         if ((moved && gap >= SEND_EVERY) || (turned && gap >= 4) || gap >= IDLE_EVERY) {
             net.T.sendPos(me);
             net.sent = net.t;
@@ -51476,6 +51492,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             } // досчитать шаг — не дальше двух вестей
             o.x += (o.tx - o.x) * 0.25;
             o.y += (o.ty - o.y) * 0.25; // к своей точке — плавно
+            o.sitK += ((o.sit || 0) - (o.sitK || 0)) * 0.12; // садится и встаёт, как свой
         }
         net.voices = net.voices.filter(v => net.t - v.t0 < VOICE_LIFE);
         if (layer === 'surface' && !net.fetching && (!net.fetched || Math.hypot(me.x - net.fetched.x, me.y - net.fetched.y) > FETCH_R / 2 || net.t - net.fetched.t > 3600))
@@ -51569,6 +51586,16 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         catch (e) { }
     }
     exports_146("mute", mute);
+    // смотрит ли кто-то рядом из-под ладони (за кольцом, наверху): черта видна двоим
+    function lookingNear(x, y, r = SIGHT) {
+        if (!net.on)
+            return false;
+        for (const o of net.others.values())
+            if (o.look && o.layer === 'surface' && Math.hypot(o.x - x, o.y - y) < r)
+                return true;
+        return false;
+    }
+    exports_146("lookingNear", lookingNear);
     // кто стоит в рамке на этом слое
     function othersIn(layer, x0, y0, x1, y1) {
         const out = [];
@@ -51605,6 +51632,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             }
         ],
         execute: function () {
+            exports_146("SIGHT", SIGHT = 320); // смотреть вдаль вдвоём — не дальше, чем видно друг друга
             exports_146("HEAR", HEAR = 260), exports_146("LOST", LOST = 600), exports_146("SAY_GAP", SAY_GAP = 120), exports_146("NOTE_GAP", NOTE_GAP = 3600), exports_146("FETCH_R", FETCH_R = 700), exports_146("VOICE_LIFE", VOICE_LIFE = 1500); // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
             SEND_EVERY = 20, IDLE_EVERY = 120, MUTE_KEY = 'ardet-net-muted', GONE_KEY = 'ardet-net-reported';
             exports_146("net", net = {
@@ -51622,7 +51650,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
 });
 System.register("render/net", ["sprites/player", "render/context", "world/whisper", "net/net"], function (exports_147, context_147) {
     "use strict";
-    var player_js_1, context_js_17, whisper_js_3, net_js_1, K0, L1, L2, BO, S2, KV, GHOST, SPEED, AGE, READ, WRAP, LINE, buf;
+    var player_js_1, context_js_17, whisper_js_3, net_js_1, K0, L1, L2, BO, S2, KV, CLEAR, GHOST, SPEED, AGE, READ, WRAP, LINE, buf;
     var __moduleName = context_147 && context_147.id;
     function sheet() {
         if (buf !== null)
@@ -51640,9 +51668,9 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         return buf;
     }
     // чужой странник тенью: рисунок героя — в отдельный лист, лист — с прозрачностью;
-    // в криосклепе и у него огонёк пеплом (cold)
-    function ghost(ctx, o, cold) {
-        const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold };
+    // в криосклепе и у него огонёк пеплом (cold); ладонь козырьком и «сел» — как у своего
+    function ghost(ctx, o, cold, alpha = GHOST) {
+        const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold, visor: o.look, sit: o.sitK || 0 };
         if (!b) {
             context_js_17.setCtx(ctx);
             player_js_1.drawPlayer({ ...fig, x: o.x - 6, y: o.y - 23 });
@@ -51653,16 +51681,17 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         context_js_17.setCtx(g);
         player_js_1.drawPlayer(fig);
         context_js_17.setCtx(ctx);
-        ctx.globalAlpha = GHOST;
+        ctx.globalAlpha = alpha;
         ctx.drawImage(b, Math.round(o.x - 6 - 14), Math.round(o.y - 23 - 16));
         ctx.globalAlpha = 1;
     }
-    // чужие — по глубине вместе с миром: { k, draw }; coldAt — холод под землёй (world/underside.js)
-    function othersToDraw(ctx, layer, camX, camY, vw, vh, coldAt = null) {
+    // чужие — по глубине вместе с миром: { k, draw }; coldAt — холод под землёй (world/underside.js);
+    // together — черту видят двое: тот, кто смотрит с тобой, уже не тень
+    function othersToDraw(ctx, layer, camX, camY, vw, vh, coldAt = null, together = false) {
         if (!net_js_1.net.on)
             return [];
         return net_js_1.othersIn(layer, camX - 20, camY - 10, camX + vw + 20, camY + vh + 40)
-            .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0) }));
+            .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0, together && o.look ? CLEAR : GHOST) }));
     }
     exports_147("othersToDraw", othersToDraw);
     // огонёк у сердца чужого светит, как свой, только слабее; в инее тёплого нет (канон U7)
@@ -51808,6 +51837,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         ],
         execute: function () {
             K0 = '#15100c', L1 = '#c8b89a', L2 = '#b0a284', BO = '#D9CFB8', S2 = '#33302e', KV = '#C23B2B';
+            CLEAR = 0.9; // смотрят вдаль вдвоём: в поле просто стоит человек
             GHOST = 0.55, SPEED = 2, AGE = 30 * 86400e3, READ = 2.2, WRAP = 30, LINE = 8;
             buf = null;
         }
@@ -51933,12 +51963,15 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         };
     }
     exports_148("noteMenu", noteMenu);
-    function otherMenu(o) {
+    // canJoin — за кольцом, рядом, сам ещё не смотришь: можно посмотреть туда же (черта на двоих)
+    function otherMenu(o, canJoin = false) {
         return {
             id: 'net_other', net: o.tab, name: 'Странник',
             x: o.x - 6, y: o.y - 23, w: 12, h: 23,
-            look: 'Другой странник. Капюшон и тьма, как у тебя; огонёк у сердца — свой. Что скажет — слышно, только если стоять рядом.',
+            look: o.look ? 'Другой странник. Стоит, ладонь козырьком, и смотрит вдаль — туда, где за кольцом нет горизонта.'
+                : 'Другой странник. Капюшон и тьма, как у тебя; огонёк у сердца — свой. Что скажет — слышно, только если стоять рядом.',
             useAction: 'net_mute', useLabel: net_js_2.net.muted.has(o.tab) ? '<i>◉</i>СЛУШАТЬ' : '<i>◌</i>НЕ СЛУШАТЬ',
+            altNow: () => (o.look && canJoin ? { key: 'horizon_join', label: '<i>―</i>ПОСМОТРЕТЬ ТУДА ЖЕ' } : null),
         };
     }
     exports_148("otherMenu", otherMenu);
@@ -52213,7 +52246,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             drawList.push({ k: ravens_js_2.ravenDepth(b), raven: b });
         for (const f of fireRing_js_1.fireSitesInView(camX, camY, vw, vh))
             drawList.push({ k: f.y, fire: f }); // костры кольца огня
-        for (const o of net_js_4.othersToDraw(worldCtx, 'surface', camX, camY, vw, vh))
+        for (const o of net_js_4.othersToDraw(worldCtx, 'surface', camX, camY, vw, vh, null, beyond_js_2.beyond.shared))
             drawList.push({ k: o.k, other: o }); // другие странники — тенью
         drawList.push({ k: player.y + 24, player: true });
         drawList.sort((p, q) => p.k - q.k);
@@ -52357,7 +52390,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         townWell_js_2.stepTownWell(player); // колодец у площади: мимо прошёл — ворот поскрипел
         mossway_js_2.stepMossway(player, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).moon > 0.5, sky_js_4.dayIndex(time_js_43.t)); // пифос ночью шепчет тому, кто задержался
         // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
-        beyond_js_2.beyond.step(player.x + 6, player.y + 23, player.moving, !state_js_7.state.is('game'));
+        // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
+        beyond_js_2.beyond.step(player.x + 6, player.y + 23, player.moving, !state_js_7.state.is('game'), beyond_js_2.beyond.visor && net_js_3.lookingNear(player.x + 6, player.y + 23));
         player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond_js_2.beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12; // садится смотреть; шагнул — встал
         player.visor = beyond_js_2.beyond.visor; // у столба: ладонь козырьком, пока черта видна
         beyond_js_2.stepPozemka(camX, camY, scaler_js_26.scaler.vw, scaler_js_26.scaler.vh);
@@ -53047,8 +53081,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (!net_js_3.net.on)
             return false;
         const o = net_js_4.otherAt(layer, x, y);
+        // смотрит вдаль, а ты рядом за кольцом и сам не смотришь — можно посмотреть туда же
+        const join = o && o.look && layer === 'surface' && beyond_js_2.beyond.depth > 0.03 && beyond_js_2.beyond.hT <= 0 && Math.hypot(o.x - player.x - 6, o.y - player.y - 23) < net_js_3.SIGHT;
         if (o) {
-            ui_js_2.showMenu(netui_js_1.otherMenu(o));
+            ui_js_2.showMenu(netui_js_1.otherMenu(o, join));
             return true;
         }
         const n = layer === 'surface' ? net_js_4.noteAt(x, y) : null;
@@ -54265,6 +54301,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     const s = useActions_js_6.useTexts.town_well_give;
                     ui_js_2.showLook({ name: s.title, look: s.text });
                 } // своё — в ведро общего дна
+                if (a.key === 'horizon_join')
+                    beyond_js_2.beyond.lookHorizon(); // ладонь козырьком — туда же, куда смотрит встречный (черта на двоих)
                 // чужая записка: пожаловаться — у себя больше не увидишь; три жалобы — не увидит никто
                 if (a.key === 'net_report')
                     net_js_3.netVote(loc.net, 'report').then(r => lorepopup_js_1.showLore(r.error && r.error !== 'twice' ? netui_js_1.VOTE_ERR[r.error] || netui_js_1.VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));

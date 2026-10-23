@@ -17,6 +17,7 @@ import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
 
+export const SIGHT = 320;                     // смотреть вдаль вдвоём — не дальше, чем видно друг друга
 export const HEAR = 260, LOST = 600, SAY_GAP = 120, NOTE_GAP = 3600, FETCH_R = 700, VOICE_LIFE = 1500;   // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
 const SEND_EVERY = 20, IDLE_EVERY = 120, MUTE_KEY = 'ardet-net-muted', GONE_KEY = 'ardet-net-reported';
 
@@ -52,12 +53,12 @@ export async function startNet(T = null) {
   try { for (const k of JSON.parse(localStorage.getItem(GONE_KEY) || '[]')) net.gone.add(k); } catch (e) {}
   net.T.on('pos', m => {
     const o = net.others.get(m.id);
-    if (!o) { net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, heard: net.t }); return; }
+    if (!o) { net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, sitK: m.sit ? 1 : 0, heard: net.t }); return; }
     const jump = o.layer !== m.layer || Math.hypot(o.x - m.x, o.y - m.y) > 400, dt = Math.max(1, net.t - o.heard);
     if (jump) { o.x = m.x; o.y = m.y; }                          // спустился, поднялся, переехал — там и стоит
     // идёт — куда и как быстро, по двум последним точкам: между вестями шаг досчитывается
     o.vx = m.moving && !jump ? (m.x - o.rx) / dt : 0; o.vy = m.moving && !jump ? (m.y - o.ry) / dt : 0;
-    Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, heard: net.t });
+    Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, heard: net.t });
   });
   net.T.on('say', m => {
     const o = net.others.get(m.id), text = clean(m.text, SAY_MAX);
@@ -84,20 +85,22 @@ function voice(who, text) {
   net.voices = net.voices.filter(v => v.who !== who);           // новое слово стирает прежнее у того же странника
   net.voices.push({ who, text, t0: net.t });
 }
-// шаг: p — странник {x, y, dir, moving}, layer — 'surface' | 'under'
+// шаг: p — странник {x, y, dir, moving, visor, sit}, layer — 'surface' | 'under'
 export function stepNet(p, layer) {
   net.t++;
   if (!net.on) return;
-  const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving };
+  // ладонь козырьком и «сел смотреть» — тоже видно другим (за кольцом)
+  const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving, look: !!p.visor, sit: (p.sit || 0) > 0.5 ? 1 : 0 };
   // весть — когда сдвинулся с посланной точки; встал или пошёл — сразу; стоишь — изредка: «я тут»
   const S = net.sentPos, gap = net.t - net.sent;
-  const turned = S && S.moving !== me.moving, moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
+  const turned = S && (S.moving !== me.moving || S.look !== me.look || S.sit !== me.sit), moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
   if ((moved && gap >= SEND_EVERY) || (turned && gap >= 4) || gap >= IDLE_EVERY) { net.T.sendPos(me); net.sent = net.t; net.sentPos = me; }
   net.last = me;
   for (const [k, o] of net.others) {
     if (net.t - o.heard > LOST) { net.others.delete(k); continue; }
     if (net.t - o.heard < 2 * SEND_EVERY) { o.tx += o.vx; o.ty += o.vy; }   // досчитать шаг — не дальше двух вестей
     o.x += (o.tx - o.x) * 0.25; o.y += (o.ty - o.y) * 0.25;     // к своей точке — плавно
+    o.sitK += ((o.sit || 0) - (o.sitK || 0)) * 0.12;             // садится и встаёт, как свой
   }
   net.voices = net.voices.filter(v => net.t - v.t0 < VOICE_LIFE);
   if (layer === 'surface' && !net.fetching && (!net.fetched || Math.hypot(me.x - net.fetched.x, me.y - net.fetched.y) > FETCH_R / 2 || net.t - net.fetched.t > 3600)) fetchNotes(me);
@@ -156,6 +159,12 @@ export function mute(tab, on = true) {
   if (on) net.muted.add(tab); else net.muted.delete(tab);
   net.voices = net.voices.filter(v => !net.muted.has(v.who));
   try { localStorage.setItem(MUTE_KEY, JSON.stringify([...net.muted].slice(-200))); } catch (e) {}
+}
+// смотрит ли кто-то рядом из-под ладони (за кольцом, наверху): черта видна двоим
+export function lookingNear(x, y, r = SIGHT) {
+  if (!net.on) return false;
+  for (const o of net.others.values()) if (o.look && o.layer === 'surface' && Math.hypot(o.x - x, o.y - y) < r) return true;
+  return false;
 }
 // кто стоит в рамке на этом слое
 export function othersIn(layer, x0, y0, x1, y1) {

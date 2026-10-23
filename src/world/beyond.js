@@ -16,6 +16,9 @@
 //    несколько секунд прорезается тонкая твёрдая черта, и пустыня становится просто
 //    вечером в поле: растр не бормочет, позёмка ложится, бумажка не трепещет.
 //    Шагнул — черта уходит: пользоваться на месте, вынос не предусмотрен.
+//    Черту можно показать другому — она видна двоим, если смотрят из-под ладоней в
+//    одну сторону (сеть странников, weave/NET.md): пока смотрят двое, черта держится
+//    и растр не копится — самый простой способ не потеряться за кольцом.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { TOWN, RINGS, RING_W, FIRE_W, EDGE_BAND, warpedDist, trailPoint } from './disc.js';
@@ -104,6 +107,7 @@ export const PIC_LINE = 'Изображение восстановлено ча�
 export const STILL0 = 60, GRAIN = 120, BUILD = 3600, HOLD = 600;    // встал; выбрал песчинку; минута; досмотреть
 const MISS = 0.13;                                                   // столько крошки не возвращается никогда
 export const HOR_LINE = 'Нашедшему горизонт просьба пользоваться на месте. Вынос не предусмотрен.';
+export const HOR_TWO = 'Горизонт выдан на двоих. Вынос не предусмотрен.';     // нов.: смотрели двое
 export const HOR = 420, HOR_IN = 45, HOR_OUT = 60;                  // семь секунд; прорезается, уходит
 const HOR_SAY = 2700;                                                // строка — не чаще раза в сорок пять секунд
 
@@ -121,36 +125,42 @@ export const beyond = {
   hAge: 0,               // …и сколько уже
   visor: false,          // ладонь козырьком
   dropped: false,        // ладонь опустил, шагнул — черта уходит
+  shared: false,         // смотрят двое — черта держится, пока оба смотрят
+  sharedEver: false,     // в этот раз смотрели вдвоём (строка после — своя)
   saidAt: -1e9,          // когда последний раз выходила строка про вынос
   say: null,             // строка мира — main покажет бумажкой
-  // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть
-  step(fx, fy, moving, paused = false) {
+  // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть;
+  // together — рядом кто-то смотрит из-под ладони туда же (сеть странников)
+  step(fx, fy, moving, paused = false, together = false) {
     const dep = northDepth(fx, fy), here = dep > 0.03 && dep < 0.92;
     this.depth = dep;
     // позёмка бормочет: обломки слов, гуще к краю; горизонт виден — молчит
     this.murmur = here && Math.random() < 0.22 ? (0.35 + 0.65 * dep) * (1 - this.hK) : 0;
     if (paused) return;
-    this.horizon(moving);
+    this.horizon(moving, together);
     this.still = moving || this.hT > 0 ? 0 : this.still + 1;       // неподвижный взгляд на одну песчинку (не на черту)
     this.look(here, moving, fx, fy);
     const Q = this.pic;
     // странник сидит, пока смотрит: от выбранной песчинки до тихого конца и отдыха после
     this.seated = here && !moving && (Q ? !Q.gone || Q.gone.kind === 'quiet' : this.still < 0);
   },
-  // горизонт: прорезается за HOR_IN, держится, уходит за HOR_OUT; шагнул — уходит сразу
-  horizon(moving) {
+  // горизонт: прорезается за HOR_IN, держится, уходит за HOR_OUT; шагнул — уходит сразу;
+  // смотрят двое — не убывает, пока оба смотрят
+  horizon(moving, together = false) {
     if (this.hT > 0) {
       this.hAge++;
       if (moving && !this.dropped) { this.dropped = true; this.hT = Math.min(this.hT, HOR_OUT); }
-      if (--this.hT <= 0 && t - this.saidAt > HOR_SAY) { this.say = HOR_LINE; this.saidAt = t; }
-    }
+      this.shared = together && !this.dropped;
+      if (this.shared) { this.sharedEver = true; this.hT = Math.max(this.hT, HOR_OUT); }   // и в полную силу
+      else if (--this.hT <= 0 && t - this.saidAt > HOR_SAY) { this.say = this.sharedEver ? HOR_TWO : HOR_LINE; this.saidAt = t; }
+    } else this.shared = false;
     this.hK = this.hT > 0 ? Math.min(1, this.hAge / HOR_IN, this.hT / HOR_OUT) : 0;
     this.visor = this.hT > 0 && !this.dropped;
   },
   // посмотреть из-под ладони (столб): на песчинку больше не смотришь — недосмотренный кадр уходит
   lookHorizon() {
     if (this.hT > 0) return false;
-    this.hT = HOR; this.hAge = 0; this.dropped = false; this.still = 0;
+    this.hT = HOR; this.hAge = 0; this.dropped = false; this.still = 0; this.sharedEver = false;
     const P = this.pic;
     if (P && !P.gone) { if (P.t > GRAIN) this.scatter('sigh'); else this.pic = null; }
     return true;
@@ -176,7 +186,7 @@ export const beyond = {
   },
   reset() {
     this.pic = null; this.still = 0; this.murmur = 0; this.sighSnd = false; this.seated = false; this.say = null; this.depth = -1;
-    this.hT = 0; this.hAge = 0; this.hK = 0; this.visor = false; this.dropped = false;
+    this.hT = 0; this.hAge = 0; this.hK = 0; this.visor = false; this.dropped = false; this.shared = false; this.sharedEver = false;
   },
 };
 // кадр у ног: песчинка — в середине; крошка прилетает по ветру, с наветренной стороны
@@ -323,7 +333,7 @@ export function drawHorizon(ctx, vw, vh) {
   const k = beyond.hK;
   if (k <= 0) return;
   const H = Math.round(vh * 0.2), top = Math.round(H * 0.45);
-  const half = Math.round(vw / 2 * Math.min(1, beyond.hAge / 24)), x0 = Math.round(vw / 2) - half;
+  const half = Math.round(vw / 2 * (beyond.shared ? 1 : Math.min(1, beyond.hAge / 24))), x0 = Math.round(vw / 2) - half;   // двое — черта во всю ширину
   ctx.globalAlpha = 0.75 * k; ctx.fillStyle = AS; ctx.fillRect(0, 0, vw, top);   // пепел сверху — сквозь него ещё мир
   ctx.globalAlpha = 0.9 * k; ctx.fillStyle = BO; ctx.fillRect(0, top, vw, H - top);
   ctx.fillStyle = AS;                                                   // пепел уходит в кость штрихами: к черте реже

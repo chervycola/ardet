@@ -371,6 +371,66 @@ await test('меню: записка — прочесть, заверить чу
   assert(U.otherMenu({ tab: 'w1', x: 50, y: 50 }).useLabel.includes('СЛУШАТЬ') && !U.otherMenu({ tab: 'w1', x: 50, y: 50 }).useLabel.includes('НЕ'));
 });
 
+// ── черта горизонта на двоих (канон: «видна двоим, если смотрят из-под ладоней в одну сторону») ──
+const B = await imp('world/beyond.js');
+const L0 = []; B.buildBeyond(L0);
+const pole = B.horizonPole(), PX = pole.x + 6, PY = pole.y + pole.h + 30;   // у столба, в пустыне
+await test('горизонт: один — черта семь секунд и «вынос не предусмотрен»', () => {
+  B._resetBeyond();
+  assert(B.northDepth(PX, PY) > 0.03, 'точка — в пустыне');
+  assert(B.beyond.lookHorizon());
+  let n = 0;
+  while (B.beyond.hT > 0 && n < 2000) { B.beyond.step(PX, PY, false, false, false); n++; }
+  eq(n, B.HOR, 'семь секунд');
+  eq(B.beyond.say, B.HOR_LINE);
+});
+await test('горизонт: двое смотрят — черта держится, сколько смотрят, во всю ширину; потом — «выдан на двоих»', () => {
+  B._resetBeyond();
+  B.beyond.lookHorizon();
+  for (let i = 0; i < 3 * B.HOR; i++) B.beyond.step(PX, PY, false, false, true);
+  assert(B.beyond.hT > 0 && B.beyond.hK === 1 && B.beyond.shared && B.beyond.visor, 'держится: ' + B.beyond.hT);
+  let n = 0;
+  while (B.beyond.hT > 0 && n < 2000) { B.beyond.step(PX, PY, false, false, false); n++; }   // второй опустил ладонь
+  assert(n > 0 && n <= B.HOR, 'дальше — своим сроком: ' + n);
+  eq(B.beyond.say, B.HOR_TWO);
+});
+await test('горизонт: присоединился поздно — черта сразу в полную силу; шагнул — уходит и у двоих', () => {
+  B._resetBeyond();
+  B.beyond.lookHorizon();
+  for (let i = 0; i < B.HOR - 20; i++) B.beyond.step(PX, PY, false, false, false);
+  assert(B.beyond.hK < 1, 'гаснет');
+  B.beyond.step(PX, PY, false, false, true);
+  eq(B.beyond.hK, 1, 'двое — снова видна');
+  B.beyond.step(PX, PY, true, false, true);                 // шагнул
+  assert(!B.beyond.shared && !B.beyond.visor && B.beyond.hT <= B.HOR_OUT, 'ушла');
+});
+await test('горизонт: ладонь козырьком уходит в сеть сразу; рядом смотрящий — виден, далеко или внизу — нет', async () => {
+  const T = await fresh();
+  N.stepNet({ ...P(PX, PY), visor: false }, 'surface');
+  const n0 = T.sent.pos.length;
+  for (let i = 0; i < 5; i++) N.stepNet({ ...P(PX, PY), visor: true }, 'surface');
+  eq(T.sent.pos.length, n0 + 1, 'подняла ладонь — весть');
+  eq(T.sent.pos.at(-1).look, true);
+  T.emit('pos', { id: 'near', x: PX + 60, y: PY, layer: 'surface', look: true });
+  T.emit('pos', { id: 'far', x: PX + N.SIGHT + 80, y: PY, layer: 'surface', look: true });
+  T.emit('pos', { id: 'down', x: PX + 10, y: PY, layer: 'under', look: true });
+  assert(N.lookingNear(PX, PY), 'рядом смотрит');
+  T.emit('pos', { id: 'near', x: PX + 60, y: PY, layer: 'surface', look: false });
+  assert(!N.lookingNear(PX, PY), 'опустил — нет; далеко и внизу — не в счёт');
+  T.emit('pos', { id: 'sitter', x: PX - 40, y: PY, layer: 'surface', sit: 1 });
+  for (let i = 0; i < 60; i++) N.stepNet(P(PX, PY), 'surface');
+  assert(N.net.others.get('sitter').sitK > 0.9, 'сел — садится и у тебя');
+});
+await test('горизонт: встречный смотрит вдаль — в меню «посмотреть туда же», если можно', async () => {
+  await fresh();
+  const o = { tab: 'w', x: PX, y: PY, look: true };
+  const m = U.otherMenu(o, true);
+  eq(m.altNow().key, 'horizon_join');
+  assert(m.look.includes('ладонь козырьком'), m.look);
+  eq(U.otherMenu(o, false).altNow(), null, 'нельзя — нет кнопки');
+  eq(U.otherMenu({ ...o, look: false }, true).altNow(), null, 'не смотрит — нет');
+});
+
 // ── Supabase на подставном сервере ──
 class FakeWS {
   constructor(url) { this.url = url; this.readyState = 0; this.sent = []; FakeWS.all.push(this); setTimeout(() => { if (this.readyState) return; this.readyState = 1; this.onopen && this.onopen(); }, 0); }

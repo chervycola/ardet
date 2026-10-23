@@ -110,7 +110,7 @@ import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
-import { startNet, stepNet, netVote, mute, net } from './net/net.js';
+import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT } from './net/net.js';
 import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } from './render/net.js';
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 
@@ -482,7 +482,7 @@ function render() {
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
   for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
-  for (const o of othersToDraw(worldCtx, 'surface', camX, camY, vw, vh)) drawList.push({ k: o.k, other: o });   // другие странники — тенью
+  for (const o of othersToDraw(worldCtx, 'surface', camX, camY, vw, vh, null, beyond.shared)) drawList.push({ k: o.k, other: o });   // другие странники — тенью
   drawList.push({ k: player.y + 24, player: true });
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
@@ -628,7 +628,8 @@ function stepFx() {
   stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
   stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t));   // пифос ночью шепчет тому, кто задержался
   // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
-  beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'));
+  // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
+  beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'), beyond.visor && lookingNear(player.x + 6, player.y + 23));
   player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть; шагнул — встал
   player.visor = beyond.visor;                       // у столба: ладонь козырьком, пока черта видна
   stepPozemka(camX, camY, scaler.vw, scaler.vh);
@@ -1197,7 +1198,9 @@ function walkUnder(gx, gy) {
 function netClick(x, y, layer) {
   if (!net.on) return false;
   const o = otherAt(layer, x, y);
-  if (o) { showMenu(otherMenu(o)); return true; }
+  // смотрит вдаль, а ты рядом за кольцом и сам не смотришь — можно посмотреть туда же
+  const join = o && o.look && layer === 'surface' && beyond.depth > 0.03 && beyond.hT <= 0 && Math.hypot(o.x - player.x - 6, o.y - player.y - 23) < SIGHT;
+  if (o) { showMenu(otherMenu(o, join)); return true; }
   const n = layer === 'surface' ? noteAt(x, y) : null;
   if (!n) return false;
   const nm = noteMenu(n), sx = n.x - 6 - 12, sy = n.y - 23;         // встать слева: подол записку не закроет
@@ -1694,6 +1697,7 @@ events.on('location.alt', (loc) => {
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
   if (a.key === 'town_well_give' && giveTownWell()) { const s = useTexts.town_well_give; showLook({ name: s.title, look: s.text }); }   // своё — в ведро общего дна
+  if (a.key === 'horizon_join') beyond.lookHorizon();   // ладонь козырьком — туда же, куда смотрит встречный (черта на двоих)
   // чужая записка: пожаловаться — у себя больше не увидишь; три жалобы — не увидит никто
   if (a.key === 'net_report') netVote(loc.net, 'report').then(r => showLore(r.error && r.error !== 'twice' ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));
 });

@@ -12,6 +12,7 @@ import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
 import { net, othersIn, notesIn } from '../net/net.js';
 
 const K0 = '#15100c', L1 = '#c8b89a', L2 = '#b0a284', BO = '#D9CFB8', S2 = '#33302e', KV = '#C23B2B';
+const CLEAR = 0.9;                       // смотрят вдаль вдвоём: в поле просто стоит человек
 const GHOST = 0.55, SPEED = 2, AGE = 30 * 86400e3, READ = 2.2, WRAP = 30, LINE = 8;
 let buf = null;
 function sheet() {
@@ -20,22 +21,23 @@ function sheet() {
   return buf;
 }
 // чужой странник тенью: рисунок героя — в отдельный лист, лист — с прозрачностью;
-// в криосклепе и у него огонёк пеплом (cold)
-function ghost(ctx, o, cold) {
-  const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold };
+// в криосклепе и у него огонёк пеплом (cold); ладонь козырьком и «сел» — как у своего
+function ghost(ctx, o, cold, alpha = GHOST) {
+  const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold, visor: o.look, sit: o.sitK || 0 };
   if (!b) { setCtx(ctx); drawPlayer({ ...fig, x: o.x - 6, y: o.y - 23 }); return; }
   const g = b.getContext('2d');
   g.clearRect(0, 0, b.width, b.height);
   setCtx(g); drawPlayer(fig); setCtx(ctx);
-  ctx.globalAlpha = GHOST;
+  ctx.globalAlpha = alpha;
   ctx.drawImage(b, Math.round(o.x - 6 - 14), Math.round(o.y - 23 - 16));
   ctx.globalAlpha = 1;
 }
-// чужие — по глубине вместе с миром: { k, draw }; coldAt — холод под землёй (world/underside.js)
-export function othersToDraw(ctx, layer, camX, camY, vw, vh, coldAt = null) {
+// чужие — по глубине вместе с миром: { k, draw }; coldAt — холод под землёй (world/underside.js);
+// together — черту видят двое: тот, кто смотрит с тобой, уже не тень
+export function othersToDraw(ctx, layer, camX, camY, vw, vh, coldAt = null, together = false) {
   if (!net.on) return [];
   return othersIn(layer, camX - 20, camY - 10, camX + vw + 20, camY + vh + 40)
-    .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0) }));
+    .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0, together && o.look ? CLEAR : GHOST) }));
 }
 // огонёк у сердца чужого светит, как свой, только слабее; в инее тёплого нет (канон U7)
 export function otherLights(layer, camX, camY, vw, vh, coldAt = null) {

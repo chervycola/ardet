@@ -102,12 +102,15 @@ export function noteMenu(n) {
     altNow: () => (n.mine || n.reported ? null : { key: 'net_report', label: '<i>✕</i>ПОЖАЛОВАТЬСЯ' }),
   };
 }
-export function otherMenu(o) {
+// canJoin — за кольцом, рядом, сам ещё не смотришь: можно посмотреть туда же (черта на двоих)
+export function otherMenu(o, canJoin = false) {
   return {
     id: 'net_other', net: o.tab, name: 'Странник',
     x: o.x - 6, y: o.y - 23, w: 12, h: 23,
-    look: 'Другой странник. Капюшон и тьма, как у тебя; огонёк у сердца — свой. Что скажет — слышно, только если стоять рядом.',
+    look: o.look ? 'Другой странник. Стоит, ладонь козырьком, и смотрит вдаль — туда, где за кольцом нет горизонта.'
+      : 'Другой странник. Капюшон и тьма, как у тебя; огонёк у сердца — свой. Что скажет — слышно, только если стоять рядом.',
     useAction: 'net_mute', useLabel: net.muted.has(o.tab) ? '<i>◉</i>СЛУШАТЬ' : '<i>◌</i>НЕ СЛУШАТЬ',
+    altNow: () => (o.look && canJoin ? { key: 'horizon_join', label: '<i>―</i>ПОСМОТРЕТЬ ТУДА ЖЕ' } : null),
   };
 }
 export const VOTE_ERR = {
