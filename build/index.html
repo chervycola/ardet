@@ -666,7 +666,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='fb65ab7 · 2026-10-23';console.log('[оттиск]', 'fb65ab7 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c15e2e1 · 2026-10-23';console.log('[оттиск]', 'c15e2e1 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -53655,7 +53655,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "assets/loader"], function (exports_156, context_156) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter, DEV;
     var __moduleName = context_156 && context_156.id;
     function lockHint() {
         if (time_js_43.t - lockHintAt < 1800)
@@ -56256,31 +56256,34 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:14px">ARDET ERROR:\n' + msg + '\nLine: ' + line + '\n\n' + (err && err.stack || '') + '</pre>';
             };
             // build 1776974120
-            // Проверка эффектов руками: I (Ш) — вторая краска авто → 0..3; O (Щ) — шторм пластины;
-            // L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться;
-            // N (Т) — красный полдень
-            document.addEventListener('keydown', e => {
-                if (!state_js_7.state.is('game') || e.repeat)
-                    return;
-                if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш')
-                    ink_js_2.ink.cycle();
-                if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д')
-                    ink_js_2.ink.note('ЛОУ-ФАЙ · ' + lofi_js_1.LOFI_NAMES[lofi_js_1.lofi.cycle()]);
-                if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') {
-                    toxic_js_2.toxic.setTest(!toxic_js_2.toxic.isTest());
-                    ink_js_2.ink.note(toxic_js_2.toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');
-                }
-                if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л')
-                    ink_js_2.ink.note('ОСТУПИЛСЯ · ' + stumble_js_1.stumble.cycle(player));
-                if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') {
-                    stormTest = !stormTest;
-                    ink_js_2.ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ');
-                }
-                if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') {
-                    redNoon_js_3.triggerRedNoon(time_js_44.t);
-                    ink_js_2.ink.note('КРАСНЫЙ ПОЛДЕНЬ');
-                }
-            });
+            // Проверка эффектов руками — только с ?dev в адресе: в рабочей сборке случайное нажатие
+            // ломало настроение и выглядело как сбой игры. I (Ш) — вторая краска авто → 0..3;
+            // O (Щ) — шторм пластины; L (Д) — сбой лоу-фай; T (Е) — токсик (протёрто и счётчик);
+            // K (Л) — оступиться; N (Т) — красный полдень
+            DEV = /[?&]dev\b/.test(location.search);
+            if (DEV)
+                document.addEventListener('keydown', e => {
+                    if (!state_js_7.state.is('game') || e.repeat)
+                        return;
+                    if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш')
+                        ink_js_2.ink.cycle();
+                    if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д')
+                        ink_js_2.ink.note('ЛОУ-ФАЙ · ' + lofi_js_1.LOFI_NAMES[lofi_js_1.lofi.cycle()]);
+                    if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') {
+                        toxic_js_2.toxic.setTest(!toxic_js_2.toxic.isTest());
+                        ink_js_2.ink.note(toxic_js_2.toxic.isTest() ? 'ТОКСИК · ПРОВЕРКА · ВКЛ' : 'ТОКСИК · ПРОВЕРКА · ВЫКЛ');
+                    }
+                    if (e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л')
+                        ink_js_2.ink.note('ОСТУПИЛСЯ · ' + stumble_js_1.stumble.cycle(player));
+                    if (e.key === 'o' || e.key === 'O' || e.key === 'щ' || e.key === 'Щ') {
+                        stormTest = !stormTest;
+                        ink_js_2.ink.note(stormTest ? 'ШТОРМ ПЛАСТИНЫ · ВКЛ' : 'ШТОРМ ПЛАСТИНЫ · ВЫКЛ');
+                    }
+                    if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') {
+                        redNoon_js_3.triggerRedNoon(time_js_44.t);
+                        ink_js_2.ink.note('КРАСНЫЙ ПОЛДЕНЬ');
+                    }
+                });
         }
     };
 });

@@ -1932,10 +1932,12 @@ window.onerror = (msg, src, line, col, err) => {
 };
 // build 1776974120
 
-// Проверка эффектов руками: I (Ш) — вторая краска авто → 0..3; O (Щ) — шторм пластины;
-// L (Д) — сбой лоу-фай; T (Е) — токсик (код и счётчик); K (Л) — оступиться;
-// N (Т) — красный полдень
-document.addEventListener('keydown', e => {
+// Проверка эффектов руками — только с ?dev в адресе: в рабочей сборке случайное нажатие
+// ломало настроение и выглядело как сбой игры. I (Ш) — вторая краска авто → 0..3;
+// O (Щ) — шторм пластины; L (Д) — сбой лоу-фай; T (Е) — токсик (протёрто и счётчик);
+// K (Л) — оступиться; N (Т) — красный полдень
+const DEV = /[?&]dev\b/.test(location.search);
+if (DEV) document.addEventListener('keydown', e => {
   if (!state.is('game') || e.repeat) return;
   if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') ink.cycle();
   if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д') ink.note('ЛОУ-ФАЙ · ' + LOFI_NAMES[lofi.cycle()]);
