@@ -15,6 +15,7 @@ const ZONE_CONFIGS = {
   quarter:    { freq: 38, type: 'sine', filterFreq: 80, gain: 0.007 },
   street:     { freq: 60, type: 'triangle', filterFreq: 90, gain: 0.007 },
   under:      { freq: 31, type: 'sine', filterFreq: 70, gain: 0.011 },   // изнанка: гул породы
+  house:      { freq: 36, type: 'sine', filterFreq: 60, gain: 0.004 },   // пустой дом: тишина гудит еле-еле
 };
 
 function createZoneSound(cfg) {

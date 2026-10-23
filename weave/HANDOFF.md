@@ -17,6 +17,7 @@
   chrome `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; поднять
   `python3 -m http.server PORT` в /home/user/ardet, вход = клик #entry-btn,
   затем клик #howto, подождать ~16.3с (похмельная прогрузка), потом играть.
+  Старт — в доме пробуждения (weave/HOUSE.md); `?nohouse` — с места сохранения, как раньше.
 - Деплой на ardet.art: залить index.html + mobile.html + assets/icons + assets/music.
   ardet.fun — отдельный хостинг, глушит JS (CSP), нужен 301-редирект на art.
 

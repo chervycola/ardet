@@ -113,6 +113,8 @@ import { UNDER_INSC } from './content/underside.js';
 import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT } from './net/net.js';
 import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } from './render/net.js';
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
+import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
+import { drawHouseWorld } from './render/house.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -120,6 +122,7 @@ layers.init(mainCanvas);
 installPen(layers.ctx('world')); installPen(layers.ctx('bg'));   // перо: толщина штриха — по нажиму суток
 input.init(mainCanvas);
 attachContent(looks, dialogues);
+buildHouse(locations);                         // дом пробуждения — в центре старого города (квартал); дороги и фундаменты его обходят
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
 // артерии — дороги, река, дуги, линия неба — в обход построек, дворов, табличек и утвари
 buildArteries([
@@ -221,7 +224,7 @@ if (savedData) {
 
 if (!STREAM) startAutoSave(() => ({
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-  player: under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF,
+  player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
   observersSeen: Array.from(flags.observersSeen),
@@ -233,7 +236,7 @@ if (!STREAM) startAutoSave(() => ({
   under: under.save(),
   well: saveTownWell(),
 }));
-setPosOverride(() => (under.active ? under.ret : null));   // карта мира: странник там, где спустился
+setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
 
 initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
@@ -283,6 +286,43 @@ for (const loc of locations) {
 for (const L of archWindowLights(locations, archProps)) lighting.add(L);
 // костры кольца огня
 for (const L of fireLights()) lighting.add(L);
+
+// ═══ ДОМ ПРОБУЖДЕНИЯ (world/house.js) ═══
+// Канон: «здесь всегда просыпаются». Каждый вход в мир — в доме, на краю своей
+// кровати; упал за краем — тоже сюда. ?nohouse и ?under — проверка руками: с места.
+const NO_HOUSE = /[?&](?:nohouse|under)\b/.test(location.search);
+let houseKeep = null;                                // свет мира, пока в доме
+function intoHouse(fx, fy, wake) {
+  if (wake) house.wake(); else house.enter();
+  if (!houseKeep) houseKeep = lighting.sources;
+  player.x = fx - 6; player.y = fy - 23; player.tx = player.x; player.ty = player.y;
+  player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
+  player.sit = wake ? 1 : 0; player.visor = false;
+  clearWhisper();                                    // шёпот улицы остался на улице
+  muteRedNoon(true);
+  lighting.sources = houseLights(player.x + 6, player.y + 10, skyAt(phaseAt(t)));
+}
+function outOfHouse() {
+  house.leave();                                     // вышел — обулся
+  if (houseKeep) lighting.sources = houseKeep;
+  houseKeep = null;
+  muteRedNoon(false);
+  player.sit = 0; player.path = null; player.walkTo = null;
+}
+function enterHouse() { teleportWithFade(ENTRY.x - 6, ENTRY.y - 23, () => intoHouse(ENTRY.x, ENTRY.y, false)); }
+function leaveHouse() { const d = doorOutside(); teleportWithFade(d.x, d.y, outOfHouse); }
+// клик в доме: к вещи — до места у неё, из комнаты в сени — через проём
+function walkHouse(gx, gy) {
+  const th = findLocationAt(gx, gy, houseThings(!skyAt(phaseAt(t)).sun), 4);
+  const path = th ? houseRoute(player.x + 6, player.y + 23, th.at[0], th.at[1]) : houseRoute(player.x + 6, player.y + 23, gx, gy);
+  if (!path.length) return;
+  const w = path.shift();
+  player.path = path;
+  player.tx = w.x - 6; player.ty = w.y - 23;
+  player.moving = true; player.auto = true;
+  player.walkTo = th || null;
+}
+if (!NO_HOUSE) intoHouse(WAKE.x, WAKE.y, true);
 
 // ═══ TIME ═══
 import { t } from './core/time.js';
@@ -421,6 +461,7 @@ const npcDrawFn = {
 
 // ═══ RENDER ═══
 function render() {
+  if (house.active) { renderHouse(); return; }
   if (under.active) { renderUnder(); return; }
   const vw = scaler.vw, vh = scaler.vh;
   layers.clearAll();
@@ -616,7 +657,8 @@ function plateStorm() {
 // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
 function stepFx() {
-  stepNet(player, under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг
+  stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+  if (house.active) { stepFxHouse(); return; }
   if (under.active) { stepFxUnder(); return; }
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
@@ -1211,6 +1253,36 @@ function netClick(x, y, layer) {
   player.walkTo = nm;
   return true;
 }
+// шаг эффектов дома: за стеной ветер глухо, неба не видно (только в окне), яда нет;
+// проснулся сидя — сидит, пока не шагнул
+function stepFxHouse() {
+  const camX = Math.round(camera.x), camY = Math.round(camera.y);
+  wind.update('clear', 0, 0, true);
+  updateWindSound(0.02);
+  setPress(pressAt(phaseAt(t)));
+  stepRedNoon(t, phaseAt(t), dayIndex(t));
+  ink.noon(0);
+  ink.sky(false);
+  ink.beginFrame();
+  ink.want(0, 'дом');
+  if (isEndingActive()) ink.want(3, 'финал');
+  if (getActiveLoc()) ink.want(2, 'осмотр');
+  ink.setGroup([]);
+  ink.update();
+  const d = doorOutside();
+  plate.update(d.x + 6, d.y + 24, 0);               // зерно — квартала: дом стоит в нём
+  toxic.hush();
+  updateGeiger(toxic.level());
+  lofi.update(0);
+  if (player.moving) house.seated = false;
+  player.sit = player.moving ? 0 : (player.sit || 0) + ((house.seated ? 1 : 0) - (player.sit || 0)) * 0.12;
+  player.visor = false;
+  stepWhisper();
+  lighting.sources = houseLights(player.x + 6, player.y + 10, skyAt(phaseAt(t)));
+  lightParticles.update({ x: camX, y: camY }, lighting.sources);
+  dyingPixels.update();
+  screenMoss.update(player.moving);
+}
 // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
 function stepFxUnder() {
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
@@ -1269,6 +1341,37 @@ function stepFxUnder() {
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving);
+}
+function renderHouse() {
+  const vw = scaler.vw, vh = scaler.vh;
+  layers.clearAll();
+  const bgCtx = layers.ctx('bg'), worldCtx = layers.ctx('world'), lightCtx = layers.ctx('light');
+  const fxCtx = layers.ctx('fx'), uiCtx = layers.ctx('ui'), postCtx = layers.ctx('post');
+  const camX = Math.round(camera.x), camY = Math.round(camera.y), sky = skyAt(phaseAt(t));
+  bgCtx.fillStyle = '#0D0B0A';
+  bgCtx.fillRect(0, 0, vw, vh);
+  worldCtx.save();
+  worldCtx.translate(-camX, -camY);
+  setCtx(worldCtx);
+  drawHouseWorld(worldCtx, player, () => { setCtx(worldCtx); drawPlayer(player); }, sky);
+  drawParticles(worldCtx, { x: camX, y: camY });
+  drawWhisper(worldCtx, { x: camX, y: camY });
+  drawVoices(worldCtx, 'house', player);            // своё слово — и в доме; чужих здесь нет
+  worldCtx.restore();
+  hazeOff();
+  warmSpots = warmIn(camX, camY, vw, vh);
+  setCtx(worldCtx);
+  lighting.render(lightCtx, { x: camX, y: camY }, sky.sun ? HOUSE_AMBIENT.day : HOUSE_AMBIENT.night);   // темно: окно, щель двери, огонёк
+  lightParticles.draw(worldCtx, { x: camX, y: camY });
+  crackedGlass.draw(fxCtx);
+  dyingPixels.draw(fxCtx);
+  screenMoss.draw(uiCtx);
+  drawHUD(uiCtx);
+  ink.drawLabel(uiCtx);
+  postfx.apply(postCtx);
+  drawTeleportFade(postCtx);
+  if (isEndingActive()) drawEnding(postCtx);
+  layers.composite();
 }
 function renderUnder() {
   const vw = scaler.vw, vh = scaler.vh;
@@ -1343,7 +1446,8 @@ function heroStep(dvx, dvy) {
   else { player.vx += ex / el * rate; player.vy += ey / el * rate; }
   if (want < 0.01 && Math.hypot(player.vx, player.vy) < 0.03) { stopHero(); return 0; }
   const ox = player.x, oy = player.y;
-  if (under.active) underMove(player, player.vx, player.vy);
+  if (house.active) houseMove(player, player.vx, player.vy);
+  else if (under.active) underMove(player, player.vx, player.vy);
   else tryMove(player, player.vx, player.vy, locations, {
     canLeaveSettlement: canLeaveSettlement(), onLock: lockHint,
   });
@@ -1358,7 +1462,7 @@ function heroStep(dvx, dvy) {
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
     // (под землёй следы остаются в пыли — render/underside.js)
-    const kind = under.active ? null : wetKind(S.print);
+    const kind = under.active || house.active ? null : wetKind(S.print);
     if (kind !== null && addFootprint(player.x, player.y, kind)) {
       if (kind === 'wet') usedWet();
       if (surfName === 'ash' || nearFire()) ashPuff(player.x + 6, player.y + 23, sp);
@@ -1373,11 +1477,11 @@ function updateGame() {
   if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { stopHero(); return; }
   if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
-  const fell = under.active ? false : stumble.update(player);   // полотно ровное — под землёй не оступишься
+  const fell = under.active || house.active ? false : stumble.update(player);   // полотно ровное — под землёй и дома не оступишься
   if (fell && !stumbling) startleRavens(player.x + 6, player.y + 22, 150);   // упал — вороны в округе взлетают
   stumbling = fell;
   if (fell) { stopHero(); updateWorldSystems(); return; }   // оступился — шаг пропал
-  surfName = under.active ? surfaceUnder(player.x + 6, player.y + 23) : surfaceAt(player.x + 6, player.y + 24, locations);
+  surfName = house.active ? 'path' : under.active ? surfaceUnder(player.x + 6, player.y + 23) : surfaceAt(player.x + 6, player.y + 24, locations);   // дома — доски
   const S = SURF[surfName];
 
   // желаемая скорость: палец (держат), клавиши, автоход к цели
@@ -1408,7 +1512,7 @@ function updateGame() {
       // не открываем: мимо вещи можно пройти, не останавливаясь.
       const want = player.walkTo;
       player.walkTo = null;
-      if (want && (want.under || want.net)) showMenu(want);   // вещь изнанки, записка: путь вёл к ней
+      if (want && (want.under || want.net || want.house)) showMenu(want);   // вещь изнанки, дома, записка: путь вёл к ней
       else {
         const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
           && Math.abs(player.y - (want.y + want.h + 5)) < 4;
@@ -1435,6 +1539,17 @@ function updateGame() {
 // Camera + all per-frame world systems. Shared by the normal movement
 // path and the held-finger walk branch above.
 function updateWorldSystems() {
+  if (house.active) {                       // дом: своя карта; меньше кадра — посередине
+    camera.follow(player.x + 6, player.y + 10);
+    camera.update();
+    const vw = scaler.vw, vh = scaler.vh;
+    camera.x = HW <= vw ? (HW - vw) / 2 : Math.max(0, Math.min(camera.x, HW - vw));
+    camera.y = HH <= vh ? (HH - vh) / 2 : Math.max(0, Math.min(camera.y, HH - vh));
+    updateZone('house');
+    if (!redNoon.active) updateIdle(player.moving);
+    updateParticles();
+    return;
+  }
   if (under.active) {                       // изнанка: своя карта, мира сверху здесь нет
     camera.follow(player.x + 6, player.y + 10);
     camera.update();
@@ -1523,13 +1638,7 @@ function startGame() {
     window.ArdetAudio.unlock();
     window.ArdetAudio.playOnce('title');
   }
-  // похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают
-  gw.classList.add('wake');
-  const lids = document.createElement('div');
-  lids.id = 'wakelids';
-  // без подписи: пробуждение говорит само
-  document.body.appendChild(lids);
-  setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+  wakeFx();
   // Touch devices have no M key — give them an on-screen map button.
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
     const mb = document.getElementById('map-btn');
@@ -1539,6 +1648,20 @@ function startGame() {
     }
   }
 }
+
+// похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают (вход в мир и пробуждение после падения)
+function wakeFx() {
+  const gw = document.getElementById('gw');
+  if (!gw || document.getElementById('wakelids')) return;
+  gw.classList.add('wake');
+  const lids = document.createElement('div');
+  lids.id = 'wakelids';
+  // без подписи: пробуждение говорит само
+  document.body.appendChild(lids);
+  setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+}
+// упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
+events.on('brainrot.recover', () => { if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
 
 let entryDone = false;
 { // оттиск сборки на заставке — сверка «что реально задеплоено»
@@ -1605,6 +1728,7 @@ input.onClick(({ clientX, clientY, originalEvent }) => {
   if (loreActive()) { dismissLore(); return; }   // первый клик допечатывает, второй убирает
 
   const pos = input.screenToWorld(clientX, clientY, camera);
+  if (house.active) { walkHouse(pos.x, pos.y); return; }
   if (under.active) { walkUnder(pos.x, pos.y); return; }
   player.path = null;
   if (netClick(pos.x, pos.y, 'surface')) return;   // другой странник, записка на земле
@@ -1707,6 +1831,8 @@ events.on('location.use', (loc) => {
   // сеть странников: заверить чужую записку — красная точка печати; не слушать встречного (ui/netui.js)
   if (actionKey === 'net_cert') { netVote(loc.net, 'cert').then(r => showLore(r.error ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Заверено. На записке теперь красная точка печати.')); return; }
   if (actionKey === 'net_mute') { const off = !net.muted.has(loc.net); mute(loc.net, off); showLore(off ? 'Слова этого странника больше не доходят.' : 'Этого странника снова слышно.'); return; }
+  if (actionKey === 'house_exit') { leaveHouse(); return; }   // дом пробуждения: на улицу
+  if (actionKey === 'house_enter') { enterHouse(); return; }  // …и обратно, в пустой тёмный дом
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты
   // изнанка: дочитать чужую строку инея над дверью криосклепа, не выдохнув
   if (actionKey === 'under_read') { under.readFrost(loc.x + loc.w / 2, loc.y + 12, FROST_FOREIGN); return; }

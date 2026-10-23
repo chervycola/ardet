@@ -62,7 +62,7 @@ export async function startNet(T = null) {
   });
   net.T.on('say', m => {
     const o = net.others.get(m.id), text = clean(m.text, SAY_MAX);
-    if (!o || !text || net.muted.has(m.id)) return;
+    if (!o || !text || net.muted.has(m.id) || o.layer === 'house') return;   // в доме каждый у себя: не слышно
     if (net.last && (o.layer !== net.last.layer || Math.hypot(o.x - net.last.x, o.y - net.last.y) > HEAR)) return;   // далеко — не слышно
     voice(m.id, text);
   });
@@ -127,7 +127,7 @@ export function netSay(text) {
 // записка у ног: брань база не примет — не тратить попытку
 export async function netLeaveNote(text) {
   if (!net.on || !net.last) return { error: 'off' };
-  if (net.last.layer !== 'surface') return { error: 'under' };
+  if (net.last.layer !== 'surface') return { error: net.last.layer === 'house' ? 'house' : 'under' };
   const s = clean(text, NOTE_MAX);
   if (!s) return { error: 'empty' };
   if (dirty(text) || s.includes('█')) return { error: 'dirty' };

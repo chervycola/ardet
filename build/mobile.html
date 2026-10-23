@@ -624,7 +624,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='74b9a19 · 2026-10-23';console.log('[оттиск]', '74b9a19 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='29349c2 · 2026-10-23';console.log('[оттиск]', '29349c2 · 2026-10-23');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -35428,7 +35428,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         ],
         execute: function () {
             // Special use-actions handled directly by main.js (not via useTexts)
-            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute']);
+            SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
             // ── MENU (location interaction) ──
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
@@ -35437,6 +35437,10 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 net_note: 'почерк чужой.', // сеть странников (ui/netui.js)
                 net_note_mine: 'почерк свой.',
                 net_other: 'идёт своей дорогой.',
+                wake_house: 'окна тёмные.', // дом пробуждения (world/house.js)
+                h_door: 'не заперто.',
+                h_journal: 'ни строки.',
+                h_window: 'за стеклом — квартал.',
                 campfire: 'огонь не спрашивает.',
                 jester_home: 'смеётся. потому что альтернатива.',
                 terminal: 'session expired. reconnect?',
@@ -45475,6 +45479,7 @@ System.register("audio/zoneAmbient", ["world/disc", "audio/audio"], function (ex
                 quarter: { freq: 38, type: 'sine', filterFreq: 80, gain: 0.007 },
                 street: { freq: 60, type: 'triangle', filterFreq: 90, gain: 0.007 },
                 under: { freq: 31, type: 'sine', filterFreq: 70, gain: 0.011 }, // изнанка: гул породы
+                house: { freq: 36, type: 'sine', filterFreq: 60, gain: 0.004 }, // пустой дом: тишина гудит еле-еле
             };
         }
     };
@@ -51434,8 +51439,8 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         });
         net.T.on('say', m => {
             const o = net.others.get(m.id), text = filter_js_2.clean(m.text, filter_js_2.SAY_MAX);
-            if (!o || !text || net.muted.has(m.id))
-                return;
+            if (!o || !text || net.muted.has(m.id) || o.layer === 'house')
+                return; // в доме каждый у себя: не слышно
             if (net.last && (o.layer !== net.last.layer || Math.hypot(o.x - net.last.x, o.y - net.last.y) > HEAR))
                 return; // далеко — не слышно
             voice(m.id, text);
@@ -51531,7 +51536,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         if (!net.on || !net.last)
             return { error: 'off' };
         if (net.last.layer !== 'surface')
-            return { error: 'under' };
+            return { error: net.last.layer === 'house' ? 'house' : 'under' };
         const s = filter_js_2.clean(text, filter_js_2.NOTE_MAX);
         if (!s)
             return { error: 'empty' };
@@ -52012,6 +52017,7 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
                 refused: 'Канцелярия не приняла записку.',
                 net: 'Записка не дошла: нет связи.',
                 under: 'Под землёй записки не держатся: оставь наверху.',
+                house: 'В дом никто не зайдёт: записку оставь на улице.',
             };
             SAY_ERR = { soon: 'Прежние слова ещё пишутся.' };
             exports_148("isTyping", isTyping = () => !!mode);
@@ -52027,10 +52033,554 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "assets/loader"], function (exports_149, context_149) {
+System.register("world/house", ["world/town"], function (exports_149, context_149) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_42, player_js_2, context_js_18, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_43, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_4, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, time_js_43, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var town_js_4, HW, HH, WH, ROOM, PART, SENI, FRONT, DOOR, BED, BED2, STOOL, STOVE, WINDOW, BOOTS, BLOCKS, WAKE, ENTRY, house, inSeni, WINDOW_NIGHT, WINDOW_DAY, THINGS, AMBIENT, NI, AS, K0, K1, K2, K4, BR2, L1, L2, S1, S2, R, HOUSE_W, HOUSE_H, OUT_LOOK, home, wakeHouse, doorOutside;
     var __moduleName = context_149 && context_149.id;
+    // ноги (x, y) — можно ли тут стоять
+    function walkable(x, y) {
+        const inR = R => x >= R.x0 + 4 && x <= R.x1 - 4 && y >= R.y0 + 3 && y <= R.y1 - 2;
+        const gap = x > PART.x0 - 6 && x < PART.x1 + 6 && y >= PART.g0 + 4 && y <= PART.g1 - 2;
+        if (!(inR(ROOM) || inR(SENI) || gap))
+            return false;
+        for (const b of BLOCKS)
+            if (x > b.x0 - 3 && x < b.x1 + 3 && y > b.y0 && y < b.y1 + 2)
+                return false;
+        return true;
+    }
+    exports_149("walkable", walkable);
+    function houseMove(p, dx, dy) {
+        const fx = p.x + 6, fy = p.y + 23;
+        if (walkable(fx + dx, fy + dy)) {
+            p.x += dx;
+            p.y += dy;
+            return true;
+        }
+        if (Math.abs(dx) > 0.01 && walkable(fx + dx, fy)) {
+            p.x += dx;
+            return true;
+        }
+        if (Math.abs(dy) > 0.01 && walkable(fx, fy + dy)) {
+            p.y += dy;
+            return true;
+        }
+        return false;
+    }
+    exports_149("houseMove", houseMove);
+    // ближайшая точка пола к (x, y) — туда и идти, если ткнули в стену или в мебель
+    function nearestFloor(x, y) {
+        if (walkable(x, y))
+            return { x, y };
+        let best = null, bd = 1e9;
+        for (let yy = 0; yy <= HH; yy += 2)
+            for (let xx = 0; xx <= HW; xx += 2) {
+                if (!walkable(xx, yy))
+                    continue;
+                const d = (xx - x) ** 2 + (yy - y) ** 2;
+                if (d < bd) {
+                    bd = d;
+                    best = { x: xx, y: yy };
+                }
+            }
+        return best;
+    }
+    exports_149("nearestFloor", nearestFloor);
+    // путь от ног до точки: из комнаты в сени — через проём
+    function houseRoute(fx, fy, tx, ty) {
+        const to = nearestFloor(tx, ty);
+        if (!to)
+            return [];
+        if (inSeni(fx) === inSeni(to.x))
+            return [to];
+        return [{ x: PART.x0 - 8, y: (PART.g0 + PART.g1) / 2 + 2 }, { x: PART.x1 + 8, y: (PART.g0 + PART.g1) / 2 + 2 }, to];
+    }
+    exports_149("houseRoute", houseRoute);
+    // вещи сейчас (ботинки — пока не обулся); окно — по времени суток
+    function houseThings(night = true) {
+        const w = THINGS.find(th => th.id === 'h_window');
+        w.look = night ? WINDOW_NIGHT : WINDOW_DAY;
+        return THINGS.filter(th => !th.shown || th.shown());
+    }
+    exports_149("houseThings", houseThings);
+    function houseLights(px, py, sky) {
+        const night = !sky || !sky.sun, moon = sky ? sky.moon || 0 : 0;
+        // огонёк у сердца и рассеянный от него свет на стенах (как в изнанке): без него комнату не видно
+        const L = [{ x: px, y: py, r: 46, color: [226, 138, 58], flicker: 0.1, candle: true, intensity: 1.1 },
+            { x: px, y: py, r: 120, color: [232, 220, 198], flicker: 0, intensity: 1.7 }];
+        if (night)
+            L.push({ x: (WINDOW.x0 + WINDOW.x1) / 2, y: 46, r: 44, color: [150, 160, 172], flicker: 0, intensity: 0.35 + 0.5 * moon });
+        else
+            L.push({ x: (WINDOW.x0 + WINDOW.x1) / 2, y: 46, r: 58, color: [176, 172, 164], flicker: 0, intensity: 0.8 });
+        L.push({ x: (DOOR.x0 + DOOR.x1) / 2, y: FRONT.y0, r: 18, color: night ? [140, 150, 160] : [176, 172, 164], flicker: 0, intensity: night ? 0.2 : 0.5 });
+        return L;
+    }
+    exports_149("houseLights", houseLights);
+    function hq(a, b, s) {
+        let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
+    function drawHouse(ctx, loc) {
+        const x = loc.x, gy = loc.y + loc.h, W = HOUSE_W;
+        ctx.globalAlpha = 0.45;
+        R(ctx, x + 2, gy, W + 2, 2, K0);
+        R(ctx, x + W, gy - 3, 3, 3, K0);
+        ctx.globalAlpha = 1; // тень — вправо
+        // стены: кладка рядами, свет слева, кромка пеплом справа; цоколь темнее
+        const wy = gy - 22;
+        for (let y = wy; y < gy; y++) {
+            const row = y - wy, off = (row >> 2) & 1 ? 3 : 0;
+            for (let xx = x + 2; xx < x + W - 2; xx++) {
+                const k = xx - x - 2, seam = (row & 3) === 3 || ((k + off) % 7 === 0);
+                R(ctx, xx, y, 1, 1, row > 18 ? (seam ? K2 : S2) : seam ? S1 : k < 3 ? L1 : hq(k, row, 3) < 0.12 ? S1 : L2);
+            }
+        }
+        R(ctx, x + W - 3, wy, 1, 22, AS); // кромка пеплом
+        // крыша: скат к улице, свес над стеной; конёк сверху; черепица рядами
+        const ry = wy - 14;
+        for (let j = 0; j < 14; j++) {
+            const inset = Math.round((13 - j) * 0.35);
+            for (let xx = x + inset; xx < x + W - inset; xx++)
+                R(ctx, xx, ry + j, 1, 1, j === 13 ? K0 : (j & 1) && ((xx - x) % 4 === 0) ? K0 : j < 2 ? K4 : K1);
+            R(ctx, x + inset, ry + j, 1, 1, K4); // к свету
+        }
+        R(ctx, x + 5, ry - 1, W - 10, 1, K4); // конёк
+        // печная труба — холодная, без дыма
+        R(ctx, x + 27, ry - 7, 5, 9, S2);
+        R(ctx, x + 27, ry - 7, 1, 9, L2);
+        R(ctx, x + 26, ry - 8, 7, 1, K2);
+        // окна тёмные: рама пеплом, стекло — ночь; в левом — отсвет
+        for (const wx of [x + 6, x + 27]) {
+            R(ctx, wx - 1, wy + 4, 9, 9, AS);
+            R(ctx, wx, wy + 5, 7, 7, NI);
+            R(ctx, wx + 3, wy + 5, 1, 7, K2);
+            R(ctx, wx, wy + 8, 7, 1, K2);
+            R(ctx, wx - 1, wy + 13, 9, 1, L1); // подоконник
+        }
+        R(ctx, x + 7, wy + 6, 1, 1, S1);
+        // дверь посередине: доски, ручка-кольцо; порог
+        const dx = x + 16;
+        R(ctx, dx - 1, gy - 15, 10, 15, K2);
+        R(ctx, dx, gy - 14, 8, 14, BR2);
+        for (const k of [2, 5])
+            R(ctx, dx + k, gy - 14, 1, 14, K1);
+        R(ctx, dx + 6, gy - 7, 1, 1, AS);
+        R(ctx, dx, gy - 14, 1, 14, K4);
+        R(ctx, dx - 2, gy - 1, 12, 1, L2); // порог
+        // щебень у подошвы
+        for (let k = 0; k < 9; k++)
+            R(ctx, x + Math.floor(hq(k, 1, 5) * W), gy - 1 + (k & 1), 1, 1, k % 3 ? S1 : AS);
+    }
+    // на северо-восточном углу перекрёстка главной улицы квартала и улицы у церкви
+    function buildHouse(locations) {
+        const main = town_js_4.STREETS.find(s => s[0] === 'road:q-main')[1], church = town_js_4.STREETS.find(s => s[0] === 'road:q-church')[1];
+        const cx = church.reduce((s, p) => s + p[0], 0) / church.length; // улица у церкви — почти отвес
+        let cy = main[0][1]; // главная — на этом x
+        for (let i = 1; i < main.length; i++) {
+            const [ax, ay] = main[i - 1], [bx, by] = main[i];
+            if (cx >= ax && cx <= bx) {
+                cy = ay + (by - ay) * (cx - ax) / (bx - ax);
+                break;
+            }
+        }
+        const x = Math.round(cx + 5 + 10), gy = Math.round(cy - 5 - 5); // за бордюром и тротуаром
+        home = { id: 'wake_house', name: 'Дом', zone: 'quarter', x, y: gy - HOUSE_H, w: HOUSE_W, h: HOUSE_H, solid: true,
+            look: OUT_LOOK, drawSelf: drawHouse, useAction: 'house_enter', useLabel: '<i>⌂</i>ВОЙТИ' };
+        locations.push(home);
+        return home;
+    }
+    exports_149("buildHouse", buildHouse);
+    return {
+        setters: [
+            function (town_js_4_1) {
+                town_js_4 = town_js_4_1;
+            }
+        ],
+        execute: function () {
+            exports_149("HW", HW = 232), exports_149("HH", HH = 122); // дом целиком
+            exports_149("WH", WH = 26); // стена видна лицом на столько
+            exports_149("ROOM", ROOM = { x0: 6, x1: 150, y0: 32, y1: 112 }); // пол комнаты
+            exports_149("PART", PART = { x0: 150, x1: 158, g0: 70, g1: 108 }); // перегородка; проём по полу g0..g1
+            exports_149("SENI", SENI = { x0: 158, x1: 226, y0: 52, y1: 112 }); // пол сеней
+            exports_149("FRONT", FRONT = { y0: 112, y1: 118 }); // передняя стена — сверху полосой
+            exports_149("DOOR", DOOR = { x0: 182, x1: 200 }); // дверь на улицу — в передней стене сеней
+            // мебель — основание по полу; сквозь не пройти
+            exports_149("BED", BED = { x0: 44, x1: 66, y0: 32, y1: 62 }); // своя — левее окна; печь в углу её не заслоняет
+            exports_149("BED2", BED2 = { x0: 120, x1: 142, y0: 32, y1: 62 });
+            exports_149("STOOL", STOOL = { x0: 76, x1: 86, y0: 40, y1: 48 });
+            exports_149("STOVE", STOVE = { x0: 8, x1: 32, y0: 84, y1: 110 });
+            exports_149("WINDOW", WINDOW = { x0: 70, x1: 92, y0: 9, y1: 25 }); // в стене комнаты
+            exports_149("BOOTS", BOOTS = { x: 206, gy: 107 });
+            BLOCKS = [BED, BED2, STOOL, STOVE];
+            // где просыпаешься: на краю своей кровати (ноги — перед ней)
+            exports_149("WAKE", WAKE = { x: 55, y: 67 });
+            // где встаёшь, войдя с улицы: на пороге
+            exports_149("ENTRY", ENTRY = { x: 191, y: 106 });
+            exports_149("house", house = {
+                active: false,
+                seated: false, // сидит на краю кровати, пока не шагнул
+                boots: false, // ботинки у порога: только после пробуждения
+                wakes: 0, // сколько раз просыпался здесь (за этот заход)
+                // проснулся: свет, сидя на кровати; ботинки у порога
+                wake() { this.active = true; this.seated = true; this.boots = true; this.wakes++; },
+                enter() { this.active = true; this.seated = false; },
+                leave() { this.active = false; this.seated = false; this.boots = false; }, // вышел — обулся
+            });
+            inSeni = x => x >= PART.x1;
+            // ── вещи: осмотр, у иных — действие ──
+            WINDOW_NIGHT = 'Окно. За стеклом — пустая улица и мёртвый фонарь; луна стоит низко, свет от неё лежит на полу квадратом.';
+            WINDOW_DAY = 'Окно. За стеклом — пустая улица квартала, вдоль неё фундаменты. Стекло пыльное, свет сквозь него серый.';
+            exports_149("THINGS", THINGS = [
+                { id: 'h_bed', name: 'Кровать', x: BED.x0, y: BED.y0 - 6, w: BED.x1 - BED.x0, h: BED.y1 - BED.y0 + 6, at: [WAKE.x, WAKE.y],
+                    look: 'Своя кровать. Простыня сбита, подушка ещё помнит голову.' },
+                { id: 'h_bed2', name: 'Вторая кровать', x: BED2.x0, y: BED2.y0 - 6, w: BED2.x1 - BED2.x0, h: BED2.y1 - BED2.y0 + 6, at: [131, 67],
+                    look: 'Вторая кровать. Застелена и холодна.' }, // канон: не объясняется никогда
+                { id: 'h_journal', name: 'Журнал', x: STOOL.x0 - 2, y: STOOL.y0 - 10, w: 14, h: 18, at: [81, 55],
+                    look: 'Журнал на табурете. Пуст.' }, // канон: журнал пуст
+                { id: 'h_window', name: 'Окно', x: WINDOW.x0, y: WINDOW.y0, w: WINDOW.x1 - WINDOW.x0, h: WINDOW.y1 - WINDOW.y0, at: [81, 55],
+                    look: WINDOW_NIGHT },
+                { id: 'h_stove', name: 'Печь', x: STOVE.x0, y: STOVE.y0 - 30, w: STOVE.x1 - STOVE.x0, h: STOVE.y1 - STOVE.y0 + 30, at: [40, 100],
+                    look: 'Печь. Холодная; зола в ней старая, слежалась.' },
+                { id: 'h_boots', name: 'Ботинки', x: BOOTS.x - 7, y: BOOTS.gy - 8, w: 14, h: 10, at: [196, 102],
+                    look: 'Ботинки у порога. Стоптаны сильнее, чем помнишь.', shown: () => house.boots }, // канон
+                { id: 'h_door', name: 'Дверь', x: DOOR.x0, y: FRONT.y0 - 8, w: DOOR.x1 - DOOR.x0, h: 14, at: [ENTRY.x, ENTRY.y],
+                    look: 'Дверь на улицу. Не заперта.', useAction: 'house_exit', useLabel: '<i>⌂</i>ВЫЙТИ' },
+            ]);
+            for (const th of THINGS)
+                th.house = true;
+            // ── свет: огонёк у сердца; окно — луной или серым днём; щель двери ──
+            exports_149("AMBIENT", AMBIENT = { night: 0.15, day: 0.24 });
+            // ═══ ДОМ СНАРУЖИ ═══
+            // единственный целый дом квартала: на северо-восточном углу перекрёстка главной
+            // улицы и улицы у церкви, фасадом на главную. Камень светлее земли квартала,
+            // крыша скатом к улице, печная труба холодная, окна тёмные. Свет слева, кромка
+            // пеплом справа.
+            NI = '#0D0B0A', AS = '#8A8D8F', K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328';
+            BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#4a463f', S2 = '#33302e';
+            R = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+            exports_149("HOUSE_W", HOUSE_W = 40), exports_149("HOUSE_H", HOUSE_H = 38);
+            OUT_LOOK = 'Единственный целый дом на старых улицах: стены, крыша, дверь. Окна тёмные, внутри никого. Здесь просыпаются.';
+            home = null;
+            exports_149("wakeHouse", wakeHouse = () => home);
+            // снаружи у двери — куда выходишь (верх рисунка героя)
+            exports_149("doorOutside", doorOutside = () => ({ x: home.x + home.w / 2 - 6, y: home.y + home.h + 5 }));
+        }
+    };
+});
+System.register("render/house", ["world/house"], function (exports_150, context_150) {
+    "use strict";
+    var house_js_1, NI, AS, BO, KV, K0, K1, K2, K4, BR1, BR2, BR3, L1, L2, L3, S0, S1, S2, q, G, r, base, _bakeReset;
+    var __moduleName = context_150 && context_150.id;
+    function hh(a, b, s) {
+        let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
+    // ── стена лицом: обои выцвели (редкий узор), панель снизу темнее, плинтус ──
+    function wallFace(x0, x1, y0, y1) {
+        for (let y = y0; y < y1; y++)
+            for (let x = x0; x < x1; x++) {
+                const d = y1 - y, k = x - x0;
+                let c = d <= 2 ? K1 : d <= 9 ? (k % 9 === 0 ? K2 : S2) : (hh(x, y, 7) < 0.07 ? L3 : (x + y * 3) % 11 === 0 && (y & 1) ? L3 : S0);
+                if (y === y0)
+                    c = K2; // верх стены — в тень потолка
+                if (d === 10)
+                    c = K2; // край панели
+                r(x, y, 1, 1, c);
+            }
+        r(x0, y0, 1, y1 - y0, S1); // угол к свету
+    }
+    // пол: доски поперёк, стыки вразбежку; пыль; к стенам темнее
+    function floor(R) {
+        for (let y = R.y0; y < R.y1; y++) {
+            const row = Math.floor((y - R.y0) / 5), seam = (y - R.y0) % 5 === 4;
+            for (let x = R.x0; x < R.x1; x++) {
+                const joint = (x + row * 23) % 41 === 0;
+                let c = seam || joint ? K1 : hh(row, Math.floor((x + row * 23) / 41), 3) < 0.4 ? BR2 : BR1;
+                if (!seam && !joint && hh(x, y, 11) < 0.04)
+                    c = BR3; // сучок, пыль
+                if (y - R.y0 < 2)
+                    c = K0; // у стены — тень
+                r(x, y, 1, 1, c);
+            }
+        }
+    }
+    function bake() {
+        if (base !== null)
+            return base;
+        let c = null;
+        try {
+            c = typeof document !== 'undefined' && document.createElement ? document.createElement('canvas') : null;
+        }
+        catch (e) {
+            c = null;
+        }
+        if (!c || !c.getContext) {
+            base = false;
+            return base;
+        }
+        c.width = house_js_1.HW;
+        c.height = house_js_1.HH;
+        const prev = G;
+        G = c.getContext('2d');
+        try {
+            drawStatic();
+        }
+        finally {
+            G = prev;
+        }
+        base = c;
+        return base;
+    }
+    function drawStatic() {
+        r(0, 0, house_js_1.HW, house_js_1.HH, NI);
+        floor(house_js_1.ROOM);
+        floor(house_js_1.SENI);
+        floor({ x0: house_js_1.PART.x0, x1: house_js_1.PART.x1, y0: house_js_1.PART.g0, y1: house_js_1.PART.g1 }); // порожек проёма
+        wallFace(house_js_1.ROOM.x0, house_js_1.ROOM.x1, house_js_1.ROOM.y0 - house_js_1.WH, house_js_1.ROOM.y0);
+        wallFace(house_js_1.SENI.x0, house_js_1.SENI.x1, house_js_1.SENI.y0 - house_js_1.WH, house_js_1.SENI.y0);
+        // от снятой рамы — прямоугольник светлее обоев
+        for (let y = house_js_1.ROOM.y0 - 22; y < house_js_1.ROOM.y0 - 12; y++)
+            for (let x = 104; x < 116; x++)
+                r(x, y, 1, 1, (x === 104 || y === house_js_1.ROOM.y0 - 22) ? L3 : hh(x, y, 5) < 0.1 ? L3 : L2);
+        r(109, house_js_1.ROOM.y0 - 24, 1, 2, K1); // гвоздь остался
+        // сени: два пустых крючка
+        for (const hx of [170, 178]) {
+            r(hx, house_js_1.SENI.y0 - 18, 1, 3, K1);
+            r(hx + 1, house_js_1.SENI.y0 - 16, 1, 1, K1);
+            r(hx + 1, house_js_1.SENI.y0 - 15, 1, 1, S1);
+        }
+        // окно: проём, рама, подоконник; стекло — в кадре (по времени суток)
+        r(house_js_1.WINDOW.x0 - 1, house_js_1.WINDOW.y0 - 1, house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0 + 2, house_js_1.WINDOW.y1 - house_js_1.WINDOW.y0 + 2, K1);
+        r(house_js_1.WINDOW.x0, house_js_1.WINDOW.y0, house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0, 1, L2);
+        r(house_js_1.WINDOW.x0, house_js_1.WINDOW.y0, 1, house_js_1.WINDOW.y1 - house_js_1.WINDOW.y0, L2);
+        r(house_js_1.WINDOW.x0 - 2, house_js_1.WINDOW.y1, house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0 + 4, 2, L1);
+        r(house_js_1.WINDOW.x0 - 2, house_js_1.WINDOW.y1 + 1, house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0 + 4, 1, L3);
+        // перегородка сверху: полоса от стены до передней стены, проём в ней
+        for (const [y0, y1] of [[house_js_1.SENI.y0 - house_js_1.WH, house_js_1.PART.g0], [house_js_1.PART.g1, house_js_1.FRONT.y0]]) {
+            r(house_js_1.PART.x0, y0, house_js_1.PART.x1 - house_js_1.PART.x0, y1 - y0, K2);
+            r(house_js_1.PART.x0, y0, 1, y1 - y0, S2);
+            r(house_js_1.PART.x1 - 1, y0, 1, y1 - y0, K0);
+        }
+        r(house_js_1.PART.x0, house_js_1.PART.g0 - 1, house_js_1.PART.x1 - house_js_1.PART.x0, 1, S1);
+        r(house_js_1.PART.x0, house_js_1.PART.g1, house_js_1.PART.x1 - house_js_1.PART.x0, 1, K0);
+        // наружные стены сверху: слева, справа, над сенями — темень; передняя — полосой
+        r(0, house_js_1.ROOM.y0 - house_js_1.WH, house_js_1.ROOM.x0, house_js_1.FRONT.y1 - house_js_1.ROOM.y0 + house_js_1.WH, K2);
+        r(0, house_js_1.ROOM.y0 - house_js_1.WH, 1, house_js_1.FRONT.y1 - house_js_1.ROOM.y0 + house_js_1.WH, S2);
+        r(house_js_1.SENI.x1, house_js_1.SENI.y0 - house_js_1.WH, house_js_1.HW - house_js_1.SENI.x1, house_js_1.FRONT.y1 - house_js_1.SENI.y0 + house_js_1.WH, K2);
+        r(house_js_1.HW - 1, house_js_1.SENI.y0 - house_js_1.WH, 1, house_js_1.FRONT.y1 - house_js_1.SENI.y0 + house_js_1.WH, AS);
+        r(0, house_js_1.FRONT.y0, house_js_1.HW, house_js_1.FRONT.y1 - house_js_1.FRONT.y0, K2);
+        r(0, house_js_1.FRONT.y0, house_js_1.HW, 1, S2);
+        r(0, house_js_1.FRONT.y1 - 1, house_js_1.HW, 1, K0);
+        // дверь в передней стене: проём, порог-доска, полотно прикрыто
+        r(house_js_1.DOOR.x0, house_js_1.FRONT.y0, house_js_1.DOOR.x1 - house_js_1.DOOR.x0, house_js_1.FRONT.y1 - house_js_1.FRONT.y0, NI);
+        r(house_js_1.DOOR.x0, house_js_1.FRONT.y0, house_js_1.DOOR.x1 - house_js_1.DOOR.x0, 1, L3); // порог
+        r(house_js_1.DOOR.x0 + 1, house_js_1.FRONT.y0 + 1, house_js_1.DOOR.x1 - house_js_1.DOOR.x0 - 2, 2, BR2);
+        r(house_js_1.DOOR.x0 + 1, house_js_1.FRONT.y0 + 1, 1, 2, BR3); // полотно — ребром
+        r(house_js_1.DOOR.x1 - 4, house_js_1.FRONT.y0 + 1, 1, 1, AS); // ручка
+    }
+    // ── кровать: изголовье у стены, матрас, одеяло; made — застелена туго ──
+    function bed(B, made) {
+        const x0 = B.x0, x1 = B.x1, w = x1 - x0, y0 = B.y0, y1 = B.y1;
+        r(x0, y0 - 6, w, 7, BR1);
+        r(x0, y0 - 6, w, 1, BR3);
+        r(x0, y0 - 6, 1, 7, BR3);
+        r(x1 - 1, y0 - 6, 1, 7, K0); // изголовье
+        for (const k of [4, 9, 13, 18])
+            if (k < w - 1)
+                r(x0 + k, y0 - 5, 1, 5, K1); // прутья
+        r(x0, y0 + 1, w, y1 - y0 - 1, K1); // рама
+        r(x0 + 1, y0 + 1, w - 2, y1 - y0 - 3, L3); // простыня
+        r(x0 + 2, y0 + 2, w - 4, 5, made ? L1 : L2); // подушка
+        if (!made) {
+            r(x0 + 5, y0 + 4, 6, 1, L3);
+            r(x0 + 4, y0 + 3, 1, 2, L3);
+        } // вмятина — помнит голову
+        const by = y0 + 9; // одеяло
+        if (made) {
+            r(x0 + 1, by - 1, w - 2, 2, L1); // отворот простыни — ровной полосой
+            r(x0 + 1, by + 1, w - 2, y1 - by - 3, S2);
+            r(x0 + 1, by + 1, 1, y1 - by - 3, S1);
+            r(x1 - 2, by + 1, 1, y1 - by - 3, K2);
+            r(x0 + 1, y1 - 3, w - 2, 1, S1); // подоткнуто
+        }
+        else {
+            for (let y = by; y < y1 - 2; y++)
+                for (let x = x0 + 1; x < x1 - 1; x++) {
+                    const f = Math.sin((x - x0) * 0.9 + (y - by) * 0.45) + Math.sin((y - by) * 1.3 - (x - x0) * 0.3);
+                    if (y === by && x > x0 + w * 0.6)
+                        continue; // откинуто — видна простыня
+                    r(x, y, 1, 1, f > 1.1 ? S1 : f < -0.9 ? K2 : S2);
+                }
+            r(x1 - 3, y1 - 3, 3, 3, S2);
+            r(x1 - 1, y1 - 1, 2, 2, K2); // свесилось с края
+        }
+        r(x0, y1 - 2, w, 2, BR2);
+        r(x0, y1 - 2, w, 1, BR3); // изножье
+        r(x0, y1, 1, 2, K0);
+        r(x1 - 1, y1, 1, 2, K0); // ножки
+    }
+    // табурет и журнал на нём: тёмная обложка, закладка киноварью
+    function stool() {
+        const x = house_js_1.STOOL.x0, y = house_js_1.STOOL.y0, w = house_js_1.STOOL.x1 - house_js_1.STOOL.x0;
+        r(x, y + 2, 1, 6, BR1);
+        r(x + w - 1, y + 2, 1, 6, K1);
+        r(x + 2, y + 5, w - 4, 1, BR1); // ножки, перекладина
+        r(x - 1, y - 1, w + 2, 3, BR2);
+        r(x - 1, y - 1, w + 2, 1, BR3); // сиденье
+        r(x + 1, y - 5, w - 2, 4, K1);
+        r(x + 1, y - 5, w - 2, 1, K4);
+        r(x + 1, y - 5, 1, 4, K4); // журнал закрыт
+        r(x + w - 4, y - 1, 1, 2, KV); // закладка
+        r(x + 2, y - 3, 4, 1, K2); // этикетка — пустая
+    }
+    // изразцовая печь: верх, лицо в плитке, чугунная дверца; холодная, зола у дверцы
+    function stove() {
+        const x0 = house_js_1.STOVE.x0, x1 = house_js_1.STOVE.x1, w = x1 - x0, H = 30, top = house_js_1.STOVE.y0 - H, fy = house_js_1.STOVE.y1 - H;
+        r(x0, top, w, fy - top, S1); // верх
+        for (let y = top; y < fy; y += 3)
+            r(x0, y, w, 1, S2);
+        r(x0, top, w, 1, L3);
+        for (let y = fy; y < house_js_1.STOVE.y1; y++)
+            for (let x = x0; x < x1; x++) { // лицо: плитка, свет слева
+                const tx = (x - x0) % 6, ty = (y - fy) % 6, edge = tx === 5 || ty === 5;
+                r(x, y, 1, 1, edge ? S2 : x - x0 < 2 ? L2 : tx < 2 && ty < 2 ? L2 : L3); // изразец в темноте — бледный, не светит
+            }
+        r(x1 - 1, fy, 1, H, AS); // кромка пеплом
+        r(x0, fy, w, 1, L2); // карниз
+        const dx = x0 + 8;
+        r(dx, house_js_1.STOVE.y1 - 11, 9, 7, K1);
+        r(dx + 1, house_js_1.STOVE.y1 - 10, 7, 5, K0); // дверца, темно
+        for (const k of [2, 4, 6])
+            r(dx + k, house_js_1.STOVE.y1 - 9, 1, 3, K2); // решётка
+        r(dx + 8, house_js_1.STOVE.y1 - 8, 1, 1, AS); // засов
+        r(x0, house_js_1.STOVE.y1 - 1, w, 1, K0);
+        for (let k = 0; k < 7; k++)
+            r(dx - 1 + Math.floor(hh(k, 2, 9) * 11), house_js_1.STOVE.y1 + Math.floor(hh(k, 3, 9) * 3), 1, 1, AS); // зола у дверцы
+    }
+    // ботинки у порога: стоптаны; один завалился
+    function boots() {
+        const x = house_js_1.BOOTS.x, gy = house_js_1.BOOTS.gy;
+        r(x - 6, gy - 4, 4, 4, K1);
+        r(x - 7, gy - 1, 6, 1, K2);
+        r(x - 6, gy - 4, 1, 3, K4);
+        r(x - 7, gy, 6, 1, AS); // стоит
+        r(x - 5, gy - 5, 2, 1, BR2); // шнурок
+        r(x, gy - 2, 6, 3, K1);
+        r(x, gy - 2, 6, 1, K4);
+        r(x + 5, gy - 3, 2, 2, K2);
+        r(x, gy + 1, 6, 1, AS); // лежит на боку
+        r(x + 2, gy - 1, 1, 1, S1);
+    }
+    // окно сейчас: ночь — темень и луна; день — пыльный серый
+    function windowGlass(sky) {
+        const night = !sky || !sky.sun, x0 = house_js_1.WINDOW.x0 + 1, y0 = house_js_1.WINDOW.y0 + 1, w = house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0 - 1, h = house_js_1.WINDOW.y1 - house_js_1.WINDOW.y0 - 1;
+        for (let y = y0; y < y0 + h; y++)
+            for (let x = x0; x < x0 + w; x++) {
+                let c = night ? (hh(x, y, 13) < 0.05 ? S2 : NI) : (hh(x, y, 13) < 0.25 ? L3 : AS);
+                r(x, y, 1, 1, c);
+            }
+        if (night && sky && sky.moon > 0.3) {
+            r(x0 + w - 6, y0 + 2, 3, 3, L2);
+            r(x0 + w - 5, y0 + 1, 1, 1, L3);
+            r(x0 + w - 7, y0 + 3, 1, 1, L3);
+        } // луна стоит низко
+        const mx = x0 + Math.floor(w / 2); // переплёт крестом
+        r(mx, y0, 1, h, K1);
+        r(x0, y0 + Math.floor(h / 2), w, 1, K1);
+    }
+    // квадрат света от окна на полу: косо, к нам шире; ночью — луна, днём — серый
+    function lightPatch(sky) {
+        const night = !sky || !sky.sun, k = night ? (sky ? sky.moon || 0 : 0) * 0.14 : 0.1;
+        if (k <= 0.01)
+            return;
+        G.globalAlpha = k;
+        G.fillStyle = night ? BO : L1;
+        for (let j = 0; j < 22; j++) {
+            const y = house_js_1.ROOM.y0 + 2 + j, xl = house_js_1.WINDOW.x0 + 2 + q(j * 0.45), xr = house_js_1.WINDOW.x1 - 2 + q(j * 0.9);
+            if (y > house_js_1.STOOL.y0 - 1 && y < house_js_1.STOOL.y1 + 1) {
+                G.fillRect(xl, y, house_js_1.STOOL.x0 - 1 - xl, 1);
+                G.fillRect(house_js_1.STOOL.x1 + 1, y, xr - house_js_1.STOOL.x1 - 1, 1);
+                continue;
+            }
+            G.fillRect(xl, y, xr - xl, 1);
+        }
+        const cx = q((house_js_1.WINDOW.x0 + house_js_1.WINDOW.x1) / 2 + 6); // тень переплёта
+        G.globalAlpha = k * 0.8;
+        G.fillStyle = NI;
+        for (let j = 2; j < 22; j++)
+            G.fillRect(cx + q(j * 0.68), house_js_1.ROOM.y0 + 2 + j, 1, 1);
+        G.fillRect(house_js_1.WINDOW.x0 + 6, house_js_1.ROOM.y0 + 13, house_js_1.WINDOW.x1 - house_js_1.WINDOW.x0 + 4, 1);
+        G.globalAlpha = 1;
+    }
+    // из-под двери днём — серая полоса на пол сеней
+    function doorSpill(sky) {
+        if (!sky || !sky.sun)
+            return;
+        G.globalAlpha = 0.18;
+        G.fillStyle = L1;
+        for (let j = 0; j < 5; j++)
+            G.fillRect(house_js_1.DOOR.x0 + 2 - j, house_js_1.FRONT.y0 - 1 - j, house_js_1.DOOR.x1 - house_js_1.DOOR.x0 - 4 + 2 * j, 1);
+        G.globalAlpha = 1;
+    }
+    // ═══ КАДР ДОМА ═══
+    // g — холст мира (уже сдвинут на камеру); p — странник; drawHero рисует его; sky — небо суток
+    function drawHouseWorld(g, p, drawHero, sky) {
+        G = g;
+        const b = bake();
+        if (b)
+            g.drawImage(b, 0, 0);
+        else
+            drawStatic();
+        G = g;
+        windowGlass(sky);
+        lightPatch(sky);
+        doorSpill(sky);
+        // вещи и странник — по глубине (по основанию)
+        const list = [
+            { k: house_js_1.BED.y1, f: () => bed(house_js_1.BED, false) }, { k: house_js_1.BED2.y1, f: () => bed(house_js_1.BED2, true) },
+            { k: house_js_1.STOOL.y1, f: stool }, { k: house_js_1.STOVE.y1, f: stove },
+            { k: p.y + 23, hero: true },
+        ];
+        if (house_js_1.house.boots)
+            list.push({ k: house_js_1.BOOTS.gy, f: boots });
+        list.sort((a, c) => a.k - c.k);
+        for (const it of list) {
+            if (it.hero) {
+                drawHero();
+                G = g;
+                continue;
+            }
+            G = g;
+            it.f();
+        }
+    }
+    exports_150("drawHouseWorld", drawHouseWorld);
+    return {
+        setters: [
+            function (house_js_1_1) {
+                house_js_1 = house_js_1_1;
+            }
+        ],
+        execute: function () {
+            NI = '#0D0B0A', AS = '#8A8D8F', BO = '#D9CFB8', KV = '#C23B2B';
+            K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328';
+            BR1 = '#2e2014', BR2 = '#3a2818', BR3 = '#46301c';
+            L1 = '#c8b89a', L2 = '#b0a284', L3 = '#968a72';
+            S0 = '#5a564e', S1 = '#4a463f', S2 = '#33302e';
+            q = Math.round;
+            G = null;
+            r = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(x, y, w, h); };
+            // ── статичное: стены, пол, перегородка, передняя стена; печётся раз ──
+            base = null;
+            exports_150("_bakeReset", _bakeReset = () => { base = null; });
+        }
+    };
+});
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "assets/loader"], function (exports_151, context_151) {
+    "use strict";
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_8, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_42, player_js_2, context_js_18, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_43, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_1, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, NO_HOUSE, houseKeep, time_js_43, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter;
+    var __moduleName = context_151 && context_151.id;
     function lockHint() {
         if (time_js_42.t - lockHintAt < 1800)
             return;
@@ -52040,6 +52590,55 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // Check if player can leave settlement
     function canLeaveSettlement() {
         return flags.talkedTo.has('jester');
+    }
+    function intoHouse(fx, fy, wake) {
+        if (wake)
+            house_js_2.house.wake();
+        else
+            house_js_2.house.enter();
+        if (!houseKeep)
+            houseKeep = lighting_js_1.lighting.sources;
+        player.x = fx - 6;
+        player.y = fy - 23;
+        player.tx = player.x;
+        player.ty = player.y;
+        player.path = null;
+        player.walkTo = null;
+        player.auto = false;
+        player.moving = false;
+        player.vx = 0;
+        player.vy = 0;
+        player.sit = wake ? 1 : 0;
+        player.visor = false;
+        whisper_js_4.clear(); // шёпот улицы остался на улице
+        redNoon_js_3.muteRedNoon(true);
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 6, player.y + 10, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)));
+    }
+    function outOfHouse() {
+        house_js_2.house.leave(); // вышел — обулся
+        if (houseKeep)
+            lighting_js_1.lighting.sources = houseKeep;
+        houseKeep = null;
+        redNoon_js_3.muteRedNoon(false);
+        player.sit = 0;
+        player.path = null;
+        player.walkTo = null;
+    }
+    function enterHouse() { teleportWithFade(house_js_2.ENTRY.x - 6, house_js_2.ENTRY.y - 23, () => intoHouse(house_js_2.ENTRY.x, house_js_2.ENTRY.y, false)); }
+    function leaveHouse() { const d = house_js_2.doorOutside(); teleportWithFade(d.x, d.y, outOfHouse); }
+    // клик в доме: к вещи — до места у неё, из комнаты в сени — через проём
+    function walkHouse(gx, gy) {
+        const th = physics_js_2.findLocationAt(gx, gy, house_js_2.houseThings(!sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).sun), 4);
+        const path = th ? house_js_2.houseRoute(player.x + 6, player.y + 23, th.at[0], th.at[1]) : house_js_2.houseRoute(player.x + 6, player.y + 23, gx, gy);
+        if (!path.length)
+            return;
+        const w = path.shift();
+        player.path = path;
+        player.tx = w.x - 6;
+        player.ty = w.y - 23;
+        player.moving = true;
+        player.auto = true;
+        player.walkTo = th || null;
     }
     function depthOf(loc) {
         if (GROUND.has(loc.id))
@@ -52168,6 +52767,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     }
     // ═══ RENDER ═══
     function render() {
+        if (house_js_2.house.active) {
+            renderHouse();
+            return;
+        }
         if (underside_js_4.under.active) {
             renderUnder();
             return;
@@ -52375,7 +52978,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
     // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
     function stepFx() {
-        net_js_3.stepNet(player, underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг
+        net_js_3.stepNet(player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+        if (house_js_2.house.active) {
+            stepFxHouse();
+            return;
+        }
         if (underside_js_4.under.active) {
             stepFxUnder();
             return;
@@ -52407,7 +53014,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         if (underside_js_4.under.shadow && sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)).sun)
             underside_js_4.under.shadow = false; // тень цветка держится до первого дневного света
-        castle_js_1.stepCastle(!player.moving && town_js_4.onBridge(player.x + 6, player.y + 23)); // кто стоит на мосту, тому туман расходится
+        castle_js_1.stepCastle(!player.moving && town_js_5.onBridge(player.x + 6, player.y + 23)); // кто стоит на мосту, тому туман расходится
         silentCat_js_1.stepCats(player, locations_js_6.locations); // кот: пугается бегущего, к стоящему идёт греться
         ravens_js_2.stepRavens(player, locations_js_6.locations, weather_js_1.weather); // вороны: стаи взлетают от шагов, падения, грома
         puddles_js_1.stepPuddles(player, surfName, weather_js_1.weather, { x: camX, y: camY, vw: scaler_js_26.scaler.vw, vh: scaler_js_26.scaler.vh }, locations_js_6.locations);
@@ -53106,6 +53713,39 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.walkTo = nm;
         return true;
     }
+    // шаг эффектов дома: за стеной ветер глухо, неба не видно (только в окне), яда нет;
+    // проснулся сидя — сидит, пока не шагнул
+    function stepFxHouse() {
+        const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
+        wind_js_18.wind.update('clear', 0, 0, true);
+        windSound_js_1.updateWindSound(0.02);
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_4.phaseAt(time_js_43.t)));
+        redNoon_js_3.stepRedNoon(time_js_43.t, sky_js_4.phaseAt(time_js_43.t), sky_js_4.dayIndex(time_js_43.t));
+        ink_js_2.ink.noon(0);
+        ink_js_2.ink.sky(false);
+        ink_js_2.ink.beginFrame();
+        ink_js_2.ink.want(0, 'дом');
+        if (ending_js_1.isActive())
+            ink_js_2.ink.want(3, 'финал');
+        if (ui_js_2.getActiveLoc())
+            ink_js_2.ink.want(2, 'осмотр');
+        ink_js_2.ink.setGroup([]);
+        ink_js_2.ink.update();
+        const d = house_js_2.doorOutside();
+        plate_js_3.plate.update(d.x + 6, d.y + 24, 0); // зерно — квартала: дом стоит в нём
+        toxic_js_2.toxic.hush();
+        geiger_js_1.updateGeiger(toxic_js_2.toxic.level());
+        lofi_js_1.lofi.update(0);
+        if (player.moving)
+            house_js_2.house.seated = false;
+        player.sit = player.moving ? 0 : (player.sit || 0) + ((house_js_2.house.seated ? 1 : 0) - (player.sit || 0)) * 0.12;
+        player.visor = false;
+        whisper_js_4.stepWhisper();
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 6, player.y + 10, sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t)));
+        lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
+        metaFx_js_2.dyingPixels.update();
+        metaFx_js_2.screenMoss.update(player.moving);
+    }
     // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
     function stepFxUnder() {
         const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
@@ -53188,6 +53828,38 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         metaFx_js_2.dyingPixels.update();
         metaFx_js_2.screenMoss.update(player.moving);
     }
+    function renderHouse() {
+        const vw = scaler_js_26.scaler.vw, vh = scaler_js_26.scaler.vh;
+        layers_js_2.layers.clearAll();
+        const bgCtx = layers_js_2.layers.ctx('bg'), worldCtx = layers_js_2.layers.ctx('world'), lightCtx = layers_js_2.layers.ctx('light');
+        const fxCtx = layers_js_2.layers.ctx('fx'), uiCtx = layers_js_2.layers.ctx('ui'), postCtx = layers_js_2.layers.ctx('post');
+        const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y), sky = sky_js_4.skyAt(sky_js_4.phaseAt(time_js_43.t));
+        bgCtx.fillStyle = '#0D0B0A';
+        bgCtx.fillRect(0, 0, vw, vh);
+        worldCtx.save();
+        worldCtx.translate(-camX, -camY);
+        context_js_18.setCtx(worldCtx);
+        house_js_3.drawHouseWorld(worldCtx, player, () => { context_js_18.setCtx(worldCtx); player_js_2.drawPlayer(player); }, sky);
+        particles_js_3.draw(worldCtx, { x: camX, y: camY });
+        whisper_js_4.draw(worldCtx, { x: camX, y: camY });
+        net_js_4.drawVoices(worldCtx, 'house', player); // своё слово — и в доме; чужих здесь нет
+        worldCtx.restore();
+        haze_js_1.hazeOff();
+        warmSpots = warmIn(camX, camY, vw, vh);
+        context_js_18.setCtx(worldCtx);
+        lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, sky.sun ? house_js_2.AMBIENT.day : house_js_2.AMBIENT.night); // темно: окно, щель двери, огонёк
+        lighting_js_1.lightParticles.draw(worldCtx, { x: camX, y: camY });
+        metaFx_js_2.crackedGlass.draw(fxCtx);
+        metaFx_js_2.dyingPixels.draw(fxCtx);
+        metaFx_js_2.screenMoss.draw(uiCtx);
+        drawHUD(uiCtx);
+        ink_js_2.ink.drawLabel(uiCtx);
+        postfx_js_1.postfx.apply(postCtx);
+        drawTeleportFade(postCtx);
+        if (ending_js_1.isActive())
+            ending_js_1.draw(postCtx);
+        layers_js_2.layers.composite();
+    }
     function renderUnder() {
         const vw = scaler_js_26.scaler.vw, vh = scaler_js_26.scaler.vh;
         layers_js_2.layers.clearAll();
@@ -53257,7 +53929,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return 0;
         }
         const ox = player.x, oy = player.y;
-        if (underside_js_4.under.active)
+        if (house_js_2.house.active)
+            house_js_2.houseMove(player, player.vx, player.vy);
+        else if (underside_js_4.under.active)
             underside_js_4.underMove(player, player.vx, player.vy);
         else
             physics_js_2.tryMove(player, player.vx, player.vy, locations_js_6.locations, {
@@ -53280,7 +53954,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 particles_js_3.footstepDust(player.x, player.y);
             // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
             // (под землёй следы остаются в пыли — render/underside.js)
-            const kind = underside_js_4.under.active ? null : puddles_js_1.wetKind(S.print);
+            const kind = underside_js_4.under.active || house_js_2.house.active ? null : puddles_js_1.wetKind(S.print);
             if (kind !== null && atmosphere_js_1.addFootprint(player.x, player.y, kind)) {
                 if (kind === 'wet')
                     puddles_js_1.usedWet();
@@ -53306,7 +53980,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             stopHero();
             return;
         } // карта открыта — стрелки двигают лист, не героя
-        const fell = underside_js_4.under.active ? false : stumble_js_1.stumble.update(player); // полотно ровное — под землёй не оступишься
+        const fell = underside_js_4.under.active || house_js_2.house.active ? false : stumble_js_1.stumble.update(player); // полотно ровное — под землёй и дома не оступишься
         if (fell && !stumbling)
             ravens_js_2.startleRavens(player.x + 6, player.y + 22, 150); // упал — вороны в округе взлетают
         stumbling = fell;
@@ -53315,7 +53989,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             updateWorldSystems();
             return;
         } // оступился — шаг пропал
-        surfName = underside_js_4.under.active ? underside_js_4.surfaceUnder(player.x + 6, player.y + 23) : surface_js_3.surfaceAt(player.x + 6, player.y + 24, locations_js_6.locations);
+        surfName = house_js_2.house.active ? 'path' : underside_js_4.under.active ? underside_js_4.surfaceUnder(player.x + 6, player.y + 23) : surface_js_3.surfaceAt(player.x + 6, player.y + 24, locations_js_6.locations); // дома — доски
         const S = surface_js_3.SURF[surfName];
         // желаемая скорость: палец (держат), клавиши, автоход к цели
         const held = input_js_2.input.getHeldTouch();
@@ -53358,8 +54032,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 // не открываем: мимо вещи можно пройти, не останавливаясь.
                 const want = player.walkTo;
                 player.walkTo = null;
-                if (want && (want.under || want.net))
-                    ui_js_2.showMenu(want); // вещь изнанки, записка: путь вёл к ней
+                if (want && (want.under || want.net || want.house))
+                    ui_js_2.showMenu(want); // вещь изнанки, дома, записка: путь вёл к ней
                 else {
                     const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
                         && Math.abs(player.y - (want.y + want.h + 5)) < 4;
@@ -53387,6 +54061,18 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // Camera + all per-frame world systems. Shared by the normal movement
     // path and the held-finger walk branch above.
     function updateWorldSystems() {
+        if (house_js_2.house.active) { // дом: своя карта; меньше кадра — посередине
+            camera_js_1.camera.follow(player.x + 6, player.y + 10);
+            camera_js_1.camera.update();
+            const vw = scaler_js_26.scaler.vw, vh = scaler_js_26.scaler.vh;
+            camera_js_1.camera.x = house_js_2.HW <= vw ? (house_js_2.HW - vw) / 2 : Math.max(0, Math.min(camera_js_1.camera.x, house_js_2.HW - vw));
+            camera_js_1.camera.y = house_js_2.HH <= vh ? (house_js_2.HH - vh) / 2 : Math.max(0, Math.min(camera_js_1.camera.y, house_js_2.HH - vh));
+            zoneAmbient_js_1.updateZone('house');
+            if (!redNoon_js_3.redNoon.active)
+                idle_js_1.update(player.moving);
+            particles_js_3.update();
+            return;
+        }
         if (underside_js_4.under.active) { // изнанка: своя карта, мира сверху здесь нет
             camera_js_1.camera.follow(player.x + 6, player.y + 10);
             camera_js_1.camera.update();
@@ -53478,13 +54164,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             window.ArdetAudio.unlock();
             window.ArdetAudio.playOnce('title');
         }
-        // похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают
-        gw.classList.add('wake');
-        const lids = document.createElement('div');
-        lids.id = 'wakelids';
-        // без подписи: пробуждение говорит само
-        document.body.appendChild(lids);
-        setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+        wakeFx();
         // Touch devices have no M key — give them an on-screen map button.
         if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
             const mb = document.getElementById('map-btn');
@@ -53493,6 +54173,18 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 mb.addEventListener('click', () => worldmap_js_1.toggle());
             }
         }
+    }
+    // похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают (вход в мир и пробуждение после падения)
+    function wakeFx() {
+        const gw = document.getElementById('gw');
+        if (!gw || document.getElementById('wakelids'))
+            return;
+        gw.classList.add('wake');
+        const lids = document.createElement('div');
+        lids.id = 'wakelids';
+        // без подписи: пробуждение говорит само
+        document.body.appendChild(lids);
+        setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
     }
     // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
     function sceneOrDown(actionKey) {
@@ -53722,8 +54414,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (things_js_5_1) {
                 things_js_5 = things_js_5_1;
             },
-            function (town_js_4_1) {
-                town_js_4 = town_js_4_1;
+            function (town_js_5_1) {
+                town_js_5 = town_js_5_1;
             },
             function (townProps_js_1_1) {
                 townProps_js_1 = townProps_js_1_1;
@@ -53830,6 +54522,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (netui_js_1_1) {
                 netui_js_1 = netui_js_1_1;
             },
+            function (house_js_2_1) {
+                house_js_2 = house_js_2_1;
+            },
+            function (house_js_3_1) {
+                house_js_3 = house_js_3_1;
+            },
             function (loader_js_2_1) {
                 loader_js_2 = loader_js_2_1;
             }
@@ -53842,6 +54540,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             pen_js_1.installPen(layers_js_2.layers.ctx('bg')); // перо: толщина штриха — по нажиму суток
             input_js_2.input.init(mainCanvas);
             locations_js_6.attachContent(looks_js_3.looks, dialogues_js_2.dialogues);
+            house_js_2.buildHouse(locations_js_6.locations); // дом пробуждения — в центре старого города (квартал); дороги и фундаменты его обходят
             archground_js_1.prepareArchGround(locations_js_6.archEnsembles, locations_js_6.locations); // земля под постройками эпох
             // артерии — дороги, река, дуги, линия неба — в обход построек, дворов, табличек и утвари
             arteries_js_10.buildArteries([
@@ -53850,7 +54549,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 ...archground_js_1.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
             ], [...locations_js_6.locations, ...archground_js_1.archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
                 .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h }))); // подножия у тропы: дорога их обходит
-            town_js_4.buildTown(); // городок по канону: высохшее русло через посёлок, мост над ним
+            town_js_5.buildTown(); // городок по канону: высохшее русло через посёлок, мост над ним
             relief_js_8.setReliefCarve(arteries_js_10.riverCarve); // река промыла себе долину
             relief_js_8.setReliefFlats(archground_js_1.archGroundRects()); // под дворами и водой земля выровнена
             arteryProps_js_1.buildArteryProps(); // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
@@ -53947,7 +54646,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             if (!stream_js_1.STREAM)
                 save_js_1.startAutoSave(() => ({
                     // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-                    player: underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : { x: player.x, y: player.y }, off: disc_js_43.OFF,
+                    player: house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : { x: player.x, y: player.y }, off: disc_js_43.OFF,
                     talkedTo: Array.from(flags.talkedTo),
                     visited: Array.from(flags.visited),
                     observersSeen: Array.from(flags.observersSeen),
@@ -53959,7 +54658,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     under: underside_js_4.under.save(),
                     well: townWell_js_2.saveTownWell(),
                 }));
-            playerRef_js_4.setPosOverride(() => (underside_js_4.under.active ? underside_js_4.under.ret : null)); // карта мира: странник там, где спустился
+            playerRef_js_4.setPosOverride(() => (house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active ? underside_js_4.under.ret : null)); // карта мира: странник там, где спустился (или у дома)
             Object.assign(ui_js_2.menuInscriptions, underside_js_6.UNDER_INSC);
             stream_js_1.initStream({ locations: locations_js_6.locations, getVisited: () => flags.visited, getFrames: () => time_js_42.t });
             // Замок городка объясняет себя голосом мира — не чаще раза в полминуты
@@ -53998,6 +54697,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // костры кольца огня
             for (const L of fireRing_js_1.fireLights())
                 lighting_js_1.lighting.add(L);
+            // ═══ ДОМ ПРОБУЖДЕНИЯ (world/house.js) ═══
+            // Канон: «здесь всегда просыпаются». Каждый вход в мир — в доме, на краю своей
+            // кровати; упал за краем — тоже сюда. ?nohouse и ?under — проверка руками: с места.
+            NO_HOUSE = /[?&](?:nohouse|under)\b/.test(location.search);
+            houseKeep = null; // свет мира, пока в доме
+            if (!NO_HOUSE)
+                intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true);
             // Сутки — по канону v3.3 (world/sky.js): день 42% → сумерки 13% → ночь 37% →
             // рассвет 8%, 12 минут, начало на 0.30 — «день клонится к вечеру».
             // ═══ ТЕНИ ═══
@@ -54102,6 +54808,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // один шаг; вкладка спала — долг не копим (не больше 4 шагов за кадр).
             STEP = 1000 / 60, SLACK = 2, MAX_STEPS = 4;
             lastNow = 0, acc = 0;
+            // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
+            events_js_8.events.on('brainrot.recover', () => { if (NO_HOUSE)
+                return; intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true); wakeFx(); });
             entryDone = false;
             { // оттиск сборки на заставке — сверка «что реально задеплоено»
                 const bs = document.getElementById('build-stamp');
@@ -54184,6 +54893,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 } // первый клик допечатывает, второй убирает
                 const pos = input_js_2.input.screenToWorld(clientX, clientY, camera_js_1.camera);
+                if (house_js_2.house.active) {
+                    walkHouse(pos.x, pos.y);
+                    return;
+                }
                 if (underside_js_4.under.active) {
                     walkUnder(pos.x, pos.y);
                     return;
@@ -54324,6 +55037,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     lorepopup_js_1.showLore(off ? 'Слова этого странника больше не доходят.' : 'Этого странника снова слышно.');
                     return;
                 }
+                if (actionKey === 'house_exit') {
+                    leaveHouse();
+                    return;
+                } // дом пробуждения: на улицу
+                if (actionKey === 'house_enter') {
+                    enterHouse();
+                    return;
+                } // …и обратно, в пустой тёмный дом
                 if (actionKey === 'under_up') {
                     goUp(loc);
                     return;
