@@ -154,6 +154,17 @@ canvas#game {
   76%  { transform: scale(1.02) rotate(-0.4deg) translate(-0.1%, 0.1%); }
   100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
+/* второе пробуждение и дальше — та же сцена за шесть секунд (render/wakefx.js); шатает
+   вдвое слабее, веки те же, только чаще; проснуться сразу — клавиша или клик (main.js) */
+#gw.wake.short { animation: wakeblur 6s ease-out forwards, wakeswayShort 6s ease-in-out forwards; }
+@keyframes wakeswayShort {
+  0%   { transform: scale(1.055) rotate(-1.5deg)  translate(-0.7%, 0.35%); }
+  14%  { transform: scale(1.05)  rotate(1.3deg)   translate(0.55%, -0.25%); }
+  32%  { transform: scale(1.04)  rotate(-0.9deg)  translate(-0.4%, 0.2%); }
+  52%  { transform: scale(1.025) rotate(0.5deg)   translate(0.2%, -0.1%); }
+  76%  { transform: scale(1.01)  rotate(-0.2deg)  translate(-0.05%, 0.05%); }
+  100% { transform: scale(1) rotate(0deg) translate(0, 0); }
+}
 #wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
 #wakelids::before, #wakelids::after {
   content: ''; position: absolute; left: -5%; right: -5%; height: 58%;
@@ -163,6 +174,7 @@ canvas#game {
   transform-origin: top; animation: lidBlink 15s ease-in-out forwards; }
 #wakelids::after { bottom: -4%; border-radius: 50% 50% 0 0 / 16% 16% 0 0;
   transform-origin: bottom; animation: lidBlink 15s ease-in-out forwards; }
+#wakelids.short::before, #wakelids.short::after { animation-duration: 6s; }
 @keyframes lidBlink {
   0%  { transform: scaleY(1); }    8%  { transform: scaleY(0.3); }
   16% { transform: scaleY(0.95); } 28% { transform: scaleY(0.2); }
@@ -189,10 +201,11 @@ canvas#game {
 }
 @media (pointer: coarse) {
   #gw.wake { animation-name: wakeblurLite, wakesway; }
+  #gw.wake.short { animation-name: wakeblurLite, wakeswayShort; }
 }
 /* «меньше движения» в системе — без шатания (и без дрожи и рывков в кадре) */
 @media (prefers-reduced-motion: reduce) {
-  #gw.wake { animation-name: wakeblurLite; }
+  #gw.wake, #gw.wake.short { animation-name: wakeblurLite; }
 }
 
 /* ── Menu ── */
@@ -677,7 +690,7 @@ canvas#game {
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3cf270b · 2026-10-23';console.log('[оттиск]', '3cf270b · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='62e3d94 · 2026-10-23';console.log('[оттиск]', '62e3d94 · 2026-10-23');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -53572,13 +53585,14 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
         return D;
     }
     exports_155("decodeAt", decodeAt);
-    function tremorAt(a, seed = 1, reduced = false) {
+    // q — настоящий кадр (в полной сцене совпадает с a): по нему меняется картинка мигания
+    function tremorAt(a, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
             return [0, 0];
         for (const [s, e, A] of BURSTS) {
             if (a < s || a >= e)
                 continue;
-            const k = a >> 1, fade = 1 - (a - s) / (e - s) * 0.5;
+            const k = q >> 1, fade = 1 - (a - s) / (e - s) * 0.5;
             const amp = Math.max(1, Math.round(A * fade));
             return [Math.round((hh(k, 1, seed) * 2 - 1) * amp), Math.round((hh(k, 2, seed) * 2 - 1) * amp)];
         }
@@ -53587,20 +53601,20 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
     exports_155("tremorAt", tremorAt);
     // ── рывки строк: полосы кадра уезжают вбок; густо в первые две секунды и на каждом
     //    открытии век ──
-    function slicesAt(a, vh, seed = 1, reduced = false) {
+    function slicesAt(a, vh, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
             return [];
         let n = 0;
         if (a < 120)
-            n = 2 + Math.floor(hh(a >> 2, 3, seed) * 4);
+            n = 2 + Math.floor(hh(q >> 2, 3, seed) * 4);
         for (const o of OPEN) {
             const d = a - o;
             if (d >= 0 && d < 20)
-                n = Math.max(n, 1 + Math.floor(hh(a >> 2, 4, seed) * 3));
+                n = Math.max(n, 1 + Math.floor(hh(q >> 2, 4, seed) * 3));
         }
         const out = [];
         for (let i = 0; i < n; i++) {
-            const k = (a >> 2) * 7 + i; // полоса держится четыре кадра
+            const k = (q >> 2) * 7 + i; // полоса держится четыре кадра
             const h = 2 + Math.floor(hh(k, 5, seed) * 12), y = Math.floor(hh(k, 6, seed) * Math.max(1, vh - h));
             const dx = Math.round((hh(k, 7, seed) * 2 - 1) * (a < 120 ? 16 : 8));
             if (dx)
@@ -53610,7 +53624,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
     }
     exports_155("slicesAt", slicesAt);
     // ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
-    function codeAt(a, vw, vh, seed = 1, reduced = false) {
+    function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
             return [];
         let on = a >= 10 && a < 100;
@@ -53621,7 +53635,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
         }
         if (!on)
             return [];
-        const k = a >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
+        const k = q >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
         for (let i = 0; i < n; i++) {
             const len = 12 + Math.floor(hh(k + i, 9, seed) * 40);
             let s = '';
@@ -53673,12 +53687,12 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
         if (a < 0 || a >= LEN || !main)
             return;
         const W = main.width, H = main.height, s = Math.max(1, scale), vw = Math.round(W / s), vh = Math.round(H / s);
-        const seed = wakefx.seed, red = wakefx.reduced;
+        const seed = wakefx.seed, red = wakefx.reduced, q = wakefx.frame();
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.imageSmoothingEnabled = false;
         // 1. дрожь и рывки строк — по снимку кадра (один снимок на кадр)
-        const [jx, jy] = tremorAt(a, seed, red), sl = slicesAt(a, vh, seed, red);
+        const [jx, jy] = tremorAt(a, seed, red, q), sl = slicesAt(a, vh, seed, red, q);
         if (jx || jy || sl.length) {
             snap = canvas(W, H, snap);
             if (snap) {
@@ -53708,7 +53722,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
         }
         // 3. двоичный код и битые точки — в точках кадра
         ctx.setTransform(s, 0, 0, s, 0, 0);
-        const code = codeAt(a, vw, vh, seed, red);
+        const code = codeAt(a, vw, vh, seed, red, q);
         if (code.length) {
             ctx.font = FONT;
             ctx.textBaseline = 'top';
@@ -53744,9 +53758,13 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
             FONT = '6px "Press Start 2P","VT323",monospace';
             reducedNow = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
             exports_155("wakefx", wakefx = {
-                t0: -1, seed: 1, reduced: false, stuck: null,
-                start() { this.t0 = time_js_42.t; this.seed = (this.seed * 1103515245 + 12345) & 0x7fffffff; this.reduced = reducedNow(); this.stuck = null; },
-                age() { return this.t0 < 0 ? -1 : time_js_42.t - this.t0; },
+                t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,
+                start(speed = 1) { this.t0 = time_js_42.t; this.speed = speed; this.seed = (this.seed * 1103515245 + 12345) & 0x7fffffff; this.reduced = reducedNow(); this.stuck = null; },
+                age() { return this.t0 < 0 ? -1 : (time_js_42.t - this.t0) * this.speed; }, // ход сцены — в шагах полной
+                frame() { return this.t0 < 0 ? -1 : time_js_42.t - this.t0; }, // настоящие кадры — для мигания
+                // проснуться: сцена дотягивается за полсекунды — последние блоки, без новых рывков
+                skip() { if (this.active())
+                    this.t0 = time_js_42.t - (LEN - 30 * this.speed) / this.speed; },
                 active() { const a = this.age(); return a >= 0 && a < LEN; },
             });
             // ── сколько точек в блоке (точки кадра): первая сборка 24 → 1 за пять с половиной
@@ -53766,7 +53784,7 @@ System.register("render/wakefx", ["core/time"], function (exports_155, context_1
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "content/looks", "content/dialogues", "world/lore", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "assets/loader"], function (exports_156, context_156) {
     "use strict";
-    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, entryDone, entryEnter, HAND, DEV;
+    var scaler_js_26, layers_js_2, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_4, redNoon_js_3, pen_js_1, etch_js_1, relief_js_9, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_7, events_js_8, input_js_2, time_js_43, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, looks_js_3, dialogues_js_2, lore_js_4, save_js_1, playerRef_js_4, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_11, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_46, ulitsa_db_js_12, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_44, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, DEV;
     var __moduleName = context_156 && context_156.id;
     function lockHint() {
         if (time_js_43.t - lockHintAt < 1800)
@@ -55367,19 +55385,46 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             }
         }
     }
-    // похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают, тело шатает и трясёт,
-    // а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения)
     function wakeFx() {
         const gw = document.getElementById('gw');
         if (!gw || document.getElementById('wakelids'))
             return;
-        wakefx_js_1.wakefx.start();
+        const short = wokeOnce, dur = short ? WAKE_SHORT : WAKE_FULL;
+        wakefx_js_1.wakefx.start(WAKE_FULL / dur);
         gw.classList.add('wake');
+        gw.classList.toggle('short', short);
         const lids = document.createElement('div');
         lids.id = 'wakelids';
+        lids.classList.toggle('short', short);
         // без подписи: пробуждение говорит само
         document.body.appendChild(lids);
-        setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+        const timer = setTimeout(() => {
+            gw.classList.remove('wake', 'short');
+            lids.remove();
+            wakeUp = null;
+            wokeOnce = true;
+        }, dur * 1000 + 600);
+        if (!short)
+            return;
+        // проснуться: муть и шатание сходят за полсекунды с того места, где были, веки уходят
+        wakeUp = () => {
+            wakeUp = null;
+            clearTimeout(timer);
+            wakefx_js_1.wakefx.skip();
+            const cs = getComputedStyle(gw);
+            gw.style.filter = cs.filter;
+            gw.style.transform = cs.transform;
+            gw.classList.remove('wake', 'short');
+            void gw.offsetWidth;
+            gw.style.transition = 'filter .5s ease-out, transform .5s ease-out';
+            gw.style.filter = 'none';
+            gw.style.transform = 'none';
+            lids.style.transition = 'opacity .35s ease-out';
+            lids.style.opacity = '0';
+            lids.style.pointerEvents = 'none';
+            setTimeout(() => { gw.style.transition = ''; gw.style.filter = ''; gw.style.transform = ''; lids.remove(); }, 600);
+        };
+        lids.addEventListener('pointerdown', () => wakeUp && wakeUp());
     }
     // к вещи: близко — шаг-мигание к её порогу, далеко — дойти; у порога — её дело
     // (одно действие — сразу, больше — меню; ui.js openThing)
@@ -55916,6 +55961,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (savedData.well)
                     townWell_js_2.loadTownWell(savedData.well);
             }
+            // первое пробуждение странника было — дальше короткие (wakeFx)
+            wokeOnce = !!(savedData && savedData.woke);
             if (!stream_js_2.STREAM)
                 save_js_1.startAutoSave(() => ({
                     // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
@@ -55930,6 +55977,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     discoveredGates: worldmap_js_1.getDiscovered(),
                     under: underside_js_4.under.save(),
                     well: townWell_js_2.saveTownWell(),
+                    woke: wokeOnce,
                 }));
             playerRef_js_4.setPosOverride(() => (house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active ? underside_js_4.under.ret : null)); // карта мира: странник там, где спустился (или у дома)
             Object.assign(ui_js_2.menuInscriptions, underside_js_6.UNDER_INSC);
@@ -56079,6 +56127,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // один шаг; вкладка спала — долг не копим (не больше 4 шагов за кадр).
             STEP = 1000 / 60, SLACK = 2, MAX_STEPS = 4;
             lastNow = 0, acc = 0;
+            // похмельная прогрузка: мир всплывает в фокус, веки моргают, тело шатает и трясёт,
+            // а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения).
+            // Первое пробуждение странника — целиком, пятнадцать секунд; дальше — шесть, и
+            // проснуться можно сразу: клавиша или клик (weave/ROADMAP И4)
+            WAKE_FULL = 15, WAKE_SHORT = 6;
+            wakeUp = null; // проснуться сейчас — пока идёт короткое
+            // клавиша будит (сама клавиша — шаг, карта — делает своё: проснулся и пошёл)
+            document.addEventListener('keydown', e => {
+                if (wakeUp && !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key))
+                    wakeUp();
+            });
             // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
             events_js_8.events.on('brainrot.recover', () => { if (NO_HOUSE)
                 return; intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true); wakeFx(); });

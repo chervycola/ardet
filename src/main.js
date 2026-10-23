@@ -231,6 +231,8 @@ if (savedData) {
   if (savedData.well) loadTownWell(savedData.well);
 }
 
+// первое пробуждение странника было — дальше короткие (wakeFx)
+let wokeOnce = !!(savedData && savedData.woke);
 if (!STREAM) startAutoSave(() => ({
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
   player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
@@ -244,6 +246,7 @@ if (!STREAM) startAutoSave(() => ({
   discoveredGates: getDiscoveredGates(),
   under: under.save(),
   well: saveTownWell(),
+  woke: wokeOnce,
 }));
 setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
@@ -1662,19 +1665,49 @@ function startGame() {
   }
 }
 
-// похмельная прогрузка: 15 с мир всплывает в фокус, веки моргают, тело шатает и трясёт,
-// а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения)
+// похмельная прогрузка: мир всплывает в фокус, веки моргают, тело шатает и трясёт,
+// а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения).
+// Первое пробуждение странника — целиком, пятнадцать секунд; дальше — шесть, и
+// проснуться можно сразу: клавиша или клик (weave/ROADMAP И4)
+const WAKE_FULL = 15, WAKE_SHORT = 6;
+let wakeUp = null;                                   // проснуться сейчас — пока идёт короткое
 function wakeFx() {
   const gw = document.getElementById('gw');
   if (!gw || document.getElementById('wakelids')) return;
-  wakefx.start();
+  const short = wokeOnce, dur = short ? WAKE_SHORT : WAKE_FULL;
+  wakefx.start(WAKE_FULL / dur);
   gw.classList.add('wake');
+  gw.classList.toggle('short', short);
   const lids = document.createElement('div');
   lids.id = 'wakelids';
+  lids.classList.toggle('short', short);
   // без подписи: пробуждение говорит само
   document.body.appendChild(lids);
-  setTimeout(() => { gw.classList.remove('wake'); lids.remove(); }, 15600);
+  const timer = setTimeout(() => {
+    gw.classList.remove('wake', 'short'); lids.remove();
+    wakeUp = null; wokeOnce = true;
+  }, dur * 1000 + 600);
+  if (!short) return;
+  // проснуться: муть и шатание сходят за полсекунды с того места, где были, веки уходят
+  wakeUp = () => {
+    wakeUp = null;
+    clearTimeout(timer);
+    wakefx.skip();
+    const cs = getComputedStyle(gw);
+    gw.style.filter = cs.filter; gw.style.transform = cs.transform;
+    gw.classList.remove('wake', 'short');
+    void gw.offsetWidth;
+    gw.style.transition = 'filter .5s ease-out, transform .5s ease-out';
+    gw.style.filter = 'none'; gw.style.transform = 'none';
+    lids.style.transition = 'opacity .35s ease-out'; lids.style.opacity = '0'; lids.style.pointerEvents = 'none';
+    setTimeout(() => { gw.style.transition = ''; gw.style.filter = ''; gw.style.transform = ''; lids.remove(); }, 600);
+  };
+  lids.addEventListener('pointerdown', () => wakeUp && wakeUp());
 }
+// клавиша будит (сама клавиша — шаг, карта — делает своё: проснулся и пошёл)
+document.addEventListener('keydown', e => {
+  if (wakeUp && !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) wakeUp();
+});
 // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
 events.on('brainrot.recover', () => { if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
 

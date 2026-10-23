@@ -140,6 +140,17 @@ canvas#game {
   76%  { transform: scale(1.02) rotate(-0.4deg) translate(-0.1%, 0.1%); }
   100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
+/* второе пробуждение и дальше — та же сцена за шесть секунд (render/wakefx.js); шатает
+   вдвое слабее, веки те же, только чаще; проснуться сразу — клавиша или клик (main.js) */
+#gw.wake.short { animation: wakeblur 6s ease-out forwards, wakeswayShort 6s ease-in-out forwards; }
+@keyframes wakeswayShort {
+  0%   { transform: scale(1.055) rotate(-1.5deg)  translate(-0.7%, 0.35%); }
+  14%  { transform: scale(1.05)  rotate(1.3deg)   translate(0.55%, -0.25%); }
+  32%  { transform: scale(1.04)  rotate(-0.9deg)  translate(-0.4%, 0.2%); }
+  52%  { transform: scale(1.025) rotate(0.5deg)   translate(0.2%, -0.1%); }
+  76%  { transform: scale(1.01)  rotate(-0.2deg)  translate(-0.05%, 0.05%); }
+  100% { transform: scale(1) rotate(0deg) translate(0, 0); }
+}
 #wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
 #wakelids::before, #wakelids::after {
   content: ''; position: absolute; left: -5%; right: -5%; height: 58%;
@@ -149,6 +160,7 @@ canvas#game {
   transform-origin: top; animation: lidBlink 15s ease-in-out forwards; }
 #wakelids::after { bottom: -4%; border-radius: 50% 50% 0 0 / 16% 16% 0 0;
   transform-origin: bottom; animation: lidBlink 15s ease-in-out forwards; }
+#wakelids.short::before, #wakelids.short::after { animation-duration: 6s; }
 @keyframes lidBlink {
   0%  { transform: scaleY(1); }    8%  { transform: scaleY(0.3); }
   16% { transform: scaleY(0.95); } 28% { transform: scaleY(0.2); }
@@ -175,10 +187,11 @@ canvas#game {
 }
 @media (pointer: coarse) {
   #gw.wake { animation-name: wakeblurLite, wakesway; }
+  #gw.wake.short { animation-name: wakeblurLite, wakeswayShort; }
 }
 /* «меньше движения» в системе — без шатания (и без дрожи и рывков в кадре) */
 @media (prefers-reduced-motion: reduce) {
-  #gw.wake { animation-name: wakeblurLite; }
+  #gw.wake, #gw.wake.short { animation-name: wakeblurLite; }
 }
 
 /* ── Menu ── */

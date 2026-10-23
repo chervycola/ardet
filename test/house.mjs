@@ -142,6 +142,28 @@ await test('пробуждение: дрожь всплесками целыми
   for (let a = 0; a < 60; a++) { const k = JSON.stringify(WF.codeAt(a, 640, 360, 7)); if (k !== prev) flips++; prev = k; }
   assert(flips <= 9, 'код меняется не чаще раза в восемь кадров: ' + flips);
 });
+await test('пробуждение: второе — та же сцена за шесть секунд, мигание по настоящим кадрам; проснуться — за полсекунды', async () => {
+  const TM = await imp('core/time.js');
+  WF.wakefx.start(15 / 6);
+  for (let i = 0; i < 100; i++) TM.tick();
+  eq(WF.wakefx.frame(), 100); eq(WF.wakefx.age(), 250, 'ход сцены в шагах полной');
+  for (let i = 0; i < 260; i++) TM.tick();
+  assert(!WF.wakefx.active(), 'шесть секунд — и всё');
+  // дрожь меняется не чаще раза в два кадра, код — раз в восемь: как в полной
+  let flips = 0, prev = '';
+  for (let q = 0; q < 60; q++) { const k = WF.tremorAt(q * 2.5, 7, false, q).join(); if (k !== prev) flips++; prev = k; }
+  assert(flips <= 31, 'дрожь — по кадрам, не по ходу сцены: ' + flips);
+  flips = 0; prev = '';
+  for (let q = 0; q < 40; q++) { const k = JSON.stringify(WF.codeAt(q * 2.5, 640, 360, 7, false, q)); if (k !== prev) flips++; prev = k; }
+  assert(flips <= 6, 'код — не чаще раза в восемь кадров: ' + flips);
+  WF.wakefx.start(15 / 6);
+  for (let i = 0; i < 30; i++) TM.tick();
+  WF.wakefx.skip();
+  let n = 0;
+  while (WF.wakefx.active() && n < 200) { TM.tick(); n++; }
+  assert(n <= 31, 'проснулся за полсекунды: ' + n);
+  eq(WF.decodeAt(WF.LEN - 30 * 2.5).b, 1, 'последние полсекунды — чистый кадр');
+});
 await test('пробуждение: проход без холста (проверки) — без ошибок', () => {
   WF.wakefx.start();
   WF.wakePass(fakeCtx(), null, 2);
