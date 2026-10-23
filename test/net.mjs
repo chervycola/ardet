@@ -135,7 +135,9 @@ async function fresh() { N._resetNet(); storage.clear(); const T = fakeT(); awai
 
 await test('net: без транспорта мира для одного не касается ничего', async () => {
   N._resetNet();
-  assert(!(await N.startNet()), 'нет конфига — нет сети');
+  globalThis.location = { search: '?net=off' };            // адрес Supabase вписан — выключить можно только так
+  assert(!(await N.startNet()), '?net=off — нет сети');
+  delete globalThis.location;
   N.stepNet(P(0, 0), 'surface');
   eq(N.netSay('эй').error, 'off');
   eq((await N.netLeaveNote('эй')).error, 'off');
