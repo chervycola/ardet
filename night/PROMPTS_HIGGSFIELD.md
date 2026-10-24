@@ -327,6 +327,77 @@ Seedream 4.5 · FLUX.2 pro), формат 3:4 (Recraft 4:5):
 рамкой или перегенерацией; иконный масштаб костра и Шута — правило
 для сцен, в портретах не участвует.
 
+## 11. Заставка «форма 0» · 24.10 — три раунда через MCP
+
+Фон первого экрана. Поверх него ложится бумажный бланк «форма 0 ·
+заявление о начале странствия» (`#form0`, по центру, ширина
+min(420px, 88vw)). Отсюда **правило композиции заставки**:
+- середина кадра тёмная и пустая: бумага кладётся на ночь, на светлом
+  небе бежевый бланк растворяется;
+- сильный верх (луна) и сильный низ (сюжет), между ними пустая полоса;
+- всё главное на вертикальной оси, чтобы кадр пережил кроп 9:16.
+
+Проверка — контактный лист: на каждый кадр накладываем силуэт бланка
+и рамку кропа 9:16 (ImageMagick по превью `_min.webp`).
+
+**Раунд 1 · 3 подхода × 3 пробы** (оттиск / офорт / Бакши × луна /
+городок / ворота; 13.5 кр.). Победил **2а · офорт · луна** (GPT Image 2,
+`41536d16`): луна в кольцах с потёками, чёрная середина, выгнутый
+горизонт с крошечным городком. Оттиск даёт самую сильную графику, но
+тянет к светлому небу: 1б (городок красной плашкой) отложен под постер
+или экран загрузки. Бакши сползает в типовое тёмное фэнтези и пускает
+лишний цвет (3а — бирюзовое небо целиком).
+
+**Раунд 2 · всё в стиле 2а, `41536d16` референсом** (луна / городок /
+дорога × GPT Image 2 / Seedream 5 Pro / FLUX.2; 13.5 кр.). Лучшие:
+городок Seedream `a15c6d93`, городок GPT `53af2c5b`, дорога GPT
+`98981edc`, дорога Seedream `62498057`. С референсом небо у всех одно,
+меняется только низ, поэтому **заставка может идти серией по вечерам**
+(бланк и так ставит «вх. № вечера»).
+
+**Раунд 3 · следующие сюжеты и новые сетки** (21 задание, ≈37 кр.).
+Место пробуждения теперь **дом в городе** (`weave/HOUSE.md`), костёр
+идёт отдельным сюжетом.
+
+| сюжет | GPT Image 2 | Seedream 5 Pro | FLUX.2 |
+|---|---|---|---|
+| дом пробуждения | ✓ `a574230f` | ★ `0678bf23` | ✗ фонари горят, луна-фото, дом под бланком |
+| костёр и Шут | ✓ `0785b7af` | ~ `2877924d`: колпак заходит под бланк | ✗ путник ростом с Шута |
+| канцелярия | ✓ `9a3537e6` | ✗ запекла бумажные поля | ✗ дом под бланком, окна горят у соседей |
+| диск мира | ~ `54f2191a`: городок в центре под бланком | ★ `ac32ffff`: центр пересвечен почти до белого | ~ годен |
+
+Новые сетки, тот же референс:
+
+| сюжет | сетка | итог |
+|---|---|---|
+| дом | Nano Banana 2.1 | ★ `98d5ea56` |
+| дом | Grok Image 2.0 | ✗ крыша под бланком |
+| дом | Recraft V4.1 (референс не принимает) | ✗ ушла в светлую бумагу; это контроль: без референса стиль не держится |
+| канцелярия | Kling O1 | ✗ дом в полкадра, под бланком |
+| канцелярия | OpenAI Hazel (только 3:2) | ✓ `08d387f5`, для 16:9 нужен аутпейнт |
+| канцелярия | Soul 2.0 | ✗ сюжет потерян |
+| диск | Soul Cinema | ✗ пашня вместо диска |
+| диск | Cinema Studio 2.5 | ★ `53fc0b4a` |
+| диск | Soul Cinema Studio | ✗ сюжет потерян |
+
+**Сетки для этого стиля:**
+- **оставить**: GPT Image 2 (самая ровная, ближе всех к референсу),
+  Seedream 5 Pro (самая подробная, но иногда запекает поля и поднимает
+  сюжет), Nano Banana 2.1, Cinema Studio 2.5;
+- **вычеркнуть**: FLUX.2 (рамки, горящие фонари, фотолуна; за два
+  раунда годен один кадр из семи), семейство Soul (сервер сам
+  переписывает промт через `enhance_prompt`, сюжет теряется), Kling O1
+  и Grok 2.0 (сюжет лезет под бланк), Recraft (без референсов).
+
+**Грабли:**
+- фраза «title screen» провоцирует текст (Seedream вписала готическую
+  абракадабру): убрана, в хвосте явный запрет надписей;
+- запросы на Nano Banana Pro сервер исполняет как Nano Banana 2;
+- `use_unlim` для аккаунта закрыт, безлимит есть только в веб-интерфейсе;
+- Ideogram 4.5 и Z Image падают технически, кредиты не списываются.
+
+Рабочий промт — в конце файла, «Промт заставки «форма 0» (вер. 3)».
+
 ---
 
 ## Промт сцены «Поезд издалека с путником» (вер. 1, 26.07)
@@ -458,3 +529,82 @@ Seedream 4.5 · FLUX.2 pro), формат 3:4 (Recraft 4:5):
 > across the whole field, worn scratched frame border, vast negative space.
 > Only colors: black, bone and crimson — crimson only in the moon. No 3D,
 > no gloss, no text, no letters, no captions, no signature
+
+---
+
+## Промт заставки «форма 0» (вер. 3, 24.10)
+
+Журнал прогонов — §11. Формат 16:9. Сетки: GPT Image 2 · Seedream 5 Pro ·
+Nano Banana 2.1 · Cinema Studio 2.5. Референс — `41536d16` (кадр 2а) по
+job-id: роль `image` у GPT Image 2 и Cinema Studio 2.5, роль
+`image_references` у Seedream и Nano Banana.
+
+Сборка: **голова + сюжет + хвост**. Голова и хвост не меняются, меняется
+только слот сюжета. Небо у всей серии одно, поэтому кадры складываются
+в серию сами.
+
+**Голова**
+> Match the style of the reference image exactly: very dark vintage
+> etching and mezzotint, deep velvety blacks dominating the frame, fine
+> crosshatching, burnished bone #D9CFB8 highlights, plate scratches, heavy
+> film grain; red #C23B2B only in the moon (rough drips, concentric ring
+> strokes) and a thin glow along the horizon.
+
+**Хвост**
+> Composition: a huge red moon scored with concentric rings high in the
+> upper third, three scattered black birds near it; the middle band left
+> calm, nearly black and empty; the subject stays low, below the middle
+> band; key elements centered on the vertical axis. The image runs to all
+> four edges with no border of any kind: no frame, no paper margin, no
+> white edge line, no vignette edge. No text, no letters, no title, no
+> signature.
+
+### Слоты сюжета
+
+**Дом пробуждения** (первый вечер; лучшие — Seedream `0678bf23`, Nano
+Banana 2.1 `98d5ea56`)
+> In the bottom fifth, the house of awakening seen from a distance: the
+> only intact house among the ruined old streets of the town — a plain
+> stone house, its stone paler than the ground, a roof sloping toward the
+> street, a cold chimney with no smoke, dark windows, a door in the
+> middle; around it only low foundations, stumps of walls and dead street
+> lanterns on empty cobblestones, a church silhouette nearby. No light in
+> the windows. A tiny hooded traveller stands at the door with one tiny
+> amber #E28A3A ember glowing at his chest — the only warm light.
+
+**Костёр и Шут** (лучший — GPT `0785b7af`)
+> In the bottom fifth, the bonfire on the square of a small timeless town
+> seen from a distance: exactly one bull skull on a single pole beside the
+> fire, and the Jester standing by the flames — a gaunt multi-armed
+> harlequin in a three-horned belled cap, his arms juggling three daggers
+> in a natural cascade with elbows close to the body; the Jester is
+> clearly larger than a tiny hooded traveller approaching from the side,
+> hierarchic icon scale. The fire is one solid amber #E28A3A light.
+
+**Канцелярия** (лучший — GPT `9a3537e6`)
+> In the bottom fifth, the town chancellery seen from a distance: a narrow
+> two-story office building with a steep gable roof and a row of dark
+> windows, exactly one of them — the third from the left — lit amber
+> #E28A3A, a crooked blank noticeboard by the door, low dark rooftops of
+> the town on either side.
+
+**Диск мира** (лучшие — Cinema Studio 2.5 `53fc0b4a`, Seedream `ac32ffff`)
+> In the lower third, the whole world seen from high above as a flat disc
+> at a low angle, a wide flat ellipse: a tiny town at its center, around
+> it concentric rings of land — fields, ruins, roads, each ring a
+> different texture — and at the outer rim a thin ring of fire; the rings
+> of the land echo the concentric rings of the moon above.
+
+**Городок** и **дорога** — сюжеты раунда 2 (лучшие: городок Seedream
+`a15c6d93`, дорога GPT `98981edc`), переложены под хвост вер. 3. В этом
+виде ещё не гонялись.
+> In the bottom fifth, the small timeless town seen from a distance: dark
+> rooftops, a chancellery with one lit amber #E28A3A window, exactly one
+> bonfire on the square with exactly one bull skull on a single pole, a
+> thin line of smoke rising straight up, exactly one black cat silhouette
+> on a roof ridge.
+
+> In the bottom fifth, open stone gates overgrown with grass and a short
+> dusty road with wheel ruts leading out through them; a tiny hooded
+> traveller just past the gates, back to us, one tiny amber #E28A3A
+> lantern in hand.
