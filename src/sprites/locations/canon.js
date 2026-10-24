@@ -682,6 +682,39 @@ export function draw_nocturnal(x, y) {
   bake('nocturnal', x, y, -4, -3, 68, 106, plainBody);
 }
 
+// языки огня одним силуэтом (костёр, мусорка): TONG — [середина, высота, ширина,
+// сзади?]; сзади — тонкие киноварные языки выше, спереди внутри свеча, по кромке
+// и к верху киноварь, внутри медленные киноварные лизки (раз в четверть секунды,
+// не мельтешат); по ветру клонится; язык изредка отрывается
+function flames(FX0, base, FW, TONG, lean) {
+  for (const back of [1, 0]) {
+    const tg = TONG.map(([bx0, hb, wb, b], i) => {
+      if (b !== back) return null;
+      const f = 0.5 + 0.5 * Math.sin(t * (0.07 + i * 0.013) + i * 2.3) * Math.sin(t * 0.029 + i * 1.7);
+      return { bx0, wb, i, H: Math.max(3, q(hb * (0.72 + 0.28 * f))) };
+    }).filter(Boolean);
+    if (!tg.length) continue;
+    const top = Math.max(...tg.map(g => g.H));
+    for (let k = 0; k < top; k++) {
+      const cov = new Array(FW).fill(9);
+      for (const g of tg) {
+        if (k >= g.H) continue;
+        const u = k / g.H, cx = g.bx0 + Math.sin(t * 0.055 + g.i * 1.3 + k * 0.32) * u * 2.2 + lean * u * u;
+        const hw = Math.max(0.5, g.wb / 2 * Math.pow(1 - u, 0.85));
+        for (let px = q(cx - hw); px <= q(cx + hw); px++) if (px >= 0 && px < FW) cov[px] = Math.min(cov[px], u);
+      }
+      for (let px = 0; px < FW; px++) {
+        const u = cov[px];
+        if (u > 1) continue;
+        const edge = (px === 0 || cov[px - 1] > 1 || px === FW - 1 || cov[px + 1] > 1) && k > 2;
+        const lick = !back && u > 0.3 && u < 0.55 && hh(px, k + (t >> 4), 13) < 0.16;
+        r(FX0 + px, base - k, 1, 1, back || edge || lick || u >= 0.55 ? KV : SV);
+      }
+    }
+    if (!back) for (const g of tg) if (((t >> 2) + g.i * 3) % 7 === 0) r(FX0 + g.bx0 + q(lean), base - g.H - 2, 1, 1, KV);   // язык отрывается
+  }
+}
+
 // ── ЖЕРТВЕННЫЙ КОСТЁР ──
 // «В кольце закопчённых камней лежит рогатый скелет неизвестного зверя,
 // наполовину сожжённый, наполовину ещё горящий. Череп с длинными изогнутыми
@@ -872,33 +905,7 @@ export function draw_campfire(x, y) {
   for (let i = 0; i < 9; i++) r(x + 6 + i * 2 + q(hh(i, 3, 7)), base + 1 + (i & 1), 2, 1, ((t >> 3) + i) % 4 ? SV : KV);
   const TONG = [[5, 9, 2, 0], [8, 15, 3, 0], [11, 20, 4, 0], [14, 22, 4, 0], [17, 17, 3, 0], [20, 12, 3, 0], [23, 7, 2, 0],
     [9, 19, 1.5, 1], [13, 27, 1.5, 1], [16, 25, 1.5, 1], [19, 19, 1.5, 1]];
-  const lean = wind.x * 4;
-  for (const back of [1, 0]) {
-    const tg = TONG.map(([bx0, hb, wb, b], i) => {
-      if (b !== back) return null;
-      const f = 0.5 + 0.5 * Math.sin(t * (0.07 + i * 0.013) + i * 2.3) * Math.sin(t * 0.029 + i * 1.7);
-      return { bx0, wb, i, H: Math.max(3, q(hb * (0.72 + 0.28 * f))) };
-    }).filter(Boolean);
-    const top = Math.max(...tg.map(g => g.H));
-    for (let k = 0; k < top; k++) {
-      const cov = new Array(FW).fill(9);
-      for (const g of tg) {
-        if (k >= g.H) continue;
-        const u = k / g.H, cx = g.bx0 + Math.sin(t * 0.055 + g.i * 1.3 + k * 0.32) * u * 2.2 + lean * u * u;
-        const hw = Math.max(0.5, g.wb / 2 * Math.pow(1 - u, 0.85));
-        for (let px = q(cx - hw); px <= q(cx + hw); px++) if (px >= 0 && px < FW) cov[px] = Math.min(cov[px], u);
-      }
-      for (let px = 0; px < FW; px++) {
-        const u = cov[px];
-        if (u > 1) continue;
-        const edge = (px === 0 || cov[px - 1] > 1 || px === FW - 1 || cov[px + 1] > 1) && k > 2;
-        // внутри — медленные киноварные лизки вверх (раз в четверть секунды, не мельтешат)
-        const lick = !back && u > 0.3 && u < 0.55 && hh(px, k + (t >> 4), 13) < 0.16;
-        r(FX0 + px, base - k, 1, 1, back || edge || lick || u >= 0.55 ? KV : SV);
-      }
-    }
-    if (!back) for (const g of tg) if (((t >> 2) + g.i * 3) % 7 === 0) r(FX0 + g.bx0 + q(lean), base - g.H - 2, 1, 1, KV);   // язык отрывается
-  }
+  flames(FX0, base, FW, TONG, wind.x * 4);
   // искры к луне и дым по ветру
   for (let i = 0; i < 5; i++) {
     const a = ((t * 0.5 + i * 23) % 70) / 70;
@@ -1745,10 +1752,14 @@ export function draw_altar(x, y) {
 // стенке — трафарет: SYSTEM SUICIDE. Кто-то сделал из разрушения — бренд. На
 // вывеске мелким шрифтом: «основано выжившими». Жар обжигает лицо даже на
 // расстоянии.» Говорит сама (dialogues: «мусор внутри меня кончился на девятый
-// день. Теперь горю я сама»; «Тебе нужен мерч?»). Контейнер с откинутой
-// крышкой, край раскалён; трафарет — буквами осмотра; табличка мелко —
-// штрихами; рядом ящик мерча. Огонь — свеча и киноварь, сплошной; лицо в огне
-// проступает изредка (sprites/npcs/dumpster.js).
+// день. Теперь горю я сама»; «Тебе нужен мерч?»).
+// По референсу автора (24.10: горящая куча хлама, над ней дым встаёт демоном):
+// контейнер с откинутой крышкой утонул в куче, которую к нему всё несут —
+// кинескоп, покрышка, мешки белый и чёрный, бумаги, палки; по куче занялись
+// очаги. Внутри бака мусор кончился — горит он сам: край раскалён, огонь
+// языками одним силуэтом (свеча и киноварь, сплошной). Трафарет — буквами
+// осмотра; табличка мелко — штрихами, слева на колышке; ящик мерча — справа.
+// Демон — дым над баком (sprites/npcs/dumpster.js).
 const STENCIL = {
   S: ['XXX', 'X..', 'XXX', '..X', 'XXX'], Y: ['X.X', 'X.X', '.X.', '.X.', '.X.'], T: ['XXX', '.X.', '.X.', '.X.', '.X.'], E: ['XXX', 'X..', 'XX.', 'X..', 'XXX'],
   M: ['X.X', 'XXX', 'X.X', 'X.X', 'X.X'], U: ['X.X', 'X.X', 'X.X', 'X.X', 'XXX'], I: ['XXX', '.X.', '.X.', '.X.', 'XXX'], C: ['XXX', 'X..', 'X..', 'X..', 'XXX'], D: ['XX.', 'X.X', 'X.X', 'X.X', 'XX.'],
@@ -1759,7 +1770,42 @@ function stencil(word, x0, y0) {                                         // тр
     if (hh(i, x0, 3) < 0.45) r(x0 + i * 4 + (i % 3), y0 + 5, 1, 1 + (i & 1), L2);   // потёк
   });
 }
+// хлам кучи — пиксельными картами (pix, PAL: B L l k d n w … , g — корпус, o — экран)
+const TV = [
+  '.dddddddddddd.',
+  'dkkkkkkkkkkkkd',
+  'dkdddddddddkkd',
+  'dkdLLLLLLlldkd',
+  'dkdLBLLLLlldkd',
+  'dkdLLLLLLlldkd',
+  'dkdlLLLLllldkd',
+  'dkddddddddddkd',
+  'dkkkkkkkkkpkkd',
+  '.dddddddddddd.',
+  '..dd......dd..',
+];
+const TIRE = [
+  '....dddddd....',
+  '..ddkdkdkdkd..',
+  '.dkdkddddkdkd.',
+  'dkdd......ddkd',
+  'dkd........dkd',
+  'dkd........dkd',
+  'dkdd......ddkd',
+  '.dkdkddddkdkd.',
+  '..ddkdkdkdkd..',
+  '....dddddd....',
+];
+const BAG_W = ['...lBl...', '....l....', '..BLLLl..', '.BLLLLLl.', 'BLLlLLLLl', 'BLLLLlLLl', '.lLLLLLl.', '..lllll..'];
+const BAG_K = ['....d....', '...ddd...', '..dkkkd..', '.dkHkkkd.', 'dkHkkkkkd', 'dkkkkkHkd', '.dkkkkkd.', '..ddddd..'];
 function dumpsterBody() {
+  // куча: тёмный холм хлама вокруг бака, мелкие светлые обломки
+  for (let y = 26; y <= 47; y++) for (let x = -22; x <= 70; x++) {
+    const e = ((x - 24) / 46) ** 2 + ((y - 47) / 21) ** 2;
+    if (e > 1) continue;
+    const v = hh(x >> 1, y >> 1, 3);
+    r(x, y, 1, 1, e > 0.86 ? (v < 0.5 ? K1 : K0) : v < 0.04 ? L2 : v < 0.08 ? AS : v < 0.4 ? K4 : v < 0.75 ? K1 : K2);
+  }
   // крышка откинута назад
   r(8, 3, 32, 3, K2); r(8, 3, 32, 1, S2); for (let k = 0; k < 4; k++) r(8 + k * 9, 6, 2, 6, K1);
   // корпус: шире кверху; краска вспучена жаром, ржа
@@ -1768,26 +1814,37 @@ function dumpsterBody() {
   for (let x = 8; x < 41; x += 8) r(x, 13, 1, 26, K2);                    // рёбра жёсткости
   r(4, 11, 40, 2, K1);                                                    // край — раскалён (живьём)
   stencil('SYSTEM', 12, 18); stencil('SUICIDE', 10, 25);
-  for (const wx of [8, 36]) { r(wx, 40, 4, 3, K0); r(wx + 1, 41, 2, 1, K1); }   // колёса
-  // вывеска мелким шрифтом — на колышке слева
-  r(-4, 30, 1, 13, BR2); r(-8, 26, 9, 5, L1); r(-8, 26, 9, 1, BO); for (let k = 0; k < 7; k++) r(-7 + k, 28 + (k & 1), 1, 1, K2);
-  // ящик мерча справа: футболки с трафаретом, ценник
-  r(36, 34, 12, 8, BR2); r(36, 34, 12, 1, K4); r(36, 37, 12, 1, K1);
-  for (const fx of [37, 41, 44]) { r(fx, 32, 3, 2, NI); r(fx + 1, 32, 1, 1, KV); }
-  r(46, 31, 2, 2, L1);
-  X.globalAlpha = 0.5; r(-6, 43, 56, 1, K0); X.globalAlpha = 1;
+  // хлам привалили к баку: низ корпуса в куче
+  for (let x = 3; x <= 45; x++) { const hgt = 3 + q(hh(x >> 1, 9, 5) * 4); for (let y = 40 - hgt; y <= 40; y++) r(x, y, 1, 1, hh(x >> 1, y >> 1, 7) < 0.07 ? L2 : hh(x >> 1, y, 5) < 0.5 ? K4 : K1); }
+  // палки торчат, бумаги
+  for (const [ax, ay, bx, by] of [[-12, 36, -4, 28], [50, 38, 58, 30], [30, 44, 37, 36], [-2, 44, 4, 40]]) {
+    const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay)); for (let k = 0; k <= n; k++) r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 1, k % 3 ? BR2 : K4);
+  }
+  for (const [px, py, w] of [[-16, 42, 4], [18, 44, 3], [44, 45, 4], [60, 41, 3], [-6, 30, 3], [52, 33, 3]]) { r(px, py, w, 2, L1); r(px, py, w, 1, BO); r(px + w - 1, py + 1, 1, 1, L2); }
+  // кинескоп — слева спереди, экран мёртвый, трещина
+  pix(TV, -14, 33); r(-9, 37, 1, 1, K4); r(-8, 38, 1, 1, K4); r(-7, 39, 1, 1, K4);
+  // покрышка — справа, привалена на бок
+  pix(TIRE, 44, 35);
+  // мешки: белый спереди, чёрный рядом
+  pix(BAG_W, 2, 39); pix(BAG_K, 26, 40);
+  // вывеска мелким шрифтом — на колышке слева, дальше от огня
+  r(-19, 30, 1, 14, BR2); r(-23, 26, 9, 5, L1); r(-23, 26, 9, 1, BO); for (let k = 0; k < 7; k++) r(-22 + k, 28 + (k & 1), 1, 1, K2);
+  // ящик мерча — справа за покрышкой: футболки с трафаретом, ценник
+  r(60, 36, 12, 8, BR2); r(60, 36, 12, 1, K4); r(60, 39, 12, 1, K1);
+  for (const fx of [61, 65, 68]) { r(fx, 34, 3, 2, NI); r(fx + 1, 34, 1, 1, KV); }
+  r(70, 33, 2, 2, L1);
+  X.globalAlpha = 0.5; r(-24, 47, 98, 1, K0); X.globalAlpha = 1;
 }
 export function draw_dumpster(x, y) {
-  bake('dumpster', x, y, -9, 2, 59, 43, dumpsterBody);
+  bake('dumpster2', x, y, -26, 2, 102, 47, dumpsterBody);
   // раскалённый край: тлеет пятнами
   for (let k = 0; k < 40; k += 2) if (hh(k, (t >> 4) & 7, 3) < 0.6) r(x + 4 + k, y + 11 + (k % 4 === 0 ? 1 : 0), 2, 1, hh(k, t >> 4, 5) < 0.3 ? SV : KV);
-  // огонь: языки над краем, сплошные; искры; дым по ветру
-  for (let i = 0; i < 9; i++) {
-    const fx = x + 7 + i * 4, f = 0.5 + 0.5 * Math.sin(t * (0.1 + i * 0.013) + i * 1.9) * Math.sin(t * 0.027 + i);
-    const H = q(6 + (i > 1 && i < 7 ? 10 : 4) * Math.abs(f));
-    for (let k = 0; k < H; k++) { const u = k / H, sway = q(Math.sin(t * 0.07 + i + k * 0.3) * u * 2 + wind.x * u * 4); r(fx + sway, y + 11 - k, u < 0.4 ? 3 : u < 0.75 ? 2 : 1, 1, u < 0.5 ? SV : KV); }
-  }
-  for (let i = 0; i < 5; i++) { const a = ((t * 0.6 + i * 19) % 60) / 60; X.globalAlpha = 1 - a; r(x + 12 + i * 6 + q(Math.sin(a * 6 + i) * 3 + a * wind.x * 16), y + 2 - q(a * 30), 1, 1, a < 0.4 ? SV : KV); }
-  for (let i = 0; i < 6; i++) { const age = (t * 0.3 + i * 16) % 96, k = age / 96; X.globalAlpha = (1 - k) * 0.35; r(x + 22 + q(age * wind.x * 0.5 + Math.sin(age * 0.1 + i) * 3), y - 4 - q(age * 0.32), 2 + q(k * 4), 1 + q(k * 2), K1); }
+  // огонь из бака — языками одним силуэтом; очаги по куче
+  flames(x + 4, y + 11, 40, [[3, 8, 3, 0], [8, 13, 4, 0], [14, 17, 5, 0], [20, 19, 5, 0], [26, 15, 4, 0], [32, 11, 4, 0], [37, 7, 3, 0],
+    [11, 21, 1.5, 1], [18, 25, 1.5, 1], [24, 23, 1.5, 1], [30, 18, 1.5, 1]], wind.x * 4);
+  flames(x - 12, y + 33, 12, [[3, 6, 2, 0], [6, 9, 3, 0], [9, 5, 2, 0], [5, 11, 1.5, 1]], wind.x * 3);   // за кинескопом
+  flames(x + 46, y + 36, 10, [[3, 7, 3, 0], [6, 5, 2, 0], [4, 9, 1.5, 1]], wind.x * 3);                 // у покрышки
+  // искры
+  for (let i = 0; i < 5; i++) { const a = ((t * 0.6 + i * 19) % 60) / 60; X.globalAlpha = 1 - a; r(x + 12 + i * 6 + q(Math.sin(a * 6 + i) * 3 + a * wind.x * 16), y - 2 - q(a * 30), 1, 1, a < 0.4 ? SV : KV); }
   X.globalAlpha = 1;
 }

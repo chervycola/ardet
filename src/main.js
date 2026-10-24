@@ -393,7 +393,7 @@ function locCaster(loc) {
     c = { key: loc, ox: 0, oy: 0,
       build: () => maskFrom(g => {
         setCtx(g); drawLocation(g, loc);
-        if (loc.npc && npcDrawFn[loc.npc]) npcDrawFn[loc.npc](loc.x, loc.y);
+        if (loc.npc && npcDrawFn[loc.npc] && loc.npc !== 'dumpster') npcDrawFn[loc.npc](loc.x, loc.y);   // дым-демон тени не кладёт
         setCtx(layers.ctx('world'));
       }, loc.x - 30, loc.y - 70, loc.w + 60, loc.y + loc.h) };
     casterOf.set(loc, c);
