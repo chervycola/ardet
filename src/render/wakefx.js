@@ -26,7 +26,7 @@ function hh(a, b, s) {
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
-const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
+const reducedNow = reducedMotion;   // система или «меньше движения» в настройках быта (core/prefs.js)
 
 export const wakefx = {
   t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,

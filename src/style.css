@@ -53,49 +53,56 @@ canvas#game {
   display: block;
 }
 
-/* ── Entry screen ── */
+/* ── Entry screen: заглавная — картина автора во всю высоту, «fall in» среди птиц (ui/title.js) ── */
 #entry {
   position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: center; align-items: safe center; justify-content: center;
-  background: var(--c-void);
-  overflow-y: auto;                 /* бланк выше экрана — прокручивается; safe: лишнее уходит вниз, верх достижим */
-}
-#entry-left {
-  display: flex; flex-direction: column; align-items: center; gap: 24px;
-}
-#entry { gap: 56px; }
-#entry-mirror {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-}
-#entry-mirror-cap {
-  font-family: var(--font-pixel); font-size: 7px; color: var(--c-gold); letter-spacing: 2px;
-}
-#entry-mirror-glass {
-  width: 150px; height: 210px; position: relative;
-  display: flex; align-items: flex-end; justify-content: center;
-  border: 1px solid var(--c-crimson);
-  box-shadow: 0 0 0 3px var(--c-void), 0 0 0 4px rgba(184,134,11,0.45), 0 0 24px rgba(107,15,26,0.25);
-  background: linear-gradient(115deg, #0a0a18 0%, #14142a 45%, #0a0a18 62%);
+  background: #0D0B0A;
   overflow: hidden;
 }
-#entry-mirror-glass::before {
-  content: ''; position: absolute; top: -40%; left: -60%; width: 45%; height: 180%;
-  background: linear-gradient(105deg, transparent, rgba(232,220,200,0.06), transparent);
-  transform: rotate(8deg);
-  animation: mirrorSheen 7s ease-in-out infinite;
+/* сама картина: во всю высоту экрана, по центру; на узком телефоне бока срезаются, луна целиком */
+#entry-art {
+  position: absolute; top: 0; bottom: 0; left: 50%;
+  aspect-ratio: 1497 / 2000; height: 100%;
+  transform: translateX(-50%);
 }
-@keyframes mirrorSheen { 0%,100%{ left:-60% } 50%{ left:110% } }
-#entry-mirror-glass i {
-  position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
-  width: 36px; height: 68px; filter: blur(1px);
-  background:
-    radial-gradient(ellipse 50% 36% at 50% 12%, rgba(232,220,200,0.10), transparent 70%),
-    radial-gradient(ellipse 62% 70% at 50% 76%, rgba(232,220,200,0.05), transparent 75%);
+/* по бокам на широком экране — край картины, протянутый вдаль: зарево горизонта не
+   обрывается рамкой, к краю экрана гаснет в ночь */
+#entry-art::before, #entry-art::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 100vw;
+  background: var(--entry-art, none) no-repeat;
+  background-size: 100000% 100%;
+  filter: blur(4px);
+  opacity: 0; transition: opacity .9s ease-out;
 }
-#entry-mirror-glass span {
-  font-family: var(--font-pixel); font-size: 8px; color: var(--c-ash);
-  letter-spacing: 2px; opacity: .8; margin-bottom: 16px;
+#entry-art::before { right: 96%; background-position: 0 50%;
+  -webkit-mask-image: linear-gradient(to left, #000 4vw, transparent 85%); mask-image: linear-gradient(to left, #000 4vw, transparent 85%); }
+#entry-art::after { left: 96%; background-position: 100% 50%;
+  -webkit-mask-image: linear-gradient(to right, #000 4vw, transparent 85%); mask-image: linear-gradient(to right, #000 4vw, transparent 85%); }
+#entry.art #entry-art::before, #entry.art #entry-art::after { opacity: 1; }
+#entry-img {
+  position: relative; z-index: 1;
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .9s ease-out;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
+#entry.art #entry-img { opacity: 1; }
+/* fall in — среди птиц, той же чернотой, что их силуэты */
+#entry-btn {
+  position: absolute; z-index: 2; left: 52%; top: 39.6%; transform: translate(-50%, -50%);
+  margin: 0; padding: 0.35em 0.7em; background: none; border: 0; border-radius: 0;
+  font: italic 400 clamp(20px, 4.6vh, 46px) var(--font-book); letter-spacing: 0.04em;
+  color: #0D0B0A; white-space: nowrap; cursor: pointer;
+  text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+  transition: text-decoration-color .25s;
+  -webkit-tap-highlight-color: transparent;
+}
+#entry-btn:hover, #entry-btn:focus-visible { text-decoration-color: currentColor; }
+#entry-btn:focus { outline: none; }
+#entry.noart #entry-btn { color: #D9CFB8; }   /* картины нет — ночь и кнопка костью */
+html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
@@ -564,9 +571,7 @@ canvas#game {
   body { cursor: auto; }
   canvas#game { touch-action: none; }
 
-  #entry { flex-direction: column; justify-content: flex-start; justify-content: safe center; gap: 20px; padding: 14px; touch-action: pan-y; }
-  #entry-mirror-glass { width: 118px; height: 158px; }
-  #entry-mirror-glass i { bottom: 32px; width: 30px; height: 56px; }
+  #entry { touch-action: manipulation; }
 
   #menu {
     left: 50% !important;
@@ -754,115 +759,11 @@ body.noon .mi i { color: var(--ink); }
   #menu-inscription { font-size: 14px; }
 }
 
-/* ═══ ФОРМА 0 · заявление о начале странствия (ART_BIBLE §06; ui/titleForm.js) ═══
-   Главное меню — бланк поверх ночи: пункты отмечают углём, печать канцелярии — криво.
-   Скруглений нет; тёплого нет — бумага, сепия, одна киноварь печати. */
-#form0 {
-  position: relative; margin: 0;
-  width: min(420px, 88vw);
-  padding: 26px 30px 22px;
-  background: var(--paper); color: var(--sepia);
-  box-shadow: 0 14px 50px rgba(0,0,0,0.8);
-  font-family: var(--font-book);
-}
-#entry-logo {
-  font-family: var(--font-book); font-weight: 400; font-style: italic;
-  font-size: 34px; letter-spacing: 2px; color: var(--sepia); text-shadow: none;
-}
-#form0 .f0-grif {
-  margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(58,48,38,0.55);
-  font: 300 10px Montserrat, 'PT Sans', sans-serif; letter-spacing: 3px; text-transform: uppercase;
-}
-#form0 .f0-list { list-style: none; margin: 0; padding: 0; }
-#form0 .f0-item, #form0 .f0-opt {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  min-height: 40px; padding: 4px 2px; margin: 0;
-  background: none; border: none; border-bottom: 1px dashed rgba(58,48,38,0.28);
-  font: 400 19px var(--font-book); color: var(--sepia); text-align: left; cursor: pointer;
-}
-#form0 .f0-item:hover .f0-t, #form0 .f0-item:focus-visible .f0-t,
-#form0 .f0-opt:hover .f0-t, #form0 .f0-opt:focus-visible .f0-t { text-decoration: underline; text-decoration-color: #C23B2B; text-underline-offset: 4px; }
-#form0 button:focus { outline: none; }
-#form0 .f0-box {
-  position: relative; flex: none; width: 17px; height: 17px;
-  border: 1px solid rgba(58,48,38,0.75);
-}
-#form0 .f0-box svg { position: absolute; left: -3px; top: -9px; width: 26px; height: 26px; overflow: visible; }
-#form0 .f0-box path { fill: none; stroke: #241d18; stroke-linejoin: miter; stroke-linecap: butt; }
-#form0 .f0-box path.smudge { stroke: rgba(36,29,24,0.35); stroke-width: 4.5; }
-#form0 .f0-box path.line { stroke-width: 2.4; stroke-dasharray: 40; stroke-dashoffset: 40; transition: stroke-dashoffset .32s ease-in; }
-#form0 .on > .f0-box path.line { stroke-dashoffset: 0; }
-#form0 .f0-box path.smudge { opacity: 0; transition: opacity .3s .15s; }
-#form0 .on > .f0-box path.smudge { opacity: 1; }
-#form0 .f0-byt { margin: 10px 0 2px; padding: 8px 0 2px 29px; border-left: 1px solid rgba(58,48,38,0.35); }
-#form0 .f0-row { margin: 0 0 8px; }
-#form0 .f0-row h4 {
-  margin: 4px 0 2px; font: 500 9px Montserrat, 'PT Sans', sans-serif;
-  letter-spacing: 3px; text-transform: uppercase; color: rgba(58,48,38,0.8);
-}
-#form0 .f0-opts { display: flex; flex-wrap: wrap; gap: 0 18px; }
-#form0 .f0-opt { width: auto; min-height: 34px; font-size: 16px; border-bottom: none; gap: 8px; }
-#form0 .f0-opt .f0-box { width: 14px; height: 14px; }
-#form0 .f0-opt .f0-box svg { width: 22px; height: 22px; top: -8px; }
-#form0 .f0-foot {
-  margin-top: 14px; font: italic 13px var(--font-book); color: rgba(58,48,38,0.75); line-height: 1.35;
-}
-/* подпись заявителя: росчерк углём на линии (ui/signature.js) */
-#form0 .f0-sign { margin-top: 10px; width: 240px; max-width: 100%; }
-#form0 .f0-sign canvas {
-  display: block; width: 240px; max-width: 100%; height: 56px;
-  border-bottom: 1px solid rgba(58,48,38,0.7); cursor: crosshair; touch-action: none;
-}
-#form0 .f0-sign-cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px;
-  font: 300 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
-#form0 .f0-sign-cap button { background: none; border: none; padding: 4px 0; cursor: pointer;
-  font: italic 13px var(--font-book); letter-spacing: 0; text-transform: none; color: rgba(58,48,38,0.8);
-  text-decoration: line-through; text-decoration-color: rgba(194,59,43,0.7); }
-/* рука странника на бумагах мира: протокол, осмотр, опись */
+/* рука странника на бумагах мира: протокол, осмотр, опись (ui/signature.js) */
 svg.sign { display: inline-block; vertical-align: middle; overflow: visible; }
 .dmarg svg.sign { margin-left: 6px; }
 #look-sign { display: none; margin: 10px 0 2px; font: 300 9px Montserrat, 'PT Sans', sans-serif;
   letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
 #look-sign svg.sign { margin-left: 8px; }
 .inv-foot svg.sign { margin-left: 6px; }
-#form0 .f0-seal {
-  position: absolute; right: 20px; top: 16px; transform: rotate(-8deg);
-  padding: 5px 9px 4px; text-align: center; pointer-events: none;
-  border: 2px solid rgba(194,59,43,0.85); outline: 1px solid rgba(194,59,43,0.55); outline-offset: 2px;
-  color: rgba(194,59,43,0.88); mix-blend-mode: multiply;
-  font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase;
-}
-#form0 .f0-seal b { display: block; font-weight: 500; }
-#form0 .f0-seal i { display: block; font-style: normal; font-size: 14px; line-height: 1.1; }
-#form0 .f0-void { display: none; margin-top: 12px; font: italic 15px var(--font-book); line-height: 1.4; }
-/* покинуть вечер: штамп «ПОГАШЕНО», бланк гаснет; щелчок — вернуться */
-#entry.left #form0 .f0-list, #entry.left #form0 .f0-byt, #entry.left #form0 .f0-foot { opacity: 0.35; }
-#entry.left #form0 .f0-sign { opacity: 0.35; pointer-events: none; }   /* погашено: щелчок по подписи — тоже «по бланку» */
-#entry.left #form0 .f0-void { display: block; }
-#entry.left #form0::after {
-  content: 'погашено'; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-11deg);
-  padding: 6px 16px; border: 3px double rgba(194,59,43,0.9); color: rgba(194,59,43,0.9); mix-blend-mode: multiply;
-  font: 500 22px Montserrat, 'PT Sans', sans-serif; letter-spacing: 6px; text-transform: uppercase;
-}
-#entry.left { box-shadow: inset 0 0 0 100vmax rgba(5,4,8,0.82) !important; transition: box-shadow 1.2s; }
-html.rm #form0 .f0-box path.line, html.rm #form0 .f0-box path.smudge { transition: none; }
-html.rm #entry-mirror-glass::before { animation: none; }
 html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
-@media (prefers-reduced-motion: reduce) {
-  #form0 .f0-box path.line, #form0 .f0-box path.smudge { transition: none; }
-  #entry-mirror-glass::before { animation: none; }
-}
-@media (max-width: 768px), (pointer: coarse) {
-  #form0 { padding: 18px 20px 16px; width: min(400px, 92vw); }
-  #entry-logo { font-size: 28px; }
-  #form0 .f0-item { font-size: 18px; min-height: 44px; }
-  #form0 .f0-seal { top: 12px; right: 12px; }
-}
-@media (max-height: 520px) {                 /* телефон боком */
-  #form0 { padding: 12px 18px 10px; }
-  #entry-logo { font-size: 22px; }
-  #form0 .f0-grif { margin-bottom: 6px; padding-bottom: 6px; }
-  #form0 .f0-item { min-height: 34px; font-size: 16px; }
-  #form0 .f0-foot { margin-top: 6px; font-size: 12px; }
-  #entry-mirror { display: none; }
-}

@@ -113,7 +113,7 @@ function spawnBurst(n, vertical) {
 }
 
 export const plate = {
-  economy: false,   // экономный кадр (форма 0, core/prefs.js): зерно пересыпается раз в секунду, без царапин
+  economy: false,   // экономный кадр (настройки быта, core/prefs.js): зерно пересыпается раз в секунду, без царапин
   // stormLevel: 0..1 от погоды/молнии/брейнрота — считает main
   update(px, py, stormLevel) {
     frame++;

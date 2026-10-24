@@ -65,7 +65,7 @@ import { init as initTerminal, open as openTerminal } from './terminal/terminal.
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
-  init as initWorldMap, toggle as toggleWorldMap, isOpen as isMapOpen, open as openWorldMap,
+  init as initWorldMap, toggle as toggleWorldMap, isOpen as isMapOpen,
   markDiscovered as discoverGate,
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
@@ -170,7 +170,7 @@ initAudio();
 // настройки быта (форма 0): громкость мира, экономный кадр
 import { onPrefs, soundLevel, economyFrame } from './core/prefs.js';
 import { setVolume as setSfxVolume } from './audio/audio.js';
-import { initTitleForm } from './ui/titleForm.js';
+import { initTitle } from './ui/title.js';
 function applyByt() {
   setSfxVolume(soundLevel());
   if (window.ArdetAudio && window.ArdetAudio.setVolume) window.ArdetAudio.setVolume(soundLevel());
@@ -1825,8 +1825,8 @@ const entryEnter = () => {
   setTimeout(() => howto.addEventListener('click', go, { once: true }), 400);
   setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
 };
-// заставка — форма 0 (ui/titleForm.js): «идти дальше» — вход; «вспомнить дорогу» — план местности
-initTitleForm({ onGo: entryEnter, onRoad: () => openWorldMap(true) });
+// заглавная — картина автора и «fall in» среди птиц (ui/title.js)
+initTitle({ onGo: entryEnter });
 
 // Fallback removed: canvas click handler already dispatches. Keeping #gw
 // click listener caused double-dispatch (canvas → #gw bubble), which

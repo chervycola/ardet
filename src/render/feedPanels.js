@@ -106,7 +106,7 @@ export function record(k) {
   snap(pw, cx0, vh);
 }
 
-const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
+const reducedNow = reducedMotion;   // система или «меньше движения» в настройках быта (core/prefs.js)
 
 // ctx — в точках кадра (vw×vh); в сборке рисуется до печати и растра (main.js: layers.feedPass);
 // k = 0 — лент нет (полдень, дом, изнанка): застывшие кадры не доживают до следующего раза

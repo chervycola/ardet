@@ -35,7 +35,7 @@ let frame = 0;
 export const GAP = 7200, IN = 32, HOLD = 210, OUT = 48;
 let burst = null, lastBurst = -GAP;
 let cam = null;                                             // камера этого кадра — ставит отрисовка поверхности
-const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
+const reducedNow = reducedMotion;   // система или «меньше движения» в настройках быта (core/prefs.js)
 
 function hh(a, b, s) {
   let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;

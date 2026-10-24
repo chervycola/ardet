@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+<link rel="preload" as="image" href="assets/scenes/entry.webp" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Montserrat:wght@300;500&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>/* ═══════════════════════════════════════ */
@@ -67,49 +68,56 @@ canvas#game {
   display: block;
 }
 
-/* ── Entry screen ── */
+/* ── Entry screen: заглавная — картина автора во всю высоту, «fall in» среди птиц (ui/title.js) ── */
 #entry {
   position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: center; align-items: safe center; justify-content: center;
-  background: var(--c-void);
-  overflow-y: auto;                 /* бланк выше экрана — прокручивается; safe: лишнее уходит вниз, верх достижим */
-}
-#entry-left {
-  display: flex; flex-direction: column; align-items: center; gap: 24px;
-}
-#entry { gap: 56px; }
-#entry-mirror {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-}
-#entry-mirror-cap {
-  font-family: var(--font-pixel); font-size: 7px; color: var(--c-gold); letter-spacing: 2px;
-}
-#entry-mirror-glass {
-  width: 150px; height: 210px; position: relative;
-  display: flex; align-items: flex-end; justify-content: center;
-  border: 1px solid var(--c-crimson);
-  box-shadow: 0 0 0 3px var(--c-void), 0 0 0 4px rgba(184,134,11,0.45), 0 0 24px rgba(107,15,26,0.25);
-  background: linear-gradient(115deg, #0a0a18 0%, #14142a 45%, #0a0a18 62%);
+  background: #0D0B0A;
   overflow: hidden;
 }
-#entry-mirror-glass::before {
-  content: ''; position: absolute; top: -40%; left: -60%; width: 45%; height: 180%;
-  background: linear-gradient(105deg, transparent, rgba(232,220,200,0.06), transparent);
-  transform: rotate(8deg);
-  animation: mirrorSheen 7s ease-in-out infinite;
+/* сама картина: во всю высоту экрана, по центру; на узком телефоне бока срезаются, луна целиком */
+#entry-art {
+  position: absolute; top: 0; bottom: 0; left: 50%;
+  aspect-ratio: 1497 / 2000; height: 100%;
+  transform: translateX(-50%);
 }
-@keyframes mirrorSheen { 0%,100%{ left:-60% } 50%{ left:110% } }
-#entry-mirror-glass i {
-  position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
-  width: 36px; height: 68px; filter: blur(1px);
-  background:
-    radial-gradient(ellipse 50% 36% at 50% 12%, rgba(232,220,200,0.10), transparent 70%),
-    radial-gradient(ellipse 62% 70% at 50% 76%, rgba(232,220,200,0.05), transparent 75%);
+/* по бокам на широком экране — край картины, протянутый вдаль: зарево горизонта не
+   обрывается рамкой, к краю экрана гаснет в ночь */
+#entry-art::before, #entry-art::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 100vw;
+  background: var(--entry-art, none) no-repeat;
+  background-size: 100000% 100%;
+  filter: blur(4px);
+  opacity: 0; transition: opacity .9s ease-out;
 }
-#entry-mirror-glass span {
-  font-family: var(--font-pixel); font-size: 8px; color: var(--c-ash);
-  letter-spacing: 2px; opacity: .8; margin-bottom: 16px;
+#entry-art::before { right: 96%; background-position: 0 50%;
+  -webkit-mask-image: linear-gradient(to left, #000 4vw, transparent 85%); mask-image: linear-gradient(to left, #000 4vw, transparent 85%); }
+#entry-art::after { left: 96%; background-position: 100% 50%;
+  -webkit-mask-image: linear-gradient(to right, #000 4vw, transparent 85%); mask-image: linear-gradient(to right, #000 4vw, transparent 85%); }
+#entry.art #entry-art::before, #entry.art #entry-art::after { opacity: 1; }
+#entry-img {
+  position: relative; z-index: 1;
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .9s ease-out;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
+#entry.art #entry-img { opacity: 1; }
+/* fall in — среди птиц, той же чернотой, что их силуэты */
+#entry-btn {
+  position: absolute; z-index: 2; left: 52%; top: 39.6%; transform: translate(-50%, -50%);
+  margin: 0; padding: 0.35em 0.7em; background: none; border: 0; border-radius: 0;
+  font: italic 400 clamp(20px, 4.6vh, 46px) var(--font-book); letter-spacing: 0.04em;
+  color: #0D0B0A; white-space: nowrap; cursor: pointer;
+  text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+  transition: text-decoration-color .25s;
+  -webkit-tap-highlight-color: transparent;
+}
+#entry-btn:hover, #entry-btn:focus-visible { text-decoration-color: currentColor; }
+#entry-btn:focus { outline: none; }
+#entry.noart #entry-btn { color: #D9CFB8; }   /* картины нет — ночь и кнопка костью */
+html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
@@ -578,9 +586,7 @@ canvas#game {
   body { cursor: auto; }
   canvas#game { touch-action: none; }
 
-  #entry { flex-direction: column; justify-content: flex-start; justify-content: safe center; gap: 20px; padding: 14px; touch-action: pan-y; }
-  #entry-mirror-glass { width: 118px; height: 158px; }
-  #entry-mirror-glass i { bottom: 32px; width: 30px; height: 56px; }
+  #entry { touch-action: manipulation; }
 
   #menu {
     left: 50% !important;
@@ -768,137 +774,19 @@ body.noon .mi i { color: var(--ink); }
   #menu-inscription { font-size: 14px; }
 }
 
-/* ═══ ФОРМА 0 · заявление о начале странствия (ART_BIBLE §06; ui/titleForm.js) ═══
-   Главное меню — бланк поверх ночи: пункты отмечают углём, печать канцелярии — криво.
-   Скруглений нет; тёплого нет — бумага, сепия, одна киноварь печати. */
-#form0 {
-  position: relative; margin: 0;
-  width: min(420px, 88vw);
-  padding: 26px 30px 22px;
-  background: var(--paper); color: var(--sepia);
-  box-shadow: 0 14px 50px rgba(0,0,0,0.8);
-  font-family: var(--font-book);
-}
-#entry-logo {
-  font-family: var(--font-book); font-weight: 400; font-style: italic;
-  font-size: 34px; letter-spacing: 2px; color: var(--sepia); text-shadow: none;
-}
-#form0 .f0-grif {
-  margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(58,48,38,0.55);
-  font: 300 10px Montserrat, 'PT Sans', sans-serif; letter-spacing: 3px; text-transform: uppercase;
-}
-#form0 .f0-list { list-style: none; margin: 0; padding: 0; }
-#form0 .f0-item, #form0 .f0-opt {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  min-height: 40px; padding: 4px 2px; margin: 0;
-  background: none; border: none; border-bottom: 1px dashed rgba(58,48,38,0.28);
-  font: 400 19px var(--font-book); color: var(--sepia); text-align: left; cursor: pointer;
-}
-#form0 .f0-item:hover .f0-t, #form0 .f0-item:focus-visible .f0-t,
-#form0 .f0-opt:hover .f0-t, #form0 .f0-opt:focus-visible .f0-t { text-decoration: underline; text-decoration-color: #C23B2B; text-underline-offset: 4px; }
-#form0 button:focus { outline: none; }
-#form0 .f0-box {
-  position: relative; flex: none; width: 17px; height: 17px;
-  border: 1px solid rgba(58,48,38,0.75);
-}
-#form0 .f0-box svg { position: absolute; left: -3px; top: -9px; width: 26px; height: 26px; overflow: visible; }
-#form0 .f0-box path { fill: none; stroke: #241d18; stroke-linejoin: miter; stroke-linecap: butt; }
-#form0 .f0-box path.smudge { stroke: rgba(36,29,24,0.35); stroke-width: 4.5; }
-#form0 .f0-box path.line { stroke-width: 2.4; stroke-dasharray: 40; stroke-dashoffset: 40; transition: stroke-dashoffset .32s ease-in; }
-#form0 .on > .f0-box path.line { stroke-dashoffset: 0; }
-#form0 .f0-box path.smudge { opacity: 0; transition: opacity .3s .15s; }
-#form0 .on > .f0-box path.smudge { opacity: 1; }
-#form0 .f0-byt { margin: 10px 0 2px; padding: 8px 0 2px 29px; border-left: 1px solid rgba(58,48,38,0.35); }
-#form0 .f0-row { margin: 0 0 8px; }
-#form0 .f0-row h4 {
-  margin: 4px 0 2px; font: 500 9px Montserrat, 'PT Sans', sans-serif;
-  letter-spacing: 3px; text-transform: uppercase; color: rgba(58,48,38,0.8);
-}
-#form0 .f0-opts { display: flex; flex-wrap: wrap; gap: 0 18px; }
-#form0 .f0-opt { width: auto; min-height: 34px; font-size: 16px; border-bottom: none; gap: 8px; }
-#form0 .f0-opt .f0-box { width: 14px; height: 14px; }
-#form0 .f0-opt .f0-box svg { width: 22px; height: 22px; top: -8px; }
-#form0 .f0-foot {
-  margin-top: 14px; font: italic 13px var(--font-book); color: rgba(58,48,38,0.75); line-height: 1.35;
-}
-/* подпись заявителя: росчерк углём на линии (ui/signature.js) */
-#form0 .f0-sign { margin-top: 10px; width: 240px; max-width: 100%; }
-#form0 .f0-sign canvas {
-  display: block; width: 240px; max-width: 100%; height: 56px;
-  border-bottom: 1px solid rgba(58,48,38,0.7); cursor: crosshair; touch-action: none;
-}
-#form0 .f0-sign-cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px;
-  font: 300 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
-#form0 .f0-sign-cap button { background: none; border: none; padding: 4px 0; cursor: pointer;
-  font: italic 13px var(--font-book); letter-spacing: 0; text-transform: none; color: rgba(58,48,38,0.8);
-  text-decoration: line-through; text-decoration-color: rgba(194,59,43,0.7); }
-/* рука странника на бумагах мира: протокол, осмотр, опись */
+/* рука странника на бумагах мира: протокол, осмотр, опись (ui/signature.js) */
 svg.sign { display: inline-block; vertical-align: middle; overflow: visible; }
 .dmarg svg.sign { margin-left: 6px; }
 #look-sign { display: none; margin: 10px 0 2px; font: 300 9px Montserrat, 'PT Sans', sans-serif;
   letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
 #look-sign svg.sign { margin-left: 8px; }
 .inv-foot svg.sign { margin-left: 6px; }
-#form0 .f0-seal {
-  position: absolute; right: 20px; top: 16px; transform: rotate(-8deg);
-  padding: 5px 9px 4px; text-align: center; pointer-events: none;
-  border: 2px solid rgba(194,59,43,0.85); outline: 1px solid rgba(194,59,43,0.55); outline-offset: 2px;
-  color: rgba(194,59,43,0.88); mix-blend-mode: multiply;
-  font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase;
-}
-#form0 .f0-seal b { display: block; font-weight: 500; }
-#form0 .f0-seal i { display: block; font-style: normal; font-size: 14px; line-height: 1.1; }
-#form0 .f0-void { display: none; margin-top: 12px; font: italic 15px var(--font-book); line-height: 1.4; }
-/* покинуть вечер: штамп «ПОГАШЕНО», бланк гаснет; щелчок — вернуться */
-#entry.left #form0 .f0-list, #entry.left #form0 .f0-byt, #entry.left #form0 .f0-foot { opacity: 0.35; }
-#entry.left #form0 .f0-sign { opacity: 0.35; pointer-events: none; }   /* погашено: щелчок по подписи — тоже «по бланку» */
-#entry.left #form0 .f0-void { display: block; }
-#entry.left #form0::after {
-  content: 'погашено'; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-11deg);
-  padding: 6px 16px; border: 3px double rgba(194,59,43,0.9); color: rgba(194,59,43,0.9); mix-blend-mode: multiply;
-  font: 500 22px Montserrat, 'PT Sans', sans-serif; letter-spacing: 6px; text-transform: uppercase;
-}
-#entry.left { box-shadow: inset 0 0 0 100vmax rgba(5,4,8,0.82) !important; transition: box-shadow 1.2s; }
-html.rm #form0 .f0-box path.line, html.rm #form0 .f0-box path.smudge { transition: none; }
-html.rm #entry-mirror-glass::before { animation: none; }
 html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
-@media (prefers-reduced-motion: reduce) {
-  #form0 .f0-box path.line, #form0 .f0-box path.smudge { transition: none; }
-  #entry-mirror-glass::before { animation: none; }
-}
-@media (max-width: 768px), (pointer: coarse) {
-  #form0 { padding: 18px 20px 16px; width: min(400px, 92vw); }
-  #entry-logo { font-size: 28px; }
-  #form0 .f0-item { font-size: 18px; min-height: 44px; }
-  #form0 .f0-seal { top: 12px; right: 12px; }
-}
-@media (max-height: 520px) {                 /* телефон боком */
-  #form0 { padding: 12px 18px 10px; }
-  #entry-logo { font-size: 22px; }
-  #form0 .f0-grif { margin-bottom: 6px; padding-bottom: 6px; }
-  #form0 .f0-item { min-height: 34px; font-size: 16px; }
-  #form0 .f0-foot { margin-top: 6px; font-size: 12px; }
-  #entry-mirror { display: none; }
-}
 </style>
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><div id="entry-left"><form id="form0" onsubmit="return false" aria-label="форма 0 · заявление о начале странствия">
-  <div id="entry-logo">ardet</div>
-  <div class="f0-grif">форма 0 · заявление о начале странствия</div>
-  <ol class="f0-list" id="f0-list">
-    <li><button type="button" class="f0-item" id="entry-btn" data-act="go"><span class="f0-box"></span><span class="f0-t">идти дальше</span></button></li>
-    <li><button type="button" class="f0-item" data-act="road"><span class="f0-box"></span><span class="f0-t">вспомнить дорогу</span></button></li>
-    <li><button type="button" class="f0-item" data-act="byt"><span class="f0-box"></span><span class="f0-t">настройки быта</span></button></li>
-    <li><button type="button" class="f0-item" data-act="leave"><span class="f0-box"></span><span class="f0-t">покинуть вечер</span></button></li>
-  </ol>
-  <div class="f0-byt" id="f0-byt" hidden></div>
-  <div class="f0-foot">нужное отметить углём · недостающее вписать · лишнее пережить</div>
-  <div class="f0-sign"><canvas id="f0-sign-pad" width="240" height="56" aria-label="поле подписи: расписаться пальцем или мышью"></canvas><div class="f0-sign-cap"><span>подпись заявителя</span><button type="button" id="f0-sign-x" hidden>зачеркнуть</button></div></div>
-  <div class="f0-seal" aria-hidden="true"><b>канцелярия</b><i>☠</i><span id="f0-seal-text"></span></div>
-  <div class="f0-void" id="f0-void" aria-live="polite"></div>
-</form></div><div id="entry-mirror"><span id="entry-mirror-cap">АФИША ВЫСТУПЛЕНИЙ</span><div id="entry-mirror-glass"><i></i><span>COMING SOON</span></div></div><div id="build-stamp"></div></div>
+<div id="entry"><div id="entry-art"><img id="entry-img" alt="" decoding="async"><button type="button" id="entry-btn" aria-label="fall in — войти">fall in</button></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
@@ -978,7 +866,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='2c24907 · 2026-10-24';console.log('[оттиск]', '2c24907 · 2026-10-24');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='84bd9f6 · 2026-10-24';console.log('[оттиск]', '84bd9f6 · 2026-10-24');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2843,7 +2731,7 @@ System.register("render/plate", ["render/scaler", "world/disc"], function (expor
             jitter = 0;
             cache = null, cacheCtx = null, cacheKey = '';
             exports_11("plate", plate = {
-                economy: false, // экономный кадр (форма 0, core/prefs.js): зерно пересыпается раз в секунду, без царапин
+                economy: false, // экономный кадр (настройки быта, core/prefs.js): зерно пересыпается раз в секунду, без царапин
                 // stormLevel: 0..1 от погоды/молнии/брейнрота — считает main
                 update(px, py, stormLevel) {
                     frame++;
@@ -3809,7 +3697,7 @@ System.register("render/backstage", [], function (exports_15, context_15) {
 });
 System.register("core/prefs", [], function (exports_16, context_16) {
     "use strict";
-    var KEY, BYT, DEFAULTS, prefs, listeners;
+    var KEY, BYT, DEFAULTS, prefs, READ_SAVED, listeners;
     var __moduleName = context_16 && context_16.id;
     function onPrefs(fn) { listeners.push(fn); }
     exports_16("onPrefs", onPrefs);
@@ -3832,7 +3720,7 @@ System.register("core/prefs", [], function (exports_16, context_16) {
         }
     }
     exports_16("setPref", setPref);
-    // «меньше движения» — отмеченное в форме или заданное системой
+    // «меньше движения» — отмеченное в настройках быта или заданное системой
     function reducedMotion() {
         if (prefs.motion === 'меньше')
             return true;
@@ -3855,9 +3743,11 @@ System.register("core/prefs", [], function (exports_16, context_16) {
         setters: [],
         execute: function () {
             // ═══════════════════════════════════════
-            // НАСТРОЙКИ БЫТА — то, что отмечено углём в форме 0 (ui/titleForm.js):
-            // звук мира, движение, кадр. Живут в браузере, отдельно от сохранения
-            // странствия: быт — дело заявителя, не канцелярии.
+            // НАСТРОЙКИ БЫТА — звук мира, движение, кадр. Отмечались углём в бланке
+            // «форма 0»; бланк снят с заглавной (слово автора 24.10: «пока лишняя»), API
+            // осталось — вернуть легко. Пока графы нет, сохранённое раньше не читаем:
+            // отмеченное «без звука» не должно застрять без способа снять. «Меньше
+            // движения» по-прежнему берётся из системы.
             // ═══════════════════════════════════════
             KEY = 'ardet-byt';
             exports_16("BYT", BYT = {
@@ -3867,8 +3757,9 @@ System.register("core/prefs", [], function (exports_16, context_16) {
             });
             DEFAULTS = { sound: 'громко', motion: 'как есть', frame: 'полный' };
             prefs = { ...DEFAULTS };
+            READ_SAVED = false; // графа вернётся на заглавную — true
             try {
-                const raw = typeof localStorage !== 'undefined' && localStorage.getItem(KEY);
+                const raw = READ_SAVED && typeof localStorage !== 'undefined' && localStorage.getItem(KEY);
                 if (raw) {
                     const p = JSON.parse(raw);
                     for (const k of Object.keys(BYT))
@@ -4074,7 +3965,7 @@ System.register("world/toxic", ["world/disc", "render/scaler", "render/backstage
             exports_17("GAP", GAP = 7200), exports_17("IN", IN = 32), exports_17("HOLD", HOLD = 210), exports_17("OUT", OUT = 48);
             burst = null, lastBurst = -GAP;
             cam = null; // камера этого кадра — ставит отрисовка поверхности
-            reducedNow = prefs_js_1.reducedMotion; // система или «меньше движения» в форме 0 (core/prefs.js)
+            reducedNow = prefs_js_1.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
             BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
             bay = (i, j) => (BAYER[((j & 3) << 2) | (i & 3)] + 0.5) / 16;
             seedOf = id => { let h = 7; for (const ch of String(id))
@@ -4613,7 +4504,7 @@ System.register("audio/audio", [], function (exports_18, context_18) {
             ctx = null;
             masterGain = null;
             sfxOut = null; // шина звуков мира мимо мастера (ветер, гул зон, вороны, колокола…) — тоже под «звуком мира»
-            // звук мира из формы 0 (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
+            // звук мира из настроек быта (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
             volMul = 1;
             // куда подключать звуки мира, что идут мимо мастера: громкость — как задана, без деления на мастер
             exports_18("getOut", getOut = () => sfxOut || (ctx && ctx.destination));
@@ -36588,7 +36479,7 @@ System.register("assets/manifest", [], function (exports_104, context_104) {
             });
             // Full-screen / threshold images.
             exports_104("SCENES", SCENES = {
-                entry: 'assets/scenes/entry.png', // CSS background of #entry
+                entry: 'assets/scenes/entry.webp', // заглавная: красная луна над городком, картина автора (ui/title.js)
                 ending: 'assets/scenes/ending.png', // drawn during the ending sequence
             });
         }
@@ -37092,9 +36983,11 @@ System.register("ui/signature", [], function (exports_110, context_110) {
         setters: [],
         execute: function () {
             // ═══════════════════════════════════════
-            // ПОДПИСЬ СТРАННИКА — «недостающее вписать» (форма 0): единственное в мире
-            // штампов, что сделано твоей рукой. Росчерк пальцем или мышью; хранится в
-            // этом браузере и никуда не уходит (сеть его не видит). Дальше рука
+            // ПОДПИСЬ СТРАННИКА — «недостающее вписать»: единственное в мире штампов, что
+            // сделано твоей рукой. Росчерк пальцем или мышью; хранится в этом браузере и
+            // никуда не уходит (сеть его не видит). Графа подписи стояла в бланке «форма 0»;
+            // бланк снят с заглавной (24.10) — поле росчерка (initSignPad) ждёт нового места,
+            // а уже поставленная подпись по-прежнему ложится на бумаги. Дальше рука
             // появляется там, где канцелярия пишет «рука знакомая»: подпись свидетеля
             // в протоколе беседы, книга выдачи гардероба, второй почерк в протоколе
             // замера, опись найденного, «обмер произвёл» на плане. Не расписался —
@@ -50622,7 +50515,7 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
             scroll = 0, lastT = -1; // прокрутка копится по шагам — смена скорости не дёргает ленту
             stills = {}; // «меньше движения»: по полосе — один застывший кадр
             shown = []; // полосы, что легли в прошлой сборке: { x, w, alpha }
-            reducedNow = prefs_js_4.reducedMotion; // система или «меньше движения» в форме 0 (core/prefs.js)
+            reducedNow = prefs_js_4.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
         }
     };
 });
@@ -56050,7 +55943,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             exports_166("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
             FONT = '6px "Press Start 2P","VT323",monospace';
-            reducedNow = prefs_js_5.reducedMotion; // система или «меньше движения» в форме 0 (core/prefs.js)
+            reducedNow = prefs_js_5.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
             exports_166("wakefx", wakefx = {
                 t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,
                 start(speed = 1) { this.t0 = time_js_44.t; this.speed = speed; this.seed = (this.seed * 1103515245 + 12345) & 0x7fffffff; this.reduced = reducedNow(); this.stuck = null; },
@@ -56076,229 +55969,93 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
     };
 });
-System.register("ui/titleForm", ["core/prefs", "core/events", "ui/signature"], function (exports_167, context_167) {
+System.register("ui/title", ["assets/loader", "assets/manifest"], function (exports_167, context_167) {
     "use strict";
-    var prefs_js_6, events_js_8, signature_js_4, CHECK, LEAVE, ROW, MARK_MS, entry, form, byt, voidEl, busy, visit, shown, later;
+    var loader_js_2, manifest_js_2, entry, busy, shown;
     var __moduleName = context_167 && context_167.id;
-    function visitNo() {
-        if (visit)
-            return visit;
-        let n = 0;
-        try {
-            n = (parseInt(localStorage.getItem('ardet-visits'), 10) || 0) + 1;
-            localStorage.setItem('ardet-visits', String(n));
-        }
-        catch (e) {
-            n = 1;
-        }
-        return (visit = n);
-    }
-    exports_167("visitNo", visitNo);
-    function mark(btn, on = true) { if (btn) {
-        btn.classList.toggle('on', on);
-        if (btn.classList.contains('f0-opt'))
-            btn.setAttribute('aria-pressed', String(on));
-    } }
-    function buildByt() {
-        byt.innerHTML = Object.keys(prefs_js_6.BYT).map(k => `<div class="f0-row"><h4>${ROW[k]}</h4><div class="f0-opts">`
-            + prefs_js_6.BYT[k].map(v => `<button type="button" class="f0-opt${prefs_js_6.getPref(k) === v ? ' on' : ''}" aria-pressed="${prefs_js_6.getPref(k) === v}" data-k="${k}" data-v="${v}"><span class="f0-box">${CHECK}</span><span class="f0-t">${v}</span></button>`).join('')
-            + '</div></div>').join('')
-            + `<button type="button" class="f0-opt f0-done" data-done="1"><span class="f0-box">${CHECK}</span><span class="f0-t">приложить к заявлению</span></button>`;
-        for (const b of byt.querySelectorAll('.f0-opt'))
-            b.addEventListener('click', () => {
-                if (b.dataset.done) {
-                    mark(b);
-                    later(() => closeByt(true));
-                    return;
-                }
-                prefs_js_6.setPref(b.dataset.k, b.dataset.v);
-                for (const o of byt.querySelectorAll(`.f0-opt[data-k="${b.dataset.k}"]`))
-                    mark(o, o === b);
-            });
-    }
-    function openByt(btn) { buildByt(); byt.hidden = false; mark(btn); const f = byt.querySelector('.f0-opt.on') || byt.querySelector('.f0-opt'); if (f)
-        f.focus({ preventScroll: true }); }
-    function closeByt(refocus) {
-        byt.hidden = true;
-        byt.innerHTML = '';
-        const b = form.querySelector('.f0-item[data-act="byt"]');
-        mark(b, false);
-        if (refocus && b)
-            b.focus({ preventScroll: true });
-    }
-    function leave(btn) {
-        if (btn.classList.contains('on') || entry.classList.contains('left'))
-            return; // уже отозвано — второй раз не отзывают
-        mark(btn);
-        later(() => {
-            entry.classList.add('left');
-            voidEl.innerHTML = LEAVE;
-            if (document.activeElement && document.activeElement.blur)
-                document.activeElement.blur();
-            setTimeout(() => entry.addEventListener('click', function back() {
-                entry.classList.remove('left');
-                voidEl.innerHTML = '';
-                mark(btn, false);
-                entry.removeEventListener('click', back);
-                btn.focus({ preventScroll: true }); // фокус на месте: следующий Enter не уводит в дорогу
-            }), 300);
-        });
-    }
-    function initTitleForm({ onGo, onRoad }) {
+    function initTitle({ onGo }) {
         entry = document.getElementById('entry');
-        form = document.getElementById('form0');
-        if (!entry || !form)
+        const btn = document.getElementById('entry-btn'), img = document.getElementById('entry-img');
+        if (!entry || !btn)
             return;
-        byt = document.getElementById('f0-byt');
-        voidEl = document.getElementById('f0-void');
-        for (const b of form.querySelectorAll('.f0-item .f0-box'))
-            b.innerHTML = CHECK;
-        const seal = document.getElementById('f0-seal-text');
-        if (seal)
-            seal.textContent = 'вх. № ' + visitNo();
-        // недостающее вписать: подпись заявителя (ui/signature.js)
-        const x = document.getElementById('f0-sign-x');
-        const showX = () => { if (x)
-            x.hidden = !signature_js_4.hasSignature(); };
-        const pad = signature_js_4.initSignPad(document.getElementById('f0-sign-pad'), showX);
-        if (x && pad)
-            x.addEventListener('click', e => {
-                e.stopPropagation();
-                pad.clear();
-                // с клавиатуры: кнопка исчезла — фокус на последнюю графу, а не в пустоту (оттуда Enter — «идти дальше»)
-                if (e.detail === 0) {
-                    const it = form.querySelectorAll('.f0-item');
-                    if (it.length)
-                        it[it.length - 1].focus({ preventScroll: true });
-                }
-            });
-        showX();
-        const act = btn => {
-            if (busy || !shown() || entry.classList.contains('left'))
+        loader_js_2.loadAsset(manifest_js_2.SCENES.entry).then(im => {
+            if (!im) {
+                entry.classList.add('noart');
                 return;
-            const a = btn.dataset.act;
-            if (a === 'go') {
-                busy = true;
-                mark(btn);
-                later(() => { busy = false; onGo && onGo(); });
             }
-            else if (a === 'road') {
-                mark(btn);
-                later(() => { events_js_8.events.once('map.closed', () => { mark(btn, false); btn.focus({ preventScroll: true }); }); if (onRoad)
-                    onRoad(); });
-            }
-            else if (a === 'byt') {
-                if (byt.hidden)
-                    openByt(btn);
-                else
-                    closeByt(true);
-            }
-            else if (a === 'leave')
-                leave(btn);
+            if (img)
+                img.src = im.src;
+            entry.style.setProperty('--entry-art', `url("${im.src}")`);
+            entry.classList.add('art');
+        });
+        const go = () => {
+            if (busy || !shown())
+                return;
+            busy = true;
+            if (onGo)
+                onGo();
         };
-        for (const btn of form.querySelectorAll('.f0-item'))
-            btn.addEventListener('click', () => act(btn));
+        btn.addEventListener('click', go);
         // в некоторых webview тап не рождает click — вход ловим и по pointerup, но только тапом:
-        // палец почти не сдвинулся и поднят над графой. Свайп (бланк прокручивается) и палец,
-        // соскользнувший с графы, в дорогу не уводят — как обычная кнопка
-        const go = form.querySelector('.f0-item[data-act="go"]');
-        if (go) {
-            let down = null;
-            go.addEventListener('pointerdown', e => { down = e.pointerType !== 'mouse' ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null; });
-            go.addEventListener('pointercancel', () => { down = null; });
-            go.addEventListener('pointerup', e => {
-                const d = down;
-                down = null;
-                if (!d || e.pointerId !== d.id || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 10)
-                    return;
-                const r = go.getBoundingClientRect();
-                if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)
-                    act(go);
-            });
-        }
-        // клавиши: вверх-вниз по графам, влево-вправо в строке настроек, Enter / пробел / E — отметить
+        // палец почти не сдвинулся и поднят над кнопкой; соскользнувший палец в дорогу не уводит
+        let down = null;
+        btn.addEventListener('pointerdown', e => { down = e.pointerType !== 'mouse' ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null; });
+        btn.addEventListener('pointercancel', () => { down = null; });
+        btn.addEventListener('pointerup', e => {
+            const d = down;
+            down = null;
+            if (!d || e.pointerId !== d.id || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 10)
+                return;
+            const r = btn.getBoundingClientRect();
+            if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)
+                go();
+        });
+        // клавиши: Enter / пробел / E — войти (зажатая — один раз)
         document.addEventListener('keydown', e => {
-            if (e.defaultPrevented)
-                return; // клавишу уже взяла карта (закрылась Enter/пробелом)
-            if (!shown() || document.getElementById('map')?.classList.contains('on'))
+            if (e.defaultPrevented || !shown())
                 return;
             if (e.ctrlKey || e.metaKey || e.altKey)
                 return;
             const tg = e.target;
             if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable))
                 return;
-            if (document.getElementById('txed')?.classList.contains('on'))
-                return;
-            if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key)) {
-                e.preventDefault();
-                return;
-            } // зажатая клавиша отмечает один раз — и браузер кнопку не жмёт
-            if (entry.classList.contains('left')) {
-                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    entry.click();
-                }
-                return;
-            }
             const k = e.key.toLowerCase();
-            const all = [...form.querySelectorAll('.f0-item, .f0-byt:not([hidden]) .f0-opt, #f0-sign-x:not([hidden])')];
-            const i = all.indexOf(document.activeElement);
-            const step = { arrowdown: 1, s: 1, 'ы': 1, arrowup: -1, w: -1, 'ц': -1, arrowright: 1, d: 1, 'в': 1, arrowleft: -1, a: -1, 'ф': -1 }[k];
-            if (step) {
-                e.preventDefault();
-                (all[(i + step + all.length) % all.length] || all[0]).focus({ preventScroll: true });
+            if (k !== 'enter' && k !== ' ' && k !== 'e' && k !== 'у')
                 return;
-            }
-            if (k === 'enter' || k === ' ' || k === 'e' || k === 'у') {
-                e.preventDefault();
-                (i >= 0 ? all[i] : go).click();
-            }
-            if (k === 'escape' && !byt.hidden)
-                closeByt(true);
+            e.preventDefault();
+            if (!e.repeat)
+                go();
         });
-        if (go && matchMedia && matchMedia('(pointer: fine)').matches)
-            go.focus({ preventScroll: true });
+        if (typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches)
+            btn.focus({ preventScroll: true });
     }
-    exports_167("initTitleForm", initTitleForm);
+    exports_167("initTitle", initTitle);
     return {
         setters: [
-            function (prefs_js_6_1) {
-                prefs_js_6 = prefs_js_6_1;
+            function (loader_js_2_1) {
+                loader_js_2 = loader_js_2_1;
             },
-            function (events_js_8_1) {
-                events_js_8 = events_js_8_1;
-            },
-            function (signature_js_4_1) {
-                signature_js_4 = signature_js_4_1;
+            function (manifest_js_2_1) {
+                manifest_js_2 = manifest_js_2_1;
             }
         ],
         execute: function () {
-            CHECK = '<svg viewBox="0 0 26 26" aria-hidden="true">'
-                + '<path class="smudge" d="M4.2 14.4 L10.2 20.2 L23.2 3.4"/>'
-                + '<path class="line" d="M3.4 13.1 L10.5 19.7 L22.7 2.3"/></svg>';
-            LEAVE = 'Заявление отозвано заявителем. Вечер покинут; огонь оставлен гореть. '
-                + 'Вкладку закрывает заявитель лично.<br><small>передумать — щелчком по бланку</small>';
-            ROW = { sound: 'звук мира', motion: 'движение', frame: 'кадр' };
-            MARK_MS = 340; // столько дорисовывается галочка
-            entry = null, form = null, byt = null, voidEl = null, busy = false;
-            // входящий номер: который вечер (каждая загрузка страницы — новый вечер)
-            visit = 0;
+            entry = null, busy = false;
             shown = () => entry && entry.style.display !== 'none';
-            later = fn => (prefs_js_6.reducedMotion() ? fn() : setTimeout(fn, MARK_MS));
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/titleForm", "assets/loader"], function (exports_168, context_168) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_168, context_168) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_9, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_1, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_5, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_7, audio_js_13, titleForm_js_1, loader_js_2, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_1, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_5, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
     var __moduleName = context_168 && context_168.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_13.SEGMENTS.length ? ulitsa_db_js_13.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
-        audio_js_13.setVolume(prefs_js_7.soundLevel());
+        audio_js_13.setVolume(prefs_js_6.soundLevel());
         if (window.ArdetAudio && window.ArdetAudio.setVolume)
-            window.ArdetAudio.setVolume(prefs_js_7.soundLevel());
-        plate_js_3.plate.economy = prefs_js_7.economyFrame();
+            window.ArdetAudio.setVolume(prefs_js_6.soundLevel());
+        plate_js_3.plate.economy = prefs_js_6.economyFrame();
     }
     function lockHint() {
         if (time_js_45.t - lockHintAt < 1800)
@@ -56631,7 +56388,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         drawWorldWhisper({ x: camX, y: camY });
         net_js_4.drawVoices(worldCtx, 'surface', player); // сказанное рядом — пером над тем, кто сказал
         worldCtx.restore();
-        if (!prefs_js_7.economyFrame())
+        if (!prefs_js_6.economyFrame())
             haze_js_1.hazeView(camX, camY, vw, vh, locations_js_6.locations, redNoon_js_5.redNoon.k); // марево: над костром, над Sol, в гари, в полдень — везде (в экономном кадре — нет)
         warmSpots = warmIn(camX, camY, vw, vh); // тёплые огни кадра — перо их не трогает
         // группа второй краски — те же вещи, отдельным прогоном
@@ -57688,7 +57445,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 else if (Math.abs(mx) > Math.abs(my) * 1.15)
                     player.face = mx > 0 ? 'E' : 'W';
             }
-            events_js_9.events.emit(events_js_9.E.PLAYER_MOVE, player);
+            events_js_8.events.emit(events_js_8.E.PLAYER_MOVE, player);
             if (time_js_46.t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss')
                 particles_js_3.footstepDust(player.x, player.y);
             // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
@@ -58026,7 +57783,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     }
     function arriveAt(loc, intent = null) {
         flags.visited.add(loc.id);
-        events_js_9.events.emit(events_js_9.E.LOCATION_VISIT, loc);
+        events_js_8.events.emit(events_js_8.E.LOCATION_VISIT, loc);
         ui_js_2.openThing(loc, intent);
     }
     function thingAtHand() {
@@ -58250,8 +58007,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (state_js_8_1) {
                 state_js_8 = state_js_8_1;
             },
-            function (events_js_9_1) {
-                events_js_9 = events_js_9_1;
+            function (events_js_8_1) {
+                events_js_8 = events_js_8_1;
             },
             function (input_js_2_1) {
                 input_js_2 = input_js_2_1;
@@ -58486,14 +58243,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (wakefx_js_1_1) {
                 wakefx_js_1 = wakefx_js_1_1;
             },
-            function (prefs_js_7_1) {
-                prefs_js_7 = prefs_js_7_1;
+            function (prefs_js_6_1) {
+                prefs_js_6 = prefs_js_6_1;
             },
-            function (titleForm_js_1_1) {
-                titleForm_js_1 = titleForm_js_1_1;
+            function (title_js_1_1) {
+                title_js_1 = title_js_1_1;
             },
-            function (loader_js_2_1) {
-                loader_js_2 = loader_js_2_1;
+            function (loader_js_3_1) {
+                loader_js_3 = loader_js_3_1;
             }
         ],
         execute: function () {
@@ -58538,13 +58295,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             cursor_js_1.init();
             audio_js_12.initAudio();
             applyByt();
-            prefs_js_7.onPrefs(applyByt);
+            prefs_js_6.onPrefs(applyByt);
             editor_js_1.initEditor();
             netui_js_1.initNetUI(lorepopup_js_1.showLore); // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
-            loader_js_2.preloadAll().then(() => {
+            loader_js_3.preloadAll().then(() => {
                 // Once the entry painting is in cache, mount it as the #entry
                 // background; the existing logo + button markup stays on top.
-                const entry = loader_js_2.getScene('entry');
+                const entry = loader_js_3.getScene('entry');
                 if (entry) {
                     const el = document.getElementById('entry');
                     if (el) {
@@ -58762,7 +58519,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 ctx.restore();
             };
             layers_js_3.layers.inkPass = (ctx, main) => {
-                if (!prefs_js_7.economyFrame())
+                if (!prefs_js_6.economyFrame())
                     haze_js_1.hazeComposite(ctx, main); // марево — в мире, до печати (зерно и краска на бумаге)
                 ink_js_2.ink.composite(ctx, main);
                 pen_js_1.penComposite(ctx, main, warmSpots); // перо к ночи сухое: светлый штрих рвётся, огонь — сплошной
@@ -58831,7 +58588,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     wakeUp();
             });
             // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
-            events_js_9.events.on('brainrot.recover', () => { if (NO_HOUSE)
+            events_js_8.events.on('brainrot.recover', () => { if (NO_HOUSE)
                 return; intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true); wakeFx(); });
             entryDone = false;
             { // оттиск сборки на заставке — сверка «что реально задеплоено»
@@ -58876,8 +58633,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 setTimeout(() => howto.addEventListener('click', go, { once: true }), 400);
                 setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
             };
-            // заставка — форма 0 (ui/titleForm.js): «идти дальше» — вход; «вспомнить дорогу» — план местности
-            titleForm_js_1.initTitleForm({ onGo: entryEnter, onRoad: () => worldmap_js_1.open(true) });
+            // заглавная — картина автора и «fall in» среди птиц (ui/title.js)
+            title_js_1.initTitle({ onGo: entryEnter });
             // Fallback removed: canvas click handler already dispatches. Keeping #gw
             // click listener caused double-dispatch (canvas → #gw bubble), which
             // flashed the menu open+closed on the same click.
@@ -58982,24 +58739,24 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // вещь осмотрели — счёт; что-то с ней сделали — отметка; второй раз — текст точнее,
             // вариант по обстановке: сутки, погода, ветер
             SKY_TAG = { 'день': 'day', 'сумерки': 'dusk', 'ночь': 'night', 'рассвет': 'dawn' };
-            events_js_9.events.on(events_js_9.E.LOCATION_LOOK, loc => { if (loc && loc.id) {
+            events_js_8.events.on(events_js_8.E.LOCATION_LOOK, loc => { if (loc && loc.id) {
                 relook_js_1.noteLook(loc.id);
                 attention_js_3.noteAttention(loc);
             } });
-            events_js_9.events.on('location.use', loc => { if (loc && loc.id) {
+            events_js_8.events.on('location.use', loc => { if (loc && loc.id) {
                 relook_js_1.noteUse(loc.id);
                 attention_js_3.noteAttention(loc);
             } });
             // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
-            events_js_9.events.on('brainrot.freeze', attention_js_3.forget);
+            events_js_8.events.on('brainrot.freeze', attention_js_3.forget);
             potemkin_js_4.setRelook(loc => relook_js_1.relookText(loc.id, lookTags()));
             // ═══ EVENT HANDLERS ═══
             // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)
-            events_js_9.events.on('brainrot.freeze', () => { if (window.ArdetAudio && window.ArdetAudio.open)
+            events_js_8.events.on('brainrot.freeze', () => { if (window.ArdetAudio && window.ArdetAudio.open)
                 window.ArdetAudio.open('brainrot'); });
-            events_js_9.events.on('brainrot.hook', () => { if (window.ArdetAudio && window.ArdetAudio.open)
+            events_js_8.events.on('brainrot.hook', () => { if (window.ArdetAudio && window.ArdetAudio.open)
                 window.ArdetAudio.open('brainrot'); });
-            events_js_9.events.on(events_js_9.E.NPC_TALK, (npcId) => {
+            events_js_8.events.on(events_js_8.E.NPC_TALK, (npcId) => {
                 if (npcId === 'jester' && !flags.talkedTo.has('jester'))
                     jesterFirstTalk = true;
                 flags.talkedTo.add(npcId);
@@ -59007,15 +58764,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     worldmap_js_1.markDiscovered('gate_europe');
             });
             // Дежурный криосклепа: что скажет — решает изнанка (строка описи дошла до него — назовёт её)
-            events_js_9.events.on(events_js_9.E.NPC_TALK, (npcId, loc) => {
+            events_js_8.events.on(events_js_8.E.NPC_TALK, (npcId, loc) => {
                 if (npcId === 'watchman' && loc && state_js_8.state.is('menu'))
                     loc.talkLines = underside_js_4.under.talk();
             });
-            events_js_9.events.on(events_js_9.E.OBSERVER_MET, (npcId) => {
+            events_js_8.events.on(events_js_8.E.OBSERVER_MET, (npcId) => {
                 flags.observersSeen.add(npcId);
             });
             // Gates open on milestones: thresholds match content/worldmap_db.GATES.reveal.
-            events_js_9.events.on(events_js_9.E.LORE_COLLECT, () => {
+            events_js_8.events.on(events_js_8.E.LORE_COLLECT, () => {
                 const n = lore_js_4.getCollectedCount();
                 if (n >= 30)
                     worldmap_js_1.markDiscovered('gate_americas');
@@ -59024,14 +58781,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             });
             // Terminal-driven discoveries — fired from inside terminal.exec via the
             // 'terminal.read' bus event below.
-            events_js_9.events.on('terminal.read', (key) => {
+            events_js_8.events.on('terminal.read', (key) => {
                 if (key === 'timbuktu')
                     worldmap_js_1.markDiscovered('gate_africa');
                 if (key === 'ishraq')
                     worldmap_js_1.markDiscovered('gate_asia');
             });
             // Fast-travel through a gate: teleport to its world target.
-            events_js_9.events.on('gate.use', (gate) => {
+            events_js_8.events.on('gate.use', (gate) => {
                 if (!gate || !gate.target)
                     return;
                 if (!state_js_8.state.is('game'))
@@ -59052,14 +58809,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 const p = disc_js_48.trailPoint('south', disc_js_48.ringD(Math.max(1, seg.n), 100));
                 teleportWithFade(p.x, p.y);
             });
-            events_js_9.events.on(events_js_9.E.LORE_COLLECT, (item) => {
+            events_js_8.events.on(events_js_8.E.LORE_COLLECT, (item) => {
                 lorepopup_js_1.showLore(item.text, item.live);
                 audio_js_12.playPickup();
                 particles_js_3.pickupSparkle(item.x, item.y);
             });
             // второе действие вещи: изнанка — у лестницы подуть на уголёк (ритуал «Вдох на пороге»);
             // с тенью цветка в кармане — положить её на вещь («Гербарий темноты»)
-            events_js_9.events.on('location.alt', (loc) => {
+            events_js_8.events.on('location.alt', (loc) => {
                 const a = loc.altNow && loc.altNow();
                 if (!a)
                     return;
@@ -59079,7 +58836,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (a.key === 'net_report')
                     net_js_3.netVote(loc.net, 'report').then(r => lorepopup_js_1.showLore(r.error && r.error !== 'twice' ? netui_js_1.VOTE_ERR[r.error] || netui_js_1.VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));
             });
-            events_js_9.events.on('location.use', (loc) => {
+            events_js_8.events.on('location.use', (loc) => {
                 if (loc.id === 'terminal') {
                     terminal_js_1.open();
                     return;

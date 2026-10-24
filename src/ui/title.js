@@ -1,0 +1,58 @@
+// ═══════════════════════════════════════
+// ЗАГЛАВНАЯ — картина автора: красная луна над городком (assets/scenes/entry.webp,
+// слот SCENES.entry) и одна кнопка «fall in» среди птиц. Бланк «форма 0» снят
+// (слово автора 24.10): настройки быта, «вспомнить дорогу», «покинуть вечер» и
+// графа подписи пока лишние — их код остался (core/prefs.js, ui/signature.js,
+// ui/worldmap.js), вернуть легко. Картину находит загрузчик (на сайте — рядом со
+// страницей, в локальной сборке — в корне репозитория); нет картины — ночь и
+// кнопка костью. Вход: щелчок, тап, Enter / пробел / E.
+// ═══════════════════════════════════════
+import { loadAsset } from '../assets/loader.js';
+import { SCENES } from '../assets/manifest.js';
+
+let entry = null, busy = false;
+const shown = () => entry && entry.style.display !== 'none';
+
+export function initTitle({ onGo }) {
+  entry = document.getElementById('entry');
+  const btn = document.getElementById('entry-btn'), img = document.getElementById('entry-img');
+  if (!entry || !btn) return;
+
+  loadAsset(SCENES.entry).then(im => {
+    if (!im) { entry.classList.add('noart'); return; }
+    if (img) img.src = im.src;
+    entry.style.setProperty('--entry-art', `url("${im.src}")`);
+    entry.classList.add('art');
+  });
+
+  const go = () => {
+    if (busy || !shown()) return;
+    busy = true;
+    if (onGo) onGo();
+  };
+  btn.addEventListener('click', go);
+  // в некоторых webview тап не рождает click — вход ловим и по pointerup, но только тапом:
+  // палец почти не сдвинулся и поднят над кнопкой; соскользнувший палец в дорогу не уводит
+  let down = null;
+  btn.addEventListener('pointerdown', e => { down = e.pointerType !== 'mouse' ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null; });
+  btn.addEventListener('pointercancel', () => { down = null; });
+  btn.addEventListener('pointerup', e => {
+    const d = down; down = null;
+    if (!d || e.pointerId !== d.id || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 10) return;
+    const r = btn.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) go();
+  });
+
+  // клавиши: Enter / пробел / E — войти (зажатая — один раз)
+  document.addEventListener('keydown', e => {
+    if (e.defaultPrevented || !shown()) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tg = e.target;
+    if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
+    const k = e.key.toLowerCase();
+    if (k !== 'enter' && k !== ' ' && k !== 'e' && k !== 'у') return;
+    e.preventDefault();
+    if (!e.repeat) go();
+  });
+  if (typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches) btn.focus({ preventScroll: true });
+}

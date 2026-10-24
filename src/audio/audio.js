@@ -23,7 +23,7 @@ export function initAudio() {
 
 export function getCtx() { return ctx; }
 
-// звук мира из формы 0 (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
+// звук мира из настроек быта (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
 let volMul = 1;
 export function setVolume(f) {
   volMul = Math.max(0, Math.min(1, +f || 0));

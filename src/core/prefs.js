@@ -1,7 +1,9 @@
 // ═══════════════════════════════════════
-// НАСТРОЙКИ БЫТА — то, что отмечено углём в форме 0 (ui/titleForm.js):
-// звук мира, движение, кадр. Живут в браузере, отдельно от сохранения
-// странствия: быт — дело заявителя, не канцелярии.
+// НАСТРОЙКИ БЫТА — звук мира, движение, кадр. Отмечались углём в бланке
+// «форма 0»; бланк снят с заглавной (слово автора 24.10: «пока лишняя»), API
+// осталось — вернуть легко. Пока графы нет, сохранённое раньше не читаем:
+// отмеченное «без звука» не должно застрять без способа снять. «Меньше
+// движения» по-прежнему берётся из системы.
 // ═══════════════════════════════════════
 const KEY = 'ardet-byt';
 export const BYT = {
@@ -11,8 +13,9 @@ export const BYT = {
 };
 const DEFAULTS = { sound: 'громко', motion: 'как есть', frame: 'полный' };
 let prefs = { ...DEFAULTS };
+const READ_SAVED = false;                 // графа вернётся на заглавную — true
 try {
-  const raw = typeof localStorage !== 'undefined' && localStorage.getItem(KEY);
+  const raw = READ_SAVED && typeof localStorage !== 'undefined' && localStorage.getItem(KEY);
   if (raw) {
     const p = JSON.parse(raw);
     for (const k of Object.keys(BYT)) if (p && BYT[k].includes(p[k])) prefs[k] = p[k];
@@ -30,7 +33,7 @@ export function setPref(k, v) {
   for (const fn of listeners) { try { fn(k, v); } catch (e) {} }
 }
 
-// «меньше движения» — отмеченное в форме или заданное системой
+// «меньше движения» — отмеченное в настройках быта или заданное системой
 export function reducedMotion() {
   if (prefs.motion === 'меньше') return true;
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
