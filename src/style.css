@@ -59,8 +59,12 @@ canvas#game {
   background: #0D0B0A;
   overflow: hidden;
 }
-/* оттиск целиком, с бумажным полем: на компьютере — во всю высоту, на телефоне — во всю
-   ширину; вокруг ночь — бумага ложится поверх ночи, как справка на стол (ART_BIBLE §01) */
+/* оттиск — на холсте (ui/title.js): бумажное поле срезано, картина во всю высоту
+   экрана; на узком — бока срезаются, окно держит щит и луну; на широком — края
+   протянуты в стороны и гаснут в ночь. Слова автора: «растяни картинку, не смотря
+   на рамку». #entry-art — рамка полной картины поверх холста: щит и кнопка */
+#entry-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
+#entry.art #entry-canvas { opacity: 1; }
 #entry-art {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   aspect-ratio: 864 / 1184;
@@ -68,12 +72,7 @@ canvas#game {
   width: min(96vw, calc(96dvh * 864 / 1184));
   container-type: size;
 }
-#entry-img {
-  display: block; width: 100%; height: 100%;
-  opacity: 0; transition: opacity .9s ease-out;
-  -webkit-user-drag: none; user-select: none; pointer-events: none;
-}
-#entry.art #entry-img { opacity: 1; }
+#entry.art #entry-art { transform: none; aspect-ratio: auto; }
 /* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
 #entry-afisha {
   position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
@@ -104,8 +103,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-img, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-img, #entry-btn { transition: none; } }
+html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }

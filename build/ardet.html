@@ -74,8 +74,12 @@ canvas#game {
   background: #0D0B0A;
   overflow: hidden;
 }
-/* оттиск целиком, с бумажным полем: на компьютере — во всю высоту, на телефоне — во всю
-   ширину; вокруг ночь — бумага ложится поверх ночи, как справка на стол (ART_BIBLE §01) */
+/* оттиск — на холсте (ui/title.js): бумажное поле срезано, картина во всю высоту
+   экрана; на узком — бока срезаются, окно держит щит и луну; на широком — края
+   протянуты в стороны и гаснут в ночь. Слова автора: «растяни картинку, не смотря
+   на рамку». #entry-art — рамка полной картины поверх холста: щит и кнопка */
+#entry-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
+#entry.art #entry-canvas { opacity: 1; }
 #entry-art {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   aspect-ratio: 864 / 1184;
@@ -83,12 +87,7 @@ canvas#game {
   width: min(96vw, calc(96dvh * 864 / 1184));
   container-type: size;
 }
-#entry-img {
-  display: block; width: 100%; height: 100%;
-  opacity: 0; transition: opacity .9s ease-out;
-  -webkit-user-drag: none; user-select: none; pointer-events: none;
-}
-#entry.art #entry-img { opacity: 1; }
+#entry.art #entry-art { transform: none; aspect-ratio: auto; }
 /* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
 #entry-afisha {
   position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
@@ -119,8 +118,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-img, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-img, #entry-btn { transition: none; } }
+html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
@@ -789,7 +788,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><div id="entry-art"><img id="entry-img" alt="" decoding="async"><div id="entry-afisha" aria-label="афиша выступлений"></div><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
+<div id="entry"><canvas id="entry-canvas" aria-hidden="true"></canvas><div id="entry-art"><div id="entry-afisha" aria-label="афиша выступлений"></div><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
@@ -869,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='39e2f0a · 2026-10-24';console.log('[оттиск]', '39e2f0a · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='4d4a2e7 · 2026-10-24';console.log('[оттиск]', '4d4a2e7 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -56293,7 +56292,7 @@ System.register("content/afisha", [], function (exports_167, context_167) {
 });
 System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha"], function (exports_168, context_168) {
     "use strict";
-    var loader_js_2, manifest_js_2, afisha_js_1, esc, entry, busy, shown;
+    var loader_js_2, manifest_js_2, afisha_js_1, esc, entry, busy, shown, CROP, ANCHOR_X;
     var __moduleName = context_168 && context_168.id;
     // щит: даты выступлений; нет их — «скоро»
     function fillAfisha(el) {
@@ -56305,9 +56304,54 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
             ? shows.map(s => `<div>${esc(s.date || '')}${s.date && s.place ? ' · ' : ''}${esc(s.place || '')}</div>`).join('')
             : '<span class="af-soon">COMING SOON</span>';
     }
+    function paint(im) {
+        const cv = document.getElementById('entry-canvas'), art = document.getElementById('entry-art');
+        if (!cv || !art || !im)
+            return;
+        const vw = entry.clientWidth, vh = entry.clientHeight, dpr = Math.min(3, window.devicePixelRatio || 1);
+        if (!vw || !vh)
+            return;
+        cv.width = Math.round(vw * dpr);
+        cv.height = Math.round(vh * dpr);
+        const g = cv.getContext('2d');
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.imageSmoothingQuality = 'high';
+        const W0 = im.naturalWidth, H0 = im.naturalHeight;
+        const sx0 = CROP.x0 * W0, sx1 = CROP.x1 * W0, sy0 = CROP.y0 * H0, sh = (CROP.y1 - CROP.y0) * H0, sw = sx1 - sx0;
+        const s = vh / sh, dw = sw * s;
+        let dx = (vw - dw) / 2;
+        if (dw > vw)
+            dx = Math.min(0, Math.max(vw - dw, vw / 2 - (ANCHOR_X * W0 - sx0) * s));
+        g.fillStyle = '#0D0B0A';
+        g.fillRect(0, 0, vw, vh);
+        if (dx > 0) { // бока: край оттиска протянут вдаль
+            g.save();
+            if ('filter' in g)
+                g.filter = 'blur(3px)';
+            const inset = 0.012 * W0; // столбец — чуть внутрь оттиска: мимо царапин кромки
+            g.drawImage(im, sx0 + inset, sy0, 2, sh, -4, 0, dx + 8, vh);
+            g.drawImage(im, sx1 - inset - 2, sy0, 2, sh, dx + dw - 4, 0, vw - dx - dw + 8, vh);
+            g.restore();
+            const fade = (x0, x1, a0, a1) => { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, `rgba(13,11,10,${a0})`); gr.addColorStop(1, `rgba(13,11,10,${a1})`); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), vh); };
+            fade(0, dx, 0.8, 0);
+            fade(dx + dw, vw, 0, 0.8);
+            for (const [x0, w] of [[0, dx], [dx + dw, vw - dx - dw]]) { // верх и низ протяжки — в ночь
+                const gv = g.createLinearGradient(0, 0, 0, vh);
+                gv.addColorStop(0, 'rgba(13,11,10,1)');
+                gv.addColorStop(0.1, 'rgba(13,11,10,0)');
+                gv.addColorStop(0.88, 'rgba(13,11,10,0)');
+                gv.addColorStop(1, 'rgba(13,11,10,1)');
+                g.fillStyle = gv;
+                g.fillRect(x0, 0, w, vh);
+            }
+        }
+        g.drawImage(im, sx0, sy0, sw, sh, dx, 0, dw, vh);
+        // рамка полной картины — щит и кнопка стоят на своих местах
+        Object.assign(art.style, { left: `${dx - sx0 * s}px`, top: `${-sy0 * s}px`, width: `${W0 * s}px`, height: `${H0 * s}px` });
+    }
     function initTitle({ onGo }) {
         entry = document.getElementById('entry');
-        const btn = document.getElementById('entry-btn'), img = document.getElementById('entry-img');
+        const btn = document.getElementById('entry-btn');
         if (!entry || !btn)
             return;
         fillAfisha(document.getElementById('entry-afisha'));
@@ -56316,9 +56360,13 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
                 entry.classList.add('noart');
                 return;
             }
-            if (img)
-                img.src = im.src;
             entry.classList.add('art');
+            paint(im);
+            let raf = 0;
+            const again = () => { if (raf || !shown())
+                return; raf = requestAnimationFrame(() => { raf = 0; paint(im); }); };
+            window.addEventListener('resize', again);
+            window.addEventListener('orientationchange', again);
         });
         const go = () => {
             if (busy || !shown())
@@ -56376,6 +56424,11 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
             esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
             entry = null, busy = false;
             shown = () => entry && entry.style.display !== 'none';
+            // оттиск на холсте: поле бумаги срезаем (слово автора: «растяни картинку, не смотря
+            // на рамку»); по высоте — во весь экран; узкий экран — окно держит щит и луну;
+            // широкий — края протянуты в стороны и к краю экрана гаснут в ночь
+            CROP = { x0: 0.066, x1: 0.934, y0: 0.024, y1: 0.962 }; // доли картины без бумажного поля
+            ANCHOR_X = 0.445; // середина окна на узком экране: между щитом и луной
         }
     };
 });
