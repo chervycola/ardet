@@ -4,8 +4,8 @@
 // (слово автора 24.10): настройки быта, «вспомнить дорогу», «покинуть вечер» и
 // графа подписи пока лишние — их код остался (core/prefs.js, ui/signature.js,
 // ui/worldmap.js), вернуть легко. Картину находит загрузчик (на сайте — рядом со
-// страницей, в локальной сборке — в корне репозитория); нет картины — ночь и
-// кнопка костью. Вход: щелчок, тап, Enter / пробел / E.
+// страницей, в локальной сборке — в корне репозитория). Кнопка — как была до
+// бланка: рамка, пиксельный шрифт, FALL IN. Вход: щелчок, тап, Enter / пробел / E.
 // ═══════════════════════════════════════
 import { loadAsset } from '../assets/loader.js';
 import { SCENES } from '../assets/manifest.js';
@@ -54,5 +54,4 @@ export function initTitle({ onGo }) {
     e.preventDefault();
     if (!e.repeat) go();
   });
-  if (typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches) btn.focus({ preventScroll: true });
 }

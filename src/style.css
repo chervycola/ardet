@@ -88,21 +88,25 @@ canvas#game {
   -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
 #entry.art #entry-img { opacity: 1; }
-/* fall in — среди птиц, той же чернотой, что их силуэты */
+/* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
+   птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
+   киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
   position: absolute; z-index: 2; left: 52%; top: 39.6%; transform: translate(-50%, -50%);
-  margin: 0; padding: 0.35em 0.7em; background: none; border: 0; border-radius: 0;
-  font: italic 400 clamp(20px, 4.6vh, 46px) var(--font-book); letter-spacing: 0.04em;
-  color: #0D0B0A; white-space: nowrap; cursor: pointer;
-  text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
-  transition: text-decoration-color .25s;
+  margin: 0; padding: 14px 28px; min-height: 44px; border-radius: 0;
+  font-family: var(--font-pixel); font-size: clamp(10px, 1.45vh, 15px); letter-spacing: 1px;
+  color: #D9CFB8; background: rgba(13, 11, 10, 0.72);
+  border: 1px solid #C23B2B;
+  white-space: nowrap; cursor: pointer;
+  transition: background .3s, color .3s, border-color .3s;
   -webkit-tap-highlight-color: transparent;
 }
-#entry-btn:hover, #entry-btn:focus-visible { text-decoration-color: currentColor; }
+#entry-btn:hover, #entry-btn:focus-visible { background: #C23B2B; color: #0D0B0A; border-color: #0D0B0A; }
 #entry-btn:focus { outline: none; }
-#entry.noart #entry-btn { color: #D9CFB8; }   /* картины нет — ночь и кнопка костью */
-html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img { transition: none; } }
+#entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
+#entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
+html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
