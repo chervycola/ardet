@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -728,74 +728,6 @@ export function draw_crypt(x, y) {
     tGlow.addColorStop(1,'rgba(0,0,0,0)');
     X.fillStyle=tGlow;X.fillRect(x-17,y-10,32,32);
     X.globalAlpha=1;
-}
-
-// Обрушенный мост — северный конец эстакады над трассой (world/town.js): два
-// уцелевших пролёта на опорах, средний рухнул плитой на землю; над провалом —
-// канат, истлевший до нитки; с края свисает верёвка, конец перетёрт; на
-// уцелевшей опоре — щит. Восточный пролёт держит первая опора эстакады
-// (render/arteryProps.js) — дальше пролёты идут над рельсами и трассой.
-// Бетон — краской эстакад колец; настил на 24 точки над землёй, как у них.
-const OV_C = '#5a5650', OV_D = '#3e3b36', OV_L = '#8a857a', OV_R = '#4a3420';
-export function draw_overpass(x, y) {
-    const g = y + 60, top = g - 30;                    // земля и верх настила
-    // тень настила на земле
-    X.globalAlpha = .3; X.fillStyle = '#0D0B0A';
-    X.fillRect(x + 1, g - 2, 44, 3); X.fillRect(x + 79, g - 2, 21, 3); X.globalAlpha = 1;
-    // рухнувший пролёт: плита лежит наискось, переломлена; осыпь
-    for (let i = 0; i < 28; i++) {
-      const px0 = x + 48 + i, py0 = g - 3 - Math.round(i * 0.28) - (i > 15 ? 2 : 0);
-      rect(X, px0, py0 - 4, 1, 4, i === 15 || i === 16 ? '#0D0B0A' : OV_D);
-      px(X, px0, py0 - 4, OV_L);
-    }
-    rect(X, x + 47, g - 3, 3, 3, OV_D); rect(X, x + 66, g - 2, 4, 2, OV_C); px(X, x + 66, g - 2, OV_L);
-    rect(X, x + 74, g - 3, 3, 3, OV_C); px(X, x + 54, g - 1, OV_L); px(X, x + 71, g - 1, OV_D);
-    // опоры
-    for (const ox of [6, 33]) {
-      rect(X, x + ox, top + 6, 5, 24, OV_C); rect(X, x + ox, top + 6, 1, 24, OV_L); rect(X, x + ox + 4, top + 6, 1, 24, OV_D);
-      rect(X, x + ox - 1, top + 6, 7, 2, OV_D);
-    }
-    // настил: западный пролёт до слома, восточный — консолью к опоре эстакады
-    const deck = (a, b) => {
-      rect(X, a, top, b - a, 6, OV_D); rect(X, a, top, b - a, 1, OV_L); rect(X, a, top + 5, b - a, 1, '#0D0B0A');
-      rect(X, a, top - 2, b - a, 1, OV_L);
-      for (let k = a; k < b; k += 4) px(X, k, top - 1, OV_C);
-    };
-    deck(x, x + 45); deck(x + 79, x + 100);
-    // сломы: край рваный, арматура наружу
-    rect(X, x + 45, top + 1, 1, 3, OV_D); rect(X, x + 44, top + 4, 1, 1, OV_C);
-    rect(X, x + 46, top + 2, 2, 1, OV_R); rect(X, x + 46, top + 4, 3, 1, OV_R);
-    rect(X, x + 78, top + 2, 1, 3, OV_D); rect(X, x + 76, top + 1, 2, 1, OV_R); rect(X, x + 75, top + 3, 3, 1, OV_R);
-    // арматура свисает с восточного слома — качается
-    for (let i = 0; i < 3; i++) {
-      const sw = Math.round(Math.sin(t * .005 + i * 2) * 1.4);
-      for (let k = 0; k < 7 + i * 2; k++) px(X, x + 79 + i * 3 + (k > 3 ? sw : 0), top + 6 + k, OV_R);
-    }
-    // канат над провалом — истлел до нитки: провис, местами пропал
-    X.globalAlpha = .75;
-    for (let i = 0; i <= 33; i++) {
-      const u = i / 33, yy = top - 1 + Math.round(6 * (1 - (2 * u - 1) ** 2));
-      if ((i * 7) % 11 < 2) continue;
-      px(X, x + 45 + i, yy, '#b0a284');
-    }
-    X.globalAlpha = 1;
-    // верёвка свисает с восточного края, конец перетёрт
-    const sw = Math.round(Math.sin(t * .003) * 1.2);
-    for (let k = 0; k < 14; k++) px(X, x + 91 + (k > 6 ? sw : 0), top + 6 + k, '#8a857a');
-    px(X, x + 90 + sw, top + 20, '#8a857a'); px(X, x + 92 + sw, top + 21, '#8a857a');
-    // труба под настилом, разбита у слома — капает
-    rect(X, x + 18, top + 7, 27, 2, '#241c14'); px(X, x + 18, top + 7, '#8a857a');
-    if (t % 90 < 20) {
-      const dropY = top + 9 + (t % 90) * 1.2;
-      X.globalAlpha = .5; px(X, x + 44, dropY, P.toxic); X.globalAlpha = 1;
-    }
-    // щит на уцелевшей опоре: строки не прочесть
-    rect(X, x + 3, top + 12, 11, 7, '#2a2620'); rect(X, x + 4, top + 13, 9, 5, '#b0a284');
-    for (let k = 0; k < 3; k++) rect(X, x + 5, top + 14 + k * 1.5 | 0, 7 - (k === 2 ? 3 : 0), 1, '#3a3328');
-    // на опоре — аэрозолем, киноварью, наискось
-    X.globalAlpha = .7;
-    for (let k = 0; k < 5; k++) px(X, x + 34 + k, top + 18 + (k & 1), '#C23B2B');
-    X.globalAlpha = 1;
 }
 
 export function draw_riverbed(x, y) {

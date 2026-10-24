@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='b43687d · 2026-10-24';console.log('[оттиск]', 'b43687d · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='e4e6719 · 2026-10-24';console.log('[оттиск]', 'e4e6719 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32547,7 +32547,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin"], function (exports_102, context_102) {
     "use strict";
-    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, JK_DIGIT, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER;
+    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, JK_DIGIT, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_102 && context_102.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -35864,6 +35864,176 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
     }
     exports_102("draw_banner", draw_banner);
+    function ovBody(ox, oy) {
+        const R = (lx, ly, w, h, c) => r(ox + lx, oy + ly, w, h, c);
+        const g = 60, top = 30; // земля, верх настила
+        // тени на земле под пролётами
+        context_js_9.X.globalAlpha = 0.3;
+        R(1, g - 1, 44, 2, NI);
+        R(77, g - 1, 22, 2, NI);
+        context_js_9.X.globalAlpha = 1;
+        // ── рухнувший пролёт: плита надвое — одна лежит, другая легла на восточную опору ──
+        for (let x = 44; x <= 60; x++) { // лежит, чуть наклонно
+            const yy = q(52 + (x - 44) * 0.15);
+            R(x, yy, 1, 5, OV_D);
+            R(x, yy, 1, 1, OV_L);
+            R(x, yy + 4, 1, 1, NI);
+            if (x % 4 === 1)
+                R(x, yy - 2, 1, 2, OV_L); // отбойник набок
+        }
+        for (let x = 61; x <= 75; x++) { // легла на опору
+            const yy = q(56 - (x - 61) * 0.95);
+            R(x, yy, 1, 6, OV_D);
+            R(x, yy, 1, 1, OV_L);
+            R(x, yy + 5, 1, 1, NI);
+            if (x % 3 === 0)
+                R(x, yy + 2, 1, 1, OV_C);
+        }
+        R(60, 52, 1, 6, NI);
+        R(61, 55, 1, 1, NI); // излом
+        for (const [ax, ay, dx, dy] of [[60, 54, 2, -3], [59, 56, 1, -4], [44, 53, -2, -2], [76, 42, 2, -3]])
+            for (let k = 0; k < 4; k++)
+                R(ax + q(dx * k / 3), ay + q(dy * k / 3), 1, 1, RUST); // арматура из излома
+        for (const [sx, sy, w] of [[46, 58, 3], [53, 59, 2], [58, 58, 2], [66, 58, 3], [71, 59, 2], [42, 59, 2]]) {
+            R(sx, sy, w, 1, OV_D);
+            R(sx, sy, 1, 1, OV_L);
+        } // крошка
+        // ── опоры: устой слева, западная — у провала, восточная — под обломком ──
+        const pier = (x0, w) => {
+            for (let y = top + 6; y < g; y++) {
+                R(x0, y, 1, 1, OV_L);
+                R(x0 + 1, y, w - 3, 1, OV_C);
+                R(x0 + w - 2, y, 1, 1, OV_D);
+                R(x0 + w - 1, y, 1, 1, NI);
+                if ((y & 3) === 0)
+                    for (let k = 2; k < w - 3; k += 3)
+                        R(x0 + k, y, 1, 1, OV_D); // следы опалубки
+            }
+            R(x0 - 1, top + 6, w + 2, 2, OV_D);
+            R(x0 - 1, top + 6, w + 2, 1, OV_L); // оголовок
+            for (let k = 1; k < w - 2; k++)
+                if (hh(x0, k, 171) < 0.35)
+                    R(x0 + k, top + 9, 1, 3 + q(hh(k, x0, 173) * 10), OV_D); // потёки
+            R(x0, g - 2, w, 2, OV_D);
+            R(x0 + 1, g - 3, 1, 1, MG);
+            R(x0 + w - 3, g - 3, 2, 1, MG); // мох у подошвы
+        };
+        for (let y = top; y < g; y++) {
+            R(0, y, 7, 1, y === top ? OV_L : OV_C);
+            R(0, y, 1, 1, OV_L);
+            R(6, y, 1, 1, OV_D);
+        } // устой
+        for (let y = top + 8; y < g; y += 7)
+            R(0, y, 7, 1, OV_D);
+        pier(31, 12);
+        pier(78, 8);
+        // ── настил: западный пролёт до провала и восточный — к эстакаде; кромки обломаны ──
+        const deck = (a, b) => {
+            for (let x = a; x <= b; x++) {
+                R(x, top, 1, 6, OV_D);
+                R(x, top, 1, 1, OV_L);
+                R(x, top + 5, 1, 1, NI); // настил, верх на свету, низ в тени
+                R(x, top - 2, 1, 2, OV_L); // отбойник
+                R(x, top + 6, 1, 1, NI); // тень под настилом
+                if (x % 9 === 4)
+                    R(x, top + 1, 1, 4, OV_C); // шов плит
+            }
+        };
+        deck(0, 42);
+        deck(77, 99);
+        for (let k = 0; k < 6; k++) {
+            R(43, top + k, 1 + (hh(k, 1, 175) < 0.5 ? 1 : 0), 1, k & 1 ? OV_C : OV_D);
+            R(76 - (hh(k, 2, 177) < 0.5 ? 1 : 0), top + k, 1, 1, k & 1 ? OV_D : OV_C);
+        }
+        R(42, top - 2, 1, 1, NI);
+        R(77, top - 1, 1, 1, NI); // отбойник оборван
+        // ── столб со щитом на краю пролёта; ниже — отдельная табличка, новее ──
+        R(34, 17, 2, 11, S2);
+        R(34, 17, 1, 11, S1);
+        R(33, 27, 4, 1, K3);
+        R(27, 8, 16, 9, K2);
+        R(28, 9, 14, 7, L2);
+        R(28, 9, 14, 1, L1);
+        R(41, 10, 1, 6, S2);
+        for (let k = 0; k < 4; k++)
+            for (let x = 29; x < 41; x++)
+                if (hh(x, k, 179) < (k === 0 ? 0.85 : 0.6))
+                    R(x, 10 + k + (k > 0 ? 1 : 0), 1, 1, k === 0 ? K1 : K3); // строки — не прочесть
+        R(30, 19, 10, 5, K2);
+        R(31, 20, 8, 3, L1);
+        R(31, 20, 8, 1, BO);
+        R(31, 20, 1, 1, AS);
+        R(38, 20, 1, 1, AS); // табличка на двух винтах
+        for (let x = 32; x < 38; x++)
+            if (hh(x, 9, 181) < 0.7)
+                R(x, 22, 1, 1, K2);
+        // ── на западной опоре: аэрозолем киноварь, ниже маркером, рядом записка в плёнке ──
+        for (const [gx, gy] of [[32, 40], [33, 39], [34, 40], [35, 41], [36, 39], [37, 40], [38, 39], [39, 41], [40, 40], [33, 43], [34, 42], [35, 43], [37, 43], [38, 42], [39, 43]])
+            R(gx, gy, 1, 1, KV);
+        R(36, 44, 1, 2, KV); // подтёк
+        for (const [gx, gy] of [[33, 47], [34, 46], [35, 47], [36, 47], [38, 46], [39, 47]])
+            R(gx, gy, 1, 1, NI); // маркером — другой рукой
+        R(37, 50, 4, 5, L1);
+        R(37, 50, 4, 1, BO);
+        R(40, 51, 1, 4, L2);
+        R(37, 50, 1, 1, AS);
+        R(38, 52, 2, 1, K3);
+        R(38, 53, 1, 1, K3); // записка: плёнка бликует, строки ровные
+    }
+    function draw_overpass(x, y) {
+        if (OV_CANVAS === null) {
+            let c = typeof document !== 'undefined' && document.createElement ? document.createElement('canvas') : false;
+            if (c && typeof c.getContext === 'function') {
+                c.width = OV_W;
+                c.height = OV_H;
+                const prev = context_js_9.X;
+                context_js_9.setCtx(c.getContext('2d'));
+                try {
+                    ovBody(-OV_X0, -OV_Y0);
+                }
+                finally {
+                    context_js_9.setCtx(prev);
+                }
+            }
+            else
+                c = false;
+            OV_CANVAS = c;
+        }
+        const ox = q(x), oy = q(y);
+        if (OV_CANVAS)
+            context_js_9.X.drawImage(OV_CANVAS, ox + OV_X0, oy + OV_Y0);
+        else
+            ovBody(ox, oy);
+        // канат над провалом: у краёв две пряди, к середине — нитка с пропусками; чуть ходит
+        const sw = Math.sin(time_js_22.t * 0.004) * (0.6 + wind_js_13.wind.s);
+        for (let k = 0; k <= 32; k++) {
+            const u = k / 32, cx = ox + 44 + k, cy = oy + 29 + q(6 * Math.sin(Math.PI * u) + sw * Math.sin(Math.PI * u));
+            const edge = Math.min(k, 32 - k);
+            if (edge > 6 && hh(k, 1, 183) < 0.3)
+                continue; // истлел
+            r(cx, cy, 1, 1, edge < 4 ? SINGE : L2);
+            if (edge < 4)
+                r(cx, cy + 1, 1, 1, BR2); // вторая прядь у краёв
+        }
+        // верёвка с края у опоры: узел на отбойнике, конец перетёрт, качается
+        r(ox + 43, oy + 28, 2, 2, SINGE);
+        r(ox + 44, oy + 27, 1, 1, L2);
+        r(ox + 42, oy + 29, 1, 1, BR2);
+        const vs = Math.sin(time_js_22.t * 0.003 + 1) * (0.8 + wind_js_13.wind.s);
+        for (let k = 0; k < 18; k++)
+            r(ox + 44 + q(vs * k / 18), oy + 30 + k, 1, 1, k & 1 ? SINGE : L2);
+        const ex = ox + 44 + q(vs), ey = oy + 48;
+        r(ex - 1, ey, 1, 2, L2);
+        r(ex, ey, 1, 1, SINGE);
+        r(ex + 1, ey + 1, 1, 1, L2); // перетёрт
+        // арматура с обломанных кромок — покачивается
+        for (let i = 0; i < 3; i++) {
+            const sx = ox + 77 + i * 3, len = 4 + i * 2, d = q(Math.sin(time_js_22.t * 0.005 + i * 2) * 1.2);
+            for (let k = 0; k < len; k++)
+                r(sx + (k > len / 2 ? d : 0), oy + 36 + k, 1, 1, RUST);
+        }
+    }
+    exports_102("draw_overpass", draw_overpass);
     return {
         setters: [
             function (context_js_9_1) {
@@ -36206,12 +36376,30 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             brushWordW = (txt, sc) => [...txt].reduce((a, ch) => a + (ch === ' ' ? 12 : BRUSH_GLYPH[ch][0] + 6) * sc, 0) - 6 * sc;
             TARPS = [null, null]; // холсты полотна: целое и со швом (нет — по пикселю)
             BANNER = { id: 'banner' };
+            // ── ОБРУШЕННЫЙ МОСТ ──
+            // «Эстакада. Средний пролёт обрушен. Над провалом висит канат, истлевший до нитки.
+            // На уцелевшем столбе — щит: „ПЕРЕХОД НАД ПРОПАСТЬЮ…" Ниже, на отдельной табличке:
+            // „Сдача объекта переносится. Сверхчеловек задерживается".» Использовать: «С моста
+            // свисает верёвка. Узел морской. Конец перетёрт. На бетонной опоре, аэрозолем:
+            // „ПРЫГАТЬ ОБРАТНО НЕЛЬЗЯ". Рядом, маркером: „Можно. Но больно." Там же,
+            // ламинированная записка…» Северный конец эстакады над трассой (world/town.js):
+            // устой слева, западный пролёт на опоре, средний рухнул — плита на земле надвое,
+            // одна половина легла на опору; восточный пролёт держит первая опора эстакады
+            // (render/arteryProps.js) — настил на 24 над землёй, толщиной 6, отбойник в два
+            // ряда, как у неё. На краю пролёта — столб со щитом и табличкой (строк не
+            // прочесть); над провалом канат — у краёв в две пряди, к середине нитка; с края
+            // у опоры свисает верёвка — узел на отбойнике, конец перетёрт; на опоре —
+            // киноварью баллончиком, ниже маркером, рядом записка в плёнке. Тело рисуется в
+            // мировых точках (тест места) — в холст запекается со сдвигом.
+            OV_C = '#5a5650', OV_D = '#3e3b36', OV_L = '#8a857a'; // бетон — краской эстакад колец
+            OV_X0 = -1, OV_Y0 = 6, OV_W = 104, OV_H = 56; // запечённая область
+            OV_CANVAS = null;
         }
     };
 });
 System.register("sprites/locations/index", ["render/draw", "render/context", "core/time", "world/sky", "core/playerRef", "world/locations", "sprites/locations/canon"], function (exports_103, context_103) {
     "use strict";
-    var draw_js_6, context_js_10, time_js_23, sky_js_3, playerRef_js_4, locations_js_3, P, npcProximity, OV_C, OV_D, OV_L, OV_R;
+    var draw_js_6, context_js_10, time_js_23, sky_js_3, playerRef_js_4, locations_js_3, P, npcProximity;
     var __moduleName = context_103 && context_103.id;
     function drawBuildingSilhouette(x, y, w, h, roofColor) {
         draw_js_6.rect(context_js_10.X, x, y, w, h, P.dstone);
@@ -36963,94 +37151,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_10.X.globalAlpha = 1;
     }
     exports_103("draw_crypt", draw_crypt);
-    function draw_overpass(x, y) {
-        const g = y + 60, top = g - 30; // земля и верх настила
-        // тень настила на земле
-        context_js_10.X.globalAlpha = .3;
-        context_js_10.X.fillStyle = '#0D0B0A';
-        context_js_10.X.fillRect(x + 1, g - 2, 44, 3);
-        context_js_10.X.fillRect(x + 79, g - 2, 21, 3);
-        context_js_10.X.globalAlpha = 1;
-        // рухнувший пролёт: плита лежит наискось, переломлена; осыпь
-        for (let i = 0; i < 28; i++) {
-            const px0 = x + 48 + i, py0 = g - 3 - Math.round(i * 0.28) - (i > 15 ? 2 : 0);
-            draw_js_6.rect(context_js_10.X, px0, py0 - 4, 1, 4, i === 15 || i === 16 ? '#0D0B0A' : OV_D);
-            draw_js_6.px(context_js_10.X, px0, py0 - 4, OV_L);
-        }
-        draw_js_6.rect(context_js_10.X, x + 47, g - 3, 3, 3, OV_D);
-        draw_js_6.rect(context_js_10.X, x + 66, g - 2, 4, 2, OV_C);
-        draw_js_6.px(context_js_10.X, x + 66, g - 2, OV_L);
-        draw_js_6.rect(context_js_10.X, x + 74, g - 3, 3, 3, OV_C);
-        draw_js_6.px(context_js_10.X, x + 54, g - 1, OV_L);
-        draw_js_6.px(context_js_10.X, x + 71, g - 1, OV_D);
-        // опоры
-        for (const ox of [6, 33]) {
-            draw_js_6.rect(context_js_10.X, x + ox, top + 6, 5, 24, OV_C);
-            draw_js_6.rect(context_js_10.X, x + ox, top + 6, 1, 24, OV_L);
-            draw_js_6.rect(context_js_10.X, x + ox + 4, top + 6, 1, 24, OV_D);
-            draw_js_6.rect(context_js_10.X, x + ox - 1, top + 6, 7, 2, OV_D);
-        }
-        // настил: западный пролёт до слома, восточный — консолью к опоре эстакады
-        const deck = (a, b) => {
-            draw_js_6.rect(context_js_10.X, a, top, b - a, 6, OV_D);
-            draw_js_6.rect(context_js_10.X, a, top, b - a, 1, OV_L);
-            draw_js_6.rect(context_js_10.X, a, top + 5, b - a, 1, '#0D0B0A');
-            draw_js_6.rect(context_js_10.X, a, top - 2, b - a, 1, OV_L);
-            for (let k = a; k < b; k += 4)
-                draw_js_6.px(context_js_10.X, k, top - 1, OV_C);
-        };
-        deck(x, x + 45);
-        deck(x + 79, x + 100);
-        // сломы: край рваный, арматура наружу
-        draw_js_6.rect(context_js_10.X, x + 45, top + 1, 1, 3, OV_D);
-        draw_js_6.rect(context_js_10.X, x + 44, top + 4, 1, 1, OV_C);
-        draw_js_6.rect(context_js_10.X, x + 46, top + 2, 2, 1, OV_R);
-        draw_js_6.rect(context_js_10.X, x + 46, top + 4, 3, 1, OV_R);
-        draw_js_6.rect(context_js_10.X, x + 78, top + 2, 1, 3, OV_D);
-        draw_js_6.rect(context_js_10.X, x + 76, top + 1, 2, 1, OV_R);
-        draw_js_6.rect(context_js_10.X, x + 75, top + 3, 3, 1, OV_R);
-        // арматура свисает с восточного слома — качается
-        for (let i = 0; i < 3; i++) {
-            const sw = Math.round(Math.sin(time_js_23.t * .005 + i * 2) * 1.4);
-            for (let k = 0; k < 7 + i * 2; k++)
-                draw_js_6.px(context_js_10.X, x + 79 + i * 3 + (k > 3 ? sw : 0), top + 6 + k, OV_R);
-        }
-        // канат над провалом — истлел до нитки: провис, местами пропал
-        context_js_10.X.globalAlpha = .75;
-        for (let i = 0; i <= 33; i++) {
-            const u = i / 33, yy = top - 1 + Math.round(6 * (1 - (2 * u - 1) ** 2));
-            if ((i * 7) % 11 < 2)
-                continue;
-            draw_js_6.px(context_js_10.X, x + 45 + i, yy, '#b0a284');
-        }
-        context_js_10.X.globalAlpha = 1;
-        // верёвка свисает с восточного края, конец перетёрт
-        const sw = Math.round(Math.sin(time_js_23.t * .003) * 1.2);
-        for (let k = 0; k < 14; k++)
-            draw_js_6.px(context_js_10.X, x + 91 + (k > 6 ? sw : 0), top + 6 + k, '#8a857a');
-        draw_js_6.px(context_js_10.X, x + 90 + sw, top + 20, '#8a857a');
-        draw_js_6.px(context_js_10.X, x + 92 + sw, top + 21, '#8a857a');
-        // труба под настилом, разбита у слома — капает
-        draw_js_6.rect(context_js_10.X, x + 18, top + 7, 27, 2, '#241c14');
-        draw_js_6.px(context_js_10.X, x + 18, top + 7, '#8a857a');
-        if (time_js_23.t % 90 < 20) {
-            const dropY = top + 9 + (time_js_23.t % 90) * 1.2;
-            context_js_10.X.globalAlpha = .5;
-            draw_js_6.px(context_js_10.X, x + 44, dropY, P.toxic);
-            context_js_10.X.globalAlpha = 1;
-        }
-        // щит на уцелевшей опоре: строки не прочесть
-        draw_js_6.rect(context_js_10.X, x + 3, top + 12, 11, 7, '#2a2620');
-        draw_js_6.rect(context_js_10.X, x + 4, top + 13, 9, 5, '#b0a284');
-        for (let k = 0; k < 3; k++)
-            draw_js_6.rect(context_js_10.X, x + 5, top + 14 + k * 1.5 | 0, 7 - (k === 2 ? 3 : 0), 1, '#3a3328');
-        // на опоре — аэрозолем, киноварью, наискось
-        context_js_10.X.globalAlpha = .7;
-        for (let k = 0; k < 5; k++)
-            draw_js_6.px(context_js_10.X, x + 34 + k, top + 18 + (k & 1), '#C23B2B');
-        context_js_10.X.globalAlpha = 1;
-    }
-    exports_103("draw_overpass", draw_overpass);
     function draw_riverbed(x, y) {
         // Animated puddle reflection
         const shimmer = Math.sin(time_js_23.t * .004) * .3 + .3;
@@ -37277,7 +37377,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_lake": canon_js_1_1["draw_lake"],
                     "draw_altar": canon_js_1_1["draw_altar"],
                     "draw_dumpster": canon_js_1_1["draw_dumpster"],
-                    "draw_banner": canon_js_1_1["draw_banner"]
+                    "draw_banner": canon_js_1_1["draw_banner"],
+                    "draw_overpass": canon_js_1_1["draw_overpass"]
                 });
             }
         ],
@@ -37304,13 +37405,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                 parchment: '#e8d8b0',
             };
             npcProximity = 0;
-            // Обрушенный мост — северный конец эстакады над трассой (world/town.js): два
-            // уцелевших пролёта на опорах, средний рухнул плитой на землю; над провалом —
-            // канат, истлевший до нитки; с края свисает верёвка, конец перетёрт; на
-            // уцелевшей опоре — щит. Восточный пролёт держит первая опора эстакады
-            // (render/arteryProps.js) — дальше пролёты идут над рельсами и трассой.
-            // Бетон — краской эстакад колец; настил на 24 точки над землёй, как у них.
-            OV_C = '#5a5650', OV_D = '#3e3b36', OV_L = '#8a857a', OV_R = '#4a3420';
         }
     };
 });
