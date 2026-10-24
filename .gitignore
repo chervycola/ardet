@@ -1,2 +1,5 @@
+# Общие правила для всего монорепо. Правила сборок — в .gitignore разделов
+# (04_ardet/, 03_pedals/site/, 03_pedals/04_sequencer_lithoseq/lithoseq/, 03_pedals/00_series/docs/).
+# build/ здесь не игнорируется: в 04_ardet/build/ закоммичена играбельная сборка.
 node_modules/
-build/
+.DS_Store
