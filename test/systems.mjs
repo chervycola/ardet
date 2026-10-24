@@ -3013,6 +3013,69 @@ setCtx(ctx);
   });
 }
 
+// ═══ ВНИМАНИЕ ОЖИВЛЯЕТ МЕХАНИЗМЫ (world/attention.js; Платонов) ═══
+{
+  const AT = await imp('world/attention.js');
+  const MCH = await imp('world/mechanisms.js');
+  const HG = await imp('world/hang.js');
+  const PR = await imp('core/playerRef.js');
+  const thing = { id: 'test_vane_house', x: 1000, y: 1000, w: 40, h: 30 };
+  test('внимание: три раза — узнаёт, семь — отвечает в полную; лента отнимает половину', () => {
+    AT._resetAttention();
+    eq(AT.levelOf(thing.id), 0, 'с порога знаком');
+    for (let i = 0; i < 3; i++) AT.noteAttention(thing);
+    eq(AT.levelOf(thing.id), 1, 'после трёх');
+    for (let i = 0; i < 4; i++) AT.noteAttention(thing);
+    eq(AT.levelOf(thing.id), 2, 'после семи');
+    AT.forget();
+    eq(AT.levelOf(thing.id), 1, 'после падения в брейнрот');
+    AT.noteAttention({ id: 'u', x: 1, y: 1, under: true });
+    eq(AT.pointsOf('u'), 0, 'изнанка копит внимание');
+  });
+  test('внимание: отвечает только знакомое и только тому, кто рядом; сохранение помнит', () => {
+    AT._resetAttention();
+    for (let i = 0; i < 7; i++) AT.noteAttention(thing);
+    const near = { x: 1000, y: 1020 }, far = { x: 1600, y: 1600 };
+    assert(AT.respond(1020, 1000, near), 'рядом не отвечает');
+    eq(AT.respond(1020, 1000, far), null, 'отвечает издалека');
+    eq(AT.respond(3000, 3000, { x: 3000, y: 3000 }), null, 'отвечает незнакомое');
+    const saved = AT.saveAttention();
+    AT._resetAttention();
+    AT.loadAttention(saved, [thing]);
+    eq(AT.levelOf(thing.id), 2, 'сохранение не помнит');
+  });
+  test('внимание: флюгер у знакомой вещи поворачивается остриём к страннику, а не к ветру', () => {
+    AT._resetAttention();
+    for (let i = 0; i < 7; i++) AT.noteAttention(thing);
+    const player = { x: 1100, y: 980, vx: 0, vy: 0 };   // справа от флюгера
+    PR.setPlayer(player);
+    const ctx = { fillRect() {}, fillStyle: '' };
+    let m;
+    for (let i = 0; i < 900; i++) { m = MCH.vane(ctx, 'vane:test', 1020, 990, '#000', '#fff'); MCH.stepMechs(); }
+    const want = Math.atan2(player.y + 20 - 990, player.x + 6 - 1020);
+    const off = Math.abs(Math.atan2(Math.sin(m.a - want), Math.cos(m.a - want)));
+    assert(off < 0.6, `флюгер смотрит мимо: ${off.toFixed(2)} рад`);
+  });
+  test('внимание: колокол у знакомой вещи качнётся навстречу; кран кольца «сейчас» — нет', () => {
+    AT._resetAttention(); HG._reset();
+    for (let i = 0; i < 7; i++) AT.noteAttention(thing);
+    const far = { x: 3000, y: 3000, vx: 0, vy: 0 };
+    const bell = HG.hang('chime:test', 1020, 990, 6, { gy: 1030, r: 2 });
+    const crane = HG.hang('crane:test', 1030, 990, 6, { gy: 1030, r: 2 });
+    for (let i = 0; i < 200; i++) { HG.hang('chime:test', 1020, 990, 6, { gy: 1030 }); HG.hang('crane:test', 1030, 990, 6, { gy: 1030 }); HG.stepHangs(far); }
+    const b0 = HG.tipOf(bell).x, c0 = HG.tipOf(crane).x;
+    const near = { x: 1060, y: 1006, vx: 0, vy: 0 };                    // подошёл справа, не задевая
+    let bmax = 0, cmax = 0;
+    for (let i = 0; i < 40; i++) {
+      HG.hang('chime:test', 1020, 990, 6, { gy: 1030 }); HG.hang('crane:test', 1030, 990, 6, { gy: 1030 });
+      HG.stepHangs(near);
+      bmax = Math.max(bmax, HG.tipOf(bell).x - b0); cmax = Math.max(cmax, Math.abs(HG.tipOf(crane).x - c0));
+    }
+    assert(bmax > 0.3, `колокол не качнулся навстречу (${bmax.toFixed(2)})`);
+    assert(cmax < 0.05, `кран ответил вниманию (${cmax.toFixed(2)})`);
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

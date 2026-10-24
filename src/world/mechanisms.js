@@ -17,10 +17,16 @@
 //                  тяжёлое, а ворот сам поскрипывает на пол-оборота, когда
 //                  проходишь мимо (world/townWell.js).
 // Считаются только видимые (как подвесы); ворот — пока работает.
+// Внимание оживляет (world/attention.js): к знакомому страннику флюгер
+// поворачивается сам, маховик прибавляет ход и выдыхает навстречу, вокзальные
+// часы ждут — минутная не прыгает, пока он рядом; ворот кивает. Ветряк
+// кольца «сейчас» отвечает только ветру — новое внимания не знает.
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
 import { emit } from '../render/particles.js';
 import { getCtx } from '../audio/audio.js';
+import { respond } from './attention.js';
+import { getPlayer } from '../core/playerRef.js';
 
 const REG = new Map();
 let frame = 0;
@@ -77,8 +83,11 @@ export function vane(ctx, key, x, y, col, head) {
 }
 function stepVane(m) {
   const w = wind.at(m.x, m.y + 40);
+  const r = respond(m.x, m.y, getPlayer());
+  const kw = r ? (r.lv === 2 ? 0.25 : 0.6) : 1;          // знакомый странник рядом — ветер ему уступает
   const d = wrap(wind.ang + Math.PI - m.a);
-  m.w += 0.004 * (0.25 + w.s) * Math.sin(d) - m.w * 0.06 + (Math.random() - 0.5) * 0.006 * w.s;
+  m.w += kw * 0.004 * (0.25 + w.s) * Math.sin(d) - m.w * 0.06 + (Math.random() - 0.5) * 0.006 * w.s * kw;
+  if (r) m.w += (r.lv === 2 ? 0.009 : 0.004) * Math.sin(wrap(Math.atan2(r.dy, r.dx) - m.a));   // остриём — на него
   m.a += m.w;
 }
 
@@ -101,6 +110,7 @@ export function rotor(ctx, key, hx, hy, R, col) {
   ctx.fillStyle = col.hub; ctx.fillRect(hx - 1, hy - 1, 2, 2);
   return m;
 }
+// ветряк кольца «сейчас» — новое: отвечает ветру и графику, внимание его не касается
 function stepRotor(m) {
   const w = wind.at(m.x, m.y + 70);
   const target = wind.ang + Math.PI;
@@ -119,8 +129,12 @@ export function flywheel(key, o) {
   return m;
 }
 function stepFly(m) {
+  // знакомый странник подошёл — маховик выдыхает навстречу и прибавляет ход
+  const r = m.puff ? respond(m.puff.x, m.puff.y, getPlayer()) : null;
+  if (r && !m.near) emit(m.puff.x, m.puff.y, 3 + r.lv * 2, { color: '#8A8D8F', speed: 0.3, life: 70, spread: 0.9, angle: -Math.PI / 2, windK: 0.9 });
+  m.near = !!r;
   // два хода поршня на оборот шкива: на каждом — толчок, между — провал
-  const om = 0.035 * (1 + 0.12 * Math.sin(2 * m.thp));
+  const om = 0.035 * (1 + 0.12 * Math.sin(2 * m.thp)) * (r ? 1 + 0.3 * r.lv : 1);
   const prev = m.thp;
   m.th += om;
   m.thp += om * m.R / m.r;                          // ремень не проскальзывает: ωr = ωR·R/r
@@ -133,10 +147,20 @@ function stepFly(m) {
 // время — настоящее, часов игрока; «железнодорожные» прыгают раз в минуту,
 // «местные» идут плавно и отстают: солнце здесь встаёт по-своему
 const LOCAL_LAG = 23;                                // минут
+// знакомому страннику вокзальные часы слышны (на смене минуты — щелчок), а узнавшие
+// его совсем — ждут: минутная не прыгает, пока он рядом; ушёл — догоняет разом
+const HOLD = new Map(), LASTMIN = new Map();
 export function stationClock(ctx, cx, cy, kind, col) {
   const d = new Date();
   let min = d.getHours() * 60 + d.getMinutes();
   if (kind === 'local') min += d.getSeconds() / 60 - LOCAL_LAG;
+  else {
+    const key = cx + ':' + cy, r = respond(cx, cy, getPlayer());
+    if (r && LASTMIN.has(key) && LASTMIN.get(key) !== min && !HOLD.has(key)) tick(1800, 'bandpass', 0.03, 0.04);
+    LASTMIN.set(key, min);
+    if (r && r.lv === 2) { if (!HOLD.has(key)) HOLD.set(key, min); min = HOLD.get(key); }
+    else HOLD.delete(key);
+  }
   const am = (min % 60) / 60 * TAU, ah = ((min / 60) % 12) / 12 * TAU;
   line(ctx, col, cx, cy, cx + Math.sin(am) * 2.4, cy - Math.cos(am) * 2.4);
   line(ctx, col, cx, cy, cx + Math.sin(ah) * 1.5, cy - Math.cos(ah) * 1.5);
@@ -204,7 +228,14 @@ function stepWell(m) {
 
 export function stepMechs() {
   frame++;
+  const P = getPlayer();
   for (const [k, m] of REG) {
+    // простой колодец (не тот, что у площади: тот кивает всем) кивает знакомому страннику
+    if (m.kind === 'well' && !m.heavy && m.x !== undefined) {
+      const r = respond(m.x, m.y, P, 60);
+      if (r && !m.near && m.st === 'idle') { m.st = 'nod'; m.nod = 0; m.c0 = m.crank; }
+      m.near = !!r;
+    }
     const active = m.kind === 'well' && m.st !== 'idle';
     if (!active && frame - m.seen > 30) { if (frame - m.seen > 3600 && m.kind !== 'well') REG.delete(k); continue; }
     if (m.kind === 'vane') stepVane(m);

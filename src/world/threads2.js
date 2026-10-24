@@ -42,6 +42,7 @@ function drawBoard(ctx, loc, t) {            // табло без времени
 function drawWell(ctx, loc) {                // колодец с воротом: крутишь — ведро идёт вверх
   const x = loc.x + loc.w / 2, gy = loc.y + loc.h;
   const m = well(`well:${loc.id}`);
+  m.x = x; m.y = gy - 10;                               // где ворот: знакомому страннику кивает (world/attention.js)
   shadow(ctx, x, gy, 18);
   R(ctx, x - 7, gy - 20, 1, 12, D1); R(ctx, x + 6, gy - 20, 1, 12, D1);
   R(ctx, x - 8, gy - 21, 16, 2, D2); R(ctx, x - 4, gy - 17, 8, 2, D3);   // крыша и ворот

@@ -106,6 +106,7 @@ import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel } from './world/brainrot.js';
 import { pullVector } from './world/feedPull.js';
 import { placeOf } from './world/placeStamp.js';
+import { noteAttention, stepAttention, forget as forgetAttention, saveAttention, loadAttention } from './world/attention.js';
 // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
 function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.ring <= EPOCHS.length ? EPOCHS[p.ring - 1].id + ':' + p.side : null; }
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
@@ -251,6 +252,7 @@ if (savedData) {
   if (savedData.well) loadTownWell(savedData.well);
   if (savedData.looks) loadRelook(savedData.looks);
   if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
+  if (savedData.attn) loadAttention(savedData.attn, locations);
 }
 // без пропуска Шута — только в городке: старое сохранение (до замка) или тестовый адрес
 // без дома (?nohouse, ?under) не начинают странствие за изгородью (сверка обходов, 24.10)
@@ -268,6 +270,7 @@ if (!STREAM) startAutoSave(() => ({
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
+  attn: saveAttention(),
   observersSeen: Array.from(flags.observersSeen),
   collectedLore: getCollectedIds(),
   graffiti: getGraffiti(),
@@ -1647,6 +1650,7 @@ function updateWorldSystems() {
   // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
   if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
   if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); }   // обмер — ногами
+  stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving);
@@ -1972,8 +1976,10 @@ function lookTags() {
   if (wind.s > 0.45) tags.add('wind');
   return tags;
 }
-events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) noteLook(loc.id); });
-events.on('location.use', loc => { if (loc && loc.id) noteUse(loc.id); });
+events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) { noteLook(loc.id); noteAttention(loc); } });
+events.on('location.use', loc => { if (loc && loc.id) { noteUse(loc.id); noteAttention(loc); } });
+// лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
+events.on('brainrot.freeze', forgetAttention);
 setRelook(loc => relookText(loc.id, lookTags()));
 
 // ═══ EVENT HANDLERS ═══

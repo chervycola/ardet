@@ -12,6 +12,7 @@
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
 import { getCtx } from '../audio/audio.js';
+import { respond } from './attention.js';
 
 const G = 0.12;                  // тяжесть, точек за шаг²
 const REG = new Map();
@@ -47,6 +48,7 @@ export function hang(key, ax, ay, len, opt = {}) {
       sail: opt.sail ?? 0.03, damp: opt.damp ?? 0.995, gy: opt.gy ?? ay + len,
       r: opt.r ?? 2, group: opt.group || null, tone: opt.tone || 0,
       pin2: opt.pin2 || null, gy2: opt.gy2 ?? null, lift: opt.lift || null,
+      fresh: key.startsWith('crane:'),        // кран кольца «сейчас» — новое: внимания не знает
     };
     REG.set(key, h);
   }
@@ -89,6 +91,12 @@ function sim(h, player) {
         p.x += (player.vx || 0) * 0.45 + (p.x < player.x + 6 ? -0.2 : 0.2);
       }
     }
+  }
+  // знакомая вещь качнётся навстречу (world/attention.js) — раз на каждый приход
+  if (player && !h.fresh) {
+    const r = respond(h.ax, h.gy, player, 80);
+    if (r && !h.met) { const p = h.pin2 ? P[n >> 1] : P[n - 1]; p.ox -= Math.sign(r.dx || 1) * 0.35 * r.lv; }
+    h.met = !!r || (h.met && Math.hypot(player.x + 6 - h.ax, player.y + 20 - h.gy) < 120);
   }
   // связи: звенья держат длину, опора прибита
   const seg = h.len / h.segs;
