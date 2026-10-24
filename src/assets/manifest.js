@@ -27,7 +27,7 @@ export const PORTRAITS = {
 
 // Full-screen / threshold images.
 export const SCENES = {
-  entry:  'assets/scenes/entry.webp',  // заглавная: красная луна над городком, картина автора (ui/title.js)
+  entry:  'assets/scenes/entry.webp',  // заглавная: оттиск автора — красная луна, щит-афиша, городок (ui/title.js)
   ending: 'assets/scenes/ending.png',  // drawn during the ending sequence
 };
 

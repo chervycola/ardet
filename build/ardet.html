@@ -68,48 +68,47 @@ canvas#game {
   display: block;
 }
 
-/* ── Entry screen: заглавная — картина автора во всю высоту, «fall in» среди птиц (ui/title.js) ── */
+/* ── Entry screen: заглавная — оттиск автора на ночи: красная луна, щит-афиша, «FALL IN» среди птиц (ui/title.js) ── */
 #entry {
   position: fixed; inset: 0; z-index: 100;
   background: #0D0B0A;
   overflow: hidden;
 }
-/* сама картина: во всю высоту экрана, по центру; на узком телефоне бока срезаются, луна целиком */
+/* оттиск целиком, с бумажным полем: на компьютере — во всю высоту, на телефоне — во всю
+   ширину; вокруг ночь — бумага ложится поверх ночи, как справка на стол (ART_BIBLE §01) */
 #entry-art {
-  position: absolute; top: 0; bottom: 0; left: 50%;
-  aspect-ratio: 1497 / 2000; height: 100%;
-  transform: translateX(-50%);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  aspect-ratio: 864 / 1184;
+  width: min(96vw, calc(96vh * 864 / 1184));
+  width: min(96vw, calc(96dvh * 864 / 1184));
+  container-type: size;
 }
-/* по бокам на широком экране — край картины, протянутый вдаль: зарево горизонта не
-   обрывается рамкой, к краю экрана гаснет в ночь */
-#entry-art::before, #entry-art::after {
-  content: ''; position: absolute; top: 0; bottom: 0; width: 100vw;
-  background: var(--entry-art, none) no-repeat;
-  background-size: 100000% 100%;
-  filter: blur(4px);
-  opacity: 0; transition: opacity .9s ease-out;
-}
-#entry-art::before { right: 96%; background-position: 0 50%;
-  -webkit-mask-image: linear-gradient(to left, #000 4vw, transparent 85%); mask-image: linear-gradient(to left, #000 4vw, transparent 85%); }
-#entry-art::after { left: 96%; background-position: 100% 50%;
-  -webkit-mask-image: linear-gradient(to right, #000 4vw, transparent 85%); mask-image: linear-gradient(to right, #000 4vw, transparent 85%); }
-#entry.art #entry-art::before, #entry.art #entry-art::after { opacity: 1; }
 #entry-img {
-  position: relative; z-index: 1;
-  display: block; width: 100%; height: 100%; object-fit: cover;
+  display: block; width: 100%; height: 100%;
   opacity: 0; transition: opacity .9s ease-out;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
   -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
 #entry.art #entry-img { opacity: 1; }
+/* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
+#entry-afisha {
+  position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
+  padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
+  font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
+  font-size: 11px; font-size: 1.6cqh; line-height: 1.5;
+  pointer-events: none; user-select: none;
+}
+#entry.art #entry-afisha { display: flex; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.05cqh; }
+#entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
-  position: absolute; z-index: 2; left: 52%; top: 39.6%; transform: translate(-50%, -50%);
-  margin: 0; padding: 14px 28px; min-height: 44px; border-radius: 0;
-  font-family: var(--font-pixel); font-size: clamp(10px, 1.45vh, 15px); letter-spacing: 1px;
+  position: absolute; z-index: 2; left: 51.5%; top: 41.5%; transform: translate(-50%, -50%);
+  margin: 0; padding: 1.35em 2.7em; min-height: 44px; border-radius: 0;
+  font-family: var(--font-pixel); letter-spacing: 1px;
+  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.5cqh, 15px);
   color: #D9CFB8; background: rgba(13, 11, 10, 0.72);
   border: 1px solid #C23B2B;
   white-space: nowrap; cursor: pointer;
@@ -120,8 +119,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img, #entry-btn { transition: none; } }
+html.rm #entry-img, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-img, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
@@ -790,7 +789,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><div id="entry-art"><img id="entry-img" alt="" decoding="async"><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
+<div id="entry"><div id="entry-art"><img id="entry-img" alt="" decoding="async"><div id="entry-afisha" aria-label="афиша выступлений"></div><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
@@ -870,7 +869,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='a03ec5d · 2026-10-24';console.log('[оттиск]', 'a03ec5d · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='18fdee3 · 2026-10-24';console.log('[оттиск]', '18fdee3 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -36483,7 +36482,7 @@ System.register("assets/manifest", [], function (exports_104, context_104) {
             });
             // Full-screen / threshold images.
             exports_104("SCENES", SCENES = {
-                entry: 'assets/scenes/entry.webp', // заглавная: красная луна над городком, картина автора (ui/title.js)
+                entry: 'assets/scenes/entry.webp', // заглавная: оттиск автора — красная луна, щит-афиша, городок (ui/title.js)
                 ending: 'assets/scenes/ending.png', // drawn during the ending sequence
             });
         }
@@ -55973,15 +55972,43 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
     };
 });
-System.register("ui/title", ["assets/loader", "assets/manifest"], function (exports_167, context_167) {
+System.register("content/afisha", [], function (exports_167, context_167) {
     "use strict";
-    var loader_js_2, manifest_js_2, entry, busy, shown;
+    var SHOWS;
     var __moduleName = context_167 && context_167.id;
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // АФИША ВЫСТУПЛЕНИЙ — щит на заглавной картине (ui/title.js). Пусто — на щите
+            // «COMING SOON». Дата и место — строка на щите, сверху вниз, по порядку;
+            // помещается четыре-пять строк.
+            // Пример: { date: '12.11', place: 'Москва · клуб «Х»' }
+            // ═══════════════════════════════════════
+            exports_167("SHOWS", SHOWS = []);
+        }
+    };
+});
+System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha"], function (exports_168, context_168) {
+    "use strict";
+    var loader_js_2, manifest_js_2, afisha_js_1, esc, entry, busy, shown;
+    var __moduleName = context_168 && context_168.id;
+    // щит: даты выступлений; нет их — «скоро»
+    function fillAfisha(el) {
+        if (!el)
+            return;
+        const shows = (afisha_js_1.SHOWS || []).filter(s => s && (s.date || s.place));
+        el.classList.toggle('list', shows.length > 0);
+        el.innerHTML = shows.length
+            ? shows.map(s => `<div>${esc(s.date || '')}${s.date && s.place ? ' · ' : ''}${esc(s.place || '')}</div>`).join('')
+            : '<span class="af-soon">COMING SOON</span>';
+    }
     function initTitle({ onGo }) {
         entry = document.getElementById('entry');
         const btn = document.getElementById('entry-btn'), img = document.getElementById('entry-img');
         if (!entry || !btn)
             return;
+        fillAfisha(document.getElementById('entry-afisha'));
         loader_js_2.loadAsset(manifest_js_2.SCENES.entry).then(im => {
             if (!im) {
                 entry.classList.add('noart');
@@ -55989,7 +56016,6 @@ System.register("ui/title", ["assets/loader", "assets/manifest"], function (expo
             }
             if (img)
                 img.src = im.src;
-            entry.style.setProperty('--entry-art', `url("${im.src}")`);
             entry.classList.add('art');
         });
         const go = () => {
@@ -56031,7 +56057,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest"], function (expo
                 go();
         });
     }
-    exports_167("initTitle", initTitle);
+    exports_168("initTitle", initTitle);
     return {
         setters: [
             function (loader_js_2_1) {
@@ -56039,18 +56065,22 @@ System.register("ui/title", ["assets/loader", "assets/manifest"], function (expo
             },
             function (manifest_js_2_1) {
                 manifest_js_2 = manifest_js_2_1;
+            },
+            function (afisha_js_1_1) {
+                afisha_js_1 = afisha_js_1_1;
             }
         ],
         execute: function () {
+            esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
             entry = null, busy = false;
             shown = () => entry && entry.style.display !== 'none';
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_168, context_168) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_169, context_169) {
     "use strict";
     var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_18, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_1, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_5, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_1, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_4, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
-    var __moduleName = context_168 && context_168.id;
+    var __moduleName = context_169 && context_169.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_13.SEGMENTS.length ? ulitsa_db_js_13.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
@@ -58300,21 +58330,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             prefs_js_6.onPrefs(applyByt);
             editor_js_1.initEditor();
             netui_js_1.initNetUI(lorepopup_js_1.showLore); // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
-            loader_js_3.preloadAll().then(() => {
-                // Once the entry painting is in cache, mount it as the #entry
-                // background; the existing logo + button markup stays on top.
-                const entry = loader_js_3.getScene('entry');
-                if (entry) {
-                    const el = document.getElementById('entry');
-                    if (el) {
-                        el.style.backgroundImage = `url('${entry.src}')`;
-                        el.style.backgroundSize = 'cover';
-                        el.style.backgroundPosition = 'center';
-                        // Slight darken so the logo + button stay readable
-                        el.style.boxShadow = 'inset 0 0 0 100vmax rgba(5,4,8,0.55)';
-                    }
-                }
-            });
+            loader_js_3.preloadAll();
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
                 x: disc_js_48.CORE.x, y: disc_js_48.CORE.y, tx: disc_js_48.CORE.x, ty: disc_js_48.CORE.y,

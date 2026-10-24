@@ -183,23 +183,10 @@ initNetUI(showLore);                           // сеть странников:
 
 // Painted assets (portraits + entry/ending scenes) — fire-and-forget
 // preload; UI code asks for them when it needs them and falls back to
-// empty frames if they're not on disk yet.
-import { preloadAll, getScene } from './assets/loader.js';
-preloadAll().then(() => {
-  // Once the entry painting is in cache, mount it as the #entry
-  // background; the existing logo + button markup stays on top.
-  const entry = getScene('entry');
-  if (entry) {
-    const el = document.getElementById('entry');
-    if (el) {
-      el.style.backgroundImage = `url('${entry.src}')`;
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-      // Slight darken so the logo + button stay readable
-      el.style.boxShadow = 'inset 0 0 0 100vmax rgba(5,4,8,0.55)';
-    }
-  }
-});
+// empty frames if they're not on disk yet. Картину заглавной ставит
+// ui/title.js — фоном #entry её больше не кладём (выходил двойник за оттиском).
+import { preloadAll } from './assets/loader.js';
+preloadAll();
 
 // ═══ GAME OBJECTS (must be before loadGame!) ═══
 const player = {

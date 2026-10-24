@@ -1,6 +1,8 @@
 // ═══════════════════════════════════════
-// ЗАГЛАВНАЯ — картина автора: красная луна над городком (assets/scenes/entry.webp,
-// слот SCENES.entry) и одна кнопка «fall in» среди птиц. Бланк «форма 0» снят
+// ЗАГЛАВНАЯ — оттиск автора на ночи: красная луна над городком и щит у дороги
+// (assets/scenes/entry.webp, слот SCENES.entry); на щите — афиша выступлений
+// (content/afisha.js), пока пусто — «COMING SOON»; кнопка «FALL IN» среди птиц.
+// Бланк «форма 0» снят
 // (слово автора 24.10): настройки быта, «вспомнить дорогу», «покинуть вечер» и
 // графа подписи пока лишние — их код остался (core/prefs.js, ui/signature.js,
 // ui/worldmap.js), вернуть легко. Картину находит загрузчик (на сайте — рядом со
@@ -9,6 +11,18 @@
 // ═══════════════════════════════════════
 import { loadAsset } from '../assets/loader.js';
 import { SCENES } from '../assets/manifest.js';
+import { SHOWS } from '../content/afisha.js';
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+// щит: даты выступлений; нет их — «скоро»
+function fillAfisha(el) {
+  if (!el) return;
+  const shows = (SHOWS || []).filter(s => s && (s.date || s.place));
+  el.classList.toggle('list', shows.length > 0);
+  el.innerHTML = shows.length
+    ? shows.map(s => `<div>${esc(s.date || '')}${s.date && s.place ? ' · ' : ''}${esc(s.place || '')}</div>`).join('')
+    : '<span class="af-soon">COMING SOON</span>';
+}
 
 let entry = null, busy = false;
 const shown = () => entry && entry.style.display !== 'none';
@@ -17,11 +31,11 @@ export function initTitle({ onGo }) {
   entry = document.getElementById('entry');
   const btn = document.getElementById('entry-btn'), img = document.getElementById('entry-img');
   if (!entry || !btn) return;
+  fillAfisha(document.getElementById('entry-afisha'));
 
   loadAsset(SCENES.entry).then(im => {
     if (!im) { entry.classList.add('noart'); return; }
     if (img) img.src = im.src;
-    entry.style.setProperty('--entry-art', `url("${im.src}")`);
     entry.classList.add('art');
   });
 

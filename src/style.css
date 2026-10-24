@@ -53,48 +53,47 @@ canvas#game {
   display: block;
 }
 
-/* ── Entry screen: заглавная — картина автора во всю высоту, «fall in» среди птиц (ui/title.js) ── */
+/* ── Entry screen: заглавная — оттиск автора на ночи: красная луна, щит-афиша, «FALL IN» среди птиц (ui/title.js) ── */
 #entry {
   position: fixed; inset: 0; z-index: 100;
   background: #0D0B0A;
   overflow: hidden;
 }
-/* сама картина: во всю высоту экрана, по центру; на узком телефоне бока срезаются, луна целиком */
+/* оттиск целиком, с бумажным полем: на компьютере — во всю высоту, на телефоне — во всю
+   ширину; вокруг ночь — бумага ложится поверх ночи, как справка на стол (ART_BIBLE §01) */
 #entry-art {
-  position: absolute; top: 0; bottom: 0; left: 50%;
-  aspect-ratio: 1497 / 2000; height: 100%;
-  transform: translateX(-50%);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  aspect-ratio: 864 / 1184;
+  width: min(96vw, calc(96vh * 864 / 1184));
+  width: min(96vw, calc(96dvh * 864 / 1184));
+  container-type: size;
 }
-/* по бокам на широком экране — край картины, протянутый вдаль: зарево горизонта не
-   обрывается рамкой, к краю экрана гаснет в ночь */
-#entry-art::before, #entry-art::after {
-  content: ''; position: absolute; top: 0; bottom: 0; width: 100vw;
-  background: var(--entry-art, none) no-repeat;
-  background-size: 100000% 100%;
-  filter: blur(4px);
-  opacity: 0; transition: opacity .9s ease-out;
-}
-#entry-art::before { right: 96%; background-position: 0 50%;
-  -webkit-mask-image: linear-gradient(to left, #000 4vw, transparent 85%); mask-image: linear-gradient(to left, #000 4vw, transparent 85%); }
-#entry-art::after { left: 96%; background-position: 100% 50%;
-  -webkit-mask-image: linear-gradient(to right, #000 4vw, transparent 85%); mask-image: linear-gradient(to right, #000 4vw, transparent 85%); }
-#entry.art #entry-art::before, #entry.art #entry-art::after { opacity: 1; }
 #entry-img {
-  position: relative; z-index: 1;
-  display: block; width: 100%; height: 100%; object-fit: cover;
+  display: block; width: 100%; height: 100%;
   opacity: 0; transition: opacity .9s ease-out;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
   -webkit-user-drag: none; user-select: none; pointer-events: none;
 }
 #entry.art #entry-img { opacity: 1; }
+/* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
+#entry-afisha {
+  position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
+  padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
+  font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
+  font-size: 11px; font-size: 1.6cqh; line-height: 1.5;
+  pointer-events: none; user-select: none;
+}
+#entry.art #entry-afisha { display: flex; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.05cqh; }
+#entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
-  position: absolute; z-index: 2; left: 52%; top: 39.6%; transform: translate(-50%, -50%);
-  margin: 0; padding: 14px 28px; min-height: 44px; border-radius: 0;
-  font-family: var(--font-pixel); font-size: clamp(10px, 1.45vh, 15px); letter-spacing: 1px;
+  position: absolute; z-index: 2; left: 51.5%; top: 41.5%; transform: translate(-50%, -50%);
+  margin: 0; padding: 1.35em 2.7em; min-height: 44px; border-radius: 0;
+  font-family: var(--font-pixel); letter-spacing: 1px;
+  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.5cqh, 15px);
   color: #D9CFB8; background: rgba(13, 11, 10, 0.72);
   border: 1px solid #C23B2B;
   white-space: nowrap; cursor: pointer;
@@ -105,8 +104,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-art::before, html.rm #entry-art::after, html.rm #entry-img, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-art::before, #entry-art::after, #entry-img, #entry-btn { transition: none; } }
+html.rm #entry-img, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-img, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
