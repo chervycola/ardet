@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════
 import { BYT, getPref, setPref, reducedMotion } from '../core/prefs.js';
 import { events } from '../core/events.js';
+import { initSignPad, hasSignature } from './signature.js';
 
 const CHECK = '<svg viewBox="0 0 26 26" aria-hidden="true">'
   + '<path class="smudge" d="M4.2 14.4 L10.2 20.2 L23.2 3.4"/>'
@@ -69,6 +70,12 @@ export function initTitleForm({ onGo, onRoad }) {
   for (const b of form.querySelectorAll('.f0-item .f0-box')) b.innerHTML = CHECK;
   const seal = document.getElementById('f0-seal-text');
   if (seal) seal.textContent = 'вх. № ' + visitNo();
+  // недостающее вписать: подпись заявителя (ui/signature.js)
+  const x = document.getElementById('f0-sign-x');
+  const showX = () => { if (x) x.hidden = !hasSignature(); };
+  const pad = initSignPad(document.getElementById('f0-sign-pad'), showX);
+  if (x && pad) x.addEventListener('click', e => { e.stopPropagation(); pad.clear(); });
+  showX();
 
   const act = btn => {
     if (busy || entry.classList.contains('left')) return;

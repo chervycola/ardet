@@ -15,6 +15,7 @@ import { TOWN, CORE, RINGS, RINGS_D, RING_EDGE, FIRE_W, ringD, ringAt, ringOfD, 
 import { sideAt } from '../world/relief.js';
 import { CELL_TITLES } from '../content/cell_titles.js';
 import { SIDE_RU } from '../world/placeStamp.js';
+import { drawSignature } from './signature.js';
 import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
 import { events } from '../core/events.js';
@@ -423,8 +424,18 @@ function drawLocalSide() {
   }
   y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
   if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_PAPER_S]], y);
+  // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился
+  const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
+  ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);
+  ctx.fillText('ОБМЕР ПРОИЗВЁЛ', SIDE.x, sy);
+  if (!drawSignature(ctx, SIDE.x + 112, sy - 17, 140, 22, '#241d18', 1.3)) {
+    ctx.font = "italic 13px Literata, 'PT Serif', Georgia, serif"; ctx.fillStyle = rgba(SEPIA, 0.8);
+    ctx.fillText('— от подписи уклонился', SIDE.x + 104, sy);
+  }
+  ctx.strokeStyle = rgba(SEPIA, 0.5); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(SIDE.x + 104, sy + 4); ctx.lineTo(SIDE.x + SIDE.w - 8, sy + 4); ctx.stroke();
   // легенда
-  y = Math.max(y + 6, SIDE.y + SIDE.h - 58);
+  y = Math.max(sy + 28, SIDE.y + SIDE.h - 58);
   ctx.font = F_PAPER_S;
   const leg = [
     [() => { ctx.strokeStyle = SEPIA; ctx.lineWidth = 1; ctx.beginPath(); for (let j = 0; j < 9; j += 3) { ctx.moveTo(SIDE.x + j, y - 1); ctx.lineTo(SIDE.x + j + 5, y - 9); } ctx.stroke(); }, 'пройдено ногами'],

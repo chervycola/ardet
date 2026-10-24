@@ -806,6 +806,24 @@ body.noon .mi i { color: var(--ink); }
 #form0 .f0-foot {
   margin-top: 14px; font: italic 13px var(--font-book); color: rgba(58,48,38,0.75); line-height: 1.35;
 }
+/* подпись заявителя: росчерк углём на линии (ui/signature.js) */
+#form0 .f0-sign { margin-top: 10px; width: 240px; max-width: 100%; }
+#form0 .f0-sign canvas {
+  display: block; width: 240px; max-width: 100%; height: 56px;
+  border-bottom: 1px solid rgba(58,48,38,0.7); cursor: crosshair; touch-action: none;
+}
+#form0 .f0-sign-cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px;
+  font: 300 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
+#form0 .f0-sign-cap button { background: none; border: none; padding: 4px 0; cursor: pointer;
+  font: italic 13px var(--font-book); letter-spacing: 0; text-transform: none; color: rgba(58,48,38,0.8);
+  text-decoration: line-through; text-decoration-color: rgba(194,59,43,0.7); }
+/* рука странника на бумагах мира: протокол, осмотр, опись */
+svg.sign { display: inline-block; vertical-align: middle; overflow: visible; }
+.dmarg svg.sign { margin-left: 6px; }
+#look-sign { display: none; margin: 10px 0 2px; font: 300 9px Montserrat, 'PT Sans', sans-serif;
+  letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
+#look-sign svg.sign { margin-left: 8px; }
+.inv-foot svg.sign { margin-left: 6px; }
 #form0 .f0-seal {
   position: absolute; right: 20px; top: 16px; transform: rotate(-8deg);
   padding: 5px 9px 4px; text-align: center; pointer-events: none;

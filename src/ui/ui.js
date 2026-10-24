@@ -15,6 +15,7 @@ import { useTexts } from '../world/useActions.js';
 import { paginate, pageMeasure } from './pages.js';
 import { STREAM } from './stream.js';
 import { placeStamp } from '../world/placeStamp.js';
+import { hasSignature, signatureSVG } from './signature.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -217,6 +218,8 @@ let lookShownAt = 0;   // клик в ту же долю секунды, что 
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
 let lookInsc = '';    // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
 let lookStamp = '';   // штамп места: «кольцо 6 · север · пар и тени» (world/placeStamp.js)
+// места, где канцелярия узнаёт руку странника: строка текста → подпись под ним
+const SIGN_SPOTS = [['Рука знакомая', 'подпись принявшего'], ['Второй ты узнаёшь', 'второй почерк']];
 let lookLoc = null;   // вещь, которую осматривают: F из осмотра — использовать её же
 
 // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
@@ -275,6 +278,14 @@ function renderLookPage() {
   if (stamp) {
     stamp.textContent = blind(lookStamp);
     stamp.style.display = lookStamp ? 'inline-block' : 'none';
+  }
+  // где текст говорит «рука знакомая», там и стоит рука странника (нить П1, ui/signature.js)
+  let sign = document.getElementById('look-sign');
+  if (!sign && lookEl && lb) { sign = document.createElement('div'); sign.id = 'look-sign'; lb.after(sign); }
+  if (sign) {
+    const spot = !noon && hasSignature() && SIGN_SPOTS.find(([m]) => (lookPages[lookPageIdx] || '').includes(m));
+    sign.innerHTML = spot ? spot[1] + signatureSVG(24) : '';
+    sign.style.display = spot ? 'block' : 'none';
   }
   if (insc) {
     const on = !!lookInsc && lookPageIdx === 0;
@@ -429,7 +440,8 @@ function typeLine() {
     optsEl.appendChild(btn);
     const note = document.createElement('div');                       // канон §06: пометка на полях
     note.className = 'dmarg';
-    note.textContent = 'пометка на полях: свидетель от подписи уклонился';
+    if (hasSignature()) note.innerHTML = 'подпись свидетеля:' + signatureSVG(22);   // рука странника (ui/signature.js)
+    else note.textContent = 'пометка на полях: свидетель от подписи уклонился';
     optsEl.appendChild(note);
   }
 }

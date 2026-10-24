@@ -9,6 +9,7 @@
 // ═══════════════════════════════════════
 import { state } from '../core/state.js';
 import { playClick } from '../audio/audio.js';
+import { hasSignature, signatureSVG } from './signature.js';
 import { redNoon, smear } from '../world/redNoon.js';
 
 const num = n => '№ ' + String(n).padStart(3, '0');
@@ -126,7 +127,7 @@ function render() {
   if (!el || !data) return;
   const close = touch() ? 'закрыть' : 'esc — закрыть';
   // красный полдень: мир без текста — бланк тоже точками
-  const blind = redNoon.k > 0.5 ? smear : (x => x);
+  const blindOn = redNoon.k > 0.5, blind = blindOn ? smear : (x => x);
   const T = s => esc(blind(s));
   if (detail) {
     el.innerHTML = `<div class="inv-head"><span class="inv-title">${T('Записка ' + num(detail.n))}</span></div>`
@@ -142,7 +143,8 @@ function render() {
   const many = pages.length > 1;
   el.innerHTML = `<div class="inv-head"><span class="inv-title">${T('Опись найденного')}</span><span class="inv-sheet">${T(`лист ${page + 1} из ${pages.length}`)}</span></div>`
     + `<div class="inv-body">${rows}</div>`
-    + `<div class="inv-foot">${T(`итого записок: ${data.notes.length} · итого нужных: неизвестно`)}<br>${T('смысл — утерян, не возвращать')}</div>`
+    + `<div class="inv-foot">${T(`итого записок: ${data.notes.length} · итого нужных: неизвестно`)}<br>${T('смысл — утерян, не возвращать')}<br>`
+    + (hasSignature() && !blindOn ? T('опись составил:') + signatureSVG(20) : T('составитель от подписи уклонился')) + `</div>`
     + `<div class="inv-stamp">${T('ПРОВЕРЕНО · СМЫСЛА НЕТ')}</div>`
     + `<div class="inv-nav">${many ? `<span data-inv="prev"${page ? '' : ' class="off"'}>← лист</span><span data-inv="next"${page < pages.length - 1 ? '' : ' class="off"'}>лист →</span>` : ''}<span data-inv="close">${close}</span></div>`;
 }

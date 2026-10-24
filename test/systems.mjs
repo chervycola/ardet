@@ -2993,6 +2993,26 @@ setCtx(ctx);
   });
 }
 
+// ═══ ПОДПИСЬ СТРАННИКА (ui/signature.js) ═══
+{
+  const SG = await imp('ui/signature.js');
+  test('подпись: не расписался — подписи нет; расписался — есть, в любую графу ложится росчерком', () => {
+    SG.setStrokes([]);
+    assert(!SG.hasSignature() && SG.signatureSVG() === '', 'подпись без росчерка');
+    SG.setStrokes([[10, 40, 30, 12, 50, 38, 80, 20], [20, 46, 200, 44], [5, 5]]);   // третий штрих — точка, не росчерк
+    assert(SG.hasSignature(), 'подписи нет');
+    eq(SG.getStrokes().length, 2, 'штрихов');
+    const svg = SG.signatureSVG(22);
+    assert(/^<svg class="sign"/.test(svg) && /height="22"/.test(svg) && /<path d="M[\d.]+ [\d.]+L/.test(svg), svg.slice(0, 80));
+    let moves = 0;
+    const ctx = { save() {}, restore() {}, beginPath() {}, moveTo() { moves++; }, lineTo() {}, stroke() {} };
+    assert(SG.drawSignature(ctx, 0, 0, 100, 20), 'на холсте не легла');
+    eq(moves, 2, 'на холсте не два штриха');
+    SG.setStrokes([]);
+    assert(!SG.drawSignature(ctx, 0, 0, 100, 20), 'пустая подпись легла');
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
