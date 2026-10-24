@@ -2923,6 +2923,43 @@ setCtx(ctx);
   });
 }
 
+// ═══ ПОЛОСЫ ЛЕНТЫ: кадр 9:16 с миром из прошлого (render/feedPanels.js) ═══
+{
+  const FPN = await imp('render/feedPanels.js');
+  test('полосы ленты: ширина — 9:16 от высоты, на узком экране — не шире половины', () => {
+    const w = FPN.panelWidth(640, 360);
+    assert(Math.abs(w / 360 - 9 / 16) < 0.01, `ширина ${w}`);
+    const ph = FPN.panelWidth(360, 640);
+    assert(ph <= 360 / 2.2 + 1 && ph > 100, `телефон: ${ph}`);
+  });
+  test('полосы ленты: до порога распада кадр цел; дальше полосы входят по одной; середина всегда живая', () => {
+    eq(FPN.layout(FPN.PANEL_FROM - 0.01, 640, 360).panels.length, 0, 'полосы раньше порога');
+    const one = FPN.layout(0.6, 640, 360).panels;
+    eq(one.length, 1, 'на 0.6 не одна полоса');
+    assert(one[0].alpha > 0 && one[0].alpha < 1, 'полоса входит не плавно');
+    for (const k of [0.7, 0.85, 1]) {
+      const L = FPN.layout(k, 640, 360);
+      for (const p of L.panels) {
+        assert(p.x >= 0 && p.x + p.w <= 640 && p.w >= 4, `полоса вне экрана: ${JSON.stringify(p)}`);
+        assert(p.x + p.w <= L.cx0 || p.x >= L.cx0 + L.pw, `полоса легла на середину: ${JSON.stringify(p)}`);
+      }
+    }
+    eq(FPN.layout(1, 640, 360).panels.length, 4, 'на полном распаде не четыре полосы');
+    const delays = FPN.SLOTS.map(sl => sl.delay).sort((a, b) => a - b).join();
+    eq(delays, '2,4,6,8', 'задержки');
+  });
+  test('полосы ленты: показывают прошлое не моложе задержки; нет такого — самое старое', () => {
+    const frames = Array.from({ length: 44 }, (_, i) => 1000 + i * 12);   // ≈ 8,8 с записи
+    const now = frames[43];
+    for (const d of [2, 4, 6, 8]) {
+      const i = FPN.pickIndex(frames, now, d);
+      assert(frames[i] <= now - d * 60 && (i === frames.length - 1 || frames[i + 1] > now - d * 60), `задержка ${d}: ${frames[i]}`);
+    }
+    eq(FPN.pickIndex(frames.slice(40), now, 8), 0, 'короткая запись: не самое старое');
+    eq(FPN.pickIndex([], now, 2), -1, 'пустая запись');
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

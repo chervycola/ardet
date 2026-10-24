@@ -11,6 +11,7 @@ import { crackedGlass } from '../render/metaFx.js';
 import { edgeDepth, edgeState } from './edges.js';
 import { CORE } from './disc.js';
 import { layers } from '../render/layers.js';
+import * as feedPanels from '../render/feedPanels.js';
 
 export const FALL_AT = 0.97;   // падение — только у дальнего края пустыни
 
@@ -86,7 +87,7 @@ export function update(player) {
   calmFrames = player.still === true ? Math.min(600, calmFrames + 1) : 0;   // покой — только когда точно известно, что стоит
   target *= 1 - calmOf();
   brainrot += (Math.min(100, target) - brainrot) * (target > brainrot ? 0.05 : 0.08);
-  if (brainrot < 0.2) brainrot = 0;
+  if (brainrot < 0.2) { if (brainrot > 0) feedPanels.reset(); brainrot = 0; }   // отпустило — прошлое ленты не храним
 
   if ((edge >= FALL_AT || (edge > 0.85 && brainrot >= 99) || (dist > 600 && brainrot >= 99.5)) && !brainrotFreeze) {
     const st = edgeState();
@@ -94,6 +95,7 @@ export function update(player) {
     brainrotFreeze = true;
     brainrotFreezeTimer = 0;
     brainrot = 100;
+    feedPanels.reset();
     if (fallKind !== 'sand' && fallKind !== 'lake') crackedGlass.add(scaler.vw / 2 | 0, scaler.vh / 2 | 0);   // экран бьётся при падении
     if (fallKind === 'ice') for (let i = 0; i < 4; i++) crackedGlass.add(Math.random() * scaler.vw | 0, Math.random() * scaler.vh | 0);
     events.emit('brainrot.freeze');
@@ -152,6 +154,8 @@ export function draw(ctx) {
   const bg = layers.canvas('bg'), world = layers.canvas('world');
   const tick = t >> 2;                       // распад дёргается рывками, не плывёт
 
+  feedPanels.record(k);                      // прошлое для полос ленты (render/feedPanels.js)
+
   // строки рвутся и съезжают
   if (k > 0.35) {
     const n = Math.floor((k - 0.35) * 22);
@@ -173,6 +177,8 @@ export function draw(ctx) {
       ctx.drawImage(bg, sx * sc, sy * sc, sc, sc, (sx - b / 2) | 0, (sy - b / 2) | 0, b, b);
     }
   }
+  // лента делит кадр на полосы 9:16 с миром из прошлого: гладкая поверх рваного, под растром
+  feedPanels.draw(ctx, k);
   // растр: брейнрот = растр
   if (k > 0.15) {
     const level = Math.min(14, Math.round((k - 0.15) / 0.85 * 14));

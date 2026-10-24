@@ -1,0 +1,119 @@
+// ═══════════════════════════════════════
+// ПОЛОСЫ ЛЕНТЫ — на глубоком распаде кадр делится на вертикальные полосы
+// 9:16, и в соседних идёт тот же мир, только с задержкой: две секунды,
+// четыре, шесть, восемь. Камера держит странника посередине — поэтому в
+// ленте он видит себя, того, кем был только что. Середина остаётся живой.
+// Полосы прокручиваются, каждая сама по себе, как лента; при «меньше
+// движения» стоят. Без вспышек: полоса входит плавно, раз и насовсем.
+// Запись — середина кадра (фон, мир, свет, сложение) раз в 12 кадров, пока распад есть.
+// Лента ложится поверх рвущейся реальности, но под растр: распад рвёт мир,
+// а лента гладкая — и растр одинаково ест обоих.
+// ═══════════════════════════════════════
+import { t } from '../core/time.js';
+import { scaler } from './scaler.js';
+import { layers } from './layers.js';
+
+export const PANEL_FROM = 0.55;          // доля распада, с которой лента делит кадр
+const REC_FROM = 0.3;                    // писать прошлое начинаем раньше, чтобы было что показать
+const EVERY = 12;                        // кадр записи раз в 12 (5 в секунду)
+const KEEP = 44;                         // ≈ 8,8 секунды прошлого
+const GAP = 3;                           // шов между «постами» прокрутки
+const NIGHT = '#0D0B0A';
+// полоса: s — сколько ширин от середины; delay — секунд назад; at — с какой доли распада
+export const SLOTS = [
+  { s: 1, delay: 2, at: 0.55 },
+  { s: -1, delay: 4, at: 0.65 },
+  { s: 2, delay: 8, at: 0.78 },
+  { s: -2, delay: 6, at: 0.78 },
+];
+
+// ширина полосы: 9:16 от высоты кадра, но на узком экране — не шире половины
+export function panelWidth(vw, vh) {
+  return Math.max(24, Math.round(Math.min(vh * 9 / 16, vw / 2.2)));
+}
+
+// раскладка полос для доли распада k: где каждая лежит на экране и какой частью записи
+export function layout(k, vw, vh) {
+  const pw = panelWidth(vw, vh), cx0 = Math.floor((vw - pw) / 2), out = [];
+  for (const sl of SLOTS) {
+    const alpha = Math.max(0, Math.min(1, (k - sl.at) / 0.08));
+    if (alpha <= 0) continue;
+    const x = cx0 + sl.s * pw, x0 = Math.max(0, x), x1 = Math.min(vw, x + pw);
+    if (x1 - x0 < 4) continue;
+    out.push({ s: sl.s, delay: sl.delay, x: x0, w: x1 - x0, src: x0 - x, alpha });
+  }
+  return { pw, cx0, panels: out };
+}
+
+// какую запись показать: последнюю, что не моложе задержки; нет такой — самую старую
+export function pickIndex(frames, now, delay) {
+  if (!frames.length) return -1;
+  const want = now - delay * 60;
+  let best = 0;
+  for (let i = 0; i < frames.length; i++) if (frames[i] <= want) best = i;
+  return best;
+}
+
+// ── запись прошлого ──
+let hist = [];                           // { c, f } от старых к новым
+let pool = [];
+export function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; }
+export function historyLength() { return hist.length; }
+
+function snap(pw, cx0, vh) {
+  const bg = layers.canvas('bg'), world = layers.canvas('world'), light = layers.canvas('light'), fx = layers.canvas('fx');
+  if (!bg || !bg.width || typeof document === 'undefined') return;
+  let c = pool.pop();
+  if (!c) { c = document.createElement('canvas'); if (!c.getContext) return; }
+  if (c.width !== pw || c.height !== vh) { c.width = pw; c.height = vh; }
+  const g = c.getContext('2d'), sc = scaler.scale || 1;
+  g.imageSmoothingEnabled = false;
+  g.globalCompositeOperation = 'source-over';
+  g.fillStyle = NIGHT; g.fillRect(0, 0, pw, vh);
+  g.drawImage(bg, cx0 * sc, 0, pw * sc, vh * sc, 0, 0, pw, vh);
+  if (world && world.width) g.drawImage(world, cx0 * sc, 0, pw * sc, vh * sc, 0, 0, pw, vh);
+  if (light && light.width) {
+    g.globalCompositeOperation = 'multiply';
+    g.drawImage(light, cx0 * sc, 0, pw * sc, vh * sc, 0, 0, pw, vh);
+    g.globalCompositeOperation = 'source-over';
+  }
+  if (fx && fx.width) {                                   // стихия края и прочее сложение — как в кадре
+    g.globalCompositeOperation = 'lighter';
+    g.drawImage(fx, cx0 * sc, 0, pw * sc, vh * sc, 0, 0, pw, vh);
+    g.globalCompositeOperation = 'source-over';
+  }
+  hist.push({ c, f: t });
+  while (hist.length > KEEP) pool.push(hist.shift().c);
+}
+
+export function record(k) {
+  if (k < REC_FROM || t % EVERY) return;
+  const vw = scaler.vw, vh = scaler.vh, { pw, cx0 } = layout(0, vw, vh);
+  if (hist.length && (hist[0].c.width !== pw || hist[0].c.height !== vh)) reset();   // экран сменился
+  snap(pw, cx0, vh);
+}
+
+const reducedNow = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+export function draw(ctx, k) {
+  if (k < PANEL_FROM || !hist.length) return;
+  const vw = scaler.vw, vh = scaler.vh, { panels } = layout(k, vw, vh);
+  if (!panels.length) return;
+  const still = reducedNow(), frames = hist.map(h => h.f);
+  for (const p of panels) {
+    const h = hist[pickIndex(frames, t, p.delay)];
+    if (!h) continue;
+    const seed = (p.s * 97 + 400) % (vh + GAP);
+    const off = still ? seed : (t * (0.3 + 0.45 * k) + seed) % (vh + GAP);   // лента едет вверх
+    ctx.save();
+    ctx.beginPath(); ctx.rect(p.x, 0, p.w, vh); ctx.clip();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = NIGHT; ctx.fillRect(p.x, 0, p.w, vh);
+    ctx.drawImage(h.c, p.src, 0, p.w, vh, p.x, -off, p.w, vh);
+    ctx.drawImage(h.c, p.src, 0, p.w, vh, p.x, vh + GAP - off, p.w, vh);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = NIGHT;                                   // края полосы — ночь
+    ctx.fillRect(p.s > 0 ? p.x : p.x + p.w - 1, 0, 1, vh);
+    ctx.restore();
+  }
+}
