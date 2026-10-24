@@ -1604,16 +1604,13 @@ function updateGame() {
   // а за изгородь — только с пропуском Шута.
   let drift = false;
   if (!house.active && !under.active && canLeaveSettlement()) {
-    // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет вперёд —
-    // не проскочить; вбок тянет и там (иначе на коротком тапе по льду ленты почти нет), на последних 10 — ничуть
+    // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет вовсе —
+    // не проскочить. Цена: короткий тап по льду тянет меньше, чем зажатая клавиша. Тянуть «только
+    // вбок» нельзя: лента всегда наружу, её боковая доля сводит с линии, ходок мажет мимо точки
+    // и на льду выкатывается к краю (сверка 24.10: шесть тапов из шести — в падение)
     const v2 = player.vx * player.vx + player.vy * player.vy;
-    const tdx = player.tx - player.x, tdy = player.ty - player.y, td = Math.hypot(tdx, tdy);
-    const braking = player.auto && !(player.path && player.path.length) && td < 10 + v2 / (2 * Math.max(0.005, S.decel));
-    let [pdx, pdy] = braking && td < 10 ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
-    if (braking && td > 0) {
-      const ux = tdx / td, uy = tdy / td, a = pdx * ux + pdy * uy;
-      if (a > 0) { pdx -= a * ux; pdy -= a * uy; }
-    }
+    const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
+    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
     // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
     // иначе сидящий у картинки позёмки съезжал и падал)
     if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }

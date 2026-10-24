@@ -159,6 +159,8 @@ export function stepHangs(player) {
   const groups = new Map();
   for (const [k, h] of REG) {
     const age = frame - h.seen;
+    // «уже качнулась навстречу» отпускает и за кадром: ушёл из виду ближе 120 — на возвращение качнётся
+    if (age > 30 && h.met && (!player || Math.hypot(player.x + 6 - h.ax, player.y + 20 - h.gy) >= 120)) h.met = false;
     if (age > 30) { if (age > 3600) REG.delete(k); continue; }
     sim(h, player);
     if (h.group) {

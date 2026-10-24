@@ -136,7 +136,7 @@ function stepFly(m) {
   const P = getPlayer();
   const r = m.puff ? respond(m.puff.x, m.gy, P) : null;
   if (r && !m.near) emit(m.puff.x, m.puff.y, 3 + r.lv * 2, { color: '#8A8D8F', speed: 0.3, life: 70, spread: 0.9, angle: -Math.PI / 2, windK: 0.9 });
-  m.near = !!r || (m.near && !!P && !!m.puff && Math.hypot(P.x + 6 - m.puff.x, P.y + 20 - m.gy) < 225);
+  if (r) m.near = true;                             // отпускает stepMechs — и когда маховик за кадром
   // два хода поршня на оборот шкива: на каждом — толчок, между — провал
   const om = 0.035 * (1 + 0.12 * Math.sin(2 * m.thp)) * (r ? 1 + 0.3 * r.lv : 1);
   const prev = m.thp;
@@ -153,13 +153,18 @@ function stepFly(m) {
 const LOCAL_LAG = 23;                                // минут
 // знакомому страннику вокзальные часы слышны (на смене минуты — щелчок), а узнавшие
 // его совсем — ждут: минутная не прыгает, пока он рядом; ушёл — догоняет разом
-const HOLD = new Map(), LASTMIN = new Map();
+// часы помнят только пока на виду: не рисовались полсекунды (ушёл за кадр, сменил место) —
+// вернувшегося встречают нынешней минутой, а не той, при которой он ушёл
+const HOLD = new Map(), LASTMIN = new Map(), DRAWN = new Map();
 export function stationClock(ctx, cx, cy, kind, col, gy = cy) {
   const d = new Date();
   let min = d.getHours() * 60 + d.getMinutes();
   if (kind === 'local') min += d.getSeconds() / 60 - LOCAL_LAG;
   else {
     const key = cx + ':' + cy, r = respond(cx, gy, getPlayer());     // рядом ли — по земле под часами, как флюгер
+    const now = d.getTime();
+    if (now - (DRAWN.get(key) || 0) > 500) { HOLD.delete(key); LASTMIN.delete(key); }
+    DRAWN.set(key, now);
     if (r && LASTMIN.has(key) && LASTMIN.get(key) !== min && !HOLD.has(key)) tick(1800, 'bandpass', 0.03, 0.04);
     LASTMIN.set(key, min);
     if (r && r.lv === 2) { if (!HOLD.has(key)) HOLD.set(key, min); min = HOLD.get(key); }
@@ -241,6 +246,9 @@ export function stepMechs() {
       if (r && !m.near && m.st === 'idle') { m.st = 'nod'; m.nod = 0; m.c0 = m.crank; }
       m.near = !!r || (m.near && !!P && Math.hypot(P.x + 6 - m.x, P.y + 20 - m.y) < 90);
     }
+    // маховик отпускает «уже поздоровался», как только странник отошёл дальше 225, — и за кадром:
+    // иначе ушедший из виду ближе этого остаётся «рядом» и на возвращение выдоха нет
+    if (m.kind === 'fly' && m.near && m.puff && (!P || Math.hypot(P.x + 6 - m.puff.x, P.y + 20 - m.gy) >= 225)) m.near = false;
     const active = m.kind === 'well' && m.st !== 'idle';
     if (!active && frame - m.seen > 30) { if (frame - m.seen > 3600 && m.kind !== 'well') REG.delete(k); continue; }
     if (m.kind === 'vane') stepVane(m);

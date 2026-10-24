@@ -3046,6 +3046,11 @@ setCtx(ctx);
     eq(st.length, 1, 'штрихов после нового росчерка');
     eq(st[0].join(), '20,20,40,25,60,30', 'чужой палец в штрихе');
     eq(changed, 1, 'бланк не узнал о новой подписи');
+    // палец, что держит телефон за краем поля, — не помеха: штрих другим пальцем ложится
+    on.pointerdown(ev({ clientX: 30, clientY: 20, pointerId: 8, isPrimary: false }));
+    on.pointermove(ev({ clientX: 70, clientY: 30, pointerId: 8, isPrimary: false }));
+    on.pointerup(ev({ pointerId: 8, isPrimary: false }));
+    eq(SG.getStrokes().length, 2, 'штрих не первым пальцем на экране не лёг');
     SG.setStrokes([]);
   });
 }
@@ -3124,6 +3129,40 @@ setCtx(ctx);
     player.y = 2010 - 20 + 40;                            // вернулся
     for (let i = 0; i < 5; i++) { MCH.stepMechs(); if (m.st === 'nod' && prev !== 'nod') nods++; prev = m.st; }
     eq(nods, 2, 'на новый подход не кивнул');
+  });
+  test('внимание: маховик отпускает «уже поздоровался» и за кадром — вернувшемуся выдохнет снова', () => {
+    AT._resetAttention();
+    const office = { id: 'test_office', x: 3000, y: 2950, w: 60, h: 60 };
+    for (let i = 0; i < 7; i++) AT.noteAttention(office);
+    const player = { x: 3029 - 6, y: 3000 - 20 + 40, vx: 0, vy: 0 };
+    PR.setPlayer(player);
+    let m;
+    for (let i = 0; i < 5; i++) { m = MCH.flywheel('fly:test_latch', { R: 6, r: 3, puff: { x: 3029, y: 2978 }, gy: 3000 }); MCH.stepMechs(); }
+    assert(m.near, 'рядом — не поздоровался');
+    player.y = 3000 - 20 + 200;                                   // ушёл за кадр ближе 225: маховик больше не рисуется
+    for (let i = 0; i < 60; i++) MCH.stepMechs();
+    player.y = 3000 - 20 + 400;                                   // и дальше
+    for (let i = 0; i < 5; i++) MCH.stepMechs();
+    assert(!m.near, 'ушедший из виду так и остался «рядом» — на возвращение выдоха не будет');
+  });
+  test('внимание: вокзальные часы, оставленные за кадром, встречают нынешней минутой, а не той, при которой ушёл', () => {
+    AT._resetAttention();
+    const st = { id: 'test_station', x: 4000, y: 3926, w: 92, h: 74 };
+    for (let i = 0; i < 7; i++) AT.noteAttention(st);
+    const player = { x: 4044 - 6, y: 4000 - 20 + 20, vx: 0, vy: 0 };
+    PR.setPlayer(player);
+    const RealDate = Date;
+    let now = new RealDate(2026, 9, 24, 12, 0, 0).getTime();
+    globalThis.Date = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(now); } };
+    try {
+      const px = [];
+      const ctx = { fillRect(x, y) { px.push(x + ',' + y); }, fillStyle: '' };
+      for (let i = 0; i < 3; i++) { MCH.stationClock(ctx, 4044, 3951, 'rail', '#000', 4000); now += 16; }
+      now += 25 * 60 * 1000;                                      // ушёл за кадр на 25 минут, вернулся
+      px.length = 0;
+      MCH.stationClock(ctx, 4044, 3951, 'rail', '#000', 4000);
+      assert(px.includes('4045,3953'), `минутная не на 25-й минуте: ${px.join(' ')}`);
+    } finally { globalThis.Date = RealDate; }
   });
   test('полосы ленты: где лежали — забыто, когда лент нет (распад рвёт мир мимо них только пока они есть)', () => {
     FPN2.draw(fakeCtx(), 0);

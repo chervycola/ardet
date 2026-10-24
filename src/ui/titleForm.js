@@ -53,6 +53,7 @@ function closeByt(refocus) {
 }
 
 function leave(btn) {
+  if (btn.classList.contains('on') || entry.classList.contains('left')) return;   // уже отозвано — второй раз не отзывают
   mark(btn);
   later(() => {
     entry.classList.add('left'); voidEl.innerHTML = LEAVE;
@@ -95,10 +96,21 @@ export function initTitleForm({ onGo, onRoad }) {
     else if (a === 'leave') leave(btn);
   };
   for (const btn of form.querySelectorAll('.f0-item')) btn.addEventListener('click', () => act(btn));
-  // в некоторых webview тап не рождает click — вход ловим и по pointerup: бланк
-  // прокручивается, а свайп с графы шлёт pointercancel вместо pointerup — в дорогу не уводит
+  // в некоторых webview тап не рождает click — вход ловим и по pointerup, но только тапом:
+  // палец почти не сдвинулся и поднят над графой. Свайп (бланк прокручивается) и палец,
+  // соскользнувший с графы, в дорогу не уводят — как обычная кнопка
   const go = form.querySelector('.f0-item[data-act="go"]');
-  if (go) go.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') act(go); });
+  if (go) {
+    let down = null;
+    go.addEventListener('pointerdown', e => { down = e.pointerType !== 'mouse' ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null; });
+    go.addEventListener('pointercancel', () => { down = null; });
+    go.addEventListener('pointerup', e => {
+      const d = down; down = null;
+      if (!d || e.pointerId !== d.id || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 10) return;
+      const r = go.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) act(go);
+    });
+  }
 
   // клавиши: вверх-вниз по графам, влево-вправо в строке настроек, Enter / пробел / E — отметить
   document.addEventListener('keydown', e => {
@@ -108,7 +120,7 @@ export function initTitleForm({ onGo, onRoad }) {
     const tg = e.target;
     if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
     if (document.getElementById('txed')?.classList.contains('on')) return;
-    if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key)) return;      // зажатая клавиша отмечает один раз
+    if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key)) { e.preventDefault(); return; }   // зажатая клавиша отмечает один раз — и браузер кнопку не жмёт
     if (entry.classList.contains('left')) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); entry.click(); } return; }
     const k = e.key.toLowerCase();
     const all = [...form.querySelectorAll('.f0-item, .f0-byt:not([hidden]) .f0-opt, #f0-sign-x:not([hidden])')];

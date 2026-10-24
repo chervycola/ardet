@@ -978,7 +978,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='1f1319c · 2026-10-24';console.log('[оттиск]', '1f1319c · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='2c24907 · 2026-10-24';console.log('[оттиск]', '2c24907 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6647,6 +6647,9 @@ System.register("world/hang", ["world/wind", "audio/audio", "world/attention"], 
         const groups = new Map();
         for (const [k, h] of REG) {
             const age = frame - h.seen;
+            // «уже качнулась навстречу» отпускает и за кадром: ушёл из виду ближе 120 — на возвращение качнётся
+            if (age > 30 && h.met && (!player || Math.hypot(player.x + 6 - h.ax, player.y + 20 - h.gy) >= 120))
+                h.met = false;
             if (age > 30) {
                 if (age > 3600)
                     REG.delete(k);
@@ -12573,7 +12576,7 @@ System.register("core/playerRef", [], function (exports_35, context_35) {
 });
 System.register("world/mechanisms", ["world/wind", "render/particles", "audio/audio", "world/attention", "core/playerRef"], function (exports_36, context_36) {
     "use strict";
-    var wind_js_3, particles_js_1, audio_js_4, attention_js_2, playerRef_js_1, REG, frame, TAU, wrap, LOCAL_LAG, HOLD, LASTMIN;
+    var wind_js_3, particles_js_1, audio_js_4, attention_js_2, playerRef_js_1, REG, frame, TAU, wrap, LOCAL_LAG, HOLD, LASTMIN, DRAWN;
     var __moduleName = context_36 && context_36.id;
     function reg(key, kind, init) {
         let m = REG.get(key);
@@ -12709,7 +12712,8 @@ System.register("world/mechanisms", ["world/wind", "render/particles", "audio/au
         const r = m.puff ? attention_js_2.respond(m.puff.x, m.gy, P) : null;
         if (r && !m.near)
             particles_js_1.emit(m.puff.x, m.puff.y, 3 + r.lv * 2, { color: '#8A8D8F', speed: 0.3, life: 70, spread: 0.9, angle: -Math.PI / 2, windK: 0.9 });
-        m.near = !!r || (m.near && !!P && !!m.puff && Math.hypot(P.x + 6 - m.puff.x, P.y + 20 - m.gy) < 225);
+        if (r)
+            m.near = true; // отпускает stepMechs — и когда маховик за кадром
         // два хода поршня на оборот шкива: на каждом — толчок, между — провал
         const om = 0.035 * (1 + 0.12 * Math.sin(2 * m.thp)) * (r ? 1 + 0.3 * r.lv : 1);
         const prev = m.thp;
@@ -12726,6 +12730,12 @@ System.register("world/mechanisms", ["world/wind", "render/particles", "audio/au
             min += d.getSeconds() / 60 - LOCAL_LAG;
         else {
             const key = cx + ':' + cy, r = attention_js_2.respond(cx, gy, playerRef_js_1.getPlayer()); // рядом ли — по земле под часами, как флюгер
+            const now = d.getTime();
+            if (now - (DRAWN.get(key) || 0) > 500) {
+                HOLD.delete(key);
+                LASTMIN.delete(key);
+            }
+            DRAWN.set(key, now);
             if (r && LASTMIN.has(key) && LASTMIN.get(key) !== min && !HOLD.has(key))
                 tick(1800, 'bandpass', 0.03, 0.04);
             LASTMIN.set(key, min);
@@ -12859,6 +12869,10 @@ System.register("world/mechanisms", ["world/wind", "render/particles", "audio/au
                 }
                 m.near = !!r || (m.near && !!P && Math.hypot(P.x + 6 - m.x, P.y + 20 - m.y) < 90);
             }
+            // маховик отпускает «уже поздоровался», как только странник отошёл дальше 225, — и за кадром:
+            // иначе ушедший из виду ближе этого остаётся «рядом» и на возвращение выдоха нет
+            if (m.kind === 'fly' && m.near && m.puff && (!P || Math.hypot(P.x + 6 - m.puff.x, P.y + 20 - m.gy) >= 225))
+                m.near = false;
             const active = m.kind === 'well' && m.st !== 'idle';
             if (!active && frame - m.seen > 30) {
                 if (frame - m.seen > 3600 && m.kind !== 'well')
@@ -12905,7 +12919,9 @@ System.register("world/mechanisms", ["world/wind", "render/particles", "audio/au
             LOCAL_LAG = 23; // минут
             // знакомому страннику вокзальные часы слышны (на смене минуты — щелчок), а узнавшие
             // его совсем — ждут: минутная не прыгает, пока он рядом; ушёл — догоняет разом
-            HOLD = new Map(), LASTMIN = new Map();
+            // часы помнят только пока на виду: не рисовались полсекунды (ушёл за кадр, сменил место) —
+            // вернувшегося встречают нынешней минутой, а не той, при которой он ушёл
+            HOLD = new Map(), LASTMIN = new Map(), DRAWN = new Map();
         }
     };
 });
@@ -36984,7 +37000,9 @@ System.register("ui/signature", [], function (exports_110, context_110) {
     exports_110("drawSignature", drawSignature);
     // поле росчерка на бланке: рисуют углём; начал заново — прежняя подпись уступает
     // место новой, но только когда новый штрих лёг: тычок, правый клик, сорванный
-    // жест подпись не трогают. Пишет одна рука: второй палец и ладонь — мимо.
+    // жест подпись не трогают. Пишет один палец: кто первым лёг на поле, тот и ведёт
+    // штрих; второй палец и ладонь посреди штриха — мимо (палец, что держит телефон
+    // за краем поля, — не помеха).
     function initSignPad(canvas, onChange) {
         if (!canvas || !canvas.getContext)
             return;
@@ -37021,7 +37039,7 @@ System.register("ui/signature", [], function (exports_110, context_110) {
         let cur = null, id = null, list = strokes.slice(), fresh = true;
         const at = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * SIGN_W / r.width, (e.clientY - r.top) * SIGN_H / r.height]; };
         canvas.addEventListener('pointerdown', e => {
-            if (cur || !e.isPrimary || e.button !== 0)
+            if (cur || e.button !== 0)
                 return;
             e.preventDefault();
             e.stopPropagation();
@@ -56109,6 +56127,8 @@ System.register("ui/titleForm", ["core/prefs", "core/events", "ui/signature"], f
             b.focus({ preventScroll: true });
     }
     function leave(btn) {
+        if (btn.classList.contains('on') || entry.classList.contains('left'))
+            return; // уже отозвано — второй раз не отзывают
         mark(btn);
         later(() => {
             entry.classList.add('left');
@@ -56178,12 +56198,24 @@ System.register("ui/titleForm", ["core/prefs", "core/events", "ui/signature"], f
         };
         for (const btn of form.querySelectorAll('.f0-item'))
             btn.addEventListener('click', () => act(btn));
-        // в некоторых webview тап не рождает click — вход ловим и по pointerup: бланк
-        // прокручивается, а свайп с графы шлёт pointercancel вместо pointerup — в дорогу не уводит
+        // в некоторых webview тап не рождает click — вход ловим и по pointerup, но только тапом:
+        // палец почти не сдвинулся и поднят над графой. Свайп (бланк прокручивается) и палец,
+        // соскользнувший с графы, в дорогу не уводят — как обычная кнопка
         const go = form.querySelector('.f0-item[data-act="go"]');
-        if (go)
-            go.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse')
-                act(go); });
+        if (go) {
+            let down = null;
+            go.addEventListener('pointerdown', e => { down = e.pointerType !== 'mouse' ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null; });
+            go.addEventListener('pointercancel', () => { down = null; });
+            go.addEventListener('pointerup', e => {
+                const d = down;
+                down = null;
+                if (!d || e.pointerId !== d.id || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 10)
+                    return;
+                const r = go.getBoundingClientRect();
+                if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)
+                    act(go);
+            });
+        }
         // клавиши: вверх-вниз по графам, влево-вправо в строке настроек, Enter / пробел / E — отметить
         document.addEventListener('keydown', e => {
             if (e.defaultPrevented)
@@ -56197,8 +56229,10 @@ System.register("ui/titleForm", ["core/prefs", "core/events", "ui/signature"], f
                 return;
             if (document.getElementById('txed')?.classList.contains('on'))
                 return;
-            if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key))
-                return; // зажатая клавиша отмечает один раз
+            if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key)) {
+                e.preventDefault();
+                return;
+            } // зажатая клавиша отмечает один раз — и браузер кнопку не жмёт
             if (entry.classList.contains('left')) {
                 if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -57762,19 +57796,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // а за изгородь — только с пропуском Шута.
         let drift = false;
         if (!house_js_2.house.active && !underside_js_4.under.active && canLeaveSettlement()) {
-            // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет вперёд —
-            // не проскочить; вбок тянет и там (иначе на коротком тапе по льду ленты почти нет), на последних 10 — ничуть
+            // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет вовсе —
+            // не проскочить. Цена: короткий тап по льду тянет меньше, чем зажатая клавиша. Тянуть «только
+            // вбок» нельзя: лента всегда наружу, её боковая доля сводит с линии, ходок мажет мимо точки
+            // и на льду выкатывается к краю (сверка 24.10: шесть тапов из шести — в падение)
             const v2 = player.vx * player.vx + player.vy * player.vy;
-            const tdx = player.tx - player.x, tdy = player.ty - player.y, td = Math.hypot(tdx, tdy);
-            const braking = player.auto && !(player.path && player.path.length) && td < 10 + v2 / (2 * Math.max(0.005, S.decel));
-            let [pdx, pdy] = braking && td < 10 ? [0, 0] : feedPull_js_1.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), 2.4 * S.max, dvx, dvy, player.face, brainrot_js_1.inLoop());
-            if (braking && td > 0) {
-                const ux = tdx / td, uy = tdy / td, a = pdx * ux + pdy * uy;
-                if (a > 0) {
-                    pdx -= a * ux;
-                    pdy -= a * uy;
-                }
-            }
+            const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
+            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_1.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), 2.4 * S.max, dvx, dvy, player.face, brainrot_js_1.inLoop());
             // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
             // иначе сидящий у картинки позёмки съезжал и падал)
             if (!steering) {

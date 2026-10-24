@@ -72,7 +72,9 @@ export function drawSignature(ctx, x, y, w, h, color = '#241d18', width = 1.2) {
 
 // поле росчерка на бланке: рисуют углём; начал заново — прежняя подпись уступает
 // место новой, но только когда новый штрих лёг: тычок, правый клик, сорванный
-// жест подпись не трогают. Пишет одна рука: второй палец и ладонь — мимо.
+// жест подпись не трогают. Пишет один палец: кто первым лёг на поле, тот и ведёт
+// штрих; второй палец и ладонь посреди штриха — мимо (палец, что держит телефон
+// за краем поля, — не помеха).
 export function initSignPad(canvas, onChange) {
   if (!canvas || !canvas.getContext) return;
   const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
@@ -93,7 +95,7 @@ export function initSignPad(canvas, onChange) {
   let cur = null, id = null, list = strokes.slice(), fresh = true;
   const at = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * SIGN_W / r.width, (e.clientY - r.top) * SIGN_H / r.height]; };
   canvas.addEventListener('pointerdown', e => {
-    if (cur || !e.isPrimary || e.button !== 0) return;
+    if (cur || e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     id = e.pointerId;
     canvas.setPointerCapture && canvas.setPointerCapture(id);
