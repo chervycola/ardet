@@ -1,0 +1,248 @@
+From 37dc9c07395ee56632bff9ee9b46d174530a5771 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 10 May 2026 12:46:48 +0000
+Subject: [PATCH] Achievements: rebind to philosophy, wire dead unlocks, real
+ ach listing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Refresh the seven existing achievements with Архивариус-voice notes and a
+short philosophical hit per name (ПОДПИСЧИК / 47-Й / АРХИВАРИУС / СЛУШАТЕЛЬ /
+СВИДЕТЕЛЬ / AMOR FATI / МОХ ПОМНИТ / СЕАНС). Add three new tied to existing
+mechanics: ПЯТЫЙ (Cat at all five spots), ХОНТОЛОГИЯ (read .fisher), 47-Й
+(read 47 fragments).
+
+Wire the previously-dead three: fire on chai-with-Старец useAction,
+moss on a 10-min stillness counter ticked from the main loop, terminal on a
+new `terminal.cmd` event emitted by exec(). Fix archivist threshold (57 → 88,
+matching the actual lore.js count).
+
+Replace the `ach` terminal stub with a real list — marks, descriptions, the
+philosophical line on unlock, and a "X / N collected" footer.
+
+https://claude.ai/code/session_01LVwPreRodjCmwpCk6uZGEa
+---
+ src/core/achievements.js | 98 +++++++++++++++++++++++++++++++++++++++++++-----
+ src/main.js              |  3 +-
+ src/terminal/terminal.js | 27 +++++++++++--
+ 3 files changed, 114 insertions(+), 14 deletions(-)
+
+diff --git a/src/core/achievements.js b/src/core/achievements.js
+index 3c851ee..9591fe1 100644
+--- a/src/core/achievements.js
++++ b/src/core/achievements.js
+@@ -4,16 +4,69 @@
+ import { events, E } from './events.js';
+ 
+ const DEFS = {
+-  collector: { name: 'СОБИРАТЕЛЬ', desc: 'Собрал 20 фрагментов', threshold: 20 },
+-  archivist: { name: 'АРХИВАРИУС', desc: 'Собрал все фрагменты', threshold: 57 },
+-  listener: { name: 'СЛУШАТЕЛЬ', desc: 'Поговорил со всеми NPC', threshold: 5 },
+-  observers: { name: 'СВИДЕТЕЛЬ', desc: 'Увидел всех Наблюдателей', threshold: 4 },
+-  fire: { name: 'ОГНЕННЫЙ', desc: 'Бросил 7 вещей в костёр', threshold: 7 },
+-  moss: { name: 'МОХ ПОМНИТ', desc: 'Простоял 10 минут неподвижно' },
+-  terminal: { name: 'ПРОШИВКА', desc: 'Ввёл 10 команд в терминал', threshold: 10 },
++  collector: {
++    name: 'ПОДПИСЧИК',
++    desc: '20 фрагментов прочитано',
++    note: 'Подписка оформлена до твоего рождения.',
++    threshold: 20,
++  },
++  forty_seven: {
++    name: '47-Й',
++    desc: '47 фрагментов прочитано',
++    note: 'Шутка → тик → номер. Форма выжила.',
++    threshold: 47,
++  },
++  archivist: {
++    name: 'АРХИВАРИУС',
++    desc: 'Все 88 фрагментов прочитаны',
++    note: 'Архивариус — это ты.',
++    threshold: 88,
++  },
++  listener: {
++    name: 'СЛУШАТЕЛЬ',
++    desc: 'Услышал всех у костров',
++    note: 'Тишина — пароль. Ты его уже ввёл.',
++    threshold: 5,
++  },
++  observers: {
++    name: 'СВИДЕТЕЛЬ',
++    desc: 'Шут / Sol / Старец / Лунный',
++    note: 'Четыре способа быть в горящем доме.',
++    threshold: 4,
++  },
++  fire: {
++    name: 'AMOR FATI',
++    desc: 'Принял чай у Старца',
++    note: 'Совпал с огнём. Не выбирал.',
++  },
++  moss: {
++    name: 'МОХ ПОМНИТ',
++    desc: 'Простоял на месте 10 минут',
++    note: 'И приговор, и утешение.',
++  },
++  terminal: {
++    name: 'СЕАНС',
++    desc: '10 команд в терминал',
++    note: 'Спираль ведёт вниз. А вниз — это сюда же.',
++    threshold: 10,
++  },
++  cat: {
++    name: 'ПЯТЫЙ',
++    desc: 'Кот замечен во всех своих местах',
++    note: 'Не Наблюдатель. Не-Работник.',
++    threshold: 5,
++  },
++  hauntology: {
++    name: 'ХОНТОЛОГИЯ',
++    desc: 'Прочитан .fisher',
++    note: 'Конец капитализма представить трудно. Конец света — уже наступил.',
++  },
+ };
+ 
+ const unlocked = new Set();
++let termCmdCount = 0;
++let stillFrames = 0;
++const STILL_FRAMES_FOR_MOSS = 36000; // 10 min @ 60fps
+ 
+ function unlock(id) {
+   if (unlocked.has(id)) return;
+@@ -24,11 +77,12 @@ function unlock(id) {
+   console.log(`[ach] ${def.name} — ${def.desc}`);
+ }
+ 
+-export function init(flags, getLore, getTerminalCount) {
++export function init(flags, getLore) {
+   events.on(E.LORE_COLLECT, () => {
+     const count = getLore();
+     if (count >= 20) unlock('collector');
+-    if (count >= 57) unlock('archivist');
++    if (count >= 47) unlock('forty_seven');
++    if (count >= 88) unlock('archivist');
+   });
+   events.on(E.NPC_TALK, () => {
+     if (flags.talkedTo.size >= 5) unlock('listener');
+@@ -36,11 +90,35 @@ export function init(flags, getLore, getTerminalCount) {
+   events.on(E.OBSERVER_MET, () => {
+     if (flags.observersSeen && flags.observersSeen.size >= 4) unlock('observers');
+   });
++  events.on('location.use', (loc) => {
++    if (!loc) return;
++    const key = loc.useAction || loc.id;
++    if (key === 'campfire_throw' || key === 'tent_tea') unlock('fire');
++  });
++  events.on('terminal.cmd', () => {
++    termCmdCount++;
++    if (termCmdCount >= 10) unlock('terminal');
++  });
++  events.on('terminal.read', (file) => {
++    const k = (file || '').replace(/^\./, '').toLowerCase();
++    if (k === 'fisher') unlock('hauntology');
++  });
++  events.on('cat.sighted', (loc, count) => {
++    if (count >= 5) unlock('cat');
++  });
++}
++
++// Called from the main update loop. moving=true → reset; false → tick.
++export function tickStillness(moving) {
++  if (moving) { stillFrames = 0; return; }
++  stillFrames++;
++  if (stillFrames >= STILL_FRAMES_FOR_MOSS) unlock('moss');
+ }
+ 
+ export function getUnlocked() { return Array.from(unlocked); }
++export function getDefs() { return DEFS; }
++export function isUnlocked(id) { return unlocked.has(id); }
+ export function loadUnlocked(ids) {
+   unlocked.clear();
+   if (Array.isArray(ids)) ids.forEach(id => unlocked.add(id));
+ }
+-export function getDefs() { return DEFS; }
+diff --git a/src/main.js b/src/main.js
+index 79c0988..7d33c27 100644
+--- a/src/main.js
++++ b/src/main.js
+@@ -35,7 +35,7 @@ import { initShop, openShop } from './ui/shop.js';
+ import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound } from './audio/audio.js';
+ import { updateZone, getZone } from './audio/zoneAmbient.js';
+ import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
+-import { init as initAchievements, getUnlocked, loadUnlocked } from './core/achievements.js';
++import { init as initAchievements, getUnlocked, loadUnlocked, tickStillness } from './core/achievements.js';
+ import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
+ import { update as updateIdle, draw as drawIdle } from './world/idle.js';
+ import { check as checkWhisper, draw as drawWhisper } from './world/whisper.js';
+@@ -403,6 +403,7 @@ function updateGame() {
+   updateMonsters(player);
+   updateZone(getZone(player.x, player.y));
+   updateIdle(player.moving);
++  tickStillness(player.moving);
+   checkWhisper(player, locations);
+   updateParticles();
+   updateWeather(getZone(player.x, player.y));
+diff --git a/src/terminal/terminal.js b/src/terminal/terminal.js
+index 9a17c36..a70c78e 100644
+--- a/src/terminal/terminal.js
++++ b/src/terminal/terminal.js
+@@ -4,6 +4,7 @@
+ import { state } from '../core/state.js';
+ import { events } from '../core/events.js';
+ import { termDb } from '../content/terminal_db.js';
++import { getDefs, isUnlocked } from '../core/achievements.js';
+ 
+ const termEl = document.getElementById('term');
+ const inputEl = document.getElementById('ti');
+@@ -206,9 +207,23 @@ const commands = {
+   },
+ 
+   ach() {
+-    print(`ДОСТИЖЕНИЯ:
+-> функция в разработке.
+-> мох уже знает, что ты их собираешь.`, '#1a6b1a');
++    const defs = getDefs();
++    const lines = ['ДОСТИЖЕНИЯ:', ''];
++    let got = 0;
++    const total = Object.keys(defs).length;
++    for (const id of Object.keys(defs)) {
++      const d = defs[id];
++      const ok = isUnlocked(id);
++      if (ok) got++;
++      const mark = ok ? '★' : '·';
++      lines.push(`  ${mark} ${d.name}`);
++      lines.push(`     ${d.desc}`);
++      if (ok && d.note) lines.push(`     « ${d.note} »`);
++      lines.push('');
++    }
++    lines.push(`собрано: ${got} / ${total}`);
++    lines.push('мох считает за тебя.');
++    print(lines.join('\n'), '#1a6b1a');
+   },
+ 
+   map() {
+@@ -289,11 +304,16 @@ function exec(cmd) {
+   history.push(trimmed);
+   historyIdx = history.length;
+   print('> ' + trimmed, '#666');
++  events.emit('terminal.cmd', trimmed);
+ 
+   const parts = trimmed.toLowerCase().split(/\s+/);
+   const name = parts[0];
+   const args = parts.slice(1);
+ 
++  if (name === 'read' || name === 'cat') {
++    if (args[0]) events.emit('terminal.read', args[0]);
++  }
++
+   const fn = commands[name];
+   if (fn) {
+     fn.call(commands, args);
+@@ -301,6 +321,7 @@ function exec(cmd) {
+     // Try as a whois/read fallback (handles bare ".moss" etc.)
+     const dbKey = name.replace(/^\./, '');
+     if (termDb[dbKey]) {
++      events.emit('terminal.read', name);
+       print(termDb[dbKey].text, termDb[dbKey].color);
+     } else {
+       print(`> команда не найдена: ${name}\n> введи help`, '#8b0000');

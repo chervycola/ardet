@@ -1,0 +1,39 @@
+From 56b3e4efd057ade40aea0aa87cc939ea8a9bfb60 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 24 Apr 2026 21:08:43 +0000
+Subject: [PATCH] Graffiti tag: drop Banksy, land a wordplay punchline
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Cut all Banksy references (Pest Control, Love is in the Bin, his quote).
+Keep the moss-from-spray-can setup. New punchline rides on the double
+meaning of "стена" in Russian — physical wall and social-feed wall —
+so the wall publishes your tag before you finish it, with 34 reactions and
+a "кринж" comment, and your own reaction isn't among them.
+
+https://claude.ai/code/session_01LVwPreRodjCmwpCk6uZGEa
+---
+ src/world/useActions.js | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/world/useActions.js b/src/world/useActions.js
+index 061187b..7a5cb1c 100644
+--- a/src/world/useActions.js
++++ b/src/world/useActions.js
+@@ -200,13 +200,11 @@ export const useTexts = {
+ «Не ходи туда. Сходишь — вернёшься без.»
+ 
+ На дне чашки — зелёный кружок. Он растёт быстрее, чем ты пьёшь.` },
+-  'graffiti_tag': { title: `ОСТАВИТЬ МЕТКУ`, text: `Ты поднимаешь баллон. Паук перечёркнут. Бэнкси. На дне — бирка: «Pest Control — подлинность подтверждена». Так и называется орган, заверяющий Бэнкси.
++  'graffiti_tag': { title: `ОСТАВИТЬ МЕТКУ`, text: `Ты поднимаешь баллон. Паук перечёркнут. Пустой, но ещё тяжёлый: в дне что-то есть.
+ 
+ Жмёшь на сопло. Выходит не краска — мох. Прилипает к бетону и сразу стареет.
+ 
+-Пишешь имя. Мох съедает буквы быстрее, чем ты их выводишь. На середине баллон шредит сам себя — ровной полосой, как «Love is in the Bin» на Sotheby's в 18-м. Цена удвоилась. Покупателей нет. Это и есть успех.
+-
+-Под меткой — старое: «if graffiti changed anything it would be illegal». Теперь illegal. Никто не заметил.` },
++Пишешь имя. Мох съедает буквы быстрее, чем ты их выводишь. Ставишь точку — стена уже опубликовала: геолокация, подпись «живу», тридцать четыре реакции. Один коммент: «кринж». Твоей реакции — нет.` },
+   'church_candle': { title: `СПУСК В КРИПТУ`, text: `Ступени ведут вниз. Ты считаешь: девять.
+ 
+ — 1 — темнее

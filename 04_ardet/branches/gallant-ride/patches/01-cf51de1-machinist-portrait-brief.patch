@@ -1,0 +1,43 @@
+From cf51de15f4f3c8df29f94835f38750d021432e83 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 24 Jun 2026 11:35:37 +0000
+Subject: [PATCH] content: add Machinist portrait brief (house-style
+ iconostasis)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+No canonical look existed for the Train NPC. Brief written to the
+locked woodcut house style and grounded in lore (train / l64 / l78):
+the one who *sits* — multi-armed half-Shiva fused to the dead
+locomotive's controls, hands in ritual mudras on the levers, gaze on a
+door left ajar (wife who stepped off at Bologoye, won't return). Single
+dim-ember accent in the firebox — proposed, pending confirmation.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01W1QYpUgPvprt4gjyDEjp8o
+---
+ src/content/looks.js | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/content/looks.js b/src/content/looks.js
+index f2729c9..9c6eb26 100644
+--- a/src/content/looks.js
++++ b/src/content/looks.js
+@@ -211,6 +211,16 @@ export const looks = {
+ 
+ Квартира 13, первый этаж: дверь с двадцатью замками. Все открыты. Внутри — никого. На табурете — примус. Починен.`,
+ 
++  // Машинист — портрет-бриф (канонического описания не было; написан под
++  // дом-стиль иконостаса, опирается на train/l64/l78: «сидящий», 4-я фигура).
++  machinist: `Машинист сросся с пультом мёртвого паровоза. Не ведёт — сидит. Это не глагол, а состояние.
++
++Многорукая поза, но согбенная, сидячая: ладони лежат на латунных рычагах и регуляторе в ритуальных мудрах — пальцы артикулированы, но неподвижны. Две руки — голая кость, одна — тонкая звериная лапа.
++
++Голова опущена под форменной фуражкой. Лицо — спокойная костяная маска с пустыми глазами, повёрнутыми к двери, оставленной приоткрытой. Жена сошла в Бологое в 12-м. Он знает, что не вернётся. Дверь не закрывает — закрыть значит признать.
++
++Из топки тянется пар, штриховкой к небу. Трава у колёс не растёт — боится потревожить. Единственный тёплый отсвет — один тусклый уголь в открытой топке. Больше он не ждёт. Он просто не встаёт.`,
++
+   sol_home: `Sol стоит у терминала. Не смотрит на экран — экран смотрит на него.
+ 
+ Вместо головы — пылающий диск. Четырнадцать лучей медленно вращаются, как стрелки часов, которые ждут, что их оттянут назад. Под диском — лицо: закрытые глаза, золотые потёки, замершие на щеках.

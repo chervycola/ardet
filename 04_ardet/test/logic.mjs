@@ -1,0 +1,491 @@
+// ═══════════════════════════════════════
+// LOGIC TESTS — non-visual modules: terminal, weather, save, world.
+// Stubs DOM + localStorage and exercises public APIs to catch bad
+// state transitions, ReferenceErrors, broken invariants.
+// Run: node test/logic.mjs
+// ═══════════════════════════════════════
+const noop = () => {};
+
+// ── localStorage shim ──
+const storage = new Map();
+globalThis.localStorage = {
+  getItem: k => storage.has(k) ? storage.get(k) : null,
+  setItem: (k, v) => storage.set(k, String(v)),
+  removeItem: k => storage.delete(k),
+  clear: () => storage.clear(),
+};
+
+// ── DOM shim — terminal needs real-ish elements ──
+function fakeEl(tag = 'div') {
+  const el = {
+    tagName: tag.toUpperCase(),
+    children: [],
+    style: {},
+    classList: { add: noop, remove: noop, contains: () => false, toggle: noop },
+    appendChild(c) { this.children.push(c); return c; },
+    removeChild(c) { this.children = this.children.filter(x => x !== c); return c; },
+    addEventListener: noop, removeEventListener: noop,
+    focus: noop, blur: noop,
+    set innerHTML(v) { this._html = v; if (v === '') this.children = []; },
+    get innerHTML() { return this._html || ''; },
+    set textContent(v) { this._text = v; },
+    get textContent() { return this._text || ''; },
+    set value(v) { this._value = v; },
+    get value() { return this._value || ''; },
+    scrollTop: 0, scrollHeight: 0,
+  };
+  return el;
+}
+const elementCache = new Map();
+globalThis.window = {
+  innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
+  addEventListener: noop, removeEventListener: noop, visualViewport: null,
+};
+globalThis.document = {
+  getElementById: id => {
+    if (!elementCache.has(id)) elementCache.set(id, fakeEl());
+    return elementCache.get(id);
+  },
+  createElement: tag => fakeEl(tag),
+  addEventListener: noop, querySelectorAll: () => [], title: 'x',
+};
+globalThis.requestAnimationFrame = noop;
+globalThis.setInterval = () => 0;
+globalThis.clearInterval = noop;
+globalThis.setTimeout = (fn) => { try { fn(); } catch {} return 0; };
+
+// ── Test infra ──
+const results = []; // { name, status, msg }
+function test(name, fn) {
+  try {
+    fn();
+    results.push({ name, status: 'pass' });
+  } catch (e) {
+    results.push({ name, status: 'fail', msg: e.message, stack: e.stack });
+  }
+}
+function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+function eq(a, b, msg) { if (a !== b) throw new Error((msg || 'expected equality') + `: ${a} !== ${b}`); }
+
+const base = new URL('../src/', import.meta.url);
+const imp = p => import(new URL(p, base));
+
+// ═══════════════════════════════════════
+// TERMINAL — every command runs without throwing
+// ═══════════════════════════════════════
+{
+  const term = await imp('terminal/terminal.js');
+  term.init();
+  const { exec, commands } = term._test;
+
+  // Each command name + a representative arg variant
+  const inputs = [
+    'help', 'dir', 'ls', 'ls secrets', 'dir /secrets',
+    'read', 'read .moss', 'read .fisher', 'read .ardet',
+    'read .alephs', 'read .angel', 'read .baseline', 'read .commons',
+    'read .cycle', 'read .convivial', 'read .joy', 'read .demiurge',
+    'read nonsense-file',
+    'cat', 'cat .ardet', 'cat .moss_weights', 'cat unknown',
+    'whois', 'whois camus', 'whois fisher', 'whois nobody',
+    'prompt', 'prompt jester', 'prompt unknown',
+    'status', 'ach', 'map', 'ping', 'mycelium', 'fortune',
+    'history', 'clear', 'echo hello world', 'ardet',
+    '.moss', '.fisher', // bare-file fallback
+    'thisIsNotACommand',
+    '', '   ', // empty / whitespace — should be no-op
+  ];
+
+  test('terminal: every command in inputs runs without throwing', () => {
+    for (const cmd of inputs) {
+      exec(cmd);
+    }
+  });
+
+  test('terminal: history accumulates non-empty commands only', () => {
+    const h0 = term._test.history.length;
+    exec('echo a');
+    exec('');
+    exec('   ');
+    exec('echo b');
+    assert(term._test.history.length === h0 + 2, 'empty inputs must not enter history');
+  });
+
+  test('terminal: open/close lifecycle does not crash', () => {
+    term.open(); term.close(); term.open(); term.close();
+  });
+
+  test('terminal: commands map matches help text claims', () => {
+    // 'ach' снята вместе с ачивками: глубина не геймифицируется
+    const required = ['help','dir','ls','read','cat','whois','status','map','ping','mycelium','fortune','history','clear','exit','echo','ardet'];
+    for (const r of required) assert(typeof commands[r] === 'function', `missing: ${r}`);
+  });
+}
+
+// ═══════════════════════════════════════
+// WEATHER — scheduler invariants over a long simulated run
+// ═══════════════════════════════════════
+{
+  const { weather, update: updateWeather, WEATHER_STATE } = await imp('render/weather.js');
+  const { tick } = await imp('core/time.js');
+
+  test('weather: rain starts at most once per 9 minutes', () => {
+    // Reset relevant state
+    weather.lastStartAt[WEATHER_STATE.TOXIC_RAIN] = -999999;
+    weather.lastStartAt[WEATHER_STATE.SANDSTORM] = -999999;
+    weather.nextCheck = 1800;
+    weather.currentDuration = 0;
+    weather.state = WEATHER_STATE.CLEAR;
+    weather.intensity = 0;
+
+    const rainStarts = [];
+    let prevState = WEATHER_STATE.CLEAR;
+    // Simulate 30 minutes @ 60fps to give multiple rain cycles a chance
+    const FRAMES = 30 * 60 * 60;
+    for (let f = 0; f < FRAMES; f++) {
+      tick();
+      // Force a rain-preferring zone
+      updateWeather('toxic');
+      if (weather.state === WEATHER_STATE.TOXIC_RAIN && prevState !== WEATHER_STATE.TOXIC_RAIN) {
+        rainStarts.push(f);
+      }
+      prevState = weather.state;
+    }
+    // Verify min gap
+    for (let i = 1; i < rainStarts.length; i++) {
+      const gap = rainStarts[i] - rainStarts[i - 1];
+      assert(gap >= 32400, `rain gap ${gap} < 32400 frames (9 min) between starts ${rainStarts[i-1]}→${rainStarts[i]}`);
+    }
+    // Should have triggered AT LEAST one rain in 30 minutes of forced rain zone
+    assert(rainStarts.length >= 1, 'expected at least one rain event in 30min simulation');
+  });
+
+  test('weather: intensity stays in [0,1]', () => {
+    for (let f = 0; f < 5000; f++) {
+      tick();
+      updateWeather(['toxic', 'highway', 'settlement', 'forest', 'quarter'][f % 5]);
+      assert(weather.intensity >= 0 && weather.intensity <= 1, `intensity out of bounds: ${weather.intensity}`);
+    }
+  });
+
+  test('weather: particle pools have caps (no leaks)', () => {
+    for (let f = 0; f < 10000; f++) {
+      tick();
+      updateWeather('toxic');
+    }
+    assert(weather.rainParts.length <= 90, `rain pool overgrew: ${weather.rainParts.length}`);
+    assert(weather.puddles.length <= 30, `puddle pool overgrew: ${weather.puddles.length}`);
+    for (let f = 0; f < 10000; f++) {
+      tick();
+      updateWeather('highway');
+    }
+    assert(weather.sandParts.length <= 140, `sand pool overgrew: ${weather.sandParts.length}`);
+  });
+}
+
+// ═══════════════════════════════════════
+// SAVE / LOAD — round-trip + bad data
+// ═══════════════════════════════════════
+{
+  const { saveGame, loadGame, clearSave } = await imp('core/save.js');
+
+  test('save/load: round-trip preserves payload', () => {
+    clearSave();
+    const payload = {
+      player: { x: 800, y: 900 },
+      talkedTo: ['jester', 'sol'],
+      visited: ['campfire', 'library', 'crater'],
+      observersSeen: ['jester'],
+      collectedLore: ['l1', 'l42', 'l88'],
+      graffiti: [{ x: 100, y: 200, text: 'ардет' }],
+      catSightings: 3,
+      catUnlocked: true,
+    };
+    assert(saveGame(payload), 'saveGame returned false');
+    const back = loadGame();
+    assert(back !== null, 'loadGame returned null after save');
+    eq(back.player.x, 800, 'player.x');
+    eq(back.player.y, 900, 'player.y');
+    eq(back.talkedTo.length, 2, 'talkedTo length');
+    eq(back.collectedLore.length, 3, 'lore length');
+    eq(back.catUnlocked, true, 'catUnlocked');
+    eq(back.version, 2, 'version stamped');
+    assert(typeof back.timestamp === 'number', 'timestamp present');
+  });
+
+  test('save/load: empty storage returns null', () => {
+    clearSave();
+    eq(loadGame(), null, 'expected null from empty storage');
+  });
+
+  test('save/load: corrupt JSON does not throw', () => {
+    storage.set('ardet_v2_save', '{not valid json');
+    eq(loadGame(), null, 'corrupt save should return null, not throw');
+  });
+}
+
+// ═══════════════════════════════════════
+// PHYSICS — movement + settlement lock
+// ═══════════════════════════════════════
+{
+  const PHY = await imp('world/physics.js');
+  const { tryMove, isInSettlement } = PHY;
+  const DSC0 = await imp('world/disc.js');
+  // координаты записаны в мире прежнего поля (2300): городок — контент 0..3000 × 160..1800,
+  // ныне он в центре диска и ×1,25 от угла (world/disc.js: townX, townY)
+  const { townX, townY } = await imp('world/disc.js');
+  const old = (x, y) => ({ x: townX(x - 2300), y: townY(y - 2140) });
+  const { locations } = await imp('world/locations.js');
+
+  test('physics: stranded outside settlement → tryMove can walk back in', () => {
+    // Regression for the "stuck near Pizzeria Babylon" bug. The Pizzeria
+    // click-teleport landed the player at (2664, 1443) but the locked
+    // starting area ends at x=2650. With the old per-frame slide rule
+    // (must land inside in one step) the 2.4 px/frame keyboard step
+    // could never bring the player back: 2664 - 2.4 = 2661.6, still
+    // outside. The recovery slide must allow moves that REDUCE distance
+    // to the settlement even if the new position is still outside.
+    const player = old(4964, 3583);
+    assert(!isInSettlement(player.x, player.y), 'precondition: outside');
+
+    let frames = 0;
+    while (!isInSettlement(player.x, player.y) && frames < 200) {
+      const moved = tryMove(player, -2.4, 0, locations, { canLeaveSettlement: false });
+      assert(moved, `stuck at frame ${frames}, x=${player.x}`);
+      frames++;
+    }
+    assert(isInSettlement(player.x, player.y),
+      `failed to re-enter after ${frames} frames at (${player.x},${player.y})`);
+    assert(frames < 50, `took too long: ${frames} frames`);
+  });
+
+  test('physics: stranded recovery only allows progress, not further drift', () => {
+    // Same scenario, but trying to push further out (east, away from
+    // settlement). Must be rejected.
+    const player = old(4964, 3583);
+    const moved = tryMove(player, +2.4, 0, locations, { canLeaveSettlement: false });
+    assert(!moved, 'must not allow movement further away from settlement');
+    eq(player.x, old(4964, 3583).x, 'x unchanged');
+  });
+
+  test('physics: застрявший снаружи не уходит вдоль края диагональю — только к городку по каждой оси', () => {
+    const { SETTLEMENT } = PHY;
+    const { TOWN } = DSC0;
+    // полоса между изгородью и краем городка: с запада и с юга, диагональ наружу
+    for (const [x, y, dx, dy] of [[SETTLEMENT.x1 - 2, (SETTLEMENT.y1 + SETTLEMENT.y2) / 2, -1, -1.15], [(SETTLEMENT.x1 + SETTLEMENT.x2) / 2, SETTLEMENT.y2 + 3, -1.15, 1]]) {
+      const p = { x, y };
+      for (let i = 0; i < 600; i++) tryMove(p, dx * 2.4, dy * 2.4, [], { canLeaveSettlement: false });
+      assert(p.x >= TOWN.x0 - 1 && p.y <= TOWN.y1 + 1 && p.x >= SETTLEMENT.x1 - 3 && p.y <= SETTLEMENT.y2 + 4, `ушёл: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`);
+    }
+    // а к городку — дойти можно
+    const back = { x: SETTLEMENT.x1 - 30, y: SETTLEMENT.y2 + 30 };
+    for (let i = 0; i < 100 && !isInSettlement(back.x, back.y); i++) tryMove(back, 2, -2, [], { canLeaveSettlement: false });
+    assert(isInSettlement(back.x, back.y), 'к городку не дойти');
+  });
+
+  test('physics: inside settlement, trying to cross boundary is still blocked', () => {
+    // The other half of the contract: a player inside the zone can't
+    // walk OUT while it's locked. (Movement along the boundary should
+    // still work via the original per-axis slide.)
+    const player = old(4949, 3040);  // 1 px inside east edge
+    assert(isInSettlement(player.x, player.y));
+    const moved = tryMove(player, +5, 0, locations, { canLeaveSettlement: false });
+    // Either no move (5px east crosses the line) or sliding works on y.
+    // We just assert player didn't end up outside.
+    assert(isInSettlement(player.x, player.y),
+      `breached boundary: (${player.x},${player.y})`);
+  });
+}
+
+// ═══════════════════════════════════════
+// WORLD — pure update functions
+// ═══════════════════════════════════════
+{
+  const whisper = await imp('world/whisper.js');
+  const inscriptions = await imp('world/inscriptions.js');
+  const idle = await imp('world/idle.js');
+  const brainrot = await imp('world/brainrot.js');
+  const lore = await imp('world/lore.js');
+  const { locations } = await imp('world/locations.js');
+  const { loreItems } = await imp('content/lore.js');
+  const { tick } = await imp('core/time.js');
+
+  test('whisper.check: empty/no-loc inputs do not throw', () => {
+    whisper.check({ x: 0, y: 0, moving: false }, []);
+    whisper.check({ x: 99999, y: 99999, moving: false }, locations);
+    whisper.check({ x: 1000, y: 920, moving: true }, locations);  // moving — no trigger
+  });
+
+  test('inscriptions.updateProximity: accumulates only when player is stationary', () => {
+    const player = { x: 600, y: 850, moving: true };
+    for (let i = 0; i < 30; i++) inscriptions.updateProximity(player, locations);
+    // Now stationary near graffiti (600,850, w=60,h=45 → center ~630,872 — within 60px)
+    player.moving = false;
+    player.x = 625; player.y = 870;
+    for (let i = 0; i < 30; i++) inscriptions.updateProximity(player, locations);
+    // Smoke: completing 60 calls without exception is the bar
+  });
+
+  test('idle.update: does not crash on flip-flop input', () => {
+    for (let i = 0; i < 5000; i++) {
+      tick();
+      idle.update(i % 7 === 0);   // mostly stationary, occasional moves
+    }
+  });
+
+  test('brainrot.update: handles far-from-map without crashing; level bounded [0,100]', () => {
+    const player = { x: -2000, y: -2000 };
+    for (let i = 0; i < 2000; i++) {
+      tick();
+      brainrot.update(player);
+      const lvl = brainrot.getLevel();
+      assert(lvl >= 0 && lvl <= 100, `brainrot out of [0,100]: ${lvl}`);
+    }
+  });
+
+  test('lore: load/getCollectedIds round-trip', () => {
+    const original = ['l1', 'l5', 'l12'];
+    lore.loadCollected(original);
+    const back = lore.getCollectedIds();
+    eq(back.length, 3, 'length');
+    for (const id of original) assert(lore.isCollected(id), `missing: ${id}`);
+  });
+
+  test('lore.checkLorePickup: re-visiting same spot does not re-add a collected item', () => {
+    lore.loadCollected([]);
+    const item = loreItems[0];
+    const player = { x: item.x, y: item.y };
+    const first = lore.checkLorePickup(player);
+    assert(first && first.id === item.id, 'expected to pick up l1');
+    const countAfterFirst = lore.getCollectedCount();
+    // Hammer the same spot — must not re-collect the same id (its return
+    // value can either be null OR a different neighbor item, but the
+    // already-collected id must never be re-counted)
+    for (let i = 0; i < 10; i++) lore.checkLorePickup(player);
+    assert(lore.isCollected(item.id), 'item should remain collected');
+    // The count may have grown if a neighbor was in range, but the
+    // SAME id must not be added twice
+    const ids = lore.getCollectedIds();
+    const seen = new Set(); for (const id of ids) {
+      assert(!seen.has(id), `id ${id} appears twice`);
+      seen.add(id);
+    }
+  });
+}
+
+// ═══ СТРАНИЦЫ ОСМОТРА (ui/pages.js) ═══
+{
+  const { paginate, pageMeasure, NL_COST } = await imp('ui/pages.js');
+  test('осмотр: страницы — без потерь, в меру окна, по абзацу или по пробелу, слово не рвётся', () => {
+    const para = 'Слово за словом ложится строка, и ни одна не рвётся посередине. '.repeat(9).trim();
+    const text = [para, para, 'Агора 300 м →    место казни 350 м →', para].join('\n\n');
+    const pages = paginate(text, 600);
+    eq(pages.join(''), text, 'текст собран из страниц без потерь');
+    assert(pages.length >= 3, `страниц ${pages.length}`);
+    const cost = s => s.length + (s.match(/\n/g) || []).length * NL_COST;
+    for (const p of pages) {
+      assert(cost(p) <= 600, `страница сверх меры: ${cost(p)}`);
+      assert(/(\n\n| )$/.test(p) || p === pages[pages.length - 1], `страница кончается посреди слова: «…${p.slice(-12)}»`);
+    }
+    assert(pages.some(p => p.includes('Агора 300 м →    место казни')), 'пробелы указателя целы');
+    eq(paginate('коротко', 600).length, 1);
+    const big = pageMeasure(1920, 1000), lap = pageMeasure(1366, 650), phone = pageMeasure(390, 844, true);
+    assert(big.budget > lap.budget, 'выше окно — больше знаков');
+    assert(lap.budget >= 600 && pageMeasure(3840, 2160).budget <= 1500, 'мера в пределах');
+    assert(phone.nl < big.nl, 'на телефоне строка короче — перенос дешевле');
+    assert(phone.budget >= 600, `телефон держит не меньше прежнего: ${phone.budget}`);
+  });
+}
+
+// ── опись найденного (ui/inventory.js) ──
+{
+  const INV = await imp('ui/inventory.js');
+  test('опись найденного: записки по номерам, пустые графы не скрываются, заголовок не висит в конце листа', () => {
+    const d = { notes: [{ n: 1, text: 'Конверт без адреса. Внутри — письмо «Отцу», дописанное двадцать раз, по строке в год.' }, { n: 2, text: 'Коротко.' }], total: 132, ways: [], rooms: ['Крипта, девятый ярус'], rites: ['Журнал учений — расписался.'] };
+    const L = INV.inventoryLines(d);
+    eq(L[0].h, 'Записки');
+    eq(L[1].n, '№ 001'); assert(L[1].text.endsWith('…') && L[1].text.length <= 66, 'первые слова записки');
+    eq(L[2].text, 'Коротко.');
+    assert(L[3].empty && L[3].n === '№ 003–132' && /графы не заполнены/.test(L[3].text), 'пустые графы — строкой с номерами');
+    assert(L.some(l => l.h === 'Ходы изнанки') && L.some(l => l.empty && l.text === 'графа не заполнена'), 'пустая графа ходов — не скрыта');
+    assert(L.some(l => l.text === 'Крипта, девятый ярус') && L.some(l => l.text === 'Журнал учений — расписался.'), 'где был и обряды');
+    for (const per of [4, 5, 6, 7]) {
+      const P = INV.inventoryPages(L, per);
+      eq(P.flat().length, L.length, 'ничего не потеряно');
+      for (const p of P) { assert(p.length <= per, 'лист не длиннее меры'); assert(!p[p.length - 1].h, 'заголовок графы — последней строкой листа'); }
+    }
+    const all = { notes: Array.from({ length: 132 }, (_, i) => ({ n: i + 1, text: 'x' })), total: 132, ways: [], rooms: [], rites: [] };
+    assert(!INV.inventoryLines(all).some(l => /не заполнен/.test(l.text) && l.n), 'всё найдено — пустых граф записок нет');
+  });
+}
+
+// ── тихое подаёт голос (world/quietSound.js) ──
+{
+  const QS = await imp('world/quietSound.js');
+  test('тихое подаёт голос: ближняя неосмотренная вещь в тени, со своей стороны; осмотренная молчит; не чаще меры', () => {
+    const sign = { id: 's', quiet: true, x: 90, y: 0, w: 20, h: 20 };          // подножие (100, 20)
+    const hut = { id: 'h', quiet: true, archDraw: () => {}, archX: -60, archGy: 20, x: -80, y: -20, w: 40, h: 40 };
+    const loud = { id: 'l', x: 0, y: 0, w: 10, h: 10 };
+    const none = () => false, last = new Map();
+    let q = QS.quietVoice([sign, hut, loud], 0, 20, 1000, none, last);
+    eq(q.l.id, 'h', 'ближняя'); eq(q.kind, 'creak', 'постройка скрипит'); assert(q.pan < 0, 'слева — слева');
+    q = QS.quietVoice([sign, loud], 0, 20, 1000, none, last);
+    eq(q.kind, 'rustle', 'табличка шуршит'); assert(q.pan > 0 && q.v > 0 && q.v <= 1, 'справа, громкость в мере');
+    eq(QS.quietVoice([sign], 0, 20, 1000, id => id === 's', last), null, 'осмотренная молчит');
+    eq(QS.quietVoice([loud], 0, 20, 1000, none, last), null, 'громкая — не тихая');
+    eq(QS.quietVoice([sign], 400, 20, 1000, none, last), null, 'далеко — не слышно');
+    last.set('s', 900);
+    eq(QS.quietVoice([sign], 0, 20, 1000, none, last), null, 'своя мера: недавно звучала');
+    eq(QS.quietVoice([sign], 0, 20, 900 + QS.OWN, none, last, 900 + QS.OWN - 10), null, 'общая мера: только что звучала другая');
+    assert(QS.quietVoice([sign], 0, 20, 900 + QS.OWN, none, last, 0), 'прошло — снова отзывается');
+  });
+}
+
+// ── повторный осмотр (world/relook.js): точнее, вариант по обстановке ──
+{
+  const RL = await imp('world/relook.js');
+  const { RELOOKS } = await imp('content/relooks.js');
+  test('повторный осмотр: первый — свой текст; второй — точнее, по обстановке; виденное не повторяется, пока есть новое', () => {
+    RL._resetRelook();
+    const night = new Set(['night']), day = new Set(['day']);
+    RL.noteLook('campfire');
+    eq(RL.relookText('campfire', night), null, 'первый осмотр — свой текст');
+    RL.noteLook('campfire');
+    assert(/полумесяц не уходит/.test(RL.relookText('campfire', night)), 'ночью — ночной вариант');
+    RL.noteLook('campfire');
+    assert(/девятнадцать/.test(RL.relookText('campfire', night)), 'третий ночью — ещё не виденный');
+    RL.noteLook('campfire');
+    assert(/мерку помнит рука/.test(RL.relookText('campfire', day)), 'днём — то, что ещё не видел');
+    RL.noteUse('campfire'); RL.noteLook('campfire');
+    assert(/без описи/.test(RL.relookText('campfire', day)), 'сделал что-то с вещью — об этом');
+    eq(RL.relookText('nothing_here', night), null, 'нет вариантов — свой текст');
+    const saved = JSON.parse(JSON.stringify(RL.saveRelook()));
+    RL._resetRelook(); RL.loadRelook(saved);
+    eq(RL.lookCount('campfire'), 5, 'счёт помнит сохранение');
+    assert(RL.wasUsed('campfire'), 'тронутое помнит сохранение');
+    RL._resetRelook();
+  });
+  test('повторный осмотр: у каждой вещи есть вариант без условий; метки — из известных; тексты не пустые', () => {
+    const TAGS = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind', 'used', 'n3']);
+    for (const [id, list] of Object.entries(RELOOKS)) {
+      assert(list.some(v => !v.if || !v.if.length), `${id}: нет варианта на любую обстановку`);
+      for (const v of list) {
+        assert(typeof v.text === 'string' && v.text.length > 20, `${id}: пустой текст`);
+        for (const tg of v.if || []) assert(TAGS.has(tg), `${id}: неизвестная метка ${tg}`);
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// REPORT
+// ═══════════════════════════════════════
+const passed = results.filter(r => r.status === 'pass').length;
+const failed = results.filter(r => r.status === 'fail');
+console.log('\n── LOGIC TESTS ──');
+for (const r of results) {
+  console.log(`${r.status === 'pass' ? '✓' : '✗'} ${r.name}`);
+  if (r.status === 'fail') console.log(`  ${r.msg}`);
+}
+console.log(`\n${passed}/${results.length} passed`);
+if (failed.length) { console.log(`\nFirst failure stack:\n${failed[0].stack}`); process.exit(1); }
+process.exit(0);

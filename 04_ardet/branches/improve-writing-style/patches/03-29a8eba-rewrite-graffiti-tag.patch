@@ -1,0 +1,43 @@
+From 29a8eba4579149a32ff361fd981a145ccab73b94 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 24 Apr 2026 21:03:33 +0000
+Subject: [PATCH] Rewrite graffiti tag: pathos out, dense irony in
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Drop the "почерк твоего будущего" line and the mystic Banksy pathos. Replace
+with three dense, factual ironies: Pest Control Office is the literal name of
+Banksy's authentication body; "Love is in the Bin" doubled in value after
+self-shredding at Sotheby's 2018; his own quote "if graffiti changed anything
+it would be illegal" plays flat in a world where it now is, and no one cares.
+
+No callbacks — jokes stand on external facts, not internal recognition.
+
+https://claude.ai/code/session_01LVwPreRodjCmwpCk6uZGEa
+---
+ src/world/useActions.js | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/world/useActions.js b/src/world/useActions.js
+index 0637411..061187b 100644
+--- a/src/world/useActions.js
++++ b/src/world/useActions.js
+@@ -200,13 +200,13 @@ export const useTexts = {
+ «Не ходи туда. Сходишь — вернёшься без.»
+ 
+ На дне чашки — зелёный кружок. Он растёт быстрее, чем ты пьёшь.` },
+-  'graffiti_tag': { title: `ОСТАВИТЬ МЕТКУ`, text: `Ты поднимаешь с земли баллон. На нём — паук, перечёркнутый. Бэнкси. Пустой, но ещё тяжёлый: в дне что-то есть.
++  'graffiti_tag': { title: `ОСТАВИТЬ МЕТКУ`, text: `Ты поднимаешь баллон. Паук перечёркнут. Бэнкси. На дне — бирка: «Pest Control — подлинность подтверждена». Так и называется орган, заверяющий Бэнкси.
+ 
+-Ты трясёшь. Шарик стучит. Жмёшь на сопло. Из него выходит не краска — выходит мох. Тонкой струёй. Прилипает к бетону и сразу становится старше.
++Жмёшь на сопло. Выходит не краска — мох. Прилипает к бетону и сразу стареет.
+ 
+-Ты пишешь своё имя. Мох превращает буквы в другие. Ты не можешь прочесть — но узнаёшь почерк. Это почерк твоего будущего.
++Пишешь имя. Мох съедает буквы быстрее, чем ты их выводишь. На середине баллон шредит сам себя — ровной полосой, как «Love is in the Bin» на Sotheby's в 18-м. Цена удвоилась. Покупателей нет. Это и есть успех.
+ 
+-Под меткой проявляется стёртая надпись: «Banksy был здесь. До пожара.» Ниже: «Все здесь были до пожара. В этом и дело.»` },
++Под меткой — старое: «if graffiti changed anything it would be illegal». Теперь illegal. Никто не заметил.` },
+   'church_candle': { title: `СПУСК В КРИПТУ`, text: `Ступени ведут вниз. Ты считаешь: девять.
+ 
+ — 1 — темнее

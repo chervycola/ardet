@@ -1,0 +1,248 @@
+[
+ {
+  "key": "content/terminal_db:termDb.klein.text",
+  "verdict": "contested",
+  "claim": "Пандемия как пример — не из книги 2007 г., а из статьи Кляйн «Screen New Deal» (2020); это её тезис, а не установленный факт",
+  "source": "https://naomiklein.org/the-screen-new-deal/",
+  "from": "пандемия 2020-2022 — сдвиг",
+  "to": "пандемия 2020 (её же «Screen\n>     New Deal») — сдвиг"
+ },
+ {
+  "key": "content/terminal_db:termDb.land.text",
+  "verdict": "wrong",
+  "claim": "CCRU основана в 1995 (Плант и Лэнд); Лэнд ушёл из Уорика в 1998, «1995-2003» — срок жизни группы, не его",
+  "source": "https://monoskop.org/Cybernetic_Culture_Research_Unit",
+  "from": "1995-2003: один из основателей",
+  "to": "1995: один из основателей"
+ },
+ {
+  "key": "content/terminal_db:termDb.ngugi.text",
+  "verdict": "typo",
+  "claim": "Kamiriithu — латиница в слове; остальное верно (1938; ум. 28.05.2025, Бьюфорд, Джорджия; «Дьявол на кресте» на тюремной туалетной бумаге)",
+  "source": "https://www.britannica.com/biography/Ngugi-wa-Thiongo",
+  "from": "born: 1938, Камirithu",
+  "to": "born: 1938, Камириитху"
+ },
+ {
+  "key": "content/terminal_db:termDb.nietzsche.text",
+  "verdict": "contested",
+  "claim": "Сцена с лошадью — анекдот без надёжного свидетеля; после 03.01.1889 Ницше написал ещё «записки безумия» (Wahnzettel) — «ни строчки» неверно",
+  "source": "https://en.wikipedia.org/wiki/Friedrich_Nietzsche#Breakdown",
+  "from": "разрухе. 03.01.1889, Турин —\n> увидел извозчика",
+  "to": "разрухе. 03.01.1889, Турин —\n> по рассказу, увидел извозчика"
+ },
+ {
+  "key": "content/terminal_db:termDb.nietzsche.text",
+  "verdict": "wrong",
+  "claim": "После срыва Ницше разослал серию «безумных записок» (Wahnzettel), подписанных «Дионис» и «Распятый»",
+  "source": "https://en.wikipedia.org/wiki/Friedrich_Nietzsche#Breakdown",
+  "from": "этого не написал ни строчки.",
+  "to": "этого — несколько безумных\n> записок, и всё."
+ },
+ {
+  "key": "content/terminal_db:termDb.observers.text",
+  "verdict": "wrong",
+  "claim": "«В яму положили Настю. Будущее — нигде.» — такой цитаты в «Котловане» нет; оформлено как цитата Платонова. Снимаем кавычки — остаётся пересказ",
+  "source": "https://ru.wikisource.org/wiki/Котлован_(Платонов)",
+  "from": "«В яму положили Настю.\n  Будущее — нигде.»",
+  "to": "В котлован положили Настю.\n  Будущее не пришло."
+ },
+ {
+  "key": "content/terminal_db:termDb.pauly.text",
+  "verdict": "wrong",
+  "claim": "Журнал — Trends in Ecology & Evolution 10(10):430; статья одностраничная, не «три страницы»",
+  "source": "https://worldfishcenter.org/publication/anecdotes-and-shifting-baseline-syndrome-fisheries",
+  "from": "(1995, Trends in Ecology)\n>\n> короткая статья, три страницы.",
+  "to": "(1995, Trends in Ecology\n>   & Evolution)\n>\n> короткая статья, одна страница."
+ },
+ {
+  "key": "content/terminal_db:termDb.platonov.text",
+  "verdict": "wrong",
+  "claim": "Сына арестовали в 1938 в 15 лет, освободили в октябре 1940 — около двух с половиной лет, не три",
+  "source": "https://ru.wikipedia.org/wiki/Платонов,_Андрей_Платонович",
+  "from": "три года в лагере",
+  "to": "два с лишним года в лагере"
+ },
+ {
+  "key": "content/terminal_db:termDb.platonov.text",
+  "verdict": "wrong",
+  "claim": "Платонов издавался при жизни («Епифанские шлюзы», «Происхождение мастера», «Впрок» и др.); не изданы были главные вещи — «Чевенгур», «Котлован»",
+  "source": "https://ru.wikipedia.org/wiki/Платонов,_Андрей_Платонович",
+  "from": "> не издавался при жизни.",
+  "to": "> главное не издано при жизни."
+ },
+ {
+  "key": "content/terminal_db:termDb.platonov.text",
+  "verdict": "contested",
+  "claim": "Экземпляр «Впрока» с пометками Сталина не сохранился; по мемуарам — «дурак», «подлец», «сволочь», «мерзавец» не засвидетельствован",
+  "source": "https://litinstitut.ru/content/za-chto-stalin-voznenavidel-andreya-platonova-intervyu-s-alekseem-varlamovym",
+  "from": "> Сталин лично написал на\n> его рассказе «Впрок» (1931):\n> «Сволочь. Подлец. Мерзавец.»",
+  "to": "> Сталин, по рассказам, написал\n> на полях «Впрока» (1931):\n> «Дурак. Подлец. Сволочь.»"
+ },
+ {
+  "key": "content/terminal_db:termDb.platonov.text",
+  "verdict": "wrong",
+  "claim": "Настя в «Котловане» умирает от болезни/холода, туберкулёз не назван",
+  "source": "https://ru.wikisource.org/wiki/Котлован_(Платонов)",
+  "from": "> положили девочку Настю,\n> которая умерла от туберкулёза.",
+  "to": "> положили девочку Настю,\n> которая умерла."
+ },
+ {
+  "key": "content/terminal_db:termDb.platonov.text",
+  "verdict": "wrong",
+  "claim": "Шут, катающий голову Ленина в тележке, у Платонова не обнаружен — выдумка",
+  "source": "https://ru.wikisource.org/wiki/Котлован_(Платонов)",
+  "from": "зачем ему мозг. Шут, который\n> катает голову Ленина\n> в тележке.",
+  "to": "зачем ему мозг."
+ },
+ {
+  "key": "content/terminal_db:termDb.polanyi.text",
+  "verdict": "wrong",
+  "claim": "Поланьи уехал из Вены в Англию в 1933, до аншлюса",
+  "source": "https://www.britannica.com/biography/Karl-Polanyi",
+  "from": "> после аншлюса 1938.",
+  "to": "> в 1933."
+ },
+ {
+  "key": "content/terminal_db:termDb.thacker.text",
+  "verdict": "typo",
+  "claim": "Оговорка в определении третьего мира",
+  "source": "—",
+  "from": "Это мир, которому",
+  "to": "Это мир, в котором"
+ },
+ {
+  "key": "content/terminal_db:termDb.thacker.text",
+  "verdict": "wrong",
+  "claim": "Куртку с обложкой книги носил сам Jay-Z в ролике «Run» (2014), не танцор",
+  "source": "https://blogs.newschool.edu/news/2014/11/eugene-thacker-confronts-the-unthinkable/",
+  "from": "попала на куртку\n> танцора Jay-Z",
+  "to": "попала на куртку\n> самого Jay-Z"
+ },
+ {
+  "key": "content/terminal_db:termDb.thacker.text",
+  "verdict": "contested",
+  "claim": "Год рождения 1968 не подтверждается (Wikidata: XX в.); источники: родом с тихоокеанского северо-запада США; «пересказ Тэкера» про flat circle — натяжка (это ницшеанское вечное возвращение), но влияние Тэкера на Пиццолатто задокументировано",
+  "source": "https://www.wikidata.org/wiki/Q17154156",
+  "from": "> born: 1968, США",
+  "to": "> born: США, северо-запад"
+ },
+ {
+  "key": "content/terminal_db:termDb.yukteshwar.text",
+  "verdict": "wrong",
+  "claim": "432 000 лет — из пуран; Махабхарата даёт 1200 «божественных» лет. По Юктешвару Кали-юга — 1200 лет, не 2400",
+  "source": "https://en.wikipedia.org/wiki/The_Holy_Science",
+  "from": "> хронологию юг. Махабхарата\n> даёт длину Кали-юги в\n> 432 000 лет. Юктешвар — 2400.",
+  "to": "> хронологию юг. Пураны\n> дают длину Кали-юги в\n> 432 000 лет. Юктешвар — 1200."
+ },
+ {
+  "key": "content/terminal_db:termDb.yukteshwar.text",
+  "verdict": "wrong",
+  "claim": "Восходящая Двапара (с сандхи) длится 2400 лет от 1699 → Трета около 4100 г.",
+  "source": "https://en.wikipedia.org/wiki/The_Holy_Science",
+  "from": "к 2700 г. — Трета.",
+  "to": "к 4100 г. — Трета."
+ },
+ {
+  "key": "content/terminal_db:termDb.zera_yacob.text",
+  "verdict": "typo",
+  "claim": "Опечатка в имени (Zera Yacob — Зэра Якоб); даты 1599–1692 и пещера верны",
+  "source": "https://plato.stanford.edu/entries/africana/",
+  "from": "Зэра Яыкоб",
+  "to": "Зэра Якоб"
+ },
+ {
+  "key": "content/ulitsa_db:SEGMENTS.1.signs.1.backyard",
+  "verdict": "typo",
+  "claim": "Фактических утверждений для проверки нет (игровая табличка); пропущено тире между подлежащим и сказуемым",
+  "source": "—",
+  "from": "Захват ровесник портика.",
+  "to": "Захват — ровесник портика."
+ },
+ {
+  "key": "world/useActions:useTexts.bus_instr.text",
+  "verdict": "ok",
+  "claim": "Run–Hide–Fight и «телефон на беззвучный, не на вибрацию» соответствуют памятке DHS/FBI; «версия 47» — внутриигровая карточка, не утверждение о мире",
+  "source": "https://www.dhs.gov/sites/default/files/publications/active-shooter-pamphlet-2017-508.pdf"
+ },
+ {
+  "key": "world/useActions:useTexts.church_candle.text",
+  "verdict": "wrong",
+  "claim": "Надпись над вратами ада у Данте — на итальянском, не на латыни",
+  "source": "https://it.wikisource.org/wiki/Divina_Commedia/Inferno/Canto_III",
+  "from": "Над дверью, на латыни, Данте:",
+  "to": "Над дверью, по-итальянски, Данте:"
+ },
+ {
+  "key": "world/useActions:useTexts.moss_commune.text",
+  "verdict": "wrong",
+  "claim": "Cladosporium — плесневый гриб; стерилизацию и кипячение не переносит. Задокументировано: C. sphaerospermum растёт в Чернобыльском реакторе и испытан на МКС (2018–19)",
+  "source": "https://www.biorxiv.org/content/10.1101/2020.07.16.205534v1",
+  "from": "Они выдерживают стерилизацию, кипячение, радиацию 1000 грей и вакуум космоса.",
+  "to": "Их родню находили в реакторе Чернобыля и испытывали на МКС."
+ },
+ {
+  "key": "world/useActions:useTexts.pipeline_valve.text",
+  "verdict": "wrong",
+  "claim": "Взрывы — 00:03 и 17:03 UTC (02:03 и 19:03 по местному летнему)",
+  "source": "https://seismica.library.mcgill.ca/article/download/253/270/2249",
+  "from": "02:03 и 19:03 UTC.",
+  "to": "02:03 и 19:03 по местному."
+ },
+ {
+  "key": "world/useActions:useTexts.pipeline_valve.text",
+  "verdict": "contested",
+  "claim": "Мотив сохранения ветки — домысел, подан как факт",
+  "source": "https://en.wikipedia.org/wiki/Nord_Stream_pipelines_sabotage",
+  "from": "Четвёртая ветка NS2 — уцелела. Чтобы было чем торговаться.",
+  "to": "Четвёртая ветка NS2 — уцелела."
+ },
+ {
+  "key": "world/useActions:useTexts.pipeline_valve.text",
+  "verdict": "wrong",
+  "claim": "Утечки прекратились 2–3 октября 2022 — около недели, не четверо суток",
+  "source": "https://en.wikipedia.org/wiki/Nord_Stream_pipelines_sabotage",
+  "from": "газ шёл пузырями четверо суток.",
+  "to": "газ шёл пузырями неделю."
+ },
+ {
+  "key": "world/useActions:useTexts.ruins_apt42.text",
+  "verdict": "wrong",
+  "claim": "681 692 расстрела — за 1937–1938 (за один 1937 — ~353 тыс.)",
+  "source": "https://ru.wikipedia.org/wiki/Большой_террор",
+  "from": "• 1937 — 681 692 расстреляно за год.",
+  "to": "• 1937–38 — 681 692 расстреляно."
+ },
+ {
+  "key": "world/useActions:useTexts.ruins_apt42.text",
+  "verdict": "contested",
+  "claim": "Дата «12.05.1929» как начало романа не задокументирована; принято считать 1928 (или 1929) год; 8.05.1929 — лишь сдача главы «Мания фурибунда»",
+  "source": "https://ru.wikipedia.org/wiki/Мастер_и_Маргарита",
+  "from": "Дата: 12.05.1929 — первый вечер, когда Булгаков сел писать «Мастера».",
+  "to": "Дата: 1928 — год, когда Булгаков сел писать «Мастера»."
+ },
+ {
+  "key": "world/useActions:useTexts.ruins_apt42.text",
+  "verdict": "contested",
+  "claim": "То же — дата начала романа",
+  "source": "https://ru.wikipedia.org/wiki/Мастер_и_Маргарита",
+  "from": "• 12.05.1929 — начал",
+  "to": "• 1928 — начал"
+ },
+ {
+  "key": "world/useActions:useTexts.tent_tea.text",
+  "verdict": "wrong",
+  "claim": "Тарковский умер в 1986, Лариса Тарковская — в 1998, через 12 лет. По рассказу звукорежиссёра В. Шаруна, от рака умерли Тарковский, его жена и Солоницын; сам звукорежиссёр жил долго — его в списке быть не может",
+  "source": "https://en.wikipedia.org/wiki/Stalker_(1979_film)#Production",
+  "from": "Его жена — через год после.",
+  "to": "Его жена — через двенадцать."
+ },
+ {
+  "key": "world/useActions:useTexts.tent_tea.text",
+  "verdict": "wrong",
+  "claim": "Звукорежиссёр Шарун — источник истории, а не жертва",
+  "source": "https://en.wikipedia.org/wiki/Stalker_(1979_film)#Production",
+  "from": "— рак. Звукооператор. Ещё один.",
+  "to": "— рак. Ещё один."
+ }
+]

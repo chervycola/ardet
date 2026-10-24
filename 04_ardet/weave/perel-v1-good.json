@@ -1,0 +1,436 @@
+[
+ {
+  "key": "content/arch_backs:ARCH_BACKS.enlightenment:plain:потёмкинский фасад.back",
+  "score": 5,
+  "defects": [],
+  "why": "Логика доведена: проезд «ожидается обратно» — подделка становится несущей, одна петля, тяжёлое последнее слово.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_backs:ARCH_BACKS.neon:south:кофейня Махфуза.back",
+  "score": 5,
+  "defects": [],
+  "why": "Ритуал без содержания: кофе для пустого столика выливают под фикус — убыль показана усилием, пуант в «лучший в квартале».",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_backs:ARCH_BACKS.porticoes:east:стена в лесах.back",
+  "score": 5,
+  "defects": [],
+  "why": "«Без происшествий» и каждый раз новый почерк — убыль спрятана в протоколе, ни слова о смерти.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_backs:ARCH_BACKS.twohearths:east:застава сэкисё.back",
+  "score": 5,
+  "defects": [],
+  "why": "Три короткие фразы, правило мира и его тихое опровержение: «Тропа протоптана».",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.catastrophes:north:мачта дирижабля",
+  "score": 5,
+  "defects": [],
+  "why": "Смерть как хозяйство: «Ищущих потом тоже искали» — сухой счёт, удар в конце.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.catastrophes:plain:сталинская высотка",
+  "score": 5,
+  "defects": [],
+  "why": "Учтённое отсутствие: семь высоток «в полном составе» при плане восьми.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.catastrophes:west:гранд-отель «Бездна»",
+  "score": 5,
+  "defects": [],
+  "why": "Отсылка с грузом (Гранд-отель «Бездна»), пуант «Свет включён в стоимость».",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.enlightenment:east:павильон описи",
+  "score": 5,
+  "defects": [],
+  "why": "Указ прежде собрания — «С тех пор сходится»: Кафка в двух словах.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.lightgarden:east:сад камней",
+  "score": 5,
+  "defects": [],
+  "why": "Процедура над пустотой: восстанавливают то, чего никто не трогал; «Работа принята».",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.now:north:Всемирное семенохранилище",
+  "score": 5,
+  "defects": [],
+  "why": "Документальный факт и канцелярская вера: мерзлота подтаяла, но «значится вечной».",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.porticoes:west:башня лимеса",
+  "score": 5,
+  "defects": [],
+  "why": "Подлинный рапорт Виндоланды, и пуант «Граница держится» — числа говорят сами.",
+  "worst": ""
+ },
+ {
+  "key": "content/arch_looks:ARCH_LOOKS.twohearths:north:замок-библиотека",
+  "score": 5,
+  "defects": [],
+  "why": "Две описи сходятся в одном: «полки на месте» — опись-исповедь уровня эталона.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_LORE.0.text",
+  "score": 5,
+  "defects": [],
+  "why": "Прячущий из любви, не разоблачается: «Воркута, январь… Тепло».",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_LORE.3.text",
+  "score": 5,
+  "defects": [],
+  "why": "Учтённая убыль: сорт снят, «Образец — нет» — короче некуда.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.0.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Опрос свиты как процедура над страшным; «Список исполнен» — без единого слова о казни.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.12.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "«Всё хорошо, прекрасная маркиза» как бланк с отсылками «см.»; итоговая строка исправлений не имеет.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.17.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Явка сто процентов у постели умирающего — каменное лицо, документальный факт.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.22.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Лао Лай-цзы без названия: «Хозяину семьдесят. Родители живы» — жалость без слов жалости.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.29.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Двое «учтены вместе с крепью» — учёт съедает людей, одна петля.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.31.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Опись-исповедь: заказано 3 мин, говорят 40 секунд; «возврату не подлежат».",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.31.whisper",
+  "score": 5,
+  "defects": [],
+  "why": "Шёпот как бытовая мелочь мимо огня — ровно по принципу эталона №12.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.8.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Программа праздника и сухое «Не состоялся» на 10 термидора — смерть как пункт плана.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_SIGNS.8.potemkin",
+  "score": 5,
+  "defects": [],
+  "why": "Одна строка-шов, документальная и смешная: «У Мудрости лицо в копоти».",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_TERM.allegro.text",
+  "score": 5,
+  "defects": [],
+  "why": "Опись писем Моцарта: «расхождений не выявлено» — протокол не удивляется смерти.",
+  "worst": ""
+ },
+ {
+  "key": "content/cover_layer:COVER_TERM.diff.text",
+  "score": 5,
+  "defects": [],
+  "why": "diff негатива и отпечатка: стёртый нарком = «иных расхождений нет»; форма несёт смысл.",
+  "worst": ""
+ },
+ {
+  "key": "content/dialogues:dialogues.train.2",
+  "score": 5,
+  "defects": [],
+  "why": "Ожидание как служба: «Кажется — тоже работа» — платоновский сдвиг в устах человека, по делу.",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_LORE.10.text",
+  "score": 5,
+  "defects": [],
+  "why": "Опись-исповедь банок: «НЕ ОТКРЫВАТЬ» 1961 года и «Опись верна».",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_LORE.12.text",
+  "score": 5,
+  "defects": [],
+  "why": "Платонов в устах человека («без меня народ неполный») и шов: «Чернила свежее печати».",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_LORE.14.text",
+  "score": 5,
+  "defects": [],
+  "why": "Самиздат через вещь: слепой четвёртый экземпляр, «прочёл — передай», три галочки.",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_LORE.16.text",
+  "score": 5,
+  "defects": [],
+  "why": "Мемориал Паскаля без названия: вещь, шов к телу, «Иных записей … не нашли».",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_LORE.24.text",
+  "score": 5,
+  "defects": [],
+  "why": "Овидий без лекции; второй бледный штемпель «АДРЕСАТ ТАКЖЕ» — тяжёлое последнее слово.",
+  "worst": ""
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.25.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Одна петля: записку изъяли для проверки, обещание вернуть живёт дольше даты; тяжёлое последнее слово.",
+  "worst": "Год изъятия: не читается."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.3.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Логика доведена до конца без ошибки: счёт отменён как строевой — без счёта не прижилось — вернули со счётом.",
+  "worst": "1951: возобновлена. Со счётом."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.47.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Чжуан-цзы в трёх фразах казённой описи; бесполезность как причина целости, слово «Цел» в конце.",
+  "worst": "Цел."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.61.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Хармс через бланк розыска: «бланк один на всех — экономия» и составитель, выбывший в том же порядке, — убыль как хозяйство.",
+  "worst": "Составитель бланка выбыл в том же порядке."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.99.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Руссо, перевёрнутый одной казённой строкой мельче: свобода — с 16 до 18; пуант без объяснения.",
+  "worst": "«Часы посещения — с 16:00 до 18:00»."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_TERM.brodsky.text",
+  "score": 5,
+  "defects": [],
+  "why": "Протокол против протокола: запись «поэт» не подтверждена, подтверждена другим ведомством на другом языке — исправлений не вносили.",
+  "worst": "в протокол исправления\n> не вносились."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_TERM.codex.text",
+  "score": 5,
+  "defects": [],
+  "why": "Ланда как акт: копия акта подшита, подлинник сожжён, скорбь не подшита; чужая рука «копий не было» — честный удар в конце.",
+  "worst": "«копий не было»."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_TERM.cryolog.text",
+  "score": 5,
+  "defects": [],
+  "why": "Ритуал без содержания в чистом виде: прочерк ставится принимающим смену лично; убыль показана графой.",
+  "worst": "прочерк ставится принимающим\n> смену лично."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_TERM.warranty.text",
+  "score": 5,
+  "defects": [],
+  "why": "Опись-исповедь: выбыл день в день с гарантией, точность изготовителя отмечена благодарностью — одна петля, каменное лицо.",
+  "worst": "точность изготовителя\n> отмечена в приказе\n> благодарностью."
+ },
+ {
+  "key": "content/lore:loreItems.36.text",
+  "score": 5,
+  "defects": [],
+  "why": "Протокол честно доведён до конца: план выполнен, приёмщик не прибыл, скреплять нечего.",
+  "worst": ""
+ },
+ {
+  "key": "content/lore:loreItems.57.text",
+  "score": 5,
+  "defects": [],
+  "why": "Протокол проб «в норме», потому что вещество не нормируется — убыль через соблюдение правила.",
+  "worst": ""
+ },
+ {
+  "key": "content/lore:loreItems.64.text",
+  "score": 5,
+  "defects": [],
+  "why": "Звёзды на гастролях по афише, шестой ряд распродан, над афишей — ни одной: учтённое отсутствие.",
+  "worst": ""
+ },
+ {
+  "key": "content/lore:loreItems.9.text",
+  "score": 5,
+  "defects": [],
+  "why": "Опись, где выдаёт последний пункт: «Собака — есть».",
+  "worst": ""
+ },
+ {
+  "key": "content/lore:loreItems.93.text",
+  "score": 5,
+  "defects": [],
+  "why": "Астапово без имени: часы 6:05, восемьдесят два года ухода, одно тяжёлое «Успел».",
+  "worst": ""
+ },
+ {
+  "key": "content/potemkin:POTEMKIN_LOOKS.theater",
+  "score": 5,
+  "defects": [],
+  "why": "Шов виден, а не комментирован: «каждый вечер» поверх «ОТМЕНЯЕТСЯ».",
+  "worst": ""
+ },
+ {
+  "key": "content/terminal_db:termDb.demon_descartes.text",
+  "score": 5,
+  "defects": [],
+  "why": "Протокол над Богом: гарант не выходит на связь с 1650-го, установленного «хватает».",
+  "worst": ""
+ },
+ {
+  "key": "content/terminal_db:termDb.fedorov.text",
+  "score": 5,
+  "defects": [],
+  "why": "Три факта, вещь в конце: «спал на сундуке» — справка с весом.",
+  "worst": ""
+ },
+ {
+  "key": "content/terminal_db:termDb.pelevin.text",
+  "score": 5,
+  "defects": [],
+  "why": "Сжатые сюжеты, финал — честная опись канцелярии: тиражи есть, автора нет.",
+  "worst": "существование автора\n> не подтверждено."
+ },
+ {
+  "key": "content/terminal_db:termDb.tarkovsky.text",
+  "score": 5,
+  "defects": [],
+  "why": "Факт-железо, «связь не установлена» и Комната протоколом — без единого лишнего слова.",
+  "worst": "связь не установлена."
+ },
+ {
+  "key": "content/ulitsa_db:SEGMENTS.1.signs.2.potemkin",
+  "score": 5,
+  "defects": [],
+  "why": "Исторический факт (займы Сенеки в Британии) под плакатом о нестяжании; «единовременно» бьёт.",
+  "worst": "Взыскание — единовременно"
+ },
+ {
+  "key": "content/ulitsa_db:SEGMENTS.2.signs.7.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Кафка в чистом виде: невыполнимую услугу не выполняют, заявки на неё подшивают.",
+  "worst": "Заявки на незаметную принимаются: подшито три тома."
+ },
+ {
+  "key": "content/ulitsa_db:SEGMENTS.6.signs.2.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Документальная опись Беньямина, убыль в последней строке.",
+  "worst": "Рукопись по описи не значится."
+ },
+ {
+  "key": "content/ulitsa_db:SEGMENTS.6.signs.8.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Философский пароход одной петлёй: условие нарушили книги.",
+  "worst": "Соблюдено не всеми книгами."
+ },
+ {
+  "key": "content/wasteland:WASTE_SIGNS.0.facade",
+  "score": 5,
+  "defects": [],
+  "why": "Вещь и пуант: от города осталось только расстояние до него — ноль.",
+  "worst": "Уцелела цифра расстояния: 0."
+ },
+ {
+  "key": "content/wasteland:WASTE_SIGNS.9.backyard",
+  "score": 5,
+  "defects": [],
+  "why": "Логика учёта доведена до конца, двухголовое согласие.",
+  "worst": "Оспаривать некому — обе головы согласны."
+ },
+ {
+  "key": "world/locations:locationById.br_bell.look",
+  "score": 5,
+  "defects": [],
+  "why": "Колокол без языка и пункт «по необходимости»: убыль процедурой.",
+  "worst": "Необходимости не зафиксировано."
+ },
+ {
+  "key": "world/locations:locationById.st_146.look",
+  "score": 5,
+  "defects": [],
+  "why": "Бланк с типографским «всё хорошо», заполняемый нарастающим итогом; отсылка с грузом.",
+  "worst": "Заполняется нарастающим итогом."
+ },
+ {
+  "key": "world/locations:locationById.st_182.look",
+  "score": 5,
+  "defects": [],
+  "why": "Журнал межгорода: недоговорённые минуты — убыль усилием, шёпот-быт точен.",
+  "worst": "Неиспользованные минуты возврату не подлежат."
+ },
+ {
+  "key": "world/locations:locationById.st_40.look",
+  "score": 5,
+  "defects": [],
+  "why": "Аррия у постели мужа (Плиний): бережение без разоблачения, шёпот-цитата с грузом.",
+  "worst": "Ответ ему один: спал хорошо, поел с охотой."
+ },
+ {
+  "key": "world/useActions:useTexts.campfire_throw.text",
+  "score": 5,
+  "defects": [],
+  "why": "Опись-исповедь вещей в пепле и казённое ПРИНЯТО — смерть как хозяйство.",
+  "worst": "На камне процарапано, давно и ровно: ПРИНЯТО."
+ },
+ {
+  "key": "world/useActions:useTexts.events.text",
+  "score": 5,
+  "defects": [],
+  "why": "Слои афиш, запрет клеить и место на одну — ритуал и убыль без слова.",
+  "worst": "Свободного места на стене осталось на одну афишу."
+ }
+]

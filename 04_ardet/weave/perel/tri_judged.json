@@ -1,0 +1,927 @@
+[
+{
+"key": "content/lore:loreItems.34.text",
+"win": "A",
+"why": "короче; у B вставка про лицо матери — вторая мысль и пафос"
+},
+{
+"key": "content/terminal_db:termDb.alephs.text",
+"win": "A",
+"why": "ветка 3: «диск он выбросил» — тяжёлый пуант; у B вялое «без фанфар»"
+},
+{
+"key": "content/lore:loreItems.66.text",
+"win": "B",
+"why": "без афоризма-хвоста, гипотеза «питается» сохранена точнее"
+},
+{
+"key": "content/looks:looks.sol_home",
+"win": "A",
+"why": "у B лишнее сравнение со стрелками часов"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.30.backyard",
+"win": "B",
+"why": "без пояснения «прочерк не понравился» — процедура говорит сама"
+},
+{
+"key": "content/terminal_db:termDb.joy.text",
+"win": "B",
+"why": "вещь (автомат) прежде тезиса; та же петля"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.75.backyard",
+"win": "A",
+"why": "«провал получше» внятнее; «годные к лучшему» у B мутно"
+},
+{
+"key": "content/lore:loreItems.46.text",
+"win": "B",
+"why": "«согласием считается вдох» — канцелярская петля, тяжёлое последнее слово"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.steamshadows:south:пароход в песках.back",
+"win": "A",
+"why": "B потерял «пустого» — деталь пустого пьедестала"
+},
+{
+"key": "content/lore:loreItems.37.text",
+"win": "A",
+"why": "одна петля; у B второй поворот и хвост"
+},
+{
+"key": "content/terminal_db:termDb.borges.text",
+"win": "A",
+"why": "литературно, тяжёлый финал цитатой «книги и ночь»; B — список-справка"
+},
+{
+"key": "content/lore:loreItems.30.text",
+"win": "=",
+"why": "разница в атрибуции, обе формулировки допустимы"
+},
+{
+"key": "world/useActions:useTexts.radio_tune.text",
+"win": "B",
+"why": "точнее (глава компании, Сенат), без пояснительного хвоста про 1941"
+},
+{
+"key": "content/ulitsa_db:SEGMENTS.4.signs.2.backyard",
+"win": "B",
+"why": "одна петля, с оговоркой «говорят»; A перегружен вторым ходом"
+},
+{
+"key": "content/looks:looks.overpass",
+"win": "B",
+"why": "пуант «сверхчеловек задерживается» последним; у A хвост-второй абзац"
+},
+{
+"key": "content/eggs_transfer:EGG_TERM..satorquadrat.text",
+"win": "B",
+"why": "одна петля, «без строки 2» сильнее; короче"
+},
+{
+"key": "content/terminal_db:termDb.ecclesiastes.text",
+"win": "B",
+"why": "сжато, финал «всё — пар»"
+},
+{
+"key": "content/terminal_db:termDb.yukteshwar.text",
+"win": "A",
+"why": "финал на контрасте 432 000 / 1 200; у B хвост про 4099"
+},
+{
+"key": "content/lore:loreItems.56.text",
+"win": "A",
+"why": "вещь (уголь, стена) и одна петля; B — мораль-наставление"
+},
+{
+"key": "content/terminal_db:termDb.demiurge.text",
+"win": "B",
+"why": "короче, без «ни одна не утешает» и второго хвоста подписи"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.25.backyard",
+"win": "B",
+"why": "без вставки про сияние — вторая петля"
+},
+{
+"key": "content/terminal_db:termDb.illich.text",
+"win": "A",
+"why": "факт точен (меньше 8 км/ч); у B «пешеход обгоняет» 7 км/ч — ошибка"
+},
+{
+"key": "content/dialogues:dialogues.sol_home.3",
+"win": "A",
+"why": "у B хвост «поэтому не останавливаюсь»"
+},
+{
+"key": "content/lore:loreItems.83.text",
+"win": "B",
+"why": "одна петля, коротко; A многословен с хвостом Архивариуса"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.porticoes:south:сад Эпикура.back",
+"win": "A",
+"why": "последняя фраза несёт сад Эпикура; без неё B — голое описание"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.34.facade",
+"win": "B",
+"why": "обрыв на «до конца сезона»; пульт у A — вторая петля"
+},
+{
+"key": "content/terminal_db:termDb.camus.text",
+"win": "B",
+"why": "финал «неиспользованный» тяжёлый; у A лекция про упорство"
+},
+{
+"key": "world/useActions:useTexts.crater_coin.text",
+"win": "B",
+"why": "короче; «называть было некому» — второй ход перед финалом"
+},
+{
+"key": "content/terminal_db:termDb.debord.text",
+"win": "A",
+"why": "коротко, финал-вещь: книга стирает соседей; B — лекция"
+},
+{
+"key": "content/lore:loreItems.13.text",
+"win": "A",
+"why": "цельная петля, последнее слово «дольше»; B невнятен"
+},
+{
+"key": "content/lore:loreItems.29.text",
+"win": "A",
+"why": "у B жаргон «чушпан» и лишнее «глубже» — голос протёк"
+},
+{
+"key": "content/dialogues:dialogues.nocturnal_home.0",
+"win": "A",
+"why": "у B хвост «смотрит сквозь тебя»"
+},
+{
+"key": "content/terminal_db:termDb.confucius.text",
+"win": "B",
+"why": "анекдот из «Лунь юя» с тяжёлым финалом; у A невнятный афоризм"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.catastrophes:plain:сталинская высотка.back",
+"win": "B",
+"why": "точнее и яснее: мост не доходит до берега"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.82.backyard",
+"win": "B",
+"why": "финал на глаголе, без сравнения «как мох»"
+},
+{
+"key": "world/useActions:useTexts.lake_stone.text",
+"win": "B",
+"why": "плотнее, «Принимаются меры» звучит сильнее; ключевые факты на месте"
+},
+{
+"key": "content/dialogues:dialogues.sol_home.2",
+"win": "B",
+"why": "без второй строки после пуанта «не выбирал гореть»"
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.catastrophes:west:собор с обломком шпиля",
+"win": "B",
+"why": "финал на ритуале «подметают» — сильнейший ход убыли"
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.enlightenment:north:оранжерея Линнея",
+"win": "B",
+"why": "порядок чище, финал «держался юг»"
+},
+{
+"key": "content/looks:looks.ruins",
+"win": "A",
+"why": "у B филлер «Сидит. Смотрит.»"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.lightgarden:north:драккар на берегу.back",
+"win": "B",
+"why": "конец на пуанте про щиты; корни — лишняя вещь"
+},
+{
+"key": "content/eggs_transfer:EGG_LORE.5.text",
+"win": "B",
+"why": "одна петля «Ответ: не найдены»; у A второй каламбур"
+},
+{
+"key": "content/terminal_db:termDb.soyinka.text",
+"win": "B",
+"why": "факт верен (негритюд), без лекции-хвоста"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.26.backyard",
+"win": "B",
+"why": "короче; разница малая"
+},
+{
+"key": "content/looks:looks.lake",
+"win": "A",
+"why": "у B два лишних абзаца — несколько петель"
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.lightgarden:west:чёрный собор",
+"win": "B",
+"why": "конец на «вошёл в виды города»; стекло у A — лишнее"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.18.backyard",
+"win": "A",
+"why": "B разоблачает прячущего (лаз, тропа); A хранит тайну"
+},
+{
+"key": "content/terminal_db:termDb.angel.text",
+"win": "B",
+"why": "без ошибки «за год до смерти» и пересказа; финал «прогрессом»"
+},
+{
+"key": "content/lore:loreItems.52.text",
+"win": "A",
+"why": "у B хвост-разжёвывание карандашом"
+},
+{
+"key": "content/eggs_transfer:EGG_TERM.moderna.text",
+"win": "B",
+"why": "конец на «отдельной строкой»; у A подмигивающее примечание"
+},
+{
+"key": "content/terminal_db:termDb.federici.text",
+"win": "A",
+"why": "короче, с оговоркой, финал «без денег»; B — список-лекция"
+},
+{
+"key": "world/useActions:useTexts.bus_instr.text",
+"win": "B",
+"why": "финал «таблица умножения»; учебная тревога — хвост"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.neon:plain:панельная девятиэтажка.back",
+"win": "A",
+"why": "у B вторая вещь-петля про подъезд"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.catastrophes:west:собор с обломком шпиля.back",
+"win": "=",
+"why": "разница порядка, оба финала держат"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.24.backyard",
+"win": "B",
+"why": "конкретный факт (Домициан) вместо расплывчатого «другой цезарь»"
+},
+{
+"key": "content/dialogues:dialogues.nocturnal_home.1",
+"win": "A",
+"why": "у B хвост-афоризм про пустоту"
+},
+{
+"key": "world/useActions:useTexts.basement_door.text",
+"win": "B",
+"why": "конец на «Понимаю»; счёт за спиной — хвост"
+},
+{
+"key": "content/terminal_db:termDb.darwish.text",
+"win": "B",
+"why": "факт-убыль «деревни нет с 1948-го», без хвоста «файл и есть вопрос»"
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.lightgarden:north:драккар на берегу",
+"win": "A",
+"why": "у B лишняя строка после пуанта про такелаж"
+},
+{
+"key": "content/lore:loreItems.15.text",
+"win": "A",
+"why": "одна петля «Охлаждение: в норме»"
+},
+{
+"key": "content/cover_layer:COVER_LORE.2.text",
+"win": "B",
+"why": "конец на воде в куполе; у A хвост"
+},
+{
+"key": "content/terminal_db:termDb.void.text",
+"win": "A",
+"why": "у B хвост-пояснение"
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.enlightenment:west:ратуша с часами.back",
+"win": "B",
+"why": "«отвод» — сдвиг с грузом; A буквален"
+},
+{
+"key": "content/lore:loreItems.50.text",
+"win": "A",
+"why": "у B хвост «для того, кто придёт следующим»"
+},
+{
+"key": "content/terminal_db:termDb.eliade.text",
+"win": "B",
+"why": "сжато, финал — молчание о «Железной гвардии»; A — лекция"
+},
+{
+"key": "world/locations:locationById.fire_sf.look",
+"win": "A",
+"why": "у B лекционная вставка «аннексия речи»"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.13.facade",
+"win": "A",
+"why": "B потерял её описание — пропала деталь портрета"
+},
+{
+"key": "content/terminal_db:termDb.haraway.text",
+"win": "A",
+"why": "коротко, финал «Make kin not babies»; B — лекция списком"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.37.backyard",
+"win": "B",
+"why": "без шутки «выход по лестнице» — вторая петля"
+},
+{
+"key": "world/useActions:useTexts.pipeline_valve.text",
+"win": "B",
+"why": "конец на «приняли ноль»; у A хвост и домысел"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.106.backyard",
+"win": "A",
+"why": "без красивости «выцвела до кости»"
+},
+{
+"key": "content/dialogues:dialogues.jester_home.1",
+"win": "A",
+"why": "одна петля; у B лишний вводный ход"
+},
+{
+"key": "content/lore:loreItems.14.text",
+"win": "B",
+"why": "грамотнее и без хвоста «всегда уходящего»"
+},
+{
+"key": "content/terminal_db:termDb.observers.text",
+"win": "A",
+"why": "короче, без пояснений «иначе бы кричал» и повтора"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.33.potemkin",
+"win": "A",
+"why": "короче, «по накладной» хватает"
+},
+{
+"key": "content/eggs_transfer:EGG_TERM.coin.text",
+"win": "B",
+"why": "пустая графа «вывод» — пуант; у A хвост про лавочника"
+},
+{
+"key": "content/terminal_db:termDb.pauly.text",
+"win": "B",
+"why": "сжато, факт Кабота надёжнее сомнительных цифр A"
+},
+{
+"key": "content/lore:loreItems.53.text",
+"win": "B",
+"why": "«смазывать некому» — тяжёлый финал; у A многоточие-мистика"
+},
+{
+"key": "content/cover_layer:COVER_LORE.1.text",
+"win": "A",
+"why": "короче, суть та же"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.28.backyard",
+"win": "A",
+"why": "у B вторая петля про иней"
+},
+{
+"key": "content/terminal_db:termDb.lao.text",
+"win": "A",
+"why": "у B лекция «кому выгодно»"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.29.backyard",
+"win": "A",
+"why": "у B невнятная вставка про стекло"
+},
+{
+"key": "content/dialogues:dialogues.elder_home.10",
+"win": "A",
+"why": "у B хвост-мораль"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.16.backyard",
+"win": "B",
+"why": "короче, лишние детали сняты"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.56.backyard",
+"win": "A",
+"why": "у B хвост «гвозди забил кто-то живой»"
+},
+{
+"key": "content/lore:loreItems.100.text",
+"win": "A",
+"why": "у B лишний рулон бумаги после пуанта"
+},
+{
+"key": "world/useActions:useTexts.moss_commune.text",
+"win": "A",
+"why": "у B разжёвывание и лекция про споры"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.12.backyard",
+"win": "B",
+"why": "короче, ясно «нора»"
+},
+{
+"key": "content/eggs_transfer:EGG_TERM.barnum.text",
+"win": "A",
+"why": "сохранён ключевой факт: великан — подделка, «копия точна»"
+},
+{
+"key": "content/looks:looks.nocturnal",
+"win": "B",
+"why": "без лишнего сдвига «движение запомнилось»"
+},
+{
+"key": "world/useActions:useTexts.pizzeria_enter.text",
+"win": "B",
+"why": "одна вырезка с тяжёлым финалом; список у A — перегруз"
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.35.backyard",
+"win": "A",
+"why": "у B неуклюжая вставка про рекорд"
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.7.backyard",
+"win": "A",
+"why": "В A сохранена запись «окон два, видов девять» — без неё «виды подновляют» непонятно."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.now:south:«Линия»",
+"win": "A",
+"why": "Три размера внятны; в B «километров на пятьсот метров» читается как ширина."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.21.facade",
+"win": "A",
+"why": "«Очередь от столбика» на край света — точная деталь описи, пуант тот же."
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.lightgarden:north:ставкирка.back",
+"win": "B",
+"why": "Одна петля об оружии и тяжёлое последнее слово «не сдали»."
+},
+{
+"key": "content/lore:loreItems.38.text",
+"win": "B",
+"why": "Петля «маску сняли — лицо не вернулось» яснее, чем непонятный «пункт»."
+},
+{
+"key": "content/lore:loreItems.51.text",
+"win": "B",
+"why": "Короче, без лишних стёртостей, пуант не тронут."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.22.potemkin",
+"win": "A",
+"why": "Второй предмет после пуанта — хвост; A кончается на латке."
+},
+{
+"key": "content/terminal_db:termDb.fromm.text",
+"win": "A",
+"why": "Короче, суть двух модусов сохранена, без лекции."
+},
+{
+"key": "content/terminal_db:termDb.baudrillard.text",
+"win": "B",
+"why": "Одна петля «не будет — происходит ли — не было», тяжёлый финал."
+},
+{
+"key": "content/terminal_db:termDb.tsing.text",
+"win": "A",
+"why": "Короче, без лекции; концовка «говорят» о Хиросиме."
+},
+{
+"key": "content/dialogues:dialogues.dumpster.5",
+"win": "B",
+"why": "Хвост «не баг, единственная фича» — эстрада; B кончается на дыме."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.enlightenment:south:пирамида в лесах",
+"win": "A",
+"why": "Одна петля с теодолитом; в B второй поворот и лишний фонарь."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.neon:north:нефтяная платформа",
+"win": "A",
+"why": "Кончается на «ходить не ходит»; в B хвост-красивость."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.13.backyard",
+"win": "A",
+"why": "Второй обмер разбавляет одну петлю со свечой."
+},
+{
+"key": "world/useActions:useTexts.powerline_touch.text",
+"win": "A",
+"why": "Короче, без каталога и без строки после пуанта."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.20.backyard",
+"win": "A",
+"why": "Иней — красивость, вставленная перед пуантом."
+},
+{
+"key": "content/lore:loreItems.42.text",
+"win": "B",
+"why": "Чище по-русски, факты сохранены."
+},
+{
+"key": "content/terminal_db:termDb.commons.text",
+"win": "A",
+"why": "Короче, без лекционных расширений."
+},
+{
+"key": "content/dialogues:dialogues.jester_home.6",
+"win": "A",
+"why": "Последнее слово «по описи»; «Песня — та же» — хвост."
+},
+{
+"key": "content/looks:looks.basement",
+"win": "A",
+"why": "Вторая петля с перепиской граффити и грубость; A чище."
+},
+{
+"key": "content/terminal_db:termDb.heraclitus.text",
+"win": "B",
+"why": "Короче; анекдот с оговоркой «по рассказу» и финал «не высох»."
+},
+{
+"key": "content/terminal_db:termDb.benjamin.text",
+"win": "B",
+"why": "Опись вещей покойного — одна петля, «содержание неизвестно» тяжело."
+},
+{
+"key": "content/lore:loreItems.40.text",
+"win": "B",
+"why": "Кончается на пуанте «особенно да» без хвоста."
+},
+{
+"key": "content/ulitsa_db:SEGMENTS.8.signs.9.backyard",
+"win": "A",
+"why": "Лишние строки разбавляют пуант."
+},
+{
+"key": "content/lore:loreItems.32.text",
+"win": "A",
+"why": "Рассказчик без нарочитого сдвига «между бетоном и долгом»."
+},
+{
+"key": "content/lore:loreItems.71.text",
+"win": "B",
+"why": "Без морали в конце, обрывается на «растёт»."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.5.backyard",
+"win": "A",
+"why": "Короче, лишние уточнения в B ничего не добавляют."
+},
+{
+"key": "content/lore:loreItems.54.text",
+"win": "A",
+"why": "Короче, без повтора и лишнего «владелец ушёл»."
+},
+{
+"key": "content/lore:loreItems.69.text",
+"win": "A",
+"why": "Одна история с диском без каталога потерь."
+},
+{
+"key": "content/looks:looks.junkyard",
+"win": "B",
+"why": "Финал на акте «передана водителю», без хвоста."
+},
+{
+"key": "content/eggs_transfer:EGG_TERM.pfizer.text",
+"win": "B",
+"why": "Кончается на «прямоугольниках»; примечание — хвост."
+},
+{
+"key": "content/dialogues:dialogues.sol_home.5",
+"win": "A",
+"why": "«Amor fati. Совпадение» — хвост после пуанта."
+},
+{
+"key": "content/lore:loreItems.24.text",
+"win": "B",
+"why": "Без морали «единственный честный пользователь»."
+},
+{
+"key": "content/lore:loreItems.78.text",
+"win": "B",
+"why": "Кончается на журнале учителя, без приписки Архивариуса."
+},
+{
+"key": "world/whisper:WHISPERS.altar",
+"win": "A",
+"why": "Шёпот — многоточия без точек по правилу."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.steamshadows:west:Эйфелева башня",
+"win": "=",
+"why": "Разница пустяковая: маяк против краткости."
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.twohearths:east:Тадж-Махал.back",
+"win": "A",
+"why": "Ступени — лишний предмет."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.11.backyard",
+"win": "B",
+"why": "Полная цитата Лескова, смысл не обрезан."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.31.backyard",
+"win": "A",
+"why": "Строка о резчиках — хвост после пуанта."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.21.backyard",
+"win": "A",
+"why": "В B потеряно «смазка не значится» — скрытый уход."
+},
+{
+"key": "content/terminal_db:termDb.augustine.text",
+"win": "B",
+"why": "«Дописывал, пока город горел» — тяжёлый финал."
+},
+{
+"key": "content/looks:looks.rocket",
+"win": "A",
+"why": "Граффити — вторая петля и мораль."
+},
+{
+"key": "content/terminal_db:termDb.cycle.text",
+"win": "B",
+"why": "Короче, кончается на «осталось», без второй части."
+},
+{
+"key": "content/lore:loreItems.20.text",
+"win": "B",
+"why": "Без лишней строки, пуант «игроков нет»."
+},
+{
+"key": "content/lore:loreItems.7.text",
+"win": "B",
+"why": "Пояснения в скобках разжёвывают шутку."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.6.facade",
+"win": "A",
+"why": "Короче; подробности полёта лишние."
+},
+{
+"key": "content/lore:loreItems.88.text",
+"win": "B",
+"why": "Сжато, без патетической приписки Архивариуса."
+},
+{
+"key": "content/terminal_db:termDb.derrida.text",
+"win": "B",
+"why": "История с Ожье — одна петля с грузом."
+},
+{
+"key": "content/lore:loreItems.79.text",
+"win": "A",
+"why": "Короче, без лишних промежуточных шагов."
+},
+{
+"key": "content/dialogues:dialogues.jester_home.3",
+"win": "A",
+"why": "Лишний пролог."
+},
+{
+"key": "content/terminal_db:termDb.merleau.text",
+"win": "B",
+"why": "Сжато, финал с «Диоптрикой» — одна петля."
+},
+{
+"key": "content/lore:loreItems.6.text",
+"win": "B",
+"why": "Кончается на «души», «чек утерян» — хвост."
+},
+{
+"key": "content/lore:loreItems.85.text",
+"win": "B",
+"why": "«Имел в виду буквально» разжёвывает."
+},
+{
+"key": "content/terminal_db:termDb.fisher.text",
+"win": "B",
+"why": "Короче, без лекционной нумерации."
+},
+{
+"key": "content/ulitsa_db:SEGMENTS.0.signs.3.facade",
+"win": "A",
+"why": "«Работа не закончена» — хвост."
+},
+{
+"key": "content/lore:loreItems.10.text",
+"win": "B",
+"why": "«Сведения подтверждены. — Учёт» — казённая петля сильнее пустоты."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.steamshadows:plain:станция с водокачкой",
+"win": "A",
+"why": "Вагон — хвост после пуанта."
+},
+{
+"key": "content/terminal_db:termDb.sartre.text",
+"win": "A",
+"why": "Нобелевская петля против цитаты-клише."
+},
+{
+"key": "content/terminal_db:termDb.amo.text",
+"win": "A",
+"why": "Последняя строка B разжёвывает."
+},
+{
+"key": "content/lore:loreItems.49.text",
+"win": "B",
+"why": "Убрана пустая фраза «кто-то когда-то принял решение»."
+},
+{
+"key": "content/dialogues:dialogues.nocturnal_home.4",
+"win": "A",
+"why": "Кончается на «беззвучно»; последняя строка B разжёвывает."
+},
+{
+"key": "content/lore:loreItems.68.text",
+"win": "A",
+"why": "Опознали как фейк — нужный факт к петле."
+},
+{
+"key": "content/lore:loreItems.26.text",
+"win": "A",
+"why": "Короче, без разъясняющего финала."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.36.facade",
+"win": "A",
+"why": "«В рост коровы» — точный буквальный сдвиг."
+},
+{
+"key": "content/terminal_db:termDb.chomei.text",
+"win": "B",
+"why": "Короче, суть сохранена."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.110.backyard",
+"win": "A",
+"why": "«На спинке» двусмысленно и уменьшительно."
+},
+{
+"key": "content/looks:looks.pizzeria",
+"win": "A",
+"why": "Лишние наклейки и второй пуант."
+},
+{
+"key": "world/useActions:useTexts.watchtower_binoc.text",
+"win": "B",
+"why": "Кончается на «Не намеренно», без хвоста."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.lightgarden:west:фахверковый дом",
+"win": "A",
+"why": "Щит цеха — лишний предмет."
+},
+{
+"key": "world/useActions:useTexts.ruins_apt42.text",
+"win": "B",
+"why": "Короче, без декоративных деталей."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.8.backyard",
+"win": "=",
+"why": "Обе фразы равноценны."
+},
+{
+"key": "content/lore:loreItems.59.text",
+"win": "A",
+"why": "«Без комментария» — хвост."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.14.backyard",
+"win": "A",
+"why": "Короче, без пояснения про стрелку."
+},
+{
+"key": "world/useActions:useTexts.riverbed_dig.text",
+"win": "A",
+"why": "Второй список и кость — хвост."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.92.facade",
+"win": "A",
+"why": "«Мера едина» — лекция после пуанта."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.enlightenment:north:обсерватория",
+"win": "B",
+"why": "Ноль там, где кипит вода, — факт и петля."
+},
+{
+"key": "content/cover_layer:COVER_SIGNS.38.backyard",
+"win": "B",
+"why": "Сжато, суть сохранена."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.17.backyard",
+"win": "A",
+"why": "Короче; освещение разжёвано."
+},
+{
+"key": "world/useActions:useTexts.banner_fine.text",
+"win": "B",
+"why": "Короче, без разжёвывания."
+},
+{
+"key": "world/locations:locationById.fire_la.look",
+"win": "A",
+"why": "Сохранён поджог; «город спектакля» — называние."
+},
+{
+"key": "content/eggs_transfer:EGG_SIGNS.9.backyard",
+"win": "B",
+"why": "«Кто-то следит» объясняет показанное."
+},
+{
+"key": "world/useActions:useTexts.billboard_tear.text",
+"win": "B",
+"why": "Бумага без ветра — хвост."
+},
+{
+"key": "content/terminal_db:termDb.zhuangzi.text",
+"win": "B",
+"why": "Сжато, все три притчи на месте."
+},
+{
+"key": "content/terminal_db:termDb.saro_wiwa.text",
+"win": "A",
+"why": "Сухо; B впадает в пафос «цену назначили на виселице»."
+},
+{
+"key": "content/terminal_db:termDb.wittgenstein.text",
+"win": "A",
+"why": "Последние слова как факт против шутки про мерч."
+},
+{
+"key": "content/arch_backs:ARCH_BACKS.now:north:Всемирное семенохранилище.back",
+"win": "A",
+"why": "«Вечная мерзлота оказалась временной» — пуант."
+},
+{
+"key": "content/looks:looks.riverbed",
+"win": "A",
+"why": "Короче, без красивости «вода помнит цвет»."
+},
+{
+"key": "content/terminal_db:termDb.descartes.text",
+"win": "A",
+"why": "Без метафоры с очагом, короче."
+},
+{
+"key": "content/ulitsa_db:SEGMENTS.3.signs.1.facade",
+"win": "B",
+"why": "Спорное отмечено «говорят»."
+},
+{
+"key": "content/terminal_db:termDb.harvey.text",
+"win": "B",
+"why": "Сжато, без списков."
+},
+{
+"key": "content/lore:loreItems.63.text",
+"win": "B",
+"why": "Кончается на «не трогается», без объяснения."
+},
+{
+"key": "content/lore:loreItems.1.text",
+"win": "A",
+"why": "«Пережил тебя. Опять» — пуант; B невнятен."
+},
+{
+"key": "content/arch_looks:ARCH_LOOKS.twohearths:east:хижина Басё",
+"win": "=",
+"why": "Разница пустяковая."
+}
+]

@@ -1,0 +1,868 @@
+/* ═══════════════════════════════════════ */
+/* ARDET V2 — design tokens + base styles */
+/* ═══════════════════════════════════════ */
+:root {
+  --c-void: #050510;
+  --c-crimson: #6b0f1a;
+  --c-gold: #b8860b;
+  --c-bone: #e8dcc8;
+  --c-ash: #8a8d8f;
+  --c-indigo: #1b1464;
+  --c-term: #1a8c1a;
+  --c-toxic: #2a5a1a;
+
+  --font-pixel: 'Press Start 2P', monospace;
+  /* книжный — текст осмотра: высокий, для долгого чтения; без сети — системная антиква */
+  --font-book: 'Literata', 'PT Serif', Georgia, 'Times New Roman', serif;
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--c-void);
+  overflow: hidden;
+  font-family: var(--font-pixel);
+  color: var(--c-bone);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+/* мобильные браузеры: высота без учёта уезжающей адресной строки */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+  canvas#game { height: 100dvh; }
+}
+
+/* ── Game canvas ── */
+#gw {
+  position: fixed; inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1.5s;
+}
+#gw.on { opacity: 1; }
+
+canvas#game {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+/* ── Entry screen ── */
+#entry {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; align-items: safe center; justify-content: center;
+  background: var(--c-void);
+  overflow-y: auto;                 /* бланк выше экрана — прокручивается; safe: лишнее уходит вниз, верх достижим */
+}
+#entry-left {
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+#entry { gap: 56px; }
+#entry-mirror {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+#entry-mirror-cap {
+  font-family: var(--font-pixel); font-size: 7px; color: var(--c-gold); letter-spacing: 2px;
+}
+#entry-mirror-glass {
+  width: 150px; height: 210px; position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+  border: 1px solid var(--c-crimson);
+  box-shadow: 0 0 0 3px var(--c-void), 0 0 0 4px rgba(184,134,11,0.45), 0 0 24px rgba(107,15,26,0.25);
+  background: linear-gradient(115deg, #0a0a18 0%, #14142a 45%, #0a0a18 62%);
+  overflow: hidden;
+}
+#entry-mirror-glass::before {
+  content: ''; position: absolute; top: -40%; left: -60%; width: 45%; height: 180%;
+  background: linear-gradient(105deg, transparent, rgba(232,220,200,0.06), transparent);
+  transform: rotate(8deg);
+  animation: mirrorSheen 7s ease-in-out infinite;
+}
+@keyframes mirrorSheen { 0%,100%{ left:-60% } 50%{ left:110% } }
+#entry-mirror-glass i {
+  position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 68px; filter: blur(1px);
+  background:
+    radial-gradient(ellipse 50% 36% at 50% 12%, rgba(232,220,200,0.10), transparent 70%),
+    radial-gradient(ellipse 62% 70% at 50% 76%, rgba(232,220,200,0.05), transparent 75%);
+}
+#entry-mirror-glass span {
+  font-family: var(--font-pixel); font-size: 8px; color: var(--c-ash);
+  letter-spacing: 2px; opacity: .8; margin-bottom: 16px;
+}
+
+/* ── Wake: похмельная прогрузка после Fall In ── */
+#gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
+/* муть — слабее, чем была: размывает мир теперь сам кадр, блоками, как цифра после сбоя (render/wakefx.js) */
+@keyframes wakeblur {
+  0%   { filter: blur(5px)   brightness(0.3) saturate(0.4); }
+  12%  { filter: blur(3px)   brightness(0.5) saturate(0.55); }
+  22%  { filter: blur(5px)   brightness(0.4) saturate(0.5); }
+  40%  { filter: blur(2px)   brightness(0.65) saturate(0.7); }
+  56%  { filter: blur(4px)   brightness(0.55) saturate(0.65); }
+  76%  { filter: blur(1px)   brightness(0.85) saturate(0.9); }
+  100% { filter: none; }
+}
+/* шатание: голову ведёт маятником — сперва широко, к концу затихает (дрожь — в кадре, render/wakefx.js) */
+@keyframes wakesway {
+  0%   { transform: scale(1.11) rotate(-3deg)   translate(-1.4%, 0.7%); }
+  9%   { transform: scale(1.10) rotate(2.6deg)  translate(1.1%, -0.5%); }
+  20%  { transform: scale(1.09) rotate(-2.3deg) translate(-0.9%, 0.6%); }
+  32%  { transform: scale(1.08) rotate(1.7deg)  translate(0.7%, -0.4%); }
+  46%  { transform: scale(1.06) rotate(-1.2deg) translate(-0.5%, 0.3%); }
+  60%  { transform: scale(1.04) rotate(0.8deg)  translate(0.3%, -0.2%); }
+  76%  { transform: scale(1.02) rotate(-0.4deg) translate(-0.1%, 0.1%); }
+  100% { transform: scale(1) rotate(0deg) translate(0, 0); }
+}
+/* второе пробуждение и дальше — та же сцена за шесть секунд (render/wakefx.js); шатает
+   вдвое слабее, веки те же, только чаще; проснуться сразу — клавиша или клик (main.js) */
+#gw.wake.short { animation: wakeblur 6s ease-out forwards, wakeswayShort 6s ease-in-out forwards; }
+@keyframes wakeswayShort {
+  0%   { transform: scale(1.055) rotate(-1.5deg)  translate(-0.7%, 0.35%); }
+  14%  { transform: scale(1.05)  rotate(1.3deg)   translate(0.55%, -0.25%); }
+  32%  { transform: scale(1.04)  rotate(-0.9deg)  translate(-0.4%, 0.2%); }
+  52%  { transform: scale(1.025) rotate(0.5deg)   translate(0.2%, -0.1%); }
+  76%  { transform: scale(1.01)  rotate(-0.2deg)  translate(-0.05%, 0.05%); }
+  100% { transform: scale(1) rotate(0deg) translate(0, 0); }
+}
+#wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
+#wakelids::before, #wakelids::after {
+  content: ''; position: absolute; left: -5%; right: -5%; height: 58%;
+  background: var(--c-void);
+}
+#wakelids::before { top: -4%; border-radius: 0 0 50% 50% / 0 0 16% 16%;
+  transform-origin: top; animation: lidBlink 15s ease-in-out forwards; }
+#wakelids::after { bottom: -4%; border-radius: 50% 50% 0 0 / 16% 16% 0 0;
+  transform-origin: bottom; animation: lidBlink 15s ease-in-out forwards; }
+#wakelids.short::before, #wakelids.short::after { animation-duration: 6s; }
+@keyframes lidBlink {
+  0%  { transform: scaleY(1); }    8%  { transform: scaleY(0.3); }
+  16% { transform: scaleY(0.95); } 28% { transform: scaleY(0.2); }
+  44% { transform: scaleY(0.8); }  58% { transform: scaleY(0.12); }
+  68% { transform: scaleY(0.35); } 84% { transform: scaleY(0.04); }
+  100%{ transform: scaleY(0); }
+}
+#wakelids span {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  text-align: center; font-family: var(--font-pixel); font-size: 8px;
+  color: var(--c-ash); letter-spacing: 3px; opacity: 0;
+  animation: wakecap 15s ease-in-out forwards;
+}
+@keyframes wakecap { 0%,10%{opacity:0} 30%{opacity:0.55} 45%{opacity:0.15}
+  60%{opacity:0.5} 80%{opacity:0.1} 100%{opacity:0} }
+/* на телефонах blur дорогой — облегчённое похмелье */
+@keyframes wakeblurLite {
+  0%   { filter: blur(3px)   brightness(0.35); }
+  22%  { filter: blur(3px)   brightness(0.45); }
+  40%  { filter: blur(1.5px) brightness(0.65); }
+  56%  { filter: blur(2.5px) brightness(0.55); }
+  76%  { filter: blur(0.5px) brightness(0.85); }
+  100% { filter: none; }
+}
+@media (pointer: coarse) {
+  #gw.wake { animation-name: wakeblurLite, wakesway; }
+  #gw.wake.short { animation-name: wakeblurLite, wakeswayShort; }
+}
+/* «меньше движения» в системе — без шатания (и без дрожи и рывков в кадре) */
+@media (prefers-reduced-motion: reduce) {
+  #gw.wake, #gw.wake.short { animation-name: wakeblurLite; }
+}
+
+/* ── Menu ── */
+#menu {
+  position: fixed;
+  display: none;
+  z-index: 200;
+  background: rgba(5,5,16,0.96);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(107,15,26,0.6);
+  border-top: 2px solid var(--c-gold);
+  padding: 3px;
+  min-width: 180px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.6), 0 0 15px rgba(107,15,26,0.15);
+}
+#menu.on { display: block; }
+#menu-inscription {
+  font-size: 10px;
+  color: var(--c-gold);
+  padding: 10px 14px;
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.6;
+}
+#menu-inscription.on { display: block; }
+.mi {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--c-bone);
+  cursor: pointer;
+  min-height: 44px;
+  transition: background .1s;
+}
+.mi:hover { background: rgba(107,15,26,0.2); }
+.mi:active { background: rgba(184,134,11,0.15); }
+.mi i { font-style: normal; font-size: 12px; }
+
+/* ── Look panel ── */
+#look {
+  /* центр через inset+margin, а не transform — transform занят
+     анимацией scaleIn и раньше сбивал центровку (панель уезжала) */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+  display: none;
+  z-index: 210;
+  background: rgba(5,5,16,0.97);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(107,15,26,0.4);
+  border-top: 2px solid var(--c-gold);
+  padding: 24px 34px 18px;
+  max-width: 92vw;
+  width: min(720px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 2;
+  color: var(--c-bone);
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 20px rgba(27,20,100,0.15);
+}
+#look.on { display: block; }
+#look h3 {
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  color: var(--c-gold);
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--c-gold);
+  padding-bottom: 8px;
+}
+/* текст — книжным, с абзацами как написаны; пиксельные — заголовок и служебные строки */
+#lb {
+  font-family: var(--font-book);
+  font-size: 20px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+}
+/* красный полдень: буквы точками — точке шаг буквы, строки не съёживаются */
+#lb.blind { letter-spacing: 0.3em; }
+/* надпись меню, когда меню пропущено (одно действие, клавиша E) — под заголовком */
+#look-insc {
+  display: none;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--c-gold);
+  margin: -6px 0 12px;
+  opacity: 0.85;
+}
+#look-page {
+  margin-top: 14px;
+  text-align: right;
+  font-size: 8px;
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+}
+#li {
+  font-size: 8px;
+  color: var(--c-ash);
+  margin-top: var(--space-s);
+  text-align: right;
+}
+
+/* ── Dialogue ── */
+/* в браузере — на треть крупнее прежнего (окно, портрет, колонка, служебный кегль);
+   реплики — книжным, как текст осмотра */
+#dlg {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: none;
+  z-index: 220;
+  background: rgba(5,5,16,0.96);
+  border-top: 2px solid var(--c-crimson);
+  padding: 21px 26px;
+  min-height: 260px;
+  max-height: 65vh;
+}
+#dlg.on { display: flex; gap: 21px; justify-content: center; }
+/* портрет — оттиск 4:5; нет картины — рамки нет (ui.js drawPortrait) */
+#dp { width: 168px; height: 210px; flex-shrink: 0; align-self: flex-start; }
+#dpc { display: block; width: 100%; height: 100%; }
+/* колонка с прокруткой текста: кнопки ответов всегда на экране */
+#dd { flex: 0 1 832px; display: flex; flex-direction: column; min-width: 0; }
+#dt { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+#do { margin-top: 10px; flex-shrink: 0; }
+#dn {
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  color: var(--c-gold);
+  margin-bottom: 10px;
+}
+#dt {
+  font-family: var(--font-book);
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--c-bone);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+}
+.dopt {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--c-gold);
+  background: transparent;
+  border: 1px solid rgba(184,134,11,0.3);
+  padding: 13px 0;
+  width: 100%;
+  cursor: pointer;
+  min-height: 52px;
+  transition: background .1s;
+}
+.dopt:hover { background: rgba(107,15,26,0.15); }
+.dopt:active { background: rgba(184,134,11,0.15); }
+
+/* ── Terminal ── */
+#term {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 300;
+  background: rgba(0,5,0,0.97);
+  padding: var(--space-m);
+  /* Reverse so the input sits at the bottom (output fills above) */
+  flex-direction: column-reverse;
+  align-items: center;
+}
+#term.on { display: flex; }
+#ti {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--c-term);
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--c-term);
+  padding: var(--space-s);
+  outline: none;
+  caret-color: var(--c-term);
+  max-width: 660px;
+  width: 100%;
+}
+#to {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 10px;
+  color: var(--c-term);
+  white-space: pre-wrap;
+  line-height: 1.8;
+  padding-bottom: var(--space-s);
+  max-width: 660px;
+  width: 100%;
+}
+
+/* ── How-to plate (after В ПУСТОТУ) ── */
+#howto {
+  position: fixed; inset: 0; z-index: 150;
+  display: none;
+  align-items: center; justify-content: center;
+  background: var(--c-void);
+  cursor: pointer;
+}
+#howto.on { display: flex; }
+#howto-box {
+  border: 1px solid rgba(107,15,26,0.5);
+  border-top: 2px solid var(--c-gold);
+  background: rgba(10,8,6,0.9);
+  padding: 26px 34px;
+  max-width: 420px;
+}
+.ht-title {
+  font-size: 11px; color: var(--c-gold);
+  letter-spacing: 3px; margin-bottom: 18px; text-align: center;
+}
+.ht-grid {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 10px 18px; font-size: 9px; line-height: 1.6;
+}
+.ht-k { color: var(--c-gold); white-space: nowrap; }
+.ht-v { color: var(--c-bone); }
+.ht-note {
+  margin-top: 18px; font-size: 8px; color: var(--c-ash);
+  text-align: center; font-style: normal;
+}
+.ht-go {
+  margin-top: 14px; font-size: 8px; color: var(--c-crimson);
+  text-align: center;
+  animation: htblink 1.6s ease-in-out infinite;
+}
+@keyframes htblink { 0%,100%{opacity:0.9} 50%{opacity:0.3} }
+
+/* ── World map (M) ── */
+#map {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 320;
+  background: rgba(0,0,0,0.55);
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+#map.on { display: flex; }
+#map-canvas {
+  width: min(96vw, calc(94vh * 1.6), 1240px);
+  height: auto;
+  aspect-ratio: 960 / 600;
+  border: 1px solid rgba(107,15,26,0.4);
+  background: #08060a;
+}
+
+/* ── Map button (touch devices — no M key there) ── */
+#map-btn {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: none;               /* shown from JS on touch devices */
+  align-items: center; justify-content: center;
+  z-index: 250;                /* under terminal(300)/map(320) overlays */
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--c-gold);
+  background: rgba(10,8,6,0.72);
+  border: 1px solid rgba(184,134,11,0.5);
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#map-btn:active { background: rgba(107,15,26,0.4); }
+#map-btn.on { display: flex; }
+/* опись найденного: кнопка «§» — под картой, только на телефоне (ui/inventory.js) */
+#inv-btn {
+  position: fixed;
+  top: calc(62px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 250;
+  font-family: var(--font-book);
+  font-size: 20px;
+  color: var(--c-gold);
+  background: rgba(10,8,6,0.72);
+  border: 1px solid rgba(184,134,11,0.5);
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#inv-btn:active { background: rgba(107,15,26,0.4); }
+#inv-btn.on { display: flex; }
+
+/* ── Опись найденного — бланк: бумага поверх ночи встык, сепия, печать криво (ART_BIBLE §01, §06) ── */
+#inv {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  display: none;
+  z-index: 230;
+  padding: 26px 34px 18px;
+  background: #E8DCC3;
+  color: #3A3026;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+  -webkit-overflow-scrolling: touch;
+}
+#inv.on { display: block; }
+#inv .inv-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px dashed rgba(58,48,38,0.55);
+  padding-bottom: 8px; margin-bottom: 12px;
+}
+#inv .inv-title { font-family: var(--font-pixel); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+#inv .inv-sheet { font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px; opacity: 0.7; }
+#inv .inv-h {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  margin: 14px 0 6px; opacity: 0.8;
+}
+#inv .inv-h:first-child { margin-top: 0; }
+#inv .inv-row {
+  display: flex; gap: 12px; align-items: baseline;
+  font-family: var(--font-book); font-size: 17px; line-height: 1.45;
+  padding: 3px 0;
+  border-bottom: 1px dotted rgba(58,48,38,0.25);
+}
+#inv .inv-row[data-inv] { cursor: pointer; }
+#inv .inv-row[data-inv]:hover { background: rgba(194,59,43,0.08); }
+#inv .inv-n { font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; min-width: 52px; opacity: 0.75; }
+#inv .inv-t { min-width: 0; overflow-wrap: break-word; }
+#inv .inv-empty { opacity: 0.55; font-style: italic; }
+#inv .inv-note {
+  font-family: var(--font-book); font-size: 20px; line-height: 1.6;
+  white-space: pre-wrap; overflow-wrap: break-word; margin: 6px 0 12px;
+}
+#inv .inv-foot { font-family: var(--font-book); font-size: 14px; font-style: italic; margin-top: 14px; opacity: 0.75; }
+#inv .inv-stamp {
+  position: absolute; top: 14px; right: 22%;
+  transform: rotate(-6deg);
+  border: 2px solid #C23B2B; color: #C23B2B;
+  padding: 3px 8px;
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  opacity: 0.78; pointer-events: none;
+}
+#inv .inv-nav {
+  display: flex; justify-content: flex-end; gap: 18px; margin-top: 14px;
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+}
+#inv .inv-nav span { cursor: pointer; padding: 6px 0; }
+#inv .inv-nav span.off { opacity: 0.3; pointer-events: none; }
+/* телефон: бланк ниже кнопок карты и описи; печать — под итогом, не поверх строк */
+@media (max-width: 768px) {
+  #inv {
+    width: 92vw; padding: 18px 16px 12px;
+    top: calc(112px + env(safe-area-inset-top)); transform: translateX(-50%);
+    max-height: calc(100vh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  #inv .inv-row { font-size: 15px; }
+  #inv .inv-note { font-size: 17px; line-height: 1.5; }
+  #inv .inv-stamp { position: static; display: inline-block; margin-top: 10px; transform: rotate(-4deg); }
+}
+
+/* ── Custom cursor ── */
+#cur {
+  position: fixed;
+  top: 0; left: 0;
+  width: 20px; height: 20px;
+  pointer-events: none;
+  z-index: 9999;
+  image-rendering: pixelated;
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 768px), (pointer: coarse) {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+  body { cursor: auto; }
+  canvas#game { touch-action: none; }
+
+  #entry { flex-direction: column; justify-content: flex-start; justify-content: safe center; gap: 20px; padding: 14px; touch-action: pan-y; }
+  #entry-mirror-glass { width: 118px; height: 158px; }
+  #entry-mirror-glass i { bottom: 32px; width: 30px; height: 56px; }
+
+  #menu {
+    left: 50% !important;
+    top: auto !important;
+    bottom: 60px !important;
+    transform: translateX(-50%);
+    min-width: 240px;
+    max-width: 90vw;
+  }
+  .mi { font-size: 11px; padding: 14px 18px; }
+  .mi i { font-size: 14px; }
+
+  #look {
+    max-width: 92vw;
+    width: min(92vw, 480px);
+    font-size: 11px;
+    line-height: 1.8;
+    max-height: 75vh;
+    padding: 14px 16px;
+  }
+  #look h3 { font-size: 12px; margin-bottom: 10px; }
+  #lb { font-size: 17px; line-height: 1.5; }
+
+  #dlg {
+    height: auto;
+    min-height: 170px;
+    max-height: 45vh;
+    padding: 12px 16px;
+  }
+  #dp { width: 72px; height: 90px; font-size: 16px; }
+  #dn { font-size: 10px; margin-bottom: 6px; }
+  #dt { font-size: 17px; line-height: 1.5; }
+  .dopt { font-size: 10px; min-height: 44px; padding: 10px 0; }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (max-height: 500px) {
+  #menu { bottom: 10px !important; }
+  #dlg { min-height: 120px; max-height: 40vh; }
+  #look { max-height: 85vh; }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  #menu { min-width: 200px; }
+  .mi { font-size: 10px; padding: 12px 14px; }
+  #look { width: 95vw; }
+}
+
+/* ── Канцелярия · правка (текст-редактор) ── */
+#txed { position: fixed; inset: 0; z-index: 400; display: none; background: rgba(5,4,8,0.8); }
+#txed.on { display: flex; align-items: center; justify-content: center; }
+#txed-box { width: min(96vw, 980px); height: min(94vh, 700px); display: flex; flex-direction: column;
+  background: #efe4cb; color: #3a3026; box-shadow: 0 12px 50px rgba(0,0,0,.7); font-family: 'VT323', monospace; }
+#txed-head { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-bottom: 2px solid #6b0f1a; }
+#txed-head b { font-family: var(--font-pixel); font-size: 9px; letter-spacing: 2px; color: #6b0f1a; }
+#txed-count { font-size: 15px; opacity: .6; flex: 1; }
+#txed-head button { font-family: var(--font-pixel); font-size: 8px; background: none;
+  border: 1px solid rgba(58,48,38,.4); padding: 6px 10px; cursor: pointer; color: #3a3026; min-height: 34px; }
+#txed-cats { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; }
+#txed-cats button { font-size: 15px; font-family: 'VT323',monospace; background: none;
+  border: 1px solid rgba(58,48,38,.25); padding: 2px 8px; cursor: pointer; color: #3a3026; }
+#txed-cats button.on { background: #6b0f1a; color: #efe4cb; }
+#txed-search { margin: 0 10px 6px; padding: 6px 8px; font: 16px 'VT323',monospace;
+  background: rgba(255,255,255,.5); border: 1px solid rgba(58,48,38,.3); color: #3a3026; }
+#txed-body { flex: 1; display: flex; min-height: 0; }
+#txed-list { width: 44%; overflow-y: auto; border-right: 1px solid rgba(58,48,38,.25); }
+.txed-row { padding: 5px 10px; font-size: 15px; line-height: 1.25; cursor: pointer;
+  border-bottom: 1px solid rgba(58,48,38,.12); }
+.txed-row i { font-style: normal; font-size: 12px; color: #a07818; margin-right: 6px; }
+.txed-row.edited { border-left: 3px solid #b8860b; }
+.txed-row.cur { background: rgba(107,15,26,.12); }
+.txed-row:hover { background: rgba(107,15,26,.08); }
+#txed-edit { flex: 1; display: none; flex-direction: column; padding: 8px 10px; min-width: 0; }
+#txed-edit.on { display: flex; }
+#txed-label { font-size: 14px; color: #a07818; margin-bottom: 6px; }
+#txed-ta { flex: 1; resize: none; font: 17px/1.45 'VT323', monospace;
+  background: rgba(255,255,255,.55); color: #2a241c; border: 1px solid rgba(58,48,38,.35); padding: 10px; }
+#txed-btns { display: flex; gap: 8px; margin-top: 8px; }
+#txed-btns button { font-family: var(--font-pixel); font-size: 8px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid rgba(58,48,38,.4); background: none; color: #3a3026; min-height: 40px; }
+#txed-save { background: #6b0f1a; color: #efe4cb; border-color: #6b0f1a; }
+#txed-fab { position: fixed; left: 12px; top: 12px; z-index: 32; width: 38px; height: 38px;
+  background: rgba(238,227,203,0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  border: none; cursor: pointer; font-size: 18px; color: #3a3026; box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+@media (max-width: 768px), (pointer: coarse) {
+  #txed-box { width: 100vw; height: 100dvh; }
+  #txed-body { flex-direction: column; }
+  #txed-list { width: 100%; height: 38%; border-right: none; border-bottom: 1px solid rgba(58,48,38,.25); }
+  .txed-row, #txed-cats button { font-size: 17px; padding-top: 8px; padding-bottom: 8px; }
+  #txed-ta { font-size: 18px; }
+}
+
+/* оттиск сборки — угол заставки, для сверки версий */
+#build-stamp{position:absolute; right:12px; bottom:8px;
+  font-family:'PT Mono','VT323',monospace; font-size:11px;
+  color:rgba(138,141,143,.55); letter-spacing:1px}
+
+/* ═══ БУМАГА — по канону (ART_BIBLE §01, §06; weave/ROADMAP Г4): «система — бумага: меню —
+   бланк, инвентарь — опись, диалог — протокол; бумага ложится поверх ночи встык».
+   Осмотр — бланк, разговор — протокол беседы, меню действий — бланк крупнее прежнего.
+   Красный полдень: «бумага и небо совпадают по цвету» — бумага полуденная, буквы чернилами. ═══ */
+:root { --paper: #E8DCC3; --sepia: #3A3026; --seal: #C23B2B; --ink: #12100D; --noon: #A32D2D; }
+
+#look {
+  background: var(--paper); color: var(--sepia);
+  border: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+}
+#look h3 { color: var(--sepia); border-bottom: 1px dashed rgba(58,48,38,0.55); }
+#look-insc { color: var(--sepia); font-family: var(--font-book); font-style: italic; font-size: 15px; opacity: 0.75; }
+#look-page { color: var(--sepia); }
+/* штамп места: где стоит вещь — «кольцо 6 · север · пар и тени» (ориентирование печатью, 3А) */
+#look-stamp {
+  display: none; margin: -4px 0 10px; padding: 3px 8px 2px;
+  border: 1px solid rgba(58,48,38,0.55); outline: 1px solid rgba(58,48,38,0.25); outline-offset: 1px;
+  transform: rotate(-1.2deg); transform-origin: left center;
+  font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(58,48,38,0.85);
+}
+#li { color: rgba(58,48,38,0.7); }
+
+#dlg {
+  background: var(--paper); color: var(--sepia);
+  border-top: none;
+  box-shadow: 0 -10px 34px rgba(0,0,0,0.7);
+}
+#dn { color: var(--sepia); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
+  border-bottom: 1px dashed rgba(58,48,38,0.5); padding-bottom: 6px; }
+#dn .dn-who { letter-spacing: 1px; }
+#dn .dn-when { font-family: var(--font-book); font-style: italic; font-size: 14px; letter-spacing: 0; opacity: 0.7; }
+#dt { color: var(--sepia); }
+#dp { box-shadow: 0 0 0 1px rgba(58,48,38,0.45); }
+.dopt {
+  color: var(--sepia); background: transparent;
+  border: none; border-bottom: 1px dotted rgba(58,48,38,0.35);
+  text-align: left; padding: 10px 4px; min-height: 44px;
+  font-family: var(--font-book); font-size: 17px;
+}
+.dopt::before { content: '— '; }
+/* выбранная реплика подчёркнута красным карандашом (§06) */
+.dopt:hover, .dopt:focus-visible { background: transparent; outline: none;
+  text-decoration: underline; text-decoration-color: var(--seal); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.dopt:active { background: rgba(194,59,43,0.08); }
+.dmarg { font-family: var(--font-book); font-style: italic; font-size: 13px; opacity: 0.6; margin-top: 8px; text-align: right; }
+
+/* окно из картин автора (weave/WINDOWS.md): рамка на девять частей, фактура плиткой */
+#dlg.framed {
+  border: 36px solid transparent;
+  border-image: var(--dlg-frame) 120 / 36px stretch;
+  background-image: var(--dlg-tile, none);
+  background-clip: padding-box;
+  padding: 6px 18px;
+}
+/* окно «ночной офорт» — тёмное, буквы костью */
+#dlg.skin-etching { background-color: #0D0B0A; color: #D9CFB8; }
+#dlg.skin-etching #dn, #dlg.skin-etching #dt, #dlg.skin-etching .dopt { color: #D9CFB8; }
+#dlg.skin-etching #dn { border-bottom-color: rgba(217,207,184,0.35); }
+#dlg.skin-etching .dopt { border-bottom-color: rgba(217,207,184,0.25); }
+
+#menu {
+  background: var(--paper);
+  border: none; border-top: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.75);
+  padding: 4px 0; min-width: 250px;
+}
+#menu-inscription {
+  color: var(--sepia); font-family: var(--font-book); font-style: italic; font-size: 15px; line-height: 1.45;
+  border-bottom: 1px dashed rgba(58,48,38,0.45); max-width: 300px; padding: 12px 18px;
+}
+.mi { color: var(--sepia); font-size: 12px; min-height: 48px; padding: 12px 18px; gap: 14px; }
+.mi:hover { background: rgba(194,59,43,0.1); }
+.mi:active { background: rgba(194,59,43,0.18); }
+.mi i { color: var(--seal); font-size: 15px; font-family: var(--font-book); font-variant-emoji: text; min-width: 16px; text-align: center; }
+
+/* красный полдень: бумага цвета неба, буквы чернилами */
+body.noon #look, body.noon #dlg, body.noon #menu, body.noon #inv { background: var(--noon); color: var(--ink); }
+body.noon #look h3, body.noon #look-page, body.noon #look-insc, body.noon #dn, body.noon #dt, body.noon .dopt,
+body.noon .mi, body.noon #menu-inscription, body.noon #inv .inv-title { color: var(--ink); }
+body.noon .mi i { color: var(--ink); }
+@media (max-width: 768px), (pointer: coarse) {
+  .dopt { font-size: 15px; padding: 8px 2px; min-height: 44px; }
+  #dn .dn-when { font-size: 12px; }
+  .mi { font-size: 11px; }
+  #menu-inscription { font-size: 14px; }
+}
+
+/* ═══ ФОРМА 0 · заявление о начале странствия (ART_BIBLE §06; ui/titleForm.js) ═══
+   Главное меню — бланк поверх ночи: пункты отмечают углём, печать канцелярии — криво.
+   Скруглений нет; тёплого нет — бумага, сепия, одна киноварь печати. */
+#form0 {
+  position: relative; margin: 0;
+  width: min(420px, 88vw);
+  padding: 26px 30px 22px;
+  background: var(--paper); color: var(--sepia);
+  box-shadow: 0 14px 50px rgba(0,0,0,0.8);
+  font-family: var(--font-book);
+}
+#entry-logo {
+  font-family: var(--font-book); font-weight: 400; font-style: italic;
+  font-size: 34px; letter-spacing: 2px; color: var(--sepia); text-shadow: none;
+}
+#form0 .f0-grif {
+  margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(58,48,38,0.55);
+  font: 300 10px Montserrat, 'PT Sans', sans-serif; letter-spacing: 3px; text-transform: uppercase;
+}
+#form0 .f0-list { list-style: none; margin: 0; padding: 0; }
+#form0 .f0-item, #form0 .f0-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 40px; padding: 4px 2px; margin: 0;
+  background: none; border: none; border-bottom: 1px dashed rgba(58,48,38,0.28);
+  font: 400 19px var(--font-book); color: var(--sepia); text-align: left; cursor: pointer;
+}
+#form0 .f0-item:hover .f0-t, #form0 .f0-item:focus-visible .f0-t,
+#form0 .f0-opt:hover .f0-t, #form0 .f0-opt:focus-visible .f0-t { text-decoration: underline; text-decoration-color: #C23B2B; text-underline-offset: 4px; }
+#form0 button:focus { outline: none; }
+#form0 .f0-box {
+  position: relative; flex: none; width: 17px; height: 17px;
+  border: 1px solid rgba(58,48,38,0.75);
+}
+#form0 .f0-box svg { position: absolute; left: -3px; top: -9px; width: 26px; height: 26px; overflow: visible; }
+#form0 .f0-box path { fill: none; stroke: #241d18; stroke-linejoin: miter; stroke-linecap: butt; }
+#form0 .f0-box path.smudge { stroke: rgba(36,29,24,0.35); stroke-width: 4.5; }
+#form0 .f0-box path.line { stroke-width: 2.4; stroke-dasharray: 40; stroke-dashoffset: 40; transition: stroke-dashoffset .32s ease-in; }
+#form0 .on > .f0-box path.line { stroke-dashoffset: 0; }
+#form0 .f0-box path.smudge { opacity: 0; transition: opacity .3s .15s; }
+#form0 .on > .f0-box path.smudge { opacity: 1; }
+#form0 .f0-byt { margin: 10px 0 2px; padding: 8px 0 2px 29px; border-left: 1px solid rgba(58,48,38,0.35); }
+#form0 .f0-row { margin: 0 0 8px; }
+#form0 .f0-row h4 {
+  margin: 4px 0 2px; font: 500 9px Montserrat, 'PT Sans', sans-serif;
+  letter-spacing: 3px; text-transform: uppercase; color: rgba(58,48,38,0.8);
+}
+#form0 .f0-opts { display: flex; flex-wrap: wrap; gap: 0 18px; }
+#form0 .f0-opt { width: auto; min-height: 34px; font-size: 16px; border-bottom: none; gap: 8px; }
+#form0 .f0-opt .f0-box { width: 14px; height: 14px; }
+#form0 .f0-opt .f0-box svg { width: 22px; height: 22px; top: -8px; }
+#form0 .f0-foot {
+  margin-top: 14px; font: italic 13px var(--font-book); color: rgba(58,48,38,0.75); line-height: 1.35;
+}
+/* подпись заявителя: росчерк углём на линии (ui/signature.js) */
+#form0 .f0-sign { margin-top: 10px; width: 240px; max-width: 100%; }
+#form0 .f0-sign canvas {
+  display: block; width: 240px; max-width: 100%; height: 56px;
+  border-bottom: 1px solid rgba(58,48,38,0.7); cursor: crosshair; touch-action: none;
+}
+#form0 .f0-sign-cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px;
+  font: 300 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
+#form0 .f0-sign-cap button { background: none; border: none; padding: 4px 0; cursor: pointer;
+  font: italic 13px var(--font-book); letter-spacing: 0; text-transform: none; color: rgba(58,48,38,0.8);
+  text-decoration: line-through; text-decoration-color: rgba(194,59,43,0.7); }
+/* рука странника на бумагах мира: протокол, осмотр, опись */
+svg.sign { display: inline-block; vertical-align: middle; overflow: visible; }
+.dmarg svg.sign { margin-left: 6px; }
+#look-sign { display: none; margin: 10px 0 2px; font: 300 9px Montserrat, 'PT Sans', sans-serif;
+  letter-spacing: 2px; text-transform: uppercase; color: rgba(58,48,38,0.75); }
+#look-sign svg.sign { margin-left: 8px; }
+.inv-foot svg.sign { margin-left: 6px; }
+#form0 .f0-seal {
+  position: absolute; right: 20px; top: 16px; transform: rotate(-8deg);
+  padding: 5px 9px 4px; text-align: center; pointer-events: none;
+  border: 2px solid rgba(194,59,43,0.85); outline: 1px solid rgba(194,59,43,0.55); outline-offset: 2px;
+  color: rgba(194,59,43,0.88); mix-blend-mode: multiply;
+  font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase;
+}
+#form0 .f0-seal b { display: block; font-weight: 500; }
+#form0 .f0-seal i { display: block; font-style: normal; font-size: 14px; line-height: 1.1; }
+#form0 .f0-void { display: none; margin-top: 12px; font: italic 15px var(--font-book); line-height: 1.4; }
+/* покинуть вечер: штамп «ПОГАШЕНО», бланк гаснет; щелчок — вернуться */
+#entry.left #form0 .f0-list, #entry.left #form0 .f0-byt, #entry.left #form0 .f0-foot { opacity: 0.35; }
+#entry.left #form0 .f0-sign { opacity: 0.35; pointer-events: none; }   /* погашено: щелчок по подписи — тоже «по бланку» */
+#entry.left #form0 .f0-void { display: block; }
+#entry.left #form0::after {
+  content: 'погашено'; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-11deg);
+  padding: 6px 16px; border: 3px double rgba(194,59,43,0.9); color: rgba(194,59,43,0.9); mix-blend-mode: multiply;
+  font: 500 22px Montserrat, 'PT Sans', sans-serif; letter-spacing: 6px; text-transform: uppercase;
+}
+#entry.left { box-shadow: inset 0 0 0 100vmax rgba(5,4,8,0.82) !important; transition: box-shadow 1.2s; }
+html.rm #form0 .f0-box path.line, html.rm #form0 .f0-box path.smudge { transition: none; }
+html.rm #entry-mirror-glass::before { animation: none; }
+html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
+@media (prefers-reduced-motion: reduce) {
+  #form0 .f0-box path.line, #form0 .f0-box path.smudge { transition: none; }
+  #entry-mirror-glass::before { animation: none; }
+}
+@media (max-width: 768px), (pointer: coarse) {
+  #form0 { padding: 18px 20px 16px; width: min(400px, 92vw); }
+  #entry-logo { font-size: 28px; }
+  #form0 .f0-item { font-size: 18px; min-height: 44px; }
+  #form0 .f0-seal { top: 12px; right: 12px; }
+}
+@media (max-height: 520px) {                 /* телефон боком */
+  #form0 { padding: 12px 18px 10px; }
+  #entry-logo { font-size: 22px; }
+  #form0 .f0-grif { margin-bottom: 6px; padding-bottom: 6px; }
+  #form0 .f0-item { min-height: 34px; font-size: 16px; }
+  #form0 .f0-foot { margin-top: 6px; font-size: 12px; }
+  #entry-mirror { display: none; }
+}

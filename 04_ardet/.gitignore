@@ -1,0 +1,9 @@
+node_modules/
+# build/ — вывод node build.js. Три HTML-артефакта и README закоммичены
+# сознательно (играбельная сборка в репозитории), остальное — не коммитим.
+build/*
+!build/index.html
+!build/ardet.html
+!build/mobile.html
+!build/README.md
+hunt-runs/

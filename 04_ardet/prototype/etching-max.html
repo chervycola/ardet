@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ardet · офорт на максималках</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@0;1&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#080706;overflow:hidden;
+    display:flex;align-items:center;justify-content:center}
+  #wrap{position:relative}
+  canvas{display:block;background:#0D0B0A}
+  #cap{position:absolute;left:0;right:0;bottom:-34px;display:flex;
+    justify-content:space-between;font-family:'Cormorant Garamond',serif;
+    font-style:italic;font-size:15px;color:#8A8D8F}
+  #cap b{font-style:normal;font-family:Montserrat;font-weight:300;
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;align-self:center}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="cap"><span>городок · долгий вечер</span><b>направление 2a · офорт</b><span>ardet — it burns</span></div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARDET — офорт «на максималках». Плотность Доре: перекрёстный штрих,
+// свет как вещество (радиальные лучи), штрих по форме. Палитра-библия.
+// ═══════════════════════════════════════════════════════════════════
+const NIGHT='#0D0B0A', BONE='#D9CFB8', ASH='#8A8D8F', MIST='#3D4A3A', CANDLE='#E28A3A', RED='#C23B2B';
+const cv=document.getElementById('c'), x=cv.getContext('2d');
+let W=1280,H=720,DPR=1;
+function resize(){
+  const availW=Math.min(innerWidth-40,1360), availH=Math.min(innerHeight-90,765);
+  const k=Math.min(availW/16,availH/9);
+  W=Math.round(k*16); H=Math.round(k*9);
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=W*DPR; cv.height=H*DPR;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  x.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize',()=>{resize();});
+resize();
+
+// Детерминированный «рукотворный» джиттер
+const J=i=>Math.sin(i*127.13)*43758.545%1;
+
+// ── Параллельный штрих внутри пути (слоями => перекрёстный) ──
+function hatchIn(pathFn, layers){
+  for(const L of layers){
+    x.save(); x.beginPath(); pathFn(); x.clip();
+    x.strokeStyle=L.col||BONE; x.globalAlpha=L.a; x.lineWidth=L.w||0.65;
+    const ang=L.ang*Math.PI/180, diag=Math.hypot(W,H), n=Math.ceil(diag/L.gap)+2;
+    x.beginPath();
+    for(let i=-n;i<n;i++){
+      const off=i*L.gap, jx=J(i+L.ang)*L.j||0, jy=J(i*2+L.ang)*(L.j||0);
+      const cx0=W/2+Math.cos(ang+Math.PI/2)*off-Math.cos(ang)*diag;
+      const cy0=H/2+Math.sin(ang+Math.PI/2)*off-Math.sin(ang)*diag;
+      x.moveTo(cx0+jx,cy0+jy);
+      x.lineTo(cx0+Math.cos(ang)*diag*2+jy, cy0+Math.sin(ang)*diag*2+jx);
+    }
+    x.stroke(); x.restore();
+  }
+  x.globalAlpha=1;
+}
+// ── Радиальные лучи света (свет как вещество) ──
+function rays(cx,cy,r0,r1,n,col,a,wobble=0){
+  x.strokeStyle=col; x.globalAlpha=a; x.lineWidth=0.7;
+  x.beginPath();
+  for(let i=0;i<n;i++){
+    const ang=(i/n)*Math.PI*2+J(i)*0.03;
+    const rr1=r1*(0.75+J(i*3)*0.5)+wobble*Math.sin(i*1.7);
+    x.moveTo(cx+Math.cos(ang)*r0, cy+Math.sin(ang)*r0);
+    x.lineTo(cx+Math.cos(ang)*rr1, cy+Math.sin(ang)*rr1);
+  }
+  x.stroke(); x.globalAlpha=1;
+}
+
+let t0=performance.now();
+function frame(now){
+  const t=(now-t0)/1000;
+  const u=v=>v*W/1280, uy=v=>v*H/720; // расчёт от эталона 1280×720
+  x.clearRect(0,0,W,H);
+  x.fillStyle=NIGHT; x.fillRect(0,0,W,H);
+
+  // ═══ НЕБО: горизонтальный офорт пластины, гуще к углам ═══
+  hatchIn(()=>x.rect(0,0,W,uy(462)),[
+    {ang:0,gap:3.6,a:0.16,w:0.55,j:0.9},
+    {ang:0,gap:7.4,a:0.10,w:0.5,j:1.4},
+    {ang:2,gap:15,a:0.07,w:0.5,j:2.2},
+  ]);
+  // виньетка штрихом: углы неба темнее
+  hatchIn(()=>{x.moveTo(0,0);x.lineTo(u(360),0);x.lineTo(0,uy(290));x.closePath();},
+    [{ang:45,gap:2.6,a:0.6,col:NIGHT,w:1.4}]);
+  hatchIn(()=>{x.moveTo(W,0);x.lineTo(W-u(240),0);x.lineTo(W,uy(160));x.closePath();},
+    [{ang:-45,gap:3,a:0.45,col:NIGHT,w:1.2}]);
+
+  // ═══ ЛУНА — тёплое пятно III: гравюрная моделировка дугами ═══
+  const mx=u(1050), my=uy(120), mr=u(52);
+  const halo=x.createRadialGradient(mx,my,mr*0.5,mx,my,mr*3.1);
+  halo.addColorStop(0,'rgba(226,138,58,0.22)'); halo.addColorStop(1,'rgba(226,138,58,0)');
+  x.fillStyle=halo; x.fillRect(mx-mr*3.2,my-mr*3.2,mr*6.4,mr*6.4);
+  // лучи света от луны — редкие, длинные
+  rays(mx,my,mr*1.12,mr*2.7,52,'#CDA96F',0.17);
+  x.fillStyle='#DDC08A'; x.beginPath(); x.arc(mx,my,mr,0,7); x.fill();
+  x.save(); x.beginPath(); x.arc(mx,my,mr,0,7); x.clip();
+  // концентрические дуги формы — центр смещён к свету (верх-лево)
+  x.strokeStyle='#8F7448'; x.lineWidth=0.6;
+  for(let i=0;i<20;i++){
+    x.globalAlpha=0.12+i*0.021;
+    x.beginPath(); x.arc(mx-mr*0.36,my-mr*0.32, mr*(0.1+i*0.078), -0.5, 3.0); x.stroke();
+  }
+  // тень терминатора — редкие дуги от нижне-правого края
+  x.strokeStyle='#5E4A2B';
+  for(let i=0;i<6;i++){
+    x.globalAlpha=0.2-i*0.02;
+    x.beginPath(); x.arc(mx+mr*1.05,my+mr*0.9, mr*(1.06+i*0.14), 2.9, 5.0); x.stroke();
+  }
+  // кратеры — обвод + внутренняя тень
+  const crat=[[-0.28,-0.1,0.16],[0.2,0.24,0.11],[0.33,-0.28,0.08],[-0.05,0.38,0.09],[0.05,-0.42,0.06]];
+  for(const [fx,fy,fr] of crat){
+    x.strokeStyle='#6E5733'; x.globalAlpha=0.65; x.lineWidth=0.7;
+    x.beginPath(); x.arc(mx+mr*fx,my+mr*fy,mr*fr,0,7); x.stroke();
+    x.globalAlpha=0.4;
+    x.beginPath(); x.arc(mx+mr*fx+1.2,my+mr*fy+1.2,mr*fr*0.8,0.5,2.7); x.stroke();
+  }
+  // край лимба снизу-справа — потемнение обводом
+  x.strokeStyle='#4F3E24'; x.lineWidth=2.2; x.globalAlpha=0.5;
+  x.beginPath(); x.arc(mx,my,mr-1.4,0.3,2.2); x.stroke();
+  x.globalAlpha=1;
+  x.restore();
+
+  // ═══ ОБЛАЧНЫЕ ТЯЖИ — рыхлые тёмные мазки, светлая кромка к луне ═══
+  const cl=(cx,cy,len,h,drift)=>{
+    const dx2=Math.sin(t*0.05+drift)*u(7);
+    x.lineCap='round'; x.strokeStyle='#0A0908';
+    for(let i=0;i<5;i++){
+      const fy=cy+(i-2)*h*0.52;
+      const half=len*(1-Math.abs(i-2)*0.26)*(0.85+J(i+drift)*0.15);
+      x.globalAlpha=0.78; x.lineWidth=h*0.8;
+      x.beginPath();
+      x.moveTo(cx+dx2-half,fy);
+      x.quadraticCurveTo(cx+dx2,fy+Math.sin(i*2.1+drift)*h*0.4, cx+dx2+half,fy);
+      x.stroke();
+    }
+    x.strokeStyle='#C9AE7F'; x.globalAlpha=0.26; x.lineWidth=0.8;
+    x.beginPath();
+    x.moveTo(cx+dx2-len*0.7,cy-h*1.2);
+    x.quadraticCurveTo(cx+dx2,cy-h*1.8, cx+dx2+len*0.75,cy-h*1.1);
+    x.stroke();
+    x.globalAlpha=1; x.lineCap='butt';
+  };
+  cl(mx-u(14),my+mr*0.62,u(150),uy(9),0);     // через нижнюю треть луны
+  cl(u(760),uy(200),u(120),uy(7),2.3);
+  cl(u(1140),uy(268),u(90),uy(6),4.1);
+
+  // ═══ ВОРОНЫ — три штриха у замка ═══
+  x.strokeStyle=BONE; x.lineWidth=0.9;
+  for(let i=0;i<3;i++){
+    const bx0=u(470)+i*u(56)+Math.sin(t*0.11+i)*u(10), by0=uy(206)+i*uy(26)+Math.cos(t*0.13+i*2)*uy(6);
+    const flap=Math.sin(t*5+i*2.4)*uy(3.4);
+    x.globalAlpha=0.4-i*0.07;
+    x.beginPath();
+    x.moveTo(bx0-u(6),by0-flap); x.quadraticCurveTo(bx0-u(2),by0+uy(2),bx0,by0);
+    x.quadraticCurveTo(bx0+u(2),by0+uy(2),bx0+u(6),by0-flap);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ═══ ЗАМОК — как погода: два тона мглы, вертикальный штрих, ни одного огня ═══
+  const cbase=uy(370);
+  function castlePath(){
+    x.moveTo(u(60),cbase);
+    x.lineTo(u(88),uy(258)); x.lineTo(u(88),uy(232)); // левая башня с зубцами
+    x.lineTo(u(91),uy(232)); x.lineTo(u(91),uy(237)); x.lineTo(u(94.5),uy(237)); x.lineTo(u(94.5),uy(232));
+    x.lineTo(u(98),uy(232)); x.lineTo(u(98),uy(237)); x.lineTo(u(102),uy(237)); x.lineTo(u(102),uy(232));
+    x.lineTo(u(102),uy(258)); x.lineTo(u(140),uy(268));
+    x.lineTo(u(148),uy(196)); x.lineTo(u(142),uy(196)); x.lineTo(u(158),uy(160)); // шпиль
+    x.lineTo(u(174),uy(196)); x.lineTo(u(168),uy(196)); x.lineTo(u(176),uy(262));
+    x.lineTo(u(214),uy(252)); x.lineTo(u(214),uy(228)); // правая башня с зубцами
+    x.lineTo(u(217),uy(228)); x.lineTo(u(217),uy(233)); x.lineTo(u(220.5),uy(233)); x.lineTo(u(220.5),uy(228));
+    x.lineTo(u(224),uy(228)); x.lineTo(u(224),uy(233)); x.lineTo(u(228),uy(233)); x.lineTo(u(228),uy(228));
+    x.lineTo(u(228),uy(256)); x.lineTo(u(258),uy(300)); x.lineTo(u(276),cbase);
+    x.closePath();
+  }
+  x.fillStyle='rgba(61,74,58,0.28)'; x.beginPath(); castlePath(); x.fill();
+  hatchIn(castlePath,[
+    {ang:90,gap:2.8,a:0.22,col:MIST,w:0.65,j:0.5},
+    {ang:90,gap:6,a:0.13,col:BONE,w:0.5,j:0.8},
+  ]);
+  x.strokeStyle=MIST; x.globalAlpha=0.65; x.lineWidth=1;
+  x.beginPath(); castlePath(); x.stroke(); x.globalAlpha=1;
+  x.strokeStyle=BONE; x.globalAlpha=0.18; x.lineWidth=0.6;
+  x.beginPath(); castlePath(); x.stroke(); x.globalAlpha=1;
+  // флюгер-вымпел на шпиле — чтобы не читался стрелкой
+  x.strokeStyle=MIST; x.globalAlpha=0.8; x.lineWidth=1;
+  x.beginPath(); x.moveTo(u(158),uy(160)); x.lineTo(u(158),uy(146));
+  x.quadraticCurveTo(u(165),uy(149)+Math.sin(t*0.7)*uy(1.5), u(171),uy(146));
+  x.quadraticCurveTo(u(165),uy(153), u(158),uy(152));
+  x.stroke(); x.globalAlpha=1;
+  // гора под замком
+  hatchIn(()=>{x.moveTo(0,uy(430));x.lineTo(u(40),cbase-uy(6));x.lineTo(u(300),cbase-uy(4));x.lineTo(u(360),uy(430));x.closePath();},
+    [{ang:24,gap:3,a:0.2,col:MIST,w:0.65,j:1},{ang:-30,gap:4.6,a:0.11,col:BONE,w:0.5,j:1}]);
+
+  // ═══ ДАЛЬНИЕ КРЫШИ — силуэтный план со шпилями ═══
+  function farRoofs(){
+    x.moveTo(0,uy(452));
+    x.lineTo(u(60),uy(430)); x.lineTo(u(120),uy(452)); x.lineTo(u(150),uy(414));
+    x.lineTo(u(158),uy(452)); x.lineTo(u(230),uy(436)); x.lineTo(u(310),uy(455));
+    x.lineTo(u(350),uy(420)); x.lineTo(u(354),uy(408)); x.lineTo(u(360),uy(420)); // шпиль
+    x.lineTo(u(400),uy(452)); x.lineTo(u(470),uy(430)); x.lineTo(u(560),uy(455));
+    x.lineTo(u(640),uy(434)); x.lineTo(u(720),uy(455)); x.lineTo(u(800),uy(428));
+    x.lineTo(u(880),uy(452)); x.lineTo(u(980),uy(430)); x.lineTo(u(1080),uy(455));
+    x.lineTo(u(1170),uy(436)); x.lineTo(u(1280),uy(452));
+    x.lineTo(W,uy(490)); x.lineTo(0,uy(490)); x.closePath();
+  }
+  x.fillStyle='#12100D'; x.beginPath(); farRoofs(); x.fill();
+  hatchIn(farRoofs,[{ang:-34,gap:2.8,a:0.19,w:0.6,j:0.6},{ang:56,gap:5.6,a:0.10,w:0.5,j:0.8}]);
+  x.strokeStyle=BONE; x.globalAlpha=0.5; x.lineWidth=0.85;
+  x.beginPath(); farRoofs(); x.stroke(); x.globalAlpha=1;
+
+  // ═══ БЛИЖНИЙ ПЛАН — дома с черепицей, канцелярия, окно №3 ═══
+  // дом канцелярии
+  const kx=u(250), ky=uy(470);
+  function chanc(){ x.rect(kx,ky,u(180),uy(130)); }
+  x.fillStyle='#0F0D0B'; x.beginPath(); chanc(); x.fill();
+  hatchIn(chanc,[
+    {ang:90,gap:2.6,a:0.2,w:0.6,j:0.4},
+    {ang:0,gap:4.8,a:0.13,w:0.5,j:0.6},
+  ]);
+  x.strokeStyle=BONE; x.globalAlpha=0.55; x.lineWidth=0.9;
+  x.beginPath(); chanc(); x.stroke(); x.globalAlpha=1;
+  // крыша канцелярии — черепица рядами дуг
+  function chancRoof(){ x.moveTo(kx-u(14),ky); x.lineTo(kx+u(90),ky-uy(52)); x.lineTo(kx+u(194),ky); x.closePath(); }
+  x.fillStyle='#12100D'; x.beginPath(); chancRoof(); x.fill();
+  x.save(); x.beginPath(); chancRoof(); x.clip();
+  x.strokeStyle=BONE; x.lineWidth=0.6;
+  for(let row=0;row<7;row++){
+    const ry=ky-uy(46)+row*uy(7.4);
+    x.globalAlpha=0.24+row*0.025;
+    x.beginPath();
+    for(let cxx=kx-u(16);cxx<kx+u(198);cxx+=u(11)){
+      x.moveTo(cxx+u(10),ry+(row%2?u(5):0));
+      x.arc(cxx+u(5)+(row%2?u(5):0),ry,u(5),0,Math.PI);
+    }
+    x.stroke();
+  }
+  x.restore(); x.globalAlpha=1;
+  x.strokeStyle=BONE; x.globalAlpha=0.6; x.lineWidth=1; x.beginPath(); chancRoof(); x.stroke(); x.globalAlpha=1;
+  // окна канцелярии: тёмные с переплётами + ОКНО №3 горит
+  const wins=[[u(24),uy(28)],[u(76),uy(28)],[u(128),uy(28)],[u(24),uy(82)],[u(128),uy(82)]];
+  x.strokeStyle=ASH; x.lineWidth=0.9;
+  for(const [ox,oy] of wins){
+    x.globalAlpha=0.6;
+    x.strokeRect(kx+ox,ky+oy,u(28),uy(36));
+    x.beginPath(); x.moveTo(kx+ox+u(14),ky+oy); x.lineTo(kx+ox+u(14),ky+oy+uy(36));
+    x.moveTo(kx+ox,ky+oy+uy(18)); x.lineTo(kx+ox+u(28),ky+oy+uy(18)); x.stroke();
+  }
+  x.globalAlpha=1;
+  // ОКНО №3 — тёплое пятно II
+  const w3x=kx+u(76), w3y=ky+uy(82);
+  const flick=0.8+0.2*(Math.sin(t*7.1)*0.3+Math.sin(t*12.7)*0.2+Math.sin(t*2.3)*0.5);
+  const wglow=x.createRadialGradient(w3x+u(14),w3y+uy(18),2,w3x+u(14),w3y+uy(18),u(72));
+  wglow.addColorStop(0,`rgba(226,138,58,${0.30*flick})`); wglow.addColorStop(1,'rgba(226,138,58,0)');
+  x.fillStyle=wglow; x.fillRect(w3x-u(60),w3y-uy(56),u(148),uy(148));
+  rays(w3x+u(14),w3y+uy(18),u(24),u(52),26,CANDLE,0.16*flick);
+  x.fillStyle=`rgba(236,190,120,${0.88*flick})`; x.fillRect(w3x,w3y,u(28),uy(36));
+  x.strokeStyle=NIGHT; x.lineWidth=1.3;
+  x.beginPath(); x.moveTo(w3x+u(14),w3y); x.lineTo(w3x+u(14),w3y+uy(36));
+  x.moveTo(w3x,w3y+uy(18)); x.lineTo(w3x+u(28),w3y+uy(18)); x.stroke();
+  // фигура в окне — тёмный силуэт пишущего
+  x.fillStyle='rgba(13,11,10,0.75)';
+  x.beginPath(); x.arc(w3x+u(9),w3y+uy(26),u(5),Math.PI,0); x.fill();
+  // вывеска
+  x.fillStyle=BONE; x.globalAlpha=0.85; x.font=`300 ${Math.max(8,u(10))}px Montserrat`;
+  x.fillText('К А Н Ц Е Л Я Р И Я', kx+u(28), ky+uy(16));
+  x.globalAlpha=0.6; x.font=`300 ${Math.max(7,u(9))}px Montserrat`;
+  x.fillText('№3', w3x+u(32), w3y+uy(12));
+  x.globalAlpha=1;
+  // доска объявлений рядом
+  x.strokeStyle=BONE; x.globalAlpha=0.65; x.lineWidth=1;
+  x.strokeRect(kx+u(196),ky+uy(66),u(44),uy(56));
+  x.globalAlpha=0.42;
+  for(let i=0;i<3;i++) x.strokeRect(kx+u(201)+J(i)*3, ky+uy(72)+i*uy(16), u(20), uy(11));
+  x.globalAlpha=0.7; x.font=`italic ${Math.max(7,u(9))}px "Cormorant Garamond"`;
+  x.fillStyle=BONE;
+  x.fillText('утеряно: смысл', kx+u(199), ky+uy(118));
+  x.globalAlpha=1;
+
+  // второй дом правее, с дранкой
+  const h2x=u(560), h2y=uy(478);
+  function h2(){ x.rect(h2x,h2y,u(130),uy(122)); }
+  x.fillStyle='#0F0D0B'; x.beginPath(); h2(); x.fill();
+  hatchIn(h2,[{ang:90,gap:3,a:0.18,w:0.6,j:0.4},{ang:14,gap:5.4,a:0.10,w:0.5,j:0.7}]);
+  x.strokeStyle=BONE; x.globalAlpha=0.5; x.lineWidth=0.9;
+  x.beginPath(); h2(); x.stroke(); x.globalAlpha=1;
+  function h2roof(){ x.moveTo(h2x-u(12),h2y); x.lineTo(h2x+u(64),h2y-uy(44)); x.lineTo(h2x+u(142),h2y); x.closePath(); }
+  x.fillStyle='#12100D'; x.beginPath(); h2roof(); x.fill();
+  x.save(); x.beginPath(); h2roof(); x.clip();
+  x.strokeStyle=BONE; x.lineWidth=0.55;
+  for(let row=0;row<6;row++){
+    x.globalAlpha=0.2+row*0.028;
+    const ry=h2y-uy(40)+row*uy(7);
+    x.beginPath();
+    for(let i=0;i<16;i++){
+      const sx=h2x-u(12)+i*u(10)+(row%2?u(5):0);
+      x.moveTo(sx,ry); x.lineTo(sx+u(8),ry+uy(2.4)); // дранка — косые плашки
+    }
+    x.stroke();
+  }
+  x.restore(); x.globalAlpha=1;
+  x.strokeStyle=BONE; x.globalAlpha=0.55; x.lineWidth=1; x.beginPath(); h2roof(); x.stroke(); x.globalAlpha=1;
+  // тёмные окна
+  x.strokeStyle=ASH; x.globalAlpha=0.55; x.lineWidth=0.9;
+  x.strokeRect(h2x+u(18),h2y+uy(24),u(26),uy(34));
+  x.strokeRect(h2x+u(84),h2y+uy(24),u(26),uy(34));
+  x.strokeRect(h2x+u(50),h2y+uy(70),u(28),uy(50)); // дверь
+  x.globalAlpha=1;
+  // дымящая труба (одна на городок)
+  const chx=h2x+u(100), chy=h2y-uy(30);
+  x.fillStyle='#0F0D0B'; x.fillRect(chx-u(7),chy-uy(30),u(14),uy(30));
+  x.strokeStyle=BONE; x.globalAlpha=0.5; x.strokeRect(chx-u(7),chy-uy(30),u(14),uy(30)); x.globalAlpha=1;
+  x.strokeStyle=ASH; x.lineWidth=1;
+  for(let i=0;i<3;i++){
+    x.globalAlpha=0.30-i*0.07;
+    const ph=t*0.3+i*2.1;
+    x.beginPath();
+    x.moveTo(chx,chy-uy(32)-i*uy(15));
+    x.bezierCurveTo(chx+u(12)+Math.sin(ph)*u(8), chy-uy(46)-i*uy(15),
+                    chx-u(9)+Math.cos(ph*0.8)*u(9), chy-uy(58)-i*uy(15),
+                    chx+u(5)+Math.sin(ph*0.6)*u(11), chy-uy(72)-i*uy(15));
+    x.stroke();
+  }
+  x.globalAlpha=1;
+  // кот на коньке — чаще, чем геометрически возможно
+  const catx=h2x+u(64), caty=h2y-uy(46);
+  x.fillStyle='#080706';
+  x.beginPath();
+  x.ellipse(catx,caty,u(7),uy(4.4),0,0,7); x.fill();               // тело
+  x.beginPath(); x.arc(catx+u(6),caty-uy(3),u(3.2),0,7); x.fill(); // голова
+  x.beginPath(); x.moveTo(catx+u(4.4),caty-uy(5.4)); x.lineTo(catx+u(5.4),caty-uy(8)); x.lineTo(catx+u(6.6),caty-uy(5.6)); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(catx+u(6.4),caty-uy(5.6)); x.lineTo(catx+u(7.6),caty-uy(8)); x.lineTo(catx+u(8.4),caty-uy(5.2)); x.closePath(); x.fill();
+  x.strokeStyle='#080706'; x.lineWidth=1.6;
+  x.beginPath(); x.moveTo(catx-u(6.4),caty);
+  x.bezierCurveTo(catx-u(12),caty-uy(2), catx-u(12),caty-uy(10), catx-u(8),caty-uy(11));
+  x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.6; x.lineWidth=0.6;
+  x.beginPath(); x.ellipse(catx,caty,u(7),uy(4.4),0,-2.4,-0.6); x.stroke(); // лунный обвод спины
+  x.beginPath(); x.arc(catx+u(6),caty-uy(3),u(3.2),-2.6,-0.8); x.stroke();
+  x.globalAlpha=1;
+
+  // ═══ ПЛОЩАДЬ: горизонтальный штрих + брусчатка на переднем плане ═══
+  hatchIn(()=>x.rect(0,uy(486),W,uy(234)),[
+    {ang:0,gap:3,a:0.15,w:0.55,j:0.9},
+    {ang:0,gap:6.2,a:0.09,w:0.5,j:1.4},
+  ]);
+  // брусчатка — ряды камней, ближе — крупнее
+  x.strokeStyle=BONE; x.lineWidth=0.55;
+  for(let row=0;row<5;row++){
+    const ry=uy(600)+row*uy(26), sc=1+row*0.35;
+    x.globalAlpha=0.11+row*0.035;
+    x.beginPath();
+    for(let i=-1;i<22;i++){
+      const sx=(i*u(64)+((row%2)?u(32):0))*1;
+      x.moveTo(sx+u(52)*sc*0.4,ry);
+      x.ellipse(sx,ry,u(26)*sc*0.42,uy(7)*sc,0,0,Math.PI*2);
+    }
+    x.stroke();
+  }
+  x.globalAlpha=1;
+  // туман по колено
+  const fog=x.createLinearGradient(0,uy(560),0,uy(700));
+  fog.addColorStop(0,'rgba(61,74,58,0)'); fog.addColorStop(1,'rgba(61,74,58,0.16)');
+  x.fillStyle=fog; x.fillRect(0,uy(560),W,uy(160));
+
+  // ═══ ВРАТА слева — открыты всегда, вросли ═══
+  const gx=u(64), gy=uy(600);
+  x.strokeStyle=BONE; x.globalAlpha=0.75; x.lineWidth=1.2;
+  x.strokeRect(gx-u(6),gy-uy(120),u(14),uy(120));   // левый столб
+  x.strokeRect(gx+u(64),gy-uy(120),u(14),uy(120));  // правый столб
+  x.beginPath(); x.moveTo(gx-u(8),gy-uy(120));      // перемычка с прогибом
+  x.quadraticCurveTo(gx+u(36),gy-uy(134), gx+u(80),gy-uy(120)); x.stroke();
+  x.globalAlpha=1;
+  hatchIn(()=>{x.rect(gx-u(6),gy-uy(120),u(14),uy(120)); x.rect(gx+u(64),gy-uy(120),u(14),uy(120));},
+    [{ang:90,gap:2.4,a:0.26,w:0.6,j:0.4},{ang:8,gap:9,a:0.14,w:0.5,j:0.6}]);
+  // створка, вросшая в землю под углом
+  x.save();
+  x.translate(gx+u(10),gy); x.rotate(-0.18);
+  x.strokeStyle=BONE; x.globalAlpha=0.6; x.lineWidth=1;
+  x.strokeRect(0,-uy(96),u(30),uy(96));
+  for(let i=1;i<4;i++){ x.beginPath(); x.moveTo(u(7.5*i),-uy(96)); x.lineTo(u(7.5*i),0); x.stroke(); }
+  x.restore(); x.globalAlpha=1;
+  // трава у створки
+  x.strokeStyle=MIST; x.globalAlpha=0.85; x.lineWidth=0.9;
+  for(let i=0;i<9;i++){
+    const bx2=gx+u(4)+i*u(4.4);
+    x.beginPath(); x.moveTo(bx2,gy+uy(2));
+    x.quadraticCurveTo(bx2+J(i)*4-2, gy-uy(9)-J(i*2)*uy(5), bx2+J(i*3)*6-3, gy-uy(13)-J(i)*uy(6));
+    x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ═══ ПОГАСШИЙ ФОНАРЬ — единственный столб без света ═══
+  const lx=u(392), ly=uy(646);
+  x.strokeStyle='#2A241E'; x.lineWidth=4; x.lineCap='round';
+  x.beginPath(); x.moveTo(lx,ly); x.lineTo(lx,ly-uy(112)); x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.7; x.lineWidth=1.1;
+  x.beginPath(); x.moveTo(lx,ly-uy(112)); x.quadraticCurveTo(lx+u(2),ly-uy(124),lx+u(16),ly-uy(124)); x.stroke();
+  // корпус лампы — пустой, стекло треснуто
+  x.strokeRect(lx+u(11),ly-uy(140),u(15),uy(19));
+  x.beginPath(); x.moveTo(lx+u(13),ly-uy(136)); x.lineTo(lx+u(22),ly-uy(126)); x.stroke(); // трещина
+  x.globalAlpha=0.4;
+  x.beginPath(); x.moveTo(lx+u(11),ly-uy(121)); x.lineTo(lx+u(26),ly-uy(121)); x.stroke();
+  x.globalAlpha=1;
+  hatchIn(()=>x.rect(lx-2.2,ly-uy(112),4.4,uy(112)),[{ang:90,gap:2,a:0.3,w:0.55}]);
+
+  // ═══ ПИФОС — глиняная бочка на боку, выметенная ═══
+  const px2=u(660), py2=uy(668);
+  function pith(){ x.ellipse(px2,py2,u(46),uy(26),-0.1,0,7); }
+  x.fillStyle='#141110'; x.beginPath(); pith(); x.fill();
+  hatchIn(pith,[
+    {ang:-8,gap:2.4,a:0.3,w:0.6,j:0.5},
+    {ang:78,gap:4.6,a:0.15,w:0.5,j:0.5},
+  ]);
+  x.strokeStyle=BONE; x.globalAlpha=0.7; x.lineWidth=1;
+  x.beginPath(); pith(); x.stroke();
+  // обручи формы
+  for(const k of [-0.55,-0.15,0.3]){
+    x.globalAlpha=0.45;
+    x.beginPath(); x.ellipse(px2+u(46)*k,py2+uy(1)*k, u(7),uy(23.4),-0.1,0,7); x.stroke();
+  }
+  // горло — чёрный зев с костяным ободом
+  x.globalAlpha=1; x.fillStyle=NIGHT;
+  x.beginPath(); x.ellipse(px2+u(42),py2-uy(4),u(9),uy(17),-0.1,0,7); x.fill();
+  x.strokeStyle=BONE; x.globalAlpha=0.75;
+  x.beginPath(); x.ellipse(px2+u(42),py2-uy(4),u(9),uy(17),-0.1,0,7); x.stroke();
+  x.globalAlpha=1;
+
+  // ═══ ЖЕРТВЕННЫЙ КОСТЁР — тёплое пятно I: свет как вещество ═══
+  const bx=u(880), by=uy(620);
+  const breath=0.75+0.25*Math.sin(t*(Math.PI*2/6)); // дыхание 6 с
+  // лучи света — гравюрное «вещество света»
+  rays(bx,by-uy(26),u(40),u(150)*breath,72,CANDLE,0.15*breath,u(6));
+  rays(bx,by-uy(26),u(30),u(86)*breath,36,'#F2C079',0.19*breath);
+  const bglow=x.createRadialGradient(bx,by-uy(24),u(6),bx,by-uy(24),u(190)*breath);
+  bglow.addColorStop(0,`rgba(226,138,58,${0.30*breath})`);
+  bglow.addColorStop(0.45,`rgba(194,59,43,${0.10*breath})`);
+  bglow.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=bglow; x.fillRect(bx-u(200),by-uy(214),u(400),uy(400));
+  // кострище камнями
+  x.strokeStyle=BONE; x.globalAlpha=0.6; x.lineWidth=0.9;
+  for(let i=0;i<9;i++){
+    const ang=i/9*Math.PI*2;
+    x.beginPath();
+    x.ellipse(bx+Math.cos(ang)*u(34), by+uy(6)+Math.sin(ang)*uy(10), u(7),uy(4.4), ang*0.3, 0, 7);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+  // поленья
+  x.strokeStyle='#241E18'; x.lineWidth=6; x.lineCap='round';
+  x.beginPath(); x.moveTo(bx-u(26),by+uy(4)); x.lineTo(bx+u(24),by-uy(5));
+  x.moveTo(bx-u(20),by-uy(7)); x.lineTo(bx+u(27),by+uy(6)); x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.4; x.lineWidth=1;
+  x.beginPath(); x.moveTo(bx-u(26),by+uy(3)); x.lineTo(bx+u(24),by-uy(6)); x.stroke();
+  x.globalAlpha=1;
+  // пламя — три языка кривыми
+  const flame=(ph,s,col,al)=>{
+    x.fillStyle=col; x.globalAlpha=al;
+    const fh=(uy(56)+Math.sin(t*3.1+ph)*uy(12))*s, fw=(u(19)+Math.sin(t*4.7+ph)*u(5))*s;
+    x.beginPath();
+    x.moveTo(bx-fw,by);
+    x.bezierCurveTo(bx-fw*1.3, by-fh*0.45, bx+Math.sin(t*5+ph)*u(8), by-fh*0.8, bx+Math.sin(t*2.4+ph)*u(6), by-fh);
+    x.bezierCurveTo(bx+fw*1.25, by-fh*0.5, bx+fw, by-fh*0.15, bx+fw, by);
+    x.closePath(); x.fill(); x.globalAlpha=1;
+  };
+  flame(0,1.12,RED,0.5);
+  flame(2.2,0.88,CANDLE,0.72);
+  flame(4.1,0.5,'#F2C079',0.9);
+  // офортные язычки поверх пламени — штрих огня
+  x.strokeStyle='#F2C079'; x.lineWidth=0.7;
+  for(let i=0;i<7;i++){
+    x.globalAlpha=0.4;
+    const ph=t*2.2+i*1.7, hgt=uy(30)+Math.sin(ph)*uy(9);
+    x.beginPath();
+    x.moveTo(bx-u(12)+i*u(4), by-uy(3));
+    x.quadraticCurveTo(bx-u(10)+i*u(4)+Math.sin(ph)*u(4), by-hgt*0.6, bx-u(8)+i*u(4)+Math.sin(ph*1.3)*u(5), by-hgt);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+  // искры
+  x.fillStyle=CANDLE;
+  for(let i=0;i<9;i++){
+    const sp=(t*0.24+i*0.11)%1;
+    if(sp<0.9){
+      x.globalAlpha=(1-sp)*0.85;
+      x.beginPath();
+      x.arc(bx+Math.sin(t*1.4+i*2.2)*u(20)*sp, by-uy(18)-sp*uy(150), Math.max(0.8,u(1.3)), 0, 7);
+      x.fill();
+    }
+  }
+  x.globalAlpha=1;
+  // ── ЧЕРЕП БЫКА на шесте — детальный офорт ──
+  const skx=bx, sky=by-uy(150);
+  // шест
+  x.strokeStyle='#241E18'; x.lineWidth=3.6;
+  x.beginPath(); x.moveTo(skx,sky+uy(30)); x.lineTo(bx,by-uy(10)); x.stroke();
+  x.strokeStyle=BONE; x.globalAlpha=0.35; x.lineWidth=0.8;
+  x.beginPath(); x.moveTo(skx+1.6,sky+uy(30)); x.lineTo(bx+1.6,by-uy(10)); x.stroke();
+  x.globalAlpha=1;
+  // форма черепа: широкая коробка, длинная сужающаяся морда
+  function skullPath(){
+    x.moveTo(skx-u(15),sky-uy(16));
+    x.bezierCurveTo(skx-u(7),sky-uy(23), skx+u(7),sky-uy(23), skx+u(15),sky-uy(16)); // лоб
+    x.bezierCurveTo(skx+u(19),sky-uy(9), skx+u(18),sky-uy(1), skx+u(13),sky+uy(4)); // правая скула
+    x.bezierCurveTo(skx+u(9),sky+uy(10), skx+u(7),sky+uy(18), skx+u(5),sky+uy(27)); // к морде
+    x.bezierCurveTo(skx+u(3),sky+uy(31), skx-u(3),sky+uy(31), skx-u(5),sky+uy(27)); // конец морды
+    x.bezierCurveTo(skx-u(7),sky+uy(18), skx-u(9),sky+uy(10), skx-u(13),sky+uy(4));
+    x.bezierCurveTo(skx-u(18),sky-uy(1), skx-u(19),sky-uy(9), skx-u(15),sky-uy(16));
+    x.closePath();
+  }
+  x.fillStyle='rgba(217,207,184,0.14)';
+  x.strokeStyle=BONE; x.lineWidth=1.2; x.globalAlpha=0.95;
+  x.beginPath(); skullPath(); x.fill(); x.stroke();
+  x.globalAlpha=1;
+  // штрих по кости — до деталей, чтобы не глушить их
+  hatchIn(skullPath,[
+    {ang:-28,gap:2.2,a:0.22,col:'#8A7B5C',w:0.5,j:0.3},
+    {ang:52,gap:4.4,a:0.11,col:'#8A7B5C',w:0.5,j:0.3},
+  ]);
+  // поперечные дуги по морде — штрих по форме
+  x.strokeStyle=BONE; x.lineWidth=0.6;
+  for(let i=0;i<4;i++){
+    x.globalAlpha=0.4;
+    x.beginPath(); x.arc(skx,sky+uy(8)+i*uy(5.4), u(7.5-i*1.1), 0.5, 2.64); x.stroke();
+  }
+  x.globalAlpha=1;
+  // рога — бычьи: массивные, в стороны и вверх, сужаются к кончику
+  const horn=(s)=>{ // s=-1 левый, s=1 правый
+    const hp=()=>{
+      x.moveTo(skx+s*u(13),sky-uy(15));
+      x.bezierCurveTo(skx+s*u(34),sky-uy(24), skx+s*u(48),sky-uy(34), skx+s*u(44),sky-uy(52)); // внешняя до кончика
+      x.bezierCurveTo(skx+s*u(40),sky-uy(34), skx+s*u(30),sky-uy(20), skx+s*u(11),sky-uy(8)); // внутренняя к базе
+      x.closePath();
+    };
+    x.fillStyle='rgba(217,207,184,0.12)';
+    x.strokeStyle=BONE; x.globalAlpha=0.9; x.lineWidth=1.1;
+    x.beginPath(); hp(); x.fill(); x.stroke();
+    // кольца роста — короткие поперечные насечки
+    x.lineWidth=0.6; x.globalAlpha=0.5;
+    const ring=[[22,19,20,12],[30,25,27,17],[37,32,33,25]];
+    for(const [ax,ay,bx3,by3] of ring){
+      x.beginPath(); x.moveTo(skx+s*u(ax),sky-uy(ay)); x.lineTo(skx+s*u(bx3),sky-uy(by3)); x.stroke();
+    }
+    x.globalAlpha=1;
+  };
+  horn(-1); horn(1);
+  // глазницы — глубокие косые тени, без «зрачков»
+  x.fillStyle=NIGHT;
+  x.beginPath(); x.ellipse(skx-u(8.5),sky-uy(2),u(4.2),uy(5.6),0.55,0,7); x.fill();
+  x.beginPath(); x.ellipse(skx+u(8.5),sky-uy(2),u(4.2),uy(5.6),-0.55,0,7); x.fill();
+  x.strokeStyle='#6E5F45'; x.globalAlpha=0.7; x.lineWidth=0.7;   // край глазницы
+  x.beginPath(); x.ellipse(skx-u(8.5),sky-uy(2),u(4.2),uy(5.6),0.55,0,7); x.stroke();
+  x.beginPath(); x.ellipse(skx+u(8.5),sky-uy(2),u(4.2),uy(5.6),-0.55,0,7); x.stroke();
+  // костёр лижет кость снизу — тёплый подсвет нижних кромок
+  x.strokeStyle=CANDLE; x.globalAlpha=0.55*breath; x.lineWidth=1;
+  x.beginPath(); x.arc(skx,sky+uy(26),u(5),0.5,2.64); x.stroke();
+  x.beginPath(); x.arc(skx-u(11),sky+uy(4),u(6),1.3,2.3); x.stroke();
+  x.beginPath(); x.arc(skx+u(11),sky+uy(4),u(6),0.85,1.85); x.stroke();
+  x.globalAlpha=1;
+  // ноздри у конца морды и трещина
+  x.strokeStyle=BONE; x.globalAlpha=0.8; x.lineWidth=0.7;
+  x.beginPath(); x.ellipse(skx-u(2.6),sky+uy(24),u(1.4),uy(3),0.25,0,7); x.stroke();
+  x.beginPath(); x.ellipse(skx+u(2.6),sky+uy(24),u(1.4),uy(3),-0.25,0,7); x.stroke();
+  x.beginPath(); x.moveTo(skx-u(5),sky-uy(13)); x.lineTo(skx-u(2),sky-uy(5)); x.lineTo(skx-u(5),sky+uy(1)); x.stroke();
+  x.globalAlpha=1;
+
+  // ═══ ШУТ у костра — силуэт с трёхрогим колпаком, контровой свет ═══
+  const jx=bx+u(94), jy=by+uy(6), jsw=Math.sin(t*0.8)*u(2);
+  x.fillStyle='#0A0908';
+  x.beginPath();
+  x.moveTo(jx-u(16),jy);
+  x.bezierCurveTo(jx-u(18),jy-uy(38), jx-u(10),jy-uy(58), jx-u(4)+jsw,jy-uy(66)); // спина
+  // колпак — три рога
+  x.lineTo(jx-u(13)+jsw,jy-uy(84)); x.lineTo(jx-u(5)+jsw,jy-uy(74));
+  x.lineTo(jx+jsw,jy-uy(92)); x.lineTo(jx+u(5)+jsw,jy-uy(74));
+  x.lineTo(jx+u(13)+jsw,jy-uy(82)); x.lineTo(jx+u(6)+jsw,jy-uy(66));
+  x.bezierCurveTo(jx+u(13),jy-uy(52), jx+u(15),jy-uy(28), jx+u(13),jy);
+  x.closePath(); x.fill();
+  // бубенцы колпака ловят свет костра
+  x.fillStyle=CANDLE; x.globalAlpha=0.85*breath;
+  x.beginPath(); x.arc(jx-u(13)+jsw,jy-uy(84),u(1.8),0,7); x.fill();
+  x.beginPath(); x.arc(jx+jsw,jy-uy(92),u(1.8),0,7); x.fill();
+  x.beginPath(); x.arc(jx+u(13)+jsw,jy-uy(82),u(1.8),0,7); x.fill();
+  x.globalAlpha=1;
+  // контровой свет: костяная кромка со стороны костра
+  x.strokeStyle='#E8C89A'; x.globalAlpha=0.75*breath; x.lineWidth=1.2;
+  x.beginPath();
+  x.moveTo(jx-u(16),jy);
+  x.bezierCurveTo(jx-u(18),jy-uy(38), jx-u(10),jy-uy(58), jx-u(4)+jsw,jy-uy(66));
+  x.lineTo(jx-u(13)+jsw,jy-uy(84));
+  x.stroke(); x.globalAlpha=1;
+  // ромбы арлекина на подоле — ловят отсвет
+  x.strokeStyle='#B99B6E'; x.globalAlpha=0.45*breath; x.lineWidth=0.6;
+  for(let i=0;i<3;i++){
+    x.beginPath();
+    x.moveTo(jx-u(9)+i*u(7),jy-uy(9)); x.lineTo(jx-u(6)+i*u(7),jy-uy(15));
+    x.lineTo(jx-u(3)+i*u(7),jy-uy(9)); x.lineTo(jx-u(6)+i*u(7),jy-uy(3));
+    x.closePath(); x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ═══ СТРАННИК — слои рваной ткани как оперение ═══
+  const wx2=u(806), wy2=uy(664), sw2=Math.sin(t*0.9)*u(1.6);
+  // тень от костра — вытянута ОТ огня
+  x.fillStyle='rgba(5,4,3,0.5)';
+  x.beginPath(); x.ellipse(wx2-u(26),wy2+uy(4),u(40),uy(7),-0.06,0,7); x.fill();
+  // три яруса лохмотьев
+  const tatter=(baseY,wdt,hgt,segs,alpha)=>{
+    x.fillStyle=`rgba(8,7,6,${alpha})`;
+    x.beginPath();
+    x.moveTo(wx2-wdt+sw2*0.5, wy2-baseY);
+    x.bezierCurveTo(wx2-wdt-u(3), wy2-baseY+hgt*0.5, wx2-wdt+u(2), wy2-baseY+hgt*0.85, wx2-wdt+u(4), wy2-baseY+hgt);
+    for(let i=1;i<=segs;i++){
+      const sx=wx2-wdt+(2*wdt)*(i/segs);
+      x.lineTo(sx-u(3), wy2-baseY+hgt-(i%2?uy(7):0)-J(i)*uy(4));
+      x.lineTo(sx, wy2-baseY+hgt);
+    }
+    x.bezierCurveTo(wx2+wdt+u(2), wy2-baseY+hgt*0.6, wx2+wdt-u(2), wy2-baseY+hgt*0.2, wx2+wdt+sw2*0.5, wy2-baseY);
+    x.closePath(); x.fill();
+  };
+  tatter(uy(102),u(15),uy(46),5,0.95);   // плечевой ярус
+  tatter(uy(72),u(17.6),uy(48),6,0.97);  // средний
+  tatter(uy(40),u(19.4),uy(44),7,1);     // подол
+  // капюшон
+  x.fillStyle='#080706';
+  x.beginPath();
+  x.moveTo(wx2-u(9)+sw2,wy2-uy(100));
+  x.bezierCurveTo(wx2-u(12)+sw2, wy2-uy(118), wx2-u(4)+sw2, wy2-uy(126), wx2+sw2, wy2-uy(126));
+  x.bezierCurveTo(wx2+u(6)+sw2, wy2-uy(126), wx2+u(11)+sw2, wy2-uy(116), wx2+u(8)+sw2, wy2-uy(100));
+  x.bezierCurveTo(wx2+u(4), wy2-uy(94), wx2-u(5), wy2-uy(94), wx2-u(9)+sw2, wy2-uy(100));
+  x.closePath(); x.fill();
+  // тьма под капюшоном — абсолютная
+  x.fillStyle='#020202';
+  x.beginPath(); x.ellipse(wx2+sw2,wy2-uy(108),u(5.5),uy(7),0,0,7); x.fill();
+  // контровая кромка со стороны костра (справа)
+  x.strokeStyle='#E8C89A'; x.globalAlpha=0.7*breath; x.lineWidth=1.2;
+  x.beginPath();
+  x.moveTo(wx2+u(8)+sw2,wy2-uy(100));
+  x.bezierCurveTo(wx2+u(15), wy2-uy(72), wx2+u(17), wy2-uy(40), wx2+u(17), wy2-uy(6));
+  x.stroke();
+  x.globalAlpha=0.5*breath; x.lineWidth=0.9;
+  x.beginPath(); x.arc(wx2+u(3)+sw2,wy2-uy(118),u(7),-0.6,0.9); x.stroke(); // кромка капюшона
+  x.globalAlpha=1;
+  // штрих по ткани
+  x.save(); x.beginPath();
+  x.rect(wx2-u(22),wy2-uy(126),u(44),uy(126)); x.clip();
+  x.strokeStyle=BONE; x.globalAlpha=0.13; x.lineWidth=0.5;
+  for(let i=0;i<20;i++){
+    x.beginPath();
+    x.moveTo(wx2-u(22), wy2-uy(120)+i*uy(6.4));
+    x.lineTo(wx2+u(22), wy2-uy(112)+i*uy(6.4));
+    x.stroke();
+  }
+  x.restore(); x.globalAlpha=1;
+  // огонёк у сердца
+  const hb=0.7+0.3*Math.sin(t*2.6);
+  const hglow=x.createRadialGradient(wx2+u(2),wy2-uy(84),1,wx2+u(2),wy2-uy(84),u(15));
+  hglow.addColorStop(0,`rgba(226,138,58,${0.75*hb})`); hglow.addColorStop(1,'rgba(226,138,58,0)');
+  x.fillStyle=hglow; x.fillRect(wx2-u(14),wy2-uy(100),u(32),uy(32));
+  x.fillStyle='#F2C079'; x.globalAlpha=hb;
+  x.beginPath(); x.arc(wx2+u(2),wy2-uy(84),u(2),0,7); x.fill(); x.globalAlpha=1;
+  // следы на пыли — единственная биография
+  x.strokeStyle=BONE; x.globalAlpha=0.24; x.lineWidth=0.9;
+  for(let i=0;i<6;i++){
+    x.beginPath();
+    x.ellipse(wx2-u(50)-i*u(26), wy2+uy(8)+i*uy(2), u(4),uy(1.8), -0.1, 0, 7);
+    x.stroke();
+  }
+  x.globalAlpha=1;
+
+  // ═══ МОСТ справа — фрагмент, «стоять подолгу» ═══
+  const brx=u(1120), bry=uy(560);
+  x.strokeStyle=BONE; x.globalAlpha=0.6; x.lineWidth=1.1;
+  x.beginPath(); x.moveTo(brx,bry);
+  x.quadraticCurveTo(brx+u(80),bry-uy(18), u(1280),bry-uy(10)); x.stroke();
+  x.beginPath(); x.moveTo(brx,bry+uy(10));
+  x.quadraticCurveTo(brx+u(80),bry-uy(8), u(1280),bry); x.stroke();
+  x.globalAlpha=0.45;
+  for(let i=0;i<7;i++){
+    const sx=brx+i*u(24);
+    x.beginPath(); x.moveTo(sx,bry+uy(3)-i*uy(1.4)); x.lineTo(sx,bry-uy(9)-i*uy(1.4)); x.stroke();
+  }
+  hatchIn(()=>{x.moveTo(brx,bry+uy(10)); x.quadraticCurveTo(brx+u(80),bry-uy(8),u(1280),bry); x.lineTo(u(1280),bry+uy(30)); x.lineTo(brx,bry+uy(34)); x.closePath();},
+    [{ang:16,gap:2.6,a:0.16,w:0.5,j:0.6}]);
+  x.globalAlpha=1;
+
+  // ═══ ПЫЛЬ В ЛУЧЕ + зерно бумаги ═══
+  for(let i=0;i<12;i++){
+    const dp=(t*0.045+i*0.083)%1;
+    x.globalAlpha=(1-dp)*0.3*breath;
+    x.fillStyle=CANDLE;
+    x.fillRect(bx-u(60)+Math.sin(i*3.3+t*0.4)*u(46), by-uy(12)-dp*uy(190), 1.3, 1.3);
+  }
+  x.globalAlpha=0.06;
+  for(let i=0;i<520;i++){
+    x.fillStyle=(i%3)?BONE:ASH;
+    x.fillRect((J(i)*0.5+0.5)*W*2%W, (J(i*7)*0.5+0.5)*H*2%H, 1, 1);
+  }
+  x.globalAlpha=1;
+
+  // ═══ РАМКА ОФОРТА ═══
+  x.strokeStyle=BONE; x.globalAlpha=0.7; x.lineWidth=1.1;
+  x.strokeRect(u(14),uy(14),W-u(28),H-uy(28));
+  x.globalAlpha=0.3;
+  x.strokeRect(u(19),uy(19),W-u(38),H-uy(38));
+  x.globalAlpha=1;
+  // виньетка тона к углам
+  const vig=x.createRadialGradient(W/2,H/2,H*0.46,W/2,H/2,H*0.9);
+  vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(5,4,3,0.32)');
+  x.fillStyle=vig; x.fillRect(0,0,W,H);
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

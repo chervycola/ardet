@@ -1,0 +1,184 @@
+[
+ {
+  "key": "content/dialogues:dialogues.elder_home.5",
+  "verdict": "wrong",
+  "claim": "Мицелий тянется на километры вширь, а не вглубь: живёт в верхних сантиметрах почвы. Грибы в 4-м блоке ЧАЭС найдены в 1991-м, радиотропизм — по Ждановой (верно). «Огонь — его еда» оставлено как образ: пирофильные грибы существуют.",
+  "source": "https://en.wikipedia.org/wiki/Radiotrophic_fungus",
+  "from": "Мицелий лежит на километры\nвниз.",
+  "to": "Мицелий тянется на километры\nвширь."
+ },
+ {
+  "key": "content/eggs_transfer:EGG_SIGNS.5.backyard",
+  "verdict": "wrong",
+  "claim": "Фланнан, 1900: один непромокаемый плащ остался, лампа вычищена и заправлена, пароход Archtor отметил погасший огонь — всё верно. Строка «с тех пор его отмечает каждое судно, каждую ночь» выдумана: маяк снова зажгли 26.12.1900, с 1971-го он автоматический.",
+  "source": "https://en.wikipedia.org/wiki/Flannan_Isles_Lighthouse",
+  "from": " С тех пор его отмечает каждое судно на этом курсе. Каждую ночь.",
+  "to": ""
+ },
+ {
+  "key": "content/looks:looks.exit",
+  "verdict": "contested",
+  "claim": "Imperva Bad Bot Report 2025: автоматизированный трафик в 2024-м впервые за десятилетие превысил человеческий — 51%. «Ещё в двадцатых» звучит как прошлое десятилетие, а на дворе 2026-й.",
+  "source": "https://www.imperva.com/resources/resource-library/reports/2025-bad-bot-report/",
+  "from": "По замерам, за половину трафика перевалило ещё в двадцатых.",
+  "to": "По отчётам, за половину трафика перевалило в 24-м."
+ },
+ {
+  "key": "content/looks:looks.pipeline",
+  "verdict": "wrong",
+  "claim": "26.09.2022, 02:03 и точка 54.88°N 15.41°E — это взрыв на «Северном потоке-2» (линия A, к юго-востоку от Борнхольма). Ветка NS1 (2011) взорвана в 19:03 к северо-востоку от острова. Бирку привёл в соответствие с временем и координатами.",
+  "source": "https://en.wikipedia.org/wiki/2022_Nord_Stream_pipeline_sabotage",
+  "from": "«NS1 — 2011»",
+  "to": "«NS2 — 2021»"
+ },
+ {
+  "key": "content/lore:loreItems.44.text",
+  "verdict": "wrong",
+  "claim": "Войны США с Гренландией не было. Живой политик назван в выдуманном событии, поэтому он заменён ролью.",
+  "source": "https://en.wikipedia.org/wiki/Greenland",
+  "from": "Воюющий Трамп объявил войну Гренландии.",
+  "to": "Один президент объявил войну Гренландии."
+ },
+ {
+  "key": "content/lore:loreItems.66.text",
+  "verdict": "wrong",
+  "claim": "Радиосинтез — гипотеза (Дадачова, Касадеваль), по которой процесс аналогичен фотосинтезу, а не обратен ему: меланин вместо хлорофилла. Мох и гриб — сознательное смешение в рамках мира, оставлено.",
+  "source": "https://en.wikipedia.org/wiki/Radiotrophic_fungus",
+  "from": "радиосинтез, обратная фотосинтезу.",
+  "to": "по гипотезе — радиосинтез, как фотосинтез, только на гамма-квантах."
+ },
+ {
+  "key": "content/lore:loreItems.72.text",
+  "verdict": "wrong",
+  "claim": "«57% сети сгенерировано ИИ» — искажённый пересказ исследования AWS 2024 года: 57,1% предложений в вебе машинно переведены на несколько языков. Число Q-drops (4953) верно.",
+  "source": "https://forum.effectivealtruism.org/posts/YSukavPSpCNiHB6Sd/fact-check-57-of-the-internet-is-not-ai-generated",
+  "from": "57% контента в сети в 25-м вероятно сгенерировано моделью.",
+  "to": "говорят, больше половины сети в 25-м написано моделью."
+ },
+ {
+  "key": "content/lore:loreItems.73.text",
+  "verdict": "wrong",
+  "claim": "Цифры Pew (май 2024: 38% страниц 2013 года, четверть страниц за 2013–2023, 54% страниц Википедии) верны. «JPEG разложится за 7 лет» выдумано: файл сам по себе не распадается, качество теряется только при пересжатии.",
+  "source": "https://www.pewresearch.org/data-labs/2024/05/17/when-online-content-disappears/",
+  "from": "JPEG разложится за 7 лет.",
+  "to": "JPEG пережимают, пока не останется шум."
+ },
+ {
+  "key": "content/lore:loreItems.74.text",
+  "verdict": "wrong",
+  "claim": "Цитата Оганяна (июнь 2025) подтверждается. «57,1% контента написано моделью» — искажение исследования AWS о машинном переводе. Ботов — 51% трафика (Imperva). Сумма 50+43+0 не сходится, поэтому строка про 43% убрана.",
+  "source": "https://fortune.com/2025/10/15/reddit-co-founder-alexis-ohanian-dead-internet-theory-ai-bots-linkedin-slop",
+  "from": "57.1% онлайн-контента в 2025-м — вероятно, написано моделью. 50% веб-трафика — боты. Оставшиеся 43% — люди, которые копируют модель.",
+  "to": "Говорят, больше половины текстов в сети написано моделью. Половина веб-трафика — боты."
+ },
+ {
+  "key": "content/lore:loreItems.75.text",
+  "verdict": "wrong",
+  "claim": "Дэвис погиб 11.08.2018 под поездом в Те-Даллс, Орегон; TempleOS на HolyC, около 100 тыс. строк, задумана как Третий Храм — это верно. «Официальная церковь, три филиала, Church of AI Christ» не находятся ни в одном источнике. «Откровения» в названии лишнее.",
+  "source": "https://en.wikipedia.org/wiki/Terry_A._Davis",
+  "from": "Называл её Третьим Храмом Откровения. К 25-му году у него церковь. Официальная. Минимум три филиала. Один называется Church of AI Christ.",
+  "to": "Называл её Третьим Храмом. К 25-му у него — паства в сети, говорят."
+ },
+ {
+  "key": "content/lore:loreItems.84.text",
+  "verdict": "ok",
+  "claim": "Даты сленга условные, но правдоподобные; крах FTX — ноябрь 2022-го, сходится. Это эпитафии-оценки, а не утверждения о фактах.",
+  "source": "https://en.wikipedia.org/wiki/FTX"
+ },
+ {
+  "key": "content/lore:loreItems.89.text",
+  "verdict": "wrong",
+  "claim": "Фонд ИНИОН — 14,2 млн единиц хранения (верно). Пожар начался 30.01.2015 и шёл больше суток. Сравнение с Британской библиотекой ложно: у неё около 170 млн единиц. Табличка не задокументирована.",
+  "source": "https://www.gazeta.ru/science/2015/01/31_a_6394913.shtml",
+  "from": "На стене ИНИОНа висела табличка: «Здесь хранится 14,2 млн единиц хранения. Это больше, чем в Британской библиотеке.»",
+  "to": "На стене ИНИОНа, по рассказам, висела табличка: «Здесь хранится 14,2 млн единиц хранения.»"
+ },
+ {
+  "key": "content/terminal_db:termDb.adorno.text",
+  "verdict": "wrong",
+  "claim": "В 1934-м Адорно уехал в Оксфорд, в США — в 1938-м, вернулся в 1949-м. Остальные даты верны.",
+  "source": "https://en.wikipedia.org/wiki/Theodor_W._Adorno",
+  "from": "Эмигрировал в США\n> в 1934-м,",
+  "to": "Эмигрировал в 1934-м,\n> в США — с 1938-го,"
+ },
+ {
+  "key": "content/terminal_db:termDb.adorno.text",
+  "verdict": "wrong",
+  "claim": "Адорно не основывал Франкфуртскую школу: институт открыт в 1923-м, сам Адорно вошёл в него в 1938-м.",
+  "source": "https://en.wikipedia.org/wiki/Frankfurt_School",
+  "from": "соучредитель Франкфуртской\n> школы.",
+  "to": "ключевая фигура Франкфуртской\n> школы."
+ },
+ {
+  "key": "content/terminal_db:termDb.alephs.text",
+  "verdict": "wrong",
+  "claim": "Квартира Воланда в «Мастере и Маргарите» — №50 (и у самого Булгакова на Садовой 10 — №50), а не 42.",
+  "source": "https://en.wikipedia.org/wiki/Bulgakov_House",
+  "from": "Квартира 42 —\nпросто квартира.",
+  "to": "Квартира 50 —\nпросто квартира."
+ },
+ {
+  "key": "content/terminal_db:termDb.alephs.text",
+  "verdict": "wrong",
+  "claim": "«Ленин промахнулся мимо поезда» лишено смысла. Реальная развилка — «пломбированный вагон»: Ленин прибыл на Финляндский вокзал 16.04.1917 по новому стилю.",
+  "source": "https://en.wikipedia.org/wiki/Lenin%27s_return_to_Russia",
+  "from": "07.11.1917. Ленин промахнулся\nмимо поезда.",
+  "to": "16.04.1917. Ленин опоздал\nна поезд."
+ },
+ {
+  "key": "content/terminal_db:termDb.alephs.text",
+  "verdict": "typo",
+  "claim": "«Сад расходящихся тропок» вышел в 1941-м в одноимённом сборнике. Ficciones — 1944.",
+  "source": "https://en.wikipedia.org/wiki/The_Garden_of_Forking_Paths",
+  "from": "(по Борхесу, 1941, Ficciones)",
+  "to": "(по Борхесу, 1941)"
+ },
+ {
+  "key": "content/terminal_db:termDb.baseline.text",
+  "verdict": "wrong",
+  "claim": "Pauly D. (1995). Anecdotes and the shifting baseline syndrome of fisheries. Trends in Ecology & Evolution 10(10):430.",
+  "source": "https://doi.org/10.1016/S0169-5347(00)89171-5",
+  "from": "Marine Trends in Ecology.",
+  "to": "Trends in Ecology & Evolution."
+ },
+ {
+  "key": "content/terminal_db:termDb.cycle.text",
+  "verdict": "contested",
+  "claim": "Длительности юг, сроки жизни, начало Кали-юги (3102 до н. э.) и арифметика (5127 / 426 873), а также Юктешвар (1894; 24 000 лет; 499 / 1699 / 4099) верны. «Корова у каждого» и «корова разделена» не находятся в источниках: у дхармы образ быка на четырёх ногах. «Еда с деревьев» — по пуранам, деревья-калпаврикши, оставлено.",
+  "source": "https://en.wikipedia.org/wiki/Yuga_Cycle",
+  "from": "Корова\nу каждого. ",
+  "to": ""
+ },
+ {
+  "key": "content/terminal_db:termDb.cycle.text",
+  "verdict": "contested",
+  "claim": "«Корова разделена» в источниках не находится.",
+  "source": "https://en.wikipedia.org/wiki/Yuga_Cycle",
+  "from": "обычная. Корова разделена.\n",
+  "to": "обычная.\n"
+ },
+ {
+  "key": "content/terminal_db:termDb.demiurge.text",
+  "verdict": "wrong",
+  "claim": "Арабское fanāʼ (فناء) значит «уничтожение, исчезновение», корень ф-н-й. Это не «горение» и не тот же корень, что у латинского ardet.",
+  "source": "https://en.wikipedia.org/wiki/Fana_(Sufism)",
+  "from": "Арабский даёт тот же\nкорень другим именем: «fana»\n(فناء) — горение, исчезновение,\nрастворение.",
+  "to": "У суфиев есть близкое\nслово: «fana»\n(فناء) — исчезновение,\nрастворение."
+ },
+ {
+  "key": "content/terminal_db:termDb.demiurge.text",
+  "verdict": "contested",
+  "claim": "Плерома — «полнота», мир эонов. Это не имя истинного Бога, а область, где он пребывает.",
+  "source": "https://en.wikipedia.org/wiki/Pleroma",
+  "from": "Настоящий Бог (Плерома) —",
+  "to": "Настоящий Бог — в Плероме,"
+ },
+ {
+  "key": "content/terminal_db:termDb.fanon.text",
+  "verdict": "wrong",
+  "claim": "Книга «Les Damnés de la terre» (Maspero) вышла осенью 1961-го, незадолго до смерти Фанона 6 декабря, а не после неё. Остальные даты верны.",
+  "source": "https://en.wikipedia.org/wiki/The_Wretched_of_the_Earth",
+  "from": "Книга\n> вышла через месяц после\n> его смерти.",
+  "to": "Книга\n> вышла незадолго до\n> его смерти."
+ }
+]
