@@ -6,7 +6,7 @@
 // Через миг в кармане вибрирует телефон (на телефоне — по-настоящему).
 // Кто звонит — не сказано.
 // ═══════════════════════════════════════
-import { getCtx } from '../audio/audio.js';
+import { getCtx, getOut } from '../audio/audio.js';
 import { inCore } from './disc.js';
 
 const KINDS = { stone: { dur: 26, name: 'камень' }, pit: { dur: 50, name: 'яма' }, fossil: { dur: 32, name: 'окаменелая какаха' } };
@@ -24,13 +24,13 @@ function thud() {
   o.frequency.exponentialRampToValueAtTime(48, ctx.currentTime + 0.12);
   g.gain.setValueAtTime(0.16, ctx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16);
-  o.connect(g); g.connect(ctx.destination);
+  o.connect(g); g.connect(getOut());
   o.start(); o.stop(ctx.currentTime + 0.17);
   // камешек: сухой щелчок по земле
   const n = Math.floor(ctx.sampleRate * 0.03), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6) * (i % 400 < 60 ? 1 : 0.3);
   const s = ctx.createBufferSource(), sg = ctx.createGain(); s.buffer = b; sg.gain.value = 0.12;
-  s.connect(sg); sg.connect(ctx.destination); s.start(ctx.currentTime + 0.18);
+  s.connect(sg); sg.connect(getOut()); s.start(ctx.currentTime + 0.18);
 }
 
 function noise(ctx, sec, shape, type, freq, vol, at) {
@@ -38,7 +38,7 @@ function noise(ctx, sec, shape, type, freq, vol, at) {
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * shape(i / n, i);
   const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = b; f.type = type; f.frequency.value = freq; g.gain.value = vol;
-  s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(ctx.currentTime + (at || 0));
+  s.connect(f); f.connect(g); g.connect(getOut()); s.start(ctx.currentTime + (at || 0));
 }
 function pitSound() {
   const ctx = getCtx();
@@ -47,7 +47,7 @@ function pitSound() {
   o.type = 'sine'; o.frequency.setValueAtTime(80, ctx.currentTime);
   o.frequency.exponentialRampToValueAtTime(34, ctx.currentTime + 0.22);
   g.gain.setValueAtTime(0.2, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.26);
-  o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.27);
+  o.connect(g); g.connect(getOut()); o.start(); o.stop(ctx.currentTime + 0.27);
   // земля осыпается следом
   noise(ctx, 0.5, k => Math.pow(1 - k, 2) * (0.4 + Math.random() * 0.6), 'lowpass', 700, 0.1, 0.12);
 }
@@ -65,7 +65,7 @@ function buzz() {
   if (!ctx || ctx.state !== 'running') return;
   // вибромотор в кармане: глухое жужжание двумя-тремя толчками
   const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
-  const g = ctx.createGain(); g.gain.value = 0; lp.connect(g); g.connect(ctx.destination);
+  const g = ctx.createGain(); g.gain.value = 0; lp.connect(g); g.connect(getOut());
   const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 155; o.connect(lp);
   const t0 = ctx.currentTime;
   [[0, 0.16], [0.26, 0.16], [0.52, 0.28]].forEach(([a, l]) => {

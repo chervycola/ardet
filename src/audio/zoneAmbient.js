@@ -2,7 +2,7 @@ import { townDist, TOWN, TS } from '../world/disc.js';
 // ═══════════════════════════════════════
 // ZONE AMBIENT — procedural soundscapes per zone
 // ═══════════════════════════════════════
-import { getCtx } from './audio.js';
+import { getCtx, getOut } from './audio.js';
 
 let currentZone = 'settlement';
 let nodes = null;
@@ -43,7 +43,7 @@ function createZoneSound(cfg) {
   osc.connect(filter);
   osc2.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getOut());
 
   osc.start();
   osc2.start();

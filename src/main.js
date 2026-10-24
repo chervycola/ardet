@@ -85,7 +85,7 @@ import { drawArchLife } from './render/archlife.js';
 import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
 import { archWindowLights } from './render/archlights.js';
-import { update as updateEdges, draw as drawEdges, slowFactor } from './world/edges.js';
+import { update as updateEdges, draw as drawEdges, drawHud as drawEdgeHud, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
@@ -103,7 +103,8 @@ import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawR
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
-import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel } from './world/brainrot.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel, calmOf, feedK } from './world/brainrot.js';
+import { draw as drawFeedPanels } from './render/feedPanels.js';
 import { pullVector } from './world/feedPull.js';
 import { placeOf } from './world/placeStamp.js';
 import { noteAttention, stepAttention, forget as forgetAttention, saveAttention, loadAttention } from './world/attention.js';
@@ -652,6 +653,7 @@ function render() {
   setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
   dampBrainrot(beyond.hK);                          // горизонт виден — распад редеет
   drawBrainrot(uiCtx);
+  drawEdgeHud(uiCtx);                               // батарейка у льда — поверх полос ленты
   drawHorizon(uiCtx, vw, vh);                       // столб за кольцом: черта далеко впереди, над ней вечер
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
@@ -680,6 +682,17 @@ const NO_PLATE = /[?&]noplate\b/.test(location.search);
 const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравнения и слабых машин
 const NO_SHADOW = /[?&]noshadow\b/.test(location.search); // тени по времени суток — выключить (сравнить)
 const NO_CASTLE = /[?&]nocastle\b/.test(location.search); // замок-погода и крыши — выключить (сравнить)
+// полосы ленты (render/feedPanels.js) — в сборке до печати: зерно, яд, заливки и интерфейс ложатся поверх,
+// растр распада (слой ui) ест и ленту; в красный полдень, дома и под землёй лент нет
+layers.feedPass = ctx => {
+  const k = feedK();
+  if (k <= 0 || redNoon.k > 0.5 || house.active || under.active) return;
+  ctx.save();
+  ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  drawFeedPanels(ctx, k);
+  ctx.restore();
+};
 layers.inkPass = (ctx, main) => {
   if (!economyFrame()) hazeComposite(ctx, main);   // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);
@@ -1592,9 +1605,15 @@ function updateGame() {
   // а за изгородь — только с пропуском Шута.
   let drift = false;
   if (!house.active && !under.active && canLeaveSettlement()) {
-    const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10;
-    const [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
-    if (pdx || pdy) { dvx += pdx; dvy += pdy; drift = !steering; }
+    // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет — не проскочить
+    const v2 = player.vx * player.vx + player.vy * player.vy;
+    const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
+    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
+    // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
+    // иначе сидящий у картинки позёмки съезжал и падал)
+    if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }
+    // снос — только то, что объясняет лента; скольжение по льду с разгона — ещё ход
+    if (pdx || pdy) { drift = !steering && Math.sqrt(v2) <= Math.hypot(pdx, pdy) + 0.05; dvx += pdx; dvy += pdy; }
   }
   const sp = heroStep(dvx, dvy, drift);
   player.moving = steering || (sp > 0.05 && !drift);   // снос лентой — не ходьба: стоящий стоит

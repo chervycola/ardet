@@ -3,7 +3,7 @@
 // силой ветра у странника: в штиль еле слышно, порыв поднимает и тон,
 // и громкость, в бурю гудит. Тихо — как зоны (ZONE_CONFIGS: ~0.01).
 // ═══════════════════════════════════════
-import { getCtx } from './audio.js';
+import { getCtx, getOut } from './audio.js';
 
 let src = null, bp = null, g = null, n = 0;
 
@@ -15,7 +15,7 @@ function setup(ctx) {
   src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
   bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = 0.8;
   g = ctx.createGain(); g.gain.value = 0;
-  src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+  src.connect(bp); bp.connect(g); g.connect(getOut());
   src.start();
 }
 

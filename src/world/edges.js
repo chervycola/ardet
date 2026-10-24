@@ -66,21 +66,6 @@ export function draw(ctx) {
   } else if (cur.elem === 'ice') {
     ctx.fillStyle = `rgba(180,210,230,${d * 0.16})`;
     ctx.fillRect(0, 0, vw, vh);
-    // разряжается телефон: пиксельная батарейка тает
-    const charge = Math.max(0, 1 - d * 1.15);
-    const bx = vw - 34, by = 8;
-    ctx.fillStyle = 'rgba(10,8,6,0.8)';
-    ctx.fillRect(bx - 2, by - 2, 28, 14);
-    ctx.strokeStyle = '#e8dcc8'; ctx.lineWidth = 1;
-    ctx.strokeRect(bx + 0.5, by + 0.5, 22, 9);
-    ctx.fillStyle = '#e8dcc8'; ctx.fillRect(bx + 23, by + 3, 2, 4);
-    ctx.fillStyle = charge > 0.3 ? '#e8dcc8' : '#C23B2B';
-    if (charge > 0.01) ctx.fillRect(bx + 2, by + 2, (20 * charge) | 0, 6);
-    if (charge < 0.3 && (t / 20 | 0) % 2 === 0) {
-      ctx.font = '6px "Press Start 2P","VT323",monospace';
-      ctx.fillStyle = '#C23B2B';
-      ctx.fillText('LOW', bx - 24, by + 9);
-    }
   } else if (cur.elem === 'lake') {
     ctx.fillStyle = `rgba(58,255,26,${d * 0.10})`;
     ctx.fillRect(0, 0, vw, vh);
@@ -107,5 +92,25 @@ export function draw(ctx) {
       ctx.fillStyle = ['#2a241c', '#3a2e1e', '#1c1812'][i % 3];
       ctx.fillRect(jx | 0, jy, 4 + (i % 4), 3 + (i % 3));
     }
+  }
+}
+
+// ── у льда разряжается телефон: батарейка — поверх всего кадра (и полос ленты), слой интерфейса ──
+export function drawHud(ctx) {
+  if (!cur || cur.elem !== 'ice' || cur.depth <= 0.02) return;
+  const vw = scaler.vw, d = cur.depth;
+  const charge = Math.max(0, 1 - d * 1.15);
+  const bx = vw - 34, by = 8;
+  ctx.fillStyle = 'rgba(10,8,6,0.8)';
+  ctx.fillRect(bx - 2, by - 2, 28, 14);
+  ctx.strokeStyle = '#e8dcc8'; ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, 22, 9);
+  ctx.fillStyle = '#e8dcc8'; ctx.fillRect(bx + 23, by + 3, 2, 4);
+  ctx.fillStyle = charge > 0.3 ? '#e8dcc8' : '#C23B2B';
+  if (charge > 0.01) ctx.fillRect(bx + 2, by + 2, (20 * charge) | 0, 6);
+  if (charge < 0.3 && (t / 20 | 0) % 2 === 0) {
+    ctx.font = '6px "Press Start 2P","VT323",monospace';
+    ctx.fillStyle = '#C23B2B';
+    ctx.fillText('LOW', bx - 24, by + 9);
   }
 }

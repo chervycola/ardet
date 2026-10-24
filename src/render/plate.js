@@ -134,12 +134,12 @@ export const plate = {
     }
     for (let j = scratches.length - 1; j >= 0; j--) if (--scratches[j].life <= 0) scratches.splice(j, 1);
     // долгая царапина плёнки: эпоха катастроф и шторм
-    const wantFilm = (prof.ring === 7 && frame % 900 < 420) || storm > 0.5;
+    const wantFilm = !this.economy && ((prof.ring === 7 && frame % 900 < 420) || storm > 0.5);
     if (wantFilm && !film) film = { x: Math.random() * scaler.vw, drift: (Math.random() - 0.5) * 0.15 };
     if (!wantFilm) film = null;
     if (film) { film.x += film.drift + (Math.random() - 0.5) * 0.6; if (film.x < 4 || film.x > scaler.vw - 4) film = null; }
     // кляксы в шторм
-    if (storm > 0.35 && Math.random() < storm * 0.04) {
+    if (!this.economy && storm > 0.35 && Math.random() < storm * 0.04) {
       const W = scaler.vw, H = scaler.vh, side = Math.random() * 4 | 0;
       blots.push({
         x: side === 0 ? Math.random() * 30 : side === 1 ? W - Math.random() * 30 : Math.random() * W,
@@ -179,7 +179,7 @@ export const plate = {
     const g = Math.min(0.5, prof.grain * (1 + storm * 0.9));
     const ew = Math.round(prof.edge + storm * 6);
     const step = this.economy ? 60 : storm > 0.3 ? 2 : 8;
-    const seed = storm > 0.3 ? (frame >> 3) % 4 : 0;
+    const seed = !this.economy && storm > 0.3 ? (frame >> 3) % 4 : 0;
     const key = `${W}:${H}:${prof.cell}:${Math.round(g * 100)}:${ew}:${seed}:${Math.floor(frame / step)}`;
     if (key !== cacheKey) {
       cacheKey = key;

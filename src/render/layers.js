@@ -79,6 +79,9 @@ export const layers = {
     ctx.drawImage(this.canvas('fx'), 0, 0);
     ctx.globalCompositeOperation = 'source-over';
 
+    // полосы ленты: мир из прошлого поверх кадра — до печати, яда и интерфейса (render/feedPanels.js)
+    if (this.feedPass) this.feedPass(ctx, this.main);
+
     // вторая краска: красная форма поверх отпечатанного кадра, до интерфейса
     if (this.inkPass) this.inkPass(ctx, this.main);
 

@@ -6,7 +6,7 @@
 // спадает медленнее) и сама плывёт волнами. Изредка, не чаще раза
 // в 120 с, — приступ: щелчки разгоняются и стихают.
 // ═══════════════════════════════════════
-import { getCtx } from './audio.js';
+import { getCtx, getOut } from './audio.js';
 
 const VOL = 0.2;                     // общая громкость прибора (было 0.4)
 const GAP = 120000;                  // приступ — не чаще раза в 120 с
@@ -21,7 +21,7 @@ function setup() {
   if (!out) {
     out = ctx.createGain();
     out.gain.value = 0;
-    out.connect(ctx.destination);
+    out.connect(getOut());
     // щелчок: 5 мс шума с резким спадом
     const n = Math.floor(ctx.sampleRate * 0.005);
     clickBuf = ctx.createBuffer(1, n, ctx.sampleRate);

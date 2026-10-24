@@ -15,7 +15,7 @@ import { t } from '../core/time.js';
 import { hash } from './draw.js';
 import { emit } from './particles.js';
 import { surfaceAt } from '../world/surface.js';
-import { getCtx } from '../audio/audio.js';
+import { getCtx, getOut } from '../audio/audio.js';
 
 const CELL = 90;
 const WET_UP = 1 / 900;          // под полным дождём — 15 с до полных луж
@@ -78,12 +78,12 @@ function plip(sp) {
   o.type = 'sine';
   o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f0 * 0.45, t0 + 0.07);
   g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
-  o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + 0.1);
+  o.connect(g); g.connect(getOut()); o.start(t0); o.stop(t0 + 0.1);
   const n = Math.floor(ctx.sampleRate * 0.06), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
   const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g2 = ctx.createGain();
   src.buffer = b; f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.9; g2.gain.value = vol * 0.8;
-  src.connect(f); f.connect(g2); g2.connect(ctx.destination); src.start(t0);
+  src.connect(f); f.connect(g2); g2.connect(getOut()); src.start(t0);
 }
 
 // шаг мира: влажность, круги, шаги странника по воде

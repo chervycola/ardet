@@ -16,6 +16,7 @@ import { sideAt } from '../world/relief.js';
 import { CELL_TITLES } from '../content/cell_titles.js';
 import { SIDE_RU } from '../world/placeStamp.js';
 import { drawSignature } from './signature.js';
+import { reducedMotion } from '../core/prefs.js';
 import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
 import { events } from '../core/events.js';
@@ -223,17 +224,36 @@ const cellKey = (ring, side) => SEGMENTS[ring - 1].id + ':' + side;
 let mask = null;                 // { ids, cx, cy } — геометрия клеток в точках листа, считается раз
 let baseCv = null, fillCv = null, fillKey = '';
 function plainCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-function buildMask() {
-  const w = MAPB.w, h = MAPB.h, ids = new Uint8Array(w * h);
-  const sx = new Float64Array(64), sy = new Float64Array(64), n = new Float64Array(64);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+// геометрия клеток считается по частям (≈0,1 с целиком): после старта — в фоне, по 40 строк;
+// открыли карту раньше — по 90 строк за кадр, лист пока просто бумага (ревью 24.10)
+let maskJob = null;
+function maskStep(rows) {
+  if (mask) return true;
+  const w = MAPB.w, h = MAPB.h;
+  if (!maskJob) maskJob = { y: 0, ids: new Uint8Array(w * h), sx: new Float64Array(64), sy: new Float64Array(64), n: new Float64Array(64) };
+  const J = maskJob, end = Math.min(h, J.y + rows);
+  for (let y = J.y; y < end; y++) for (let x = 0; x < w; x++) {
     const wx = EXT.x0 + (MAPB.x + x + 0.5 - LOX) / LS, wy = EXT.y0 + (MAPB.y + y + 0.5 - LOY) / LS;
     const r = ringOfD(warpedDist(wx, wy));
     const id = r >= 1 && r <= RINGS ? cellId(r, sideAt(wx, wy)) : cellId(r);
-    ids[y * w + x] = id; sx[id] += x; sy[id] += y; n[id]++;
+    J.ids[y * w + x] = id; J.sx[id] += x; J.sy[id] += y; J.n[id]++;
   }
+  J.y = end;
+  if (J.y < h) return false;
+  finishMask(J.ids, J.sx, J.sy, J.n);
+  maskJob = null;
+  return true;
+}
+function finishMask(ids, sx, sy, n) {
+  const w = MAPB.w, h = MAPB.h;
+  // подпись — в точке самой клетки, ближайшей к её середине: у колец-подков середина бывает чужой
+  const gx = new Float64Array(64), gy = new Float64Array(64), best = new Float64Array(64).fill(Infinity);
   const cx = new Float64Array(64), cy = new Float64Array(64);
-  for (let i = 0; i < 64; i++) if (n[i]) { cx[i] = sx[i] / n[i]; cy[i] = sy[i] / n[i]; }
+  for (let i = 0; i < 64; i++) if (n[i]) { gx[i] = sx[i] / n[i]; gy[i] = sy[i] / n[i]; }
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
+    const id = ids[y * w + x], d = (x - gx[id]) ** 2 + (y - gy[id]) ** 2;
+    if (d < best[id]) { best[id] = d; cx[id] = x; cy[id] = y; }
+  }
   mask = { ids, cx, cy, w, h };
   // подложка: бумага, графы клеток сепией, огонь киноварью, за краем — пусто
   baseCv = plainCanvas(w, h);
@@ -276,17 +296,21 @@ function drawLocal() {
   const visited = getVisitedFn() || new Set();
   const walked = getWalkedFn() || new Set();
   const p = getPlayerPos();
-  here = p ? ringAt(p.x, p.y) : 0;
-  hereSide = p && here >= 1 && here <= RINGS ? sideAt(p.x, p.y) : null;
+  const f = p && { x: p.x + 6, y: p.y + 23 };                  // клетка — по ногам, как пишет обмер (main)
+  here = f ? ringAt(f.x, f.y) : 0;
+  hereSide = f && here >= 1 && here <= RINGS ? sideAt(f.x, f.y) : null;
   walkedNow = new Set(walked);
   if (hereSide) walkedNow.add(cellKey(here, hereSide));
   knownRings = new Set([here]);
   for (const k of walkedNow) { const n = SEGMENTS.findIndex(sg => sg.id === k.split(':')[0]) + 1; if (n) knownRings.add(n); }
-  if (!mask) buildMask();
-  buildFill(walkedNow);
-
-  ctx.drawImage(baseCv, MAPB.x, MAPB.y);
-  ctx.drawImage(fillCv, MAPB.x, MAPB.y);
+  if (!mask) maskStep(90);
+  if (mask) {
+    buildFill(walkedNow);
+    ctx.imageSmoothingEnabled = false;            // при приближении — чёткие ступени, а не муть
+    ctx.drawImage(baseCv, MAPB.x, MAPB.y);
+    ctx.drawImage(fillCv, MAPB.x, MAPB.y);
+    ctx.imageSmoothingEnabled = true;
+  } else { ctx.fillStyle = PAPER; ctx.fillRect(MAPB.x, MAPB.y, MAPB.w, MAPB.h); }
   // замок на выходе
   if (getLockedFn()) {
     ctx.setLineDash([3, 2]);
@@ -317,16 +341,21 @@ function drawLocal() {
   // подписи пройденных клеток — от руки, названием из описи
   const fs = 11.5 / Math.sqrt(zscale);
   ctx.font = `italic ${fs}px Literata, 'PT Serif', Georgia, serif`;
+  // тесно (запад, восток) — подпись, налезающая на соседнюю, ждёт приближения
+  const tboxes = [];
   const put = (id, title) => {
-    const tx = MAPB.x + mask.cx[id], ty = MAPB.y + mask.cy[id], tw = ctx.measureText(title).width;
-    ctx.fillStyle = rgba(PAPER, 0.82); ctx.fillRect(tx - tw / 2 - 2, ty - fs * 0.8, tw + 4, fs * 1.1);
+    if (!mask) return;
+    const tx = MAPB.x + mask.cx[id], ty = MAPB.y + mask.cy[id] + fs * 0.35, tw = ctx.measureText(title).width;
+    const b = { x: tx - tw / 2 - 2, y: ty - fs * 0.8, w: tw + 4, h: fs * 1.1 };
+    if (tboxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)) return;
+    tboxes.push(b);
+    ctx.fillStyle = rgba(PAPER, 0.82); ctx.fillRect(b.x, b.y, b.w, b.h);
     ctx.fillStyle = SEPIA; ctx.fillText(title, tx - tw / 2, ty);
   };
   put(1, 'городок');
-  for (const k of walkedNow) {
-    const [rid, side] = k.split(':'), n = SEGMENTS.findIndex(sg => sg.id === rid) + 1;
-    if (n && CELL_TITLES[k]) put(cellId(n, side), '«' + CELL_TITLES[k] + '»');
-  }
+  const cells = [...walkedNow].map(k => { const [rid, side] = k.split(':'); return { k, side, n: SEGMENTS.findIndex(sg => sg.id === rid) + 1 }; })
+    .filter(c => c.n && CELL_TITLES[c.k]).sort((a, b) => a.n - b.n);
+  for (const c of cells) put(cellId(c.n, c.side), '«' + CELL_TITLES[c.k] + '»');
 
   // места: осмотренные — точка сепией, имя при приближении
   let shown = 0, total = 0;
@@ -356,7 +385,7 @@ function drawLocal() {
   // ты — киноварью
   if (p) {
     const px = lx(p.x), py = ly(p.y);
-    if (((Date.now() / 400) | 0) % 2 === 0) { ctx.fillStyle = CINNABAR; ctx.fillRect(px - 2.5 * q, py - 2.5 * q, 5 * q, 5 * q); }
+    if (reducedMotion() || ((Date.now() / 400) | 0) % 2 === 0) { ctx.fillStyle = CINNABAR; ctx.fillRect(px - 2.5 * q, py - 2.5 * q, 5 * q, 5 * q); }
     ctx.font = `italic ${13 / Math.sqrt(zscale)}px Literata, 'PT Serif', Georgia, serif`;
     const tw = ctx.measureText('ты').width;
     ctx.fillStyle = CINNABAR; ctx.fillText('ты', px - tw - 5 * q, py + 4 * q);
@@ -628,6 +657,8 @@ export function init(opts) {
   if (opts && typeof opts.getLocked === 'function') getLockedFn = opts.getLocked;
   if (opts && typeof opts.getWalked === 'function') getWalkedFn = opts.getWalked;
   canvas = document.getElementById('map-canvas');
+  // кадастровая геометрия — заранее, в фоне, не мешая игре (по 40 строк раз в 30 мс)
+  if (typeof setTimeout === 'function') setTimeout(function step() { if (!visible && !maskStep(40)) setTimeout(step, 30); else if (!mask) setTimeout(step, 200); }, 3000);
   if (canvas) {
     canvas.width = W * DPR;
     canvas.height = H * DPR;

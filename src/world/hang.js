@@ -11,7 +11,7 @@
 // тот качается молча.
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
-import { getCtx } from '../audio/audio.js';
+import { getCtx, getOut } from '../audio/audio.js';
 import { respond } from './attention.js';
 
 const G = 0.12;                  // тяжесть, точек за шаг²
@@ -145,7 +145,7 @@ function ding(freq, force, dist) {
   const t0 = ctx.currentTime, g = ctx.createGain();
   g.gain.setValueAtTime(vol, t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
-  g.connect(ctx.destination);
+  g.connect(getOut());
   for (const [f, k] of [[freq, 1], [freq * 2.76, 0.35], [freq * 5.4, 0.12]]) {
     const o = ctx.createOscillator(), og = ctx.createGain();
     o.type = 'sine'; o.frequency.value = f; og.gain.value = k;

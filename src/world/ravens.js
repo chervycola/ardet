@@ -15,7 +15,7 @@ import { hash } from '../render/draw.js';
 import { wind } from './wind.js';
 import { ringAt, inCore, RINGS } from './disc.js';
 import { surfaceAt } from './surface.js';
-import { getCtx } from '../audio/audio.js';
+import { getCtx, getOut } from '../audio/audio.js';
 
 const CELL = 480;
 const NEAR = 560;          // ближе — стая живёт
@@ -37,7 +37,7 @@ function flutter(vol) {                         // хлопанье крылье
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
     s.buffer = b; f.type = 'bandpass'; f.frequency.value = 650 + Math.random() * 350; f.Q.value = 0.8;
     g.gain.value = vol * (1 - i * 0.15);
-    s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t0 + i * 0.07);
+    s.connect(f); f.connect(g); g.connect(getOut()); s.start(t0 + i * 0.07);
   }
 }
 function caw(vol) {                             // «карр»: хрип, тон вниз; бывает дважды
@@ -55,7 +55,7 @@ function caw(vol) {                             // «карр»: хрип, то�
     am.connect(amg); amg.connect(rasp.gain);
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.025);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.26);
-    o.connect(f); f.connect(rasp); rasp.connect(g); g.connect(ctx.destination);
+    o.connect(f); f.connect(rasp); rasp.connect(g); g.connect(getOut());
     o.start(t0); o.stop(t0 + 0.28); am.start(t0); am.stop(t0 + 0.28);
   }
 }

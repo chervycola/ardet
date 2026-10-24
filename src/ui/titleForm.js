@@ -31,12 +31,12 @@ export function visitNo() {
 
 const shown = () => entry && entry.style.display !== 'none';
 const later = fn => (reducedMotion() ? fn() : setTimeout(fn, MARK_MS));
-function mark(btn, on = true) { if (btn) btn.classList.toggle('on', on); }
+function mark(btn, on = true) { if (btn) { btn.classList.toggle('on', on); if (btn.classList.contains('f0-opt')) btn.setAttribute('aria-pressed', String(on)); } }
 
 function buildByt() {
   byt.innerHTML = Object.keys(BYT).map(k =>
     `<div class="f0-row"><h4>${ROW[k]}</h4><div class="f0-opts">`
-    + BYT[k].map(v => `<button type="button" class="f0-opt${getPref(k) === v ? ' on' : ''}" data-k="${k}" data-v="${v}"><span class="f0-box">${CHECK}</span><span class="f0-t">${v}</span></button>`).join('')
+    + BYT[k].map(v => `<button type="button" class="f0-opt${getPref(k) === v ? ' on' : ''}" aria-pressed="${getPref(k) === v}" data-k="${k}" data-v="${v}"><span class="f0-box">${CHECK}</span><span class="f0-t">${v}</span></button>`).join('')
     + '</div></div>').join('')
     + `<button type="button" class="f0-opt f0-done" data-done="1"><span class="f0-box">${CHECK}</span><span class="f0-t">приложить к заявлению</span></button>`;
   for (const b of byt.querySelectorAll('.f0-opt')) b.addEventListener('click', () => {
@@ -56,6 +56,7 @@ function leave(btn) {
   mark(btn);
   later(() => {
     entry.classList.add('left'); voidEl.innerHTML = LEAVE;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     setTimeout(() => entry.addEventListener('click', function back() {
       entry.classList.remove('left'); voidEl.innerHTML = ''; mark(btn, false);
       entry.removeEventListener('click', back);
@@ -95,8 +96,13 @@ export function initTitleForm({ onGo, onRoad }) {
 
   // клавиши: вверх-вниз по графам, влево-вправо в строке настроек, Enter / пробел / E — отметить
   document.addEventListener('keydown', e => {
+    if (e.defaultPrevented) return;                          // клавишу уже взяла карта (закрылась Enter/пробелом)
     if (!shown() || document.getElementById('map')?.classList.contains('on')) return;
-    if (entry.classList.contains('left')) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') entry.click(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tg = e.target;
+    if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
+    if (document.getElementById('txed')?.classList.contains('on')) return;
+    if (entry.classList.contains('left')) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); entry.click(); } return; }
     const k = e.key.toLowerCase();
     const all = [...form.querySelectorAll('.f0-item, .f0-byt:not([hidden]) .f0-opt')];
     const i = all.indexOf(document.activeElement);

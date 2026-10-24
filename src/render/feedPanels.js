@@ -58,7 +58,12 @@ export function pickIndex(frames, now, delay) {
 // ── запись прошлого ──
 let hist = [];                           // { c, f } от старых к новым
 let pool = [];
-export function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; }
+let lastRec = -1e9;                      // кадр последней записи (по времени, не по остатку: рендер бывает реже)
+let scroll = 0, lastT = -1;              // прокрутка копится по шагам — смена скорости не дёргает ленту
+let stills = {};                         // «меньше движения»: по полосе — один застывший кадр
+export function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; lastRec = -1e9; scroll = 0; lastT = -1; stills = {}; }
+// прошлое старше записи не показываем: «две секунды назад» не должны быть минутами
+function dropStale() { while (hist.length && t - hist[0].f > (KEEP + 1) * EVERY) pool.push(hist.shift().c); }
 export function historyLength() { return hist.length; }
 
 function snap(pw, cx0, vh) {
@@ -88,30 +93,51 @@ function snap(pw, cx0, vh) {
 }
 
 export function record(k) {
-  if (k < REC_FROM || t % EVERY) return;
+  if (k < REC_FROM) { if (hist.length) reset(); return; }
+  if (t - lastRec < EVERY && t >= lastRec) return;
+  lastRec = t;
   const vw = scaler.vw, vh = scaler.vh, { pw, cx0 } = layout(0, vw, vh);
   if (hist.length && (hist[0].c.width !== pw || hist[0].c.height !== vh)) reset();   // экран сменился
+  dropStale();
   snap(pw, cx0, vh);
 }
 
 const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
 
+// ctx — в точках кадра (vw×vh); в сборке рисуется до печати и растра (main.js: layers.feedPass)
 export function draw(ctx, k) {
   if (k < PANEL_FROM || !hist.length) return;
-  const vw = scaler.vw, vh = scaler.vh, { panels } = layout(k, vw, vh);
-  if (!panels.length) return;
+  dropStale();
+  const vw = scaler.vw, vh = scaler.vh, { pw, panels } = layout(k, vw, vh);
+  if (!panels.length || !hist.length) return;
+  if (hist[0].c.width !== pw || hist[0].c.height !== vh) { reset(); return; }   // экран сменился — запись не та
   const still = reducedNow(), frames = hist.map(h => h.f);
+  if (!still) {
+    stills = {};
+    const dt = lastT < 0 ? 1 : Math.min(4, Math.max(0, t - lastT));
+    scroll = (scroll + dt * (0.3 + 0.45 * k)) % (vh + GAP);                 // лента едет вверх
+  }
+  lastT = t;
   for (const p of panels) {
-    const h = hist[pickIndex(frames, t, p.delay)];
-    if (!h) continue;
+    let img = null;
+    if (still && stills[p.s]) img = stills[p.s];
+    else {
+      const h = hist[pickIndex(frames, t, p.delay)];
+      if (!h) continue;
+      img = h.c;
+      if (still && typeof document !== 'undefined') {             // застыть: свой холст — запись переиспользуется
+        const c = document.createElement('canvas'); c.width = h.c.width; c.height = h.c.height;
+        c.getContext('2d').drawImage(h.c, 0, 0); stills[p.s] = img = c;
+      }
+    }
     const seed = (p.s * 97 + 400) % (vh + GAP);
-    const off = still ? seed : (t * (0.3 + 0.45 * k) + seed) % (vh + GAP);   // лента едет вверх
+    const off = still ? seed : (scroll + seed) % (vh + GAP);
     ctx.save();
     ctx.beginPath(); ctx.rect(p.x, 0, p.w, vh); ctx.clip();
     ctx.globalAlpha = p.alpha;
     ctx.fillStyle = NIGHT; ctx.fillRect(p.x, 0, p.w, vh);
-    ctx.drawImage(h.c, p.src, 0, p.w, vh, p.x, -off, p.w, vh);
-    ctx.drawImage(h.c, p.src, 0, p.w, vh, p.x, vh + GAP - off, p.w, vh);
+    ctx.drawImage(img, p.src, 0, p.w, vh, p.x, -off, p.w, vh);
+    ctx.drawImage(img, p.src, 0, p.w, vh, p.x, vh + GAP - off, p.w, vh);
     ctx.globalAlpha = 1;
     ctx.fillStyle = NIGHT;                                   // края полосы — ночь
     ctx.fillRect(p.s > 0 ? p.x : p.x + p.w - 1, 0, 1, vh);

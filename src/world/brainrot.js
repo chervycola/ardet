@@ -144,12 +144,14 @@ function copyStrip(ctx, src, sy, h, dx) {
 }
 
 export function draw(ctx) {
+  lastK = 0;
   if (brainrot <= 0 && !brainrotFreeze) return;
   const vw = scaler.vw, vh = scaler.vh;
 
   if (brainrotFreeze) { drawFall(ctx, fallKind, brainrotFreezeTimer / FALL_LEN); return; }
 
   const k = brainrot / 100 * (1 - 0.85 * damp);
+  lastK = Math.max(0, k);
   if (k <= 0) return;
   const bg = layers.canvas('bg'), world = layers.canvas('world');
   const tick = t >> 2;                       // распад дёргается рывками, не плывёт
@@ -177,8 +179,7 @@ export function draw(ctx) {
       ctx.drawImage(bg, sx * sc, sy * sc, sc, sc, (sx - b / 2) | 0, (sy - b / 2) | 0, b, b);
     }
   }
-  // лента делит кадр на полосы 9:16 с миром из прошлого: гладкая поверх рваного, под растром
-  feedPanels.draw(ctx, k);
+  // полосы ленты рисуются в сборке, до печати и растра (feedK; main.js: layers.feedPass)
   // растр: брейнрот = растр
   if (k > 0.15) {
     const level = Math.min(14, Math.round((k - 0.15) / 0.85 * 14));
@@ -306,6 +307,9 @@ function drawFall(ctx, kind, f) {
   ctx.globalAlpha = 1;
 }
 
+// доля распада для полос ленты в этом кадре (0 — нет; в падении, петле с потопом и в красный полдень — main решает)
+let lastK = 0;
+export function feedK() { return brainrotFreeze ? 0 : lastK; }
 export function fallKindOf() { return fallKind; }
 export function isFrozen() { return brainrotFreeze; }
 export function getLevel() { return brainrot; }

@@ -4,6 +4,7 @@
 
 let ctx = null;
 let masterGain = null;
+let sfxOut = null;      // шина звуков мира мимо мастера (ветер, гул зон, вороны, колокола…) — тоже под «звуком мира»
 
 export function initAudio() {
   if (ctx) return;
@@ -12,6 +13,9 @@ export function initAudio() {
     masterGain = ctx.createGain();
     masterGain.gain.value = 0.5 * volMul;
     masterGain.connect(ctx.destination);
+    sfxOut = ctx.createGain();
+    sfxOut.gain.value = volMul;
+    sfxOut.connect(ctx.destination);
   } catch (e) {
     console.warn('[audio] not supported');
   }
@@ -24,7 +28,10 @@ let volMul = 1;
 export function setVolume(f) {
   volMul = Math.max(0, Math.min(1, +f || 0));
   if (masterGain) masterGain.gain.value = 0.5 * volMul;
+  if (sfxOut) sfxOut.gain.value = volMul;
 }
+// куда подключать звуки мира, что идут мимо мастера: громкость — как задана, без деления на мастер
+export const getOut = () => sfxOut || (ctx && ctx.destination);
 
 // Resume on user gesture (autoplay policies)
 export function resumeAudio() {

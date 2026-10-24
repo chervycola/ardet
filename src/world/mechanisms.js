@@ -24,7 +24,7 @@
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
 import { emit } from '../render/particles.js';
-import { getCtx } from '../audio/audio.js';
+import { getCtx, getOut } from '../audio/audio.js';
 import { respond } from './attention.js';
 import { getPlayer } from '../core/playerRef.js';
 
@@ -56,7 +56,7 @@ function tick(freq, type, vol, len) {
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 4);
   const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = b; f.type = type; f.frequency.value = freq; f.Q.value = 1.2; g.gain.value = vol;
-  s.connect(f); f.connect(g); g.connect(ctx.destination); s.start();
+  s.connect(f); f.connect(g); g.connect(getOut()); s.start();
 }
 function thud() {
   const ctx = getCtx();
@@ -64,7 +64,7 @@ function thud() {
   const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime;
   o.type = 'sine'; o.frequency.setValueAtTime(90, t0); o.frequency.exponentialRampToValueAtTime(38, t0 + 0.18);
   g.gain.setValueAtTime(0.14, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
-  o.connect(g); g.connect(ctx.destination); o.start(); o.stop(t0 + 0.23);
+  o.connect(g); g.connect(getOut()); o.start(); o.stop(t0 + 0.23);
   tick(500, 'lowpass', 0.08, 0.12);                  // сухо: ни плеска, ни эха
 }
 
