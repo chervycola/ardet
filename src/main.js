@@ -1638,8 +1638,9 @@ function updateWorldSystems() {
   updateJester(camera);
   updateProximity(player, locations);
   updatePets();
-  updateEdges(player);
-  updateBrainrot(player);
+  // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
+  // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
+  if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
   if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); }   // обмер — ногами
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));

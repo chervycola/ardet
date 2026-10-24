@@ -957,7 +957,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='b701299 · 2026-10-24';console.log('[оттиск]', 'b701299 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='24a6d5d · 2026-10-24';console.log('[оттиск]', '24a6d5d · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -57169,8 +57169,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         wandering_js_1.updateJester(camera_js_1.camera);
         inscriptions_js_3.updateProximity(player, locations_js_6.locations);
         pets_js_1.update();
-        edges_js_2.update(player);
-        brainrot_js_1.update(player);
+        // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
+        // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
+        if (canLeaveSettlement()) {
+            edges_js_2.update(player);
+            brainrot_js_1.update(player);
+        }
         if (time_js_45.t % 30 === 0) {
             const k = walkedKey({ x: player.x + 6, y: player.y + 23 });
             if (k)
