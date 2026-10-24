@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+</defs>
+<rect width="1080" height="1080" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1040" height="1040" fill="none" stroke="#000" stroke-width="2"/>
+
+<use href="#logoD" fill="#000" transform="translate(60,40) scale(4.0)"/>
+<text x="540" y="72" text-anchor="middle" font-weight="800" font-size="46" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="1020" y="66" text-anchor="end" font-family="'Courier New',monospace" font-size="19" letter-spacing="2" fill="#000">БИЛЕТЫ</text>
+<line x1="60" y1="96" x2="1020" y2="96" stroke="#000" stroke-width="2"/>
+
+<text x="540" y="164" text-anchor="middle" font-family="'Courier New',monospace" font-size="25" letter-spacing="3" fill="#E30613">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ</text>
+<text x="540" y="204" text-anchor="middle" font-family="'Courier New',monospace" font-size="25" letter-spacing="3" fill="#E30613">ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+
+<text x="60" y="590" font-weight="800" font-size="150" letter-spacing="1" fill="#000">19.09.<tspan fill="#E30613">2026</tspan></text>
+<text x="60" y="700" font-family="'Courier New',monospace" font-size="34" letter-spacing="3" fill="#000">ЗЕЛЕНОГРАД · МИЭТ</text>
+<text x="60" y="756" font-family="'Courier New',monospace" font-size="34" letter-spacing="3" fill="#000">13:00–20:00</text>
+
+<g stroke="#E30613" stroke-width="5" stroke-linecap="round" transform="translate(-744,-240) scale(0.75)">
+  <line x1="2185" y1="668" x2="2185" y2="604"/><line x1="2185" y1="852" x2="2185" y2="916"/>
+  <line x1="2092" y1="760" x2="2126" y2="760"/><line x1="2244" y1="760" x2="2278" y2="760"/>
+  <line x1="2119" y1="694" x2="2075" y2="650"/><line x1="2251" y1="694" x2="2295" y2="650"/>
+  <line x1="2119" y1="826" x2="2075" y2="870"/><line x1="2251" y1="826" x2="2295" y2="870"/>
+  <line x1="2149" y1="680" x2="2132" y2="642"/><line x1="2221" y1="680" x2="2238" y2="642"/>
+  <line x1="2149" y1="840" x2="2132" y2="878"/><line x1="2221" y1="840" x2="2238" y2="878"/>
+</g>
+<circle cx="895" cy="330" r="11" fill="#E30613"/>
+
+<circle cx="60" cy="900" r="5" fill="#E30613"/>
+<polyline points="60,900 149,900 149,892 199,892 199,908 241,908 241,900 309,900 309,884 353,884 353,916 392,916 392,892 442,892 442,924 501,924 501,908 546,908 546,900 623,900 623,884 670,884 670,908 712,908 712,892 768,892 768,916 813,916 813,900 878,900 878,892 931,892 931,900 1020,900" fill="none" stroke="#000" stroke-width="2.5"/>
+
+<text x="1020" y="1012" text-anchor="end" font-weight="800" font-size="30" letter-spacing="1" fill="#E30613">ДИСКРЕТ.РФ</text>
+</svg>

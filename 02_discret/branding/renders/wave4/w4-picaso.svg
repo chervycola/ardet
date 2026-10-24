@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" font-family="'Arial Narrow','Helvetica Neue',Arial,sans-serif">
+<defs>
+  <clipPath id="scr"><rect x="60" y="140" width="960" height="690"/></clipPath>
+  <filter id="gray"><feColorMatrix type="saturate" values="0.08"/><feComponentTransfer><feFuncR type="linear" slope="1.06" intercept="-0.02"/><feFuncG type="linear" slope="1.06" intercept="-0.02"/><feFuncB type="linear" slope="1.06" intercept="-0.02"/></feComponentTransfer></filter>
+  <g id="logoD" shape-rendering="crispEdges" transform="scale(0.66667)">
+    <rect x="10" y="0" width="2" height="12"/><rect x="2" y="0" width="8" height="2"/><rect x="4" y="2" width="2" height="4"/>
+    <rect x="2" y="6" width="2" height="2"/><rect x="0" y="8" width="12" height="2"/><rect x="0" y="10" width="2" height="2"/>
+  </g>
+  <g id="cross"><line x1="-16" y1="0" x2="16" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#000" stroke-width="2"/></g>
+  <pattern id="th" width="12" height="12" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#f4f4f4"/>
+    <line x1="0" y1="0" x2="0" y2="12" stroke="#e3e3e3" stroke-width="4"/>
+  </pattern>
+</defs>
+<rect width="1080" height="1350" fill="#FFFFFF"/>
+<rect x="20" y="20" width="1040" height="1310" fill="none" stroke="#000" stroke-width="2"/>
+<use href="#cross" x="20" y="20"/><use href="#cross" x="1060" y="20"/><use href="#cross" x="20" y="1330"/><use href="#cross" x="1060" y="1330"/>
+<use href="#logoD" fill="#000" transform="translate(60,30) scale(4.2)"/>
+<text x="108" y="70" font-weight="800" font-size="44" letter-spacing="1" fill="#000">ДИСКРЕТ</text>
+<text x="1020" y="48" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЧЕТВЁРТАЯ ВОЛНА</text>
+<text x="1020" y="76" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#000">ЭКСПО · 02/07</text>
+<line x1="60" y1="104" x2="1020" y2="104" stroke="#000" stroke-width="2"/>
+<rect x="60" y="140" width="960" height="690" fill="#FFFFFF"/>
+<image xlink:href="../../app/photos/lg_picaso.svg" x="240" y="290" width="600" height="390" preserveAspectRatio="xMidYMid meet"/>
+<rect x="60" y="140" width="960" height="690" fill="none" stroke="#000" stroke-width="3"/>
+<rect x="68" y="148" width="944" height="674" fill="none" stroke="#000" stroke-width="1" opacity="0.35"/>
+<path d="M60 180 V140 H100 M980 140 H1020 V180 M1020 790 V830 H980 M100 830 H60 V790" fill="none" stroke="#E30613" stroke-width="4"/>
+<rect x="60" y="800" width="434" height="30" fill="#000"/>
+<text x="72" y="821" font-family="'Courier New',monospace" font-size="16" letter-spacing="1" fill="#FFF">15 000+ принтеров на предприятиях России</text>
+<text x="60" y="905" font-family="'Courier New',monospace" font-size="22" letter-spacing="4" fill="#E30613">ПРОМЫШЛЕННЫЕ 3D-ПРИНТЕРЫ · ЗЕЛЕНОГРАД</text>
+<text x="56" y="1010" font-weight="800" font-size="96" letter-spacing="1" fill="#000">ПИКАСО 3D</text>
+<text x="60" y="1058" font-family="'Courier New',monospace" font-size="24" letter-spacing="1" fill="#000">FDM/FFF-печать с 2011 года</text>
+<circle cx="60" cy="1130" r="5" fill="#E30613"/>
+<polyline points="60,1130 149,1130 149,1122 199,1122 199,1138 241,1138 241,1130 309,1130 309,1114 353,1114 353,1146 392,1146 392,1122 442,1122 442,1154 501,1154 501,1138 546,1138 546,1130 623,1130 623,1114 670,1114 670,1138 712,1138 712,1122 768,1122 768,1146 813,1146 813,1130 878,1130 878,1122 931,1122 931,1130 1020,1130" fill="none" stroke="#000" stroke-width="3"/>
+<line x1="60" y1="1210" x2="1020" y2="1210" stroke="#000" stroke-width="2"/>
+<text x="60" y="1256" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">НАУЧНО-ТЕХНИЧЕСКИЙ ФОРУМ ТВОРЧЕСКОГО ПРИБОРОСТРОЕНИЯ</text>
+<text x="60" y="1284" font-family="'Courier New',monospace" font-size="18" letter-spacing="2" fill="#000">ДИСКРЕТ.РФ</text>
+<text x="1020" y="1250" text-anchor="end" font-weight="800" font-size="32" fill="#000">19.09.2026</text>
+<text x="1020" y="1282" text-anchor="end" font-family="'Courier New',monospace" font-size="17" letter-spacing="2" fill="#E30613">ЗЕЛЕНОГРАД · МИЭТ</text>
+</svg>
