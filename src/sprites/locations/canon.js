@@ -1665,10 +1665,8 @@ export function draw_junkyard(x, y) {
   for (const px of [1, 26]) { r(x + px, y - 10 + d, 2, 14 - d, S0); r(x + px, y - 10 + d, 1, 14 - d, S1); }   // штоки
   r(x - 1, y - 12 + d, 31, 2, K3); r(x - 1, y - 12 + d, 31, 1, S0); r(x + 29, y - 11 + d, 1, 1, AS);   // траверса
   r(x + 2, y + d - 2, 25, 1, K1);                                          // плита над воронкой
-  if (c >= 170 && c < 360) {
-    const u = Math.min(1, (c - 170) / 70), cx = x + 15 + q(u * 12);
-    jCube(cx, y + 54, 9 + (Math.floor(t / 360) % 7), false);
-  }
+  const n = Math.floor((t - 170) / 360), u = c >= 170 ? Math.min(1, (c - 170) / 70) : 1;   // прежний стоит, пока не выйдет новый
+  jCube(x + 15 + q(u * 12), y + 54, 9 + ((n % 7) + 7) % 7, false);
 }
 
 // ── ШКОЛЬНЫЙ АВТОБУС ──
@@ -1828,9 +1826,8 @@ function lakeBody(night) {
     if (e > 0.96) { r(x, y, 1, 1, hh(x, y, 195) < 0.3 ? L2 : hh(x, y, 196) < 0.5 ? K4 : MG_D); continue; }   // корка у воды — белёсыми пятнами
     r(x, y, 1, 1, e > 0.88 ? MG_D : e < 0.45 ? LK_DEEP : (hh(x >> 3, y >> 1, 197) < 0.15 ? LK_DEEP : MG));
   }
-  // гладь — зеркало: ровные светлые полосы неба (не рябь), в ней вниз головой столб с табличкой
+  // гладь не шелохнётся: ровные светлые полосы неба, не рябь
   for (const [y, x0, x1] of [[14, 30, 62], [22, 18, 44], [39, 50, 74]]) { X.globalAlpha = 0.18; r(x0, y, x1 - x0, 1, MG_L); X.globalAlpha = 1; }
-  X.globalAlpha = 0.35; r(83, 47, 1, 6, K3); r(79, 53, 9, 4, K3); r(80, 54, 7, 2, MG_L); X.globalAlpha = 1;
   // пена у берега — тусклыми клочьями
   for (let k = 0; k < 26; k++) { const a = hh(k, 3, 199) * Math.PI * 2, d = 0.86 + hh(k, 4, 201) * 0.08, x = LK_CX + Math.cos(a) * 46 * d, y = LK_CY + Math.sin(a) * 26 * d; X.globalAlpha = 0.45; r(x, y, 1 + q(hh(k, 5, 203) * 3), 1, k & 1 ? L2 : AS); X.globalAlpha = 1; }
   // радуга нефти — днём: разводы, краска переходит одна в другую по ходу струи
@@ -2056,11 +2053,20 @@ export function draw_dumpster(x, y) {
 const TARP_L = '#4b5a48', TARP_D = '#30392e', TARP_DD = '#262d24';      // брезент: к свету, в складке, глубже
 const BN_L = -4, BN_R = 274, BN_G = 120, BN_TOP = -20;                  // столбы (левый край трубы), земля, верх
 const TRP_W = 268, TRP_H = 124, TRP_X = 4, TRP_Y = -14;                           // полотно: размер и левый верх
-const TIES = 12;                                                        // узлы по верхней кромке — через 24
+const TIES = 11;                                                        // узлы по верхней кромке — через 24, все на полотне
 const tarpTop = x => 2 + q(3 * Math.sin(Math.PI * x / TRP_W)) + ((x + 12) % 24 > 6 && (x + 12) % 24 < 18 ? 1 : 0);
 const tarpBot = x => TRP_H - 6 + q(2 * Math.sin(Math.PI * x / TRP_W));
 const tarpTorn = (x, y) => x > TRP_W - 30 && y > tarpBot(x) - (x - (TRP_W - 30)) * 0.95 + (hh(x, 1, 41) < 0.4 ? 1 : 0);   // оторванный угол
 const tarpBurnt = (x, y) => { const dx = x - 24, dy = (y - 98) * 1.3; return dx * dx + dy * dy < 22 + hh(x, y, 43) * 10; };   // прожжено
+let TARP_RUNS = null;                                                    // где по столбцу есть ткань (мимо дыры и угла) — для тени склона
+const tarpRuns = () => TARP_RUNS || (TARP_RUNS = Array.from({ length: TRP_W }, (_, x) => {
+  const runs = []; let y0 = -1;
+  for (let y = tarpTop(x); y <= tarpBot(x) + 1; y++) {
+    const on = y <= tarpBot(x) && !tarpTorn(x, y) && !tarpBurnt(x, y);
+    if (on && y0 < 0) y0 = y; else if (!on && y0 >= 0) { runs.push(y0, y - y0); y0 = -1; }
+  }
+  return runs;
+}));
 // буквы — по скелету, кистью: [ширина, ломаные]; координаты в клетке 14×24
 const BRUSH_GLYPH = {
   C: [14, [[[13, 3], [10, 0], [4, 0], [1, 3], [0, 8], [0, 16], [1, 21], [4, 24], [10, 24], [13, 21]]]],
@@ -2197,6 +2203,7 @@ function bannerPoles() {
 }
 const TARPS = [null, null];                                              // холсты полотна: целое и со швом (нет — по пикселю)
 const BANNER = { id: 'banner' };
+let BN_T = -1, BN_PH = 0, BN_FL = 0;                                    // фаза волны и клока: копятся по шагам (не t × скорость — та гуляет с ветром)
 export function draw_banner(x, y) {
   bake('banner_poles', x, y, -18, -24, 314, 146, bannerPoles);
   const seam = revealOf(BANNER) > 0.25 ? 1 : 0;
@@ -2208,7 +2215,9 @@ export function draw_banner(x, y) {
   const TARP = TARPS[seam];
   // волна идёт вдоль полотна по ветру; у столбов полотно держат — там тише
   const s = Math.min(1.3, wind.s), A = 0.8 + s * 3.2, dir = wind.x < 0 ? -1 : 1, sp = 0.05 + s * 0.08;
-  const off = cx => { const env = Math.sin(Math.PI * Math.max(0, Math.min(TRP_W, cx)) / TRP_W); return q((Math.sin(cx * 0.05 - dir * t * sp) * A + Math.sin(cx * 0.11 - dir * t * sp * 1.7 + 1.3) * A * 0.2) * env); };
+  const dt = BN_T < 0 ? 0 : Math.min(240, Math.max(0, t - BN_T)); BN_T = t;   // за кадр могло пройти несколько шагов; второй вызов в том же шаге — ноль
+  BN_PH += dir * sp * dt; BN_FL += (0.12 + s * 0.1) * dt;
+  const off = cx => { const env = Math.sin(Math.PI * Math.max(0, Math.min(TRP_W, cx)) / TRP_W); return q((Math.sin(cx * 0.05 - BN_PH) * A + Math.sin(cx * 0.11 - BN_PH * 1.7 + 1.3) * A * 0.2) * env); };
   const ox = q(x) + TRP_X, oy = q(y) + TRP_Y;
   // верхняя верёвка: провисает, ходит вполовину полотна; ровные отрезки — одним мазком
   const ropeY = k => -16 + q(3 * Math.sin(Math.PI * Math.max(0, Math.min(1, (k - TRP_X) / TRP_W)))) + q(off(k - TRP_X) * 0.5);
@@ -2225,7 +2234,11 @@ export function draw_banner(x, y) {
       const o = cx < TRP_W ? off(cx) : null;
       if (o === o0) continue;
       X.drawImage(TARP, c0, 0, cx - c0, TRP_H, ox + c0, oy + o0, cx - c0, TRP_H);
-      if (o !== null) { const d = o - o0, sx = cx - 4; X.globalAlpha = d > 0 ? 0.14 : 0.05; X.fillStyle = d > 0 ? NI : BO; X.fillRect(ox + sx, oy + o0 + tarpTop(sx), 4, tarpBot(sx) - tarpTop(sx) + 1); X.globalAlpha = 1; }
+      if (o !== null) {
+        const d = o - o0, sx = cx - 4, R = tarpRuns(); X.globalAlpha = d > 0 ? 0.14 : 0.05; X.fillStyle = d > 0 ? NI : BO;
+        for (let xx = sx; xx < sx + 4; xx++) { const rr = R[xx]; for (let i = 0; i < rr.length; i += 2) X.fillRect(ox + xx, oy + o0 + rr[i], 1, rr[i + 1]); }
+        X.globalAlpha = 1;
+      }
       c0 = cx; o0 = o;
     }
   } else { X.translate(ox, oy); try { tarpBody(seam); } finally { X.translate(-ox, -oy); } }
@@ -2236,7 +2249,7 @@ export function draw_banner(x, y) {
   tie(x + BN_L + 5, y + 101, ox, oy + tarpBot(0) - 1 + off(0));
   // оторванный клок у правого нижнего угла треплется
   const fx = ox + TRP_W - 30, fy = oy + tarpBot(TRP_W - 30) + off(TRP_W - 30);
-  for (let k = 0; k < 9; k++) { const len = 9 - k + q(Math.sin(t * (0.12 + s * 0.1) + k * 0.6) * (1 + s)), sway = q(Math.sin(t * 0.09 + k * 0.4) * (1 + s * 2) * k / 9); r(fx + k + sway, fy - k, 1, len, k & 1 ? TARP_D : MG); }
+  for (let k = 0; k < 9; k++) { const len = 9 - k + q(Math.sin(BN_FL + k * 0.6) * (1 + s)), sway = q(Math.sin(t * 0.09 + k * 0.4) * (1 + s * 2) * k / 9); r(fx + k + sway, fy - k, 1, len, k & 1 ? TARP_D : MG); }
 }
 
 // ── ОБРУШЕННЫЙ МОСТ ──
@@ -2337,5 +2350,5 @@ export function draw_overpass(x, y) {
   const ex = ox + 44 + q(vs), ey = oy + 48;
   r(ex - 1, ey, 1, 2, L2); r(ex, ey, 1, 1, SINGE); r(ex + 1, ey + 1, 1, 1, L2);   // перетёрт
   // арматура с обломанных кромок — покачивается
-  for (let i = 0; i < 3; i++) { const sx = ox + 77 + i * 3, len = 4 + i * 2, d = q(Math.sin(t * 0.005 + i * 2) * 1.2); for (let k = 0; k < len; k++) r(sx + (k > len / 2 ? d : 0), oy + 36 + k, 1, 1, RUST); }
+  for (let i = 0; i < 3; i++) { const sx = ox + 77 - i * 2, len = 4 + i * 2, d = q(Math.sin(t * 0.005 + i * 2) * 1.2); for (let k = 0; k < len; k++) r(sx + (k > len / 2 ? d : 0), oy + 36 + k, 1, 1, RUST); }
 }
