@@ -113,6 +113,8 @@ tiny hooded figure at the threshold --ar 2:3
 ```
 правило комнаты: ноль тёплых пятен — единственная генерация канона,
 где СВЕЧА запрещена.
+**Заменён (24.10):** склеп с тех пор оброс каноном (жила, опись инеем,
+счётчик, строка над входом, огонёк-пепел) — промт по нему — G12.
 
 ## G6 · НОЧНОЙ — оттиск для диалогов (3:4, бумага)
 ```
@@ -238,4 +240,43 @@ readable text, letters, words, numbers, signage, signature, watermark, logo, fra
 Приёмка — по скиллу ardet-scene-accept: тёплого не больше трёх (в G10 — одно),
 красное — только киноварь, букв нет, фигура странника меньше десятой высоты кадра,
 огонь сплошной. Принятое — `weave/G9_v1.jpg`, `weave/G10_v1.jpg`, `weave/G11_v1.jpg`.
+
+
+## G12–G13 · холодная жила U7: криосклеп «WD» и каптёрка Дежурного (24.10)
+
+Тупик под парком закрытого праздника (неон, запад): «По документам —
+кремирован. По счетам — охлаждается.» Перед ним каптёрка Дежурного —
+единственный разговор района и единственное тёплое место маршрута.
+Регистр — STYLE LOCK v1, как G9–G11; модель — GPT Image 2 (оба кадра
+самые тёмные), запасной — seedream v5 pro. 16:9. Буквы на табличке капсулы,
+строку инеем над входом и цифры графика ставит игра — в генерации их нет.
+
+### G12 · криосклеп «WD» — могила Диснея (16:9, тёплого ноль)
+Из осмотров: капсула под инеем, табличка в две буквы, счётчик крутится,
+«Платит фонд. Фонд — тоже под инеем»; над входом инеем чужой рукой «1. пусть
+подождёт»; кабели «прочего» сходятся сюда; огонёк странника — пепел.
+```
+Underground dead-end cryogenic vault at the end of an old cable tunnel, seen from the cold tunnel through a low doorway, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. Along the lintel above the doorway, a thin line of handwriting drawn in hoarfrost, too faint to read. Beyond it, a small round chamber whose walls are covered in thick white frost fur; in its center on a low plinth lies a single horizontal steel capsule like a sarcophagus, buried under hoarfrost, with a small frosted window and a small blank metal plate on its side. Dozens of thick power cables run down from the tunnel ceiling along the walls and converge into the capsule, all furred with frost. On the chamber wall an old electricity meter, its disc still spinning, a tiny dull cinnabar #C23B2B mark on the dial, the only color. The floor is snow-dusted concrete without footprints. At the threshold stands a tiny lone hooded wanderer in a layered torn cloak, a puff of breath vapor in front of the hood, the glow at the chest gone ash-grey. No warm light anywhere: only a pale bone-cold glow #D9CFB8 from the frost itself, deep flat blacks, ash grey #8A8D8F halftones. Absolute stillness, silence, vast dark negative space, full-bleed, no frame, no text, no letters, no logos.
+```
+Пасхалка по желанию (нов.) — дописать в конец промта:
+```
+On the capsule's frosted window the frost has formed three overlapping rings, one large and two smaller above it, easy to miss.
+```
+(«спрятанный Микки» — ритуал самих парков: знак основателя прячут на виду;
+рифма к «ушам» на стене парка наверху.)
+
+### G13 · каптёрка Дежурного — место разговора (16:9)
+Из сцены: ниша коллектора перед дверью склепа, катушка от кабеля вместо стола,
+журнал с прочерками, гранёный стакан с кипятком, табурет, буржуйка с чайником,
+труба в темноту, график дежурств на кнопках, ватник на гвозде; иней жилы
+кончается у ниши — «тепло, приставленное сторожить мороз». Тёплого два:
+печка и огонёк странника.
+```
+A small warm niche carved into the wall of a long underground cable tunnel, right before the heavy door of a frozen vault, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. The tunnel walls carry thick cables on iron brackets, furred with hoarfrost that grows thicker toward the vault door on the right; the frost stops sharply at the edge of the niche, inside it there is no frost at all. In the niche: a small cast-iron pot-belly stove with a battered kettle on top, its door slightly open with fire glowing inside #E28A3A, its pipe rising into the darkness; a big wooden cable reel standing on its side used as a table, an open ledger on it with rows of short dashes instead of signatures, and a faceted glass of hot water at its very edge with steam rising; a low stool; on the back wall a duty roster pinned with push pins and a quilted work jacket hanging on a nail. On the stool between the reel and the stove sits the watchman, a tall hooded figure in a long dark robe, the hood hides the face completely, only darkness inside with the faintest suggestion of eyes, his hands held out to the stove. From the frozen tunnel on the left a tiny lone hooded wanderer approaches, breath vapor in front of the hood, a small amber ember at the chest. Exactly two warm lights: the stove fire and the wanderer's ember; everything else is cold: deep flat blacks, bone-white #D9CFB8 frost highlights, ash grey #8A8D8F halftones; the fire painted as one solid flame. Quiet, patient, vast dark negative space, full-bleed, no frame, no text, no letters, no numbers on the roster.
+```
+negative — тот же, что у G9–G11; для G12 добавить `warm light, orange, fire, candle`.
+
+Приёмка: G12 — ноль тёплого, единственный цвет — киноварная метка счётчика;
+G13 — тёплого ровно два, иней обрывается у ниши. Принятое — `weave/G12_v1.jpg`,
+`weave/G13_v1.jpg`. Портрет Дежурного для разговора — weave/PORTRAITS.md.
 

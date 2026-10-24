@@ -97,6 +97,25 @@ metallic gold, blue, purple, saturated green`
   будто глаза; пишет в тяжёлой книге на коленях — строка растёт; рядом стопки книг
   разного века — камень, глина, свиток, кожа, бумага; один тёплый свет снизу, от свечи
 
+**Дежурный криосклепа — роль Старца** (`watchman.png`, по желанию; нов. 24.10). Тот же
+актёр, та же тьма под капюшоном — другой реквизит: каптёрка вместо палатки. Пока
+файла нет, Дежурный говорит с портретом Старца (`assets/manifest.js`); примем
+отдельный — переключу одной строкой. Тепло: печка снизу, вне кадра.
+- EN: the watchman of a frozen vault: a tall hooded figure in a long dark robe, the hood
+  hides the face completely, only darkness inside with the faintest suggestion of eyes;
+  he holds a faceted glass of hot water in both hands, a thin thread of steam rising from
+  it; warm light from below, from the open door of a small pot-belly stove out of frame;
+  behind him only the dark wall of a cable tunnel with a few cables on brackets and a
+  quilted work jacket hanging on a nail at the edge; a few frost crystals at the far edge
+  of the frame, the cold he guards; patient, without surprise, as if he expected you
+  exactly now
+- RU: дежурный криосклепа: высокая фигура в капюшоне и длинной тёмной ризе, лицо закрыто
+  целиком, во тьме едва будто глаза; в обеих руках гранёный стакан с кипятком, над ним
+  нитка пара; тёплый свет снизу — от открытой дверцы буржуйки вне кадра; за спиной
+  только тёмная стена коллектора, кабели на кронштейнах, у края — ватник на гвозде; у
+  дальнего края — несколько игл инея: холод, который он сторожит; ждёт без удивления,
+  будто по графику ждал именно сейчас
+
 **Машинист** (`machinist.png`) — осмотр поезда, разговор, записка l78. Со спины — по
 строке разговора «Он не оборачивается» (поза — нов.). Свет пепельный, без тепла.
 - EN: an old locomotive engineer seen from behind in the cab of a rusted steam
