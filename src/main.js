@@ -103,7 +103,8 @@ import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawR
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
-import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot } from './world/brainrot.js';
+import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel } from './world/brainrot.js';
+import { pullVector } from './world/feedPull.js';
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed, setRelook } from './world/potemkin.js';
@@ -188,6 +189,7 @@ preloadAll().then(() => {
 const player = {
   x: CORE.x, y: CORE.y, tx: CORE.x, ty: CORE.y,
   dir: 1, moving: false, walkFrame: 0,
+  still: true,           // не ведут ни клавиши, ни палец, ни автоход (снос лентой — не ходьба)
   vx: 0, vy: 0,          // скорость: догоняет желаемую с инерцией поверхности
   auto: false,           // идёт сам к точке клика (tx, ty)
 };
@@ -1462,7 +1464,7 @@ function nearFire() {
   if (fireLoc === undefined) fireLoc = locations.find(l => l.id === 'campfire') || null;
   return !!fireLoc && Math.hypot(player.x + 6 - (fireLoc.x + 18), player.y + 23 - (fireLoc.y + 20)) < 40;
 }
-function heroStep(dvx, dvy) {
+function heroStep(dvx, dvy, drift = false) {
   const S = SURF[surfName];
   const cur = Math.hypot(player.vx, player.vy), want = Math.hypot(dvx, dvy);
   const rate = want > 0.01 && want >= cur - 0.01 ? S.accel : S.decel;
@@ -1482,11 +1484,14 @@ function heroStep(dvx, dvy) {
   if (Math.abs(my - player.vy) > 0.01) player.vy = my;
   const sp = Math.hypot(mx, my);
   if (sp > 0.05) {
-    if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
-    // куда смотрит (sprites/player.js): вверх — спиной к зрителю, вниз — лицом, вбок — в профиль;
-    // по диагонали — как был (слово автора)
-    if (Math.abs(my) > Math.abs(mx) * 1.15) player.face = my < 0 ? 'N' : 'S';
-    else if (Math.abs(mx) > Math.abs(my) * 1.15) player.face = mx > 0 ? 'E' : 'W';
+    // сносит лентой, а сам стоит — не разворачивается (world/feedPull.js)
+    if (!drift) {
+      if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
+      // куда смотрит (sprites/player.js): вверх — спиной к зрителю, вниз — лицом, вбок — в профиль;
+      // по диагонали — как был (слово автора)
+      if (Math.abs(my) > Math.abs(mx) * 1.15) player.face = my < 0 ? 'N' : 'S';
+      else if (Math.abs(mx) > Math.abs(my) * 1.15) player.face = mx > 0 ? 'E' : 'W';
+    }
     events.emit(E.PLAYER_MOVE, player);
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
@@ -1555,8 +1560,18 @@ function updateGame() {
       dvx = dx / dist * spd; dvy = dy / dist * spd; steering = true;
     }
   }
-  const sp = heroStep(dvx, dvy);
-  player.moving = steering || sp > 0.05;
+  // ЛЕНТА ТЯНЕТ (world/feedPull.js): у края брейнрот сносит наружу — тем слабее, чем меньше
+  // подыгрываешь; всегда медленнее шага. Покой лечит (brainrot.js). Только за изгородью,
+  // а за изгородь — только с пропуском Шута.
+  let drift = false;
+  if (!house.active && !under.active && canLeaveSettlement()) {
+    const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10;
+    const [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
+    if (pdx || pdy) { dvx += pdx; dvy += pdy; drift = !steering; }
+  }
+  const sp = heroStep(dvx, dvy, drift);
+  player.moving = steering || (sp > 0.05 && !drift);   // снос лентой — не ходьба: стоящий стоит
+  player.still = !steering;
 
   updateWorldSystems();
 }

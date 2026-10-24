@@ -24,6 +24,11 @@ const FALL_LEN = 300;
 // выход не подписан — остановиться. Падения милосердны.
 let loopMode = false;
 let stillFrames = 0;
+// ── Покой лечит: кто стоит, не подыгрывая ленте, тому распад отпускает — с секунды
+// до половины за пять (лента при этом тянет едва-едва: world/feedPull.js)
+let calmFrames = 0;
+const isStill = p => (p.still !== undefined ? p.still : !p.moving);
+export function calmOf() { return Math.min(0.5, Math.max(0, calmFrames - 60) / 240 * 0.5); }
 let loopExitCb = null;
 export function enterLoop(exitCb) {
   loopMode = true; stillFrames = 0; loopExitCb = exitCb || null;
@@ -45,7 +50,7 @@ function getDistFromMap(player) {
 export function update(player) {
   if (loopMode) {
     brainrot = Math.min(96, brainrot + 0.16);   // растёт, но фриза нет
-    if (player.moving) stillFrames = 0; else stillFrames++;
+    if (isStill(player)) stillFrames++; else stillFrames = 0;
     if (stillFrames > 240) {                    // 4 секунды покоя — отпустило
       loopMode = false; stillFrames = 0;
       brainrot = Math.min(brainrot, 55);
@@ -78,6 +83,8 @@ export function update(player) {
   let target = 0;
   if (edge > 0.04) target = Math.pow((edge - 0.04) / 0.93, 1.15) * 100;
   else if (dist > 600) target = Math.min(100, (dist - 600) / 30);
+  calmFrames = player.still === true ? Math.min(600, calmFrames + 1) : 0;   // покой — только когда точно известно, что стоит
+  target *= 1 - calmOf();
   brainrot += (Math.min(100, target) - brainrot) * (target > brainrot ? 0.05 : 0.08);
   if (brainrot < 0.2) brainrot = 0;
 

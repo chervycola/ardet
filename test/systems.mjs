@@ -2874,6 +2874,55 @@ setCtx(ctx);
   });
 }
 
+// ═══ ЛЕНТА ТЯНЕТ: снос к краю и покой, который лечит (world/feedPull.js, brainrot.js) ═══
+{
+  const FP = await imp('world/feedPull.js');
+  const DSC = await imp('world/disc.js');
+  const EDG = await imp('world/edges.js');
+  const BRT = await imp('world/brainrot.js');
+  const T0 = DSC.TOWN, OUT = DSC.RINGS_D + DSC.FIRE_W, MIDX = (T0.x0 + T0.x1) / 2;
+  const S = { x: MIDX, y: T0.y1 + OUT + 500 };                 // юг за огнём, середина пустыни
+  const walk = 2.4;
+  test('лента: наружу — к краю; при слабом распаде не тянет', () => {
+    const [ux, uy] = FP.outward(S.x, S.y);
+    assert(uy > 0.7, `юг: наружу не вниз (${ux.toFixed(2)}, ${uy.toFixed(2)})`);
+    assert(FP.outward(MIDX, T0.y0 - OUT - 500)[1] < -0.7, 'север: наружу не вверх');
+    assert(FP.outward(T0.x0 - OUT - 500, (T0.y0 + T0.y1) / 2)[0] < -0.7, 'запад: наружу не влево');
+    eq(FP.pullVector(S.x, S.y, 3, walk, 0, 0, 'S').join(), '0,0', 'тянет при слабом распаде');
+  });
+  test('лента: всегда медленнее шага — вглубь уйти можно и при полном распаде', () => {
+    for (const lvl of [20, 50, 80, 100]) for (const [mx, my, f] of [[0, walk, 'S'], [0, -walk, 'N'], [walk, 0, 'E'], [0, 0, 'S']]) {
+      const v = Math.hypot(...FP.pullVector(S.x, S.y, lvl, walk, mx, my, f));
+      assert(v <= walk * FP.PULL_MAX + 1e-9, `снос ${v.toFixed(2)} при ${lvl}`);
+    }
+    const [, py] = FP.pullVector(S.x, S.y, 100, walk, 0, -walk, 'N');
+    assert(-walk + py < -walk * 0.85, `вглубь при полном распаде: ${(-walk + py).toFixed(2)}`);
+  });
+  test('лента: подыгрываешь — тянет сильнее; стоишь — слабее; спиной к краю — ещё слабее; вглубь — почти отпускает', () => {
+    const m = (mx, my, f) => Math.hypot(...FP.pullVector(S.x, S.y, 70, walk, mx, my, f));
+    const out = m(0, walk, 'S'), side = m(walk, 0, 'E'), still = m(0, 0, 'S'), back = m(0, 0, 'N'), inn = m(0, -walk, 'N');
+    assert(out > side && side > still && still > back && back > inn, `${out} ${side} ${still} ${back} ${inn}`);
+  });
+  test('лента: в петле СКРОЛЛ крутит вниз', () => {
+    const [px, py] = FP.pullVector(S.x, S.y, 60, walk, 0, 0, 'S', true);
+    assert(py > 0 && px === 0, 'петля не вниз');
+  });
+  test('покой лечит: стоящему распад отпускает до половины, идущему — нет', () => {
+    const p = { x: S.x, y: S.y, moving: true, still: false };
+    const run = k => { for (let i = 0; i < k; i++) { EDG.update(p); BRT.update(p); } return BRT.getLevel(); };
+    const walking = run(600);
+    assert(walking > 20 && !BRT.isFrozen(), `в пустыне распад ${walking}`);
+    p.moving = false; p.still = true;
+    eq(BRT.calmOf(), 0, 'покой раньше, чем встал');
+    const calm = run(400);
+    assert(Math.abs(BRT.calmOf() - 0.5) < 1e-9, `покой ${BRT.calmOf()}`);
+    assert(calm < walking * 0.6, `стоял — не отпустило: ${walking.toFixed(1)} → ${calm.toFixed(1)}`);
+    p.moving = true; p.still = false;
+    assert(run(600) > walking * 0.9, 'пошёл — распад не вернулся');
+    p.y = T0.y1 - 50; run(300);                               // домой: распад ушёл
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
