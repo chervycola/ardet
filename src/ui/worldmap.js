@@ -11,7 +11,10 @@ import {
   STATUS_COLORS, THREAD_COLORS, nodeById, gateById,
 } from '../content/worldmap_db.js';
 import { SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, CORE, RINGS, RINGS_D, RING_EDGE, FIRE_W, ringD, ringAt, trailPoint } from '../world/disc.js';
+import { TOWN, CORE, RINGS, RINGS_D, RING_EDGE, FIRE_W, ringD, ringAt, ringOfD, warpedDist, trailPoint } from '../world/disc.js';
+import { sideAt } from '../world/relief.js';
+import { CELL_TITLES } from '../content/cell_titles.js';
+import { SIDE_RU } from '../world/placeStamp.js';
 import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
 import { events } from '../core/events.js';
@@ -47,10 +50,16 @@ const NIGHT = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
 const F_TITLE = '10px "Press Start 2P",monospace';
 const F_TEXT = '17px VT323,monospace';
 const F_SMALL = '15px VT323,monospace';
+// план местности — бумага (канон: «система — бумага»)
+const PAPER = '#E8DCC3', SEPIA = '#3A3026';
+const F_PAPER = "16px Literata, 'PT Serif', Georgia, serif";
+const F_PAPER_S = "14px Literata, 'PT Serif', Georgia, serif";
+const F_GRIF = "500 9px Montserrat, 'PT Sans', sans-serif";
 
 let view = 'local';                       // 'local' — план местности, 'world' — карта мира
 let getVisitedFn = () => new Set();       // main передаёт flags.visited
 let getLockedFn = () => false;            // выход из городка закрыт?
+let getWalkedFn = () => new Set();        // клетки «кольцо:сторона», пройденные ногами (main)
 const TABS = [
   { view: 'local', label: 'ПЛАН МЕСТНОСТИ', x: 560, w: 180 },
   { view: 'world', label: 'КАРТА МИРА', x: 750, w: 150 },
@@ -115,28 +124,40 @@ function base() { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
 function draw() {
   if (!visible || !ctx) return;
   base();
-  ctx.fillStyle = NIGHT;
+  const paper = view === 'local';               // план местности — бумага; карта мира — ночь
+  ctx.fillStyle = paper ? PAPER : NIGHT;
   ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = rgba(CINNABAR, 0.5);
+  ctx.strokeStyle = paper ? rgba(SEPIA, 0.5) : rgba(CINNABAR, 0.5);
   ctx.lineWidth = 1;
   ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
 
   // шапка: название листа и вкладки
-  ctx.font = F_TITLE;
-  ctx.fillStyle = BONE;
-  ctx.fillText('КАРТА', 18, 27);
-  ctx.font = F_SMALL;
+  if (paper) {
+    ctx.font = F_GRIF; ctx.fillStyle = SEPIA;
+    ctx.fillText('ПЛАН МЕСТНОСТИ · КАДАСТРОВЫЙ · ЛИСТ 1', 18, 25);
+    ctx.save();                                 // штамп: криво, сепией
+    ctx.translate(330, 21); ctx.rotate(-0.07);
+    ctx.strokeStyle = rgba(SEPIA, 0.7); ctx.lineWidth = 1; ctx.strokeRect(-4, -12, 150, 17);
+    ctx.fillStyle = rgba(SEPIA, 0.8); ctx.fillText('ОБМЕР — НОГАМИ', 6, 0);
+    ctx.restore();
+  } else {
+    ctx.font = F_TITLE;
+    ctx.fillStyle = BONE;
+    ctx.fillText('КАРТА', 18, 27);
+  }
+  ctx.font = paper ? F_GRIF : F_SMALL;
   for (const t of TABS) {
     const on = t.view === view;
-    ctx.fillStyle = on ? rgba(CANDLE, 0.16) : 'transparent';
+    ctx.fillStyle = on ? (paper ? rgba(SEPIA, 0.1) : rgba(CANDLE, 0.16)) : 'transparent';
     ctx.fillRect(t.x, TAB_Y, t.w, TAB_H);
-    ctx.strokeStyle = on ? CANDLE : rgba(ASH, 0.5);
+    ctx.strokeStyle = paper ? rgba(SEPIA, on ? 0.9 : 0.4) : on ? CANDLE : rgba(ASH, 0.5);
     ctx.strokeRect(t.x + 0.5, TAB_Y + 0.5, t.w, TAB_H);
-    ctx.fillStyle = on ? CANDLE : ASH;
-    ctx.fillText(t.label, t.x + (t.w - ctx.measureText(t.label).width) / 2, TAB_Y + 16);
+    ctx.fillStyle = paper ? rgba(SEPIA, on ? 1 : 0.6) : on ? CANDLE : ASH;
+    ctx.fillText(t.label, t.x + (t.w - ctx.measureText(t.label).width) / 2, TAB_Y + (paper ? 15 : 16));
   }
   // подвал: клавиши
-  ctx.fillStyle = ASH;
+  ctx.font = paper ? F_PAPER_S : F_SMALL;
+  ctx.fillStyle = paper ? rgba(SEPIA, 0.7) : ASH;
   ctx.fillText('тащи — двигать · колесо, щипок, +/− — масштаб · стрелки — сдвиг · Tab — лист · Esc — закрыть', 16, H - 12);
 
   // поле листа — под зумом, с обрезкой по рамке
@@ -146,7 +167,7 @@ function draw() {
   if (view === 'local') drawLocal(); else drawWorld();
   ctx.restore();
   base();
-  ctx.strokeStyle = rgba(ASH, 0.35);
+  ctx.strokeStyle = paper ? rgba(SEPIA, 0.6) : rgba(ASH, 0.35);
   ctx.strokeRect(MAPB.x + 0.5, MAPB.y + 0.5, MAPB.w, MAPB.h);
   if (view === 'local') drawLocalSide(); else drawWorldSide();
   drawButtons();
@@ -156,16 +177,17 @@ function draw() {
 
 function drawButtons() {
   ctx.font = F_TEXT;
+  const paper = view === 'local';
   for (const b of BTNS) {
     const dim = (b.id === 'in' && zscale >= ZMAX) || (b.id === 'out' && zscale <= ZMIN) || (b.id === 'reset' && zscale === 1);
-    ctx.fillStyle = rgba(NIGHT, 0.85); ctx.fillRect(b.x, b.y, b.w, b.h);
-    ctx.strokeStyle = dim ? rgba(ASH, 0.3) : rgba(BONE, 0.6); ctx.lineWidth = 1;
+    ctx.fillStyle = paper ? rgba(PAPER, 0.92) : rgba(NIGHT, 0.85); ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.strokeStyle = paper ? rgba(SEPIA, dim ? 0.3 : 0.75) : dim ? rgba(ASH, 0.3) : rgba(BONE, 0.6); ctx.lineWidth = 1;
     ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
-    ctx.fillStyle = dim ? rgba(ASH, 0.4) : BONE;
+    ctx.fillStyle = paper ? rgba(SEPIA, dim ? 0.35 : 1) : dim ? rgba(ASH, 0.4) : BONE;
     ctx.fillText(b.label, b.x + (b.w - ctx.measureText(b.label).width) / 2, b.y + b.h / 2 + 5);
   }
   if (zscale > 1) {
-    ctx.font = F_SMALL; ctx.fillStyle = ASH;
+    ctx.font = F_SMALL; ctx.fillStyle = paper ? SEPIA : ASH;
     const t = '×' + zscale.toFixed(1);
     ctx.fillText(t, BTNS[0].x - ctx.measureText(t).width - 8, BTNS[0].y + 17);
   }
@@ -190,56 +212,80 @@ function roundRect(x0, y0, x1, y1, r) {
 }
 function ringRect(d) { roundRect(lx(TOWN.x0 - d), ly(TOWN.y0 - d), lx(TOWN.x1 + d), ly(TOWN.y1 + d), Math.max(0.1, d * LS)); }
 
-let localShown = 0, localTotal = 0, knownRings = new Set(), here = 0;
+// ── План местности — кадастровый (ориентирование печатью, 3А): лист бумаги, клетки
+// диска «кольцо × сторона» в графах; пройденные ногами заштрихованы карандашом и
+// подписаны от руки названием из описи; непройденные — пустые графы. Огонь — киноварью.
+const SIDES5 = ['north', 'south', 'west', 'east', 'plain'];
+const SIDE_ABBR = { north: 'С', south: 'Ю', west: 'З', east: 'В', plain: 'Р' };
+const cellId = (ring, side) => ring === 0 ? 1 : ring <= RINGS ? 2 + (ring - 1) * 5 + SIDES5.indexOf(side) : ring === RINGS + 1 ? 50 : 0;
+const cellKey = (ring, side) => SEGMENTS[ring - 1].id + ':' + side;
+let mask = null;                 // { ids, cx, cy } — геометрия клеток в точках листа, считается раз
+let baseCv = null, fillCv = null, fillKey = '';
+function plainCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function buildMask() {
+  const w = MAPB.w, h = MAPB.h, ids = new Uint8Array(w * h);
+  const sx = new Float64Array(64), sy = new Float64Array(64), n = new Float64Array(64);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const wx = EXT.x0 + (MAPB.x + x + 0.5 - LOX) / LS, wy = EXT.y0 + (MAPB.y + y + 0.5 - LOY) / LS;
+    const r = ringOfD(warpedDist(wx, wy));
+    const id = r >= 1 && r <= RINGS ? cellId(r, sideAt(wx, wy)) : cellId(r);
+    ids[y * w + x] = id; sx[id] += x; sy[id] += y; n[id]++;
+  }
+  const cx = new Float64Array(64), cy = new Float64Array(64);
+  for (let i = 0; i < 64; i++) if (n[i]) { cx[i] = sx[i] / n[i]; cy[i] = sy[i] / n[i]; }
+  mask = { ids, cx, cy, w, h };
+  // подложка: бумага, графы клеток сепией, огонь киноварью, за краем — пусто
+  baseCv = plainCanvas(w, h);
+  const g = baseCv.getContext('2d'), img = g.createImageData(w, h), d = img.data;
+  const put = (i, r, gg, b, a) => { d[i * 4] = r; d[i * 4 + 1] = gg; d[i * 4 + 2] = b; d[i * 4 + 3] = a; };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, id = ids[i];
+    const edge = (x + 1 < w && ids[i + 1] !== id) || (y + 1 < h && ids[i + w] !== id);
+    const fib = ((x * 73 + y * 151) % 97) / 97;                       // волокно бумаги
+    if (edge && (id || ids[i + 1] || ids[i + w])) put(i, 58, 48, 38, 150);
+    else if (id === 50) put(i, 194, 59, 43, 70);                       // огонь
+    else put(i, 232 - (fib > 0.93 ? 8 : 0), 220 - (fib > 0.93 ? 8 : 0), 195 - (fib > 0.93 ? 8 : 0), 255);
+  }
+  g.putImageData(img, 0, 0);
+}
+// штриховка пройденного: карандаш по диагонали; городок — точками (вне времени)
+function buildFill(walked) {
+  const key = [...walked].sort().join('|');
+  if (fillCv && key === fillKey) return;
+  fillKey = key;
+  const { ids, w, h } = mask, on = new Uint8Array(64);
+  for (const k of walked) {
+    const [rid, side] = k.split(':'), n = SEGMENTS.findIndex(sg => sg.id === rid) + 1;
+    if (n > 0) on[cellId(n, side)] = 1;
+  }
+  fillCv = fillCv || plainCanvas(w, h);
+  const g = fillCv.getContext('2d'), img = g.createImageData(w, h), d = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, id = ids[i];
+    let a = 0;
+    if (id === 1) a = (x % 4 === 0 && y % 4 === 0) ? 90 : 0;
+    else if (on[id]) a = ((x - y) % 5 + 5) % 5 === 0 ? 85 + ((x * 31 + y * 17) % 40) : 14;
+    if (a) { d[i * 4] = 58; d[i * 4 + 1] = 48; d[i * 4 + 2] = 38; d[i * 4 + 3] = a; }
+  }
+  g.putImageData(img, 0, 0);
+}
+
+let localShown = 0, localTotal = 0, knownRings = new Set(), here = 0, hereSide = null, walkedNow = new Set();
 function drawLocal() {
   const visited = getVisitedFn() || new Set();
+  const walked = getWalkedFn() || new Set();
   const p = getPlayerPos();
   here = p ? ringAt(p.x, p.y) : 0;
+  hereSide = p && here >= 1 && here <= RINGS ? sideAt(p.x, p.y) : null;
+  walkedNow = new Set(walked);
+  if (hereSide) walkedNow.add(cellKey(here, hereSide));
   knownRings = new Set([here]);
-  for (const loc of locations) if (visited.has(loc.id)) knownRings.add(ringAt(loc.x + (loc.w || 0) / 2, loc.y + (loc.h || 0)));
+  for (const k of walkedNow) { const n = SEGMENTS.findIndex(sg => sg.id === k.split(':')[0]) + 1; if (n) knownRings.add(n); }
+  if (!mask) buildMask();
+  buildFill(walkedNow);
 
-  // за краем — пустыня
-  ctx.fillStyle = '#16110c';
-  ctx.fillRect(MAPB.x, MAPB.y, MAPB.w, MAPB.h);
-  // кольцо огня
-  ringRect(RINGS_D + FIRE_W);
-  ctx.fillStyle = mix(CINNABAR, knownRings.has(RINGS + 1) ? 0.45 : 0.22);
-  ctx.fill();
-  // эпохи: снаружи внутрь; неизвестные — тёмные, только контур
-  for (let n = RINGS; n >= 1; n--) {
-    ringRect(RING_EDGE[n]);
-    ctx.fillStyle = knownRings.has(n) ? mix(SEGMENTS[n - 1].palette.ground, 0.85) : '#1d1813';
-    ctx.fill();
-    ctx.strokeStyle = n === here ? CANDLE : rgba(ASH, 0.28);
-    ctx.lineWidth = n === here ? 1.2 : 0.6;
-    ctx.stroke();
-  }
-  // городок
-  ctx.fillStyle = '#2a1e14';
-  ctx.fillRect(lx(TOWN.x0), ly(TOWN.y0), (TOWN.x1 - TOWN.x0) * LS, (TOWN.y1 - TOWN.y0) * LS);
-  ctx.strokeStyle = rgba(BONE, 0.7); ctx.lineWidth = 1;
-  ctx.strokeRect(lx(TOWN.x0), ly(TOWN.y0), (TOWN.x1 - TOWN.x0) * LS, (TOWN.y1 - TOWN.y0) * LS);
-  // номера колец — по северо-западной диагонали
-  ctx.font = F_SMALL;
-  for (let n = 1; n <= RINGS; n++) {
-    const d = ringD(n, 100) * LS;                       // середина кольца
-    const cx = lx(TOWN.x0) - d * 0.7071, cy = ly(TOWN.y0) - d * 0.7071;
-    ctx.fillStyle = n === here ? CANDLE : knownRings.has(n) ? BONE : rgba(ASH, 0.6);
-    const s = String(n);
-    ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy + 5);
-  }
-  // тропы на четыре стороны
-  ctx.fillStyle = rgba(BONE, 0.45);
-  for (const side of ['north', 'south', 'east', 'west'])
-    for (let d = 0; d < RINGS_D + FIRE_W; d += 45) {
-      const t = trailPoint(side, d);
-      ctx.fillRect(lx(t.x) - 0.6, ly(t.y) - 0.6, 1.2, 1.2);
-    }
-  // ядро вне времени и костёр
-  ctx.strokeStyle = rgba(CANDLE, 0.35); ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.arc(lx(CORE.x), ly(CORE.y), CORE.r * LS, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = CANDLE;
-  ctx.fillRect(lx(CORE.x) - 1.5, ly(CORE.y) - 1.5, 3, 3);
+  ctx.drawImage(baseCv, MAPB.x, MAPB.y);
+  ctx.drawImage(fillCv, MAPB.x, MAPB.y);
   // замок на выходе
   if (getLockedFn()) {
     ctx.setLineDash([3, 2]);
@@ -247,8 +293,41 @@ function drawLocal() {
     ctx.strokeRect(lx(SETTLEMENT.x1), ly(SETTLEMENT.y1), (SETTLEMENT.x2 - SETTLEMENT.x1) * LS, (SETTLEMENT.y2 - SETTLEMENT.y1) * LS);
     ctx.setLineDash([]);
   }
+  // тропы на четыре стороны — пунктир сепией
+  ctx.fillStyle = rgba(SEPIA, 0.5);
+  for (const side of ['north', 'south', 'east', 'west'])
+    for (let d = 0; d < RINGS_D + FIRE_W; d += 45) {
+      const t = trailPoint(side, d);
+      ctx.fillRect(lx(t.x) - 0.6, ly(t.y) - 0.6, 1.2, 1.2);
+    }
+  // ядро вне времени и костёр — единственное тёплое на листе
+  ctx.strokeStyle = rgba(SEPIA, 0.45); ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.arc(lx(CORE.x), ly(CORE.y), CORE.r * LS, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = CANDLE;
+  ctx.fillRect(lx(CORE.x) - 1.5, ly(CORE.y) - 1.5, 3, 3);
+  // номера колец — по северо-западной диагонали, как графы
+  ctx.font = `500 ${10 / Math.sqrt(zscale)}px Montserrat, 'PT Sans', sans-serif`;
+  for (let n = 1; n <= RINGS; n++) {
+    const d = ringD(n, 100) * LS;
+    const cx = lx(TOWN.x0) - d * 0.7071, cy = ly(TOWN.y0) - d * 0.7071, s = String(n);
+    ctx.fillStyle = n === here ? CINNABAR : rgba(SEPIA, knownRings.has(n) ? 0.95 : 0.5);
+    ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy + 4);
+  }
+  // подписи пройденных клеток — от руки, названием из описи
+  const fs = 11.5 / Math.sqrt(zscale);
+  ctx.font = `italic ${fs}px Literata, 'PT Serif', Georgia, serif`;
+  const put = (id, title) => {
+    const tx = MAPB.x + mask.cx[id], ty = MAPB.y + mask.cy[id], tw = ctx.measureText(title).width;
+    ctx.fillStyle = rgba(PAPER, 0.82); ctx.fillRect(tx - tw / 2 - 2, ty - fs * 0.8, tw + 4, fs * 1.1);
+    ctx.fillStyle = SEPIA; ctx.fillText(title, tx - tw / 2, ty);
+  };
+  put(1, 'городок');
+  for (const k of walkedNow) {
+    const [rid, side] = k.split(':'), n = SEGMENTS.findIndex(sg => sg.id === rid) + 1;
+    if (n && CELL_TITLES[k]) put(cellId(n, side), '«' + CELL_TITLES[k] + '»');
+  }
 
-  // места: осмотренные — с именем, прочие — слабая точка
+  // места: осмотренные — точка сепией, имя при приближении
   let shown = 0, total = 0;
   const marks = [];
   for (const loc of locations) {
@@ -256,41 +335,30 @@ function drawLocal() {
     const sx = lx(loc.x + (loc.w || 0) / 2), sy = ly(loc.y + (loc.h || 0) / 2);
     if (visited.has(loc.id)) shown++;
     if (sx < MAPB.x + 2 || sx > MAPB.x + MAPB.w - 2 || sy < MAPB.y + 2 || sy > MAPB.y + MAPB.h - 2) continue;
-    if (visited.has(loc.id)) { marks.push([sx, sy, loc]); }
-    else { ctx.fillStyle = rgba(BONE, 0.22); ctx.fillRect(sx - 0.5, sy - 0.5, 1, 1); }
+    if (visited.has(loc.id)) marks.push([sx, sy, loc]);
   }
-  ctx.font = F_SMALL;
-  const boxes = [];
-  for (const [sx, sy, loc] of marks) {
-    const q = 1 / Math.sqrt(zscale);            // при зуме метки не раздуваются
-    ctx.fillStyle = NIGHT; ctx.fillRect(sx - 2.5 * q, sy - 2.5 * q, 5 * q, 5 * q);
-    ctx.fillStyle = BONE; ctx.fillRect(sx - 1.5 * q, sy - 1.5 * q, 3 * q, 3 * q);
+  const q = 1 / Math.sqrt(zscale);
+  for (const [sx, sy] of marks) { ctx.fillStyle = SEPIA; ctx.fillRect(sx - 1.4 * q, sy - 1.4 * q, 2.8 * q, 2.8 * q); }
+  if (zscale >= 1.8) {
+    const ls = 13 / zscale;
+    ctx.font = `${ls}px Literata, 'PT Serif', Georgia, serif`;
+    const boxes = [];
+    for (const [sx, sy, loc] of marks) {
+      const name = (loc.name || loc.id).slice(0, 28), tw = ctx.measureText(name).width;
+      const b = { x: sx + 4, y: sy - ls * 0.7, w: tw + 2, h: ls * 0.95 };
+      if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)) continue;
+      boxes.push(b);
+      ctx.fillStyle = rgba(PAPER, 0.85); ctx.fillRect(b.x - 1, b.y, b.w + 1, b.h);
+      ctx.fillStyle = SEPIA; ctx.fillText(name, sx + 5, sy + ls * 0.2);
+    }
   }
-  // подписи — сколько влезет без наложений; остальные видны при зуме
-  const fs = 15 / zscale;
-  ctx.font = `${fs}px VT323,monospace`;
-  for (const [sx, sy, loc] of marks) {
-    const name = (loc.name || loc.id).slice(0, 24);
-    const tw = ctx.measureText(name).width;
-    const tx = Math.min(sx + 5, MAPB.x + MAPB.w - tw - 3);
-    const b = { x: tx - 1, y: sy - fs * 0.6, w: tw + 2, h: fs * 0.9 };
-    if (sx + 5 > MAPB.x + MAPB.w - tw - 3 && zscale > 1) continue;
-    if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)) continue;
-    boxes.push(b);
-    ctx.fillStyle = rgba(NIGHT, 0.7); ctx.fillRect(b.x - 1, b.y, b.w + 1, b.h);
-    ctx.fillStyle = BONE; ctx.fillText(name, tx, sy + fs * 0.25);
-  }
-  // ты
-  if (p && ((Date.now() / 300) | 0) % 2 === 0) {
-    const px = lx(p.x), py = ly(p.y);
-    ctx.fillStyle = NIGHT; ctx.fillRect(px - 3, py - 3, 7, 7);
-    ctx.fillStyle = CANDLE; ctx.fillRect(px - 2, py - 2, 5, 5);
-  }
+  // ты — киноварью
   if (p) {
-    ctx.font = `${15 / zscale}px VT323,monospace`;
-    const px = lx(p.x), py = ly(p.y), tw = ctx.measureText('ты').width;
-    ctx.fillStyle = rgba(NIGHT, 0.75); ctx.fillRect(px - tw - 7, py - 6, tw + 3, 10);
-    ctx.fillStyle = CANDLE; ctx.fillText('ты', px - tw - 6, py + 3);
+    const px = lx(p.x), py = ly(p.y);
+    if (((Date.now() / 400) | 0) % 2 === 0) { ctx.fillStyle = CINNABAR; ctx.fillRect(px - 2.5 * q, py - 2.5 * q, 5 * q, 5 * q); }
+    ctx.font = `italic ${13 / Math.sqrt(zscale)}px Literata, 'PT Serif', Georgia, serif`;
+    const tw = ctx.measureText('ты').width;
+    ctx.fillStyle = CINNABAR; ctx.fillText('ты', px - tw - 5 * q, py + 4 * q);
   }
   localShown = shown; localTotal = total;
 }
@@ -298,9 +366,11 @@ function drawLocal() {
 function sideText(lines, y) {
   for (const [txt, col, font] of lines) {
     if (txt === null) { y += 8; continue; }
-    ctx.font = font || F_TEXT;
-    ctx.fillStyle = col || BONE;
-    for (const ln of wrap(txt, SIDE.w - 8)) { ctx.fillText(ln, SIDE.x, y); y += font === F_SMALL ? 16 : 18; }
+    const paper = view === 'local';
+    ctx.font = font || (paper ? F_PAPER : F_TEXT);
+    ctx.fillStyle = col || (paper ? SEPIA : BONE);
+    const lh = font === F_GRIF ? 15 : font === F_PAPER_S ? 17 : font === F_SMALL ? 16 : paper ? 19 : 18;
+    for (const ln of wrap(txt, SIDE.w - 8)) { ctx.fillText(ln, SIDE.x, y); y += lh; }
   }
   return y;
 }
@@ -314,40 +384,54 @@ function wrap(txt, maxW) {
   return out;
 }
 
-function whereName(n) {
-  if (n === 0) return 'городок';
-  if (n <= RINGS) return `кольцо ${n} · ${SEGMENTS[n - 1].name}`;
-  return n === RINGS + 1 ? 'кольцо огня' : 'за краем';
+function whereName(n, side) {
+  if (n === 0) return 'городок · вне времени';
+  if (n <= RINGS) return `кольцо ${n} · ${side ? SIDE_RU[side] + ' · ' : ''}${SEGMENTS[n - 1].name}`;
+  return n === RINGS + 1 ? 'кольцо огня' : 'за огнём · край';
 }
 
 function drawLocalSide() {
+  const filled = [...walkedNow].filter(k => CELL_TITLES[k]).length;
   const L = [
-    ['ТЫ: ' + whereName(here), CANDLE],
-    [`осмотрено мест: ${localShown} из ${localTotal}`, ASH, F_SMALL],
-    [null],
-    ['КОЛЬЦА ОТ ГОРОДКА', ASH, F_SMALL],
+    ['ты: ' + whereName(here, hereSide), CINNABAR],
   ];
-  for (let n = 1; n <= RINGS; n++) {
-    const s = SEGMENTS[n - 1], k = knownRings.has(n);
-    L.push([`${n}  ${k ? s.name : '· · ·'}${k && s.era ? ' · ' + s.era : ''}`, n === here ? CANDLE : k ? BONE : ASH, F_SMALL]);
-  }
-  L.push([`за девятым — огонь, за огнём — край`, ASH, F_SMALL]);
+  if (hereSide && CELL_TITLES[cellKey(here, hereSide)]) L.push([`клетка «${CELL_TITLES[cellKey(here, hereSide)]}»`, SEPIA, F_PAPER_S]);
+  L.push([`граф заполнено: ${filled} из ${RINGS * 5} · мест осмотрено: ${localShown} из ${localTotal}`, rgba(SEPIA, 0.8), F_PAPER_S]);
   L.push([null]);
-  let y = sideText(L, SIDE.y + 14);
-  if (getLockedFn()) {
-    y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_SMALL]], y);
+  let y = sideText(L, SIDE.y + 16);
+  // ведомость клеток: кольцо, эпоха, пять граф сторон
+  ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);
+  ctx.fillText('КОЛЬЦО · ЭПОХА', SIDE.x, y);
+  const gx = SIDE.x + SIDE.w - 5 * 15 - 4;
+  SIDES5.forEach((sd, i) => ctx.fillText(SIDE_ABBR[sd], gx + i * 15 + 3, y));
+  y += 16;
+  for (let n = 1; n <= RINGS; n++) {
+    const sg = SEGMENTS[n - 1], k = knownRings.has(n);
+    ctx.font = F_PAPER_S;
+    ctx.fillStyle = n === here ? CINNABAR : rgba(SEPIA, k ? 0.95 : 0.45);
+    ctx.fillText(`${n}  ${k ? sg.name : '· · ·'}`, SIDE.x, y);
+    SIDES5.forEach((sd, i) => {
+      const bx = gx + i * 15, by = y - 10;
+      ctx.strokeStyle = rgba(SEPIA, 0.6); ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, 11, 11);
+      if (walkedNow.has(cellKey(n, sd))) {
+        ctx.strokeStyle = SEPIA; ctx.lineWidth = 1.2;
+        ctx.beginPath(); for (let j = -8; j <= 8; j += 4) { ctx.moveTo(bx + 1 + Math.max(0, j), by + 1 + Math.max(0, -j)); ctx.lineTo(bx + 11 + Math.min(0, j), by + 11 + Math.min(0, -j)); } ctx.stroke();
+      }
+      if (n === here && sd === hereSide) { ctx.strokeStyle = CINNABAR; ctx.lineWidth = 1.2; ctx.strokeRect(bx - 0.5, by - 0.5, 13, 13); }
+    });
+    y += 18;
   }
+  y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
+  if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_PAPER_S]], y);
   // легенда
-  y = Math.max(y + 6, SIDE.y + SIDE.h - 86);
-  ctx.font = F_SMALL;
+  y = Math.max(y + 6, SIDE.y + SIDE.h - 58);
+  ctx.font = F_PAPER_S;
   const leg = [
-    [() => { ctx.fillStyle = BONE; ctx.fillRect(SIDE.x + 2, y - 7, 4, 4); }, 'осмотрено'],
-    [() => { ctx.fillStyle = rgba(BONE, 0.4); ctx.fillRect(SIDE.x + 3, y - 6, 2, 2); }, 'место есть, имени нет'],
-    [() => { ctx.fillStyle = CANDLE; ctx.fillRect(SIDE.x + 1, y - 8, 6, 6); }, 'ты'],
-    [() => { ctx.strokeStyle = rgba(CANDLE, 0.6); ctx.beginPath(); ctx.arc(SIDE.x + 4, y - 5, 4, 0, Math.PI * 2); ctx.stroke(); }, 'круг у костра — вне времени'],
-    [() => { ctx.fillStyle = rgba(BONE, 0.6); for (let i = 0; i < 3; i++) ctx.fillRect(SIDE.x + i * 3, y - 5, 1.5, 1.5); }, 'тропы на четыре стороны'],
+    [() => { ctx.strokeStyle = SEPIA; ctx.lineWidth = 1; ctx.beginPath(); for (let j = 0; j < 9; j += 3) { ctx.moveTo(SIDE.x + j, y - 1); ctx.lineTo(SIDE.x + j + 5, y - 9); } ctx.stroke(); }, 'пройдено ногами'],
+    [() => { ctx.fillStyle = SEPIA; ctx.fillRect(SIDE.x + 2, y - 7, 3, 3); }, 'осмотрено'],
+    [() => { ctx.fillStyle = CINNABAR; ctx.fillRect(SIDE.x + 1, y - 8, 6, 6); }, 'ты'],
   ];
-  for (const [icon, label] of leg) { icon(); ctx.fillStyle = ASH; ctx.fillText(label, SIDE.x + 14, y); y += 16; }
+  for (const [icon, label] of leg) { icon(); ctx.fillStyle = rgba(SEPIA, 0.85); ctx.fillText(label, SIDE.x + 16, y); y += 17; }
 }
 
 // ── Карта мира ──
@@ -531,6 +615,7 @@ export function isOpen() { return visible; }
 export function init(opts) {
   if (opts && typeof opts.getVisited === 'function') getVisitedFn = opts.getVisited;
   if (opts && typeof opts.getLocked === 'function') getLockedFn = opts.getLocked;
+  if (opts && typeof opts.getWalked === 'function') getWalkedFn = opts.getWalked;
   canvas = document.getElementById('map-canvas');
   if (canvas) {
     canvas.width = W * DPR;

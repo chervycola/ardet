@@ -105,6 +105,9 @@ import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/s
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel } from './world/brainrot.js';
 import { pullVector } from './world/feedPull.js';
+import { placeOf } from './world/placeStamp.js';
+// клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
+function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.ring <= EPOCHS.length ? EPOCHS[p.ring - 1].id + ':' + p.side : null; }
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed, setRelook } from './world/potemkin.js';
@@ -158,7 +161,7 @@ initUI();
 initMetaFx();
 initTerminal();
 initShop();
-initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement() });
+initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement(), getWalked: () => flags.walked });
 
 initCursor();
 initAudio();
@@ -210,6 +213,7 @@ const flags = {
   visited: new Set(),
   collectedLore: new Set(),
   observersSeen: new Set(),
+  walked: new Set(),       // клетки «кольцо:сторона», пройденные ногами — план местности (3А)
 };
 
 // Session memory
@@ -246,7 +250,10 @@ if (savedData) {
   if (savedData.under) under.load(savedData.under);
   if (savedData.well) loadTownWell(savedData.well);
   if (savedData.looks) loadRelook(savedData.looks);
+  if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
 }
+// старые сохранения: клетки, где что-то осмотрено, — тоже пройдены
+for (const loc of locations) if (flags.visited.has(loc.id)) { const k = walkedKey(loc); if (k) flags.walked.add(k); }
 
 // первое пробуждение странника было — дальше короткие (wakeFx)
 let wokeOnce = !!(savedData && savedData.woke);
@@ -255,6 +262,7 @@ if (!STREAM) startAutoSave(() => ({
   player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   visited: Array.from(flags.visited),
+  walked: Array.from(flags.walked),
   observersSeen: Array.from(flags.observersSeen),
   collectedLore: getCollectedIds(),
   graffiti: getGraffiti(),
@@ -1632,6 +1640,7 @@ function updateWorldSystems() {
   updatePets();
   updateEdges(player);
   updateBrainrot(player);
+  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); }   // обмер — ногами
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving);

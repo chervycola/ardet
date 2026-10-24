@@ -2960,6 +2960,39 @@ setCtx(ctx);
   });
 }
 
+// ═══ ОРИЕНТИРОВАНИЕ ПЕЧАТЬЮ: штамп места и клетки плана (world/placeStamp.js, content/cell_titles.js) ═══
+{
+  const PS = await imp('world/placeStamp.js');
+  const CT = await imp('content/cell_titles.js');
+  const WC = await imp('content/world_cells.js');
+  const LOC = await imp('world/locations.js');
+  const DSC = await imp('world/disc.js');
+  const { SEGMENTS: SEG } = await imp('content/ulitsa_db.js');
+  test('план: названия клеток — те же, что в описи (лист 2), все 45', () => {
+    const keys = Object.keys(WC.CELL_DETAIL);
+    eq(Object.keys(CT.CELL_TITLES).length, 45, 'клеток');
+    for (const k of keys) eq(CT.CELL_TITLES[k], WC.CELL_DETAIL[k].title, k);
+  });
+  test('штамп места: постройка — её кольцо и сторона; городок — вне времени; действие — без штампа', () => {
+    const pier = LOC.locations.find(l => l.name === 'пирс над глубиной' && l.archNth === 1);
+    eq(PS.placeStamp(pier), 'кольцо 6 · север · пар и тени', 'пирс');
+    const fire = LOC.locations.find(l => l.id === 'campfire');
+    eq(PS.placeStamp(fire), 'городок · вне времени', 'костёр');
+    eq(PS.placeStamp({ name: 'МОНЕТА' }), '', 'действие со штампом');
+    eq(PS.placeStamp({ under: true, x: 1, y: 1 }), 'изнанка', 'изнанка');
+    const T = DSC.TOWN, OUT = DSC.RINGS_D + DSC.FIRE_W;
+    eq(PS.placeStamp({ x: (T.x0 + T.x1) / 2, y: T.y1 + OUT + 300 }), 'за огнём · край', 'за огнём');
+  });
+  test('штамп места: у каждой постройки колец — кольцо и сторона, и такая клетка в описи есть', () => {
+    for (const l of LOC.locations.filter(l => l.archDraw)) {
+      const st = PS.placeStamp(l);
+      assert(/^кольцо [1-9] · (север|юг|запад|восток|равнина) · /.test(st), `${l.name}: ${st}`);
+      const p = PS.placeOf(l), key = SEG[p.ring - 1].id + ':' + p.side;
+      assert(CT.CELL_TITLES[key], `${l.name}: клетки ${key} нет в описи`);
+    }
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

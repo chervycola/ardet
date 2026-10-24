@@ -678,6 +678,14 @@ canvas#game {
 #look h3 { color: var(--sepia); border-bottom: 1px dashed rgba(58,48,38,0.55); }
 #look-insc { color: var(--sepia); font-family: var(--font-book); font-style: italic; font-size: 15px; opacity: 0.75; }
 #look-page { color: var(--sepia); }
+/* штамп места: где стоит вещь — «кольцо 6 · север · пар и тени» (ориентирование печатью, 3А) */
+#look-stamp {
+  display: none; margin: -4px 0 10px; padding: 3px 8px 2px;
+  border: 1px solid rgba(58,48,38,0.55); outline: 1px solid rgba(58,48,38,0.25); outline-offset: 1px;
+  transform: rotate(-1.2deg); transform-origin: left center;
+  font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(58,48,38,0.85);
+}
 #li { color: rgba(58,48,38,0.7); }
 
 #dlg {

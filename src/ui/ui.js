@@ -14,6 +14,7 @@ import { input } from '../core/input.js';
 import { useTexts } from '../world/useActions.js';
 import { paginate, pageMeasure } from './pages.js';
 import { STREAM } from './stream.js';
+import { placeStamp } from '../world/placeStamp.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -215,12 +216,14 @@ let lookPageIdx = 0;
 let lookShownAt = 0;   // клик в ту же долю секунды, что открыл страницу, не листает её
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
 let lookInsc = '';    // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
+let lookStamp = '';   // штамп места: «кольцо 6 · север · пар и тени» (world/placeStamp.js)
 let lookLoc = null;   // вещь, которую осматривают: F из осмотра — использовать её же
 
 // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
 export function showLook(loc, direct = false) {
   state.transition('look');
   lookTitle = (loc && loc.name) || '';
+  lookStamp = placeStamp(loc);
   lookInsc = direct && loc ? menuInscriptions[loc.id] || '' : '';
   lookLoc = activeLoc && activeLoc === loc ? loc : null;
 
@@ -257,12 +260,22 @@ function renderLookPage() {
     insc.id = 'look-insc';       // вид — style.css
     lt.after(insc);
   }
+  let stamp = document.getElementById('look-stamp');
+  if (!stamp && lookEl && lt) {
+    stamp = document.createElement('div');
+    stamp.id = 'look-stamp';     // штамп места — вид в style.css
+    lt.after(stamp);
+  }
 
   // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
   const noon = redNoon.k > 0.5, blind = noon ? smear : (x => x);
   lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
   lb.textContent = blind(lookPages[lookPageIdx] || '');
   lb.classList.toggle('blind', noon);
+  if (stamp) {
+    stamp.textContent = blind(lookStamp);
+    stamp.style.display = lookStamp ? 'inline-block' : 'none';
+  }
   if (insc) {
     const on = !!lookInsc && lookPageIdx === 0;
     insc.textContent = on ? '« ' + blind(lookInsc) + ' »' : '';
