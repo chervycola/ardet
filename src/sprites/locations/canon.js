@@ -12,6 +12,7 @@ import { phaseAt, skyAt } from '../../world/sky.js';
 import { wind } from '../../world/wind.js';
 import { getPlayer } from '../../core/playerRef.js';
 import { revealOf } from '../../world/potemkin.js';
+import { weather } from '../../render/weather.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', SV = '#E28A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -1794,46 +1795,92 @@ export function draw_pipeline(x, y) {
 
 // ── ТОКСИЧНОЕ ОЗЕРО ──
 // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
-// Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды
-// табличка...» Озеро — пятном с неровным берегом, вода не шелохнётся; радуга
-// нефти тонкими разводами в красках канона; берег — потрескавшийся ил;
-// скелеты рыб; у воды столб с табличкой (штрихами). Живая рыба изредка
-// показывается и уходит. Слева в озеро — сток трубы отравы. Лежит в земле.
-function lakeBody() {
-  const cx = 52, cy = 31, edge = a => 1 + 0.09 * Math.sin(a * 3 + 0.4) + 0.06 * Math.sin(a * 5 + 2);
-  for (let y = 0; y < 62; y++) for (let x = -2; x < 104; x++) {
-    const a = Math.atan2(y - cy, x - cx), e = Math.hypot((x - cx) / 50, (y - cy) / 27) / edge(a);
-    if (e > 1.22) continue;
-    if (e > 1) { r(x, y, 1, 1, hh(x, y, 3) < 0.12 ? K1 : (x + y) % 9 === 0 ? K4 : SEP); continue; }   // ил, трещины
-    r(x, y, 1, 1, e > 0.93 ? MG_D : e < 0.5 ? '#36432f' : MG);
+// Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды табличка:
+// „ВОДОЁМ ЗАРЫБЛЕН. ЛОВ ЗАПРЕЩЁН". Запрет соблюдается.» Повторный осмотр: «Под
+// дождём гладь не рябит: капли ложатся на неё шариками и не тонут»; «Ночью радуга
+// на воде гаснет. Остаётся одна — на рыбе»; «Живая рыба показывается раз в восемь
+// секунд, на одном и том же месте, и уходит. Скелеты на берегу лежат головами к
+// воде». Берег — ил плитами в трещинах, у воды белёсая корка; гладь — зеркало:
+// в ней вниз головой столб с табличкой; пена у берега; радуга нефти разводами —
+// днём (второй холст на ночь — без неё). Табличка: строки штрихами, знак «лов
+// запрещён» — рыба под киноварной чертой. Лежит в земле.
+const LK_CX = 51, LK_CY = 30;                                           // по нему же камыш (world/flora.js) и тест берега
+const lkE = (x, y) => { const a = Math.atan2(y - LK_CY, x - LK_CX), k = 1 + 0.05 * Math.sin(a * 3 + 0.4) + 0.03 * Math.sin(a * 5 + 2) + 0.02 * Math.sin(a * 9 + 1); return Math.hypot((x - LK_CX) / 46, (y - LK_CY) / 26) / k; };
+const LK_DEEP = '#36432f';
+const lkCell = (x, y) => Math.floor((x + 3 * Math.sin(y * 0.7)) / 7) * 131 + Math.floor((y + 2 * Math.sin(x * 0.5)) / 4);   // плита ила
+// скелет рыбы по направлению (ux, uy) — головой туда: хребет, рёбра, череп, хвост
+function fishBones(hx, hy, ux, uy, n) {
+  const px = -uy, py = ux;
+  for (let k = 0; k <= n; k++) r(hx - ux * k, hy - uy * k, 1, 1, k === 0 ? L1 : L2);
+  for (let k = 2; k < n - 1; k += 2) { r(hx - ux * k + px, hy - uy * k + py, 1, 1, BO); r(hx - ux * k - px, hy - uy * k - py, 1, 1, BO); }
+  r(hx + ux, hy + uy, 1, 1, L1); r(hx + px * 0.6, hy + py * 0.6, 1, 1, BO); r(hx - px * 0.6, hy - py * 0.6, 1, 1, BO); r(hx + ux * 0.5 + px * 0.5, hy + uy * 0.5 + py * 0.5, 1, 1, K1);   // череп, глазница
+  r(hx - ux * (n + 1) + px, hy - uy * (n + 1) + py, 1, 1, L2); r(hx - ux * (n + 1) - px, hy - uy * (n + 1) - py, 1, 1, L2);   // хвост вилкой
+}
+function lakeBody(night) {
+  for (let y = -4; y < 65; y++) for (let x = -10; x < 113; x++) {   // ил не заходит на тропу (юг y+65, восток x+112)
+    const e = lkE(x, y);
+    if (e > 1.18 || y > 63 || x > 111) continue;
+    if (e > 1.02) {                                                     // ил плитами неровно, трещины по краям плит
+      const id = lkCell(x, y), seam = id !== lkCell(x + 1, y) || id !== lkCell(x, y + 1), v = hh(id, 3, 191);
+      r(x, y, 1, 1, seam ? (hh(x, y, 193) < 0.8 ? K1 : K4) : v < 0.3 ? K4 : v > 0.85 ? '#4a3f33' : SEP);
+      continue;
+    }
+    if (e > 0.96) { r(x, y, 1, 1, hh(x, y, 195) < 0.3 ? L2 : hh(x, y, 196) < 0.5 ? K4 : MG_D); continue; }   // корка у воды — белёсыми пятнами
+    r(x, y, 1, 1, e > 0.88 ? MG_D : e < 0.45 ? LK_DEEP : (hh(x >> 3, y >> 1, 197) < 0.15 ? LK_DEEP : MG));
   }
-  for (let k = 0; k < 40; k++) { const a = hh(k, 2, 3) * Math.PI * 2, d = 1.04 + hh(k, 2, 5) * 0.15, x = cx + Math.cos(a) * 50 * d, y = cy + Math.sin(a) * 27 * d; r(x, y, 2 + q(hh(k, 2, 7) * 3), 1, K1); }   // трещины ила
-  // радуга нефти — разводами: киноварь, кость, пепел, мгла, сепия
-  const film = [KV, BO, AS, MG_L, SEP];
-  for (let s = 0; s < 4; s++) {
-    const ox = 22 + s * 17, oy = 22 + (s & 1) * 12;
-    for (let k = 0; k < 18; k++) {
-      const u = k / 18 * Math.PI * 1.4 + s, x = ox + Math.cos(u) * (6 + s), y = oy + Math.sin(u) * 3;
-      const c = film[(k + s) % 5]; X.globalAlpha = c === KV ? 0.2 : 0.32; r(x, y, 2, 1, c); X.globalAlpha = 1;
+  // гладь — зеркало: ровные светлые полосы неба (не рябь), в ней вниз головой столб с табличкой
+  for (const [y, x0, x1] of [[14, 30, 62], [22, 18, 44], [39, 50, 74]]) { X.globalAlpha = 0.18; r(x0, y, x1 - x0, 1, MG_L); X.globalAlpha = 1; }
+  X.globalAlpha = 0.35; r(83, 47, 1, 6, K3); r(79, 53, 9, 4, K3); r(80, 54, 7, 2, MG_L); X.globalAlpha = 1;
+  // пена у берега — тусклыми клочьями
+  for (let k = 0; k < 26; k++) { const a = hh(k, 3, 199) * Math.PI * 2, d = 0.86 + hh(k, 4, 201) * 0.08, x = LK_CX + Math.cos(a) * 46 * d, y = LK_CY + Math.sin(a) * 26 * d; X.globalAlpha = 0.45; r(x, y, 1 + q(hh(k, 5, 203) * 3), 1, k & 1 ? L2 : AS); X.globalAlpha = 1; }
+  // радуга нефти — днём: разводы, краска переходит одна в другую по ходу струи
+  if (!night) {
+    const film = [KV, L2, AS, MG_L, SEP, L2];
+    for (let s = 0; s < 5; s++) {
+      const ox = 20 + s * 14, oy = 18 + ((s * 7) % 3) * 6, R0 = 5 + (s % 3) * 2;
+      for (let k = 0; k < 26; k++) {
+        const u = k / 26 * Math.PI * 1.6 + s * 1.3, rr = R0 + k * 0.12, x = ox + Math.cos(u) * rr * 1.6, y = oy + Math.sin(u) * rr * 0.6;
+        if (lkE(x, y) > 0.86) continue;
+        const c = film[Math.floor(k / 4 + s) % film.length]; X.globalAlpha = c === KV ? 0.22 : 0.3; r(x, y, 2, 1, c); X.globalAlpha = 1;
+      }
     }
   }
-  // скелеты рыб на берегу
-  for (const [fx, fy, d] of [[14, 52, 1], [70, 56, 1], [88, 47, -1], [36, 58, -1]]) {
-    r(fx, fy, 5, 1, L1); for (let k = 1; k < 4; k++) { r(fx + k, fy - 1, 1, 1, BO); r(fx + k, fy + 1, 1, 1, BO); }
-    r(d > 0 ? fx - 2 : fx + 5, fy - 1, 2, 3, L2); r(d > 0 ? fx + 5 : fx - 2, fy - 1, 1, 1, BO); r(d > 0 ? fx + 5 : fx - 2, fy + 1, 1, 1, BO);
+  // скелеты на берегу — головами к воде
+  for (const a of [2.5, 1.9, 1.2, 0.35, -0.5, 3.6]) {                     // голова у кромки, тело на иле
+    let k = 0.94, fx, fy;
+    do { fx = q(LK_CX + Math.cos(a) * 46 * k); fy = q(LK_CY + Math.sin(a) * 26 * k); k += 0.01; } while (lkE(fx, fy) < 1.0 && k < 1.2);
+    const dx = LK_CX - fx, dy = (LK_CY - fy) * 1.8, d = Math.hypot(dx, dy);
+    fishBones(fx, fy, Math.round(dx / d), Math.round(dy / d), 6);
   }
-  // столб с табличкой у воды
-  r(84, 50, 1, 9, BR2); r(84, 50, 1, 9, K4); r(80, 46, 9, 5, L1); r(80, 46, 9, 1, BO); r(88, 47, 1, 4, AS);
-  for (let k = 0; k < 7; k++) { r(81 + k, 48, 1, 1, K2); if (k < 5) r(81 + k, 49, 1, 1, K2); }
+  // столб у воды: в мелкой воде, кольцо мути у основания; табличка — строки штрихами,
+  // знак «лов запрещён»: рыба под киноварной чертой
+  r(83, 37, 2, 12, BR2); r(83, 37, 1, 12, SINGE); r(82, 48, 4, 1, MG_D); r(81, 49, 6, 1, K4);
+  r(76, 30, 15, 8, K2); r(77, 31, 13, 6, L1); r(77, 31, 13, 1, BO); r(89, 32, 1, 5, L2);
+  r(78, 33, 4, 2, NI); r(77, 33, 1, 1, NI); r(82, 34, 1, 1, NI);         // рыба
+  for (let k = 0; k < 6; k++) r(77 + k, 36 - k, 1, 1, KV);               // черта
+  for (let x = 84; x < 89; x++) { if (hh(x, 1, 205) < 0.8) r(x, 32, 1, 1, K2); if (hh(x, 2, 207) < 0.7) r(x, 34, 1, 1, K2); }
 }
 export function draw_lake(x, y) {
-  bake('lake', x, y, -2, 0, 106, 62, lakeBody);
-  // живая рыба: раз в восемь секунд показывается, радужная, — и уходит
+  const night = skyAt(phaseAt(t)).name === 'ночь';
+  bake(night ? 'lake2n' : 'lake2', x, y, -10, -4, 123, 69, () => lakeBody(night));
+  // дождь: капли ложатся шариками и не тонут — копятся, пока идёт
+  if (weather.state === 'toxicRain' && weather.intensity > 0.15) {
+    const n = q(weather.intensity * 28);
+    for (let k = 0; k < n; k++) {
+      const bx = q(LK_CX - 38 + hh(k, 7, 209) * 76), by = q(LK_CY - 18 + hh(k, 8, 211) * 36);
+      if (lkE(bx, by) > 0.85) continue;
+      r(x + bx, y + by, 1, 1, L2); r(x + bx + 1, y + by + 1, 1, 1, LK_DEEP);
+    }
+  }
+  // живая рыба: раз в восемь секунд, на одном и том же месте, радужная — и уходит;
+  // ночью её радуга — единственная на воде
   const p = t % 480;
-  if (p < 120) {
-    const u = p / 120, fx = x + 34 + q(u * 30), fy = y + 30 + q(Math.sin(u * Math.PI) * -3);
-    X.globalAlpha = Math.sin(u * Math.PI);
-    r(fx, fy, 5, 2, MG_L); r(fx + 1, fy, 1, 1, KV); r(fx + 2, fy + 1, 1, 1, BO); r(fx + 3, fy, 1, 1, AS); r(fx - 2, fy, 2, 2, MG_L); r(fx + 4, fy, 1, 1, NI);
+  if (p < 110) {
+    const u = p / 110, rise = Math.sin(u * Math.PI), fx = x + 38, fy = y + 27;
+    X.globalAlpha = Math.min(1, rise * 1.4);
+    r(fx - 2, fy + 1, 2, 1, MG_L); r(fx, fy, 6, 2, MG_L); r(fx + 6, fy, 1, 1, BO);   // спина, хвост, глаз — костью
+    r(fx + 1, fy, 1, 1, KV); r(fx + 2, fy, 1, 1, L2); r(fx + 3, fy, 1, 1, AS); r(fx + 4, fy, 1, 1, SEP); r(fx + 2, fy + 1, 1, 1, BO);   // радуга по чешуе
+    if (rise > 0.6) r(fx + 2, fy - 1, 2, 1, MG_L);                       // плавник
     X.globalAlpha = 1;
   }
 }
