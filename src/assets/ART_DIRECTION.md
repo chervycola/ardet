@@ -66,6 +66,41 @@
 Палитра-параметр: `["#0a0a0a","#e8dcc8","#6b0f1a","#b8860b"]`,
 формат `4:5` (под слот портрета).
 
+### ✅ ЗАФИКСИРОВАНО (прогон 2026-06-24) — дом-стиль = вудкат-гибрид
+
+После бейк-оффа по сеткам (Recraft / Nano Banana 2 / Seedream 4.5 / GPT
+Image 2) и итераций по референсам автор выбрал **дом-стиль для ВСЕХ
+портретов**: тушь/вудкат на пергаменте, многорукая Шива-поза, ритуальные
+мудры на руках, единственный акцент — кровавая луна. НЕ живописный регистр
+ref 5 (он остаётся «верхней планкой» только для титула/концовки).
+
+Победный Шут — Higgsfield job `d0f78078-8b9e-4287-b453-9c68f9f6264c`
+(модель GPT Image 2, quality high, по референсам Nano-гибрида
+`1acf57f9` + Nano `306b0729`). Ключевые черты, которые держим во всех
+портретах этого дома:
+- многорукая поза, **две руки — голая кость, одна — тонкая звериная лапа**;
+- руки в **выразительных ритуальных мудрах** (пальцы артикулированы);
+- частичная **симметрия** атрибутов (у Шута — веер кинжалов);
+- плотный кросс-хэтчинг костюма (детализация пришла от GPT Image 2);
+- фактура состаренной бумаги, почти пустой фон, низ — намёк на пустошь.
+
+Финальный промт Шута (дом-эталон для адаптации под остальных NPC):
+> Single full-body gothic apocalyptic harlequin jester, multi-armed
+> half-Shiva pose; every free hand in an expressive ritual mudra
+> (precisely articulated fingers); daggers orbit the head in a partly
+> symmetrical fan. Two arms are bare skeletal bone, one arm is a thin
+> clawed beast limb. Bone-white skull face with a cross-scar, three-horned
+> belled cap, finely rendered ragged costume with harlequin diamond tights
+> and dense crosshatch shading, rusted spiked chain flail. Black
+> pen-and-ink woodcut / Gustave Doré crosshatch on aged bone-white
+> parchment, heavy linework, paper texture. Single accent: a deep crimson
+> blood moon; faint wasteland buttes along the bottom. No other colors,
+> no 3D, no gloss, no text, no signature.
+
+Пайплайн на остальные 8 портретов: тот же промт-скелет, подменяя
+персонажа и его акцент-цвет, с этим Шутом (`d0f78078`) в референсах для
+когезии стиля.
+
 ---
 
 ## ДОМ-СТИЛЬ ДЛЯ ОСТАЛЬНЫХ ПОРТРЕТОВ (предложение)
