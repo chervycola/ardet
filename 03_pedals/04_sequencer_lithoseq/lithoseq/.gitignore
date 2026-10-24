@@ -1,0 +1,7 @@
+build/
+*.bin
+*.csv
+*.png
+*.pgm
+*.mid
+*.stl

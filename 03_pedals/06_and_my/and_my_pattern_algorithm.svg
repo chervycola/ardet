@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="297mm" height="210mm" viewBox="0 0 297 210"
+     version="1.1">
+  <!--
+    AND MY — Pattern & Melody Generation Algorithm (draft)
+    For: R&D dept, sync с секвенсор-каноном And My (Decision 15, строка модуля 8)
+    Companion: signal_flow_last_night.svg (conventions inherited)
+
+    Canon base (D15): 32×32 оптико-импедансная матрица, сменные
+    кристаллические/пористые пластины; пластина = оптическая программа;
+    луч оптической шины = источник подсветки/инжекции.
+    Всё, что ниже уровня канона, — рабочая реконструкция (draft до respec-документа).
+
+    Conventions:
+      ━━━ thick black arrow = audio/CV signal path
+      ┄┄┄ dashed thin arrow = modulation / control path
+      ▣ amber box = physical-element zone (sacred core: пластина)
+      ▢ grey box = analog signal-processing block
+      blue box = clock / scan logic
+  -->
+
+  <defs>
+    <marker id="arrow-sig" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000000"/>
+    </marker>
+    <marker id="arrow-mod" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666666"/>
+    </marker>
+    <marker id="arrow-light" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#aa2222"/>
+    </marker>
+    <style>
+      .block { fill: #f8f8f8; stroke: #333333; stroke-width: 0.4; }
+      .cartridge-block { fill: #fff4e0; stroke: #7a4a00; stroke-width: 0.8; }
+      .clock-block { fill: #e8f0f8; stroke: #002266; stroke-width: 0.4; }
+      .step-block { fill: #ffffff; stroke: #333333; stroke-width: 0.35; }
+      .audio-arrow { stroke: #000000; stroke-width: 0.8; fill: none; marker-end: url(#arrow-sig); }
+      .mod-arrow { stroke: #666666; stroke-width: 0.4; fill: none;
+                   stroke-dasharray: 1.5,1; marker-end: url(#arrow-mod); }
+      .light-ray { stroke: #aa2222; stroke-width: 0.5; fill: none;
+                   stroke-dasharray: 2.5,0.8; marker-end: url(#arrow-light); }
+      .label-block { font-family: Helvetica, Arial, sans-serif; font-size: 2.4px;
+                     fill: #000000; text-anchor: middle; }
+      .label-sub { font-family: Helvetica, Arial, sans-serif; font-size: 1.8px;
+                   fill: #555555; text-anchor: middle; }
+      .label-sub-l { font-family: Helvetica, Arial, sans-serif; font-size: 1.8px;
+                     fill: #555555; text-anchor: start; }
+      .label-title { font-family: serif; font-size: 6px; fill: #000000; text-anchor: middle;
+                     letter-spacing: 1; }
+      .label-zone { font-family: Helvetica, Arial, sans-serif; font-size: 3.0px;
+                    fill: #003366; text-anchor: start; font-weight: bold; }
+      .label-legend { font-family: Helvetica, Arial, sans-serif; font-size: 2.2px;
+                      fill: #000000; }
+      .label-step { font-family: Helvetica, Arial, sans-serif; font-size: 2.1px;
+                    fill: #000000; text-anchor: middle; font-weight: bold; }
+      .label-axis { font-family: Helvetica, Arial, sans-serif; font-size: 2.0px;
+                    fill: #003366; text-anchor: middle; }
+      .grid-line { stroke: #bbbbbb; stroke-width: 0.15; }
+      .cell-on { fill: #7a4a00; opacity: 0.75; }
+      .cell-dim { fill: #c8a060; opacity: 0.5; }
+      .scan-col { fill: #aa2222; opacity: 0.18; stroke: #aa2222; stroke-width: 0.3; }
+      .vein { stroke: #7a4a00; stroke-width: 0.35; fill: none; opacity: 0.8; }
+      .pore { fill: #7a4a00; opacity: 0.35; }
+    </style>
+  </defs>
+
+  <!-- ========== PAGE FRAME ========== -->
+  <rect x="2" y="2" width="293" height="206" fill="#ffffff"
+        stroke="#444444" stroke-width="0.3"/>
+
+  <!-- ========== TITLE BAR ========== -->
+  <text x="148.5" y="10" class="label-title">AND MY — Алгоритм генерации мелодий и паттернов</text>
+  <text x="148.5" y="14" class="label-sub">System Suicide · Module 8 · Материальный секвенсор · draft (Decision 15 sync) · пластина = партитура, электроника обслуживает физику</text>
+  <line x1="10" y1="16" x2="287" y2="16" stroke="#666666" stroke-width="0.2"/>
+
+  <!-- ================================================================ -->
+  <!-- ZONE A: THE PLATE (x 8..76, y 22..96)                            -->
+  <!-- ================================================================ -->
+  <text x="8" y="22" class="label-zone">A. ПЛАСТИНА = ПРОГРАММА</text>
+
+  <rect x="8" y="25" width="68" height="64" class="cartridge-block"/>
+  <text x="42" y="29.5" class="label-block">СМЕННАЯ ПЛАСТИНА (картридж)</text>
+  <text x="42" y="32.5" class="label-sub">кристаллическая / пористая · паттерн задан структурой материала</text>
+
+  <!-- plate drawing: crystal veins -->
+  <rect x="14" y="36" width="26" height="26" fill="#fdf8ee" stroke="#7a4a00" stroke-width="0.5"/>
+  <polyline class="vein" points="16,60 20,52 19,46 24,40 27,38"/>
+  <polyline class="vein" points="14,48 21,47 26,50 31,46 36,48"/>
+  <polyline class="vein" points="24,62 26,55 31,52 33,45 32,38"/>
+  <polyline class="vein" points="20,52 26,50"/>
+  <polyline class="vein" points="31,52 36,56 38,60"/>
+  <polyline class="vein" points="27,38 31,42 31,46"/>
+  <text x="27" y="65.5" class="label-sub">кристалл: жилы = линии мелодии</text>
+
+  <!-- plate drawing: porous -->
+  <rect x="44" y="36" width="26" height="26" fill="#fdf8ee" stroke="#7a4a00" stroke-width="0.5"/>
+  <circle class="pore" cx="48" cy="40" r="1.1"/>
+  <circle class="pore" cx="54" cy="42" r="0.7"/>
+  <circle class="pore" cx="60" cy="39" r="0.9"/>
+  <circle class="pore" cx="66" cy="43" r="0.6"/>
+  <circle class="pore" cx="47" cy="48" r="0.6"/>
+  <circle class="pore" cx="52" cy="50" r="1.2"/>
+  <circle class="pore" cx="59" cy="47" r="0.5"/>
+  <circle class="pore" cx="64" cy="51" r="1.0"/>
+  <circle class="pore" cx="49" cy="57" r="0.8"/>
+  <circle class="pore" cx="56" cy="55" r="0.5"/>
+  <circle class="pore" cx="62" cy="58" r="1.1"/>
+  <circle class="pore" cx="67" cy="56" r="0.6"/>
+  <text x="57" y="65.5" class="label-sub">пористая: поры = события ритма</text>
+
+  <text x="42" y="71" class="label-sub">Материал прозрачен/непрозрачен для света и проводит/не проводит ток —</text>
+  <text x="42" y="74" class="label-sub">две физические карты одной структуры. Нет памяти, нет пресетов:</text>
+  <text x="42" y="77" class="label-sub">вынул пластину — унёс композицию. Edition пластин = edition партитур.</text>
+  <text x="42" y="82.5" class="label-sub">Кандидаты материала: кварц / кальцит / пористая керамика /</text>
+  <text x="42" y="85.5" class="label-sub">срез кости (связь с All Bones Dust) / соль (Body Blood And Salt)</text>
+
+  <!-- ================================================================ -->
+  <!-- ZONE B: READING (x 84..152, y 22..96)                            -->
+  <!-- ================================================================ -->
+  <text x="84" y="22" class="label-zone">B. ЧТЕНИЕ — ДВА КАНАЛА</text>
+
+  <rect x="84" y="25" width="68" height="64" class="block"/>
+  <text x="118" y="29.5" class="label-block">ОПТИКО-ИМПЕДАНСНАЯ МАТРИЦА 32×32</text>
+
+  <!-- optical channel drawing -->
+  <text x="88" y="35" class="label-sub-l">Оптический канал (быстрый — ноты):</text>
+  <!-- LED row -->
+  <rect x="90" y="38" width="3" height="14" fill="#fff4e0" stroke="#aa5500" stroke-width="0.3"/>
+  <text x="91.5" y="55.5" class="label-sub">LED /</text>
+  <text x="91.5" y="58" class="label-sub">луч шины</text>
+  <!-- plate in middle -->
+  <rect x="103" y="36" width="10" height="18" fill="#fdf8ee" stroke="#7a4a00" stroke-width="0.5"/>
+  <text x="108" y="57.5" class="label-sub">пластина</text>
+  <!-- photodiode array -->
+  <rect x="123" y="38" width="3" height="14" fill="#e8f0f8" stroke="#002266" stroke-width="0.3"/>
+  <text x="124.5" y="55.5" class="label-sub">32×32</text>
+  <text x="124.5" y="58" class="label-sub">фотоприёмн.</text>
+  <!-- rays -->
+  <line class="light-ray" x1="93.5" y1="41" x2="102" y2="41"/>
+  <line class="light-ray" x1="93.5" y1="45" x2="102" y2="45"/>
+  <line class="light-ray" x1="93.5" y1="49" x2="102" y2="49"/>
+  <line class="light-ray" x1="113.5" y1="41" x2="122" y2="41"/>
+  <line class="light-ray" x1="113.5" y1="49" x2="122" y2="49"/>
+  <text x="118" y="47.5" class="label-sub">(жила гасит луч 45)</text>
+
+  <text x="132" y="40" class="label-sub-l">L[x,y] = пропускание</text>
+  <text x="132" y="43" class="label-sub-l">света ячейкой:</text>
+  <text x="132" y="46" class="label-sub-l">карта нот и</text>
+  <text x="132" y="49" class="label-sub-l">акцентов</text>
+
+  <!-- impedance channel drawing -->
+  <text x="88" y="64" class="label-sub-l">Импедансный канал (медленный — модуляция):</text>
+  <rect x="90" y="67" width="26" height="12" fill="#fdf8ee" stroke="#7a4a00" stroke-width="0.5"/>
+  <line class="grid-line" x1="96" y1="67" x2="96" y2="79"/>
+  <line class="grid-line" x1="103" y1="67" x2="103" y2="79"/>
+  <line class="grid-line" x1="110" y1="67" x2="110" y2="79"/>
+  <line class="grid-line" x1="90" y1="71" x2="116" y2="71"/>
+  <line class="grid-line" x1="90" y1="75" x2="116" y2="75"/>
+  <circle cx="96" cy="71" r="0.7" fill="#002266"/>
+  <circle cx="110" cy="75" r="0.7" fill="#002266"/>
+  <text x="103" y="82.5" class="label-sub">сетка электродов row/col (charlieplex-скан)</text>
+
+  <text x="120" y="70" class="label-sub-l">Z[x,y] = импеданс ячейки:</text>
+  <text x="120" y="73" class="label-sub-l">влажность, соль, трещины,</text>
+  <text x="120" y="76" class="label-sub-l">прижим пальца исполнителя —</text>
+  <text x="120" y="79" class="label-sub-l">живой CV-слой поверх партитуры</text>
+
+  <text x="118" y="87" class="label-sub">Обе карты снимаются с одной пластины — свет читает структуру, ток читает вещество.</text>
+
+  <!-- arrow A -> B -->
+  <line class="audio-arrow" x1="76" y1="57" x2="83" y2="57"/>
+
+  <!-- ================================================================ -->
+  <!-- ZONE C: SCAN & EXTRACTION (x 160..289, y 22..96)                 -->
+  <!-- ================================================================ -->
+  <text x="160" y="22" class="label-zone">C. СКАН И ИЗВЛЕЧЕНИЕ НОТ</text>
+
+  <rect x="160" y="25" width="129" height="64" class="block"/>
+
+  <!-- matrix with scan column: 8x8 visible grid standing for 32x32 -->
+  <rect x="166" y="32" width="40" height="40" fill="#ffffff" stroke="#333333" stroke-width="0.4"/>
+  <line class="grid-line" x1="171" y1="32" x2="171" y2="72"/>
+  <line class="grid-line" x1="176" y1="32" x2="176" y2="72"/>
+  <line class="grid-line" x1="181" y1="32" x2="181" y2="72"/>
+  <line class="grid-line" x1="186" y1="32" x2="186" y2="72"/>
+  <line class="grid-line" x1="191" y1="32" x2="191" y2="72"/>
+  <line class="grid-line" x1="196" y1="32" x2="196" y2="72"/>
+  <line class="grid-line" x1="201" y1="32" x2="201" y2="72"/>
+  <line class="grid-line" x1="166" y1="37" x2="206" y2="37"/>
+  <line class="grid-line" x1="166" y1="42" x2="206" y2="42"/>
+  <line class="grid-line" x1="166" y1="47" x2="206" y2="47"/>
+  <line class="grid-line" x1="166" y1="52" x2="206" y2="52"/>
+  <line class="grid-line" x1="166" y1="57" x2="206" y2="57"/>
+  <line class="grid-line" x1="166" y1="62" x2="206" y2="62"/>
+  <line class="grid-line" x1="166" y1="67" x2="206" y2="67"/>
+  <!-- pattern cells (the "melody" written by material) -->
+  <rect class="cell-on" x="166" y="57" width="5" height="5"/>
+  <rect class="cell-dim" x="171" y="52" width="5" height="5"/>
+  <rect class="cell-on" x="176" y="47" width="5" height="5"/>
+  <rect class="cell-on" x="181" y="52" width="5" height="5"/>
+  <rect class="cell-dim" x="186" y="42" width="5" height="5"/>
+  <rect class="cell-on" x="191" y="37" width="5" height="5"/>
+  <rect class="cell-dim" x="196" y="47" width="5" height="5"/>
+  <rect class="cell-on" x="201" y="57" width="5" height="5"/>
+  <rect class="cell-dim" x="176" y="62" width="5" height="5"/>
+  <rect class="cell-dim" x="196" y="62" width="5" height="5"/>
+  <!-- scan column highlight -->
+  <rect class="scan-col" x="181" y="32" width="5" height="40"/>
+  <!-- axes -->
+  <text x="186" y="76" class="label-axis">X = время · 32 шага (столбец = шаг секвенции)</text>
+  <text x="162" y="52" class="label-axis" transform="rotate(-90 162 52)">Y = питч · 32 дорожки</text>
+
+  <!-- extraction chain -->
+  <text x="212" y="32" class="label-sub-l">На каждом такте clock — столбец x:</text>
+
+  <rect x="212" y="35" width="34" height="9" class="clock-block"/>
+  <text x="229" y="39" class="label-block">КОМПАРАТОР</text>
+  <text x="229" y="42" class="label-sub">L[x,y] &gt; THRESHOLD → нота есть</text>
+
+  <rect x="212" y="47" width="34" height="9" class="clock-block"/>
+  <text x="229" y="51" class="label-block">ПИТЧ: y* = argmax L[x,y]</text>
+  <text x="229" y="54" class="label-sub">ярчайшая ячейка → квантайзер (лад)</text>
+
+  <rect x="212" y="59" width="34" height="9" class="clock-block"/>
+  <text x="229" y="63" class="label-block">ВЕЛОСИТИ: уровень L[x,y*]</text>
+  <text x="229" y="66" class="label-sub">полупрозрачность = тихая нота</text>
+
+  <rect x="212" y="71" width="34" height="9" class="clock-block"/>
+  <text x="229" y="75" class="label-block">МОДУЛЯЦИЯ: Z[x,·]</text>
+  <text x="229" y="78" class="label-sub">импеданс столбца → slow CV</text>
+
+  <!-- outputs -->
+  <line class="audio-arrow" x1="246" y1="39.5" x2="256" y2="39.5"/>
+  <text x="258" y="40.5" class="label-legend">GATE out</text>
+  <line class="audio-arrow" x1="246" y1="51.5" x2="256" y2="51.5"/>
+  <text x="258" y="52.5" class="label-legend">PITCH CV (1V/oct)</text>
+  <line class="audio-arrow" x1="246" y1="63.5" x2="256" y2="63.5"/>
+  <text x="258" y="64.5" class="label-legend">VEL CV</text>
+  <line class="mod-arrow" x1="246" y1="75.5" x2="256" y2="75.5"/>
+  <text x="258" y="76.5" class="label-legend">MOD CV</text>
+
+  <text x="224.5" y="85" class="label-sub">Полифония (опц.): до 4 голосов = 4 ярчайшие ячейки столбца</text>
+
+  <!-- arrow B -> C -->
+  <line class="audio-arrow" x1="152" y1="57" x2="159" y2="57"/>
+
+  <!-- ================================================================ -->
+  <!-- ZONE D: TRANSFORMS (x 8..152, y 100..142)                        -->
+  <!-- ================================================================ -->
+  <text x="8" y="100" class="label-zone">D. ТРАНСФОРМАЦИИ — ВСЕ ОПЕРАЦИИ ФИЗИЧЕСКИЕ</text>
+
+  <rect x="8" y="103" width="144" height="39" class="block"/>
+
+  <rect x="12" y="107" width="25" height="22" class="cartridge-block"/>
+  <text x="24.5" y="112" class="label-block">ПОВОРОТ 90°</text>
+  <text x="24.5" y="116.5" class="label-sub">питч ↔ время:</text>
+  <text x="24.5" y="119.5" class="label-sub">мелодия становится</text>
+  <text x="24.5" y="122.5" class="label-sub">ритмом и наоборот</text>
+
+  <rect x="41" y="107" width="25" height="22" class="cartridge-block"/>
+  <text x="53.5" y="112" class="label-block">ЗЕРКАЛО ПО X</text>
+  <text x="53.5" y="116.5" class="label-sub">ретроград:</text>
+  <text x="53.5" y="119.5" class="label-sub">паттерн задом</text>
+  <text x="53.5" y="122.5" class="label-sub">наперёд</text>
+
+  <rect x="70" y="107" width="25" height="22" class="cartridge-block"/>
+  <text x="82.5" y="112" class="label-block">ЗЕРКАЛО ПО Y</text>
+  <text x="82.5" y="116.5" class="label-sub">инверсия:</text>
+  <text x="82.5" y="119.5" class="label-sub">мелодия</text>
+  <text x="82.5" y="122.5" class="label-sub">вверх ногами</text>
+
+  <rect x="99" y="107" width="25" height="22" class="cartridge-block"/>
+  <text x="111.5" y="112" class="label-block">СМЕНА ПЛАСТИНЫ</text>
+  <text x="111.5" y="116.5" class="label-sub">новая программа:</text>
+  <text x="111.5" y="119.5" class="label-sub">песня = стопка</text>
+  <text x="111.5" y="122.5" class="label-sub">пластин на пюпитре</text>
+
+  <rect x="128" y="107" width="21" height="22" class="cartridge-block"/>
+  <text x="138.5" y="112" class="label-block">РУКА / ДЫМ</text>
+  <text x="138.5" y="116.5" class="label-sub">заслонить свет,</text>
+  <text x="138.5" y="119.5" class="label-sub">прижать палец (Z):</text>
+  <text x="138.5" y="122.5" class="label-sub">live-мутация</text>
+
+  <text x="80" y="134" class="label-sub">Пластина квадратная и двусторонняя: 4 поворота × 2 стороны = 8 вариаций одной партитуры без электронной памяти.</text>
+  <text x="80" y="138" class="label-sub">Транспонирование, ретроград, инверсия — жесты рук, а не кнопки. Секвенсор нельзя «сохранить» — только унести пластину.</text>
+
+  <!-- ================================================================ -->
+  <!-- ZONE E: SYSTEM CONTEXT (x 160..289, y 100..142)                  -->
+  <!-- ================================================================ -->
+  <text x="160" y="100" class="label-zone">E. МЕСТО В СИСТЕМЕ</text>
+
+  <rect x="160" y="103" width="129" height="39" class="block"/>
+
+  <!-- chain -->
+  <rect x="166" y="108" width="26" height="10" class="step-block"/>
+  <text x="179" y="112.5" class="label-block">LAST DAY</text>
+  <text x="179" y="115.5" class="label-sub">oil delay · слот 7</text>
+
+  <rect x="200" y="108" width="26" height="10" class="cartridge-block"/>
+  <text x="213" y="112.5" class="label-block">AND MY</text>
+  <text x="213" y="115.5" class="label-sub">секвенсор · слот 8</text>
+
+  <rect x="234" y="108" width="26" height="10" class="step-block"/>
+  <text x="247" y="112.5" class="label-block">LAST NIGHT</text>
+  <text x="247" y="115.5" class="label-sub">reverb · слот 9</text>
+
+  <line class="audio-arrow" x1="192" y1="113" x2="199" y2="113"/>
+  <line class="audio-arrow" x1="226" y1="113" x2="233" y2="113"/>
+
+  <!-- clock + optical bus -->
+  <line class="mod-arrow" x1="213" y1="126" x2="213" y2="119"/>
+  <text x="213" y="129.5" class="label-sub">CLOCK IN ← Fuck Abandoned Sleep (маятники = мастер-клок)</text>
+
+  <line class="light-ray" x1="170" y1="134" x2="256" y2="134"/>
+  <text x="224.5" y="138" class="label-sub">оптическая шина (D15): луч серии как подсветка/инжекция — пластина становится оптической программой для света всей цепи</text>
+
+  <!-- ================================================================ -->
+  <!-- ZONE F: ALGORITHM STEPS (x 8..289, y 148..186)                   -->
+  <!-- ================================================================ -->
+  <text x="8" y="148" class="label-zone">F. ЦИКЛ АЛГОРИТМА (один шаг секвенции)</text>
+
+  <rect x="8" y="151" width="42" height="24" class="step-block"/>
+  <text x="29" y="156" class="label-step">1 · CLOCK</text>
+  <text x="29" y="160.5" class="label-sub">тик мастер-клока →</text>
+  <text x="29" y="163.5" class="label-sub">x := (x+1) mod 32,</text>
+  <text x="29" y="166.5" class="label-sub">активируется столбец x</text>
+
+  <rect x="56" y="151" width="42" height="24" class="step-block"/>
+  <text x="77" y="156" class="label-step">2 · ЧТЕНИЕ</text>
+  <text x="77" y="160.5" class="label-sub">снять столбец: 32 значения</text>
+  <text x="77" y="163.5" class="label-sub">света L[x,y] + импеданс</text>
+  <text x="77" y="166.5" class="label-sub">Z[x,y] (мультиплексор)</text>
+
+  <rect x="104" y="151" width="42" height="24" class="step-block"/>
+  <text x="125" y="156" class="label-step">3 · GATE</text>
+  <text x="125" y="160.5" class="label-sub">есть ячейка выше порога?</text>
+  <text x="125" y="163.5" class="label-sub">да → GATE high</text>
+  <text x="125" y="166.5" class="label-sub">нет → пауза (rest)</text>
+
+  <rect x="152" y="151" width="42" height="24" class="step-block"/>
+  <text x="173" y="156" class="label-step">4 · ПИТЧ</text>
+  <text x="173" y="160.5" class="label-sub">y* = argmax L[x,y] →</text>
+  <text x="173" y="163.5" class="label-sub">квантайзер лада →</text>
+  <text x="173" y="166.5" class="label-sub">PITCH CV 1V/oct</text>
+
+  <rect x="200" y="151" width="42" height="24" class="step-block"/>
+  <text x="221" y="156" class="label-step">5 · ДИНАМИКА</text>
+  <text x="221" y="160.5" class="label-sub">яркость → VEL CV;</text>
+  <text x="221" y="163.5" class="label-sub">импеданс столбца →</text>
+  <text x="221" y="166.5" class="label-sub">MOD CV (медленный слой)</text>
+
+  <rect x="248" y="151" width="41" height="24" class="step-block"/>
+  <text x="268.5" y="156" class="label-step">6 · ЦИКЛ</text>
+  <text x="268.5" y="160.5" class="label-sub">x = 31 → возврат к 0:</text>
+  <text x="268.5" y="163.5" class="label-sub">паттерн 32 шага; вариации —</text>
+  <text x="268.5" y="166.5" class="label-sub">только руками (зона D)</text>
+
+  <line class="audio-arrow" x1="50" y1="163" x2="55" y2="163"/>
+  <line class="audio-arrow" x1="98" y1="163" x2="103" y2="163"/>
+  <line class="audio-arrow" x1="146" y1="163" x2="151" y2="163"/>
+  <line class="audio-arrow" x1="194" y1="163" x2="199" y2="163"/>
+  <line class="audio-arrow" x1="242" y1="163" x2="247" y2="163"/>
+
+  <text x="148.5" y="181.5" class="label-sub">Мелодия не генерируется алгоритмом в привычном смысле — алгоритм лишь читает то, что материал уже «сочинил»: жилы кристалла, поры керамики, трещины соли.</text>
+  <text x="148.5" y="185" class="label-sub">Случайность = геология, повторяемость = физика пластины. Принцип серии сохранён: электроника обслуживает физику.</text>
+
+  <!-- ========== LEGEND / FOOTER ========== -->
+  <line x1="10" y1="190" x2="287" y2="190" stroke="#666666" stroke-width="0.2"/>
+  <rect x="10" y="193" width="6" height="4" class="cartridge-block"/>
+  <text x="18" y="196" class="label-legend">физический элемент (sacred core)</text>
+  <rect x="66" y="193" width="6" height="4" class="clock-block"/>
+  <text x="74" y="196" class="label-legend">скан/извлечение</text>
+  <line class="audio-arrow" x1="106" y1="195" x2="114" y2="195"/>
+  <text x="116" y="196" class="label-legend">сигнал / CV</text>
+  <line class="mod-arrow" x1="138" y1="195" x2="146" y2="195"/>
+  <text x="148" y="196" class="label-legend">модуляция / клок</text>
+  <line class="light-ray" x1="172" y1="195" x2="180" y2="195"/>
+  <text x="182" y="196" class="label-legend">свет (оптическая шина, D15)</text>
+
+  <text x="287" y="201" class="label-legend" text-anchor="end">канон: D15 строка модуля 8; остальное — draft до respec-документа And My · 2026-07-08 · System Suicide · Ardet</text>
+</svg>

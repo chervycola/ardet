@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" font-family="Helvetica, Arial, sans-serif">
+  <!--
+    LAST NIGHT — Strike × Seating × Frame-compliance coupled problem
+    Cross-section side view. Shows force budget at rest + dynamics during TOLL strike.
+    Reveals R1-rattle self-induction risk on light plates (momentum matching).
+  -->
+
+  <style>
+    .title { font-size: 18px; font-weight: bold; fill: #111; }
+    .subtitle { font-size: 12px; fill: #444; }
+    .label { font-size: 11px; fill: #111; }
+    .label-bold { font-size: 11px; font-weight: bold; fill: #111; }
+    .label-sm { font-size: 9.5px; fill: #333; }
+    .force-static { font-size: 10.5px; fill: #0a5; font-weight: bold; }
+    .force-strike { font-size: 11px; fill: #c00; font-weight: bold; }
+    .module { fill: #f0f0e8; stroke: #333; stroke-width: 1.2; }
+    .frame { fill: #d6c8a8; stroke: #6b5a30; stroke-width: 1.2; }
+    .plate { fill: #c8b070; stroke: #6b4a10; stroke-width: 1.2; }
+    .rubber { fill: #444; stroke: #000; stroke-width: 0.5; }
+    .magnet { fill: #d44; stroke: #800; stroke-width: 0.6; }
+    .felt { fill: #c8c8b0; stroke: #555; stroke-width: 0.5; }
+    .plunger { fill: #888; stroke: #222; stroke-width: 0.8; }
+    .coil { fill: #b87333; stroke: #5a3818; stroke-width: 0.5; }
+    .pin { fill: #888; stroke: #222; stroke-width: 0.6; }
+    .pad { fill: #6a6; stroke: #040; stroke-width: 0.8; }
+    .spring { fill: none; stroke: #444; stroke-width: 1; }
+    .gap-line { stroke: #d00; stroke-width: 0.7; stroke-dasharray: 3,2; }
+    .arrow-static { stroke: #0a5; stroke-width: 2; fill: #0a5; }
+    .arrow-strike { stroke: #c00; stroke-width: 2.5; fill: #c00; }
+    .arrow-bounce { stroke: #c00; stroke-width: 2; fill: #c00; stroke-dasharray: 4,2; }
+    .panel-bg { fill: #fafafa; stroke: #aaa; stroke-width: 0.6; }
+    .danger-bg { fill: #fff4f0; stroke: #c00; stroke-width: 0.8; }
+    .ok-bg { fill: #f0faf0; stroke: #0a5; stroke-width: 0.8; }
+    .axis { stroke: #999; stroke-width: 0.5; }
+  </style>
+
+  <defs>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0a5"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c00"/>
+    </marker>
+  </defs>
+
+  <!-- TITLE -->
+  <text x="450" y="26" class="title" text-anchor="middle">Strike × Seating × Frame-compliance — почему TOLL может сам вызвать R1-rattle</text>
+  <text x="450" y="44" class="subtitle" text-anchor="middle">Side cross-section. Зелёные стрелки — статика (картридж в доке). Красные — динамика во время TOLL (0–2 мс).</text>
+
+  <!-- ============== LEFT: cross-section ============== -->
+  <!-- Module top housing -->
+  <rect x="120" y="80" width="500" height="38" class="module"/>
+  <text x="370" y="103" class="label-bold" text-anchor="middle">MODULE (chassis верх)</text>
+
+  <!-- Solenoid coil + plunger -->
+  <rect x="320" y="118" width="100" height="60" class="coil"/>
+  <text x="370" y="138" class="label-sm" text-anchor="middle">SOLENOID coil</text>
+  <text x="370" y="151" class="label-sm" text-anchor="middle">5V · 17Ω · 30 mH</text>
+  <text x="370" y="164" class="label-sm" text-anchor="middle">F ≈ 5N pull</text>
+
+  <!-- Plunger -->
+  <rect x="356" y="178" width="28" height="40" class="plunger"/>
+  <text x="395" y="195" class="label-sm">plunger 5г</text>
+  <text x="395" y="207" class="label-sm">(equal mass</text>
+  <text x="395" y="217" class="label-sm">тонкой плите!)</text>
+
+  <!-- Felt tip -->
+  <rect x="356" y="218" width="28" height="8" class="felt"/>
+  <text x="395" y="226" class="label-sm">felt</text>
+
+  <!-- AIR GAP -->
+  <line x1="350" y1="226" x2="350" y2="246" class="gap-line"/>
+  <line x1="390" y1="226" x2="390" y2="246" class="gap-line"/>
+  <text x="335" y="240" class="label-sm" text-anchor="end">gap</text>
+  <text x="335" y="252" class="label-sm" text-anchor="end">2 мм</text>
+
+  <!-- ============ CARTRIDGE ============ -->
+  <!-- Frame outer (top rail) -->
+  <rect x="140" y="246" width="460" height="14" class="frame"/>
+  <!-- Frame outer (bottom rail) -->
+  <rect x="140" y="304" width="460" height="14" class="frame"/>
+  <!-- Frame sides -->
+  <rect x="140" y="246" width="14" height="72" class="frame"/>
+  <rect x="586" y="246" width="14" height="72" class="frame"/>
+
+  <text x="148" y="240" class="label-sm">CARTRIDGE FRAME (PETG/alu)</text>
+
+  <!-- Magnets (4× retention, polarized for keying) -->
+  <circle cx="175" cy="253" r="5" class="magnet"/>
+  <circle cx="565" cy="253" r="5" class="magnet"/>
+  <circle cx="175" cy="311" r="5" class="magnet"/>
+  <circle cx="565" cy="311" r="5" class="magnet"/>
+  <text x="155" y="237" class="label-sm" fill="#800">◯ 4× N42</text>
+
+  <!-- Rubber gaskets (top + bottom) — compliance source -->
+  <rect x="195" y="260" width="350" height="5" class="rubber"/>
+  <rect x="195" y="299" width="350" height="5" class="rubber"/>
+  <text x="550" y="269" class="label-sm" fill="#444">rubber gasket (frame damping)</text>
+  <text x="550" y="280" class="label-sm" fill="#444">k ≈ 5 kN/m → plate-on-mount</text>
+  <text x="550" y="291" class="label-sm" fill="#444">резонанс ≈ 70-160 Hz (T = 6-14 мс)</text>
+
+  <!-- PLATE -->
+  <rect x="195" y="265" width="350" height="34" class="plate"/>
+  <text x="370" y="284" class="label-bold" text-anchor="middle">PLATE (cartridge)</text>
+  <text x="370" y="296" class="label-sm" text-anchor="middle">5г (thin wood) … 25г (slate) · 100×(35-55)×h</text>
+
+  <!-- Piezo pins (from below, spring-loaded pogo) -->
+  <rect x="240" y="318" width="6" height="22" class="pin"/>
+  <rect x="494" y="318" width="6" height="22" class="pin"/>
+  <text x="225" y="345" class="label-sm" text-anchor="middle">piezo</text>
+  <text x="225" y="356" class="label-sm" text-anchor="middle">pin L</text>
+  <text x="515" y="345" class="label-sm" text-anchor="middle">piezo</text>
+  <text x="515" y="356" class="label-sm" text-anchor="middle">pin R</text>
+
+  <!-- Exciter pad (center, spring-loaded) -->
+  <rect x="350" y="318" width="40" height="10" class="pad"/>
+  <path d="M 354 328 Q 358 333 354 338 Q 358 343 354 348 Q 358 353 354 358 Q 358 363 354 368" class="spring"/>
+  <path d="M 386 328 Q 382 333 386 338 Q 382 343 386 348 Q 382 353 386 358 Q 382 363 386 368" class="spring"/>
+  <text x="370" y="385" class="label-sm" text-anchor="middle">EXCITER pad (spring-loaded)</text>
+
+  <!-- Module bottom housing -->
+  <rect x="120" y="395" width="500" height="38" class="module"/>
+  <text x="370" y="418" class="label-bold" text-anchor="middle">MODULE (chassis низ)</text>
+
+  <!-- ============== STATIC FORCES (green) ============== -->
+  <!-- Magnets pull plate down (4× to bottom rail) -->
+  <line x1="175" y1="262" x2="175" y2="302" class="arrow-static" marker-end="url(#arr-green)"/>
+  <line x1="565" y1="262" x2="565" y2="302" class="arrow-static" marker-end="url(#arr-green)"/>
+  <text x="105" y="285" class="force-static" text-anchor="middle">magnets</text>
+  <text x="105" y="298" class="force-static" text-anchor="middle">↓ ~12-20 N</text>
+  <text x="105" y="311" class="label-sm" text-anchor="middle">(retention)</text>
+
+  <!-- Exciter spring pushes up -->
+  <line x1="370" y1="328" x2="370" y2="305" class="arrow-static" marker-end="url(#arr-green)"/>
+  <text x="635" y="368" class="force-static">exciter spring</text>
+  <text x="635" y="382" class="force-static">↑ ~3-5 N</text>
+
+  <!-- Net seating into piezo pins -->
+  <text x="635" y="328" class="force-static">net seating</text>
+  <text x="635" y="342" class="force-static">на pin ≈ 5 N</text>
+  <text x="635" y="354" class="label-sm" fill="#555">(magnets − exciter)</text>
+
+  <!-- ============== STRIKE DYNAMICS (red, 0-2ms) ============== -->
+  <!-- Plunger moves down -->
+  <line x1="370" y1="232" x2="370" y2="263" class="arrow-strike" marker-end="url(#arr-red)"/>
+  <text x="295" y="244" class="force-strike">TOLL: v=2 m/s</text>
+  <text x="295" y="258" class="force-strike">I = 0.01 N·s</text>
+
+  <!-- Plate kicked downward as rigid body -->
+  <line x1="500" y1="282" x2="500" y2="315" class="arrow-strike" marker-end="url(#arr-red)"/>
+  <text x="555" y="314" class="force-strike">плита: v ≈ 2 m/s</text>
+  <text x="555" y="327" class="label-sm" fill="#c00">(на 5г — равные массы!</text>
+  <text x="555" y="339" class="label-sm" fill="#c00"> momentum transfer ≈ 100%)</text>
+
+  <!-- Bounce-back / unseating arrow -->
+  <line x1="285" y1="299" x2="285" y2="278" class="arrow-bounce" marker-end="url(#arr-red)"/>
+  <text x="183" y="297" class="force-strike" text-anchor="end">rebound</text>
+  <text x="183" y="310" class="label-sm" fill="#c00" text-anchor="end">отскок плиты от</text>
+  <text x="183" y="321" class="label-sm" fill="#c00" text-anchor="end">pad/pin → rattle</text>
+
+
+  <!-- ============== RIGHT PANEL: NUMBERS ============== -->
+  <rect x="660" y="80" width="230" height="160" class="danger-bg" rx="4"/>
+  <text x="775" y="100" class="label-bold" text-anchor="middle" fill="#c00">⚠ Marginal по ВРЕМЕНИ, не только величине</text>
+  <text x="668" y="120" class="label-sm">Импульс плунжера на плиту:</text>
+  <text x="668" y="134" class="label-bold">  I = √(2·F·d·m) = 0.010 N·s</text>
+  <text x="668" y="153" class="label-sm">Pickup preload 5N арестует импульс за:</text>
+  <text x="668" y="167" class="label-bold">  t = I/F = 0.010 / 5 = 2.0 мс</text>
+  <text x="668" y="186" class="label-sm" fill="#c00">= тот же порядок, что сам удар.</text>
+  <text x="668" y="206" class="label-sm">Peak Hertzian force в контакте:</text>
+  <text x="668" y="220" class="label-bold">  F_peak ≈ I/t_c = 10-20 N briefly</text>
+  <text x="668" y="234" class="label-sm" fill="#c00">→ 2-4× preload. На пике pad/pin откидывает.</text>
+
+  <!-- Momentum matching table -->
+  <rect x="660" y="252" width="230" height="115" class="panel-bg" rx="4"/>
+  <text x="775" y="270" class="label-bold" text-anchor="middle">Momentum match по массе плиты</text>
+  <text x="668" y="288" class="label-sm">плунжер 5г · I=0.01 N·s →</text>
+  <line x1="660" y1="293" x2="890" y2="293" class="axis"/>
+  <text x="668" y="305" class="label-sm">  oak 5г  · 1.8мм  →  v = 2.0 m/s</text>
+  <text x="836" y="305" class="label-sm" fill="#c00" text-anchor="end">  CRIT</text>
+  <text x="668" y="320" class="label-sm">  brass 13г · 0.5мм → v = 0.77</text>
+  <text x="836" y="320" class="label-sm" fill="#c80" text-anchor="end">  WARN</text>
+  <text x="668" y="335" class="label-sm">  bone 17г · 2.5мм → v = 0.59</text>
+  <text x="668" y="350" class="label-sm">  slate 25г · 2.0мм → v = 0.40</text>
+  <text x="836" y="350" class="label-sm" fill="#0a5" text-anchor="end">  ok</text>
+  <text x="668" y="365" class="label-sm" fill="#555">плита-как-rigid-body после удара</text>
+
+  <!-- Frame compliance trap -->
+  <rect x="660" y="380" width="230" height="100" class="danger-bg" rx="4"/>
+  <text x="775" y="398" class="label-bold" text-anchor="middle" fill="#c00">⚠ Frame rubber = ловушка</text>
+  <text x="668" y="416" class="label-sm">Резина добавлена против резонанса</text>
+  <text x="668" y="429" class="label-sm">рамки. Та же compliance →</text>
+  <text x="668" y="446" class="label-bold">  плита-на-mount: f₀ ≈ 70-160 Hz</text>
+  <text x="668" y="460" class="label-bold">  T = 6-14 мс &gt; t_strike 2 мс</text>
+  <text x="668" y="474" class="label-sm" fill="#c00">→ резина НЕ держит на timescale удара.</text>
+
+  <!-- ============== BOTTOM: timeline / verdict ============== -->
+  <rect x="40" y="500" width="820" height="200" class="panel-bg" rx="4"/>
+  <text x="450" y="522" class="label-bold" text-anchor="middle">Что происходит на каждом TOLL pulse (0-5 мс)</text>
+
+  <!-- Timeline axis -->
+  <line x1="80" y1="555" x2="820" y2="555" class="axis"/>
+  <line x1="80" y1="550" x2="80" y2="560" class="axis"/>
+  <line x1="228" y1="550" x2="228" y2="560" class="axis"/>
+  <line x1="376" y1="550" x2="376" y2="560" class="axis"/>
+  <line x1="524" y1="550" x2="524" y2="560" class="axis"/>
+  <line x1="672" y1="550" x2="672" y2="560" class="axis"/>
+  <line x1="820" y1="550" x2="820" y2="560" class="axis"/>
+  <text x="80" y="572" class="label-sm" text-anchor="middle">0</text>
+  <text x="228" y="572" class="label-sm" text-anchor="middle">1 мс</text>
+  <text x="376" y="572" class="label-sm" text-anchor="middle">2 мс</text>
+  <text x="524" y="572" class="label-sm" text-anchor="middle">3 мс</text>
+  <text x="672" y="572" class="label-sm" text-anchor="middle">4 мс</text>
+  <text x="820" y="572" class="label-sm" text-anchor="middle">5 мс</text>
+
+  <!-- Phase blocks -->
+  <rect x="80" y="582" width="296" height="20" fill="#e0e8f8" stroke="#446"/>
+  <text x="228" y="596" class="label-sm" text-anchor="middle">TRANSIT (gate high, plunger летит через gap)</text>
+
+  <rect x="376" y="582" width="80" height="20" fill="#f8d8d8" stroke="#c00"/>
+  <text x="416" y="596" class="label-sm" text-anchor="middle" fill="#c00">CONTACT</text>
+
+  <rect x="456" y="582" width="364" height="20" fill="#e0f8e0" stroke="#080"/>
+  <text x="638" y="596" class="label-sm" text-anchor="middle">RELEASE (gate low, плита звенит free)</text>
+
+  <!-- Events annotated -->
+  <line x1="376" y1="610" x2="376" y2="625" stroke="#c00" stroke-width="1"/>
+  <text x="376" y="640" class="label-sm" text-anchor="middle" fill="#c00">плита получает</text>
+  <text x="376" y="652" class="label-sm" text-anchor="middle" fill="#c00">0.01 N·s ↓</text>
+
+  <line x1="456" y1="610" x2="456" y2="625" stroke="#c00" stroke-width="1"/>
+  <text x="456" y="640" class="label-sm" text-anchor="middle" fill="#c00">5N preload</text>
+  <text x="456" y="652" class="label-sm" text-anchor="middle" fill="#c00">арестовал</text>
+
+  <text x="640" y="640" class="label-sm" fill="#080">если pulse уйдёт low здесь → escapement, плита поёт</text>
+  <text x="640" y="652" class="label-sm" fill="#c00">если pulse держится → felt сидит на звенящей плите = DAMPING</text>
+
+  <!-- Verdict box -->
+  <rect x="80" y="664" width="740" height="30" class="ok-bg" rx="3"/>
+  <text x="90" y="682" class="label-bold" fill="#0a5">ВЕРДИКТ:</text>
+  <text x="155" y="682" class="label" fill="#111">на 5-13г пластинах удар может сам разорвать контакт plate↔pin (R1-rattle self-induced).</text>
+  <text x="90" y="694" class="label-sm" fill="#444">Mitigations не в текущих доках: (a) pin preload поднять отдельно от exciter; (b) пины — к жёсткому шасси, НЕ к податливой рамке; (c) cap TOLL energy на light-tier; (d) MUTE FET во время CONTACT phase.</text>
+
+</svg>

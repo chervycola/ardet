@@ -1,0 +1,537 @@
+{
+  "projectVersion": 4,
+  "panel": {
+    "widthHP": 40,
+    "customHP": false
+  },
+  "components": [
+    {
+      "type": "pot9mm",
+      "ref": "RV_IN",
+      "label": "INPUT",
+      "x": 20,
+      "y": 16,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_DW",
+      "label": "DRY/WET",
+      "x": 175,
+      "y": 16,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_OUT",
+      "label": "OUTPUT",
+      "x": 192,
+      "y": 16,
+      "rotation": 0
+    },
+    {
+      "type": "customrect",
+      "ref": "SLOT",
+      "label": "CARTRIDGE",
+      "x": 101,
+      "y": 30,
+      "rotation": 0,
+      "holeType": "rect",
+      "holeW": 110,
+      "holeH": 8,
+      "keepoutW": 114,
+      "keepoutH": 12
+    },
+    {
+      "type": "customrect",
+      "ref": "SW_BANK",
+      "label": "Bank Mode",
+      "x": 12,
+      "y": 62,
+      "rotation": 0,
+      "holeType": "rect",
+      "holeW": 3,
+      "holeH": 32,
+      "keepoutW": 8,
+      "keepoutH": 36
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_DRIVE",
+      "label": "DRIVE",
+      "x": 34,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_ATK",
+      "label": "ATK",
+      "x": 52,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_DEC",
+      "label": "DEC",
+      "x": 70,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_TONE",
+      "label": "TONE",
+      "x": 34,
+      "y": 74,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_NOISE",
+      "label": "NOISE",
+      "x": 52,
+      "y": 74,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_COLOR",
+      "label": "color/geiger",
+      "x": 70,
+      "y": 74,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_FB",
+      "label": "FEEDBACK",
+      "x": 105,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_LP",
+      "label": "LowPass",
+      "x": 105,
+      "y": 72,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_HP",
+      "label": "HiPass",
+      "x": 105,
+      "y": 88,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_POS",
+      "label": "position",
+      "x": 126,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_BOOST",
+      "label": "boost",
+      "x": 144,
+      "y": 52,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_PHF",
+      "label": "Phase/Flutter",
+      "x": 126,
+      "y": 76,
+      "rotation": 0
+    },
+    {
+      "type": "slideSwitchMini",
+      "ref": "SW_CLIP",
+      "label": "SWITCH CLIP",
+      "x": 168,
+      "y": 42,
+      "rotation": 0
+    },
+    {
+      "type": "customrect",
+      "ref": "SL_RISE",
+      "label": "rise",
+      "x": 163,
+      "y": 66,
+      "rotation": 0,
+      "holeType": "rect",
+      "holeW": 3,
+      "holeH": 24,
+      "keepoutW": 7,
+      "keepoutH": 28
+    },
+    {
+      "type": "customrect",
+      "ref": "SL_FALL",
+      "label": "fall",
+      "x": 174,
+      "y": 66,
+      "rotation": 0,
+      "holeType": "rect",
+      "holeW": 3,
+      "holeH": 24,
+      "keepoutW": 7,
+      "keepoutH": 28
+    },
+    {
+      "type": "customrect",
+      "ref": "SL_DEPTH",
+      "label": "depth",
+      "x": 185,
+      "y": 66,
+      "rotation": 0,
+      "holeType": "rect",
+      "holeW": 3,
+      "holeH": 24,
+      "keepoutW": 7,
+      "keepoutH": 28
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_EXP",
+      "label": "exp/log",
+      "x": 167,
+      "y": 92,
+      "rotation": 0
+    },
+    {
+      "type": "pot9mm",
+      "ref": "RV_SPD",
+      "label": "speed/range",
+      "x": 185,
+      "y": 92,
+      "rotation": 0
+    },
+    {
+      "type": "slideSwitchMini",
+      "ref": "SW_RANGE",
+      "label": "FG range",
+      "x": 196,
+      "y": 66,
+      "rotation": 0
+    },
+    {
+      "type": "tactled",
+      "ref": "SW_TAP",
+      "label": "TAP",
+      "x": 12,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "tactled",
+      "ref": "SW_GC",
+      "label": "GATE-CRUSH",
+      "x": 12,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "tactled",
+      "ref": "SW_BYP",
+      "label": "BYPASS",
+      "x": 195,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "tactled",
+      "ref": "SW_FRZ",
+      "label": "FREEZE",
+      "x": 195,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_0",
+      "label": "IN",
+      "x": 24,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_1",
+      "label": "gate",
+      "x": 34,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_2",
+      "label": "attack",
+      "x": 44,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_3",
+      "label": "decay",
+      "x": 54,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_4",
+      "label": "drive",
+      "x": 64,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_5",
+      "label": "tone",
+      "x": 74,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_6",
+      "label": "lopass",
+      "x": 84,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_7",
+      "label": "feedback",
+      "x": 94,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_8",
+      "label": "position",
+      "x": 104,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_9",
+      "label": "boost",
+      "x": 114,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J1_10",
+      "label": "speed",
+      "x": 124,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_0",
+      "label": "clock",
+      "x": 24,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_1",
+      "label": "noise",
+      "x": 34,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_2",
+      "label": "color",
+      "x": 44,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_3",
+      "label": "output",
+      "x": 54,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_4",
+      "label": "mix",
+      "x": 64,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_5",
+      "label": "HiPass",
+      "x": 74,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_6",
+      "label": "rise",
+      "x": 84,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_7",
+      "label": "fall",
+      "x": 94,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_8",
+      "label": "depth",
+      "x": 104,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_9",
+      "label": "env",
+      "x": 114,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J2_10",
+      "label": "ph/flt",
+      "x": 124,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE1_0",
+      "label": "TOLL",
+      "x": 136,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE1_1",
+      "label": "STALL",
+      "x": 144,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE1_2",
+      "label": "SIDE",
+      "x": 152,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE1_3",
+      "label": "FREEZE",
+      "x": 160,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE2_0",
+      "label": "Gate",
+      "x": 136,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE2_1",
+      "label": "Sub2",
+      "x": 144,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE2_2",
+      "label": "Inv",
+      "x": 152,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "JE2_3",
+      "label": "EG OUT",
+      "x": 160,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J_DRY",
+      "label": "DRY",
+      "x": 172,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J_WET",
+      "label": "WET",
+      "x": 182,
+      "y": 104,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J_L",
+      "label": "L",
+      "x": 172,
+      "y": 117,
+      "rotation": 0
+    },
+    {
+      "type": "jack",
+      "ref": "J_R",
+      "label": "R",
+      "x": 182,
+      "y": 117,
+      "rotation": 0
+    }
+  ],
+  "textItems": [],
+  "scaleItems": [],
+  "projectMeta": {
+    "name": "Last Night 40HP — Material Resonator",
+    "author": "System Suicide",
+    "notes": "v6.5 canon. Generated layout — Eurorack 40HP. Cartridge slot + Bank Mode + FG sliders. Sliders/slot as customrect placeholders (no fader in library)."
+  }
+}
