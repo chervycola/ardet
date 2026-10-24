@@ -869,7 +869,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='18fdee3 · 2026-10-24';console.log('[оттиск]', '18fdee3 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='86452b6 · 2026-10-24';console.log('[оттиск]', '86452b6 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32081,7 +32081,7 @@ System.register("sprites/npcs/dumpster", ["core/time", "render/context"], functi
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef"], function (exports_100, context_100) {
     "use strict";
-    var context_js_8, time_js_21, sky_js_2, wind_js_12, playerRef_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, FX, FY, PIKE, CLAY, CLAY_L, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL;
+    var context_js_8, time_js_21, sky_js_2, wind_js_12, playerRef_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL;
     var __moduleName = context_100 && context_100.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -33097,9 +33097,17 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('nocturnal', x, y, -4, -3, 68, 106, plainBody);
     }
     exports_100("draw_nocturnal", draw_nocturnal);
+    function pix(rows, ox, oy) {
+        for (let y = 0; y < rows.length; y++)
+            for (let x = 0; x < rows[y].length; x++) {
+                const ch = rows[y][x];
+                if (ch !== '.')
+                    r(ox + x, oy + y, 1, 1, PAL[ch]);
+            }
+    }
     function campfireBody() {
         // полумесяц над костром — низко, цвета запёкшейся крови
-        const mx = 17, my = -24;
+        const [mx, my] = MOON;
         for (let dy = -9; dy <= 9; dy++)
             for (let dx = -9; dx <= 9; dx++) {
                 const o = dx * dx + dy * dy <= 72, cut = (dx - 4) * (dx - 4) + (dy + 1) * (dy + 1) <= 52;
@@ -33141,6 +33149,20 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(-7, 26, 1, 1, L2);
         r(-8, 25, 1, 1, L2);
         r(-9, 23, 1, 2, L1); // рог в левой груде
+        // копьё с черепом — за кольцом слева, вбито в землю; древко чуть к огню
+        const [sbx, sby] = SPEAR.base, [stx, sty] = SPEAR.top, sn = sby - sty;
+        for (let k = 0; k <= sn; k++) {
+            const xx = sbx + (stx - sbx) * k / sn, yy = sby - k;
+            r(xx, yy, 1, 1, SINGE);
+            r(xx + 1, yy, 1, 1, BR2);
+        }
+        r(sbx - 2, sby + 1, 6, 1, K0);
+        r(sbx - 1, sby, 1, 1, SEP);
+        r(sbx + 2, sby, 1, 1, SEP); // вбито: земля бугром
+        r(stx - 1, sty + 1, 4, 1, K1);
+        r(stx - 1, sty + 2, 4, 1, SINGE); // обмотка под черепом
+        pix(BLADE, SKX + 11, SKY + 2);
+        pix(SKULL, SKX, SKY);
         // кольцо закопчённых камней; кровь спеклась коркой
         for (let k = 0; k < 11; k++) {
             const a = k / 11 * Math.PI * 2 + 0.3, sx = q(FX + Math.cos(a) * 18) - 2, sy = q(FY + Math.sin(a) * 8.5) - 2, w = 4 + (k & 1), h = 3 + (k % 3 === 0 ? 1 : 0);
@@ -33154,14 +33176,20 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(sx + 2, sy + 2, 1, 1, BLOOD);
             }
         }
-        // скелет: хребет поперёк огня; левая половина сгорела — уголь, правая — кость
+        // скелет без головы: хребет поперёк огня; левая половина сгорела — уголь
+        // с тлеющими трещинами, правая — кость; шея кончается позвонками
         for (let x = 6; x <= 25; x++)
             r(x, 20 - q((x - 6) * 0.12), 1, 1, x < 15 ? (x & 1 ? K1 : K4) : x & 1 ? L1 : L2);
+        r(26, 17, 1, 1, L2);
+        r(27, 17, 1, 1, BO);
+        r(28, 16, 1, 1, L2); // шейные позвонки — голова на копье
         for (let k = 0; k < 6; k++) { // рёбра аркой
             const rx = 9 + k * 3, burnt = rx < 15;
             for (let j = 0; j < 4; j++)
                 r(rx + (j > 2 ? 1 : 0), 19 - j - q((rx - 6) * 0.12), 1, 1, burnt ? (j > 1 ? K1 : K4) : j === 3 ? BO : L1);
             r(rx + 1, 22 - q((rx - 6) * 0.12), 1, 1, burnt ? K1 : L2);
+            if (burnt)
+                r(rx, 18 - q((rx - 6) * 0.12), 1, 1, KV); // тлеет
         }
         r(7, 21, 1, 3, K4);
         r(6, 24, 2, 1, K1);
@@ -33169,55 +33197,22 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(20, 20, 1, 4, L1);
         r(21, 24, 2, 1, BO);
         r(23, 19, 1, 4, L2); // ноги
-        // череп на камнях, мордой вверх; рога — лирой
-        const cx = 28, cy = 13;
-        r(cx - 2, cy, 5, 4, L1);
-        r(cx - 2, cy, 1, 4, BO);
-        r(cx + 2, cy + 1, 1, 3, L2); // свод
-        r(cx - 1, cy - 4, 3, 4, L1);
-        r(cx - 1, cy - 4, 1, 4, BO);
-        r(cx, cy - 5, 1, 1, L2); // морда вверх
-        r(cx - 2, cy + 1, 1, 1, NI);
-        r(cx + 2, cy + 1, 1, 1, NI); // глазницы по бокам
-        r(cx, cy - 3, 1, 1, K1);
-        r(cx, cy - 1, 1, 1, K1); // ноздри
-        for (const s of [-1, 1]) {
-            for (let k = 0; k <= 12; k++) {
-                const u = k / 12, hx = cx + s * (3 + Math.sin(u * Math.PI * 0.9) * 5 + u * 1.5), hy = cy + 1 - u * 11 + Math.sin(u * Math.PI) * 1.2;
-                r(hx, hy, k < 4 ? 2 : 1, 1, k < 4 ? K4 : k > 10 ? BO : L2);
-            }
-        }
-        r(cx - 3, cy + 4, 7, 1, K0); // лёг на камни
-        // пика Шута воткнута в землю, клонится к огню; на ней — лицо
-        const [bx, by] = PIKE.base, [tx, ty] = PIKE.tip, n = Math.max(Math.abs(tx - bx), Math.abs(ty - by));
+        // пика Шута воткнута в землю, клонится к огню; на острие — лицо
+        const [bx, by] = PIKE.base, [tx, ty] = PIKE.tip, fy0 = ty + 11, n = Math.max(Math.abs(tx - bx), Math.abs(fy0 - by));
         for (let k = 0; k <= n; k++) {
-            const xx = bx + (tx - bx) * k / n, yy = by + (ty - by) * k / n;
+            const xx = bx + (tx - bx) * k / n, yy = by + (fy0 - by) * k / n;
             r(xx, yy, 1, 1, BR2);
-            r(xx - 1, yy, 1, 1, k % 7 === 3 ? K4 : L2);
+            r(xx - 1, yy, 1, 1, k % 7 === 3 ? K4 : SINGE);
         }
         r(bx - 2, by + 1, 5, 1, K0);
         r(bx - 1, by, 1, 1, SEP);
         r(bx + 1, by, 1, 1, SEP); // вбита в землю
-        r(tx - 1, ty - 1, 1, 1, AS);
-        r(tx - 2, ty - 2, 1, 1, S0); // наконечник
-        const fx = tx - 2, fy = ty + 1; // лицо на острие
-        r(fx - 1, fy - 1, 6, 2, K1);
-        r(fx - 2, fy, 1, 4, K1);
-        r(fx + 5, fy, 1, 3, K1); // волосы
-        r(fx, fy + 1, 5, 5, L1);
-        r(fx, fy + 1, 1, 5, BO);
-        r(fx + 4, fy + 2, 1, 4, K4); // кожа, к огню подпечена
-        r(fx + 1, fy + 2, 1, 1, K0);
-        r(fx + 3, fy + 2, 1, 1, K0);
-        r(fx + 2, fy + 3, 1, 1, K4);
-        r(fx + 1, fy + 4, 3, 1, K0); // глазницы, нос, рот
-        r(fx, fy + 6, 5, 1, BLOOD);
-        r(fx + 2, fy + 7, 1, 1, BLOOD); // кровь по нижнему краю
+        pix(FACE, tx - 4, ty);
     }
     function draw_campfire(x, y) {
-        bake('campfire', x, y, -14, -36, 74, 77, campfireBody);
+        bake('campfire2', x, y, -16, -46, 80, 90, campfireBody);
         // кровь с нижнего рога полумесяца: капля набухает, срывается, падает в огонь
-        const dk = (time_js_21.t % 360) / 360, hx = x + 22, hy = y - 17;
+        const dk = (time_js_21.t % 360) / 360, hx = x + MOON[0] + 5, hy = y + MOON[1] + 7;
         if (dk < 0.55) {
             const L = 1 + q(dk / 0.55 * 2);
             r(hx, hy, 1, L, BLOOD);
@@ -33232,41 +33227,78 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         else
             r(hx, hy, 1, 1, BLOOD);
+        // с лица на пике капает: капля у подбородка, раз в несколько секунд
+        const dl = ((time_js_21.t + 140) % 300) / 300, lx = x + PIKE.tip[0] - 2, ly = y + PIKE.tip[1] + 15;
+        if (dl < 0.6)
+            r(lx, ly, 1, 1 + q(dl / 0.6), BLOOD);
+        else if (dl < 0.8) {
+            const u = (dl - 0.6) / 0.2;
+            r(lx, ly + 2 + q(u * u * 22), 1, 1, BLOOD);
+        }
         // лицо на пике подпекается: дымок по ветру
         for (let i = 0; i < 3; i++) {
             const u = ((time_js_21.t * 0.4 + i * 20) % 60) / 60;
             context_js_8.X.globalAlpha = 0.35 * (1 - u);
-            r(x + PIKE.tip[0] + q(Math.sin(u * 6 + i) * 1.5 + u * wind_js_12.wind.x * 10), y + PIKE.tip[1] - 2 - q(u * 14), 1, 1, AS);
+            r(x + PIKE.tip[0] + q(Math.sin(u * 6 + i) * 1.5 + u * wind_js_12.wind.x * 10), y + PIKE.tip[1] + 2 - q(u * 14), 1, 1, AS);
         }
         context_js_8.X.globalAlpha = 1;
-        // огонь: сгоревшую половину доедает; языки сплошные — у корня свеча, к верху киноварь
-        r(x + 6, y + 22, 14, 2, SV);
-        r(x + 5, y + 23, 16, 1, KV);
-        for (let i = 0; i < 6; i++) {
-            const fx = x + 6 + i * 2.4, f = 0.5 + 0.5 * Math.sin(time_js_21.t * (0.09 + i * 0.017) + i * 2.3) * Math.sin(time_js_21.t * 0.031 + i);
-            const H = q(5 + (i > 0 && i < 5 ? 9 : 4) * Math.abs(f)), base = y + 22;
-            for (let k = 0; k < H; k++) {
-                const u = k / H, sway = q(Math.sin(time_js_21.t * 0.06 + i * 1.3 + k * 0.35) * u * 2 + wind_js_12.wind.x * u * 3);
-                r(fx + sway, base - k, u < 0.45 ? 2 : 1, 1, u < 0.55 ? SV : KV);
+        // тряпица на копье под черепом — киноварь, треплет ветер
+        const rx = x + SPEAR.top[0] + 2, ry = y + SPEAR.top[1] + 2;
+        for (let k = 0; k < 4; k++)
+            r(rx + q(Math.sin(time_js_21.t * 0.07 + k * 0.8) * k * 0.4 + wind_js_12.wind.x * k * 0.8), ry + k, k < 2 ? 2 : 1, 1, k === 0 ? BLOOD : KV);
+        // огонь: языками одним силуэтом — внутри свеча, по кромке и к верху киноварь;
+        // сзади тонкие киноварные языки выше; сильнее над сгоревшей половиной; по
+        // ветру клонится; под ним тлеющая подложка углями
+        const base = y + 23, FW = 30, FX0 = x + 3;
+        for (let i = 0; i < 9; i++)
+            r(x + 6 + i * 2 + q(hh(i, 3, 7)), base + 1 + (i & 1), 2, 1, ((time_js_21.t >> 3) + i) % 4 ? SV : KV);
+        const TONG = [[5, 9, 2, 0], [8, 15, 3, 0], [11, 20, 4, 0], [14, 22, 4, 0], [17, 17, 3, 0], [20, 12, 3, 0], [23, 7, 2, 0],
+            [9, 19, 1.5, 1], [13, 27, 1.5, 1], [16, 25, 1.5, 1], [19, 19, 1.5, 1]];
+        const lean = wind_js_12.wind.x * 4;
+        for (const back of [1, 0]) {
+            const tg = TONG.map(([bx0, hb, wb, b], i) => {
+                if (b !== back)
+                    return null;
+                const f = 0.5 + 0.5 * Math.sin(time_js_21.t * (0.07 + i * 0.013) + i * 2.3) * Math.sin(time_js_21.t * 0.029 + i * 1.7);
+                return { bx0, wb, i, H: Math.max(3, q(hb * (0.72 + 0.28 * f))) };
+            }).filter(Boolean);
+            const top = Math.max(...tg.map(g => g.H));
+            for (let k = 0; k < top; k++) {
+                const cov = new Array(FW).fill(9);
+                for (const g of tg) {
+                    if (k >= g.H)
+                        continue;
+                    const u = k / g.H, cx = g.bx0 + Math.sin(time_js_21.t * 0.055 + g.i * 1.3 + k * 0.32) * u * 2.2 + lean * u * u;
+                    const hw = Math.max(0.5, g.wb / 2 * Math.pow(1 - u, 0.85));
+                    for (let px = q(cx - hw); px <= q(cx + hw); px++)
+                        if (px >= 0 && px < FW)
+                            cov[px] = Math.min(cov[px], u);
+                }
+                for (let px = 0; px < FW; px++) {
+                    const u = cov[px];
+                    if (u > 1)
+                        continue;
+                    const edge = (px === 0 || cov[px - 1] > 1 || px === FW - 1 || cov[px + 1] > 1) && k > 2;
+                    // внутри — медленные киноварные лизки вверх (раз в четверть секунды, не мельтешат)
+                    const lick = !back && u > 0.3 && u < 0.55 && hh(px, k + (time_js_21.t >> 4), 13) < 0.16;
+                    r(FX0 + px, base - k, 1, 1, back || edge || lick || u >= 0.55 ? KV : SV);
+                }
             }
-            if (((time_js_21.t >> 2) + i) % 5 === 0)
-                r(fx + 1, base - H - 2, 1, 1, KV); // язык отрывается
+            if (!back)
+                for (const g of tg)
+                    if (((time_js_21.t >> 2) + g.i * 3) % 7 === 0)
+                        r(FX0 + g.bx0 + q(lean), base - g.H - 2, 1, 1, KV); // язык отрывается
         }
-        for (let i = 0; i < 6; i++) {
-            const on = Math.sin(time_js_21.t * 0.05 + i * 2.1) > -0.2;
-            if (on)
-                r(x + 8 + q(hh(i, 9, 3) * 18), y + 24 + q(hh(i, 9, 5) * 4), 1, 1, i & 1 ? SV : KV);
-        } // угли
         // искры к луне и дым по ветру
         for (let i = 0; i < 5; i++) {
             const a = ((time_js_21.t * 0.5 + i * 23) % 70) / 70;
             context_js_8.X.globalAlpha = (1 - a) * 0.8;
-            r(x + FX - 4 + q(Math.sin(a * 5 + i * 2) * 4 + a * wind_js_12.wind.x * 20), y + 8 - q(a * 34), 1, 1, a < 0.4 ? SV : KV);
+            r(x + FX - 4 + q(Math.sin(a * 5 + i * 2) * 4 + a * wind_js_12.wind.x * 20), y + 2 - q(a * 34), 1, 1, a < 0.4 ? SV : KV);
         }
         for (let i = 0; i < 6; i++) {
             const age = (time_js_21.t * 0.25 + i * 16) % 96, k = age / 96;
             context_js_8.X.globalAlpha = (1 - k) * 0.3;
-            r(x + FX - 2 + q(age * wind_js_12.wind.x * 0.5 + Math.sin(age * 0.1 + i) * 2), y + 6 - q(age * 0.3), 1 + q(k * 3), 1 + q(k * 2), AS);
+            r(x + FX - 2 + q(age * wind_js_12.wind.x * 0.5 + Math.sin(age * 0.1 + i) * 2), y + 0 - q(age * 0.3), 1 + q(k * 3), 1 + q(k * 2), AS);
         }
         context_js_8.X.globalAlpha = 1;
     }
@@ -34933,14 +34965,108 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // запёкшейся крови, слишком низкий для настоящей луны. Вокруг камней — груды
             // костей других жертв, сваленных без порядка... Пепел на камнях — чёрный и
             // жирный. Кровь на камнях уже спеклась в твёрдую корку.» Тёплое пятно I
-            // (ART_BIBLE §04): огонь — свеча и киноварь, сплошной, без растра. Середина огня
-            // — на x+18 (гирлянда Шута). Сгоревшая половина скелета — уголь, целая — кость;
-            // череп поднят на камнях мордой вверх, рога лирой. С нижнего рога полумесяца
-            // капает кровь. По слову автора пика Шута с лицом воткнута в землю между ним и
-            // огнём, наклонена к огню: лицо подпекается над краем кольца, идёт дымок.
+            // (ART_BIBLE §04: «жертвенный костёр — череп быка над огнём»): огонь — свеча у
+            // корня, киноварь к верху, языками, сплошной, без растра. Середина огня — на
+            // x+18 (гирлянда Шута, марево).
+            // Слово автора (24.10): «ответственно — к костру, черепу животного на копье, к
+            // стоящей пике и лицу на ней». Череп снят со скелета и поднят над огнём на
+            // копьё, за кольцом слева: анфас, рога лирой, наконечник выходит между рогами,
+            // снизу его подсвечивает огонь. Пика Шута воткнута между ним и огнём,
+            // клонится к огню; на острие — лицо: волосы свисают, глазницы и рот пустые,
+            // бок к огню подпечён, по нижнему краю кровь, капает; от лица дымок. Рисунок —
+            // пиксельными картами: каждая буква — краска (PAL), точка — пусто.
             BLOOD = '#6b0f1a'; // запёкшаяся — как на большой трубе
+            SINGE = '#5a4030'; // подпечённое, древко к свету
             FX = 18, FY = 22; // середина огня
-            PIKE = { base: [56, 38], tip: [38, -6] };
+            MOON = [27, -33]; // полумесяц — низко над огнём
+            SPEAR = { base: [1, 16], top: [3, -16] }; // копьё с черепом: древко до черепа
+            SKX = -9, SKY = -38; // череп на копье (левый верх карты)
+            PIKE = { base: [56, 38], tip: [39, -4] }; // пика Шута: острие — над лицом
+            SKIN = '#a89878', SKIN_S = '#7a6a52'; // кожа — тусклее кости, с тенью
+            PAL = { B: BO, L: L1, l: L2, k: K4, d: K1, n: NI, s: SV, r: KV, b: BLOOD, h: K1, H: K4, c: SINGE, p: S1, P: AS, w: BR2, F: SKIN, f: SKIN_S };
+            // череп быка анфас — половина карты, вторая зеркалом; свет слева (кость к свету
+            // светлее, к тени — темнее). H — рог (лирой: от затылка в стороны, вверх,
+            // кончики внутрь), h — кончик рога, обуглен; T — затылок; X — кость;
+            // E — тёмная кромка; O — провал (глазницы, носовой проём)
+            SKULL_HALF = [
+                '...h.........',
+                '..Hh.........',
+                '..H..........',
+                '.HH..........',
+                '.HH..........',
+                '..HH.........',
+                '..HHH........',
+                '...HHHH......',
+                '....HHHTTTTTT',
+                '.....EXXXXXXX',
+                '....EXXXXXXXX',
+                '...EXOOXXXXXX',
+                '...EXOOOXXXXX',
+                '....EXXXXXXXX',
+                '.....EXXXXXXX',
+                '......EXXXXXO',
+                '......XXXXXXO',
+                '.......EXXXOO',
+                '.......XXXXOO',
+                '........XXXOO',
+                '........XXXXX',
+                '........XXX..',
+                '........EE...',
+            ];
+            SKULL = SKULL_HALF.map((row, y) => {
+                const full = row + row.slice(0, 12).split('').reverse().join(''), out = [];
+                const is = (x, set) => x >= 0 && x < full.length && set.includes(full[x]);
+                for (let x = 0; x < full.length; x++) {
+                    const c = full[x], left = x < 12;
+                    if (c === '.')
+                        out.push('.');
+                    else if (c === 'O')
+                        out.push('n');
+                    else if (c === 'E')
+                        out.push('d');
+                    else if (c === 'h')
+                        out.push('k');
+                    else if (c === 'H')
+                        out.push(left ? (is(x - 1, 'H') ? 'L' : 'B') : (is(x + 1, 'H') ? 'l' : 'k'));
+                    else if (c === 'T')
+                        out.push(x < 15 ? 'B' : 'l');
+                    else if (left)
+                        out.push(is(x - 1, 'XT') ? 'L' : 'B');
+                    else if (x === 12)
+                        out.push('L');
+                    else
+                        out.push(!is(x + 1, 'XT') ? 'k' : !is(x + 2, 'XT') ? 'l' : 'L');
+                }
+                // трещина по лбу и копоть — череп не новый
+                if (y === 10)
+                    out[9] = 'l';
+                if (y === 13)
+                    out[14] = 'k';
+                if (y === 15)
+                    out[10] = 'l';
+                return out.join('');
+            });
+            // наконечник копья выходит между рогами, из затылка
+            BLADE = ['.P.', 'pPp', 'pPp', 'pPp', 'pPd', '.pd', '.d.'];
+            // лицо на пике: острие насквозь, волосы свисают набок; брови, нос, пустые
+            // глазницы и рот; к огню (слева) подпечено, по нижнему краю — кровь
+            FACE = [
+                '....P....',
+                '....P....',
+                '..hhPhh..',
+                '.hhhhhhh.',
+                'hhcFFFFhh',
+                'hcFFFFFfh',
+                'hcddFddfh',
+                'hcnnFnnfh',
+                'hcFFkFFfh',
+                'h.cFkFff.',
+                '..cnnnf.h',
+                '..cnnnf.h',
+                '...cFf..h',
+                '...bfb...',
+                '...b.b...',
+            ];
             // ── ПИФОС ──
             // «Пустая бочка Диогена. Выметено. Жилец не оставил адреса...» По ART_BIBLE
             // §04 — глиняная бочка на боку, пустая, выметенная; жилец ушёл. Не деревянная
