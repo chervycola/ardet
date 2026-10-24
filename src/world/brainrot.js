@@ -143,6 +143,47 @@ function copyStrip(ctx, src, sy, h, dx) {
   ctx.drawImage(src, 0, sy * sc, src.width, h * sc, dx, sy, scaler.vw, h);
 }
 
+// строки рвутся и съезжают, мир крошится макроблоками
+function tearAndCrumble(ctx, k, bg, world, tick, vw, vh) {
+  if (k > 0.35) {
+    const n = Math.floor((k - 0.35) * 22);
+    for (let i = 0; i < n; i++) {
+      const y = rnd(tick * 7 + i) * vh | 0;
+      const h = 1 + (rnd(tick * 3 + i * 5) * (2 + k * 9) | 0);
+      const dx = ((rnd(tick + i * 11) - 0.5) * k * 46) | 0;
+      copyStrip(ctx, bg, y, h, dx);
+      copyStrip(ctx, world, y, h, dx);
+    }
+  }
+  if (k > 0.6 && bg && bg.width) {
+    const n = Math.floor((k - 0.6) * 70);
+    const sc = scaler.scale || 1;
+    for (let i = 0; i < n; i++) {
+      const sx = rnd(tick * 13 + i) * vw | 0, sy = rnd(tick * 17 + i) * vh | 0;
+      const b = 4 + (rnd(i * 3 + tick) * 10 | 0);
+      ctx.drawImage(bg, sx * sc, sy * sc, sc, sc, (sx - b / 2) | 0, (sy - b / 2) | 0, b, b);
+    }
+  }
+}
+// нарисовать мимо полос ленты; проявляющаяся полоса заслоняет распад по мере проявления
+function aroundFeed(ctx, vw, vh, fn) {
+  const ps = feedPanels.drawn();
+  if (!ps.length) { fn(); return; }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, vw, vh);
+  for (const p of ps) ctx.rect(p.x, 0, p.w, vh);
+  ctx.clip('evenodd');
+  fn();
+  ctx.restore();
+  for (const p of ps) if (p.alpha < 1) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(p.x, 0, p.w, vh); ctx.clip();
+    ctx.globalAlpha = 1 - p.alpha;
+    fn();
+    ctx.restore();
+  }
+}
+
 export function draw(ctx) {
   lastK = 0;
   if (brainrot <= 0 && !brainrotFreeze) return;
@@ -158,27 +199,8 @@ export function draw(ctx) {
 
   feedPanels.record(k);                      // прошлое для полос ленты (render/feedPanels.js)
 
-  // строки рвутся и съезжают
-  if (k > 0.35) {
-    const n = Math.floor((k - 0.35) * 22);
-    for (let i = 0; i < n; i++) {
-      const y = rnd(tick * 7 + i) * vh | 0;
-      const h = 1 + (rnd(tick * 3 + i * 5) * (2 + k * 9) | 0);
-      const dx = ((rnd(tick + i * 11) - 0.5) * k * 46) | 0;
-      copyStrip(ctx, bg, y, h, dx);
-      copyStrip(ctx, world, y, h, dx);
-    }
-  }
-  // мир крошится макроблоками
-  if (k > 0.6 && bg && bg.width) {
-    const n = Math.floor((k - 0.6) * 70);
-    const sc = scaler.scale || 1;
-    for (let i = 0; i < n; i++) {
-      const sx = rnd(tick * 13 + i) * vw | 0, sy = rnd(tick * 17 + i) * vh | 0;
-      const b = 4 + (rnd(i * 3 + tick) * 10 | 0);
-      ctx.drawImage(bg, sx * sc, sy * sc, sc, sc, (sx - b / 2) | 0, (sy - b / 2) | 0, b, b);
-    }
-  }
+  // распад рвёт мир, а ленту — нет: разрывы и макроблоки идут мимо полос (render/feedPanels.js)
+  aroundFeed(ctx, vw, vh, () => tearAndCrumble(ctx, k, bg, world, tick, vw, vh));
   // полосы ленты рисуются в сборке, до печати и растра (feedK; main.js: layers.feedPass)
   // растр: брейнрот = растр
   if (k > 0.15) {

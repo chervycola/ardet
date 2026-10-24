@@ -16,6 +16,7 @@ import { sideAt } from '../world/relief.js';
 import { CELL_TITLES } from '../content/cell_titles.js';
 import { SIDE_RU } from '../world/placeStamp.js';
 import { drawSignature } from './signature.js';
+import { redNoon } from '../world/redNoon.js';
 import { reducedMotion } from '../core/prefs.js';
 import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
@@ -453,11 +454,11 @@ function drawLocalSide() {
   }
   y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
   if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_PAPER_S]], y);
-  // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился
+  // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился; в красный полдень руки нет
   const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
   ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);
   ctx.fillText('ОБМЕР ПРОИЗВЁЛ', SIDE.x, sy);
-  if (!drawSignature(ctx, SIDE.x + 112, sy - 17, 140, 22, '#241d18', 1.3)) {
+  if (redNoon.k > 0.5 || !drawSignature(ctx, SIDE.x + 112, sy - 17, 140, 22, '#241d18', 1.3)) {
     ctx.font = "italic 13px Literata, 'PT Serif', Georgia, serif"; ctx.fillStyle = rgba(SEPIA, 0.8);
     ctx.fillText('— от подписи уклонился', SIDE.x + 104, sy);
   }

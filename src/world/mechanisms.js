@@ -70,10 +70,12 @@ function thud() {
 
 // ═══ ФЛЮГЕР ═══
 // стрелка — навстречу ветру (откуда дует), хвост — по ветру; сбоку видно
-// её длину в проекции: на север и юг она смотрит почти точкой
-export function vane(ctx, key, x, y, col, head) {
-  const m = reg(key, 'vane', { a: wind.ang + Math.PI, w: 0, x, y });
-  m.x = x; m.y = y;
+// её длину в проекции: на север и юг она смотрит почти точкой.
+// gy — земля под флюгером: на странника он смотрит оттуда (высота шпиля на
+// экране — не глубина мира, иначе стрелка ищет его в небе)
+export function vane(ctx, key, x, y, col, head, gy = y) {
+  const m = reg(key, 'vane', { a: wind.ang + Math.PI, w: 0, x, y, gy });
+  m.x = x; m.y = y; m.gy = gy;
   const c = Math.cos(m.a), L = 3;
   const hx = Math.round(x + c * L), tx = Math.round(x - c * L);
   line(ctx, col, tx, y, hx, y);
@@ -83,7 +85,7 @@ export function vane(ctx, key, x, y, col, head) {
 }
 function stepVane(m) {
   const w = wind.at(m.x, m.y + 40);
-  const r = respond(m.x, m.y, getPlayer());
+  const r = respond(m.x, m.gy, getPlayer());
   const kw = r ? (r.lv === 2 ? 0.25 : 0.6) : 1;          // знакомый странник рядом — ветер ему уступает
   const d = wrap(wind.ang + Math.PI - m.a);
   m.w += kw * 0.004 * (0.25 + w.s) * Math.sin(d) - m.w * 0.06 + (Math.random() - 0.5) * 0.006 * w.s * kw;
@@ -122,17 +124,19 @@ function stepRotor(m) {
 }
 
 // ═══ МАХОВИК СО ШКИВОМ ═══
-// o: { R, r — радиусы маховика и шкива; puff — где выдыхает цилиндр (мир) }
+// o: { R, r — радиусы маховика и шкива; puff — где выдыхает цилиндр (мир); gy — земля под ним }
 export function flywheel(key, o) {
   const m = reg(key, 'fly', { th: 0, thp: 0, R: o.R, r: o.r, puff: o.puff });
-  m.puff = o.puff;
+  m.puff = o.puff; m.gy = o.gy !== undefined ? o.gy : o.puff && o.puff.y;
   return m;
 }
 function stepFly(m) {
-  // знакомый странник подошёл — маховик выдыхает навстречу и прибавляет ход
-  const r = m.puff ? respond(m.puff.x, m.puff.y, getPlayer()) : null;
+  // знакомый странник подошёл — маховик выдыхает навстречу и прибавляет ход;
+  // выдох — раз на подход: снова — только когда отошёл подальше (как подвесы, world/hang.js)
+  const P = getPlayer();
+  const r = m.puff ? respond(m.puff.x, m.gy, P) : null;
   if (r && !m.near) emit(m.puff.x, m.puff.y, 3 + r.lv * 2, { color: '#8A8D8F', speed: 0.3, life: 70, spread: 0.9, angle: -Math.PI / 2, windK: 0.9 });
-  m.near = !!r;
+  m.near = !!r || (m.near && !!P && !!m.puff && Math.hypot(P.x + 6 - m.puff.x, P.y + 20 - m.gy) < 225);
   // два хода поршня на оборот шкива: на каждом — толчок, между — провал
   const om = 0.035 * (1 + 0.12 * Math.sin(2 * m.thp)) * (r ? 1 + 0.3 * r.lv : 1);
   const prev = m.thp;
@@ -150,12 +154,12 @@ const LOCAL_LAG = 23;                                // минут
 // знакомому страннику вокзальные часы слышны (на смене минуты — щелчок), а узнавшие
 // его совсем — ждут: минутная не прыгает, пока он рядом; ушёл — догоняет разом
 const HOLD = new Map(), LASTMIN = new Map();
-export function stationClock(ctx, cx, cy, kind, col) {
+export function stationClock(ctx, cx, cy, kind, col, gy = cy) {
   const d = new Date();
   let min = d.getHours() * 60 + d.getMinutes();
   if (kind === 'local') min += d.getSeconds() / 60 - LOCAL_LAG;
   else {
-    const key = cx + ':' + cy, r = respond(cx, cy, getPlayer());
+    const key = cx + ':' + cy, r = respond(cx, gy, getPlayer());     // рядом ли — по земле под часами, как флюгер
     if (r && LASTMIN.has(key) && LASTMIN.get(key) !== min && !HOLD.has(key)) tick(1800, 'bandpass', 0.03, 0.04);
     LASTMIN.set(key, min);
     if (r && r.lv === 2) { if (!HOLD.has(key)) HOLD.set(key, min); min = HOLD.get(key); }
@@ -230,11 +234,12 @@ export function stepMechs() {
   frame++;
   const P = getPlayer();
   for (const [k, m] of REG) {
-    // простой колодец (не тот, что у площади: тот кивает всем) кивает знакомому страннику
+    // простой колодец (не тот, что у площади: тот кивает всем) кивает знакомому страннику —
+    // раз на подход: снова — только когда отошёл дальше 90
     if (m.kind === 'well' && !m.heavy && m.x !== undefined) {
       const r = respond(m.x, m.y, P, 60);
       if (r && !m.near && m.st === 'idle') { m.st = 'nod'; m.nod = 0; m.c0 = m.crank; }
-      m.near = !!r;
+      m.near = !!r || (m.near && !!P && Math.hypot(P.x + 6 - m.x, P.y + 20 - m.y) < 90);
     }
     const active = m.kind === 'well' && m.st !== 'idle';
     if (!active && frame - m.seen > 30) { if (frame - m.seen > 3600 && m.kind !== 'well') REG.delete(k); continue; }

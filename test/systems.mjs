@@ -3011,6 +3011,43 @@ setCtx(ctx);
     SG.setStrokes([]);
     assert(!SG.drawSignature(ctx, 0, 0, 100, 20), 'пустая подпись легла');
   });
+  test('подпись: плоский росчерк (почти прямая) не растягивается во всю бумагу', () => {
+    SG.setStrokes([[10, 30, 230, 30]]);
+    const w = +/width="(\d+)"/.exec(SG.signatureSVG(20))[1];
+    assert(w <= 160, `ширина ${w}`);
+    SG.setStrokes([[10, 30, 120, 34, 230, 31]]);
+    const w2 = +/width="(\d+)"/.exec(SG.signatureSVG(20, '#000', 1.6, 120))[1];
+    assert(w2 <= 120, `ширина ${w2} при maxW 120`);
+    SG.setStrokes([]);
+  });
+  test('подпись: тычок, правый клик, сорванный жест и второй палец прежнюю подпись не трогают', () => {
+    const on = {};
+    const cv = { getContext: () => fakeCtx(), addEventListener: (n, f) => { on[n] = f; }, setPointerCapture() {},
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 240, height: 56 }) };
+    const ev = (o) => ({ isPrimary: true, button: 0, pointerId: 1, preventDefault() {}, stopPropagation() {}, ...o });
+    const old = [[10, 40, 30, 12, 50, 38]];
+    SG.setStrokes(old);
+    let changed = 0;
+    SG.initSignPad(cv, () => changed++);
+    on.pointerdown(ev({ clientX: 20, clientY: 20 })); on.pointerup(ev({}));                       // тычок
+    on.pointerdown(ev({ clientX: 20, clientY: 20, button: 2 })); on.pointerup(ev({}));            // правый клик
+    on.pointerdown(ev({ clientX: 20, clientY: 20 })); on.pointermove(ev({ clientX: 60, clientY: 30 })); on.pointercancel(ev({}));   // сорвался
+    eq(JSON.stringify(SG.getStrokes()), JSON.stringify(old), 'подпись стёрта');
+    eq(changed, 0, 'бланк узнал о перемене, которой не было');
+    // новый росчерк, посреди него — второй палец: он мимо, штрих не рвётся
+    on.pointerdown(ev({ clientX: 20, clientY: 20 }));
+    on.pointermove(ev({ clientX: 40, clientY: 25 }));
+    on.pointerdown(ev({ clientX: 200, clientY: 45, pointerId: 2, isPrimary: false }));
+    on.pointermove(ev({ clientX: 190, clientY: 44, pointerId: 2, isPrimary: false }));
+    on.pointermove(ev({ clientX: 60, clientY: 30 }));
+    on.pointerup(ev({ clientX: 200, clientY: 45, pointerId: 2, isPrimary: false }));
+    on.pointerup(ev({}));
+    const st = SG.getStrokes();
+    eq(st.length, 1, 'штрихов после нового росчерка');
+    eq(st[0].join(), '20,20,40,25,60,30', 'чужой палец в штрихе');
+    eq(changed, 1, 'бланк не узнал о новой подписи');
+    SG.setStrokes([]);
+  });
 }
 
 // ═══ ВНИМАНИЕ ОЖИВЛЯЕТ МЕХАНИЗМЫ (world/attention.js; Платонов) ═══
@@ -3019,6 +3056,7 @@ setCtx(ctx);
   const MCH = await imp('world/mechanisms.js');
   const HG = await imp('world/hang.js');
   const PR = await imp('core/playerRef.js');
+  const FPN2 = await imp('render/feedPanels.js');
   const thing = { id: 'test_vane_house', x: 1000, y: 1000, w: 40, h: 30 };
   test('внимание: три раза — узнаёт, семь — отвечает в полную; лента отнимает половину', () => {
     AT._resetAttention();
@@ -3055,6 +3093,41 @@ setCtx(ctx);
     const want = Math.atan2(player.y + 20 - 990, player.x + 6 - 1020);
     const off = Math.abs(Math.atan2(Math.sin(m.a - want), Math.cos(m.a - want)));
     assert(off < 0.6, `флюгер смотрит мимо: ${off.toFixed(2)} рад`);
+  });
+  test('внимание: флюгер на шпиле ищет странника на земле, а не в небе над ним', () => {
+    AT._resetAttention();
+    for (let i = 0; i < 7; i++) AT.noteAttention(thing);
+    const player = { x: 1060, y: 1002, vx: 0, vy: 0 };   // перед вокзалом, правее шпиля, ноги у земли 1025
+    PR.setPlayer(player);
+    const ctx = { fillRect() {}, fillStyle: '' };
+    let m;
+    for (let i = 0; i < 1200; i++) { m = MCH.vane(ctx, 'vane:spire', 1020, 1025 - 73, '#000', '#fff', 1025); MCH.stepMechs(); }
+    assert(Math.cos(m.a) > 0.8, `стрелка смотрит в небо/камеру: cos ${Math.cos(m.a).toFixed(2)}`);
+  });
+  test('внимание: колодец кивает знакомому раз на подход, а не на каждый шаг у края', () => {
+    AT._resetAttention();
+    const wl = { id: 'test_well', x: 2000, y: 2000, w: 20, h: 20 };
+    for (let i = 0; i < 7; i++) AT.noteAttention(wl);
+    const m = MCH.well('well:test_hyst'); m.x = 2010; m.y = 2010;
+    const player = { x: 2010 - 6, y: 2010 + 50 - 20, vx: 0, vy: 0 };
+    PR.setPlayer(player);
+    let nods = 0, prev = m.st;
+    for (let i = 0; i < 1200; i++) {                       // ходит взад-вперёд через границу «рядом» (60)
+      player.y = 2010 - 20 + 50 + 25 * Math.sin(i / 20);
+      MCH.stepMechs();
+      if (m.st === 'nod' && prev !== 'nod') nods++;
+      prev = m.st;
+    }
+    eq(nods, 1, 'кивков');
+    player.y = 2010 - 20 + 200;                           // ушёл
+    for (let i = 0; i < 100; i++) MCH.stepMechs();
+    player.y = 2010 - 20 + 40;                            // вернулся
+    for (let i = 0; i < 5; i++) { MCH.stepMechs(); if (m.st === 'nod' && prev !== 'nod') nods++; prev = m.st; }
+    eq(nods, 2, 'на новый подход не кивнул');
+  });
+  test('полосы ленты: где лежали — забыто, когда лент нет (распад рвёт мир мимо них только пока они есть)', () => {
+    FPN2.draw(fakeCtx(), 0);
+    eq(FPN2.drawn().length, 0, 'полосы помнят место без ленты');
   });
   test('внимание: колокол у знакомой вещи качнётся навстречу; кран кольца «сейчас» — нет', () => {
     AT._resetAttention(); HG._reset();

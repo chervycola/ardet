@@ -653,7 +653,7 @@ function render() {
   setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
   dampBrainrot(beyond.hK);                          // горизонт виден — распад редеет
   drawBrainrot(uiCtx);
-  drawEdgeHud(uiCtx);                               // батарейка у льда — поверх полос ленты
+  if (!isFrozen()) drawEdgeHud(uiCtx);              // батарейка у льда — поверх полос ленты; телефон погас — и её нет
   drawHorizon(uiCtx, vw, vh);                       // столб за кольцом: черта далеко впереди, над ней вечер
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
@@ -685,12 +685,11 @@ const NO_CASTLE = /[?&]nocastle\b/.test(location.search); // замок-пого
 // полосы ленты (render/feedPanels.js) — в сборке до печати: зерно, яд, заливки и интерфейс ложатся поверх,
 // растр распада (слой ui) ест и ленту; в красный полдень, дома и под землёй лент нет
 layers.feedPass = ctx => {
-  const k = feedK();
-  if (k <= 0 || redNoon.k > 0.5 || house.active || under.active) return;
+  const k = feedK(), off = k <= 0 || redNoon.k > 0.5 || house.active || under.active;
   ctx.save();
   ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  drawFeedPanels(ctx, k);
+  drawFeedPanels(ctx, off ? 0 : k);                 // и без лент — зовём: полосы забывают, где лежали
   ctx.restore();
 };
 layers.inkPass = (ctx, main) => {
@@ -1605,10 +1604,16 @@ function updateGame() {
   // а за изгородь — только с пропуском Шута.
   let drift = false;
   if (!house.active && !under.active && canLeaveSettlement()) {
-    // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет — не проскочить
+    // автоход тормозит к точке: в пути торможения (v²/2a, на льду — длинном) лента не тянет вперёд —
+    // не проскочить; вбок тянет и там (иначе на коротком тапе по льду ленты почти нет), на последних 10 — ничуть
     const v2 = player.vx * player.vx + player.vy * player.vy;
-    const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
-    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
+    const tdx = player.tx - player.x, tdy = player.ty - player.y, td = Math.hypot(tdx, tdy);
+    const braking = player.auto && !(player.path && player.path.length) && td < 10 + v2 / (2 * Math.max(0.005, S.decel));
+    let [pdx, pdy] = braking && td < 10 ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
+    if (braking && td > 0) {
+      const ux = tdx / td, uy = tdy / td, a = pdx * ux + pdy * uy;
+      if (a > 0) { pdx -= a * ux; pdy -= a * uy; }
+    }
     // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
     // иначе сидящий у картинки позёмки съезжал и падал)
     if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }

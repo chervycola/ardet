@@ -6,8 +6,9 @@
 // Полосы прокручиваются, каждая сама по себе, как лента; при «меньше
 // движения» стоят. Без вспышек: полоса входит плавно, раз и насовсем.
 // Запись — середина кадра (фон, мир, свет, сложение) раз в 12 кадров, пока распад есть.
-// Лента ложится поверх рвущейся реальности, но под растр: распад рвёт мир,
-// а лента гладкая — и растр одинаково ест обоих.
+// Лента ложится в сборке до печати и растра: распад рвёт мир, а лента гладкая —
+// разрывы строк и макроблоки её обходят (world/brainrot.js: drawn()), растр и
+// провалы кадра одинаково едят обоих.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { scaler } from './scaler.js';
@@ -61,7 +62,10 @@ let pool = [];
 let lastRec = -1e9;                      // кадр последней записи (по времени, не по остатку: рендер бывает реже)
 let scroll = 0, lastT = -1;              // прокрутка копится по шагам — смена скорости не дёргает ленту
 let stills = {};                         // «меньше движения»: по полосе — один застывший кадр
-export function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; lastRec = -1e9; scroll = 0; lastT = -1; stills = {}; }
+let shown = [];                          // полосы, что легли в прошлой сборке: { x, w, alpha }
+export function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; lastRec = -1e9; scroll = 0; lastT = -1; stills = {}; shown = []; }
+// где лента лежит на экране сейчас — распад рвёт мир мимо неё
+export function drawn() { return shown; }
 // прошлое старше записи не показываем: «две секунды назад» не должны быть минутами
 function dropStale() { while (hist.length && t - hist[0].f > (KEEP + 1) * EVERY) pool.push(hist.shift().c); }
 export function historyLength() { return hist.length; }
@@ -104,11 +108,14 @@ export function record(k) {
 
 const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
 
-// ctx — в точках кадра (vw×vh); в сборке рисуется до печати и растра (main.js: layers.feedPass)
+// ctx — в точках кадра (vw×vh); в сборке рисуется до печати и растра (main.js: layers.feedPass);
+// k = 0 — лент нет (полдень, дом, изнанка): застывшие кадры не доживают до следующего раза
 export function draw(ctx, k) {
-  if (k < PANEL_FROM || !hist.length) return;
+  shown = [];
+  if (k < PANEL_FROM || !hist.length) { stills = {}; return; }
   dropStale();
   const vw = scaler.vw, vh = scaler.vh, { pw, panels } = layout(k, vw, vh);
+  for (const s in stills) if (!panels.some(p => String(p.s) === s)) delete stills[s];   // ушла полоса — ушёл и её кадр
   if (!panels.length || !hist.length) return;
   if (hist[0].c.width !== pw || hist[0].c.height !== vh) { reset(); return; }   // экран сменился — запись не та
   const still = reducedNow(), frames = hist.map(h => h.f);
@@ -142,5 +149,6 @@ export function draw(ctx, k) {
     ctx.fillStyle = NIGHT;                                   // края полосы — ночь
     ctx.fillRect(p.s > 0 ? p.x : p.x + p.w - 1, 0, 1, vh);
     ctx.restore();
+    shown.push({ x: p.x, w: p.w, alpha: p.alpha });
   }
 }

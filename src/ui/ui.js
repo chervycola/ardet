@@ -440,7 +440,7 @@ function typeLine() {
     optsEl.appendChild(btn);
     const note = document.createElement('div');                       // канон §06: пометка на полях
     note.className = 'dmarg';
-    if (hasSignature()) note.innerHTML = 'подпись свидетеля:' + signatureSVG(22);   // рука странника (ui/signature.js)
+    if (hasSignature() && redNoon.k <= 0.5) note.innerHTML = 'подпись свидетеля:' + signatureSVG(22);   // рука странника (ui/signature.js); в красный полдень руки нет
     else note.textContent = 'пометка на полях: свидетель от подписи уклонился';
     optsEl.appendChild(note);
   }

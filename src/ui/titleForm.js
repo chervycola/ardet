@@ -60,6 +60,7 @@ function leave(btn) {
     setTimeout(() => entry.addEventListener('click', function back() {
       entry.classList.remove('left'); voidEl.innerHTML = ''; mark(btn, false);
       entry.removeEventListener('click', back);
+      btn.focus({ preventScroll: true });                      // фокус на месте: следующий Enter не уводит в дорогу
     }), 300);
   });
 }
@@ -75,11 +76,15 @@ export function initTitleForm({ onGo, onRoad }) {
   const x = document.getElementById('f0-sign-x');
   const showX = () => { if (x) x.hidden = !hasSignature(); };
   const pad = initSignPad(document.getElementById('f0-sign-pad'), showX);
-  if (x && pad) x.addEventListener('click', e => { e.stopPropagation(); pad.clear(); });
+  if (x && pad) x.addEventListener('click', e => {
+    e.stopPropagation(); pad.clear();
+    // с клавиатуры: кнопка исчезла — фокус на последнюю графу, а не в пустоту (оттуда Enter — «идти дальше»)
+    if (e.detail === 0) { const it = form.querySelectorAll('.f0-item'); if (it.length) it[it.length - 1].focus({ preventScroll: true }); }
+  });
   showX();
 
   const act = btn => {
-    if (busy || entry.classList.contains('left')) return;
+    if (busy || !shown() || entry.classList.contains('left')) return;
     const a = btn.dataset.act;
     if (a === 'go') { busy = true; mark(btn); later(() => { busy = false; onGo && onGo(); }); }
     else if (a === 'road') {
@@ -90,9 +95,10 @@ export function initTitleForm({ onGo, onRoad }) {
     else if (a === 'leave') leave(btn);
   };
   for (const btn of form.querySelectorAll('.f0-item')) btn.addEventListener('click', () => act(btn));
-  // в некоторых webview тап не рождает click — вход ловим и по pointerdown
+  // в некоторых webview тап не рождает click — вход ловим и по pointerup: бланк
+  // прокручивается, а свайп с графы шлёт pointercancel вместо pointerup — в дорогу не уводит
   const go = form.querySelector('.f0-item[data-act="go"]');
-  if (go) go.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') act(go); });
+  if (go) go.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') act(go); });
 
   // клавиши: вверх-вниз по графам, влево-вправо в строке настроек, Enter / пробел / E — отметить
   document.addEventListener('keydown', e => {
@@ -102,9 +108,10 @@ export function initTitleForm({ onGo, onRoad }) {
     const tg = e.target;
     if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
     if (document.getElementById('txed')?.classList.contains('on')) return;
+    if (e.repeat && /^(enter| |escape|e|у)$/i.test(e.key)) return;      // зажатая клавиша отмечает один раз
     if (entry.classList.contains('left')) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); entry.click(); } return; }
     const k = e.key.toLowerCase();
-    const all = [...form.querySelectorAll('.f0-item, .f0-byt:not([hidden]) .f0-opt')];
+    const all = [...form.querySelectorAll('.f0-item, .f0-byt:not([hidden]) .f0-opt, #f0-sign-x:not([hidden])')];
     const i = all.indexOf(document.activeElement);
     const step = { arrowdown: 1, s: 1, 'ы': 1, arrowup: -1, w: -1, 'ц': -1, arrowright: 1, d: 1, 'в': 1, arrowleft: -1, a: -1, 'ф': -1 }[k];
     if (step) { e.preventDefault(); (all[(i + step + all.length) % all.length] || all[0]).focus({ preventScroll: true }); return; }

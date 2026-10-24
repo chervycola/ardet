@@ -176,7 +176,7 @@ function giyofuStation(ctx, x, gy) {
   // идут по-настоящему: верхние прыгают раз в минуту, нижние плавно и отстают
   f(B, 42, 52, 6, 6); f(null, 42, 42, 6, 6);
   const L0 = Math.round(x - 46), G0 = Math.round(gy);
-  stationClock(ctx, L0 + 44, G0 - 49, 'rail', N);
+  stationClock(ctx, L0 + 44, G0 - 49, 'rail', N, G0);
   stationClock(ctx, L0 + 44, G0 - 39, 'local', N);
   f(A, 43, 45, 4, 1);
   // западная шляпа: восьмигранный бельведер — застеклённый фонарь, купол, флюгер
@@ -186,7 +186,7 @@ function giyofuStation(ctx, x, gy) {
   f(D1, 41, 66, 8, 2); f(null, 42, 68, 6, 2); f(null, 43, 69, 4, 1);
   f(P2, 41, 66, 1, 2); f(null, 42, 68, 1, 2); f(null, 43, 69, 1, 1);
   f(A, 44, 72, 1, 3);                                              // шпиль флюгера
-  vane(ctx, `vane:${L0}:${G0}`, L0 + 44, G0 - 73, A, B);          // стрелка — навстречу ветру
+  vane(ctx, `vane:${L0}:${G0}`, L0 + 44, G0 - 73, A, B, G0);      // стрелка — навстречу ветру; на странника — от земли
   // вход под караха́фу
   f(D1, 35, 24, 20, 2); f(null, 37, 26, 16, 2); f(null, 41, 28, 8, 2);
   f(P2, 41, 28, 8, 1); f(null, 37, 26, 4, 1); f(null, 49, 26, 4, 1);
@@ -226,7 +226,7 @@ function machineOffice(ctx, x, gy) {
   // на каждый ход поршня цилиндр выдыхает пар
   const cx = 53, cy = 9, r = 8;
   const L0 = Math.round(x - 48), G0 = Math.round(gy);
-  const fw = flywheel(`fly:${L0}:${G0}`, { R: r, r: 3, puff: { x: L0 + 29, y: G0 - 22 } });
+  const fw = flywheel(`fly:${L0}:${G0}`, { R: r, r: 3, puff: { x: L0 + 29, y: G0 - 22 }, gy: G0 });
   line(f, P2, 36, 21, 53, 17); line(f, P2, 36, 15, 53, 1);
   // ремень бежит: светлые метки едут со скоростью обода (верхняя ветвь — к маховику)
   for (let k = 0; k < 2; k++) {
