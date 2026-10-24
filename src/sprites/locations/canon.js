@@ -11,6 +11,7 @@ import { t } from '../../core/time.js';
 import { phaseAt } from '../../world/sky.js';
 import { wind } from '../../world/wind.js';
 import { getPlayer } from '../../core/playerRef.js';
+import { revealOf } from '../../world/potemkin.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', SV = '#E28A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -1847,4 +1848,202 @@ export function draw_dumpster(x, y) {
   // искры
   for (let i = 0; i < 5; i++) { const a = ((t * 0.6 + i * 19) % 60) / 60; X.globalAlpha = 1 - a; r(x + 12 + i * 6 + q(Math.sin(a * 6 + i) * 3 + a * wind.x * 16), y - 2 - q(a * 30), 1, 1, a < 0.4 ? SV : KV); }
   X.globalAlpha = 1;
+}
+
+// ── ТРАНСПАРАНТ ──
+// «Полотнище метров в тридцать натянуто между двумя ржавыми столбами. Брезент,
+// надпись краской от руки. Буквы оплыли от дождей, но читаются. Внизу мелко:
+// „дата уточняется. место уточняется. реальность уточняется."» Под ним (use) —
+// «Буквы огромные. COMING SOON». Шов (potemkin): «Надпись обведена по старой,
+// буква в букву, и не один раз; в последнем слове обвели и потёк». Брезент —
+// мглой, складки от узлов вниз; буквы костью кистью, краска выцвела и шелушится,
+// потёки давние. Шов — только неподвижному взгляду (world/potemkin.js): тогда
+// последнее слово свежее, из-под него по краю выглядывают прежние обводки,
+// потёки свежие и длиннее (второй холст полотна). Полотно хлопает
+// по ветру (полосами — волна идёт вдоль), правый нижний угол оторван и треплется;
+// слева внизу прожжено. Столбы — трубы в ржавчине, растяжки, бетонные башмаки.
+const TARP_L = '#4b5a48', TARP_D = '#30392e', TARP_DD = '#262d24';      // брезент: к свету, в складке, глубже
+const BN_L = -4, BN_R = 274, BN_G = 120, BN_TOP = -20;                  // столбы (левый край трубы), земля, верх
+const TRP_W = 268, TRP_H = 124, TRP_X = 4, TRP_Y = -14;                           // полотно: размер и левый верх
+const TIES = 12;                                                        // узлы по верхней кромке — через 24
+const tarpTop = x => 2 + q(3 * Math.sin(Math.PI * x / TRP_W)) + ((x + 12) % 24 > 6 && (x + 12) % 24 < 18 ? 1 : 0);
+const tarpBot = x => TRP_H - 6 + q(2 * Math.sin(Math.PI * x / TRP_W));
+const tarpTorn = (x, y) => x > TRP_W - 30 && y > tarpBot(x) - (x - (TRP_W - 30)) * 0.95 + (hh(x, 1, 41) < 0.4 ? 1 : 0);   // оторванный угол
+const tarpBurnt = (x, y) => { const dx = x - 24, dy = (y - 98) * 1.3; return dx * dx + dy * dy < 22 + hh(x, y, 43) * 10; };   // прожжено
+// буквы — по скелету, кистью: [ширина, ломаные]; координаты в клетке 14×24
+const BRUSH_GLYPH = {
+  C: [14, [[[13, 3], [10, 0], [4, 0], [1, 3], [0, 8], [0, 16], [1, 21], [4, 24], [10, 24], [13, 21]]]],
+  O: [14, [[[4, 0], [10, 0], [13, 3], [14, 8], [14, 16], [13, 21], [10, 24], [4, 24], [1, 21], [0, 16], [0, 8], [1, 3], [4, 0]]]],
+  M: [16, [[[0, 24], [0, 0], [8, 14], [16, 0], [16, 24]]]],
+  I: [3, [[[1, 0], [1, 24]]]],
+  N: [14, [[[0, 24], [0, 0], [14, 24], [14, 0]]]],
+  G: [14, [[[13, 3], [10, 0], [4, 0], [1, 3], [0, 8], [0, 16], [1, 21], [4, 24], [10, 24], [13, 21], [14, 14], [8, 14]]]],
+  S: [13, [[[13, 3], [10, 0], [4, 0], [1, 3], [1, 8], [4, 11], [9, 13], [12, 15], [13, 20], [10, 24], [4, 24], [0, 21]]]],
+};
+// мелко — заглавные 3×5 (Д, Л и М шире)
+const FINE = {
+  'А': ['.#.', '#.#', '###', '#.#', '#.#'], 'Д': ['.###.', '.#.#.', '.#.#.', '#####', '#...#'], 'Т': ['###', '.#.', '.#.', '.#.', '.#.'],
+  'У': ['#.#', '#.#', '.##', '..#', '##.'], 'О': ['.#.', '#.#', '#.#', '#.#', '.#.'], 'Ч': ['#.#', '#.#', '.##', '..#', '..#'],
+  'Н': ['#.#', '#.#', '###', '#.#', '#.#'], 'Я': ['.##', '#.#', '.##', '#.#', '#.#'], 'Е': ['###', '#..', '##.', '#..', '###'],
+  'С': ['.##', '#..', '#..', '#..', '.##'], 'М': ['#...#', '##.##', '#.#.#', '#...#', '#...#'], 'Р': ['##.', '#.#', '##.', '#..', '#..'],
+  'Л': ['.###', '.#.#', '.#.#', '.#.#', '##.#'], 'Ь': ['#..', '#..', '##.', '#.#', '##.'], '.': ['.', '.', '.', '.', '#'],
+};
+const FINE_LINES = ['ДАТА УТОЧНЯЕТСЯ.', 'МЕСТО УТОЧНЯЕТСЯ.', 'РЕАЛЬНОСТЬ УТОЧНЯЕТСЯ.'];
+const fineW = s => [...s].reduce((a, ch) => a + (ch === ' ' ? 3 : FINE[ch][0].length + 1), 0) - 1;
+// мазок кистью по ломаной: квадратная кисть w, лёгкая дрожь руки; flake — доля облезлого;
+// капли вниз с нижних мест; skip — куда не красить (дыра, оторванный угол)
+function brushStroke(pts, ox, oy, sc, w, col, seed, o) {
+  let i = 0;
+  for (let s = 0; s + 1 < pts.length; s++) {
+    const [x0, y0] = pts[s], [x1, y1] = pts[s + 1], n = Math.max(1, q(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * sc));
+    for (let k = 0; k <= n; k++, i++) {
+      const wob = q(Math.sin(i * 0.33 + seed) * 0.55);
+      const cx = q(ox + (x0 + (x1 - x0) * k / n) * sc + (Math.abs(y1 - y0) > Math.abs(x1 - x0) ? wob : 0));
+      const cy = q(oy + (y0 + (y1 - y0) * k / n) * sc + (Math.abs(y1 - y0) > Math.abs(x1 - x0) ? 0 : wob));
+      for (let a = 0; a < w; a++) for (let b = 0; b < w; b++) {
+        const px = cx - (w >> 1) + a, py = cy - (w >> 1) + b;
+        if (hh(px, py, 47) < o.flake) continue;
+        r(px, py, 1, 1, hh(px, py, 49) < o.worn ? o.wornCol : col);
+      }
+      // капля: снизу мазка, где кисть шла поперёк или в нижней трети буквы
+      const low = (y0 + (y1 - y0) * k / n) > 15 || Math.abs(y1 - y0) < Math.abs(x1 - x0);
+      if (low && hh(i, seed * 7 | 0, 51) < o.drip) {
+        const len = 2 + q(hh(i, seed * 7 | 0, 53) * o.dripLen), dx = cx - (w >> 1) + q(hh(i, 3, 55) * (w - 1));
+        r(dx, cy + (w >> 1) + 1, 1, len, o.dripCol); r(dx, cy + (w >> 1) + 1 + len, 1, 1, o.dripCol);
+        if (len > 6) r(dx - 1 + (hh(i, 4, 57) < 0.5 ? 0 : 2), cy + (w >> 1) + len, 1, 1, o.dripCol);   // капля раздалась
+      }
+    }
+  }
+}
+function brushWord(txt, ox, oy, sc, w, col, seed, o) {
+  let x = ox;
+  for (const ch of txt) {
+    if (ch === ' ') { x += 12 * sc; continue; }
+    const [gw, strokes] = BRUSH_GLYPH[ch];
+    strokes.forEach((pts, j) => brushStroke(pts, x, oy, sc, w, col, seed + x * 0.1 + j, o));
+    x += (gw + 6) * sc;
+  }
+  return x;
+}
+const brushWordW = (txt, sc) => [...txt].reduce((a, ch) => a + (ch === ' ' ? 12 : BRUSH_GLYPH[ch][0] + 6) * sc, 0) - 6 * sc;
+// полотно целиком — в свой холст: мгла с складками от узлов, кромки с люверсами,
+// подтёки дождя, буквы, мелкая строка, дыра и оторванный угол
+function tarpBody(seam) {
+  // брезент: столбцами, пропуская дыру и угол; складки — гребень под узлом, впадина между
+  for (let x = 0; x < TRP_W; x++) {
+    const top = tarpTop(x), bot = tarpBot(x), ph = ((x - 12) % 24 + 24) % 24, fold = Math.cos(ph / 24 * Math.PI * 2);
+    for (let y = top; y <= bot; y++) {
+      if (tarpTorn(x, y) || tarpBurnt(x, y)) continue;
+      const decay = Math.max(0, 1 - (y - top) / 46), f = fold * decay + (hh(x, y, 61) - 0.5) * 0.35;
+      r(x, y, 1, 1, f > 0.55 ? TARP_L : f < -0.62 ? TARP_DD : f < -0.25 ? TARP_D : MG);
+    }
+    // подтёки дождя — тёмные полосы от кромки вниз
+    if (hh(x, 2, 63) < 0.08) { const len = 10 + q(hh(x, 3, 65) * 50); for (let y = top + 3; y < Math.min(bot, top + len); y++) if (!tarpTorn(x, y) && !tarpBurnt(x, y) && hh(x, y, 67) < 0.8) r(x, y, 1, 1, TARP_D); }
+    // кромки: подшивка темнее, по ней стежок
+    r(x, top, 1, 2, TARP_D); if (x % 3 === 0) r(x, top + 2, 1, 1, TARP_DD);
+    if (!tarpTorn(x, bot - 1)) { r(x, bot - 1, 1, 2, TARP_D); if (x % 3 === 1) r(x, bot - 2, 1, 1, TARP_DD); }
+  }
+  // люверсы под узлами: квадратное кольцо пеплом
+  for (let k = 0; k < TIES; k++) { const gx = 12 + k * 24, gy = tarpTop(gx) + 1; r(gx - 1, gy - 1, 3, 3, AS); r(gx, gy, 1, 1, K1); r(gx + 1, gy + 1, 1, 1, S0); }
+  // прожжённая дыра: край обуглен, вокруг подпалина
+  for (let y = 86; y < 112; y++) for (let x = 12; x < 38; x++) {
+    if (tarpBurnt(x, y) || y < tarpTop(x) || y > tarpBot(x)) continue;
+    const n = (tarpBurnt(x - 1, y) || tarpBurnt(x + 1, y) || tarpBurnt(x, y - 1) || tarpBurnt(x, y + 1)), m = (tarpBurnt(x - 2, y) || tarpBurnt(x + 2, y) || tarpBurnt(x, y - 2) || tarpBurnt(x, y + 2));
+    if (n) r(x, y, 1, 1, K1); else if (m) r(x, y, 1, 1, hh(x, y, 69) < 0.5 ? BR2 : SINGE);
+  }
+  // оторванный угол: бахрома ниток по рваному краю
+  for (let x = TRP_W - 30; x < TRP_W; x++) {
+    let y = tarpBot(x); while (y > 0 && tarpTorn(x, y)) y--;
+    if (hh(x, 5, 71) < 0.45) r(x, y + 1, 1, 1 + q(hh(x, 6, 73) * 3), TARP_D);
+  }
+  // COMING SOON: старое слово выцвело и шелушится, потёки давние; последнее — обведено
+  // по старому не раз (прежние обводки торчат по краю), свежо, потёки длиннее
+  const SC = 1.3, BW = 4, all = brushWordW('COMING SOON', SC), ox = q((TRP_W - all) / 2), oy = 16;
+  const old = { flake: 0.07, worn: 0.22, wornCol: L2, drip: 0.035, dripLen: 7, dripCol: L2 };
+  const sx = brushWord('COMING ', ox, oy, SC, BW, L1, 1, old);
+  if (!seam) brushWord('SOON', sx, oy, SC, BW, L1, 7, { ...old, flake: 0.05 });
+  else {
+    brushWord('SOON', sx - 1, oy + 1, SC, BW, L2, 5, { flake: 0.25, worn: 0, wornCol: L2, drip: 0, dripLen: 0, dripCol: L2 });   // первая обводка
+    brushWord('SOON', sx + 1, oy - 1, SC, BW, L1, 6, { flake: 0.18, worn: 0.3, wornCol: L2, drip: 0.02, dripLen: 6, dripCol: L2 });   // вторая
+    brushWord('SOON', sx, oy, SC, BW, BO, 7, { flake: 0, worn: 0.04, wornCol: L1, drip: 0.06, dripLen: 11, dripCol: BO });   // свежая, течёт
+  }
+  // мелкая строка: три строки, к последней краски меньше
+  FINE_LINES.forEach((s, li) => {
+    let x = q((TRP_W - fineW(s)) / 2); const y = 72 + li * 8, fade = [0, 0.03, 0.08][li];
+    for (const ch of s) {
+      if (ch === ' ') { x += 3; continue; }
+      const g = FINE[ch];
+      for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < g[yy].length; xx++)
+        if (g[yy][xx] === '#' && hh(x + xx, y + yy, 75) >= fade) r(x + xx, y + yy, 1, 1, li === 2 ? L2 : L1);
+      x += g[0].length + 1;
+    }
+  });
+}
+// столбы, растяжки, башмаки — неподвижное
+function bannerPoles() {
+  for (const px of [BN_L, BN_R]) {
+    // бетонный башмак, вросший; плита на болтах
+    r(px - 6, BN_G - 3, 18, 4, S2); r(px - 6, BN_G - 3, 18, 1, S0); r(px - 6, BN_G - 3, 1, 4, S1);
+    r(px - 3, BN_G - 5, 12, 2, K3); r(px - 3, BN_G - 5, 12, 1, S0); r(px - 2, BN_G - 5, 1, 1, AS); r(px + 7, BN_G - 5, 1, 1, AS);
+    // труба: свет слева, к тени — темнее, кромка
+    for (let y = BN_TOP; y < BN_G - 5; y++) {
+      r(px, y, 1, 1, S1); r(px + 1, y, 2, 1, S0); r(px + 3, y, 1, 1, K3); r(px + 4, y, 1, 1, K2); r(px + 5, y, 1, 1, K1);
+      if (hh(px, y, 81) < 0.12) r(px + 1 + q(hh(px, y, 83) * 3), y, 1 + (hh(px, y, 85) < 0.4 ? 1 : 0), 1, hh(px, y, 87) < 0.5 ? RUST : RUST_L);
+    }
+    // ржа потёками от хомутов вниз
+    for (const cy of [-16, 100]) {
+      r(px - 1, cy, 8, 2, K3); r(px - 1, cy, 8, 1, S0); r(px - 1, cy, 1, 2, AS);
+      for (let k = 0; k < 6; k++) if (hh(px, k + cy, 89) < 0.6) r(px + k, cy + 2, 1, 3 + q(hh(px, k, 91) * 9), hh(k, px, 93) < 0.5 ? RUST : RUST_L);
+    }
+    // шапка
+    r(px - 1, BN_TOP - 2, 8, 2, K3); r(px - 1, BN_TOP - 2, 8, 1, S1);
+  }
+  // растяжки — от верха наружу к колышкам
+  const guy = (ax, ay, bx, by) => { const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay)); for (let k = 0; k <= n; k++) r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 1, k % 7 === 3 ? RUST_L : K3); };
+  guy(BN_L, BN_TOP + 1, BN_L - 10, BN_G - 1); guy(BN_R + 5, BN_TOP + 1, BN_R + 14, BN_G - 1);   // в рамке проявления (main.js: ±10)
+  for (const gx of [BN_L - 11, BN_R + 14]) { r(gx, BN_G - 2, 2, 3, K1); r(gx, BN_G - 2, 2, 1, AS); }
+  X.globalAlpha = 0.45; r(BN_L - 8, BN_G, 22, 1, K0); r(BN_R - 8, BN_G, 22, 1, K0); X.globalAlpha = 1;
+}
+const TARPS = [null, null];                                              // холсты полотна: целое и со швом (нет — по пикселю)
+const BANNER = { id: 'banner' };
+export function draw_banner(x, y) {
+  bake('banner_poles', x, y, -18, -24, 314, 146, bannerPoles);
+  const seam = revealOf(BANNER) > 0.25 ? 1 : 0;
+  if (TARPS[seam] === null) {
+    let c = typeof document !== 'undefined' && document.createElement ? document.createElement('canvas') : false;
+    if (c && typeof c.getContext === 'function') { c.width = TRP_W; c.height = TRP_H; const prev = X; setCtx(c.getContext('2d')); try { tarpBody(seam); } finally { setCtx(prev); } } else c = false;
+    TARPS[seam] = c;
+  }
+  const TARP = TARPS[seam];
+  // волна идёт вдоль полотна по ветру; у столбов полотно держат — там тише
+  const s = Math.min(1.3, wind.s), A = 0.8 + s * 3.2, dir = wind.x < 0 ? -1 : 1, sp = 0.05 + s * 0.08;
+  const off = cx => { const env = Math.sin(Math.PI * Math.max(0, Math.min(TRP_W, cx)) / TRP_W); return q((Math.sin(cx * 0.05 - dir * t * sp) * A + Math.sin(cx * 0.11 - dir * t * sp * 1.7 + 1.3) * A * 0.2) * env); };
+  const ox = q(x) + TRP_X, oy = q(y) + TRP_Y;
+  // верхняя верёвка: провисает, ходит вполовину полотна; ровные отрезки — одним мазком
+  const ropeY = k => -16 + q(3 * Math.sin(Math.PI * Math.max(0, Math.min(1, (k - TRP_X) / TRP_W)))) + q(off(k - TRP_X) * 0.5);
+  X.fillStyle = SINGE;
+  for (let k = BN_L + 5, k0 = k, y0 = ropeY(k); k <= BN_R; k++) {
+    const yy = k < BN_R ? ropeY(k) : null;
+    if (yy !== y0) { X.fillRect(q(x) + k0, q(y) + y0, k - k0, 1); k0 = k; y0 = yy; }
+  }
+  if (TARP) {
+    // полосами по 4: волна идёт вдоль (соседние полосы на одной высоте — одним блитом),
+    // склон к свету чуть светлее, от света — темнее
+    let c0 = 0, o0 = off(0);
+    for (let cx = 4; cx <= TRP_W; cx += 4) {
+      const o = cx < TRP_W ? off(cx) : null;
+      if (o === o0) continue;
+      X.drawImage(TARP, c0, 0, cx - c0, TRP_H, ox + c0, oy + o0, cx - c0, TRP_H);
+      if (o !== null) { const d = o - o0, sx = cx - 4; X.globalAlpha = d > 0 ? 0.14 : 0.05; X.fillStyle = d > 0 ? NI : BO; X.fillRect(ox + sx, oy + o0 + tarpTop(sx), 4, tarpBot(sx) - tarpTop(sx) + 1); X.globalAlpha = 1; }
+      c0 = cx; o0 = o;
+    }
+  } else { X.translate(ox, oy); try { tarpBody(seam); } finally { X.translate(-ox, -oy); } }
+  // узлы: от верёвки к люверсам
+  for (let k = 0; k < TIES; k++) { const gx = 12 + k * 24, o = off(gx), ry = -16 + q(3 * Math.sin(Math.PI * gx / TRP_W)) + q(o * 0.5); for (let yy = ry + 1; yy < TRP_Y + tarpTop(gx) + o; yy++) r(ox + gx, y + yy, 1, 1, SINGE); r(ox + gx - 1, y + ry, 3, 1, BR2); }
+  // углы привязаны к столбам
+  const tie = (ax, ay, bx, by) => { const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay), 1); for (let k = 0; k <= n; k++) r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 1, SINGE); };
+  tie(x + BN_L + 5, y + 101, ox, oy + tarpBot(0) - 1 + off(0));
+  // оторванный клок у правого нижнего угла треплется
+  const fx = ox + TRP_W - 30, fy = oy + tarpBot(TRP_W - 30) + off(TRP_W - 30);
+  for (let k = 0; k < 9; k++) { const len = 9 - k + q(Math.sin(t * (0.12 + s * 0.1) + k * 0.6) * (1 + s)), sway = q(Math.sin(t * 0.09 + k * 0.4) * (1 + s * 2) * k / 9); r(fx + k + sway, fy - k, 1, len, k & 1 ? TARP_D : MG); }
 }

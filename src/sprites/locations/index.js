@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -963,105 +963,6 @@ export function draw_posterwall(x, y) {
       // Petals falling
       px(X,rosX+hash(i,0,11)*3-1,y+53,'#3a0a08');
     }
-}
-
-export function draw_banner(x, y) {
-    // Heavy support poles with base plates
-    rect(X,x-4,y-20,6,140,P.dgrey);rect(X,x-3,y-20,4,140,P.ash);
-    rect(X,x+274,y-20,6,140,P.dgrey);rect(X,x+275,y-20,4,140,P.ash);
-    // Base plates
-    rect(X,x-10,y+118,20,4,P.dgrey);rect(X,x+268,y+118,20,4,P.dgrey);
-    // Cross-wires top and bottom
-    rect(X,x+2,y-16,272,2,P.dgrey);
-    rect(X,x+2,y+114,272,2,P.dgrey);
-    // Diagonal support wires
-    for(let i=0;i<3;i++){
-      const wy=y-10+i*45;
-      rect(X,x-3,wy,2,1,P.ash);rect(X,x+276,wy,2,1,P.ash);
-    }
-    
-    // Banner fabric — animated wave
-    const wave=Math.sin(t*.005)*3;
-    const wave2=Math.sin(t*.007+1)*2;
-    
-    // Fabric background — warm parchment
-    rect(X,x+4,y-12+wave*.3,268,118+Math.abs(wave),'#2a1e10');
-    rect(X,x+6,y-10+wave*.3,264,114+Math.abs(wave),'#3a2a14');
-    // Aged stain patches
-    for(let i=0;i<8;i++){
-      X.globalAlpha=.08;
-      rect(X,x+20+hash(i,0,11)*220,y+hash(i,0,22)*80+wave*.3,
-        10+hash(i,0,33)*25,8+hash(i,0,44)*15,
-        hash(i,0,55)>.5?'#4a3a20':'#2a1a0a');
-    }
-    X.globalAlpha=1;
-    
-    // Double ornamental border — gold
-    rect(X,x+8,y-8+wave*.3,260,2,P.gold);
-    rect(X,x+8,y+100+wave*.3+Math.abs(wave),260,2,P.gold);
-    rect(X,x+8,y-8+wave*.3,2,108+Math.abs(wave),P.gold);
-    rect(X,x+266,y-8+wave*.3,2,108+Math.abs(wave),P.gold);
-    // Inner border
-    rect(X,x+12,y-4+wave*.3,252,1,P.damber);
-    rect(X,x+12,y+96+wave*.3+Math.abs(wave),252,1,P.damber);
-    rect(X,x+12,y-4+wave*.3,1,100+Math.abs(wave),P.damber);
-    rect(X,x+263,y-4+wave*.3,1,100+Math.abs(wave),P.damber);
-    
-    // Corner stars
-    const corners=[[14,-2],[258,-2],[14,92+Math.abs(wave)],[258,92+Math.abs(wave)]];
-    corners.forEach(([cx,cy])=>{
-      X.fillStyle=P.gold;
-      const sx=x+cx,sy=y+cy+wave*.3;
-      X.beginPath();X.moveTo(sx,sy-3);X.lineTo(sx+2,sy-1);X.lineTo(sx+4,sy-3);
-      X.lineTo(sx+3,sy);X.lineTo(sx+4,sy+3);X.lineTo(sx+2,sy+1);
-      X.lineTo(sx,sy+3);X.lineTo(sx+1,sy);X.closePath();X.fill();
-    });
-    
-    // Decorative line under title
-    rect(X,x+40,y+22+wave*.3,196,1,P.gold);
-    rect(X,x+60,y+24+wave*.3,156,1,P.damber);
-    
-    // Text: "ARDET" — huge
-    X.fillStyle=P.gold;X.font='20px "Press Start 2P"';
-    X.textAlign='center';
-    X.fillText('A R D E T',x+138,y+16+wave*.3);
-    
-    // "COMING SOON" — crimson
-    X.fillStyle=P.crimson;X.font='11px "Press Start 2P"';
-    X.fillText('★  COMING SOON  ★',x+138,y+44+wave*.3);
-    
-    // Subtitle lines
-    X.fillStyle=P.bone;X.font='7px "Press Start 2P"';
-    X.globalAlpha=.7;
-    X.fillText('дата уточняется',x+138,y+62+wave*.3);
-    X.fillText('место уточняется',x+138,y+74+wave*.3);
-    X.globalAlpha=.4;
-    X.fillText('реальность уточняется',x+138,y+86+wave*.3);
-    X.globalAlpha=1;
-    X.textAlign='left';
-    
-    // Bottom fringe — fabric tassels waving
-    for(let i=0;i<20;i++){
-      const fx=x+14+i*13;
-      const fy=y+104+wave*.3+Math.abs(wave)+Math.sin(t*.01+i*.7)*2;
-      const fh=4+Math.sin(t*.012+i*.5)*2;
-      rect(X,fx,fy,4,fh,'#3a2a14');
-      rect(X,fx+1,fy+fh,2,2,'#2a1e10');
-    }
-    
-    // Torn/burned section — right side
-    for(let i=0;i<6;i++){
-      const tx_=x+258+hash(i,0,11)*10;
-      const ty_=y+20+hash(i,0,22)*60+wave*.3;
-      rect(X,tx_,ty_,3+hash(i,0,33)*4,2,P.dstone);
-    }
-    // Scorch mark — left bottom
-    X.globalAlpha=.15;
-    for(let i=0;i<10;i++){
-      rect(X,x+10+hash(i,1,11)*30,y+85+hash(i,1,22)*20+wave*.3,
-        3+hash(i,1,33)*6,2,'#1a0a04');
-    }
-    X.globalAlpha=1;
 }
 
 // End of location sprites
