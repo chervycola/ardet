@@ -14,7 +14,7 @@ const PLAYER_MY = 16;
 // Locked until Jester is spoken to: only the far border territories where
 // the two outlier NPCs live (Dumpster Demon at 2720,200 in top-right highway,
 // Nocturnal at 1665,1685 on the southern toxic plain) and the pit/brainrot fringe.
-import { TOWN, TS, townDist } from './disc.js';
+import { TOWN, TS } from './disc.js';
 export const SETTLEMENT = { x1: TOWN.x0 + 40, x2: TOWN.x0 + 2650 * TS, y1: TOWN.y0 + 20, y2: TOWN.y0 + 1420 * TS };
 
 export function isInSettlement(x, y) {
@@ -22,18 +22,16 @@ export function isInSettlement(x, y) {
          y >= SETTLEMENT.y1 && y <= SETTLEMENT.y2;
 }
 
-// How far outside the settlement a point is (0 if inside). Used to let
-// a stranded player walk *back toward* the settlement even though every
-// intermediate frame is still outside (slides are sub-pixel; the strict
-// "must land inside this frame" rule could otherwise lock the player out
-// for good after a click-teleport or an old save).
-function settlementDist(x, y) {
-  let d = 0;
-  if (x < SETTLEMENT.x1) d += SETTLEMENT.x1 - x;
-  if (x > SETTLEMENT.x2) d += x - SETTLEMENT.x2;
-  if (y < SETTLEMENT.y1) d += SETTLEMENT.y1 - y;
-  if (y > SETTLEMENT.y2) d += y - SETTLEMENT.y2;
-  return d;
+// Stranded outside (old save, test URL): let the player walk *back toward* the
+// settlement even though every intermediate frame is still outside — slides are
+// sub-pixel and a strict "must land inside this frame" rule would lock them out.
+// шаг застрявшего снаружи — только к городку и по каждой оси: по сумме осей диагональ
+// уводила вдоль края всё дальше (сверка обходов замка, 24.10)
+const outX = x => Math.max(0, SETTLEMENT.x1 - x, x - SETTLEMENT.x2);
+const outY = y => Math.max(0, SETTLEMENT.y1 - y, y - SETTLEMENT.y2);
+function closer(px, py, nx, ny) {
+  const ox = outX(nx), oy = outY(ny), cx = outX(px), cy = outY(py);
+  return ox <= cx && oy <= cy && ox + oy < cx + cy;
 }
 
 // Check collision with solid locations
@@ -72,12 +70,10 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
   nx = clamp(nx, 6, MW - 22);
   ny = clamp(ny, 6, MH - 30);
 
-  // Кольца эпох (бывш. улица) открыты всегда — врата сделаны для тебя;
-  // замок городка держит только его собственные края до разговора с Шутом.
-  const onRings = townDist(nx, ny) > 0 || townDist(player.x, player.y) > 0;
-
-  // Settlement lock
-  if (!canLeaveSettlement && !onRings && !isInSettlement(nx, ny)) {
+  // Замок городка: без пропуска Шута за изгородь не выйти — ни к кольцам, ни дальше
+  // (слово автора, 24.10). Кто всё же оказался снаружи (старое сохранение, тестовый
+  // адрес), тому можно только назад, к городку.
+  if (!canLeaveSettlement && !isInSettlement(nx, ny)) {
     // Stranded outside? Allow any move that *reduces* the distance back
     // to the settlement. Covers two cases:
     //   1) the player was click-teleported to a location whose access
@@ -87,16 +83,16 @@ export function tryMove(player, dx, dy, locations, opts = {}) {
     //   2) loaded an old save with a player position outside the new
     //      smaller settlement bounds.
     if (!isInSettlement(player.x, player.y)) {
-      const cur = settlementDist(player.x, player.y);
-      if (settlementDist(nx, ny) < cur && !isBlocked(nx, ny, locations, player)) {
+      const px = player.x, py = player.y;
+      if (closer(px, py, nx, ny) && !isBlocked(nx, ny, locations, player)) {
         player.x = nx; player.y = ny;
         return true;
       }
-      if (settlementDist(nx, player.y) < cur && !isBlocked(nx, player.y, locations, player)) {
+      if (closer(px, py, nx, py) && !isBlocked(nx, py, locations, player)) {
         player.x = nx;
         return true;
       }
-      if (settlementDist(player.x, ny) < cur && !isBlocked(player.x, ny, locations, player)) {
+      if (closer(px, py, px, ny) && !isBlocked(px, ny, locations, player)) {
         player.y = ny;
         return true;
       }

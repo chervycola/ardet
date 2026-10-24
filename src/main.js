@@ -252,6 +252,11 @@ if (savedData) {
   if (savedData.looks) loadRelook(savedData.looks);
   if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
 }
+// без пропуска Шута — только в городке: старое сохранение (до замка) или тестовый адрес
+// без дома (?nohouse, ?under) не начинают странствие за изгородью (сверка обходов, 24.10)
+if (!canLeaveSettlement() && !isInSettlement(player.x, player.y)) {
+  player.x = player.tx = CORE.x; player.y = player.ty = CORE.y;
+}
 // старые сохранения: клетки, где что-то осмотрено, — тоже пройдены
 for (const loc of locations) if (flags.visited.has(loc.id)) { const k = walkedKey(loc); if (k) flags.walked.add(k); }
 
@@ -2004,7 +2009,11 @@ events.on('terminal.read', (key) => {
 // Fast-travel through a gate: teleport to its world target.
 events.on('gate.use', (gate) => {
   if (!gate || !gate.target) return;
+  if (!state.is('game')) return;                                   // с заставки — только посмотреть план
   if (!canLeaveSettlement()) { lockHint(); return; }
+  // из дома и из-под земли врата не ведут: иначе странник оказался бы на поверхности,
+  // а ноги — в доме или в изнанке (сверка обходов, 24.10)
+  if (house.active || under.active) { showLore('Переход через врата — с поверхности. Отсюда сначала наверх.'); return; }
   // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
   const vx = gate.target.x - STREET_SHIFT;
   const seg = EPOCHS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || EPOCHS[EPOCHS.length - 1];
@@ -2073,14 +2082,17 @@ events.on('location.use', (loc) => {
   }
   // Каркас: кольцевая равнины и СКРОЛЛ
   if (actionKey === 'branch_plain') {
+    if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
     teleportWithFade(TOWN.x1 + ringD(2, 96), BRANCH_PLAIN.y0 + 80 * TS);
     return;
   }
   if (actionKey === 'branch_back') {
+    if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
     teleportWithFade(TOWN.x0 + 2560 * TS, TOWN.y1 + ringD(2, 80));
     return;
   }
   if (actionKey === 'brainrot_enter') {
+    if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
     teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(9, 90), () => {
       enterBrainrotLoop(() => {
         teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(8, 100), () => {

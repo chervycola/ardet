@@ -227,7 +227,9 @@ const imp = p => import(new URL(p, base));
 // PHYSICS — movement + settlement lock
 // ═══════════════════════════════════════
 {
-  const { tryMove, isInSettlement } = await imp('world/physics.js');
+  const PHY = await imp('world/physics.js');
+  const { tryMove, isInSettlement } = PHY;
+  const DSC0 = await imp('world/disc.js');
   // координаты записаны в мире прежнего поля (2300): городок — контент 0..3000 × 160..1800,
   // ныне он в центре диска и ×1,25 от угла (world/disc.js: townX, townY)
   const { townX, townY } = await imp('world/disc.js');
@@ -263,6 +265,21 @@ const imp = p => import(new URL(p, base));
     const moved = tryMove(player, +2.4, 0, locations, { canLeaveSettlement: false });
     assert(!moved, 'must not allow movement further away from settlement');
     eq(player.x, old(4964, 3583).x, 'x unchanged');
+  });
+
+  test('physics: застрявший снаружи не уходит вдоль края диагональю — только к городку по каждой оси', () => {
+    const { SETTLEMENT } = PHY;
+    const { TOWN } = DSC0;
+    // полоса между изгородью и краем городка: с запада и с юга, диагональ наружу
+    for (const [x, y, dx, dy] of [[SETTLEMENT.x1 - 2, (SETTLEMENT.y1 + SETTLEMENT.y2) / 2, -1, -1.15], [(SETTLEMENT.x1 + SETTLEMENT.x2) / 2, SETTLEMENT.y2 + 3, -1.15, 1]]) {
+      const p = { x, y };
+      for (let i = 0; i < 600; i++) tryMove(p, dx * 2.4, dy * 2.4, [], { canLeaveSettlement: false });
+      assert(p.x >= TOWN.x0 - 1 && p.y <= TOWN.y1 + 1 && p.x >= SETTLEMENT.x1 - 3 && p.y <= SETTLEMENT.y2 + 4, `ушёл: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`);
+    }
+    // а к городку — дойти можно
+    const back = { x: SETTLEMENT.x1 - 30, y: SETTLEMENT.y2 + 30 };
+    for (let i = 0; i < 100 && !isInSettlement(back.x, back.y); i++) tryMove(back, 2, -2, [], { canLeaveSettlement: false });
+    assert(isInSettlement(back.x, back.y), 'к городку не дойти');
   });
 
   test('physics: inside settlement, trying to cross boundary is still blocked', () => {

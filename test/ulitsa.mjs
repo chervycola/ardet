@@ -178,10 +178,15 @@ const { OFF } = await imp('world/disc.js');
     assert(q.y > 5900, `пески юга достижимы (y=${q.y})`);
   });
 
-  test('physics: замок городка не действует на кольцах', () => {
+  test('physics: без пропуска Шута за изгородь не выйти — на кольцах только назад, к городку (слово автора, 24.10)', () => {
     const p = { ...was(3800, 4040), tx: 0, ty: 0, moving: false }, y0 = p.y; // кольцо 1 юга (прежнее поле 2300)
     tryMove(p, 0, 100, [], { canLeaveSettlement: false });
-    assert(p.y > y0 + 50, `по кольцам ходим до Шута (y=${p.y})`);
+    eq(p.y, y0, 'дальше по кольцам до Шута');
+    tryMove(p, 0, -100, [], { canLeaveSettlement: false });
+    assert(p.y < y0, 'назад, к городку, не пускает');
+    const q = { ...was(3800, 4040), tx: 0, ty: 0, moving: false }, q0 = q.y;
+    tryMove(q, 0, 100, [], { canLeaveSettlement: true });
+    assert(q.y > q0 + 50, `с пропуском по кольцам ходим (y=${q.y})`);
   });
 
   test('zones: кольца звучат улицей; зоны городка целы', () => {
