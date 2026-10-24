@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='a5e834e · 2026-10-24';console.log('[оттиск]', 'a5e834e · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='b43687d · 2026-10-24';console.log('[оттиск]', 'b43687d · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32547,7 +32547,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin"], function (exports_102, context_102) {
     "use strict";
-    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER;
+    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, JK_DIGIT, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER;
     var __moduleName = context_102 && context_102.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -34872,95 +34872,224 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     exports_102("draw_watchtower", draw_watchtower);
-    // ── СВАЛКА ──
+    // ── КЛАДБИЩЕ МАШИН ──
     // «Десятки корпусов, спрессованных в серые кубы. УНИФИКАТОР 3000 гудит —
     // принимает всё, выдаёт куб 10×10×10. Между кубами — одна машина не в кубе.
-    // Белая, вмята в борт фуры. На номере: AUTOPILOT. Сиденье пустое... На экране:
-    // KEEP HANDS ON WHEEL. Он светится семь лет подряд. Под лобовым стеклом — акт
-    // осмотра.» Пресс слева: воронка, плита ходит, из жёлоба — свежий куб. Кубы
-    // штабелями: слои краски, всё серое. Справа — фура, в борт вмята белая машина;
-    // экран в салоне — третьей краской; под дворником лист.
-    function cube(x, y, v) {
-        r(x, y + 3, 10, 7, S0);
+    // Белая, вмята в борт фуры. На номере: AUTOPILOT. Сиденье пустое. Ремень
+    // пристёгнут через ничто. На экране: KEEP HANDS ON WHEEL. Он светится семь лет
+    // подряд. Под лобовым стеклом — акт осмотра.» Меню: «вход — разное. выход — куб.»
+    // Слева пресс: воронка, из неё торчит разное (дверь, колесо, бампер, труба);
+    // поршни по бокам, траверса ходит — плита давит; на щите трафарет, «3000»
+    // читается; из жёлоба на рольганг выезжает свежий куб. Кубы — слоями
+    // спрессованной краски, всё серое; позади стена кубов (их десятки), спереди
+    // штабеля. Справа фура без тягача на опорах; в её борт носом вмята белая
+    // машина — видна сзади: номер штрихами, в заднем стекле пустое сиденье и ремень
+    // поперёк пустоты, у лобового — экран третьей краской (горит ровно, не мигает)
+    // и белый лист акта. Свет слева, кромка пеплом справа.
+    // куб 10×10×10 в три четверти: лицо 10×7 слоями, верх 10×3, бок 2; far — дальний ряд
+    function jCube(x, y, v, far) {
+        const LAY = far ? [S2, K3, S2, K4, K3, S2, RUST, K3] : [S0, S2, K4, S0, RUST, S2, L2, S0, BR2, AS, S2, MG];
         for (let k = 0; k < 7; k++)
-            r(x, y + 3 + k, 10, 1, [S0, S2, K4, S0, RUST, S2, L2][(k + v) % 7]);
-        r(x + 2, y, 10, 3, S1);
-        r(x + 1, y + 1, 1, 2, S1);
-        r(x + 10, y + 1, 2, 8, S2);
-        r(x + 11, y + 1, 1, 8, AS);
-        for (let k = 0; k < 4; k++)
-            r(x + q(hh(v, k, 3) * 9), y + 4 + q(hh(v, k, 5) * 5), 2, 1, K1); // смятое
-        r(x, y + 9, 10, 1, K1);
+            r(x, y + 3 + k, 10, 1, LAY[(k * 5 + v * 3) % LAY.length]);
+        r(x + 1, y, 10, 3, far ? S0 : S1);
+        r(x + 1, y, 10, 1, far ? S1 : L2);
+        r(x, y + 1, 1, 2, far ? S0 : S1); // верх — к свету
+        r(x + 10, y + 1, 2, 9, far ? K2 : S2);
+        r(x + 11, y + 1, 1, 9, far ? K0 : AS); // бок — в тени, кромка
+        for (let k = 0; k < (far ? 2 : 4); k++) {
+            const cx = x + q(hh(v, k, 131) * 8), cy = y + 4 + q(hh(v, k, 133) * 5);
+            r(cx, cy, 2, 1, K1);
+            r(cx + 1, cy - 1, 1, 1, far ? S2 : S1);
+        } // смятое: складка и блик
+        if (!far && hh(v, 1, 135) < 0.45) {
+            const wx = x + 2 + q(hh(v, 2, 137) * 4), wy = y + 4;
+            r(wx, wy, 3, 1, K1);
+            r(wx, wy + 3, 3, 1, K1);
+            r(wx - 1, wy + 1, 1, 2, K1);
+            r(wx + 3, wy + 1, 1, 2, K1);
+            r(wx + 1, wy + 1, 1, 1, S1);
+        } // сплющенный обод
+        if (!far && hh(v, 3, 139) < 0.5)
+            r(x + 1 + q(hh(v, 4, 141) * 7), y + 5 + q(hh(v, 5, 143) * 3), 1, 1, AS); // стекло
+        r(x, y + 10, 12, 1, far ? K0 : K1);
     }
     function junkBody() {
         const g = 70;
-        // унификатор: короб, воронка сверху, плита пресса, жёлоб
-        r(2, 22, 24, 40, K3);
-        r(2, 22, 24, 1, S0);
-        r(2, 22, 1, 40, S0);
-        r(25, 23, 1, 39, AS);
-        for (let k = 0; k < 6; k++)
-            r(4 + k * 3, 14 + k, 24 - k * 6 > 0 ? 24 - k * 6 : 2, 1, K4); // воронка
-        r(0, 13, 28, 2, S0);
-        r(0, 13, 28, 1, S1);
-        for (let k = 0; k < 10; k++)
-            r(4 + k * 2, 26, 1, 2, k & 1 ? KV : NI); // полосы на плите
-        for (let k = 0; k < 4; k++)
-            r(5, 32 + k * 5, 18, 1, K1); // клёпаный борт
-        r(8, 50, 12, 12, K0);
-        r(8, 50, 12, 1, K2); // жёлоб
-        r(10, 61, 9, 1, K1);
-        // штабеля кубов
-        for (const [cx, cy, v] of [[30, 52, 1], [42, 52, 3], [54, 52, 5], [33, 42, 2], [45, 42, 4], [36, 32, 6], [30, 62, 0]])
-            cube(cx, cy, v);
-        // фура: борт, колёса
-        r(56, 24, 34, 24, K3);
-        r(56, 24, 34, 1, S0);
-        r(56, 24, 1, 24, S0);
-        r(89, 25, 1, 23, AS);
-        for (let x = 58; x < 88; x += 5)
-            r(x, 26, 1, 20, K2);
-        for (let k = 0; k < 6; k++)
-            r(60 + k * 4, 30 + q(hh(k, 9, 3) * 12), 2, 2, RUST);
-        for (const wx of [62, 80]) {
-            r(wx, 48, 6, 4, K0);
-            r(wx + 1, 49, 4, 2, K1);
-            r(wx + 2, 49, 1, 1, AS);
+        // ── стена кубов позади (десятки): дальний ряд, темнее ──
+        for (let tier = 0; tier < 3; tier++)
+            for (let k = 0; k < 6; k++) {
+                const cx = 30 + k * 12 + (tier & 1) * 6, cy = 6 - tier * 11;
+                if (cx > 82 || (tier === 2 && (k === 0 || k > 3)))
+                    continue; // верхний ряд неполный — силуэт ступенькой
+                jCube(cx, cy, 20 + tier * 7 + k, true);
+            }
+        // ── фура без тягача: короб, рёбра, ржа, рама, колёса, опоры ──
+        r(44, 16, 50, 34, K3);
+        r(44, 16, 50, 1, S0);
+        r(44, 16, 1, 34, S0);
+        r(93, 17, 1, 33, AS);
+        for (let x = 47; x < 92; x += 4) {
+            r(x, 18, 1, 31, K2);
+            r(x + 1, 18, 1, 31, K4);
+        } // гофра
+        r(44, 20, 50, 1, K2);
+        r(44, 46, 50, 1, K2);
+        for (let k = 0; k < 14; k++)
+            r(46 + q(hh(k, 7, 145) * 44), 22 + q(hh(k, 8, 147) * 22), 1 + (k & 1), 2 + q(hh(k, 9, 149) * 5), k % 3 ? RUST : RUST_L); // ржа потёками
+        r(44, 50, 50, 3, K1);
+        r(44, 50, 50, 1, K2); // рама
+        for (const lx of [49, 52]) {
+            r(lx, 53, 1, 12, K2);
         }
+        r(47, 64, 8, 1, S0);
+        r(47, 65, 8, 1, K1); // опоры — тягача нет
+        for (const wx of [80, 87]) {
+            r(wx, 53, 6, 6, K0);
+            r(wx + 1, 54, 4, 4, K1);
+            r(wx + 2, 55, 2, 2, S0);
+            r(wx + 1, 54, 1, 1, S2);
+        }
+        // пробоина в борту: тёмная дыра, рваные кромки блеском, борт вдавлен вокруг
+        for (let x = 57; x <= 83; x++) {
+            const top = 36 + q(Math.abs(x - 70) * 0.35 + hh(x, 1, 151) * 2);
+            r(x, top, 1, 50 - top, K0);
+            if (hh(x, 2, 153) < 0.6)
+                r(x, top - 1, 1, 1, S1);
+            if (hh(x, 3, 155) < 0.4)
+                r(x, top - 2 - q(hh(x, 4, 157) * 3), 1, 1, K1);
+        }
+        for (let k = 0; k < 6; k++) {
+            const a = 56 + k * 5;
+            r(a, 34 - (k & 1), 1, 2, K1);
+        } // вмятина волной
+        // ── унификатор 3000: воронка с разным, короб, поршни, щит, жёлоб, рольганг ──
+        for (let y = 6; y < 24; y++) { // воронка: шире кверху
+            const k = (y - 6) / 18, lx = q(0 + k * 5), rx = q(28 - k * 6);
+            r(lx, y, rx - lx + 1, 1, K2);
+            r(lx, y, 1, 1, S1);
+            r(rx, y, 1, 1, AS);
+        }
+        r(0, 5, 29, 2, S0);
+        r(0, 5, 29, 1, S1);
+        r(28, 6, 1, 1, AS); // обод
+        // разное в воронке: дверь с окном, колесо, бампер, труба
+        r(3, 2, 8, 5, L2);
+        r(4, 3, 4, 2, K1);
+        r(3, 2, 8, 1, BO);
+        r(10, 3, 1, 4, S2);
+        r(14, 0, 1, 1, K1);
+        r(13, 1, 3, 1, K1);
+        r(12, 2, 1, 3, K1);
+        r(16, 2, 1, 3, K1);
+        r(13, 5, 3, 1, K1);
+        r(14, 3, 1, 1, S1); // колесо
+        r(18, 3, 9, 2, S0);
+        r(18, 3, 9, 1, S1);
+        r(26, 4, 1, 1, AS); // бампер
+        r(21, -3, 2, 7, RUST);
+        r(21, -3, 1, 7, RUST_L); // труба
+        r(2, 24, 24, 46, K3);
+        r(2, 24, 24, 1, S0);
+        r(2, 24, 1, 46, S1);
+        r(25, 25, 1, 45, AS); // короб
+        for (const ry of [30, 46, 58])
+            for (let x = 4; x < 24; x += 3)
+                r(x, ry, 1, 1, K1); // клёпка
+        // щит: трафарет «УНИФИКАТОР» штрихами, «3000» читается; полосы опасности — у пасти
+        r(5, 33, 18, 10, K2);
+        r(5, 33, 18, 1, K1);
+        for (let k = 0; k < 16; k++)
+            if (hh(k, 5, 159) < 0.75)
+                r(6 + k, 35, 1, 1 + (k % 3 === 0 ? 1 : 0), S0);
+        let dx = 7;
+        for (const d of [3, 0, 0, 0]) {
+            const m = JK_DIGIT[d];
+            for (let yy = 0; yy < 5; yy++)
+                for (let xx = 0; xx < 3; xx++)
+                    if (m[yy][xx] === '#')
+                        r(dx + xx, 37 + yy, 1, 1, S1);
+            dx += 4;
+        }
+        for (let k = 0; k < 8; k++)
+            r(5 + k * 2, 25, 1, 2, k & 1 ? KV : NI); // полосы у пасти — киноварь, мало
+        // жёлоб и рольганг: оттуда выходит куб
+        r(14, 52, 12, 14, K0);
+        r(14, 52, 12, 1, K2);
+        r(13, 52, 1, 14, K1);
+        r(24, 64, 14, 2, K1);
+        for (let x = 25; x < 38; x += 3)
+            r(x, 64, 1, 1, S1); // рольганг
+        r(26, 66, 1, 4, K2);
+        r(36, 66, 1, 4, K2);
+        // ── штабеля спереди ──
+        for (const [cx, cy, v] of [[40, 59, 1], [33, 48, 2], [44, 48, 3], [38, 37, 4], [84, 59, 5]])
+            jCube(cx, cy, v, false);
+        // ── белая машина — не в кубе: видна сзади, носом в борту фуры ──
+        r(58, 48, 25, 3, L1);
+        r(58, 48, 25, 1, BO);
+        r(82, 48, 1, 3, S2); // крыша уходит в пробоину
+        r(59, 51, 23, 6, K1);
+        r(60, 51, 1, 6, L2);
+        r(80, 51, 1, 6, L2); // заднее стекло, стойки
+        r(61, 52, 1, 1, AS);
+        r(62, 53, 1, 1, AS); // блик
+        r(64, 52, 4, 3, S2);
+        r(73, 52, 4, 3, S2);
+        r(64, 52, 4, 1, S0);
+        r(73, 52, 4, 1, S0); // подголовники — пусто
+        for (let k = 0; k < 5; k++)
+            r(73 + k, 55 - (k >> 1), 1, 1, S0); // ремень пристёгнут через ничто
+        r(69, 51, 2, 1, TI);
+        r(68, 51, 1, 1, TD); // экран у лобового — горит
+        r(66, 51, 2, 1, L1); // акт под стеклом
+        r(57, 57, 27, 4, L1);
+        r(57, 57, 27, 1, BO);
+        r(57, 57, 1, 4, BO);
+        r(83, 57, 1, 4, AS); // багажник
+        r(57, 61, 27, 4, L2);
+        r(57, 64, 27, 1, S2); // бампер
+        r(58, 59, 3, 2, BLOOD);
+        r(80, 59, 3, 2, BLOOD); // фонари — давно не горят
+        r(66, 61, 9, 3, BO);
+        r(66, 61, 9, 1, L1); // номер: AUTOPILOT — штрихами
         for (let k = 0; k < 9; k++)
-            r(66 + k, 34 + q(Math.sin(k / 8 * Math.PI) * 4), 1, 1, K1); // борт вмят
-        // белая машина — не в кубе; носом в борт
-        r(58, 50, 24, 9, L1);
-        r(58, 50, 24, 1, BO);
-        r(58, 50, 1, 9, BO);
-        r(81, 51, 1, 8, AS); // корпус
-        r(62, 45, 13, 5, L1);
-        r(62, 45, 13, 1, BO);
-        r(64, 46, 4, 3, K1);
-        r(69, 46, 5, 3, K1); // кабина, стёкла
-        r(56, 51, 3, 6, L2);
-        for (let k = 0; k < 3; k++)
-            r(55 + k, 50 + k * 2, 1, 1, S2); // смятый нос в борту
-        r(65, 48, 2, 1, TD);
-        r(66, 48, 1, 1, '#8CC63F'); // экран — светится
-        r(70, 49, 3, 1, BO); // акт под стеклом
-        r(76, 55, 4, 2, BO);
-        r(77, 56, 2, 1, K2); // номер
-        for (const wx of [61, 76]) {
-            r(wx, 58, 5, 3, K0);
-            r(wx + 1, 59, 3, 1, K1);
+            if (k !== 4 || true)
+                r(66 + k, 62 + (k & 1 ? 0 : 0), 1, 1 + (hh(k, 6, 161) < 0.3 ? 1 : 0), K2);
+        for (const wx of [58, 77]) {
+            r(wx, 65, 6, 4, K0);
+            r(wx + 1, 66, 4, 2, K1);
         }
+        // ── земля: масло, болты, колпак ──
+        context_js_9.X.globalAlpha = 0.4;
+        r(30, 68, 18, 2, K0);
+        r(60, 69, 22, 1, K0);
+        context_js_9.X.globalAlpha = 1;
+        for (const [bx, by] of [[29, 69], [52, 68], [86, 70], [12, 69]])
+            r(bx, by, 1, 1, S1);
+        r(48, 67, 3, 2, S0);
+        r(48, 67, 3, 1, S1);
+        r(49, 68, 1, 1, K1); // колпак
         context_js_9.X.globalAlpha = 0.5;
-        r(0, g, 90, 1, K0);
+        r(0, g, 94, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_junkyard(x, y) {
-        bake('junkyard', x, y, 0, 12, 91, 59, junkBody);
-        // гудит: плита пресса ходит, корпус дрожит; из жёлоба — куб
-        const p = (time_js_22.t % 240) / 240, press = q(Math.sin(p * Math.PI * 2) * 2 + 2);
-        r(x + 4, y + 26 + press, 20, 1, K1);
-        if (time_js_22.t % 6 < 3)
-            r(x + 25, y + 30, 1, 1, S1);
+        bake('junkyard2', x, y, -1, -17, 97, 89, junkBody);
+        // гудит: траверса с плитой ходит медленно (цикл 6 с), поршни выдвигаются; после
+        // удара — из жёлоба на рольганг выезжает свежий куб и стоит до следующего
+        const c = time_js_22.t % 360, down = c < 150 ? c / 150 : c < 170 ? 1 : c < 280 ? 1 - (c - 170) / 110 : 0, d = q(down * 7);
+        for (const px of [1, 26]) {
+            r(x + px, y - 10 + d, 2, 14 - d, S0);
+            r(x + px, y - 10 + d, 1, 14 - d, S1);
+        } // штоки
+        r(x - 1, y - 12 + d, 31, 2, K3);
+        r(x - 1, y - 12 + d, 31, 1, S0);
+        r(x + 29, y - 11 + d, 1, 1, AS); // траверса
+        r(x + 2, y + d - 2, 25, 1, K1); // плита над воронкой
+        if (c >= 170 && c < 360) {
+            const u = Math.min(1, (c - 170) / 70), cx = x + 15 + q(u * 12);
+            jCube(cx, y + 54, 9 + (Math.floor(time_js_22.t / 360) % 7), false);
+        }
     }
     exports_102("draw_junkyard", draw_junkyard);
     // ── ШКОЛЬНЫЙ АВТОБУС ──
@@ -35977,6 +36106,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 Л: ['.XXX', '.X.X', '.X.X', '.X.X', 'XX.X'], О: ['.XX.', 'X..X', 'X..X', 'X..X', '.XX.'], Н: ['X..X', 'X..X', 'XXXX', 'X..X', 'X..X'],
             };
             SIGN = 'ВАВИЛОН', SIGN_X = 50, SIGN_Y = 50;
+            JK_DIGIT = { 3: ['##.', '..#', '.#.', '..#', '##.'], 0: ['.#.', '#.#', '#.#', '#.#', '.#.'] };
             // ── АЛТАРЬ ──
             // «Поляна в мёртвом лесу. В центре — низкий плоский камень, метра полтора в
             // поперечнике. Мох покрыл его полностью и тихо дышит — толстый, многослойный,
