@@ -10,7 +10,7 @@ export function initAudio() {
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = ctx.createGain();
-    masterGain.gain.value = 0.5;
+    masterGain.gain.value = 0.5 * volMul;
     masterGain.connect(ctx.destination);
   } catch (e) {
     console.warn('[audio] not supported');
@@ -18,6 +18,13 @@ export function initAudio() {
 }
 
 export function getCtx() { return ctx; }
+
+// звук мира из формы 0 (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
+let volMul = 1;
+export function setVolume(f) {
+  volMul = Math.max(0, Math.min(1, +f || 0));
+  if (masterGain) masterGain.gain.value = 0.5 * volMul;
+}
 
 // Resume on user gesture (autoplay policies)
 export function resumeAudio() {

@@ -15,6 +15,7 @@
 // Проход — по готовому кадру, до интерфейса (render/layers.js: wakePass).
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
+import { reducedMotion } from '../core/prefs.js';
 
 export const LEN = 900;                                    // пятнадцать секунд
 export const OPEN = [72, 252, 522, 756];                   // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
@@ -25,7 +26,7 @@ function hh(a, b, s) {
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
-const reducedNow = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
 
 export const wakefx = {
   t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,

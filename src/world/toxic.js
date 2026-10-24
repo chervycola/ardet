@@ -19,6 +19,7 @@
 import { ringAt, RINGS } from './disc.js';
 import { scaler } from '../render/scaler.js';
 import { backstage, drawBack, MONO, PROMPT, BACK_COLORS } from '../render/backstage.js';
+import { reducedMotion } from '../core/prefs.js';
 
 const TOXIC_IDS = new Set(['lake', 'pipeline', 'basement', 'dumpster', 'pit', 'toxic_dump']);
 const FIRE_IDS = new Set(['dumpster']);                    // горит — не протирается
@@ -34,7 +35,7 @@ let frame = 0;
 export const GAP = 7200, IN = 32, HOLD = 210, OUT = 48;
 let burst = null, lastBurst = -GAP;
 let cam = null;                                             // камера этого кадра — ставит отрисовка поверхности
-const reducedNow = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
 
 function hh(a, b, s) {
   let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;

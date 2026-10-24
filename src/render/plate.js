@@ -113,6 +113,7 @@ function spawnBurst(n, vertical) {
 }
 
 export const plate = {
+  economy: false,   // экономный кадр (форма 0, core/prefs.js): зерно пересыпается раз в секунду, без царапин
   // stormLevel: 0..1 от погоды/молнии/брейнрота — считает main
   update(px, py, stormLevel) {
     frame++;
@@ -127,7 +128,7 @@ export const plate = {
 
     // царапины — вспышками; в шторм чаще
     const rate = prof.scr + storm * 40;                      // вспышек в минуту
-    if (rate > 0 && --nextBurst <= 0) {
+    if (rate > 0 && !this.economy && --nextBurst <= 0) {
       spawnBurst(2 + (Math.random() * (3 + storm * 5) | 0), prof.ring === 7 && Math.random() < 0.6);
       nextBurst = (3600 / rate) * (0.5 + Math.random());
     }
@@ -177,7 +178,7 @@ export const plate = {
     // зерно и осыпь краёв — один кэшированный слой; пересобирается, когда зерно сдвигается
     const g = Math.min(0.5, prof.grain * (1 + storm * 0.9));
     const ew = Math.round(prof.edge + storm * 6);
-    const step = storm > 0.3 ? 2 : 8;
+    const step = this.economy ? 60 : storm > 0.3 ? 2 : 8;
     const seed = storm > 0.3 ? (frame >> 3) % 4 : 0;
     const key = `${W}:${H}:${prof.cell}:${Math.round(g * 100)}:${ew}:${seed}:${Math.floor(frame / step)}`;
     if (key !== cacheKey) {

@@ -11,12 +11,25 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Montserrat:wght@300;500&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>/* __CSS__ */</style>
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><div id="entry-left"><div id="entry-logo">ARDET</div><button id="entry-btn">FALL IN</button></div><div id="entry-mirror"><span id="entry-mirror-cap">АФИША ВЫСТУПЛЕНИЙ</span><div id="entry-mirror-glass"><i></i><span>COMING SOON</span></div></div><div id="build-stamp"></div></div>
+<div id="entry"><div id="entry-left"><form id="form0" onsubmit="return false" aria-label="форма 0 · заявление о начале странствия">
+  <div id="entry-logo">ardet</div>
+  <div class="f0-grif">форма 0 · заявление о начале странствия</div>
+  <ol class="f0-list" id="f0-list">
+    <li><button type="button" class="f0-item" id="entry-btn" data-act="go"><span class="f0-box"></span><span class="f0-t">идти дальше</span></button></li>
+    <li><button type="button" class="f0-item" data-act="road"><span class="f0-box"></span><span class="f0-t">вспомнить дорогу</span></button></li>
+    <li><button type="button" class="f0-item" data-act="byt"><span class="f0-box"></span><span class="f0-t">настройки быта</span></button></li>
+    <li><button type="button" class="f0-item" data-act="leave"><span class="f0-box"></span><span class="f0-t">покинуть вечер</span></button></li>
+  </ol>
+  <div class="f0-byt" id="f0-byt" hidden></div>
+  <div class="f0-foot">нужное отметить углём · недостающее вписать · лишнее пережить</div>
+  <div class="f0-seal" aria-hidden="true"><b>канцелярия</b><i>☠</i><span id="f0-seal-text"></span></div>
+  <div class="f0-void" id="f0-void" aria-live="polite"></div>
+</form></div><div id="entry-mirror"><span id="entry-mirror-cap">АФИША ВЫСТУПЛЕНИЙ</span><div id="entry-mirror-glass"><i></i><span>COMING SOON</span></div></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>

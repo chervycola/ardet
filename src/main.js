@@ -65,7 +65,7 @@ import { init as initTerminal, open as openTerminal } from './terminal/terminal.
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
 import {
-  init as initWorldMap, toggle as toggleWorldMap, isOpen as isMapOpen,
+  init as initWorldMap, toggle as toggleWorldMap, isOpen as isMapOpen, open as openWorldMap,
   markDiscovered as discoverGate,
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
@@ -162,6 +162,17 @@ initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettle
 
 initCursor();
 initAudio();
+// настройки быта (форма 0): громкость мира, экономный кадр
+import { onPrefs, soundLevel, economyFrame } from './core/prefs.js';
+import { setVolume as setSfxVolume } from './audio/audio.js';
+import { initTitleForm } from './ui/titleForm.js';
+function applyByt() {
+  setSfxVolume(soundLevel());
+  if (window.ArdetAudio && window.ArdetAudio.setVolume) window.ArdetAudio.setVolume(soundLevel());
+  plate.economy = economyFrame();
+}
+applyByt();
+onPrefs(applyByt);
 initEditor();
 initNetUI(showLore);                           // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
 
@@ -587,7 +598,7 @@ function render() {
   drawVoices(worldCtx, 'surface', player);          // сказанное рядом — пером над тем, кто сказал
 
   worldCtx.restore();
-  hazeView(camX, camY, vw, vh, locations, redNoon.k);   // марево: над костром, над Sol, в гари, в полдень — везде
+  if (!economyFrame()) hazeView(camX, camY, vw, vh, locations, redNoon.k);   // марево: над костром, над Sol, в гари, в полдень — везде (в экономном кадре — нет)
   warmSpots = warmIn(camX, camY, vw, vh);           // тёплые огни кадра — перо их не трогает
 
   // группа второй краски — те же вещи, отдельным прогоном
@@ -654,7 +665,7 @@ const NO_GRASS = /[?&]nograss\b/.test(location.search);   // для сравне
 const NO_SHADOW = /[?&]noshadow\b/.test(location.search); // тени по времени суток — выключить (сравнить)
 const NO_CASTLE = /[?&]nocastle\b/.test(location.search); // замок-погода и крыши — выключить (сравнить)
 layers.inkPass = (ctx, main) => {
-  hazeComposite(ctx, main);              // марево — в мире, до печати (зерно и краска на бумаге)
+  if (!economyFrame()) hazeComposite(ctx, main);   // марево — в мире, до печати (зерно и краска на бумаге)
   ink.composite(ctx, main);
   penComposite(ctx, main, warmSpots);    // перо к ночи сухое: светлый штрих рвётся, огонь — сплошной
   if (!NO_PLATE) plate.composite(ctx);
@@ -1774,9 +1785,8 @@ const entryEnter = () => {
   setTimeout(() => howto.addEventListener('click', go, { once: true }), 400);
   setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
 };
-// pointerdown + click: в некоторых webview тап не рождает click
-document.getElementById('entry-btn').addEventListener('pointerdown', entryEnter);
-document.getElementById('entry-btn').addEventListener('click', entryEnter);
+// заставка — форма 0 (ui/titleForm.js): «идти дальше» — вход; «вспомнить дорогу» — план местности
+initTitleForm({ onGo: entryEnter, onRoad: () => openWorldMap(true) });
 
 // Fallback removed: canvas click handler already dispatches. Keeping #gw
 // click listener caused double-dispatch (canvas → #gw bubble), which

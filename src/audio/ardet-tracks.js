@@ -37,7 +37,7 @@
   const DRONE_LEN=90;            // сек «длительности» заглушки
   const LS_KEY='ardet_tracks_unlocked';
 
-  let ctx=null, master=null, unlocked=false;
+  let ctx=null, master=null, unlocked=false, volMul=1;   // volMul — «звук мира» из формы 0
   let current=null;              // {id, stop(), isDrone}
   let loadingId=null;            // трек в декодировании — эфир ждёт
   let locationId=null;           // эфир: чей трек играть следующим
@@ -52,7 +52,7 @@
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC) return;
     ctx=new AC();
-    master=ctx.createGain(); master.gain.value=VOL; master.connect(ctx.destination);
+    master=ctx.createGain(); master.gain.value=VOL*volMul; master.connect(ctx.destination);
   }
 
   // музыка может лежать по-разному относительно страницы — пробуем базы
@@ -225,6 +225,10 @@
       if(!collection.has(id)){ collection.add(id); saveCol(); ui.refresh(); }
       radioPick=id;
       if(unlocked && !current && !loadingId) startTrack(nextId());
+    },
+    setVolume(f){                       // звук мира: 1 — как задумано, 0.4 — тихо, 0 — без звука
+      volMul=Math.max(0,Math.min(1,+f||0));
+      if(master) master.gain.value=VOL*volMul;
     },
     get unlocked(){ return unlocked; },
     get nowPlaying(){ return current?current.id:null; },

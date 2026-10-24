@@ -500,9 +500,10 @@ function drawWorldSide() {
 }
 
 // ── Public API ──
-export function open() {
+// force — с бланка заставки («вспомнить дорогу»): мир ещё не начат, а план уже есть
+export function open(force = false) {
   if (visible) return;
-  if (!state.is('game')) return;
+  if (!state.is('game') && !force) return;
   visible = true;
   resetZoom();
   const el = document.getElementById('map');
@@ -513,10 +514,12 @@ export function open() {
 }
 
 export function close() {
+  const was = visible;
   visible = false;
   const el = document.getElementById('map');
   if (el) el.classList.remove('on');
   cancelAnimationFrame(rafId);
+  if (was) events.emit('map.closed');
 }
 
 export function toggle() {

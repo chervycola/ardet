@@ -12,6 +12,7 @@
 import { t } from '../core/time.js';
 import { scaler } from './scaler.js';
 import { layers } from './layers.js';
+import { reducedMotion } from '../core/prefs.js';
 
 export const PANEL_FROM = 0.55;          // доля распада, с которой лента делит кадр
 const REC_FROM = 0.3;                    // писать прошлое начинаем раньше, чтобы было что показать
@@ -93,7 +94,7 @@ export function record(k) {
   snap(pw, cx0, vh);
 }
 
-const reducedNow = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducedNow = reducedMotion;   // система или «меньше движения» в форме 0 (core/prefs.js)
 
 export function draw(ctx, k) {
   if (k < PANEL_FROM || !hist.length) return;
