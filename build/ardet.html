@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='9a5e4f8 · 2026-10-24';console.log('[оттиск]', '9a5e4f8 · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='a5e834e · 2026-10-24';console.log('[оттиск]', 'a5e834e · 2026-10-24');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32547,7 +32547,7 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin"], function (exports_102, context_102) {
     "use strict";
-    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER;
+    var context_js_9, time_js_22, sky_js_2, wind_js_13, playerRef_js_3, potemkin_js_2, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER;
     var __moduleName = context_102 && context_102.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -33870,155 +33870,250 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('lantern1', x, y, -1, 0, 13, 46, lanternBody);
     }
     exports_102("draw_lantern1", draw_lantern1);
-    // ── ЗАБРОШЕННАЯ ЦЕРКОВЬ ──
-    // «Готический силуэт без крыши. Витражи разбиты, но рама осталась — рисует
-    // узоры на полу. Над входом — полустёртая латынь... Под ней баллончиком...
-    // Алтарь цел. На нём — тетрадь в чёрной обложке. QR-код на стене.» Сцена: спуск
-    // в крипту, девять ступеней. Фасад обрушен выше портала: стоят контрфорсы с
-    // пинаклями и стрельчатый портал; сквозь пролом виден неф сверху — пол плитами,
-    // на полу узоры рам (свет слева, через окна левой стены), у дальней стены
-    // апсида с пустым окном-ланцетом, алтарь с тетрадью, справа — спуск в крипту.
-    // Надписи — штрихами, слов не разобрать. Стёкол нет: в окне — то, что за ним.
+    function chTop(x) {
+        let top = chGable(x);
+        if (x >= 47 && x <= 77) {
+            for (let i = 0; i + 1 < CH_BRK.length; i++) {
+                const [x0, y0] = CH_BRK[i], [x1, y1] = CH_BRK[i + 1];
+                if (x >= x0 && x <= x1)
+                    top = Math.max(top, q(y0 + (y1 - y0) * (x - x0) / (x1 - x0) + (hh(x, 9, 101) - 0.5) * 2));
+            }
+        }
+        return Math.ceil(top);
+    }
+    // контрфорс: ширина по ярусам (уступы на 62, 34, 8), пинакль выше; s — сторона
+    function chButt(x, y, x0, broken) {
+        const lx = x - x0; // 0..11 от внешнего края
+        if (y >= 62)
+            return lx >= 0 && lx <= 11;
+        if (y >= 34)
+            return lx >= 1 && lx <= 10;
+        if (y >= 8)
+            return lx >= 2 && lx <= 9;
+        if (y >= 0)
+            return lx >= 2 && lx <= 9 && (!broken || y >= 2 + q(hh(x, 1, 103) * 3));
+        if (broken)
+            return false;
+        const hw = (y + 25) / 25 * 3.6; // шпиль
+        return Math.abs(lx + 0.5 - 6) <= hw;
+    }
+    // что за пиксель фасада: 'b' контрфорс, 'a' придел, 'n' средняя стена, 'f' рама окна,
+    // 't' переплёт, 'o' сквозь окно (пусто), 'w' дальняя стена в окне, 'r1..r3' уступы
+    // портала, 'h' слезник, 'p' в портале, '' — ничего
+    function chPart(x, y) {
+        if (y > 91 || y < -26 || x < 0 || x > 105)
+            return '';
+        if (chButt(x, y, 2, false) || chButt(x, y, 92, true))
+            return 'b';
+        if (x >= 21 && x <= 23 && y >= 3 && y < 14 && Math.abs(x - 22) <= (y - 3) / 4)
+            return 'b'; // пинакли у плеч щипца
+        if (x >= 82 && x <= 84 && y >= 3 && y < 14 && Math.abs(x - 83) <= (y - 3) / 4)
+            return 'b';
+        // портал: проём, уступы, слезник
+        if (inArch(x, y, CH_CX, 6, 72))
+            return 'p';
+        for (let k = 1; k <= 3; k++)
+            if (inArch(x, y, CH_CX, 6, 72, 2 * k))
+                return 'r' + k;
+        if (y < 74 && inArch(x, y, CH_CX, 6, 72, 8))
+            return 'h';
+        // окно
+        const O = y <= 44 && inArch(x, y, CH_CX, 11, 24);
+        if (O) {
+            const dc = Math.hypot(x + 0.5 - CH_CX, y + 0.5 - 14.5);
+            if (Math.abs(dc - 4.2) < 0.75)
+                return 't'; // круг
+            if (dc < 3.6)
+                return (Math.abs(x + 0.5 - CH_CX) < 0.6 || Math.abs(y + 0.5 - 14.5) < 0.6) && dc < 3 ? 't' : 'o'; // крест в круге
+            if (x === 52 || x === 53)
+                return 't'; // средник
+            const inSub = inArch(x, y, 47, 4.5, 31) || inArch(x, y, 58, 4.5, 31);
+            if (y < 31 && !inSub)
+                return 't'; // глухие пазухи
+            if (y < 31 && (inArch(x, y, 47, 4.5, 31) && !inArch(x, y, 47, 3.5, 31) || inArch(x, y, 58, 4.5, 31) && !inArch(x, y, 58, 3.5, 31)))
+                return 't';
+            return y >= 27 ? 'w' : 'o'; // низ — в тени нефа, верх — небо (крыши нет)
+        }
+        if (y <= 45 && inArch(x, y, CH_CX, 11, 24, 2))
+            return 'f';
+        if (y <= 45 && inArch(x, y, CH_CX, 11, 24, 3))
+            return 'F';
+        if (x >= 14 && x <= 21 && y >= q(36 + (21 - x) * 0.7))
+            return 'a';
+        if (x >= 84 && x <= 91 && y >= q(36 + (x - 84) * 0.7))
+            return 'a';
+        if (x >= 22 && x <= 83 && y >= chTop(x))
+            return 'n';
+        return '';
+    }
+    // камень кладкой: ряды по 5, швы вразбежку и не везде, камни разного тона, кое-где
+    // выпал камень; tone: 1 к свету, 0, −1 в тень
+    function chStone(x, y, tone) {
+        const row = Math.floor((y + 30) / 5), sx = Math.floor((x + (row & 1) * 5) / 10), joint = (y + 30) % 5 === 0;
+        const vj = (x + (row & 1) * 5) % 10 === 0 && hh(sx, row, 127) < 0.85;
+        const v = hh(sx, row, 105);
+        if (tone === undefined) { // свет по камням, не по столбцу пикселей
+            const xc = sx * 10 - (row & 1) * 5 + 5, j = (hh(sx, row, 129) - 0.5) * 12;
+            tone = xc + j < 38 ? 1 : xc + j > 72 ? -1 : 0;
+        }
+        if (v > 0.965 && (x + (row & 1) * 5) % 10 < 5)
+            return (y + 30) % 5 === 4 ? S1 : K1; // выпал камень: тень в гнезде, свет по нижней кромке
+        if (joint || vj)
+            return tone < 0 ? K1 : K3;
+        if (tone > 0)
+            return v < 0.15 ? S2 : v > 0.7 ? S1 : S0;
+        if (tone < 0)
+            return v > 0.72 ? S0 : S2;
+        return v < 0.2 ? S2 : v > 0.9 ? S1 : S0;
+    }
     function churchBody() {
-        const g = 92;
-        // ── апсида: дальняя стена, к нам лицом; окно-ланцет пусто ──
-        r(32, 6, 42, 24, S0);
-        for (let y = 8; y < 30; y += 4)
-            for (let x = 32 + ((y >> 2) & 1) * 3; x < 74; x += 6)
-                r(x, y, 1, 2, S2);
-        r(32, 6, 1, 24, S1);
-        r(73, 6, 1, 24, S2);
-        for (let k = 0; k < 42; k++)
-            r(32 + k, 5 - q(hh(k, 3, 5) * 3), 1, 2 + q(hh(k, 3, 5) * 3), S0); // верх обломан — крыши нет
-        context_js_9.X.clearRect(46, 10, 14, 18); // ланцет: стекла нет — там то, что за стеной
-        for (let y = 10; y < 28; y++) {
-            const w = y < 14 ? q(7 * Math.sqrt(Math.max(0, 1 - ((14 - y) / 4) ** 2))) : 7;
-            if (w < 7) {
-                context_js_9.X.fillStyle = S0;
-                context_js_9.X.fillRect(46, y, 7 - w, 1);
-                context_js_9.X.fillRect(53 + w, y, 7 - w, 1);
+        for (let y = -26; y <= 91; y++)
+            for (let x = 0; x <= 105; x++) {
+                const p = chPart(x, y);
+                if (!p || p === 'o')
+                    continue;
+                const left = x + 0.5 < CH_CX;
+                let c;
+                if (p === 'b' || p === 'a' || p === 'n') {
+                    const pl = chPart(x - 1, y), pr = chPart(x + 1, y), pu = chPart(x, y - 1);
+                    if (pu === '' || pu === 'o')
+                        c = p === 'n' && y < chGable(x) + 2.5 ? (left ? L2 : S1) : (left ? S1 : S0); // кромка верха: к свету светлее
+                    else if (pl === '' || pl === 'o')
+                        c = S1; // левая кромка — свет
+                    else if (pr === '' || pr === 'o')
+                        c = x > 90 ? AS : S2; // правая — пеплом
+                    else
+                        c = chStone(x, y, p === 'a' ? -1 : undefined);
+                }
+                else if (p === 'f')
+                    c = left ? S1 : S2;
+                else if (p === 'F')
+                    c = K3;
+                else if (p === 't')
+                    c = left ? S0 : K3;
+                else if (p === 'w')
+                    c = y >= 38 && ((y & 3) === 2 || (x + ((y >> 2) & 1) * 3) % 6 === 0) ? K1 : y >= 38 ? K2 : K0; // сквозь низ: тень нефа, дальше — верх дальней стены
+                else if (p === 'r3')
+                    c = left ? S1 : S0;
+                else if (p === 'r2')
+                    c = left ? S0 : S2;
+                else if (p === 'r1')
+                    c = left ? S2 : K3;
+                else if (p === 'h')
+                    c = y < 72 ? (inArch(x, y, CH_CX, 6, 72, 7) ? K3 : S1) : S1;
+                else if (p === 'p') { // вглубь: пол, стены нефа, апсида
+                    const dx = Math.abs(x + 0.5 - CH_CX);
+                    if (y >= 78) {
+                        const hwF = 1.5 + (y - 78) * 0.4;
+                        c = dx <= hwF ? (dx < hwF * 0.5 ? S0 : S2) : (left ? K2 : K1);
+                    }
+                    else
+                        c = (x === 52 || x === 53) && y >= 64 && y <= 70 && !(y === 64 && x === 53) ? (x === 52 ? L2 : S1) : K1; // апсида в тени, ланцет окна светом
+                }
+                r(x, y, 1, 1, c);
             }
-        }
-        r(52, 10, 2, 18, K3);
-        r(46, 19, 14, 1, K3);
-        r(49, 12, 1, 2, K3);
-        r(56, 12, 1, 2, K3); // рама осталась: средник, импост, трилистники
-        r(45, 10, 1, 18, S1);
-        r(60, 10, 1, 18, S2);
-        // ── неф сверху: пол плитами между стенами ──
-        r(16, 30, 74, 34, S2);
-        for (let y = 30; y < 64; y += 4)
-            r(16, y, 74, 1, K3);
-        for (let y = 30, row = 0; y < 64; y += 4, row++)
-            for (let x = 16 + (row & 1) * 4; x < 90; x += 8)
-                r(x, y + 1, 1, 3, K3);
-        // узоры рам на полу: свет через окна левой стены — ланцет вкось, средник, трилистник
-        for (const [px, py] of [[19, 33], [19, 43], [19, 53]]) {
-            for (let j = 0; j < 8; j++) {
-                const w = j === 0 ? 1 : j === 1 ? 3 : 5, x0 = px + q(j * 0.8) + (5 - w >> 1);
-                context_js_9.X.globalAlpha = 0.38;
-                r(x0, py + j, w, 1, L1);
-                context_js_9.X.globalAlpha = 1;
-                if (j > 1)
-                    r(px + q(j * 0.8) + 2, py + j, 1, 1, S2); // средник
+        // алтарь у дальней стены — цел; на нём тетрадь в чёрной обложке, край страниц
+        r(48, 74, 9, 1, S1);
+        r(48, 75, 9, 3, S0);
+        r(56, 75, 1, 3, K3);
+        r(48, 77, 9, 1, S2);
+        r(51, 73, 3, 1, NI);
+        r(54, 73, 1, 1, L1);
+        // уступы контрфорсов: скат к свету, под ним тень
+        for (const x0 of [2, 92])
+            for (const [y, a, b] of [[61, 0, 11], [33, 1, 10], [7, 2, 9]]) {
+                r(x0 + a, y, b - a + 1, 1, S1);
+                r(x0 + a, y + 1, b - a + 1, 1, K3);
             }
-            context_js_9.X.globalAlpha = 0.38;
-            r(px + 1, py - 2, 3, 1, L1);
-            r(px + 2, py - 3, 1, 1, L1);
-            context_js_9.X.globalAlpha = 1; // трилистник
+        // пинакль: краббы по шпилю, нишка; правый сломан — верх лежит у подножия
+        for (let y = -22; y < 0; y += 4) {
+            const hw = (y + 25) / 25 * 3.6;
+            r(2 + 6 - q(hw) - 1, y, 1, 1, S0);
+            r(2 + 6 + q(hw), y, 1, 1, K3);
         }
-        // спуск в крипту — справа: проём и ступени вниз
-        r(70, 44, 14, 9, K0);
-        for (let k = 0; k < 4; k++)
-            r(71 + k, 45 + k * 2, 13 - k * 2, 1, K2);
-        r(70, 44, 14, 1, S0);
-        r(83, 44, 1, 9, AS);
-        // алтарь цел; на нём — тетрадь в чёрной обложке
-        r(45, 31, 16, 6, S0);
-        r(45, 31, 16, 1, S1);
-        r(45, 31, 1, 6, S1);
-        r(60, 32, 1, 5, S2);
-        r(46, 37, 14, 1, K1);
-        r(51, 29, 5, 3, NI);
-        r(51, 29, 5, 1, K1);
-        r(55, 30, 1, 2, BO); // тетрадь, обрез страниц
-        // боковые стены — встают от краёв пола, верх рваный
-        for (const [x0, lit] of [[12, true], [90, false]]) {
-            for (let k = 0; k < 4; k++) {
-                const top = 14 + q(hh(k, x0, 7) * 10);
-                r(x0 + k, top, 1, 64 - top, lit ? (k === 0 ? S1 : S0) : k === 3 ? AS : S2);
+        r(7, -26, 1, 2, S1);
+        r(6, 2, 2, 4, K1);
+        r(96, 3, 2, 3, K1);
+        for (const [sx, sy, w] of [[95, 89, 6], [97, 88, 4], [99, 87, 2]]) {
+            r(sx, sy, w, 1, S0);
+            r(sx, sy, 1, 1, S1);
+            r(sx + w - 1, sy, 1, 1, S2);
+        }
+        // подоконник окна, потёки под ним
+        r(41, 44, 24, 1, S1);
+        r(41, 45, 24, 1, K3);
+        for (let k = 0; k < 24; k++)
+            if (hh(k, 4, 107) < 0.25)
+                r(41 + k, 46, 1, 2 + q(hh(k, 5, 109) * 6), S2);
+        // полустёртая надпись над порталом — резьбой, слов не разобрать
+        r(33, 48, 40, 1, S1);
+        r(33, 49, 40, 2, S0);
+        r(33, 51, 40, 1, K3);
+        for (let k = 0; k < 38; k++) {
+            if (hh(k >> 2, 6, 111) < 0.35)
+                continue;
+            if ((k & 3) !== 3 && hh(k, 7, 113) < 0.7)
+                r(34 + k, 49 + (hh(k, 8, 115) < 0.5 ? 0 : 1), 1, 1 + (k % 4 === 0 ? 1 : 0), K3);
+        }
+        // баллончиком справа от слезника — киноварью, с подтёком
+        for (const [gx, gy] of [[66, 56], [67, 55], [68, 56], [67, 57], [70, 57], [71, 56], [72, 57], [73, 56], [74, 55], [74, 57], [76, 56], [77, 55], [77, 57], [78, 56], [80, 55], [80, 57]])
+            r(gx, gy, 1, 1, KV);
+        r(71, 58, 1, 3, KV);
+        r(77, 58, 1, 2, BLOOD);
+        // QR-код на правом контрфорсе: краской, клетка за клеткой, по линейке
+        r(94, 70, 9, 9, L1);
+        for (let a = 0; a < 7; a++)
+            for (let b = 0; b < 7; b++) {
+                const fin = (a < 3 && b < 3) || (a > 3 && b < 3) || (a < 3 && b > 3);
+                const on = fin ? !((a % 4 === 1) && (b % 4 === 1)) && (a % 4 !== 1 || b % 4 !== 1) && !(((a === 1 || a === 5) && b === 1) || (a === 1 && b === 5)) : hh(a, b, 117) < 0.5;
+                if (fin && (a === 1 || a === 5) && (b === 1 || b === 5))
+                    continue;
+                if (on)
+                    r(95 + a, 71 + b, 1, 1, NI);
             }
-            for (let y = 22; y < 60; y += 12)
-                r(x0, y, 4, 7, K1); // проёмы окон — рам нет, сквозит
+        // трещина по левой стене, мох по уступам и подоконнику
+        for (let k = 0, cx = 30; k < 34; k++) {
+            cx += hh(k, 2, 119) < 0.33 ? -1 : hh(k, 2, 119) > 0.7 ? 1 : 0;
+            r(cx, 54 + k, 1, 1, K1);
         }
-        // QR-код на правой стене — у спуска
-        for (let k = 0; k < 25; k++)
-            r(86 + k % 5, 30 + (k / 5 | 0), 1, 1, hh(k, 9, 3) < 0.5 ? NI : BO);
-        r(86, 30, 2, 2, NI);
-        r(89, 30, 2, 2, NI);
-        r(86, 33, 2, 2, NI);
-        // ── фасад: нижняя часть стоит, выше портала — пролом ──
-        r(8, 62, 90, 30, S0);
-        for (let y = 64; y < g; y += 4) {
-            r(8, y, 90, 1, S2);
-            for (let x = 8 + ((y >> 2) & 1) * 4; x < 98; x += 8)
-                r(x, y + 1, 1, 3, S2);
+        for (let k = 0; k < 30; k++) {
+            const mx = q(hh(k, 1, 121) * 104), my = [61, 33, 44, 91][k & 3];
+            if (chPart(mx, my) && chPart(mx, my) !== 'p' && chPart(mx, my) !== 'o')
+                r(mx, my - (k & 1), 1, 1, MG);
         }
-        for (let k = 0; k < 90; k++) {
-            const top = 60 + q(hh(k, 5, 3) * 4) + (k > 30 && k < 60 ? 2 : 0);
-            r(8 + k, top, 1, 63 - top, S0);
-            if (hh(k, 5, 9) < 0.3)
-                r(8 + k, top - 1, 1, 1, MG);
-        } // рваный край, трава по верху
-        r(8, 62, 1, 30, S1);
-        // контрфорсы с пинаклями — стоят выше всего
-        for (const [bx, lit] of [[4, true], [93, false]]) {
-            r(bx, 30, 9, g - 30, S0);
-            r(bx, 30, 1, g - 30, lit ? L2 : S1);
-            r(bx + 8, 31, 1, g - 31, lit ? S2 : AS);
-            for (let y = 36; y < g; y += 9)
-                r(bx, y, 9, 1, S2);
-            r(bx + 2, 22, 5, 8, S0);
-            r(bx + 3, 16, 3, 6, S0);
-            r(bx + 4, 12, 1, 4, S1);
-            r(bx + 2, 22, 1, 8, lit ? L2 : S1); // пинакль
-            for (let k = 0; k < 3; k++)
-                r(bx + 1 + k * 3, 21, 1, 1, S2);
+        // осыпь у подножия; щебень от щипца — справа у портала
+        for (let k = 0; k < 16; k++) {
+            const sx = q(hh(k, 3, 123) * 102), w = 1 + q(hh(k, 4, 125) * 3);
+            if (Math.abs(sx - CH_CX) < 9)
+                continue;
+            r(sx, 90, w, 2, k & 1 ? S0 : S2);
+            r(sx, 90, 1, 1, S1);
         }
-        // портал: стрельчатый, в несколько уступов; внутри — тьма нефа
-        for (let st = 0; st < 3; st++) {
-            const L = 38 + st * 2, R = 67 - st * 2, top = 64 + st;
-            for (let y = top; y < g; y++) {
-                const u = (y - top) / 8, w = u < 1 ? q((R - L) / 2 * Math.sqrt(Math.max(0, 1 - (1 - u) ** 2))) : (R - L) >> 1;
-                r((L + R) / 2 - w, y, 2 * w, 1, st === 2 ? K0 : st ? S2 : S1);
-            }
+        for (const [sx, sy, w] of [[68, 88, 4], [72, 89, 3], [75, 90, 5], [80, 89, 2]]) {
+            r(sx, sy, w, 2, S0);
+            r(sx, sy, w, 1, S1);
+            r(sx + w - 1, sy + 1, 1, 1, K3);
         }
-        r(48, 84, 9, 8, K1);
-        r(48, 84, 9, 1, K3); // дальний пол в проёме
-        // над входом — латынь полустёрта, ниже баллончиком
-        r(30, 58, 46, 4, S1);
-        r(30, 58, 46, 1, L2);
-        r(30, 61, 46, 1, S2);
-        for (let k = 0; k < 40; k++)
-            if (hh(k, 11, 3) > 0.35)
-                r(32 + k, 59 + (hh(k, 11, 5) < 0.3 ? 1 : 0), 1, 1 + (hh(k, 11, 7) < 0.4 ? 1 : 0), S2);
-        for (let k = 0; k < 14; k++)
-            r(44 + k + q(Math.sin(k * 1.7)), 63 + (k & 1), 1, 1, KV); // баллончиком — штрихами
-        // обломки у фасада, мох
-        for (let k = 0; k < 14; k++) {
-            const x = q(hh(k, 13, 3) * 100), w = 2 + q(hh(k, 13, 5) * 3);
-            r(x, g - 2 - (k & 1), w, 2, S0);
-            r(x, g - 2 - (k & 1), w, 1, S1);
-            r(x + w, g - 1, 1, 1, K1);
-        }
-        for (let k = 0; k < 18; k++)
-            r(8 + q(hh(k, 17, 3) * 90), 64 + q(hh(k, 17, 5) * 26), 1, 1, MG);
+        r(45, 91, 16, 1, S1); // порог
         context_js_9.X.globalAlpha = 0.5;
-        r(2, g, 102, 1, K0);
+        r(0, 92, 106, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_church(x, y) {
-        bake('church', x, y, 0, 3, 106, 91, churchBody);
+        bake('church2', x, y, -2, -28, 110, 122, churchBody);
+        // днём пустые рамы кладут на пол узор: два ланцета и круг; ползёт за солнцем
+        // и к вечеру доходит до алтаря (виден сквозь портал); ночью узора нет
+        const sky = sky_js_2.skyAt(sky_js_2.phaseAt(time_js_22.t));
+        if (!sky.sun)
+            return;
+        const u = sky.sun.az / Math.PI, py = q(90 - u * 12), px = q(CH_CX - 4 + u * 3);
+        context_js_9.X.globalAlpha = 0.28 + 0.2 * sky.sun.elev;
+        for (const [dx, dy] of [[0, 0], [0, 1], [0, 2], [2, 0], [2, 1], [2, 2], [1, -2]]) {
+            const lx = px + dx, ly = py + dy;
+            if (chPart(lx, ly) === 'p' && ly >= 78)
+                r(x + lx, y + ly, 1, 1, L1);
+        }
+        context_js_9.X.globalAlpha = 1;
     }
     exports_102("draw_church", draw_church);
     function libraryBody() {
@@ -35834,6 +35929,30 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // волной; трещина. Зев к нам, внутри чисто — светлая полоска выметенного дна; у
             // зева на пыли — следы метлы веером.
             CLAY = '#4a3420', CLAY_L = '#6b4a2c'; // глина обожжённая: тело, к свету
+            // ── ЗАБРОШЕННАЯ ЦЕРКОВЬ ──
+            // «Готический силуэт без крыши. Витражи разбиты, но рама осталась — рисует
+            // узоры на полу. Над входом — полустёртая латынь: LASCIATE OGNI SPERANZA. Под ней
+            // баллончиком: „А шо, были?" Алтарь цел. На нём — тетрадь в чёрной обложке. QR-код
+            // на стене.» Повторный осмотр: «Днём пустые рамы витражей кладут на пол узор…
+            // Узор ползёт за солнцем и к вечеру доходит до алтаря»; «QR-код… нарисован от руки,
+            // клетка за клеткой, по линейке». Силуэт — фасадом: контрфорсы с пинаклями (правый
+            // сломан, верх лежит у подножия), щипец обломан наискось — крыши нет; большое
+            // стрельчатое окно — стекла нет, переплёт цел: два ланцета и круг с крестом, сквозь
+            // верх — небо (пусто), сквозь низ — дальняя стена; портал уступами, сквозь него
+            // вглубь — пол плитами, свет без крыши, у дальней стены алтарь с чёрной тетрадью,
+            // над ним щель окна апсиды; днём по полу ползёт узор рам (живой слой). Надписи —
+            // резьбой и баллончиком, слов не разобрать. Свет слева, кромка пеплом справа.
+            CH_CX = 52.5, CH_G = 92;
+            // стрельчатая арка (равносторонняя): внутри ли пиксель; d — отступ наружу (уступы, рама)
+            inArch = (x, y, cx, hw, spring, d = 0) => {
+                const px = x + 0.5, py = y + 0.5;
+                if (py >= spring)
+                    return Math.abs(px - cx) <= hw + d;
+                const R = 2 * hw + d;
+                return Math.hypot(px - (cx - hw), py - spring) <= R && Math.hypot(px - (cx + hw), py - spring) <= R;
+            };
+            CH_BRK = [[47, -23], [49, -15], [51, -12], [53, -7], [56, -5], [60, 1], [64, 5], [68, 4], [71, 7], [74, 4], [77, 1]]; // слом щипца
+            chGable = x => 14 - 1.44 * (30.5 - Math.abs(x + 0.5 - CH_CX));
             // ── РАЗРУШЕННАЯ БИБЛИОТЕКА ──
             // «Остов здания. Стеллажи обнажены: книги горели, но отдельные страницы ещё
             // шевелятся на ветру. На полке 3.14 — книга другого цвета.» Сцена «Архив»:
