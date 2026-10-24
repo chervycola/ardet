@@ -57,6 +57,8 @@ only red, one warm light accent #E28A3A in windows, no neon, no gloss,
 melancholic monumental quiet --ar 16:9
 ```
 назначение: задник титула; поверх — процедурные птицы, кольца, мерцание.
+**Заменён (24.10):** заставка теперь — бланк «форма 0» (ROADMAP 13); задник
+под бланк — G9.
 
 ## G2 · ДВА ОЧАГА · ЗАПАД (клетка-дыра, 2:3, walkable)
 ```
@@ -183,3 +185,57 @@ no text, no signs, no readable glyphs, full-bleed --ar 21:9
 инвариант «где здесь то, на чём это стоит»); после приёмки задник
 подключается в движок слоем под динамику: свет, тьма, огонь,
 персонажи, погода и все надписи остаются процедурными.
+
+
+## G9–G11 · начало игры: заглавная, дом пробуждения, костёр Шута (24.10)
+
+Порядок, в котором странник их видит: бланк «форма 0» поверх ночи → комната
+в доме пробуждения (weave/HOUSE.md) → главной улицей квартала на восток,
+к костру Шута (ART_BIBLE §04–§05, осмотр `campfire`, `jester_home`).
+Регистр — STYLE LOCK v1 «Красная луна» (офорт-меццо-тинта), все три одним
+стилем. Модель: seedream v5 pro; G10 (самый тёмный) — GPT Image 2.
+Соотношение сторон — в настройках модели. Тёплое (свеча) — не больше трёх
+пятен, красное — только киноварь, букв нет нигде.
+
+### G9 · заглавная — ночь под бланком «форма 0» (16:9, телефон — 9:16)
+Середина кадра — пустое тёмное поле: туда ложится бланк. Луна, окно №3,
+костёр — три света по краям.
+```
+Dark game title screen background, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. Low horizon in the lower third, a vast near-black sky above it. Upper left: a huge blood-red moon #C23B2B with rough ink drips running down from it and ring-shaped brush marks around it, like a printing defect; three black birds far apart near it, not a flock. Left on the horizon: a small provincial chancellery with a proud stucco facade, its windows only painted on the plaster, and ONE real window behind a grille glowing amber #E28A3A; a black cat silhouette on its roof ridge. The whole middle third of the image is an almost empty, calm, low-contrast dark field of sky and ground, only a faint castle on a distant hill drawn like weather, its windows dark. Lower right: a small sacrificial bonfire in a ring of soot-black stones, a horned bull skull in the flames, a tiny jester silhouette in a three-horned cap beside it, a tiny lone hooded wanderer walking toward the fire. Cobblestones dissolving into dust, knee-deep ground fog. Deep flat blacks dominate; bone-white #D9CFB8 highlights, ash grey #8A8D8F halftones, dark moss green #3D4A3A only in the fog; exactly three light accents: the moon, the window, the fire; the fire painted as one solid flame. Melancholic, quiet, vast negative space, full-bleed, no border, no frame, no text, no letters, no signature.
+```
+Телефон (9:16):
+```
+Tall vertical dark game title screen background, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. Top fifth: a huge blood-red moon #C23B2B with rough ink drips and ring-shaped brush marks, two black birds far apart. The middle three fifths: an almost empty, calm, low-contrast dark sky with nothing in it. Bottom fifth, a thin strip of horizon: on the left a small chancellery with ONE window glowing amber #E28A3A and a black cat on the roof ridge; on the right a small bonfire in a ring of black stones with a horned bull skull, a tiny jester silhouette and a tiny lone hooded wanderer; knee-deep fog. Deep flat blacks, bone-white #D9CFB8 highlights, ash grey #8A8D8F halftones, exactly three light accents, the fire as one solid flame, vast negative space, full-bleed, no frame, no text, no letters.
+```
+
+### G10 · первая локация — комната в доме пробуждения (16:9, ноль тёплого, кроме огонька)
+Всё из описи дома: светлый прямоугольник от снятой рамы и гвоздь, своя кровать
+сбита, вторая застелена и холодна, журнал на табурете с красной закладкой —
+единственный красный, холодная изразцовая печь, квадрат лунного света с тенью
+переплёта, пустые крючки, стоптанные ботинки у порога, дверь не заперта.
+Странник сидит на краю своей кровати; тёплое одно — огонёк у сердца.
+```
+Interior of an empty dark room in an old stone house at night, seen wide from a high corner, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. Faded wallpaper with a barely visible pattern; a lighter rectangle on the wall where a picture frame used to hang, the bare nail still in it. Dusty plank floor. Two narrow iron beds against the back wall: the left one with crumpled sheets and a dented pillow; the right one made tight, smooth and cold, never slept in. Between them, under a small window, a wooden stool with a thin closed journal on it and one cinnabar-red #C23B2B ribbon bookmark hanging down, the only red in the room. In the corner a cold tiled stove, old caked ash behind its open door. Through the dusty window: an empty street and an unlit cast-iron street lantern; the low moon itself is out of view, its pale light lies on the floor as a square with the cross-shaped shadow of the window frame; two large pale moths drift in the shaft of light. On the left, a narrow entry: two empty coat hooks, a pair of badly worn boots by the threshold, the street door unlocked and slightly ajar, a thin grey line of light under it. On the edge of the left bed sits a tiny hooded wanderer in a layered torn cloak, no face, only darkness under the hood with two tiny ember eyes, and a single small amber #E28A3A glow at the chest, the only warm light in the frame. Deep flat blacks dominate, bone-white #D9CFB8 highlights, ash grey #8A8D8F halftones, things lie as if forgotten, not arranged, still and silent, vast dark negative space, full-bleed, no frame, no text, no letters, no candles, no cobwebs.
+```
+
+### G11 · вторая локация — городок у костра Шута (16:9)
+Из осмотра: рогатый скелет неизвестного зверя, наполовину сгоревший; череп с
+рогами-лирой смотрит вверх на полумесяц цвета запёкшейся крови, слишком низкий
+для настоящей луны; груды костей; Шут — белое лицо, красные губы, колпак с тремя
+рогами, ромбы, хвост с лезвием, горящий нимб, крест в глазнице, карты-надгробия,
+кинжал в руке, пика над огнём; гирлянда флажков от пики до погасшего фонаря;
+пифос на боку, выметен; окно №3; замок как погода. Слева входит главная улица
+квартала — по ней странник идёт от дома. Тёплое: костёр, окно №3, огонёк.
+```
+A small timeless town square at long evening, seen slightly from above, very dark vintage etching-mezzotint on an aged printing plate, scratches and ink stains, heavy film grain. Center right: a sacrificial bonfire in a ring of soot-blackened stones crusted with old blood and greasy black ash; in it lies the horned skeleton of an unknown beast, half burnt to charcoal, half still burning; its skull with long curved lyre-shaped horns looks up at a low crescent moon the color of clotted blood #C23B2B hanging just above the fire, far too low for a real moon, a single drop of blood falling from its lower horn into the flames; heaps of old bones around the stones. Beside the fire stands the jester, swaying: a tall thin figure with a chalk-white face and red lips, a three-horned cap, harlequin diamonds in black and cinnabar, a tail ending in a blade, a thin ring of dull cinnabar fire as a halo, a cross in one eye socket, a dagger in one hand, a long pike stuck in the ground leaning over the flames with a grim trophy of hair on its point; small tombstones shaped like playing cards lean in the dirt behind him. From his pike a sagging garland of small rag flags runs to an unlit cast-iron street lantern, the only lantern without light. A big clay pithos jar lies on its side nearby, empty and swept clean. From the left edge an old cobbled main street enters between low foundations and stubs of ruined walls; far down it a tiny lone hooded wanderer walks toward the fire, a pinpoint amber ember at the chest. Background: two planes of tiled rooftop silhouettes with one smoking chimney and a black cat on a ridge; a stiff chancellery facade with ONE window glowing amber #E28A3A behind a grille; on a distant hill a dark castle drawn like weather, its windows dark. Knee-deep fog over the ground. Deep flat blacks dominate, bone-white #D9CFB8 highlights, ash grey #8A8D8F halftones, moss green #3D4A3A only in the fog and between the cobbles; warm amber only in the bonfire, the one window and the ember; the fire painted as solid tongues of flame, amber at the root, cinnabar at the tips; sparse, lots of empty dark ground, full-bleed, no frame, no text, no letters, no signature.
+```
+
+### negative (всем трём, где модель его принимает)
+```
+readable text, letters, words, numbers, signage, signature, watermark, logo, frame, border, neon, glossy, 3D render, vector, flat illustration, cartoon, anime, rounded corners, pastel, bright colors, pure white, blue tint, purple, saturated green, gold, crowd, close-up faces, V-shaped bird flock, candles with wax drips, cobwebs, globe, violin, glasses on an open book, halftone dots in the fire
+```
+
+Приёмка — по скиллу ardet-scene-accept: тёплого не больше трёх (в G10 — одно),
+красное — только киноварь, букв нет, фигура странника меньше десятой высоты кадра,
+огонь сплошной. Принятое — `weave/G9_v1.jpg`, `weave/G10_v1.jpg`, `weave/G11_v1.jpg`.
+
