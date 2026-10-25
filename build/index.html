@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='89de74c · 2026-10-25';console.log('[оттиск]', '89de74c · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='77ae405 · 2026-10-25';console.log('[оттиск]', '77ae405 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -36567,6 +36567,89 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('posterwall3', x, y, 0, -1, 70, 55, posterwallBody);
     }
     exports_105("draw_posterwall", draw_posterwall);
+    function grafWord(set, word, x, y, c, drip, sd) {
+        for (const ch of word) {
+            if (ch === ' ') {
+                x += 3;
+                continue;
+            }
+            const g = set[ch];
+            for (let j = 0; j < g.length; j++)
+                for (let i = 0; i < g[j].length; i++)
+                    if (g[j][i] === '#')
+                        r(x + i, y + j, 1, 1, c);
+            if (drip)
+                for (let i = 0; i < g[0].length; i++)
+                    if (g[g.length - 1][i] === '#' && hh(x + i, sd, 371) < 0.35)
+                        r(x + i, y + g.length, 1, 1 + q(hh(x + i, sd, 373) * 3), drip); // потёки
+            x += g[0].length + 1;
+        }
+        return x;
+    }
+    function graffitiBody() {
+        // ── плита: опалубка, поры, трещины, скол по верху; торец пеплом ──
+        for (let x = 1; x < 58; x++) {
+            const top = 1 + (hh(x >> 2, 0, 375) < 0.25 ? 1 : 0) + (x > 49 ? q((x - 49) * 0.4) : 0);
+            for (let y = top; y < 42; y++) {
+                const h = hh(x, y, 377);
+                r(x, y, 1, 1, x < 3 ? OV_L : (y - 1) % 8 === 0 ? OV_D : h < 0.05 ? OV_D : h > 0.97 ? OV_L : OV_C);
+            }
+            r(x, top, 1, 1, x < 40 ? OV_L : S1);
+        }
+        for (let y = 4; y < 42; y++) {
+            r(58, y, 2, 1, OV_D);
+            r(59, y, 1, 1, AS);
+        }
+        for (const [cx, cy, n] of [[12, 2, 7], [41, 28, 9], [53, 10, 6]])
+            for (let k = 0; k < n; k++)
+                r(cx + q(Math.sin(k * 1.7) * 1.2), cy + k, 1, 1, K2); // трещины
+        // ── старая реклама: выцветшие поля, строки проступают штрихами ──
+        context_js_9.X.globalAlpha = 0.35;
+        r(3, 3, 52, 15, L2);
+        r(5, 19, 48, 9, AS);
+        context_js_9.X.globalAlpha = 1;
+        context_js_9.X.globalAlpha = 0.6;
+        for (let x = 10; x < 52; x++)
+            if (hh(x, 12, 379) > 0.3 && x !== 16 && x !== 29)
+                r(x, 16, 1, 1 + (hh(x, 13, 381) < 0.3 ? 1 : 0), K3); // «...НО СКИДКИ ЖИВЫ.»
+        for (let x = 8; x < 52; x++)
+            if (hh(x, 24, 383) > 0.3 && x !== 27)
+                r(x, 26, 1, 1 + (hh(x, 25, 385) < 0.3 ? 1 : 0), S2); // «...БЕСПЛАТНАЯ ДОСТАВКА.»
+        context_js_9.X.globalAlpha = 1;
+        // ── лозунги: красный в две строки с потёками, белый ──
+        grafWord(GRAF, 'СИСТЕМА', 4, 3, KV, null, 1);
+        grafWord(GRAF, 'МЕРТВА', 12, 9, KV, BLOOD, 1);
+        grafWord(GRAF, 'МЫ СВОБОДНЫ', 6, 19, BO, L2, 2);
+        // ── «ARDET» чёрным поверх всего; по нему — мох, гуще к хвосту, «A» ещё цела ──
+        grafWord(ARDET, 'ARDET', 6, 29, NI, K0, 3);
+        for (let x = 12; x < 40; x++)
+            for (let y = 27; y < 38; y++) {
+                const d = (x - 12) / 28, h = hh(x >> 1, y >> 1, 387) * 0.6 + hh(x, y, 389) * 0.4;
+                if (h < 0.15 + d * 0.55)
+                    r(x, y, 1, 1, h < 0.08 + d * 0.2 ? MG_L : h < 0.12 + d * 0.4 ? MG : MG_D);
+            }
+        for (let k = 0; k < 8; k++) {
+            const mx = 40 + q(hh(k, 30, 391) * 16), my = 33 + q(hh(k, 30, 393) * 8);
+            r(mx, my, 2, 1, MG_D);
+            r(mx, my - 1, 1, 1, MG);
+        } // мох ползёт по низу
+        // ── под стеной: баллон набок, шарик стучит; сорняк ──
+        r(44, 43, 5, 2, AS);
+        r(44, 43, 5, 1, S1);
+        r(49, 43, 1, 2, K1);
+        r(43, 43, 1, 2, K2);
+        r(45, 44, 3, 1, S0);
+        r(1, 42, 58, 1, K1);
+        for (let k = 0; k < 10; k++)
+            r(2 + q(hh(k, 31, 395) * 55), 41 + (k & 1), 1, 2, k & 1 ? MG_D : K4);
+        context_js_9.X.globalAlpha = 0.5;
+        r(1, 45, 59, 1, K0);
+        context_js_9.X.globalAlpha = 1;
+    }
+    function draw_graffiti(x, y) {
+        bake('graffiti2', x, y, 0, 0, 61, 47, graffitiBody);
+    }
+    exports_105("draw_graffiti", draw_graffiti);
     // ── РЖАВЫЙ ТРУБОПРОВОД ──
     // «Труба большого диаметра. Немецкая сталь. Этикетки содраны, уцелела одна...
     // В боку — пробоина. Края оплавлены внутрь. На бетоне рядом, мелом: дата,
@@ -37735,6 +37818,29 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // пеплом справа.
             PW_X0 = 2, PW_X1 = 64, PW_G = 48, PW_C = 50; // подножие стены — у основания места; свечи стоят на y 50
             pwTop = x => x < 50 ? 2 + (hh(x >> 2, 0, 371) < 0.3 ? 1 : 0) : 2 + q((x - 50) * 0.5) + (hh(x, 0, 373) < 0.4 ? 1 : 0);
+            // ── СТЕНА ГРАФФИТИ ──
+            // «Бетонная стена, покрытая слоями краски. „СИСТЕМА МЕРТВА" написано красным. Под
+            // ней проступает реклама: „...НО СКИДКИ ЖИВЫ." „МЫ СВОБОДНЫ" — белым. Под ней:
+            // „...БЕСПЛАТНАЯ ДОСТАВКА." „ARDET" — чёрным поверх всего. А поверх „ARDET" — зелёные
+            // пятна мха, разрастающиеся так, что через несколько лет от слова останется только
+            // первая буква... Мох — последний слой.» Использовать: баллон лежит на земле, пустой,
+            // шарик стучит. Плита бетона: опалубка, поры, трещины, скол по верху, торец пеплом.
+            // Слоями: под лозунгами — выцветшие поля старой рекламы, её строки проступают
+            // штрихами; лозунги — буквами (без них стену не узнать, как «ВАВИЛОН»): красный с
+            // потёками, белый, чёрный крупно поверх всего; по чёрному — мох кочками, гуще к
+            // хвосту слова, первая буква ещё цела. Под стеной — баллон набок. Свет слева.
+            GRAF = {
+                С: ['.##', '#..', '#..', '#..', '.##'], И: ['#..#', '#..#', '#.##', '##.#', '#..#'], Т: ['###', '.#.', '.#.', '.#.', '.#.'],
+                Е: ['###', '#..', '##.', '#..', '###'], М: ['#...#', '##.##', '#.#.#', '#...#', '#...#'], А: ['.#.', '#.#', '###', '#.#', '#.#'],
+                Р: ['##.', '#.#', '##.', '#..', '#..'], В: ['##.', '#.#', '##.', '#.#', '##.'], Ы: ['#...#', '#...#', '##..#', '#.#.#', '##..#'],
+                О: ['.#.', '#.#', '#.#', '#.#', '.#.'], Б: ['###', '#..', '##.', '#.#', '##.'], Д: ['.###', '.#.#', '.#.#', '#..#', '####'],
+                Н: ['#.#', '#.#', '###', '#.#', '#.#'],
+            };
+            ARDET = {
+                A: ['.###.', '##.##', '##.##', '#####', '##.##', '##.##', '##.##'], R: ['####.', '##.##', '##.##', '####.', '##.##', '##.##', '##.##'],
+                D: ['####.', '##.##', '##.##', '##.##', '##.##', '##.##', '####.'], E: ['#####', '##...', '##...', '####.', '##...', '##...', '#####'],
+                T: ['#####', '.###.', '.###.', '.###.', '.###.', '.###.', '.###.'],
+            };
             // ── ТОКСИЧНОЕ ОЗЕРО ──
             // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
             // Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды табличка:
@@ -37980,152 +38086,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_7.px(context_js_10.X, x + 1, y + 51, P.toxic);
     }
     exports_106("draw_vending", draw_vending);
-    function draw_graffiti(x, y) {
-        // ═══ GRAFFITI WALL — layered slogans through the years ═══
-        // Base concrete wall
-        draw_js_7.rect(context_js_10.X, x, y, 58, 42, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 1, y + 1, 56, 40, P.dstone);
-        // Cracks
-        context_js_10.X.fillStyle = '#0a0a0e';
-        for (let i = 0; i < 5; i++) {
-            draw_js_7.rect(context_js_10.X, x + 2 + draw_js_7.hash(i, 0, 11) * 54, y + 2 + draw_js_7.hash(i, 0, 22) * 38, 1, 3 + draw_js_7.hash(i, 0, 33) * 4);
-        }
-        // ── LAYER 1 (oldest) — advertising ghost ──
-        context_js_10.X.globalAlpha = .2;
-        draw_js_7.dither(context_js_10.X, x + 3, y + 3, 52, 36, P.damber, P.stone, .4);
-        // Fragment of "БУДЬ В КАЧЕ" (be in quality, old ad)
-        draw_js_7.rect(context_js_10.X, x + 6, y + 6, 3, 1, P.damber);
-        draw_js_7.rect(context_js_10.X, x + 10, y + 6, 3, 1, P.damber);
-        draw_js_7.rect(context_js_10.X, x + 14, y + 6, 3, 1, P.damber);
-        draw_js_7.rect(context_js_10.X, x + 18, y + 6, 3, 1, P.damber);
-        context_js_10.X.globalAlpha = 1;
-        // ── LAYER 2 — "СИСТЕМА МЕРТВА" big red ──
-        context_js_10.X.fillStyle = '#6b0f1a';
-        draw_js_7.rect(context_js_10.X, x + 4, y + 10, 4, 2);
-        draw_js_7.rect(context_js_10.X, x + 4, y + 12, 2, 4); // С
-        draw_js_7.rect(context_js_10.X, x + 9, y + 10, 5, 1);
-        draw_js_7.rect(context_js_10.X, x + 11, y + 10, 2, 6); // и (simplified)
-        draw_js_7.rect(context_js_10.X, x + 15, y + 10, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 15, y + 13, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 15, y + 16, 4, 1); // С (bottom)
-        draw_js_7.rect(context_js_10.X, x + 20, y + 10, 2, 7);
-        draw_js_7.rect(context_js_10.X, x + 20, y + 10, 3, 1);
-        draw_js_7.rect(context_js_10.X, x + 20, y + 13, 3, 1); // Т
-        draw_js_7.rect(context_js_10.X, x + 25, y + 10, 1, 7);
-        draw_js_7.rect(context_js_10.X, x + 25, y + 10, 3, 1); // Е
-        draw_js_7.rect(context_js_10.X, x + 29, y + 10, 2, 7);
-        draw_js_7.rect(context_js_10.X, x + 31, y + 12, 2, 5); // М
-        draw_js_7.rect(context_js_10.X, x + 35, y + 10, 1, 7);
-        draw_js_7.rect(context_js_10.X, x + 35, y + 13, 3, 1); // А
-        // Red paint drips
-        draw_js_7.rect(context_js_10.X, x + 6, y + 17, 1, 3, '#4a0a12');
-        draw_js_7.rect(context_js_10.X, x + 12, y + 17, 1, 4, '#4a0a12');
-        draw_js_7.rect(context_js_10.X, x + 22, y + 17, 1, 3, '#4a0a12');
-        draw_js_7.rect(context_js_10.X, x + 30, y + 17, 1, 3, '#4a0a12');
-        // ── LAYER 3 — "НО СКИДКИ ЖИВЫ" (underneath, smaller) ──
-        context_js_10.X.globalAlpha = .6;
-        context_js_10.X.fillStyle = '#1a1a1a';
-        for (let i = 0; i < 10; i++) {
-            draw_js_7.rect(context_js_10.X, x + 4 + i * 3, y + 22, 2, 1);
-            draw_js_7.rect(context_js_10.X, x + 4 + i * 3, y + 24, 2, 1);
-        }
-        context_js_10.X.globalAlpha = 1;
-        // ── LAYER 4 — white "МЫ СВОБОДНЫ" ──
-        context_js_10.X.fillStyle = P.bone;
-        draw_js_7.rect(context_js_10.X, x + 7, y + 26, 2, 5);
-        draw_js_7.rect(context_js_10.X, x + 7, y + 26, 5, 1);
-        draw_js_7.rect(context_js_10.X, x + 7, y + 28, 3, 1); // М
-        draw_js_7.rect(context_js_10.X, x + 14, y + 26, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 14, y + 26, 1, 5);
-        draw_js_7.rect(context_js_10.X, x + 14, y + 30, 4, 1); // Ы
-        draw_js_7.rect(context_js_10.X, x + 20, y + 26, 3, 5); // block
-        draw_js_7.rect(context_js_10.X, x + 25, y + 26, 1, 5);
-        draw_js_7.rect(context_js_10.X, x + 25, y + 28, 3, 1);
-        draw_js_7.rect(context_js_10.X, x + 27, y + 26, 1, 5); // Н
-        draw_js_7.rect(context_js_10.X, x + 30, y + 26, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 30, y + 30, 2, 1); // Ы
-        // ── LAYER 5 — "ARDET" in big black ──
-        context_js_10.X.fillStyle = '#0a0a0a';
-        // A
-        draw_js_7.rect(context_js_10.X, x + 6, y + 33, 3, 6);
-        draw_js_7.rect(context_js_10.X, x + 7, y + 32, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 6, y + 35, 4, 1);
-        // R
-        draw_js_7.rect(context_js_10.X, x + 11, y + 32, 3, 7);
-        draw_js_7.rect(context_js_10.X, x + 13, y + 32, 2, 3);
-        draw_js_7.rect(context_js_10.X, x + 13, y + 35, 2, 3);
-        // D
-        draw_js_7.rect(context_js_10.X, x + 16, y + 32, 3, 7);
-        draw_js_7.rect(context_js_10.X, x + 18, y + 32, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 18, y + 38, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 19, y + 33, 1, 5);
-        // E
-        draw_js_7.rect(context_js_10.X, x + 21, y + 32, 3, 7);
-        draw_js_7.rect(context_js_10.X, x + 21, y + 32, 5, 1);
-        draw_js_7.rect(context_js_10.X, x + 21, y + 35, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 21, y + 38, 5, 1);
-        // T
-        draw_js_7.rect(context_js_10.X, x + 27, y + 32, 5, 1);
-        draw_js_7.rect(context_js_10.X, x + 29, y + 32, 2, 7);
-        // ── LAYER 6 (newest) — MOSS growing over ARDET ──
-        // Living moss patches
-        for (let i = 0; i < 6; i++) {
-            const mcx = x + 8 + i * 5;
-            const mcy = y + 33 + Math.sin(i) * 2;
-            draw_js_7.rect(context_js_10.X, mcx, mcy, 3, 2, P.dtoxic);
-            draw_js_7.px(context_js_10.X, mcx + 1, mcy - 1, P.toxic);
-            if (i % 2)
-                draw_js_7.px(context_js_10.X, mcx, mcy + 2, P.btoxic);
-        }
-        // ── SMALL TAGS on top ──
-        // "А" (anarchist)
-        context_js_10.X.fillStyle = '#6b0f1a';
-        draw_js_7.rect(context_js_10.X, x + 40, y + 4, 2, 4);
-        draw_js_7.rect(context_js_10.X, x + 40, y + 5, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 42, y + 4, 2, 4);
-        // Small "Z" crossed out (red strike)
-        context_js_10.X.fillStyle = '#252b22';
-        draw_js_7.rect(context_js_10.X, x + 46, y + 4, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 48, y + 5, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 46, y + 6, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 46, y + 7, 4, 1);
-        context_js_10.X.strokeStyle = '#6b0f1a';
-        context_js_10.X.lineWidth = 1;
-        context_js_10.X.beginPath();
-        context_js_10.X.moveTo(x + 45, y + 3);
-        context_js_10.X.lineTo(x + 51, y + 9);
-        context_js_10.X.stroke();
-        // Heart + initials
-        context_js_10.X.fillStyle = '#b8860b';
-        draw_js_7.rect(context_js_10.X, x + 47, y + 16, 1, 1);
-        draw_js_7.rect(context_js_10.X, x + 49, y + 16, 1, 1);
-        draw_js_7.rect(context_js_10.X, x + 46, y + 17, 4, 1);
-        draw_js_7.rect(context_js_10.X, x + 47, y + 18, 3, 1);
-        draw_js_7.rect(context_js_10.X, x + 48, y + 19, 1, 1);
-        // QR code in corner (tiny)
-        for (let qy = 0; qy < 5; qy++)
-            for (let qx = 0; qx < 5; qx++) {
-                if (draw_js_7.hash(qx, qy, 55) > .4)
-                    draw_js_7.px(context_js_10.X, x + 50 + qx, y + 32 + qy, '#0a0a0a');
-            }
-        // Spray can at base
-        draw_js_7.rect(context_js_10.X, x + 35, y + 39, 2, 3, P.dgrey);
-        draw_js_7.px(context_js_10.X, x + 35, y + 38, P.ash);
-        // Small spray mist
-        if (time_js_24.t % 80 < 20) {
-            context_js_10.X.globalAlpha = .2;
-            draw_js_7.px(context_js_10.X, x + 36, y + 37, '#6b0f1a');
-            draw_js_7.px(context_js_10.X, x + 37, y + 36, '#6b0f1a');
-            context_js_10.X.globalAlpha = 1;
-        }
-        // "Мох помнит" scratch (barely visible, very small)
-        context_js_10.X.globalAlpha = .4;
-        context_js_10.X.fillStyle = P.toxic;
-        for (let i = 0; i < 8; i++)
-            draw_js_7.px(context_js_10.X, x + 40 + i, y + 39, P.dtoxic);
-        context_js_10.X.globalAlpha = 1;
-    }
-    exports_106("draw_graffiti", draw_graffiti);
     function draw_raven(x, y) {
         // ═══ RAVEN'S NEST — twisted oak with trove ═══
         // Shadow
@@ -38623,7 +38583,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_banner": canon_js_1_1["draw_banner"],
                     "draw_overpass": canon_js_1_1["draw_overpass"],
                     "draw_posterwall": canon_js_1_1["draw_posterwall"],
-                    "draw_crypt": canon_js_1_1["draw_crypt"]
+                    "draw_crypt": canon_js_1_1["draw_crypt"],
+                    "draw_graffiti": canon_js_1_1["draw_graffiti"]
                 });
             }
         ],

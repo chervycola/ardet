@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -111,120 +111,6 @@ export function draw_vending(x, y) {
     // Moss at base
     rect(X,x,y+52,3,2,P.dtoxic);
     px(X,x+1,y+51,P.toxic);
-}
-
-export function draw_graffiti(x, y) {
-    // ═══ GRAFFITI WALL — layered slogans through the years ═══
-    // Base concrete wall
-    rect(X,x,y,58,42,P.stone);
-    rect(X,x+1,y+1,56,40,P.dstone);
-    // Cracks
-    X.fillStyle='#0a0a0e';
-    for(let i=0;i<5;i++){
-      rect(X,x+2+hash(i,0,11)*54,y+2+hash(i,0,22)*38,1,3+hash(i,0,33)*4);
-    }
-
-    // ── LAYER 1 (oldest) — advertising ghost ──
-    X.globalAlpha=.2;
-    dither(X,x+3,y+3,52,36,P.damber,P.stone,.4);
-    // Fragment of "БУДЬ В КАЧЕ" (be in quality, old ad)
-    rect(X,x+6,y+6,3,1,P.damber);rect(X,x+10,y+6,3,1,P.damber);
-    rect(X,x+14,y+6,3,1,P.damber);rect(X,x+18,y+6,3,1,P.damber);
-    X.globalAlpha=1;
-
-    // ── LAYER 2 — "СИСТЕМА МЕРТВА" big red ──
-    X.fillStyle='#6b0f1a';
-    rect(X,x+4,y+10,4,2);rect(X,x+4,y+12,2,4); // С
-    rect(X,x+9,y+10,5,1);rect(X,x+11,y+10,2,6); // и (simplified)
-    rect(X,x+15,y+10,4,1);rect(X,x+15,y+13,4,1);rect(X,x+15,y+16,4,1); // С (bottom)
-    rect(X,x+20,y+10,2,7);rect(X,x+20,y+10,3,1);rect(X,x+20,y+13,3,1); // Т
-    rect(X,x+25,y+10,1,7);rect(X,x+25,y+10,3,1); // Е
-    rect(X,x+29,y+10,2,7);rect(X,x+31,y+12,2,5); // М
-    rect(X,x+35,y+10,1,7);rect(X,x+35,y+13,3,1); // А
-    // Red paint drips
-    rect(X,x+6,y+17,1,3,'#4a0a12');
-    rect(X,x+12,y+17,1,4,'#4a0a12');
-    rect(X,x+22,y+17,1,3,'#4a0a12');
-    rect(X,x+30,y+17,1,3,'#4a0a12');
-
-    // ── LAYER 3 — "НО СКИДКИ ЖИВЫ" (underneath, smaller) ──
-    X.globalAlpha=.6;
-    X.fillStyle='#1a1a1a';
-    for(let i=0;i<10;i++){
-      rect(X,x+4+i*3,y+22,2,1);
-      rect(X,x+4+i*3,y+24,2,1);
-    }
-    X.globalAlpha=1;
-
-    // ── LAYER 4 — white "МЫ СВОБОДНЫ" ──
-    X.fillStyle=P.bone;
-    rect(X,x+7,y+26,2,5);rect(X,x+7,y+26,5,1);rect(X,x+7,y+28,3,1); // М
-    rect(X,x+14,y+26,4,1);rect(X,x+14,y+26,1,5);rect(X,x+14,y+30,4,1); // Ы
-    rect(X,x+20,y+26,3,5); // block
-    rect(X,x+25,y+26,1,5);rect(X,x+25,y+28,3,1);rect(X,x+27,y+26,1,5); // Н
-    rect(X,x+30,y+26,2,1);rect(X,x+30,y+30,2,1); // Ы
-
-    // ── LAYER 5 — "ARDET" in big black ──
-    X.fillStyle='#0a0a0a';
-    // A
-    rect(X,x+6,y+33,3,6);rect(X,x+7,y+32,2,1);rect(X,x+6,y+35,4,1);
-    // R
-    rect(X,x+11,y+32,3,7);rect(X,x+13,y+32,2,3);rect(X,x+13,y+35,2,3);
-    // D
-    rect(X,x+16,y+32,3,7);rect(X,x+18,y+32,2,1);rect(X,x+18,y+38,2,1);rect(X,x+19,y+33,1,5);
-    // E
-    rect(X,x+21,y+32,3,7);rect(X,x+21,y+32,5,1);rect(X,x+21,y+35,4,1);rect(X,x+21,y+38,5,1);
-    // T
-    rect(X,x+27,y+32,5,1);rect(X,x+29,y+32,2,7);
-
-    // ── LAYER 6 (newest) — MOSS growing over ARDET ──
-    // Living moss patches
-    for(let i=0;i<6;i++){
-      const mcx=x+8+i*5;
-      const mcy=y+33+Math.sin(i)*2;
-      rect(X,mcx,mcy,3,2,P.dtoxic);
-      px(X,mcx+1,mcy-1,P.toxic);
-      if(i%2)px(X,mcx,mcy+2,P.btoxic);
-    }
-
-    // ── SMALL TAGS on top ──
-    // "А" (anarchist)
-    X.fillStyle='#6b0f1a';
-    rect(X,x+40,y+4,2,4);rect(X,x+40,y+5,4,1);rect(X,x+42,y+4,2,4);
-    // Small "Z" crossed out (red strike)
-    X.fillStyle='#252b22';
-    rect(X,x+46,y+4,4,1);rect(X,x+48,y+5,2,1);rect(X,x+46,y+6,2,1);rect(X,x+46,y+7,4,1);
-    X.strokeStyle='#6b0f1a';X.lineWidth=1;
-    X.beginPath();X.moveTo(x+45,y+3);X.lineTo(x+51,y+9);X.stroke();
-
-    // Heart + initials
-    X.fillStyle='#b8860b';
-    rect(X,x+47,y+16,1,1);rect(X,x+49,y+16,1,1);
-    rect(X,x+46,y+17,4,1);
-    rect(X,x+47,y+18,3,1);
-    rect(X,x+48,y+19,1,1);
-
-    // QR code in corner (tiny)
-    for(let qy=0;qy<5;qy++)for(let qx=0;qx<5;qx++){
-      if(hash(qx,qy,55)>.4)px(X,x+50+qx,y+32+qy,'#0a0a0a');
-    }
-
-    // Spray can at base
-    rect(X,x+35,y+39,2,3,P.dgrey);
-    px(X,x+35,y+38,P.ash);
-    // Small spray mist
-    if(t%80<20){
-      X.globalAlpha=.2;
-      px(X,x+36,y+37,'#6b0f1a');
-      px(X,x+37,y+36,'#6b0f1a');
-      X.globalAlpha=1;
-    }
-
-    // "Мох помнит" scratch (barely visible, very small)
-    X.globalAlpha=.4;
-    X.fillStyle=P.toxic;
-    for(let i=0;i<8;i++)px(X,x+40+i,y+39,P.dtoxic);
-    X.globalAlpha=1;
 }
 
 export function draw_raven(x, y) {
