@@ -398,6 +398,55 @@ min(420px, 88vw)). Отсюда **правило композиции заста
 
 Рабочий промт — в конце файла, «Промт заставки «форма 0» (вер. 3)».
 
+## 12. Портрет Сола для диалога · 25.10
+
+Задание — `weave/PORTRAITS.md` (ветка philosophy): `sol.png`, вертикаль 4:5,
+1024×1280; в игре рамка 168×210, на телефоне 72×90. Канон фигуры —
+`weave/FIGURES.md` и ART_BIBLE §05. Сол является в красный полдень, поэтому
+фон — ровная киноварь без теней.
+
+Шесть проб (9.75 кр.), промт один на все (ниже), меняются сетка и референс:
+
+| № | сетка | референс | итог |
+|---|---|---|---|
+| 1 | GPT Image 2 | 2а `41536d16` | солнце-маска, самый офортный и гротескный; лучей около 15 |
+| 2 | Seedream 5 Pro | 2а | человек с нимбом: читается как святой, а не как солнце |
+| 3 | Nano Banana 2.1 | 2а | то же, зато самое строгое лицо |
+| 4 | GPT Image 2 | ДЕНЬ `3637a5f7` | ★ выбор автора, `479004eb`: лицо — сам диск, потёки, рёбра в прорехе, ветка горит; лучей около 20 |
+| 5 | Seedream 5 Pro | ДЕНЬ | голова-диск, лучше всех читается в 72×90, `6f08583f` |
+| 6 | Recraft V4.1 | без референса, палитра | киноварь ушла в алый, ветка стала факелом |
+
+Для красного полдня референс ДЕНЬ держит концепт лучше: Seedream с ним
+рисует солнце-лицо, а с офортом 2а — святого с нимбом.
+
+В игре: `assets/portraits/sol.png` — №4, обрезан до 4:5 сверху и выведен
+в 1024×1280. Расхождение с каноном: лучей около двадцати, а по канону 14
+(«число несущее»). Если число держим строго — поправить одной правкой поверх.
+
+Промт (голова для референса ДЕНЬ):
+> Match the style of the reference image, not its composition: flat
+> woodcut-poster layers, solid cinnabar masses, bone highlights, worn print
+> texture. Dialogue portrait of Sol, the sun of this world, who appears at
+> red noon: an anthropomorphic sun god with two arms. Behind his head a disc
+> with exactly fourteen straight rays. Under the disc a stern, grotesque,
+> solemn face — heavy eyelids, a straight mouth with the corners turned down,
+> frozen drips running down the cheeks like cooled wax. Beneath the disc a
+> wilting wreath of wheat ears, some ears drooping. His mantle turns from
+> cracked gilding at the shoulders, across a ragged border, into dark wood
+> and then into ash and decay at the hem; the gilding is drawn in
+> candle-orange #E28A3A and bone #D9CFB8, never metallic. A sunflower clasp
+> with a skull at its heart, on a dark backing, holds the mantle; through two
+> tears in the cloth his ribs show. In one hand a branch that burns and does
+> not burn away, its flame drawn as solid flat tongues. Red noon without
+> shadows: behind him a flat, even cinnabar #C23B2B ground, no shading, no
+> sky, no landscape. One clear silhouette that still reads when tiny: head
+> and rays in the upper three-fifths of the frame. Etched portrait print:
+> black and bone ink hatching over the flat cinnabar ground, Gustave Doré
+> density, rotaprint impression, heavy paper grain, slightly misregistered
+> second ink, solemn, waist-up, the figure fills the frame. No text, no
+> letters, no signature, no watermark, no border, no frame. Not glossy, not
+> 3D, not vector, not cartoon, no metallic gold, no blue, no purple, no green.
+
 ---
 
 ## Промт сцены «Поезд издалека с путником» (вер. 1, 26.07)
