@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ad1be79 · 2026-10-24';console.log('[оттиск]', 'ad1be79 · 2026-10-24');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='50f405e · 2026-10-25';console.log('[оттиск]', '50f405e · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32940,7 +32940,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather"], function (exports_103, context_103) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, JK_DIGIT, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, JK_DIGIT, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_103 && context_103.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -34973,123 +34973,174 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('tent', x, y, -8, 1, 80, 60, tentBody);
     }
     exports_103("draw_tent", draw_tent);
-    function glyph(ch, x0, y0, c, c2) { GLYPH[ch].forEach((row, j) => { for (let i = 0; i < 4; i++)
-        if (row[i] === 'X')
-            r(x0 + i, y0 + j, 1, 1, j === 0 && c2 ? c2 : c); }); }
+    function glyph(ch, x0, y0, c, c2, broken) {
+        GLYPH[ch].forEach((row, j) => { for (let i = 0; i < 4; i++)
+            if (row[i] === 'X' && !(broken && hh(x0 + i, y0 + j, 221) < broken))
+                r(x0 + i, y0 + j, 1, 1, j === 0 && c2 ? c2 : c); });
+    }
+    function pzBrick(x, y) {
+        const row = Math.floor(y / 3), sh = (row & 1) * 3, bi = Math.floor((x + sh) / 6);
+        if (y % 3 === 0 || (x + sh) % 6 === 0)
+            return x < 40 ? S2 : K3;
+        const v = hh(bi, row, 225) + (x < 36 ? 0.12 : x > 104 ? -0.12 : 0);
+        return v > 0.88 ? S1 : v < 0.14 ? S2 : S0;
+    }
     function pizzeriaBody() {
         const g = 88;
-        // третий и второй этажи: стена, окна пустые, копоть; справа третий обрушен
-        r(4, 8, 132, 46, S0);
-        for (let y = 10; y < 54; y += 4)
-            r(4, y, 132, 1, S2);
-        for (let y = 8; y < 54; y += 4)
-            for (let x = 4 + ((y >> 2) & 1) * 5; x < 136; x += 10)
-                r(x, y + 1, 1, 3, S2);
-        for (let k = 0; k < 132; k++) {
-            const top = k > 80 ? 8 + q(hh(k, 3, 5) * 6) + q((k - 80) * 0.35) : 8 + q(hh(k, 3, 5) * 2);
-            context_js_9.X.clearRect(4 + k, 6, 1, top - 6);
-        } // рваный верх, справа — пролом
-        for (let k = 0; k < 6; k++)
-            r(92 + k * 7, 12 + q(k * 2.4), 1, 4 + (k & 1) * 2, K1); // арматура из пролома
-        r(4, 8, 1, 46, S1);
-        r(135, 8, 1, 46, AS);
-        for (const [wy, fl] of [[14, 3], [34, 2]])
+        // ── второй и третий этажи: кирпич, рваный верх, справа пролом ──
+        for (let x = 4; x < 136; x++) {
+            const top = pzTop(x);
+            for (let y = top; y < 55; y++)
+                r(x, y, 1, 1, y === top ? (x < 70 ? S1 : S0) : pzBrick(x, y));
+        }
+        r(4, 9, 1, 46, S1);
+        r(135, pzTop(135), 1, 55 - pzTop(135), AS);
+        for (let k = 0; k < 7; k++) {
+            const ax = 90 + k * 6, ay = pzTop(ax);
+            r(ax, ay - 3 - (k & 1) * 2, 1, 3 + (k & 1) * 2, RUST);
+            r(ax + 1, ay - 1, 1, 1, K1);
+        } // арматура из пролома
+        for (let x = 86; x < 136; x++)
+            if (hh(x, 1, 227) < 0.4)
+                r(x, pzTop(x) + 1, 1, 1, K1); // скол по кромке
+        r(4, 30, 132, 1, S1);
+        r(4, 31, 132, 1, K3); // карниз между этажами
+        // окна: рама, темнота комнаты, осколки, кое-где занавеска; над ними — копоть языками
+        for (const [wy, fl] of [[13, 3], [35, 2]])
             for (let k = 0; k < 7; k++) {
                 const wx = 10 + k * 18;
-                if (fl === 3 && wx > 96)
-                    continue; // там обрушено
-                r(wx, wy, 10, 12, K0);
+                if (fl === 3 && wx > 82)
+                    continue;
+                for (let dy = 0; dy <= 9; dy++) { // копоть: языком вверх от окна, шире и реже
+                    const w = 3 + q(dy * 0.5), yy = wy - 2 - dy;
+                    for (let dx = -w; dx <= w; dx++)
+                        if (yy >= pzTop(wx + 5 + dx) + 1 && hh(wx + 5 + dx, yy, 229) < 0.95 - dy * 0.08 - Math.abs(dx) * 0.06)
+                            r(wx + 5 + dx, yy, 1, 1, dy < 3 ? NI : dy < 6 ? K1 : K3);
+                }
+                r(wx - 1, wy - 1, 12, 14, K3);
                 r(wx - 1, wy - 1, 12, 1, S1);
-                r(wx - 1, wy + 12, 12, 1, S1);
-                if (hh(k, fl, 3) < 0.5) {
-                    r(wx + 1, wy + 1, 2, 3, AS);
-                    r(wx + 7, wy + 8, 2, 3, AS);
-                } // осколки
-                for (let s = 0; s < 6; s++)
-                    if (hh(k, fl * 9 + s, 7) < 0.6)
-                        r(wx + 2 + s, wy - 2 - q(hh(k, s, 9) * 5), 1, 2 + q(hh(k, s, 11) * 3), NI); // копоть пожара
+                r(wx - 1, wy - 1, 1, 14, S1); // рама: свет слева-сверху
+                r(wx, wy, 10, 12, K0);
+                r(wx, wy + 9, 10, 3, K1); // комната: в глубине пол светлее
+                r(wx + 4, wy, 1, 12, K3);
+                r(wx, wy + 5, 10, 1, K3); // переплёт
+                if (hh(k, fl, 231) < 0.6) {
+                    r(wx, wy, 2, 2, AS);
+                    r(wx, wy, 1, 1, L2);
+                    r(wx + 8, wy + 10, 2, 2, AS);
+                } // осколки по углам
+                if (hh(k, fl, 233) < 0.3) {
+                    r(wx + 6, wy, 3, 7 + (k & 1) * 2, SEP);
+                    r(wx + 6, wy, 1, 7 + (k & 1) * 2, BR2);
+                } // обрывок занавески
+                r(wx - 2, wy + 12, 14, 1, S1);
+                r(wx - 2, wy + 13, 14, 1, K3); // подоконник
             }
-        // первый этаж: «Вавилон» — витрина, дверь, окно заколочено
-        r(2, 56, 136, 32, K3);
-        r(2, 56, 136, 1, S1);
-        r(2, 56, 1, 32, S0);
-        r(137, 57, 1, 31, AS);
+        // ── первый этаж «Вавилон»: фриз, витрина, дверь, заколоченное окно, подвал ──
+        r(2, 55, 136, 33, K3);
+        r(2, 55, 136, 1, S1);
+        r(2, 55, 1, 33, S0);
+        r(137, 56, 1, 32, AS);
+        r(2, 56, 136, 3, K2);
+        r(2, 58, 136, 1, K1); // фриз под вывеской
+        // витрина: стекла нет, в глубине столы рядами (дальние мельче), меню под стеклом — бликом
+        r(9, 61, 60, 24, S1);
         r(10, 62, 58, 22, K0);
-        r(9, 61, 60, 1, S1);
-        r(9, 84, 60, 1, S1); // витрина
-        for (let k = 0; k < 5; k++)
-            for (let j = 0; j < 2; j++) { // столы рядами — их сорок семь
-                const tx = 13 + k * 11, ty = 70 + j * 7;
-                r(tx, ty, 7, 1, K3);
-                r(tx + 1, ty + 1, 1, 3, K2);
-                r(tx + 5, ty + 1, 1, 3, K2);
-                r(tx + 2, ty - 1, 3, 1, S2); // стол, ножки, меню под стеклом
-                r(tx - 2, ty - 1, 1, 4, K2);
-                r(tx + 8, ty - 1, 1, 4, K2); // стулья
+        r(38, 62, 1, 22, K3);
+        r(10, 62, 58, 6, K1); // дальняя стена
+        r(48, 63, 12, 6, S2);
+        r(49, 62, 10, 1, S2);
+        r(51, 61, 6, 1, S2);
+        r(48, 63, 1, 6, S0); // печь куполом — разбита
+        r(52, 65, 4, 3, K0);
+        r(53, 66, 2, 1, BLOOD);
+        r(57, 62, 2, 3, K0); // зев, тепло; пролом в куполе
+        for (const [row, n, w, y0, gap] of [[0, 8, 4, 69, 7], [1, 7, 5, 73, 8], [2, 6, 6, 78, 9]])
+            for (let k = 0; k < n; k++) {
+                const tx = 12 + k * gap + (row === 0 ? 1 : 0), ty = y0;
+                if (tx + w > 67)
+                    continue;
+                r(tx, ty, w, 1, K4);
+                r(tx + 1, ty - 1, w - 2 > 0 ? w - 2 : 1, 1, L1); // стол и меню под стеклом
+                r(tx, ty + 1, 1, row + 1, K2);
+                r(tx + w - 1, ty + 1, 1, row + 1, K2); // ножки
+                if (row > 0)
+                    r(tx - 1, ty - 1, 1, row + 2, K2); // стул
             }
-        r(52, 64, 12, 7, S0);
-        r(53, 63, 10, 1, S0);
-        r(54, 62, 8, 1, S2);
-        r(52, 64, 1, 7, S1); // печь в глубине, разбита
-        r(56, 67, 4, 3, K0);
-        r(57, 68, 2, 1, BLOOD);
-        r(62, 64, 2, 2, K0);
-        for (const [sx, sy] of [[10, 62], [11, 63], [67, 62], [66, 83], [10, 82]])
+        for (const [sx, sy] of [[10, 62], [11, 63], [67, 62], [66, 83], [10, 82], [39, 62]])
             r(sx, sy, 1, 1, AS); // стекло по краям
+        r(10, 84, 58, 1, S0);
+        // дверь, косяк со счётом карандашом, коврик, ключ
+        r(75, 61, 18, 27, S1);
         r(76, 62, 16, 26, K1);
-        r(75, 61, 18, 1, S1);
-        r(75, 61, 1, 27, S1);
-        r(92, 62, 1, 26, S2); // проём двери
+        r(92, 62, 1, 26, S2);
         r(78, 64, 12, 24, BR2);
         r(78, 64, 1, 24, K4);
-        r(88, 74, 1, 2, AS); // дверь
+        r(89, 64, 1, 24, K1);
+        r(88, 75, 1, 2, AS); // дверь, ручка
+        r(79, 66, 10, 7, K4);
+        r(80, 67, 8, 5, K1); // окошко двери — темно
         for (let k = 0; k < 10; k++) {
             const yy = 63 + (k >> 1) * 5 + (k & 1) * 2;
             for (let m = 0; m < (k === 9 ? 2 : 4); m++)
                 r(93, yy + m, 1, 1, K2);
             if (k < 9)
-                r(93, yy, 1, 4, K2);
-        } // косяк: счёт карандашом, пятёрками
+                r(94, yy - 1 + (k & 1), 1, 5, K2);
+        } // счёт: черта и перечёркнутые пятёрки
+        r(74, 86, 20, 2, BR2);
+        r(74, 86, 20, 1, SEP);
+        for (let k = 0; k < 7; k++)
+            r(76 + k * 2 + (k > 3 ? 1 : 0), 86, 1, 1, L2); // «Welcome» — штрихами
+        r(93, 87, 2, 1, AS); // ключ из-под края
+        // заколоченное окно, решётка подвала
+        r(99, 61, 30, 22, S1);
         r(100, 62, 28, 20, K1);
         for (let k = 0; k < 4; k++) {
             r(99, 64 + k * 5, 30, 2, BR2);
             r(99, 64 + k * 5, 30, 1, K4);
-        } // окно заколочено
-        r(74, 86, 20, 2, BR2);
-        for (let k = 0; k < 6; k++)
-            r(77 + k * 3, 87, 2, 1, L2); // коврик «Welcome», ключ под ним
-        // вывеска: короб, кронштейны; трубки букв
-        r(SIGN_X - 3, SIGN_Y - 2, SIGN.length * 5 + 5, 9, K1);
-        r(SIGN_X - 3, SIGN_Y - 2, SIGN.length * 5 + 5, 1, K4);
-        r(SIGN_X - 1, SIGN_Y + 7, 1, 3, K1);
-        r(SIGN_X + SIGN.length * 5, SIGN_Y + 7, 1, 3, K1);
-        [...SIGN].forEach((ch, i) => { if (i)
-            glyph(ch, SIGN_X + i * 5, SIGN_Y, K4, S2); });
-        // справа в кустах — пирамида коробок от пиццы; на верхней — чек
-        for (let k = 0; k < 9; k++)
-            r(118 + q(hh(k, 5, 3) * 22), 80 + q(hh(k, 5, 5) * 6), 1, 3 + q(hh(k, 5, 7) * 4), k & 1 ? K4 : MG_D);
+            r(101 + (k & 1) * 24, 64 + k * 5, 1, 1, AS);
+        } // доски, гвозди
+        r(98, 70, 32, 2, BR2);
+        r(98, 70, 32, 1, SEP); // доска наискось — крестом
+        r(20, 85, 12, 3, K0);
+        for (let k = 0; k < 5; k++)
+            r(21 + k * 2, 85, 1, 3, AS); // решётка подвала — заперто
+        // ── справа в кустах — пирамида коробок от пиццы; на верхней — чек ──
+        for (let k = 0; k < 12; k++)
+            r(116 + q(hh(k, 5, 235) * 24), 78 + q(hh(k, 5, 237) * 8), 1, 3 + q(hh(k, 5, 239) * 5), k & 1 ? K4 : MG_D);
         for (const [row, n] of [[0, 4], [1, 3], [2, 2], [3, 1]])
             for (let k = 0; k < n; k++) {
-                const bx = 120 + row * 3 + k * 6, by = 84 - row * 3;
+                const bx = 119 + row * 3 + k * 6, by = 84 - row * 3;
                 r(bx, by, 6, 3, L2);
                 r(bx, by, 6, 1, L1);
                 r(bx + 5, by + 1, 1, 2, K4);
                 r(bx, by + 2, 6, 1, K4);
+                r(bx + 2, by + 1, 2, 1, SEP); // коробка, жирное пятно
             }
-        r(130, 74, 3, 2, BO); // чек выцвел
+        r(129, 72, 4, 3, BO);
+        r(130, 73, 2, 1, L2); // чек выцвел
+        // ── вывеска: короб на кронштейнах, проводка; трубки мёртвых букв ──
+        r(SIGN_X - 3, SIGN_Y - 2, SIGN.length * 5 + 5, 9, K1);
+        r(SIGN_X - 3, SIGN_Y - 2, SIGN.length * 5 + 5, 1, K4);
+        r(SIGN_X - 1, SIGN_Y + 7, 1, 3, K2);
+        r(SIGN_X + SIGN.length * 5, SIGN_Y + 7, 1, 3, K2);
+        for (let k = 0; k < SIGN.length * 5; k += 3)
+            r(SIGN_X + k, SIGN_Y + 6, 2, 1, K3); // провод по низу
+        [...SIGN].forEach((ch, i) => { if (i)
+            glyph(ch, SIGN_X + i * 5, SIGN_Y, S2, S0, 0.06); }); // стекло трубок пыльное, кое-где битое
         context_js_9.X.globalAlpha = 0.5;
         r(0, g, 140, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_pizzeria(x, y) {
-        bake('pizzeria', x, y, 0, 5, 142, 85, pizzeriaBody);
+        bake('pizzeria2', x, y, 0, 5, 142, 85, pizzeriaBody);
         // «В» мигает одиннадцать лет; мёртвые по очереди искрят
         const m = time_js_23.t % 150, on = m < 96 || (m > 104 && m < 112);
         if (on) {
-            glyph('В', x + SIGN_X, y + SIGN_Y, KV, SV);
-            context_js_9.X.globalAlpha = 0.18;
+            context_js_9.X.globalAlpha = 0.16;
             r(x + SIGN_X - 2, y + SIGN_Y - 2, 8, 9, KV);
             context_js_9.X.globalAlpha = 1;
+            glyph('В', x + SIGN_X, y + SIGN_Y, KV, SV);
         }
         else
             glyph('В', x + SIGN_X, y + SIGN_Y, BLOOD);
@@ -35100,7 +35151,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         // печь внутри тёплая — зев чуть дышит
         if ((time_js_23.t >> 5) & 1)
-            r(x + 57, y + 68, 2, 1, KV);
+            r(x + 53, y + 66, 2, 1, KV);
     }
     exports_103("draw_pizzeria", draw_pizzeria);
     // ── ДВЕНАДЦАТИЭТАЖКА В РУИНАХ ──
@@ -36717,20 +36768,25 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // полке — одна светлая, нетронутая. Копоть по колоннам. Страницы — живьём.
             COLS = [10, 26, 42, 58, 74, 90], FALLEN = 74;
             // ── ПИЦЦЕРИЯ «ВАВИЛОН» ──
-            // «Трёхэтажная руина. Неоновая вывеска «ВАВИЛОН»: буква «В» мигает уже
+            // «Трёхэтажная руина. Неоновая вывеска „ВАВИЛОН": буква „В" мигает уже
             // одиннадцать лет, остальные шесть мертвы и иногда искрят. Внутри 47 столов —
-            // Архивариус считал, карандашом на косяке, до единицы... Печь разбита, но
-            // внутри тёплая... Ключ — под ковриком у входа. Коврик гласит: «Welcome».
-            // Справа, в кустах, — пирамида из пустых коробок от пиццы. На верхней —
-            // выцветший чек.» Вывеска — буквами осмотра: живая одна «В», киноварью;
-            // мёртвые трубки — тёмные, по очереди искрят (каждая раз в минуту, не
-            // случайно). За витриной — столы рядами и печь, в зеве тепло тлеет киноварью.
-            // На косяке — счёт карандашом, пятёрками. Третий этаж обрушен справа.
+            // Архивариус считал, карандашом на косяке, до единицы. 47 меню под стеклом…
+            // Печь разбита, но внутри тёплая и пахнет тестом. Подвал закрыт. Ключ — под
+            // ковриком у входа. Коврик гласит: „Welcome". Справа, в кустах, — пирамида из
+            // пустых коробок от пиццы. На верхней — выцветший чек.» Кирпич рядами в тон, над
+            // окнами копоть языками — был пожар; окна с рамами, осколки, где-то обрывок
+            // занавески; справа третий этаж обрушен — плита с арматурой. Вывеска трубками:
+            // живая «В» киноварью со свечой по верху, мёртвые трубки серые, кое-где битые, по
+            // очереди искрят (каждая раз в минуту). Витрина: столы рядами вглубь, на каждом
+            // меню под стеклом бликом; у дальней стены печь — разбита, в зеве тлеет. Дверь,
+            // на косяке счёт карандашом пятёрками, коврик, у его края блестит ключ; решётка
+            // подвала. Свет слева, кромка пеплом справа.
             GLYPH = {
                 В: ['XXX.', 'X..X', 'XXX.', 'X..X', 'XXX.'], А: ['.XX.', 'X..X', 'XXXX', 'X..X', 'X..X'], И: ['X..X', 'X..X', 'X.XX', 'XX.X', 'X..X'],
                 Л: ['.XXX', '.X.X', '.X.X', '.X.X', 'XX.X'], О: ['.XX.', 'X..X', 'X..X', 'X..X', '.XX.'], Н: ['X..X', 'X..X', 'XXXX', 'X..X', 'X..X'],
             };
             SIGN = 'ВАВИЛОН', SIGN_X = 50, SIGN_Y = 50;
+            pzTop = x => x > 84 ? 8 + q(hh(x, 3, 223) * 4) + q((x - 84) * 0.42) : 8 + q(hh(x, 3, 223) * 2); // рваный верх; справа пролом
             JK_DIGIT = { 3: ['##.', '..#', '.#.', '..#', '##.'], 0: ['.#.', '#.#', '#.#', '#.#', '.#.'] };
             // ── ТОКСИЧНОЕ ОЗЕРО ──
             // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
