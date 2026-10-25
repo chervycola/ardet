@@ -453,6 +453,53 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
 }
 
+// ═══ ТЁПЛЫЕ ПЯТНА: в кадре ансамбля не больше трёх (ART_BIBLE §01) ═══
+{
+  // пятна свечи в рисунке — без холста: записываем прямоугольники цветом свечи
+  // (как render/archlights.js candleSpots: четыре мгновения, близкие — одно пятно)
+  const CANDLE = '#e28a3a', SPOTS = new Map();
+  const spotsOf = (draw, w, h) => {
+    if (SPOTS.has(draw)) return SPOTS.get(draw);
+    const rects = [], c = fakeCtx();
+    c.fillRect = (x, y, ww, hh) => { if (String(c.fillStyle).toLowerCase() === CANDLE && c.globalAlpha > 0.78) rects.push([x, y, ww, hh]); };
+    for (const t of [0, 37, 100, 211]) { try { draw(c, 0, 0, t); } catch (e) { break; } }
+    // склейка по касанию (в 3 точках — одно пятно), центр — по площади
+    let cl = [];
+    for (const [x, y, ww, hh] of rects) {
+      const k = { x0: x, y0: y, x1: x + ww, y1: y + hh, sx: (x + ww / 2) * ww * hh, sy: (y + hh / 2) * ww * hh, a: ww * hh };
+      const near = cl.filter(q => q.x0 - 3 <= k.x1 && k.x0 <= q.x1 + 3 && q.y0 - 3 <= k.y1 && k.y0 <= q.y1 + 3);
+      for (const q of near) { k.x0 = Math.min(k.x0, q.x0); k.y0 = Math.min(k.y0, q.y0); k.x1 = Math.max(k.x1, q.x1); k.y1 = Math.max(k.y1, q.y1); k.sx += q.sx; k.sy += q.sy; k.a += q.a; }
+      cl = cl.filter(q => !near.includes(q)).concat(k);
+    }
+    const out = cl.filter(q => q.a > 0).map(q => ({ dx: q.sx / q.a, dy: q.sy / q.a }));
+    SPOTS.set(draw, out);
+    return out;
+  };
+  test('тёплые пятна: в кадре ансамбля колец (640×360) — окна, утварь и огни доминант — не больше трёх', () => {
+    const src = [];
+    for (const l of locations) {
+      if (!l.archDraw || l.quiet) continue;
+      for (const s of spotsOf(l.archDraw, l.w, l.h)) {
+        if (l.archLight && Math.abs(s.dx - (l.archLight.dx || 0)) < 6 && Math.abs(s.dy - l.archLight.dy) < 6) continue;
+        src.push({ x: l.archX + (l.archFlip ? -s.dx : s.dx), y: l.archGy + s.dy, who: l.name });
+      }
+      if (l.archLight) src.push({ x: l.archX + (l.archLight.dx || 0), y: l.archGy + (l.archLight.dy || 0), who: l.name + ' (огонь доминанты)' });
+    }
+    for (const p of archProps) if (p.kindDraw) for (const s of spotsOf(p.kindDraw, p.w, p.h)) src.push({ x: p.x + s.dx, y: p.gy + s.dy, who: p.name || 'утварь' });
+    const bad = [];
+    for (const e of archEnsembles) {
+      const ar = locations.filter(l => l.archEns === e.id);
+      if (!ar.length) continue;
+      const cx = ar.reduce((s, l) => s + l.archX, 0) / ar.length, cy = ar.reduce((s, l) => s + l.archGy, 0) / ar.length;
+      const cl = [];
+      for (const q of src) if (Math.abs(q.x - cx) < 320 && Math.abs(q.y - cy) < 180 && !cl.some(k => Math.hypot(k.x - q.x, k.y - q.y) < 12)) cl.push(q);
+      if (cl.length > 3) bad.push(`${e.ring}:${e.side}:${e.kind} — ${cl.map(k => k.who).join(', ')}`);
+    }
+    assert(src.length > 30, `тёплых окон и огней подозрительно мало: ${src.length}`);
+    eq(bad.length, 0, 'больше трёх тёплых пятен: ' + bad.join(' | '));
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
