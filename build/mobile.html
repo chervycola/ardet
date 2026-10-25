@@ -321,9 +321,12 @@ html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
   max-height: 65vh;
 }
 #dlg.on { display: flex; gap: 21px; justify-content: center; }
-/* портрет — оттиск 4:5; нет картины — рамки нет (ui.js drawPortrait) */
-#dp { width: 168px; height: 210px; flex-shrink: 0; align-self: flex-start; }
-#dpc { display: block; width: 100%; height: 100%; }
+/* портрет — оттиск 4:5 крупнее окна (слово автора 25.10): стоит на нижнем крае бумаги
+   и выходит над ней в сцену. Место в строке держит #dp, картина #dpc — поверх;
+   нет картины — нет и места (ui.js drawPortrait) */
+#dp { position: relative; width: clamp(220px, 50vh, 420px); flex-shrink: 0; align-self: stretch; }
+#dpc { position: absolute; left: 0; bottom: 0; display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 5; pointer-events: none; }
 /* колонка с прокруткой текста: кнопки ответов всегда на экране */
 #dd { flex: 0 1 832px; display: flex; flex-direction: column; min-width: 0; }
 #dt { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -618,7 +621,8 @@ html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
     max-height: 45vh;
     padding: 12px 16px;
   }
-  #dp { width: 72px; height: 90px; font-size: 16px; }
+  #dp { width: 104px; }
+  #dpc { bottom: auto; top: -88px; }        /* на телефоне окно выше — портрет держится за верх */
   #dn { font-size: 10px; margin-bottom: 6px; }
   #dt { font-size: 17px; line-height: 1.5; }
   .dopt { font-size: 10px; min-height: 44px; padding: 10px 0; }
@@ -721,7 +725,10 @@ html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
 #dn .dn-who { letter-spacing: 1px; }
 #dn .dn-when { font-family: var(--font-book); font-style: italic; font-size: 14px; letter-spacing: 0; opacity: 0.7; }
 #dt { color: var(--sepia); }
-#dp { box-shadow: 0 0 0 1px rgba(58,48,38,0.45); }
+/* оттиск на листе: поле бумаги и край сепией (тенью — не трогают размер картины),
+   чуть криво; над бумагой край читается карточкой и роняет тень в сцену */
+#dpc { box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px rgba(58,48,38,0.45), 0 14px 30px rgba(0,0,0,0.6);
+  transform: rotate(-0.7deg); transform-origin: 50% 100%; }
 .dopt {
   color: var(--sepia); background: transparent;
   border: none; border-bottom: 1px dotted rgba(58,48,38,0.35);
@@ -868,7 +875,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='fef1cdf · 2026-10-25';console.log('[оттиск]', 'fef1cdf · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='59cb4f3 · 2026-10-25';console.log('[оттиск]', '59cb4f3 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -40338,7 +40345,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
     // оттиски-портреты»). Картины нет — нет и рамки: пустой прямоугольник читался как
     // недогрузка (weave/ROADMAP Г1). Пришла позже, чем открылся разговор, — встаёт сразу.
     // Рисуется в точках экрана (рамка × плотность экрана), с мягким уменьшением: картина
-    // большая (1024×1280), рамка — 168×210.
+    // большая (1024×1280), рамка — до 420×525 и выходит над бумагой в сцену (style.css #dp).
+    // Размер — по раскладке, не по экранной коробке: оттиск чуть повёрнут.
     function drawPortrait(npcId) {
         const c = document.getElementById('dpc'), frame = document.getElementById('dp');
         if (!c)
@@ -40351,9 +40359,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 drawPortrait(npcId); });
             return;
         }
-        const box = c.getBoundingClientRect();
         const dpr = Math.min(2, window.devicePixelRatio || 1);
-        const W = Math.max(1, Math.round((box.width || 168) * dpr)), H = Math.max(1, Math.round((box.height || 210) * dpr));
+        const W = Math.max(1, Math.round((c.offsetWidth || 168) * dpr)), H = Math.max(1, Math.round((c.offsetHeight || 210) * dpr));
         if (c.width !== W || c.height !== H) {
             c.width = W;
             c.height = H;

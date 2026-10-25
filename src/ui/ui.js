@@ -373,7 +373,8 @@ export function startDialogue(loc) {
 // оттиски-портреты»). Картины нет — нет и рамки: пустой прямоугольник читался как
 // недогрузка (weave/ROADMAP Г1). Пришла позже, чем открылся разговор, — встаёт сразу.
 // Рисуется в точках экрана (рамка × плотность экрана), с мягким уменьшением: картина
-// большая (1024×1280), рамка — 168×210.
+// большая (1024×1280), рамка — до 420×525 и выходит над бумагой в сцену (style.css #dp).
+// Размер — по раскладке, не по экранной коробке: оттиск чуть повёрнут.
 function drawPortrait(npcId) {
   const c = document.getElementById('dpc'), frame = document.getElementById('dp');
   if (!c) return;
@@ -383,9 +384,8 @@ function drawPortrait(npcId) {
     loadPortrait(npcId).then(im => { if (im && dlgLoc && dlgLoc.npc === npcId) drawPortrait(npcId); });
     return;
   }
-  const box = c.getBoundingClientRect();
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const W = Math.max(1, Math.round((box.width || 168) * dpr)), H = Math.max(1, Math.round((box.height || 210) * dpr));
+  const W = Math.max(1, Math.round((c.offsetWidth || 168) * dpr)), H = Math.max(1, Math.round((c.offsetHeight || 210) * dpr));
   if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, W, H);
