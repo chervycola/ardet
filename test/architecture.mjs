@@ -500,6 +500,42 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
 }
 
+// ═══ ЗАПЕКАНИЕ (render/archbake.js; weave/ARCH_PLAN.md, этап 1) ═══
+{
+  const B = await imp('render/archbake.js');
+  const arch = locations.filter(l => l.archDraw);
+  test('запекание: живое узнаётся само — огни, экраны, часы, механизмы и подвесы рисуются каждый кадр', () => {
+    B._resetBake();
+    const kind = new Map();
+    for (const l of arch) kind.set(l.name, B.kindOf(l.archDraw, l.archX, l.archGy));
+    for (const n of ['стеклянная башня', 'серверный ангар', 'вокзал двух часов', 'Останкинская башня', 'долгострой с краном'])
+      assert(kind.get(n) && kind.get(n).live, `${n}: живое запеклось бы`);
+    const stat = [...kind.values()].filter(k => !k.live).length;
+    assert(stat >= 50, `неподвижных видов мало: ${stat}`);
+    assert([...kind.values()].every(k => k.live || k.shared !== undefined), 'вид без решения');
+  });
+  test('запекание: неподвижная постройка — один холст, дальше картинкой; живая — рисуется сама; без холста — живой', () => {
+    B._resetBake();
+    const stat = arch.find(l => !B.kindOf(l.archDraw, l.archX, l.archGy).live), live = arch.find(l => B.kindOf(l.archDraw, l.archX, l.archGy).live);
+    const counting = () => { const c = fakeCtx(); c.n = { fill: 0, img: 0 }; c.fillRect = () => c.n.fill++; c.drawImage = () => c.n.img++; return c; };
+    // без холста (как в тестах) — рисуется живой
+    let c = counting(); B.drawArch(c, stat, 1);
+    assert(c.n.fill > 0 && c.n.img === 0, 'без холста не нарисовалась');
+    // с холстом — запекается, дальше одна картинка
+    const ce = document.createElement;
+    document.createElement = () => ({ ...fakeEl(), width: 0, height: 0, getContext: () => fakeCtx() });
+    try {
+      B._resetBake();
+      for (let t = 2; t < 6; t++) B.drawArch(counting(), stat, t);
+      c = counting(); B.drawArch(c, stat, 7);
+      eq(c.n.img, 1, 'запечённая — не одной картинкой'); eq(c.n.fill, 0, 'запечённая рисуется заново');
+      c = counting(); for (let t = 8; t < 12; t++) B.drawArch(c, live, t);
+      assert(c.n.fill > 0 && c.n.img === 0, 'живая не рисуется сама');
+      eq(B.kindOf(live.archDraw, live.archX, live.archGy).live, true, 'живая запеклась');
+    } finally { document.createElement = ce; B._resetBake(); }
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

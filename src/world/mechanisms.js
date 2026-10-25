@@ -33,7 +33,11 @@ let frame = 0;
 const TAU = Math.PI * 2;
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
+// касания: запекание построек (render/archbake.js) узнаёт по ним живое — механизм не запекают
+let TOUCH = 0;
+export const mechTouches = () => TOUCH;
 function reg(key, kind, init) {
+  TOUCH++;
   let m = REG.get(key);
   if (!m) { m = { kind, seen: frame, ...init }; REG.set(key, m); }
   m.seen = frame;
@@ -157,6 +161,7 @@ const LOCAL_LAG = 23;                                // минут
 // вернувшегося встречают нынешней минутой, а не той, при которой он ушёл
 const HOLD = new Map(), LASTMIN = new Map(), DRAWN = new Map();
 export function stationClock(ctx, cx, cy, kind, col, gy = cy) {
+  TOUCH++;                                       // стрелки идут — часы не запекают
   const d = new Date();
   let min = d.getHours() * 60 + d.getMinutes();
   if (kind === 'local') min += d.getSeconds() / 60 - LOCAL_LAG;

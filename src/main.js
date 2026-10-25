@@ -82,6 +82,7 @@ import { buildTown, onBridge } from './world/town.js';
 import { bridgePieces, townThingsIn } from './render/townProps.js';
 import { drawCastle, stepCastle, castleSeen } from './render/castle.js';
 import { drawArchLife } from './render/archlife.js';
+import { drawArch } from './render/archbake.js';
 import { STREAM, initStream } from './ui/stream.js';
 import { prepareArchGround, drawArchGround, drawArchFoot, drawArchChar, archProps, archGroundRects } from './render/archground.js';
 import { archWindowLights } from './render/archlights.js';
@@ -835,9 +836,9 @@ function drawLocationPlain(ctx, loc) {
   if (loc.archDraw) {
     if (loc.archFlip) {                     // повтор вида — зеркально
       ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1);
-      loc.archDraw(ctx, loc.archX, loc.archGy, t);
+      drawArch(ctx, loc, t);
       ctx.restore();
-    } else loc.archDraw(ctx, loc.archX, loc.archGy, t);
+    } else drawArch(ctx, loc, t);           // неподвижное — запечённым холстом (render/archbake.js)
     if (loc.archMirror) drawMirrorCandle(ctx, loc);
     drawArchLife(ctx, loc, t, { x: player.x + 6, y: player.y + 24 });
     drawArchChar(ctx, loc);

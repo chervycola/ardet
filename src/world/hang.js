@@ -29,7 +29,11 @@ let frame = 0;
 //   pin2  — второй конец тоже прибит {x, y} (гирлянда между опорами);
 //           gy2 — земля под ним (глубина по тросу — между gy и gy2)
 //   lift  — тяга снизу {x, r, k}: над огнём горячий воздух поднимает и треплет
+// касания реестра: запекание построек (render/archbake.js) узнаёт по ним живое
+let TOUCH = 0;
+export const hangTouches = () => TOUCH;
 export function hang(key, ax, ay, len, opt = {}) {
+  TOUCH++;
   let h = REG.get(key);
   if (!h) {
     const segs = opt.segs || 1, pts = [];
