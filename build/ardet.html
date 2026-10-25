@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='6dc2819 · 2026-10-25';console.log('[оттиск]', '6dc2819 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='e971369 · 2026-10-25';console.log('[оттиск]', 'e971369 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -33453,49 +33453,70 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(cx - hw, cy + dy, hw * 2 + 1, 1, c);
         }
     }
-    function wheel(cx, cy, R) {
+    // колесо паровоза: бандаж, восемь спиц, противовес серпом, ступица, палец кривошипа; свет слева
+    function wheel(cx, cy, R, buried) {
         disc(cx, cy, R, K0);
         disc(cx, cy, R - 1, S0);
-        disc(cx, cy, R - 2, K1);
-        r(cx - R + 2, cy, 2 * R - 3, 1, S0);
-        r(cx, cy - R + 2, 1, 2 * R - 3, S0);
+        disc(cx, cy, R - 2, K0);
+        for (let a = 0; a < 8; a++) {
+            const u = a * Math.PI / 4;
+            for (let k = 1; k <= R - 2; k++)
+                r(cx + q(Math.cos(u) * k), cy + q(Math.sin(u) * k), 1, 1, a < 4 ? K3 : S2);
+        }
         if (R > 4)
-            for (const [dx, dy] of [[-2, -2], [2, 2], [2, -2], [-2, 2]])
-                r(cx + dx, cy + dy, 1, 1, S0);
+            for (let dy = 1; dy <= R - 2; dy++)
+                for (let dx = -R + 2; dx <= R - 2; dx++)
+                    if (dx * dx + dy * dy <= (R - 2) * (R - 2) && dx * dx + dy * dy > 2)
+                        r(cx + dx, cy + dy, 1, 1, K2); // противовес
         r(cx, cy, 1, 1, L2);
+        r(cx + 1, cy - 2, 1, 1, AS);
         r(cx - R + 1, cy - 1, 1, 2, S1);
-        r(cx - 1, cy - R + 1, 2, 1, S1);
-        r(cx + R - 1, cy + 1, 1, 2, RUST);
-        r(cx + 1, cy + R - 1, 2, 1, RUST);
+        r(cx - 1, cy - R + 1, 2, 1, S1); // кромка бандажа к свету
+        r(cx + R - 1, cy, 1, 2, RUST);
+        r(cx, cy + R - 1, 2, 1, RUST);
+        if (buried) {
+            r(cx - R - 1, cy + 1, 2 * R + 3, R, SEP);
+            r(cx - R - 1, cy + 1, 2 * R + 3, 1, K4);
+        }
     }
     // вагон на боку: x0, длина, g — где днище встало на землю, v — зерно
     function wagonOnSide(x0, len, g, v, chalk) {
-        const top = g - 20, face = g - 11;
-        // бок, ставший верхом: выцветшая мгла; дальнее ребро — крыша, ушла от нас
-        r(x0 - 1, top - 1, len + 2, 21, K0); // контур
-        r(x0, top, len, 9, MG);
-        r(x0, top, len, 1, MG_D);
-        r(x0, top + 1, 1, 8, MG_L);
-        r(x0 + 1, top + 8, len - 1, 1, MG_L);
-        r(x0 + len - 1, top + 1, 1, 8, AS);
-        for (let k = 0; x0 + 3 + k * 5 + 3 < x0 + len - 1; k++) { // окна — ближе к крыше, стёкол нет
+        const top = g - 21, face = g - 11;
+        // крыша ушла от нас — видна дальней кромкой; бок, ставший верхом, — выцветшая краска
+        r(x0, top - 2, len, 2, K0);
+        r(x0 + 1, top - 2, len - 2, 1, S2);
+        r(x0 + 1, top - 1, len - 2, 1, K3);
+        for (let yy = top; yy < face; yy++)
+            for (let k = 0; k < len; k++) {
+                const h = hh(x0 + k, yy, v + 31);
+                r(x0 + k, yy, 1, 1, yy === face - 1 ? S1 : k < len * 0.35 ? (h < 0.2 ? MG : MG_L) : h < 0.15 ? MG_D : h > 0.9 ? MG_L : MG);
+            }
+        r(x0, top, 1, face - top, S1);
+        r(x0 + len - 1, top, 1, face - top, AS);
+        for (let k = 0; x0 + 3 + k * 5 + 3 < x0 + len - 2; k++) { // окна без стёкол — в ряд, у крыши; рама; осколок
             const wx = x0 + 3 + k * 5;
-            r(wx, top + 1, 3, 2, K0);
-            if (hh(k, v, 3) < 0.4)
-                r(wx + 2, top + 1, 1, 1, AS); // осколок ловит небо
+            r(wx - 1, top + 1, 5, 4, MG_D);
+            r(wx, top + 2, 3, 2, K0);
+            r(wx, top + 1, 3, 1, K1);
+            if (hh(k, v, 3) < 0.35)
+                r(wx + 2, top + 2, 1, 1, AS);
         }
-        for (let k = 1; k < len - 1; k++) { // ржа пятнами
-            if (hh(k, v, 5) < 0.1)
-                r(x0 + k, top + 3 + q(hh(k, v, 7) * 4), 1 + (hh(k, v, 9) < 0.3 ? 1 : 0), 1, RUST);
-            if (hh(k, v, 15) < 0.06)
-                r(x0 + k, top + 4, 1, 1, MG_D); // мох
+        const dx = x0 + (len >> 1) - 2; // дверь — посередине, щель
+        r(dx, top + 1, 5, 8, MG_D);
+        r(dx + 1, top + 2, 3, 6, MG);
+        r(dx + 4, top + 2, 1, 6, K1);
+        r(dx + 1, top + 5, 1, 1, AS);
+        for (let k = 1; k < len - 1; k++) { // ржа пятнами, потёки к нам; мох
+            if (hh(k, v, 5) < 0.12)
+                r(x0 + k, top + 5 + q(hh(k, v, 7) * 3), 1 + (hh(k, v, 9) < 0.3 ? 1 : 0), 1, hh(k, v, 13) < 0.5 ? RUST : RUST_L);
+            if (hh(k, v, 15) < 0.07)
+                r(x0 + k, face - 2, 1, 1, MG_D);
         }
         if (chalk) { // мелом, две строки: штрихи как буквы — слов не разобрать
-            context_js_9.X.globalAlpha = 0.8;
-            for (const [row, from, to, s0] of [[top + 4, 3, len - 3, 21], [top + 6, 5, len - 9, 23]]) {
+            for (const [row, from, to, s0] of [[top + 6, 2, len - 3, 21], [top + 8, 4, len - 10, 23]]) {
                 for (let cx = x0 + from, k = 0; cx < x0 + to; k++) {
                     const h = hh(k, v, s0);
-                    if (h < 0.16) {
+                    if (h < 0.16 || (cx >= dx && cx <= dx + 4)) {
                         cx += 2;
                         continue;
                     }
@@ -33503,36 +33524,43 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                     cx += h > 0.55 ? 2 : 1;
                 }
             }
-            context_js_9.X.globalAlpha = 1;
         }
-        // днище к нам: балка, тележки, оси торчком, колёса легли плашмя
+        // днище к нам: балка, настил, тележки, оси торчком, колёса легли плашмя; буфера по краям
         r(x0, face, len, 11, K1);
         r(x0, face, len, 1, K4);
         r(x0, face + 1, len, 1, K2);
+        r(x0, face + 9, len, 1, K2);
+        for (let k = 2; k < len - 1; k += 3)
+            r(x0 + k, face + 2, 1, 7, K0); // доски настила
         r(x0 + len - 1, face, 1, 11, K2);
+        for (const ex of [x0 - 2, x0 + len]) {
+            r(ex, face + 3, 2, 2, K3);
+            r(ex, face + 3, 1, 1, S0);
+            r(ex, face + 6, 2, 2, K3);
+            r(ex, face + 6, 1, 1, S0);
+        } // буфера
         const bogies = [x0 + 3, x0 + len - 11];
-        // между тележками — ящик, тормозной цилиндр, стяжка провисла
-        const m = x0 + (len >> 1);
+        const m = x0 + (len >> 1); // меж тележек — ящик, цилиндр, тяга провисла
         r(m - 4, face + 3, 7, 4, K2);
         r(m - 4, face + 3, 7, 1, K4);
         r(m + 2, face + 4, 1, 3, AS);
-        r(m + 5, face + 4, 3, 3, K2);
-        r(m + 5, face + 4, 1, 1, K4);
         for (let xx = bogies[0] + 8; xx < bogies[1]; xx++) {
             const u = (xx - bogies[0] - 8) / (bogies[1] - bogies[0] - 8);
             r(xx, face + 7 + q(u * (1 - u) * 6), 1, 1, K0);
         }
         for (let k = 1; k < len - 1; k++)
             if (hh(k, v, 17) < 0.12)
-                r(x0 + k, face + 2, 1, 2 + q(hh(k, v, 19) * 3), RUST); // потёки ржи
+                r(x0 + k, face + 2, 1, 2 + q(hh(k, v, 19) * 3), RUST);
         for (const bx of bogies) {
             r(bx - 1, face + 3, 10, 5, K0);
             r(bx, face + 3, 8, 4, K3);
             r(bx, face + 3, 8, 1, S0);
-            r(bx + 3, face + 4, 2, 2, K1);
+            for (let k = 0; k < 3; k++)
+                r(bx + 2, face + 4 + k, 4 - (k === 1 ? 0 : 1), 1, k === 1 ? K1 : K2); // рессора листами
             for (const ax of [bx + 1, bx + 6]) {
-                r(ax, face + 1, 1, 9, K4); // ось торчком
-                for (const wy of [face - 1, face + 9]) { // колёса легли плашмя — к нам эллипсом
+                r(ax, face + 1, 1, 9, K4);
+                r(ax, face + 1, 1, 1, S0); // ось торчком
+                for (const wy of [face - 1, face + 9]) { // колёса плашмя — к нам эллипсом
                     r(ax - 2, wy, 5, 1, K0);
                     r(ax - 3, wy + 1, 7, 1, K0);
                     r(ax - 2, wy + 2, 5, 1, K0);
@@ -33550,157 +33578,204 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         return bogies.flatMap(b => [b + 1, b + 6]); // где колёса — там голо
     }
     function trainBody() {
-        const RAIL = 45; // линия пути (world/town.js RAIL)
-        // вагоны легли набок — от пути, к северу
+        const RAIL = 45; // ближний рельс; дальний — 41 (как вытравлен путь, world/town.js RAIL)
         const bare = [];
-        bare.push(...wagonOnSide(88, 31, 42, 7, false));
-        bare.push(...wagonOnSide(50, 35, 42, 3, true));
-        r(85, 34, 2, 1, K1);
-        r(86, 35, 1, 3, K1);
-        r(87, 37, 1, 1, AS); // сцепка оборвана, крюк висит
+        // ── путь во всю длину — как вытравлен в земле: шпалы через 4, рельсы на 41 и 45; перед вагонами пуст и зарос ──
+        for (let xx = -10; xx < 126; xx += 4) {
+            r(xx, 40, 2, 7, K2);
+            r(xx, 40, 2, 1, K4);
+        }
+        for (const ry of [41, 45]) {
+            r(-10, ry, 136, 1, S0);
+            r(-10, ry + 1, 136, 1, K1);
+        }
+        for (let xx = 52; xx < 124; xx++)
+            if (hh(xx, 43, 371) < 0.22)
+                r(xx, 42 + (xx & 1), 1, 2, hh(xx, 44, 373) < 0.5 ? MG : MG_D); // меж шпал проросло
+        // ── вагоны легли набок — с пути, к северу: перед ними путь пуст ──
+        bare.push(...wagonOnSide(89, 31, 38, 7, false));
+        bare.push(...wagonOnSide(51, 35, 38, 3, true));
+        r(86, 30, 2, 1, K1);
+        r(87, 31, 1, 3, K1);
+        r(88, 33, 1, 1, AS); // сцепка оборвана, крюк висит
         // ── паровоз: носом в землю у тупика, корма задрана ──
-        // контур силуэта
-        Lr(-2, 31, 50, 4, K0);
-        Lr(-1, 17, 33, 16, K0);
-        Lr(11, 24, 20, 9, K0);
-        Lr(5, 7, 7, 12, K0);
-        Lr(14, 14, 8, 6, K0);
-        Lr(22, 16, 5, 4, K0);
-        Lr(29, 7, 20, 26, K0);
+        Lr(-2, 30, 50, 5, K0);
+        Lr(-1, 16, 33, 16, K0);
+        Lr(3, 4, 8, 14, K0);
+        Lr(13, 12, 8, 6, K0);
+        Lr(20, 13, 7, 5, K0);
+        Lr(28, 5, 21, 28, K0); // контур
         // колёса: переднее в земле, ведущие — задние висят над рельсом
-        wheel(2, 41 + lean(2), 3);
+        wheel(1, 41 + lean(1), 3, true);
         for (const wx of [12, 24, 36]) {
             wheel(wx, 39 + lean(wx), 5);
             bare.push(wx);
         }
-        bare.push(2);
-        Lr(12, 39, 25, 1, S0);
-        Lr(12, 40, 25, 1, K0); // дышло
+        bare.push(1);
+        Lr(12, 38, 25, 1, S1);
+        Lr(12, 39, 25, 1, K0); // спарник
         for (const wx of [12, 24, 36])
-            Lr(wx, 39, 1, 1, L2);
-        // рама и площадка над колёсами
-        Lr(-1, 32, 48, 2, K3);
-        Lr(-1, 32, 48, 1, S1);
-        // котёл: сверху блик, ниже темнее; дымовая коробка спереди темней
-        Lr(4, 18, 27, 14, K3);
-        Lr(5, 18, 25, 1, S1);
-        Lr(4, 19, 27, 2, S0);
-        Lr(4, 28, 27, 4, K2);
-        Lr(0, 18, 5, 14, K2);
-        Lr(0, 18, 1, 14, S0);
-        Lr(4, 18, 1, 14, K1);
-        for (const bx of [11, 18, 25]) {
-            Lr(bx, 18, 1, 14, K1);
-            Lr(bx, 18, 1, 1, L2);
+            Lr(wx + 1, 38, 1, 1, L2);
+        Lr(-1, 34, 8, 4, K3);
+        Lr(-1, 34, 8, 1, S0);
+        Lr(-1, 37, 8, 1, K1);
+        Lr(7, 36, 6, 1, S0); // цилиндр, шток к ведущему
+        // рама и площадка
+        Lr(-2, 31, 50, 1, S1);
+        Lr(-2, 32, 50, 1, K3);
+        Lr(-2, 33, 50, 1, K1);
+        // котёл цилиндром: блик по верху, к низу темнее; бандажи с заклёпками
+        for (let i = 0; i < BOIL.length; i++)
+            Lr(3, 16 + i, 28, 1, BOIL[i]);
+        Lr(3, 17, 4, 1, L2); // блик ближе к свету
+        for (const bx of [9, 16, 23]) {
+            Lr(bx, 17, 1, 13, K1);
+            Lr(bx, 17, 1, 1, L2);
+            for (let k = 0; k < 6; k++)
+                Lr(bx + 1, 19 + k * 2, 1, 1, K2);
         }
-        // бак сбоку: короб с заклёпками
-        Lr(12, 25, 18, 7, K4);
-        Lr(12, 25, 18, 1, S1);
-        Lr(12, 25, 1, 7, S1);
-        Lr(29, 26, 1, 6, K1);
-        for (let k = 0; k < 8; k++)
-            Lr(14 + k * 2, 27, 1, 1, K1);
-        // труба: раструб, внутри темно
-        Lr(6, 10, 5, 8, K3);
-        Lr(6, 10, 1, 8, S0);
-        Lr(10, 10, 1, 8, K1);
-        Lr(5, 8, 7, 2, K4);
-        Lr(5, 8, 3, 1, L2);
-        Lr(7, 8, 3, 1, K0);
-        Lr(11, 9, 1, 1, AS);
-        // сухопарник и песочница; свисток
-        Lr(16, 15, 4, 1, S0);
-        Lr(15, 16, 6, 3, K4);
-        Lr(15, 16, 1, 3, S1);
-        Lr(16, 15, 2, 1, L2);
-        Lr(20, 16, 1, 3, K1);
-        Lr(23, 17, 3, 2, K4);
-        Lr(23, 17, 1, 1, S1);
-        Lr(28, 14, 1, 4, K1);
-        Lr(28, 13, 1, 1, AS);
+        // дымовая коробка спереди — темнее, кромка дверцы
+        const SMOKE = [K0, S0, K4, K3, K2, K2, K2, K2, K2, K2, K1, K1, K1, K0, K0];
+        for (let i = 0; i < SMOKE.length; i++)
+            Lr(-1, 16 + i, 4, 1, SMOKE[i]);
+        Lr(-1, 17, 1, 12, S0);
+        Lr(2, 17, 1, 12, K0);
+        for (let k = 0; k < 5; k++)
+            Lr(0, 18 + k * 2, 1, 1, K1);
+        // бак сбоку: короб с заклёпками, горловина
+        Lr(10, 23, 20, 8, K4);
+        Lr(10, 23, 20, 1, S1);
+        Lr(10, 23, 1, 8, S1);
+        Lr(29, 24, 1, 7, K1);
+        Lr(10, 30, 20, 1, K1);
+        for (let k = 0; k < 9; k++) {
+            Lr(12 + k * 2, 25, 1, 1, K1);
+            Lr(12 + k * 2, 29, 1, 1, K2);
+        }
+        Lr(24, 22, 3, 1, K3);
+        Lr(24, 22, 1, 1, S0);
+        // труба раструбом, внутри темно
+        Lr(5, 8, 4, 9, K3);
+        Lr(5, 8, 1, 9, S0);
+        Lr(8, 8, 1, 9, K1);
+        Lr(4, 7, 6, 1, K4);
+        Lr(3, 5, 8, 2, K3);
+        Lr(3, 5, 3, 1, L2);
+        Lr(5, 5, 4, 1, K0);
+        Lr(10, 5, 1, 2, AS);
+        Lr(5, 12, 4, 1, RUST);
+        Lr(6, 13, 1, 2, RUST_L);
+        // сухопарник и песочница — куполами; свисток
+        Lr(15, 13, 4, 1, S0);
+        Lr(14, 14, 6, 3, K4);
+        Lr(14, 14, 1, 3, S1);
+        Lr(15, 13, 2, 1, L2);
+        Lr(19, 14, 1, 3, K1);
+        Lr(22, 14, 3, 1, S0);
+        Lr(21, 15, 5, 2, K4);
+        Lr(21, 15, 1, 2, S1);
+        Lr(25, 15, 1, 2, K1);
+        Lr(28, 11, 1, 5, K1);
+        Lr(27, 10, 3, 1, K3);
+        Lr(27, 10, 1, 1, AS);
         // фонарь мёртвый, стекло пеплом
-        Lr(1, 15, 3, 3, K0);
-        Lr(2, 16, 1, 1, AS);
+        Lr(0, 12, 3, 4, K0);
+        Lr(1, 13, 1, 2, AS);
         // ржа пятнами по котлу и баку, потёки от бандажей
         for (let k = 0; k < 26; k++)
             if (hh(k, 2, 5) < 0.35)
-                Lr(5 + k, 20 + q(hh(k, 2, 7) * 11), 1, 1 + (hh(k, 2, 9) < 0.3 ? 1 : 0), hh(k, 2, 11) < 0.5 ? RUST : RUST_L);
-        for (const bx of [11, 18, 25])
-            Lr(bx + 1, 21, 1, 3, RUST);
-        // будка: крыша навесом, окно; внутри темно, дальнее окно светлее
-        Lr(30, 10, 17, 22, K3);
-        Lr(30, 10, 1, 22, S0);
-        Lr(46, 10, 1, 22, AS);
-        Lr(29, 8, 19, 2, K1);
-        Lr(29, 8, 19, 1, L2);
-        Lr(47, 9, 1, 1, AS);
-        Lr(33, 13, 10, 9, K4);
-        Lr(33, 13, 10, 1, S1);
-        Lr(34, 14, 8, 7, K0);
-        Lr(34, 14, 7, 6, AS);
-        Lr(34, 14, 7, 1, L2); // дальнее окно — против него он
-        // машинист: на своём месте, лицом вперёд, фуражка; рука у регулятора
-        Lr(36, 14, 3, 1, NI);
-        Lr(35, 15, 4, 1, NI); // фуражка, козырёк вперёд
-        Lr(36, 16, 3, 2, NI);
-        Lr(35, 17, 1, 1, NI); // голова в профиль, нос
-        Lr(37, 18, 2, 1, NI);
-        Lr(35, 19, 6, 2, NI); // шея, плечи, рука вперёд
-        Lr(41, 16, 1, 2, KV); // стоп-кран за его спиной: красная ручка, пломба цела
-        Lr(30, 22, 17, 1, K1); // подоконник
-        Lr(36, 24, 7, 4, K2);
-        Lr(36, 24, 7, 1, K4);
-        Lr(36, 25, 1, 1, L2);
-        Lr(42, 25, 1, 1, L2); // табличка — номер стёрт
-        for (const [sx, sy] of [[40, 29], [43, 30], [32, 27]])
+                Lr(4 + k, 19 + q(hh(k, 2, 7) * 10), 1, 1 + (hh(k, 2, 9) < 0.3 ? 1 : 0), hh(k, 2, 11) < 0.5 ? RUST : RUST_L);
+        for (const bx of [9, 16, 23])
+            Lr(bx + 1, 20, 1, 3, RUST);
+        // будка: крыша навесом, стены, окно в пыли — у передней кромки протёрт круг размером в лицо
+        Lr(29, 9, 18, 22, K3);
+        Lr(29, 9, 1, 22, S0);
+        Lr(46, 9, 1, 22, AS);
+        Lr(30, 6, 16, 1, S0);
+        Lr(28, 7, 20, 1, L2);
+        Lr(28, 8, 20, 1, K1);
+        Lr(47, 7, 1, 2, AS);
+        Lr(32, 11, 12, 10, K4);
+        Lr(32, 11, 12, 1, S1);
+        Lr(32, 11, 1, 10, S1); // рама окна
+        for (let yy = 12; yy < 20; yy++)
+            for (let xx = 33; xx < 43; xx++) {
+                const d = (xx - 36) * (xx - 36) + (yy - 15.5) * (yy - 15.5);
+                if (d <= 6.5)
+                    Lr(xx, yy, 1, 1, xx > 37 ? L2 : AS); // протёрто: насквозь — светлое дальнее окно
+                else {
+                    const h = hh(xx, yy, 341);
+                    Lr(xx, yy, 1, 1, h < 0.35 ? S1 : h < 0.7 ? S2 : h < 0.9 ? K3 : AS);
+                } // пыль
+            }
+        // машинист — на своём месте, в профиль, лицом вперёд; фуражка; у руки — красная ручка, пломба цела
+        Lr(35, 13, 3, 1, NI);
+        Lr(34, 14, 4, 1, NI);
+        Lr(35, 15, 3, 2, NI);
+        Lr(34, 16, 1, 1, NI);
+        Lr(36, 17, 2, 1, NI);
+        Lr(35, 18, 4, 1, NI);
+        Lr(38, 17, 1, 1, KV);
+        Lr(38, 18, 1, 1, BLOOD);
+        Lr(29, 21, 18, 1, K1); // подоконник
+        Lr(34, 23, 8, 4, K2);
+        Lr(34, 23, 8, 1, K4);
+        Lr(34, 24, 1, 1, L2);
+        Lr(41, 24, 1, 1, L2);
+        for (let k = 0; k < 3; k++)
+            Lr(36 + k * 2, 25, 1, 1, S2); // табличка — номер стёрт
+        Lr(44, 15, 1, 15, S0);
+        Lr(44, 15, 1, 1, L2); // поручень
+        for (const [sx, sy] of [[39, 28], [42, 29], [31, 26], [45, 23]])
             Lr(sx, sy, 1, 2, RUST);
-        // подножки
         Lr(41, 35, 4, 1, K1);
         Lr(42, 37, 3, 1, K1);
-        Lr(44, 33, 1, 5, K1);
+        Lr(44, 33, 1, 5, K1); // подножки
         // путеочиститель — в земле; буферный брус
-        for (let k = 0; k < 4; k++)
-            Lr(-4 + k, 34 + k, 1, 6 - k, K1);
-        Lr(-2, 30, 3, 3, K2);
-        Lr(-2, 30, 1, 3, S0);
-        // нос ушёл в землю: отвал земли
-        for (const [dx, dy, w] of [[-6, 44, 10], [-5, 43, 7], [-3, 42, 3]]) {
+        for (let k = 0; k < 5; k++)
+            Lr(-5 + k, 33 + k, 1, 6 - k, k & 1 ? K2 : K1);
+        Lr(-3, 29, 3, 3, K2);
+        Lr(-3, 29, 1, 3, S0);
+        for (const [dx, dy, w] of [[-8, 44, 12], [-7, 43, 9], [-5, 42, 5]]) {
             r(dx, dy, w, 1, SEP);
             r(dx, dy, 1, 1, K4);
-        }
-        // сцепка с первым вагоном перекручена
+            r(dx + w - 1, dy, 1, 1, K2);
+        } // отвал земли у носа
         r(46, 33 + lean(46), 2, 1, K1);
         r(48, 34 + lean(46), 1, 2, K1);
-        r(49, 36, 1, 1, AS);
-        // земля и трава: кругом трава, у колёс — голая, кольцом
+        r(49, 36, 1, 1, AS); // сцепка перекручена
+        // земля и трава: кругом трава, у колёс — голо кольцом
         for (const b of bare) {
-            r(b - 4, RAIL + 2, 9, 1, K2);
-            r(b - 3, RAIL + 3, 7, 1, K2);
-            r(b - 2, RAIL + 2, 1, 1, SEP);
-            r(b + 2, RAIL + 3, 1, 1, SEP);
+            r(b - 4, RAIL + 3, 9, 1, K2);
+            r(b - 3, RAIL + 4, 7, 1, K2);
+            r(b - 2, RAIL + 3, 1, 1, SEP);
+            r(b + 2, RAIL + 4, 1, 1, SEP);
         }
         for (let xx = -9; xx < 125; xx++) {
             const nb = Math.min(...bare.map(b => Math.abs(xx - b)));
             if (nb < 5)
                 continue; // у колёс — голо
-            for (const [base, s] of [[RAIL - 2, 11], [RAIL + 5, 13], [RAIL + 3, 29]]) {
-                if (base < RAIL && xx < 48)
+            for (const [base, sd] of [[39, 11], [RAIL + 5, 13], [RAIL + 3, 29]]) {
+                if (base < RAIL && xx < 50)
                     continue; // за паровозом — путь
-                if (hh(xx, s, 3) > (s === 29 ? 0.35 : 0.8))
+                if (hh(xx, sd, 3) > (sd === 29 ? 0.35 : 0.8))
                     continue;
-                const hgt = 1 + q(hh(xx, s, 5) * (base > RAIL ? 4 : 5) * Math.min(1, (nb - 4) / 3)); // к проплешине ниже
-                r(xx, base - hgt + 1, 1, hgt, hh(xx, s, 7) < 0.3 ? MG_L : hh(xx, s, 9) < 0.5 ? MG : MG_D);
+                const hgt = 1 + q(hh(xx, sd, 5) * (base > RAIL ? 4 : 5) * Math.min(1, (nb - 4) / 3)); // к проплешине ниже
+                r(xx, base - hgt + 1, 1, hgt, hh(xx, sd, 7) < 0.3 ? MG_L : hh(xx, sd, 9) < 0.5 ? MG : MG_D);
             }
         }
     }
     function draw_train(x, y) {
-        bake('train', x, y, -10, 4, 136, 50, trainBody);
-        // пар из трубы — идёт, как шёл; сносит ветром, тает
-        const sx = x + 8, sy = y + 7 + lean(8);
-        for (let i = 0; i < 8; i++) {
-            const age = (time_js_23.t * 0.3 + i * 12) % 96, k = age / 96;
-            context_js_9.X.globalAlpha = (1 - k) * 0.55;
-            r(sx + q(age * wind_js_14.wind.x * 0.5 + Math.sin(age * 0.12 + i) * 1.2), sy - q(age * 0.25), 1 + q(k * 3), 1 + q(k * 2), k < 0.3 ? BO : L2);
+        bake('train2', x, y, -10, -1, 136, 56, trainBody);
+        // пар из трубы — идёт, как шёл; белый, сносит ветром, тает
+        const dt = TR_T < 0 ? 0 : Math.min(240, Math.max(0, time_js_23.t - TR_T));
+        TR_T = time_js_23.t;
+        TR_PH += dt * 0.3;
+        const sx = x + 6, sy = y + 4 + lean(6);
+        for (let i = 0; i < 12; i++) {
+            const age = (TR_PH + i * 9) % 108, k = age / 108, w = 2 + q(k * 4), h = 2 + q(k * 3);
+            context_js_9.X.globalAlpha = (1 - k) * (1 - k) * 0.58; // гуще — застынет в маске тени
+            r(sx - (w >> 1) + 1 + q(age * wind_js_14.wind.x * 0.6 + Math.sin(age * 0.11 + i) * (1 + k * 2)), sy - q(age * 0.3) - h + 1, w, h, k < 0.4 ? BO : L1);
         }
         context_js_9.X.globalAlpha = 1;
     }
@@ -37231,16 +37306,25 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             BAKED = new Map();
             // ── РЖАВЫЙ ПОЕЗД ──
             // «Два вагона на боку. Паровоз с ними, набекрень. Машинист в кабине, на своём
-            // месте. Сидит так долго, что трава у колёс не растёт... На боку вагона,
-            // мелом... Из трубы идёт пар.» Паровоз — у тупика, носом в землю, корма
-            // задрана: задние колёса рельса не касаются. Вагоны легли набок, от пути: к
-            // нам — днище, тележки, оси торчком, колёса плашмя; сверху — бок с окнами, на
-            // нём мел, слов не разобрать. В кабине машинист — тёмный против дальнего окна;
-            // у его руки красная ручка стоп-крана, пломба цела. Кругом трава, у колёс —
-            // голая земля. Неподвижное запечено; пар идёт живьём, его сносит ветер.
+            // месте. Сидит так долго, что трава у колёс не растёт — боится потревожить. На боку
+            // вагона, мелом: „Нет правильного в неправильном. Но сидеть — можно." Из трубы идёт
+            // пар.» Повторный: «Ночью пар белее неба»; «Окно кабины протёрто изнутри — кругом,
+            // размером в лицо. Остальное стекло в пыли: смотрят только вперёд»; использовать:
+            // красная ручка стоп-крана, пломба цела. Паровоз-танк у тупика набекрень: нос ушёл в
+            // землю, корма задрана — ведущие колёса над рельсом. Котёл цилиндром (свет по верху,
+            // к низу темнее), бандажи с заклёпками, труба раструбом, сухопарник, песочница,
+            // бак сбоку, дышла; будка навесом: окно в пыли, у передней кромки протёрт круг —
+            // в нём машинист в профиль, лицом вперёд, против светлого дальнего окна; у руки
+            // красная ручка. Вагоны легли набок от пути: сверху — бок в выцветшей краске, окна
+            // без стёкол, на ближнем мел штрихами; к нам — днище, тележки, оси торчком, колёса
+            // плашмя, буфера. Путь под паровозом зарос; кругом трава, у колёс — голо кольцом.
+            // Неподвижное запечено; пар живьём, белый, его сносит ветер. Свет слева, кромка
+            // пеплом справа.
             RUST = '#4a3420', RUST_L = '#6b4a2c'; // ржа — как на трубах отравы
             MG_L = '#4d5a49', MG_D = '#2f372c'; // вагон — выцветшая мгла: к свету, в тени
-            lean = xx => q((24 - xx) * 0.16); // крен паровоза: нос ниже, корма выше
+            lean = xx => q((24 - xx) * 0.2); // крен паровоза: нос ниже, корма выше
+            BOIL = [K0, S1, S0, S0, K4, K3, K3, K3, K3, K3, K2, K2, K2, K1, K0]; // котёл сверху вниз: блик, тело, к низу темнее
+            TR_T = -1, TR_PH = 0; // пар копится по шагам
             // ── ТЕАТР ТЕНЕЙ ──
             // «Полукруглый каменный амфитеатр на склоне холма. Скамьи, поросшие мхом,
             // спускаются к маленькой круглой сцене. На сцене четыре силуэта... один
