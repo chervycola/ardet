@@ -1244,16 +1244,16 @@ function libraryBody() {
   r(20, 77, 9, 1, K4); r(21, 76, 3, 1, L1); r(25, 76, 3, 1, L1); r(24, 76, 1, 1, K4);   // переплёт и развороты
   X.globalAlpha = 0.5; r(0, g, 106, 1, K0); X.globalAlpha = 1;
 }
-let LB_T = -1, LB_PH = 0, LB_F = 99, LB_A = 0;                          // фаза листания копится по шагам; LB_F — кадры текущего листа
+let LB_T = -1, LB_PH = 0, LB_F = 99, LB_A = 0, LB_D = 1;               // фаза листания копится по шагам; LB_F — кадры текущего листа, LB_D — куда
 export function draw_library(x, y) {
   bake('library3', x, y, -4, 1, 112, 83, libraryBody);
   const dt = LB_T < 0 ? 0 : Math.min(240, Math.max(0, t - LB_T)); LB_T = t;   // второй вызов в том же шаге (маска тени) — ноль
-  const s = wind.at(x + 52, y + 60).s;
+  const W = wind.at(x + 52, y + 60), s = W.s;
   LB_A += (Math.min(1, s * 2.5) - LB_A) * Math.min(1, dt * 0.01);           // размах страниц: за ветром, плавно
   // раскрытая книга листается сама — на ветру; в штиль изредка, раз в полминуты
   const n0 = Math.floor(LB_PH); LB_PH += dt * (s < 0.06 ? 1 / 1800 : (0.25 + s) / 150);
-  if (Math.floor(LB_PH) !== n0) LB_F = 0;
-  if (LB_F < 24) { const u = LB_F / 24, h = q(Math.sin(u * Math.PI) * 3); r(x + 24 + q((u - 0.5) * 6), y + 76 - h, 1, h + 1, BO); LB_F += dt; }
+  if (Math.floor(LB_PH) !== n0) { LB_F = 0; LB_D = W.x < 0 ? -1 : 1; }    // лист ложится по ветру; в полёте не разворачивается
+  if (LB_F < 24) { const u = LB_F / 24, h = q(Math.sin(u * Math.PI) * 3); r(x + 24 + q((u - 0.5) * 6 * LB_D), y + 76 - h, 1, h + 1, BO); LB_F += dt; }
   // отдельные страницы шевелятся на ветру: две; в штиль лежат у ступеней и чуть вздрагивают
   for (let i = 0; i < 2; i++) {
     const a = t * (0.006 + i * 0.0013) + i * 2.1, A = LB_A;

@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3d1393c · 2026-10-25';console.log('[оттиск]', '3d1393c · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='386dc00 · 2026-10-25';console.log('[оттиск]', '386dc00 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -34842,16 +34842,18 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('library3', x, y, -4, 1, 112, 83, libraryBody);
         const dt = LB_T < 0 ? 0 : Math.min(240, Math.max(0, time_js_23.t - LB_T));
         LB_T = time_js_23.t; // второй вызов в том же шаге (маска тени) — ноль
-        const s = wind_js_14.wind.at(x + 52, y + 60).s;
+        const W = wind_js_14.wind.at(x + 52, y + 60), s = W.s;
         LB_A += (Math.min(1, s * 2.5) - LB_A) * Math.min(1, dt * 0.01); // размах страниц: за ветром, плавно
         // раскрытая книга листается сама — на ветру; в штиль изредка, раз в полминуты
         const n0 = Math.floor(LB_PH);
         LB_PH += dt * (s < 0.06 ? 1 / 1800 : (0.25 + s) / 150);
-        if (Math.floor(LB_PH) !== n0)
+        if (Math.floor(LB_PH) !== n0) {
             LB_F = 0;
+            LB_D = W.x < 0 ? -1 : 1;
+        } // лист ложится по ветру; в полёте не разворачивается
         if (LB_F < 24) {
             const u = LB_F / 24, h = q(Math.sin(u * Math.PI) * 3);
-            r(x + 24 + q((u - 0.5) * 6), y + 76 - h, 1, h + 1, BO);
+            r(x + 24 + q((u - 0.5) * 6 * LB_D), y + 76 - h, 1, h + 1, BO);
             LB_F += dt;
         }
         // отдельные страницы шевелятся на ветру: две; в штиль лежат у ступеней и чуть вздрагивают
@@ -37418,7 +37420,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // ступеней. Свет слева, кромка пеплом справа.
             COLS = [10, 26, 42, 58, 74, 90], FALLEN = 74;
             COL_SH = [L2, S1, S1, S0, S0, S2, K3]; // ствол колонны слева направо: свет → тень
-            LB_T = -1, LB_PH = 0, LB_F = 99, LB_A = 0; // фаза листания копится по шагам; LB_F — кадры текущего листа
+            LB_T = -1, LB_PH = 0, LB_F = 99, LB_A = 0, LB_D = 1; // фаза листания копится по шагам; LB_F — кадры текущего листа, LB_D — куда
             // ── ПИЦЦЕРИЯ «ВАВИЛОН» ──
             // «Трёхэтажная руина. Неоновая вывеска „ВАВИЛОН": буква „В" мигает уже
             // одиннадцать лет, остальные шесть мертвы и иногда искрят. Внутри 47 столов —
