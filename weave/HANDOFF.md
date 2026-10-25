@@ -18,7 +18,7 @@
   `python3 -m http.server PORT` в /home/user/ardet, вход = клик #entry-btn,
   затем клик #howto, подождать ~16.3с (похмельная прогрузка), потом играть.
   Старт — в доме пробуждения (weave/HOUSE.md); `?nohouse` — с места сохранения, как раньше.
-- Деплой на ardet.art: залить index.html + mobile.html + assets/icons + assets/music.
+- Деплой на ardet.art — weave/DEPLOY.md: `npm run site` → залить содержимое site/ в корень сайта
   ardet.fun — отдельный хостинг, глушит JS (CSP), нужен 301-редирект на art.
 
 ## Мир (открытый диск) — src/world/disc.js

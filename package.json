@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node test/smoke-sprites.mjs && node test/logic.mjs && node test/systems.mjs && node test/content.mjs && node test/effects.mjs && node test/ulitsa.mjs && node test/potemkin.mjs && node test/architecture.mjs",
+    "build": "node build.js",
+    "site": "node build.js && node site.js",
     "test:sprites": "node test/smoke-sprites.mjs",
     "test:logic": "node test/logic.mjs",
     "test:systems": "node test/systems.mjs",
