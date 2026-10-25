@@ -541,6 +541,27 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
 }
 
+// ═══ НАДПИСИ СТЕН: на фасаде штрихи, прочесть — в осмотре (слово автора 25.10) ═══
+{
+  const IN = await imp('world/inscriptions.js'), PT = await imp('world/potemkin.js'), CX = await imp('render/context.js');
+  test('надписи стен: на фасаде постройки — штрихи без шрифта; в осмотре — только проступившие строки', () => {
+    const l = locations.find(q => q.archDraw && IN.hiddenInscriptions[q.id] && IN.hiddenInscriptions[q.id].length >= 2);
+    assert(l, 'нет постройки с надписью');
+    const lines = IN.hiddenInscriptions[l.id];
+    eq(IN.wallLines(l.id).length, 0, 'проступило, не постояв');
+    assert(!PT.lookText(l).includes(lines[0]), 'в осмотре прежде, чем проступила');
+    const pl = { x: l.x + l.w / 2, y: l.y + l.h / 2, moving: false };
+    for (let i = 0; i < 70; i++) IN.updateProximity(pl, locations);
+    eq(IN.wallLines(l.id).length, 1, 'первая строка не проступила');
+    assert(PT.lookText(l).includes(`«${lines[0]}»`) && !PT.lookText(l).includes(`«${lines[1]}»`), 'в осмотре не та строка');
+    const c = fakeCtx(), n = { text: 0, rect: 0 };
+    c.fillText = () => n.text++; c.fillRect = () => n.rect++;
+    const prev = CX.X; CX.setCtx(c);
+    try { IN.draw({ x: l.x - 100, y: l.y - 60 }, locations); } finally { CX.setCtx(prev); }
+    eq(n.text, 0, 'на фасаде — шрифт'); assert(n.rect > 3, 'штрихов нет');
+  });
+}
+
 // ═══ НАБОР МАТЕРИАЛОВ (sprites/arch/kit.js; weave/ARCH_PLAN.md, этап 3) ═══
 {
   const K = await imp('sprites/arch/kit.js');

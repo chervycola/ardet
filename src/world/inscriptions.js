@@ -49,6 +49,29 @@ export function updateProximity(player, locations) {
   }
 }
 
+// сколько строк уже проступило у стены (постоял — проступают по одной)
+const revealedOf = (locId, n) => { const prox = wallProx[locId] || 0; return prox < 60 ? 0 : Math.min(n, Math.floor((prox - 60) / 180) + 1); };
+// проступившие строки — для осмотра постройки (world/potemkin.js lookText): на стене штрихи, прочесть — там
+export function wallLines(locId) {
+  const lines = hiddenInscriptions[locId];
+  return lines ? lines.slice(0, revealedOf(locId, lines.length)) : [];
+}
+
+// штрихи вместо букв (слово автора 25.10): на фасаде — рука, а не шрифт; по знаку на букву,
+// пробел — просвет; каждая надпись всегда одними и теми же штрихами
+function scribble(ctx, text, x, y, seed, maxW) {
+  let px = 0;
+  for (let k = 0; k < text.length && px < maxW; k++) {
+    if (text[k] === ' ') { px += 3; continue; }
+    let h = (seed * 131 + k * 977 + text.charCodeAt(k) * 61) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177); h = (h ^ (h >>> 16)) >>> 0;
+    ctx.fillRect(x + px, y - 3 + (h & 1), 1, 3 - (h & 1));                 // стойка
+    if (h & 2) ctx.fillRect(x + px + 1, y - 2 + ((h >> 2) & 1), 1, 1);       // перекладина
+    if ((h & 24) === 24) ctx.fillRect(x + px, y - 4, 2, 1);                  // надстрочный росчерк
+    px += 2 + ((h >> 5) & 1);
+  }
+}
+
 export function draw(camera, locations) {
   const ctx = X;
   for (const locId of Object.keys(hiddenInscriptions)) {
@@ -61,9 +84,9 @@ export function draw(camera, locations) {
     if (sx < -100 || sx > scaler.vw + 100 || sy < -60 || sy > scaler.vh + 60) continue;
 
     const lines = hiddenInscriptions[locId];
-    const revealed = Math.min(lines.length, Math.floor((prox - 60) / 180) + 1);
+    const revealed = revealedOf(locId, lines.length);
 
-    ctx.font = '5px "Press Start 2P","VT323",monospace';
+    ctx.font = '5px "Press Start 2P","VT323",monospace';         // для надписей над местами городка
     for (let i = 0; i < revealed; i++) {
       const lineAge = prox - 60 - i * 180;
       const alpha = Math.min(0.5, lineAge / 120) * 0.9;
@@ -76,7 +99,8 @@ export function draw(camera, locations) {
       const onWall = !!l.archDraw;
       const lx = onWall ? l.x + 3 + (i % 2) * Math.max(0, l.w - 60) : l.x + 4 + (i % 2) * (l.w - 50);
       const ly = onWall ? l.y + Math.round(l.h * 0.62) + i * 6 : l.y - 8 + Math.floor(i / 2) * 7;
-      ctx.fillText(lines[i], lx, ly);
+      if (onWall) scribble(ctx, lines[i], lx, ly, i + locId.length * 7, Math.max(12, l.w - 8));
+      else ctx.fillText(lines[i], lx, ly);
       ctx.globalAlpha = 1;
     }
   }

@@ -9,6 +9,7 @@
 import { t } from '../core/time.js';
 import { setCtx } from '../render/context.js';
 import { POTEMKIN_LOOKS, POTEMKIN_TENDER } from '../content/potemkin.js';
+import { wallLines } from './inscriptions.js';
 
 export const STILL_DELAY = 150;   // кадров неподвижности до первого шва (~2.5 с)
 export const RISE = 1 / 90;       // проявление — полторы секунды
@@ -65,11 +66,14 @@ export function setRelook(fn) { relookOf = fn; }
 export function lookText(loc) {
   const base = (relookOf && loc && loc.id && relookOf(loc)) || loc.look || loc.name;
   const seam = seamOf(loc);
-  if (!seam || !seamVisible(loc)) return base;
+  // надпись на стене постройки колец: на фасаде — штрихи, прочесть — здесь, если уже проступила
+  const wall = loc && loc.archDraw && loc.id ? wallLines(loc.id) : [];
+  const add = [seam && seamVisible(loc) ? seam : null, wall.length ? `На стене, рукой: ${wall.map(w => `«${w}»`).join(' · ')}.` : null].filter(Boolean);
+  if (!add.length) return base;
   const HINT = '\n\n— обойти:';
-  const i = base.indexOf(HINT);
-  if (i < 0) return `${base}\n\n${seam}`;
-  return `${base.slice(0, i)}\n\n${seam}${base.slice(i)}`;
+  const i = base.indexOf(HINT), tail = add.join('\n\n');
+  if (i < 0) return `${base}\n\n${tail}`;
+  return `${base.slice(0, i)}\n\n${tail}${base.slice(i)}`;
 }
 
 // ── Рендер проявления ──
