@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -771,129 +771,6 @@ export function draw_pit(x, y) {
       X.globalAlpha=.06;
       rect(X,x+16+Math.sin(t*.01)*3,steamY,4,2,'#2a4a1a');
       X.globalAlpha=1;
-    }
-}
-
-export function draw_posterwall(x, y) {
-    // Concrete wall base
-    rect(X,x,y,65,45,P.stone);rect(X,x+1,y+1,63,43,P.dstone);
-    // Layered posters — different sizes, colors, overlapping
-    const posters=[
-      {px:3,py:3,pw:18,ph:22,c:'#3a0a08',tc:P.amber},   // crimson poster
-      {px:20,py:2,pw:20,ph:25,c:'#252b22',tc:P.bone},    // indigo poster
-      {px:38,py:4,pw:22,ph:20,c:'#0a0a0a',tc:'#8b0000'}, // black poster
-      {px:5,py:24,pw:25,ph:18,c:'#2a1a08',tc:P.gold},    // burnt poster
-      {px:32,py:22,pw:28,ph:20,c:'#1a0c20',tc:P.celestial}, // purple poster
-    ];
-    posters.forEach(p=>{
-      rect(X,x+p.px,y+p.py,p.pw,p.ph,p.c);
-      // Torn edges
-      for(let i=0;i<3;i++){
-        const tx_=x+p.px+hash(i,p.px,1)*p.pw;
-        const ty_=y+p.py+hash(i,p.py,2)*p.ph;
-        rect(X,tx_,ty_,2,1,P.dstone);
-      }
-      // Text lines (abstract)
-      rect(X,x+p.px+2,y+p.py+3,p.pw-4,1,p.tc);
-      rect(X,x+p.px+2,y+p.py+6,p.pw*.6,1,p.tc);
-      // "A" logo on some
-      if(hash(p.px,p.py,33)>.4){
-        X.globalAlpha=.6;
-        rect(X,x+p.px+p.pw/2-2,y+p.py+p.ph-8,5,6,p.tc);
-        X.globalAlpha=1;
-      }
-    });
-    // Peeling corner on top poster
-    const peel=Math.sin(t*.008)*1.5;
-    rect(X,x+58+peel,y+5,3,4,P.dstone);
-
-    // ═══════════════════════════════════════════
-    // ── 5 FIRE-MEMORIAL POSTERS with WAX SEALS ──
-    // ═══════════════════════════════════════════
-    // Each of the 5 stacked posters corresponds to a real concert-hall fire.
-    // Char marks at the edges (burn marks)
-    X.globalAlpha=.55;X.fillStyle='#0a0604';
-    // Burn halo around poster 1
-    for(let i=0;i<8;i++){
-      const ang=i/8*Math.PI*2;
-      rect(X,x+12+Math.cos(ang)*10,y+14+Math.sin(ang)*12,2,1);
-    }
-    X.globalAlpha=1;
-    // Five date labels on poster corners (tiny)
-    X.fillStyle=P.bone;X.font='3px "Press Start 2P"';
-    X.globalAlpha=.55;
-    X.fillText('20.02.03',x+4,y+8);   // The Station
-    X.fillText('05.12.09',x+21,y+8);  // Хромая Лошадь
-    X.fillText('27.01.13',x+39,y+8);  // Kiss Santa Maria
-    X.fillText('30.10.15',x+6,y+30);  // Colectiv
-    X.fillText('13.11.15',x+33,y+30); // Bataclan
-    X.globalAlpha=1;
-    // Wax seals dripped over each poster — red wax
-    const sealPos=[
-      [12,14],[29,14],[48,14],[17,33],[45,33]
-    ];
-    sealPos.forEach(([sx_,sy_],si)=>{
-      // Drip base
-      X.fillStyle='#6b0f1a';
-      X.beginPath();X.arc(x+sx_,y+sy_,2,0,Math.PI*2);X.fill();
-      // Dripping down
-      rect(X,x+sx_,y+sy_,1,3+si*.5,'#6b0f1a');
-      // Highlight
-      px(X,x+sx_-1,y+sy_-1,'#8b0f1a');
-      // Tiny number stamped in wax (1-5)
-      X.fillStyle=P.bone;
-      px(X,x+sx_,y+sy_,P.bone);
-    });
-
-    // ── 5 CANDLES at the base — simplified (single cheap glow) ──
-    for(let ci=0;ci<5;ci++){
-      const cdx=x+8+ci*12;
-      const cdy=y+45;
-      // Wax puddle base
-      rect(X,cdx-1,cdy+5,5,2,'#e8dcc8');
-      rect(X,cdx,cdy+7,3,1,'#c8b098');
-      // Candle body
-      rect(X,cdx,cdy-3,3,8,P.bone);
-      rect(X,cdx,cdy-3,3,1,'#e8dcc8');
-      // Wick
-      px(X,cdx+1,cdy-4,'#1a0806');
-      // Flame — simple
-      X.globalAlpha=.9;
-      rect(X,cdx+1,cdy-6,1,2,P.f2);
-      px(X,cdx+1,cdy-7,'#ffffcc');
-      X.globalAlpha=1;
-      // Cheap amber glow (plain rect, no gradient)
-      X.globalAlpha=.08+.02*Math.sin(t*.1+ci);
-      rect(X,cdx-3,cdy-8,9,6,P.amber);
-      X.globalAlpha=1;
-    }
-
-    // ── "ВЫХОД БЫЛ ЗАПЕРТ" graffiti above the posters ──
-    X.fillStyle='#6b0f1a';X.font='4px "Press Start 2P"';
-    X.globalAlpha=.7;
-    X.fillText('ВЫХОД БЫЛ',x+6,y+41);
-    X.fillText('ЗАПЕРТ СНАРУЖИ',x+2,y+44);
-    X.globalAlpha=1;
-
-    // ── PYROTECHNIC SCORCH MARKS radiating across the wall ──
-    X.globalAlpha=.15;
-    X.fillStyle='#1a0604';
-    for(let i=0;i<30;i++){
-      const sox=hash(i,0,11)*65;
-      const soy=hash(i,0,22)*45;
-      rect(X,x+sox,y+soy,1+hash(i,0,33)*3,1,'#1a0604');
-    }
-    X.globalAlpha=1;
-
-    // ── DEAD ROSES at base of wall — 5 stems ──
-    for(let i=0;i<5;i++){
-      const rosX=x+14+i*10;
-      // Stem
-      rect(X,rosX,y+49,1,4,'#1a2a0a');
-      // Dried bud
-      rect(X,rosX-1,y+48,3,2,'#3a0a08');
-      // Petals falling
-      px(X,rosX+hash(i,0,11)*3-1,y+53,'#3a0a08');
     }
 }
 

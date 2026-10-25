@@ -38,7 +38,7 @@ export const locations = [
     solid: true, light: { r: 18, color: [138, 141, 143], flicker: 0.02 } },
   { id: 'posterwall', name: 'Стена афиш', x: 850, y: 680, w: 70, h: 50, zone: 'settlement',
     useAction: 'events',
-    light: { r: 14, color: [150, 146, 134], flicker: 0.03 } },
+    light: { r: 14, color: [150, 146, 134], flicker: 0 } },   // «все горят одинаково ровно»
   { id: 'riverbed', name: 'Высохшее русло', x: 900, y: 1050, w: 60, h: 30, zone: 'settlement',
     useAction: 'riverbed_dig',
     light: { r: 12, color: [61, 74, 58], flicker: 0.02 } },

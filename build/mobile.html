@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='a4692b2 · 2026-10-25';console.log('[оттиск]', 'a4692b2 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='30cd016 · 2026-10-25';console.log('[оттиск]', '30cd016 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -24481,7 +24481,7 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
                     solid: true, light: { r: 18, color: [138, 141, 143], flicker: 0.02 } },
                 { id: 'posterwall', name: 'Стена афиш', x: 850, y: 680, w: 70, h: 50, zone: 'settlement',
                     useAction: 'events',
-                    light: { r: 14, color: [150, 146, 134], flicker: 0.03 } },
+                    light: { r: 14, color: [150, 146, 134], flicker: 0 } }, // «все горят одинаково ровно»
                 { id: 'riverbed', name: 'Высохшее русло', x: 900, y: 1050, w: 60, h: 30, zone: 'settlement',
                     useAction: 'riverbed_dig',
                     light: { r: 12, color: [61, 74, 58], flicker: 0.02 } },
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -36123,6 +36123,196 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             bake('billboard3', x, y, 0, -3, 108, 55, () => billboardBody(false));
     }
     exports_105("draw_billboard", draw_billboard);
+    function posterwallBody() {
+        // ── плита: опалубка полосами, поры, потёки сверху; торец справа ──
+        for (let x = PW_X0; x <= PW_X1; x++) {
+            const top = pwTop(x);
+            for (let y = top; y < PW_G; y++) {
+                const h = hh(x, y, 375), board = (y - 2) % 7 === 0;
+                r(x, y, 1, 1, x < PW_X0 + 2 ? OV_L : board ? OV_D : h < 0.06 ? OV_D : h > 0.97 ? OV_L : OV_C);
+            }
+            r(x, top, 1, 1, x < 50 ? OV_L : S1);
+        }
+        for (let k = 0; k < 9; k++) {
+            const x = 4 + q(hh(k, 1, 377) * 58);
+            for (let y = pwTop(x) + 1, L = 4 + q(hh(k, 2, 379) * 14); L > 0; L--, y++)
+                r(x, y, 1, 1, OV_D);
+        }
+        for (let y = 4; y < PW_G; y++) {
+            r(PW_X1 + 1, y, 2, 1, OV_D);
+            r(PW_X1 + 3, y, 1, 1, AS);
+        }
+        for (let k = 0; k < 4; k++) {
+            r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 3 + (k & 1), RUST);
+            r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 1, RUST_L);
+        } // арматура из слома
+        // бумага: рваные верх и низ; low — у земли: низ обуглен, кромка крошится
+        const paper = (x0, y0, w, h, c, seed, low) => {
+            for (let i = 0; i < w; i++) {
+                const t0 = q(hh(i >> 1, seed, 381) * 2), b0 = q(hh(i >> 1, seed, 383) * 3);
+                for (let y = y0 + t0; y < y0 + h - b0; y++) {
+                    const d = y0 + h - b0 - y;
+                    r(x0 + i, y, 1, 1, low && d < 2 ? K1 : low && d < 3 ? BR2 : low && d < 5 && hh(i, y, 385) < 0.45 ? SINGE : c);
+                }
+            }
+        };
+        // ступенька слоёв у рваной кромки: верхний светлее, глубже темнее
+        const layers = (x0, y0, w, n, dir) => { const T = [L2, SEP, BR2, K1]; for (let k = 0; k < n; k++)
+            r(x0 + (dir < 0 ? -k : 0), y0 + k, w - k, 1, T[Math.min(3, k)]); };
+        const ink = (x, y, w, h, c) => r(x, y, w, h, c);
+        const dash = (x0, y, w, c) => { for (let i = 0; i < w; i++)
+            if (hh(x0 + i, y, 387) > 0.3)
+                r(x0 + i, y, 1, 1, c); };
+        const wax = (x, y, n) => {
+            r(x - 1, y, 4, 2, BO);
+            r(x + 2, y + 1, 1, 1, L1);
+            r(x, y - 1, 2, 1, L1);
+            for (let k = 0; k < n; k++) {
+                const dx = [-1, 1, 2][k], L = 2 + q(hh(x, k, 389) * 4);
+                r(x + dx, y + 2, 1, L, BO);
+                r(x + dx, y + 2 + L, 1, 1, L1);
+            }
+        };
+        // ── старые слои клочьями: сверху выцвели, у земли — уголь ──
+        paper(3, 2, 18, 8, AS, 6, false);
+        paper(19, 22, 9, 8, L2, 8, false);
+        paper(37, 2, 14, 7, S1, 7, false);
+        paper(2, 25, 8, 17, SEP, 1, true);
+        paper(22, 33, 8, 9, SEP, 2, true);
+        paper(41, 37, 22, 5, BR2, 3, true);
+        paper(57, 9, 7, 16, AS, 5, false);
+        // ── пять афиш ──
+        // 1942 — шапка, рамка в два контура, певец у микрофона; выцвела
+        paper(4, 9, 16, 17, L2, 11, false);
+        ink(5, 10, 14, 1, S1);
+        ink(5, 23, 14, 1, S1);
+        ink(5, 10, 1, 14, S1);
+        ink(18, 10, 1, 14, S1);
+        dash(7, 12, 10, S1);
+        ink(10, 15, 2, 2, S1);
+        ink(9, 17, 4, 5, S1);
+        ink(14, 15, 1, 7, AS);
+        ink(13, 14, 3, 1, AS);
+        ink(13, 21, 3, 1, AS); // певец, стойка
+        dash(7, 24, 10, AS);
+        wax(16, 11, 2);
+        // 2003 — гитарист, по бокам фонтаны искр
+        paper(22, 3, 16, 19, L1, 12, false);
+        ink(23, 4, 14, 2, AS);
+        dash(24, 7, 12, S1);
+        ink(29, 9, 2, 2, S1);
+        ink(28, 11, 4, 6, S1);
+        ink(28, 17, 1, 3, S1);
+        ink(31, 17, 1, 3, S1); // фигура
+        for (let k = 0; k < 6; k++)
+            r(26 + k, 16 - q(k * 0.7), 1, 1, K3);
+        ink(26, 15, 2, 2, K3); // гриф наискось
+        for (let k = 0; k < 6; k++) {
+            r(24 + q(hh(k, 13, 391) * 2), 9 + k * 2, 1, 1, AS);
+            r(35 + q(hh(k, 14, 393) * 2), 9 + k * 2, 1, 1, AS);
+        }
+        dash(24, 20, 11, AS);
+        wax(34, 5, 3);
+        layers(22, 21, 6, 4, 1);
+        // 2009 — сцена аркой, на ней трое
+        paper(41, 9, 16, 16, L2, 13, false);
+        ink(42, 10, 14, 2, S1);
+        dash(43, 13, 11, AS);
+        ink(43, 15, 12, 1, S1);
+        ink(43, 15, 1, 6, S1);
+        ink(54, 15, 1, 6, S1);
+        ink(43, 21, 12, 1, S1);
+        for (const fx of [46, 49, 52]) {
+            ink(fx, 17, 1, 1, S1);
+            ink(fx, 18, 1, 3, S1);
+        }
+        dash(43, 23, 10, AS);
+        wax(53, 11, 2);
+        layers(56, 24, 5, 3, -1);
+        // 2013 — руки над залом; низ обуглен
+        paper(6, 27, 17, 14, AS, 14, true);
+        ink(7, 28, 15, 2, S0);
+        dash(8, 31, 12, K3);
+        for (let k = 0; k < 6; k++) {
+            const hx = 8 + k * 2 + (k > 2 ? 1 : 0), hy = 33 + (k & 1);
+            ink(hx, hy, 1, 4 - (k & 1), K2);
+            ink(hx - 1 + (k & 1) * 2, hy - 1, 1, 1, K2);
+        }
+        ink(7, 37, 15, 1, K2);
+        wax(18, 29, 2);
+        // 2015 — группа: трое у края сцены, провода; низ обуглен
+        paper(25, 25, 17, 15, L2, 15, true);
+        ink(26, 26, 15, 2, S1);
+        dash(27, 29, 12, K3);
+        for (const fx of [28, 33, 38]) {
+            ink(fx, 31, 2, 2, K2);
+            ink(fx - 1, 33, 4, 4, K2);
+        }
+        dash(27, 37, 13, K3);
+        wax(37, 27, 3);
+        layers(25, 37, 7, 3, 1);
+        // ── одно место свободно: голый бетон, по краю клей и обрывки ──
+        for (let x = 45; x < 61; x++) {
+            if (hh(x, 21, 401) < 0.5)
+                r(x, 26, 1, 1, L2);
+            if (hh(x, 22, 403) < 0.4)
+                r(x, 37, 1, 1, SEP);
+        }
+        for (let y = 27; y < 37; y++) {
+            if (hh(y, 23, 405) < 0.5)
+                r(44, y, 1, 1, L2);
+            if (hh(y, 24, 407) < 0.4)
+                r(61, y, 1, 1, SEP);
+        }
+        // мелом, казённым почерком, ровно: «ПОВЕРХ НЕ КЛЕИТЬ»
+        for (let x = 45; x < 61; x++) {
+            if (x === 51 || x === 54)
+                continue;
+            r(x, 39, 1, 1, (x & 1) ? BO : L2);
+            if (x % 3 === 0)
+                r(x, 38, 1, 1, L2);
+        }
+        // от руки, выше одной афиши: «пожарный выход был заперт снаружи. везде. всегда.»
+        for (let x = 5; x < 33; x++) {
+            if (x === 22 || x === 23 || x === 28 || x === 29)
+                continue;
+            if (hh(x, 16, 395) > 0.18)
+                r(x, 6 + (x % 5 === 0 ? -1 : 0) + (x > 24 ? 1 : 0), 1, 1 + (hh(x, 17, 397) < 0.25 ? 1 : 0), K1);
+        }
+        // ── копоть над свечами — слабо ──
+        context_js_9.X.globalAlpha = 0.18;
+        for (let c = 0; c < 5; c++) {
+            const cx = 10 + c * 11;
+            for (let y = 0; y < 6; y++)
+                r(cx - (y < 3 ? 1 : 0), PW_G - 4 - y, y < 3 ? 4 : 2, 1, K0);
+        }
+        context_js_9.X.globalAlpha = 1;
+        // ── у основания: уголь крошится; пять свечей — свежие, фитили подрезаны, пламя одно на всех ──
+        r(PW_X0, PW_G, PW_X1 - PW_X0 + 3, 1, K1);
+        for (let k = 0; k < 12; k++)
+            r(3 + q(hh(k, 25, 409) * 60), PW_G + 1 + q(hh(k, 26, 411) * 2), 1, 1, K1);
+        for (let c = 0; c < 5; c++) {
+            const cx = 10 + c * 11, by = PW_G + 7;
+            r(cx - 1, by, 4, 1, L2);
+            r(cx, by + 1, 3, 1, K3); // лужица воска
+            r(cx, by - 5, 2, 5, L2);
+            r(cx, by - 5, 1, 5, L1);
+            r(cx + 1, by - 4, 1, 4, AS); // свеча: к свету слева
+            r(cx, by - 6, 1, 1, K0); // фитиль короткий
+            context_js_9.X.globalAlpha = 0.16;
+            r(cx - 1, by - 9, 3, 3, BO);
+            context_js_9.X.globalAlpha = 1; // свет — холодный, ровный
+            r(cx, by - 9, 1, 1, L1);
+            r(cx, by - 8, 1, 2, BO); // пламя — тонкое, прямое
+        }
+        context_js_9.X.globalAlpha = 0.5;
+        r(PW_X0, PW_G + 9, PW_X1 - PW_X0 + 3, 1, K0);
+        context_js_9.X.globalAlpha = 1;
+    }
+    function draw_posterwall(x, y) {
+        bake('posterwall2', x, y, 0, -1, 70, 55, posterwallBody);
+    }
+    exports_105("draw_posterwall", draw_posterwall);
     // ── РЖАВЫЙ ТРУБОПРОВОД ──
     // «Труба большого диаметра. Немецкая сталь. Этикетки содраны, уцелела одна...
     // В боку — пробоина. Края оплавлены внутрь. На бетоне рядом, мелом: дата,
@@ -37243,6 +37433,24 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             };
             // обезьяна на принте 6×5 под строкой гвоздя: макушка, уши, глаза, морда, подбородок
             APE = ['.hhhh.', 'hhhhhh', '.heeh.', '.hmmh.', '..hh..'];
+            // ── СТЕНА АФИШ ──
+            // «Бетонная стена, обклеенная слоями афиш. Нижние — обуглены. Верхние — выцвели.
+            // Пять афиш помечены восковой свечой, оплывшей прямо на бумагу: 28.11.1942 —
+            // Coconut Grove, Бостон… 20.02.2003 — The Station… 05.12.2009 — «Хромая лошадь»…
+            // 27.01.2013 — Kiss, Санта-Мария… 30.10.2015 — Colectiv, Бухарест… У основания стены —
+            // свечи. Пять. Все зажжены. Все горят одинаково ровно — в безветрии. Выше одной
+            // афиши, от руки: „пожарный выход был заперт снаружи. везде. всегда."» Использовать:
+            // слои на палец, нижние крошатся углём; воск мягкий, фитили подрезаны; внизу мелом
+            // «ПОВЕРХ НЕ КЛЕИТЬ»; свободным осталось одно место. Плита бетона: опалубка полосами,
+            // поры, потёки, верх справа обломан — арматура. Афиши — концертные («музыка не
+            // горит»): шапка, картинка, строки; картинки общие — певец у микрофона, гитарист в
+            // искрах, сцена, руки над залом, группа; даты и надписи штрихами. На каждой из пяти
+            // оплыла свеча. Рваные кромки — ступенькой слоёв, глубже темнее. Свечи горят костью
+            // и не дрожат: тёплых пятен в городке три (костёр, окно №3, мусорка), и этот огонь —
+            // не живой. Ветра здесь нет — ничего не шевелится, всё запечено. Свет слева, кромка
+            // пеплом справа.
+            PW_X0 = 2, PW_X1 = 64, PW_G = 43;
+            pwTop = x => x < 50 ? 2 + (hh(x >> 2, 0, 371) < 0.3 ? 1 : 0) : 2 + q((x - 50) * 0.5) + (hh(x, 0, 373) < 0.4 ? 1 : 0);
             // ── ТОКСИЧНОЕ ОЗЕРО ──
             // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
             // Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды табличка:
@@ -38201,130 +38409,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         }
     }
     exports_106("draw_pit", draw_pit);
-    function draw_posterwall(x, y) {
-        // Concrete wall base
-        draw_js_7.rect(context_js_10.X, x, y, 65, 45, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 1, y + 1, 63, 43, P.dstone);
-        // Layered posters — different sizes, colors, overlapping
-        const posters = [
-            { px: 3, py: 3, pw: 18, ph: 22, c: '#3a0a08', tc: P.amber }, // crimson poster
-            { px: 20, py: 2, pw: 20, ph: 25, c: '#252b22', tc: P.bone }, // indigo poster
-            { px: 38, py: 4, pw: 22, ph: 20, c: '#0a0a0a', tc: '#8b0000' }, // black poster
-            { px: 5, py: 24, pw: 25, ph: 18, c: '#2a1a08', tc: P.gold }, // burnt poster
-            { px: 32, py: 22, pw: 28, ph: 20, c: '#1a0c20', tc: P.celestial }, // purple poster
-        ];
-        posters.forEach(p => {
-            draw_js_7.rect(context_js_10.X, x + p.px, y + p.py, p.pw, p.ph, p.c);
-            // Torn edges
-            for (let i = 0; i < 3; i++) {
-                const tx_ = x + p.px + draw_js_7.hash(i, p.px, 1) * p.pw;
-                const ty_ = y + p.py + draw_js_7.hash(i, p.py, 2) * p.ph;
-                draw_js_7.rect(context_js_10.X, tx_, ty_, 2, 1, P.dstone);
-            }
-            // Text lines (abstract)
-            draw_js_7.rect(context_js_10.X, x + p.px + 2, y + p.py + 3, p.pw - 4, 1, p.tc);
-            draw_js_7.rect(context_js_10.X, x + p.px + 2, y + p.py + 6, p.pw * .6, 1, p.tc);
-            // "A" logo on some
-            if (draw_js_7.hash(p.px, p.py, 33) > .4) {
-                context_js_10.X.globalAlpha = .6;
-                draw_js_7.rect(context_js_10.X, x + p.px + p.pw / 2 - 2, y + p.py + p.ph - 8, 5, 6, p.tc);
-                context_js_10.X.globalAlpha = 1;
-            }
-        });
-        // Peeling corner on top poster
-        const peel = Math.sin(time_js_24.t * .008) * 1.5;
-        draw_js_7.rect(context_js_10.X, x + 58 + peel, y + 5, 3, 4, P.dstone);
-        // ═══════════════════════════════════════════
-        // ── 5 FIRE-MEMORIAL POSTERS with WAX SEALS ──
-        // ═══════════════════════════════════════════
-        // Each of the 5 stacked posters corresponds to a real concert-hall fire.
-        // Char marks at the edges (burn marks)
-        context_js_10.X.globalAlpha = .55;
-        context_js_10.X.fillStyle = '#0a0604';
-        // Burn halo around poster 1
-        for (let i = 0; i < 8; i++) {
-            const ang = i / 8 * Math.PI * 2;
-            draw_js_7.rect(context_js_10.X, x + 12 + Math.cos(ang) * 10, y + 14 + Math.sin(ang) * 12, 2, 1);
-        }
-        context_js_10.X.globalAlpha = 1;
-        // Five date labels on poster corners (tiny)
-        context_js_10.X.fillStyle = P.bone;
-        context_js_10.X.font = '3px "Press Start 2P"';
-        context_js_10.X.globalAlpha = .55;
-        context_js_10.X.fillText('20.02.03', x + 4, y + 8); // The Station
-        context_js_10.X.fillText('05.12.09', x + 21, y + 8); // Хромая Лошадь
-        context_js_10.X.fillText('27.01.13', x + 39, y + 8); // Kiss Santa Maria
-        context_js_10.X.fillText('30.10.15', x + 6, y + 30); // Colectiv
-        context_js_10.X.fillText('13.11.15', x + 33, y + 30); // Bataclan
-        context_js_10.X.globalAlpha = 1;
-        // Wax seals dripped over each poster — red wax
-        const sealPos = [
-            [12, 14], [29, 14], [48, 14], [17, 33], [45, 33]
-        ];
-        sealPos.forEach(([sx_, sy_], si) => {
-            // Drip base
-            context_js_10.X.fillStyle = '#6b0f1a';
-            context_js_10.X.beginPath();
-            context_js_10.X.arc(x + sx_, y + sy_, 2, 0, Math.PI * 2);
-            context_js_10.X.fill();
-            // Dripping down
-            draw_js_7.rect(context_js_10.X, x + sx_, y + sy_, 1, 3 + si * .5, '#6b0f1a');
-            // Highlight
-            draw_js_7.px(context_js_10.X, x + sx_ - 1, y + sy_ - 1, '#8b0f1a');
-            // Tiny number stamped in wax (1-5)
-            context_js_10.X.fillStyle = P.bone;
-            draw_js_7.px(context_js_10.X, x + sx_, y + sy_, P.bone);
-        });
-        // ── 5 CANDLES at the base — simplified (single cheap glow) ──
-        for (let ci = 0; ci < 5; ci++) {
-            const cdx = x + 8 + ci * 12;
-            const cdy = y + 45;
-            // Wax puddle base
-            draw_js_7.rect(context_js_10.X, cdx - 1, cdy + 5, 5, 2, '#e8dcc8');
-            draw_js_7.rect(context_js_10.X, cdx, cdy + 7, 3, 1, '#c8b098');
-            // Candle body
-            draw_js_7.rect(context_js_10.X, cdx, cdy - 3, 3, 8, P.bone);
-            draw_js_7.rect(context_js_10.X, cdx, cdy - 3, 3, 1, '#e8dcc8');
-            // Wick
-            draw_js_7.px(context_js_10.X, cdx + 1, cdy - 4, '#1a0806');
-            // Flame — simple
-            context_js_10.X.globalAlpha = .9;
-            draw_js_7.rect(context_js_10.X, cdx + 1, cdy - 6, 1, 2, P.f2);
-            draw_js_7.px(context_js_10.X, cdx + 1, cdy - 7, '#ffffcc');
-            context_js_10.X.globalAlpha = 1;
-            // Cheap amber glow (plain rect, no gradient)
-            context_js_10.X.globalAlpha = .08 + .02 * Math.sin(time_js_24.t * .1 + ci);
-            draw_js_7.rect(context_js_10.X, cdx - 3, cdy - 8, 9, 6, P.amber);
-            context_js_10.X.globalAlpha = 1;
-        }
-        // ── "ВЫХОД БЫЛ ЗАПЕРТ" graffiti above the posters ──
-        context_js_10.X.fillStyle = '#6b0f1a';
-        context_js_10.X.font = '4px "Press Start 2P"';
-        context_js_10.X.globalAlpha = .7;
-        context_js_10.X.fillText('ВЫХОД БЫЛ', x + 6, y + 41);
-        context_js_10.X.fillText('ЗАПЕРТ СНАРУЖИ', x + 2, y + 44);
-        context_js_10.X.globalAlpha = 1;
-        // ── PYROTECHNIC SCORCH MARKS radiating across the wall ──
-        context_js_10.X.globalAlpha = .15;
-        context_js_10.X.fillStyle = '#1a0604';
-        for (let i = 0; i < 30; i++) {
-            const sox = draw_js_7.hash(i, 0, 11) * 65;
-            const soy = draw_js_7.hash(i, 0, 22) * 45;
-            draw_js_7.rect(context_js_10.X, x + sox, y + soy, 1 + draw_js_7.hash(i, 0, 33) * 3, 1, '#1a0604');
-        }
-        context_js_10.X.globalAlpha = 1;
-        // ── DEAD ROSES at base of wall — 5 stems ──
-        for (let i = 0; i < 5; i++) {
-            const rosX = x + 14 + i * 10;
-            // Stem
-            draw_js_7.rect(context_js_10.X, rosX, y + 49, 1, 4, '#1a2a0a');
-            // Dried bud
-            draw_js_7.rect(context_js_10.X, rosX - 1, y + 48, 3, 2, '#3a0a08');
-            // Petals falling
-            draw_js_7.px(context_js_10.X, rosX + draw_js_7.hash(i, 0, 11) * 3 - 1, y + 53, '#3a0a08');
-        }
-    }
-    exports_106("draw_posterwall", draw_posterwall);
     return {
         setters: [
             function (draw_js_7_1) {
@@ -38375,7 +38459,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_altar": canon_js_1_1["draw_altar"],
                     "draw_dumpster": canon_js_1_1["draw_dumpster"],
                     "draw_banner": canon_js_1_1["draw_banner"],
-                    "draw_overpass": canon_js_1_1["draw_overpass"]
+                    "draw_overpass": canon_js_1_1["draw_overpass"],
+                    "draw_posterwall": canon_js_1_1["draw_posterwall"]
                 });
             }
         ],
