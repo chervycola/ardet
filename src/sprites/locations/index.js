@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -45,73 +45,6 @@ function drawBuildingSilhouette(x, y, w, h, roofColor) {
 
 let npcProximity = 0;
 
-
-export function draw_vending(x, y) {
-    // ═══ VENDING MACHINE — Nosedive rating + Merits ═══
-    X.globalAlpha=.3;X.fillStyle='#000';
-    X.beginPath();X.ellipse(x+18,y+56,22,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-    // Main body
-    rect(X,x,y,36,54,P.dgrey);
-    rect(X,x+1,y+1,34,52,P.ash);
-    rect(X,x+2,y+2,32,50,P.dstone);
-    // Rust patches
-    dither(X,x+3,y+20,8,18,P.rust,P.ash,.35);
-    dither(X,x+26,y+28,7,16,P.drust,P.ash,.3);
-    // Top display — flickering
-    const fl=hash(0,t*.012,77)>.08?1:.2;
-    X.globalAlpha=fl;
-    rect(X,x+6,y+4,24,16,'#0a0a1a');
-    // "ОБМЕН" label
-    rect(X,x+8,y+7,16,2,P.amber);
-    // Rating display — 4.7★ Nosedive style
-    X.globalAlpha=fl*.9;
-    rect(X,x+9,y+11,2,2,P.gold);rect(X,x+11,y+11,1,1,P.damber); // star
-    rect(X,x+13,y+11,2,2,P.amber); // 4
-    rect(X,x+16,y+11,1,2,P.amber); // .
-    rect(X,x+18,y+11,2,2,P.amber); // 7
-    X.globalAlpha=1;
-    // 4 window cells with items (mice)
-    for(let i=0;i<4;i++){
-      rect(X,x+7+i*7,y+24,5,5,P.dgrey);
-      rect(X,x+8+i*7,y+25,3,3,'#0a0a0e');
-      // One window has a mouse inside
-      if(i===1){
-        rect(X,x+9,y+26,2,1,'#1a1a1a'); // mouse body
-        if(t%12<6)px(X,x+9,y+26,'#6b0f1a'); // eye
-      }
-      // Another has a coin stuck
-      if(i===2){
-        px(X,x+16,y+27,P.gold);
-      }
-    }
-    // Keypad
-    rect(X,x+8,y+32,20,14,'#0a0a0a');
-    for(let row=0;row<3;row++)for(let col=0;col<4;col++){
-      rect(X,x+9+col*5,y+33+row*4,3,3,P.dgrey);
-    }
-    // Coin slot (welded shut)
-    rect(X,x+8,y+48,20,2,'#1a1a1a');
-    X.fillStyle='#6b0f1a';
-    rect(X,x+10,y+48,3,1); // weld mark
-    rect(X,x+16,y+48,2,1);
-    rect(X,x+22,y+48,3,1);
-    // Bottom lip
-    rect(X,x+4,y+52,28,2,P.amber);
-    // "PRESS TO SPIN" label (faded, broken)
-    X.globalAlpha=.4;
-    X.fillStyle='#1a1a1a';
-    rect(X,x+10,y+29,16,1);
-    X.globalAlpha=1;
-    // Cracked screen line
-    X.strokeStyle=P.lgrey;X.lineWidth=1;
-    X.beginPath();X.moveTo(x+9,y+5);X.lineTo(x+22,y+15);X.stroke();
-    // Small "5 ⭐" graffiti on the side
-    X.fillStyle=P.gold;
-    px(X,x+32,y+30);px(X,x+33,y+30);px(X,x+32,y+31);
-    // Moss at base
-    rect(X,x,y+52,3,2,P.dtoxic);
-    px(X,x+1,y+51,P.toxic);
-}
 
 export function draw_raven(x, y) {
     // ═══ RAVEN'S NEST — twisted oak with trove ═══

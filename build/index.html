@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='08912cd · 2026-10-25';console.log('[оттиск]', '08912cd · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='c9e55e1 · 2026-10-25';console.log('[оттиск]', 'c9e55e1 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -37575,6 +37575,235 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
     }
     exports_105("draw_overpass", draw_overpass);
+    function vendBody() {
+        const F0 = VM_FX, F1 = VM_FX + VM_FW - 1, G = VM_G;
+        // ── крыша: копоть, к свету светлее; торец уходит вверх-вправо ──
+        for (let j = 0; j < 3; j++)
+            for (let x = F0 + 2 - j; x <= F1 + 4 - 2 * j; x++) {
+                const h = hh(x, j, 501);
+                r(x, 4 + j, 1, 1, h < 0.35 ? K2 : x < F0 + 8 ? S1 : S0);
+            }
+        for (let i = 0; i < 5; i++) {
+            const cx = F1 + 1 + i, top = 6 - (i >> 1) - (i > 3 ? 0 : 0), bot = G - 2 - (i >> 1);
+            for (let y = top; y <= bot; y++) {
+                const h = hh(cx, y, 503);
+                r(cx, y, 1, 1, i === 4 ? (h < 0.12 ? AS : S1) : h < 0.08 ? RUST : h < 0.14 ? K2 : S2);
+            }
+        }
+        for (let y = 9; y < G - 6; y += 4)
+            r(F1 + 2, y, 2, 1, K1); // жалюзи вентиляции на торце
+        // ── лицо: крашеная сталь, слева на свету, ржа по углам и потёками от болтов ──
+        for (let x = F0; x <= F1; x++)
+            for (let y = 7; y < G; y++) {
+                const h = hh(x, y, 505), low = y > G - 14 ? (y - (G - 14)) / 14 : 0;
+                let c = x === F0 ? S1 : S0;
+                if (h < 0.05 + low * 0.25 && (x < F0 + 5 || x > F1 - 4))
+                    c = h < 0.03 + low * 0.1 ? RUST_L : RUST;
+                else if (h > 0.985)
+                    c = S2;
+                r(x, y, 1, 1, c);
+            }
+        r(F0, 7, VM_FW, 1, L2);
+        r(F0, 7, 1, G - 7, L2); // ребро к свету
+        for (const bx of [F0 + 1, F1 - 1]) {
+            r(bx, 8, 1, 1, K0);
+            for (let k = 1; k < 4 + (bx & 3); k++)
+                r(bx, 8 + k, 1, 1, RUST);
+        } // болты, потёки
+        // ── шапка: «ОБМЕН» под копотью — буквы штрихами, копоть съела половину ──
+        r(F0 + 2, 9, VM_FW - 4, 5, K1);
+        r(F0 + 2, 9, VM_FW - 4, 1, K0);
+        r(F0 + 2, 13, VM_FW - 4, 1, K2);
+        const OB = { О: ['###', '#.#', '###'], Б: ['###', '##.', '##.'], М: ['#.#', '###', '#.#'], Е: ['###', '##.', '###'], Н: ['#.#', '###', '#.#'] };
+        let lx = F0 + 3;
+        for (const ch of 'ОБМЕН') {
+            const g = OB[ch];
+            for (let j = 0; j < 3; j++)
+                for (let i = 0; i < 3; i++)
+                    if (g[j][i] === '#' && hh(lx + i, j, 507) > 0.4)
+                        r(lx + i, 10 + j, 1, 1, hh(lx + i, j, 509) < 0.5 ? L2 : SEP);
+            lx += 4;
+        }
+        for (let k = 0; k < 6; k++)
+            r(F0 + 3 + q(hh(k, 9, 511) * 17), 10 + (k % 3), 2, 1, K2); // копоть пятнами
+        // ── экран: рамка, стекло, строки развёртки (живое — поверх) ──
+        r(F0 + 2, 15, 14, 11, K0);
+        r(F0 + 3, 16, 12, 9, NI);
+        for (let y = 17; y < 25; y += 2)
+            r(F0 + 3, y, 12, 1, K0);
+        r(F0 + 2, 15, 14, 1, S2);
+        r(F0 + 15, 16, 1, 10, S1);
+        // ── справа от экрана: прорези динамика, табличка правил строками ──
+        for (let j = 0; j < 3; j++)
+            r(F0 + 18, 15 + j * 2, 4, 1, K0);
+        r(F0 + 17, 21, 6, 5, L2);
+        r(F0 + 17, 21, 6, 1, L1);
+        r(F0 + 22, 22, 1, 4, AS);
+        for (const [ly, n] of [[22, 4], [23, 3], [24, 4]])
+            for (let k = 0; k < n; k++)
+                if (hh(k, ly, 513) > 0.2)
+                    r(F0 + 18 + k, ly, 1, 1, K3);
+        r(F0 + 18, 25, 2, 1, K3); // «4. См. п. 1.»
+        // ── витрина: три полки на спиралях, товар пункта обмена ──
+        const GX = F0 + 2, GY = 27, GW = 14, GH = 19;
+        r(GX, GY, GW, GH, K0);
+        r(GX + 1, GY + 1, GW - 2, GH - 2, K1);
+        for (let y = GY + 1; y < GY + GH - 1; y++)
+            if (y > GY + 9)
+                r(GX + 1, y, GW - 2, 1, NI);
+        for (const sy of [GY + 6, GY + 12, GY + 17]) {
+            r(GX + 1, sy, GW - 2, 1, K3);
+            for (let x = GX + 1; x < GX + GW - 1; x++)
+                if ((x + sy) % 2 === 0)
+                    r(x, sy - 1, 1, 1, S1); // спирали
+        }
+        // полка 1: футболка сложена, книга корешком
+        r(GX + 1, GY + 2, 4, 3, L2);
+        r(GX + 2, GY + 2, 2, 1, K1);
+        r(GX + 1, GY + 4, 4, 1, L1);
+        r(GX + 7, GY + 1, 3, 4, K3);
+        r(GX + 9, GY + 1, 1, 4, L1);
+        r(GX + 7, GY + 1, 1, 4, K4);
+        // полка 2: пластинка — красный ярлык, плакат свёрнут в трубку
+        r(GX + 2, GY + 7, 4, 4, NI);
+        r(GX + 2, GY + 7, 1, 1, K1);
+        r(GX + 5, GY + 7, 1, 1, K1);
+        r(GX + 2, GY + 10, 1, 1, K1);
+        r(GX + 5, GY + 10, 1, 1, K1);
+        r(GX + 3, GY + 8, 2, 2, K3);
+        r(GX + 4, GY + 9, 1, 1, KV);
+        r(GX + 8, GY + 10, 4, 1, L2);
+        r(GX + 8, GY + 9, 4, 1, L1);
+        r(GX + 11, GY + 9, 1, 2, AS);
+        // полка 3: худи застряло на краю спирали — висит косо у стекла
+        r(GX + 6, GY + 14, 2, 1, MG_D);
+        r(GX + 5, GY + 15, 3, 1, MG_D);
+        r(GX + 5, GY + 16, 2, 1, MG);
+        r(GX + 7, GY + 13, 1, 1, MG_L);
+        // стекло: блик по диагонали, скол со звездой трещин
+        for (let k = 0; k < 9; k++)
+            if (k % 4 !== 3)
+                r(GX + 3 + k, GY + GH - 3 - k, 1, 1, S1);
+        const cx = GX + 11, cy = GY + 3;
+        r(cx, cy, 1, 1, L1);
+        for (const [dx, dy] of [[1, -1], [-1, 1], [-2, 1], [1, 1], [-1, -1]])
+            r(cx + dx, cy + dy, 1, 1, AS);
+        // ── колонка справа: клавиши (одна затёрта до блеска, одна запала), заваренный монетоприёмник ──
+        const KX = F0 + 18;
+        r(KX - 1, 27, 7, 8, K1);
+        for (let j = 0; j < 3; j++)
+            for (let i = 0; i < 3; i++)
+                r(KX + i * 2, 28 + j * 2, 1, 1, i === 0 && j === 0 ? L1 : i === 2 && j === 1 ? K0 : S1);
+        r(KX, 34, 5, 1, S2);
+        r(KX - 1, 36, 7, 5, S1);
+        r(KX - 1, 36, 7, 1, L2);
+        r(KX + 5, 37, 1, 4, S2);
+        r(KX + 2, 37, 1, 3, K0); // щель
+        for (let k = 0; k < 5; k++)
+            r(KX + k, 38, 1, 1, k & 1 ? SINGE : AS); // шов поперёк — ровный, заводской
+        r(KX + 1, 37, 1, 1, SINGE);
+        r(KX + 3, 39, 1, 1, SINGE);
+        // ниже клавиш чёрточками нацарапан счёт кругов: пятёрка и ещё две
+        for (let k = 0; k < 4; k++)
+            r(KX - 1 + k * 2, 43, 1, 4, AS);
+        for (let k = 0; k < 7; k++)
+            r(KX - 1 + k, 46 - (k >> 1), 1, 1, L2);
+        for (let k = 0; k < 2; k++)
+            r(KX - 1 + k * 2, 49, 1, 3, S1);
+        // ── лоток выдачи: заслонка, внутри темно ──
+        r(GX, 47, GW, 5, K0);
+        r(GX + 1, 48, GW - 2, 3, NI);
+        r(GX + 1, 48, GW - 2, 1, K3);
+        r(GX + 1, 48, 3, 1, S1);
+        // ── цоколь: пинали, ржа, ножки; мох с левого угла ──
+        r(F0, G - 4, VM_FW, 3, K2);
+        r(F0, G - 4, VM_FW, 1, K3);
+        for (let x = F0; x <= F1; x++)
+            if (hh(x, 1, 515) < 0.3)
+                r(x, G - 3, 1, 1, RUST);
+        r(F0 + 7, G - 3, 3, 1, S2);
+        r(F0 + 8, G - 4, 1, 1, K1); // вмятина от ботинка
+        r(F0, G - 1, VM_FW + 4, 1, K0);
+        r(F1 + 1, G - 2, 4, 1, K0);
+        for (let k = 0; k < 8; k++) {
+            const mx = F0 + q(hh(k, 2, 517) * 6), my = G - 1 - q(hh(k, 3, 519) * 4);
+            r(mx, my, 1, 1, k & 1 ? MG : MG_D);
+        }
+        // ── велотренажёр в профиль: седло, рама, маховик с шатуном, руль приварен к углу автомата ──
+        const BIKE = [
+            '.........hh',
+            '..........f',
+            'ssss......f',
+            '.KK......f.',
+            '..p.....f..',
+            '..p....f...',
+            '...p..f....',
+            '...ooooo...',
+            '..o..c..o..',
+            '..o..ca.o..',
+            '..o...ad...',
+            '...ooooo...',
+            '...........',
+            'bbbbbbbbbb.',
+        ];
+        const BCOL = { h: AS, f: S0, s: L2, K: K1, p: S0, o: AS, c: K0, a: S1, d: L1, b: K3 };
+        const BY0 = G - BIKE.length;
+        for (let j = 0; j < BIKE.length; j++)
+            for (let i = 0; i < BIKE[j].length; i++) {
+                const ch = BIKE[j][i];
+                if (ch === '.')
+                    continue;
+                let c = BCOL[ch];
+                if (ch === 'o' && (i > 6 || j > 9))
+                    c = S1; // маховик: к свету светлее
+                if (ch === 'f' && j > 2)
+                    c = (i + j) & 1 ? S0 : S1;
+                r(i - 1, BY0 + j, 1, 1, c);
+            }
+        r(0, BY0 + 2, 1, 1, SEP);
+        r(-1, G - 1, 1, 1, K3);
+        r(8, G - 2, 1, 1, K3);
+        r(0, G - 2, 1, 1, K3); // седло потёрто, лапы опоры
+        r(F0 - 1, BY0, 1, 1, SINGE);
+        r(F0, BY0, 1, 2, SINGE);
+        r(F0, BY0 + 2, 1, 1, RUST); // руль приварен
+        for (let x = 6; x < F0; x++)
+            r(x, G - 2, 1, 1, x & 1 ? NI : K0); // провод динамо — в цоколь
+        // ── земля перед автоматом и у педалей: вытоптано ──
+        for (let k = 0; k < 9; k++)
+            r(1 + q(hh(k, 5, 521) * 32), G - 1, 1, 1, k & 1 ? K4 : K3);
+    }
+    function draw_vending(x, y) {
+        bake('vend1', x, y, -1, 0, 46, VM_G, vendBody);
+        // экран: колесо крутится, мериты набираются столбиком — и сгорают; редкий провал
+        const dt = VM_T < 0 ? 0 : Math.min(240, Math.max(0, time_js_23.t - VM_T));
+        VM_T = time_js_23.t;
+        VM_PH += dt;
+        const ox = q(x) + VM_FX + 3, oy = q(y) + 16;
+        const on = hh(Math.floor(VM_PH / 7), 3, 523) > 0.05;
+        context_js_9.X.globalAlpha = on ? 0.22 : 0.08;
+        r(ox, oy, 12, 9, L2);
+        context_js_9.X.globalAlpha = on ? 0.58 : 0.16;
+        for (const [dx, dy] of [[2, 0], [3, 0], [4, 0], [1, 1], [5, 1], [0, 2], [6, 2], [0, 3], [6, 3], [0, 4], [6, 4], [1, 5], [5, 5], [2, 6], [3, 6], [4, 6]])
+            r(ox + 1 + dx, oy + 1 + dy, 1, 1, BO); // колесо
+        const sp = Math.floor(VM_PH / 16) & 1; // спицы накрест — крутятся
+        for (const k of [-2, -1, 1, 2]) {
+            if (sp) {
+                r(ox + 4 + k, oy + 4, 1, 1, BO);
+                r(ox + 4, oy + 4 + k, 1, 1, BO);
+            }
+            else if (k === -1 || k === 1) {
+                r(ox + 4 + k, oy + 4 + k, 1, 1, BO);
+                r(ox + 4 + k, oy + 4 - k, 1, 1, BO);
+            }
+        }
+        r(ox + 4, oy + 4, 1, 1, L2);
+        const n = Math.floor(VM_PH / 50) % 6; // мериты: ноль, один… пять — и снова ноль
+        for (let k = 0; k < 5; k++)
+            r(ox + 10, oy + 7 - k * 2 + 1, 1, 1, k < n ? BO : K2);
+        context_js_9.X.globalAlpha = 1;
+    }
+    exports_105("draw_vending", draw_vending);
     return {
         setters: [
             function (context_js_9_1) {
@@ -38128,6 +38357,21 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             OV_C = '#5a5650', OV_D = '#3e3b36', OV_L = '#8a857a'; // бетон — краской эстакад колец
             OV_X0 = -1, OV_Y0 = 6, OV_W = 104, OV_H = 56; // запечённая область
             OV_CANVAS = null;
+            // ── ТОРГОВЫЙ АВТОМАТ ──
+            // «Ржавая коробка с мерцающим экраном. Под копотью — „ОБМЕН". Монетоприёмник
+            // заварен ещё на заводе, но экран работает. Правила обмена: 1. Крутите педали.
+            // 2. Получайте мериты. 3. Меняйте мериты на еду. 4. См. п. 1.» Меню: «крути —
+            // получи мериты. цикл замкнут.» Короб в три четверти: лицо, торец в тени, крыша
+            // в копоти; шапка — «ОБМЕН» под копотью штрихами; экран живой: колесо
+            // крутится, мериты набираются столбиком и сгорают; табличка правил строками;
+            // в витрине на спиралях — товар пункта обмена (футболка, книга, пластинка,
+            // плакат в трубке), худи застряло на спирали — классика; клавиши — одна
+            // затёрта до блеска; монетоприёмник заварен ровным заводским швом; на боку
+            // чёрточками счёт кругов. Слева — велотренажёр приварен рулём к автомату
+            // (нов.: правило п. 1 в железе), педаль натёрта, провод динамо — в цоколь.
+            // Свет слева, кромка пеплом справа.
+            VM_FX = 10, VM_FW = 25, VM_G = 56; // лицо: x, ширина; подножие
+            VM_T = -1, VM_PH = 0;
         }
     };
 });
@@ -38145,86 +38389,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             }
         }
     }
-    function draw_vending(x, y) {
-        // ═══ VENDING MACHINE — Nosedive rating + Merits ═══
-        context_js_10.X.globalAlpha = .3;
-        context_js_10.X.fillStyle = '#000';
-        context_js_10.X.beginPath();
-        context_js_10.X.ellipse(x + 18, y + 56, 22, 3, 0, 0, Math.PI * 2);
-        context_js_10.X.fill();
-        context_js_10.X.globalAlpha = 1;
-        // Main body
-        draw_js_7.rect(context_js_10.X, x, y, 36, 54, P.dgrey);
-        draw_js_7.rect(context_js_10.X, x + 1, y + 1, 34, 52, P.ash);
-        draw_js_7.rect(context_js_10.X, x + 2, y + 2, 32, 50, P.dstone);
-        // Rust patches
-        draw_js_7.dither(context_js_10.X, x + 3, y + 20, 8, 18, P.rust, P.ash, .35);
-        draw_js_7.dither(context_js_10.X, x + 26, y + 28, 7, 16, P.drust, P.ash, .3);
-        // Top display — flickering
-        const fl = draw_js_7.hash(0, time_js_24.t * .012, 77) > .08 ? 1 : .2;
-        context_js_10.X.globalAlpha = fl;
-        draw_js_7.rect(context_js_10.X, x + 6, y + 4, 24, 16, '#0a0a1a');
-        // "ОБМЕН" label
-        draw_js_7.rect(context_js_10.X, x + 8, y + 7, 16, 2, P.amber);
-        // Rating display — 4.7★ Nosedive style
-        context_js_10.X.globalAlpha = fl * .9;
-        draw_js_7.rect(context_js_10.X, x + 9, y + 11, 2, 2, P.gold);
-        draw_js_7.rect(context_js_10.X, x + 11, y + 11, 1, 1, P.damber); // star
-        draw_js_7.rect(context_js_10.X, x + 13, y + 11, 2, 2, P.amber); // 4
-        draw_js_7.rect(context_js_10.X, x + 16, y + 11, 1, 2, P.amber); // .
-        draw_js_7.rect(context_js_10.X, x + 18, y + 11, 2, 2, P.amber); // 7
-        context_js_10.X.globalAlpha = 1;
-        // 4 window cells with items (mice)
-        for (let i = 0; i < 4; i++) {
-            draw_js_7.rect(context_js_10.X, x + 7 + i * 7, y + 24, 5, 5, P.dgrey);
-            draw_js_7.rect(context_js_10.X, x + 8 + i * 7, y + 25, 3, 3, '#0a0a0e');
-            // One window has a mouse inside
-            if (i === 1) {
-                draw_js_7.rect(context_js_10.X, x + 9, y + 26, 2, 1, '#1a1a1a'); // mouse body
-                if (time_js_24.t % 12 < 6)
-                    draw_js_7.px(context_js_10.X, x + 9, y + 26, '#6b0f1a'); // eye
-            }
-            // Another has a coin stuck
-            if (i === 2) {
-                draw_js_7.px(context_js_10.X, x + 16, y + 27, P.gold);
-            }
-        }
-        // Keypad
-        draw_js_7.rect(context_js_10.X, x + 8, y + 32, 20, 14, '#0a0a0a');
-        for (let row = 0; row < 3; row++)
-            for (let col = 0; col < 4; col++) {
-                draw_js_7.rect(context_js_10.X, x + 9 + col * 5, y + 33 + row * 4, 3, 3, P.dgrey);
-            }
-        // Coin slot (welded shut)
-        draw_js_7.rect(context_js_10.X, x + 8, y + 48, 20, 2, '#1a1a1a');
-        context_js_10.X.fillStyle = '#6b0f1a';
-        draw_js_7.rect(context_js_10.X, x + 10, y + 48, 3, 1); // weld mark
-        draw_js_7.rect(context_js_10.X, x + 16, y + 48, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 22, y + 48, 3, 1);
-        // Bottom lip
-        draw_js_7.rect(context_js_10.X, x + 4, y + 52, 28, 2, P.amber);
-        // "PRESS TO SPIN" label (faded, broken)
-        context_js_10.X.globalAlpha = .4;
-        context_js_10.X.fillStyle = '#1a1a1a';
-        draw_js_7.rect(context_js_10.X, x + 10, y + 29, 16, 1);
-        context_js_10.X.globalAlpha = 1;
-        // Cracked screen line
-        context_js_10.X.strokeStyle = P.lgrey;
-        context_js_10.X.lineWidth = 1;
-        context_js_10.X.beginPath();
-        context_js_10.X.moveTo(x + 9, y + 5);
-        context_js_10.X.lineTo(x + 22, y + 15);
-        context_js_10.X.stroke();
-        // Small "5 ⭐" graffiti on the side
-        context_js_10.X.fillStyle = P.gold;
-        draw_js_7.px(context_js_10.X, x + 32, y + 30);
-        draw_js_7.px(context_js_10.X, x + 33, y + 30);
-        draw_js_7.px(context_js_10.X, x + 32, y + 31);
-        // Moss at base
-        draw_js_7.rect(context_js_10.X, x, y + 52, 3, 2, P.dtoxic);
-        draw_js_7.px(context_js_10.X, x + 1, y + 51, P.toxic);
-    }
-    exports_106("draw_vending", draw_vending);
     function draw_raven(x, y) {
         // ═══ RAVEN'S NEST — twisted oak with trove ═══
         // Shadow
@@ -38723,7 +38887,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_overpass": canon_js_1_1["draw_overpass"],
                     "draw_posterwall": canon_js_1_1["draw_posterwall"],
                     "draw_crypt": canon_js_1_1["draw_crypt"],
-                    "draw_graffiti": canon_js_1_1["draw_graffiti"]
+                    "draw_graffiti": canon_js_1_1["draw_graffiti"],
+                    "draw_vending": canon_js_1_1["draw_vending"]
                 });
             }
         ],
