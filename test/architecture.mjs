@@ -480,7 +480,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     SPOTS.set(draw, out);
     return out;
   };
-  test('тёплые пятна: в кадре ансамбля колец (640×360) — окна, утварь и огни доминант — не больше трёх', () => {
+  test('тёплые пятна: в любом кадре колец (640×360) — окна, утварь, огни доминант и мест — не больше трёх', () => {
     const src = [];
     for (const l of locations) {
       if (!l.archDraw || l.quiet) continue;
@@ -491,17 +491,24 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       if (l.archLight) src.push({ x: l.archX + (l.archLight.dx || 0), y: l.archGy + (l.archLight.dy || 0), who: l.name + ' (огонь доминанты)' });
     }
     for (const p of archProps) if (p.kindDraw) for (const s of spotsOf(p.kindDraw, p.w, p.h)) src.push({ x: p.x + s.dx, y: p.gy + s.dy, who: p.name || 'утварь' });
-    const bad = [];
-    for (const e of archEnsembles) {
-      const ar = locations.filter(l => l.archEns === e.id);
-      if (!ar.length) continue;
-      const cx = ar.reduce((s, l) => s + l.archX, 0) / ar.length, cy = ar.reduce((s, l) => s + l.archGy, 0) / ar.length;
-      const cl = [];
-      for (const q of src) if (Math.abs(q.x - cx) < 320 && Math.abs(q.y - cy) < 180 && !cl.some(k => Math.hypot(k.x - q.x, k.y - q.y) < 12)) cl.push(q);
-      if (cl.length > 3) bad.push(`${e.ring}:${e.side}:${e.kind} — ${cl.map(k => k.who).join(', ')}`);
+    // свет мест (газовый фонарь у решётки, костры стоянок) — тёплый, если красный перевешивает синий;
+    // кольцо огня — край мира, сплошная стена пламени, а не пятно: его в счёт не берём
+    for (const l of locations) if (l.light && !l.quiet && !l.archDraw && l.light.color && l.light.color[0] > l.light.color[2] + 80 && ringAt(l.x, l.y) >= 1)
+      src.push({ x: l.x + (l.light.dx ?? l.w / 2), y: l.y + (l.light.dy ?? l.h / 2), who: 'свет места ' + l.name });
+    // камера ходит за игроком: кадр — любой 640×360. Худший кадр можно сдвинуть так, что левый край
+    // ляжет на одно пятно, а верхний — на другое: перебираем эти пары
+    const bad = new Map();
+    for (const p of src) {
+      const col = src.filter(q => q.x >= p.x && q.x < p.x + 640);
+      for (const r of col) {
+        if (r.y > p.y || r.y <= p.y - 360) continue;
+        const cl = [];
+        for (const q of col) if (q.y >= r.y && q.y < r.y + 360 && !cl.some(k => Math.hypot(k.x - q.x, k.y - q.y) < 12)) cl.push(q);
+        if (cl.length > 3) bad.set(cl.map(k => k.who).sort().join(', '), `(${Math.round(p.x + 320)},${Math.round(r.y + 180)}) ${cl.length}: ${cl.map(k => k.who).join(', ')}`);
+      }
     }
     assert(src.length > 30, `тёплых окон и огней подозрительно мало: ${src.length}`);
-    eq(bad.length, 0, 'больше трёх тёплых пятен: ' + bad.join(' | '));
+    eq(bad.size, 0, 'больше трёх тёплых пятен: ' + [...bad.values()].join(' | '));
   });
 }
 
@@ -518,6 +525,30 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     const stat = [...kind.values()].filter(k => !k.live).length;
     assert(stat >= 50, `неподвижных видов мало: ${stat}`);
     assert([...kind.values()].every(k => k.live || k.shared !== undefined), 'вид без решения');
+  });
+  test('запекание: признанное неподвижным не меняется ни в одно мгновение (развёртка t по 3 до 1200 и дальние)', () => {
+    B._resetBake();
+    const rec = (draw, x, gy, t) => {
+      const log = [], c = fakeCtx();
+      const p = new Proxy(c, {
+        get: (o, k) => typeof o[k] === 'function' ? (...a) => { log.push(k + a.join()); return o[k](...a); } : o[k],
+        set: (o, k, v) => { log.push(k + '=' + v); o[k] = v; return true; },
+      });
+      draw(p, x, gy, t);
+      return log.join(';');
+    };
+    const seen = new Set(), moved = [];
+    for (const l of arch) {
+      if (seen.has(l.archDraw) || B.kindOf(l.archDraw, l.archX, l.archGy).live) continue;
+      seen.add(l.archDraw);
+      const base = rec(l.archDraw, l.archX, l.archGy, 0);
+      for (let t = 3; t < 1200 + 40; t += 3) {
+        const tt = t < 1200 ? t : 1e6 + t * 7919;
+        if (rec(l.archDraw, l.archX, l.archGy, tt) !== base) { moved.push(`${l.name} (t=${tt})`); break; }
+      }
+    }
+    assert(seen.size >= 50, `неподвижных видов мало: ${seen.size}`);
+    eq(moved.length, 0, 'запеклось бы живое: ' + moved.join(', '));
   });
   test('запекание: неподвижная постройка — один холст, дальше картинкой; живая — рисуется сама; без холста — живой', () => {
     B._resetBake();

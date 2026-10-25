@@ -88,7 +88,7 @@ export const SEGMENTS = [
   {
     id: 'lightgarden', n: 3, range: [820, 1240],
     name: 'свет и сад', era: 'VI–XVI вв.',
-    palette: { sky: '#3a2a3a', ground: '#4e4a32', lamp: 'lantern', dust: '#3D4A3A' },
+    palette: { sky: '#352f2e', ground: '#4e4a32', lamp: 'lantern', dust: '#3D4A3A' },
     signs: [
       { x: 860, name: 'дом без видимого источника света', form: 'building',
         facade: `Светло. Лампы нет. На полках — Авиценна, Сухраварди, Садра. Терминал внутри: .ishraq`,
