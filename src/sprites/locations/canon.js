@@ -1963,10 +1963,10 @@ export function draw_junkyard(x, y) {
 // нет: краска выцвела в кость-песок) поверх ржи, ржа гуще к низу и у арок;
 // чёрные отбойные полосы по борту, между ними трафарет штрихами. Окна в чёрных
 // рамах, створки сдвинуты; в окнах спинки и ранцы, разные; два стекла выбиты.
-// Дверь-гармошка: в стекле — инструкция с пробоиной; за лобовым — противогаз
-// на спинке (два стекла-глаза, коробка). Знак «стоп» сложен по борту. Рупор на
-// крыше — раз в одиннадцать секунд дрожит. Колёса спущены — осел, трава в
-// арках. Свет слева, кромка пеплом справа.
+// Дверь-гармошка: в стекле — инструкция с пробоиной; в окне водителя — спинка
+// переднего сиденья и на ней противогаз (два стекла-глаза, коробка). Рупор на
+// крыше — раз в одиннадцать секунд дрожит. Колёса спущены — осел: переднее под
+// капотом, заднее под кормой. Свет слева, кромка пеплом справа.
 const BUS_G = 40;
 function busBody() {
   const G = BUS_G, X0 = 11, X1 = 67, TOP = 8, BOT = 33;
@@ -1985,12 +1985,12 @@ function busBody() {
   for (let k = 0; k < 10; k++) { const sx = X0 + 2 + q(hh(k, 3, 585) * 52), sy = 20 + q(hh(k, 4, 587) * 3); for (let i = 0; i < 2 + (k % 3); i++) r(sx, sy + i, 1, 1, BR2); }   // потёки из-под окон
   r(X0, TOP, 1, BOT - TOP + 1, L1); r(X1, TOP, 1, BOT - TOP + 1, AS);
   // ── окна в чёрных рамах; спинки и ранцы; два стекла выбиты ──
-  const BAGS = [BR2, MG_D, BLOOD, S0, K4, MG, SEP];
-  for (let k = 0; k < 7; k++) {
-    const wx = 19 + k * 7;
+  const BAGS = [BR2, MG_D, BLOOD, S0, K4];
+  for (let k = 0; k < 5; k++) {
+    const wx = 26 + k * 7;
     r(wx - 1, TOP + 2, 7, 9, K0);                                        // рама
     r(wx, TOP + 3, 5, 7, NI);
-    const broken = k === 2 || k === 5;
+    const broken = k === 1 || k === 3;
     if (!broken) { r(wx, TOP + 3, 5, 1, K2); r(wx + 2, TOP + 3, 1, 3, K1); r(wx + 4, TOP + 4, 1, 1, AS); }   // створки сдвинуты, блик
     else { r(wx, TOP + 3, 1, 2, AS); r(wx + 4, TOP + 8, 1, 1, AS); }      // осколки по краю
     r(wx, TOP + 7, 5, 3, K3); r(wx, TOP + 7, 5, 1, K4);                  // спинка сиденья
@@ -1999,52 +1999,50 @@ function busBody() {
   }
   // ── отбойные полосы, между ними трафарет «ШКОЛА №1» штрихами ──
   for (const ry of [TOP + 12, TOP + 18, TOP + 22]) { r(X0, ry, X1 - X0 + 1, 1, K0); r(X0, ry + 1, X1 - X0 + 1, 1, K2); }
-  for (let k = 0; k < 8; k++) { const lx = 25 + k * 4; if (k === 5) continue; r(lx, TOP + 14, 3, 1, K1); r(lx + (k & 1 ? 2 : 0), TOP + 15, 1, 1, K1); r(lx, TOP + 16, 3, 1, hh(k, 9, 589) < 0.4 ? L2 : K1); }
-  // знак «стоп» сложен по борту: восьмиугольник, кайма костью
-  const SX = X0 + 3, SY = TOP + 13;
-  r(SX + 1, SY, 4, 6, KV); r(SX, SY + 1, 6, 4, KV); r(SX + 1, SY, 4, 1, BO); r(SX, SY + 1, 1, 4, BO); r(SX + 2, SY + 2, 2, 2, BO); r(SX + 5, SY + 2, 1, 2, BLOOD);
-  // ── перёд: кабина, лобовое, противогаз на спинке, дверь-гармошка ──
+  for (let k = 0; k < 8; k++) { const lx = 26 + k * 4; if (k === 5) continue; r(lx, TOP + 14, 3, 1, K1); r(lx + (k & 1 ? 2 : 0), TOP + 15, 1, 1, K1); r(lx, TOP + 16, 3, 1, hh(k, 9, 589) < 0.4 ? L2 : K1); }
+  // ── перёд: кабина, окно водителя — спинка сиденья и на ней противогаз; капот; дверь-гармошка ──
   r(X0 - 1, TOP, 1, 18, BO);
   r(X0 + 1, TOP + 2, 5, 9, K0); r(X0 + 2, TOP + 3, 3, 7, NI);         // окно водителя
-  r(X0 + 2, TOP + 5, 3, 3, S0); r(X0 + 2, TOP + 5, 3, 1, S1); r(X0 + 2, TOP + 6, 1, 1, AS); r(X0 + 4, TOP + 6, 1, 1, AS); r(X0 + 3, TOP + 8, 1, 2, MG_D);   // ГП-5: стёкла, коробка
-  // капот: ниже кабины, решётка, фара, бампер
+  r(X0 + 2, TOP + 7, 3, 3, K3); r(X0 + 2, TOP + 7, 3, 1, K4);          // спинка переднего сиденья
+  r(X0 + 3, TOP + 4, 1, 1, K1);                                          // ремешок
+  r(X0 + 2, TOP + 5, 3, 3, S0); r(X0 + 2, TOP + 5, 3, 1, S1); r(X0 + 2, TOP + 6, 1, 1, AS); r(X0 + 4, TOP + 6, 1, 1, AS); r(X0 + 3, TOP + 8, 1, 2, MG_D);   // ГП-5 на спинке: стёкла, коробка
+  // капот: ниже кабины, решётка, фара, бампер у носа
   const HX = 1;
   for (let x = HX; x < X0; x++) { const top = TOP + 9 + (x < HX + 2 ? 1 : 0); for (let y = top; y <= BOT; y++) { const h = hh(x, y, 591); r(x, y, 1, 1, y === top ? L1 : y === top + 1 ? L2 : h < 0.08 + Math.max(0, y - BOT + 7) * 0.12 ? RUST : x < HX + 5 ? L2 : S1); } }
   r(HX, TOP + 12, X0 - HX, 1, K2);                                        // шов капота
-  for (let y = TOP + 14; y < BOT - 3; y++) for (let x = HX; x < HX + 4; x++) r(x, y, 1, 1, (x - HX) & 1 ? K3 : K1);   // решётка
+  for (let y = TOP + 13; y < BOT - 7; y++) for (let x = HX; x < HX + 4; x++) r(x, y, 1, 1, (x - HX) & 1 ? K3 : K1);   // решётка
   r(HX + 4, TOP + 13, 2, 2, S2); r(HX + 4, TOP + 13, 1, 1, AS);          // фара — мёртвая
-  r(0, BOT - 2, X0 + 1, 3, K0); r(0, BOT - 2, X0 + 1, 1, K3);            // бампер
+  r(0, BOT - 2, 3, 3, K0); r(0, BOT - 2, 3, 1, K3);                      // бампер — на носу
   r(X0 - 3, TOP + 7, 3, 1, K2); r(X0 - 4, TOP + 5, 1, 4, AS); r(X0 - 4, TOP + 5, 1, 1, L2);   // зеркало на кронштейне
   // дверь-гармошка: две створки, стекло; инструкция прошита пулей
-  const DX = X0 + 7;
+  const DX = X0 + 8;
   r(DX - 1, TOP + 1, 1, BOT - TOP, K0); r(DX + 5, TOP + 1, 1, BOT - TOP, K0);
   for (const dx of [0, 3]) { r(DX + dx, TOP + 2, 2, 20, K1); r(DX + dx, TOP + 2, 1, 20, K2); r(DX + dx, TOP + 23, 2, 7, RUST); }
   r(DX + 2, TOP + 1, 1, 30, K0);
-  r(DX + 3, TOP + 6, 2, 4, L1); r(DX + 3, TOP + 6, 2, 1, BO); r(DX + 4, TOP + 7, 1, 1, NI); r(DX + 3, TOP + 8, 1, 1, K2);   // инструкция, пробоина
-  // зад: аварийная дверь, фонари погасли
+  r(DX + 3, TOP + 6, 2, 4, L1); r(DX + 3, TOP + 6, 2, 1, BO); r(DX + 4, TOP + 8, 1, 1, NI);   // инструкция, пробоина
+  // зад: аварийная дверь
   r(X1 - 5, TOP + 2, 4, 20, K1); r(X1 - 4, TOP + 3, 2, 7, NI); r(X1 - 4, TOP + 3, 2, 1, K2); r(X1 - 2, TOP + 12, 1, 3, S2);
-  r(X1 - 1, TOP + 24, 1, 2, BLOOD);
   // рупор на крыше: кронштейн, раструб
   r(55, TOP - 6, 1, 3, K1); r(56, TOP - 7, 4, 3, S0); r(56, TOP - 7, 1, 3, S1); r(59, TOP - 8, 1, 5, S2); r(58, TOP - 7, 1, 1, L2);
-  // ── арки, колёса спущены — осел; трава в арках ──
-  for (const wx of [15, 53]) {
-    const cx = wx + 4;
-    for (let x = wx - 2; x <= wx + 10; x++) { const top = BOT - q(Math.sqrt(Math.max(0, 36 - (x - cx) * (x - cx)))); for (let y = top; y <= BOT; y++) r(x, y, 1, 1, NI); if (top < BOT) r(x, top, 1, 1, K0); }   // арка
-    for (let dy = -4; dy <= 4; dy++) { const yy = BOT + 1 + dy; if (yy > G - 2) continue; const hw = q(Math.sqrt(16 - Math.min(16, dy * dy))) + (dy > 1 ? 1 : 0); r(cx - hw, yy, 2 * hw + 1, 1, K0); r(cx - hw, yy, 1, 1, dy < 0 ? K3 : K2); }   // шина: сплющена книзу
+  // ── днище, арки, колёса спущены — осел: переднее — под капотом, заднее — под кормой ──
+  const WH = [8, 57];
+  for (let x = X0; x <= X1; x++) if (!WH.some(cx => Math.abs(x - cx) <= 6)) r(x, BOT + 1, 1, 1, K1);   // днище
+  for (const cx of WH) {
+    for (let x = cx - 6; x <= cx + 6; x++) { const top = BOT - q(Math.sqrt(Math.max(0, 36 - (x - cx) * (x - cx)))); for (let y = top; y <= BOT; y++) r(x, y, 1, 1, NI); if (top < BOT) r(x, top, 1, 1, K0); }   // арка
+    for (let dy = -4; dy <= 4; dy++) { const yy = BOT + 1 + dy; if (yy > G - 2) continue; const hw = q(Math.sqrt(16 - Math.min(16, dy * dy))) + (dy > 1 ? 1 : 0); r(cx - hw, yy, 2 * hw + 1, 1, K0); r(cx - hw, yy, 1, 1, dy < 0 ? K3 : K2); r(cx + hw, yy, 1, 1, K2); }   // шина: сплющена книзу, протектор по кромке
     r(cx - 1, BOT, 3, 3, S2); r(cx - 1, BOT, 1, 1, AS); r(cx, BOT + 1, 1, 1, K1);   // колпак
     r(cx - 5, G - 2, 11, 1, K0);                                           // села в землю
-    for (let k = 0; k < 4; k++) r(wx + k * 3, G - 3 - (k & 1), 1, 2 + (k & 1), k & 1 ? MG : MG_D);   // трава у колеса
+    for (const gx of [cx - 7, cx + 7, cx + 8]) r(gx, G - 4, 1, 3, MG_D);  // трава у колеса — сбоку
   }
-  r(X0, BOT + 1, X1 - X0 + 1, 1, K1);                                    // днище
-  for (let k = 0; k < 34; k++) { const xx = q(hh(k, 13, 593) * 70); if ((xx > 13 && xx < 26) || (xx > 51 && xx < 64)) continue; r(xx, G - 2 - q(hh(k, 13, 595) * 3), 1, 2 + q(hh(k, 13, 595) * 2), hh(k, 13, 597) < 0.5 ? MG : MG_D); }
+  for (let k = 0; k < 34; k++) { const xx = q(hh(k, 13, 593) * 70); if (WH.some(cx => Math.abs(xx - cx) <= 7)) continue; r(xx, G - 2 - q(hh(k, 13, 595) * 3), 1, 2 + q(hh(k, 13, 595) * 2), hh(k, 13, 597) < 0.5 ? MG : MG_D); }
   r(0, G - 1, 70, 1, K1);
 }
 let BUS_T = -1, BUS_PH = 0;
 export function draw_bus(x, y) {
-  bake('bus5', x, y, 0, -1, 70, BUS_G + 1, busBody);
+  bake('bus6', x, y, 0, -1, 70, BUS_G + 1, busBody);
   // раз в одиннадцать секунд — «учебная тревога»: рупор дрожит
   const dt = BUS_T < 0 ? 0 : Math.min(240, Math.max(0, t - BUS_T)); BUS_T = t; BUS_PH += dt;
-  if (BUS_PH % 660 < 50 && Math.floor(BUS_PH / 4) & 1) { r(q(x) + 60, q(y) + 0, 1, 5, AS); r(q(x) + 61, q(y) + 1, 1, 3, S2); }
+  if (BUS_PH % 660 < 50 && Math.floor(BUS_PH / 8) & 1) { X.globalAlpha = 0.58; r(q(x) + 60, q(y) + 0, 1, 5, AS); r(q(x) + 61, q(y) + 1, 1, 3, S2); X.globalAlpha = 1; }
 }
 
 // ── УПАВШИЙ БИЛБОРД ──
