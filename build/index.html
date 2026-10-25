@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='9cb9fef · 2026-10-25';console.log('[оттиск]', '9cb9fef · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='075c04f · 2026-10-25';console.log('[оттиск]', '075c04f · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6665,6 +6665,7 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
                 const v = hh(cell, row, s + 1);
                 return v < 0.3 ? -1 : v > 0.75 ? 1 : 0;
             }
+            case MAT.BAKED:
             case MAT.BRICK: {
                 const c = Math.floor(y / 3), o = (c & 1) * 3;
                 if (y % 3 === 2 || (x + o) % 6 === 5)
@@ -6943,6 +6944,7 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
                 WATTLE: 22, // плетень: колья и прутья вперевивку
                 FELT: 23, // войлок: шерсть свалянная, без швов, ворс пятнами
                 SAND: 24, // песок: барханы, рябь ветра наискось
+                BAKED: 25, // обожжённый кирпич светлый (Вавилон): облицовка по сырцу
             });
             // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
             exports_29("FORM", FORM = { FLAT: 0, CYL: 1, FLUTE: 2 });
@@ -6969,6 +6971,7 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
             RAMP[MAT.SANDSTONE] = ramp(mix(mix(SEP, BO, 0.42), KV, 0.05));
             RAMP[MAT.RAMMED] = ramp(mix(mix(SEP, BO, 0.3), S0, 0.25));
             RAMP[MAT.WATTLE] = ramp(mix(SEP, NI, 0.1), mix(BO, SEP, 0.2));
+            RAMP[MAT.BAKED] = ramp(mix(mix(SEP, BO, 0.38), KV, 0.08), mix(BO, KV, 0.08));
             RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
             RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
             RIM = AS; // кромка справа — пеплом (канон)
@@ -7222,15 +7225,15 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             px(K3, 90 - 2 * k + (k >> 1), 77 + k, Math.min(3 + 2 * k, 96 - (90 - 2 * k + (k >> 1))));
             px(AS, 90 - 2 * k, 77 + k);
         }
-        px(K0, 18, 12, 1, 4);
-        px(K0, 19, 9, 1, 3);
-        px(K0, 20, 7, 2, 2);
-        px(K0, 22, 9, 4, 1); // сосна над пропастью
-        px(MG, 16, 4, 8, 2);
-        px(MG, 23, 7, 7, 2);
-        px(MG, 19, 2, 4, 1);
-        px(AS, 17, 4, 4, 1);
-        px(AS, 24, 7, 3, 1);
+        px(K0, 16, 13, 1, 4);
+        px(K0, 17, 10, 1, 3);
+        px(K0, 18, 8, 2, 2);
+        px(K0, 20, 10, 4, 1); // сосна: корень в скале, клонится над пропастью
+        px(MG, 14, 4, 8, 2);
+        px(MG, 21, 7, 7, 2);
+        px(MG, 17, 2, 4, 1);
+        px(AS, 15, 4, 4, 1);
+        px(AS, 22, 7, 3, 1);
         px(K3, 67, 76, 4, 3);
         px(L2, 67, 76, 4, 1);
         px(K3, 71, 77); // чайник
@@ -7270,9 +7273,9 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         kit_js_1.paint(c, X0, Y0, pass2.P, { seed: 59, chip: 0.06, cracks: 3 });
         const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
         for (const bx of [16, 19, 22]) {
-            px(L2, bx, 71, 3, 1);
-            px(AS, bx + 2, 71);
-        } // три чаши
+            px(L1, bx, 70, 2, 1);
+            px(K3, bx, 71, 2, 1);
+        } // три чаши: кромка светлая, тулово тёмное
         for (const [dx, len] of [[75, 9], [77, 12], [79, 8], [89, 10], [91, 13], [93, 9]])
             px(MG, dx, 58, 1, len); // ветви ивы вниз
     }
@@ -7544,7 +7547,8 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         px(L1, 40, 57, 5, 1); // лыжня
     }
     // Вторая вежа (#2) — каркас без покрышки: жерди сведены вверху, дёрн снят и сложен
-    // рядом пластами травой вниз; в середине очаг из трёх камней, зола свежая, огня нет.
+    // рядом пластами травой вниз; в середине очаг из трёх камней, зола свежая, огня нет;
+    // на шесте за каркасом бубна нет — светлое пятно коры и целая обвязка.
     function vezha2(c, X, G) {
         const W = 64, H = 58, vx = 21;
         if (!vezha2.P) {
@@ -7557,6 +7561,7 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
                 P.box(x0, y, w, 2, kit_js_1.MAT.MUD);
                 P.box(x0, y + 2, w, 1, kit_js_1.MAT.MOSS);
             }
+            P.box(30, 12, 2, 46, kit_js_1.MAT.TIMBER); // шест за каркасом
         }
         const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
         kit_js_1.paint(c, X0, Y0, vezha2.P, { seed: 57, snow: 0.6, chip: 0.03, ao: 1 });
@@ -7567,6 +7572,9 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         r(c, AS, x + 2, top - 3, 1, 3); // концы над сводом
         r(c, AS, x - 2, g - 1, 4, 1);
         r(c, L1, x - 1, g - 2, 2, 1); // зола свежая
+        r(c, L1, X0 + 30, Y0 + 26, 2, 8);
+        r(c, K1, X0 + 30, Y0 + 25, 2, 1);
+        r(c, K1, X0 + 30, Y0 + 34, 2, 1); // где висел бубен: кора светлее, обвязка цела
     }
     // ── РАВНИНА · немая степь ──────────────────────────────────────────
     // Курган — пологий, с крепидой из неровных камней; на макушке каменная баба
@@ -7594,8 +7602,8 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         r(c, BO, X0 + 52, Y0 + 12, 5, 2);
         r(c, L2, X0 + 53, Y0 + 14, 3, 1); // чаша цела
     }
-    // Скифская кибитка: войлок на дугах — длинный свод на платформе, полог сзади
-    // опущен и завязан, одна аппликация-олень; колёса — сплошные диски из досок;
+    // Скифская кибитка: войлок на дугах — длинный свод на платформе, передний полог
+    // опущен, задний подвязан скаткой (выходят сзади), одна аппликация-олень; колёса — сплошные диски из досок;
     // у дышла ярмо. Рядом тёплое кострище — хозяева отошли час назад.
     function kibitkaBody(c, X, G) {
         const W = 64, H = 40;
@@ -7607,7 +7615,9 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             P.box(5, 29, 1, 2, kit_js_1.MAT.TIMBER); // ярмо
             P.box(15, 27, 36, 3, kit_js_1.MAT.TIMBER); // платформа
             P.poly([[17, 27], [17, 13], [19, 8], [23, 5], [29, 4], [37, 4], [43, 5], [47, 8], [49, 13], [49, 27]], kit_js_1.MAT.FELT); // войлок на дугах
-            P.box(43, 11, 6, 16, kit_js_1.MAT.FELT); // полог опущен
+            P.box(17, 11, 6, 16, kit_js_1.MAT.FELT); // передний полог опущен
+            P.cut(47, 12, 2, 15);
+            P.box(44, 9, 6, 3, kit_js_1.MAT.FELT); // задний подвязан скаткой: выход
             for (const wx of [22, 43]) { // колёса-диски
                 const pts = [];
                 for (let k = 0; k < 16; k++) {
@@ -7624,7 +7634,8 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         px(hoop, 24, 6, 1, 21);
         px(hoop, 31, 5, 1, 22);
         px(hoop, 38, 5, 1, 22); // дуги под войлоком
-        px(L1, 45, 19, 1, 2); // завязка полога
+        px(L1, 19, 19, 1, 2);
+        px(L1, 46, 10); // завязки
         for (const [dx, dy, w] of [[3, 0, 1], [5, 0, 1], [7, 0, 1], [3, 1, 5], [0, 2, 2], [3, 2, 1], [1, 3, 6], [2, 4, 1], [4, 4, 1]])
             px(CI_F, 24 + dx, 16 + dy, w, 1); // олень звериного стиля
         for (const wx of [22, 43]) {
@@ -7948,7 +7959,8 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
     }
     // ── ДОМИНАНТА · юг ─────────────────────────────────────────────────
     // Зиккурат Этеменанки (Вавилон, Набопаласар и Навуходоносор II): шесть уступов
-    // сырцовой массы почти отвесными стенами, лопатки ритмом, пояса камышовых циновок
+    // почти отвесными стенами — сырцовое ядро в облицовке обожжённым кирпичом (где она
+    // осыпалась, виден сырец), лопатки ритмом, пояса камышовых циновок
     // тёмными швами. С юга три лестницы: главная в лоб до второго уступа, у подножия
     // ворота в рост; две боковые — вдоль фаса до первого уступа (их, по раскопкам,
     // считают доходившими до половины высоты). Выше — узкий марш до храма с зубцами
@@ -7961,7 +7973,7 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             let b = H;
             const tops = [];
             for (const [w, h] of T) {
-                P.trap(cx - w, cx + w - 1, cx - w + 1, cx + w - 2, b - h, b - 1, kit_js_1.MAT.MUD);
+                P.trap(cx - w, cx + w - 1, cx - w + 1, cx + w - 2, b - h, b - 1, kit_js_1.MAT.BAKED);
                 tops.push([b - h, b, w]);
                 b -= h;
             }
@@ -7969,8 +7981,13 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
                 const [top, bot, w] = tops[i];
                 for (let k = -w + 6; k <= w - 6; k += step)
                     if (Math.abs(k) > 12)
-                        P.box(cx + k - 1, top + 2, pw, bot - top - 2, kit_js_1.MAT.MUD);
+                        P.box(cx + k - 1, top + 2, pw, bot - top - 2, kit_js_1.MAT.BAKED);
             }
+            // где облицовка осыпалась — сырец
+            P.poly([[20, 128], [27, 126], [31, 131], [29, 140], [22, 142], [18, 135]], kit_js_1.MAT.MUD);
+            P.poly([[121, 133], [128, 131], [131, 138], [126, 146], [120, 142]], kit_js_1.MAT.MUD);
+            P.poly([[108, 97], [115, 96], [117, 103], [111, 106]], kit_js_1.MAT.MUD);
+            P.poly([[40, 75], [46, 74], [47, 80], [42, 82]], kit_js_1.MAT.MUD);
             for (const [top, bot, w] of tops)
                 for (let y = top + 4; y < bot - 2; y += 7)
                     P.cut(cx - w + 2, y, 2 * w - 4, 1); // циновки
@@ -8129,7 +8146,7 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
                     name: 'зиккурат Этеменанки', side: 'south', w: 150, h: 150,
                     light: { dx: 0, dy: -132, r: 80 },
                     draw: etemenanki,
-                    life: { birds: [[-72, -63, -32]] },
+                    life: { birds: [[-72, -63, -31]] },
                 },
                 south: [
                     { name: 'пилон с обелиском', w: 96, h: 88, draw: pylon, draw2: pylon2, life: { flag: [[25, -88, 5, 'K']] } },
@@ -19934,7 +19951,7 @@ System.register("render/context", [], function (exports_50, context_50) {
 });
 System.register("world/inscriptions", ["core/time", "render/context", "render/scaler", "content/eggs_transfer"], function (exports_51, context_51) {
     "use strict";
-    var time_js_5, context_js_1, scaler_js_10, P, hiddenInscriptions, eggs_transfer_js_2, wallProx, byId, locOf, revealedOf;
+    var time_js_5, context_js_1, scaler_js_10, P, hiddenInscriptions, eggs_transfer_js_2, wallProx, byId, locOf, revealedOf, MASKS, PLACES, _scribble, _wallMask;
     var __moduleName = context_51 && context_51.id;
     function updateProximity(player, locations) {
         for (const locId of Object.keys(hiddenInscriptions)) {
@@ -19976,6 +19993,147 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             px += 2 + ((h >> 5) & 1);
         }
     }
+    // ширина строки штрихами — та же, что у scribble (пробел 3, знак 2–3 точки)
+    function strokeW(text, seed) {
+        let px = 0;
+        for (let k = 0; k < text.length; k++) {
+            if (text[k] === ' ') {
+                px += 3;
+                continue;
+            }
+            let h = (seed * 131 + k * 977 + text.charCodeAt(k) * 61) | 0;
+            h = Math.imul(h ^ (h >>> 13), 1274126177);
+            h = (h ^ (h >>> 16)) >>> 0;
+            px += 2 + ((h >> 5) & 1);
+        }
+        return px;
+    }
+    function lum(c) {
+        if (typeof c !== 'string')
+            return 128;
+        let m = c.match(/^#([0-9a-f]{6})$/i);
+        if (m) {
+            const n = parseInt(m[1], 16);
+            return ((n >> 16 & 255) + (n >> 8 & 255) + (n & 255)) / 3;
+        }
+        if ((m = c.match(/^#([0-9a-f]{3})$/i)))
+            return [...m[1]].reduce((a, h) => a + parseInt(h + h, 16), 0) / 3;
+        if ((m = c.match(/^rgba?\(([^)]+)\)/))) {
+            const v = m[1].split(',').map(Number);
+            return (v[0] + v[1] + v[2]) / 3;
+        }
+        return 128;
+    }
+    function wallMask(l) {
+        const key = l.archDraw;
+        let byDim = MASKS.get(key);
+        if (!byDim)
+            MASKS.set(key, byDim = new Map());
+        const dk = l.w + 'x' + l.h;
+        if (byDim.has(dk))
+            return byDim.get(dk);
+        const W = l.w, H = l.h, M = new Int8Array(W * H).fill(-1); // -1 пусто, 0 почти чёрное, 1 тёмное, 2 светлое
+        const st = { fillStyle: '#000', globalAlpha: 1 };
+        let tx = 0, ty = 0;
+        const stack = [];
+        const ctx = new Proxy(st, {
+            get(o, k) {
+                if (k in o)
+                    return o[k];
+                if (k === 'fillRect')
+                    return (x, y, w, h) => {
+                        if (o.globalAlpha < 0.5)
+                            return;
+                        const L = lum(o.fillStyle), v = L > 40 ? 2 : L > 18 ? 1 : 0;
+                        const x0 = Math.max(0, Math.round(x + tx - l.x)), y0 = Math.max(0, Math.round(y + ty - l.y));
+                        const x1 = Math.min(W, Math.round(x + w + tx - l.x)), y1 = Math.min(H, Math.round(y + h + ty - l.y));
+                        for (let j = y0; j < y1; j++)
+                            for (let i = x0; i < x1; i++)
+                                M[j * W + i] = v;
+                    };
+                if (k === 'translate')
+                    return (a, b) => { tx += a; ty += b; };
+                if (k === 'save')
+                    return () => stack.push([tx, ty, o.globalAlpha, o.fillStyle]);
+                if (k === 'restore')
+                    return () => { const v = stack.pop(); if (v)
+                        [tx, ty, o.globalAlpha, o.fillStyle] = v; };
+                if (k === 'setTransform')
+                    return (a, b, c, d, e, f) => { tx = e || 0; ty = f || 0; };
+                if (k === 'measureText')
+                    return () => ({ width: 0 });
+                if (k === 'createLinearGradient' || k === 'createRadialGradient')
+                    return () => ({ addColorStop() { } });
+                if (k === 'getImageData')
+                    return (a, b, w, h) => ({ data: new Uint8ClampedArray(Math.max(0, w * h * 4)) });
+                if (k === 'canvas')
+                    return { width: 0, height: 0 };
+                return () => { };
+            },
+            set(o, k, v) { o[k] = v; return true; },
+        });
+        try {
+            l.archDraw(ctx, l.archX, l.archGy, 0);
+        }
+        catch (e) { /* без карты — по рамке */ }
+        byDim.set(dk, M);
+        return M;
+    }
+    function placeLines(l, lines) {
+        const W = l.w, H = l.h, M = wallMask(l), out = [], used = new Uint8Array(H);
+        for (let i = 0; i < lines.length; i++) {
+            const need = strokeW(lines[i], i + l.id.length * 7);
+            let best = null;
+            for (const lo of [2, 1, 0]) { // светлая стена, тёмное тело, хоть что-то, но не воздух
+                const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++)
+                    if (M[j * W + x] >= lo)
+                        n++; return n >= 3; };
+                if (best && best.take >= Math.min(need, 24))
+                    break;
+                for (let b = H - 5; b >= 0; b--) {
+                    let clash = false;
+                    for (let j = b - 1; j < b + 5; j++)
+                        if (j >= 0 && j < H && used[j])
+                            clash = true;
+                    if (clash)
+                        continue;
+                    for (let x = 0; x < W;) {
+                        if (!ok(x, b)) {
+                            x++;
+                            continue;
+                        }
+                        let e = x;
+                        while (e < W && ok(e, b))
+                            e++;
+                        const L = e - x, take = Math.min(L, need);
+                        if (L >= 10) {
+                            const score = take + (take >= need ? 20 : 0) + 6 * b / H - (b < H * 0.3 ? 12 : 0); // верх — только если ниже негде
+                            if (!best || score > best.score)
+                                best = { score, x0: x + ((L - take) >> 1), b, take };
+                        }
+                        x = e;
+                    }
+                }
+            }
+            if (best) {
+                for (let j = best.b - 1; j < best.b + 5; j++)
+                    if (j >= 0 && j < H)
+                        used[j] = 1;
+                out.push({ lx: l.x + best.x0, ly: l.y + best.b + 4, mw: Math.max(12, best.take) });
+            }
+            else {
+                out.push({ lx: l.x + 3 + (i % 2) * Math.max(0, W - 60), ly: l.y + Math.round(H * 0.62) + i * 6, mw: Math.max(12, W - 8) });
+            }
+        }
+        return out;
+    }
+    function wallPlace(l, i) {
+        let p = PLACES.get(l.id);
+        if (!p || p.draw !== l.archDraw)
+            PLACES.set(l.id, p = { draw: l.archDraw, at: placeLines(l, hiddenInscriptions[l.id] || []) });
+        return p.at[i] || p.at[p.at.length - 1];
+    }
+    exports_51("wallPlace", wallPlace);
     function draw(camera, locations) {
         const ctx = context_js_1.X;
         for (const locId of Object.keys(hiddenInscriptions)) {
@@ -20001,13 +20159,12 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
                     (locId === 'graffiti' ? P.crimson :
                         (locId === 'church' ? P.damber : P.bone));
                 // на постройке эпохи — по стене, в нижней трети, строка под строкой
-                const onWall = !!l.archDraw;
-                const lx = onWall ? l.x + 3 + (i % 2) * Math.max(0, l.w - 60) : l.x + 4 + (i % 2) * (l.w - 50);
-                const ly = onWall ? l.y + Math.round(l.h * 0.62) + i * 6 : l.y - 8 + Math.floor(i / 2) * 7;
-                if (onWall)
-                    scribble(ctx, lines[i], lx, ly, i + locId.length * 7, Math.max(12, l.w - 8));
+                if (l.archDraw) {
+                    const w = wallPlace(l, i);
+                    scribble(ctx, lines[i], w.lx, w.ly, i + locId.length * 7, w.mw);
+                }
                 else
-                    ctx.fillText(lines[i], lx, ly);
+                    ctx.fillText(lines[i], l.x + 4 + (i % 2) * (l.w - 50), l.y - 8 + Math.floor(i / 2) * 7);
                 ctx.globalAlpha = 1;
             }
         }
@@ -20057,6 +20214,16 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             };
             // сколько строк уже проступило у стены (постоял — проступают по одной)
             revealedOf = (locId, n) => { const prox = wallProx[locId] || 0; return prox < 60 ? 0 : Math.min(n, Math.floor((prox - 60) / 180) + 1); };
+            // Стена — по рисунку, а не по рамке: рисунок постройки прогоняется вхолостую (запись fillRect,
+            // без холста) в карту «светлое / тёмное / почти чёрное / пусто» в координатах рамки; строка ищет
+            // сперва светлую стену, у тёмных построек — тёмную, и только потом почти чёрную (там и проёмы).
+            // Карта — одна на вид и размер.
+            MASKS = new Map();
+            // места строк постройки: строка (четыре ряда штрихов) ложится на самый длинный отрезок, где из
+            // четырёх рядов хотя бы три — стена (светлая, если есть), — ниже и шире лучше, верхняя треть —
+            // только если ниже негде (арки, решётки); строки не налезают друг на друга. Нет такого отрезка — нижняя треть рамки, как прежде.
+            PLACES = new Map();
+            exports_51("_scribble", _scribble = scribble), exports_51("_wallMask", _wallMask = wallMask);
         }
     };
 });

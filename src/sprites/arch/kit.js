@@ -45,6 +45,7 @@ export const MAT = {
   WATTLE: 22,     // плетень: колья и прутья вперевивку
   FELT: 23,       // войлок: шерсть свалянная, без швов, ворс пятнами
   SAND: 24,       // песок: барханы, рябь ветра наискось
+  BAKED: 25,      // обожжённый кирпич светлый (Вавилон): облицовка по сырцу
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -71,6 +72,7 @@ RAMP[MAT.GRANITE] = ramp(mix(mix(AS, KV, 0.16), NI, 0.3));
 RAMP[MAT.SANDSTONE] = ramp(mix(mix(SEP, BO, 0.42), KV, 0.05));
 RAMP[MAT.RAMMED] = ramp(mix(mix(SEP, BO, 0.3), S0, 0.25));
 RAMP[MAT.WATTLE] = ramp(mix(SEP, NI, 0.1), mix(BO, SEP, 0.2));
+RAMP[MAT.BAKED] = ramp(mix(mix(SEP, BO, 0.38), KV, 0.08), mix(BO, KV, 0.08));
 RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
 RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
@@ -111,6 +113,7 @@ function tex(mat, x, y, s) {
       const v = hh(cell, row, s + 1);
       return v < 0.3 ? -1 : v > 0.75 ? 1 : 0;
     }
+    case MAT.BAKED:
     case MAT.BRICK: {
       const c = Math.floor(y / 3), o = (c & 1) * 3;
       if (y % 3 === 2 || (x + o) % 6 === 5) return 1;                 // раствор светлее кирпича

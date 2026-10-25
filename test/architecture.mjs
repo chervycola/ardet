@@ -526,7 +526,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     assert(stat >= 50, `неподвижных видов мало: ${stat}`);
     assert([...kind.values()].every(k => k.live || k.shared !== undefined), 'вид без решения');
   });
-  test('запекание: признанное неподвижным не меняется ни в одно мгновение (развёртка t по 3 до 1200 и дальние)', () => {
+  test('запекание: признанное неподвижным не меняется ни в одно мгновение (развёртка t до 1200 по всем остаткам и дальние)', () => {
     B._resetBake();
     const rec = (draw, x, gy, t) => {
       const log = [], c = fakeCtx();
@@ -543,8 +543,8 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       seen.add(l.archDraw);
       const d = l.archDraw.body || l.archDraw;                 // у вида с огнём поверх запекается тело
       const base = rec(d, l.archX, l.archGy, 0);
-      for (let t = 3; t < 1200 + 40; t += 3) {
-        const tt = t < 1200 ? t : 1e6 + t * 7919;
+      for (let k = 1; k < 414; k++) {                            // t по 3 со сдвигом 0/1/2 — все остатки
+        const tt = k < 400 ? 3 * k + (k % 3) : 1e6 + k * 7919;
         if (rec(d, l.archX, l.archGy, tt) !== base) { moved.push(`${l.name} (t=${tt})`); break; }
       }
     }
@@ -576,6 +576,24 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
 // ═══ НАДПИСИ СТЕН: на фасаде штрихи, прочесть — в осмотре (слово автора 25.10) ═══
 {
   const IN = await imp('world/inscriptions.js'), PT = await imp('world/potemkin.js'), CX = await imp('render/context.js');
+  test('надписи стен ложатся на рисунок постройки, а не в воздух рамки (по всем кольцам)', () => {
+    let tot = 0, off = 0;
+    const bad = [];
+    for (const l of locations) {
+      const lines = IN.hiddenInscriptions[l.id];
+      if (!l.archDraw || !lines) continue;
+      const M = IN._wallMask(l);
+      let t1 = 0, o1 = 0;
+      const rec = { fillRect: (x, y, w, h) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+        t1++; const a = i - l.x, b = j - l.y; if (a < 0 || b < 0 || a >= l.w || b >= l.h || M[b * l.w + a] < 0) o1++; } } };
+      lines.forEach((ln, i) => { const p = IN.wallPlace(l, i); IN._scribble(rec, ln, p.lx, p.ly, i + l.id.length * 7, p.mw); });
+      tot += t1; off += o1;
+      if (o1 > t1 * 0.25) bad.push(`${l.name}${l.archNth > 1 ? '#' + l.archNth : ''} ${Math.round(o1 / t1 * 100)}%`);
+    }
+    assert(tot > 2000, `штрихов мало: ${tot}`);
+    eq(bad.length, 0, 'больше четверти штрихов в воздухе: ' + bad.join(', '));
+    assert(off < tot * 0.05, `в воздухе ${(off / tot * 100).toFixed(1)}% штрихов`);
+  });
   test('надписи стен: на фасаде постройки — штрихи без шрифта; в осмотре — только проступившие строки', () => {
     const l = locations.find(q => q.archDraw && IN.hiddenInscriptions[q.id] && IN.hiddenInscriptions[q.id].length >= 2);
     assert(l, 'нет постройки с надписью');

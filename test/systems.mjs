@@ -1323,9 +1323,9 @@ setCtx(ctx);
   const { COLOR_EXCEPTIONS } = await imp('content/world_cells.js');
   const { SEGMENTS: SEGS } = await imp('content/ulitsa_db.js');
   test('постройки колец по канону: без золота, синего, неона и белого; чужой цвет — только объявленное исключение своей эпохи', () => {
-    // золото — по оттенку, а не списком: жёлтое и золотое (32–70°) насыщенное и светлое; свеча (28°)
+    // золото — по оттенку, а не списком: жёлтое и золотое (30–70°) насыщенное и светлое; свеча (28°)
     // и киноварь (5°) вне полосы, кость и бумага — без насыщенности
-    const gold = c => { const q = hsv(c); return q.h >= 32 && q.h <= 70 && q.sat > 0.35 && q.v > 0.35; }, bad = [];
+    const gold = c => { const q = hsv(c); return q.h >= 30 && q.h <= 70 && q.sat > 0.35 && q.v > 0.35; }, bad = [];
     const dir = new URL('../src/sprites/arch/', import.meta.url);
     for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.js') && n !== 'index.js')) {
       const epoch = f.slice(0, -3);
