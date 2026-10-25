@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='73f40df · 2026-10-25';console.log('[оттиск]', '73f40df · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='6dc2819 · 2026-10-25';console.log('[оттиск]', '6dc2819 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -36192,10 +36192,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             for (let y = pwTop(x) + 1, L = 4 + q(hh(k, 2, 379) * 14); L > 0; L--, y++)
                 r(x, y, 1, 1, OV_D);
         }
-        for (let y = 4; y < PW_G; y++) {
-            r(PW_X1 + 1, y, 2, 1, OV_D);
-            r(PW_X1 + 3, y, 1, 1, AS);
-        }
+        for (let i = 0; i < 3; i++)
+            for (let y = pwTop(PW_X1) + i; y < PW_G; y++)
+                r(PW_X1 + 1 + i, y, 1, 1, i < 2 ? OV_D : AS); // торец — от слома, ступенькой
         for (let k = 0; k < 4; k++) {
             r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 3 + (k & 1), RUST);
             r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 1, RUST_L);
@@ -36235,8 +36234,11 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         paper(22, 33, 8, 9, SEP, 2, true);
         paper(41, 37, 22, 5, BR2, 3, true);
         paper(57, 9, 7, 16, AS, 5, false);
+        paper(3, 41, 21, 7, SEP, 21, true);
+        paper(25, 41, 17, 7, BR2, 22, true);
+        paper(44, 41, 19, 7, SEP, 23, true); // у земли — уголь слоями
         // ── пять афиш ──
-        // 1942 — шапка, рамка в два контура, певец у микрофона; выцвела
+        // 1942 — рамка, строка, певец у микрофона; выцвела
         paper(4, 9, 16, 17, L2, 11, false);
         ink(5, 10, 14, 1, S1);
         ink(5, 23, 14, 1, S1);
@@ -36327,18 +36329,24 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(x, 38, 1, 1, L2);
         }
         // от руки, выше одной афиши: «пожарный выход был заперт снаружи. везде. всегда.»
-        for (let x = 5; x < 33; x++) {
-            if (x === 22 || x === 23 || x === 28 || x === 29)
+        for (let x = 5; x < 21; x++) {
+            if (x === 12 || x === 17)
                 continue;
             if (hh(x, 16, 395) > 0.18)
-                r(x, 6 + (x % 5 === 0 ? -1 : 0) + (x > 24 ? 1 : 0), 1, 1 + (hh(x, 17, 397) < 0.25 ? 1 : 0), K1);
-        }
+                r(x, 4 + (x % 5 === 0 ? -1 : 0), 1, 1 + (hh(x, 17, 397) < 0.25 ? 1 : 0), K1);
+        } // на клочке над афишей 1942
+        for (let x = 5; x < 17; x++) {
+            if (x === 10 || x === 11)
+                continue;
+            if (hh(x, 18, 395) > 0.2)
+                r(x, 7 + (x % 4 === 0 ? -1 : 0), 1, 1, K1);
+        } // «везде. всегда.» — второй строкой
         // ── копоть над свечами — слабо ──
         context_js_9.X.globalAlpha = 0.18;
         for (let c = 0; c < 5; c++) {
             const cx = 10 + c * 11;
             for (let y = 0; y < 6; y++)
-                r(cx - (y < 3 ? 1 : 0), PW_G - 4 - y, y < 3 ? 4 : 2, 1, K0);
+                r(cx - (y < 3 ? 1 : 0), PW_C - 11 - y, y < 3 ? 4 : 2, 1, K0);
         }
         context_js_9.X.globalAlpha = 1;
         // ── у основания: уголь крошится; пять свечей — свежие, фитили подрезаны, пламя одно на всех ──
@@ -36346,7 +36354,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         for (let k = 0; k < 12; k++)
             r(3 + q(hh(k, 25, 409) * 60), PW_G + 1 + q(hh(k, 26, 411) * 2), 1, 1, K1);
         for (let c = 0; c < 5; c++) {
-            const cx = 10 + c * 11, by = PW_G + 7;
+            const cx = 10 + c * 11, by = PW_C;
             r(cx - 1, by, 4, 1, L2);
             r(cx, by + 1, 3, 1, K3); // лужица воска
             r(cx, by - 5, 2, 5, L2);
@@ -36360,11 +36368,11 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(cx, by - 8, 1, 2, BO); // пламя — тонкое, прямое
         }
         context_js_9.X.globalAlpha = 0.5;
-        r(PW_X0, PW_G + 9, PW_X1 - PW_X0 + 3, 1, K0);
+        r(PW_X0, PW_C + 2, PW_X1 - PW_X0 + 3, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_posterwall(x, y) {
-        bake('posterwall2', x, y, 0, -1, 70, 55, posterwallBody);
+        bake('posterwall3', x, y, 0, -1, 70, 55, posterwallBody);
     }
     exports_105("draw_posterwall", draw_posterwall);
     // ── РЖАВЫЙ ТРУБОПРОВОД ──
@@ -37507,7 +37515,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // и не дрожат: тёплых пятен в городке три (костёр, окно №3, мусорка), и этот огонь —
             // не живой. Ветра здесь нет — ничего не шевелится, всё запечено. Свет слева, кромка
             // пеплом справа.
-            PW_X0 = 2, PW_X1 = 64, PW_G = 43;
+            PW_X0 = 2, PW_X1 = 64, PW_G = 48, PW_C = 50; // подножие стены — у основания места; свечи стоят на y 50
             pwTop = x => x < 50 ? 2 + (hh(x >> 2, 0, 371) < 0.3 ? 1 : 0) : 2 + q((x - 50) * 0.5) + (hh(x, 0, 373) < 0.4 ? 1 : 0);
             // ── ТОКСИЧНОЕ ОЗЕРО ──
             // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
