@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -603,131 +603,6 @@ export function draw_rocket(x, y) {
     rect(X,x-9,gy-16,8,4,P.parchment);
     for (let i = 0; i < 3; i++) rect(X,x-8+i*2,gy-15,1,1,'#1a1a1a');
     rect(X,x-9,gy-10,7,1,P.bone);
-}
-
-export function draw_crypt(x, y) {
-    // ═══ CRYPT — DANTE'S NINE CIRCLES ═══
-    // Shadow on ground
-    X.globalAlpha=.4;X.fillStyle='#000';
-    X.beginPath();X.ellipse(x+18,y+38,20,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-
-    // ── ENTRANCE — carved stone arch ──
-    // Arch sides
-    rect(X,x+1,y+4,4,32,P.stone);
-    rect(X,x+31,y+4,4,32,P.stone);
-    // Arch top — curved via multiple rects
-    rect(X,x+5,y+2,26,3,P.stone);
-    rect(X,x+7,y,22,2,P.stone);
-    // Stone texture
-    for(let i=0;i<8;i++){
-      const sx=x+2+hash(i,0,11)*32;
-      const sy=y+5+hash(i,0,22)*30;
-      rect(X,sx,sy,1,1,'#1a1a20');
-    }
-    // Moss at base
-    rect(X,x+2,y+35,4,2,P.dtoxic);
-    rect(X,x+30,y+35,4,2,P.dtoxic);
-    px(X,x+3,y+34,P.toxic);
-
-    // ── KEYSTONE with inscription ──
-    rect(X,x+16,y,4,4,P.lstone);
-    px(X,x+17,y+1,'#0a0a0e');
-    px(X,x+18,y+2,'#0a0a0e');
-
-    // ── IRON GATE (ajar, swinging slightly) ──
-    const gateSwing=Math.sin(t*.004)*.5;
-    rect(X,x+5+gateSwing,y+4,2,32,P.dgrey);
-    // Gate bars
-    for(let i=0;i<5;i++){
-      rect(X,x+6+gateSwing,y+6+i*6,10,1,P.dgrey);
-    }
-    for(let i=0;i<3;i++){
-      rect(X,x+7+i*4+gateSwing,y+4,1,30,P.dgrey);
-    }
-    // Gate hinge
-    px(X,x+5+gateSwing,y+4,P.ash);
-    px(X,x+5+gateSwing,y+35,P.ash);
-
-    // ── DESCENDING STEPS — 9 visible, receding into darkness ──
-    for(let i=0;i<9;i++){
-      const stepShade=Math.max(2,26-i*3);
-      const stepWidth=24-i*1.5;
-      const stepX=x+6+i*.7;
-      const stepY=y+8+i*3;
-      rect(X,stepX,stepY,stepWidth,2,`rgb(${stepShade},${stepShade},${stepShade+2})`);
-      rect(X,stepX,stepY+2,stepWidth,1,'#020202');
-    }
-
-    // Deep darkness beyond
-    X.globalAlpha=.95;
-    X.fillStyle='#020204';
-    X.fillRect(x+12,y+30,16,8);
-    X.globalAlpha=1;
-
-    // ── NUMBERED CIRCLES (small Roman numerals on steps, barely visible) ──
-    X.fillStyle='#3a3a42';
-    // I — first step
-    px(X,x+14,y+9,'#4a4a50');
-    // II — second
-    px(X,x+14,y+12,'#4a4a50');px(X,x+15,y+12,'#4a4a50');
-    // Rest fade into darkness
-    X.globalAlpha=.4;
-    px(X,x+14,y+15,'#3a3a42');px(X,x+15,y+15,'#3a3a42');px(X,x+16,y+15,'#3a3a42');
-    X.globalAlpha=.25;
-    px(X,x+15,y+18,'#2a2a32');
-    X.globalAlpha=1;
-
-    // ── COLD AIR / FOG POURING OUT ──
-    for(let i=0;i<4;i++){
-      const fogPhase=((t*.008+i*.25)%1);
-      const fogY=y+12+fogPhase*18;
-      const fogX=x+10+Math.sin(t*.01+i)*3;
-      X.globalAlpha=(1-fogPhase)*.25;
-      rect(X,fogX,fogY,8+i,2,'#6b726d');
-      X.globalAlpha=1;
-    }
-    // Extra cold breath at step level
-    if(t%40<20){
-      X.globalAlpha=.1;
-      rect(X,x+8,y+14,20,3,'#D9CFB8');
-      X.globalAlpha=1;
-    }
-
-    // ── WARNING PLAQUE on left ──
-    rect(X,x-6,y+12,6,8,P.stone);
-    rect(X,x-5,y+13,4,6,P.dstone);
-    // Faint text (scratches)
-    px(X,x-4,y+14,'#0a0a0e');
-    px(X,x-3,y+14,'#0a0a0e');
-    px(X,x-4,y+16,'#0a0a0e');
-    px(X,x-4,y+18,'#0a0a0e');
-    px(X,x-3,y+18,'#0a0a0e');
-
-    // ── BONES scattered at entrance ──
-    rect(X,x+25,y+36,3,1,P.bone);
-    px(X,x+27,y+35,P.bone);
-    rect(X,x+8,y+37,2,1,P.dbone);
-
-    // ── FALLEN ROMAN NUMERAL "IX" near entrance ──
-    X.fillStyle='#3a3a42';
-    rect(X,x+36,y+34,1,3,'#3a3a42');
-    rect(X,x+38,y+34,1,3,'#3a3a42');
-    rect(X,x+40,y+34,3,1,'#3a3a42');
-    rect(X,x+40,y+36,3,1,'#3a3a42');
-
-    // ── TORCH flickering beside gate ──
-    rect(X,x-2,y+8,2,12,P.dwood);
-    const trFlick=Math.sin(t*.06)*.5;
-    px(X,x-1+trFlick,y+6,P.f2);
-    px(X,x-1+trFlick,y+5,P.f1);
-    px(X,x-1+trFlick,y+4,'#ffffcc');
-    // Torch glow
-    X.globalAlpha=.15+.05*Math.sin(t*.03);
-    const tGlow=X.createRadialGradient(x-1,y+6,0,x-1,y+6,16);
-    tGlow.addColorStop(0,'rgba(255,100,20,1)');
-    tGlow.addColorStop(1,'rgba(0,0,0,0)');
-    X.fillStyle=tGlow;X.fillRect(x-17,y-10,32,32);
-    X.globalAlpha=1;
 }
 
 export function draw_riverbed(x, y) {

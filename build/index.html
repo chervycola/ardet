@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='e971369 · 2026-10-25';console.log('[оттиск]', 'e971369 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='89de74c · 2026-10-25';console.log('[оттиск]', '89de74c · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -33780,6 +33780,123 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     exports_105("draw_train", draw_train);
+    function cryptBody(seam) {
+        // ── портал: грубый камень — ряды разной высоты, камни разной длины, тон по камню ──
+        const rowY = [4, 7, 9, 12, 15, 17, 20, 23, 25, 28, 31, 34];
+        for (let ri = 0; ri < rowY.length - 1; ri++) {
+            const y0 = rowY[ri], y1 = rowY[ri + 1];
+            for (let x = 3, bi = 0; x < 37; bi++) {
+                const w = 3 + q(hh(bi, ri, 351) * 4), v = hh(bi, ri, 353) + (x < 9 ? 0.18 : x > 30 ? -0.2 : 0), c = v > 0.85 ? S1 : v < 0.22 ? S2 : S0;
+                for (let xx = x; xx < Math.min(37, x + w); xx++)
+                    for (let y = y0; y < y1; y++) {
+                        if (crInArch(xx, y))
+                            continue;
+                        r(xx, y, 1, 1, y === y1 - 1 || xx === x ? K3 : y === y0 && xx < x + w - 1 ? (c === S1 ? L2 : S1) : c); // шов, кромка к свету
+                    }
+                x += w;
+            }
+        }
+        for (let y = 4; y < 34; y++) {
+            if (!crInArch(3, y))
+                r(3, y, 1, 1, S1);
+            r(36, y, 1, 1, AS);
+        }
+        // скат плитой по верху: к оси выше на точку, кромка к свету, свес тенью
+        for (let x = 2; x < 38; x++) {
+            const lift = Math.abs(x - CR_CX) < 8 ? 1 : 0;
+            r(x, 2 - lift, 1, 2 + lift, x < CR_CX ? S1 : S0);
+            r(x, 2 - lift, 1, 1, x < CR_CX ? L2 : S1);
+            r(x, 4, 1, 1, K2);
+        }
+        r(37, 2, 1, 2, AS);
+        // арка: клинчатые камни по двум дугам, в вершине — замок
+        for (let a = 0; a <= 16; a++)
+            for (const sd of [-1, 1]) {
+                const u = a / 16 * Math.acos(2 / (CR_R + 1)), ax = q(CR_CX + sd * 2 - sd * Math.cos(u) * (CR_R + 1)), ay = q(CR_SPR - Math.sin(u) * (CR_R + 1));
+                if (ay < 4)
+                    continue;
+                r(ax, ay, 1, 1, a % 4 === 0 ? K3 : sd < 0 ? S1 : S0);
+            }
+        r(19, 4, 2, 2, S1);
+        r(19, 4, 1, 1, L2);
+        // ── сквозь арку: ступени вниз и вглубь — ближние светлее, дальние уже и темнее ──
+        for (let y = 6; y < 34; y++)
+            for (let x = 10; x <= 29; x++)
+                if (crInArch(x, y))
+                    r(x, y, 1, 1, NI);
+        const TREAD = [S1, S0, S2, K3, K2, K1, K0], RISE = [S2, K3, K2, K1, K0, K0, NI];
+        for (let i = 0; i < 7; i++) {
+            const y0 = 31 - i * 2, hw = 10 - i;
+            r(10, y0, 20, 2, i < 2 ? K2 : K1); // стены колодца лестницы
+            r(10, y0, 1, 2, i < 3 ? S2 : K2);
+            r(q(CR_CX - hw), y0, hw * 2, 1, TREAD[i]);
+            r(q(CR_CX - hw), y0 + 1, hw * 2, 1, RISE[i]);
+            if (i < 3)
+                r(q(CR_CX - hw), y0, 1, 1, L2);
+        }
+        r(14, 17, 12, 2, NI); // дальше — темно
+        // таблички ярусов: первый — у ближних ступеней, четвёртый — глубже, тусклее; штрихами
+        r(11, 25, 3, 3, L2);
+        r(11, 25, 3, 1, BO);
+        r(12, 26, 1, 1, K2);
+        r(11, 27, 2, 1, K3);
+        r(26, 20, 3, 2, S1);
+        r(26, 20, 3, 1, AS);
+        r(27, 21, 1, 1, K1);
+        // иней на нижних ступенях: пером — неровно, перьями; под взглядом — белила
+        for (let i = 3; i < 7; i++) {
+            const y0 = 31 - i * 2, hw = 10 - i, x0 = q(CR_CX - hw);
+            if (!seam) {
+                for (let x = x0; x < x0 + hw * 2; x++) {
+                    const h = hh(x, i, 353);
+                    if (h < 0.3)
+                        r(x, y0, 1, 1, h < 0.05 ? BO : h < 0.16 ? L2 : AS);
+                }
+            }
+            else {
+                r(x0 + 1, y0, hw * 2 - 2, 1, L2);
+                if (i === 4) {
+                    r(x0 + 3, y0 + 1, 1, 2, L2);
+                    r(x0 + 3, y0 + 3, 1, 1, AS);
+                }
+                if (i === 5)
+                    r(x0 + hw * 2 - 1, y0 - 1, 2, 1, L2);
+            }
+        }
+        if (seam) {
+            r(10, 22, 1, 4, L2);
+            r(11, 23, 1, 1, L1);
+        } // кисть задела стену
+        // ── порог: плита истёрта посередине; мох, сорняк ──
+        r(8, 33, 24, 2, S1);
+        r(8, 33, 24, 1, L2);
+        r(15, 33, 10, 1, S0);
+        r(8, 34, 24, 1, K3);
+        for (const [mx, w] of [[3, 3], [33, 4]]) {
+            r(mx, 32, w, 2, MG_D);
+            r(mx, 32, 1, 1, MG);
+        }
+        for (let k = 0; k < 6; k++)
+            r(2 + q(hh(k, 1, 355) * 36), 33 + (k & 1), 1, 2, k & 1 ? MG_D : K4);
+        context_js_9.X.globalAlpha = 0.5;
+        r(2, 35, 37, 1, K0);
+        context_js_9.X.globalAlpha = 1;
+    }
+    function draw_crypt(x, y) {
+        const seam = potemkin_js_2.revealOf(CRYPT) > 0.25;
+        bake(seam ? 'crypt3s' : 'crypt3', x, y, 0, 0, 40, 36, () => cryptBody(seam));
+        // снизу — холодный воздух ровными толчками, раз в шесть секунд: в такт ярусу внизу
+        const p = time_js_23.t % 360;
+        if (p < 70) {
+            const k = p / 70;
+            for (let i = 0; i < 3; i++) {
+                context_js_9.X.globalAlpha = (1 - k) * (0.32 - i * 0.07);
+                r(x + 13 + i * 4 + q(Math.sin(k * 3 + i) * 1.5), y + 26 - q(k * 24) - i * 2, 4 + q(k * 4), 1 + (k > 0.5 ? 1 : 0), BO);
+            }
+            context_js_9.X.globalAlpha = 1;
+        }
+    }
+    exports_105("draw_crypt", draw_crypt);
     function theaterBody() {
         const { cx, cy } = TH;
         // холм: земля с сухой травой, в нём вырезан зал
@@ -37325,6 +37442,23 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             lean = xx => q((24 - xx) * 0.2); // крен паровоза: нос ниже, корма выше
             BOIL = [K0, S1, S0, S0, K4, K3, K3, K3, K3, K3, K2, K2, K2, K1, K0]; // котёл сверху вниз: блик, тело, к низу темнее
             TR_T = -1, TR_PH = 0; // пар копится по шагам
+            // ── ВХОД В КРИПТУ ──
+            // «Каменные ступени уходят вниз. Снизу поднимается холодный воздух — ровными
+            // толчками, раз в шесть секунд. На каждом ярусе табличка. Ярус 1: „некрещёные —
+            // ожидание продлено". Ярус 4: „скупцы и расточители — взаимозачёт произведён".
+            // Ярус 9: „предатели — хранятся во льду. Лёд кончается."» Шов (потёмкин): «Иней на
+            // нижних ступенях нарисован белилами». Портал из грубого камня, как церковь квартала:
+            // скат плитой по верху, стрельчатая арка клинчатым камнем (нов. — тексты портала не
+            // описывают). Сквозь неё ступени уходят вниз и вглубь —
+            // ближние светлее, дальние уже и темнее, в конце темно. На стене у первого яруса
+            // табличка, у четвёртого — ещё одна, тусклее; надписи штрихами. На нижних ступенях
+            // иней — пером, неровно; неподвижному взгляду (второй холст) — белила: ровные
+            // мазки, потёк по подступёнку, кисть задела стену. Холодный воздух — живьём, ровными
+            // толчками раз в шесть секунд, в такт дыханию яруса внизу (t % 360). Свет слева,
+            // кромка пеплом справа.
+            CR_CX = 19.5, CR_SPR = 17, CR_R = 12; // стрельчатая: две дуги радиусом 12 из точек в 2 от оси
+            crInArch = (x, y) => x >= 10 && x <= 29 && (y >= CR_SPR || ((x - CR_CX - 2) ** 2 + (y - CR_SPR) ** 2 <= CR_R * CR_R && (x - CR_CX + 2) ** 2 + (y - CR_SPR) ** 2 <= CR_R * CR_R));
+            CRYPT = { id: 'crypt' };
             // ── ТЕАТР ТЕНЕЙ ──
             // «Полукруглый каменный амфитеатр на склоне холма. Скамьи, поросшие мхом,
             // спускаются к маленькой круглой сцене. На сцене четыре силуэта... один
@@ -38384,128 +38518,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_7.rect(context_js_10.X, x - 9, gy - 10, 7, 1, P.bone);
     }
     exports_106("draw_rocket", draw_rocket);
-    function draw_crypt(x, y) {
-        // ═══ CRYPT — DANTE'S NINE CIRCLES ═══
-        // Shadow on ground
-        context_js_10.X.globalAlpha = .4;
-        context_js_10.X.fillStyle = '#000';
-        context_js_10.X.beginPath();
-        context_js_10.X.ellipse(x + 18, y + 38, 20, 3, 0, 0, Math.PI * 2);
-        context_js_10.X.fill();
-        context_js_10.X.globalAlpha = 1;
-        // ── ENTRANCE — carved stone arch ──
-        // Arch sides
-        draw_js_7.rect(context_js_10.X, x + 1, y + 4, 4, 32, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 31, y + 4, 4, 32, P.stone);
-        // Arch top — curved via multiple rects
-        draw_js_7.rect(context_js_10.X, x + 5, y + 2, 26, 3, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 7, y, 22, 2, P.stone);
-        // Stone texture
-        for (let i = 0; i < 8; i++) {
-            const sx = x + 2 + draw_js_7.hash(i, 0, 11) * 32;
-            const sy = y + 5 + draw_js_7.hash(i, 0, 22) * 30;
-            draw_js_7.rect(context_js_10.X, sx, sy, 1, 1, '#1a1a20');
-        }
-        // Moss at base
-        draw_js_7.rect(context_js_10.X, x + 2, y + 35, 4, 2, P.dtoxic);
-        draw_js_7.rect(context_js_10.X, x + 30, y + 35, 4, 2, P.dtoxic);
-        draw_js_7.px(context_js_10.X, x + 3, y + 34, P.toxic);
-        // ── KEYSTONE with inscription ──
-        draw_js_7.rect(context_js_10.X, x + 16, y, 4, 4, P.lstone);
-        draw_js_7.px(context_js_10.X, x + 17, y + 1, '#0a0a0e');
-        draw_js_7.px(context_js_10.X, x + 18, y + 2, '#0a0a0e');
-        // ── IRON GATE (ajar, swinging slightly) ──
-        const gateSwing = Math.sin(time_js_24.t * .004) * .5;
-        draw_js_7.rect(context_js_10.X, x + 5 + gateSwing, y + 4, 2, 32, P.dgrey);
-        // Gate bars
-        for (let i = 0; i < 5; i++) {
-            draw_js_7.rect(context_js_10.X, x + 6 + gateSwing, y + 6 + i * 6, 10, 1, P.dgrey);
-        }
-        for (let i = 0; i < 3; i++) {
-            draw_js_7.rect(context_js_10.X, x + 7 + i * 4 + gateSwing, y + 4, 1, 30, P.dgrey);
-        }
-        // Gate hinge
-        draw_js_7.px(context_js_10.X, x + 5 + gateSwing, y + 4, P.ash);
-        draw_js_7.px(context_js_10.X, x + 5 + gateSwing, y + 35, P.ash);
-        // ── DESCENDING STEPS — 9 visible, receding into darkness ──
-        for (let i = 0; i < 9; i++) {
-            const stepShade = Math.max(2, 26 - i * 3);
-            const stepWidth = 24 - i * 1.5;
-            const stepX = x + 6 + i * .7;
-            const stepY = y + 8 + i * 3;
-            draw_js_7.rect(context_js_10.X, stepX, stepY, stepWidth, 2, `rgb(${stepShade},${stepShade},${stepShade + 2})`);
-            draw_js_7.rect(context_js_10.X, stepX, stepY + 2, stepWidth, 1, '#020202');
-        }
-        // Deep darkness beyond
-        context_js_10.X.globalAlpha = .95;
-        context_js_10.X.fillStyle = '#020204';
-        context_js_10.X.fillRect(x + 12, y + 30, 16, 8);
-        context_js_10.X.globalAlpha = 1;
-        // ── NUMBERED CIRCLES (small Roman numerals on steps, barely visible) ──
-        context_js_10.X.fillStyle = '#3a3a42';
-        // I — first step
-        draw_js_7.px(context_js_10.X, x + 14, y + 9, '#4a4a50');
-        // II — second
-        draw_js_7.px(context_js_10.X, x + 14, y + 12, '#4a4a50');
-        draw_js_7.px(context_js_10.X, x + 15, y + 12, '#4a4a50');
-        // Rest fade into darkness
-        context_js_10.X.globalAlpha = .4;
-        draw_js_7.px(context_js_10.X, x + 14, y + 15, '#3a3a42');
-        draw_js_7.px(context_js_10.X, x + 15, y + 15, '#3a3a42');
-        draw_js_7.px(context_js_10.X, x + 16, y + 15, '#3a3a42');
-        context_js_10.X.globalAlpha = .25;
-        draw_js_7.px(context_js_10.X, x + 15, y + 18, '#2a2a32');
-        context_js_10.X.globalAlpha = 1;
-        // ── COLD AIR / FOG POURING OUT ──
-        for (let i = 0; i < 4; i++) {
-            const fogPhase = ((time_js_24.t * .008 + i * .25) % 1);
-            const fogY = y + 12 + fogPhase * 18;
-            const fogX = x + 10 + Math.sin(time_js_24.t * .01 + i) * 3;
-            context_js_10.X.globalAlpha = (1 - fogPhase) * .25;
-            draw_js_7.rect(context_js_10.X, fogX, fogY, 8 + i, 2, '#6b726d');
-            context_js_10.X.globalAlpha = 1;
-        }
-        // Extra cold breath at step level
-        if (time_js_24.t % 40 < 20) {
-            context_js_10.X.globalAlpha = .1;
-            draw_js_7.rect(context_js_10.X, x + 8, y + 14, 20, 3, '#D9CFB8');
-            context_js_10.X.globalAlpha = 1;
-        }
-        // ── WARNING PLAQUE on left ──
-        draw_js_7.rect(context_js_10.X, x - 6, y + 12, 6, 8, P.stone);
-        draw_js_7.rect(context_js_10.X, x - 5, y + 13, 4, 6, P.dstone);
-        // Faint text (scratches)
-        draw_js_7.px(context_js_10.X, x - 4, y + 14, '#0a0a0e');
-        draw_js_7.px(context_js_10.X, x - 3, y + 14, '#0a0a0e');
-        draw_js_7.px(context_js_10.X, x - 4, y + 16, '#0a0a0e');
-        draw_js_7.px(context_js_10.X, x - 4, y + 18, '#0a0a0e');
-        draw_js_7.px(context_js_10.X, x - 3, y + 18, '#0a0a0e');
-        // ── BONES scattered at entrance ──
-        draw_js_7.rect(context_js_10.X, x + 25, y + 36, 3, 1, P.bone);
-        draw_js_7.px(context_js_10.X, x + 27, y + 35, P.bone);
-        draw_js_7.rect(context_js_10.X, x + 8, y + 37, 2, 1, P.dbone);
-        // ── FALLEN ROMAN NUMERAL "IX" near entrance ──
-        context_js_10.X.fillStyle = '#3a3a42';
-        draw_js_7.rect(context_js_10.X, x + 36, y + 34, 1, 3, '#3a3a42');
-        draw_js_7.rect(context_js_10.X, x + 38, y + 34, 1, 3, '#3a3a42');
-        draw_js_7.rect(context_js_10.X, x + 40, y + 34, 3, 1, '#3a3a42');
-        draw_js_7.rect(context_js_10.X, x + 40, y + 36, 3, 1, '#3a3a42');
-        // ── TORCH flickering beside gate ──
-        draw_js_7.rect(context_js_10.X, x - 2, y + 8, 2, 12, P.dwood);
-        const trFlick = Math.sin(time_js_24.t * .06) * .5;
-        draw_js_7.px(context_js_10.X, x - 1 + trFlick, y + 6, P.f2);
-        draw_js_7.px(context_js_10.X, x - 1 + trFlick, y + 5, P.f1);
-        draw_js_7.px(context_js_10.X, x - 1 + trFlick, y + 4, '#ffffcc');
-        // Torch glow
-        context_js_10.X.globalAlpha = .15 + .05 * Math.sin(time_js_24.t * .03);
-        const tGlow = context_js_10.X.createRadialGradient(x - 1, y + 6, 0, x - 1, y + 6, 16);
-        tGlow.addColorStop(0, 'rgba(255,100,20,1)');
-        tGlow.addColorStop(1, 'rgba(0,0,0,0)');
-        context_js_10.X.fillStyle = tGlow;
-        context_js_10.X.fillRect(x - 17, y - 10, 32, 32);
-        context_js_10.X.globalAlpha = 1;
-    }
-    exports_106("draw_crypt", draw_crypt);
     function draw_riverbed(x, y) {
         // Animated puddle reflection
         const shimmer = Math.sin(time_js_24.t * .004) * .3 + .3;
@@ -38610,7 +38622,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_dumpster": canon_js_1_1["draw_dumpster"],
                     "draw_banner": canon_js_1_1["draw_banner"],
                     "draw_overpass": canon_js_1_1["draw_overpass"],
-                    "draw_posterwall": canon_js_1_1["draw_posterwall"]
+                    "draw_posterwall": canon_js_1_1["draw_posterwall"],
+                    "draw_crypt": canon_js_1_1["draw_crypt"]
                 });
             }
         ],
