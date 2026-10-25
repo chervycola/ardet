@@ -875,7 +875,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='908f561 · 2026-10-25';console.log('[оттиск]', '908f561 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='6f37891 · 2026-10-25';console.log('[оттиск]', '6f37891 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -21642,14 +21642,18 @@ System.register("world/underside", ["content/underside", "core/time"], function 
     }
     exports_61("wallSpot", wallSpot);
     function murmurAt(fx, fy, greeted) {
-        let best = null, bd = 420;
-        for (const a of MURMUR_AT) {
-            const d = Math.hypot(a.x - fx, a.y - fy);
-            if (d < bd) {
-                bd = d;
-                best = a;
+        // в зале шепчет сам зал; по ближайшему центру — только в штреках, разрезах и жиле
+        // (иначе у лестницы канализации слышно остров за стеной)
+        const here = placeAt(fx, fy);
+        let best = ROOMS.some(R => R.id === here) && MURMURS[here] ? { key: here } : null, bd = 420;
+        if (!best)
+            for (const a of MURMUR_AT) {
+                const d = Math.hypot(a.x - fx, a.y - fy);
+                if (d < bd) {
+                    bd = d;
+                    best = a;
+                }
             }
-        }
         if (!best)
             return null;
         const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];

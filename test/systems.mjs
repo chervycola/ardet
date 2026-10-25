@@ -2902,6 +2902,13 @@ setCtx(ctx);
     }
     assert(/укрытие/.test(TX.UNDER_TEXT.u_isle_inventory.look) && /ВИД НА МОРЕ/.test(TX.UNDER_TEXT.u_isle_loungers.look), 'опись и шезлонги не по замыслу');
   });
+
+  test('шёпоты изнанки: в зале шепчет сам зал — у лестницы канализации не слышно острова', () => {
+    const lad = U.thingById('u_up_gaslamp'), isle = U.thingById('u_isle_inventory');
+    eq(U.placeAt(lad.at[0], lad.at[1]), 'u3', 'лестница газового фонаря не в канализации');
+    for (let i = 0; i < 20; i++) eq(U.murmurAt(lad.at[0], lad.at[1], true).key, 'u3', 'у лестницы канализации шепчет чужой зал');
+    eq(U.murmurAt(isle.at[0], isle.at[1], true).key, 'isle', 'в тоннелях острова шепчет не остров');
+  });
 }
 
 // ═══ ЛЕНТА ТЯНЕТ: снос к краю и покой, который лечит (world/feedPull.js, brainrot.js) ═══

@@ -737,8 +737,11 @@ export function wallSpot(fx, fy, x) {
   return [x, fy - 20];
 }
 export function murmurAt(fx, fy, greeted) {
-  let best = null, bd = 420;
-  for (const a of MURMUR_AT) { const d = Math.hypot(a.x - fx, a.y - fy); if (d < bd) { bd = d; best = a; } }
+  // в зале шепчет сам зал; по ближайшему центру — только в штреках, разрезах и жиле
+  // (иначе у лестницы канализации слышно остров за стеной)
+  const here = placeAt(fx, fy);
+  let best = ROOMS.some(R => R.id === here) && MURMURS[here] ? { key: here } : null, bd = 420;
+  if (!best) for (const a of MURMUR_AT) { const d = Math.hypot(a.x - fx, a.y - fy); if (d < bd) { bd = d; best = a; } }
   if (!best) return null;
   const lines = MURMURS[best.key], text = lines[Math.floor(Math.random() * lines.length)];
   if (!greeted) { const ox = Math.round((Math.random() - 0.5) * 8); return { text, x: fx + ox, y: fy - 32, ox, oy: -32, key: best.key, ear: true }; }   // вплотную, идёт следом
