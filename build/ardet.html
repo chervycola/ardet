@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='386dc00 · 2026-10-25';console.log('[оттиск]', '386dc00 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='73f40df · 2026-10-25';console.log('[оттиск]', '73f40df · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -35984,7 +35984,8 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             const a = hh(iu, iv, 341), b = hh(iu + 1, iv, 341), c = hh(iu, iv + 1, 341), d = hh(iu + 1, iv + 1, 341);
             return (a + (b - a) * fu) * (1 - fv) + (c + (d - c) * fu) * fv;
         };
-        // ── позади: ноги подломились — двутавры рваными верхами, правый согнут ──
+        // ── позади: ноги подломились — двутавры рваными верхами, правый согнут. Щит лежит (GROUND):
+        // странник, прошедший за ним, ляжет и поверх этих обрубков — несколько точек, принято ──
         r(21, 5, 7, 2, K3);
         r(22, 5, 1, 1, AS);
         r(26, 5, 1, 1, AS); // накладка на болтах
@@ -36049,10 +36050,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             const P = E(83, 8);
             for (let k = 0; k < 6; k++)
                 P(70 + k, 8 + k, 2, 3, BO);
-            for (let k = 0; k <= 22; k++) {
+            for (let k = 0; k <= 16; k++) {
                 const th = 3 - q(k / 11);
-                P(76 + k, 13 - q(k * 0.55) - th + 1, 1, th + (k < 3 ? 1 : 0), k > 14 ? L1 : BO);
-            }
+                P(76 + k, 13 - q(k * 0.55) - th + 1, 1, th + (k < 3 ? 1 : 0), k > 12 ? L1 : BO);
+            } // кончик — на жести, не на отогнутом углу
             for (let k = 0; k < 9; k++)
                 P(70 + q(hh(k, 16, 353) * 27), 4 + q(hh(k, 17, 355) * 10), 1, 1, K2);
         } // облезло точками
@@ -36102,10 +36103,11 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 P(24, v, 1, 1, K2);
             P(25, 31, 15, 1, K2);
             for (let i = 0; i < 9; i++)
-                P(26 + i, 24 + (hh(i, 11, 339) < 0.5 ? 1 : 0), 1, 1 + (i & 1), K1); // вихры маркером
-            P(26, 26, 1, 4, K1);
-            P(34, 26, 1, 4, K1);
-            P(27, 30, 7, 1, K1);
+                if (hh(i, 11, 339) > 0.2)
+                    P(26 + i, 24, 1, 1, K1); // вихры маркером; ниже — пустой лоб
+            P(26, 29, 1, 1, K1);
+            P(34, 29, 1, 1, K1);
+            P(27, 30, 7, 1, K1); // скулы и подбородок — ноли стоят отдельно
             for (const eu of [27, 31]) {
                 P(eu, 26, 3, 1, K1);
                 P(eu, 28, 3, 1, K1);
@@ -36170,9 +36172,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_billboard(x, y) {
         if (relook_js_1.wasUsed('billboard'))
-            bake('billboard3t', x, y, 0, -3, 108, 55, () => billboardBody(true));
+            bake('billboard4t', x, y, 0, -3, 108, 55, () => billboardBody(true));
         else
-            bake('billboard3', x, y, 0, -3, 108, 55, () => billboardBody(false));
+            bake('billboard4', x, y, 0, -3, 108, 55, () => billboardBody(false));
     }
     exports_105("draw_billboard", draw_billboard);
     function posterwallBody() {
