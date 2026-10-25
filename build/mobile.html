@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='da8ed29 · 2026-10-25';console.log('[оттиск]', 'da8ed29 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='3d1393c · 2026-10-25';console.log('[оттиск]', '3d1393c · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -35400,9 +35400,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 const fy = (g - 10 - y) % fl, brick = ruPlaster(x, y) || y < ruTop(x) + 2;
                 let c;
                 if (fy === 0)
-                    c = K3; // тяга: тень под ней
+                    c = S1; // тяга: по верху — к свету
                 else if (fy === fl - 1)
-                    c = S1; // тяга по верху — к свету
+                    c = K3; // и тень под ней
                 else if (brick)
                     c = (y & 1) === 0 || (x + ((y >> 1) & 1) * 2) % 4 === 0 ? SEP : BR2;
                 else {
@@ -35415,32 +35415,33 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                     c = AS;
                 r(x, y, 1, 1, c);
             }
+        // окна; у слома (девятый этаж) — по столбцам ниже кромки: ниже неё кирпич не держит
+        const W = (x, y, w, h, c) => { for (let i = 0; i < w; i++) {
+            const top = Math.max(y, ruTop(x + i) + 2);
+            if (top < y + h)
+                r(x + i, top, 1, y + h - top, c);
+        } };
+        const sooty = [];
         for (let f = 0; f < 8; f++) {
             const y0 = g - 10 - (f + 1) * fl;
             for (let c = 0; c < 6; c++) {
                 const wx = x0 + 3 + c * 12, wy = y0 + 2, cat = f === 1 && c === 5;
-                if (wy - 1 < ruTop(wx) + 1 || wy - 1 < ruTop(wx + 6) + 1)
-                    continue;
+                if (wy + 4 < ruTop(wx) + 2 || wy + 4 < ruTop(wx + 5) + 2)
+                    continue; // от проёма не осталось и двух рядов
                 if (!cat && hh(f, c, 247) < 0.4)
-                    for (let dy = 0; dy < 9; dy++) {
-                        const w = 2 + (dy >> 2);
-                        for (let dx = -w; dx <= w; dx++) {
-                            const yy = wy - 2 - dy, xx = wx + 3 + dx;
-                            if (yy > ruTop(xx) && hh(xx, yy, 249) < 0.85 - dy * 0.09)
-                                r(xx, yy, 1, 1, dy < 3 ? NI : K1);
-                        }
-                    } // копоть языком
-                r(wx - 1, wy - 1, 8, 1, S1);
-                r(wx - 1, wy, 8, 1, K3); // сандрик: карнизик, тень под ним
-                r(wx, wy + 1, 6, 5, K0);
-                r(wx, wy + 1, 1, 5, K2); // проём, откос
+                    sooty.push([wx, wy]);
+                W(wx - 1, wy - 1, 8, 1, S1);
+                W(wx - 1, wy, 8, 1, K3); // сандрик: карнизик, тень под ним
+                W(wx, wy + 1, 6, 5, K0);
+                W(wx, wy + 1, 1, 5, K2); // проём, откос
                 r(wx - 1, wy + 6, 8, 1, S1); // подоконник
-                if (cat) { // кв. 42: занавеска на свету, кот силуэтом
+                if (cat) { // кв. 42: занавеска на свету, складка с краю, кот силуэтом — уши торчком
                     r(wx + 1, wy + 1, 5, 5, L2);
                     r(wx + 1, wy + 1, 5, 1, L1);
-                    r(wx + 3, wy + 1, 1, 5, K3);
-                    r(wx + 3, wy + 3, 2, 3, NI);
-                    r(wx + 3, wy + 2, 1, 1, NI);
+                    r(wx + 1, wy + 1, 1, 5, K3);
+                    r(wx + 2, wy + 4, 3, 2, NI);
+                    r(wx + 2, wy + 3, 3, 1, NI);
+                    r(wx + 2, wy + 2, 1, 1, NI);
                     r(wx + 4, wy + 2, 1, 1, NI);
                 }
                 else {
@@ -35451,15 +35452,29 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                         r(wx + 1, wy + 2, 1, 1, AS);
                     } // заколочено
                     else if (v < 0.55) {
-                        r(wx + 3, wy + 1, 1, 5, BR2);
-                        r(wx, wy + 3, 6, 1, BR2);
-                        r(wx + 1, wy + 2, 1, 1, AS);
+                        W(wx + 3, wy + 1, 1, 5, BR2);
+                        W(wx, wy + 3, 6, 1, BR2);
+                        W(wx + 1, wy + 2, 1, 1, AS);
                     } // остатки рамы, осколок
                     if (hh(f, c, 253) < 0.35)
-                        r(wx + q(hh(f, c, 255) * 5), wy + 7, 1, 2 + q(hh(f, c, 257) * 4), RUST); // потёк от жести подоконника
+                        r(wx + q(hh(f, c, 255) * 5), wy + 7, 1, 1 + (hh(f, c, 257) < 0.5 ? 1 : 0), RUST); // потёк от жести подоконника — по тяге, не в окно ниже
                 }
             }
         }
+        // копоть языком — поверх окна выше (сажа ложится и на сандрик, и на подоконник), проёмы не трогает
+        for (const [wx, wy] of sooty)
+            for (let dy = 0; dy < 9; dy++) {
+                const w = 2 + (dy >> 1), yy = wy - 2 - dy, inUp = yy >= wy - fl + 1 && yy <= wy - fl + 5; // шире кверху — обходит окно выше по простенкам
+                context_js_9.X.globalAlpha = dy < 3 ? 0.85 : 0.65;
+                for (let dx = -w; dx <= w; dx++) {
+                    const xx = wx + 3 + dx;
+                    if (inUp && xx >= wx && xx < wx + 6)
+                        continue;
+                    if (yy > ruTop(xx) && hh(xx, yy, 249) < 0.9 - dy * 0.07 - Math.abs(dx) * 0.06)
+                        r(xx, yy, 1, 1, dy < 3 ? NI : K1);
+                }
+            }
+        context_js_9.X.globalAlpha = 1;
         // ── верх: кирпич слома, концы балок торчат ──
         for (let x = x0; x < x1; x++) {
             r(x, ruTop(x), 1, 1, hh(x, 3, 259) < 0.5 ? SEP : BR2);
@@ -35514,10 +35529,12 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(58, g - 9, 6, 9, K1);
         r(63, g - 9, 1, 9, K0);
         r(57, g - 10, 8, 1, S2); // дверь кв. 13 приоткрыта
-        for (let k = 0; k < 10; k++) {
-            r(59, g - 9 + q(k * 0.85), 1, 1, AS);
-            r(61, g - 9 + q(k * 0.85), 1, 1, AS);
-        } // двадцать замков — открыты
+        for (let n = 0, y = g - 9; y < g && n < 20; y++)
+            for (let x = 58; x <= 62 && n < 20; x++)
+                if (((x + y) & 1) === 0) {
+                    r(x, y, 1, 1, AS);
+                    n++;
+                } // двадцать замков — открыты, каждый отдельно
         // ── во дворе — обрушенное: груды кирпича, балки, штукатурка ──
         for (const [px, py, w, h] of [[85, 72, 20, 18], [2, 82, 8, 8]]) {
             for (let x = 0; x < w; x++) {
@@ -35545,12 +35562,12 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_ruins(x, y) {
         const seam = potemkin_js_2.revealOf(RUINS) > 0.25;
-        bake(seam ? 'ruins3s' : 'ruins3', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
+        bake(seam ? 'ruins4s' : 'ruins4', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
         // кот в кв. 42 изредка дёргает хвостом
         const wx = x + RU_X0 + 3 + 5 * 12, wy = y + RU_G - 10 - 2 * RU_FL + 2, p = time_js_23.t % 300;
         r(wx + 5, wy + 5, 1, 1, NI);
         if (p < 24)
-            r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI);
+            r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI); // хвост вверх — у самого бока
     }
     exports_105("draw_ruins", draw_ruins);
     // ── СМОТРОВАЯ ВЫШКА ──

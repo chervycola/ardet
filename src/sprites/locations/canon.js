@@ -1582,33 +1582,43 @@ function ruinsBody(seam) {
   for (let x = x0; x < x1; x++) for (let y = ruTop(x); y < g - 10; y++) {
     const fy = (g - 10 - y) % fl, brick = ruPlaster(x, y) || y < ruTop(x) + 2;
     let c;
-    if (fy === 0) c = K3;                                                  // тяга: тень под ней
-    else if (fy === fl - 1) c = S1;                                        // тяга по верху — к свету
+    if (fy === 0) c = S1;                                                  // тяга: по верху — к свету
+    else if (fy === fl - 1) c = K3;                                        // и тень под ней
     else if (brick) c = (y & 1) === 0 || (x + ((y >> 1) & 1) * 2) % 4 === 0 ? SEP : BR2;
     else { const v = hh(x >> 4, y >> 3, 245); c = v < 0.25 ? S2 : v > 0.8 ? S1 : S0; }
     if (x === x0 && !brick) c = S1; if (x === x1 - 1) c = AS;
     r(x, y, 1, 1, c);
   }
+  // окна; у слома (девятый этаж) — по столбцам ниже кромки: ниже неё кирпич не держит
+  const W = (x, y, w, h, c) => { for (let i = 0; i < w; i++) { const top = Math.max(y, ruTop(x + i) + 2); if (top < y + h) r(x + i, top, 1, y + h - top, c); } };
+  const sooty = [];
   for (let f = 0; f < 8; f++) {
     const y0 = g - 10 - (f + 1) * fl;
     for (let c = 0; c < 6; c++) {
       const wx = x0 + 3 + c * 12, wy = y0 + 2, cat = f === 1 && c === 5;
-      if (wy - 1 < ruTop(wx) + 1 || wy - 1 < ruTop(wx + 6) + 1) continue;
-      if (!cat && hh(f, c, 247) < 0.4) for (let dy = 0; dy < 9; dy++) { const w = 2 + (dy >> 2); for (let dx = -w; dx <= w; dx++) { const yy = wy - 2 - dy, xx = wx + 3 + dx; if (yy > ruTop(xx) && hh(xx, yy, 249) < 0.85 - dy * 0.09) r(xx, yy, 1, 1, dy < 3 ? NI : K1); } }   // копоть языком
-      r(wx - 1, wy - 1, 8, 1, S1); r(wx - 1, wy, 8, 1, K3);                // сандрик: карнизик, тень под ним
-      r(wx, wy + 1, 6, 5, K0); r(wx, wy + 1, 1, 5, K2);                     // проём, откос
+      if (wy + 4 < ruTop(wx) + 2 || wy + 4 < ruTop(wx + 5) + 2) continue;   // от проёма не осталось и двух рядов
+      if (!cat && hh(f, c, 247) < 0.4) sooty.push([wx, wy]);
+      W(wx - 1, wy - 1, 8, 1, S1); W(wx - 1, wy, 8, 1, K3);                // сандрик: карнизик, тень под ним
+      W(wx, wy + 1, 6, 5, K0); W(wx, wy + 1, 1, 5, K2);                     // проём, откос
       r(wx - 1, wy + 6, 8, 1, S1);                                          // подоконник
-      if (cat) {                                                            // кв. 42: занавеска на свету, кот силуэтом
-        r(wx + 1, wy + 1, 5, 5, L2); r(wx + 1, wy + 1, 5, 1, L1); r(wx + 3, wy + 1, 1, 5, K3);
-        r(wx + 3, wy + 3, 2, 3, NI); r(wx + 3, wy + 2, 1, 1, NI); r(wx + 4, wy + 2, 1, 1, NI);
+      if (cat) {                                                            // кв. 42: занавеска на свету, складка с краю, кот силуэтом — уши торчком
+        r(wx + 1, wy + 1, 5, 5, L2); r(wx + 1, wy + 1, 5, 1, L1); r(wx + 1, wy + 1, 1, 5, K3);
+        r(wx + 2, wy + 4, 3, 2, NI); r(wx + 2, wy + 3, 3, 1, NI); r(wx + 2, wy + 2, 1, 1, NI); r(wx + 4, wy + 2, 1, 1, NI);
       } else {
         const v = hh(f, c, 251);
         if (f < 2 && v < 0.35) { for (let k = 0; k < 3; k++) r(wx, wy + 2 + k * 2, 6, 1, BR2); r(wx + 1, wy + 2, 1, 1, AS); }   // заколочено
-        else if (v < 0.55) { r(wx + 3, wy + 1, 1, 5, BR2); r(wx, wy + 3, 6, 1, BR2); r(wx + 1, wy + 2, 1, 1, AS); }   // остатки рамы, осколок
-        if (hh(f, c, 253) < 0.35) r(wx + q(hh(f, c, 255) * 5), wy + 7, 1, 2 + q(hh(f, c, 257) * 4), RUST);   // потёк от жести подоконника
+        else if (v < 0.55) { W(wx + 3, wy + 1, 1, 5, BR2); W(wx, wy + 3, 6, 1, BR2); W(wx + 1, wy + 2, 1, 1, AS); }   // остатки рамы, осколок
+        if (hh(f, c, 253) < 0.35) r(wx + q(hh(f, c, 255) * 5), wy + 7, 1, 1 + (hh(f, c, 257) < 0.5 ? 1 : 0), RUST);   // потёк от жести подоконника — по тяге, не в окно ниже
       }
     }
   }
+  // копоть языком — поверх окна выше (сажа ложится и на сандрик, и на подоконник), проёмы не трогает
+  for (const [wx, wy] of sooty) for (let dy = 0; dy < 9; dy++) {
+    const w = 2 + (dy >> 1), yy = wy - 2 - dy, inUp = yy >= wy - fl + 1 && yy <= wy - fl + 5;   // шире кверху — обходит окно выше по простенкам
+    X.globalAlpha = dy < 3 ? 0.85 : 0.65;
+    for (let dx = -w; dx <= w; dx++) { const xx = wx + 3 + dx; if (inUp && xx >= wx && xx < wx + 6) continue; if (yy > ruTop(xx) && hh(xx, yy, 249) < 0.9 - dy * 0.07 - Math.abs(dx) * 0.06) r(xx, yy, 1, 1, dy < 3 ? NI : K1); }
+  }
+  X.globalAlpha = 1;
   // ── верх: кирпич слома, концы балок торчат ──
   for (let x = x0; x < x1; x++) { r(x, ruTop(x), 1, 1, hh(x, 3, 259) < 0.5 ? SEP : BR2); if (hh(x, 2, 261) < 0.3) r(x, ruTop(x) - 1, 1, 1, BR2); }
   for (let k = 0; k < 7; k++) { const bx = x0 + 6 + k * 11, by = ruTop(bx) + 1; r(bx, by - 2, 2, 2, K1); r(bx, by - 2, 2, 1, BR2); }   // концы балок
@@ -1632,7 +1642,7 @@ function ruinsBody(seam) {
   if (seam) letters(14, 30, BO);                                           // поверх копоти, другой — белее
   r(42, g - 9, 8, 9, K0); r(41, g - 12, 10, 2, S1); r(41, g - 12, 10, 1, L2); r(41, g - 10, 1, 2, K3); r(50, g - 10, 1, 2, K3); r(42, g - 9, 1, 9, K2);   // подъезд, козырёк на кронштейнах
   r(58, g - 9, 6, 9, K1); r(63, g - 9, 1, 9, K0); r(57, g - 10, 8, 1, S2);  // дверь кв. 13 приоткрыта
-  for (let k = 0; k < 10; k++) { r(59, g - 9 + q(k * 0.85), 1, 1, AS); r(61, g - 9 + q(k * 0.85), 1, 1, AS); }   // двадцать замков — открыты
+  for (let n = 0, y = g - 9; y < g && n < 20; y++) for (let x = 58; x <= 62 && n < 20; x++) if (((x + y) & 1) === 0) { r(x, y, 1, 1, AS); n++; }   // двадцать замков — открыты, каждый отдельно
   // ── во дворе — обрушенное: груды кирпича, балки, штукатурка ──
   for (const [px, py, w, h] of [[85, 72, 20, 18], [2, 82, 8, 8]]) {
     for (let x = 0; x < w; x++) { const hgt = q(h * Math.sin(Math.PI * (x + 0.5) / w) * (0.75 + hh(x, px, 273) * 0.25)); for (let y = 0; y < hgt; y++) { const yy = py + h - y; r(px + x, yy, 1, 1, hh(px + x, yy, 275) < 0.3 ? SEP : hh(px + x, yy, 276) < 0.15 ? S0 : BR2); } if (hgt > 0) r(px + x, py + h - hgt + 1, 1, 1, hh(x, 2, 277) < 0.5 ? S1 : SEP); }
@@ -1644,11 +1654,11 @@ function ruinsBody(seam) {
 const RUINS = { id: 'ruins' };
 export function draw_ruins(x, y) {
   const seam = revealOf(RUINS) > 0.25;
-  bake(seam ? 'ruins3s' : 'ruins3', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
+  bake(seam ? 'ruins4s' : 'ruins4', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
   // кот в кв. 42 изредка дёргает хвостом
   const wx = x + RU_X0 + 3 + 5 * 12, wy = y + RU_G - 10 - 2 * RU_FL + 2, p = t % 300;
   r(wx + 5, wy + 5, 1, 1, NI);
-  if (p < 24) r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI);
+  if (p < 24) r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI);              // хвост вверх — у самого бока
 }
 
 // ── СМОТРОВАЯ ВЫШКА ──
