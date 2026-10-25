@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending, draw_basement } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -198,99 +198,6 @@ export function draw_raven(x, y) {
     }
     // Silent cat on a branch — useless tree, useless cat, both survived
     // NPC drawn separately
-}
-
-export function draw_basement(x, y) {
-    // ═══ FLOODED BASEMENT — Iä! Iä! ═══
-    // Shadow
-    X.globalAlpha=.35;X.fillStyle='#000';
-    X.beginPath();X.ellipse(x+25,y+44,28,3,0,0,Math.PI*2);X.fill();X.globalAlpha=1;
-
-    // Concrete walls
-    rect(X,x+5,y+12,40,30,P.dstone);
-    rect(X,x+6,y+13,38,28,'#1a1820');
-    rect(X,x+7,y+14,36,26,'#0a0a12');
-    // Moss on walls
-    for(let i=0;i<4;i++){
-      rect(X,x+8+i*9,y+14,2,2,P.dtoxic);
-      if(hash(i,0,11)>.5)px(X,x+9+i*9,y+13,P.toxic);
-    }
-
-    // Stone frame
-    rect(X,x+4,y+10,3,32,P.stone);
-    rect(X,x+43,y+10,3,32,P.stone);
-    rect(X,x+4,y+10,42,3,P.stone);
-    // Frame weathering
-    for(let i=0;i<6;i++)px(X,x+6+i*6,y+11,'#1a1a22');
-
-    // Steps descending (with perspective)
-    for(let i=0;i<5;i++){
-      const stW=24-i*2;
-      const stX=x+13+i;
-      const stY=y+18+i*4;
-      const shade=Math.max(3,30-i*6);
-      rect(X,stX,stY,stW,2,`rgb(${shade},${shade-1},${shade+2})`);
-      rect(X,stX,stY+2,stW,1,'#020202');
-    }
-
-    // Water at bottom — pulsing toxic glow
-    X.globalAlpha=.5+.1*Math.sin(t*.02);
-    rect(X,x+12,y+37,26,5,P.dtoxic);
-    rect(X,x+13,y+38,24,3,P.toxic);
-    X.globalAlpha=1;
-    // Water ripples
-    for(let i=0;i<3;i++){
-      const rph=((t*.02+i*.33)%1);
-      X.globalAlpha=(1-rph)*.3;
-      X.strokeStyle=P.btoxic;X.lineWidth=1;
-      X.beginPath();X.ellipse(x+25,y+39,3+rph*10,1+rph*2,0,0,Math.PI*2);X.stroke();
-      X.globalAlpha=1;
-    }
-
-    // Glowing rune on wall — slow pulse
-    const rPulse=.4+.3*Math.sin(t*.006);
-    X.globalAlpha=rPulse;
-    X.fillStyle='#6b0f1a';
-    // Triangle
-    rect(X,x+23,y+16,2,2);rect(X,x+21,y+19,6,1);
-    rect(X,x+22,y+17,4,1);
-    X.globalAlpha=1;
-
-    // WET FOOTPRINTS on steps — coming UP (someone just climbed out)
-    for(let i=0;i<4;i++){
-      const fpY=y+22+i*4;
-      const fpX=x+15+i*2+Math.sin(i*2)*2;
-      X.globalAlpha=.4+hash(i,0,11)*.2;
-      rect(X,fpX,fpY,2,1,'#1a3a2a');
-      rect(X,fpX+3,fpY+1,2,1,'#1a3a2a');
-      X.globalAlpha=1;
-    }
-
-    // Cold air/fog from inside (rising)
-    for(let i=0;i<3;i++){
-      const fph=((t*.008+i*.33)%1);
-      const fx=x+18+i*6+Math.sin(t*.01+i)*2;
-      const fy=y+12-fph*8;
-      X.globalAlpha=(1-fph)*.25;
-      rect(X,fx,fy,3,1,'#4a7a5a');
-      X.globalAlpha=1;
-    }
-
-    // Graffiti on doorframe — "Iä!" in red
-    X.fillStyle='#6b0f1a';
-    rect(X,x+8,y+6,1,3); // I
-    rect(X,x+10,y+6,1,3);px(X,x+11,y+6); // ä
-    rect(X,x+10,y+5,1,1); rect(X,x+12,y+5,1,1);
-    rect(X,x+14,y+6,1,1); // !
-    rect(X,x+14,y+8,1,1);
-
-    // Drop of water dripping from frame
-    if(t%60<20){
-      const dY=y+9+(t%60)*.4;
-      X.globalAlpha=.5;
-      px(X,x+20,dY,P.toxic);
-      X.globalAlpha=1;
-    }
 }
 
 export function draw_exit(x, y) {

@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='c9e55e1 · 2026-10-25';console.log('[оттиск]', 'c9e55e1 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='1e826c1 · 2026-10-25';console.log('[оттиск]', '1e826c1 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH, BS_WL;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -37804,6 +37804,190 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     exports_105("draw_vending", draw_vending);
+    function bsLip(x) { return x <= 25 ? 25 + (x - 4) * 13 / 21 : 38 - (x - 25) * 13 / 21; }
+    function bsIn(x, y) {
+        if (y < 10 || x < 4 || x > 46 || y >= bsLip(x))
+            return false;
+        const yy = Math.min(y, 25);
+        return x >= 8 - (yy - 10) * 4 / 15 && x <= 42 + (yy - 10) * 4 / 15;
+    }
+    function basementBody(wet) {
+        // ── плита по кромке: бетон, край обломан неровно ──
+        for (let y = 5; y < 45; y++)
+            for (let x = 0; x < 50; x++) {
+                if (bsIn(x, y))
+                    continue;
+                const near = bsIn(x, y + 4) || bsIn(x, y - 5) || bsIn(x - 4, y) || bsIn(x + 4, y) || bsIn(x - 3, y - 4) || bsIn(x + 3, y - 4);
+                if (!near)
+                    continue;
+                const h = hh(x, y, 531);
+                if (h < 0.06)
+                    continue; // выкрошилось
+                if (x > 35 && x < 44 && y > 31 && y < 37)
+                    continue; // угол отбит
+                r(x, y, 1, 1, h < 0.08 ? K2 : h > 0.94 ? S1 : (x + y * 3) % 17 === 0 ? S2 : S0);
+            }
+        // ── проём: вода, задняя стена, боковые стены ──
+        for (let y = 10; y < 40; y++)
+            for (let x = 4; x <= 46; x++) {
+                if (!bsIn(x, y))
+                    continue;
+                const h = hh(x, y, 533);
+                let c;
+                if (x < 8 && y < 10 + (8 - x) * 15 / 4 + 14) { // левая стена — в тени
+                    const d = y - (10 + (8 - x) * 15 / 4);
+                    c = d < 4 ? S2 : d < 9 ? K3 : K1;
+                }
+                else if (x > 42 && y < 10 + (x - 42) * 15 / 4 + 14) { // правая — к свету
+                    const d = y - (10 + (x - 42) * 15 / 4);
+                    c = d < 4 ? S1 : d < 9 ? S0 : S2;
+                }
+                else if (y < BS_WL && x >= 8 && x <= 42) { // задняя — в опалубке, к низу темнее
+                    const d = y - 10;
+                    c = d < 5 ? S0 : d < 10 ? S2 : K3;
+                    if ((y - 10) % 4 === 3 && d < 11)
+                        c = d < 5 ? S2 : K2; // швы опалубки
+                    if (h < 0.04)
+                        c = K2;
+                    if (y >= BS_WL - 2)
+                        c = d < 12 ? MG_D : K1; // мокрая полоса над водой
+                    if (y === 19 && h < 0.6)
+                        c = L2; // соль: была выше
+                }
+                else { // вода — стоит: тёмная, к стенам темнее, у ближней кромки чуть видна
+                    const d = y - BS_WL, edge = bsLip(x) - y;
+                    c = d < 2 || x < 9 || x > 41 ? NI : edge < 3 ? (h < 0.5 ? K1 : K0) : K0;
+                    if (d > 3 && edge > 2 && h < 0.05)
+                        c = MG_D;
+                }
+                r(x, y, 1, 1, c);
+            }
+        r(8, 10, 1, BS_WL - 10, K1);
+        r(42, 10, 1, BS_WL - 10, L2); // углы: в тени и к свету
+        // кромки плиты по проёму — ребро к свету
+        for (let x = 8; x <= 42; x++)
+            r(x, 9, 1, 1, L2);
+        for (let x = 4; x <= 46; x++) {
+            const ly = Math.ceil(bsLip(x));
+            r(x, ly, 1, 1, x < 25 ? L2 : L1);
+        }
+        for (let y = 10; y < 25; y++) {
+            r(q(8 - (y - 10) * 4 / 15) - 1, y, 1, 1, S1);
+            r(q(42 + (y - 10) * 4 / 15) + 1, y, 1, 1, L2);
+        }
+        // ── марш: справа налево вниз, ребро ступени к свету, косоур в тени; низ под водой ──
+        const STEP = k => [39 - 3 * k, 11 + 2 * k];
+        for (let k = 0; k < 9; k++) {
+            const [tx, ty] = STEP(k);
+            if (ty >= BS_WL) { // под водой — едва
+                if (k & 1)
+                    r(tx - 2, ty, 3, 1, MG_D);
+                else
+                    r(tx - 1, ty, 2, 1, MG_D);
+                continue;
+            }
+            for (let j = 2; j < 6 && ty + j < BS_WL; j++)
+                r(tx - 2, ty + j, 3, 1, j < 3 ? K3 : K2); // косоур
+            r(tx - 2, ty + 1, 3, 1, S1);
+            r(tx - 2, ty, 3, 1, L2);
+            r(tx - 2, ty, 1, 1, BO);
+            if (wet && k > 0)
+                r(tx - 1, ty, 1, 1, k > 4 ? K2 : K3); // мокрый след
+        }
+        r(38, 10, 4, 1, L2);
+        r(40, 11, 2, 1, S1); // площадка наверху
+        // перила: ржавая труба, стойки через ступень; у воды оборваны, конец висит
+        for (let k = 0; k < 5; k++) {
+            const [tx, ty] = STEP(k);
+            for (let i = 0; i < 3; i++)
+                r(tx - i, ty - 4 + (i === 2 ? 1 : 0) + (i > 0 && k > 0 ? 0 : 0), 1, 1, i === 0 ? RUST_L : RUST);
+            if (!(k & 1))
+                r(tx, ty - 3, 1, 3, RUST);
+        }
+        r(26, 16, 1, 1, RUST);
+        r(26, 17, 1, 2, RUST_L);
+        r(25, 19, 1, 1, RUST); // конец перил свисает
+        // ── дверь в дальнем углу: доски, по пояс в воде, низ разбух; над ней карандашом ──
+        r(10, 16, 6, BS_WL - 16, BR2);
+        for (let x = 10; x < 16; x += 2)
+            r(x, 16, 1, BS_WL - 16, K1);
+        r(10, 16, 6, 1, RUST_L);
+        r(10, 16, 1, BS_WL - 16, RUST);
+        r(11, 19, 4, 1, K1);
+        r(14, 20, 1, 1, AS); // планка, ручка
+        r(10, BS_WL - 2, 6, 2, MG_D); // разбухла у воды
+        r(9, 16, 1, BS_WL - 16, K0);
+        for (const [lx, ly, n] of [[10, 13, 5], [11, 14, 4]])
+            for (let k = 0; k < n; k++)
+                if (hh(k, ly, 535) > 0.25)
+                    r(lx + k, ly, 1, 1, K3); // «Звонить три раза…»
+        // ── «Iä! Iä!» и «Sh—» штрихами пеплом, с потёками; вторая строка оборвана ──
+        for (const ox of [17, 24]) {
+            r(ox, 11, 1, 4, AS); // I
+            r(ox + 2, 13, 2, 2, AS);
+            r(ox + 2, 11, 1, 1, AS);
+            r(ox + 3, 11, 1, 1, AS);
+            r(ox + 3, 15, 1, 1, SEP); // ä
+            r(ox + 5, 11, 1, 3, AS);
+            r(ox + 5, 15, 1, 1, AS); // !
+        }
+        r(18, 17, 2, 1, AS);
+        r(17, 18, 1, 1, AS);
+        r(18, 19, 1, 1, AS);
+        r(17, 20, 2, 1, AS); // S
+        r(20, 17, 1, 4, AS);
+        r(21, 18, 1, 1, AS);
+        r(22, 19, 1, 2, AS); // h
+        r(23, 18, 1, 1, AS);
+        r(24, 18, 1, 1, S1); // — и всё
+        r(17, 21, 1, 2, SEP);
+        r(20, 21, 1, 1, SEP);
+        r(22, 21, 1, 2, SEP); // потёки
+        // ── отражения в воде: ступени и дверь ──
+        for (let k = 2; k < 7; k++) {
+            const [tx, ty] = STEP(k);
+            const ry = 2 * BS_WL - ty + 1;
+            if (ry < 36 && bsIn(tx, ry)) {
+                r(tx - 2, ry, 2, 1, k > 4 ? MG : MG_D);
+                if (k > 3)
+                    r(tx, ry, 1, 1, MG_L);
+            }
+        }
+        for (let y = BS_WL + 2; y < 34; y += 2)
+            if (bsIn(41, y))
+                r(41, y, 1, 1, MG_D); // правая стена — бликом в воде
+        r(11, BS_WL + 1, 1, 2, K2);
+        r(13, BS_WL + 1, 1, 1, K2);
+        // ── плита: соль, мох у воды, трещины; угол отбит — арматура, земля ──
+        for (let k = 0; k < 26; k++) {
+            const sx = q(hh(k, 1, 537) * 50), sy = 5 + q(hh(k, 2, 539) * 40);
+            if (bsIn(sx, sy))
+                continue;
+            r(sx, sy, 1, 1, k % 3 === 0 ? MG : k % 3 === 1 ? L2 : MG_D);
+        }
+        for (const [cx, cy, dx, dy, n] of [[3, 12, 1, 1, 4], [45, 30, -1, 1, 3], [22, 41, 1, 0, 5], [30, 6, 0, 1, 3]])
+            for (let k = 0; k < n; k++)
+                r(cx + dx * k, cy + dy * k + (k & 1), 1, 1, K2);
+        r(37, 33, 5, 3, K4);
+        r(38, 32, 3, 1, K3);
+        r(36, 34, 1, 2, K3);
+        r(38, 31, 1, 3, RUST);
+        r(40, 30, 1, 3, RUST_L);
+        r(39, 30, 1, 1, RUST); // арматура
+        // мокрые следы на плите — к тропе
+        if (wet)
+            for (const [fx, fy] of [[43, 8], [46, 11], [45, 15], [48, 19]]) {
+                r(fx, fy, 1, 2, K2);
+                r(fx + 1, fy + 1, 1, 1, K3);
+            }
+    }
+    function draw_basement(x, y) {
+        if (relook_js_1.wasUsed('basement'))
+            bake('basement4w', x, y, 0, 5, 50, 40, () => basementBody(true));
+        else
+            bake('basement4', x, y, 0, 5, 50, 40, () => basementBody(false));
+    }
+    exports_105("draw_basement", draw_basement);
     return {
         setters: [
             function (context_js_9_1) {
@@ -38372,6 +38556,20 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // Свет слева, кромка пеплом справа.
             VM_FX = 10, VM_FW = 25, VM_G = 56; // лицо: x, ширина; подножие
             VM_T = -1, VM_PH = 0;
+            // ── ЗАТОПЛЕННЫЙ ПОДВАЛ ──
+            // «Бетонный спуск в темноту. Вода стоит по пояс. На стене — граффити: „Iä! Iä!
+            // Shub—". Надпись обрывается. Углов в подвале — пять.» Сцена: «спускаешься по
+            // бетону… В дальнем углу — деревянная дверь. Над ней карандашом…». Дом над
+            // подвалом сошёл, перекрытие рухнуло (нов.) — подвал открыт: бетонная плита
+            // по кромке, проём в пять углов — пятый смотрит на зрителя. Задняя стена — в
+            // опалубке, к низу темнее; по ней марш вниз справа налево, перила ржавые,
+            // у воды оборваны; нижние ступени под водой. В дальнем углу — дверь из досок,
+            // по пояс в воде, над ней карандашом строки. Между ними — надпись штрихами
+            // пеплом, вторая строка оборвана. Боковые стены: левая в тени, правая к свету.
+            // Вода стоит — без ряби; в ней отражаются ступени. По плите — соль и мох,
+            // угол отбит, торчит арматура. После сцены — мокрые следы вверх по ступеням и
+            // на плиту: это странник поднимался. Свет слева.
+            BS_WL = 24; // уровень воды на задней стене
         }
     };
 });
@@ -38542,102 +38740,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         // NPC drawn separately
     }
     exports_106("draw_raven", draw_raven);
-    function draw_basement(x, y) {
-        // ═══ FLOODED BASEMENT — Iä! Iä! ═══
-        // Shadow
-        context_js_10.X.globalAlpha = .35;
-        context_js_10.X.fillStyle = '#000';
-        context_js_10.X.beginPath();
-        context_js_10.X.ellipse(x + 25, y + 44, 28, 3, 0, 0, Math.PI * 2);
-        context_js_10.X.fill();
-        context_js_10.X.globalAlpha = 1;
-        // Concrete walls
-        draw_js_7.rect(context_js_10.X, x + 5, y + 12, 40, 30, P.dstone);
-        draw_js_7.rect(context_js_10.X, x + 6, y + 13, 38, 28, '#1a1820');
-        draw_js_7.rect(context_js_10.X, x + 7, y + 14, 36, 26, '#0a0a12');
-        // Moss on walls
-        for (let i = 0; i < 4; i++) {
-            draw_js_7.rect(context_js_10.X, x + 8 + i * 9, y + 14, 2, 2, P.dtoxic);
-            if (draw_js_7.hash(i, 0, 11) > .5)
-                draw_js_7.px(context_js_10.X, x + 9 + i * 9, y + 13, P.toxic);
-        }
-        // Stone frame
-        draw_js_7.rect(context_js_10.X, x + 4, y + 10, 3, 32, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 43, y + 10, 3, 32, P.stone);
-        draw_js_7.rect(context_js_10.X, x + 4, y + 10, 42, 3, P.stone);
-        // Frame weathering
-        for (let i = 0; i < 6; i++)
-            draw_js_7.px(context_js_10.X, x + 6 + i * 6, y + 11, '#1a1a22');
-        // Steps descending (with perspective)
-        for (let i = 0; i < 5; i++) {
-            const stW = 24 - i * 2;
-            const stX = x + 13 + i;
-            const stY = y + 18 + i * 4;
-            const shade = Math.max(3, 30 - i * 6);
-            draw_js_7.rect(context_js_10.X, stX, stY, stW, 2, `rgb(${shade},${shade - 1},${shade + 2})`);
-            draw_js_7.rect(context_js_10.X, stX, stY + 2, stW, 1, '#020202');
-        }
-        // Water at bottom — pulsing toxic glow
-        context_js_10.X.globalAlpha = .5 + .1 * Math.sin(time_js_24.t * .02);
-        draw_js_7.rect(context_js_10.X, x + 12, y + 37, 26, 5, P.dtoxic);
-        draw_js_7.rect(context_js_10.X, x + 13, y + 38, 24, 3, P.toxic);
-        context_js_10.X.globalAlpha = 1;
-        // Water ripples
-        for (let i = 0; i < 3; i++) {
-            const rph = ((time_js_24.t * .02 + i * .33) % 1);
-            context_js_10.X.globalAlpha = (1 - rph) * .3;
-            context_js_10.X.strokeStyle = P.btoxic;
-            context_js_10.X.lineWidth = 1;
-            context_js_10.X.beginPath();
-            context_js_10.X.ellipse(x + 25, y + 39, 3 + rph * 10, 1 + rph * 2, 0, 0, Math.PI * 2);
-            context_js_10.X.stroke();
-            context_js_10.X.globalAlpha = 1;
-        }
-        // Glowing rune on wall — slow pulse
-        const rPulse = .4 + .3 * Math.sin(time_js_24.t * .006);
-        context_js_10.X.globalAlpha = rPulse;
-        context_js_10.X.fillStyle = '#6b0f1a';
-        // Triangle
-        draw_js_7.rect(context_js_10.X, x + 23, y + 16, 2, 2);
-        draw_js_7.rect(context_js_10.X, x + 21, y + 19, 6, 1);
-        draw_js_7.rect(context_js_10.X, x + 22, y + 17, 4, 1);
-        context_js_10.X.globalAlpha = 1;
-        // WET FOOTPRINTS on steps — coming UP (someone just climbed out)
-        for (let i = 0; i < 4; i++) {
-            const fpY = y + 22 + i * 4;
-            const fpX = x + 15 + i * 2 + Math.sin(i * 2) * 2;
-            context_js_10.X.globalAlpha = .4 + draw_js_7.hash(i, 0, 11) * .2;
-            draw_js_7.rect(context_js_10.X, fpX, fpY, 2, 1, '#1a3a2a');
-            draw_js_7.rect(context_js_10.X, fpX + 3, fpY + 1, 2, 1, '#1a3a2a');
-            context_js_10.X.globalAlpha = 1;
-        }
-        // Cold air/fog from inside (rising)
-        for (let i = 0; i < 3; i++) {
-            const fph = ((time_js_24.t * .008 + i * .33) % 1);
-            const fx = x + 18 + i * 6 + Math.sin(time_js_24.t * .01 + i) * 2;
-            const fy = y + 12 - fph * 8;
-            context_js_10.X.globalAlpha = (1 - fph) * .25;
-            draw_js_7.rect(context_js_10.X, fx, fy, 3, 1, '#4a7a5a');
-            context_js_10.X.globalAlpha = 1;
-        }
-        // Graffiti on doorframe — "Iä!" in red
-        context_js_10.X.fillStyle = '#6b0f1a';
-        draw_js_7.rect(context_js_10.X, x + 8, y + 6, 1, 3); // I
-        draw_js_7.rect(context_js_10.X, x + 10, y + 6, 1, 3);
-        draw_js_7.px(context_js_10.X, x + 11, y + 6); // ä
-        draw_js_7.rect(context_js_10.X, x + 10, y + 5, 1, 1);
-        draw_js_7.rect(context_js_10.X, x + 12, y + 5, 1, 1);
-        draw_js_7.rect(context_js_10.X, x + 14, y + 6, 1, 1); // !
-        draw_js_7.rect(context_js_10.X, x + 14, y + 8, 1, 1);
-        // Drop of water dripping from frame
-        if (time_js_24.t % 60 < 20) {
-            const dY = y + 9 + (time_js_24.t % 60) * .4;
-            context_js_10.X.globalAlpha = .5;
-            draw_js_7.px(context_js_10.X, x + 20, dY, P.toxic);
-            context_js_10.X.globalAlpha = 1;
-        }
-    }
-    exports_106("draw_basement", draw_basement);
     function draw_exit(x, y) {
         // ═══ EXIT TO THE WASTELAND — @ardet_mirror sign ═══
         // Road fading into the distance (perspective)
@@ -38888,7 +38990,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_posterwall": canon_js_1_1["draw_posterwall"],
                     "draw_crypt": canon_js_1_1["draw_crypt"],
                     "draw_graffiti": canon_js_1_1["draw_graffiti"],
-                    "draw_vending": canon_js_1_1["draw_vending"]
+                    "draw_vending": canon_js_1_1["draw_vending"],
+                    "draw_basement": canon_js_1_1["draw_basement"]
                 });
             }
         ],
