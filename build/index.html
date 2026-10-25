@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ad6661e · 2026-10-25';console.log('[оттиск]', 'ad6661e · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='929f295 · 2026-10-25';console.log('[оттиск]', '929f295 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32940,7 +32940,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather"], function (exports_103, context_103) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, RUINS, JK_DIGIT, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
     var __moduleName = context_103 && context_103.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -35205,120 +35205,123 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     exports_103("draw_pizzeria", draw_pizzeria);
     function ruinsBody(seam) {
         const g = RU_G, x0 = RU_X0, x1 = RU_X1, fl = RU_FL;
-        // ── девять панельных этажей: панели в тон, швы ──
+        // ── восемь этажей над первым: штукатурка в тон, где облетела — кирпич; тяги ──
         for (let x = x0; x < x1; x++)
             for (let y = ruTop(x); y < g - 10; y++) {
-                const f = Math.floor((g - 10 - 1 - y) / fl), pc = Math.floor((x - x0) / 12), v = hh(pc, f, 243);
-                const seamH = (g - 10 - y) % fl === 0, seamV = (x - x0) % 12 === 0;
-                r(x, y, 1, 1, seamH || seamV ? K3 : x === x0 ? S1 : x === x1 - 1 ? AS : v < 0.25 ? S2 : v > 0.85 ? S1 : S0);
+                const fy = (g - 10 - y) % fl, brick = ruPlaster(x, y) || y < ruTop(x) + 2;
+                let c;
+                if (fy === 0)
+                    c = K3; // тяга: тень под ней
+                else if (fy === fl - 1)
+                    c = S1; // тяга по верху — к свету
+                else if (brick)
+                    c = (y & 1) === 0 || (x + ((y >> 1) & 1) * 2) % 4 === 0 ? SEP : BR2;
+                else {
+                    const v = hh(x >> 4, y >> 3, 245);
+                    c = v < 0.25 ? S2 : v > 0.8 ? S1 : S0;
+                }
+                if (x === x0 && !brick)
+                    c = S1;
+                if (x === x1 - 1)
+                    c = AS;
+                r(x, y, 1, 1, c);
             }
-        for (let f = 0; f < 9; f++) {
+        for (let f = 0; f < 8; f++) {
             const y0 = g - 10 - (f + 1) * fl;
             for (let c = 0; c < 6; c++) {
                 const wx = x0 + 3 + c * 12, wy = y0 + 2, cat = f === 1 && c === 5;
-                if (y0 + 2 < ruTop(wx) + 1)
+                if (wy - 1 < ruTop(wx) + 1 || wy - 1 < ruTop(wx + 6) + 1)
                     continue;
-                // копоть языком вверх — у иных окон через этаж
-                if (!cat && hh(f, c, 245) < 0.4)
+                if (!cat && hh(f, c, 247) < 0.4)
                     for (let dy = 0; dy < 9; dy++) {
                         const w = 2 + (dy >> 2);
                         for (let dx = -w; dx <= w; dx++) {
-                            const yy = wy - 1 - dy, xx = wx + 3 + dx;
-                            if (yy > ruTop(xx) && hh(xx, yy, 247) < 0.9 - dy * 0.09)
+                            const yy = wy - 2 - dy, xx = wx + 3 + dx;
+                            if (yy > ruTop(xx) && hh(xx, yy, 249) < 0.85 - dy * 0.09)
                                 r(xx, yy, 1, 1, dy < 3 ? NI : K1);
                         }
-                    }
-                r(wx - 1, wy - 1, 8, 6, K3);
-                r(wx - 1, wy - 1, 8, 1, S1); // проём: откос к свету
-                r(wx, wy, 6, 4, K0);
+                    } // копоть языком
+                r(wx - 1, wy - 1, 8, 1, S1);
+                r(wx - 1, wy, 8, 1, K3); // сандрик: карнизик, тень под ним
+                r(wx, wy + 1, 6, 5, K0);
+                r(wx, wy + 1, 1, 5, K2); // проём, откос
+                r(wx - 1, wy + 6, 8, 1, S1); // подоконник
                 if (cat) { // кв. 42: занавеска на свету, кот силуэтом
-                    r(wx, wy, 6, 4, L2);
-                    r(wx, wy, 6, 1, L1);
-                    r(wx + 2, wy + 1, 2, 3, NI);
-                    r(wx + 2, wy, 1, 1, NI);
-                    r(wx + 3, wy, 1, 1, NI);
+                    r(wx + 1, wy + 1, 5, 5, L2);
+                    r(wx + 1, wy + 1, 5, 1, L1);
+                    r(wx + 3, wy + 1, 1, 5, K3);
+                    r(wx + 3, wy + 3, 2, 3, NI);
+                    r(wx + 3, wy + 2, 1, 1, NI);
+                    r(wx + 4, wy + 2, 1, 1, NI);
                 }
                 else {
-                    const v = hh(f, c, 249);
-                    if (v < 0.3) {
-                        r(wx, wy, 6, 1, K1);
-                        r(wx + 1, wy + 1, 1, 1, AS);
-                        r(wx + 3, wy, 1, 4, K2);
-                    } // уцелевшая рама, блик
-                    else if (v < 0.42) {
-                        r(wx + 3, wy, 3, 4, SEP);
-                        r(wx + 3, wy, 1, 4, BR2);
-                    } // штора
-                }
-                if (c % 2 === 1 && f > 0) { // балкон: плита, ограждение, потёк ржи
-                    const by = wy + 4;
-                    r(wx - 2, by, 10, 1, S1);
-                    r(wx - 2, by + 1, 10, 2, hh(f, c, 251) < 0.4 ? BR2 : S2);
-                    r(wx - 2, by + 3, 10, 1, K1);
-                    if (hh(f, c, 251) < 0.4)
+                    const v = hh(f, c, 251);
+                    if (f < 2 && v < 0.35) {
                         for (let k = 0; k < 3; k++)
-                            r(wx - 1 + k * 3, by + 1, 2, 1, AS); // застеклён: рамы, стекло
-                    else
-                        for (let k = 0; k < 5; k++)
-                            r(wx - 1 + k * 2, by + 1, 1, 2, K3);
-                    if (hh(f, c, 253) < 0.6)
-                        r(wx + q(hh(f, c, 255) * 6), by + 4, 1, 2 + q(hh(f, c, 257) * 4), RUST);
+                            r(wx, wy + 2 + k * 2, 6, 1, BR2);
+                        r(wx + 1, wy + 2, 1, 1, AS);
+                    } // заколочено
+                    else if (v < 0.55) {
+                        r(wx + 3, wy + 1, 1, 5, BR2);
+                        r(wx, wy + 3, 6, 1, BR2);
+                        r(wx + 1, wy + 2, 1, 1, AS);
+                    } // остатки рамы, осколок
+                    if (hh(f, c, 253) < 0.35)
+                        r(wx + q(hh(f, c, 255) * 5), wy + 7, 1, 2 + q(hh(f, c, 257) * 4), RUST); // потёк от жести подоконника
                 }
             }
         }
-        // ── верх: плиты перекрытий торчат, арматура, висит обломок панели ──
+        // ── верх: кирпич слома, концы балок торчат ──
         for (let x = x0; x < x1; x++) {
-            r(x, ruTop(x), 1, 1, S1);
-            if (hh(x, 2, 259) < 0.3)
-                r(x, ruTop(x) - 1, 1, 1, S2);
+            r(x, ruTop(x), 1, 1, hh(x, 3, 259) < 0.5 ? SEP : BR2);
+            if (hh(x, 2, 261) < 0.3)
+                r(x, ruTop(x) - 1, 1, 1, BR2);
         }
-        for (const [sx, w] of [[x0 + 2, 9], [x0 + 30, 7], [x0 + 52, 6]]) {
-            const yy = ruTop(sx) + 1;
-            r(sx - 2, yy, w, 1, S1);
-            r(sx - 2, yy + 1, w, 1, K1);
-        } // кромки перекрытий
-        for (let k = 0; k < 9; k++) {
-            const ax = x0 + 4 + k * 8, ay = ruTop(ax);
-            r(ax, ay - 3 - (k & 1) * 2, 1, 3 + (k & 1) * 2, RUST);
-        }
-        r(x1 - 6, ruTop(x1 - 6) + 1, 5, 4, S0);
-        r(x1 - 6, ruTop(x1 - 6) + 1, 5, 1, S1);
-        r(x1 - 2, ruTop(x1 - 6) + 5, 1, 2, RUST); // висит обломок
-        // ── первый этаж: кирпич, подъезд с козырьком, надпись краской, кв. 13 ──
+        for (let k = 0; k < 7; k++) {
+            const bx = x0 + 6 + k * 11, by = ruTop(bx) + 1;
+            r(bx, by - 2, 2, 2, K1);
+            r(bx, by - 2, 2, 1, BR2);
+        } // концы балок
+        // ── первый этаж: руст, у подъезда штукатурка сбита — кирпич ──
         for (let x = x0; x < x1; x++)
             for (let y = g - 10; y < g; y++) {
-                const row = y - (g - 10), sh = (row & 1) * 2, mortar = (row & 1) === 0 && false;
-                r(x, y, 1, 1, (x + sh) % 4 === 0 || row % 2 === 1 && (x + sh) % 4 === 2 && false ? K1 : hh((x + sh) >> 2, row, 261) < 0.2 ? SEP : BR2);
+                const atBrick = x < 40 && x >= x0 + 1;
+                let c;
+                if (atBrick)
+                    c = (y - (g - 10)) % 2 === 1 || (x + (((y - (g - 10)) >> 1) & 1) * 2) % 4 === 0 ? K1 : hh(x >> 2, y, 263) < 0.2 ? SEP : BR2;
+                else
+                    c = (y - (g - 10)) % 3 === 0 ? K3 : (x % 9 === 0 ? S2 : S0); // руст
+                if (x === x1 - 1)
+                    c = AS;
+                r(x, y, 1, 1, c);
             }
-        for (let y = g - 10; y < g; y += 2)
-            r(x0, y, x1 - x0, 1, K1); // швы кирпича
-        r(x0, g - 10, 1, 10, SINGE);
-        r(x1 - 1, g - 10, 1, 10, AS);
-        // надпись — штрихами краской; копоть лежит поверх. Шов: вторая половина написана после
-        // пожара — по копоти, другой краской (только неподвижному взгляду)
+        r(x0, g - 11, x1 - x0, 1, S1); // тяга над первым
+        // надпись краской — штрихами; копоть поверх. Шов: вторая половина белее и лежит по копоти
         const lx = x0 + 3, ly = g - 8;
         const letters = (from, to, col) => { for (let k = from; k < to; k++)
-            if (k !== 13 && hh(k, 9, 263) > 0.18)
-                r(lx + k, ly + (k & 1), 1, 1 + (hh(k, 10, 265) < 0.3 ? 1 : 0), col); };
-        letters(0, 14, BO);
+            if (k !== 13 && hh(k, 9, 265) > 0.18)
+                r(lx + k, ly + (k & 1), 1, 1 + (hh(k, 10, 267) < 0.3 ? 1 : 0), col); };
+        letters(0, 14, L1);
         if (!seam)
-            letters(14, 30, BO);
-        context_js_9.X.globalAlpha = 0.7;
-        for (let k = 0; k < 34; k++) { // копоть пожара по кирпичу у подъезда
-            const sx = lx - 2 + k, n = 4 + q(hh(k, 11, 267) * 4);
+            letters(14, 30, L1);
+        context_js_9.X.globalAlpha = 0.5;
+        for (let k = 0; k < 34; k++) {
+            const sx = lx - 2 + k, n = 4 + q(hh(k, 11, 269) * 4);
             for (let j = 0; j < n; j++) {
                 const sy = g - 10 + j;
-                if (hh(sx, sy, 269) < 0.65)
+                if (hh(sx, sy, 271) < 0.45)
                     r(sx, sy, 1, 1, NI);
             }
-        }
+        } // копоть пожара
         context_js_9.X.globalAlpha = 1;
         if (seam)
-            letters(14, 30, L1); // поверх копоти, другой краской
-        r(40, g - 9, 8, 9, K0);
-        r(39, g - 11, 10, 2, S1);
-        r(39, g - 11, 10, 1, L2);
-        r(40, g - 9, 1, 9, K2); // подъезд, козырёк
+            letters(14, 30, BO); // поверх копоти, другой — белее
+        r(42, g - 9, 8, 9, K0);
+        r(41, g - 12, 10, 2, S1);
+        r(41, g - 12, 10, 1, L2);
+        r(41, g - 10, 1, 2, K3);
+        r(50, g - 10, 1, 2, K3);
+        r(42, g - 9, 1, 9, K2); // подъезд, козырёк на кронштейнах
         r(58, g - 9, 6, 9, K1);
         r(63, g - 9, 1, 9, K0);
         r(57, g - 10, 8, 1, S2); // дверь кв. 13 приоткрыта
@@ -35326,34 +35329,39 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(59, g - 9 + q(k * 0.85), 1, 1, AS);
             r(61, g - 9 + q(k * 0.85), 1, 1, AS);
         } // двадцать замков — открыты
-        // ── во дворе — обрушенные этажи плитами, арматура, пыль ──
-        for (const [px, py, w, h, tilt] of [[86, 74, 18, 4, -0.2], [84, 80, 22, 4, 0.15], [90, 69, 12, 3, 0.3], [80, 85, 26, 4, 0], [2, 84, 10, 4, 0.2]]) {
-            for (let k = 0; k < w; k++) {
-                const yy = py + q((k - w / 2) * tilt);
-                r(px + k, yy, 1, h, S0);
-                r(px + k, yy, 1, 1, S1);
-                r(px + k, yy + h - 1, 1, 1, S2);
-                if (k % 6 === 3)
-                    r(px + k, yy + 1, 1, h - 2, K3);
+        // ── во дворе — обрушенное: груды кирпича, балки, штукатурка ──
+        for (const [px, py, w, h] of [[85, 72, 20, 18], [2, 82, 8, 8]]) {
+            for (let x = 0; x < w; x++) {
+                const hgt = q(h * Math.sin(Math.PI * (x + 0.5) / w) * (0.75 + hh(x, px, 273) * 0.25));
+                for (let y = 0; y < hgt; y++) {
+                    const yy = py + h - y;
+                    r(px + x, yy, 1, 1, hh(px + x, yy, 275) < 0.3 ? SEP : hh(px + x, yy, 276) < 0.15 ? S0 : BR2);
+                }
+                if (hgt > 0)
+                    r(px + x, py + h - hgt + 1, 1, 1, hh(x, 2, 277) < 0.5 ? S1 : SEP);
             }
-            r(px + w - 1, py + q((w / 2) * tilt), 1, h, AS);
         }
-        for (let k = 0; k < 7; k++)
-            r(88 + k * 3, 66 + (k & 1) * 3, 1, 5, RUST); // прутья арматуры
-        for (let k = 0; k < 20; k++)
-            r(84 + q(hh(k, 11, 271) * 24), 82 + q(hh(k, 11, 273) * 8), 1, 1, hh(k, 11, 275) < 0.5 ? S2 : AS);
+        for (const [ax, ay, bx, by] of [[86, 74, 104, 68], [92, 86, 106, 82], [84, 80, 96, 73]]) {
+            const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay));
+            for (let k = 0; k <= n; k++) {
+                r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 2, K1);
+                r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 1, BR2);
+            }
+        } // балки
+        for (let k = 0; k < 16; k++)
+            r(84 + q(hh(k, 11, 279) * 22), 86 + q(hh(k, 11, 281) * 4), 1, 1, hh(k, 11, 283) < 0.5 ? S1 : S0); // куски штукатурки
         context_js_9.X.globalAlpha = 0.5;
         r(2, g, 106, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_ruins(x, y) {
         const seam = potemkin_js_2.revealOf(RUINS) > 0.25;
-        bake(seam ? 'ruins2s' : 'ruins2', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
+        bake(seam ? 'ruins3s' : 'ruins3', x, y, 0, 0, 110, 91, () => ruinsBody(seam));
         // кот в кв. 42 изредка дёргает хвостом
         const wx = x + RU_X0 + 3 + 5 * 12, wy = y + RU_G - 10 - 2 * RU_FL + 2, p = time_js_23.t % 300;
-        r(wx + 4, wy + 3, 1, 1, NI);
+        r(wx + 5, wy + 5, 1, 1, NI);
         if (p < 24)
-            r(wx + 5, wy + 2 - ((p >> 3) & 1), 1, 1, NI);
+            r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI);
     }
     exports_103("draw_ruins", draw_ruins);
     // ── СМОТРОВАЯ ВЫШКА ──
@@ -36910,17 +36918,21 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // «Двенадцать этажей. Три верхних — обрушены во двор. На стене подъезда, белой
             // краской по кирпичу: „ЖИЛЬЦЫ СЪЕХАЛИ РАНЬШЕ ПОЖАРА". Квартира 42 — третий этаж,
             // правое окно. В окне — силуэт чёрного кота. Квартира 13, первый этаж: дверь с
-            // двадцатью замками. Все открыты.» Шов (бережение): «„РАНЬШЕ ПОЖАРА" дописано
-            // другой краской — поверх копоти». Панельный дом: стоят девять этажей над
-            // кирпичным первым, панели в тон, швы, рыжие потёки от балконов; верх рваный —
-            // торчат плиты перекрытий и арматура, обрушенное лежит во дворе. Копоть языками
-            // из окон — был пожар. Балконы через окно, иные застеклены. Кот — третий этаж,
-            // правое окно, силуэтом на занавеске, хвост изредка дёргается. На кирпиче у
-            // подъезда надпись краской — штрихами; копоть легла поверх; неподвижному взгляду
-            // видно, что вторая половина написана после пожара — по копоти, белее (второй
-            // холст). Дверь кв. 13 приоткрыта, столбик замков. Свет слева, кромка пеплом.
-            RU_G = 90, RU_X0 = 8, RU_X1 = 84, RU_FL = 8;
-            ruTop = x => RU_G - 10 - 9 * RU_FL + q(hh(x, 1, 241) * 3 + (x > 50 ? (x - 50) * 0.12 : 0)); // рваный верх
+            // двадцатью замками. Все открыты.» Использовать: «Лифт не работает с 1940-го.
+            // Площадка пахнет керосином» — дом довоенный: кирпич под штукатуркой, тяги по
+            // этажам, сандрики над окнами (не панели). Шов (бережение): «„РАНЬШЕ ПОЖАРА"
+            // дописано другой краской — поверх копоти». Стоят девять этажей — первый и восемь
+            // над ним; верх рваный — кирпич слома, торчат концы балок; обрушенное лежит во
+            // дворе грудами кирпича и балками. Штукатурка в тон, местами облетела до
+            // кирпича; копоть языками из окон — был пожар; иные окна заколочены, в иных —
+            // остатки рам. Кот — третий этаж, правое окно, силуэтом на занавеске, хвост
+            // изредка дёргается. У подъезда штукатурка сбита — кирпич, на нём надпись
+            // краской штрихами, копоть поверх; неподвижному взгляду видно, что вторая
+            // половина белее и лежит по копоти (второй холст). Дверь кв. 13 приоткрыта,
+            // столбик из двадцати замков. Свет слева, кромка пеплом справа.
+            RU_G = 90, RU_X0 = 8, RU_X1 = 84, RU_FL = 9;
+            ruTop = x => RU_G - 10 - 8 * RU_FL + q(hh(x, 1, 241) * 3 + (x > 50 ? (x - 50) * 0.14 : 0)); // рваный верх
+            ruPlaster = (x, y) => hh(x >> 3, y >> 2, 243) < 0.13 || hh(x >> 2, y >> 3, 244) < 0.06; // облетела до кирпича
             RUINS = { id: 'ruins' };
             JK_DIGIT = { 3: ['##.', '..#', '.#.', '..#', '##.'], 0: ['.#.', '#.#', '#.#', '#.#', '.#.'] };
             // ── ТОКСИЧНОЕ ОЗЕРО ──
