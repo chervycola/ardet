@@ -875,7 +875,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='6f37891 · 2026-10-25';console.log('[оттиск]', '6f37891 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='8c258bd · 2026-10-25';console.log('[оттиск]', '8c258bd · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2113,7 +2113,8 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
                 {
                     id: 'twohearths', n: 4, range: [1240, 1440],
                     name: 'два очага', era: 'XVII век',
-                    palette: { sky: '#2a3450', ground: '#3a3a4a', lamp: 'candle', dust: '#5a5236' },
+                    // краски — производные канона: пепел в ночи с сепией очага (прежние небо и земля были синими)
+                    palette: { sky: '#262525', ground: '#3a3735', lamp: 'candle', dust: '#5a5236' },
                     signs: [
                         { x: 1280, name: 'дом с печью', form: 'building',
                             facade: `Очаг горит ровно, на столе четыре правила, окно закрыто, за ним война. Терминал: .demon`,
@@ -2208,7 +2209,9 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
                 {
                     id: 'neon', n: 8, range: [2400, 2700],
                     name: 'неон', era: '1960–90-е',
-                    palette: { sky: '#1a1430', ground: '#2a1a3a', lamp: 'neon', dust: '#aa3a8a' },
+                    // краски — производные канона: асфальт — пепел в ночи, пыль — пепел с киноварью вывесок
+                    // (прежние земля и небо были лиловыми, пыль — малиновой)
+                    palette: { sky: '#1a1817', ground: '#2b2a2a', lamp: 'neon', dust: '#918383' },
                     actSign: `АКТ III.\nАннексировано: внимание, связь.`,
                     signs: [
                         { x: 2430, name: 'стены под рекламой',
@@ -2250,7 +2253,8 @@ System.register("content/ulitsa_db", ["content/eggs_transfer", "content/cover_la
                 {
                     id: 'now', n: 9, range: [2700, 3000],
                     name: 'сейчас', era: '2000-е —',
-                    palette: { sky: '#0e1a2a', ground: '#1a2030', lamp: 'screen', dust: '#5c6266' },
+                    // краски — производные канона: ночь с пеплом и мглой (прежние небо и земля были синими)
+                    palette: { sky: '#121110', ground: '#1f1e1e', lamp: 'screen', dust: '#5c6266' },
                     actSign: `АКТ IV.\nАннексируется: речь, образ. Внутренний монолог — на очереди.`,
                     signs: [
                         { x: 2720, name: 'Felixstowe',
@@ -6616,7 +6620,7 @@ System.register("world/hang", ["world/wind", "audio/audio", "world/attention"], 
 // Контракт: x — центр, gy — линия земли; рисунок строго в w×h.
 System.register("sprites/arch/axial", ["world/hang"], function (exports_29, context_29) {
     "use strict";
-    var hang_js_1, NI, BO, AS, MG, CA, CI, K0, K1, K2, K3, K4, BR2, DRD, GD, L1, L2, q, ARCH;
+    var hang_js_1, NI, BO, AS, MG, CA, CI, K0, K1, K2, K3, K4, BR2, DRD, L1, L2, q, ARCH;
     var __moduleName = context_29 && context_29.id;
     function r(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // отрезок ступеньками [x0, x1): пологий — по рядам, крутой — по столбцам
@@ -6666,9 +6670,10 @@ System.register("sprites/arch/axial", ["world/hang"], function (exports_29, cont
             r(c, K3, ox + dx, y, w, 18);
             r(c, BO, ox + dx, y, 1, 18);
         }
-        r(c, GD, ox - 2, g - 76, 5, 1);
-        r(c, GD, ox - 1, g - 78, 3, 2);
-        r(c, GD, ox, g - 79, 1, 1);
+        // пирамидион ловит последний свет — костью: золота канон не даёт
+        r(c, L1, ox - 2, g - 76, 5, 1);
+        r(c, L1, ox - 1, g - 78, 3, 2);
+        r(c, L1, ox, g - 79, 1, 1);
         r(c, BO, ox - 2, g - 76, 1, 1);
         r(c, BO, ox - 1, g - 78, 1, 2);
         r(c, K1, ox, g - 68, 1, 3);
@@ -7604,7 +7609,7 @@ System.register("sprites/arch/axial", ["world/hang"], function (exports_29, cont
             NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A';
             CA = '#E28A3A', CI = '#C23B2B';
             K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
-            BR2 = '#3a2818', DRD = '#3a1c14', GD = '#b8860b';
+            BR2 = '#3a2818', DRD = '#3a1c14';
             L1 = '#c8b89a', L2 = '#b0a284';
             q = Math.round;
             exports_29("ARCH", ARCH = {
@@ -8785,7 +8790,7 @@ System.register("sprites/arch/porticoes", [], function (exports_30, context_30) 
 // Свет — лунный, слева; проёмы — ночь. x — центр, gy — линия земли.
 System.register("sprites/arch/lightgarden", [], function (exports_31, context_31) {
     "use strict";
-    var N, BONE, ASH, MIST, CANDLE, CINN, SEP, D1, D2, WOOD, PLANK, STONE, ST2, CONC, GOLD, PAPER, PAPER2, ARCH;
+    var N, BONE, ASH, MIST, CANDLE, CINN, SEP, D1, D2, WOOD, PLANK, STONE, ST2, CONC, ICON_GOLD, PAPER, PAPER2, ARCH;
     var __moduleName = context_31 && context_31.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // стрельчатый проём: lx — левый край, by — низ, w×h
@@ -9117,7 +9122,7 @@ System.register("sprites/arch/lightgarden", [], function (exports_31, context_31
         setters: [],
         execute: function () {
             N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A', CANDLE = '#E28A3A', CINN = '#C23B2B', SEP = '#3A3026';
-            D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818', STONE = '#3a3328', ST2 = '#2a2620', CONC = '#34302a', GOLD = '#b8860b', PAPER = '#c8b89a', PAPER2 = '#b0a284';
+            D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818', STONE = '#3a3328', ST2 = '#2a2620', CONC = '#34302a', ICON_GOLD = '#D4AF37', PAPER = '#c8b89a', PAPER2 = '#b0a284'; // сусальное золото иконы — исключение равнины (COLOR_EXCEPTIONS)
             exports_31("ARCH", ARCH = {
                 // ── ДОМИНАНТА · юг: Айя-София. Купол на парусах над кольцом окон —
                 // в окнах лампады; тимпан с сеткой окон между контрфорсами, полукупола
@@ -9685,7 +9690,7 @@ System.register("sprites/arch/lightgarden", [], function (exports_31, context_31
                             RA(c, BONE, X - 6, G - 3, 12, 17);
                             RA(c, CONC, X - 5, G - 3, 10, 15);
                             RA(c, N, X - 3, G - 3, 6, 12);
-                            R(c, GOLD, X - 2, G - 10, 4, 5);
+                            R(c, ICON_GOLD, X - 2, G - 10, 4, 5);
                             // барабан и шлем
                             R(c, ASH, X - 6, G - 60, 12, 10);
                             R(c, BONE, X - 6, G - 60, 1, 10);
@@ -9902,7 +9907,7 @@ System.register("sprites/arch/lightgarden", [], function (exports_31, context_31
 // Пиксель-арт: fillRect по целым, детерминированно; тепло — одно окно, и не везде.
 System.register("sprites/arch/twohearths", [], function (exports_32, context_32) {
     "use strict";
-    var N, BONE, ASH, MIST, CANDLE, CINN, SEP, D1, D2, WOOD, PLANK, ST2, BRICK, CONC, GOLD, PAPER, PAPER2, QARC22, QARC19, ARMILLA, ph, MARB, ARCH;
+    var N, BONE, ASH, MIST, CANDLE, CINN, SEP, D1, D2, WOOD, PLANK, ST2, BRICK, CONC, PAPER, PAPER2, QARC22, QARC19, ARMILLA, ph, MARB, ARCH;
     var __moduleName = context_32 && context_32.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // стрельчатый проём: lx — левый край, by — низ, w×h
@@ -10095,7 +10100,7 @@ System.register("sprites/arch/twohearths", [], function (exports_32, context_32)
         setters: [],
         execute: function () {
             N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A', CANDLE = '#E28A3A', CINN = '#C23B2B', SEP = '#3A3026';
-            D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818', ST2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', GOLD = '#b8860b', PAPER = '#c8b89a', PAPER2 = '#b0a284';
+            D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818', ST2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', PAPER = '#c8b89a', PAPER2 = '#b0a284';
             QARC22 = qarc(22), QARC19 = qarc(19);
             // армиллярная сфера r=9 вокруг (0,0): меридиан, горизонт, экватор; ось — отдельно
             ARMILLA = (() => {
@@ -10548,7 +10553,7 @@ System.register("sprites/arch/twohearths", [], function (exports_32, context_32)
                             TIERS(c, D1, X, G - 78, [6, 5, 4, 3, 2, 1], 2);
                             R(c, ASH, X - 1, G - 92, 1, 3);
                             R(c, ASH, X - 9, G - 92, 17, 1);
-                            c.fillStyle = GOLD;
+                            c.fillStyle = PAPER; // короны — костью на фоне неба (золота канон не даёт)
                             for (const o of [-9, -3, 3]) {
                                 c.fillRect(X + o, G - 94, 5, 2);
                                 c.fillRect(X + o, G - 95, 1, 1);
@@ -11149,7 +11154,7 @@ System.register("sprites/arch/twohearths", [], function (exports_32, context_32)
 // поленница, парник, сани; будка часового, шлагбаум, ёлка на подпорке.
 System.register("sprites/arch/enlightenment", ["world/hang"], function (exports_33, context_33) {
     "use strict";
-    var hang_js_2, N, B, A, M, C, K, S, D1, D2, D3, D4, D5, RB, RR, GD, P1, P2, ARCH;
+    var hang_js_2, N, B, A, M, C, K, S, D1, D2, D3, D4, D5, RB, RR, P1, P2, ARCH;
     var __moduleName = context_33 && context_33.id;
     // перо: f(цвет|null, dx от левого края, dy — высота верха над землёй, w, h вниз)
     function pen(ctx, x, gy, w) {
@@ -11711,18 +11716,18 @@ System.register("sprites/arch/enlightenment", ["world/hang"], function (exports_
         f(null, 17, 113, 1, 1);
         f(null, 18, 114, 1, 1);
         f(null, 18, 111, 2, 1); // рука
-        f(GD, 20, 120, 1, 10);
+        f(P1, 20, 120, 1, 10);
         f(null, 19, 117, 3, 1);
         // игла
-        f(GD, 16, 107, 1, 12);
+        f(P1, 16, 107, 1, 12);
         f(null, 16, 95, 2, 14);
         f(null, 15, 81, 4, 14);
         // корона и барабан
-        f(GD, 13, 81, 8, 2);
+        f(P1, 13, 81, 8, 2);
         f(D4, 14, 79, 6, 8);
         f(N, 16, 77, 2, 4);
-        // золочёный шлем
-        f(GD, 14, 71, 6, 2);
+        // шлем: позолота в каноне — светлой костью, золота нет
+        f(P1, 14, 71, 6, 2);
         f(null, 12, 69, 10, 3);
         f(null, 10, 66, 14, 4);
         f(D1, 13, 66, 1, 3);
@@ -12255,7 +12260,7 @@ System.register("sprites/arch/enlightenment", ["world/hang"], function (exports_
         execute: function () {
             N = '#0D0B0A', B = '#D9CFB8', A = '#8A8D8F', M = '#3D4A3A', C = '#E28A3A', K = '#C23B2B', S = '#3A3026';
             D1 = '#15100c', D2 = '#241c14', D3 = '#2a2620', D4 = '#34302a', D5 = '#3a3328';
-            RB = '#3a2418', RR = '#3a1c14', GD = '#b8860b', P1 = '#c8b89a', P2 = '#b0a284';
+            RB = '#3a2418', RR = '#3a1c14', P1 = '#c8b89a', P2 = '#b0a284';
             exports_33("ARCH", ARCH = {
                 // ── ДОМИНАНТА · юг: пирамида в лесах, фонарь учёных на верхней стойке ──
                 landmark: {
@@ -15600,7 +15605,7 @@ System.register("sprites/arch/catastrophes", [], function (exports_38, context_3
 // рисуется один раз в закэшированный холст и выводится одним drawImage.
 System.register("sprites/arch/neon", ["world/hang"], function (exports_39, context_39) {
     "use strict";
-    var hang_js_3, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, GOLD, PAPER, PAPER2, SPR, PAL, STAMPS, CAFE_TABLE, GARLAND, SCOOTER, VENDING, LAUNDRY, YATAI, POPCORN, BUMPER, FINS, FLATPACK, CHESS, ESTATE, SHELL, BENCH, ARCH;
+    var hang_js_3, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, SPR, PAL, STAMPS, CAFE_TABLE, GARLAND, SCOOTER, VENDING, LAUNDRY, YATAI, POPCORN, BUMPER, FINS, FLATPACK, CHESS, ESTATE, SHELL, BENCH, ARCH;
     var __moduleName = context_39 && context_39.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // ступенчатая линия (опоры, ванты, растяжки): от (x0,y0) к (x1,y1) шагами
@@ -16231,7 +16236,7 @@ System.register("sprites/arch/neon", ["world/hang"], function (exports_39, conte
         R(c, BONE, L + 13, G - 54, 74, 2); // снег на кровле
         R(c, BONE, L + 22, G - 52, 1, 2);
         R(c, BONE, L + 61, G - 52, 1, 3);
-        R(c, GOLD, L + 14, G - 50, 72, 3); // жёлтый пояс — единственное золото кольца
+        R(c, PAPER2, L + 14, G - 50, 72, 3); // пояс фирменной краски — выгорел до кости (золота канон не даёт)
         R(c, ASH, L + 85, G - 52, 1, 52);
         R(c, ASH, L + 14, G - 52, 1, 52); // углы
         // витрина: под лампой один собранный стул, сидеть некому
@@ -16248,7 +16253,7 @@ System.register("sprites/arch/neon", ["world/hang"], function (exports_39, conte
         // пилон выше короба, на нём жёлтая панель без слов
         R(c, ASH, L + 91, G - 56, 2, 56);
         R(c, BONE, L + 86, G - 64, 10, 9);
-        R(c, GOLD, L + 87, G - 63, 8, 7);
+        R(c, PAPER2, L + 87, G - 63, 8, 7);
         // исполинский шестигранник прислонён к фасаду: длинное плечо под ~60°,
         // короткое лежит на земле, грани торцов бликуют
         stair(c, ASH, L + 22, G - 3, L + 38, G - 33, 10, 3);
@@ -16699,7 +16704,7 @@ System.register("sprites/arch/neon", ["world/hang"], function (exports_39, conte
             }
         ],
         execute: function () {
-            N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A', CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026', DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328', STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', GOLD = '#b8860b', PAPER = '#c8b89a', PAPER2 = '#b0a284';
+            N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A', CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026', DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328', STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', PAPER = '#c8b89a', PAPER2 = '#b0a284';
             // кэш статики: постройка рисуется один раз в свой холст (лениво, на уровне
             // модуля), дальше — один drawImage за кадр. Без canvas — рисуем напрямую.
             SPR = {};

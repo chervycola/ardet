@@ -1310,6 +1310,34 @@ setCtx(ctx);
     }
     eq(bad.length, 0, 'вне канона: ' + bad.join(', '));
   });
+  const { COLOR_EXCEPTIONS } = await imp('content/world_cells.js');
+  const { SEGMENTS: SEGS } = await imp('content/ulitsa_db.js');
+  test('постройки колец по канону: без золота, синего, неона и белого; чужой цвет — только объявленное исключение своей эпохи', () => {
+    const GOLDS = ['b8860b', 'daa520', 'a06820', '7a4a14', 'ffd700'], bad = [];
+    const dir = new URL('../src/sprites/arch/', import.meta.url);
+    for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.js') && n !== 'index.js')) {
+      const epoch = f.slice(0, -3);
+      const own = Object.values(COLOR_EXCEPTIONS).filter(e => e.epoch === epoch).flatMap(e => [...e.color.matchAll(/#([0-9a-fA-F]{6})/g)].map(m => m[1].toLowerCase()));
+      const src = fs.readFileSync(new URL(f, dir), 'utf8');
+      for (const m of src.matchAll(/'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})'/g)) {
+        const h = (m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1]).toLowerCase(), n = parseInt(h, 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+        if (own.includes(h)) continue;
+        const blue = c[2] > c[0] + 25 && c[2] > c[1] + 8, white = c.every(v => v > 240);
+        if (blue || white || neon(c) || GOLDS.includes(h)) bad.push(f + ' #' + h);
+      }
+      assert(!/createLinearGradient|createRadialGradient|\.arc\(|\.ellipse\(|bezierCurveTo|quadraticCurveTo|\.stroke\(\)/.test(src), `${f}: векторное — только точки`);
+    }
+    eq(bad.length, 0, 'вне канона: ' + [...new Set(bad)].join(', '));
+  });
+  test('палитры колец (небо, земля, пыль) — производные канона: без синего, лилового и малинового отлива', () => {
+    const bad = [];
+    for (const s of SEGS) for (const k of ['sky', 'ground', 'dust']) {
+      const v = s.palette[k], n = parseInt(v.slice(1), 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+      const cold = c[2] > Math.max(c[0], c[1]) + 6, magenta = c[1] < Math.min(c[0], c[2]) - 20 && c[2] > c[1] + 30;
+      if (cold || magenta || neon(c)) bad.push(`${s.id || s.name}.${k} ${v}`);
+    }
+    eq(bad.length, 0, 'вне канона: ' + bad.join(', '));
+  });
   test('земля городка: у каждой зоны своя фактура, артерий она не трогает', () => {
     const S = 1.25, pick = { 0: [T.x0 + 900 * S, T.y0 + 100 * S], 1: [T.x0 + 1000 * S, T.y0 + 1400 * S], 2: [T.x0 + 160 * S, T.y0 + 700 * S], 3: [T.x0 + 2300 * S, T.y0 + 900 * S], 4: [T.x0 + 1100 * S, T.y0 + 700 * S] };   // городок ×1,25 от угла
     for (const [z, [x, y]] of Object.entries(pick)) {

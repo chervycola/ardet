@@ -22,7 +22,7 @@ const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CINN = '#C23B2B', SEP = '#3A3026';
 const D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818',
   ST2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a',
-  GOLD = '#b8860b', PAPER = '#c8b89a', PAPER2 = '#b0a284';
+  PAPER = '#c8b89a', PAPER2 = '#b0a284';
 
 function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
 // стрельчатый проём: lx — левый край, by — низ, w×h
@@ -555,7 +555,7 @@ export const ARCH = {
         TIERS(c, D1, X, G - 78, [6, 5, 4, 3, 2, 1], 2);
         R(c, ASH, X - 1, G - 92, 1, 3);
         R(c, ASH, X - 9, G - 92, 17, 1);
-        c.fillStyle = GOLD;
+        c.fillStyle = PAPER;                          // короны — костью на фоне неба (золота канон не даёт)
         for (const o of [-9, -3, 3]) {
           c.fillRect(X + o, G - 94, 5, 2);
           c.fillRect(X + o, G - 95, 1, 1); c.fillRect(X + o + 2, G - 96, 1, 2); c.fillRect(X + o + 4, G - 95, 1, 1);

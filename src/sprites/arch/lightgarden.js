@@ -27,7 +27,7 @@ const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CINN = '#C23B2B', SEP = '#3A3026';
 const D1 = '#15100c', D2 = '#241c14', WOOD = '#3a2418', PLANK = '#3a2818',
   STONE = '#3a3328', ST2 = '#2a2620', CONC = '#34302a',
-  GOLD = '#b8860b', PAPER = '#c8b89a', PAPER2 = '#b0a284';
+  ICON_GOLD = '#D4AF37', PAPER = '#c8b89a', PAPER2 = '#b0a284';   // сусальное золото иконы — исключение равнины (COLOR_EXCEPTIONS)
 
 function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
 // стрельчатый проём: lx — левый край, by — низ, w×h
@@ -708,7 +708,7 @@ export const ARCH = {
         RA(c, BONE, X - 6, G - 3, 12, 17);
         RA(c, CONC, X - 5, G - 3, 10, 15);
         RA(c, N, X - 3, G - 3, 6, 12);
-        R(c, GOLD, X - 2, G - 10, 4, 5);
+        R(c, ICON_GOLD, X - 2, G - 10, 4, 5);
         // барабан и шлем
         R(c, ASH, X - 6, G - 60, 12, 10);
         R(c, BONE, X - 6, G - 60, 1, 10);

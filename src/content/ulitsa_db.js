@@ -119,7 +119,8 @@ export const SEGMENTS = [
   {
     id: 'twohearths', n: 4, range: [1240, 1440],
     name: 'два очага', era: 'XVII век',
-    palette: { sky: '#2a3450', ground: '#3a3a4a', lamp: 'candle', dust: '#5a5236' },
+    // краски — производные канона: пепел в ночи с сепией очага (прежние небо и земля были синими)
+    palette: { sky: '#262525', ground: '#3a3735', lamp: 'candle', dust: '#5a5236' },
     signs: [
       { x: 1280, name: 'дом с печью', form: 'building',
         facade: `Очаг горит ровно, на столе четыре правила, окно закрыто, за ним война. Терминал: .demon`,
@@ -218,7 +219,9 @@ export const SEGMENTS = [
   {
     id: 'neon', n: 8, range: [2400, 2700],
     name: 'неон', era: '1960–90-е',
-    palette: { sky: '#1a1430', ground: '#2a1a3a', lamp: 'neon', dust: '#aa3a8a' },
+    // краски — производные канона: асфальт — пепел в ночи, пыль — пепел с киноварью вывесок
+    // (прежние земля и небо были лиловыми, пыль — малиновой)
+    palette: { sky: '#1a1817', ground: '#2b2a2a', lamp: 'neon', dust: '#918383' },
     actSign: `АКТ III.\nАннексировано: внимание, связь.`,
     signs: [
       { x: 2430, name: 'стены под рекламой',
@@ -261,7 +264,8 @@ export const SEGMENTS = [
   {
     id: 'now', n: 9, range: [2700, 3000],
     name: 'сейчас', era: '2000-е —',
-    palette: { sky: '#0e1a2a', ground: '#1a2030', lamp: 'screen', dust: '#5c6266' },
+    // краски — производные канона: ночь с пеплом и мглой (прежние небо и земля были синими)
+    palette: { sky: '#121110', ground: '#1f1e1e', lamp: 'screen', dust: '#5c6266' },
     actSign: `АКТ IV.\nАннексируется: речь, образ. Внутренний монолог — на очереди.`,
     signs: [
       { x: 2720, name: 'Felixstowe',

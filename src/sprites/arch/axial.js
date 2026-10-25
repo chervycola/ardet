@@ -14,7 +14,7 @@ import { hang, angleOf } from '../../world/hang.js';
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A';
 const CA = '#E28A3A', CI = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
-const BR2 = '#3a2818', DRD = '#3a1c14', GD = '#b8860b';
+const BR2 = '#3a2818', DRD = '#3a1c14';
 const L1 = '#c8b89a', L2 = '#b0a284';
 
 function r(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
@@ -66,7 +66,8 @@ function pylon(c, X, G) {
     const [dx, w] = OB[k], y = g - 21 - 18 * k;
     r(c, K3, ox + dx, y, w, 18); r(c, BO, ox + dx, y, 1, 18);
   }
-  r(c, GD, ox - 2, g - 76, 5, 1); r(c, GD, ox - 1, g - 78, 3, 2); r(c, GD, ox, g - 79, 1, 1);
+  // пирамидион ловит последний свет — костью: золота канон не даёт
+  r(c, L1, ox - 2, g - 76, 5, 1); r(c, L1, ox - 1, g - 78, 3, 2); r(c, L1, ox, g - 79, 1, 1);
   r(c, BO, ox - 2, g - 76, 1, 1); r(c, BO, ox - 1, g - 78, 1, 2);
   r(c, K1, ox, g - 68, 1, 3); r(c, K1, ox - 1, g - 60, 2, 1); r(c, K1, ox, g - 52, 1, 2);
   const pc = x + 7;                                    // ось пилона

@@ -22,7 +22,7 @@ import { hang, angleOf } from '../../world/hang.js';
 const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026',
   DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328',
-  STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a', GOLD = '#b8860b',
+  STONE2 = '#2a2620', BRICK = '#3a1c14', CONC = '#34302a',
   PAPER = '#c8b89a', PAPER2 = '#b0a284';
 
 function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
@@ -466,7 +466,7 @@ function warehouse(c, x, gy) {
   c.fillStyle = CONC; for (let k = 0; k < 9; k++) c.fillRect(L + 18 + k * 8, G - 46, 1, 46);
   R(c, BONE, L + 13, G - 54, 74, 2);                  // снег на кровле
   R(c, BONE, L + 22, G - 52, 1, 2); R(c, BONE, L + 61, G - 52, 1, 3);
-  R(c, GOLD, L + 14, G - 50, 72, 3);                  // жёлтый пояс — единственное золото кольца
+  R(c, PAPER2, L + 14, G - 50, 72, 3);                // пояс фирменной краски — выгорел до кости (золота канон не даёт)
   R(c, ASH, L + 85, G - 52, 1, 52); R(c, ASH, L + 14, G - 52, 1, 52);   // углы
   // витрина: под лампой один собранный стул, сидеть некому
   R(c, N, L + 44, G - 26, 18, 16);
@@ -477,7 +477,7 @@ function warehouse(c, x, gy) {
   R(c, ASH, L + 64, G - 19, 12, 1); R(c, N, L + 66, G - 18, 8, 18);
   // пилон выше короба, на нём жёлтая панель без слов
   R(c, ASH, L + 91, G - 56, 2, 56);
-  R(c, BONE, L + 86, G - 64, 10, 9); R(c, GOLD, L + 87, G - 63, 8, 7);
+  R(c, BONE, L + 86, G - 64, 10, 9); R(c, PAPER2, L + 87, G - 63, 8, 7);
   // исполинский шестигранник прислонён к фасаду: длинное плечо под ~60°,
   // короткое лежит на земле, грани торцов бликуют
   stair(c, ASH, L + 22, G - 3, L + 38, G - 33, 10, 3);
