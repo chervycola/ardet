@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ff6db1f · 2026-10-25';console.log('[оттиск]', 'ff6db1f · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='7d8299c · 2026-10-25';console.log('[оттиск]', '7d8299c · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33914,6 +33914,15 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(x, sy, 1, 1, S0);
             } // камни в траве
         }
+        // перед залом — земля до основания места, натоптано к сцене
+        for (let x = -3; x <= 83; x++)
+            for (let yy = 51; yy < 60; yy++) {
+                const h = hh(x, yy, 362);
+                r(x, yy, 1, 1, Math.abs(x - 42) < 8 && yy > 54 ? (h < 0.3 ? SEP : K4) : h < 0.06 ? K4 : h > 0.94 ? MG_D : SEP);
+            }
+        for (let x = -3; x <= 83; x++)
+            if (hh(x, 59, 364) < 0.25 && Math.abs(x - 42) > 9)
+                r(x, 58, 1, 2, hh(x, 60, 366) < 0.5 ? MG_D : K4);
         // ярусы — от верхнего к нижнему: нос скамьи, сиденье, подступёнок; блоками
         for (let k = TH.tiers - 1; k >= 0; k--) {
             const { rx, ry, h } = tierOf(k), base = q(cy - h) + 4;
@@ -33981,36 +33990,45 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(gx - 1, gg - 11, 1, 1, K1);
         r(gx - 3, gg - 5, 4, 1, K3);
         r(gx + 1, gg - 13, 1, 2, BO); // номерок
-        // афиша у входа: название стёрто, строчки, полоска наклеена поверх; в углу — штамп пожарного надзора
-        const px0 = 0, pg = 56;
+        r(gx + 4, gg - 6, 6, 1, K1);
+        r(gx + 5, gg - 5, 1, 5, K1);
+        r(gx + 8, gg - 5, 1, 5, K1);
+        r(gx + 4, gg - 6, 6, 1, K3); // стойка гардероба
+        r(gx + 4, gg - 8, 6, 2, BO);
+        r(gx + 7, gg - 8, 1, 2, L2);
+        r(gx + 5, gg - 7, 2, 1, K3);
+        r(gx + 8, gg - 7, 1, 1, K3); // книга выдачи раскрыта: подпись, прочерк
+        // афиша у входа, где приходит тропа: название стёрто, строчки, полоска наклеена поверх; в углу — штамп пожарного надзора
+        const px0 = 14, pg = 59;
         r(px0 + 1, pg - 12, 1, 12, K1);
-        r(px0 + 9, pg - 12, 1, 12, K1);
+        r(px0 + 12, pg - 12, 1, 12, K1);
         r(px0 + 1, pg - 12, 1, 1, S0);
-        r(px0, pg - 20, 11, 10, BR2);
-        r(px0, pg - 20, 11, 1, L2);
-        r(px0 + 10, pg - 19, 1, 9, AS);
-        r(px0 + 1, pg - 19, 9, 8, L1);
-        r(px0 + 1, pg - 19, 9, 1, BO);
+        r(px0, pg - 23, 14, 12, BR2);
+        r(px0, pg - 23, 14, 1, L2);
+        r(px0 + 13, pg - 22, 1, 11, AS);
+        r(px0 + 1, pg - 22, 12, 10, L1);
+        r(px0 + 1, pg - 22, 12, 1, BO);
         context_js_9.X.globalAlpha = 0.55;
-        r(px0 + 2, pg - 18, 7, 2, AS);
+        r(px0 + 2, pg - 21, 10, 2, AS);
         context_js_9.X.globalAlpha = 1; // название стёрто
-        r(px0 + 2, pg - 13, 4, 1, K4);
-        r(px0 + 1, pg - 16, 9, 2, BO);
-        r(px0 + 1, pg - 15, 9, 1, L2); // полоска поверх: «...каждый вечер...»
-        for (let k = 0; k < 7; k++)
-            if (k !== 3)
-                r(px0 + 2 + k, pg - 16, 1, 1, K3);
+        r(px0 + 2, pg - 14, 6, 1, K4);
+        r(px0 + 1, pg - 18, 12, 3, BO);
+        r(px0 + 1, pg - 16, 12, 1, L2); // полоска поверх: «...каждый вечер...»
+        for (let k = 0; k < 10; k++)
+            if (k !== 4)
+                r(px0 + 2 + k, pg - 17, 1, 1, K3);
         if (seam) {
-            context_js_9.X.globalAlpha = 0.75;
-            for (let k = 0; k < 9; k++)
-                r(px0 + 1 + k, pg - 16 + (k % 3 === 1 ? 1 : 0), 1, 1 + (k & 1), K1);
+            context_js_9.X.globalAlpha = 0.8;
+            for (let k = 0; k < 11; k++)
+                if (k !== 5)
+                    r(px0 + 1 + k, pg - 18 + (k % 3 === 1 ? 1 : 0), 1, 2, K1);
             context_js_9.X.globalAlpha = 1;
         } // сквозь бумагу — слово, крупнее строки
         context_js_9.X.globalAlpha = 0.8;
-        for (const [dx, dy] of [[7, -13], [6, -12], [8, -12], [7, -11]])
+        for (const [dx, dy] of [[10, -14], [9, -13], [11, -13], [10, -12]])
             r(px0 + dx, pg + dy, 1, 1, KV);
         context_js_9.X.globalAlpha = 1;
-        r(px0 + 3, pg - 11, 3, 1, L1); // угол отклеился
+        r(px0 + 3, pg - 12, 3, 1, L1); // угол отклеился
     }
     // тень-человек 3×7: голова, плечи, пояс, ноги; fy — где стоят ступни
     function man(x, fy, head = 0) {
@@ -34026,13 +34044,15 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             man(x, fy - b, act ? -1 : 0);
             r(x + 3, fy - 4 - b, 1, 1, NI);
         }
-        else if (kind === 'burn') { // горит: всегда, в свой черёд — выше
+        else if (kind === 'burn') { // горит: огонь — тенью, как всё на этой сцене (горит по-настоящему только фонарь из сцены); в свой черёд — выше
             man(x, fy);
-            const f = act ? 2 + ((time_js_23.t >> 3) % 2) : (time_js_23.t >> 4) % 2;
-            r(x + 1, fy - 8 - f, 1, f + 1, SV);
+            const f = act ? 2 + ((time_js_23.t >> 4) % 2) : (time_js_23.t >> 5) % 2;
+            r(x + 1, fy - 8 - f, 1, f + 1, NI);
+            r(x, fy - 8 - (f >> 1), 1, 1 + (f >> 1), NI);
             if (f > 1) {
-                r(x, fy - 8, 1, 1, KV);
-                r(x + 2, fy - 9, 1, 1, KV);
+                r(x + 2, fy - 9, 1, 2, NI);
+                r(x - 1, fy - 7, 1, 1, NI);
+                r(x + 3, fy - 6, 1, 1, NI);
             }
         }
         else if (kind === 'sit') { // сидит на камне; в свой черёд кивает
@@ -34052,7 +34072,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_theater(x, y) {
         const seam = potemkin_js_2.revealOf(THEATER) > 0.25;
-        bake(seam ? 'theater2s' : 'theater2', x, y, -4, 0, 90, 60, () => theaterBody(seam));
+        bake(seam ? 'theater3s' : 'theater3', x, y, -4, 0, 90, 61, () => theaterBody(seam));
         while (time_js_23.t - SHOW.t0 >= showLen(SHOW.k)) {
             SHOW.t0 += showLen(SHOW.k);
             SHOW.k++;
@@ -37618,7 +37638,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // Два прохода лесенками. Сцена — плиты кругом, край к свету, лицевая сторона
             // кладкой. Афиша: название стёрто, строки штрихами, поверх наклеена полоска;
             // неподвижному взгляду (второй холст) сквозь неё темнеет слово. Свет слева,
-            // кромка пеплом справа.
+            // кромка пеплом справа. Афиша — у входа, где приходит тропа; у гардероба — книга выдачи
+            // раскрыта (использовать). Горящий горит тенью: настоящий огонь на этой пустоши — один
+            // фонарь из сцены, а тёплых пятен в городке три.
             TH = { cx: 40, cy: 50, tiers: 6 };
             tierOf = k => ({ rx: 15 + 4.4 * k, ry: 6 + 3 * k, h: 2 + 1.6 * k });
             // сорок седьмой цикл, каждый следующий короче: 24 с, дальше на 1,5% короче, не короче 4 с
