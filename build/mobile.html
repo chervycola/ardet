@@ -875,7 +875,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='8c258bd · 2026-10-25';console.log('[оттиск]', '8c258bd · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='f32352c · 2026-10-25';console.log('[оттиск]', 'f32352c · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -9897,7 +9897,7 @@ System.register("sprites/arch/lightgarden", [], function (exports_31, context_31
 // Север — Швеция и Дания под снегом: островная обсерватория — щит кровли снят,
 //      на открытой площадке армилла, стенной квадрант прямо по кирпичу, усадьба
 //      с трубой; замок Тре Крунур — глухой донжон с машикулями, три короны на
-//      шпиле (единственное золото кольца), сугробы и сосульки.
+//      шпиле (костью: золота канон не даёт), сугробы и сосульки.
 // Равнина — Московия раскола: шатровая церковь с восьмиконечным крестом;
 //      острог: тын выше человека, ворота в рост, перед тыном земляная тюрьма —
 //      решётка вровень с землёй, на дне свеча: пишут.
@@ -10270,11 +10270,12 @@ System.register("sprites/arch/twohearths", [], function (exports_32, context_32)
                         name: 'застава сэкисё', w: 80, h: 50,
                         draw(c, x, gy) {
                             const X = Math.round(x), G = Math.round(gy);
-                            // фонарь на столбе — единственный огонь заставы
+                            // фонарь на столбе не зажжён: заставу запирали на закате и отпирали на рассвете —
+                            // ночью через неё не ходят (бумага фонаря — костью, без огня)
                             R(c, D1, X - 37, G - 26, 2, 26);
                             R(c, D1, X - 39, G - 34, 6, 1);
                             R(c, D1, X - 38, G - 33, 4, 6);
-                            R(c, CANDLE, X - 37, G - 32, 2, 4);
+                            R(c, PAPER2, X - 37, G - 32, 2, 4);
                             R(c, D1, X - 37, G - 30, 2, 1);
                             R(c, D1, X - 39, G - 27, 6, 1);
                             // ворота: два столба, балка, тяжёлая черепичная кровля с загнутыми краями
@@ -11144,7 +11145,7 @@ System.register("sprites/arch/twohearths", [], function (exports_32, context_32)
 //          костью, за ними лимоны, печная труба с дымком, красный павильон
 //          под снежным скатом, бирки на колышках, ель.
 // равнина — Петербург по линейке: шпиль, ангел держит крест на отлёте
-//          (единственное золото кольца); потёмкинский фасад на подкосах,
+//          (позолота — светлой костью: золота канон не даёт); потёмкинский фасад на подкосах,
 //          сквозь окна — горизонт степи.
 // Фасады табличек: каирский дом с машрабией, машия Эдо (два свеса, норэн,
 // решётка-коси, тётин), георгианский дом с веерным окном, шведский дом
@@ -13319,7 +13320,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms"], function (exp
         f(null, 56, 65, 7, 2);
         f(null, 64, 66, 4, 1);
         ctx.globalAlpha = 1;
-        // чугунная ограда с пиками, калитка против портала; газовый фонарь у калитки
+        // чугунная ограда с пиками, калитка против портала; газовый фонарь у калитки не зажжён:
+        // в зале горит одна зелёная лампа — единственный свет стороны (COLOR_EXCEPTIONS)
         for (let px = 2; px < 36; px += 3)
             f(A, px, 6, 1, 5);
         for (let px = 50; px < 82; px += 3)
@@ -13332,7 +13334,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms"], function (exp
         f(A, 31, 20, 1, 20);
         f(D1, 29, 25, 6, 1);
         f(null, 30, 24, 4, 4);
-        f(C, 31, 23, 2, 2);
+        f(A, 31, 23, 2, 2);
+        f(B, 31, 23, 1, 1);
         f(D1, 30, 20, 4, 1);
     }
     // ───────────────────────── СЕВЕР ─────────────────────────
@@ -17289,7 +17292,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms"], function
     }
     // стеклянная башня: тёмная навесная стена в высоких витражах, макушка
     // срезана наискось, мачта у высокого края; блики идут одной чистой
-    // диагональю; в два ночи светится один этаж; в лобби — дерево под камерой
+    // диагональю; в два ночи светится один этаж — холодным светом ламп, не огнём; в лобби —
+    // дерево под камерой
     function glassTower(c, x, gy, t) {
         const L = Math.round(x) - 26, G = Math.round(gy);
         R(c, N, L + 6, G - 92, 40, 92);
@@ -17314,8 +17318,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms"], function
             if (k < 6)
                 c.fillRect(L + 18 + k * 5, G - 26 - k * 8, 1, 1);
         }
-        // светится один этаж — не весь
-        R(c, CANDLE, L + 17, G - 57, 23, 2);
+        // светится один этаж — не весь; лампы дневного света: костью, не свечой (тёплое в кадре — огню)
+        R(c, PAPER2, L + 17, G - 57, 23, 2);
         R(c, BONE, L + 6, G - 92, 1, 92); // лунная кромка
         // лобби двойной высоты — под рост
         R(c, ASH, L + 4, G - 21, 44, 1);
@@ -27742,7 +27746,7 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
 });
 System.register("render/shadows", [], function (exports_81, context_81) {
     "use strict";
-    var BUILD_PER_FRAME, SHADE, FIRE_EXAG, FIRE_L_MAX, FIRE_GROW, GROW_H, FIRE_BREATH, FIRE_REACH, CANDLE, masks, sunC, sunX, fireC, fireX, outC, outX, _masks;
+    var BUILD_PER_FRAME, SHADE, FIRE_EXAG, FIRE_L_MAX, FIRE_GROW, GROW_H, FIRE_BREATH, FIRE_REACH, CANDLE, masks, MAX_MASKS, sunC, sunX, fireC, fireX, outC, outX, _maskCount, _masks;
     var __moduleName = context_81 && context_81.id;
     function layer(c, vw, vh) {
         if (!c)
@@ -27835,13 +27839,19 @@ System.register("render/shadows", [], function (exports_81, context_81) {
         return x1 > camX && x0 < camX + vw && y1 > camY && y0 < camY + vh;
     }
     function maskOf(c, budget) {
-        if (masks.has(c.key))
-            return masks.get(c.key);
+        if (masks.has(c.key)) { // освежить: в кадре — значит недавняя
+            const m = masks.get(c.key);
+            masks.delete(c.key);
+            masks.set(c.key, m);
+            return m;
+        }
         if (budget.n <= 0)
             return undefined;
         budget.n--;
         const m = c.build();
         masks.set(c.key, m);
+        if (masks.size > MAX_MASKS)
+            masks.delete(masks.keys().next().value);
         return m;
     }
     // тени кадра. casters: [{ key, ox, oy, build, noFire, fx, fy }] — build() строит маску
@@ -27981,8 +27991,10 @@ System.register("render/shadows", [], function (exports_81, context_81) {
             FIRE_BREATH = 0.12; // дыхание: длина и рост гуляют с пламенем
             FIRE_REACH = 1.25; // докуда достаёт свет огня (в долях радиуса теней)
             CANDLE = '226,138,58'; // СВЕЧА — свет огня на земле
-            masks = new Map();
+            masks = new Map(); // ключ → маска; самые давние уходят (LRU) — мир большой, а кадр мал
+            MAX_MASKS = 1500; // с запасом на всё, что бывает в одном кадре (деревья, утварь, заборы)
             sunC = null, sunX = null, fireC = null, fireX = null, outC = null, outX = null;
+            exports_81("_maskCount", _maskCount = () => masks.size); // для тестов
             exports_81("_masks", _masks = () => masks);
         }
     };

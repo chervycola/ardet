@@ -566,6 +566,16 @@ setCtx(ctx);
     eq(night.from, 'луна');
     assert(night.a > 0 && night.a < evening.a, 'ночь не бледнее вечера');
   });
+  test('тени: масок не больше полутора тысяч — самые давние уходят (мир большой, кадр мал)', () => {
+    const ce = document.createElement;
+    document.createElement = () => ({ ...fakeEl(), width: 0, height: 0, getContext: () => ctx });
+    try {
+      const casters = Array.from({ length: 1700 }, (_, i) => ({ key: 'lru' + i, ox: 0, oy: 0, build: () => null }));
+      for (let f = 0; f < 300; f++) Sh.castShadows(ctx, 0, 0, 640, 360, casters, { dx: 0.5, dy: 0.2, a: 0.5, wash: 0 }, null);
+      assert(Sh._maskCount() <= 1500, `масок ${Sh._maskCount()}`);
+      assert(Sh._maskCount() > 1000, `масок подозрительно мало: ${Sh._maskCount()}`);
+    } finally { document.createElement = ce; }
+  });
   test('тени: силуэт ложится от подножия — низ маски на месте, верх уходит на (dx, dy)·высоту', () => {
     const m = { x0: 100, y0: 50, base: 90, w: 20 };
     const [a, b, c, d, e, f] = Sh.shadowTransform(m, 0, 0, 1.5, -0.4, 0, 0);

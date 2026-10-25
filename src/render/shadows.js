@@ -27,7 +27,8 @@ const GROW_H = 40;                             // на какой высоте �
 const FIRE_BREATH = 0.12;                      // дыхание: длина и рост гуляют с пламенем
 const FIRE_REACH = 1.25;                       // докуда достаёт свет огня (в долях радиуса теней)
 const CANDLE = '226,138,58';                   // СВЕЧА — свет огня на земле
-const masks = new Map();
+const masks = new Map();                       // ключ → маска; самые давние уходят (LRU) — мир большой, а кадр мал
+const MAX_MASKS = 1500;                        // с запасом на всё, что бывает в одном кадре (деревья, утварь, заборы)
 let sunC = null, sunX = null, fireC = null, fireX = null, outC = null, outX = null;
 
 function layer(c, vw, vh) {
@@ -104,13 +105,19 @@ function reaches(m, ox, oy, dx, dy, camX, camY, vw, vh, pad = 0) {
 }
 
 function maskOf(c, budget) {
-  if (masks.has(c.key)) return masks.get(c.key);
+  if (masks.has(c.key)) {                       // освежить: в кадре — значит недавняя
+    const m = masks.get(c.key);
+    masks.delete(c.key); masks.set(c.key, m);
+    return m;
+  }
   if (budget.n <= 0) return undefined;
   budget.n--;
   const m = c.build();
   masks.set(c.key, m);
+  if (masks.size > MAX_MASKS) masks.delete(masks.keys().next().value);
   return m;
 }
+export const _maskCount = () => masks.size;     // для тестов
 
 // тени кадра. casters: [{ key, ox, oy, build, noFire, fx, fy }] — build() строит маску
 // (один раз), ox/oy — сдвиг маски в мире (странник ходит; дома стоят на нуле).
