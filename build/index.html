@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='93a86f3 · 2026-10-25';console.log('[оттиск]', '93a86f3 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='518ce23 · 2026-10-25';console.log('[оттиск]', '518ce23 · 2026-10-25');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -36741,7 +36741,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                     r(x, 39, 1, 1, K1); // KILROY WAS HERE — штрихом
             for (let x = 43; x < 55; x++)
                 if (hh(x, 42, 403) > 0.35 && x !== 49)
-                    r(x, 41, 1, 1, K2); // «все были. до пожара.» — другой рукой
+                    r(x, 42, 1, 1, K2); // «все были. до пожара.» — другой рукой
         }
         // ── под стеной: баллон набок, шарик стучит; сорняк ──
         r(1, G, 58, 1, K1);
@@ -36758,7 +36758,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_graffiti(x, y) {
         if (relook_js_1.wasUsed('graffiti'))
-            bake('graffiti3t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
+            bake('graffiti4t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
         else
             bake('graffiti3', x, y, 0, 0, 61, 48, () => graffitiBody(false));
     }

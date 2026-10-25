@@ -2303,7 +2303,7 @@ function graffitiBody(tagged) {
     r(44, 35, 1, 1, L1); r(47, 35, 1, 1, L1); r(45, 35, 1, 1, K1); r(46, 35, 1, 1, K1);   // глаза
     r(45, 37, 2, 2, K1); r(42, 37, 1, 1, K1); r(49, 37, 1, 1, K1);        // нос свесился, пальцы
     for (let x = 41; x < 54; x++) if (hh(x, 40, 401) > 0.3 && x !== 47) r(x, 39, 1, 1, K1);   // KILROY WAS HERE — штрихом
-    for (let x = 43; x < 55; x++) if (hh(x, 42, 403) > 0.35 && x !== 49) r(x, 41, 1, 1, K2);   // «все были. до пожара.» — другой рукой
+    for (let x = 43; x < 55; x++) if (hh(x, 42, 403) > 0.35 && x !== 49) r(x, 42, 1, 1, K2);   // «все были. до пожара.» — другой рукой
   }
   // ── под стеной: баллон набок, шарик стучит; сорняк ──
   r(1, G, 58, 1, K1);
@@ -2312,7 +2312,7 @@ function graffitiBody(tagged) {
   X.globalAlpha = 0.5; r(1, G + 2, 59, 1, K0); X.globalAlpha = 1;
 }
 export function draw_graffiti(x, y) {
-  if (wasUsed('graffiti')) bake('graffiti3t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
+  if (wasUsed('graffiti')) bake('graffiti4t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
   else bake('graffiti3', x, y, 0, 0, 61, 48, () => graffitiBody(false));
 }
 
