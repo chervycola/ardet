@@ -875,7 +875,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='fd9d2e3 · 2026-10-25';console.log('[оттиск]', 'fd9d2e3 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='b10ad08 · 2026-10-25';console.log('[оттиск]', 'b10ad08 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -20157,17 +20157,10 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             }
             placeLandmarks('plain');
         }
-        // повтор вида на той же стороне — зеркально: «такой же», а не копия.
-        // Двойняшки одного двора — нет: одинаковые дома одинаковы до последнего окна
-        const seen = new Map();
-        for (const b of buildings) {
-            const k = `${b.ring}:${b.side}:${b.name}`;
-            const prev = seen.get(k) || [];
-            b.flip = prev.length % 2 === 1 && !prev.some(o => o.ens === b.ens);
-            if (b.kind && b.kind.noFlip)
-                b.flip = false; // механизмы и подвесы считают ветер по миру
-            seen.set(k, [...prev, b]);
-        }
+        // зеркал нет (слово автора 25.10, weave/ARCH_PLAN.md этап 2): свет у всех слева, повтор вида —
+        // свой рисунок #2 и своё зерно износа, а не отражение
+        for (const b of buildings)
+            b.flip = false;
         return { buildings, ensembles };
     }
     exports_52("buildEnsembles", buildEnsembles);

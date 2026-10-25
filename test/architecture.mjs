@@ -164,6 +164,11 @@ test('ансамбли: одинаковые постройки не попад�
   }
 });
 
+test('без зеркал: ни одна постройка не отражена — свет у всех слева', () => {
+  const flipped = locations.filter(l => l.archDraw && l.archFlip);
+  eq(flipped.length, 0, 'отражены: ' + flipped.map(l => l.name).join(', '));
+});
+
 test('ансамбли: постройки двора — рядом друг с другом', () => {
   for (const e of archEnsembles) {
     if (e.members.length < 2) continue;

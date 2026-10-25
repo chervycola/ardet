@@ -347,16 +347,9 @@ export function buildEnsembles(signs = []) {
     }
     placeLandmarks('plain');
   }
-  // повтор вида на той же стороне — зеркально: «такой же», а не копия.
-  // Двойняшки одного двора — нет: одинаковые дома одинаковы до последнего окна
-  const seen = new Map();
-  for (const b of buildings) {
-    const k = `${b.ring}:${b.side}:${b.name}`;
-    const prev = seen.get(k) || [];
-    b.flip = prev.length % 2 === 1 && !prev.some(o => o.ens === b.ens);
-    if (b.kind && b.kind.noFlip) b.flip = false;     // механизмы и подвесы считают ветер по миру
-    seen.set(k, [...prev, b]);
-  }
+  // зеркал нет (слово автора 25.10, weave/ARCH_PLAN.md этап 2): свет у всех слева, повтор вида —
+  // свой рисунок #2 и своё зерно износа, а не отражение
+  for (const b of buildings) b.flip = false;
   return { buildings, ensembles };
 }
 
