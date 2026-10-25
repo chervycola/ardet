@@ -371,7 +371,7 @@ import { t } from './core/time.js';
 const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle']);
 // лежат в земле — рисуются под всем, что стоит (иначе песок равнины Лунного
 // ложится поверх самого Лунного: его место ниже по глубине, чем край равнины)
-const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'trap_puddle']);
+const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'billboard', 'trap_puddle']);
 // сидят внутри другого места — рисуются сразу после него (Старец — в палатке;
 // кот на стопке книг — ещё позже: сидящий на вещи берёт её глубину +0,5, world/silentCat.js)
 const INSIDE = { elder_home: 'tent' }, insideHost = new Map();

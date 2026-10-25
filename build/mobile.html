@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='929f295 · 2026-10-25';console.log('[оттиск]', '929f295 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='a4692b2 · 2026-10-25';console.log('[оттиск]', 'a4692b2 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32938,10 +32938,166 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         }
     };
 });
-System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather"], function (exports_103, context_103) {
+System.register("content/relooks", [], function (exports_103, context_103) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var RELOOKS;
     var __moduleName = context_103 && context_103.id;
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // ПОВТОРНЫЙ ОСМОТР — слово автора (23.10): «повторный осмотр может быть более
+            // точным; можно выбрать разные варианты по подходящему контексту».
+            // Первый осмотр — всегда свой текст вещи. Со второго — точнее: одна подмеченная
+            // подробность (счёт, мера, износ, след заботы), первому не противоречит и его
+            // пуант не повторяет. Вариант — по обстановке: if — все метки должны совпасть;
+            // из подходящих — сперва ещё не виденный, по порядку списка (world/relook.js).
+            // Метки: day · dusk · night · dawn — сутки; rain · sand · wind — погода и ветер;
+            // used — странник уже что-то делал с вещью; n3 — третий осмотр и дальше.
+            // Всё ниже — нов. (пробник на двенадцати вещах городка, на приёмку автору);
+            // опоры — осмотры вещей, ART_BIBLE §04–05, weave/FIGURES.md.
+            // ═══════════════════════════════════════
+            exports_103("RELOOKS", RELOOKS = {
+                campfire: [
+                    { if: ['used'], text: 'То, что ты принёс, уже не найти: огонь берёт без описи и без расписки. Камни те же. Пепла прибавилось на щепоть.' },
+                    { if: ['rain'], text: 'Дождь до огня не долетает: капли кончаются над камнями, в кольце сухо. Мокнут только кости вокруг.' },
+                    { if: ['night'], text: 'Ночью видно, что полумесяц не уходит вместе с небом: звёзды сдвинулись, он висит, где висел. С нижнего рога набухает капля, срывается и падает в огонь. Огонь не шипит.' },
+                    { text: 'Камней в кольце девятнадцать. Один светлее прочих: его подложили взамен треснувшего. Треснувший лежит тут же, у кольца, — выбросить не решились.' },
+                    { if: ['n3'], text: 'Огонь держат на ладонь ниже черепа — чтобы горел и чтобы череп было видно. Шут подкладывает по кости, не глядя: мерку помнит рука.' },
+                ],
+                pithos: [
+                    { if: ['night'], text: 'Ночью из горла тянет сухой глиной и тёплым, будто там только что лежали. Внутри темно ровно настолько, чтобы лечь.' },
+                    { if: ['day'], text: 'Днём солнце заходит в горло до самого дна. Его здесь никто не заслоняет.' },
+                    { text: 'Пифос лежит на боку, горлом к улице. Трещина идёт от венчика до второго пояса и дальше не пошла. У горла — следы метлы веером: выметали много раз, и всегда наружу.' },
+                ],
+                lantern1: [
+                    { if: ['night'], text: 'Ночью это единственный столб без света. От его крюка к шесту над костром тянутся флажки — их видно только с той стороны, где огонь.' },
+                    { if: ['wind'], text: 'Ветер фонарь не качает — чугун. Качается паутина под шатром, пустая: паук ушёл, когда погас свет.' },
+                    { text: 'Фитиль подрезан ровно, масла — на донышке. Фонарь не разбили: его погасили, как гасят после смены.' },
+                ],
+                office: [
+                    { if: ['night'], text: 'Ночью окно №3 горит. Приём не ведётся, свет оплачен до конца квартала. Какого — не указано.' },
+                    { text: 'На подоконнике — штемпельная подушка, свежая. Печать лежит лицом вниз, чтобы не высохла: приём может начаться в любую минуту.' },
+                    { if: ['n3'], text: 'Табличка «Обед» висит изнанкой наружу, на изнанке — «Приём». Перевернуть некому: изнутри не видно, какая сторона снаружи.' },
+                ],
+                gates: [
+                    { if: ['dawn'], text: 'На рассвете небо за вратами теплеет раньше, чем над городком. Отсюда это видно лучше всего. Может, поэтому их и не закрывают.' },
+                    { if: ['wind'], text: 'Ветер давит на створки — они не двигаются. Шевелится только вьюн: туда и обратно, будто проверяет, открыто ли.' },
+                    { text: 'Створки вросли низом в дёрн на ладонь. Вьюн по левой дошёл до середины, по правой — до самого верха: правую открыли раньше.' },
+                ],
+                town_well: [
+                    { if: ['used'], text: 'После тебя ворот докрутил ещё пол-оборота сам — проверил, всё ли поднято.' },
+                    { if: ['rain'], text: 'Ворот накрыт дощечкой от дождя. Дощечку прибили давно, гвозди проржавели насквозь: беречь было что.' },
+                    { text: 'Цепь уходит в темноту; видно тридцать два звена. Каждое стёрто с одного бока: крутили всегда в одну сторону, к себе.' },
+                ],
+                church: [
+                    { if: ['day'], text: 'Днём пустые рамы витражей кладут на пол узор — свинцовые переплёты без стекла. Узор ползёт за солнцем и к вечеру доходит до алтаря.' },
+                    { text: 'QR-код на стене нарисован от руки, клетка за клеткой, по линейке. Ведёт на 404. Рисовали, судя по слоям краски, неделю.' },
+                ],
+                fountain: [
+                    { if: ['night'], text: 'Ночью у фонтана белеет одна шапочка на крысином черепе. Дежурство не снято.' },
+                    { text: 'Отбитое крыло ангела лежит в чаше, у края жижи. Его не убрали и не приклеили. Оно чистое: его протирают.' },
+                ],
+                cross: [
+                    { if: ['used'], text: 'Земля, которую ты стронул плечом, подгребена обратно и примята. Рядом никого не было.' },
+                    { if: ['night'], text: 'Ночью камень у подножия остывает последним. Неперечёркнутую зарубку можно нащупать пальцем: она свежее трёх.' },
+                    { text: 'Огарок оплавился в сторону холма: ветер здесь дует с одной стороны. Цветы — разных лет. Свежих нет, выброшенных тоже.' },
+                ],
+                lake: [
+                    { if: ['rain'], text: 'Под дождём гладь не рябит: капли ложатся на неё шариками и не тонут. Новую воду озеро не принимает.' },
+                    { if: ['night'], text: 'Ночью радуга на воде гаснет. Остаётся одна — на рыбе: видно, где она.' },
+                    { text: 'Живая рыба показывается раз в восемь секунд, на одном и том же месте, и уходит. Скелеты на берегу лежат головами к воде.' },
+                ],
+                train: [
+                    { if: ['night'], text: 'Ночью пар белее неба. Машинист сидит так же: ночь — не причина.' },
+                    { text: 'Окно кабины протёрто изнутри — кругом, размером в лицо. Остальное стекло в пыли: смотрят только в одну сторону, вперёд.' },
+                    { if: ['n3'], text: 'Трава у колёс подступила на палец. Боится по-прежнему, но привыкает.' },
+                ],
+                library: [
+                    { if: ['wind'], text: 'На ветру страницы листаются сами. Прижмёшь одну — на ней всегда середина фразы: начала и конца ветер не держит.' },
+                    { text: 'Пустая верхняя полка подписана «Архив». Пыли на ней нет: её протирают, хотя класть нечего.' },
+                ],
+            });
+        }
+    };
+});
+System.register("world/relook", ["content/relooks"], function (exports_104, context_104) {
+    "use strict";
+    var relooks_js_1, counts, shown, used, lookCount, wasUsed;
+    var __moduleName = context_104 && context_104.id;
+    function noteLook(id) {
+        const n = (counts.get(id) || 0) + 1;
+        counts.set(id, n);
+        return n;
+    }
+    exports_104("noteLook", noteLook);
+    function noteUse(id) { used.add(id); }
+    exports_104("noteUse", noteUse);
+    // текст повторного осмотра или null (первый раз, нет вариантов, ни один не подходит).
+    // tags — метки обстановки (Set); n3 и used добавляются здесь
+    function relookText(id, tags = new Set()) {
+        const list = relooks_js_1.RELOOKS[id], n = counts.get(id) || 0;
+        if (!list || n < 2)
+            return null;
+        const T = new Set(tags);
+        if (n >= 3)
+            T.add('n3');
+        if (used.has(id))
+            T.add('used');
+        const fits = [];
+        list.forEach((v, i) => { if (!v.if || v.if.every(tg => T.has(tg)))
+            fits.push(i); });
+        if (!fits.length)
+            return null;
+        const seen = shown.get(id) || new Set();
+        const i = fits.find(k => !seen.has(k)) ?? fits[0]; // сперва — ещё не виденный
+        seen.add(i);
+        shown.set(id, seen);
+        return list[i].text;
+    }
+    exports_104("relookText", relookText);
+    function saveRelook() {
+        return {
+            n: Object.fromEntries(counts),
+            seen: Object.fromEntries([...shown].map(([id, s]) => [id, [...s]])),
+            used: [...used],
+        };
+    }
+    exports_104("saveRelook", saveRelook);
+    function loadRelook(d) {
+        if (!d)
+            return;
+        for (const [id, n] of Object.entries(d.n || {}))
+            if (n > 0)
+                counts.set(id, n | 0);
+        for (const [id, s] of Object.entries(d.seen || {}))
+            if (Array.isArray(s))
+                shown.set(id, new Set(s));
+        for (const id of d.used || [])
+            used.add(id);
+    }
+    exports_104("loadRelook", loadRelook);
+    function _resetRelook() { counts.clear(); shown.clear(); used.clear(); }
+    exports_104("_resetRelook", _resetRelook);
+    return {
+        setters: [
+            function (relooks_js_1_1) {
+                relooks_js_1 = relooks_js_1_1;
+            }
+        ],
+        execute: function () {
+            counts = new Map(); // id → сколько раз осматривали
+            shown = new Map(); // id → номера виденных вариантов
+            used = new Set(); // с чем странник что-то делал
+            exports_104("lookCount", lookCount = id => counts.get(id) || 0);
+            exports_104("wasUsed", wasUsed = id => used.has(id));
+        }
+    };
+});
+System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
+    "use strict";
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, TH, tierOf, SHOW, showLen, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS;
+    var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -32992,7 +33148,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('office', x, y, -6, -16, 80, 64, () => officeBody(0, 0));
         rect3(x, y);
     }
-    exports_103("draw_office", draw_office);
+    exports_105("draw_office", draw_office);
     function officeBody(x, y) {
         const g = y + 46;
         // цоколь: камень рядами, шире стены
@@ -33170,7 +33326,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_gates(x, y) {
         bake('gates', x, y, -16, -2, 80, 61, () => gatesBody(0, 0));
     }
-    exports_103("draw_gates", draw_gates);
+    exports_105("draw_gates", draw_gates);
     function gatesBody(x, y) {
         const g = y + 56;
         // небо в проёме едва теплеет — свечой, сверху теплее
@@ -33548,7 +33704,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_train", draw_train);
+    exports_105("draw_train", draw_train);
     function theaterBody() {
         const { cx, cy } = TH;
         // холм: земля с сухой травой, в нём вырезан зал
@@ -33707,7 +33863,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(zx + 1, zy - 4, 1, 2, '#8CC63F');
         }
     }
-    exports_103("draw_theater", draw_theater);
+    exports_105("draw_theater", draw_theater);
     function terminalBody() {
         // стол: столешница, кромка, ноги, распорка; ржа
         r(1, 27, 47, 5, K0);
@@ -33798,7 +33954,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_terminal", draw_terminal);
+    exports_105("draw_terminal", draw_terminal);
     function pole(x0, g, H, lean) {
         for (let k = 0; k < H; k++) {
             const xx = x0 + q(lean * k / H);
@@ -33860,7 +34016,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(x + 12 + rx * Math.cos(u), y + 47 + ry * Math.sin(u), 1, 1, a % 5 ? K1 : RUST_L);
             } // свернулся на земле
     }
-    exports_103("draw_powerline", draw_powerline);
+    exports_105("draw_powerline", draw_powerline);
     // ── КРАТЕР ──
     // «Монета расплавила песок... Жар сплавил стороны в одну поверхность. Ни
     // орла, ни решки — гладкий диск... В центре — мох. Гуще всего там, где было
@@ -33916,7 +34072,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_crater(x, y) {
         bake('crater', x, y, -1, 4, 53, 34, craterBody);
     }
-    exports_103("draw_crater", draw_crater);
+    exports_105("draw_crater", draw_crater);
     // ── РАВНИНА ЛУННОГО ──
     // «Выжженная равнина. Чёрный песок до горизонта, зерно к зерну одного
     // размера, как просеянный. На песке — борозды. Ветра здесь нет. Борозды — от
@@ -33955,7 +34111,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_nocturnal(x, y) {
         bake('nocturnal', x, y, -4, -3, 68, 106, plainBody);
     }
-    exports_103("draw_nocturnal", draw_nocturnal);
+    exports_105("draw_nocturnal", draw_nocturnal);
     // языки огня одним силуэтом (костёр, мусорка): TONG — [середина, высота, ширина,
     // сзади?]; сзади — тонкие киноварные языки выше, спереди внутри свеча, по кромке
     // и к верху киноварь, внутри медленные киноварные лизки (раз в четверть секунды,
@@ -34168,7 +34324,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_campfire", draw_campfire);
+    exports_105("draw_campfire", draw_campfire);
     function pithosBody() {
         const cx = 11, cy = 8;
         for (let y = 1; y <= 15; y++)
@@ -34207,7 +34363,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_pithos(x, y) {
         bake('pithos', x, y, -1, 0, 33, 18, pithosBody);
     }
-    exports_103("draw_pithos", draw_pithos);
+    exports_105("draw_pithos", draw_pithos);
     // ── ПОГАСШИЙ ФОНАРЬ ──
     // «Фонарь погас. Кто-то искал с ним человека — днём. Техника не подвела.» По
     // ART_BIBLE §04 — единственный столб без света. Чугунный столб: цоколь с
@@ -34262,7 +34418,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_lantern1(x, y) {
         bake('lantern1', x, y, -1, 0, 13, 46, lanternBody);
     }
-    exports_103("draw_lantern1", draw_lantern1);
+    exports_105("draw_lantern1", draw_lantern1);
     function chTop(x) {
         let top = chGable(x);
         if (x >= 47 && x <= 77) {
@@ -34508,7 +34664,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_church", draw_church);
+    exports_105("draw_church", draw_church);
     function libraryBody() {
         const g = 82;
         // ── фронтон: левая половина цела, правая обрушена ступенькой ──
@@ -34687,7 +34843,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(px, py, flip ? 2 : 1, 2, flip ? BO : L1);
         }
     }
-    exports_103("draw_library", draw_library);
+    exports_105("draw_library", draw_library);
     // ── РАЗБИТЫЙ ФОНТАН ──
     // «Каменная чаша с отбитыми фигурами. Вместо воды — зеленоватая жижа. Статуя
     // ангела без головы. На постаменте: «ПОМНИ». Рядом — крысиный скелет в
@@ -34777,7 +34933,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(x + 22 + (time_js_23.t / 300 | 0) % 6, y + 29 - q(k * 1.5), 1 + (k > 0.6 ? 1 : 0), 1, k < 0.8 ? MG_L : MG_D);
         }
     }
-    exports_103("draw_fountain", draw_fountain);
+    exports_105("draw_fountain", draw_fountain);
     // ── КРЕСТ НА ХОЛМЕ ──
     // «Деревянный крест на вершине холма. Слишком большой для могильного. Маяк
     // или предупреждение. У подножия — истлевшие цветы, свечной огарок, камень...
@@ -34837,7 +34993,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_cross(x, y) {
         bake('cross', x, y, -7, 0, 44, 52, crossBody);
     }
-    exports_103("draw_cross", draw_cross);
+    exports_105("draw_cross", draw_cross);
     // ── РАДИОВЫШКА ──
     // «Ржавая конструкция. Красный огонь на верхушке мигает одиннадцать лет
     // подряд. У основания — стопка дисков. Каждый следующий тоньше предыдущего.
@@ -34922,7 +35078,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(x + 15, y + 77, 4, 2, K0);
         r(x + 16, y + 77, 2, 1, (time_js_23.t >> 4) & 1 ? '#8CC63F' : TD);
     }
-    exports_103("draw_radio", draw_radio);
+    exports_105("draw_radio", draw_radio);
     // ── ПАЛАТКА СТАРЦА ──
     // «Брезент на арматуре. Пахнет сушёными травами и мокрой шерстью. На полу —
     // 9 жизней кота, записанных столбиком. 8 зачёркнуты. У входа — блюдце. Молоко
@@ -35024,7 +35180,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_tent(x, y) {
         bake('tent', x, y, -8, 1, 80, 60, tentBody);
     }
-    exports_103("draw_tent", draw_tent);
+    exports_105("draw_tent", draw_tent);
     function glyph(ch, x0, y0, c, c2, broken) {
         GLYPH[ch].forEach((row, j) => { for (let i = 0; i < 4; i++)
             if (row[i] === 'X' && !(broken && hh(x0 + i, y0 + j, 221) < broken))
@@ -35202,7 +35358,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(x + 53, y + 66, 2, 1, KV);
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_pizzeria", draw_pizzeria);
+    exports_105("draw_pizzeria", draw_pizzeria);
     function ruinsBody(seam) {
         const g = RU_G, x0 = RU_X0, x1 = RU_X1, fl = RU_FL;
         // ── восемь этажей над первым: штукатурка в тон, где облетела — кирпич; тяги ──
@@ -35363,7 +35519,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         if (p < 24)
             r(wx + 5, wy + 4 - ((p >> 3) & 1), 1, 1, NI);
     }
-    exports_103("draw_ruins", draw_ruins);
+    exports_105("draw_ruins", draw_ruins);
     // ── СМОТРОВАЯ ВЫШКА ──
     // «Деревянная платформа на четырёх ногах. Бинокль направлен внутрь поселения.
     // На платформе — термос, ещё тёплый. Журнал наблюдений... раскрыт. Рядом —
@@ -35436,7 +35592,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_watchtower", draw_watchtower);
+    exports_105("draw_watchtower", draw_watchtower);
     // ── КЛАДБИЩЕ МАШИН ──
     // «Десятки корпусов, спрессованных в серые кубы. УНИФИКАТОР 3000 гудит —
     // принимает всё, выдаёт куб 10×10×10. Между кубами — одна машина не в кубе.
@@ -35654,7 +35810,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         const n = Math.floor((time_js_23.t - 170) / 360), u = c >= 170 ? Math.min(1, (c - 170) / 70) : 1; // прежний стоит, пока не выйдет новый
         jCube(x + 15 + q(u * 12), y + 54, 9 + ((n % 7) + 7) % 7, false);
     }
-    exports_103("draw_junkyard", draw_junkyard);
+    exports_105("draw_junkyard", draw_junkyard);
     // ── ШКОЛЬНЫЙ АВТОБУС ──
     // «Школьный автобус. Жёлтая краска облезла. На борту, трафаретом: «ШКОЛА №1».
     // Внутри — ряды школьных ранцев на сиденьях. На спинке переднего сиденья висит
@@ -35748,101 +35904,225 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         if (time_js_23.t % 660 < 50 && (time_js_23.t & 2))
             r(x + 58, y + 2, 1, 3, S1);
     }
-    exports_103("draw_bus", draw_bus);
-    // ── БИЛБОРД ──
-    // «Just Do It — уцелело на жести. Галочка стоит, но продукта уже нет. Поверх —
-    // двадцать распечаток обезьян, приколочены гвоздями... Ниже прибит график:
-    // линия поднимается, потом обрывается вниз. Поверх — портрет маркером...
-    // Вместо глаз — два ноля. Чек с аукциона... На отдельном клочке... «WAGMI» —
-    // зачёркнуто.» Жесть листами на двух балках с мостком; надпись — штрихами;
-    // галочка — большая; обезьяны сеткой на гвоздях, одна сорвана (сцена «Сорванный
-    // принт»); график вверх и обрыв; портрет с нолями; чек и клочок.
-    function billboardBody() {
-        // балки, мосток
-        for (const bx of [20, 80]) {
-            r(bx, 30, 4, 20, K3);
-            r(bx, 30, 1, 20, S0);
-            r(bx + 3, 31, 1, 19, K1);
-            for (let y = 33; y < 50; y += 5)
-                r(bx + 1, y, 2, 1, K1);
+    exports_105("draw_bus", draw_bus);
+    function billboardBody(torn) {
+        // щит лёг наискось: верх сдвинут вправо, правый край чуть выше. Жесть кладётся
+        // по точке (R), бумага и буквы — целиком по своей точке (E), чтоб не ломались
+        const sx = (u, v) => 2 + u + q((BB_H - 1 - v) * 0.16), sy = (u, v) => BB_Y + v - q(u * 2 / BB_W);
+        const R = (u, v, w, h, c) => { for (let j = 0; j < h; j++)
+            for (let i = 0; i < w; i++)
+                r(sx(u + i, v + j), sy(u + i, v + j), 1, 1, c); };
+        const E = (u0, v0) => { const dx = sx(u0, v0) - u0, dy = sy(u0, v0) - v0; return (u, v, w, h, c) => r(u + dx, v + dy, w, h, c); };
+        const word = (s, u, v, c, drop) => {
+            for (const ch of s) {
+                if (ch === ' ') {
+                    u += 2;
+                    continue;
+                }
+                const g = BB_GLYPH[ch], P = E(u + 1, v + 2);
+                for (let j = 0; j < 5; j++)
+                    for (let i = 0; i < g[j].length; i++)
+                        if (g[j][i] === '#' && !(drop && hh(u + i, v + j, 331) < drop))
+                            P(u + i, v + j, 1, 1, c);
+                u += g[0].length + 1;
+            }
+        };
+        const nz = (u, v) => {
+            const gu = u / 6, gv = v / 4, iu = Math.floor(gu), iv = Math.floor(gv), fu = gu - iu, fv = gv - iv;
+            const a = hh(iu, iv, 341), b = hh(iu + 1, iv, 341), c = hh(iu, iv + 1, 341), d = hh(iu + 1, iv + 1, 341);
+            return (a + (b - a) * fu) * (1 - fv) + (c + (d - c) * fu) * fv;
+        };
+        // ── позади: ноги подломились — двутавры рваными верхами, правый согнут ──
+        r(21, 5, 7, 2, K3);
+        r(22, 5, 1, 1, AS);
+        r(26, 5, 1, 1, AS); // накладка на болтах
+        for (let i = 0; i < 5; i++) {
+            const top = [1, 0, 2, 1, 3][i];
+            r(22 + i, top, 1, 10 - top, i === 0 ? S1 : i === 4 ? K1 : S2);
         }
-        r(10, 30, 86, 2, K1);
-        r(10, 30, 86, 1, S2);
-        for (let x = 12; x < 96; x += 6)
-            r(x, 26, 1, 4, K1);
-        r(10, 26, 86, 1, K2);
-        // жесть листами: швы, ржа потёками, угол отогнут
-        r(2, 2, 101, 25, S2);
-        for (let x = 2; x < 103; x += 15) {
-            r(x, 2, 1, 25, K3);
-            r(x + 1, 2, 1, 25, S0);
-        }
-        r(2, 2, 101, 1, S0);
-        r(2, 26, 101, 1, K1);
-        r(102, 3, 1, 24, AS);
-        for (let k = 0; k < 22; k++) {
-            const x = 3 + q(hh(k, 1, 3) * 98), L = 3 + q(hh(k, 1, 5) * 12);
-            r(x, 3, 1, L, RUST);
-            r(x, 3 + L, 1, 1, RUST_L);
-        }
-        r(97, 2, 6, 5, K0);
-        for (let k = 0; k < 5; k++)
-            r(97 + k, 2 + k, 6 - k, 1, S0); // угол отогнут
-        // «Just Do It» — уцелело штрихами; галочка стоит
-        for (let k = 0; k < 26; k++)
-            if (hh(k, 3, 3) > 0.3)
-                r(6 + k + (k > 8 ? 2 : 0) + (k > 14 ? 2 : 0), 5 + (hh(k, 3, 5) < 0.3 ? 1 : 0), 1, 2, L1);
-        for (let k = 0; k <= 30; k++) {
-            const u = k / 30, x = 62 + u * 36, y = u < 0.2 ? 14 + u * 25 : 19 - (u - 0.2) / 0.8 * 15;
-            r(x, y, 1, u < 0.2 ? 2 : 3 - q(u * 2), u < 0.6 ? BO : L1);
-        }
-        // двадцать обезьян на гвоздях, одна сорвана
-        for (let k = 0; k < 20; k++) {
-            const c = k % 5, row = k / 5 | 0, px = 8 + c * 9 + (row & 1 ? 2 : 0), py = 9 + row * 4;
-            if (k === 13) {
-                r(px + 3, py, 1, 1, AS);
-                continue;
-            } // сорван — гвоздь остался
-            const sk = hh(k, 4, 3) < 0.3 ? 1 : 0;
-            r(px, py + sk, 7, 4, L1);
-            r(px, py + sk, 7, 1, BO);
-            r(px + 2, py + 1 + sk, 3, 2, BR2);
-            r(px + 3, py + 2 + sk, 1, 1, L2);
-            r(px + 3, py + sk, 1, 1, AS);
-        }
-        // график: вверх и обрыв вниз; поверх — портрет маркером, глаза — ноли
-        r(54, 15, 20, 10, L1);
-        r(54, 15, 20, 1, BO);
-        r(56, 15, 1, 1, AS);
-        r(71, 15, 1, 1, AS);
-        for (let k = 0; k < 14; k++)
-            r(55 + k, 23 - q(k * 0.5) - (k & 1), 1, 1, K1);
+        r(23, 1, 1, 1, K1);
+        r(25, 2, 1, 1, RUST);
+        r(24, 7, 1, 2, RUST);
         for (let k = 0; k < 6; k++)
-            r(69, 16 + k, 1, 1, K1);
-        r(59, 17, 6, 6, K2);
-        r(60, 18, 4, 4, L1);
-        r(60, 19, 1, 1, K1);
-        r(63, 19, 1, 1, K1);
-        r(61, 21, 2, 1, K1); // портрет: два ноля вместо глаз
-        for (let k = 0; k < 8; k++)
-            r(57 + k, 24, 1, 1, k & 1 ? K2 : L2); // подпись
-        // чек с аукциона, клочок «WAGMI» — зачёркнуто
-        r(77, 12, 4, 9, BO);
-        for (let k = 0; k < 4; k++)
-            r(78, 13 + k * 2, 2, 1, K2);
-        r(84, 18, 9, 5, L1);
-        for (let k = 0; k < 5; k++)
-            r(85 + k, 19, 1, 1, K2);
-        r(84, 19, 7, 1, K1);
-        r(85, 21, 6, 1, K2);
+            r(27 + k, 3 + k, 1, 1, k & 1 ? K3 : S2); // раскос, обломан
+        for (let i = 0; i < 5; i++)
+            r(78 + i, 5, 1, 3, i === 0 ? S1 : i === 4 ? K1 : S2); // правый: стоит…
+        for (let k = 0; k < 6; k++)
+            for (let i = 0; i < 4; i++)
+                r(79 + i + k, 4 - q(k * 0.5) + (i === 3 ? 1 : 0), 1, 2, i === 0 ? S1 : i === 3 ? K1 : S2); // …и сложился вбок
+        r(84, 0, 1, 2, S2);
+        r(86, 1, 1, 1, K3);
+        r(80, 6, 1, 1, RUST);
+        // ── жесть: краска рекламы чёрная, облезла пятнами к кромкам; под ней цинк и ржа ──
+        for (let v = 0; v < BB_H; v++)
+            for (let u = 0; u < BB_W; u++) {
+                if (v < 6 && u > BB_W - 7 + v)
+                    continue; // угол отогнут — там пусто
+                const e = Math.min(u, BB_W - 1 - u, v * 1.6, (BB_H - 1 - v) * 1.2), n = nz(u, v) + (e < 5 ? (5 - e) * 0.05 : 0) + (hh(u, v, 343) - 0.5) * 0.08;
+                R(u, v, 1, 1, n > 0.86 ? RUST : n > 0.72 ? (u < BB_W * 0.4 ? S1 : S0) : n > 0.68 ? RUST : (u + v * 3) % 23 === 0 ? K3 : K2);
+            }
+        for (let u = 16; u < BB_W - 4; u += 16) {
+            R(u, 0, 1, BB_H, K1);
+            R(u + 1, 0, 1, BB_H, S2);
+            for (let v = 2; v < BB_H; v += 6)
+                R(u + 1, v, 1, 1, S1);
+        } // швы, заклёпки
+        R(0, 0, BB_W - 6, 1, S1);
+        R(0, 1, 1, BB_H - 1, S1);
+        R(0, BB_H - 1, BB_W, 1, K1);
+        R(BB_W - 1, 6, 1, BB_H - 6, AS); // рама: к свету слева, кромка пеплом
+        for (let k = 0; k < 16; k++) {
+            const u = 2 + q(hh(k, 1, 313) * 93), L = 2 + q(hh(k, 1, 315) * 9);
+            R(u, 1, 1, L, RUST);
+            R(u, 1 + L, 1, 1, RUST_L);
+        } // ржа потёками от верха
+        for (let j = 0; j < 6; j++)
+            for (let i = 0; i <= j; i++)
+                R(BB_W - 6 + i, j, 1, 1, i === j ? K1 : i === 0 ? S1 : AS); // отогнутый угол — изнанкой, цинком
+        // «JUST DO IT.» — уцелело, облезло; продукта нет — от его щита пустая рамка на болтах
+        word('JUST DO IT.', 3, 2, BO, 0.1);
+        {
+            const P = E(53, 4);
+            P(42, 1, 23, 7, K3);
+            P(42, 1, 23, 1, S2);
+            P(42, 7, 23, 1, K1);
+            P(42, 2, 1, 5, S2);
+            for (const [u, v] of [[43, 2], [63, 2], [43, 6], [63, 6]])
+                P(u, v, 1, 1, K0);
+            for (let k = 0; k < 5; k++)
+                P(46 + q(hh(k, 14, 349) * 15), 3 + q(hh(k, 15, 351) * 3), 2, 1, S2);
+        } // клей полосами
+        // галочка стоит — большая, простая: короткий штрих вниз, длинный вверх
+        {
+            const P = E(83, 8);
+            for (let k = 0; k < 6; k++)
+                P(70 + k, 8 + k, 2, 3, BO);
+            for (let k = 0; k <= 22; k++) {
+                const th = 3 - q(k / 11);
+                P(76 + k, 13 - q(k * 0.55) - th + 1, 1, th + (k < 3 ? 1 : 0), k > 14 ? L1 : BO);
+            }
+            for (let k = 0; k < 9; k++)
+                P(70 + q(hh(k, 16, 353) * 27), 4 + q(hh(k, 17, 355) * 10), 1, 1, K2);
+        } // облезло точками
+        // двадцать обезьян на гвоздях; когда странник сорвёт одну — гвоздь остался
+        const FUR = [BR2, K1, SEP, K2, BR2], BG = [L1, L2, BO, AS, L2, L1, BO];
+        for (let k = 0; k < 20; k++) {
+            const c = k % 10, row = k / 10 | 0, pu = 4 + c * 7, pv = 9 + row * 7, sk = hh(k, 4, 321) < 0.25 ? 1 : 0, P = E(pu + 3, pv + 3);
+            if (k === 13 && torn) {
+                P(pu, pv, 6, 6, S0);
+                P(pu + 2, pv, 1, 1, AS);
+                P(pu + 1, pv, 1, 1, L2);
+                P(pu + 3, pv, 1, 1, L2);
+                P(pu + 2, pv + 1, 1, 1, L2);
+                continue;
+            }
+            const bg = BG[q(hh(k, 5, 323) * 6)], fur = FUR[q(hh(k, 6, 325) * 4)], washed = hh(k, 7, 327) < 0.2, hat = hh(k, 8, 329) < 0.3;
+            P(pu, pv + sk, 6, 6, bg);
+            for (let j = 0; j < 5; j++)
+                for (let i = 0; i < 6; i++) {
+                    const ch = APE[j][i];
+                    if (ch === '.')
+                        continue;
+                    P(pu + i, pv + 1 + j + sk, 1, 1, ch === 'e' ? (bg === BO ? L1 : BO) : ch === 'm' ? (bg === AS ? L2 : AS) : washed ? S1 : fur);
+                }
+            if (hat) {
+                P(pu + 1, pv + sk, 4, 1, K1);
+                P(pu, pv + 1 + sk, 6, 1, K1);
+            }
+            if (hh(k, 9, 335) < 0.35)
+                P(pu + 5, pv + 5 + sk, 1, 1, K2); // уголок отстал
+            P(pu + 2, pv + sk, 1, 1, AS);
+            if (hh(k, 10, 337) < 0.4)
+                P(pu + 2, pv + 1 + sk, 1, 1 + (k & 1), RUST); // гвоздь, ржа с него
+        }
+        // график прибит ниже: вверх — и обрыв; поверх маркером портрет, глаза — ноли, подпись
+        {
+            const P = E(28, 28);
+            P(16, 23, 25, 10, L1);
+            P(16, 23, 25, 1, BO);
+            P(17, 23, 1, 1, AS);
+            P(39, 23, 1, 1, AS);
+            P(17, 24, 1, 8, K3);
+            P(17, 31, 23, 1, K3);
+            for (let k = 0; k < 6; k++)
+                P(18 + k, 30 - q(k * 1.2), 1, 1 + (k > 2 ? 1 : 0), K2);
+            for (let v = 24; v < 31; v++)
+                P(24, v, 1, 1, K2);
+            P(25, 31, 15, 1, K2);
+            for (let i = 0; i < 9; i++)
+                P(26 + i, 24 + (hh(i, 11, 339) < 0.5 ? 1 : 0), 1, 1 + (i & 1), K1); // вихры маркером
+            P(26, 26, 1, 4, K1);
+            P(34, 26, 1, 4, K1);
+            P(27, 30, 7, 1, K1);
+            for (const eu of [27, 31]) {
+                P(eu, 26, 3, 1, K1);
+                P(eu, 28, 3, 1, K1);
+                P(eu, 27, 1, 1, K1);
+                P(eu + 2, 27, 1, 1, K1);
+            } // 0 0
+            for (let k = 0; k < 13; k++)
+                P(25 + k, 32, 1, 1, k % 3 === 1 ? L1 : K2);
+        }
+        // чек с аукциона: сумма жирно, строки мелко, карандаш в углу
+        {
+            const P = E(46, 27);
+            P(43, 22, 8, 11, BO);
+            P(43, 32, 8, 1, L2);
+            P(46, 22, 1, 1, AS);
+            P(44, 24, 6, 2, K2);
+            P(45, 24, 1, 1, BO);
+            P(48, 25, 1, 1, BO);
+            for (let v = 27; v < 31; v++)
+                for (let u = 44; u < 50; u++)
+                    if (v & 1 ? u < 48 : (u + v) % 3)
+                        P(u, v, 1, 1, K3);
+            P(48, 31, 2, 1, K1);
+        }
+        // клочок усталым почерком: слово жирно — зачёркнуто; ниже строка карандашом, вкось
+        {
+            const P = E(85, 24);
+            P(76, 19, 19, 12, L2);
+            P(76, 19, 19, 1, L1);
+            P(85, 19, 1, 1, AS);
+            P(94, 30, 1, 1, K2);
+            P(76, 30, 1, 1, K2);
+            for (let u = 78; u < 92; u++) {
+                const hgt = hh(u, 18, 357) < 0.3 ? 3 : 2;
+                P(u, 23 - hgt + 1 + (u % 4 === 0 ? 1 : 0), 1, hgt, hh(u, 19, 359) < 0.15 ? L2 : K2);
+            }
+            for (let u = 77; u < 94; u++)
+                P(u, 22 - (u > 85 ? 1 : 0), 1, 1, K1);
+            for (let u = 79; u < 92; u++)
+                if (hh(u, 20, 361) > 0.25)
+                    P(u, 27 + (u > 87 ? -1 : 0) - (u % 3 === 0 ? 1 : 0), 1, 1 + (u % 5 === 0 ? 1 : 0), K3);
+        }
+        // торец щита к нам: рама двутавром
+        for (let u = 0; u < BB_W; u++) {
+            r(sx(u, BB_H), sy(u, BB_H), 1, 1, K1);
+            r(sx(u, BB_H + 1), sy(u, BB_H + 1), 1, 1, u % 9 === 4 ? K3 : K0);
+        }
+        // ── мосток рухнул решёткой перед щитом; перила легли ──
+        r(4, 45, 44, 1, S1);
+        r(4, 48, 44, 1, K3);
+        for (let x = 4; x < 48; x += 2)
+            if (hh(x, 12, 345) > 0.12)
+                r(x + (hh(x, 13, 347) < 0.15 ? 1 : 0), 46, 1, 2, K3);
+        r(5, 49, 40, 1, S2);
+        for (const px of [6, 18, 30, 42])
+            r(px, 48, 1, 2, S2); // перила вперёд, плашмя
+        for (let k = 0; k < 14; k++)
+            r(2 + q(hh(k, 9, 323) * 100), 44 + q(hh(k, 9, 325) * 3), 1, 2 + q(hh(k, 9, 327) * 2), k & 1 ? MG_D : K4); // сорняк у кромки
         context_js_9.X.globalAlpha = 0.5;
-        r(8, 50, 90, 1, K0);
+        r(2, 50, 102, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_billboard(x, y) {
-        bake('billboard', x, y, 0, 1, 106, 51, billboardBody);
+        if (relook_js_1.wasUsed('billboard'))
+            bake('billboard3t', x, y, 0, -3, 108, 55, () => billboardBody(true));
+        else
+            bake('billboard3', x, y, 0, -3, 108, 55, () => billboardBody(false));
     }
-    exports_103("draw_billboard", draw_billboard);
+    exports_105("draw_billboard", draw_billboard);
     // ── РЖАВЫЙ ТРУБОПРОВОД ──
     // «Труба большого диаметра. Немецкая сталь. Этикетки содраны, уцелела одна...
     // В боку — пробоина. Края оплавлены внутрь. На бетоне рядом, мелом: дата,
@@ -35918,7 +36198,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     function draw_pipeline(x, y) {
         bake('pipeline', x, y, 0, 0, 82, 26, pipelineBody);
     }
-    exports_103("draw_pipeline", draw_pipeline);
+    exports_105("draw_pipeline", draw_pipeline);
     // скелет рыбы по направлению (ux, uy) — головой туда: хребет, рёбра, череп, хвост
     function fishBones(hx, hy, ux, uy, n) {
         const px = -uy, py = ux;
@@ -36047,7 +36327,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             context_js_9.X.globalAlpha = 1;
         }
     }
-    exports_103("draw_lake", draw_lake);
+    exports_105("draw_lake", draw_lake);
     function altarBody() {
         const { cx, cy } = ALT;
         for (let y = 6; y < 44; y++)
@@ -36115,7 +36395,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             }
         }
     }
-    exports_103("draw_altar", draw_altar);
+    exports_105("draw_altar", draw_altar);
     function stencil(word, x0, y0) {
         [...word].forEach((ch, i) => {
             STENCIL[ch].forEach((row, j) => { for (let k = 0; k < 3; k++)
@@ -36219,7 +36499,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
         context_js_9.X.globalAlpha = 1;
     }
-    exports_103("draw_dumpster", draw_dumpster);
+    exports_105("draw_dumpster", draw_dumpster);
     // мазок кистью по ломаной: квадратная кисть w, лёгкая дрожь руки; flake — доля облезлого;
     // капли вниз с нижних мест; skip — куда не красить (дыра, оторванный угол)
     function brushStroke(pts, ox, oy, sc, w, col, seed, o) {
@@ -36487,7 +36767,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(fx + k + sway, fy - k, 1, len, k & 1 ? TARP_D : MG);
         }
     }
-    exports_103("draw_banner", draw_banner);
+    exports_105("draw_banner", draw_banner);
     function ovBody(ox, oy) {
         const R = (lx, ly, w, h, c) => r(ox + lx, oy + ly, w, h, c);
         const g = 60, top = 30; // земля, верх настила
@@ -36657,7 +36937,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(sx + (k > len / 2 ? d : 0), oy + 36 + k, 1, 1, RUST);
         }
     }
-    exports_103("draw_overpass", draw_overpass);
+    exports_105("draw_overpass", draw_overpass);
     return {
         setters: [
             function (context_js_9_1) {
@@ -36680,6 +36960,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             },
             function (weather_js_1_1) {
                 weather_js_1 = weather_js_1_1;
+            },
+            function (relook_js_1_1) {
+                relook_js_1 = relook_js_1_1;
             }
         ],
         execute: function () {
@@ -36935,6 +37218,31 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             ruPlaster = (x, y) => hh(x >> 3, y >> 2, 243) < 0.13 || hh(x >> 2, y >> 3, 244) < 0.06; // облетела до кирпича
             RUINS = { id: 'ruins' };
             JK_DIGIT = { 3: ['##.', '..#', '.#.', '..#', '##.'], 0: ['.#.', '#.#', '#.#', '#.#', '.#.'] };
+            // ── УПАВШИЙ БИЛБОРД ──
+            // «Just Do It — уцелело на жести. Галочка стоит, но продукта уже нет. Поверх —
+            // двадцать распечаток обезьян, приколочены гвоздями. Покупали за миллионы. Теперь
+            // не покупают. Ниже прибит график: линия поднимается, потом обрывается вниз.
+            // Поверх — портрет маркером, под ним подпись „effective altruism". Вместо глаз —
+            // два ноля. Чек с аукциона: 69 миллионов за jpeg… На отдельном клочке: „WAGMI" —
+            // зачёркнуто. Рядом: „NGMI. всё же".» Сцена «Сорванный принт». Упал: ноги
+            // подломились, щит откинулся назад и лёг на обрубки — лицом к небу и к нам, чуть
+            // наискось (лежит: тени не кладёт, рисуется под стоящим — main.js FLAT, GROUND).
+            // Позади — двутавры рваными верхами, правый сложился; мосток рухнул решёткой перед
+            // щитом. Жесть: краска рекламы чёрная, облезла к кромкам до цинка и ржи, швы, угол
+            // отогнут; слоган буквами, от продукта — пустая рамка; галочка простая, большая;
+            // двадцать принтов на гвоздях, после «Сорванного принта» одного нет — гвоздь
+            // остался (принт у странника); ниже график, поверх портрет — ноли; чек, клочок.
+            // Свет слева, кромка пеплом справа.
+            BB_W = 98, BB_H = 34, BB_Y = 8;
+            // латиница щита 3×5, I и точка — в одну. Буквами — только слоган: без него щит не узнать
+            // (как «ВАВИЛОН»); чек и клочок — штрихами
+            BB_GLYPH = {
+                J: ['..#', '..#', '..#', '#.#', '.#.'], U: ['#.#', '#.#', '#.#', '#.#', '###'], S: ['.##', '#..', '.#.', '..#', '##.'],
+                T: ['###', '.#.', '.#.', '.#.', '.#.'], D: ['##.', '#.#', '#.#', '#.#', '##.'], O: ['.#.', '#.#', '#.#', '#.#', '.#.'],
+                I: ['#', '#', '#', '#', '#'], '.': ['.', '.', '.', '.', '#'],
+            };
+            // обезьяна на принте 6×5 под строкой гвоздя: макушка, уши, глаза, морда, подбородок
+            APE = ['.hhhh.', 'hhhhhh', '.heeh.', '.hmmh.', '..hh..'];
             // ── ТОКСИЧНОЕ ОЗЕРО ──
             // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
             // Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды табличка:
@@ -37086,10 +37394,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         }
     };
 });
-System.register("sprites/locations/index", ["render/draw", "render/context", "core/time", "world/sky", "core/playerRef", "world/locations", "sprites/locations/canon"], function (exports_104, context_104) {
+System.register("sprites/locations/index", ["render/draw", "render/context", "core/time", "world/sky", "core/playerRef", "world/locations", "sprites/locations/canon"], function (exports_106, context_106) {
     "use strict";
     var draw_js_7, context_js_10, time_js_24, sky_js_3, playerRef_js_4, locations_js_3, P, npcProximity;
-    var __moduleName = context_104 && context_104.id;
+    var __moduleName = context_106 && context_106.id;
     function drawBuildingSilhouette(x, y, w, h, roofColor) {
         draw_js_7.rect(context_js_10.X, x, y, w, h, P.dstone);
         draw_js_7.rect(context_js_10.X, x + 2, y + 2, w - 4, h - 4, '#1a1a22');
@@ -37179,7 +37487,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         draw_js_7.rect(context_js_10.X, x, y + 52, 3, 2, P.dtoxic);
         draw_js_7.px(context_js_10.X, x + 1, y + 51, P.toxic);
     }
-    exports_104("draw_vending", draw_vending);
+    exports_106("draw_vending", draw_vending);
     function draw_graffiti(x, y) {
         // ═══ GRAFFITI WALL — layered slogans through the years ═══
         // Base concrete wall
@@ -37325,7 +37633,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_7.px(context_js_10.X, x + 40 + i, y + 39, P.dtoxic);
         context_js_10.X.globalAlpha = 1;
     }
-    exports_104("draw_graffiti", draw_graffiti);
+    exports_106("draw_graffiti", draw_graffiti);
     function draw_raven(x, y) {
         // ═══ RAVEN'S NEST — twisted oak with trove ═══
         // Shadow
@@ -37478,7 +37786,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         // Silent cat on a branch — useless tree, useless cat, both survived
         // NPC drawn separately
     }
-    exports_104("draw_raven", draw_raven);
+    exports_106("draw_raven", draw_raven);
     function draw_basement(x, y) {
         // ═══ FLOODED BASEMENT — Iä! Iä! ═══
         // Shadow
@@ -37574,7 +37882,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             context_js_10.X.globalAlpha = 1;
         }
     }
-    exports_104("draw_basement", draw_basement);
+    exports_106("draw_basement", draw_basement);
     function draw_exit(x, y) {
         // ═══ EXIT TO THE WASTELAND — @ardet_mirror sign ═══
         // Road fading into the distance (perspective)
@@ -37662,7 +37970,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             context_js_10.X.globalAlpha = 1;
         }
     }
-    exports_104("draw_exit", draw_exit);
+    exports_106("draw_exit", draw_exit);
     function draw_rocket(x, y) {
         // ═══ РАКЕТА ЗА ПУТЯМИ — «MARS: A FRESH START» ═══
         // Подделка целиком (потёмкинская скорость): пламя сопел писано
@@ -37717,7 +38025,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_7.rect(context_js_10.X, x - 8 + i * 2, gy - 15, 1, 1, '#1a1a1a');
         draw_js_7.rect(context_js_10.X, x - 9, gy - 10, 7, 1, P.bone);
     }
-    exports_104("draw_rocket", draw_rocket);
+    exports_106("draw_rocket", draw_rocket);
     function draw_crypt(x, y) {
         // ═══ CRYPT — DANTE'S NINE CIRCLES ═══
         // Shadow on ground
@@ -37839,7 +38147,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         context_js_10.X.fillRect(x - 17, y - 10, 32, 32);
         context_js_10.X.globalAlpha = 1;
     }
-    exports_104("draw_crypt", draw_crypt);
+    exports_106("draw_crypt", draw_crypt);
     function draw_riverbed(x, y) {
         // Animated puddle reflection
         const shimmer = Math.sin(time_js_24.t * .004) * .3 + .3;
@@ -37861,7 +38169,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             context_js_10.X.globalAlpha = 1;
         }
     }
-    exports_104("draw_riverbed", draw_riverbed);
+    exports_106("draw_riverbed", draw_riverbed);
     function draw_pit(x, y) {
         // Dark hole in ground
         context_js_10.X.fillStyle = '#020202';
@@ -37892,7 +38200,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             context_js_10.X.globalAlpha = 1;
         }
     }
-    exports_104("draw_pit", draw_pit);
+    exports_106("draw_pit", draw_pit);
     function draw_posterwall(x, y) {
         // Concrete wall base
         draw_js_7.rect(context_js_10.X, x, y, 65, 45, P.stone);
@@ -38016,7 +38324,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
             draw_js_7.px(context_js_10.X, rosX + draw_js_7.hash(i, 0, 11) * 3 - 1, y + 53, '#3a0a08');
         }
     }
-    exports_104("draw_posterwall", draw_posterwall);
+    exports_106("draw_posterwall", draw_posterwall);
     return {
         setters: [
             function (draw_js_7_1) {
@@ -38038,7 +38346,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                 locations_js_3 = locations_js_3_1;
             },
             function (canon_js_1_1) {
-                exports_104({
+                exports_106({
                     "draw_office": canon_js_1_1["draw_office"],
                     "draw_gates": canon_js_1_1["draw_gates"],
                     "draw_train": canon_js_1_1["draw_train"],
@@ -38104,10 +38412,10 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
 // from build/ at runtime). Missing files degrade gracefully — slots
 // just stay blank, no crash.
 // ═══════════════════════════════════════
-System.register("assets/manifest", [], function (exports_105, context_105) {
+System.register("assets/manifest", [], function (exports_107, context_107) {
     "use strict";
     var PORTRAITS, SCENES;
-    var __moduleName = context_105 && context_105.id;
+    var __moduleName = context_107 && context_107.id;
     // Flat list of all asset paths (used by the preloader + build copier).
     function allAssetPaths() {
         return [
@@ -38115,7 +38423,7 @@ System.register("assets/manifest", [], function (exports_105, context_105) {
             ...Object.values(SCENES),
         ];
     }
-    exports_105("allAssetPaths", allAssetPaths);
+    exports_107("allAssetPaths", allAssetPaths);
     return {
         setters: [],
         execute: function () {
@@ -38123,7 +38431,7 @@ System.register("assets/manifest", [], function (exports_105, context_105) {
             // the NPC id from locations.js (loc.npc). Files go into the repo-root
             // assets/portraits/ (next to assets/music, assets/icons); what to paint
             // and how — weave/PORTRAITS.md. No file — no frame (ui.js drawPortrait).
-            exports_105("PORTRAITS", PORTRAITS = {
+            exports_107("PORTRAITS", PORTRAITS = {
                 jester: 'assets/portraits/jester.png',
                 sol: 'assets/portraits/sol.png',
                 elder: 'assets/portraits/elder.png',
@@ -38138,17 +38446,17 @@ System.register("assets/manifest", [], function (exports_105, context_105) {
                 moss: 'assets/portraits/moss.png',
             });
             // Full-screen / threshold images.
-            exports_105("SCENES", SCENES = {
+            exports_107("SCENES", SCENES = {
                 entry: 'assets/scenes/entry.webp', // заглавная: оттиск автора — красная луна, щит-афиша, городок (ui/title.js)
                 ending: 'assets/scenes/ending.png', // drawn during the ending sequence
             });
         }
     };
 });
-System.register("assets/loader", ["assets/manifest"], function (exports_106, context_106) {
+System.register("assets/loader", ["assets/manifest"], function (exports_108, context_108) {
     "use strict";
     var manifest_js_1, cache, pending, loadAsset, _test;
-    var __moduleName = context_106 && context_106.id;
+    var __moduleName = context_108 && context_108.id;
     // Где лежат картины: на сайте — assets/ рядом со страницей (как музыка и значки),
     // в локальной сборке build/index.html — ../assets/ (корневая папка репозитория).
     // window.ARDET_ASSET_BASE — свой адрес, если положили иначе.
@@ -38199,13 +38507,13 @@ System.register("assets/loader", ["assets/manifest"], function (exports_106, con
         probe(path);
         return null;
     }
-    exports_106("getPortrait", getPortrait);
+    exports_108("getPortrait", getPortrait);
     // то же, но дождаться: портрет пришёл позже, чем открылся разговор
     function loadPortrait(npcId) {
         const path = manifest_js_1.PORTRAITS[npcId];
         return path ? probe(path) : Promise.resolve(null);
     }
-    exports_106("loadPortrait", loadPortrait);
+    exports_108("loadPortrait", loadPortrait);
     function getScene(id) {
         const path = manifest_js_1.SCENES[id];
         if (!path)
@@ -38215,14 +38523,14 @@ System.register("assets/loader", ["assets/manifest"], function (exports_106, con
         probe(path);
         return null;
     }
-    exports_106("getScene", getScene);
+    exports_108("getScene", getScene);
     // Preload everything declared in the manifest. Useful at game boot so
     // the first dialogue doesn't open with a blank portrait frame.
     function preloadAll() {
         const paths = [...Object.values(manifest_js_1.PORTRAITS), ...Object.values(manifest_js_1.SCENES)];
         return Promise.all(paths.map(probe));
     }
-    exports_106("preloadAll", preloadAll);
+    exports_108("preloadAll", preloadAll);
     return {
         setters: [
             function (manifest_js_1_1) {
@@ -38233,10 +38541,10 @@ System.register("assets/loader", ["assets/manifest"], function (exports_106, con
             cache = new Map(); // path → Image | null (null = known missing)
             pending = new Map(); // path → Promise<Image|null>
             // любая картинка по пути от корня ассетов (окна диалога — weave/WINDOWS.md)
-            exports_106("loadAsset", loadAsset = path => probe(path));
+            exports_108("loadAsset", loadAsset = path => probe(path));
             // Test handle — let tests inspect the cache without prodding internals
             // from the outside.
-            exports_106("_test", _test = {
+            exports_108("_test", _test = {
                 cache,
                 clear() { cache.clear(); pending.clear(); },
                 seed(path, value) { cache.set(path, value); },
@@ -38247,9 +38555,9 @@ System.register("assets/loader", ["assets/manifest"], function (exports_106, con
 // ═══════════════════════════════════════
 // UI TRANSITIONS — smooth open/close animations
 // ═══════════════════════════════════════
-System.register("ui/transitions", [], function (exports_107, context_107) {
+System.register("ui/transitions", [], function (exports_109, context_109) {
     "use strict";
-    var __moduleName = context_107 && context_107.id;
+    var __moduleName = context_109 && context_109.id;
     // CSS transition helpers — add/remove classes with JS timing
     function fadeIn(el, duration = 300) {
         el.style.opacity = '0';
@@ -38260,7 +38568,7 @@ System.register("ui/transitions", [], function (exports_107, context_107) {
         el.style.opacity = '1';
         el.style.transform = 'translateY(0)';
     }
-    exports_107("fadeIn", fadeIn);
+    exports_109("fadeIn", fadeIn);
     function fadeOut(el, duration = 200) {
         return new Promise(resolve => {
             el.style.transition = `opacity ${duration}ms ease-in, transform ${duration}ms ease-in`;
@@ -38269,7 +38577,7 @@ System.register("ui/transitions", [], function (exports_107, context_107) {
             setTimeout(resolve, duration);
         });
     }
-    exports_107("fadeOut", fadeOut);
+    exports_109("fadeOut", fadeOut);
     function scaleIn(el, duration = 250) {
         el.style.opacity = '0';
         el.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
@@ -38278,7 +38586,7 @@ System.register("ui/transitions", [], function (exports_107, context_107) {
         el.style.opacity = '1';
         el.style.transform = 'scale(1)';
     }
-    exports_107("scaleIn", scaleIn);
+    exports_109("scaleIn", scaleIn);
     function slideUp(el, duration = 300) {
         el.style.opacity = '0';
         el.style.transition = `opacity ${duration}ms ease-out, transform ${duration}ms ease-out`;
@@ -38287,17 +38595,17 @@ System.register("ui/transitions", [], function (exports_107, context_107) {
         el.style.opacity = '1';
         el.style.transform = 'translateY(0)';
     }
-    exports_107("slideUp", slideUp);
+    exports_109("slideUp", slideUp);
     return {
         setters: [],
         execute: function () {
         }
     };
 });
-System.register("ui/pages", [], function (exports_108, context_108) {
+System.register("ui/pages", [], function (exports_110, context_110) {
     "use strict";
     var NL_COST;
-    var __moduleName = context_108 && context_108.id;
+    var __moduleName = context_110 && context_110.id;
     function paginate(text, budget = 600, nl = NL_COST) {
         const costOf = s => s.length + (s.match(/\n/g) || []).length * nl;
         if (costOf(text) <= budget)
@@ -38325,7 +38633,7 @@ System.register("ui/pages", [], function (exports_108, context_108) {
         }
         return pages;
     }
-    exports_108("paginate", paginate);
+    exports_110("paginate", paginate);
     // мера страницы по окну (style.css: #look и #lb; режим стрима — ui/stream.js):
     // ширина строки и кегль дают знаков в строку, высота экрана — строк в окне
     function pageMeasure(w, h, coarse = false, stream = false) {
@@ -38337,7 +38645,7 @@ System.register("ui/pages", [], function (exports_108, context_108) {
         const lines = Math.floor((vh * h - (mob ? 130 : stream ? 170 : 140)) / lh);
         return { budget: Math.max(mob ? 240 : 600, Math.min(1500, lines * perLine)), nl: Math.round(perLine / 2) };
     }
-    exports_108("pageMeasure", pageMeasure);
+    exports_110("pageMeasure", pageMeasure);
     return {
         setters: [],
         execute: function () {
@@ -38346,29 +38654,29 @@ System.register("ui/pages", [], function (exports_108, context_108) {
             // Мера — знаки; перенос строки стоит полстроки этого окна: абзац съедает
             // место. Режем по абзацу, иначе по пробелу — слово не рвётся.
             // ═══════════════════════════════════════
-            exports_108("NL_COST", NL_COST = 30);
+            exports_110("NL_COST", NL_COST = 30);
         }
     };
 });
-System.register("ui/stream", [], function (exports_109, context_109) {
+System.register("ui/stream", [], function (exports_111, context_111) {
     "use strict";
     var STREAM;
-    var __moduleName = context_109 && context_109.id;
+    var __moduleName = context_111 && context_111.id;
     // что идёт в опись: всё, к чему можно подойти и что-то увидеть
     function countable(locations) {
         return locations.filter(l => l.look || l.useAction || l.npc || l.archDraw || l.streetForm);
     }
-    exports_109("countable", countable);
+    exports_111("countable", countable);
     // номер дела: пятый наблюдатель, дата и минута начала прогона
     function caseNumber(d = new Date()) {
         const p = n => String(n).padStart(2, '0');
         return `5/${String(d.getFullYear()).slice(2)}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
     }
-    exports_109("caseNumber", caseNumber);
+    exports_111("caseNumber", caseNumber);
     function tallyLine(found, total) {
         return `ОПИСЬ НАЙДЕННОГО: ${found} ИЗ ${total}. ОСТАТОК УЧТЁН.`;
     }
-    exports_109("tallyLine", tallyLine);
+    exports_111("tallyLine", tallyLine);
     function initStream({ locations, getVisited, getFrames }) {
         if (!STREAM || typeof document === 'undefined')
             return;
@@ -38401,7 +38709,7 @@ System.register("ui/stream", [], function (exports_109, context_109) {
         tick();
         setInterval(tick, 1000);
     }
-    exports_109("initStream", initStream);
+    exports_111("initStream", initStream);
     return {
         setters: [],
         execute: function () {
@@ -38411,14 +38719,14 @@ System.register("ui/stream", [], function (exports_109, context_109) {
             // время в пути; панели осмотра, диалога и терминала крупнее — их читают
             // с экрана. Забег чистый: сохранение не читается и не пишется.
             // ═══════════════════════════════════════
-            exports_109("STREAM", STREAM = typeof location !== 'undefined' && /[?&]stream\b/.test(location.search));
+            exports_111("STREAM", STREAM = typeof location !== 'undefined' && /[?&]stream\b/.test(location.search));
         }
     };
 });
-System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulitsa_db"], function (exports_110, context_110) {
+System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulitsa_db"], function (exports_112, context_112) {
     "use strict";
     var disc_js_36, relief_js_9, ulitsa_db_js_9, SIDE_RU;
-    var __moduleName = context_110 && context_110.id;
+    var __moduleName = context_112 && context_112.id;
     // кольцо и сторона точки (постройки знают свои сами)
     function placeOf(loc) {
         if (!loc || loc.under || loc.house)
@@ -38431,7 +38739,7 @@ System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulit
         const ring = disc_js_36.ringAt(x, y);
         return { ring, side: ring >= 1 && ring <= disc_js_36.RINGS ? relief_js_9.sideAt(x, y) : null };
     }
-    exports_110("placeOf", placeOf);
+    exports_112("placeOf", placeOf);
     function placeStamp(loc) {
         if (!loc)
             return '';
@@ -38450,7 +38758,7 @@ System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulit
             return 'за огнём · край';
         return `кольцо ${p.ring} · ${SIDE_RU[p.side] || p.side} · ${ulitsa_db_js_9.SEGMENTS[p.ring - 1].name}`;
     }
-    exports_110("placeStamp", placeStamp);
+    exports_112("placeStamp", placeStamp);
     return {
         setters: [
             function (disc_js_36_1) {
@@ -38464,20 +38772,20 @@ System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulit
             }
         ],
         execute: function () {
-            exports_110("SIDE_RU", SIDE_RU = { north: 'север', south: 'юг', east: 'восток', west: 'запад', plain: 'равнина' });
+            exports_112("SIDE_RU", SIDE_RU = { north: 'север', south: 'юг', east: 'восток', west: 'запад', plain: 'равнина' });
         }
     };
 });
-System.register("ui/signature", [], function (exports_111, context_111) {
+System.register("ui/signature", [], function (exports_113, context_113) {
     "use strict";
     var KEY, SIGN_W, SIGN_H, strokes, listeners;
-    var __moduleName = context_111 && context_111.id;
+    var __moduleName = context_113 && context_113.id;
     function onSignature(fn) { listeners.push(fn); }
-    exports_111("onSignature", onSignature);
+    exports_113("onSignature", onSignature);
     function hasSignature() { return strokes.length > 0; }
-    exports_111("hasSignature", hasSignature);
+    exports_113("hasSignature", hasSignature);
     function getStrokes() { return strokes; }
-    exports_111("getStrokes", getStrokes);
+    exports_113("getStrokes", getStrokes);
     function setStrokes(list) {
         strokes = (list || []).filter(s => s.length >= 4).map(s => s.map(v => Math.round(v * 10) / 10));
         try {
@@ -38494,7 +38802,7 @@ System.register("ui/signature", [], function (exports_111, context_111) {
             catch (e) { }
         }
     }
-    exports_111("setStrokes", setStrokes);
+    exports_113("setStrokes", setStrokes);
     // рамка росчерка: чтобы подпись ложилась в любую графу, не таща за собой пустое поле
     function bounds(list = strokes) {
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -38524,7 +38832,7 @@ System.register("ui/signature", [], function (exports_111, context_111) {
         return `<svg class="sign" viewBox="0 0 ${w.toFixed(1)} ${h}" width="${w.toFixed(0)}" height="${h}" aria-label="подпись странника">`
             + `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round"/></svg>`;
     }
-    exports_111("signatureSVG", signatureSVG);
+    exports_113("signatureSVG", signatureSVG);
     // подпись на холсте (план местности): в рамку w×h, по левому краю
     function drawSignature(ctx, x, y, w, h, color = '#241d18', width = 1.2) {
         const b = bounds();
@@ -38548,7 +38856,7 @@ System.register("ui/signature", [], function (exports_111, context_111) {
         ctx.restore();
         return true;
     }
-    exports_111("drawSignature", drawSignature);
+    exports_113("drawSignature", drawSignature);
     // поле росчерка на бланке: рисуют углём; начал заново — прежняя подпись уступает
     // место новой, но только когда новый штрих лёг: тычок, правый клик, сорванный
     // жест подпись не трогают. Пишет один палец: кто первым лёг на поле, тот и ведёт
@@ -38638,7 +38946,7 @@ System.register("ui/signature", [], function (exports_111, context_111) {
         paint(list);
         return { clear, repaint: () => { list = strokes.slice(); fresh = true; paint(list); } };
     }
-    exports_111("initSignPad", initSignPad);
+    exports_113("initSignPad", initSignPad);
     return {
         setters: [],
         execute: function () {
@@ -38655,7 +38963,7 @@ System.register("ui/signature", [], function (exports_111, context_111) {
             // Нить П1 (weave/MOTIFS.md): опись мира ведёт сам странник.
             // ═══════════════════════════════════════
             KEY = 'ardet-sign';
-            exports_111("SIGN_W", SIGN_W = 240), exports_111("SIGN_H", SIGN_H = 56); // поле подписи, в его точках хранится росчерк
+            exports_113("SIGN_W", SIGN_W = 240), exports_113("SIGN_H", SIGN_H = 56); // поле подписи, в его точках хранится росчерк
             strokes = []; // [[x, y, x, y, …], …] — точки в поле SIGN_W×SIGN_H
             try {
                 const raw = typeof localStorage !== 'undefined' && localStorage.getItem(KEY);
@@ -38668,10 +38976,10 @@ System.register("ui/signature", [], function (exports_111, context_111) {
         }
     };
 });
-System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core/events", "assets/loader", "core/time", "world/sky", "ui/transitions", "audio/audio", "core/input", "world/useActions", "ui/pages", "ui/stream", "world/placeStamp", "ui/signature"], function (exports_112, context_112) {
+System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core/events", "assets/loader", "core/time", "world/sky", "ui/transitions", "audio/audio", "core/input", "world/useActions", "ui/pages", "ui/stream", "world/placeStamp", "ui/signature"], function (exports_114, context_114) {
     "use strict";
     var state_js_1, potemkin_js_3, redNoon_js_2, events_js_1, loader_js_1, time_js_25, sky_js_4, transitions_js_1, audio_js_6, input_js_1, useActions_js_5, pages_js_1, stream_js_1, placeStamp_js_1, signature_js_1, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, lookInsc, lookStamp, SIGN_SPOTS, lookLoc, dlgEl, dlgLines, dlgIndex, dlgLoc, ORD, GEN, DLG_SKIN;
-    var __moduleName = context_112 && context_112.id;
+    var __moduleName = context_114 && context_114.id;
     // Does this location actually do something on «использовать»?
     // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
     function hasUseAction(loc) {
@@ -38728,16 +39036,16 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         menuEl.classList.add('on');
         transitions_js_1.slideUp(menuEl, 200);
     }
-    exports_112("showMenu", showMenu);
+    exports_114("showMenu", showMenu);
     function hideMenu() {
         menuEl.classList.remove('on');
         menuInsc.classList.remove('on');
         state_js_1.state.transition('game');
         activeLoc = null;
     }
-    exports_112("hideMenu", hideMenu);
+    exports_114("hideMenu", hideMenu);
     function getActiveLoc() { return activeLoc; }
-    exports_112("getActiveLoc", getActiveLoc);
+    exports_114("getActiveLoc", getActiveLoc);
     // Действие в один клик (weave/ROADMAP И3): что можно сделать с вещью — пункты меню
     // без «отмены»; одно — сразу оно, больше — меню.
     function menuActions(loc) {
@@ -38750,7 +39058,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             acts.push('talk');
         return acts;
     }
-    exports_112("menuActions", menuActions);
+    exports_114("menuActions", menuActions);
     // intent — с клавиш E/F и правой кнопки: 'look' или 'use' (у человека «использовать» —
     // заговорить). Второе действие (подуть, пожаловаться) — только из меню: случайно не
     // жалуются. Путь тот же, что из меню: события, окна и звук — те же.
@@ -38771,7 +39079,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         state_js_1.state.transition('menu');
         menuAction(act, true);
     }
-    exports_112("openThing", openThing);
+    exports_114("openThing", openThing);
     function menuAction(action, direct = false) {
         audio_js_6.playClick();
         menuEl.classList.remove('on');
@@ -38811,7 +39119,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 break;
         }
     }
-    exports_112("menuAction", menuAction);
+    exports_114("menuAction", menuAction);
     // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
     function showLook(loc, direct = false) {
         state_js_1.state.transition('look');
@@ -38832,7 +39140,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             events_js_1.events.emit(events_js_1.E.OBSERVER_MET, loc.npc);
         }
     }
-    exports_112("showLook", showLook);
+    exports_114("showLook", showLook);
     function renderLookPage() {
         const lt = document.getElementById('lt');
         const lb = document.getElementById('lb');
@@ -38926,7 +39234,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         closeLook();
         return true;
     }
-    exports_112("advanceOrCloseLook", advanceOrCloseLook);
+    exports_114("advanceOrCloseLook", advanceOrCloseLook);
     function closeLook() {
         lookEl.classList.remove('on');
         state_js_1.state.transition('game');
@@ -38936,7 +39244,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         lookPages = [];
         lookPageIdx = 0;
     }
-    exports_112("closeLook", closeLook);
+    exports_114("closeLook", closeLook);
     function startDialogue(loc) {
         if (!loc.talkLines || loc.talkLines.length === 0) {
             hideMenu();
@@ -38950,7 +39258,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         transitions_js_1.fadeIn(dlgEl, 300);
         typeLine();
     }
-    exports_112("startDialogue", startDialogue);
+    exports_114("startDialogue", startDialogue);
     // Портрет — оттиск на бумаге рядом с протоколом беседы (ART_BIBLE: «крупные лица — только
     // оттиски-портреты»). Картины нет — нет и рамки: пустой прямоугольник читался как
     // недогрузка (weave/ROADMAP Г1). Пришла позже, чем открылся разговор, — встаёт сразу.
@@ -38989,7 +39297,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         const ord = ORD[GEN[phase] || 'm'];
         return day >= 1 && day <= ord.length ? `${phase} ${ord[day - 1]}` : `${phase} № ${day}`;
     }
-    exports_112("protocolWhen", protocolWhen);
+    exports_114("protocolWhen", protocolWhen);
     function typeLine() {
         const nameEl = document.getElementById('dn');
         const textEl = document.getElementById('dt');
@@ -39038,7 +39346,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         dlgLines = [];
         dlgIndex = 0;
     }
-    exports_112("closeDialogue", closeDialogue);
+    exports_114("closeDialogue", closeDialogue);
     function dlgSkin() {
         if (!dlgEl)
             return;
@@ -39135,7 +39443,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             }
         }, { passive: true });
     }
-    exports_112("initUI", initUI);
+    exports_114("initUI", initUI);
     return {
         setters: [
             function (state_js_1_1) {
@@ -39191,7 +39499,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             menuEl = document.getElementById('menu');
             menuInsc = document.getElementById('menu-inscription');
             activeLoc = null;
-            exports_112("menuInscriptions", menuInscriptions = {
+            exports_114("menuInscriptions", menuInscriptions = {
                 net_note: 'почерк чужой.', // сеть странников (ui/netui.js)
                 net_note_mine: 'почерк свой.',
                 net_other: 'идёт своей дорогой.',
@@ -39282,162 +39590,6 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                     return 'protocol';
                 }
             })();
-        }
-    };
-});
-System.register("content/relooks", [], function (exports_113, context_113) {
-    "use strict";
-    var RELOOKS;
-    var __moduleName = context_113 && context_113.id;
-    return {
-        setters: [],
-        execute: function () {
-            // ═══════════════════════════════════════
-            // ПОВТОРНЫЙ ОСМОТР — слово автора (23.10): «повторный осмотр может быть более
-            // точным; можно выбрать разные варианты по подходящему контексту».
-            // Первый осмотр — всегда свой текст вещи. Со второго — точнее: одна подмеченная
-            // подробность (счёт, мера, износ, след заботы), первому не противоречит и его
-            // пуант не повторяет. Вариант — по обстановке: if — все метки должны совпасть;
-            // из подходящих — сперва ещё не виденный, по порядку списка (world/relook.js).
-            // Метки: day · dusk · night · dawn — сутки; rain · sand · wind — погода и ветер;
-            // used — странник уже что-то делал с вещью; n3 — третий осмотр и дальше.
-            // Всё ниже — нов. (пробник на двенадцати вещах городка, на приёмку автору);
-            // опоры — осмотры вещей, ART_BIBLE §04–05, weave/FIGURES.md.
-            // ═══════════════════════════════════════
-            exports_113("RELOOKS", RELOOKS = {
-                campfire: [
-                    { if: ['used'], text: 'То, что ты принёс, уже не найти: огонь берёт без описи и без расписки. Камни те же. Пепла прибавилось на щепоть.' },
-                    { if: ['rain'], text: 'Дождь до огня не долетает: капли кончаются над камнями, в кольце сухо. Мокнут только кости вокруг.' },
-                    { if: ['night'], text: 'Ночью видно, что полумесяц не уходит вместе с небом: звёзды сдвинулись, он висит, где висел. С нижнего рога набухает капля, срывается и падает в огонь. Огонь не шипит.' },
-                    { text: 'Камней в кольце девятнадцать. Один светлее прочих: его подложили взамен треснувшего. Треснувший лежит тут же, у кольца, — выбросить не решились.' },
-                    { if: ['n3'], text: 'Огонь держат на ладонь ниже черепа — чтобы горел и чтобы череп было видно. Шут подкладывает по кости, не глядя: мерку помнит рука.' },
-                ],
-                pithos: [
-                    { if: ['night'], text: 'Ночью из горла тянет сухой глиной и тёплым, будто там только что лежали. Внутри темно ровно настолько, чтобы лечь.' },
-                    { if: ['day'], text: 'Днём солнце заходит в горло до самого дна. Его здесь никто не заслоняет.' },
-                    { text: 'Пифос лежит на боку, горлом к улице. Трещина идёт от венчика до второго пояса и дальше не пошла. У горла — следы метлы веером: выметали много раз, и всегда наружу.' },
-                ],
-                lantern1: [
-                    { if: ['night'], text: 'Ночью это единственный столб без света. От его крюка к шесту над костром тянутся флажки — их видно только с той стороны, где огонь.' },
-                    { if: ['wind'], text: 'Ветер фонарь не качает — чугун. Качается паутина под шатром, пустая: паук ушёл, когда погас свет.' },
-                    { text: 'Фитиль подрезан ровно, масла — на донышке. Фонарь не разбили: его погасили, как гасят после смены.' },
-                ],
-                office: [
-                    { if: ['night'], text: 'Ночью окно №3 горит. Приём не ведётся, свет оплачен до конца квартала. Какого — не указано.' },
-                    { text: 'На подоконнике — штемпельная подушка, свежая. Печать лежит лицом вниз, чтобы не высохла: приём может начаться в любую минуту.' },
-                    { if: ['n3'], text: 'Табличка «Обед» висит изнанкой наружу, на изнанке — «Приём». Перевернуть некому: изнутри не видно, какая сторона снаружи.' },
-                ],
-                gates: [
-                    { if: ['dawn'], text: 'На рассвете небо за вратами теплеет раньше, чем над городком. Отсюда это видно лучше всего. Может, поэтому их и не закрывают.' },
-                    { if: ['wind'], text: 'Ветер давит на створки — они не двигаются. Шевелится только вьюн: туда и обратно, будто проверяет, открыто ли.' },
-                    { text: 'Створки вросли низом в дёрн на ладонь. Вьюн по левой дошёл до середины, по правой — до самого верха: правую открыли раньше.' },
-                ],
-                town_well: [
-                    { if: ['used'], text: 'После тебя ворот докрутил ещё пол-оборота сам — проверил, всё ли поднято.' },
-                    { if: ['rain'], text: 'Ворот накрыт дощечкой от дождя. Дощечку прибили давно, гвозди проржавели насквозь: беречь было что.' },
-                    { text: 'Цепь уходит в темноту; видно тридцать два звена. Каждое стёрто с одного бока: крутили всегда в одну сторону, к себе.' },
-                ],
-                church: [
-                    { if: ['day'], text: 'Днём пустые рамы витражей кладут на пол узор — свинцовые переплёты без стекла. Узор ползёт за солнцем и к вечеру доходит до алтаря.' },
-                    { text: 'QR-код на стене нарисован от руки, клетка за клеткой, по линейке. Ведёт на 404. Рисовали, судя по слоям краски, неделю.' },
-                ],
-                fountain: [
-                    { if: ['night'], text: 'Ночью у фонтана белеет одна шапочка на крысином черепе. Дежурство не снято.' },
-                    { text: 'Отбитое крыло ангела лежит в чаше, у края жижи. Его не убрали и не приклеили. Оно чистое: его протирают.' },
-                ],
-                cross: [
-                    { if: ['used'], text: 'Земля, которую ты стронул плечом, подгребена обратно и примята. Рядом никого не было.' },
-                    { if: ['night'], text: 'Ночью камень у подножия остывает последним. Неперечёркнутую зарубку можно нащупать пальцем: она свежее трёх.' },
-                    { text: 'Огарок оплавился в сторону холма: ветер здесь дует с одной стороны. Цветы — разных лет. Свежих нет, выброшенных тоже.' },
-                ],
-                lake: [
-                    { if: ['rain'], text: 'Под дождём гладь не рябит: капли ложатся на неё шариками и не тонут. Новую воду озеро не принимает.' },
-                    { if: ['night'], text: 'Ночью радуга на воде гаснет. Остаётся одна — на рыбе: видно, где она.' },
-                    { text: 'Живая рыба показывается раз в восемь секунд, на одном и том же месте, и уходит. Скелеты на берегу лежат головами к воде.' },
-                ],
-                train: [
-                    { if: ['night'], text: 'Ночью пар белее неба. Машинист сидит так же: ночь — не причина.' },
-                    { text: 'Окно кабины протёрто изнутри — кругом, размером в лицо. Остальное стекло в пыли: смотрят только в одну сторону, вперёд.' },
-                    { if: ['n3'], text: 'Трава у колёс подступила на палец. Боится по-прежнему, но привыкает.' },
-                ],
-                library: [
-                    { if: ['wind'], text: 'На ветру страницы листаются сами. Прижмёшь одну — на ней всегда середина фразы: начала и конца ветер не держит.' },
-                    { text: 'Пустая верхняя полка подписана «Архив». Пыли на ней нет: её протирают, хотя класть нечего.' },
-                ],
-            });
-        }
-    };
-});
-System.register("world/relook", ["content/relooks"], function (exports_114, context_114) {
-    "use strict";
-    var relooks_js_1, counts, shown, used, lookCount, wasUsed;
-    var __moduleName = context_114 && context_114.id;
-    function noteLook(id) {
-        const n = (counts.get(id) || 0) + 1;
-        counts.set(id, n);
-        return n;
-    }
-    exports_114("noteLook", noteLook);
-    function noteUse(id) { used.add(id); }
-    exports_114("noteUse", noteUse);
-    // текст повторного осмотра или null (первый раз, нет вариантов, ни один не подходит).
-    // tags — метки обстановки (Set); n3 и used добавляются здесь
-    function relookText(id, tags = new Set()) {
-        const list = relooks_js_1.RELOOKS[id], n = counts.get(id) || 0;
-        if (!list || n < 2)
-            return null;
-        const T = new Set(tags);
-        if (n >= 3)
-            T.add('n3');
-        if (used.has(id))
-            T.add('used');
-        const fits = [];
-        list.forEach((v, i) => { if (!v.if || v.if.every(tg => T.has(tg)))
-            fits.push(i); });
-        if (!fits.length)
-            return null;
-        const seen = shown.get(id) || new Set();
-        const i = fits.find(k => !seen.has(k)) ?? fits[0]; // сперва — ещё не виденный
-        seen.add(i);
-        shown.set(id, seen);
-        return list[i].text;
-    }
-    exports_114("relookText", relookText);
-    function saveRelook() {
-        return {
-            n: Object.fromEntries(counts),
-            seen: Object.fromEntries([...shown].map(([id, s]) => [id, [...s]])),
-            used: [...used],
-        };
-    }
-    exports_114("saveRelook", saveRelook);
-    function loadRelook(d) {
-        if (!d)
-            return;
-        for (const [id, n] of Object.entries(d.n || {}))
-            if (n > 0)
-                counts.set(id, n | 0);
-        for (const [id, s] of Object.entries(d.seen || {}))
-            if (Array.isArray(s))
-                shown.set(id, new Set(s));
-        for (const id of d.used || [])
-            used.add(id);
-    }
-    exports_114("loadRelook", loadRelook);
-    function _resetRelook() { counts.clear(); shown.clear(); used.clear(); }
-    exports_114("_resetRelook", _resetRelook);
-    return {
-        setters: [
-            function (relooks_js_1_1) {
-                relooks_js_1 = relooks_js_1_1;
-            }
-        ],
-        execute: function () {
-            counts = new Map(); // id → сколько раз осматривали
-            shown = new Map(); // id → номера виденных вариантов
-            used = new Set(); // с чем странник что-то делал
-            exports_114("lookCount", lookCount = id => counts.get(id) || 0);
-            exports_114("wasUsed", wasUsed = id => used.has(id));
         }
     };
 });
@@ -57397,7 +57549,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_169, context_169) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_19, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_1, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_6, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_5, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_19, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_9, mechanisms_js_5, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_6, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_3, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_5, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
     var __moduleName = context_169 && context_169.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_13.SEGMENTS.length ? ulitsa_db_js_13.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -59177,7 +59329,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function stepQuietVoices() {
         if (redNoon_js_5.redNoon.k > 0.5 || !QUIET.length)
             return; // полдень — мир без голоса вещей
-        const q = quietSound_js_1.quietVoice(QUIET, player.x + 6, player.y + 23, time_js_45.t, id => relook_js_1.lookCount(id) > 0, quietHeard, quietLast);
+        const q = quietSound_js_1.quietVoice(QUIET, player.x + 6, player.y + 23, time_js_45.t, id => relook_js_2.lookCount(id) > 0, quietHeard, quietLast);
         if (!q)
             return;
         quietHeard.set(q.l.id, time_js_45.t);
@@ -59394,8 +59546,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (ui_js_2_1) {
                 ui_js_2 = ui_js_2_1;
             },
-            function (relook_js_1_1) {
-                relook_js_1 = relook_js_1_1;
+            function (relook_js_2_1) {
+                relook_js_2 = relook_js_2_1;
             },
             function (quietSound_js_1_1) {
                 quietSound_js_1 = quietSound_js_1_1;
@@ -59713,7 +59865,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (savedData.well)
                     townWell_js_2.loadTownWell(savedData.well);
                 if (savedData.looks)
-                    relook_js_1.loadRelook(savedData.looks);
+                    relook_js_2.loadRelook(savedData.looks);
                 if (savedData.walked)
                     savedData.walked.forEach(k => flags.walked.add(k));
                 if (savedData.attn)
@@ -59751,7 +59903,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     under: underside_js_4.under.save(),
                     well: townWell_js_2.saveTownWell(),
                     woke: wokeOnce,
-                    looks: relook_js_1.saveRelook(),
+                    looks: relook_js_2.saveRelook(),
                 }));
             playerRef_js_6.setPosOverride(() => (house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active ? underside_js_4.under.ret : null)); // карта мира: странник там, где спустился (или у дома)
             Object.assign(ui_js_2.menuInscriptions, underside_js_6.UNDER_INSC);
@@ -59808,7 +59960,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle']);
             // лежат в земле — рисуются под всем, что стоит (иначе песок равнины Лунного
             // ложится поверх самого Лунного: его место ниже по глубине, чем край равнины)
-            GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'trap_puddle']);
+            GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'billboard', 'trap_puddle']);
             // сидят внутри другого места — рисуются сразу после него (Старец — в палатке;
             // кот на стопке книг — ещё позже: сидящий на вещи берёт её глубину +0,5, world/silentCat.js)
             INSIDE = { elder_home: 'tent' }, insideHost = new Map();
@@ -60076,16 +60228,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // вариант по обстановке: сутки, погода, ветер
             SKY_TAG = { 'день': 'day', 'сумерки': 'dusk', 'ночь': 'night', 'рассвет': 'dawn' };
             events_js_8.events.on(events_js_8.E.LOCATION_LOOK, loc => { if (loc && loc.id) {
-                relook_js_1.noteLook(loc.id);
+                relook_js_2.noteLook(loc.id);
                 attention_js_3.noteAttention(loc);
             } });
             events_js_8.events.on('location.use', loc => { if (loc && loc.id) {
-                relook_js_1.noteUse(loc.id);
+                relook_js_2.noteUse(loc.id);
                 attention_js_3.noteAttention(loc);
             } });
             // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
             events_js_8.events.on('brainrot.freeze', attention_js_3.forget);
-            potemkin_js_5.setRelook(loc => relook_js_1.relookText(loc.id, lookTags()));
+            potemkin_js_5.setRelook(loc => relook_js_2.relookText(loc.id, lookTags()));
             // ═══ EVENT HANDLERS ═══
             // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)
             events_js_8.events.on('brainrot.freeze', () => { if (window.ArdetAudio && window.ArdetAudio.open)
