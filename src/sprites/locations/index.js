@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending, draw_basement } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending, draw_basement, draw_exit } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
@@ -198,93 +198,6 @@ export function draw_raven(x, y) {
     }
     // Silent cat on a branch — useless tree, useless cat, both survived
     // NPC drawn separately
-}
-
-export function draw_exit(x, y) {
-    // ═══ EXIT TO THE WASTELAND — @ardet_mirror sign ═══
-    // Road fading into the distance (perspective)
-    for(let i=0;i<22;i++){
-      const rx=x+i*4;
-      const ry=y+12+Math.sin(i*.4)*2;
-      const w=Math.max(1,24-Math.floor(i*1.3));
-      dither(X,rx,ry,4,w,P.d1,P.g3,.5);
-    }
-    // Road markings (dashed center line)
-    for(let i=0;i<5;i++){
-      const rx=x+4+i*14;
-      rect(X,rx,y+14+i*.8,4,2,'#3a2a0a');
-    }
-
-    // Signpost
-    rect(X,x+10,y-14,3,34,P.dwood);
-    rect(X,x+11,y-13,1,32,P.wood);
-    // Rust at base
-    px(X,x+10,y+18,P.rust);
-    px(X,x+12,y+17,P.drust);
-
-    // Main sign board
-    rect(X,x+2,y-20,28,14,P.dwood);
-    rect(X,x+3,y-19,26,12,P.wood);
-    rect(X,x+3,y-19,26,1,P.lwood); // top edge
-    // Darker weathering
-    dither(X,x+4,y-18,24,10,'#3a2618','#5a3a24',.3);
-    // Crack
-    rect(X,x+18,y-18,1,6,'#1a0e06');
-    // Arrow
-    rect(X,x+5,y-13,2,4,P.bone);
-    rect(X,x+7,y-14,1,6,P.bone);
-    // @ardet_mirror fake-pixel text
-    X.fillStyle=P.bone;
-    // @
-    rect(X,x+10,y-15,1,3);rect(X,x+11,y-15,3,1);rect(X,x+11,y-13,3,1);rect(X,x+13,y-14,1,1);
-    // a
-    rect(X,x+15,y-14,2,2);
-    // r
-    rect(X,x+18,y-14,1,2);rect(X,x+18,y-15,2,1);
-    // d
-    rect(X,x+20,y-15,1,3);rect(X,x+21,y-14,1,2);
-    // e
-    rect(X,x+23,y-14,2,1);rect(X,x+23,y-13,2,1);
-    // t
-    rect(X,x+26,y-15,1,3);rect(X,x+25,y-15,2,1);
-    // Second line: smaller "ardet.art" fake
-    rect(X,x+6,y-10,18,1,P.damber);
-
-    // Small sub-sign below
-    rect(X,x+14,y-4,12,5,P.dwood);
-    rect(X,x+15,y-3,10,3,P.wood);
-    // "→" arrow on sub-sign
-    rect(X,x+17,y-2,4,1,'#1a0e06');
-    rect(X,x+20,y-3,1,1,'#1a0e06');
-    rect(X,x+20,y-1,1,1,'#1a0e06');
-
-    // Crow perched on sign
-    if(t%500<480){
-      rect(X,x+25,y-21,2,1,'#050505');
-      px(X,x+24,y-21,'#050505'); // beak
-      px(X,x+25,y-22,'#050505'); // head
-      // Occasional eye glint
-      if(t%10<3)px(X,x+25,y-21,P.amber);
-    }
-
-    // Old bones at base of sign
-    rect(X,x+4,y+17,4,1,P.bone);
-    px(X,x+8,y+17,P.dbone);
-    rect(X,x+6,y+19,3,1,P.dbone);
-
-    // Wind-blown leaflet stuck to post
-    const lfSway=Math.sin(t*.02)*.5;
-    rect(X,x+13+lfSway,y-2,3,3,P.parchment);
-    rect(X,x+13+lfSway,y-2,3,1,'#3a2a18');
-
-    // Small boot footprints heading away (into the distance)
-    for(let i=0;i<4;i++){
-      const fpX=x+30+i*6+hash(i,0,11)*2;
-      const fpY=y+12+i*2;
-      X.globalAlpha=.25-i*.04;
-      rect(X,fpX,fpY,2,1,'#0a0a0a');
-      X.globalAlpha=1;
-    }
 }
 
 export function draw_rocket(x, y) {

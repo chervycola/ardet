@@ -868,7 +868,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='1e826c1 · 2026-10-25';console.log('[оттиск]', '1e826c1 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='ee27b82 · 2026-10-25';console.log('[оттиск]', 'ee27b82 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33096,7 +33096,7 @@ System.register("world/relook", ["content/relooks"], function (exports_104, cont
 });
 System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook"], function (exports_105, context_105) {
     "use strict";
-    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH, BS_WL;
+    var context_js_9, time_js_23, sky_js_2, wind_js_14, playerRef_js_3, potemkin_js_2, weather_js_1, relook_js_1, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH, BS_WL, EX_G, EX_T, EX_PH;
     var __moduleName = context_105 && context_105.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -37988,6 +37988,122 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             bake('basement4', x, y, 0, 5, 50, 40, () => basementBody(false));
     }
     exports_105("draw_basement", draw_basement);
+    function exitBody() {
+        const G = EX_G;
+        // ── указатель: щит мглой (выцветшая зелень трасс), кайма костью, стрелка наружу ──
+        for (const sx of [7, 29]) {
+            r(sx, 15, 2, G - 15, S0);
+            r(sx, 15, 1, G - 15, S1);
+            r(sx + 1, 15, 1, G - 15, S2);
+            for (let k = 0; k < 4; k++)
+                r(sx + (k & 1), G - 3 - k * 5, 1, 2, RUST);
+        }
+        const BX = 2, BY = 3, BW = 34, BH = 13;
+        for (let y = BY; y < BY + BH; y++)
+            for (let x = BX; x < BX + BW; x++) {
+                const h = hh(x, y, 541), lit = x < BX + 12 ? 1 : x > BX + BW - 6 ? -1 : 0;
+                r(x, y, 1, 1, h < 0.03 ? RUST : lit > 0 ? (h < 0.25 ? MG_L : MG) : lit < 0 ? (h < 0.3 ? MG : MG_D) : h < 0.08 ? MG_L : MG);
+            }
+        r(BX, BY, BW, 1, L2);
+        r(BX, BY + BH - 1, BW, 1, L1);
+        r(BX, BY, 1, BH, L2);
+        r(BX + BW - 1, BY, 1, BH, AS);
+        r(BX + 1, BY + 1, BW - 2, 1, MG_D);
+        // угол загнут — справа сверху: изнанка щита в тени
+        r(BX + BW - 3, BY, 3, 1, NI);
+        r(BX + BW - 2, BY + 1, 2, 1, NI);
+        r(BX + BW - 1, BY + 2, 1, 1, NI);
+        r(BX + BW - 4, BY + 1, 2, 1, S2);
+        r(BX + BW - 3, BY + 2, 1, 1, S2);
+        // стрелка — наружу: древко и наконечник
+        const AX = BX + 27, AY = BY + 6;
+        r(AX - 12, AY, 12, 2, L1);
+        r(AX - 12, AY + 1, 12, 1, L2);
+        for (let k = 0; k < 4; k++)
+            r(AX - 3 + k, AY - 3 + k, 1, 8 - 2 * k, L1);
+        r(AX - 3, AY - 3, 1, 1, L2);
+        // строки стёрты: по месту букв — пятна краски, светлее фона
+        for (const [ly, n] of [[BY + 2, 6], [BY + 10, 7]])
+            for (let k = 0; k < n; k++)
+                if (hh(k, ly, 543) > 0.5)
+                    r(BX + 3 + k * 2, ly, 1, 1, MG_L);
+        // дробь, потёки ржи с дыр
+        for (const [dx, dy] of [[30, 3], [31, 7], [29, 9], [6, 2], [9, 10]]) {
+            r(BX + dx, BY + dy, 1, 1, K0);
+            r(BX + dx, BY + dy + 1, 1, 2, RUST);
+        }
+        // ── последний столб: брус, к свету бок, траверса, изоляторы; провода — живые ──
+        const PX = 48;
+        for (let y = 2; y < G; y++) {
+            const lean = y < 14 ? 1 : 0;
+            r(PX + lean, y, 1, 1, SINGE);
+            r(PX + 1 + lean, y, 1, 1, BR2);
+            r(PX + 2 + lean, y, 1, 1, K1);
+            if (hh(PX, y, 547) < 0.15)
+                r(PX + 1 + lean, y, 1, 1, K1);
+        }
+        r(PX + 1, 1, 1, 1, K1); // торец
+        r(PX - 7, 6, 17, 2, BR2);
+        r(PX - 7, 6, 17, 1, SINGE);
+        r(PX + 9, 6, 1, 2, K1); // траверса
+        r(PX - 7, 8, 1, 1, K1);
+        r(PX + 8, 8, 1, 1, K1);
+        for (const ix of [PX - 6, PX + 1, PX + 7]) {
+            r(ix, 4, 2, 2, L2);
+            r(ix, 4, 1, 1, BO);
+            r(ix + 1, 5, 1, 1, AS);
+        } // изоляторы
+        r(PX - 3, 8, 1, 4, BR2);
+        r(PX - 2, 11, 2, 1, BR2); // подкос
+        // скобы-ступени по столбу
+        for (let y = 14; y < G - 4; y += 5)
+            r(PX - 1, y, 1, 1, AS);
+        // жестяная табличка: ржавая, на двух гвоздях; «@» и строка — почти стёрто
+        const TX = PX - 3, TY = 22;
+        r(TX, TY, 8, 5, AS);
+        r(TX, TY, 8, 1, L2);
+        r(TX + 7, TY + 1, 1, 4, S2);
+        r(TX, TY + 4, 8, 1, S1);
+        for (let k = 0; k < 9; k++) {
+            const rx = TX + q(hh(k, 9, 549) * 8), ry = TY + q(hh(k, 10, 551) * 5);
+            r(rx, ry, 1, 1, k & 1 ? RUST : RUST_L);
+        }
+        r(TX + 1, TY + 1, 1, 1, K1);
+        r(TX + 6, TY + 1, 1, 1, K1); // гвозди
+        r(TX + 2, TY + 2, 2, 1, L1);
+        r(TX + 1, TY + 3, 1, 1, L1);
+        r(TX + 3, TY + 3, 1, 1, L1); // «@» — нацарапано
+        for (let k = 0; k < 3; k++)
+            if (k !== 1)
+                r(TX + 4 + k, TY + 3, 1, 1, L1); // строка — стёрлась
+        r(TX + 2, TY + 5, 1, 2, RUST);
+        r(TX + 5, TY + 5, 1, 1, RUST); // потёки
+        // подножие: щебень обочины, бурьян у стоек
+        for (let k = 0; k < 14; k++) {
+            const gx = 1 + q(hh(k, 12, 553) * 56), gy = G - 1 - (k & 1);
+            r(gx, gy, 1, 1, k % 3 ? K3 : S2);
+        }
+        for (const [wx, n] of [[5, 3], [10, 2], [31, 3], [46, 3], [52, 2]])
+            for (let k = 0; k < n; k++)
+                r(wx + k, G - 2 - (k % 2) * 2, 1, 1 + (k % 2) * 2, k & 1 ? MG_D : K4);
+        r(0, G - 1, 60, 1, K1);
+    }
+    function draw_exit(x, y) {
+        bake('exit4', x, y, 0, 0, 60, EX_G, exitBody);
+        // срезанные провода висят от изоляторов и чуть ходят на ветру
+        const dt = EX_T < 0 ? 0 : Math.min(240, Math.max(0, time_js_23.t - EX_T));
+        EX_T = time_js_23.t;
+        EX_PH += dt * (0.002 + wind_js_14.wind.s * 0.006);
+        const ox = q(x), oy = q(y);
+        for (const [ix, len, side] of [[42, 9, -1], [49, 13, 1], [55, 7, 1]]) {
+            const sw = Math.sin(EX_PH + ix) * (0.5 + wind_js_14.wind.s * 1.5);
+            for (let k = 0; k < len; k++) {
+                const u = k / len, dx = q(side * u * 2 + sw * u * u);
+                r(ox + ix + dx, oy + 6 + k, 1, 1, k === len - 1 ? AS : K2);
+            }
+        }
+    }
+    exports_105("draw_exit", draw_exit);
     return {
         setters: [
             function (context_js_9_1) {
@@ -38570,6 +38686,19 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // угол отбит, торчит арматура. После сцены — мокрые следы вверх по ступеням и
             // на плиту: это странник поднимался. Свет слева.
             BS_WL = 24; // уровень воды на задней стене
+            // ── ВЫХОД В ПУСТОШЬ ──
+            // «Дорога уходит за край карты. На последнем указателе, почти стёрто,
+            // нацарапано: @ardet_mirror. Дальше пишут не люди.» Использовать: «На последнем
+            // столбе — жестяная табличка: „Telegram: @ardet_mirror". Других сигналов на этой
+            // частоте нет.» Меню: «блуждание — было общим. продано. органа нет.» Трасса —
+            // своя (world/town.js: мимо знака «Выход в Пустошь»), здесь — обочина: большой
+            // указатель на двух стойках, выцветший, стрелка — наружу, строки стёрты, по
+            // щиту дробью, угол загнут; последний столб линии связи (нов.: «последний
+            // столб» — столб линии): траверса, изоляторы, провода срезаны и висят — других
+            // сигналов нет; на столбе жестяная табличка, ржавая, гвоздями, нацарапано «@»
+            // и строка — почти стёрто. Свет слева, кромка пеплом справа.
+            EX_G = 40;
+            EX_T = -1, EX_PH = 0;
         }
     };
 });
@@ -38740,94 +38869,6 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
         // NPC drawn separately
     }
     exports_106("draw_raven", draw_raven);
-    function draw_exit(x, y) {
-        // ═══ EXIT TO THE WASTELAND — @ardet_mirror sign ═══
-        // Road fading into the distance (perspective)
-        for (let i = 0; i < 22; i++) {
-            const rx = x + i * 4;
-            const ry = y + 12 + Math.sin(i * .4) * 2;
-            const w = Math.max(1, 24 - Math.floor(i * 1.3));
-            draw_js_7.dither(context_js_10.X, rx, ry, 4, w, P.d1, P.g3, .5);
-        }
-        // Road markings (dashed center line)
-        for (let i = 0; i < 5; i++) {
-            const rx = x + 4 + i * 14;
-            draw_js_7.rect(context_js_10.X, rx, y + 14 + i * .8, 4, 2, '#3a2a0a');
-        }
-        // Signpost
-        draw_js_7.rect(context_js_10.X, x + 10, y - 14, 3, 34, P.dwood);
-        draw_js_7.rect(context_js_10.X, x + 11, y - 13, 1, 32, P.wood);
-        // Rust at base
-        draw_js_7.px(context_js_10.X, x + 10, y + 18, P.rust);
-        draw_js_7.px(context_js_10.X, x + 12, y + 17, P.drust);
-        // Main sign board
-        draw_js_7.rect(context_js_10.X, x + 2, y - 20, 28, 14, P.dwood);
-        draw_js_7.rect(context_js_10.X, x + 3, y - 19, 26, 12, P.wood);
-        draw_js_7.rect(context_js_10.X, x + 3, y - 19, 26, 1, P.lwood); // top edge
-        // Darker weathering
-        draw_js_7.dither(context_js_10.X, x + 4, y - 18, 24, 10, '#3a2618', '#5a3a24', .3);
-        // Crack
-        draw_js_7.rect(context_js_10.X, x + 18, y - 18, 1, 6, '#1a0e06');
-        // Arrow
-        draw_js_7.rect(context_js_10.X, x + 5, y - 13, 2, 4, P.bone);
-        draw_js_7.rect(context_js_10.X, x + 7, y - 14, 1, 6, P.bone);
-        // @ardet_mirror fake-pixel text
-        context_js_10.X.fillStyle = P.bone;
-        // @
-        draw_js_7.rect(context_js_10.X, x + 10, y - 15, 1, 3);
-        draw_js_7.rect(context_js_10.X, x + 11, y - 15, 3, 1);
-        draw_js_7.rect(context_js_10.X, x + 11, y - 13, 3, 1);
-        draw_js_7.rect(context_js_10.X, x + 13, y - 14, 1, 1);
-        // a
-        draw_js_7.rect(context_js_10.X, x + 15, y - 14, 2, 2);
-        // r
-        draw_js_7.rect(context_js_10.X, x + 18, y - 14, 1, 2);
-        draw_js_7.rect(context_js_10.X, x + 18, y - 15, 2, 1);
-        // d
-        draw_js_7.rect(context_js_10.X, x + 20, y - 15, 1, 3);
-        draw_js_7.rect(context_js_10.X, x + 21, y - 14, 1, 2);
-        // e
-        draw_js_7.rect(context_js_10.X, x + 23, y - 14, 2, 1);
-        draw_js_7.rect(context_js_10.X, x + 23, y - 13, 2, 1);
-        // t
-        draw_js_7.rect(context_js_10.X, x + 26, y - 15, 1, 3);
-        draw_js_7.rect(context_js_10.X, x + 25, y - 15, 2, 1);
-        // Second line: smaller "ardet.art" fake
-        draw_js_7.rect(context_js_10.X, x + 6, y - 10, 18, 1, P.damber);
-        // Small sub-sign below
-        draw_js_7.rect(context_js_10.X, x + 14, y - 4, 12, 5, P.dwood);
-        draw_js_7.rect(context_js_10.X, x + 15, y - 3, 10, 3, P.wood);
-        // "→" arrow on sub-sign
-        draw_js_7.rect(context_js_10.X, x + 17, y - 2, 4, 1, '#1a0e06');
-        draw_js_7.rect(context_js_10.X, x + 20, y - 3, 1, 1, '#1a0e06');
-        draw_js_7.rect(context_js_10.X, x + 20, y - 1, 1, 1, '#1a0e06');
-        // Crow perched on sign
-        if (time_js_24.t % 500 < 480) {
-            draw_js_7.rect(context_js_10.X, x + 25, y - 21, 2, 1, '#050505');
-            draw_js_7.px(context_js_10.X, x + 24, y - 21, '#050505'); // beak
-            draw_js_7.px(context_js_10.X, x + 25, y - 22, '#050505'); // head
-            // Occasional eye glint
-            if (time_js_24.t % 10 < 3)
-                draw_js_7.px(context_js_10.X, x + 25, y - 21, P.amber);
-        }
-        // Old bones at base of sign
-        draw_js_7.rect(context_js_10.X, x + 4, y + 17, 4, 1, P.bone);
-        draw_js_7.px(context_js_10.X, x + 8, y + 17, P.dbone);
-        draw_js_7.rect(context_js_10.X, x + 6, y + 19, 3, 1, P.dbone);
-        // Wind-blown leaflet stuck to post
-        const lfSway = Math.sin(time_js_24.t * .02) * .5;
-        draw_js_7.rect(context_js_10.X, x + 13 + lfSway, y - 2, 3, 3, P.parchment);
-        draw_js_7.rect(context_js_10.X, x + 13 + lfSway, y - 2, 3, 1, '#3a2a18');
-        // Small boot footprints heading away (into the distance)
-        for (let i = 0; i < 4; i++) {
-            const fpX = x + 30 + i * 6 + draw_js_7.hash(i, 0, 11) * 2;
-            const fpY = y + 12 + i * 2;
-            context_js_10.X.globalAlpha = .25 - i * .04;
-            draw_js_7.rect(context_js_10.X, fpX, fpY, 2, 1, '#0a0a0a');
-            context_js_10.X.globalAlpha = 1;
-        }
-    }
-    exports_106("draw_exit", draw_exit);
     function draw_rocket(x, y) {
         // ═══ РАКЕТА ЗА ПУТЯМИ — «MARS: A FRESH START» ═══
         // Подделка целиком (потёмкинская скорость): пламя сопел писано
@@ -38991,7 +39032,8 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
                     "draw_crypt": canon_js_1_1["draw_crypt"],
                     "draw_graffiti": canon_js_1_1["draw_graffiti"],
                     "draw_vending": canon_js_1_1["draw_vending"],
-                    "draw_basement": canon_js_1_1["draw_basement"]
+                    "draw_basement": canon_js_1_1["draw_basement"],
+                    "draw_exit": canon_js_1_1["draw_exit"]
                 });
             }
         ],
