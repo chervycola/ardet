@@ -16,11 +16,13 @@ const TS = [0, 37, 100, 211, 997];               // мгновения проб�
 const SHIFT = 1000;                              // проба на другом месте: целый сдвиг
 const PAD = 2;                                   // поле холста (контракт — всё внутри w×h над землёй)
 const BAKE_PER_FRAME = 3;
+const MS_PER_FRAME = 4;                          // и не дольше этого за кадр: набор материалов печётся миллисекундами
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const MAX = 96;
 const KIND = new Map();                          // draw → { live, shared }
 const BAKED = new Map();                         // ключ → { c, cx, gy } | null (холста нет)
 const IDS = new WeakMap();
-let nid = 0, budget = BAKE_PER_FRAME, frameT = null;
+let nid = 0, budget = BAKE_PER_FRAME, spent = 0, frameT = null;
 const idOf = f => { let n = IDS.get(f); if (n === undefined) IDS.set(f, n = ++nid); return n; };
 
 // запись рисунка: каждый вызов и каждая установка свойства — строкой; координаты
@@ -51,10 +53,17 @@ function record(draw, x, gy, t, dx = 0, dy = 0) {
   return { log: log.join(';'), touched: hangTouches() !== h0 || mechTouches() !== m0 };
 }
 
-// живое ли и одинаков ли рисунок на разных местах
+// живое ли и одинаков ли рисунок на разных местах. Рисунок набора (kit.js) объявляет себя
+// сам — draw.static: неподвижен и от места не зависит; пробу (тысячи вызовов) пропускаем
 export function kindOf(draw, x, gy) {
   let k = KIND.get(draw);
   if (k) return k;
+  if (draw.static === true) { KIND.set(draw, k = { live: false, shared: true }); return k; }
+  KIND.set(draw, k = probeKind(draw, x, gy));
+  return k;
+}
+// проба без доверия к draw.static (для тестов: объявленное неподвижным и правда неподвижно)
+export function probeKind(draw, x, gy) {
   let live = false, base = null;
   for (const t of TS) {
     const r = record(draw, x, gy, t);
@@ -62,8 +71,7 @@ export function kindOf(draw, x, gy) {
     base = r.log;
   }
   const shared = !live && record(draw, x + SHIFT, gy + SHIFT, 0, SHIFT, SHIFT).log === base;
-  KIND.set(draw, k = { live, shared });
-  return k;
+  return { live, shared };
 }
 
 function bake(loc) {
@@ -82,22 +90,26 @@ function bake(loc) {
 
 // нарисовать постройку: запечённой — если неподвижна и холст есть, иначе живой
 export function drawArch(ctx, loc, t) {
-  if (t !== frameT) { frameT = t; budget = BAKE_PER_FRAME; }
+  if (t !== frameT) { frameT = t; budget = BAKE_PER_FRAME; spent = 0; }
   const draw = loc.archDraw;
   let k = KIND.get(draw);
   if (!k) {
-    if (budget <= 0) { draw(ctx, loc.archX, loc.archGy, t); return false; }
+    if (budget <= 0 || spent > MS_PER_FRAME) { draw(ctx, loc.archX, loc.archGy, t); return false; }
     budget--;
+    const t0 = now();
     k = kindOf(draw, loc.archX, loc.archGy);
+    spent += now() - t0;
   }
   if (k.live) { draw(ctx, loc.archX, loc.archGy, t); return false; }
   // общий холст — на вид, размер и дробную долю места (округление в рисунке); свой — на постройку
   const key = k.shared ? `${idOf(draw)}|${loc.w}|${loc.h}|${loc.archX % 1}|${loc.archGy % 1}` : loc;
   let b = BAKED.get(key);
   if (b === undefined) {
-    if (budget <= 0) { draw(ctx, loc.archX, loc.archGy, t); return false; }
+    if (budget <= 0 || spent > MS_PER_FRAME) { draw(ctx, loc.archX, loc.archGy, t); return false; }
     budget--;
+    const t0 = now();
     b = bake(loc);
+    spent += now() - t0;
     BAKED.set(key, b);
     if (BAKED.size > MAX) BAKED.delete(BAKED.keys().next().value);
   } else { BAKED.delete(key); BAKED.set(key, b); }      // освежить
@@ -107,4 +119,4 @@ export function drawArch(ctx, loc, t) {
 }
 
 export const _bakeStats = () => ({ kinds: KIND.size, live: [...KIND.values()].filter(k => k.live).length, baked: BAKED.size });
-export function _resetBake() { KIND.clear(); BAKED.clear(); frameT = null; budget = BAKE_PER_FRAME; }
+export function _resetBake() { KIND.clear(); BAKED.clear(); frameT = null; budget = BAKE_PER_FRAME; spent = 0; }

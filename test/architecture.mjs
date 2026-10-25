@@ -536,6 +536,52 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
 }
 
+// ═══ НАБОР МАТЕРИАЛОВ (sprites/arch/kit.js; weave/ARCH_PLAN.md, этап 3) ═══
+{
+  const K = await imp('sprites/arch/kit.js');
+  const rec = () => { const c = fakeCtx(), log = []; c.fillRect = (x, y, w, h) => log.push([c.fillStyle, x, y, w, h]); c.log = log; return c; };
+  test('набор: краски — производные канона (без синего, неона и белого), свет растёт по лестнице', () => {
+    const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    for (const [m, R] of Object.entries(K._RAMP)) {
+      if (!R) continue;
+      for (const h of R) {
+        const c = rgb(h), max = Math.max(...c), min = Math.min(...c), sat = max ? (max - min) / max : 0;
+        assert(!(c[2] > c[0] + 25 && c[2] > c[1] + 8), `материал ${m}: синий ${h}`);
+        assert(!c.every(v => v > 240), `материал ${m}: белый ${h}`);
+        assert(!(sat > 0.5 && max > 90 && c[1] > c[0] + 20), `материал ${m}: неон ${h}`);
+      }
+      const L = R.map(h => rgb(h).reduce((a, b) => a + b, 0));
+      for (let i = 2; i < 6; i++) assert(L[i] >= L[i - 1] - 6, `материал ${m}: лестница тона не растёт к свету`);
+    }
+  });
+  test('набор: рисунок в рамке плана и всегда один и тот же; верх и левый край к свету, справа кромка пеплом', () => {
+    const P = K.plan(20, 16); P.box(2, 4, 14, 12, K.MAT.PLASTER);
+    const a = rec(), b = rec();
+    K.paint(a, 100, 200, P, { seed: 3, chip: 0.2, moss: 0.3, cracks: 2 }); K.paint(b, 100, 200, P, { seed: 3, chip: 0.2, moss: 0.3, cracks: 2 });
+    eq(JSON.stringify(a.log), JSON.stringify(b.log), 'рисунок не повторяется');
+    for (const [, x, y, w, h] of a.log) assert(x >= 100 && y >= 200 && x + w <= 120 && y + h <= 216, `вне рамки: ${x},${y} ${w}×${h}`);
+    const at = (log, x, y) => (log.find(([, X, Y, W]) => Y === y && x >= X && x < X + W) || [])[0];
+    const c = rec(); K.paint(c, 0, 0, P, { seed: 3 });
+    eq(at(c.log, 15, 8), '#8A8D8F', 'справа не кромка пеплом');
+    const R = K._RAMP[K.MAT.PLASTER], lum = h => [1, 3, 5].reduce((s, i) => s + parseInt(h.slice(i, i + 2), 16), 0);
+    assert(lum(at(c.log, 8, 4)) > lum(R[2]), 'верх не к свету');
+    assert(lum(at(c.log, 2, 9)) >= lum(R[2]), 'левый край не к свету');
+  });
+  const BK = await imp('render/archbake.js');
+  test('набор: перерисованные набором виды оси неподвижны (запекаются) и в своей рамке', () => {
+    for (const [side, name] of [['south', 'пилон с обелиском'], ['south', 'дорический храм'], ['north', 'каменная ладья и сейд']]) {
+      const k = ARCH_BY_RING.axial[side].find(q => q.name === name);
+      assert(k, `${name}: нет вида`);
+      const pk = BK.probeKind(k.draw, 500, 500);
+      eq(pk.live, false, `${name}: на деле живой`); eq(pk.shared, true, `${name}: зависит от места`);
+      eq(k.draw.static, true, `${name}: не объявлен неподвижным`);
+      const c = rec(); k.draw(c, 500, 500, 0);
+      assert(c.log.length > 50, `${name}: рисунок пуст`);
+      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${name}: вне рамки ${x},${y} ${w}×${h}`);
+    }
+  });
+}
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
