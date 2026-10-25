@@ -25,6 +25,25 @@ export const PORTRAITS = {
   moss:      'assets/portraits/moss.png',
 };
 
+// Картины мест — вклейка в окно осмотра (вариант А, слово автора 25.10): оттиск 3:4 стоит над
+// справкой, как портрет над протоколом. Ключ — id места (world/locations.js) или ключ постройки
+// колец «кольцо:сторона:имя» (как в arch_looks.js). Файла нет — вклейки нет. Грузятся при первом
+// осмотре, не на заставке (в preloadAll не входят). Что писать и как — weave/PLACES.md.
+export const PLACES = {
+  campfire:  'assets/places/campfire.webp',   // жертвенный костёр и Шут у огня
+  office:    'assets/places/office.webp',     // канцелярия: глухой фасад, окно №3
+  lantern1:  'assets/places/lantern1.webp',   // погасший фонарь
+  gates:     'assets/places/gates.webp',      // врата: створки вросли, блюдце на пороге
+  theater:   'assets/places/theater.webp',    // театр теней
+  library:   'assets/places/library.webp',    // разрушенная библиотека
+  church:    'assets/places/church.webp',     // заброшенная церковь
+  train:     'assets/places/train.webp',      // ржавый поезд набекрень
+  pizzeria:  'assets/places/pizzeria.webp',   // пиццерия «Вавилон»
+  lake:      'assets/places/lake.webp',       // токсичное озеро
+  crater:    'assets/places/crater.webp',     // кратер
+  ruins:     'assets/places/ruins.webp',      // жилой дом №7
+};
+
 // Full-screen / threshold images.
 export const SCENES = {
   entry:  'assets/scenes/entry.webp',  // заглавная: оттиск автора — красная луна, щит-афиша, городок (ui/title.js)

@@ -6,7 +6,7 @@
 // callers know to render their fallback (the pixel sprite, an empty
 // frame, the void).
 // ═══════════════════════════════════════
-import { PORTRAITS, SCENES } from './manifest.js';
+import { PORTRAITS, SCENES, PLACES } from './manifest.js';
 
 const cache = new Map();        // path → Image | null (null = known missing)
 const pending = new Map();      // path → Promise<Image|null>
@@ -62,6 +62,13 @@ export const loadAsset = path => probe(path);
 // то же, но дождаться: портрет пришёл позже, чем открылся разговор
 export function loadPortrait(npcId) {
   const path = PORTRAITS[npcId];
+  return path ? probe(path) : Promise.resolve(null);
+}
+
+// картина места для вклейки в осмотр: путь по ключу; null — нет такой (или ещё грузится — тогда Promise)
+export const placePath = key => (key && PLACES[key]) || null;
+export function loadPlace(key) {
+  const path = placePath(key);
   return path ? probe(path) : Promise.resolve(null);
 }
 

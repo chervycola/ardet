@@ -562,6 +562,21 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
 }
 
+// ═══ ВКЛЕЙКА: картина места в окне осмотра (вариант А; weave/PLACES.md) ═══
+{
+  const MF = await imp('assets/manifest.js'), UI = await imp('ui/ui.js');
+  test('вклейка: ключ — id места или «кольцо:сторона:имя» постройки; нет записи — нет вклейки; пути в assets/places', () => {
+    for (const [k, v] of Object.entries(MF.PLACES)) assert(/^assets\/places\/[a-z0-9_:#\- а-яё«»]+\.webp$/i.test(v), `${k}: путь ${v}`);
+    for (const k of Object.keys(MF.PLACES)) if (!k.includes(':')) assert(locations.some(l => l.id === k), `${k}: нет такого места`);
+    eq(UI.placeKey(locations.find(l => l.id === 'campfire')), 'campfire', 'костёр без вклейки');
+    const temple = locations.find(l => l.archDraw && l.name === 'дорический храм');
+    eq(UI.placeKey(temple), null, 'вклейка без записи');
+    MF.PLACES['axial:south:дорический храм'] = 'assets/places/x.webp';
+    try { eq(UI.placeKey(temple), 'axial:south:дорический храм', 'постройка колец не по ключу описи'); }
+    finally { delete MF.PLACES['axial:south:дорический храм']; }
+  });
+}
+
 // ═══ НАБОР МАТЕРИАЛОВ (sprites/arch/kit.js; weave/ARCH_PLAN.md, этап 3) ═══
 {
   const K = await imp('sprites/arch/kit.js');

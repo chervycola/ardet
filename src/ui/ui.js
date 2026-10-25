@@ -5,7 +5,8 @@ import { state } from '../core/state.js';
 import { lookText } from '../world/potemkin.js';
 import { redNoon, smear } from '../world/redNoon.js';
 import { events, E } from '../core/events.js';
-import { getPortrait, loadPortrait, loadAsset } from '../assets/loader.js';
+import { getPortrait, loadPortrait, loadAsset, loadPlace, placePath } from '../assets/loader.js';
+import { SEGMENTS } from '../content/ulitsa_db.js';
 import { t } from '../core/time.js';
 import { phaseAt, skyAt, dayIndex } from '../world/sky.js';
 import { fadeIn, scaleIn, slideUp } from './transitions.js';
@@ -240,12 +241,61 @@ export function showLook(loc, direct = false) {
 
   lookEl.classList.add('on');
   scaleIn(lookEl, 250);
+  placeCard(loc);
 
   // Track observer viewing
   if (loc.npc && ['jester', 'sol', 'elder', 'nocturnal'].includes(loc.npc)) {
     events.emit(E.OBSERVER_MET, loc.npc);
   }
 }
+
+// ── ВКЛЕЙКА: картина места над справкой (вариант А, слово автора 25.10; weave/PLACES.md) ──
+// Оттиск 3:4 стоит над левым верхним углом окна осмотра и заходит на поле бумаги — заголовок
+// и текст не закрывает (справа вверху — радио и кнопки карты). Окно осмотра прокручивается (overflow), поэтому вклейка — отдельно,
+// по его рамке. Нет картины — нет вклейки; места над окном мало — тоже нет.
+let lpic = null, lpicKey = null;
+export function placeKey(loc) {
+  if (!loc) return null;
+  if (placePath(loc.id)) return loc.id;
+  if (loc.archDraw && loc.archRing && SEGMENTS[loc.archRing - 1]) {
+    const base = `${SEGMENTS[loc.archRing - 1].id}:${loc.archSide}:${loc.name}`;
+    const nth = loc.archNth > 1 ? `${base}#${loc.archNth}` : null;
+    return nth && placePath(nth) ? nth : placePath(base) ? base : null;
+  }
+  return null;
+}
+function placeCard(loc) {
+  lpicKey = placeKey(loc);
+  if (!lpic && typeof document !== 'undefined' && document.body) {
+    lpic = document.createElement('div'); lpic.id = 'lpic';
+    lpic.innerHTML = '<img alt="">';
+    document.body.appendChild(lpic);
+  }
+  if (!lpic) return;
+  lpic.style.display = 'none';
+  if (!lpicKey) return;
+  const key = lpicKey;
+  loadPlace(key).then(img => {
+    if (!img || lpicKey !== key || !lookEl.classList.contains('on')) return;
+    const im = lpic.querySelector && lpic.querySelector('img');
+    if (im) im.src = img.src;
+    placeCardFit();
+    setTimeout(placeCardFit, 270);                 // окно ещё раскрывается (scaleIn)
+  });
+}
+function placeCardFit() {
+  if (!lpic || !lpicKey || !lookEl.classList.contains('on') || !lookEl.getBoundingClientRect) return;
+  // заходит на поле бумаги, не до заголовка: глубина — по верхнему полю окна (минус поле вклейки)
+  const r = lookEl.getBoundingClientRect(), pad = parseFloat(getComputedStyle(lookEl).paddingTop) || 14, over = Math.max(0, pad - 14);
+  const h = Math.min(window.innerHeight * 0.34, 320, r.top - 10 + over);
+  if (h < 90) { lpic.style.display = 'none'; return; }
+  const w = Math.round(h * 0.75);
+  lpic.style.width = w + 'px'; lpic.style.height = Math.round(h) + 'px';
+  lpic.style.left = Math.round(r.left + 18) + 'px';   // слева: справа вверху — радио и кнопки карты
+  lpic.style.top = Math.round(r.top + over - h) + 'px';
+  lpic.style.display = 'block';
+}
+if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('resize', () => placeCardFit());
 
 function renderLookPage() {
   const lt = document.getElementById('lt');
@@ -257,6 +307,7 @@ function renderLookPage() {
     lookEl.appendChild(ind);
   }
   lookShownAt = performance.now();
+  if (lpicKey) setTimeout(placeCardFit, 0);       // высота окна по странице — вклейку за ним
 
   let insc = document.getElementById('look-insc');
   if (!insc && lookEl && lt) {
@@ -340,6 +391,8 @@ export function advanceOrCloseLook() {
 
 export function closeLook() {
   lookEl.classList.remove('on');
+  lpicKey = null;
+  if (lpic) lpic.style.display = 'none';
   state.transition('game');
   activeLoc = null;
   lookLoc = null;

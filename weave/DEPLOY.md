@@ -21,6 +21,7 @@ site/
   assets/logo/        эмблема
   assets/music/       title.mp3 (≈24 МБ) и другие треки, когда появятся
   assets/portraits/   портреты протокола беседы (jester, sol, nocturnal…)
+  assets/places/      картины мест — вклейки в окно осмотра (weave/PLACES.md), когда появятся
   assets/scenes/      entry.webp — заглавная
 ```
 

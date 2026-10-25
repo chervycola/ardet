@@ -688,6 +688,11 @@ html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
   box-shadow: 0 10px 40px rgba(0,0,0,0.75);
 }
 #look h3 { color: var(--sepia); border-bottom: 1px dashed rgba(58,48,38,0.55); }
+/* вклейка: картина места над справкой — оттиск на листе, чуть криво (ui.js placeCard) */
+#lpic { position: fixed; display: none; z-index: 211; pointer-events: none; background: var(--paper);
+  box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px rgba(58,48,38,0.45), 0 14px 30px rgba(0,0,0,0.6);
+  transform: rotate(-0.8deg); transform-origin: 50% 100%; }
+#lpic img { display: block; width: 100%; height: 100%; object-fit: cover; }
 #look-insc { color: var(--sepia); font-family: var(--font-book); font-style: italic; font-size: 15px; opacity: 0.75; }
 #look-page { color: var(--sepia); }
 /* штамп места: где стоит вещь — «кольцо 6 · север · пар и тени» (ориентирование печатью, 3А) */

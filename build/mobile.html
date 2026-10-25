@@ -703,6 +703,11 @@ html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
   box-shadow: 0 10px 40px rgba(0,0,0,0.75);
 }
 #look h3 { color: var(--sepia); border-bottom: 1px dashed rgba(58,48,38,0.55); }
+/* вклейка: картина места над справкой — оттиск на листе, чуть криво (ui.js placeCard) */
+#lpic { position: fixed; display: none; z-index: 211; pointer-events: none; background: var(--paper);
+  box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px rgba(58,48,38,0.45), 0 14px 30px rgba(0,0,0,0.6);
+  transform: rotate(-0.8deg); transform-origin: 50% 100%; }
+#lpic img { display: block; width: 100%; height: 100%; object-fit: cover; }
 #look-insc { color: var(--sepia); font-family: var(--font-book); font-style: italic; font-size: 15px; opacity: 0.75; }
 #look-page { color: var(--sepia); }
 /* штамп места: где стоит вещь — «кольцо 6 · север · пар и тени» (ориентирование печатью, 3А) */
@@ -875,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='eabcc4f · 2026-10-25';console.log('[оттиск]', 'eabcc4f · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='effa02c · 2026-10-25';console.log('[оттиск]', 'effa02c · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -39851,7 +39856,7 @@ System.register("sprites/locations/index", ["render/draw", "render/context", "co
 // ═══════════════════════════════════════
 System.register("assets/manifest", [], function (exports_108, context_108) {
     "use strict";
-    var PORTRAITS, SCENES;
+    var PORTRAITS, PLACES, SCENES;
     var __moduleName = context_108 && context_108.id;
     // Flat list of all asset paths (used by the preloader + build copier).
     function allAssetPaths() {
@@ -39882,6 +39887,24 @@ System.register("assets/manifest", [], function (exports_108, context_108) {
                 cat: 'assets/portraits/cat.png',
                 moss: 'assets/portraits/moss.png',
             });
+            // Картины мест — вклейка в окно осмотра (вариант А, слово автора 25.10): оттиск 3:4 стоит над
+            // справкой, как портрет над протоколом. Ключ — id места (world/locations.js) или ключ постройки
+            // колец «кольцо:сторона:имя» (как в arch_looks.js). Файла нет — вклейки нет. Грузятся при первом
+            // осмотре, не на заставке (в preloadAll не входят). Что писать и как — weave/PLACES.md.
+            exports_108("PLACES", PLACES = {
+                campfire: 'assets/places/campfire.webp', // жертвенный костёр и Шут у огня
+                office: 'assets/places/office.webp', // канцелярия: глухой фасад, окно №3
+                lantern1: 'assets/places/lantern1.webp', // погасший фонарь
+                gates: 'assets/places/gates.webp', // врата: створки вросли, блюдце на пороге
+                theater: 'assets/places/theater.webp', // театр теней
+                library: 'assets/places/library.webp', // разрушенная библиотека
+                church: 'assets/places/church.webp', // заброшенная церковь
+                train: 'assets/places/train.webp', // ржавый поезд набекрень
+                pizzeria: 'assets/places/pizzeria.webp', // пиццерия «Вавилон»
+                lake: 'assets/places/lake.webp', // токсичное озеро
+                crater: 'assets/places/crater.webp', // кратер
+                ruins: 'assets/places/ruins.webp', // жилой дом №7
+            });
             // Full-screen / threshold images.
             exports_108("SCENES", SCENES = {
                 entry: 'assets/scenes/entry.webp', // заглавная: оттиск автора — красная луна, щит-афиша, городок (ui/title.js)
@@ -39892,7 +39915,7 @@ System.register("assets/manifest", [], function (exports_108, context_108) {
 });
 System.register("assets/loader", ["assets/manifest"], function (exports_109, context_109) {
     "use strict";
-    var manifest_js_1, cache, pending, loadAsset, _test;
+    var manifest_js_1, cache, pending, loadAsset, placePath, _test;
     var __moduleName = context_109 && context_109.id;
     // Где лежат картины: на сайте — assets/ рядом со страницей (как музыка и значки),
     // в локальной сборке build/index.html — ../assets/ (корневая папка репозитория).
@@ -39951,6 +39974,11 @@ System.register("assets/loader", ["assets/manifest"], function (exports_109, con
         return path ? probe(path) : Promise.resolve(null);
     }
     exports_109("loadPortrait", loadPortrait);
+    function loadPlace(key) {
+        const path = placePath(key);
+        return path ? probe(path) : Promise.resolve(null);
+    }
+    exports_109("loadPlace", loadPlace);
     function getScene(id) {
         const path = manifest_js_1.SCENES[id];
         if (!path)
@@ -39979,6 +40007,8 @@ System.register("assets/loader", ["assets/manifest"], function (exports_109, con
             pending = new Map(); // path → Promise<Image|null>
             // любая картинка по пути от корня ассетов (окна диалога — weave/WINDOWS.md)
             exports_109("loadAsset", loadAsset = path => probe(path));
+            // картина места для вклейки в осмотр: путь по ключу; null — нет такой (или ещё грузится — тогда Promise)
+            exports_109("placePath", placePath = key => (key && manifest_js_1.PLACES[key]) || null);
             // Test handle — let tests inspect the cache without prodding internals
             // from the outside.
             exports_109("_test", _test = {
@@ -40413,9 +40443,9 @@ System.register("ui/signature", [], function (exports_114, context_114) {
         }
     };
 });
-System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core/events", "assets/loader", "core/time", "world/sky", "ui/transitions", "audio/audio", "core/input", "world/useActions", "ui/pages", "ui/stream", "world/placeStamp", "ui/signature"], function (exports_115, context_115) {
+System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core/events", "assets/loader", "content/ulitsa_db", "core/time", "world/sky", "ui/transitions", "audio/audio", "core/input", "world/useActions", "ui/pages", "ui/stream", "world/placeStamp", "ui/signature"], function (exports_115, context_115) {
     "use strict";
-    var state_js_1, potemkin_js_4, redNoon_js_2, events_js_1, loader_js_1, time_js_25, sky_js_4, transitions_js_1, audio_js_6, input_js_1, useActions_js_5, pages_js_1, stream_js_1, placeStamp_js_1, signature_js_1, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, lookInsc, lookStamp, SIGN_SPOTS, lookLoc, dlgEl, dlgLines, dlgIndex, dlgLoc, ORD, GEN, DLG_SKIN;
+    var state_js_1, potemkin_js_4, redNoon_js_2, events_js_1, loader_js_1, ulitsa_db_js_10, time_js_25, sky_js_4, transitions_js_1, audio_js_6, input_js_1, useActions_js_5, pages_js_1, stream_js_1, placeStamp_js_1, signature_js_1, SPECIAL_USE, menuEl, menuInsc, activeLoc, menuInscriptions, lookEl, lookPages, lookPageIdx, lookShownAt, lookTitle, lookInsc, lookStamp, SIGN_SPOTS, lookLoc, lpic, lpicKey, dlgEl, dlgLines, dlgIndex, dlgLoc, ORD, GEN, DLG_SKIN;
     var __moduleName = context_115 && context_115.id;
     // Does this location actually do something on «использовать»?
     // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -40572,12 +40602,67 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         renderLookPage();
         lookEl.classList.add('on');
         transitions_js_1.scaleIn(lookEl, 250);
+        placeCard(loc);
         // Track observer viewing
         if (loc.npc && ['jester', 'sol', 'elder', 'nocturnal'].includes(loc.npc)) {
             events_js_1.events.emit(events_js_1.E.OBSERVER_MET, loc.npc);
         }
     }
     exports_115("showLook", showLook);
+    function placeKey(loc) {
+        if (!loc)
+            return null;
+        if (loader_js_1.placePath(loc.id))
+            return loc.id;
+        if (loc.archDraw && loc.archRing && ulitsa_db_js_10.SEGMENTS[loc.archRing - 1]) {
+            const base = `${ulitsa_db_js_10.SEGMENTS[loc.archRing - 1].id}:${loc.archSide}:${loc.name}`;
+            const nth = loc.archNth > 1 ? `${base}#${loc.archNth}` : null;
+            return nth && loader_js_1.placePath(nth) ? nth : loader_js_1.placePath(base) ? base : null;
+        }
+        return null;
+    }
+    exports_115("placeKey", placeKey);
+    function placeCard(loc) {
+        lpicKey = placeKey(loc);
+        if (!lpic && typeof document !== 'undefined' && document.body) {
+            lpic = document.createElement('div');
+            lpic.id = 'lpic';
+            lpic.innerHTML = '<img alt="">';
+            document.body.appendChild(lpic);
+        }
+        if (!lpic)
+            return;
+        lpic.style.display = 'none';
+        if (!lpicKey)
+            return;
+        const key = lpicKey;
+        loader_js_1.loadPlace(key).then(img => {
+            if (!img || lpicKey !== key || !lookEl.classList.contains('on'))
+                return;
+            const im = lpic.querySelector && lpic.querySelector('img');
+            if (im)
+                im.src = img.src;
+            placeCardFit();
+            setTimeout(placeCardFit, 270); // окно ещё раскрывается (scaleIn)
+        });
+    }
+    function placeCardFit() {
+        if (!lpic || !lpicKey || !lookEl.classList.contains('on') || !lookEl.getBoundingClientRect)
+            return;
+        // заходит на поле бумаги, не до заголовка: глубина — по верхнему полю окна (минус поле вклейки)
+        const r = lookEl.getBoundingClientRect(), pad = parseFloat(getComputedStyle(lookEl).paddingTop) || 14, over = Math.max(0, pad - 14);
+        const h = Math.min(window.innerHeight * 0.34, 320, r.top - 10 + over);
+        if (h < 90) {
+            lpic.style.display = 'none';
+            return;
+        }
+        const w = Math.round(h * 0.75);
+        lpic.style.width = w + 'px';
+        lpic.style.height = Math.round(h) + 'px';
+        lpic.style.left = Math.round(r.left + 18) + 'px'; // слева: справа вверху — радио и кнопки карты
+        lpic.style.top = Math.round(r.top + over - h) + 'px';
+        lpic.style.display = 'block';
+    }
     function renderLookPage() {
         const lt = document.getElementById('lt');
         const lb = document.getElementById('lb');
@@ -40588,6 +40673,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             lookEl.appendChild(ind);
         }
         lookShownAt = performance.now();
+        if (lpicKey)
+            setTimeout(placeCardFit, 0); // высота окна по странице — вклейку за ним
         let insc = document.getElementById('look-insc');
         if (!insc && lookEl && lt) {
             insc = document.createElement('div');
@@ -40674,6 +40761,9 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
     exports_115("advanceOrCloseLook", advanceOrCloseLook);
     function closeLook() {
         lookEl.classList.remove('on');
+        lpicKey = null;
+        if (lpic)
+            lpic.style.display = 'none';
         state_js_1.state.transition('game');
         activeLoc = null;
         lookLoc = null;
@@ -40898,6 +40988,9 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             function (loader_js_1_1) {
                 loader_js_1 = loader_js_1_1;
             },
+            function (ulitsa_db_js_10_1) {
+                ulitsa_db_js_10 = ulitsa_db_js_10_1;
+            },
             function (time_js_25_1) {
                 time_js_25 = time_js_25_1;
             },
@@ -41005,6 +41098,13 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             // места, где канцелярия узнаёт руку странника: строка текста → подпись под ним
             SIGN_SPOTS = [['Рука знакомая', 'подпись принявшего'], ['Второй ты узнаёшь', 'второй почерк']];
             lookLoc = null; // вещь, которую осматривают: F из осмотра — использовать её же
+            // ── ВКЛЕЙКА: картина места над справкой (вариант А, слово автора 25.10; weave/PLACES.md) ──
+            // Оттиск 3:4 стоит над левым верхним углом окна осмотра и заходит на поле бумаги — заголовок
+            // и текст не закрывает (справа вверху — радио и кнопки карты). Окно осмотра прокручивается (overflow), поэтому вклейка — отдельно,
+            // по его рамке. Нет картины — нет вклейки; места над окном мало — тоже нет.
+            lpic = null, lpicKey = null;
+            if (typeof window !== 'undefined' && window.addEventListener)
+                window.addEventListener('resize', () => placeCardFit());
             // ── DIALOGUE ──
             dlgEl = document.getElementById('dlg');
             dlgLines = [];
@@ -47610,7 +47710,7 @@ System.register("content/cell_titles", [], function (exports_130, context_130) {
 });
 System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ulitsa_db", "world/disc", "world/relief", "content/cell_titles", "world/placeStamp", "ui/signature", "world/redNoon", "core/prefs", "world/physics", "core/playerRef", "core/events", "world/locations"], function (exports_131, context_131) {
     "use strict";
-    var state_js_5, worldmap_db_js_1, ulitsa_db_js_10, disc_js_38, relief_js_10, cell_titles_js_1, placeStamp_js_2, signature_js_3, redNoon_js_4, prefs_js_2, physics_js_1, playerRef_js_5, events_js_5, locations_js_4, discovered, recently, W, H, DPR, visible, canvas, ctx, rafId, NIGHT, BONE, ASH, MIST, CANDLE, CINNABAR, F_TITLE, F_TEXT, F_SMALL, PAPER, SEPIA, F_PAPER, F_PAPER_S, F_GRIF, view, getVisitedFn, getLockedFn, getWalkedFn, TABS, TAB_Y, TAB_H, TAB_Y_, MAPB, BTNS, SIDE, PAD, EXT, LS, LOX, LOY, lx, ly, AS, AOX, AOY, ax, ay, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, MID, SIDES5, SIDE_ABBR, cellId, cellKey, mask, baseCv, fillCv, fillKey, maskJob, localShown, localTotal, knownRings, here, hereSide, walkedNow;
+    var state_js_5, worldmap_db_js_1, ulitsa_db_js_11, disc_js_38, relief_js_10, cell_titles_js_1, placeStamp_js_2, signature_js_3, redNoon_js_4, prefs_js_2, physics_js_1, playerRef_js_5, events_js_5, locations_js_4, discovered, recently, W, H, DPR, visible, canvas, ctx, rafId, NIGHT, BONE, ASH, MIST, CANDLE, CINNABAR, F_TITLE, F_TEXT, F_SMALL, PAPER, SEPIA, F_PAPER, F_PAPER_S, F_GRIF, view, getVisitedFn, getLockedFn, getWalkedFn, TABS, TAB_Y, TAB_H, TAB_Y_, MAPB, BTNS, SIDE, PAD, EXT, LS, LOX, LOY, lx, ly, AS, AOX, AOY, ax, ay, ZMIN, ZMAX, zscale, zx, zy, gestured, pendingClose, MID, SIDES5, SIDE_ABBR, cellId, cellKey, mask, baseCv, fillCv, fillKey, maskJob, localShown, localTotal, knownRings, here, hereSide, walkedNow;
     var __moduleName = context_131 && context_131.id;
     function isDiscovered(id) { return discovered.has(id); }
     exports_131("isDiscovered", isDiscovered);
@@ -47837,7 +47937,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         fillKey = key;
         const { ids, w, h } = mask, on = new Uint8Array(64);
         for (const k of walked) {
-            const [rid, side] = k.split(':'), n = ulitsa_db_js_10.SEGMENTS.findIndex(sg => sg.id === rid) + 1;
+            const [rid, side] = k.split(':'), n = ulitsa_db_js_11.SEGMENTS.findIndex(sg => sg.id === rid) + 1;
             if (n > 0)
                 on[cellId(n, side)] = 1;
         }
@@ -47872,7 +47972,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             walkedNow.add(cellKey(here, hereSide));
         knownRings = new Set([here]);
         for (const k of walkedNow) {
-            const n = ulitsa_db_js_10.SEGMENTS.findIndex(sg => sg.id === k.split(':')[0]) + 1;
+            const n = ulitsa_db_js_11.SEGMENTS.findIndex(sg => sg.id === k.split(':')[0]) + 1;
             if (n)
                 knownRings.add(n);
         }
@@ -47939,7 +48039,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             ctx.fillText(title, tx - tw / 2, ty);
         };
         put(1, 'городок');
-        const cells = [...walkedNow].map(k => { const [rid, side] = k.split(':'); return { k, side, n: ulitsa_db_js_10.SEGMENTS.findIndex(sg => sg.id === rid) + 1 }; })
+        const cells = [...walkedNow].map(k => { const [rid, side] = k.split(':'); return { k, side, n: ulitsa_db_js_11.SEGMENTS.findIndex(sg => sg.id === rid) + 1 }; })
             .filter(c => c.n && cell_titles_js_1.CELL_TITLES[c.k]).sort((a, b) => a.n - b.n);
         for (const c of cells)
             put(cellId(c.n, c.side), '«' + cell_titles_js_1.CELL_TITLES[c.k] + '»');
@@ -48029,7 +48129,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         if (n === 0)
             return 'городок · вне времени';
         if (n <= disc_js_38.RINGS)
-            return `кольцо ${n} · ${side ? placeStamp_js_2.SIDE_RU[side] + ' · ' : ''}${ulitsa_db_js_10.SEGMENTS[n - 1].name}`;
+            return `кольцо ${n} · ${side ? placeStamp_js_2.SIDE_RU[side] + ' · ' : ''}${ulitsa_db_js_11.SEGMENTS[n - 1].name}`;
         return n === disc_js_38.RINGS + 1 ? 'кольцо огня' : 'за огнём · край';
     }
     function drawLocalSide() {
@@ -48050,7 +48150,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         SIDES5.forEach((sd, i) => ctx.fillText(SIDE_ABBR[sd], gx + i * 15 + 3, y));
         y += 16;
         for (let n = 1; n <= disc_js_38.RINGS; n++) {
-            const sg = ulitsa_db_js_10.SEGMENTS[n - 1], k = knownRings.has(n);
+            const sg = ulitsa_db_js_11.SEGMENTS[n - 1], k = knownRings.has(n);
             ctx.font = F_PAPER_S;
             ctx.fillStyle = n === here ? CINNABAR : rgba(SEPIA, k ? 0.95 : 0.45);
             ctx.fillText(`${n}  ${k ? sg.name : '· · ·'}`, SIDE.x, y);
@@ -48557,8 +48657,8 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             function (worldmap_db_js_1_1) {
                 worldmap_db_js_1 = worldmap_db_js_1_1;
             },
-            function (ulitsa_db_js_10_1) {
-                ulitsa_db_js_10 = ulitsa_db_js_10_1;
+            function (ulitsa_db_js_11_1) {
+                ulitsa_db_js_11 = ulitsa_db_js_11_1;
             },
             function (disc_js_38_1) {
                 disc_js_38 = disc_js_38_1;
@@ -48657,7 +48757,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
             SIDES5 = ['north', 'south', 'west', 'east', 'plain'];
             SIDE_ABBR = { north: 'С', south: 'Ю', west: 'З', east: 'В', plain: 'Р' };
             cellId = (ring, side) => ring === 0 ? 1 : ring <= disc_js_38.RINGS ? 2 + (ring - 1) * 5 + SIDES5.indexOf(side) : ring === disc_js_38.RINGS + 1 ? 50 : 0;
-            cellKey = (ring, side) => ulitsa_db_js_10.SEGMENTS[ring - 1].id + ':' + side;
+            cellKey = (ring, side) => ulitsa_db_js_11.SEGMENTS[ring - 1].id + ':' + side;
             mask = null; // { ids, cx, cy } — геометрия клеток в точках листа, считается раз
             baseCv = null, fillCv = null, fillKey = '';
             // геометрия клеток считается по частям (≈0,1 с целиком): после старта — в фоне, по 40 строк;
@@ -48669,13 +48769,13 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
 });
 System.register("ui/editor", ["world/locations", "content/looks", "content/dialogues", "content/lore", "content/ulitsa_db", "content/terminal_db", "content/potemkin", "world/inscriptions", "world/whisper", "ui/ui", "core/state"], function (exports_132, context_132) {
     "use strict";
-    var locations_js_5, looks_js_2, dialogues_js_1, lore_js_3, ulitsa_db_js_11, terminal_db_js_2, potemkin_js_5, inscriptions_js_3, whisper_js_2, ui_js_1, state_js_6, LS_KEY, edits, items, root, listEl, editEl, current, catFilter, open;
+    var locations_js_5, looks_js_2, dialogues_js_1, lore_js_3, ulitsa_db_js_12, terminal_db_js_2, potemkin_js_5, inscriptions_js_3, whisper_js_2, ui_js_1, state_js_6, LS_KEY, edits, items, root, listEl, editEl, current, catFilter, open;
     var __moduleName = context_132 && context_132.id;
     // ── Каталог: плоский список редактируемых записей ──
     // Каждая: { key, cat, label, get(), set(text) }
     function catalog() {
         const items = [];
-        const seg = (id) => id === 'townlet' ? ulitsa_db_js_11.TOWNLET : ulitsa_db_js_11.SEGMENTS.find(s => s.id === id);
+        const seg = (id) => id === 'townlet' ? ulitsa_db_js_12.TOWNLET : ulitsa_db_js_12.SEGMENTS.find(s => s.id === id);
         for (const id of Object.keys(looks_js_2.looks)) {
             items.push({
                 key: `look:${id}`, cat: 'осмотры',
@@ -48700,7 +48800,7 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
                 set: (t) => { dialogues_js_1.dialogues[locId][i] = t; },
             }));
         }
-        for (const sgId of [...ulitsa_db_js_11.SEGMENTS.map(s => s.id), 'townlet']) {
+        for (const sgId of [...ulitsa_db_js_12.SEGMENTS.map(s => s.id), 'townlet']) {
             const s = seg(sgId);
             if (!s)
                 continue;
@@ -48956,8 +49056,8 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
             function (lore_js_3_1) {
                 lore_js_3 = lore_js_3_1;
             },
-            function (ulitsa_db_js_11_1) {
-                ulitsa_db_js_11 = ulitsa_db_js_11_1;
+            function (ulitsa_db_js_12_1) {
+                ulitsa_db_js_12 = ulitsa_db_js_12_1;
             },
             function (terminal_db_js_2_1) {
                 terminal_db_js_2 = terminal_db_js_2_1;
@@ -50334,7 +50434,7 @@ System.register("render/archbake", ["world/hang", "world/mechanisms"], function 
 });
 System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprites/arch/index", "render/draw", "render/things"], function (exports_140, context_140) {
     "use strict";
-    var ulitsa_db_js_12, disc_js_40, index_js_3, draw_js_9, things_js_4, NIGHT, BONE, ASH, MIST, SEPIA, SAND, BAYER, bayer, S, STYLE, WET, BOG, ICE, DUNE, grounds, archProps, JUNK, MAX_BAKED, baked, pieceCache;
+    var ulitsa_db_js_13, disc_js_40, index_js_3, draw_js_9, things_js_4, NIGHT, BONE, ASH, MIST, SEPIA, SAND, BAYER, bayer, S, STYLE, WET, BOG, ICE, DUNE, grounds, archProps, JUNK, MAX_BAKED, baked, pieceCache;
     var __moduleName = context_140 && context_140.id;
     function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
     function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
@@ -50445,7 +50545,7 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
             const st = STYLE[e.ringId]?.[e.side];
             if (!st)
                 continue;
-            const g = hex(ulitsa_db_js_12.SEGMENTS[e.ring - 1].palette.ground);
+            const g = hex(ulitsa_db_js_13.SEGMENTS[e.ring - 1].palette.ground);
             const members = arch.filter(l => l.archEns === e.id);
             if (!members.length)
                 continue;
@@ -51225,8 +51325,8 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
     exports_140("archGroundRects", archGroundRects);
     return {
         setters: [
-            function (ulitsa_db_js_12_1) {
-                ulitsa_db_js_12 = ulitsa_db_js_12_1;
+            function (ulitsa_db_js_13_1) {
+                ulitsa_db_js_13 = ulitsa_db_js_13_1;
             },
             function (disc_js_40_1) {
                 disc_js_40 = disc_js_40_1;
@@ -59276,10 +59376,10 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_171, context_171) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_19, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_10, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_6, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_13, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_19, surface_js_3, grass_js_2, bunting_js_1, haze_js_1, shadows_js_1, sky_js_5, redNoon_js_5, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_10, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_6, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_14, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
     var __moduleName = context_171 && context_171.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
-    function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_13.SEGMENTS.length ? ulitsa_db_js_13.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
+    function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_14.SEGMENTS.length ? ulitsa_db_js_14.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
         audio_js_13.setVolume(prefs_js_6.soundLevel());
         if (window.ArdetAudio && window.ArdetAudio.setVolume)
@@ -61331,8 +61431,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (disc_js_48_1) {
                 disc_js_48 = disc_js_48_1;
             },
-            function (ulitsa_db_js_13_1) {
-                ulitsa_db_js_13 = ulitsa_db_js_13_1;
+            function (ulitsa_db_js_14_1) {
+                ulitsa_db_js_14 = ulitsa_db_js_14_1;
             },
             function (ground_js_2_1) {
                 ground_js_2 = ground_js_2_1;
@@ -62023,7 +62123,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }
                 // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
                 const vx = gate.target.x - street_js_3.STREET_SHIFT;
-                const seg = ulitsa_db_js_13.SEGMENTS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || ulitsa_db_js_13.SEGMENTS[ulitsa_db_js_13.SEGMENTS.length - 1];
+                const seg = ulitsa_db_js_14.SEGMENTS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || ulitsa_db_js_14.SEGMENTS[ulitsa_db_js_14.SEGMENTS.length - 1];
                 const p = disc_js_48.trailPoint('south', disc_js_48.ringD(Math.max(1, seg.n), 100));
                 teleportWithFade(p.x, p.y);
             });
