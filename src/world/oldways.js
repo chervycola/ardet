@@ -26,6 +26,7 @@
 //    «ПРОЧЕЕ — 100%». От дна морозилки лаз спускается в жилу, к криосклепу «WD».
 // ═══════════════════════════════════════
 import { TOWN, RINGS_D, OLD_OFF, ringAt, ringD, fromOldGeo, trailPoint } from './disc.js';
+import { revealOf } from './potemkin.js';
 // запасное место (если всё занято) — в прежней раскладке: от углов прежнего городка, на чтении — по долям колец
 const was = (dx, dy, ox = 0, oy = 0) => { const p = fromOldGeo(OLD_OFF + ox * 3000 + dx, OLD_OFF + oy * 1640 + dy); return { x: Math.round(p.x), gy: Math.round(p.y) }; };
 
@@ -33,7 +34,7 @@ const NI = '#0D0B0A', AS = '#8A8D8F';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a';
 const BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#5e5e5d', S2 = '#33302e';
 const RUST = '#4a3420', RUST_L = '#6b4a2c', KV = '#C23B2B', B3 = '#3a1c14', D4 = '#34302a', D5 = '#3a3328';
-const SV = '#E28A3A', MG_D = '#2f372c', MG = '#3D4A3A', BO = '#D9CFB8', S0 = '#474442';
+const SV = '#E28A3A', MG_D = '#2f372c', MG = '#3D4A3A', BO = '#D9CFB8', S0 = '#474442', MG_L = '#4d5a49';
 const q = Math.round;
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 const sideOf = (x, y) => {
@@ -312,7 +313,140 @@ function drawFreezerShed(ctx, loc, t) {
 }
 const FREEZER_LOOK = 'Подсобка парка: морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН», пустая; на крышке круглые следы от бутылок. Рядом гудит подстанция: «ПАРК — 0% · ОСВЕЩЕНИЕ — 0% · ПРОЧЕЕ — 100%», «прочее» кем-то подчёркнуто; стрелка счётчика крутится. На крыше подсобки — иней.';
 
-let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null, freezer = null;
+// ── U8, вход: остров у входа в залив (сейчас, запад) — у таблички «остров с бункерами»:
+//    «Был военной базой: бетон, тоннели, бункеры… На причале табличка — свежее всего на
+//    острове: «КУРОРТ. СКОРО»» (cover_layer.js). По справке (weave/UNDERGROUND.md, U8):
+//    купола дотов — около трёх тысяч, тоннели, ворота для катеров; острову дан статус
+//    стратегической инвестиции, разрешений на стройку не выдано — курорта нет, есть
+//    рендер. Рисунок: скала известняка, маквис, купола дотов с щелью амбразуры, ворота
+//    тоннеля у воды, причал посредине (сюда выходит лестница снизу), маяк на плато. На ходу
+//    на плато — белая вилла с бассейном; неподвижному взгляду — баннер на лесах, угол
+//    оторван, под ним амбразура (шов). Маяк — четыре вспышки за пятнадцать секунд. Свет слева ──
+const ZW_ = 112, ZH_ = 74;
+const hz = (a, b, s) => worn(a * 31 + s, b * 17 + s * 7);
+function szTop(x) {                                                      // верх скалы над урезом, по x (вода — до 7)
+  if (x < 4 || x > 107) return 0;
+  if (x < 10) return 9 + (x - 4) * 1.4;
+  if (x < 32) return 17 + (x - 10) * 0.9;
+  if (x < 96) return 37 + (hz(x >> 2, 1, 701) < 0.3 ? 1 : 0);
+  return 37 - (x - 96) * 2.2;
+}
+function szDome(P, cx, by, small) {                                      // дот: сборный купол, щель, воротник в земле
+  const rows = small ? [3, 5, 7, 7, 7] : [5, 9, 11, 11, 13];
+  rows.forEach((w, j) => { const y = by - rows.length + j, x0 = cx - (w >> 1); for (let i = 0; i < w; i++) P(x0 + i, y, 1, 1, j === 0 ? (i < w / 2 ? S1 : S0) : i < 2 ? S1 : i > w - 3 ? S2 : S0); });
+  P(cx - (rows[0] >> 1), by - rows.length, rows[0] >> 1, 1, L2);
+  P(cx - (small ? 1 : 2), by - 2, small ? 3 : 5, 1, NI);
+  P(cx - (rows[rows.length - 1] >> 1), by, rows[rows.length - 1], 1, K1);
+  P(cx + (small ? 1 : 3), by - rows.length - 1, 2, 1, MG);              // трава на макушке
+}
+const vn = (x, v, sc, sd) => { const gx = x / sc, gv = v / sc, ix = Math.floor(gx), iv = Math.floor(gv), fx = gx - ix, fv = gv - iv;
+  return (hz(ix, iv, sd) * (1 - fx) + hz(ix + 1, iv, sd) * fx) * (1 - fv) + (hz(ix, iv + 1, sd) * (1 - fx) + hz(ix + 1, iv + 1, sd) * fx) * fv; };
+function sazanBody(ctx, x0, y0, seam) {
+  const P = (xx, yy, w, h, c) => R(ctx, x0 + xx, y0 + yy, w, h, c), Y = v => ZH_ - 1 - v;
+  // ── вода у подножия: стоит, редкая рябь ──
+  for (let v = 0; v < 8; v++) for (let x = 0; x < ZW_; x++) P(x, Y(v), 1, 1, hz(x, v, 703) < 0.1 ? MG_D : v > 5 ? K1 : K0);
+  for (let k = 0; k < 18; k++) P(1 + q(hz(k, 1, 705) * 106), Y(1 + (k % 6)), 2 + (k % 3), 1, k % 4 ? MG : MG_D);   // рябь
+  for (let x = 4; x < 108; x++) if (szTop(x) > 0) P(x, Y(7), 1, 1, hz(x, 9, 707) < 0.5 ? AS : S1);   // пена у скалы
+  // ── скала: массивы рельефа — кромка каждого к свету, правый край в тень; мыс справа — в тени ──
+  const hf = (x, v) => vn(x, v * 1.7, 11, 721) * 0.75 + vn(x, v * 1.7, 5, 723) * 0.25;
+  const band = (x, v) => Math.floor((hf(x, v) + v * 0.008) * 3.5);
+  for (let x = 0; x < ZW_; x++) {
+    const top = q(szTop(x));
+    for (let v = 8; v <= top; v++) {
+      const b0 = band(x, v), lit = x < 26 ? 1 : x > 96 ? -1 : 0;
+      let c = b0 & 1 ? (lit > 0 ? L2 : D4) : (lit < 0 ? K3 : D5);
+      if (hz(x, v, 725) < 0.05) c = lit >= 0 ? L2 : D4;
+      if (b0 !== band(x, v + 1) && v < top) c = lit < 0 ? D4 : x < 40 ? L1 : L2;
+      else if (b0 !== band(x + 1, v)) c = K2;
+      if (v === top) c = x < 30 ? L1 : L2;
+      P(x, Y(v), 1, 1, c);
+    }
+  }
+  // маквис: кусты мглой по склону, гуще к верху
+  for (let k = 0; k < 70; k++) {
+    const xx = 2 + q(hz(k, 2, 709) * 104), tv = q(szTop(xx)), vv = tv - q(hz(k, 3, 713) * hz(k, 4, 715) * 14), w = 2 + (k % 3);
+    if (vv < 11) continue;
+    P(xx, Y(vv), w, 1, k & 1 ? MG : MG_D); P(xx + 1, Y(vv + 1), w - 1, 1, k % 4 === 0 ? MG_L : MG); P(xx, Y(vv - 1), w, 1, K2);
+  }
+  // ── ворота тоннеля у воды: арка в бетоне, створка приржавела на середине, вода уходит внутрь ──
+  const TX = 10, TW = 11;
+  for (let i = -1; i <= TW; i++) for (let v = 7; v <= 19; v++) {
+    const inA = i >= 0 && i < TW && (v < 16 || (v === 16 && i > 0 && i < TW - 1) || (v === 17 && i > 1 && i < TW - 2));
+    P(TX + i, Y(v), 1, 1, inA ? (v < 10 ? K0 : NI) : v === 19 || i === -1 ? L2 : S1);
+  }
+  P(TX + TW, Y(18), 1, 11, S2);
+  for (let v = 9; v < 16; v++) { P(TX + 1, Y(v), 1, 1, RUST); if (v & 1) P(TX + 2, Y(v), 2, 1, RUST); }
+  P(TX + 1, Y(16), 3, 1, RUST_L);
+  for (let k = 0; k < 4; k++) P(TX + 4 + k * 2, Y(7), 1, 1, MG);
+  // ── доты по склону ──
+  szDome(P, 38, Y(22), false); szDome(P, 54, Y(28), true); szDome(P, 75, Y(19), false); szDome(P, 88, Y(31), true); szDome(P, 102, Y(18), true);
+  // ── маяк на плато: короткая башня и дом смотрителя ──
+  const MX = 92, MY = Y(37);
+  P(MX - 4, MY - 5, 6, 5, L2); P(MX - 4, MY - 5, 6, 1, L1); P(MX - 3, MY - 3, 1, 2, K2); P(MX + 1, MY - 4, 1, 4, S1);
+  P(MX + 2, MY - 12, 3, 12, L1); P(MX + 2, MY - 12, 1, 12, BO); P(MX + 4, MY - 12, 1, 12, AS);
+  P(MX + 1, MY - 14, 5, 2, S0); P(MX + 2, MY - 16, 3, 2, K1); P(MX + 3, MY - 17, 1, 1, S1);
+  // ── причал посредине: доски через воду к скале ──
+  const JX = (ZW_ >> 1) - 4;
+  for (let v = 0; v < 10; v++) { P(JX, Y(v), 8, 1, v & 1 ? L2 : BR2); P(JX, Y(v), 1, 1, L1); P(JX + 7, Y(v), 1, 1, K2); }
+  for (const v of [2, 6]) { P(JX - 1, Y(v), 1, 2, K3); P(JX + 8, Y(v), 1, 2, K3); }
+  const BY = Y(37);                                                      // плато
+  if (!seam) {
+    // ── на ходу: вилла — белые объёмы консолями, стекло в пол, бассейн по краю, шезлонги, зонт, пальма ──
+    P(40, BY - 12, 46, 12, L1); P(40, BY - 12, 46, 1, BO); P(40, BY - 12, 1, 12, BO); P(85, BY - 11, 1, 11, AS);
+    for (let k = 0; k < 6; k++) { P(43 + k * 7, BY - 10, 5, 8, MG_D); P(43 + k * 7, BY - 10, 5, 1, AS); P(44 + k * 7, BY - 9, 1, 6, MG_L); }
+    P(48, BY - 24, 38, 12, BO); P(85, BY - 23, 1, 11, AS); P(46, BY - 25, 42, 1, L1);
+    for (let k = 0; k < 5; k++) { P(51 + k * 7, BY - 21, 5, 7, MG_D); P(52 + k * 7, BY - 20, 1, 5, MG_L); }
+    P(48, BY - 12, 38, 1, K2);
+    P(26, BY - 2, 30, 2, MG_L); P(26, BY - 2, 30, 1, BO); P(27, BY - 1, 6, 1, MG); P(26, BY, 30, 1, S1);   // бассейн по краю обрыва
+    for (const sx of [29, 36, 43]) { P(sx, BY - 4, 4, 1, L2); P(sx + 3, BY - 5, 1, 1, L2); }
+    P(33, BY - 9, 7, 1, KV); P(34, BY - 10, 5, 1, KV); P(36, BY - 8, 1, 5, AS);   // зонт
+    for (let v = 0; v < 14; v++) P(22 + (v > 9 ? 1 : 0), BY - v, 1, 1, v & 1 ? BR2 : K3);   // пальма
+    for (const [dx, dy] of [[-4, -15], [-3, -16], [-2, -16], [-1, -15], [1, -16], [2, -16], [3, -15], [4, -14], [-5, -14], [5, -13], [0, -17], [-1, -17]]) P(23 + dx, BY + dy, 1, 1, dy < -15 ? MG_L : MG);
+    P(JX + 9, Y(3), 7, 1, BO); P(JX + 10, Y(4), 4, 1, L1); P(JX + 15, Y(3), 1, 1, AS); P(JX + 9, Y(2), 7, 1, S1);   // катер у причала
+  } else {
+    // ── шов: вилла — баннер на лесах; стяжки по краю, складки; угол оторван — под ним амбразура ──
+    for (const sx of [40, 54, 68, 82, 87]) { P(sx, BY - 30, 1, 30, RUST); P(sx + 1, BY - 30, 1, 30, K2); P(sx - 1, BY - 1, 3, 1, L2); }
+    for (const yy of [BY - 29, BY - 18, BY - 8]) P(39, yy, 51, 1, RUST_L);
+    for (let k = 0; k < 14; k++) { P(41 + k, BY - 9 - q(k * 0.7), 1, 1, K3); P(69 + k, BY - 19 - q(k * 0.7), 1, 1, K3); }
+    const BX0 = 39, BX1 = 87, BT = BY - 27, BB = BY - 3;
+    for (let x = BX0; x <= BX1; x++) for (let y = BT; y <= BB; y++) {
+      const printed = (x > 47 && y < BT + 12) || y >= BT + 12;
+      P(x, y, 1, 1, (x - BX0 + (y - BT) * 2) % 13 === 0 ? S1 : printed ? L2 : D5);
+    }
+    for (let k = 0; k < 6; k++) P(BX0 + 3 + k * 7, BT + 15, 5, 7, S2);   // окна — печатью, без глубины
+    for (let k = 0; k < 5; k++) P(BX0 + 11 + k * 7, BT + 3, 5, 6, S2);
+    P(BX0 + 1, BB - 1, 30, 1, S0);                                       // «бассейн» — полоса краски
+    for (let x = BX0; x <= BX1; x += 3) { P(x, BT - 1, 1, 1, BO); P(x, BB + 1, 1, 1, BO); }
+    P(BX0 - 1, BT - 1, 1, BB - BT + 3, K1); P(BX1 + 1, BT - 1, 1, BB - BT + 3, K1);
+    P(BX1 - 9, BB - 9, 10, 10, S0); P(BX1 - 9, BB - 9, 10, 1, S1); P(BX1 - 7, BB - 5, 6, 2, NI); P(BX1 - 7, BB - 6, 6, 1, S2);   // бетон, амбразура
+    for (let k = 0; k < 6; k++) P(BX1 - 9 + k, BB - 7 + k, 1, 1, L2);
+    for (let k = 0; k < 5; k++) P(BX1 - 2 + (k >> 1), BB + 1 + k, 1, 1, k & 1 ? L2 : S1);   // свисает лоскут
+    P(20, BY - 17, 7, 17, D5); for (let v = 0; v < 14; v++) P(22, BY - v, 1, 1, S2); P(26, BY - 8, 4, 8, K3);   // пальма — фанера на подпорке
+    for (const [dx, dy] of [[-3, -15], [-1, -16], [1, -16], [3, -15]]) P(23 + dx, BY + dy, 2, 1, S2);
+  }
+}
+const SZ_CACHE = [null, null];                                           // на ходу · шов
+function drawSazan(ctx, loc, t) {
+  const seam = revealOf(loc) > 0.25 ? 1 : 0;
+  let c = SZ_CACHE[seam];
+  if (c === null) {
+    c = typeof document !== 'undefined' && document.createElement ? document.createElement('canvas') : false;
+    if (c && typeof c.getContext === 'function') { c.width = ZW_; c.height = ZH_; sazanBody(c.getContext('2d'), 0, 0, seam); } else c = false;
+    SZ_CACHE[seam] = c;
+  }
+  if (c) ctx.drawImage(c, loc.x, loc.y); else sazanBody(ctx, loc.x, loc.y, seam);
+  // маяк: группа из четырёх вспышек каждые пятнадцать секунд
+  const ph = (t || 0) % 900, on = ph < 240 && ph % 60 < 12;
+  if (on) {
+    const lx = loc.x + 95, ly = loc.y + ZH_ - 1 - 37 - 15;
+    ctx.globalAlpha = 0.35; R(ctx, lx - 2, ly - 1, 5, 3, BO); ctx.globalAlpha = 1;
+    R(ctx, lx, ly, 1, 1, BO);
+  }
+}
+const SAZAN_LOOK = 'Остров у входа в залив. Был военной базой: по склонам — бетонные купола дотов, около трёх тысяч; в скале — тоннели, у воды — ворота для катеров. На плато — белая вилла: стекло в пол, бассейн по краю обрыва, шезлонги. Острову дан статус стратегической инвестиции: сорок пять гектаров из пятисот шестидесяти. Разрешений на стройку, по словам министерства, не выдавали. Вилла уже стоит.';
+const SAZAN_SEAM = 'Вилла — на баннере, баннер — на лесах. Ветер оторвал угол: под ним амбразура, смотрит в пролив.';
+
+let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null, freezer = null, sazan = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
   stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', ringD(3, 100)).x);
@@ -407,5 +541,15 @@ export function buildOldways(locations) {
     useAction: 'freezer_down', useLabel: '<i>❄</i>МОРОЗИЛКА',
   };
   locations.push(freezer);
+  // U8, вход: остров у входа в залив — у таблички «остров с бункерами» (сейчас, запад)
+  const isle = locations.find(l => l.name === 'остров с бункерами') || archOf(locations, 9, 'west', 'стеклянная башня', TOWN.x0);
+  const zp = placeIn(locations, 9, 'west', ZW_, ZH_, isle) || was(-1720, 700);
+  sazan = {
+    id: 'sazan', name: 'Остров у входа в залив', zone: 'street',
+    x: zp.x, y: zp.gy - ZH_, w: ZW_, h: ZH_, solidBox: { x: zp.x + 2, y: zp.gy - 12, w: ZW_ - 4, h: 8 },
+    look: SAZAN_LOOK, drawSelf: drawSazan, potemkin: SAZAN_SEAM,
+    useAction: 'sazan_down', useLabel: '<i>↓</i>В ТОННЕЛЬ',
+  };
+  locations.push(sazan);
 }
-export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro, freezer });
+export const oldways = () => ({ nilometer, stave, colonnade, cathedral, gaslamp, hatch, cellar, carriage, metro, freezer, sazan });

@@ -2872,6 +2872,34 @@ setCtx(ctx);
     eq(U.surfaceUnder(582, 240), 'snow', 'в лазе не иней под ногами');
     assert(/прочее/.test(TX.UNDER_TEXT.u_up_freezer.look) && /под лёд/.test(TX.UNDER_TEXT.u_up_freezer.look), 'кабели «прочего» не уходят под лёд');
   });
+  test('U8 «остров»: остров у входа в залив — у таблички «остров с бункерами» (сейчас, запад); купола дотов, ворота тоннеля; вилла на ходу, баннер неподвижному взгляду', () => {
+    const { sazan: z } = OW.oldways();
+    assert(z && M.locations.includes(z), 'острова нет');
+    const zx = z.x + z.w / 2, zy = z.y + z.h;
+    eq(DS.ringAt(zx, zy), 9, 'остров не в «сейчас»'); eq(sideOf(zx, zy), 'west', 'остров не на западе');
+    const sign = M.locations.find(l => l.name === 'остров с бункерами');
+    if (sign) assert(Math.hypot(sign.x + sign.w / 2 - zx, sign.y + sign.h - zy) < 300, 'остров далеко от таблички');
+    assert(/около трёх тысяч/.test(z.look) && /ворота для катеров/.test(z.look) && /Вилла уже стоит/.test(z.look), 'осмотр острова не по справке');
+    assert(/на баннере/.test(z.potemkin) && /амбразура/.test(z.potemkin), 'у виллы нет шва');
+    eq(z.useAction, 'sazan_down', 'в тоннель не войти');
+    assert(/ПОД ЯХТЫ/.test(UA.useTexts.sazan_down.text) && /девяносто седьмом/.test(UA.useTexts.sazan_down.text), 'у ворот не канон');
+    eq(U.DESCENTS.sazan_down, 'u_up_sazan', 'ворота ведут не к слипу');
+    const up = U.thingById('u_up_sazan');
+    eq(upOf(up), z, 'слип выводит не на остров');
+    eq(U.placeAt(up.at[0], up.at[1]), 'isle', 'слип — не в тоннелях острова');
+    for (const l of M.locations) if (l !== z) assert(!(l.x < z.x + z.w + 6 && l.x + l.w > z.x - 6 && l.y < z.y + z.h + 6 && l.y + l.h > z.y - 6), `остров налез на «${l.name}»`);
+    const draw = tt => { const log = [], ctx = new Proxy({}, { get(t, kk) { return (...a) => { log.push([kk, ...a]); }; }, set(t, kk, val) { log.push(['=' + kk, val]); return true; } }); z.drawSelf(ctx, z, tt); return log; };
+    for (const tt of [0, 30, 500]) for (const [kk, x, y, w, hh] of draw(tt)) if (kk === 'fillRect') assert(x >= z.x - 1 && x + w <= z.x + z.w + 1 && y >= z.y - 1 && y + hh <= z.y + z.h + 1, `остров вылез из рамки: ${x},${y} ${w}×${hh}`);
+    assert(JSON.stringify(draw(0)) !== JSON.stringify(draw(30)), 'маяк не мигает');
+  });
+  test('U8: из тоннелей острова — в бункер на всякий случай и к линии; бункер больше не тупик', () => {
+    const up = U.thingById('u_up_sazan');
+    for (const id of ['u_isle_inventory', 'u_isle_embrasure', 'u_isle_loungers', 'u_screen', 'u_cans', 'u_cut_shelter']) {
+      const b = U.thingById(id);
+      assert(U.pathTo(up.at[0], up.at[1], b.at[0], b.at[1]), `от слипа к ${id} не пройти`);
+    }
+    assert(/укрытие/.test(TX.UNDER_TEXT.u_isle_inventory.look) && /ВИД НА МОРЕ/.test(TX.UNDER_TEXT.u_isle_loungers.look), 'опись и шезлонги не по замыслу');
+  });
 }
 
 // ═══ ЛЕНТА ТЯНЕТ: снос к краю и покой, который лечит (world/feedPull.js, brainrot.js) ═══

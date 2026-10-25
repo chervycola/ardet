@@ -1465,7 +1465,7 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral|gaslamp|hatch|cellar|carriage|escalator|freezer)
+// ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral|gaslamp|hatch|cellar|carriage|escalator|freezer|isle)
 {
   const m = /[?&]under(?:=(\w+))?/.exec(location.search);
   if (m) {
@@ -1473,7 +1473,7 @@ function renderUnder() {
       godot: 'u_godot', station: 'u_car', onkalo: 'u_spiral', kola: 'u_kola', bunker: 'u_screen', cloud: 'u_racks', metro: 'u_cut_metro',
       moss: 'u_up_pithos', burrow: 'u_up_burrow', kapt: 'u_watchman', stave: 'u_up_stave', nilometer: 'u_up_nilometer', colonnade: 'u_up_colonnade', cathedral: 'u_up_cathedral',
       gaslamp: 'u_up_gaslamp', hatch: 'u_up_hatch', cellar: 'u_up_cellar', carriage: 'u_up_carriage',
-      escalator: 'u_up_metro', freezer: 'u_up_freezer' }[m[1]] || 'u_up_pizzeria';
+      escalator: 'u_up_metro', freezer: 'u_up_freezer', isle: 'u_up_sazan' }[m[1]] || 'u_up_pizzeria';
     setTimeout(() => goUnder(spot), 0);
   }
 }

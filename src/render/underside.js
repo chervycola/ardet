@@ -562,6 +562,27 @@ FLOORS.u7 = (x, y, R) => {
   const n = hh(x, y, 195); return n < 0.05 ? AS : n < 0.08 ? S2 : S0;
 };
 
+// ── U8, тоннели острова: бетон в опалубке — швы щитов; понизу свежая белая краска курорта,
+// под ней кое-где проступает армейская олива. Пол — бетон, по нему рельсы слипа ──
+BANDS.isle = (x, d, H) => {
+  if (d <= 2) return K2;
+  if (d > H - 3) return K1;
+  if (d > H - 8) return hh(x, d, 198) < 0.2 ? K2 : K3;
+  if (d < 12) { const n = hh(x, d, 199); return n < 0.06 ? MG_D : n < 0.1 ? MG : d === 3 ? L2 : L1; }   // краска курорта по армейской
+  if (d === 12) return hh(x, d, 200) < 0.5 ? L2 : S1;                  // край покраски — неровный
+  if (d % 7 === 0 || x % 23 === 0) return S2;                          // швы опалубки
+  const n = hh(x, d, 201); return n < 0.05 ? K3 : n > 0.985 ? S1 : S0;
+};
+SIDE.isle = [K2, S2, S0, S0, S2, K1]; LIPS.isle = [S1, S0, S2, K2, K1];
+FLOORS.isle = (x, y, R) => {
+  const fy = y - R.y0;
+  if (fy === 0) return K1;
+  if (fy === 1) return K2;
+  if (fy === 30 || fy === 35) return (x & 1) ? S2 : RUST;              // рельсы слипа — к воротам
+  if ((x - R.x0) % 36 === 0 && hh(x, y >> 3, 202) < 0.7) return K3;    // швы
+  const n = hh(x, y, 203); return n < 0.05 ? S2 : n > 0.988 ? S1 : S0;
+};
+
 // многоугольник: грани с внутренней нормалью к зрителю (идут на восток) — стены, остальные — срез
 function edges(P) { return P.map((a, i) => [a, P[(i + 1) % P.length]]); }
 const yAt = (a, b, x) => a[1] + (x - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
@@ -825,6 +846,20 @@ function stair(th) {
     r(bx + 2, gy - 4, bw - 4, 3, S2); r(bx + 2, gy - 4, bw - 4, 1, AS); r(bx + 2, gy - 1, bw - 4, 1, K1);   // ступенька в вагон
     return;
   }
+  if (kind === 'slip') {                                                // U8: бетонный слип наверх, к воротам для катеров — створка приоткрыта, в щели день
+    r(ox - 2, top - 2, ow + 4, gy - top + 2, S0); r(ox + ow, top - 1, 2, gy - top + 1, S2); r(ox - 2, top - 2, ow + 4, 1, S1);
+    r(ox, top, ow, gy - top, NI);
+    for (let i = 0; i < gy - top - 12; i++) {                           // пандус: к верху уже и темнее; посредине мокро
+      const yy = gy - 1 - i, ins = q(i * 0.25), c = i < 6 ? S0 : i < 14 ? S2 : K3;
+      r(ox + ins, yy, ow - 2 * ins, 1, c);
+      if (i % 3 !== 2) r(q(ox + ow / 2) - 1, yy, 2, 1, i < 10 ? MG_D : K2);
+    }
+    const gx = q(ox + ow / 2) - 4;                                       // ворота: створки, щель дня
+    r(gx - 2, top + 1, 12, 11, RUST); r(gx - 2, top + 1, 12, 1, RUST_L);
+    r(gx + 3, top + 2, 2, 9, L2); r(gx + 3, top + 2, 1, 9, BO);
+    r(gx - 1, top + 5, 3, 1, BR2); r(gx + 6, top + 6, 3, 1, BR2);
+    return;
+  }
   if (kind === 'freezer') {                                             // U7: над головой дно морозилки — эмаль в инее; скобы вверх; иней лёг стрелкой вниз
     const cx = q(x + w / 2);
     r(cx - 8, top + 7, 16, gy - top - 7, K1);                           // ниша под скобами
@@ -1041,6 +1076,29 @@ function wallThing(th) {
       r(x + 5, y + 7, 74, 24, K1);
       for (let i = 0; i < 6; i++) { r(x + i, y + 2, 1, 33, i & 1 ? L1 : L2); r(x + 79 + i, y + 2, 1, 33, i & 1 ? L2 : L1); }   // шторы
       r(x - 1, y + 1, 87, 2, S2);                                       // карниз
+      break;
+    }
+    case 'u_isle_inventory': {                                          // опись на бетоне: шапка новая, графы старые, галочки; «укрытие» — пусто
+      const px = x + 8, py = y + 4;
+      r(px + 1, py + 1, 24, 22, K2);
+      r(px, py, 24, 22, L1); r(px, py, 24, 1, BO); r(px + 23, py + 1, 1, 21, L2);
+      r(px + 2, py + 2, 20, 3, K1);                                     // «ОБЪЕКТ: КУРОРТ»
+      for (let k = 0; k < 4; k++) {
+        const ly = py + 8 + k * 3;
+        for (let i = 0; i < 12; i++) if (hh(i, k, 204) > 0.25) r(px + 2 + i, ly, 1, 1, K3);
+        if (k < 3) { r(px + 17, ly, 1, 1, K1); r(px + 18, ly + 1, 1, 1, K1); r(px + 19, ly, 1, 1, K1); r(px + 20, ly - 1, 1, 1, K1); }   // галочка
+        else { r(px + 17, ly - 1, 4, 1, S1); r(px + 17, ly + 1, 4, 1, S1); r(px + 17, ly - 1, 1, 3, S1); r(px + 20, ly - 1, 1, 3, S1); }   // «укрытие» — пустая клетка
+      }
+      r(px + 1, py + 1, 1, 1, AS); r(px + 22, py + 1, 1, 1, AS);       // гвозди
+      break;
+    }
+    case 'u_isle_embrasure': {                                          // амбразура изнутри: щель, в ней пролив и белый угол; сектор краской веером
+      const cx = x + 15;
+      r(x + 2, y + 4, 26, 9, S1); r(x + 2, y + 4, 26, 1, L2); r(x + 27, y + 5, 1, 8, S2);
+      r(x + 4, y + 7, 22, 3, NI);
+      r(x + 5, y + 8, 20, 1, MG); r(x + 5, y + 9, 20, 1, MG_D); r(x + 18, y + 7, 5, 1, L1); r(x + 21, y + 8, 2, 1, BO);   // пролив; угол баннера
+      for (let k = 0; k < 7; k++) { r(cx - 3 - k * 2, y + 13 + k, 1, 1, KV); r(cx + 3 + k * 2, y + 13 + k, 1, 1, KV); }   // сектор: от сих до сих
+      r(cx - 1, y + 13, 3, 1, KV);
       break;
     }
     case 'u_cans': {                                                    // стеллаж: банки рядами, на каждой — дата
@@ -1522,7 +1580,21 @@ function benches(th) {
   for (let lx = x + 3; lx < x + w - 2; lx += 19) { r(lx, sy + 4, 2, 5, K2); r(lx + 1, sy + 4, 1, 5, K1); }
   G.globalAlpha = 0.4; r(x + 2, sy + 9, w - 2, 1, K0); G.globalAlpha = 1;
 }
+// шезлонги штабелем, в заводской плёнке, на поддоне; бирка
+function loungers(th) {
+  const [x0, , x1, y1] = th.solid, w = x1 - x0;
+  G.globalAlpha = 0.45; r(x0 + 2, y1, w, 2, K1); G.globalAlpha = 1;
+  r(x0, y1 - 3, w, 3, BR2); r(x0, y1 - 3, w, 1, RUST_L);                  // поддон
+  for (let k = 0; k < 4; k++) {
+    const yy = y1 - 6 - k * 4;
+    r(x0 + 2 + (k & 1), yy, w - 4, 3, L1); r(x0 + 2 + (k & 1), yy, w - 4, 1, BO); r(x0 + 2 + (k & 1), yy + 2, w - 4, 1, L2);
+    r(x0 + 6 + (k & 1), yy + 1, 1, 1, S1); r(x1 - 8 + (k & 1), yy + 1, 1, 1, S1);
+  }
+  for (let k = 0; k < 6; k++) r(x0 + 8 + k * 7, y1 - 21 + (k & 1) * 6, 3, 1, AS);   // плёнка бликует
+  r(x1 - 12, y1 - 14, 5, 4, BO); r(x1 - 11, y1 - 13, 3, 1, K3); r(x1 - 10, y1 - 15, 1, 1, K1);   // бирка «ВИД НА МОРЕ»
+}
 const FLOOR_DRAW = {
+  u_isle_loungers: loungers,
   u_roots: rootPillar,
   u_benches: benches,
   u_duty_log: dutyTable,
