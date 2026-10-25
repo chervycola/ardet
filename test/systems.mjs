@@ -2631,6 +2631,7 @@ setCtx(ctx);
   const UA = await imp('world/useActions.js');
   const TX = await imp('content/underside.js');
   const DS = await imp('world/disc.js');
+  const WW = await imp('content/world_weave.js');
   const T0 = DS.TOWN;
   const sideOf = (x, y) => { const dn = T0.y0 - y, ds = y - T0.y1, dw = T0.x0 - x, de = x - T0.x1, m = Math.max(dn, ds, dw, de); return m === ds ? 'south' : m === dn ? 'north' : m === dw ? 'west' : 'east'; };
   const upOf = th => M.locations.find(l => l.id === th.up || l.upKey === th.up);
@@ -2901,6 +2902,11 @@ setCtx(ctx);
       assert(U.pathTo(up.at[0], up.at[1], b.at[0], b.at[1]), `от слипа к ${id} не пройти`);
     }
     assert(/укрытие/.test(TX.UNDER_TEXT.u_isle_inventory.look) && /ВИД НА МОРЕ/.test(TX.UNDER_TEXT.u_isle_loungers.look), 'опись и шезлонги не по замыслу');
+  });
+
+  test('изнанка в описи: витков семь (Sol: «Витков семь, все в описи»), U8 — отвод от бункера', () => {
+    eq(WW.UNDERSIDE.filter(u => !u.branch).length, 7, 'витков не семь — строка Sol разошлась с описью');
+    assert(WW.UNDERSIDE.find(u => u.id === 'U8').branch, 'U8 записан витком');
   });
 
   test('шёпоты изнанки: в зале шепчет сам зал — у лестницы канализации не слышно острова', () => {
