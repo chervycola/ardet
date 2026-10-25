@@ -56,11 +56,14 @@ function record(draw, x, gy, t, dx = 0, dy = 0) {
 }
 
 // живое ли и одинаков ли рисунок на разных местах. Рисунок набора (kit.js) объявляет себя
-// сам — draw.static: неподвижен и от места не зависит; пробу (тысячи вызовов) пропускаем
+// сам — draw.static: неподвижен и от места не зависит; пробу (тысячи вызовов) пропускаем.
+// Вид из двух слоёв — draw.body (тело набором, неподвижно) и draw.live (огонь, пар): тело
+// запекается, живое рисуется поверх каждый кадр
 export function kindOf(draw, x, gy) {
   let k = KIND.get(draw);
   if (k) return k;
   if (draw.static === true) { KIND.set(draw, k = { live: false, shared: true }); return k; }
+  if (draw.body && draw.live && draw.body.static === true) { KIND.set(draw, k = { live: false, shared: true, split: true }); return k; }
   KIND.set(draw, k = probeKind(draw, x, gy));
   return k;
 }
@@ -86,7 +89,7 @@ function bake(loc) {
   const cx = W >> 1, gy = H - 2;                         // где в холсте x и земля
   g.imageSmoothingEnabled = false;
   g.translate(cx - Math.round(loc.archX), gy - Math.round(loc.archGy));   // рисуем на настоящем месте — сдвигом холста
-  loc.archDraw(g, loc.archX, loc.archGy, 0);
+  (loc.archDraw.body || loc.archDraw)(g, loc.archX, loc.archGy, 0);
   return { c, cx, gy };
 }
 
@@ -117,8 +120,9 @@ export function drawArch(ctx, loc, t) {
   } else { BAKED.delete(key); BAKED.set(key, b); }      // освежить
   if (!b) { draw(ctx, loc.archX, loc.archGy, t); return false; }
   ctx.drawImage(b.c, Math.round(loc.archX) - b.cx, Math.round(loc.archGy) - b.gy);
+  if (k.split) draw.live(ctx, loc.archX, loc.archGy, t);
   return true;
 }
 
-export const _bakeStats = () => ({ kinds: KIND.size, live: [...KIND.values()].filter(k => k.live).length, baked: BAKED.size });
+export const _bakeStats = () => ({ kinds: KIND.size, live: [...KIND.values()].filter(k => k.live).length, split: [...KIND.values()].filter(k => k.split).length, baked: BAKED.size });
 export function _resetBake() { KIND.clear(); BAKED.clear(); frameT = null; budget = BAKE_PER_FRAME; spent = 0; }

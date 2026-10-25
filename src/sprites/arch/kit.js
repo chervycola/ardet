@@ -41,6 +41,10 @@ export const MAT = {
   MARBLE: 18,     // мрамор и известняк под штуком: светлый, гладкий
   GRANITE: 19,    // гранит: монолит в крапину (обелиск, валуны)
   SANDSTONE: 20,  // песчаник: тёплый, рядами (Египет, пустыни)
+  RAMMED: 21,     // трамбованная земля: слои без швов, ряды дыр от опалубки (Хань, пахса)
+  WATTLE: 22,     // плетень: колья и прутья вперевивку
+  FELT: 23,       // войлок: шерсть свалянная, без швов, ворс пятнами
+  SAND: 24,       // песок: барханы, рябь ветра наискось
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -57,7 +61,7 @@ RAMP[MAT.CONCRETE] = ramp(mix(AS, NI, 0.42));
 RAMP[MAT.GLASS] = ramp(mix(NI, AS, 0.12), AS);
 RAMP[MAT.IRON] = ramp(mix(AS, NI, 0.48));
 RAMP[MAT.DARK] = [NI, NI, mix(NI, SEP, 0.35), mix(NI, SEP, 0.55), mix(NI, SEP, 0.7), mix(NI, SEP, 0.8)];
-RAMP[MAT.MUD] = ramp(mix(SEP, mix(SEP, KV, 0.3), 0.6), mix(BO, SEP, 0.15));
+RAMP[MAT.MUD] = ramp(mix(mix(SEP, BO, 0.2), KV, 0.06), mix(BO, SEP, 0.15));   // сырец: к охре, светлее обожжённого
 RAMP[MAT.SNOW] = ramp(mix(BO, AS, 0.25));
 RAMP[MAT.MOSS] = ramp(MG, mix(MG, BO, 0.4));
 RAMP[MAT.BASALT] = ramp(mix(NI, S0, 0.55));
@@ -65,6 +69,10 @@ RAMP[MAT.TIMBER] = ramp(mix(SEP, NI, 0.35), mix(BO, SEP, 0.3));
 RAMP[MAT.MARBLE] = ramp(mix(BO, S0, 0.42));
 RAMP[MAT.GRANITE] = ramp(mix(mix(AS, KV, 0.16), NI, 0.3));
 RAMP[MAT.SANDSTONE] = ramp(mix(mix(SEP, BO, 0.42), KV, 0.05));
+RAMP[MAT.RAMMED] = ramp(mix(mix(SEP, BO, 0.3), S0, 0.25));
+RAMP[MAT.WATTLE] = ramp(mix(SEP, NI, 0.1), mix(BO, SEP, 0.2));
+RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
+RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -76,6 +84,19 @@ function hh(a, b, s) {
 // фактура: сдвиг ступени тона в точке (x, y) материала; s — зерно постройки
 function tex(mat, x, y, s) {
   switch (mat) {
+    case MAT.RAMMED: {
+      if (y % 3 === 2) return -1;                                       // шов слоя
+      if (y % 12 === 7 && x % 9 === 4) return -2;                      // дыра от бруса опалубки
+      return hh(x >> 2, Math.floor(y / 3), s + 25) < 0.15 ? -1 : 0;
+    }
+    case MAT.WATTLE: {                                                  // прут идёт перед колом, потом за ним
+      const row = Math.floor(y / 3), o = (row & 1) * 3;
+      if (x % 6 === 0) return -2;                                       // кол
+      if (y % 3 === 2) return -1;
+      return (x + o) % 6 < 3 ? 1 : -1;
+    }
+    case MAT.SAND: return (x + 2 * y) % 9 === 0 ? -1 : (hh(x, y, s + 29) < 0.04 ? -1 : 0);
+    case MAT.FELT: { const v = hh(x >> 1, y >> 1, s + 27); return v < 0.12 ? -1 : v > 0.94 ? 1 : 0; }
     case MAT.SANDSTONE:
     case MAT.ASHLAR: {
       const c = Math.floor(y / 5), o = (c & 1) * 4, b = Math.floor((x + o) / 9);
@@ -167,6 +188,21 @@ export function plan(w, h) {
     },
     // проём: та же часть, что и стена (кромки — внутри проёма), низ — подоконник светлее
     cut(x, y, ww, hh2, mat = MAT.DARK) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, mat, p); return P; },
+    // многоугольник [[x, y], …] одной частью: скала, конус кровли, курган, купол
+    poly(pts, mat, form = 0) {
+      const p = ++pid, xs = pts.map(v => v[0]), ys = pts.map(v => v[1]);
+      info[p] = { x0: Math.round(Math.min(...xs)), x1: Math.round(Math.max(...xs)), form };
+      for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(Math.max(...ys)); y++) {
+        const yc = y + 0.5, cr = [];
+        for (let i = 0; i < pts.length; i++) {
+          const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length];
+          if ((ay <= yc) !== (by <= yc)) cr.push(ax + (yc - ay) / (by - ay) * (bx - ax));
+        }
+        cr.sort((u, v) => u - v);
+        for (let k = 0; k + 1 < cr.length; k += 2) for (let x = Math.round(cr[k]); x < Math.round(cr[k + 1]); x++) put(x, y, mat, p);
+      }
+      return P;
+    },
     clear(x, y, ww, hh2) { for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, 0, 0); return P; },
   };
   return P;
@@ -244,4 +280,6 @@ export function kitKind(w, h, build, opt = {}) {
   return draw;
 }
 
+// ступень тона материала (0 — глубь … 5 — блик): для рисунка поверх набора теми же красками
+export const tone = (mat, st) => RAMP[mat][st];
 export const _RAMP = RAMP;

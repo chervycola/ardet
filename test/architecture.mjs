@@ -541,10 +541,11 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     for (const l of arch) {
       if (seen.has(l.archDraw) || B.kindOf(l.archDraw, l.archX, l.archGy).live) continue;
       seen.add(l.archDraw);
-      const base = rec(l.archDraw, l.archX, l.archGy, 0);
+      const d = l.archDraw.body || l.archDraw;                 // у вида с огнём поверх запекается тело
+      const base = rec(d, l.archX, l.archGy, 0);
       for (let t = 3; t < 1200 + 40; t += 3) {
         const tt = t < 1200 ? t : 1e6 + t * 7919;
-        if (rec(l.archDraw, l.archX, l.archGy, tt) !== base) { moved.push(`${l.name} (t=${tt})`); break; }
+        if (rec(d, l.archX, l.archGy, tt) !== base) { moved.push(`${l.name} (t=${tt})`); break; }
       }
     }
     assert(seen.size >= 50, `неподвижных видов мало: ${seen.size}`);
@@ -640,17 +641,61 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     assert(lum(at(c.log, 2, 9)) >= lum(R[2]), 'левый край не к свету');
   });
   const BK = await imp('render/archbake.js');
-  test('набор: перерисованные набором виды оси неподвижны (запекаются) и в своей рамке', () => {
-    for (const [side, name] of [['south', 'пилон с обелиском'], ['south', 'дорический храм'], ['north', 'каменная ладья и сейд']]) {
-      const k = ARCH_BY_RING.axial[side].find(q => q.name === name);
-      assert(k, `${name}: нет вида`);
-      const pk = BK.probeKind(k.draw, 500, 500);
-      eq(pk.live, false, `${name}: на деле живой`); eq(pk.shared, true, `${name}: зависит от места`);
-      eq(k.draw.static, true, `${name}: не объявлен неподвижным`);
-      const c = rec(); k.draw(c, 500, 500, 0);
-      assert(c.log.length > 50, `${name}: рисунок пуст`);
-      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${name}: вне рамки ${x},${y} ${w}×${h}`);
+  test('набор: ось — все виды и доминанта набором; тело неподвижно (запекается), огонь — слоем поверх; всё в рамке', () => {
+    const A = ARCH_BY_RING.axial, kinds = [A.landmark, ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
+    eq(kinds.length, 11, 'видов оси');
+    let split = 0;
+    for (const k of kinds) {
+      const name = k.name, body = k.draw.body || k.draw;
+      eq(body.static, true, `${name}: тело не объявлено неподвижным`);
+      const pk = BK.probeKind(body, 500, 500);
+      eq(pk.live, false, `${name}: тело на деле живое`); eq(pk.shared, true, `${name}: тело зависит от места`);
+      if (k.draw.body) {
+        split++;
+        assert(typeof k.draw.live === 'function', `${name}: нет живого слоя`);
+        eq(BK.probeKind(k.draw, 500, 500).live, true, `${name}: огонь не движется`);
+        BK._resetBake();
+        const kd = BK.kindOf(k.draw, 500, 500);
+        assert(kd.split && !kd.live, `${name}: запекание не делит тело и огонь`);
+      }
+      for (const t of [0, 19, 40, 77]) {
+        const c = rec(); k.draw(c, 500, 500, t);
+        assert(c.log.length > 50, `${name}: рисунок пуст`);
+        for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${name}: вне рамки ${x},${y} ${w}×${h} (t=${t})`);
+      }
     }
+    eq(split, 4, 'с огнём поверх — застава, круглый дом, кибитка, зиккурат');
+  });
+  test('свой рисунок #2: второй экземпляр вида оси — по своему осмотру (draw2), набором и в рамке; жизнь — своя', () => {
+    const A = ARCH_BY_RING.axial, kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);
+    const two = kinds.filter(k => k.draw2);
+    eq(two.map(k => k.name).sort().join(), ['вежа с бубном', 'дорический храм', 'застава на перевале', 'каменная ладья и сейд', 'пилон с обелиском'].sort().join(), 'с рисунком #2');
+    for (const k of two) {
+      eq(k.draw2.static, true, `${k.name} #2: не объявлен неподвижным`);
+      const pk = BK.probeKind(k.draw2, 500, 500);
+      eq(pk.live, false, `${k.name} #2: живой`); eq(pk.shared, true, `${k.name} #2: зависит от места`);
+      const c = rec(); k.draw2(c, 500, 500, 0);
+      assert(c.log.length > 50, `${k.name} #2: пуст`);
+      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${k.name} #2: вне рамки ${x},${y} ${w}×${h}`);
+      const inWorld = locations.filter(l => l.archRing === 1 && l.name === k.name);
+      for (const l of inWorld) eq(l.archDraw, l.archNth > 1 ? k.draw2 : k.draw, `${k.name} №${l.archNth}: не свой рисунок`);
+    }
+    const v2 = locations.find(l => l.archRing === 1 && l.name === 'вежа с бубном' && l.archNth > 1);
+    assert(v2 && !(v2.archLife && v2.archLife.smoke), 'вежа без покрышки дымит');
+  });
+  test('запекание: тело — в холст, огонь — поверх каждый кадр', () => {
+    const l = locations.find(q => q.archDraw && q.archDraw.body);
+    assert(l, 'нет постройки с огнём поверх');
+    const counting = () => { const c = fakeCtx(); c.n = { fill: 0, img: 0 }; c.fillRect = () => c.n.fill++; c.drawImage = () => c.n.img++; return c; };
+    const ce = document.createElement;
+    document.createElement = () => ({ ...fakeEl(), width: 0, height: 0, getContext: () => fakeCtx() });
+    try {
+      BK._resetBake();
+      for (let t = 2; t < 6; t++) BK.drawArch(counting(), l, t);
+      const c = counting(); BK.drawArch(c, l, 7);
+      eq(c.n.img, 1, 'тело не картинкой');
+      assert(c.n.fill > 0 && c.n.fill < 6, `огонь поверх — не горсть точек: ${c.n.fill}`);
+    } finally { document.createElement = ce; BK._resetBake(); }
   });
 }
 

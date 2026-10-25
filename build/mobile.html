@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ae79a08 · 2026-10-25';console.log('[оттиск]', 'ae79a08 · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='9cb9fef · 2026-10-25';console.log('[оттиск]', '9cb9fef · 2026-10-25');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6618,7 +6618,7 @@ System.register("world/hang", ["world/wind", "audio/audio", "world/attention"], 
 });
 System.register("sprites/arch/kit", [], function (exports_29, context_29) {
     "use strict";
-    var NI, BO, AS, MG, KV, SEP, hex, css, mix, ramp, S0, RUST, MAT, FORM, RAMP, RIM, _RAMP;
+    var NI, BO, AS, MG, KV, SEP, hex, css, mix, ramp, S0, RUST, MAT, FORM, RAMP, RIM, tone, _RAMP;
     var __moduleName = context_29 && context_29.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -6628,6 +6628,26 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
     // фактура: сдвиг ступени тона в точке (x, y) материала; s — зерно постройки
     function tex(mat, x, y, s) {
         switch (mat) {
+            case MAT.RAMMED: {
+                if (y % 3 === 2)
+                    return -1; // шов слоя
+                if (y % 12 === 7 && x % 9 === 4)
+                    return -2; // дыра от бруса опалубки
+                return hh(x >> 2, Math.floor(y / 3), s + 25) < 0.15 ? -1 : 0;
+            }
+            case MAT.WATTLE: { // прут идёт перед колом, потом за ним
+                const row = Math.floor(y / 3), o = (row & 1) * 3;
+                if (x % 6 === 0)
+                    return -2; // кол
+                if (y % 3 === 2)
+                    return -1;
+                return (x + o) % 6 < 3 ? 1 : -1;
+            }
+            case MAT.SAND: return (x + 2 * y) % 9 === 0 ? -1 : (hh(x, y, s + 29) < 0.04 ? -1 : 0);
+            case MAT.FELT: {
+                const v = hh(x >> 1, y >> 1, s + 27);
+                return v < 0.12 ? -1 : v > 0.94 ? 1 : 0;
+            }
             case MAT.SANDSTONE:
             case MAT.ASHLAR: {
                 const c = Math.floor(y / 5), o = (c & 1) * 4, b = Math.floor((x + o) / 9);
@@ -6747,6 +6767,24 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
             cut(x, y, ww, hh2, mat = MAT.DARK) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++)
                 for (let i = 0; i < ww; i++)
                     put(x + i, y + j, mat, p); return P; },
+            // многоугольник [[x, y], …] одной частью: скала, конус кровли, курган, купол
+            poly(pts, mat, form = 0) {
+                const p = ++pid, xs = pts.map(v => v[0]), ys = pts.map(v => v[1]);
+                info[p] = { x0: Math.round(Math.min(...xs)), x1: Math.round(Math.max(...xs)), form };
+                for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(Math.max(...ys)); y++) {
+                    const yc = y + 0.5, cr = [];
+                    for (let i = 0; i < pts.length; i++) {
+                        const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length];
+                        if ((ay <= yc) !== (by <= yc))
+                            cr.push(ax + (yc - ay) / (by - ay) * (bx - ax));
+                    }
+                    cr.sort((u, v) => u - v);
+                    for (let k = 0; k + 1 < cr.length; k += 2)
+                        for (let x = Math.round(cr[k]); x < Math.round(cr[k + 1]); x++)
+                            put(x, y, mat, p);
+                }
+                return P;
+            },
             clear(x, y, ww, hh2) { for (let j = 0; j < hh2; j++)
                 for (let i = 0; i < ww; i++)
                     put(x + i, y + j, 0, 0); return P; },
@@ -6901,6 +6939,10 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
                 MARBLE: 18, // мрамор и известняк под штуком: светлый, гладкий
                 GRANITE: 19, // гранит: монолит в крапину (обелиск, валуны)
                 SANDSTONE: 20, // песчаник: тёплый, рядами (Египет, пустыни)
+                RAMMED: 21, // трамбованная земля: слои без швов, ряды дыр от опалубки (Хань, пахса)
+                WATTLE: 22, // плетень: колья и прутья вперевивку
+                FELT: 23, // войлок: шерсть свалянная, без швов, ворс пятнами
+                SAND: 24, // песок: барханы, рябь ветра наискось
             });
             // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
             exports_29("FORM", FORM = { FLAT: 0, CYL: 1, FLUTE: 2 });
@@ -6917,7 +6959,7 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
             RAMP[MAT.GLASS] = ramp(mix(NI, AS, 0.12), AS);
             RAMP[MAT.IRON] = ramp(mix(AS, NI, 0.48));
             RAMP[MAT.DARK] = [NI, NI, mix(NI, SEP, 0.35), mix(NI, SEP, 0.55), mix(NI, SEP, 0.7), mix(NI, SEP, 0.8)];
-            RAMP[MAT.MUD] = ramp(mix(SEP, mix(SEP, KV, 0.3), 0.6), mix(BO, SEP, 0.15));
+            RAMP[MAT.MUD] = ramp(mix(mix(SEP, BO, 0.2), KV, 0.06), mix(BO, SEP, 0.15)); // сырец: к охре, светлее обожжённого
             RAMP[MAT.SNOW] = ramp(mix(BO, AS, 0.25));
             RAMP[MAT.MOSS] = ramp(MG, mix(MG, BO, 0.4));
             RAMP[MAT.BASALT] = ramp(mix(NI, S0, 0.55));
@@ -6925,7 +6967,13 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
             RAMP[MAT.MARBLE] = ramp(mix(BO, S0, 0.42));
             RAMP[MAT.GRANITE] = ramp(mix(mix(AS, KV, 0.16), NI, 0.3));
             RAMP[MAT.SANDSTONE] = ramp(mix(mix(SEP, BO, 0.42), KV, 0.05));
+            RAMP[MAT.RAMMED] = ramp(mix(mix(SEP, BO, 0.3), S0, 0.25));
+            RAMP[MAT.WATTLE] = ramp(mix(SEP, NI, 0.1), mix(BO, SEP, 0.2));
+            RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
+            RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
             RIM = AS; // кромка справа — пеплом (канон)
+            // ступень тона материала (0 — глубь … 5 — блик): для рисунка поверх набора теми же красками
+            exports_29("tone", tone = (mat, st) => RAMP[mat][st]);
             exports_29("_RAMP", _RAMP = RAMP);
         }
     };
@@ -6939,11 +6987,15 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
 // Север: каменная ладья с сейдом, дерновая вежа и бубен-карта на шесте.
 // Равнина: курган с каменной бабой и скифская кибитка у тёплого кострища.
 // Свет лунный, слева; у крупных масс справа кромка пеплом — ночью держится.
+// Все виды и доминанта — набором материалов (kit.js): тело неподвижно и запекается,
+// огонь и пар — слоем поверх (split). Второй экземпляр вида в мире — свой рисунок
+// по своему осмотру (draw2): застава у выхода в пески, каркас вежи, малая ладья,
+// храм с колоннами разных веков, пилон с перебитым картушем.
 // Утварь дворов (props) — по три вещи на сторону, без осмотра.
 // Контракт: x — центр, gy — линия земли; рисунок строго в w×h.
 System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], function (exports_30, context_30) {
     "use strict";
-    var hang_js_1, kit_js_1, NI, BO, AS, MG, CA, CI, K0, K1, K2, K3, K4, BR2, DRD, L1, L2, CI_F, q, ARCH;
+    var hang_js_1, kit_js_1, NI, BO, AS, MG, CA, CI, K0, K1, K2, K3, K4, BR2, DRD, L1, L2, CI_F, q, pass, roundhouse, kibitka, etemenanki, ARCH;
     var __moduleName = context_30 && context_30.id;
     function r(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // отрезок ступеньками [x0, x1): пологий — по рядам, крутой — по столбцам
@@ -6978,313 +7030,402 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
         }
         return y;
     }
+    // тело — набором и неподвижно (запекается); живое — огонь, пар — поверх каждый кадр
+    // (render/archbake.js: draw.body запекается, draw.live рисуется сам)
+    function split(body, live) {
+        const d = (c, X, G, t) => { body(c, X, G); live(c, X, G, t); };
+        body.static = true;
+        d.body = body;
+        d.live = live;
+        return d;
+    }
+    // силуэт резьбой: точки «.» строки вынимаются из плана (слон в капители, завиток, колесо)
+    function carve(P, x0, y0, rows) {
+        rows.forEach((s, j) => { for (let i = 0; i < s.length; i++)
+            if (s[i] === '.')
+                P.clear(x0 + i, y0 + j, 1, 1); });
+    }
     // ── ЮГ · древние пути ──────────────────────────────────────────────
     // Пилон Эдфу: две скошенные башни выше человека втрое, карниз-выкружка,
     // мачты из ниш выше башен, вымпелы; ворота с крылатым диском.
     // Слева обелиск — асуанский гранит монолитом, пирамидион ловит последний свет.
     // Набор материалов (kit.js): песчаник рядами, откос башен, мачты кедром.
-    function pylon(c, X, G) {
+    // Второй пилон (#2) тех же пропорций: над воротами вместо диска картуш, перебитый
+    // трижды, — три рамки вглубь, последняя самая глубокая.
+    function pylonPlan(v) {
         const W = 96, H = 88, ob = 6, pc = 55; // ось обелиска и ось пилона — от левого края рамки
-        if (!pylon.P) {
-            const P = pylon.P = kit_js_1.plan(W, H);
-            P.box(ob - 6, 85, 12, 3, kit_js_1.MAT.ASHLAR); // постамент
-            P.trap(ob - 4, ob + 3, ob - 2, ob + 1, 12, 84, kit_js_1.MAT.GRANITE, kit_js_1.FORM.CYL); // обелиск — монолит
-            P.wedge(ob, 9, 12, 1, 5, kit_js_1.MAT.GRANITE); // пирамидион
-            P.trap(pc - 41, pc - 8, pc - 30, pc - 8, 16, 87, kit_js_1.MAT.SANDSTONE); // башни: откос наружу,
-            P.trap(pc + 8, pc + 40, pc + 8, pc + 29, 16, 87, kit_js_1.MAT.SANDSTONE); // внутренний край отвесный
-            P.box(pc - 32, 12, 25, 4, kit_js_1.MAT.SANDSTONE);
-            P.box(pc + 7, 12, 26, 4, kit_js_1.MAT.SANDSTONE); // карнизы-выкружки
-            P.cut(pc - 20, 16, 3, 72);
-            P.cut(pc + 17, 16, 3, 72); // ниши под мачты
-            P.box(pc - 19, 0, 1, 87, kit_js_1.MAT.TIMBER);
-            P.box(pc + 18, 0, 1, 87, kit_js_1.MAT.TIMBER); // мачты выше башен
-            P.box(pc - 7, 40, 14, 48, kit_js_1.MAT.SANDSTONE);
-            P.box(pc - 9, 36, 18, 4, kit_js_1.MAT.SANDSTONE); // портал и его карниз
-            P.cut(pc - 4, 48, 8, 40); // проход
+        const P = kit_js_1.plan(W, H);
+        P.box(ob - 6, 85, 12, 3, kit_js_1.MAT.ASHLAR); // постамент
+        P.trap(ob - 4, ob + 3, ob - 2, ob + 1, 12, 84, kit_js_1.MAT.GRANITE, kit_js_1.FORM.CYL); // обелиск — монолит
+        P.wedge(ob, 9, 12, 1, 5, kit_js_1.MAT.GRANITE); // пирамидион
+        P.trap(pc - 41, pc - 8, pc - 30, pc - 8, 16, 87, kit_js_1.MAT.SANDSTONE); // башни: откос наружу,
+        P.trap(pc + 8, pc + 40, pc + 8, pc + 29, 16, 87, kit_js_1.MAT.SANDSTONE); // внутренний край отвесный
+        P.box(pc - 32, 12, 25, 4, kit_js_1.MAT.SANDSTONE);
+        P.box(pc + 7, 12, 26, 4, kit_js_1.MAT.SANDSTONE); // карнизы-выкружки
+        P.cut(pc - 20, 16, 3, 72);
+        P.cut(pc + 17, 16, 3, 72); // ниши под мачты
+        P.box(pc - 19, 0, 1, 87, kit_js_1.MAT.TIMBER);
+        P.box(pc + 18, 0, 1, 87, kit_js_1.MAT.TIMBER); // мачты выше башен
+        P.box(pc - 7, 40, 14, 48, kit_js_1.MAT.SANDSTONE);
+        P.box(pc - 9, 36, 18, 4, kit_js_1.MAT.SANDSTONE); // портал и его карниз
+        P.cut(pc - 4, 48, 8, 40); // проход
+        if (v) { // картуш: рамка в рамке, имя глубже
+            P.cut(pc - 6, 41, 12, 6);
+            P.box(pc - 5, 42, 10, 4, kit_js_1.MAT.SANDSTONE);
+            P.cut(pc - 4, 43, 8, 2);
+            P.box(pc - 3, 43, 6, 1, kit_js_1.MAT.SANDSTONE);
         }
+        return P;
+    }
+    function pylonPaint(c, X, G, P, v) {
+        const W = 96, H = 88, ob = 6, pc = 55;
         const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
-        kit_js_1.paint(c, X0, Y0, pylon.P, { seed: 11, chip: 0.08, cracks: 2, moss: 0.02 });
+        kit_js_1.paint(c, X0, Y0, P, { seed: v ? 19 : 11, chip: 0.08, cracks: v ? 3 : 2, moss: 0.02 });
         const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
         // пирамидион ловит последний свет — костью (золота канон не даёт); знаки по стволу — врезаны
         px(L1, ob - 1, 10, 2, 1);
         px(BO, ob - 1, 9, 1, 2);
         for (let k = 0; k < 7; k++)
             px(K1, ob - (k & 1), 20 + k * 9, 1 + (k % 3 === 0 ? 1 : 0), 2);
-        // крылатый диск над проходом: крылья костью и пеплом, диск — киноварь выцвела
-        px(L2, pc - 7, 42, 5, 1);
-        px(L2, pc + 2, 42, 5, 1);
-        px(AS, pc - 6, 43, 4, 1);
-        px(AS, pc + 3, 43, 4, 1);
-        px(CI_F, pc - 1, 41, 2, 2);
+        if (!v) { // крылатый диск над проходом: крылья костью и пеплом, диск — киноварь выцвела
+            px(L2, pc - 7, 42, 5, 1);
+            px(L2, pc + 2, 42, 5, 1);
+            px(AS, pc - 6, 43, 4, 1);
+            px(AS, pc + 3, 43, 4, 1);
+            px(CI_F, pc - 1, 41, 2, 2);
+        }
+        else { // имя последнего — тёмной строкой, по рамке — сколы прежних
+            px(K0, pc - 2, 44, 4, 1);
+            px(K1, pc - 7, 40, 2, 1);
+            px(K1, pc + 5, 47, 2, 1);
+            px(K1, pc + 6, 41, 1, 2);
+        }
         for (const [dx, dy] of [[pc - 31, 46], [pc - 27, 52], [pc - 23, 60], [pc + 24, 46], [pc + 27, 52], [pc + 30, 60]])
             px(K1, dx, dy, 1, 5); // рельеф вглубь
         px(CI, pc - 18, 0, 3, 1);
         px(CI, pc - 18, 1, 2, 1);
         px(L1, pc + 19, 0, 1, 5); // вымпел и лента
     }
+    function pylon(c, X, G) { if (!pylon.P)
+        pylon.P = pylonPlan(0); pylonPaint(c, X, G, pylon.P, 0); }
+    function pylon2(c, X, G) { if (!pylon2.P)
+        pylon2.P = pylonPlan(1); pylonPaint(c, X, G, pylon2.P, 1); }
     // Дорический храм-гексастиль на египетском фундаменте: в кладке — блок со
     // знаками, анх петлёй вниз (положен вверх ногами); справа лежит пифос Диогена.
-    function doric(c, X, G) {
+    // Второй (#2) — тот же гексастиль, колонны из разных веков: толще, тоньше, с иной
+    // капителью; в глубине, между третьей и четвёртой, — одна всё ещё дубовая.
+    function doricPlan(v) {
         const W = 92, H = 76, tx = 37; // ось храма — от левого края рамки (левее середины на 9)
-        if (!doric.P) {
-            const P = doric.P = kit_js_1.plan(W, H);
-            P.box(0, 68, 74, 8, kit_js_1.MAT.RUBBLE); // фундамент взят готовым — бут
+        const P = kit_js_1.plan(W, H);
+        P.box(0, 68, 74, 8, kit_js_1.MAT.RUBBLE); // фундамент взят готовым — бут
+        if (!v)
             P.box(tx - 16, 69, 11, 7, kit_js_1.MAT.BASALT); // сполия со знаками
-            P.box(2, 66, 70, 2, kit_js_1.MAT.MARBLE);
-            P.box(3, 64, 68, 2, kit_js_1.MAT.MARBLE); // ступени
-            P.cut(6, 27, 62, 37); // тьма целлы
-            for (let i = 0; i < 6; i++) { // шесть колонн с каннелюрами, капители
-                const lx = tx - 33 + 12 * i;
-                P.box(lx, 29, 6, 35, kit_js_1.MAT.MARBLE, kit_js_1.FORM.FLUTE);
-                P.box(lx - 1, 27, 8, 2, kit_js_1.MAT.MARBLE);
-            }
-            P.box(3, 23, 68, 4, kit_js_1.MAT.MARBLE); // архитрав
-            P.box(3, 18, 68, 5, kit_js_1.MAT.MARBLE); // фриз
-            for (let i = 0; i < 6; i++)
-                P.box(tx - 32 + 12 * i, 18, 3, 5, kit_js_1.MAT.ASHLAR); // триглифы
-            P.box(1, 16, 72, 2, kit_js_1.MAT.MARBLE); // карниз
-            P.wedge(tx, 5, 15, 4, 72, kit_js_1.MAT.MARBLE); // фронтон
-            P.wedge(tx, 9, 14, 2, 58, kit_js_1.MAT.PLASTER); // тимпан — вглубь
-            P.box(tx - 1, 1, 2, 4, kit_js_1.MAT.MARBLE); // акротерий
+        P.box(2, 66, 70, 2, kit_js_1.MAT.MARBLE);
+        P.box(3, 64, 68, 2, kit_js_1.MAT.MARBLE); // ступени
+        P.cut(6, 27, 62, 37); // тьма целлы
+        if (v)
+            P.box(tx - 1, 29, 3, 35, kit_js_1.MAT.TIMBER, kit_js_1.FORM.CYL); // дубовая — в глубине
+        const cw = v ? [6, 5, 7, 6, 7, 5] : [6, 6, 6, 6, 6, 6], kw = v ? [8, 6, 9, 8, 7, 7] : [8, 8, 8, 8, 8, 8];
+        for (let i = 0; i < 6; i++) { // шесть колонн с каннелюрами, капители
+            const lx = tx - 33 + 12 * i + ((6 - cw[i]) >> 1);
+            P.box(lx, 29, cw[i], 35, kit_js_1.MAT.MARBLE, kit_js_1.FORM.FLUTE);
+            P.box(lx - ((kw[i] - cw[i]) >> 1), 27, kw[i], 2, kit_js_1.MAT.MARBLE);
+        }
+        P.box(3, 23, 68, 4, kit_js_1.MAT.MARBLE); // архитрав
+        P.box(3, 18, 68, 5, kit_js_1.MAT.MARBLE); // фриз
+        for (let i = 0; i < 6; i++)
+            P.box(tx - 32 + 12 * i, 18, 3, 5, kit_js_1.MAT.ASHLAR); // триглифы
+        P.box(1, 16, 72, 2, kit_js_1.MAT.MARBLE); // карниз
+        P.wedge(tx, 5, 15, 4, 72, kit_js_1.MAT.MARBLE); // фронтон
+        P.wedge(tx, 9, 14, 2, 58, kit_js_1.MAT.PLASTER); // тимпан — вглубь
+        P.box(tx - 1, 1, 2, 4, kit_js_1.MAT.MARBLE); // акротерий
+        if (!v) {
             P.box(76, 69, 9, 7, kit_js_1.MAT.MUD);
             P.box(75, 70, 11, 5, kit_js_1.MAT.MUD); // пифос лёжа
             P.box(83, 69, 6, 6, kit_js_1.MAT.MUD);
             P.cut(84, 70, 4, 4); // обод и жерло
         }
+        return P;
+    }
+    function doric(c, X, G) {
+        const W = 92, H = 76, tx = 37;
+        if (!doric.P)
+            doric.P = doricPlan(0);
         const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
         kit_js_1.paint(c, X0, Y0, doric.P, { seed: 7, chip: 0.12, moss: 0.06, cracks: 3 });
         const sb = X0 + tx - 16, g = q(G); // анх вверх ногами на сполии — процарапан
         for (const [dx, dy, w, h] of [[3, -6, 1, 1], [2, -5, 3, 1], [2, -4, 1, 1], [4, -4, 1, 1], [3, -3, 1, 1], [7, -6, 1, 2], [6, -3, 2, 1]])
             r(c, K0, sb + dx, g + dy, w, h);
     }
-    // ── ВОСТОК · Азия ──────────────────────────────────────────────────
-    // Застава Ханьгу: ущелье — две рваные скалы выше башни (верх зубьями,
-    // свет только на уступах, трещины, осыпь клином у подножия, на уступе
-    // кривая сосна). В ущелье — глинобитная башня с откосом, слоями трамбовки
-    // и открытым проходом на запад; наверху зал под прямой ханьской кровлей.
-    // Справа будка смотрителя: кипяток не выкипает.
-    function pass(c, X, G, t) {
-        const x = q(X), g = q(G);
-        const crag = (cols) => {
-            for (const [dx, w, h] of cols) {
-                r(c, K2, x + dx, g - h, w, h);
-                r(c, AS, x + dx, g - h, w, 1);
-            }
-        };
-        crag([[-48, 2, 44], [-46, 2, 56], [-44, 3, 66], [-41, 2, 78], [-39, 3, 83],
-            [-36, 2, 79], [-34, 3, 74], [-31, 2, 68], [-29, 3, 61], [-26, 2, 52]]);
-        crag([[23, 3, 50], [26, 2, 58], [28, 3, 66], [31, 2, 73], [33, 3, 80],
-            [36, 2, 82], [38, 3, 77], [41, 2, 69], [43, 3, 58], [46, 2, 46]]);
-        r(c, L2, x - 39, g - 83, 3, 1);
-        r(c, L2, x - 41, g - 78, 2, 1);
-        r(c, L2, x + 36, g - 82, 2, 1);
-        for (const [dx, y, w] of [[-45, 56, 4], [-40, 41, 3], [-35, 27, 4], [29, 44, 3], [40, 53, 4], [35, 31, 3]]) {
-            r(c, AS, x + dx, g - y, w, 1);
-            r(c, K0, x + dx, g - y + 1, w, 1); // уступы на стене скалы
-        }
-        for (const [dx, y, h] of [[-40, 70, 6], [-39, 64, 5], [-37, 50, 7], [-36, 43, 4], [-30, 36, 6],
-            [37, 69, 7], [38, 62, 4], [34, 56, 6], [33, 50, 5], [41, 29, 6]])
-            r(c, K0, x + dx, g - y, 1, h); // трещины
-        for (let k = 0; k < 6; k++) { // осыпь клином у подножия
-            r(c, K3, x - 43 - (k >> 1), g - 7 + k, 3 + 2 * k, 1);
-            r(c, AS, x - 41 + 2 * k, g - 7 + k, 1, 1);
-            r(c, K3, x + 42 - 2 * k + (k >> 1), g - 7 + k, 3 + 2 * k, 1);
-            r(c, AS, x + 42 - 2 * k, g - 7 + k, 1, 1);
-        }
-        r(c, K0, x - 30, g - 72, 1, 4);
-        r(c, K0, x - 29, g - 75, 1, 3);
-        r(c, K0, x - 28, g - 77, 2, 2); // кривая сосна
-        r(c, K0, x - 26, g - 75, 4, 1);
-        r(c, MG, x - 32, g - 80, 8, 2);
-        r(c, MG, x - 25, g - 77, 7, 2);
-        r(c, MG, x - 29, g - 82, 4, 1);
-        r(c, AS, x - 31, g - 80, 4, 1);
-        r(c, AS, x - 24, g - 77, 3, 1);
-        for (let i = 0; i < 11; i++) { // хан-ту: откос, слои трамбовки
-            const y = g - 3 * (i + 1);
-            r(c, K2, x - 29 + i, y, 58 - 2 * i, 3);
-            r(c, BR2, x - 28 + i, y, 56 - 2 * i, 2);
-            r(c, L2, x - 29 + i, y, 1, 3);
-            r(c, AS, x + 28 - i, y, 1, 3); // кромки откоса
-        }
-        r(c, L2, x - 19, g - 33, 38, 1);
-        r(c, NI, x - 6, g - 27, 12, 27); // проход на запад
-        r(c, K0, x - 8, g - 29, 16, 2);
-        r(c, AS, x - 8, g - 29, 4, 1);
-        r(c, DRD, x - 6, g - 24, 2, 24);
-        r(c, DRD, x + 4, g - 24, 2, 24); // створки вросли
-        r(c, K1, x - 15, g - 41, 30, 8); // зал
-        r(c, AS, x - 15, g - 41, 1, 8);
-        r(c, AS, x - 1, g - 41, 1, 8);
-        r(c, AS, x + 14, g - 41, 1, 8);
-        r(c, NI, x - 11, g - 39, 6, 4);
-        r(c, NI, x + 5, g - 39, 6, 4);
-        r(c, BO, x - 16, g - 42, 32, 1);
-        r(c, K0, x - 23, g - 44, 46, 2); // прямой свес, подъём — крайним пикселем
-        r(c, K0, x - 23, g - 45, 1, 1);
-        r(c, K0, x + 22, g - 45, 1, 1);
-        r(c, K0, x - 19, g - 47, 38, 3);
-        r(c, K0, x - 15, g - 50, 30, 3);
-        r(c, K0, x - 13, g - 52, 26, 2); // конёк
-        r(c, K0, x - 13, g - 53, 1, 1);
-        r(c, K0, x + 12, g - 53, 1, 1);
-        r(c, L2, x - 22, g - 44, 6, 1);
-        r(c, AS, x - 19, g - 47, 5, 1);
-        r(c, AS, x - 15, g - 50, 4, 1);
-        r(c, K1, x + 16, g - 21, 13, 21);
-        r(c, L2, x + 16, g - 21, 1, 21);
-        r(c, AS, x + 28, g - 21, 1, 21); // будка Инь Си
-        r(c, K0, x + 14, g - 24, 17, 3);
-        r(c, L2, x + 14, g - 24, 6, 1);
-        r(c, K0, x + 14, g - 25, 1, 1);
-        r(c, K0, x + 30, g - 25, 1, 1);
-        r(c, NI, x + 18, g - 19, 6, 19); // вход в рост
-        r(c, CA, x + 19, g - 4 + ((t / 18 | 0) % 2), 3, 2); // огонь под чайником
-        r(c, K3, x + 19, g - 8, 4, 3);
-        r(c, L2, x + 19, g - 8, 4, 1);
-        r(c, K3, x + 23, g - 7, 1, 1); // чайник
-        r(c, AS, x + 21, g - 11 - ((t / 24 | 0) % 3), 1, 1); // пар: кипяток не выкипает
-        r(c, L2, x + 25, g - 11, 3, 1);
-        r(c, L1, x + 25, g - 12, 1, 1);
-        r(c, L1, x + 27, g - 12, 1, 1); // полка, две чашки
+    function doric2(c, X, G) {
+        if (!doric2.P)
+            doric2.P = doricPlan(1);
+        kit_js_1.paint(c, q(X) - 46, q(G) - 76, doric2.P, { seed: 47, chip: 0.14, moss: 0.08, cracks: 4 });
     }
-    // Ступа: анда на мэдхи с оградой, хармика, сплошные зонты-чхатры;
-    // торана — тёмные столбы, три балки с волютами вверх, колесо на верху.
+    // ── ВОСТОК · Азия ──────────────────────────────────────────────────
+    // Застава Ханьгу: ущелье — две рваные скалы выше башни, свет на уступах,
+    // трещины, осыпь клином, на краю скалы сосна над пропастью. В ущелье —
+    // башня трамбованной земли с откосом и рядами дыр от опалубки, открытый
+    // проход на запад, створки вросли; наверху зал под прямой ханьской кровлей.
+    // Справа будка смотрителя: кипяток не выкипает, чашек две.
+    function passBody(c, X, G) {
+        const W = 96, H = 84;
+        if (!passBody.P) {
+            const P = passBody.P = kit_js_1.plan(W, H);
+            // скалы — лёсс столбами: уступы с плоским верхом, грань в тени — второй частью
+            P.poly([[0, 84], [0, 41], [2, 39], [3, 27], [5, 25], [6, 13], [8, 11], [9, 5], [12, 4], [13, 9], [15, 10], [16, 17],
+                [18, 18], [19, 24], [22, 25], [23, 33], [25, 34], [26, 44], [27, 84]], kit_js_1.MAT.BASALT);
+            P.poly([[12, 84], [13, 52], [15, 40], [17, 31], [19, 26], [22, 27], [23, 34], [25, 36], [26, 46], [27, 84]], kit_js_1.MAT.BASALT);
+            P.poly([[69, 84], [70, 44], [71, 36], [73, 35], [74, 27], [76, 26], [77, 17], [79, 15], [80, 7], [82, 6], [83, 2], [86, 2],
+                [87, 8], [89, 9], [90, 16], [92, 18], [93, 26], [95, 28], [96, 40], [96, 84]], kit_js_1.MAT.BASALT);
+            P.poly([[82, 84], [83, 60], [85, 44], [87, 32], [89, 22], [92, 20], [93, 28], [95, 30], [96, 42], [96, 84]], kit_js_1.MAT.BASALT);
+            P.trap(19, 76, 29, 66, 51, 83, kit_js_1.MAT.RAMMED); // хан-ту с откосом
+            P.cut(42, 57, 12, 27); // проход на запад
+            P.box(40, 55, 16, 2, kit_js_1.MAT.TIMBER); // притолока
+            P.box(42, 60, 2, 24, kit_js_1.MAT.TIMBER);
+            P.box(52, 60, 2, 24, kit_js_1.MAT.TIMBER); // створки распахнуты
+            P.round(43, 80, 83, 6, kit_js_1.MAT.MOSS);
+            P.round(53, 80, 83, 6, kit_js_1.MAT.MOSS); // вросли: земля с травой
+            P.box(33, 42, 30, 9, kit_js_1.MAT.PLASTER); // зал
+            for (const x of [33, 47, 62])
+                P.box(x, 42, 1, 9, kit_js_1.MAT.TIMBER);
+            P.cut(35, 45, 26, 3); // галерея: решётка, не окна
+            for (let x = 37; x < 60; x += 3)
+                P.box(x, 45, 1, 3, kit_js_1.MAT.TIMBER);
+            // прямая ханьская кровля серой трубчатой черепицей (ряды стоймя), подъём — крайней точкой
+            P.trap(29, 66, 35, 60, 32, 39, kit_js_1.MAT.IRON);
+            P.box(25, 40, 46, 2, kit_js_1.MAT.IRON);
+            P.box(25, 39, 1, 1, kit_js_1.MAT.IRON);
+            P.box(70, 39, 1, 1, kit_js_1.MAT.IRON);
+            P.box(34, 31, 28, 1, kit_js_1.MAT.IRON);
+            P.box(34, 30, 1, 1, kit_js_1.MAT.IRON);
+            P.box(61, 30, 1, 1, kit_js_1.MAT.IRON); // конёк
+            P.box(64, 63, 13, 21, kit_js_1.MAT.BOARD); // будка Инь Си
+            P.box(62, 60, 17, 3, kit_js_1.MAT.IRON);
+            P.box(62, 59, 1, 1, kit_js_1.MAT.IRON);
+            P.box(78, 59, 1, 1, kit_js_1.MAT.IRON);
+            P.cut(66, 65, 6, 19); // вход в рост
+        }
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, passBody.P, { seed: 13, chip: 0.05, cracks: 2, moss: 0.03 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        for (const [x, y, w] of [[1, 47, 3], [7, 31, 3], [4, 60, 4], [72, 50, 3], [90, 36, 4], [86, 66, 3]]) {
+            px(AS, x, y, w);
+            px(K0, x, y + 1, w);
+        } // уступы
+        for (const [x, y, h] of [[8, 14, 6], [9, 20, 5], [11, 34, 7], [12, 41, 4], [18, 48, 6], [85, 15, 7], [86, 22, 4], [82, 28, 6],
+            [81, 34, 5], [89, 55, 6]])
+            px(K0, x, y, 1, h); // трещины
+        for (let k = 0; k < 6; k++) { // осыпь клином у подножия
+            px(K3, 5 - (k >> 1), 77 + k, 3 + 2 * k);
+            px(AS, 7 + 2 * k, 77 + k);
+            px(K3, 90 - 2 * k + (k >> 1), 77 + k, Math.min(3 + 2 * k, 96 - (90 - 2 * k + (k >> 1))));
+            px(AS, 90 - 2 * k, 77 + k);
+        }
+        px(K0, 18, 12, 1, 4);
+        px(K0, 19, 9, 1, 3);
+        px(K0, 20, 7, 2, 2);
+        px(K0, 22, 9, 4, 1); // сосна над пропастью
+        px(MG, 16, 4, 8, 2);
+        px(MG, 23, 7, 7, 2);
+        px(MG, 19, 2, 4, 1);
+        px(AS, 17, 4, 4, 1);
+        px(AS, 24, 7, 3, 1);
+        px(K3, 67, 76, 4, 3);
+        px(L2, 67, 76, 4, 1);
+        px(K3, 71, 77); // чайник
+        px(L2, 73, 73, 3, 1);
+        px(L1, 73, 72);
+        px(L1, 75, 72); // полка, две чашки
+    }
+    function passLive(c, X, G, t) {
+        const x = q(X), g = q(G);
+        r(c, CA, x + 19, g - 4 + ((t / 18 | 0) % 2), 3, 2); // огонь под чайником
+        r(c, AS, x + 21, g - 11 - ((t / 24 | 0) % 3), 1, 1); // пар: кипяток не выкипает
+    }
+    // Вторая застава (#2) — у самого выхода в пески: здесь не досматривают, а провожают.
+    // Глинобитная крепость без кровли, ворота настежь, за ней барханы; у ворот вкопан стол,
+    // на нём кувшин и три чаши; у стены ива — ветку ломают уходящему.
+    function pass2(c, X, G) {
+        const W = 96, H = 84;
+        if (!pass2.P) {
+            const P = pass2.P = kit_js_1.plan(W, H);
+            P.poly([[38, 84], [46, 62], [58, 54], [72, 50], [84, 53], [96, 60], [96, 84]], kit_js_1.MAT.SAND); // бархан за крепостью
+            P.trap(24, 70, 27, 67, 34, 83, kit_js_1.MAT.RAMMED); // крепость трамбовкой
+            P.clear(40, 34, 4, 2);
+            P.clear(58, 34, 3, 1);
+            P.clear(27, 34, 2, 1); // бровка выветрена
+            P.cut(41, 62, 12, 22);
+            P.cut(43, 61, 8, 1); // ворота настежь
+            P.box(83, 56, 3, 28, kit_js_1.MAT.TIMBER); // ива: ствол, крона
+            P.poly([[74, 62], [76, 52], [80, 46], [86, 44], [92, 47], [95, 54], [94, 62], [88, 58], [82, 59]], kit_js_1.MAT.MOSS);
+            P.poly([[0, 84], [0, 70], [10, 66], [22, 69], [30, 76], [36, 84]], kit_js_1.MAT.SAND); // бархан ближний
+            P.box(8, 72, 18, 2, kit_js_1.MAT.TIMBER);
+            P.box(10, 74, 2, 10, kit_js_1.MAT.TIMBER);
+            P.box(22, 74, 2, 10, kit_js_1.MAT.TIMBER); // стол вкопан
+            P.round(12, 65, 71, 5, kit_js_1.MAT.MUD);
+            P.box(11, 63, 2, 2, kit_js_1.MAT.MUD); // кувшин
+        }
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, pass2.P, { seed: 59, chip: 0.06, cracks: 3 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        for (const bx of [16, 19, 22]) {
+            px(L2, bx, 71, 3, 1);
+            px(AS, bx + 2, 71);
+        } // три чаши
+        for (const [dx, len] of [[75, 9], [77, 12], [79, 8], [89, 10], [91, 13], [93, 9]])
+            px(MG, dx, 58, 1, len); // ветви ивы вниз
+    }
+    // Ступа (Санчи): анда под штукатуркой на террасе обхода, хармика, три сплошных
+    // зонта на стволе; внизу каменная ограда-ведика. Торана — без стены: два столба,
+    // в капителях слоны, три архитрава со спиральными концами, между ними тумбы
+    // и балясины, наверху колесо и два трезубца-триратны.
     function stupa(c, X, G) {
-        const X0 = q(X), g = q(G), sx = X0 + 15;
-        r(c, K3, sx - 32, g - 12, 64, 12);
-        r(c, L2, sx - 32, g - 12, 64, 1); // мэдхи
-        r(c, AS, sx + 31, g - 12, 1, 12);
-        const top = mass(c, sx, g - 12, [[28, 28, 4], [27, 27, 4], [26, 26, 3], [24, 24, 3],
-            [21, 21, 3], [17, 17, 3], [12, 12, 2], [6, 6, 2]], K3, L2, AS); // анда
-        r(c, K2, sx - 5, top - 6, 10, 6);
-        r(c, L2, sx - 5, top - 6, 10, 1); // хармика
-        r(c, NI, sx - 4, top - 4, 8, 2);
-        r(c, K2, sx - 2, top - 4, 1, 2);
-        r(c, K2, sx + 1, top - 4, 1, 2);
-        r(c, K2, sx - 1, top - 7, 2, 1);
-        for (let k = 0; k < 3; k++) { // зонты без просветов
-            const w = 14 - 2 * k, y = top - 9 - 2 * k;
-            r(c, K2, sx - w / 2, y, w, 2);
-            r(c, L2, sx - w / 2, y, w, 1);
+        const W = 96, H = 58, sx = 63; // ось ступы — от левого края рамки; торана — на 19
+        if (!stupa.P) {
+            const P = stupa.P = kit_js_1.plan(W, H);
+            P.box(31, 46, 64, 12, kit_js_1.MAT.SANDSTONE); // мэдхи
+            const dome = [];
+            for (let k = 0; k <= 16; k++) {
+                const a = Math.PI * k / 16;
+                dome.push([sx + 28 * Math.cos(a), 46 - 24 * Math.sin(a)]);
+            }
+            P.poly(dome, kit_js_1.MAT.PLASTER, kit_js_1.FORM.CYL); // анда
+            P.box(58, 16, 10, 6, kit_js_1.MAT.SANDSTONE);
+            P.cut(59, 18, 8, 2); // хармика: ограда квадратом
+            P.box(61, 18, 1, 2, kit_js_1.MAT.SANDSTONE);
+            P.box(64, 18, 1, 2, kit_js_1.MAT.SANDSTONE);
+            P.box(62, 4, 2, 12, kit_js_1.MAT.SANDSTONE); // ствол
+            P.box(56, 13, 15, 2, kit_js_1.MAT.SANDSTONE);
+            P.box(57, 9, 13, 2, kit_js_1.MAT.SANDSTONE);
+            P.box(59, 5, 9, 2, kit_js_1.MAT.SANDSTONE); // зонты сплошные
+            P.box(62, 3, 2, 2, kit_js_1.MAT.SANDSTONE);
+            P.box(36, 50, 59, 8, kit_js_1.MAT.SANDSTONE); // ведика: столбы и три поперечины
+            for (let i = 0; i < 10; i++) {
+                const bx = 38 + 6 * i, bw = Math.min(4, 95 - bx);
+                for (const y of [51, 53, 55])
+                    P.cut(bx, y, bw, 1);
+            }
+            P.box(8, 24, 4, 34, kit_js_1.MAT.SANDSTONE);
+            P.box(27, 24, 4, 34, kit_js_1.MAT.SANDSTONE); // торана: столбы
+            P.box(6, 20, 7, 4, kit_js_1.MAT.SANDSTONE);
+            carve(P, 6, 20, ['..####.', '#######', '######.', '#.#.#.#']); // слон смотрит наружу
+            P.box(26, 20, 7, 4, kit_js_1.MAT.SANDSTONE);
+            carve(P, 26, 20, ['.####..', '#######', '.######', '#.#.#.#']);
+            for (const y of [17, 11, 5]) { // три архитрава, концы — спиралью
+                P.box(3, y, 33, 3, kit_js_1.MAT.SANDSTONE);
+                P.box(0, y, 3, 3, kit_js_1.MAT.SANDSTONE);
+                carve(P, 0, y, ['###', '#.#', '##.']);
+                P.box(36, y, 3, 3, kit_js_1.MAT.SANDSTONE);
+                carve(P, 36, y, ['###', '#.#', '.##']);
+            }
+            for (const y of [14, 8]) {
+                P.box(8, y, 4, 3, kit_js_1.MAT.SANDSTONE);
+                P.box(27, y, 4, 3, kit_js_1.MAT.SANDSTONE);
+            } // тумбы над столбами
+            for (const x of [15, 19, 23])
+                P.box(x, 14, 1, 3, kit_js_1.MAT.SANDSTONE); // балясины
+            P.box(17, 8, 5, 3, kit_js_1.MAT.SANDSTONE);
+            P.box(17, 0, 5, 5, kit_js_1.MAT.SANDSTONE);
+            carve(P, 17, 0, ['.###.', '#.#.#', '##.##', '#.#.#', '.###.']); // колесо
+            for (const x of [8, 28]) {
+                P.box(x, 2, 3, 3, kit_js_1.MAT.SANDSTONE);
+                carve(P, x, 2, ['#.#', '###', '.#.']);
+            } // триратны
         }
-        const v0 = X0 - 12, vw = 59; // ведика
-        r(c, K4, v0, g - 8, vw, 6);
-        r(c, L2, v0, g - 8, vw, 1);
-        r(c, K2, v0, g - 5, vw, 1);
-        r(c, K2, v0, g - 2, vw, 2);
-        for (let i = 0; i < 10; i++)
-            r(c, L2, v0 + 2 + 6 * i, g - 7, 1, 5);
-        const tx = X0 - 29; // торана
-        r(c, K3, tx - 11, g - 34, 4, 34);
-        r(c, BO, tx - 11, g - 34, 1, 34);
-        r(c, K3, tx + 8, g - 34, 4, 34);
-        r(c, BO, tx + 8, g - 34, 1, 34);
-        for (let k = 0; k < 3; k++) {
-            const y = g - 37 - 6 * k;
-            r(c, K2, tx - 16, y, 33, 3);
-            r(c, BO, tx - 16, y, 33, 1);
-            r(c, L2, tx - 18, y - 1, 2, 2);
-            r(c, L2, tx + 17, y - 1, 2, 2); // волюты вверх
-        }
-        for (const y of [g - 40, g - 46]) {
-            r(c, K3, tx - 10, y, 2, 3);
-            r(c, K3, tx + 9, y, 2, 3);
-        }
-        r(c, AS, tx - 2, g - 53, 5, 3);
-        r(c, AS, tx - 1, g - 54, 3, 5); // колесо
-        r(c, NI, tx - 1, g - 53, 3, 3);
-        r(c, AS, tx, g - 52, 1, 1);
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, stupa.P, { seed: 17, chip: 0.06, moss: 0.04, cracks: 2 });
+        for (const y of [18, 12, 6])
+            r(c, K1, X0 + 5, Y0 + y + 1, 29, 1); // резные поля архитравов
     }
     // ── ЗАПАД · Европа ─────────────────────────────────────────────────
-    // Кельтский круглый дом: низкая плетёная стена в плечо (колья тёмные,
-    // прутья перевиты рядами), над ней высокий конус соломы со свесом и
-    // костяной кромкой по скату; пояса обвязки, дым сквозь кровлю; дверь
-    // в рост под притолокой, в глубине очаг; у стены привозная амфора.
-    function roundhouse(c, X, G, t) {
-        const x = q(X), g = q(G);
-        r(c, BR2, x - 27, g - 18, 54, 18); // плетень
-        for (let k = 0; k < 6; k++)
-            r(c, K4, x - 27, g - 17 + 3 * k, 54, 2); // прутья в тени
-        for (let i = 0; i < 9; i++)
-            r(c, K1, x - 25 + 6 * i, g - 18, 1, 18); // колья
-        for (let k = 0; k < 6; k++)
-            for (let i = k & 1; i < 10; i += 2) { // прут выходит перед колом
-                const a = Math.max(x - 27, x - 28 + 6 * i);
-                r(c, L2, a, g - 17 + 3 * k, Math.min(x + 26, x - 21 + 6 * i) - a, 1);
-            }
-        r(c, BO, x - 27, g - 18, 1, 18);
-        r(c, AS, x + 26, g - 18, 1, 18);
-        mass(c, x, g - 16, [[30, 30, 3], [28, 28, 3], [25, 25, 3], [22, 22, 3], [19, 19, 3],
-            [16, 16, 3], [13, 13, 3], [10, 10, 3], [7, 7, 3], [4, 4, 3], [2, 2, 2]], K3, BO, AS); // солома
-        r(c, K2, x - 22, g - 28, 44, 1);
-        r(c, K2, x - 13, g - 37, 26, 1); // пояса обвязки
-        for (let i = 0; i < 7; i++)
-            r(c, K3, x - 29 + 9 * i, g - 16, 3, 1 + (i % 2)); // бахрома
-        const s = (t / 30 | 0) % 2;
-        r(c, AS, x + 1 + s, g - 50, 1, 1);
-        r(c, AS, x - s, g - 52, 1, 1); // дым сквозь солому
-        r(c, K1, x - 6, g - 19, 12, 19);
-        r(c, L2, x - 6, g - 19, 12, 1); // косяки, притолока
-        r(c, NI, x - 5, g - 18, 10, 18); // дверь 10×18
-        r(c, CA, x - 1, g - 4 + ((t / 18 | 0) % 2), 2, 3); // очаг в глубине
-        r(c, L2, x + 17, g - 8, 4, 5);
-        r(c, L2, x + 18, g - 9, 2, 1); // амфора
-        r(c, L2, x + 18, g - 3, 2, 2);
-        r(c, AS, x + 20, g - 8, 1, 5);
+    // Кельтский круглый дом: низкий плетень в плечо, над ним крутой конус соломы
+    // со свесом и бахромой, пояса обвязки дугой; дверь в рост под притолокой,
+    // в глубине очаг; у стены привозная амфора. Дым сквозь кровлю — разметкой жизни.
+    function roundBody(c, X, G) {
+        const W = 64, H = 54;
+        if (!roundBody.P) {
+            const P = roundBody.P = kit_js_1.plan(W, H);
+            P.box(5, 36, 54, 18, kit_js_1.MAT.WATTLE); // плетень
+            P.poly([[1, 40], [63, 40], [33, 4], [31, 4]], kit_js_1.MAT.THATCH, kit_js_1.FORM.CYL); // конус соломы
+            P.box(26, 35, 12, 19, kit_js_1.MAT.TIMBER);
+            P.cut(27, 36, 10, 18); // косяки, притолока, дверь 10×18
+        }
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, roundBody.P, { seed: 23, chip: 0.04, moss: 0.06 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        for (const yb of [26, 17]) { // пояса обвязки — дугой по конусу
+            const hw = 30 * (yb - 4) / 36;
+            for (let dx = 1 - Math.floor(hw); dx < hw - 1; dx++)
+                px(K2, 32 + dx, yb + Math.round(1.5 * (1 - (dx / hw) ** 2)));
+        }
+        for (const i of [0, 1, 2, 4, 5, 6])
+            px(K3, 3 + 9 * i, 40, 3, 1 + (i % 2)); // бахрома свеса
+        px(L2, 49, 46, 4, 5);
+        px(L2, 50, 45, 2, 1);
+        px(L2, 50, 51, 2, 2);
+        px(AS, 52, 46, 1, 5);
+        px(L2, 48, 46, 1, 2); // амфора
     }
-    // Святилище с черепами (Рокпертюз): три каменных столба по 9, в каждом
-    // ниши под голову с черепами (одна пустая) — череп костью, две глазницы,
-    // челюсть за просветом; одна тяжёлая плита-притолока, на ней большая
-    // каменная птица; за ним дуб священной рощи, омела в кроне точками.
+    function roundLive(c, X, G, t) {
+        r(c, CA, q(X) - 1, q(G) - 4 + ((t / 18 | 0) % 2), 2, 3); // очаг в глубине
+    }
+    // Святилище с черепами (Рокпертюз): три каменных столба, в каждом две ниши под
+    // голову — черепа лицом к дороге, одна ниша пустая; тяжёлая плита-притолока,
+    // на ней большая каменная птица. За ним дуб священной рощи, омела в кроне.
     function skullshrine(c, X, G) {
-        const x = q(X), g = q(G), px = x - 16;
-        const ok = x + 31; // дуб священной рощи
-        r(c, K1, ok - 2, g - 27, 5, 27);
-        r(c, K1, ok - 4, g - 3, 9, 3);
-        r(c, AS, ok + 2, g - 25, 1, 22);
-        r(c, K1, ok - 9, g - 28, 8, 1);
-        r(c, K1, ok - 13, g - 29, 4, 1);
-        r(c, K1, ok + 3, g - 29, 8, 1);
-        r(c, K1, ok + 10, g - 30, 4, 1); // сучья врозь
-        mass(c, ok, g - 29, [[12, 11, 2], [15, 14, 3], [15, 15, 4], [14, 15, 3], [12, 13, 3],
-            [13, 9, 3], [8, 10, 2], [3, 5, 2]], K2, AS, AS); // крона в 30, неровная
-        for (const [mx, my] of [[-8, 41], [-6, 40], [-7, 39], [6, 46], [7, 45], [5, 44], [9, 35], [10, 36]]) {
-            r(c, my % 2 ? L1 : MG, ok + mx, g - my, 1, 1); // омела точками
+        const W = 96, H = 58, ok = 79; // ось дуба — от левого края рамки
+        if (!skullshrine.P) {
+            const P = skullshrine.P = kit_js_1.plan(W, H);
+            P.box(77, 31, 5, 27, kit_js_1.MAT.TIMBER);
+            P.box(75, 55, 9, 3, kit_js_1.MAT.TIMBER); // ствол, комель
+            P.box(70, 30, 8, 1, kit_js_1.MAT.TIMBER);
+            P.box(66, 29, 4, 1, kit_js_1.MAT.TIMBER);
+            P.box(82, 29, 8, 1, kit_js_1.MAT.TIMBER);
+            P.box(89, 28, 4, 1, kit_js_1.MAT.TIMBER);
+            const L = [], R = []; // крона неровная
+            let y = 30;
+            for (const [l, rr, h] of [[12, 11, 2], [15, 14, 3], [15, 15, 4], [14, 15, 3], [12, 13, 3], [13, 9, 3], [8, 10, 2], [3, 5, 2]]) {
+                L.push([ok - l, y - h / 2]);
+                R.push([ok + rr + 1, y - h / 2]);
+                y -= h;
+            }
+            P.poly([[ok - 10, 30], ...L, [ok - 2, y], [ok + 4, y], ...R.reverse(), [ok + 10, 30]], kit_js_1.MAT.MOSS);
+            for (const dx of [2, 28, 54]) { // столбы с нишами
+                P.box(dx, 20, 9, 38, kit_js_1.MAT.ASHLAR);
+                P.cut(dx + 2, 24, 5, 1);
+                P.cut(dx + 1, 25, 7, 8);
+                P.cut(dx + 2, 37, 5, 1);
+                P.cut(dx + 1, 38, 7, 8);
+            }
+            P.box(0, 13, 64, 7, kit_js_1.MAT.ASHLAR); // одна тяжёлая плита
+            // каменная птица во весь рост плиты: тело яйцом, хвост клином, шея вверх, голова с клювом
+            P.poly([[19, 7], [23, 8], [26, 6], [31, 5], [36, 6], [39, 9], [39, 13], [24, 13], [22, 10]], kit_js_1.MAT.BASALT);
+            P.poly([[35, 7], [37, 1], [40, 0], [42, 1], [45, 2], [42, 3], [40, 3], [39, 8]], kit_js_1.MAT.BASALT);
         }
-        for (const dx of [-30, -4, 22]) { // три каменных столба
-            r(c, K3, px + dx, g - 38, 9, 38);
-            r(c, BO, px + dx, g - 38, 1, 38);
-            r(c, AS, px + dx + 8, g - 38, 1, 38);
-        }
-        r(c, K3, px - 32, g - 45, 64, 7);
-        r(c, BO, px - 31, g - 45, 63, 1); // одна тяжёлая плита
-        r(c, K1, px - 32, g - 39, 64, 1);
-        r(c, K1, px - 13, g - 44, 1, 3);
-        r(c, K1, px + 14, g - 43, 1, 2);
-        const niche = (nx, ny, skull) => {
-            r(c, K0, nx + 1, ny, 5, 1);
-            r(c, K0, nx, ny + 1, 7, 8);
-            if (!skull)
-                return;
-            r(c, BO, nx + 2, ny + 2, 3, 1);
-            r(c, BO, nx + 1, ny + 3, 5, 3);
-            r(c, K0, nx + 2, ny + 4, 1, 1);
-            r(c, K0, nx + 4, ny + 4, 1, 1); // глазницы
-            r(c, BO, nx + 2, ny + 7, 3, 1); // челюсть за просветом
-        };
-        for (const dx of [-30, -4, 22]) {
-            niche(px + dx + 1, g - 34, true);
-            niche(px + dx + 1, g - 21, dx !== 22);
-        }
-        r(c, K0, px - 5, g - 51, 11, 6); // птица: тело
-        r(c, K0, px - 9, g - 50, 4, 2); // хвост
-        r(c, K0, px + 4, g - 55, 3, 4); // шея
-        r(c, K0, px + 5, g - 57, 4, 2);
-        r(c, K0, px + 9, g - 56, 2, 1); // голова, клюв
-        r(c, AS, px - 5, g - 51, 9, 1);
-        r(c, AS, px + 5, g - 57, 3, 1);
-        r(c, AS, px + 4, g - 55, 1, 4);
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, skullshrine.P, { seed: 29, moss: 0.12, chip: 0.08, cracks: 3 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        px(K1, 0, 19, 64, 1);
+        px(K1, 19, 14, 1, 3);
+        px(K1, 46, 15, 1, 2); // тень под плитой, трещины
+        px(K0, 27, 9, 7, 1);
+        px(K0, 33, 10, 3, 1);
+        px(K0, 25, 10, 2, 1); // крыло
+        px(AS, 41, 1); // глаз
+        for (const dx of [2, 28, 54])
+            for (const ny of [24, 37]) { // черепа: глазницы, челюсть за просветом
+                if (dx === 54 && ny === 37)
+                    continue;
+                const nx = dx + 1;
+                px(BO, nx + 2, ny + 2, 3, 1);
+                px(BO, nx + 1, ny + 3, 5, 3);
+                px(K0, nx + 2, ny + 4);
+                px(K0, nx + 4, ny + 4);
+                px(BO, nx + 2, ny + 7, 3, 1);
+            }
+        for (const [mx, my] of [[-8, 17], [-6, 18], [-7, 19], [6, 12], [7, 13], [5, 14], [9, 23], [10, 22]])
+            px(my % 2 ? L1 : MG, ok + mx, my); // омела
     }
     // ── СЕВЕР · северные народы ────────────────────────────────────────
     // Каменная ладья: стоячие камни по пологой дуге, к штевням выше, снег на
@@ -7310,140 +7451,194 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             st.sort((a, b) => a.by - b.by); // дальние — раньше
             for (const o of st)
                 P.round(o.bx, o.by - o.h, o.by, o.w, kit_js_1.MAT.GRANITE);
-            // сейд: валун клином на трёх камнях-ножках, левый бок выше
-            P.round(sx - 8, 29, 33, 5, kit_js_1.MAT.GRANITE);
-            P.round(sx, 30, 33, 4, kit_js_1.MAT.GRANITE);
-            P.round(sx + 7, 29, 33, 5, kit_js_1.MAT.GRANITE);
-            P.trap(sx - 12, sx + 11, sx - 7, sx + 2, 14, 29, kit_js_1.MAT.BASALT);
-            P.round(sx - 4, 11, 17, 9, kit_js_1.MAT.BASALT);
+            // сейд: валун шире своей высоты лежит на трёх камнях-ножках, левый бок выше; под ним просвет
+            P.round(sx - 8, 30, 33, 6, kit_js_1.MAT.BASALT);
+            P.round(sx + 1, 31, 33, 4, kit_js_1.MAT.BASALT);
+            P.round(sx + 8, 30, 33, 6, kit_js_1.MAT.BASALT);
+            P.poly([[sx - 13, 30], [sx - 13, 25], [sx - 10, 21], [sx - 4, 19], [sx + 4, 20], [sx + 10, 23], [sx + 13, 27], [sx + 12, 30]], kit_js_1.MAT.GRANITE);
         }
         const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
         kit_js_1.paint(c, X0, Y0, shipstones.P, { seed: 5, snow: 0.55, moss: 0.25, chip: 0.05, ao: 1 });
         r(c, AS, X0 + sx + 1, Y0 + 33, 3, 1);
         r(c, BO, X0 + sx + 2, Y0 + 32, 1, 1); // блюдце, монета
     }
-    // Саамская вежа-коте под дёрном: почти отвесный низ, плоская макушка,
-    // жерди дымника торчат крестом, дверь в рост в дощатой рамке; рядом шест
-    // с рогами, сбоку на ремешке — овальный бубен с кольцом и красной
-    // точкой-городком; молоточек на земле, от порога лыжня.
-    function vezha(c, X, G, t) {
-        const x = q(X), g = q(G), vx = x - 11;
-        const top = mass(c, vx, g, [[20, 20, 6], [20, 20, 6], [19, 19, 5], [17, 17, 5],
-            [15, 15, 4], [12, 12, 3], [9, 9, 3], [5, 5, 2], [2, 2, 1]], K2, L2, AS);
-        r(c, MG, vx - 16, g - 21, 5, 1);
-        r(c, MG, vx + 7, g - 14, 6, 1);
-        r(c, MG, vx - 4, g - 28, 4, 1);
-        r(c, L1, vx - 18, g - 24, 4, 1);
-        r(c, L1, vx - 14, g - 29, 4, 1); // снег на плече
-        r(c, L2, vx - 3, top - 3, 1, 2);
-        r(c, L2, vx - 4, top - 5, 1, 2); // жерди крестом
-        r(c, AS, vx + 2, top - 3, 1, 2);
-        r(c, AS, vx + 3, top - 5, 1, 2);
-        const s = (t / 26 | 0) % 2;
-        r(c, AS, vx + s, top - 7, 1, 1);
-        r(c, AS, vx - 1 + s, top - 9, 1, 1); // дымок
-        r(c, BR2, vx - 5, g - 20, 10, 20);
-        r(c, L2, vx - 5, g - 20, 10, 1); // дверь в рамке
-        r(c, NI, vx - 4, g - 18, 8, 18);
-        r(c, CA, vx + 1, g - 2, 1, 1); // угли сбережены
-        const px = x + 16;
-        r(c, K1, px, g - 48, 2, 48); // шест
-        for (let k = 0; k < 3; k++) { // рога: стволы, концы вверх, отростки
-            r(c, L1, px - 1 - k, g - 49 - k, 1, 1);
-            r(c, L1, px + 2 + k, g - 49 - k, 1, 1);
+    // Вторая ладья (#2) — малая, такие ставили тем, кому плыть недалеко; камни у кормы
+    // светлее прочих (вернулись с фундамента хутора). Сейда нет: подношения — на скамье гребца.
+    function shipstones2(c, X, G) {
+        const W = 92, H = 34, cx = 46;
+        if (!shipstones2.P) {
+            const P = shipstones2.P = kit_js_1.plan(W, H);
+            const cy = 26, A = 15, B = 4, N = 8;
+            for (let y = Math.ceil(cy - B); y <= cy + B; y++) {
+                const k = 1 - ((y - cy) / B) ** 2, hw = A * Math.sqrt(Math.max(0, k)) - 2;
+                if (hw > 0)
+                    P.box(q(cx - hw), y, q(hw * 2), 1, kit_js_1.MAT.MOSS);
+            }
+            const st = [];
+            for (let i = 0; i < N; i++) {
+                const th = Math.PI * 2 * i / N + 0.2, c0 = Math.cos(th), s0 = Math.sin(th), near = s0 > 0;
+                st.push({ bx: cx + A * c0, by: q(cy + B * s0), h: q(3 + (near ? 6 : 5) * Math.abs(c0) ** 4), w: near ? 4 : 3, stern: c0 > 0.6 });
+            }
+            st.sort((a, b) => a.by - b.by);
+            for (const o of st)
+                P.round(o.bx, o.by - o.h, o.by, o.w, o.stern ? kit_js_1.MAT.MARBLE : kit_js_1.MAT.GRANITE);
+            P.box(cx - 2, cy - 2, 5, 2, kit_js_1.MAT.ASHLAR); // скамья гребца
         }
-        r(c, L1, px - 4, g - 56, 1, 5);
-        r(c, L1, px + 5, g - 56, 1, 5);
-        r(c, L1, px - 2, g - 53, 1, 3);
-        r(c, L1, px + 3, g - 53, 1, 3);
-        const o = px + 3, p = g - 34; // бубен, чуть наклонён
-        r(c, K1, px + 2, p - 3, 6, 1);
-        r(c, K1, px + 7, p - 2, 1, 2); // сучок, ремешок
-        r(c, K1, o + 2, p, 7, 6);
-        r(c, K1, o + 1, p + 1, 9, 5);
-        r(c, K1, o + 1, p + 6, 7, 6);
-        r(c, K1, o, p + 6, 9, 5);
-        r(c, L2, o + 2, p + 1, 7, 5);
-        r(c, L2, o + 1, p + 6, 7, 5); // кожа
-        r(c, K1, o + 4, p + 3, 3, 1);
-        r(c, K1, o + 4, p + 8, 3, 1); // кольцо
-        r(c, K1, o + 3, p + 4, 1, 4);
-        r(c, K1, o + 7, p + 4, 1, 4);
-        r(c, CI, o + 5, p + 5, 1, 2); // городок
-        r(c, K1, o + 6, p + 9, 1, 2); // трещина
-        r(c, K1, o - 1, p + 6, 1, 1);
-        r(c, K1, o + 9, p + 6, 1, 1); // концы рукояти
-        r(c, L1, px + 4, g - 3, 1, 1);
-        r(c, L1, px + 4, g - 1, 1, 1);
-        r(c, L1, px + 5, g - 2, 4, 1); // молоточек
-        r(c, L1, x - 30, g - 1, 6, 1);
-        r(c, L1, x + 8, g - 1, 5, 1);
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, shipstones2.P, { seed: 53, snow: 0.5, moss: 0.25, chip: 0.05, ao: 1 });
+        r(c, BO, X0 + cx - 1, Y0 + 23, 1, 1);
+        r(c, AS, X0 + cx + 1, Y0 + 23, 1, 1);
+        r(c, L1, X0 + cx + 2, Y0 + 24, 1, 1); // подношения
+    }
+    // Саамская вежа-коте под дёрном: почти отвесный низ, плоская макушка, жерди
+    // дымника крестом, дверь в рост в дощатой рамке, угли сбережены; рядом шест
+    // с рогами, на ремешке овальный бубен — кожа кругами, красная точка-городок;
+    // молоточек положен, от порога лыжня. Дым — разметкой жизни.
+    function vezha(c, X, G) {
+        const W = 64, H = 58, vx = 21, pl = 48; // ось вежи и шест — от левого края рамки
+        if (!vezha.P) {
+            const P = vezha.P = kit_js_1.plan(W, H);
+            P.poly([[1, 58], [1, 46], [2, 41], [4, 36], [6, 32], [9, 29], [12, 26], [16, 24], [19, 23], [24, 23], [27, 24], [31, 26],
+                [34, 29], [37, 32], [39, 36], [41, 41], [42, 46], [42, 58]], kit_js_1.MAT.MOSS); // дёрн
+            P.box(16, 38, 10, 20, kit_js_1.MAT.BOARD);
+            P.cut(17, 40, 8, 18); // дверь в рамке
+            P.box(pl, 10, 2, 48, kit_js_1.MAT.TIMBER); // шест
+        }
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, vezha.P, { seed: 31, snow: 0.8, chip: 0.03, ao: 1 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        px(L2, vx - 3, 20, 1, 2);
+        px(L2, vx - 4, 18, 1, 2);
+        px(AS, vx + 2, 20, 1, 2);
+        px(AS, vx + 3, 18, 1, 2); // жерди крестом
+        px(CA, vx + 1, 56); // угли сбережены
+        for (let k = 0; k < 3; k++) {
+            px(L1, pl - 1 - k, 9 - k);
+            px(L1, pl + 2 + k, 9 - k);
+        } // рога
+        px(L1, pl - 4, 2, 1, 5);
+        px(L1, pl + 5, 2, 1, 5);
+        px(L1, pl - 2, 5, 1, 3);
+        px(L1, pl + 3, 5, 1, 3);
+        const o = pl + 3, p = 24; // бубен, чуть наклонён
+        px(K1, pl + 2, p - 3, 6, 1);
+        px(K1, pl + 7, p - 2, 1, 2); // сучок, ремешок
+        px(K1, o + 2, p, 7, 6);
+        px(K1, o + 1, p + 1, 9, 5);
+        px(K1, o + 1, p + 6, 7, 6);
+        px(K1, o, p + 6, 9, 5);
+        px(L2, o + 2, p + 1, 7, 5);
+        px(L2, o + 1, p + 6, 7, 5); // кожа
+        px(K1, o + 4, p + 3, 3, 1);
+        px(K1, o + 4, p + 8, 3, 1);
+        px(K1, o + 3, p + 4, 1, 4);
+        px(K1, o + 7, p + 4, 1, 4); // круг
+        px(CI, o + 5, p + 5, 1, 2); // городок
+        px(K1, o + 6, p + 9, 1, 2);
+        px(K1, o - 1, p + 6);
+        px(K1, o + 9, p + 6); // трещина, концы рукояти
+        px(L1, pl + 4, 55);
+        px(L1, pl + 4, 57);
+        px(L1, pl + 5, 56, 4, 1); // молоточек
+        px(L1, 2, 57, 6, 1);
+        px(L1, 40, 57, 5, 1); // лыжня
+    }
+    // Вторая вежа (#2) — каркас без покрышки: жерди сведены вверху, дёрн снят и сложен
+    // рядом пластами травой вниз; в середине очаг из трёх камней, зола свежая, огня нет.
+    function vezha2(c, X, G) {
+        const W = 64, H = 58, vx = 21;
+        if (!vezha2.P) {
+            const P = vezha2.P = kit_js_1.plan(W, H);
+            P.round(vx - 4, 54, 57, 4, kit_js_1.MAT.GRANITE);
+            P.round(vx, 55, 57, 3, kit_js_1.MAT.GRANITE);
+            P.round(vx + 4, 54, 57, 4, kit_js_1.MAT.GRANITE); // очаг
+            for (let k = 0; k < 4; k++) { // пласты дёрна: земля сверху, трава снизу
+                const y = 55 - 3 * k, x0 = 38 + (k & 1) * 2, w = 18 - 2 * k;
+                P.box(x0, y, w, 2, kit_js_1.MAT.MUD);
+                P.box(x0, y + 2, w, 1, kit_js_1.MAT.MOSS);
+            }
+        }
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, vezha2.P, { seed: 57, snow: 0.6, chip: 0.03, ao: 1 });
+        const x = X0 + vx, top = Y0 + 22, g = Y0 + 57;
+        for (const [dx, col] of [[-20, L2], [-13, L2], [-6, L2], [6, AS], [13, AS], [20, AS]])
+            seg(c, col, x + dx, g, x - Math.sign(dx) * 2, top); // жерди сведены
+        r(c, L2, x - 3, top - 3, 1, 3);
+        r(c, AS, x + 2, top - 3, 1, 3); // концы над сводом
+        r(c, AS, x - 2, g - 1, 4, 1);
+        r(c, L1, x - 1, g - 2, 2, 1); // зола свежая
     }
     // ── РАВНИНА · немая степь ──────────────────────────────────────────
-    // Курган — пологий, неровный, с крепидой из неровных камней; на макушке
-    // каменная баба (лица нет, чаша двумя руками). Вдали, в мгле, второй курган.
+    // Курган — пологий, с крепидой из неровных камней; на макушке каменная баба
+    // (лицо выветрено, чаша двумя руками). Вдали, в мгле, второй курган.
     function kurgan(c, X, G) {
-        const x = q(X), g = q(G), kx = x + 10;
-        mass(c, x - 38, g, [[7, 7, 2], [5, 5, 1], [3, 3, 1]], K3, AS, AS); // дальний курган в мгле
-        r(c, AS, x - 38, g - 8, 1, 3);
-        mass(c, kx, g, [[35, 34, 1], [34, 34, 1], [33, 33, 2], [31, 31, 2], [29, 28, 2], [26, 26, 2],
-            [23, 24, 2], [20, 20, 1], [17, 16, 1], [14, 12, 1], [10, 8, 1], [6, 4, 1]], K2, L2, AS);
-        r(c, MG, kx - 24, g - 5, 3, 1);
-        r(c, MG, kx + 16, g - 7, 4, 1);
-        r(c, MG, kx - 8, g - 14, 3, 1);
-        for (const [dx, w, h] of [[-31, 3, 2], [-23, 2, 2], [-12, 3, 1], [1, 2, 2], [11, 3, 2], [24, 2, 1], [30, 3, 2]]) {
-            r(c, AS, kx + dx, g - 1 - h, w, h);
-            r(c, K0, kx + dx, g - 1, w + 1, 1); // крепида
+        const W = 92, H = 36, kx = 56;
+        if (!kurgan.P) {
+            const P = kurgan.P = kit_js_1.plan(W, H);
+            P.poly([[1, 36], [4, 34], [8, 32], [12, 33], [16, 36]], kit_js_1.MAT.MOSS); // дальний курган
+            const m = [];
+            for (let k = 0; k <= 18; k++) {
+                const a = Math.PI * k / 18;
+                m.push([kx + 35 * Math.cos(a) - (k > 9 ? 1 : 0), 36 - 17 * Math.sin(a) ** 0.75]);
+            }
+            P.poly(m, kit_js_1.MAT.MOSS);
+            for (const [dx, w, h] of [[-31, 3, 2], [-23, 2, 2], [-12, 3, 1], [1, 2, 2], [11, 3, 2], [24, 2, 1], [30, 3, 2]])
+                P.round(kx + dx + w / 2, 35 - h, 35, w + 1, kit_js_1.MAT.GRANITE); // крепида
+            P.box(51, 7, 7, 12, kit_js_1.MAT.GRANITE, kit_js_1.FORM.CYL); // каменная баба
+            P.round(54, 1, 6, 5, kit_js_1.MAT.GRANITE);
         }
-        const bx = kx - 2; // каменная баба
-        r(c, AS, bx - 3, g - 29, 7, 12);
-        r(c, AS, bx - 2, g - 34, 5, 5);
-        r(c, AS, bx - 1, g - 35, 3, 1);
-        r(c, L1, bx - 3, g - 29, 1, 12);
-        r(c, L1, bx - 2, g - 34, 1, 5);
-        r(c, K3, bx + 3, g - 29, 1, 12);
-        r(c, K3, bx - 2, g - 27, 1, 4);
-        r(c, K3, bx + 2, g - 27, 1, 4); // руки к чаше
-        r(c, BO, bx - 1, g - 24, 3, 2); // чаша на животе
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, kurgan.P, { seed: 37, chip: 0.05, ao: 1 });
+        r(c, K1, X0 + 52, Y0 + 9, 1, 4);
+        r(c, K1, X0 + 56, Y0 + 9, 1, 4); // руки к чаше
+        r(c, BO, X0 + 52, Y0 + 12, 5, 2);
+        r(c, L2, X0 + 53, Y0 + 14, 3, 1); // чаша цела
     }
-    // Скифская кибитка (по керченским моделям): войлочная башенка выше своей
-    // ширины, купол с тёмным дымником, на низкой платформе; колёса — сплошные
-    // диски; у дышла ярмо. Рядом тёплое кострище — хозяева ушли час назад.
-    function kibitka(c, X, G, t) {
-        const x = q(X), g = q(G), cx = x + 1;
-        r(c, K1, x - 30, g - 10, 13, 1); // дышло
-        r(c, K1, x - 32, g - 12, 6, 1);
-        r(c, K1, x - 32, g - 11, 1, 2);
-        r(c, K1, x - 27, g - 11, 1, 2); // ярмо
-        r(c, K1, x - 17, g - 13, 36, 3);
-        r(c, L2, x - 17, g - 13, 36, 1);
-        r(c, AS, x + 18, g - 13, 1, 3);
-        const top = mass(c, cx, g - 13, [[11, 11, 8], [11, 11, 6], [10, 10, 4], [8, 8, 3],
-            [6, 6, 2], [3, 3, 1]], K2, L2, AS);
-        r(c, NI, cx - 2, top - 1, 4, 2); // дымник
-        r(c, K1, cx + 3, g - 27, 7, 14);
-        r(c, L2, cx + 3, g - 28, 7, 1); // полог опущен
-        r(c, AS, cx + 9, g - 27, 1, 14);
-        r(c, L1, cx + 6, g - 21, 1, 2); // кромка, завязка
-        for (const [dx, dy] of [[-9, -21], [-3, -21], [-6, -30]]) { // олени-аппликации
-            r(c, L2, cx + dx, g + dy, 2, 1);
-            r(c, L2, cx + dx + 1, g + dy + 1, 2, 1);
+    // Скифская кибитка: войлок на дугах — длинный свод на платформе, полог сзади
+    // опущен и завязан, одна аппликация-олень; колёса — сплошные диски из досок;
+    // у дышла ярмо. Рядом тёплое кострище — хозяева отошли час назад.
+    function kibitkaBody(c, X, G) {
+        const W = 64, H = 40;
+        if (!kibitkaBody.P) {
+            const P = kibitkaBody.P = kit_js_1.plan(W, H);
+            P.box(2, 30, 13, 1, kit_js_1.MAT.TIMBER); // дышло
+            P.box(0, 28, 6, 1, kit_js_1.MAT.TIMBER);
+            P.box(0, 29, 1, 2, kit_js_1.MAT.TIMBER);
+            P.box(5, 29, 1, 2, kit_js_1.MAT.TIMBER); // ярмо
+            P.box(15, 27, 36, 3, kit_js_1.MAT.TIMBER); // платформа
+            P.poly([[17, 27], [17, 13], [19, 8], [23, 5], [29, 4], [37, 4], [43, 5], [47, 8], [49, 13], [49, 27]], kit_js_1.MAT.FELT); // войлок на дугах
+            P.box(43, 11, 6, 16, kit_js_1.MAT.FELT); // полог опущен
+            for (const wx of [22, 43]) { // колёса-диски
+                const pts = [];
+                for (let k = 0; k < 16; k++) {
+                    const a = Math.PI * 2 * k / 16;
+                    pts.push([wx + 5.5 * Math.cos(a), 33.5 + 5.5 * Math.sin(a)]);
+                }
+                P.poly(pts, kit_js_1.MAT.TIMBER, kit_js_1.FORM.CYL);
+            }
         }
-        const wheel = (wx) => {
-            r(c, K2, wx - 3, g - 11, 7, 11);
-            r(c, K2, wx - 5, g - 9, 11, 7);
-            r(c, K2, wx - 4, g - 10, 9, 9);
-            r(c, BO, wx - 3, g - 11, 4, 1);
-            r(c, BO, wx - 5, g - 9, 1, 4);
-            r(c, BO, wx - 4, g - 10, 1, 1);
-            r(c, AS, wx + 5, g - 7, 1, 4);
-            r(c, K1, wx + 2, g - 10, 1, 9);
-            r(c, L2, wx - 1, g - 7, 2, 2);
-        };
-        wheel(cx - 11);
-        wheel(cx + 10);
-        r(c, K2, x + 22, g - 2, 9, 2); // кострище
-        r(c, CA, x + 25, g - 3, 2 + ((t / 20 | 0) % 2), 1);
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, kibitkaBody.P, { seed: 41, chip: 0.03, ao: 1 });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        const hoop = kit_js_1.tone(kit_js_1.MAT.FELT, 1);
+        px(hoop, 24, 6, 1, 21);
+        px(hoop, 31, 5, 1, 22);
+        px(hoop, 38, 5, 1, 22); // дуги под войлоком
+        px(L1, 45, 19, 1, 2); // завязка полога
+        for (const [dx, dy, w] of [[3, 0, 1], [5, 0, 1], [7, 0, 1], [3, 1, 5], [0, 2, 2], [3, 2, 1], [1, 3, 6], [2, 4, 1], [4, 4, 1]])
+            px(CI_F, 24 + dx, 16 + dy, w, 1); // олень звериного стиля
+        for (const wx of [22, 43]) {
+            px(K1, wx + 2, 29, 1, 9);
+            px(L2, wx - 1, 33, 2, 2);
+        } // доски диска, ступица
+        px(K3, 54, 38, 9, 2);
+        px(AS, 54, 38, 2, 1);
+        px(AS, 58, 38, 2, 1);
+        px(AS, 61, 38, 2, 1); // камни кострища
+    }
+    function kibitkaLive(c, X, G, t) {
+        const x = q(X), g = q(G);
+        r(c, CA, x + 25, g - 3, 2 + ((t / 20 | 0) % 2), 1); // угли тлеют
         r(c, AS, x + 26, g - 6 - ((t / 22 | 0) % 3), 1, 1);
     }
     // ── УТВАРЬ ДВОРОВ ──────────────────────────────────────────────────
@@ -7752,57 +7947,72 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             r(c, K3, x + fx, g - 6, 2, 2); // бахрома
     }
     // ── ДОМИНАНТА · юг ─────────────────────────────────────────────────
-    // Зиккурат Этеменанки (Вавилон, Набопаласар и Навуходоносор II): шесть
-    // уступов сырцовой массы, пояса камышовых циновок, ниши-лопатки по нижнему
-    // ярусу; главная лестница с юга в лоб, у подножия ворота в рост; выше —
-    // узкий марш до храма. Наверху храм с зубцами, в дверях — светильник.
-    function etemenanki(c, X, G, t) {
-        const x = q(X), g = q(G);
-        const T = [[74, 32], [60, 26], [48, 22], [38, 18], [29, 15], [21, 13]];
-        const top = mass(c, x, g, T.map(([w, h]) => [w, w, h]), K2, L2, AS);
-        let y = g;
-        for (let i = 0; i < T.length; i++) { // пояса циновок, тень под уступом
-            const [w, h] = T[i];
-            y -= h;
-            r(c, K1, x - w, y + q(h / 2), w * 2, 1);
-            if (i < T.length - 1)
-                r(c, K0, x - w, y + 1, w * 2, 1);
+    // Зиккурат Этеменанки (Вавилон, Набопаласар и Навуходоносор II): шесть уступов
+    // сырцовой массы почти отвесными стенами, лопатки ритмом, пояса камышовых циновок
+    // тёмными швами. С юга три лестницы: главная в лоб до второго уступа, у подножия
+    // ворота в рост; две боковые — вдоль фаса до первого уступа (их, по раскопкам,
+    // считают доходившими до половины высоты). Выше — узкий марш до храма с зубцами
+    // ступенями; в дверях светильник.
+    function etemBody(c, X, G) {
+        const W = 150, H = 150, cx = 75;
+        if (!etemBody.P) {
+            const P = etemBody.P = kit_js_1.plan(W, H);
+            const T = [[74, 32], [60, 26], [48, 22], [38, 18], [29, 15], [21, 13]];
+            let b = H;
+            const tops = [];
+            for (const [w, h] of T) {
+                P.trap(cx - w, cx + w - 1, cx - w + 1, cx + w - 2, b - h, b - 1, kit_js_1.MAT.MUD);
+                tops.push([b - h, b, w]);
+                b -= h;
+            }
+            for (const [i, step, pw] of [[0, 12, 3], [1, 10, 2], [2, 10, 2]]) { // лопатки
+                const [top, bot, w] = tops[i];
+                for (let k = -w + 6; k <= w - 6; k += step)
+                    if (Math.abs(k) > 12)
+                        P.box(cx + k - 1, top + 2, pw, bot - top - 2, kit_js_1.MAT.MUD);
+            }
+            for (const [top, bot, w] of tops)
+                for (let y = top + 4; y < bot - 2; y += 7)
+                    P.cut(cx - w + 2, y, 2 * w - 4, 1); // циновки
+            P.poly([[8, 150], [18, 150], [64, 121], [64, 113]], kit_js_1.MAT.BRICK); // боковые лестницы
+            P.poly([[142, 150], [132, 150], [86, 121], [86, 113]], kit_js_1.MAT.BRICK);
+            P.box(72, 24, 6, 68, kit_js_1.MAT.BRICK); // узкий марш до храма
+            P.box(64, 90, 2, 60, kit_js_1.MAT.BRICK);
+            P.box(84, 90, 2, 60, kit_js_1.MAT.BRICK); // главная: парапеты
+            P.box(66, 92, 18, 58, kit_js_1.MAT.BRICK);
+            P.box(63, 124, 24, 26, kit_js_1.MAT.BRICK); // ворота у подножия
+            for (const o of [63, 69, 75, 81]) {
+                P.box(o, 122, 5, 2, kit_js_1.MAT.BRICK);
+                P.box(o + 1, 121, 3, 1, kit_js_1.MAT.BRICK);
+            }
+            P.cut(71, 129, 8, 21);
+            P.cut(72, 128, 6, 1);
+            P.box(61, 5, 29, 19, kit_js_1.MAT.BRICK); // храм наверху
+            P.box(65, 10, 1, 14, kit_js_1.MAT.BRICK);
+            P.box(84, 10, 1, 14, kit_js_1.MAT.BRICK);
+            for (const o of [61, 67, 73, 79, 85]) {
+                P.box(o, 3, 4, 2, kit_js_1.MAT.BRICK);
+                P.box(o + 1, 2, 2, 1, kit_js_1.MAT.BRICK);
+            } // зубцы ступенями
+            P.cut(72, 12, 6, 12); // дверь
         }
-        for (let k = -66; k <= 66; k += 12)
-            if (Math.abs(k) > 12)
-                r(c, K3, x + k, g - 30, 3, 30); // лопатки
-        r(c, K3, x - 9, g - 58, 18, 58); // главная лестница
-        r(c, L2, x - 9, g - 58, 1, 58);
-        r(c, AS, x + 8, g - 58, 1, 58);
-        for (let s = g - 26; s > g - 58; s -= 3)
-            r(c, K1, x - 8, s, 16, 1);
-        r(c, K1, x - 12, g - 26, 24, 26); // ворота у подножия
-        r(c, L2, x - 12, g - 26, 1, 26);
-        r(c, AS, x + 11, g - 26, 1, 26);
-        r(c, L2, x - 12, g - 27, 24, 1);
-        for (const o of [-12, -6, 0, 6])
-            r(c, K1, x + o + 1, g - 29, 4, 2);
-        r(c, NI, x - 4, g - 21, 8, 21);
-        r(c, NI, x - 3, g - 22, 6, 1);
-        const m0 = g - 58, m1 = top; // узкий марш выше
-        r(c, K3, x - 3, m1, 6, m0 - m1);
-        r(c, L2, x - 3, m1, 1, m0 - m1);
-        for (let s = m0 - 3; s > m1; s -= 3)
-            r(c, K1, x - 2, s, 4, 1);
-        // храм наверху: сырец под зубцами, дверь, светильник
-        const tb = top;
-        r(c, AS, x - 14, tb - 19, 29, 19);
-        r(c, L2, x - 15, tb - 19, 29, 19);
-        r(c, K3, x - 14, tb - 18, 28, 18);
-        for (const o of [-14, -8, -2, 4, 10]) {
-            r(c, K3, x + o, tb - 22, 4, 3);
-            r(c, L2, x + o, tb - 22, 4, 1);
+        const X0 = q(X) - (W >> 1), Y0 = q(G) - H;
+        kit_js_1.paint(c, X0, Y0, etemBody.P, { seed: 43, chip: 0.06, cracks: 6,
+            drips: [[20, 119, 8], [37, 121, 6], [110, 119, 9], [128, 120, 5], [30, 93, 6], [118, 94, 7], [45, 71, 5], [103, 72, 6]] });
+        const px = (col, dx, dy, w = 1, h = 1) => r(c, col, X0 + dx, Y0 + dy, w, h);
+        for (let y = 95; y < 121; y += 3)
+            px(K1, 67, y, 16, 1); // ступени главной
+        for (let y = 27; y < 91; y += 3)
+            px(K1, 73, y, 4, 1); // ступени марша
+        for (let x = 15; x < 63; x += 3) { // ступени боковых
+            const y = Math.round(150 - (x - 8) * 37 / 56) + 2;
+            px(K1, x, y, 1, 2);
+            px(K1, 149 - x, y, 1, 2);
         }
-        r(c, K2, x - 10, tb - 14, 1, 14);
-        r(c, K2, x + 9, tb - 14, 1, 14);
-        r(c, NI, x - 3, tb - 12, 6, 12);
-        const f = ((t || 0) / 16 | 0) % 3;
-        r(c, CA, x - 2, tb - 6 + (f === 1 ? 1 : 0), 4, 4 - (f === 1 ? 1 : 0));
+    }
+    function etemLive(c, X, G, t) {
+        const x = q(X), tb = q(G) - 126, f = ((t || 0) / 16 | 0) % 3;
+        r(c, CA, x - 2, tb - 6 + (f === 1 ? 1 : 0), 4, 4 - (f === 1 ? 1 : 0)); // светильник в дверях
         r(c, CA, x - 1 + (f === 2 ? 1 : 0), tb - 8, 2, 2);
     }
     // ── ФАСАДЫ ТАБЛИЧЕК 18×30 ──────────────────────────────────────────
@@ -7905,9 +8115,15 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
             L1 = '#c8b89a', L2 = '#b0a284';
             CI_F = '#7e3629'; // киноварь выцвела (крылатый диск)
             q = Math.round;
-            // нарисованы набором (kit.js) — неподвижны и от места не зависят: запекаются без пробы
-            for (const f of [pylon, doric, shipstones])
+            pass = split(passBody, passLive);
+            roundhouse = split(roundBody, roundLive);
+            kibitka = split(kibitkaBody, kibitkaLive);
+            // нарисованы набором (kit.js) — неподвижны и от места не зависят: запекаются без пробы;
+            // у заставы, круглого дома, кибитки и зиккурата тело запекается, огонь — поверх (split).
+            // Второй экземпляр вида в мире (#2) — свой рисунок по своему осмотру (draw2), своя жизнь (life2)
+            for (const f of [pylon, doric, shipstones, stupa, skullshrine, vezha, kurgan, pylon2, doric2, shipstones2, vezha2, pass2])
                 f.static = true;
+            etemenanki = split(etemBody, etemLive);
             exports_30("ARCH", ARCH = {
                 landmark: {
                     name: 'зиккурат Этеменанки', side: 'south', w: 150, h: 150,
@@ -7916,11 +8132,11 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
                     life: { birds: [[-72, -63, -32]] },
                 },
                 south: [
-                    { name: 'пилон с обелиском', w: 96, h: 88, draw: pylon, life: { flag: [[25, -88, 5, 'K']] } },
-                    { name: 'дорический храм', w: 92, h: 76, draw: doric },
+                    { name: 'пилон с обелиском', w: 96, h: 88, draw: pylon, draw2: pylon2, life: { flag: [[25, -88, 5, 'K']] } },
+                    { name: 'дорический храм', w: 92, h: 76, draw: doric, draw2: doric2 },
                 ],
                 east: [
-                    { name: 'застава на перевале', w: 96, h: 84, draw: pass },
+                    { name: 'застава на перевале', w: 96, h: 84, draw: pass, draw2: pass2 },
                     { name: 'ступа', w: 96, h: 58, draw: stupa },
                 ],
                 west: [
@@ -7928,8 +8144,8 @@ System.register("sprites/arch/axial", ["world/hang", "sprites/arch/kit"], functi
                     { name: 'святилище с черепами', w: 96, h: 58, draw: skullshrine, life: { birds: [[-3, 12, -44]] } },
                 ],
                 north: [
-                    { name: 'каменная ладья и сейд', w: 92, h: 34, draw: shipstones },
-                    { name: 'вежа с бубном', w: 64, h: 58, draw: vezha, life: { smoke: [[-11, -36]] } },
+                    { name: 'каменная ладья и сейд', w: 92, h: 34, draw: shipstones, draw2: shipstones2 },
+                    { name: 'вежа с бубном', w: 64, h: 58, draw: vezha, life: { smoke: [[-11, -36]] }, draw2: vezha2, life2: {} },
                 ],
                 plain: [
                     { name: 'курган с каменной бабой', w: 92, h: 36, draw: kurgan, life: { birds: [[-6, -2, -15]] } },
@@ -20098,7 +20314,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                 idx.push(buildings.length);
                 const key = archKey(seg.id, side, m.kind.name), k = (nth.get(key) || 0) + 1;
                 nth.set(key, k);
-                buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: m.kind.draw, name: m.kind.name,
+                buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: (k > 1 && m.kind.draw2) || m.kind.draw, name: m.kind.name,
                     ring: n, side, ens: id, nth: k, look: own(arch_looks_js_1.ARCH_LOOKS, seg.id, side, m.kind.name, k) || null });
             }
             ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });
@@ -20195,7 +20411,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
             placeLandmarks('plain');
         }
         // зеркал нет (слово автора 25.10, weave/ARCH_PLAN.md этап 2): свет у всех слева, повтор вида —
-        // свой рисунок #2 и своё зерно износа, а не отражение
+        // свой рисунок #2 (kind.draw2, по осмотру ключ#2) и своё зерно износа, а не отражение
         for (const b of buildings)
             b.flip = false;
         return { buildings, ensembles };
@@ -20234,7 +20450,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                 look: d.look || d.name,
                 archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
                 archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip, archNth: d.nth || 1,
-                archLife: (d.kind && d.kind.life) || null,
+                archLife: (d.kind && ((d.nth > 1 && d.kind.life2) || d.kind.life)) || null, // у второго — своя (draw2/life2)
                 ...(around ? { useAction: around } : {}),
                 ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
                 // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
@@ -50310,13 +50526,19 @@ System.register("render/archbake", ["world/hang", "world/mechanisms"], function 
         return { log: log.join(';'), touched: hang_js_9.hangTouches() !== h0 || mechanisms_js_5.mechTouches() !== m0 };
     }
     // живое ли и одинаков ли рисунок на разных местах. Рисунок набора (kit.js) объявляет себя
-    // сам — draw.static: неподвижен и от места не зависит; пробу (тысячи вызовов) пропускаем
+    // сам — draw.static: неподвижен и от места не зависит; пробу (тысячи вызовов) пропускаем.
+    // Вид из двух слоёв — draw.body (тело набором, неподвижно) и draw.live (огонь, пар): тело
+    // запекается, живое рисуется поверх каждый кадр
     function kindOf(draw, x, gy) {
         let k = KIND.get(draw);
         if (k)
             return k;
         if (draw.static === true) {
             KIND.set(draw, k = { live: false, shared: true });
+            return k;
+        }
+        if (draw.body && draw.live && draw.body.static === true) {
+            KIND.set(draw, k = { live: false, shared: true, split: true });
             return k;
         }
         KIND.set(draw, k = probeKind(draw, x, gy));
@@ -50350,7 +50572,7 @@ System.register("render/archbake", ["world/hang", "world/mechanisms"], function 
         const cx = W >> 1, gy = H - 2; // где в холсте x и земля
         g.imageSmoothingEnabled = false;
         g.translate(cx - Math.round(loc.archX), gy - Math.round(loc.archGy)); // рисуем на настоящем месте — сдвигом холста
-        loc.archDraw(g, loc.archX, loc.archGy, 0);
+        (loc.archDraw.body || loc.archDraw)(g, loc.archX, loc.archGy, 0);
         return { c, cx, gy };
     }
     // нарисовать постройку: запечённой — если неподвижна и холст есть, иначе живой
@@ -50401,6 +50623,8 @@ System.register("render/archbake", ["world/hang", "world/mechanisms"], function 
             return false;
         }
         ctx.drawImage(b.c, Math.round(loc.archX) - b.cx, Math.round(loc.archGy) - b.gy);
+        if (k.split)
+            draw.live(ctx, loc.archX, loc.archGy, t);
         return true;
     }
     exports_139("drawArch", drawArch);
@@ -50431,7 +50655,7 @@ System.register("render/archbake", ["world/hang", "world/mechanisms"], function 
             nid = 0, budget = BAKE_PER_FRAME, spent = 0, frameT = null;
             idOf = f => { let n = IDS.get(f); if (n === undefined)
                 IDS.set(f, n = ++nid); return n; };
-            exports_139("_bakeStats", _bakeStats = () => ({ kinds: KIND.size, live: [...KIND.values()].filter(k => k.live).length, baked: BAKED.size }));
+            exports_139("_bakeStats", _bakeStats = () => ({ kinds: KIND.size, live: [...KIND.values()].filter(k => k.live).length, split: [...KIND.values()].filter(k => k.split).length, baked: BAKED.size }));
         }
     };
 });

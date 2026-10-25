@@ -261,7 +261,7 @@ export function buildEnsembles(signs = []) {
       idx.push(buildings.length);
       const key = archKey(seg.id, side, m.kind.name), k = (nth.get(key) || 0) + 1;
       nth.set(key, k);
-      buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: m.kind.draw, name: m.kind.name,
+      buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: (k > 1 && m.kind.draw2) || m.kind.draw, name: m.kind.name,
         ring: n, side, ens: id, nth: k, look: own(ARCH_LOOKS, seg.id, side, m.kind.name, k) || null });
     }
     ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });
@@ -348,7 +348,7 @@ export function buildEnsembles(signs = []) {
     placeLandmarks('plain');
   }
   // зеркал нет (слово автора 25.10, weave/ARCH_PLAN.md этап 2): свет у всех слева, повтор вида —
-  // свой рисунок #2 и своё зерно износа, а не отражение
+  // свой рисунок #2 (kind.draw2, по осмотру ключ#2) и своё зерно износа, а не отражение
   for (const b of buildings) b.flip = false;
   return { buildings, ensembles };
 }
@@ -384,7 +384,7 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip, archNth: d.nth || 1,
-      archLife: (d.kind && d.kind.life) || null,
+      archLife: (d.kind && ((d.nth > 1 && d.kind.life2) || d.kind.life)) || null,   // у второго — своя (draw2/life2)
       ...(around ? { useAction: around } : {}),
       ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
       // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
