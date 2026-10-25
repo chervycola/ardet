@@ -447,6 +447,55 @@ min(420px, 88vw)). Отсюда **правило композиции заста
 > letters, no signature, no watermark, no border, no frame. Not glossy, not
 > 3D, not vector, not cartoon, no metallic gold, no blue, no purple, no green.
 
+## 13. Портреты в игре и Лунный с цифрой · 25.10
+
+В игре сейчас (`assets/portraits/`, 4:5, 1024×1280):
+- `sol.png` — №4 из §12;
+- `jester.png` — картина автора по короткому промту ниже: белое лицо,
+  красные губы, колпак с тремя рогами, ромбы, горящий нимб, кинжал остриём
+  вниз, дымящаяся пика, костёр снизу;
+- `nocturnal.png` — картина автора, Лунный «немного кибернетически-цифровой,
+  несильно» (слово автора): дорожки платы по ободу серпа, нити уходят
+  в пиксели, песок сыплется квадратными зёрнами.
+
+Шут (короткий промт, референс — Сол №4):
+> Match the style of the reference image, not its composition or background.
+> Etched portrait print of the Jester at the sacrificial bonfire: chalk-white
+> face, red #C23B2B lips in a fixed smile, a small cross in his left eye
+> socket, three-horned cap with bells, harlequin diamond doublet, a burning
+> cinnabar halo with candle-flame tongues. Dagger point-down in his right
+> hand, a smoking pike in his left. Amber bonfire glow from below, near-black
+> void behind. Waist-up, one clear silhouette, Doré-dense hatching, heavy
+> paper grain, solemn. No text, no frame, not glossy, not cartoon.
+
+Лунный с цифрой — семь проб (11 кр.), промт один:
+> Match the drawing technique of the reference image, not its composition or
+> colors. Etched portrait print of the Nocturnal, the lunar puppeteer, with a
+> faint touch of the machine: instead of a head, a crescent of darkened
+> silver with a face with closed eyes in its curve, its rim etched with fine
+> circuit traces; a starfield cloak, the four-star constellation on the chest
+> joined by thin straight lines; silver threads rise from his raised fingers
+> and break into tiny square pixels high in the dark; black sand falls from
+> his lowered palm as small square grains. Cold moonlight only, no warm
+> light, near-black void behind. Waist-up, the figure fills the frame, the
+> crescent head in the upper three-fifths, one clear silhouette, Doré-dense
+> hatching in bone and ash grey, heavy paper grain, solemn. No text, no
+> numbers, no frame, no neon, no blue, no robot armor, not glossy.
+
+| № | сетка | референс | итог |
+|---|---|---|---|
+| 1 | GPT Image 2 | Сол `479004eb` | ушёл в сепию, дорожки платы не видны |
+| 2 | Seedream 5 Pro | Сол | ★ `67203a58`: самый чистый и читаемый в 72×90; но нити идут вниз, как у марионетки, пиксели едва видны |
+| 3 | Nano Banana 2.1 | Сол | ★ `c1071e9c`: ближе всех к брифу по цифре (нити в пиксели, песок квадратами), но внизу светлый блок |
+| 4 | GPT Image 2 | 2а `41536d16` | плата лабиринтом, но кадр слишком тёмный |
+| 5 | Seedream 5 Pro | 2а | `775d85e7`: свечение по серпу, драматично, цифры мало |
+| 6 | Nano Banana 2.1 | 2а | запекла бумажную рамку — брак |
+| 7 | GPT Image 2 | Сол + зелёный блик | зелёный проигнорирован, сепия |
+
+Выводы: GPT с референсом Сола тянет тёплую сепию — для холодных фигур
+бери Seedream или Nano Banana. Картина автора пока сильнее всех по балансу,
+поэтому в игре остаётся она.
+
 ---
 
 ## Промт сцены «Поезд издалека с путником» (вер. 1, 26.07)
