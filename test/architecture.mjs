@@ -539,7 +539,9 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
         if (l.archLight && Math.abs(s.dx - (l.archLight.dx || 0)) < 6 && Math.abs(s.dy - l.archLight.dy) < 6) continue;
         src.push({ x: l.archX + (l.archFlip ? -s.dx : s.dx), y: l.archGy + s.dy, who: l.name });
       }
-      if (l.archLight) src.push({ x: l.archX + (l.archLight.dx || 0), y: l.archGy + (l.archLight.dy || 0), who: l.name + ' (огонь доминанты)' });
+      // огонь доминанты — тёплый, если цвет не задан (свеча) или красный перевешивает синий; холодный свет (кость) — не в счёт
+      const lc = l.archLight && l.archLight.color;
+      if (l.archLight && (!lc || lc[0] > lc[2] + 80)) src.push({ x: l.archX + (l.archLight.dx || 0), y: l.archGy + (l.archLight.dy || 0), who: l.name + ' (огонь доминанты)' });
     }
     for (const p of archProps) if (p.kindDraw) for (const s of spotsOf(p.kindDraw, p.w, p.h)) src.push({ x: p.x + s.dx, y: p.gy + s.dy, who: p.name || 'утварь' });
     // свет мест (газовый фонарь у решётки, костры стоянок) — тёплый, если красный перевешивает синий;
@@ -569,10 +571,13 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   const arch = locations.filter(l => l.archDraw);
   test('запекание: живое узнаётся само — огни, экраны, часы, механизмы и подвесы рисуются каждый кадр', () => {
     B._resetBake();
-    const kind = new Map();
-    for (const l of arch) kind.set(l.name, B.kindOf(l.archDraw, l.archX, l.archGy));
-    for (const n of ['стеклянная башня', 'серверный ангар', 'вокзал двух часов', 'Останкинская башня', 'долгострой с краном'])
-      assert(kind.get(n) && kind.get(n).live, `${n}: живое запеклось бы`);
+    const kind = new Map(), drawOf = new Map();
+    for (const l of arch) { kind.set(l.name, B.kindOf(l.archDraw, l.archX, l.archGy)); if (l.archNth === 1) drawOf.set(l.name, l); }
+    // живое — либо весь вид, либо его живой слой поверх запечённого тела (draw.live)
+    for (const n of ['стеклянная башня', 'серверный ангар', 'вокзал двух часов', 'Останкинская башня', 'долгострой с краном']) {
+      const l = drawOf.get(n), k = l && B.kindOf(l.archDraw, l.archX, l.archGy);
+      assert(k && (k.live || (k.split && B.probeKind(l.archDraw.live, l.archX, l.archGy).live)), `${n}: живое запеклось бы`);
+    }
     const stat = [...kind.values()].filter(k => !k.live).length;
     assert(stat >= 50, `неподвижных видов мало: ${stat}`);
     assert([...kind.values()].every(k => k.live || k.shared !== undefined), 'вид без решения');
@@ -711,10 +716,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   const BK = await imp('render/archbake.js');
   // кольца, перерисованные набором целиком (ARCH_PLAN, этап 5): сколько видов и сколько с огнём поверх
-  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4] };
+  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4], now: [11, 6] };
   test('набор: перерисованные кольца — все виды и доминанта набором; тело неподвижно (запекается), живое — слоем поверх; всё в рамке', () => {
    for (const [ring, [nKinds, nSplit]] of Object.entries(KIT_RINGS)) {
-    const A = ARCH_BY_RING[ring], kinds = [A.landmark, ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
+    const A = ARCH_BY_RING[ring], kinds = [...[].concat(A.landmark), ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
     eq(kinds.length, nKinds, `видов ${ring}`);
     let split = 0;
     for (const k of kinds) {
@@ -741,24 +746,32 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   test('свой рисунок #2/#3: повтор вида — по своему осмотру (draw2, draw3), набором и в рамке; жизнь — своя', () => {
    const WANT = { 1: ['вежа с бубном', 'дорический храм', 'застава на перевале', 'каменная ладья и сейд', 'пилон с обелиском'],
-     2: ['Пантеон', 'акведук', 'болото жертв', 'брох', 'пещерный храм-чайтья', 'сад Эпикура'] };
+     2: ['Пантеон', 'акведук', 'болото жертв', 'брох', 'пещерный храм-чайтья', 'сад Эпикура'],
+     9: ['библиотека у моря', 'игла над пустыней', 'серверный ангар', 'стеклянная башня', 'стеклянная пагода'] };
+   const RING = { 1: 'axial', 2: 'porticoes', 9: 'now' };
    for (const [ringN, names] of Object.entries(WANT)) {
-    const ring = ringN === '1' ? 'axial' : 'porticoes';
+    const ring = RING[ringN];
     const A = ARCH_BY_RING[ring], kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);
     const two = kinds.filter(k => k.draw2);
     eq(two.map(k => k.name).sort().join(), names.slice().sort().join(), `${ring}: с рисунком #2`);
     for (const k of two) for (const dn of ['draw2', 'draw3']) {
       const d = k[dn];
       if (!d) continue;
-      eq(d.static, true, `${k.name} ${dn}: не объявлен неподвижным`);
-      const pk = BK.probeKind(d, 500, 500);
+      const body = d.body || d;                                    // с живым поверх — тело неподвижно, огонь слоем
+      eq(body.static, true, `${k.name} ${dn}: не объявлен неподвижным`);
+      const pk = BK.probeKind(body, 500, 500);
       eq(pk.live, false, `${k.name} ${dn}: живой`); eq(pk.shared, true, `${k.name} ${dn}: зависит от места`);
-      const c = rec(); d(c, 500, 500, 0);
-      assert(c.log.length > 50, `${k.name} ${dn}: пуст`);
-      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${k.name} ${dn}: вне рамки ${x},${y} ${w}×${h}`);
+      if (d.body) assert(typeof d.live === 'function', `${k.name} ${dn}: нет живого слоя`);
+      for (const t of [0, 19, 40, 77]) {
+        const c = rec(); d(c, 500, 500, t);
+        assert(c.log.length > 50, `${k.name} ${dn}: пуст`);
+        for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${k.name} ${dn}: вне рамки ${x},${y} ${w}×${h} (t=${t})`);
+      }
     }
-    for (const k of two) for (const l of locations.filter(l => l.archRing === +ringN && l.name === k.name))
+    for (const k of two) for (const l of locations.filter(l => l.archRing === +ringN && l.name === k.name)) {
       eq(l.archDraw, (l.archNth > 2 && k.draw3) || (l.archNth > 1 && k.draw2) || k.draw, `${k.name} №${l.archNth}: не свой рисунок`);
+      eq(l.archLife, (l.archNth > 2 && k.life3) || (l.archNth > 1 && k.life2) || k.life || null, `${k.name} №${l.archNth}: не своя жизнь`);
+    }
    }
     const v2 = locations.find(l => l.archRing === 1 && l.name === 'вежа с бубном' && l.archNth > 1);
     assert(v2 && !(v2.archLife && v2.archLife.smoke), 'вежа без покрышки дымит');

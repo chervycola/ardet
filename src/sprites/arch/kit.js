@@ -47,6 +47,12 @@ export const MAT = {
   SAND: 24,       // песок: барханы, рябь ветра наискось
   BAKED: 25,      // обожжённый кирпич светлый (Вавилон): облицовка по сырцу
   DRYSTONE: 26,   // плитняк сухой кладки: камни в точку высотой и 3–7 длиной, швы вразбежку (брохи)
+  CURTAIN: 27,    // навесная стена: серебристое стекло в импостах, пояса перекрытий светлее (небоскрёбы)
+  TINT: 28,       // стекло в цвет мглы, пояса этажей (Тайбэй)
+  PANEL: 29,      // сборная железобетонная панель: гладкая, вертикальные стыки (панельный дом)
+  STEEL: 30,      // крашеная сталь, светлая и гладкая (решётка башни, диагональная сетка)
+  DIAGRID: 31,    // стекло в диагональной сетке светлой стали («огурец»)
+  ROCK: 32,       // скала: глыбы косыми пластами, трещины — без кладки (горы)
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -77,6 +83,12 @@ RAMP[MAT.DRYSTONE] = ramp(mix(mix(S0, BO, 0.24), MG, 0.14));
 RAMP[MAT.BAKED] = ramp(mix(mix(SEP, BO, 0.38), KV, 0.08), mix(BO, KV, 0.08));
 RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
 RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
+RAMP[MAT.CURTAIN] = ramp(mix(AS, NI, 0.34), mix(BO, AS, 0.2));
+RAMP[MAT.TINT] = ramp(mix(MG, NI, 0.22), mix(MG, BO, 0.6));
+RAMP[MAT.PANEL] = ramp(mix(mix(AS, NI, 0.36), BO, 0.06));
+RAMP[MAT.STEEL] = ramp(mix(BO, AS, 0.55));
+RAMP[MAT.DIAGRID] = ramp(mix(AS, NI, 0.5), mix(BO, AS, 0.3));
+RAMP[MAT.ROCK] = ramp(mix(mix(NI, S0, 0.62), SEP, 0.12));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -141,6 +153,33 @@ function tex(mat, x, y, s) {
     }
     case MAT.GLASS: return ((x + Math.floor(y * 0.6)) % 23 + 23) % 23 < 2 ? 3 : 0;   // полоса неба наискось
     case MAT.IRON: return x % 2 ? 1 : -1;
+    case MAT.CURTAIN: {
+      if (x % 3 === 2) return 1;                                        // стальное ребро ловит свет
+      if (((x + Math.floor(y * 0.6)) % 23 + 23) % 23 === 0) return 1;  // полоса неба наискось
+      return y % 8 === 7 && hh(x >> 2, y >> 3, s + 39) < 0.5 ? -1 : 0;  // пояс техэтажа местами
+    }
+    case MAT.TINT: {
+      if (y % 4 === 3) return -1;                                       // пояс этажа
+      if (((x + Math.floor(y * 0.6)) % 19 + 19) % 19 === 0) return 1;  // полоса неба наискось
+      return x % 4 === 0 ? 1 : 0;                                       // стойки витража
+    }
+    case MAT.PANEL: {
+      if (x % 8 === 7) return -1;                                       // вертикальный стык панелей
+      const v = hh(x >> 3, y, s + 41);
+      return v < 0.05 ? -1 : 0;
+    }
+    case MAT.STEEL: return hh(x, y, s + 43) < 0.03 ? -1 : 0;
+    case MAT.ROCK: {                                                    // глыба — косой параллелограмм, ряды вразбежку
+      const r = Math.floor(y / 3), u = x + (y >> 1) + Math.floor(hh(r, 0, s + 45) * 5), k = Math.floor(u / 5);
+      if (u % 5 === 0 && hh(k, r, s + 47) < 0.45) return -2;          // трещина
+      if (y % 3 === 0 && hh(k, r, s + 49) < 0.3) return 1;            // кромка пласта к свету
+      const v = hh(k, r, s + 51);
+      return v < 0.28 ? -1 : v > 0.86 ? 1 : 0;
+    }
+    case MAT.DIAGRID: {
+      if ((x + y) % 6 === 0 || ((x - y) % 6 + 6) % 6 === 0) return 2;  // сетка стали
+      return ((x + Math.floor(y * 0.6)) % 23 + 23) % 23 < 2 ? 1 : 0;
+    }
     case MAT.DARK: return 0;
     case MAT.MUD: {
       const c = Math.floor(y / 4), o = (c & 1) * 4;
@@ -216,6 +255,8 @@ export function plan(w, h) {
       return P;
     },
     clear(x, y, ww, hh2) { for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, 0, 0); return P; },
+    // последняя часть — грань в тени (боковая сторона объёма, повёрнутая от света): тон ниже на k
+    shade(k = 1) { if (info[pid]) info[pid].dim = k; return P; },
   };
   return P;
 }
@@ -264,6 +305,7 @@ export function paint(ctx, X0, Y0, P, o = {}) {
           else if (!L || P.partAt(x - 1, y) !== pid) st += 1;                               // слева — к свету
           else if (P.partAt(x + 1, y) !== pid && R) st -= 1;                                // шов справа — в тень
           const f = P.info[pid];
+          if (f && f.dim) st -= f.dim;
           if (f && f.form && mat0 !== MAT.DARK) {                                            // цилиндр: свет по ширине
             const k = (x - f.x0) / Math.max(1, f.x1 - f.x0);
             st += k < 0.3 ? 1 : k > 0.72 ? -1 : 0;

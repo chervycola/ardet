@@ -384,7 +384,7 @@ export function archLocations(decor) {
       look: d.look || d.name,
       archDraw: d.draw, archX: Math.round(d.x), archGy: Math.round(d.gy),
       archRing: d.ring, archSide: d.side, archEns: d.ens, archFlip: !!d.flip, archNth: d.nth || 1,
-      archLife: (d.kind && ((d.nth > 1 && d.kind.life2) || d.kind.life)) || null,   // у второго — своя (draw2/life2)
+      archLife: (d.kind && ((d.nth > 2 && d.kind.life3) || (d.nth > 1 && d.kind.life2) || d.kind.life)) || null,   // у второго и третьего — своя (draw2/life2, draw3/life3)
       ...(around ? { useAction: around } : {}),
       ...(bk && bk.seam && !(d.kind && d.kind.potemkin) ? { potemkin: bk.seam, potemkinTender: !!bk.tender } : {}),
       // у кольца огня постройки закопчены: тем сильнее, чем ближе к огню
