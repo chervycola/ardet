@@ -270,6 +270,22 @@ test('земля: заборы не перегораживают тропы и �
   }
 });
 
+const { warmKind } = await imp('render/things.js');
+test('утварь: примета эпохи — одна на сторону кольца (на оси — у каждой стороны); холодное живое стороны встаёт у построек', () => {
+  const cells = new Map(archEnsembles.map(e => [e.ring + ':' + e.side, e.ringId]));
+  for (const [cell, rid] of cells) {
+    const kinds = ARCH_BY_RING[rid]?.props?.[cell.split(':')[1]] || [];
+    const here = archProps.filter(p => p.cell === cell);
+    for (const k of kinds.filter(k => k.unique)) {
+      const n = here.filter(p => p.name === k.name).length;
+      assert(n <= 1, `${cell}: примета «${k.name}» встала ${n} раз`);
+      if (rid === 'axial') eq(n, 1, `${cell}: примета «${k.name}» не встала`);
+    }
+    const cold = kinds.filter(k => k.live && !warmKind(k));
+    if (cold.length) assert(here.some(p => cold.some(k => k.name === p.name)), `${cell}: живое (${cold.map(k => k.name).join(', ')}) не встало ни во дворе, ни у ворот`);
+  }
+});
+
 const { RELOOKS } = await imp('content/relooks.js');
 test('повторный осмотр: каждая вещь пробника — место мира', () => {
   for (const id of Object.keys(RELOOKS)) assert(locations.some(l => l.id === id), `нет места ${id}`);

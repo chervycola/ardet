@@ -77,6 +77,35 @@ function canvas(w, h) {
 // ── запекание ──
 // spec: { x, gy, w, h, draw(ctx, x, gy, t), live, wear }
 // x — середина, gy — линия земли; рисунок вещи — в w×h над землёй
+// тёплое ли у вида рисунок (огонь, свеча, лампа): брошенным в поле тёплое не лежит, у ворот
+// и во дворе вперёд очереди не встаёт — тёплых пятен в кадре не больше трёх (render/ground.js,
+// render/archground.js). Узнаю по краскам рисунка (без холста)
+const WARM = new Map();
+export function warmKind(K) {
+  if (WARM.has(K.draw)) return WARM.get(K.draw);
+  let hot = false;
+  const look = v => {
+    if (typeof v !== 'string') return;
+    let c = null;
+    const m = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (m) { const h = m[1].length === 3 ? m[1].replace(/./g, ch => ch + ch) : m[1]; const n = parseInt(h, 16); c = [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    const r = v.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)/i);
+    if (r) c = [+r[1], +r[2], +r[3]];
+    if (c && c[0] > 200 && c[2] < 90) hot = true;          // та же мерка, что у теней: огонь
+  };
+  const ctx = new Proxy({}, {
+    get: (t, k) => k === 'canvas' ? { width: 1, height: 1 } : k in t ? t[k]
+      : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop: (o, c) => look(c) })
+      : k === 'measureText' ? () => ({ width: 1 }) : () => {},
+    set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') look(v); t[k] = v; return true; },
+  });
+  for (const t of [0, 37, 70, 211, 997]) {                  // огонь мигает: проба в разные мгновения
+    try { K.draw(ctx, 0, 0, t); } catch (e) { /* рисунок без холста не обязан работать */ }
+  }
+  WARM.set(K.draw, hot);
+  return hot;
+}
+
 const baked = new Map();
 
 export function thing(spec) {

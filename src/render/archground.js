@@ -11,7 +11,7 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, trailPoint, warpedDist } from '../world/disc.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { hash } from './draw.js';
-import { thing, wearOf } from './things.js';
+import { thing, wearOf, warmKind } from './things.js';
 
 const NIGHT = [13, 11, 10], BONE = [217, 207, 184], ASH = [138, 141, 143];
 const MIST = [61, 74, 58], SEPIA = [58, 48, 38], SAND = [176, 162, 132];
@@ -166,6 +166,7 @@ export function prepareArchGround(ensembles, locations) {
   const allBoxes = arch.map(l => ({ x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }));
   const signs = locations.filter(l => l.streetForm);
   const gated = new Set(ensembles.filter(e => e.kind === 'gate').map(e => e.ring + ':' + e.side));
+  const yarded = new Set(ensembles.filter(e => e.kind !== 'gate').map(e => e.ring + ':' + e.side));
   for (const e of ensembles) {
     const st = STYLE[e.ringId]?.[e.side];
     if (!st) continue;
@@ -262,7 +263,8 @@ export function prepareArchGround(ensembles, locations) {
       fenceFor(e, st, ms, yb, cx, signs, allBoxes, water);
     }
     // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
-    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), !gated.has(e.ring + ':' + e.side));
+    const cell = e.ring + ':' + e.side;
+    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell) });
   }
 }
 
@@ -692,10 +694,16 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // ── утварь двора ──
 // Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
 // тропы. Не на пороге, не на табличке, не друг на друге.
-function propsFor(e, ms, signs, boxes, water = [], gateless = false) {
+//   gateless — у стороны кольца нет ворот (равнина); yardless — нет двора, одни ворота
+function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false } = {}) {
   const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side];
   if (!kinds || !kinds.length) return;
-  const want = e.kind === 'gate' ? 1 : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
+  const cell = e.ring + ':' + e.side;
+  // живое в поле не кладут (render/ground.js) — его место только у построек: во дворе холодное
+  // живое встаёт раньше прочего, пока его нет на стороне; где двора нет, ворота берут и его
+  const liveFirst = e.kind !== 'gate' || yardless;
+  const cold = k => !!k.live && !warmKind(k);   // живое без огня: огни идут своей очередью
+  const want = e.kind === 'gate' ? (yardless && kinds.some(cold) ? 2 : 1) : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
   const placed = [];
   const free = (x, gy, w, h) => {
     const x0 = x - w / 2 - 3, x1 = x + w / 2 + 3, y0 = gy - h, y1 = gy + 3;
@@ -716,12 +724,15 @@ function propsFor(e, ms, signs, boxes, water = [], gateless = false) {
     || archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
   const used = new Set();
   // примета эпохи стороны встаёт первой у ворот — её видят, входя в клетку (ARCH_PLAN, этап 6);
-  // где у стороны ворот нет (равнина), — первой во дворе, а за ней живое: в поле живого не кладут,
-  // двор для него — единственное место
+  // где у стороны ворот нет (равнина), — первой во дворе
   const sign = e.kind === 'gate' || gateless ? kinds.find(k => k.unique && !archProps.some(p => p.name === k.name)) : null;
+  // очередь: холодное живое, которого на стороне ещё нет; затем любая вещь, которой на стороне
+  // нет; затем по кругу
+  const onSide = k => archProps.some(p => p.cell === cell && p.name === k.name);
+  const rank = k => onSide(k) ? 0 : cold(k) ? 2 : 1;
   for (let i = 0; i < want; i++) {
     const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));
-    if (gateless) order.sort((a, b) => !!b.live - !!a.live);
+    if (liveFirst) order.sort((a, b) => rank(b) - rank(a));
     if (sign && i === 0) order.unshift(...order.splice(order.indexOf(sign), 1));
     const ax = ms[0].x, ag = ms[0].gy;
     const K = order.find(k => !seenNear(k, ax, ag));
@@ -748,7 +759,7 @@ function propsFor(e, ms, signs, boxes, water = [], gateless = false) {
       const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, name: K.name, kind: 'yard',
         wear: wearOf({ ring: e.ring, side: e.side, d: warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true,
           foot: drift === 'snow' ? 'snow' : drift === 'sand' ? 'sand' : 'yard' }) });
-      const p = { x, gy, w: K.w, h: K.h, name: K.name, kindDraw: K.draw, thing: T, draw: T.draw };
+      const p = { x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw };
       placed.push(p);
       archProps.push(p);
       break;

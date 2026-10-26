@@ -835,9 +835,8 @@ function feltRack(c, X, G) {
 // без огня; у ножки горка трёхлопастных наконечников без древков — перепись ещё идёт.
 const ARIANT = ['.L.......K.', 'L.K.....L.K', 'LHHHHHHHHHK', 'LNNNNNNNNNK', 'LBBBBBBBBBD', 'LBBBBBBBBBD', '.LBBBBBBBD.', '..LBBBBBD..', '....LBD....', '...LBBBD...'];
 function ariantas(c, X, G) {
-  const x = q(X) - 2, g = q(G), C = { L: BZ1, H: L2, B: BZ, D: BZ0, K: K1, N: NI };
+  const x = q(X) - 4, g = q(G), C = { L: BZ1, H: L2, B: BZ, D: BZ0, K: K1, N: NI };
   ARIANT.forEach((row, k) => { for (let i = 0; i < row.length; i++) if (C[row[i]]) r(c, C[row[i]], x - 6 + i, g - 10 + k, 1, 1); });
-  r(c, K3, x - 7, g, 13, 1);                                                   // земля
   ['...H....', '..DLD...', '.DHDDL..', 'DLDDHDDL'].forEach((row, k) => {           // горка наконечников, острия к свету
     for (let i = 0; i < row.length; i++) if (C[row[i]]) r(c, C[row[i]], x + 6 + i, g - 4 + k, 1, 1);
   });
@@ -1020,14 +1019,14 @@ export const ARCH = {
     south: [
       { name: 'колодец-журавль у канала', w: 28, h: 28, draw: shaduf },
       { name: 'жертвенник огня', live: true, w: 14, h: 22, draw: fireAltar },
-      { name: 'посох и светильник Диогена', live: true, w: 12, h: 26, draw: lychnos },
+      { name: 'посох и светильник Диогена', live: true, w: 14, h: 26, draw: lychnos },
       { name: 'клепсидра суда', live: true, w: 10, h: 12, draw: klepsydra },
       { name: 'остраконы', w: 9, h: 4, unique: true, draw: ostraka },
     ],
     east: [
       { name: 'колодец с воротом', w: 22, h: 24, draw: windlassWell },
       { name: 'весы пошлины', w: 22, h: 18, draw: tollScales },
-      { name: 'колокола на раме', w: 22, h: 16, draw: chimeBells },
+      { name: 'колокола на раме', w: 24, h: 16, draw: chimeBells },
       { name: 'пограничный журнал на цепочке', w: 10, h: 6, unique: true, draw: slipRegister },
     ],
     west: [
@@ -1047,7 +1046,7 @@ export const ARCH = {
       { name: 'брошенное колесо', w: 18, h: 12, draw: oldWheel },
       { name: 'горит на колу', w: 12, h: 22, draw: gorytos },
       { name: 'войлок на жердях', w: 24, h: 20, draw: feltRack },
-      { name: 'навершие-погремушка', live: true, w: 6, h: 24, draw: poleTop },
+      { name: 'навершие-погремушка', live: true, w: 8, h: 24, draw: poleTop },
       { name: 'котёл Арианта', w: 24, h: 10, unique: true, draw: ariantas },
     ],
   },

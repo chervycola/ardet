@@ -57,7 +57,7 @@ import { ringAt, CORE, WORLD_W, WORLD_H } from '../world/disc.js';
 import { fieldAt } from '../world/fields.js';
 import { floraIn } from '../world/flora.js';
 import { landmarkBoxes } from '../world/landmarks.js';
-import { thing, wearOf } from './things.js';
+import { thing, wearOf, warmKind } from './things.js';
 import { FRAGMENTS } from '../sprites/fragments.js';
 const CELL = 150;
 const FRAME_X = 640, FRAME_Y = 360;   // «один кадр»: ближе — повтор видно
@@ -123,31 +123,6 @@ function tissueCellRaw(gx, gy) {
 function kindsOf(pr, side) {
   const own = (ARCH_BY_RING[SEGMENTS[pr - 1].id]?.props?.[side] || []).filter(p => !p.unique && !p.live && !warmKind(p));
   return [...own, ...FRAGMENTS[pr - 1]];
-}
-// тёплое (огонь, свеча, лампа) брошенным в поле не лежит: тёплых пятен в кадре
-// не больше трёх, и все они — у жилья. Узнаю по краскам рисунка (без холста)
-const WARM = new Map();
-function warmKind(K) {
-  if (WARM.has(K.draw)) return WARM.get(K.draw);
-  let hot = false;
-  const look = v => {
-    if (typeof v !== 'string') return;
-    let c = null;
-    const m = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (m) { const h = m[1].length === 3 ? m[1].replace(/./g, ch => ch + ch) : m[1]; const n = parseInt(h, 16); c = [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-    const r = v.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)/i);
-    if (r) c = [+r[1], +r[2], +r[3]];
-    if (c && c[0] > 200 && c[2] < 90) hot = true;          // та же мерка, что у теней: огонь
-  };
-  const ctx = new Proxy({}, {
-    get: (t, k) => k === 'canvas' ? { width: 1, height: 1 } : k in t ? t[k]
-      : k === 'createLinearGradient' || k === 'createRadialGradient' ? () => ({ addColorStop: (o, c) => look(c) })
-      : k === 'measureText' ? () => ({ width: 1 }) : () => {},
-    set: (t, k, v) => { if (k === 'fillStyle' || k === 'strokeStyle') look(v); t[k] = v; return true; },
-  });
-  try { K.draw(ctx, 0, 0, 0); } catch (e) { /* рисунок без холста не обязан работать */ }
-  WARM.set(K.draw, hot);
-  return hot;
 }
 
 // ── сборка ткани: один раз, после дворов, полей, примет и рощ ──
