@@ -93,21 +93,22 @@ function bake(loc) {
   return { c, cx, gy };
 }
 
-// нарисовать постройку: запечённой — если неподвижна и холст есть, иначе живой
-export function drawArch(ctx, loc, t) {
+// нарисовать постройку: запечённой — если неподвижна и холст есть, иначе живой;
+// bodyOnly — для маски тени: только неподвижное тело (живое меняет позу — тени по нему не кладём)
+export function drawArch(ctx, loc, t, bodyOnly) {
   if (t !== frameT) { frameT = t; budget = BAKE_PER_FRAME; spent = 0; }
-  const draw = loc.archDraw;
-  let k = KIND.get(draw);
+  const draw0 = loc.archDraw, draw = bodyOnly && draw0.body ? draw0.body : draw0;
+  let k = KIND.get(draw0);
   if (!k) {
     if (budget <= 0 || spent > MS_PER_FRAME) { draw(ctx, loc.archX, loc.archGy, t); return false; }
     budget--;
     const t0 = now();
-    k = kindOf(draw, loc.archX, loc.archGy);
+    k = kindOf(draw0, loc.archX, loc.archGy);
     spent += now() - t0;
   }
   if (k.live) { draw(ctx, loc.archX, loc.archGy, t); return false; }
   // общий холст — на вид, размер и дробную долю места (округление в рисунке); свой — на постройку
-  const key = k.shared ? `${idOf(draw)}|${loc.w}|${loc.h}|${loc.archX % 1}|${loc.archGy % 1}` : loc;
+  const key = k.shared ? `${idOf(draw0)}|${loc.w}|${loc.h}|${loc.archX % 1}|${loc.archGy % 1}` : loc;
   let b = BAKED.get(key);
   if (b === undefined) {
     if (budget <= 0 || spent > MS_PER_FRAME) { draw(ctx, loc.archX, loc.archGy, t); return false; }
@@ -120,7 +121,7 @@ export function drawArch(ctx, loc, t) {
   } else { BAKED.delete(key); BAKED.set(key, b); }      // освежить
   if (!b) { draw(ctx, loc.archX, loc.archGy, t); return false; }
   ctx.drawImage(b.c, Math.round(loc.archX) - b.cx, Math.round(loc.archGy) - b.gy);
-  if (k.split) draw.live(ctx, loc.archX, loc.archGy, t);
+  if (k.split && !bodyOnly) draw0.live(ctx, loc.archX, loc.archGy, t);
   return true;
 }
 

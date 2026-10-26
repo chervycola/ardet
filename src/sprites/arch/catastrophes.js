@@ -237,7 +237,7 @@ const scapaBody = kit('scapa', 92, 41, P => {
   // гюйсшток на носу — перпендикулярно палубе
   seg(tone(MAT.STEEL, 2), 47.5, -2.5, 47.5, -6.5);
   // своя вода: тень корпуса под срезом, пена у входа палубы и киля, рябь
-  R(c, N, X0, Y0 + 37, 92, 4);
+  for (const [y, x0] of [[37, 6], [38, 3], [39, 1], [40, 2]]) R(c, N, X0 + x0, Y0 + y, 92 - x0, 1);   // слева — берег уступом, не срезом рамки
   R(c, mix9(N, tone(MAT.WARSHIP, 0), 0.6), X0 + 42, Y0 + 37, 28, 1);
   c.fillStyle = mix9(N, B, 0.55); for (const [rx, rw] of [[63, 7], [45, 4]]) c.fillRect(X0 + rx, Y0 + 37, rw, 1);
   c.fillStyle = A; for (const [rx, ry, rw] of [[3, 39, 4], [20, 38, 3], [30, 40, 4], [76, 39, 4], [86, 38, 3]]) c.fillRect(X0 + rx, Y0 + ry, rw, 1);
@@ -299,7 +299,8 @@ const bikiniBody = kit('bikini', 92, 41, P => {
     c.fillStyle = mix9(M, B, 0.4); c.fillRect(tx - 2, ty - 1, 2, 1); c.fillRect(tx + 1, ty, 2, 1);
   }
   // своя вода: тень корпуса, пена у входа палубы, рябь
-  R(c, N, X0, Y0 + 37, 72, 4); R(c, N, X0 + 72, Y0 + 39, 20, 2);   // справа у косы — мель
+  for (const [y, x0] of [[37, 5], [38, 3], [39, 1], [40, 2]]) R(c, N, X0 + x0, Y0 + y, 72 - x0, 1);   // слева — берег уступом
+  R(c, N, X0 + 72, Y0 + 39, 20, 2);                                                // справа у косы — мель
   R(c, mix9(N, tone(MAT.WARSHIP, 0), 0.6), X0 + 6, Y0 + 37, 50, 1);
   c.fillStyle = mix9(N, B, 0.55); c.fillRect(X0 + 8, Y0 + 37, 4, 1);
   c.fillStyle = A; for (const [rx, ry, rw] of [[2, 39, 3], [24, 40, 4], [44, 39, 3], [60, 40, 4]]) c.fillRect(X0 + rx, Y0 + ry, rw, 1);
@@ -361,6 +362,8 @@ const flareDerrickBody = kit('derrick', 72, 86, P => {
   R(c, tone(MAT.IRON, 3), X0 + 62, Y0 + 63, 1, 1);
 });
 // пламя и шлейф: язык по ветру, кончик срывается; чёрные клубы уходят по ветру и тают
+// сколько клубу места до края рамки (меньше нуля — вышел): у края тает, за краем не рисуется — не копится столбом
+const edgeRoom = (lx, sz, X0, W) => Math.min(lx - X0, X0 + W - sz - lx);
 function flareLive(c, x, gy, t) {
   const X0 = Math.round(x) - 36, Y0 = Math.round(gy) - 86, T = t || 0;
   const w = wind.at(x, gy), lean = Math.max(-1.2, Math.min(1.2, w.x));
@@ -379,9 +382,10 @@ function flareLive(c, x, gy, t) {
     const px = fx + Math.round(lean * (L * 0.45 + age * 0.35) + Math.sin(age * 0.08 + i * 1.7) * 2 * k);
     const py = fy - L - 1 - Math.round(age * 0.3);
     if (py - 4 < Y0) continue;
-    const sz = 2 + Math.floor(k * 6);
-    c.globalAlpha = 0.9 * (1 - k * k);
-    c.fillRect(Math.max(X0, Math.min(X0 + 72 - sz, px - (sz >> 1))), py - (sz >> 1), sz, sz);   // клубы — в рамке
+    const sz = 2 + Math.floor(k * 6), lx = px - (sz >> 1), room = edgeRoom(lx, sz, X0, 72);
+    if (room < 0) continue;                                                       // ушёл за рамку — растаял
+    c.globalAlpha = 0.9 * (1 - k * k) * Math.min(1, (room + 1) / 5);
+    c.fillRect(lx, py - (sz >> 1), sz, sz);
   }
   c.globalAlpha = 1;
   hazeColumn(fx, fy - L, 16, 3, 0.25, 1.1);                                        // марево над пламенем
@@ -436,11 +440,10 @@ function kuwaitLive(c, x, gy, t) {
   for (let i = 0; i < 26; i++) {
     const age = (T * 0.6 + i * 6) % 156, k = age / 156;
     const sz = 6 + Math.floor(k * 9), spread = 2 + k * 9;
-    let px = cx + Math.round(lean * (8 + age * 0.35) + Math.sin(i * 2.39) * spread) - (sz >> 1);
-    const py = top - 2 - Math.round(age * 0.4) - (sz >> 1);
-    if (py < Y0) continue;
-    px = Math.max(X0, Math.min(X0 + 72 - sz, px));                                     // клубы — в рамке
-    c.globalAlpha = 0.85 * (1 - k * 0.5);
+    const px = cx + Math.round(lean * (8 + age * 0.35) + Math.sin(i * 2.39) * spread) - (sz >> 1);
+    const py = top - 2 - Math.round(age * 0.4) - (sz >> 1), room = edgeRoom(px, sz, X0, 72);
+    if (py < Y0 || room < 0) continue;                                             // за рамкой — растаял
+    c.globalAlpha = 0.85 * (1 - k * 0.5) * Math.min(1, (room + 1) / 5);
     c.fillRect(px, py, sz, sz);
   }
   c.globalAlpha = 1;
@@ -625,7 +628,7 @@ function lionLive(c, x, gy, t) {
   c.fillStyle = A;
   for (let i = 0; i < 3; i++) {
     const ph = (T * 0.05 + i * 26) % 78;
-    c.fillRect(X0 + 4 + Math.round(ph), Y0 + 39 + (i % 2) * 2, 2, 1);   // 4…83 — в воде
+    c.fillRect(X0 + 4 + Math.min(76, Math.round(ph)), Y0 + 39 + (i % 2) * 2, 2, 1);   // 4…81 — в воде (вода 4…83)
   }
 }
 const lionBridge = split(lionBridgeBody, lionLive);
@@ -681,8 +684,9 @@ const grandHotelBody = kit('hotel', 72, 104, P => {
   R(c, tone(MAT.STEEL, 2), X0 + 36, Y0 + 4, 1, 18); R(c, tone(MAT.STEEL, 4), X0 + 36, Y0 + 3, 1, 1);
   // шпили павильонов
   for (const cx of [8, 64]) R(c, tone(MAT.IRON, 4), X0 + cx, Y0 + 16, 1, 3);
+  R(c, C, X0 + 43, Y0 + 66, 2, 5);   // окно, что горит до утра, — в теле: так его находит свет окон (render/archlights.js)
 });
-// флаг на половине древка по ветру; одно окно горит с сумерек до утра
+// флаг на половине древка по ветру; одно окно горит с сумерек до утра — днём его закрывает затемнение
 function hotelLive(c, x, gy, t) {
   const X0 = Math.round(x) - 36, Y0 = Math.round(gy) - 104, T = t || 0;
   const w = wind.at(x, gy), lean = Math.max(0.2, Math.min(1, Math.abs(w.x))), dir = w.x < 0 ? -1 : 1;
@@ -691,8 +695,7 @@ function hotelLive(c, x, gy, t) {
     const sag = Math.round((1 - lean) * i * 0.5 + Math.sin(T * 0.12 - i * 0.9) * lean * 0.6);
     R(c, i === len - 1 ? SEP : P2, X0 + 36 + dir * (i + 1), Y0 + 13 + sag, 1, 3);
   }
-  const sky = skyAt(phaseAt(T)).name;
-  if (sky !== 'день') R(c, C, X0 + 43, Y0 + 66, 2, 5);
+  if (skyAt(phaseAt(T)).name === 'день') R(c, tone(MAT.DARK, 1), X0 + 43, Y0 + 66, 2, 5);
 }
 const grandHotel = split(grandHotelBody, hotelLive);
 
@@ -745,8 +748,8 @@ function spireLive(c, x, gy, t) {
   R(c, tone(MAT.IRON, 2), X0 + 36, Y0 + 71, 1, 1); R(c, tone(MAT.IRON, 2), X0 + 36 + (sw >> 1), Y0 + 72, 1, 2); R(c, tone(MAT.IRON, 1), X0 + 36 + sw, Y0 + 74, 1, 1);
   const sky = skyAt(phaseAt(T)).name, vis = sky === 'ночь' ? 1 : sky === 'день' ? 0 : 0.5;
   if (!vis) return;
-  const hold = (T % 1500) < 120;                                                 // обыскивает: замер
-  const a = Math.sin((hold ? T - (T % 1500) : T) * 2 * Math.PI / 2400) * 0.5 + 0.5;   // 0…1
+  const Ph = T - Math.floor(T / 1500) * 120 - Math.min(T % 1500, 120);            // обыскивает: замер — фаза стоит, потом идёт дальше без скачка
+  const a = Math.sin(Ph * 2 * Math.PI / 2400) * 0.5 + 0.5;                       // 0…1
   const sx = 46, sy = 74, tx = 32 + a * 18;                                      // верх луча — над нефом и хором
   c.fillStyle = B;
   for (let y = sy - 1; y >= 0; y--) {
@@ -842,6 +845,17 @@ const frozenBarqueBody = kit('barque', 84, 84, P => {
 });
 // сияние — занавесом позади мачт: сплошная нижняя кромка, лучи кверху гаснут; маска лучей постоянная,
 // складки бегут медленно, яркость плывёт, раз в несколько минут вспышка; ночью 1, в сумерки 0.4, днём нет
+// угол ротора копится по шагам (скорость — от ветра сейчас), а не «время × ветер»: иначе от порыва к
+// затишью ротор дёргается и крутится назад; долгий разрыв (вне кадра, пробы) не наверстываем
+const MILLS = new Map();
+function millAngle(key, T, speed) {
+  let m = MILLS.get(key);
+  if (!m) MILLS.set(key, m = { t: T, a: 0 });
+  const dt = T - m.t;
+  if (dt > 0 && dt < 600) m.a += dt * speed;
+  m.t = T;
+  return m.a;
+}
 function barqueLive(c, x, gy, t) {
   const X0 = Math.round(x) - 42, Y0 = Math.round(gy) - 84, T = t || 0;
   const sky = skyAt(phaseAt(T)).name, k = sky === 'ночь' ? 1 : sky === 'день' ? 0 : 0.4;
@@ -858,7 +872,7 @@ function barqueLive(c, x, gy, t) {
   }
   barqueRig(c, X0, Y0);                                                             // мачты — перед сиянием
   // ветряк на корме — крутил динамо для электрического света в полярную ночь (место на палубе — допущение)
-  const w = wind.at(x, gy), ang = T * 0.03 * (0.4 + Math.min(1.5, w.s || 0));
+  const w = wind.at(x, gy), ang = millAngle(Math.round(x) + ',' + Math.round(gy), T, 0.03 * (0.4 + Math.min(1.5, w.s || 0)));
   R(c, tone(MAT.TIMBER, 2), X0 + 18, Y0 + 47, 1, 11);
   for (let b = 0; b < 6; b++) { const a = ang + b * Math.PI / 3; for (let r = 1; r <= 4; r++) R(c, tone(MAT.IRON, 2), X0 + 18 + Math.round(Math.cos(a) * r), Y0 + 46 + Math.round(Math.sin(a) * r), 1, 1); }
   R(c, tone(MAT.IRON, 4), X0 + 18, Y0 + 46, 1, 1);
@@ -868,9 +882,10 @@ const frozenBarque = split(frozenBarqueBody, barqueLive);
 // вмёрзший барк #2 — «Эндьюранс» Шеклтона (Сандефьорд, 1912; задуман для полярных круизов): острый
 // корпус, как у всех, и лёд его не выжал, а раздавил — за месяцы, со скрипом. Судно с дифферентом на
 // нос, борт проломлен по швам, через планширь перевалены льдины. Рангоут — как в «South»: стеньга
-// рухнула и висит вдоль фок-мачты, фока-рей встал торчком, от грот-мачты пенёк со щепой, бизань
-// стоит с наклоном. Вокруг — гряда торосов, разводье. Слева вдали на льдине лагерь: палатки, шлюпка
-// на санях, дымок печи — оттуда слушали. Сияния нет: цвет стороны — один.
+// рухнула и висит вдоль фок-мачты, фока-рей встал торчком, от грот-мачты пенёк со щепой; бизань
+// стоит с наклоном (допущение: «South» о ней молчит, стояла ли к 21 ноября — не сверено). Вокруг —
+// гряда торосов, разводье. Слева вдали, на краю льда, лагерь — маленький, отдельно от корпуса: палатки,
+// шлюпка, дымок печи — оттуда слушали. Сияния нет: цвет стороны — один.
 const ENDUR_HULL = [[10, 57], [14, 60], [20, 61], [34, 62], [50, 63.5], [62, 65], [70, 66], [76, 66], [72, 70], [66, 73], [52, 74], [30, 73], [16, 70], [12, 66]];
 const enduranceBody = kit('endurance', 84, 84, P => {
   P.poly(ENDUR_HULL, MAT.TIMBER);
@@ -886,8 +901,8 @@ const enduranceBody = kit('endurance', 84, 84, P => {
     [[[75, 64], [71, 77], [80, 77]], 2], [[[77, 78], [80, 68], [84, 69], [84, 78]], 1]]) { P.poly(pts, MAT.ICE); if (d) P.shade(d); }
   // льдины через планширь в середине судна
   P.poly([[38, 64], [42, 56], [46, 58], [44, 65]], MAT.ICE); P.poly([[50, 65], [53, 58], [57, 60], [55, 66]], MAT.ICE).shade(1);
-  // лагерь вдали — на приподнятой льдине слева
-  P.poly([[0, 52], [2, 49], [22, 48], [25, 51], [24, 54], [0, 55]], MAT.SNOW);
+  // лагерь вдали — тонкая кромка льда слева, левее кормы и снастей: даль выше и мельче
+  P.poly([[0, 53], [0, 51], [9, 51], [10, 52], [9, 53]], MAT.SNOW);
 }, { seed: 717, snow: 0.15, chip: 0.06, cracks: 2 }, (c, X0, Y0) => {
   const MS = tone(MAT.TIMBER, 2), ML = tone(MAT.TIMBER, 4), RG = tone(MAT.IRON, 2);
   // фок-мачта: низ стоит с наклоном к носу; стеньга висит вдоль; фока-рей торчком
@@ -896,7 +911,7 @@ const enduranceBody = kit('endurance', 84, 84, P => {
   R(c, ML, X0 + 67, Y0 + 36, 1, 16); R(c, tone(MAT.SNOW, 3), X0 + 68, Y0 + 37, 1, 14);
   // грот — пенёк со щепой
   R(c, ML, X0 + 40, Y0 + 56, 2, 6); R(c, B, X0 + 40, Y0 + 55, 1, 1); R(c, B, X0 + 42, Y0 + 56, 1, 1);
-  // бизань стоит, с наклоном; гафель
+  // бизань стоит, с наклоном (допущение); гафель
   hline(c, ML, X0 + 20, Y0 + 61, X0 + 23, Y0 + 30); hline(c, MS, X0 + 21, Y0 + 61, X0 + 24, Y0 + 30);
   hline(c, MS, X0 + 22, Y0 + 40, X0 + 13, Y0 + 37);
   // ванты провисли дугами, часть оборвана
@@ -907,10 +922,11 @@ const enduranceBody = kit('endurance', 84, 84, P => {
   R(c, B, X0 + 16, Y0 + 64, 1, 1);
   // разводье через наст
   hline(c, mix9(M, N, 0.5), X0 + 4, Y0 + 81, X0 + 34, Y0 + 79); hline(c, N, X0 + 34, Y0 + 79, X0 + 60, Y0 + 82);
-  // лагерь: две конические палатки, полукруглая, шлюпка на санях
-  for (const tx of [3, 9]) { R(c, B, X0 + tx + 2, Y0 + 44, 1, 1); R(c, P1, X0 + tx + 1, Y0 + 45, 3, 2); R(c, P2, X0 + tx, Y0 + 47, 5, 2); R(c, N, X0 + tx + 2, Y0 + 47, 1, 2); }
-  R(c, P2, X0 + 15, Y0 + 46, 4, 1); R(c, P2, X0 + 14, Y0 + 47, 6, 2); R(c, A, X0 + 19, Y0 + 47, 1, 2);
-  R(c, SEP, X0 + 2, Y0 + 50, 10, 2); R(c, tone(MAT.BOARD, 3), X0 + 2, Y0 + 50, 10, 1); R(c, A, X0 + 1, Y0 + 52, 12, 1);
+  // лагерь вдали: коническая палатка с печью, полукруглая, шлюпка — точками
+  R(c, P1, X0 + 2, Y0 + 48, 1, 1); R(c, P2, X0 + 1, Y0 + 49, 3, 2); R(c, N, X0 + 2, Y0 + 50, 1, 1);
+  R(c, P2, X0 + 5, Y0 + 49, 2, 1); R(c, P2, X0 + 5, Y0 + 50, 3, 1);
+  R(c, SEP, X0 + 8, Y0 + 50, 2, 1);
+  R(c, A, X0 + 0, Y0 + 53, 10, 1);
 });
 const endurance = enduranceBody;
 
@@ -1629,9 +1645,10 @@ function palaceLive(c, x, gy, t) {
     const age = (T * 0.35 + i * 17) % 170, k = age / 170, sz = 2 + Math.floor(k * 5);
     const px = X0 + 73 + Math.round(w.x * age * 0.25 + Math.sin(age * 0.06 + i) * 2 * k) - (sz >> 1);
     const py = Y0 + 190 - Math.round(age * 0.32) - (sz >> 1);
-    if (py < Y0 + 120) continue;
-    c.globalAlpha = (night ? 0.35 : 0.22) * (1 - k);
-    c.fillRect(Math.max(X0, Math.min(X0 + 110 - sz, px)), py, sz, sz);
+    const room = edgeRoom(px, sz, X0, 110);
+    if (py < Y0 + 120 || room < 0) continue;
+    c.globalAlpha = (night ? 0.35 : 0.22) * (1 - k) * Math.min(1, (room + 1) / 5);
+    c.fillRect(px, py, sz, sz);
   }
   if (night) {
     for (let y = 49; y >= 0; y--) {
@@ -1649,25 +1666,25 @@ export const ARCH = {
     name: 'Дворец Советов', side: 'plain', w: 110, h: 198,
     light: { dx: 0, dy: -150, r: 80, color: [217, 207, 184], flicker: 0 },
     draw: palaceSoviets,
-    life: { birds: [[-49, -41, -38]] },
+    life: { birds: [[-49, -45, -37]] },
     potemkin: 'Гранит и колонны написаны на щитах, щиты стоят на подкосах. В проёме за ними — котлован, над котлованом пар, как над тёплой водой.',
   },
   south: [
     { name: 'затопленный фарватер', w: 92, h: 41, draw: sunkenFairway, draw2: scapa, draw3: bikini,
-      life: { birds: [[-44, -29, -27, 'K']] }, life2: { birds: [[-38, -36, -18, 'K']] }, life3: { birds: [[-31, -24, -28]] } },
-    { name: 'вышка с факелом', w: 72, h: 86, draw: flareDerrick, draw2: kuwait, life2: { birds: [[12, 30, -7]] } },
+      life: { birds: [[-44, -29, -26, 'K']] }, life2: { birds: [[-10, -8, -32, 'K']] }, life3: { birds: [[-29, -27, -22]] } },
+    { name: 'вышка с факелом', w: 72, h: 86, draw: flareDerrick, draw2: kuwait, life2: { birds: [[15, 26, -8]] } },
   ],
   east: [
-    { name: 'купол-остов', w: 84, h: 70, draw: bareDome, draw2: urakami, life: { birds: [[-20, -2, -32]] }, life2: { birds: [[-15, -5, -46]] } },
+    { name: 'купол-остов', w: 84, h: 70, draw: bareDome, draw2: urakami, life: { birds: [[-13, -11, -31]] }, life2: { birds: [[-11, -10, -44]] } },
     { name: 'мост львов', w: 96, h: 42, draw: lionBridge },
   ],
   west: [
     { name: 'гранд-отель «Бездна»', w: 72, h: 104, draw: grandHotel, life: { smoke: [[18, -84]] } },
-    { name: 'собор с обломком шпиля', w: 52, h: 114, draw: brokenSpire, draw2: frauen, life: { birds: [[-6, -3, -102]] }, life2: { birds: [[-19, -17, -92]] } },
+    { name: 'собор с обломком шпиля', w: 52, h: 114, draw: brokenSpire, draw2: frauen, life: { birds: [[-5, -5, -104]] }, life2: { birds: [[-21, -21, -92]] } },
   ],
   north: [
-    { name: 'вмёрзший барк', w: 84, h: 84, draw: frozenBarque, draw2: endurance, life: { smoke: [[6, -32]] }, life2: { smoke: [[-25, -37]] } },
-    { name: 'мачта дирижабля', w: 100, h: 83, draw: airshipMast, draw2: lakehurst, draw3: esb, life2: { birds: [[-20, -18, -67]] } },
+    { name: 'вмёрзший барк', w: 84, h: 84, draw: frozenBarque, draw2: endurance, life: { smoke: [[6, -32]] }, life2: { smoke: [[-40, -36]] } },
+    { name: 'мачта дирижабля', w: 100, h: 83, draw: airshipMast, draw2: lakehurst, draw3: esb, life2: { birds: [[-20, -20, -70]] }, life3: { birds: [[-18, -12, -30]] } },
   ],
   plain: [
     { name: 'сталинская высотка', w: 76, h: 128, draw: stalinTower },

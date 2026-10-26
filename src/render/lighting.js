@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════
 import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
+import { phaseAt, skyAt } from '../world/sky.js';
 
 export const lighting = {
   sources: [],
@@ -31,7 +32,9 @@ export const lighting = {
     ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
     ctx.fillRect(0, 0, vw, vh);
 
+    const day = skyAt(phaseAt(t)).name === 'день';
     for (const L of this.sources) {
+      if (L.night && day) continue;          // окно, что зажигают в сумерки (render/archlights.js)
       const sx = L.x - cam.x;
       const sy = L.y - cam.y;
 

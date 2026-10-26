@@ -1005,14 +1005,14 @@ export const ARCH = {
   ],
   west: [
     { name: 'круглый дом', w: 64, h: 54, draw: roundhouse, life: { smoke: [[0, -49]] } },
-    { name: 'святилище с черепами', w: 96, h: 58, draw: skullshrine, life: { birds: [[-3, 12, -44]] } },
+    { name: 'святилище с черепами', w: 96, h: 58, draw: skullshrine, life: { birds: [[-1, 7, -44]] } },
   ],
   north: [
     { name: 'каменная ладья и сейд', w: 92, h: 34, draw: shipstones, draw2: shipstones2 },
     { name: 'вежа с бубном', w: 64, h: 58, draw: vezha, life: { smoke: [[-11, -36]] }, draw2: vezha2, life2: {} },
   ],
   plain: [
-    { name: 'курган с каменной бабой', w: 92, h: 36, draw: kurgan, life: { birds: [[-6, -2, -15]] } },
+    { name: 'курган с каменной бабой', w: 92, h: 36, draw: kurgan, life: { birds: [[-7, -4, -15]] } },
     { name: 'кибитка', w: 64, h: 40, draw: kibitka },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },

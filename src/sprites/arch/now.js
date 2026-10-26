@@ -1834,7 +1834,7 @@ export const ARCH = {
       name: 'библиотека у моря', w: 96, h: 48, draw: library, draw2: library2, draw3: library3,
       life: { birds: [[39, 45, -3, 'K']] },
       life2: { blink: [[26, -30, 'P', 41, 0.35], [34, -29, 'K', 67, 0.2], [42, -30, 'P', 29, 0.5], [44, -29, 'K', 53, 0.25]] },
-      life3: { birds: [[-46, -22, -37]] },
+      life3: { birds: [[-38, -26, -37]] },
     },
   ],
   east: [
@@ -1848,11 +1848,11 @@ export const ARCH = {
   north: [
     {
       name: 'серверный ангар', w: 94, h: 98, noFlip: true, draw: dataCenter, draw2: natick, draw3: heatReuse,
-      life: {}, life2: { birds: [[-29, 15, -39, 'K']] }, life3: {},
+      life: {}, life2: { birds: [[-24, 8, -39, 'K']] }, life3: {},
     },
   ],
   plain: [
-    { name: 'долгострой с краном', w: 92, h: 112, noFlip: true, draw: unfinished, life: { birds: [[-1, 7, -71]] } },
+    { name: 'долгострой с краном', w: 92, h: 112, noFlip: true, draw: unfinished, life: { birds: [[-1, 4, -71]] } },
     { name: 'панельная башня', w: 52, h: 118, draw: panelTower, life: { blink: [[7, -118, 'V', 90, 0.67]] } },
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },

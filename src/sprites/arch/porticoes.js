@@ -1017,24 +1017,24 @@ export const ARCH = {
     name: 'Фаросский маяк', side: 'south', w: 72, h: 196,
     light: { dx: 0, dy: -170, r: 80 },
     draw: pharos,
-    life: { smoke: [[8, -176]], birds: [[13, 17, -110, 'K']] },
+    life: { smoke: [[8, -176]], birds: [[13, 16, -110, 'K']] },
     tender: true,           // маяк настоящий: проявляется только надпись, без подпорок
     potemkin: 'На доске у двери по штукатурке — имя царя. Где штукатурка осыпалась, из камня проступает другое имя, вырезанное глубже.',
   },
   south: [
     { name: 'Пантеон', w: 96, h: 66, draw: pantheon, draw2: pantheon2 },
-    { name: 'сад Эпикура', w: 56, h: 50, draw: epicurusGarden, draw2: epicurusGarden2, life: { birds: [[-5, 14, -19]] } },
+    { name: 'сад Эпикура', w: 56, h: 50, draw: epicurusGarden, draw2: epicurusGarden2, life: { birds: [[0, 13, -19]] }, life2: { birds: [[-1, 1, -19]] } },
   ],
   east: [
     { name: 'пещерный храм-чайтья', w: 80, h: 62, draw: chaitya, draw2: chaitya2 },
     { name: 'стена в лесах', w: 96, h: 68, draw: greatWall, life: { smoke: [[7, -66]] } },
   ],
   west: [
-    { name: 'башня лимеса', w: 56, h: 72, draw: limesTower, life: { birds: [[9, 12, -55]] } },
+    { name: 'башня лимеса', w: 56, h: 72, draw: limesTower, life: { birds: [[11, 12, -55]] } },
     { name: 'акведук', w: 96, h: 56, draw: aqueduct, draw2: aqueduct2 },
   ],
   north: [
-    { name: 'брох', w: 44, h: 70, draw: broch, draw2: broch2, draw3: broch3, life: { birds: [[-14, -9, -67]] } },
+    { name: 'брох', w: 44, h: 70, draw: broch, draw2: broch2, draw3: broch3, life: { birds: [[-14, -9, -67]] }, life2: { birds: [[-6, 0, -68]] }, life3: { birds: [[-9, -7, -65]] } },
     { name: 'болото жертв', w: 64, h: 48, draw: bog, draw2: bog2 },
   ],
   plain: [

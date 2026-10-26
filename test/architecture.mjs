@@ -512,13 +512,15 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
 // ═══ ТЁПЛЫЕ ПЯТНА: в кадре ансамбля не больше трёх (ART_BIBLE §01) ═══
 {
   // пятна свечи в рисунке — без холста: записываем прямоугольники цветом свечи
-  // (как render/archlights.js candleSpots: четыре мгновения, близкие — одно пятно)
+  // (как render/archlights.js candleSpots: четыре мгновения и одно ночное, близкие — одно пятно)
   const CANDLE = '#e28a3a', SPOTS = new Map();
+  const SKY = await imp('world/sky.js');
+  const NIGHT_T = (() => { for (let t = 0; t < SKY.DAY_LEN; t += 300) if (SKY.skyAt(SKY.phaseAt(t)).name === 'ночь') return t; })();
   const spotsOf = (draw, w, h) => {
     if (SPOTS.has(draw)) return SPOTS.get(draw);
     const rects = [], c = fakeCtx();
     c.fillRect = (x, y, ww, hh) => { if (String(c.fillStyle).toLowerCase() === CANDLE && c.globalAlpha > 0.78) rects.push([x, y, ww, hh]); };
-    for (const t of [0, 37, 100, 211]) { try { draw(c, 0, 0, t); } catch (e) { break; } }
+    for (const t of [0, 37, 100, 211, NIGHT_T]) { try { draw(c, 0, 0, t); } catch (e) { break; } }   // окно, что горит только ночью, — тоже пятно
     // склейка по касанию (в 3 точках — одно пятно), центр — по площади
     let cl = [];
     for (const [x, y, ww, hh] of rects) {
@@ -779,6 +781,22 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
    }
     const v2 = locations.find(l => l.archRing === 1 && l.name === 'вежа с бубном' && l.archNth > 1);
     assert(v2 && !(v2.archLife && v2.archLife.smoke), 'вежа без покрышки дымит');
+  });
+  test('птицы набора сидят на кромке: под ними твёрдое, на месте тела пусто (по неподвижному телу; жизнь #2/#3 — как в мире)', () => {
+   for (const ring of Object.keys(KIT_RINGS)) {
+    const A = ARCH_BY_RING[ring], kinds = [...[].concat(A.landmark), ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
+    for (const k of kinds) for (const [dn, n] of [['draw', 1], ['draw2', 2], ['draw3', 3]]) {
+      const d = k[dn], L = (n > 2 && k.life3) || (n > 1 && k.life2) || k.life;   // world/architecture.js
+      if (!d || !L || !L.birds) continue;
+      const on = new Set(), c = fakeCtx();
+      c.fillRect = (x, y, w, h) => { if (c.globalAlpha >= 0.6) for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) on.add(`${x + i},${y + j}`); };
+      (d.body || d)(c, 500, 500, 0);
+      for (const p of L.birds) for (let dx = p[0]; dx <= p[1] + 1; dx++) {   // птица в 2 px: тело на gy+dy−2, опора — строкой ниже
+        assert(on.has(`${500 + dx},${500 + p[2] - 1}`), `${ring}/${k.name} ${dn}: птицы ${p} висят в воздухе (dx ${dx})`);
+        assert(!on.has(`${500 + dx},${500 + p[2] - 2}`), `${ring}/${k.name} ${dn}: птицы ${p} нарисованы по стене (dx ${dx})`);
+      }
+    }
+   }
   });
   test('запекание: тело — в холст, огонь — поверх каждый кадр', () => {
     const l = locations.find(q => q.archDraw && q.archDraw.body);

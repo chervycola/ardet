@@ -388,12 +388,14 @@ function depthOf(loc) {
 }
 const LIGHTS = new Set(['campfire', 'sol_home']);   // сами светят — тени не отбрасывают (Sol горит с основания)
 const casterOf = new Map();
+let maskPass = false;   // маска тени постройки: только неподвижное — живой слой и жизнь (дым, птицы, сияние) меняют позу, в маске застыли бы
 function locCaster(loc) {
   let c = casterOf.get(loc);
   if (!c) {
     c = { key: loc, ox: 0, oy: 0,
       build: () => maskFrom(g => {
-        setCtx(g); drawLocation(g, loc);
+        setCtx(g); maskPass = true;
+        try { drawLocation(g, loc); } finally { maskPass = false; }
         if (loc.npc && npcDrawFn[loc.npc] && loc.npc !== 'dumpster') npcDrawFn[loc.npc](loc.x, loc.y);   // дым-демон тени не кладёт
         setCtx(layers.ctx('world'));
       }, loc.x - 30, loc.y - 70, loc.w + 60, loc.y + loc.h) };
@@ -836,11 +838,11 @@ function drawLocationPlain(ctx, loc) {
   if (loc.archDraw) {
     if (loc.archFlip) {                     // повтор вида — зеркально
       ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1);
-      drawArch(ctx, loc, t);
+      drawArch(ctx, loc, t, maskPass);
       ctx.restore();
-    } else drawArch(ctx, loc, t);           // неподвижное — запечённым холстом (render/archbake.js)
+    } else drawArch(ctx, loc, t, maskPass);  // неподвижное — запечённым холстом (render/archbake.js)
     if (loc.archMirror) drawMirrorCandle(ctx, loc);
-    drawArchLife(ctx, loc, t, { x: player.x + 6, y: player.y + 24 });
+    if (!maskPass) drawArchLife(ctx, loc, t, { x: player.x + 6, y: player.y + 24 });
     drawArchChar(ctx, loc);
     drawArchFoot(ctx, loc);
     return;
