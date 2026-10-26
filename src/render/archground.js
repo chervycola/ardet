@@ -756,7 +756,7 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
       // вещь стоит в земле двора (render/things.js): тень касания, у подошвы —
       // сугроб или нанос, если у стен двора они есть; износ — по эпохе и огню
       const drift = STYLE[e.ringId]?.[e.side]?.drift;
-      const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, name: K.name, kind: 'yard',
+      const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, fine: K.fine, name: K.name, kind: 'yard',
         wear: wearOf({ ring: e.ring, side: e.side, d: warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true,
           foot: drift === 'snow' ? 'snow' : drift === 'sand' ? 'sand' : 'yard' }) });
       const p = { x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw };

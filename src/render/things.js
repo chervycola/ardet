@@ -75,8 +75,10 @@ function canvas(w, h) {
 }
 
 // ── запекание ──
-// spec: { x, gy, w, h, draw(ctx, x, gy, t), live, wear }
-// x — середина, gy — линия земли; рисунок вещи — в w×h над землёй
+// spec: { x, gy, w, h, draw(ctx, x, gy, t), live, wear, fine }
+// x — середина, gy — линия земли; рисунок вещи — в w×h над землёй;
+// fine — мелочь, чей смысл в одной-двух точках (царапина на черепке, ямка на скале): без крена,
+// сколов, снежных шапок и мха, нанос у подошвы её не заносит — тень касания остаётся
 // тёплое ли у вида рисунок (огонь, свеча, лампа): брошенным в поле тёплое не лежит, у ворот
 // и во дворе вперёд очереди не встаёт — тёплых пятен в кадре не больше трёх (render/ground.js,
 // render/archground.js). Узнаю по краскам рисунка (без холста)
@@ -110,7 +112,7 @@ const baked = new Map();
 
 export function thing(spec) {
   const T = {
-    x: spec.x, gy: spec.gy, w: spec.w, h: spec.h, live: !!spec.live, src: spec.draw, wear: spec.wear,
+    x: spec.x, gy: spec.gy, w: spec.w, h: spec.h, live: !!spec.live, fine: !!spec.fine, src: spec.draw, wear: spec.wear,
     name: spec.name, kind: spec.kind,
     draw(ctx) { (baked.get(T) || bake(T)).draw(ctx); },
   };
@@ -134,14 +136,14 @@ function bake(T) {
     const foot = footOf(d, W, H, G);
     const U = canvas(W, H), O = canvas(W, H);
     contact(U.getContext('2d'), foot, G);
-    footing(O.getContext('2d'), foot, G, W0, 0, rng(W0.seed * 13 + 5));
+    if (!T.fine) footing(O.getContext('2d'), foot, G, W0, 0, rng(W0.seed * 13 + 5));
     out = { U, O, draw(ctx) { ctx.drawImage(U, X0, Y0); T.src(ctx, T.x, T.gy, now); ctx.drawImage(O, X0, Y0); } };
   } else {
     const R = rng(W0.seed * 31 + 17);
     let buf = d;
-    if (W0.lean) buf = lean(buf, W, H, G, W0.lean);
-    chip(buf, W, H, G, W0.chips, R);
-    wear(buf, W, H, G, W0, R);
+    if (W0.lean && !T.fine) buf = lean(buf, W, H, G, W0.lean);
+    chip(buf, W, H, G, T.fine ? 0 : W0.chips, R);
+    wear(buf, W, H, G, T.fine ? { ...W0, snow: 0, moss: 0, scorch: 0 } : W0, R);
     const foot = footOf(buf, W, H, G);
     const F = canvas(W, H), f = F.getContext('2d');
     contact(f, foot, G);
@@ -149,7 +151,7 @@ function bake(T) {
     if (buf !== d) d.set(buf);
     g.putImageData(im, 0, 0);
     f.drawImage(a, 0, 0);
-    footing(f, foot, G, W0, b, R);
+    if (!T.fine) footing(f, foot, G, W0, b, R);
     out = { F, draw(ctx) { ctx.drawImage(F, X0, Y0); } };
   }
   out.x0 = X0; out.y0 = Y0; out.w = W; out.h = H;

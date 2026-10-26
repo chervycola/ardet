@@ -286,6 +286,41 @@ test('утварь: примета эпохи — одна на сторону �
   }
 });
 
+test('утварь: мелочь (fine) после запекания цела — царапина на остраконе и ямка петроглифа на месте', () => {
+  // попиксельный холст: запекание (render/things.js) красит, читает и складывает слои
+  const rgba = v => { const m = String(v).match(/^#([0-9a-f]{6})$/i); if (m) { const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255, 1]; }
+    const r = String(v).match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/); return r ? [+r[1], +r[2], +r[3], r[4] === undefined ? 1 : +r[4]] : [0, 0, 0, 1]; };
+  const put = (d, i, r, g, b, a) => { const da = d[i + 3] / 255, oa = a + da * (1 - a); if (oa <= 0) return;
+    d[i] = (r * a + d[i] * da * (1 - a)) / oa; d[i + 1] = (g * a + d[i + 1] * da * (1 - a)) / oa; d[i + 2] = (b * a + d[i + 2] * da * (1 - a)) / oa; d[i + 3] = oa * 255; };
+  const pixCanvas = () => { const c = { width: 0, height: 0, data: null };
+    c.getContext = () => { if (!c.data) c.data = new Uint8ClampedArray(c.width * c.height * 4);
+      const g = { tx: 0, ty: 0, fillStyle: '#000', canvas: c, imageSmoothingEnabled: false,
+        translate(x, y) { g.tx += x; g.ty += y; }, setTransform(a, b, cc, d, e, f) { g.tx = e; g.ty = f; },
+        fillRect(x, y, w, h) { const [r, gg, b, a] = rgba(g.fillStyle); x = Math.round(x + g.tx); y = Math.round(y + g.ty);
+          for (let yy = Math.max(0, y); yy < Math.min(c.height, y + h); yy++) for (let xx = Math.max(0, x); xx < Math.min(c.width, x + w); xx++) put(c.data, (yy * c.width + xx) * 4, r, gg, b, a); },
+        getImageData: () => ({ data: new Uint8ClampedArray(c.data) }), putImageData(im) { c.data.set(im.data); },
+        drawImage(s, x, y) { s.getContext(); x = Math.round(x + g.tx); y = Math.round(y + g.ty);
+          for (let yy = 0; yy < s.height; yy++) for (let xx = 0; xx < s.width; xx++) { const j = (yy * s.width + xx) * 4, X = xx + x, Y = yy + y;
+            if (s.data[j + 3] && X >= 0 && Y >= 0 && X < c.width && Y < c.height) put(c.data, (Y * c.width + X) * 4, s.data[j], s.data[j + 1], s.data[j + 2], s.data[j + 3] / 255); } },
+        beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {}, save() {}, restore() {} };
+      return g; };
+    return c; };
+  const ce = document.createElement;
+  document.createElement = pixCanvas;
+  try {
+    const light = (c, X, Y) => { const i = (Y * c.width + X) * 4; return c.data[i + 3] > 200 && c.data[i] > 180 && c.data[i + 1] > 170; };
+    const dark = (c, X, Y) => { const i = (Y * c.width + X) * 4; return c.data[i + 3] > 200 && c.data[i] + c.data[i + 1] + c.data[i + 2] < 160; };
+    const shot = p => { const c = pixCanvas(); c.width = 60; c.height = 40; const g = c.getContext(); g.translate(-(p.x - 30), -(p.gy - 30)); p.draw(g); return c; };
+    const ost = archProps.find(p => p.name === 'остраконы'), pet = archProps.find(p => p.name === 'петроглиф: ладья и ямки');
+    assert(ost && pet, 'остраконы и петроглиф стоят в мире');
+    assert(ost.thing.fine && pet.thing.fine, 'мелочи запекаются как fine');
+    let c = shot(ost); const ox = Math.round(ost.x) - (ost.x - 30), oy = ost.gy - (ost.gy - 30);
+    assert(light(c, ox + 1, oy - 4) && light(c, ox + 3, oy - 4), 'царапина на верхнем черепке пропала при запекании');
+    c = shot(pet); const px = Math.round(pet.x) - (pet.x - 30), py = pet.gy - (pet.gy - 30);
+    assert(dark(c, px + 6, py - 4) && dark(c, px - 7, py - 3), 'чашечные ямки петроглифа пропали при запекании');
+  } finally { document.createElement = ce; }
+});
+
 const { RELOOKS } = await imp('content/relooks.js');
 test('повторный осмотр: каждая вещь пробника — место мира', () => {
   for (const id of Object.keys(RELOOKS)) assert(locations.some(l => l.id === id), `нет места ${id}`);

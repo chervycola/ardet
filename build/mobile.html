@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='e808661 · 2026-10-26';console.log('[оттиск]', 'e808661 · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='88a9644 · 2026-10-26';console.log('[оттиск]', '88a9644 · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -7729,7 +7729,8 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
         const f = (t / 22 | 0) % 2;
         r(c, CA, x + 1, g - 6 + f, 1, 2 - f); // огонёк — днём так же
     }
-    // Клепсидра суда (Агора, ок. 400 г. до н. э.): верхний сосуд на подставке, у самого дна
+    // Клепсидра суда (Агора, ок. 400 г. до н. э.; от сосуда P 2084 уцелела нижняя часть, подставка
+    // и нижний сосуд — по реконструкции Музея Агоры): верхний сосуд на подставке, у самого дна
     // носик, под венчиком отверстие уровня; вода тонкой струёй каплями в нижний сосуд. К концу
     // струя слабеет до редких капель, сосуд пустеет, пауза — и его наливают снова (два хоя за
     // шесть минут — замер на восстановленном сосуде Агоры).
@@ -7758,7 +7759,7 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
     // Остраконы: горка черепков после подсчёта — чернолаковые вперемешку с простыми: черепица,
     // стенка амфоры, кухонный горшок, донце килики (так в находках Агоры и Керамика). Верхний
     // лежит отдельно, на нём процарапанная строка — резец снимает лак, царапина светлая. Букв нет
-    // (Афины, 488/7–417).
+    // (Афины, 488/7 — ок. 417).
     function ostraka(c, X, G) {
         const x = q(X), g = q(G);
         r(c, NI, x - 4, g - 1, 2, 1);
@@ -7865,10 +7866,10 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
         r(c, BR2, x + 9, g - 7, 3, 1); // колотушка у стойки
     }
     // Пограничный журнал на цепочке: на плоском камне полураскрытый свиток планок — слева тугой
-    // рулон, справа планки, поперёк два пеньковых шнура (так связывали; планки маркиза И, ок.
-    // 433 г. до н. э.; Годянь, ок. 300 г.); на шнуре бирка, верх зачернён тушью, как у ханьских
-    // бирок; к колышку в камне свиток прикован цепочкой (нов.: книги на цепи — обычай Европы).
-    // На средней планке — последняя строка.
+    // рулон, справа планки, поперёк два шнура (по два — Годянь, «Лао-цзы» А/Б/В, ок. 300 г. до н. э.;
+    // пенька — как у ханьских служебных связок, Цзюйянь 128.1, позже кольца); на шнуре бирка, верх
+    // зачернён тушью, как у ханьских бирок; к колышку в камне свиток прикован цепочкой (нов.: книги
+    // на цепи — обычай Европы). На средней планке — последняя строка.
     function slipRegister(c, X, G) {
         const x = q(X), g = q(G);
         r(c, K3, x - 4, g - 2, 9, 2);
@@ -8159,10 +8160,10 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
         r(c, BZ1, x + 15, g - 2, 1, 1);
         r(c, BZ0, x + 15, g - 1, 1, 1); // один лёг в стороне: остриё, втулка
     }
-    // Навершие-погремушка на шесте (скифские навершия: Коцюбинчики, VII в.; Ульские курганы,
-    // VI в.; Александрополь, Чмырёва Могила, IV в. до н. э.): деревянный шест, бронзовая
-    // втулка, полая груша с прорезью, в ней свободно катается железный шарик; сверху голова
-    // грифона клювом вбок. Зачем ставили — спорят: повозка, знак места жертвы, алтарь у входа.
+    // Навершие-погремушка на шесте (скифские навершия: Коцюбинчики, VII в.; Александрополь,
+    // Чмырёва Могила, IV в. до н. э.): деревянный шест, бронзовая втулка, полая груша с прорезью,
+    // в ней свободно катается железный шарик; сверху голова грифона клювом вбок (грифоны — IV в.).
+    // Зачем ставили — спорят: повозка, знак места жертвы, пара у входа в святилище.
     // Навершие (в жизни 14–30 см) нарисовано крупнее натуры — эмблема; шест в рост человека.
     // Шест не качается; шарик внутри — короткий маятник: задевший странник (через подвес) или
     // порыв бури (по силе ветра) его перекатывают, и голова дрожит на точку, прорезь мигает.
@@ -8387,9 +8388,9 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
             // не узнал. Царь Ариант велел каждому принести по наконечнику стрелы, грозя смертью
             // ослушнику, и из собранной груды отлил медный сосуд-памятник в Эксампее («Священные пути»,
             // на Буге, у края скифов-пахарей — IV 52): «вмещает шестьсот амфор», стенки в шесть пальцев,
-            // то есть метра четыре в поперечнике. Здесь — эмблема не в масштабе:
+            // по нашему счёту — метра четыре в поперечнике. Здесь — эмблема не в масштабе:
             // скифский котёл (полусфера на ножке-раструбе, ручки дугами торчком на венце), холодный,
-            // без огня; у ножки горка трёхлопастных наконечников без древков — перепись ещё идёт.
+            // без огня; у ножки горка трёхлопастных наконечников без древков — перепись ещё идёт (нов.).
             ARIANT = ['.L.......K.', 'L.K.....L.K', 'LHHHHHHHHHK', 'LNNNNNNNNNK', 'LBBBBBBBBBD', 'LBBBBBBBBBD', '.LBBBBBBBD.', '..LBBBBBD..', '....LBD....', '...LBBBD...'];
             etemenanki = kit_js_1.split(etemBody, etemLive);
             exports_30("ARCH", ARCH = {
@@ -8424,15 +8425,15 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
                     south: [
                         { name: 'колодец-журавль у канала', w: 28, h: 28, draw: shaduf },
                         { name: 'жертвенник огня', live: true, w: 14, h: 22, draw: fireAltar },
-                        { name: 'посох и светильник Диогена', live: true, w: 14, h: 26, draw: lychnos },
-                        { name: 'клепсидра суда', live: true, w: 10, h: 12, draw: klepsydra },
-                        { name: 'остраконы', w: 9, h: 4, unique: true, draw: ostraka },
+                        { name: 'посох и светильник Диогена', live: true, fine: true, w: 14, h: 26, draw: lychnos },
+                        { name: 'клепсидра суда', live: true, fine: true, w: 10, h: 12, draw: klepsydra },
+                        { name: 'остраконы', w: 9, h: 4, unique: true, fine: true, draw: ostraka },
                     ],
                     east: [
                         { name: 'колодец с воротом', w: 22, h: 24, draw: windlassWell },
                         { name: 'весы пошлины', w: 22, h: 18, draw: tollScales },
                         { name: 'колокола на раме', w: 24, h: 16, draw: chimeBells },
-                        { name: 'пограничный журнал на цепочке', w: 10, h: 6, unique: true, draw: slipRegister },
+                        { name: 'пограничный журнал на цепочке', w: 10, h: 6, unique: true, fine: true, draw: slipRegister },
                     ],
                     west: [
                         { name: 'колесница', w: 30, h: 16, draw: chariot },
@@ -8445,14 +8446,14 @@ System.register("sprites/arch/axial", ["world/hang", "world/wind", "sprites/arch
                         { name: 'кережа', w: 22, h: 10, draw: akja },
                         { name: 'лыжи у сугроба', w: 10, h: 28, draw: skis },
                         { name: 'вешало с рыбой', live: true, w: 16, h: 13, draw: fishRack },
-                        { name: 'петроглиф: ладья и ямки', w: 18, h: 5, unique: true, draw: petroglyph },
+                        { name: 'петроглиф: ладья и ямки', w: 18, h: 5, unique: true, fine: true, draw: petroglyph },
                     ],
                     plain: [
                         { name: 'брошенное колесо', w: 18, h: 12, draw: oldWheel },
                         { name: 'горит на колу', w: 12, h: 22, draw: gorytos },
                         { name: 'войлок на жердях', w: 24, h: 20, draw: feltRack },
                         { name: 'навершие-погремушка', live: true, w: 8, h: 24, draw: poleTop },
-                        { name: 'котёл Арианта', w: 24, h: 10, unique: true, draw: ariantas },
+                        { name: 'котёл Арианта', w: 24, h: 10, unique: true, fine: true, draw: ariantas },
                     ],
                 },
             });
@@ -27513,7 +27514,7 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
     exports_76("warmKind", warmKind);
     function thing(spec) {
         const T = {
-            x: spec.x, gy: spec.gy, w: spec.w, h: spec.h, live: !!spec.live, src: spec.draw, wear: spec.wear,
+            x: spec.x, gy: spec.gy, w: spec.w, h: spec.h, live: !!spec.live, fine: !!spec.fine, src: spec.draw, wear: spec.wear,
             name: spec.name, kind: spec.kind,
             draw(ctx) { (baked.get(T) || bake(T)).draw(ctx); },
         };
@@ -27539,16 +27540,17 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
             const foot = footOf(d, W, H, G);
             const U = canvas(W, H), O = canvas(W, H);
             contact(U.getContext('2d'), foot, G);
-            footing(O.getContext('2d'), foot, G, W0, 0, rng(W0.seed * 13 + 5));
+            if (!T.fine)
+                footing(O.getContext('2d'), foot, G, W0, 0, rng(W0.seed * 13 + 5));
             out = { U, O, draw(ctx) { ctx.drawImage(U, X0, Y0); T.src(ctx, T.x, T.gy, time_js_11.t); ctx.drawImage(O, X0, Y0); } };
         }
         else {
             const R = rng(W0.seed * 31 + 17);
             let buf = d;
-            if (W0.lean)
+            if (W0.lean && !T.fine)
                 buf = lean(buf, W, H, G, W0.lean);
-            chip(buf, W, H, G, W0.chips, R);
-            wear(buf, W, H, G, W0, R);
+            chip(buf, W, H, G, T.fine ? 0 : W0.chips, R);
+            wear(buf, W, H, G, T.fine ? { ...W0, snow: 0, moss: 0, scorch: 0 } : W0, R);
             const foot = footOf(buf, W, H, G);
             const F = canvas(W, H), f = F.getContext('2d');
             contact(f, foot, G);
@@ -27557,7 +27559,8 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
                 d.set(buf);
             g.putImageData(im, 0, 0);
             f.drawImage(a, 0, 0);
-            footing(f, foot, G, W0, b, R);
+            if (!T.fine)
+                footing(f, foot, G, W0, b, R);
             out = { F, draw(ctx) { ctx.drawImage(F, X0, Y0); } };
         }
         out.x0 = X0;
@@ -27830,8 +27833,10 @@ System.register("render/things", ["world/disc", "content/ulitsa_db", "render/gra
             BURY = [0.3, 0.2, 0.12, 0.06, 0.03, 0, 0, 0, 0]; // доля высоты в земле, по эпохе
             DAMP = { west: 1.25, east: 1, plain: 0.8, north: 0.45, south: 0 }; // где растёт мох
             // ── запекание ──
-            // spec: { x, gy, w, h, draw(ctx, x, gy, t), live, wear }
-            // x — середина, gy — линия земли; рисунок вещи — в w×h над землёй
+            // spec: { x, gy, w, h, draw(ctx, x, gy, t), live, wear, fine }
+            // x — середина, gy — линия земли; рисунок вещи — в w×h над землёй;
+            // fine — мелочь, чей смысл в одной-двух точках (царапина на черепке, ямка на скале): без крена,
+            // сколов, снежных шапок и мха, нанос у подошвы её не заносит — тень касания остаётся
             // тёплое ли у вида рисунок (огонь, свеча, лампа): брошенным в поле тёплое не лежит, у ворот
             // и во дворе вперёд очереди не встаёт — тёплых пятен в кадре не больше трёх (render/ground.js,
             // render/archground.js). Узнаю по краскам рисунка (без холста)
@@ -52155,7 +52160,7 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
                 // вещь стоит в земле двора (render/things.js): тень касания, у подошвы —
                 // сугроб или нанос, если у стен двора они есть; износ — по эпохе и огню
                 const drift = STYLE[e.ringId]?.[e.side]?.drift;
-                const T = things_js_4.thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, name: K.name, kind: 'yard',
+                const T = things_js_4.thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, fine: K.fine, name: K.name, kind: 'yard',
                     wear: things_js_4.wearOf({ ring: e.ring, side: e.side, d: disc_js_40.warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true,
                         foot: drift === 'snow' ? 'snow' : drift === 'sand' ? 'sand' : 'yard' }) });
                 const p = { x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw };
