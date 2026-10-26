@@ -36,6 +36,8 @@ import { plan, paint, MAT, FORM, tone, split } from './kit.js';
 import { phaseAt, skyAt } from '../../world/sky.js';
 import { redNoon } from '../../world/redNoon.js';
 import { wind } from '../../world/wind.js';
+import { getPlayer } from '../../core/playerRef.js';
+import { hazeColumn } from '../../render/haze.js';
 const N = '#0D0B0A', BONE = '#D9CFB8', ASH = '#8A8D8F', MIST = '#3D4A3A',
   CANDLE = '#E28A3A', CIN = '#C23B2B', SEP = '#3A3026',
   DARK = '#15100c', WOOD = '#241c14', WOOD2 = '#3a2418', STONE = '#3a3328',
@@ -51,6 +53,11 @@ function noise(i, j, s) {
 }
 
 // пологая линия горизонтальными отрезками (тросы, лопасти): без разрывов
+// смесь двух красок канона (#rrggbb) в долю k
+function mix9(a, b, k) {
+  const p = v => [1, 3, 5].map(i => parseInt(v.slice(i, i + 2), 16)), A = p(a), B = p(b);
+  return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join('');
+}
 function hline(c, col, x0, y0, x1, y1) {
   c.fillStyle = col;
   const n = Math.abs(y1 - y0) + 1, sy = Math.sign(y1 - y0);
@@ -539,10 +546,50 @@ function glassBody(c, x, gy) {
   hline(c, ASH, X0 + 39, Y0 + 106, X0 + 28, Y0 + 96);
 }
 // днём в стекле — соседние башни и пуля «огурца», ломаная по стёклам; ход эскалатора;
-// ночью — она сама: горит один этаж
+// ночью — она сама: горит один этаж. Поверх — люлька мойщика (cradle)
 function glassLive(c, x, gy, t) {
   const X0 = Math.round(x) - 23, Y0 = Math.round(gy) - 112, T = t | 0;
   const sky = skyAt(phaseAt(t || 0));
+  glassPanes(c, X0, Y0, T, sky);
+  cradle(c, X0, Y0, T, sky);
+}
+// Люлька мойщика на двух тросах с консоли на крыше (башенные установки — у «огурца», 20 Fenchurch,
+// Шарда, Бурдж-Халифы): днём спускается ступенями — пояс витража за поясом, на каждом моют, рука со
+// скребком ходит, — наверх поднимается сплошь. Ветер у земли от 0,5 (у крыши это ~10 м/с; в США
+// работа запрещена выше 25 миль/ч) — люлька уходит к кромке крыши и спускается снова, только когда
+// стихнет ниже 0,4 и пройдёт три четверти минуты; в сумерки и ночью стоит там же. На спуске
+// люльку держат упоры (EN 1808) — качается на точку, не маятником; на стоянке закреплена.
+// Новое — странника не знает (world/hang.js, cradle:).
+const CR_BELT = 968, CR_BELTS = 7, CR_UP = 900, CR_REST = 1200;   // пояс: 2 с хода + 14 с мытья; подъём 15 с; у крыши 20 с
+function cradle(c, X0, Y0, T, sky) {
+  const jx = X0 + 29, jy = Y0 + 10;
+  R(c, tone(MAT.STEEL, 3), X0 + 27, Y0 + 10, 4, 3); R(c, tone(MAT.STEEL, 1), X0 + 25, Y0 + 10, 9, 1);   // машина на крыше и консоль
+  const h = hang(`cradle:${X0}:${Y0}`, jx, jy, 4, { sail: 0.008, damp: 0.99, gy: Y0 + 112, r: 5 });
+  // ветер: уйти наверх сразу, вернуться — когда стихнет и выждав
+  const w = wind.at(jx, Y0 + 112);
+  if (w.s >= 0.5) { h.park = true; h.calm = T; }
+  else if (h.park && (w.s >= 0.4 || T - h.calm < 2700 || T < h.calm)) { if (w.s >= 0.4) h.calm = T; }
+  else h.park = false;
+  const P = CR_BELT * CR_BELTS + CR_UP + CR_REST, ph = (T + (noise(X0, Y0, 5) * P | 0)) % P;
+  let L = 4;
+  if (sky.name === 'день' && !h.park && ph < CR_BELT * CR_BELTS) L = 4 + 9 * (Math.floor(ph / CR_BELT) + 1);
+  // лебёдка: трос травится и выбирается со своей скоростью; скачок времени (запекание, пробы) — сразу на место
+  const dt = T - (h.ct ?? T);
+  if (h.cur === undefined || dt < 0 || dt > 10) {
+    h.cur = L;
+    for (const [i, q] of h.pts.entries()) { q.x = q.ox = jx; q.y = q.oy = jy + L * i / h.segs; }   // повисла отвесно, без разгона
+  } else h.cur += Math.max(-0.07 * dt, Math.min(0.07 * dt, L - h.cur));
+  h.ct = T; h.len = h.cur;
+  const parked = h.cur < 4.5, still = Math.abs(h.cur - L) < 0.3;
+  h.sail = parked ? 0 : 0.008;
+  const tp = tipOf(h), gx = parked ? jx : jx + Math.max(-1, Math.min(1, Math.round(tp.x - jx))), gyy = Math.round(jy + h.cur);
+  hline(c, ASH, X0 + 25, jy + 1, gx - 4, gyy); hline(c, ASH, X0 + 33, jy + 1, gx + 4, gyy);
+  R(c, ASH, gx - 4, gyy, 9, 1);                                                    // поручень
+  R(c, tone(MAT.STEEL, 3), gx - 4, gyy + 1, 9, 2); R(c, tone(MAT.STEEL, 0), gx - 4, gyy + 3, 9, 1);   // короб
+  R(c, BONE, gx - 1, gyy - 2, 1, 1); R(c, SEP, gx - 1, gyy - 1, 1, 2);             // мойщик: каска, роба
+  if (!parked && still && (T >> 5) & 1) R(c, SEP, gx - 2, gyy - 1, 1, 1);          // рука со скребком
+}
+function glassPanes(c, X0, Y0, T, sky) {
   if (sky.sun && redNoon.k < 0.5) {
     c.fillStyle = tone(MAT.GLASS, 3);
     for (const [bx, bw, top] of [[5, 6, 44], [23, 7, 52], [37, 5, 60]]) c.fillRect(X0 + bx, Y0 + top, bw, 92 - top);
@@ -1020,45 +1067,92 @@ function art(name, rows) {
   return { name, w: t[0].length, h: t.length, draw: (c, x, gy) => stamp(c, x, gy, t) };
 }
 
-// юг — пирс над фундаментом: лодка со стеклянным дном, свая с отметками
-// прилива, солнечная панель на стойке
+// юг — пирс над фундаментом: лодка со стеклянным дном, солнечная панель на стойке; примета —
+// свая с водомерной рейкой, живое — флаг ныряльщика на поплавке в море у библиотеки
 const GLASSBOAT = [
   '....BBBBBBBBBBBBBBBB........',
   '....A..............A........',
   '....A..............A....11..',
   'AAAAAAAAAAAAAAAAAAAAAAAA111.',
   '.PPPPPPPPPPPPPPPPPPPPPPPA11.',
-  '..PPPPPPPPPPPPPPPPPPPPPP.1..',
+  '..PPP11PPPP11PPPP11PPPPP.1..',
   '...AAAAAAAAAAAAAAAAAAAAA.1..',
   '.........................A..',
 ];
-const TIDEPOST = [
-  '..AA....',
-  '.AWWw...',
-  '.AWWwBB.',
-  '.AWWw...',
-  '.AWWwB..',
-  '.AWWw...',
-  '.AWWwBB.',
-  '.AWWw...',
-  '.AWWwB..',
-  '.AWWw...',
-  '.AWWwBBB',
-  '.AWWw...',
-  'AAAAAA..',
-  '.AWWwB..',
-  '.AWWw...',
-  '.AWWwBB.',
-  '.AWWw...',
-  '.AWWwB..',
-  '.AWWw...',
-  '.AWWwBBB',
-  '.AWWw...',
-  '.AMWw...',
-  'MAMMwM..',
-  '.MWMMw..',
-  'MMMMMMM.',
-];
+// Свая с водомерной рейкой (примета): эмаль костью, деления «E» через одну зеркально, без цифр —
+// условно, не в масштабе; метровая стяжка. За правую кромку — засечки высокой воды по ряду
+// мареографа Пунта-делла-Салюте (Венеция; высоты — от нуля мареографа; ряд средиземноморский,
+// свая у библиотеки над морем — выдумка): верхняя, процарапанная, — 4.11.1966, 194 см, рекорд;
+// на точку ниже, киноварью, — 12.11.2019, 189 см по сводному разбору (в первых сводках 187),
+// «почти»; самая новая — самая низкая: 3.10.2020 ворота MOSE впервые подняли против настоящей
+// высокой воды — в море ждали 130–140, у Салюте поднялось до 77, Сан-Марко сухая. Снизу засохшие
+// водоросли, над ними строка соли; двор сухой.
+const TP_E = ['11', '1.', '11'];                                    // «E» на полрейки: ножка и зубцы, через просвет
+function tidePost(c, x, gy) {
+  const L = Math.round(x) - 4, G = Math.round(gy), top = G - 25;
+  R(c, tone(MAT.TIMBER, 3), L, top, 1, 25); R(c, WOOD2, L + 1, top, 3, 25); R(c, ASH, L + 4, top, 1, 25);   // свая: свет слева, кромка пеплом
+  R(c, ASH, L, top - 1, 5, 1);                                                      // срез
+  R(c, BONE, L + 1, top + 1, 3, 15);                                                // рейка — эмаль
+  for (let k = 0; k < 3; k++) TP_E.forEach((row, r) => { for (let i = 0; i < 2; i++) if (row[i] === '1') R(c, N, L + (k % 2 ? 3 - i : 1 + i), top + 2 + k * 5 + r, 1, 1); });
+  R(c, SEP, L + 3, top + 4, 1, 1); R(c, SEP, L + 1, top + 13, 1, 1);               // сколы эмали
+  R(c, ASH, L, top + 12, 6, 1);                                                     // стяжка на метре
+  // засечки высокой воды
+  R(c, ASH, L + 5, top + 1, 2, 1);                                                  // 1966
+  R(c, CIN, L + 5, top + 2, 3, 1);                                                  // 2019
+  R(c, BONE, L + 5, top + 16, 2, 1);                                                // 2020, ворота закрыты
+  // засохшие водоросли и соль
+  const ALG = mix9(MIST, N, 0.45);
+  for (let y = top + 17; y < G; y++) for (let i = 0; i < 5; i++) R(c, y > G - 4 || (i + y) % 3 === 0 ? ALG : MIST, L + i, y, 1, 1);
+  for (let i = 0; i < 5; i += 2) R(c, BONE, L + i, top + 16, 1, 1);                 // строка соли
+  R(c, PAPER2, L + 1, top + 16, 1, 1); R(c, PAPER2, L + 3, top + 16, 1, 1);
+  R(c, SEP, L - 1, G - 1, 7, 1);                                                    // сырой песок у подножия
+}
+
+// Флаг ныряльщика на поплавке: внизу работает человек (водолаз-архивист — наша выдумка; работа —
+// нет: дно у форта Кайтбей описывают с 1994-го — тысячи камней, среди них маяк, у каждого номер;
+// в Восточной гавани ищут с 1992-го, и что подняли из гавани, стоит в музее под соседней
+// библиотекой). Флаг — красный с белой косой полосой, как велит итальянская норма для буя
+// ныряльщика (документально — Италия; флаг «А» — сигнал судна, и он синий).
+// Поплавок костью, линь уходит к пузырям. Три ритма: флаг — по ветру мира (в штиль висит, в ветер
+// вытянут и рябит), поплавок — на зыби, раз в ~4,5 с; пузыри — очередью на каждый выдох, раз в
+// 4–6 с, место очереди бродит у поплавка. Работают днём: к вечеру флаг скатан, пузырей нет.
+const BUOY = new Map();
+function diverBuoy(c, x, gy, t = 0, still = false) {
+  const X = Math.round(x), G = Math.round(gy), T = t | 0;
+  const day = !still && skyAt(phaseAt(t || 0)).name === 'день';
+  const bob = still ? 0 : Math.sin(T * 0.0233 + noise(X, G, 7) * 6.3) > 0.35 ? -1 : 0, W0 = G - 3 + bob;
+  // пузыри: очередь на выдох — точка, кольцо, редкие запоздалые
+  if (day) {
+    let st = BUOY.get(X + ':' + G);
+    if (!st) BUOY.set(X + ':' + G, st = { at: T, gap: 270 });
+    if (T - st.at > st.gap || T < st.at) { st.at = T; st.gap = 240 + (noise(X, T >> 6, 9) * 120 | 0); }
+    const a = T - st.at, bx = X + 5 + Math.round(Math.sin(T * 0.0021) * 1.2), by = G - 2;
+    if (a < 8) R(c, BONE, bx, by, 1, 1);
+    else if (a < 30) { R(c, BONE, bx - 1, by, 1, 1); R(c, BONE, bx + 1, by, 1, 1); R(c, BONE, bx, by - 1, 1, 1); if (a < 18) R(c, PAPER, bx, by, 1, 1); }
+    else if (a < 54 && (a >> 2) & 1) { R(c, mix9(BONE, MIST, 0.5), bx - 1, by - 1, 1, 1); R(c, mix9(BONE, MIST, 0.5), bx + 1, by, 1, 1); }
+    hline(c, mix9(ASH, MIST, 0.5), X + 1, G - 1, bx - 1, G - 1);                   // линь к водолазу
+  }
+  // поплавок: свет слева сверху, низ уходит в воду
+  R(c, BONE, X - 2, W0 - 1, 4, 1); R(c, PAPER, X - 3, W0, 7, 1); R(c, BONE, X - 3, W0, 2, 1); R(c, ASH, X + 2, W0 - 1, 1, 1);
+  R(c, mix9(ASH, MIST, 0.5), X - 3, W0 + 1, 7, 1);
+  R(c, mix9(BONE, MIST, 0.4), X - 5, W0 + 1, 1, 1); R(c, mix9(BONE, MIST, 0.4), X + 4, W0 + 1, 1, 1);   // рябь у бортов
+  // мачта с шишечкой
+  R(c, ASH, X, W0 - 10, 1, 9); R(c, BONE, X, W0 - 11, 1, 1);
+  if (still) return;
+  if (!day) { R(c, CIN, X + 1, W0 - 10, 1, 3); R(c, SEP, X + 1, W0 - 8, 1, 1); return; }   // скатан на мачте
+  const w = wind.at(X, G), d = w.x >= 0 ? 1 : -1;
+  if (w.s < 0.12) {                                                                // штиль: висит вдоль мачты
+    R(c, CIN, X + d, W0 - 10, 2, 4); R(c, BONE, X + d, W0 - 10, 1, 1); R(c, BONE, X + d + (d > 0 ? 1 : 0), W0 - 8, 1, 1); R(c, SEP, X + 2 * d, W0 - 7, 1, 1);
+    return;
+  }
+  // вытянут по ветру 6×4, белая полоса от верхнего угла у мачты к нижнему у свободного края; край рябит
+  const rip = (T >> 3) & 1;
+  for (let i = 0; i < 6; i++) {
+    const fx = X + d * (i + 1), dy = i >= 4 ? (i === 5 ? rip : 0) : 0, h = i === 5 ? 3 : 4;
+    R(c, CIN, fx, W0 - 10 + dy, 1, h);
+    R(c, BONE, fx, W0 - 10 + dy + Math.min(h - 1, Math.round(i * 3 / 5)), 1, 1);
+  }
+}
 const SOLAR = [
   '....AAAAAAAAAAAAAA',
   '....A111111111111A',
@@ -1074,8 +1168,8 @@ const SOLAR = [
   '.......A1.........',
   '.....AAA11A.......',
 ];
-// восток — плоский новый мир: светофор с пустой рамкой, гашапоны,
-// прокатный велосипед
+// восток — плоский новый мир: светофор с пустой рамкой, гашапоны; примета — куча брошенных
+// прокатных велосипедов, живое — купол камеры на столбе
 const WALKSIGN = [
   '.11111.',
   '1NNNNN1',
@@ -1114,36 +1208,125 @@ function gacha(c, x, gy) {
     R(c, BONE, L + mx + 1 + k, G - 12, 2, 2); R(c, k ? MIST : CIN, L + mx + 3, G - 11, 2, 2); R(c, PAPER2, L + mx + 2 + k, G - 15, 2, 2);
   }
 }
-function bike(c, x, gy) {
-  const L = Math.round(x) - 8, G = Math.round(gy);
-  // колёса кольцами, втулки
-  for (const wx of [0, 11]) {
-    R(c, ASH, L + wx + 1, G - 5, 3, 1); R(c, ASH, L + wx + 1, G - 1, 3, 1);
-    R(c, ASH, L + wx, G - 4, 1, 3); R(c, ASH, L + wx + 4, G - 4, 1, 3); R(c, N, L + wx + 2, G - 3, 1, 1);
-  }
-  // рама киноварью — единственный цвет; седло, руль, корзина
-  R(c, CIN, L + 8, G - 3, 5, 1); R(c, CIN, L + 8, G - 7, 1, 4); R(c, CIN, L + 4, G - 7, 5, 1);
-  R(c, CIN, L + 5, G - 6, 1, 1); R(c, CIN, L + 6, G - 5, 1, 1); R(c, CIN, L + 7, G - 4, 1, 1);
-  R(c, ASH, L + 3, G - 7, 1, 4);
-  R(c, N, L + 7, G - 8, 4, 1);
-  R(c, ASH, L + 2, G - 9, 3, 1); R(c, ASH, L, G - 8, 3, 3); R(c, N, L + 1, G - 7, 1, 1);
+// Куча брошенных прокатных велосипедов (пузырь шеринга без стоянок, Китай, 2017–2018: «кладбища»
+// на пустырях Сямэня, Шанхая, Пекина, Уханя; Bluegogo закрылся в ноябре 2017-го, у ofo в конце
+// 2018-го — очереди за залогами). Холм выше слева, к правому краю сходит на нет; наверху —
+// велосипед колёсами вверх: свалка, а не стоянка. Краски переводом: колёса одних — киноварью
+// (оранжевые литые), рамы серебром — пеплом; рамы других — выгоревшей бумагой, корзина костью;
+// третьих — мглой. Сквозь кучу проросла трава (стояли месяцами — допущение).
+function ring5(c, cx, cy, col, lit, hub = N) {
+  R(c, col, cx - 1, cy - 2, 3, 1); R(c, col, cx - 1, cy + 2, 3, 1); R(c, col, cx - 2, cy - 1, 1, 3); R(c, col, cx + 2, cy - 1, 1, 3);
+  if (lit) { R(c, lit, cx - 1, cy - 2, 2, 1); R(c, lit, cx - 2, cy - 1, 1, 1); }       // свет сверху слева
+  R(c, hub, cx, cy, 1, 1);
 }
+function bikePile(c, x, gy) {
+  const L = Math.round(x) - 13, G = Math.round(gy);
+  R(c, SEP, L + 1, G - 1, 25, 1);                                                    // тень кучи
+  // тело кучи: переплетение рам и спиц, выше слева от середины
+  for (let i = 0; i < 25; i++) {
+    const top = G - 2 - Math.round(9 * Math.exp(-(((i - 9) / 8) ** 2)));
+    for (let y = top; y < G - 1; y++) {
+      const v = noise(i, y - G, 17);
+      const col = v < 0.3 ? N : v < 0.55 ? STONE2 : v < 0.72 ? SEP : v < 0.86 ? tone(MAT.STEEL, 1) : null;
+      if (col && (i + y) % 3 !== 0) R(c, col, L + i, y, 1, 1);
+    }
+  }
+  // полузасыпанные колёса и рама третьих — мглой
+  ring5(c, L + 4, G - 4, tone(MAT.STEEL, 1), null); R(c, STONE2, L + 1, G - 2, 6, 1);
+  ring5(c, L + 11, G - 6, tone(MAT.STEEL, 2), ASH);
+  hline(c, MIST, L + 5, G - 8, L + 9, G - 4);
+  // прислонён справа: шины тёмные, рама-монотруба выгоревшей бумагой, корзина костью спереди
+  ring5(c, L + 17, G - 3, STONE2, ASH); ring5(c, L + 23, G - 3, STONE2, ASH);
+  hline(c, PAPER2, L + 18, G - 3, L + 22, G - 7); R(c, PAPER, L + 18, G - 4, 1, 1);
+  R(c, PAPER2, L + 19, G - 8, 1, 3); R(c, N, L + 18, G - 9, 3, 1);                    // подседельная, седло
+  R(c, PAPER2, L + 23, G - 8, 1, 3); R(c, ASH, L + 22, G - 9, 3, 1);                  // вынос, руль
+  R(c, BONE, L + 24, G - 7, 3, 1); R(c, BONE, L + 24, G - 6, 1, 1); R(c, BONE, L + 26, G - 6, 1, 1);   // корзина
+  // наверху — колёсами вверх: литые колёса киноварью, рама буквой V пеплом, седло и руль вниз в кучу
+  ring5(c, L + 6, G - 12, CIN, null); ring5(c, L + 13, G - 12, CIN, null);
+  R(c, BONE, L + 5, G - 14, 2, 1); R(c, BONE, L + 12, G - 14, 2, 1);                  // свет на ободах
+  hline(c, ASH, L + 7, G - 10, L + 9, G - 8); hline(c, ASH, L + 9, G - 8, L + 12, G - 10);
+  R(c, N, L + 8, G - 7, 3, 1);                                                          // седло вниз
+  R(c, ASH, L + 13, G - 9, 1, 2); R(c, ASH, L + 12, G - 7, 3, 1);                      // руль вниз
+  R(c, MIST, L + 8, G - 2, 1, 1); R(c, MIST, L + 12, G - 2, 1, 1); R(c, MIST, L + 12, G - 3, 1, 1);   // трава
+}
+
+// Столб с камерами (Skynet — с 2005-го, Sharp Eyes — с 2015-го): консоль буквой «Г», на ней три
+// неподвижные «пули» — влево, вправо, вправо-вниз, — под консолью панель подсветки, на столбе —
+// шкафчик питания; ниже на кронштейне купол поворотной. Купол ведёт того, кто движется рядом, —
+// кого угодно одинаково, шагами, с запаздыванием и перелётом; остановился — пропал для камеры:
+// купол постоит и пойдёт обходом от края к краю. Внимания не знает, узнавания нет; ничего не
+// мигает (тот столб, что весь в мигающих глазах, — на западной тропе, world/cameras.js).
+// Подсветка ночью невидима, как у 940 нм.
+const CAMS = new Map();
+function bullet(c, x, y, d) {                                     // корпус 4×2 под козырьком, объектив ночью, кронштейн вверх
+  R(c, BONE, x - (d > 0 ? 0 : 1), y - 1, 5, 1);                   // козырёк выступает над объективом
+  R(c, PAPER, x, y, 4, 1); R(c, ASH, x, y + 1, 4, 1); R(c, N, d > 0 ? x + 4 : x - 1, y, 1, 2);
+  R(c, tone(MAT.STEEL, 1), x + 1 + (d > 0 ? 0 : 1), y - 2, 1, 1);
+}
+function camPole(c, x, gy, t = 0, still = false) {
+  const X = Math.round(x) - 3, G = Math.round(gy), T = t | 0;                        // столб левее середины: отвод вправо
+  R(c, CONC, X - 1, G - 2, 4, 2); R(c, ASH, X - 1, G - 2, 1, 1);                     // пятка
+  R(c, tone(MAT.STEEL, 3), X, G - 31, 1, 29); R(c, ASH, X + 1, G - 31, 1, 29);        // столб: свет слева, кромка пеплом
+  R(c, CONC, X - 2, G - 15, 3, 4); R(c, tone(MAT.CONCRETE, 4), X - 2, G - 15, 1, 4);  // шкафчик питания
+  R(c, ASH, X - 3, G - 33, 12, 1); R(c, tone(MAT.STEEL, 1), X - 3, G - 32, 2, 1);     // консоль «Г»
+  bullet(c, X + 4, G - 30, 1); bullet(c, X - 6, G - 30, -1);                        // под консолью: вправо, влево
+  R(c, tone(MAT.STEEL, 1), X + 8, G - 32, 1, 5); bullet(c, X + 9, G - 26, 1); R(c, N, X + 13, G - 25, 1, 1);   // на отводе — вправо-вниз
+  R(c, ASH, X + 2, G - 32, 2, 2); R(c, BONE, X + 2, G - 31, 1, 1);                    // панель подсветки
+  // купол на кронштейне: шапка, дымчатая полусфера; блик объектива показывает поворот
+  R(c, ASH, X - 2, G - 22, 2, 1);
+  R(c, BONE, X - 6, G - 22, 4, 1); R(c, ASH, X - 6, G - 21, 4, 1);
+  R(c, SEP, X - 6, G - 20, 4, 1); R(c, N, X - 5, G - 19, 2, 1); R(c, SEP, X - 6, G - 19, 1, 1); R(c, SEP, X - 3, G - 19, 1, 1);
+  let st = CAMS.get(X + ':' + G);
+  if (!st) CAMS.set(X + ':' + G, st = { p: 2, row: 1, want: 2, wrow: 1, next: 0, lt: T, seen: -1e9, dir: 1, hold: 0 });
+  if (!still) step(st, X - 4, G, T);
+  const p = still ? 2 : st.p, row = still ? 1 : st.row;
+  R(c, ASH, X - 6 + Math.min(3, p), G - 20 + row, 1, 1);
+}
+// купол: цель — кто движется рядом; шаг — одна позиция за 18 кадров; потерял — обход
+function step(st, cx, G, T) {
+  const dt = T - st.lt; st.lt = T;
+  if (dt <= 0 || dt > 10) { st.next = T; return; }                 // запекание и пробы — мимо
+  const pl = getPlayer();
+  if (pl && (Math.abs(pl.vx || 0) + Math.abs(pl.vy || 0)) > 0.05) {
+    const dx = pl.x + 6 - cx, dy = pl.y + 23 - G;
+    if (Math.abs(dx) < 200 && Math.abs(dy) < 140) {
+      const a = Math.atan2(dx, dy);
+      st.want = Math.max(0, Math.min(4, Math.round(Math.sin(a) * 2) + 2)); st.wrow = Math.cos(a) > 0 ? 1 : 0;
+      st.seen = T;
+    }
+  }
+  if (T - st.seen > 270) {                                         // никого: постоял — обход от края к краю
+    if (st.p === st.want && T >= st.hold) {
+      if (st.p === 0 || st.p === 4) { st.dir = st.p === 0 ? 1 : -1; st.hold = T + 180; }
+      st.want = Math.max(0, Math.min(4, st.p + st.dir)); st.wrow = 1;
+    }
+  }
+  if (T < st.next) return;
+  const patrol = T - st.seen > 270;
+  if (st.p !== st.want) { st.p += Math.sign(st.want - st.p); st.next = T + (patrol ? 75 : 18); }
+  else if (st.row !== st.wrow) { st.row = st.wrow; st.next = T + 18; }
+}
+
 // запад — стеклянный даунтаун: антитаранные тумбы, самокат, зарядка машин
 const BOLLARDS = [
   '.BA.....BA.....BA.',
-  'BAA1...BAA1...BAA1',
-  'BAA1...BAA1...BAA1',
-  'PPPP...PPPP...PPPP',
-  'BAA1...BAA1...BAA1',
-  'BAA1...BAA1...BAA1',
-  'BAA1...BAA1...BAA1',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'PPPA...PPPA...PPPA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
+  'BAsA...BAsA...BAsA',
   'AAA1...AAA1...AAA1',
 ];
 const ESCOOTER = [
   '..AAAA......',
   '....A1......',
   '....A1......',
-  '....AK......',
+  '...BA1......',
   '....A1......',
   '....A1......',
   '....A1......',
@@ -1152,7 +1335,7 @@ const ESCOOTER = [
   '....A1......',
   '....A1......',
   '...A11......',
-  '..A1AAAAAAAA',
+  '..A1AAAAAAAK',
   '.A1A1111111A',
   'A111A.....A1',
   '.AAA.......A',
@@ -1178,6 +1361,27 @@ const CHARGER = [
   'AcccccA..',
   'AAAAAAA..',
 ];
+// Враждебная скамейка (примета): сиденье поделено подлокотниками на три равных места — сидеть
+// можно, лечь нельзя. Из приёмов «защитной» архитектуры (скамья «Камден», 2012; шипы у входов,
+// сняты в июне 2014-го после петиции) этот читается одной вещью. Рейки сиденья на стальной
+// раме, разделители — полированная сталь: свет слева, кромка пеплом; спинка дальше, темнее.
+const HOSTILE = [
+  '.SSSSSSSSSSSSSSSSSSSSS.',
+  '.N...................N.',
+  '.SSSSSSSSSSSSSSSSSSSSS.',
+  '.N...................N.',
+  'BA.....BA.....BA.....BA',
+  'BA.....BA.....BA.....BA',
+  'PPPPPPPPPPPPPPPPPPPPPPA',
+  'WWWWWWWWWWWWWWWWWWWWWWN',
+  '.A..........A........A.',
+  '.A..........A........A.',
+  'NA.........NA........AN',
+];
+function hostileBench(c, x, gy) {
+  spr(c, Math.round(x) - 11, Math.round(gy) - HOSTILE.length, HOSTILE, { S: tone(MAT.STEEL, 1), D: N, B: BONE, A: ASH, P: PAPER2, W: WOOD2, N });
+}
+
 // север — горячий коридор: снегоход, кабельный барабан, тарелка на шесте
 const SNOWMOBILE = [
   '.....AA.................',
@@ -1201,29 +1405,104 @@ function cableDrum(c, x, gy) {
   R(c, N, L + 5, G - 8, 3, 3); R(c, ASH, L + 6, G - 7, 1, 1);
   // кабель сходит по земле — к ветряку
   R(c, N, L + 9, G - 1, 7, 1); R(c, ASH, L + 9, G - 2, 1, 1);
+  R(c, tone(MAT.SNOW, 5), L + 3, G - 14, 6, 1); R(c, tone(MAT.SNOW, 4), L + 2, G - 13, 2, 1);   // снег на щеке
 }
-const DISH = [
-  '........BBB...',
-  '......AAAAA...',
-  '....AA11111A..',
-  '...A1111111A..',
-  '..A1111111A...',
-  '..A111111A..A.',
-  '...A1111A..A..',
-  '....AAAA..1...',
-  '......A.......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '......A1......',
-  '.....AA11.....',
-  '....AAA111....',
-];
+// Тарелка на шесте — почти стоймя, анфас: на 78° с. ш. геостационарные спутники всего на ~3° над
+// южным горизонтом, тарелка смотрит на юг, к нам (расчёт по геометрии). Тёмная чаша, кромка пеплом,
+// блик слева сверху, облучатель ниже середины на штанге от нижней кромки.
+function dishPole(c, x, gy) {
+  const X = Math.round(x), G = Math.round(gy), cy = G - 15;
+  for (let dy = -5; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+    const q = (dx / 4.6) ** 2 + ((dy + 0.5) / 5.1) ** 2;
+    if (q > 1) continue;
+    R(c, q > 0.62 ? (dx < 0 || dy < -2 ? ASH : tone(MAT.STEEL, 1)) : STONE2, X + dx, cy + dy, 1, 1);
+  }
+  R(c, BONE, X - 3, cy - 3, 1, 2); R(c, BONE, X - 2, cy - 4, 1, 1);                  // блик
+  R(c, ASH, X, cy + 3, 1, 2); R(c, BONE, X - 1, cy + 1, 2, 2); R(c, ASH, X + 1, cy + 2, 1, 1);   // штанга от нижней кромки, облучатель
+  R(c, tone(MAT.STEEL, 3), X, cy + 5, 1, G - cy - 6); R(c, ASH, X + 1, cy + 5, 1, G - cy - 6);   // шест
+  R(c, CONC, X - 2, G - 1, 5, 1);
+}
+// Радомы станции на плато (SvalSat на Платоберге у Лонгйира, с 1997-го; к 2004-му — шесть антенн,
+// теперь их больше сотни, по ESA — за полторы сотни): не шары во дворе, а вид на отрог плато —
+// снежная полка, под ней тёмная скала, по скале зигзагом дорога наверх. Три белых шара разной
+// величины, срезанные снизу, на низких тумбах; у большого — коробка аппаратной; швы панелей —
+// только на крупных. Три против полутора сотен — синекдоха. Свет слева сверху.
+function radome(c, cx, cy, r) {
+  for (let dy = -r; dy <= Math.ceil(r * 0.6); dy++) for (let dx = -r; dx <= r; dx++) {
+    const d2 = dx * dx + dy * dy;
+    if (d2 > r * r + r * 0.6) continue;
+    const lit = (-dx * 0.6 - dy * 0.8) / r;                     // к свету — светлее
+    let col = lit > 0.35 ? BONE : lit > -0.15 ? PAPER : lit > -0.55 ? PAPER2 : ASH;
+    if (r >= 5 && col !== ASH && (dx - 2 * dy + 64) % 5 === 0 && d2 < r * r - r) col = col === BONE ? PAPER : PAPER2;   // швы панелей
+    R(c, col, cx + dx, cy + dy, 1, 1);
+  }
+  const by = cy + Math.ceil(r * 0.6) + 1, bw = Math.max(3, Math.round(r * 0.9));
+  R(c, CONC, cx - (bw >> 1), by, bw, 2); R(c, ASH, cx - (bw >> 1), by, 1, 2);          // тумба
+}
+function radomes(c, x, gy) {
+  const L = Math.round(x) - 15, G = Math.round(gy), shelf = G - 9;
+  // отрог: тёмная скала косыми пластами, к краям ниже
+  for (let i = 0; i < 30; i++) {
+    const top = shelf + (i < 2 ? 2 - i : i > 27 ? i - 27 : 0);
+    for (let y = top; y < G; y++) R(c, (i + 2 * y) % 9 === 0 ? SEP : (i * 3 + y) % 23 === 0 ? N : STONE2, L + i, y, 1, 1);   // косые пласты
+    if (i < 2 || i % 9 === 4) R(c, tone(MAT.ROCK, 3), L + i, top, 1, 1);                // кромки к свету
+  }
+  // дорога наверх зигзагом — накатанная, светлее скалы
+  hline(c, ASH, L + 3, G - 1, L + 14, G - 3); hline(c, ASH, L + 14, G - 3, L + 7, G - 5); hline(c, ASH, L + 7, G - 5, L + 20, G - 7); hline(c, ASH, L + 20, G - 7, L + 16, G - 8);
+  // снежная полка
+  R(c, tone(MAT.SNOW, 4), L + 1, shelf, 28, 1); R(c, tone(MAT.SNOW, 5), L + 3, shelf, 22, 1); R(c, tone(MAT.SNOW, 3), L + 2, shelf + 1, 4, 1); R(c, tone(MAT.SNOW, 3), L + 22, shelf + 1, 5, 1);
+  radome(c, L + 6, shelf - 3 - 3, 5);
+  radome(c, L + 17, shelf - 3 - 4, 6);
+  radome(c, L + 26, shelf - 3 - 2, 3);
+  R(c, CONC, L + 22, shelf - 2, 3, 2); R(c, ASH, L + 22, shelf - 2, 3, 1);              // аппаратная у большого
+}
+
+// Контейнер-майнер: морской контейнер, набитый вычислителями, на бетонных блоках (северный майнинг
+// 2010–2020-х, где электричество дешевле: материковая Норвегия, Исландия, Иркутская область; на
+// Шпицбергене не документирован — посёлок на дизеле). Гофра стенок, у торца — стена вытяжных
+// вентиляторов, один заглушён — мороз, тёплый воздух подмешивают к притоку. Над вытяжкой — не пар
+// (воздух только нагрет, влаги в нём не прибавилось), а марево: дрожит то, что за ним. С крыши
+// снег стаял, по кромке сосульки; перед вытяжкой — талое обледенелое пятно, ночью над ним
+// поднимается и тает низкая дымка — единственный честный пар. Кабель толщиной в руку — к коробке
+// трансформатора. Огни холодные; аварийный — киноварью, вспыхивает редко.
+function minerBox(c, x, gy, t = 0, still = false) {
+  const L = Math.round(x) - 14, G = Math.round(gy), T = t | 0;
+  // талое пятно перед вытяжкой
+  R(c, SEP, L + 13, G - 1, 10, 1); R(c, N, L + 15, G - 1, 5, 1); R(c, BONE, L + 17, G - 1, 1, 1);
+  R(c, CONC, L + 2, G - 3, 4, 2); R(c, CONC, L + 17, G - 3, 4, 2);                    // блоки
+  const top = G - 14;
+  for (let i = 0; i < 24; i++) R(c, i % 2 ? tone(MAT.STEEL, 1) : tone(MAT.STEEL, 2), L + i, top, 1, 11);   // гофра
+  R(c, tone(MAT.STEEL, 3), L, top, 1, 11); R(c, ASH, L + 23, top, 1, 11);               // свет слева, кромка пеплом
+  R(c, tone(MAT.STEEL, 0), L, top + 10, 24, 1);
+  R(c, ASH, L, top - 1, 24, 1);                                                      // крыша — голая, снег стаял
+  c.fillStyle = BONE; for (const [ix, n] of [[2, 2], [5, 1], [9, 3], [12, 1], [16, 2], [20, 1]]) c.fillRect(L + ix, top, 1, n);   // сосульки
+  R(c, tone(MAT.STEEL, 3), L + 2, top + 2, 1, 7); R(c, tone(MAT.STEEL, 3), L + 5, top + 2, 1, 7);   // запоры двери
+  R(c, PAPER2, L + 8, top + 7, 3, 2);                                                 // табличка без знаков
+  // стена вытяжки: три вентилятора, один стоит
+  const night = skyAt(phaseAt(t || 0)).name === 'ночь', per = night ? 6 : 4;
+  for (const [k, fx] of [[0, 12], [1, 17]]) {
+    R(c, N, L + fx, top + 3, 4, 4);
+    const b = still || k === 1 ? 0 : ((T / per | 0) + k) & 1;
+    R(c, ASH, L + fx + 1 + b, top + 4, 1, 2); R(c, ASH, L + fx + 1, top + 4 + b, 2, 1);
+  }
+  // огни состояния — холодные; аварийный — редко
+  R(c, (T >> 5) & 1 && !still ? BONE : MIST, L + 8, top + 3, 1, 1); R(c, MIST, L + 10, top + 3, 1, 1);
+  if (!still && (T + (noise(L, G, 4) * 1800 | 0)) % 1800 < 90) R(c, CIN, L + 10, top + 3, 1, 1);
+  // кабель — к коробке трансформатора
+  R(c, N, L + 24, top + 6, 1, 7); R(c, N, L + 25, G - 2, 2, 1);
+  R(c, CONC, L + 26, G - 5, 3, 4); R(c, ASH, L + 26, G - 5, 3, 1);
+  if (still) return;
+  hazeColumn(L + 15, top - 1, 14, 3, 0.25, 1.1);                                     // марево над вытяжкой
+  // ночью над талым пятном — низкая дымка, раз в ~12 с
+  if (night) {
+    const k = (T + (noise(L, G, 6) * 720 | 0)) % 720;
+    if (k < 120) {
+      const f = k / 120, y = G - 2 - Math.round(f * 4);
+      R(c, f < 0.6 ? PAPER2 : ASH, L + 15 + Math.round(f * 2), y, f < 0.5 ? 3 : 2, 1);
+    }
+  }
+}
+
 // равнина — панельная тишина: поддоны кирпича, ларёк, грибок песочницы
 const BRICKS = [
   'AAAAAAAA.AAAAAAAA.',
@@ -1259,6 +1538,87 @@ function sandbox(c, x, gy) {
   R(c, CIN, L + 6, G - 20, 8, 1); R(c, CIN, L + 3, G - 19, 14, 2); R(c, CIN, L + 1, G - 17, 18, 2);
   R(c, SEP, L + 2, G - 15, 16, 1);
   c.fillStyle = BONE; for (const [bx, by] of [[5, 18], [10, 19], [14, 17], [3, 16], [8, 16]]) c.fillRect(L + bx, G - by, 2, 1);
+}
+// рисунок по строкам: буква — краска из pal, точка — пусто; одинаковые подряд — одним прямоугольником
+function spr(c, L, T, rows, pal) {
+  rows.forEach((row, y) => {
+    for (let i = 0; i < row.length;) {
+      const ch = row[i]; let e = i + 1;
+      while (e < row.length && row[e] === ch) e++;
+      if (pal[ch]) { c.fillStyle = pal[ch]; c.fillRect(L + i, T + y, e - i, 1); }
+      i = e;
+    }
+  });
+}
+
+// Лебедь из покрышки (примета; ЖЭК-арт дворов России, Украины, Казахстана — убывающий пережиток:
+// по сообщениям, в 2022-м в Екатеринбурге дворы велели к 1 июня очистить от шин; говорят, теперь
+// за них штрафуют). Так обычно делают: шину режут вдоль протектора, выворачивают, бока надрезают
+// зубцами — крылья встают; полоса протектора — шея на проволоке; красят белым, клюв красный. Сидит
+// в клумбе из покрышки — резина в костяных полосах, земля, ростки. Где эмаль облупилась — резина.
+const SWAN = [
+  '.BBA............',
+  'KBNBA...........',
+  '..BBA...........',
+  '...BA...........',
+  '...BA.......B.B.',
+  '..BA......B.BPB.',
+  '..BA....B.BPPPBA',
+  '..BBA.B.BPPPPPPA',
+  '.BBBPABPPPPPPPA.',
+  '.BBBPPPPPPPNPPA.',
+  '..BBPPPPPPPPPA..',
+  '.MNNNAAAAAAAANM.',
+  'NNBBNNBBNNBBNNA.',
+  '.SNBBNNBBNNBBA..',
+];
+function tyreSwan(c, x, gy) {
+  spr(c, Math.round(x) - 7, Math.round(gy) - SWAN.length, SWAN, { B: BONE, P: PAPER, A: ASH, N, K: CIN, M: MIST, S: SEP });
+}
+
+// Шлагбаум во двор (Москва: порядок установки на придомовой территории — 2013, по решению
+// общего собрания; модуль GSM открывает по звонку с номера из списка, реле замыкается на секунду,
+// привод поднимает стрелу за 2,5–6 с, закрывает сам). Тумба с приводом и лампой, стрела в
+// красно-белую полосу, на дальнем конце рогатка-опора. Поднимается изредка сама — раз в одну-две
+// с половиной минуты, неровно, бывает дважды подряд: кто-то позвонил, никто не въехал (выдумка,
+// правдоподобная). Перед ходом и на ходу лампа мигает раз в секунду. Странник для неё не машина:
+// модуль слышит только звонки из списка; новое — внимания не знает. Пеший обходит сбоку.
+const GATE_ARM = 24, GATE_S = 6300;                              // в среднем раз в 105 с, разброс ±45 с
+function barrierAt(L, G, T) {
+  const k0 = Math.floor(T / GATE_S);
+  for (const k of [k0, k0 - 1]) {
+    let ph = T - (k * GATE_S + Math.floor(noise(L, k + G, 11) * 2700));
+    if (ph < 0) continue;
+    const hold = 600 + Math.floor(noise(L, k + G, 12) * 300), one = 90 + 300 + hold + 300;
+    if (ph >= one) {
+      if (noise(L, k + G, 13) >= 0.11 || ph < one + 120) continue;   // позвонили дважды — изредка
+      ph -= one + 120;
+      if (ph >= one) continue;
+    }
+    const sm = u => u * u * (3 - 2 * u);
+    const arm = ph < 90 ? 0 : ph < 390 ? sm((ph - 90) / 300) : ph < 390 + hold ? 1 : 1 - sm((ph - 390 - hold) / 300);
+    return { arm, blink: ph < 390 || ph >= 390 + hold };
+  }
+  return { arm: 0, blink: false };
+}
+function yardBarrier(c, x, gy, t = 0, still = false) {
+  const L = Math.round(x) - 14, G = Math.round(gy), T = t | 0;
+  // опора стрелы — рогатка у дальнего конца
+  R(c, ASH, L + 27, G - 5, 1, 5); R(c, ASH, L + 26, G - 6, 1, 1); R(c, ASH, L + 28, G - 6, 1, 1); R(c, N, L + 26, G - 1, 3, 1);
+  // тумба привода: свет слева, кромка справа
+  R(c, CONC, L, G - 1, 6, 1);
+  R(c, ASH, L + 1, G - 8, 4, 7); R(c, BONE, L + 1, G - 8, 1, 7); R(c, tone(MAT.STEEL, 1), L + 4, G - 8, 1, 7);
+  R(c, N, L + 2, G - 10, 2, 1);                                   // лампа
+  const st = still ? { arm: 0, blink: false } : barrierAt(L, G, T);
+  if (st.blink && ((T / 30) | 0) & 1) R(c, CIN, L + 2, G - 10, 2, 1);
+  // стрела: от оси на тумбе, полосами по 3 точки; снизу тенью
+  const a = st.arm * Math.PI / 2, ax = L + 4, ay = G - 7, ca = Math.cos(a), sa = Math.sin(a);
+  for (let i = 0; i <= GATE_ARM; i++) {
+    const px = Math.round(ax + i * ca), py = Math.round(ay - i * sa), stripe = (i / 3 | 0) % 2;
+    R(c, stripe ? BONE : CIN, px, py, 1, 1);
+    R(c, stripe ? PAPER2 : SEP, Math.round(ax + i * ca + sa), Math.round(ay - i * sa + ca), 1, 1);
+  }
+  R(c, N, ax - 1, ay - 1, 2, 2);                                  // ось
 }
 
 // ── ДОМИНАНТА · ЮГ ───────────────────────────────────────────────────
@@ -1473,10 +1833,26 @@ export const ARCH = {
   ],
   sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
   props: {
-    south: [art('лодка со стеклянным дном', GLASSBOAT), art('свая с отметками прилива', TIDEPOST), art('солнечная панель', SOLAR)],
-    east: [art('светофор с пустой рамкой', WALKSIGN), { name: 'гашапоны', w: 16, h: 16, draw: gacha }, { name: 'прокатный велосипед', w: 16, h: 9, draw: bike }],
-    west: [art('антитаранные тумбы', BOLLARDS), art('электросамокат', ESCOOTER), art('зарядка для машин', CHARGER)],
-    north: [art('снегоход', SNOWMOBILE), { name: 'кабельный барабан', w: 16, h: 13, draw: cableDrum }, art('тарелка на шесте', DISH)],
-    plain: [art('поддоны кирпича', BRICKS), { name: 'ларёк', w: 20, h: 22, draw: kiosk }, { name: 'грибок песочницы', w: 20, h: 20, draw: sandbox }],
+    south: [
+      art('лодка со стеклянным дном', GLASSBOAT), art('солнечная панель', SOLAR),
+      { name: 'свая с водомерной рейкой', w: 9, h: 26, unique: true, fine: true, draw: tidePost },
+      { name: 'флаг ныряльщика на поплавке', live: true, wet: true, w: 14, h: 15, draw: diverBuoy, shadow: (c, X, G) => diverBuoy(c, X, G, 0, true) },
+    ],
+    east: [
+      art('светофор с пустой рамкой', WALKSIGN), { name: 'гашапоны', w: 16, h: 16, draw: gacha },
+      { name: 'куча брошенных прокатных велосипедов', w: 26, h: 14, unique: true, draw: bikePile },
+      { name: 'столб с камерами и поворотным куполом', live: true, tall: true, w: 22, h: 34, draw: camPole, shadow: (c, X, G) => camPole(c, X, G, 0, true) },
+    ],
+    west: [art('антитаранные тумбы', BOLLARDS), art('электросамокат', ESCOOTER), art('зарядка для машин', CHARGER), { name: 'враждебная скамейка', w: 23, h: 11, unique: true, draw: hostileBench }],
+    north: [
+      art('снегоход', SNOWMOBILE), { name: 'кабельный барабан', w: 16, h: 13, draw: cableDrum }, { name: 'тарелка на шесте', w: 11, h: 21, draw: dishPole },
+      { name: 'радомы на плато', w: 30, h: 22, unique: true, draw: radomes },
+      { name: 'контейнер-майнер', live: true, w: 30, h: 16, draw: minerBox, shadow: (c, X, G) => minerBox(c, X, G, 0, true) },
+    ],
+    plain: [
+      art('поддоны кирпича', BRICKS), { name: 'ларёк', w: 20, h: 22, draw: kiosk }, { name: 'грибок песочницы', w: 20, h: 20, draw: sandbox },
+      { name: 'лебедь из покрышки', w: 16, h: 14, unique: true, draw: tyreSwan },
+      { name: 'шлагбаум во двор', live: true, tall: true, w: 30, h: 32, draw: yardBarrier, shadow: (c, X, G) => yardBarrier(c, X, G, 0, true) },
+    ],
   },
 };

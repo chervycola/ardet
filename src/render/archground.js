@@ -167,6 +167,7 @@ export function prepareArchGround(ensembles, locations) {
   const signs = locations.filter(l => l.streetForm);
   const gated = new Set(ensembles.filter(e => e.kind === 'gate').map(e => e.ring + ':' + e.side));
   const yarded = new Set(ensembles.filter(e => e.kind !== 'gate').map(e => e.ring + ':' + e.side));
+  const seas = [];                                       // полосы моря у построек — для того, что плавает
   for (const e of ensembles) {
     const st = STYLE[e.ringId]?.[e.side];
     if (!st) continue;
@@ -271,7 +272,11 @@ export function prepareArchGround(ensembles, locations) {
     // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
     const cell = e.ring + ':' + e.side;
     propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell) });
+    for (const p of patches) if (p.sea) seas.push({ e, S: p.sea });
   }
+  // что плавает — сверх утвари двора, у ворот раньше прочего: его видят, входя в клетку
+  seas.sort((a, b) => (b.e.kind === 'gate') - (a.e.kind === 'gate'));
+  for (const { e, S } of seas) wetFor(e, S, allBoxes);
 }
 
 // ── у стены ──
@@ -702,7 +707,7 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // тропы. Не на пороге, не на табличке, не друг на друге.
 //   gateless — у стороны кольца нет ворот (равнина); yardless — нет двора, одни ворота
 function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false } = {}) {
-  const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side];
+  const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side]?.filter(k => !k.wet);   // плавучее — в воде (wetFor)
   if (!kinds || !kinds.length) return;
   const cell = e.ring + ':' + e.side;
   // живое в поле не кладут (render/ground.js) — его место только у построек: во дворе холодное
@@ -711,14 +716,15 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
   const cold = k => !!k.live && !warmKind(k);   // живое без огня: огни идут своей очередью
   const want = e.kind === 'gate' ? (yardless && kinds.some(cold) ? 2 : 1) : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
   const placed = [];
-  const free = (x, gy, w, h) => {
-    const x0 = x - w / 2 - 3, x1 = x + w / 2 + 3, y0 = gy - h, y1 = gy + 3;
+  // tall — высокое (столб, шлагбаум, контейнер): постройку позади не трогает только низом, верх её заслоняет
+  const free = (x, gy, w, h, tall = false) => {
+    const x0 = x - w / 2 - 3, x1 = x + w / 2 + 3, y0 = gy - h, y1 = gy + 3, yb = tall ? gy - Math.min(h, 12) : y0;
     for (const m of ms) if (Math.abs(x - m.x) < 16 + w / 2 && gy > m.gy - 4 && gy < m.gy + 34) return false;   // порог
     for (const s of signs) {
       const sx = s.x + s.w / 2, sgy = s.y + s.h;
       if (sx > x0 - 12 && sx < x1 + 12 && sgy > y0 - 4 && sgy < y1 + 30) return false;
     }
-    for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 + 2 && y0 < b.y1 + 2) return false;
+    for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 + 2 && yb < b.y1 + 2) return false;
     for (const w of water) if (x1 > w.x0 && x0 < w.x1 && y1 > w.y0 && y0 < w.y1) return false;
     for (const p of placed) if (x1 > p.x - p.w / 2 - 6 && x0 < p.x + p.w / 2 + 6 && y1 > p.gy - p.h - 2 && y0 < p.gy + 4) return false;
     for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
@@ -756,9 +762,12 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
         cands.push({ x: m.x + fx * m.w, gy: m.gy + dy });
       }
     }
-    for (const c of cands) {
+    // сначала — как всё; высокому, если места так нет, — заслоняя постройку позади верхом
+    const side = K.tall ? ms.flatMap(m => [-1, 1].flatMap(d => [10, 18, 4].map(dy => ({ x: m.x + d * (m.w / 2 + K.w / 2 + 4), gy: m.gy + dy })))) : [];   // и сбоку
+    const fits = [...cands.map(c => [c, false]), ...(K.tall ? [...cands, ...side].map(c => [c, true]) : [])];
+    for (const [c, tall] of fits) {
       const x = Math.round(c.x), gy = Math.round(c.gy);
-      if (!free(x, gy, K.w, K.h)) continue;
+      if (!free(x, gy, K.w, K.h, tall)) continue;
       // вещь стоит в земле двора (render/things.js): тень касания, у подошвы —
       // сугроб или нанос, если у стен двора они есть; износ — по эпохе и огню
       const drift = STYLE[e.ringId]?.[e.side]?.drift;
@@ -769,6 +778,30 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
         shadowDraw: K.shadow ? g => K.shadow(g, x, gy) : null };   // живое, что меняет позу, — тень по неподвижной части
       placed.push(p);
       archProps.push(p);
+      break;
+    }
+  }
+}
+
+// ── на воде ──
+// Что плавает у постройки над морем (буй ныряльщика у библиотеки): одно на сторону кольца, в
+// полосе моря — поодаль от берега и не у растворённого дальнего края, ватерлиния — посередине
+// полосы. Стоит на воде: без тени касания и подошвы (render/things.js, float)
+function wetFor(e, S, boxes) {
+  const cell = e.ring + ':' + e.side;
+  for (const K of (ARCH_BY_RING[e.ringId]?.props?.[e.side] || []).filter(k => k.wet)) {
+    if (archProps.some(p => p.cell === cell && p.name === K.name)) continue;
+    const span = S.x1 - S.x0 - 44;
+    if (span < K.w) continue;
+    for (const f of [0.35, 0.5, 0.2, 0.65]) {
+      const x = Math.round(S.dir > 0 ? S.x0 + 16 + K.w / 2 + span * f : S.x1 - 16 - K.w / 2 - span * f), gy = Math.round(S.y0 + 17);
+      const x0 = x - K.w / 2 - 3, x1 = x + K.w / 2 + 3;
+      if (boxes.some(b => x1 > b.x0 && x0 < b.x1 && gy > b.y0 && gy - K.h < b.y1)) continue;
+      if (archProps.some(p => Math.abs(p.x - x) < p.w / 2 + K.w / 2 + 4 && Math.abs(p.gy - gy) < 10)) continue;
+      const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, float: true, name: K.name, kind: 'yard',
+        wear: wearOf({ ring: e.ring, side: e.side, d: warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true }) });
+      archProps.push({ x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw, wet: true,
+        shadowDraw: K.shadow ? g => K.shadow(g, x, gy) : null });
       break;
     }
   }

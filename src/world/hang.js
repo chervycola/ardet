@@ -52,7 +52,7 @@ export function hang(key, ax, ay, len, opt = {}) {
       sail: opt.sail ?? 0.03, damp: opt.damp ?? 0.995, gy: opt.gy ?? ay + len,
       r: opt.r ?? 2, group: opt.group || null, tone: opt.tone || 0,
       pin2: opt.pin2 || null, gy2: opt.gy2 ?? null, lift: opt.lift || null,
-      fresh: key.startsWith('crane:'),        // кран кольца «сейчас» — новое: внимания не знает
+      fresh: /^(crane|cradle):/.test(key),    // кран и люлька кольца «сейчас» — новое: внимания не знает
     };
     REG.set(key, h);
   }
