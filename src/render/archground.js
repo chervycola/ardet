@@ -714,8 +714,11 @@ function propsFor(e, ms, signs, boxes, water = []) {
   const seenNear = (K, x, gy) => (K.unique && archProps.some(p => p.name === K.name))
     || archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
   const used = new Set();
+  // примета эпохи стороны встаёт первой у ворот — её видят, входя в клетку (ARCH_PLAN, этап 6)
+  const sign = e.kind === 'gate' ? kinds.find(k => k.unique && !archProps.some(p => p.name === k.name)) : null;
   for (let i = 0; i < want; i++) {
     const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));
+    if (sign && i === 0) order.unshift(...order.splice(order.indexOf(sign), 1));
     const ax = ms[0].x, ag = ms[0].gy;
     const K = order.find(k => !seenNear(k, ax, ag));
     if (!K) break;

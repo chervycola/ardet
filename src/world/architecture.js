@@ -261,7 +261,7 @@ export function buildEnsembles(signs = []) {
       idx.push(buildings.length);
       const key = archKey(seg.id, side, m.kind.name), k = (nth.get(key) || 0) + 1;
       nth.set(key, k);
-      buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: (k > 1 && m.kind.draw2) || m.kind.draw, name: m.kind.name,
+      buildings.push({ x: m.x, gy: m.gy, w: m.w, h: m.h, kind: m.kind, draw: (k > 2 && m.kind.draw3) || (k > 1 && m.kind.draw2) || m.kind.draw, name: m.kind.name,
         ring: n, side, ens: id, nth: k, look: own(ARCH_LOOKS, seg.id, side, m.kind.name, k) || null });
     }
     ensembles.push({ id, ring: n, ringId: seg.id, side, kind, members: idx, ...extra });

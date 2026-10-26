@@ -46,6 +46,7 @@ export const MAT = {
   FELT: 23,       // войлок: шерсть свалянная, без швов, ворс пятнами
   SAND: 24,       // песок: барханы, рябь ветра наискось
   BAKED: 25,      // обожжённый кирпич светлый (Вавилон): облицовка по сырцу
+  DRYSTONE: 26,   // плитняк сухой кладки: камни в точку высотой и 3–7 длиной, швы вразбежку (брохи)
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -72,6 +73,7 @@ RAMP[MAT.GRANITE] = ramp(mix(mix(AS, KV, 0.16), NI, 0.3));
 RAMP[MAT.SANDSTONE] = ramp(mix(mix(SEP, BO, 0.42), KV, 0.05));
 RAMP[MAT.RAMMED] = ramp(mix(mix(SEP, BO, 0.3), S0, 0.25));
 RAMP[MAT.WATTLE] = ramp(mix(SEP, NI, 0.1), mix(BO, SEP, 0.2));
+RAMP[MAT.DRYSTONE] = ramp(mix(mix(S0, BO, 0.24), MG, 0.14));
 RAMP[MAT.BAKED] = ramp(mix(mix(SEP, BO, 0.38), KV, 0.08), mix(BO, KV, 0.08));
 RAMP[MAT.SAND] = ramp(mix(mix(SEP, BO, 0.45), KV, 0.04));
 RAMP[MAT.FELT] = ramp(mix(mix(SEP, AS, 0.35), BO, 0.12), mix(BO, SEP, 0.15));
@@ -96,6 +98,13 @@ function tex(mat, x, y, s) {
       if (x % 6 === 0) return -2;                                       // кол
       if (y % 3 === 2) return -1;
       return (x + o) % 6 < 3 ? 1 : -1;
+    }
+    case MAT.DRYSTONE: {                                                // ряд — плита в точку, длина 3–7, шов вразбежку
+      const k = Math.floor((x + Math.floor(hh(y, 0, s) * 7)) / 5);
+      if (y % 2 === 1) return hh(x >> 1, y, s + 33) < 0.5 ? -2 : -1;
+      if (hh(k, y, s + 35) < 0.18 && (x + Math.floor(hh(y, 0, s) * 7)) % 5 === 0) return -2;
+      const v = hh(k, y, s + 37);
+      return v < 0.25 ? -1 : v > 0.85 ? 1 : 0;
     }
     case MAT.SAND: return (x + 2 * y) % 9 === 0 ? -1 : (hh(x, y, s + 29) < 0.04 ? -1 : 0);
     case MAT.FELT: { const v = hh(x >> 1, y >> 1, s + 27); return v < 0.12 ? -1 : v > 0.94 ? 1 : 0; }
@@ -281,6 +290,18 @@ export function kitKind(w, h, build, opt = {}) {
   };
   draw.static = true;                            // неподвижен: запекание не пробует (render/archbake.js)
   return draw;
+}
+
+// тело — набором и неподвижно (запекается); живое — огонь, пар, подвес — поверх каждый кадр
+// (render/archbake.js: draw.body запекается, draw.live рисуется сам)
+export function split(body, live) {
+  const d = (c, X, G, t) => { body(c, X, G); live(c, X, G, t); };
+  body.static = true; d.body = body; d.live = live;
+  return d;
+}
+// силуэт резьбой: точки «.» строки вынимаются из плана (слон в капители, завиток, колесо)
+export function carve(P, x0, y0, rows) {
+  rows.forEach((s, j) => { for (let i = 0; i < s.length; i++) if (s[i] === '.') P.clear(x0 + i, y0 + j, 1, 1); });
 }
 
 // ступень тона материала (0 — глубь … 5 — блик): для рисунка поверх набора теми же красками

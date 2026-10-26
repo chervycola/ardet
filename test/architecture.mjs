@@ -659,9 +659,12 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     assert(lum(at(c.log, 2, 9)) >= lum(R[2]), 'левый край не к свету');
   });
   const BK = await imp('render/archbake.js');
-  test('набор: ось — все виды и доминанта набором; тело неподвижно (запекается), огонь — слоем поверх; всё в рамке', () => {
-    const A = ARCH_BY_RING.axial, kinds = [A.landmark, ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
-    eq(kinds.length, 11, 'видов оси');
+  // кольца, перерисованные набором целиком (ARCH_PLAN, этап 5): сколько видов и сколько с огнём поверх
+  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4] };
+  test('набор: перерисованные кольца — все виды и доминанта набором; тело неподвижно (запекается), живое — слоем поверх; всё в рамке', () => {
+   for (const [ring, [nKinds, nSplit]] of Object.entries(KIT_RINGS)) {
+    const A = ARCH_BY_RING[ring], kinds = [A.landmark, ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
+    eq(kinds.length, nKinds, `видов ${ring}`);
     let split = 0;
     for (const k of kinds) {
       const name = k.name, body = k.draw.body || k.draw;
@@ -682,22 +685,30 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
         for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${name}: вне рамки ${x},${y} ${w}×${h} (t=${t})`);
       }
     }
-    eq(split, 4, 'с огнём поверх — застава, круглый дом, кибитка, зиккурат');
+    eq(split, nSplit, `${ring}: с живым поверх`);
+   }
   });
-  test('свой рисунок #2: второй экземпляр вида оси — по своему осмотру (draw2), набором и в рамке; жизнь — своя', () => {
-    const A = ARCH_BY_RING.axial, kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);
+  test('свой рисунок #2/#3: повтор вида — по своему осмотру (draw2, draw3), набором и в рамке; жизнь — своя', () => {
+   const WANT = { 1: ['вежа с бубном', 'дорический храм', 'застава на перевале', 'каменная ладья и сейд', 'пилон с обелиском'],
+     2: ['Пантеон', 'акведук', 'болото жертв', 'брох', 'пещерный храм-чайтья', 'сад Эпикура'] };
+   for (const [ringN, names] of Object.entries(WANT)) {
+    const ring = ringN === '1' ? 'axial' : 'porticoes';
+    const A = ARCH_BY_RING[ring], kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);
     const two = kinds.filter(k => k.draw2);
-    eq(two.map(k => k.name).sort().join(), ['вежа с бубном', 'дорический храм', 'застава на перевале', 'каменная ладья и сейд', 'пилон с обелиском'].sort().join(), 'с рисунком #2');
-    for (const k of two) {
-      eq(k.draw2.static, true, `${k.name} #2: не объявлен неподвижным`);
-      const pk = BK.probeKind(k.draw2, 500, 500);
-      eq(pk.live, false, `${k.name} #2: живой`); eq(pk.shared, true, `${k.name} #2: зависит от места`);
-      const c = rec(); k.draw2(c, 500, 500, 0);
-      assert(c.log.length > 50, `${k.name} #2: пуст`);
-      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${k.name} #2: вне рамки ${x},${y} ${w}×${h}`);
-      const inWorld = locations.filter(l => l.archRing === 1 && l.name === k.name);
-      for (const l of inWorld) eq(l.archDraw, l.archNth > 1 ? k.draw2 : k.draw, `${k.name} №${l.archNth}: не свой рисунок`);
+    eq(two.map(k => k.name).sort().join(), names.slice().sort().join(), `${ring}: с рисунком #2`);
+    for (const k of two) for (const dn of ['draw2', 'draw3']) {
+      const d = k[dn];
+      if (!d) continue;
+      eq(d.static, true, `${k.name} ${dn}: не объявлен неподвижным`);
+      const pk = BK.probeKind(d, 500, 500);
+      eq(pk.live, false, `${k.name} ${dn}: живой`); eq(pk.shared, true, `${k.name} ${dn}: зависит от места`);
+      const c = rec(); d(c, 500, 500, 0);
+      assert(c.log.length > 50, `${k.name} ${dn}: пуст`);
+      for (const [, x, y, w, h] of c.log) assert(x >= 500 - k.w / 2 && x + w <= 500 + k.w / 2 && y >= 500 - k.h && y + h <= 500, `${k.name} ${dn}: вне рамки ${x},${y} ${w}×${h}`);
     }
+    for (const k of two) for (const l of locations.filter(l => l.archRing === +ringN && l.name === k.name))
+      eq(l.archDraw, (l.archNth > 2 && k.draw3) || (l.archNth > 1 && k.draw2) || k.draw, `${k.name} №${l.archNth}: не свой рисунок`);
+   }
     const v2 = locations.find(l => l.archRing === 1 && l.name === 'вежа с бубном' && l.archNth > 1);
     assert(v2 && !(v2.archLife && v2.archLife.smoke), 'вежа без покрышки дымит');
   });

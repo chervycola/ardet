@@ -15,7 +15,7 @@
 // Контракт: x — центр, gy — линия земли; рисунок строго в w×h.
 
 import { hang, angleOf } from '../../world/hang.js';
-import { plan, paint, MAT, FORM, tone } from './kit.js';
+import { plan, paint, MAT, FORM, tone, split, carve } from './kit.js';
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A';
 const CA = '#E28A3A', CI = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -57,18 +57,6 @@ function mass(c, cx, g, rows, body, lit, rim) {
     e = 0;
   }
   return y;
-}
-
-// тело — набором и неподвижно (запекается); живое — огонь, пар — поверх каждый кадр
-// (render/archbake.js: draw.body запекается, draw.live рисуется сам)
-function split(body, live) {
-  const d = (c, X, G, t) => { body(c, X, G); live(c, X, G, t); };
-  body.static = true; d.body = body; d.live = live;
-  return d;
-}
-// силуэт резьбой: точки «.» строки вынимаются из плана (слон в капители, завиток, колесо)
-function carve(P, x0, y0, rows) {
-  rows.forEach((s, j) => { for (let i = 0; i < s.length; i++) if (s[i] === '.') P.clear(x0 + i, y0 + j, 1, 1); });
 }
 
 // ── ЮГ · древние пути ──────────────────────────────────────────────
