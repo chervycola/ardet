@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='5fd8a79 · 2026-10-26';console.log('[оттиск]', '5fd8a79 · 2026-10-26');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='d1b743e · 2026-10-26';console.log('[оттиск]', 'd1b743e · 2026-10-26');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -18428,7 +18428,7 @@ System.register("sprites/arch/neon", ["world/hang"], function (exports_42, conte
 });
 System.register("render/haze", ["core/time", "render/scaler", "world/wind", "world/disc", "render/draw"], function (exports_43, context_43) {
     "use strict";
-    var time_js_5, scaler_js_10, wind_js_6, disc_js_8, draw_js_1, OFF, CH, PATCH, FIRE_IN, FIRE_OUT, buf, bctx, cam, cols, _cols;
+    var time_js_5, scaler_js_10, wind_js_6, disc_js_8, draw_js_1, OFF, CH, PATCH, FIRE_IN, FIRE_OUT, buf, bctx, cam, cols, extra, extraT, _cols, _extra;
     var __moduleName = context_43 && context_43.id;
     // столб: x, y0 — где начинается (над пламенем), H — высота, w0 — полуширина
     // у основания, grow — на сколько шире к верху, amp — сила, lean — наклон
@@ -18464,21 +18464,27 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
         return 1;
     }
     exports_43("heatAt", heatAt);
-    // столб от вещи, что рисуется каждый кадр (вытяжка контейнера-майнера): встаёт в этот кадр;
-    // hazeView следующего кадра его снимет — не нарисовали, нет и марева
     function hazeColumn(x, y0, H, w0, grow, amp) {
-        if (!OFF)
-            cols.push(column(x, y0, H, w0, grow, amp));
+        if (OFF)
+            return;
+        if (extraT !== time_js_5.t) {
+            extra = [];
+            extraT = time_js_5.t;
+        }
+        if (extra.length < 32)
+            extra.push(column(x, y0, H, w0, grow, amp));
     }
     exports_43("hazeColumn", hazeColumn);
     // кадр: где что дрожит (вызывать из render, до сборки слоёв)
     // noon — красный полдень (0…1): марево по всему кадру
     // изнанка: под землёй марева нет — столбы прошлого кадра не тянем
-    function hazeOff() { cols = []; }
+    function hazeOff() { cols = []; extra = []; }
     exports_43("hazeOff", hazeOff);
     function hazeView(camX, camY, vw, vh, locations, noon = 0) {
         cam = { x: camX, y: camY };
-        cols = [];
+        cols = extraT === time_js_5.t ? extra : [];
+        extra = [];
+        extraT = -1; // взято: следующий кадр копит заново
         if (OFF)
             return;
         const inView = (x, y, r) => x + r > camX && x - r < camX + vw && y > camY && y - 80 < camY + vh;
@@ -18574,7 +18580,13 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
             FIRE_IN = disc_js_8.RINGS_D, FIRE_OUT = disc_js_8.RINGS_D + disc_js_8.FIRE_W;
             buf = null, bctx = null;
             cam = { x: 0, y: 0 }, cols = [];
+            // столб от вещи, что рисуется каждый кадр (вытяжка контейнера-майнера). Мир рисуется раньше, чем
+            // hazeView собирает кадр, поэтому столб ждёт в списке своего кадра: hazeView этого кадра его
+            // берёт; не нарисовали — нет и марева. Список держит один кадр — в экономном кадре и под землёй,
+            // где hazeView не зовут, не копится
+            extra = [], extraT = -1;
             exports_43("_cols", _cols = () => cols);
+            exports_43("_extra", _extra = () => extra);
         }
     };
 });
@@ -18605,9 +18617,12 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
 // справа обрывается, дальше колышки разметки; в стекле — земля перед ней,
 // у кромки — зарево огня края мира. Север — Всемирное семенохранилище:
 // чёрная столовая гора, бетонный клин входа, костяная полоса над дверью.
-// Утварь дворов: лодка со стеклянным дном, свая прилива, солнечная панель ·
-// светофор с пустой рамкой, гашапоны, велосипед · тумбы, самокат, зарядка ·
-// снегоход, кабельный барабан, тарелка · поддоны кирпича, ларёк, грибок.
+// Утварь дворов: лодка со стеклянным дном, солнечная панель · светофор с пустой
+// рамкой, гашапоны · тумбы, самокат, зарядка · снегоход, кабельный барабан,
+// тарелка · поддоны кирпича, ларёк, грибок. Приметы: свая с водомерной рейкой ·
+// куча брошенных велосипедов · враждебная скамейка · радомы на плато · лебедь из
+// покрышки. Живое: флаг ныряльщика на воде · купол камеры · люлька мойщика на
+// стеклянной башне · контейнер-майнер в мареве · шлагбаум.
 // Пиксель-арт: fillRect по целым; дуг нет.
 System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/arch/kit", "world/sky", "world/redNoon", "world/wind", "core/playerRef", "render/haze"], function (exports_44, context_44) {
     "use strict";

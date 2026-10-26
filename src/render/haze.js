@@ -50,20 +50,26 @@ export function heatAt(x, y) {
   return 1;
 }
 
-// столб от вещи, что рисуется каждый кадр (вытяжка контейнера-майнера): встаёт в этот кадр;
-// hazeView следующего кадра его снимет — не нарисовали, нет и марева
+// столб от вещи, что рисуется каждый кадр (вытяжка контейнера-майнера). Мир рисуется раньше, чем
+// hazeView собирает кадр, поэтому столб ждёт в списке своего кадра: hazeView этого кадра его
+// берёт; не нарисовали — нет и марева. Список держит один кадр — в экономном кадре и под землёй,
+// где hazeView не зовут, не копится
+let extra = [], extraT = -1;
 export function hazeColumn(x, y0, H, w0, grow, amp) {
-  if (!OFF) cols.push(column(x, y0, H, w0, grow, amp));
+  if (OFF) return;
+  if (extraT !== t) { extra = []; extraT = t; }
+  if (extra.length < 32) extra.push(column(x, y0, H, w0, grow, amp));
 }
 
 // кадр: где что дрожит (вызывать из render, до сборки слоёв)
 // noon — красный полдень (0…1): марево по всему кадру
 // изнанка: под землёй марева нет — столбы прошлого кадра не тянем
-export function hazeOff() { cols = []; }
+export function hazeOff() { cols = []; extra = []; }
 
 export function hazeView(camX, camY, vw, vh, locations, noon = 0) {
   cam = { x: camX, y: camY };
-  cols = [];
+  cols = extraT === t ? extra : [];
+  extra = []; extraT = -1;                     // взято: следующий кадр копит заново
   if (OFF) return;
   const inView = (x, y, r) => x + r > camX && x - r < camX + vw && y > camY && y - 80 < camY + vh;
   const fire = locations.find(l => l.id === 'campfire');
@@ -119,3 +125,4 @@ export function hazeComposite(ctx, main) {
 }
 
 export const _cols = () => cols;
+export const _extra = () => extra;
