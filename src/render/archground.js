@@ -726,10 +726,10 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
   // примета эпохи стороны встаёт первой у ворот — её видят, входя в клетку (ARCH_PLAN, этап 6);
   // где у стороны ворот нет (равнина), — первой во дворе
   const sign = e.kind === 'gate' || gateless ? kinds.find(k => k.unique && !archProps.some(p => p.name === k.name)) : null;
-  // очередь: холодное живое, которого на стороне ещё нет; затем любая вещь, которой на стороне
-  // нет; затем по кругу
+  // очередь: холодное живое, которого на стороне ещё нет; во дворе затем и живой огонь, которого
+  // нет (у ворот огонь вперёд не встаёт); затем любая вещь, которой на стороне нет; затем по кругу
   const onSide = k => archProps.some(p => p.cell === cell && p.name === k.name);
-  const rank = k => onSide(k) ? 0 : cold(k) ? 2 : 1;
+  const rank = k => onSide(k) ? 0 : cold(k) ? 3 : k.live && e.kind !== 'gate' ? 2 : 1;
   for (let i = 0; i < want; i++) {
     const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));
     if (liveFirst) order.sort((a, b) => rank(b) - rank(a));
