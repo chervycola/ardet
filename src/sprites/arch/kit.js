@@ -54,6 +54,15 @@ export const MAT = {
   DIAGRID: 31,    // стекло в диагональной сетке светлой стали («огурец»)
   ROCK: 32,       // скала: глыбы косыми пластами, трещины — без кладки (горы)
   MIRROR: 33,     // зеркальные панели: тон земли, светлый импост, пояс; соседние стоят не в одной плоскости
+  PLATE: 34,      // клёпаная обшивка корпуса: тёмная сталь, рыжие потёки (пояса, стыки и заклёпки — рисунком по седловатости)
+  REDLEAD: 35,    // сурик подводной части: тёмно-красный, гладкий, сыпь ржавчины
+  WARSHIP: 36,    // шаровая краска военного корпуса: серо, гладко, оспины без ржавчины
+  TAR: 37,        // корка нефти с песком: чёрно-бурая, трещины многоугольником, блёстки
+  SOOTSAND: 38,   // песчаник после огня: рядами, почти чёрный, верхние кромки к пеплу (Дрезден)
+  ICE: 39,        // паковый лёд: кость с пеплом, на изломе слоями, в тени — мгла (холод без синего)
+  ENVELOPE: 40,   // оболочка дирижабля: лакированная ткань, светлая, продольные швы через 4 точки
+  QING: 41,       // серый кирпич шанхайских переулков: перевязка как у кирпича, раствор светлее
+  CERAMIC: 42,    // облицовочная керамика высоток: тёплая кость-серая плитка, швы строк, заменённые плитки
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -91,6 +100,15 @@ RAMP[MAT.STEEL] = ramp(mix(BO, AS, 0.55));
 RAMP[MAT.DIAGRID] = ramp(mix(AS, NI, 0.5), mix(BO, AS, 0.3));
 RAMP[MAT.ROCK] = ramp(mix(mix(NI, S0, 0.62), SEP, 0.12));
 RAMP[MAT.MIRROR] = ramp(mix(mix(SEP, NI, 0.35), AS, 0.12));
+RAMP[MAT.PLATE] = ramp(mix(mix(NI, AS, 0.34), RUST, 0.3), mix(BO, AS, 0.3));
+RAMP[MAT.REDLEAD] = ramp(mix(KV, NI, 0.5), mix(BO, KV, 0.3));
+RAMP[MAT.WARSHIP] = ramp(mix(AS, NI, 0.45), mix(BO, AS, 0.3));
+RAMP[MAT.TAR] = ramp(mix(SEP, NI, 0.5), mix(AS, SEP, 0.4));
+RAMP[MAT.SOOTSAND] = ramp(mix(mix(SEP, NI, 0.42), AS, 0.1), AS);
+RAMP[MAT.ICE] = ramp(mix(mix(BO, AS, 0.4), MG, 0.12), BO);
+RAMP[MAT.ENVELOPE] = ramp(mix(BO, AS, 0.45), BO);
+RAMP[MAT.QING] = ramp(mix(S0, NI, 0.15));
+RAMP[MAT.CERAMIC] = ramp(mix(BO, SEP, 0.32));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -123,6 +141,7 @@ function tex(mat, x, y, s) {
     case MAT.SAND: return (x + 2 * y) % 9 === 0 ? -1 : (hh(x, y, s + 29) < 0.04 ? -1 : 0);
     case MAT.FELT: { const v = hh(x >> 1, y >> 1, s + 27); return v < 0.12 ? -1 : v > 0.94 ? 1 : 0; }
     case MAT.SANDSTONE:
+    case MAT.SOOTSAND:
     case MAT.ASHLAR: {
       const c = Math.floor(y / 5), o = (c & 1) * 4, b = Math.floor((x + o) / 9);
       if (y % 5 === 4) return -1;
@@ -137,6 +156,7 @@ function tex(mat, x, y, s) {
       return v < 0.3 ? -1 : v > 0.75 ? 1 : 0;
     }
     case MAT.BAKED:
+    case MAT.QING:
     case MAT.BRICK: {
       const c = Math.floor(y / 3), o = (c & 1) * 3;
       if (y % 3 === 2 || (x + o) % 6 === 5) return 1;                 // раствор светлее кирпича
@@ -184,6 +204,19 @@ function tex(mat, x, y, s) {
       if ((x + y) % 6 === 0 || ((x - y) % 6 + 6) % 6 === 0) return 2;  // сетка стали
       return ((x + Math.floor(y * 0.6)) % 23 + 23) % 23 < 2 ? 1 : 0;
     }
+    case MAT.PLATE: {                                                   // потёк ржавчины и оспины; пояса — рисунком по корпусу (он бывает наклонён)
+      if (hh(x, Math.floor(y / 5), s + 55) < 0.06) return -1;
+      const v = hh(x, y, s + 57);
+      return v < 0.03 ? -1 : v > 0.98 ? 1 : 0;
+    }
+    case MAT.REDLEAD: return hh(x, y, s + 59) < 0.08 ? -1 : 0;
+    case MAT.WARSHIP: return hh(x, y, s + 61) < 0.03 ? -1 : 0;
+    case MAT.TAR: {                                                     // трещины — ломаной сеткой, на сломе блеск
+      const r = Math.floor(y / 3), o = Math.floor(hh(r, 0, s + 63) * 6);
+      if (y % 3 === 0 && hh(Math.floor((x + o) / 5), r, s + 65) < 0.5) return -1;
+      if ((x + o) % 6 === 0 && hh(Math.floor((x + o) / 6), r, s + 67) < 0.55) return -1;
+      return hh(x, y, s + 69) < 0.04 ? 1 : 0;
+    }
     case MAT.DARK: return 0;
     case MAT.MUD: {
       const c = Math.floor(y / 4), o = (c & 1) * 4;
@@ -191,6 +224,13 @@ function tex(mat, x, y, s) {
       return hh(Math.floor((x + o) / 8), c, s) < 0.25 ? -1 : 0;
     }
     case MAT.SNOW: return hh(x, y, s) < 0.08 ? -1 : 0;
+    case MAT.ENVELOPE: return y % 4 === 3 ? -1 : 0;
+    case MAT.CERAMIC: {                                                 // плитка: шов строки через 3, вертикальный вразбежку, заменённые
+      if (y % 3 === 2) return hh(x >> 1, y, s + 75) < 0.5 ? -1 : 0;
+      if ((x + (Math.floor(y / 3) & 1) * 2) % 4 === 3 && hh(x, y >> 2, s + 77) < 0.3) return -1;
+      return hh(x >> 1, Math.floor(y / 3), s + 79) < 0.04 ? -1 : 0;
+    }
+    case MAT.ICE: return y % 2 === 0 && hh(x >> 2, y, s + 71) < 0.35 ? -1 : (hh(x, y, s + 73) < 0.04 ? 1 : 0);
     case MAT.MOSS: { const v = hh(x, y, s + 11); return v < 0.3 ? -1 : v > 0.8 ? 1 : 0; }
     case MAT.BASALT: return hh(Math.floor(x / 3), Math.floor(y / 3), s) < 0.25 ? -1 : 0;
     case MAT.TIMBER: return hh(x, y, s + 13) < 0.04 ? -1 : 0;
