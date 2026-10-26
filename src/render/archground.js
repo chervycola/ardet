@@ -165,6 +165,7 @@ export function prepareArchGround(ensembles, locations) {
   const arch = locations.filter(l => l.archDraw);
   const allBoxes = arch.map(l => ({ x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }));
   const signs = locations.filter(l => l.streetForm);
+  const gated = new Set(ensembles.filter(e => e.kind === 'gate').map(e => e.ring + ':' + e.side));
   for (const e of ensembles) {
     const st = STYLE[e.ringId]?.[e.side];
     if (!st) continue;
@@ -261,7 +262,7 @@ export function prepareArchGround(ensembles, locations) {
       fenceFor(e, st, ms, yb, cx, signs, allBoxes, water);
     }
     // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
-    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r));
+    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), !gated.has(e.ring + ':' + e.side));
   }
 }
 
@@ -691,7 +692,7 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // ── утварь двора ──
 // Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
 // тропы. Не на пороге, не на табличке, не друг на друге.
-function propsFor(e, ms, signs, boxes, water = []) {
+function propsFor(e, ms, signs, boxes, water = [], gateless = false) {
   const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side];
   if (!kinds || !kinds.length) return;
   const want = e.kind === 'gate' ? 1 : Math.min(kinds.length, ms.length > 1 ? 3 : 2);
@@ -714,10 +715,13 @@ function propsFor(e, ms, signs, boxes, water = []) {
   const seenNear = (K, x, gy) => (K.unique && archProps.some(p => p.name === K.name))
     || archProps.some(p => p.name === K.name && Math.abs(p.x - x) < 640 && Math.abs(p.gy - gy) < 360);
   const used = new Set();
-  // примета эпохи стороны встаёт первой у ворот — её видят, входя в клетку (ARCH_PLAN, этап 6)
-  const sign = e.kind === 'gate' ? kinds.find(k => k.unique && !archProps.some(p => p.name === k.name)) : null;
+  // примета эпохи стороны встаёт первой у ворот — её видят, входя в клетку (ARCH_PLAN, этап 6);
+  // где у стороны ворот нет (равнина), — первой во дворе, а за ней живое: в поле живого не кладут,
+  // двор для него — единственное место
+  const sign = e.kind === 'gate' || gateless ? kinds.find(k => k.unique && !archProps.some(p => p.name === k.name)) : null;
   for (let i = 0; i < want; i++) {
     const order = kinds.map((_, j) => kinds[(e.id + i + j) % kinds.length]).filter(k => !used.has(k));
+    if (gateless) order.sort((a, b) => !!b.live - !!a.live);
     if (sign && i === 0) order.unshift(...order.splice(order.indexOf(sign), 1));
     const ax = ms[0].x, ag = ms[0].gy;
     const K = order.find(k => !seenNear(k, ax, ag));
