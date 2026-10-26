@@ -199,11 +199,17 @@ export function prepareArchGround(ensembles, locations) {
       if (!kind) continue;
       // вода — с одной стороны: наружу от соседей по двору, у одиночки — как выпадет
       const mid = ms.reduce((a, o) => a + o.x, 0) / ms.length;
-      const dir = ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1);
+      // рисунок сам знает, где у него вода (draw.seaSide: срез к морю, капитель в воде), иначе — наружу от соседей
+      const own = m.loc && m.loc.archDraw && m.loc.archDraw.seaSide;
+      const dir = own || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
       if (kind === 'water') {
-        // море — полосой от стены в сторону, за край двора; порог сухой
+        // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
         const len = 130 + m.w * 0.6;
-        const x0 = dir > 0 ? m.x + 16 : m.x - 16 - len, x1 = dir > 0 ? m.x + 16 + len : m.x - 16;
+        let x0 = dir > 0 ? m.x + 16 : m.x - 16 - len, x1 = dir > 0 ? m.x + 16 + len : m.x - 16;
+        for (const o of ms) if (o !== m) {
+          if (dir > 0 && o.x > m.x) x1 = Math.min(x1, o.x - o.w / 2 - 4);
+          if (dir < 0 && o.x < m.x) x0 = Math.max(x0, o.x + o.w / 2 + 4);
+        }
         patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 } });
       } else if (kind === 'bog') {
         const rx = Math.max(26, m.w * 0.42), ry = 13;
