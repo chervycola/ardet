@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='af76fd9 · 2026-10-26';console.log('[оттиск]', 'af76fd9 · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='851db37 · 2026-10-26';console.log('[оттиск]', '851db37 · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -8619,7 +8619,7 @@ System.register("world/redNoon", [], function (exports_32, context_32) {
 // Свет — лунный, слева; проёмы — ночь. x — центр, gy — линия земли.
 System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "world/wind", "world/sky", "world/redNoon"], function (exports_33, context_33) {
     "use strict";
-    var kit_js_2, hang_js_2, wind_js_3, sky_js_1, redNoon_js_1, N, K, P, M, S, V, D1, D2, D3, D4, D5, B1, B2, B3, C1, C2, V_F, V_D, ST_L, q, pharos, greatWall, BW, factoryPortico, customs, SCAPHE, DRACO_DIR, signSouth, signEast, signWest, signNorth, ARCH;
+    var kit_js_2, hang_js_2, wind_js_3, sky_js_1, redNoon_js_1, N, K, P, M, S, V, D1, D2, D3, D4, D5, B1, B2, B3, C1, C2, V_F, V_D, ST_L, q, pharos, greatWall, BW, factoryPortico, customs, SCAPHE, DRACO, signSouth, signEast, signWest, signNorth, ARCH;
     var __moduleName = context_33 && context_33.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // отрезок ступеньками [x0, x1): пологий — по рядам, крутой — по столбцам
@@ -9521,9 +9521,17 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
         R(c, C2, x, y0 + 6, 1, 1);
         R(c, C2, x + 8, y0 + 6, 1, 1); // когти лап к свету
         if (day) {
-            const az = sky.sun.az, ex = 4 - q(3 * Math.cos(az)), ey = 1 + q(3 * Math.sin(az));
+            const az = sky.sun.az;
+            let ex = 4, ey = 1;
+            for (let r = 3; r >= 1; r -= 0.5) { // конец тени — в чаше: где край сужается, тень короче
+                ex = 4 - q(r * Math.cos(az));
+                ey = 1 + q(r * Math.sin(az));
+                if (SCAPHE[ey][ex] === 'b')
+                    break;
+            }
             const ink = sky_js_1.shadowAt(p).a < 0.3 ? D4 : D1;
-            seg(c, ink, x + 4, y0 + 1, x + ex + (ex >= 4 ? 1 : 0), y0 + ey); // от штыря к концу тени
+            const sx = ex > 4 && Math.abs(ex - 4) >= Math.abs(ey - 1) ? 1 : 0; // seg не включает x1 только у пологой
+            seg(c, ink, x + 4, y0 + 1, x + ex + sx, y0 + ey); // от штыря к концу тени
             R(c, ink, x + ex, y0 + ey, 1, 1);
         }
         R(c, D1, x + 4, y0, 1, 1); // штырь в кромке
@@ -9601,7 +9609,7 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
     // глиняная корка от ветра, торцы видны, где она облетела. Говорят, за две тысячи лет штабели
     // просолились и окаменели: сложены по уставу и ждут. Рядом штабель поменьше, у подножия сноп.
     function jixin(c, X, Y) {
-        const x = q(X), B = q(Y);
+        const x = q(X) - 2, B = q(Y);
         R(c, D2, x - 10, B - 1, 15, 1); // подошва
         for (const [y, ends] of [[2, 1], [3, 1], [5, 0], [6, 0], [8, 1], [9, 1]]) {
             const w = y > 7 ? 13 : 14, x0 = x - 10 + (y > 7 ? 1 : 0);
@@ -9687,8 +9695,9 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             } // обручи парами, деревянные
         }
     }
-    // Мильный камень (Стейнгейт у Виндоланды; у фермы Криндлдайкс, в миле к востоку, нашли пять
-    // подписанных камней разных императоров — ставили заново под каждого). Короткий цилиндр с
+    // Мильный камень (Стейнгейт у Виндоланды; у фермы Криндлдайкс, в миле к востоку, нашли вместе
+    // пять подписанных — от Севера Александра до Константина: камень ставили заново при новом
+    // правлении, одному Константину дважды — цезарем и августом). Короткий цилиндр с
     // округлой макушкой на квадратном основании, у дороги; восточный камень Виндоланды стоит без
     // надписи, макушка сколота. Камень той же каменоломни, что куртина башни.
     function miliarium(c, X, Y) {
@@ -9742,11 +9751,11 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             const k = (t | 0) % 150, dir = w.x >= 0 ? 1 : -1;
             if (k < 36) {
                 const f = k / 36;
-                R(c, C2, x - 6 + dir * q(1 + f * 6), B - 12 - q(Math.sin(f * 3) * 2), 1, 1);
+                R(c, C2, x - 6 + dir * q(1 + f * 3), B - 12 - q(Math.sin(f * 3)), 1, 1);
             }
             if (k > 12 && k < 40) {
                 const f = (k - 12) / 28;
-                R(c, C1, x - 5 + dir * q(f * 5), B - 11 - q(f * 2), 1, 1);
+                R(c, C1, x - 5 + dir * q(f * 3), B - 11 - q(f), 1, 1);
             }
         }
     }
@@ -9826,13 +9835,21 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
         R(c, K, x - 4, B - 1, 1, 1);
         R(c, C1, x - 5, B - 1, 1, 1); // крупка
     }
-    function draco(c, X, Y, t = 0) {
+    function draco(c, X, Y, t = 0, still = false) {
         const x = q(X), B = q(Y), key = x + ':' + B;
         const w = wind_js_3.wind.at(x, B), k = Math.max(0, Math.min(1, (w.s - 0.08) / 0.37)), kk = k * k * (3 - 2 * k);
-        let dir = DRACO_DIR.get(key) || 1;
+        let st = DRACO.get(key);
+        if (!st)
+            DRACO.set(key, st = { dir: 1, ph: 0, lt: t });
         if (Math.abs(w.x) > 0.05)
-            dir = w.x > 0 ? 1 : -1;
-        DRACO_DIR.set(key, dir);
+            st.dir = w.x > 0 ? 1 : -1;
+        const dt = t - st.lt;
+        if (dt > 0 && dt < 10)
+            st.ph += dt * (0.05 + 0.22 * w.s); // запекание и пробы зовут вразбивку — их не считаю
+        st.lt = t;
+        const dir = st.dir;
+        // вбок — по доле ветра поперёк взгляда; ветер к зрителю или от него укорачивает трубу по глубине
+        const kx = Math.min(1, Math.abs(w.x) / Math.max(w.s, 1e-3)), ky = w.y > 0 ? 1 : -1;
         R(c, D2, x - 2, B - 1, 5, 1);
         R(c, M, x - 1, B - 2, 3, 1); // холмик у шеста
         R(c, B2, x, B - 17, 1, 16); // шест
@@ -9847,10 +9864,12 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             if (HC[ch])
                 R(c, HC[ch], hx0 + i, H + r, 1, 1);
         } });
-        R(c, P, dir > 0 ? x + 2 : x - 3, H - 1, 1, 1); // гребень на затылке
+        R(c, P, dir > 0 ? x + 2 : x - 2, H - 1, 1, 1); // гребень на затылке
+        if (still)
+            return; // тень: шест и голова, без трубы — та меняет позу
         // труба: от затылка по ветру, сплошной ломаной; в штиль — складками вдоль шеста
-        const n = 8, ph = t * (0.05 + 0.22 * w.s), A = kk < 0.15 ? 0 : kk > 0.85 ? 0.5 : 1;
-        const ox = dir > 0 ? x + 3 : x - 4, oy = H + 1;
+        const n = 8, ph = st.ph, A = kk < 0.15 ? 0 : kk > 0.85 ? 0.5 : 1;
+        const ox = dir > 0 ? x + 3 : x - 3, oy = H + 1;
         const COL = [V, V, V_F, V, P, V_F, V, V];
         const pts = [];
         for (let i = 0; i <= n; i++) {
@@ -9858,7 +9877,7 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             if (kk < 0.15)
                 pts.push([ox + (i % 3 === 1 ? dir : 0), oy + i]);
             else
-                pts.push([q(ox + dir * Math.sin(ang) * i + Math.cos(ang) * wv), q(oy + Math.cos(ang) * i - Math.sin(ang) * wv * dir)]);
+                pts.push([q(ox + dir * Math.sin(ang) * i * kx + Math.cos(ang) * wv), q(oy + Math.cos(ang) * i + ky * Math.sin(ang) * i * (1 - kx) * 0.5 - Math.sin(ang) * wv * dir)]);
         }
         for (let i = 0; i < n; i++) {
             const [ax, ay] = pts[i], [bx, by] = pts[i + 1], col = kk < 0.15 ? (i % 2 ? V_D : V_F) : COL[i];
@@ -9971,8 +9990,9 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             // Повтор вида — свой рисунок по осмотру #2/#3 (draw2, draw3)
             for (const f of [pantheon, pantheon2, epicurusGarden, epicurusGarden2, chaitya, chaitya2, limesTower, aqueduct, aqueduct2, broch, broch2, broch3, bog, bog2])
                 f.static = true;
-            // Скафе (Витрувий IX 8: чашу приписывают Аристарху Самосскому; находки — Делос, II–I вв. до н. э.,
-            // Помпеи, Агора; у Плиния, по Варрону, часы на столбе у Ростр): каменный блок на столбе, чаша
+            // Скафе (Витрувий IX 8: чашу приписывают Аристарху Самосскому; находки — Делос, II в. до н. э.,
+            // Помпеи, Агора, Дион; у Плиния, по Варрону, первые часы Рима стояли на столбе у Ростр — какого
+            // типа, не сказано): каменный блок на столбе, чаша
             // открыта на юг, к зрителю, из середины верхней кромки торчит штырь. Одиннадцать часовых линий в
             // семь точек не войдут — линией служит сама тень. Тень идёт за солнцем игры: утром лежит влево,
             // в полдень висит до дна, вечером вправо (двенадцать долей светлого дня — двенадцать римских
@@ -9987,8 +10007,9 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
             // игры (знак носили в руке). Голова жёсткая, змеиная, без лап и рогов, пастью навстречу ветру;
             // за ней труба из лоскутов: киноварь вместо пурпура (пурпур — у римских драконов IV в.), один
             // лоскут пеплом, швы выцветшие. Живёт от ветра мира: в штиль висит складками вдоль шеста, в ветер
-            // наполняется, уходит по ветру и извивается волной; в бурю почти горизонтальна.
-            DRACO_DIR = new Map();
+            // наполняется, уходит по ветру и извивается волной; в бурю почти горизонтальна. Ветер к зрителю
+            // или от него укорачивает трубу — вбок она уходит по доле ветра поперёк взгляда.
+            DRACO = new Map(); // по месту: куда смотрит и фаза волны (копится по шагам)
             // юг: термополий — плоская кровля-терраса с кадкой, окно наверху, широкий проём, в
             // плите прилавка устья долиев, лицо прилавка — помпейский красный
             signSouth = signKit(P => {
@@ -10105,7 +10126,7 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
                         { name: 'ротационная зернотёрка', w: 10, h: 6, unique: true, fine: true, draw: quern },
                     ],
                     plain: [
-                        { name: 'драко на шесте', live: true, unique: true, w: 24, h: 22, draw: draco },
+                        { name: 'драко на шесте', live: true, unique: true, w: 24, h: 22, draw: draco, shadow: (c, X, G) => draco(c, X, G, 0, true) },
                         { name: 'мешки зерна и модий', w: 22, h: 10, draw: grainSacks },
                         { name: 'стол у лимана', w: 22, h: 13, draw: ovidTable },
                     ],
@@ -52406,7 +52427,8 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
                 const T = things_js_4.thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, fine: K.fine, name: K.name, kind: 'yard',
                     wear: things_js_4.wearOf({ ring: e.ring, side: e.side, d: disc_js_40.warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true,
                         foot: drift === 'snow' ? 'snow' : drift === 'sand' ? 'sand' : 'yard' }) });
-                const p = { x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw };
+                const p = { x, gy, w: K.w, h: K.h, name: K.name, cell, kindDraw: K.draw, thing: T, draw: T.draw,
+                    shadowDraw: K.shadow ? g => K.shadow(g, x, gy) : null }; // живое, что меняет позу, — тень по неподвижной части
                 placed.push(p);
                 archProps.push(p);
                 break;
@@ -60580,7 +60602,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function propCaster(p) {
         let c = casterOf.get(p);
         if (!c) {
-            c = { key: p, ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => { context_js_19.setCtx(g); p.draw(g); context_js_19.setCtx(layers_js_3.layers.ctx('world')); }, Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
+            c = { key: p, ox: 0, oy: 0, build: () => shadows_js_1.maskFrom(g => { context_js_19.setCtx(g); (p.shadowDraw || p.draw)(g); context_js_19.setCtx(layers_js_3.layers.ctx('world')); }, Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
             casterOf.set(p, c);
         }
         return c;

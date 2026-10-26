@@ -404,7 +404,7 @@ function locCaster(loc) {
 function propCaster(p) {
   let c = casterOf.get(p);
   if (!c) {
-    c = { key: p, ox: 0, oy: 0, build: () => maskFrom(g => { setCtx(g); p.draw(g); setCtx(layers.ctx('world')); },
+    c = { key: p, ox: 0, oy: 0, build: () => maskFrom(g => { setCtx(g); (p.shadowDraw || p.draw)(g); setCtx(layers.ctx('world')); },
       Math.floor(p.x - p.w / 2 - 8), Math.floor(p.gy - p.h - 24), Math.ceil(p.w + 16), p.gy) };
     casterOf.set(p, c);
   }
