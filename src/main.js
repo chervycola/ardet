@@ -4,7 +4,7 @@
 import { scaler } from './render/scaler.js';
 import { layers } from './render/layers.js';
 import { camera } from './render/camera.js';
-import { lighting, lightParticles } from './render/lighting.js';
+import { lighting, lightParticles, shines } from './render/lighting.js';
 import { postfx } from './render/postfx.js';
 import { ink } from './render/ink.js';
 import { plate } from './render/plate.js';
@@ -448,7 +448,7 @@ function warmIn(camX, camY, vw, vh) {
   const out = [];
   for (const L of lighting.sources) {
     const c = L.color || [255, 180, 80];
-    if (c[0] < c[1] + 30) continue;                 // не тёплый (экран терминала, луна)
+    if (c[0] < c[1] + 30 || !shines(L)) continue;   // не тёплый (экран терминала, луна) или днём не горит
     const x = L.x - camX, y = L.y - camY, r = Math.max(6, L.r * 0.5);
     if (x + r < 0 || x - r > vw || y + r < 0 || y - r > vh) continue;
     out.push({ x, y, r });
@@ -460,6 +460,7 @@ function litAt(x, y) {
   const S = lighting.sources;
   for (let i = 1; i < S.length; i++) {
     const L = S[i], R = L.r * 1.2;
+    if (!shines(L)) continue;
     if (Math.abs(L.x - x) < R && Math.abs(L.y - y) < R && Math.hypot(L.x - x, L.y - y) < R) return true;
   }
   return false;

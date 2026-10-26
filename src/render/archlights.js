@@ -9,8 +9,9 @@ import { DAY_LEN, phaseAt, skyAt } from '../world/sky.js';
 
 const CANDLE = [226, 138, 58];
 const cache = new Map();          // draw → [{dx, dy, n, night?}] от (x, gy)
-// шаг, когда на дворе ночь: окно, что загорается только в сумерки, днём пробы не увидят
-const nightStep = () => { for (let t = 0; t < DAY_LEN; t += 300) if (skyAt(phaseAt(t)).name === 'ночь') return t; return null; };
+// шаг, с которого небо name держится ещё 211 шагов (пробы мерцания): день — от старта по ?phase, ночь —
+// для окна, что загорается только в сумерки; днём пробы его не увидят
+const stepOf = name => { for (let t = 0; t < DAY_LEN; t += 300) if (skyAt(phaseAt(t)).name === name && skyAt(phaseAt(t + 211)).name === name) return t; return null; };
 
 // пятна свечи в рисунке: кластеры соседних пикселей, центр и размер; night — горит только не днём
 export function candleSpots(draw, w, h) {
@@ -22,15 +23,16 @@ export function candleSpots(draw, w, h) {
   if (x && x.getImageData) {
     const W = Math.ceil(w) + 24, H = Math.ceil(h) + 24, cx = W >> 1, gy = H - 12;
     c.width = W; c.height = H;
-    const hit = new Uint8Array(W * H);             // 1 — свеча и днём, 2 — только ночью
-    const tn = nightStep();
-    for (const t of [0, 37, 100, 211, ...(tn === null ? [] : [tn])]) {   // мерцающие огоньки — в разные мгновения; и ночью
+    const hit = new Uint8Array(W * H);             // 1 — свеча и днём, 2 — только не днём
+    const td = stepOf('день') ?? 0, tn = stepOf('ночь');
+    for (const t of [td, td + 37, td + 100, td + 211, ...(tn === null ? [] : [tn])]) {   // мерцающие огоньки — в разные мгновения дня; и ночью
+      const isDay = skyAt(phaseAt(t)).name === 'день';
       x.clearRect(0, 0, W, H);
       try { draw(x, cx, gy, t); } catch (e) { break; }
       const d = x.getImageData(0, 0, W, H).data;
       for (let i = 0; i < W * H; i++) {
         if (d[i * 4 + 3] > 200 && Math.abs(d[i * 4] - CANDLE[0]) < 6
-          && Math.abs(d[i * 4 + 1] - CANDLE[1]) < 6 && Math.abs(d[i * 4 + 2] - CANDLE[2]) < 6) hit[i] = t === tn ? (hit[i] || 2) : 1;
+          && Math.abs(d[i * 4 + 1] - CANDLE[1]) < 6 && Math.abs(d[i * 4 + 2] - CANDLE[2]) < 6) hit[i] = isDay ? 1 : (hit[i] || 2);
       }
     }
     // кластеры: пиксели ближе 4 px — одно окно

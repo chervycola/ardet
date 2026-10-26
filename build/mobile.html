@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='76b36dd · 2026-10-26';console.log('[оттиск]', '76b36dd · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='d7d362a · 2026-10-26';console.log('[оттиск]', 'd7d362a · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -1494,7 +1494,7 @@ System.register("world/sky", [], function (exports_5, context_5) {
 });
 System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], function (exports_6, context_6) {
     "use strict";
-    var scaler_js_3, time_js_1, sky_js_1, lighting, lightParticles;
+    var scaler_js_3, time_js_1, sky_js_1, shines, lighting, lightParticles;
     var __moduleName = context_6 && context_6.id;
     function drawRadial(ctx, cx, cy, radius, r, g, b, alpha) {
         if (alpha < 0.005)
@@ -1519,6 +1519,9 @@ System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], 
             }
         ],
         execute: function () {
+            // светит ли источник сейчас: окно, что зажигают в сумерки (render/archlights.js), днём тёмное —
+            // ни ореола, ни искр, ни тёплого пятна для пера
+            exports_6("shines", shines = L => !(L.night && sky_js_1.skyAt(sky_js_1.phaseAt(time_js_1.t)).name === 'день'));
             exports_6("lighting", lighting = {
                 sources: [],
                 add(light) {
@@ -1541,10 +1544,9 @@ System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], 
                     const ab = Math.floor(255 * a * 0.95);
                     ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
                     ctx.fillRect(0, 0, vw, vh);
-                    const day = sky_js_1.skyAt(sky_js_1.phaseAt(time_js_1.t)).name === 'день';
                     for (const L of this.sources) {
-                        if (L.night && day)
-                            continue; // окно, что зажигают в сумерки (render/archlights.js)
+                        if (!shines(L))
+                            continue;
                         const sx = L.x - cam.x;
                         const sy = L.y - cam.y;
                         const maxR = L.r * 2.5;
@@ -1585,6 +1587,8 @@ System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], 
                     if (this.particles.length < this.maxCount && time_js_1.t % 4 === 0) {
                         // Pick a random visible light source
                         const visible = lightSources.filter(L => {
+                            if (!shines(L))
+                                return false;
                             const sx = L.x - cam.x, sy = L.y - cam.y;
                             return sx > -L.r && sx < vw + L.r && sy > -L.r && sy < vh + L.r;
                         });
@@ -16130,10 +16134,11 @@ System.register("sprites/arch/catastrophes", ["sprites/arch/kit", "world/sky", "
             const age = (T * 0.4 + i * 15) % 150, k = age / 150, sz = 4 + Math.floor(k * 7);
             const px = X0 + 32 + Math.round(Math.sin(i * 2.4) * 9 * (0.4 + k) + w.x * age * 0.3) - (sz >> 1);
             const py = Y0 + 23 - Math.round(age * 0.16) - (sz >> 1);
-            if (py < Y0)
-                continue;
-            c.globalAlpha = 0.4 * (1 - k);
-            c.fillRect(Math.max(X0, Math.min(X0 + 96 - sz, px)), py, sz, sz);
+            const room = edgeRoom(px, sz, X0, 96);
+            if (py < Y0 || room < 0)
+                continue; // за рамкой — растаял
+            c.globalAlpha = 0.4 * (1 - k) * Math.min(1, (room + 1) / 5);
+            c.fillRect(px, py, sz, sz);
         }
         const shift = T % 14400; // гудок: смена — восемь игровых часов
         if (shift < 150) {
@@ -16640,7 +16645,7 @@ System.register("sprites/arch/catastrophes", ["sprites/arch/kit", "world/sky", "
                 const poly = (pts, mat, form) => P.poly(pts.map(([u, v]) => bk(u, v)), mat, form);
                 // коса атолла справа у воды
                 P.poly([[70, 41], [72, 37], [80, 35], [88, 35], [92, 37], [92, 41]], kit_js_3.MAT.SAND);
-                // корпус под палубой; открытый бак — тёмной щелью под выступом
+                // корпус под палубой — нос обшит до палубы, бак закрыт
                 poly([[0, 12], [0, 0], [61, 0], [60, 4], [57, 8], [53, 10], [0, 10]], kit_js_3.MAT.WARSHIP);
                 // полётная палуба — плита толщиной 2, длиннее корпуса, выступает за форштевень
                 poly([[-2, -2], [64, -2], [64, 0], [-2, 0]], kit_js_3.MAT.WARSHIP);
@@ -16653,7 +16658,7 @@ System.register("sprites/arch/catastrophes", ["sprites/arch/kit", "world/sky", "
                 const px = (col, u, v) => { const [x, y] = bk(u, v).map(Math.round); if (y < 37 && x >= 0 && x < 92)
                     R(c, col, X0 + x, Y0 + y, 1, 1); };
                 const seg = (col, u0, v0, u1, v1) => { const [ax, ay] = bk(u0, v0).map(Math.round), [bx, by] = bk(u1, v1).map(Math.round); hline(c, col, X0 + ax, Y0 + ay, X0 + bx, Y0 + by); };
-                // палуба светлой кромкой, стойки под выступом
+                // палуба светлой кромкой
                 for (let u = -1; u < 64; u++)
                     px(kit_js_3.tone(kit_js_3.MAT.WARSHIP, 5), u, -2);
                 // спонсоны и галереи под палубой
@@ -55091,7 +55096,7 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
 });
 System.register("render/archlights", ["world/sky"], function (exports_141, context_141) {
     "use strict";
-    var sky_js_9, CANDLE, cache, nightStep;
+    var sky_js_9, CANDLE, cache, stepOf;
     var __moduleName = context_141 && context_141.id;
     // пятна свечи в рисунке: кластеры соседних пикселей, центр и размер; night — горит только не днём
     function candleSpots(draw, w, h) {
@@ -55105,9 +55110,10 @@ System.register("render/archlights", ["world/sky"], function (exports_141, conte
             const W = Math.ceil(w) + 24, H = Math.ceil(h) + 24, cx = W >> 1, gy = H - 12;
             c.width = W;
             c.height = H;
-            const hit = new Uint8Array(W * H); // 1 — свеча и днём, 2 — только ночью
-            const tn = nightStep();
-            for (const t of [0, 37, 100, 211, ...(tn === null ? [] : [tn])]) { // мерцающие огоньки — в разные мгновения; и ночью
+            const hit = new Uint8Array(W * H); // 1 — свеча и днём, 2 — только не днём
+            const td = stepOf('день') ?? 0, tn = stepOf('ночь');
+            for (const t of [td, td + 37, td + 100, td + 211, ...(tn === null ? [] : [tn])]) { // мерцающие огоньки — в разные мгновения дня; и ночью
+                const isDay = sky_js_9.skyAt(sky_js_9.phaseAt(t)).name === 'день';
                 x.clearRect(0, 0, W, H);
                 try {
                     draw(x, cx, gy, t);
@@ -55119,7 +55125,7 @@ System.register("render/archlights", ["world/sky"], function (exports_141, conte
                 for (let i = 0; i < W * H; i++) {
                     if (d[i * 4 + 3] > 200 && Math.abs(d[i * 4] - CANDLE[0]) < 6
                         && Math.abs(d[i * 4 + 1] - CANDLE[1]) < 6 && Math.abs(d[i * 4 + 2] - CANDLE[2]) < 6)
-                        hit[i] = t === tn ? (hit[i] || 2) : 1;
+                        hit[i] = isDay ? 1 : (hit[i] || 2);
                 }
             }
             // кластеры: пиксели ближе 4 px — одно окно
@@ -55191,9 +55197,10 @@ System.register("render/archlights", ["world/sky"], function (exports_141, conte
         execute: function () {
             CANDLE = [226, 138, 58];
             cache = new Map(); // draw → [{dx, dy, n, night?}] от (x, gy)
-            // шаг, когда на дворе ночь: окно, что загорается только в сумерки, днём пробы не увидят
-            nightStep = () => { for (let t = 0; t < sky_js_9.DAY_LEN; t += 300)
-                if (sky_js_9.skyAt(sky_js_9.phaseAt(t)).name === 'ночь')
+            // шаг, с которого небо name держится ещё 211 шагов (пробы мерцания): день — от старта по ?phase, ночь —
+            // для окна, что загорается только в сумерки; днём пробы его не увидят
+            stepOf = name => { for (let t = 0; t < sky_js_9.DAY_LEN; t += 300)
+                if (sky_js_9.skyAt(sky_js_9.phaseAt(t)).name === name && sky_js_9.skyAt(sky_js_9.phaseAt(t + 211)).name === name)
                     return t; return null; };
         }
     };
@@ -63199,8 +63206,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const out = [];
         for (const L of lighting_js_1.lighting.sources) {
             const c = L.color || [255, 180, 80];
-            if (c[0] < c[1] + 30)
-                continue; // не тёплый (экран терминала, луна)
+            if (c[0] < c[1] + 30 || !lighting_js_1.shines(L))
+                continue; // не тёплый (экран терминала, луна) или днём не горит
             const x = L.x - camX, y = L.y - camY, r = Math.max(6, L.r * 0.5);
             if (x + r < 0 || x - r > vw || y + r < 0 || y - r > vh)
                 continue;
@@ -63213,6 +63220,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const S = lighting_js_1.lighting.sources;
         for (let i = 1; i < S.length; i++) {
             const L = S[i], R = L.r * 1.2;
+            if (!lighting_js_1.shines(L))
+                continue;
             if (Math.abs(L.x - x) < R && Math.abs(L.y - y) < R && Math.hypot(L.x - x, L.y - y) < R)
                 return true;
         }

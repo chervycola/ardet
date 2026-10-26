@@ -5,6 +5,10 @@ import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
 import { phaseAt, skyAt } from '../world/sky.js';
 
+// светит ли источник сейчас: окно, что зажигают в сумерки (render/archlights.js), днём тёмное —
+// ни ореола, ни искр, ни тёплого пятна для пера
+export const shines = L => !(L.night && skyAt(phaseAt(t)).name === 'день');
+
 export const lighting = {
   sources: [],
 
@@ -32,9 +36,8 @@ export const lighting = {
     ctx.fillStyle = `rgb(${ar},${ag},${ab})`;
     ctx.fillRect(0, 0, vw, vh);
 
-    const day = skyAt(phaseAt(t)).name === 'день';
     for (const L of this.sources) {
-      if (L.night && day) continue;          // окно, что зажигают в сумерки (render/archlights.js)
+      if (!shines(L)) continue;
       const sx = L.x - cam.x;
       const sy = L.y - cam.y;
 
@@ -84,6 +87,7 @@ export const lightParticles = {
     if (this.particles.length < this.maxCount && t % 4 === 0) {
       // Pick a random visible light source
       const visible = lightSources.filter(L => {
+        if (!shines(L)) return false;
         const sx = L.x - cam.x, sy = L.y - cam.y;
         return sx > -L.r && sx < vw + L.r && sy > -L.r && sy < vh + L.r;
       });

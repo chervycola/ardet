@@ -270,7 +270,7 @@ const bikiniBody = kit('bikini', 92, 41, P => {
   const poly = (pts, mat, form) => P.poly(pts.map(([u, v]) => bk(u, v)), mat, form);
   // коса атолла справа у воды
   P.poly([[70, 41], [72, 37], [80, 35], [88, 35], [92, 37], [92, 41]], MAT.SAND);
-  // корпус под палубой; открытый бак — тёмной щелью под выступом
+  // корпус под палубой — нос обшит до палубы, бак закрыт
   poly([[0, 12], [0, 0], [61, 0], [60, 4], [57, 8], [53, 10], [0, 10]], MAT.WARSHIP);
   // полётная палуба — плита толщиной 2, длиннее корпуса, выступает за форштевень
   poly([[-2, -2], [64, -2], [64, 0], [-2, 0]], MAT.WARSHIP); P.shade(-1);
@@ -280,7 +280,7 @@ const bikiniBody = kit('bikini', 92, 41, P => {
 }, { seed: 714, chip: 0.03 }, (c, X0, Y0) => {
   const px = (col, u, v) => { const [x, y] = bk(u, v).map(Math.round); if (y < 37 && x >= 0 && x < 92) R(c, col, X0 + x, Y0 + y, 1, 1); };
   const seg = (col, u0, v0, u1, v1) => { const [ax, ay] = bk(u0, v0).map(Math.round), [bx, by] = bk(u1, v1).map(Math.round); hline(c, col, X0 + ax, Y0 + ay, X0 + bx, Y0 + by); };
-  // палуба светлой кромкой, стойки под выступом
+  // палуба светлой кромкой
   for (let u = -1; u < 64; u++) px(tone(MAT.WARSHIP, 5), u, -2);
   // спонсоны и галереи под палубой
   for (let u = 4; u < 52; u += 4) { px(N, u, 1); px(N, u + 1, 1); }
@@ -1154,9 +1154,10 @@ function worksLive(c, x, gy, t) {
     const age = (T * 0.4 + i * 15) % 150, k = age / 150, sz = 4 + Math.floor(k * 7);
     const px = X0 + 32 + Math.round(Math.sin(i * 2.4) * 9 * (0.4 + k) + w.x * age * 0.3) - (sz >> 1);
     const py = Y0 + 23 - Math.round(age * 0.16) - (sz >> 1);
-    if (py < Y0) continue;
-    c.globalAlpha = 0.4 * (1 - k);
-    c.fillRect(Math.max(X0, Math.min(X0 + 96 - sz, px)), py, sz, sz);
+    const room = edgeRoom(px, sz, X0, 96);
+    if (py < Y0 || room < 0) continue;                                             // за рамкой — растаял
+    c.globalAlpha = 0.4 * (1 - k) * Math.min(1, (room + 1) / 5);
+    c.fillRect(px, py, sz, sz);
   }
   const shift = T % 14400;                                                          // гудок: смена — восемь игровых часов
   if (shift < 150) { c.globalAlpha = 0.6 * (1 - shift / 150); c.fillRect(X0 + 76, Y0 + 41 - Math.round(shift / 30), 3, 2); }
