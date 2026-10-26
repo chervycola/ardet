@@ -142,8 +142,8 @@ buildArteries([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
   ...archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
-], [...locations, ...archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
-  .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит
+], [...locations, ...archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
+  .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит (плавучее — не подножие)
 buildTown();                                   // городок по канону: высохшее русло через посёлок, мост над ним
 setReliefCarve(riverCarve);                    // река промыла себе долину
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена

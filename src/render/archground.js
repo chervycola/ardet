@@ -165,6 +165,7 @@ export function prepareArchGround(ensembles, locations) {
   const arch = locations.filter(l => l.archDraw);
   const allBoxes = arch.map(l => ({ x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }));
   const signs = locations.filter(l => l.streetForm);
+  const spots = locations.filter(l => !l.archDraw).map(l => ({ x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }));   // места сцен: ловушки, вывески
   const gated = new Set(ensembles.filter(e => e.kind === 'gate').map(e => e.ring + ':' + e.side));
   const yarded = new Set(ensembles.filter(e => e.kind !== 'gate').map(e => e.ring + ':' + e.side));
   const seas = [];                                       // полосы моря у построек — для того, что плавает
@@ -271,12 +272,12 @@ export function prepareArchGround(ensembles, locations) {
     }
     // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
     const cell = e.ring + ':' + e.side;
-    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell) });
+    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell), spots });
     for (const p of patches) if (p.sea) seas.push({ e, S: p.sea });
   }
   // что плавает — сверх утвари двора, у ворот раньше прочего: его видят, входя в клетку
   seas.sort((a, b) => (b.e.kind === 'gate') - (a.e.kind === 'gate'));
-  for (const { e, S } of seas) wetFor(e, S, allBoxes);
+  for (const { e, S } of seas) wetFor(e, S, allBoxes, spots);
 }
 
 // ── у стены ──
@@ -706,7 +707,7 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
 // тропы. Не на пороге, не на табличке, не друг на друге.
 //   gateless — у стороны кольца нет ворот (равнина); yardless — нет двора, одни ворота
-function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false } = {}) {
+function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false, spots = [] } = {}) {
   const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side]?.filter(k => !k.wet);   // плавучее — в воде (wetFor)
   if (!kinds || !kinds.length) return;
   const cell = e.ring + ':' + e.side;
@@ -726,6 +727,7 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
     }
     for (const b of boxes) if (x1 > b.x0 && x0 < b.x1 && y1 > b.y0 + 2 && yb < b.y1 + 2) return false;
     for (const w of water) if (x1 > w.x0 && x0 < w.x1 && y1 > w.y0 && y0 < w.y1) return false;
+    if (overSpot(spots, x0, y0, x1, y1)) return false;
     for (const p of placed) if (x1 > p.x - p.w / 2 - 6 && x0 < p.x + p.w / 2 + 6 && y1 > p.gy - p.h - 2 && y0 < p.gy + 4) return false;
     for (const p of archProps) if (Math.abs(p.x - x) < p.w / 2 + w / 2 + 2 && Math.abs(p.gy - gy) < 6) return false;
     return !onTrail(e.side, x, gy) && !onTrail(e.side, x - w / 2, gy) && !onTrail(e.side, x + w / 2, gy);
@@ -756,6 +758,8 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
       for (const m of ms) for (const dx of [-1, 1]) for (const dy of [14, 24, 6, 34]) {
         cands.push({ x: m.x + dx * (m.w / 2 - 6), gy: m.gy + dy });
       }
+      // занято местом сцены или тропой — чуть дальше, за угол постройки
+      for (const m of ms) for (const dx of [-1, 1]) for (const dy of [14, 24]) cands.push({ x: m.x + dx * (m.w / 2 + K.w / 2 + 6), gy: m.gy + dy });
     } else {
       // во дворе: перед постройками, по краю фартука
       for (const m of ms) for (const fx of [-0.42, 0.42, -0.25, 0.25, -0.55, 0.55]) for (const dy of [12, 20, 8, 28]) {
@@ -783,20 +787,29 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
   }
 }
 
+// вещь не встаёт на место сцены (ловушка, вывеска, столб): рамки не пересекаются, с полями
+function overSpot(spots, x0, y0, x1, y1) {
+  return spots.some(o => x1 > o.x0 - 4 && x0 < o.x1 + 4 && y1 > o.y0 - 4 && y0 < o.y1 + 4);
+}
+
 // ── на воде ──
 // Что плавает у постройки над морем (буй ныряльщика у библиотеки): одно на сторону кольца, в
 // полосе моря — поодаль от берега и не у растворённого дальнего края, ватерлиния — посередине
-// полосы. Стоит на воде: без тени касания и подошвы (render/things.js, float)
-function wetFor(e, S, boxes) {
+// полосы; не на тропе и не под местом сцены. Стоит на воде: без тени касания и подошвы
+// (render/things.js, float)
+function wetFor(e, S, boxes, spots = []) {
   const cell = e.ring + ':' + e.side;
   for (const K of (ARCH_BY_RING[e.ringId]?.props?.[e.side] || []).filter(k => k.wet)) {
     if (archProps.some(p => p.cell === cell && p.name === K.name)) continue;
     const span = S.x1 - S.x0 - 44;
     if (span < K.w) continue;
-    for (const f of [0.35, 0.5, 0.2, 0.65]) {
-      const x = Math.round(S.dir > 0 ? S.x0 + 16 + K.w / 2 + span * f : S.x1 - 16 - K.w / 2 - span * f), gy = Math.round(S.y0 + 17);
+    // ватерлиния — посередине полосы; занято — ближе к переднему краю воды
+    for (const [f, row] of [0.35, 0.5, 0.2, 0.65].flatMap(f => [[f, 17], [f, 25]])) {
+      const x = Math.round(S.dir > 0 ? S.x0 + 16 + K.w / 2 + span * f : S.x1 - 16 - K.w / 2 - span * f), gy = Math.round(S.y0 + row);
       const x0 = x - K.w / 2 - 3, x1 = x + K.w / 2 + 3;
       if (boxes.some(b => x1 > b.x0 && x0 < b.x1 && gy > b.y0 && gy - K.h < b.y1)) continue;
+      if (overSpot(spots, x0, gy - K.h, x1, gy + 3)) continue;
+      if (onTrail(e.side, x, gy) || onTrail(e.side, x - K.w / 2, gy) || onTrail(e.side, x + K.w / 2, gy)) continue;
       if (archProps.some(p => Math.abs(p.x - x) < p.w / 2 + K.w / 2 + 4 && Math.abs(p.gy - gy) < 10)) continue;
       const T = thing({ x, gy, w: K.w, h: K.h, draw: K.draw, live: K.live, float: true, name: K.name, kind: 'yard',
         wear: wearOf({ ring: e.ring, side: e.side, d: warpedDist(x, gy), seed: x * 31 + gy * 17 + e.id, yard: true }) });

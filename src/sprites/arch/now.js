@@ -1224,6 +1224,11 @@ function ring5(c, cx, cy, col, lit, hub = N) {
   if (lit) { R(c, lit, cx - 1, cy - 2, 2, 1); R(c, lit, cx - 2, cy - 1, 1, 1); }       // свет сверху слева
   R(c, hub, cx, cy, 1, 1);
 }
+function wheelUp(c, cx, cy) {
+  R(c, CIN, cx - 1, cy - 2, 3, 1); R(c, CIN, cx - 2, cy - 1, 1, 2); R(c, CIN, cx + 2, cy - 1, 1, 2);   // шина — верх и бока
+  R(c, mix9(CIN, N, 0.45), cx - 2, cy + 1, 1, 1); R(c, STONE2, cx + 2, cy + 1, 1, 1); R(c, SEP, cx - 1, cy + 2, 3, 1);   // низ в тени кучи
+  R(c, ASH, cx, cy, 1, 1); R(c, tone(MAT.STEEL, 1), cx - 1, cy - 1, 1, 1); R(c, tone(MAT.STEEL, 1), cx + 1, cy + 1, 1, 1);   // ступица и спицы
+}
 function bikePile(c, x, gy) {
   const L = Math.round(x) - 13, G = Math.round(gy);
   R(c, SEP, L + 1, G - 1, 25, 1);                                                    // тень кучи
@@ -1246,20 +1251,22 @@ function bikePile(c, x, gy) {
   R(c, PAPER2, L + 19, G - 8, 1, 3); R(c, N, L + 18, G - 9, 3, 1);                    // подседельная, седло
   R(c, PAPER2, L + 23, G - 8, 1, 3); R(c, ASH, L + 22, G - 9, 3, 1);                  // вынос, руль
   R(c, BONE, L + 24, G - 7, 3, 1); R(c, BONE, L + 24, G - 6, 1, 1); R(c, BONE, L + 26, G - 6, 1, 1);   // корзина
-  // наверху — колёсами вверх: литые колёса киноварью, рама буквой V пеплом, седло и руль вниз в кучу
-  ring5(c, L + 6, G - 12, CIN, null); ring5(c, L + 13, G - 12, CIN, null);
-  R(c, BONE, L + 5, G - 14, 2, 1); R(c, BONE, L + 12, G - 14, 2, 1);                  // свет на ободах
-  hline(c, ASH, L + 7, G - 10, L + 9, G - 8); hline(c, ASH, L + 9, G - 8, L + 12, G - 10);
+  // наверху — колёсами вверх, чуть вкось: литая шина киноварью только по верху обода, низ ушёл в
+  // кучу; ступица светлая, со спицей; рама буквой V бумагой по тёмному, седло и руль вниз в кучу
+  wheelUp(c, L + 6, G - 12); wheelUp(c, L + 13, G - 11);
+  hline(c, N, L + 7, G - 9, L + 9, G - 7); hline(c, N, L + 10, G - 7, L + 12, G - 9);
+  hline(c, PAPER2, L + 7, G - 10, L + 9, G - 8); hline(c, PAPER2, L + 9, G - 8, L + 12, G - 10);
   R(c, N, L + 8, G - 7, 3, 1);                                                          // седло вниз
   R(c, ASH, L + 13, G - 9, 1, 2); R(c, ASH, L + 12, G - 7, 3, 1);                      // руль вниз
+  R(c, STONE2, L + 15, G - 10, 1, 1); R(c, SEP, L + 14, G - 9, 2, 1);                  // куча прикрывает дальний обод
   R(c, MIST, L + 8, G - 2, 1, 1); R(c, MIST, L + 12, G - 2, 1, 1); R(c, MIST, L + 12, G - 3, 1, 1);   // трава
 }
 
 // Столб с камерами (Skynet — с 2005-го, Sharp Eyes — с 2015-го): консоль буквой «Г», на ней три
 // неподвижные «пули» — влево, вправо, вправо-вниз, — под консолью панель подсветки, на столбе —
-// шкафчик питания; ниже на кронштейне купол поворотной. Купол ведёт того, кто движется рядом, —
-// кого угодно одинаково, шагами, с запаздыванием и перелётом; остановился — пропал для камеры:
-// купол постоит и пойдёт обходом от края к краю. Внимания не знает, узнавания нет; ничего не
+// шкафчик питания; ниже на кронштейне купол поворотной. Купол ведёт странника, когда тот движется
+// рядом, — шагами, с запаздыванием; остановился — пропал для камеры: купол постоит и пойдёт обходом
+// от края к краю, у каждого края постоит. Внимания не знает, узнавания нет; ничего не
 // мигает (тот столб, что весь в мигающих глазах, — на западной тропе, world/cameras.js).
 // Подсветка ночью невидима, как у 940 нм.
 const CAMS = new Map();
@@ -1285,7 +1292,7 @@ function camPole(c, x, gy, t = 0, still = false) {
   if (!st) CAMS.set(X + ':' + G, st = { p: 2, row: 1, want: 2, wrow: 1, next: 0, lt: T, seen: -1e9, dir: 1, hold: 0 });
   if (!still) step(st, X - 4, G, T);
   const p = still ? 2 : st.p, row = still ? 1 : st.row;
-  R(c, ASH, X - 6 + Math.min(3, p), G - 20 + row, 1, 1);
+  R(c, ASH, X - 6 + [0, 1, 2, 2, 3][p], G - 20 + row, 1, 1);
 }
 // купол: цель — кто движется рядом; шаг — одна позиция за 18 кадров; потерял — обход
 function step(st, cx, G, T) {
@@ -1302,8 +1309,9 @@ function step(st, cx, G, T) {
   }
   if (T - st.seen > 270) {                                         // никого: постоял — обход от края к краю
     if (st.p === st.want && T >= st.hold) {
-      if (st.p === 0 || st.p === 4) { st.dir = st.p === 0 ? 1 : -1; st.hold = T + 180; }
-      st.want = Math.max(0, Math.min(4, st.p + st.dir)); st.wrow = 1;
+      const nd = st.p === 0 ? 1 : st.p === 4 ? -1 : st.dir;              // у края — разворот и стоянка там же
+      if (nd !== st.dir) { st.dir = nd; st.hold = T + 180; }
+      else { st.want = Math.max(0, Math.min(4, st.p + st.dir)); st.wrow = 1; }
     }
   }
   if (T < st.next) return;
@@ -1416,50 +1424,59 @@ function cableDrum(c, x, gy) {
 // южным горизонтом, тарелка смотрит на юг, к нам (расчёт по геометрии). Тёмная чаша, кромка пеплом,
 // блик слева сверху, облучатель ниже середины на штанге от нижней кромки.
 function dishPole(c, x, gy) {
-  const X = Math.round(x), G = Math.round(gy), cy = G - 15;
-  for (let dy = -5; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
-    const q = (dx / 4.6) ** 2 + ((dy + 0.5) / 5.1) ** 2;
+  const X = Math.round(x) - 1, G = Math.round(gy), cy = G - 15;
+  // шест правее чаши, кронштейн в её спину — не тарелка на палке, а тарелка на креплении
+  R(c, tone(MAT.STEEL, 3), X + 3, cy - 1, 1, G - cy); R(c, ASH, X + 4, cy - 1, 1, G - cy);
+  R(c, CONC, X + 1, G - 1, 5, 1);
+  // чаша: кромка толщиной — светлая сверху-слева, тёмная снизу-справа; внутри вогнутость —
+  // темнее под верхней кромкой, светлее к нижней
+  for (let dy = -5; dy <= 5; dy++) for (let dx = -4; dx <= 4; dx++) {
+    const q = (dx / 4.4) ** 2 + (dy / 5.4) ** 2;
     if (q > 1) continue;
-    R(c, q > 0.62 ? (dx < 0 || dy < -2 ? ASH : tone(MAT.STEEL, 1)) : STONE2, X + dx, cy + dy, 1, 1);
+    const s2 = (dx + dy) / 9;
+    let col;
+    if (q > 0.62) col = s2 < -0.1 ? (q > 0.82 ? BONE : ASH) : s2 > 0.15 ? (q > 0.82 ? N : tone(MAT.STEEL, 0)) : ASH;
+    else col = s2 < -0.25 ? SEP : s2 < 0.2 ? STONE2 : tone(MAT.STEEL, 2);
+    R(c, col, X + dx, cy + dy, 1, 1);
   }
-  R(c, BONE, X - 3, cy - 3, 1, 2); R(c, BONE, X - 2, cy - 4, 1, 1);                  // блик
-  R(c, ASH, X, cy + 3, 1, 2); R(c, BONE, X - 1, cy + 1, 2, 2); R(c, ASH, X + 1, cy + 2, 1, 1);   // штанга от нижней кромки, облучатель
-  R(c, tone(MAT.STEEL, 3), X, cy + 5, 1, G - cy - 6); R(c, ASH, X + 1, cy + 5, 1, G - cy - 6);   // шест
-  R(c, CONC, X - 2, G - 1, 5, 1);
+  // штанга облучателя — от нижней кромки вниз и вбок, облучатель под чашей, в стороне от шеста
+  R(c, ASH, X - 2, cy + 5, 1, 1); R(c, ASH, X - 3, cy + 6, 1, 1);
+  R(c, BONE, X - 5, cy + 7, 2, 1); R(c, ASH, X - 5, cy + 8, 2, 1);
 }
 // Радомы станции на плато (SvalSat на Платоберге у Лонгйира, с 1997-го; к 2004-му — шесть антенн,
 // теперь их больше сотни, по ESA — за полторы сотни): не шары во дворе, а вид на отрог плато —
-// снежная полка, под ней тёмная скала, по скале зигзагом дорога наверх. Три белых шара разной
-// величины, срезанные снизу, на низких тумбах; у большого — коробка аппаратной; швы панелей —
-// только на крупных. Три против полутора сотен — синекдоха. Свет слева сверху.
+// низкая полка в снегу с проталинами, к краям — склон и осыпь, по скале зигзагом дорога наверх.
+// Три гладких белых шара разной величины, срезанные снизу, каждый на плите во весь срез, между
+// шарами просвет; у большого — коробка аппаратной. Три против полутора сотен — синекдоха. Свет
+// слева сверху.
 function radome(c, cx, cy, r) {
-  for (let dy = -r; dy <= Math.ceil(r * 0.6); dy++) for (let dx = -r; dx <= r; dx++) {
+  const cut = Math.ceil(r * 0.55);                                  // срезан снизу: стоит, а не катится
+  for (let dy = -r; dy <= cut; dy++) for (let dx = -r; dx <= r; dx++) {
     const d2 = dx * dx + dy * dy;
-    if (d2 > r * r + r * 0.6) continue;
-    const lit = (-dx * 0.6 - dy * 0.8) / r;                     // к свету — светлее
-    let col = lit > 0.35 ? BONE : lit > -0.15 ? PAPER : lit > -0.55 ? PAPER2 : ASH;
-    if (r >= 5 && col !== ASH && (dx - 2 * dy + 64) % 5 === 0 && d2 < r * r - r) col = col === BONE ? PAPER : PAPER2;   // швы панелей
-    R(c, col, cx + dx, cy + dy, 1, 1);
+    if (d2 > r * r + r * 0.5) continue;
+    const nz = Math.sqrt(Math.max(0, 1 - d2 / (r * r + 0.01)));
+    const lit = (-dx * 0.55 - dy * 0.6) / r + nz * 0.5;             // гладкий шар, свет слева сверху
+    R(c, lit > 0.75 ? BONE : lit > 0.4 ? PAPER : lit > 0.02 ? PAPER2 : ASH, cx + dx, cy + dy, 1, 1);
   }
-  const by = cy + Math.ceil(r * 0.6) + 1, bw = Math.max(3, Math.round(r * 0.9));
-  R(c, CONC, cx - (bw >> 1), by, bw, 2); R(c, ASH, cx - (bw >> 1), by, 1, 2);          // тумба
+  const hw = Math.round(Math.sqrt(Math.max(1, r * r - cut * cut))) + 1, by = cy + cut + 1;
+  R(c, CONC, cx - hw, by, 2 * hw + 1, 1); R(c, tone(MAT.CONCRETE, 4), cx - hw, by, 1, 1);   // плита во весь срез
 }
 function radomes(c, x, gy) {
-  const L = Math.round(x) - 15, G = Math.round(gy), shelf = G - 9;
-  // отрог: тёмная скала косыми пластами, к краям ниже
-  for (let i = 0; i < 30; i++) {
-    const top = shelf + (i < 2 ? 2 - i : i > 27 ? i - 27 : 0);
-    for (let y = top; y < G; y++) R(c, (i + 2 * y) % 9 === 0 ? SEP : (i * 3 + y) % 23 === 0 ? N : STONE2, L + i, y, 1, 1);   // косые пласты
-    if (i < 2 || i % 9 === 4) R(c, tone(MAT.ROCK, 3), L + i, top, 1, 1);                // кромки к свету
+  const L = Math.round(x) - 17, G = Math.round(gy), shelf = G - 6;
+  // отрог: полка плато, слева уходит в землю пологим склоном, справа — осыпью; косые пласты
+  for (let i = 0; i < 34; i++) {
+    const top = i < 4 ? shelf + 4 - i : i > 28 ? shelf + (i - 28) : shelf;
+    for (let y = top; y < G; y++) R(c, (i + 2 * y) % 9 === 0 ? SEP : (i * 3 + y) % 23 === 0 ? N : STONE2, L + i, y, 1, 1);
+    if (i % 7 === 3 || i < 4) R(c, tone(MAT.ROCK, 3), L + i, top, 1, 1);                // кромки к свету
   }
   // дорога наверх зигзагом — накатанная, светлее скалы
-  hline(c, ASH, L + 3, G - 1, L + 14, G - 3); hline(c, ASH, L + 14, G - 3, L + 7, G - 5); hline(c, ASH, L + 7, G - 5, L + 20, G - 7); hline(c, ASH, L + 20, G - 7, L + 16, G - 8);
-  // снежная полка
-  R(c, tone(MAT.SNOW, 4), L + 1, shelf, 28, 1); R(c, tone(MAT.SNOW, 5), L + 3, shelf, 22, 1); R(c, tone(MAT.SNOW, 3), L + 2, shelf + 1, 4, 1); R(c, tone(MAT.SNOW, 3), L + 22, shelf + 1, 5, 1);
-  radome(c, L + 6, shelf - 3 - 3, 5);
-  radome(c, L + 17, shelf - 3 - 4, 6);
-  radome(c, L + 26, shelf - 3 - 2, 3);
-  R(c, CONC, L + 22, shelf - 2, 3, 2); R(c, ASH, L + 22, shelf - 2, 3, 1);              // аппаратная у большого
+  hline(c, ASH, L + 2, G - 1, L + 13, G - 3); hline(c, ASH, L + 13, G - 3, L + 7, G - 5);
+  // снег по полке — с проталинами
+  c.fillStyle = tone(MAT.SNOW, 4); for (const [sx, sw] of [[4, 6], [12, 9], [23, 6]]) c.fillRect(L + sx, shelf, sw, 1);
+  radome(c, L + 5, shelf - 5, 4);
+  radome(c, L + 18, shelf - 6, 6);
+  radome(c, L + 30, shelf - 4, 3);
+  R(c, CONC, L + 25, shelf - 2, 3, 2); R(c, ASH, L + 25, shelf - 2, 3, 1);              // аппаратная у большого
 }
 
 // Контейнер-майнер: морской контейнер, набитый вычислителями, на бетонных блоках (северный майнинг
@@ -1483,12 +1500,13 @@ function minerBox(c, x, gy, t = 0, still = false) {
   c.fillStyle = BONE; for (const [ix, n] of [[2, 2], [5, 1], [9, 3], [12, 1], [16, 2], [20, 1]]) c.fillRect(L + ix, top, 1, n);   // сосульки
   R(c, tone(MAT.STEEL, 3), L + 2, top + 2, 1, 7); R(c, tone(MAT.STEEL, 3), L + 5, top + 2, 1, 7);   // запоры двери
   R(c, PAPER2, L + 8, top + 7, 3, 2);                                                 // табличка без знаков
-  // стена вытяжки: три вентилятора, один стоит
+  // стена вытяжки: три вентилятора со ступицей, крайний правый стоит; лопасти — то крестом, то косым
   const night = skyAt(phaseAt(t || 0)).name === 'ночь', per = night ? 6 : 4;
-  for (const [k, fx] of [[0, 12], [1, 17]]) {
-    R(c, N, L + fx, top + 3, 4, 4);
-    const b = still || k === 1 ? 0 : ((T / per | 0) + k) & 1;
-    R(c, ASH, L + fx + 1 + b, top + 4, 1, 2); R(c, ASH, L + fx + 1, top + 4 + b, 2, 1);
+  for (const [k, fx] of [[0, 12], [1, 16], [2, 20]]) {
+    R(c, N, L + fx, top + 4, 3, 3); R(c, ASH, L + fx + 1, top + 5, 1, 1);
+    const turn = !still && k !== 2 && (((T / per | 0) + k) & 1);
+    c.fillStyle = tone(MAT.STEEL, 1);
+    for (const [ox, oy] of turn ? [[0, 0], [2, 0], [0, 2], [2, 2]] : [[1, 0], [0, 1], [2, 1], [1, 2]]) c.fillRect(L + fx + ox, top + 4 + oy, 1, 1);
   }
   // огни состояния — холодные; аварийный — редко
   R(c, (T >> 5) & 1 && !still ? BONE : MIST, L + 8, top + 3, 1, 1); R(c, MIST, L + 10, top + 3, 1, 1);
@@ -1606,7 +1624,7 @@ function barrierAt(L, G, T) {
   }
   return { arm: 0, blink: false };
 }
-function yardBarrier(c, x, gy, t = 0, still = false) {
+function yardBarrier(c, x, gy, t = 0, still = false, noArm = false) {
   const L = Math.round(x) - 14, G = Math.round(gy), T = t | 0;
   // опора стрелы — рогатка у дальнего конца
   R(c, ASH, L + 27, G - 5, 1, 5); R(c, ASH, L + 26, G - 6, 1, 1); R(c, ASH, L + 28, G - 6, 1, 1); R(c, N, L + 26, G - 1, 3, 1);
@@ -1616,6 +1634,7 @@ function yardBarrier(c, x, gy, t = 0, still = false) {
   R(c, N, L + 2, G - 10, 2, 1);                                   // лампа
   const st = still ? { arm: 0, blink: false } : barrierAt(L, G, T);
   if (st.blink && ((T / 30) | 0) & 1) R(c, CIN, L + 2, G - 10, 2, 1);
+  if (noArm) return;                                              // тень от солнца — по тумбе и рогатке: стрела ходит
   // стрела: от оси на тумбе, полосами по 3 точки; снизу тенью
   const a = st.arm * Math.PI / 2, ax = L + 4, ay = G - 7, ca = Math.cos(a), sa = Math.sin(a);
   for (let i = 0; i <= GATE_ARM; i++) {
@@ -1851,13 +1870,13 @@ export const ARCH = {
     west: [art('антитаранные тумбы', BOLLARDS), art('электросамокат', ESCOOTER), art('зарядка для машин', CHARGER), { name: 'враждебная скамейка', w: 23, h: 11, unique: true, draw: hostileBench }],
     north: [
       art('снегоход', SNOWMOBILE), { name: 'кабельный барабан', w: 16, h: 13, draw: cableDrum }, { name: 'тарелка на шесте', w: 11, h: 21, draw: dishPole },
-      { name: 'радомы на плато', w: 30, h: 22, unique: true, draw: radomes },
+      { name: 'радомы на плато', w: 34, h: 22, unique: true, draw: radomes },
       { name: 'контейнер-майнер', live: true, w: 30, h: 16, draw: minerBox, shadow: (c, X, G) => minerBox(c, X, G, 0, true) },
     ],
     plain: [
       art('поддоны кирпича', BRICKS), { name: 'ларёк', w: 20, h: 22, draw: kiosk }, { name: 'грибок песочницы', w: 20, h: 20, draw: sandbox },
       { name: 'лебедь из покрышки', w: 16, h: 14, unique: true, draw: tyreSwan },
-      { name: 'шлагбаум во двор', live: true, tall: true, w: 30, h: 32, draw: yardBarrier, shadow: (c, X, G) => yardBarrier(c, X, G, 0, true) },
+      { name: 'шлагбаум во двор', live: true, tall: true, w: 30, h: 32, draw: yardBarrier, shadow: (c, X, G) => yardBarrier(c, X, G, 0, true, true) },
     ],
   },
 };

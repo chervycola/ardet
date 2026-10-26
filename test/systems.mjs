@@ -862,7 +862,7 @@ setCtx(ctx);
   const L = M.locations;
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
   A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 }))],
-    [...L, ...AG.archProps.filter(p => p.name).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
+    [...L, ...AG.archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
   (await imp('world/town.js')).buildTown();                       // как в main.js: русло, тропы и улицы городка — сразу за артериями
   const line = id => A.lines.find(l => l.id === id);
   const runs = arr => { const o = []; for (const v of arr) if (o[o.length - 1] !== v) o.push(v); return o; };
