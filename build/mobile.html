@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='d1b743e · 2026-10-26';console.log('[оттиск]', 'd1b743e · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5026e41 · 2026-10-26';console.log('[оттиск]', '5026e41 · 2026-10-26');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -18626,7 +18626,7 @@ System.register("render/haze", ["core/time", "render/scaler", "world/wind", "wor
 // Пиксель-арт: fillRect по целым; дуг нет.
 System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/arch/kit", "world/sky", "world/redNoon", "world/wind", "core/playerRef", "render/haze"], function (exports_44, context_44) {
     "use strict";
-    var hang_js_5, mechanisms_js_2, kit_js_3, sky_js_2, redNoon_js_2, wind_js_7, playerRef_js_2, haze_js_1, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, BURJ, burj, BURJ2, burj2, GLYPHS, library, library2, library3, TP, taipei, ST, skytree, SCR, screenTower, GH, ghHalf, gherkin, CR_BELT, CR_BELTS, CR_UP, CR_REST, glassTower, WT_EDGE, walkie, dataCenter, NT, natick, heatReuse, RUST, unfinished, PT_AC, panelTower, signSouth, signEast, signWest, signNorth, PAL, STAMPS, GLASSBOAT, TP_E, BUOY, SOLAR, WALKSIGN, CAMS, BOLLARDS, ESCOOTER, CHARGER, HOSTILE, SNOWMOBILE, BRICKS, SWAN, GATE_ARM, GATE_S, LN, LN_B4, mixC, theLine, SV, SV_HILL, SV_TALUS, seedVault, ARCH;
+    var hang_js_5, mechanisms_js_2, kit_js_3, sky_js_2, redNoon_js_2, wind_js_7, playerRef_js_2, haze_js_1, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, BURJ, burj, BURJ2, burj2, GLYPHS, library, library2, library3, TP, taipei, ST, skytree, SCR, screenTower, GH, ghHalf, gherkin, CR_WINCH, CR_BELT, CR_BELTS, CR_UP, CR_REST, glassTower, WT_EDGE, walkie, dataCenter, NT, natick, heatReuse, RUST, unfinished, PT_AC, panelTower, signSouth, signEast, signWest, signNorth, PAL, STAMPS, GLASSBOAT, TP_E, BUOY, SOLAR, WALKSIGN, CAMS, BOLLARDS, ESCOOTER, CHARGER, HOSTILE, SNOWMOBILE, BRICKS, SWAN, GATE_ARM, GATE_S, LN, LN_B4, mixC, theLine, SV, SV_HILL, SV_TALUS, seedVault, ARCH;
     var __moduleName = context_44 && context_44.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // шум 0..1 по клетке: без косых полос, которые даёт линейная смесь координат
@@ -19254,7 +19254,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             } // повисла отвесно, без разгона
         }
         else
-            h.cur += Math.max(-0.07 * dt, Math.min(0.07 * dt, L - h.cur));
+            h.cur += Math.max(-CR_WINCH * dt, Math.min(CR_WINCH * dt, L - h.cur));
         h.ct = T;
         h.len = h.cur;
         const parked = h.cur < 4.5, still = Math.abs(h.cur - L) < 0.3;
@@ -20620,12 +20620,14 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             gherkinBody.static = true;
             // Люлька мойщика на двух тросах с консоли на крыше (башенные установки — у «огурца», 20 Fenchurch,
             // Шарда, Бурдж-Халифы): днём спускается ступенями — пояс витража за поясом, на каждом моют, рука со
-            // скребком ходит, — наверх поднимается сплошь. Ветер у земли от 0,5 (у крыши это ~10 м/с; в США
-            // работа запрещена выше 25 миль/ч) — люлька уходит к кромке крыши и спускается снова, только когда
-            // стихнет ниже 0,4 и пройдёт три четверти минуты; в сумерки и ночью стоит там же. На спуске
-            // люльку держат упоры (EN 1808) — качается на точку, не маятником; на стоянке закреплена.
+            // скребком ходит, — наверх поднимается сплошь, лебёдкой той же скорости. Ветер у земли от 0,5 (у
+            // крыши, по нашей оценке, ~10 м/с; в США работа запрещена выше 25 миль/ч) — люлька уходит к кромке
+            // крыши и спускается снова, только когда стихнет ниже 0,4 и пройдёт три четверти минуты; в сумерки
+            // и ночью стоит там же. Качается на точку, не маятником: настоящая башня в разы выше нарисованной,
+            // и у фасадов бывают упоры (по описаниям изготовителей); на стоянке закреплена.
             // Новое — странника не знает (world/hang.js, cradle:).
-            CR_BELT = 968, CR_BELTS = 7, CR_UP = 900, CR_REST = 1200; // пояс: 2 с хода + 14 с мытья; подъём 15 с; у крыши 20 с
+            CR_WINCH = 0.025; // точек за шаг: ~40 м/мин в масштабе башни
+            CR_BELT = 1200, CR_BELTS = 7, CR_UP = 2520, CR_REST = 1200; // пояс: 6 с хода + 14 с мытья; подъём 42 с; у крыши 20 с
             glassTower = kit_js_3.split(glassBody, glassLive);
             // вторая башня выгнута к улице: шире кверху, вогнутое лицо собирало солнце
             // в пятно — этажи прогибаются «улыбкой». Теперь на южном лице почти во всю
@@ -20935,7 +20937,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             // Лебедь из покрышки (примета; ЖЭК-арт дворов России, Украины, Казахстана — убывающий пережиток:
             // по сообщениям, в 2022-м в Екатеринбурге дворы велели к 1 июня очистить от шин; говорят, теперь
             // за них штрафуют). Так обычно делают: шину режут вдоль протектора, выворачивают, бока надрезают
-            // зубцами — крылья встают; полоса протектора — шея на проволоке; красят белым, клюв красный. Сидит
+            // зубцами — крылья встают; полоса протектора — шея на проволоке; красят — чаще белым, клюв красный. Сидит
             // в клумбе из покрышки — резина в костяных полосах, земля, ростки. Где эмаль облупилась — резина.
             SWAN = [
                 '.BBA............',
