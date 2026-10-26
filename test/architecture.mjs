@@ -345,8 +345,8 @@ test('жизнь: разметка по контракту — внутри си
     for (const L of [].concat(A.landmark || [])) kinds.push([`${id}/landmark/${L.name}`, L]);
   }
   const COLS = ['V', 'K', 'P', 'M', 'S', 'N'];
-  for (const [key, it] of kinds) {
-    const L = it.life;
+  for (const [key0, it] of kinds) for (const ln of ['life', 'life2', 'life3']) {   // жизнь второго и третьего — по тому же контракту
+    const L = it[ln], key = ln === 'life' ? key0 : `${key0} ${ln}`;
     if (!L) continue;
     const inside = (dx, dy, m = 4) => Math.abs(dx) <= it.w / 2 + m && dy <= 0 && dy >= -it.h - m;
     for (const p of L.smoke || []) assert(inside(p[0], p[1]), `${key}: дым вне постройки ${p}`);
@@ -761,7 +761,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       eq(body.static, true, `${k.name} ${dn}: не объявлен неподвижным`);
       const pk = BK.probeKind(body, 500, 500);
       eq(pk.live, false, `${k.name} ${dn}: живой`); eq(pk.shared, true, `${k.name} ${dn}: зависит от места`);
-      if (d.body) assert(typeof d.live === 'function', `${k.name} ${dn}: нет живого слоя`);
+      if (d.body) {
+        assert(typeof d.live === 'function', `${k.name} ${dn}: нет живого слоя`);
+        eq(BK.probeKind(d, 500, 500).live, true, `${k.name} ${dn}: живое не движется`);
+      }
       for (const t of [0, 19, 40, 77]) {
         const c = rec(); d(c, 500, 500, t);
         assert(c.log.length > 50, `${k.name} ${dn}: пуст`);

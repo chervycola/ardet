@@ -880,7 +880,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3c328f3 · 2026-10-26';console.log('[оттиск]', '3c328f3 · 2026-10-26');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='6ec2506 · 2026-10-26';console.log('[оттиск]', '6ec2506 · 2026-10-26');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6716,13 +6716,16 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
                     return 1; // полоса неба наискось
                 return x % 4 === 0 ? 1 : 0; // стойки витража
             }
-            case MAT.PANEL: {
-                if (x % 8 === 7)
-                    return -1; // вертикальный стык панелей
-                const v = hh(x >> 3, y, s + 41);
-                return v < 0.05 ? -1 : 0;
-            }
+            case MAT.PANEL: return hh(x, y, s + 41) < 0.04 ? -1 : 0; // гладкая; стыки рисует постройка по своему шагу
             case MAT.STEEL: return hh(x, y, s + 43) < 0.03 ? -1 : 0;
+            case MAT.MIRROR: { // модуль 12×18: импост — нить света, пояс — тень
+                if (x % 12 === 11)
+                    return 2;
+                if (y % 18 === 17)
+                    return -1;
+                const v = hh(Math.floor(x / 12), Math.floor(y / 18), s + 53);
+                return v < 0.12 ? -1 : 0; // изредка панель стоит чуть иначе
+            }
             case MAT.ROCK: { // глыба — косой параллелограмм, ряды вразбежку
                 const r = Math.floor(y / 3), u = x + (y >> 1) + Math.floor(hh(r, 0, s + 45) * 5), k = Math.floor(u / 5);
                 if (u % 5 === 0 && hh(k, r, s + 47) < 0.45)
@@ -7014,10 +7017,11 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
                 DRYSTONE: 26, // плитняк сухой кладки: камни в точку высотой и 3–7 длиной, швы вразбежку (брохи)
                 CURTAIN: 27, // навесная стена: серебристое стекло в импостах, пояса перекрытий светлее (небоскрёбы)
                 TINT: 28, // стекло в цвет мглы, пояса этажей (Тайбэй)
-                PANEL: 29, // сборная железобетонная панель: гладкая, вертикальные стыки (панельный дом)
+                PANEL: 29, // сборная железобетонная панель: гладкая, стыки — по шагу постройки (панельный дом)
                 STEEL: 30, // крашеная сталь, светлая и гладкая (решётка башни, диагональная сетка)
                 DIAGRID: 31, // стекло в диагональной сетке светлой стали («огурец»)
                 ROCK: 32, // скала: глыбы косыми пластами, трещины — без кладки (горы)
+                MIRROR: 33, // зеркальные панели: тон земли, светлый импост, пояс; соседние стоят не в одной плоскости
             });
             // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
             exports_29("FORM", FORM = { FLAT: 0, CYL: 1, FLUTE: 2 });
@@ -7054,6 +7058,7 @@ System.register("sprites/arch/kit", [], function (exports_29, context_29) {
             RAMP[MAT.STEEL] = ramp(mix(BO, AS, 0.55));
             RAMP[MAT.DIAGRID] = ramp(mix(AS, NI, 0.5), mix(BO, AS, 0.3));
             RAMP[MAT.ROCK] = ramp(mix(mix(NI, S0, 0.62), SEP, 0.12));
+            RAMP[MAT.MIRROR] = ramp(mix(mix(SEP, NI, 0.35), AS, 0.12));
             RIM = AS; // кромка справа — пеплом (канон)
             // ступень тона материала (0 — глубь … 5 — блик): для рисунка поверх набора теми же красками
             exports_29("tone", tone = (mat, st) => RAMP[mat][st]);
@@ -18453,9 +18458,15 @@ System.register("sprites/arch/neon", ["world/hang"], function (exports_42, conte
 // Пиксель-арт: fillRect по целым; дуг нет.
 System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/arch/kit", "world/sky", "world/redNoon", "world/wind"], function (exports_43, context_43) {
     "use strict";
-    var hang_js_5, mechanisms_js_2, kit_js_3, sky_js_2, redNoon_js_2, wind_js_6, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, BURJ, burj, BURJ2, burj2, GLYPHS, library, library2, library3, TP, taipei, ST, skytree, SCR, screenTower, GH, ghHalf, gherkin, glassTower, WT_EDGE, walkie, dataCenter, natick, heatReuse, unfinished, panelTower, signSouth, signEast, signWest, signNorth, PAL, STAMPS, GLASSBOAT, TIDEPOST, SOLAR, WALKSIGN, BOLLARDS, ESCOOTER, CHARGER, SNOWMOBILE, DISH, BRICKS, LN, lnTop, lnBot, theLine, SV, SV_HILL, SV_TALUS, seedVault, ARCH;
+    var hang_js_5, mechanisms_js_2, kit_js_3, sky_js_2, redNoon_js_2, wind_js_6, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, BURJ, burj, BURJ2, burj2, GLYPHS, library, library2, library3, TP, taipei, ST, skytree, SCR, screenTower, GH, ghHalf, gherkin, glassTower, WT_EDGE, walkie, dataCenter, natick, heatReuse, RUST, unfinished, PT_AC, panelTower, signSouth, signEast, signWest, signNorth, PAL, STAMPS, GLASSBOAT, TIDEPOST, SOLAR, WALKSIGN, BOLLARDS, ESCOOTER, CHARGER, SNOWMOBILE, DISH, BRICKS, LN, mixC, theLine, SV, SV_HILL, SV_TALUS, seedVault, ARCH;
     var __moduleName = context_43 && context_43.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
+    // шум 0..1 по клетке: без косых полос, которые даёт линейная смесь координат
+    function noise(i, j, s) {
+        let h = (i * 374761393 + j * 668265263 + s * 2246822519) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
     // пологая линия горизонтальными отрезками (тросы, лопасти): без разрывов
     function hline(c, col, x0, y0, x1, y1) {
         c.fillStyle = col;
@@ -18559,27 +18570,27 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         // вечер: тень земли поднимается по башне, выше неё — последнее солнце на левых гранях
         const sky = sky_js_2.skyAt(sky_js_2.phaseAt(t || 0));
         let line = null;
+        // line — где кончается солнце: ниже него уже тень земли; вечером линия ползёт вверх
         if (sky.sun && sky.sun.az > Math.PI / 2 && sky.sun.elev < 0.2)
-            line = Math.round(120 - 84 * (1 - sky.sun.elev / 0.2));
+            line = Math.round(36 + 84 * sky.sun.elev / 0.2);
         else if (sky.name === 'сумерки' && sky.moon < 0.3)
             line = Math.round(36 - 34 * sky.moon / 0.3);
         if (line === null || redNoon_js_2.redNoon.k > 0.5)
             return;
-        for (const w of [BURJ2.left]) {
-            let prev = 120;
-            for (const [top, ins] of w.tops) {
-                const xa = w.x0 + ins, y0 = Math.max(top + 1, line);
-                if (y0 < prev)
-                    R(c, BONE, X0 + xa, Y0 + y0, 1, prev - y0);
-                if (line < prev && top + 1 < line)
-                    R(c, kit_js_3.tone(kit_js_3.MAT.CURTAIN, 1), X0 + xa, Y0 + top + 1, 1, Math.min(prev, line) - top - 1);
-                prev = top;
-            }
+        // выше линии — последнее солнце на левой грани каждого уступа, ниже — уже тень
+        let prev = 120;
+        for (const [top, ins] of BURJ2.left.tops) {
+            const xa = BURJ2.left.x0 + ins, a = top + 1, m = Math.min(prev, Math.max(a, line));
+            if (m > a)
+                R(c, BONE, X0 + xa, Y0 + a, 1, m - a);
+            if (prev > m)
+                R(c, kit_js_3.tone(kit_js_3.MAT.CURTAIN, 1), X0 + xa, Y0 + m, 1, prev - m);
+            prev = top;
         }
-        if (line < 36)
-            R(c, BONE, X0 + 32, Y0 + Math.max(25, line), 1, 36 - Math.max(25, line));
-        if (line < 24)
-            R(c, BONE, X0 + 33, Y0 + Math.max(10, line), 1, 24 - Math.max(10, line));
+        if (line > 25)
+            R(c, BONE, X0 + 32, Y0 + 25, 1, Math.min(36, line) - 25); // корона
+        if (line > 10)
+            R(c, BONE, X0 + 33, Y0 + 10, 1, Math.min(24, line) - 10); // игла
     }
     function libraryBody(c, x, gy) {
         const X0 = Math.round(x) - 48, Y0 = Math.round(gy) - 48;
@@ -18592,21 +18603,21 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             P.poly(ring, kit_js_3.MAT.PLASTER, kit_js_3.FORM.CYL); // шар планетария
             P.box(1, 40, 23, 2, kit_js_3.MAT.CONCRETE);
             P.box(2, 42, 21, 6, kit_js_3.MAT.CONCRETE); // кольцо постамента
-            P.poly([[26, 10], [86, 30], [86, 48], [26, 48]], kit_js_3.MAT.GRANITE, kit_js_3.FORM.CYL); // барабан
-            P.poly([[25, 7], [88, 28], [88, 30], [25, 9]], kit_js_3.MAT.GLASS); // кровля — фонари полосой
+            P.poly([[26, 10], [83, 29], [83, 48], [26, 48]], kit_js_3.MAT.ASHLAR, kit_js_3.FORM.CYL); // барабан: серый гранит плитами
+            P.poly([[25, 7], [85, 27], [85, 29], [25, 9]], kit_js_3.MAT.GLASS); // кровля — фонари полосой
             P.cut(48, 30, 6, 18, kit_js_3.MAT.DARK); // вход под рост
         }
         kit_js_3.paint(c, X0, Y0, P, { seed: 167, chip: 0.03 });
         // знаки в граните: ряды, у каждого знака свой вид
         let n = 0;
-        for (let y = 16; y < 44; y += 4)
-            for (let gx = 28; gx < 84; gx += 4) {
+        for (let y = 16; y < 44; y += 5)
+            for (let gx = 28; gx < 82; gx += 4) { // в каждом ряду плит — строка знаков
                 const g = GLYPHS[(Math.imul(n++ * 7 + y, 2654435761) >>> 0) % GLYPHS.length];
-                if (libraryBody.P.at(gx, y - 1) !== kit_js_3.MAT.GRANITE || libraryBody.P.at(gx + 3, y + 2) !== kit_js_3.MAT.GRANITE)
+                if (libraryBody.P.at(gx, y - 1) !== kit_js_3.MAT.ASHLAR || libraryBody.P.at(gx + 3, y + 2) !== kit_js_3.MAT.ASHLAR)
                     continue;
                 for (const [dx, dy, w, h] of g) {
-                    R(c, kit_js_3.tone(kit_js_3.MAT.GRANITE, 4), X0 + gx + dx, Y0 + y + dy - 1, w, 1);
-                    R(c, kit_js_3.tone(kit_js_3.MAT.GRANITE, 0), X0 + gx + dx, Y0 + y + dy, w, h);
+                    R(c, kit_js_3.tone(kit_js_3.MAT.ASHLAR, 4), X0 + gx + dx, Y0 + y + dy - 1, w, 1);
+                    R(c, kit_js_3.tone(kit_js_3.MAT.ASHLAR, 0), X0 + gx + dx, Y0 + y + dy, w, h);
                 }
             }
         // фонари кровли: точки света по полосе
@@ -18706,7 +18717,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 P.cut(6 + k * 10, 32, 5, 10, kit_js_3.MAT.DARK);
             P.cut(26, 30, 7, 18, kit_js_3.MAT.DARK); // дверь
             P.box(24, 26, 11, 2, kit_js_3.MAT.CONCRETE); // доска над дверью
-            P.box(58, 26, 6, 22, kit_js_3.MAT.BRICK); // стена к соседу
+            P.box(58, 18, 6, 30, kit_js_3.MAT.BRICK); // стена к соседу — выше роста
             P.box(64, 24, 30, 24, kit_js_3.MAT.PLASTER); // ресторан
             P.box(62, 22, 34, 2, kit_js_3.MAT.BOARD); // навес
             P.cut(67, 29, 14, 13, kit_js_3.MAT.GLASS);
@@ -18726,13 +18737,13 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         for (let k = 0; k < 4; k++)
             c.fillRect(X0 + 25 + k * 2 + (k > 1 ? 1 : 0), Y0 + 26, 1, 1);
         // две книги на гребне стены
-        R(c, kit_js_3.tone(kit_js_3.MAT.TILE, 3), X0 + 59, Y0 + 24, 2, 2);
-        R(c, kit_js_3.tone(kit_js_3.MAT.LOGS, 3), X0 + 61, Y0 + 23, 2, 3);
+        R(c, kit_js_3.tone(kit_js_3.MAT.TILE, 3), X0 + 59, Y0 + 16, 2, 2);
+        R(c, kit_js_3.tone(kit_js_3.MAT.LOGS, 3), X0 + 61, Y0 + 15, 2, 3);
         // в окне ресторана — стопки до потолка, корешками
         const spines = [kit_js_3.tone(kit_js_3.MAT.LOGS, 3), kit_js_3.tone(kit_js_3.MAT.THATCH, 2), kit_js_3.tone(kit_js_3.MAT.TILE, 3), kit_js_3.tone(kit_js_3.MAT.BOARD, 4), kit_js_3.tone(kit_js_3.MAT.FELT, 3)];
         for (let sx = 0; sx < 14; sx += 2)
             for (let sy = 0; sy < 13; sy++)
-                R(c, spines[(sx * 3 + sy) % 5], X0 + 67 + sx, Y0 + 29 + sy, 2, 1);
+                R(c, spines[Math.floor(noise(sx, sy >> (sx & 2 ? 1 : 0), 17) * 5)], X0 + 67 + sx, Y0 + 29 + sy, 2, 1);
         // меню на двери
         R(c, PAPER, X0 + 85, Y0 + 34, 3, 4);
         R(c, SEP, X0 + 85, Y0 + 35, 3, 1);
@@ -18857,22 +18868,21 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         for (let y = 1; y < SCR.h; y += 2)
             c.fillRect(sx, sy + y, SCR.w, 1);
         const qx = sx + 4, qy = sy + 15;
-        R(c, ASH, qx - 1, qy - 1, 23, 23);
+        R(c, BONE, qx - 1, qy - 1, 23, 23);
         for (const [fx, fy] of [[0, 0], [14, 0], [0, 14]]) {
             R(c, N, qx + fx, qy + fy, 7, 7);
-            R(c, ASH, qx + fx + 1, qy + fy + 1, 5, 5);
+            R(c, BONE, qx + fx + 1, qy + fy + 1, 5, 5);
             R(c, N, qx + fx + 2, qy + fy + 2, 3, 3);
         }
         R(c, N, qx + 14, qy + 14, 5, 5);
-        R(c, ASH, qx + 15, qy + 15, 3, 3);
+        R(c, BONE, qx + 15, qy + 15, 3, 3);
         R(c, N, qx + 16, qy + 16, 1, 1); // малый маркер
         c.fillStyle = N;
         for (let j = 0; j < 21; j++)
             for (let i = 0; i < 21; i++) {
                 if ((i < 8 && j < 8) || (i > 12 && j < 8) || (i < 8 && j > 12) || (i > 12 && j > 12 && i < 20 && j < 20))
                     continue;
-                const h = (Math.imul(i * 73 + j * 151 + 9, 2654435761) >>> 0) / 4294967296;
-                if (h < 0.47)
+                if (noise(i, j, 9) < 0.47)
                     c.fillRect(qx + i, qy + j, 1, 1);
             }
         // над кодом и под ним — полосы рекламы без товара: светлее сетки, без знаков
@@ -18884,7 +18894,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         for (let k = 0; k < 7; k++) {
             const by = Y0 + 18 + k * 8;
             R(c, ASH, X0 + 1, by, 6, 7);
-            R(c, PAPER, X0 + 2, by + 1, 4, 5);
+            R(c, BONE, X0 + 2, by + 1, 4, 5);
         }
         // камера на углу экрана: кронштейн вбок, объектив вниз, на тротуар
         R(c, ASH, X0 + 40, Y0 + 13, 3, 1);
@@ -18933,7 +18943,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             if (hw < 3)
                 continue;
             for (let k = 0; k < 6; k++) {
-                const th = k * Math.PI / 3 + y * 0.07, cs = Math.cos(th);
+                const th = k * Math.PI / 3 + y * 0.03, cs = Math.cos(th); // около полуоборота по высоте
                 if (cs < 0.15)
                     continue;
                 const bw = Math.max(1, Math.round(3.2 * cs)), px = Math.round(cx + hw * Math.sin(th) * 0.92 - bw / 2);
@@ -18998,7 +19008,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 c.fillRect(X0 + bx, Y0 + top, bw, 92 - top);
             c.fillStyle = kit_js_3.tone(kit_js_3.MAT.GLASS, 1);
             for (const [bx, bw, top] of [[5, 6, 44], [23, 7, 52], [37, 5, 60]])
-                for (let y = top + 3; y < 92; y += 4)
+                for (let y = top + 3; y < 92; y += 8)
                     c.fillRect(X0 + bx + 1, Y0 + y, bw - 2, 1);
             // пуля соседа: контур пеплом, на каждом стыке витража сдвинут на точку
             c.fillStyle = ASH;
@@ -19013,7 +19023,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 c.fillRect(X0 + 29 + ((k * 3 + (T >> 3)) % 12), Y0 + 109 - ((k * 3 + (T >> 3)) % 12), 1, 1); // ступени ползут
         }
         else if (sky.name === 'ночь') {
-            R(c, PAPER2, X0 + 9, Y0 + 55, 26, 2);
+            R(c, BONE, X0 + 9, Y0 + 55, 26, 2); // лампы дневного света — костью
             c.fillStyle = kit_js_3.tone(kit_js_3.MAT.GLASS, 1);
             for (const fx of [13, 22, 30])
                 c.fillRect(X0 + fx, Y0 + 55, 1, 2); // люди внутри
@@ -19043,17 +19053,17 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             }
         }
         kit_js_3.paint(c, X0, Y0, P, { seed: 213, chip: 0.01 });
-        // вогнутое лицо: этажи прогибаются улыбкой по нижней трети
-        for (let y = 66; y < 92; y += 4) {
+        // вогнутое лицо: этажи прогибаются улыбкой
+        for (let y = 18; y < 92; y += 4) {
             const e = WT_EDGE(y) + 1, w = 44 - 2 * e;
             for (let k = 0; k < w; k++)
                 R(c, kit_js_3.tone(kit_js_3.MAT.CURTAIN, 1), X0 + e + k, Y0 + y + Math.round(2 * Math.sin(Math.PI * k / w)), 1, 1);
         }
-        // козырёк: ламели по верхней половине лица, под каждой — тень
-        for (let y = 16; y < 58; y += 3) {
-            const e = WT_EDGE(y) + 1;
-            R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 2), X0 + e, Y0 + y, 44 - 2 * e, 1);
-            R(c, N, X0 + e, Y0 + y + 1, 44 - 2 * e, 1);
+        // козырёк: ламели почти во всю высоту лица, редкие и светлые, под каждой — тень
+        for (let y = 16; y < 92; y += 5) {
+            const e = WT_EDGE(y) + 2, w = 44 - 2 * e;
+            R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 4), X0 + e, Y0 + y, w, 1);
+            R(c, kit_js_3.tone(kit_js_3.MAT.CURTAIN, 0), X0 + e, Y0 + y + 1, w, 1);
         }
         // сад под короной: зелень внутри переплёта
         c.fillStyle = kit_js_3.tone(kit_js_3.MAT.MOSS, 3);
@@ -19084,8 +19094,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         if (door)
             P.cut(60, 80, 8, 18, kit_js_3.MAT.DARK);
         for (const fx of [28, 42, 56, 70]) {
-            P.box(fx, 51, 11, 5, kit_js_3.MAT.STEEL);
-            P.cut(fx + 1, 53, 9, 2, kit_js_3.MAT.DARK);
+            P.box(fx, 53, 11, 5, kit_js_3.MAT.STEEL);
+            P.cut(fx + 1, 55, 9, 2, kit_js_3.MAT.DARK);
         } // охладители
         P.box(20, 23, 2, 75, kit_js_3.MAT.STEEL);
         P.box(18, 92, 6, 6, kit_js_3.MAT.CONCRETE); // мачта ветряка
@@ -19099,8 +19109,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         for (let k = 0; k < 3; k++)
             c.fillRect(X0 + 30, Y0 + 65 + k * 2, 52, 1);
         for (const fx of [28, 42, 56, 70]) {
-            R(c, ASH, X0 + fx + 1, Y0 + 50, 4, 1);
-            R(c, ASH, X0 + fx + 6, Y0 + 50, 4, 1);
+            R(c, ASH, X0 + fx + 1, Y0 + 52, 4, 1);
+            R(c, ASH, X0 + fx + 6, Y0 + 52, 4, 1);
         }
         R(c, N, X0 + 89, Y0 + 70, 1, 1);
         R(c, N, X0 + 92, Y0 + 72, 1, 1); // устья труб
@@ -19132,7 +19142,7 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         kit_js_3.paint(c, X0, Y0, P, { seed: 217, snow: 0.3, chip: 0.03 });
         hangarOver(c, X0, Y0);
         R(c, CANDLE, X0 + 63, Y0 + 81, 1, 17); // горячий коридор в щель
-        cat(c, X0 + 81, Y0 + 48);
+        cat(c, X0 + 82, Y0 + 53);
         snowdrift(c, X0, Y0);
     }
     function dataLive(c, x, gy, t) {
@@ -19191,7 +19201,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         c.fillStyle = kit_js_3.tone(kit_js_3.MAT.MOSS, 2);
         for (const [ax, ay, w] of [[17, 79, 9], [27, 81, 12], [41, 78, 8], [50, 80, 10], [20, 74, 3], [46, 73, 4], [57, 76, 4]])
             c.fillRect(X0 + ax, Y0 + ay, w, 2);
-        for (const [ax, ay, col] of [[16, 86, CIN], [19, 88, PAPER], [58, 86, CIN], [61, 88, PAPER], [44, 79, CIN]]) {
+        // актинии в углах рамы — белые метридиумы
+        for (const [ax, ay, col] of [[16, 86, BONE], [19, 88, PAPER], [58, 86, BONE], [61, 88, PAPER], [44, 79, PAPER]]) {
             R(c, col, X0 + ax, Y0 + ay, 1, 1);
             R(c, kit_js_3.tone(kit_js_3.MAT.MOSS, 4), X0 + ax, Y0 + ay + 1, 1, 1);
         }
@@ -19257,54 +19268,84 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         const p = sky_js_2.phaseAt(t || 0), evening = p > 0.35 && p < 0.6, k = Math.floor(T / (evening ? 6 : 18)) % 4;
         R(c, ASH, X0 + 16 + k, Y0 + 81, 1, 1);
     }
-    // ── РАВНИНА ──────────────────────────────────────────────────────────
-    // долгострой: бетонный каркас без стен — колонны и плиты восьми этажей,
-    // кое-где заложены пролёты; на недоведённом девятом торчит арматура под
-    // следующий этаж. Башенный кран замер, на крюке висит плита — ветер её
-    // качает медленно и долго (живое). Забор из профнастила, на нём растяжка
-    // «дом готов»: светлое полотно, дом, на балконах цветы, небо — без синего
-    // (канон: голубого нет, небо пеплом). В пролёте первого этажа на верёвке
-    // сохнет одеяло, на кирпиче чайник, в глубине теплится огонёк: тут живут.
     function unfinishedBody(c, x, gy) {
         const X0 = Math.round(x) - 46, Y0 = Math.round(gy) - 112;
         let P = unfinishedBody.P;
         if (!P) {
             P = unfinishedBody.P = kit_js_3.plan(92, 112);
+            for (const cx of [33, 46, 59, 72, 86])
+                P.box(cx, 40, 1, 72, kit_js_3.MAT.CONCRETE).shade(1); // задний ряд колонн
+            P.box(55, 30, 10, 82, kit_js_3.MAT.CONCRETE); // ядро лестницы и лифта
+            for (let f = 0; f < 9; f++)
+                P.cut(58, 33 + f * 9, 4, 4, kit_js_3.MAT.DARK);
             for (let k = 1; k <= 8; k++)
-                P.box(29, 112 - k * 9, 58, 2, kit_js_3.MAT.CONCRETE); // плиты
-            for (const cx of [30, 43, 56, 69, 84])
-                P.box(cx, 40, 2, 72, kit_js_3.MAT.CONCRETE); // колонны
+                P.box(28, 112 - k * 9, 61, 3, kit_js_3.MAT.CONCRETE); // плиты
+            P.clear(84, 40, 5, 3); // торец верхней плиты рваный
+            for (const cx of [30, 43, 69, 84])
+                P.box(cx, 40, 2, 72, kit_js_3.MAT.CONCRETE); // передние колонны
             P.box(43, 32, 2, 8, kit_js_3.MAT.CONCRETE);
-            P.box(56, 32, 2, 8, kit_js_3.MAT.CONCRETE); // девятый
-            for (const [bx, by, bw] of [[32, 96, 11], [45, 87, 11], [58, 96, 11], [71, 69, 13]])
-                P.box(bx, by, bw, 7, kit_js_3.MAT.MUD); // заложенные пролёты
-            P.cut(47, 89, 3, 3, kit_js_3.MAT.DARK);
-            // кран: мачта решёткой, оголовок, стрела, противовес, кабина
+            P.box(69, 32, 2, 8, kit_js_3.MAT.CONCRETE); // девятый
+            // кран: мачта, оголовок, стрела двумя поясами, противовесная консоль с блоками, кабина
             P.box(10, 8, 1, 104, kit_js_3.MAT.IRON);
             P.box(15, 8, 1, 104, kit_js_3.MAT.IRON);
-            P.box(12, 0, 2, 8, kit_js_3.MAT.IRON);
-            P.box(2, 8, 88, 1, kit_js_3.MAT.IRON);
-            P.box(16, 6, 70, 1, kit_js_3.MAT.IRON);
-            P.box(1, 9, 7, 5, kit_js_3.MAT.CONCRETE);
+            P.box(12, 0, 2, 8, kit_js_3.MAT.STEEL);
+            P.box(16, 5, 72, 1, kit_js_3.MAT.IRON);
+            P.box(16, 8, 74, 1, kit_js_3.MAT.IRON);
+            P.box(2, 8, 14, 1, kit_js_3.MAT.IRON);
+            P.box(1, 9, 4, 3, kit_js_3.MAT.CONCRETE);
+            P.box(5, 9, 3, 3, kit_js_3.MAT.CONCRETE);
             P.box(16, 9, 4, 4, kit_js_3.MAT.IRON);
             P.cut(17, 10, 2, 2, kit_js_3.MAT.GLASS);
-            // забор
-            P.box(34, 102, 58, 10, kit_js_3.MAT.IRON);
+            P.box(64, 9, 5, 2, kit_js_3.MAT.STEEL); // тележка
+            // забор, в нём снят лист — щель в подвал
+            P.box(30, 101, 62, 11, kit_js_3.MAT.IRON);
+            P.clear(84, 101, 5, 11);
         }
-        kit_js_3.paint(c, X0, Y0, P, { seed: 191, chip: 0.08, cracks: 3, drips: [[33, 105, 4], [60, 78, 6], [73, 60, 5]] });
-        // решётка мачты и тяги стрелы
+        kit_js_3.paint(c, X0, Y0, P, { seed: 191, chip: 0.06, cracks: 2, drips: [[45, 42, 5], [70, 42, 6], [85, 34, 4]] });
+        // тень под каждой плитой
+        c.fillStyle = kit_js_3.tone(kit_js_3.MAT.CONCRETE, 0);
+        for (let k = 1; k <= 8; k++)
+            c.fillRect(X0 + 28, Y0 + 114 - k * 9, 56, 1);
+        // решётка мачты зигзагом, раскосы стрелы, тяги от оголовка
         c.fillStyle = ASH;
-        for (let k = 0; k < 13; k++)
-            c.fillRect(X0 + (k & 1 ? 13 : 11), Y0 + 108 - k * 8, 2, 1);
-        hline(c, ASH, X0 + 14, Y0, X0 + 62, Y0 + 5);
+        for (let y = 10; y < 110; y += 2)
+            c.fillRect(X0 + 11 + (((y >> 1) % 4 < 2) ? (y >> 1) % 2 : 3 - (y >> 1) % 2) + ((y >> 2) & 1), Y0 + y, 1, 1);
+        for (let k = 17; k < 88; k += 4)
+            R(c, ASH, X0 + k + ((k >> 2) & 1), Y0 + 6 + ((k >> 2) & 1), 1, 2);
+        hline(c, ASH, X0 + 14, Y0, X0 + 62, Y0 + 4);
         hline(c, ASH, X0 + 11, Y0 + 1, X0 + 3, Y0 + 7);
-        // арматура над недоведённым девятым
-        c.fillStyle = kit_js_3.tone(kit_js_3.MAT.IRON, 3);
-        for (const rx of [31, 35, 70, 75, 84, 86])
-            c.fillRect(X0 + rx, Y0 + 35, 1, 5);
-        // растяжка «дом готов»: полотно, небо пеплом, дом, на балконах цветы — без букв
-        R(c, PAPER, X0 + 50, Y0 + 103, 30, 8);
-        R(c, ASH, X0 + 51, Y0 + 104, 28, 3);
+        // арматура из оголовков колонн, верх загнут, под ней рыжие подтёки
+        for (const cx of [43, 69])
+            for (const [dx, h] of [[0, 5], [1, 4]]) {
+                R(c, RUST, X0 + cx + dx, Y0 + 32 - h, 1, h);
+                R(c, RUST, X0 + cx + dx + 1, Y0 + 32 - h, 1, 1);
+            }
+        for (const cx of [30, 84])
+            for (const [dx, h] of [[0, 6], [1, 4]]) {
+                R(c, RUST, X0 + cx + dx, Y0 + 40 - h, 1, h);
+                R(c, RUST, X0 + cx + dx - 1, Y0 + 40 - h, 1, 1);
+            }
+        for (const [rx, ry, l] of [[30, 43, 3], [43, 35, 2], [69, 35, 3], [84, 43, 2]])
+            R(c, RUST, X0 + rx, Y0 + ry, 1, l);
+        // в щели забора: подвал — кладка жильца, верёвка с одеялом, чайник на кирпиче
+        R(c, DARK, X0 + 84, Y0 + 101, 5, 11);
+        R(c, kit_js_3.tone(kit_js_3.MAT.BRICK, 2), X0 + 84, Y0 + 108, 5, 4);
+        R(c, kit_js_3.tone(kit_js_3.MAT.BRICK, 4), X0 + 84, Y0 + 108, 5, 1);
+        R(c, ASH, X0 + 84, Y0 + 102, 5, 1);
+        R(c, kit_js_3.tone(kit_js_3.MAT.FELT, 3), X0 + 85, Y0 + 103, 3, 4);
+        R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 3), X0 + 85, Y0 + 106, 2, 2);
+        R(c, ASH, X0 + 87, Y0 + 106, 1, 1);
+        // тропа к щели, вытоптанная до глины
+        c.fillStyle = kit_js_3.tone(kit_js_3.MAT.MUD, 2);
+        for (const [px, w] of [[80, 2], [82, 3], [85, 4]])
+            c.fillRect(X0 + px, Y0 + 111, w, 1);
+        // прежние растяжки выглядывают из-под нынешней: край выцветший, край рваный
+        R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 3), X0 + 48, Y0 + 102, 33, 1);
+        R(c, STONE, X0 + 79, Y0 + 110, 3, 1);
+        R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 2), X0 + 49, Y0 + 110, 2, 1);
+        // растяжка «дом готов»: полотно, небо — самый светлый тон, дом, на балконах цветы — без букв
+        R(c, PAPER, X0 + 50, Y0 + 103, 30, 7);
+        R(c, BONE, X0 + 51, Y0 + 104, 28, 2);
         R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 4), X0 + 58, Y0 + 105, 12, 5);
         R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 4), X0 + 60, Y0 + 104, 8, 1);
         R(c, N, X0 + 60, Y0 + 106, 2, 1);
@@ -19313,90 +19354,108 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         R(c, CIN, X0 + 62, Y0 + 107, 1, 1);
         R(c, CIN, X0 + 66, Y0 + 107, 1, 1);
         R(c, CIN, X0 + 66, Y0 + 109, 1, 1);
-        // в пролёте первого этажа: верёвка, одеяло, чайник на кирпиче, огонёк в глубине
-        R(c, ASH, X0 + 70, Y0 + 95, 14, 1);
-        R(c, kit_js_3.tone(kit_js_3.MAT.FELT, 3), X0 + 73, Y0 + 96, 6, 5);
-        R(c, kit_js_3.tone(kit_js_3.MAT.FELT, 1), X0 + 73, Y0 + 100, 6, 1);
-        R(c, kit_js_3.tone(kit_js_3.MAT.BRICK, 2), X0 + 81, Y0 + 99, 3, 2);
-        R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 3), X0 + 81, Y0 + 97, 3, 2);
-        R(c, ASH, X0 + 84, Y0 + 97, 1, 1);
-        R(c, CANDLE, X0 + 79, Y0 + 98, 1, 2);
     }
     function unfinishedLive(c, x, gy, t) {
         const L = Math.round(x) - 46, G = Math.round(gy);
-        // крюк и плита на тросе: тяжёлая — ветер раскачивает её медленно и долго
-        const hk = hang_js_5.hang(`crane:${L}:${G}`, L + 66, G - 105, 21, { segs: 3, sail: 0.02, damp: 0.997, gy: G, r: 8 });
+        // трос с тележки, крюк и плита: тяжёлая — ветер раскачивает её медленно и долго
+        const hk = hang_js_5.hang(`crane:${L}:${G}`, L + 66, G - 101, 21, { segs: 3, sail: 0.02, damp: 0.997, gy: G, r: 8 });
         hang_js_5.drawRope(c, hk.pts, ASH);
         const tp = hang_js_5.tipOf(hk), kx = Math.round(tp.x), ky = Math.round(tp.y);
         R(c, STONE, kx - 1, ky, 3, 2); // крюк
-        R(c, ASH, kx - 5, ky + 2, 5, 1);
-        R(c, ASH, kx, ky + 2, 5, 1); // стропы
+        for (const sx of [-6, -3, 2, 5])
+            hline(c, ASH, kx, ky + 1, kx + sx, ky + 3); // четыре стропы
         R(c, kit_js_3.tone(kit_js_3.MAT.CONCRETE, 2), kx - 8, ky + 3, 16, 4);
         R(c, kit_js_3.tone(kit_js_3.MAT.CONCRETE, 4), kx - 8, ky + 3, 16, 1);
     }
-    // панельная башня: семнадцать этажей сборных панелей — стыки по швам,
-    // окна в ряд; лоджии двумя стояками застеклены кто во что горазд: дерево,
-    // алюминий, пластик, открытая с бельём — каждая в свой год; кондиционеры.
-    // Тарелки на лоджиях смотрят в одну точку неба; одна, на крыше у машинного
-    // отделения, задрана прямо вверх. Подъезд под козырьком; окно горит одно.
     function panelBody(c, x, gy) {
         const X0 = Math.round(x) - 26, Y0 = Math.round(gy) - 118;
         let P = panelBody.P;
         if (!P) {
             P = panelBody.P = kit_js_3.plan(52, 118);
-            P.box(19, 8, 12, 6, kit_js_3.MAT.PANEL); // машинное отделение
+            P.box(17, 8, 12, 6, kit_js_3.MAT.PANEL); // машинное отделение
+            P.cut(19, 10, 4, 1, kit_js_3.MAT.DARK);
+            P.cut(24, 10, 4, 1, kit_js_3.MAT.DARK);
+            P.box(33, 0, 1, 14, kit_js_3.MAT.STEEL); // мачта связи
+            P.box(8, 10, 5, 4, kit_js_3.MAT.IRON); // шкаф связи
             P.box(3, 14, 46, 2, kit_js_3.MAT.CONCRETE); // парапет
             P.box(4, 16, 44, 102, kit_js_3.MAT.PANEL);
             for (let f = 0; f < 17; f++) {
                 const y = 17 + f * 6;
-                for (const wx of [15, 21, 27, 33])
-                    if (!(f === 0 && wx === 21))
+                for (const wx of [19, 30])
+                    if (!(f === 0))
                         P.cut(wx, y + 1, 3, 3, kit_js_3.MAT.GLASS);
+                for (const wx of [13, 35])
+                    if (!(f === 0))
+                        P.cut(wx, y + 1, 2, 3, kit_js_3.MAT.GLASS);
             }
-            P.box(21, 110, 8, 1, kit_js_3.MAT.CONCRETE); // козырёк подъезда
-            P.cut(22, 111, 6, 7, kit_js_3.MAT.DARK);
+            P.box(20, 110, 12, 1, kit_js_3.MAT.CONCRETE); // козырёк подъезда
+            P.cut(23, 111, 6, 7, kit_js_3.MAT.DARK);
         }
-        kit_js_3.paint(c, X0, Y0, P, { seed: 193, chip: 0.04, drips: [[10, 40, 6], [42, 64, 5], [13, 88, 4]] });
-        // швы перекрытий
+        const drips = PT_AC.map(([ax, f]) => [ax + 1, 22 + f * 6, 3 + (f & 1)]);
+        kit_js_3.paint(c, X0, Y0, P, { seed: 193, chip: 0.04, drips });
+        // пояса этажей и вертикальные стыки панелей; местами шов перегерметизирован — другим тоном
         c.fillStyle = kit_js_3.tone(kit_js_3.MAT.PANEL, 1);
         for (let f = 1; f < 17; f++)
             c.fillRect(X0 + 5, Y0 + 16 + f * 6, 42, 1);
+        for (const jx of [16, 27, 38])
+            c.fillRect(X0 + jx, Y0 + 16, 1, 102);
+        c.fillStyle = kit_js_3.tone(kit_js_3.MAT.PANEL, 3);
+        for (const [jx, f0, n] of [[27, 3, 4], [16, 9, 3], [38, 12, 3]])
+            c.fillRect(X0 + jx, Y0 + 16 + f0 * 6, 1, n * 6);
+        // рамы окон: белый пластик с импостом, старое дерево, без рамы
+        for (let f = 1; f < 17; f++)
+            for (const wx of [19, 30]) {
+                const k = (f * 3 + wx) % 3, y = Y0 + 18 + f * 6;
+                if (k === 0)
+                    R(c, BONE, X0 + wx + 1, y, 1, 3);
+                else if (k === 1) {
+                    R(c, SEP, X0 + wx, y, 3, 1);
+                    R(c, SEP, X0 + wx, y + 2, 3, 1);
+                }
+            }
         // лоджии двумя стояками: остекление каждая на свой лад
         const kinds = [
             (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.BOARD, 2), lx, ly, 7, 5); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 1), lx + 1, ly + 1, 2, 3); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 1), lx + 4, ly + 1, 2, 3); },
             (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 1), lx, ly, 7, 5); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 2), lx + 1, ly + 1, 5, 3); },
-            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 4), lx, ly, 7, 5); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 0), lx + 1, ly + 1, 2, 2); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 0), lx + 4, ly + 1, 2, 2); },
-            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.PANEL, 1), lx, ly + 3, 7, 2); R(c, DARK, lx, ly, 7, 3); R(c, PAPER2, lx + 1, ly + 1, 1, 2); R(c, kit_js_3.tone(kit_js_3.MAT.FELT, 3), lx + 3, ly + 1, 2, 2); },
-            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 2), lx, ly, 7, 5); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 3), lx + 1, ly + 1, 5, 2); },
-            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.PANEL, 2), lx, ly + 2, 7, 3); R(c, DARK, lx, ly, 7, 2); },
+            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.PLASTER, 4), lx - 1, ly, 8, 5); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 0), lx, ly + 1, 3, 2); R(c, kit_js_3.tone(kit_js_3.MAT.GLASS, 0), lx + 4, ly + 1, 2, 2); }, // вынос
+            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.PANEL, 1), lx, ly + 3, 7, 2); R(c, DARK, lx, ly, 7, 3); R(c, PAPER2, lx + 1, ly + 1, 1, 2); R(c, kit_js_3.tone(kit_js_3.MAT.FELT, 3), lx + 3, ly + 1, 2, 2); }, // открытая, бельё
+            (lx, ly) => { R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 2), lx, ly, 7, 5); c.fillStyle = kit_js_3.tone(kit_js_3.MAT.IRON, 3); c.fillRect(lx, ly + 1, 7, 1); c.fillRect(lx, ly + 3, 7, 1); }, // сайдинг
         ];
         for (let f = 0; f < 16; f++)
-            for (const [lx, sh] of [[6, 0], [39, 3]]) {
+            for (const [lx, sh] of [[5, 0], [40, 3]]) {
                 const k = (f * 7 + sh * 5 + (f >> 2)) % kinds.length;
                 kinds[k](X0 + lx, Y0 + 17 + f * 6);
             }
         // кондиционеры
-        for (const [ax, f] of [[13, 2], [36, 4], [13, 7], [46, 9], [36, 12], [13, 14]]) {
-            R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 3), X0 + ax, Y0 + 20 + f * 6, 2, 2);
+        for (const [ax, f] of PT_AC) {
+            R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 3), X0 + ax, Y0 + 20 + f * 6, 3, 2);
             R(c, ASH, X0 + ax, Y0 + 20 + f * 6, 1, 1);
         }
-        // тарелки на лоджиях: все в одну точку неба — вверх-влево
-        for (const [dx, f] of [[6, 1], [39, 3], [6, 6], [39, 8], [6, 11], [39, 13]]) {
+        // тарелки на перилах снаружи стояков: почти отвесны, все в одну сторону, тёмной стороной вправо
+        for (const [dx, f] of [[3, 1], [48, 3], [3, 6], [48, 8], [3, 11], [48, 13]]) {
             const ly = Y0 + 17 + f * 6;
-            R(c, ASH, X0 + dx - 2, ly - 1, 2, 1);
-            R(c, ASH, X0 + dx - 3, ly, 2, 1);
-            R(c, ASH, X0 + dx - 3, ly + 1, 1, 1);
-            R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 2), X0 + dx - 1, ly + 1, 1, 1);
+            R(c, ASH, X0 + dx - 1, ly, 1, 3);
+            R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 1), X0 + dx, ly + 1, 1, 2);
+            R(c, ASH, X0 + dx - 2, ly + 1, 1, 1);
         }
-        // одна — на крыше, прямо вверх
-        R(c, BONE, X0 + 38, Y0 + 9, 5, 1);
-        R(c, ASH, X0 + 39, Y0 + 10, 3, 1);
-        R(c, ASH, X0 + 40, Y0 + 11, 1, 3);
+        // мачта связи: три секторные антенны, радиорелейная «таблетка»
+        R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 4), X0 + 32, Y0 + 2, 2, 5);
+        R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 3), X0 + 31, Y0 + 2, 1, 5);
+        R(c, kit_js_3.tone(kit_js_3.MAT.STEEL, 2), X0 + 34, Y0 + 2, 1, 5);
+        R(c, ASH, X0 + 34, Y0 + 8, 3, 3);
+        R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 1), X0 + 36, Y0 + 9, 1, 1);
+        R(c, kit_js_3.tone(kit_js_3.MAT.IRON, 3), X0 + 13, Y0 + 13, 20, 1); // кабельная трасса по парапету
+        // одна — на крыше, лицом в зенит: чаша, исподнее, ножка, облучатель на кронштейне
+        R(c, BONE, X0 + 41, Y0 + 11, 5, 1);
+        R(c, ASH, X0 + 42, Y0 + 12, 3, 1);
+        R(c, ASH, X0 + 43, Y0 + 13, 1, 1);
+        R(c, ASH, X0 + 45, Y0 + 9, 1, 2);
+        R(c, ASH, X0 + 44, Y0 + 8, 1, 1);
         // окна: тёплое одно, холодные три
-        R(c, CANDLE, X0 + 27, Y0 + 66, 3, 3);
-        c.fillStyle = PAPER2;
-        for (const [wx, f] of [[15, 4], [33, 9], [21, 13]])
-            c.fillRect(X0 + wx, Y0 + 18 + f * 6, 3, 3);
+        R(c, CANDLE, X0 + 30, Y0 + 67, 3, 3);
+        c.fillStyle = ASH;
+        for (const [wx, f] of [[19, 4], [30, 9], [19, 13]])
+            c.fillRect(X0 + wx, Y0 + 18 + f * 6, 3, 3); // холодные — пеплом
     }
     // ── ФАСАДЫ ТАБЛИЧЕК 18×30 ────────────────────────────────────────────
     // набором, тем же материалом, что и постройки: план один на фасад
@@ -19562,84 +19621,90 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
     }
     function lineBody(c, x, gy) {
         const X0 = Math.round(x) - 70, Y0 = Math.round(gy) - LN.H;
-        const T = k => Math.round(lnTop(k)), B = k => Math.round(lnBot(k));
-        // лицо стены: колонка за колонкой — небо в стекле над горизонтом, пустыня под ним
-        for (let k = LN.x0; k <= LN.x1; k++) {
-            const t0 = T(k), b0 = B(k), hz = Math.min(b0, LN.vy - 2 + Math.round((LN.vx - k) * 0.06));
-            R(c, N, X0 + k, Y0 + t0, 1, hz - t0);
-            R(c, SEP, X0 + k, Y0 + hz, 1, b0 - hz);
+        let P = lineBody.P;
+        if (!P) {
+            P = lineBody.P = kit_js_3.plan(LN.W, LN.H);
+            P.box(0, LN.top, LN.face, LN.base - LN.top, kit_js_3.MAT.MIRROR);
+            P.clear(106, LN.top, 12, 18);
+            P.clear(112, LN.top + 18, 6, 18); // двух панелей ещё нет
+            P.box(0, LN.top - 2, 106, 2, kit_js_3.MAT.STEEL);
+            P.box(106, LN.top + 16, 6, 2, kit_js_3.MAT.STEEL); // кромка
+            // последний пролёт: стойки, на одной — панель
+            P.box(120, 40, 1, 108, kit_js_3.MAT.STEEL);
+            P.box(131, 70, 1, 78, kit_js_3.MAT.STEEL);
+            P.box(121, 64, 8, 18, kit_js_3.MAT.MIRROR);
+            P.box(0, 145, LN.face + 2, 3, kit_js_3.MAT.SAND); // гребень песка у подножия
         }
-        // отражённые звёзды; к дали реже
-        for (const [sx, sy] of [[14, 20], [23, 47], [31, 12], [37, 70], [46, 33], [52, 88], [61, 57], [70, 41], [78, 78], [88, 66], [97, 94], [19, 101], [42, 104], [64, 99], [27, 84]]) {
-            if (sy > T(sx) + 1 && sy < LN.vy - 4)
-                R(c, ASH, X0 + sx, Y0 + sy, 1, 1);
-        }
-        // отражённые дюны: пологий наветренный скат, крутой подветренный в тени; к дали мельче
-        for (const [d0, d1, hgt] of [[8, 44, 9], [36, 66, 7], [60, 84, 5], [78, 97, 3], [93, 104, 2]]) {
-            const crest = d0 + Math.round((d1 - d0) * 0.72);
-            for (let k = d0; k <= d1; k++) {
-                const h = k <= crest ? Math.round(hgt * (k - d0) / (crest - d0)) : Math.round(hgt * (1 - (k - crest) / (d1 - crest)) ** 0.5);
-                const yb = B(k) - 2 - h;
-                if (yb <= LN.vy - 1 || yb >= B(k))
+        kit_js_3.paint(c, X0, Y0, P, { seed: 229, chip: 0.01 });
+        // верх кромки — костью под луной
+        R(c, BONE, X0, Y0 + LN.top - 2, 106, 1);
+        R(c, BONE, X0 + 106, Y0 + LN.top + 16, 6, 1);
+        // подкосы последнего пролёта — вниз и назад, к земле
+        hline(c, ASH, X0 + 120, Y0 + 40, X0 + 138, Y0 + 147);
+        hline(c, ASH, X0 + 131, Y0 + 70, X0 + 139, Y0 + 122);
+        // в стекле — пустыня за спиной: ближние дюны у низа стекла, пологий скат светлее, крутой
+        // в тени; на стыке панелей отражение ломается на точку — каждая панель стоит чуть в своей плоскости
+        const jog = k => ((Math.floor(k / 12) * 5) % 3) - 1;
+        for (const [x0, x1, top, crest] of [[0, 64, 122, 0.72], [44, 108, 129, 0.68], [86, 118, 134, 0.6]]) {
+            const cx = x0 + (x1 - x0) * crest;
+            for (let k = x0; k < x1; k++) {
+                if (k % 12 === 11)
                     continue;
-                R(c, k <= crest ? ASH : STONE2, X0 + k, Y0 + yb, 1, 1);
-                if (k > crest)
-                    R(c, STONE2, X0 + k, Y0 + yb + 1, 1, Math.max(0, B(k) - yb - 3));
+                const u = k < cx ? (k - x0) / (cx - x0) : 1 - (k - cx) / (x1 - cx);
+                const f = k < cx ? Math.sin(u * Math.PI / 2) : Math.pow(u, 0.45); // наветренный скат пологий и выпуклый, подветренный крутой
+                const yy = Math.round(LN.base - 3 - (LN.base - 3 - top) * f) + jog(k);
+                if (lineBody.P.at(k, yy) !== kit_js_3.MAT.MIRROR)
+                    continue;
+                R(c, kit_js_3.tone(kit_js_3.MAT.MIRROR, k < cx ? 3 : 1), X0 + k, Y0 + yy + 1, 1, Math.max(0, LN.base - 4 - yy));
+                R(c, kit_js_3.tone(kit_js_3.MAT.SAND, k < cx ? 4 : 2), X0 + k, Y0 + yy, 1, 1);
             }
         }
-        // швы панелей: стойки сходятся к дали, пояса — к точке схода
-        c.fillStyle = STONE2;
-        for (let j = 1; j < 9; j++) {
-            const k = Math.round(LN.x0 + (LN.x1 - LN.x0) * (1 - 1 / (1 + j * 0.42)) * 1.25);
-            if (k >= LN.x1)
-                break;
-            c.fillRect(X0 + k, Y0 + T(k) + 1, 1, B(k) - T(k) - 1);
-        }
-        for (const f of [0.25, 0.5])
-            for (let k = LN.x0 + 1; k <= LN.x1; k++) {
-                const y = Math.round(T(k) + (B(k) - T(k)) * f * (f < 0.4 ? 1 : 0.86));
-                if (y < LN.vy - 3)
-                    c.fillRect(X0 + k, Y0 + y, 1, 1);
+        // блики по стеклу: косые полосы светлее, на стыках панелей сдвинуты
+        for (const [b0, w] of [[18, 3], [27, 1], [64, 2]]) {
+            for (let y = LN.top + 2; y < 108; y++) {
+                const kx = b0 + Math.round((y - LN.top) * 0.55);
+                for (let i = 0; i < w; i++) {
+                    const k = kx + i + jog(kx);
+                    if (k < LN.face && k % 12 !== 11 && lineBody.P.at(k, y) === kit_js_3.MAT.MIRROR)
+                        R(c, kit_js_3.tone(kit_js_3.MAT.MIRROR, y < 60 ? 4 : 3), X0 + k, Y0 + y, 1, 1);
+                }
             }
-        // верхняя кромка — под луной; дальний край — срез: торчат стойки каркаса
-        for (let k = LN.x0; k <= LN.x1; k++)
-            R(c, BONE, X0 + k, Y0 + T(k) - 1, 1, 1);
-        R(c, ASH, X0 + LN.x1, Y0 + T(LN.x1), 1, B(LN.x1) - T(LN.x1));
-        for (const [dx, h] of [[1, 5], [3, 3]])
-            R(c, ASH, X0 + LN.x1 + dx, Y0 + T(LN.x1) - 1, 1, h);
-        // ближний торец: толщина стены — тоже зеркало, ребро костью
-        for (let k = 0; k < LN.x0; k++) {
-            const tt = LN.top0 + 4 - Math.round(k / 2);
-            R(c, DARK, X0 + k, Y0 + tt, 1, LN.H - tt);
         }
-        R(c, BONE, X0 + LN.x0 - 1, Y0 + LN.top0 - 1, 1, LN.H - LN.top0 + 1);
-        R(c, ASH, X0, Y0 + LN.top0 + 4, LN.x0, 1);
-        c.fillStyle = STONE2;
-        for (const y of [30, 58, 86, 114])
-            c.fillRect(X0 + 1, Y0 + y, LN.x0 - 2, 1);
-        // гребень песка вдоль подножия
-        for (let k = 0; k <= LN.x1; k++) {
-            const b0 = k < LN.x0 ? LN.H - 1 : B(k), hh2 = 1 + ((k * 7) % 5 === 0 ? 1 : 0);
-            R(c, PAPER2, X0 + k, Y0 + b0 - hh2 + 1, 1, hh2);
+        // пыль по низу стекла: светлее к земле
+        c.fillStyle = kit_js_3.tone(kit_js_3.MAT.MIRROR, 3);
+        for (let k = 0; k < 60; k++) {
+            const hsh = (Math.imul(k * 2654435761 + 97, 2246822519) >>> 0);
+            const px = hsh % LN.face, py = LN.base - 2 - ((hsh >>> 12) % 10);
+            if (lineBody.P.at(px, py) === kit_js_3.MAT.MIRROR)
+                c.fillRect(X0 + px, Y0 + py, 1, 1);
         }
-        // дальше линии стены нет — колышки разметки с флажками до самой рамки
-        for (let j = 0; j < 6; j++) {
-            const k = LN.x1 + 6 + Math.round(j * 6 - j * j * 0.25), yb = B(k), hgt = Math.max(2, 6 - j);
-            if (k > LN.W - 2)
-                break;
-            R(c, ASH, X0 + k, Y0 + yb - hgt, 1, hgt + 1);
-            R(c, CIN, X0 + k + 1, Y0 + yb - hgt, j < 3 ? 2 : 1, 1);
+        // колышки разметки перед стеной и их отражения: стоят у подножия — отражение растёт вверх
+        for (const kx of [34, 71, 98]) {
+            R(c, ASH, X0 + kx, Y0 + 142, 1, 6);
+            R(c, CIN, X0 + kx + 1, Y0 + 142, 2, 1);
+            R(c, kit_js_3.tone(kit_js_3.MAT.MIRROR, 4), X0 + kx, Y0 + 136, 1, 6);
+            R(c, kit_js_3.tone(kit_js_3.MAT.MIRROR, 5), X0 + kx + 1, Y0 + 141, 2, 1);
         }
+        // за последним пролётом — колышки разметки до края рамки
+        for (const [kx, h] of [[134, 5], [138, 4]]) {
+            R(c, ASH, X0 + kx, Y0 + 148 - h, 1, h);
+            R(c, CIN, X0 + kx + 1, Y0 + 148 - h, 1, 1);
+        }
+        // зарево огня края мира у верхней кромки стекла: сепия к киновари, не свеча
+        c.fillStyle = mixC;
+        for (let k = 0; k < LN.face; k++)
+            if (k < 106 || k >= 112) {
+                const h = 2 + ((k * 7) % 5 === 0 ? 1 : 0);
+                c.fillRect(X0 + k, Y0 + LN.top + (k >= 106 ? 18 : 0), 1, h);
+            }
     }
-    // живое: на горизонте в стекле отражается кольцо огня — одна сплошная нить,
-    // языки над ней колышутся (тепло не растрируется)
+    // живое: в одной точке отражение огня горит свечой — колышется, сплошное
     function lineLive(c, x, gy, t) {
         const X0 = Math.round(x) - 70, Y0 = Math.round(gy) - LN.H, T = (t | 0) >> 3;
-        for (let k = LN.x0; k <= LN.x1; k++) {
-            const hz = Math.min(Math.round(lnBot(k)), LN.vy - 2 + Math.round((LN.vx - k) * 0.06));
-            const tip = k < 70 && ((Math.imul(k * 31 + T * 7, 2654435761) >>> 28) & 7) === 0;
-            R(c, CANDLE, X0 + k, Y0 + hz - (tip ? 1 : 0), 1, tip ? 2 : 1);
-        }
+        const w = 4 + (((T * 7) >> 2) & 1) + ((T % 5) === 0 ? 1 : 0);
+        R(c, CANDLE, X0 + 32, Y0 + LN.top + 1, w, 1);
+        if ((T & 3) === 1)
+            R(c, CANDLE, X0 + 33, Y0 + LN.top, 2, 1);
     }
     function vaultBody(c, x, gy) {
         const X0 = Math.round(x) - 65, Y0 = Math.round(gy) - SV.H;
@@ -19815,8 +19880,8 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             gherkinBody.static = true;
             glassTower = kit_js_3.split(glassBody, glassLive);
             // вторая башня выгнута к улице: шире кверху, вогнутое лицо собирало солнце
-            // в пятно — этажи прогибаются «улыбкой». Теперь на верхней половине стекла —
-            // козырёк из горизонтальных ламелей, нижняя треть голая; наверху — сад под
+            // в пятно — этажи прогибаются «улыбкой». Теперь на южном лице почти во всю
+            // высоту — козырёк из горизонтальных ламелей, редких и светлых; наверху — сад под
             // стеклянной короной. У подножия — экраны и кадки с деревьями, чтобы ветер
             // спотыкался. Пятно стало тенью: днём на тротуаре лежит тень, ползёт за
             // солнцем (живое). Огонь на короне — в жизни второго.
@@ -19825,7 +19890,29 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
             dataCenter = kit_js_3.split(dataBody, dataLive);
             natick = kit_js_3.split(natickBody, natickLive);
             heatReuse = kit_js_3.split(heatBody, heatLive);
+            // ── РАВНИНА ──────────────────────────────────────────────────────────
+            // долгострой: бетонный каркас без стен — плиты восьми этажей с тенью снизу,
+            // передний ряд колонн и задний в тени, над плитами — ядро лестницы и
+            // лифта; на недоведённом девятом из оголовков колонн торчит арматура под
+            // следующий этаж, под ней рыжие подтёки. Башенный кран замер: мачта
+            // решёткой, стрела с раскосами, противовес из блоков, тележка, на крюке
+            // висит плита — ветер её качает медленно и долго (живое). Забор из
+            // профнастила, на нём растяжка «дом готов»: светлое полотно, дом, на
+            // балконах цветы, небо — без синего (канон: самый светлый тон); из-под неё
+            // выглядывают края двух прежних. В заборе снят лист, к щели — тропа; в
+            // щели подвал: кирпичная кладка жильца, на верёвке одеяло, на кирпиче
+            // чайник, огонёк — тут живут.
+            RUST = '#483127'; // ржавчина: mix(SEP, CIN, 0.1)
             unfinished = kit_js_3.split(unfinishedBody, unfinishedLive);
+            // панельная башня: семнадцать этажей сборных панелей — пояса этажей и
+            // вертикальные стыки, по окну на панель, рамы кто какие поставил; лоджии
+            // двумя стояками застеклены кто во что горазд: дерево, алюминий, пластик,
+            // вынос, открытая с бельём — каждая в свой год; кондиционеры с подтёками.
+            // Тарелки на перилах снаружи стояков почти отвесны и смотрят в одну точку
+            // неба; одна, на крыше, лежит лицом в зенит — с облучателем на кронштейне.
+            // На крыше машинное отделение и мачта связи с секторными антеннами; подъезд
+            // под козырьком; тёплое окно одно. Огонь мачты — в жизни постройки.
+            PT_AC = [[13, 2], [36, 4], [13, 7], [36, 9], [13, 12], [36, 14]];
             panelTower = panelBody;
             panelBody.static = true;
             // юг: плоская крыша, из неё торчит арматура «под следующий этаж», чёрный
@@ -20092,16 +20179,18 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 'WWWWWWWW.WWWWWWWW.',
             ];
             // ── ДОМИНАНТА · ЮГ ───────────────────────────────────────────────────
-            // «Линия»: зеркальная стена уходит поперёк пустыни к горизонту — верхняя
-            // кромка и подножие сходятся в точку, швы панелей густеют к дали. Ближний
-            // торец — во всю высоту. В стекле — пустыня, та, что за спиной: ночное
-            // небо со звёздами, ниже горизонта — дюны; на горизонте отражается кольцо
-            // огня (нов.: огонь доминанты — отражённый). Стена кончается, не дойдя до
-            // горизонта (по сообщениям, проект сократили): дальше по той же линии —
-            // только колышки разметки с флажками. Подножие — гребень песка.
-            LN = { W: 140, H: 150, vx: 150, vy: 116, x0: 8, x1: 104, top0: 2 };
-            lnTop = x => LN.top0 + (LN.vy - LN.top0) * (x - LN.x0) / (LN.vx - LN.x0);
-            lnBot = x => LN.H - 1 - (LN.H - 1 - LN.vy) * (x - LN.x0) / (LN.vx - LN.x0);
+            // «Линия»: зеркальная стена поперёк пустыни, фасадом к смотрящему, как всё
+            // в этом мире. Слева уходит за край рамки — конца не видно; справа
+            // кончается уступом: двух панелей ещё нет, последний пролёт — голые стойки
+            // на подкосах, на одной висит одинокая панель (по сообщениям, проект
+            // сократили). В стекле — пустыня, та, что за спиной: земля перед стеной,
+            // а не небо; что ближе — у низа стекла, что дальше — выше. Колышки
+            // разметки перед стеной удвоены отражением. Огонь края мира далеко за
+            // спиной — у верхней кромки стекла его зарево; в одной точке отражение
+            // горит свечой (огонь доминанты, нов.). Пыль по низу стекла, гребень песка
+            // у подножия; на кромке — огни для самолётов (жизнь постройки).
+            LN = { W: 140, H: 150, face: 118, top: 12, base: 148 };
+            mixC = '#633328'; // зарево в стекле: mix(SEP, CIN, 0.3) — сепия к киновари, не свеча
             theLine = kit_js_3.split(lineBody, lineLive);
             // ── ДОМИНАНТА · СЕВЕР ────────────────────────────────────────────────
             // Всемирное семенохранилище: столовая гора Шпицбергена — плоская макушка
@@ -20125,12 +20214,13 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 landmark: [
                     {
                         name: '«Линия»', side: 'south', w: 140, h: 150,
-                        light: { dx: -14, dy: -30, r: 80 },
-                        mirror: { x0: -62, x1: -20, y0: -112, y1: -12 },
+                        light: { dx: -36, dy: -137, r: 80 },
+                        mirror: { x0: -70, x1: 35, y0: -136, y1: -6 },
                         draw: theLine,
+                        life: { blink: [[-64, -140, 'V', 90, 0.67], [28, -140, 'V', 90, 0.67]] },
                     },
                     {
-                        name: 'Всемирное семенохранилище', side: 'north', w: 130, h: 162,
+                        name: 'Всемирное семенохранилище', side: 'north', w: 130, h: 104,
                         light: { dx: 29, dy: -23, r: 80, color: [217, 207, 184], flicker: 0 },
                         draw: seedVault,
                     },
@@ -20139,9 +20229,9 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                     { name: 'игла над пустыней', w: 68, h: 120, draw: burj, draw2: burj2, life: { blink: [[0, -120, 'V', 90, 0.67]] } },
                     {
                         name: 'библиотека у моря', w: 96, h: 48, draw: library, draw2: library2, draw3: library3,
-                        life: { birds: [[37, 46, -4, 'K']] },
-                        life2: { blink: [[26, -29, 'P', 41, 0.35], [34, -28, 'K', 67, 0.2], [42, -29, 'P', 29, 0.5], [43, -19, 'K', 53, 0.25]] },
-                        life3: { birds: [[-46, -21, -38]] },
+                        life: { birds: [[37, 46, -3, 'K']] },
+                        life2: { blink: [[26, -30, 'P', 41, 0.35], [34, -29, 'K', 67, 0.2], [42, -30, 'P', 29, 0.5], [44, -29, 'K', 53, 0.25]] },
+                        life3: { birds: [[-46, -21, -37]] },
                     },
                 ],
                 east: [
@@ -20155,12 +20245,12 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
                 north: [
                     {
                         name: 'серверный ангар', w: 94, h: 98, noFlip: true, draw: dataCenter, draw2: natick, draw3: heatReuse,
-                        life: {}, life2: { birds: [[-31, 14, -34, 'K']] }, life3: {},
+                        life: {}, life2: { birds: [[-31, 14, -33, 'K']] }, life3: {},
                     },
                 ],
                 plain: [
-                    { name: 'долгострой с краном', w: 92, h: 112, noFlip: true, draw: unfinished, life: { birds: [[-1, 7, -73]] } },
-                    { name: 'панельная башня', w: 52, h: 118, draw: panelTower },
+                    { name: 'долгострой с краном', w: 92, h: 112, noFlip: true, draw: unfinished, life: { birds: [[-1, 7, -71]] } },
+                    { name: 'панельная башня', w: 52, h: 118, draw: panelTower, life: { blink: [[7, -118, 'V', 90, 0.67]] } },
                 ],
                 sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
                 props: {
@@ -61771,9 +61861,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ctx.globalAlpha = 0.85 - Math.min(0.5, d / 320);
         ctx.fillStyle = '#3a3026';
         ctx.fillRect(rx - 1, ry, 3, 7); // силуэт, тусклый
-        ctx.fillStyle = '#E28A3A';
-        ctx.fillRect(rx, ry + 3, 1, 2); // свеча
         ctx.globalAlpha = 1;
+        ctx.fillStyle = '#E28A3A';
+        ctx.fillRect(rx, ry + 3, 1, 2); // свеча — сплошная: тепло не растрируется
     }
     // ═══ ТАБЛИЧКИ ПО ЭПОХАМ ═══
     // Форма та же (табличка, стойка, ларёк, стена), материал — века:

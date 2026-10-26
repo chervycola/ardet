@@ -868,8 +868,8 @@ function drawMirrorCandle(ctx, loc) {
   const rx = Math.round(px);
   ctx.globalAlpha = 0.85 - Math.min(0.5, d / 320);
   ctx.fillStyle = '#3a3026'; ctx.fillRect(rx - 1, ry, 3, 7);       // силуэт, тусклый
-  ctx.fillStyle = '#E28A3A'; ctx.fillRect(rx, ry + 3, 1, 2);       // свеча
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#E28A3A'; ctx.fillRect(rx, ry + 3, 1, 2);       // свеча — сплошная: тепло не растрируется
 }
 
 // ═══ ТАБЛИЧКИ ПО ЭПОХАМ ═══
