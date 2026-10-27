@@ -78,6 +78,7 @@ export const MAT = {
   MOSAIC: 55,     // наборная мозаика моарраг: те же краски, но осколки — без сетки, мелкой россыпью, узор течёт наискось
   REDSAND: 56,    // красный песчаник Агры: киноварь с сепией, ряды тёсаного камня
   LEMEKH: 57,     // осиновый лемех: серебристая чешуя рядами вразбежку (главки, шатры)
+  OCHRE: 58,      // штукатурка петровского барокко: тёплая охра с сепией, гладь в редкую крапину (белые лопатки — поверх)
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -139,6 +140,7 @@ RAMP[MAT.KASHI] = ramp(mix(mix(MG, AS, 0.45), BO, 0.1));
 RAMP[MAT.MOSAIC] = ramp(mix(mix(MG, AS, 0.4), BO, 0.06));
 RAMP[MAT.REDSAND] = ramp(mix(mix(KV, SEP, 0.52), BO, 0.1), mix(BO, KV, 0.2));
 RAMP[MAT.LEMEKH] = ramp(mix(mix(AS, BO, 0.3), SEP, 0.18));
+RAMP[MAT.OCHRE] = ramp(mix(mix(BO, SEP, 0.4), KV, 0.06));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -193,6 +195,7 @@ function tex(mat, x, y, s) {
       const v = hh(Math.floor((x + o) / 6), c, s);
       return v < 0.2 ? -1 : 0;
     }
+    case MAT.OCHRE:
     case MAT.PLASTER: { const v = hh(x, y, s + 5); return v < 0.06 ? -1 : v > 0.97 ? 1 : 0; }
     case MAT.LOGS: return y % 3 === 2 ? -2 : y % 3 === 0 ? 1 : 0;
     case MAT.BOARD: return x % 3 === 2 ? -1 : (hh(x, Math.floor(y / 4), s) < 0.1 ? -1 : 0);

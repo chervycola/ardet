@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ce947c5 · 2026-10-27';console.log('[оттиск]', 'ce947c5 · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='260b61d · 2026-10-27';console.log('[оттиск]', '260b61d · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6768,6 +6768,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
                 const v = hh(Math.floor((x + o) / 6), c, s);
                 return v < 0.2 ? -1 : 0;
             }
+            case MAT.OCHRE:
             case MAT.PLASTER: {
                 const v = hh(x, y, s + 5);
                 return v < 0.06 ? -1 : v > 0.97 ? 1 : 0;
@@ -7243,6 +7244,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
                 MOSAIC: 55, // наборная мозаика моарраг: те же краски, но осколки — без сетки, мелкой россыпью, узор течёт наискось
                 REDSAND: 56, // красный песчаник Агры: киноварь с сепией, ряды тёсаного камня
                 LEMEKH: 57, // осиновый лемех: серебристая чешуя рядами вразбежку (главки, шатры)
+                OCHRE: 58, // штукатурка петровского барокко: тёплая охра с сепией, гладь в редкую крапину (белые лопатки — поверх)
             });
             // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
             exports_30("FORM", FORM = { FLAT: 0, CYL: 1, FLUTE: 2 });
@@ -7304,6 +7306,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
             RAMP[MAT.MOSAIC] = ramp(mix(mix(MG, AS, 0.4), BO, 0.06));
             RAMP[MAT.REDSAND] = ramp(mix(mix(KV, SEP, 0.52), BO, 0.1), mix(BO, KV, 0.2));
             RAMP[MAT.LEMEKH] = ramp(mix(mix(AS, BO, 0.3), SEP, 0.18));
+            RAMP[MAT.OCHRE] = ramp(mix(mix(BO, SEP, 0.4), KV, 0.06));
             RIM = AS; // кромка справа — пеплом (канон)
             // ступень тона материала (0 — глубь … 5 — блик): для рисунка поверх набора теми же красками
             exports_30("tone", tone = (mat, st) => RAMP[mat][st]);
@@ -14115,52 +14118,81 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             });
             orangery2 = tea2Body;
             // ───────────────────────── РАВНИНА ─────────────────────────
-            // шпиль с ангелом (набором): колокольня Петропавловского собора (Трезини, 1712–1733) — нижний ярус с
-            // пилястрами и арочным входом, два яруса уступами с волютами на плечах, барабан с часами, золочёный
-            // купол и игла (позолота — светлой костью: золота канон не даёт); наверху ангел держит крест на
-            // отлёте, как поднос. Внизу сваи уходят в болото — гать и вода у подножия.
+            // шпиль с ангелом (набором): колокольня Петропавловского собора (Трезини, 1712–1733) — ярусы охрой
+            // с белыми лопатками, нижний с арочным входом, два яруса уступами с волютами на плечах, барабан с
+            // часами; выше всё золочёное — гранёный шлем (восьмискатный, не луковица), фонарик с проёмами,
+            // корона и длинная игла (позолота — светлой костью и самым светлым в кадре: золота канон не даёт).
+            // Наверху ангел держит крест на отлёте, как поднос: крыло влево, рука с крестом вправо. Ангел века —
+            // после урагана 1777 г. переделан при Ринальди; поворотный, флюгером. Внизу сваи уходят в болото.
             spireBody = kit('spire', 34, 120, P => {
-                P.box(4, 92, 26, 25, kit_js_4.MAT.PLASTER); // нижний ярус
+                P.box(4, 92, 26, 25, kit_js_4.MAT.OCHRE).shade(1); // нижний ярус
                 P.box(3, 90, 28, 2, kit_js_4.MAT.MARBLE);
                 P.cut(14, 101, 6, 16);
                 P.round(17, 98, 101, 6, kit_js_4.MAT.DARK); // арочный вход
-                P.box(8, 76, 18, 14, kit_js_4.MAT.PLASTER);
+                P.box(8, 76, 18, 14, kit_js_4.MAT.OCHRE).shade(1);
                 P.box(7, 74, 20, 2, kit_js_4.MAT.MARBLE); // второй ярус
-                P.poly([[4, 90], [8, 84], [8, 90]], kit_js_4.MAT.PLASTER);
-                P.poly([[30, 90], [26, 84], [26, 90]], kit_js_4.MAT.PLASTER); // волюты
+                P.poly([[4, 90], [5, 88], [6, 86], [8, 84], [8, 90]], kit_js_4.MAT.OCHRE).shade(1);
+                P.poly([[30, 90], [29, 88], [28, 86], [26, 84], [26, 90]], kit_js_4.MAT.OCHRE).shade(1); // волюты
                 P.cut(15, 79, 4, 8);
-                P.box(11, 64, 12, 10, kit_js_4.MAT.PLASTER);
+                P.box(11, 64, 12, 10, kit_js_4.MAT.OCHRE).shade(1);
                 P.box(10, 62, 14, 2, kit_js_4.MAT.MARBLE); // третий ярус
-                P.poly([[8, 74], [11, 69], [11, 74]], kit_js_4.MAT.PLASTER);
-                P.poly([[26, 74], [23, 69], [23, 74]], kit_js_4.MAT.PLASTER);
-                P.box(12, 54, 10, 8, kit_js_4.MAT.PLASTER); // барабан с часами
-                P.round(17, 46, 54, 12, kit_js_4.MAT.MARBLE).shade(-1); // золочёный купол
-                P.box(15, 41, 4, 5, kit_js_4.MAT.MARBLE).shade(-1); // фонарик
-                P.trap(15, 18, 16, 17, 9, 41, kit_js_4.MAT.MARBLE);
-                P.shade(-1); // игла
+                P.poly([[8, 74], [9, 72], [10, 70], [11, 69], [11, 74]], kit_js_4.MAT.OCHRE).shade(1);
+                P.poly([[26, 74], [25, 72], [24, 70], [23, 69], [23, 74]], kit_js_4.MAT.OCHRE).shade(1);
+                P.box(12, 55, 10, 7, kit_js_4.MAT.OCHRE).shade(1); // барабан с часами
+                P.poly([[11, 55], [23, 55], [22, 52], [20, 48], [19, 45], [15, 45], [14, 48], [12, 52]], kit_js_4.MAT.MARBLE); // гранёный шлем
+                P.box(15, 39, 4, 6, kit_js_4.MAT.MARBLE);
+                P.cut(16, 40, 1, 3);
+                P.cut(18, 40, 1, 3); // фонарик с проёмами
+                P.box(14, 37, 6, 2, kit_js_4.MAT.MARBLE); // корона
+                P.box(16, 20, 2, 17, kit_js_4.MAT.MARBLE);
+                P.box(16, 9, 1, 11, kit_js_4.MAT.MARBLE); // игла
                 P.box(0, 117, 34, 3, kit_js_4.MAT.TIMBER); // гать
             }, { seed: 517, chip: 0.02, drips: [[6, 97, 3], [27, 97, 4]] }, (c, X0, Y0) => {
-                const PIL = kit_js_4.tone(kit_js_4.MAT.MARBLE, 5);
+                const PIL = kit_js_4.tone(kit_js_4.MAT.MARBLE, 4), G5 = B, G4 = kit_js_4.tone(kit_js_4.MAT.MARBLE, 5), G2 = kit_js_4.tone(kit_js_4.MAT.MARBLE, 3);
                 for (const px of [5, 12, 21, 28])
-                    R(c, PIL, X0 + px, Y0 + 92, 1, 25); // пилястры
+                    R(c, PIL, X0 + px, Y0 + 92, 1, 25); // лопатки
                 for (const px of [9, 24])
                     R(c, PIL, X0 + px, Y0 + 76, 1, 14);
                 for (const px of [12, 21])
                     R(c, PIL, X0 + px, Y0 + 64, 1, 10);
-                R(c, A, X0 + 14, Y0 + 55, 6, 6);
-                R(c, B, X0 + 15, Y0 + 56, 4, 4);
-                R(c, N, X0 + 17, Y0 + 57, 1, 2);
-                R(c, N, X0 + 17, Y0 + 58, 2, 1); // часы
-                for (let y = 11; y < 41; y += 6)
-                    R(c, kit_js_4.tone(kit_js_4.MAT.MARBLE, 2), X0 + 16, Y0 + y, 2, 1); // пояса иглы
-                // ангел: крылья, фигура, крест на отлёте — как поднос
-                R(c, B, X0 + 16, Y0 + 5, 2, 4);
-                R(c, B, X0 + 16, Y0 + 3, 1, 2); // фигура, голова
-                R(c, kit_js_4.tone(kit_js_4.MAT.MARBLE, 4), X0 + 13, Y0 + 5, 3, 1);
-                R(c, kit_js_4.tone(kit_js_4.MAT.MARBLE, 4), X0 + 14, Y0 + 4, 2, 1); // крыло
-                R(c, B, X0 + 18, Y0 + 6, 3, 1); // рука на отлёт
-                R(c, B, X0 + 21, Y0 + 1, 1, 6);
-                R(c, B, X0 + 20, Y0 + 3, 3, 1); // крест
+                R(c, PIL, X0 + 5, Y0 + 89, 1, 1);
+                R(c, PIL, X0 + 28, Y0 + 89, 1, 1);
+                R(c, PIL, X0 + 9, Y0 + 73, 1, 1);
+                R(c, PIL, X0 + 24, Y0 + 73, 1, 1); // улитки волют
+                // часы: круг, стрелки
+                R(c, A, X0 + 15, Y0 + 56, 4, 5);
+                R(c, A, X0 + 14, Y0 + 57, 6, 3);
+                R(c, B, X0 + 15, Y0 + 57, 4, 3);
+                R(c, B, X0 + 16, Y0 + 56, 2, 5);
+                R(c, N, X0 + 16, Y0 + 57, 1, 2);
+                R(c, N, X0 + 17, Y0 + 58, 1, 1);
+                // позолота: шлем гранями — левая к свету, средняя, правая в тень; рёбра; фонарик, корона, игла
+                for (let y = 45; y < 55; y++) {
+                    const t = (y - 45) / 10, xl = Math.round(15 - t * 3.5), xr = Math.round(19 + t * 3.5), w = xr - xl;
+                    R(c, G4, X0 + xl, Y0 + y, Math.max(1, Math.round(w * 0.3)), 1);
+                    R(c, G5, X0 + xl + Math.round(w * 0.3), Y0 + y, Math.max(1, Math.round(w * 0.35)), 1);
+                    R(c, G2, X0 + xl + Math.round(w * 0.65), Y0 + y, Math.max(1, w - Math.round(w * 0.65)), 1);
+                }
+                R(c, G5, X0 + 15, Y0 + 39, 1, 6);
+                R(c, G5, X0 + 17, Y0 + 39, 1, 6);
+                R(c, G2, X0 + 18, Y0 + 44, 1, 1);
+                R(c, G5, X0 + 14, Y0 + 37, 5, 1);
+                R(c, G2, X0 + 19, Y0 + 37, 1, 2);
+                for (const x of [14, 16, 18])
+                    R(c, G5, X0 + x, Y0 + 36, 1, 1); // зубцы короны
+                R(c, G5, X0 + 16, Y0 + 9, 1, 28);
+                R(c, G2, X0 + 17, Y0 + 20, 1, 17); // игла: свет слева, тень справа
+                for (let y = 24; y < 37; y += 5)
+                    R(c, G4, X0 + 17, Y0 + y, 1, 1); // пояски иглы
+                // ангел: голова, фигура, крыло влево, рука вправо — крест на отлёте
+                R(c, G5, X0 + 16, Y0 + 3, 1, 1);
+                R(c, G5, X0 + 16, Y0 + 4, 2, 4);
+                R(c, G4, X0 + 13, Y0 + 4, 2, 1);
+                R(c, G4, X0 + 14, Y0 + 5, 2, 1);
+                R(c, G2, X0 + 12, Y0 + 3, 1, 1);
+                R(c, G5, X0 + 18, Y0 + 5, 3, 1);
+                R(c, G5, X0 + 21, Y0 + 0, 1, 7);
+                R(c, G5, X0 + 20, Y0 + 2, 3, 1);
                 // сваи в болото: вода и кочки у гати
                 R(c, mix9(N, M, 0.35), X0 + 0, Y0 + 119, 34, 1);
                 for (let x = 1; x < 34; x += 4)
@@ -14168,46 +14200,54 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             });
             spire = spireBody;
             // потёмкинский фасад (набором): фасад в толщину доски, тёс расписан «под камень» — портик о шести
-            // колоннах, фронтон, шесть наличников; окна сквозные: в них степь и подкосы за щитом. По краям торчат
-            // подкосы, ребро доски видно. Перед фасадом вода — смотреть рекомендовано с реки, на ходу. Сбоку
-            // полосатый верстовой столб, на цепи — путевой дневник.
-            POT_WIN = [6, 16, 26, 64, 74, 84];
+            // колоннах, фронтон, шесть наличников. Колонны плоские, тень на них нарисована кистью — слева, против
+            // света мира: шов виден тому, кто стоит. Окна сквозные: стекла нет, в проёме — подкос за щитом. На
+            // торце видно ребро доски, за щитом — подкосы. Перед фасадом полоса воды — смотреть рекомендовано с
+            // реки, на ходу (по легенде; Гельбиг в поездке не был, де Линь слухи отвергал). Справа, за щитом,
+            // полосатый верстовой столб, на цепи — путевой дневник (полосатые вёрсты, вероятно, позже 1790 г. —
+            // допущение кольца).
+            POT_WIN = [14, 21, 28, 65, 72, 79];
             potemkinBody = kit('potemkin', 96, 40, P => {
-                P.box(2, 14, 92, 22, kit_js_4.MAT.RUSTBOARD); // щит фасада
-                P.box(1, 12, 94, 2, kit_js_4.MAT.RUSTBOARD).shade(-1); // карниз
+                P.box(10, 14, 76, 22, kit_js_4.MAT.RUSTBOARD); // щит фасада
+                P.box(9, 12, 78, 2, kit_js_4.MAT.RUSTBOARD).shade(-1); // карниз
                 P.wedge(48, 3, 12, 2, 30, kit_js_4.MAT.RUSTBOARD).shade(-1); // фронтон
                 P.box(34, 12, 28, 2, kit_js_4.MAT.RUSTBOARD).shade(-1);
                 for (const cx of [35, 40, 45, 50, 55, 60])
-                    P.box(cx, 14, 2, 22, kit_js_4.MAT.PLASTER, kit_js_4.FORM.CYL); // колонны портика
+                    P.box(cx, 14, 2, 22, kit_js_4.MAT.RUSTBOARD).shade(-1); // колонны — плоские, крашеные
                 for (const wx of POT_WIN)
-                    P.clear(wx, 18, 5, 9); // окна насквозь
+                    P.clear(wx, 18, 3, 9); // окна насквозь
                 P.clear(46, 22, 4, 14); // дверь насквозь
             }, { seed: 518, chip: 0.03 }, (c, X0, Y0) => {
-                const FR = kit_js_4.tone(kit_js_4.MAT.RUSTBOARD, 5), BR = kit_js_4.tone(kit_js_4.MAT.TIMBER, 2);
-                for (const wx of POT_WIN) {
-                    R(c, FR, X0 + wx - 1, Y0 + 17, 7, 1);
+                const FR = kit_js_4.tone(kit_js_4.MAT.RUSTBOARD, 5), BR = kit_js_4.tone(kit_js_4.MAT.TIMBER, 1), BR2 = kit_js_4.tone(kit_js_4.MAT.TIMBER, 3);
+                for (const wx of POT_WIN) { // наличники; в проёме — стойка подкоса у края
+                    R(c, FR, X0 + wx - 1, Y0 + 17, 5, 1);
                     R(c, FR, X0 + wx - 1, Y0 + 18, 1, 9);
-                    R(c, FR, X0 + wx + 5, Y0 + 18, 1, 9);
-                    R(c, FR, X0 + wx - 1, Y0 + 27, 7, 1);
-                    hline(c, BR, X0 + wx, Y0 + 26, X0 + wx + 4, Y0 + 19);
-                } // наличники; подкос в проёме
-                hline(c, BR, X0 + 2, Y0 + 14, X0 + 0, Y0 + 36);
-                hline(c, BR, X0 + 93, Y0 + 14, X0 + 95, Y0 + 36); // подкосы по краям
-                R(c, kit_js_4.tone(kit_js_4.MAT.TIMBER, 1), X0 + 94, Y0 + 13, 1, 23); // ребро доски
-                hline(c, FR, X0 + 34, Y0 + 11, X0 + 47, Y0 + 3);
-                hline(c, FR, X0 + 62, Y0 + 11, X0 + 49, Y0 + 3); // кромка фронтона
-                // вода перед фасадом
-                for (let y = 36; y < 40; y++)
-                    R(c, y === 36 ? mix9(N, M, 0.45) : mix9(N, M, 0.25), X0 + 0, Y0 + y, 82, 1);
-                c.fillStyle = mix9(A, N, 0.45);
-                for (const [rx, ry, rw] of [[8, 38, 4], [30, 37, 5], [58, 39, 3], [70, 38, 4]])
+                    R(c, FR, X0 + wx + 3, Y0 + 18, 1, 9);
+                    R(c, FR, X0 + wx - 1, Y0 + 27, 5, 1);
+                    R(c, BR, X0 + wx + 2, Y0 + 18, 1, 9);
+                }
+                R(c, BR, X0 + 48, Y0 + 22, 1, 14); // и в двери
+                for (const cx of [35, 40, 45, 50, 55, 60]) {
+                    R(c, kit_js_4.tone(kit_js_4.MAT.RUSTBOARD, 2), X0 + cx, Y0 + 14, 1, 22);
+                    R(c, FR, X0 + cx + 1, Y0 + 14, 1, 22);
+                } // тень кистью — слева
+                // торец: ребро доски, подкосы за щитом
+                R(c, BR, X0 + 86, Y0 + 12, 1, 24);
+                R(c, BR2, X0 + 87, Y0 + 13, 1, 23);
+                hline(c, BR2, X0 + 87, Y0 + 16, X0 + 92, Y0 + 35);
+                hline(c, BR2, X0 + 9, Y0 + 15, X0 + 5, Y0 + 35);
+                // вода перед фасадом — с рябью, светлее цоколя
+                for (let y = 37; y < 40; y++)
+                    R(c, y === 37 ? mix9(M, A, 0.35) : mix9(N, M, 0.55), X0 + 4, Y0 + y, 82, 1);
+                c.fillStyle = mix9(B, M, 0.45);
+                for (const [rx, ry, rw] of [[12, 38, 4], [30, 39, 5], [52, 38, 3], [70, 39, 4]])
                     c.fillRect(X0 + rx, Y0 + ry, rw, 1);
-                // верстовой столб полосами, на цепи — путевой дневник
-                for (let y = 14; y < 40; y++)
-                    R(c, ((y - 14) >> 2) & 1 ? N : B, X0 + 88, Y0 + y, 2, 1);
-                R(c, A, X0 + 87, Y0 + 24, 1, 6);
-                R(c, P1, X0 + 85, Y0 + 30, 3, 4);
-                R(c, P2, X0 + 85, Y0 + 30, 1, 4);
+                // верстовой столб полосами за щитом справа, на цепи — путевой дневник
+                for (let y = 16; y < 40; y++)
+                    R(c, ((y - 16) >> 2) & 1 ? N : B, X0 + 93, Y0 + y, 2, 1);
+                R(c, A, X0 + 92, Y0 + 24, 1, 6);
+                R(c, P1, X0 + 89, Y0 + 30, 3, 4);
+                R(c, P2, X0 + 89, Y0 + 30, 1, 4);
             });
             potemkin = potemkinBody;
             // ───────────────────────── ФАСАДЫ ТАБЛИЧЕК ─────────────────────────
@@ -14419,7 +14459,7 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
                 ],
                 plain: [
                     { name: 'шпиль с ангелом', w: 34, h: 120, draw: spire },
-                    { name: 'потёмкинский фасад', w: 96, h: 40, life: { birds: [[-44, -38, -27]] }, draw: potemkin },
+                    { name: 'потёмкинский фасад', w: 96, h: 40, life: { birds: [[-34, -28, -27]] }, draw: potemkin },
                 ],
                 sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
                 props: {
