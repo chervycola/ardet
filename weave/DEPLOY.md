@@ -22,7 +22,7 @@ site/
   assets/music/       title.mp3 (≈24 МБ) и другие треки, когда появятся
   assets/portraits/   портреты протокола беседы (jester, sol, nocturnal…)
   assets/places/      картины мест — вклейки в окно осмотра (weave/PLACES.md), когда появятся
-  assets/scenes/      entry.webp — заглавная
+  assets/scenes/      entry-wide.webp — заглавная (16:9; имя новое, чтобы кеш не подсунул прежний оттиск)
 ```
 
 ## Залить
@@ -40,7 +40,7 @@ FTP/SFTP), с сохранением путей: `index.html` рядом с па
 2. Войти, подойти к Шуту у костра, «говорить» — слева от протокола
    портрет. То же у Sol Invictus и Лунного.
 3. DevTools → Network: `assets/portraits/jester.png`, `sol.png`,
-   `nocturnal.png`, `assets/scenes/entry.webp` — 200. 404 на прочих
+   `nocturnal.png`, `assets/scenes/entry-wide.webp` — 200. 404 на прочих
    портретах (elder, dumpster, machinist, archivist, cat, moss),
    `scenes/ending.png` и `assets/ui/dlg-protocol-*.png` — норма: картин
    ещё нет, игра прячет рамку.
