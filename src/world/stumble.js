@@ -120,6 +120,8 @@ export const stumble = {
     if (kind === 'fossil') return { x: Math.round(-dir * 3 * p), y: Math.round(p) };
     return { x: Math.round(dir * 3 * p), y: Math.round(2 * p) };
   },
+  // оборвать (вошёл в дом, спустился): поза и дрожь кончились, телефон не жужжит
+  cancel() { anim = 0; buzzAt = 0; shake = 0; },
   // поза для рисунка (world/gait.js → sprites/player.js): вид, ход 0..1, сила 0..1, куда
   pose() {
     if (anim <= 0) return null;

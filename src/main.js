@@ -11,7 +11,7 @@ import { plate } from './render/plate.js';
 import { lofi, LOFI_NAMES } from './render/lofi.js';
 import { toxic } from './world/toxic.js';
 import { stumble } from './world/stumble.js';
-import { stepGait } from './world/gait.js';
+import { stepGait, shiftGait } from './world/gait.js';
 import { reducedMotion } from './core/prefs.js';
 import { updateGeiger } from './audio/geiger.js';
 import { wind } from './world/wind.js';
@@ -335,6 +335,7 @@ const NO_HOUSE = /[?&](?:nohouse|under)\b/.test(location.search);
 let houseKeep = null;                                // свет мира, пока в доме
 function intoHouse(fx, fy, wake) {
   if (wake) house.wake(); else house.enter();
+  stumble.cancel();                                  // оступился на пороге — в доме уже стоишь
   if (!houseKeep) houseKeep = lighting.sources;
   player.x = fx - 6; player.y = fy - 23; player.tx = player.x; player.ty = player.y;
   player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
@@ -580,7 +581,8 @@ function render() {
     if (it.tree) { drawTree(worldCtx, it.tree, t); continue; }
     if (it.other) { it.other.draw(); continue; }
     if (it.player) {
-      const so = stumble.offset();
+      // свой герой клюёт и скользит позой (sprites/player.js); сдвигом — только просел в яму
+      const so = player.gait && player.gait.trip && player.gait.trip.kind !== 'pit' ? { x: 0, y: 0 } : stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);
       drawPlayer(player);
       worldCtx.restore();
@@ -1248,6 +1250,7 @@ function goUnder(stairId) {
   const a = accessOf(th), retX = player.x, retY = player.y;
   teleportWithFade(a.x, a.y, () => {
     under.enter(retX, retY);
+    stumble.cancel();
     clearWhisper();                                 // шёпот сверху остался наверху
     muteRedNoon(true);
     if (!surfaceLights) surfaceLights = lighting.sources;
@@ -1547,7 +1550,7 @@ function updateGame() {
   updateTeleportFade();
   // походка (world/gait.js): шаг — по пройденному за прошлый тик пути, только когда правят;
   // остановка, оборот к player.face, оступился — позой (sprites/player.js)
-  stepGait(player, { stepping: !player.still, surf: surfName, trip: stumble.pose(), reduced: reducedMotion() });
+  stepGait(player, { stepping: !player.still, surf: surfName, trip: house.active || under.active ? null : stumble.pose(), reduced: reducedMotion() });
   if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { stopHero(); return; }
   if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
@@ -1651,8 +1654,8 @@ function updateWorldSystems() {
   // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
   if (inBrainrotLoop()) {
     const L0 = TOWN.y1 + ringD(9, 24), L1 = TOWN.y1 + ringD(9, 184);
-    if (player.y > L1) { player.y -= (L1 - L0); player.ty = player.y; }
-    else if (player.y < L0) { player.y += (L1 - L0); player.ty = player.y; }
+    if (player.y > L1) { player.y -= (L1 - L0); player.ty = player.y; shiftGait(player, 0, -(L1 - L0)); }   // шов петли — не прыжок для походки
+    else if (player.y < L0) { player.y += (L1 - L0); player.ty = player.y; shiftGait(player, 0, L1 - L0); }
   }
   camera.follow(player.x + 6, player.y + 10);
   camera.update();

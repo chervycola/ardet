@@ -3321,6 +3321,25 @@ setCtx(ctx);
     for (let i = 2; i < hems.length; i++) if (Math.sign(hems[i] - hems[i - 1]) * Math.sign(hems[i - 1] - hems[i - 2]) < 0 && Math.abs(hems[i] - hems[i - 1]) > 0.02) flips++;
     assert(flips <= 1, 'подол качается пружиной: ' + flips);
   });
+  test('походка: остановка при любой фазе — дошагнута до опоры, вес осел; шов петли — не прыжок; ладонь — после оборота; в воде ног не видно', () => {
+    for (let n = 22; n <= 34; n++) {
+      const p = mk('E'); idle(p, 2); go(p, n, 2.6);
+      let maxSettle = 0;
+      for (let i = 0; i < 60; i++) { p.vx = Math.max(0, p.vx - 0.4); p.x += p.vx; p.still = true; tick(); GT.stepGait(p, { stepping: false, surf: 'ground' }); maxSettle = Math.max(maxSettle, p.gait.settle); }
+      const fr = p.gait.phase - Math.floor(p.gait.phase), off = Math.min(fr, 1 - fr);   // опора — у целого шага (±2 %)
+      assert(off < 0.03 && maxSettle > 0.5, `остановка после ${n} тиков: фаза ${fr.toFixed(2)}, осадка ${maxSettle.toFixed(2)}`);
+    }
+    const lp = mk('S'); idle(lp, 2); go(lp, 30, 0, 2.4);
+    const a0 = lp.gait.amp;
+    lp.y -= 180.8; GT.shiftGait(lp, 0, -180.8); go(lp, 1, 0, 2.4);
+    assert(lp.gait.amp >= a0, 'шов петли сбросил шаг');
+    const v = mk('N'); idle(v, 3); v.visor = true;
+    let raisedBack = false;
+    for (let i = 0; i < 40; i++) { idle(v, 1); if (v.gait.view !== 'S' && v.gait.visorK > 0) raisedBack = true; }
+    assert(!raisedBack && v.gait.visorK === 1 && v.gait.view === 'S', 'ладонь поднялась до оборота');
+    const wd = mk('S'); idle(wd, 30, { surf: 'water' });
+    assert(!rec(wd).some(([c]) => c === '#5c564e'), 'вброд торчат носки');
+  });
   test('походка: оборот — через три четверти; кругом S↔N через бок по ходу, E↔W через лицо; «меньше движения» — сразу', () => {
     eq(GT.turnPath('S', 'E').join(), 'SE,E');
     eq(GT.turnPath('E', 'W').join(), 'SE,S,SW,W', 'E→W через лицо к зрителю');
@@ -3330,7 +3349,7 @@ setCtx(ctx);
     const p = mk('E'); idle(p, 3);
     p.face = 'W';
     const seen = [];
-    for (let i = 0; i < 20; i++) { idle(p, 1); if (seen[seen.length - 1] !== p.gait.view) seen.push(p.gait.view); }
+    for (let i = 0; i < 30; i++) { idle(p, 1); if (seen[seen.length - 1] !== p.gait.view) seen.push(p.gait.view); }
     eq(seen.join(), 'E,SE,S,SW,W', 'виды по пути');
     const r = mk('E'); idle(r, 1, { reduced: true }); r.face = 'W'; idle(r, 1, { reduced: true });
     eq(r.gait.view, 'W', '«меньше движения» — оборот сразу');
