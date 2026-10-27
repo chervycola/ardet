@@ -120,6 +120,13 @@ export const stumble = {
     if (kind === 'fossil') return { x: Math.round(-dir * 3 * p), y: Math.round(p) };
     return { x: Math.round(dir * 3 * p), y: Math.round(2 * p) };
   },
+  // поза для рисунка (world/gait.js → sprites/player.js): вид, ход 0..1, сила 0..1, куда
+  pose() {
+    if (anim <= 0) return null;
+    const k = 1 - anim / dur;
+    const p = kind === 'pit' ? (k < 0.15 ? k / 0.15 : k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4) : (k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75);
+    return { kind, k, p, dir };
+  },
   // дрожь кадра, пока жужжит телефон
   shake() { return shake > 0 ? { x: (shake % 4 < 2 ? 1 : -1), y: 0 } : { x: 0, y: 0 }; },
   // пока проседаешь в яму — её край рисуется поверх фигуры: ноги в яме

@@ -3284,6 +3284,97 @@ setCtx(ctx);
 }
 
 // ═══ REPORT ═══
+// ═══ ПОХОДКА СТРАННИКА (world/gait.js, sprites/player.js; ROADMAP Г8) ═══
+{
+  const GT = await imp('world/gait.js');
+  const PL = await imp('sprites/player.js');
+  const mk = face => ({ x: 1000, y: 1000, vx: 0, vy: 0, face, dir: 1, still: true, sit: 0 });
+  const go = (p, n, dx, dy = 0, o = {}) => { for (let i = 0; i < n; i++) { p.vx = dx; p.vy = dy; p.x += dx; p.y += dy; p.still = false; tick(); GT.stepGait(p, { stepping: true, surf: 'ground', ...o }); } };
+  const idle = (p, n, o = {}) => { for (let i = 0; i < n; i++) { p.still = true; tick(); GT.stepGait(p, o); } };
+  const rec = p => { const L = []; let col = null; const g = new Proxy({}, { get(t, k) { return k === 'fillRect' ? (...a) => L.push([col, ...a]) : noop; }, set(t, k, v) { if (k === 'fillStyle') col = v; return true; } }); setCtx(g); PL.drawPlayer(p); setCtx(ctx); return L; };
+  test('походка: шаг — по пройденному пути, не по времени; стоит — не шагает; без руля по льду — скользит', () => {
+    const p = mk('E'); idle(p, 5);
+    const ph0 = p.gait.phase; idle(p, 120);
+    eq(p.gait.phase, ph0, 'стоя фаза шага идёт');
+    go(p, 60, 2.6);
+    const walk = p.gait.phase - ph0;
+    assert(walk > 1.8 && walk < 3.2, `за секунду хода шагов ${walk.toFixed(2)} (ждём ≈2,5)`);
+    const s = mk('E'); idle(s, 2); go(s, 60, 4.3);
+    const runSteps = s.gait.phase;
+    assert(runSteps > walk && runSteps < walk * 1.7, `бег чаще шага, но не вдвое: ${runSteps.toFixed(2)} против ${walk.toFixed(2)}`);
+    const ice = mk('E'); idle(ice, 2);
+    for (let i = 0; i < 40; i++) { ice.vx = 2; ice.x += 2; ice.still = true; tick(); GT.stepGait(ice, { stepping: false, surf: 'ice' }); }
+    assert(ice.gait.phase < 0.2 && ice.gait.glide > 0.8, 'катится без руля — ногами не перебирает');
+    const wall = mk('E'); idle(wall, 2);
+    for (let i = 0; i < 60; i++) { wall.vx = 2.6; wall.still = false; tick(); GT.stepGait(wall, { stepping: true, surf: 'ground' }); }
+    eq(wall.gait.phase, 0, 'упёрся в стену — на месте не шагает');
+  });
+  test('походка: остановка — дошагивает до опоры и оседает; подол уходит вперёд и опадает без перелёта', () => {
+    const p = mk('E'); idle(p, 2); go(p, 31, 2.6);
+    const hems = [];
+    for (let i = 0; i < 60; i++) { p.vx = Math.max(0, p.vx - 0.4); p.x += p.vx; p.still = true; tick(); GT.stepGait(p, { stepping: false, surf: 'ground' }); hems.push(p.gait.hem); }
+    const fr = p.gait.phase - Math.floor(p.gait.phase);
+    assert(fr < 1e-9, `шаг не дошагнут: ${fr}`);
+    eq(p.gait.amp, 0, 'шаг не затих');
+    assert(Math.max(...hems) > 0.5, 'подол по инерции не ушёл вперёд');
+    let flips = 0;
+    for (let i = 2; i < hems.length; i++) if (Math.sign(hems[i] - hems[i - 1]) * Math.sign(hems[i - 1] - hems[i - 2]) < 0 && Math.abs(hems[i] - hems[i - 1]) > 0.02) flips++;
+    assert(flips <= 1, 'подол качается пружиной: ' + flips);
+  });
+  test('походка: оборот — через три четверти; кругом S↔N через бок по ходу, E↔W через лицо; «меньше движения» — сразу', () => {
+    eq(GT.turnPath('S', 'E').join(), 'SE,E');
+    eq(GT.turnPath('E', 'W').join(), 'SE,S,SW,W', 'E→W через лицо к зрителю');
+    eq(GT.turnPath('W', 'E').join(), 'SW,S,SE,E');
+    eq(GT.turnPath('S', 'N', 1).join(), 'SE,E,NE,N', 'S→N при ходе вправо — через правый бок');
+    eq(GT.turnPath('S', 'N', -1).join(), 'SW,W,NW,N');
+    const p = mk('E'); idle(p, 3);
+    p.face = 'W';
+    const seen = [];
+    for (let i = 0; i < 20; i++) { idle(p, 1); if (seen[seen.length - 1] !== p.gait.view) seen.push(p.gait.view); }
+    eq(seen.join(), 'E,SE,S,SW,W', 'виды по пути');
+    const r = mk('E'); idle(r, 1, { reduced: true }); r.face = 'W'; idle(r, 1, { reduced: true });
+    eq(r.gait.view, 'W', '«меньше движения» — оборот сразу');
+  });
+  test('походка: рисунок — носок на опоре вбок впереди, стоя лицом — оба носка; спиной огонька нет; в рамке маски', () => {
+    const p = mk('E'); idle(p, 2); go(p, 200, 2.6);
+    let toeFront = 0, frames = 0;
+    for (let i = 0; i < 60; i++) {
+      go(p, 1, 2.6); frames++;
+      const L = rec(p), x = Math.floor(p.x);
+      if (L.some(([c, X, Y]) => c === '#5c564e' && X >= x + 14 && Y >= Math.floor(p.y) + 21)) toeFront++;
+    }
+    assert(toeFront > 5 && toeFront < frames, `носок впереди: ${toeFront} из ${frames}`);
+    const s = mk('S'); idle(s, 30);
+    const LS = rec(s);
+    eq(LS.filter(([c]) => c === '#5c564e').length, 2, 'стоит лицом — два носка');
+    const n = mk('N'); idle(n, 30);
+    const LN = rec(n);
+    assert(!LN.some(([c, X, Y, W, H]) => c === '#E28A3A' && W * H >= 4), 'спиной огонёк виден');
+    // рамка: шаг, бег, оступился — в маске тени x−6..x+20, y−10..y+24
+    for (const [face, dx, trip] of [['E', 2.6], ['W', -2.6], ['S', 0], ['E', 4.3], ['E', 0, 'stone'], ['W', 0, 'fossil'], ['S', 0, 'pit']]) {
+      const f = mk(face); idle(f, 2); if (dx) go(f, 40, dx);
+      for (let k = 0; k < 20; k++) {
+        if (dx) go(f, 1, dx); else idle(f, 1);
+        if (trip) f.gait.trip = { kind: trip, p: k / 19, k: 0.3, dir: face === 'W' ? -1 : 1 };
+        const L = rec(f), x = Math.floor(f.x), y = Math.floor(f.y);
+        for (const [, X, Y, W, H] of L) assert(X >= x - 6 && X + W <= x + 21 && Y >= y - 10 && Y + H <= y + 25, `${face}${trip || ''}: вылез из рамки ${X - x},${Y - y} ${W}×${H}`);
+      }
+    }
+  });
+  test('походка: оступился — позой, не только сдвигом: камень клюёт вперёд, окаменелость — нога назад, зажмурился', () => {
+    const p = mk('E'); idle(p, 2);
+    const base = rec(p);
+    p.gait.trip = { kind: 'stone', p: 1, k: 0.25, dir: 1 };
+    const st = rec(p);
+    const hoodX = L => Math.min(...L.filter(([c, X, Y]) => c === '#2a2620' && Y <= Math.floor(p.y) - 4).map(([, X]) => X));
+    assert(hoodX(st) >= hoodX(base) + 2, `капюшон не клюнул вперёд: ${hoodX(base)} → ${hoodX(st)}`);
+    assert(!st.some(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(p.y)), 'зажмурился — глаз нет');
+    p.gait.trip = { kind: 'fossil', p: 1, k: 0.25, dir: 1 };
+    const fo = rec(p), x = Math.floor(p.x);
+    assert(fo.some(([c, X]) => c === '#5c564e' && X < x + 2), 'нога не поехала назад');
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

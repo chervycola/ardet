@@ -11,6 +11,8 @@ import { plate } from './render/plate.js';
 import { lofi, LOFI_NAMES } from './render/lofi.js';
 import { toxic } from './world/toxic.js';
 import { stumble } from './world/stumble.js';
+import { stepGait } from './world/gait.js';
+import { reducedMotion } from './core/prefs.js';
 import { updateGeiger } from './audio/geiger.js';
 import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
@@ -1543,6 +1545,9 @@ function heroStep(dvx, dvy, drift = false) {
 // ═══ EPOCH TITLE CARD ═══
 function updateGame() {
   updateTeleportFade();
+  // походка (world/gait.js): шаг — по пройденному за прошлый тик пути, только когда правят;
+  // остановка, оборот к player.face, оступился — позой (sprites/player.js)
+  stepGait(player, { stepping: !player.still, surf: surfName, trip: stumble.pose(), reduced: reducedMotion() });
   if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { stopHero(); return; }
   if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
