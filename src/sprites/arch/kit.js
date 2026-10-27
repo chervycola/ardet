@@ -375,8 +375,9 @@ export function plan(w, h) {
     w, h, m, part, info,
     at: (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? m[y * w + x] : 0,
     partAt: (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? part[y * w + x] : 0,
-    // прямоугольник материала — новая часть (своя кромка света и тени)
-    box(x, y, ww, hh2, mat, form = 0) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form }; for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, mat, p); return P; },
+    // прямоугольник материала — новая часть (своя кромка света и тени); дробный угол округляется
+    // (иначе запись в типизированный массив по дробному индексу молча пропадает)
+    box(x, y, ww, hh2, mat, form = 0) { x = Math.round(x); y = Math.round(y); const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form }; for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, mat, p); return P; },
     // клин: строки от yTop до yBot, ширина растёт от wTop до wBot; кровля, щипец, пирамида
     wedge(cx, yTop, yBot, wTop, wBot, mat) {
       const p = ++pid, n = Math.max(1, yBot - yTop);
@@ -408,7 +409,7 @@ export function plan(w, h) {
       return P;
     },
     // проём: та же часть, что и стена (кромки — внутри проёма), низ — подоконник светлее
-    cut(x, y, ww, hh2, mat = MAT.DARK) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, mat, p); return P; },
+    cut(x, y, ww, hh2, mat = MAT.DARK) { x = Math.round(x); y = Math.round(y); const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, mat, p); return P; },
     // многоугольник [[x, y], …] одной частью: скала, конус кровли, курган, купол
     poly(pts, mat, form = 0) {
       const p = ++pid, xs = pts.map(v => v[0]), ys = pts.map(v => v[1]);
@@ -424,7 +425,7 @@ export function plan(w, h) {
       }
       return P;
     },
-    clear(x, y, ww, hh2) { for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, 0, 0); return P; },
+    clear(x, y, ww, hh2) { x = Math.round(x); y = Math.round(y); for (let j = 0; j < hh2; j++) for (let i = 0; i < ww; i++) put(x + i, y + j, 0, 0); return P; },
     // последняя часть — грань в тени (боковая сторона объёма, повёрнутая от света): тон ниже на k
     shade(k = 1) { if (info[pid]) info[pid].dim = k; return P; },
   };

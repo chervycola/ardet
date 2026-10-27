@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3416b2b · 2026-10-27';console.log('[оттиск]', '3416b2b · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='0046a79 · 2026-10-27';console.log('[оттиск]', '0046a79 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -6997,8 +6997,9 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
             w, h, m, part, info,
             at: (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? m[y * w + x] : 0,
             partAt: (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? part[y * w + x] : 0,
-            // прямоугольник материала — новая часть (своя кромка света и тени)
-            box(x, y, ww, hh2, mat, form = 0) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form }; for (let j = 0; j < hh2; j++)
+            // прямоугольник материала — новая часть (своя кромка света и тени); дробный угол округляется
+            // (иначе запись в типизированный массив по дробному индексу молча пропадает)
+            box(x, y, ww, hh2, mat, form = 0) { x = Math.round(x); y = Math.round(y); const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form }; for (let j = 0; j < hh2; j++)
                 for (let i = 0; i < ww; i++)
                     put(x + i, y + j, mat, p); return P; },
             // клин: строки от yTop до yBot, ширина растёт от wTop до wBot; кровля, щипец, пирамида
@@ -7035,7 +7036,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
                 return P;
             },
             // проём: та же часть, что и стена (кромки — внутри проёма), низ — подоконник светлее
-            cut(x, y, ww, hh2, mat = MAT.DARK) { const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++)
+            cut(x, y, ww, hh2, mat = MAT.DARK) { x = Math.round(x); y = Math.round(y); const p = ++pid; info[p] = { x0: x, x1: x + ww - 1, form: 0 }; for (let j = 0; j < hh2; j++)
                 for (let i = 0; i < ww; i++)
                     put(x + i, y + j, mat, p); return P; },
             // многоугольник [[x, y], …] одной частью: скала, конус кровли, курган, купол
@@ -7056,7 +7057,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
                 }
                 return P;
             },
-            clear(x, y, ww, hh2) { for (let j = 0; j < hh2; j++)
+            clear(x, y, ww, hh2) { x = Math.round(x); y = Math.round(y); for (let j = 0; j < hh2; j++)
                 for (let i = 0; i < ww; i++)
                     put(x + i, y + j, 0, 0); return P; },
             // последняя часть — грань в тени (боковая сторона объёма, повёрнутая от света): тон ниже на k
@@ -10724,12 +10725,7 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
             R(c, D2, x + px + 2, G - 15, 1, 3);
         }
     }
-    // ── набор (kit.js): шум, пологая линия, смесь красок канона, план по первому зову ──
-    function noise(i, j, s) {
-        let h = (i * 374761393 + j * 668265263 + s * 2246822519) | 0;
-        h = Math.imul(h ^ (h >>> 13), 1274126177);
-        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-    }
+    // ── набор (kit.js): пологая линия, смесь красок канона, план по первому зову ──
     function hline(c, col, x0, y0, x1, y1) {
         c.fillStyle = col;
         const n = Math.abs(y1 - y0) + 1, sy = Math.sign(y1 - y0);
@@ -10756,14 +10752,15 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
         d.plan = get;
         return d;
     }
-    // фасад таблички набором: 18×30, px(цвет, dx, dy, w, h) — поверх
+    // фасад таблички набором: 18×30, px(цвет, dx, dy, w, h) — поверх (вторым — план)
     function signKit(build, opt, over) {
         const get = lazyPlan(18, 30, build);
         const d = (c, X, G) => {
             const X0 = Math.round(X) - 9, Y0 = Math.round(G) - 30;
-            kit_js_3.paint(c, X0, Y0, get(), opt);
+            const P = get();
+            kit_js_3.paint(c, X0, Y0, P, opt);
             if (over)
-                over((col, dx, dy, w = 1, h = 1) => R(c, col, X0 + dx, Y0 + dy, w, h));
+                over((col, dx, dy, w = 1, h = 1) => R(c, col, X0 + dx, Y0 + dy, w, h), P);
         };
         d.static = true;
         return d;
@@ -10793,8 +10790,8 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 if (d < r + 0.45 || d > r + 2.5 || dy > r * 0.7)
                     continue;
                 const m = at(i, y);
-                if (!m || m === kit_js_3.MAT.DARK)
-                    continue;
+                if (!m || m === kit_js_3.MAT.DARK || !at(i - 1, y) || !at(i + 1, y))
+                    continue; // кромку силуэта не трогать
                 px(Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI / n)) % 2 ? VRED : L, i, y);
             }
     }
@@ -10844,22 +10841,23 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
             R(c, C, X0 + 75, Y0 + 45, 2, 2); // лампа переписчика — до утра
         const h = hang_js_3.hang(`leaf:${X0}:${Y0}`, X0 + 70, Y0 + 23, 3, { sail: 0.09, damp: 0.93, gy: Y0 + 52, r: 2 });
         const lift = Math.min(2, Math.round(Math.abs(Math.sin(hang_js_3.angleOf(h))) * 4));
-        R(c, LEAF, X0 + 69, Y0 + 23, 3, 1);
-        R(c, LEAF, X0 + 72, Y0 + 23 - lift, 3, 1);
+        R(c, B, X0 + 69, Y0 + 23, 3, 1);
+        R(c, B, X0 + 72, Y0 + 23 - lift, 3, 1);
         if (lift)
             R(c, LEAF2, X0 + 72, Y0 + 24 - lift, 3, lift);
-        R(c, LEAF2, X0 + 69, Y0 + 24, lift ? 3 : 6, 2);
-        R(c, kit_js_3.tone(kit_js_3.MAT.ROCK, 1), X0 + 70, Y0 + 22, 1, 1);
+        R(c, LEAF, X0 + 69, Y0 + 24, lift ? 3 : 6, 1);
+        R(c, kit_js_3.tone(kit_js_3.MAT.ROCK, 0), X0 + 69, Y0 + 22, 2, 1);
     }
     function paper3Live(c, x, gy, t) {
         const X0 = Math.round(x) - 46, Y0 = Math.round(gy) - 52;
-        // свесившийся лист: держится краем, низ ходит на ветру
-        const h = hang_js_3.hang(`geniza:${X0}:${Y0}`, X0 + 69, Y0 + 17, 5, { sail: 0.07, damp: 0.95, gy: Y0 + 52, r: 2 });
+        // свесившийся лист: держится одним углом у края пролома, низ ходит на ветру; по листу — строки
+        const h = hang_js_3.hang(`geniza:${X0}:${Y0}`, X0 + 74, Y0 + 17, 4, { sail: 0.07, damp: 0.95, gy: Y0 + 52, r: 2 });
         const o = Math.max(-1, Math.min(1, Math.round(Math.sin(hang_js_3.angleOf(h)) * 3)));
-        R(c, LEAF, X0 + 68, Y0 + 17, 3, 2);
-        R(c, LEAF2, X0 + 68 + (o > 0 ? 1 : 0), Y0 + 19, 3, 1);
-        R(c, LEAF2, X0 + 68 + o, Y0 + 20, 3, 2);
-        R(c, LEAF2, X0 + 69 + o, Y0 + 22, 2, 1);
+        R(c, LEAF, X0 + 73, Y0 + 17, 4, 1);
+        R(c, LEAF, X0 + 73 + (o > 0 ? 1 : 0), Y0 + 18, 4, 2);
+        R(c, LEAF2, X0 + 73 + o, Y0 + 20, 4, 1);
+        R(c, S, X0 + 74 + (o > 0 ? 1 : 0), Y0 + 18, 2, 1);
+        R(c, S, X0 + 74 + o, Y0 + 20, 2, 1);
     }
     // полуширина конуса на высоте y по своей стороне: уступ 2 точки на каждый пройденный виток
     function malwHalf(y, steps) {
@@ -10985,11 +10983,13 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
             // ───────────────────────── ДОМИНАНТА · юг ─────────────────────────
             // Айя-София (набором), вид с юга. Штукатурка охрой; купол пологий, под свинцом, по основанию — кольцо
             // окон между контрфорсиками (окон сорок, с одной стороны видно семнадцать), в окнах лампады — огонь
-            // доминанты. Под куполом — южный тимпан: под большой аркой окна тремя рядами, по сторонам — две
-            // громадные опоры под свинцовыми шапками. Влево и вправо купол сходит полукуполами — свинцовыми
-            // плечами; ниже корпус галерей, окна в два ряда, у входа притвор. Минареты приставлены позже и
-            // разной рукой: с юга видно юго-западный белого камня (западные — по рассказу, Синана) и
-            // юго-восточный красного кирпича — его ставили первым, при Мехмеде II; он толще и ниже.
+            // доминанты. Под куполом — южный тимпан: под большой аркой окна двумя рядами — пять вверху, семь
+            // внизу; по сторонам — две громадные опоры под свинцовыми шапками. Влево и вправо купол сходит
+            // полукуполами — свинцовыми плечами; ниже корпус галерей, окна в два ряда, у входа притвор.
+            // Минареты приставлены позже и разной рукой: с юга видно юго-западный белого камня (западные —
+            // при Селиме II, по проекту Синана) и юго-восточный кирпичный — старший из уцелевших (при Мехмеде II
+            // или Баязиде II — датировка спорна; первый минарет был деревянный); он ниже западных. Толще на
+            // рисунке — допущение.
             SOFIA_WIN = Array.from({ length: 17 }, (_, i) => 47 + i * 4);
             sofiaBody = kit(160, 160, P => {
                 P.box(3, 124, 9, 36, kit_js_3.MAT.ASHLAR); // минарет белого камня: цоколь до кровли
@@ -10997,7 +10997,7 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 P.box(3, 64, 9, 2, kit_js_3.MAT.MARBLE);
                 P.box(3, 96, 9, 2, kit_js_3.MAT.MARBLE); // балконы-шерефе
                 P.wedge(7, 10, 30, 1, 7, kit_js_3.MAT.SLATE); // свинцовый карандаш
-                P.box(147, 118, 10, 42, kit_js_3.MAT.BRICK); // кирпичный — толще и ниже
+                P.box(147, 118, 10, 42, kit_js_3.MAT.BRICK); // кирпичный — ниже
                 P.box(148, 40, 8, 78, kit_js_3.MAT.BRICK, kit_js_3.FORM.CYL);
                 P.box(147, 74, 10, 2, kit_js_3.MAT.BRICK);
                 P.wedge(152, 22, 40, 1, 8, kit_js_3.MAT.SLATE);
@@ -11021,7 +11021,7 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                     P.wedge(bx + 8, 57, 62, 10, 16, kit_js_3.MAT.SLATE);
                     P.cut(bx + 6, 70, 4, 8);
                 }
-                // тимпан под большой аркой — отступает вглубь
+                // тимпан под большой аркой — отступает вглубь; окна двумя рядами: пять над семью
                 const ty = [[50, 100], [50, 86]];
                 for (let k = 1; k < 12; k++) {
                     const a = Math.PI * k / 12;
@@ -11029,12 +11029,10 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 }
                 ty.push([110, 86], [110, 100]);
                 P.poly(ty, kit_js_3.MAT.OCHRE).shade(1);
-                for (const x of [67, 73, 79, 85, 91])
-                    rarch(P, x, 71, 3, 7);
+                for (const x of [66, 72, 78, 84, 90])
+                    rarch(P, x, 74, 4, 10);
                 for (let i = 0; i < 7; i++)
-                    rarch(P, 59 + i * 6, 81, 3, 6);
-                for (let i = 0; i < 7; i++)
-                    rarch(P, 57 + i * 7, 96, 4, 8);
+                    rarch(P, 57 + i * 7, 97, 4, 12);
                 // окна галерей в два ряда; середину низа занимает притвор
                 for (const x of [20, 27, 126, 133, 54, 62, 98, 106]) {
                     rarch(P, x, 114, 3, 8);
@@ -11054,8 +11052,8 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                     const a = Math.PI * k / 40, x = Math.round(80 - 31 * Math.cos(a)), y = Math.round(86 - 31 * Math.sin(a));
                     px(k < 20 ? RIM : kit_js_3.tone(kit_js_3.MAT.OCHRE, 3), x, y);
                 }
-                // контрфорсики между окнами кольца: светлая грань слева
-                for (const x of SOFIA_WIN)
+                // контрфорсики между окнами кольца: светлая грань слева (у первого окна — край барабана)
+                for (const x of SOFIA_WIN.slice(1))
                     px(RIM, x - 2, 49, 1, 6);
                 // рёбра купола — свинец лёг полосами
                 for (const dx of [-24, -14, -5, 5, 14, 24]) {
@@ -11074,13 +11072,15 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
             });
             sofia = kit_js_3.split(sofiaBody, sofiaLive);
             // ───────────────────────── ЮГ · дом бумаги, минарет витком ─────────────────────────
-            // дом бумаги (набором): Кордова. Песчаник; крылья — аркады подков, клинья через один костью и
-            // киноварью; средний корпус выше, со ступенчатыми мерлонами, портал-подкова в альфисе, над ним
-            // ажимес — двойное окно с колонкой. На кровле крыльев сохнут свежие листы: лежат на парапете,
-            // край свешивается, сверху камешек (один лист ветер то и дело поднимает за угол — камешек держит).
-            // Лампа переписчика горит в правой аркаде ночью.
+            // дом бумаги (набором): монтаж назван — облик кордовский (подковы с клиньями через один костью и
+            // киноварью, альфис, ажимес, ступенчатые мерлоны — по Меските), промысел — по Шатибе: там, по
+            // аль-Идриси (XII в.), делали бумагу, «какой нет нигде в мире»; бумага тряпичная. Песчаник; крылья —
+            // аркады подков; средний корпус выше, портал-подкова в альфисе, над ним ажимес — двойное окно с
+            // колонкой. На кровле крыльев сохнут свежие листы (сушка на парапете — допущение): лежат на
+            // парапете, край свешивается — у кого до земли полотном, у кого чуть; сверху камешек. Один лист
+            // ветер то и дело поднимает за угол — камешек держит. Лампа переписчика горит в правой аркаде ночью.
             PAPER_ARCH = [3, 13, 23, 63, 73, 83];
-            PAPER_SHEETS = [[1, 7, 3], [9, 6, 2], [16, 7, 4], [24, 6, 3], [61, 7, 3], [77, 7, 4], [85, 6, 2]];
+            PAPER_SHEETS = [[2, 5, 6, 0], [11, 4, 2, 0], [20, 5, 5, 1], [61, 5, 2, 0], [80, 5, 6, 0]]; // x, ширина, свес, косо
             paperBody = kit(92, 52, P => {
                 P.box(0, 24, 92, 28, kit_js_3.MAT.SANDSTONE);
                 for (const x of PAPER_ARCH)
@@ -11104,19 +11104,22 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 px(AL, 54, 21, 1, 12);
                 px(kit_js_3.tone(kit_js_3.MAT.MARBLE, 3), 45, 11, 2, 6);
                 px(kit_js_3.tone(kit_js_3.MAT.MARBLE, 4), 44, 10, 4, 1); // колонка ажимеса
-                for (const [x, w, d] of PAPER_SHEETS) {
+                // листы: верхний край по парапету, свес тонким полотном, тень — сбоку; камешек силуэтом над краем
+                for (const [x, w, d, skew] of PAPER_SHEETS) {
                     px(B, x, 23, w, 1);
-                    px(LEAF, x, 24, w, d - 1);
-                    px(LEAF2, x + 1, 23 + d, w - 3, 1);
-                    px(kit_js_3.tone(kit_js_3.MAT.SANDSTONE, 0), x + 1, 24 + d, w - 3, 1); // лист тонок: под краем тень
-                    px(kit_js_3.tone(kit_js_3.MAT.ROCK, 1), x + 1 + (w >> 2), 22, 1, 1); // камешек
+                    for (let k = 1; k < d; k++)
+                        px(k === d - 1 ? LEAF2 : LEAF, x + (skew ? k >> 1 : 0), 23 + k, w - (k === d - 1 ? 1 : 0), 1);
+                    px(kit_js_3.tone(kit_js_3.MAT.SANDSTONE, 1), x + w + (skew ? (d - 1) >> 1 : 0), 24, 1, d - 1);
+                    px(kit_js_3.tone(kit_js_3.MAT.ROCK, 0), x + 1, 22, 2, 1); // камешек
                 }
             });
             paperHouse = kit_js_3.split(paperBody, paperLive);
-            // дом бумаги #2 (набором): дом мудрости, Багдад. Обожжённый кирпич в два этажа; наверху лоджия
-            // тремя стрельчатыми арками. В средней — подставка и раскрытая рукопись: строки редкие, поля
-            // широкие, лист толстый, блок страниц — стопой. В левой — весы с гирями: чаша с рукописью ниже
-            // чаши с гирями (переводчику платят по весу — так рассказывают). В правой — стопы толстой бумаги.
+            // дом бумаги #2 (набором): дом мудрости, Багдад. Допущение: здание не сохранилось (Багдад разорён в
+            // 1258-м), облик неизвестен — кирпич, стрельчатые арки и зубцы взяты по аббасидскому типу; что это
+            // была академия переводов, а не дворцовая библиотека, — спорно. Обожжённый кирпич в два этажа;
+            // наверху лоджия тремя стрельчатыми арками. В средней — подставка и раскрытый перевод: строки
+            // редкие, поля широкие, лист толстый, блок страниц стопой. В левой — оригинал: кодекс меньше и
+            // тоньше, строки сплошные. В правой — стопы толстой бумаги. Весы — во дворе, на изнанке.
             paper2 = kit(92, 52, P => {
                 P.box(0, 26, 92, 26, kit_js_3.MAT.BAKED);
                 P.box(0, 9, 92, 17, kit_js_3.MAT.BAKED);
@@ -11131,24 +11134,22 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 for (const x of [6, 18, 70, 82])
                     parch(P, x, 22, 3, 7);
             }, { seed: 139, chip: 0.02, drips: [[34, 27, 4], [56, 27, 3]] }, (c, X0, Y0) => {
-                const px = pxOf(c, X0, Y0), TB = kit_js_3.tone(kit_js_3.MAT.TIMBER, 3), TB2 = kit_js_3.tone(kit_js_3.MAT.TIMBER, 1), W = kit_js_3.tone(kit_js_3.MAT.IRON, 4);
+                const px = pxOf(c, X0, Y0), TB = kit_js_3.tone(kit_js_3.MAT.TIMBER, 3), TB2 = kit_js_3.tone(kit_js_3.MAT.TIMBER, 1);
                 px(kit_js_3.tone(kit_js_3.MAT.BAKED, 4), 0, 26, 92, 1); // пояс между этажами
                 px(TB, 29, 25, 33, 1); // перила лоджии
                 for (const x of [32, 36, 46, 50, 57])
                     px(TB2, x, 22, 1, 3);
-                // весы: стойка, коромысло вкось — рукопись тянет вниз; чаши на шнурах
-                px(TB, 34, 15, 1, 10);
-                px(TB, 33, 24, 3, 1);
-                hline(c, kit_js_3.tone(kit_js_3.MAT.TIMBER, 4), X0 + 30, Y0 + 16, X0 + 38, Y0 + 14);
-                px(A, 30, 17, 1, 3);
-                px(A, 38, 15, 1, 2);
-                px(A, 29, 20, 4, 1);
-                px(LEAF2, 29, 18, 4, 2);
-                px(S, 29, 18, 1, 2); // чаша с рукописью — ниже
-                px(A, 36, 17, 4, 1);
-                px(W, 36, 16, 1, 1);
-                px(W, 38, 16, 2, 1); // чаша с гирями
-                // рукопись на подставке: страницы, редкие строки, широкие поля, блок толщиной
+                // оригинал: кодекс поменьше на низкой подставке, строки сплошь
+                px(TB, 31, 21, 1, 4);
+                px(TB, 36, 21, 1, 4);
+                px(TB, 30, 20, 8, 1);
+                px(mix9(B, S, 0.2), 30, 16, 4, 4);
+                px(mix9(B, S, 0.2), 34, 16, 4, 4);
+                for (let y = 16; y < 20; y++) {
+                    px(S, 30, y, 3, 1);
+                    px(S, 35, y, 3, 1);
+                }
+                // перевод на подставке: страницы, редкие строки, широкие поля, блок толщиной
                 px(TB, 43, 21, 1, 4);
                 px(TB, 47, 21, 1, 4);
                 px(TB, 42, 20, 7, 1);
@@ -11171,7 +11172,9 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
             });
             // дом бумаги #3 (набором): хранилище-гениза (по Каиру, при синагоге Бен-Эзры). Гладкая штукатурка,
             // окна редкие и малые; под самым карнизом справа — пролом в чулан: из него торчат края листов,
-            // один свесился по стене. Под проломом стена глухая до земли: ни двери, ни лестницы.
+            // один свесился по стене — исписанный. Под проломом стена глухая до земли: ни двери, ни лестницы.
+            // Допущение: проём вынесен на фасад для чтения — в Бен-Эзре он внутри, в торце женской галереи,
+            // и к нему приставляли лестницу.
             paper3Body = kit(92, 52, P => {
                 P.box(4, 12, 84, 40, kit_js_3.MAT.PLASTER);
                 P.box(2, 9, 88, 3, kit_js_3.MAT.PLASTER); // карниз
@@ -11183,7 +11186,7 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 P.box(36, 16, 9, 8, kit_js_3.MAT.BOARD); // решётка галереи
                 for (const x of [34, 48])
                     rarch(P, x, 42, 4, 9);
-            }, { seed: 143, chip: 0.01, drips: [[66, 18, 5], [74, 18, 6], [30, 12, 5], [55, 12, 4]] }, (c, X0, Y0) => {
+            }, { seed: 143, chip: 0.01, drips: [[66, 18, 5], [70, 18, 4], [30, 12, 5], [55, 12, 4]] }, (c, X0, Y0) => {
                 const px = pxOf(c, X0, Y0), G = kit_js_3.tone(kit_js_3.MAT.TIMBER, 1);
                 px(kit_js_3.tone(kit_js_3.MAT.ASHLAR, 3), 14, 32, 10, 1); // перемычка
                 for (const x of [34, 48]) {
@@ -11195,20 +11198,22 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 for (let y = 18; y < 23; y += 2)
                     px(G, 37, y, 7, 1);
                 px(kit_js_3.tone(kit_js_3.MAT.PLASTER, 4), 4, 26, 84, 1); // пояс
-                // в проломе — листы стопой до края, кромки наружу; класть можно, доставать не предполагалось
-                px(LEAF2, 65, 16, 11, 1);
-                px(LEAF, 66, 15, 7, 1);
-                px(LEAF, 74, 15, 2, 1);
-                px(LEAF2, 67, 14, 4, 1);
-                px(LEAF2, 72, 14, 2, 1);
-                px(LEAF, 66, 17, 1, 1);
-                px(LEAF, 73, 17, 2, 1);
-                px(LEAF2, 76, 16, 1, 1);
+                // в проломе — листы стопой до края, кромки наружу неровно; класть можно, доставать не предполагалось
+                px(LEAF2, 65, 16, 4, 1);
+                px(LEAF2, 70, 16, 2, 1);
+                px(LEAF, 66, 15, 4, 1);
+                px(LEAF, 72, 15, 3, 1);
+                px(LEAF2, 67, 14, 2, 1);
+                px(LEAF2, 73, 14, 2, 1);
+                px(LEAF, 65, 17, 1, 1);
+                px(LEAF, 70, 17, 1, 1);
             });
             paper3 = kit_js_3.split(paper3Body, paper3Live);
-            // спиральный минарет (набором): Самарра. Обожжённый кирпич; квадратный цоколь, конус — пандусом:
-            // виток идёт снаружи, перил нет. По силуэту уступы слева и справа — на полвитка вразбежку; по
-            // лицу пандус — светлой кромкой, под ней тень. Наверху беседка с двумя стрельчатыми проёмами.
+            // спиральный минарет (набором): Самарра. Обожжённый кирпич, сплошной; квадратный цоколь, конус —
+            // пандусом: виток идёт снаружи против часовой стрелки (если смотреть сверху), пять витков, перил
+            // нет. На лице пандус поднимается слева направо — светлой кромкой, под ней тень; по силуэту уступы
+            // слева и справа — на полвитка вразбежку. С земли на цоколь — въезд от середины (халиф, по
+            // преданию, поднимался верхом на осле). Наверху круглый барабан со стрельчатыми нишами.
             MALW = { b: 94, top: 22, turns: 5 };
             malwSteps = () => {
                 const p = (MALW.b - MALW.top) / MALW.turns, L = [], Rr = [];
@@ -11226,31 +11231,29 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 for (let y = MALW.top; y <= MALW.b; y++)
                     pts.push([22 + malwHalf(y, st.R), y]);
                 P.poly(pts, kit_js_3.MAT.BAKED, kit_js_3.FORM.CYL);
-                P.box(17, 10, 10, 12, kit_js_3.MAT.BAKED); // беседка
+                P.box(17, 10, 10, 12, kit_js_3.MAT.BAKED, kit_js_3.FORM.CYL); // барабан
                 P.box(16, 8, 12, 2, kit_js_3.MAT.BAKED);
-                P.wedge(22, 4, 7, 2, 8, kit_js_3.MAT.BAKED);
                 parch(P, 18, 21, 3, 8);
                 parch(P, 23, 21, 3, 8);
-                rarch(P, 19, 104, 6, 8); // вход в цоколе
             }, { seed: 147, chip: 0.03, cracks: 1 }, (c, X0, Y0) => {
                 const px = pxOf(c, X0, Y0), st = malwSteps(), TOP = kit_js_3.tone(kit_js_3.MAT.BAKED, 5), SH = kit_js_3.tone(kit_js_3.MAT.BAKED, 0);
-                // пандус по лицу: от правого уступа витка вверх-влево к левому — светлая кромка, под ней тень
+                // пандус по лицу: от левого уступа витка вверх-вправо к правому
                 for (let k = 0; k < MALW.turns; k++) {
-                    const yr = st.R[k] - 1 + st.p, yl = st.L[k];
-                    const xr = Math.floor(22 + malwHalf(yr + 1, st.R)) - 1, xl = Math.ceil(22 - malwHalf(yl + 1, st.L));
-                    if (k === 0)
-                        continue;
-                    hline(c, TOP, X0 + xr, Y0 + Math.round(yr), X0 + xl, Y0 + Math.round(yl));
-                    hline(c, SH, X0 + xr, Y0 + Math.round(yr) + 1, X0 + xl, Y0 + Math.round(yl) + 1);
+                    const yl = st.L[k], yr = st.R[k];
+                    const xl = Math.ceil(22 - malwHalf(yl + 1, st.L)), xr = Math.floor(22 + malwHalf(yr + 1, st.R)) - 1;
+                    hline(c, TOP, X0 + xl, Y0 + Math.round(yl), X0 + xr, Y0 + Math.round(yr));
+                    hline(c, SH, X0 + xl, Y0 + Math.round(yl) + 1, X0 + xr, Y0 + Math.round(yr) + 1);
                 }
-                const yr0 = MALW.b - 1, yl0 = st.L[0]; // первый виток — от земли у правого края цоколя
-                hline(c, TOP, X0 + 40, Y0 + yr0, X0 + Math.ceil(22 - malwHalf(yl0 + 1, st.L)), Y0 + Math.round(yl0));
-                hline(c, SH, X0 + 40, Y0 + yr0 + 1, X0 + Math.ceil(22 - malwHalf(yl0 + 1, st.L)), Y0 + Math.round(yl0) + 1);
+                // въезд: с земли от середины цоколя вверх-вправо до правого края конуса — дальше виток уходит за спину
+                hline(c, TOP, X0 + 10, Y0 + 102, X0 + 40, Y0 + 94);
+                hline(c, SH, X0 + 10, Y0 + 103, X0 + 40, Y0 + 95);
                 px(kit_js_3.tone(kit_js_3.MAT.BAKED, 4), 1, 94, 42, 1);
+                px(kit_js_3.tone(kit_js_3.MAT.BAKED, 4), 16, 8, 12, 1); // плоская кромка верха
             });
             // спиральный минарет #2 (набором): Ибн Тулун, Каир — пониже, тоже витком: квадратный цоколь с
-            // наружной лестницей вкось, на нём цилиндр, лестница обходит его витком; выше восьмерик с
-            // арочками, фонарь и ребристый куполок-курильница.
+            // наружной лестницей вкось, на нём цилиндр, лестница обходит его витком; выше восьмерик с арочками,
+            // фонарь и ребристый куполок-курильница (мабхара), навершие — полумесяц. Нынешний каменный минарет —
+            // перестройка султана Ладжина (1296), мабхара мамлюкская; повторяет ли виток первоначальный — спорно.
             tulun = kit(44, 104, P => {
                 P.box(6, 66, 32, 38, kit_js_3.MAT.ASHLAR);
                 P.box(5, 64, 34, 2, kit_js_3.MAT.ASHLAR);
@@ -11275,8 +11278,10 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                     px(kit_js_3.tone(kit_js_3.MAT.ASHLAR, 1), 13 + k * 3, 30, 1, 1);
                 for (const dx of [-3, 0, 3])
                     px(kit_js_3.tone(kit_js_3.MAT.ASHLAR, 1), 22 + dx, 21, 1, 4); // рёбра куполка
-                px(A, 22, 14, 1, 5);
-                px(A, 21, 15, 3, 1);
+                px(A, 22, 15, 1, 4);
+                px(kit_js_3.tone(kit_js_3.MAT.ASHLAR, 5), 22, 16, 1, 1); // стержень с шариком
+                px(A, 21, 13, 1, 2);
+                px(A, 23, 13, 1, 2); // полумесяц рогами вверх
             });
             // ───────────────────────── ВОСТОК · камень и тушь ─────────────────────────
             // пагода (набором): пять ярусов. Каменный стилобат; тела ярусов — светлая штукатурка в киноварных
@@ -11704,9 +11709,8 @@ System.register("sprites/arch/lightgarden", ["world/hang", "sprites/arch/kit", "
                 horse(P, 4, 14, 3, 6);
                 horse(P, 10, 14, 3, 6);
                 horse(P, 6, 30, 6, 12);
-            }, { seed: 197, chip: 0.03 }, px => {
-                const at = (x, y) => (x >= 1 && x <= 16 && y >= 6 && !(y >= 18 && x >= 5 && x <= 12)) ? kit_js_3.MAT.SANDSTONE : 0;
-                voussoirs(px, (x, y) => at(x, y), 6, 30, 6, 12, 6);
+            }, { seed: 197, chip: 0.03 }, (px, P) => {
+                voussoirs(px, P.at, 6, 30, 6, 12, 6);
                 px(kit_js_3.tone(kit_js_3.MAT.MARBLE, 3), 8, 8, 1, 6);
             });
             // восток: дзэн-мастерская — вальма черепицей с загибом, окно-колокол, сёдзи
@@ -25320,7 +25324,7 @@ System.register("content/arch_backs", [], function (exports_51, context_51) {
                 "lightgarden:south:дом бумаги": { "back": "Во дворе чаны с вымоченным тряпьём: бумагу делают из старых рубах. Сломанные калямы связаны в пучок и не выброшены." },
                 "lightgarden:south:дом бумаги#2": { "back": "Во дворе весы с гирями, как у торговца зерном. При весах ведут книгу: что взвешено, сколько, кому выдано. Толще этой книги в доме нет." },
                 "lightgarden:south:дом бумаги#3": { "back": "Разбирать начали через тысячу лет: листы вынесли мешками и развезли по библиотекам мира. Теперь бывает, что один лист хранится в двух городах — половинами, и половины узнают друг друга по краю разрыва." },
-                "lightgarden:south:спиральный минарет": { "back": "С этой стороны тот же пандус, только на виток выше. У основания в камень вбито кольцо коновязи — низко, по ослу." },
+                "lightgarden:south:спиральный минарет": { "back": "С этой стороны тот же пандус, только на виток выше. У основания в кладку вбито кольцо коновязи — низко, по ослу." },
                 "lightgarden:south:спиральный минарет#2": { "back": "У основания, в нише, — бумажная полоска, свёрнутая и перевязанная ниткой. Показывают как ту самую. За века таких показывали несколько; все одной длины." },
                 "lightgarden:west:фахверковый дом": { "back": "Со двора балки голые, без резьбы: крашено то, что видно с улицы. Верх выдвинут и сюда, над навозной кучей." },
                 "lightgarden:west:чёрный собор": { "back": "Позади хора штабель тёсаного камня под номерами; номера заросли мхом. В колесе крана ступени для ходоков, на ступенях пыль ровным слоем." },
