@@ -7,7 +7,7 @@
 //      по светлоте и цветом самой картины, к краю клетка крупнее (брейнрот = растр).
 // А стоит 8–14 с, Д — 4–7 с; смена — с рывком, новое лицо проступает строкой развёртки
 // сверху вниз, как мир при пробуждении. Поверх обоих — рывки строк, подгрузка крупным
-// блоком, потёки, на миг двоичный код. Словарь — тот же, что у пробуждения
+// блоком, потёки; текста нет — ни цифр, ни букв (слово автора 27.10). Словарь — тот же, что у пробуждения
 // (render/wakefx.js): дробится сам кадр, сверху — только кость, пепел и редкая киноварь;
 // рывков не больше трёх в секунду. Оба лица запекаются раз на размер окна (bake); живое —
 // на своём холсте поверх, тридцать раз в секунду и только пока заглавная на экране (run).
@@ -17,7 +17,6 @@
 import { reducedMotion } from '../core/prefs.js';
 
 const BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
-const FONT = '"Press Start 2P","VT323",monospace';
 // полосы сбоя по картине (доли ширины): слева у земли — только край левее труб завода, выше,
 // в дыму, — глубже; справа — всё правее луны и городка; на узком экране, где боков картины не
 // видно, — ещё полоса у самого края экрана, послабее
@@ -234,7 +233,7 @@ export function run(cv, over, L, shown) {
   g.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
   g.imageSmoothingEnabled = false;
   const D = L.dpr, rnd = lcg(L.seed);
-  const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, code: null, nextCode: 1500 + rnd() * 2000, reload: null };
+  const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, reload: null };
   const frame = now => {
     raf = 0;
     if (!shown()) { stop(); return; }
@@ -295,21 +294,6 @@ export function run(cv, over, L, shown) {
       S.nextSmear = t + 600 + rnd() * 1200;
     }
     for (const m of S.smears) smear(g, src, D, m);
-    // двоичный код проступает строкой: раз в 2,5–6 с на полсекунды, цифры меняются
-    if (!S.code && t >= S.nextCode) {
-      const q = pick(L, rnd, 8);
-      if (q && q.x1 - q.x0 > 70) S.code = { q, len: Math.min(32, Math.floor((q.x1 - q.x0 - 8) / 8)), end: t + 500 + rnd() * 500, k: Math.floor(rnd() * 1e6) };
-      S.nextCode = t + 2500 + rnd() * 3500;
-    }
-    if (S.code && t > S.code.end) S.code = null;
-    if (S.code) {
-      const c = S.code, k = c.k + Math.floor(t / 100);
-      let s = '';
-      for (let j = 0; j < c.len; j++) s += hh(k, j, L.seed) < 0.5 ? '0' : '1';
-      g.font = `8px ${FONT}`; g.textBaseline = 'top'; g.fillStyle = BO; g.globalAlpha = 0.55;
-      g.fillText(s, c.q.x0 + 4, c.q.y);
-      g.globalAlpha = 1;
-    }
   };
   raf = requestAnimationFrame(frame);
 }

@@ -3,12 +3,12 @@
 // цифровое стираемо, биологическое нет; мир помнит тело». Тело просыпается — его
 // шатает и трясёт: шатание маятником — у #gw (style.css, wakesway), дрожь — здесь,
 // целыми точками кадра. Мир — цифра после сбоя: собирается заново, сперва крупными
-// блоками, потом мельче; строки срывает и сдвигает вбок; на миг проступает двоичный
-// код; по кадру — битые точки, гаснут не сразу. Каждый раз, как веки открываются,
+// блоками, потом мельче; строки срывает и сдвигает вбок; по кадру — битые точки,
+// гаснут не сразу. Текста в сбое нет — ни цифр, ни букв (слово автора 27.10). Каждый раз, как веки открываются,
 // мир чуть заново подгружается. Пятнадцать секунд, как муть и веки (style.css).
 // Первое пробуждение странника — целиком; дальше — та же сцена за шесть секунд
 // (speed 2,5) и проснуться можно сразу (skip). Ускоряется ход сцены, не мигание:
-// дрожь, рывки и код меняются по настоящим кадрам, как в полной.
+// дрожь и рывки меняются по настоящим кадрам, как в полной.
 // Краски свои: дробится и рвётся сам кадр, сверху — только кость, пепел и редкая
 // киноварь. Вспышек не больше трёх в секунду; «меньше движения» в системе — только
 // сборка блоками и битые точки, без дрожи и рывков.
@@ -20,7 +20,6 @@ import { reducedMotion } from '../core/prefs.js';
 export const LEN = 900;                                    // пятнадцать секунд
 export const OPEN = [72, 252, 522, 756];                   // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
 const BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
-const FONT = '6px "Press Start 2P","VT323",monospace';
 function hh(a, b, s) {
   let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -88,21 +87,6 @@ export function slicesAt(a, vh, seed = 1, reduced = false, q = a) {
   }
   return out;
 }
-// ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
-export function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
-  if (reduced || a < 0 || a >= LEN) return [];
-  let on = a >= 10 && a < 100;
-  for (const o of OPEN) { const d = a - o; if (d >= 2 && d < 14) on = true; }
-  if (!on) return [];
-  const k = q >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
-  for (let i = 0; i < n; i++) {
-    const len = 12 + Math.floor(hh(k + i, 9, seed) * 40);
-    let s = '';
-    for (let j = 0; j < len; j++) s += hh(k * 31 + i, j, seed) < 0.5 ? '0' : '1';
-    out.push({ s, x: Math.floor(hh(k + i, 10, seed) * Math.max(1, vw - 60)), y: 8 + Math.floor(hh(k + i, 11, seed) * Math.max(1, vh - 16)), a: 0.4 + 0.3 * hh(k + i, 12, seed) });
-  }
-  return out;
-}
 // ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
 function stuckOf(vw, vh, seed) {
   const out = [];
@@ -162,13 +146,8 @@ export function wakePass(ctx, main, scale = 1) {
     if (sy < H) blocks(ctx, main, W, H, D.prev * s, sy, H);
     if (sy < H) { ctx.globalAlpha = 0.35; ctx.fillStyle = BO; ctx.fillRect(0, sy, W, s); ctx.globalAlpha = 1; }   // строка развёртки
   }
-  // 3. двоичный код и битые точки — в точках кадра
+  // 3. битые точки — в точках кадра (текста нет: ни цифр, ни букв)
   ctx.setTransform(s, 0, 0, s, 0, 0);
-  const code = codeAt(a, vw, vh, seed, red, q);
-  if (code.length) {
-    ctx.font = FONT; ctx.textBaseline = 'top'; ctx.fillStyle = BO;
-    for (const c of code) { ctx.globalAlpha = c.a; ctx.fillText(c.s, c.x, c.y); }
-  }
   if (!wakefx.stuck) wakefx.stuck = stuckOf(vw, vh, seed);
   for (const p of wakefx.stuck) {
     if (a >= p.life) continue;

@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='5788443 · 2026-10-27';console.log('[оттиск]', '5788443 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='1dab1f8 · 2026-10-27';console.log('[оттиск]', '1dab1f8 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -65344,7 +65344,7 @@ System.register("render/house", ["world/house"], function (exports_168, context_
 });
 System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_169, context_169) {
     "use strict";
-    var time_js_45, prefs_js_5, LEN, OPEN, BO, AS, KV, FONT, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
+    var time_js_45, prefs_js_5, LEN, OPEN, BO, AS, KV, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
     var __moduleName = context_169 && context_169.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -65412,29 +65412,6 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         return out;
     }
     exports_169("slicesAt", slicesAt);
-    // ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
-    function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
-        if (reduced || a < 0 || a >= LEN)
-            return [];
-        let on = a >= 10 && a < 100;
-        for (const o of OPEN) {
-            const d = a - o;
-            if (d >= 2 && d < 14)
-                on = true;
-        }
-        if (!on)
-            return [];
-        const k = q >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
-        for (let i = 0; i < n; i++) {
-            const len = 12 + Math.floor(hh(k + i, 9, seed) * 40);
-            let s = '';
-            for (let j = 0; j < len; j++)
-                s += hh(k * 31 + i, j, seed) < 0.5 ? '0' : '1';
-            out.push({ s, x: Math.floor(hh(k + i, 10, seed) * Math.max(1, vw - 60)), y: 8 + Math.floor(hh(k + i, 11, seed) * Math.max(1, vh - 16)), a: 0.4 + 0.3 * hh(k + i, 12, seed) });
-        }
-        return out;
-    }
-    exports_169("codeAt", codeAt);
     // ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
     function stuckOf(vw, vh, seed) {
         const out = [];
@@ -65509,18 +65486,8 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                 ctx.globalAlpha = 1;
             } // строка развёртки
         }
-        // 3. двоичный код и битые точки — в точках кадра
+        // 3. битые точки — в точках кадра (текста нет: ни цифр, ни букв)
         ctx.setTransform(s, 0, 0, s, 0, 0);
-        const code = codeAt(a, vw, vh, seed, red, q);
-        if (code.length) {
-            ctx.font = FONT;
-            ctx.textBaseline = 'top';
-            ctx.fillStyle = BO;
-            for (const c of code) {
-                ctx.globalAlpha = c.a;
-                ctx.fillText(c.s, c.x, c.y);
-            }
-        }
         if (!wakefx.stuck)
             wakefx.stuck = stuckOf(vw, vh, seed);
         for (const p of wakefx.stuck) {
@@ -65547,7 +65514,6 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             exports_169("LEN", LEN = 900); // пятнадцать секунд
             exports_169("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
-            FONT = '6px "Press Start 2P","VT323",monospace';
             reducedNow = prefs_js_5.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
             exports_169("wakefx", wakefx = {
                 t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,
@@ -65593,7 +65559,7 @@ System.register("content/afisha", [], function (exports_170, context_170) {
 });
 System.register("ui/titleglitch", ["core/prefs"], function (exports_171, context_171) {
     "use strict";
-    var prefs_js_6, BO, AS, KV, FONT, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
+    var prefs_js_6, BO, AS, KV, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
     var __moduleName = context_171 && context_171.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -65838,7 +65804,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_171, context
         g.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
         g.imageSmoothingEnabled = false;
         const D = L.dpr, rnd = lcg(L.seed);
-        const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, code: null, nextCode: 1500 + rnd() * 2000, reload: null };
+        const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, reload: null };
         const frame = now => {
             raf = 0;
             if (!shown()) {
@@ -65931,27 +65897,6 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_171, context
             }
             for (const m of S.smears)
                 smear(g, src, D, m);
-            // двоичный код проступает строкой: раз в 2,5–6 с на полсекунды, цифры меняются
-            if (!S.code && t >= S.nextCode) {
-                const q = pick(L, rnd, 8);
-                if (q && q.x1 - q.x0 > 70)
-                    S.code = { q, len: Math.min(32, Math.floor((q.x1 - q.x0 - 8) / 8)), end: t + 500 + rnd() * 500, k: Math.floor(rnd() * 1e6) };
-                S.nextCode = t + 2500 + rnd() * 3500;
-            }
-            if (S.code && t > S.code.end)
-                S.code = null;
-            if (S.code) {
-                const c = S.code, k = c.k + Math.floor(t / 100);
-                let s = '';
-                for (let j = 0; j < c.len; j++)
-                    s += hh(k, j, L.seed) < 0.5 ? '0' : '1';
-                g.font = `8px ${FONT}`;
-                g.textBaseline = 'top';
-                g.fillStyle = BO;
-                g.globalAlpha = 0.55;
-                g.fillText(s, c.q.x0 + 4, c.q.y);
-                g.globalAlpha = 1;
-            }
         };
         raf = requestAnimationFrame(frame);
     }
@@ -65964,7 +65909,6 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_171, context
         ],
         execute: function () {
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
-            FONT = '"Press Start 2P","VT323",monospace';
             // полосы сбоя по картине (доли ширины): слева у земли — только край левее труб завода, выше,
             // в дыму, — глубже; справа — всё правее луны и городка; на узком экране, где боков картины не
             // видно, — ещё полоса у самого края экрана, послабее
