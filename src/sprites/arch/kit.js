@@ -72,6 +72,8 @@ export const MAT = {
   MADARA: 49,     // пёстрый туф (идзу-мадара): светлые ряды тёсаного камня в тёмную крапину
   ROOFIRON: 50,   // кровельное железо XIX века на фальцах, крашеное «медянкой» (в мглу): стоячий фальц ловит свет, поперечные швы вразбежку
   RUSTBOARD: 51,  // тёс «под руст»: доска, крашенная под камень, — светлая кость, пазы рядами и вразбежку (лопатки, наличники усадеб)
+  STRATA: 52,     // известняк скалы пластами (сфинкс, высеченный из скалы): ряды без вертикальных швов, выветренные борозды
+  FALU: 53,       // доска стоймя, крашенная фалунской красной (Швеция): бурая киноварь, щели между досками, краска облезает пятнами
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -123,6 +125,8 @@ RAMP[MAT.NAMAKO] = ramp(mix(NI, AS, 0.45), mix(BO, AS, 0.3));
 RAMP[MAT.MADARA] = ramp(mix(S0, BO, 0.36));
 RAMP[MAT.ROOFIRON] = ramp(mix(mix(AS, NI, 0.45), MG, 0.15));
 RAMP[MAT.RUSTBOARD] = ramp(mix(BO, S0, 0.38));
+RAMP[MAT.STRATA] = ramp(mix(mix(SEP, BO, 0.5), KV, 0.04));
+RAMP[MAT.FALU] = ramp(mix(mix(KV, SEP, 0.5), NI, 0.1), mix(BO, KV, 0.3));
 RAMP[MAT.KAWARA] = ramp(mix(mix(NI, AS, 0.48), SEP, 0.06), mix(BO, AS, 0.35));
 RAMP[MAT.CLAPBOARD] = ramp(mix(mix(BO, SEP, 0.42), AS, 0.12));
 RAMP[MAT.WROUGHT] = ramp(mix(mix(SEP, KV, 0.3), NI, 0.22), mix(BO, KV, 0.18));
@@ -255,6 +259,14 @@ function tex(mat, x, y, s) {
       if (x % 4 === 1) return -1;
       if (y % 8 === 7 && hh(x >> 2, y >> 3, s + 95) < 0.5) return -1;   // поперечный шов вразбежку
       return hh(x, y, s + 96) < 0.02 ? -1 : 0;
+    }
+    case MAT.FALU: {
+      if (x % 4 === 3) return -1;                                        // щель между досками
+      return hh(x >> 2, y >> 2, s + 107) < 0.08 ? 1 : (hh(x, y, s + 109) < 0.05 ? -1 : 0);   // облезло — светлее
+    }
+    case MAT.STRATA: {
+      if (y % 4 === 3) return hh(x >> 2, y, s + 101) < 0.7 ? -1 : 0;   // пласт — борозда, местами сглажена
+      return hh(x, y, s + 103) < 0.06 ? -1 : (hh(x >> 1, y, s + 105) > 0.96 ? 1 : 0);
     }
     case MAT.RUSTBOARD: {
       if (y % 4 === 3) return -2;                                        // паз ряда
