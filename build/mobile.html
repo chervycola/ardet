@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='73a4ead · 2026-10-27';console.log('[оттиск]', '73a4ead · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5788443 · 2026-10-27';console.log('[оттиск]', '5788443 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -20511,7 +20511,8 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
             if (at && !at(x, y))
                 continue;
             px(N, x, y, noise(i, 3, seed) < 0.3 ? 2 : 1, 1);
-            px(kit_js_8.tone(kit_js_8.MAT.CONCRETE, 5), x, y - 1, 1, 1);
+            if (!at || at(x, y - 1))
+                px(kit_js_8.tone(kit_js_8.MAT.CONCRETE, 5), x, y - 1, 1, 1);
         }
     }
     // пальма: ствол дугой, крона веером, листья свисают; x, g — основание ствола
@@ -20535,10 +20536,10 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
         R(c, F2, px + 4, py - 3, 3, 1);
         R(c, F2, px - 1, py - 5, 1, 3);
     }
-    function glyph(px, col, x, y, ch, dx = () => 0) {
+    function glyph(px, col, x, y, ch) {
         (GLYPH[ch] || []).forEach((row, j) => { for (let i = 0; i < 3; i++)
             if (row[i] === '1')
-                px(col, x + i + dx(j), y + j); });
+                px(col, x + i, y + j); });
     }
     function words(px, col, x, y, text) { for (const ch of text) {
         if (ch !== ' ')
@@ -20615,10 +20616,11 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
     }
     function cafe2Live(c, x, gy, t) {
         const X0 = Math.round(x) - 32, Y0 = Math.round(gy) - 62, k = ((t | 0) / 90 | 0) % 3, f = ((t | 0) / 20 | 0) % 3;
-        R(c, N, X0 + 13, Y0 + 51, 1 + (k > 0 ? 1 : 0), 1);
-        R(c, A, X0 + 13 + k, Y0 + 51, 1, 1); // рука старика, перо — редко
-        R(c, N, X0 + 16 - (f > 1 ? 1 : 0), Y0 + 51, 1, 1);
-        R(c, A, X0 + 15 - f, Y0 + 51, 1, 1); // друг пишет чаще
+        R(c, N, X0 + 13, Y0 + 51, 1, 1);
+        if (k > 0)
+            R(c, A, X0 + 14, Y0 + 51, 1, 1); // рука старика, перо — редко
+        R(c, N, X0 + 16, Y0 + 51, 1, 1);
+        R(c, A, X0 + 15, Y0 + 50 + (f & 1), 1, 1); // друг пишет чаще
     }
     function honeyWin(P, x0, x1, y0, y1, step, s) {
         for (let y = y0; y < y1; y += step) {
@@ -20666,7 +20668,7 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
         const f = (Math.min(W, px0 + L) - Math.max(0, px0)) / L;
         if (f <= 0)
             return;
-        c.globalAlpha = Math.min(1, f * f * 1.4);
+        c.globalAlpha = f < 1 ? 0.85 * f * f : 1;
         const BE = kit_js_8.tone(kit_js_8.MAT.STEEL, 2);
         const parts = [[1, 3, L - 1, 3, A], [0, 4, 1, 2, A], [L - 4, 0, 2, 1, A], [L - 5, 1, 3, 1, A], [L - 6, 2, 4, 1, A],
             [2, 5, L - 4, 1, BE], [11, 6, 10, 1, BE], [8, 6, 1, 2, A], [20, 6, 1, 2, A], [8, 8, 1, 1, N], [20, 8, 1, 1, N]];
@@ -21064,7 +21066,7 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 const px = pxOf(c, X0, Y0), ST = kit_js_8.tone(kit_js_8.MAT.STEEL, 3), PL = kit_js_8.tone(kit_js_8.MAT.STEEL, 5);
                 pocks(px, 28, 22, 12, 52, 44, 7, (x, y) => P.at(x, y) === kit_js_8.MAT.CONCRETE); // угол в оспинах
                 pocks(px, 76, 40, 4, 40, 10, 9, (x, y) => P.at(x, y) === kit_js_8.MAT.CONCRETE);
-                px(C, 62, HOT_F[4] + 1, 4, 2); // натрий
+                px(C, 61, HOT_F[4] + 1, 3, 2); // натрий
                 // решётка вывески над крышей: рама и плашки, что не осыпались
                 px(ST, 29, 15, 46, 1);
                 px(ST, 29, 6, 46, 1);
@@ -21074,10 +21076,10 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                     if (!ch)
                         continue;
                     if (ch === 'D') { // на одном болте: сползла, осела краем
-                        const dy = i => 1 + (i >= 3 ? 1 : 0);
+                        const dy = [0, 1, 1, 2, 3]; // скос лесенкой: правый угол ниже рамы
                         for (let i = 0; i < 5; i++)
-                            px(PL, x + i, 7 + dy(i), 1, 7);
-                        px(kit_js_8.tone(kit_js_8.MAT.STEEL, 2), x + 4, 8 + dy(4), 1, 6);
+                            px(PL, x + i, 7 + dy[i], 1, 7);
+                        px(kit_js_8.tone(kit_js_8.MAT.STEEL, 2), x + 4, 8 + dy[4], 1, 6);
                         glyph(px, N, x + 1, 9, 'D'); // буква цела — плашка нет
                         px(A, x, 6, 1, 3); // болт, что держит
                         continue;
@@ -21130,8 +21132,11 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                     px(A, x, 44, 1, 2);
                     px(A, x, 66, 1, 3);
                 } // растяжки
-                for (const [x, y] of [[75, 35], [79, 37], [77, 34]])
-                    px(kit_js_8.tone(kit_js_8.MAT.IRON, 3), x, y, 1, 3); // арматура из обломка
+                const RB = kit_js_8.tone(kit_js_8.MAT.IRON, 3); // арматура растёт из обломка
+                px(RB, 75, 38, 1, 3);
+                px(RB, 77, 36, 1, 5);
+                px(RB, 78, 36, 1, 1);
+                px(RB, 79, 40, 1, 3);
                 palm(c, X0 + 6, Y0 + 95, 40);
             });
             // пляж «аренда солнца» (набором): будка проката под косым навесом; прейскурант выгорел, кроме
@@ -21147,13 +21152,10 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
             }, { seed: 217, chip: 0.03 }, (c, X0, Y0) => {
                 const px = pxOf(c, X0, Y0), SUN = mix9(B, S, 0.15), POLE = kit_js_8.tone(kit_js_8.MAT.STEEL, 3), INK = kit_js_8.tone(kit_js_8.MAT.BOARD, 1);
                 for (const y of [24, 26])
-                    px(INK, 6, y, 6, 1); // строки цен — штрихами
-                px(INK, 14, 24, 1, 3);
-                px(INK, 13, 25, 3, 1); // в прейскуранте солнце целое: диск и лучи
-                px(INK, 13, 24, 1, 1);
-                px(INK, 15, 24, 1, 1);
-                px(INK, 13, 26, 1, 1);
-                px(INK, 15, 26, 1, 1);
+                    px(INK, 6, y, 5, 1); // строки цен — штрихами
+                // в прейскуранте солнце целое: кольцо и все восемь лучей
+                for (const [dx, dy] of [[0, 0], [2, 0], [4, 0], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [3, 2], [4, 2], [1, 3], [2, 3], [3, 3], [0, 4], [2, 4], [4, 4]])
+                    px(INK, 12 + dx, 23 + dy, 1, 1);
                 px(A, 20, 31, 3, 3);
                 px(A, 22, 27, 1, 4); // приёмник
                 // солнце на шесте: диск, лучи; верхнего правого нет — выгорел
@@ -21202,9 +21204,9 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 cafeOver(c, X0, Y0, P, false);
                 const px = pxOf(c, X0, Y0);
                 px(mix9(B, S, 0.6), 8, 44, 12, 11); // за стеклом свет
-                px(N, 9, 47, 3, 3);
-                px(N, 9, 50, 4, 4);
-                px(N, 13, 50, 1, 1); // старик: голова к листу, плечи скатом
+                px(N, 10, 48, 3, 3);
+                px(N, 9, 51, 1, 3);
+                px(N, 10, 50, 3, 4); // старик: голова к листу, спина скатом
                 px(N, 17, 47, 2, 3);
                 px(N, 17, 50, 3, 4); // друг напротив
                 px(LEAF, 12, 52, 5, 1); // листы на столе
@@ -21318,7 +21320,7 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 for (const [x, b, h, l] of [[2, 16, 7], [8, 12, 9], [12, 16, 11, 1], [27, 22, 6], [33, 22, 9], [45, 22, 7, -1], [53, 14, 6], [68, 14, 9]])
                     antenna(px, c, X0, Y0, x, b, h, l);
                 // щель: лестничные марши зигзагом, площадки
-                for (let y = 24; y < 88; y += 8) {
+                for (let y = 24; y + 7 < 67; y += 8) {
                     hline(c, ST, X0 + 20, Y0 + y + 7, X0 + 23, Y0 + y + 4);
                     px(ST, 20, y + 3, 4, 1);
                     hline(c, ST, X0 + 23, Y0 + y + 3, X0 + 20, Y0 + y);
@@ -21548,8 +21550,8 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                         px(SL, x, 15, 2, 3);
             });
             smoker = kit_js_8.split(smokerBody, smokerLive);
-            // нефтяная платформа (набором): полупогружная — понтоны под водой, ватерлиния посередине колонн,
-            // три видимые колонны со связями; палуба под снегом; жилой блок с вертолётной площадкой кольцом;
+            // нефтяная платформа (набором): полупогружная — понтоны и низ колонн под водой, у ватерлинии связи;
+            // три видимые колонны; палуба под снегом; жилой блок с вертолётной площадкой кольцом;
             // вышка в ветрозащитной обшивке, выше — открытые фермы и кронблок; модуль; на стреле, вынесенной
             // за кромку палубы, факел — горит ровно. Держится на якорях: цепи от клюзов внешних колонн.
             RIG_WL = 72;
@@ -21644,13 +21646,16 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 P.box(90, 8, 2, 56, kit_js_8.MAT.STEEL);
                 P.box(86, 0, 10, 9, kit_js_8.MAT.STEEL).shade(-1);
                 for (let k = 0; k < 4; k++)
-                    P.box(1 + (k === 2 ? 1 : 0), 60 - k * 3, 17, 3, kit_js_8.MAT.PLASTER).shade(k & 1 ? -1 : 0); // коробки
-                P.box(19, 30, 3, 31, kit_js_8.MAT.STEEL);
-                P.box(19, 58, 12, 3, kit_js_8.MAT.STEEL); // ключ: длинное плечо стоймя, короткое на земле
-            }, { seed: 257, snow: 0.7 }, (c, X0, Y0) => {
+                    P.box(1 + (k === 2 ? 1 : 0), 61 - k * 3, 17, 3, kit_js_8.MAT.PLASTER).shade(k & 1 ? -1 : 0); // коробки
+                P.box(24, 36, 3, 28, kit_js_8.MAT.STEEL);
+                P.box(24, 61, 11, 3, kit_js_8.MAT.STEEL); // ключ: длинное плечо стоймя, короткое на земле
+            }, { seed: 257, snow: 0.7 }, (c, X0, Y0, P) => {
                 const px = pxOf(c, X0, Y0);
-                px(mix9(B, S, 0.1), 14, 29, 72, 3);
-                px(mix9(B, S, 0.3), 14, 32, 72, 1); // пояс выцвел до кости
+                for (let x = 14; x < 86; x++)
+                    if (P.at(x, 30) === kit_js_8.MAT.IRON) {
+                        px(mix9(B, S, 0.1), x, 29, 1, 3);
+                        px(mix9(B, S, 0.3), x, 32, 1, 1);
+                    } // пояс выцвел до кости
                 px(mix9(B, S, 0.2), 87, 1, 8, 7); // панель без слов
                 // стул под лампой, под ним на полу пятно света
                 px(B, 52, 38, 2, 1);
@@ -21667,15 +21672,16 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 px(N, 68, 53, 1, 1);
                 px(N, 70, 53, 1, 1);
                 px(A, 72, 51, 1, 2);
-                // ключ: светлая грань-фаска, торец короткого плеча со срезанными углами
-                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 5), 19, 30, 1, 28);
-                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 5), 22, 58, 9, 1);
-                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 1), 31, 59, 1, 1);
-                px(N, 31, 58, 1, 1);
-                px(N, 31, 60, 1, 1);
+                // ключ: тень на гофре отделяет его от стены; светлая грань-фаска; торец короткого плеча со срезанными углами
+                px(N, 27, 37, 1, 24);
+                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 5), 24, 37, 1, 24);
+                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 5), 27, 61, 7, 1);
+                px(kit_js_8.tone(kit_js_8.MAT.STEEL, 1), 34, 62, 1, 1);
+                px(N, 34, 61, 1, 1);
+                px(N, 34, 63, 1, 1);
                 // коробки: тёмная кромка, скотч, ярлык
                 for (let k = 0; k < 4; k++) {
-                    const x = 1 + (k === 2 ? 1 : 0), y = 60 - k * 3;
+                    const x = 1 + (k === 2 ? 1 : 0), y = 61 - k * 3;
                     px(N, x, y + 2, 17, 1);
                     px(mix9(B, S, 0.25), x + 7, y, 2, 2);
                     if (k & 1)
@@ -21696,11 +21702,11 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 P.box(7, 38, 2, 5, kit_js_8.MAT.STEEL).shade(1);
                 hofdiBuild(P);
             }, { seed: 269, snow: 0.6 }, (c, X0, Y0) => {
-                hofdiOver(c, X0, Y0);
                 const px = pxOf(c, X0, Y0);
                 px(kit_js_8.tone(kit_js_8.MAT.GLASS, 1), 6, 44, 4, 1);
                 px(N, 7, 38, 2, 1); // окна надстройки лентой, обрез трубы
                 px(kit_js_8.tone(kit_js_8.MAT.PLATE, 4), 0, 49, 20, 1);
+                hofdiOver(c, X0, Y0); // флагштоки — ближе теплохода
             });
             // ── РАВНИНА (набором) ────────────────────────────────────────────────
             // панельная девятиэтажка (набором): торец и фасад из панелей; швы промазаны, потом ещё раз —
@@ -21738,7 +21744,7 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 for (let i = 0; i < 6; i++)
                     P.box(21, 58 + 2 * i, 1 + i, 2, kit_js_8.MAT.CONCRETE).shade(-1); // ступени вниз — профилем
                 P.cut(28, 50, 6, 20); // дверь: верх над землёй, низ в приямке
-                P.round(46, 52, 58, 11, kit_js_8.MAT.BASALT); // уголь
+                P.poly([[40, 58], [43, 55], [46, 54], [48, 52], [50, 54], [53, 55], [56, 58]], kit_js_8.MAT.BASALT); // уголь кучей
                 P.box(64, 50, 15, 20, kit_js_8.MAT.CONCRETE); // забор из плит
                 P.box(80, 39, 16, 31, kit_js_8.MAT.CONCRETE);
                 P.box(79, 38, 17, 2, kit_js_8.MAT.CONCRETE).shade(-1);
@@ -21758,6 +21764,10 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                 px(A, 23, 46, 1, 1);
                 px(A, 25, 46, 1, 1);
                 px(D, 27, 53, 1, 4); // кот на перилах, хвост вниз
+                for (const [x, y] of [[44, 56], [48, 53], [51, 56], [46, 57]])
+                    px(B, x, y, 1, 1); // блеск кусков угля
+                px(kit_js_8.tone(kit_js_8.MAT.BASALT, 1), 39, 59, 2, 1);
+                px(kit_js_8.tone(kit_js_8.MAT.BASALT, 1), 56, 59, 1, 1); // скатились на землю
                 px(kit_js_8.tone(kit_js_8.MAT.CONCRETE, 0), 71, 50, 1, 20); // шов плит
                 px(B, 86, 42, 4, 3);
                 px(K, 87, 43, 2, 1); // «не влезай»
@@ -21766,14 +21776,14 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
             // ───────────────────────── ДОМИНАНТА · РАВНИНА ─────────────────────────
             // Останкинская башня (набором): бетон светлый; основание — усечённый конус на ногах (уже и круче
             // образца в 1,3 раза — чтобы читалось «на ногах», а не шатром), между ногами стрельчатые проёмы,
-            // крайние — уже (ракурс), в среднем — остеклённое лобби; ствол сужается, пояса техэтажей; ресторан — обод в три
+            // крайние — уже и ниже (ракурс), в среднем — остеклённое лобби; ствол сужается, пояса техэтажей; ресторан — обод в три
             // этажа, лента стекла, пол вращается (переплёт ползёт); выше стальная антенна с полосами.
             // Заградительные огни киноварью, верхний мигает.
             ostBody = kit(72, 200, P => {
                 P.trap(21, 51, 31, 41, 174, 199, kit_js_8.MAT.CONCRETE).shade(-1);
-                for (const [x, w, h] of [[23, 2, 11], [28, 3, 12], [34, 3, 13], [40, 3, 12], [46, 2, 11]])
+                for (const [x, w, h] of [[24, 2, 7], [29, 3, 12], [35, 3, 13], [41, 3, 12], [47, 2, 7]])
                     parch(P, x, 200, w, h);
-                P.cut(34, 192, 3, 8, kit_js_8.MAT.GLASS);
+                P.cut(35, 192, 3, 8, kit_js_8.MAT.GLASS);
                 P.trap(31, 41, 34, 38, 57, 173, kit_js_8.MAT.CONCRETE, kit_js_8.FORM.CYL).shade(-1);
                 P.box(29, 144, 14, 2, kit_js_8.MAT.CONCRETE).shade(-2);
                 P.box(31, 98, 10, 2, kit_js_8.MAT.CONCRETE).shade(-2);
