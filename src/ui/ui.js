@@ -50,7 +50,7 @@ export const menuInscriptions = {
   vending: 'крути — получи мериты. цикл замкнут.',
   library: 'полка 3.14. не листай.',
   tent: 'без меня народ неполный.',
-  elder_home: 'сидит. счёт ведётся.',
+  elder_home: 'приёмные часы: все. очереди нет.',
   graffiti: 'СИСТЕМА МЕРТВА. ...НО СКИДКИ ЖИВЫ.',
   radio: 'i don\'t want to set the world on fire...',
   cross: 'amor fati. или нет.',

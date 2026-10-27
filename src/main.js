@@ -16,6 +16,7 @@ import { wind } from './world/wind.js';
 import { SURF, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
+import { initMoonThread, drawMoonThread, moonThreadDepth, touchMoonThread } from './render/moonthread.js';
 import { hazeView, hazeComposite, hazeOff } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
 import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
@@ -160,6 +161,7 @@ setTissueBlockers([
 ]);
 buildTissue(archProps.filter(p => p.name));    // утварь эпох в поле: не повторяет соседей и ближние дворы
 initBunting(locations);                        // флаги Шута: гирлянда от фонаря к шесту
+initMoonThread(locations);                     // нить Лунного: от его руки по песку к палатке Старца
 initUI();
 initMetaFx();
 initTerminal();
@@ -560,6 +562,7 @@ function render() {
   for (const T of townThingsIn(camX - 4, camY - 4, camX + vw + 4, camY + vh + 40)) drawList.push({ k: T.gy, prop: T });     // квартал городка
   for (const p of bridgePieces()) if (camera.isVisible(p.x - p.w / 2, p.gy - p.h, p.w, p.h + 4)) drawList.push({ k: p.gy, prop: p });   // мост: дальние перила — за странником, ближние — перед
   for (const b of buntingPasses()) drawList.push({ k: b.k, bunting: b.pass });   // флаги Шута: перед костром, за Шутом
+  if (moonThreadDepth() !== null) drawList.push({ k: moonThreadDepth(), moonthread: true });   // нить Лунного — по земле, под стоящим
   for (const c of catsInView(camX, camY, vw, vh)) drawList.push({ k: catDepth(c), cat: c });
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
   for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
@@ -568,6 +571,7 @@ function render() {
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
+    if (it.moonthread) { drawMoonThread(worldCtx, { x: camX, y: camY }, vw, vh); continue; }
     if (it.cat) { drawCat(worldCtx, it.cat, player); continue; }
     if (it.raven) { drawRaven(worldCtx, it.raven); continue; }
     if (it.fire) { drawFireSite(worldCtx, it.fire, t); continue; }
@@ -1523,6 +1527,7 @@ function heroStep(dvx, dvy, drift = false) {
       else if (Math.abs(mx) > Math.abs(my) * 1.15) player.face = mx > 0 ? 'E' : 'W';
     }
     events.emit(E.PLAYER_MOVE, player);
+    touchMoonThread(player.x + 6, player.y + 23);   // перешагнул нить Лунного — дрожит
     if (t % 8 === 0 && surfName !== 'ice' && surfName !== 'swamp' && surfName !== 'water' && surfName !== 'moss') footstepDust(player.x, player.y);
     // след: из лужи — мокрый; в гари и у костра из-под ноги встаёт пепел
     // (под землёй следы остаются в пыли — render/underside.js)
