@@ -105,13 +105,6 @@ function signKit(build, opt, over) {
   return d;
 }
 const pxOf = (c, X0, Y0) => (col, x, y, w = 1, h = 1) => R(c, col, X0 + x, Y0 + y, w, h);
-// полуциркульный проём одной частью: x — левый край, yb — строка под ним
-function rarch(P, x, yb, w, h, mat = MAT.DARK) {
-  const r = w / 2, pts = [[x, yb], [x, yb - h + r]];
-  for (let k = 1; k < 8; k++) { const a = Math.PI * k / 8; pts.push([x + r - r * Math.cos(a), yb - h + r - r * Math.sin(a)]); }
-  pts.push([x + w, yb - h + r], [x + w, yb]);
-  return P.poly(pts, mat);
-}
 // стрельчатый проём одной частью
 function parch(P, x, yb, w, h, mat = MAT.DARK) {
   const k = Math.min(h - 1, w * 0.9);

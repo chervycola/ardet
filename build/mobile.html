@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='622b324 · 2026-10-27';console.log('[оттиск]', '622b324 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='73a4ead · 2026-10-27';console.log('[оттиск]', '73a4ead · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -20498,16 +20498,6 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
         };
         d.static = true;
         return d;
-    }
-    // полуциркульный проём одной частью: x — левый край, yb — строка под ним
-    function rarch(P, x, yb, w, h, mat = kit_js_8.MAT.DARK) {
-        const r = w / 2, pts = [[x, yb], [x, yb - h + r]];
-        for (let k = 1; k < 8; k++) {
-            const a = Math.PI * k / 8;
-            pts.push([x + r - r * Math.cos(a), yb - h + r - r * Math.sin(a)]);
-        }
-        pts.push([x + w, yb - h + r], [x + w, yb]);
-        return P.poly(pts, mat);
     }
     // стрельчатый проём одной частью
     function parch(P, x, yb, w, h, mat = kit_js_8.MAT.DARK) {
