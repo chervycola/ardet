@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='bd174c9 · 2026-10-27';console.log('[оттиск]', 'bd174c9 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='622b324 · 2026-10-27';console.log('[оттиск]', '622b324 · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -20388,27 +20388,29 @@ System.register("sprites/arch/catastrophes", ["sprites/arch/kit", "world/sky", "
 // Свет стал товаром: вывески вместо звёзд, реклама поверх лозунгов, тепло продаётся. Трубки
 // вывесок у канона в узде — мёртвые пеплом, живая одна, киноварью. Всё — набором (kit.js): тело
 // неподвижно и запекается; огни, пар, кольца дыма, гондолы, факел, самолёт — слоем поверх.
-//   юг     — отель-пластина в гребёнке балконов, вывеска теряет буквы, угол в оспинах (#2 — отель
-//            ниже, охрой, во всю стену плакат STOP SOLIDERE штрихами); пляж «аренда солнца»;
-//            кофейня Махфуза: машрабия, мёртвая вязь, столик с биркой (#2 — без бирки, за стеклом
-//            старик пишет медленно)
-//   восток — город-соты: три блока разного материала, клетки, вывески на кронштейнах, самолёт
-//            садится над антеннами (#2 — снесли всё, кроме ямэня; парк с прудом); капсульная башня
-//   запад  — колесо за воротами, гондолы ходят на ветру, звезда без огня; щит с ковбоями (#2 —
-//            курящий щит: кольца дыма над улицей)
-//   север  — платформа с факелом во льдах (#2 — жилая «на пяти ногах» с креном, пятая отломилась);
-//            мебельный ангар: гофра, пояс выцвел до кости, стул под лампой, шестигранник; домик
-//            Хёвди с двумя флагштоками (#2 — за домом в гавани теплоход делегации)
-//   равнина — Останкинская башня: ноги-арки, ствол, ресторан с вращающимся полом, антенна в
-//            полосах, огни киноварью; девятиэтажка — швы промазаны дважды, одна кухня на шестом
-//            (#2 — та же, швы не промазаны, в них трава, ни одного огня); кочегарка «Камчатка»
+//   юг     — отель-пластина в гребёнке балконов, на крыше вывеска теряет буквы — «H LID Y», угол
+//            в оспинах (#2 — модернистский отель ниже, во всю стену плакат STOP SOLIDERE); пляж
+//            «аренда солнца»; кофейня Махфуза: машрабия, мёртвая вязь, столик с биркой (#2 — за
+//            стеклом старик пишет медленно, друг напротив записывает быстрее)
+//   восток — город-соты: три блока разного материала и шага, окна кто где, клетки, вывески на
+//            кронштейнах, самолёт садится над антеннами (#2 — город ещё стоит, в середине ямэнь);
+//            капсульная башня: капсулы на двух стволах, цоколь
+//   запад  — колесо за воротами, нижняя гондола у помоста, гондолы ходят на ветру, звезда без огня;
+//            щит с ковбоями на конях (#2 — курящий щит на стене дома: кольца поднимаются над щитом)
+//   север  — платформа с факелом в море, на якорях (#2 — жилая «на пяти ногах» легла на бок,
+//            колонна D отломилась); мебельный ангар: гофра, пояс выцвел до кости, стул под лампой,
+//            ключ углом; домик Хёвди с двумя флагштоками (#2 — за домом в гавани теплоход)
+//   равнина — Останкинская башня: конус на ногах, ствол, ресторан с вращающимся полом, антенна
+//            в полосах, огни киноварью; девятиэтажка — швы промазаны дважды, одна кухня на шестом
+//            (#2 — та же, швы не промазаны, в них трава, ни одного огня); кочегарка «Камчатка» —
+//            полуподвал жилого дома, приямок, топка у самой земли
 // Фасады табличек: бейрутский дом с водонагревателем, лавка Коулуна, ломбард с шарами, барак.
 // Утварь дворов: столик кафе, гирлянда, мотороллер · автомат, бельё, ятай · попкорн, автодром,
 // остов с плавниками · тележка коробок, демонстрационная доска, универсал · «ракушка», лавочка,
 // ракета-горка.
 System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], function (exports_43, context_43) {
     "use strict";
-    var hang_js_6, kit_js_8, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, B, A, K, C, S, LEAF, pxOf, GLYPH, HOT_F, HOT_PLATES, hotel, HOT2_F, hotel2, beach, cafeBody, cafe, cafe2Body, cafe2, HONEY_WIN, honeyBuild, HONEY_ANT, honeyBody, honeycomb, honey2Build, honey2Body, honey2, CAPS, capsBody, CAP_SCREEN, capsules, WH, MARQ, WHEEL_FRONT, wheelBody, wheel, BY, billboard, smokerBody, smoker, RIG_WL, rigBody, rig, RIG2_WL, TH, rot, rbox, rig2, warehouse, hofdi, hofdi2, PAN_F, panel, panel2, boilerBody, boiler, ostBody, ostankino, signSouth, signEastBody, signEast, signWestBody, signNorth, PAL, STAMPS, CAFE_TABLE, GARLAND, SCOOTER, VENDING, LAUNDRY, YATAI, POPCORN, BUMPER, FINS, FLATPACK, CHESS, ESTATE, SHELL, BENCH, ARCH;
+    var hang_js_6, kit_js_8, N, BONE, ASH, MIST, CANDLE, CIN, SEP, DARK, WOOD, WOOD2, STONE, STONE2, BRICK, CONC, PAPER, PAPER2, B, A, K, C, S, LEAF, pxOf, GLYPH, HOT_F, HOT_PLATES, hotel, HOT2_F, hotel2, beach, cafeBody, cafe, cafe2Body, cafe2, HONEY_WIN, honeyBuild, HONEY_ANT, honeyBody, honeycomb, honey2Build, honey2Body, honey2, CAPS, capsBody, CAP_SCREEN, capsules, WH, MARQ, WHEEL_FRONT, wheelBody, wheel, BY, billboard, smokerBody, smoker, RIG_WL, rigBody, rig, RIG2_WL, TH, rot, rbox, rig2, warehouse, hofdi, hofdi2, PAN_F, PAN_DOOR, panel, panel2, boilerBody, boiler, ostBody, ostankino, signSouth, signEastBody, signEast, signWestBody, signNorth, PAL, STAMPS, CAFE_TABLE, GARLAND, SCOOTER, VENDING, LAUNDRY, YATAI, POPCORN, BUMPER, FINS, FLATPACK, CHESS, ESTATE, SHELL, BENCH, ARCH;
     var __moduleName = context_43 && context_43.id;
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
     // попиксельная прямая: Брезенхем (спицы колеса)
@@ -20869,48 +20871,56 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
         P.box(14, 12, 60, 75, kit_js_8.MAT.PANEL);
         P.box(1, 11, 74, 1, kit_js_8.MAT.PANEL).shade(-1);
         P.box(44, 6, 10, 5, kit_js_8.MAT.PANEL).shade(1); // машинное
-        for (const y of PAN_F)
-            for (let k = 0; k < 8; k++)
-                if (k !== 2 && k !== 6)
-                    P.cut(16 + k * 7, y, 4, 4);
+        for (const y of [...PAN_F, 79])
+            for (let k = 0; k < 8; k++) {
+                const x = 16 + k * 7;
+                if (k === 2 || k === 6 || PAN_DOOR.includes(x))
+                    continue;
+                P.cut(x, y, 4, 4);
+            }
         for (const bx of [29, 57])
             for (const y of PAN_F) {
                 P.cut(bx + 1, y - 1, 7, 3);
                 P.box(bx, y + 2, 9, 3, kit_js_8.MAT.PANEL).shade(-1);
             } // лоджии: проём и экран ограждения
-        for (const x of [20, 48]) {
-            P.cut(x, 70, 5, 17);
-            P.box(x - 2, 68, 9, 1, kit_js_8.MAT.CONCRETE);
+        P.box(2, 84, 72, 3, kit_js_8.MAT.CONCRETE).shade(-1); // цоколь
+        for (const x of PAN_DOOR) {
+            for (const y of PAN_F)
+                P.cut(x + 1, y + 4, 2, 3); // лестница: окна на пол-этажа ниже
+            P.cut(x - 1, 79, 6, 8);
+            P.box(x - 3, 77, 10, 1, kit_js_8.MAT.CONCRETE); // подъезд и козырёк
         }
     }
     function panelOver(c, X0, Y0, P, caulked) {
         const px = pxOf(c, X0, Y0), SEAM = kit_js_8.tone(kit_js_8.MAT.PANEL, 0), CK = kit_js_8.tone(kit_js_8.MAT.PANEL, 3), CK2 = kit_js_8.tone(kit_js_8.MAT.PANEL, 1);
-        for (let y = 19; y < 86; y += 8)
+        for (let y = 19; y < 84; y += 8)
             for (let x = 2; x < 74; x++)
                 if (P.at(x, y) === kit_js_8.MAT.PANEL)
                     px(SEAM, x, y);
         for (let x = 8; x < 74; x += 14)
-            for (let y = 12; y < 86; y++)
+            for (let y = 12; y < 84; y++)
                 if (P.at(x, y) === kit_js_8.MAT.PANEL)
                     px(SEAM, x, y);
         if (caulked) { // промазано, потом ещё раз — пятнами поверх
-            for (let y = 19; y < 86; y += 8)
+            for (let y = 19; y < 84; y += 8)
                 for (let x = 2; x < 74; x++)
                     if (P.at(x, y) === kit_js_8.MAT.PANEL && noise(x >> 2, y, 31) < 0.7)
                         px(noise(x >> 1, y, 33) < 0.5 ? CK : CK2, x, y);
             for (let x = 8; x < 74; x += 14)
-                for (let y = 12; y < 86; y++)
+                for (let y = 12; y < 84; y++)
                     if (P.at(x, y) === kit_js_8.MAT.PANEL && noise(x, y >> 2, 35) < 0.7)
                         px(noise(x, y >> 1, 37) < 0.5 ? CK : CK2, x, y);
         }
-        else { // не промазано ни разу: в швах трава
-            for (let i = 0; i < 26; i++) {
-                const y = 19 + 8 * Math.floor(noise(i, 1, 39) * 8), x = 3 + Math.floor(noise(i, 2, 39) * 70);
-                if (P.at(x, y) === kit_js_8.MAT.PANEL) {
-                    px(kit_js_8.tone(kit_js_8.MAT.MOSS, 2), x, y - 1, 1, 1);
-                    px(kit_js_8.tone(kit_js_8.MAT.MOSS, 3), x + 1, y - 2, 1, 2);
-                }
+        else { // не промазано ни разу: в швах трава веером, гуще внизу и по парапету
+            const G1 = kit_js_8.tone(kit_js_8.MAT.MOSS, 2), G2 = kit_js_8.tone(kit_js_8.MAT.MOSS, 3);
+            const tuft = (x, y) => { px(G2, x, y - 3, 1, 3); px(G1, x - 1, y - 1, 1, 1); px(G1, x - 2, y - 2, 1, 1); px(G1, x + 1, y - 1, 1, 1); px(G1, x + 2, y - 2, 1, 1); };
+            for (let i = 0; i < 30; i++) {
+                const f = Math.min(7, Math.floor(Math.sqrt(noise(i, 1, 39)) * 8)), y = 19 + 8 * f, x = 4 + Math.floor(noise(i, 2, 39) * 68);
+                if (P.at(x, y) === kit_js_8.MAT.PANEL && P.at(x, y - 3) === kit_js_8.MAT.PANEL)
+                    tuft(x, y);
             }
+            for (const x of [6, 25, 39, 66])
+                tuft(x, 11);
         }
         // антенны-«ёлочки»: мачта, штанга в одну сторону, вибраторы
         for (const ax of [20, 62]) {
@@ -20921,11 +20931,11 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
         }
     }
     function boilerLive(c, x, gy, t) {
-        const X0 = Math.round(x) - 48, Y0 = Math.round(gy) - 58;
-        R(c, ((t | 0) >> 4) % 7 ? C : S, X0 + 5, Y0 + 55, 3, 2); // в топке
+        const X0 = Math.round(x) - 48, Y0 = Math.round(gy) - 70;
+        R(c, ((t | 0) >> 4) % 7 ? C : S, X0 + 5, Y0 + 56, 3, 2); // в топке
     }
     function ostLive(c, x, gy, t) {
-        const X0 = Math.round(x) - 36, Y0 = Math.round(gy) - 200, s = ((t | 0) / 150 | 0) % 4;
+        const X0 = Math.round(x) - 36, Y0 = Math.round(gy) - 200, s = ((t | 0) / 150 | 0) % 14;
         for (let k = 0; k < 4; k++)
             R(c, kit_js_8.tone(kit_js_8.MAT.CONCRETE, 4), X0 + 29 + ((k * 4 + s) % 14), Y0 + 76, 1, 3); // пол ресторана вращается
         if (((t | 0) >> 4) % 3)
@@ -21093,6 +21103,7 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
             // («клаустра»), за ними проёмы в ритм; внизу утопленная терраса на квадратных столбах; на крыше
             // бак-блок, на нём рельефом мёртвое название. Тоже в оспинах, но поверх них во всю стену висит
             // плакат STOP SOLIDERE (так он и висел: хозяин не продаёт руину застройщику). Плакат выгорает. Пальма.
+            // «Скупил весь берег» в осмотре — гипербола: права на центр обменяли на акции, бухту перед отелем засыпали.
             HOT2_F = [44, 56, 68, 80];
             hotel2 = kit(96, 96, P => {
                 P.box(18, 40, 66, 48, kit_js_8.MAT.PLASTER);
@@ -21703,70 +21714,76 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
             });
             // ── РАВНИНА (набором) ────────────────────────────────────────────────
             // панельная девятиэтажка (набором): торец и фасад из панелей; швы промазаны, потом ещё раз —
-            // серым поверх серого; окна сеткой, первый этаж глухой — подъезды под козырьками; балконы двумя
-            // стояками. Антенны-«ёлочки» на крыше все смотрят в одну сторону. Горит одна кухня, на шестом.
+            // серым поверх серого; окна сеткой, первый этаж — тоже окна, под ними цоколь; подъезды под
+            // козырьками только внизу, над каждым — столбец узких окон лестницы, сдвинутых на пол-этажа;
+            // лоджии двумя стояками. Антенны-«ёлочки» на крыше все смотрят в одну сторону. Горит одна кухня,
+            // на шестом.
             PAN_F = Array.from({ length: 8 }, (_, f) => 15 + f * 8); // этажи 9…2 сверху вниз
+            PAN_DOOR = [23, 51]; // оси подъездов
             panel = kit(76, 87, panelBuild, { seed: 271, chip: 0.01 }, (c, X0, Y0, P) => {
                 panelOver(c, X0, Y0, P, true);
-                R(c, C, X0 + 23, Y0 + PAN_F[3], 4, 4); // кухня на шестом
+                R(c, C, X0 + 16, Y0 + PAN_F[3], 4, 4); // кухня на шестом
             });
-            panel2 = kit(76, 87, panelBuild, { seed: 277, chip: 0.02, moss: 0.05 }, (c, X0, Y0, P) => panelOver(c, X0, Y0, P, false));
-            // кочегарка «Камчатка» (набором): кирпичный полуподвал — ступени вниз к двери, перила приямка,
-            // журнал смен на гвозде; окно топки у самой земли, уголь кучей; кирпичная труба с оголовком.
-            // На ребре крыши кот. Рядом забор из бетонных плит — надпись штрихами; трансформаторная будка
-            // «не влезай».
-            boilerBody = kit(96, 58, P => {
-                P.box(20, 3, 4, 30, kit_js_8.MAT.BRICK, kit_js_8.FORM.CYL);
-                P.box(19, 2, 6, 2, kit_js_8.MAT.BRICK).shade(-1);
-                P.box(0, 33, 34, 25, kit_js_8.MAT.BRICK);
-                P.box(0, 32, 34, 1, kit_js_8.MAT.CONCRETE).shade(-1);
-                P.cut(4, 37, 4, 4, kit_js_8.MAT.GLASS);
-                P.cut(11, 37, 4, 4, kit_js_8.MAT.GLASS);
-                P.cut(25, 40, 6, 18);
-                P.cut(4, 54, 5, 3); // окно топки
-                P.round(15, 50, 57, 10, kit_js_8.MAT.BASALT); // уголь
-                P.box(37, 43, 40, 15, kit_js_8.MAT.CONCRETE);
-                P.box(80, 27, 16, 31, kit_js_8.MAT.CONCRETE);
-                P.box(79, 26, 17, 2, kit_js_8.MAT.CONCRETE).shade(-1);
-                P.box(83, 33, 10, 25, kit_js_8.MAT.IRON);
-            }, { seed: 281, chip: 0.02, drips: [[22, 33, 6], [86, 28, 5]] }, (c, X0, Y0) => {
-                const px = pxOf(c, X0, Y0), D = kit_js_8.tone(kit_js_8.MAT.DARK, 2);
-                px(A, 29, 51, 3, 1);
-                px(A, 27, 53, 3, 1);
-                px(A, 25, 55, 3, 1); // ступени вниз
-                px(A, 23, 49, 11, 1);
-                px(A, 23, 49, 1, 8);
-                px(A, 33, 49, 1, 8); // перила приямка
-                px(LEAF, 32, 43, 1, 2); // журнал смен
-                px(D, 6, 28, 6, 4);
-                px(D, 5, 25, 4, 3);
-                px(A, 5, 24, 1, 1);
-                px(A, 8, 24, 1, 1);
-                px(D, 12, 31, 1, 5); // кот, хвост по стене
-                for (const x of [50, 63])
-                    px(kit_js_8.tone(kit_js_8.MAT.CONCRETE, 0), x, 43, 1, 15); // швы плит
-                for (let i = 0; i < 6; i++) { // два слова по три знака — штрихами
-                    const gx = 40 + i * 5 + (i > 2 ? 4 : 0), hh = [5, 4, 5, 5, 3, 5][i], top = 52 - hh;
-                    px(B, gx + (i % 2), top, 1, 1);
-                    px(B, gx, top + 1, 2, hh - 1);
-                }
-                px(B, 39, 53, 35, 1);
-                px(B, 75, 47, 1, 4);
-                px(B, 75, 53, 1, 1);
-                px(B, 86, 30, 4, 3);
-                px(K, 87, 31, 2, 1); // «не влезай»
+            panel2 = kit(76, 87, panelBuild, { seed: 277, chip: 0.02, moss: 0.02 }, (c, X0, Y0, P) => panelOver(c, X0, Y0, P, false));
+            // кочегарка «Камчатка» (набором): полуподвал жилого дома — над ним два этажа штукатурки, карниз;
+            // цоколь кирпичный, земля перед фасадом выше пола: окна полуподвала у самой земли (одно — топка),
+            // дверь наполовину над землёй, к ней приямок со ступенями вниз, перила по краю, на перилах кот;
+            // журнал смен на гвозде. Труба кирпичная по стене, с оголовком. Уголь кучей. Рядом забор из
+            // бетонных плит; трансформаторная будка «не влезай». Монтаж назван: на деле — подвал дома
+            // повыше (ул. Блохина, 15); здесь дом срезан до двух этажей, труба вынесена на стену.
+            boilerBody = kit(96, 70, P => {
+                P.box(0, 12, 62, 34, kit_js_8.MAT.PLASTER);
+                P.box(0, 10, 63, 2, kit_js_8.MAT.CONCRETE).shade(-1); // карниз
+                for (const y of [16, 31])
+                    for (const x of [4, 14, 24, 34, 44])
+                        P.cut(x, y, 4, 7, kit_js_8.MAT.GLASS);
+                P.box(0, 46, 62, 24, kit_js_8.MAT.BRICK);
+                P.box(0, 45, 62, 1, kit_js_8.MAT.CONCRETE); // пояс над цоколем
+                P.box(54, 2, 4, 44, kit_js_8.MAT.BRICK, kit_js_8.FORM.CYL);
+                P.box(53, 0, 6, 2, kit_js_8.MAT.BRICK).shade(-1); // труба по стене, оголовок
+                P.cut(4, 55, 5, 4);
+                P.cut(12, 55, 5, 4, kit_js_8.MAT.GLASS); // окна полуподвала (левое — топка)
+                P.box(0, 58, 62, 12, kit_js_8.MAT.RAMMED).shade(-2); // земля перед фасадом
+                P.box(21, 58, 15, 12, kit_js_8.MAT.BRICK); // приямок: стена до пола
+                for (let i = 0; i < 6; i++)
+                    P.box(21, 58 + 2 * i, 1 + i, 2, kit_js_8.MAT.CONCRETE).shade(-1); // ступени вниз — профилем
+                P.cut(28, 50, 6, 20); // дверь: верх над землёй, низ в приямке
+                P.round(46, 52, 58, 11, kit_js_8.MAT.BASALT); // уголь
+                P.box(64, 50, 15, 20, kit_js_8.MAT.CONCRETE); // забор из плит
+                P.box(80, 39, 16, 31, kit_js_8.MAT.CONCRETE);
+                P.box(79, 38, 17, 2, kit_js_8.MAT.CONCRETE).shade(-1);
+                P.box(83, 45, 10, 25, kit_js_8.MAT.IRON);
+            }, { seed: 281, chip: 0.02, drips: [[56, 3, 6], [86, 40, 5], [20, 46, 6]] }, (c, X0, Y0, P) => {
+                const px = pxOf(c, X0, Y0), D = kit_js_8.tone(kit_js_8.MAT.DARK, 2), E = mix9(S, N, 0.35), E2 = mix9(S, A, 0.25);
+                for (let y = 58; y < 70; y++)
+                    for (let x = 0; x < 62; x++)
+                        if (P.at(x, y) === kit_js_8.MAT.RAMMED)
+                            px(y === 58 ? mix9(B, S, 0.45) : noise(x, y, 41) < 0.12 ? E2 : E, x, y); // земля, по кромке — иней
+                px(A, 21, 52, 16, 1);
+                px(A, 21, 52, 1, 6);
+                px(A, 36, 52, 1, 6); // перила приямка — на земле
+                px(LEAF, 35, 61, 1, 2); // журнал смен на гвозде
+                px(D, 23, 49, 4, 3);
+                px(D, 23, 47, 3, 2);
+                px(A, 23, 46, 1, 1);
+                px(A, 25, 46, 1, 1);
+                px(D, 27, 53, 1, 4); // кот на перилах, хвост вниз
+                px(kit_js_8.tone(kit_js_8.MAT.CONCRETE, 0), 71, 50, 1, 20); // шов плит
+                px(B, 86, 42, 4, 3);
+                px(K, 87, 43, 2, 1); // «не влезай»
             });
             boiler = kit_js_8.split(boilerBody, boilerLive);
             // ───────────────────────── ДОМИНАНТА · РАВНИНА ─────────────────────────
-            // Останкинская башня (набором): бетон светлый; основание — усечённый конус на ногах, между ними
-            // арки, в середине остеклённое лобби; ствол сужается, пояса техэтажей; ресторан — обод в три
+            // Останкинская башня (набором): бетон светлый; основание — усечённый конус на ногах (уже и круче
+            // образца в 1,3 раза — чтобы читалось «на ногах», а не шатром), между ногами стрельчатые проёмы,
+            // крайние — уже (ракурс), в среднем — остеклённое лобби; ствол сужается, пояса техэтажей; ресторан — обод в три
             // этажа, лента стекла, пол вращается (переплёт ползёт); выше стальная антенна с полосами.
             // Заградительные огни киноварью, верхний мигает.
             ostBody = kit(72, 200, P => {
-                P.trap(14, 57, 31, 41, 174, 199, kit_js_8.MAT.CONCRETE).shade(-1);
-                for (const [x, h] of [[18, 12], [25, 17], [42, 17], [49, 12]])
-                    rarch(P, x, 200, 5, h);
-                P.cut(33, 186, 6, 14, kit_js_8.MAT.GLASS);
+                P.trap(21, 51, 31, 41, 174, 199, kit_js_8.MAT.CONCRETE).shade(-1);
+                for (const [x, w, h] of [[23, 2, 11], [28, 3, 12], [34, 3, 13], [40, 3, 12], [46, 2, 11]])
+                    parch(P, x, 200, w, h);
+                P.cut(34, 192, 3, 8, kit_js_8.MAT.GLASS);
                 P.trap(31, 41, 34, 38, 57, 173, kit_js_8.MAT.CONCRETE, kit_js_8.FORM.CYL).shade(-1);
                 P.box(29, 144, 14, 2, kit_js_8.MAT.CONCRETE).shade(-2);
                 P.box(31, 98, 10, 2, kit_js_8.MAT.CONCRETE).shade(-2);
@@ -22132,8 +22149,8 @@ System.register("sprites/arch/neon", ["world/hang", "sprites/arch/kit"], functio
                     { name: 'домик Хёвди', w: 76, h: 74, life: { birds: [[18, 21, -43]] }, draw: hofdi, draw2: hofdi2 },
                 ],
                 plain: [
-                    { name: 'панельная девятиэтажка', w: 76, h: 87, draw: panel, draw2: panel2, life: { birds: [[-17, -11, -75]] } },
-                    { name: 'кочегарка «Камчатка»', w: 96, h: 58, draw: boiler, life: { smoke: [[-27, -56]], birds: [[31, 40, -31]] } },
+                    { name: 'панельная девятиэтажка', w: 76, h: 87, draw: panel, draw2: panel2, life: { birds: [[-9, -4, -75]] } },
+                    { name: 'кочегарка «Камчатка»', w: 96, h: 70, draw: boiler, life: { smoke: [[7, -70]], birds: [[31, 40, -31]] } },
                 ],
                 sign: { south: signSouth, east: signEast, west: signWest, north: signNorth },
                 props: {
