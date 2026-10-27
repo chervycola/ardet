@@ -44,7 +44,7 @@ export const menuInscriptions = {
   h_journal: 'ни строки.',
   h_window: 'за стеклом — квартал.',
   campfire: 'огонь не спрашивает.',
-  jester_home: 'смеётся. потому что альтернатива.',
+  jester_home: 'некролог при себе. бумага горючая.',
   terminal: 'session expired. reconnect?',
   sol_home: 'горит. без адресата.',
   vending: 'крути — получи мериты. цикл замкнут.',
@@ -89,7 +89,7 @@ export const menuInscriptions = {
   nocturnal: 'тишина держит нити. нити держат тебя.',
   nocturnal_home: 'молчит. звук не долетает.',
   theater: 'выйди на сцену. зал полон.',
-  altar: 'мох помнит. мох всегда помнил. теперь ты тоже.',
+  altar: 'проба снята. состав совпал.',
   posterwall: 'музыка не горит.',
   banner: '★ coming soon ★',
 };
