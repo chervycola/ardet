@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='cb03888 · 2026-10-27';console.log('[оттиск]', 'cb03888 · 2026-10-27');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='92b281e · 2026-10-27';console.log('[оттиск]', '92b281e · 2026-10-27');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -7294,7 +7294,7 @@ System.register("sprites/arch/kit", [], function (exports_30, context_30) {
             RAMP[MAT.MADARA] = ramp(mix(S0, BO, 0.36));
             RAMP[MAT.ROOFIRON] = ramp(mix(mix(AS, NI, 0.45), MG, 0.15));
             RAMP[MAT.RUSTBOARD] = ramp(mix(BO, S0, 0.38));
-            RAMP[MAT.STRATA] = ramp(mix(mix(SEP, BO, 0.5), KV, 0.04));
+            RAMP[MAT.STRATA] = ramp(mix(mix(SEP, BO, 0.46), AS, 0.24)); // серее и на ступень темнее песка: скала не тонет в бархане
             RAMP[MAT.FALU] = ramp(mix(mix(KV, SEP, 0.5), NI, 0.1), mix(BO, KV, 0.3));
             RAMP[MAT.KAWARA] = ramp(mix(mix(NI, AS, 0.48), SEP, 0.06), mix(BO, AS, 0.35));
             RAMP[MAT.CLAPBOARD] = ramp(mix(mix(BO, SEP, 0.42), AS, 0.12));
@@ -12953,7 +12953,7 @@ System.register("sprites/arch/twohearths", ["world/hang", "sprites/arch/kit", "w
 // поленница, парник, сани; будка часового, шлагбаум, ёлка на подпорке.
 System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit", "world/sky"], function (exports_36, context_36) {
     "use strict";
-    var hang_js_4, kit_js_4, sky_js_4, N, B, A, M, C, K, S, D1, D2, D3, D4, D5, RB, RR, P1, P2, night, SPH_BODY, sphinx, sphinx2, fortStele, fortStele2, fortStele3, pavilionBody, libraryPavilion, CELL_X, examBody, examCells, exam2Body, examCells2, PRINT_WIN, printBody, printingHouse, print2Body, printingHouse2, hallBody, townHall, obsBody, observatory, obs2Body, observatory2, ORANGE_WIN, orangeryBody, orangery, tea2Body, orangery2, spireBody, spire, POT_WIN, potemkinBody, potemkin, signSouth, signEast, signWest, signNorth, PYR_ROWS, pyramidBody, pyramidScaffold, ARCH;
+    var hang_js_4, kit_js_4, sky_js_4, N, B, A, M, C, K, S, D1, D2, D3, D4, D5, RB, RR, P1, P2, night, SPH_BODY, sphinx, sphinx2, fortStele, fortStele2, fortStele3, pavilionBody, libraryPavilion, CELL_X, examBody, examCells, CELL2_X, exam2Body, examCells2, PRINT_WIN, printBody, printingHouse, print2Body, printingHouse2, hallBody, townHall, obsBody, observatory, obs2Body, observatory2, ORANGE_WIN, orangeryBody, orangery, tea2Body, orangery2, spireBody, spire, POT_WIN, potemkinBody, potemkin, signSouth, signEast, signWest, signNorth, PYR_ROWS, pyramidBody, pyramidScaffold, ARCH;
     var __moduleName = context_36 && context_36.id;
     // ── набор (kit.js): прямоугольник краской, шум, пологая линия, смесь красок канона ──
     function R(c, col, x, y, w, h) { c.fillStyle = col; c.fillRect(x, y, w, h); }
@@ -13055,7 +13055,9 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
     // Жюльен): стена обожжённого кирпича с зубцами, круглая угловая башня с бойницами, над ней трёхцветный
     // флаг (синий — пеплом: синего канон не даёт); за стеной карандашный минарет. Перед стеной — камень
     // в три руки: тёмный, верх обломан, три полосы письма (знаки, скоропись, греческий) — вынут из кладки
-    // и прислонён к ящику с биркой описи; у ящика — оттиски, листы. Пушка, ядра пирамидой, пальма.
+    // (по одному рассказу — из стены; Бадж даёт обе версии) и прислонён к ящику с биркой описи; у ящика —
+    // оттиски, листы. Пушка, ядра пирамидой, пальма. Круглая башня — по статье 1940-х, не сверено: форт
+    // Кайтбея (ок. 1470) описывают приземистым прямоугольником с блокгаузом посередине.
     function fortBase(P, opt = {}) {
         P.box(30, 6, 4, 24, kit_js_4.MAT.PLASTER, kit_js_4.FORM.CYL).shade(-1); // минарет вдали
         P.box(29, 13, 6, 1, kit_js_4.MAT.PLASTER).shade(-1);
@@ -13420,7 +13422,11 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             // сфинкс в лесах (набором): Большой сфинкс, каким его застала комиссия, — откопан с лица: лапы и грудь
             // в яме, круп ещё в песке по спину (изнанка). В профиль мордой влево: немес с полосатым крылом до
             // плеча, лицо без носа — скол плоский, бороды нет; длинное низкое тело, лапы вперёд. Леса из жердей,
-            // ростомер — шест с делениями, планка легла на темя; на лапе бирка с номером. Всё — известняк Гизы.
+            // ростомер — шест с делениями, планка легла на темя; на лапе бирка с номером. Всё — известняк Гизы:
+            // тело — скала пластами (мягкие и твёрдые слои чередуются, по AERA), лапы — кладка с ремонтами.
+            // Надпись стены (AN VII · UNE PAGE D'HISTOIRE…) — монтаж назван: это памятная надпись французов на
+            // пилоне храма Исиды в Филе (13 вантоза VII г. = 3.III.1799, резчик Кастекс); «страницу истории» дописал
+            // позже другой путешественник, до снимка Тейнара 1851–52. На сфинкса перенесена кольцом.
             SPH_BODY = [[1, 39], [13, 38], [14, 25], [18, 21], [28, 21], [40, 22], [60, 23], [80, 24], [88, 26], [91, 31], [91, 44], [1, 44]];
             sphinx = kit('sphinx', 92, 44, P => sphinxPlan(P), { seed: 501, chip: 0.03 }, sphinxOver);
             // сфинкс #2: тот же, между лап — плита со сном (гранит, полукруглый верх, строки штрихами, вверху
@@ -13466,7 +13472,9 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
                 R(c, kit_js_4.tone(kit_js_4.MAT.IRON, 4), X0 + 20, Y0 + 57, 12, 1);
             });
             // форт #2: другой камень — целее первого, вмурован в кладку у караулки; полукруглый верх, ни одного
-            // скола; рядом меловая стрелка снизу вверх — читать с греческого. Из стены его вынимать не стали
+            // скола; рядом меловая стрелка снизу вверх — читать с греческого. Из стены его вынимать не стали.
+            // Прообраз — Канопский декрет (танисская копия 1866 г.; лежала в земле, не в стене — допущение кольца).
+            // Надпись стены JE TIENS L'AFFAIRE — по рассказу: возглас Шампольона известен из семейного предания (1822).
             fortStele2 = kit('fortcanopus', 96, 68, P => {
                 fortBase(P, { noGate: true });
                 P.box(40, 46, 18, 22, kit_js_4.MAT.BAKED).shade(1);
@@ -13483,7 +13491,10 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
                 R(c, mix9(B, A, 0.2), X0 + 36, Y0 + 45, 3, 1); // меловая стрелка снизу вверх
             });
             // форт #3: сдача — над башней белый флаг; у ворот связки бумаг учёных и жаровня (не зажжена); камни
-            // уходят в ящиках на ручной тележке, на ящиках бирки
+            // уходят в ящиках на ручной тележке, на ящиках бирки. ARTICLE XVI: французский проект ст. 16 оставлял
+            // учёным бумаги, планы, коллекции и древности; британский ответ — только привезённые инструменты.
+            // Угроза Жоффруа сжечь записи — в пересказе (Британника 1860/1911), первоисточника нет. Место сдачи —
+            // допущение кольца.
             fortStele3 = kit('fortalexandria', 96, 68, P => {
                 fortBase(P);
                 P.box(26, 58, 14, 10, kit_js_4.MAT.PLASTER).shade(-1); // связки бумаг
@@ -13512,11 +13523,15 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             });
             // ───────────────────────── ВОСТОК ─────────────────────────
             // павильон описи (набором): Вэньюаньгэ в Запретном городе (1776) — хранилище «Полного собрания книг
-            // четырёх хранилищ». Широкий зал в два этажа на белой мраморной террасе с перилами, кровля
-            // двускатная с глухими щипцами, черепица чёрной глазури (вода против огня), кромки — мглой; колонны
-            // тёмно-зелёные, между ними решётчатые двери; посередине навес-пояс между этажами. Один пролёт
-            // открыт: футляры рядами до потолка, на каждом один штамп, в одном ряду зазор в ладонь. Перед
-            // террасой пруд и каменный мостик.
+            // четырёх хранилищ» (сбор книг — указ 1772 г.; бюро и имя собрания — 1773 г.: имя прежде собрания).
+            // Устроен «как Тяньигэ» (по Лу Сисюну). Широкий зал в два этажа на белой мраморной террасе с
+            // перилами; кровля сешань — с фасада сплошной скат, излом только уступом на концах; черепица чёрной
+            // глазури (вода против огня), кромки — мглой; колонны тёмно-зелёные, между ними решётчатые двери;
+            // посередине навес-пояс между этажами. Торцы верхнего этажа — глухие простенки кирпичом (допущение:
+            // сешань щипца с фасада не показывает). Один пролёт открыт: футляры рядами до потолка, на каждом
+            // один штамп — тёмным оттиском, не огоньком; в одном ряду зазор в ладонь. Перед террасой пруд и
+            // каменный мостик. Просел (обследование 1932 г.) только пол верхнего этажа — из-за составных балок;
+            // снаружи этого не видно, свес ровный.
             pavilionBody = kit('wenyuan', 88, 62, P => {
                 P.box(2, 50, 84, 6, kit_js_4.MAT.MARBLE); // терраса
                 P.box(7, 36, 74, 14, kit_js_4.MAT.BOARD); // первый этаж: решётчатые двери
@@ -13573,7 +13588,7 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
                             continue;
                         const fx = X0 + 33 + k * 2.5 | 0, fy = Y0 + 39 + r * 2;
                         R(c, (r + k) & 1 ? P1 : P2, fx, fy, 2, 1);
-                        R(c, mix9(K, S, 0.35), fx + 1, fy, 1, 1);
+                        R(c, mix9(K, N, 0.55), fx + 1, fy, 1, 1);
                     }
             });
             libraryPavilion = pavilionBody;
@@ -13581,6 +13596,8 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             // ячейки в рост, открытый зев, внутри две доски — стол и сиденье; над рядом односкатная черепица, над
             // каждой ячейкой табличка с номером. За кровлей — гребни других рядов, их не счесть, между ними трава;
             // посередине вышка надзора. В одной ячейке горит свеча над тушечницей — на неё смотрит вышка.
+            // Цзяннань: 20 644 места (по ряду источников; встречается 20 446), ячейка около 1 × 1,3 м; 206
+            // восстановлены. Простенок между ячейками — оценка, не источник.
             CELL_X = [2, 17, 32, 47, 62, 77];
             examBody = kit('gongyuan', 94, 64, P => {
                 for (let k = 0; k < 7; k++)
@@ -13623,29 +13640,67 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
                         R(c, mix9(M, B, 0.2), X0 + x, Y0 + 62, 1, 2); // трава у порога
             });
             examCells = examBody;
-            // кельи #2: снаружи — высокая стена вокруг двора, черепичный гребень; ворота запечатаны: крест-накрест
-            // полосы бумаги с печатями; над стеной — гребни бесчисленных рядов и вышка надзора
+            // кельи #2: изнутри, во втором ряду — ряд келий во всю ширину, мельче ближнего: пасти с досками и
+            // номерами, тушечницы на местах. Слева торец ближнего ряда, на нём внахлёст четыре листа списков —
+            // столбцы штрихов, без букв. Над одной кельей четыре штриха (нов.): четыре раза на одном месте. За
+            // рядами — высокая стена ограды; по гребню колючки (棘院 — по объяснению названия пекинского двора;
+            // здесь допущение кольца). Вышка справа, её окно смотрит на ряд. Свечи нет, травы меньше. Ворота с
+            // печатями — на изнанке, отсюда их не видно. Хун Сюцюань сдавал в Гуанчжоу (провалы 1827, 1836, 1837,
+            // 1843), а двор кольца — Цзяннань: монтаж назван.
+            CELL2_X = [12, 21, 30, 39, 48, 57, 66, 75, 84];
             exam2Body = kit('gongyuanwall', 94, 64, P => {
-                P.box(43, 2, 12, 3, kit_js_4.MAT.KAWARA).shade(1);
-                P.box(45, 5, 8, 7, kit_js_4.MAT.BOARD);
-                P.box(42, 11, 14, 2, kit_js_4.MAT.KAWARA).shade(1);
-                P.box(44, 13, 10, 12, kit_js_4.MAT.BRICK);
-                for (let k = 0; k < 6; k++)
-                    P.box(2 + k, 20 + k * 2, 90 - k * 2, 1, kit_js_4.MAT.KAWARA).shade(1 + (k & 1)); // гребни рядов за стеной
-                P.box(0, 32, 94, 32, kit_js_4.MAT.PLASTER);
-                P.box(0, 30, 94, 2, kit_js_4.MAT.KAWARA).shade(1); // стена с гребнем
-                P.box(36, 40, 22, 24, kit_js_4.MAT.BRICK);
-                P.poly([[34, 41], [60, 41], [57, 36], [37, 36]], kit_js_4.MAT.KAWARA).shade(1); // ворота
-                P.box(40, 46, 14, 18, kit_js_4.MAT.BOARD).shade(1); // створки
-            }, { seed: 509, chip: 0.04, moss: 0.06, drips: [[10, 32, 4], [80, 32, 3]] }, (c, X0, Y0) => {
-                R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 0), X0 + 47, Y0 + 46, 1, 18); // притвор
-                for (const [x, y] of [[42, 49], [43, 51], [44, 53], [45, 55], [46, 57], [47, 59], [48, 61]])
-                    R(c, B, X0 + x, Y0 + y, 2, 1); // бумажные полосы крест-накрест
-                for (const [x, y] of [[51, 49], [50, 51], [49, 53], [48, 55], [47, 57], [46, 59], [45, 61]])
-                    R(c, B, X0 + x, Y0 + y, 2, 1);
-                R(c, K, X0 + 46, Y0 + 54, 2, 2); // печать на скрещении
-                for (const bx of [41, 51])
-                    R(c, kit_js_4.tone(kit_js_4.MAT.IRON, 3), X0 + bx, Y0 + 52, 2, 1); // кольца
+                P.box(0, 12, 94, 22, kit_js_4.MAT.PLASTER);
+                P.box(0, 10, 94, 2, kit_js_4.MAT.KAWARA).shade(1); // стена ограды с гребнем
+                P.poly([[70, 7], [90, 7], [87, 3], [73, 3]], kit_js_4.MAT.KAWARA).shade(1);
+                P.box(78, 0, 2, 3, kit_js_4.MAT.TIMBER); // вышка: верх
+                P.box(74, 7, 12, 8, kit_js_4.MAT.BOARD);
+                P.cut(75, 9, 3, 4); // ярус с окном на ряд
+                P.poly([[69, 17], [91, 17], [88, 14], [72, 14]], kit_js_4.MAT.KAWARA).shade(1);
+                P.box(75, 17, 10, 10, kit_js_4.MAT.BRICK); // свес, ствол
+                for (let k = 0; k < 2; k++)
+                    P.box(0, 27 + k * 3, 94, 1, kit_js_4.MAT.KAWARA).shade(1 + k); // гребни дальних рядов
+                P.box(10, 37, 84, 25, kit_js_4.MAT.BRICK); // второй ряд
+                for (const x of CELL2_X)
+                    P.cut(x - 1, 40, 7, 22); // пасти келий
+                P.box(10, 33, 84, 5, kit_js_4.MAT.KAWARA).shade(1); // кровля ряда
+                P.box(0, 30, 9, 32, kit_js_4.MAT.BRICK).shade(1);
+                P.wedge(4.5, 26, 30, 1, 9, kit_js_4.MAT.BRICK).shade(1); // торец ближнего ряда
+                P.box(0, 62, 94, 2, kit_js_4.MAT.ASHLAR); // цоколь
+            }, { seed: 509, chip: 0.04, moss: 0.04, drips: [[20, 12, 3], [60, 12, 4]] }, (c, X0, Y0) => {
+                for (let x = 1; x < 94; x += 3) { // колючки по гребню: редкие палки
+                    const n = noise(x, 3, 509);
+                    if (n < 0.35 || (x > 68 && x < 92))
+                        continue;
+                    const h = n > 0.7 ? 3 : 2, d = n > 0.55 ? 1 : -1;
+                    R(c, kit_js_4.tone(kit_js_4.MAT.TIMBER, 1), X0 + x, Y0 + 10 - h, 1, h);
+                    R(c, kit_js_4.tone(kit_js_4.MAT.TIMBER, 1), X0 + x + d, Y0 + 9 - h, 1, 1);
+                }
+                for (let x = 1; x < 94; x += 3)
+                    R(c, kit_js_4.tone(kit_js_4.MAT.KAWARA, 4), X0 + x, Y0 + 37, 1, 1); // торцы черепиц
+                for (const x of CELL2_X) {
+                    const xl = x - 1;
+                    R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 4), X0 + xl, Y0 + 50, 7, 1);
+                    R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 1), X0 + xl, Y0 + 51, 7, 1); // стол
+                    R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 3), X0 + xl, Y0 + 55, 7, 1);
+                    R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 0), X0 + xl, Y0 + 56, 7, 1); // сиденье
+                    R(c, N, X0 + xl + 4, Y0 + 49, 2, 1); // тушечница
+                    R(c, mix9(B, A, 0.15), X0 + x + 1, Y0 + 39, 2, 1); // номер
+                }
+                for (let k = 0; k < 4; k++)
+                    R(c, B, X0 + 29 + k * 2, Y0 + 34, 1, 2); // четыре штриха над одной кельей
+                R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 5), X0 + 29, Y0 + 55, 7, 1); // её сиденье вытерто
+                // списки внахлёст на торце: столбцы штрихов пеплом
+                for (let k = 0; k < 4; k++) {
+                    const sx = X0 + 1 + k, sy = Y0 + 40 + k * 2, col = [P1, P2, mix9(P2, S, 0.3), P1][k];
+                    R(c, col, sx, sy, 5, 7);
+                    for (let cx = 1; cx < 5; cx += 2)
+                        for (let yy = 1; yy < 6; yy++)
+                            if (noise(cx + k * 9, yy, 44) > 0.3)
+                                R(c, mix9(col, N, 0.55), sx + cx, sy + yy, 1, 1);
+                }
+                R(c, kit_js_4.tone(kit_js_4.MAT.BOARD, 4), X0 + 74, Y0 + 13, 12, 1); // перила вышки
+                for (const x of [3, 20, 47, 88])
+                    R(c, mix9(M, B, 0.2), X0 + x, Y0 + 61, 1, 1); // трава редко
             });
             examCells2 = exam2Body;
             // ───────────────────────── ЗАПАД ─────────────────────────
@@ -14178,6 +14233,8 @@ System.register("sprites/arch/enlightenment", ["world/hang", "sprites/arch/kit",
             // грань в свету, правая в тени; по теневой грани леса — стойки, настилы, раскосы, приставная лестница
             // с земли; на верхней стойке фонарь учёных (живое — слоем поверх). Вход над основанием — лаз под
             // двускатной перемычкой. У подножия на лунной стороне — теодолит на треноге; у основания осыпь.
+            // Надпись стены SCOPERTA DA G. BELZONI · 2. MAR. 1818 — монтаж назван: она во входе пирамиды Хафра,
+            // открытом Бельцони 2.III.1818, на двадцать лет позже комиссии, — из тех, «кто пришёл позже».
             PYR_ROWS = 25;
             pyramidBody = kit('pyramid', 160, 140, P => {
                 for (let i = 0; i < PYR_ROWS; i++) {
