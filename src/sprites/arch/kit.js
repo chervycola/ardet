@@ -74,6 +74,10 @@ export const MAT = {
   RUSTBOARD: 51,  // тёс «под руст»: доска, крашенная под камень, — светлая кость, пазы рядами и вразбежку (лопатки, наличники усадеб)
   STRATA: 52,     // известняк скалы пластами (сфинкс, высеченный из скалы): ряды без вертикальных швов, выветренные борозды
   FALU: 53,       // доска стоймя, крашенная фалунской красной (Швеция): бурая киноварь, щели между досками, краска облезает пятнами
+  KASHI: 54,      // расписной изразец хафт-ранги (Исфахан): бирюза выгорела в мглу, квадраты плитки — сетка швов, в каждой узел узора
+  MOSAIC: 55,     // наборная мозаика моарраг: те же краски, но осколки — без сетки, мелкой россыпью, узор течёт наискось
+  REDSAND: 56,    // красный песчаник Агры: киноварь с сепией, ряды тёсаного камня
+  LEMEKH: 57,     // осиновый лемех: серебристая чешуя рядами вразбежку (главки, шатры)
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -131,6 +135,10 @@ RAMP[MAT.KAWARA] = ramp(mix(mix(NI, AS, 0.48), SEP, 0.06), mix(BO, AS, 0.35));
 RAMP[MAT.CLAPBOARD] = ramp(mix(mix(BO, SEP, 0.42), AS, 0.12));
 RAMP[MAT.WROUGHT] = ramp(mix(mix(SEP, KV, 0.3), NI, 0.22), mix(BO, KV, 0.18));
 RAMP[MAT.SLATE] = ramp(mix(mix(NI, AS, 0.42), SEP, 0.12), mix(BO, AS, 0.4));
+RAMP[MAT.KASHI] = ramp(mix(mix(MG, AS, 0.45), BO, 0.1));
+RAMP[MAT.MOSAIC] = ramp(mix(mix(MG, AS, 0.4), BO, 0.06));
+RAMP[MAT.REDSAND] = ramp(mix(mix(KV, SEP, 0.52), BO, 0.1), mix(BO, KV, 0.2));
+RAMP[MAT.LEMEKH] = ramp(mix(mix(AS, BO, 0.3), SEP, 0.18));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -288,6 +296,29 @@ function tex(mat, x, y, s) {
     case MAT.CLAPBOARD: {
       if (y % 3 === 2) return -1;                                       // тень под кромкой доски
       return (x + Math.floor(y / 3) * 7) % 17 === 0 ? -1 : (hh(x, y, s + 89) < 0.03 ? -1 : 0);   // стык доски
+    }
+    case MAT.KASHI: {                                                   // плитка 4×4: шов — тень, в середине — узел узора
+      const u = x & 3, v = y & 3;
+      if (u === 3 || v === 3) return -1;
+      if (hh(x >> 2, y >> 2, s + 111) < 0.08) return -1;                // плитка из другой обжигки
+      return (u === 1 && v === 1) || ((x >> 2) + (y >> 2)) % 3 === 0 && u === v ? 1 : 0;
+    }
+    case MAT.MOSAIC: {                                                  // осколки без сетки; узор течёт наискось
+      if (((x + 2 * y) % 9 + 9) % 9 === 0) return 1;
+      const v = hh(x >> 1, y >> 1, s + 113);
+      return v < 0.22 ? -1 : v > 0.85 ? 1 : 0;
+    }
+    case MAT.REDSAND: {
+      const c = Math.floor(y / 4), o = (c & 1) * 5;
+      if (y % 4 === 3) return -1;
+      if ((x + o) % 10 === 9) return -1;
+      return hh(Math.floor((x + o) / 10), c, s + 115) < 0.15 ? -1 : 0;
+    }
+    case MAT.LEMEKH: {                                                  // чешуя: ряд через 3, лемех вразбежку, низ лемеха к свету
+      const r = Math.floor(y / 3), u = (x + (r & 1) * 2) & 3;
+      if (y % 3 === 0) return -1;
+      if (u === 0) return -1;
+      return y % 3 === 2 ? 1 : 0;
     }
     case MAT.WROUGHT: return hh(x, y, s + 85) < 0.05 ? 1 : 0;            // заклёпки бликом
     case MAT.SLATE: {                                                   // ряд — тень под нижней кромкой, шов вразбежку
