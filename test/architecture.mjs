@@ -350,7 +350,7 @@ test('жизнь: разметка по контракту — внутри си
     if (!L) continue;
     const inside = (dx, dy, m = 4) => Math.abs(dx) <= it.w / 2 + m && dy <= 0 && dy >= -it.h - m;
     for (const p of L.smoke || []) assert(inside(p[0], p[1]), `${key}: дым вне постройки ${p}`);
-    for (const p of L.flag || []) assert(inside(p[0], p[1]) && p[2] >= 2 && p[2] <= 16 && COLS.includes(p[3]), `${key}: флаг ${p}`);
+    for (const p of L.flag || []) assert(inside(p[0], p[1]) && p[2] >= 2 && p[2] <= 16 && [...p[3]].every(ch => COLS.includes(ch)), `${key}: флаг ${p}`);
     for (const p of L.blink || []) assert(inside(p[0], p[1]) && COLS.includes(p[2]) && p[3] > 0, `${key}: огонёк ${p}`);
     for (const p of L.birds || []) assert(inside(p[0], p[2]) && inside(p[1], p[2]) && p[0] <= p[1] && (p[3] == null || COLS.includes(p[3])), `${key}: птицы ${p}`);
     const loc = { id: key, archLife: L, archX: 500, archGy: 500, w: it.w, h: it.h };
@@ -718,7 +718,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   const BK = await imp('render/archbake.js');
   // кольца, перерисованные набором целиком (ARCH_PLAN, этап 5): сколько видов и сколько с огнём поверх
-  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4], catastrophes: [11, 7], now: [11, 6] };
+  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4], steamshadows: [11, 4], catastrophes: [11, 7], now: [11, 6] };
   test('набор: перерисованные кольца — все виды и доминанта набором; тело неподвижно (запекается), живое — слоем поверх; всё в рамке', () => {
    for (const [ring, [nKinds, nSplit]] of Object.entries(KIT_RINGS)) {
     const A = ARCH_BY_RING[ring], kinds = [...[].concat(A.landmark), ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
@@ -749,9 +749,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   test('свой рисунок #2/#3: повтор вида — по своему осмотру (draw2, draw3), набором и в рамке; жизнь — своя', () => {
    const WANT = { 1: ['вежа с бубном', 'дорический храм', 'застава на перевале', 'каменная ладья и сейд', 'пилон с обелиском'],
      2: ['Пантеон', 'акведук', 'болото жертв', 'брох', 'пещерный храм-чайтья', 'сад Эпикура'],
+     6: ['вокзал двух часов', 'контора «Либо/Либо»', 'опера в песке', 'пароход в песках', 'пирс над глубиной', 'читальный зал'],
      7: ['вмёрзший барк', 'вышка с факелом', 'затопленный фарватер', 'купол-остов', 'мачта дирижабля', 'собор с обломком шпиля'],
      9: ['библиотека у моря', 'игла над пустыней', 'серверный ангар', 'стеклянная башня', 'стеклянная пагода'] };
-   const RING = { 1: 'axial', 2: 'porticoes', 7: 'catastrophes', 9: 'now' };
+   const RING = { 1: 'axial', 2: 'porticoes', 6: 'steamshadows', 7: 'catastrophes', 9: 'now' };
    for (const [ringN, names] of Object.entries(WANT)) {
     const ring = RING[ringN];
     const A = ARCH_BY_RING[ring], kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);

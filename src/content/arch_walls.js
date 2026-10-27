@@ -73,7 +73,7 @@ export const ARCH_WALLS = {
   "porticoes:west:акведук#2": ["ROTAS OPERA TENET AREPO SATOR","CACATOR CAVE MALUM"],
   "porticoes:west:башня лимеса": ["CERVESAM NON HABUNT","KILROY WAS HERE"],
   "steamshadows:east:вокзал двух часов": ["BUNMEI KAIKA","WAKON YŌSAI"],
-  "steamshadows:east:вокзал двух часов#2": ["SHINBASHI 1872","CHŪKEN HACHIKŌ"],
+  "steamshadows:east:вокзал двух часов#2": ["SHINBASHI 1872","0 MILE"],
   "steamshadows:plain:дом с мезонином": ["МИСЮСЬ, ГДЕ ТЫ?"],
   "steamshadows:plain:станция с водокачкой": ["ЗДЕСЬ БЫЛ ВАСЯ","КИПЯТОК"],
   "steamshadows:south:пароход в песках": ["KILROY WAS HERE"],

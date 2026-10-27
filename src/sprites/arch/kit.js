@@ -63,6 +63,15 @@ export const MAT = {
   ENVELOPE: 40,   // оболочка дирижабля: лакированная ткань, светлая, продольные швы через 4 точки
   QING: 41,       // серый кирпич шанхайских переулков: перевязка как у кирпича, раствор светлее
   CERAMIC: 42,    // облицовочная керамика высоток: тёплая кость-серая плитка, швы строк, заменённые плитки
+  SLATE: 43,      // шифер-сланец кровли: тёмно-серый, ряды через 2 точки, швы вразбежку, плитки разного тона
+  WROUGHT: 44,    // пудлинговое железо ажурных башен, крашенное «венецианским красным» (1889): бурое, гладкое, заклёпки
+  CLAPBOARD: 45,  // тёс внакрой, крашеный: доски лёжа по 3 точки, под каждой тень, стыки вразбежку (усадьба, станция)
+  KAWARA: 46,     // японская черепица: серебристо-серая, ряды круглых черепиц сверху вниз — гребень к свету, жёлоб в тень
+  SHIKKUI: 47,    // известковая штукатурка кура: светлая кость-серая, гладкая, светлее штукатурки
+  NAMAKO: 48,     // намако: тёмные плитки в светлой косой сетке выпуклых швов
+  MADARA: 49,     // пёстрый туф (идзу-мадара): светлые ряды тёсаного камня в тёмную крапину
+  ROOFIRON: 50,   // кровельное железо XIX века на фальцах, крашеное «медянкой» (в мглу): стоячий фальц ловит свет, поперечные швы вразбежку
+  RUSTBOARD: 51,  // тёс «под руст»: доска, крашенная под камень, — светлая кость, пазы рядами и вразбежку (лопатки, наличники усадеб)
 };
 // форма части: плоская стена, цилиндр (свет по ширине — колонна, башня), с каннелюрами
 export const FORM = { FLAT: 0, CYL: 1, FLUTE: 2 };
@@ -109,6 +118,15 @@ RAMP[MAT.ICE] = ramp(mix(mix(BO, AS, 0.4), MG, 0.12), BO);
 RAMP[MAT.ENVELOPE] = ramp(mix(BO, AS, 0.45), BO);
 RAMP[MAT.QING] = ramp(mix(S0, NI, 0.15));
 RAMP[MAT.CERAMIC] = ramp(mix(BO, SEP, 0.32));
+RAMP[MAT.SHIKKUI] = ramp(mix(BO, S0, 0.28));
+RAMP[MAT.NAMAKO] = ramp(mix(NI, AS, 0.45), mix(BO, AS, 0.3));
+RAMP[MAT.MADARA] = ramp(mix(S0, BO, 0.36));
+RAMP[MAT.ROOFIRON] = ramp(mix(mix(AS, NI, 0.45), MG, 0.15));
+RAMP[MAT.RUSTBOARD] = ramp(mix(BO, S0, 0.38));
+RAMP[MAT.KAWARA] = ramp(mix(mix(NI, AS, 0.48), SEP, 0.06), mix(BO, AS, 0.35));
+RAMP[MAT.CLAPBOARD] = ramp(mix(mix(BO, SEP, 0.42), AS, 0.12));
+RAMP[MAT.WROUGHT] = ramp(mix(mix(SEP, KV, 0.3), NI, 0.22), mix(BO, KV, 0.18));
+RAMP[MAT.SLATE] = ramp(mix(mix(NI, AS, 0.42), SEP, 0.12), mix(BO, AS, 0.4));
 const RIM = AS;                                   // кромка справа — пеплом (канон)
 
 function hh(a, b, s) {
@@ -229,6 +247,41 @@ function tex(mat, x, y, s) {
       if (y % 3 === 2) return hh(x >> 1, y, s + 75) < 0.5 ? -1 : 0;
       if ((x + (Math.floor(y / 3) & 1) * 2) % 4 === 3 && hh(x, y >> 2, s + 77) < 0.3) return -1;
       return hh(x >> 1, Math.floor(y / 3), s + 79) < 0.04 ? -1 : 0;
+    }
+    case MAT.SHIKKUI: return hh(x, y, s + 91) < 0.04 ? -1 : 0;
+    case MAT.NAMAKO: return ((x + y) % 4 === 0 || ((x - y) % 4 + 4) % 4 === 0) ? 3 : -1;   // швы сеткой наискось
+    case MAT.ROOFIRON: {
+      if (x % 4 === 0) return 1;                                         // стоячий фальц
+      if (x % 4 === 1) return -1;
+      if (y % 8 === 7 && hh(x >> 2, y >> 3, s + 95) < 0.5) return -1;   // поперечный шов вразбежку
+      return hh(x, y, s + 96) < 0.02 ? -1 : 0;
+    }
+    case MAT.RUSTBOARD: {
+      if (y % 4 === 3) return -2;                                        // паз ряда
+      if ((x + ((y >> 2) & 1) * 4) % 8 === 7) return -1;                 // вертикальный паз вразбежку
+      return hh(x, y, s + 97) < 0.05 ? -1 : 0;                           // волокно сквозь краску
+    }
+    case MAT.MADARA: {
+      const c = Math.floor(y / 5), o = (c & 1) * 4;
+      if (y % 5 === 4 || (x + o) % 9 === 8) return -1;
+      const v = hh(x >> 1, y >> 1, s + 93);
+      return v < 0.14 ? -1 : v > 0.95 ? 1 : 0;
+    }
+    case MAT.KAWARA: {
+      const k = x % 3;
+      if (k === 0) return 1;                                            // гребень круглой черепицы
+      if (k === 2) return -1;                                           // жёлоб
+      return y % 4 === 3 ? -1 : 0;                                      // нахлёст ряда
+    }
+    case MAT.CLAPBOARD: {
+      if (y % 3 === 2) return -1;                                       // тень под кромкой доски
+      return (x + Math.floor(y / 3) * 7) % 17 === 0 ? -1 : (hh(x, y, s + 89) < 0.03 ? -1 : 0);   // стык доски
+    }
+    case MAT.WROUGHT: return hh(x, y, s + 85) < 0.05 ? 1 : 0;            // заклёпки бликом
+    case MAT.SLATE: {                                                   // ряд — тень под нижней кромкой, шов вразбежку
+      if (y % 2 === 1) return -1;
+      if ((x + (y >> 1 & 1) * 2) % 4 === 3) return hh(x, y, s + 81) < 0.6 ? -1 : 0;
+      return hh((x + (y >> 1 & 1) * 2) >> 2, y >> 1, s + 83) < 0.12 ? 1 : 0;
     }
     case MAT.ICE: return y % 2 === 0 && hh(x >> 2, y, s + 71) < 0.35 ? -1 : (hh(x, y, s + 73) < 0.04 ? 1 : 0);
     case MAT.MOSS: { const v = hh(x, y, s + 11); return v < 0.3 ? -1 : v > 0.8 ? 1 : 0; }

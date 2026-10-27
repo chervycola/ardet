@@ -2,7 +2,8 @@
 // ЖИЗНЬ ПОСТРОЕК — то, что шевелится: дым из труб, флаги, мигающие огни,
 // птицы на коньке. Разметка — в спрайтах эпох, поле `life` у постройки:
 //   smoke: [[dx, dy]]              — устье трубы; струйка уходит вверх по ветру
-//   flag:  [[dx, dy, len, 'V']]    — верх древка; полотнище по ветру (V/K/P/M/S)
+//   flag:  [[dx, dy, len, 'V']]    — верх древка; полотнище по ветру (V/K/P/M/S;
+//                                    несколько букв — полосы от древка: 'PKV')
 //   blink: [[dx, dy, 'S', period, duty]] — огонёк: горит duty доли периода
 //   birds: [[dx0, dx1, dy, 'K'?]]  — конёк, где сидят птицы; взлетают от странника;
 //                                    цвет необязателен (чайки — K, по умолчанию чёрные)
@@ -41,8 +42,10 @@ function drawFlag(ctx, x, y, len, col, t, seed) {
   const h = Math.max(2, Math.round(len * 0.6));
   const w = wind.at(x, y), dir = w.x < 0 ? -1 : 1;
   const ext = Math.max(0.3, Math.min(1, Math.abs(w.x) * 2.2 + 0.15)); // насколько вытянут
-  ctx.fillStyle = COL[col] || col || COL.P;
+  const cols = col && col.length > 1 && /^[VKPMSN]+$/.test(col) ? [...col] : [col];
   for (let c = 0; c < len; c++) {
+    const cc = cols[Math.min(cols.length - 1, Math.floor(c * cols.length / len))];
+    ctx.fillStyle = COL[cc] || cc || COL.P;
     const amp = Math.min(1.5, c / 3) * (0.5 + w.s * 1.1);
     const off = Math.round(Math.sin(t * (0.05 + w.s * 0.12) + seed - c * 0.8) * amp);
     const droop = Math.round(c * (1 - ext) * 0.9);     // обвисший край ниже
