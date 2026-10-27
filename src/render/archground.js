@@ -207,7 +207,8 @@ export function prepareArchGround(ensembles, locations) {
       if (kind === 'water') {
         // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
         const len = 130 + m.w * 0.6;
-        let x0 = dir > 0 ? m.x + 16 : m.x - 16 - len, x1 = dir > 0 ? m.x + 16 + len : m.x - 16;
+        const from = (m.loc && m.loc.archDraw && m.loc.archDraw.seaFrom) ?? 16;   // откуда вода у самого рисунка (пирс рисует свою)
+        let x0 = dir > 0 ? m.x + from : m.x - from - len, x1 = dir > 0 ? m.x + from + len : m.x - from;
         for (const o of ms) if (o !== m) {
           if (dir > 0 && o.x > m.x) x1 = Math.min(x1, o.x - o.w / 2 - 4);
           if (dir < 0 && o.x < m.x) x0 = Math.max(x0, o.x + o.w / 2 + 4);

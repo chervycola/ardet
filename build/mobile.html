@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='41ebd58 · 2026-10-27';console.log('[оттиск]', '41ebd58 · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='cb03888 · 2026-10-27';console.log('[оттиск]', 'cb03888 · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -14811,7 +14811,7 @@ System.register("world/mechanisms", ["world/wind", "render/particles", "audio/au
 // неподвижно и запекается; колокол, маяк, часы и флюгер, пёс — слоем поверх.
 // юг     — Суэц: пароход над валом вынутого грунта — воды не видно: чёрный борт с седловатостью,
 //          клипер-нос с бушпритом, труба с паровой трубкой, реи с убранными парусами; за дальним
-//          валом — следующий в колонне; пустой светлый пьедестал (болты ярче патины, на плите
+//          валом — следующий в колонне; пустой светлый пьедестал Лессепса — знак из будущего (болты ярче патины, на плите
 //          чайки), верстовой щит, землекоп с корзиной. #2 — «Ньюпорт» в голове очереди, огни в
 //          чехлах, за ним императорская колёсная яхта. Хедивская опера — театр, а не банк:
 //          сценическая коробка, подъезд о трёх арках, лоджия, аттик с полым косым штампом, афиша
@@ -14988,7 +14988,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
         const k = s.sun ? 1 : 1 - s.moon;
         if (k < 0.08)
             return;
-        const cx = s.sun ? Math.round(42 - Math.cos(s.sun.az) * 14) : 42;
+        const cx = s.sun ? Math.round(42 - Math.cos(s.sun.az) * 14) : (s.name === 'рассвет' ? 28 : 56); // в сумерки и рассвет — гаснет на месте, не прыгает
         c.globalAlpha = 0.1 * k;
         R(c, B, X0 + 39, Y0 + 6, 6, 48); // столб света из фонаря
         c.globalAlpha = 0.7 * k;
@@ -15332,13 +15332,17 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
         return d;
     }
     // маяк: фонарь кампанилы горит костью, раз в оборот — вспышка киноварью; два прожектора на рельсе у
-    // галереи третьего яруса — сбоку виден луч то длиннее, то короче по обе стороны
+    // галереи третьего яруса — сбоку виден луч то длиннее, то короче по обе стороны; лучи — только ночью,
+    // в сумерки и рассвет бледнее, днём луча не видно
     function towerLive(c, x, gy, t) {
         const X0 = Math.round(x) - TC, Y0 = Math.round(gy) - TH, T = t || 0, PER = 240;
         const flash = T % PER < 10;
         R(c, flash ? K : B, X0 + 35, Y0 + 15, 2, 2);
+        const sky = sky_js_5.skyAt(sky_js_5.phaseAt(T)).name;
+        if (sky === 'день')
+            return;
         const L = Math.round(Math.abs(Math.cos(T * 2 * Math.PI / PER)) * 16);
-        c.globalAlpha = 0.5;
+        c.globalAlpha = sky === 'ночь' ? 0.5 : 0.25;
         for (let i = 1; i < L; i += 2) {
             R(c, B, X0 + 28 - i, Y0 + 20, 1, 1);
             R(c, B, X0 + 43 + i, Y0 + 20, 1, 1);
@@ -15369,8 +15373,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
             // пароход в песках (набором): Суэцкий канал из пустыни — воды не видно, корабль идёт над валом
             // вынутого грунта: чёрный корпус верхней третью с седловатостью к носу, светлая рубка, высокая
             // труба с поясом и чёрным оголовком, две мачты с реями (паруса убраны), штаги к носу. За дальним
-            // валом — мачты и труба следующего в колонне. У входа в канал — пустой пьедестал: плита сверху
-            // голая, болты блестят. Валы — песком, гребни округлые (не ряды кирпича).
+            // валом — мачты и труба следующего в колонне. У входа в канал — пустой пьедестал Лессепса (статуя
+            // встанет в 1899-м, снята в 1956-м) — знак из будущего, назван: плита сверху голая, болты блестят. Валы — песком, гребни округлые (не ряды кирпича).
             DUNE_NEAR = [[0, 66], [0, 53], [8, 50], [20, 49], [34, 51], [48, 48], [62, 49], [76, 47], [90, 50], [100, 48], [108, 49], [108, 66]];
             DUNE_LOW = [[0, 66], [0, 60], [14, 58], [30, 60], [50, 58], [70, 61], [90, 58], [108, 59], [108, 66]];
             steamerBody = kit('steamer', 108, 66, P => {
@@ -15439,14 +15443,16 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 3), X0 + 95, Y0 + 38, X0 + 105, Y0 + 33);
                 R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + 59, Y0 + 13, 1, 21);
                 // верстовой щит — строка штрихами; землекоп с корзиной на гребне вала
+                R(c, P2, X0 + 26, Y0 + 48, 5, 3);
                 R(c, N, X0 + 26, Y0 + 48, 3, 1);
                 R(c, N, X0 + 26, Y0 + 50, 4, 1);
-                R(c, N, X0 + 30, Y0 + 48, 1, 1);
-                R(c, kit_js_5.tone(kit_js_5.MAT.LOGS, 1), X0 + 38, Y0 + 47, 1, 4);
-                R(c, kit_js_5.tone(kit_js_5.MAT.LOGS, 1), X0 + 38, Y0 + 46, 1, 1);
-                R(c, P1, X0 + 37, Y0 + 44, 3, 2);
+                R(c, N, X0 + 30, Y0 + 48, 1, 1); // щит — светлой доской
+                R(c, P2, X0 + 38, Y0 + 47, 1, 4);
+                R(c, P2, X0 + 38, Y0 + 46, 1, 1);
+                R(c, P1, X0 + 37, Y0 + 44, 3, 2); // землекоп светлым на чёрном борту — фигура для масштаба
             });
             canalSteamer = steamerBody;
+            canalSteamer.wall = [20, 39, 97, 48]; // надписи стен — на борт над насыпью, не на песок
             // пароход #2 (набором): канонерка «Ньюпорт» в голове очереди наутро 17 ноября 1869-го — низкий
             // чёрный корпус, три мачты (реи только на фоке), одна труба между гротом и бизанью; на вантах фока
             // щит ходового огня — пустой: прошёл без огней. За ней, за дальним валом, — императорская яхта: два трубы, кожух
@@ -15474,7 +15480,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 // мачты канонерки: фок с реями, грот и бизань с гафелями
                 for (const [mx, top] of [[88, 6], [70, 9], [46, 14]])
                     hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 3), X0 + mx + 1, Y0 + 46, X0 + mx, Y0 + top);
-                for (const [y, w] of [[10, 13], [16, 15], [22, 11]]) {
+                for (const [y, w] of [[10, 11], [16, 13], [22, 15]]) {
                     R(c, RIG, X0 + 88 - (w >> 1), Y0 + y, w, 1);
                     R(c, SAIL, X0 + 89 - (w >> 1), Y0 + y + 1, w - 2, 1);
                 }
@@ -15505,6 +15511,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     hline(c, kit_js_5.tone(kit_js_5.MAT.SAND, 4), X0 + DUNE2L[i][0], Y0 + DUNE2L[i][1], X0 + DUNE2L[i + 1][0], Y0 + DUNE2L[i + 1][1]);
             });
             steamer2 = steamer2Body;
+            steamer2.wall = [38, 39, 103, 49]; // на борт канонерки и рубку, не на яхту и не на насыпь
             // опера в песке (набором): Хедивская опера в Каире (1869, к открытию канала; Авоскани; за месяцы,
             // в основном из дерева). Театр, а не банк: широкое фойе, за ним выше — сценическая коробка с пологой
             // кровлей; по оси выступает подъезд о трёх арках, над ним терраса с балюстрадой и лоджия о
@@ -15521,6 +15528,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 P.wedge(89, 2, 7, 1, 3, kit_js_5.MAT.MARBLE);
                 P.round(85, 22, 30, 8, kit_js_5.MAT.MARBLE);
                 P.box(80, 28, 11, 6, kit_js_5.MAT.MARBLE);
+                P.poly([[76, 72], [76, 37], [80, 34], [86, 33], [92, 35], [92, 72]], kit_js_5.MAT.SAND).shade(1); // отрог Мукаттама под Цитаделью — мечеть не висит в небе
                 // сценическая коробка за фойе, пологая кровля
                 P.box(42, 18, 34, 18, kit_js_5.MAT.PLASTER).shade(1);
                 P.trap(40, 77, 44, 73, 14, 18, kit_js_5.MAT.IRON);
@@ -15592,17 +15600,21 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 hline(c, kit_js_5.tone(kit_js_5.MAT.SAND, 5), X0 + 12, Y0 + 66, X0 + 26, Y0 + 69);
                 hline(c, kit_js_5.tone(kit_js_5.MAT.SAND, 5), X0 + 70, Y0 + 68, X0 + 92, Y0 + 69);
                 // финиковая пальма: ствол с изломом и рубцами; перья дугой — вверх, потом свисают
-                hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 3), X0 + 5, Y0 + 71, X0 + 7, Y0 + 26);
-                hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 1), X0 + 6, Y0 + 71, X0 + 8, Y0 + 26);
+                hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 3), X0 + 5, Y0 + 71, X0 + 7, Y0 + 24);
+                hline(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 1), X0 + 6, Y0 + 71, X0 + 8, Y0 + 24);
                 for (let y = 32; y < 69; y += 4)
                     R(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 4), X0 + 6, Y0 + y, 1, 1);
-                const FR = mix9(M, N, 0.1), FL = mix9(M, B, 0.25);
-                for (const [ax, ay, bx, by] of [[13, 19, 17, 25], [12, 18, 16, 18], [1, 19, 0, 25], [2, 18, 0, 19], [8, 17, 10, 15], [5, 17, 4, 15], [11, 22, 13, 29], [3, 22, 1, 29]]) {
+                const FR = mix9(M, N, 0.1), FL = mix9(M, B, 0.25), DRY = kit_js_5.tone(kit_js_5.MAT.TIMBER, 2);
+                for (const [dx, dy] of [[-2, 25], [-1, 26], [-1, 25], [3, 25], [2, 26], [2, 25]])
+                    R(c, DRY, X0 + 7 + dx, Y0 + dy, 1, 1); // юбка сухих перьев
+                // перья разной длины: середина торчит вверх, нижние свисают ниже кроны
+                for (const [ax, ay, bx, by] of [[8, 16, 9, 13], [5, 16, 4, 13], [11, 17, 14, 16], [3, 17, 0, 16], [13, 19, 17, 22], [1, 19, 0, 23],
+                    [12, 21, 15, 27], [2, 21, 0, 27], [10, 22, 12, 30], [4, 22, 2, 30], [9, 20, 13, 21], [5, 20, 1, 21]]) {
                     hline(c, FR, X0 + 7, Y0 + 23, X0 + ax, Y0 + ay);
                     hline(c, FR, X0 + ax, Y0 + ay, X0 + bx, Y0 + by);
-                    R(c, FL, X0 + ax, Y0 + ay, 1, 1);
                 }
-                R(c, mix9(M, B, 0.3), X0 + 6, Y0 + 22, 3, 2);
+                for (const [x, y] of [[8, 21], [9, 20], [10, 19], [11, 19], [6, 21], [5, 20], [4, 19], [8, 16], [5, 16]])
+                    R(c, FL, X0 + x, Y0 + y, 1, 1); // свет — по верхней кромке
             });
             sandOpera = operaBody;
             // опера #2 (набором): та же опера летом 1869-го — к сроку. Силуэт тот же (сценическая коробка, подъезд
@@ -16044,8 +16056,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 R(c, ARCH, X0 + 5, Y0 + 87, 5, 1);
                 // напуск оголовка — светлый ряд; полоса копоти по стволу
                 R(c, kit_js_5.tone(kit_js_5.MAT.ASHLAR, 5), X0 + 71, Y0 + 6, 10, 1);
-                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 1), X0 + 72, Y0 + 30, 7, 1);
-                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 1), X0 + 72, Y0 + 60, 8, 1); // стяжные обручи
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 1), X0 + 73, Y0 + 30, 7, 1);
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 1), X0 + 72, Y0 + 60, 9, 1); // стяжные обручи — по ширине ствола
                 // восьмигранник: рёбра граней — светлое к свету, тёмное в тень
                 hline(c, kit_js_5.tone(kit_js_5.MAT.BRICK, 4), X0 + 74, Y0 + 8, X0 + 74, Y0 + 95);
                 hline(c, kit_js_5.tone(kit_js_5.MAT.BRICK, 1), X0 + 78, Y0 + 8, X0 + 78, Y0 + 95);
@@ -16171,7 +16183,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 P.box(37, 2, 10, 1, kit_js_5.MAT.IRON);
                 P.box(41, 0, 2, 2, kit_js_5.MAT.IRON); // фонарь, крышка, шар
                 P.poly(ell(42, 57, 29, 8.5, 32), kit_js_5.MAT.PLASTER);
-                P.shade(1); // пол — чуть сверху
+                P.shade(3); // пол — чуть сверху, тёмный
                 P.box(37, 55, 10, 3, kit_js_5.MAT.BOARD).shade(1);
                 P.poly(ell(42, 55, 5, 1.6, 16), kit_js_5.MAT.BOARD); // возвышение
                 P.box(40, 51, 4, 3, kit_js_5.MAT.TIMBER); // стол смотрителя
@@ -16210,8 +16222,9 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 // столы лучами от центра — тёмные на тёмном, без светлых концов
                 for (let k = 0; k < 11; k++) {
                     const an = k < 6 ? Math.PI * (0.08 + k * 0.17) : Math.PI * (1.08 + (k - 6) * 0.21);
-                    const x1 = 42 + 13 * Math.cos(an), y1 = 57 + 3.8 * Math.sin(an), x2 = 42 + 27 * Math.cos(an), y2 = 57 + 7.8 * Math.sin(an);
-                    hline(c, D2, X0 + Math.round(x1), Y0 + Math.round(y1), X0 + Math.round(x2), Y0 + Math.round(y2));
+                    const x1 = 42 + 13 * Math.cos(an), y1 = 57 + 3.8 * Math.sin(an), x2 = 42 + 25 * Math.cos(an), y2 = Math.min(62, 57 + 7 * Math.sin(an));
+                    for (const [a0, a1] of [[0, 0.42], [0.58, 1]]) // луч — два стола с проходом, не спица
+                        hline(c, D2, X0 + Math.round(x1 + (x2 - x1) * a0), Y0 + Math.round(y1 + (y2 - y1) * a0), X0 + Math.round(x1 + (x2 - x1) * a1), Y0 + Math.round(y1 + (y2 - y1) * a1));
                 }
                 // два кольца каталогов вокруг возвышения
                 for (const [rx, ry] of [[7.5, 2.2], [10, 3]])
@@ -16257,7 +16270,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     R(c, kit_js_5.tone(kit_js_5.MAT.LOGS, 3), X0 + 56, Y0 + 42 + 3 * k, 1, 2);
                 }
                 // причелины: по скатам в 2 точки, зубцы резьбы, снег; за коньком — крест-накрест в шеи
-                for (let t = 0; t <= 32; t++) {
+                for (let t = 0; t <= 33; t++) {
                     const yl = Y0 + 41 - t, xl = X0 + 3 + t, xr = X0 + 59 - t;
                     R(c, BB, xl, yl, 2, 1);
                     R(c, BB, xr - 1, yl, 2, 1);
@@ -16347,9 +16360,9 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 P.box(21, 23, 1, 6, kit_js_5.MAT.TIMBER);
                 P.box(28, 23, 1, 6, kit_js_5.MAT.TIMBER); // доска объявлений
                 // откидной мост: клёпаная балка, шарнир у пирса, конец под водой; решётка вычетом
-                P.poly([[56, 29], [90, 33], [90, 37], [56, 33]], kit_js_5.MAT.IRON);
+                P.poly([[56, 29], [84, 30], [90, 33], [90, 37], [84, 34], [56, 33]], kit_js_5.MAT.IRON); // почти вровень над водой, тонет только конец
                 for (let x = 59; x < 88; x++) {
-                    const top = Math.round(29 + (x - 56) * 4 / 34);
+                    const top = x < 84 ? Math.round(29 + (x - 56) / 28) : Math.round(30 + (x - 84) / 2);
                     if (x % 3 === 0)
                         P.clear(x, top + 1, 1, 2);
                     else if (x % 3 === 1)
@@ -16391,12 +16404,13 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + 0, Y0 + 29, 56, 1);
                 for (let x = 1; x < 56; x += 3)
                     R(c, kit_js_5.tone(kit_js_5.MAT.TIMBER, 1), X0 + x, Y0 + 30, 1, 1);
-                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + 56, Y0 + 28, X0 + 84, Y0 + 32);
-                hline(c, mix9(A, N, 0.55), X0 + 84, Y0 + 33, X0 + 91, Y0 + 35); // ушли под воду
+                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + 56, Y0 + 28, X0 + 84, Y0 + 29);
+                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + 84, Y0 + 29, X0 + 89, Y0 + 32);
+                hline(c, mix9(A, N, 0.55), X0 + 89, Y0 + 33, X0 + 91, Y0 + 34); // ушли под воду
                 // балка моста: нижний пояс светлой ниткой над водой, заклёпки
-                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 3), X0 + 57, Y0 + 32, X0 + 64, Y0 + 33);
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 3), X0 + 57, Y0 + 32, 27, 1);
                 for (let x = 58; x < 84; x += 3)
-                    R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 5), X0 + x, Y0 + Math.round(29 + (x - 56) * 4 / 34), 1, 1);
+                    R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 5), X0 + x, Y0 + Math.round(29 + (x - 56) / 28), 1, 1);
                 // шкивы, цепи к концу моста
                 for (const sx of [74, 85]) {
                     R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + sx, Y0 + 16, 2, 2);
@@ -16409,7 +16423,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     R(c, B, X0 + 41, Y0 + y, k % 5 === 0 ? 2 : 1, 1);
                 R(c, K, X0 + 38, Y0 + 5, 3, 2);
                 for (const y of [11, 13, 14, 16])
-                    R(c, mix9(B, A, 0.5), X0 + 37, Y0 + y, 1, 1); // надпись вдоль сваи — штрихами
+                    R(c, mix9(B, A, 0.5), X0 + 39, Y0 + y, 1, 1); // надпись вдоль сваи — штрихами по самой свае
                 hline(c, mix9(A, N, 0.3), X0 + 40, Y0 + 32, X0 + 42, Y0 + 44);
                 // доска: свежие листы, в середине давний — пожелтевший, со строками
                 for (const [lx, ly, lw, lh] of [[21, 18, 2, 3], [27, 18, 2, 4], [21, 22, 3, 1]])
@@ -16422,6 +16436,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 R(c, kit_js_5.tone(kit_js_5.MAT.SNOW, 5), X0 + 7, Y0 + 25, 9, 1);
             });
             depthPier = pierBody;
+            depthPier.seaSide = 1;
+            depthPier.seaFrom = -28; // море — вправо, от кромки набережной: своя вода рисунка продолжается морем двора
             // контора «Либо/Либо» #2 (набором): копенгагенский дом Золотого века (собирательно, адрес не
             // называем) — штукатурка, три этажа по пять осей, первый рустом; над карнизом по оси фронтквист с
             // треугольным фронтоном — датская примета; черепица под снегом, два слуховых окна, две трубы. Слева
@@ -16550,7 +16566,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     R(c, MS, X0 + mx + 1, Y0 + top, 1, 29 - top);
                     R(c, ML, X0 + mx, Y0 + top, 1, 29 - top);
                 }
-                for (const [y, w] of [[10, 7], [13, 6], [16, 5]]) {
+                for (const [y, w] of [[10, 5], [13, 6], [16, 7]]) {
                     R(c, MS, X0 + 84 - (w >> 1), Y0 + y, w + 1, 1);
                     R(c, kit_js_5.tone(kit_js_5.MAT.SNOW, 3), X0 + 85 - (w >> 1), Y0 + y + 1, w - 1, 1);
                 }
@@ -16585,6 +16601,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 R(c, kit_js_5.tone(kit_js_5.MAT.FELT, 2), X0 + 59, Y0 + 20, 2, 1);
             });
             pier2 = pier2Body;
+            pier2.seaSide = 1;
+            pier2.seaFrom = 12;
             // ───────────────────────── РАВНИНА ─────────────────────────
             // станция с водокачкой (набором): уездная станция (Астапово, монтаж) — длинная низкая, красный
             // кирпич, лопатки, белые наличники с лучковым верхом и замковым камнем; средний ризалит выше, в его
@@ -16670,7 +16688,7 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 R(c, N, X0 + 32, Y0 + 24, 1, 1);
                 R(c, N, X0 + 33, Y0 + 23, 1, 1);
                 R(c, N, X0 + 34, Y0 + 22, 1, 1);
-                R(c, B, X0 + 31, Y0 + 22, 1, 1); // «12» на ободе
+                R(c, A, X0 + 31, Y0 + 22, 1, 1); // «12» на ободе — пеплом по кости, видна
                 // над дверью белая доска со штрихами — вывеска без букв
                 R(c, WH, X0 + 25, Y0 + 33, 12, 3);
                 for (const [sx, sw] of [[26, 3], [30, 2], [33, 3]])
@@ -16786,9 +16804,10 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                             R(c, mix9(M, B, 0.3), X0 + f(i), Y0 + top + 6, 1, 2);
                     }
                     // ствол: светлый слева, пепел справа; чечевички поперёк; низ тёмный с трещинами
-                    R(c, mix9(B, A, 0.15), X0 + bx, Y0 + 4, 1, 49);
-                    R(c, A, X0 + bx + 1, Y0 + 4, 1, 49);
-                    for (const [dy, w] of [[9, 2], [14, 1], [19, 2], [25, 1], [30, 2], [36, 1], [41, 2], [46, 2]])
+                    R(c, mix9(B, A, 0.15), X0 + bx, Y0 + 10, 1, 43);
+                    R(c, A, X0 + bx + 1, Y0 + 10, 1, 43); // ствол начинается в кроне — не шест над ней
+                    R(c, mix9(B, A, 0.35), X0 + bx, Y0 + 8, 1, 2); // тонкая вершина в кроне
+                    for (const [dy, w] of [[14, 1], [19, 2], [25, 1], [30, 2], [36, 1], [41, 2], [46, 2]])
                         R(c, N, X0 + bx + (w === 1 ? 1 : 0), Y0 + dy, w, 1);
                     R(c, S, X0 + bx, Y0 + 52, 2, 8);
                     R(c, mix9(B, A, 0.4), X0 + bx, Y0 + 53, 1, 2);
@@ -16915,8 +16934,8 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 px(mix9(A, B, 0.2), 15, 16, 1, 2); // стекло — газ не горит
             });
             // север: копенгагенский амбар (собирательно): узкий кирпичный фасад щипцом к улице, по оси столб
-            // грузовых люков друг над другом, под коньком люк чердака и балка-подъёмник — торец светлой точкой,
-            // подкос, шкив; канат вниз с тюком; верхний люк открыт, створка откинута; по бокам малые окна;
+            // грузовых люков друг над другом, под коньком люк чердака и балка-подъёмник под капом щипчиком —
+            // торец светлой точкой, шкив; канат вниз с тюком; верхний люк открыт, створка откинута; по бокам малые окна;
             // снег по скатам и на подоконниках, у ворот табличка
             signNorth = signKit(P => {
                 P.box(1, 12, 16, 18, kit_js_5.MAT.BRICK); // корпус
@@ -16933,8 +16952,11 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     px(SN, i, 12 - i, 1, 1);
                     px(SN, 17 - i, 12 - i, 1, 1);
                 } // снег по скатам
-                px(TB, 7, 3, 4, 2);
-                px(SN, 7, 2, 4, 1); // балка под козырьком
+                px(TB, 8, 2, 2, 1);
+                px(TB, 7, 3, 4, 1);
+                px(SN, 7, 2, 1, 1);
+                px(SN, 10, 2, 1, 1); // кап щипчиком над балкой, снег по его скатам
+                px(N, 8, 4, 2, 1); // тень под капом
                 px(kit_js_5.tone(kit_js_5.MAT.TIMBER, 5), 9, 4, 1, 1); // торец балки светлый
                 px(kit_js_5.tone(kit_js_5.MAT.IRON, 4), 9, 5, 1, 1); // шкив
                 px(A, 9, 6, 1, 7); // канат
@@ -17046,17 +17068,18 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                 }
                 // флагшток
                 R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + TC, Y0 + 0, 1, 7);
-                // антенна: две струны с вершины вниз, в сторону; у верха изоляторы
-                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 2), X0 + TC + 2, Y0 + 9, X0 + TW - 1, Y0 + TH - 1);
-                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 2), X0 + TC + 2, Y0 + 11, X0 + TW - 6, Y0 + TH - 1);
-                R(c, B, X0 + TC + 3, Y0 + 14, 1, 1);
-                R(c, B, X0 + TC + 3, Y0 + 15, 1, 1);
+                // антенна: две струны с вершины вниз, в сторону — к своему якорю в поле, мимо опор башни; изоляторы железом
+                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 2), X0 + TC + 1, Y0 + 1, X0 + TW + 14, Y0 + TH - 1);
+                hline(c, kit_js_5.tone(kit_js_5.MAT.IRON, 2), X0 + TC + 1, Y0 + 3, X0 + TW + 8, Y0 + TH - 1);
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + TC + 3, Y0 + 9, 1, 1);
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 4), X0 + TC + 3, Y0 + 11, 1, 1);
+                R(c, kit_js_5.tone(kit_js_5.MAT.IRON, 1), X0 + TW + 7, Y0 + TH - 2, 9, 2);
             });
             towerBeacon = kit_js_5.split(towerBody, towerLive);
             exports_40("ARCH", ARCH = {
                 // ── ДОМИНАНТА · запад: ажурная башня, маяк на вершине ──
                 landmark: {
-                    name: 'Эйфелева башня', side: 'west', w: 72, h: 200,
+                    name: 'Эйфелева башня', side: 'west', w: 104, h: 200,
                     light: { dx: 0, dy: -184, r: 90, color: [217, 207, 184], flicker: 0 },
                     life: { flag: [[0, -199, 6, 'PKV']] },
                     draw: towerBeacon,
@@ -17066,11 +17089,11 @@ System.register("sprites/arch/steamshadows", ["world/mechanisms", "sprites/arch/
                     { name: 'опера в песке', w: 92, h: 72, draw: sandOpera, draw2: opera2 },
                 ],
                 east: [
-                    { name: 'вокзал двух часов', w: 92, h: 74, noFlip: true, draw: giyofuStation, draw2: station2, life2: { smoke: [[38, -6]] } },
+                    { name: 'вокзал двух часов', w: 92, h: 74, noFlip: true, draw: giyofuStation, draw2: station2 },
                     { name: 'контора перевода машин', w: 96, h: 64, noFlip: true, life: { smoke: [[30, -60]] }, draw: machineOffice },
                 ],
                 west: [
-                    { name: 'прядильня с трубой', w: 84, h: 100, life: { smoke: [[34, -93]] }, draw: spinningMill },
+                    { name: 'прядильня с трубой', w: 84, h: 100, life: { smoke: [[34, -96]] }, draw: spinningMill },
                     { name: 'читальный зал', w: 84, h: 66, life: { birds: [[-5, -3, -63, 'P']] }, draw: readingRoom, draw2: readingRoom2 },
                 ],
                 north: [
@@ -17506,7 +17529,7 @@ System.register("sprites/arch/catastrophes", ["sprites/arch/kit", "world/sky", "
             R(c, MS, X0 + mx + 1, Y0 + top, 1, 61 - top);
             R(c, ML, X0 + mx, Y0 + top, 1, 61 - top);
         }
-        for (const [y, w] of [[24, 14], [31, 12], [38, 10]]) {
+        for (const [y, w] of [[24, 10], [31, 12], [38, 14]]) {
             R(c, MS, X0 + 58 - (w >> 1), Y0 + y, w + 1, 1);
             R(c, kit_js_6.tone(kit_js_6.MAT.SNOW, 3), X0 + 58 - (w >> 1) + 1, Y0 + y + 1, w - 1, 1);
         } // реи фока, паруса убраны
@@ -24844,8 +24867,8 @@ System.register("content/arch_walls", [], function (exports_52, context_52) {
                 "steamshadows:plain:дом с мезонином": ["МИСЮСЬ, ГДЕ ТЫ?"],
                 "steamshadows:plain:станция с водокачкой": ["ЗДЕСЬ БЫЛ ВАСЯ", "КИПЯТОК"],
                 "steamshadows:south:пароход в песках": ["KILROY WAS HERE"],
-                "steamshadows:south:пароход в песках#2": ["NEWPORT", "17·XI·1869"],
-                "steamshadows:west:Эйфелева башня": ["LAVOISIER · AMPÈRE", "CAUCHY · LAPLACE", "INUTILE ET MONSTRUEUSE"],
+                "steamshadows:south:пароход в песках#2": ["NEWPORT · 17·XI·1869"],
+                "steamshadows:west:Эйфелева башня": ["LAVOISIER · AMPÈRE", "INUTILE ET MONSTRUEUSE"],
                 "twohearths:east:хижина Басё": ["kusa no to mo", "sumikawaru yo zo", "hina no ie"],
                 "twohearths:north:островная обсерватория": ["NON HABERI SED ESSE"],
                 "twohearths:north:островная обсерватория#2": ["NE FRUSTRA VIXISSE VIDEAR", "SUSPICIENDO DESPICIO"],
@@ -24884,7 +24907,7 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             if (!l)
                 continue;
             const dx = player.x - (l.x + l.w / 2);
-            const dy = player.y - (l.y + l.h / 2);
+            const dy = player.y - (l.archDraw ? l.archGy - Math.min(l.h / 2, 30) : l.y + l.h / 2); // у высокой постройки — от подножия, не от середины рамки
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d < 60 && !player.moving) {
                 wallProx[locId] = (wallProx[locId] || 0) + 1;
@@ -25001,6 +25024,12 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             l.archDraw(ctx, l.archX, l.archGy, 0);
         }
         catch (e) { /* без карты — по рамке */ }
+        const RW = l.archDraw.wall; // [x0, y0, x1, y1] в рамке: строки — только сюда (борт, а не насыпь)
+        if (RW)
+            for (let j = 0; j < H; j++)
+                for (let i = 0; i < W; i++)
+                    if (i < RW[0] || i >= RW[2] || j < RW[1] || j >= RW[3])
+                        M[j * W + i] = -2; // −2: туда строке нельзя ни одним рядом
         byDim.set(dk, M);
         return M;
     }
@@ -25010,9 +25039,13 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             const need = strokeW(lines[i], i + l.id.length * 7);
             let best = null;
             for (const lo of [2, 1, 0]) { // светлая стена, тёмное тело, хоть что-то, но не воздух
-                const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++)
-                    if (M[j * W + x] >= lo)
-                        n++; return n >= 3; };
+                const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++) {
+                    const v = M[j * W + x];
+                    if (v === -2)
+                        return false;
+                    if (v >= lo)
+                        n++;
+                } return n >= 3; };
                 if (best && best.take >= Math.min(need, 24))
                     break;
                 for (let b = H - 5; b >= 0; b--) {
@@ -55631,7 +55664,8 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
                 if (kind === 'water') {
                     // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
                     const len = 130 + m.w * 0.6;
-                    let x0 = dir > 0 ? m.x + 16 : m.x - 16 - len, x1 = dir > 0 ? m.x + 16 + len : m.x - 16;
+                    const from = (m.loc && m.loc.archDraw && m.loc.archDraw.seaFrom) ?? 16; // откуда вода у самого рисунка (пирс рисует свою)
+                    let x0 = dir > 0 ? m.x + from : m.x - from - len, x1 = dir > 0 ? m.x + from + len : m.x - from;
                     for (const o of ms)
                         if (o !== m) {
                             if (dir > 0 && o.x > m.x)

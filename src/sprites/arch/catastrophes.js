@@ -805,7 +805,7 @@ const BARQUE_HULL = [[16, 70], [13, 66], [13, 62], [15, 59], [24, 60], [36, 61],
 function barqueRig(c, X0, Y0) {
   const MS = tone(MAT.TIMBER, 2), ML = tone(MAT.TIMBER, 4), RG = tone(MAT.IRON, 2), FR = B;
   for (const [mx, top] of [[58, 18], [40, 16], [24, 22]]) { R(c, MS, X0 + mx + 1, Y0 + top, 1, 61 - top); R(c, ML, X0 + mx, Y0 + top, 1, 61 - top); }
-  for (const [y, w] of [[24, 14], [31, 12], [38, 10]]) { R(c, MS, X0 + 58 - (w >> 1), Y0 + y, w + 1, 1); R(c, tone(MAT.SNOW, 3), X0 + 58 - (w >> 1) + 1, Y0 + y + 1, w - 1, 1); }   // реи фока, паруса убраны
+  for (const [y, w] of [[24, 10], [31, 12], [38, 14]]) { R(c, MS, X0 + 58 - (w >> 1), Y0 + y, w + 1, 1); R(c, tone(MAT.SNOW, 3), X0 + 58 - (w >> 1) + 1, Y0 + y + 1, w - 1, 1); }   // реи фока, паруса убраны
   hline(c, MS, X0 + 40, Y0 + 32, X0 + 30, Y0 + 28); hline(c, MS, X0 + 24, Y0 + 37, X0 + 16, Y0 + 33);      // гафели грота и бизани
   R(c, ML, X0 + 39, Y0 + 19, 3, 3); R(c, MS, X0 + 41, Y0 + 19, 1, 3);                                    // бочка марсового
   hline(c, RG, X0 + 58, Y0 + 19, X0 + 79, Y0 + 56); hline(c, RG, X0 + 40, Y0 + 17, X0 + 58, Y0 + 19);        // штаги

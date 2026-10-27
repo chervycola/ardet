@@ -41,7 +41,7 @@ export function updateProximity(player, locations) {
     const l = locOf(locations, locId);
     if (!l) continue;
     const dx = player.x - (l.x + l.w / 2);
-    const dy = player.y - (l.y + l.h / 2);
+    const dy = player.y - (l.archDraw ? l.archGy - Math.min(l.h / 2, 30) : l.y + l.h / 2);   // у высокой постройки — от подножия, не от середины рамки
     const d = Math.sqrt(dx * dx + dy * dy);
     if (d < 60 && !player.moving) {
       wallProx[locId] = (wallProx[locId] || 0) + 1;
@@ -130,6 +130,8 @@ function wallMask(l) {
     set(o, k, v) { o[k] = v; return true; },
   });
   try { l.archDraw(ctx, l.archX, l.archGy, 0); } catch (e) { /* без карты — по рамке */ }
+  const RW = l.archDraw.wall;                                      // [x0, y0, x1, y1] в рамке: строки — только сюда (борт, а не насыпь)
+  if (RW) for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (i < RW[0] || i >= RW[2] || j < RW[1] || j >= RW[3]) M[j * W + i] = -2;   // −2: туда строке нельзя ни одним рядом
   byDim.set(dk, M);
   return M;
 }
@@ -144,7 +146,7 @@ function placeLines(l, lines) {
     const need = strokeW(lines[i], i + l.id.length * 7);
     let best = null;
     for (const lo of [2, 1, 0]) {                                  // светлая стена, тёмное тело, хоть что-то, но не воздух
-      const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++) if (M[j * W + x] >= lo) n++; return n >= 3; };
+      const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++) { const v = M[j * W + x]; if (v === -2) return false; if (v >= lo) n++; } return n >= 3; };
       if (best && best.take >= Math.min(need, 24)) break;
     for (let b = H - 5; b >= 0; b--) {
       let clash = false;
