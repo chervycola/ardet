@@ -611,7 +611,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   test('запекание: неподвижная постройка — один холст, дальше картинкой; живая — рисуется сама; без холста — живой', () => {
     B._resetBake();
-    const stat = arch.find(l => !B.kindOf(l.archDraw, l.archX, l.archGy).live), live = arch.find(l => B.kindOf(l.archDraw, l.archX, l.archGy).live);
+    const stat = arch.find(l => !B.kindOf(l.archDraw, l.archX, l.archGy).live);
+    // все кольца теперь набором (тело + живое слоем): живая целиком постройка в мире больше не встречается —
+    // путь «живая рисуется сама» проверяем на пробной, что сдвигается со временем
+    const live = arch.find(l => B.kindOf(l.archDraw, l.archX, l.archGy).live) || { ...stat, archDraw: (cx, x, gy, t) => cx.fillRect(x + (t % 3), gy, 1, 1) };
     const counting = () => { const c = fakeCtx(); c.n = { fill: 0, img: 0 }; c.fillRect = () => c.n.fill++; c.drawImage = () => c.n.img++; return c; };
     // без холста (как в тестах) — рисуется живой
     let c = counting(); B.drawArch(c, stat, 1);
@@ -718,7 +721,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   const BK = await imp('render/archbake.js');
   // кольца, перерисованные набором целиком (ARCH_PLAN, этап 5): сколько видов и сколько с огнём поверх
-  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4], lightgarden: [11, 6], twohearths: [11, 5], enlightenment: [11, 2], steamshadows: [11, 4], catastrophes: [11, 7], now: [11, 6] };
+  const KIT_RINGS = { axial: [11, 4], porticoes: [11, 4], lightgarden: [11, 6], twohearths: [11, 5], enlightenment: [11, 2], steamshadows: [11, 4], catastrophes: [11, 7], neon: [13, 7], now: [11, 6] };
   test('набор: перерисованные кольца — все виды и доминанта набором; тело неподвижно (запекается), живое — слоем поверх; всё в рамке', () => {
    for (const [ring, [nKinds, nSplit]] of Object.entries(KIT_RINGS)) {
     const A = ARCH_BY_RING[ring], kinds = [...[].concat(A.landmark), ...['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd])];
@@ -754,8 +757,9 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
      5: ['обсерватория', 'оранжерея Линнея', 'печатня', 'сфинкс в лесах', 'форт со стелой', 'экзаменационные кельи'],
      6: ['вокзал двух часов', 'контора «Либо/Либо»', 'опера в песке', 'пароход в песках', 'пирс над глубиной', 'читальный зал'],
      7: ['вмёрзший барк', 'вышка с факелом', 'затопленный фарватер', 'купол-остов', 'мачта дирижабля', 'собор с обломком шпиля'],
+     8: ['город-соты', 'домик Хёвди', 'кофейня Махфуза', 'нефтяная платформа', 'отель-пластина', 'панельная девятиэтажка', 'щит с ковбоями'],
      9: ['библиотека у моря', 'игла над пустыней', 'серверный ангар', 'стеклянная башня', 'стеклянная пагода'] };
-   const RING = { 1: 'axial', 2: 'porticoes', 3: 'lightgarden', 4: 'twohearths', 5: 'enlightenment', 6: 'steamshadows', 7: 'catastrophes', 9: 'now' };
+   const RING = { 1: 'axial', 2: 'porticoes', 3: 'lightgarden', 4: 'twohearths', 5: 'enlightenment', 6: 'steamshadows', 7: 'catastrophes', 8: 'neon', 9: 'now' };
    for (const [ringN, names] of Object.entries(WANT)) {
     const ring = RING[ringN];
     const A = ARCH_BY_RING[ring], kinds = ['south', 'east', 'west', 'north', 'plain'].flatMap(sd => A[sd]);
