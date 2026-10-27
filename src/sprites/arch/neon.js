@@ -512,108 +512,159 @@ const capsules = split(capsBody, capsLive);
 
 // ── ЗАПАД (набором) ──────────────────────────────────────────────────
 // колесо обозрения (набором): за решёткой ворот парка, открытие которого назначали на 1 мая и не
-// открыли. Опоры буквой «А» стальным профилем, обод двойной, двенадцать спиц; гондолы открытые —
-// навес, скамья; остановлено как положено: нижняя у помоста. Гондолы чуть ходят на ветру. Над
-// воротами маркиза аркой, лампочки мёртвые; касса. На пилоне звезда — восемь лучей, ни один не
-// горит (звезда-«гуги» над въездом — монтаж назван: так украшали парки за океаном).
-const WH = { x: 50, cy: 36, r: 34 };
+// открыли (рассказ о пробном пуске 27 апреля не подтверждён). Опоры буквой «А» стальным профилем,
+// обод двойной, шестнадцать спиц, в каждом узле гондола — навес, скамья. Остановлено как положено:
+// нижняя у помоста, к помосту ступенька. Гондолы чуть ходят на ветру. Ворота — лентой арки, под
+// замком доска, буквы осыпались, по кромке мёртвые лампочки; касса. У въезда на пилоне звезда —
+// восемь лучей на патронах, ни один не горит. Монтаж назван: звезда-«гуги», ворота с маркизой
+// и касса — приём парков за океаном, не этого парка.
+const WH = { x: 50, cy: 45, r: 33 };
+const MARQ = [];
+for (let k = 0; k <= 16; k++) { const a = Math.PI * k / 16; MARQ.push([WH.x - 18 * Math.cos(a), 70 - 10 * Math.sin(a)]); }
+for (let k = 16; k >= 0; k--) { const a = Math.PI * k / 16; MARQ.push([WH.x - 16 * Math.cos(a), 70 - 8 * Math.sin(a)]); }
+const WHEEL_FRONT = [MAT.BOARD, MAT.CONCRETE, MAT.BRICK];             // перед колесом: маркиза, столбы, касса
+// контекст с маской: пиксели колеса за воротами не ложатся
+function masked(c, X0, Y0, P) {
+  return {
+    set fillStyle(v) { c.fillStyle = v; },
+    fillRect(x, y, w, h) {
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (!WHEEL_FRONT.includes(P.at(x + i - X0, y + j - Y0))) c.fillRect(x + i, y + j, 1, 1);
+    },
+  };
+}
+function wheelGrille(c, X0, Y0) {
+  for (let k = -12; k <= 12; k += 6) R(c, tone(MAT.IRON, 3), X0 + WH.x + k, Y0 + 72, 1, 19);
+  R(c, N, X0 + WH.x - 13, Y0 + 72, 27, 1);
+}
 const wheelBody = kit(88, 92, P => {
   P.poly([[29, 91], [32, 91], [WH.x, WH.cy + 1], [WH.x - 1, WH.cy]], MAT.STEEL);
   P.poly([[68, 91], [71, 91], [WH.x + 1, WH.cy], [WH.x, WH.cy + 1]], MAT.STEEL);
-  P.box(WH.x - 14, 64, 29, 2, MAT.STEEL);                              // связь опор
-  P.box(WH.x - 6, 78, 13, 2, MAT.BOARD);                              // помост
+  P.box(WH.x - 6, 84, 13, 2, MAT.STEEL); P.box(WH.x + 7, 87, 3, 1, MAT.STEEL);   // помост, ступенька
   P.box(WH.x - 16, 69, 3, 23, MAT.CONCRETE); P.box(WH.x + 14, 69, 3, 23, MAT.CONCRETE);   // столбы ворот
-  const arc = [[WH.x - 18, 70]];
-  for (let k = 0; k <= 16; k++) { const a = Math.PI * k / 16; arc.push([WH.x - 18 * Math.cos(a), 70 - 10 * Math.sin(a)]); }
-  arc.push([WH.x + 18, 70], [WH.x + 18, 72], [WH.x - 18, 72]);
-  P.poly(arc, MAT.BOARD).shade(1);                                     // маркиза
-  P.box(76, 77, 9, 14, MAT.BRICK); P.box(75, 76, 11, 1, MAT.CONCRETE); P.cut(78, 80, 5, 4);   // касса
+  P.poly(MARQ, MAT.BOARD).shade(1);                                    // маркиза — лента арки
+  P.box(WH.x - 10, 63, 21, 4, MAT.BOARD);                              // доска под замком арки — для объявления
+  P.box(75, 77, 11, 14, MAT.BRICK); P.box(74, 76, 13, 1, MAT.CONCRETE); P.cut(78, 80, 5, 4);   // касса
   P.poly([[7, 91], [10, 91], [7, 40], [5, 40]], MAT.CONCRETE);         // косой стебель пилона
-}, { seed: 239, chip: 0.02 }, (c, X0, Y0) => {
-  const px = pxOf(c, X0, Y0), X = X0 + WH.x, cy = Y0 + WH.cy, RIM = tone(MAT.STEEL, 3), RIM2 = tone(MAT.STEEL, 1);
-  ring(c, RIM, X, cy, WH.r); ring(c, RIM2, X, cy, WH.r - 3);
-  for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; line(c, RIM2, X, cy, X + Math.round(Math.cos(a) * (WH.r - 3)), cy + Math.round(Math.sin(a) * (WH.r - 3))); }
-  px(B, WH.x - 1, WH.cy - 1, 3, 3);                                     // ступица
-  for (let k = -12; k <= 12; k += 6) px(tone(MAT.IRON, 3), WH.x + k, 72, 1, 19);   // решётка ворот
-  px(N, WH.x - 13, 72, 27, 1);
+}, { seed: 239, chip: 0.02 }, (c, X0, Y0, P) => {
+  const px = pxOf(c, X0, Y0), X = X0 + WH.x, cy = Y0 + WH.cy, RIM = tone(MAT.STEEL, 3), RIM2 = tone(MAT.STEEL, 1), m = masked(c, X0, Y0, P);
+  ring(m, RIM, X, cy, WH.r); ring(m, RIM2, X, cy, WH.r - 3);
+  for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; line(m, RIM2, X, cy, X + Math.round(Math.cos(a) * (WH.r - 3)), cy + Math.round(Math.sin(a) * (WH.r - 3))); }
+  // передние ноги «А» — поверх обода
+  const LEG = tone(MAT.STEEL, 2);
+  for (const bx of [30, 31, 69, 70]) line(m, LEG, X0 + bx, Y0 + 90, X, cy + 1);
+  px(tone(MAT.STEEL, 4), WH.x - 1, WH.cy - 1, 3, 3); px(N, WH.x, WH.cy, 1, 1);   // ступица
+  wheelGrille(c, X0, Y0);
   for (let dx = -16; dx <= 16; dx += 2) {                              // мёртвые лампочки по кромке маркизы
     const y = 70 - Math.round(10 * Math.sqrt(Math.max(0, 1 - (dx / 18) ** 2)));
-    if ((dx + 40) % 7 !== 3) px(tone(MAT.STEEL, 4), WH.x + dx, y + 1, 1, 1);
+    if ((dx + 40) % 7 !== 3) px(tone(MAT.STEEL, 4), WH.x + dx, y - 1, 1, 1);
   }
-  px(tone(MAT.BOARD, 1), WH.x - 9, 62, 19, 3); px(N, WH.x - 8, 63, 4, 1); px(N, WH.x + 1, 63, 7, 1);   // доска: буквы осыпались
   px(LEAF, 79, 85, 3, 2);                                              // «перерыв»
-  // звезда на пилоне: восемь лучей, тёмная
+  // звезда на пилоне: восемь лучей почти равной длины, на концах — патроны, втулка тёмная
   const sx = 6, sy = 34, ST = tone(MAT.STEEL, 3);
-  px(ST, sx - 6, sy, 13, 1); px(ST, sx, sy - 6, 1, 13);
-  for (let d = 1; d <= 4; d++) { px(ST, sx + d, sy - d); px(ST, sx - d, sy + d); if (d < 4) { px(ST, sx - d, sy - d); px(ST, sx + d, sy + d); } }
-  px(tone(MAT.STEEL, 5), sx - 1, sy - 1, 3, 3);
+  px(ST, sx - 5, sy, 11, 1); px(ST, sx, sy - 5, 1, 11);
+  for (let d = 1; d <= 4; d++) { px(ST, sx + d, sy - d); px(ST, sx - d, sy + d); px(ST, sx - d, sy - d); px(ST, sx + d, sy + d); }
+  for (const [dx, dy] of [[-6, 0], [6, 0], [0, -6], [0, 6], [-5, -5], [5, -5], [-5, 5], [5, 5]]) px(A, sx + dx, sy + dy);
+  px(ST, sx - 1, sy - 1, 3, 3); px(N, sx, sy);
 });
 function wheelLive(c, x, gy) {
-  const X0 = Math.round(x) - 44, G = Math.round(gy), Y0 = G - 92;
-  for (let k = 0; k < 8; k++) {
-    const a = k * Math.PI / 4 + Math.PI / 8, gx = WH.x + Math.round(Math.cos(a) * WH.r), gyy = WH.cy + Math.round(Math.sin(a) * WH.r);
+  const X0 = Math.round(x) - 44, G = Math.round(gy), Y0 = G - 92, m = masked(c, X0, Y0, wheelBody.plan());
+  for (let k = 0; k < 16; k++) {
+    const a = k * Math.PI / 8, gx = WH.x + Math.round(Math.cos(a) * WH.r), gyy = WH.cy + Math.round(Math.sin(a) * WH.r);
     const h = hang(`gond:${X0}:${G}:${k}`, X0 + gx + 0.5, Y0 + gyy, 3, { sail: 0.03, damp: 0.994, gy: G, r: 3 });
     const o = Math.max(-1, Math.min(1, Math.round(tipOf(h).x - (X0 + gx + 0.5))));
     const L = Math.max(X0 + 1, Math.min(X0 + 80, X0 + gx - 3 + o)), T = Y0 + gyy;
-    R(c, A, X0 + gx, T, 1, 2);
-    R(c, B, L, T + 2, 7, 1); R(c, A, L, T + 3, 1, 2); R(c, A, L + 6, T + 3, 1, 2);
-    R(c, A, L, T + 5, 7, 1); R(c, tone(MAT.BOARD, 3), L + 2, T + 4, 3, 1);
+    m.fillStyle = A; m.fillRect(X0 + gx, T, 1, 2);
+    m.fillStyle = B; m.fillRect(L, T + 2, 7, 1);
+    m.fillStyle = A; m.fillRect(L, T + 3, 1, 2); m.fillRect(L + 6, T + 3, 1, 2); m.fillRect(L, T + 5, 7, 1);
+    m.fillStyle = tone(MAT.BOARD, 3); m.fillRect(L + 2, T + 4, 3, 1);
   }
+  wheelGrille(c, X0, Y0);                                               // решётка ворот — перед гондолой у помоста
 }
 const wheel = split(wheelBody, wheelLive);
 
 // щит с ковбоями (набором): щит на трёх ногах, мостик, лампы подсветки погашены. Два одинаковых
-// плаката со всадником: на втором он кашляет. Новый клеят поверх прежнего: у края отошло — три
-// слоя, нижний писан от руки.
+// плаката со всадником: конь в профиль, всадник прямо, курит; на втором тот же — завалился на
+// шею коня, кашляет. Новый клеят поверх прежнего: у края угол отошёл и загнулся светлой
+// изнанкой, под ним ступенькой прежний плакат и нижний, писанный от руки (обломок мазка киноварью).
+// Над щитом — пустое небо: рамка выше доски, чтобы кольцам #2 было куда подниматься.
+const BY = 14;
 function boardFrame(P) {
-  for (const x of [10, 37, 64]) P.box(x, 27, 2, 31, MAT.STEEL);
-  P.box(10, 37, 56, 1, MAT.STEEL); P.box(10, 47, 56, 1, MAT.STEEL);
-  P.box(2, 27, 72, 1, MAT.STEEL).shade(-1);                            // мостик
-  P.box(2, 2, 72, 25, MAT.BOARD);
+  for (const x of [10, 37, 64]) P.box(x, BY + 27, 2, 31, MAT.STEEL);
+  P.box(10, BY + 37, 56, 1, MAT.STEEL); P.box(10, BY + 47, 56, 1, MAT.STEEL);
+  P.box(2, BY + 27, 72, 1, MAT.STEEL).shade(-1);                       // мостик
+  P.box(2, BY + 2, 72, 25, MAT.BOARD);
 }
 function boardOver(px) {
   for (const lx of [12, 30, 48, 66]) { px(A, lx, 0, 3, 1); px(A, lx + 1, 1, 1, 1); }   // лампы погашены
 }
-const billboard = kit(76, 58, boardFrame, { seed: 241 }, (c, X0, Y0) => {
-  const px = pxOf(c, X0, Y0), SKY = mix9(B, S, 0.28), GR = tone(MAT.BOARD, 2);
+// всадник в профиль: конь вправо, x — круп; cough — второй плакат
+function rider(px, x, cough) {
+  px(N, x, 15, 15, 5);                                                 // корпус коня
+  for (const [lx, sh] of [[1, 0], [3, 1], [11, 0], [13, -1]]) { px(N, x + lx, 20, 1, 3); px(N, x + lx + sh, 23, 1, 2); }
+  px(N, x + 14, 13, 2, 2); px(N, x + 15, 12, 2, 1); px(N, x + 16, 10, 4, 2); px(N, x + 19, 12, 1, 1); px(N, x + 16, 9, 1, 1);   // шея, голова
+  px(N, x - 1, 15, 1, 4); px(N, x - 2, 17, 1, 4);                      // хвост
+  if (!cough) {
+    px(N, x + 5, 5, 5, 2); px(N, x + 4, 7, 7, 1); px(N, x + 6, 8, 3, 3); px(N, x + 5, 11, 4, 4);
+    px(N, x + 9, 12, 3, 1);                                             // рука к поводу
+    px(LEAF, x + 9, 9, 2, 1); px(K, x + 11, 9, 1, 1);                  // сигарета с угольком
+  } else {
+    px(N, x + 5, 12, 5, 3); px(N, x + 8, 11, 3, 2);                    // торс завален на шею
+    px(N, x + 10, 8, 3, 3); px(N, x + 9, 7, 5, 1); px(N, x + 10, 5, 3, 2);
+    px(N, x + 13, 9, 1, 2);                                             // рука у рта
+    px(B, x + 15, 7, 1, 1); px(B, x + 17, 6, 1, 1); px(B, x + 16, 4, 1, 1);
+  }
+}
+const billboard = kit(76, 58 + BY, boardFrame, { seed: 241 }, (c, X0, Y0) => {
+  const px = pxOf(c, X0, Y0 + BY), SKY = mix9(B, S, 0.28), GR = tone(MAT.BOARD, 2);
   boardOver(px);
   for (const x of [4, 39]) {
     px(SKY, x, 4, 33, 8); px(GR, x, 12, 33, 13);
-    px(S, x + 1, 11, 9, 1); px(S, x + 24, 10, 8, 2);                   // столовые горы
+    px(S, x + 1, 9, 6, 3); px(S, x + 2, 8, 4, 1); px(S, x + 29, 10, 4, 2);   // столовые горы
+    rider(px, x + 7, x > 20);
   }
-  const H = 20;                                                         // всадник прямо, курит
-  px(N, H - 3, 5, 7, 3); px(N, H - 7, 8, 15, 1); px(N, H - 8, 7, 1, 1); px(N, H + 8, 7, 1, 1);
-  px(N, H - 2, 9, 5, 4); px(N, H - 1, 13, 3, 1); px(N, H - 7, 14, 15, 1); px(N, H - 9, 15, 19, 9);
-  px(LEAF, H + 3, 11, 4, 1); px(K, H + 7, 11, 1, 1);
-  const Q = 54;                                                         // второй согнулся — кашляет
-  px(N, Q, 9, 7, 2); px(N, Q - 4, 11, 15, 1); px(N, Q - 5, 10, 1, 1); px(N, Q + 11, 10, 1, 1);
-  px(N, Q + 1, 12, 5, 5); px(N, Q - 9, 19, 9, 5); px(N, Q - 4, 17, 11, 7);
-  px(N, Q + 5, 15, 3, 2); px(SKY, Q + 6, 14, 2, 2); px(LEAF, Q - 7, 22, 3, 1);
-  px(B, Q + 9, 14, 1, 1); px(B, Q + 11, 13, 1, 1); px(B, Q + 10, 16, 1, 1);
-  // отклеившийся угол: под рекламой — прежний плакат, под ним — писанный от руки
-  px(LEAF, 4, 21, 6, 4); px(K, 4, 24, 5, 1); px(tone(MAT.BOARD, 4), 4, 21, 3, 2); px(N, 7, 20, 3, 1);
+  // отклеившийся угол: загнут светлой изнанкой; под ним прежний плакат и писанный от руки
+  const OLD = tone(MAT.BOARD, 4), HAND = mix9(B, S, 0.35);
+  for (let dy = 0; dy <= 5; dy++) for (let dx = 0; dx <= 5; dx++) {
+    const s = dx + dy, x = 4 + dx, y = 24 - dy;
+    if (s <= 3) px(HAND, x, y); else if (s <= 5) px(OLD, x, y);
+    else if (s <= 8) px(s === 6 ? mix9(LEAF, N, 0.25) : LEAF, x, y);
+  }
+  px(K, 5, 22, 1, 1); px(K, 6, 21, 1, 1);                               // обломок мазка буквы
 });
-// щит #2 (набором): курящий щит. Во всю доску — курильщик (солдат, моряк, теперь кто-то в шляпе):
-// голова, шляпа, сигарета; рот — тёмным кружком. Раз в несколько секунд изо рта вылетает кольцо
-// и плывёт над улицей, расходится и тает.
-const smokerBody = kit(76, 58, boardFrame, { seed: 243 }, (c, X0, Y0) => {
-  const px = pxOf(c, X0, Y0), SKY = mix9(B, S, 0.32), FACE = mix9(B, S, 0.45), HAT = tone(MAT.BOARD, 1);
+// щит #2 (набором): курящий щит — по образцу щита на Таймс-сквер (1941–66), как он и висел: на
+// стене дома, в упор над окнами, лампы подсветки по верху. Во всю доску — курильщик (солдат,
+// моряк, теперь кто-то в шляпе): шляпа, лицо, рот тёмным кружком, сигарета в пальцах; справа
+// выцветший слоган — блоки букв, не прочесть. Раз в несколько секунд изо рта вылетает кольцо,
+// поднимается над щитом, расходится и тает (пар из трубы за щитом — в изнанке).
+const smokerBody = kit(76, 58 + BY, P => {
+  P.box(0, BY + 6, 76, 52, MAT.BRICK);
+  P.box(0, BY + 5, 76, 1, MAT.CONCRETE).shade(-1);                     // карниз брандмауэра
+  for (const y of [BY + 31, BY + 44]) for (const x of [5, 17, 29, 41, 53, 65]) P.cut(x, y, 5, 7);
+  P.box(0, BY + 29, 76, 1, MAT.CONCRETE);                              // пояс под щитом
+  P.box(2, BY + 2, 72, 25, MAT.BOARD);
+}, { seed: 243, chip: 0.02, soot: [[17, BY + 30, 5, 5], [53, BY + 43, 5, 4]] }, (c, X0, Y0) => {
+  const px = pxOf(c, X0, Y0 + BY), SKY = mix9(B, S, 0.32), FACE = mix9(B, S, 0.45), HAND = mix9(B, S, 0.56), HAT = tone(MAT.BOARD, 1);
   boardOver(px);
+  for (const lx of [12, 30, 48, 66]) px(A, lx + 1, 2, 1, 2);           // кронштейны ламп к доске
   px(SKY, 4, 4, 68, 21);
   px(HAT, 22, 5, 18, 4); px(HAT, 17, 9, 28, 2);                        // шляпа
-  px(FACE, 23, 11, 16, 12); px(FACE, 25, 23, 12, 2);                   // лицо
+  px(FACE, 23, 11, 16, 12); px(FACE, 25, 23, 12, 2);                   // лицо, подбородок
   px(N, 26, 14, 3, 1); px(N, 33, 14, 3, 1);                            // глаза в тени полей
   px(tone(MAT.BOARD, 2), 29, 16, 2, 4);                                // нос
   px(N, 31, 20, 3, 3); px(FACE, 32, 21, 1, 1);                         // рот кружком
-  px(tone(MAT.BOARD, 2), 18, 25, 26, 0); px(S, 15, 23, 32, 2);         // ворот
-  px(LEAF, 37, 19, 6, 1); px(A, 43, 19, 1, 1);                         // сигарета
-  for (const x of [50, 56, 62]) px(tone(MAT.BOARD, 3), x, 8, 1, 14);  // полосы доски за курильщиком
+  px(S, 15, 25, 32, 2);                                                // ворот
+  px(LEAF, 35, 22, 5, 1); px(A, 40, 22, 1, 1);                         // сигарета
+  px(HAND, 37, 23, 3, 2); px(HAND, 38, 25, 2, 1);                      // пальцы, запястье к вороту
+  // выцветший слоган: блоки букв, вторая строка мельче
+  const SL = mix9(SKY, S, 0.35);
+  for (const [x, w] of [[48, 3], [52, 3], [56, 2], [60, 3], [64, 3], [68, 2]]) px(SL, x, 8, w, 5);
+  for (let x = 48; x < 71; x += 3) if (x !== 57) px(SL, x, 15, 2, 3);
 });
 function smokerLive(c, x, gy, t) {
-  const X0 = Math.round(x) - 38, Y0 = Math.round(gy) - 58, ph = (t | 0) % 240;
-  if (ph >= 180) return;
-  const k = ph / 180, rx = Math.round(33 + 30 * k), ry = Math.round(20 - 18 * k), s = k < 0.4 ? 1 : 2;
-  c.globalAlpha = 0.85 * (1 - k);
+  const X0 = Math.round(x) - 38, Y0 = Math.round(gy) - 58 - BY, ph = (t | 0) % 240;
+  if (ph >= 200) return;
+  const k = ph / 200, rx = Math.round(33 + 31 * k), ry = Math.round(BY + 21 - (BY + 16) * Math.sqrt(k)), s = k < 0.3 ? 1 : k < 0.65 ? 2 : 3;
+  c.globalAlpha = 0.85 * Math.sqrt(1 - k);
   c.fillStyle = A;
   c.fillRect(X0 + rx - s, Y0 + ry - s, 2 * s + 1, 1); c.fillRect(X0 + rx - s, Y0 + ry + s, 2 * s + 1, 1);
   c.fillRect(X0 + rx - s - 1, Y0 + ry - s + 1, 1, 2 * s - 1); c.fillRect(X0 + rx + s + 1, Y0 + ry - s + 1, 1, 2 * s - 1);
@@ -1192,8 +1243,8 @@ export const ARCH = {
     { name: 'капсульная башня', w: 46, h: 92, draw: capsules },
   ],
   west: [
-    { name: 'колесо обозрения', w: 88, h: 92, life: { birds: [[3, 6, -89]] }, draw: wheel },
-    { name: 'щит с ковбоями', w: 76, h: 58, draw: billboard, draw2: smoker, life: { blink: [[29, -57, 'S', 150, 0.12]], birds: [[-23, -17, -55]] } },
+    { name: 'колесо обозрения', w: 88, h: 92, life: { birds: [[4, 8, -79]] }, draw: wheel },
+    { name: 'щит с ковбоями', w: 76, h: 72, draw: billboard, draw2: smoker, life: { blink: [[29, -57, 'S', 150, 0.12]], birds: [[-23, -17, -55]] } },
   ],
   north: [
     { name: 'нефтяная платформа', w: 84, h: 96, draw: rig, life: { smoke: [[38, -87]], birds: [[-40, -34, -61]] }, draw2: rig2, life2: {} },
