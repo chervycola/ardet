@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════
-// ЗАГЛАВНАЯ — оттиск автора во весь экран: красная луна над городком и щит у дороги
-// (assets/scenes/entry.webp, слот SCENES.entry); на щите — афиша выступлений
-// (content/afisha.js), пока пусто — «COMING SOON»; кнопка «FALL IN» среди птиц.
+// ЗАГЛАВНАЯ — картина автора во весь экран (16:9, оттиск расширен по бокам): красная луна
+// над городком и щит у дороги (assets/scenes/entry.webp, слот SCENES.entry); на щите —
+// афиша выступлений (content/afisha.js), пока пусто — «COMING SOON»; кнопка «FALL IN»
+// среди птиц; по бокам картина сыплется цифрой (ui/titleglitch.js).
 // Бланк «форма 0» снят
 // (слово автора 24.10): настройки быта, «вспомнить дорогу», «покинуть вечер» и
 // графа подписи пока лишние — их код остался (core/prefs.js, ui/signature.js,
@@ -12,6 +13,7 @@
 import { loadAsset } from '../assets/loader.js';
 import { SCENES } from '../assets/manifest.js';
 import { SHOWS } from '../content/afisha.js';
+import { bake, run } from './titleglitch.js';
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 // щит: даты выступлений; нет их — «скоро»
@@ -27,11 +29,12 @@ function fillAfisha(el) {
 let entry = null, busy = false;
 const shown = () => entry && entry.style.display !== 'none';
 
-// оттиск на холсте: поле бумаги срезаем (слово автора: «растяни картинку, не смотря
-// на рамку»); по высоте — во весь экран; узкий экран — окно держит щит и луну;
-// широкий — края протянуты в стороны и к краю экрана гаснут в ночь
-const CROP = { x0: 0.066, x1: 0.934, y0: 0.024, y1: 0.962 };   // доли картины без бумажного поля
-const ANCHOR_X = 0.445;                                        // середина окна на узком экране: между щитом и луной
+// оттиск на холсте: картина 16:9 без поля (расширена по бокам с прежнего оттиска автора);
+// по высоте — во весь экран; уже экрана — середина по картине, но полоса от щита до
+// луны (KEY) всегда целиком; узкий экран — полоса KEY во всю ширину, картина ниже
+// экрана, сверху и снизу ночь; шире картины — края протянуты в стороны и гаснут в ночь.
+// По бокам — сбой цифрой (ui/titleglitch.js); щит и кнопка чисты
+const KEY = [0.322, 0.628];                                    // от левой кромки щита до правой кромки луны
 function paint(im) {
   const cv = document.getElementById('entry-canvas'), art = document.getElementById('entry-art');
   if (!cv || !art || !im) return;
@@ -40,30 +43,44 @@ function paint(im) {
   cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
   const g = cv.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0); g.imageSmoothingQuality = 'high';
-  const W0 = im.naturalWidth, H0 = im.naturalHeight;
-  const sx0 = CROP.x0 * W0, sx1 = CROP.x1 * W0, sy0 = CROP.y0 * H0, sh = (CROP.y1 - CROP.y0) * H0, sw = sx1 - sx0;
-  const s = vh / sh, dw = sw * s;
+  const W0 = im.naturalWidth, H0 = im.naturalHeight, kw = (KEY[1] - KEY[0]) * W0;
+  let s = vh / H0;
+  if (kw * s > vw * 0.96) s = vw * 0.96 / kw;                  // узкий: щит и луна во всю ширину
+  const dw = W0 * s, dh = H0 * s, dy = Math.max(0, (vh - dh) / 2);
   let dx = (vw - dw) / 2;
-  if (dw > vw) dx = Math.min(0, Math.max(vw - dw, vw / 2 - (ANCHOR_X * W0 - sx0) * s));
+  if (dw > vw) dx = Math.min(0, vw - KEY[1] * dw, Math.max(vw - dw, -KEY[0] * dw, vw / 2 - dw / 2));
   g.fillStyle = '#0D0B0A'; g.fillRect(0, 0, vw, vh);
+  const fade = (x0, y0, x1, y1, w, h, a0, a1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, `rgba(13,11,10,${a0})`); gr.addColorStop(1, `rgba(13,11,10,${a1})`); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), Math.min(y0, y1), w, h); };
   if (dx > 0) {                                                // бока: край оттиска протянут вдаль
     g.save();
     if ('filter' in g) g.filter = 'blur(3px)';
     const inset = 0.012 * W0;                                  // столбец — чуть внутрь оттиска: мимо царапин кромки
-    g.drawImage(im, sx0 + inset, sy0, 2, sh, -4, 0, dx + 8, vh);
-    g.drawImage(im, sx1 - inset - 2, sy0, 2, sh, dx + dw - 4, 0, vw - dx - dw + 8, vh);
+    g.drawImage(im, inset, 0, 2, H0, -4, dy, dx + 8, dh);
+    g.drawImage(im, W0 - inset - 2, 0, 2, H0, dx + dw - 4, dy, vw - dx - dw + 8, dh);
     g.restore();
-    const fade = (x0, x1, a0, a1) => { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, `rgba(13,11,10,${a0})`); gr.addColorStop(1, `rgba(13,11,10,${a1})`); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), vh); };
-    fade(0, dx, 0.8, 0); fade(dx + dw, vw, 0, 0.8);
-    for (const [x0, w] of [[0, dx], [dx + dw, vw - dx - dw]]) {   // верх и низ протяжки — в ночь
-      const gv = g.createLinearGradient(0, 0, 0, vh);
-      gv.addColorStop(0, 'rgba(13,11,10,1)'); gv.addColorStop(0.1, 'rgba(13,11,10,0)'); gv.addColorStop(0.88, 'rgba(13,11,10,0)'); gv.addColorStop(1, 'rgba(13,11,10,1)');
-      g.fillStyle = gv; g.fillRect(x0, 0, w, vh);
-    }
+    fade(0, 0, dx, 0, dx, vh, 0.8, 0); fade(dx + dw, 0, vw, 0, vw - dx - dw, vh, 0, 0.8);
   }
-  g.drawImage(im, sx0, sy0, sw, sh, dx, 0, dw, vh);
-  // рамка полной картины — щит и кнопка стоят на своих местах
-  Object.assign(art.style, { left: `${dx - sx0 * s}px`, top: `${-sy0 * s}px`, width: `${W0 * s}px`, height: `${H0 * s}px` });
+  if (dy > 0) {                                                // сверху и снизу: небо и земля протянуты и гаснут в ночь
+    g.save();
+    if ('filter' in g) g.filter = 'blur(3px)';
+    const inset = 0.012 * H0;
+    g.drawImage(im, 0, inset, W0, 2, dx, -4, dw, dy + 8);
+    g.drawImage(im, 0, H0 - inset - 2, W0, 2, dx, dy + dh - 4, dw, vh - dy - dh + 8);
+    g.restore();
+    fade(0, 0, 0, dy, vw, dy, 1, 0); fade(0, dy + dh, 0, vh, vw, vh - dy - dh, 0, 1);
+  }
+  g.drawImage(im, 0, 0, W0, H0, dx, dy, dw, dh);
+  // рамка картины — щит и кнопка стоят на своих местах
+  Object.assign(art.style, { left: `${dx}px`, top: `${dy}px`, width: `${dw}px`, height: `${dh}px` });
+  // сбой по бокам: щит-афиша и кнопка — неприкосновенны
+  const keep = ['entry-afisha', 'entry-btn'].map(id => document.getElementById(id)).filter(Boolean).map(el => {
+    const r = el.getBoundingClientRect(), p = 6;
+    return { x0: r.left - p, y0: r.top - p, x1: r.right + p, y1: r.bottom + p };
+  }).filter(r => r.x1 - r.x0 > 2 * 6);
+  const L = { vw, vh, dpr, dx, dy, dw, dh, keep, seed: 7 };
+  bake(g, cv, L);
+  const over = document.getElementById('entry-glitch');
+  if (over) run(cv, over, L, shown);
 }
 
 export function initTitle({ onGo }) {

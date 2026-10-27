@@ -74,40 +74,41 @@ canvas#game {
   background: #0D0B0A;
   overflow: hidden;
 }
-/* оттиск — на холсте (ui/title.js): бумажное поле срезано, картина во всю высоту
-   экрана; на узком — бока срезаются, окно держит щит и луну; на широком — края
-   протянуты в стороны и гаснут в ночь. Слова автора: «растяни картинку, не смотря
-   на рамку». #entry-art — рамка полной картины поверх холста: щит и кнопка */
-#entry-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
-#entry.art #entry-canvas { opacity: 1; }
+/* картина — на холсте (ui/title.js): 16:9, во всю высоту экрана; на узком — полоса от щита
+   до луны во всю ширину, сверху и снизу ночь; на широком — края протянуты в стороны и гаснут
+   в ночь. По бокам — сбой цифрой: блоки запечены в холст, рывки и потёки — на #entry-glitch
+   (ui/titleglitch.js). #entry-art — рамка картины поверх холста: щит и кнопка */
+#entry-canvas, #entry-glitch { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
+#entry-glitch { pointer-events: none; }
+#entry.art #entry-canvas, #entry.art #entry-glitch { opacity: 1; }
 #entry-art {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  aspect-ratio: 864 / 1184;
-  width: min(96vw, calc(96vh * 864 / 1184));
-  width: min(96vw, calc(96dvh * 864 / 1184));
+  aspect-ratio: 2000 / 1100;
+  width: min(96vw, calc(96vh * 2000 / 1100));
+  width: min(96vw, calc(96dvh * 2000 / 1100));
   container-type: size;
 }
 #entry.art #entry-art { transform: none; aspect-ratio: auto; }
 /* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
 #entry-afisha {
-  position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
+  position: absolute; left: 33.15%; top: 61.7%; width: 14.2%; height: 11.7%;
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
   padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
   font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
-  font-size: 11px; font-size: 1.6cqh; line-height: 1.5;
+  font-size: 11px; font-size: 1.7cqh; line-height: 1.5;
   pointer-events: none; user-select: none;
 }
 #entry.art #entry-afisha { display: flex; }
-#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.05cqh; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.12cqh; }
 #entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
-  position: absolute; z-index: 2; left: 51.5%; top: 41.5%; transform: translate(-50%, -50%);
+  position: absolute; z-index: 2; left: 50.75%; top: 41.8%; transform: translate(-50%, -50%);
   margin: 0; padding: 1.35em 2.7em; min-height: 44px; border-radius: 0;
   font-family: var(--font-pixel); letter-spacing: 1px;
-  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.5cqh, 15px);
+  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.6cqh, 15px);
   color: #D9CFB8; background: rgba(13, 11, 10, 0.72);
   border: 1px solid #C23B2B;
   white-space: nowrap; cursor: pointer;
@@ -118,8 +119,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-btn { transition: none; } }
+html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-glitch, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
@@ -800,7 +801,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </head>
 <body>
 <div id="gw"><canvas id="game"></canvas></div>
-<div id="entry"><canvas id="entry-canvas" aria-hidden="true"></canvas><div id="entry-art"><div id="entry-afisha" aria-label="афиша выступлений"></div><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
+<div id="entry"><canvas id="entry-canvas" aria-hidden="true"></canvas><canvas id="entry-glitch" aria-hidden="true"></canvas><div id="entry-art"><div id="entry-afisha" aria-label="афиша выступлений"></div><button type="button" id="entry-btn" aria-label="fall in — войти">FALL IN</button></div><div id="build-stamp"></div></div>
 <div id="howto">
   <div id="howto-box">
     <div class="ht-title">ПЕРЕД ДОРОГОЙ</div>
@@ -880,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='3a1ad39 · 2026-10-27';console.log('[оттиск]', '3a1ad39 · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='acac0ad · 2026-10-27';console.log('[оттиск]', 'acac0ad · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -64142,10 +64143,317 @@ System.register("content/afisha", [], function (exports_169, context_169) {
         }
     };
 });
-System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha"], function (exports_170, context_170) {
+System.register("ui/titleglitch", ["core/prefs"], function (exports_170, context_170) {
     "use strict";
-    var loader_js_2, manifest_js_2, afisha_js_1, esc, entry, busy, shown, CROP, ANCHOR_X;
+    var prefs_js_6, BO, AS, KV, FONT, LEFT, RAMP_L, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RELOAD, cl, hitsKeep, lcg, snapC, smalls, smear, raf, layer;
     var __moduleName = context_170 && context_170.id;
+    function hh(a, b, s) {
+        let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
+    // вес сбоя в точке экрана (0 — чисто, 1 — край): по картине, у края экрана, полосами
+    // разной глубины; щит и кнопка — ноль
+    function colW(L, x) {
+        const xp = (x - L.dx) / L.dw;
+        const w = xp < 0 || xp > 1 ? 1 : Math.max(cl((LEFT - xp) / RAMP_L), cl((xp - RIGHT) / RAMP_R));
+        return Math.max(w, EDGE_W * cl(1 - Math.min(x, L.vw - x) / (EDGE * L.vw)));
+    }
+    function weightAt(L, x, y) {
+        const w = L.col ? L.col[Math.max(0, Math.min(L.col.length - 1, Math.floor(x)))] : colW(L, x);
+        if (w <= 0)
+            return 0;
+        for (const r of L.keep)
+            if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1)
+                return 0;
+        const j = Math.floor(y / STRIPE), d = hh(j, 1, L.seed);
+        return w + (d - 0.5) * 0.36 + (hh(j, 2, L.seed) < 0.12 ? 0.3 : 0); // полоса глубже или мельче соседних
+    }
+    exports_170("weightAt", weightAt);
+    // полоса сбоя на строках y..y+h: слева — от края до a, справа — от b до края (по весу,
+    // у всех строк сразу — сорванная строка не заедет на щит)
+    function band(L, y, h) {
+        let a = L.vw, b = 0;
+        for (let yy = y; yy < y + Math.max(1, h); yy += 3) {
+            let ra = 0, rb = L.vw;
+            while (ra < L.vw * 0.5 && weightAt(L, ra, yy) > 0.05)
+                ra += 4;
+            while (rb > L.vw * 0.5 && weightAt(L, rb - 1, yy) > 0.05)
+                rb -= 4;
+            a = Math.min(a, ra);
+            b = Math.max(b, rb);
+        }
+        return [a, b];
+    }
+    // строка и сторона сбоя: где полоса шире — туда чаще
+    function pick(L, rnd, h) {
+        for (let k = 0; k < 6; k++) {
+            const y = Math.floor(rnd() * Math.max(1, L.vh - h)), [a, b] = band(L, y, h), wl = a, wr = L.vw - b;
+            if (wl + wr < 8)
+                continue;
+            const left = rnd() * (wl + wr) < wl;
+            return { y, h, left, x0: left ? 0 : b, x1: left ? a : L.vw };
+        }
+        return null;
+    }
+    function canvas(old, w, h) {
+        const c = old || document.createElement('canvas');
+        if (c.width !== w || c.height !== h) {
+            c.width = w;
+            c.height = h;
+        }
+        return c;
+    }
+    // картина блоками p точек экрана (сетка от угла экрана)
+    function small(src, L, p) {
+        const w = Math.max(1, Math.ceil(L.vw / p)), h = Math.max(1, Math.ceil(L.vh / p));
+        const c = canvas(smalls.get(p), w, h), g = c.getContext('2d');
+        g.imageSmoothingEnabled = true;
+        g.imageSmoothingQuality = 'high';
+        g.clearRect(0, 0, w, h);
+        g.drawImage(src, 0, 0, w * p * L.dpr, h * p * L.dpr, 0, 0, w, h);
+        smalls.set(p, c);
+        return c;
+    }
+    // сорванная строка: полоса сдвинута вбок в своих границах; бывает с налётом киновари или кости
+    function tear(g, src, D, q, dx, tint) {
+        g.save();
+        g.beginPath();
+        g.rect(q.x0, q.y, q.x1 - q.x0, q.h);
+        g.clip();
+        g.drawImage(src, q.x0 * D, q.y * D, (q.x1 - q.x0) * D, q.h * D, q.x0 + dx, q.y, q.x1 - q.x0, q.h);
+        if (tint) {
+            g.globalAlpha = tint === KV ? 0.24 : 0.1;
+            g.fillStyle = tint;
+            g.fillRect(q.x0, q.y, q.x1 - q.x0, q.h);
+        }
+        g.restore();
+    }
+    // ── запечь: блоки, сорванные строки, потёки, битые точки — прямо в холст картины ──
+    function bake(g, cv, L) {
+        L.col = new Float32Array(Math.ceil(L.vw) + 1); // вес по столбцам — раз на размер
+        for (let x = 0; x < L.col.length; x++)
+            L.col[x] = colW(L, x + 0.5);
+        const D = L.dpr, rnd = lcg(L.seed * 7919);
+        smalls.clear();
+        snapC = canvas(snapC, cv.width, cv.height); // картина до сбоя: из неё блоки и рывки
+        snapC.getContext('2d').drawImage(cv, 0, 0);
+        for (const [, p] of LEVELS)
+            small(snapC, L, p);
+        small(snapC, L, RELOAD);
+        g.save();
+        g.imageSmoothingEnabled = false;
+        for (const [th, p] of LEVELS) { // мельче — шире, крупнее — у самого края
+            g.save();
+            g.beginPath();
+            let any = false;
+            for (let y = 0; y < L.vh; y += p) {
+                let run = -1;
+                for (let x = 0; x <= L.vw; x += p) {
+                    const on = x < L.vw && weightAt(L, x + p / 2, y + p / 2) >= th;
+                    if (on && run < 0)
+                        run = x;
+                    if (!on && run >= 0) {
+                        g.rect(run, y, x - run, p);
+                        run = -1;
+                        any = true;
+                    }
+                }
+            }
+            if (any) {
+                g.clip();
+                const sm = smalls.get(p);
+                g.drawImage(sm, 0, 0, sm.width, sm.height, 0, 0, sm.width * p, sm.height * p);
+            }
+            g.restore();
+        }
+        // сорванные строки — уже по блокам: снимок после блоков
+        const mid = canvas(null, cv.width, cv.height);
+        mid.getContext('2d').drawImage(cv, 0, 0);
+        for (let i = 0, n = Math.round(L.vh / 22); i < n; i++) {
+            const h = 2 + Math.floor(rnd() * (rnd() < 0.2 ? 40 : 14)), q = pick(L, rnd, h);
+            if (!q || q.x1 - q.x0 < 6)
+                continue;
+            const reach = 6 + rnd() * 0.5 * (q.x1 - q.x0);
+            tear(g, mid, D, q, Math.round((q.left ? 1 : -1) * (rnd() < 0.7 ? 1 : -1) * Math.min(64, reach)), rnd() < 0.18 ? KV : rnd() < 0.12 ? BO : null);
+        }
+        // потёки: строка тянется вниз — по нескольку с каждого бока
+        for (let i = 0, n = 4 + Math.round(L.vh / 260); i < n; i++) {
+            const q = pick(L, rnd, 1);
+            if (!q || q.x1 - q.x0 < 10)
+                continue;
+            const w = Math.min(q.x1 - q.x0 - 2, 2 + 2 * Math.floor(rnd() * 7)), x = q.x0 + Math.floor(rnd() * (q.x1 - q.x0 - w)), h = 24 + Math.floor(rnd() * 180);
+            if (hitsKeep(L, x, q.y, w, h))
+                continue;
+            g.globalAlpha = 0.85;
+            smear(g, mid, D, { x, y: q.y, w, h: Math.min(h, L.vh - q.y) });
+            g.globalAlpha = 1;
+        }
+        // битые точки и обрывки строк: кость, пепел, редкая киноварь
+        const n = Math.round(L.vw * L.vh / 7000);
+        for (let i = 0; i < n; i++) {
+            const x = Math.floor(hh(i, 3, L.seed) * L.vw), y = Math.floor(hh(i, 4, L.seed) * L.vh), w = weightAt(L, x, y);
+            if (w < 0.3 || hh(i, 5, L.seed) > w)
+                continue;
+            g.globalAlpha = 0.5 + 0.35 * hh(i, 6, L.seed);
+            g.fillStyle = i % 9 === 4 ? KV : i % 3 ? BO : AS;
+            const k = hh(i, 7, L.seed);
+            if (k < 0.12) { // строка-остаток — в своей полосе
+                const len = 16 + Math.floor(hh(i, 8, L.seed) * 110), [a] = band(L, y, 1);
+                g.globalAlpha *= 0.45;
+                g.fillRect(x, y, x < L.vw / 2 ? Math.max(2, Math.min(len, a - x)) : len, 1);
+            }
+            else
+                g.fillRect(x, y, k < 0.35 ? 2 : 1, k > 0.9 ? 2 : 1);
+        }
+        g.restore();
+    }
+    exports_170("bake", bake);
+    function stop() {
+        if (raf)
+            cancelAnimationFrame(raf);
+        raf = 0;
+        if (layer)
+            layer.getContext('2d').clearRect(0, 0, layer.width, layer.height);
+    }
+    exports_170("stop", stop);
+    function run(cv, over, L, shown) {
+        stop();
+        layer = over;
+        over.width = cv.width;
+        over.height = cv.height;
+        if (prefs_js_6.reducedMotion() || !snapC)
+            return;
+        const g = over.getContext('2d');
+        g.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+        g.imageSmoothingEnabled = false;
+        const D = L.dpr, rnd = lcg(L.seed);
+        const S = { t0: -1, last: -1, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, code: null, nextCode: 1500 + rnd() * 2000, reload: null };
+        const frame = now => {
+            raf = 0;
+            if (!shown()) {
+                stop();
+                return;
+            }
+            raf = requestAnimationFrame(frame);
+            if (S.t0 < 0)
+                S.t0 = now;
+            const t = now - S.t0;
+            if (S.last >= 0 && t - S.last < 33)
+                return; // тридцать раз в секунду
+            S.last = t;
+            g.clearRect(0, 0, L.vw, L.vh);
+            // рывок: раз в 0,5–2 с на 0,12–0,36 с — строки уезжают вбок, держатся по 70 мс
+            if (!S.burst && t >= S.next) {
+                S.burst = { t0: t, len: 120 + rnd() * 240 };
+                S.next = t + 500 + rnd() * 1500;
+            }
+            if (S.burst && t - S.burst.t0 > S.burst.len) {
+                S.burst = null;
+                S.tears = [];
+                S.reload = null;
+            }
+            if (S.burst && t - S.tearsAt >= 70) {
+                S.tearsAt = t;
+                S.tears = [];
+                S.reload = null;
+                for (let i = 0, n = 2 + Math.floor(rnd() * 5); i < n; i++) {
+                    const big = rnd() < 0.2, q = pick(L, rnd, big ? 40 + Math.floor(rnd() * 100) : 2 + Math.floor(rnd() * 18));
+                    if (!q)
+                        continue;
+                    S.tears.push({ q, dx: Math.round((rnd() < 0.5 ? -1 : 1) * (6 + rnd() * (big ? 36 : 60))), tint: rnd() < 0.25 ? KV : rnd() < 0.15 ? BO : null });
+                }
+                if (rnd() < 0.6) { // кусок подгружается заново — крупно
+                    const h = 16 + Math.floor(rnd() * 40), q = pick(L, rnd, h);
+                    if (q && q.x1 - q.x0 > 30) {
+                        const w = Math.min(q.x1 - q.x0, 30 + Math.floor(rnd() * 90)), x = q.x0 + Math.floor(rnd() * (q.x1 - q.x0 - w + 1));
+                        if (!hitsKeep(L, x, q.y, w, h))
+                            S.reload = { x, y: q.y, w, h };
+                    }
+                }
+            }
+            for (const r of S.tears)
+                tear(g, snapC, D, r.q, r.dx, r.tint);
+            if (S.reload) {
+                const r = S.reload, sm = smalls.get(RELOAD), p = RELOAD;
+                const bx = Math.floor(r.x / p), by = Math.floor(r.y / p), bw = Math.ceil((r.x + r.w) / p) - bx, bh = Math.ceil((r.y + r.h) / p) - by;
+                g.save();
+                g.beginPath();
+                g.rect(r.x, r.y, r.w, r.h);
+                g.clip();
+                if (sm)
+                    g.drawImage(sm, bx, by, bw, bh, bx * p, by * p, bw * p, bh * p);
+                g.restore();
+            }
+            // потёк: строка тянется вниз столбом и держится 0,3–1,2 с; не больше трёх сразу
+            S.smears = S.smears.filter(m => t < m.end);
+            if (t >= S.nextSmear && S.smears.length < 3) {
+                const q = pick(L, rnd, 1);
+                if (q && q.x1 - q.x0 > 6) {
+                    const w = Math.min(q.x1 - q.x0, 2 * (2 + Math.floor(rnd() * 13))), x = q.x0 + Math.floor(rnd() * (q.x1 - q.x0 - w + 1)), h = 20 + Math.floor(rnd() * 160);
+                    if (!hitsKeep(L, x, q.y, w, h))
+                        S.smears.push({ x, y: q.y, w, h: Math.min(h, L.vh - q.y), end: t + 300 + rnd() * 900 });
+                }
+                S.nextSmear = t + 600 + rnd() * 1200;
+            }
+            for (const m of S.smears)
+                smear(g, snapC, D, m);
+            // двоичный код проступает строкой: раз в 2,5–6 с на полсекунды, цифры меняются
+            if (!S.code && t >= S.nextCode) {
+                const q = pick(L, rnd, 8);
+                if (q && q.x1 - q.x0 > 70)
+                    S.code = { q, len: Math.min(32, Math.floor((q.x1 - q.x0 - 8) / 8)), end: t + 500 + rnd() * 500, k: Math.floor(rnd() * 1e6) };
+                S.nextCode = t + 2500 + rnd() * 3500;
+            }
+            if (S.code && t > S.code.end)
+                S.code = null;
+            if (S.code) {
+                const c = S.code, k = c.k + Math.floor(t / 100);
+                let s = '';
+                for (let j = 0; j < c.len; j++)
+                    s += hh(k, j, L.seed) < 0.5 ? '0' : '1';
+                g.font = `8px ${FONT}`;
+                g.textBaseline = 'top';
+                g.fillStyle = BO;
+                g.globalAlpha = 0.55;
+                g.fillText(s, c.q.x0 + 4, c.q.y);
+                g.globalAlpha = 1;
+            }
+        };
+        raf = requestAnimationFrame(frame);
+    }
+    exports_170("run", run);
+    return {
+        setters: [
+            function (prefs_js_6_1) {
+                prefs_js_6 = prefs_js_6_1;
+            }
+        ],
+        execute: function () {
+            BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
+            FONT = '"Press Start 2P","VT323",monospace';
+            // полосы сбоя по картине (доли ширины): слева сыплется всё, что левее щита, справа — правее
+            // луны и городка; на узком экране — ещё полоса у самого края экрана, послабее
+            LEFT = 0.29, RAMP_L = 0.24, RIGHT = 0.68, RAMP_R = 0.25, EDGE = 0.09, EDGE_W = 0.75;
+            STRIPE = 12; // полоса глубины, точки экрана
+            LEVELS = [[0.16, 4], [0.32, 6], [0.5, 10], [0.68, 16], [0.86, 24]]; // [порог веса, блок]
+            RELOAD = 20; // блок подгрузки заново
+            cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
+            hitsKeep = (L, x, y, w, h) => L.keep.some(r => x < r.x1 && x + w > r.x0 && y < r.y1 && y + h > r.y0);
+            lcg = seed => { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); };
+            snapC = null;
+            smalls = new Map(); // блок → картина, уменьшенная до блоков
+            // потёк: одна строка картины тянется вниз столбом
+            smear = (g, src, D, m) => g.drawImage(src, m.x * D, m.y * D, m.w * D, D, m.x, m.y, m.w, m.h);
+            // ── живой слой поверх ──
+            raf = 0, layer = null;
+        }
+    };
+});
+System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_171, context_171) {
+    "use strict";
+    var loader_js_2, manifest_js_2, afisha_js_1, titleglitch_js_1, esc, entry, busy, shown, KEY;
+    var __moduleName = context_171 && context_171.id;
     // щит: даты выступлений; нет их — «скоро»
     function fillAfisha(el) {
         if (!el)
@@ -64168,38 +64476,52 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         const g = cv.getContext('2d');
         g.setTransform(dpr, 0, 0, dpr, 0, 0);
         g.imageSmoothingQuality = 'high';
-        const W0 = im.naturalWidth, H0 = im.naturalHeight;
-        const sx0 = CROP.x0 * W0, sx1 = CROP.x1 * W0, sy0 = CROP.y0 * H0, sh = (CROP.y1 - CROP.y0) * H0, sw = sx1 - sx0;
-        const s = vh / sh, dw = sw * s;
+        const W0 = im.naturalWidth, H0 = im.naturalHeight, kw = (KEY[1] - KEY[0]) * W0;
+        let s = vh / H0;
+        if (kw * s > vw * 0.96)
+            s = vw * 0.96 / kw; // узкий: щит и луна во всю ширину
+        const dw = W0 * s, dh = H0 * s, dy = Math.max(0, (vh - dh) / 2);
         let dx = (vw - dw) / 2;
         if (dw > vw)
-            dx = Math.min(0, Math.max(vw - dw, vw / 2 - (ANCHOR_X * W0 - sx0) * s));
+            dx = Math.min(0, vw - KEY[1] * dw, Math.max(vw - dw, -KEY[0] * dw, vw / 2 - dw / 2));
         g.fillStyle = '#0D0B0A';
         g.fillRect(0, 0, vw, vh);
+        const fade = (x0, y0, x1, y1, w, h, a0, a1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, `rgba(13,11,10,${a0})`); gr.addColorStop(1, `rgba(13,11,10,${a1})`); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), Math.min(y0, y1), w, h); };
         if (dx > 0) { // бока: край оттиска протянут вдаль
             g.save();
             if ('filter' in g)
                 g.filter = 'blur(3px)';
             const inset = 0.012 * W0; // столбец — чуть внутрь оттиска: мимо царапин кромки
-            g.drawImage(im, sx0 + inset, sy0, 2, sh, -4, 0, dx + 8, vh);
-            g.drawImage(im, sx1 - inset - 2, sy0, 2, sh, dx + dw - 4, 0, vw - dx - dw + 8, vh);
+            g.drawImage(im, inset, 0, 2, H0, -4, dy, dx + 8, dh);
+            g.drawImage(im, W0 - inset - 2, 0, 2, H0, dx + dw - 4, dy, vw - dx - dw + 8, dh);
             g.restore();
-            const fade = (x0, x1, a0, a1) => { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, `rgba(13,11,10,${a0})`); gr.addColorStop(1, `rgba(13,11,10,${a1})`); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), vh); };
-            fade(0, dx, 0.8, 0);
-            fade(dx + dw, vw, 0, 0.8);
-            for (const [x0, w] of [[0, dx], [dx + dw, vw - dx - dw]]) { // верх и низ протяжки — в ночь
-                const gv = g.createLinearGradient(0, 0, 0, vh);
-                gv.addColorStop(0, 'rgba(13,11,10,1)');
-                gv.addColorStop(0.1, 'rgba(13,11,10,0)');
-                gv.addColorStop(0.88, 'rgba(13,11,10,0)');
-                gv.addColorStop(1, 'rgba(13,11,10,1)');
-                g.fillStyle = gv;
-                g.fillRect(x0, 0, w, vh);
-            }
+            fade(0, 0, dx, 0, dx, vh, 0.8, 0);
+            fade(dx + dw, 0, vw, 0, vw - dx - dw, vh, 0, 0.8);
         }
-        g.drawImage(im, sx0, sy0, sw, sh, dx, 0, dw, vh);
-        // рамка полной картины — щит и кнопка стоят на своих местах
-        Object.assign(art.style, { left: `${dx - sx0 * s}px`, top: `${-sy0 * s}px`, width: `${W0 * s}px`, height: `${H0 * s}px` });
+        if (dy > 0) { // сверху и снизу: небо и земля протянуты и гаснут в ночь
+            g.save();
+            if ('filter' in g)
+                g.filter = 'blur(3px)';
+            const inset = 0.012 * H0;
+            g.drawImage(im, 0, inset, W0, 2, dx, -4, dw, dy + 8);
+            g.drawImage(im, 0, H0 - inset - 2, W0, 2, dx, dy + dh - 4, dw, vh - dy - dh + 8);
+            g.restore();
+            fade(0, 0, 0, dy, vw, dy, 1, 0);
+            fade(0, dy + dh, 0, vh, vw, vh - dy - dh, 0, 1);
+        }
+        g.drawImage(im, 0, 0, W0, H0, dx, dy, dw, dh);
+        // рамка картины — щит и кнопка стоят на своих местах
+        Object.assign(art.style, { left: `${dx}px`, top: `${dy}px`, width: `${dw}px`, height: `${dh}px` });
+        // сбой по бокам: щит-афиша и кнопка — неприкосновенны
+        const keep = ['entry-afisha', 'entry-btn'].map(id => document.getElementById(id)).filter(Boolean).map(el => {
+            const r = el.getBoundingClientRect(), p = 6;
+            return { x0: r.left - p, y0: r.top - p, x1: r.right + p, y1: r.bottom + p };
+        }).filter(r => r.x1 - r.x0 > 2 * 6);
+        const L = { vw, vh, dpr, dx, dy, dw, dh, keep, seed: 7 };
+        titleglitch_js_1.bake(g, cv, L);
+        const over = document.getElementById('entry-glitch');
+        if (over)
+            titleglitch_js_1.run(cv, over, L, shown);
     }
     function initTitle({ onGo }) {
         entry = document.getElementById('entry');
@@ -64259,7 +64581,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
                 go();
         });
     }
-    exports_170("initTitle", initTitle);
+    exports_171("initTitle", initTitle);
     return {
         setters: [
             function (loader_js_2_1) {
@@ -64270,31 +64592,35 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
             },
             function (afisha_js_1_1) {
                 afisha_js_1 = afisha_js_1_1;
+            },
+            function (titleglitch_js_1_1) {
+                titleglitch_js_1 = titleglitch_js_1_1;
             }
         ],
         execute: function () {
             esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
             entry = null, busy = false;
             shown = () => entry && entry.style.display !== 'none';
-            // оттиск на холсте: поле бумаги срезаем (слово автора: «растяни картинку, не смотря
-            // на рамку»); по высоте — во весь экран; узкий экран — окно держит щит и луну;
-            // широкий — края протянуты в стороны и к краю экрана гаснут в ночь
-            CROP = { x0: 0.066, x1: 0.934, y0: 0.024, y1: 0.962 }; // доли картины без бумажного поля
-            ANCHOR_X = 0.445; // середина окна на узком экране: между щитом и луной
+            // оттиск на холсте: картина 16:9 без поля (расширена по бокам с прежнего оттиска автора);
+            // по высоте — во весь экран; уже экрана — середина по картине, но полоса от щита до
+            // луны (KEY) всегда целиком; узкий экран — полоса KEY во всю ширину, картина ниже
+            // экрана, сверху и снизу ночь; шире картины — края протянуты в стороны и гаснут в ночь.
+            // По бокам — сбой цифрой (ui/titleglitch.js); щит и кнопка чисты
+            KEY = [0.322, 0.628]; // от левой кромки щита до правой кромки луны
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_171, context_171) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "core/prefs", "ui/title", "assets/loader"], function (exports_172, context_172) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_24, surface_js_3, grass_js_2, bunting_js_1, haze_js_3, shadows_js_1, sky_js_12, redNoon_js_7, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_11, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_7, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_14, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_6, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
-    var __moduleName = context_171 && context_171.id;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, geiger_js_1, wind_js_24, surface_js_3, grass_js_2, bunting_js_1, haze_js_3, shadows_js_1, sky_js_12, redNoon_js_7, pen_js_1, etch_js_1, relief_js_11, fireRing_js_1, arteries_js_10, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_11, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_45, player_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_7, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_48, ulitsa_db_js_14, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_7, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_46, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCaster, heroSitCaster, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var __moduleName = context_172 && context_172.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_14.SEGMENTS.length ? ulitsa_db_js_14.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
-        audio_js_13.setVolume(prefs_js_6.soundLevel());
+        audio_js_13.setVolume(prefs_js_7.soundLevel());
         if (window.ArdetAudio && window.ArdetAudio.setVolume)
-            window.ArdetAudio.setVolume(prefs_js_6.soundLevel());
-        plate_js_3.plate.economy = prefs_js_6.economyFrame();
+            window.ArdetAudio.setVolume(prefs_js_7.soundLevel());
+        plate_js_3.plate.economy = prefs_js_7.economyFrame();
     }
     function lockHint() {
         if (time_js_45.t - lockHintAt < 1800)
@@ -64635,7 +64961,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         drawWorldWhisper({ x: camX, y: camY });
         net_js_4.drawVoices(worldCtx, 'surface', player); // сказанное рядом — пером над тем, кто сказал
         worldCtx.restore();
-        if (!prefs_js_6.economyFrame())
+        if (!prefs_js_7.economyFrame())
             haze_js_3.hazeView(camX, camY, vw, vh, locations_js_6.locations, redNoon_js_7.redNoon.k); // марево: над костром, над Sol, в гари, в полдень — везде (в экономном кадре — нет)
         warmSpots = warmIn(camX, camY, vw, vh); // тёплые огни кадра — перо их не трогает
         // группа второй краски — те же вещи, отдельным прогоном
@@ -66494,8 +66820,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (wakefx_js_1_1) {
                 wakefx_js_1 = wakefx_js_1_1;
             },
-            function (prefs_js_6_1) {
-                prefs_js_6 = prefs_js_6_1;
+            function (prefs_js_7_1) {
+                prefs_js_7 = prefs_js_7_1;
             },
             function (title_js_1_1) {
                 title_js_1 = title_js_1_1;
@@ -66546,7 +66872,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             cursor_js_1.init();
             audio_js_12.initAudio();
             applyByt();
-            prefs_js_6.onPrefs(applyByt);
+            prefs_js_7.onPrefs(applyByt);
             editor_js_1.initEditor();
             netui_js_1.initNetUI(lorepopup_js_1.showLore); // сеть странников: кнопки «записка», «сказать» (weave/NET.md)
             loader_js_3.preloadAll();
@@ -66757,7 +67083,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 ctx.restore();
             };
             layers_js_3.layers.inkPass = (ctx, main) => {
-                if (!prefs_js_6.economyFrame())
+                if (!prefs_js_7.economyFrame())
                     haze_js_3.hazeComposite(ctx, main); // марево — в мире, до печати (зерно и краска на бумаге)
                 ink_js_2.ink.composite(ctx, main);
                 pen_js_1.penComposite(ctx, main, warmSpots); // перо к ночи сухое: светлый штрих рвётся, огонь — сплошной

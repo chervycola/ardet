@@ -59,40 +59,41 @@ canvas#game {
   background: #0D0B0A;
   overflow: hidden;
 }
-/* оттиск — на холсте (ui/title.js): бумажное поле срезано, картина во всю высоту
-   экрана; на узком — бока срезаются, окно держит щит и луну; на широком — края
-   протянуты в стороны и гаснут в ночь. Слова автора: «растяни картинку, не смотря
-   на рамку». #entry-art — рамка полной картины поверх холста: щит и кнопка */
-#entry-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
-#entry.art #entry-canvas { opacity: 1; }
+/* картина — на холсте (ui/title.js): 16:9, во всю высоту экрана; на узком — полоса от щита
+   до луны во всю ширину, сверху и снизу ночь; на широком — края протянуты в стороны и гаснут
+   в ночь. По бокам — сбой цифрой: блоки запечены в холст, рывки и потёки — на #entry-glitch
+   (ui/titleglitch.js). #entry-art — рамка картины поверх холста: щит и кнопка */
+#entry-canvas, #entry-glitch { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .9s ease-out; }
+#entry-glitch { pointer-events: none; }
+#entry.art #entry-canvas, #entry.art #entry-glitch { opacity: 1; }
 #entry-art {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  aspect-ratio: 864 / 1184;
-  width: min(96vw, calc(96vh * 864 / 1184));
-  width: min(96vw, calc(96dvh * 864 / 1184));
+  aspect-ratio: 2000 / 1100;
+  width: min(96vw, calc(96vh * 2000 / 1100));
+  width: min(96vw, calc(96dvh * 2000 / 1100));
   container-type: size;
 }
 #entry.art #entry-art { transform: none; aspect-ratio: auto; }
 /* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
 #entry-afisha {
-  position: absolute; left: 11.6%; top: 60.4%; width: 32.4%; height: 11.1%;
+  position: absolute; left: 33.15%; top: 61.7%; width: 14.2%; height: 11.7%;
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
   padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
   font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
-  font-size: 11px; font-size: 1.6cqh; line-height: 1.5;
+  font-size: 11px; font-size: 1.7cqh; line-height: 1.5;
   pointer-events: none; user-select: none;
 }
 #entry.art #entry-afisha { display: flex; }
-#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.05cqh; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.12cqh; }
 #entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
-  position: absolute; z-index: 2; left: 51.5%; top: 41.5%; transform: translate(-50%, -50%);
+  position: absolute; z-index: 2; left: 50.75%; top: 41.8%; transform: translate(-50%, -50%);
   margin: 0; padding: 1.35em 2.7em; min-height: 44px; border-radius: 0;
   font-family: var(--font-pixel); letter-spacing: 1px;
-  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.5cqh, 15px);
+  font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.6cqh, 15px);
   color: #D9CFB8; background: rgba(13, 11, 10, 0.72);
   border: 1px solid #C23B2B;
   white-space: nowrap; cursor: pointer;
@@ -103,8 +104,8 @@ canvas#game {
 #entry-btn:focus { outline: none; }
 #entry.noart #entry-btn { background: transparent; color: #8A8D8F; }   /* картины нет — как в ночи прежде */
 #entry.noart #entry-btn:hover, #entry.noart #entry-btn:focus-visible { background: #C23B2B; color: #D9CFB8; }
-html.rm #entry-canvas, html.rm #entry-btn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-btn { transition: none; } }
+html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-glitch, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
 #gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
