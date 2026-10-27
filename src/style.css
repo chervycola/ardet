@@ -76,7 +76,7 @@ canvas#game {
 #entry.art #entry-art { transform: none; aspect-ratio: auto; }
 /* щит-афиша на картине: даты выступлений (content/afisha.js), пока — COMING SOON */
 #entry-afisha {
-  position: absolute; left: 33.15%; top: 61.7%; width: 14.2%; height: 11.7%;
+  position: absolute; left: 33.15%; top: 61.45%; width: 14.2%; height: 11.7%;
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
   padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
   font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
@@ -90,7 +90,7 @@ canvas#game {
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
 #entry-btn {
-  position: absolute; z-index: 2; left: 50.75%; top: 41.8%; transform: translate(-50%, -50%);
+  position: absolute; z-index: 2; left: 50.75%; top: 42%; transform: translate(-50%, -50%);
   margin: 0; padding: 1.35em 2.7em; min-height: 44px; border-radius: 0;
   font-family: var(--font-pixel); letter-spacing: 1px;
   font-size: clamp(9px, 1.45vh, 15px); font-size: clamp(9px, 1.6cqh, 15px);

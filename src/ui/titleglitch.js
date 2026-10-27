@@ -14,9 +14,10 @@ import { reducedMotion } from '../core/prefs.js';
 
 const BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
 const FONT = '"Press Start 2P","VT323",monospace';
-// полосы сбоя по картине (доли ширины): слева сыплется всё, что левее щита, справа — правее
-// луны и городка; на узком экране — ещё полоса у самого края экрана, послабее
-const LEFT = 0.29, RAMP_L = 0.24, RIGHT = 0.68, RAMP_R = 0.25, EDGE = 0.09, EDGE_W = 0.75;
+// полосы сбоя по картине (доли ширины): слева у земли — только край левее труб завода, выше,
+// в дыму, — глубже; справа — всё правее луны и городка; на узком экране, где боков картины не
+// видно, — ещё полоса у самого края экрана, послабее
+const LEFT_SKY = 0.25, LEFT_GROUND = 0.095, SKY_TO = [0.5, 0.58], RIGHT = 0.68, RAMP_R = 0.25, EDGE = 0.09, EDGE_W = 0.75;
 const STRIPE = 12;                                              // полоса глубины, точки экрана
 const LEVELS = [[0.16, 4], [0.32, 6], [0.5, 10], [0.68, 16], [0.86, 24]];   // [порог веса, блок]
 const RELOAD = 20;                                              // блок подгрузки заново
@@ -30,13 +31,15 @@ const cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
 
 // вес сбоя в точке экрана (0 — чисто, 1 — край): по картине, у края экрана, полосами
 // разной глубины; щит и кнопка — ноль
-function colW(L, x) {
-  const xp = (x - L.dx) / L.dw;
-  const w = xp < 0 || xp > 1 ? 1 : Math.max(cl((LEFT - xp) / RAMP_L), cl((xp - RIGHT) / RAMP_R));
-  return Math.max(w, EDGE_W * cl(1 - Math.min(x, L.vw - x) / (EDGE * L.vw)));
+function baseW(L, x, y) {
+  const xp = (x - L.dx) / L.dw, yp = (y - L.dy) / L.dh;
+  if (xp < 0 || xp > 1) return 1;
+  const k = cl((yp - SKY_TO[0]) / (SKY_TO[1] - SKY_TO[0])), lim = LEFT_SKY + (LEFT_GROUND - LEFT_SKY) * k;
+  const w = Math.max(cl((lim - xp) / (lim - 0.01)), cl((xp - RIGHT) / RAMP_R));
+  return L.edge ? Math.max(w, EDGE_W * cl(1 - Math.min(x, L.vw - x) / (EDGE * L.vw))) : w;
 }
 export function weightAt(L, x, y) {
-  const w = L.col ? L.col[Math.max(0, Math.min(L.col.length - 1, Math.floor(x)))] : colW(L, x);
+  const w = baseW(L, x, y);
   if (w <= 0) return 0;
   for (const r of L.keep) if (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1) return 0;
   const j = Math.floor(y / STRIPE), d = hh(j, 1, L.seed);
@@ -97,8 +100,7 @@ const smear = (g, src, D, m) => g.drawImage(src, m.x * D, m.y * D, m.w * D, D, m
 
 // ── запечь: блоки, сорванные строки, потёки, битые точки — прямо в холст картины ──
 export function bake(g, cv, L) {
-  L.col = new Float32Array(Math.ceil(L.vw) + 1);               // вес по столбцам — раз на размер
-  for (let x = 0; x < L.col.length; x++) L.col[x] = colW(L, x + 0.5);
+  L.edge = L.vw < 0.6 * L.dw;                                  // боков картины не видно — сыплется край экрана
   const D = L.dpr, rnd = lcg(L.seed * 7919);
   smalls.clear();
   snapC = canvas(snapC, cv.width, cv.height);                   // картина до сбоя: из неё блоки и рывки
