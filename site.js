@@ -16,11 +16,13 @@ for (const p of PAGES) {
 }
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
+fs.chmodSync(OUT, 0o755);                      // папки — 755: при umask 077 вышли бы 700, и сервер ответит 403
 
 let bytes = 0;
 const list = [];
 const put = (src, dst) => {
-  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  if (fs.mkdirSync(path.dirname(dst), { recursive: true }))
+    for (let d = path.dirname(dst); d !== OUT && d.startsWith(OUT); d = path.dirname(d)) fs.chmodSync(d, 0o755);
   fs.copyFileSync(src, dst);
   fs.chmodSync(dst, 0o644);                    // хостинг отдаёт только читаемое всеми
   const n = fs.statSync(dst).size;

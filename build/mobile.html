@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='5c17dda · 2026-10-27';console.log('[оттиск]', '5c17dda · 2026-10-27');window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='b3b69bd · 2026-10-27';console.log('[оттиск]', 'b3b69bd · 2026-10-27');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -45249,7 +45249,13 @@ System.register("assets/loader", ["assets/manifest"], function (exports_109, con
                 out.push({ url, status: 'сеть: ' + (e && e.message || e) });
                 continue;
             }
-            out.push({ url, status: r.status, type: r.headers.get('content-type') || '' });
+            let size = +r.headers.get('content-length') || 0;
+            if (r.ok && !size)
+                try {
+                    size = (await (await fetch(url, { cache: 'no-store' })).arrayBuffer()).byteLength;
+                }
+                catch (e) { /* размер неизвестен */ }
+            out.push({ url, status: r.status, type: r.headers.get('content-type') || '', size });
         }
         return out;
     }
@@ -62903,7 +62909,7 @@ System.register("net/filter", [], function (exports_160, context_160) {
     function clean(text, max = SAY_MAX) {
         let s = String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim();
         s = Array.from(s).slice(0, max).join('');
-        return s.replace(MAT, bar).replace(EN, bar).replace(LINK, bar);
+        return s.replace(MAT, (m, pre, w) => pre + bar(w)).replace(EN, bar).replace(LINK, bar);
     }
     exports_160("clean", clean);
     return {
@@ -62918,7 +62924,9 @@ System.register("net/filter", [], function (exports_160, context_160) {
             // корни — с начала слова, с приставками: «корабля» и «рубля» не трогаем
             PRE = '(?:за|вы|на|до|от|у|по|при|раз|рас|съ|объ|отъ|подъ|разъ|изъ|въ|об|пере|под|недо|ни)?';
             ROOTS = '(?:ху[йеёяи]|пизд|п[иі]зд|[её]б[аеуиоы]|бля|мудак|мудил|пид[оа]р|шлюх|гандон|залуп|сучар)';
-            MAT = new RegExp(`(?<![\\p{L}])${PRE}${ROOTS}[\\p{L}]*`, 'giu');
+            // без проверки назад (lookbehind): её не знают Safari и iOS до 16.4 — регулярка бросала бы при
+            // загрузке и роняла всю игру (заглавная без картины); край слова — захватом предыдущего знака
+            MAT = new RegExp(`(^|[^\\p{L}])(${PRE}${ROOTS}[\\p{L}]*)`, 'giu');
             EN = /\b(?:fuck\w*|cunt\w*|nigg\w*|fagg?ot\w*)/gi;
             LINK = /(?:https?:\/\/|www\.)\S+|[\p{L}\d-]+\.(?:com|ru|net|org|io|me|gg|xyz|su|рф)(?![\p{L}\d])(?:\/\S*)?|@\w{3,}/giu; // адрес — и «сайт.рф», но не «текст.rubles»
             bar = w => '█'.repeat(Math.min(6, Math.max(2, Array.from(w).length)));
@@ -65118,13 +65126,25 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         loader_js_2.loadAsset(manifest_js_2.SCENES.entry).then(im => {
             if (!im) {
                 entry.classList.add('noart');
-                // картины нет: в угол к оттиску — какой адрес спрошен и что ответил сервер
+                // картины нет: в угол к оттиску — какой адрес спрошен, что ответил сервер и цел ли файл
+                // (размер сверяется с собранным: ARDET_SIZES кладёт build.js)
                 loader_js_2.whyMissing(manifest_js_2.SCENES.entry).then(list => {
-                    const say = list.map(o => `${o.url} → ${o.status}${o.type ? ' ' + o.type : ''}`);
-                    console.warn('[картины] заглавная не загрузилась:', manifest_js_2.SCENES.entry, '\n' + say.join('\n'));
+                    const want = (window.ARDET_SIZES || {})[manifest_js_2.SCENES.entry] || 0;
+                    const say = o => {
+                        const type = (o.type || '').split(';')[0];
+                        let s = `${o.status}${type ? ' ' + type : ''}`;
+                        if (o.status === 200 && /^image\//.test(type)) {
+                            s += want && o.size && o.size !== want ? `, ${o.size} из ${want} байт — файл испорчен при заливке (залить в двоичном режиме)`
+                                : ', файл на месте, но браузер его не читает';
+                        }
+                        else if (o.status === 200)
+                            s += ' — вместо картины сервер отдал другое';
+                        return s;
+                    };
+                    console.warn('[картины] заглавная не загрузилась:', manifest_js_2.SCENES.entry, '\n' + list.map(o => `${o.url} → ${say(o)}`).join('\n'));
                     const bs = document.getElementById('build-stamp'), first = list[0];
                     if (bs && first)
-                        bs.textContent += ` · нет картины: ${manifest_js_2.SCENES.entry} → ${first.status}${first.type ? ' ' + first.type.split(';')[0] : ''}`;
+                        bs.textContent += ` · нет картины: ${manifest_js_2.SCENES.entry} → ${say(first)}`;
                 }).catch(() => { });
                 return;
             }

@@ -7,14 +7,16 @@ export const SAY_MAX = 120, NOTE_MAX = 140;
 // корни — с начала слова, с приставками: «корабля» и «рубля» не трогаем
 const PRE = '(?:за|вы|на|до|от|у|по|при|раз|рас|съ|объ|отъ|подъ|разъ|изъ|въ|об|пере|под|недо|ни)?';
 const ROOTS = '(?:ху[йеёяи]|пизд|п[иі]зд|[её]б[аеуиоы]|бля|мудак|мудил|пид[оа]р|шлюх|гандон|залуп|сучар)';
-const MAT = new RegExp(`(?<![\\p{L}])${PRE}${ROOTS}[\\p{L}]*`, 'giu');
+// без проверки назад (lookbehind): её не знают Safari и iOS до 16.4 — регулярка бросала бы при
+// загрузке и роняла всю игру (заглавная без картины); край слова — захватом предыдущего знака
+const MAT = new RegExp(`(^|[^\\p{L}])(${PRE}${ROOTS}[\\p{L}]*)`, 'giu');
 const EN = /\b(?:fuck\w*|cunt\w*|nigg\w*|fagg?ot\w*)/gi;
 const LINK = /(?:https?:\/\/|www\.)\S+|[\p{L}\d-]+\.(?:com|ru|net|org|io|me|gg|xyz|su|рф)(?![\p{L}\d])(?:\/\S*)?|@\w{3,}/giu;   // адрес — и «сайт.рф», но не «текст.rubles»
 const bar = w => '█'.repeat(Math.min(6, Math.max(2, Array.from(w).length)));
 export function clean(text, max = SAY_MAX) {
   let s = String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim();
   s = Array.from(s).slice(0, max).join('');
-  return s.replace(MAT, bar).replace(EN, bar).replace(LINK, bar);
+  return s.replace(MAT, (m, pre, w) => pre + bar(w)).replace(EN, bar).replace(LINK, bar);
 }
 // было ли что вымарывать (база записку с бранью не примет — не тратить попытку)
 export const dirty = text => clean(text, 10000) !== String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim();

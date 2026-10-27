@@ -57,7 +57,9 @@ export async function whyMissing(path) {
       r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
       if (r.status === 405 || r.status === 501) r = await fetch(url, { cache: 'no-store' });
     } catch (e) { out.push({ url, status: 'сеть: ' + (e && e.message || e) }); continue; }
-    out.push({ url, status: r.status, type: r.headers.get('content-type') || '' });
+    let size = +r.headers.get('content-length') || 0;
+    if (r.ok && !size) try { size = (await (await fetch(url, { cache: 'no-store' })).arrayBuffer()).byteLength; } catch (e) { /* размер неизвестен */ }
+    out.push({ url, status: r.status, type: r.headers.get('content-type') || '', size });
   }
   return out;
 }

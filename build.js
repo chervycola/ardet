@@ -84,9 +84,23 @@ function buildStamp() {
   } catch (e) { return 'без оттиска'; }
 }
 
+// размеры картин в байтах — сверка на хостинге: дошёл ли файл целым (заглавная пишет к оттиску)
+function assetSizes() {
+  const out = {};
+  (function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, ent.name);
+      if (ent.isDirectory()) walk(p);
+      else if (/\.(png|jpe?g|webp)$/i.test(ent.name)) out[p.split(path.sep).join('/')] = fs.statSync(p).size;
+    }
+  })('assets');
+  return out;
+}
+
 function renderHtml(js, flags) {
   const stamp = buildStamp();
-  flags = `window.ARDET_BUILD='${stamp}';console.log('[оттиск]', '${stamp}');` + flags;
+  flags = `window.ARDET_BUILD='${stamp}';console.log('[оттиск]', '${stamp}');window.ARDET_SIZES=${JSON.stringify(assetSizes())};` + flags;
   const css = fs.readFileSync('src/style.css', 'utf8');
   const audio = fs.readFileSync('src/audio/ardet-tracks.js', 'utf8')
     .replace(/<\/script>/gi, '<\\/script>');
@@ -106,6 +120,10 @@ function renderHtml(js, flags) {
     js = bundleWithTsc();
     bundler = 'tsc+systemjs';
   }
+  // проверку назад (lookbehind) Safari и iOS до 16.4 не знают: весь бандл падает при загрузке,
+  // и на телефоне — пустая заглавная. Такой сборки не выпускать
+  const lb = js.match(/.{0,40}\(\?<[=!].{0,20}/);
+  if (lb) { console.error('✗ в бандле lookbehind (старые Safari/iOS не загрузят игру): …' + lb[0] + '…'); process.exit(1); }
   fs.mkdirSync('build', { recursive: true });
   const desktop = renderHtml(js, '');
   const mobile = renderHtml(js, 'window.ARDET_MOBILE=1;');

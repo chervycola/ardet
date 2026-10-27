@@ -93,12 +93,22 @@ export function initTitle({ onGo }) {
   loadAsset(SCENES.entry).then(im => {
     if (!im) {
       entry.classList.add('noart');
-      // картины нет: в угол к оттиску — какой адрес спрошен и что ответил сервер
+      // картины нет: в угол к оттиску — какой адрес спрошен, что ответил сервер и цел ли файл
+      // (размер сверяется с собранным: ARDET_SIZES кладёт build.js)
       whyMissing(SCENES.entry).then(list => {
-        const say = list.map(o => `${o.url} → ${o.status}${o.type ? ' ' + o.type : ''}`);
-        console.warn('[картины] заглавная не загрузилась:', SCENES.entry, '\n' + say.join('\n'));
+        const want = (window.ARDET_SIZES || {})[SCENES.entry] || 0;
+        const say = o => {
+          const type = (o.type || '').split(';')[0];
+          let s = `${o.status}${type ? ' ' + type : ''}`;
+          if (o.status === 200 && /^image\//.test(type)) {
+            s += want && o.size && o.size !== want ? `, ${o.size} из ${want} байт — файл испорчен при заливке (залить в двоичном режиме)`
+              : ', файл на месте, но браузер его не читает';
+          } else if (o.status === 200) s += ' — вместо картины сервер отдал другое';
+          return s;
+        };
+        console.warn('[картины] заглавная не загрузилась:', SCENES.entry, '\n' + list.map(o => `${o.url} → ${say(o)}`).join('\n'));
         const bs = document.getElementById('build-stamp'), first = list[0];
-        if (bs && first) bs.textContent += ` · нет картины: ${SCENES.entry} → ${first.status}${first.type ? ' ' + first.type.split(';')[0] : ''}`;
+        if (bs && first) bs.textContent += ` · нет картины: ${SCENES.entry} → ${say(first)}`;
       }).catch(() => {});
       return;
     }
