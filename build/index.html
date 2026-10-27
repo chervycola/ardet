@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='56dcf11 · 2026-10-27';console.log('[оттиск]', '56dcf11 · 2026-10-27');window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='5c17dda · 2026-10-27';console.log('[оттиск]', '5c17dda · 2026-10-27');window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -45227,6 +45227,33 @@ System.register("assets/loader", ["assets/manifest"], function (exports_109, con
         pending.set(path, p);
         return p;
     }
+    // почему картины нет: какие адреса пробовали и что ответил сервер (статус, тип) — для заглавной
+    // и консоли; на хостинге без DevTools видно, лежит ли файл там, где его ищет страница
+    async function whyMissing(path) {
+        const out = [];
+        for (const b of bases()) {
+            let url = b + path;
+            try {
+                url = new URL(url, location.href).href;
+            }
+            catch (e) { /* без location — как есть */ }
+            if (out.some(o => o.url === url))
+                continue;
+            let r = null;
+            try {
+                r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                if (r.status === 405 || r.status === 501)
+                    r = await fetch(url, { cache: 'no-store' });
+            }
+            catch (e) {
+                out.push({ url, status: 'сеть: ' + (e && e.message || e) });
+                continue;
+            }
+            out.push({ url, status: r.status, type: r.headers.get('content-type') || '' });
+        }
+        return out;
+    }
+    exports_109("whyMissing", whyMissing);
     // Public: ask for a portrait by NPC id; returns Image|null synchronously
     // if already cached, or a Promise if it's the first request. Drawing
     // code can call get() and skip drawing when it's null.
@@ -65091,6 +65118,14 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         loader_js_2.loadAsset(manifest_js_2.SCENES.entry).then(im => {
             if (!im) {
                 entry.classList.add('noart');
+                // картины нет: в угол к оттиску — какой адрес спрошен и что ответил сервер
+                loader_js_2.whyMissing(manifest_js_2.SCENES.entry).then(list => {
+                    const say = list.map(o => `${o.url} → ${o.status}${o.type ? ' ' + o.type : ''}`);
+                    console.warn('[картины] заглавная не загрузилась:', manifest_js_2.SCENES.entry, '\n' + say.join('\n'));
+                    const bs = document.getElementById('build-stamp'), first = list[0];
+                    if (bs && first)
+                        bs.textContent += ` · нет картины: ${manifest_js_2.SCENES.entry} → ${first.status}${first.type ? ' ' + first.type.split(';')[0] : ''}`;
+                }).catch(() => { });
                 return;
             }
             entry.classList.add('art');

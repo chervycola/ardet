@@ -11,7 +11,7 @@
 // страницей, в локальной сборке — в корне репозитория). Кнопка — как была до
 // бланка: рамка, пиксельный шрифт, FALL IN. Вход: щелчок, тап, Enter / пробел / E.
 // ═══════════════════════════════════════
-import { loadAsset } from '../assets/loader.js';
+import { loadAsset, whyMissing } from '../assets/loader.js';
 import { SCENES } from '../assets/manifest.js';
 import { SHOWS } from '../content/afisha.js';
 import { bake, run } from './titleglitch.js';
@@ -91,7 +91,17 @@ export function initTitle({ onGo }) {
   fillAfisha(document.getElementById('entry-afisha'));
 
   loadAsset(SCENES.entry).then(im => {
-    if (!im) { entry.classList.add('noart'); return; }
+    if (!im) {
+      entry.classList.add('noart');
+      // картины нет: в угол к оттиску — какой адрес спрошен и что ответил сервер
+      whyMissing(SCENES.entry).then(list => {
+        const say = list.map(o => `${o.url} → ${o.status}${o.type ? ' ' + o.type : ''}`);
+        console.warn('[картины] заглавная не загрузилась:', SCENES.entry, '\n' + say.join('\n'));
+        const bs = document.getElementById('build-stamp'), first = list[0];
+        if (bs && first) bs.textContent += ` · нет картины: ${SCENES.entry} → ${first.status}${first.type ? ' ' + first.type.split(';')[0] : ''}`;
+      }).catch(() => {});
+      return;
+    }
     entry.classList.add('art');
     paint(im);
     let raf = 0;

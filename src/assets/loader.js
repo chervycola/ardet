@@ -44,6 +44,24 @@ function probe(path) {
   return p;
 }
 
+// почему картины нет: какие адреса пробовали и что ответил сервер (статус, тип) — для заглавной
+// и консоли; на хостинге без DevTools видно, лежит ли файл там, где его ищет страница
+export async function whyMissing(path) {
+  const out = [];
+  for (const b of bases()) {
+    let url = b + path;
+    try { url = new URL(url, location.href).href; } catch (e) { /* без location — как есть */ }
+    if (out.some(o => o.url === url)) continue;
+    let r = null;
+    try {
+      r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      if (r.status === 405 || r.status === 501) r = await fetch(url, { cache: 'no-store' });
+    } catch (e) { out.push({ url, status: 'сеть: ' + (e && e.message || e) }); continue; }
+    out.push({ url, status: r.status, type: r.headers.get('content-type') || '' });
+  }
+  return out;
+}
+
 // Public: ask for a portrait by NPC id; returns Image|null synchronously
 // if already cached, or a Promise if it's the first request. Drawing
 // code can call get() and skip drawing when it's null.
