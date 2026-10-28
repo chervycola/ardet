@@ -136,10 +136,10 @@ await test('пробуждение: дрожь всплесками целыми
   assert(WF.slicesAt(WF.OPEN[2] + 2, 360, 7).length >= 1, 'на открытии век — рвёт');
   for (const a of [10, 40, WF.OPEN[1] + 3]) { eq(WF.tremorAt(a, 7, true).join(), '0,0'); eq(WF.slicesAt(a, 360, 7, true).length, 0); }
 });
-await test('сбой без текста: ни пробуждение, ни заглавная не пишут ни цифр, ни букв (слово автора 27.10)', async () => {
+await test('сбой без текста: ни пробуждение, ни заглавная, ни падение не пишут ни цифр, ни букв (слово автора 27.10, 28.10)', async () => {
   const { readFileSync } = await import('node:fs');
   const TM = await imp('core/time.js');
-  for (const f of ['render/wakefx.js', 'ui/titleglitch.js']) {
+  for (const f of ['render/wakefx.js', 'ui/titleglitch.js', 'world/brainrot.js']) {
     const src = readFileSync(new URL(f, base), 'utf8');
     assert(!/fillText|strokeText|\.font\s*=/.test(src), f + ': в сбое пишется текст');
   }
@@ -149,6 +149,9 @@ await test('сбой без текста: ни пробуждение, ни за
   WF.wakefx.start();
   for (let n = 0; n < 900; n++) { TM.tick(); if (n % 3 === 0) WF.wakePass(c, { width: 1280, height: 720 }, 2); }
   eq(texts, 0, 'за всё пробуждение — ни одной строки');
+  const BR = await imp('world/brainrot.js');
+  for (const kind of ['sand', 'ice', 'lake', 'junk', 'void']) for (let f = 0; f <= 1; f += 0.05) BR._fallFrame(c, kind, f);
+  eq(texts, 0, 'ни в одном падении — ни строки: ни процентов, ни окон со словами, ни подписи');
 });
 await test('пробуждение: второе — та же сцена за шесть секунд, мигание по настоящим кадрам; проснуться — за полсекунды', async () => {
   const TM = await imp('core/time.js');
