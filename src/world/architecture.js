@@ -85,7 +85,10 @@ function linePts() {
   LINE_GRID = new Map();
   const put = (p, pad) => { const k = Math.floor(p.x / 200) + ',' + Math.floor(p.y / 200); if (!LINE_GRID.has(k)) LINE_GRID.set(k, []); LINE_GRID.get(k).push({ x: p.x, y: p.y, pad }); };
   for (const p of idealRiver()) put(p, 46);
-  for (const A of idealArcs()) for (const p of A.pts) put(p, 30);
+  for (const A of idealArcs()) for (let i = 0; i < A.pts.length; i++) {                // точки через 24 — с серединками
+    put(A.pts[i], 30);
+    if (i + 1 < A.pts.length) put({ x: (A.pts[i].x + A.pts[i + 1].x) / 2, y: (A.pts[i].y + A.pts[i + 1].y) / 2 }, 30);
+  }
   return LINE_GRID;
 }
 function lineClash(b) {
@@ -134,11 +137,16 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
   // две копии одного места (две мечети одной площади) — рядом: правило кадра для них не действует
   const pair = new Set(copies.filter((c, i) => copies.findIndex(o => o.name === c.name) !== i).map(c => c.name));
   for (const C of copies) {
-    const K = C.kind, all = [...placed, ...out.filter(o => !pair.has(o.kind.name))];
+    const K = C.kind, others = [...placed, ...out];
+    // для правила кадра — только такие же (свои пары места — не в счёт); для табличек — ближние к поиску
+    const all = others.filter(o => o.kind === K && !(pair.has(K.name) && out.includes(o)));
     const k = K.landmark ? 2.6 : 1, kx = K.landmark ? 6 : 1;
     let got = null;
     for (let grow = 1; grow <= 4 && !got; grow++) {
       const cands = [];
+      const prev0 = out[out.length - 1];
+      const pool = signs.filter(s => (Math.abs(s.x - anchor.x) < NEAR + 200 * kx * grow && Math.abs(s.y - anchor.gy) < NEAR + 140 * k * grow)
+        || (prev0 && Math.abs(s.x - prev0.x) < NEAR + 200 && Math.abs(s.y - prev0.gy) < NEAR + 140));
       const prev = out[out.length - 1];
       if (prev && grow === 1) {
         // рядом с предыдущей — слева или справа, чуть вглубь или вперёд
@@ -157,7 +165,7 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
       for (const c of cands) {
         const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
         if (!twins && sameNear(b, all)) continue;
-        if (fits(n, side, b, K.landmark || grow > 1 ? signs : nearSigns(signs, b.x, b.gy), [...placed, ...out])) { got = b; break; }
+        if (fits(n, side, b, K.landmark || grow > 1 ? pool : nearSigns(pool, b.x, b.gy), others)) { got = b; break; }
       }
     }
     if (!got) {
@@ -173,7 +181,7 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
         for (const c of cands) {
           const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
           if (strict && sameNear(b, all)) continue;
-          if (fits(n, side, b, signs, [...placed, ...out])) { got = b; break; }
+          if (fits(n, side, b, signs, others)) { got = b; break; }
         }
         if (got) break;
       }

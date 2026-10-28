@@ -98,14 +98,15 @@ function placeIn(locations, n, side, w, h, anchor) {
       if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30)) return true;
       return onTrail(x0 + w / 2, gy);
     };
-    const cands = [];
-    for (let dx = -R; dx <= R; dx += 12) for (let dy = -R; dy <= R; dy += 10) {
+    // от ближних к дальним: первое подходящее и есть ближайшее
+    const offs = [];
+    for (let dx = -R; dx <= R; dx += 12) for (let dy = -R; dy <= R; dy += 10) offs.push([dx, dy, Math.hypot(dx, dy)]);
+    offs.sort((a, b) => a[2] - b[2]);
+    for (const [dx, dy] of offs) {
       const x = Math.round(c.x + dx - w / 2), gy = Math.round(c.y + dy);
-      const ok = [x + 3, x + w / 2, x + w - 3].every(px => ringAt(px, gy) === n && sideAt(px, gy) === side);
-      if (!ok || busy(x, gy)) continue;
-      cands.push({ x, gy, d: Math.hypot(dx, dy) });
+      if (busy(x, gy)) continue;
+      if ([x + 3, x + w / 2, x + w - 3].every(px => ringAt(px, gy) === n && sideAt(px, gy) === side)) return { x, gy, d: Math.hypot(dx, dy) };
     }
-    if (cands.length) { cands.sort((a, b) => a.d - b.d); return cands[0]; }
   }
   return null;
 }

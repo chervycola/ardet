@@ -254,7 +254,13 @@ function riverD() {
     return R0 + lo + f;
   };
 }
+// замысел реки — от постоянных диска: считается раз (им пользуются и места клеток, и трассировщик)
+let RIVER_IDEAL = null;
 function riverIdeal() {
+  if (!RIVER_IDEAL) RIVER_IDEAL = riverIdealCalc();
+  return RIVER_IDEAL.map(p => ({ x: p.x, y: p.y }));
+}
+function riverIdealCalc() {
   const f0 = seamFrac(['south', 'west'], R0) + 0.012, Dof = riverD(), out = [];
   const N = 2000, LEN = 9000 * rimPerim((R0 + R1) / 2) / 15375;       // меандр — в точках земли, а не в долях оборота
   for (let k = 0; k <= N; k++) {
@@ -268,11 +274,11 @@ function riverIdeal() {
   return out;
 }
 // дуга на кольце n от дороги стороны A до дороги стороны B по часовой
-function arcIdeal(D, from, to, full) {
+function arcIdeal(D, from, to, full, step = 6) {
   const fs = rimFrac(from.x, from.y, D);
   let fe = full ? fs + 1 : rimFrac(to.x, to.y, D);
   if (fe <= fs) fe += 1;
-  const out = [], n = Math.ceil((fe - fs) * rimPerim(D) / 6);
+  const out = [], n = Math.ceil((fe - fs) * rimPerim(D) / step);
   for (let k = 0; k <= n; k++) { const p = rimAt(fs + (fe - fs) * k / n, D); out.push({ x: p.x, y: p.y }); }
   out[0] = { x: from.x, y: from.y };
   if (!full) out[out.length - 1] = { x: to.x, y: to.y };
@@ -284,7 +290,7 @@ function arcIdeal(D, from, to, full) {
 export const idealRiver = () => riverIdeal();
 export function idealArcs() {
   const at = (side, D) => side === 'plain' ? plainIdeal(0.5)[Math.round(D / 6)] : trailPoint(side, D);
-  return ARCS.map(A => ({ id: A.id, n: A.n, name: A.name, D: A.D, pts: arcIdeal(A.D, at(A.from, A.D), at(A.to, A.D), A.full) }));
+  return ARCS.map(A => ({ id: A.id, n: A.n, name: A.name, D: A.D, pts: arcIdeal(A.D, at(A.from, A.D), at(A.to, A.D), A.full, 24) }));   // замысел — точкой через 24
 }
 // линия неба: вдоль дороги, сбоку, в off точках (по глубине — сжато)
 function skyIdeal(road, off) {

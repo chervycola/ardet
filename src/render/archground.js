@@ -162,9 +162,10 @@ export const archProps = []; // куски заборов: { x, gy, w, h, draw(c
 // ближайшая точка замысла реки, не дальше R
 let RIVER = null;
 function riverNear(x, y, R) {
-  if (!RIVER) RIVER = idealRiver().filter((p, i) => i % 2 === 0);
+  if (!RIVER) { RIVER = new Map(); idealRiver().forEach((p, i) => { if (i % 2) return; const k = Math.floor(p.x / 300) + ',' + Math.floor(p.y / 300); if (!RIVER.has(k)) RIVER.set(k, []); RIVER.get(k).push(p); }); }
   let best = null, bd = R;
-  for (const p of RIVER) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } }
+  const gx = Math.floor(x / 300), gy = Math.floor(y / 300);
+  for (let i = gx - 1; i <= gx + 1; i++) for (let j = gy - 1; j <= gy + 1; j++) for (const p of RIVER.get(i + ',' + j) || []) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } }
   return best;
 }
 

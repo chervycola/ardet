@@ -105,14 +105,17 @@ export function features() {
   const cell = p => { const n = ringAt(p.x, p.y); return n >= 1 && n <= RINGS ? n + ':' + sideAt(p.x, p.y) : null; };
   const river = idealRiver().filter((p, i) => i % 3 === 0).map(p => ({ x: p.x, y: p.y, c: cell(p) })).filter(p => p.c);
   const arcs = [];
-  for (const A of idealArcs()) for (let i = 0; i < A.pts.length; i += 4) { const p = A.pts[i]; const c = cell(p); if (c) arcs.push({ x: p.x, y: p.y, c, arc: A.id }); }
+  for (const A of idealArcs()) for (const p of A.pts) { const c = cell(p); if (c) arcs.push({ x: p.x, y: p.y, c, arc: A.id }); }
   FEAT = { river, arcs };
   return FEAT;
 }
-// ближайшая точка замысла в той же клетке, не дальше R
+// ближайшая точка замысла в той же клетке, не дальше R (точки — по клеткам, один раз на список)
+const BY_CELL = new WeakMap();
 export function nearestIn(list, c, x, y, R) {
+  let idx = BY_CELL.get(list);
+  if (!idx) { idx = new Map(); for (const p of list) { if (!idx.has(p.c)) idx.set(p.c, []); idx.get(p.c).push(p); } BY_CELL.set(list, idx); }
   let best = null, bd = R;
-  for (const p of list) { if (p.c !== c) continue; const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } }
+  for (const p of idx.get(c) || []) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } }
   return best ? { ...best, d: bd } : null;
 }
 // местная вершина: самое высокое в радиусе R (рельеф до дорог и дворов)

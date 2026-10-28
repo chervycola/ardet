@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='66db954 · 2026-10-28';console.log('[оттиск]', '66db954 · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='fa0bd9d · 2026-10-28';console.log('[оттиск]', 'fa0bd9d · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -5740,7 +5740,7 @@ System.register("world/relief", ["world/disc"], function (exports_25, context_25
 });
 System.register("world/arteries", ["world/disc", "world/routes", "world/relief"], function (exports_26, context_26) {
     "use strict";
-    var disc_js_6, routes_js_1, relief_js_1, OUTER, CX, HW, RAISED, WATER, fr, lines, bridges, nodes, fords, artBlock, G, grid, rgrid, CARVE_R, FORD_W, ARCS, R0, R1, SPAN, idealRiver, aside, shapeLine, SIDE4, SIDE5;
+    var disc_js_6, routes_js_1, relief_js_1, OUTER, CX, HW, RAISED, WATER, fr, lines, bridges, nodes, fords, artBlock, G, grid, rgrid, CARVE_R, FORD_W, ARCS, R0, R1, SPAN, RIVER_IDEAL, idealRiver, aside, shapeLine, SIDE4, SIDE5;
     var __moduleName = context_26 && context_26.id;
     // ── стадии по эпохе (расстояние d — то же, что у колец) ──
     function roadStage(d) {
@@ -5994,6 +5994,11 @@ System.register("world/arteries", ["world/disc", "world/routes", "world/relief"]
         };
     }
     function riverIdeal() {
+        if (!RIVER_IDEAL)
+            RIVER_IDEAL = riverIdealCalc();
+        return RIVER_IDEAL.map(p => ({ x: p.x, y: p.y }));
+    }
+    function riverIdealCalc() {
         const f0 = seamFrac(['south', 'west'], R0) + 0.012, Dof = riverD(), out = [];
         const N = 2000, LEN = 9000 * disc_js_6.rimPerim((R0 + R1) / 2) / 15375; // меандр — в точках земли, а не в долях оборота
         for (let k = 0; k <= N; k++) {
@@ -6007,12 +6012,12 @@ System.register("world/arteries", ["world/disc", "world/routes", "world/relief"]
         return out;
     }
     // дуга на кольце n от дороги стороны A до дороги стороны B по часовой
-    function arcIdeal(D, from, to, full) {
+    function arcIdeal(D, from, to, full, step = 6) {
         const fs = disc_js_6.rimFrac(from.x, from.y, D);
         let fe = full ? fs + 1 : disc_js_6.rimFrac(to.x, to.y, D);
         if (fe <= fs)
             fe += 1;
-        const out = [], n = Math.ceil((fe - fs) * disc_js_6.rimPerim(D) / 6);
+        const out = [], n = Math.ceil((fe - fs) * disc_js_6.rimPerim(D) / step);
         for (let k = 0; k <= n; k++) {
             const p = rimAt(fs + (fe - fs) * k / n, D);
             out.push({ x: p.x, y: p.y });
@@ -6024,7 +6029,7 @@ System.register("world/arteries", ["world/disc", "world/routes", "world/relief"]
     }
     function idealArcs() {
         const at = (side, D) => side === 'plain' ? plainIdeal(0.5)[Math.round(D / 6)] : disc_js_6.trailPoint(side, D);
-        return ARCS.map(A => ({ id: A.id, n: A.n, name: A.name, D: A.D, pts: arcIdeal(A.D, at(A.from, A.D), at(A.to, A.D), A.full) }));
+        return ARCS.map(A => ({ id: A.id, n: A.n, name: A.name, D: A.D, pts: arcIdeal(A.D, at(A.from, A.D), at(A.to, A.D), A.full, 24) })); // замысел — точкой через 24
     }
     exports_26("idealArcs", idealArcs);
     // линия неба: вдоль дороги, сбоку, в off точках (по глубине — сжато)
@@ -6330,6 +6335,8 @@ System.register("world/arteries", ["world/disc", "world/routes", "world/relief"]
             // Наружу река уходит неровно: у кольцевых дуг — круто (дугу переходит
             // один раз и поперёк), между ними — полого.
             R0 = 50, R1 = disc_js_6.RINGS_D + disc_js_6.FIRE_W * 0.6, SPAN = 0.85; // углы колец теперь длинны: шов юг|запад у огня — на 0,70 оборота
+            // замысел реки — от постоянных диска: считается раз (им пользуются и места клеток, и трассировщик)
+            RIVER_IDEAL = null;
             // замыслы реки и дуг — до построек (world/geoplace.js: что стоит у воды и у пути, встаёт к ним;
             // трассировщик потом обходит постройки рядом, не уходя далеко). Дуга примыкает к тропе стороны
             // на своём D; у равнины — к середине её возможных углов
@@ -25630,7 +25637,7 @@ System.register("content/places", [], function (exports_49, context_49) {
 });
 System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries"], function (exports_50, context_50) {
     "use strict";
-    var disc_js_10, relief_js_3, arteries_js_3, SIDE_ORDER, GEO_AXES, A_MIN, A_MAX, clampA, RING_YEARS, R_MIN, R_MAX, ringDepth, FEAT, cellAt, roadAt;
+    var disc_js_10, relief_js_3, arteries_js_3, SIDE_ORDER, GEO_AXES, A_MIN, A_MAX, clampA, RING_YEARS, R_MIN, R_MAX, ringDepth, FEAT, BY_CELL, cellAt, roadAt;
     var __moduleName = context_50 && context_50.id;
     // ── сектор стороны на обходе D: [начало, длина] в точках обхода (rimPoint: от левого конца
     // северной кромки по часовой). Швы: углы городка под 45°, клин равнины — 18°…72° дуги СВ
@@ -25718,8 +25725,7 @@ System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries
         const river = arteries_js_3.idealRiver().filter((p, i) => i % 3 === 0).map(p => ({ x: p.x, y: p.y, c: cell(p) })).filter(p => p.c);
         const arcs = [];
         for (const A of arteries_js_3.idealArcs())
-            for (let i = 0; i < A.pts.length; i += 4) {
-                const p = A.pts[i];
+            for (const p of A.pts) {
                 const c = cell(p);
                 if (c)
                     arcs.push({ x: p.x, y: p.y, c, arc: A.id });
@@ -25728,12 +25734,19 @@ System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries
         return FEAT;
     }
     exports_50("features", features);
-    // ближайшая точка замысла в той же клетке, не дальше R
     function nearestIn(list, c, x, y, R) {
+        let idx = BY_CELL.get(list);
+        if (!idx) {
+            idx = new Map();
+            for (const p of list) {
+                if (!idx.has(p.c))
+                    idx.set(p.c, []);
+                idx.get(p.c).push(p);
+            }
+            BY_CELL.set(list, idx);
+        }
         let best = null, bd = R;
-        for (const p of list) {
-            if (p.c !== c)
-                continue;
+        for (const p of idx.get(c) || []) {
             const d = Math.hypot(p.x - x, p.y - y);
             if (d < bd) {
                 bd = d;
@@ -25789,6 +25802,8 @@ System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries
             exports_50("ringDepth", ringDepth = (n, r) => disc_js_10.RING_EDGE[n - 1] + r * disc_js_10.RING_WS[n - 1]);
             // ── замыслы местности: река и дуги — точками с клеткой
             FEAT = null;
+            // ближайшая точка замысла в той же клетке, не дальше R (точки — по клеткам, один раз на список)
+            BY_CELL = new WeakMap();
             exports_50("cellAt", cellAt = (x, y) => { const n = disc_js_10.ringAt(x, y); return n >= 1 && n <= disc_js_10.RINGS ? n + ':' + relief_js_3.sideAt(x, y) : null; });
             // дорога своей стороны на расстоянии d от городка (равнину ведёт трассировщик — её здесь нет)
             exports_50("roadAt", roadAt = (side, d) => side === 'plain' ? null : disc_js_10.trailPoint(side, d));
@@ -27652,8 +27667,11 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
         for (const p of arteries_js_4.idealRiver())
             put(p, 46);
         for (const A of arteries_js_4.idealArcs())
-            for (const p of A.pts)
-                put(p, 30);
+            for (let i = 0; i < A.pts.length; i++) { // точки через 24 — с серединками
+                put(A.pts[i], 30);
+                if (i + 1 < A.pts.length)
+                    put({ x: (A.pts[i].x + A.pts[i + 1].x) / 2, y: (A.pts[i].y + A.pts[i + 1].y) / 2 }, 30);
+            }
         return LINE_GRID;
     }
     function lineClash(b) {
@@ -27705,11 +27723,16 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
         // две копии одного места (две мечети одной площади) — рядом: правило кадра для них не действует
         const pair = new Set(copies.filter((c, i) => copies.findIndex(o => o.name === c.name) !== i).map(c => c.name));
         for (const C of copies) {
-            const K = C.kind, all = [...placed, ...out.filter(o => !pair.has(o.kind.name))];
+            const K = C.kind, others = [...placed, ...out];
+            // для правила кадра — только такие же (свои пары места — не в счёт); для табличек — ближние к поиску
+            const all = others.filter(o => o.kind === K && !(pair.has(K.name) && out.includes(o)));
             const k = K.landmark ? 2.6 : 1, kx = K.landmark ? 6 : 1;
             let got = null;
             for (let grow = 1; grow <= 4 && !got; grow++) {
                 const cands = [];
+                const prev0 = out[out.length - 1];
+                const pool = signs.filter(s => (Math.abs(s.x - anchor.x) < NEAR + 200 * kx * grow && Math.abs(s.y - anchor.gy) < NEAR + 140 * k * grow)
+                    || (prev0 && Math.abs(s.x - prev0.x) < NEAR + 200 && Math.abs(s.y - prev0.gy) < NEAR + 140));
                 const prev = out[out.length - 1];
                 if (prev && grow === 1) {
                     // рядом с предыдущей — слева или справа, чуть вглубь или вперёд
@@ -27731,7 +27754,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                     const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
                     if (!twins && sameNear(b, all))
                         continue;
-                    if (fits(n, side, b, K.landmark || grow > 1 ? signs : nearSigns(signs, b.x, b.gy), [...placed, ...out])) {
+                    if (fits(n, side, b, K.landmark || grow > 1 ? pool : nearSigns(pool, b.x, b.gy), others)) {
                         got = b;
                         break;
                     }
@@ -27752,7 +27775,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                         const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
                         if (strict && sameNear(b, all))
                             continue;
-                        if (fits(n, side, b, signs, [...placed, ...out])) {
+                        if (fits(n, side, b, signs, others)) {
                             got = b;
                             break;
                         }
@@ -31956,18 +31979,18 @@ System.register("world/oldways", ["world/disc", "world/relief", "world/geoplace"
                     return true;
                 return onTrail(x0 + w / 2, gy);
             };
-            const cands = [];
+            // от ближних к дальним: первое подходящее и есть ближайшее
+            const offs = [];
             for (let dx = -R; dx <= R; dx += 12)
-                for (let dy = -R; dy <= R; dy += 10) {
-                    const x = Math.round(c.x + dx - w / 2), gy = Math.round(c.y + dy);
-                    const ok = [x + 3, x + w / 2, x + w - 3].every(px => disc_js_21.ringAt(px, gy) === n && relief_js_5.sideAt(px, gy) === side);
-                    if (!ok || busy(x, gy))
-                        continue;
-                    cands.push({ x, gy, d: Math.hypot(dx, dy) });
-                }
-            if (cands.length) {
-                cands.sort((a, b) => a.d - b.d);
-                return cands[0];
+                for (let dy = -R; dy <= R; dy += 10)
+                    offs.push([dx, dy, Math.hypot(dx, dy)]);
+            offs.sort((a, b) => a[2] - b[2]);
+            for (const [dx, dy] of offs) {
+                const x = Math.round(c.x + dx - w / 2), gy = Math.round(c.y + dy);
+                if (busy(x, gy))
+                    continue;
+                if ([x + 3, x + w / 2, x + w - 3].every(px => disc_js_21.ringAt(px, gy) === n && relief_js_5.sideAt(px, gy) === side))
+                    return { x, gy, d: Math.hypot(dx, dy) };
             }
         }
         return null;
@@ -58913,16 +58936,23 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
         return Math.hypot(dx, dy);
     }
     function riverNear(x, y, R) {
-        if (!RIVER)
-            RIVER = arteries_js_12.idealRiver().filter((p, i) => i % 2 === 0);
-        let best = null, bd = R;
-        for (const p of RIVER) {
-            const d = Math.hypot(p.x - x, p.y - y);
-            if (d < bd) {
-                bd = d;
-                best = p;
-            }
+        if (!RIVER) {
+            RIVER = new Map();
+            arteries_js_12.idealRiver().forEach((p, i) => { if (i % 2)
+                return; const k = Math.floor(p.x / 300) + ',' + Math.floor(p.y / 300); if (!RIVER.has(k))
+                RIVER.set(k, []); RIVER.get(k).push(p); });
         }
+        let best = null, bd = R;
+        const gx = Math.floor(x / 300), gy = Math.floor(y / 300);
+        for (let i = gx - 1; i <= gx + 1; i++)
+            for (let j = gy - 1; j <= gy + 1; j++)
+                for (const p of RIVER.get(i + ',' + j) || []) {
+                    const d = Math.hypot(p.x - x, p.y - y);
+                    if (d < bd) {
+                        bd = d;
+                        best = p;
+                    }
+                }
         return best;
     }
     // sign ids → локации; trail — точка тропы рядом с ансамблем
