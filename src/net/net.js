@@ -17,6 +17,12 @@ import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
 import { fromOldGeo, toOldGeo } from '../world/disc.js';
+import { cutOf } from '../sprites/player.js';
+import { CUTS } from '../sprites/wardrobe.js';
+
+const FACES = ['S', 'N', 'E', 'W'];
+// крой из чужой вести: только известный, не ключ прототипа
+const lookOf = c => (typeof c === 'string' && Object.hasOwn(CUTS, c) ? c : undefined);
 
 // Кольца стали просторнее (geo 2, world/disc.js): записки новой геометрии лежат в базе
 // со сдвигом по x — прежние клиенты их не видят и не путают; прежние записки ищутся
@@ -67,12 +73,13 @@ export async function startNet(T = null) {
   try { for (const k of JSON.parse(localStorage.getItem(GONE_KEY) || '[]')) net.gone.add(k); } catch (e) {}
   net.T.on('pos', m => {
     const o = net.others.get(m.id);
-    if (!o) { net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, sitK: m.sit ? 1 : 0, heard: net.t }); return; }
+    const cut = lookOf(m.cut), face = FACES.includes(m.face) ? m.face : undefined;   // чужой клиент мог прислать что угодно
+    if (!o) { net.others.set(m.id, { x: m.x, y: m.y, tx: m.x, ty: m.y, rx: m.x, ry: m.y, vx: 0, vy: 0, layer: m.layer, dir: m.dir || 1, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, sitK: m.sit ? 1 : 0, cut, face, heard: net.t }); return; }
     const jump = o.layer !== m.layer || Math.hypot(o.x - m.x, o.y - m.y) > 400, dt = Math.max(1, net.t - o.heard);
     if (jump) { o.x = m.x; o.y = m.y; }                          // спустился, поднялся, переехал — там и стоит
     // идёт — куда и как быстро, по двум последним точкам: между вестями шаг досчитывается
     o.vx = m.moving && !jump ? (m.x - o.rx) / dt : 0; o.vy = m.moving && !jump ? (m.y - o.ry) / dt : 0;
-    Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, heard: net.t });
+    Object.assign(o, { tx: m.x, ty: m.y, rx: m.x, ry: m.y, layer: m.layer, dir: m.dir || o.dir, moving: !!m.moving, look: !!m.look, sit: m.sit ? 1 : 0, cut, face: face || o.face, heard: net.t });
   });
   net.T.on('say', m => {
     const o = net.others.get(m.id), text = clean(m.text, SAY_MAX);
@@ -104,10 +111,11 @@ export function stepNet(p, layer) {
   net.t++;
   if (!net.on) return;
   // ладонь козырьком и «сел смотреть» — тоже видно другим (за кольцом)
-  const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving, look: !!p.visor, sit: (p.sit || 0) > 0.5 ? 1 : 0 };
+  // во что одет и куда смотрит — тоже: чужие видят твой крой и твой оборот (sprites/wardrobe.js)
+  const me = { x: Math.round(p.x + 6), y: Math.round(p.y + 23), layer, dir: p.dir || 1, moving: !!p.moving, look: !!p.visor, sit: (p.sit || 0) > 0.5 ? 1 : 0, cut: cutOf(p), face: FACES.includes(p.face) ? p.face : 'S' };
   // весть — когда сдвинулся с посланной точки; встал или пошёл — сразу; стоишь — изредка: «я тут»
   const S = net.sentPos, gap = net.t - net.sent;
-  const turned = S && (S.moving !== me.moving || S.look !== me.look || S.sit !== me.sit), moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
+  const turned = S && (S.moving !== me.moving || S.look !== me.look || S.sit !== me.sit || S.cut !== me.cut || S.face !== me.face), moved = !S || S.layer !== layer || Math.hypot(me.x - S.x, me.y - S.y) > 1;
   if ((moved && gap >= SEND_EVERY) || (turned && gap >= 4) || gap >= IDLE_EVERY) { net.T.sendPos(me); net.sent = net.t; net.sentPos = me; }
   net.last = me;
   for (const [k, o] of net.others) {

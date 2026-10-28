@@ -45,7 +45,7 @@ import { state } from './core/state.js';
 import { events, E } from './core/events.js';
 import { input } from './core/input.js';
 import { t as _t, tick } from './core/time.js';
-import { drawPlayer } from './sprites/player.js';
+import { drawPlayer, cutOf } from './sprites/player.js';
 import { setCtx } from './render/context.js';
 import { drawNPC_jester } from './sprites/npcs/jester.js';
 import { drawNPC_sol } from './sprites/npcs/sol.js';
@@ -417,12 +417,19 @@ function propCaster(p) {
   }
   return c;
 }
-const heroCaster = { key: 'странник', ox: 0, oy: 0, build: () => maskFrom(g => {
-  setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0 }); setCtx(layers.ctx('world'));
-}, -6, -10, 26, 23) };
-const heroSitCaster = { key: 'странник сидя', ox: 0, oy: 0, build: () => maskFrom(g => {
-  setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0, sit: 1 }); setCtx(layers.ctx('world'));
-}, -8, -10, 30, 23) };
+// тень героя — по надетому крою (sprites/wardrobe.js): маска своя у каждого кроя, стоя и сидя
+const heroCasters = new Map();
+function heroCaster(sit) {
+  const cut = cutOf(player), k = cut + (sit ? ' сидя' : '');
+  let c = heroCasters.get(k);
+  if (!c) {
+    c = { key: 'странник:' + k, ox: 0, oy: 0, build: () => maskFrom(g => {
+      setCtx(g); drawPlayer({ x: 0, y: 0, dir: 1, moving: false, vx: 0, vy: 0, cut, sit: sit ? 1 : 0 }); setCtx(layers.ctx('world'));
+    }, sit ? -8 : -6, -10, sit ? 30 : 26, 23) };
+    heroCasters.set(k, c);
+  }
+  return c;
+}
 const LOW = new Set(['reed', 'bush', 'stump', 'log', 'snag', 'deadreed']);   // низкое тени по солнцу не кладёт (трава и камни — тоже)
 const FLATLM = new Set(['iceHole', 'boat', 'oasis']);   // приметы вровень с землёй
 function shadowCasters(camX, camY, vw, vh) {
@@ -442,7 +449,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const T of tissueThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));   // ткань поля
   for (const T of townThingsIn(camX - pad, camY - 40, camX + vw + pad, camY + vh + pad)) out.push(thingCaster(T, maskFrom));     // квартал: стены, фонари
   for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
-  const hero = (player.sit || 0) > 0.5 ? heroSitCaster : heroCaster;   // сел — и тень села
+  const hero = heroCaster((player.sit || 0) > 0.5);   // сел — и тень села
   hero.ox = player.x; hero.oy = player.y;
   out.push(hero);
   return out;

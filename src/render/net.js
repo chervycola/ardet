@@ -21,9 +21,10 @@ function sheet() {
   return buf;
 }
 // чужой странник тенью: рисунок героя — в отдельный лист, лист — с прозрачностью;
-// в криосклепе и у него огонёк пеплом (cold); ладонь козырьком и «сел» — как у своего
+// в криосклепе и у него огонёк пеплом (cold); ладонь козырьком и «сел» — как у своего;
+// одет в своё и смотрит, куда смотрит (cut, face — из его вести)
 function ghost(ctx, o, cold, alpha = GHOST) {
-  const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold, visor: o.look, sit: o.sitK || 0 };
+  const b = sheet(), fig = { x: 14, y: 16, dir: o.dir, moving: o.moving, vx: o.moving ? (o.dir || 1) * 0.6 : 0, vy: 0, cold, visor: o.look, sit: o.sitK || 0, cut: o.cut, face: o.face };
   if (!b) { setCtx(ctx); drawPlayer({ ...fig, x: o.x - 6, y: o.y - 23 }); return; }
   const g = b.getContext('2d');
   g.clearRect(0, 0, b.width, b.height);

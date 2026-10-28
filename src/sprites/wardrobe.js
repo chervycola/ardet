@@ -30,7 +30,7 @@ const MG = '#3D4A3A', MGL = '#4a5646', MGD = '#2c362a';         // мгла — 
 const q = Math.round;
 
 // материалы: b — тон, l — край к свету (слева), r — кромка справа, t — верх, d — низ (тень у земли)
-const CL = 1, CD = 2, DP = 3, TR = 4, BO = 5, HD = 6, FC = 7, RP = 8, BG = 9, ST = 10, SH = 11, TO = 12, LT = 13, HN = 14, HR = 15;
+const CL = 1, CD = 2, DP = 3, TR = 4, BO = 5, HD = 6, FC = 7, RP = 8, BG = 9, ST = 10, SH = 11, TO = 12, LT = 13, HN = 14, HR = 15, BK = 16;
 const MAT = [];
 MAT[CL] = { b: K2, l: K4, r: S2, t: K4, d: K0 };
 MAT[CD] = { b: K1, l: K2, r: K1, t: K2, d: K0 };
@@ -46,7 +46,8 @@ MAT[ST] = { b: K4, l: BT };
 MAT[SH] = { b: MG, l: MGL, r: MGD, d: MGD, t: MGL };
 MAT[TO] = { b: BT };
 MAT[LT] = { b: K4, r: S2 };
-MAT[HN] = { b: K4, l: BT };
+MAT[HN] = { b: K4 };
+MAT[BK] = { b: S2 };                                            // пряжка: металл потускнел
 
 // сетка: u −15..15, v −34..5 (0 — земля, носки)
 const OU = 15, GW = 31, OV = 34, GH = 40;
@@ -54,17 +55,17 @@ const M = new Uint8Array(GW * GH);
 const inG = (u, v) => u >= -OU && u < GW - OU && v >= -OV && v < GH - OV;
 const at = (u, v) => (inG(u, v) ? M[(v + OV) * GW + u + OU] : 0);
 // поза: верх (выше пояса) садится на опоре и дышит, наклон растёт к плечам; голова — своё
-let BY = 0, HY = 0, LEAN = 0, CLIP = 99;
+let BY = 0, HY = 0, LEAN = 0, CLIP = 99, SEAT = 0;
 function shift(v) {
   if (v <= -19) return [LEAN, BY + HY];
-  if (v <= -11) return [q(LEAN * Math.min(1, (-10 - v) / 8)), BY];
+  if (v <= -11 || SEAT) return [q(LEAN * Math.min(1, (-10 - v) / 8)), BY];   // сидя опускается вся фигура
   return [0, 0];
 }
 function put(u, v, m) {
   u = q(u); v = q(v);
   const [du, dv] = shift(v);
   const pu = u + du, pv = v + dv;
-  if (pv > CLIP) return;
+  if (pv > CLIP || (SEAT && pv > -3)) return;                     // сидя низ рисует seat()
   if (inG(pu, pv)) M[(pv + OV) * GW + pu + OU] = m;
   // верх приподнялся (вдох): нижний ряд области тянется — без щели у пояса
   if (dv < 0 && (v === -11 || v === -19) && inG(pu, v) && !M[(v + OV) * GW + pu + OU]) M[(v + OV) * GW + pu + OU] = m;
@@ -86,8 +87,9 @@ function scr(u, v) { const [du, dv] = shift(v); const uu = u + du; return [PX + 
 function legsSide(P, hv, s, near, far) {
   const k = P.walking && !P.reverse ? P.amp : 0;
   const a = q(s * k * (1 - 2 * P.fr)), lift = q(2 * k * Math.sin(Math.PI * P.fr));
-  const fos = P.kind === 'fossil' ? -q(2 * P.tp) : 0;
-  const plant = a + fos, swing = -a + fos;
+  // окаменелость: опорная нога едет назад, другая осталась впереди
+  const fos = P.kind === 'fossil' ? q(3 * P.tp) : 0;
+  const plant = a - fos - (fos ? 1 : 0), swing = -a + (fos ? 1 : 0);
   // какая нога ближе к зрителю — по счёту шага
   const nearSwing = P.foot > 0;
   const L = [[plant, 0, nearSwing ? far : near], [swing, lift, nearSwing ? near : far]];
@@ -176,9 +178,23 @@ function toesSide(P, fh, bh) {
   else if (P.fr > 0.55 && P.fr < 0.9) put(bh - 1, 0, BO);
 }
 
+// сидя (лицом к зрителю): колени подтянуты, ткань легла на землю, носки впереди, кисти — на земле по бокам.
+// how: 'coat' — полы разошлись, колени в штанах; 'robe' — колени под тканью; 'legs' — рубаха и штаны
+function seat(how, m) {
+  const km = how === 'robe' ? m : TR;
+  trap(-3, 0, -6, 6, -8, 8, m);                                   // ткань на земле
+  if (how === 'coat') { run(-1, 1, -3, DP); run(-2, 2, -2, DP); }   // разрез полы между коленями
+  trap(-6, -2, -4, -1, -4, -1, km); trap(-6, -2, 1, 4, 1, 4, km);  // колени и голени
+  put(-4, -6, how === 'robe' ? LT : CD); put(1, -6, how === 'robe' ? LT : CD);
+  put(0, -5, DP); put(0, -4, DP);                                  // между коленями — тень
+  if (how !== 'robe') { run(-4, -2, -1, BO); run(-4, -1, 0, BO); put(-1, 0, TO); run(2, 4, -1, BO); run(1, 4, 0, BO); put(1, 0, TO); }
+  else { run(-3, -2, 0, BO); put(-2, 0, TO); run(2, 3, 0, BO); put(2, 0, TO); }
+  if (how === 'legs') { run(-6, 6, -3, TR); run(-7, -5, -2, TR); run(5, 7, -2, TR); }   // подол рубахи
+}
+
 // пыльник
 CUTS.duster = {
-  sleeve: CL,
+  sleeve: CL, seat: 'coat', cloth: CL,
   front(P, s, back) {
     legsFront(P, -9, back);
     // полы: от пояса клином вниз; спереди — разрез, в нём ноги; шагнувшая нога выносит полу
@@ -196,7 +212,7 @@ CUTS.duster = {
     const au = P.walking ? P.foot : 0;
     trap(-16, -11 - (au > 0 ? 1 : 0), -6 + s, -5 + s, -6 + s, -5 + s, CL); put(-6 + s, -10 - (au > 0 ? 1 : 0), HN);
     trap(-16, -11 - (au < 0 ? 1 : 0), 5, 6, 5, 6, CL); put(6, -10 - (au < 0 ? 1 : 0), HN);
-    run(-4 + s, 4, -11, DP); if (!back) put(s, -11, RP);         // пояс, пряжка
+    run(-4 + s, 4, -11, DP); if (!back) put(s, -11, BK);         // пояс, пряжка
     return back ? null : [1 + s, -15];
   },
   side(P) {
@@ -207,7 +223,7 @@ CUTS.duster = {
     for (let v = -8; v <= -4; v++) put(q(-3 + (bh + 3) * (v + 10) / 7) + 2, v, CD);   // складка полы к хвосту
     // корпус в профиль — в тени, ближний рукав — на свету
     run(-3, 2, -18, HD); trap(-17, -12, -3, 3, -3, 3, CD); put(4, -15, CD); put(4, -14, CD);
-    run(-3, 3, -11, DP); put(3, -11, RP);
+    run(-3, 3, -11, DP); put(3, -11, BK);
     const au = armSwing(P);
     for (let v = -15; v <= -11; v++) put(-2 + q(au * (v + 16) / 6), v, DP);
     limb(-1, -17, -1 + au, -10, 2, CL); put(au + (au > 0 ? 1 : 0), -9, HN);
@@ -217,7 +233,7 @@ CUTS.duster = {
 
 // паломник
 CUTS.pilgrim = {
-  sleeve: CL,
+  sleeve: CL, seat: 'robe', cloth: CL,
   front(P, s, back) {
     const pl = hemPush(P), lpush = P.foot > 0 ? pl : 0, rpush = P.foot < 0 ? pl : 0;
     toesFront(P, back);
@@ -259,14 +275,14 @@ CUTS.pilgrim = {
 
 // пелерина
 CUTS.cape = {
-  sleeve: CD,
+  sleeve: CD, seat: 'legs', cloth: CL,
   front(P, s, back) {
     legsFront(P, -6, back);
     const pl = hemPush(P);
     // рубаха до бедра, пояс; предплечья из-под пелерины, кисти
     trap(-12, -6, -4 + s, 4, -5 + s, 5, TR);
     if (P.walking) run(P.foot > 0 ? -5 + s : 1, P.foot > 0 ? -1 : 5, -5 - (pl ? 0 : 1) + 1, TR);
-    run(-4 + s, 4, -9, DP); if (!back) put(s, -9, RP);
+    run(-4 + s, 4, -9, DP); if (!back) put(s, -9, BK);
     const au = P.walking ? P.foot : 0;
     trap(-12, -10 - (au > 0 ? 1 : 0), -6 + s, -5 + s, -6 + s, -5 + s, TR); put(-6 + s, -9 - (au > 0 ? 1 : 0), HN);
     trap(-12, -10 - (au < 0 ? 1 : 0), 5, 6, 5, 6, TR); put(6, -9 - (au < 0 ? 1 : 0), HN);
@@ -295,7 +311,7 @@ CUTS.cape = {
 
 // номад
 CUTS.nomad = {
-  head: 'wrap', sleeve: CL,
+  head: 'wrap', sleeve: CL, seat: 'robe', cloth: CL,
   front(P, s, back) {
     const pl = hemPush(P), lpush = P.foot > 0 ? pl : 0, rpush = P.foot < 0 ? pl : 0;
     toesFront(P, back);
@@ -335,7 +351,7 @@ CUTS.nomad = {
 
 // ярусы: накидка в два яруса — зубцы широкие, края ярусов по бокам длиннее (крылья), ряса узкая
 CUTS.tiers = {
-  sleeve: CL,
+  sleeve: CL, seat: 'robe', cloth: CD,
   front(P, s, back) {
     const pl = hemPush(P), lpush = P.foot > 0 ? pl : 0, rpush = P.foot < 0 ? pl : 0;
     toesFront(P, back);
@@ -396,12 +412,15 @@ export function drawCut(player, P, name) {
   const [kind, s, flip, back] = VIEWMAP[P.view] || VIEWMAP.S;
   FLIP = flip; PX = P.x + 7; PY = P.y + 22;
   // поза: вес на опоре, осел, дыхание (плечи, потом голова), сидя — ниже; наклон — по ходу
-  const sitD = q(3 * P.sit);
+  // сесть: сперва колени (верх ниже на 2), с середины — сидит: вся фигура на 7 ниже, низ — seat()
+  const seated = P.sit > 0.5 && kind !== 'side';
+  const sitD = seated ? 5 + q(2 * Math.min(1, (P.sit - 0.5) * 2)) : q(4 * P.sit);
   const down = (P.kind === 'stone' && P.tp > 0.6) || (P.kind === 'pit' && P.tp > 0.5) ? 1 : 0;
   P.down = down;
-  BY = P.dip - P.bSh + sitD; HY = -P.bHd + down + P.dipH;
-  LEAN = kind === 'side' ? (flip ? -P.lean : P.lean) + (P.kind === 'stone' ? q(2 * P.tp) : 0) : 0;
-  CLIP = P.kind === 'pit' ? -q(2 * P.tp) : 99;
+  BY = P.dip - P.bSh + sitD; HY = -P.bHd + down + P.dipH; SEAT = seated ? 1 : 0;
+  LEAN = kind === 'side' ? (flip ? -P.lean : P.lean) : 0;                // клевок о камень — уже в наклоне (pose)
+  // яма — проседает; вброд, в зыби, снегу и мху — ступней не видно
+  CLIP = P.kind === 'pit' ? -q(2 * P.tp) : !P.feet && P.sit < 0.5 ? -2 : 99;
   // ход по экрану: фазу ноги — по зеркалу
   const PP = Object.assign({}, P, { swayU: 0 });
   if (P.sit > 0.5) PP.walking = false;
@@ -413,15 +432,18 @@ export function drawCut(player, P, name) {
     heart = C.front(PP, s, back);
     if (C.head === 'wrap') wrap(back ? 'N' : s ? 'Q' : 'S'); else hood(back ? (s ? 'NQ' : 'N') : s ? 'Q' : 'S');
   }
-  // ладонь козырьком: рукав от плеча к виску, ладонь над тьмой (лицом к зрителю — вид S)
+  // ладонь козырьком (лицом к зрителю): плечо в сторону, предплечье стоймя, кисть над тьмой — «Г»
   if (P.visorK > 0 && kind !== 'side') {
     const sl = C.sleeve;
-    limb(5, -17, 7, -19, 2, sl);                                   // плечо — локоть в сторону
-    if (P.visorK >= 0.5) limb(6, -20, 4, -23, 2, sl);              // предплечье к виску
-    if (P.visorK >= 1) { run(-2, 3, -24, HN); run(-2, 2, -23, FC); }   // ладонь над тьмой, под ней тень
+    run(5, 8, -17, sl); run(5, 7, -16, sl);                       // плечо в сторону, рукав провис
+    if (P.visorK < 0.5) run(7, 8, -18, sl);                       // локоть пошёл вверх
+    else {
+      trap(-22, -18, 7, 8, 7, 8, sl); put(8, -17, DP);             // предплечье стоймя, под локтем — тень
+      if (P.visorK >= 1) { run(1, 7, -23, sl); run(-2, 5, -24, HN); put(-2, -24, TO); run(-1, 3, -23, FC); }   // кисть к виску, ладонь над тьмой
+    }
   }
-  // сидя: подол лёг на землю шире
-  if (P.sit > 0.5) { run(-7, 7, 0, C.sleeve === CD ? CD : CL); run(-6, 6, -1, C.sleeve === CD ? CD : CL); }
+  SEAT = 0;                                                       // низ сидящего — на месте, без сдвига
+  if (seated) seat(C.seat || 'robe', C.cloth || CL);
   // тень у земли
   X.globalAlpha = 0.35; X.fillStyle = NI; X.fillRect(P.x + 1, P.y + 23, 13, 1); X.globalAlpha = 1;
   // свет и кромки по сетке → холст (ряд за рядом, одинаковые подряд — одним прямоугольником)
@@ -460,8 +482,8 @@ export function drawCut(player, P, name) {
   if (!back && !(P.visorK >= 1 && kind !== 'side')) eyes(em, P, (player.cold || 0) > 0.5);
 }
 
-// на пробу: ?cut=duster|pilgrim|cape|nomad|tiers
-let pick = 'plumage';
-try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && CUTS[m[1]]) pick = m[1]; } catch (e) { /* без адреса — прежний плащ */ }
+// основной крой — пыльник (слово автора 28.10); ?cut= в адресе — на пробу, без сохранения
+let pick = 'duster';
+try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && Object.hasOwn(CUTS, m[1])) pick = m[1]; } catch (e) { /* без адреса — пыльник */ }
 export const CUT = pick;
 export { CUTS };

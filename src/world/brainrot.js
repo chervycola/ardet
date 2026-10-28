@@ -3,7 +3,9 @@
 // Растёт с глубиной в пустыню за огнём; падение — у дальнего края.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { X } from '../render/context.js';
+import { X, setCtx } from '../render/context.js';
+import { drawPlayer, cutOf } from '../sprites/player.js';
+import { getPlayer } from '../core/playerRef.js';
 import { scaler } from '../render/scaler.js';
 import { MW, MH } from './terrain.js';
 import { events } from '../core/events.js';
@@ -248,12 +250,19 @@ function battery(ctx, cx, y, q) {
   ctx.fillRect(x + 22, y + 3, 2, 3);
   if (q > 0) { ctx.fillStyle = CINNABAR; ctx.fillRect(x + 2, y + 2, Math.max(1, 18 * q | 0), 5); }
 }
-// отражение странника: капюшон и плащ до земли — ног из-под подола не видно
-function reflection(ctx, cx, cy) {
-  const rows = [[2, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [5, 6], [5, 7], [5, 8], [5, 9], [5, 10], [5, 11],
-    [5, 12], [6, 13], [6, 14], [6, 15], [6, 16], [6, 17], [7, 18], [7, 19], [7, 20], [7, 21], [7, 22], [8, 23]];
-  for (const [w, dy] of rows) ctx.fillRect(cx - w, cy - 14 + dy, w * 2, 1);
-  for (let i = 0; i < 8; i++) if (i % 3 !== 1) ctx.fillRect(cx - 8 + i * 2, cy + 10, 2, 1);   // рваный подол
+// отражение странника — он сам, в том, что надето (sprites/wardrobe.js): силуэт тоном стекла, лицом к зрителю
+let mirror = null;
+function reflection(ctx, cx, cy, a) {
+  if (typeof document === 'undefined' || !document.createElement) return;
+  if (!mirror) { mirror = document.createElement('canvas'); mirror.width = 32; mirror.height = 40; }
+  const g = mirror.getContext && mirror.getContext('2d');
+  if (!g) return;
+  g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, 32, 40);
+  const me = getPlayer() || {};
+  const prev = X;
+  setCtx(g); drawPlayer({ x: 9, y: 8, vx: 0, vy: 0, face: 'S', moving: false, cut: cutOf(me) }); setCtx(prev);
+  g.globalCompositeOperation = 'source-in'; g.fillStyle = '#3a332c'; g.fillRect(0, 0, 32, 40);
+  ctx.globalAlpha = a; ctx.drawImage(mirror, cx - 16, cy - 26); ctx.globalAlpha = 1;
 }
 // окно хлама: шапка, крестик, строки-штрихи, кнопка — без слов
 function popup(ctx, i, x, y, w, h) {
@@ -311,11 +320,7 @@ function drawFall(ctx, kind, f) {
     ctx.fillStyle = NIGHT; ctx.fillRect(0, 0, vw, vh);
     ctx.globalAlpha = 1;
     battery(ctx, vw / 2 | 0, 16, Math.max(0, 0.25 - a * 0.3));
-    if (a > 0.7) {                                  // отражение странника
-      ctx.globalAlpha = Math.min(0.6, (a - 0.7) * 2);
-      ctx.fillStyle = '#3a332c';
-      reflection(ctx, vw / 2 | 0, vh / 2 + 10 | 0);
-    }
+    if (a > 0.7) reflection(ctx, vw / 2 | 0, vh / 2 + 10 | 0, Math.min(0.6, (a - 0.7) * 2));   // отражение странника
   } else if (kind === 'lake') {
     // жижа поднимается, мир плывёт волнами и тонет
     const world = layers.canvas('world'), bg = layers.canvas('bg');

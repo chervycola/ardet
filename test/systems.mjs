@@ -3360,7 +3360,7 @@ setCtx(ctx);
     for (let i = 0; i < 60; i++) {
       go(p, 1, 2.6); frames++;
       const L = rec(p), x = Math.floor(p.x);
-      if (L.some(([c, X, Y]) => c === '#5c564e' && X >= x + 14 && Y >= Math.floor(p.y) + 21)) toeFront++;
+      if (L.some(([c, X, Y]) => c === '#5c564e' && X >= x + 10 && Y >= Math.floor(p.y) + 21)) toeFront++;   // носок пыльника — впереди оси
     }
     assert(toeFront > 5 && toeFront < frames, `носок впереди: ${toeFront} из ${frames}`);
     const s = mk('S'); idle(s, 30);
@@ -3389,14 +3389,18 @@ setCtx(ctx);
     assert(hoodX(st) >= hoodX(base) + 2, `капюшон не клюнул вперёд: ${hoodX(base)} → ${hoodX(st)}`);
     assert(!st.some(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(p.y)), 'зажмурился — глаз нет');
     p.gait.trip = { kind: 'fossil', p: 1, k: 0.25, dir: 1 };
-    const fo = rec(p), x = Math.floor(p.x);
-    assert(fo.some(([c, X]) => c === '#5c564e' && X < x + 2), 'нога не поехала назад');
+    const fo = rec(p);
+    const toeX = L => Math.min(...L.filter(([c]) => c === '#5c564e').map(([, X]) => X));
+    assert(toeX(fo) <= toeX(base) - 2, `нога не поехала назад: ${toeX(base)} → ${toeX(fo)}`);
   });
-  test('гардероб: каждый крой — во всех видах, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки', async () => {
-    const W = await imp('sprites/wardrobe.js');
-    const cuts = Object.keys(W.CUTS);
+  const WR = await imp('sprites/wardrobe.js');
+  test('гардероб: каждый крой — во всех видах, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки', () => {
+    const cuts = Object.keys(WR.CUTS);
     assert(cuts.length >= 5, 'кроёв меньше пяти: ' + cuts);
-    eq(W.CUT, 'plumage', 'без ?cut= — прежний плащ');
+    eq(WR.CUT, 'duster', 'без ?cut= — пыльник');
+    eq(PL.cutOf({}), 'duster', 'без своего кроя — пыльник');
+    eq(PL.cutOf({ cut: 'nomad' }), 'nomad', 'свой крой — свой');
+    eq(PL.cutOf({ cut: 'нет такого' }), 'duster', 'чужое имя — пыльник');
     const PAL = new Set(['#0D0B0A', '#8A8D8F', '#E28A3A', '#C23B2B', '#c8b89a', '#15100c', '#241c14', '#2a2620', '#3a3328', '#33302e', '#5c564e', '#5a4232', '#3D4A3A', '#4a5646', '#2c362a']);
     for (const cut of cuts) {
       const fr = (f, tag) => {
