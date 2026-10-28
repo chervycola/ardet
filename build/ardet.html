@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='586ffbb · 2026-10-28';console.log('[оттиск]', '586ffbb · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='3e357db · 2026-10-28';console.log('[оттиск]', '3e357db · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32345,12 +32345,15 @@ System.register("world/garments", ["sprites/wardrobe"], function (exports_73, co
         return OFF_LINE;
     }
     exports_73("wear", wear);
-    // опись: что на плечах, что где висит
+    // опись: что на плечах, что где висит; ненайденное не называется и не считается — графа пустая
     function wardrobeLines() {
-        const L = [`Пыльник${wardrobe.worn === BASE ? ' — на плечах' : ' — при себе'}.`];
+        const L = [`Пыльник — ${wardrobe.worn === BASE ? 'на плечах' : 'при себе'}.`];
         for (const g of Object.keys(GARMENTS))
             if (wardrobe.found.has(g))
                 L.push(`${GARMENTS[g].name} — ${wardrobe.worn === g ? 'на плечах' : 'висит: ' + GARMENTS[g].place}.`);
+        const left = Object.keys(GARMENTS).length - wardrobe.found.size;
+        if (left > 0)
+            L.push({ text: left === 1 ? 'графа не заполнена' : 'графы не заполнены', empty: true });
         return L;
     }
     exports_73("wardrobeLines", wardrobeLines);
@@ -32375,16 +32378,25 @@ System.register("world/garments", ["sprites/wardrobe"], function (exports_73, co
         ],
         execute: function () {
             exports_73("BASE", BASE = 'duster');
-            // cut → где висит; wear — подпись действия; name — в описи; on — строка, когда надел
+            // cut → где висит; wear — подпись действия; name — в описи; on — строка внизу, когда надел:
+            // сперва — как висело (вещь на своём месте, канцелярия описывает её всерьёз), потом — как легло.
+            // Сверка с каноном (28.10): пыльник нигде не «находят» — он свой; в гардероб театра свой плащ не
+            // сдают и номерка не берут («гардероб на одного»: одно пальто, одна строка) — пелерина висит за
+            // кулисой (костюмерная — нов.); котомка паломника не пуста — по описи; ярусы — зубцами, не перьями;
+            // в местах памяти и в чужих домах (вежа, кибитка — «хозяин скоро») одежды не берут.
             exports_73("GARMENTS", GARMENTS = {
-                pilgrim: { where: { id: 'church' }, place: 'Заброшенная церковь', name: 'Ряса паломника, верёвка, котомка, посох',
-                    wear: '<i>❦</i>НАДЕТЬ РЯСУ', on: 'Ряса впору. В котомке — пусто; посох стёрт под ладонью до гладкого.' },
-                cape: { where: { id: 'theater' }, place: 'Театр Теней', name: 'Пелерина',
-                    wear: '<i>❦</i>НАДЕТЬ ПЕЛЕРИНУ', on: 'Пелерина по плечам. Край обтрёпан, будто в ней долго кланялись.' },
+                pilgrim: { where: { id: 'church' }, place: 'Заброшенная церковь', name: 'Ряса, верёвка, посох',
+                    wear: '<i>⌒</i>НАДЕТЬ РЯСУ',
+                    on: 'У алтаря на гвозде — ряса и верёвка вместо пояса; к стене прислонён посох. Бирка: «выдаётся идущим. возврат — по миновании надобности». Котомка легла на плечо: фонарь, газета, блюдце — по описи.' },
+                cape: { where: { id: 'theater' }, place: 'Театр Теней, за кулисой', name: 'Пелерина',
+                    wear: '<i>⌒</i>НАДЕТЬ ПЕЛЕРИНУ',
+                    on: 'За кулисой, на плечиках, — пелерина. Бирка костюмерной: «к спектаклю. выход — каждый вечер». Край обтрёпан, будто в ней долго кланялись.' },
                 nomad: { where: { id: 'exit' }, place: 'Выход в Пустошь', name: 'Обмотка и платок',
-                    wear: '<i>❦</i>ОБМОТАТЬ ГОЛОВУ', on: 'Обмотка легла виток к витку. Платок пахнет пылью дальней дороги.' },
+                    wear: '<i>⌒</i>ОБМОТАТЬ ГОЛОВУ',
+                    on: 'На столбе последнего указателя намотан платок цвета мглы, под ним — обмотка. Узел слабый. Обмотка легла виток к витку.' },
                 tiers: { where: { id: 'raven' }, place: 'Гнездо Ворона', name: 'Накидка в два яруса',
-                    wear: '<i>❦</i>НАКИНУТЬ ЯРУСЫ', on: 'Накидка легла ярусами, перо к перу. Ворон смотрит, не моргая.' },
+                    wear: '<i>⌒</i>НАКИНУТЬ ЯРУСЫ',
+                    on: 'В описи гнезда, строкой ниже книги: «накидка в два яруса, б/н. выдаче подлежит». Накидка легла ярусами, зубец к зубцу. Ворон смотрит, не моргая.' },
             });
             OFF_LINE = 'Снова в своём пыльнике. Снятое осталось висеть, где висело.';
             exports_73("wardrobe", wardrobe = { worn: BASE, found: new Set() });
@@ -50401,7 +50413,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
         else
             L.push({ text: 'графа не заполнена', empty: true });
         L.push({ h: 'Одежда' }); // что на плечах, что где висит (world/garments.js)
-        (d.clothes && d.clothes.length ? d.clothes : ['Пыльник — на плечах.']).forEach(c => L.push({ text: c }));
+        (d.clothes && d.clothes.length ? d.clothes : ['Пыльник — на плечах.']).forEach(c => L.push(typeof c === 'string' ? { text: c } : c));
         return L;
     }
     exports_125("inventoryLines", inventoryLines);

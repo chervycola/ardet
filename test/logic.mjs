@@ -445,7 +445,14 @@ const imp = p => import(new URL(p, base));
     eq(GA.wear('cape'), null, 'надетое второй раз не надевается');
     assert(GA.wardrobeLines().includes('Пелерина — на плечах.') && GA.wardrobeLines()[0] === 'Пыльник — при себе.', 'опись: что на плечах');
     assert(typeof GA.wear('duster') === 'string' && GA.wardrobe.worn === 'duster', 'снова в пыльнике');
-    assert(GA.wardrobeLines().some(l => /Пелерина — висит: /.test(l)), 'снятое висит, где висело');
+    const W = GA.wardrobeLines();
+    assert(W.some(l => typeof l === 'string' && /Пелерина — висит: /.test(l)), 'снятое висит, где висело');
+    // ненайденное не называется и не считается — пустая графа (канон: опись котомки)
+    const last = W[W.length - 1];
+    assert(last.empty && last.text === 'графы не заполнены' && !/\d/.test(last.text), 'пустые графы — без имён и без счёта');
+    assert(!W.some(l => typeof l === 'string' && /Ряса|Обмотка|Накидка/.test(l)), 'ненайденное названо');
+    for (const g of Object.keys(GA.GARMENTS)) assert(!/перо|перь/i.test(GA.GARMENTS[g].on), 'перья — слово автора: не мешок из перьев');
+    assert(/фонарь, газета, блюдце/.test(GA.GARMENTS.pilgrim.on), 'котомка — по описи, не пуста');
     eq(GA.wear('constructor'), null, 'ключ прототипа не надевается');
     eq(GA.wear('plumage'), null, 'чего нет в гардеробе — не надеть');
     GA._resetWardrobe();
