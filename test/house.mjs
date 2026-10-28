@@ -136,10 +136,10 @@ await test('пробуждение: дрожь всплесками целыми
   assert(WF.slicesAt(WF.OPEN[2] + 2, 360, 7).length >= 1, 'на открытии век — рвёт');
   for (const a of [10, 40, WF.OPEN[1] + 3]) { eq(WF.tremorAt(a, 7, true).join(), '0,0'); eq(WF.slicesAt(a, 360, 7, true).length, 0); }
 });
-await test('сбой без текста: ни пробуждение, ни заглавная, ни падение не пишут ни цифр, ни букв (слово автора 27.10, 28.10)', async () => {
+await test('сбой без текста: ни пробуждение, ни заглавная не пишут ни цифр, ни букв; падение — с текстом, пробуждение — без текста, но со следами падения (слово автора 27.10, 28.10)', async () => {
   const { readFileSync } = await import('node:fs');
   const TM = await imp('core/time.js');
-  for (const f of ['render/wakefx.js', 'ui/titleglitch.js', 'world/brainrot.js']) {
+  for (const f of ['render/wakefx.js', 'ui/titleglitch.js']) {
     const src = readFileSync(new URL(f, base), 'utf8');
     assert(!/fillText|strokeText|\.font\s*=/.test(src), f + ': в сбое пишется текст');
   }
@@ -149,9 +149,22 @@ await test('сбой без текста: ни пробуждение, ни за
   WF.wakefx.start();
   for (let n = 0; n < 900; n++) { TM.tick(); if (n % 3 === 0) WF.wakePass(c, { width: 1280, height: 720 }, 2); }
   eq(texts, 0, 'за всё пробуждение — ни одной строки');
+  // падение — с текстом: подпись у всех, проценты у льда, слова в окнах хлама
   const BR = await imp('world/brainrot.js');
-  for (const kind of ['sand', 'ice', 'lake', 'junk', 'void']) for (let f = 0; f <= 1; f += 0.05) BR._fallFrame(c, kind, f);
-  eq(texts, 0, 'ни в одном падении — ни строки: ни процентов, ни окон со словами, ни подписи');
+  for (const kind of ['sand', 'ice', 'lake', 'junk', 'void']) {
+    const said = [];
+    const cf = fakeCtx(); cf.fillText = s => said.push(s);
+    for (let f = 0; f <= 1; f += 0.05) BR._fallFrame(cf, kind, f);
+    assert(said.includes('вы упали в брейнрот'), kind + ': без подписи');
+    if (kind === 'ice') assert(said.some(s => /^\d%$/.test(s)), 'лёд: без процентов');
+    if (kind === 'junk') assert(said.includes('ВЫ ВЫИГРАЛИ'), 'хлам: окна без слов');
+  }
+  // пробуждение после падения — без текста, но со следами: строка внизу уходит, трещины остаются
+  const main = readFileSync(new URL('main.js', base), 'utf8');
+  const rec = (main.match(/events\.on\('brainrot\.recover',[^\n]*/) || [''])[0];
+  assert(/hideLore\(\)/.test(rec), 'на пробуждении строка падения не уходит');
+  assert(!/crackedGlass\.clear/.test(rec), 'следы падения стёрты');
+  assert(!/renderHouse[\s\S]{0,1500}drawBrainrot/.test(main.slice(main.indexOf('function renderHouse'), main.indexOf('function renderUnder'))), 'в доме рисуется оверлей падения');
 });
 await test('пробуждение: второе — та же сцена за шесть секунд, мигание по настоящим кадрам; проснуться — за полсекунды', async () => {
   const TM = await imp('core/time.js');

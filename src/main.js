@@ -65,7 +65,7 @@ import { initInventory } from './ui/inventory.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer, setPosOverride } from './core/playerRef.js';
 import { screenMoss, crackedGlass, dyingPixels, initMetaFx } from './render/metaFx.js';
-import { showLore, draw as drawLorePopup, skipOrDismiss as dismissLore, isActive as loreActive } from './ui/lorepopup.js';
+import { showLore, draw as drawLorePopup, skipOrDismiss as dismissLore, isActive as loreActive, dismiss as hideLore } from './ui/lorepopup.js';
 import { init as initTerminal, open as openTerminal } from './terminal/terminal.js';
 import { initShop, openShop } from './ui/shop.js';
 import { STREET_SPAWN, GATES_RETURN, STREET_X0, STREET_END_W, STREET_SHIFT, STREET_ROAD_Y, BRANCH_PLAIN, consumeGatesLine, worldSegmentAt } from './world/street.js';
@@ -1811,7 +1811,9 @@ document.addEventListener('keydown', e => {
   if (wakeUp && !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) wakeUp();
 });
 // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
-events.on('brainrot.recover', () => { if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
+// пробуждение — без текста, но со следами падения (слово автора 28.10): строка внизу уходит,
+// трещины экрана остаются (render/metaFx.js); подписи падения в доме нет — оверлей там не рисуется
+events.on('brainrot.recover', () => { hideLore(); if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
 
 let entryDone = false;
 { // оттиск сборки на заставке — сверка «что реально задеплоено»

@@ -236,20 +236,10 @@ export function draw(ctx) {
   ctx.globalAlpha = 1;
 }
 
-// ── Падения: у каждой стихии своё. f — 0..1 за время падения; к концу у всех один
-// конец — экран гаснет, как телефон: кадр сходится в черту, черта в точку (дальше —
-// пробуждение, render/wakefx.js). Текста в падении нет — ни подписи, ни цифр, ни слов
-// в окнах (слово автора 28.10): батарейка — рисунком, строки окон — штрихами.
-const BONE = '#D9CFB8', PAPER = '#E8DCC3', SEPIA = '#3A3026', CINNABAR = '#C23B2B';
-// батарейка в чёрном стекле: контур, носик, остаток заряда (q — 0..1)
-function battery(ctx, cx, y, q) {
-  const x = cx - 12;
-  ctx.fillStyle = q > 0 ? PAPER : SEPIA;
-  ctx.fillRect(x, y, 22, 1); ctx.fillRect(x, y + 8, 22, 1);
-  ctx.fillRect(x, y, 1, 9); ctx.fillRect(x + 21, y, 1, 9);
-  ctx.fillRect(x + 22, y + 3, 2, 3);
-  if (q > 0) { ctx.fillStyle = CINNABAR; ctx.fillRect(x + 2, y + 2, Math.max(1, 18 * q | 0), 5); }
-}
+// ── Падения: у каждой стихии своё. f — 0..1 за время падения; к концу у всех одна подпись.
+// Текст здесь — по слову автора (28.10): «падение в брейнрот должно быть с текстом» — проценты
+// у льда, слова в окнах хлама, подпись; пробуждение в доме — без текста, но со следами падения
+// (main.js: строка внизу уходит, трещины экрана остаются, оверлея падения в доме нет).
 // отражение странника — он сам, в том, что надето (sprites/wardrobe.js): силуэт тоном стекла, лицом к зрителю
 let mirror = null;
 function reflection(ctx, cx, cy, a) {
@@ -264,46 +254,17 @@ function reflection(ctx, cx, cy, a) {
   g.globalCompositeOperation = 'source-in'; g.fillStyle = '#3a332c'; g.fillRect(0, 0, 32, 40);
   ctx.globalAlpha = a; ctx.drawImage(mirror, cx - 16, cy - 26); ctx.globalAlpha = 1;
 }
-// окно хлама: шапка, крестик, строки-штрихи, кнопка — без слов
-function popup(ctx, i, x, y, w, h) {
-  ctx.fillStyle = PAPER; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = i % 4 ? SEPIA : CINNABAR; ctx.fillRect(x, y, w, 6);
-  ctx.fillStyle = PAPER;                                         // крестик — две косые
-  for (let k = 0; k < 3; k++) { ctx.fillRect(x + w - 6 + k, y + 1 + k, 1, 1); ctx.fillRect(x + w - 4 - k, y + 1 + k, 1, 1); }
-  ctx.fillStyle = SEPIA;
-  const n = 1 + (rnd(i * 11) * 3 | 0);
-  for (let k = 0; k < n && 10 + k * 4 < h - 7; k++) {
-    const lw = (w - 8) * (0.45 + 0.5 * rnd(i * 13 + k)) | 0;
-    ctx.globalAlpha = k ? 0.45 : 0.8;
-    ctx.fillRect(x + 4, y + 10 + k * 4, lw, k ? 1 : 2);
-  }
-  ctx.globalAlpha = 1;
-  if (i % 3 === 0) { ctx.fillStyle = i % 2 ? CINNABAR : SEPIA; ctx.fillRect(x + w - 18, y + h - 7, 14, 4); }
-}
-// экран гаснет: шторки сверху и снизу сходятся в черту, черта — в точку, точка тухнет
-function screenOff(ctx, vw, vh, k) {
-  const cy = vh / 2 | 0;
-  const half = Math.max(0, (1 - k / 0.5)) * cy | 0;
-  ctx.globalAlpha = 1; ctx.fillStyle = NIGHT;
-  ctx.fillRect(0, 0, vw, cy - half); ctx.fillRect(0, cy + half + 1, vw, vh - cy - half);
-  if (k < 0.5) return;
-  if (half <= 0) { ctx.fillRect(0, cy - 1, vw, 3); }
-  const m = (k - 0.5) / 0.35, len = Math.max(1, (1 - Math.min(1, m)) * vw) | 0;
-  ctx.globalAlpha = m > 1 ? Math.max(0, 1 - (m - 1) / 0.43) : 0.9;
-  ctx.fillStyle = BONE;
-  ctx.fillRect(vw / 2 - len / 2 | 0, cy, len, 1);
-  ctx.globalAlpha = 1;
-}
+const POPUPS = ['ВЫ ВЫИГРАЛИ', 'ОБНОВИТЬ', 'ЕЩЁ 1 ВИДЕО', 'НЕ ПРОПУСТИ', 'ОСТАЛОСЬ 2 ШТ', 'ВАС ЖДУТ', 'ПРИНЯТЬ ВСЁ', '99+'];
 function drawFall(ctx, kind, f) {
   const vw = scaler.vw, vh = scaler.vh;
-  const a = Math.min(1, f / 0.62);                 // анимация; потом — экран гаснет
+  const a = Math.min(1, f / 0.62);                 // анимация; потом — подпись
   if (kind === 'sand') {
     // песок поднимается растром и засыпает кадр; сверху — последняя песчинка
     const h = vh * Math.min(1, a * 1.08);
     for (let i = 0; i < 900; i++) {
       const x = rnd(i * 3.1) * vw | 0;
       const y = vh - rnd(i * 7.7 + (t >> 3)) * h | 0;
-      ctx.fillStyle = i % 3 ? BONE : SEPIA;
+      ctx.fillStyle = i % 3 ? '#D9CFB8' : '#3A3026';
       ctx.globalAlpha = 0.5 + 0.5 * rnd(i);
       ctx.fillRect(x, y, 1, 1);
     }
@@ -311,16 +272,21 @@ function drawFall(ctx, kind, f) {
     ctx.fillStyle = '#7a6034';
     ctx.fillRect(0, vh - h * 0.85, vw, h * 0.85);
     if (f > 0.5) {                                  // одна песчинка
-      ctx.globalAlpha = 1; ctx.fillStyle = BONE;
+      ctx.globalAlpha = 1; ctx.fillStyle = '#D9CFB8';
       ctx.fillRect(vw / 2 | 0, ((f - 0.5) * 2.2 * vh) % vh | 0, 1, 1);
     }
   } else if (kind === 'ice') {
-    // телефон садится: заряд стекает, экран гаснет, в чёрном стекле — ты сам
+    // телефон садится: экран гаснет, в чёрном стекле — ты сам
     ctx.globalAlpha = Math.min(1, a * 1.4);
     ctx.fillStyle = NIGHT; ctx.fillRect(0, 0, vw, vh);
+    const pct = Math.max(0, Math.round(5 - a * 6));
     ctx.globalAlpha = 1;
-    battery(ctx, vw / 2 | 0, 16, Math.max(0, 0.25 - a * 0.3));
-    if (a > 0.7) reflection(ctx, vw / 2 | 0, vh / 2 + 10 | 0, Math.min(0.6, (a - 0.7) * 2));   // отражение странника
+    ctx.fillStyle = pct > 0 ? '#C23B2B' : '#3A3026';
+    ctx.font = '6px "Press Start 2P","VT323",monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(pct + '%', vw / 2, 22);
+    if (a > 0.7) reflection(ctx, vw / 2 | 0, vh / 2 + 10 | 0, Math.min(0.6, (a - 0.7) * 2));   // отражение странника — в надетом
+    ctx.textAlign = 'left';
   } else if (kind === 'lake') {
     // жижа поднимается, мир плывёт волнами и тонет
     const world = layers.canvas('world'), bg = layers.canvas('bg');
@@ -343,11 +309,15 @@ function drawFall(ctx, kind, f) {
   } else if (kind === 'junk') {
     // цифровой хлам: окна сыплются, пока не завалят кадр
     const n = Math.floor(a * 70);
-    ctx.globalAlpha = 1;
+    ctx.font = '6px "Press Start 2P","VT323",monospace';
     for (let i = 0; i < n; i++) {
       const w = 46 + (rnd(i * 2) * 50 | 0), h = 22 + (rnd(i * 3) * 24 | 0);
       const x = (rnd(i * 5) * (vw + 20) - 20) | 0, y = (rnd(i * 7) * (vh + 10) - 10) | 0;
-      popup(ctx, i, x, y, w, h);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#E8DCC3'; ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = i % 4 ? '#3A3026' : '#C23B2B'; ctx.fillRect(x, y, w, 6);
+      ctx.fillStyle = '#E8DCC3'; ctx.fillText('✕', x + w - 7, y + 5);
+      ctx.fillStyle = '#3A3026'; ctx.fillText(POPUPS[i % POPUPS.length], x + 3, y + 14);
     }
   } else {
     ctx.globalAlpha = 0.88; ctx.fillStyle = NIGHT; ctx.fillRect(0, 0, vw, vh);
@@ -357,8 +327,17 @@ function drawFall(ctx, kind, f) {
       ctx.fillRect(Math.random() * vw | 0, Math.random() * vh | 0, 2, 2);
     }
   }
-  // конец — один на все падения: экран гаснет
-  if (f > 0.66) screenOff(ctx, vw, vh, Math.min(1, (f - 0.66) / 0.34));
+  // подпись — одна на все падения
+  if (f > 0.55) {
+    ctx.globalAlpha = Math.min(0.92, (f - 0.55) * 3);
+    ctx.fillStyle = NIGHT; ctx.fillRect(0, vh / 2 - 14, vw, 22);
+    ctx.globalAlpha = Math.min(1, (f - 0.55) * 3) * (0.75 + 0.25 * Math.sin(t * 0.05));
+    ctx.fillStyle = '#C23B2B';
+    ctx.font = '10px "Press Start 2P","VT323",monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('вы упали в брейнрот', vw / 2, vh / 2);
+    ctx.textAlign = 'left';
+  }
   ctx.globalAlpha = 1;
 }
 
