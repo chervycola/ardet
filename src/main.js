@@ -46,6 +46,8 @@ import { events, E } from './core/events.js';
 import { input } from './core/input.js';
 import { t as _t, tick } from './core/time.js';
 import { drawPlayer, cutOf } from './sprites/player.js';
+import { CUT_PINNED } from './sprites/wardrobe.js';
+import { wardrobe, wear, noteGarment, saveWardrobe, loadWardrobe, wardrobeLines } from './world/garments.js';
 import { setCtx } from './render/context.js';
 import { drawNPC_jester } from './sprites/npcs/jester.js';
 import { drawNPC_sol } from './sprites/npcs/sol.js';
@@ -246,7 +248,10 @@ if (savedData) {
   if (savedData.looks) loadRelook(savedData.looks);
   if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
   if (savedData.attn) loadAttention(savedData.attn, locations);
+  if (savedData.wardrobe) loadWardrobe(savedData.wardrobe);
 }
+// одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
+if (!CUT_PINNED) player.cut = wardrobe.worn;
 // без пропуска Шута — только в городке: старое сохранение (до замка) или тестовый адрес
 // без дома (?nohouse, ?under) не начинают странствие за изгородью (сверка обходов, 24.10)
 if (!canLeaveSettlement() && !isInSettlement(player.x, player.y)) {
@@ -257,7 +262,8 @@ for (const loc of locations) if (flags.visited.has(loc.id)) { const k = walkedKe
 
 // первое пробуждение странника было — дальше короткие (wakeFx)
 let wokeOnce = !!(savedData && savedData.woke);
-if (!STREAM) startAutoSave(() => ({
+function saveData() {
+  return {
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
   player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
@@ -274,7 +280,12 @@ if (!STREAM) startAutoSave(() => ({
   well: saveTownWell(),
   woke: wokeOnce,
   looks: saveRelook(),
-}));
+  wardrobe: saveWardrobe(),
+  };
+}
+if (!STREAM) startAutoSave(saveData);
+// сразу, не дожидаясь полуминуты (переоделся — и закрыл вкладку)
+function saveNow() { if (!STREAM) saveGame(saveData()); }
 setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
 
@@ -1991,7 +2002,7 @@ function inventoryData() {
   if (under.ticket) rites.push('Билет «до колодца. туда.» — в кармане.');
   const given = (saveTownWell() || {}).g | 0;
   if (given) rites.push(`Ведро общего дна — своё отдано: ${given}.`);
-  return { notes, total: getTotalCount(), ways, rooms, rites };
+  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines() };
 }
 initInventory(inventoryData, () => !loreActive() && !isMapOpen());
 
@@ -2009,6 +2020,7 @@ function lookTags() {
   return tags;
 }
 events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) { noteLook(loc.id); noteAttention(loc); } });
+events.on(E.LOCATION_VISIT, noteGarment);   // дошёл до места, где висит крой, — в опись
 events.on('location.use', loc => { if (loc && loc.id) { noteUse(loc.id); noteAttention(loc); } });
 // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
 events.on('brainrot.freeze', forgetAttention);
@@ -2072,7 +2084,12 @@ events.on('location.alt', (loc) => {
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
   if (a.key === 'town_well_give' && giveTownWell()) { const s = useTexts.town_well_give; showLook({ name: s.title, look: s.text }); }   // своё — в ведро общего дна
-  if (a.key === 'horizon_join') beyond.lookHorizon();   // ладонь козырьком — туда же, куда смотрит встречный (черта на двоих)
+  if (a.key === 'horizon_join') beyond.lookHorizon();
+  // гардероб: надеть то, что висит здесь, или снова свой пыльник (world/garments.js)
+  if (a.key.startsWith('wear_')) {
+    const line = wear(a.key.slice(5));
+    if (line) { if (!CUT_PINNED) player.cut = wardrobe.worn; playRustle(0.5); showLore(line); saveNow(); }
+  }   // ладонь козырьком — туда же, куда смотрит встречный (черта на двоих)
   // чужая записка: пожаловаться — у себя больше не увидишь; три жалобы — не увидит никто
   if (a.key === 'net_report') netVote(loc.net, 'report').then(r => showLore(r.error && r.error !== 'twice' ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Жалоба принята к рассмотрению. Этой записки ты больше не увидишь.'));
 });

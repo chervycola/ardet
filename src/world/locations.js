@@ -180,6 +180,9 @@ buildBeyond(locations);
 // старые ходы с колец эпох (изнанка, волна 4): концы наверху — ставкирка, нилометр…
 import { buildOldways } from './oldways.js';
 buildOldways(locations);
+// гардероб: крои висят по местам — второе действие «надеть» (world/garments.js)
+import { hangGarments } from './garments.js';
+export const garmentPlaces = hangGarments(locations);
 
 // ── HYBRID FIRES — Los Angeles and San Francisco on the street ──
 // They are full burning landmarks, not just plaques: lit, animated, and

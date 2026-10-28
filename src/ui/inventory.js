@@ -36,6 +36,8 @@ export function inventoryLines(d) {
   L.push({ h: 'Обряды' });
   if (d.rites.length) d.rites.forEach(r => L.push({ text: r }));
   else L.push({ text: 'графа не заполнена', empty: true });
+  L.push({ h: 'Одежда' });                                        // что на плечах, что где висит (world/garments.js)
+  (d.clothes && d.clothes.length ? d.clothes : ['Пыльник — на плечах.']).forEach(c => L.push({ text: c }));
   return L;
 }
 

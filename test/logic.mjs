@@ -415,6 +415,54 @@ const imp = p => import(new URL(p, base));
     }
     const all = { notes: Array.from({ length: 132 }, (_, i) => ({ n: i + 1, text: 'x' })), total: 132, ways: [], rooms: [], rites: [] };
     assert(!INV.inventoryLines(all).some(l => /не заполнен/.test(l.text) && l.n), 'всё найдено — пустых граф записок нет');
+    const cl = L.findIndex(l => l.h === 'Одежда');
+    assert(cl > 0 && L[cl + 1].text === 'Пыльник — на плечах.', 'графа одежды: без данных — пыльник на плечах');
+    const L2 = INV.inventoryLines({ ...d, clothes: ['Пыльник — при себе.', 'Пелерина — на плечах.'] });
+    assert(L2.some(l => l.text === 'Пелерина — на плечах.'), 'графа одежды — из данных');
+  });
+}
+
+// ── гардероб в мире (world/garments.js) ──
+{
+  const GA = await imp('world/garments.js');
+  const LOC = await imp('world/locations.js');
+  test('гардероб: крои висят по местам; второе действие — надеть, там же — снова в пыльник; ничего не теряется', () => {
+    GA._resetWardrobe();
+    const places = LOC.garmentPlaces;
+    for (const g of Object.keys(GA.GARMENTS)) {
+      const loc = places[g];
+      assert(loc && loc.garment === g, `«${g}» нигде не висит`);
+      assert(LOC.locations.filter(l => l.garment === g).length === 1, `«${g}» висит в двух местах`);
+      const a = loc.altNow();
+      eq(a.key, 'wear_' + g, 'второе действие — надеть');
+      assert(/НАДЕТЬ|ОБМОТАТЬ|НАКИНУТЬ/.test(a.label), 'подпись действия');
+    }
+    const loc = places.cape;
+    GA.noteGarment(loc);
+    assert(GA.wardrobe.found.has('cape'), 'дошёл — найдено');
+    assert(typeof GA.wear('cape') === 'string' && GA.wardrobe.worn === 'cape', 'надел пелерину');
+    eq(loc.altNow().key, 'wear_duster', 'надетое снимается там же');
+    eq(GA.wear('cape'), null, 'надетое второй раз не надевается');
+    assert(GA.wardrobeLines().includes('Пелерина — на плечах.') && GA.wardrobeLines()[0] === 'Пыльник — при себе.', 'опись: что на плечах');
+    assert(typeof GA.wear('duster') === 'string' && GA.wardrobe.worn === 'duster', 'снова в пыльнике');
+    assert(GA.wardrobeLines().some(l => /Пелерина — висит: /.test(l)), 'снятое висит, где висело');
+    eq(GA.wear('constructor'), null, 'ключ прототипа не надевается');
+    eq(GA.wear('plumage'), null, 'чего нет в гардеробе — не надеть');
+    GA._resetWardrobe();
+  });
+  test('гардероб: сохранение туда и обратно; мусор и чужие ключи — мимо; ненайденное не надето', () => {
+    GA._resetWardrobe();
+    GA.noteGarment(LOC.garmentPlaces.nomad); GA.wear('nomad');
+    const d = JSON.parse(JSON.stringify(GA.saveWardrobe()));
+    GA._resetWardrobe(); GA.loadWardrobe(d);
+    eq(GA.wardrobe.worn, 'nomad', 'надетое пережило перезагрузку');
+    assert(GA.wardrobe.found.has('nomad'), 'найденное — тоже');
+    for (const bad of [null, 7, 'x', {}, { w: '__proto__', f: ['constructor', 'toString', 42] }, { w: 'tiers', f: [] }, { w: 'plumage' }]) {
+      GA._resetWardrobe(); GA.loadWardrobe(bad);
+      eq(GA.wardrobe.worn, 'duster', 'мусор — снова пыльник: ' + JSON.stringify(bad));
+      eq(GA.wardrobe.found.size, 0, 'мусор — ничего не найдено');
+    }
+    GA._resetWardrobe();
   });
 }
 

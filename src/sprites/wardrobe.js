@@ -483,7 +483,8 @@ export function drawCut(player, P, name) {
 }
 
 // основной крой — пыльник (слово автора 28.10); ?cut= в адресе — на пробу, без сохранения
-let pick = 'duster';
-try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && Object.hasOwn(CUTS, m[1])) pick = m[1]; } catch (e) { /* без адреса — пыльник */ }
+let pick = 'duster', pinned = false;
+try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && Object.hasOwn(CUTS, m[1])) { pick = m[1]; pinned = true; } } catch (e) { /* без адреса — пыльник */ }
 export const CUT = pick;
+export const CUT_PINNED = pinned;                                 // крой задан адресом — надетое в мире не рисуется
 export { CUTS };
