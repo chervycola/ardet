@@ -18,11 +18,11 @@ import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
 import { fromOldGeo, toOldGeo } from '../world/disc.js';
 import { cutOf } from '../sprites/player.js';
-import { CUTS } from '../sprites/wardrobe.js';
+import { isCut } from '../sprites/wardrobe.js';
 
 const FACES = ['S', 'N', 'E', 'W'];
 // крой из чужой вести: только известный, не ключ прототипа
-const lookOf = c => (typeof c === 'string' && Object.hasOwn(CUTS, c) ? c : undefined);
+const lookOf = c => (isCut(c) ? c : undefined);
 
 // Кольца стали просторнее (geo 2, world/disc.js): записки новой геометрии лежат в базе
 // со сдвигом по x — прежние клиенты их не видят и не путают; прежние записки ищутся

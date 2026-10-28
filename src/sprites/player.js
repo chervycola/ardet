@@ -22,7 +22,7 @@
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { wind } from '../world/wind.js';
-import { CUTS, CUT, drawCut } from './wardrobe.js';
+import { CUT, isCut, drawCut } from './wardrobe.js';
 
 const q = Math.round;
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -66,7 +66,7 @@ export function pose(player) {
 }
 
 // крой: свой у фигуры (сохранён, надет в месте мира), иначе — основной
-export const cutOf = player => (player && typeof player.cut === 'string' && Object.hasOwn(CUTS, player.cut) ? player.cut : CUT);
+export const cutOf = player => (player && isCut(player.cut) ? player.cut : CUT);
 
 export function drawPlayer(player) {
   drawCut(player, pose(player), cutOf(player));

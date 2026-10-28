@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='f98d716 · 2026-10-28';console.log('[оттиск]', 'f98d716 · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='07ead38 · 2026-10-28';console.log('[оттиск]', '07ead38 · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -31544,7 +31544,7 @@ System.register("world/oldways", ["world/disc", "world/potemkin"], function (exp
 });
 System.register("sprites/wardrobe", ["render/context", "core/time"], function (exports_72, context_72) {
     "use strict";
-    var context_js_3, time_js_12, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, BT, GL, MG, MGL, MGD, q, CL, CD, DP, TR, BO, HD, FC, RP, BG, ST, SH, TO, LT, HN, HR, BK, MAT, OU, GW, OV, GH, M, inG, at, BY, HY, LEAN, CLIP, SEAT, run, FLIP, PX, PY, EYES, CUTS, hemPush, armSwing, VIEWMAP, pick, pinned, CUT, CUT_PINNED;
+    var context_js_3, time_js_12, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, BT, GL, MG, MGL, MGD, q, CL, CD, DP, TR, BO, HD, FC, RP, BG, ST, SH, TO, LT, HN, HR, BK, MAT, OU, GW, OV, GH, M, inG, at, BY, HY, LEAN, CLIP, SEAT, run, FLIP, PX, PY, EYES, CUTS, hemPush, armSwing, VIEWMAP, own, isCut, pick, pinned, CUT, CUT_PINNED;
     var __moduleName = context_72 && context_72.id;
     function shift(v) {
         if (v <= -19)
@@ -31819,7 +31819,8 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         // яма — проседает; вброд, в зыби, снегу и мху — ступней не видно
         CLIP = P.kind === 'pit' ? -q(2 * P.tp) : !P.feet && P.sit < 0.5 ? -2 : 99;
         // ход по экрану: фазу ноги — по зеркалу
-        const PP = Object.assign({}, P, { swayU: 0 });
+        // подол по ветру — в сетке крои «лицом к +u»: на W зеркалим, как наклон
+        const PP = Object.assign({}, P, { swayU: 0, trail: flip ? -P.trail : P.trail });
         if (P.sit > 0.5)
             PP.walking = false;
         let heart;
@@ -31858,6 +31859,9 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         SEAT = 0; // низ сидящего — на месте, без сдвига
         if (seated)
             seat(C.seat || 'robe', C.cloth || CL);
+        if (seated && C.staff)
+            for (let v = -2; v <= 0; v++)
+                put(back ? 8 : -8 + s, v, ST); // посох сидящего — до земли
         // тень у земли
         context_js_3.X.globalAlpha = 0.35;
         context_js_3.X.fillStyle = NI;
@@ -32042,7 +32046,7 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             };
             // паломник
             CUTS.pilgrim = {
-                sleeve: CL, seat: 'robe', cloth: CL,
+                sleeve: CL, seat: 'robe', cloth: CL, staff: true,
                 front(P, s, back) {
                     const pl = hemPush(P), lpush = P.foot > 0 ? pl : 0, rpush = P.foot < 0 ? pl : 0;
                     toesFront(P, back);
@@ -32284,11 +32288,14 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             VIEWMAP = { S: ['front', 0, false, false], SE: ['front', 1, false, false], SW: ['front', 1, true, false],
                 E: ['side', 0, false, false], W: ['side', 0, true, false],
                 N: ['front', 0, false, true], NE: ['front', 1, false, true], NW: ['front', 1, true, true] };
+            // есть ли такой крой: своё поле, не ключ прототипа; без Object.hasOwn — старые Safari и WebView
+            own = Object.prototype.hasOwnProperty;
+            exports_72("isCut", isCut = c => typeof c === 'string' && own.call(CUTS, c));
             // основной крой — пыльник (слово автора 28.10); ?cut= в адресе — на пробу, без сохранения
             pick = 'duster', pinned = false;
             try {
                 const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : '');
-                if (m && Object.hasOwn(CUTS, m[1])) {
+                if (m && isCut(m[1])) {
                     pick = m[1];
                     pinned = true;
                 }
@@ -32400,7 +32407,7 @@ System.register("world/garments", ["sprites/wardrobe"], function (exports_73, co
             });
             OFF_LINE = 'Снова в своём пыльнике. Снятое осталось висеть, где висело.';
             exports_73("wardrobe", wardrobe = { worn: BASE, found: new Set() });
-            known = id => typeof id === 'string' && (id === BASE || (Object.hasOwn(GARMENTS, id) && Object.hasOwn(wardrobe_js_1.CUTS, id)));
+            known = id => wardrobe_js_1.isCut(id) && (id === BASE || Object.prototype.hasOwnProperty.call(GARMENTS, id));
             exports_73("saveWardrobe", saveWardrobe = () => ({ w: wardrobe.worn, f: [...wardrobe.found] }));
         }
     };
@@ -39429,7 +39436,7 @@ System.register("sprites/player", ["core/time", "world/wind", "sprites/wardrobe"
             // вид: сторона (−1…1: в профиль ±1, в три четверти ±0.5)
             SIDE = { S: 0, SE: 0.5, E: 1, NE: 0.5, N: 0, NW: -0.5, W: -1, SW: -0.5 };
             // крой: свой у фигуры (сохранён, надет в месте мира), иначе — основной
-            exports_101("cutOf", cutOf = player => (player && typeof player.cut === 'string' && Object.hasOwn(wardrobe_js_2.CUTS, player.cut) ? player.cut : wardrobe_js_2.CUT));
+            exports_101("cutOf", cutOf = player => (player && wardrobe_js_2.isCut(player.cut) ? player.cut : wardrobe_js_2.CUT));
         }
     };
 });
@@ -65387,7 +65394,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         execute: function () {
             FACES = ['S', 'N', 'E', 'W'];
             // крой из чужой вести: только известный, не ключ прототипа
-            lookOf = c => (typeof c === 'string' && Object.hasOwn(wardrobe_js_3.CUTS, c) ? c : undefined);
+            lookOf = c => (wardrobe_js_3.isCut(c) ? c : undefined);
             // Кольца стали просторнее (geo 2, world/disc.js): записки новой геометрии лежат в базе
             // со сдвигом по x — прежние клиенты их не видят и не путают; прежние записки ищутся
             // по своим координатам и переносятся так же, как сохранения (fromOldGeo)

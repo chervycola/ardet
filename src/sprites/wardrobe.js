@@ -233,7 +233,7 @@ CUTS.duster = {
 
 // паломник
 CUTS.pilgrim = {
-  sleeve: CL, seat: 'robe', cloth: CL,
+  sleeve: CL, seat: 'robe', cloth: CL, staff: true,
   front(P, s, back) {
     const pl = hemPush(P), lpush = P.foot > 0 ? pl : 0, rpush = P.foot < 0 ? pl : 0;
     toesFront(P, back);
@@ -422,7 +422,8 @@ export function drawCut(player, P, name) {
   // яма — проседает; вброд, в зыби, снегу и мху — ступней не видно
   CLIP = P.kind === 'pit' ? -q(2 * P.tp) : !P.feet && P.sit < 0.5 ? -2 : 99;
   // ход по экрану: фазу ноги — по зеркалу
-  const PP = Object.assign({}, P, { swayU: 0 });
+  // подол по ветру — в сетке крои «лицом к +u»: на W зеркалим, как наклон
+  const PP = Object.assign({}, P, { swayU: 0, trail: flip ? -P.trail : P.trail });
   if (P.sit > 0.5) PP.walking = false;
   let heart;
   if (kind === 'side') {
@@ -444,6 +445,7 @@ export function drawCut(player, P, name) {
   }
   SEAT = 0;                                                       // низ сидящего — на месте, без сдвига
   if (seated) seat(C.seat || 'robe', C.cloth || CL);
+  if (seated && C.staff) for (let v = -2; v <= 0; v++) put(back ? 8 : -8 + s, v, ST);   // посох сидящего — до земли
   // тень у земли
   X.globalAlpha = 0.35; X.fillStyle = NI; X.fillRect(P.x + 1, P.y + 23, 13, 1); X.globalAlpha = 1;
   // свет и кромки по сетке → холст (ряд за рядом, одинаковые подряд — одним прямоугольником)
@@ -482,9 +484,12 @@ export function drawCut(player, P, name) {
   if (!back && !(P.visorK >= 1 && kind !== 'side')) eyes(em, P, (player.cold || 0) > 0.5);
 }
 
+// есть ли такой крой: своё поле, не ключ прототипа; без Object.hasOwn — старые Safari и WebView
+const own = Object.prototype.hasOwnProperty;
+export const isCut = c => typeof c === 'string' && own.call(CUTS, c);
 // основной крой — пыльник (слово автора 28.10); ?cut= в адресе — на пробу, без сохранения
 let pick = 'duster', pinned = false;
-try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && Object.hasOwn(CUTS, m[1])) { pick = m[1]; pinned = true; } } catch (e) { /* без адреса — пыльник */ }
+try { const m = /[?&]cut=(\w+)/.exec(typeof location !== 'undefined' ? location.search : ''); if (m && isCut(m[1])) { pick = m[1]; pinned = true; } } catch (e) { /* без адреса — пыльник */ }
 export const CUT = pick;
 export const CUT_PINNED = pinned;                                 // крой задан адресом — надетое в мире не рисуется
 export { CUTS };

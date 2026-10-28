@@ -11,7 +11,7 @@
 // порядку раскладки, сдвигаются). Второе действие у места одно: если оно уже занято
 // (спуск, ведро) — прежнее главнее, крой там не висит.
 // ═══════════════════════════════════════
-import { CUTS } from '../sprites/wardrobe.js';
+import { isCut } from '../sprites/wardrobe.js';
 
 export const BASE = 'duster';
 // cut → где висит; wear — подпись действия; name — в описи; on — строка внизу, когда надел:
@@ -37,7 +37,7 @@ export const GARMENTS = {
 const OFF_LINE = 'Снова в своём пыльнике. Снятое осталось висеть, где висело.';
 
 export const wardrobe = { worn: BASE, found: new Set() };
-const known = id => typeof id === 'string' && (id === BASE || (Object.hasOwn(GARMENTS, id) && Object.hasOwn(CUTS, id)));
+const known = id => isCut(id) && (id === BASE || Object.prototype.hasOwnProperty.call(GARMENTS, id));
 
 // второе действие места, где висит крой
 export function garmentAlt(loc) {

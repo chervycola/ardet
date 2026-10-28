@@ -3368,7 +3368,7 @@ setCtx(ctx);
     eq(LS.filter(([c]) => c === '#5c564e').length, 2, 'стоит лицом — два носка');
     const n = mk('N'); idle(n, 30);
     const LN = rec(n);
-    assert(!LN.some(([c, X, Y, W, H]) => c === '#E28A3A' && W * H >= 4), 'спиной огонёк виден');
+    assert(!LN.some(([c, X, Y, W, H]) => c === '#E28A3A' && W * H >= 2), 'спиной огонёк виден');
     // рамка: шаг, бег, оступился — в маске тени x−6..x+20, y−10..y+24
     for (const [face, dx, trip] of [['E', 2.6], ['W', -2.6], ['S', 0], ['E', 4.3], ['E', 0, 'stone'], ['W', 0, 'fossil'], ['S', 0, 'pit']]) {
       const f = mk(face); idle(f, 2); if (dx) go(f, 40, dx);
@@ -3382,16 +3382,22 @@ setCtx(ctx);
   });
   test('походка: оступился — позой, не только сдвигом: камень клюёт вперёд, окаменелость — нога назад, зажмурился', () => {
     const p = mk('E'); idle(p, 2);
-    const base = rec(p);
+    // угольки: v −22 → y−2..y+3 (огонёк у сердца и искры — ниже)
+    const eye = ([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y <= Math.floor(p.y) + 3;
+    let base = rec(p);
+    for (let i = 0; i < 10 && !base.some(eye); i++) { tick(); base = rec(p); }   // моргнул — следующий кадр
+    assert(base.some(eye), 'стоит — угольки видны');
     p.gait.trip = { kind: 'stone', p: 1, k: 0.25, dir: 1 };
     const st = rec(p);
-    const hoodX = L => Math.min(...L.filter(([c, X, Y]) => c === '#2a2620' && Y <= Math.floor(p.y) - 4).map(([, X]) => X));
-    assert(hoodX(st) >= hoodX(base) + 2, `капюшон не клюнул вперёд: ${hoodX(base)} → ${hoodX(st)}`);
-    assert(!st.some(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(p.y)), 'зажмурился — глаз нет');
+    // верх капюшона — самый верхний ряд его тона; клевок — на 2..3, без двойного
+    const hoodX = L => { const H = L.filter(([c]) => c === '#2a2620'); const top = Math.min(...H.map(r => r[2])); return Math.min(...H.filter(r => r[2] === top).map(r => r[1])); };
+    const d = hoodX(st) - hoodX(base);
+    assert(Number.isFinite(d) && d >= 2 && d <= 3, `капюшон клюнул на ${d} (нужно 2..3, без двойного клевка): ${hoodX(base)} → ${hoodX(st)}`);
+    assert(!st.some(eye), 'зажмурился — глаз нет');
     p.gait.trip = { kind: 'fossil', p: 1, k: 0.25, dir: 1 };
     const fo = rec(p);
     const toeX = L => Math.min(...L.filter(([c]) => c === '#5c564e').map(([, X]) => X));
-    assert(toeX(fo) <= toeX(base) - 2, `нога не поехала назад: ${toeX(base)} → ${toeX(fo)}`);
+    assert(Number.isFinite(toeX(base)) && toeX(fo) <= toeX(base) - 2, `нога не поехала назад: ${toeX(base)} → ${toeX(fo)}`);
   });
   const WR = await imp('sprites/wardrobe.js');
   test('гардероб: каждый крой — во всех видах, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки', () => {
@@ -3420,7 +3426,18 @@ setCtx(ctx);
         for (let k = 0; k < 24; k++) { go(f, 1, dx, dy); fr(f, face + ' ход'); }
         for (const h of [-3, 3]) { f.gait.hem = h; fr(f, face + ' ветер'); }
       }
-      { const f = mk('S'); f.cut = cut; idle(f, 2); f.sit = 1; idle(f, 30); fr(f, 'сидя'); f.sit = 0; f.visor = true; idle(f, 30); const L = fr(f, 'ладонь'); assert(!L.some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd === 1 && H === 1 && Y < Math.floor(f.y) - 1), `${cut}: под ладонью видны угольки`); }
+      { const f = mk('S'); f.cut = cut; idle(f, 2); f.sit = 1; idle(f, 30); fr(f, 'сидя'); f.sit = 0; f.visor = true; idle(f, 30); const L = fr(f, 'ладонь'); assert(!L.some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd === 1 && H === 1 && Y < Math.floor(f.y)), `${cut}: под ладонью видны угольки`); }
+      // вброд (вода, зыбь, снег, мох) ниже v=−2 ничего: ни ног, ни подола, ни посоха; тень у земли не в счёт
+      for (const [face, dx] of [['S', 0], ['E', 2.6], ['W', -2.6]]) {
+        const f = mk(face); f.cut = cut; idle(f, 2, { surf: 'water' });
+        if (dx) go(f, 20, dx, 0, { surf: 'water' }); else idle(f, 30, { surf: 'water' });
+        const y = Math.floor(f.y);
+        assert(!rec(f).some(([c, X, Y, Wd, H]) => c !== '#0D0B0A' && Y + H > y + 21), `${cut} ${face}: вброд видно ниже воды`);
+      }
+      // подол и хвосты против хода одинаково на E и W (зеркалом): хвост сзади, не впереди (ветер мира — мимо)
+      const back = (face, dx) => { const f = mk(face); f.cut = cut; idle(f, 2); go(f, 30, dx); f.gait.hem = -Math.sign(dx) * 2; const x = Math.floor(f.x); const Ls = rec(f).filter(([c, X, Y]) => c !== '#0D0B0A' && Y > Math.floor(f.y) + 8); return face === 'E' ? x + 7 - Math.min(...Ls.map(r => r[1])) : Math.max(...Ls.map(r => r[1] + r[3])) - 1 - (x + 7); };
+      const bE = back('E', 2.6), bW = back('W', -2.6);
+      assert(Math.abs(bE - bW) <= 1, `${cut}: хвост на E ${bE}, на W ${bW} — зеркало кривое`);
       for (const kind of ['stone', 'pit', 'fossil']) for (const face of ['E', 'W', 'S']) { const f = mk(face); f.cut = cut; idle(f, 2); f.gait.trip = { kind, p: 1, k: 0.3, dir: face === 'W' ? -1 : 1 }; fr(f, kind + face); }
       // тени чужих и маски тени — без походки
       for (const o of [{ moving: false }, { moving: true }, { sit: 1 }, { face: 'N', moving: true }]) fr({ x: 1000, y: 1000, vx: 0, vy: 0, dir: 1, cut, ...o }, 'без походки');

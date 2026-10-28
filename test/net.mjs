@@ -564,6 +564,31 @@ await test('supabase: сессия продлевается по сохранё�
   eq(await T3.start(), false, 'нет связи — сети нет, мир идёт');
 });
 
+// ── во что одет и куда смотрит (sprites/wardrobe.js): уходит, обновляется сразу, чужое — проверяется ──
+await test('net: крой и сторона взгляда — уходят, переоделся — весть сразу, чужое проверяется, тень одета', async () => {
+  const T = await fresh();
+  const me = (x, y, o = {}) => ({ ...P(x, y), ...o });
+  N.stepNet(me(100, 100, { cut: 'nomad', face: 'E' }), 'surface');
+  eq(T.sent.pos.at(-1).cut, 'nomad'); eq(T.sent.pos.at(-1).face, 'E');
+  const n = T.sent.pos.length;
+  for (let i = 0; i < 5; i++) N.stepNet(me(100, 100, { cut: 'duster', face: 'E' }), 'surface');
+  eq(T.sent.pos.length, n + 1, 'переоделся стоя — весть сразу'); eq(T.sent.pos.at(-1).cut, 'duster');
+  for (let i = 0; i < 5; i++) N.stepNet(me(100, 100, { cut: 'duster', face: 'N' }), 'surface');
+  eq(T.sent.pos.at(-1).face, 'N', 'обернулся — весть сразу');
+  N.stepNet(me(100, 100, { cut: 'нет такого', face: '?' }), 'surface');
+  // чужие: известный крой и сторона — берутся; ключ прототипа и мусор — мимо; без стороны — прежняя
+  T.emit('pos', { id: 'a', x: 150, y: 120, layer: 'surface', cut: 'pilgrim', face: 'W' });
+  eq(N.net.others.get('a').cut, 'pilgrim'); eq(N.net.others.get('a').face, 'W');
+  T.emit('pos', { id: 'a', x: 150, y: 120, layer: 'surface', cut: '__proto__', face: 'Z' });
+  eq(N.net.others.get('a').cut, undefined, 'ключ прототипа — мимо'); eq(N.net.others.get('a').face, 'W', 'без стороны — прежняя');
+  for (const bad of ['constructor', 'toString', 'plumage', 42, null]) {
+    T.emit('pos', { id: 'b', x: 160, y: 120, layer: 'surface', cut: bad });
+    eq(N.net.others.get('b').cut, undefined, 'мусор — мимо: ' + bad);
+  }
+  T.emit('pos', { id: 'a', x: 150, y: 120, layer: 'surface', cut: 'tiers', face: 'E' });
+  for (const it of R.othersToDraw(fakeCtx(), 'surface', 0, 0, 480, 270)) it.draw();   // тень в чужом крое — без ошибок
+});
+
 N._resetNet();
 const passed = results.filter(r => r.status === 'pass').length;
 for (const r of results) {
