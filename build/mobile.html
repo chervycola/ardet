@@ -881,7 +881,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='9dda738 · 2026-10-28';console.log('[оттиск]', '9dda738 · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='66db954 · 2026-10-28';console.log('[оттиск]', '66db954 · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -2518,6 +2518,26 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_11, conte
         return { x0: TOWN.x1 + RING_EDGE[n - 1], x1: TOWN.x1 + RING_EDGE[n] };
     }
     exports_11("eastBand", eastBand);
+    // где на стороне стоят таблички и постройки — world/sites.js (раскладка по истории, weave/SCALE.md §9)
+    // полоса кольца n по вертикали через x вокруг y: [верх, низ]
+    function ringSpanY(n, x, y) {
+        let y0 = y, y1 = y;
+        while (y0 > y - 400 && ringAt(x, y0 - 4) === n)
+            y0 -= 4;
+        while (y1 < y + 400 && ringAt(x, y1 + 4) === n)
+            y1 += 4;
+        return [y0, y1];
+    }
+    exports_11("ringSpanY", ringSpanY);
+    // петля ленты СКРОЛЛа — по вертикали через место входа, внутри девятого кольца; ноги входа —
+    // всегда внутри полосы (у кромки — с запасом в 30). Полоса — для ног (y + 23 странника)
+    function loopBandAt(x, footY) {
+        const [r0, r1] = ringSpanY(9, x, footY);
+        if (r1 - r0 < 120)
+            return { y0: footY - 80, y1: footY + 80 };
+        return { y0: Math.min(r0 + 10, footY - 30), y1: Math.max(r1 - 10, footY + 30) };
+    }
+    exports_11("loopBandAt", loopBandAt);
     function rimPoint(s, D) {
         const W = TOWN.x1 - TOWN.x0, H = TOWN.y1 - TOWN.y0, Q = Math.PI * D / 2;
         s = ((s % rimPerim(D)) + rimPerim(D)) % rimPerim(D);
@@ -2627,7 +2647,6 @@ System.register("world/disc", ["content/ulitsa_db"], function (exports_11, conte
             // тропы из городка на четыре стороны: вьются — дорога помнит, что её
             // протаптывали, а не чертили. d — расстояние от кромки городка.
             TRAIL_PH = { south: 0.7, north: 2.3, east: 4.1, west: 5.6 };
-            // где на стороне стоят таблички и постройки — world/sites.js (раскладка по истории, weave/SCALE.md §9)
             // ── обход вокруг городка на расстоянии D (скруглённые углы), по часовой
             // стрелке от левого конца северной кромки: точка по длине s, длина обхода,
             // и где на обходе точка (доля 0…1)
@@ -25019,8 +25038,9 @@ System.register("content/arch_ids", [], function (exports_48, context_48) {
             // ПОСТОЯННЫЕ НОМЕРА ПОСТРОЕК КОЛЕЦ. В сохранениях (осмотрено, повторный осмотр,
             // внимание) постройка — по номеру ar_N; номер держится за постройку (кольцо:сторона:
             // имя#копия), а не за порядок раскладки: расстановка может меняться, сохранения — нет.
-            // Номера — как стояли до раскладки по истории (28.10); новая постройка получает
-            // следующий свободный номер (world/architecture.js archLocations).
+            // Номера — как стояли до раскладки по истории (28.10). Новая постройка или новая
+            // копия #2/#3 — новой строкой здесь со следующим номером (тест архитектуры не пустит
+            // постройку без номера: номер «по очереди раскладки» сползал бы между выпусками).
             // ═══════════════════════════════════════
             exports_48("ARCH_IDS", ARCH_IDS = {
                 "axial:south:дорический храм": 0,
@@ -25654,7 +25674,12 @@ System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries
         // как disc.rimFrac, но без опоры на внешние кромки: по ближайшему сегменту обхода
         const W = disc_js_10.TOWN.x1 - disc_js_10.TOWN.x0, H = disc_js_10.TOWN.y1 - disc_js_10.TOWN.y0, Q = Math.PI * D / 2, P = disc_js_10.rimPerim(D);
         let s;
-        if (y < disc_js_10.TOWN.y0 && x >= disc_js_10.TOWN.x0 && x <= disc_js_10.TOWN.x1)
+        // внутри городка (место задели разлётом) — по ближайшей кромке, а не по западной
+        if (x >= disc_js_10.TOWN.x0 && x <= disc_js_10.TOWN.x1 && y >= disc_js_10.TOWN.y0 && y <= disc_js_10.TOWN.y1) {
+            const e = Math.min(y - disc_js_10.TOWN.y0, disc_js_10.TOWN.x1 - x, disc_js_10.TOWN.y1 - y, x - disc_js_10.TOWN.x0);
+            s = e === y - disc_js_10.TOWN.y0 ? x - disc_js_10.TOWN.x0 : e === disc_js_10.TOWN.x1 - x ? W + Q + (y - disc_js_10.TOWN.y0) : e === disc_js_10.TOWN.y1 - y ? W + 2 * Q + H + (disc_js_10.TOWN.x1 - x) : 2 * W + 3 * Q + H + (disc_js_10.TOWN.y1 - y);
+        }
+        else if (y < disc_js_10.TOWN.y0 && x >= disc_js_10.TOWN.x0 && x <= disc_js_10.TOWN.x1)
             s = x - disc_js_10.TOWN.x0;
         else if (x > disc_js_10.TOWN.x1 && y < disc_js_10.TOWN.y0)
             s = W + (Math.PI / 2 - Math.atan2(disc_js_10.TOWN.y0 - y, x - disc_js_10.TOWN.x1)) * D;
@@ -25772,7 +25797,7 @@ System.register("world/geoplace", ["world/disc", "world/relief", "world/arteries
 });
 System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "content/arch_ids", "content/places", "world/disc", "world/geoplace"], function (exports_51, context_51) {
     "use strict";
-    var ulitsa_db_js_2, index_js_1, arch_ids_js_1, places_js_1, disc_js_11, geoplace_js_1, SERIES, signKey, hs, landmarksOf, recOf, MIN_GAP, ALONE_GAP, OFF_ROAD, TWIN_W, TWIN_H, toAR, clampAR, roadPt, roadDist, SITES, inCell;
+    var ulitsa_db_js_2, index_js_1, arch_ids_js_1, places_js_1, disc_js_11, geoplace_js_1, SERIES, signKey, hs, landmarksOf, recOf, MIN_GAP, ALONE_GAP, OFF_ROAD, ROAD_BANK, TWIN_W, TWIN_H, toAR, clampAR, roadPt, roadDist, SITES, inCell;
     var __moduleName = context_51 && context_51.id;
     function kindOf(arch, side, name) {
         const L = landmarksOf(arch).find(k => k.side === side && k.name === name);
@@ -25866,7 +25891,7 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
         if (T.has('pass') || T.has('frontier') || T.has('crossroads')) {
             const p = roadPt(S.side, S.x, S.y);
             if (p && Math.hypot(p.x - S.x, p.y - S.y) < 1100) {
-                bank(p, 150);
+                bank(p, ROAD_BANK);
                 S.by = 'road';
                 return;
             }
@@ -26069,13 +26094,14 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
                         moved = true;
                     }
                 for (const S of mine) {
-                    if (S.by === 'road')
+                    if (S.fixed)
                         continue;
-                    const p = roadPt(side, S.x, S.y);
+                    // застава в поле (перевал, рубеж) держится обочины — у дороги, но не на ней
+                    const off = S.by === 'road' ? ROAD_BANK : OFF_ROAD, p = roadPt(side, S.x, S.y);
                     if (!p)
                         continue;
                     const d = Math.hypot(p.x - S.x, p.y - S.y);
-                    if (d >= OFF_ROAD)
+                    if (d >= off)
                         continue;
                     let dx = S.x - p.x, dy = S.y - p.y;
                     const L = Math.hypot(dx, dy) || 1;
@@ -26083,7 +26109,7 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
                         dx = side === 'south' || side === 'north' ? 1 : 0;
                         dy = 1 - Math.abs(dx);
                     }
-                    const ar = toAR(side, p.x + dx / L * OFF_ROAD, p.y + dy / L * OFF_ROAD, n, true);
+                    const ar = toAR(side, p.x + dx / L * off, p.y + dy / L * off, n, true);
                     putAR(S, ar.a, ar.r, true);
                     moved = true;
                 }
@@ -26118,12 +26144,13 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
                         const d = S.d + (k * 64) + step * 22 * (step % 2 ? 1 : -1);
                         const p = disc_js_11.trailPoint(S.side, d), verge = (hs(it.key) > 0.5 ? 1 : -1) * (k % 2 ? -1 : 1);
                         const x = ns ? p.x + verge * (34 + hs(it.key + 'v') * 18) : p.x, gy = ns ? p.y : p.y - 22 - hs(it.key + 'v') * 16;
-                        if (inCell(S, x, gy) && !clash(x, gy))
+                        if (inCell(S, x, gy) && !clash(x, gy) && !geoplace_js_1.nearestIn(F.river, S.cell, x, gy, 40))
                             spot = { x: Math.round(x), gy: Math.round(gy) };
                     }
+                    // совсем тесно — в стороне от дороги, поперёк неё
                     if (!spot) {
-                        const p = disc_js_11.trailPoint(S.side, S.d);
-                        spot = { x: Math.round(p.x + 40), gy: Math.round(p.y) };
+                        const p = disc_js_11.trailPoint(S.side, S.d), ns = S.side === 'south' || S.side === 'north';
+                        spot = { x: Math.round(p.x + (ns ? 60 : 0)), gy: Math.round(p.y + (ns ? 0 : -40)) };
                     }
                     taken.push(spot);
                     out.set(it.key, { ...spot, site: S.id });
@@ -26148,7 +26175,12 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
                 // тесно — шире, к середине клетки
                 for (let k = 1; !spot && k <= 12; k++) {
                     const t = k / 12, x = Math.round(cx + (S.mx - cx) * t), gy = Math.round(cy + (S.my - cy) * t);
-                    if (!clash(x, gy) && inCell(S, x, gy))
+                    if (!clash(x, gy) && !onLine(S, x, gy) && inCell(S, x, gy))
+                        spot = { x, gy };
+                }
+                for (let k = 0; !spot && k < 20; k++) {
+                    const x = Math.round(S.mx + (k % 5 - 2) * 30), gy = Math.round(S.my + (Math.floor(k / 5) - 2) * 36);
+                    if (!clash(x, gy))
                         spot = { x, gy };
                 }
                 if (!spot)
@@ -26192,7 +26224,7 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
             landmarksOf = arch => [].concat(arch.landmark || [], arch.landmarks || []).filter(L => L && L.side);
             recOf = (table, key) => table[key] || table[key.replace(/#\d+$/, '')] || null;
             // ── места ──
-            MIN_GAP = 300, ALONE_GAP = 480, OFF_ROAD = 190;
+            MIN_GAP = 300, ALONE_GAP = 480, OFF_ROAD = 190, ROAD_BANK = 150;
             TWIN_W = 720, TWIN_H = 420; // кадр 640×360 с полями: одинаковые постройки — не в один
             // fast — по ровному обходу (итерации разлёта); в конце место встаёт на рваную кромку
             toAR = (side, x, y, n, fast = false) => ({ a: geoplace_js_1.sectorFrac(side, x, y, fast), r: ((fast ? disc_js_11.townDist(x, y) : disc_js_11.warpedDist(x, y)) - geoplace_js_1.ringDepth(n, 0)) / (geoplace_js_1.ringDepth(n, 1) - geoplace_js_1.ringDepth(n, 0)) });
@@ -26206,8 +26238,8 @@ System.register("world/sites", ["content/ulitsa_db", "sprites/arch/index", "cont
             roadDist = (side, x, y) => { const p = roadPt(side, x, y); return p ? Math.hypot(p.x - x, p.y - y) : Infinity; };
             SITES = null;
             // ── таблички места: сценой перед постройками (в поле — кучкой вокруг места); у дороги — по обочинам
-            // табличка целиком в своей клетке: подножие (по нему кольцо пишет штамп) и середина
-            inCell = (S, x, gy) => geoplace_js_1.cellAt(x, gy) === S.cell && geoplace_js_1.cellAt(x, gy - 13) === S.cell && geoplace_js_1.cellAt(x - 7, gy) === S.cell && geoplace_js_1.cellAt(x + 7, gy) === S.cell;
+            // табличка целиком в своей клетке — и точка подхода перед ней (ноги странника), чтобы не шагнуть в соседнее кольцо
+            inCell = (S, x, gy) => geoplace_js_1.cellAt(x, gy) === S.cell && geoplace_js_1.cellAt(x, gy - 13) === S.cell && geoplace_js_1.cellAt(x - 7, gy) === S.cell && geoplace_js_1.cellAt(x + 7, gy) === S.cell && geoplace_js_1.cellAt(x, gy + 28) === S.cell;
         }
     };
 });
@@ -27670,7 +27702,6 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
     // рядом — шире; совсем негде — где угодно в своей клетке. twins — одинаковые дома одного двора
     function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
         const out = [];
-        const near = nearSigns(signs, anchor.x, anchor.gy);
         // две копии одного места (две мечети одной площади) — рядом: правило кадра для них не действует
         const pair = new Set(copies.filter((c, i) => copies.findIndex(o => o.name === c.name) !== i).map(c => c.name));
         for (const C of copies) {
@@ -27700,7 +27731,7 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
                     const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
                     if (!twins && sameNear(b, all))
                         continue;
-                    if (fits(n, side, b, K.landmark || grow > 1 ? signs : near, [...placed, ...out])) {
+                    if (fits(n, side, b, K.landmark || grow > 1 ? signs : nearSigns(signs, b.x, b.gy), [...placed, ...out])) {
                         got = b;
                         break;
                     }
@@ -27813,7 +27844,8 @@ System.register("world/architecture", ["sprites/arch/index", "content/ulitsa_db"
     // Постройки как локации мира: подходишь — осмотр; твёрдое только
     // основание (низ силуэта), чтобы высокое можно было обойти сзади.
     // номер постройки — постоянный по ключу (content/arch_ids.js): сохранения держатся за постройку,
-    // а не за порядок раскладки; новой — следующий свободный
+    // а не за порядок раскладки; без строки в реестре — следующий свободный, но только на время
+    // (тест требует строку: иначе номер сполз бы при следующей новой постройке)
     function archIdsOf(decor) {
         let next = Math.max(-1, ...Object.values(arch_ids_js_2.ARCH_IDS)) + 1;
         return decor.map(d => {
@@ -58950,8 +58982,10 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
                 // рисунок сам знает, где у него вода (draw.seaSide: срез к морю, капитель в воде), иначе — наружу от соседей
                 const own = m.loc && m.loc.archDraw && m.loc.archDraw.seaSide;
                 // у реки (место по истории — на берегу) вода — к реке: полоса сливается с руслом и его не толкает
+                // — если с той стороны не стоит сосед по двору (иначе полоса срежется в ноль)
                 const rv = kind === 'water' ? riverNear(m.x, m.gy, 260) : null;
-                const dir = own || (rv ? Math.sign(rv.x - m.x) || 1 : 0) || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (draw_js_9.hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
+                const rd = rv ? Math.sign(rv.x - m.x) || 1 : 0, rdFree = rd && !ms.some(o => o !== m && Math.sign(o.x - m.x) === rd);
+                const dir = own || (rdFree ? rd : 0) || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (draw_js_9.hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
                 if (kind === 'water') {
                     // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
                     const len = 130 + m.w * 0.6;
@@ -58964,7 +58998,10 @@ System.register("render/archground", ["content/ulitsa_db", "world/disc", "sprite
                             if (dir < 0 && o.x < m.x)
                                 x0 = Math.max(x0, o.x + o.w / 2 + 4);
                         }
-                    patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 }, river: !!rv });
+                    // с рекой сливается, только если полоса к ней и дотягивается (дальний край — у русла замысла)
+                    const end = dir > 0 ? x1 : x0, joins = rv && dir === rd && !!riverNear(end, m.gy + 12, 60);
+                    if (x1 - x0 >= 24)
+                        patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 }, river: joins });
                 }
                 else if (kind === 'bog') {
                     const rx = Math.max(26, m.w * 0.42), ry = 13;
@@ -68275,7 +68312,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_180, context_180) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_2, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
     var __moduleName = context_180 && context_180.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_15.SEGMENTS.length ? ulitsa_db_js_15.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -69897,7 +69934,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
         if (brainrot_js_1.inLoop()) {
-            const L0 = disc_js_51.TOWN.y1 + disc_js_51.ringD(9, 24), L1 = disc_js_51.TOWN.y1 + disc_js_51.ringD(9, 184);
+            // петля — вокруг места входа (СКРОЛЛ стоит по своему месту клетки, не обязательно против городка)
+            const L0 = loopBand ? loopBand.y0 : disc_js_51.TOWN.y1 + disc_js_51.ringD(9, 24), L1 = loopBand ? loopBand.y1 : disc_js_51.TOWN.y1 + disc_js_51.ringD(9, 184);
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -70822,6 +70860,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // midpoint; `after` (e.g. opening the menu) fires right after it.
             FADE_HALF = 10; // frames each way (~330 ms total @60fps)
             teleportFade = { phase: 0, dir: 0, target: null, after: null };
+            loopBand = null; // полоса петли ленты: вокруг места входа в СКРОЛЛ
             // ═══ ИЗНАНКА: спуск, подъём, ходьба, кадр ═══
             // Отдельная карта под городком (world/underside.js). Спуск — повторное
             // «использовать» после сцены места; подъём — лестница своей комнаты, обычно
@@ -71249,6 +71288,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     } // за изгородь — только с пропуском Шута
                     const to = frontOf(loc, { x: disc_js_51.TOWN.x0 + 2540 * disc_js_51.TS, y: disc_js_51.TOWN.y1 + disc_js_51.ringD(9, 90) });
                     const side = loc.streetSide && loc.streetSide !== 'plain' ? loc.streetSide : 'south', back = disc_js_51.trailPoint(side, disc_js_51.ringD(8, 100));
+                    const B = disc_js_51.loopBandAt(to.x + 6, to.y + 23); // по ногам; петля — в своём кольце
+                    loopBand = { y0: B.y0 - 23, y1: B.y1 - 23 };
                     teleportWithFade(to.x, to.y, () => {
                         brainrot_js_1.enterLoop(() => {
                             teleportWithFade(back.x, back.y, () => {

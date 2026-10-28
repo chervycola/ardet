@@ -223,8 +223,10 @@ export function prepareArchGround(ensembles, locations) {
       // рисунок сам знает, где у него вода (draw.seaSide: срез к морю, капитель в воде), иначе — наружу от соседей
       const own = m.loc && m.loc.archDraw && m.loc.archDraw.seaSide;
       // у реки (место по истории — на берегу) вода — к реке: полоса сливается с руслом и его не толкает
+      // — если с той стороны не стоит сосед по двору (иначе полоса срежется в ноль)
       const rv = kind === 'water' ? riverNear(m.x, m.gy, 260) : null;
-      const dir = own || (rv ? Math.sign(rv.x - m.x) || 1 : 0) || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
+      const rd = rv ? Math.sign(rv.x - m.x) || 1 : 0, rdFree = rd && !ms.some(o => o !== m && Math.sign(o.x - m.x) === rd);
+      const dir = own || (rdFree ? rd : 0) || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
       if (kind === 'water') {
         // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
         const len = 130 + m.w * 0.6;
@@ -234,7 +236,9 @@ export function prepareArchGround(ensembles, locations) {
           if (dir > 0 && o.x > m.x) x1 = Math.min(x1, o.x - o.w / 2 - 4);
           if (dir < 0 && o.x < m.x) x0 = Math.max(x0, o.x + o.w / 2 + 4);
         }
-        patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 }, river: !!rv });
+        // с рекой сливается, только если полоса к ней и дотягивается (дальний край — у русла замысла)
+        const end = dir > 0 ? x1 : x0, joins = rv && dir === rd && !!riverNear(end, m.gy + 12, 60);
+        if (x1 - x0 >= 24) patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 }, river: joins });
       } else if (kind === 'bog') {
         const rx = Math.max(26, m.w * 0.42), ry = 13;
         const ex = m.x + dir * (m.w * 0.3 + rx * 0.7), ey = m.gy + 10;

@@ -53,7 +53,7 @@ setCtx(fakeCtx());
 const { ARCH_BY_RING } = await imp('sprites/arch/index.js');
 const { buildArchitecture, buildEnsembles, signFacade } = await imp('world/architecture.js');
 const { locations, archEnsembles } = await imp('world/locations.js');
-const { TOWN, ringD, townDist, ringAt, trailPoint } = await imp('world/disc.js');
+const { TOWN, ringD, townDist, ringAt, trailPoint, loopBandAt } = await imp('world/disc.js');
 const { SEGMENTS } = await imp('content/ulitsa_db.js');
 
 const SIDES = ['south', 'east', 'west', 'north', 'plain'];
@@ -149,6 +149,7 @@ const { PLACES, SIGN_PLACES } = await imp('content/places.js');
 const { buildSites } = await imp('world/sites.js');
 const { sideAt } = await imp('world/relief.js');
 const { RING_YEARS } = await imp('world/geoplace.js');
+const { ARCH_LOOKS: LOOKS_N } = await imp('content/arch_looks.js'), { ARCH_BACKS: BACKS_N } = await imp('content/arch_backs.js'), { ARCH_WALLS: WALLS_N } = await imp('content/arch_walls.js');
 const archLocs = locations.filter(l => l.archDraw);
 const { isBlocked: isBlockedPhys } = await imp('world/physics.js');
 const isBlockedAt = (x, y) => isBlockedPhys(x, y, locations);
@@ -174,6 +175,10 @@ test('места: каждая постройка реестра встала, �
     assert(l, `${key}: не встала`);
     eq(l.id, 'ar_' + n, `${key}: номер сменился`);
   }
+  // и обратно: каждая стоящая постройка — в реестре; копия с своим текстом или рисунком #n — тоже
+  for (const [key, l] of byKey) assert(Object.prototype.hasOwnProperty.call(ARCH_IDS, key), `${key} (${l.id}): нет номера в content/arch_ids.js — добавить следующий`);
+  for (const [name, table] of [['осмотр', LOOKS_N], ['изнанка', BACKS_N], ['надписи', WALLS_N], ['места', PLACES]])
+    for (const k of Object.keys(table)) if (/#\d+$/.test(k)) assert(Object.prototype.hasOwnProperty.call(ARCH_IDS, k), `${name}: ${k} — копии нет в реестре номеров`);
 });
 
 test('места: табличка и постройка стоят в своей клетке — кольцо и сторона по земле те же, что в описи', () => {
@@ -231,6 +236,12 @@ test('места: переходы ведут к своим табличкам �
     assert(!isBlockedAt(l.x + l.w / 2 - 6, l.y + l.h + 5), `${l.name}: точка перед ней занята`);
   }
   for (let n = 1; n <= 9; n++) { const p = trailPoint('south', ringD(n, 100)); assert(!isBlockedAt(p.x, p.y), `врата → кольцо ${n}: тропа занята`); }
+  // СКРОЛЛ: ноги перед ним — в девятом кольце, и петле ленты есть где крутиться внутри кольца
+  const sc = locations.find(l => l.useAction === 'brainrot_enter'), fx = sc.x + sc.w / 2, fy = sc.y + sc.h + 5 + 23;
+  eq(ringAt(fx, fy), 9, 'перед СКРОЛЛОМ — не девятое кольцо');
+  const B = loopBandAt(fx, fy);
+  assert(B.y1 - B.y0 > 120 && fy > B.y0 && fy < B.y1, `петля ленты не вокруг входа: ${B.y0}..${B.y1}, ноги ${fy}`);
+  assert(ringAt(fx, (B.y0 + B.y1) / 2) === 9, 'петля ленты — не в девятом кольце');
 });
 
 test('ансамбли: одинаковые постройки не попадают в один кадр (кроме двойняшек-панелек)', () => {

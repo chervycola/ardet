@@ -131,7 +131,6 @@ function sameNear(b, placed) {
 // рядом — шире; совсем негде — где угодно в своей клетке. twins — одинаковые дома одного двора
 function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
   const out = [];
-  const near = nearSigns(signs, anchor.x, anchor.gy);
   // две копии одного места (две мечети одной площади) — рядом: правило кадра для них не действует
   const pair = new Set(copies.filter((c, i) => copies.findIndex(o => o.name === c.name) !== i).map(c => c.name));
   for (const C of copies) {
@@ -158,7 +157,7 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
       for (const c of cands) {
         const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
         if (!twins && sameNear(b, all)) continue;
-        if (fits(n, side, b, K.landmark || grow > 1 ? signs : near, [...placed, ...out])) { got = b; break; }
+        if (fits(n, side, b, K.landmark || grow > 1 ? signs : nearSigns(signs, b.x, b.gy), [...placed, ...out])) { got = b; break; }
       }
     }
     if (!got) {
@@ -265,7 +264,8 @@ export function signFacade(ringN, side) {
 // Постройки как локации мира: подходишь — осмотр; твёрдое только
 // основание (низ силуэта), чтобы высокое можно было обойти сзади.
 // номер постройки — постоянный по ключу (content/arch_ids.js): сохранения держатся за постройку,
-// а не за порядок раскладки; новой — следующий свободный
+// а не за порядок раскладки; без строки в реестре — следующий свободный, но только на время
+// (тест требует строку: иначе номер сполз бы при следующей новой постройке)
 export function archIdsOf(decor) {
   let next = Math.max(-1, ...Object.values(ARCH_IDS)) + 1;
   return decor.map(d => {

@@ -67,7 +67,7 @@ function allItems() {
 }
 
 // ── места ──
-const MIN_GAP = 300, ALONE_GAP = 480, OFF_ROAD = 190;
+const MIN_GAP = 300, ALONE_GAP = 480, OFF_ROAD = 190, ROAD_BANK = 150;
 const TWIN_W = 720, TWIN_H = 420;          // кадр 640×360 с полями: одинаковые постройки — не в один
 // fast — по ровному обходу (итерации разлёта); в конце место встаёт на рваную кромку
 const toAR = (side, x, y, n, fast = false) => ({ a: sectorFrac(side, x, y, fast), r: ((fast ? townDist(x, y) : warpedDist(x, y)) - ringDepth(n, 0)) / (ringDepth(n, 1) - ringDepth(n, 0)) });
@@ -100,7 +100,7 @@ function snap(S) {
   if (T.has('rail') || T.has('arc')) { const q = nearestIn(F.arcs, S.cell, S.x, S.y, 1000); if (q) { bank(q, 95); S.by = 'arc'; return; } }
   if (T.has('pass') || T.has('frontier') || T.has('crossroads')) {
     const p = roadPt(S.side, S.x, S.y);
-    if (p && Math.hypot(p.x - S.x, p.y - S.y) < 1100) { bank(p, 150); S.by = 'road'; return; }
+    if (p && Math.hypot(p.x - S.x, p.y - S.y) < 1100) { bank(p, ROAD_BANK); S.by = 'road'; return; }
   }
   if (T.has('hill')) { const s = summitNear(S.x, S.y, 260, S.cell); const ar = toAR(S.side, s.x, s.y, S.ring); putAR(S, ar.a, ar.r); S.by = 'hill'; return; }
   if (T.has('seam')) { putAR(S, S.a < 0.5 ? A_MIN + 0.02 : A_MAX - 0.02, S.r); S.by = 'seam'; }
@@ -236,14 +236,15 @@ export function buildSites() {
         moved = true;
       }
       for (const S of mine) {
-        if (S.by === 'road') continue;
-        const p = roadPt(side, S.x, S.y);
+        if (S.fixed) continue;
+        // застава в поле (перевал, рубеж) держится обочины — у дороги, но не на ней
+        const off = S.by === 'road' ? ROAD_BANK : OFF_ROAD, p = roadPt(side, S.x, S.y);
         if (!p) continue;
         const d = Math.hypot(p.x - S.x, p.y - S.y);
-        if (d >= OFF_ROAD) continue;
+        if (d >= off) continue;
         let dx = S.x - p.x, dy = S.y - p.y; const L = Math.hypot(dx, dy) || 1;
         if (L < 2) { dx = side === 'south' || side === 'north' ? 1 : 0; dy = 1 - Math.abs(dx); }
-        const ar = toAR(side, p.x + dx / L * OFF_ROAD, p.y + dy / L * OFF_ROAD, n, true); putAR(S, ar.a, ar.r, true); moved = true;
+        const ar = toAR(side, p.x + dx / L * off, p.y + dy / L * off, n, true); putAR(S, ar.a, ar.r, true); moved = true;
       }
       if (!moved) break;
     }
@@ -256,8 +257,8 @@ export function buildSites() {
 }
 
 // ── таблички места: сценой перед постройками (в поле — кучкой вокруг места); у дороги — по обочинам
-// табличка целиком в своей клетке: подножие (по нему кольцо пишет штамп) и середина
-const inCell = (S, x, gy) => cellAt(x, gy) === S.cell && cellAt(x, gy - 13) === S.cell && cellAt(x - 7, gy) === S.cell && cellAt(x + 7, gy) === S.cell;
+// табличка целиком в своей клетке — и точка подхода перед ней (ноги странника), чтобы не шагнуть в соседнее кольцо
+const inCell = (S, x, gy) => cellAt(x, gy) === S.cell && cellAt(x, gy - 13) === S.cell && cellAt(x - 7, gy) === S.cell && cellAt(x + 7, gy) === S.cell && cellAt(x, gy + 28) === S.cell;
 export function signSpots() {
   const out = new Map(), F = features(), sites = buildSites();
   const taken = [];
@@ -273,9 +274,10 @@ export function signSpots() {
           const d = S.d + (k * 64) + step * 22 * (step % 2 ? 1 : -1);
           const p = trailPoint(S.side, d), verge = (hs(it.key) > 0.5 ? 1 : -1) * (k % 2 ? -1 : 1);
           const x = ns ? p.x + verge * (34 + hs(it.key + 'v') * 18) : p.x, gy = ns ? p.y : p.y - 22 - hs(it.key + 'v') * 16;
-          if (inCell(S, x, gy) && !clash(x, gy)) spot = { x: Math.round(x), gy: Math.round(gy) };
+          if (inCell(S, x, gy) && !clash(x, gy) && !nearestIn(F.river, S.cell, x, gy, 40)) spot = { x: Math.round(x), gy: Math.round(gy) };
         }
-        if (!spot) { const p = trailPoint(S.side, S.d); spot = { x: Math.round(p.x + 40), gy: Math.round(p.y) }; }
+        // совсем тесно — в стороне от дороги, поперёк неё
+        if (!spot) { const p = trailPoint(S.side, S.d), ns = S.side === 'south' || S.side === 'north'; spot = { x: Math.round(p.x + (ns ? 60 : 0)), gy: Math.round(p.y + (ns ? 0 : -40)) }; }
         taken.push(spot); out.set(it.key, { ...spot, site: S.id });
       });
       continue;
@@ -294,8 +296,9 @@ export function signSpots() {
       // тесно — шире, к середине клетки
       for (let k = 1; !spot && k <= 12; k++) {
         const t = k / 12, x = Math.round(cx + (S.mx - cx) * t), gy = Math.round(cy + (S.my - cy) * t);
-        if (!clash(x, gy) && inCell(S, x, gy)) spot = { x, gy };
+        if (!clash(x, gy) && !onLine(S, x, gy) && inCell(S, x, gy)) spot = { x, gy };
       }
+      for (let k = 0; !spot && k < 20; k++) { const x = Math.round(S.mx + (k % 5 - 2) * 30), gy = Math.round(S.my + (Math.floor(k / 5) - 2) * 36); if (!clash(x, gy)) spot = { x, gy }; }
       if (!spot) spot = { x: Math.round(S.mx), gy: Math.round(S.my) };
       taken.push(spot); out.set(it.key, { ...spot, site: S.id });
     }

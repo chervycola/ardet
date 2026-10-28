@@ -79,7 +79,7 @@ import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistan
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
-import { TOWN, TS, CORE, RINGS, OFF, GEO, fromOldGeo, ringD, trailPoint, ringAt, inCore } from './world/disc.js';
+import { TOWN, TS, CORE, RINGS, OFF, GEO, fromOldGeo, ringD, trailPoint, ringAt, inCore, loopBandAt } from './world/disc.js';
 import { SEGMENTS as EPOCHS } from './content/ulitsa_db.js';
 import { drawGroundMarks, setTissueBlockers, buildTissue, tissueThingsIn } from './render/ground.js';
 import { thingCaster } from './render/things.js';
@@ -1212,6 +1212,7 @@ function updateCrackTriggers(player) {
 const FADE_HALF = 10; // frames each way (~330 ms total @60fps)
 const teleportFade = { phase: 0, dir: 0, target: null, after: null };
 
+let loopBand = null;   // полоса петли ленты: вокруг места входа в СКРОЛЛ
 // точка перед местом — где встаёт странник, подойдя к нему (как в клике); нет места — запасная
 function frontOf(l, fallback) {
   return l ? { x: Math.round(l.x + l.w / 2 - 6), y: Math.round(l.y + l.h + 5) } : fallback;
@@ -1675,7 +1676,8 @@ function updateWorldSystems() {
   }
   // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
   if (inBrainrotLoop()) {
-    const L0 = TOWN.y1 + ringD(9, 24), L1 = TOWN.y1 + ringD(9, 184);
+    // петля — вокруг места входа (СКРОЛЛ стоит по своему месту клетки, не обязательно против городка)
+    const L0 = loopBand ? loopBand.y0 : TOWN.y1 + ringD(9, 24), L1 = loopBand ? loopBand.y1 : TOWN.y1 + ringD(9, 184);
     if (player.y > L1) { player.y -= (L1 - L0); player.ty = player.y; shiftGait(player, 0, -(L1 - L0)); }   // шов петли — не прыжок для походки
     else if (player.y < L0) { player.y += (L1 - L0); player.ty = player.y; shiftGait(player, 0, L1 - L0); }
   }
@@ -2159,6 +2161,8 @@ events.on('location.use', (loc) => {
     if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
     const to = frontOf(loc, { x: TOWN.x0 + 2540 * TS, y: TOWN.y1 + ringD(9, 90) });
     const side = loc.streetSide && loc.streetSide !== 'plain' ? loc.streetSide : 'south', back = trailPoint(side, ringD(8, 100));
+    const B = loopBandAt(to.x + 6, to.y + 23);                      // по ногам; петля — в своём кольце
+    loopBand = { y0: B.y0 - 23, y1: B.y1 - 23 };
     teleportWithFade(to.x, to.y, () => {
       enterBrainrotLoop(() => {
         teleportWithFade(back.x, back.y, () => {

@@ -56,7 +56,11 @@ function rimFracOf(x, y, D) {
   // как disc.rimFrac, но без опоры на внешние кромки: по ближайшему сегменту обхода
   const W = TOWN.x1 - TOWN.x0, H = TOWN.y1 - TOWN.y0, Q = Math.PI * D / 2, P = rimPerim(D);
   let s;
-  if (y < TOWN.y0 && x >= TOWN.x0 && x <= TOWN.x1) s = x - TOWN.x0;
+  // внутри городка (место задели разлётом) — по ближайшей кромке, а не по западной
+  if (x >= TOWN.x0 && x <= TOWN.x1 && y >= TOWN.y0 && y <= TOWN.y1) {
+    const e = Math.min(y - TOWN.y0, TOWN.x1 - x, TOWN.y1 - y, x - TOWN.x0);
+    s = e === y - TOWN.y0 ? x - TOWN.x0 : e === TOWN.x1 - x ? W + Q + (y - TOWN.y0) : e === TOWN.y1 - y ? W + 2 * Q + H + (TOWN.x1 - x) : 2 * W + 3 * Q + H + (TOWN.y1 - y);
+  } else if (y < TOWN.y0 && x >= TOWN.x0 && x <= TOWN.x1) s = x - TOWN.x0;
   else if (x > TOWN.x1 && y < TOWN.y0) s = W + (Math.PI / 2 - Math.atan2(TOWN.y0 - y, x - TOWN.x1)) * D;
   else if (x > TOWN.x1 && y <= TOWN.y1) s = W + Q + (y - TOWN.y0);
   else if (x > TOWN.x1) s = W + Q + H - Math.atan2(TOWN.y1 - y, x - TOWN.x1) * D;
