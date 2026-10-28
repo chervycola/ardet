@@ -32,6 +32,7 @@
 import { X } from '../render/context.js';
 import { t } from '../core/time.js';
 import { wind } from '../world/wind.js';
+import { CUTS, CUT, drawCut } from './wardrobe.js';
 
 const NI = '#0D0B0A', AS = '#8A8D8F', SV = '#E28A3A', KV = '#C23B2B', L1 = '#c8b89a';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328', S2 = '#33302e';
@@ -74,7 +75,8 @@ function toe(x, y, w, fwd) {
   X.globalAlpha = 0.5; r(x, y + 1, w, 1, NI); X.globalAlpha = 1;
 }
 
-export function drawPlayer(player) {
+// поза кадра — общая для всех кроёв (sprites/wardrobe.js): ход, вид, вес, дыхание, ветер, оступился
+export function pose(player) {
   const x = Math.floor(player.x), y = Math.floor(player.y);
   const g = player.gait, red = !!(g && g.red);
   const w = wind.at(x + 6, y + 12), vx = player.vx || 0;
@@ -108,6 +110,16 @@ export function drawPlayer(player) {
   const lean = clamp(q(vx * (run > 0.5 ? 0.6 : 0.45)), run > 0.5 ? -2 : -1, run > 0.5 ? 2 : 1) + (kind === 'stone' ? q(2 * tp) * tdx : 0);
   const flick = (0.15 + w.s * 0.25 + 0.3 * (player.gust || 0) + 0.6 * tp) * (player.steady ? 0.35 : 1) * Math.sin(t * (0.45 + w.s * 0.3 + 0.4 * (player.gust || 0)) + Math.sin(t * 0.1) * 2);
   const cx = x + swayU, top = y + 2 * sk + dip;
+  const push = red || reverse ? 0 : amp * Math.sin(Math.PI * fr);
+  return { x, y, g, red, w, vx, amp, phase, fr, foot, sit, sk, view, side, back, sd, prof, visorK, trip, tp, kind, tdx, feet, walking, reverse,
+    contact, dip, dipH, still, bs, bSh, bHd, swayU, trail, run, lean, flick, cx, top, push };
+}
+
+export function drawPlayer(player) {
+  const cut = player.cut || CUT;
+  if (cut !== 'plumage' && CUTS[cut]) { drawCut(player, pose(player), cut); return; }
+  const { x, y, g, red, w, vx, amp, phase, fr, foot, sit, sk, view, side, back, sd, prof, visorK, trip, tp, kind, tdx, feet, walking, reverse,
+    contact, dip, dipH, still, bs, bSh, bHd, swayU, trail, run, lean, flick, cx, top, push } = pose(player);
   // следы и тень — у земли
   X.globalAlpha = 0.35; r(x + 1 - sk, y + 23, 12 + 2 * sk, 1, NI); X.globalAlpha = 1;
   // ── подол: стоит на земле; ноги читаются его контуром ──
@@ -116,7 +128,6 @@ export function drawPlayer(player) {
   const hemX = x - 2 - q(2 * sit) + (nar >> 1) + q(2 * pit) - fos;
   const hemW = 18 + q(4 * sit) - nar - q(4 * pit);
   const hemY = y + 15 + sk - q(2 * pit);
-  const push = red || reverse ? 0 : amp * Math.sin(Math.PI * fr);
   const swing = q(sd ? sd * push : foot * push);
   let legs = null;
   if (walking && !reverse && !red) {

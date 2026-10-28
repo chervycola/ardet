@@ -3392,6 +3392,41 @@ setCtx(ctx);
     const fo = rec(p), x = Math.floor(p.x);
     assert(fo.some(([c, X]) => c === '#5c564e' && X < x + 2), 'нога не поехала назад');
   });
+  test('гардероб: каждый крой — во всех видах, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки', async () => {
+    const W = await imp('sprites/wardrobe.js');
+    const cuts = Object.keys(W.CUTS);
+    assert(cuts.length >= 5, 'кроёв меньше пяти: ' + cuts);
+    eq(W.CUT, 'plumage', 'без ?cut= — прежний плащ');
+    const PAL = new Set(['#0D0B0A', '#8A8D8F', '#E28A3A', '#C23B2B', '#c8b89a', '#15100c', '#241c14', '#2a2620', '#3a3328', '#33302e', '#5c564e', '#5a4232', '#3D4A3A', '#4a5646', '#2c362a']);
+    for (const cut of cuts) {
+      const fr = (f, tag) => {
+        const L = rec(f), x = Math.floor(f.x), y = Math.floor(f.y);
+        let warm = 0;
+        for (const [c, X, Y, Wd, H] of L) {
+          assert(PAL.has(c), `${cut} ${tag}: краска вне канона ${c}`);
+          assert(X >= x - 6 && X + Wd <= x + 21 && Y >= y - 10 && Y + H <= y + 25, `${cut} ${tag}: вылез из рамки ${X - x},${Y - y} ${Wd}×${H}`);
+          if (c === '#E28A3A') warm += Wd * H;
+        }
+        assert(warm <= 10, `${cut} ${tag}: тёплого ${warm} точек — больше огонька и угольков`);
+        return L;
+      };
+      for (const v of GT.VIEWS) { const f = mk('S'); f.cut = cut; idle(f, 2); f.gait.view = v; f.gait.path = []; fr(f, v); }
+      for (const [face, dx, dy] of [['E', 2.6, 0], ['W', -2.6, 0], ['S', 0, 2.6], ['N', 0, -2.6], ['E', 4.3, 0]]) {
+        const f = mk(face); f.cut = cut; idle(f, 2); go(f, 30, dx, dy);
+        for (let k = 0; k < 24; k++) { go(f, 1, dx, dy); fr(f, face + ' ход'); }
+        for (const h of [-3, 3]) { f.gait.hem = h; fr(f, face + ' ветер'); }
+      }
+      { const f = mk('S'); f.cut = cut; idle(f, 2); f.sit = 1; idle(f, 30); fr(f, 'сидя'); f.sit = 0; f.visor = true; idle(f, 30); const L = fr(f, 'ладонь'); assert(!L.some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd === 1 && H === 1 && Y < Math.floor(f.y) - 1), `${cut}: под ладонью видны угольки`); }
+      for (const kind of ['stone', 'pit', 'fossil']) for (const face of ['E', 'W', 'S']) { const f = mk(face); f.cut = cut; idle(f, 2); f.gait.trip = { kind, p: 1, k: 0.3, dir: face === 'W' ? -1 : 1 }; fr(f, kind + face); }
+      // тени чужих и маски тени — без походки
+      for (const o of [{ moving: false }, { moving: true }, { sit: 1 }, { face: 'N', moving: true }]) fr({ x: 1000, y: 1000, vx: 0, vy: 0, dir: 1, cut, ...o }, 'без походки');
+      // спиной огонька не видно; лицом — виден
+      const n = mk('N'); n.cut = cut; idle(n, 30);
+      assert(!rec(n).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd * H >= 2), `${cut}: спиной огонёк виден`);
+      const s = mk('S'); s.cut = cut; idle(s, 30);
+      assert(rec(s).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd === 2), `${cut}: лицом огонька нет`);
+    }
+  });
 }
 
 const passed = results.filter(r => r.status === 'pass').length;
