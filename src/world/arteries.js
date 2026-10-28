@@ -189,7 +189,7 @@ export function riverCarve(x, y) {
 
 // ── замыслы ──
 // точка обхода на кольцевом расстоянии D (догоняем рваную границу по нормали)
-function rimAt(f, D) {
+export function rimAt(f, D) {
   const p = rimPoint(f * rimPerim(D), D);
   let x = p.x, y = p.y;
   for (let k = 0; k < 5; k++) { const e = D - warpedDist(x, y); x += p.nx * e; y += p.ny * e; }
@@ -277,6 +277,14 @@ function arcIdeal(D, from, to, full) {
   out[0] = { x: from.x, y: from.y };
   if (!full) out[out.length - 1] = { x: to.x, y: to.y };
   return out;
+}
+// замыслы реки и дуг — до построек (world/geoplace.js: что стоит у воды и у пути, встаёт к ним;
+// трассировщик потом обходит постройки рядом, не уходя далеко). Дуга примыкает к тропе стороны
+// на своём D; у равнины — к середине её возможных углов
+export const idealRiver = () => riverIdeal();
+export function idealArcs() {
+  const at = (side, D) => side === 'plain' ? plainIdeal(0.5)[Math.round(D / 6)] : trailPoint(side, D);
+  return ARCS.map(A => ({ id: A.id, n: A.n, name: A.name, D: A.D, pts: arcIdeal(A.D, at(A.from, A.D), at(A.to, A.D), A.full) }));
 }
 // линия неба: вдоль дороги, сбоку, в off точках (по глубине — сжато)
 function skyIdeal(road, off) {

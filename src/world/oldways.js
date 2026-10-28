@@ -28,7 +28,9 @@
 //    с бункерами»; ворота тоннеля для катеров, вниз — тоннели острова, оттуда трубой — в
 //    бункер на всякий случай. На ходу на плато вилла; неподвижному взгляду — баннер на лесах.
 // ═══════════════════════════════════════
-import { TOWN, RINGS_D, OLD_OFF, ringAt, ringD, fromOldGeo, trailPoint } from './disc.js';
+import { TOWN, OLD_OFF, ringAt, fromOldGeo, trailPoint } from './disc.js';
+import { sideAt } from './relief.js';
+import { sectorPoint, ringDepth } from './geoplace.js';
 import { revealOf } from './potemkin.js';
 // запасное место (если всё занято) — в прежней раскладке: от углов прежнего городка, на чтении — по долям колец
 const was = (dx, dy, ox = 0, oy = 0) => { const p = fromOldGeo(OLD_OFF + ox * 3000 + dx, OLD_OFF + oy * 1640 + dy); return { x: Math.round(p.x), gy: Math.round(p.y) }; };
@@ -40,10 +42,6 @@ const RUST = '#4a3420', RUST_L = '#6b4a2c', KV = '#C23B2B', B3 = '#3a1c14', D4 =
 const SV = '#E28A3A', MG_D = '#2f372c', MG = '#3D4A3A', BO = '#D9CFB8', S0 = '#474442', MG_L = '#4d5a49';
 const q = Math.round;
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
-const sideOf = (x, y) => {
-  const dn = TOWN.y0 - y, ds = y - TOWN.y1, dw = TOWN.x0 - x, de = x - TOWN.x1, m = Math.max(dn, ds, dw, de);
-  return m === ds ? 'south' : m === dn ? 'north' : m === dw ? 'west' : 'east';
-};
 
 // ── U1: нилометр — «сухая цистерна у бассейна» (канон: колодец со шкалой паводков,
 //    винтовая лестница вниз; отметки воды гуще книзу и обрываются) ──
@@ -79,47 +77,41 @@ function drawNilometer(ctx, loc) {
 const NILO_LOOK = 'Нилометр — сухая цистерна у бассейна. Колодец со шкалой паводков; по стене — винтовая лестница вниз. Река, которую он мерил, больше не поднимается.';
 
 // где встать месту w×h в клетке «кольцо n · сторона»: не на чужом дворе, не у табличек, не на
-// радиальной тропе; ближе к anchor (постройке-соседке по смыслу)
+// радиальной тропе; ближе к anchor (постройке или табличке — соседке по смыслу). Ищем вокруг
+// соседки, шире и шире: места колец стоят по истории (world/sites.js), не полосами у городка
 function placeIn(locations, n, side, w, h, anchor) {
-  const cands = [], R0 = ringD(n, 70), R1 = ringD(n, 170);
-  const box = side === 'south' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y1 + R0, TOWN.y1 + R1]
-    : side === 'north' ? [TOWN.x0 + 120, TOWN.x1 - 120, TOWN.y0 - R1, TOWN.y0 - R0]
-    : side === 'west' ? [TOWN.x0 - R1, TOWN.x0 - R0, TOWN.y0 + 120, TOWN.y1 - 60]
-    : side === 'plain' ? [TOWN.x1, TOWN.x1 + R1, TOWN.y0 - R1, TOWN.y0]
-    : [TOWN.x1 + R0, TOWN.x1 + R1, TOWN.y0 + 120, TOWN.y1 - 60];
-  // соседи — только те, что могут задеть рамку поиска (кольца просторны: мест много, рамка большая)
-  const near = locations.filter(l => l.x < box[1] + w + 80 && l.x + l.w > box[0] - 80 && l.y < box[3] + 80 && l.y + l.h > box[2] - h - 80);
-  const arch = near.filter(l => l.archDraw), small = near.filter(l => !l.archDraw);
-  // радиальная тропа своей стороны: точки через 10, рядом с местом — по её же расстоянию от городка
-  const ts = side === 'plain' ? 'north' : side, TP = [];
-  for (let d = 0; d <= RINGS_D + 100; d += 10) TP.push(trailPoint(ts, d));
+  const c = anchor ? { x: anchor.archX ?? anchor.x + anchor.w / 2, y: anchor.archGy ?? anchor.y + anchor.h } : (() => { const p = sectorPoint(side, 0.5, ringDepth(n, 0.5)); return { x: p.x, y: p.y }; })();
+  const ts = side === 'plain' ? null : side;
   const onTrail = (cx, gy) => {
-    const d = ts === 'south' ? gy - TOWN.y1 : ts === 'north' ? TOWN.y0 - gy : ts === 'east' ? cx - TOWN.x1 : TOWN.x0 - cx, r = ts === 'south' || ts === 'north' ? 40 : 60;
-    for (let i = Math.max(0, Math.floor((d - r) / 10)); i <= Math.min(TP.length - 1, Math.ceil((d + r) / 10)); i++) {
-      const p = TP[i];
-      if (Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40) return true;
+    if (!ts) return false;
+    const d = ts === 'south' ? gy - TOWN.y1 : ts === 'north' ? TOWN.y0 - gy : ts === 'east' ? cx - TOWN.x1 : TOWN.x0 - cx;
+    if (d < 0) return false;
+    const p = trailPoint(ts, d);
+    return Math.abs(p.x - cx) < 60 && Math.abs(p.y - gy) < 40;
+  };
+  for (const R of [260, 520, 900, 1500]) {
+    const near = locations.filter(l => Math.abs(l.x + l.w / 2 - c.x) < R + w + 120 && Math.abs(l.y + l.h - c.y) < R + h + 120);
+    const arch = near.filter(l => l.archDraw), small = near.filter(l => !l.archDraw);
+    const busy = (x0, gy) => {
+      const x1 = x0 + w, y0 = gy - h;
+      if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50)) return true;
+      if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30)) return true;
+      return onTrail(x0 + w / 2, gy);
+    };
+    const cands = [];
+    for (let dx = -R; dx <= R; dx += 12) for (let dy = -R; dy <= R; dy += 10) {
+      const x = Math.round(c.x + dx - w / 2), gy = Math.round(c.y + dy);
+      const ok = [x + 3, x + w / 2, x + w - 3].every(px => ringAt(px, gy) === n && sideAt(px, gy) === side);
+      if (!ok || busy(x, gy)) continue;
+      cands.push({ x, gy, d: Math.hypot(dx, dy) });
     }
-    return false;
-  };
-  const busy = (x0, gy) => {
-    const x1 = x0 + w, y0 = gy - h;
-    if (arch.some(l => x1 > l.x - 60 && x0 < l.x + l.w + 60 && gy > l.y - 10 && y0 < l.y + l.h + 50)) return true;
-    if (small.some(l => x1 > l.x - 36 && x0 < l.x + l.w + 36 && gy > l.y - 30 && y0 < l.y + l.h + 30)) return true;
-    return onTrail(x0 + w / 2, gy);
-  };
-  // равнина — дуга у северо-восточного угла: середина дуги, не к её краям
-  const inSide = (x, y) => side !== 'plain' ? sideOf(x, y) === side
-    : x > TOWN.x1 && y < TOWN.y0 && Math.atan2(TOWN.y0 - y, x - TOWN.x1) > 0.15 * Math.PI && Math.atan2(TOWN.y0 - y, x - TOWN.x1) < 0.35 * Math.PI;
-  const ax = anchor ? anchor.archX ?? anchor.x + anchor.w / 2 : 0, ay = anchor ? anchor.archGy ?? anchor.y + anchor.h : 0;
-  for (let x = box[0]; x < box[1]; x += 12) for (let gy = box[2]; gy <= box[3]; gy += 10) {
-    if (ringAt(x + w / 2, gy) !== n || !inSide(x + w / 2, gy) || busy(x, gy)) continue;
-    cands.push({ x, gy, d: anchor ? Math.hypot(x + w / 2 - ax, gy - ay) : 0 });
+    if (cands.length) { cands.sort((a, b) => a.d - b.d); return cands[0]; }
   }
-  cands.sort((a, b) => a.d - b.d);
-  return cands[0] || null;
+  return null;
 }
-const archOf = (locations, ring, side, name, nearX) => locations.filter(l => l.archDraw && l.archRing === ring && l.archSide === side && l.name === name)
-  .sort((a, b) => Math.abs(a.archX - nearX) - Math.abs(b.archX - nearX))[0] || null;
+// копия постройки с ходом — первая (#1): номер постоянный, текст хода — её (content/arch_ids.js)
+const archOf = (locations, ring, side, name) => locations.filter(l => l.archDraw && l.archRing === ring && l.archSide === side && l.name === name)
+  .sort((a, b) => (a.archNth || 1) - (b.archNth || 1))[0] || null;
 
 // ── U2: красная колоннада — «дорога вглубь, между колоннами прилавки первой витрины; тень
 //    портика расчерчена на платные полосы; в глубине — тёмная дверь» (канон) ──
@@ -456,13 +448,13 @@ const SAZAN_SEAM = 'Вилла — на баннере, баннер — на л
 let nilometer = null, stave = null, colonnade = null, cathedral = null, gaslamp = null, hatch = null, cellar = null, carriage = null, metro = null, freezer = null, sazan = null;
 export function buildOldways(locations) {
   // U1, вход: ставкирка у северной тропы — за алтарём дверца вниз
-  stave = archOf(locations, 3, 'north', 'ставкирка', trailPoint('north', ringD(3, 100)).x);
+  stave = archOf(locations, 3, 'north', 'ставкирка');
   if (stave) {
     stave.upKey = 'stave';                                               // сюда выводит лестница хода крипты
     stave.altNow = () => ({ key: 'stave_altar', label: '<i>✝</i>ЗА АЛТАРЬ' });
   }
   // U1, выход: нилометр — у пилона с обелиском: египетское у египетского
-  const pylon = archOf(locations, 1, 'south', 'пилон с обелиском', TOWN.x0);
+  const pylon = archOf(locations, 1, 'south', 'пилон с обелиском');
   const p = placeIn(locations, 1, 'south', NW, NH, pylon) || was(600, 120, 0, 1);
   nilometer = {
     id: 'nilometer', name: 'Нилометр', zone: 'street',
@@ -472,7 +464,7 @@ export function buildOldways(locations) {
   };
   locations.push(nilometer);
   // U2, вход: красная колоннада — у сада Эпикура: тень бесплатна только за его калиткой
-  const garden = archOf(locations, 2, 'south', 'сад Эпикура', TOWN.x1);
+  const garden = archOf(locations, 2, 'south', 'сад Эпикура');
   const c = placeIn(locations, 2, 'south', CW, CH, garden) || was(1800, 320, 0, 1);
   colonnade = {
     id: 'colonnade', name: 'Красная колоннада', zone: 'street',
@@ -482,7 +474,7 @@ export function buildOldways(locations) {
   };
   locations.push(colonnade);
   // U2, выход: крипта чёрного собора — у западной тропы
-  cathedral = archOf(locations, 3, 'west', 'чёрный собор', 0);
+  cathedral = archOf(locations, 3, 'west', 'чёрный собор');
   if (cathedral) {
     cathedral.upKey = 'cathedral';
     cathedral.altNow = () => ({ key: 'cathedral_crypt', label: '<i>✝</i>В КРИПТУ' });
@@ -499,7 +491,7 @@ export function buildOldways(locations) {
   };
   locations.push(gaslamp);
   // U3, выход: люк — у градирни и цеха
-  const works = archOf(locations, 7, 'plain', 'градирня и цех', TOWN.x1);
+  const works = archOf(locations, 7, 'plain', 'градирня и цех');
   const hp = placeIn(locations, 7, 'plain', HW_, HH_, works) || was(1000, -900, 1, 0);
   hatch = {
     id: 'factory_hatch', name: 'Люк на территории завода', zone: 'street',
@@ -519,7 +511,7 @@ export function buildOldways(locations) {
   locations.push(cellar);
   // U4, выход: вагон 89 6 — во дворе-колодце, у его громкоговорителя
   const yard = locations.find(l => l.name === 'громкоговоритель двора-колодца')
-    || archOf(locations, 8, 'east', 'город-соты', TOWN.x1);
+    || archOf(locations, 8, 'east', 'город-соты');
   const vp = placeIn(locations, 8, 'east', VW_, VH_, yard) || was(1500, 900, 1, 0);
   carriage = {
     id: 'carriage_89', name: 'Вагон 89 6', zone: 'street',
@@ -529,7 +521,7 @@ export function buildOldways(locations) {
   };
   locations.push(carriage);
   // U5, вход: заклеенный вход метро — у экрана-фасада проспекта
-  const screen = archOf(locations, 9, 'east', 'экран-фасад', TOWN.x1);
+  const screen = archOf(locations, 9, 'east', 'экран-фасад');
   const mp = placeIn(locations, 9, 'east', MW_, MH_, screen) || was(1700, 900, 1, 0);
   metro = {
     id: 'metro_sealed', name: 'Заклеенный вход метро', zone: 'street',
@@ -539,7 +531,7 @@ export function buildOldways(locations) {
   };
   locations.push(metro);
   // U7, вход: подсобка с морозилкой — у таблички «морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»» парка
-  const plate = locations.find(l => l.name === 'морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»') || archOf(locations, 8, 'west', 'колесо обозрения', TOWN.x0);
+  const plate = locations.find(l => l.name === 'морозилка «ЖДЁТ ЛУЧШИХ ВРЕМЁН»') || archOf(locations, 8, 'west', 'колесо обозрения');
   const fp = placeIn(locations, 8, 'west', PW_, PH_, plate) || was(-1560, 900);
   freezer = {
     id: 'park_freezer', name: 'Подсобка парка', zone: 'street',
@@ -549,7 +541,7 @@ export function buildOldways(locations) {
   };
   locations.push(freezer);
   // U8, вход: остров у входа в залив — у таблички «остров с бункерами» (сейчас, запад)
-  const isle = locations.find(l => l.name === 'остров с бункерами') || archOf(locations, 9, 'west', 'стеклянная башня', TOWN.x0);
+  const isle = locations.find(l => l.name === 'остров с бункерами') || archOf(locations, 9, 'west', 'стеклянная башня');
   const zp = placeIn(locations, 9, 'west', ZW_, ZH_, isle) || was(-1720, 700);
   sazan = {
     id: 'sazan', name: 'Остров у входа в залив', zone: 'street',

@@ -7,7 +7,8 @@
 // the gates. Epoch gradient is painted directly into the terrain.
 // ═══════════════════════════════════════
 import { TOWNLET, SEGMENTS } from '../content/ulitsa_db.js';
-import { TOWN, TS, RINGS, RINGS_D, RING_EDGE, FIRE_W, EDGE_BAND, ringD, townY, townDist, epochAt, southPoint, sidePoint } from './disc.js';
+import { TOWN, TS, RINGS, RINGS_D, RING_EDGE, FIRE_W, EDGE_BAND, ringD, townY, townDist, epochAt } from './disc.js';
+import { signSpots, signKey } from './sites.js';
 import { WASTE_SIGNS } from '../content/wasteland.js';
 import { useTexts } from './useActions.js';
 
@@ -41,16 +42,17 @@ export function consumeGatesLine() {
   return true;
 }
 
-// ── Street locations from sign data ──
-// Each sign becomes a small world location standing on the north side
-// of the road. look = facade (+live/whisper marks); use flips the plaque.
+// ── Таблички улицы — места мира. Где стоит — по истории (world/sites.js: год и место
+// прототипа, местность, кто с кем рядом); серии стендов — вдоль дороги. look — фасад
+// (+живое/шёпот), действие переворачивает табличку.
 function buildStreetLocations() {
-  const out = [];
+  const out = [], spots = signSpots();
   let i = 0;
   for (const seg of SEGMENTS) {
     for (const sign of seg.signs) {
       const id = `st_${i++}`;
-      const pt = sidePoint(sign.x, sign.side || 'south');
+      const key = signKey(seg, sign), sp = spots.get(key);
+      const pt = { x: sp.x, y: sp.gy - 26 };
       let look = sign.facade;
       if (sign.whisper) look += `\n\n${sign.whisper}`;
       if (sign.live) look += `\n\n[запись продолжается]`;
@@ -65,6 +67,7 @@ function buildStreetLocations() {
         streetEnter: !!sign.enter,
         streetLive: !!sign.live,
         streetSeg: seg.n,
+        streetKey: key, streetSite: sp.site,
       };
       if (sign.potemkin) loc.potemkinSign = sign;   // подделка: шов читается живьём
       if (sign.enter) {

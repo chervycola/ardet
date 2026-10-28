@@ -131,48 +131,7 @@ export function eastBand(n) {
   return { x0: TOWN.x1 + RING_EDGE[n - 1], x1: TOWN.x1 + RING_EDGE[n] };
 }
 
-// прогресс vx (виртуальная координата старой улицы 220..3000) →
-// точка на юге: эпоха его сегмента, поперёк — распределение по x
-export function southPoint(vx) {
-  let seg = SEGMENTS[SEGMENTS.length - 1];
-  for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
-  const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
-  return {
-    x: townX(340 + t * 2320),
-    y: TOWN.y1 + ringD(seg.n, 58 + ((vx * 37) % 84)),   // детерминированный разброс в кольце
-    ring: seg.n,
-  };
-}
-
-// точка знака на любой стороне. Раскладка кластерная: знаки кольца
-// сходятся в 2-3 «сцены» (двор, площадь, перекрёсток) с пустотами
-// между — против линейной сетки.
-function h01(n) { const v = Math.sin(n * 127.13) * 43758.5453; return v - Math.floor(v); }
-export function sidePoint(vx, side = 'south') {
-  let seg = SEGMENTS[SEGMENTS.length - 1];
-  for (const s of SEGMENTS) if (vx >= s.range[0] && vx < s.range[1]) { seg = s; break; }
-  const t = (vx - seg.range[0]) / (seg.range[1] - seg.range[0]);
-  const sideN = { south: 1, north: 2, west: 3, east: 4, plain: 5 }[side] || 1;
-  const K = 2 + (Math.floor(h01(seg.n * 13 + sideN * 7) * 2));       // 2-3 сцены
-  const ci = Math.floor(h01(vx * 7.3 + sideN) * K);                  // своя сцена
-  const center = 0.14 + (ci + 0.5) / K * 0.72
-    + (h01(seg.n * 31 + ci * 17 + sideN) - 0.5) * 0.16;              // сцены гуляют
-  const along = Math.max(0.03, Math.min(0.97,
-    center + (t - 0.5) * 0.16 + (h01(vx * 3.7) - 0.5) * 0.06));      // кучно внутри
-  const depth = 36 + h01(vx * 11 + ci) * 128                          // глубина в кольце (прежняя мера)
-    + (h01(seg.n + ci * 29 + sideN * 3) - 0.5) * 40;                  // сцены на разной глубине
-  const r = ringD(seg.n, depth);
-  if (side === 'plain') {
-    // равнина — дуга у северо-восточного угла городка
-    const a = (0.2 + along * 0.6) * Math.PI / 2;
-    return { x: TOWN.x1 + r * Math.cos(a), y: TOWN.y0 - r * Math.sin(a) - 13, ring: seg.n };
-  }
-  const ax = TOWN.x0 + (300 + along * 2400) * TS, ay = TOWN.y0 + (140 + along * 1360) * TS;
-  if (side === 'north') return { x: ax, y: TOWN.y0 - r - 26, ring: seg.n };
-  if (side === 'west')  return { x: TOWN.x0 - r - 14, y: ay, ring: seg.n };
-  if (side === 'east')  return { x: TOWN.x1 + r,      y: ay, ring: seg.n };
-  return { x: ax, y: TOWN.y1 + r, ring: seg.n };
-}
+// где на стороне стоят таблички и постройки — world/sites.js (раскладка по истории, weave/SCALE.md §9)
 
 // ── обход вокруг городка на расстоянии D (скруглённые углы), по часовой
 // стрелке от левого конца северной кромки: точка по длине s, длина обхода,

@@ -143,16 +143,94 @@ test('arch: постройки не заслоняют таблички (таб�
   }
 });
 
-test('ансамбли: у тропы на каждой стороне каждого кольца — ворота эпохи', () => {
-  for (let n = 1; n <= 9; n++) for (const side of ['south', 'north', 'west', 'east']) {
-    const g = archEnsembles.find(e => e.ring === n && e.side === side && e.kind === 'gate');
-    assert(g && g.members.length >= 1, `кольцо ${n}/${side}: нет ворот`);
-    const tp = trailPoint(side, ringD(n, 100));
-    for (const i of g.members) {
-      const d = decor[i];
-      assert(Math.hypot(d.x - tp.x, d.gy - tp.y) < 240, `кольцо ${n}/${side}: ${d.name} далеко от тропы`);
+// ═══ РАСКЛАДКА ПО ИСТОРИИ (слово автора 28.10: «не по четырём линиям — живее и исторически») ═══
+const { ARCH_IDS } = await imp('content/arch_ids.js');
+const { PLACES, SIGN_PLACES } = await imp('content/places.js');
+const { buildSites } = await imp('world/sites.js');
+const { sideAt } = await imp('world/relief.js');
+const { RING_YEARS } = await imp('world/geoplace.js');
+const archLocs = locations.filter(l => l.archDraw);
+const { isBlocked: isBlockedPhys } = await imp('world/physics.js');
+const isBlockedAt = (x, y) => isBlockedPhys(x, y, locations);
+test('места: у дороги — только заставы и серии; ворота стоят у тропы своей глубины', () => {
+  for (const e of archEnsembles.filter(e => e.kind === 'gate')) {
+    for (const i of e.members) {
+      const d = decor[i], key = `${e.ringId}:${e.side}:${d.name}` + (d.nth > 1 ? '#' + d.nth : '');
+      const rec = PLACES[key] || PLACES[key.replace(/#\d+$/, '')];
+      assert(rec && rec.road, `${key}: у дороги без причины`);
+      const dd = e.side === 'south' ? d.gy - TOWN.y1 : e.side === 'north' ? TOWN.y0 - d.gy : e.side === 'east' ? d.x - TOWN.x1 : TOWN.x0 - d.x;
+      const tp = trailPoint(e.side, dd);
+      assert(Math.hypot(d.x - tp.x, d.gy - tp.y) < 240, `${key}: далеко от тропы`);
     }
   }
+});
+
+test('места: каждая постройка реестра встала, номер постоянный и один на постройку', () => {
+  const ids = archLocs.map(l => l.id);
+  eq(new Set(ids).size, ids.length, 'номера построек повторяются');
+  const byKey = new Map(archLocs.map(l => [`${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}` + (l.archNth > 1 ? '#' + l.archNth : ''), l]));
+  for (const [key, n] of Object.entries(ARCH_IDS)) {
+    const l = byKey.get(key);
+    assert(l, `${key}: не встала`);
+    eq(l.id, 'ar_' + n, `${key}: номер сменился`);
+  }
+});
+
+test('места: табличка и постройка стоят в своей клетке — кольцо и сторона по земле те же, что в описи', () => {
+  for (const l of locations.filter(l => /^st_/.test(l.id))) {
+    const x = l.x + l.w / 2, y = l.y + l.h;
+    eq(ringAt(x, y), l.streetSeg, `«${l.name}»: кольцо по земле`);
+    eq(sideAt(x, y), l.streetSide, `«${l.name}»: сторона по земле`);
+  }
+  for (const l of archLocs) for (const x of [l.x + 3, l.archX, l.x + l.w - 3]) eq(sideAt(x, l.archGy), l.archSide, `${l.name} (${l.archRing}): сторона по земле`);
+});
+
+test('места: не крестом — вещи колец стоят и в углах, не только в полосах против сторон городка', () => {
+  const ring = locations.filter(l => /^(st_|ar_)/.test(l.id) && !/_around$/.test(l.id));
+  let corner = 0;
+  for (const l of ring) {
+    const x = l.x + l.w / 2, y = l.y + l.h;
+    const inBandX = x > TOWN.x0 && x < TOWN.x1, inBandY = y > TOWN.y0 && y < TOWN.y1;
+    if (!inBandX && !inBandY) corner++;
+  }
+  assert(corner / ring.length > 0.25, `в углах ${corner} из ${ring.length}`);
+  // и в каждой клетке места не на одной линии: разброс по сектору шире трети
+  const cells = new Map();
+  for (const S of buildSites()) { if (!cells.has(S.cell)) cells.set(S.cell, []); cells.get(S.cell).push(S.a); }
+  let narrow = 0;
+  for (const [c, as] of cells) if (as.length >= 4 && Math.max(...as) - Math.min(...as) < 0.33) narrow++;
+  assert(narrow <= 2, `клеток в одну линию: ${narrow}`);
+});
+
+test('места: радиус — по году изображённого (раньше — ближе к городку)', () => {
+  // по каждой клетке: из пар вещей с годом в пределах эпохи и разницей больше четверти эпохи —
+  // раньше ближе к городку в большинстве (местность и разлёт мест могут поправить отдельные)
+  let ok = 0, all = 0;
+  const pts = [];
+  for (const l of locations) {
+    let rec = null, n = 0;
+    if (/^st_/.test(l.id)) { rec = SIGN_PLACES[l.streetKey]; n = l.streetSeg; }
+    else if (l.archDraw && !l.id.endsWith('_around')) { const k = `${SEGMENTS[l.archRing - 1].id}:${l.archSide}:${l.name}`; rec = PLACES[l.archNth > 1 ? k + '#' + l.archNth : k] || PLACES[k]; n = l.archRing; }
+    if (!rec || rec.y == null || !RING_YEARS[n - 1]) continue;
+    const [y0, y1] = RING_YEARS[n - 1];
+    if (rec.y < y0 || rec.y > y1) continue;
+    pts.push({ n, side: l.streetSide || l.archSide, y: rec.y, d: townDist(l.x + l.w / 2, l.y + l.h), span: y1 - y0 });
+  }
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const A = pts[i], B = pts[j];
+    if (A.n !== B.n || A.side !== B.side || Math.abs(A.y - B.y) < A.span / 4) continue;
+    all++; if ((A.y - B.y) * (A.d - B.d) > 0) ok++;
+  }
+  assert(all < 20 || ok / all > 0.7, `по году — ${ok} пар из ${all}`);
+});
+
+test('места: переходы ведут к своим табличкам — точка перед вехой портиков и перед СКРОЛЛОМ свободна', () => {
+  for (const a of ['branch_plain', 'brainrot_enter']) {
+    const l = locations.find(l => l.useAction === a);
+    assert(l, `нет места с переходом ${a}`);
+    assert(!isBlockedAt(l.x + l.w / 2 - 6, l.y + l.h + 5), `${l.name}: точка перед ней занята`);
+  }
+  for (let n = 1; n <= 9; n++) { const p = trailPoint('south', ringD(n, 100)); assert(!isBlockedAt(p.x, p.y), `врата → кольцо ${n}: тропа занята`); }
 });
 
 test('ансамбли: одинаковые постройки не попадают в один кадр (кроме двойняшек-панелек)', () => {
@@ -611,7 +689,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
   });
   test('запекание: неподвижная постройка — один холст, дальше картинкой; живая — рисуется сама; без холста — живой', () => {
     B._resetBake();
-    const stat = arch.find(l => !B.kindOf(l.archDraw, l.archX, l.archGy).live);
+    const stat = arch.find(l => { const k = B.kindOf(l.archDraw, l.archX, l.archGy); return !k.live && !k.split; });   // без своего живого слоя
     // все кольца теперь набором (тело + живое слоем): живая целиком постройка в мире больше не встречается —
     // путь «живая рисуется сама» проверяем на пробной, что сдвигается со временем
     const live = arch.find(l => B.kindOf(l.archDraw, l.archX, l.archGy).live) || { ...stat, archDraw: (cx, x, gy, t) => cx.fillRect(x + (t % 3), gy, 1, 1) };

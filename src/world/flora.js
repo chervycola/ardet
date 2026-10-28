@@ -10,13 +10,14 @@
 // двор, утварь, дорогу, реку и опору линии неба; камыш — по берегу ручья.
 // Рисунок — render/floraProps.js.
 // ═══════════════════════════════════════
-import { TOWN, TS, RINGS_D, RING_WS, RING_EDGE, WORLD_W, WORLD_H, warpedDist, ringOfD, thinAt } from './disc.js';
+import { TOWN, TS, RINGS_D, RING_WS, WORLD_W, WORLD_H, warpedDist, ringOfD, thinAt } from './disc.js';
 import { sideAt, townZoneOf, townWarp, townEdge } from './relief.js';
 import { PUDDLES } from './town.js';
 import { locations } from './locations.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
 import { fieldAt } from './fields.js';
+import { buildSites } from './sites.js';
 
 // виды: дуб, берёза, ель, сосна, кипарис, пальма, олива, бамбук, ива,
 // тополь, плодовое, городское (в решётке), сухое, пень, куст
@@ -100,20 +101,35 @@ const grove = (x, y) => 0.6 * vn(x / 230, y / 135, 31) + 0.4 * vn(x / 80, y / 48
 // рощ на кольце столько же, сколько было до просторных колец (disc.js: thinAt):
 // роща той же густоты, а встают они пятнами крупнее рощи — лесные края и
 // открытые; доля края, где рощи есть, — по площади кольца. Порог — по выборке
-// самого шума (его значения не ровны: у середины чаще). Лес держится углов
-// колец — там сходятся две стороны и ничьё жильё не стоит; у мест сторон его
-// свели (в сумме рощ столько же)
+// самого шума (его значения не ровны: у середины чаще). Лес держится глуши —
+// подальше от мест клеток, где стоит жильё (места — по истории, world/sites.js:
+// и в углах колец, и у дорог); у мест его свели (в сумме рощ столько же)
 const wood = (x, y) => vn(x / 320, y / 190, 39);
 const WOODQ = (() => { const v = []; for (let i = 0; i < 4096; i++) v.push(wood(h01(i, 1, 61) * 4000, h01(i, 2, 61) * 4000)); return v.sort((a, b) => a - b); })();
 const woodAt = keep => WOODQ[Math.min(WOODQ.length - 1, Math.floor(keep * WOODQ.length))];
-const cornerAt = (x, y) => sm(-240, 0, Math.min(Math.max(TOWN.x0 - x, x - TOWN.x1), Math.max(TOWN.y0 - y, y - TOWN.y1)));
-const CORNER_F = RING_WS.map((w, i) => {                                   // доля углов в площади кольца
-  const d0 = RING_EDGE[i], d1 = RING_EDGE[i + 1], c = Math.PI * (d1 * d1 - d0 * d0);
-  return c / (c + 2 * (TOWN.x1 - TOWN.x0 + TOWN.y1 - TOWN.y0) * w);
-});
-const CB = 1.5;
-const keepAt = (ring, x, y) => Math.min(0.92, thinAt(ring) * (1 + CB * cornerAt(x, y)) / (1 + CB * CORNER_F[ring - 1]));
 const sm = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
+// глушь: дальше 620 от места клетки — 1, ближе 240 — 0; расстояние до ближайшего места —
+// сеткой по 60, штампом от каждого места (дёшево на старте)
+const WG = 60, WGW = Math.ceil(WORLD_W / WG), WGH = Math.ceil(WORLD_H / WG);
+const NEAR_D = new Float32Array(WGW * WGH).fill(620);
+for (const S of buildSites()) {
+  const cx = Math.floor(S.x / WG), cy = Math.floor(S.y / WG), R = Math.ceil(620 / WG);
+  for (let j = Math.max(0, cy - R); j <= Math.min(WGH - 1, cy + R); j++) for (let i = Math.max(0, cx - R); i <= Math.min(WGW - 1, cx + R); i++) {
+    const d = Math.hypot((i + 0.5) * WG - S.x, (j + 0.5) * WG - S.y), k = j * WGW + i;
+    if (d < NEAR_D[k]) NEAR_D[k] = d;
+  }
+}
+const wildAt = (x, y) => {
+  const i = Math.max(0, Math.min(WGW - 1, Math.floor(x / WG))), j = Math.max(0, Math.min(WGH - 1, Math.floor(y / WG)));
+  return sm(240, 620, NEAR_D[j * WGW + i]);
+};
+const WILD_F = RING_WS.map(() => [0, 0]);                                 // доля глуши в площади кольца
+for (let j = 0; j < WGH; j += 2) for (let i = 0; i < WGW; i += 2) {
+  const x = (i + 0.5) * WG, y = (j + 0.5) * WG, r = ringOfD(warpedDist(x, y));
+  if (r >= 1 && r <= RING_WS.length) { WILD_F[r - 1][0] += sm(240, 620, NEAR_D[j * WGW + i]); WILD_F[r - 1][1]++; }
+}
+const CB = 1.5;
+const keepAt = (ring, x, y) => { const f = WILD_F[ring - 1]; return Math.min(0.92, thinAt(ring) * (1 + CB * wildAt(x, y)) / (1 + CB * (f[1] ? f[0] / f[1] : 0.5))); };
 
 function pick(list, r) {
   let sum = 0;

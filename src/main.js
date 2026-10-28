@@ -1212,6 +1212,10 @@ function updateCrackTriggers(player) {
 const FADE_HALF = 10; // frames each way (~330 ms total @60fps)
 const teleportFade = { phase: 0, dir: 0, target: null, after: null };
 
+// точка перед местом — где встаёт странник, подойдя к нему (как в клике); нет места — запасная
+function frontOf(l, fallback) {
+  return l ? { x: Math.round(l.x + l.w / 2 - 6), y: Math.round(l.y + l.h + 5) } : fallback;
+}
 function teleportWithFade(x, y, after = null) {
   // If a fade is already running, just retarget it.
   teleportFade.target = { x, y };
@@ -2143,16 +2147,21 @@ events.on('location.use', (loc) => {
     teleportWithFade(TOWN.x1 + ringD(2, 96), BRANCH_PLAIN.y0 + 80 * TS);
     return;
   }
+  // цели переходов — у своих табличек (места колец стоят по истории, world/sites.js): к вехе
+  // портиков, к СКРОЛЛУ; из ленты — на тропу кольца ближе к городку
   if (actionKey === 'branch_back') {
     if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
-    teleportWithFade(TOWN.x0 + 2560 * TS, TOWN.y1 + ringD(2, 80));
+    const to = frontOf(locations.find(l => l.useAction === 'branch_plain'), { x: TOWN.x0 + 2560 * TS, y: TOWN.y1 + ringD(2, 80) });
+    teleportWithFade(to.x, to.y);
     return;
   }
   if (actionKey === 'brainrot_enter') {
     if (!canLeaveSettlement()) { lockHint(); return; }   // за изгородь — только с пропуском Шута
-    teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(9, 90), () => {
+    const to = frontOf(loc, { x: TOWN.x0 + 2540 * TS, y: TOWN.y1 + ringD(9, 90) });
+    const side = loc.streetSide && loc.streetSide !== 'plain' ? loc.streetSide : 'south', back = trailPoint(side, ringD(8, 100));
+    teleportWithFade(to.x, to.y, () => {
       enterBrainrotLoop(() => {
-        teleportWithFade(TOWN.x0 + 2540 * TS, TOWN.y1 + ringD(8, 100), () => {
+        teleportWithFade(back.x, back.y, () => {
           showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
         });
       });

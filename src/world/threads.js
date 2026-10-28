@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════
 import { useTexts } from './useActions.js';
 import { free } from './aitraps.js';
+import { ringAt } from './disc.js';
 
 let sawNomerok = false;
 
@@ -49,9 +50,12 @@ export function buildThreads(locations) {
   const box = locations.find(l => l.name === 'ящик в газовом переулке' && l.streetForm);
   if (!box) return;
   const w = 20, h = 30;
-  for (const dx of [26, -26, 44, -44, 62]) {
-    const b = { x: Math.round(box.x + 7 + dx - w / 2), y: box.y + box.h - h, w, h };
-    if (!free(b, locations)) continue;
+  // рядом с ящиком: сбоку, чуть впереди или позади — где свободно (у места сцены тесно)
+  const spots = [];
+  for (const dy of [0, 22, -22, 44]) for (const dx of [26, -26, 44, -44, 62, -62, 84, -84]) spots.push([dx, dy]);
+  for (const [dx, dy] of spots) {
+    const b = { x: Math.round(box.x + 7 + dx - w / 2), y: box.y + box.h - h + dy, w, h };
+    if (ringAt(b.x + w / 2, b.y + h) !== ringAt(box.x + box.w / 2, box.y + box.h) || !free(b, locations)) continue;   // в том же кольце, что ящик
     locations.push({
       id: 'mail_1889', name: 'окно «до востребования»', zone: 'street', ...b,
       look: 'Окно выдачи «до востребования». Над окном: «Выдача по номеркам». За стеклом никого; письма разложены по номерам.',

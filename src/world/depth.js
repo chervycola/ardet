@@ -3,9 +3,10 @@
 // не больше трёх глубины I — остальное глубже» (EASTER_FUND, DRAMATURGY §5);
 // картина — клетка диска, кольцо × сторона. Глубина I видна с прогулки, II —
 // вторым взглядом.
-//  · Громкое — постройка эпохи. На клетку остаются три: доминанта, ворота у
-//    тропы, ближний к тропе двор — ансамблем целиком; прочие ансамбли уходят в
-//    глубину II.
+//  · Громкое — постройка эпохи. На клетку остаются три: доминанта, застава у
+//    дороги, двор побольше — ансамблем целиком; громкие клетки не в одном кадре
+//    («громкие места клетки — не ближе кадра», SCALE §3); прочие ансамбли уходят
+//    в глубину II.
 //  · Позиций на клетку на виду — не больше пятнадцати. Юг — наследство улицы
 //    эпох — гуще прочих сторон: таблички сверх того уходят в глубину II, дальние
 //    от дороги первыми. Живые, входы, подделки со швом и серии стендов — нет.
@@ -51,11 +52,16 @@ export function passDepth(locations, ensembles) {
     const ens = new Map();
     for (const l of list) if (l.archDraw) { if (!ens.has(l.archEns)) ens.set(l.archEns, []); ens.get(l.archEns).push(l); }
     const rank = e => { const k = ensembles[e[0]]?.kind; return k === 'landmark' ? 0 : k === 'gate' ? 1 : 2; };
-    const order = [...ens.entries()].sort((a, b) => (rank(a) - rank(b)) || (Math.min(...a[1].map(l => offRoad(l, side))) - Math.min(...b[1].map(l => offRoad(l, side)))));
+    const near = e => Math.min(...e[1].map(l => offRoad(l, side)));
+    const order = [...ens.entries()].sort((a, b) => (rank(a) - rank(b)) || (b[1].length - a[1].length) || (near(a) - near(b)));
+    const lit = [];
+    const apart = ms => lit.every(o => ms.every(l => { const p = footOf(l), q = footOf(o); return Math.abs(p.x - q.x) >= 640 || Math.abs(p.y - q.y) >= 360; }));
     let loud = 0;
-    for (const [, members] of order) {
-      // первый ансамбль клетки на виду всегда: посёлок равнины в четыре дома — одна находка
-      if (loud + members.length <= LOUD_PER_CELL || loud === 0) { loud += members.length; continue; }
+    for (const e of order) {
+      const members = e[1];
+      // первый ансамбль клетки на виду всегда: посёлок равнины в четыре дома — одна находка;
+      // двор — если не в одном кадре с уже громким
+      if (loud === 0 || (loud + members.length <= LOUD_PER_CELL && (rank(e) < 2 || apart(members)))) { loud += members.length; lit.push(...members); continue; }
       for (const l of members) { l.depth = 2; l.quiet = true; quietB++; }
     }
     // на виду — не больше пятнадцати: таблички, дальние от дороги, — в тень

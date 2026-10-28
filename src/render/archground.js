@@ -12,6 +12,7 @@ import { TOWN, trailPoint, warpedDist } from '../world/disc.js';
 import { ARCH_BY_RING } from '../sprites/arch/index.js';
 import { hash } from './draw.js';
 import { thing, wearOf, warmKind } from './things.js';
+import { idealRiver } from '../world/arteries.js';
 
 const NIGHT = [13, 11, 10], BONE = [217, 207, 184], ASH = [138, 141, 143];
 const MIST = [61, 74, 58], SEPIA = [58, 48, 38], SAND = [176, 162, 132];
@@ -158,6 +159,15 @@ function rectDist(r, x, y) {
 const grounds = [];          // запекаемая земля ансамблей
 export const archProps = []; // куски заборов: { x, gy, w, h, draw(ctx) }
 
+// ближайшая точка замысла реки, не дальше R
+let RIVER = null;
+function riverNear(x, y, R) {
+  if (!RIVER) RIVER = idealRiver().filter((p, i) => i % 2 === 0);
+  let best = null, bd = R;
+  for (const p of RIVER) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } }
+  return best;
+}
+
 // sign ids → локации; trail — точка тропы рядом с ансамблем
 export function prepareArchGround(ensembles, locations) {
   grounds.length = 0; archProps.length = 0;
@@ -186,6 +196,15 @@ export function prepareArchGround(ensembles, locations) {
         rects.push({ x0: a.x, y0: Math.min(a.gy, b.gy) - 4, x1: b.x, y1: Math.max(a.gy, b.gy) + 20 });
       }
     }
+    // одинокий дом — с участком сбоку (утварь встаёт там, а не в простенке соседей); сторона —
+    // прочь от тропы, если она рядом
+    let plot = null;
+    if (ms.length === 1 && e.kind !== 'gate' && e.kind !== 'landmark') {
+      const m = ms[0], tr = e.trail;
+      const dir = tr && Math.abs(tr.x - m.x) < m.w / 2 + 90 && Math.abs(tr.y - m.gy) < 120 ? (tr.x > m.x ? -1 : 1) : (hash(m.x, m.gy, 4.4) > 0.5 ? 1 : -1);
+      plot = { dir, x0: dir > 0 ? m.x + m.w / 2 : m.x - m.w / 2 - 46, x1: dir > 0 ? m.x + m.w / 2 + 46 : m.x - m.w / 2 };
+      rects.push({ x0: plot.x0, y0: m.gy - 8, x1: plot.x1, y1: m.gy + 22 });
+    }
     // таблички сцены — на земле двора, если рядом
     const ss = (e.signs || []).map(id => byId.get(id)).filter(Boolean);
     const near = ss.filter(s => ms.some(m => Math.abs(s.x + 7 - m.x) < m.w / 2 + 90 && Math.abs(s.y + s.h - m.gy) < 110));
@@ -203,7 +222,9 @@ export function prepareArchGround(ensembles, locations) {
       const mid = ms.reduce((a, o) => a + o.x, 0) / ms.length;
       // рисунок сам знает, где у него вода (draw.seaSide: срез к морю, капитель в воде), иначе — наружу от соседей
       const own = m.loc && m.loc.archDraw && m.loc.archDraw.seaSide;
-      const dir = own || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
+      // у реки (место по истории — на берегу) вода — к реке: полоса сливается с руслом и его не толкает
+      const rv = kind === 'water' ? riverNear(m.x, m.gy, 260) : null;
+      const dir = own || (rv ? Math.sign(rv.x - m.x) || 1 : 0) || (ms.length > 1 && Math.abs(m.x - mid) > 4 ? Math.sign(m.x - mid) : (hash(m.x, m.gy, 1.1) > 0.5 ? 1 : -1));
       if (kind === 'water') {
         // море — полосой от стены в сторону, за край двора; порог сухой; под соседа не заходит
         const len = 130 + m.w * 0.6;
@@ -213,7 +234,7 @@ export function prepareArchGround(ensembles, locations) {
           if (dir > 0 && o.x > m.x) x1 = Math.min(x1, o.x - o.w / 2 - 4);
           if (dir < 0 && o.x < m.x) x0 = Math.max(x0, o.x + o.w / 2 + 4);
         }
-        patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 } });
+        patches.push({ kind, sea: { x0, x1, y0: m.gy - 6, y1: m.gy + 30, dir }, r: { x0, y0: m.gy - 10, x1, y1: m.gy + 34 }, river: !!rv });
       } else if (kind === 'bog') {
         const rx = Math.max(26, m.w * 0.42), ry = 13;
         const ex = m.x + dir * (m.w * 0.3 + rx * 0.7), ey = m.gy + 10;
@@ -273,7 +294,7 @@ export function prepareArchGround(ensembles, locations) {
     }
     // утварь двора: колодец, телега, стог… — из модуля кольца; не в воде
     const cell = e.ring + ':' + e.side;
-    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell), spots });
+    propsFor(e, ms, signs, allBoxes, patches.filter(p => p.kind === 'water' || p.kind === 'bog').map(p => p.r), { gateless: !gated.has(cell), yardless: !yarded.has(cell), spots, plot });
     for (const p of patches) if (p.sea) seas.push({ e, S: p.sea });
   }
   // что плавает — сверх утвари двора, у ворот раньше прочего: его видят, входя в клетку
@@ -707,8 +728,9 @@ function fenceFor(e, st, ms, yb, cx, signs, boxes, water = []) {
 // ── утварь двора ──
 // Вещи эпохи перед постройками: во дворе — две-три, у ворот — одна у
 // тропы. Не на пороге, не на табличке, не друг на друге.
-//   gateless — у стороны кольца нет ворот (равнина); yardless — нет двора, одни ворота
-function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false, spots = [] } = {}) {
+//   gateless — у стороны кольца нет ворот (равнина); yardless — нет двора, одни ворота;
+//   plot — участок сбоку у одинокого дома
+function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless = false, spots = [], plot = null } = {}) {
   const kinds = ARCH_BY_RING[e.ringId]?.props?.[e.side]?.filter(k => !k.wet);   // плавучее — в воде (wetFor)
   if (!kinds || !kinds.length) return;
   const cell = e.ring + ':' + e.side;
@@ -762,10 +784,11 @@ function propsFor(e, ms, signs, boxes, water = [], { gateless = false, yardless 
       // занято местом сцены или тропой — чуть дальше, за угол постройки
       for (const m of ms) for (const dx of [-1, 1]) for (const dy of [14, 24]) cands.push({ x: m.x + dx * (m.w / 2 + K.w / 2 + 6), gy: m.gy + dy });
     } else {
-      // во дворе: перед постройками, по краю фартука
+      // во дворе: перед постройками, по краю фартука; у одинокого — и на участке сбоку
       for (const m of ms) for (const fx of [-0.42, 0.42, -0.25, 0.25, -0.55, 0.55]) for (const dy of [12, 20, 8, 28]) {
         cands.push({ x: m.x + fx * m.w, gy: m.gy + dy });
       }
+      if (plot) for (const f of [0.5, 0.3, 0.7]) for (const dy of [6, 12, 0, 18]) cands.push({ x: plot.x0 + f * (plot.x1 - plot.x0), gy: ms[0].gy + dy });
     }
     // сначала — как всё; высокому, если места так нет, — заслоняя постройку позади верхом
     const side = K.tall ? ms.flatMap(m => [-1, 1].flatMap(d => [10, 18, 4].map(dy => ({ x: m.x + d * (m.w / 2 + K.w / 2 + 4), gy: m.gy + dy })))) : [];   // и сбоку
@@ -826,7 +849,7 @@ export function archGroundRects() {
   const out = [];
   for (const G of grounds) {
     for (const r of G.rects) out.push({ x0: r.x0 - 4, y0: r.y0 - 4, x1: r.x1 + 4, y1: r.y1 + 4 });
-    for (const p of G.patches) out.push({ x0: p.r.x0, y0: p.r.y0, x1: p.r.x1, y1: p.r.y1 });
+    for (const p of G.patches) if (!p.river) out.push({ x0: p.r.x0, y0: p.r.y0, x1: p.r.x1, y1: p.r.y1 });   // вода у реки — та же вода
   }
   return out;
 }
