@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// ARDET AUDIO v2 — треки по очереди, радио, коллекция. Без кроссфейдов.
+// ARDET AUDIO v2 — треки по очереди, значок музыки (опись эфира), коллекция. Без кроссфейдов.
 // Правила (канон автора):
 //  · трек НИКОГДА не обрывается сменой локации — доигрывает до конца,
 //    затем начинается трек текущей локации;
@@ -132,9 +132,12 @@
     startTrack(id);
   }
 
-  // ═══ РАДИО — интерфейс коллекции ═══
+  // ═══ МУЗЫКА — интерфейс коллекции ═══
+  // Один значок (слово автора 28.10: «замени „стоп" и „радио" одним значком музыки»):
+  // нажал — раскрывается опись эфира — пауза и открытые треки; нажал ещё раз — свернулась.
   const ui=(function(){
-    let btn=null,pauseBtn=null,panel=null,open=false;
+    let btn=null,panel=null,open=false;
+    const paused=()=>!!ctx&&ctx.state!=='running';
     function build(){
       if(btn||!document.body) return;
       const top=window.ARDET_RADIO_TOP||'12px';
@@ -143,54 +146,53 @@
       css.textContent=`
       #ardetRadioWrap{position:fixed;top:${top};right:${right};z-index:30;display:flex;gap:6px}
       #ardetRadioWrap button{background:rgba(238,227,203,0.55);color:#3A3026;border:none;
-        padding:7px 11px 8px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3);
+        cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3);
         backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
-        font:500 9px Montserrat,sans-serif;letter-spacing:3px;text-transform:uppercase}
-      #ardetRadioWrap button:active{background:rgba(238,227,203,0.78)}
-      #ardetRadioBtn b{color:#C23B2B}
-      #ardetPauseBtn{letter-spacing:0;min-width:34px;text-align:center;padding-left:8px;padding-right:8px}
-      #ardetRadioPanel{position:fixed;top:calc(${top} + 40px);right:${right};z-index:30;min-width:210px;
+        width:34px;height:30px;padding:0;font:16px/30px Georgia,serif;text-align:center}
+      #ardetRadioWrap button:active,#ardetRadioWrap button.on{background:rgba(238,227,203,0.82)}
+      #ardetRadioBtn b{color:#C23B2B;font-weight:normal}
+      #ardetRadioPanel{position:fixed;top:calc(${top} + 38px);right:${right};z-index:31;min-width:210px;
         background:rgba(238,227,203,0.82);color:#3A3026;
         backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
         padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none}
-      #ardetRadioPanel h4{margin:0 0 7px;font:500 8px Montserrat,sans-serif;
+      #ardetRadioPanel .hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 7px}
+      #ardetRadioPanel h4{margin:0;font:500 8px Montserrat,sans-serif;
         letter-spacing:3px;color:#C23B2B;text-transform:uppercase}
       #ardetRadioPanel button{display:block;width:100%;text-align:left;background:none;
         border:none;border-top:1px solid rgba(58,48,38,.18);padding:6px 2px;cursor:pointer;
         font:italic 15px 'Cormorant Garamond',Georgia,serif;color:#3A3026}
       #ardetRadioPanel button:hover{color:#C23B2B}
       #ardetRadioPanel button.now::before{content:'\u25c9 ';color:#C23B2B}
+      #ardetRadioPanel button.pause{display:inline-block;width:auto;border:none;padding:2px 4px;
+        font:normal 12px Georgia,serif;letter-spacing:0;color:#3A3026}
       #ardetRadioPanel .off{opacity:.45;font-style:normal;font-size:12px}`;
       document.head.appendChild(css);
       const wrap=document.createElement('div'); wrap.id='ardetRadioWrap';
       btn=document.createElement('button'); btn.id='ardetRadioBtn';
-      btn.innerHTML='<b>\u25c9</b> радио';
-      pauseBtn=document.createElement('button'); pauseBtn.id='ardetPauseBtn';
-      pauseBtn.textContent='\u275a\u275a'; pauseBtn.title='пауза';
+      btn.innerHTML='<b>\u266b</b>'; btn.title='музыка';
       panel=document.createElement('div'); panel.id='ardetRadioPanel';
-      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; refresh(); });
-      pauseBtn.addEventListener('click',()=>{           // пауза всего эфира
-        if(!ctx) return;
-        if(ctx.state==='running'){ ctx.suspend(); pauseBtn.textContent='\u25ba'; pauseBtn.title='продолжить'; }
-        else { ctx.resume(); pauseBtn.textContent='\u275a\u275a'; pauseBtn.title='пауза'; }
-      });
-      wrap.appendChild(btn); wrap.appendChild(pauseBtn);
+      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; btn.classList.toggle('on',open); refresh(); });
+      wrap.appendChild(btn);
       document.body.appendChild(wrap); document.body.appendChild(panel);
     }
     function refresh(){
       if(!panel||!open) return;
-      let h='<h4>радио · опись эфира</h4>';
-      const auto=!radioPick&&(!current||current.id===locationId||collection.size===0);
+      const pz=paused();
+      let h=`<div class="hd"><h4>опись эфира</h4><button class="pause" data-id="__pause" title="${pz?'продолжить':'пауза'}">${pz?'\u25ba':'\u275a\u275a'}</button></div>`;
       h+=`<button data-id="__auto"${(!radioPick&&current&&current.id===locationId)?' class="now"':''}>эфир локации</button>`;
       for(const id of collection){
         if(!TRACKS[id]) continue;
-        const now=current&&current.id===id&&(radioPick===null);
         h+=`<button data-id="${id}"${current&&current.id===id?' class="now"':''}>${TRACKS[id].name}</button>`;
       }
       h+='<div class="off">трек доигрывает до конца.<br>новые — находишь в локациях.</div>';
       panel.innerHTML=h;
       panel.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
         const id=b.dataset.id;
+        if(id==='__pause'){                                  // пауза всего эфира
+          if(ctx){ if(ctx.state==='running') ctx.suspend().then(refresh,refresh); else ctx.resume().then(refresh,refresh); }
+          return;
+        }
+        if(paused()&&ctx) ctx.resume();                      // выбрал трек — эфир снова идёт
         if(id==='__auto'){ radioPick=null; if(locationId&&(!current||current.id!==locationId)) hardSwitch(locationId); }
         else { radioPick=null; hardSwitch(id); }
         refresh();
