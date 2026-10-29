@@ -353,7 +353,7 @@ function intoHouse(fx, fy, wake) {
   player.sit = wake ? 1 : 0; player.visor = false;
   clearWhisper();                                    // шёпот улицы остался на улице
   muteRedNoon(true);
-  lighting.sources = houseLights(player.x + 6, player.y + 10, skyAt(phaseAt(t)));
+  lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
 }
 function outOfHouse() {
   house.leave();                                     // вышел — обулся
@@ -1277,7 +1277,7 @@ function goUnder(stairId) {
     clearWhisper();                                 // шёпот сверху остался наверху
     muteRedNoon(true);
     if (!surfaceLights) surfaceLights = lighting.sources;
-    lighting.sources = underLights(player.x + 6, player.y + 10);
+    lighting.sources = underLights(player.x + 7, player.y + 10);
     resetUnderLife();
     player.path = null; player.walkTo = null;
     camera.clampToWorld(UW, UH);
@@ -1367,7 +1367,7 @@ function stepFxHouse() {
   player.sit = player.moving ? 0 : (player.sit || 0) + ((house.seated ? 1 : 0) - (player.sit || 0)) * 0.12;
   player.visor = false;
   stepWhisper();
-  lighting.sources = houseLights(player.x + 6, player.y + 10, skyAt(phaseAt(t)));
+  lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving);
@@ -1426,7 +1426,7 @@ function stepFxUnder() {
   if (under.pourSnd) playPour();                                    // кипяток — в гранёный стакан
   stepUnderLife(player);
   const skyNow = skyAt(phaseAt(t));                                 // из сухой цистерны нилометра видно небо
-  lighting.sources = underLights(player.x + 6, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
+  lighting.sources = underLights(player.x + 7, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving);
@@ -1552,6 +1552,9 @@ function heroStep(dvx, dvy, drift = false) {
       // куда смотрит (sprites/player.js): две плоскости — вверх спиной к зрителю, вниз лицом;
       // вбок и по диагонали — в той, в какой был (слово автора 29.10: без боковых)
       if (Math.abs(my) > Math.abs(mx) * 1.15) player.face = my < 0 ? 'N' : 'S';
+      // а куда шёл — по четырём сторонам: лента помнит, стоит ли он спиной к краю (world/feedPull.js)
+      if (Math.abs(my) > Math.abs(mx) * 1.15) player.head = my < 0 ? 'N' : 'S';
+      else if (Math.abs(mx) > Math.abs(my) * 1.15) player.head = mx > 0 ? 'E' : 'W';
     }
     events.emit(E.PLAYER_MOVE, player);
     touchMoonThread(player.x + 6, player.y + 23);   // перешагнул нить Лунного — дрожит
@@ -1636,7 +1639,7 @@ function updateGame() {
     // и на льду выкатывается к краю (сверка 24.10: шесть тапов из шести — в падение)
     const v2 = player.vx * player.vx + player.vy * player.vy;
     const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
-    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.face, inBrainrotLoop());
+    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.head || player.face, inBrainrotLoop());
     // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
     // иначе сидящий у картинки позёмки съезжал и падал)
     if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }

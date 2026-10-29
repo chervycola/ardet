@@ -46,7 +46,7 @@ export function otherLights(layer, camX, camY, vw, vh, coldAt = null) {
   const out = [];
   for (const o of othersIn(layer, camX - 80, camY - 80, camX + vw + 80, camY + vh + 80)) {
     if (coldAt && coldAt(o.x, o.y) > 0.5) continue;
-    out.push({ x: o.x, y: o.y - 13, r: layer === 'under' ? 34 : 30, color: [255, 180, 80], flicker: 0.1, intensity: 0.8 });
+    out.push({ x: o.x + 1, y: o.y - 13, r: layer === 'under' ? 34 : 30, color: [255, 180, 80], flicker: 0.1, intensity: 0.8 });
   }
   return out;
 }

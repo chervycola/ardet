@@ -70,8 +70,11 @@ function put(u, v, m) {
   const pu = u + du, pv = v + dv;
   if (pv > CLIP || (SEAT && pv > -3)) return;                     // сидя низ рисует seat()
   if (inG(pu, pv)) M[(pv + OV) * GW + pu + OU] = m;
-  // верх приподнялся (вдох): нижний ряд области тянется — без щели у пояса
-  if (dv < 0 && (v === -11 || v === -19) && inG(pu, v) && !M[(v + OV) * GW + pu + OU]) M[(v + OV) * GW + pu + OU] = m;
+  // верх приподнялся (вдох): нижний ряд области тянется до соседней снизу — без щели у пояса и шеи
+  if (dv < 0 && (v === -11 || v === -19)) {
+    const lo = v + shift(v + 1)[1];
+    for (let y = pv + 1; y <= lo; y++) if (inG(pu, y) && !M[(y + OV) * GW + pu + OU]) M[(y + OV) * GW + pu + OU] = m;
+  }
 }
 const run = (u0, u1, v, m) => { for (let u = q(u0); u <= q(u1); u++) put(u, v, m); };
 function trap(v0, v1, l0, r0, l1, r1, m) {
@@ -117,7 +120,7 @@ function wrap(back) {
   run(-2, 2, -25, HR); run(-3, 3, -24, HR); trap(-23, -19, -3, 3, -3, 3, HD);
   for (const v of [-24, -20]) run(-2, 2, v, CD);                  // витки обмотки
   if (!back) { run(-2, 2, -22, FC); run(-1, 1, -21, FC); trap(-20, -18, -2, 2, -3, 3, SH); }
-  else { put(0, -23, CD); put(0, -22, CD); run(-1, 1, -21, CD); put(-1, -19, CD); put(-1, -18, CD); }   // узел и хвост обмотки
+  else { run(-3, 3, -18, HD); put(0, -23, CD); put(0, -22, CD); run(-1, 1, -21, CD); put(-1, -19, CD); put(-1, -18, CD); }   // шея обмотки, узел и хвост
 }
 
 // ── крои: вид к зрителю или спиной (back); возвращают огонёк на груди [u, v] (null — не видно);
@@ -166,7 +169,7 @@ CUTS.duster = {
     for (let v = -16; v <= -11; v++) { put(-4, v, DP); put(4, v, DP); }
     const au = P.walking ? P.foot : 0;
     trap(-16, -11 - (au > 0 ? 1 : 0), -6, -5, -6, -5, CL); put(-6, -10 - (au > 0 ? 1 : 0), HN);
-    trap(-16, -11 - (au < 0 ? 1 : 0), 5, 6, 5, 6, CL); put(6, -10 - (au < 0 ? 1 : 0), HN);
+    if (!(P.visorK >= 0.5)) { trap(-16, -11 - (au < 0 ? 1 : 0), 5, 6, 5, 6, CL); put(6, -10 - (au < 0 ? 1 : 0), HN); }   // ладонь козырьком — эта рука поднята
     run(-4, 4, -11, DP); if (!back) put(0, -11, BK);              // пояс, пряжка
     return back ? null : [0, -15];
   },
@@ -174,7 +177,7 @@ CUTS.duster = {
 
 // паломник: ряса до земли, верёвочный пояс, котомка через плечо, посох выше капюшона
 CUTS.pilgrim = {
-  sleeve: CL, seat: 'robe', cloth: CL, staff: true,
+  sleeve: CL, seat: 'robe', cloth: CL, staff: true, bag: true,
   front(P, back) {
     trap(-10, 0, -5, 5, -6, 6, CL); hem(P, -6, 6, CL);
     folds([-2], -7, -3, CD); folds([3], -5, -1, CD);
@@ -184,13 +187,13 @@ CUTS.pilgrim = {
     for (let v = -27; v <= 0; v++) put(su, v, ST); put(su + d, -27, ST); put(su + d, -26, ST);
     // рукав колоколом, что держит посох, — согнут; другой висит
     trapD(-16, -13, -5 * d, -6 * d, -6 * d, -7 * d, CL); put(-7 * d, -14, HN); put(-6 * d, -12, DP);
-    trapD(-16, -10, 5 * d, 6 * d, 6 * d, 7 * d, CL); run(Math.min(6 * d, 7 * d), Math.max(6 * d, 7 * d), -10, DP);
+    if (!(P.visorK >= 0.5)) { trapD(-16, -10, 5 * d, 6 * d, 6 * d, 7 * d, CL); run(Math.min(6 * d, 7 * d), Math.max(6 * d, 7 * d), -10, DP); }
     // пояс верёвкой, конец висит
     run(-5, 5, -11, RP);
     if (!back) { for (let v = -10; v <= -6; v++) put(1 + (v === -8 ? 1 : 0), v, RP); }
     // лямка наискось через грудь и котомка у бедра
     for (let i = 0; i <= 8; i++) put((-4 + i) * d, -17 + q(i * 0.75), RP);
-    trapD(-11, -7, 5 * d, 8 * d, 5 * d, 8 * d, BG); run(Math.min(5 * d, 8 * d), Math.max(5 * d, 8 * d), -10, DP);
+    if (!(P.sit > 0.5)) { trapD(-11, -7, 5 * d, 8 * d, 5 * d, 8 * d, BG); run(Math.min(5 * d, 8 * d), Math.max(5 * d, 8 * d), -10, DP); }   // сидя — котомка на земле
     return back ? null : [0, -15];
   },
 };
@@ -203,16 +206,16 @@ CUTS.cape = {
     const pl = hemPush(P);
     // рубаха до бедра, пояс; предплечья из-под пелерины, кисти
     trap(-12, -6, -4, 4, -5, 5, TR);
-    if (P.walking) run(P.foot > 0 ? -5 : 1, P.foot > 0 ? -1 : 5, -4 - (pl ? 0 : 1), TR);
+    if (P.walking) { const a = P.foot > 0 ? -5 : 1, b = P.foot > 0 ? -1 : 5; run(a, b, -5, TR); if (pl) run(a, b, -4, TR); }   // шагнувшая пола рубахи — от подола вниз
     run(-4, 4, -9, DP); if (!back) put(0, -9, BK);
     const au = P.walking ? P.foot : 0;
     trap(-12, -10 - (au > 0 ? 1 : 0), -6, -5, -6, -5, TR); put(-6, -9 - (au > 0 ? 1 : 0), HN);
-    trap(-12, -10 - (au < 0 ? 1 : 0), 5, 6, 5, 6, TR); put(6, -9 - (au < 0 ? 1 : 0), HN);
+    if (!(P.visorK >= 0.5)) { trap(-12, -10 - (au < 0 ? 1 : 0), 5, 6, 5, 6, TR); put(6, -9 - (au < 0 ? 1 : 0), HN); }
     // пелерина: край зубцами; спереди — разрез, в нём огонёк; тень от края на рубахе
     run(-4, 4, -18, HD); run(-5, 5, -17, CL); trap(-16, -13, -6, 6, -7, 7, CL);
     for (const u of [-7, -6, -3, -2, 1, 2, 5, 6]) put(u, -12, CL);
     for (const u of [-5, -4, -1, 0, 3, 4]) put(u, -12, DP);
-    if (!back) for (let v = -16; v <= -12; v++) { put(0, v, DP); if (v >= -14) put(1, v, DP); }
+    if (!back) for (let v = -16; v <= -12; v++) put(0, v, DP);    // разрез — по оси, в нём огонёк
     else for (let v = -16; v <= -13; v++) put(0, v, CD);
     return back ? null : [0, -15];
   },
@@ -254,7 +257,7 @@ CUTS.tiers = {
     run(-4, 4, -18, HD); run(-6, 6, -17, LT); trap(-16, -14, -6, 6, -7, 7, CL);
     for (const [u0, u1] of [[-7, -6], [-4, -3], [3, 4], [6, 7]]) run(u0, u1, -13, CL), run(u0, u1, -12, CL);
     for (const u of [-5, -2, -1, 1, 2, 5]) put(u, -13, DP);
-    if (!back) for (let v = -16; v <= -13; v++) { put(0, v, DP); if (v >= -15) put(1, v, DP); }
+    if (!back) for (let v = -16; v <= -13; v++) put(0, v, DP);    // разрез — по оси
     else for (let v = -16; v <= -9; v++) put(0, v, CD);
     return back ? null : [0, -15];
   },
@@ -316,6 +319,7 @@ export function drawCut(player, P, name) {
   SEAT = 0;                                                       // низ сидящего — на месте, без сдвига
   if (seated) seat(C.seat || 'robe', C.cloth || CL);
   if (seated && C.staff) for (let v = -2; v <= 0; v++) put(back ? 8 : -8, v, ST);   // посох сидящего — до земли
+  if (seated && C.bag) { trapD(-3, 0, 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), BG); }   // котомка — рядом на земле
   // тень у земли
   X.globalAlpha = 0.35; X.fillStyle = NI; X.fillRect(P.x + 1, P.y + 23, 13, 1); X.globalAlpha = 1;
   // свет и кромки по сетке → холст (ряд за рядом, одинаковые подряд — одним прямоугольником)
@@ -341,8 +345,10 @@ export function drawCut(player, P, name) {
   }
   // спиной: отсвет огонька по обоим краям ткани
   if (back && !cold) {
-    const gh = P.flick > 0.2 ? 3 : 2, [lx, ly] = scr(-6, -15), [rx] = scr(6, -15);
-    X.fillStyle = GL; X.fillRect(lx, ly, 1, gh); X.fillRect(rx, ly, 1, gh);
+    // по краю ткани: крайняя клетка ряда, не дальше шести от оси (у номада плечи уже)
+    const gh = P.flick > 0.2 ? 3 : 2, [, ly] = scr(6, -15), gv = ly - PY;
+    X.fillStyle = GL;
+    for (const sg of [-1, 1]) { let u = 6 * sg; while (u && !at(u, gv)) u -= sg; if (u) X.fillRect(PX + u, ly, 1, gh); }
   }
   if (heart) { const [fx, fy] = scr(heart[0], heart[1]); ember(player, P, fx, fy); }
   if (!back && P.visorK < 1) eyes(P, cold);

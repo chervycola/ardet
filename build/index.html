@@ -904,7 +904,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='4a45b03 · 2026-10-29';console.log('[оттиск]', '4a45b03 · 2026-10-29');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='b67df5c · 2026-10-29';console.log('[оттиск]', 'b67df5c · 2026-10-29');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -32724,9 +32724,13 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             return; // сидя низ рисует seat()
         if (inG(pu, pv))
             M[(pv + OV) * GW + pu + OU] = m;
-        // верх приподнялся (вдох): нижний ряд области тянется — без щели у пояса
-        if (dv < 0 && (v === -11 || v === -19) && inG(pu, v) && !M[(v + OV) * GW + pu + OU])
-            M[(v + OV) * GW + pu + OU] = m;
+        // верх приподнялся (вдох): нижний ряд области тянется до соседней снизу — без щели у пояса и шеи
+        if (dv < 0 && (v === -11 || v === -19)) {
+            const lo = v + shift(v + 1)[1];
+            for (let y = pv + 1; y <= lo; y++)
+                if (inG(pu, y) && !M[(y + OV) * GW + pu + OU])
+                    M[(y + OV) * GW + pu + OU] = m;
+        }
     }
     function trap(v0, v1, l0, r0, l1, r1, m) {
         for (let v = v0; v <= v1; v++) {
@@ -32793,12 +32797,13 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             trap(-20, -18, -2, 2, -3, 3, SH);
         }
         else {
+            run(-3, 3, -18, HD);
             put(0, -23, CD);
             put(0, -22, CD);
             run(-1, 1, -21, CD);
             put(-1, -19, CD);
             put(-1, -18, CD);
-        } // узел и хвост обмотки
+        } // шея обмотки, узел и хвост
     }
     // складки — короткими чертами, не точками
     function folds(us, v0, v1, m) { for (const u of us)
@@ -32927,6 +32932,9 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         if (seated && C.staff)
             for (let v = -2; v <= 0; v++)
                 put(back ? 8 : -8, v, ST); // посох сидящего — до земли
+        if (seated && C.bag) {
+            trapD(-3, 0, 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), BG);
+        } // котомка — рядом на земле
         // тень у земли
         context_js_3.X.globalAlpha = 0.35;
         context_js_3.X.fillStyle = NI;
@@ -32972,10 +32980,16 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         }
         // спиной: отсвет огонька по обоим краям ткани
         if (back && !cold) {
-            const gh = P.flick > 0.2 ? 3 : 2, [lx, ly] = scr(-6, -15), [rx] = scr(6, -15);
+            // по краю ткани: крайняя клетка ряда, не дальше шести от оси (у номада плечи уже)
+            const gh = P.flick > 0.2 ? 3 : 2, [, ly] = scr(6, -15), gv = ly - PY;
             context_js_3.X.fillStyle = GL;
-            context_js_3.X.fillRect(lx, ly, 1, gh);
-            context_js_3.X.fillRect(rx, ly, 1, gh);
+            for (const sg of [-1, 1]) {
+                let u = 6 * sg;
+                while (u && !at(u, gv))
+                    u -= sg;
+                if (u)
+                    context_js_3.X.fillRect(PX + u, ly, 1, gh);
+            }
         }
         if (heart) {
             const [fx, fy] = scr(heart[0], heart[1]);
@@ -33068,8 +33082,10 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     const au = P.walking ? P.foot : 0;
                     trap(-16, -11 - (au > 0 ? 1 : 0), -6, -5, -6, -5, CL);
                     put(-6, -10 - (au > 0 ? 1 : 0), HN);
-                    trap(-16, -11 - (au < 0 ? 1 : 0), 5, 6, 5, 6, CL);
-                    put(6, -10 - (au < 0 ? 1 : 0), HN);
+                    if (!(P.visorK >= 0.5)) {
+                        trap(-16, -11 - (au < 0 ? 1 : 0), 5, 6, 5, 6, CL);
+                        put(6, -10 - (au < 0 ? 1 : 0), HN);
+                    } // ладонь козырьком — эта рука поднята
                     run(-4, 4, -11, DP);
                     if (!back)
                         put(0, -11, BK); // пояс, пряжка
@@ -33078,7 +33094,7 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             };
             // паломник: ряса до земли, верёвочный пояс, котомка через плечо, посох выше капюшона
             CUTS.pilgrim = {
-                sleeve: CL, seat: 'robe', cloth: CL, staff: true,
+                sleeve: CL, seat: 'robe', cloth: CL, staff: true, bag: true,
                 front(P, back) {
                     trap(-10, 0, -5, 5, -6, 6, CL);
                     hem(P, -6, 6, CL);
@@ -33097,8 +33113,10 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     trapD(-16, -13, -5 * d, -6 * d, -6 * d, -7 * d, CL);
                     put(-7 * d, -14, HN);
                     put(-6 * d, -12, DP);
-                    trapD(-16, -10, 5 * d, 6 * d, 6 * d, 7 * d, CL);
-                    run(Math.min(6 * d, 7 * d), Math.max(6 * d, 7 * d), -10, DP);
+                    if (!(P.visorK >= 0.5)) {
+                        trapD(-16, -10, 5 * d, 6 * d, 6 * d, 7 * d, CL);
+                        run(Math.min(6 * d, 7 * d), Math.max(6 * d, 7 * d), -10, DP);
+                    }
                     // пояс верёвкой, конец висит
                     run(-5, 5, -11, RP);
                     if (!back) {
@@ -33108,8 +33126,10 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     // лямка наискось через грудь и котомка у бедра
                     for (let i = 0; i <= 8; i++)
                         put((-4 + i) * d, -17 + q(i * 0.75), RP);
-                    trapD(-11, -7, 5 * d, 8 * d, 5 * d, 8 * d, BG);
-                    run(Math.min(5 * d, 8 * d), Math.max(5 * d, 8 * d), -10, DP);
+                    if (!(P.sit > 0.5)) {
+                        trapD(-11, -7, 5 * d, 8 * d, 5 * d, 8 * d, BG);
+                        run(Math.min(5 * d, 8 * d), Math.max(5 * d, 8 * d), -10, DP);
+                    } // сидя — котомка на земле
                     return back ? null : [0, -15];
                 },
             };
@@ -33121,16 +33141,22 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     const pl = hemPush(P);
                     // рубаха до бедра, пояс; предплечья из-под пелерины, кисти
                     trap(-12, -6, -4, 4, -5, 5, TR);
-                    if (P.walking)
-                        run(P.foot > 0 ? -5 : 1, P.foot > 0 ? -1 : 5, -4 - (pl ? 0 : 1), TR);
+                    if (P.walking) {
+                        const a = P.foot > 0 ? -5 : 1, b = P.foot > 0 ? -1 : 5;
+                        run(a, b, -5, TR);
+                        if (pl)
+                            run(a, b, -4, TR);
+                    } // шагнувшая пола рубахи — от подола вниз
                     run(-4, 4, -9, DP);
                     if (!back)
                         put(0, -9, BK);
                     const au = P.walking ? P.foot : 0;
                     trap(-12, -10 - (au > 0 ? 1 : 0), -6, -5, -6, -5, TR);
                     put(-6, -9 - (au > 0 ? 1 : 0), HN);
-                    trap(-12, -10 - (au < 0 ? 1 : 0), 5, 6, 5, 6, TR);
-                    put(6, -9 - (au < 0 ? 1 : 0), HN);
+                    if (!(P.visorK >= 0.5)) {
+                        trap(-12, -10 - (au < 0 ? 1 : 0), 5, 6, 5, 6, TR);
+                        put(6, -9 - (au < 0 ? 1 : 0), HN);
+                    }
                     // пелерина: край зубцами; спереди — разрез, в нём огонёк; тень от края на рубахе
                     run(-4, 4, -18, HD);
                     run(-5, 5, -17, CL);
@@ -33140,11 +33166,8 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     for (const u of [-5, -4, -1, 0, 3, 4])
                         put(u, -12, DP);
                     if (!back)
-                        for (let v = -16; v <= -12; v++) {
-                            put(0, v, DP);
-                            if (v >= -14)
-                                put(1, v, DP);
-                        }
+                        for (let v = -16; v <= -12; v++)
+                            put(0, v, DP); // разрез — по оси, в нём огонёк
                     else
                         for (let v = -16; v <= -13; v++)
                             put(0, v, CD);
@@ -33203,11 +33226,8 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                     for (const u of [-5, -2, -1, 1, 2, 5])
                         put(u, -13, DP);
                     if (!back)
-                        for (let v = -16; v <= -13; v++) {
-                            put(0, v, DP);
-                            if (v >= -15)
-                                put(1, v, DP);
-                        }
+                        for (let v = -16; v <= -13; v++)
+                            put(0, v, DP); // разрез — по оси
                     else
                         for (let v = -16; v <= -9; v++)
                             put(0, v, CD);
@@ -60402,7 +60422,7 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
     exports_154("usedWet", usedWet);
     function drawPuddles(ctx, camX, camY, vw, vh, locations, player) {
         if (wet > 0) {
-            const gx = Math.round(player.x + 6), gy = Math.round(player.y + 36); // огонь груди, отражённый под ногами
+            const gx = Math.round(player.x + 7), gy = Math.round(player.y + 36); // огонь груди, отражённый под ногами
             forVisible(camX, camY, vw, vh, locations, (p, s) => {
                 // гладь: вода светлее земли — в ней мгла неба; эллипс построчно, пикселями
                 let hwLast = 0;
@@ -66469,7 +66489,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         for (const o of net_js_1.othersIn(layer, camX - 80, camY - 80, camX + vw + 80, camY + vh + 80)) {
             if (coldAt && coldAt(o.x, o.y) > 0.5)
                 continue;
-            out.push({ x: o.x, y: o.y - 13, r: layer === 'under' ? 34 : 30, color: [255, 180, 80], flicker: 0.1, intensity: 0.8 });
+            out.push({ x: o.x + 1, y: o.y - 13, r: layer === 'under' ? 34 : 30, color: [255, 180, 80], flicker: 0.1, intensity: 0.8 });
         }
         return out;
     }
@@ -68233,7 +68253,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.visor = false;
         whisper_js_4.clear(); // шёпот улицы остался на улице
         redNoon_js_7.muteRedNoon(true);
-        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 6, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
     }
     function outOfHouse() {
         house_js_2.house.leave(); // вышел — обулся
@@ -69276,7 +69296,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             redNoon_js_7.muteRedNoon(true);
             if (!surfaceLights)
                 surfaceLights = lighting_js_1.lighting.sources;
-            lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 6, player.y + 10);
+            lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 7, player.y + 10);
             underside_js_5.resetUnderLife();
             player.path = null;
             player.walkTo = null;
@@ -69407,7 +69427,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.sit = player.moving ? 0 : (player.sit || 0) + ((house_js_2.house.seated ? 1 : 0) - (player.sit || 0)) * 0.12;
         player.visor = false;
         whisper_js_4.stepWhisper();
-        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 6, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
         metaFx_js_2.dyingPixels.update();
         metaFx_js_2.screenMoss.update(player.moving);
@@ -69489,7 +69509,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             audio_js_12.playPour(); // кипяток — в гранёный стакан
         underside_js_5.stepUnderLife(player);
         const skyNow = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)); // из сухой цистерны нилометра видно небо
-        lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 6, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
+        lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 7, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
         metaFx_js_2.dyingPixels.update();
         metaFx_js_2.screenMoss.update(player.moving);
@@ -69621,6 +69641,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 // вбок и по диагонали — в той, в какой был (слово автора 29.10: без боковых)
                 if (Math.abs(my) > Math.abs(mx) * 1.15)
                     player.face = my < 0 ? 'N' : 'S';
+                // а куда шёл — по четырём сторонам: лента помнит, стоит ли он спиной к краю (world/feedPull.js)
+                if (Math.abs(my) > Math.abs(mx) * 1.15)
+                    player.head = my < 0 ? 'N' : 'S';
+                else if (Math.abs(mx) > Math.abs(my) * 1.15)
+                    player.head = mx > 0 ? 'E' : 'W';
             }
             events_js_8.events.emit(events_js_8.E.PLAYER_MOVE, player);
             moonthread_js_1.touchMoonThread(player.x + 6, player.y + 23); // перешагнул нить Лунного — дрожит
@@ -69740,7 +69765,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // и на льду выкатывается к краю (сверка 24.10: шесть тапов из шести — в падение)
             const v2 = player.vx * player.vx + player.vy * player.vy;
             const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
-            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_1.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), 2.4 * S.max, dvx, dvy, player.face, brainrot_js_1.inLoop());
+            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_1.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), 2.4 * S.max, dvx, dvy, player.head || player.face, brainrot_js_1.inLoop());
             // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
             // иначе сидящий у картинки позёмки съезжал и падал)
             if (!steering) {

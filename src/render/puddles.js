@@ -125,7 +125,7 @@ export function usedWet() { if (wetSteps > 0) wetSteps--; }
 
 export function drawPuddles(ctx, camX, camY, vw, vh, locations, player) {
   if (wet > 0) {
-    const gx = Math.round(player.x + 6), gy = Math.round(player.y + 36);   // огонь груди, отражённый под ногами
+    const gx = Math.round(player.x + 7), gy = Math.round(player.y + 36);   // огонь груди, отражённый под ногами
     forVisible(camX, camY, vw, vh, locations, (p, s) => {
       // гладь: вода светлее земли — в ней мгла неба; эллипс построчно, пикселями
       let hwLast = 0;

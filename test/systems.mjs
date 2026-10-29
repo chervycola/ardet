@@ -2587,7 +2587,10 @@ setCtx(ctx);
       const a = draw(false), b = draw(true);
       const x1 = L => Math.max(...L.filter(([k]) => k === 'fillRect').map(([, x, , w]) => x + w));
       assert(x1(b) >= x1(a), `локоть не в сторону: ${x1(a)} → ${x1(b)}`);
-      assert(b.length > a.length + 6, 'ладони не видно');
+      // рука поднята, а не дорисована: опущенной при козырьке нет, зато над плечами — новые клетки
+      const cells = L => { const s = new Set(); for (const [k, x, y, w, h] of L) if (k === 'fillRect') for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) s.add(`${x + i},${y + j}`); return s; };
+      const ca = cells(a), up = [...cells(b)].filter(c => !ca.has(c) && +c.split(',')[1] < 101);
+      assert(up.length >= 6, `ладони не видно: над плечами ${up.length} новых клеток`);
     });
   }
   const WND = (await imp('world/wind.js')).wind;
@@ -3357,6 +3360,9 @@ setCtx(ctx);
     // в игре вбок фигура не поворачивается: лицо меняется только ходом вверх или вниз
     const main = FS.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
     assert(!/player\.face = mx > 0 \? 'E' : 'W'/.test(main), 'вбок — снова профиль');
+    // свет огонька — на оси фигуры (x+7) и в доме, и под землёй; лента помнит, куда шёл, по четырём сторонам
+    assert(!/(house|under)Lights\(player\.x \+ 6/.test(main), 'свет огонька в доме или под землёй — не на оси');
+    assert(/pullVector\([^;]*player\.head \|\| player\.face/.test(main), 'лента не знает, куда шёл: спиной к краю на востоке и западе');
     const r = mk('S'); idle(r, 1, { reduced: true }); r.face = 'N'; idle(r, 1, { reduced: true });
     eq(r.gait.view, 'N', '«меньше движения» — оборот сразу');
   });
@@ -3404,7 +3410,7 @@ setCtx(ctx);
     assert(Number.isFinite(toeY(cb)) && toeY(fo) <= toeY(cb) - 2, `нога пелерины не уехала назад: ${toeY(cb)} → ${toeY(fo)}`);
   });
   const WR = await imp('sprites/wardrobe.js');
-  test('гардероб: каждый крой — лицом и спиной, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки; ноги — только у пелерины', () => {
+  test('гардероб: каждый крой — лицом и спиной, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки; ноги — только у пелерины; дыхание ткань не рвёт; отсвет спиной — по краю ткани', () => {
     const cuts = Object.keys(WR.CUTS);
     assert(cuts.length >= 5, 'кроёв меньше пяти: ' + cuts);
     eq(WR.CUT, 'duster', 'без ?cut= — пыльник');
@@ -3452,6 +3458,24 @@ setCtx(ctx);
       for (const kind of ['stone', 'pit', 'fossil']) for (const face of ['E', 'W', 'S']) { const f = mk(face); f.cut = cut; idle(f, 2); f.gait.trip = { kind, p: 1, k: 0.3, dir: face === 'W' ? -1 : 1 }; fr(f, kind + face); }
       // тени чужих и маски тени — без походки
       for (const o of [{ moving: false }, { moving: true }, { sit: 1 }, { face: 'N', moving: true }]) fr({ x: 1000, y: 1000, vx: 0, vy: 0, dir: 1, cut, ...o }, 'без походки');
+      // дыхание не рвёт ткань: плечи и капюшон поднялись — щелей поперёк фигуры не прибавилось
+      // (у выемок рукава и ярусов — на точку-две); спиной голова не висит отдельно от плеч
+      const gaps = L => { const col = new Map(); for (const [, X, Y, Wd, H] of L) for (let i = 0; i < Wd; i++) for (let j = 0; j < H; j++) { if (!col.has(X + i)) col.set(X + i, new Set()); col.get(X + i).add(Y + j); }
+        let k = 0; for (const c of col.values()) { const a = Math.min(...c), b = Math.max(...c); for (let Y = a; Y <= b; Y++) if (!c.has(Y)) k++; } return k; };
+      const rest = {};
+      for (const face of ['S', 'N']) {
+        // тот же кадр (ветер, часы) — без дыхания и на подъёме вдоха: дышит по gait.calm (sprites/player.js)
+        const f = mk(face); f.cut = cut; idle(f, 30); f.gait.calm = 0; rest[face] = gaps(rec(f));
+        let most = 0; for (const c of [60, 80, 100, 130, 160, 190]) { f.gait.calm = c; most = Math.max(most, gaps(rec(f))); }
+        assert(most <= rest[face] + 3, `${cut} ${face}: дыхание рвёт ткань — щелей ${rest[face]} → ${most}`);
+      }
+      assert(rest.N <= rest.S + 2, `${cut}: спиной голова висит отдельно — щелей ${rest.S} лицом, ${rest.N} спиной`);
+      // спиной отсвет — по краю ткани, а не в воздухе рядом
+      { const b = mk('N'); b.cut = cut; idle(b, 30); const L = rec(b), cloth = new Set();
+        for (const [c, X, Y, Wd, H] of L) if (c !== '#5a4232') for (let i = 0; i < Wd; i++) for (let j = 0; j < H; j++) cloth.add(`${X + i},${Y + j}`);
+        const glow = L.filter(([c]) => c === '#5a4232');
+        assert(glow.length === 2, `${cut}: спиной отсвета по краям нет`);
+        for (const [, X, Y] of glow) assert(cloth.has(`${X},${Y}`), `${cut}: отсвет спиной вне ткани ${X - Math.floor(b.x)},${Y - Math.floor(b.y)}`); }
       // спиной огонька не видно; лицом — виден
       const n = mk('N'); n.cut = cut; idle(n, 30);
       assert(!rec(n).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd * H >= 2), `${cut}: спиной огонёк виден`);
