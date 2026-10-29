@@ -9,8 +9,9 @@
 // · Остановка: шаг дошагивается до опоры, вес оседает, подол по инерции уходит вперёд и
 //   опадает — первым порядком, без перелёта. Покой (calm) копится с остановки: от него
 //   начинается дыхание — не с глобального часа.
-// · Оборот: видимая сторона (view) идёт к player.face через три четверти, по 45° за пять
-//   тиков, последний — за восемь (доворот); кругом — S↔N через бок по ходу, E↔W через лицо.
+// · Оборот: видимая сторона (view) — одна из двух плоскостей, лицом (S) или спиной (N)
+//   (слово автора 29.10: «только две плоскости — на нас и от нас, без боковых»); к
+//   player.face — сразу, после доворота в восемь тиков, без профиля и трёх четвертей.
 // · Сесть — сперва обернулся к зрителю, потом садится за ~18 тиков; встаёт за ~12. Ладонь
 //   козырьком — тоже после оборота, за восемь тиков.
 // · Оступился: вид и ход позы (world/stumble.js) — только наверху (main.js).
@@ -22,30 +23,22 @@
 // ═══════════════════════════════════════
 import { wind } from './wind.js';
 
-export const VIEWS = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'];  // по кругу: 45° на позицию
-export const TURN_HOLD = 5, TURN_LAST = 8;                          // тиков на 45°; доворот
+export const VIEWS = ['S', 'N'];                                   // лицом к нам и спиной
+export const TURN_LAST = 8;                                         // доворот: тиков до смены плоскости
 const TELEPORT = 12;                                               // дальше — перенос, не шаг
 const HEAVY = { sand: 1, mud: 1, swamp: 1, water: 1, snow: 1 };    // нога вязнет — шаг тяжелее
 const SUNK = { water: 1, swamp: 1, sand: 1, snow: 1, moss: 1 };    // ноги не видно: вброд, в зыби, в снегу, во мху
 
-// куда смотрит фигура в игре (sprites/player.js: сидя и с ладонью — лицом к зрителю)
-const wantView = p => (p.visor || (p.sit || 0) > 0.5 ? 'S' : (VIEWS.includes(p.face) ? p.face : 'S'));
+// куда смотрит фигура в игре (sprites/player.js: сидя и с ладонью — лицом к зрителю); всё, что
+// «на север», — спиной, прочее — лицом
+const wantView = p => (p.visor || (p.sit || 0) > 0.5 ? 'S' : (typeof p.face === 'string' && p.face.includes('N') ? 'N' : 'S'));
 export function gaitOf(p) {
   if (!p.gait) p.gait = { phase: 0, amp: 0, hem: 0, vx: 0, settle: 0, calm: 0, view: wantView(p), path: [], hold: 0, lx: null, ly: null, sitV: p.sit || 0, visorK: p.visor ? 1 : 0, trip: null, heavy: 0, feet: true, run: 0, glide: 0, red: false };
   return p.gait;
 }
-// путь между видами по кругу: короче; кругом — S↔N через бок по ходу, E↔W через лицо
-export function turnPath(from, to, dir = 1) {
-  const a = VIEWS.indexOf(from), b = VIEWS.indexOf(to);
-  if (a < 0 || b < 0 || a === b) return [];
-  let d = (b - a + 8) % 8;
-  if (d === 4) {
-    if (from === 'E' || from === 'W') d = from === 'E' ? -4 : 4;    // E→S→W, W→S→E: через лицо
-    else d = (from === 'S') === (dir > 0) ? 4 : -4;                 // S→E→N при ходе вправо
-  } else if (d > 4) d -= 8;
-  const out = [], s = Math.sign(d);
-  for (let i = 1; i <= Math.abs(d); i++) out.push(VIEWS[(a + s * i + 8) % 8]);
-  return out;
+// путь между видами: из лица в спину и обратно — одним шагом, без боковых
+export function turnPath(from, to) {
+  return VIEWS.includes(from) && VIEWS.includes(to) && from !== to ? [to] : [];
 }
 // перенос, который не прыжок (шов петли ленты, main.js): точка отсчёта едет вместе с фигурой
 export function shiftGait(p, dx, dy) {
@@ -101,8 +94,8 @@ export function stepGait(p, o = {}) {
   if (red) { g.view = want; g.path = []; }
   else {
     const tail = g.path.length ? g.path[g.path.length - 1] : g.view;
-    if (tail !== want) { g.path = turnPath(g.view, want, p.dir || 1); g.hold = 0; }
-    if (g.path.length && ++g.hold >= (g.path.length === 1 ? TURN_LAST : TURN_HOLD)) { g.view = g.path.shift(); g.hold = 0; }
+    if (tail !== want) { g.path = turnPath(g.view, want); g.hold = 0; }
+    if (g.path.length && ++g.hold >= TURN_LAST) { g.view = g.path.shift(); g.hold = 0; }
   }
   // сесть — когда уже лицом к зрителю, за ~18 тиков; встать — за ~12
   const s = p.sit || 0;

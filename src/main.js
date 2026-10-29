@@ -641,7 +641,7 @@ function render() {
 
   // ── LIGHT: additive lighting ──
   if (lighting.sources[0]) {
-    lighting.sources[0].x = player.x + 6;
+    lighting.sources[0].x = player.x + 7;                    // огонёк — на оси фигуры (sprites/wardrobe.js)
     lighting.sources[0].y = player.y + 10;
   }
   // Readability floor: night was 0.28 (28% brightness through the
@@ -802,7 +802,7 @@ function stepFx() {
   lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= RINGS ? 0.25 : 0)));
   toxic.step(camX, camY, locations, wind);
   // частицы света, умирающие пиксели, мох по краям экрана
-  if (lighting.sources[0]) { lighting.sources[0].x = player.x + 6; lighting.sources[0].y = player.y + 10; }
+  if (lighting.sources[0]) { lighting.sources[0].x = player.x + 7; lighting.sources[0].y = player.y + 10; }
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving);
@@ -1549,10 +1549,9 @@ function heroStep(dvx, dvy, drift = false) {
     // сносит лентой, а сам стоит — не разворачивается (world/feedPull.js)
     if (!drift) {
       if (mx > 0.15) player.dir = 1; else if (mx < -0.15) player.dir = -1;
-      // куда смотрит (sprites/player.js): вверх — спиной к зрителю, вниз — лицом, вбок — в профиль;
-      // по диагонали — как был (слово автора)
+      // куда смотрит (sprites/player.js): две плоскости — вверх спиной к зрителю, вниз лицом;
+      // вбок и по диагонали — в той, в какой был (слово автора 29.10: без боковых)
       if (Math.abs(my) > Math.abs(mx) * 1.15) player.face = my < 0 ? 'N' : 'S';
-      else if (Math.abs(mx) > Math.abs(my) * 1.15) player.face = mx > 0 ? 'E' : 'W';
     }
     events.emit(E.PLAYER_MOVE, player);
     touchMoonThread(player.x + 6, player.y + 23);   // перешагнул нить Лунного — дрожит

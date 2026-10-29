@@ -3289,6 +3289,7 @@ setCtx(ctx);
 {
   const GT = await imp('world/gait.js');
   const PL = await imp('sprites/player.js');
+  const FS = await import('fs');
   const mk = face => ({ x: 1000, y: 1000, vx: 0, vy: 0, face, dir: 1, still: true, sit: 0 });
   const go = (p, n, dx, dy = 0, o = {}) => { for (let i = 0; i < n; i++) { p.vx = dx; p.vy = dy; p.x += dx; p.y += dy; p.still = false; tick(); GT.stepGait(p, { stepping: true, surf: 'ground', ...o }); } };
   const idle = (p, n, o = {}) => { for (let i = 0; i < n; i++) { p.still = true; tick(); GT.stepGait(p, o); } };
@@ -3341,35 +3342,36 @@ setCtx(ctx);
     const wd = mk('S'); idle(wd, 30, { surf: 'water' });
     assert(!rec(wd).some(([c]) => c === '#5c564e'), 'вброд торчат носки');
   });
-  test('походка: оборот — через три четверти; кругом S↔N через бок по ходу, E↔W через лицо; «меньше движения» — сразу', () => {
-    eq(GT.turnPath('S', 'E').join(), 'SE,E');
-    eq(GT.turnPath('E', 'W').join(), 'SE,S,SW,W', 'E→W через лицо к зрителю');
-    eq(GT.turnPath('W', 'E').join(), 'SW,S,SE,E');
-    eq(GT.turnPath('S', 'N', 1).join(), 'SE,E,NE,N', 'S→N при ходе вправо — через правый бок');
-    eq(GT.turnPath('S', 'N', -1).join(), 'SW,W,NW,N');
-    const p = mk('E'); idle(p, 3);
-    p.face = 'W';
+  test('походка: две плоскости — лицом и спиной; оборот сразу, после доворота; вбок — как был; «меньше движения» — сразу', () => {
+    eq(GT.VIEWS.join(), 'S,N', 'видов два: к нам и от нас (слово автора 29.10)');
+    eq(GT.turnPath('S', 'N').join(), 'N'); eq(GT.turnPath('N', 'S').join(), 'S'); eq(GT.turnPath('S', 'S').length, 0);
+    const p = mk('S'); idle(p, 3);
+    p.face = 'N';
     const seen = [];
-    for (let i = 0; i < 30; i++) { idle(p, 1); if (seen[seen.length - 1] !== p.gait.view) seen.push(p.gait.view); }
-    eq(seen.join(), 'E,SE,S,SW,W', 'виды по пути');
-    const r = mk('E'); idle(r, 1, { reduced: true }); r.face = 'W'; idle(r, 1, { reduced: true });
-    eq(r.gait.view, 'W', '«меньше движения» — оборот сразу');
+    let at = -1;
+    for (let i = 0; i < 30; i++) { idle(p, 1); if (seen[seen.length - 1] !== p.gait.view) { seen.push(p.gait.view); if (p.gait.view === 'N') at = i; } }
+    eq(seen.join(), 'S,N', 'виды по пути — без боковых');
+    assert(at >= GT.TURN_LAST - 2 && at <= GT.TURN_LAST + 1, 'доворот не в срок: ' + at);
+    // чужой старый клиент шлёт E/W и диагонали — рисуется своей плоскостью
+    for (const [f, v] of [['E', 'S'], ['W', 'S'], ['NE', 'N'], ['NW', 'N'], ['SW', 'S']]) { const q = mk(f); idle(q, 30); eq(q.gait.view, v, f); }
+    // в игре вбок фигура не поворачивается: лицо меняется только ходом вверх или вниз
+    const main = FS.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+    assert(!/player\.face = mx > 0 \? 'E' : 'W'/.test(main), 'вбок — снова профиль');
+    const r = mk('S'); idle(r, 1, { reduced: true }); r.face = 'N'; idle(r, 1, { reduced: true });
+    eq(r.gait.view, 'N', '«меньше движения» — оборот сразу');
   });
-  test('походка: рисунок — носок на опоре вбок впереди, стоя лицом — оба носка; спиной огонька нет; в рамке маски', () => {
-    const p = mk('E'); idle(p, 2); go(p, 200, 2.6);
-    let toeFront = 0, frames = 0;
-    for (let i = 0; i < 60; i++) {
-      go(p, 1, 2.6); frames++;
-      const L = rec(p), x = Math.floor(p.x);
-      if (L.some(([c, X, Y]) => c === '#5c564e' && X >= x + 10 && Y >= Math.floor(p.y) + 21)) toeFront++;   // носок пыльника — впереди оси
-    }
-    assert(toeFront > 5 && toeFront < frames, `носок впереди: ${toeFront} из ${frames}`);
+  test('походка: рисунок — без ног (ноги только у пелерины); огонёк — на оси, в центре груди; спиной огонька нет; в рамке маски', () => {
+    const BOOT = '#5c564e';
+    const toes = (L, f) => L.filter(([c, X, Y]) => c === BOOT && Y >= Math.floor(f.y) + 20 && Math.abs(X - (Math.floor(f.x) + 7)) <= 5);
+    // пыльник: ни носков, ни ног — ни стоя, ни в шаге вниз и вбок
     const s = mk('S'); idle(s, 30);
-    const LS = rec(s);
-    eq(LS.filter(([c]) => c === '#5c564e').length, 2, 'стоит лицом — два носка');
+    eq(toes(rec(s), s).length, 0, 'стоит лицом — у пыльника носки');
+    for (const [dx, dy] of [[0, 2.4], [2.6, 0]]) { const w = mk('S'); idle(w, 2); for (let i = 0; i < 40; i++) { go(w, 1, dx, dy); eq(toes(rec(w), w).length, 0, 'в шаге у пыльника ноги'); } }
+    // огонёк: сердцевина — на оси фигуры (x+7), в центре груди (y+7), точкой
+    const x = Math.floor(s.x), y = Math.floor(s.y);
+    assert(rec(s).some(([c, X, Y, W, H]) => c === '#E28A3A' && X === x + 7 && Y >= y + 6 && Y <= y + 8 && W === 1 && H === 1), 'огонёк не на оси груди');
     const n = mk('N'); idle(n, 30);
-    const LN = rec(n);
-    assert(!LN.some(([c, X, Y, W, H]) => c === '#E28A3A' && W * H >= 2), 'спиной огонёк виден');
+    assert(!rec(n).some(([c]) => c === '#E28A3A'), 'спиной огонёк виден');
     // рамка: шаг, бег, оступился — в маске тени x−6..x+20, y−10..y+24
     for (const [face, dx, trip] of [['E', 2.6], ['W', -2.6], ['S', 0], ['E', 4.3], ['E', 0, 'stone'], ['W', 0, 'fossil'], ['S', 0, 'pit']]) {
       const f = mk(face); idle(f, 2); if (dx) go(f, 40, dx);
@@ -3381,27 +3383,28 @@ setCtx(ctx);
       }
     }
   });
-  test('походка: оступился — позой, не только сдвигом: камень клюёт вперёд, окаменелость — нога назад, зажмурился', () => {
-    const p = mk('E'); idle(p, 2);
-    // угольки: v −22 → y−2..y+3 (огонёк у сердца и искры — ниже)
+  test('походка: оступился — позой: камень — клюёт верхом, окаменелость — дёрнуло (у пелерины нога уехала назад), зажмурился', () => {
+    const p = mk('S'); idle(p, 2);
+    // угольки: v −22 → y−2..y+3 (огонёк в груди и искры — ниже)
     const eye = ([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y <= Math.floor(p.y) + 3;
     let base = rec(p);
     for (let i = 0; i < 10 && !base.some(eye); i++) { tick(); base = rec(p); }   // моргнул — следующий кадр
     assert(base.some(eye), 'стоит — угольки видны');
     p.gait.trip = { kind: 'stone', p: 1, k: 0.25, dir: 1 };
     const st = rec(p);
-    // верх капюшона — самый верхний ряд его тона; клевок — на 2..3, без двойного
-    const hoodX = L => { const H = L.filter(([c]) => c === '#2a2620'); const top = Math.min(...H.map(r => r[2])); return Math.min(...H.filter(r => r[2] === top).map(r => r[1])); };
-    const d = hoodX(st) - hoodX(base);
-    assert(Number.isFinite(d) && d >= 2 && d <= 3, `капюшон клюнул на ${d} (нужно 2..3, без двойного клевка): ${hoodX(base)} → ${hoodX(st)}`);
+    // верх капюшона — самый верхний ряд его тона; клевок лицом к нам — вниз на 2
+    const hoodTop = L => Math.min(...L.filter(([c]) => c === '#2a2620').map(r => r[2]));
+    eq(hoodTop(st) - hoodTop(base), 2, 'о камень не клюнул верхом');
     assert(!st.some(eye), 'зажмурился — глаз нет');
-    p.gait.trip = { kind: 'fossil', p: 1, k: 0.25, dir: 1 };
-    const fo = rec(p);
-    const toeX = L => Math.min(...L.filter(([c]) => c === '#5c564e').map(([, X]) => X));
-    assert(Number.isFinite(toeX(base)) && toeX(fo) <= toeX(base) - 2, `нога не поехала назад: ${toeX(base)} → ${toeX(fo)}`);
+    const c = mk('S'); c.cut = 'cape'; idle(c, 2);
+    const cb = rec(c);
+    c.gait.trip = { kind: 'fossil', p: 1, k: 0.25, dir: 1 };
+    const fo = rec(c);
+    const toeY = L => Math.min(...L.filter(([col, X, Y]) => col === '#5c564e' && Y >= Math.floor(c.y) + 18).map(r => r[2]));
+    assert(Number.isFinite(toeY(cb)) && toeY(fo) <= toeY(cb) - 2, `нога пелерины не уехала назад: ${toeY(cb)} → ${toeY(fo)}`);
   });
   const WR = await imp('sprites/wardrobe.js');
-  test('гардероб: каждый крой — во всех видах, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки', () => {
+  test('гардероб: каждый крой — лицом и спиной, в ходу, сидя, с ладонью, оступившись и без походки — в рамке маски; тепло — только огонёк и угольки; ноги — только у пелерины', () => {
     const cuts = Object.keys(WR.CUTS);
     assert(cuts.length >= 5, 'кроёв меньше пяти: ' + cuts);
     eq(WR.CUT, 'duster', 'без ?cut= — пыльник');
@@ -3435,10 +3438,17 @@ setCtx(ctx);
         const y = Math.floor(f.y);
         assert(!rec(f).some(([c, X, Y, Wd, H]) => c !== '#0D0B0A' && Y + H > y + 21), `${cut} ${face}: вброд видно ниже воды`);
       }
-      // подол и хвосты против хода одинаково на E и W (зеркалом): хвост сзади, не впереди (ветер мира — мимо)
-      const back = (face, dx) => { const f = mk(face); f.cut = cut; idle(f, 2); go(f, 30, dx); f.gait.hem = -Math.sign(dx) * 2; const x = Math.floor(f.x); const Ls = rec(f).filter(([c, X, Y]) => c !== '#0D0B0A' && Y > Math.floor(f.y) + 8); return face === 'E' ? x + 7 - Math.min(...Ls.map(r => r[1])) : Math.max(...Ls.map(r => r[1] + r[3])) - 1 - (x + 7); };
-      const bE = back('E', 2.6), bW = back('W', -2.6);
-      assert(Math.abs(bE - bW) <= 1, `${cut}: хвост на E ${bE}, на W ${bW} — зеркало кривое`);
+      // две плоскости: вбок — тот же рисунок, что лицом (ни профиля, ни зеркала); у старых E/W — лицом
+      const rel = f => rec(f).map(([c, X, Y, Wd, H]) => [c, X - Math.floor(f.x), Y - Math.floor(f.y), Wd, H].join()).join('|');
+      { const fS = mk('S'), fe = mk('E'), fw = mk('W'); for (const f of [fS, fe, fw]) { f.cut = cut; idle(f, 30); }
+        eq(rel(fe), rel(fS), `${cut}: «E» рисуется не лицом`); eq(rel(fw), rel(fS), `${cut}: «W» рисуется не лицом`); }
+      // ноги — только у пелерины: носки у земли у оси — стоя, в шаге и сидя
+      { const toesOf = f => rec(f).some(([c, X, Y]) => c === '#5c564e' && Y >= Math.floor(f.y) + 20 && Math.abs(X - (Math.floor(f.x) + 7)) <= 5);
+        const st = mk('S'); st.cut = cut; idle(st, 30);
+        const wk = mk('S'); wk.cut = cut; idle(wk, 2); let walkToes = false; for (let i = 0; i < 40; i++) { go(wk, 1, 0, 2.4); if (toesOf(wk)) walkToes = true; }
+        const sd = mk('S'); sd.cut = cut; idle(sd, 2); sd.sit = 1; idle(sd, 30);
+        if (cut === 'cape') assert(toesOf(st) && walkToes && toesOf(sd), 'пелерина: ног не видно');
+        else assert(!toesOf(st) && !walkToes && !toesOf(sd), `${cut}: видны ноги (слово автора 29.10: ноги — только у одного кроя)`); }
       for (const kind of ['stone', 'pit', 'fossil']) for (const face of ['E', 'W', 'S']) { const f = mk(face); f.cut = cut; idle(f, 2); f.gait.trip = { kind, p: 1, k: 0.3, dir: face === 'W' ? -1 : 1 }; fr(f, kind + face); }
       // тени чужих и маски тени — без походки
       for (const o of [{ moving: false }, { moving: true }, { sit: 1 }, { face: 'N', moving: true }]) fr({ x: 1000, y: 1000, vx: 0, vy: 0, dir: 1, cut, ...o }, 'без походки');
@@ -3446,7 +3456,7 @@ setCtx(ctx);
       const n = mk('N'); n.cut = cut; idle(n, 30);
       assert(!rec(n).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd * H >= 2), `${cut}: спиной огонёк виден`);
       const s = mk('S'); s.cut = cut; idle(s, 30);
-      assert(rec(s).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd === 2), `${cut}: лицом огонька нет`);
+      assert(rec(s).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && X === Math.floor(s.x) + 7 && Y >= Math.floor(s.y) + 6 && Y <= Math.floor(s.y) + 8), `${cut}: лицом огонька в центре груди нет`);
     }
   });
 }
