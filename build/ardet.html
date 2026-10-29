@@ -731,6 +731,29 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
 #dn .dn-who { letter-spacing: 1px; }
 #dn .dn-when { font-family: var(--font-book); font-style: italic; font-size: 14px; letter-spacing: 0; opacity: 0.7; }
 #dt { color: var(--sepia); }
+
+/* лавки (ui/shop.js): скрыты, пока их не открыли — иначе текст окон лежит под холстом игры и
+   проступает, пока мир мутный (пробуждение до открытия глаз); открытая — лист описи поверх ночи */
+.shop-overlay { display: none; position: fixed; inset: 0; z-index: 400; background: rgba(13,11,10,0.9);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 30px 16px; }
+.shop-overlay.on { display: flex; flex-direction: column; align-items: center; }
+.shop-overlay .sh, .shop-overlay .sh2, .shop-overlay .shop-grid, .shop-overlay .shop-footer {
+  width: min(640px, 92vw); background: var(--paper); color: var(--sepia); }
+.shop-overlay .sh { padding: 22px 28px 6px; font-size: 12px; letter-spacing: 2px; text-align: center; color: var(--sepia) !important;
+  box-shadow: 0 -18px 30px -12px rgba(0,0,0,0.7); }
+.shop-overlay .sh2 { padding: 0 28px 14px; font: italic 15px/1.5 var(--font-book); text-align: center; color: rgba(58,48,38,0.8);
+  border-bottom: 1px dashed rgba(58,48,38,0.55); }
+.shop-overlay .shop-grid { display: flex; flex-direction: column; padding: 8px 28px; }
+.shop-overlay .si { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px dotted rgba(58,48,38,0.35); }
+.shop-overlay .si-i { flex: none; width: 22px; text-align: center; filter: grayscale(1) sepia(0.6); opacity: 0.8; }
+.shop-overlay .si-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.shop-overlay .si-n { font-size: 9px; line-height: 1.6; letter-spacing: 1px; }
+.shop-overlay .si-d { font: 14px/1.45 var(--font-book); color: rgba(58,48,38,0.8); }
+.shop-overlay .si-p { flex: none; font-size: 9px; color: var(--seal); }
+.shop-overlay .shop-footer { padding: 14px 28px 22px; text-align: center; box-shadow: 0 18px 30px -12px rgba(0,0,0,0.7); }
+.shop-overlay .sx { font: 9px var(--font-pixel); letter-spacing: 2px; color: var(--sepia); background: none;
+  border: 1px solid rgba(58,48,38,0.6); padding: 8px 14px; cursor: pointer; }
+.shop-overlay .sx:hover { background: rgba(58,48,38,0.08); }
 /* оттиск на листе: поле бумаги и край сепией (тенью — не трогают размер картины),
    чуть криво; над бумагой край читается карточкой и роняет тень в сцену */
 #dpc { box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px rgba(58,48,38,0.45), 0 14px 30px rgba(0,0,0,0.6);
@@ -881,7 +904,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='fa0bd9d · 2026-10-28';console.log('[оттиск]', 'fa0bd9d · 2026-10-28');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='e7e9cf3 · 2026-10-29';console.log('[оттиск]', 'e7e9cf3 · 2026-10-29');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -67572,7 +67595,7 @@ System.register("render/house", ["world/house"], function (exports_175, context_
 });
 System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_176, context_176) {
     "use strict";
-    var time_js_46, prefs_js_5, LEN, OPEN, BO, AS, KV, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
+    var time_js_46, prefs_js_5, LEN, OPEN, BO, AS, KV, FONT, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
     var __moduleName = context_176 && context_176.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -67640,6 +67663,29 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         return out;
     }
     exports_176("slicesAt", slicesAt);
+    // ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
+    function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+        if (reduced || a < 0 || a >= LEN)
+            return [];
+        let on = a >= 10 && a < 100;
+        for (const o of OPEN) {
+            const d = a - o;
+            if (d >= 2 && d < 14)
+                on = true;
+        }
+        if (!on)
+            return [];
+        const k = q >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
+        for (let i = 0; i < n; i++) {
+            const len = 12 + Math.floor(hh(k + i, 9, seed) * 40);
+            let s = '';
+            for (let j = 0; j < len; j++)
+                s += hh(k * 31 + i, j, seed) < 0.5 ? '0' : '1';
+            out.push({ s, x: Math.floor(hh(k + i, 10, seed) * Math.max(1, vw - 60)), y: 8 + Math.floor(hh(k + i, 11, seed) * Math.max(1, vh - 16)), a: 0.4 + 0.3 * hh(k + i, 12, seed) });
+        }
+        return out;
+    }
+    exports_176("codeAt", codeAt);
     // ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
     function stuckOf(vw, vh, seed) {
         const out = [];
@@ -67714,8 +67760,18 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                 ctx.globalAlpha = 1;
             } // строка развёртки
         }
-        // 3. битые точки — в точках кадра (текста нет: ни цифр, ни букв)
+        // 3. двоичный код и битые точки — в точках кадра
         ctx.setTransform(s, 0, 0, s, 0, 0);
+        const code = codeAt(a, vw, vh, seed, red, q);
+        if (code.length) {
+            ctx.font = FONT;
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = BO;
+            for (const c of code) {
+                ctx.globalAlpha = c.a;
+                ctx.fillText(c.s, c.x, c.y);
+            }
+        }
         if (!wakefx.stuck)
             wakefx.stuck = stuckOf(vw, vh, seed);
         for (const p of wakefx.stuck) {
@@ -67742,6 +67798,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             exports_176("LEN", LEN = 900); // пятнадцать секунд
             exports_176("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
+            FONT = '6px "Press Start 2P","VT323",monospace';
             reducedNow = prefs_js_5.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
             exports_176("wakefx", wakefx = {
                 t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,
@@ -67787,7 +67844,7 @@ System.register("content/afisha", [], function (exports_177, context_177) {
 });
 System.register("ui/titleglitch", ["core/prefs"], function (exports_178, context_178) {
     "use strict";
-    var prefs_js_6, BO, AS, KV, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
+    var prefs_js_6, BO, AS, KV, FONT, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
     var __moduleName = context_178 && context_178.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -68032,7 +68089,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_178, context
         g.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
         g.imageSmoothingEnabled = false;
         const D = L.dpr, rnd = lcg(L.seed);
-        const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, reload: null };
+        const S = { t0: -1, last: -1, face: 0, until: span(rnd, HOLD_A), wipe: null, burst: null, next: 400 + rnd() * 700, tears: [], tearsAt: -1, smears: [], nextSmear: 500, code: null, nextCode: 1500 + rnd() * 2000, reload: null };
         const frame = now => {
             raf = 0;
             if (!shown()) {
@@ -68125,6 +68182,27 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_178, context
             }
             for (const m of S.smears)
                 smear(g, src, D, m);
+            // двоичный код проступает строкой: раз в 2,5–6 с на полсекунды, цифры меняются
+            if (!S.code && t >= S.nextCode) {
+                const q = pick(L, rnd, 8);
+                if (q && q.x1 - q.x0 > 70)
+                    S.code = { q, len: Math.min(32, Math.floor((q.x1 - q.x0 - 8) / 8)), end: t + 500 + rnd() * 500, k: Math.floor(rnd() * 1e6) };
+                S.nextCode = t + 2500 + rnd() * 3500;
+            }
+            if (S.code && t > S.code.end)
+                S.code = null;
+            if (S.code) {
+                const c = S.code, k = c.k + Math.floor(t / 100);
+                let s = '';
+                for (let j = 0; j < c.len; j++)
+                    s += hh(k, j, L.seed) < 0.5 ? '0' : '1';
+                g.font = `8px ${FONT}`;
+                g.textBaseline = 'top';
+                g.fillStyle = BO;
+                g.globalAlpha = 0.55;
+                g.fillText(s, c.q.x0 + 4, c.q.y);
+                g.globalAlpha = 1;
+            }
         };
         raf = requestAnimationFrame(frame);
     }
@@ -68137,6 +68215,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_178, context
         ],
         execute: function () {
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
+            FONT = '"Press Start 2P","VT323",monospace';
             // полосы сбоя по картине (доли ширины): слева у земли — только край левее труб завода, выше,
             // в дыму, — глубже; справа — всё правее луны и городка; на узком экране, где боков картины не
             // видно, — ещё полоса у самого края экрана, послабее
