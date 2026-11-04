@@ -346,6 +346,15 @@ for (const s of COVER_SIGNS) {
   seg.signs.push(sign);
 }
 
+// слой сюжета — вещи из тетради колец встают так же
+import { PLOT_SIGNS } from './plot_layer.js';
+for (const s of PLOT_SIGNS) {
+  const seg = s.segment === 'townlet' ? TOWNLET : SEGMENTS.find(g => g.id === s.segment);
+  if (!seg) continue;
+  const { segment, ...sign } = s;
+  seg.signs.push(sign);
+}
+
 // география: табличкам без стороны — сторона по региону текста
 import { SIGN_SIDES } from './sign_sides.js';
 for (const seg of SEGMENTS) {

@@ -107,7 +107,7 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
 import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir } from './world/ravens.js';
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
-import { incrementSession, getShiftConfig, maybeShowBlankScreen } from './core/sessionMemory.js';
+import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel, calmOf, feedK } from './world/brainrot.js';
 import { draw as drawFeedPanels } from './render/feedPanels.js';
@@ -1821,7 +1821,7 @@ document.addEventListener('keydown', e => {
 // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
 // пробуждение — без текста, но со следами падения (слово автора 28.10): строка внизу уходит,
 // трещины экрана остаются (render/metaFx.js); подписи падения в доме нет — оверлей там не рисуется
-events.on('brainrot.recover', () => { hideLore(); if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
+events.on('brainrot.recover', () => { markReturned(); hideLore(); if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
 
 let entryDone = false;
 { // оттиск сборки на заставке — сверка «что реально задеплоено»

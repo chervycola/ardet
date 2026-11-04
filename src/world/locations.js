@@ -257,6 +257,8 @@ export function attachContent(looks, dialogues) {
     if (dialogues[loc.id]) {
       loc.talkLines = dialogues[loc.id];
       loc.talkName = loc.name;
+      // вторая встреча: после падения за край и пробуждения дома (ui.startDialogue)
+      if (dialogues[loc.id + '_return']) loc.talkLinesReturn = dialogues[loc.id + '_return'];
     }
   }
 }

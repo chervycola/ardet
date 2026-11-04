@@ -17,6 +17,7 @@ import { paginate, pageMeasure } from './pages.js';
 import { STREAM } from './stream.js';
 import { placeStamp } from '../world/placeStamp.js';
 import { hasSignature, signatureSVG } from './signature.js';
+import { hasReturned } from '../core/sessionMemory.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -414,7 +415,7 @@ export function startDialogue(loc) {
   }
 
   dlgLoc = loc;
-  dlgLines = loc.talkLines;
+  dlgLines = (loc.talkLinesReturn && hasReturned()) ? loc.talkLinesReturn : loc.talkLines;
   dlgIndex = 0;
   state.transition('dialogue');
   dlgEl.classList.add('on');

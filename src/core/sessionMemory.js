@@ -15,6 +15,16 @@ export function incrementSession() {
   return age;
 }
 
+// Прочерк в строке #88 журнала (терминал: journal 88) — ставится один раз, без условий.
+const KEY88 = 'ardet_v2_dash88';
+export function hasDash88() { try { return localStorage.getItem(KEY88) === '1'; } catch (e) { return false; } }
+export function markDash88() { try { localStorage.setItem(KEY88, '1'); } catch (e) {} }
+
+// Возвращение: упал за краем и проснулся дома. С этой минуты Шут встречает иначе.
+const KEYRET = 'ardet_v2_returned';
+export function hasReturned() { try { return localStorage.getItem(KEYRET) === '1'; } catch (e) { return false; } }
+export function markReturned() { try { localStorage.setItem(KEYRET, '1'); } catch (e) {} }
+
 // Config that depends on session count
 export function getShiftConfig() {
   const age = getSessionAge();

@@ -5,7 +5,7 @@ import { state } from '../core/state.js';
 import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
 import { getCollectedCount, getTotalCount } from '../world/lore.js';
-import { getSessionAge } from '../core/sessionMemory.js';
+import { getSessionAge, hasDash88, markDash88 } from '../core/sessionMemory.js';
 import { t } from '../core/time.js';
 
 const termEl = document.getElementById('term');
@@ -18,7 +18,15 @@ let booted = false;
 
 // File aliases: the Cartesian ".demon" file lives under a distinct key;
 // read/cat demon and .demon resolve here.
-const FILE_ALIASES = { demon: 'demon_descartes', moss: 'moss_file', ardet: 'ardet_file' };
+const FILE_ALIASES = { demon: 'demon_descartes', moss: 'moss_file', ardet: 'ardet_file', 'поле': 'pole', field: 'pole', log: 'archivist_log', journal: 'archivist_log' };
+// журнал городка: запись #87 стоит, строка #88 пуста с первой минуты; прочерк в неё ставит
+// предъявитель сам, без условий и без подписи (BOOK §5: «движение V не существует»)
+function journalText() {
+  const base = termDb['archivist_log'].text;
+  return hasDash88()
+    ? base + '—\n> поставлен лично. подписи нет.'
+    : base + '\n> [строка пуста. ждёт. условий нет:\n>  journal 88]';
+}
 function fileEntry(rawName) {
   const stripped = rawName.replace(/^\./, '');
   const key = FILE_ALIASES[stripped] || stripped;
@@ -77,6 +85,7 @@ const commands = {
   ping           — проверить связь
   mycelium       — статус сети
   fortune        — пророчество
+  journal        — журнал городка (#87, #88)
   history        — история команд
   echo <text>    — эхо
   clear          — очистить экран
@@ -98,7 +107,7 @@ const commands = {
   .pizzeria_key  [найден под ковриком]
   .moss_weights  [мох обновляется]
   .cat_saucer    [третий этаж]
-  .archivist_log [запись #87]
+  .archivist_log [запись #${hasDash88() ? '88' : '87'}]
   .ardet         [вечно растёт]
   .observers     [требуется: осмотр всех четверых]
   .demiurge      [три гипотезы]
@@ -132,7 +141,7 @@ const commands = {
     if (!name) { print('> использование: read <файл>', '#8b0000'); return; }
     const entry = fileEntry(name);
     if (entry) {
-      print(entry.text, entry.color);
+      print(entry === termDb['archivist_log'] ? journalText() : entry.text, entry.color);
       // Tell the rest of the game which file the player just opened —
       // some gates listen for specific keys (timbuktu, ishraq).
       const key = (FILE_ALIASES[name.replace(/^\./, '')] || name.replace(/^\./, ''));
@@ -247,7 +256,7 @@ quarter║      ║ highway
   fortune() {
     const fortunes = [
       'Рукописи не горят. Но переписка — да.',
-      'Мох помнит. Это и приговор, и утешение.',
+      'Всё учтено. Это и приговор, и утешение.',
       'Кот наливает. Тебе. Даже если ты не здесь.',
       'Ответ — в подвале. Вопрос — тоже.',
       'Ты — не первый. Ты — не последний. Ты — ты.',
@@ -258,6 +267,20 @@ quarter║      ║ highway
     ];
     print('> ' + fortunes[Math.floor(Math.random() * fortunes.length)], '#d4a017');
   },
+
+  // одна команда без проверок: прочерк в #88 (канон: третье письменное действие странника)
+  journal(args) {
+    const a = args[0];
+    if (a === '88' || a === '#88' || a === '--' || a === '—') {
+      if (hasDash88()) { print('> запись #88: —\n> стоит. второй не требуется.', '#8a8d8f'); return; }
+      markDash88();
+      print('> запись #88: —\n> поставлен: предъявителем, лично.\n> условий: нет. подписи: нет.\n> почерк: сверен', '#8a8d8f');
+      events.emit('terminal.dash88');
+      return;
+    }
+    print(journalText(), termDb['archivist_log'].color);
+  },
+  log(args) { this.journal(args); },
 
   history() {
     if (history.length === 0) { print('> ИСТОРИЯ ПУСТА', '#1a6b1a'); return; }
