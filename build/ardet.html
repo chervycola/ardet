@@ -904,7 +904,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='8f2f085 · 2026-11-04';console.log('[оттиск]', '8f2f085 · 2026-11-04');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='1f39332 · 2026-11-07';console.log('[оттиск]', '1f39332 · 2026-11-07');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -49459,7 +49459,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 campfire: 'огонь не спрашивает.',
                 jester_home: 'некролог при себе. бумага горючая.',
                 terminal: 'session expired. reconnect?',
-                sol_home: 'горит. без адресата.',
+                sol_home: 'смена: без сдачи. ночь: со слов.',
                 vending: 'крути — получи мериты. цикл замкнут.',
                 library: 'полка 3.14. не листай.',
                 tent: 'без меня народ неполный.',
@@ -49500,7 +49500,7 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
                 watchtower: 'бинокль направлен внутрь.',
                 pit: '...братишка...',
                 nocturnal: 'тишина держит нити. нити держат тебя.',
-                nocturnal_home: 'молчит. звук не долетает.',
+                nocturnal_home: 'принял: прочерк. нажим сильный.',
                 theater: 'выйди на сцену. зал полон.',
                 altar: 'проба снята. состав совпал.',
                 posterwall: 'музыка не горит.',
@@ -49775,14 +49775,13 @@ Sol, который не заходит.
 Не бочка.
 Ойкумена.`,
                 ],
-                // вторая встреча: вернулся из-за края (sessionMemory.hasReturned). Реплика автора;
-                // ступень «сверять перестал» снята (BOOK §10.1). Остальные реплики те же.
+                // вторая встреча: вернулся из-за края (sessionMemory.hasReturned). Выбор автора 07.11:
+                // сверка перенесена на вещь (уголёк из городка); ступень «сверять перестал» снята (BOOK §10.1).
                 jester_home_return: [
                     `Пришёл.
 Как голова?
 
-Не отвечай, вижу.
-Сверил, пока падал.
+Уголёк не выронил.
 
 Садись. Пока не ты.`,
                     `Ирония — ароматизатор,
@@ -55341,8 +55340,12 @@ request timed out
 >
 > «непобедимое солнце». культ
 > утверждён в 274 г.
-> статус: горит. выбор
-> не предоставлялся
+> глаза: закрыты. давно
+> о своём условии: «не умею»
+> теней по числу вещей.
+> одной недостаёт
+> ночь: запрошена. выдана
+> на словах
 > заход: не зафиксирован` };
             termDb['elder'] = { color: '#8a8d8f', text: `> whois СТАРЕЦ
 >
@@ -55367,8 +55370,10 @@ request timed out
 > последнее слово: в описи,
 > триста лет назад, одно,
 > служебное
-> держит: нити, по описи
-> шестьдесят тысяч
+> нити по описи: шестьдесят
+> тысяч. оборванные в наличии
+> прошение: лист выдан.
+> возвращён чистым
 > опрошен трижды. показания
 > совпали` };
             termDb['moss'] = { color: '#1a8c1a', text: `> whois МОХ
