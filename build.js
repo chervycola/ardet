@@ -100,15 +100,37 @@ function assetSizes() {
 
 function renderHtml(js, flags) {
   const stamp = buildStamp();
-  flags = `window.ARDET_BUILD='${stamp}';console.log('[оттиск]', '${stamp}');window.ARDET_SIZES=${JSON.stringify(assetSizes())};` + flags;
+  flags = `window.ARDET_BUILD='${stamp}';console.log('[оттиск]', '${stamp}');\n// порог. вход со стороны холста. освещение не предусмотрено.\nwindow.ARDET_SIZES=${JSON.stringify(assetSizes())};` + flags;
   const css = fs.readFileSync('src/style.css', 'utf8');
   const audio = fs.readFileSync('src/audio/ardet-tracks.js', 'utf8')
     .replace(/<\/script>/gi, '<\\/script>');
-  return TEMPLATE
+  const html = TEMPLATE
     .replace('/* __CSS__ */', () => css)
     .replace('/* __FLAGS__ */', () => flags)
     .replace('/* __AUDIO__ */', () => audio)
     .replace('/* __JS__ */', () => js);
+  return withOpis(html);
+}
+
+// опись листа — в <head>, комментарием и описанием: знаков всего и видимых (вне <script>,
+// <style>, тегов и комментариев). Числа считает сборка, не рука: рука соврёт на следующей
+// сборке. Опись входит в лист и меняет его длину, поэтому подбирается до совпадения.
+const cp = s => { let n = 0; for (const _ of s) n++; return n; };
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+function visibleText(html) {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function withOpis(html) {
+  const opis = (n, m) => `опись листа. знаков: ${fmt(n)}. из них видимых: ${fmt(m)}. остальное отдано холсту. то же место текстом: /walk/`;
+  let n = cp(html), m = cp(visibleText(html)), out = '';
+  for (let k = 0; k < 5; k++) {
+    out = html.split('/* __OPIS__ */').join(opis(n, m));
+    const n2 = cp(out), m2 = cp(visibleText(out));
+    if (n2 === n && m2 === m) return out;
+    n = n2; m = m2;
+  }
+  return out;
 }
 
 (async () => {

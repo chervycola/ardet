@@ -29,6 +29,12 @@ const put = (src, dst) => {
   bytes += n; list.push([path.relative(OUT, dst), n]);
 };
 for (const p of PAGES) put(path.join('build', p), path.join(OUT, p));
+// мир текстом — для читающих без глаз (prototype/walk, дверь из <noscript> заглавной)
+const WALK = path.join('prototype', 'walk', 'town');
+if (fs.existsSync(WALK)) for (const f of fs.readdirSync(WALK)) if (/\.html$/.test(f)) put(path.join(WALK, f), path.join(OUT, 'walk', f));
+// роботам ворота открыты по-настоящему; табличка — из терминала
+fs.writeFileSync(path.join(OUT, 'robots.txt'), 'User-agent: *\nAllow: /\n# ворота открыты. табличка висит.\n');
+fs.chmodSync(path.join(OUT, 'robots.txt'), 0o644); list.push(['robots.txt', fs.statSync(path.join(OUT, 'robots.txt')).size]);
 (function walk(dir) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     const s = path.join(dir, ent.name);
