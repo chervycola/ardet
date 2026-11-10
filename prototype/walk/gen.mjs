@@ -29,6 +29,8 @@
 // страница записи 88 существует, но на неё не ведёт ничего — её находит тот, кто читает
 // адреса и достраивает их по грамматике. Единственное исключение из правила «от входа
 // достижимо всё» (TROPA §8.2, «журнал без фокуса»).
+// Книга входящих (office.book.html) собирается из book.txt: записи канцелярии о пришедших
+// следах; первая — героя. Ссылки на неё — с окна № 3 и из дома возвращения.
 //
 // Новых текстов мира здесь нет, кроме служебных строк входа и подписей
 // ссылок (нов., на приёмку автору) — они собраны в FRAME ниже.
@@ -59,6 +61,9 @@ const FRAME = {
   volume: 'том 941. записей: 87.',
   entry: 'сегодня никто не пришёл. записал.',   // terminal_db .archivist_log, запись #87
   e88: ['запись #88: —', 'поставлен: предъявителем, лично.', 'подписи нет.', 'почерк: сверен.'],
+  book: 'Книга входящих', toBook: 'книга входящих', office: 'канцелярия', toWindow: 'к окну № 3',
+  intake: 'приём входящих: окно № 3, с нарочным. бланк —',
+  blankUrl: 'https://github.com/chervycola/ardet/issues/new?template=vh.md',
   look: '§ ОСМОТРЕТЬ',          // подпись действия — как в меню игры
   talk: '❦ ГОВОРИТЬ',           // то же
   protocol: 'протокол беседы',  // ART_BIBLE: разговор — протокол
@@ -204,6 +209,7 @@ for (const l of town) {
     if (Array.isArray(l.talkLines) && l.talkLines.length) acts.push(`<p class="act"><a href="${l.id}.talk.html">${FRAME.talk}</a></p>`);
     const ray = l.id === 'gates' ? `\n<p>${FRAME.south} — <a href="${RAY[0].id}.html">${esc(RAY[0].name)}</a></p>` : '';   // от врат — луч к югу
     if (l.id === 'terminal') acts.push(`<p class="act"><a href="terminal.journal.html">&gt; journal</a></p>`);   // журнал городка
+    if (l.id === 'office') acts.push(`<p class="act"><a href="office.book.html">${FRAME.toBook}</a></p>`);     // книга у окна № 3
     put(fileOf(l.id, k), page(l.name, STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
   });
   if (Array.isArray(l.talkLines) && l.talkLines.length) {
@@ -238,6 +244,15 @@ for (const s of RAY) s.looks.forEach((text, i) => {
     `${back}\n${ENTRY}`));
 }
 
+// книга входящих: записи из book.txt (строки с «#» — правила ножа, в книгу не идут)
+{
+  const office = byId.get('office');
+  const records = fs.readFileSync(path.join(HERE, 'book.txt'), 'utf8').split(/\n{2,}/).map(b => b.split('\n').filter(l => !l.startsWith('#')).join('\n').trim()).filter(Boolean);
+  put('office.book.html', page(`${office.name} · ${FRAME.book}`, `${STAMP} · ${FRAME.office}`,
+    `<h1>${esc(FRAME.book)}</h1>\n${records.map(r => `<pre>${esc(r)}</pre>`).join('\n')}\n<p class="stamp" style="margin:1.6em 0 0">${esc(FRAME.intake)} <a href="${FRAME.blankUrl}">вх. б/н</a></p>`,
+    `<p>${FRAME.toWindow} — <a href="${fileOf(office.id)}">${esc(office.name)}</a></p>\n${ENTRY}`));
+}
+
 // вход — дом: сцена и вещи дома как они есть (world/house.js THINGS, ночь; ботинки — у проснувшегося);
 // дверь ведёт наружу, к дому как вещи городка (wake_house), оттуда — к соседям
 const outside = byId.get('wake_house');
@@ -252,7 +267,7 @@ put('index.html', page(FRAME.title, houseStamp,
 // дом возвращения — куда ведёт 404: тот же дом, под дверью бланк (полная формула — один раз, здесь)
 put('house.return.html', page(FRAME.title, houseStamp,
   `<h1>Дом</h1>\n<p>${esc(FRAME.scene)}</p>\n${houseBody}\n<p>${esc(FRAME.underDoor)}</p>\n<pre>${esc(FRAME.blank)}</pre>`,
-  `${door}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n<p><a href="campfire.html">${FRAME.toFire}</a></p>\n<p><a href="terminal.html">${FRAME.toTerminal}</a></p>\n<p><a href="office.html">${FRAME.toOffice}</a></p>\n${ENTRY}`));
+  `${door}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n<p><a href="campfire.html">${FRAME.toFire}</a></p>\n<p><a href="terminal.html">${FRAME.toTerminal}</a></p>\n<p><a href="office.html">${FRAME.toOffice}</a></p>\n<p><a href="office.book.html">${FRAME.toBook}</a></p>\n${ENTRY}`));
 
 // 404 — на любой адрес, которого нет (сайт отдаёт его настоящим кодом ответа); единственная
 // страница без «ко входу»: её ссылка ведёт в дом возвращения. Ссылка абсолютная: страница
@@ -264,7 +279,7 @@ put('404.html', page('404', FRAME.lost,
 // ── самопроверка: все ссылки ведут на собранные страницы; до всего можно дойти от входа ──
 let bad = 0;
 const local = h => h.replace(/^\/walk\//, '');                 // 404 ссылается абсолютно
-for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!files.has(local(m[1])) && !BEYOND.has(m[1])) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
+for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!/^https?:/.test(m[1]) && !files.has(local(m[1])) && !BEYOND.has(m[1])) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
 // входов два: дом и 404 (её отдаёт сервер на любой адрес, которого нет)
 const reach = new Set(['index.html', '404.html']); const queue = [...reach];
 while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h) && files.has(h)) { reach.add(h); queue.push(h); } }
