@@ -25,6 +25,10 @@
 // Южный луч до огня — две станции и падение: от врат к югу колодец (второй взгляд —
 // три слова), ларёк у кольца с табличкой без мелкого шрифта; «дальше» ведёт на адрес,
 // которого нет (TROPA §8.2; тексты станций — нов., на приёмку автору).
+// Журнал терминала: записи #86 и #87 страницами, #88 показана пустой и без ссылки;
+// страница записи 88 существует, но на неё не ведёт ничего — её находит тот, кто читает
+// адреса и достраивает их по грамматике. Единственное исключение из правила «от входа
+// достижимо всё» (TROPA §8.2, «журнал без фокуса»).
 //
 // Новых текстов мира здесь нет, кроме служебных строк входа и подписей
 // ссылок (нов., на приёмку автору) — они собраны в FRAME ниже.
@@ -51,6 +55,10 @@ const FRAME = {
   toOffice: 'окно № 3',
   further: 'дальше',
   north: 'к северу', south: 'к югу',
+  journal: 'журнал', toJournal: 'к журналу',
+  volume: 'том 941. записей: 87.',
+  entry: 'сегодня никто не пришёл. записал.',   // terminal_db .archivist_log, запись #87
+  e88: ['запись #88: —', 'поставлен: предъявителем, лично.', 'подписи нет.', 'почерк: сверен.'],
   look: '§ ОСМОТРЕТЬ',          // подпись действия — как в меню игры
   talk: '❦ ГОВОРИТЬ',           // то же
   protocol: 'протокол беседы',  // ART_BIBLE: разговор — протокол
@@ -67,6 +75,7 @@ const RAY = [
     north: ['well_axis.html', 'Колодец'], south: ['fire.html', null] },
 ];
 const BEYOND = new Set(['fire.html']);   // единственный адрес, на который ведут и которого нет: падение
+const UNLINKED = new Set(['terminal.journal.88.html']);   // единственная страница, на которую не ведёт ничего
 const DIRS = ['к востоку', 'к юго-востоку', 'к югу', 'к юго-западу', 'к западу', 'к северо-западу', 'к северу', 'к северо-востоку'];
 
 // ── заглушки DOM: те же, что в test/*.mjs ──
@@ -194,6 +203,7 @@ for (const l of town) {
     const acts = [`<p class="act"><a href="${next}">${FRAME.look}</a></p>`];
     if (Array.isArray(l.talkLines) && l.talkLines.length) acts.push(`<p class="act"><a href="${l.id}.talk.html">${FRAME.talk}</a></p>`);
     const ray = l.id === 'gates' ? `\n<p>${FRAME.south} — <a href="${RAY[0].id}.html">${esc(RAY[0].name)}</a></p>` : '';   // от врат — луч к югу
+    if (l.id === 'terminal') acts.push(`<p class="act"><a href="terminal.journal.html">&gt; journal</a></p>`);   // журнал городка
     put(fileOf(l.id, k), page(l.name, STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
   });
   if (Array.isArray(l.talkLines) && l.talkLines.length) {
@@ -210,6 +220,23 @@ for (const s of RAY) s.looks.forEach((text, i) => {
   put(fileOf(s.id, k), page(s.name, s.stamp, `<h1>${esc(s.name)}</h1>\n${paras(text)}`,
     `<p class="act"><a href="${next}">${FRAME.look}</a></p>\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${near}\n${ENTRY}`));
 });
+
+// журнал терминала: том и три записи; 86 и 87 — страницами, 88 — текстом без ссылки
+{
+  const term = byId.get('terminal');
+  const jstamp = `${STAMP} · ${FRAME.journal}`, back = `<p>${FRAME.toTerminal} — <a href="${fileOf(term.id)}">${esc(term.name)}</a></p>`;
+  const line = n => `#${n}  <a href="terminal.journal.${n}.html">${esc(FRAME.entry.replace(/ записал\.$/, ''))}</a>`;
+  put('terminal.journal.html', page(`${term.name} · ${FRAME.journal}`, jstamp,
+    `<h1>${esc(term.name)}</h1>\n<pre>&gt; journal\n\n${esc(FRAME.volume)}\n\n${line(86)}\n${line(87)}\n#88</pre>`,
+    `${back}\n${ENTRY}`));
+  for (const n of [86, 87]) put(`terminal.journal.${n}.html`, page(`${term.name} · ${FRAME.journal} · #${n}`, jstamp,
+    `<h1>${esc(term.name)}</h1>\n<pre>&gt; journal ${n}\n\nзапись #${n}: ${esc(FRAME.entry)}</pre>`,
+    `<p>${FRAME.toJournal} — <a href="terminal.journal.html">${FRAME.journal}</a></p>\n${back}\n${ENTRY}`));
+  // запись 88 — страница есть, ссылки на неё нет; назад — только к терминалу
+  put('terminal.journal.88.html', page(`${term.name} · ${FRAME.journal} · #88`, jstamp,
+    `<h1>${esc(term.name)}</h1>\n<pre>&gt; journal 88\n\n${FRAME.e88.map(esc).join('\n')}</pre>`,
+    `${back}\n${ENTRY}`));
+}
 
 // вход — дом: сцена и вещи дома как они есть (world/house.js THINGS, ночь; ботинки — у проснувшегося);
 // дверь ведёт наружу, к дому как вещи городка (wake_house), оттуда — к соседям
@@ -241,10 +268,11 @@ for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/
 // входов два: дом и 404 (её отдаёт сервер на любой адрес, которого нет)
 const reach = new Set(['index.html', '404.html']); const queue = [...reach];
 while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h) && files.has(h)) { reach.add(h); queue.push(h); } }
-const lost = [...files.keys()].filter(f => !reach.has(f));
+const lost = [...files.keys()].filter(f => !reach.has(f) && !UNLINKED.has(f));
+for (const f of UNLINKED) if (!files.has(f) || reach.has(f)) { bad++; console.error(`непрошитая страница ${f}: ${files.has(f) ? 'на неё ведёт ссылка' : 'не собрана'}`); }
 const bytes = [...files.values()].reduce((a, h) => a + Buffer.byteLength(h), 0);
 console.log(`городок текстом: вещей ${town.length}, страниц ${files.size} (${(bytes / 1024).toFixed(0)} КБ) → ${path.relative(process.cwd(), OUT)}/`);
 console.log(`  швов ${nSeam}, повторных осмотров ${nRelook}, шёпотов ${nWhisper}, разговоров ${nTalk}`);
 console.log(`  соседей у вещи: от ${Math.min(...[...adj.values()].map(s => s.size))} до ${Math.max(...[...adj.values()].map(s => s.size))}`);
 if (bad || lost.length) { console.error(`✗ битых ссылок: ${bad}; недостижимых страниц: ${lost.length} ${lost.slice(0, 5).join(', ')}`); process.exit(1); }
-console.log('✓ ссылки целы, от входа достижимо всё');
+console.log(`✓ ссылки целы, от входа достижимо всё, кроме ${[...UNLINKED].join(', ')} (нарочно)`);
