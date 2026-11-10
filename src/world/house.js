@@ -100,7 +100,7 @@ export const THINGS = [
   { id: 'h_boots', name: 'Ботинки', x: BOOTS.x - 7, y: BOOTS.gy - 8, w: 14, h: 10, at: [196, 102],
     look: 'Ботинки у порога. Стоптаны сильнее, чем помнишь.', shown: () => house.boots },   // канон
   { id: 'h_door', name: 'Дверь', x: DOOR.x0, y: FRONT.y0 - 8, w: DOOR.x1 - DOOR.x0, h: 14, at: [ENTRY.x, ENTRY.y],
-    look: 'Дверь на улицу. Не заперта.', useAction: 'house_exit', useLabel: '<i>⌂</i>ВЫЙТИ' },
+    look: 'Дверь на улицу. Не заперта. Над ручкой, штампом: «ВЫХОДА НЕТ».', useAction: 'house_exit', useLabel: '<i>⌂</i>ВЫЙТИ' },
 ];
 for (const th of THINGS) th.house = true;
 // вещи сейчас (ботинки — пока не обулся); окно — по времени суток
