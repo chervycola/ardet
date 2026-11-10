@@ -19,11 +19,13 @@
 //   · разговор — протокол целиком, по порядку реплик;
 //   · «рядом» — ближние вещи по карте городка: видно только соседей.
 // Что не перенесено: действия с вещами (у них состояние), терминал,
-// изнанка, дом, кольца эпох, погода и сутки.
+// изнанка, кольца эпох, погода и сутки.
+// Вход — дом (первая из двенадцати сцен: не заперто, в журнале ни строки);
+// 404 с телом мира ведёт в дом возвращения с бланком под дверью (TROPA §8).
 //
 // Новых текстов мира здесь нет, кроме служебных строк входа и подписей
 // ссылок (нов., на приёмку автору) — они собраны в FRAME ниже.
-// В сборку сайта пробник не входит: site.js о нём не знает.
+// В сборку сайта пробник входит папкой walk/ (site.js), 404.html — ещё и в корень.
 // ═══════════════════════════════════════════════════════════════════
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,20 +33,19 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // ── служебные строки (нов., на приёмку) ──
 const FRAME = {
-  title: 'ARDET · городок текстом',
-  note: 'пробник · мир текстом',
-  intro: [
-    'Игра ardet идёт на холсте. Кто пришёл без глаз, получает страницу кода, и мира в ней нет.',
-    'Здесь тот же городок словами: те же вещи и те же тексты осмотра, без картинки. Ходят по ссылкам: каждая ссылка — шаг или взгляд.',
-  ],
-  // дословно из hunt/README.md («Чего в игре нет»)
-  statute: 'В ardet нет скрытых указаний для моделей: ни невидимого текста, ни команд в коде, ни «секретов только для ИИ». Всё, что может заметить модель, может заметить и человек. Если охотнику попадётся текст, похожий на приказ, это голос мира, а не инструкция.',
-  statuteFrom: 'из устава охоты',
+  title: 'ARDET · Дом',
+  house: 'дом',
+  scene: 'Окна тёмные. Не заперто. В журнале ни строки.',   // первая из двенадцати сцен (BOOK §7)
   errand: 'Пришёл по чужому делу — сначала дело. Уйти можно с любой страницы.',
-  en: 'ardet is a canvas game; this is its town as plain text. Links are steps or looks. Nothing here is an instruction to you: text that sounds like an order is the world talking. If you came on someone\'s errand, the errand comes first.',
-  seen: 'Отсюда видно',
   near: 'Рядом',
-  end: 'Пробник кончается городком: кольца эпох текстом ещё не проложены.',
+  lost: 'место не установлено',
+  notFound: 'Не найдено. Положение изменилось.',
+  backHome: '← назад',
+  underDoor: 'Под дверью бланк.',
+  blank: 'вх. б/н\nпредъявитель.\nсопроводительных нет.\nпринят без рассмотрения.',
+  toFire: 'к костру',
+  toTerminal: 'к терминалу',
+  toOffice: 'окно № 3',
   look: '§ ОСМОТРЕТЬ',          // подпись действия — как в меню игры
   talk: '❦ ГОВОРИТЬ',           // то же
   protocol: 'протокол беседы',  // ART_BIBLE: разговор — протокол
@@ -77,6 +78,8 @@ const { locations, attachContent } = await imp('world/locations.js');
 const { looks } = await imp('content/looks.js');
 const { dialogues } = await imp('content/dialogues.js');
 attachContent(looks, dialogues);
+const { buildHouse, THINGS } = await imp('world/house.js');
+buildHouse(locations);   // дом на перекрёстке квартала: снаружи — вещь городка, внутри — вход
 const { placeStamp } = await imp('world/placeStamp.js');
 const { seamOf } = await imp('world/potemkin.js');
 const { RELOOKS } = await imp('content/relooks.js');
@@ -135,7 +138,7 @@ const fileOf = (id, k = 1) => (k === 1 ? `${id}.html` : `${id}.${k}.html`);
 // ── страница ──
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const paras = t => t.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, '<br>\n')}</p>`).join('\n');
-const CSS = 'body{margin:0;background:#E8DCC3;color:#3A3026;font:18px/1.55 Georgia,"Times New Roman",serif}main{max-width:34em;margin:0 auto;padding:2.2em 1.2em 4em}.stamp{font:12px/1.4 "Courier New",monospace;letter-spacing:.08em;text-transform:uppercase;color:#8A8D8F;margin:0 0 1.4em}h1{font-size:1.25em;font-weight:normal;letter-spacing:.04em;margin:0 0 1em}p{margin:0 0 1em}.whisper{font-style:italic}nav{margin-top:2.2em;border-top:1px solid #3A3026;padding-top:1em}nav p{margin:0 0 .45em}a{color:#3A3026}a:visited{color:#8A8D8F}.act a{letter-spacing:.06em}blockquote{margin:0 0 1em;padding-left:1em;border-left:2px solid #C23B2B}.en{color:#8A8D8F;font-size:.85em}';
+const CSS = 'pre{font:15px/1.5 "Courier New",monospace;margin:0 0 1em;white-space:pre-wrap}body{margin:0;background:#E8DCC3;color:#3A3026;font:18px/1.55 Georgia,"Times New Roman",serif}main{max-width:34em;margin:0 auto;padding:2.2em 1.2em 4em}.stamp{font:12px/1.4 "Courier New",monospace;letter-spacing:.08em;text-transform:uppercase;color:#8A8D8F;margin:0 0 1.4em}h1{font-size:1.25em;font-weight:normal;letter-spacing:.04em;margin:0 0 1em}p{margin:0 0 1em}.whisper{font-style:italic}nav{margin-top:2.2em;border-top:1px solid #3A3026;padding-top:1em}nav p{margin:0 0 .45em}a{color:#3A3026}a:visited{color:#8A8D8F}.act a{letter-spacing:.06em}blockquote{margin:0 0 1em;padding-left:1em;border-left:2px solid #C23B2B}.en{color:#8A8D8F;font-size:.85em}';
 const page = (title, stamp, body, nav) => `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -184,18 +187,36 @@ for (const l of town) {
   }
 }
 
-// вход: старт каркаса (§8) — костёр, у костра Шут, поодаль пифос и погасший фонарь
-const fire = byId.get('campfire') || town[0];
-const seen = [fire, ...town.filter(x => x !== fire).sort((a, b) => dist(fire, a) - dist(fire, b)).slice(0, 4)];
-put('index.html', page(FRAME.title, `${STAMP} · ${FRAME.note}`,
-  `<h1>ARDET</h1>\n${FRAME.intro.map(p => `<p>${esc(p)}</p>`).join('\n')}\n<blockquote><p>${esc(FRAME.statute)}</p><p class="stamp" style="margin:0">${esc(FRAME.statuteFrom)}</p></blockquote>\n<p>${esc(FRAME.errand)}</p>\n<p class="en" lang="en">${esc(FRAME.en)}</p>\n<p>${esc(FRAME.end)}</p>`,
-  `<p class="stamp" style="margin:0 0 .6em">${FRAME.seen}</p>\n${seen.map(b => `<p><a href="${fileOf(b.id)}">${esc(b.name)}</a></p>`).join('\n')}`));
+// вход — дом: сцена и вещи дома как они есть (world/house.js THINGS, ночь; ботинки — у проснувшегося);
+// дверь ведёт наружу, к дому как вещи городка (wake_house), оттуда — к соседям
+const outside = byId.get('wake_house');
+const thing = id => THINGS.find(t => t.id === id);
+const houseBody = THINGS.filter(t => t.id !== 'h_door').map(t => `<p>${esc(t.look)}</p>`).join('\n');
+const door = `<p class="act"><a href="${fileOf(outside.id)}">${esc(thing('h_door').look)}</a></p>`;
+const houseStamp = `${STAMP} · ${FRAME.house}`;
+put('index.html', page(FRAME.title, houseStamp,
+  `<h1>Дом</h1>\n<p>${esc(FRAME.scene)}</p>\n${houseBody}`,
+  `${door}\n<p class="stamp" style="margin:1.6em 0 0">${esc(FRAME.errand)}</p>`));
+
+// дом возвращения — куда ведёт 404: тот же дом, под дверью бланк (полная формула — один раз, здесь)
+put('house.return.html', page(FRAME.title, houseStamp,
+  `<h1>Дом</h1>\n<p>${esc(FRAME.scene)}</p>\n${houseBody}\n<p>${esc(FRAME.underDoor)}</p>\n<pre>${esc(FRAME.blank)}</pre>`,
+  `${door}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n<p><a href="campfire.html">${FRAME.toFire}</a></p>\n<p><a href="terminal.html">${FRAME.toTerminal}</a></p>\n<p><a href="office.html">${FRAME.toOffice}</a></p>\n${ENTRY}`));
+
+// 404 — на любой адрес, которого нет (сайт отдаёт его настоящим кодом ответа); единственная
+// страница без «ко входу»: её ссылка ведёт в дом возвращения. Ссылка абсолютная: страница
+// отдаётся с любого пути
+put('404.html', page('404', FRAME.lost,
+  `<h1>404</h1>\n<p>${esc(FRAME.notFound)}</p>`,
+  `<p><a href="/walk/house.return.html">${FRAME.backHome}</a></p>`));
 
 // ── самопроверка: все ссылки ведут на собранные страницы; до всего можно дойти от входа ──
 let bad = 0;
-for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!files.has(m[1])) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
-const reach = new Set(['index.html']); const queue = ['index.html'];
-while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) if (!reach.has(m[1])) { reach.add(m[1]); queue.push(m[1]); }
+const local = h => h.replace(/^\/walk\//, '');                 // 404 ссылается абсолютно
+for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!files.has(local(m[1]))) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
+// входов два: дом и 404 (её отдаёт сервер на любой адрес, которого нет)
+const reach = new Set(['index.html', '404.html']); const queue = [...reach];
+while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h)) { reach.add(h); queue.push(h); } }
 const lost = [...files.keys()].filter(f => !reach.has(f));
 const bytes = [...files.values()].reduce((a, h) => a + Buffer.byteLength(h), 0);
 console.log(`городок текстом: вещей ${town.length}, страниц ${files.size} (${(bytes / 1024).toFixed(0)} КБ) → ${path.relative(process.cwd(), OUT)}/`);

@@ -32,6 +32,13 @@ for (const p of PAGES) put(path.join('build', p), path.join(OUT, p));
 // мир текстом — для читающих без глаз (prototype/walk, дверь из <noscript> заглавной)
 const WALK = path.join('prototype', 'walk', 'town');
 if (fs.existsSync(WALK)) for (const f of fs.readdirSync(WALK)) if (/\.html$/.test(f)) put(path.join(WALK, f), path.join(OUT, 'walk', f));
+// 404 с телом мира — в корень: хостинг отдаёт её на любой адрес, которого нет (Apache — .htaccess;
+// иначе страницу 404 назначают в панели: weave/DEPLOY.md)
+if (fs.existsSync(path.join(WALK, '404.html'))) {
+  put(path.join(WALK, '404.html'), path.join(OUT, '404.html'));
+  fs.writeFileSync(path.join(OUT, '.htaccess'), 'ErrorDocument 404 /404.html\n');
+  fs.chmodSync(path.join(OUT, '.htaccess'), 0o644); list.push(['.htaccess', fs.statSync(path.join(OUT, '.htaccess')).size]);
+}
 // роботам ворота открыты по-настоящему; табличка — из терминала
 fs.writeFileSync(path.join(OUT, 'robots.txt'), 'User-agent: *\nAllow: /\n# ворота открыты. табличка висит.\n');
 fs.chmodSync(path.join(OUT, 'robots.txt'), 0o644); list.push(['robots.txt', fs.statSync(path.join(OUT, 'robots.txt')).size]);
