@@ -7,7 +7,7 @@
 // Знание — ключ: номерок не берут, его помнят.
 // ═══════════════════════════════════════
 import { useTexts } from './useActions.js';
-import { free } from './aitraps.js';
+import { free } from './recount.js';
 import { ringAt } from './disc.js';
 
 let sawNomerok = false;

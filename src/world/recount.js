@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════
-// ЛОВУШКИ ВЗГЛЯДА — вещи, которые надо пересчитать глазами: десятичные
+// ПЕРЕСЧЁТ — вещи, которые надо пересчитать глазами: десятичные
 // часы, рука на копии Рафаэля, лужа у Пантеона, табличка с подсказкой,
 // верстовые столбы. Каждая стоит в своей эпохе; осмотр ничего не
 // объясняет — считает смотрящий.
@@ -130,7 +130,7 @@ export function besideBuilding(locations, ring, side, w, h, extra) {
   return null;
 }
 
-export function buildAiTraps(locations) {
+export function buildRecount(locations) {
   const out = [];
   const add = (id, name, box, draw, look) => {
     if (!box) return;

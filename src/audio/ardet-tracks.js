@@ -9,7 +9,7 @@
 //    радио возвращается в эфир локации;
 //  · пока файла трека нет — тихая процедурная заглушка (90 с и «конец»).
 // Файлы: assets/music/<id>.mp3 · Подключение:
-//   <script src="../shared/ardet-audio.js"><\/script>
+//   script src=../shared/ardet-audio.js (тег — в шаблоне страницы)
 //   ArdetAudio.unlock()        — в первом жесте (заставка)
 //   ArdetAudio.playOnce('title') — трек заставки (после него — эфир)
 //   ArdetAudio.setLocation(id) — локация сменилась (не обрывает)

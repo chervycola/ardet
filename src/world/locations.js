@@ -157,8 +157,8 @@ export const archEnsembles = ARCH.ensembles;
 import { captchaLocation } from './captcha.js';
 locations.push(captchaLocation);
 // ловушки взгляда: часы, рука, лужа, подсказка, верстовые столбы
-import { buildAiTraps } from './aitraps.js';
-buildAiTraps(locations);
+import { buildRecount } from './recount.js';
+buildRecount(locations);
 // нити: номерок 1889 → окно «до востребования»
 import { buildThreads } from './threads.js';
 buildThreads(locations);

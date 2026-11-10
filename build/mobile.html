@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 928 683. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 928 683. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 928 696. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 928 696. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -911,7 +911,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='f862df0 · 2026-11-10';console.log('[оттиск]', 'f862df0 · 2026-11-10');
+<script>window.ARDET_BUILD='c350a2d · 2026-11-10';console.log('[оттиск]', 'c350a2d · 2026-11-10');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -927,7 +927,7 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
 //    радио возвращается в эфир локации;
 //  · пока файла трека нет — тихая процедурная заглушка (90 с и «конец»).
 // Файлы: assets/music/<id>.mp3 · Подключение:
-//   <script src="../shared/ardet-audio.js"><\/script>
+//   script src=../shared/ardet-audio.js (тег — в шаблоне страницы)
 //   ArdetAudio.unlock()        — в первом жесте (заставка)
 //   ArdetAudio.playOnce('title') — трек заставки (после него — эфир)
 //   ArdetAudio.setLocation(id) — локация сменилась (не обрывает)
@@ -9196,7 +9196,7 @@ System.register("sprites/arch/porticoes", ["sprites/arch/kit", "world/hang", "wo
     // ступенчатыми кольцами у пят и окулом-щербиной на темени; перед ним портик в восемь
     // гранитных колонн с мраморными капителями, тёмный фриз, фронтон, а над ним — второй
     // фронтон промежуточного блока, выше первого. В тени портика — бронзовая дверь.
-    // Колонн восемь: их отражает лужа у ступеней (world/aitraps.js).
+    // Колонн восемь: их отражает лужа у ступеней (world/recount.js).
     function pantheonPlan(v) {
         const W = 96, H = 66, P = kit_js_2.plan(W, H);
         if (!v) {
@@ -28206,7 +28206,7 @@ System.register("world/captcha", ["world/useActions", "world/disc"], function (e
         }
     };
 });
-System.register("world/aitraps", ["world/disc"], function (exports_63, context_63) {
+System.register("world/recount", ["world/disc"], function (exports_63, context_63) {
     "use strict";
     var disc_js_15, N, K, P, S, V, M, D1, D2, D3, D4, C1, GLYPH, R, LOOK, hit;
     var __moduleName = context_63 && context_63.id;
@@ -28324,7 +28324,7 @@ System.register("world/aitraps", ["world/disc"], function (exports_63, context_6
         return null;
     }
     exports_63("besideBuilding", besideBuilding);
-    function buildAiTraps(locations) {
+    function buildRecount(locations) {
         const out = [];
         const add = (id, name, box, draw, look) => {
             if (!box)
@@ -28358,7 +28358,7 @@ System.register("world/aitraps", ["world/disc"], function (exports_63, context_6
         }
         return out;
     }
-    exports_63("buildAiTraps", buildAiTraps);
+    exports_63("buildRecount", buildRecount);
     return {
         setters: [
             function (disc_js_15_1) {
@@ -28390,9 +28390,9 @@ System.register("world/aitraps", ["world/disc"], function (exports_63, context_6
         }
     };
 });
-System.register("world/threads", ["world/useActions", "world/aitraps", "world/disc"], function (exports_64, context_64) {
+System.register("world/threads", ["world/useActions", "world/recount", "world/disc"], function (exports_64, context_64) {
     "use strict";
-    var useActions_js_4, aitraps_js_1, disc_js_16, sawNomerok, N, K, P, S, D1, D2, R;
+    var useActions_js_4, recount_js_1, disc_js_16, sawNomerok, N, K, P, S, D1, D2, R;
     var __moduleName = context_64 && context_64.id;
     function drawMailWindow(ctx, loc) {
         const x = loc.x + loc.w / 2, gy = loc.y + loc.h;
@@ -28420,7 +28420,7 @@ System.register("world/threads", ["world/useActions", "world/aitraps", "world/di
                 spots.push([dx, dy]);
         for (const [dx, dy] of spots) {
             const b = { x: Math.round(box.x + 7 + dx - w / 2), y: box.y + box.h - h + dy, w, h };
-            if (disc_js_16.ringAt(b.x + w / 2, b.y + h) !== disc_js_16.ringAt(box.x + box.w / 2, box.y + box.h) || !aitraps_js_1.free(b, locations))
+            if (disc_js_16.ringAt(b.x + w / 2, b.y + h) !== disc_js_16.ringAt(box.x + box.w / 2, box.y + box.h) || !recount_js_1.free(b, locations))
                 continue; // в том же кольце, что ящик
             locations.push({
                 id: 'mail_1889', name: 'окно «до востребования»', zone: 'street', ...b,
@@ -28438,8 +28438,8 @@ System.register("world/threads", ["world/useActions", "world/aitraps", "world/di
             function (useActions_js_4_1) {
                 useActions_js_4 = useActions_js_4_1;
             },
-            function (aitraps_js_1_1) {
-                aitraps_js_1 = aitraps_js_1_1;
+            function (recount_js_1_1) {
+                recount_js_1 = recount_js_1_1;
             },
             function (disc_js_16_1) {
                 disc_js_16 = disc_js_16_1;
@@ -28470,9 +28470,9 @@ System.register("world/threads", ["world/useActions", "world/aitraps", "world/di
         }
     };
 });
-System.register("world/cameras", ["world/disc", "world/aitraps"], function (exports_65, context_65) {
+System.register("world/cameras", ["world/disc", "world/recount"], function (exports_65, context_65) {
     "use strict";
-    var disc_js_17, aitraps_js_2, N, K, P, V, D1, D3, R, LOOK;
+    var disc_js_17, recount_js_2, N, K, P, V, D1, D3, R, LOOK;
     var __moduleName = context_65 && context_65.id;
     // камера: корпус 4×2 на кронштейне, объектив в сторону dir; blink — красный диод
     function cam(ctx, x, y, dir, t, phase, blink) {
@@ -28513,7 +28513,7 @@ System.register("world/cameras", ["world/disc", "world/aitraps"], function (expo
             for (const dd of [0.5, 0.35, 0.65, 0.2, 0.8]) {
                 const p = disc_js_17.trailPoint('west', disc_js_17.ringD(ring, dd * 200));
                 const box = { x: Math.round(p.x - w / 2), y: Math.round(p.y) - 10 - h, w, h };
-                if (disc_js_17.ringAt(box.x + w / 2, box.y + h) !== ring || !aitraps_js_2.free(box, locations))
+                if (disc_js_17.ringAt(box.x + w / 2, box.y + h) !== ring || !recount_js_2.free(box, locations))
                     continue;
                 locations.push({
                     id: `cams_${ring}`, name: count > 1 ? 'столб с камерами' : 'столб с камерой', zone: 'street', ...box,
@@ -28529,8 +28529,8 @@ System.register("world/cameras", ["world/disc", "world/aitraps"], function (expo
             function (disc_js_17_1) {
                 disc_js_17 = disc_js_17_1;
             },
-            function (aitraps_js_2_1) {
-                aitraps_js_2 = aitraps_js_2_1;
+            function (recount_js_2_1) {
+                recount_js_2 = recount_js_2_1;
             }
         ],
         execute: function () {
@@ -28543,9 +28543,9 @@ System.register("world/cameras", ["world/disc", "world/aitraps"], function (expo
         }
     };
 });
-System.register("world/threads2", ["world/aitraps", "world/mechanisms", "world/hang"], function (exports_66, context_66) {
+System.register("world/threads2", ["world/recount", "world/mechanisms", "world/hang"], function (exports_66, context_66) {
     "use strict";
-    var aitraps_js_3, mechanisms_js_3, hang_js_8, N, K, P, V, D1, D2, D3, C1, R, shadow, LOOK, NAME, USE, DRAW;
+    var recount_js_3, mechanisms_js_3, hang_js_8, N, K, P, V, D1, D2, D3, C1, R, shadow, LOOK, NAME, USE, DRAW;
     var __moduleName = context_66 && context_66.id;
     function drawTag(ctx, loc) {
         const x = loc.x + loc.w / 2, gy = loc.y + loc.h;
@@ -28635,7 +28635,7 @@ System.register("world/threads2", ["world/aitraps", "world/mechanisms", "world/h
         for (const g of gaps)
             for (const dir of dirs) {
                 const box = { x: Math.round(cx + dir * (half + g) - w / 2), y: gy - h, w, h };
-                if (aitraps_js_3.free(box, locations))
+                if (recount_js_3.free(box, locations))
                     return box;
             }
         return null;
@@ -28649,8 +28649,8 @@ System.register("world/threads2", ["world/aitraps", "world/mechanisms", "world/h
         const fire = locations.find(l => l.id === 'campfire');
         if (fire)
             add('luna_tag', near(fire, 10, 16, locations, [16, 30, 44], [-1, 1])); // от Шута — на другую сторону
-        add('clock_nail', aitraps_js_3.besideBuilding(locations, 7, 'south', 18, 24, {}) || aitraps_js_3.besideBuilding(locations, 7, 'east', 18, 24, {}));
-        add('clock_board', aitraps_js_3.besideBuilding(locations, 9, 'south', 20, 24, {}) || aitraps_js_3.besideBuilding(locations, 9, 'east', 20, 24, {}));
+        add('clock_nail', recount_js_3.besideBuilding(locations, 7, 'south', 18, 24, {}) || recount_js_3.besideBuilding(locations, 7, 'east', 18, 24, {}));
+        add('clock_board', recount_js_3.besideBuilding(locations, 9, 'south', 20, 24, {}) || recount_js_3.besideBuilding(locations, 9, 'east', 20, 24, {}));
         const palace = locations.find(l => l.archDraw && l.name === 'Дворец Советов');
         if (palace) {
             add('kotlovan_well', near(palace, 18, 22, locations));
@@ -28660,8 +28660,8 @@ System.register("world/threads2", ["world/aitraps", "world/mechanisms", "world/h
     exports_66("buildThreads2", buildThreads2);
     return {
         setters: [
-            function (aitraps_js_3_1) {
-                aitraps_js_3 = aitraps_js_3_1;
+            function (recount_js_3_1) {
+                recount_js_3 = recount_js_3_1;
             },
             function (mechanisms_js_3_1) {
                 mechanisms_js_3 = mechanisms_js_3_1;
@@ -33613,9 +33613,9 @@ System.register("world/depth", ["world/disc", "world/relief"], function (exports
 // Pure data — no draw logic here.
 // Each location has: id, name, x, y, w, h, zone, solid?, light?
 // Location draw functions live in src/sprites/locations/
-System.register("world/locations", ["world/disc", "world/street", "world/architecture", "world/captcha", "world/aitraps", "world/threads", "world/cameras", "world/threads2", "world/townWell", "world/mossway", "world/beyond", "world/oldways", "world/garments", "world/depth"], function (exports_80, context_80) {
+System.register("world/locations", ["world/disc", "world/street", "world/architecture", "world/captcha", "world/recount", "world/threads", "world/cameras", "world/threads2", "world/townWell", "world/mossway", "world/beyond", "world/oldways", "world/garments", "world/depth"], function (exports_80, context_80) {
     "use strict";
-    var locations, disc_js_23, street_js_1, architecture_js_1, ARCH, archEnsembles, captcha_js_1, aitraps_js_4, threads_js_1, cameras_js_1, threads2_js_1, townWell_js_1, mossway_js_1, beyond_js_1, oldways_js_1, garments_js_1, garmentPlaces, disc_js_24, FIRE_AT, depth_js_1, depthPass, locationById;
+    var locations, disc_js_23, street_js_1, architecture_js_1, ARCH, archEnsembles, captcha_js_1, recount_js_4, threads_js_1, cameras_js_1, threads2_js_1, townWell_js_1, mossway_js_1, beyond_js_1, oldways_js_1, garments_js_1, garmentPlaces, disc_js_24, FIRE_AT, depth_js_1, depthPass, locationById;
     var __moduleName = context_80 && context_80.id;
     function firePlace() {
         const busy = (x, y, w, h) => locations.some(l => {
@@ -33671,8 +33671,8 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
             function (captcha_js_1_1) {
                 captcha_js_1 = captcha_js_1_1;
             },
-            function (aitraps_js_4_1) {
-                aitraps_js_4 = aitraps_js_4_1;
+            function (recount_js_4_1) {
+                recount_js_4 = recount_js_4_1;
             },
             function (threads_js_1_1) {
                 threads_js_1 = threads_js_1_1;
@@ -33835,7 +33835,7 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
             locations.push(...architecture_js_1.archLocations(ARCH.buildings));
             exports_80("archEnsembles", archEnsembles = ARCH.ensembles);
             locations.push(captcha_js_1.captchaLocation);
-            aitraps_js_4.buildAiTraps(locations);
+            recount_js_4.buildRecount(locations);
             threads_js_1.buildThreads(locations);
             cameras_js_1.buildCameras(locations);
             threads2_js_1.buildThreads2(locations);

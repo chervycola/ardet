@@ -4,7 +4,7 @@
 // у каждой мигает красный глаз. Табличка одна и та же.
 // ═══════════════════════════════════════
 import { trailPoint, ringAt, ringD } from './disc.js';
-import { free } from './aitraps.js';
+import { free } from './recount.js';
 
 const N = '#0D0B0A', K = '#D9CFB8', P = '#8A8D8F', V = '#C23B2B', D1 = '#15100c', D3 = '#2a2620';
 const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
