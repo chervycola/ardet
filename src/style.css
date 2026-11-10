@@ -80,11 +80,11 @@ canvas#game {
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
   padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
   font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
-  font-size: 11px; font-size: 1.7cqh; line-height: 1.5;
+  font-size: 14px; font-size: 2.3cqh; line-height: 1.5;
   pointer-events: none; user-select: none;
 }
 #entry.art #entry-afisha { display: flex; }
-#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.12cqh; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 10px; font-size: 1.4cqh; }
 #entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —

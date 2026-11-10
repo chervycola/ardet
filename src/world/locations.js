@@ -10,7 +10,7 @@ export const locations = [
   { id: 'campfire', name: 'Жертвенный костёр', x: 750, y: 780, w: 55, h: 50, zone: 'settlement',
     useAction: 'campfire_throw',
     light: { r: 95, color: [255, 100, 20], flicker: 0.15 } },
-  { id: 'jester_home', name: 'Шут', x: 810, y: 772, w: 18, h: 36, zone: 'settlement',
+  { id: 'jester_home', name: 'W', x: 810, y: 772, w: 18, h: 36, zone: 'settlement',
     npc: 'jester' },
   { id: 'terminal', name: 'Ржавый терминал', x: 1000, y: 920, w: 50, h: 48, zone: 'settlement',
     useAction: 'terminal',

@@ -296,7 +296,7 @@ let lockHintAt = -99999;
 function lockHint() {
   if (_t - lockHintAt < 1800) return;
   lockHintAt = _t;
-  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра».');
+  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт W, у костра».');
 }
 
 // Check if player can leave settlement
@@ -772,7 +772,7 @@ function stepFx() {
   if (ring === RINGS + 1) ink.want(3, 'кольцо огня');
   if (isFrozen() || inBrainrotLoop()) ink.want(3, 'брейнрот');
   if (jesterFirstTalk && !state.is('dialogue') && !state.is('menu')) jesterFirstTalk = false;
-  if (jesterFirstTalk) ink.want(3, 'первый разговор с Шутом');
+  if (jesterFirstTalk) ink.want(3, 'первый разговор у костра');
   if (isEndingActive()) ink.want(3, 'финал');
   const focus = getActiveLoc();
   if (focus) ink.want(2, 'осмотр');

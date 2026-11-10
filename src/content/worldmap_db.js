@@ -145,7 +145,7 @@ export const GATES = [
     label: 'врата Декарта',
     note: 'четыре правила, война за окном',
     hidden: true,
-    reveal: 'после первой беседы с шутом' },
+    reveal: 'после первой беседы у костра' },
   { id: 'gate_africa',   cont: 'Африка',          x: 612,  y: 940,
     target: { x: 4015, y: 880 },     // §3 medieval — Timbuktu
     label: 'врата Тимбукту',

@@ -15,7 +15,7 @@
 // (world/wandering.js) жонглирует так же.
 // Рисунок — пиксельными картами, как костёр (слово автора 24.10: «в таком же
 // качестве»): голова в капюшоне накрест, рога с бубенцами, ворот лепестками,
-// камзол ромбами рядами, баска зубцами, трико и башмаки накрест. Свет слева,
+// камзол гладкий (ромбы сняты 10.11), баска зубцами, трико и башмаки накрест. Свет слева,
 // кромка серым справа; неподвижные карты запекаются, живое — поверх.
 // ═══════════════════════════════════════
 import { t } from '../../core/time.js';
@@ -93,18 +93,17 @@ const COLLAR = [
   '.BB.rr.BB.dd.ll',
   '..B..r..B..d..l',
 ];
-// камзол: ромбы рядами — красный ряд по груди, чёрный ниже, под поясом снова красный
-// (зубцы баски); к талии уже;
-// свет слева, кромка пеплом справа; пояс с пряжкой
+// камзол: гладкий, без ромбов (слово автора 10.11) — ночь, к талии уже; по середине
+// три пуговицы костью; свет слева серой кромкой, кромка пеплом справа; пояс с пряжкой
 const DOUBLET = [
-  '.knnnnrnnnnP.',
-  '.rnnnrrrnnnP.',
-  '.rrnrrrrrndP.',
-  '.rrnrrrrrndP.',
-  '..knnrrrnnP..',
-  '..knnnrnnnP..',
-  '..knnnrnnnP..',
-  '..knnrrrnnP..',
+  '.knnnnnnnnnP.',
+  '.knnnnBnnnnP.',
+  '.knnnnnnnnnP.',
+  '.knnnnBnnnnP.',
+  '..knnnnnnnP..',
+  '..knnnBnnnP..',
+  '..knnnnnnnP..',
+  '..knnnnnnnP..',
   '..hhhhLhhhh..',
 ];
 // баска: зубцы накрест, расходится колоколом
@@ -194,7 +193,8 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   // пошатывается: таз в одну сторону, плечи — в другую, голова запаздывает
   const sw = Math.sin(t * 0.0045), hip = moving ? 0 : q(sw), sh = moving ? 0 : -q(sw * 0.8), hd = moving ? 0 : q(Math.sin(t * 0.0045 - 0.8));
   const step = moving ? Math.sin(t * 0.18) : 0, bob = moving ? q(Math.abs(step) * 1.5) : 0;
-  const cx = x0 + 12, by = y0 - bob, G = y0 + 46;
+  // фигура короче на четыре точки (слово автора 10.11): тело ниже, ноги 10 вместо 14; земля прежняя
+  const cx = x0 + 12, by = y0 - bob + 4, G = y0 + 46;
   const tc = cx + q((hip + sh) / 2);                                    // середина камзола
   const hx = cx - 5 + sh + hd, hy = by;                                  // голова: левый верх карты
   // ── у костра: карты-надгробия в земле ──
@@ -227,10 +227,10 @@ export function drawNPC_jester(jx, jy, opts = {}) {
   // ── ноги: трико накрест — левая ночь, правая киноварь; колено, щиколотка уже ──
   const lL = moving ? q(Math.max(0, step) * 3) : 0, lR = moving ? q(Math.max(0, -step) * 3) : 0;
   const lx = cx + hip, top = by + 29;
-  const nL = 14 - lL, nR = 14 - lR;                                      // свет слева — серой кромкой, иначе ночью не видно
-  r(lx - 4, top, 1, Math.min(11, nL), S0); r(lx - 3, top, 2, nL, NI); if (nL > 7) r(lx - 3, top + 7, 1, 1, K3);
-  r(lx + 2, top, 2, nR, KV); r(lx + 4, top, 1, Math.min(11, nR), KD); if (nR > 7) r(lx + 3, top + 7, 1, 1, KD);
-  pix(SHOE_L, lx - 11, by + 42 - lL); pix(SHOE_R, lx + 2, by + 42 - lR);
+  const nL = 10 - lL, nR = 10 - lR;                                      // свет слева — серой кромкой, иначе ночью не видно
+  r(lx - 4, top, 1, Math.min(8, nL), S0); r(lx - 3, top, 2, nL, NI); if (nL > 5) r(lx - 3, top + 5, 1, 1, K3);
+  r(lx + 2, top, 2, nR, KV); r(lx + 4, top, 1, Math.min(8, nR), KD); if (nR > 5) r(lx + 3, top + 5, 1, 1, KD);
+  pix(SHOE_L, lx - 11, by + 38 - lL); pix(SHOE_R, lx + 2, by + 38 - lR);
   // ── баска, камзол, ворот ──
   pix(PEPLUM, cx - 7 + hip, by + 25);
   pix(DOUBLET, tc - 6, by + 16);

@@ -95,11 +95,11 @@ canvas#game {
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em;
   padding: 0 4%; box-sizing: border-box; overflow: hidden; text-align: center;
   font-family: var(--font-pixel); color: #D9CFB8; letter-spacing: 0.1em;
-  font-size: 11px; font-size: 1.7cqh; line-height: 1.5;
+  font-size: 14px; font-size: 2.3cqh; line-height: 1.5;
   pointer-events: none; user-select: none;
 }
 #entry.art #entry-afisha { display: flex; }
-#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 8px; font-size: 1.12cqh; }
+#entry-afisha.list { align-items: flex-start; text-align: left; font-size: 10px; font-size: 1.4cqh; }
 #entry-afisha .af-soon { opacity: 0.88; }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
@@ -898,13 +898,13 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
     <div class="si"><span class="si-i">📡</span><div class="si-info"><span class="si-n">Антенна-брошь</span><span class="si-d">Ловит 3 полоски. Звонить некому.</span></div><span class="si-p">1100 ¤</span></div>
     <div class="si"><span class="si-i">🪨</span><div class="si-info"><span class="si-n">Камень Сизифа</span><span class="si-d">Тёплый. Всегда тёплый. Amor fati.</span></div><span class="si-p">1400 ¤</span></div>
     <div class="si"><span class="si-i">🍄</span><div class="si-info"><span class="si-n">Cladosporium (в пробирке)</span><span class="si-d">Радиотрофный гриб. Не открывай — уже открыт.</span></div><span class="si-p">∞ ¤</span></div>
-    <div class="si"><span class="si-i">🃏</span><div class="si-info"><span class="si-n">Карта Шута</span><span class="si-d">Таро. Перевёрнутая. Или нет.</span></div><span class="si-p">666 ¤</span></div>
+    <div class="si"><span class="si-i">🃏</span><div class="si-info"><span class="si-n">Карта 0</span><span class="si-d">Таро. Перевёрнутая. Или нет.</span></div><span class="si-p">666 ¤</span></div>
   </div>
   <div class="shop-footer"><button class="sx" data-close-shop>ВЫЛЕЗТИ ИЗ КУЧИ</button></div>
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='1f39332 · 2026-11-07';console.log('[оттиск]', '1f39332 · 2026-11-07');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
+<script>window.ARDET_BUILD='426b9b8 · 2026-11-10';console.log('[оттиск]', '426b9b8 · 2026-11-10');window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
 if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_RADIO_RIGHT='62px';</script>
 <script>// ═══════════════════════════════════════════════════════════════════
@@ -33695,7 +33695,7 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
                 { id: 'campfire', name: 'Жертвенный костёр', x: 750, y: 780, w: 55, h: 50, zone: 'settlement',
                     useAction: 'campfire_throw',
                     light: { r: 95, color: [255, 100, 20], flicker: 0.15 } },
-                { id: 'jester_home', name: 'Шут', x: 810, y: 772, w: 18, h: 36, zone: 'settlement',
+                { id: 'jester_home', name: 'W', x: 810, y: 772, w: 18, h: 36, zone: 'settlement',
                     npc: 'jester' },
                 { id: 'terminal', name: 'Ржавый терминал', x: 1000, y: 920, w: 50, h: 48, zone: 'settlement',
                     useAction: 'terminal',
@@ -40635,7 +40635,8 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         // пошатывается: таз в одну сторону, плечи — в другую, голова запаздывает
         const sw = Math.sin(time_js_19.t * 0.0045), hip = moving ? 0 : q(sw), sh = moving ? 0 : -q(sw * 0.8), hd = moving ? 0 : q(Math.sin(time_js_19.t * 0.0045 - 0.8));
         const step = moving ? Math.sin(time_js_19.t * 0.18) : 0, bob = moving ? q(Math.abs(step) * 1.5) : 0;
-        const cx = x0 + 12, by = y0 - bob, G = y0 + 46;
+        // фигура короче на четыре точки (слово автора 10.11): тело ниже, ноги 10 вместо 14; земля прежняя
+        const cx = x0 + 12, by = y0 - bob + 4, G = y0 + 46;
         const tc = cx + q((hip + sh) / 2); // середина камзола
         const hx = cx - 5 + sh + hd, hy = by; // голова: левый верх карты
         // ── у костра: карты-надгробия в земле ──
@@ -40679,17 +40680,17 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
         // ── ноги: трико накрест — левая ночь, правая киноварь; колено, щиколотка уже ──
         const lL = moving ? q(Math.max(0, step) * 3) : 0, lR = moving ? q(Math.max(0, -step) * 3) : 0;
         const lx = cx + hip, top = by + 29;
-        const nL = 14 - lL, nR = 14 - lR; // свет слева — серой кромкой, иначе ночью не видно
-        r(lx - 4, top, 1, Math.min(11, nL), S0);
+        const nL = 10 - lL, nR = 10 - lR; // свет слева — серой кромкой, иначе ночью не видно
+        r(lx - 4, top, 1, Math.min(8, nL), S0);
         r(lx - 3, top, 2, nL, NI);
-        if (nL > 7)
-            r(lx - 3, top + 7, 1, 1, K3);
+        if (nL > 5)
+            r(lx - 3, top + 5, 1, 1, K3);
         r(lx + 2, top, 2, nR, KV);
-        r(lx + 4, top, 1, Math.min(11, nR), KD);
-        if (nR > 7)
-            r(lx + 3, top + 7, 1, 1, KD);
-        pix(SHOE_L, lx - 11, by + 42 - lL);
-        pix(SHOE_R, lx + 2, by + 42 - lR);
+        r(lx + 4, top, 1, Math.min(8, nR), KD);
+        if (nR > 5)
+            r(lx + 3, top + 5, 1, 1, KD);
+        pix(SHOE_L, lx - 11, by + 38 - lL);
+        pix(SHOE_R, lx + 2, by + 38 - lR);
         // ── баска, камзол, ворот ──
         pix(PEPLUM, cx - 7 + hip, by + 25);
         pix(DOUBLET, tc - 6, by + 16);
@@ -40825,18 +40826,17 @@ System.register("sprites/npcs/jester", ["core/time", "render/context"], function
                 '.BB.rr.BB.dd.ll',
                 '..B..r..B..d..l',
             ];
-            // камзол: ромбы рядами — красный ряд по груди, чёрный ниже, под поясом снова красный
-            // (зубцы баски); к талии уже;
-            // свет слева, кромка пеплом справа; пояс с пряжкой
+            // камзол: гладкий, без ромбов (слово автора 10.11) — ночь, к талии уже; по середине
+            // три пуговицы костью; свет слева серой кромкой, кромка пеплом справа; пояс с пряжкой
             DOUBLET = [
-                '.knnnnrnnnnP.',
-                '.rnnnrrrnnnP.',
-                '.rrnrrrrrndP.',
-                '.rrnrrrrrndP.',
-                '..knnrrrnnP..',
-                '..knnnrnnnP..',
-                '..knnnrnnnP..',
-                '..knnrrrnnP..',
+                '.knnnnnnnnnP.',
+                '.knnnnBnnnnP.',
+                '.knnnnnnnnnP.',
+                '.knnnnBnnnnP.',
+                '..knnnnnnnP..',
+                '..knnnBnnnP..',
+                '..knnnnnnnP..',
+                '..knnnnnnnP..',
                 '..hhhhLhhhh..',
             ];
             // баска: зубцы накрест, расходится колоколом
@@ -41888,7 +41888,7 @@ System.register("content/relooks", [], function (exports_113, context_113) {
                     { if: ['rain'], text: 'Дождь до огня не долетает: капли кончаются над камнями, в кольце сухо. Мокнут только кости вокруг.' },
                     { if: ['night'], text: 'Ночью видно, что полумесяц не уходит вместе с небом: звёзды сдвинулись, он висит, где висел. С нижнего рога набухает капля, срывается и падает в огонь. Огонь не шипит.' },
                     { text: 'Камней в кольце девятнадцать. Один светлее прочих: его подложили взамен треснувшего. Треснувший лежит тут же, у кольца, — выбросить не решились.' },
-                    { if: ['n3'], text: 'Огонь держат на ладонь ниже черепа — чтобы горел и чтобы череп было видно. Шут подкладывает по кости, не глядя: мерку помнит рука.' },
+                    { if: ['n3'], text: 'Огонь держат на ладонь ниже черепа — чтобы горел и чтобы череп было видно. W подкладывает по кости, не глядя: мерку помнит рука.' },
                 ],
                 pithos: [
                     { if: ['night'], text: 'Ночью из горла тянет сухой глиной и тёплым, будто там только что лежали. Внутри темно ровно настолько, чтобы лечь.' },
@@ -53307,7 +53307,7 @@ III. САМАЯ ТЁМНАЯ.
 
 «Нас четверо.
 
-ШУТ смеётся. Тёзки: Бодрийяр
+W смеётся. Тёзки: Бодрийяр
 («Войны в Заливе не было»)
 и Платонов — котлован вырыли,
 будущее не пришло.
@@ -56065,7 +56065,7 @@ System.register("content/worldmap_db", ["content/eggs_transfer"], function (expo
                     label: 'врата Декарта',
                     note: 'четыре правила, война за окном',
                     hidden: true,
-                    reveal: 'после первой беседы с шутом' },
+                    reveal: 'после первой беседы у костра' },
                 { id: 'gate_africa', cont: 'Африка', x: 612, y: 940,
                     target: { x: 4015, y: 880 }, // §3 medieval — Timbuktu
                     label: 'врата Тимбукту',
@@ -56628,7 +56628,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
         }
         y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
         if (getLockedFn())
-            y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра.', CINNABAR, F_PAPER_S]], y);
+            y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт W, у костра.', CINNABAR, F_PAPER_S]], y);
         // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился; в красный полдень руки нет
         const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
         ctx.font = F_GRIF;
@@ -60531,7 +60531,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
                 'реактор стабилен', 'рейтинг 0.0', 'зеркало опаздывает',
                 'песок помнит червя', 'котлован глубже чем кажется',
                 'лёд тает в девятом круге', 'чаша с молоком — на месте',
-                'шут смеётся за углом', 'братишка принёс', 'скрепка идеальна',
+                'за углом смеются', 'братишка принёс', 'скрепка идеальна',
                 'wifi есть, гостей нет', 'how dared', 'автопилот всё ещё едет',
                 'модель отвечает себе', 'скибиди', 'маска без лица',
                 'капитализм проще конца света', 'мох — последний, но не нетронутый',
@@ -68496,7 +68496,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (time_js_47.t - lockHintAt < 1800)
             return;
         lockHintAt = time_js_47.t;
-        lorepopup_js_1.showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт Шут. Шут у костра».');
+        lorepopup_js_1.showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт W, у костра».');
     }
     // Check if player can leave settlement
     function canLeaveSettlement() {
@@ -68980,7 +68980,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (jesterFirstTalk && !state_js_8.state.is('dialogue') && !state_js_8.state.is('menu'))
             jesterFirstTalk = false;
         if (jesterFirstTalk)
-            ink_js_2.ink.want(3, 'первый разговор с Шутом');
+            ink_js_2.ink.want(3, 'первый разговор у костра');
         if (ending_js_1.isActive())
             ink_js_2.ink.want(3, 'финал');
         const focus = ui_js_2.getActiveLoc();
