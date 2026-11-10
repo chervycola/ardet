@@ -22,6 +22,9 @@
 // изнанка, кольца эпох, погода и сутки.
 // Вход — дом (первая из двенадцати сцен: не заперто, в журнале ни строки);
 // 404 с телом мира ведёт в дом возвращения с бланком под дверью (TROPA §8).
+// Южный луч до огня — две станции и падение: от врат к югу колодец (второй взгляд —
+// три слова), ларёк у кольца с табличкой без мелкого шрифта; «дальше» ведёт на адрес,
+// которого нет (TROPA §8.2; тексты станций — нов., на приёмку автору).
 //
 // Новых текстов мира здесь нет, кроме служебных строк входа и подписей
 // ссылок (нов., на приёмку автору) — они собраны в FRAME ниже.
@@ -46,12 +49,24 @@ const FRAME = {
   toFire: 'к костру',
   toTerminal: 'к терминалу',
   toOffice: 'окно № 3',
+  further: 'дальше',
+  north: 'к северу', south: 'к югу',
   look: '§ ОСМОТРЕТЬ',          // подпись действия — как в меню игры
   talk: '❦ ГОВОРИТЬ',           // то же
   protocol: 'протокол беседы',  // ART_BIBLE: разговор — протокол
   back: 'к вещи',
   toEntry: 'ко входу',
 };
+// южный луч (нов., на приёмку): станции от врат до огня; last — адрес за кольцом, которого нет
+const RAY = [
+  { id: 'well_axis', name: 'Колодец', stamp: 'кольцо 1 · юг · три огня',
+    looks: ['Колодец у дороги. Сруб, ворот, ведро на цепи; ведро поднято, полное.\n\nС вечера в воду бросили соль. Соли не найти. Вода солёная сверху, в середине и со дна.', 'тат твам аси'],
+    north: ['gates.html', 'Врата'], south: ['ring_kiosk.html', 'Ларёк у кольца'] },
+  { id: 'ring_kiosk', name: 'Ларёк у кольца', stamp: 'кольцо 9 · юг · сейчас',
+    looks: ['Дорога кончается у ларька. Окно закрыто, ассортимент не вывешен. Табличка на окне без мелкого шрифта:\n\nВПЕРЁД — ПАДЕНИЕ. НАЗАД — ВСЕГДА.\n\nЗа ларьком огонь во всю ширину. Тени ложатся назад, к городку.', 'Шурупы без ржавчины.'],
+    north: ['well_axis.html', 'Колодец'], south: ['fire.html', null] },
+];
+const BEYOND = new Set(['fire.html']);   // единственный адрес, на который ведут и которого нет: падение
 const DIRS = ['к востоку', 'к юго-востоку', 'к югу', 'к юго-западу', 'к западу', 'к северо-западу', 'к северу', 'к северо-востоку'];
 
 // ── заглушки DOM: те же, что в test/*.mjs ──
@@ -178,7 +193,8 @@ for (const l of town) {
     const body = `<h1>${esc(l.name)}</h1>\n` + (s.kind === 'whisper' ? `<p class="whisper">${esc(s.text)}</p>` : paras(s.text));
     const acts = [`<p class="act"><a href="${next}">${FRAME.look}</a></p>`];
     if (Array.isArray(l.talkLines) && l.talkLines.length) acts.push(`<p class="act"><a href="${l.id}.talk.html">${FRAME.talk}</a></p>`);
-    put(fileOf(l.id, k), page(l.name, STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}\n${ENTRY}`));
+    const ray = l.id === 'gates' ? `\n<p>${FRAME.south} — <a href="${RAY[0].id}.html">${esc(RAY[0].name)}</a></p>` : '';   // от врат — луч к югу
+    put(fileOf(l.id, k), page(l.name, STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
   });
   if (Array.isArray(l.talkLines) && l.talkLines.length) {
     nTalk++;
@@ -186,6 +202,14 @@ for (const l of town) {
     put(`${l.id}.talk.html`, page(`${l.name} · ${FRAME.protocol}`, `${STAMP} · ${FRAME.protocol}`, body, `<p>${FRAME.back} — <a href="${fileOf(l.id)}">${esc(l.name)}</a></p>\n${ENTRY}`));
   }
 }
+
+// южный луч: у станции две страницы (взгляд и второй взгляд, круг), соседи — к северу и к югу
+for (const s of RAY) s.looks.forEach((text, i) => {
+  const k = i + 1, next = fileOf(s.id, k === s.looks.length ? 1 : k + 1);
+  const near = [s.north, s.south].map(([href, name]) => `<p>${href === s.north[0] ? FRAME.north : FRAME.south} — <a href="${href}">${esc(name || FRAME.further)}</a></p>`).join('\n');
+  put(fileOf(s.id, k), page(s.name, s.stamp, `<h1>${esc(s.name)}</h1>\n${paras(text)}`,
+    `<p class="act"><a href="${next}">${FRAME.look}</a></p>\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${near}\n${ENTRY}`));
+});
 
 // вход — дом: сцена и вещи дома как они есть (world/house.js THINGS, ночь; ботинки — у проснувшегося);
 // дверь ведёт наружу, к дому как вещи городка (wake_house), оттуда — к соседям
@@ -213,10 +237,10 @@ put('404.html', page('404', FRAME.lost,
 // ── самопроверка: все ссылки ведут на собранные страницы; до всего можно дойти от входа ──
 let bad = 0;
 const local = h => h.replace(/^\/walk\//, '');                 // 404 ссылается абсолютно
-for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!files.has(local(m[1]))) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
+for (const [name, html] of files) for (const m of html.matchAll(/href="([^"]+)"/g)) if (!files.has(local(m[1])) && !BEYOND.has(m[1])) { bad++; console.error(`битая ссылка: ${name} → ${m[1]}`); }
 // входов два: дом и 404 (её отдаёт сервер на любой адрес, которого нет)
 const reach = new Set(['index.html', '404.html']); const queue = [...reach];
-while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h)) { reach.add(h); queue.push(h); } }
+while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h) && files.has(h)) { reach.add(h); queue.push(h); } }
 const lost = [...files.keys()].filter(f => !reach.has(f));
 const bytes = [...files.values()].reduce((a, h) => a + Buffer.byteLength(h), 0);
 console.log(`городок текстом: вещей ${town.length}, страниц ${files.size} (${(bytes / 1024).toFixed(0)} КБ) → ${path.relative(process.cwd(), OUT)}/`);
