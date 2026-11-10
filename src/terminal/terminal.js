@@ -181,7 +181,7 @@ const commands = {
 
 ПЕРСОНАЖИ:
   archivist, moss, cat, you
-  jester, sol, elder, nocturnal
+  w, sol, elder, nocturnal
 
 МЫСЛИТЕЛИ:
   camus, borges, baudrillard, lovecraft

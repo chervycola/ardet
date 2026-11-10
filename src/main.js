@@ -296,7 +296,7 @@ let lockHintAt = -99999;
 function lockHint() {
   if (_t - lockHintAt < 1800) return;
   lockHintAt = _t;
-  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт W, у костра».');
+  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт W. У костра».');
 }
 
 // Check if player can leave settlement

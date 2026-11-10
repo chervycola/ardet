@@ -453,7 +453,7 @@ function drawLocalSide() {
     y += 18;
   }
   y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
-  if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт W, у костра.', CINNABAR, F_PAPER_S]], y);
+  if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт W. У костра.', CINNABAR, F_PAPER_S]], y);
   // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился; в красный полдень руки нет
   const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
   ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);
