@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 931 121. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 931 121. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 931 077. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 931 077. из них видимых: 1 747. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -911,7 +911,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='99b6d51 · 2026-11-11';console.log('[оттиск]', '99b6d51 · 2026-11-11');
+<script>window.ARDET_BUILD='a55fa68 · 2026-11-11';console.log('[оттиск]', 'a55fa68 · 2026-11-11');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -6710,9 +6710,7 @@ System.register("world/attention", [], function (exports_30, context_30) {
             // шлагбаум поднимается по звонку, — их внимание не касается.
             // Лента отнимает внимание: падение в брейнрот — механизмы забывают половину.
             // Чисел и шкал нет: видно только по тому, как вещь себя ведёт.
-            // Потолок очков — семь, он же полный ответ (слово автора 11.11): стоять дольше незачем,
-            // а падение в ленту видно и тому, кто сидел у вещи час (при потолке двадцать усидчивый
-            // падения не замечал — скрытая награда за долгий покой).
+            // Потолок очков — семь, он же полный ответ.
             // ═══════════════════════════════════════
             exports_30("LEVELS", LEVELS = [3, 7]); // очков: узнаёт · отвечает в полную
             CAP = LEVELS[1]; // потолок: полный ответ, выше не копится
@@ -42000,10 +41998,15 @@ System.register("world/relook", ["content/relooks"], function (exports_114, cont
             return null;
         const seen = shown.get(id) || new Set();
         const i = fits.find(k => !seen.has(k));
-        if (i === undefined) {
-            shown.delete(id);
+        if (i === undefined) { // всё подходящее видано: первый текст, круг по нему заново
+            for (const k of fits)
+                seen.delete(k);
+            if (seen.size)
+                shown.set(id, seen);
+            else
+                shown.delete(id);
             return null;
-        } // всё видано: первый текст, круг заново
+        }
         seen.add(i);
         shown.set(id, seen);
         return list[i].text;
