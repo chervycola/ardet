@@ -153,6 +153,21 @@ test('potemkin: все швы — непустые строки, у каждог
   eq(withSeam.length, signSeams, 'каждая табличка со швом стала подделкой в мире');
 });
 
+test('potemkin: взгляд поднимается с порога шва и спадает плавно, как проявленность; тихой вещи он снимает тень', async () => {
+  P._reset(); run(near, P.STILL_DELAY + 1);
+  assert(P.gaze() === 0 || P.gaze() <= P.RISE + 1e-9, 'до порога взгляда нет');
+  run(near, 90);
+  assert(P.gaze() > 0.99, `за полторы секунды взгляд полный: ${P.gaze().toFixed(2)}`);
+  run({ ...near, moving: true }, 1);
+  assert(P.gaze() > 0.9 && P.gaze() < 1, `шаг — спад на FALL, не в ноль: ${P.gaze().toFixed(3)}`);
+  run({ ...near, moving: true }, 60);
+  eq(P.gaze(), 0, 'на ходу взгляд сходит на нет');
+  const { quietShade } = await imp('render/quiet.js');
+  for (const d of [0, 100, 150, 230]) assert(quietShade(d, 1) < quietShade(d, 0) || quietShade(d, 0) === 0, `взгляд снимает тень на ${d}`);
+  eq(quietShade(0, 1), 0, 'вблизи под взглядом тени нет');
+  assert(Math.abs((quietShade(150, 0) - quietShade(150, 1)) - 0.12) < 1e-9, 'прибавка — на волос, 0.12');
+});
+
 // ═══ REPORT ═══
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');

@@ -21,6 +21,7 @@ export const SEAM_MEMORY = 120;   // шов помнится ~2 с: подойт
 const reveal = new Map();         // loc.id → 0..1
 const seenAt = new Map();         // loc.id → кадр, когда шов был виден
 let stillFrames = 0;
+let gazeK = 0;                    // неподвижный взгляд 0..1: поднимается и спадает, как проявленность
 let fakes = null;
 
 // Строка-шов подделки (живое чтение: правка в редакторе сразу в мире)
@@ -37,6 +38,8 @@ function anchor(loc) {
 export function update(player, locations, frozen = false) {
   if (!fakes) fakes = locations.filter(l => seamOf(l));
   stillFrames = (player.moving || frozen) ? 0 : stillFrames + 1;
+  const gt = stillFrames > STILL_DELAY ? 1 : 0;
+  gazeK = gazeK < gt ? Math.min(gt, gazeK + RISE) : gazeK > gt ? Math.max(gt, gazeK - FALL) : gazeK;
   const px = player.x + 6, py = player.y + 10;
   for (const loc of fakes) {
     const a = anchor(loc);
@@ -53,7 +56,7 @@ export function revealOf(loc) { return reveal.get(loc.id) || 0; }
 
 // неподвижный взгляд как таковой, 0..1: с тем же порогом и подъёмом, что шов; у подделки
 // под ним редеет фасад, у настоящей тихой вещи — на волос прибавляется (render/quiet.js)
-export function gaze() { return Math.max(0, Math.min(1, (stillFrames - STILL_DELAY) * RISE)); }
+export function gaze() { return gazeK; }
 
 export function seamVisible(loc) {
   if (revealOf(loc) >= SEAM_AT) return true;
@@ -192,4 +195,4 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
 }
 
 // для тестов и перезапуска мира
-export function _reset() { reveal.clear(); seenAt.clear(); stillFrames = 0; fakes = null; }
+export function _reset() { reveal.clear(); seenAt.clear(); stillFrames = 0; gazeK = 0; fakes = null; }

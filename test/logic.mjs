@@ -519,6 +519,20 @@ const imp = p => import(new URL(p, base));
     assert(RL.wasUsed('campfire'), 'тронутое помнит сохранение');
     RL._resetRelook();
   });
+  test('повторный осмотр: все подробности виданы — первый текст вещи, круг заново', () => {
+    RL._resetRelook();
+    const id = Object.keys(RELOOKS).find(k => RELOOKS[k].length >= 2);
+    const all = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind']);   // любая обстановка: подходят все варианты
+    const n = RELOOKS[id].length;
+    RL.noteUse(id); RL.noteLook(id); RL.noteLook(id); RL.noteLook(id);              // третий взгляд: годны и n3, и used
+    const seen = [];
+    for (let i = 0; i < n; i++) { seen.push(RL.relookText(id, all)); RL.noteLook(id); }
+    assert(seen.every(Boolean) && new Set(seen).size === n, 'подробности идут по одной, без повторов');
+    eq(RL.relookText(id, all), null, 'всё видано — снова первый текст');
+    eq((RL.saveRelook().seen[id] || []).length, 0, 'круг начат заново');
+    RL.noteLook(id); eq(RL.relookText(id, all), seen[0], 'дальше — снова первая подробность');
+    RL._resetRelook();
+  });
   test('повторный осмотр: у каждой вещи есть вариант без условий; метки — из известных; тексты не пустые', () => {
     const TAGS = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind', 'used', 'n3']);
     for (const [id, list] of Object.entries(RELOOKS)) {

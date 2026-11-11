@@ -6,7 +6,7 @@
 import { setCtx } from './context.js';
 
 const NEAR = 70, FAR = 230, DEEP = 0.62, SEEN = 0.1;   // в двух шагах — почти как есть; издали — силуэт в тени
-const HAIR = 0.25;                                     // неподвижному взгляду ближняя тихая вещь прибавляет на волос: тень меньше на четверть
+const HAIR = 0.12;                                     // неподвижному взгляду ближняя тихая вещь прибавляет на волос: тени меньше на 0.12 (вблизи — до нуля)
 let off = null, oc = null;
 
 // сколько тени: по расстоянию от ног странника до подножия вещи; g — неподвижный взгляд
@@ -14,7 +14,7 @@ let off = null, oc = null;
 // подделка под взглядом теряет, настоящее набирает на волос
 export function quietShade(d, g = 0) {
   const k = Math.max(0, Math.min(1, (d - NEAR) / (FAR - NEAR)));
-  return (SEEN + (DEEP - SEEN) * k * k * (3 - 2 * k)) * (1 - HAIR * Math.max(0, Math.min(1, g)));
+  return Math.max(0, SEEN + (DEEP - SEEN) * k * k * (3 - 2 * k) - HAIR * Math.max(0, Math.min(1, g)));
 }
 
 // drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом

@@ -3186,6 +3186,16 @@ setCtx(ctx);
     AT.loadAttention(saved, [thing]);
     eq(AT.levelOf(thing.id), 2, 'сохранение не помнит');
   });
+  test('внимание: потолок — полный ответ; старое сохранение с двадцатью очками садится на семь; падение видно', () => {
+    AT._resetAttention();
+    for (let i = 0; i < 30; i++) AT.noteAttention(thing);
+    eq(AT.pointsOf(thing.id), AT.LEVELS[1], 'сверх потолка не копится');
+    AT._resetAttention();
+    AT.loadAttention({ [thing.id]: 20 }, [thing]);
+    eq(AT.pointsOf(thing.id), AT.LEVELS[1], 'старое сохранение — на потолок');
+    AT.forget();
+    eq(AT.levelOf(thing.id), 1, 'после падения усидчивый тоже теряет полный ответ');
+  });
   test('внимание: флюгер у знакомой вещи поворачивается остриём к страннику, а не к ветру', () => {
     AT._resetAttention();
     for (let i = 0; i < 7; i++) AT.noteAttention(thing);

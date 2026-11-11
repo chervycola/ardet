@@ -838,10 +838,12 @@ function drawLocationPlaceholder(ctx, loc) {
   ctx.globalAlpha = 1;
 }
 
-// ближняя тихая вещь в пределах взгляда: только ей неподвижность прибавляет на волос
+// ближняя тихая вещь в пределах взгляда: только ей неподвижность прибавляет на волос.
+// Взгляд тихой вещи шире, чем у подделки (72): тихие стоят в тени дальше от дороги
+const GAZE_R = 150;
 let quietGazeId = null;
 function nearestQuietId() {
-  let best = null, bd = 230;
+  let best = null, bd = GAZE_R;
   for (const loc of locations) {
     if (!loc.quiet || loc.under || loc.house) continue;
     const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
