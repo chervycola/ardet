@@ -1391,7 +1391,7 @@ const HOSTILE = [
   '.A..........A........A.',
   'NA.........NA........AN',
 ];
-function hostileBench(c, x, gy) {
+export function hostileBench(c, x, gy) {
   spr(c, Math.round(x) - 11, Math.round(gy) - HOSTILE.length, HOSTILE, { S: tone(MAT.STEEL, 1), D: N, B: BONE, A: ASH, P: PAPER2, W: WOOD2, N });
 }
 

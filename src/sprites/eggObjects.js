@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════
 
 import { hang, angleOf } from '../world/hang.js';
+import { hostileBench } from './arch/now.js';   // скамья с подлокотниками — та же, что примета девятого кольца
 const C = {
   dark: '#15100c', wood: '#241c14', wood2: '#3a2418', plank: '#3a2818',
   stone: '#3a3328', stone2: '#2a2620', brick: '#3a1c14', concrete: '#34302a',
@@ -593,6 +594,8 @@ const STREET = {
     ctx.fillStyle = C.bone;                        // резаное имя на средней планке
     ctx.fillRect(x - 3, gy - 8, 7, 1);
   },
+  // скамья с подлокотниками (табличка слоя сюжета, кольцо IX)
+  hostile_bench(ctx, x, gy) { hostileBench(ctx, x, gy); },
   // зеркало лицом к стене
   mirror_wall(ctx, x, gy) {
     ctx.fillStyle = C.stone;

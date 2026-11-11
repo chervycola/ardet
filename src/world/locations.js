@@ -12,6 +12,8 @@ export const locations = [
     light: { r: 95, color: [255, 100, 20], flicker: 0.15 } },
   { id: 'jester_home', name: 'W', x: 810, y: 772, w: 18, h: 36, zone: 'settlement',
     npc: 'jester' },
+  { id: 'firelog', name: 'Бревно', x: 714, y: 822, w: 30, h: 8, zone: 'settlement',
+    useAction: 'sit_log', useLabel: '<i>⌂</i>СЕСТЬ' },
   { id: 'terminal', name: 'Ржавый терминал', x: 1000, y: 920, w: 50, h: 48, zone: 'settlement',
     useAction: 'terminal',
     solid: true, light: { r: 28, color: [120, 170, 60], flicker: 0.05 } },

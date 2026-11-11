@@ -47,10 +47,10 @@ export function pose(player) {
   const contact = amp > 0.3 && !red && (fr < 0.3 || fr > 0.92);
   const dip = Math.max(contact ? 1 : 0, g && g.settle > 0.5 && !red ? 1 : 0);
   const dipH = contact && g && g.heavy && fr < 0.1 ? 1 : 0;
-  // дыхание — только в покое: у своего — с остановки (gait.calm), у теней — по часам; сперва плечи, потом голова
+  // дыхание — в покое, стоя и сидя: у своего — с остановки (gait.calm), у теней — по часам; сперва плечи, потом голова
   const still = 1 - Math.min(1, amp * 2);
   const bt = g ? g.calm - 40 : t;
-  const bs = !red && sit < 0.5 && still > 0.5 && bt > 0 ? Math.sin(bt * Math.PI * 2 / 360) : 0;
+  const bs = !red && still > 0.5 && bt > 0 ? Math.sin(bt * Math.PI * 2 / 600) : 0;
   const bSh = bs > 0.15 ? 1 : 0, bHd = bs > 0.45 ? 1 : 0;
   const trail = clamp(g ? g.hem : w.x * 2.4 - vx * 0.7, -3, 3);
   const run = g ? g.run : 0;

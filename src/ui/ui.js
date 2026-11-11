@@ -20,7 +20,7 @@ import { hasSignature, signatureSVG } from './signature.js';
 import { hasReturned } from '../core/sessionMemory.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
-const SPECIAL_USE = new Set(['shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
+const SPECIAL_USE = new Set(['sit_log', 'shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
 
 // Does this location actually do something on «использовать»?
 // Mirrors the dispatch in main.js's 'location.use' handler — keep in sync.
@@ -46,6 +46,7 @@ export const menuInscriptions = {
   h_window: 'за стеклом — квартал.',
   campfire: 'огонь не спрашивает.',
   jester_home: 'некролог при себе. бумага горючая.',
+  firelog: 'место одно. пока сидишь — занято.',
   terminal: 'session expired. reconnect?',
   sol_home: 'смена: без сдачи. ночь: со слов.',
   vending: 'крути — получи мериты. цикл замкнут.',

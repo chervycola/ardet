@@ -346,6 +346,7 @@ const NO_HOUSE = /[?&](?:nohouse|under)\b/.test(location.search);
 let houseKeep = null;                                // свет мира, пока в доме
 function intoHouse(fx, fy, wake) {
   if (wake) house.wake(); else house.enter();
+  logSeated = false;
   stumble.cancel();                                  // оступился на пороге — в доме уже стоишь
   if (!houseKeep) houseKeep = lighting.sources;
   player.x = fx - 6; player.y = fy - 23; player.tx = player.x; player.ty = player.y;
@@ -354,6 +355,13 @@ function intoHouse(fx, fy, wake) {
   clearWhisper();                                    // шёпот улицы остался на улице
   muteRedNoon(true);
   lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
+}
+// бревно у костра (world/locations.js firelog): фигура садится на середину бревна; любой перенос — встал
+let logSeated = false;
+function sitOnLog(loc) {
+  player.x = loc.x + loc.w / 2 - 6; player.y = loc.y + loc.h - 23; player.tx = player.x; player.ty = player.y;
+  player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
+  logSeated = true;
 }
 function outOfHouse() {
   house.leave();                                     // вышел — обулся
@@ -747,7 +755,8 @@ function stepFx() {
   // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
   // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
   beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'), beyond.visor && lookingNear(player.x + 6, player.y + 23));
-  player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть; шагнул — встал
+  if (player.moving) logSeated = false;
+  player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated || logSeated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть или на бревно; шагнул — встал
   player.visor = beyond.visor;                       // у столба: ладонь козырьком, пока черта видна
   stepPozemka(camX, camY, scaler.vw, scaler.vh);
   if (beyond.murmur) playMurmur(beyond.murmur);
@@ -1234,6 +1243,7 @@ function frontOf(l, fallback) {
   return l ? { x: Math.round(l.x + l.w / 2 - 6), y: Math.round(l.y + l.h + 5) } : fallback;
 }
 function teleportWithFade(x, y, after = null) {
+  logSeated = false;
   // If a fade is already running, just retarget it.
   teleportFade.target = { x, y };
   teleportFade.after = after;
@@ -2150,6 +2160,8 @@ events.on('location.use', (loc) => {
   if (actionKey === 'town_well_crank') { crankTownWell(showLore); return; }
   // столб за кольцом: посмотреть из-под ладони — черта горизонта на несколько секунд (world/beyond.js)
   if (actionKey === 'horizon_look') { beyond.lookHorizon(); return; }
+  // бревно у костра: сесть лицом к огню; слов нет, дыхание продолжается; шагнул — встал
+  if (actionKey === 'sit_log') { sitOnLog(loc); return; }
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }

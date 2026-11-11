@@ -8,7 +8,7 @@ import { phaseAt } from '../../world/sky.js';
 import { playerNearLoc } from '../../core/playerRef.js';
 import { locations as locs } from '../../world/locations.js';
 // места по канону — сверены с осмотром и описью сцены (sprites/locations/canon.js)
-export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending, draw_basement, draw_exit, draw_raven } from './canon.js';
+export { draw_office, draw_gates, draw_train, draw_theater, draw_terminal, draw_powerline, draw_crater, draw_nocturnal, draw_campfire, draw_pithos, draw_firelog, draw_lantern1, draw_church, draw_library, draw_fountain, draw_cross, draw_radio, draw_tent, draw_pizzeria, draw_ruins, draw_watchtower, draw_junkyard, draw_bus, draw_billboard, draw_pipeline, draw_lake, draw_altar, draw_dumpster, draw_banner, draw_overpass, draw_posterwall, draw_crypt, draw_graffiti, draw_vending, draw_basement, draw_exit, draw_raven } from './canon.js';
 
 const P = {
   d1: '#0a0a0a', d2: '#6b0f1a', dgrey: '#2a2a2a', dstone: '#3a3a2a',
