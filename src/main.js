@@ -118,7 +118,7 @@ import { noteAttention, stepAttention, forget as forgetAttention, saveAttention,
 function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.ring <= EPOCHS.length ? EPOCHS[p.ring - 1].id + ':' + p.side : null; }
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
-import { update as updatePotemkin, revealOf, drawRevealed, setRelook } from './world/potemkin.js';
+import { update as updatePotemkin, revealOf, drawRevealed, setRelook, gaze } from './world/potemkin.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
@@ -838,8 +838,22 @@ function drawLocationPlaceholder(ctx, loc) {
   ctx.globalAlpha = 1;
 }
 
+// ближняя тихая вещь в пределах взгляда: только ей неподвижность прибавляет на волос
+let quietGazeId = null;
+function nearestQuietId() {
+  let best = null, bd = 230;
+  for (const loc of locations) {
+    if (!loc.quiet || loc.under || loc.house) continue;
+    const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
+    const d = Math.hypot(player.x + 6 - fx, player.y + 24 - fy);
+    if (d < bd) { bd = d; best = loc.id; }
+  }
+  return best;
+}
+
 // Location draw: real sprite if migrated, placeholder otherwise.
-// Подделка под неподвижным взглядом проявляется (потёмкинская скорость).
+// Подделка под неподвижным взглядом проявляется (потёмкинская скорость); настоящая тихая
+// вещь под тем же взглядом набирает на волос (один закон на две стороны).
 function drawLocation(ctx, loc) {
   const k = revealOf(loc);
   if (k > 0.01) {
@@ -855,7 +869,7 @@ function drawLocation(ctx, loc) {
     const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
     const box = loc.archDraw ? { x: loc.archX - loc.w / 2 - 6, y: loc.archGy - loc.h - 14, w: loc.w + 12, h: loc.h + 20 }
       : { x: loc.x + 7 - 24, y: loc.y + loc.h - 52, w: 48, h: 56 };
-    drawQuiet(ctx, box, quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy)), c => drawLocationPlain(c, loc));
+    drawQuiet(ctx, box, quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? gaze() : 0), c => drawLocationPlain(c, loc));
     return;
   }
   drawLocationPlain(ctx, loc);
@@ -1702,6 +1716,7 @@ function updateWorldSystems() {
   if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
   if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); }   // обмер — ногами
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
+  if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving);

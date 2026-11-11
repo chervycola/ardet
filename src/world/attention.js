@@ -11,8 +11,12 @@
 // шлагбаум поднимается по звонку, — их внимание не касается.
 // Лента отнимает внимание: падение в брейнрот — механизмы забывают половину.
 // Чисел и шкал нет: видно только по тому, как вещь себя ведёт.
+// Потолок очков — семь, он же полный ответ (слово автора 11.11): стоять дольше незачем,
+// а падение в ленту видно и тому, кто сидел у вещи час (при потолке двадцать усидчивый
+// падения не замечал — скрытая награда за долгий покой).
 // ═══════════════════════════════════════
 export const LEVELS = [3, 7];              // очков: узнаёт · отвечает в полную
+const CAP = LEVELS[1];                     // потолок: полный ответ, выше не копится
 const NEAR = 60;                           // «рядом» с вещью — в стольких точках от её рамки
 const STILL_PT = 480;                      // кадров неподвижности рядом — очко (8 с)
 
@@ -27,7 +31,7 @@ export const pointsOf = id => pts.get(id) || 0;
 
 export function noteAttention(loc, k = 1) {
   if (!loc || !loc.id || !Number.isFinite(loc.x) || !Number.isFinite(loc.y) || loc.under || loc.house || loc.net) return;
-  pts.set(loc.id, Math.min(20, (pts.get(loc.id) || 0) + k));
+  pts.set(loc.id, Math.min(CAP, (pts.get(loc.id) || 0) + k));
   box.set(loc.id, { x: loc.x, y: loc.y, w: loc.w || 0, h: loc.h || 0 });
 }
 
@@ -87,8 +91,8 @@ export function loadAttention(d, locations = []) {
   for (const [id, v] of Object.entries(d)) {
     const l = byId.get(id), p = Array.isArray(v) ? v[0] : v;
     if (!Number.isFinite(p) || p <= 0) continue;
-    if (l) { pts.set(id, 0); noteAttention(l, Math.min(20, p | 0)); }
-    else pts.set(id, Math.min(20, p | 0));             // вещь появится позже — рамку возьмём при встрече
+    if (l) { pts.set(id, 0); noteAttention(l, Math.min(CAP, p | 0)); }
+    else pts.set(id, Math.min(CAP, p | 0));             // вещь появится позже — рамку возьмём при встрече
   }
 }
 export function _resetAttention() { pts.clear(); box.clear(); still = 0; stillAt = null; }

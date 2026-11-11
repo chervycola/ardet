@@ -1,8 +1,10 @@
 // ═══════════════════════════════════════
 // ПОВТОРНЫЙ ОСМОТР (weave/ROADMAP И8; слово автора 23.10): второй и следующие
 // осмотры вещи — точнее первого, вариант — по обстановке. Первый — всегда свой
-// текст вещи. Счёт осмотров, виденные варианты и тронутые вещи помнит
-// сохранение. Тексты — content/relooks.js; метки обстановки даёт main.js.
+// текст вещи. Когда все подходящие подробности виданы, осмотр возвращает первый
+// текст вещи (тот же, прочитанный после подробностей; схемы §1.4, как круг в
+// пробнике walk), и круг начинается заново. Счёт осмотров, виденные варианты и
+// тронутые вещи помнит сохранение. Тексты — content/relooks.js; метки обстановки даёт main.js.
 // ═══════════════════════════════════════
 import { RELOOKS } from '../content/relooks.js';
 
@@ -31,7 +33,8 @@ export function relookText(id, tags = new Set()) {
   list.forEach((v, i) => { if (!v.if || v.if.every(tg => T.has(tg))) fits.push(i); });
   if (!fits.length) return null;
   const seen = shown.get(id) || new Set();
-  const i = fits.find(k => !seen.has(k)) ?? fits[0];   // сперва — ещё не виденный
+  const i = fits.find(k => !seen.has(k));
+  if (i === undefined) { shown.delete(id); return null; }   // всё видано: первый текст, круг заново
   seen.add(i);
   shown.set(id, seen);
   return list[i].text;

@@ -51,6 +51,10 @@ export function update(player, locations, frozen = false) {
 
 export function revealOf(loc) { return reveal.get(loc.id) || 0; }
 
+// неподвижный взгляд как таковой, 0..1: с тем же порогом и подъёмом, что шов; у подделки
+// под ним редеет фасад, у настоящей тихой вещи — на волос прибавляется (render/quiet.js)
+export function gaze() { return Math.max(0, Math.min(1, (stillFrames - STILL_DELAY) * RISE)); }
+
 export function seamVisible(loc) {
   if (revealOf(loc) >= SEAM_AT) return true;
   const at = seenAt.get(loc.id);
