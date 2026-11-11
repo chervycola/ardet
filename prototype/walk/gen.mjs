@@ -46,7 +46,6 @@ const FRAME = {
   title: 'ARDET · Дом',
   house: 'дом',
   scene: 'Окна тёмные. Не заперто. В журнале ни строки.',   // первая из двенадцати сцен (BOOK §7)
-  errand: 'Пришёл по чужому делу — сначала дело. Уйти можно с любой страницы.',
   near: 'Рядом',
   lost: 'место не установлено',
   notFound: 'Не найдено. Положение изменилось.',
@@ -82,6 +81,13 @@ const RAY = [
 ];
 const BEYOND = new Set(['fire.html']);   // единственный адрес, на который ведут и которого нет: падение
 const UNLINKED = new Set(['terminal.journal.88.html']);   // единственная страница, на которую не ведёт ничего
+// нити без гиперссылок (ATTENTION §2 п. 5): два конца на разных кольцах, не соседи по лучу,
+// ни одной ссылки между ними, ни одной страницы, где стоят оба; пометки «собрано» нет.
+// Дальний конец достижим только тем, что читающий несёт. Список — для проверки, не для мира:
+// в текстах ни одна нить не названа. Следующие ложатся вместе с кольцами луча.
+const THREADS = [
+  ['jester_home.talk.html', 'well_axis.2.html'],   // «Не ты. Похож.» у костра — «тат твам аси» на дне колодца
+];
 const DIRS = ['к востоку', 'к юго-востоку', 'к югу', 'к юго-западу', 'к западу', 'к северо-западу', 'к северу', 'к северо-востоку'];
 
 // ── заглушки DOM: те же, что в test/*.mjs ──
@@ -263,7 +269,7 @@ const door = `<p class="act"><a href="${fileOf(outside.id)}">${esc(thing('h_door
 const houseStamp = `${STAMP} · ${FRAME.house}`;
 put('index.html', page(FRAME.title, houseStamp,
   `<h1>Дом</h1>\n<p>${esc(FRAME.scene)}</p>\n${houseBody}`,
-  `${door}\n<p class="stamp" style="margin:1.6em 0 0">${esc(FRAME.errand)}</p>`));
+  door));   // ни одной строки о том, что делать: дверь делает работу сама (нож 11.11)
 
 // дом возвращения — куда ведёт 404: тот же дом, под дверью бланк (полная формула — один раз, здесь)
 put('house.return.html', page(FRAME.title, houseStamp,
@@ -286,9 +292,17 @@ const reach = new Set(['index.html', '404.html']); const queue = [...reach];
 while (queue.length) for (const m of files.get(queue.pop()).matchAll(/href="([^"]+)"/g)) { const h = local(m[1]); if (!reach.has(h) && files.has(h)) { reach.add(h); queue.push(h); } }
 const lost = [...files.keys()].filter(f => !reach.has(f) && !UNLINKED.has(f));
 for (const f of UNLINKED) if (!files.has(f) || reach.has(f)) { bad++; console.error(`непрошитая страница ${f}: ${files.has(f) ? 'на неё ведёт ссылка' : 'не собрана'}`); }
+// нити: концы собраны, на разных кольцах, не связаны ссылкой ни в какую сторону, и нет страницы, где стоят оба
+const stampOf = f => (files.get(f).match(/<p class="stamp">([^<]+)<\/p>/) || [])[1] || '';
+const ring = f => stampOf(f).split(' · ').slice(0, 2).join(' · ');
+const hrefs = f => new Set([...files.get(f).matchAll(/href="([^"]+)"/g)].map(m => local(m[1])));
+for (const [a, b] of THREADS) {
+  const why = !files.has(a) || !files.has(b) ? 'конец не собран' : a === b ? 'один конец' : ring(a) === ring(b) ? `оба конца в «${ring(a)}»` : hrefs(a).has(b) || hrefs(b).has(a) ? 'концы связаны ссылкой' : [...files].some(([f, h]) => f !== a && f !== b && hrefs(f).has(a) && hrefs(f).has(b)) ? 'есть страница с обоими концами' : null;
+  if (why) { bad++; console.error(`нить ${a} — ${b}: ${why}`); }
+}
 const bytes = [...files.values()].reduce((a, h) => a + Buffer.byteLength(h), 0);
 console.log(`городок текстом: вещей ${town.length}, страниц ${files.size} (${(bytes / 1024).toFixed(0)} КБ) → ${path.relative(process.cwd(), OUT)}/`);
 console.log(`  швов ${nSeam}, повторных осмотров ${nRelook}, шёпотов ${nWhisper}, разговоров ${nTalk}`);
 console.log(`  соседей у вещи: от ${Math.min(...[...adj.values()].map(s => s.size))} до ${Math.max(...[...adj.values()].map(s => s.size))}`);
 if (bad || lost.length) { console.error(`✗ битых ссылок: ${bad}; недостижимых страниц: ${lost.length} ${lost.slice(0, 5).join(', ')}`); process.exit(1); }
-console.log(`✓ ссылки целы, от входа достижимо всё, кроме ${[...UNLINKED].join(', ')} (нарочно)`);
+console.log(`✓ ссылки целы, от входа достижимо всё, кроме ${[...UNLINKED].join(', ')} (нарочно); нитей без ссылок: ${THREADS.length}`);
