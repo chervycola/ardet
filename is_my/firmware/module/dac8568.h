@@ -18,7 +18,7 @@ enum {
     DAC_CH_CUTOFF  = 2,   /* C: нормаль CUTOFF-in (правый Y)  */
     DAC_CH_RESO    = 3,   /* D: нормаль RESO-in   (правый X)  */
     DAC_CH_GATE    = 4,   /* E: CV-out GATE + внутр. gate      */
-    DAC_CH_MUTE    = 5,   /* F: ramp мьют-VCA (управление Iabc)*/
+    DAC_CH_MUTE    = 5,   /* F: mute-рампа, ток хвоста 2-го каскада VCA (S8) */
     DAC_CH_IQREF   = 6,   /* G: опора Iq серв ядра             */
     DAC_CH_DIAL    = 7,   /* H: gimbal dial (нормаль MIX-in)   */
 };

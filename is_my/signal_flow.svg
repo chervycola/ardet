@@ -86,7 +86,7 @@
     <text x="262" y="80">MIX</text><text x="262" y="84.5" font-size="2.1" font-weight="400" fill="#cdbfae">dry/wet</text>
 
     <rect x="278" y="70" width="32" height="24" rx="1.6" fill="#1d1916" stroke="#e0a23a" stroke-width="0.5"/>
-    <text x="294" y="80" fill="#ffd9a0">OUT VCA</text><text x="294" y="84.5" font-size="2.1" font-weight="400" fill="#cd9a66">грязный · ARM</text>
+    <text x="294" y="80" fill="#ffd9a0">OUT VCA</text><text x="294" y="84.5" font-size="2.1" font-weight="400" fill="#cd9a66">2 каскада · ARM</text>
 
     <rect x="314" y="70" width="24" height="24" rx="1.6" fill="#1d1916" stroke="#c98f5a" stroke-width="0.4"/>
     <text x="326" y="80">AUDIO</text><text x="326" y="84.5">OUT</text>

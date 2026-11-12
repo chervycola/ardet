@@ -96,7 +96,7 @@ typedef enum { FSM_RUN, FSM_DOWN, FSM_SWITCH, FSM_UP } fsm_state_t;
 static struct {
     fsm_state_t st;
     uint32_t    t0;
-    uint16_t    level_now;          /* текущий код мьют-VCA (кан. F)       */
+    uint16_t    level_now;          /* текущий код mute-каскада VCA (кан. F) */
     uint8_t     pend_mode;
     bool        pend_route_pre;
     bool        route_now;
@@ -104,8 +104,10 @@ static struct {
 
 static uint16_t mute_target(void)
 {
-    /* ARM off -> 0; on -> полный код. LEVEL — аналоговая ручка модуля,
-     * она аттенюирует управляющий ток VCA в аналоге ПОСЛЕ ramp (05 §2.2). */
+    /* ARM off -> 0; on -> полный код. Канал F управляет только вторым каскадом
+     * выходного VCA (mute). LEVEL — отдельный первый каскад, чисто аналоговый
+     * (03_schematics S8). У каскада порог открывания ~0,65 В на управлении:
+     * нижние ~16 % кода дают тишину, слышимая часть рампы лежит выше.       */
     return s_p.arm ? 0xFFFFu : 0u;
 }
 
