@@ -29,7 +29,9 @@ bool bsp_btn_link(void);                   /* кнопка Fn   (momentary -> to
 bool bsp_btn_gate(void);                   /* кнопка Shutter/Record (momentary gate)     */
 bool bsp_btn_power(void);                  /* кнопка Power (сервис: калибровка/panic)    */
 
-/* --- USB-MIDI out (device, class-compliant) --- */
+/* --- USB-MIDI out (device, class-compliant) ---
+ * len = 3: обычное сообщение (CC, Note); len = 1: realtime-байт
+ * (Active Sensing 0xFE) — bsp пакует его в USB-MIDI пакет с CIN 0xF.      */
 void bsp_midi_send(const uint8_t *bytes, uint8_t len);
 
 /* --- индикация: 4 родных LED батареи как статусы --- */

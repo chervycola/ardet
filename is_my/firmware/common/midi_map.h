@@ -3,6 +3,8 @@
  *
  * ЕДИНСТВЕННЫЙ источник истины по MIDI-маппингу (02_technical.md §C1).
  * Подключается обеими прошивками (pult/, module/). Менять здесь — и только здесь.
+ * Линк пульт -> модуль идёт по USB-MIDI (модуль = host); в комп пульт втыкается
+ * как обычный class-compliant контроллер с тем же маппингом.
  */
 #ifndef ISMY_MIDI_MAP_H
 #define ISMY_MIDI_MAP_H
@@ -19,7 +21,11 @@
  * Приёмник применяет значение по приходу LSB; если вместо LSB пришло
  * что-то другое — fallback: применить MSB<<7 (см. module/main.c).
  * Левый стик:  Y=DRIVE (rate), X=BIAS (momentary вокруг центра).
- * Правый стик: Y=CUTOFF (rate), X=RESO (momentary вокруг базы модуля). */
+ * Правый стик: Y=CUTOFF (rate), X=RESO (momentary вокруг базы модуля).
+ *
+ * Шкалы и полярности CV на стороне модуля (решение D1, 03_schematics S9.1):
+ *   rate-оси DRIVE, CUTOFF:   0..16383 -> 0…+5 В, старт с 0
+ *   momentary-оси BIAS, RESO: 8192 = центр = 0 В, края = ±5 В            */
 #define CC_JOY_X_MSB            16u         /* BIAS,   левый X  */
 #define CC_JOY_X_LSB            48u
 #define CC_JOY_Y_MSB            17u         /* DRIVE,  левый Y  */
@@ -29,8 +35,12 @@
 #define CC_RESO_MSB             19u         /* RESO,   правый X */
 #define CC_RESO_LSB             51u
 
+#define AXIS14_CENTER           8192u       /* центр momentary-оси */
+#define AXIS14_MAX              16383u
+
 /* ---- 7-bit ------------------------------------------------------------*/
-#define CC_DIAL                 20u         /* gimbal dial DJI, назначаемый (деф. MIX-офсет) */
+#define CC_DIAL                 20u         /* gimbal dial DJI -> нормаль MIX-in; 64 = нет офсета */
+#define DIAL7_CENTER            64u
 
 /* DEPRECATED для пульта: LEVEL/TONE — аналоговые ручки МОДУЛЯ (05 §2.2).
  * Дефайны оставлены: модуль может принимать их извне (DAW) в будущем.  */
@@ -48,14 +58,16 @@
 #define MODEVAL_GATE            127u
 
 /* ---- Ноты (gate-события) ----------------------------------------------*/
-#define NOTE_JOY_PRESS          36u         /* C2  */
-#define NOTE_FOOT               37u         /* C#2 */
+#define NOTE_JOY_PRESS          36u         /* C2: кнопка Shutter пульта = GATE */
+#define NOTE_FOOT               37u         /* C#2: LEGACY — педали на пульте нет; модуль
+                                             * принимает ноту как второй источник GATE (DAW) */
 #define NOTE_VELOCITY           100u
 
 /* ---- Статус-байты ------------------------------------------------------*/
 #define MIDI_ST_CC(ch)          (uint8_t)(0xB0u | ((ch) & 0x0Fu))
 #define MIDI_ST_NOTE_ON(ch)     (uint8_t)(0x90u | ((ch) & 0x0Fu))
 #define MIDI_ST_NOTE_OFF(ch)    (uint8_t)(0x80u | ((ch) & 0x0Fu))
+#define MIDI_RT_ACTIVE_SENSE    0xFEu       /* heartbeat пульта, см. ниже */
 
 /* ---- 14-bit упаковка ---------------------------------------------------*/
 static inline uint8_t midi14_msb(uint16_t v14) { return (uint8_t)((v14 >> 7) & 0x7Fu); }
@@ -65,10 +77,15 @@ static inline uint16_t midi14_join(uint8_t msb, uint8_t lsb)
     return (uint16_t)(((uint16_t)(msb & 0x7Fu) << 7) | (lsb & 0x7Fu));
 }
 
-/* ---- Тайминги протокола (обе стороны должны совпадать) -----------------*/
-#define MIDI_BAUD               31250u
+/* ---- Тайминги протокола (обе стороны должны совпадать) -----------------
+ * Пульт шлёт только изменения, поэтому при неподвижных стиках в линии тихо.
+ * Чтобы модуль отличал «тихо» от «линк умер», пульт шлёт Active Sensing
+ * (0xFE) каждые MIDI_ACTIVE_SENSE_MS. Модуль считает линк потерянным, если
+ * нет НИ ОДНОГО байта (включая 0xFE) дольше MIDI_LINK_TIMEOUT_MS, либо если
+ * USB-стек сообщил об отключении устройства.                              */
 #define AXIS_RATE_LIMIT_MS      5u          /* >= 5 мс между парами CC одной оси (~200 Гц) */
-#define MIDI_LINK_TIMEOUT_MS    500u        /* нет байтов дольше -> hold last values        */
+#define MIDI_ACTIVE_SENSE_MS    250u        /* период heartbeat пульта                      */
+#define MIDI_LINK_TIMEOUT_MS    500u        /* тишина дольше -> линк потерян, значения держим */
 #define LSB_WAIT_TIMEOUT_MS     20u         /* MSB пришёл, LSB нет -> применить MSB<<7      */
 
 #endif /* ISMY_MIDI_MAP_H */
