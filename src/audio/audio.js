@@ -222,8 +222,9 @@ export function playClick() {
 }
 
 // Ambient drone (background)
-// Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц,
-// пульс ~25 Гц, на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
+// Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц и тихая
+// полоса около 380 Гц (её слышно в динамике телефона, где низ не играет), пульс ~25 Гц,
+// на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
 let purr = null;
 export function setPurr(v) {
   if (!ctx) return;
@@ -240,7 +241,9 @@ export function setPurr(v) {
     am.gain.value = 0.5; pulse.frequency.value = 25; pg.gain.value = 0.45; pulse.connect(pg); pg.connect(am.gain);
     breath.frequency.value = 0.42; bg.gain.value = 3; breath.connect(bg); bg.connect(pulse.frequency);   // вдох — выдох
     g.gain.value = 0.0001;
-    s.connect(f); f.connect(am); am.connect(g); g.connect(getOut());
+    const hi = ctx.createBiquadFilter(), hg = ctx.createGain();
+    hi.type = 'bandpass'; hi.frequency.value = 380; hi.Q.value = 1.2; hg.gain.value = 0.38;
+    s.connect(f); f.connect(am); s.connect(hi); hi.connect(hg); hg.connect(am); am.connect(g); g.connect(getOut());
     s.start(); pulse.start(); breath.start();
     purr = { s, pulse, breath, g, off: null };
   }

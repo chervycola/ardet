@@ -36,12 +36,19 @@ class Input {
   init(canvas) {
     // Keyboard
     window.addEventListener('keydown', e => {
+      // Cmd/Ctrl + буква — команда (копировать в терминале), не шаг и не веки; на маке keyup
+      // буквы при зажатом Cmd не приходит — клавиша залипла бы
+      if ((e.metaKey || e.ctrlKey) && e.key.length === 1) return;
       this.keys[e.key.toLowerCase()] = true;
     });
     window.addEventListener('keyup', e => {
       this.keys[e.key.toLowerCase()] = false;
       if (e.key === 'Shift') this.keys['shift'] = false;
+      if (e.key === 'Meta') this.keys = {};                        // отпустил Cmd — всё, что держал при нём, отпущено
+      if (e.code === 'KeyC') { this.keys['c'] = false; this.keys['с'] = false; }   // раскладку сменили, держа C
     });
+    // ушёл из окна с зажатой клавишей — keyup не придёт: всё отпущено (веки не остаются сомкнутыми)
+    window.addEventListener('blur', () => { this.keys = {}; this.twoFingers = false; });
 
     // Mouse
     window.addEventListener('mousemove', e => {
@@ -103,8 +110,12 @@ class Input {
   }
 
   // Screen point the held finger is at, or null when not held.
+  // Первые 100 мс неподвижный палец не ведёт: два пальца ложатся не разом, и шаг
+  // первого будил бы спящего кота (world/silentCat.js). Повёл пальцем — идёт сразу.
   getHeldTouch() {
-    return this.touch ? { x: this.touch.x, y: this.touch.y } : null;
+    const t = this.touch;
+    if (!t || (!t.moved && Date.now() - t.startT < 100)) return null;
+    return { x: t.x, y: t.y };
   }
 
   isDown(action) {

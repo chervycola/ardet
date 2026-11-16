@@ -5,16 +5,18 @@
 //   бегущий или идущий прямо на него — отскок прочь; посидит, глядя
 //   с обидой (хвост дёргается), и вернётся на место;
 //   стоящий тихо дольше двух с половиной секунд — подойдёт и сядет у ног,
-//   рядом с огнём в груди: кот идёт к настоящему теплу; тому, кому
-//   доверяет, медленно моргает; странник ушёл — посидит и вернётся.
+//   рядом с огнём в груди: кот идёт к настоящему теплу (медленное
+//   моргание — ниже, «Ответить коту»); странник ушёл — посидит и вернётся.
 //   Голову держит к страннику, хвост гуляет по ветру. Молчит.
-//   Ответить коту (weave/DEPTH_GAMES_2026-11-16.md): медленное моргание — вопрос
-//   тому, кто смотрит (странник с закрытыми глазами его не видит и не спрошен).
+//   Ответить коту (weave/DEPTH_GAMES_2026-11-16.md): у ног кот один раз за приход
+//   медленно моргает тому, кто смотрит (закрыты глаза, открыт разговор, осмотр или
+//   карта — ждёт).
 //   Закрыл глаза в ответ за две секунды (world/eyes.js) — кот ложится у ног и
 //   мурчит; встать сразу можно без обиды; остался — засыпает на полминуты–
-//   полторы, сумерки и дождь идут своим ходом. Разбудил шагом — кот этого места
-//   до ухода странника держится как чужой: сидит дома спиной, греться не идёт.
-//   Проснулся сам — сидит у ног; второй раз за приход не ложится.
+//   полторы, сумерки и дождь идут своим ходом. Пропустил моргание — кот сидит
+//   у ног и больше не спрашивает, пока странник не уйдёт. Разбудил шагом — кот
+//   этого места до ухода держится как чужой: сидит дома спиной, греться не идёт.
+//   Приход кончается, когда странник дальше NEAR от кота и его места.
 //   Глаза отражают огонь странника: ближе он — ярче (как у настоящих
 //   котов: светится не глаз, а то, что в нём отражается).
 //   Вороны рядом с домом — охота: крадётся пригнувшись, замирает, прыгает с
@@ -65,7 +67,7 @@ function init(locations) {
       look: 30, prey: null, preyF: null, freeze: 0, lookX: null,
       perch: { x: l.x, y: l.y, w: l.w, h: l.h, k: l.y + l.h + 0.5 },   // сидит на вещи — рисуется поверх неё
       eyes: [], eyesT: -1,
-      askT: null, aloof: false, slept: false,   // спросил медленным морганием; разбудили — чужой; уже спал
+      asked: false, askT: null, aloof: false,   // уже спросил за приход; когда; разбудили — чужой
     });
   }
   solids = locations.filter(l => l.solid || l.solidBox).map(l => l.solidBox || l);
@@ -111,7 +113,8 @@ function walkTo(c, tx, ty, sp, check) {
 }
 
 // шаг: 60 раз в секунду (stepFx)
-export function stepCats(player, locations) {
+// looking: странник смотрит на мир (не разговор, не осмотр, не карта) — только его кот и спрашивает
+export function stepCats(player, locations, looking = true) {
   if (!cats) init(locations);
   const pvx = player.vx || 0, pvy = player.vy || 0, ps = Math.hypot(pvx, pvy);
   still = ps < 0.05 ? still + 1 : 0;
@@ -120,7 +123,7 @@ export function stepCats(player, locations) {
     const dx = c.x + 2 - px, dy = c.y + 3 - py, d = Math.hypot(dx, dy);
     if (d > NEAR && Math.hypot(c.hx - px, c.hy - py) > NEAR) {  // далеко: дома, не считается
       c.x = c.hx; c.y = c.hy; c.st = 'sit'; c.prey = null;
-      c.aloof = false; c.slept = false; c.askT = null;          // странник ушёл — приход кончился
+      c.aloof = false; c.asked = false; c.askT = null;          // странник ушёл — приход кончился
       continue;
     }
     if (d < SIGHT && !sightings.has(c.id)) {
@@ -128,13 +131,17 @@ export function stepCats(player, locations) {
       events.emit('cat.sighted', c.id, sightings.size);
       if (sightings.size === 4 && !fifthUnlocked) { fifthUnlocked = true; events.emit('cat.unlocked'); }
     }
-    // моргает; у тепла — медленно (тому, кому доверяет)
+    // моргает; у тепла один раз за приход — медленно: спрашивает того, кто смотрит
     if (c.shut > 0) c.shut--;
     else if (--c.blink <= 0) {
-      c.slow = c.st === 'warm';
-      c.shut = c.slow ? 40 : 7;
-      if (c.slow && eyes.k < 0.05) c.askT = t;                  // спрашивает того, кто смотрит
-      c.blink = c.slow ? 260 + Math.floor(Math.random() * 200) : 200 + Math.floor(Math.random() * 360);
+      const ask = c.st === 'warm' && !c.asked;
+      if (ask && (eyes.k >= 0.05 || !looking)) c.blink = 30;    // глаза закрыты или смотрит в бумагу — ждёт
+      else {
+        c.slow = ask;
+        c.shut = ask ? 40 : 7;
+        if (ask) { c.asked = true; c.askT = t; }
+        c.blink = 200 + Math.floor(Math.random() * 360);
+      }
     }
     const toward = pvx * dx + pvy * dy > 0;                      // идёт на кота
     const threat = (ps > 3 && d < 40) || (ps > 0.8 && d < 13 && toward) || (ps > 0.2 && d < 6);
@@ -205,7 +212,8 @@ export function stepCats(player, locations) {
       }
       case 'warm':
         if (d > 30) { c.st = 'wait'; c.tm = 120; break; }        // ушёл — посидит и домой
-        if (!c.slept && c.askT !== null && t - c.askT <= ANSWER && eyesShut()) {   // ответил тем же
+        if (c.askT !== null && t - c.askT > ANSWER) c.askT = null;   // не ответил — вопрос прошёл
+        if (c.askT !== null && t - c.askT <= ANSWER && eyesShut()) {   // ответил тем же
           c.st = 'lie'; c.tm = SETTLE; c.askT = null;
         }
         break;
@@ -214,8 +222,8 @@ export function stepCats(player, locations) {
         if (--c.tm <= 0) { c.st = 'sleep'; c.tm = SLEEP[0] + Math.floor(Math.random() * (SLEEP[1] - SLEEP[0])); }
         break;
       case 'sleep':                                              // спит; шаг будит — чужой до ухода
-        if (ps > 0.2) { c.aloof = true; c.slept = true; flee(c, dx, dy, d); break; }
-        if (--c.tm <= 0) { c.st = 'warm'; c.slept = true; c.blink = 120; }
+        if (ps > 0.2) { c.aloof = true; flee(c, dx, dy, d); break; }
+        if (--c.tm <= 0) { c.st = 'warm'; c.blink = 120; }
         break;
     }
     // идёт мимо сидящих ворон — взлетят; бежит — тем более

@@ -434,27 +434,85 @@ setCtx(ctx);
     p.x = 400; frame(p, false);                      // ушёл далеко: приход кончился
     assert(!cat().aloof, 'обида пережила уход');
   });
-  test('кот: не спрошен с закрытыми глазами; поздний ответ не считается; встать сразу — без обиды', () => {
+  test('кот: закрыты глаза — ждёт; моргает медленно один раз за приход; пропустил — не спросит до ухода', () => {
     C._reset(); calm(); Ey._resetEyes();
     const p = { x: 940, y: 1015, vx: 0, vy: 0 };
     for (let i = 0; i < 3000; i++) frame(p, true);
     eq(cat().st, 'warm', 'с закрытыми глазами кот не у ног');
-    eq(cat().askT, null, 'спросил того, кто не смотрит');
+    eq(cat().asked, false, 'спросил того, кто не смотрит');
     for (let i = 0; i < 12; i++) frame(p, false);
     assert(untilAsked(p), 'медленно не моргнул');
-    for (let i = 0; i < C._ANSWER + 10; i++) frame(p, false);
+    let slow = 0;
+    for (let i = 0; i < 6000; i++) { const was = cat().shut; frame(p, false); if (cat().slow && cat().shut === 40 && was === 0) slow++; }
+    eq(slow, 0, 'медленно моргнул второй раз за приход');
     for (let i = 0; i < 30; i++) frame(p, true);
     eq(cat().st, 'warm', 'лёг на поздний ответ');
     for (let i = 0; i < 12; i++) frame(p, false);
-    for (let i = 0; i < 3000 && cat().st !== 'lie'; i++) {   // следующее моргание — ответить вовремя
-      const asked = cat().askT !== null && tNow() - cat().askT < 20;
-      frame(p, asked || Ey.eyes.k > 0);
-    }
+    for (let i = 0; i < 3000; i++) frame(p, false);
+    eq(cat().askT, null, 'спросил снова, не дождавшись ухода');
+  });
+  test('кот: пока открыт разговор, осмотр или карта — не спрашивает; закрыл — спросит', () => {
+    C._reset(); calm(); Ey._resetEyes();
+    const p = { x: 940, y: 1015, vx: 0, vy: 0 };
+    for (let i = 0; i < 3000; i++) { Ey.stepEyes(false, false); tick(); C.stepCats(p, locs, false); }
+    eq(cat().st, 'warm', 'не пришёл к ногам');
+    eq(cat().asked, false, 'спросил того, кто читает бумагу');
+    assert(untilAsked(p), 'после разговора не спросил');
+  });
+  test('кот: новый приход — новый вопрос; ответил вовремя — лёг; встать сразу — без обиды', () => {
+    C._reset(); calm(); Ey._resetEyes();
+    const p = { x: 940, y: 1015, vx: 0, vy: 0 };
+    assert(untilAsked(p), 'медленно не моргнул');
+    for (let i = 0; i < C._ANSWER + 10; i++) frame(p, false);   // пропустил
+    p.x = 400; frame(p, false);                                    // ушёл: приход кончился
+    eq(cat().asked, false, 'уход не кончил приход');
+    p.x = 940;
+    assert(untilAsked(p), 'в новый приход не спросил');
+    for (let i = 0; i < 30; i++) frame(p, true);
     eq(cat().st, 'lie', 'на своевременный ответ не лёг');
     p.vx = 0.5; frame(p, false); p.vx = 0;
     eq(cat().st, 'warm', 'встал странник — кот не сел');
     assert(!cat().aloof, 'встал сразу — а кот обиделся');
+    for (let i = 0; i < 3000; i++) { frame(p, i % 200 < 40); assert(cat().st !== 'lie', 'лёг второй раз за приход'); }
   });
+}
+
+// ═══ ВВОД: два пальца, Cmd+C, уход из окна ═══
+{
+  const { input } = await imp('core/input.js');
+  const win = {}, cv = {};
+  const addW = window.addEventListener;
+  window.addEventListener = (k, f) => { win[k] = f; };
+  const In = new input.constructor();
+  In.init({ addEventListener: (k, f) => { cv[k] = f; } });
+  window.addEventListener = addW;
+  const now0 = Date.now; let clock = 1e6; Date.now = () => clock;
+  const ev = (touches, changed) => ({ touches, changedTouches: changed || touches, preventDefault: noop });
+  const f1 = { clientX: 300, clientY: 200 }, f2 = { clientX: 400, clientY: 220 };
+  test('ввод: два пальца не разом — первый не успевает повести (кот у ног не просыпается)', () => {
+    cv.touchstart(ev([f1]));
+    eq(In.getHeldTouch(), null, 'первый палец сразу повёл');
+    clock += 40; cv.touchstart(ev([f1, f2]));
+    assert(In.eyesWanted(), 'два пальца не закрыли глаза');
+    eq(In.getHeldTouch(), null, 'при двух пальцах идёт');
+    cv.touchend(ev([f1], [f2])); cv.touchend(ev([], [f1]));
+    assert(!In.eyesWanted(), 'пальцы сняли — глаза закрыты');
+    cv.touchstart(ev([f1])); clock += 120;
+    assert(In.getHeldTouch(), 'один палец, держат — не идёт');
+    cv.touchend(ev([], [f1]));
+  });
+  test('ввод: Cmd+C не залипает; ушёл из окна — всё отпущено', () => {
+    win.keydown({ key: 'c', metaKey: true });
+    assert(!In.eyesWanted(), 'Cmd+C закрыл глаза');
+    win.keydown({ key: 'c', code: 'KeyC' });
+    assert(In.eyesWanted(), 'C не закрыл глаза');
+    win.keyup({ key: 'с', code: 'KeyC' });                        // раскладку сменили, держа C
+    assert(!In.eyesWanted(), 'C залипла после смены раскладки');
+    win.keydown({ key: 'w' }); win.keydown({ key: 'c' });
+    win.blur();
+    assert(!In.eyesWanted() && !In.isDown('up'), 'после ухода из окна клавиши зажаты');
+  });
+  Date.now = now0;
 }
 
 // ═══ ЛУЖИ ═══

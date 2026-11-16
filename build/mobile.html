@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 959 154. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 959 154. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 961 374. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 961 374. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -921,7 +921,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='52ca5db · 2026-11-16';console.log('[оттиск]', '52ca5db · 2026-11-16');
+<script>window.ARDET_BUILD='bfd3693 · 2026-11-16';console.log('[оттиск]', 'bfd3693 · 2026-11-16');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -4699,8 +4699,16 @@ System.register("audio/audio", [], function (exports_20, context_20) {
             breath.connect(bg);
             bg.connect(pulse.frequency); // вдох — выдох
             g.gain.value = 0.0001;
+            const hi = ctx.createBiquadFilter(), hg = ctx.createGain();
+            hi.type = 'bandpass';
+            hi.frequency.value = 380;
+            hi.Q.value = 1.2;
+            hg.gain.value = 0.38;
             s.connect(f);
             f.connect(am);
+            s.connect(hi);
+            hi.connect(hg);
+            hg.connect(am);
             am.connect(g);
             g.connect(getOut());
             s.start();
@@ -4797,8 +4805,9 @@ System.register("audio/audio", [], function (exports_20, context_20) {
             // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
             tock = false;
             // Ambient drone (background)
-            // Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц,
-            // пульс ~25 Гц, на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
+            // Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц и тихая
+            // полоса около 380 Гц (её слышно в динамике телефона, где низ не играет), пульс ~25 Гц,
+            // на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
             purr = null;
             ambientNode = null;
         }
@@ -40559,13 +40568,25 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                 init(canvas) {
                     // Keyboard
                     window.addEventListener('keydown', e => {
+                        // Cmd/Ctrl + буква — команда (копировать в терминале), не шаг и не веки; на маке keyup
+                        // буквы при зажатом Cmd не приходит — клавиша залипла бы
+                        if ((e.metaKey || e.ctrlKey) && e.key.length === 1)
+                            return;
                         this.keys[e.key.toLowerCase()] = true;
                     });
                     window.addEventListener('keyup', e => {
                         this.keys[e.key.toLowerCase()] = false;
                         if (e.key === 'Shift')
                             this.keys['shift'] = false;
+                        if (e.key === 'Meta')
+                            this.keys = {}; // отпустил Cmd — всё, что держал при нём, отпущено
+                        if (e.code === 'KeyC') {
+                            this.keys['c'] = false;
+                            this.keys['с'] = false;
+                        } // раскладку сменили, держа C
                     });
+                    // ушёл из окна с зажатой клавишей — keyup не придёт: всё отпущено (веки не остаются сомкнутыми)
+                    window.addEventListener('blur', () => { this.keys = {}; this.twoFingers = false; });
                     // Mouse
                     window.addEventListener('mousemove', e => {
                         this.mouseX = e.clientX;
@@ -40629,8 +40650,13 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                     canvas.addEventListener('touchcancel', () => { this.touch = null; this.twoFingers = false; });
                 }
                 // Screen point the held finger is at, or null when not held.
+                // Первые 100 мс неподвижный палец не ведёт: два пальца ложатся не разом, и шаг
+                // первого будил бы спящего кота (world/silentCat.js). Повёл пальцем — идёт сразу.
                 getHeldTouch() {
-                    return this.touch ? { x: this.touch.x, y: this.touch.y } : null;
+                    const t = this.touch;
+                    if (!t || (!t.moved && Date.now() - t.startT < 100))
+                        return null;
+                    return { x: t.x, y: t.y };
                 }
                 isDown(action) {
                     const keys = ACTIONS[action] || [];
@@ -62045,7 +62071,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 look: 30, prey: null, preyF: null, freeze: 0, lookX: null,
                 perch: { x: l.x, y: l.y, w: l.w, h: l.h, k: l.y + l.h + 0.5 }, // сидит на вещи — рисуется поверх неё
                 eyes: [], eyesT: -1,
-                askT: null, aloof: false, slept: false, // спросил медленным морганием; разбудили — чужой; уже спал
+                asked: false, askT: null, aloof: false, // уже спросил за приход; когда; разбудили — чужой
             });
         }
         solids = locations.filter(l => l.solid || l.solidBox).map(l => l.solidBox || l);
@@ -62101,7 +62127,8 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         return 'going';
     }
     // шаг: 60 раз в секунду (stepFx)
-    function stepCats(player, locations) {
+    // looking: странник смотрит на мир (не разговор, не осмотр, не карта) — только его кот и спрашивает
+    function stepCats(player, locations, looking = true) {
         if (!cats)
             init(locations);
         const pvx = player.vx || 0, pvy = player.vy || 0, ps = Math.hypot(pvx, pvy);
@@ -62115,7 +62142,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 c.st = 'sit';
                 c.prey = null;
                 c.aloof = false;
-                c.slept = false;
+                c.asked = false;
                 c.askT = null; // странник ушёл — приход кончился
                 continue;
             }
@@ -62127,15 +62154,22 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                     events_js_6.events.emit('cat.unlocked');
                 }
             }
-            // моргает; у тепла — медленно (тому, кому доверяет)
+            // моргает; у тепла один раз за приход — медленно: спрашивает того, кто смотрит
             if (c.shut > 0)
                 c.shut--;
             else if (--c.blink <= 0) {
-                c.slow = c.st === 'warm';
-                c.shut = c.slow ? 40 : 7;
-                if (c.slow && eyes_js_1.eyes.k < 0.05)
-                    c.askT = time_js_40.t; // спрашивает того, кто смотрит
-                c.blink = c.slow ? 260 + Math.floor(Math.random() * 200) : 200 + Math.floor(Math.random() * 360);
+                const ask = c.st === 'warm' && !c.asked;
+                if (ask && (eyes_js_1.eyes.k >= 0.05 || !looking))
+                    c.blink = 30; // глаза закрыты или смотрит в бумагу — ждёт
+                else {
+                    c.slow = ask;
+                    c.shut = ask ? 40 : 7;
+                    if (ask) {
+                        c.asked = true;
+                        c.askT = time_js_40.t;
+                    }
+                    c.blink = 200 + Math.floor(Math.random() * 360);
+                }
             }
             const toward = pvx * dx + pvy * dy > 0; // идёт на кота
             const threat = (ps > 3 && d < 40) || (ps > 0.8 && d < 13 && toward) || (ps > 0.2 && d < 6);
@@ -62286,7 +62320,9 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                         c.tm = 120;
                         break;
                     } // ушёл — посидит и домой
-                    if (!c.slept && c.askT !== null && time_js_40.t - c.askT <= ANSWER && eyes_js_1.eyesShut()) { // ответил тем же
+                    if (c.askT !== null && time_js_40.t - c.askT > ANSWER)
+                        c.askT = null; // не ответил — вопрос прошёл
+                    if (c.askT !== null && time_js_40.t - c.askT <= ANSWER && eyes_js_1.eyesShut()) { // ответил тем же
                         c.st = 'lie';
                         c.tm = SETTLE;
                         c.askT = null;
@@ -62306,13 +62342,11 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 case 'sleep': // спит; шаг будит — чужой до ухода
                     if (ps > 0.2) {
                         c.aloof = true;
-                        c.slept = true;
                         flee(c, dx, dy, d);
                         break;
                     }
                     if (--c.tm <= 0) {
                         c.st = 'warm';
-                        c.slept = true;
                         c.blink = 120;
                     }
                     break;
@@ -69465,8 +69499,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
     function stepFx() {
         net_js_3.stepNet(player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
-        // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее
-        eyes_js_2.stepEyes(state_js_9.state.is('game') && !worldmap_js_1.isOpen() && input_js_2.input.eyesWanted(), player.moving, !house_js_2.house.active && !underside_js_4.under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
+        // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
+        // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
+        const free = state_js_9.state.is('game') && !worldmap_js_1.isOpen(); // смотрит на мир: не разговор, не осмотр, не карта
+        eyes_js_2.stepEyes(free && input_js_2.input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05, !house_js_2.house.active && !underside_js_4.under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
         if (time_js_48.t % 10 === 0)
             audio_js_12.setPurr(house_js_2.house.active || underside_js_4.under.active ? 0 : silentCat_js_1.catPurr(player.x + 6, player.y + 22));
         if (house_js_2.house.active) {
@@ -69507,7 +69543,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (underside_js_4.under.shadow && sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).sun)
             underside_js_4.under.shadow = false; // тень цветка держится до первого дневного света
         castle_js_1.stepCastle(!player.moving && town_js_5.onBridge(player.x + 6, player.y + 23)); // кто стоит на мосту, тому туман расходится
-        silentCat_js_1.stepCats(player, locations_js_6.locations); // кот: пугается бегущего, к стоящему идёт греться
+        silentCat_js_1.stepCats(player, locations_js_6.locations, free); // кот: пугается бегущего, к стоящему идёт греться; спрашивает смотрящего на мир
         ravens_js_2.stepRavens(player, locations_js_6.locations, weather_js_2.weather); // вороны: стаи взлетают от шагов, падения, грома
         puddles_js_1.stepPuddles(player, surfName, weather_js_2.weather, { x: camX, y: camY, vw: scaler_js_27.scaler.vw, vh: scaler_js_27.scaler.vh }, locations_js_6.locations);
         pen_js_1.setPress(pen_js_1.pressAt(sky_js_14.phaseAt(time_js_48.t))); // перо: к ночи исписалось, на рассвете обмакнули

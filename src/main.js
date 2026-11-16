@@ -749,8 +749,10 @@ function plateStorm() {
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
 function stepFx() {
   stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
-  // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее
-  stepEyes(state.is('game') && !isMapOpen() && input.eyesWanted(), player.moving,
+  // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
+  // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
+  const free = state.is('game') && !isMapOpen();   // смотрит на мир: не разговор, не осмотр, не карта
+  stepEyes(free && input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05,
     !house.active && !under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
   if (t % 10 === 0) setPurr(house.active || under.active ? 0 : catPurr(player.x + 6, player.y + 22));
   if (house.active) { stepFxHouse(); return; }
@@ -776,7 +778,7 @@ function stepFx() {
   if (beyond.say) { showLore(beyond.say); beyond.say = null; }
   if (under.shadow && skyAt(phaseAt(t)).sun) under.shadow = false;   // тень цветка держится до первого дневного света
   stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
-  stepCats(player, locations);            // кот: пугается бегущего, к стоящему идёт греться
+  stepCats(player, locations, free);      // кот: пугается бегущего, к стоящему идёт греться; спрашивает смотрящего на мир
   stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
   setPress(pressAt(phaseAt(t)));          // перо: к ночи исписалось, на рассвете обмакнули
