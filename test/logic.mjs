@@ -325,6 +325,27 @@ const imp = p => import(new URL(p, base));
     // Smoke: completing 60 calls without exception is the bar
   });
 
+  test('inscriptions: надпись проступает одним ответом на 2,5 с и дальше не прибавляет строк', () => {
+    const g = locations.find(l => l.id === 'graffiti');
+    const player = { x: g.x + g.w / 2 - 2, y: g.y + g.h / 2, moving: false };
+    const all = inscriptions.hiddenInscriptions.graffiti.length;
+    for (let i = 0; i < 100; i++) inscriptions.updateProximity(player, locations);
+    const early = inscriptions.wallLines('graffiti').length;
+    for (let i = 0; i < 100; i++) inscriptions.updateProximity(player, locations);
+    const shown = inscriptions.wallLines('graffiti').length;
+    for (let i = 0; i < 3000; i++) inscriptions.updateProximity(player, locations);
+    const late = inscriptions.wallLines('graffiti').length;
+    if (!(shown === all && late === all)) throw new Error(`строк к 3,3 с ${shown}, к 53 с ${late} из ${all}`);
+    if (early !== 0 && early !== all) throw new Error(`проступает по строке: ${early} из ${all}`);
+  });
+
+  test('idle: словарь ленты — только у ленты', () => {
+    // в тихом месте строка берётся из пула без слов ленты; пул не пуст и уже полного
+    if (!idle._quietHasNoLenta()) throw new Error('в тихом пуле есть слова ленты');
+    for (let i = 0; i < 901; i++) idle.update(false, false);   // тихое место: не падает
+    idle.update(true);
+  });
+
   test('idle.update: does not crash on flip-flop input', () => {
     for (let i = 0; i < 5000; i++) {
       tick();

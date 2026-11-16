@@ -43,14 +43,17 @@ export function updateProximity(player, locations) {
     const dx = player.x - (l.x + l.w / 2);
     const dy = player.y - (l.archDraw ? l.archGy - Math.min(l.h / 2, 30) : l.y + l.h / 2);   // у высокой постройки — от подножия, не от середины рамки
     const d = Math.sqrt(dx * dx + dy * dy);
-    if (d < 60 && !player.moving) {
+    if (d < 60 && !player.moving && (wallProx[locId] || 0) < SHOW_AT + 120) {   // счёт до проявления, дальше не растёт
       wallProx[locId] = (wallProx[locId] || 0) + 1;
     }
   }
 }
 
-// сколько строк уже проступило у стены (постоял — проступают по одной)
-const revealedOf = (locId, n) => { const prox = wallProx[locId] || 0; return prox < 60 ? 0 : Math.min(n, Math.floor((prox - 60) / 180) + 1); };
+// надпись проступает одним ответом: постоял у стены 2,5 с (тот же срок, что у шва подделки,
+// world/potemkin.js STILL_DELAY) — видны все строки разом; дольше стоять — больше не прибавится
+// (таблица покоя: ответ короткий, твёрдый, убывающий; .claude/skills/ardet-scene-accept §4)
+const SHOW_AT = 150;
+const revealedOf = (locId, n) => ((wallProx[locId] || 0) < SHOW_AT ? 0 : n);
 // проступившие строки — для осмотра постройки (world/potemkin.js lookText): на стене штрихи, прочесть — там
 export function wallLines(locId) {
   const lines = hiddenInscriptions[locId];
@@ -185,7 +188,7 @@ export function draw(camera, locations) {
   const ctx = X;
   for (const locId of Object.keys(hiddenInscriptions)) {
     const prox = wallProx[locId] || 0;
-    if (prox < 60) continue;
+    if (prox < SHOW_AT) continue;
     const l = locOf(locations, locId);
     if (!l) continue;
     const sx = l.x - camera.x;
@@ -197,7 +200,7 @@ export function draw(camera, locations) {
 
     ctx.font = '5px "Press Start 2P","VT323",monospace';         // для надписей над местами городка
     for (let i = 0; i < revealed; i++) {
-      const lineAge = prox - 60 - i * 180;
+      const lineAge = prox - SHOW_AT;
       const alpha = Math.min(0.5, lineAge / 120) * 0.9;
       const flick = 0.85 + 0.15 * Math.sin(t * 0.01 + i * 2);
       ctx.globalAlpha = alpha * flick;

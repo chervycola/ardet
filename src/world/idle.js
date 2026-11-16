@@ -39,16 +39,26 @@ const MSGS = [
   'у стихии нет меморандумов',
 ];
 
+// словарь ленты: под ногами — только там, где лента есть (кольцо «сейчас», огонь и пустошь
+// за ним); в городке, древних кольцах, доме и изнанке его нет — тихое место молчит своим
+const LENTA = new Set(['скибиди', 'шесть семь', 'mid съел норму', 'я cooked', 'aura 0',
+  'chronically Ardet', '💀 ушёл на пенсию', 'rizz закончился', 'sigma сам себя слышит',
+  'жиза, но тихо', 'по фактам — нет фактов']);
+const QUIET_MSGS = MSGS.filter(m => !LENTA.has(m));
+export const _quietHasNoLenta = () => QUIET_MSGS.length > 0 && QUIET_MSGS.every(m => !LENTA.has(m)) && QUIET_MSGS.length < MSGS.length;
+
 let idleTimer = 0;
 let currentMsg = '';
 let msgLife = 0;
 
-export function update(isMoving) {
+// lentaNear: странник там, где лента (main.js: кольцо ≥ RINGS); по умолчанию — тихое место
+export function update(isMoving, lentaNear = false) {
   if (isMoving) { idleTimer = 0; return; }
   idleTimer++;
 
   if (idleTimer === 900) {
-    currentMsg = MSGS[Math.floor(Math.random() * MSGS.length)];
+    const pool = lentaNear ? MSGS : QUIET_MSGS;
+    currentMsg = pool[Math.floor(Math.random() * pool.length)];
     msgLife = 240;
   }
 

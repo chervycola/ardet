@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 938 232. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 938 232. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 939 994. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 939 994. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -911,7 +911,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='95e9bf3 · 2026-11-16';console.log('[оттиск]', '95e9bf3 · 2026-11-16');
+<script>window.ARDET_BUILD='2b7aaba · 2026-11-16';console.log('[оттиск]', '2b7aaba · 2026-11-16');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -27512,7 +27512,7 @@ System.register("render/context", [], function (exports_59, context_59) {
 });
 System.register("world/inscriptions", ["core/time", "render/context", "render/scaler", "content/eggs_transfer"], function (exports_60, context_60) {
     "use strict";
-    var time_js_6, context_js_1, scaler_js_11, P, hiddenInscriptions, eggs_transfer_js_2, wallProx, byId, locOf, revealedOf, MASKS, PLACES, _scribble, _wallMask;
+    var time_js_6, context_js_1, scaler_js_11, P, hiddenInscriptions, eggs_transfer_js_2, wallProx, byId, locOf, SHOW_AT, revealedOf, MASKS, PLACES, _scribble, _wallMask;
     var __moduleName = context_60 && context_60.id;
     function updateProximity(player, locations) {
         for (const locId of Object.keys(hiddenInscriptions)) {
@@ -27522,7 +27522,7 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             const dx = player.x - (l.x + l.w / 2);
             const dy = player.y - (l.archDraw ? l.archGy - Math.min(l.h / 2, 30) : l.y + l.h / 2); // у высокой постройки — от подножия, не от середины рамки
             const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < 60 && !player.moving) {
+            if (d < 60 && !player.moving && (wallProx[locId] || 0) < SHOW_AT + 120) { // счёт до проявления, дальше не растёт
                 wallProx[locId] = (wallProx[locId] || 0) + 1;
             }
         }
@@ -27709,7 +27709,7 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
         const ctx = context_js_1.X;
         for (const locId of Object.keys(hiddenInscriptions)) {
             const prox = wallProx[locId] || 0;
-            if (prox < 60)
+            if (prox < SHOW_AT)
                 continue;
             const l = locOf(locations, locId);
             if (!l)
@@ -27722,7 +27722,7 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
             const revealed = revealedOf(locId, lines.length);
             ctx.font = '5px "Press Start 2P","VT323",monospace'; // для надписей над местами городка
             for (let i = 0; i < revealed; i++) {
-                const lineAge = prox - 60 - i * 180;
+                const lineAge = prox - SHOW_AT;
                 const alpha = Math.min(0.5, lineAge / 120) * 0.9;
                 const flick = 0.85 + 0.15 * Math.sin(time_js_6.t * 0.01 + i * 2);
                 ctx.globalAlpha = alpha * flick;
@@ -27783,8 +27783,11 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
                     byId = new Map(locations.map(l => [l.id, l]));
                 return byId.get(id);
             };
-            // сколько строк уже проступило у стены (постоял — проступают по одной)
-            revealedOf = (locId, n) => { const prox = wallProx[locId] || 0; return prox < 60 ? 0 : Math.min(n, Math.floor((prox - 60) / 180) + 1); };
+            // надпись проступает одним ответом: постоял у стены 2,5 с (тот же срок, что у шва подделки,
+            // world/potemkin.js STILL_DELAY) — видны все строки разом; дольше стоять — больше не прибавится
+            // (таблица покоя: ответ короткий, твёрдый, убывающий; .claude/skills/ardet-scene-accept §4)
+            SHOW_AT = 150;
+            revealedOf = (locId, n) => ((wallProx[locId] || 0) < SHOW_AT ? 0 : n);
             // Стена — по рисунку, а не по рамке: рисунок постройки прогоняется вхолостую (запись fillRect,
             // без холста) в карту «светлое / тёмное / почти чёрное / пусто» в координатах рамки; строка ищет
             // сперва светлую стену, у тёмных построек — тёмную, и только потом почти чёрную (там и проёмы).
@@ -52273,7 +52276,7 @@ System.register("core/save", ["core/events"], function (exports_133, context_133
 });
 System.register("render/metaFx", ["render/scaler", "core/time"], function (exports_134, context_134) {
     "use strict";
-    var scaler_js_18, time_js_29, screenMoss, crackedGlass, dyingPixels, tabMessages, titleInterval, originalTitle;
+    var scaler_js_18, time_js_29, MOSS_UNTIL, screenMoss, crackedGlass, dyingPixels, tabMessages, titleInterval, originalTitle;
     var __moduleName = context_134 && context_134.id;
     function initTabTitle() {
         originalTitle = document.title;
@@ -52308,21 +52311,27 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
         ],
         execute: function () {
             // ── SCREEN MOSS ──
-            // Green pixels grow from edges during idle, retreat on movement
+            // Green pixels grow from edges during idle, retreat on movement.
+            // Таблица покоя (.claude/skills/ardet-scene-accept §4): мох проявляется к 21 с и растёт
+            // до 30 с покоя — дальше на стекле не прибавляется ничего. Краски — мох канона (MG, его свет
+            // и тень, яд мглой), без неона: тепло не растрируется, мох — не подсветка.
+            MOSS_UNTIL = 1800; // 30 с покоя
             exports_134("screenMoss", screenMoss = {
                 cells: [],
                 idleGrowth: 0,
+                still: 0,
                 maxCells: 800,
                 retreatSpeed: 0.015,
                 palette: [
-                    '#0a1a08', '#0d2a0b', '#1a3a12', '#2a5a1a',
-                    '#1a4a14', '#2a6a20', '#3a7a2a', '#4a8a34',
-                    '#5aff3a', '#3adf2a', '#6aaa40', '#8ab860',
-                    '#1a3010', '#0e1a08', '#3a5a20', '#506830',
+                    '#15100c', '#241c14', '#2f372c', '#3D4A3A',
+                    '#2f372c', '#3D4A3A', '#4d5a49', '#505948',
+                    '#241c14', '#2f372c', '#3D4A3A', '#4d5a49',
+                    '#15100c', '#2f372c', '#3D4A3A', '#505948',
                 ],
                 update(isMoving) {
                     const vw = scaler_js_18.scaler.vw, vh = scaler_js_18.scaler.vh;
                     if (isMoving) {
+                        this.still = 0;
                         this.idleGrowth = Math.max(0, this.idleGrowth - this.retreatSpeed);
                         if (this.idleGrowth < 0.01 && this.cells.length > 0) {
                             for (let i = 0; i < 3; i++)
@@ -52330,8 +52339,9 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                         }
                         return;
                     }
+                    this.still++;
                     this.idleGrowth = Math.min(1, this.idleGrowth + 0.0002);
-                    if (this.idleGrowth > 0.08 && this.cells.length < this.maxCells && time_js_29.t % 12 === 0) {
+                    if (this.idleGrowth > 0.08 && this.still < MOSS_UNTIL && this.cells.length < this.maxCells && time_js_29.t % 12 === 0) {
                         const edge = Math.floor(Math.random() * 4);
                         let nx, ny;
                         if (edge === 0) {
@@ -60608,16 +60618,18 @@ System.register("world/wandering", ["core/time", "render/context", "sprites/npcs
 });
 System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], function (exports_154, context_154) {
     "use strict";
-    var time_js_35, scaler_js_21, audio_js_9, MSGS, idleTimer, currentMsg, msgLife;
+    var time_js_35, scaler_js_21, audio_js_9, MSGS, LENTA, QUIET_MSGS, _quietHasNoLenta, idleTimer, currentMsg, msgLife;
     var __moduleName = context_154 && context_154.id;
-    function update(isMoving) {
+    // lentaNear: странник там, где лента (main.js: кольцо ≥ RINGS); по умолчанию — тихое место
+    function update(isMoving, lentaNear = false) {
         if (isMoving) {
             idleTimer = 0;
             return;
         }
         idleTimer++;
         if (idleTimer === 900) {
-            currentMsg = MSGS[Math.floor(Math.random() * MSGS.length)];
+            const pool = lentaNear ? MSGS : QUIET_MSGS;
+            currentMsg = pool[Math.floor(Math.random() * pool.length)];
             msgLife = 240;
         }
         if (idleTimer === 1800) {
@@ -60689,6 +60701,13 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio"], fun
                 'запись продолжается', 'три грамма меди', 'свет без лампы',
                 'у стихии нет меморандумов',
             ];
+            // словарь ленты: под ногами — только там, где лента есть (кольцо «сейчас», огонь и пустошь
+            // за ним); в городке, древних кольцах, доме и изнанке его нет — тихое место молчит своим
+            LENTA = new Set(['скибиди', 'шесть семь', 'mid съел норму', 'я cooked', 'aura 0',
+                'chronically Ardet', '💀 ушёл на пенсию', 'rizz закончился', 'sigma сам себя слышит',
+                'жиза, но тихо', 'по фактам — нет фактов']);
+            QUIET_MSGS = MSGS.filter(m => !LENTA.has(m));
+            exports_154("_quietHasNoLenta", _quietHasNoLenta = () => QUIET_MSGS.length > 0 && QUIET_MSGS.every(m => !LENTA.has(m)) && QUIET_MSGS.length < MSGS.length);
             idleTimer = 0;
             currentMsg = '';
             msgLife = 0;
@@ -70299,7 +70318,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         monsters_js_1.update(player);
         zoneAmbient_js_1.updateZone(zoneAmbient_js_1.getZone(player.x, player.y));
         if (!redNoon_js_7.redNoon.active)
-            idle_js_1.update(player.moving);
+            idle_js_1.update(player.moving, disc_js_51.ringAt(player.x + 6, player.y + 24) >= disc_js_51.RINGS); // слова ленты — только у ленты
         whisper_js_4.check(player, locations_js_6.locations, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).moon > 0.5 ? litAt : null); // ночью — только у света
         particles_js_3.update();
         weather_js_2.update(zoneAmbient_js_1.getZone(player.x, player.y));

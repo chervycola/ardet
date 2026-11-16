@@ -1734,7 +1734,7 @@ function updateWorldSystems() {
   if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
-  if (!redNoon.active) updateIdle(player.moving);
+  if (!redNoon.active) updateIdle(player.moving, ringAt(player.x + 6, player.y + 24) >= RINGS);   // слова ленты — только у ленты
   checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
   updateParticles();
   updateWeather(getZone(player.x, player.y));

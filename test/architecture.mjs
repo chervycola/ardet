@@ -744,7 +744,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     eq(bad.length, 0, 'больше четверти штрихов в воздухе: ' + bad.join(', '));
     assert(off < tot * 0.05, `в воздухе ${(off / tot * 100).toFixed(1)}% штрихов`);
   });
-  test('надписи стен: на фасаде постройки — штрихи без шрифта; в осмотре — только проступившие строки', () => {
+  test('надписи стен: на фасаде постройки — штрихи без шрифта; в осмотре — только проступившие строки; проступают одним ответом', () => {
     const l = locations.find(q => q.archDraw && IN.hiddenInscriptions[q.id] && IN.hiddenInscriptions[q.id].length >= 2);
     assert(l, 'нет постройки с надписью');
     const lines = IN.hiddenInscriptions[l.id];
@@ -752,8 +752,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     assert(!PT.lookText(l).includes(lines[0]), 'в осмотре прежде, чем проступила');
     const pl = { x: l.x + l.w / 2, y: l.y + l.h / 2, moving: false };
     for (let i = 0; i < 70; i++) IN.updateProximity(pl, locations);
-    eq(IN.wallLines(l.id).length, 1, 'первая строка не проступила');
-    assert(PT.lookText(l).includes(`«${lines[0]}»`) && !PT.lookText(l).includes(`«${lines[1]}»`), 'в осмотре не та строка');
+    eq(IN.wallLines(l.id).length, 0, 'проступило раньше 2,5 с');
+    for (let i = 0; i < 90; i++) IN.updateProximity(pl, locations);
+    eq(IN.wallLines(l.id).length, lines.length, 'к 2,5 с надпись не проступила вся');
+    assert(PT.lookText(l).includes(`«${lines[0]}»`) && PT.lookText(l).includes(`«${lines[1]}»`), 'в осмотре не все строки');
     const c = fakeCtx(), n = { text: 0, rect: 0 };
     c.fillText = () => n.text++; c.fillRect = () => n.rect++;
     const prev = CX.X; CX.setCtx(c);

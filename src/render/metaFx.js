@@ -6,30 +6,37 @@ import { scaler } from './scaler.js';
 import { t } from '../core/time.js';
 
 // ── SCREEN MOSS ──
-// Green pixels grow from edges during idle, retreat on movement
+// Green pixels grow from edges during idle, retreat on movement.
+// Таблица покоя (.claude/skills/ardet-scene-accept §4): мох проявляется к 21 с и растёт
+// до 30 с покоя — дальше на стекле не прибавляется ничего. Краски — мох канона (MG, его свет
+// и тень, яд мглой), без неона: тепло не растрируется, мох — не подсветка.
+const MOSS_UNTIL = 1800;                         // 30 с покоя
 export const screenMoss = {
   cells: [],
   idleGrowth: 0,
+  still: 0,
   maxCells: 800,
   retreatSpeed: 0.015,
   palette: [
-    '#0a1a08', '#0d2a0b', '#1a3a12', '#2a5a1a',
-    '#1a4a14', '#2a6a20', '#3a7a2a', '#4a8a34',
-    '#5aff3a', '#3adf2a', '#6aaa40', '#8ab860',
-    '#1a3010', '#0e1a08', '#3a5a20', '#506830',
+    '#15100c', '#241c14', '#2f372c', '#3D4A3A',
+    '#2f372c', '#3D4A3A', '#4d5a49', '#505948',
+    '#241c14', '#2f372c', '#3D4A3A', '#4d5a49',
+    '#15100c', '#2f372c', '#3D4A3A', '#505948',
   ],
 
   update(isMoving) {
     const vw = scaler.vw, vh = scaler.vh;
     if (isMoving) {
+      this.still = 0;
       this.idleGrowth = Math.max(0, this.idleGrowth - this.retreatSpeed);
       if (this.idleGrowth < 0.01 && this.cells.length > 0) {
         for (let i = 0; i < 3; i++) this.cells.pop();
       }
       return;
     }
+    this.still++;
     this.idleGrowth = Math.min(1, this.idleGrowth + 0.0002);
-    if (this.idleGrowth > 0.08 && this.cells.length < this.maxCells && t % 12 === 0) {
+    if (this.idleGrowth > 0.08 && this.still < MOSS_UNTIL && this.cells.length < this.maxCells && t % 12 === 0) {
       const edge = Math.floor(Math.random() * 4);
       let nx, ny;
       if (edge === 0) { nx = Math.floor(Math.random() * vw); ny = 0; }

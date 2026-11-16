@@ -128,20 +128,33 @@ setCtx(fakeCtx());
   });
 
   test('screenMoss: cell count never exceeds maxCells (800)', () => {
-    screenMoss.cells = []; screenMoss.idleGrowth = 0;
+    screenMoss.cells = []; screenMoss.idleGrowth = 0; screenMoss.still = 0;
     for (let i = 0; i < 50_000; i++) { tick(); screenMoss.update(false); }
     assert(screenMoss.cells.length <= 800, `overgrew: ${screenMoss.cells.length}`);
   });
 
   test('screenMoss: movement after growth retreats cells back toward 0', () => {
     // Build up cells
-    screenMoss.cells = []; screenMoss.idleGrowth = 0;
+    screenMoss.cells = []; screenMoss.idleGrowth = 0; screenMoss.still = 0;
     for (let i = 0; i < 5000; i++) { tick(); screenMoss.update(false); }
     const peak = screenMoss.cells.length;
     assert(peak > 0, `precondition: cells should exist, got ${peak}`);
     // Now move long enough — should drain
     for (let i = 0; i < 20_000; i++) { tick(); screenMoss.update(true); }
     assert(screenMoss.cells.length === 0, `expected empty after retreat, got ${screenMoss.cells.length}`);
+  });
+
+  test('screenMoss: таблица покоя — после 30 с покоя клеток не прибавляется; краски без неона', () => {
+    screenMoss.cells = []; screenMoss.idleGrowth = 0; screenMoss.still = 0;
+    for (let i = 0; i < 1800; i++) { tick(); screenMoss.update(false); }
+    const at30 = screenMoss.cells.length;
+    assert(at30 > 0, `к 30 с мох должен проявиться, клеток ${at30}`);
+    for (let i = 0; i < 9000; i++) { tick(); screenMoss.update(false); }
+    eq(screenMoss.cells.length, at30, 'после 30 с покоя мох прибавил клетки');
+    for (const c of screenMoss.palette) {
+      const n = parseInt(c.slice(1), 16), g = (n >> 8) & 255, r = n >> 16, b = n & 255;
+      assert(g - Math.max(r, b) < 40 && g < 120, `неоновый зелёный в мхе: ${c}`);
+    }
   });
 }
 
