@@ -13,10 +13,15 @@
 export const DAY_LEN = 43200;                  // шагов на сутки (60 в секунду — 12 минут)
 const DAY = 0.42, DUSK = 0.55, NIGHT = 0.92;   // где кончаются день, сумерки, ночь
 let START = 0.30;
+let PINNED = false;                               // ?phase= в адресе — проверка руками: сохранение не трогает
 try {
   const q = new URLSearchParams(location.search).get('phase');
-  if (q !== null && !isNaN(+q)) START = ((+q % 1) + 1) % 1;
+  if (q !== null && !isNaN(+q)) { START = ((+q % 1) + 1) % 1; PINNED = true; }
 } catch (e) {}
+// часы мира переживают перезагрузку (слово автора 16.11): сохраняются сутки с часом,
+// следующий заход продолжает с того же места; пока странника нет, время не идёт
+export const worldClock = step => step / DAY_LEN + START;
+export function setWorldClock(v) { if (!PINNED && Number.isFinite(v) && v >= 0) START = v; }
 
 const smooth = k => { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
 const MOON = Math.SQRT1_2;                     // тень от луны на 45°: на земле — длиной в вещь (по глубине экран вдвое)

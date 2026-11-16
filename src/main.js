@@ -21,7 +21,7 @@ import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
 import { initMoonThread, drawMoonThread, moonThreadDepth, touchMoonThread } from './render/moonthread.js';
 import { hazeView, hazeComposite, hazeOff } from './render/haze.js';
 import { castShadows, maskFrom } from './render/shadows.js';
-import { phaseAt, skyAt, shadowAt, dayIndex } from './world/sky.js';
+import { phaseAt, skyAt, shadowAt, dayIndex, worldClock, setWorldClock } from './world/sky.js';
 import { redNoon, stepRedNoon, triggerRedNoon, muteRedNoon } from './world/redNoon.js';
 import { pressAt, setPress, getPress, installPen, penComposite } from './render/pen.js';
 import { drawEtchedGround } from './render/etch.js';
@@ -60,7 +60,8 @@ import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount } from
 import { quietVoice } from './world/quietSound.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
-import { checkLorePickup, drawLoreItems, getCollectedCount, getTotalCount, loadCollected, getCollectedIds, loreTextOf } from './world/lore.js';
+import { checkLorePickup, drawLoreItems, getTotalCount, loadCollected, getCollectedIds, loreTextOf } from './world/lore.js';
+import { GATES } from './content/worldmap_db.js';
 import { initInventory } from './ui/inventory.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer, setPosOverride } from './core/playerRef.js';
@@ -249,6 +250,7 @@ if (savedData) {
   if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
   if (savedData.attn) loadAttention(savedData.attn, locations);
   if (savedData.wardrobe) loadWardrobe(savedData.wardrobe);
+  if (savedData.clock != null) setWorldClock(savedData.clock);   // сутки и час — с того места, где ушёл
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -267,6 +269,7 @@ function saveData() {
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
   player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
+  clock: worldClock(t),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -1726,7 +1729,7 @@ function updateWorldSystems() {
   // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
   // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
   if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
-  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); }   // обмер — ногами
+  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); }   // обмер — ногами; врата по пройденному
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
   if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
   updateMonsters(player);
@@ -2080,12 +2083,15 @@ events.on(E.OBSERVER_MET, (npcId) => {
   flags.observersSeen.add(npcId);
 });
 
-// Gates open on milestones: thresholds match content/worldmap_db.GATES.reveal.
-events.on(E.LORE_COLLECT, () => {
-  const n = getCollectedCount();
-  if (n >= 30) discoverGate('gate_americas');
-  if (n >= 60) discoverGate('gate_north');
-});
+// врата пожаров и Шёлдена открываются, когда странник прошёл ногами южную сторону кольца,
+// куда они ведут (слово автора 16.11; прежде — за 30 и 60 подобранных записок: счёт наружу)
+// цели врат записаны в координатах старой улицы: x → эпоха
+function gateRing(gate) {
+  const vx = gate.target.x - STREET_SHIFT;
+  return EPOCHS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || EPOCHS[EPOCHS.length - 1];
+}
+const WALK_GATES = ['gate_americas', 'gate_north'].map(id => GATES.find(g => g.id === id)).filter(Boolean).map(g => [g.id, gateRing(g).id + ':south']);
+function checkWalkGates() { for (const [id, k] of WALK_GATES) if (flags.walked.has(k)) discoverGate(id); }
 // Terminal-driven discoveries — fired from inside terminal.exec via the
 // 'terminal.read' bus event below.
 events.on('terminal.read', (key) => {
@@ -2101,9 +2107,8 @@ events.on('gate.use', (gate) => {
   // из дома и из-под земли врата не ведут: иначе странник оказался бы на поверхности,
   // а ноги — в доме или в изнанке (сверка обходов, 24.10)
   if (house.active || under.active) { showLore('Переход через врата — с поверхности. Отсюда сначала наверх.'); return; }
-  // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
-  const vx = gate.target.x - STREET_SHIFT;
-  const seg = EPOCHS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || EPOCHS[EPOCHS.length - 1];
+  // цель — южная тропа кольца врат
+  const seg = gateRing(gate);
   const p = trailPoint('south', ringD(Math.max(1, seg.n), 100));
   teleportWithFade(p.x, p.y);
 });

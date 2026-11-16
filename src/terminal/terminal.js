@@ -4,7 +4,6 @@
 import { state } from '../core/state.js';
 import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
-import { getCollectedCount, getTotalCount } from '../world/lore.js';
 import { getSessionAge, hasDash88, markDash88 } from '../core/sessionMemory.js';
 import { t } from '../core/time.js';
 
@@ -204,13 +203,12 @@ const commands = {
 
   status() {
     // Real numbers: session count from sessionMemory (the v2 key —
-    // the old 'ardet_visits' read always lied), fragments from the
-    // lore module, and session time from the frame counter.
+    // the old 'ardet_visits' read always lied) and session time from the
+    // frame counter. Счёт найденного наружу не печатается (слово автора 16.11).
     const visits = Math.max(1, getSessionAge());
     const mins = Math.floor(t / 3600);
     print(`СТАТУС СТРАННИКА:
   визит:     ${visits}
-  фрагменты: ${getCollectedCount()}/${getTotalCount()}
   в пути:    ${mins} мин
   состояние: ${state.current}
   огонь:     горит

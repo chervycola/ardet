@@ -157,7 +157,7 @@ export const GATES = [
     label: 'врата пожаров',
     note: 'январь 2025; туман старше лихорадок',
     hidden: true,
-    reveal: 'после 30 фрагментов' },
+    reveal: 'когда кольцо пройдено ногами' },
   { id: 'gate_asia',     cont: 'Азия',            x: 1176, y: 612,
     target: { x: 4015, y: 880 },     // §3 — Isfahan
     label: 'врата Исфахана',
@@ -169,7 +169,7 @@ export const GATES = [
     label: 'врата Шёлдена',
     note: 'мерча нет до сих пор',
     hidden: true,
-    reveal: 'после 60 фрагментов' },
+    reveal: 'когда кольцо пройдено ногами' },
 ];
 
 export function gateById(id) { return GATES.find(g => g.id === id) || null; }

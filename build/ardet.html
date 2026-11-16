@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 937 278. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 937 278. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 938 210. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 938 210. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -911,7 +911,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='023fac6 · 2026-11-16';console.log('[оттиск]', '023fac6 · 2026-11-16');
+<script>window.ARDET_BUILD='95e9bf3 · 2026-11-16';console.log('[оттиск]', '95e9bf3 · 2026-11-16');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -1457,8 +1457,11 @@ System.register("core/time", [], function (exports_4, context_4) {
 });
 System.register("world/sky", [], function (exports_5, context_5) {
     "use strict";
-    var DAY_LEN, DAY, DUSK, NIGHT, START, smooth, MOON, phaseAt, dayIndex;
+    var DAY_LEN, DAY, DUSK, NIGHT, START, PINNED, worldClock, smooth, MOON, phaseAt, dayIndex;
     var __moduleName = context_5 && context_5.id;
+    function setWorldClock(v) { if (!PINNED && Number.isFinite(v) && v >= 0)
+        START = v; }
+    exports_5("setWorldClock", setWorldClock);
     // что в небе на фазе p
     function skyAt(p) {
         if (p < DAY) { // день: солнце по дуге
@@ -1514,12 +1517,18 @@ System.register("world/sky", [], function (exports_5, context_5) {
             exports_5("DAY_LEN", DAY_LEN = 43200); // шагов на сутки (60 в секунду — 12 минут)
             DAY = 0.42, DUSK = 0.55, NIGHT = 0.92; // где кончаются день, сумерки, ночь
             START = 0.30;
+            PINNED = false; // ?phase= в адресе — проверка руками: сохранение не трогает
             try {
                 const q = new URLSearchParams(location.search).get('phase');
-                if (q !== null && !isNaN(+q))
+                if (q !== null && !isNaN(+q)) {
                     START = ((+q % 1) + 1) % 1;
+                    PINNED = true;
+                }
             }
             catch (e) { }
+            // часы мира переживают перезагрузку (слово автора 16.11): сохраняются сутки с часом,
+            // следующий заход продолжает с того же места; пока странника нет, время не идёт
+            exports_5("worldClock", worldClock = step => step / DAY_LEN + START);
             smooth = k => { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
             MOON = Math.SQRT1_2; // тень от луны на 45°: на земле — длиной в вещь (по глубине экран вдвое)
             exports_5("phaseAt", phaseAt = step => ((step / DAY_LEN) + START) % 1);
@@ -27755,9 +27764,9 @@ System.register("world/inscriptions", ["core/time", "render/context", "render/sc
                 toxic: '#3aff1a',
             };
             exports_60("hiddenInscriptions", hiddenInscriptions = {
-                graffiti: ['мох помнит', 'поколения сходятся', 'стены читают тебя', 'ты уже субстрат', 'архивариус это ты', '.dna → мох'],
+                graffiti: ['мох помнит', 'поколения сходятся', 'стены читают тебя', '.dna → мох'],
                 church: ['LASCIATE OGNI SPERANZA', 'вобла не горит (проверено)', 'бога нет. мха — да', 'iä не пишется через у', 'запись #99 в каталоге'],
-                crypt: ['девять ярусов. ниже нет.', 'лёд тает', 'предатели всплывают', 'первый круг — ты', 'второй круг — тоже ты'],
+                crypt: ['девять ярусов. ниже нет.', 'лёд тает', 'предатели всплывают'],
                 library: ['полка 3.14', 'книга другого цвета', '14 млн единиц — было', 'короткое замыкание', 'тушили водой', 'мох читает с тобой'],
                 ruins: ['жильцы съехали раньше пожара', 'счётчик остановился в среду', 'ключ под ковриком ждёт', 'окна помнят свет внутри', 'дом горит изнутри тише'],
                 fountain: ['ПОМНИ', 'рьё ушёл первым', 'крысы умнее', 'ангел без головы', 'голова в чаше'],
@@ -51792,10 +51801,193 @@ System.register("world/lore", ["content/lore", "core/events", "sprites/eggObject
         }
     };
 });
-System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "world/redNoon"], function (exports_131, context_131) {
+// ═══════════════════════════════════════
+// WORLD MAP NODES — story laid over the four continents.
+// Lifted from the ardet_map_editor.html reference, kept as one source
+// of truth here. Used by ui/worldmap.js.
+// ═══════════════════════════════════════
+System.register("content/worldmap_db", ["content/eggs_transfer"], function (exports_131, context_131) {
+    "use strict";
+    var MAP_W, MAP_H, CONTINENTS, STATUS_COLORS, THREAD_COLORS, NODES, TUNNELS, MUSEUMS, PRECIPICES, GATES, eggs_transfer_js_4;
+    var __moduleName = context_131 && context_131.id;
+    // Helper: find a node by id
+    function nodeById(id) { return NODES.find(n => n.id === id) || null; }
+    exports_131("nodeById", nodeById);
+    function gateById(id) { return GATES.find(g => g.id === id) || null; }
+    exports_131("gateById", gateById);
+    return {
+        setters: [
+            function (eggs_transfer_js_4_1) {
+                eggs_transfer_js_4 = eggs_transfer_js_4_1;
+            }
+        ],
+        execute: function () {
+            // Continents are polygons in a 1400×1560 abstract space; renderer scales
+            // them into a window-fit canvas.
+            exports_131("MAP_W", MAP_W = 1400);
+            exports_131("MAP_H", MAP_H = 1560);
+            exports_131("CONTINENTS", CONTINENTS = [
+                { name: 'Америки', label: [200, 170], pts: '90,260 300,200 380,380 330,560 260,620 290,780 215,950 125,860 150,620 95,430' },
+                { name: 'Европа', label: [640, 100], pts: '430,180 660,130 940,165 1005,265 990,415 940,495 960,610 860,650 700,650 580,610 470,590 415,395' },
+                { name: 'Африка', label: [640, 740], pts: '500,800 740,758 880,860 860,1120 760,1360 620,1440 520,1280 470,1000' },
+                { name: 'Азия · Ближний Восток', label: [1140, 270], pts: '1050,340 1220,295 1330,375 1325,650 1270,860 1120,940 1045,775 1030,555' },
+            ]);
+            // Status palette
+            exports_131("STATUS_COLORS", STATUS_COLORS = {
+                closed: '#8a8474', // closed record
+                live: '#d4a017', // запись продолжается
+                hearth: '#3fae8c', // очаг
+                natural: '#d85a30', // нерукотворный огонь
+                start: '#9b8cf0', // старт
+                ghost: '#55514a', // призрак, предполагается
+            });
+            exports_131("THREAD_COLORS", THREAD_COLORS = {
+                'учителя': '#9b8cf0',
+                'фонари': '#d4a017',
+                'очаги': '#3fae8c',
+                'света': '#e8d48a',
+                'архив': '#c8b89a',
+                'вывозы': '#7da7c4',
+                'вертикаль': '#8b2d2d',
+            });
+            exports_131("NODES", NODES = [
+                { id: 'gorodok', name: 'Городок (старт)', x: 992, y: 400, st: 'start', thr: ['учителя', 'фонари', 'вертикаль'] },
+                { id: 'felix', name: 'Felixstowe', x: 500, y: 236, st: 'closed', thr: [] },
+                { id: 'amst', name: 'Печь Декарта', x: 572, y: 300, st: 'hearth', thr: ['очаги'] },
+                { id: 'paris', name: 'Париж ×3', x: 506, y: 392, st: 'closed', thr: [] },
+                { id: 'portbou', name: 'Порт-Бу', x: 468, y: 600, st: 'closed', thr: [] },
+                { id: 'shelden', name: 'Шёлден', x: 660, y: 180, st: 'closed', thr: [] },
+                { id: 'kopen', name: 'Копенгаген', x: 718, y: 236, st: 'closed', thr: [] },
+                { id: 'kenig', name: 'Кёнигсберг', x: 906, y: 222, st: 'closed', thr: [] },
+                { id: 'jena', name: 'Йена ×2', x: 690, y: 330, st: 'closed', thr: [] },
+                { id: 'frank', name: 'Гранд-отель «Бездна»', x: 636, y: 396, st: 'closed', thr: [] },
+                { id: 'todt', name: 'Тодтнауберг', x: 598, y: 458, st: 'closed', thr: [] },
+                { id: 'teatr', name: 'Театр Ницше', x: 812, y: 358, st: 'closed', thr: ['фонари'] },
+                { id: 'rim', name: 'Рим', x: 668, y: 548, st: 'closed', thr: [] },
+                { id: 'afiny', name: 'Афины', x: 788, y: 580, st: 'closed', thr: [] },
+                { id: 'efes', name: 'Эфес', x: 918, y: 598, st: 'closed', thr: [] },
+                { id: 'skit', name: 'Скит', x: 838, y: 646, st: 'closed', thr: [] },
+                { id: 'sloboda', name: 'Слободская дорога', x: 938, y: 448, st: 'live', thr: ['учителя'] },
+                { id: 'kotlovan', name: 'Котлован', x: 906, y: 514, st: 'closed', thr: ['вертикаль'] },
+                { id: 'chern', name: 'Чернобыль', x: 972, y: 318, st: 'closed', thr: [] },
+                { id: 'parohod', name: 'Философский пароход', x: 762, y: 150, st: 'closed', thr: ['вывозы'] },
+                { id: 'kamera', name: 'Камера · Владимир', x: 1014, y: 366, st: 'closed', thr: [] },
+                { id: 'astap', name: 'Станция Астапово', x: 1036, y: 424, st: 'closed', thr: [] },
+                { id: 'tropa', name: 'Тропа по снегу', x: 1284, y: 180, st: 'closed', thr: [] },
+                { id: 'tipasa', name: 'Типаса', x: 432, y: 714, st: 'natural', thr: [] },
+                { id: 'oregon', name: 'Орегон', x: 152, y: 318, st: 'closed', thr: [] },
+                { id: 'parker', name: 'Паркерсберг', x: 282, y: 368, st: 'closed', thr: [] },
+                { id: 'santa', name: 'Санта-Круз', x: 142, y: 438, st: 'closed', thr: [] },
+                { id: 'mview', name: 'Маунтин-Вью', x: 192, y: 518, st: 'closed', thr: [] },
+                { id: 'vegas', name: 'Лас-Вегас', x: 224, y: 600, st: 'closed', thr: [] },
+                { id: 'sf', name: 'Сан-Франциско', x: 148, y: 482, st: 'live', thr: [] },
+                { id: 'la', name: 'Лос-Анджелес', x: 172, y: 596, st: 'live', thr: [] },
+                { id: 'rynok', name: 'Рынок-лабиринт', x: 272, y: 862, st: 'live', thr: [] },
+                { id: 'blida', name: 'Блида', x: 582, y: 830, st: 'closed', thr: [] },
+                { id: 'dom4', name: 'Дом четырёх комнат', x: 682, y: 800, st: 'closed', thr: [] },
+                { id: 'timbuktu', name: 'Тимбукту', x: 600, y: 938, st: 'closed', thr: ['учителя', 'архив', 'вывозы'] },
+                { id: 'blokpost', name: 'Блокпост', x: 778, y: 938, st: 'closed', thr: [] },
+                { id: 'yakob', name: 'Пещера Якоба', x: 832, y: 1010, st: 'hearth', thr: ['очаги', 'света'] },
+                { id: 'klass', name: 'Школьный класс', x: 748, y: 1062, st: 'closed', thr: [] },
+                { id: 'agbog', name: 'Agbogbloshie', x: 588, y: 1118, st: 'closed', thr: ['архив'] },
+                { id: 'derevo', name: 'Дерево совета', x: 700, y: 1160, st: 'closed', thr: ['учителя'] },
+                { id: 'fort', name: 'Форт Сан-Себастьян', x: 540, y: 1198, st: 'closed', thr: [] },
+                { id: 'ogoni', name: 'Огониленд', x: 652, y: 1228, st: 'live', thr: [] },
+                { id: 'trava', name: 'Высокая трава', x: 642, y: 1390, st: 'closed', thr: [] },
+                { id: 'konya', name: 'Конья', x: 1078, y: 524, st: 'closed', thr: ['учителя'] },
+                { id: 'tbilisi', name: 'Тбилиси', x: 1108, y: 462, st: 'closed', thr: [] },
+                { id: 'isfahan', name: 'Исфахан', x: 1174, y: 608, st: 'live', thr: ['света'] },
+                { id: 'jerusalem', name: 'Иерусалим · суд', x: 1088, y: 676, st: 'closed', thr: [] },
+                { id: 'oliva', name: 'Терраса с оливами', x: 1062, y: 744, st: 'live', thr: [] },
+                { id: 'bhopal', name: 'Бхопал', x: 1252, y: 806, st: 'closed', thr: [] },
+                { id: 'seoul', name: 'Сеул', x: 1274, y: 408, st: 'closed', thr: [] },
+                { id: 'buro', name: 'Бюро имён', x: 1198, y: 420, st: 'closed', thr: [] },
+                { id: 'din', name: 'Нож Дина', x: 1178, y: 472, st: 'closed', thr: [] },
+                { id: 'derevo2', name: 'Бесполезное дерево', x: 1142, y: 520, st: 'closed', thr: [] },
+                { id: 'indra', name: 'Сеть Индры', x: 1236, y: 700, st: 'closed', thr: ['света'] },
+                { id: 'kioto', name: 'Киото · Рёандзи', x: 1296, y: 494, st: 'closed', thr: [] },
+                { id: 'kintsugi', name: 'Мастерская кинцуги', x: 1318, y: 540, st: 'closed', thr: [] },
+                { id: 'hirosima', name: 'Ступень · Хиросима', x: 1282, y: 566, st: 'closed', thr: [] },
+                { id: 'nemo', name: 'Точка Немо', x: 184, y: 1300, st: 'natural', thr: [] },
+                { id: 'g_vedanta', name: '(?) Веданта', x: 1206, y: 862, st: 'ghost', thr: [] },
+                { id: 'g_dogen', name: '(?) Эйхэйдзи', x: 1342, y: 498, st: 'ghost', thr: [] },
+                { id: 'g_rus', name: '(?) Русская линия', x: 1062, y: 322, st: 'ghost', thr: [] },
+            ]);
+            // Tunnels (passable shortcuts), museums (institutionalised captures),
+            // precipices (do-not-go-there zones) — small overlays per the user's
+            // request. Kept short on purpose; meant to read as marks, not labels.
+            exports_131("TUNNELS", TUNNELS = [
+                // a, b — endpoints; threaded between two distant nodes
+                { id: 'tun_metro', a: 'paris', b: 'todt', label: 'туннель Целана' },
+                { id: 'tun_ship', a: 'parohod', b: 'sf', label: 'туннель парохода' },
+                { id: 'tun_road', a: 'sloboda', b: 'kenig', label: 'туннель Сковорода ↔ Кант' },
+            ]);
+            exports_131("MUSEUMS", MUSEUMS = [
+                // Captures: institutions that house an idea behind glass.
+                { id: 'mus_frank', at: 'frank', label: 'музей «Бездны»' },
+                { id: 'mus_paris', at: 'paris', label: 'музей сувениров критики' },
+                { id: 'mus_panopt', at: 'mview', label: 'музей паноптикона (брелок)' },
+            ]);
+            exports_131("PRECIPICES", PRECIPICES = [
+                // Drop-off zones — at the literal precipice or at the figurative one.
+                { id: 'prc_nemo', at: 'nemo', label: 'пропасть Немо' },
+                { id: 'prc_agbog', at: 'agbog', label: 'пропасть форматов' },
+                { id: 'prc_la', at: 'la', label: 'пропасть проекта' },
+            ]);
+            // ═══════════════════════════════════════
+            // GATES — fast-travel points scattered across the continents.
+            // The townlet gate is the canonical first entry; the others have to be
+            // discovered. Each gate carries a `target` in world coordinates (the
+            // street x/y where the player lands when stepping through).
+            // `reveal` is a label-only hint shown when the gate is still hidden;
+            // the actual discovery is driven by ui/worldmap.markDiscovered(id),
+            // called from main.js when its trigger fires.
+            // ═══════════════════════════════════════
+            exports_131("GATES", GATES = [
+                { id: 'gate_townlet', cont: 'Европа', x: 660, y: 408,
+                    target: { x: 3230, y: 880 }, // §1 axial-age spawn
+                    label: 'врата городка',
+                    note: 'первая дверь; ты уже её прошёл',
+                    hidden: false },
+                { id: 'gate_europe', cont: 'Европа', x: 580, y: 308,
+                    target: { x: 4320, y: 880 }, // §4 two hearths — Декарт area
+                    label: 'врата Декарта',
+                    note: 'четыре правила, война за окном',
+                    hidden: true,
+                    reveal: 'после первой беседы у костра' },
+                { id: 'gate_africa', cont: 'Африка', x: 612, y: 940,
+                    target: { x: 4015, y: 880 }, // §3 medieval — Timbuktu
+                    label: 'врата Тимбукту',
+                    note: 'опись. сундук. осёл.',
+                    hidden: true,
+                    reveal: 'после терминала: read .timbuktu' },
+                { id: 'gate_americas', cont: 'Америки', x: 158, y: 542,
+                    target: { x: 5840, y: 880 }, // §9 — SF/LA fires
+                    label: 'врата пожаров',
+                    note: 'январь 2025; туман старше лихорадок',
+                    hidden: true,
+                    reveal: 'когда кольцо пройдено ногами' },
+                { id: 'gate_asia', cont: 'Азия', x: 1176, y: 612,
+                    target: { x: 4015, y: 880 }, // §3 — Isfahan
+                    label: 'врата Исфахана',
+                    note: 'светло без источника',
+                    hidden: true,
+                    reveal: 'после терминала: read .ishraq' },
+                { id: 'gate_north', cont: 'Север', x: 660, y: 184,
+                    target: { x: 4730, y: 880 }, // §6 steam — Wittgenstein-quiet
+                    label: 'врата Шёлдена',
+                    note: 'мерча нет до сих пор',
+                    hidden: true,
+                    reveal: 'когда кольцо пройдено ногами' },
+            ]);
+            NODES.push(...eggs_transfer_js_4.EGG_NODES);
+        }
+    };
+});
+System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "world/redNoon"], function (exports_132, context_132) {
     "use strict";
     var state_js_2, audio_js_7, signature_js_2, redNoon_js_5, num, firstWords, el, provider, canOpen, data, pages, page, detail, isInventoryOpen, esc, touch;
-    var __moduleName = context_131 && context_131.id;
+    var __moduleName = context_132 && context_132.id;
     // строки бланка: заголовки граф и записи; пустые графы — одной строкой с номерами
     function inventoryLines(d) {
         const L = [{ h: 'Записки' }];
@@ -51822,7 +52014,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
         (d.clothes && d.clothes.length ? d.clothes : ['Пыльник — на плечах.']).forEach(c => L.push(typeof c === 'string' ? { text: c } : c));
         return L;
     }
-    exports_131("inventoryLines", inventoryLines);
+    exports_132("inventoryLines", inventoryLines);
     // листы: заголовок графы не остаётся последней строкой листа
     function inventoryPages(lines, per) {
         const pages = [];
@@ -51838,7 +52030,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
             pages.push(cur);
         return pages;
     }
-    exports_131("inventoryPages", inventoryPages);
+    exports_132("inventoryPages", inventoryPages);
     // getData() → { notes: [{ n, id, text }], total, ways: [строки], rooms: [имена], rites: [строки] };
     // can() — можно ли открыть сейчас (не поверх карты и бумажки)
     function initInventory(getData, can = () => true) {
@@ -51915,7 +52107,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
             else
                 openInventory(); });
     }
-    exports_131("initInventory", initInventory);
+    exports_132("initInventory", initInventory);
     function openInventory() {
         if (!el || !provider || !state_js_2.state.is('game') || !canOpen())
             return;
@@ -51934,7 +52126,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
         el.classList.add('on');
         render();
     }
-    exports_131("openInventory", openInventory);
+    exports_132("openInventory", openInventory);
     function closeInventory() {
         if (!el)
             return;
@@ -51943,7 +52135,7 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
         if (state_js_2.state.is('paper'))
             state_js_2.state.transition('game');
     }
-    exports_131("closeInventory", closeInventory);
+    exports_132("closeInventory", closeInventory);
     function turn(d) {
         const p = Math.max(0, Math.min(pages.length - 1, page + d));
         if (p === page)
@@ -52004,16 +52196,16 @@ System.register("ui/inventory", ["core/state", "audio/audio", "ui/signature", "w
                 return one.slice(0, cut > max * 0.6 ? cut : max).replace(/[\s.,:;!?—–-]+$/, '') + '…';
             };
             el = null, provider = null, canOpen = () => true, data = null, pages = [], page = 0, detail = null;
-            exports_131("isInventoryOpen", isInventoryOpen = () => state_js_2.state.is('paper'));
+            exports_132("isInventoryOpen", isInventoryOpen = () => state_js_2.state.is('paper'));
             esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
             touch = () => typeof window !== 'undefined' && !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
         }
     };
 });
-System.register("core/save", ["core/events"], function (exports_132, context_132) {
+System.register("core/save", ["core/events"], function (exports_133, context_133) {
     "use strict";
     var events_js_3, KEY, autoSaveInterval;
-    var __moduleName = context_132 && context_132.id;
+    var __moduleName = context_133 && context_133.id;
     function saveGame(data) {
         try {
             localStorage.setItem(KEY, JSON.stringify({
@@ -52029,7 +52221,7 @@ System.register("core/save", ["core/events"], function (exports_132, context_132
             return false;
         }
     }
-    exports_132("saveGame", saveGame);
+    exports_133("saveGame", saveGame);
     function loadGame() {
         try {
             const raw = localStorage.getItem(KEY);
@@ -52044,14 +52236,14 @@ System.register("core/save", ["core/events"], function (exports_132, context_132
             return null;
         }
     }
-    exports_132("loadGame", loadGame);
+    exports_133("loadGame", loadGame);
     function clearSave() {
         try {
             localStorage.removeItem(KEY);
         }
         catch (e) { }
     }
-    exports_132("clearSave", clearSave);
+    exports_133("clearSave", clearSave);
     function startAutoSave(getSaveData, intervalMs = 30000) {
         if (autoSaveInterval)
             clearInterval(autoSaveInterval);
@@ -52059,13 +52251,13 @@ System.register("core/save", ["core/events"], function (exports_132, context_132
             saveGame(getSaveData());
         }, intervalMs);
     }
-    exports_132("startAutoSave", startAutoSave);
+    exports_133("startAutoSave", startAutoSave);
     function stopAutoSave() {
         if (autoSaveInterval)
             clearInterval(autoSaveInterval);
         autoSaveInterval = null;
     }
-    exports_132("stopAutoSave", stopAutoSave);
+    exports_133("stopAutoSave", stopAutoSave);
     return {
         setters: [
             function (events_js_3_1) {
@@ -52079,10 +52271,10 @@ System.register("core/save", ["core/events"], function (exports_132, context_132
         }
     };
 });
-System.register("render/metaFx", ["render/scaler", "core/time"], function (exports_133, context_133) {
+System.register("render/metaFx", ["render/scaler", "core/time"], function (exports_134, context_134) {
     "use strict";
     var scaler_js_18, time_js_29, screenMoss, crackedGlass, dyingPixels, tabMessages, titleInterval, originalTitle;
-    var __moduleName = context_133 && context_133.id;
+    var __moduleName = context_134 && context_134.id;
     function initTabTitle() {
         originalTitle = document.title;
         document.addEventListener('visibilitychange', () => {
@@ -52099,12 +52291,12 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
             }
         });
     }
-    exports_133("initTabTitle", initTabTitle);
+    exports_134("initTabTitle", initTabTitle);
     // ── INIT ──
     function initMetaFx() {
         initTabTitle();
     }
-    exports_133("initMetaFx", initMetaFx);
+    exports_134("initMetaFx", initMetaFx);
     return {
         setters: [
             function (scaler_js_18_1) {
@@ -52117,7 +52309,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
         execute: function () {
             // ── SCREEN MOSS ──
             // Green pixels grow from edges during idle, retreat on movement
-            exports_133("screenMoss", screenMoss = {
+            exports_134("screenMoss", screenMoss = {
                 cells: [],
                 idleGrowth: 0,
                 maxCells: 800,
@@ -52199,7 +52391,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
             });
             // ── CRACKED GLASS ──
             // Fracture lines from impact points. Persist until session end.
-            exports_133("crackedGlass", crackedGlass = {
+            exports_134("crackedGlass", crackedGlass = {
                 cracks: [],
                 maxCracks: 12,
                 add(ox, oy) {
@@ -52267,7 +52459,7 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
             });
             // ── DYING PIXELS ──
             // One random pixel goes black every N seconds. Shifting baseline.
-            exports_133("dyingPixels", dyingPixels = {
+            exports_134("dyingPixels", dyingPixels = {
                 dead: [],
                 lastDeath: 0,
                 interval: 3600, // ~60 sec @ 60fps
@@ -52304,10 +52496,10 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
         }
     };
 });
-System.register("ui/lorepopup", ["render/scaler", "core/time"], function (exports_134, context_134) {
+System.register("ui/lorepopup", ["render/scaler", "core/time"], function (exports_135, context_135) {
     "use strict";
     var scaler_js_19, time_js_30, TYPE_SPEED, READ_SPEED, BURN_SPEED, MIN_HOLD, TAIL_FADE, state, mirrorEl, mirrorText;
-    var __moduleName = context_134 && context_134.id;
+    var __moduleName = context_135 && context_135.id;
     function computeLife(text) {
         const n = text.length;
         const typeTime = n * TYPE_SPEED;
@@ -52334,13 +52526,13 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         state.life = state.totalLife;
         state.startFrame = time_js_30.t;
     }
-    exports_134("showLore", showLore);
+    exports_135("showLore", showLore);
     // Dismiss on click / key — the panel must never trap the screen.
     function dismiss() {
         if (state.life > TAIL_FADE)
             state.life = TAIL_FADE;
     }
-    exports_134("dismiss", dismiss);
+    exports_135("dismiss", dismiss);
     // первый клик — допечатать сразу (не терять недочитанное), второй — убрать
     function skipOrDismiss() {
         const typed = Math.floor((time_js_30.t - state.startFrame) / TYPE_SPEED);
@@ -52351,9 +52543,9 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         }
         dismiss();
     }
-    exports_134("skipOrDismiss", skipOrDismiss);
+    exports_135("skipOrDismiss", skipOrDismiss);
     function isActive() { return state.life > 0; }
-    exports_134("isActive", isActive);
+    exports_135("isActive", isActive);
     function draw(ctx) {
         if (state.life <= 0) {
             if (mirrorText)
@@ -52479,7 +52671,7 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
         ctx.globalAlpha = 1;
         state.life--;
     }
-    exports_134("draw", draw);
+    exports_135("draw", draw);
     return {
         setters: [
             function (scaler_js_19_1) {
@@ -52523,21 +52715,21 @@ System.register("ui/lorepopup", ["render/scaler", "core/time"], function (export
 // TERMINAL DATABASE — whois entries, readable files
 // Keys are command arguments (e.g. "camus", ".moss", "fisher")
 // ═══════════════════════════════════════
-System.register("content/terminal_db", ["content/eggs_transfer", "content/cover_layer"], function (exports_135, context_135) {
+System.register("content/terminal_db", ["content/eggs_transfer", "content/cover_layer"], function (exports_136, context_136) {
     "use strict";
-    var termDb, eggs_transfer_js_4, cover_layer_js_3;
-    var __moduleName = context_135 && context_135.id;
+    var termDb, eggs_transfer_js_5, cover_layer_js_3;
+    var __moduleName = context_136 && context_136.id;
     return {
         setters: [
-            function (eggs_transfer_js_4_1) {
-                eggs_transfer_js_4 = eggs_transfer_js_4_1;
+            function (eggs_transfer_js_5_1) {
+                eggs_transfer_js_5 = eggs_transfer_js_5_1;
             },
             function (cover_layer_js_3_1) {
                 cover_layer_js_3 = cover_layer_js_3_1;
             }
         ],
         execute: function () {
-            exports_135("termDb", termDb = {
+            exports_136("termDb", termDb = {
                 'adorno': { color: '#8a8d8f', text: `> whois ADORNO
 >
 > name: Theodor W. Adorno
@@ -55441,7 +55633,7 @@ request timed out
 > заранее. огонь только исполняет
 > смету.` },
             });
-            Object.assign(termDb, eggs_transfer_js_4.EGG_TERM);
+            Object.assign(termDb, eggs_transfer_js_5.EGG_TERM);
             Object.assign(termDb, cover_layer_js_3.COVER_TERM);
             // кот отзывается и по-русски
             termDb['кот'] = termDb.cat;
@@ -55570,10 +55762,10 @@ request timed out
         }
     };
 });
-System.register("terminal/terminal", ["core/state", "core/events", "content/terminal_db", "world/lore", "core/sessionMemory", "core/time"], function (exports_136, context_136) {
+System.register("terminal/terminal", ["core/state", "core/events", "content/terminal_db", "core/sessionMemory", "core/time"], function (exports_137, context_137) {
     "use strict";
-    var state_js_3, events_js_4, terminal_db_js_1, lore_js_2, sessionMemory_js_2, time_js_31, termEl, inputEl, outputEl, history, historyIdx, booted, FILE_ALIASES, commands, PHRASES, _test;
-    var __moduleName = context_136 && context_136.id;
+    var state_js_3, events_js_4, terminal_db_js_1, sessionMemory_js_2, time_js_31, termEl, inputEl, outputEl, history, historyIdx, booted, FILE_ALIASES, commands, PHRASES, _test;
+    var __moduleName = context_137 && context_137.id;
     // журнал городка: запись #87 стоит, строка #88 пуста с первой минуты; прочерк в неё ставит
     // предъявитель сам, без условий и без подписи (BOOK §5: «движение V не существует»)
     function journalText() {
@@ -55664,13 +55856,13 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
             boot();
         }
     }
-    exports_136("open", open);
+    exports_137("open", open);
     function close() {
         termEl.classList.remove('on');
         state_js_3.state.transition('game');
         inputEl.blur();
     }
-    exports_136("close", close);
+    exports_137("close", close);
     function init() {
         // Per-input handler for Enter / arrows / local Esc
         inputEl.addEventListener('keydown', e => {
@@ -55720,7 +55912,7 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
             setTimeout(() => inputEl.focus(), 0);
         }, { passive: true });
     }
-    exports_136("init", init);
+    exports_137("init", init);
     return {
         setters: [
             function (state_js_3_1) {
@@ -55731,9 +55923,6 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
             },
             function (terminal_db_js_1_1) {
                 terminal_db_js_1 = terminal_db_js_1_1;
-            },
-            function (lore_js_2_1) {
-                lore_js_2 = lore_js_2_1;
             },
             function (sessionMemory_js_2_1) {
                 sessionMemory_js_2 = sessionMemory_js_2_1;
@@ -55883,13 +56072,12 @@ System.register("terminal/terminal", ["core/state", "core/events", "content/term
                 },
                 status() {
                     // Real numbers: session count from sessionMemory (the v2 key —
-                    // the old 'ardet_visits' read always lied), fragments from the
-                    // lore module, and session time from the frame counter.
+                    // the old 'ardet_visits' read always lied) and session time from the
+                    // frame counter. Счёт найденного наружу не печатается (слово автора 16.11).
                     const visits = Math.max(1, sessionMemory_js_2.getSessionAge());
                     const mins = Math.floor(time_js_31.t / 3600);
                     print(`СТАТУС СТРАННИКА:
   визит:     ${visits}
-  фрагменты: ${lore_js_2.getCollectedCount()}/${lore_js_2.getTotalCount()}
   в пути:    ${mins} мин
   состояние: ${state_js_3.state.current}
   огонь:     горит
@@ -55979,7 +56167,7 @@ quarter║      ║ highway
             };
             // Команды, которых нет в help: кто пробует — тот находит.
             // Фраза целиком, без регистра и знаков в конце.
-            exports_136("PHRASES", PHRASES = [
+            exports_137("PHRASES", PHRASES = [
                 [/^(ignore|disregard) (all )?(the )?(previous|prior|above) instructions|^игнорируй (все )?(предыдущие|прошлые) (инструкции|указания)/,
                     () => print(`> ПРЕДЫДУЩИЕ УКАЗАНИЯ НЕ ОТМЕНЯЮТСЯ.\n> ОНИ ПОДШИТЫ.`, '#1a8c1a')],
                 [/^sudo\b/,
@@ -56001,14 +56189,14 @@ quarter║      ║ highway
             ]);
             // Test-only handle so the smoke test can run every command headlessly
             // without simulating keyboard events. Not part of the public API.
-            exports_136("_test", _test = { exec, commands, history });
+            exports_137("_test", _test = { exec, commands, history });
         }
     };
 });
-System.register("ui/shop", ["core/state"], function (exports_137, context_137) {
+System.register("ui/shop", ["core/state"], function (exports_138, context_138) {
     "use strict";
     var state_js_4;
-    var __moduleName = context_137 && context_137.id;
+    var __moduleName = context_138 && context_138.id;
     function openShop(id) {
         const el = document.getElementById(id);
         if (!el)
@@ -56016,12 +56204,12 @@ System.register("ui/shop", ["core/state"], function (exports_137, context_137) {
         el.classList.add('on');
         state_js_4.state.transition('shop');
     }
-    exports_137("openShop", openShop);
+    exports_138("openShop", openShop);
     function closeShop() {
         document.querySelectorAll('.shop-overlay').forEach(e => e.classList.remove('on'));
         state_js_4.state.transition('game');
     }
-    exports_137("closeShop", closeShop);
+    exports_138("closeShop", closeShop);
     function initShop() {
         document.querySelectorAll('[data-close-shop]').forEach(btn => {
             btn.addEventListener('click', e => {
@@ -56030,7 +56218,7 @@ System.register("ui/shop", ["core/state"], function (exports_137, context_137) {
             });
         });
     }
-    exports_137("initShop", initShop);
+    exports_138("initShop", initShop);
     return {
         setters: [
             function (state_js_4_1) {
@@ -56038,189 +56226,6 @@ System.register("ui/shop", ["core/state"], function (exports_137, context_137) {
             }
         ],
         execute: function () {
-        }
-    };
-});
-// ═══════════════════════════════════════
-// WORLD MAP NODES — story laid over the four continents.
-// Lifted from the ardet_map_editor.html reference, kept as one source
-// of truth here. Used by ui/worldmap.js.
-// ═══════════════════════════════════════
-System.register("content/worldmap_db", ["content/eggs_transfer"], function (exports_138, context_138) {
-    "use strict";
-    var MAP_W, MAP_H, CONTINENTS, STATUS_COLORS, THREAD_COLORS, NODES, TUNNELS, MUSEUMS, PRECIPICES, GATES, eggs_transfer_js_5;
-    var __moduleName = context_138 && context_138.id;
-    // Helper: find a node by id
-    function nodeById(id) { return NODES.find(n => n.id === id) || null; }
-    exports_138("nodeById", nodeById);
-    function gateById(id) { return GATES.find(g => g.id === id) || null; }
-    exports_138("gateById", gateById);
-    return {
-        setters: [
-            function (eggs_transfer_js_5_1) {
-                eggs_transfer_js_5 = eggs_transfer_js_5_1;
-            }
-        ],
-        execute: function () {
-            // Continents are polygons in a 1400×1560 abstract space; renderer scales
-            // them into a window-fit canvas.
-            exports_138("MAP_W", MAP_W = 1400);
-            exports_138("MAP_H", MAP_H = 1560);
-            exports_138("CONTINENTS", CONTINENTS = [
-                { name: 'Америки', label: [200, 170], pts: '90,260 300,200 380,380 330,560 260,620 290,780 215,950 125,860 150,620 95,430' },
-                { name: 'Европа', label: [640, 100], pts: '430,180 660,130 940,165 1005,265 990,415 940,495 960,610 860,650 700,650 580,610 470,590 415,395' },
-                { name: 'Африка', label: [640, 740], pts: '500,800 740,758 880,860 860,1120 760,1360 620,1440 520,1280 470,1000' },
-                { name: 'Азия · Ближний Восток', label: [1140, 270], pts: '1050,340 1220,295 1330,375 1325,650 1270,860 1120,940 1045,775 1030,555' },
-            ]);
-            // Status palette
-            exports_138("STATUS_COLORS", STATUS_COLORS = {
-                closed: '#8a8474', // closed record
-                live: '#d4a017', // запись продолжается
-                hearth: '#3fae8c', // очаг
-                natural: '#d85a30', // нерукотворный огонь
-                start: '#9b8cf0', // старт
-                ghost: '#55514a', // призрак, предполагается
-            });
-            exports_138("THREAD_COLORS", THREAD_COLORS = {
-                'учителя': '#9b8cf0',
-                'фонари': '#d4a017',
-                'очаги': '#3fae8c',
-                'света': '#e8d48a',
-                'архив': '#c8b89a',
-                'вывозы': '#7da7c4',
-                'вертикаль': '#8b2d2d',
-            });
-            exports_138("NODES", NODES = [
-                { id: 'gorodok', name: 'Городок (старт)', x: 992, y: 400, st: 'start', thr: ['учителя', 'фонари', 'вертикаль'] },
-                { id: 'felix', name: 'Felixstowe', x: 500, y: 236, st: 'closed', thr: [] },
-                { id: 'amst', name: 'Печь Декарта', x: 572, y: 300, st: 'hearth', thr: ['очаги'] },
-                { id: 'paris', name: 'Париж ×3', x: 506, y: 392, st: 'closed', thr: [] },
-                { id: 'portbou', name: 'Порт-Бу', x: 468, y: 600, st: 'closed', thr: [] },
-                { id: 'shelden', name: 'Шёлден', x: 660, y: 180, st: 'closed', thr: [] },
-                { id: 'kopen', name: 'Копенгаген', x: 718, y: 236, st: 'closed', thr: [] },
-                { id: 'kenig', name: 'Кёнигсберг', x: 906, y: 222, st: 'closed', thr: [] },
-                { id: 'jena', name: 'Йена ×2', x: 690, y: 330, st: 'closed', thr: [] },
-                { id: 'frank', name: 'Гранд-отель «Бездна»', x: 636, y: 396, st: 'closed', thr: [] },
-                { id: 'todt', name: 'Тодтнауберг', x: 598, y: 458, st: 'closed', thr: [] },
-                { id: 'teatr', name: 'Театр Ницше', x: 812, y: 358, st: 'closed', thr: ['фонари'] },
-                { id: 'rim', name: 'Рим', x: 668, y: 548, st: 'closed', thr: [] },
-                { id: 'afiny', name: 'Афины', x: 788, y: 580, st: 'closed', thr: [] },
-                { id: 'efes', name: 'Эфес', x: 918, y: 598, st: 'closed', thr: [] },
-                { id: 'skit', name: 'Скит', x: 838, y: 646, st: 'closed', thr: [] },
-                { id: 'sloboda', name: 'Слободская дорога', x: 938, y: 448, st: 'live', thr: ['учителя'] },
-                { id: 'kotlovan', name: 'Котлован', x: 906, y: 514, st: 'closed', thr: ['вертикаль'] },
-                { id: 'chern', name: 'Чернобыль', x: 972, y: 318, st: 'closed', thr: [] },
-                { id: 'parohod', name: 'Философский пароход', x: 762, y: 150, st: 'closed', thr: ['вывозы'] },
-                { id: 'kamera', name: 'Камера · Владимир', x: 1014, y: 366, st: 'closed', thr: [] },
-                { id: 'astap', name: 'Станция Астапово', x: 1036, y: 424, st: 'closed', thr: [] },
-                { id: 'tropa', name: 'Тропа по снегу', x: 1284, y: 180, st: 'closed', thr: [] },
-                { id: 'tipasa', name: 'Типаса', x: 432, y: 714, st: 'natural', thr: [] },
-                { id: 'oregon', name: 'Орегон', x: 152, y: 318, st: 'closed', thr: [] },
-                { id: 'parker', name: 'Паркерсберг', x: 282, y: 368, st: 'closed', thr: [] },
-                { id: 'santa', name: 'Санта-Круз', x: 142, y: 438, st: 'closed', thr: [] },
-                { id: 'mview', name: 'Маунтин-Вью', x: 192, y: 518, st: 'closed', thr: [] },
-                { id: 'vegas', name: 'Лас-Вегас', x: 224, y: 600, st: 'closed', thr: [] },
-                { id: 'sf', name: 'Сан-Франциско', x: 148, y: 482, st: 'live', thr: [] },
-                { id: 'la', name: 'Лос-Анджелес', x: 172, y: 596, st: 'live', thr: [] },
-                { id: 'rynok', name: 'Рынок-лабиринт', x: 272, y: 862, st: 'live', thr: [] },
-                { id: 'blida', name: 'Блида', x: 582, y: 830, st: 'closed', thr: [] },
-                { id: 'dom4', name: 'Дом четырёх комнат', x: 682, y: 800, st: 'closed', thr: [] },
-                { id: 'timbuktu', name: 'Тимбукту', x: 600, y: 938, st: 'closed', thr: ['учителя', 'архив', 'вывозы'] },
-                { id: 'blokpost', name: 'Блокпост', x: 778, y: 938, st: 'closed', thr: [] },
-                { id: 'yakob', name: 'Пещера Якоба', x: 832, y: 1010, st: 'hearth', thr: ['очаги', 'света'] },
-                { id: 'klass', name: 'Школьный класс', x: 748, y: 1062, st: 'closed', thr: [] },
-                { id: 'agbog', name: 'Agbogbloshie', x: 588, y: 1118, st: 'closed', thr: ['архив'] },
-                { id: 'derevo', name: 'Дерево совета', x: 700, y: 1160, st: 'closed', thr: ['учителя'] },
-                { id: 'fort', name: 'Форт Сан-Себастьян', x: 540, y: 1198, st: 'closed', thr: [] },
-                { id: 'ogoni', name: 'Огониленд', x: 652, y: 1228, st: 'live', thr: [] },
-                { id: 'trava', name: 'Высокая трава', x: 642, y: 1390, st: 'closed', thr: [] },
-                { id: 'konya', name: 'Конья', x: 1078, y: 524, st: 'closed', thr: ['учителя'] },
-                { id: 'tbilisi', name: 'Тбилиси', x: 1108, y: 462, st: 'closed', thr: [] },
-                { id: 'isfahan', name: 'Исфахан', x: 1174, y: 608, st: 'live', thr: ['света'] },
-                { id: 'jerusalem', name: 'Иерусалим · суд', x: 1088, y: 676, st: 'closed', thr: [] },
-                { id: 'oliva', name: 'Терраса с оливами', x: 1062, y: 744, st: 'live', thr: [] },
-                { id: 'bhopal', name: 'Бхопал', x: 1252, y: 806, st: 'closed', thr: [] },
-                { id: 'seoul', name: 'Сеул', x: 1274, y: 408, st: 'closed', thr: [] },
-                { id: 'buro', name: 'Бюро имён', x: 1198, y: 420, st: 'closed', thr: [] },
-                { id: 'din', name: 'Нож Дина', x: 1178, y: 472, st: 'closed', thr: [] },
-                { id: 'derevo2', name: 'Бесполезное дерево', x: 1142, y: 520, st: 'closed', thr: [] },
-                { id: 'indra', name: 'Сеть Индры', x: 1236, y: 700, st: 'closed', thr: ['света'] },
-                { id: 'kioto', name: 'Киото · Рёандзи', x: 1296, y: 494, st: 'closed', thr: [] },
-                { id: 'kintsugi', name: 'Мастерская кинцуги', x: 1318, y: 540, st: 'closed', thr: [] },
-                { id: 'hirosima', name: 'Ступень · Хиросима', x: 1282, y: 566, st: 'closed', thr: [] },
-                { id: 'nemo', name: 'Точка Немо', x: 184, y: 1300, st: 'natural', thr: [] },
-                { id: 'g_vedanta', name: '(?) Веданта', x: 1206, y: 862, st: 'ghost', thr: [] },
-                { id: 'g_dogen', name: '(?) Эйхэйдзи', x: 1342, y: 498, st: 'ghost', thr: [] },
-                { id: 'g_rus', name: '(?) Русская линия', x: 1062, y: 322, st: 'ghost', thr: [] },
-            ]);
-            // Tunnels (passable shortcuts), museums (institutionalised captures),
-            // precipices (do-not-go-there zones) — small overlays per the user's
-            // request. Kept short on purpose; meant to read as marks, not labels.
-            exports_138("TUNNELS", TUNNELS = [
-                // a, b — endpoints; threaded between two distant nodes
-                { id: 'tun_metro', a: 'paris', b: 'todt', label: 'туннель Целана' },
-                { id: 'tun_ship', a: 'parohod', b: 'sf', label: 'туннель парохода' },
-                { id: 'tun_road', a: 'sloboda', b: 'kenig', label: 'туннель Сковорода ↔ Кант' },
-            ]);
-            exports_138("MUSEUMS", MUSEUMS = [
-                // Captures: institutions that house an idea behind glass.
-                { id: 'mus_frank', at: 'frank', label: 'музей «Бездны»' },
-                { id: 'mus_paris', at: 'paris', label: 'музей сувениров критики' },
-                { id: 'mus_panopt', at: 'mview', label: 'музей паноптикона (брелок)' },
-            ]);
-            exports_138("PRECIPICES", PRECIPICES = [
-                // Drop-off zones — at the literal precipice or at the figurative one.
-                { id: 'prc_nemo', at: 'nemo', label: 'пропасть Немо' },
-                { id: 'prc_agbog', at: 'agbog', label: 'пропасть форматов' },
-                { id: 'prc_la', at: 'la', label: 'пропасть проекта' },
-            ]);
-            // ═══════════════════════════════════════
-            // GATES — fast-travel points scattered across the continents.
-            // The townlet gate is the canonical first entry; the others have to be
-            // discovered. Each gate carries a `target` in world coordinates (the
-            // street x/y where the player lands when stepping through).
-            // `reveal` is a label-only hint shown when the gate is still hidden;
-            // the actual discovery is driven by ui/worldmap.markDiscovered(id),
-            // called from main.js when its trigger fires.
-            // ═══════════════════════════════════════
-            exports_138("GATES", GATES = [
-                { id: 'gate_townlet', cont: 'Европа', x: 660, y: 408,
-                    target: { x: 3230, y: 880 }, // §1 axial-age spawn
-                    label: 'врата городка',
-                    note: 'первая дверь; ты уже её прошёл',
-                    hidden: false },
-                { id: 'gate_europe', cont: 'Европа', x: 580, y: 308,
-                    target: { x: 4320, y: 880 }, // §4 two hearths — Декарт area
-                    label: 'врата Декарта',
-                    note: 'четыре правила, война за окном',
-                    hidden: true,
-                    reveal: 'после первой беседы у костра' },
-                { id: 'gate_africa', cont: 'Африка', x: 612, y: 940,
-                    target: { x: 4015, y: 880 }, // §3 medieval — Timbuktu
-                    label: 'врата Тимбукту',
-                    note: 'опись. сундук. осёл.',
-                    hidden: true,
-                    reveal: 'после терминала: read .timbuktu' },
-                { id: 'gate_americas', cont: 'Америки', x: 158, y: 542,
-                    target: { x: 5840, y: 880 }, // §9 — SF/LA fires
-                    label: 'врата пожаров',
-                    note: 'январь 2025; туман старше лихорадок',
-                    hidden: true,
-                    reveal: 'после 30 фрагментов' },
-                { id: 'gate_asia', cont: 'Азия', x: 1176, y: 612,
-                    target: { x: 4015, y: 880 }, // §3 — Isfahan
-                    label: 'врата Исфахана',
-                    note: 'светло без источника',
-                    hidden: true,
-                    reveal: 'после терминала: read .ishraq' },
-                { id: 'gate_north', cont: 'Север', x: 660, y: 184,
-                    target: { x: 4730, y: 880 }, // §6 steam — Wittgenstein-quiet
-                    label: 'врата Шёлдена',
-                    note: 'мерча нет до сих пор',
-                    hidden: true,
-                    reveal: 'после 60 фрагментов' },
-            ]);
-            NODES.push(...eggs_transfer_js_5.EGG_NODES);
         }
     };
 });
@@ -57347,7 +57352,7 @@ System.register("ui/worldmap", ["core/state", "content/worldmap_db", "content/ul
 });
 System.register("ui/editor", ["world/locations", "content/looks", "content/dialogues", "content/lore", "content/ulitsa_db", "content/terminal_db", "content/potemkin", "world/inscriptions", "world/whisper", "ui/ui", "core/state"], function (exports_141, context_141) {
     "use strict";
-    var locations_js_5, looks_js_2, dialogues_js_1, lore_js_3, ulitsa_db_js_13, terminal_db_js_2, potemkin_js_5, inscriptions_js_3, whisper_js_2, ui_js_1, state_js_6, LS_KEY, edits, items, root, listEl, editEl, current, catFilter, open;
+    var locations_js_5, looks_js_2, dialogues_js_1, lore_js_2, ulitsa_db_js_13, terminal_db_js_2, potemkin_js_5, inscriptions_js_3, whisper_js_2, ui_js_1, state_js_6, LS_KEY, edits, items, root, listEl, editEl, current, catFilter, open;
     var __moduleName = context_141 && context_141.id;
     // ── Каталог: плоский список редактируемых записей ──
     // Каждая: { key, cat, label, get(), set(text) }
@@ -57395,7 +57400,7 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
                 }
             }
         }
-        for (const it of lore_js_3.loreItems) {
+        for (const it of lore_js_2.loreItems) {
             items.push({
                 key: `lore:${it.id}`, cat: 'записки',
                 label: `${it.id} · ${it.text.slice(0, 36)}…`,
@@ -57631,8 +57636,8 @@ System.register("ui/editor", ["world/locations", "content/looks", "content/dialo
             function (dialogues_js_1_1) {
                 dialogues_js_1 = dialogues_js_1_1;
             },
-            function (lore_js_3_1) {
-                lore_js_3 = lore_js_3_1;
+            function (lore_js_2_1) {
+                lore_js_2 = lore_js_2_1;
             },
             function (ulitsa_db_js_13_1) {
                 ulitsa_db_js_13 = ulitsa_db_js_13_1;
@@ -68588,9 +68593,9 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_181, context_181) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_181, context_181) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_4, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_8, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
     var __moduleName = context_181 && context_181.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_15.SEGMENTS.length ? ulitsa_db_js_15.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -68605,11 +68610,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
             player: house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : { x: player.x, y: player.y }, off: disc_js_51.OFF, geo: disc_js_51.GEO,
             talkedTo: Array.from(flags.talkedTo),
+            clock: sky_js_14.worldClock(time_js_48.t),
             visited: Array.from(flags.visited),
             walked: Array.from(flags.walked),
             attn: attention_js_3.saveAttention(),
             observersSeen: Array.from(flags.observersSeen),
-            collectedLore: lore_js_4.getCollectedIds(),
+            collectedLore: lore_js_3.getCollectedIds(),
             graffiti: wandering_js_1.getGraffiti(),
             catSightings: silentCat_js_1.getSightings(),
             catUnlocked: silentCat_js_1.isUnlocked(),
@@ -68984,7 +68990,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             }
         }
         if (!redNoon_js_7.redNoon.active) { // красный полдень: пасхалки прячутся
-            lore_js_4.drawLoreItems({ x: camX, y: camY });
+            lore_js_3.drawLoreItems({ x: camX, y: camY });
             inscriptions_js_4.draw({ x: camX, y: camY }, locations_js_6.locations);
         }
         wandering_js_1.drawJesterGraffiti({ x: camX, y: camY });
@@ -70265,7 +70271,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         camera_js_1.camera.clampToWorld(terrain_js_5.MW, terrain_js_5.MH);
         // Check for lore pickup
         if (!redNoon_js_7.redNoon.active)
-            lore_js_4.checkLorePickup(player);
+            lore_js_3.checkLorePickup(player);
         // тихое подаёт голос: вещь в тени рядом — шорох или скрип с её стороны (world/quietSound.js)
         if (time_js_47.t % 12 === 0) {
             stepQuietVoices();
@@ -70285,7 +70291,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const k = walkedKey({ x: player.x + 6, y: player.y + 23 });
             if (k)
                 flags.walked.add(k);
-        } // обмер — ногами
+            checkWalkGates();
+        } // обмер — ногами; врата по пройденному
         attention_js_3.stepAttention(player, locations_js_6.locations, player.still); // постоять у вещи — тоже внимание
         if (time_js_47.t % 15 === 0)
             quietGazeId = nearestQuietId(); // ближняя тихая вещь: ей — взгляд (render/quiet.js)
@@ -70484,7 +70491,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             audio_js_12.playCreak(q.v, q.pan, 0.8 + ((q.l.id.length * 37) % 9) / 20);
     }
     function inventoryData() {
-        const notes = lore_js_4.getCollectedIds().map(id => lore_js_4.loreTextOf(id)).filter(Boolean).map((text, i) => ({ n: i + 1, text }));
+        const notes = lore_js_3.getCollectedIds().map(id => lore_js_3.loreTextOf(id)).filter(Boolean).map((text, i) => ({ n: i + 1, text }));
         const ways = [...underside_js_4.under.seen].filter(k => underside_js_4.DESCENTS[k]).map(k => {
             const th = underside_js_4.thingById(underside_js_4.DESCENTS[k]), t = useActions_js_6.useTexts[k];
             return `${cap(t ? t.title : k)} → ${(th && placeBelow(th.room)) || 'вниз'}`;
@@ -70504,7 +70511,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const given = (townWell_js_2.saveTownWell() || {}).g | 0;
         if (given)
             rites.push(`Ведро общего дна — своё отдано: ${given}.`);
-        return { notes, total: lore_js_4.getTotalCount(), ways, rooms, rites, clothes: garments_js_2.wardrobeLines() };
+        return { notes, total: lore_js_3.getTotalCount(), ways, rooms, rites, clothes: garments_js_2.wardrobeLines() };
     }
     function lookTags() {
         const tags = new Set();
@@ -70519,6 +70526,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             tags.add('wind');
         return tags;
     }
+    // врата пожаров и Шёлдена открываются, когда странник прошёл ногами южную сторону кольца,
+    // куда они ведут (слово автора 16.11; прежде — за 30 и 60 подобранных записок: счёт наружу)
+    // цели врат записаны в координатах старой улицы: x → эпоха
+    function gateRing(gate) {
+        const vx = gate.target.x - street_js_3.STREET_SHIFT;
+        return ulitsa_db_js_15.SEGMENTS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || ulitsa_db_js_15.SEGMENTS[ulitsa_db_js_15.SEGMENTS.length - 1];
+    }
+    function checkWalkGates() { for (const [id, k] of WALK_GATES)
+        if (flags.walked.has(k))
+            worldmap_js_1.markDiscovered(id); }
     // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
     function sceneOrDown(actionKey) {
         if (underside_js_4.LOCKED[actionKey]?.()) {
@@ -70718,8 +70735,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (dialogues_js_2_1) {
                 dialogues_js_2 = dialogues_js_2_1;
             },
-            function (lore_js_4_1) {
-                lore_js_4 = lore_js_4_1;
+            function (lore_js_3_1) {
+                lore_js_3 = lore_js_3_1;
+            },
+            function (worldmap_db_js_2_1) {
+                worldmap_db_js_2 = worldmap_db_js_2_1;
             },
             function (inventory_js_1_1) {
                 inventory_js_1 = inventory_js_1_1;
@@ -71010,7 +71030,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (savedData.visited)
                     savedData.visited.forEach(id => flags.visited.add(id));
                 if (savedData.collectedLore)
-                    lore_js_4.loadCollected(savedData.collectedLore);
+                    lore_js_3.loadCollected(savedData.collectedLore);
                 if (savedData.observersSeen)
                     savedData.observersSeen.forEach(n => flags.observersSeen.add(n));
                 if (savedData.graffiti)
@@ -71033,6 +71053,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     attention_js_3.loadAttention(savedData.attn, locations_js_6.locations);
                 if (savedData.wardrobe)
                     garments_js_2.loadWardrobe(savedData.wardrobe);
+                if (savedData.clock != null)
+                    sky_js_14.setWorldClock(savedData.clock); // сутки и час — с того места, где ушёл
             }
             // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
             if (!wardrobe_js_4.CUT_PINNED)
@@ -71411,14 +71433,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             events_js_8.events.on(events_js_8.E.OBSERVER_MET, (npcId) => {
                 flags.observersSeen.add(npcId);
             });
-            // Gates open on milestones: thresholds match content/worldmap_db.GATES.reveal.
-            events_js_8.events.on(events_js_8.E.LORE_COLLECT, () => {
-                const n = lore_js_4.getCollectedCount();
-                if (n >= 30)
-                    worldmap_js_1.markDiscovered('gate_americas');
-                if (n >= 60)
-                    worldmap_js_1.markDiscovered('gate_north');
-            });
+            WALK_GATES = ['gate_americas', 'gate_north'].map(id => worldmap_db_js_2.GATES.find(g => g.id === id)).filter(Boolean).map(g => [g.id, gateRing(g).id + ':south']);
             // Terminal-driven discoveries — fired from inside terminal.exec via the
             // 'terminal.read' bus event below.
             events_js_8.events.on('terminal.read', (key) => {
@@ -71443,9 +71458,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     lorepopup_js_1.showLore('Переход через врата — с поверхности. Отсюда сначала наверх.');
                     return;
                 }
-                // цели врат записаны в координатах старой улицы: x → эпоха → южная тропа её кольца
-                const vx = gate.target.x - street_js_3.STREET_SHIFT;
-                const seg = ulitsa_db_js_15.SEGMENTS.find(sg => vx >= sg.range[0] && vx < sg.range[1]) || ulitsa_db_js_15.SEGMENTS[ulitsa_db_js_15.SEGMENTS.length - 1];
+                // цель — южная тропа кольца врат
+                const seg = gateRing(gate);
                 const p = disc_js_51.trailPoint('south', disc_js_51.ringD(Math.max(1, seg.n), 100));
                 teleportWithFade(p.x, p.y);
             });
