@@ -107,7 +107,7 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
 import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir } from './world/ravens.js';
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
-import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned } from './core/sessionMemory.js';
+import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned, addOffering } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel, calmOf, feedK } from './world/brainrot.js';
 import { draw as drawFeedPanels } from './render/feedPanels.js';
@@ -2207,6 +2207,10 @@ events.on('location.use', (loc) => {
   if (actionKey === 'shop1') { openShop('shop1'); return; }
   if (actionKey === 'shop2') { openShop('shop2'); return; }
   if (actionKey === 'shop3') { openShop('shop3'); return; }
+  // костёр: с седьмого приношения, если странник был у мохового алтаря, говорит огонь
+  if (actionKey === 'campfire_throw' && addOffering() >= 7 && flags.visited.has('altar')) {
+    const s = useTexts.campfire_sermon; showLook({ name: s.title, look: s.text }); return;
+  }
   // Look-based actions
   sceneOrDown(actionKey);
 });

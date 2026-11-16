@@ -25,6 +25,10 @@ const KEYRET = 'ardet_v2_returned';
 export function hasReturned() { try { return localStorage.getItem(KEYRET) === '1'; } catch (e) { return false; } }
 export function markReturned() { try { localStorage.setItem(KEYRET, '1'); } catch (e) {} }
 
+// Приношения в костёр: счёт на всё время, по одному за бросок (useAction campfire_throw).
+const KEYFIRE = 'ardet_v2_offerings';
+export function addOffering() { try { const n = (parseInt(localStorage.getItem(KEYFIRE), 10) || 0) + 1; localStorage.setItem(KEYFIRE, String(n)); return n; } catch (e) { return 1; } }
+
 // Config that depends on session count
 export function getShiftConfig() {
   const age = getSessionAge();
@@ -44,7 +48,7 @@ export function getShiftConfig() {
 }
 
 const ALT_IDLE_MSGS = [
-  'ты уже был здесь', 'стены узнали тебя', 'проба с тебя уже снята',
+  'ты уже был здесь', 'стены узнали тебя', 'мох помнит твой запах',
   'трещины стали шире', 'пиксели гаснут быстрее', 'колесо сделало ещё один оборот',
   'кот постарел', 'записи на стенах бледнее', 'воздух гуще', 'пепел глубже',
 ];

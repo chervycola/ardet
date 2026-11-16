@@ -91,7 +91,7 @@ export const menuInscriptions = {
   nocturnal: 'тишина держит нити. нити держат тебя.',
   nocturnal_home: 'принял: прочерк. нажим сильный.',
   theater: 'выйди на сцену. зал полон.',
-  altar: 'проба снята. состав совпал.',
+  altar: 'мох помнит. мох всегда помнил. теперь ты тоже.',
   posterwall: 'музыка не горит.',
   banner: '★ coming soon ★',
 };
