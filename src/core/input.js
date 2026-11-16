@@ -12,6 +12,7 @@ const ACTIONS = {
   sprint: ['shift'],
   interact: [' ', 'enter', 'e'],
   back: ['escape'],
+  eyes: ['c', 'с'],            // закрыть глаза — пока держишь (world/eyes.js)
 };
 
 // Held-finger walk: a touch counts as a TAP (interaction) only if it
@@ -29,6 +30,7 @@ class Input {
     this.touchHandlers = [];
     this.touch = null; // { x, y, startX, startY, startT, moved }
     this.lastTouchT = 0;
+    this.twoFingers = false;   // два пальца на экране — закрыть глаза (world/eyes.js)
   }
 
   init(canvas) {
@@ -61,7 +63,8 @@ class Input {
     // Touch — hold to walk, tap to interact
     canvas.addEventListener('touchstart', e => {
       this.lastTouchT = Date.now();
-      if (e.touches.length > 1) { e.preventDefault(); return; }
+      // второй палец: не идти, а закрыть глаза — пока оба на экране (прежде второй палец гасился)
+      if (e.touches.length > 1) { e.preventDefault(); this.twoFingers = true; this.touch = null; return; }
       const t0 = e.touches[0];
       this.touch = {
         x: t0.clientX, y: t0.clientY,
@@ -87,6 +90,7 @@ class Input {
     canvas.addEventListener('touchend', e => {
       e.preventDefault();
       this.lastTouchT = Date.now();
+      if (e.touches.length < 2) this.twoFingers = false;
       const t0 = e.changedTouches[0];
       const wasTap = this.touch
         && !this.touch.moved
@@ -95,7 +99,7 @@ class Input {
       if (wasTap) this._dispatchClick(t0.clientX, t0.clientY, 'touch', e);
     });
 
-    canvas.addEventListener('touchcancel', () => { this.touch = null; });
+    canvas.addEventListener('touchcancel', () => { this.touch = null; this.twoFingers = false; });
   }
 
   // Screen point the held finger is at, or null when not held.
@@ -106,6 +110,13 @@ class Input {
   isDown(action) {
     const keys = ACTIONS[action] || [];
     return keys.some(k => this.keys[k]);
+  }
+
+  // закрыть глаза: клавиша C (С) или два пальца
+  eyesWanted() {
+    const a = typeof document !== 'undefined' && document.activeElement;
+    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return false;   // пишут — не жмурятся
+    return this.isDown('eyes') || this.twoFingers;
   }
 
   // Movement vector (normalized)

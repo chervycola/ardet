@@ -222,6 +222,37 @@ export function playClick() {
 }
 
 // Ambient drone (background)
+// Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц,
+// пульс ~25 Гц, на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
+let purr = null;
+export function setPurr(v) {
+  if (!ctx) return;
+  v = Math.max(0, Math.min(1, +v || 0));
+  if (!purr) {
+    if (v <= 0.01) return;
+    const n = ctx.sampleRate * 2, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < n; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), am = ctx.createGain(), g = ctx.createGain();
+    const pulse = ctx.createOscillator(), pg = ctx.createGain(), breath = ctx.createOscillator(), bg = ctx.createGain();
+    s.buffer = b; s.loop = true;
+    f.type = 'lowpass'; f.frequency.value = 190; f.Q.value = 0.9;
+    am.gain.value = 0.5; pulse.frequency.value = 25; pg.gain.value = 0.45; pulse.connect(pg); pg.connect(am.gain);
+    breath.frequency.value = 0.42; bg.gain.value = 3; breath.connect(bg); bg.connect(pulse.frequency);   // вдох — выдох
+    g.gain.value = 0.0001;
+    s.connect(f); f.connect(am); am.connect(g); g.connect(getOut());
+    s.start(); pulse.start(); breath.start();
+    purr = { s, pulse, breath, g, off: null };
+  }
+  purr.g.gain.setTargetAtTime(Math.max(0.0001, 0.09 * v), ctx.currentTime, 0.5);
+  if (v > 0.01) { purr.off = null; return; }
+  if (purr.off === null) purr.off = ctx.currentTime;
+  else if (ctx.currentTime - purr.off > 3) {
+    const p = purr; purr = null;
+    try { p.s.stop(); p.pulse.stop(); p.breath.stop(); } catch (e) { /* уже стих */ }
+  }
+}
+
 let ambientNode = null;
 export function startAmbient() {
   if (!ctx || ambientNode) return;

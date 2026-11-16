@@ -78,7 +78,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak, setPurr } from './audio/audio.js';
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
@@ -109,7 +109,8 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
 import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir } from './world/ravens.js';
-import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
+import { stepEyes } from './world/eyes.js';
+import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, catPurr, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned, addOffering } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
 import { update as updateBrainrot, draw as drawBrainrot, isFrozen, enterLoop as enterBrainrotLoop, inLoop as inBrainrotLoop, setClearings, dampBrainrot, getLevel as brainrotLevel, calmOf, feedK } from './world/brainrot.js';
@@ -748,6 +749,10 @@ function plateStorm() {
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
 function stepFx() {
   stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+  // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее
+  stepEyes(state.is('game') && !isMapOpen() && input.eyesWanted(), player.moving,
+    !house.active && !under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
+  if (t % 10 === 0) setPurr(house.active || under.active ? 0 : catPurr(player.x + 6, player.y + 22));
   if (house.active) { stepFxHouse(); return; }
   if (under.active) { stepFxUnder(); return; }
   const camX = Math.round(camera.x), camY = Math.round(camera.y);

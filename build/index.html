@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 947 617. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 947 617. из них видимых: 1 728. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 959 132. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 959 132. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -158,6 +158,14 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   76%  { transform: scale(1.01)  rotate(-0.2deg)  translate(-0.05%, 0.05%); }
   100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
+/* закрыть глаза (world/eyes.js): веки как при пробуждении, держит их странник */
+#eyelids { position: fixed; inset: 0; z-index: 140; pointer-events: none; display: none; --k: 0; --lid: var(--c-void); }
+#eyelids.warm { --lid: #1c0d08; }
+/* веки по 70%: сомкнутые заходят друг на друга и по углам — щели нет */
+#eyelids::before, #eyelids::after { content: ''; position: absolute; left: -5%; right: -5%; height: 70%;
+  background: var(--lid); transform: scaleY(var(--k)); }
+#eyelids::before { top: -6%; border-radius: 0 0 50% 50% / 0 0 14% 14%; transform-origin: top; }
+#eyelids::after { bottom: -6%; border-radius: 50% 50% 0 0 / 14% 14% 0 0; transform-origin: bottom; }
 #wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
 #wakelids::before, #wakelids::after {
   content: ''; position: absolute; left: -5%; right: -5%; height: 58%;
@@ -841,6 +849,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
       <span class="ht-k">клик</span><span class="ht-v">подойти · осмотреть</span>
       <span class="ht-k">правый клик</span><span class="ht-v">подойти · использовать</span>
       <span class="ht-k">E · F</span><span class="ht-v">осмотреть · использовать, что рядом</span>
+      <span class="ht-k">C</span><span class="ht-v">закрыть глаза, пока держишь</span>
       <span class="ht-k">M</span><span class="ht-v">карта мира</span>
       <span class="ht-k">I</span><span class="ht-v">опись найденного</span>
       <span class="ht-k">esc</span><span class="ht-v">закрыть · назад</span>
@@ -848,6 +857,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
     <div class="ht-grid" id="howto-mobile" style="display:none">
       <span class="ht-k">держи палец</span><span class="ht-v">идти за ним</span>
       <span class="ht-k">тап</span><span class="ht-v">подойти · осмотреть</span>
+      <span class="ht-k">два пальца</span><span class="ht-v">закрыть глаза</span>
     </div>
     <div class="ht-note">прогресс сохраняется сам. мох помнит.</div>
     <div class="ht-go">— нажми что угодно —</div>
@@ -911,7 +921,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='ac81ce0 · 2026-11-16';console.log('[оттиск]', 'ac81ce0 · 2026-11-16');
+<script>window.ARDET_BUILD='52ca5db · 2026-11-16';console.log('[оттиск]', '52ca5db · 2026-11-16');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -4333,7 +4343,7 @@ System.register("world/toxic", ["world/disc", "render/scaler", "render/backstage
 // ═══════════════════════════════════════
 System.register("audio/audio", [], function (exports_20, context_20) {
     "use strict";
-    var ctx, masterGain, sfxOut, volMul, getOut, tock, ambientNode;
+    var ctx, masterGain, sfxOut, volMul, getOut, tock, purr, ambientNode;
     var __moduleName = context_20 && context_20.id;
     function initAudio() {
         if (ctx)
@@ -4659,6 +4669,64 @@ System.register("audio/audio", [], function (exports_20, context_20) {
         playTone(440, 0.08, 'square', 0.02);
     }
     exports_20("playClick", playClick);
+    function setPurr(v) {
+        if (!ctx)
+            return;
+        v = Math.max(0, Math.min(1, +v || 0));
+        if (!purr) {
+            if (v <= 0.01)
+                return;
+            const n = ctx.sampleRate * 2, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+            let last = 0;
+            for (let i = 0; i < n; i++) {
+                last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+                d[i] = last * 3.5;
+            }
+            const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), am = ctx.createGain(), g = ctx.createGain();
+            const pulse = ctx.createOscillator(), pg = ctx.createGain(), breath = ctx.createOscillator(), bg = ctx.createGain();
+            s.buffer = b;
+            s.loop = true;
+            f.type = 'lowpass';
+            f.frequency.value = 190;
+            f.Q.value = 0.9;
+            am.gain.value = 0.5;
+            pulse.frequency.value = 25;
+            pg.gain.value = 0.45;
+            pulse.connect(pg);
+            pg.connect(am.gain);
+            breath.frequency.value = 0.42;
+            bg.gain.value = 3;
+            breath.connect(bg);
+            bg.connect(pulse.frequency); // вдох — выдох
+            g.gain.value = 0.0001;
+            s.connect(f);
+            f.connect(am);
+            am.connect(g);
+            g.connect(getOut());
+            s.start();
+            pulse.start();
+            breath.start();
+            purr = { s, pulse, breath, g, off: null };
+        }
+        purr.g.gain.setTargetAtTime(Math.max(0.0001, 0.09 * v), ctx.currentTime, 0.5);
+        if (v > 0.01) {
+            purr.off = null;
+            return;
+        }
+        if (purr.off === null)
+            purr.off = ctx.currentTime;
+        else if (ctx.currentTime - purr.off > 3) {
+            const p = purr;
+            purr = null;
+            try {
+                p.s.stop();
+                p.pulse.stop();
+                p.breath.stop();
+            }
+            catch (e) { /* уже стих */ }
+        }
+    }
+    exports_20("setPurr", setPurr);
     function startAmbient() {
         if (!ctx || ambientNode)
             return;
@@ -4729,6 +4797,9 @@ System.register("audio/audio", [], function (exports_20, context_20) {
             // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
             tock = false;
             // Ambient drone (background)
+            // Кот лёг у ног (world/silentCat.js catPurr): мурчание — бурый шум ниже 200 Гц,
+            // пульс ~25 Гц, на вдохе и выдохе чуть разный; v 0..1, ноль — стихает и гаснет
+            purr = null;
             ambientNode = null;
         }
     };
@@ -40467,6 +40538,7 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                 sprint: ['shift'],
                 interact: [' ', 'enter', 'e'],
                 back: ['escape'],
+                eyes: ['c', 'с'], // закрыть глаза — пока держишь (world/eyes.js)
             };
             // Held-finger walk: a touch counts as a TAP (interaction) only if it
             // ends quickly and near where it started; otherwise it's a HOLD and the
@@ -40482,6 +40554,7 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                     this.touchHandlers = [];
                     this.touch = null; // { x, y, startX, startY, startT, moved }
                     this.lastTouchT = 0;
+                    this.twoFingers = false; // два пальца на экране — закрыть глаза (world/eyes.js)
                 }
                 init(canvas) {
                     // Keyboard
@@ -40512,8 +40585,11 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                     // Touch — hold to walk, tap to interact
                     canvas.addEventListener('touchstart', e => {
                         this.lastTouchT = Date.now();
+                        // второй палец: не идти, а закрыть глаза — пока оба на экране (прежде второй палец гасился)
                         if (e.touches.length > 1) {
                             e.preventDefault();
+                            this.twoFingers = true;
+                            this.touch = null;
                             return;
                         }
                         const t0 = e.touches[0];
@@ -40540,6 +40616,8 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                     canvas.addEventListener('touchend', e => {
                         e.preventDefault();
                         this.lastTouchT = Date.now();
+                        if (e.touches.length < 2)
+                            this.twoFingers = false;
                         const t0 = e.changedTouches[0];
                         const wasTap = this.touch
                             && !this.touch.moved
@@ -40548,7 +40626,7 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                         if (wasTap)
                             this._dispatchClick(t0.clientX, t0.clientY, 'touch', e);
                     });
-                    canvas.addEventListener('touchcancel', () => { this.touch = null; });
+                    canvas.addEventListener('touchcancel', () => { this.touch = null; this.twoFingers = false; });
                 }
                 // Screen point the held finger is at, or null when not held.
                 getHeldTouch() {
@@ -40557,6 +40635,13 @@ System.register("core/input", ["render/scaler"], function (exports_105, context_
                 isDown(action) {
                     const keys = ACTIONS[action] || [];
                     return keys.some(k => this.keys[k]);
+                }
+                // закрыть глаза: клавиша C (С) или два пальца
+                eyesWanted() {
+                    const a = typeof document !== 'undefined' && document.activeElement;
+                    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable))
+                        return false; // пишут — не жмурятся
+                    return this.isDown('eyes') || this.twoFingers;
                 }
                 // Movement vector (normalized)
                 getMove() {
@@ -61890,10 +61975,63 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         }
     };
 });
-System.register("world/silentCat", ["core/time", "core/events", "world/wind", "world/ravens"], function (exports_161, context_161) {
+System.register("world/eyes", [], function (exports_161, context_161) {
     "use strict";
-    var time_js_40, events_js_6, wind_js_24, ravens_js_1, sightings, fifthUnlocked, spots, CAT, RIM, EYE, NEAR, STILL, LEASH, SIGHT, HUNT, POUNCE, cats, still, solids, fire, inBox, catDepth, _cats;
+    var CLOSE, OPEN, eyes, el, shownK, shownWarm, eyesShut;
     var __moduleName = context_161 && context_161.id;
+    function stepEyes(want, moving, warm = false) {
+        const target = want && !moving ? 1 : 0;
+        eyes.k = target > eyes.k ? Math.min(1, eyes.k + CLOSE) : Math.max(0, eyes.k - OPEN);
+        paint(warm);
+    }
+    exports_161("stepEyes", stepEyes);
+    // веки — поверх кадра, как при пробуждении (#wakelids), но держит их сам странник
+    function paint(warm) {
+        if (typeof document === 'undefined' || !document.body)
+            return;
+        if (!el) {
+            if (eyes.k <= 0)
+                return;
+            el = document.createElement('div');
+            el.id = 'eyelids';
+            document.body.appendChild(el);
+        }
+        const k = Math.round(eyes.k * 100) / 100;
+        if (k !== shownK) {
+            if (el.style.setProperty)
+                el.style.setProperty('--k', k);
+            el.style.display = k > 0 ? 'block' : 'none';
+            shownK = k;
+        }
+        if (!!warm !== shownWarm) {
+            shownWarm = !!warm;
+            el.classList[shownWarm ? 'add' : 'remove']('warm');
+        }
+    }
+    function _resetEyes() { eyes.k = 0; }
+    exports_161("_resetEyes", _resetEyes);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // ЗАКРЫТЬ ГЛАЗА — глагол без слов (weave/DEPTH_GAMES_2026-11-16.md, «Ответить коту»;
+            // слой «остановиться», .claude/skills/ardet-scene-accept §5). Держишь C (на русской раскладке С)
+            // или два пальца на экране — веки смыкаются; отпустил или шагнул — открыты. Звук остаётся:
+            // за веками нет ничего, кроме слуха; у огня веки чуть теплее — свет сквозь них.
+            // Ничего не считает и ничего не прибавляет: закрытые глаза — ответ, а не занятие.
+            // ═══════════════════════════════════════
+            CLOSE = 1 / 24; // смыкаются за ~0,4 с
+            OPEN = 1 / 10; // открываются быстрее
+            exports_161("eyes", eyes = { k: 0 }); // 0 — открыты, 1 — сомкнуты
+            el = null, shownK = -1, shownWarm = null;
+            exports_161("eyesShut", eyesShut = () => eyes.k > 0.95);
+        }
+    };
+});
+System.register("world/silentCat", ["core/time", "core/events", "world/wind", "world/ravens", "world/eyes"], function (exports_162, context_162) {
+    "use strict";
+    var time_js_40, events_js_6, wind_js_24, ravens_js_1, eyes_js_1, sightings, fifthUnlocked, spots, CAT, RIM, EYE, NEAR, STILL, LEASH, SIGHT, HUNT, POUNCE, ANSWER, SETTLE, SLEEP, cats, still, solids, fire, inBox, catDepth, _cats, _ANSWER, _SETTLE;
+    var __moduleName = context_162 && context_162.id;
     function init(locations) {
         cats = [];
         for (const s of spots) {
@@ -61907,6 +62045,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 look: 30, prey: null, preyF: null, freeze: 0, lookX: null,
                 perch: { x: l.x, y: l.y, w: l.w, h: l.h, k: l.y + l.h + 0.5 }, // сидит на вещи — рисуется поверх неё
                 eyes: [], eyesT: -1,
+                askT: null, aloof: false, slept: false, // спросил медленным морганием; разбудили — чужой; уже спал
             });
         }
         solids = locations.filter(l => l.solid || l.solidBox).map(l => l.solidBox || l);
@@ -61975,6 +62114,9 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                 c.y = c.hy;
                 c.st = 'sit';
                 c.prey = null;
+                c.aloof = false;
+                c.slept = false;
+                c.askT = null; // странник ушёл — приход кончился
                 continue;
             }
             if (d < SIGHT && !sightings.has(c.id)) {
@@ -61991,14 +62133,19 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             else if (--c.blink <= 0) {
                 c.slow = c.st === 'warm';
                 c.shut = c.slow ? 40 : 7;
+                if (c.slow && eyes_js_1.eyes.k < 0.05)
+                    c.askT = time_js_40.t; // спрашивает того, кто смотрит
                 c.blink = c.slow ? 260 + Math.floor(Math.random() * 200) : 200 + Math.floor(Math.random() * 360);
             }
             const toward = pvx * dx + pvy * dy > 0; // идёт на кота
             const threat = (ps > 3 && d < 40) || (ps > 0.8 && d < 13 && toward) || (ps > 0.2 && d < 6);
-            if (threat && c.st !== 'flee')
+            if (threat && c.st !== 'flee') {
+                if (c.st === 'sleep')
+                    c.aloof = true;
                 flee(c, dx, dy, d);
+            }
             const ws = warmSpot(c, player);
-            const wantsWarm = still > STILL && d < 60 && d > 12 && Math.hypot(ws.x - c.hx, ws.y - c.hy) <= LEASH;
+            const wantsWarm = !c.aloof && still > STILL && d < 60 && d > 12 && Math.hypot(ws.x - c.hx, ws.y - c.hy) <= LEASH;
             switch (c.st) {
                 case 'flee': {
                     const nx = c.x + c.fx * 2.6, ny = c.y + c.fy * 2.6;
@@ -62137,7 +62284,37 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                     if (d > 30) {
                         c.st = 'wait';
                         c.tm = 120;
+                        break;
                     } // ушёл — посидит и домой
+                    if (!c.slept && c.askT !== null && time_js_40.t - c.askT <= ANSWER && eyes_js_1.eyesShut()) { // ответил тем же
+                        c.st = 'lie';
+                        c.tm = SETTLE;
+                        c.askT = null;
+                    }
+                    break;
+                case 'lie': // лёг у ног; встал странник — сел, без обиды
+                    if (d > 30 || ps > 0.3) {
+                        c.st = 'warm';
+                        c.blink = 200;
+                        break;
+                    }
+                    if (--c.tm <= 0) {
+                        c.st = 'sleep';
+                        c.tm = SLEEP[0] + Math.floor(Math.random() * (SLEEP[1] - SLEEP[0]));
+                    }
+                    break;
+                case 'sleep': // спит; шаг будит — чужой до ухода
+                    if (ps > 0.2) {
+                        c.aloof = true;
+                        c.slept = true;
+                        flee(c, dx, dy, d);
+                        break;
+                    }
+                    if (--c.tm <= 0) {
+                        c.st = 'warm';
+                        c.slept = true;
+                        c.blink = 120;
+                    }
                     break;
             }
             // идёт мимо сидящих ворон — взлетят; бежит — тем более
@@ -62146,14 +62323,14 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             }
         }
     }
-    exports_161("stepCats", stepCats);
+    exports_162("stepCats", stepCats);
     // коты в кадре — для общего порядка рисования
     function catsInView(camX, camY, vw, vh) {
         if (!cats)
             return [];
         return cats.filter(c => c.x + 9 > camX && c.x - 4 < camX + vw && c.y + 6 > camY && c.y - 4 < camY + vh);
     }
-    exports_161("catsInView", catsInView);
+    exports_162("catsInView", catsInView);
     function drawCat(ctx, c, player) {
         const x = Math.round(c.x), y = Math.round(c.y);
         const w = wind_js_24.wind.at(c.x, c.y);
@@ -62182,6 +62359,42 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             at(6, 1);
             c.eyes = [[D > 0 ? x + 5 : x - 1, y + 1]];
             c.eyesT = time_js_40.t;
+            return;
+        }
+        if (c.st === 'lie' || c.st === 'sleep') {
+            // голова к страннику
+            const D = player.x + 6 >= c.x + 2 ? 1 : -1;
+            const at = (dx, dy, wd = 1, ht = 1) => ctx.fillRect(D > 0 ? x - 1 + dx : x + 5 - dx - (wd - 1), y + dy, wd, ht);
+            c.eyes = [];
+            c.eyesT = time_js_40.t;
+            if (c.st === 'lie') { // вытянулся: голова на лапах, хвост по земле
+                at(0, 2, 6);
+                at(0, 3, 7);
+                at(6, 1, 2, 2);
+                at(6, 0);
+                at(7, 3, 2);
+                at(-1, 3);
+                at(-2, 3);
+                at(-3, Math.sin(time_js_40.t * 0.02 + c.ph) > 0.9 ? 2 : 3);
+                ctx.fillStyle = RIM;
+                at(1, 2, 4);
+                at(7, 0);
+                ctx.fillStyle = EYE;
+                ctx.globalAlpha = 0.3;
+                at(7, 1);
+                ctx.globalAlpha = 1; // глаза прикрыты
+                return;
+            }
+            // спит клубком, хвост вокруг; спина поднимается — дышит
+            const br = Math.sin(time_js_40.t * 0.045 + c.ph) > 0.2 ? 1 : 0;
+            at(1, 1 - br, 4, 1 + br);
+            at(0, 2, 6, 2);
+            at(5, 1);
+            at(-1, 3);
+            at(6, 3);
+            ctx.fillStyle = RIM;
+            at(1, 1 - br, 4);
+            at(5, 1);
             return;
         }
         if (c.st === 'flee' || c.st === 'back' || c.st === 'come' || c.st === 'pounce') {
@@ -62213,7 +62426,9 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             return;
         }
         // сидит: голова к страннику — левее, прямо, правее; хвост — с другой стороны
-        const pdx = (c.st === 'miss' && c.lookX !== null ? c.lookX : player.x + 6) - (c.x + 2); // промах — смотрит вслед стае
+        let pdx = (c.st === 'miss' && c.lookX !== null ? c.lookX : player.x + 6) - (c.x + 2); // промах — смотрит вслед стае
+        if (c.aloof && c.st === 'sit')
+            pdx = -pdx || 7; // разбудили — сидит к страннику спиной
         const hx = pdx < -6 ? 0 : pdx > 6 ? 2 : 1, side = pdx >= 0 ? 1 : -1;
         ctx.fillRect(x, y + 1, 5, 3);
         ctx.fillRect(x + hx, y, 3, 1);
@@ -62232,12 +62447,15 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         for (let k = 0; k < 4; k++)
             ctx.fillRect(tb - side * Math.round(Math.cos(a) * k), y + 3 - Math.round(Math.sin(a) * k), 1, 1);
         // отсвет: бок и ухо к страннику — тёплым
+        const lit = c.aloof && c.st === 'sit' ? -side : side; // свет — со стороны странника, куда бы ни смотрел
         ctx.fillStyle = RIM;
-        ctx.fillRect(side > 0 ? x + 4 : x, y + 1, 1, 3);
-        ctx.fillRect(side > 0 ? x + hx + 2 : x + hx, y - 1, 1, 1); // ухо к огню
+        ctx.fillRect(lit > 0 ? x + 4 : x, y + 1, 1, 3);
+        ctx.fillRect(lit > 0 ? x + hx + 2 : x + hx, y - 1, 1, 1); // ухо к огню
         // глаза: моргнул — нет; медленно моргает — прикрыты
         c.eyesT = time_js_40.t;
         c.eyes = [];
+        if (c.aloof && c.st === 'sit')
+            return; // спиной — глаз не видно
         if (c.shut > 0 && !c.slow)
             return;
         ctx.fillStyle = EYE;
@@ -62249,7 +62467,7 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         if (!(c.shut > 0))
             c.eyes = [[x + hx, y], [x + hx + 2, y]];
     }
-    exports_161("drawCat", drawCat);
+    exports_162("drawCat", drawCat);
     // отблеск глаз — на слое света (складывается): глаз отражает огонь странника,
     // ближе он — ярче; видно и в темноте, и издалека — как настоящих котов ночью
     function drawCatEyes(fx, camX, camY, player) {
@@ -62271,21 +62489,35 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         }
         fx.globalAlpha = 1;
     }
-    exports_161("drawCatEyes", drawCatEyes);
+    exports_162("drawCatEyes", drawCatEyes);
+    // мурчание: лёг у ног — громче, спит — тише; слышно в шаге-двух (0..1)
+    function catPurr(px, py) {
+        if (!cats)
+            return 0;
+        let v = 0;
+        for (const c of cats) {
+            if (c.st !== 'lie' && c.st !== 'sleep')
+                continue;
+            const d = Math.hypot(c.x + 2 - px, c.y + 3 - py);
+            v = Math.max(v, (c.st === 'lie' ? 1 : 0.6) * Math.max(0, Math.min(1, 1 - (d - 20) / 60)));
+        }
+        return v;
+    }
+    exports_162("catPurr", catPurr);
     function getSightings() { return Array.from(sightings); }
-    exports_161("getSightings", getSightings);
+    exports_162("getSightings", getSightings);
     function loadSightings(arr) {
         sightings.clear();
         if (arr)
             arr.forEach(s => sightings.add(s));
     }
-    exports_161("loadSightings", loadSightings);
+    exports_162("loadSightings", loadSightings);
     function isUnlocked() { return fifthUnlocked; }
-    exports_161("isUnlocked", isUnlocked);
+    exports_162("isUnlocked", isUnlocked);
     function setUnlocked(v) { fifthUnlocked = v; }
-    exports_161("setUnlocked", setUnlocked);
+    exports_162("setUnlocked", setUnlocked);
     function _reset() { cats = null; still = 0; sightings.clear(); fifthUnlocked = false; }
-    exports_161("_reset", _reset);
+    exports_162("_reset", _reset);
     return {
         setters: [
             function (time_js_40_1) {
@@ -62299,6 +62531,9 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             },
             function (ravens_js_1_1) {
                 ravens_js_1 = ravens_js_1_1;
+            },
+            function (eyes_js_1_1) {
+                eyes_js_1 = eyes_js_1_1;
             }
         ],
         execute: function () {
@@ -62319,25 +62554,29 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
             SIGHT = 40; // ближе — заметил
             HUNT = 150; // ворон видит отсюда; дальше этого от дома не охотится
             POUNCE = 16; // отсюда — прыжок
+            ANSWER = 40 + 120; // медленное моргание и две секунды после — время ответа
+            SETTLE = 300; // лёг и устраивается пять секунд: встать можно без обиды
+            SLEEP = [1800, 5400]; // спит полминуты–полторы
             cats = null, still = 0, solids = [], fire = null;
             // лапы кота — (x+2, y+3); из того, внутри чего уже сидит, выйти можно
             inBox = (b, px, py) => px >= b.x && px < b.x + b.w && py >= b.y && py < b.y + b.h;
             // глубина: лапы; кто сидит на своей вещи (терминал, палатка) — поверх неё
-            exports_161("catDepth", catDepth = c => inBox(c.perch, c.x + 2, c.y + 3) ? Math.max(c.perch.k, c.y + 4) : c.y + 4);
+            exports_162("catDepth", catDepth = c => inBox(c.perch, c.x + 2, c.y + 3) ? Math.max(c.perch.k, c.y + 4) : c.y + 4);
             // для тестов
-            exports_161("_cats", _cats = () => cats);
+            exports_162("_cats", _cats = () => cats);
+            exports_162("_ANSWER", _ANSWER = ANSWER), exports_162("_SETTLE", _SETTLE = SETTLE);
         }
     };
 });
-System.register("render/feedPanels", ["core/time", "render/scaler", "render/layers", "core/prefs"], function (exports_162, context_162) {
+System.register("render/feedPanels", ["core/time", "render/scaler", "render/layers", "core/prefs"], function (exports_163, context_163) {
     "use strict";
     var time_js_41, scaler_js_24, layers_js_1, prefs_js_4, PANEL_FROM, REC_FROM, EVERY, KEEP, GAP, NIGHT, SLOTS, hist, pool, lastRec, scroll, lastT, stills, shown, reducedNow;
-    var __moduleName = context_162 && context_162.id;
+    var __moduleName = context_163 && context_163.id;
     // ширина полосы: 9:16 от высоты кадра, но на узком экране — не шире половины
     function panelWidth(vw, vh) {
         return Math.max(24, Math.round(Math.min(vh * 9 / 16, vw / 2.2)));
     }
-    exports_162("panelWidth", panelWidth);
+    exports_163("panelWidth", panelWidth);
     // раскладка полос для доли распада k: где каждая лежит на экране и какой частью записи
     function layout(k, vw, vh) {
         const pw = panelWidth(vw, vh), cx0 = Math.floor((vw - pw) / 2), out = [];
@@ -62352,7 +62591,7 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
         }
         return { pw, cx0, panels: out };
     }
-    exports_162("layout", layout);
+    exports_163("layout", layout);
     // какую запись показать: последнюю, что не моложе задержки; нет такой — самую старую
     function pickIndex(frames, now, delay) {
         if (!frames.length)
@@ -62364,17 +62603,17 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
                 best = i;
         return best;
     }
-    exports_162("pickIndex", pickIndex);
+    exports_163("pickIndex", pickIndex);
     function reset() { pool = pool.concat(hist.map(h => h.c)); hist = []; lastRec = -1e9; scroll = 0; lastT = -1; stills = {}; shown = []; }
-    exports_162("reset", reset);
+    exports_163("reset", reset);
     // где лента лежит на экране сейчас — распад рвёт мир мимо неё
     function drawn() { return shown; }
-    exports_162("drawn", drawn);
+    exports_163("drawn", drawn);
     // прошлое старше записи не показываем: «две секунды назад» не должны быть минутами
     function dropStale() { while (hist.length && time_js_41.t - hist[0].f > (KEEP + 1) * EVERY)
         pool.push(hist.shift().c); }
     function historyLength() { return hist.length; }
-    exports_162("historyLength", historyLength);
+    exports_163("historyLength", historyLength);
     function snap(pw, cx0, vh) {
         const bg = layers_js_1.layers.canvas('bg'), world = layers_js_1.layers.canvas('world'), light = layers_js_1.layers.canvas('light'), fx = layers_js_1.layers.canvas('fx');
         if (!bg || !bg.width || typeof document === 'undefined')
@@ -62426,7 +62665,7 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
         dropStale();
         snap(pw, cx0, vh);
     }
-    exports_162("record", record);
+    exports_163("record", record);
     // ctx — в точках кадра (vw×vh); в сборке рисуется до печати и растра (main.js: layers.feedPass);
     // k = 0 — лент нет (полдень, дом, изнанка): застывшие кадры не доживают до следующего раза
     function draw(ctx, k) {
@@ -62488,7 +62727,7 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
             shown.push({ x: p.x, w: p.w, alpha: p.alpha });
         }
     }
-    exports_162("draw", draw);
+    exports_163("draw", draw);
     return {
         setters: [
             function (time_js_41_1) {
@@ -62505,14 +62744,14 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
             }
         ],
         execute: function () {
-            exports_162("PANEL_FROM", PANEL_FROM = 0.55); // доля распада, с которой лента делит кадр
+            exports_163("PANEL_FROM", PANEL_FROM = 0.55); // доля распада, с которой лента делит кадр
             REC_FROM = 0.3; // писать прошлое начинаем раньше, чтобы было что показать
             EVERY = 12; // кадр записи раз в 12 (5 в секунду)
             KEEP = 44; // ≈ 8,8 секунды прошлого
             GAP = 3; // шов между «постами» прокрутки
             NIGHT = '#0D0B0A';
             // полоса: s — сколько ширин от середины; delay — секунд назад; at — с какой доли распада
-            exports_162("SLOTS", SLOTS = [
+            exports_163("SLOTS", SLOTS = [
                 { s: 1, delay: 2, at: 0.55 },
                 { s: -1, delay: 4, at: 0.65 },
                 { s: 2, delay: 8, at: 0.78 },
@@ -62529,12 +62768,12 @@ System.register("render/feedPanels", ["core/time", "render/scaler", "render/laye
         }
     };
 });
-System.register("world/brainrot", ["core/time", "render/context", "sprites/player", "core/playerRef", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers", "render/feedPanels"], function (exports_163, context_163) {
+System.register("world/brainrot", ["core/time", "render/context", "sprites/player", "core/playerRef", "render/scaler", "world/terrain", "core/events", "render/metaFx", "world/edges", "world/disc", "render/layers", "render/feedPanels"], function (exports_164, context_164) {
     "use strict";
     var time_js_42, context_js_15, player_js_1, playerRef_js_7, scaler_js_25, terrain_js_3, events_js_7, metaFx_js_1, edges_js_1, disc_js_48, layers_js_2, feedPanels, FALL_AT, brainrot, brainrotFreeze, brainrotFreezeTimer, fallKind, FALL_LEN, loopMode, stillFrames, calmFrames, isStill, loopExitCb, NIGHT, BAYER, patterns, holes, damp, mirror, POPUPS, lastK;
-    var __moduleName = context_163 && context_163.id;
+    var __moduleName = context_164 && context_164.id;
     function calmOf() { return Math.min(0.5, Math.max(0, calmFrames - 60) / 240 * 0.5); }
-    exports_163("calmOf", calmOf);
+    exports_164("calmOf", calmOf);
     function enterLoop(exitCb) {
         loopMode = true;
         stillFrames = 0;
@@ -62542,13 +62781,13 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
         brainrot = Math.max(brainrot, 20);
         events_js_7.events.emit('brainrot.hook');
     }
-    exports_163("enterLoop", enterLoop);
+    exports_164("enterLoop", enterLoop);
     function inLoop() { return loopMode; }
-    exports_163("inLoop", inLoop);
+    exports_164("inLoop", inLoop);
     function _dbg() { return { loopMode, stillFrames, brainrot: brainrot | 0 }; }
-    exports_163("_dbg", _dbg);
+    exports_164("_dbg", _dbg);
     function _fallFrame(ctx, kind, f) { drawFall(ctx, kind, f); } // проверки и лист кадров
-    exports_163("_fallFrame", _fallFrame);
+    exports_164("_fallFrame", _fallFrame);
     function getDistFromMap(player) {
         let d = 0;
         if (player.x < 0)
@@ -62627,7 +62866,7 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
             events_js_7.events.emit('brainrot.freeze');
         }
     }
-    exports_163("update", update);
+    exports_164("update", update);
     function rasterPattern(ctx, level) {
         if (patterns.has(level))
             return patterns.get(level);
@@ -62649,9 +62888,9 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
     }
     function rnd(n) { const v = Math.sin(n * 91.7 + 13.1) * 43758.5453; return v - Math.floor(v); }
     function setClearings(list) { holes = list || []; }
-    exports_163("setClearings", setClearings);
+    exports_164("setClearings", setClearings);
     function dampBrainrot(v) { damp = Math.max(0, Math.min(1, v || 0)); }
-    exports_163("dampBrainrot", dampBrainrot);
+    exports_164("dampBrainrot", dampBrainrot);
     function fillAround(ctx, vw, vh) {
         if (!holes.length) {
             ctx.fillRect(0, 0, vw, vh);
@@ -62778,7 +63017,7 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
         }
         ctx.globalAlpha = 1;
     }
-    exports_163("draw", draw);
+    exports_164("draw", draw);
     function reflection(ctx, cx, cy, a) {
         if (typeof document === 'undefined' || !document.createElement)
             return;
@@ -62906,13 +63145,13 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
         ctx.globalAlpha = 1;
     }
     function feedK() { return brainrotFreeze ? 0 : lastK; }
-    exports_163("feedK", feedK);
+    exports_164("feedK", feedK);
     function fallKindOf() { return fallKind; }
-    exports_163("fallKindOf", fallKindOf);
+    exports_164("fallKindOf", fallKindOf);
     function isFrozen() { return brainrotFreeze; }
-    exports_163("isFrozen", isFrozen);
+    exports_164("isFrozen", isFrozen);
     function getLevel() { return brainrot; }
-    exports_163("getLevel", getLevel);
+    exports_164("getLevel", getLevel);
     return {
         setters: [
             function (time_js_42_1) {
@@ -62953,7 +63192,7 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
             }
         ],
         execute: function () {
-            exports_163("FALL_AT", FALL_AT = 0.97); // падение — только у дальнего края пустыни
+            exports_164("FALL_AT", FALL_AT = 0.97); // падение — только у дальнего края пустыни
             brainrot = 0;
             brainrotFreeze = false;
             brainrotFreezeTimer = 0;
@@ -62991,10 +63230,10 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
         }
     };
 });
-System.register("world/feedPull", ["world/disc"], function (exports_164, context_164) {
+System.register("world/feedPull", ["world/disc"], function (exports_165, context_165) {
     "use strict";
     var disc_js_49, PULL_MAX, FROM, FACE;
-    var __moduleName = context_164 && context_164.id;
+    var __moduleName = context_165 && context_165.id;
     // куда «наружу»: туда, где глубина края растёт быстрее всего
     function outward(x, y) {
         const h = 8;
@@ -63003,7 +63242,7 @@ System.register("world/feedPull", ["world/disc"], function (exports_164, context
         const l = Math.hypot(gx, gy);
         return l > 1e-6 ? [gx / l, gy / l] : [0, 0];
     }
-    exports_164("outward", outward);
+    exports_165("outward", outward);
     // насколько странник подыгрывает ленте: 1 — идёт к краю, ~0.12 — уходит вглубь
     function engagement(ux, uy, mvx, mvy, face) {
         const ml = Math.hypot(mvx, mvy);
@@ -63014,7 +63253,7 @@ System.register("world/feedPull", ["world/disc"], function (exports_164, context
         const c = (mvx * ux + mvy * uy) / ml; // −1 вглубь … +1 к краю
         return c >= 0 ? 0.6 + 0.4 * c : Math.max(0.12, 0.6 + 0.65 * c);
     }
-    exports_164("engagement", engagement);
+    exports_165("engagement", engagement);
     // снос за кадр: level — брейнрот 0..100, walk — скорость шага (px/кадр),
     // mvx/mvy — куда хочет идти (желаемая скорость), loop — петля СКРОЛЛ
     function pullVector(x, y, level, walk, mvx, mvy, face, loop = false) {
@@ -63027,7 +63266,7 @@ System.register("world/feedPull", ["world/disc"], function (exports_164, context
         const s = walk * PULL_MAX * Math.pow(k, 1.2) * engagement(ux, uy, mvx, mvy, face);
         return [ux * s, uy * s];
     }
-    exports_164("pullVector", pullVector);
+    exports_165("pullVector", pullVector);
     return {
         setters: [
             function (disc_js_49_1) {
@@ -63035,24 +63274,24 @@ System.register("world/feedPull", ["world/disc"], function (exports_164, context
             }
         ],
         execute: function () {
-            exports_164("PULL_MAX", PULL_MAX = 0.55); // доля скорости шага при полном распаде, если идёшь к краю
+            exports_165("PULL_MAX", PULL_MAX = 0.55); // доля скорости шага при полном распаде, если идёшь к краю
             FROM = 5; // ниже этого распада лента не тянет
             FACE = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] };
         }
     };
 });
-System.register("world/ending", ["render/scaler", "core/time"], function (exports_165, context_165) {
+System.register("world/ending", ["render/scaler", "core/time"], function (exports_166, context_166) {
     "use strict";
     var scaler_js_26, time_js_43, active, phase, timer, TEXTS;
-    var __moduleName = context_165 && context_165.id;
+    var __moduleName = context_166 && context_166.id;
     function trigger() {
         active = true;
         phase = 0;
         timer = 0;
     }
-    exports_165("trigger", trigger);
+    exports_166("trigger", trigger);
     function isActive() { return active; }
-    exports_165("isActive", isActive);
+    exports_166("isActive", isActive);
     function draw(ctx) {
         if (!active)
             return;
@@ -63080,7 +63319,7 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
         }
         ctx.globalAlpha = 1;
     }
-    exports_165("draw", draw);
+    exports_166("draw", draw);
     return {
         setters: [
             function (scaler_js_26_1) {
@@ -63108,10 +63347,10 @@ System.register("world/ending", ["render/scaler", "core/time"], function (export
         }
     };
 });
-System.register("world/monsters", ["core/time", "render/context", "world/terrain"], function (exports_166, context_166) {
+System.register("world/monsters", ["core/time", "render/context", "world/terrain"], function (exports_167, context_167) {
     "use strict";
     var time_js_44, context_js_16, terrain_js_4, monsters, lastSpawn;
-    var __moduleName = context_166 && context_166.id;
+    var __moduleName = context_167 && context_167.id;
     function getDistFromMap(player) {
         let d = 0;
         if (player.x < 0)
@@ -63156,7 +63395,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
             }
         }
     }
-    exports_166("update", update);
+    exports_167("update", update);
     function draw(camera) {
         const ctx = context_js_16.X;
         for (const m of monsters) {
@@ -63185,9 +63424,9 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
             ctx.globalAlpha = 1;
         }
     }
-    exports_166("draw", draw);
+    exports_167("draw", draw);
     function getCount() { return monsters.length; }
-    exports_166("getCount", getCount);
+    exports_167("getCount", getCount);
     return {
         setters: [
             function (time_js_44_1) {
@@ -63206,10 +63445,10 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
         }
     };
 });
-System.register("render/quiet", ["render/context"], function (exports_167, context_167) {
+System.register("render/quiet", ["render/context"], function (exports_168, context_168) {
     "use strict";
     var context_js_17, NEAR, FAR, DEEP, SEEN, HAIR, off, oc;
-    var __moduleName = context_167 && context_167.id;
+    var __moduleName = context_168 && context_168.id;
     // сколько тени: по расстоянию от ног странника до подножия вещи; g — неподвижный взгляд
     // (world/potemkin.js gaze, 0..1) для ближней тихой вещи: один закон на две стороны —
     // подделка под взглядом теряет, настоящее набирает на волос
@@ -63217,7 +63456,7 @@ System.register("render/quiet", ["render/context"], function (exports_167, conte
         const k = Math.max(0, Math.min(1, (d - NEAR) / (FAR - NEAR)));
         return Math.max(0, SEEN + (DEEP - SEEN) * k * k * (3 - 2 * k) - HAIR * Math.max(0, Math.min(1, g)));
     }
-    exports_167("quietShade", quietShade);
+    exports_168("quietShade", quietShade);
     // drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом
     function drawQuiet(ctx, box, shade, drawFn) {
         if (shade <= 0.01) {
@@ -63261,7 +63500,7 @@ System.register("render/quiet", ["render/context"], function (exports_167, conte
         oc.globalAlpha = 1;
         ctx.drawImage(off, 0, 0, W, H, ox, oy, W, H);
     }
-    exports_167("drawQuiet", drawQuiet);
+    exports_168("drawQuiet", drawQuiet);
     return {
         setters: [
             function (context_js_17_1) {
@@ -63275,10 +63514,10 @@ System.register("render/quiet", ["render/context"], function (exports_167, conte
         }
     };
 });
-System.register("render/underside", ["core/time", "world/underside"], function (exports_168, context_168) {
+System.register("render/underside", ["core/time", "world/underside"], function (exports_169, context_169) {
     "use strict";
     var time_js_45, underside_js_3, NI, BO, AS, MG, KV, K0, K1, K2, K3, K4, L1, L2, BR2, S0, S1, S2, MG_L, MG_D, TI, RUST, RUST_L, GLOW_G, GLOW_W, EMBER_G, q, G, r, LINE, NS, TRACKS, BAND, TLIP, LW, RW, BANDS, SIDE, LIPS, STAINS, FLOORS, U1_B1, U1_B2, u1Edge, FLOODS, SKULL, water, yAt, inBay, CUSH, CB, CBK, mossDry, MOSS_LIP, DRY_LIP, MOSS_END, DRY_END, END_CUT, inMossChunk, FONT, scrawl, CL_ALL, overLine, CH, NX, NY, chunks, ARCHS, RACKS_N, RACKS_S, pouring, flare, FLOOR_DRAW, prints, lastPrint, printSide, drips, puffs, draft, breath, frost, frostScreen, fsW, fsH;
-    var __moduleName = context_168 && context_168.id;
+    var __moduleName = context_169 && context_169.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -65148,7 +65387,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             breath.push({ x: x + (Math.random() - 0.5) * 26, y: y + (Math.random() - 0.5) * 16, vx: dx * v + (Math.random() - 0.5) * 0.1, vy: dy * v + (Math.random() - 0.5) * 0.1, life: 70 + q(Math.random() * 70), w: k * 3 });
         }
     }
-    exports_168("inhaleDust", inhaleDust);
+    exports_169("inhaleDust", inhaleDust);
     function frostDots() {
         if (frost)
             return frost;
@@ -65259,7 +65498,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
             }
         }
     }
-    exports_168("stepUnderLife", stepUnderLife);
+    exports_169("stepUnderLife", stepUnderLife);
     function floorLife(g, camX, camY, vw, vh, p) {
         G = g;
         // следы
@@ -65681,7 +65920,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         }
         airLife(g, camX, camY, vw, vh, p);
     }
-    exports_168("drawUnderWorld", drawUnderWorld);
+    exports_169("drawUnderWorld", drawUnderWorld);
     // вторая краска: осмотренная вещь целиком — только её точки, без породы вокруг
     function drawUnderThing(g, th) {
         G = g;
@@ -65693,7 +65932,7 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         if (f)
             f(th);
     }
-    exports_168("drawUnderThing", drawUnderThing);
+    exports_169("drawUnderThing", drawUnderThing);
     function drawUnderFx(fx, vw, vh) {
         const k = underside_js_3.under.cold;
         if (k < 0.04)
@@ -65725,10 +65964,10 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         fx.drawImage(frostScreen, 0, 0);
         fx.globalAlpha = 1;
     }
-    exports_168("drawUnderFx", drawUnderFx);
+    exports_169("drawUnderFx", drawUnderFx);
     // сброс живого при входе: прошлые следы остаются (пыль помнит), капли и пар — нет
     function resetUnderLife() { drips.length = 0; puffs.length = 0; breath.length = 0; lastPrint = null; }
-    exports_168("resetUnderLife", resetUnderLife);
+    exports_169("resetUnderLife", resetUnderLife);
     return {
         setters: [
             function (time_js_45_1) {
@@ -66391,10 +66630,10 @@ System.register("render/underside", ["core/time", "world/underside"], function (
         }
     };
 });
-System.register("net/config", [], function (exports_169, context_169) {
+System.register("net/config", [], function (exports_170, context_170) {
     "use strict";
     var SUPABASE_URL, SUPABASE_KEY;
-    var __moduleName = context_169 && context_169.id;
+    var __moduleName = context_170 && context_170.id;
     return {
         setters: [],
         execute: function () {
@@ -66405,21 +66644,21 @@ System.register("net/config", [], function (exports_169, context_169) {
             // одного, как раньше. ?net=local — проверка без сервера: вкладки одного браузера
             // видят друг друга, записки лежат в localStorage. ?net=off — выключить.
             // ═══════════════════════════════════════
-            exports_169("SUPABASE_URL", SUPABASE_URL = 'https://vchfdhhlcjhnxiivtfpr.supabase.co');
-            exports_169("SUPABASE_KEY", SUPABASE_KEY = 'sb_publishable_lXY8h_gi37sZLixPqonEqw_YZmZrA7L');
+            exports_170("SUPABASE_URL", SUPABASE_URL = 'https://vchfdhhlcjhnxiivtfpr.supabase.co');
+            exports_170("SUPABASE_KEY", SUPABASE_KEY = 'sb_publishable_lXY8h_gi37sZLixPqonEqw_YZmZrA7L');
         }
     };
 });
-System.register("net/filter", [], function (exports_170, context_170) {
+System.register("net/filter", [], function (exports_171, context_171) {
     "use strict";
     var SAY_MAX, NOTE_MAX, PRE, ROOTS, MAT, EN, LINK, bar, dirty;
-    var __moduleName = context_170 && context_170.id;
+    var __moduleName = context_171 && context_171.id;
     function clean(text, max = SAY_MAX) {
         let s = String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim();
         s = Array.from(s).slice(0, max).join('');
         return s.replace(MAT, (m, pre, w) => pre + bar(w)).replace(EN, bar).replace(LINK, bar);
     }
-    exports_170("clean", clean);
+    exports_171("clean", clean);
     return {
         setters: [],
         execute: function () {
@@ -66428,7 +66667,7 @@ System.register("net/filter", [], function (exports_170, context_170) {
             // вымарывается, как в канцелярии: чёрным по слову. Чистит и отправитель, и
             // получатель (чужой клиент мог не почистить); записки сверх того проверяет база.
             // ═══════════════════════════════════════
-            exports_170("SAY_MAX", SAY_MAX = 120), exports_170("NOTE_MAX", NOTE_MAX = 140);
+            exports_171("SAY_MAX", SAY_MAX = 120), exports_171("NOTE_MAX", NOTE_MAX = 140);
             // корни — с начала слова, с приставками: «корабля» и «рубля» не трогаем
             PRE = '(?:за|вы|на|до|от|у|по|при|раз|рас|съ|объ|отъ|подъ|разъ|изъ|въ|об|пере|под|недо|ни)?';
             ROOTS = '(?:ху[йеёяи]|пизд|п[иі]зд|[её]б[аеуиоы]|бля|мудак|мудил|пид[оа]р|шлюх|гандон|залуп|сучар)';
@@ -66439,14 +66678,14 @@ System.register("net/filter", [], function (exports_170, context_170) {
             LINK = /(?:https?:\/\/|www\.)\S+|[\p{L}\d-]+\.(?:com|ru|net|org|io|me|gg|xyz|su|рф)(?![\p{L}\d])(?:\/\S*)?|@\w{3,}/giu; // адрес — и «сайт.рф», но не «текст.rubles»
             bar = w => '█'.repeat(Math.min(6, Math.max(2, Array.from(w).length)));
             // было ли что вымарывать (база записку с бранью не примет — не тратить попытку)
-            exports_170("dirty", dirty = text => clean(text, 10000) !== String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim());
+            exports_171("dirty", dirty = text => clean(text, 10000) !== String(text || '').replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim());
         }
     };
 });
-System.register("net/local", ["net/filter"], function (exports_171, context_171) {
+System.register("net/local", ["net/filter"], function (exports_172, context_172) {
     "use strict";
     var filter_js_1, KEY, AGE, HIDE, PER_DAY, read, write;
-    var __moduleName = context_171 && context_171.id;
+    var __moduleName = context_172 && context_172.id;
     function localTransport(me) {
         const ch = typeof BroadcastChannel === 'function' ? new BroadcastChannel('ardet-net-2') : null;
         const H = { pos: [], say: [], leave: [], note: [] };
@@ -66501,7 +66740,7 @@ System.register("net/local", ["net/filter"], function (exports_171, context_171)
             },
         };
     }
-    exports_171("localTransport", localTransport);
+    exports_172("localTransport", localTransport);
     return {
         setters: [
             function (filter_js_1_1) {
@@ -66523,10 +66762,10 @@ System.register("net/local", ["net/filter"], function (exports_171, context_171)
         }
     };
 });
-System.register("net/supabase", [], function (exports_172, context_172) {
+System.register("net/supabase", [], function (exports_173, context_173) {
     "use strict";
     var TOPIC, SKEY;
-    var __moduleName = context_172 && context_172.id;
+    var __moduleName = context_173 && context_173.id;
     function supabaseTransport(url, key, tab) {
         const base = url.replace(/\/+$/, ''), wsUrl = base.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(key) + '&vsn=1.0.0';
         const H = { pos: [], say: [], leave: [], note: [] };
@@ -66665,7 +66904,7 @@ System.register("net/supabase", [], function (exports_172, context_172) {
             },
         };
     }
-    exports_172("supabaseTransport", supabaseTransport);
+    exports_173("supabaseTransport", supabaseTransport);
     return {
         setters: [],
         execute: function () {
@@ -66681,10 +66920,10 @@ System.register("net/supabase", [], function (exports_172, context_172) {
         }
     };
 });
-System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter", "world/disc", "sprites/player", "sprites/wardrobe"], function (exports_173, context_173) {
+System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter", "world/disc", "sprites/player", "sprites/wardrobe"], function (exports_174, context_174) {
     "use strict";
     var config_js_1, local_js_1, supabase_js_1, filter_js_2, disc_js_50, player_js_2, wardrobe_js_3, FACES, lookOf, NOTE_X, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, notesIn;
-    var __moduleName = context_173 && context_173.id;
+    var __moduleName = context_174 && context_174.id;
     function oldBox(b) {
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
         for (const fx of [0, 0.5, 1])
@@ -66720,7 +66959,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             return supabase_js_1.supabaseTransport(config_js_1.SUPABASE_URL, config_js_1.SUPABASE_KEY, tab);
         return null;
     }
-    exports_173("pickTransport", pickTransport);
+    exports_174("pickTransport", pickTransport);
     // T — транспорт (для проверок — свой); без него — по адресу страницы
     async function startNet(T = null) {
         const search = typeof location !== 'undefined' ? location.search : '';
@@ -66783,7 +67022,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
                 net.T.stop(); });
         return net.on;
     }
-    exports_173("startNet", startNet);
+    exports_174("startNet", startNet);
     function voice(who, text) {
         net.voices = net.voices.filter(v => v.who !== who); // новое слово стирает прежнее у того же странника
         net.voices.push({ who, text, t0: net.t });
@@ -66822,7 +67061,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         if (layer === 'surface' && !net.fetching && (!net.fetched || Math.hypot(me.x - net.fetched.x, me.y - net.fetched.y) > FETCH_R / 2 || net.t - net.fetched.t > 3600))
             fetchNotes(me);
     }
-    exports_173("stepNet", stepNet);
+    exports_174("stepNet", stepNet);
     async function fetchNotes(me) {
         net.fetching = true;
         net.fetched = { x: me.x, y: me.y, t: net.t };
@@ -66853,7 +67092,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         voice('me', s);
         return { text: s };
     }
-    exports_173("netSay", netSay);
+    exports_174("netSay", netSay);
     // записка у ног: брань база не примет — не тратить попытку
     async function netLeaveNote(text) {
         if (!net.on || !net.last)
@@ -66878,7 +67117,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             net.T.sendNote({ nid: r.id, ...at, text: s }); // тем, кто рядом, — сразу
         return r;
     }
-    exports_173("netLeaveNote", netLeaveNote);
+    exports_174("netLeaveNote", netLeaveNote);
     // заверить / пожаловаться: по разу на записку; своя — нельзя
     async function netVote(id, kind) {
         const n = net.notes.get(id);
@@ -66902,7 +67141,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         }
         return r;
     }
-    exports_173("netVote", netVote);
+    exports_174("netVote", netVote);
     function mute(tab, on = true) {
         if (on)
             net.muted.add(tab);
@@ -66914,7 +67153,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         }
         catch (e) { }
     }
-    exports_173("mute", mute);
+    exports_174("mute", mute);
     // смотрит ли кто-то рядом из-под ладони (за кольцом, наверху): черта видна двоим
     function lookingNear(x, y, r = SIGHT) {
         if (!net.on)
@@ -66924,7 +67163,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
                 return true;
         return false;
     }
-    exports_173("lookingNear", lookingNear);
+    exports_174("lookingNear", lookingNear);
     // кто стоит в рамке на этом слое
     function othersIn(layer, x0, y0, x1, y1) {
         const out = [];
@@ -66933,7 +67172,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
                 out.push({ tab, ...o });
         return out;
     }
-    exports_173("othersIn", othersIn);
+    exports_174("othersIn", othersIn);
     // для проверок
     function _resetNet() {
         if (net.T && net.on)
@@ -66944,7 +67183,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         net.muted.clear();
         net.gone.clear();
     }
-    exports_173("_resetNet", _resetNet);
+    exports_174("_resetNet", _resetNet);
     return {
         setters: [
             function (config_js_1_1) {
@@ -66977,10 +67216,10 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             // со сдвигом по x — прежние клиенты их не видят и не путают; прежние записки ищутся
             // по своим координатам и переносятся так же, как сохранения (fromOldGeo)
             NOTE_X = 1e6;
-            exports_173("SIGHT", SIGHT = 320); // смотреть вдаль вдвоём — не дальше, чем видно друг друга
-            exports_173("HEAR", HEAR = 260), exports_173("LOST", LOST = 600), exports_173("SAY_GAP", SAY_GAP = 120), exports_173("NOTE_GAP", NOTE_GAP = 3600), exports_173("FETCH_R", FETCH_R = 700), exports_173("VOICE_LIFE", VOICE_LIFE = 1500); // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
+            exports_174("SIGHT", SIGHT = 320); // смотреть вдаль вдвоём — не дальше, чем видно друг друга
+            exports_174("HEAR", HEAR = 260), exports_174("LOST", LOST = 600), exports_174("SAY_GAP", SAY_GAP = 120), exports_174("NOTE_GAP", NOTE_GAP = 3600), exports_174("FETCH_R", FETCH_R = 700), exports_174("VOICE_LIFE", VOICE_LIFE = 1500); // голос гасит перо (render/net.js); срок — на случай, если его не рисуют
             SEND_EVERY = 20, IDLE_EVERY = 120, MUTE_KEY = 'ardet-net-muted', GONE_KEY = 'ardet-net-reported';
-            exports_173("net", net = {
+            exports_174("net", net = {
                 on: false, kind: null, tab: null, T: null,
                 others: new Map(), // tab → { x, y, tx, ty, layer, dir, moving, heard }
                 notes: new Map(), // id → { id, x, y, layer, text, certs, created, mine }
@@ -66989,14 +67228,14 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
                 gone: new Set(), // записки, на которые пожаловался: у себя их больше не видно
                 t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false,
             });
-            exports_173("notesIn", notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n.layer === 'surface' && n.x > x0 && n.x < x1 && n.y > y0 && n.y < y1));
+            exports_174("notesIn", notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n.layer === 'surface' && n.x > x0 && n.x < x1 && n.y > y0 && n.y < y1));
         }
     };
 });
-System.register("render/net", ["sprites/player", "render/context", "world/whisper", "net/net"], function (exports_174, context_174) {
+System.register("render/net", ["sprites/player", "render/context", "world/whisper", "net/net"], function (exports_175, context_175) {
     "use strict";
     var player_js_3, context_js_18, whisper_js_3, net_js_1, K0, L1, L2, BO, S2, KV, CLEAR, GHOST, SPEED, AGE, READ, WRAP, LINE, buf;
-    var __moduleName = context_174 && context_174.id;
+    var __moduleName = context_175 && context_175.id;
     function sheet() {
         if (buf !== null)
             return buf;
@@ -67039,7 +67278,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         return net_js_1.othersIn(layer, camX - 20, camY - 10, camX + vw + 20, camY + vh + 40)
             .map(o => ({ k: o.y + 1, draw: () => ghost(ctx, o, coldAt ? coldAt(o.x, o.y) : 0, together && o.look ? CLEAR : GHOST) }));
     }
-    exports_174("othersToDraw", othersToDraw);
+    exports_175("othersToDraw", othersToDraw);
     // огонёк у сердца чужого светит, как свой, только слабее; в инее тёплого нет (канон U7)
     function otherLights(layer, camX, camY, vw, vh, coldAt = null) {
         if (!net_js_1.net.on)
@@ -67052,7 +67291,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         }
         return out;
     }
-    exports_174("otherLights", otherLights);
+    exports_175("otherLights", otherLights);
     // записки на земле
     function drawNotes(ctx, camX, camY, vw, vh) {
         if (!net_js_1.net.on)
@@ -67081,7 +67320,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
             } // заверено
         }
     }
-    exports_174("drawNotes", drawNotes);
+    exports_175("drawNotes", drawNotes);
     // где записка под кликом
     function noteAt(x, y) {
         let best = null, bd = 7;
@@ -67094,7 +67333,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         }
         return best;
     }
-    exports_174("noteAt", noteAt);
+    exports_175("noteAt", noteAt);
     // где чужой странник под кликом (фигура — над ногами)
     function otherAt(layer, x, y) {
         let best = null, bd = 13;
@@ -67107,7 +67346,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         }
         return best;
     }
-    exports_174("otherAt", otherAt);
+    exports_175("otherAt", otherAt);
     // строки по словам — не шире WRAP знаков
     function wrap(text, n = WRAP) {
         const out = [];
@@ -67125,7 +67364,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
             out.push(cur);
         return out;
     }
-    exports_174("wrap", wrap);
+    exports_175("wrap", wrap);
     // слова — пером над головой, строка за строкой: своё — над собой, чужое — над тем, кто сказал.
     // Двое рядом — позднее слово поднимается над ранним (lift) и, поднявшись, уже не опускается
     function drawVoices(ctx, layer, me) {
@@ -67165,7 +67404,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         }
         net_js_1.net.voices = net_js_1.net.voices.filter(v => !v.done);
     }
-    exports_174("drawVoices", drawVoices);
+    exports_175("drawVoices", drawVoices);
     return {
         setters: [
             function (player_js_3_1) {
@@ -67189,10 +67428,10 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
         }
     };
 });
-System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (exports_175, context_175) {
+System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (exports_176, context_176) {
     "use strict";
     var state_js_8, net_js_2, filter_js_3, wrap, box, field, title, count, okBtn, mode, paper, NOTE_ERR, SAY_ERR, isTyping, DAY, VOTE_ERR;
-    var __moduleName = context_175 && context_175.id;
+    var __moduleName = context_176 && context_176.id;
     function build() {
         if (wrap || typeof document === 'undefined' || !document.body)
             return;
@@ -67265,11 +67504,11 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         else
             document.addEventListener('DOMContentLoaded', build);
     }
-    exports_175("initNetUI", initNetUI);
+    exports_176("initNetUI", initNetUI);
     // кнопки — когда сеть есть
     function refreshNetUI() { if (wrap)
         wrap.style.display = net_js_2.net.on ? 'flex' : 'none'; }
-    exports_175("refreshNetUI", refreshNetUI);
+    exports_176("refreshNetUI", refreshNetUI);
     function open(m) {
         if (!net_js_2.net.on || !box || mode || !state_js_8.state.is('game'))
             return false;
@@ -67285,7 +67524,7 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         setTimeout(() => field.focus(), 0);
         return true;
     }
-    exports_175("open", open);
+    exports_176("open", open);
     function close() {
         if (!mode)
             return;
@@ -67294,7 +67533,7 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         field.blur();
         state_js_8.state.transition('game');
     }
-    exports_175("close", close);
+    exports_176("close", close);
     function noteMenu(n) {
         const d = Math.floor((Date.now() - (n.created || Date.now())) / DAY);
         const paperAge = d < 1 ? 'Бумага свежая.' : d < 10 ? 'Бумага чуть пожелтела.' : 'Бумага жёлтая, сгибы в пыли.';
@@ -67308,7 +67547,7 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
             altNow: () => (n.mine || n.reported ? null : { key: 'net_report', label: '<i>✕</i>ПОЖАЛОВАТЬСЯ' }),
         };
     }
-    exports_175("noteMenu", noteMenu);
+    exports_176("noteMenu", noteMenu);
     // canJoin — за кольцом, рядом, сам ещё не смотришь: можно посмотреть туда же (черта на двоих)
     function otherMenu(o, canJoin = false) {
         return {
@@ -67320,7 +67559,7 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
             altNow: () => (o.look && canJoin ? { key: 'horizon_join', label: '<i>―</i>ПОСМОТРЕТЬ ТУДА ЖЕ' } : null),
         };
     }
-    exports_175("otherMenu", otherMenu);
+    exports_176("otherMenu", otherMenu);
     async function submit() {
         const m = mode, text = field.value;
         if (!m)
@@ -67361,10 +67600,10 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
                 house: 'В дом никто не зайдёт: записку оставь на улице.',
             };
             SAY_ERR = { soon: 'Прежние слова ещё пишутся.' };
-            exports_175("isTyping", isTyping = () => !!mode);
+            exports_176("isTyping", isTyping = () => !!mode);
             // записка и встречный — в меню, как места (ui/ui.js); действия разбирает main.js
             DAY = 86400e3;
-            exports_175("VOTE_ERR", VOTE_ERR = {
+            exports_176("VOTE_ERR", VOTE_ERR = {
                 mine: 'Своё не заверяют.',
                 twice: 'Эта записка тобой уже заверена.',
                 gone: 'Записки уже нет.',
@@ -67374,10 +67613,10 @@ System.register("ui/netui", ["core/state", "net/net", "net/filter"], function (e
         }
     };
 });
-System.register("world/house", ["world/town"], function (exports_176, context_176) {
+System.register("world/house", ["world/town"], function (exports_177, context_177) {
     "use strict";
     var town_js_4, HW, HH, WH, ROOM, PART, SENI, FRONT, DOOR, BED, BED2, STOOL, STOVE, WINDOW, BOOTS, BLOCKS, WAKE, ENTRY, house, inSeni, WINDOW_NIGHT, WINDOW_DAY, THINGS, AMBIENT, NI, AS, K0, K1, K2, K4, BR2, L1, L2, S1, S2, R, HOUSE_W, HOUSE_H, OUT_LOOK, home, wakeHouse, doorOutside;
-    var __moduleName = context_176 && context_176.id;
+    var __moduleName = context_177 && context_177.id;
     // ноги (x, y) — можно ли тут стоять
     function walkable(x, y) {
         const inR = R => x >= R.x0 + 4 && x <= R.x1 - 4 && y >= R.y0 + 3 && y <= R.y1 - 2;
@@ -67389,7 +67628,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
                 return false;
         return true;
     }
-    exports_176("walkable", walkable);
+    exports_177("walkable", walkable);
     function houseMove(p, dx, dy) {
         const fx = p.x + 6, fy = p.y + 23;
         if (walkable(fx + dx, fy + dy)) {
@@ -67407,7 +67646,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
         }
         return false;
     }
-    exports_176("houseMove", houseMove);
+    exports_177("houseMove", houseMove);
     // ближайшая точка пола к (x, y) — туда и идти, если ткнули в стену или в мебель
     function nearestFloor(x, y) {
         if (walkable(x, y))
@@ -67425,7 +67664,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             }
         return best;
     }
-    exports_176("nearestFloor", nearestFloor);
+    exports_177("nearestFloor", nearestFloor);
     // путь от ног до точки: из комнаты в сени — через проём
     function houseRoute(fx, fy, tx, ty) {
         const to = nearestFloor(tx, ty);
@@ -67435,14 +67674,14 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             return [to];
         return [{ x: PART.x0 - 8, y: (PART.g0 + PART.g1) / 2 + 2 }, { x: PART.x1 + 8, y: (PART.g0 + PART.g1) / 2 + 2 }, to];
     }
-    exports_176("houseRoute", houseRoute);
+    exports_177("houseRoute", houseRoute);
     // вещи сейчас (ботинки — пока не обулся); окно — по времени суток
     function houseThings(night = true) {
         const w = THINGS.find(th => th.id === 'h_window');
         w.look = night ? WINDOW_NIGHT : WINDOW_DAY;
         return THINGS.filter(th => !th.shown || th.shown());
     }
-    exports_176("houseThings", houseThings);
+    exports_177("houseThings", houseThings);
     function houseLights(px, py, sky) {
         const night = !sky || !sky.sun, moon = sky ? sky.moon || 0 : 0;
         // огонёк у сердца и рассеянный от него свет на стенах (как в изнанке): без него комнату не видно
@@ -67455,7 +67694,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
         L.push({ x: (DOOR.x0 + DOOR.x1) / 2, y: FRONT.y0, r: 18, color: night ? [140, 150, 160] : [176, 172, 164], flicker: 0, intensity: night ? 0.2 : 0.5 });
         return L;
     }
-    exports_176("houseLights", houseLights);
+    exports_177("houseLights", houseLights);
     function hq(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -67530,7 +67769,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
         locations.push(home);
         return home;
     }
-    exports_176("buildHouse", buildHouse);
+    exports_177("buildHouse", buildHouse);
     return {
         setters: [
             function (town_js_4_1) {
@@ -67538,26 +67777,26 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             }
         ],
         execute: function () {
-            exports_176("HW", HW = 232), exports_176("HH", HH = 122); // дом целиком
-            exports_176("WH", WH = 26); // стена видна лицом на столько
-            exports_176("ROOM", ROOM = { x0: 6, x1: 150, y0: 32, y1: 112 }); // пол комнаты
-            exports_176("PART", PART = { x0: 150, x1: 158, g0: 70, g1: 108 }); // перегородка; проём по полу g0..g1
-            exports_176("SENI", SENI = { x0: 158, x1: 226, y0: 52, y1: 112 }); // пол сеней
-            exports_176("FRONT", FRONT = { y0: 112, y1: 118 }); // передняя стена — сверху полосой
-            exports_176("DOOR", DOOR = { x0: 182, x1: 200 }); // дверь на улицу — в передней стене сеней
+            exports_177("HW", HW = 232), exports_177("HH", HH = 122); // дом целиком
+            exports_177("WH", WH = 26); // стена видна лицом на столько
+            exports_177("ROOM", ROOM = { x0: 6, x1: 150, y0: 32, y1: 112 }); // пол комнаты
+            exports_177("PART", PART = { x0: 150, x1: 158, g0: 70, g1: 108 }); // перегородка; проём по полу g0..g1
+            exports_177("SENI", SENI = { x0: 158, x1: 226, y0: 52, y1: 112 }); // пол сеней
+            exports_177("FRONT", FRONT = { y0: 112, y1: 118 }); // передняя стена — сверху полосой
+            exports_177("DOOR", DOOR = { x0: 182, x1: 200 }); // дверь на улицу — в передней стене сеней
             // мебель — основание по полу; сквозь не пройти
-            exports_176("BED", BED = { x0: 44, x1: 66, y0: 32, y1: 62 }); // своя — левее окна; печь в углу её не заслоняет
-            exports_176("BED2", BED2 = { x0: 120, x1: 142, y0: 32, y1: 62 });
-            exports_176("STOOL", STOOL = { x0: 76, x1: 86, y0: 40, y1: 48 });
-            exports_176("STOVE", STOVE = { x0: 8, x1: 32, y0: 84, y1: 110 });
-            exports_176("WINDOW", WINDOW = { x0: 70, x1: 92, y0: 9, y1: 25 }); // в стене комнаты
-            exports_176("BOOTS", BOOTS = { x: 206, gy: 107 });
+            exports_177("BED", BED = { x0: 44, x1: 66, y0: 32, y1: 62 }); // своя — левее окна; печь в углу её не заслоняет
+            exports_177("BED2", BED2 = { x0: 120, x1: 142, y0: 32, y1: 62 });
+            exports_177("STOOL", STOOL = { x0: 76, x1: 86, y0: 40, y1: 48 });
+            exports_177("STOVE", STOVE = { x0: 8, x1: 32, y0: 84, y1: 110 });
+            exports_177("WINDOW", WINDOW = { x0: 70, x1: 92, y0: 9, y1: 25 }); // в стене комнаты
+            exports_177("BOOTS", BOOTS = { x: 206, gy: 107 });
             BLOCKS = [BED, BED2, STOOL, STOVE];
             // где просыпаешься: на краю своей кровати (ноги — перед ней)
-            exports_176("WAKE", WAKE = { x: 55, y: 67 });
+            exports_177("WAKE", WAKE = { x: 55, y: 67 });
             // где встаёшь, войдя с улицы: на пороге
-            exports_176("ENTRY", ENTRY = { x: 191, y: 106 });
-            exports_176("house", house = {
+            exports_177("ENTRY", ENTRY = { x: 191, y: 106 });
+            exports_177("house", house = {
                 active: false,
                 seated: false, // сидит на краю кровати, пока не шагнул
                 boots: false, // ботинки у порога: только после пробуждения
@@ -67571,7 +67810,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             // ── вещи: осмотр, у иных — действие ──
             WINDOW_NIGHT = 'Окно. За стеклом — пустая улица и мёртвый фонарь; луна стоит низко, свет от неё лежит на полу квадратом.';
             WINDOW_DAY = 'Окно. За стеклом — пустая улица квартала, вдоль неё фундаменты. Стекло пыльное, свет сквозь него серый.';
-            exports_176("THINGS", THINGS = [
+            exports_177("THINGS", THINGS = [
                 { id: 'h_bed', name: 'Кровать', x: BED.x0, y: BED.y0 - 6, w: BED.x1 - BED.x0, h: BED.y1 - BED.y0 + 6, at: [WAKE.x, WAKE.y],
                     look: 'Своя кровать. Простыня сбита, подушка ещё помнит голову.' },
                 { id: 'h_bed2', name: 'Вторая кровать', x: BED2.x0, y: BED2.y0 - 6, w: BED2.x1 - BED2.x0, h: BED2.y1 - BED2.y0 + 6, at: [131, 67],
@@ -67590,7 +67829,7 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             for (const th of THINGS)
                 th.house = true;
             // ── свет: огонёк у сердца; окно — луной или серым днём; щель двери ──
-            exports_176("AMBIENT", AMBIENT = { night: 0.15, day: 0.24 });
+            exports_177("AMBIENT", AMBIENT = { night: 0.15, day: 0.24 });
             // ═══ ДОМ СНАРУЖИ ═══
             // единственный целый дом квартала: на северо-восточном углу перекрёстка главной
             // улицы и улицы у церкви, фасадом на главную. Камень светлее земли квартала,
@@ -67599,19 +67838,19 @@ System.register("world/house", ["world/town"], function (exports_176, context_17
             NI = '#0D0B0A', AS = '#8A8D8F', K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K4 = '#3a3328';
             BR2 = '#3a2818', L1 = '#c8b89a', L2 = '#b0a284', S1 = '#4a463f', S2 = '#33302e';
             R = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
-            exports_176("HOUSE_W", HOUSE_W = 40), exports_176("HOUSE_H", HOUSE_H = 38);
+            exports_177("HOUSE_W", HOUSE_W = 40), exports_177("HOUSE_H", HOUSE_H = 38);
             OUT_LOOK = 'Единственный целый дом на старых улицах: стены, крыша, дверь. Окна тёмные, внутри никого. Здесь просыпаются.';
             home = null;
-            exports_176("wakeHouse", wakeHouse = () => home);
+            exports_177("wakeHouse", wakeHouse = () => home);
             // снаружи у двери — куда выходишь (верх рисунка героя)
-            exports_176("doorOutside", doorOutside = () => ({ x: home.x + home.w / 2 - 6, y: home.y + home.h + 5 }));
+            exports_177("doorOutside", doorOutside = () => ({ x: home.x + home.w / 2 - 6, y: home.y + home.h + 5 }));
         }
     };
 });
-System.register("render/house", ["world/house"], function (exports_177, context_177) {
+System.register("render/house", ["world/house"], function (exports_178, context_178) {
     "use strict";
     var house_js_1, NI, AS, BO, KV, K0, K1, K2, K4, BR1, BR2, BR3, L1, L2, L3, S0, S1, S2, q, G, r, base, _bakeReset;
-    var __moduleName = context_177 && context_177.id;
+    var __moduleName = context_178 && context_178.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -67896,7 +68135,7 @@ System.register("render/house", ["world/house"], function (exports_177, context_
             it.f();
         }
     }
-    exports_177("drawHouseWorld", drawHouseWorld);
+    exports_178("drawHouseWorld", drawHouseWorld);
     return {
         setters: [
             function (house_js_1_1) {
@@ -67914,14 +68153,14 @@ System.register("render/house", ["world/house"], function (exports_177, context_
             r = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(x, y, w, h); };
             // ── статичное: стены, пол, перегородка, передняя стена; печётся раз ──
             base = null;
-            exports_177("_bakeReset", _bakeReset = () => { base = null; });
+            exports_178("_bakeReset", _bakeReset = () => { base = null; });
         }
     };
 });
-System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_178, context_178) {
+System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_179, context_179) {
     "use strict";
     var time_js_46, prefs_js_5, LEN, OPEN, BO, AS, KV, FONT, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
-    var __moduleName = context_178 && context_178.id;
+    var __moduleName = context_179 && context_179.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -67949,7 +68188,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
         return D;
     }
-    exports_178("decodeAt", decodeAt);
+    exports_179("decodeAt", decodeAt);
     // q — настоящий кадр (в полной сцене совпадает с a): по нему меняется картинка мигания
     function tremorAt(a, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
@@ -67963,7 +68202,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
         return [0, 0];
     }
-    exports_178("tremorAt", tremorAt);
+    exports_179("tremorAt", tremorAt);
     // ── рывки строк: полосы кадра уезжают вбок; густо в первые две секунды и на каждом
     //    открытии век ──
     function slicesAt(a, vh, seed = 1, reduced = false, q = a) {
@@ -67987,7 +68226,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
         return out;
     }
-    exports_178("slicesAt", slicesAt);
+    exports_179("slicesAt", slicesAt);
     // ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
     function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
@@ -68010,7 +68249,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
         return out;
     }
-    exports_178("codeAt", codeAt);
+    exports_179("codeAt", codeAt);
     // ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
     function stuckOf(vw, vh, seed) {
         const out = [];
@@ -68109,7 +68348,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         ctx.globalAlpha = 1;
         ctx.restore();
     }
-    exports_178("wakePass", wakePass);
+    exports_179("wakePass", wakePass);
     return {
         setters: [
             function (time_js_46_1) {
@@ -68120,12 +68359,12 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             }
         ],
         execute: function () {
-            exports_178("LEN", LEN = 900); // пятнадцать секунд
-            exports_178("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
+            exports_179("LEN", LEN = 900); // пятнадцать секунд
+            exports_179("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
             FONT = '6px "Press Start 2P","VT323",monospace';
             reducedNow = prefs_js_5.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
-            exports_178("wakefx", wakefx = {
+            exports_179("wakefx", wakefx = {
                 t0: -1, seed: 1, reduced: false, stuck: null, speed: 1,
                 start(speed = 1) { this.t0 = time_js_46.t; this.speed = speed; this.seed = (this.seed * 1103515245 + 12345) & 0x7fffffff; this.reduced = reducedNow(); this.stuck = null; },
                 age() { return this.t0 < 0 ? -1 : (time_js_46.t - this.t0) * this.speed; }, // ход сцены — в шагах полной
@@ -68141,7 +68380,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             //    (prev), k — где строка (0..1). Веки открылись — короткая подгрузка всем кадром ──
             FIRST = [[40, 16], [80, 12], [120, 8], [170, 6], [220, 4], [270, 3], [330, 2]];
             AGAIN = [6, 6, 4, 4, 3, 3, 2, 2];
-            exports_178("blockAt", blockAt = a => decodeAt(a).b);
+            exports_179("blockAt", blockAt = a => decodeAt(a).b);
             // ── дрожь: всплесками, вначале крупнее и дольше, к концу реже и мельче; меняется
             //    через кадр — тридцать раз в секунду, как рука ──
             BURSTS = [[0, 150, 2], [240, 300, 2], [400, 440, 1], [510, 560, 2], [620, 650, 1], [750, 790, 1]];
@@ -68150,10 +68389,10 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         }
     };
 });
-System.register("content/afisha", [], function (exports_179, context_179) {
+System.register("content/afisha", [], function (exports_180, context_180) {
     "use strict";
     var SHOWS;
-    var __moduleName = context_179 && context_179.id;
+    var __moduleName = context_180 && context_180.id;
     return {
         setters: [],
         execute: function () {
@@ -68163,14 +68402,14 @@ System.register("content/afisha", [], function (exports_179, context_179) {
             // помещается четыре-пять строк.
             // Пример: { date: '12.11', place: 'Москва · клуб «Х»' }
             // ═══════════════════════════════════════
-            exports_179("SHOWS", SHOWS = []);
+            exports_180("SHOWS", SHOWS = []);
         }
     };
 });
-System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context_180) {
+System.register("ui/titleglitch", ["core/prefs"], function (exports_181, context_181) {
     "use strict";
     var prefs_js_6, BO, AS, KV, FONT, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
-    var __moduleName = context_180 && context_180.id;
+    var __moduleName = context_181 && context_181.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -68196,7 +68435,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context
         const j = Math.floor(y / STRIPE), d = hh(j, 1, L.seed);
         return w + (d - 0.5) * 0.36 + (hh(j, 2, L.seed) < 0.12 ? 0.3 : 0); // полоса глубже или мельче соседних
     }
-    exports_180("weightAt", weightAt);
+    exports_181("weightAt", weightAt);
     // полоса сбоя на строках y..y+h: слева — от края до a, справа — от b до края (по весу,
     // у всех строк сразу — сорванная строка не заедет на щит)
     function band(L, y, h) {
@@ -68387,7 +68626,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context
         face(1, L, faceRaster);
         show(cv, 0);
     }
-    exports_180("bake", bake);
+    exports_181("bake", bake);
     function show(cv, i) {
         const g = cv.getContext('2d');
         g.save();
@@ -68402,7 +68641,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context
         if (layer)
             layer.getContext('2d').clearRect(0, 0, layer.width, layer.height);
     }
-    exports_180("stop", stop);
+    exports_181("stop", stop);
     function run(cv, over, L, shown) {
         stop();
         layer = over;
@@ -68531,7 +68770,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context
         };
         raf = requestAnimationFrame(frame);
     }
-    exports_180("run", run);
+    exports_181("run", run);
     return {
         setters: [
             function (prefs_js_6_1) {
@@ -68564,10 +68803,10 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_180, context
         }
     };
 });
-System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_181, context_181) {
+System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_182, context_182) {
     "use strict";
     var loader_js_2, manifest_js_2, afisha_js_1, titleglitch_js_1, esc, entry, busy, shown, KEY;
-    var __moduleName = context_181 && context_181.id;
+    var __moduleName = context_182 && context_182.id;
     // щит: даты выступлений; нет их — «скоро»
     function fillAfisha(el) {
         if (!el)
@@ -68715,7 +68954,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
                 go();
         });
     }
-    exports_181("initTitle", initTitle);
+    exports_182("initTitle", initTitle);
     return {
         setters: [
             function (loader_js_2_1) {
@@ -68744,10 +68983,10 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_182, context_182) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_183, context_183) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
-    var __moduleName = context_182 && context_182.id;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var __moduleName = context_183 && context_183.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_15.SEGMENTS.length ? ulitsa_db_js_15.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
@@ -69226,6 +69465,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
     function stepFx() {
         net_js_3.stepNet(player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+        // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее
+        eyes_js_2.stepEyes(state_js_9.state.is('game') && !worldmap_js_1.isOpen() && input_js_2.input.eyesWanted(), player.moving, !house_js_2.house.active && !underside_js_4.under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
+        if (time_js_48.t % 10 === 0)
+            audio_js_12.setPurr(house_js_2.house.active || underside_js_4.under.active ? 0 : silentCat_js_1.catPurr(player.x + 6, player.y + 22));
         if (house_js_2.house.active) {
             stepFxHouse();
             return;
@@ -71014,6 +71257,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             },
             function (ravens_js_2_1) {
                 ravens_js_2 = ravens_js_2_1;
+            },
+            function (eyes_js_2_1) {
+                eyes_js_2 = eyes_js_2_1;
             },
             function (silentCat_js_1_1) {
                 silentCat_js_1 = silentCat_js_1_1;

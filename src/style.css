@@ -141,6 +141,14 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   76%  { transform: scale(1.01)  rotate(-0.2deg)  translate(-0.05%, 0.05%); }
   100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
+/* закрыть глаза (world/eyes.js): веки как при пробуждении, держит их странник */
+#eyelids { position: fixed; inset: 0; z-index: 140; pointer-events: none; display: none; --k: 0; --lid: var(--c-void); }
+#eyelids.warm { --lid: #1c0d08; }
+/* веки по 70%: сомкнутые заходят друг на друга и по углам — щели нет */
+#eyelids::before, #eyelids::after { content: ''; position: absolute; left: -5%; right: -5%; height: 70%;
+  background: var(--lid); transform: scaleY(var(--k)); }
+#eyelids::before { top: -6%; border-radius: 0 0 50% 50% / 0 0 14% 14%; transform-origin: top; }
+#eyelids::after { bottom: -6%; border-radius: 50% 50% 0 0 / 14% 14% 0 0; transform-origin: bottom; }
 #wakelids { position: fixed; inset: 0; z-index: 150; pointer-events: auto; }
 #wakelids::before, #wakelids::after {
   content: ''; position: absolute; left: -5%; right: -5%; height: 58%;

@@ -8,6 +8,13 @@
 //   рядом с огнём в груди: кот идёт к настоящему теплу; тому, кому
 //   доверяет, медленно моргает; странник ушёл — посидит и вернётся.
 //   Голову держит к страннику, хвост гуляет по ветру. Молчит.
+//   Ответить коту (weave/DEPTH_GAMES_2026-11-16.md): медленное моргание — вопрос
+//   тому, кто смотрит (странник с закрытыми глазами его не видит и не спрошен).
+//   Закрыл глаза в ответ за две секунды (world/eyes.js) — кот ложится у ног и
+//   мурчит; встать сразу можно без обиды; остался — засыпает на полминуты–
+//   полторы, сумерки и дождь идут своим ходом. Разбудил шагом — кот этого места
+//   до ухода странника держится как чужой: сидит дома спиной, греться не идёт.
+//   Проснулся сам — сидит у ног; второй раз за приход не ложится.
 //   Глаза отражают огонь странника: ближе он — ярче (как у настоящих
 //   котов: светится не глаз, а то, что в нём отражается).
 //   Вороны рядом с домом — охота: крадётся пригнувшись, замирает, прыгает с
@@ -20,6 +27,7 @@ import { t } from '../core/time.js';
 import { events } from '../core/events.js';
 import { wind } from './wind.js';
 import { calmRavenNear, startleRavens } from './ravens.js';
+import { eyes, eyesShut } from './eyes.js';
 
 const sightings = new Set();
 let fifthUnlocked = false;
@@ -40,6 +48,9 @@ const LEASH = 90;          // дальше этого от дома не ухо�
 const SIGHT = 40;          // ближе — заметил
 const HUNT = 150;          // ворон видит отсюда; дальше этого от дома не охотится
 const POUNCE = 16;         // отсюда — прыжок
+const ANSWER = 40 + 120;   // медленное моргание и две секунды после — время ответа
+const SETTLE = 300;        // лёг и устраивается пять секунд: встать можно без обиды
+const SLEEP = [1800, 5400];// спит полминуты–полторы
 let cats = null, still = 0, solids = [], fire = null;
 
 function init(locations) {
@@ -54,6 +65,7 @@ function init(locations) {
       look: 30, prey: null, preyF: null, freeze: 0, lookX: null,
       perch: { x: l.x, y: l.y, w: l.w, h: l.h, k: l.y + l.h + 0.5 },   // сидит на вещи — рисуется поверх неё
       eyes: [], eyesT: -1,
+      askT: null, aloof: false, slept: false,   // спросил медленным морганием; разбудили — чужой; уже спал
     });
   }
   solids = locations.filter(l => l.solid || l.solidBox).map(l => l.solidBox || l);
@@ -108,6 +120,7 @@ export function stepCats(player, locations) {
     const dx = c.x + 2 - px, dy = c.y + 3 - py, d = Math.hypot(dx, dy);
     if (d > NEAR && Math.hypot(c.hx - px, c.hy - py) > NEAR) {  // далеко: дома, не считается
       c.x = c.hx; c.y = c.hy; c.st = 'sit'; c.prey = null;
+      c.aloof = false; c.slept = false; c.askT = null;          // странник ушёл — приход кончился
       continue;
     }
     if (d < SIGHT && !sightings.has(c.id)) {
@@ -120,13 +133,14 @@ export function stepCats(player, locations) {
     else if (--c.blink <= 0) {
       c.slow = c.st === 'warm';
       c.shut = c.slow ? 40 : 7;
+      if (c.slow && eyes.k < 0.05) c.askT = t;                  // спрашивает того, кто смотрит
       c.blink = c.slow ? 260 + Math.floor(Math.random() * 200) : 200 + Math.floor(Math.random() * 360);
     }
     const toward = pvx * dx + pvy * dy > 0;                      // идёт на кота
     const threat = (ps > 3 && d < 40) || (ps > 0.8 && d < 13 && toward) || (ps > 0.2 && d < 6);
-    if (threat && c.st !== 'flee') flee(c, dx, dy, d);
+    if (threat && c.st !== 'flee') { if (c.st === 'sleep') c.aloof = true; flee(c, dx, dy, d); }
     const ws = warmSpot(c, player);
-    const wantsWarm = still > STILL && d < 60 && d > 12 && Math.hypot(ws.x - c.hx, ws.y - c.hy) <= LEASH;
+    const wantsWarm = !c.aloof && still > STILL && d < 60 && d > 12 && Math.hypot(ws.x - c.hx, ws.y - c.hy) <= LEASH;
     switch (c.st) {
       case 'flee': {
         const nx = c.x + c.fx * 2.6, ny = c.y + c.fy * 2.6;
@@ -190,7 +204,18 @@ export function stepCats(player, locations) {
         break;
       }
       case 'warm':
-        if (d > 30) { c.st = 'wait'; c.tm = 120; }               // ушёл — посидит и домой
+        if (d > 30) { c.st = 'wait'; c.tm = 120; break; }        // ушёл — посидит и домой
+        if (!c.slept && c.askT !== null && t - c.askT <= ANSWER && eyesShut()) {   // ответил тем же
+          c.st = 'lie'; c.tm = SETTLE; c.askT = null;
+        }
+        break;
+      case 'lie':                                                // лёг у ног; встал странник — сел, без обиды
+        if (d > 30 || ps > 0.3) { c.st = 'warm'; c.blink = 200; break; }
+        if (--c.tm <= 0) { c.st = 'sleep'; c.tm = SLEEP[0] + Math.floor(Math.random() * (SLEEP[1] - SLEEP[0])); }
+        break;
+      case 'sleep':                                              // спит; шаг будит — чужой до ухода
+        if (ps > 0.2) { c.aloof = true; c.slept = true; flee(c, dx, dy, d); break; }
+        if (--c.tm <= 0) { c.st = 'warm'; c.slept = true; c.blink = 120; }
         break;
     }
     // идёт мимо сидящих ворон — взлетят; бежит — тем более
@@ -223,6 +248,24 @@ export function drawCat(ctx, c, player) {
     c.eyes = [[D > 0 ? x + 5 : x - 1, y + 1]]; c.eyesT = t;
     return;
   }
+  if (c.st === 'lie' || c.st === 'sleep') {
+    // голова к страннику
+    const D = player.x + 6 >= c.x + 2 ? 1 : -1;
+    const at = (dx, dy, wd = 1, ht = 1) => ctx.fillRect(D > 0 ? x - 1 + dx : x + 5 - dx - (wd - 1), y + dy, wd, ht);
+    c.eyes = []; c.eyesT = t;
+    if (c.st === 'lie') {                                       // вытянулся: голова на лапах, хвост по земле
+      at(0, 2, 6); at(0, 3, 7); at(6, 1, 2, 2); at(6, 0); at(7, 3, 2);
+      at(-1, 3); at(-2, 3); at(-3, Math.sin(t * 0.02 + c.ph) > 0.9 ? 2 : 3);
+      ctx.fillStyle = RIM; at(1, 2, 4); at(7, 0);
+      ctx.fillStyle = EYE; ctx.globalAlpha = 0.3; at(7, 1); ctx.globalAlpha = 1;   // глаза прикрыты
+      return;
+    }
+    // спит клубком, хвост вокруг; спина поднимается — дышит
+    const br = Math.sin(t * 0.045 + c.ph) > 0.2 ? 1 : 0;
+    at(1, 1 - br, 4, 1 + br); at(0, 2, 6, 2); at(5, 1); at(-1, 3); at(6, 3);
+    ctx.fillStyle = RIM; at(1, 1 - br, 4); at(5, 1);
+    return;
+  }
   if (c.st === 'flee' || c.st === 'back' || c.st === 'come' || c.st === 'pounce') {
     // на ходу — сбоку: нос по ходу, хвост трубой назад
     const D = c.dir;
@@ -238,7 +281,8 @@ export function drawCat(ctx, c, player) {
     return;
   }
   // сидит: голова к страннику — левее, прямо, правее; хвост — с другой стороны
-  const pdx = (c.st === 'miss' && c.lookX !== null ? c.lookX : player.x + 6) - (c.x + 2);   // промах — смотрит вслед стае
+  let pdx = (c.st === 'miss' && c.lookX !== null ? c.lookX : player.x + 6) - (c.x + 2);   // промах — смотрит вслед стае
+  if (c.aloof && c.st === 'sit') pdx = -pdx || 7;              // разбудили — сидит к страннику спиной
   const hx = pdx < -6 ? 0 : pdx > 6 ? 2 : 1, side = pdx >= 0 ? 1 : -1;
   ctx.fillRect(x, y + 1, 5, 3);
   ctx.fillRect(x + hx, y, 3, 1);
@@ -252,11 +296,13 @@ export function drawCat(ctx, c, player) {
   const tb = side > 0 ? x - 1 : x + 5;
   for (let k = 0; k < 4; k++) ctx.fillRect(tb - side * Math.round(Math.cos(a) * k), y + 3 - Math.round(Math.sin(a) * k), 1, 1);
   // отсвет: бок и ухо к страннику — тёплым
+  const lit = c.aloof && c.st === 'sit' ? -side : side;          // свет — со стороны странника, куда бы ни смотрел
   ctx.fillStyle = RIM;
-  ctx.fillRect(side > 0 ? x + 4 : x, y + 1, 1, 3);
-  ctx.fillRect(side > 0 ? x + hx + 2 : x + hx, y - 1, 1, 1);    // ухо к огню
+  ctx.fillRect(lit > 0 ? x + 4 : x, y + 1, 1, 3);
+  ctx.fillRect(lit > 0 ? x + hx + 2 : x + hx, y - 1, 1, 1);      // ухо к огню
   // глаза: моргнул — нет; медленно моргает — прикрыты
   c.eyesT = t; c.eyes = [];
+  if (c.aloof && c.st === 'sit') return;                        // спиной — глаз не видно
   if (c.shut > 0 && !c.slow) return;
   ctx.fillStyle = EYE;
   if (c.shut > 0) ctx.globalAlpha = 0.3;
@@ -285,6 +331,18 @@ export function drawCatEyes(fx, camX, camY, player) {
   fx.globalAlpha = 1;
 }
 
+// мурчание: лёг у ног — громче, спит — тише; слышно в шаге-двух (0..1)
+export function catPurr(px, py) {
+  if (!cats) return 0;
+  let v = 0;
+  for (const c of cats) {
+    if (c.st !== 'lie' && c.st !== 'sleep') continue;
+    const d = Math.hypot(c.x + 2 - px, c.y + 3 - py);
+    v = Math.max(v, (c.st === 'lie' ? 1 : 0.6) * Math.max(0, Math.min(1, 1 - (d - 20) / 60)));
+  }
+  return v;
+}
+
 export function getSightings() { return Array.from(sightings); }
 export function loadSightings(arr) {
   sightings.clear();
@@ -296,3 +354,4 @@ export function setUnlocked(v) { fifthUnlocked = v; }
 // для тестов
 export const _cats = () => cats;
 export function _reset() { cats = null; still = 0; sightings.clear(); fifthUnlocked = false; }
+export const _ANSWER = ANSWER, _SETTLE = SETTLE;

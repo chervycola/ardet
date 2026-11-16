@@ -399,6 +399,62 @@ setCtx(ctx);
     eq(cat().st, 'sit', 'сидит');
     assert(cat().x === cat().hx && cat().y === cat().hy, `не дома: ${cat().x.toFixed(1)},${cat().y.toFixed(1)}`);
   });
+
+  // ответить коту (world/eyes.js, weave/DEPTH_GAMES_2026-11-16.md)
+  const Ey = await imp('world/eyes.js');
+  const TM0 = await imp('core/time.js'), tNow = () => TM0.t;
+  const frame = (p, shut) => { Ey.stepEyes(shut, Math.hypot(p.vx, p.vy) > 0.05); tick(); C.stepCats(p, locs); };
+  const untilAsked = p => { frame(p, false); for (let i = 0; i < 3000 && cat().askT === null; i++) frame(p, false); return cat().askT !== null; };
+  test('веки: смыкаются за полсекунды, шаг открывает', () => {
+    Ey._resetEyes();
+    for (let i = 0; i < 24; i++) Ey.stepEyes(true, false);
+    assert(Ey.eyesShut(), `не сомкнулись: ${Ey.eyes.k}`);
+    Ey.stepEyes(true, true);
+    assert(!Ey.eyesShut(), 'шагнул с закрытыми глазами');
+    for (let i = 0; i < 10; i++) Ey.stepEyes(false, false);
+    eq(Ey.eyes.k, 0, 'не открылись');
+  });
+  test('кот: закрыл глаза в ответ на моргание — лёг, мурчит, уснул; шаг будит — чужой до ухода', () => {
+    C._reset(); calm(); Ey._resetEyes();
+    const p = { x: 940, y: 1015, vx: 0, vy: 0 };
+    assert(untilAsked(p), 'медленно не моргнул');
+    eq(cat().st, 'warm', 'спросил не у ног');
+    for (let i = 0; i < 30; i++) frame(p, true);
+    eq(cat().st, 'lie', 'не лёг');
+    assert(C.catPurr(p.x + 6, p.y + 22) > 0.5, 'не мурчит');
+    for (let i = 0; i < C._SETTLE + 5; i++) frame(p, false);
+    eq(cat().st, 'sleep', 'не уснул');
+    p.vx = 1; frame(p, false); p.vx = 0;
+    assert(cat().aloof, 'разбудили — не обиделся');
+    for (let i = 0; i < 4000; i++) {
+      frame(p, false);
+      assert(cat().st !== 'warm' && cat().st !== 'come', `обиженный пришёл греться (${i})`);
+    }
+    eq(cat().st, 'sit', 'не ушёл домой');
+    p.x = 400; frame(p, false);                      // ушёл далеко: приход кончился
+    assert(!cat().aloof, 'обида пережила уход');
+  });
+  test('кот: не спрошен с закрытыми глазами; поздний ответ не считается; встать сразу — без обиды', () => {
+    C._reset(); calm(); Ey._resetEyes();
+    const p = { x: 940, y: 1015, vx: 0, vy: 0 };
+    for (let i = 0; i < 3000; i++) frame(p, true);
+    eq(cat().st, 'warm', 'с закрытыми глазами кот не у ног');
+    eq(cat().askT, null, 'спросил того, кто не смотрит');
+    for (let i = 0; i < 12; i++) frame(p, false);
+    assert(untilAsked(p), 'медленно не моргнул');
+    for (let i = 0; i < C._ANSWER + 10; i++) frame(p, false);
+    for (let i = 0; i < 30; i++) frame(p, true);
+    eq(cat().st, 'warm', 'лёг на поздний ответ');
+    for (let i = 0; i < 12; i++) frame(p, false);
+    for (let i = 0; i < 3000 && cat().st !== 'lie'; i++) {   // следующее моргание — ответить вовремя
+      const asked = cat().askT !== null && tNow() - cat().askT < 20;
+      frame(p, asked || Ey.eyes.k > 0);
+    }
+    eq(cat().st, 'lie', 'на своевременный ответ не лёг');
+    p.vx = 0.5; frame(p, false); p.vx = 0;
+    eq(cat().st, 'warm', 'встал странник — кот не сел');
+    assert(!cat().aloof, 'встал сразу — а кот обиделся');
+  });
 }
 
 // ═══ ЛУЖИ ═══
