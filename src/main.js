@@ -62,6 +62,8 @@ import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
 import { checkLorePickup, drawLoreItems, getTotalCount, loadCollected, getCollectedIds, loreTextOf } from './world/lore.js';
 import { GATES } from './content/worldmap_db.js';
+import { mailNow, answerMail, stepMail, saveMail, loadMail, MAIL_ASK } from './world/threads.js';
+import { ask } from './ui/askbox.js';
 import { initInventory } from './ui/inventory.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer, setPosOverride } from './core/playerRef.js';
@@ -250,7 +252,8 @@ if (savedData) {
   if (savedData.walked) savedData.walked.forEach(k => flags.walked.add(k));
   if (savedData.attn) loadAttention(savedData.attn, locations);
   if (savedData.wardrobe) loadWardrobe(savedData.wardrobe);
-  if (savedData.clock != null) setWorldClock(savedData.clock);   // сутки и час — с того места, где ушёл
+  if (savedData.clock != null) setWorldClock(savedData.clock);
+  if (savedData.mail) loadMail(savedData.mail);              // окно «до востребования»: выдано ли, книга запросов   // сутки и час — с того места, где ушёл
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -270,6 +273,7 @@ function saveData() {
   player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   clock: worldClock(t),
+  mail: saveMail(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -1729,7 +1733,7 @@ function updateWorldSystems() {
   // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
   // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
   if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
-  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); }   // обмер — ногами; врата по пройденному
+  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); stepMail(player.x + 6, player.y + 23); }   // обмер — ногами; врата по пройденному; створка окна
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
   if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
   updateMonsters(player);
@@ -2212,6 +2216,16 @@ events.on('location.use', (loc) => {
   if (actionKey === 'shop1') { openShop('shop1'); return; }
   if (actionKey === 'shop2') { openShop('shop2'); return; }
   if (actionKey === 'shop3') { openShop('shop3'); return; }
+  // окно «до востребования»: номер называет сам странник; ошибка — в книгу запросов (world/threads.js)
+  if (actionKey === 'mail_1889') {
+    const now = mailNow();
+    if (now) { showLook({ name: now.title, look: now.text }); return; }
+    ask({ prompt: MAIL_ASK, ok: 'назвать', max: 4, numeric: true }).then(v => {
+      const r = answerMail(v);
+      if (r) { showLook({ name: r.title, look: r.text }); saveNow(); }
+    });
+    return;
+  }
   // костёр: с седьмого приношения, если странник был у мохового алтаря, говорит огонь
   if (actionKey === 'campfire_throw' && addOffering() >= 7 && flags.visited.has('altar')) {
     const s = useTexts.campfire_sermon; showLook({ name: s.title, look: s.text }); return;

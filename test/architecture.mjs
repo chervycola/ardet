@@ -496,14 +496,32 @@ test('стрим: по умолчанию выключен; опись счит�
 });
 
 const { termDb } = await imp('content/terminal_db.js');
-test('нити: номерок 1889 → окно «до востребования»; почерк; кот', () => {
+const TH = await imp('world/threads.js'), { CORE: CORE0 } = await imp('world/disc.js');
+test('нити: номерок 1889 → окно «до востребования» — номер называет сам странник; ошибка в книгу запросов; почерк; кот', () => {
   const mail = locations.find(l => l.id === 'mail_1889');
   assert(mail && mail.drawSelf && mail.useAction === 'mail_1889', 'нет окна выдачи');
   eq(ringAt(mail.x + mail.w / 2, mail.y + mail.h), 6, 'окно — в кольце 6');
-  assert(/Без номерка/.test(useTexts.mail_1889.text), 'без театра письма не дают');
+  assert(/Без номерка/.test(useTexts.mail_1889.text), 'окно спрашивает и ждёт');
   assert(/1889/.test(useTexts.theater_stage.text) && /Рука знакомая/.test(useTexts.theater_stage.text), 'театр: номерок и подпись');
-  assert(/каждое имя в истории/.test(useTexts.mail_1889.text), 'после театра письмо выдают');
-  assert(mail.useLabel.includes('НОМЕРОК'), 'кнопка после театра');
+  assert(/Турин, январь/.test(mail.look), 'штемпель виден и без театра');
+  assert(mail.useLabel.includes('НОМЕРОК'), 'кнопка');
+  TH._resetMail();
+  eq(TH.mailNow(), null, 'окно не спрашивает');
+  eq(TH.answerMail(''), null, 'пустой ответ — не ответ');
+  const wrong = TH.answerMail('1898');
+  assert(/Спрашивали № 1898\. Не значится/.test(wrong.text) && /Рука знакомая/.test(wrong.text), 'ошибка не легла в книгу');
+  assert(TH.mailNow() && /Перерыв/.test(TH.mailNow().text), 'створка не опустилась');
+  assert(/Спрашивали № 1898/.test(mail.look), 'книги запросов нет в осмотре');
+  TH.stepMail(mail.x + mail.w / 2, mail.y + mail.h);
+  assert(TH.mailNow(), 'створка поднялась, а странник из кольца не уходил');
+  TH.stepMail(CORE0.x, CORE0.y);
+  eq(TH.mailNow(), null, 'ушёл из кольца — створка не поднялась');
+  const ok = TH.answerMail('1889');
+  assert(/каждое имя в истории/.test(ok.text), 'верный номер — письма нет');
+  assert(/выдано/.test(TH.mailNow().text), 'письмо выдают второй раз');
+  const saved = TH.saveMail(); TH._resetMail(); TH.loadMail(saved);
+  assert(/выдано/.test(TH.mailNow().text) && /1898/.test(mail.look), 'сохранение не помнит окно');
+  TH._resetMail();
   assert(termDb.cat && termDb['кот'] === termDb.cat, 'досье кота');
   assert(/почерк: сверен/.test(termDb.you.text), 'whois you — почерк');
   const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
