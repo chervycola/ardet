@@ -56,7 +56,7 @@ export const looks = {
 
 22.07.2011 — Utøya, Норвегия. 69 убитых в молодёжном лагере — от четырнадцати до пятидесяти одного. Одна — Sharidyn Svebakk-Bøhn, 14 лет, приехала из Драммена утром. Четырнадцать исполнилось пять дней назад. Стрелок ходил по острову 72 минуты. Полиция плыла на лодке. Лодка была дырявая.
 
-20.04.1999 — Columbine High School, Littleton, Colorado. 13 погибших. Одна — Rachel Scott, 17 лет, сидела на газоне, читала. Первый выстрел — в неё. За месяц до этого она сдала школьное сочинение. Там было: «I have this theory that if one person can go out of their way to show compassion, then it will start a chain reaction of the same.» Цепная реакция началась. Не та.
+20.04.1999 — Columbine High School, Littleton, Colorado. 13 погибших. Одна — Rachel Scott, 17 лет, сидела на газоне, читала. Первый выстрел — в неё. За месяц до этого она сдала школьное сочинение. Там было: «I have this theory that if one person can go out of their way to show compassion, then it will start a chain reaction of the same.»
 
 24.05.2022 — Robb Elementary, Uvalde, Texas. 19 детей + 2 учителя. Одна — Amerie Jo Garza, 10 лет, почётная ученица, хотела стать учительницей рисования. Взяла классный телефон и набрала 911. Ещё раз. Ещё раз. Снаружи стояли 376 полицейских. Слушали выстрелы 77 минут. Не вошли. Amerie не дождалась. В гробу у неё был значок «honor roll».
 
