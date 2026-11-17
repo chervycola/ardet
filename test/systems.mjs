@@ -4085,10 +4085,10 @@ setCtx(ctx);
   const north = d => { for (let y = T0.y0 - 3300; y > 0; y--) if (ST.depthAt(MIDX, y) >= d) return { x: MIDX, y }; };
   const home = () => { const p = { x: DSC.oldX(4650), y: DSC.oldY(4000), still: false }; for (let i = 0; i < 400; i++) { EDG.update(p); BRT.update(p); } };
   // странник с ногами в (fx, fy): идёт на месте (распад догоняет глубину), стоит, шагает
-  const frame = (f, still, now = NOW) => {
-    const p = { x: f.x - 6, y: f.y - 23, still, moving: !still };
+  const frame = (f, still, now = NOW, moving = !still) => {
+    const p = { x: f.x - 6, y: f.y - 23, still, moving };
     EDG.update(p); BRT.update(p);
-    return ST.stepStands(f.x, f.y, { active: true, still, level: BRT.getLevel(), calm: BRT.calmOf(), now });
+    return ST.stepStands(f.x, f.y, { active: true, still, moving, level: BRT.getLevel(), calm: BRT.calmOf(), now });
   };
   const standAt = (f, stillFrames = 330) => { for (let i = 0; i < 300; i++) frame(f, false); for (let i = 0; i < stillFrames; i++) frame(f, true); };
   const step = (f, dx, dy, n = 10, now = NOW) => { let r = false; const q = { ...f }; for (let i = 0; i < n; i++) { q.x += dx; q.y += dy; r = frame(q, false, now) || r; } return r; };
@@ -4131,6 +4131,39 @@ setCtx(ctx);
     for (let i = 0; i < 200; i++) frame(f, true, t2);
     assert(!step(f, 0, 1, 10, t2) && d.exp === e2, 'встал до покоя и шагнул — продлил');
     eq(ST.standsIn(f.x - 50, f.y - 50, f.x + 50, f.y + 50, d.exp + 1).length, 0, 'срок вышел — видна');
+    reset();
+  });
+  test('стоянка: лента снесла из вмятины до покоя — продлена та, в которую встал; лёд докатил шаг назад — шаг; докатился — встал там', () => {
+    const f = north(0.75);
+    // встал в чужую вмятину; до покоя лента сносит на 33 точки к краю (снос — не ход)
+    reset(); ST.stands.net.set(1, { id: 1, kind: 'dent', x: f.x, y: f.y, exp: NOW + 3600e3, path: null });
+    for (let i = 0; i < 300; i++) frame(f, false);
+    let q = { ...f };
+    for (let i = 0; i < 330; i++) { frame(q, true, NOW, false); q = { x: q.x, y: q.y - 0.1 }; }
+    assert(f.y - q.y > 30 && ST.stands.st.calm, 'не снесло');
+    assert(step(q, 0, 1), 'снесло и шагнул назад — не продлено');
+    eq(ST.stands.mine.length, 1, 'вмятин у себя');
+    eq(JSON.stringify([ST.stands.mine[0].x, ST.stands.mine[0].y]), JSON.stringify([f.x, f.y]), 'продлена не та, в которую встал (или легла вторая)');
+    eq(ST.stands.net.get(1).exp, NOW + ST.termOf(f.x, f.y), 'чужая не продлена');
+    // тап назад по льду: держал три кадра (2 точки), остальное докатил лёд — это шаг
+    reset(); standAt(f);
+    q = { ...f };
+    for (let i = 0; i < 3; i++) { q = { x: q.x, y: q.y + 0.7 }; frame(q, false); }
+    let laid = false;
+    for (let i = 0; i < 12; i++) { q = { x: q.x, y: q.y + 0.7 }; laid = frame(q, true, NOW, true) || laid; }
+    assert(laid && ST.stands.mine.length === 1, 'лёд докатил шаг назад — стоянка потеряна');
+    // лёд докатил меньше шага и встал — новая стоянка с нуля, не вмятина
+    reset(); standAt(f);
+    q = { ...f }; frame({ x: q.x, y: q.y + 1 }, false);
+    for (let i = 0; i < 3; i++) frame({ x: q.x, y: q.y + 2 + i }, true, NOW, true);
+    frame({ x: q.x, y: q.y + 4 }, true, NOW, false);
+    assert(!ST.stands.mine.length && ST.stands.st && !ST.stands.st.going && !ST.stands.st.calm, 'качнулся по льду — вмятина или покой прежний');
+    // пришёл на льду: отпустил — докатывает 20 точек; встал — где докатился
+    reset(); for (let i = 0; i < 300; i++) frame({ x: f.x, y: f.y + 20 }, false);
+    for (let i = 0; i < 20; i++) frame({ x: f.x, y: f.y + 20 - i }, true, NOW, true);
+    for (let i = 0; i < 330; i++) frame(f, true, NOW, false);
+    step(f, 0, 1);
+    eq(JSON.stringify(ST.stands.mine.map(s => [s.x, s.y])), JSON.stringify([[f.x, f.y]]), 'встал не там, где докатился');
     reset();
   });
   test('стоянка: в вмятине тянет, как стоящего спиной к краю; покой прежний', () => {
@@ -4208,14 +4241,45 @@ setCtx(ctx);
     assert(!ST.onStandFall(fall.x, fall.y, () => 0, NOW), 'упал сразу — цепочка из ничего');
     reset();
   });
-  test('стоянка: срок — 30 суток у огня, полтора к краю; одно перо и одна убыль; ни слов, ни счёта', () => {
+  test('стоянка: срок — 30 суток у огня (на ближней настоящей стоянке каждой стороны), полтора к краю', () => {
     const at = d => ST.termOf(MIDX, T0.y0 - 3300 - 1120 * d) / DAY;
-    assert(Math.abs(at(0.5) - 30) < 1e-6 && Math.abs(at(0.9) - 1.5) < 1e-6 && at(0.7) < at(0.6) && at(0.8) < at(0.7), `срок ${at(0.5)} ${at(0.7)} ${at(0.9)}`);
+    assert(Math.abs(at(ST.NEAR) - 30) < 1e-6 && Math.abs(at(0.9) - 1.5) < 1e-6 && at(0.75) < at(0.7) && at(0.8) < at(0.75), `срок ${at(ST.NEAR)} ${at(0.7)} ${at(0.9)}`);
+    // ближняя к огню настоящая стоянка (распад впервые 50 — по макушке, с рельефом) — везде месяц
+    const MIDY = (T0.y0 + T0.y1) / 2;
+    const SIDES = [
+      ['N', t => ({ o: { x: MIDX + t, y: T0.y0 - 3300 }, u: [0, -1] }), [0, 1]], ['S', t => ({ o: { x: MIDX + t, y: T0.y1 + 3300 }, u: [0, 1] }), [0, -1]],
+      ['E', t => ({ o: { x: T0.x1 + 3300, y: MIDY + t }, u: [1, 0] }), [-1, 0]], ['W', t => ({ o: { x: T0.x0 - 3300, y: MIDY + t }, u: [-1, 0] }), [1, 0]],
+    ];
+    const lays = f => { reset(); standAt(f); return step(f, ...back) && ST.stands.mine.length === 1; };
+    let back, worst = Infinity, where = '';
+    for (const [side, ray, b] of SIDES) for (const t of [-600, -150, 300, 700]) {
+      back = b;
+      const { o, u } = ray(t), at = d => { for (let k = 0; k < 2000; k++) { const p = { x: o.x + u[0] * k, y: o.y + u[1] * k }; if (ST.depthAt(p.x, p.y) >= d) return p; } };
+      let d = 0.45;
+      while (d < 0.8 && !lays(at(d))) d += 0.03;
+      d -= 0.03;
+      while (!lays(at(d))) d += 0.004;
+      const term = ST.stands.mine[0].exp - NOW;
+      if (term < worst) { worst = term; where = `${side} ${t} d ${d.toFixed(3)}`; }
+    }
+    assert(worst / DAY > 29.99, `ближняя стоянка — не месяц: ${(worst / DAY).toFixed(1)} суток (${where})`);
+    reset();
+  });
+  test('стоянка: одно перо и одна убыль; ни слов, ни счёта', () => {
     const f = north(0.7);
     reset();
-    const dent = { kind: 'dent', x: f.x, y: f.y, exp: NOW + 4 * DAY, path: null }, chain = { kind: 'chain', x: f.x + 30, y: f.y, exp: NOW + 4 * DAY, path: [0, 9, 1, 9, -1, 9, 0, 9] };
+    const T = ST.termOf(f.x, f.y), dent = { kind: 'dent', x: f.x, y: f.y, exp: NOW + 0.1 * T, path: null }, chain = { kind: 'chain', x: f.x + 30, y: f.y, exp: NOW + 0.1 * ST.termOf(f.x + 30, f.y), path: [0, 9, 1, 9, -1, 9, 0, 9] };
     ST.stands.mine.push(dent, chain);
+    assert(ST.keptOf(dent, NOW) > 0.3 && ST.keptOf(dent, NOW) < 0.5, `не в поре заноса: ${ST.keptOf(dent, NOW)}`);
     eq(ST.keptOf(dent, NOW), ST.keptOf(chain, NOW), 'заносит по-разному');
+    {                                                   // и перо в поре заноса одно: самая тёмная строка подошвы
+      const al = []; let cur = 1;
+      RN.drawStands(new Proxy({}, { get(t, k) { return k === 'fillRect' ? (x, y) => al.push([x, y, cur]) : () => {}; }, set(t, k, v) { if (k === 'globalAlpha') cur = v; return true; } }), f.x - 320, f.y - 180, 640, 360, NOW);
+      const top = x0 => Math.max(...al.filter(([x]) => x >= x0 - 6 && x <= x0 + 6).map(r => r[2]));
+      const last = ST.soles(chain).at(-1);
+      assert(top(f.x) > 0.2 && Math.abs(top(f.x) - top(last.x)) < 1e-9, `перо у вмятины и у полной подошвы цепочки — разное: ${top(f.x)} ${top(last.x)}`);
+    }
+    dent.exp = chain.exp = NOW + 4 * DAY;
     const draw = () => {
       const log = [];
       RN.drawStands(new Proxy({}, { get(t, k) { return (...a) => log.push([k, ...a]); }, set(t, k, v) { log.push(['=' + k, v]); return true; } }), f.x - 320, f.y - 180, 640, 360, NOW);
@@ -4227,7 +4291,14 @@ setCtx(ctx);
     assert(L.filter(([k]) => k === 'fillRect').length >= 3 * (2 + 5), 'перо не по подошвам');
     eq(L.at(-1).join(), '=globalAlpha,1', 'прозрачность осталась');
     const a = ST.saveStands(NOW);
-    assert(a.every(q => Object.keys(q).every(k => 'kxyep'.includes(k))), 'в сохранении лишнее: ' + JSON.stringify(a));
+    assert(a.every(q => Object.keys(q).every(k => 'kxyepn'.includes(k))), 'в сохранении лишнее: ' + JSON.stringify(a));
+    // голова цепочки (у обрыва) за верхним краем кадра, хвост — в кадре: хвост рисуется
+    reset();
+    const camY = f.y - 180, head = { kind: 'chain', x: f.x, y: camY - 30, exp: NOW + 4 * DAY, path: Array.from({ length: 11 }, (_, i) => i % 2 ? 9 : 0).concat([0]).slice(0, 22) };
+    ST.stands.mine.push(head);
+    let rects = 0;
+    RN.drawStands(new Proxy({}, { get(t, k) { return k === 'fillRect' ? (x, y) => { if (y >= camY) rects++; } : () => {}; }, set() { return true; } }), f.x - 320, camY, 640, 360, NOW);
+    assert(ST.soles(head).some(r => r.y >= camY) && rects > 0, 'голова цепочки за кадром — хвост в кадре не рисуется');
     reset();
   });
   test('стоянка: у столба вмятина впереди — один срок сверху и «Второй убыл»; живой второй — HOR_TWO; шагнул — прежняя строка', () => {
@@ -4264,11 +4335,22 @@ setCtx(ctx);
     ST.loadStands([...sv, { k: 'd', x: 'a', y: 1, e: NOW + DAY }, null, { k: 'c', x: 1, y: 1, e: NOW - 5 }], NOW);
     eq(JSON.stringify(ST.saveStands(NOW)), JSON.stringify(sv), 'не то же после загрузки');
     eq(ST.stands.mine[1].path.length, 6, 'след цепочки');
+    // встал в чужую — у себя копия, своей не стала: в сохранении с пометкой, падение не трогает
+    ST.stands.mine.push({ kind: 'dent', x: f.x + 100, y: f.y, exp: NOW + 4 * DAY, path: null, own: false });
+    const sv2 = ST.saveStands(NOW);
+    ST.loadStands(JSON.parse(JSON.stringify(sv2)), NOW);
+    eq(ST.stands.mine.find(q => q.x === f.x + 100).own, false, 'чужая после загрузки стала своей');
+    eq(ST.stands.mine.find(q => q.x === f.x).own, true, 'своя после загрузки стала чужой');
     if (ST.FALL_HALVES) {
       ST.onStandFall(f.x, f.y - 500, () => 0, NOW);
-      eq(ST.stands.mine.find(q => q.y === f.y).exp, NOW + 2 * DAY, 'своя на той стороне не вдвое');
+      eq(ST.stands.mine.find(q => q.x === f.x && q.y === f.y).exp, NOW + 2 * DAY, 'своя на той стороне не вдвое');
       eq(ST.stands.mine.find(q => q.y === s.y).exp, NOW + 4 * DAY, 'на другой стороне — вдвое');
+      eq(ST.stands.mine.find(q => q.x === f.x + 100).exp, NOW + 4 * DAY, 'чужую, в которую вставал, падение убавило');
     }
+    // встал в чужую из базы и шагнул назад — копия у себя чужая
+    reset(); ST.stands.net.set(3, { id: 3, kind: 'dent', x: f.x, y: f.y, exp: NOW + 3600e3, path: null });
+    standAt(f); step(f, 0, 1);
+    eq(ST.stands.mine.length === 1 && ST.stands.mine[0].own, false, 'копия чужой — своя');
     reset();
   });
   // сеть: подгрузка рамкой за огнём, своя — в базу; ответ молча
@@ -4276,8 +4358,10 @@ setCtx(ctx);
   const fake = {
     kind: 'fake', uid: 'me', on() {}, async start() { return true; }, sendPos() {}, stop() {}, async notesIn() { return []; },
     async standsIn(b) { asked.push(b); return [{ id: 7, kind: 'dent', x: f0.x + 20, y: f0.y, exp: Date.now() + DAY, path: null }, { id: 8, kind: 'bad', x: 1, y: 1, exp: 1 }]; },
-    async addStand(s) { sent.push(s); return { id: 9, ...s, exp: Date.now() + DAY }; },
+    async addStand(s) { sent.push(s); order.push('leave'); return { id: 9, ...s, exp: Date.now() + DAY }; },
+    async standFall() { order.push('fall'); await null; await null; await null; order.push('fall-done'); },
   };
+  const order = [];
   ST._resetStands(); NET._resetNet();
   const p = { x: f0.x - 6, y: f0.y - 23 };
   NET.stepNet(p, 'surface');
@@ -4286,19 +4370,36 @@ setCtx(ctx);
   NET.stepNet(p, 'surface'); await new Promise(r => queueMicrotask(r)); await null; await null;
   NET.stepNet(p, 'surface');
   const r = await NET.netLeaveStand({ kind: 'dent', x: f0.x, y: f0.y, path: null });
+  order.length = 0;
+  NET.netStandFall(f0.x, f0.y - 200);
+  await NET.netLeaveStand({ kind: 'chain', x: f0.x, y: f0.y, path: [0, 9, 0, 9, 0, 9] });
+  const order1 = order.join();
   test('стоянка: сеть — подгружает рамкой за огнём, своя уходит в базу; без сети тихо', () => {
     eq(off, 0, 'без сети спрашивает');
     eq(asked.length, 1, 'подгрузок');
     assert(asked[0].x0 <= f0.x - 600 && asked[0].x1 >= f0.x + 600, 'рамка');
     eq(ST.stands.net.size >= 1 && ST.stands.net.has(7) && !ST.stands.net.has(8), true, 'из базы не легло или легло порченое');
-    eq(sent.length, 1); eq(r.id, 9);
+    eq(sent.length, 2); eq(r.id, 9);
+    eq(order1, 'fall,fall-done,leave', 'цепочка ушла в базу раньше убыли');
+    // рамка — и наружу: из-за огня (глубина 0) видна вся полоса столба до 0,9 и шире взгляда
+    const z = north(0.0), b = ST.standsBox(z.x, z.y, 700), far = north(0.9);
+    assert(b.y0 <= far.y - 50 && b.x0 <= z.x - ST.LOOK_W && b.x1 >= z.x + ST.LOOK_W && b.y1 >= z.y + 600, `рамка не достаёт до 0,9: ${JSON.stringify(b)} ${far.y}`);
     eq(ST.standsIn(f0.x - 50, f0.y - 50, f0.x + 50, f0.y + 50).length, 2, 'своя и чужая рядом');
   });
   NET._resetNet(); ST._resetStands();
   const M = src('main.js');
   test('стоянка: проводка — ждёт за бумагой, окно рядом с позёмкой, перо после записок, сохранение', () => {
     assert(/updateBrainrot\(player\);\s*\n[^\n]*\n\s*if \(stepStands\(player\.x \+ 6, player\.y \+ 23, \{ active: !isFrozen\(\) && !inBrainrotLoop\(\)/.test(M), 'стоянка не после распада');
-    assert(M.indexOf('if (!state.is(\'game\')) { stopHero(); return; }') < M.indexOf('if (stepStands('), 'стоянка не ждёт за бумагой');
+    // за бумагой ждёт: шаг стоянки — только в updateWorldSystems, а её зовёт только updateGame,
+    // и только после «не в игре» и «карта открыта»
+    const G = M.slice(M.indexOf('function updateGame() {'), M.indexOf('function updateWorldSystems() {'));
+    const calls = s => (s.match(/updateWorldSystems\(\);/g) || []).length;
+    assert(G.length > 100 && calls(G) >= 1 && calls(M) === calls(G), 'updateWorldSystems зовут не только из updateGame');
+    const gate = Math.max(G.indexOf("if (!state.is('game')) { stopHero(); return; }"), G.indexOf('if (isMapOpen()) { stopHero(); return; }'));
+    assert(G.indexOf("if (!state.is('game'))") >= 0 && G.indexOf('if (isMapOpen())') >= 0 && gate < G.indexOf('updateWorldSystems();'), 'стоянка не ждёт за бумагой');
+    eq((M.match(/stepStands\(/g) || []).length, 1, 'шаг стоянки не в одном месте');
+    const W = M.slice(M.indexOf('function updateWorldSystems() {'));
+    assert(W.indexOf('if (stepStands(') > 0 && W.indexOf('if (stepStands(') < W.indexOf('\n}\n'), 'шаг стоянки не в updateWorldSystems');
     assert(/setClearings\(\[\.\.\.beyondClearings\(camX, camY\), \.\.\.standClearings\(camX, camY, vw, vh\)\]\)/.test(M), 'окна вмятин');
     assert(M.indexOf('drawStands(worldCtx') > M.indexOf('drawNotes(worldCtx'), 'перо не после записок');
     assert(/stands: saveStands\(\)/.test(M) && /loadStands\(savedData\.stands\)/.test(M), 'сохранение');

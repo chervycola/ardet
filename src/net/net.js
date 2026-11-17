@@ -20,7 +20,7 @@ import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
 import { fromOldGeo, toOldGeo, RINGS_D, warpedDist } from '../world/disc.js';
-import { putNetStands } from '../world/stands.js';
+import { putNetStands, standsBox } from '../world/stands.js';
 import { cutOf } from '../sprites/player.js';
 import { isCut } from '../sprites/wardrobe.js';
 
@@ -138,18 +138,24 @@ export function stepNet(p, layer) {
 async function fetchStands(me) {
   net.standsFetching = true;
   net.standsAt = { x: me.x, y: me.y, t: net.t };
-  try { putNetStands(await net.T.standsIn({ x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R }), me, 2 * FETCH_R); } catch (e) {}
+  try { putNetStands(await net.T.standsIn(standsBox(me.x, me.y, FETCH_R)), me, 2 * FETCH_R); } catch (e) {}
   net.standsFetching = false;
 }
-// своя стоянка — в базу; продлённая базой — та же, с её сроком
+// своя стоянка — в базу; продлённая базой — та же, с её сроком. После падения — когда база
+// уже убавила прежние: иначе цепочка этого падения могла лечь раньше и попасть под убыль (ревью 17.11)
+let fallP = null;
 export async function netLeaveStand(s) {
   if (!net.on || !net.T.addStand) return { error: 'off' };
+  if (fallP) await fallP;
   const r = await net.T.addStand(s);
   if (r && !r.error) putNetStands([r]);
   return r || { error: 'net' };
 }
 // упал (предложение суда): база вдвое сокращает срок стоянок, где ты стоял последним, на этой стороне
-export function netStandFall(x, y) { if (net.on && net.T.standFall) net.T.standFall({ x, y }); }
+export function netStandFall(x, y) {
+  if (!net.on || !net.T.standFall) return;
+  const p = fallP = Promise.resolve(net.T.standFall({ x, y })).catch(() => {}).then(() => { if (fallP === p) fallP = null; });
+}
 async function fetchNotes(me) {
   net.fetching = true;
   net.fetched = { x: me.x, y: me.y, t: net.t };
@@ -226,6 +232,7 @@ export const notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n
 // для проверок
 export function _resetNet() {
   if (net.T && net.on) net.T.stop();
+  fallP = null;
   Object.assign(net, { on: false, kind: null, T: null, t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false, standsAt: null, standsFetching: false, voices: [] });
   net.others.clear(); net.notes.clear(); net.muted.clear(); net.gone.clear();
 }

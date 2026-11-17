@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 080 195. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 080 195. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 082 596. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 082 596. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -934,7 +934,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='995fbc3 · 2026-11-17';console.log('[оттиск]', '995fbc3 · 2026-11-17');
+<script>window.ARDET_BUILD='8e1991a · 2026-11-17';console.log('[оттиск]', '8e1991a · 2026-11-17');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -68387,7 +68387,7 @@ System.register("net/filter", [], function (exports_175, context_175) {
 });
 System.register("world/stands", ["world/disc", "world/feedPull"], function (exports_176, context_176) {
     "use strict";
-    var disc_js_52, feedPull_js_1, OUTER, BAND, DAY, PULLED, CALM, DEEP, IN_R, BACK, LOOK_W, MERGE, CAP, CELL, STRIDE, CUT0, CUT1, PRINTS, TERM0, TERM1, FALL_HALVES, MINE_MAX, termOf, keptOf, sideOf, stands, netOut, near, shown;
+    var disc_js_52, feedPull_js_1, OUTER, BAND, DAY, PULLED, CALM, DEEP, IN_R, BACK, LOOK_W, MERGE, CAP, CELL, STRIDE, CUT0, CUT1, PRINTS, TERM0, TERM1, NEAR, FAR, FALL_HALVES, MINE_MAX, termOf, keptOf, sideOf, stands, netOut, near, shown, AHEAD;
     var __moduleName = context_176 && context_176.id;
     // глубина за огнём с рельефом (как edges.js), по ногам; не за огнём — -1
     function depthAt(x, y) { const d = disc_js_52.warpedDist(x, y); return d <= OUTER ? -1 : Math.min(1, (d - OUTER) / BAND); }
@@ -68422,7 +68422,8 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
     }
     exports_176("standBack", standBack);
     // оставить своё: рядом своя или из базы — продлить (срок по месту той, в которую встал), иначе положить,
-    // если на отрезке не полно. В базу — всё равно: база решает за всех
+    // если на отрезке не полно. В базу — всё равно: база решает за всех. Встал в чужую — у себя её
+    // копия (own: false): своей она от этого не стала, падение её не трогает
     function leave(kind, x, y, path, now) {
         const hit = s => s.kind === kind && s.exp > now && near(s, x, y, MERGE[kind]);
         const renew = s => { s.exp = Math.max(s.exp, now + termOf(s.x, s.y)); };
@@ -68434,15 +68435,18 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
         else {
             const at = n || { x, y, path }, cell = s => s.kind === kind && s.exp > now && Math.floor(s.x / CELL) === Math.floor(at.x / CELL) && Math.floor(s.y / CELL) === Math.floor(at.y / CELL);
             if (stands.mine.filter(cell).length < CAP[kind])
-                stands.mine.push({ kind, x: at.x, y: at.y, path: at.path || null, exp: now + termOf(at.x, at.y) });
+                stands.mine.push({ kind, x: at.x, y: at.y, path: at.path || null, exp: now + termOf(at.x, at.y), own: !n });
         }
         stands.mine = stands.mine.filter(s => s.exp > now).sort((a, b) => b.exp - a.exp).slice(0, MINE_MAX);
         if (netOut)
             netOut.leave({ kind, x, y, path });
         return true;
     }
-    // шаг: ноги (fx, fy); o — { active, still, level, calm, now }. active — за изгородью, наверху,
-    // не падает, не в петле СКРОЛЛ. true — легло новое или продлено (main сохранит)
+    // шаг: ноги (fx, fy); o — { active, still, moving, level, calm, now }. active — за изгородью, наверху,
+    // не падает, не в петле СКРОЛЛ; moving — ещё идёт своим ходом (скольжение по льду с разгона — ход,
+    // снос лентой — нет). true — легло новое или продлено (main сохранит).
+    // Стоянка — там, где встал (докатился и лента одна понесла): x0, y0. Пока покой не набрался,
+    // лента сносит и из вмятины; продлевается та, в которую встал, а не та, куда снесло (ревью 17.11)
     function stepStands(fx, fy, o) {
         const now = o.now ?? Date.now();
         if (!(o.active && depthAt(fx, fy) > 0)) {
@@ -68460,9 +68464,16 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
                 T.shift();
         }
         let st = stands.st;
-        if (o.still) { // стоит: лента ещё несёт, пока покой не набрался
+        // стоит: лента ещё несёт, пока покой не набрался. Шагнул и отпустил, а лёд докатывает —
+        // это ещё шаг: меряем до конца хода (ревью 17.11: тап назад на льду терял стоянку)
+        if (o.still && !(st && st.going && o.moving)) {
             if (!st || st.going)
-                st = stands.st = { x: fx, y: fy, peak: 0, calm: false, going: false };
+                st = stands.st = { x: fx, y: fy, x0: fx, y0: fy, rest: false, peak: 0, calm: false, going: false };
+            if (!st.rest) {
+                st.x0 = fx;
+                st.y0 = fy;
+                st.rest = !o.moving;
+            } // докатился — тут и встал
             st.x = fx;
             st.y = fy;
             st.peak = Math.max(st.peak, o.level || 0);
@@ -68477,12 +68488,12 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
         if (l < BACK)
             return false; // ещё не ясно, куда шагнул
         stands.st = null;
-        if (!st.calm || st.peak < PULLED || depthAt(st.x, st.y) > DEEP)
+        if (!st.calm || st.peak < PULLED || depthAt(st.x0, st.y0) > DEEP)
             return false;
         const [ux, uy] = feedPull_js_1.outward(st.x, st.y);
         if ((dx * ux + dy * uy) / l > -0.5)
             return false; // вперёд или вбок — не стоянка
-        return leave('dent', Math.round(st.x), Math.round(st.y), null, now);
+        return leave('dent', Math.round(st.x0), Math.round(st.y0), null, now);
     }
     exports_176("stepStands", stepStands);
     // упал за огнём: цепочка по своему следу; последние CUT0–CUT1 точек пути съел растр
@@ -68493,7 +68504,7 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
         if (FALL_HALVES) {
             const side = sideOf(fx, fy);
             for (const s of stands.mine)
-                if (s.exp > now && sideOf(s.x, s.y) === side)
+                if (s.own !== false && s.exp > now && sideOf(s.x, s.y) === side)
                     s.exp = now + (s.exp - now) / 2;
             if (netOut)
                 netOut.fall(Math.round(fx), Math.round(fy));
@@ -68545,6 +68556,12 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
         return out;
     }
     exports_176("standClearings", standClearings);
+    function standsBox(x, y, r) {
+        const [ux, uy] = feedPull_js_1.outward(x, y);
+        return { x0: Math.round(x - r + Math.min(0, ux * AHEAD)), x1: Math.round(x + r + Math.max(0, ux * AHEAD)),
+            y0: Math.round(y - r + Math.min(0, uy * AHEAD)), y1: Math.round(y + r + Math.max(0, uy * AHEAD)) };
+    }
+    exports_176("standsBox", standsBox);
     // у столба: живая вмятина впереди, в полосе взгляда — второй стоял дальше и убыл
     function dentAhead(x, y, now = Date.now()) {
         const [ux, uy] = feedPull_js_1.outward(x, y);
@@ -68565,12 +68582,12 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
     exports_176("putNetStands", putNetStands);
     // сохранение: свои и живые
     function saveStands(now = Date.now()) {
-        return stands.mine.filter(s => s.exp > now).map(s => ({ k: s.kind === 'chain' ? 'c' : 'd', x: s.x, y: s.y, e: s.exp, ...(s.path ? { p: s.path } : {}) }));
+        return stands.mine.filter(s => s.exp > now).map(s => ({ k: s.kind === 'chain' ? 'c' : 'd', x: s.x, y: s.y, e: s.exp, ...(s.path ? { p: s.path } : {}), ...(s.own === false ? { n: 1 } : {}) }));
     }
     exports_176("saveStands", saveStands);
     function loadStands(list, now = Date.now()) {
         stands.mine = (Array.isArray(list) ? list : []).filter(q => q && Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.e) && q.e > now)
-            .map(q => ({ kind: q.k === 'c' ? 'chain' : 'dent', x: q.x, y: q.y, exp: q.e, path: q.k === 'c' && Array.isArray(q.p) ? q.p.filter(Number.isFinite) : null }))
+            .map(q => ({ kind: q.k === 'c' ? 'chain' : 'dent', x: q.x, y: q.y, exp: q.e, path: q.k === 'c' && Array.isArray(q.p) ? q.p.filter(Number.isFinite) : null, own: q.n !== 1 }))
             .slice(0, MINE_MAX);
     }
     exports_176("loadStands", loadStands);
@@ -68592,9 +68609,12 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
             exports_176("MERGE", MERGE = { dent: 16, chain: 40 }), exports_176("CAP", CAP = { dent: 3, chain: 2 }), exports_176("CELL", CELL = 320); // ближе — та же; на отрезок
             exports_176("STRIDE", STRIDE = 9), exports_176("CUT0", CUT0 = 60), exports_176("CUT1", CUT1 = 150), exports_176("PRINTS", PRINTS = 12); // шаг следа; сколько съел растр; отпечатков
             exports_176("TERM0", TERM0 = 30 * DAY), exports_176("TERM1", TERM1 = 1.5 * DAY);
+            // срок держит 30 суток до NEAR (без рельефа): ближайшая стоянка, где распад впервые 50
+            // (глубина с рельефом 0,55; рельеф ±0,07, ноги и макушка ±0,02), — везде месяц (ревью 17.11)
+            exports_176("NEAR", NEAR = 0.63), exports_176("FAR", FAR = 0.9);
             exports_176("FALL_HALVES", FALL_HALVES = true); // предложение суда: падение вдвое короче своим на той стороне
             MINE_MAX = 24;
-            exports_176("termOf", termOf = (x, y) => TERM0 * Math.pow(TERM1 / TERM0, Math.min(1, Math.max(0, (rectDepth(x, y) - 0.5) / 0.4))));
+            exports_176("termOf", termOf = (x, y) => TERM0 * Math.pow(TERM1 / TERM0, Math.min(1, Math.max(0, (rectDepth(x, y) - NEAR) / (FAR - NEAR)))));
             // сколько не занесло 0..1: заносит последнюю четверть срока — вмятины и цепочки одинаково
             exports_176("keptOf", keptOf = (s, now = Date.now()) => Math.max(0, Math.min(1, (s.exp - now) / (0.25 * termOf(s.x, s.y)))));
             // сторона края — как edges.js: по наибольшему вылету за городок
@@ -68603,6 +68623,9 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
             netOut = null; // { leave(s), fall(x, y) } — сеть, если есть
             near = (a, x, y, r) => (a.x - x) ** 2 + (a.y - y) ** 2 <= r * r;
             shown = s => s.kind !== 'dent' || depthAt(s.x, s.y) <= DEEP;
+            // рамка подгрузки из базы вокруг (x, y): r во все стороны и ещё AHEAD наружу — столб у 0,3
+            // смотрит до 0,9 (≈ 700 точек вперёд), а подгрузка бывает и за 350 точек до столба (ревью 17.11)
+            exports_176("AHEAD", AHEAD = 500);
         }
     };
 });
@@ -68616,7 +68639,7 @@ System.register("net/local", ["net/filter", "world/stands"], function (exports_1
         if (s.kind === 'dent')
             return !s.path && d >= 0.47 && d <= 0.97;
         const P = s.path;
-        if (s.kind !== 'chain' || !Array.isArray(P) || P.length < 6 || P.length > 32 || P.length % 2 || d < 0.45 || d > 0.99)
+        if (s.kind !== 'chain' || !Array.isArray(P) || P.length < 6 || P.length > 32 || P.length % 2 || d < 0.45 || d > 1.07)
             return false;
         for (let i = 0, x = s.x, y = s.y; i < P.length; i += 2) {
             x += P[i];
@@ -68703,7 +68726,7 @@ System.register("net/local", ["net/filter", "world/stands"], function (exports_1
                     const cell = q => q.kind === s.kind && q.exp > now && Math.floor(q.x / stands_js_1.CELL) === Math.floor(s.x / stands_js_1.CELL) && Math.floor(q.y / stands_js_1.CELL) === Math.floor(s.y / stands_js_1.CELL);
                     if (list.filter(cell).length >= stands_js_1.CAP[s.kind])
                         return { error: 'full' };
-                    list.push(out = { id: 'S' + now.toString(36) + Math.random().toString(36).slice(2, 6), ...s, exp: now + stands_js_1.termOf(s.x, s.y), last: me });
+                    list.push(out = { id: 'S' + now.toString(36) + Math.random().toString(36).slice(2, 6), ...s, exp: now + stands_js_1.termOf(s.x, s.y), by: me, last: me, at: now });
                 }
                 acts.push({ who: me, act, at: now });
                 write(list, SKEY);
@@ -68713,7 +68736,7 @@ System.register("net/local", ["net/filter", "world/stands"], function (exports_1
             async standFall(at) {
                 const now = Date.now(), side = stands_js_1.sideOf(at.x, at.y), list = read(SKEY);
                 for (const q of list)
-                    if (q.last === me && q.exp > now && stands_js_1.sideOf(q.x, q.y) === side)
+                    if (q.by === me && q.last === me && q.exp > now && !(now - q.at < 10e3) && stands_js_1.sideOf(q.x, q.y) === side)
                         q.exp = now + (q.exp - now) / 2;
                 write(list, SKEY);
                 return {};
@@ -68933,7 +68956,7 @@ System.register("net/supabase", [], function (exports_178, context_178) {
 });
 System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter", "world/disc", "world/stands", "sprites/player", "sprites/wardrobe"], function (exports_179, context_179) {
     "use strict";
-    var config_js_1, local_js_1, supabase_js_1, filter_js_2, disc_js_53, stands_js_2, player_js_2, wardrobe_js_3, FACES, lookOf, NOTE_X, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, notesIn;
+    var config_js_1, local_js_1, supabase_js_1, filter_js_2, disc_js_53, stands_js_2, player_js_2, wardrobe_js_3, FACES, lookOf, NOTE_X, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, fallP, notesIn;
     var __moduleName = context_179 && context_179.id;
     function oldBox(b) {
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -69081,15 +69104,16 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
         net.standsFetching = true;
         net.standsAt = { x: me.x, y: me.y, t: net.t };
         try {
-            stands_js_2.putNetStands(await net.T.standsIn({ x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R }), me, 2 * FETCH_R);
+            stands_js_2.putNetStands(await net.T.standsIn(stands_js_2.standsBox(me.x, me.y, FETCH_R)), me, 2 * FETCH_R);
         }
         catch (e) { }
         net.standsFetching = false;
     }
-    // своя стоянка — в базу; продлённая базой — та же, с её сроком
     async function netLeaveStand(s) {
         if (!net.on || !net.T.addStand)
             return { error: 'off' };
+        if (fallP)
+            await fallP;
         const r = await net.T.addStand(s);
         if (r && !r.error)
             stands_js_2.putNetStands([r]);
@@ -69097,8 +69121,12 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
     }
     exports_179("netLeaveStand", netLeaveStand);
     // упал (предложение суда): база вдвое сокращает срок стоянок, где ты стоял последним, на этой стороне
-    function netStandFall(x, y) { if (net.on && net.T.standFall)
-        net.T.standFall({ x, y }); }
+    function netStandFall(x, y) {
+        if (!net.on || !net.T.standFall)
+            return;
+        const p = fallP = Promise.resolve(net.T.standFall({ x, y })).catch(() => { }).then(() => { if (fallP === p)
+            fallP = null; });
+    }
     exports_179("netStandFall", netStandFall);
     async function fetchNotes(me) {
         net.fetching = true;
@@ -69215,6 +69243,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
     function _resetNet() {
         if (net.T && net.on)
             net.T.stop();
+        fallP = null;
         Object.assign(net, { on: false, kind: null, T: null, t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false, standsAt: null, standsFetching: false, voices: [] });
         net.others.clear();
         net.notes.clear();
@@ -69270,13 +69299,16 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
                 t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false,
                 standsAt: null, standsFetching: false, // стоянки: где подгружены, идёт ли подгрузка
             });
+            // своя стоянка — в базу; продлённая базой — та же, с её сроком. После падения — когда база
+            // уже убавила прежние: иначе цепочка этого падения могла лечь раньше и попасть под убыль (ревью 17.11)
+            fallP = null;
             exports_179("notesIn", notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n.layer === 'surface' && n.x > x0 && n.x < x1 && n.y > y0 && n.y < y1));
         }
     };
 });
 System.register("render/net", ["sprites/player", "render/context", "world/whisper", "net/net", "world/stands"], function (exports_180, context_180) {
     "use strict";
-    var player_js_3, context_js_18, whisper_js_3, net_js_1, stands_js_3, K0, L1, L2, BO, S2, KV, CLEAR, GHOST, SPEED, AGE, READ, WRAP, LINE, buf, NIGHT;
+    var player_js_3, context_js_18, whisper_js_3, net_js_1, stands_js_3, K0, L1, L2, BO, S2, KV, CLEAR, GHOST, SPEED, AGE, READ, WRAP, LINE, buf, NIGHT, REACH;
     var __moduleName = context_180 && context_180.id;
     function sheet() {
         if (buf !== null)
@@ -69364,7 +69396,7 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
     }
     exports_180("drawNotes", drawNotes);
     function drawStands(ctx, camX, camY, vw, vh, now = Date.now()) {
-        for (const s of stands_js_3.standsIn(camX - 8, camY - 8, camX + vw + 8, camY + vh + 8, now)) {
+        for (const s of stands_js_3.standsIn(camX - REACH, camY - REACH, camX + vw + REACH, camY + vh + REACH, now)) {
             const k = stands_js_3.keptOf(s, now);
             for (const r of stands_js_3.soles(s)) {
                 const a = k * r.a;
@@ -69491,7 +69523,8 @@ System.register("render/net", ["sprites/player", "render/context", "world/whispe
             // стоянки на земле: вмятины и цепочки — одним пером. Подошва — оттиск ночью (дальний край
             // глубже), крошка выдавлена на ближний край костью: на льду читается тень, на хламе — край.
             // Заносит — бледнеет, у обеих одинаково; ни слов, ни счёта, своя не отмечена
-            NIGHT = '#0D0B0A';
+            // Рамка шире кадра на длину цепочки: её голова (у обрыва) бывает за кадром, а хвост — в нём
+            NIGHT = '#0D0B0A', REACH = 8 + stands_js_3.PRINTS * 24;
         }
     };
 });
@@ -72811,7 +72844,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             edges_js_2.update(player);
             brainrot_js_1.update(player);
             // «Стоянка на двоих»: простоял до покоя и шагнул назад — вмятина (calmOf только читается); легла — в сохранение
-            if (stands_js_4.stepStands(player.x + 6, player.y + 23, { active: !brainrot_js_1.isFrozen() && !brainrot_js_1.inLoop(), still: player.still === true, level: brainrot_js_1.getLevel(), calm: brainrot_js_1.calmOf() }))
+            if (stands_js_4.stepStands(player.x + 6, player.y + 23, { active: !brainrot_js_1.isFrozen() && !brainrot_js_1.inLoop(), still: player.still === true, moving: player.moving === true, level: brainrot_js_1.getLevel(), calm: brainrot_js_1.calmOf() }))
                 saveNow();
         }
         if (time_js_48.t % 30 === 0) {

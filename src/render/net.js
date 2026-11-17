@@ -11,7 +11,7 @@ import { drawPlayer } from '../sprites/player.js';
 import { setCtx } from './context.js';
 import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
 import { net, othersIn, notesIn } from '../net/net.js';
-import { standsIn, soles, keptOf } from '../world/stands.js';
+import { standsIn, soles, keptOf, PRINTS } from '../world/stands.js';
 
 const K0 = '#15100c', L1 = '#c8b89a', L2 = '#b0a284', BO = '#D9CFB8', S2 = '#33302e', KV = '#C23B2B';
 const CLEAR = 0.9;                       // смотрят вдаль вдвоём: в поле просто стоит человек
@@ -69,9 +69,10 @@ export function drawNotes(ctx, camX, camY, vw, vh) {
 // стоянки на земле: вмятины и цепочки — одним пером. Подошва — оттиск ночью (дальний край
 // глубже), крошка выдавлена на ближний край костью: на льду читается тень, на хламе — край.
 // Заносит — бледнеет, у обеих одинаково; ни слов, ни счёта, своя не отмечена
-const NIGHT = '#0D0B0A';
+// Рамка шире кадра на длину цепочки: её голова (у обрыва) бывает за кадром, а хвост — в нём
+const NIGHT = '#0D0B0A', REACH = 8 + PRINTS * 24;
 export function drawStands(ctx, camX, camY, vw, vh, now = Date.now()) {
-  for (const s of standsIn(camX - 8, camY - 8, camX + vw + 8, camY + vh + 8, now)) {
+  for (const s of standsIn(camX - REACH, camY - REACH, camX + vw + REACH, camY + vh + REACH, now)) {
     const k = keptOf(s, now);
     for (const r of soles(s)) {
       const a = k * r.a;

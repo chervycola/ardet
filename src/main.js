@@ -1796,7 +1796,7 @@ function updateWorldSystems() {
   if (canLeaveSettlement()) {
     updateEdges(player); updateBrainrot(player);
     // «Стоянка на двоих»: простоял до покоя и шагнул назад — вмятина (calmOf только читается); легла — в сохранение
-    if (stepStands(player.x + 6, player.y + 23, { active: !isFrozen() && !inBrainrotLoop(), still: player.still === true, level: brainrotLevel(), calm: calmOf() })) saveNow();
+    if (stepStands(player.x + 6, player.y + 23, { active: !isFrozen() && !inBrainrotLoop(), still: player.still === true, moving: player.moving === true, level: brainrotLevel(), calm: calmOf() })) saveNow();
   }
   if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); stepMail(player.x + 6, player.y + 23); stepOpis(ringAt(player.x + 6, player.y + 23)); }   // обмер — ногами; врата по пройденному; створка окна
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание

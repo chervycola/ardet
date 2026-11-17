@@ -21,11 +21,12 @@ language sql immutable as $$
   select (sqrt(power(greatest(0, 4500 - x, x - 8250), 2) + power(greatest(0, 4500 - y, y - 6550), 2)) - 3300) / 1120.0
 $$;
 
--- срок: 30 суток до 0,5 (ближе лента до распада 50 не тянет — стоянок нет), полтора к 0,9
--- и глубже, между — по степени (termOf в src/world/stands.js — то же число)
+-- срок: 30 суток до 0,63 — ближайшая стоянка, где распад впервые 50 (с рельефом 0,55; здесь
+-- рельефа нет, ±0,07), везде получает месяц; полтора к 0,9 и глубже, между — по степени
+-- (termOf в src/world/stands.js, NEAR и FAR — то же число)
 create or replace function public.stand_term(dep double precision) returns interval
 language sql immutable as $$
-  select make_interval(secs => 86400 * 30 * power(0.05, least(1, greatest(0, (dep - 0.5) / 0.4))))
+  select make_interval(secs => 86400 * 30 * power(0.05, least(1, greatest(0, (dep - 0.63) / 0.27))))
 $$;
 
 -- сторона края — как src/world/edges.js: по наибольшему вылету за городок
@@ -36,8 +37,10 @@ language sql immutable as $$
 $$;
 
 -- правдоподобно ли место. Вмятина — в поясе, где лента тянула (клиент: распад ≥ 50 и глубина
--- ≤ 0,9 → без рельефа ~0,47..0,97). Цепочка — обрыв в поясе; след — 3..16 шагов (dx, dy)
--- от обрыва назад, шаг 3..24 точки, весь за огнём, хвост мельче обрыва (шли к краю)
+-- ≤ 0,9 → без рельефа ~0,47..0,97). Цепочка — обрыв в поясе (падение — у 0,97 с рельефом,
+-- по макушке; ноги и рельеф — до 1,07 без него); след — 3..16 шагов (dx, dy) от обрыва назад,
+-- шаг 3..24 точки, весь за огнём, хвост мельче обрыва (шли к краю). Массив — обычный, с 1:
+-- иначе path[1] пуст и проверки шага молча пропускаются (ревью 17.11)
 create or replace function public.stand_place_ok(k text, x integer, y integer, path smallint[]) returns boolean
 language plpgsql immutable as $$
 declare
@@ -45,8 +48,9 @@ declare
   px integer := x; py integer := y; s integer; n integer := coalesce(cardinality(path), 0);
 begin
   if x is null or y is null or x not between 0 and 12750 or y not between 0 and 11050 then return false; end if;
+  if path is not null and (array_ndims(path) <> 1 or array_lower(path, 1) <> 1) then return false; end if;
   if k = 'dent' then return path is null and d between 0.47 and 0.97; end if;
-  if k is distinct from 'chain' or d not between 0.45 and 0.99 then return false; end if;
+  if k is distinct from 'chain' or d not between 0.45 and 1.07 then return false; end if;
   if n not between 6 and 32 or n % 2 <> 0 or array_position(path, null) is not null then return false; end if;
   for i in 1 .. n / 2 loop
     s := path[2 * i - 1] * path[2 * i - 1] + path[2 * i] * path[2 * i];
@@ -128,8 +132,10 @@ begin
     returning s.id, s.kind, s.x, s.y, s.path, s.expires_at;
 end $$;
 
--- (предложение суда, по желанию автора) падение вдвое сокращает остаток срока стоянок
--- на этой стороне, где падавший стоял последним. Чужим — ничего. Молча.
+-- (предложение суда, по желанию автора) падение вдвое сокращает остаток срока своих стоянок
+-- на этой стороне — положенных падавшим, где он же стоял последним. Чужим — ничего, и
+-- продлённая чужая своей не становится (ревью 17.11: иначе продлил — и стёр падениями).
+-- Цепочку этого падения не трогает (легла в последние секунды). Молча.
 -- Не нужно — удалить эту функцию и FALL_HALVES = false в src/world/stands.js
 create or replace function public.stand_fall(p_x integer, p_y integer) returns void
 language plpgsql volatile security definer set search_path = public as $$
@@ -138,7 +144,8 @@ begin
   if me is null or public.stand_depth(p_x, p_y) <= 0 then return; end if;
   if exists (select 1 from public.stand_acts where actor = me and act = 'fall' and at > now() - interval '1 minute') then return; end if;
   update public.stands s set expires_at = now() + (s.expires_at - now()) / 2
-   where s.last_by = me and s.expires_at > now() and public.stand_side(s.x, s.y) = public.stand_side(p_x, p_y);
+   where s.author = me and s.last_by = me and s.expires_at > now() and s.created_at < now() - interval '10 seconds'
+     and public.stand_side(s.x, s.y) = public.stand_side(p_x, p_y);
   insert into public.stand_acts (actor, act) values (me, 'fall');
 end $$;
 

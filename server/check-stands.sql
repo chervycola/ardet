@@ -40,7 +40,7 @@ insert into auth.users values
 \set ok false
 select abs(public.stand_depth(6000, 4500 - 3300 - 784) - 0.7) < 1e-9 and public.stand_depth(6000, 5000) < 0 and public.stand_depth(8250 + 3300 + 560, 5000) between 0.49 and 0.51 as ok \gset
 \if :ok \echo PASS глубина: север 0,7; городок — меньше нуля; восток 0,5 \else \echo FAIL глубина \endif
-select public.stand_term(0.3) = interval '30 days' and public.stand_term(0.5) = interval '30 days'
+select public.stand_term(0.3) = interval '30 days' and public.stand_term(0.5) = interval '30 days' and public.stand_term(0.63) = interval '30 days'
    and abs(extract(epoch from public.stand_term(0.9)) - 1.5 * 86400) < 1 and abs(extract(epoch from public.stand_term(0.99)) - 1.5 * 86400) < 1
    and public.stand_term(0.7) < interval '30 days' and public.stand_term(0.7) > interval '1.5 days' as ok \gset
 \if :ok \echo PASS срок: 30 суток у ближней кромки, полтора к 0,9, между — убывает \else \echo FAIL срок по глубине \endif
@@ -64,6 +64,12 @@ select not public.stand_place_ok('chain', 6000, 4500 - 3300 - 952, '{0,9, 0,60, 
    and not public.stand_place_ok('chain', 6000, 4500 - 3300 - 952, null)
    and not public.stand_place_ok('chain', 6000, 4500 - 3300 - 952, '{0,9, 0,null, 0,9, 0,9}') as ok \gset
 \if :ok \echo PASS место: скачок, след от края, короткий, нечётный, пустой, с дыркой — нет \else \echo FAIL место: дурная цепочка принята \endif
+\set ok false
+select not public.stand_place_ok('chain', 5200, 248, '[2:7]={181,9,0,9,0,30000}') and not public.stand_place_ok('chain', 5200, 248, '[0:5]={0,9,0,9,0,9}') as ok \gset
+\if :ok \echo PASS место: массив не с единицы — нет (иначе шаг не проверяется) \else \echo FAIL место: массив со сдвигом принят \endif
+\set ok false
+select public.stand_place_ok('chain', 6000, 6550 + 3300 + 1176, '{0,-9, 1,-9, -1,-9, 0,-9}') as ok \gset
+\if :ok \echo PASS место: цепочка юга с обрывом на 1,05 без рельефа (рельеф и ноги) — да \else \echo FAIL место: честная цепочка юга отвергнута \endif
 
 -- ── странник 1 ──
 set role anon;
@@ -165,11 +171,11 @@ reset role;
 -- ── падение (по желанию): вдвое — только где стоял последним и только на этой стороне ──
 reset role;
 delete from public.stand_acts;
-insert into public.stands (kind, x, y, expires_at, author, last_by) values
-  ('dent', 9600, 10600, now() + interval '10 days', :'u3', :'u3');            -- юг, свой
+insert into public.stands (kind, x, y, expires_at, author, last_by, created_at) values
+  ('dent', 9600, 10600, now() + interval '10 days', :'u3', :'u3', now() - interval '1 hour');   -- юг, свой
 select id as dsouth from public.stands where y = 10600 \gset
 select id as dnorth from public.stands where x = 9000 and y = 400 \gset
-update public.stands set expires_at = now() + interval '10 days' where id in (:dnorth, :d1);   -- свой на севере и чужой (u2 стоял последним) на севере
+update public.stands set expires_at = now() + interval '10 days', created_at = now() - interval '1 hour' where id in (:dnorth, :d1);   -- свой на севере и чужой (u2 стоял последним) на севере
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'u3', false) \gset
 select public.stand_fall(6000, 4500 - 3300 - 1090);
@@ -178,6 +184,26 @@ select (select expires_at between now() + interval '4.9 days' and now() + interv
    and (select expires_at > now() + interval '9.9 days' from public.stands where id = :dsouth)
    and (select expires_at > now() + interval '9.9 days' from public.stands where id = :d1) as ok \gset
 \if :ok \echo PASS падение: своё на этой стороне — вдвое; на другой и чужое — как было \else \echo FAIL падение \endif
+-- продлил чужую (стал последним) и упал — чужая не убавилась: своей она не стала
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'u2', false) \gset
+select public.stand_fall(6000, 4500 - 3300 - 1090);
+reset role;
+\set ok false
+select expires_at > now() + interval '9.9 days' as ok from public.stands where id = :d1 \gset
+\if :ok \echo PASS падение: продлённая чужая (last_by — падавший) не убавилась \else \echo FAIL падение: стёр чужую, продлив её \endif
+-- цепочка этого падения легла раньше, чем дошла убыль, — её не трогает
+delete from public.stand_acts;
+insert into public.stands (kind, x, y, path, expires_at, author, last_by) values
+  ('chain', 8000, 4500 - 3300 - 952, '{0,9, 2,9, -2,9, 0,9}', now() + interval '2 days', :'u3', :'u3');
+select id as cfresh from public.stands where x = 8000 and kind = 'chain' \gset
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'u3', false) \gset
+select public.stand_fall(6000, 4500 - 3300 - 1090);
+reset role;
+\set ok false
+select expires_at > now() + interval '1.9 days' as ok from public.stands where id = :cfresh \gset
+\if :ok \echo PASS падение: только что легшая цепочка — без убыли \else \echo FAIL падение: свежую цепочку убавило \endif
 
 -- ── старость и анонимы ──
 reset role;

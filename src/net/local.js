@@ -15,7 +15,7 @@ function standOk(s) {
   const d = rectDepth(s.x, s.y);
   if (s.kind === 'dent') return !s.path && d >= 0.47 && d <= 0.97;
   const P = s.path;
-  if (s.kind !== 'chain' || !Array.isArray(P) || P.length < 6 || P.length > 32 || P.length % 2 || d < 0.45 || d > 0.99) return false;
+  if (s.kind !== 'chain' || !Array.isArray(P) || P.length < 6 || P.length > 32 || P.length % 2 || d < 0.45 || d > 1.07) return false;
   for (let i = 0, x = s.x, y = s.y; i < P.length; i += 2) { x += P[i]; y += P[i + 1]; if (rectDepth(x, y) < 0.2 || Math.hypot(P[i], P[i + 1]) > 24) return false; }
   return true;
 }
@@ -75,7 +75,7 @@ export function localTransport(me) {
       else {
         const cell = q => q.kind === s.kind && q.exp > now && Math.floor(q.x / CELL) === Math.floor(s.x / CELL) && Math.floor(q.y / CELL) === Math.floor(s.y / CELL);
         if (list.filter(cell).length >= CAP[s.kind]) return { error: 'full' };
-        list.push(out = { id: 'S' + now.toString(36) + Math.random().toString(36).slice(2, 6), ...s, exp: now + termOf(s.x, s.y), last: me });
+        list.push(out = { id: 'S' + now.toString(36) + Math.random().toString(36).slice(2, 6), ...s, exp: now + termOf(s.x, s.y), by: me, last: me, at: now });
       }
       acts.push({ who: me, act, at: now });
       write(list, SKEY); write(acts, SACT);
@@ -83,7 +83,7 @@ export function localTransport(me) {
     },
     async standFall(at) {
       const now = Date.now(), side = sideOf(at.x, at.y), list = read(SKEY);
-      for (const q of list) if (q.last === me && q.exp > now && sideOf(q.x, q.y) === side) q.exp = now + (q.exp - now) / 2;
+      for (const q of list) if (q.by === me && q.last === me && q.exp > now && !(now - q.at < 10e3) && sideOf(q.x, q.y) === side) q.exp = now + (q.exp - now) / 2;
       write(list, SKEY);
       return {};
     },

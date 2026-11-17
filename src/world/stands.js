@@ -11,8 +11,9 @@
 //    brainrot.js setClearings). Видна, где нужна; это же и плата: видно дальше.
 //  · в вмятине лента тянет стоящего, как стоящего спиной к краю (feedPull.js);
 //    покой (brainrot.js calmOf) прежний.
-//  · чем дальше, тем срок короче: 30 суток у ближней кромки натянутой ленты,
-//    полтора — к 0,9; глубже 0,9 свободно не устоять — там не кладётся и не рисуется.
+//  · чем дальше, тем срок короче: 30 суток у ближней кромки натянутой ленты (там, где
+//    распад впервые доходит до 50, — с рельефом это до 0,63 без него), полтора — к 0,9;
+//    глубже 0,9 свободно не устоять — там не кладётся и не рисуется.
 //  · у столба горизонта вмятина впереди даёт черте один срок сверху (beyond.js HOR_GONE).
 // Без сети — свои прошлые заходы (сохранение); с сетью — и чужие: net.js кладёт их
 // сюда (putNetStands), своё уходит через setStandNet (база — server/stands.sql).
@@ -26,6 +27,9 @@ export const IN_R = 8, BACK = 6, LOOK_W = 160;         // стоишь в вмя
 export const MERGE = { dent: 16, chain: 40 }, CAP = { dent: 3, chain: 2 }, CELL = 320;   // ближе — та же; на отрезок
 export const STRIDE = 9, CUT0 = 60, CUT1 = 150, PRINTS = 12;   // шаг следа; сколько съел растр; отпечатков
 export const TERM0 = 30 * DAY, TERM1 = 1.5 * DAY;
+// срок держит 30 суток до NEAR (без рельефа): ближайшая стоянка, где распад впервые 50
+// (глубина с рельефом 0,55; рельеф ±0,07, ноги и макушка ±0,02), — везде месяц (ревью 17.11)
+export const NEAR = 0.63, FAR = 0.9;
 export const FALL_HALVES = true;                       // предложение суда: падение вдвое короче своим на той стороне
 const MINE_MAX = 24;
 
@@ -35,7 +39,7 @@ export function depthAt(x, y) { const d = warpedDist(x, y); return d <= OUTER ? 
 export function rectDepth(x, y) {
   return (Math.hypot(Math.max(0, TOWN.x0 - x, x - TOWN.x1), Math.max(0, TOWN.y0 - y, y - TOWN.y1)) - OUTER) / BAND;
 }
-export const termOf = (x, y) => TERM0 * Math.pow(TERM1 / TERM0, Math.min(1, Math.max(0, (rectDepth(x, y) - 0.5) / 0.4)));
+export const termOf = (x, y) => TERM0 * Math.pow(TERM1 / TERM0, Math.min(1, Math.max(0, (rectDepth(x, y) - NEAR) / (FAR - NEAR))));
 // сколько не занесло 0..1: заносит последнюю четверть срока — вмятины и цепочки одинаково
 export const keptOf = (s, now = Date.now()) => Math.max(0, Math.min(1, (s.exp - now) / (0.25 * termOf(s.x, s.y))));
 // сторона края — как edges.js: по наибольшему вылету за городок
@@ -65,7 +69,8 @@ export function standBack(x, y, now) {
 }
 
 // оставить своё: рядом своя или из базы — продлить (срок по месту той, в которую встал), иначе положить,
-// если на отрезке не полно. В базу — всё равно: база решает за всех
+// если на отрезке не полно. В базу — всё равно: база решает за всех. Встал в чужую — у себя её
+// копия (own: false): своей она от этого не стала, падение её не трогает
 function leave(kind, x, y, path, now) {
   const hit = s => s.kind === kind && s.exp > now && near(s, x, y, MERGE[kind]);
   const renew = s => { s.exp = Math.max(s.exp, now + termOf(s.x, s.y)); };
@@ -74,15 +79,18 @@ function leave(kind, x, y, path, now) {
   if (m) renew(m);
   else {
     const at = n || { x, y, path }, cell = s => s.kind === kind && s.exp > now && Math.floor(s.x / CELL) === Math.floor(at.x / CELL) && Math.floor(s.y / CELL) === Math.floor(at.y / CELL);
-    if (stands.mine.filter(cell).length < CAP[kind]) stands.mine.push({ kind, x: at.x, y: at.y, path: at.path || null, exp: now + termOf(at.x, at.y) });
+    if (stands.mine.filter(cell).length < CAP[kind]) stands.mine.push({ kind, x: at.x, y: at.y, path: at.path || null, exp: now + termOf(at.x, at.y), own: !n });
   }
   stands.mine = stands.mine.filter(s => s.exp > now).sort((a, b) => b.exp - a.exp).slice(0, MINE_MAX);
   if (netOut) netOut.leave({ kind, x, y, path });
   return true;
 }
 
-// шаг: ноги (fx, fy); o — { active, still, level, calm, now }. active — за изгородью, наверху,
-// не падает, не в петле СКРОЛЛ. true — легло новое или продлено (main сохранит)
+// шаг: ноги (fx, fy); o — { active, still, moving, level, calm, now }. active — за изгородью, наверху,
+// не падает, не в петле СКРОЛЛ; moving — ещё идёт своим ходом (скольжение по льду с разгона — ход,
+// снос лентой — нет). true — легло новое или продлено (main сохранит).
+// Стоянка — там, где встал (докатился и лента одна понесла): x0, y0. Пока покой не набрался,
+// лента сносит и из вмятины; продлевается та, в которую встал, а не та, куда снесло (ревью 17.11)
 export function stepStands(fx, fy, o) {
   const now = o.now ?? Date.now();
   if (!(o.active && depthAt(fx, fy) > 0)) { stands.st = null; stands.trail.length = 0; return false; }
@@ -91,8 +99,11 @@ export function stepStands(fx, fy, o) {
   if (L && dl > 40) T.length = 0;
   if (!T.length || dl >= STRIDE) { T.push([Math.round(fx), Math.round(fy)]); if (T.length > 48) T.shift(); }
   let st = stands.st;
-  if (o.still) {                                    // стоит: лента ещё несёт, пока покой не набрался
-    if (!st || st.going) st = stands.st = { x: fx, y: fy, peak: 0, calm: false, going: false };
+  // стоит: лента ещё несёт, пока покой не набрался. Шагнул и отпустил, а лёд докатывает —
+  // это ещё шаг: меряем до конца хода (ревью 17.11: тап назад на льду терял стоянку)
+  if (o.still && !(st && st.going && o.moving)) {
+    if (!st || st.going) st = stands.st = { x: fx, y: fy, x0: fx, y0: fy, rest: false, peak: 0, calm: false, going: false };
+    if (!st.rest) { st.x0 = fx; st.y0 = fy; st.rest = !o.moving; }   // докатился — тут и встал
     st.x = fx; st.y = fy; st.peak = Math.max(st.peak, o.level || 0);
     if ((o.calm || 0) >= CALM) st.calm = true;
     return false;
@@ -102,10 +113,10 @@ export function stepStands(fx, fy, o) {
   const dx = fx - st.x, dy = fy - st.y, l = Math.hypot(dx, dy);
   if (l < BACK) return false;                       // ещё не ясно, куда шагнул
   stands.st = null;
-  if (!st.calm || st.peak < PULLED || depthAt(st.x, st.y) > DEEP) return false;
+  if (!st.calm || st.peak < PULLED || depthAt(st.x0, st.y0) > DEEP) return false;
   const [ux, uy] = outward(st.x, st.y);
   if ((dx * ux + dy * uy) / l > -0.5) return false; // вперёд или вбок — не стоянка
-  return leave('dent', Math.round(st.x), Math.round(st.y), null, now);
+  return leave('dent', Math.round(st.x0), Math.round(st.y0), null, now);
 }
 
 // упал за огнём: цепочка по своему следу; последние CUT0–CUT1 точек пути съел растр
@@ -114,7 +125,7 @@ export function onStandFall(fx, fy, rnd = Math.random, now = Date.now()) {
   stands.trail.length = 0; stands.st = null;
   if (FALL_HALVES) {
     const side = sideOf(fx, fy);
-    for (const s of stands.mine) if (s.exp > now && sideOf(s.x, s.y) === side) s.exp = now + (s.exp - now) / 2;
+    for (const s of stands.mine) if (s.own !== false && s.exp > now && sideOf(s.x, s.y) === side) s.exp = now + (s.exp - now) / 2;
     if (netOut) netOut.fall(Math.round(fx), Math.round(fy));
   }
   const cut = CUT0 + rnd() * (CUT1 - CUT0);
@@ -151,6 +162,14 @@ export function standClearings(camX, camY, vw, vh, now = Date.now()) {
   }
   return out;
 }
+// рамка подгрузки из базы вокруг (x, y): r во все стороны и ещё AHEAD наружу — столб у 0,3
+// смотрит до 0,9 (≈ 700 точек вперёд), а подгрузка бывает и за 350 точек до столба (ревью 17.11)
+export const AHEAD = 500;
+export function standsBox(x, y, r) {
+  const [ux, uy] = outward(x, y);
+  return { x0: Math.round(x - r + Math.min(0, ux * AHEAD)), x1: Math.round(x + r + Math.max(0, ux * AHEAD)),
+    y0: Math.round(y - r + Math.min(0, uy * AHEAD)), y1: Math.round(y + r + Math.max(0, uy * AHEAD)) };
+}
 // у столба: живая вмятина впереди, в полосе взгляда — второй стоял дальше и убыл
 export function dentAhead(x, y, now = Date.now()) {
   const [ux, uy] = outward(x, y);
@@ -166,11 +185,11 @@ export function putNetStands(list, me = null, far = 1400) {
 }
 // сохранение: свои и живые
 export function saveStands(now = Date.now()) {
-  return stands.mine.filter(s => s.exp > now).map(s => ({ k: s.kind === 'chain' ? 'c' : 'd', x: s.x, y: s.y, e: s.exp, ...(s.path ? { p: s.path } : {}) }));
+  return stands.mine.filter(s => s.exp > now).map(s => ({ k: s.kind === 'chain' ? 'c' : 'd', x: s.x, y: s.y, e: s.exp, ...(s.path ? { p: s.path } : {}), ...(s.own === false ? { n: 1 } : {}) }));
 }
 export function loadStands(list, now = Date.now()) {
   stands.mine = (Array.isArray(list) ? list : []).filter(q => q && Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.e) && q.e > now)
-    .map(q => ({ kind: q.k === 'c' ? 'chain' : 'dent', x: q.x, y: q.y, exp: q.e, path: q.k === 'c' && Array.isArray(q.p) ? q.p.filter(Number.isFinite) : null }))
+    .map(q => ({ kind: q.k === 'c' ? 'chain' : 'dent', x: q.x, y: q.y, exp: q.e, path: q.k === 'c' && Array.isArray(q.p) ? q.p.filter(Number.isFinite) : null, own: q.n !== 1 }))
     .slice(0, MINE_MAX);
 }
 export function _resetStands() { stands.mine = []; stands.net.clear(); stands.st = null; stands.trail = []; netOut = null; }
