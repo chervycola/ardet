@@ -2,6 +2,7 @@
 // ШТАМП МЕСТА — где стоит осмотренная вещь, по-канцелярски одной строкой:
 // «кольцо 6 · север · пар и тени»; в городке — «городок · вне времени»;
 // дальше — «кольцо огня», «за огнём · край». Ставится в окне осмотра (ui.js).
+// Вещь со своей печатью (поле stamp) ставит её вместо места.
 // ═══════════════════════════════════════
 import { ringAt, RINGS } from './disc.js';
 import { sideAt } from './relief.js';
@@ -21,6 +22,7 @@ export function placeOf(loc) {
 
 export function placeStamp(loc) {
   if (!loc) return '';
+  if (loc.stamp) return loc.stamp;                 // своя печать вещи: дверь дома — «выхода нет»
   if (loc.under) return 'изнанка';
   if (loc.house) return 'дом в городке';
   const p = placeOf(loc);

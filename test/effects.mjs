@@ -144,6 +144,18 @@ setCtx(fakeCtx());
     assert(screenMoss.cells.length === 0, `expected empty after retreat, got ${screenMoss.cells.length}`);
   });
 
+  test('screenMoss: за бумагой (разговор, осмотр, карта) мох не растёт и не отступает', () => {
+    screenMoss.cells = []; screenMoss.idleGrowth = 0; screenMoss.still = 0;
+    for (let i = 0; i < 1800; i++) { tick(); screenMoss.update(false, true); }
+    eq(screenMoss.cells.length, 0, 'мох вырос, пока читали');
+    eq(screenMoss.still, 0, 'покой копился за бумагой');
+    for (let i = 0; i < 1500; i++) { tick(); screenMoss.update(false); }
+    const n = screenMoss.cells.length, g = screenMoss.idleGrowth;
+    assert(n > 0, 'стоящему мох не вырос');
+    for (let i = 0; i < 600; i++) { tick(); screenMoss.update(false, true); }
+    eq(screenMoss.cells.length, n, 'за бумагой мох прибавил или убавил');
+    eq(screenMoss.idleGrowth, g, 'за бумагой мох отступил');
+  });
   test('screenMoss: таблица покоя — после 30 с покоя клеток не прибавляется; краски без неона', () => {
     screenMoss.cells = []; screenMoss.idleGrowth = 0; screenMoss.still = 0;
     for (let i = 0; i < 1800; i++) { tick(); screenMoss.update(false); }

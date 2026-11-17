@@ -148,8 +148,9 @@ function inTown(cx, cy) {
 // ── погода: видно ли замок ──
 let clear = 0, vaneA = Math.PI, drift = 0;
 // stand — стоит ли странник на мосту (0/1); шаг — 60 раз в секунду
-export function stepCastle(stand) {
-  clear = stand ? Math.min(1, clear + 1 / 240) : Math.max(0, clear - 1 / 400);   // ~4 с — разошёлся, ~7 — сошёлся
+// paused: странник за бумагой — туман не расходится и не сходится, ждёт; ветер его сносит по-прежнему
+export function stepCastle(stand, paused = false) {
+  if (!paused) clear = stand ? Math.min(1, clear + 1 / 240) : Math.max(0, clear - 1 / 400);   // ~4 с — разошёлся, ~7 — сошёлся
   let d = wind.ang + Math.PI - vaneA;                                              // флюгер: навстречу ветру, с ленцой
   d = Math.atan2(Math.sin(d), Math.cos(d));
   vaneA += d * 0.01;

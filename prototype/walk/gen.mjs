@@ -266,7 +266,8 @@ for (const s of RAY) s.looks.forEach((text, i) => {
 const outside = byId.get('wake_house');
 const thing = id => THINGS.find(t => t.id === id);
 const houseBody = THINGS.filter(t => t.id !== 'h_door').map(t => `<p>${esc(t.look)}</p>`).join('\n');
-const door = `<p class="act"><a href="${fileOf(outside.id)}">${esc(thing('h_door').look)}</a></p>`;
+const door = `<p class="act"><a href="${fileOf(outside.id)}">${esc(thing('h_door').look)}</a></p>`
+  + (thing('h_door').stamp ? `\n<p class="stamp">${esc(thing('h_door').stamp)}</p>` : '');   // своя печать двери — «выхода нет» (как в окне осмотра)
 const houseStamp = `${STAMP} · ${FRAME.house}`;
 put('index.html', page(FRAME.title, houseStamp,
   `<h1>Дом</h1>\n<p>${esc(FRAME.scene)}</p>\n${houseBody}`,

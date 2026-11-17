@@ -24,7 +24,10 @@ export const screenMoss = {
     '#15100c', '#2f372c', '#3D4A3A', '#505948',
   ],
 
-  update(isMoving) {
+  // paused: странник читает бумагу (разговор, осмотр, меню, карта) — на мир не смотрит:
+  // мох не растёт и не отступает, счёт покоя ждёт (как вопрос кота, world/silentCat.js)
+  update(isMoving, paused = false) {
+    if (paused) return;
     const vw = scaler.vw, vh = scaler.vh;
     if (isMoving) {
       this.still = 0;

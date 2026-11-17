@@ -85,7 +85,9 @@ canvas#game {
 }
 #entry.art #entry-afisha { display: flex; }
 #entry-afisha.list { align-items: flex-start; text-align: left; font-size: 10px; font-size: 1.4cqh; }
-#entry-afisha .af-soon { opacity: 0.88; }
+/* COMING SOON: по середине щита и чуть ниже (слово автора 17.11); 0,11em вправо — хвост letter-spacing
+   и ширина пиксельных букв уводили текст влево (сверено на девяти экранах) */
+#entry-afisha .af-soon { opacity: 0.88; transform: translate(0.11em, 0.35em); }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */

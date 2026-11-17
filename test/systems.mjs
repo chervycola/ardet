@@ -582,6 +582,136 @@ setCtx(ctx);
     const c1 = centre(f), pf = { x: p.x + 6, y: p.y + 22 };
     assert(Math.hypot(c1.x - pf.x, c1.y - pf.y) > Math.hypot(c0.x - pf.x, c0.y - pf.y) + 100, 'сели не дальше');
   });
+  // Тише едешь (weave/DEPTH_GAMES_2026-11-16.md, механика 3)
+  const sentryIdx = f => f.birds.indexOf(f.sentry);
+  const toward = (p, b, v) => { const fx = p.x + 6, fy = p.y + 22, dx = b.x - fx, dy = b.y - fy, d = Math.hypot(dx, dy) || 1; p.vx = dx / d * v; p.vy = dy / d * v; const k = R.ravenHush(fx, fy, p.vx, p.vy); p.vx *= k; p.vy *= k; };
+  const stepP = p => { p.x += p.vx; p.y += p.vy; };
+  test('тише едешь: вошёл в круг — сторож ближняя птица; с другой стороны — другая', () => {
+    R._reset(false); calm();
+    let f = R._spawn(5000, 5000, 5);
+    const pl = { x: 5000 - 6 - 140, y: 5000 - 22, vx: 0, vy: 0 };
+    run(pl, 2);
+    assert(f.sentry, 'сторожа нет');
+    const left = sentryIdx(f), lx = f.sentry.x;
+    assert(f.birds.every(b => b.x >= lx - 0.01), 'сторож не крайний к пришедшему');
+    R._reset(false); f = R._spawn(5000, 5000, 5);
+    const pr = { x: 5000 - 6 + 140, y: 5000 - 22, vx: 0, vy: 0 };
+    run(pr, 2);
+    assert(sentryIdx(f) !== left, 'с другой стороны тот же сторож');
+  });
+  test('тише едешь: клюёт — идёшь, поднял голову — стоишь; дошёл — перестали считать, в клювах видно', () => {
+    R._reset(false); calm(); R.ravenNews.say = null;
+    const f = R._spawn(5000, 5000, 5);
+    const p = { x: 5000 - 6 - 145, y: 5000 - 22, vx: 0, vy: 0 };
+    run(p, 3);
+    assert(f.armed, 'встал в круге — ставка не принята');
+    let looks = 0, chain = false, lastPhase = 'bout';
+    for (let i = 0; i < 4000 && !f.tame; i++) {
+      if (f.sentry && f.phase === 'bout') toward(p, f.sentry, 2.4); else { p.vx = 0; p.vy = 0; }
+      stepP(p); run(p, 1);
+      if (f.phase === 'look' && lastPhase === 'bout') looks++;
+      if (f.phase === 'look' && f.birds.every(b => b.alert)) chain = true;
+      lastPhase = f.phase;
+      assert(f.st === 'calm', `стая взлетела на ${i}-м кадре`);
+    }
+    assert(f.tame, 'не дошёл');
+    assert(looks >= 1, 'сторож ни разу не поднял голову');
+    assert(chain, 'стая не замерла по цепочке');
+    assert(f.birds.every(b => b.show && b.beak), 'в клювах не видно');
+    assert(/^В клювах: .+\.$/.test(R.ravenNews.say || ''), `строка: ${R.ravenNews.say}`);
+    R.ravenNews.say = null;
+    for (let i = 0; i < 300; i++) { toward(p, f.birds[i % 5], 2.4); stepP(p); run(p, 1); }
+    eq(f.st, 'calm', 'дошедшего считают: взлетели от шага');
+    eq(R.ravenNews.say, null, 'строка второй раз за приход');
+  });
+  const Sky = await imp('world/sky.js'), TM = await imp('core/time.js');
+  test('тише едешь: шаг под взглядом — стая уходит из виду и не возвращается до смены света', () => {
+    const S0 = Math.round((Sky.worldClock(TM.t) - TM.t / Sky.DAY_LEN) * 1e9) / 1e9;
+    R._reset(true); calm();
+    let f = null, p = null;
+    for (let gx = 4000; gx < 9000 && !f; gx += 480) for (let gy = 4000; gy < 9000 && !f; gy += 480) {
+      p = { x: gx, y: gy, vx: 0, vy: 0 }; run(p, 1);
+      f = [...R._flocks().values()].find(q => !q.empty && Math.hypot(q.hx - gx, q.hy - gy) < 400) || null;
+    }
+    assert(f, 'стаи не нашлось');
+    const key = f.key, hx = f.hx, hy = f.hy;
+    p.x = hx - 6 - 140; p.y = hy - 22; p.vx = 0; p.vy = 0;
+    run(p, 1);
+    for (let i = 0; i < 2000 && !(f.phase === 'look' && f.lookT > R._T.GRACE + 1); i++) run(p, 1);
+    assert(R.ravenNews.look, 'автоходу не сказали, что голову подняли');
+    eq(f.phase, 'look', 'сторож не поднял голову');
+    toward(p, f.sentry, 2.4); stepP(p); run(p, 1);
+    assert(f.leave, 'шаг под взглядом не заметили');
+    p.vx = 0; p.vy = 0;
+    for (let i = 0; i < 3000 && R._flocks().has(key); i++) run(p, 1);
+    assert(!R._flocks().has(key), 'стая не ушла из виду');
+    run(p, 600);
+    assert(!R._flocks().has(key), 'вернулась при том же свете');
+    const now = Sky.skyAt(Sky.phaseAt(TM.t)).name;
+    const v = [0.1, 0.5, 0.7, 0.95].map(x => x - TM.t / Sky.DAY_LEN).find(x => Sky.skyAt(((TM.t / Sky.DAY_LEN + x) % 1 + 1) % 1).name !== now);
+    Sky.setWorldClock(v + 2);
+    run(p, 2);
+    assert(R._flocks().has(key) && !R._flocks().get(key).empty, 'свет сменился — стая не вернулась');
+    const back = R._flocks().get(key);
+    try {
+      assert(back.birds.every(b => b.st === 'fly'), 'вернулась не по воздуху — возникла на месте');
+      run(p, 2500);
+      const c = centre(back);
+      assert(back.birds.every(b => b.st === 'ground') && Math.hypot(back.hx - c.x, back.hy - c.y) < 40,
+        `не села дома: ${back.birds.map(b => b.st).join(',')} центр в ${Math.hypot(back.hx - c.x, back.hy - c.y).toFixed(0)}`);
+    } finally { Sky.setWorldClock(S0); }
+  });
+  test('тише едешь: идущий мимо и не встававший ставки не принимал — стая не уходит до смены света', () => {
+    let left = 0, slowed = 0;
+    for (let k = 0; k < 40; k++) {
+      R._reset(false); calm();
+      const f = R._spawn(5000, 5000, 5);
+      const off = 60 + (k % 3) * 20;                                    // мимо в 60, 80, 100 точках
+      const p = { x: 5000 - 6 - 260, y: 5000 - 22 - off, vx: 2.4, vy: 0 };
+      for (let i = 0; i < 230; i++) {
+        const fx = p.x + 6, fy = p.y + 22, s = R._flocks().get(f.key) ? 1 : 1;
+        if (R.ravenHush(fx, fy, 2.4, 0) < 1) slowed++;
+        stepP(p); run(p, 1);
+      }
+      if (f.leave) left++;
+    }
+    eq(left, 0, 'прохожий увёл стаю до смены света');
+    eq(slowed, 0, 'прохожего заставили красться');
+  });
+  test('тише едешь: не вставший идёт прямо на стаю — взлёт как прежде, садится рядом (не «до смены света»)', () => {
+    R._reset(false); calm();
+    const f = R._spawn(5000, 5000, 5);
+    const p = { x: 5000 - 6 - 160, y: 5000 - 22, vx: 2.4, vy: 0 };
+    for (let i = 0; i < 120 && f.st === 'calm'; i++) { stepP(p); run(p, 1); }
+    eq(f.st, 'up', 'не взлетели');
+    eq(f.leave, null, 'ушли до смены света от того, кто ставки не принимал');
+  });
+  test('тише едешь: кот стерёг стаю — вошедший начинает со своего захода клевков, сторож — ближняя к нему', () => {
+    R._reset(false); calm();
+    const f = R._spawn(5000, 5000, 5);
+    const away = { x: 5000 - 6 - 400, y: 5000 - 22, vx: 0, vy: 0 };   // поодаль, вне круга
+    for (let i = 0; i < 600 && !(f.phase === 'look'); i++) { R.ravenWatch(f, 5000 + 120, 5000); run(away, 1); }
+    eq(f.phase, 'look', 'кот не довёл до взгляда');
+    const p = { x: 5000 - 6 - 140, y: 5000 - 22, vx: 0, vy: 0 };
+    run(p, 1);
+    eq(f.phase, 'bout', 'вошедший попал сразу под взгляд');
+    const lx = Math.min(...f.birds.map(b => b.x));
+    assert(Math.abs(f.sentry.x - lx) < 0.01, 'сторож — птица кота, а не ближняя к вошедшему');
+    assert(f.birds.every(b => !b.alert), 'головы висят поднятыми над новым заходом');
+  });
+  test('тише едешь: перенёсся из круга (ворота, лестница) — сторож снят, шаг не крадётся', () => {
+    R._reset(false); calm();
+    const f = R._spawn(5000, 5000, 5);
+    const p = { x: 5000 - 6 - 140, y: 5000 - 22, vx: 0, vy: 0 };
+    run(p, 3);
+    assert(f.player && f.armed, 'не в круге');
+    p.x += -700; run(p, 1);
+    assert(!f.player && !f.armed, 'круг держится после переноса');
+    eq(R.ravenHush(p.x + 6 + 400, p.y + 22, 2.4, 0), 1, 'крадётся в 700 точках от стаи');
+  });
+  test('тише едешь: в клювах — вещи без запятых внутри (список читается)', () => {
+    for (const k of Object.keys(R._BEAKS)) for (const [name] of R._BEAKS[k]) assert(!name.includes(','), `запятая: ${name}`);
+  });
   test('вороны: шум (упал странник) поднимает стаю в радиусе, дальнюю — нет', () => {
     R._reset(false); calm();
     const a = R._spawn(5000, 5000, 4), b = R._spawn(5600, 5000, 4);
@@ -607,10 +737,16 @@ setCtx(ctx);
     const f = R._spawn(982 - 90, 1033, 4);                                // стая слева от кота
     const seen = new Set();
     let flewFromCat = false;
+    let prev = null, stillUnderGaze = 0;
     for (let i = 0; i < 6000; i++) {
       C.stepCats(p, locs); R.stepRavens(p, locs, null);
       const cat = C._cats()[0];
       seen.add(cat.st);
+      if (cat.st === 'stalk' && f.sentry && f.phase === 'look' && f.lookT > 1 && prev && prev.st === 'stalk') {
+        assert(cat.x === prev.x && cat.y === prev.y, 'кот шёл, пока сторож смотрел');
+        stillUnderGaze++;
+      }
+      prev = { x: cat.x, y: cat.y, st: cat.st };
       if (!flewFromCat && f.birds.some(b => b.st === 'fly')) {
         const bird = f.birds.find(b => b.st === 'fly');
         flewFromCat = bird.vx < 0;                                         // кот справа, странник слева — летят влево: от кота
@@ -619,6 +755,7 @@ setCtx(ctx);
     }
     for (const st of ['stalk', 'pounce', 'miss', 'back']) assert(seen.has(st), `не было: ${st} (${[...seen].join(',')})`);
     assert(flewFromCat, 'стая не взлетела прочь от кота');
+    assert(stillUnderGaze > 0, 'сторож ни разу не поднял голову, пока кот крался');
     const cat = C._cats()[0];
     eq(cat.st, 'sit', 'не вернулся');
     assert(Math.hypot(cat.x - cat.hx, cat.y - cat.hy) < 1, 'не дома');
@@ -1948,6 +2085,8 @@ setCtx(ctx);
     assert(!U.under.seen.has('pithos_whisper') && !WH.hush.has('pithos'), 'днём шепчет мох');
     for (let i = 0; i < 400; i++) MW.stepMossway({ ...pl, moving: true }, true, 1);
     assert(!U.under.seen.has('pithos_whisper'), 'шепчет проходящему мимо');
+    for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 1, false);
+    assert(!U.under.seen.has('pithos_whisper'), 'шепчет за бумагой — шёпот ночи ушёл под разговор');
     for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 1);
     eq(WH.whisperText(), MW.MOSS_WHISPER, 'шёпот мха');
     assert(U.under.seen.has('pithos_whisper') && p.useShown() && WH.hush.has('pithos') && /ЛЕЧЬ/.test(p.useLabel), 'после шёпота нет «лечь»');
@@ -3204,6 +3343,8 @@ setCtx(ctx);
     eq(PS.placeStamp(fire), 'городок · вне времени', 'костёр');
     eq(PS.placeStamp({ name: 'МОНЕТА' }), '', 'действие со штампом');
     eq(PS.placeStamp({ under: true, x: 1, y: 1 }), 'изнанка', 'изнанка');
+    eq(PS.placeStamp({ house: true, stamp: 'выхода нет' }), 'выхода нет', 'своя печать вещи (дверь дома)');
+    eq(PS.placeStamp({ house: true }), 'дом в городке', 'дом');
     const T = DSC.TOWN, OUT = DSC.RINGS_D + DSC.FIRE_W;
     eq(PS.placeStamp({ x: (T.x0 + T.x1) / 2, y: T.y1 + OUT + 300 }), 'за огнём · край', 'за огнём');
   });

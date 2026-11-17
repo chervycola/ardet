@@ -77,9 +77,12 @@ export const burrowLoc = () => burrow;
 // ночью у пифоса: задержался дольше, чем нужно, чтобы просто пройти мимо, — шёпот;
 // раз за ночь (day — номер суток); днём у пифоса прежний шёпот
 let linger = 0, night = -1;
-export function stepMossway(p, isNight, day) {
+// looking: странник смотрит на мир; за бумагой задержка у пифоса ждёт (шёпот раз за ночь
+// не должен уйти под разговор)
+export function stepMossway(p, isNight, day, looking = true) {
   if (!pithos) return;
   if (isNight) hush.add('pithos'); else hush.delete('pithos');
+  if (!looking) return;
   const d = Math.hypot(p.x + 6 - (pithos.x + pithos.w / 2), p.y + 23 - (pithos.y + pithos.h));
   linger = isNight && !p.moving && d < 40 ? linger + 1 : 0;
   if (linger > 240 && night !== day && sayAt(MOSS_WHISPER, pithos.x + pithos.w / 2, pithos.y - 10)) {

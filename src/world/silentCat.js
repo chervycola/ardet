@@ -19,7 +19,8 @@
 //   Приход кончается, когда странник дальше NEAR от кота и его места.
 //   Глаза отражают огонь странника: ближе он — ярче (как у настоящих
 //   котов: светится не глаз, а то, что в нём отражается).
-//   Вороны рядом с домом — охота: крадётся пригнувшись, замирает, прыгает с
+//   Вороны рядом с домом — охота: крадётся пригнувшись в такт сторожа стаи
+//   (клюёт — идёт, поднял голову — замер; «Тише едешь», ravens.js), прыгает с
 //   полутора шагов — стая взлетает прочь от него; промах (всегда): сидит,
 //   хвост хлещет, смотрит вслед, потом домой. Мимо сидящих ворон пройдёт —
 //   взлетят.
@@ -28,7 +29,7 @@
 import { t } from '../core/time.js';
 import { events } from '../core/events.js';
 import { wind } from './wind.js';
-import { calmRavenNear, startleRavens } from './ravens.js';
+import { calmRavenNear, startleRavens, ravenWatch, ravenUnwatch } from './ravens.js';
 import { eyes, eyesShut } from './eyes.js';
 
 const sightings = new Set();
@@ -120,6 +121,7 @@ export function stepCats(player, locations, looking = true) {
   still = ps < 0.05 ? still + 1 : 0;
   const px = player.x + 6, py = player.y + 22;                  // где странник у земли
   for (const c of cats) {
+    if (c.watching && c.st !== 'stalk') { ravenUnwatch(c.preyF); c.watching = false; }   // бросил охоту (спугнули, ушёл странник) — сторож снят
     const dx = c.x + 2 - px, dy = c.y + 3 - py, d = Math.hypot(dx, dy);
     if (d > NEAR && Math.hypot(c.hx - px, c.hy - py) > NEAR) {  // далеко: дома, не считается
       c.x = c.hx; c.y = c.hy; c.st = 'sit'; c.prey = null;
@@ -169,20 +171,22 @@ export function stepCats(player, locations, looking = true) {
           }
         }
         break;
-      case 'stalk': {                                            // крадётся, замирает
+      case 'stalk': {                                            // крадётся в такт сторожа: клюёт — идёт, смотрит — замер
         const b = c.prey;
-        if (!b || b.st !== 'ground' || c.preyF.st !== 'calm') { c.st = 'miss'; c.tm = 90; break; }
+        if (!b || b.st !== 'ground' || c.preyF.st !== 'calm') { ravenUnwatch(c.preyF); c.st = 'miss'; c.tm = 90; break; }
         c.lookX = b.x;
-        if (c.freeze > 0) { c.freeze--; break; }
-        if (--c.tm <= 0) { c.freeze = 40 + Math.floor(Math.random() * 50); c.tm = 50 + Math.floor(Math.random() * 70); break; }
+        c.watching = true;
+        if (ravenWatch(c.preyF, c.x + 2, c.y + 3)) { c.freeze = 1; break; }
+        c.freeze = 0;
         const ex = b.x - (c.x + 2), ey = b.y - (c.y + 3), e = Math.hypot(ex, ey) || 1;
         if (e < POUNCE) {                                        // прыжок — стая взлетает от кота
           c.st = 'pounce'; c.fx = ex / e; c.fy = ey / e; c.run = Math.min(16, e + 4); c.dir = ex >= 0 ? 1 : -1;
+          ravenUnwatch(c.preyF);
           startleRavens(b.x, b.y, 60, c.x + 2, c.y + 3);
           break;
         }
         const nx = c.x + ex / e * 0.16, ny = c.y + ey / e * 0.16;
-        if (blockedFrom(c, nx, ny, HUNT)) { c.st = 'miss'; c.tm = 90; break; }
+        if (blockedFrom(c, nx, ny, HUNT)) { ravenUnwatch(c.preyF); c.st = 'miss'; c.tm = 90; break; }
         c.x = nx; c.y = ny; c.walk += 0.16;
         if (Math.abs(ex) > 0.5) c.dir = ex > 0 ? 1 : -1;
         break;

@@ -9,6 +9,17 @@
 // Звук: хлопанье крыльев на взлёте, карканье — тихо.
 // Считаются только стаи рядом со странником; далёкие забываются и потом
 // появляются на своих местах снова.
+// Тише едешь (weave/DEPTH_GAMES_2026-11-16.md, механика 3): вошёл в круг стаи —
+// у неё сторож, ближняя к страннику птица; сторона подхода выбирает его такт
+// (сколько клевков в заходе, как долго держит голову). Ставку принимает тот, кто
+// встал в круге; идущему мимо — прежние правила (отпрыгивают, взлетают и садятся
+// рядом). Встал — клюёт: идёшь, к стае крадучись (клевок тихо слышно); поднял
+// голову — стая по цепочке замирает, ближе подходить нельзя. Шаг под взглядом —
+// стая уходит из виду и до смены света (день, сумерки, ночь, рассвет) не
+// возвращается; свет сменился — прилетает домой по воздуху. Дошедшего (выстоял
+// хотя бы один взгляд) перестают считать: у птиц в клювах видны вещи кольца,
+// одна строка называет их. Ничего не хранится: умение остаётся в руке. Кот у
+// стаи крадётся в тот же такт и всё равно мажет (silentCat.js).
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { hash } from '../render/draw.js';
@@ -16,6 +27,7 @@ import { wind } from './wind.js';
 import { ringAt, inCore, RINGS } from './disc.js';
 import { surfaceAt } from './surface.js';
 import { getCtx, getOut } from '../audio/audio.js';
+import { phaseAt, skyAt, dayIndex } from './sky.js';
 
 const CELL = 480;
 const NEAR = 560;          // ближе — стая живёт
@@ -25,6 +37,54 @@ const BIRD = '#0D0B0A', SHEEN = '#8A8D8F';
 const flocks = new Map();
 const overs = [];          // пролёт над головой
 let nextOver = 7200 + Math.floor(Math.random() * 7200), lastCaw = -99999, lastFlash = 0, grid = true;
+
+// ── Тише едешь ──
+const CIRCLE = 150;        // ближе к середине стаи — у неё сторож
+const CIRCLE_OUT = 190;    // дальше — сторож снят, приход кончился
+const REACH = 22;          // до сторожа ближе этого — дошёл
+const GRACE = 15;          // поднял голову — столько кадров встать: на грани реакции, вернее считать клевки
+const SNEAK = 0.9;         // в круге шаг к стае — крадучись (шаг 2,4 дошёл бы за один заход клевков)
+const gone = new Map();    // стая ушла от шага под взглядом: ключ → свет, при котором ушла
+const lightKey = () => dayIndex(t) + ':' + skyAt(phaseAt(t)).name;   // сутки сменяются на рассвете — ключ не рвётся посреди света
+// 0 — не уходила; 1 — ушла, свет тот же; 2 — свет сменился: возвращается (по воздуху)
+function goneState(key) {
+  const g = gone.get(key);
+  if (g === undefined) return 0;
+  if (g === lightKey()) return 1;
+  gone.delete(key);
+  return 2;
+}
+// вернуться домой по воздуху — из-за дома, не из ничего на глазах
+function flyHome(f, px, py) {
+  const a = Math.atan2(f.hy - py, f.hx - px) + (Math.random() - 0.5) * 0.8;
+  for (const b of f.birds) {
+    b.x = f.hx + Math.cos(a) * 600 + (Math.random() - 0.5) * 30; b.y = f.hy + Math.sin(a) * 600 + (Math.random() - 0.5) * 20;
+    b.st = 'fly'; b.z = 40; b.vx = 0; b.vy = 0; b.vz = 0; b.cruise = 40; b.near = 0; b.delay = -1; b.hop = null;
+    b.ox = (Math.random() - 0.5) * 24; b.oy = (Math.random() - 0.5) * 10;
+  }
+  f.st = 'up'; f.tx = f.hx; f.ty = f.hy;
+}
+// дошёл — строка в ленту (main.js), одна на приход; голову подняли — автоход встаёт (main.js)
+export const ravenNews = { say: null, look: false };
+// что у птиц в клювах: вещи кольца, где стая живёт; цвет — пиксель у клюва
+const BEAKS = {
+  town: [['пуговица от пальто', '#8A8D8F'], ['жетон гардероба № 40', '#E28A3A'], ['ключ без брелока', '#8A8D8F'], ['крышка от кефира', '#b0a284']],
+  1: [['черепок с половиной слова', '#3A3026'], ['косточка финика', '#3A3026'], ['бусина из сердолика', '#C23B2B'], ['щепка от весла', '#b0a284']],
+  2: [['медная монета со стёртым до затылка профилем', '#E28A3A'], ['фибула без иглы', '#E28A3A'], ['косточка оливки', '#3A3026'], ['камешек от мозаики', '#8A8D8F']],
+  3: [['свинцовая пломба паломника', '#8A8D8F'], ['обрезок пергамента с буквицей', '#b0a284'], ['бусина от чёток', '#D9CFB8'], ['гвоздь', '#8A8D8F']],
+  4: [['черенок глиняной трубки', '#D9CFB8'], ['пуговица с гербом', '#E28A3A'], ['игральная кость со стёртой точкой', '#D9CFB8'], ['хлебная корка', '#3A3026']],
+  5: [['литера «ять» из наборной кассы', '#8A8D8F'], ['сургучная крошка', '#C23B2B'], ['вырезанная ножницами сноска', '#b0a284'], ['пуговица от камзола', '#E28A3A']],
+  6: [['заклёпка', '#8A8D8F'], ['ключ от карманных часов', '#E28A3A'], ['билет третьего класса', '#b0a284'], ['стекло от пенсне', '#D9CFB8']],
+  7: [['гильза', '#E28A3A'], ['значок отличника', '#C23B2B'], ['жетон с номером', '#8A8D8F'], ['пуговица от шинели', '#8A8D8F']],
+  8: [['крышка от «Пепси»', '#C23B2B'], ['жетон метро', '#E28A3A'], ['метр магнитной ленты', '#3A3026'], ['скрепка', '#8A8D8F']],
+  9: [['SIM-карта', '#E28A3A'], ['кольцо от банки', '#8A8D8F'], ['один беспроводной наушник', '#D9CFB8'], ['чек на ноль рублей', '#b0a284']],
+  fire: [['уголёк', '#E28A3A'], ['оплавленная пуговица', '#8A8D8F'], ['обгорелая спичка', '#3A3026']],
+  edge: [['обрывок субтитров', '#b0a284'], ['скрепка', '#8A8D8F'], ['битый пиксель', '#C23B2B']],
+};
+function beaksOf(x, y) {
+  const r = ringAt(x, y);
+  return r === 0 ? BEAKS.town : r <= RINGS ? BEAKS[r] : r === RINGS + 1 ? BEAKS.fire : BEAKS.edge;
+}
 
 // ── звук ──
 function flutter(vol) {                         // хлопанье крыльев: 4–5 коротких выдохов
@@ -80,18 +140,27 @@ function makeFlock(key, hx, hy, n, seed) {
       x, y, z: 0, vx: 0, vy: 0, vz: 0, st: 'ground', dir: hash(seed, k, 4.4) < 0.5 ? -1 : 1,
       next: 20 + Math.floor(hash(seed, k, 5.5) * 120), peck: 0, hop: null, delay: -1,
       flap: hash(seed, k, 6.6) * 6, glide: 0, ox: 0, oy: 0, cruise: 30, last: 1,
+      // такт сторожа: клевок 14–22 кадра, в заходе от 2–3 до 3–5 клевков, голову держит 50–99
+      per: 14 + Math.floor(hash(seed, k, 7.7) * 9), nLo: 0, nHi: 0, hold: 50 + Math.floor(hash(seed, k, 9.9) * 50),
+      alert: false, fz: 0, show: false, item: Math.floor(hash(seed, k, 11.3) * 4),
     });
+    const b = birds[k];
+    b.nLo = 2 + Math.floor(hash(seed, k, 8.8) * 2); b.nHi = b.nLo + 1 + Math.floor(hash(seed, k, 10.1) * 2);
   }
-  return { key, hx, hy, birds, st: 'calm', tx: hx, ty: hy, i: null, j: null };
+  return { key, hx, hy, birds, st: 'calm', tx: hx, ty: hy, i: null, j: null,
+    sentry: null, phase: 'bout', tm: 0, left: 0, lookT: 0, player: false, armed: false, looked: false, cat: false, tame: false, said: false, leave: null, pd: null, wx: hx, wy: hy };
 }
-function flockAt(i, j, locations) {
+function flockAt(i, j, locations, px, py) {
   const key = i * 100003 + j;
+  const gs = goneState(key);
+  if (gs === 1) return null;                                    // ушла от шага под взглядом — до смены света
   if (flocks.has(key)) return flocks.get(key);
   let f = { empty: true, i, j };
   const hx = i * CELL + 60 + hash(i, j, 7.1) * (CELL - 120), hy = j * CELL + 60 + hash(i, j, 8.3) * (CELL - 120);
   if (hash(i, j, 9.7) < chanceAt(hx, hy) && freeSpot(hx, hy, locations)) {
     f = makeFlock(key, hx, hy, 3 + Math.floor(hash(i, j, 1.9) * 5), i * 7 + j * 13);
     f.i = i; f.j = j;
+    if (gs === 2) flyHome(f, px, py);
   }
   flocks.set(key, f);
   return f.empty ? null : f;
@@ -115,17 +184,99 @@ function pickTarget(f, px, py, locations) {
   }
   return { x: f.hx, y: f.hy };                                  // некуда — домой
 }
-function startle(f, px, py, first, locations, d) {
+function startle(f, px, py, first, locations, d, far = false) {
   if (f.st !== 'calm') return;
   f.st = 'up'; f.thx = px; f.thy = py;                           // откуда угроза — прочь от неё
-  const tg = pickTarget(f, px, py, locations);
-  f.tx = tg.x; f.ty = tg.y;
+  f.sentry = null; f.player = false; f.armed = false; f.looked = false; f.cat = false; f.tame = false;
+  for (const b of f.birds) { b.alert = false; b.show = false; }
+  if (far || f.leave) {                                           // шаг под взглядом: уходят из виду, до смены света
+    const c = center(f), base = Math.atan2(c.y - py, c.x - px);   // ушедшую спугнули снова — опять прочь, не домой
+    let x = 0, y = 0;
+    for (let k = 0; k < 12; k++) {
+      const a = base + (Math.random() - 0.5) * (0.5 + k * 0.25), r = 560 + Math.random() * 160;
+      x = c.x + Math.cos(a) * r; y = c.y + Math.sin(a) * r;
+      if (freeSpot(x, y, locations)) break;
+    }
+    f.tx = x; f.ty = y; f.leave = f.leave || lightKey();
+  } else {
+    const tg = pickTarget(f, px, py, locations);
+    f.tx = tg.x; f.ty = tg.y;
+  }
   for (const b of f.birds) {
     b.delay = 1 + Math.round(Math.hypot(b.x - first.x, b.y - first.y) * 0.6 + Math.random() * 6);   // по цепочке
     b.ox = (Math.random() - 0.5) * 28; b.oy = (Math.random() - 0.5) * 14;
   }
   flutter(near(d, 0.05));
-  if (Math.random() < 0.65) setTimeout(() => caw(near(d, 0.035)), 120 + Math.random() * 300);
+  if (far || Math.random() < 0.65) setTimeout(() => caw(near(d, 0.035)), 120 + Math.random() * 300);
+}
+
+// клевок сторожа — сухой щелчок о землю, у самого порога слуха: такт слышно и с закрытыми глазами
+function tap(vol) {
+  const ctx = getCtx();
+  if (!ctx || ctx.state !== 'running' || vol < 0.001) return;
+  const len = Math.floor(ctx.sampleRate * 0.012), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+  for (let j = 0; j < len; j++) d[j] = (Math.random() * 2 - 1) * Math.exp(-j / (len * 0.2));
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = 'bandpass'; f.frequency.value = 1800 + Math.random() * 500; f.Q.value = 1.5; g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(getOut()); s.start();
+}
+
+// ── сторож ──
+const boutOf = s => s.nLo + Math.floor(Math.random() * (s.nHi - s.nLo + 1));
+function peckNow(f, s) {
+  s.peck = 9;
+  if (f.player) tap(near(Math.hypot(s.x - f.wx, s.y - f.wy), 0.014));
+}
+// ближняя к пришедшему птица — сторож; начинает с захода клевков (вошёл — не значит попался)
+function engage(f, x, y) {
+  let best = null, bd = 1e9;
+  for (const b of f.birds) { if (b.st !== 'ground') continue; const d = Math.hypot(b.x - x, b.y - y); if (d < bd) { bd = d; best = b; } }
+  if (!best) return;
+  for (const o of f.birds) o.alert = false;                     // прерванный взгляд (кот стерёг) не висит над новым заходом
+  f.sentry = best; f.phase = 'bout'; f.left = boutOf(best); f.tm = best.per; f.lookT = 0; f.wx = x; f.wy = y; f.pd = null;
+  peckNow(f, best);
+}
+function disengage(f) {
+  f.sentry = null; f.tame = false; f.pd = null;
+  for (const b of f.birds) { b.alert = false; b.show = false; }
+}
+// такт: заход клевков → голову вверх (стая замирает по цепочке) → снова клюёт
+function stepWatch(f) {
+  const s = f.sentry;
+  if (!s || s.st !== 'ground') { disengage(f); return; }
+  if (f.tame) return;
+  if (f.phase === 'bout') {
+    if (--f.tm > 0) return;
+    if (--f.left > 0) { f.tm = s.per; peckNow(f, s); return; }
+    f.phase = 'look'; f.lookT = 0; f.tm = Math.round(s.hold * (0.8 + Math.random() * 0.4));
+    if (f.player && f.armed) ravenNews.look = true;               // автоход встаёт, как у изгороди
+    s.peck = 0; s.alert = true;
+    for (const b of f.birds) if (b !== s) b.fz = 1 + Math.round(Math.hypot(b.x - s.x, b.y - s.y) * 0.5 + Math.random() * 4);
+    return;
+  }
+  f.lookT++;
+  s.dir = f.wx > s.x ? 1 : -1;                                   // смотрит на того, кто подходит
+  if (--f.tm > 0) return;
+  f.phase = 'bout'; f.left = boutOf(s); f.tm = s.per;
+  if (f.player && f.armed) f.looked = true;                      // выстоял взгляд
+  for (const b of f.birds) b.alert = false;
+  peckNow(f, s);
+}
+// дошёл: перестали считать — в клювах видно, что несут; одна строка
+function tame(f) {
+  f.tame = true; f.phase = 'bout';
+  const list = beaksOf(f.hx, f.hy), seen = [];
+  for (const b of f.birds) {
+    b.alert = false; b.show = true;
+    const it = list[b.item % list.length];
+    b.beak = it[1];
+    if (!seen.includes(it[0])) seen.push(it[0]);
+  }
+  if (!f.said) {
+    f.said = true;
+    const names = seen.slice(0, 3);
+    ravenNews.say = 'В клювах: ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' и ' + names[names.length - 1] : names[0]) + '.';
+  }
 }
 function takeoff(b, px, py) {
   const a = Math.atan2(b.y - py, b.x - px) + (Math.random() - 0.5) * 1.0, s = 1.8 + Math.random() * 0.8;
@@ -144,9 +295,13 @@ function stepGround(b, f, px, py, ps, pvx, pvy) {
     return;
   }
   if (b.peck > 0) b.peck--;
+  if (f.sentry && !f.tame) {
+    if (b === f.sentry) return;                                   // сторож живёт тактом (stepWatch)
+    if (f.phase === 'look' && f.lookT >= b.fz) { b.alert = true; b.peck = 0; return; }   // замерла по цепочке
+  }
   if (d < 90) b.dir = px > b.x ? 1 : -1;                         // смотрит на странника
-  // идёт на птицу — отпрыгивает (держит дистанцию)
-  if (ps > 0.5 && d < 55 && pvx * dx + pvy * dy > 0 && b.delay < 0) {
+  // идёт на птицу — отпрыгивает (держит дистанцию); в круге стаи — нет: там решает сторож
+  if (!f.armed && ps > 0.5 && d < 55 && pvx * dx + pvy * dy > 0 && b.delay < 0) {
     const s = 4 + Math.random() * 2;
     b.hop = { k: 0, n: 12, dx: dx / d * s, dy: dy / d * s * 0.6 };
     b.dir = dx > 0 ? 1 : -1;
@@ -211,6 +366,32 @@ export function calmRavenNear(x, y, maxD) {
   return best;
 }
 
+// тише едешь: в круге стаи шаг к ней — крадучись; мимо, прочь и бегом — как шёл (бег пугает стаю)
+export function ravenHush(px, py, dvx, dvy, running = false) {
+  const v = Math.hypot(dvx, dvy);
+  if (running || v <= SNEAK || v > 3) return 1;
+  for (const f of flocks.values()) {
+    if (f.empty || !f.armed || !f.sentry || f.tame || f.st !== 'calm') continue;
+    const dx = f.sentry.x - px, dy = f.sentry.y - py, d = Math.hypot(dx, dy) || 1;
+    if ((dvx * dx + dvy * dy) / (v * d) > 0.5) return SNEAK / v;   // к стае, в пределах 60°
+  }
+  return 1;
+}
+
+// кот у стаи крадётся в такт сторожа (silentCat.js): клюёт — идёт, поднял голову — замер
+export function ravenWatch(f, x, y) {
+  if (!f || f.empty || f.st !== 'calm' || f.leave) return false;
+  if (!f.sentry) engage(f, x, y);
+  f.cat = true;
+  if (!f.player) { f.wx = x; f.wy = y; }
+  return f.phase === 'look' && !f.tame;
+}
+export function ravenUnwatch(f) {
+  if (!f || f.empty) return;
+  f.cat = false;
+  if (!f.player) disengage(f);
+}
+
 // стаи на своих местах всегда: у Гнезда Ворона — его стая
 let anchors = null;
 function anchorFlocks(locations, px, py) {
@@ -225,7 +406,12 @@ function anchorFlocks(locations, px, py) {
     }
   }
   for (const a of anchors) {
-    if (!flocks.has(a.key) && Math.hypot(a.x - px, a.y - py) < NEAR) flocks.set(a.key, makeFlock(a.key, a.x, a.y, 5, 77));
+    if (flocks.has(a.key)) continue;
+    const gs = goneState(a.key);
+    if (gs === 1 || Math.hypot(a.x - px, a.y - py) >= NEAR) continue;
+    const f = makeFlock(a.key, a.x, a.y, 5, 77);
+    if (gs === 2) flyHome(f, px, py);
+    flocks.set(a.key, f);
   }
 }
 
@@ -233,6 +419,7 @@ function anchorFlocks(locations, px, py) {
 export function stepRavens(player, locations, weather) {
   const px = player.x + 6, py = player.y + 22;
   const pvx = player.vx || 0, pvy = player.vy || 0, ps = Math.hypot(pvx, pvy);
+  const run = ps > 3 || (player.running && ps > 1.2);           // бег — намерение (Shift), на любой земле
   // гром: вспышка молнии поднимает всех в округе
   const flash = weather && weather.lightning > 34;
   if (flash && !lastFlash) startleRavens(px, py, 420);
@@ -240,24 +427,48 @@ export function stepRavens(player, locations, weather) {
   // стаи вокруг
   const ci = Math.floor(px / CELL), cj = Math.floor(py / CELL);
   if (grid) {
-    for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) flockAt(i, j, locations);
+    for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) flockAt(i, j, locations, px, py);
     anchorFlocks(locations, px, py);
   }
   for (const [key, f] of flocks) {
     if (f.empty) { if (Math.abs(f.i - ci) > 3 || Math.abs(f.j - cj) > 3) flocks.delete(key); continue; }
     const c = center(f), dc = Math.hypot(c.x - px, c.y - py);
-    if (dc > FORGET && Math.hypot(f.hx - px, f.hy - py) > FORGET) { flocks.delete(key); continue; }
-    if (dc > NEAR) continue;
-    // тревога: бегущий, вплотную, идущий прямо, шум
+    if (dc > FORGET && Math.hypot(f.hx - px, f.hy - py) > FORGET) { if (f.leave) gone.set(key, f.leave); flocks.delete(key); continue; }
+    if (f.leave && f.birds.every(b => Math.hypot(b.x - px, b.y - py) > 420)) { gone.set(key, f.leave); flocks.delete(key); continue; }
+    // вышел из круга (или перенёсся: ворота, лестница) — сторож снят; до отсечки дальних
+    if (f.player && dc > CIRCLE_OUT) {
+      f.player = false; f.armed = false; f.looked = false; f.said = false;
+      if (f.cat) { f.tame = false; f.pd = null; for (const b of f.birds) b.show = false; } else disengage(f);
+    }
+    if (dc > NEAR && f.st !== 'up') continue;                    // летящие (и те, что возвращаются домой) — летят и вдали
+    // вошёл — сторож: ближняя к нему птица, свой заход клевков (и если стерёг кот)
+    if (f.st === 'calm' && !f.leave) {
+      if (!f.player && dc < CIRCLE) { f.player = true; f.wx = px; f.wy = py; engage(f, px, py); }
+      if (f.player && !f.armed && ps < 0.05) f.armed = true;     // встал в круге — принял ставку
+    }
+    // тревога: бегущий, шум; не принявшему ставку — ещё вплотную и идущий прямо
     if (f.st === 'calm') {
       for (const b of f.birds) {
         const dx = b.x - px, dy = b.y - py, d = Math.hypot(dx, dy);
         const loud = pending.find(q => Math.hypot(b.x - q.x, b.y - q.y) < q.r);
-        if (d < 30 || (ps > 3 && d < 95) || (ps > 1.2 && d < 50 && pvx * dx + pvy * dy > 0) || loud) {
+        if ((!f.armed && (d < 30 || (ps > 1.2 && d < 50 && pvx * dx + pvy * dy > 0))) || (run && d < 95) || loud) {
           const from = loud && loud.fx !== undefined ? loud : null;      // угроза не от странника — кот
           startle(f, from ? from.fx : px, from ? from.fy : py, b, locations, d);
           break;
         }
+      }
+    }
+    // такт сторожа; у странника в круге — шаг под взглядом и «дошёл»
+    if (f.st === 'calm' && f.sentry) {
+      if (f.player) { f.wx = px; f.wy = py; }
+      stepWatch(f);
+      if (f.armed && f.sentry && !f.tame) {
+        const ds = Math.hypot(f.sentry.x - px, f.sentry.y - py);
+        if (ds < REACH && f.looked) tame(f);
+        else if (f.phase === 'look' && f.lookT > GRACE && f.pd !== null && f.pd - ds > 0.25 && ps > 0.2 && player.moving !== false) {   // снос лентой — не шаг
+          startle(f, px, py, f.sentry, locations, ds, true);        // шаг под взглядом
+        }
+        f.pd = ds;
       }
     }
     let up = 0;
@@ -309,9 +520,12 @@ export function drawRaven(ctx, b) {
   ctx.fillRect(Math.round(b.x) - 3, Math.round(b.y) + 2, 6, 1);
   ctx.globalAlpha = 1;
   at(-3, 0, 5);                                                  // тело — от хвоста к груди
-  if (b.peck > 0) { at(-1, -1, 3); at(2, 0); at(3, 1); at(-4, -1); }   // клюёт: голова к земле, хвост вверх
+  let bx = 4, by = -2;                                           // где кончик клюва (для вещи в нём)
+  if (b.peck > 0) { at(-1, -1, 3); at(2, 0); at(3, 1); at(-4, -1); bx = 4; by = 1; }   // клюёт: голова к земле, хвост вверх
+  else if (b.alert) { at(-1, -1, 4); at(1, -2); at(1, -3, 2); at(3, -3); at(-3, 1); by = -3; }   // голова поднята, шея вытянута
   else { at(-1, -1, 4); at(1, -2, 2); at(3, -2); at(-3, 1); }    // спина, голова, клюв, хвост вниз
   if (!b.hop) { at(-1, 1); at(1, 1); }                           // лапы
+  if (b.show && b.beak) { ctx.fillStyle = b.beak; at(bx, by); ctx.fillStyle = BIRD; }   // дошёл: видно, что в клюве
   ctx.globalAlpha = 0.5; ctx.fillStyle = SHEEN; at(-1, -1, 2);   // отлив пера на спине
   ctx.globalAlpha = 1;
 }
@@ -356,6 +570,9 @@ export function drawRavensAir(ctx, camX, camY, vw, vh) {
 }
 
 // для тестов
-export function _reset(g = true) { flocks.clear(); overs.length = 0; pending.length = 0; grid = g; nextOver = 1e9; lastFlash = 0; anchors = null; }
+export function _reset(g = true) { flocks.clear(); overs.length = 0; pending.length = 0; grid = g; nextOver = 1e9; lastFlash = 0; anchors = null; gone.clear(); ravenNews.say = null; ravenNews.look = false; }
+export const _BEAKS = BEAKS;
+export const _gone = () => gone;
+export const _T = { CIRCLE, CIRCLE_OUT, REACH, GRACE, SNEAK };
 export function _spawn(x, y, n) { const k = -1 - flocks.size, f = makeFlock(k, x, y, n, 1); flocks.set(k, f); return f; }
 export const _flocks = () => flocks;

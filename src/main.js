@@ -108,7 +108,7 @@ import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
-import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir } from './world/ravens.js';
+import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir, ravenNews, ravenHush } from './world/ravens.js';
 import { stepEyes } from './world/eyes.js';
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, catPurr, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned, addOffering } from './core/sessionMemory.js';
@@ -747,11 +747,14 @@ function plateStorm() {
 // Всё, что живёт во времени помимо updateGame: ветер, вторая краска,
 // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
 // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
+// смотрит на мир: не разговор, не осмотр, не меню, не карта — только такому миру отвечает покой
+// (вопрос кота, мох на стекле, шёпот пифоса); за бумагой их счёт ждёт
+const lookingAtWorld = () => state.is('game') && !isMapOpen();
 function stepFx() {
   stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
   // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
   // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
-  const free = state.is('game') && !isMapOpen();   // смотрит на мир: не разговор, не осмотр, не карта
+  const free = lookingAtWorld();
   stepEyes(free && input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05,
     !house.active && !under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
   if (t % 10 === 0) setPurr(house.active || under.active ? 0 : catPurr(player.x + 6, player.y + 22));
@@ -765,7 +768,7 @@ function stepFx() {
   stepHangs(player);                      // подвесы: колокола, вывески, плита на кране
   stepMechs();                            // механизмы: флюгер, ветряк, маховик, ворот
   stepTownWell(player);                   // колодец у площади: мимо прошёл — ворот поскрипел
-  stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t));   // пифос ночью шепчет тому, кто задержался
+  stepMossway(player, skyAt(phaseAt(t)).moon > 0.5, dayIndex(t), free);   // пифос ночью шепчет тому, кто задержался
   // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
   // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
   beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'), beyond.visor && lookingNear(player.x + 6, player.y + 23));
@@ -777,9 +780,10 @@ function stepFx() {
   if (beyond.sighSnd) { playSigh(); beyond.sighSnd = false; }
   if (beyond.say) { showLore(beyond.say); beyond.say = null; }
   if (under.shadow && skyAt(phaseAt(t)).sun) under.shadow = false;   // тень цветка держится до первого дневного света
-  stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23));   // кто стоит на мосту, тому туман расходится
+  stepCastle(!player.moving && onBridge(player.x + 6, player.y + 23), !free);   // кто стоит на мосту, тому туман расходится; за бумагой — ждёт
   stepCats(player, locations, free);      // кот: пугается бегущего, к стоящему идёт греться; спрашивает смотрящего на мир
-  stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома
+  stepRavens(player, locations, weather); // вороны: стаи взлетают от шагов, падения, грома; в круге стаи — такт сторожа
+  if (ravenNews.say) { if (state.is('game')) showLore(ravenNews.say); ravenNews.say = null; }   // дошёл до стаи: что в клювах
   stepPuddles(player, surfName, weather, { x: camX, y: camY, vw: scaler.vw, vh: scaler.vh }, locations);
   setPress(pressAt(phaseAt(t)));          // перо: к ночи исписалось, на рассвете обмакнули
   // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
@@ -828,7 +832,7 @@ function stepFx() {
   if (lighting.sources[0]) { lighting.sources[0].x = player.x + 7; lighting.sources[0].y = player.y + 10; }
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
-  screenMoss.update(player.moving);
+  screenMoss.update(player.moving, !lookingAtWorld());   // за бумагой мох ждёт
 }
 
 // Placeholder draw function — will be replaced with proper sprites
@@ -1410,7 +1414,7 @@ function stepFxHouse() {
   lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
-  screenMoss.update(player.moving);
+  screenMoss.update(player.moving, !lookingAtWorld());   // за бумагой мох ждёт
 }
 // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
 function stepFxUnder() {
@@ -1469,7 +1473,7 @@ function stepFxUnder() {
   lighting.sources = underLights(player.x + 7, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
-  screenMoss.update(player.moving);
+  screenMoss.update(player.moving, !lookingAtWorld());   // за бумагой мох ждёт
 }
 function renderHouse() {
   const vw = scaler.vw, vh = scaler.vh;
@@ -1668,6 +1672,14 @@ function updateGame() {
       dvx = dx / dist * spd; dvy = dy / dist * spd; steering = true;
     }
   }
+  // тише едешь (world/ravens.js): принявшему ставку шаг к стае — крадучись; бег (Shift) — бег на любой земле;
+  // сторож поднял голову — автоход встаёт, как у изгороди (клик, сделанный под взглядом, — уже шаг)
+  player.running = !held && move.active && input.isDown('sprint');
+  if (ravenNews.look) {
+    ravenNews.look = false;
+    if (player.auto && !house.active && !under.active) { player.auto = false; player.walkTo = null; player.path = null; dvx = 0; dvy = 0; steering = false; }
+  }
+  if (steering && !house.active && !under.active) { const k = ravenHush(player.x + 6, player.y + 22, dvx, dvy, player.running); dvx *= k; dvy *= k; }
   // ЛЕНТА ТЯНЕТ (world/feedPull.js): у края брейнрот сносит наружу — тем слабее, чем меньше
   // подыгрываешь; всегда медленнее шага. Покой лечит (brainrot.js). Только за изгородью,
   // а за изгородь — только с пропуском Шута.

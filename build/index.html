@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 3 961 352. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 3 961 352. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 3 980 117. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 3 980 117. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -102,7 +102,9 @@ canvas#game {
 }
 #entry.art #entry-afisha { display: flex; }
 #entry-afisha.list { align-items: flex-start; text-align: left; font-size: 10px; font-size: 1.4cqh; }
-#entry-afisha .af-soon { opacity: 0.88; }
+/* COMING SOON: по середине щита и чуть ниже (слово автора 17.11); 0,11em вправо — хвост letter-spacing
+   и ширина пиксельных букв уводили текст влево (сверено на девяти экранах) */
+#entry-afisha .af-soon { opacity: 0.88; transform: translate(0.11em, 0.35em); }
 /* FALL IN — кнопка, как была до бланка: рамка, пиксельный шрифт, капс; стоит среди
    птиц. Под надписью — ночь, чтобы читалась на луне; рамка и заливка при наведении —
    киноварью канона (прежний тёмно-малиновый вне палитры) */
@@ -921,7 +923,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='bfd3693 · 2026-11-16';console.log('[оттиск]', 'bfd3693 · 2026-11-16');
+<script>window.ARDET_BUILD='ebd0dae · 2026-11-17';console.log('[оттиск]', 'ebd0dae · 2026-11-17');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -28979,9 +28981,9 @@ System.register("content/looks", [], function (exports_67, context_67) {
 Сиденье пустое. Ремень пристёгнут через ничто. На экране: KEEP HANDS ON WHEEL. Он светится семь лет подряд.
 
 Под лобовым стеклом — акт осмотра: «Водитель: не обнаружен. Ответственность: передана водителю».`,
-                lake: `Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб. Одна рыба живая. Радужная от нефти. Приспособилась.
+                lake: `Неподвижная зелёная поверхность химического супа. На берегу скелеты рыб. Один скелет живой и переливается от нефти. Приспособился.
 
-На столбе у воды табличка: «ВОДОЁМ ЗАРЫБЛЕН. ЛОВ ЗАПРЕЩЁН». Запрет соблюдается.`,
+На столбе у воды табличка: «ВОДОЁМ ЗАРЫБЛЕН. ЛОВ ЗАПРЕЩЁН». Запрет на ловлю никто не игнорирует.`,
                 library: `Остов здания. Стеллажи обнажены: книги горели, но отдельные страницы ещё шевелятся на ветру.
 
 На полке 3.14 — книга другого цвета. Внутри — твой дневник, с записями, которые ты ещё не сделал.
@@ -31400,13 +31402,17 @@ System.register("world/mossway", ["world/underside", "world/whisper", "world/dis
         locations.push(burrow);
     }
     exports_72("buildMossway", buildMossway);
-    function stepMossway(p, isNight, day) {
+    // looking: странник смотрит на мир; за бумагой задержка у пифоса ждёт (шёпот раз за ночь
+    // не должен уйти под разговор)
+    function stepMossway(p, isNight, day, looking = true) {
         if (!pithos)
             return;
         if (isNight)
             whisper_js_1.hush.add('pithos');
         else
             whisper_js_1.hush.delete('pithos');
+        if (!looking)
+            return;
         const d = Math.hypot(p.x + 6 - (pithos.x + pithos.w / 2), p.y + 23 - (pithos.y + pithos.h));
         linger = isNight && !p.moving && d < 40 ? linger + 1 : 0;
         if (linger > 240 && night !== day && whisper_js_1.sayAt(MOSS_WHISPER, pithos.x + pithos.w / 2, pithos.y - 10)) {
@@ -42157,8 +42163,8 @@ System.register("content/relooks", [], function (exports_113, context_113) {
                 ],
                 lake: [
                     { if: ['rain'], text: 'Под дождём гладь не рябит: капли ложатся на неё шариками и не тонут. Новую воду озеро не принимает.' },
-                    { if: ['night'], text: 'Ночью радуга на воде гаснет. Остаётся одна — на рыбе: видно, где она.' },
-                    { text: 'Живая рыба показывается раз в восемь секунд, на одном и том же месте, и уходит. Скелеты на берегу лежат головами к воде.' },
+                    { if: ['night'], text: 'Ночью радуга на воде гаснет. Остаётся одна — на живом скелете: видно, где он.' },
+                    { text: 'Живой скелет показывается раз в восемь секунд, на одном и том же месте, и уходит. Остальные лежат на берегу головами к воде.' },
                 ],
                 train: [
                     { if: ['night'], text: 'Ночью пар белее неба. Машинист сидит так же: ночь — не причина.' },
@@ -46209,22 +46215,26 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 r(x + bx + 1, y + by + 1, 1, 1, LK_DEEP);
             }
         }
-        // живая рыба: раз в восемь секунд, на одном и том же месте, радужная — и уходит;
-        // ночью её радуга — единственная на воде
+        // живой скелет: раз в восемь секунд, на одном и том же месте, переливается от нефти —
+        // радуга бежит по костям — и уходит; ночью его радуга — единственная на воде
         const p = time_js_25.t % 480;
         if (p < 110) {
             const u = p / 110, rise = Math.sin(u * Math.PI), fx = x + 38, fy = y + 27;
+            const film = [KV, L2, AS, MG_L, SEP], sh = Math.floor(time_js_25.t / 7), oil = k => film[(k + sh) % film.length];
             context_js_9.X.globalAlpha = Math.min(1, rise * 1.4);
-            r(fx - 2, fy + 1, 2, 1, MG_L);
-            r(fx, fy, 6, 2, MG_L);
-            r(fx + 6, fy, 1, 1, BO); // спина, хвост, глаз — костью
-            r(fx + 1, fy, 1, 1, KV);
-            r(fx + 2, fy, 1, 1, L2);
-            r(fx + 3, fy, 1, 1, AS);
-            r(fx + 4, fy, 1, 1, SEP);
-            r(fx + 2, fy + 1, 1, 1, BO); // радуга по чешуе
+            for (let k = 0; k < 7; k++)
+                r(fx + k, fy, 1, 1, oil(k)); // хребет
+            for (const k of [1, 3, 5]) {
+                r(fx + k, fy - 1, 1, 1, oil(k + 2));
+                r(fx + k, fy + 1, 1, 1, oil(k + 3));
+            } // рёбра
+            r(fx + 7, fy, 1, 1, L1);
+            r(fx + 7, fy - 1, 1, 1, BO);
+            r(fx + 8, fy, 1, 1, BO); // череп
+            r(fx - 1, fy - 1, 1, 1, oil(6));
+            r(fx - 1, fy + 1, 1, 1, oil(7)); // хвост вилкой
             if (rise > 0.6)
-                r(fx + 2, fy - 1, 2, 1, MG_L); // плавник
+                r(fx + 3, fy - 2, 1, 1, MG_L); // плавник — нитка
             context_js_9.X.globalAlpha = 1;
         }
     }
@@ -47966,13 +47976,13 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 T: ['#####', '.###.', '.###.', '.###.', '.###.', '.###.', '.###.'],
             };
             // ── ТОКСИЧНОЕ ОЗЕРО ──
-            // «Неподвижная зелёная поверхность химического супа. На берегу — скелеты рыб.
-            // Одна рыба живая. Радужная от нефти. Приспособилась. На столбе у воды табличка:
-            // „ВОДОЁМ ЗАРЫБЛЕН. ЛОВ ЗАПРЕЩЁН". Запрет соблюдается.» Повторный осмотр: «Под
-            // дождём гладь не рябит: капли ложатся на неё шариками и не тонут»; «Ночью радуга
-            // на воде гаснет. Остаётся одна — на рыбе»; «Живая рыба показывается раз в восемь
-            // секунд, на одном и том же месте, и уходит. Скелеты на берегу лежат головами к
-            // воде». Берег — ил плитами в трещинах, у воды белёсая корка; гладь — зеркало:
+            // «Неподвижная зелёная поверхность химического супа. На берегу скелеты рыб.
+            // Один скелет живой и переливается от нефти. Приспособился. На столбе у воды табличка:
+            // „ВОДОЁМ ЗАРЫБЛЕН. ЛОВ ЗАПРЕЩЁН". Запрет на ловлю никто не игнорирует.» (слово автора
+            // 17.11) Повторный осмотр: «Под дождём гладь не рябит: капли ложатся на неё шариками и
+            // не тонут»; «Ночью радуга на воде гаснет. Остаётся одна — на живом скелете»; «Живой
+            // скелет показывается раз в восемь секунд, на одном и том же месте, и уходит.
+            // Остальные лежат на берегу головами к воде». Берег — ил плитами в трещинах, у воды белёсая корка; гладь — зеркало:
             // в ней вниз головой столб с табличкой; пена у берега; радуга нефти разводами —
             // днём (второй холст на ночь — без неё). Табличка: строки штрихами, знак «лов
             // запрещён» — рыба под киноварной чертой. Лежит в земле.
@@ -48782,6 +48792,8 @@ System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulit
     function placeStamp(loc) {
         if (!loc)
             return '';
+        if (loc.stamp)
+            return loc.stamp; // своя печать вещи: дверь дома — «выхода нет»
         if (loc.under)
             return 'изнанка';
         if (loc.house)
@@ -50028,7 +50040,7 @@ System.register("content/dialogues", [], function (exports_127, context_127) {
                     `Копали фундамент
 будущего. Вырыли яму.
 В яму положили Настю.
-Будущее — нигде.
+Будущее под ногами.
 
 Это не моя строчка.
 Но я её знаю.`,
@@ -50090,7 +50102,7 @@ System.register("content/dialogues", [], function (exports_127, context_127) {
                     `Копали фундамент
 будущего. Вырыли яму.
 В яму положили Настю.
-Будущее — нигде.
+Будущее под ногами.
 
 Это не моя строчка.
 Но я её знаю.`,
@@ -50288,7 +50300,7 @@ System.register("content/lore", ["content/eggs_transfer", "content/cover_layer",
                 { x: 1600, y: 1500, id: 'l15', text: `Осколок зеркала. Отражение опаздывает на 2 секунды. Ты видишь себя уходящим.` },
                 { x: 2600, y: 700, id: 'l16', text: `«Дата-центр пил воду целого города. Город высох. Отчёт алгоритма: "Пользователей: 0. Охлаждение: в норме."»` },
                 { x: 950, y: 450, id: 'l17', text: `Компас. Стрелка крутится. Карта врёт на 3 см влево. Территория — на 3 вправо. В зазоре 6 см живёт что-то.` },
-                { x: 200, y: 1400, id: 'l18', text: `«Копали фундамент будущего. Вырыли яму. В яму положили Настю. Яма большая. Настя маленькая. Будущее — нигде.»` },
+                { x: 200, y: 1400, id: 'l18', text: `«Копали фундамент будущего. Вырыли яму. В яму положили Настю. Яма большая. Настя маленькая. Будущее под ногами.»` },
                 { x: 2800, y: 400, id: 'l19', text: `347 крышек в мешке. Каждая крышка — бутылка, которую кто-то пил.` },
                 { x: 1400, y: 200, id: 'l20', text: `«Чёрный экран. В нём — твоё лицо. Лицо постарело, пока смотрело. Экран — нет.»` },
                 { x: 1750, y: 1100, id: 'l21', text: `«Игра в бисер. Партия №7. Тема: пепел. Магистр Йозеф К. опаздывает на 11 лет. Бисер — есть. Игроков — нет.»` },
@@ -52571,7 +52583,11 @@ System.register("render/metaFx", ["render/scaler", "core/time"], function (expor
                     '#241c14', '#2f372c', '#3D4A3A', '#4d5a49',
                     '#15100c', '#2f372c', '#3D4A3A', '#505948',
                 ],
-                update(isMoving) {
+                // paused: странник читает бумагу (разговор, осмотр, меню, карта) — на мир не смотрит:
+                // мох не растёт и не отступает, счёт покоя ждёт (как вопрос кота, world/silentCat.js)
+                update(isMoving, paused = false) {
+                    if (paused)
+                        return;
                     const vw = scaler_js_18.scaler.vw, vh = scaler_js_18.scaler.vh;
                     if (isMoving) {
                         this.still = 0;
@@ -58844,8 +58860,10 @@ System.register("render/castle", ["world/disc", "world/wind", "core/time"], func
         return Math.max(0, 1 - Math.hypot(dx, dy) / 300);
     }
     // stand — стоит ли странник на мосту (0/1); шаг — 60 раз в секунду
-    function stepCastle(stand) {
-        clear = stand ? Math.min(1, clear + 1 / 240) : Math.max(0, clear - 1 / 400); // ~4 с — разошёлся, ~7 — сошёлся
+    // paused: странник за бумагой — туман не расходится и не сходится, ждёт; ветер его сносит по-прежнему
+    function stepCastle(stand, paused = false) {
+        if (!paused)
+            clear = stand ? Math.min(1, clear + 1 / 240) : Math.max(0, clear - 1 / 400); // ~4 с — разошёлся, ~7 — сошёлся
         let d = wind_js_21.wind.ang + Math.PI - vaneA; // флюгер: навстречу ветру, с ленцой
         d = Math.atan2(Math.sin(d), Math.cos(d));
         vaneA += d * 0.01;
@@ -61489,10 +61507,46 @@ System.register("world/pets", ["core/time", "world/disc", "render/context", "ren
         }
     };
 });
-System.register("world/ravens", ["core/time", "render/draw", "world/wind", "world/disc", "world/surface", "audio/audio"], function (exports_160, context_160) {
+System.register("world/ravens", ["core/time", "render/draw", "world/wind", "world/disc", "world/surface", "audio/audio", "world/sky"], function (exports_160, context_160) {
     "use strict";
-    var time_js_39, draw_js_12, wind_js_23, disc_js_47, surface_js_2, audio_js_11, CELL, NEAR, FORGET, LEASH, BIRD, SHEEN, flocks, overs, nextOver, lastCaw, lastFlash, grid, near, pending, anchors, ravenDepth, _flocks;
+    var time_js_39, draw_js_12, wind_js_23, disc_js_47, surface_js_2, audio_js_11, sky_js_14, CELL, NEAR, FORGET, LEASH, BIRD, SHEEN, flocks, overs, nextOver, lastCaw, lastFlash, grid, CIRCLE, CIRCLE_OUT, REACH, GRACE, SNEAK, gone, lightKey, ravenNews, BEAKS, near, boutOf, pending, anchors, ravenDepth, _BEAKS, _gone, _T, _flocks;
     var __moduleName = context_160 && context_160.id;
+    // 0 — не уходила; 1 — ушла, свет тот же; 2 — свет сменился: возвращается (по воздуху)
+    function goneState(key) {
+        const g = gone.get(key);
+        if (g === undefined)
+            return 0;
+        if (g === lightKey())
+            return 1;
+        gone.delete(key);
+        return 2;
+    }
+    // вернуться домой по воздуху — из-за дома, не из ничего на глазах
+    function flyHome(f, px, py) {
+        const a = Math.atan2(f.hy - py, f.hx - px) + (Math.random() - 0.5) * 0.8;
+        for (const b of f.birds) {
+            b.x = f.hx + Math.cos(a) * 600 + (Math.random() - 0.5) * 30;
+            b.y = f.hy + Math.sin(a) * 600 + (Math.random() - 0.5) * 20;
+            b.st = 'fly';
+            b.z = 40;
+            b.vx = 0;
+            b.vy = 0;
+            b.vz = 0;
+            b.cruise = 40;
+            b.near = 0;
+            b.delay = -1;
+            b.hop = null;
+            b.ox = (Math.random() - 0.5) * 24;
+            b.oy = (Math.random() - 0.5) * 10;
+        }
+        f.st = 'up';
+        f.tx = f.hx;
+        f.ty = f.hy;
+    }
+    function beaksOf(x, y) {
+        const r = disc_js_47.ringAt(x, y);
+        return r === 0 ? BEAKS.town : r <= disc_js_47.RINGS ? BEAKS[r] : r === disc_js_47.RINGS + 1 ? BEAKS.fire : BEAKS.edge;
+    }
     // ── звук ──
     function flutter(vol) {
         const ctx = audio_js_11.getCtx();
@@ -61569,12 +61623,22 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
                 x, y, z: 0, vx: 0, vy: 0, vz: 0, st: 'ground', dir: draw_js_12.hash(seed, k, 4.4) < 0.5 ? -1 : 1,
                 next: 20 + Math.floor(draw_js_12.hash(seed, k, 5.5) * 120), peck: 0, hop: null, delay: -1,
                 flap: draw_js_12.hash(seed, k, 6.6) * 6, glide: 0, ox: 0, oy: 0, cruise: 30, last: 1,
+                // такт сторожа: клевок 14–22 кадра, в заходе от 2–3 до 3–5 клевков, голову держит 50–99
+                per: 14 + Math.floor(draw_js_12.hash(seed, k, 7.7) * 9), nLo: 0, nHi: 0, hold: 50 + Math.floor(draw_js_12.hash(seed, k, 9.9) * 50),
+                alert: false, fz: 0, show: false, item: Math.floor(draw_js_12.hash(seed, k, 11.3) * 4),
             });
+            const b = birds[k];
+            b.nLo = 2 + Math.floor(draw_js_12.hash(seed, k, 8.8) * 2);
+            b.nHi = b.nLo + 1 + Math.floor(draw_js_12.hash(seed, k, 10.1) * 2);
         }
-        return { key, hx, hy, birds, st: 'calm', tx: hx, ty: hy, i: null, j: null };
+        return { key, hx, hy, birds, st: 'calm', tx: hx, ty: hy, i: null, j: null,
+            sentry: null, phase: 'bout', tm: 0, left: 0, lookT: 0, player: false, armed: false, looked: false, cat: false, tame: false, said: false, leave: null, pd: null, wx: hx, wy: hy };
     }
-    function flockAt(i, j, locations) {
+    function flockAt(i, j, locations, px, py) {
         const key = i * 100003 + j;
+        const gs = goneState(key);
+        if (gs === 1)
+            return null; // ушла от шага под взглядом — до смены света
         if (flocks.has(key))
             return flocks.get(key);
         let f = { empty: true, i, j };
@@ -61583,6 +61647,8 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             f = makeFlock(key, hx, hy, 3 + Math.floor(draw_js_12.hash(i, j, 1.9) * 5), i * 7 + j * 13);
             f.i = i;
             f.j = j;
+            if (gs === 2)
+                flyHome(f, px, py);
         }
         flocks.set(key, f);
         return f.empty ? null : f;
@@ -61611,23 +61677,169 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         }
         return { x: f.hx, y: f.hy }; // некуда — домой
     }
-    function startle(f, px, py, first, locations, d) {
+    function startle(f, px, py, first, locations, d, far = false) {
         if (f.st !== 'calm')
             return;
         f.st = 'up';
         f.thx = px;
         f.thy = py; // откуда угроза — прочь от неё
-        const tg = pickTarget(f, px, py, locations);
-        f.tx = tg.x;
-        f.ty = tg.y;
+        f.sentry = null;
+        f.player = false;
+        f.armed = false;
+        f.looked = false;
+        f.cat = false;
+        f.tame = false;
+        for (const b of f.birds) {
+            b.alert = false;
+            b.show = false;
+        }
+        if (far || f.leave) { // шаг под взглядом: уходят из виду, до смены света
+            const c = center(f), base = Math.atan2(c.y - py, c.x - px); // ушедшую спугнули снова — опять прочь, не домой
+            let x = 0, y = 0;
+            for (let k = 0; k < 12; k++) {
+                const a = base + (Math.random() - 0.5) * (0.5 + k * 0.25), r = 560 + Math.random() * 160;
+                x = c.x + Math.cos(a) * r;
+                y = c.y + Math.sin(a) * r;
+                if (freeSpot(x, y, locations))
+                    break;
+            }
+            f.tx = x;
+            f.ty = y;
+            f.leave = f.leave || lightKey();
+        }
+        else {
+            const tg = pickTarget(f, px, py, locations);
+            f.tx = tg.x;
+            f.ty = tg.y;
+        }
         for (const b of f.birds) {
             b.delay = 1 + Math.round(Math.hypot(b.x - first.x, b.y - first.y) * 0.6 + Math.random() * 6); // по цепочке
             b.ox = (Math.random() - 0.5) * 28;
             b.oy = (Math.random() - 0.5) * 14;
         }
         flutter(near(d, 0.05));
-        if (Math.random() < 0.65)
+        if (far || Math.random() < 0.65)
             setTimeout(() => caw(near(d, 0.035)), 120 + Math.random() * 300);
+    }
+    // клевок сторожа — сухой щелчок о землю, у самого порога слуха: такт слышно и с закрытыми глазами
+    function tap(vol) {
+        const ctx = audio_js_11.getCtx();
+        if (!ctx || ctx.state !== 'running' || vol < 0.001)
+            return;
+        const len = Math.floor(ctx.sampleRate * 0.012), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+        for (let j = 0; j < len; j++)
+            d[j] = (Math.random() * 2 - 1) * Math.exp(-j / (len * 0.2));
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        s.buffer = b;
+        f.type = 'bandpass';
+        f.frequency.value = 1800 + Math.random() * 500;
+        f.Q.value = 1.5;
+        g.gain.value = vol;
+        s.connect(f);
+        f.connect(g);
+        g.connect(audio_js_11.getOut());
+        s.start();
+    }
+    function peckNow(f, s) {
+        s.peck = 9;
+        if (f.player)
+            tap(near(Math.hypot(s.x - f.wx, s.y - f.wy), 0.014));
+    }
+    // ближняя к пришедшему птица — сторож; начинает с захода клевков (вошёл — не значит попался)
+    function engage(f, x, y) {
+        let best = null, bd = 1e9;
+        for (const b of f.birds) {
+            if (b.st !== 'ground')
+                continue;
+            const d = Math.hypot(b.x - x, b.y - y);
+            if (d < bd) {
+                bd = d;
+                best = b;
+            }
+        }
+        if (!best)
+            return;
+        for (const o of f.birds)
+            o.alert = false; // прерванный взгляд (кот стерёг) не висит над новым заходом
+        f.sentry = best;
+        f.phase = 'bout';
+        f.left = boutOf(best);
+        f.tm = best.per;
+        f.lookT = 0;
+        f.wx = x;
+        f.wy = y;
+        f.pd = null;
+        peckNow(f, best);
+    }
+    function disengage(f) {
+        f.sentry = null;
+        f.tame = false;
+        f.pd = null;
+        for (const b of f.birds) {
+            b.alert = false;
+            b.show = false;
+        }
+    }
+    // такт: заход клевков → голову вверх (стая замирает по цепочке) → снова клюёт
+    function stepWatch(f) {
+        const s = f.sentry;
+        if (!s || s.st !== 'ground') {
+            disengage(f);
+            return;
+        }
+        if (f.tame)
+            return;
+        if (f.phase === 'bout') {
+            if (--f.tm > 0)
+                return;
+            if (--f.left > 0) {
+                f.tm = s.per;
+                peckNow(f, s);
+                return;
+            }
+            f.phase = 'look';
+            f.lookT = 0;
+            f.tm = Math.round(s.hold * (0.8 + Math.random() * 0.4));
+            if (f.player && f.armed)
+                ravenNews.look = true; // автоход встаёт, как у изгороди
+            s.peck = 0;
+            s.alert = true;
+            for (const b of f.birds)
+                if (b !== s)
+                    b.fz = 1 + Math.round(Math.hypot(b.x - s.x, b.y - s.y) * 0.5 + Math.random() * 4);
+            return;
+        }
+        f.lookT++;
+        s.dir = f.wx > s.x ? 1 : -1; // смотрит на того, кто подходит
+        if (--f.tm > 0)
+            return;
+        f.phase = 'bout';
+        f.left = boutOf(s);
+        f.tm = s.per;
+        if (f.player && f.armed)
+            f.looked = true; // выстоял взгляд
+        for (const b of f.birds)
+            b.alert = false;
+        peckNow(f, s);
+    }
+    // дошёл: перестали считать — в клювах видно, что несут; одна строка
+    function tame(f) {
+        f.tame = true;
+        f.phase = 'bout';
+        const list = beaksOf(f.hx, f.hy), seen = [];
+        for (const b of f.birds) {
+            b.alert = false;
+            b.show = true;
+            const it = list[b.item % list.length];
+            b.beak = it[1];
+            if (!seen.includes(it[0]))
+                seen.push(it[0]);
+        }
+        if (!f.said) {
+            f.said = true;
+            const names = seen.slice(0, 3);
+            ravenNews.say = 'В клювах: ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' и ' + names[names.length - 1] : names[0]) + '.';
+        }
     }
     function takeoff(b, px, py) {
         const a = Math.atan2(b.y - py, b.x - px) + (Math.random() - 0.5) * 1.0, s = 1.8 + Math.random() * 0.8;
@@ -61661,10 +61873,19 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         }
         if (b.peck > 0)
             b.peck--;
+        if (f.sentry && !f.tame) {
+            if (b === f.sentry)
+                return; // сторож живёт тактом (stepWatch)
+            if (f.phase === 'look' && f.lookT >= b.fz) {
+                b.alert = true;
+                b.peck = 0;
+                return;
+            } // замерла по цепочке
+        }
         if (d < 90)
             b.dir = px > b.x ? 1 : -1; // смотрит на странника
-        // идёт на птицу — отпрыгивает (держит дистанцию)
-        if (ps > 0.5 && d < 55 && pvx * dx + pvy * dy > 0 && b.delay < 0) {
+        // идёт на птицу — отпрыгивает (держит дистанцию); в круге стаи — нет: там решает сторож
+        if (!f.armed && ps > 0.5 && d < 55 && pvx * dx + pvy * dy > 0 && b.delay < 0) {
             const s = 4 + Math.random() * 2;
             b.hop = { k: 0, n: 12, dx: dx / d * s, dy: dy / d * s * 0.6 };
             b.dir = dx > 0 ? 1 : -1;
@@ -61744,6 +61965,43 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         return best;
     }
     exports_160("calmRavenNear", calmRavenNear);
+    // тише едешь: в круге стаи шаг к ней — крадучись; мимо, прочь и бегом — как шёл (бег пугает стаю)
+    function ravenHush(px, py, dvx, dvy, running = false) {
+        const v = Math.hypot(dvx, dvy);
+        if (running || v <= SNEAK || v > 3)
+            return 1;
+        for (const f of flocks.values()) {
+            if (f.empty || !f.armed || !f.sentry || f.tame || f.st !== 'calm')
+                continue;
+            const dx = f.sentry.x - px, dy = f.sentry.y - py, d = Math.hypot(dx, dy) || 1;
+            if ((dvx * dx + dvy * dy) / (v * d) > 0.5)
+                return SNEAK / v; // к стае, в пределах 60°
+        }
+        return 1;
+    }
+    exports_160("ravenHush", ravenHush);
+    // кот у стаи крадётся в такт сторожа (silentCat.js): клюёт — идёт, поднял голову — замер
+    function ravenWatch(f, x, y) {
+        if (!f || f.empty || f.st !== 'calm' || f.leave)
+            return false;
+        if (!f.sentry)
+            engage(f, x, y);
+        f.cat = true;
+        if (!f.player) {
+            f.wx = x;
+            f.wy = y;
+        }
+        return f.phase === 'look' && !f.tame;
+    }
+    exports_160("ravenWatch", ravenWatch);
+    function ravenUnwatch(f) {
+        if (!f || f.empty)
+            return;
+        f.cat = false;
+        if (!f.player)
+            disengage(f);
+    }
+    exports_160("ravenUnwatch", ravenUnwatch);
     function anchorFlocks(locations, px, py) {
         if (!anchors) {
             anchors = [];
@@ -61759,14 +62017,22 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             }
         }
         for (const a of anchors) {
-            if (!flocks.has(a.key) && Math.hypot(a.x - px, a.y - py) < NEAR)
-                flocks.set(a.key, makeFlock(a.key, a.x, a.y, 5, 77));
+            if (flocks.has(a.key))
+                continue;
+            const gs = goneState(a.key);
+            if (gs === 1 || Math.hypot(a.x - px, a.y - py) >= NEAR)
+                continue;
+            const f = makeFlock(a.key, a.x, a.y, 5, 77);
+            if (gs === 2)
+                flyHome(f, px, py);
+            flocks.set(a.key, f);
         }
     }
     // шаг мира
     function stepRavens(player, locations, weather) {
         const px = player.x + 6, py = player.y + 22;
         const pvx = player.vx || 0, pvy = player.vy || 0, ps = Math.hypot(pvx, pvy);
+        const run = ps > 3 || (player.running && ps > 1.2); // бег — намерение (Shift), на любой земле
         // гром: вспышка молнии поднимает всех в округе
         const flash = weather && weather.lightning > 34;
         if (flash && !lastFlash)
@@ -61777,7 +62043,7 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         if (grid) {
             for (let i = ci - 1; i <= ci + 1; i++)
                 for (let j = cj - 1; j <= cj + 1; j++)
-                    flockAt(i, j, locations);
+                    flockAt(i, j, locations, px, py);
             anchorFlocks(locations, px, py);
         }
         for (const [key, f] of flocks) {
@@ -61788,21 +62054,71 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             }
             const c = center(f), dc = Math.hypot(c.x - px, c.y - py);
             if (dc > FORGET && Math.hypot(f.hx - px, f.hy - py) > FORGET) {
+                if (f.leave)
+                    gone.set(key, f.leave);
                 flocks.delete(key);
                 continue;
             }
-            if (dc > NEAR)
+            if (f.leave && f.birds.every(b => Math.hypot(b.x - px, b.y - py) > 420)) {
+                gone.set(key, f.leave);
+                flocks.delete(key);
                 continue;
-            // тревога: бегущий, вплотную, идущий прямо, шум
+            }
+            // вышел из круга (или перенёсся: ворота, лестница) — сторож снят; до отсечки дальних
+            if (f.player && dc > CIRCLE_OUT) {
+                f.player = false;
+                f.armed = false;
+                f.looked = false;
+                f.said = false;
+                if (f.cat) {
+                    f.tame = false;
+                    f.pd = null;
+                    for (const b of f.birds)
+                        b.show = false;
+                }
+                else
+                    disengage(f);
+            }
+            if (dc > NEAR && f.st !== 'up')
+                continue; // летящие (и те, что возвращаются домой) — летят и вдали
+            // вошёл — сторож: ближняя к нему птица, свой заход клевков (и если стерёг кот)
+            if (f.st === 'calm' && !f.leave) {
+                if (!f.player && dc < CIRCLE) {
+                    f.player = true;
+                    f.wx = px;
+                    f.wy = py;
+                    engage(f, px, py);
+                }
+                if (f.player && !f.armed && ps < 0.05)
+                    f.armed = true; // встал в круге — принял ставку
+            }
+            // тревога: бегущий, шум; не принявшему ставку — ещё вплотную и идущий прямо
             if (f.st === 'calm') {
                 for (const b of f.birds) {
                     const dx = b.x - px, dy = b.y - py, d = Math.hypot(dx, dy);
                     const loud = pending.find(q => Math.hypot(b.x - q.x, b.y - q.y) < q.r);
-                    if (d < 30 || (ps > 3 && d < 95) || (ps > 1.2 && d < 50 && pvx * dx + pvy * dy > 0) || loud) {
+                    if ((!f.armed && (d < 30 || (ps > 1.2 && d < 50 && pvx * dx + pvy * dy > 0))) || (run && d < 95) || loud) {
                         const from = loud && loud.fx !== undefined ? loud : null; // угроза не от странника — кот
                         startle(f, from ? from.fx : px, from ? from.fy : py, b, locations, d);
                         break;
                     }
+                }
+            }
+            // такт сторожа; у странника в круге — шаг под взглядом и «дошёл»
+            if (f.st === 'calm' && f.sentry) {
+                if (f.player) {
+                    f.wx = px;
+                    f.wy = py;
+                }
+                stepWatch(f);
+                if (f.armed && f.sentry && !f.tame) {
+                    const ds = Math.hypot(f.sentry.x - px, f.sentry.y - py);
+                    if (ds < REACH && f.looked)
+                        tame(f);
+                    else if (f.phase === 'look' && f.lookT > GRACE && f.pd !== null && f.pd - ds > 0.25 && ps > 0.2 && player.moving !== false) { // снос лентой — не шаг
+                        startle(f, px, py, f.sentry, locations, ds, true); // шаг под взглядом
+                    }
+                    f.pd = ds;
                 }
             }
             let up = 0;
@@ -61875,12 +62191,23 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
         ctx.fillRect(Math.round(b.x) - 3, Math.round(b.y) + 2, 6, 1);
         ctx.globalAlpha = 1;
         at(-3, 0, 5); // тело — от хвоста к груди
+        let bx = 4, by = -2; // где кончик клюва (для вещи в нём)
         if (b.peck > 0) {
             at(-1, -1, 3);
             at(2, 0);
             at(3, 1);
             at(-4, -1);
+            bx = 4;
+            by = 1;
         } // клюёт: голова к земле, хвост вверх
+        else if (b.alert) {
+            at(-1, -1, 4);
+            at(1, -2);
+            at(1, -3, 2);
+            at(3, -3);
+            at(-3, 1);
+            by = -3;
+        } // голова поднята, шея вытянута
         else {
             at(-1, -1, 4);
             at(1, -2, 2);
@@ -61891,6 +62218,11 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             at(-1, 1);
             at(1, 1);
         } // лапы
+        if (b.show && b.beak) {
+            ctx.fillStyle = b.beak;
+            at(bx, by);
+            ctx.fillStyle = BIRD;
+        } // дошёл: видно, что в клюве
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = SHEEN;
         at(-1, -1, 2); // отлив пера на спине
@@ -61956,7 +62288,7 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
     }
     exports_160("drawRavensAir", drawRavensAir);
     // для тестов
-    function _reset(g = true) { flocks.clear(); overs.length = 0; pending.length = 0; grid = g; nextOver = 1e9; lastFlash = 0; anchors = null; }
+    function _reset(g = true) { flocks.clear(); overs.length = 0; pending.length = 0; grid = g; nextOver = 1e9; lastFlash = 0; anchors = null; gone.clear(); ravenNews.say = null; ravenNews.look = false; }
     exports_160("_reset", _reset);
     function _spawn(x, y, n) { const k = -1 - flocks.size, f = makeFlock(k, x, y, n, 1); flocks.set(k, f); return f; }
     exports_160("_spawn", _spawn);
@@ -61979,6 +62311,9 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             },
             function (audio_js_11_1) {
                 audio_js_11 = audio_js_11_1;
+            },
+            function (sky_js_14_1) {
+                sky_js_14 = sky_js_14_1;
             }
         ],
         execute: function () {
@@ -61990,13 +62325,43 @@ System.register("world/ravens", ["core/time", "render/draw", "world/wind", "worl
             flocks = new Map();
             overs = []; // пролёт над головой
             nextOver = 7200 + Math.floor(Math.random() * 7200), lastCaw = -99999, lastFlash = 0, grid = true;
+            // ── Тише едешь ──
+            CIRCLE = 150; // ближе к середине стаи — у неё сторож
+            CIRCLE_OUT = 190; // дальше — сторож снят, приход кончился
+            REACH = 22; // до сторожа ближе этого — дошёл
+            GRACE = 15; // поднял голову — столько кадров встать: на грани реакции, вернее считать клевки
+            SNEAK = 0.9; // в круге шаг к стае — крадучись (шаг 2,4 дошёл бы за один заход клевков)
+            gone = new Map(); // стая ушла от шага под взглядом: ключ → свет, при котором ушла
+            lightKey = () => sky_js_14.dayIndex(time_js_39.t) + ':' + sky_js_14.skyAt(sky_js_14.phaseAt(time_js_39.t)).name; // сутки сменяются на рассвете — ключ не рвётся посреди света
+            // дошёл — строка в ленту (main.js), одна на приход; голову подняли — автоход встаёт (main.js)
+            exports_160("ravenNews", ravenNews = { say: null, look: false });
+            // что у птиц в клювах: вещи кольца, где стая живёт; цвет — пиксель у клюва
+            BEAKS = {
+                town: [['пуговица от пальто', '#8A8D8F'], ['жетон гардероба № 40', '#E28A3A'], ['ключ без брелока', '#8A8D8F'], ['крышка от кефира', '#b0a284']],
+                1: [['черепок с половиной слова', '#3A3026'], ['косточка финика', '#3A3026'], ['бусина из сердолика', '#C23B2B'], ['щепка от весла', '#b0a284']],
+                2: [['медная монета со стёртым до затылка профилем', '#E28A3A'], ['фибула без иглы', '#E28A3A'], ['косточка оливки', '#3A3026'], ['камешек от мозаики', '#8A8D8F']],
+                3: [['свинцовая пломба паломника', '#8A8D8F'], ['обрезок пергамента с буквицей', '#b0a284'], ['бусина от чёток', '#D9CFB8'], ['гвоздь', '#8A8D8F']],
+                4: [['черенок глиняной трубки', '#D9CFB8'], ['пуговица с гербом', '#E28A3A'], ['игральная кость со стёртой точкой', '#D9CFB8'], ['хлебная корка', '#3A3026']],
+                5: [['литера «ять» из наборной кассы', '#8A8D8F'], ['сургучная крошка', '#C23B2B'], ['вырезанная ножницами сноска', '#b0a284'], ['пуговица от камзола', '#E28A3A']],
+                6: [['заклёпка', '#8A8D8F'], ['ключ от карманных часов', '#E28A3A'], ['билет третьего класса', '#b0a284'], ['стекло от пенсне', '#D9CFB8']],
+                7: [['гильза', '#E28A3A'], ['значок отличника', '#C23B2B'], ['жетон с номером', '#8A8D8F'], ['пуговица от шинели', '#8A8D8F']],
+                8: [['крышка от «Пепси»', '#C23B2B'], ['жетон метро', '#E28A3A'], ['метр магнитной ленты', '#3A3026'], ['скрепка', '#8A8D8F']],
+                9: [['SIM-карта', '#E28A3A'], ['кольцо от банки', '#8A8D8F'], ['один беспроводной наушник', '#D9CFB8'], ['чек на ноль рублей', '#b0a284']],
+                fire: [['уголёк', '#E28A3A'], ['оплавленная пуговица', '#8A8D8F'], ['обгорелая спичка', '#3A3026']],
+                edge: [['обрывок субтитров', '#b0a284'], ['скрепка', '#8A8D8F'], ['битый пиксель', '#C23B2B']],
+            };
             near = (d, base) => base * Math.max(0, 1 - d / 380);
+            // ── сторож ──
+            boutOf = s => s.nLo + Math.floor(Math.random() * (s.nHi - s.nLo + 1));
             // шум у странника — упал, гром: стаи в радиусе r поднимаются
             // (fx, fy) — откуда угроза (прочь от неё и полетят); без них — от странника
             pending = [];
             // стаи на своих местах всегда: у Гнезда Ворона — его стая
             anchors = null;
             exports_160("ravenDepth", ravenDepth = b => b.y + 2);
+            exports_160("_BEAKS", _BEAKS = BEAKS);
+            exports_160("_gone", _gone = () => gone);
+            exports_160("_T", _T = { CIRCLE, CIRCLE_OUT, REACH, GRACE, SNEAK });
             exports_160("_flocks", _flocks = () => flocks);
         }
     };
@@ -62135,6 +62500,10 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
         still = ps < 0.05 ? still + 1 : 0;
         const px = player.x + 6, py = player.y + 22; // где странник у земли
         for (const c of cats) {
+            if (c.watching && c.st !== 'stalk') {
+                ravens_js_1.ravenUnwatch(c.preyF);
+                c.watching = false;
+            } // бросил охоту (спугнули, ушёл странник) — сторож снят
             const dx = c.x + 2 - px, dy = c.y + 3 - py, d = Math.hypot(dx, dy);
             if (d > NEAR && Math.hypot(c.hx - px, c.hy - py) > NEAR) { // далеко: дома, не считается
                 c.x = c.hx;
@@ -62219,23 +62588,21 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                         }
                     }
                     break;
-                case 'stalk': { // крадётся, замирает
+                case 'stalk': { // крадётся в такт сторожа: клюёт — идёт, смотрит — замер
                     const b = c.prey;
                     if (!b || b.st !== 'ground' || c.preyF.st !== 'calm') {
+                        ravens_js_1.ravenUnwatch(c.preyF);
                         c.st = 'miss';
                         c.tm = 90;
                         break;
                     }
                     c.lookX = b.x;
-                    if (c.freeze > 0) {
-                        c.freeze--;
+                    c.watching = true;
+                    if (ravens_js_1.ravenWatch(c.preyF, c.x + 2, c.y + 3)) {
+                        c.freeze = 1;
                         break;
                     }
-                    if (--c.tm <= 0) {
-                        c.freeze = 40 + Math.floor(Math.random() * 50);
-                        c.tm = 50 + Math.floor(Math.random() * 70);
-                        break;
-                    }
+                    c.freeze = 0;
                     const ex = b.x - (c.x + 2), ey = b.y - (c.y + 3), e = Math.hypot(ex, ey) || 1;
                     if (e < POUNCE) { // прыжок — стая взлетает от кота
                         c.st = 'pounce';
@@ -62243,11 +62610,13 @@ System.register("world/silentCat", ["core/time", "core/events", "world/wind", "w
                         c.fy = ey / e;
                         c.run = Math.min(16, e + 4);
                         c.dir = ex >= 0 ? 1 : -1;
+                        ravens_js_1.ravenUnwatch(c.preyF);
                         ravens_js_1.startleRavens(b.x, b.y, 60, c.x + 2, c.y + 3);
                         break;
                     }
                     const nx = c.x + ex / e * 0.16, ny = c.y + ey / e * 0.16;
                     if (blockedFrom(c, nx, ny, HUNT)) {
+                        ravens_js_1.ravenUnwatch(c.preyF);
                         c.st = 'miss';
                         c.tm = 90;
                         break;
@@ -67858,7 +68227,7 @@ System.register("world/house", ["world/town"], function (exports_177, context_17
                 { id: 'h_boots', name: 'Ботинки', x: BOOTS.x - 7, y: BOOTS.gy - 8, w: 14, h: 10, at: [196, 102],
                     look: 'Ботинки у порога. Стоптаны сильнее, чем помнишь.', shown: () => house.boots }, // канон
                 { id: 'h_door', name: 'Дверь', x: DOOR.x0, y: FRONT.y0 - 8, w: DOOR.x1 - DOOR.x0, h: 14, at: [ENTRY.x, ENTRY.y],
-                    look: 'Дверь на улицу. Не заперта. Над ручкой, штампом: «ВЫХОДА НЕТ».', useAction: 'house_exit', useLabel: '<i>⌂</i>ВЫЙТИ' },
+                    look: 'Дверь на улицу. Не заперта.', stamp: 'выхода нет', useAction: 'house_exit', useLabel: '<i>⌂</i>ВЫЙТИ' }, // штамп окна осмотра — надпись над ручкой (слово автора 17.11)
             ]);
             for (const th of THINGS)
                 th.house = true;
@@ -69019,7 +69388,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/whisper", "render/particles", "render/puddles", "render/atmosphere", "render/weather", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_183, context_183) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_14, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_7, geiger_js_1, wind_js_25, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_15, redNoon_js_7, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_47, player_js_4, wardrobe_js_4, garments_js_2, context_js_19, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_2, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_12, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_51, ulitsa_db_js_15, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_4, idle_js_1, whisper_js_4, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_2, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_3, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_1, placeStamp_js_3, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_6, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_2, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, prefs_js_8, audio_js_13, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, time_js_48, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
     var __moduleName = context_183 && context_183.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_3.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_15.SEGMENTS.length ? ulitsa_db_js_15.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -69034,7 +69403,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
             player: house_js_2.house.active ? house_js_2.doorOutside() : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : { x: player.x, y: player.y }, off: disc_js_51.OFF, geo: disc_js_51.GEO,
             talkedTo: Array.from(flags.talkedTo),
-            clock: sky_js_14.worldClock(time_js_48.t),
+            clock: sky_js_15.worldClock(time_js_48.t),
             mail: threads_js_2.saveMail(),
             visited: Array.from(flags.visited),
             walked: Array.from(flags.walked),
@@ -69088,7 +69457,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.visor = false;
         whisper_js_4.clear(); // шёпот улицы остался на улице
         redNoon_js_7.muteRedNoon(true);
-        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)));
     }
     function sitOnLog(loc) {
         player.x = loc.x + loc.w / 2 - 6;
@@ -69117,7 +69486,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function leaveHouse() { const d = house_js_2.doorOutside(); teleportWithFade(d.x, d.y, outOfHouse); }
     // клик в доме: к вещи — до места у неё, из комнаты в сени — через проём
     function walkHouse(gx, gy, at = null) {
-        const th = at || physics_js_2.findLocationAt(gx, gy, house_js_2.houseThings(!sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).sun), 4);
+        const th = at || physics_js_2.findLocationAt(gx, gy, house_js_2.houseThings(!sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).sun), 4);
         const path = th ? house_js_2.houseRoute(player.x + 6, player.y + 23, th.at[0], th.at[1]) : house_js_2.houseRoute(player.x + 6, player.y + 23, gx, gy);
         if (!path.length)
             return;
@@ -69267,7 +69636,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     // вдвое), сила дня (низкое солнце — резче; у горизонта гаснет), сила луны, нажим пера.
     // Красный полдень — час без теней: штрих теряет свет вместе с тенями
     function groundLight() {
-        const p = sky_js_14.phaseAt(time_js_48.t), sk = sky_js_14.skyAt(p), sh = sky_js_14.shadowAt(p), fade = 1 - redNoon_js_7.redNoon.k;
+        const p = sky_js_15.phaseAt(time_js_48.t), sk = sky_js_15.skyAt(p), sh = sky_js_15.shadowAt(p), fade = 1 - redNoon_js_7.redNoon.k;
         let day = 0;
         if (sk.sun) {
             const e = sk.sun.elev, k = Math.min(1, e / 0.12);
@@ -69317,8 +69686,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (!NO_GRASS)
             grass_js_2.drawGrass(worldCtx, { x: camX, y: camY }, player); // трава гнётся по ветру и расступается
         if (!NO_SHADOW) { // тени по времени суток и от костра
-            const sk = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)), fade = 1 - redNoon_js_7.redNoon.k; // красный полдень — час без теней
-            const sun = sky_js_14.shadowAt(sky_js_14.phaseAt(time_js_48.t)), fs = fireShadow(sk, camX, camY, vw, vh);
+            const sk = sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)), fade = 1 - redNoon_js_7.redNoon.k; // красный полдень — час без теней
+            const sun = sky_js_15.shadowAt(sky_js_15.phaseAt(time_js_48.t)), fs = fireShadow(sk, camX, camY, vw, vh);
             sun.a *= fade;
             sun.wash *= fade;
             if (fs) {
@@ -69443,7 +69812,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // Readability floor: night was 0.28 (28% brightness through the
         // multiply layer) — dramatic on a desk, near-black on a phone in
         // daylight. 0.40 keeps lamps/campfire meaningful but terrain legible.
-        const ambient = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).light; // сутки по канону: 0.40 ночь … 0.82 полдень
+        const ambient = sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).light; // сутки по канону: 0.40 ночь … 0.82 полдень
         const lit = lighting_js_1.lighting.sources, theirs = net_js_4.otherLights('surface', camX, camY, vw, vh); // чужие огоньки — только на этот кадр
         if (theirs.length)
             lighting_js_1.lighting.sources = lit.concat(theirs);
@@ -69493,15 +69862,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             st += 1;
         return Math.min(1, st);
     }
-    // ═══ ШАГ ЭФФЕКТОВ ═══
-    // Всё, что живёт во времени помимо updateGame: ветер, вторая краска,
-    // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
-    // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
     function stepFx() {
         net_js_3.stepNet(player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
         // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
         // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
-        const free = state_js_9.state.is('game') && !worldmap_js_1.isOpen(); // смотрит на мир: не разговор, не осмотр, не карта
+        const free = lookingAtWorld();
         eyes_js_2.stepEyes(free && input_js_2.input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05, !house_js_2.house.active && !underside_js_4.under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
         if (time_js_48.t % 10 === 0)
             audio_js_12.setPurr(house_js_2.house.active || underside_js_4.under.active ? 0 : silentCat_js_1.catPurr(player.x + 6, player.y + 22));
@@ -69521,7 +69886,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         hang_js_13.stepHangs(player); // подвесы: колокола, вывески, плита на кране
         mechanisms_js_6.stepMechs(); // механизмы: флюгер, ветряк, маховик, ворот
         townWell_js_2.stepTownWell(player); // колодец у площади: мимо прошёл — ворот поскрипел
-        mossway_js_2.stepMossway(player, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).moon > 0.5, sky_js_14.dayIndex(time_js_48.t)); // пифос ночью шепчет тому, кто задержался
+        mossway_js_2.stepMossway(player, sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).moon > 0.5, sky_js_15.dayIndex(time_js_48.t), free); // пифос ночью шепчет тому, кто задержался
         // за кольцом, на северной равнине: позёмка растра метёт и бормочет; неподвижный взгляд собирает кадр
         // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
         beyond_js_2.beyond.step(player.x + 6, player.y + 23, player.moving, !state_js_9.state.is('game'), beyond_js_2.beyond.visor && net_js_3.lookingNear(player.x + 6, player.y + 23));
@@ -69540,15 +69905,20 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lorepopup_js_1.showLore(beyond_js_2.beyond.say);
             beyond_js_2.beyond.say = null;
         }
-        if (underside_js_4.under.shadow && sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).sun)
+        if (underside_js_4.under.shadow && sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).sun)
             underside_js_4.under.shadow = false; // тень цветка держится до первого дневного света
-        castle_js_1.stepCastle(!player.moving && town_js_5.onBridge(player.x + 6, player.y + 23)); // кто стоит на мосту, тому туман расходится
+        castle_js_1.stepCastle(!player.moving && town_js_5.onBridge(player.x + 6, player.y + 23), !free); // кто стоит на мосту, тому туман расходится; за бумагой — ждёт
         silentCat_js_1.stepCats(player, locations_js_6.locations, free); // кот: пугается бегущего, к стоящему идёт греться; спрашивает смотрящего на мир
-        ravens_js_2.stepRavens(player, locations_js_6.locations, weather_js_2.weather); // вороны: стаи взлетают от шагов, падения, грома
+        ravens_js_2.stepRavens(player, locations_js_6.locations, weather_js_2.weather); // вороны: стаи взлетают от шагов, падения, грома; в круге стаи — такт сторожа
+        if (ravens_js_2.ravenNews.say) {
+            if (state_js_9.state.is('game'))
+                lorepopup_js_1.showLore(ravens_js_2.ravenNews.say);
+            ravens_js_2.ravenNews.say = null;
+        } // дошёл до стаи: что в клювах
         puddles_js_1.stepPuddles(player, surfName, weather_js_2.weather, { x: camX, y: camY, vw: scaler_js_27.scaler.vw, vh: scaler_js_27.scaler.vh }, locations_js_6.locations);
-        pen_js_1.setPress(pen_js_1.pressAt(sky_js_14.phaseAt(time_js_48.t))); // перо: к ночи исписалось, на рассвете обмакнули
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_15.phaseAt(time_js_48.t))); // перо: к ночи исписалось, на рассвете обмакнули
         // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
-        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_14.phaseAt(time_js_48.t), sky_js_14.dayIndex(time_js_48.t));
+        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_15.phaseAt(time_js_48.t), sky_js_15.dayIndex(time_js_48.t));
         {
             const sx = player.x + 6, sy = player.y + 24, ds = sy - disc_js_51.TOWN.y1;
             const south = ds > 0 && ds >= Math.max(disc_js_51.TOWN.y0 - sy, disc_js_51.TOWN.x0 - sx, sx - disc_js_51.TOWN.x1);
@@ -69609,7 +69979,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
         metaFx_js_2.dyingPixels.update();
-        metaFx_js_2.screenMoss.update(player.moving);
+        metaFx_js_2.screenMoss.update(player.moving, !lookingAtWorld()); // за бумагой мох ждёт
     }
     // Placeholder draw function — will be replaced with proper sprites
     function drawLocationPlaceholder(ctx, loc) {
@@ -70277,8 +70647,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
         wind_js_25.wind.update('clear', 0, 0, true);
         windSound_js_1.updateWindSound(0.02);
-        pen_js_1.setPress(pen_js_1.pressAt(sky_js_14.phaseAt(time_js_48.t)));
-        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_14.phaseAt(time_js_48.t), sky_js_14.dayIndex(time_js_48.t));
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_15.phaseAt(time_js_48.t)));
+        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_15.phaseAt(time_js_48.t), sky_js_15.dayIndex(time_js_48.t));
         ink_js_2.ink.noon(0);
         ink_js_2.ink.sky(false);
         ink_js_2.ink.beginFrame();
@@ -70299,18 +70669,18 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.sit = player.moving ? 0 : (player.sit || 0) + ((house_js_2.house.seated ? 1 : 0) - (player.sit || 0)) * 0.12;
         player.visor = false;
         whisper_js_4.stepWhisper();
-        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)));
+        lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)));
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
         metaFx_js_2.dyingPixels.update();
-        metaFx_js_2.screenMoss.update(player.moving);
+        metaFx_js_2.screenMoss.update(player.moving, !lookingAtWorld()); // за бумагой мох ждёт
     }
     // шаг эффектов под землёй: неба нет (луна и полоса гаснут), яда нет, полдня не видно
     function stepFxUnder() {
         const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
         wind_js_25.wind.update('clear', 0, 0, true); // сквозняк вместо ветра
         windSound_js_1.updateWindSound(0.04);
-        pen_js_1.setPress(pen_js_1.pressAt(sky_js_14.phaseAt(time_js_48.t))); // перо устаёт по-прежнему: оно не от неба
-        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_14.phaseAt(time_js_48.t), sky_js_14.dayIndex(time_js_48.t));
+        pen_js_1.setPress(pen_js_1.pressAt(sky_js_15.phaseAt(time_js_48.t))); // перо устаёт по-прежнему: оно не от неба
+        redNoon_js_7.stepRedNoon(time_js_48.t, sky_js_15.phaseAt(time_js_48.t), sky_js_15.dayIndex(time_js_48.t));
         ink_js_2.ink.noon(0);
         ink_js_2.ink.sky(false);
         ink_js_2.ink.beginFrame();
@@ -70380,18 +70750,18 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         if (underside_js_4.under.pourSnd)
             audio_js_12.playPour(); // кипяток — в гранёный стакан
         underside_js_5.stepUnderLife(player);
-        const skyNow = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)); // из сухой цистерны нилометра видно небо
+        const skyNow = sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)); // из сухой цистерны нилометра видно небо
         lighting_js_1.lighting.sources = underside_js_4.underLights(player.x + 7, player.y + 10, { day: skyNow.sun ? Math.min(1, 0.3 + skyNow.sun.elev) : 0, moon: skyNow.moon });
         lighting_js_1.lightParticles.update({ x: camX, y: camY }, lighting_js_1.lighting.sources);
         metaFx_js_2.dyingPixels.update();
-        metaFx_js_2.screenMoss.update(player.moving);
+        metaFx_js_2.screenMoss.update(player.moving, !lookingAtWorld()); // за бумагой мох ждёт
     }
     function renderHouse() {
         const vw = scaler_js_27.scaler.vw, vh = scaler_js_27.scaler.vh;
         layers_js_3.layers.clearAll();
         const bgCtx = layers_js_3.layers.ctx('bg'), worldCtx = layers_js_3.layers.ctx('world'), lightCtx = layers_js_3.layers.ctx('light');
         const fxCtx = layers_js_3.layers.ctx('fx'), uiCtx = layers_js_3.layers.ctx('ui'), postCtx = layers_js_3.layers.ctx('post');
-        const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y), sky = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t));
+        const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y), sky = sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t));
         bgCtx.fillStyle = '#0D0B0A';
         bgCtx.fillRect(0, 0, vw, vh);
         worldCtx.save();
@@ -70626,6 +70996,25 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 steering = true;
             }
         }
+        // тише едешь (world/ravens.js): принявшему ставку шаг к стае — крадучись; бег (Shift) — бег на любой земле;
+        // сторож поднял голову — автоход встаёт, как у изгороди (клик, сделанный под взглядом, — уже шаг)
+        player.running = !held && move.active && input_js_2.input.isDown('sprint');
+        if (ravens_js_2.ravenNews.look) {
+            ravens_js_2.ravenNews.look = false;
+            if (player.auto && !house_js_2.house.active && !underside_js_4.under.active) {
+                player.auto = false;
+                player.walkTo = null;
+                player.path = null;
+                dvx = 0;
+                dvy = 0;
+                steering = false;
+            }
+        }
+        if (steering && !house_js_2.house.active && !underside_js_4.under.active) {
+            const k = ravens_js_2.ravenHush(player.x + 6, player.y + 22, dvx, dvy, player.running);
+            dvx *= k;
+            dvy *= k;
+        }
         // ЛЕНТА ТЯНЕТ (world/feedPull.js): у края брейнрот сносит наружу — тем слабее, чем меньше
         // подыгрываешь; всегда медленнее шага. Покой лечит (brainrot.js). Только за изгородью,
         // а за изгородь — только с пропуском Шута.
@@ -70732,7 +71121,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         zoneAmbient_js_1.updateZone(zoneAmbient_js_1.getZone(player.x, player.y));
         if (!redNoon_js_7.redNoon.active)
             idle_js_1.update(player.moving, disc_js_51.ringAt(player.x + 6, player.y + 24) >= disc_js_51.RINGS); // слова ленты — только у ленты
-        whisper_js_4.check(player, locations_js_6.locations, sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).moon > 0.5 ? litAt : null); // ночью — только у света
+        whisper_js_4.check(player, locations_js_6.locations, sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).moon > 0.5 ? litAt : null); // ночью — только у света
         particles_js_3.update();
         weather_js_2.update(zoneAmbient_js_1.getZone(player.x, player.y));
         updateCrackTriggers(player);
@@ -70888,7 +71277,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             } // вплотную к двум — меньшая: табличка важнее дома
         };
         if (house_js_2.house.active)
-            for (const th of house_js_2.houseThings(!sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t)).sun))
+            for (const th of house_js_2.houseThings(!sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t)).sun))
                 take(th, reach(th, th.at[0], th.at[1]), 'house');
         else if (underside_js_4.under.active)
             for (const th of underside_js_4.thingsNow())
@@ -70947,7 +71336,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     }
     function lookTags() {
         const tags = new Set();
-        const sky = sky_js_14.skyAt(sky_js_14.phaseAt(time_js_48.t));
+        const sky = sky_js_15.skyAt(sky_js_15.phaseAt(time_js_48.t));
         if (SKY_TAG[sky.name])
             tags.add(SKY_TAG[sky.name]);
         if (weather_js_2.weather.intensity > 0.3 && weather_js_2.weather.state === 'toxicRain')
@@ -71049,8 +71438,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (shadows_js_1_1) {
                 shadows_js_1 = shadows_js_1_1;
             },
-            function (sky_js_14_1) {
-                sky_js_14 = sky_js_14_1;
+            function (sky_js_15_1) {
+                sky_js_15 = sky_js_15_1;
             },
             function (redNoon_js_7_1) {
                 redNoon_js_7 = redNoon_js_7_1;
@@ -71495,7 +71884,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (savedData.wardrobe)
                     garments_js_2.loadWardrobe(savedData.wardrobe);
                 if (savedData.clock != null)
-                    sky_js_14.setWorldClock(savedData.clock);
+                    sky_js_15.setWorldClock(savedData.clock);
                 if (savedData.mail)
                     threads_js_2.loadMail(savedData.mail); // окно «до востребования»: выдано ли, книга запросов   // сутки и час — с того места, где ушёл
             }
@@ -71627,6 +72016,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             };
             // шторм пластины: непогода, молния, брейнрот; O (Щ) — проверка руками
             stormTest = /[?&]storm\b/.test(location.search);
+            // ═══ ШАГ ЭФФЕКТОВ ═══
+            // Всё, что живёт во времени помимо updateGame: ветер, вторая краска,
+            // пластина, яд, счётчик, сбои, трава, частицы света. Идёт и в меню, и в
+            // разговоре — ровно 60 раз в секунду (см. loop); render только рисует.
+            // смотрит на мир: не разговор, не осмотр, не меню, не карта — только такому миру отвечает покой
+            // (вопрос кота, мох на стекле, шёпот пифоса); за бумагой их счёт ждёт
+            lookingAtWorld = () => state_js_9.state.is('game') && !worldmap_js_1.isOpen();
             // ближняя тихая вещь в пределах взгляда: только ей неподвижность прибавляет на волос.
             // Взгляд тихой вещи шире, чем у подделки (72): тихие стоят в тени дальше от дороги
             GAZE_R = 150;
