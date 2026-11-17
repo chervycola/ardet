@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 052 539. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 052 539. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 056 203. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 056 203. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -934,7 +934,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='69f4b72 · 2026-11-17';console.log('[оттиск]', '69f4b72 · 2026-11-17');
+<script>window.ARDET_BUILD='5be95b0 · 2026-11-17';console.log('[оттиск]', '5be95b0 · 2026-11-17');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -32078,7 +32078,7 @@ System.register("content/potemkin", [], function (exports_74, context_74) {
 });
 System.register("world/potemkin", ["core/time", "render/context", "content/potemkin", "world/inscriptions"], function (exports_75, context_75) {
     "use strict";
-    var time_js_11, context_js_2, potemkin_js_1, inscriptions_js_2, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, gazeK, fakes, floorOf, isTender, relookOf, NIGHT, SEPIA, ASH, BONE, CANDLE, BAYER, off, offCtx;
+    var time_js_11, context_js_2, potemkin_js_1, inscriptions_js_2, STILL_DELAY, RISE, FALL, RADIUS, SEAM_AT, SEAM_MEMORY, reveal, seenAt, stillFrames, gazeK, fakes, floorOf, isTender, relookOf, NIGHT, SEPIA, ASH, BONE, CANDLE, BAYER, off, offCtx, LUT_T, LUT_F;
     var __moduleName = context_75 && context_75.id;
     // Строка-шов подделки (живое чтение: правка в редакторе сразу в мире)
     function seamOf(loc) {
@@ -32151,6 +32151,15 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
         return `${base.slice(0, i)}\n\n${tail}${base.slice(i)}`;
     }
     exports_75("lookText", lookText);
+    function luts() {
+        LUT_T = new Float32Array(256 * 3);
+        LUT_F = new Float32Array(256 * 3);
+        for (let i = 0; i < 256; i++) {
+            const a = ramp(i / 255), b = ramp(0.3 + 0.62 * i / 255);
+            LUT_T.set(a, i * 3);
+            LUT_F.set(b, i * 3);
+        }
+    }
     function ramp(l) {
         // яркость → НОЧЬ · СЕПИЯ · ПЕПЕЛ · КОСТЬ
         const stops = [[0, NIGHT], [0.22, SEPIA], [0.55, ASH], [0.85, BONE]];
@@ -32228,6 +32237,8 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
         drawFn(offCtx);
         context_js_2.setCtx(ctx);
         offCtx.setTransform(1, 0, 0, 1, 0, 0);
+        if (!LUT_T)
+            luts();
         const img = offCtx.getImageData(0, 0, W, H);
         const d = img.data;
         // бережение не разоблачают: без подкосов и осыпи, растр лёгкий
@@ -32251,11 +32262,11 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
                     d[i + 1] += (fr[1] - d[i + 1]) * fa;
                     d[i + 2] += (fr[2] - d[i + 2]) * fa;
                 }
-                const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
-                const c = tender ? ramp(l) : ramp(0.3 + 0.62 * l); // фанера бледнеет; бережённое — только тише
-                d[i] += (c[0] - d[i]) * k;
-                d[i + 1] += (c[1] - d[i + 1]) * k;
-                d[i + 2] += (c[2] - d[i + 2]) * k;
+                const j = Math.min(255, Math.max(0, (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) | 0)) * 3;
+                const c = tender ? LUT_T : LUT_F; // фанера бледнеет; бережённое — только тише
+                d[i] += (c[j] - d[i]) * k;
+                d[i + 1] += (c[j + 1] - d[i + 1]) * k;
+                d[i + 2] += (c[j + 2] - d[i + 2]) * k;
             }
         }
         offCtx.putImageData(img, 0, 0);
@@ -32312,6 +32323,8 @@ System.register("world/potemkin", ["core/time", "render/context", "content/potem
             CANDLE = [226, 138, 58]; // СВЕЧА: настоящее тепло взгляду не поддаётся
             BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
             off = null, offCtx = null;
+            // ramp по яркости 0…255 — таблицами (вписанная подделка проходит пиксели каждый кадр: без выделений памяти)
+            LUT_T = null, LUT_F = null;
         }
     };
 });
@@ -50185,7 +50198,7 @@ System.register("world/placeStamp", ["world/disc", "world/relief", "content/ulit
 });
 System.register("world/opis", ["world/placeStamp", "world/disc", "world/relook", "world/potemkin", "content/ulitsa_db"], function (exports_129, context_129) {
     "use strict";
-    var placeStamp_js_1, disc_js_41, relook_js_2, potemkin_js_4, ulitsa_db_js_11, FADE, THIN, PRESENT, PERSONS, WARM, TOWN_GROUND, N, st, prev, veils, here, ringMemo, keyOf, TOWN_FADES, kept, short, opisLines, saveOpis, int, str;
+    var placeStamp_js_1, disc_js_41, relook_js_2, potemkin_js_4, ulitsa_db_js_11, FADE, THIN, PRESENT, PERSONS, WARM, warmLit, burns, TOWN_GROUND, N, st, prev, veils, here, ringMemo, keyOf, TOWN_FADES, kept, short, opisLines, saveOpis, int, str;
     var __moduleName = context_129 && context_129.id;
     function rebuild() {
         veils = st.r.map((_, ring) => {
@@ -50231,15 +50244,19 @@ System.register("world/opis", ["world/placeStamp", "world/disc", "world/relook",
     // вуаль к земле кольца на этот кадр (render/quiet.js drawQuiet); null — в чернилах
     function fadeOf(loc) {
         const ring = opisRing(loc);
-        if (ring < 0 || WARM.has(loc.id) || loc.streetForm === 'fire' || kept(loc, ring))
+        if (ring < 0 || burns(loc) || kept(loc, ring))
             return null;
         return veils[ring];
     }
     exports_129("fadeOf", fadeOf);
     // вписанная подделка редеет без взгляда — по заходам после записи; бережение и настоящее держатся
+    // по строке, а не по месту: рисунки городка спрашивают заглушкой { id } (sprites/locations/canon.js);
+    // городок «вне времени» — вписанная там подделка не редеет (как и не бледнеет ничто)
     function thinOf(loc) {
-        const ring = opisRing(loc);
-        if (ring < 0 || !kept(loc, ring) || !potemkin_js_4.seamOf(loc) || potemkin_js_4.isTender(loc))
+        if (!loc || !loc.id || !potemkin_js_4.seamOf(loc) || potemkin_js_4.isTender(loc))
+            return 0;
+        const ring = st.r.findIndex(c => c && c.id === loc.id);
+        if (ring < 0 || (ring === 0 && !TOWN_FADES))
             return 0;
         return THIN[Math.max(0, Math.min(prev[ring] - st.r[ring].v, THIN.length - 1))];
     }
@@ -50325,7 +50342,10 @@ System.register("world/opis", ["world/placeStamp", "world/disc", "world/relook",
             exports_129("THIN", THIN = [0, 0.35, 0.6, 0.8, 0.9]); // вписанная подделка: заходов после записи → проявленность без взгляда
             exports_129("PRESENT", PRESENT = 20); // тиков по 30 кадров в кольце (~10 с) — заход засчитан, раз за сессию
             PERSONS = new Set(['jester', 'sol', 'elder', 'nocturnal']); // люди не вещи: в опись не вписываются
-            WARM = new Set(['campfire', 'sol_home', 'lc_fire']); // огонь не выцветает
+            WARM = new Set(['campfire', 'sol_home', 'lc_fire', 'gas_grate']); // огонь не выцветает
+            // огонь — по тому же признаку, что у пера (main.js warmIn): тёплый свет вещи; «фонарь, горящий днём» — без света, но горит
+            warmLit = loc => !!(loc.light && loc.light.color && loc.light.color[0] >= loc.light.color[1] + 30);
+            burns = loc => WARM.has(loc.id) || loc.streetForm === 'fire' || loc.streetSprite === 'day_lantern' || warmLit(loc);
             TOWN_GROUND = '#2b231c'; // земля посёлка (render/etch.js, зона 4)
             N = disc_js_41.RINGS + 1;
             // r[кольцо] = { id, k — ключ места, name, d — сутки записи, v — заходов до записи, x: [{ id, name }] — зачёркнутое }
@@ -50602,8 +50622,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
             opis = document.createElement('div');
             opis.id = 'look-opis'; // вид — style.css
             stamp.after(opis);
-            opis.addEventListener('click', e => { e.stopPropagation(); if (performance.now() - lookShownAt >= 250)
-                opisPress(); });
+            opis.addEventListener('click', e => { if (performance.now() - lookShownAt >= 250 && opisPress())
+                e.stopPropagation(); }); // не нажалась — касание листает и закрывает, как вся бумага
         }
         // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
         const noon = redNoon_js_5.redNoon.k > 0.5, blind = noon ? redNoon_js_5.smear : (x => x);
@@ -65063,7 +65083,7 @@ System.register("world/monsters", ["core/time", "render/context", "world/terrain
 });
 System.register("render/quiet", ["render/context"], function (exports_172, context_172) {
     "use strict";
-    var context_js_17, NEAR, FAR, DEEP, SEEN, HAIR, off, oc;
+    var context_js_17, NEAR, FAR, DEEP, SEEN, HAIR, off, oc0, offP, ocP, CANDLE, candleIn;
     var __moduleName = context_172 && context_172.id;
     // сколько тени: по расстоянию от ног странника до подножия вещи; g — неподвижный взгляд
     // (world/potemkin.js gaze, 0..1) для ближней тихой вещи: один закон на две стороны —
@@ -65073,33 +65093,43 @@ System.register("render/quiet", ["render/context"], function (exports_172, conte
         return Math.max(0, SEEN + (DEEP - SEEN) * k * k * (3 - 2 * k) - HAIR * Math.max(0, Math.min(1, g)));
     }
     exports_172("quietShade", quietShade);
-    // drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом;
-    // fade — выцветание по заходам ({ a, col }, world/opis.js): к земле кольца, до ночи, по тем же пикселям
-    function drawQuiet(ctx, box, shade, drawFn, fade = null) {
+    function drawQuiet(ctx, box, shade, drawFn, fade = null, key = null) {
         if (shade <= 0.01 && !fade) {
             drawFn(ctx);
             return;
         }
         const doc = typeof document !== 'undefined' ? document : null;
-        if (!off && doc && doc.createElement) {
-            off = doc.createElement('canvas');
-            oc = off.getContext ? off.getContext('2d') : null;
+        // холст вуали — в разрешении слоя мира (иначе дуги и обводки грубеют, когда кольцо бледнеет);
+        // вещь со свечой (или ещё не проверенная) выцветает попиксельно — в 1×: так дёшево каждый кадр
+        const pixel = !!fade && (!key || candleIn.get(key) !== false);
+        if (doc && doc.createElement) {
+            if (!pixel && !off) {
+                off = doc.createElement('canvas');
+                oc0 = off.getContext ? off.getContext('2d') : null;
+            }
+            if (pixel && !offP) {
+                offP = doc.createElement('canvas');
+                ocP = offP.getContext ? offP.getContext('2d', { willReadFrequently: true }) : null;
+            }
         }
+        const cv = pixel ? offP : off, oc = pixel ? ocP : oc0;
         if (!oc) {
             drawFn(ctx);
             return;
         }
-        const pad = 8, W = Math.ceil(box.w + pad * 2), H = Math.ceil(box.h + pad * 2);
-        if (off.width < W)
-            off.width = W;
-        if (off.height < H)
-            off.height = H;
+        const tf = !pixel && ctx.getTransform ? ctx.getTransform() : null;
+        const s = tf ? Math.max(1, Math.round(Math.hypot(tf.a, tf.b))) : 1;
+        const pad = 8, W = Math.ceil(box.w + pad * 2), H = Math.ceil(box.h + pad * 2), SW = W * s, SH = H * s;
+        if (cv.width < SW)
+            cv.width = SW;
+        if (cv.height < SH)
+            cv.height = SH;
         const ox = Math.floor(box.x - pad), oy = Math.floor(box.y - pad);
         oc.setTransform(1, 0, 0, 1, 0, 0);
         oc.globalCompositeOperation = 'source-over';
         oc.globalAlpha = 1;
-        oc.clearRect(0, 0, W, H);
-        oc.setTransform(1, 0, 0, 1, -ox, -oy);
+        oc.clearRect(0, 0, SW, SH);
+        oc.setTransform(s, 0, 0, s, -ox * s, -oy * s);
         oc.imageSmoothingEnabled = false;
         context_js_17.setCtx(oc);
         try {
@@ -65109,20 +65139,41 @@ System.register("render/quiet", ["render/context"], function (exports_172, conte
             context_js_17.setCtx(ctx);
         }
         oc.setTransform(1, 0, 0, 1, 0, 0);
-        oc.globalCompositeOperation = 'source-atop'; // ночь — только по пикселям вещи
         if (fade) {
-            oc.globalAlpha = fade.a;
-            oc.fillStyle = fade.col;
-            oc.fillRect(0, 0, W, H);
+            if (pixel) {
+                const img = oc.getImageData(0, 0, SW, SH), d = img.data, [fr, fg, fb] = fade.rgb, fa = fade.a;
+                let seen = false;
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i + 3] === 0)
+                        continue;
+                    if (d[i] === CANDLE[0] && d[i + 1] === CANDLE[1] && d[i + 2] === CANDLE[2]) {
+                        seen = true;
+                        continue;
+                    }
+                    d[i] += (fr - d[i]) * fa;
+                    d[i + 1] += (fg - d[i + 1]) * fa;
+                    d[i + 2] += (fb - d[i + 2]) * fa;
+                }
+                oc.putImageData(img, 0, 0);
+                if (key)
+                    candleIn.set(key, seen);
+            }
+            else {
+                oc.globalCompositeOperation = 'source-atop'; // к земле — только по пикселям вещи
+                oc.globalAlpha = fade.a;
+                oc.fillStyle = fade.col;
+                oc.fillRect(0, 0, SW, SH);
+            }
         }
+        oc.globalCompositeOperation = 'source-atop'; // ночь — только по пикселям вещи
         if (shade > 0.01) {
             oc.globalAlpha = shade;
             oc.fillStyle = '#0D0B0A';
-            oc.fillRect(0, 0, W, H);
+            oc.fillRect(0, 0, SW, SH);
         }
         oc.globalCompositeOperation = 'source-over';
         oc.globalAlpha = 1;
-        ctx.drawImage(off, 0, 0, W, H, ox, oy, W, H);
+        ctx.drawImage(cv, 0, 0, SW, SH, ox, oy, W, H);
     }
     exports_172("drawQuiet", drawQuiet);
     return {
@@ -65134,7 +65185,13 @@ System.register("render/quiet", ["render/context"], function (exports_172, conte
         execute: function () {
             NEAR = 70, FAR = 230, DEEP = 0.62, SEEN = 0.1; // в двух шагах — почти как есть; издали — силуэт в тени
             HAIR = 0.12; // неподвижному взгляду ближняя тихая вещь прибавляет на волос: тени меньше на 0.12 (вблизи — до нуля)
-            off = null, oc = null;
+            off = null, oc0 = null, offP = null, ocP = null; // холст заливки (на видеокарте) и холст попиксельного прохода (читается)
+            // drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом;
+            // fade — выцветание по заходам ({ a, col, rgb }, world/opis.js): к земле кольца, до ночи, по тем же пикселям;
+            // key — имя вещи: где в рисунке есть СВЕЧА (окна, фонари), выцветание идёт попиксельно мимо неё —
+            // тепло не выцветает (канон: огонь всегда сплошной); есть ли свеча — узнаётся раз на вещь
+            CANDLE = [226, 138, 58];
+            candleIn = new Map();
         }
     };
 });
@@ -71260,22 +71317,24 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function drawLocation(ctx, loc, inWorld = false) {
         const fade = inWorld ? opis_js_2.fadeOf(loc) : null; // «В описи не значится»: по заходам — к земле кольца; вписанное — в чернилах
         const k = potemkin_js_7.revealOf(loc);
-        if (k > 0.01) {
+        if (k > 0.01 && !maskPass) { // маска тени — всегда по целой вещи (иначе растр подделки застывает в тени)
             const gy = loc.y + loc.h;
             const box = loc.streetForm
                 ? { x: loc.x + 7 - 20, y: gy - 44, w: 40, h: 44 }
                 : { x: loc.x - 10, y: loc.y - 24, w: loc.w + 20, h: loc.h + 24 };
-            potemkin_js_7.drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box, fade);
+            potemkin_js_7.drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc, 1), box, fade); // тело — редеет; живое (птицы, дым) — поверх, не по рамке
+            if (loc.archDraw)
+                drawLocationPlain(ctx, loc, 2);
             return;
         }
         // глубина II (world/depth.js): в тени; подошёл — проступает
         if (loc.quiet) {
             const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
-            quiet_js_1.drawQuiet(ctx, veilBox(loc), quiet_js_1.quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? potemkin_js_7.gaze() : 0), c => drawLocationPlain(c, loc), fade);
+            quiet_js_1.drawQuiet(ctx, veilBox(loc), quiet_js_1.quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? potemkin_js_7.gaze() : 0), c => drawLocationPlain(c, loc), fade, loc.id);
             return;
         }
         if (fade) { // выцветшее: тело — под вуаль, живое (огонь, дым, птицы) — поверх
-            quiet_js_1.drawQuiet(ctx, veilBox(loc), 0, c => drawLocationPlain(c, loc, 1), fade);
+            quiet_js_1.drawQuiet(ctx, veilBox(loc), 0, c => drawLocationPlain(c, loc, 1), fade, loc.id);
             if (loc.archDraw)
                 drawLocationPlain(ctx, loc, 2);
             return;

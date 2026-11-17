@@ -333,7 +333,7 @@ function renderLookPage() {
     opis = document.createElement('div');
     opis.id = 'look-opis';       // вид — style.css
     stamp.after(opis);
-    opis.addEventListener('click', e => { e.stopPropagation(); if (performance.now() - lookShownAt >= 250) opisPress(); });
+    opis.addEventListener('click', e => { if (performance.now() - lookShownAt >= 250 && opisPress()) e.stopPropagation(); });   // не нажалась — касание листает и закрывает, как вся бумага
   }
 
   // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте

@@ -3,6 +3,8 @@
 // зрителя: на ходу подделка цела; постоишь рядом неподвижно — тёплая
 // краска сереет, фасад редеет растром до подпорок, осыпается побелка,
 // а осмотр получает шов. Пошёл — снова цело. Ни подсветки, ни счёта.
+// Исключение — подделка, вписанная в опись кольца от руки (world/opis.js): порог
+// проявленности по заходам после записи (setRevealFloor) — редеет и на ходу; шов — взгляду.
 // Подделка = табличка с полем potemkin (строка-шов) или локация
 // городка из POTEMKIN_LOOKS.
 // ═══════════════════════════════════════
@@ -101,6 +103,15 @@ const CANDLE = [226, 138, 58];   // СВЕЧА: настоящее тепло в
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 let off = null, offCtx = null;
 
+// ramp по яркости 0…255 — таблицами (вписанная подделка проходит пиксели каждый кадр: без выделений памяти)
+let LUT_T = null, LUT_F = null;
+function luts() {
+  LUT_T = new Float32Array(256 * 3); LUT_F = new Float32Array(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const a = ramp(i / 255), b = ramp(0.3 + 0.62 * i / 255);
+    LUT_T.set(a, i * 3); LUT_F.set(b, i * 3);
+  }
+}
 function ramp(l) {
   // яркость → НОЧЬ · СЕПИЯ · ПЕПЕЛ · КОСТЬ
   const stops = [[0, NIGHT], [0.22, SEPIA], [0.55, ASH], [0.85, BONE]];
@@ -176,6 +187,7 @@ export function drawRevealed(ctx, loc, k, drawFn, box, fade = null) {
   setCtx(ctx);
   offCtx.setTransform(1, 0, 0, 1, 0, 0);
 
+  if (!LUT_T) luts();
   const img = offCtx.getImageData(0, 0, W, H);
   const d = img.data;
   // бережение не разоблачают: без подкосов и осыпи, растр лёгкий
@@ -190,11 +202,11 @@ export function drawRevealed(ctx, loc, k, drawFn, box, fade = null) {
       const wx = x + ox, wy = y + oy;          // растр привязан к миру, не к кадру
       if (BAYER[(wy & 3) * 4 + (wx & 3)] / 16 < holes) { d[i + 3] = 0; continue; }
       if (fa) { d[i] += (fr[0] - d[i]) * fa; d[i + 1] += (fr[1] - d[i + 1]) * fa; d[i + 2] += (fr[2] - d[i + 2]) * fa; }
-      const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
-      const c = tender ? ramp(l) : ramp(0.3 + 0.62 * l);   // фанера бледнеет; бережённое — только тише
-      d[i] += (c[0] - d[i]) * k;
-      d[i + 1] += (c[1] - d[i + 1]) * k;
-      d[i + 2] += (c[2] - d[i + 2]) * k;
+      const j = Math.min(255, Math.max(0, (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) | 0)) * 3;
+      const c = tender ? LUT_T : LUT_F;                // фанера бледнеет; бережённое — только тише
+      d[i] += (c[j] - d[i]) * k;
+      d[i + 1] += (c[j + 1] - d[i + 1]) * k;
+      d[i + 2] += (c[j + 2] - d[i + 2]) * k;
     }
   }
   offCtx.putImageData(img, 0, 0);

@@ -907,22 +907,23 @@ function nearestQuietId() {
 function drawLocation(ctx, loc, inWorld = false) {
   const fade = inWorld ? opisFade(loc) : null;      // «В описи не значится»: по заходам — к земле кольца; вписанное — в чернилах
   const k = revealOf(loc);
-  if (k > 0.01) {
+  if (k > 0.01 && !maskPass) {                         // маска тени — всегда по целой вещи (иначе растр подделки застывает в тени)
     const gy = loc.y + loc.h;
     const box = loc.streetForm
       ? { x: loc.x + 7 - 20, y: gy - 44, w: 40, h: 44 }
       : { x: loc.x - 10, y: loc.y - 24, w: loc.w + 20, h: loc.h + 24 };
-    drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box, fade);
+    drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc, 1), box, fade);   // тело — редеет; живое (птицы, дым) — поверх, не по рамке
+    if (loc.archDraw) drawLocationPlain(ctx, loc, 2);
     return;
   }
   // глубина II (world/depth.js): в тени; подошёл — проступает
   if (loc.quiet) {
     const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
-    drawQuiet(ctx, veilBox(loc), quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? gaze() : 0), c => drawLocationPlain(c, loc), fade);
+    drawQuiet(ctx, veilBox(loc), quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? gaze() : 0), c => drawLocationPlain(c, loc), fade, loc.id);
     return;
   }
   if (fade) {                                          // выцветшее: тело — под вуаль, живое (огонь, дым, птицы) — поверх
-    drawQuiet(ctx, veilBox(loc), 0, c => drawLocationPlain(c, loc, 1), fade);
+    drawQuiet(ctx, veilBox(loc), 0, c => drawLocationPlain(c, loc, 1), fade, loc.id);
     if (loc.archDraw) drawLocationPlain(ctx, loc, 2);
     return;
   }

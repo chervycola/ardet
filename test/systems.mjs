@@ -4025,6 +4025,10 @@ setCtx(ctx);
     for (let i = 0; i < O.PRESENT - 1; i++) O.stepOpis(5);
     session(); eq(O.fadeOf(far), null, 'мимо прошёл — засчитан заход');
     assert(O.fadeOf(locations.find(l => l.id === 'fire_sf')) === null, 'огонь выцвел');
+    for (const r of [1, 6]) for (let s = 0; s < 4; s++) { walk(r); session(); }
+    const warm = surf.filter(l => O.opisRing(l) > 0 && ((l.light && l.light.color && l.light.color[0] >= l.light.color[1] + 30) || l.streetSprite === 'day_lantern' || l.id === 'gas_grate'));
+    assert(warm.some(l => l.id === 'gas_grate') && warm.some(l => l.streetSprite === 'day_lantern'), 'нет фонарей для проверки');
+    for (const l of warm) eq(O.fadeOf(l), null, `огонь выцвел: ${l.name}`);
     O._resetOpis();
   });
   test('в описи не значится: вписанное держит чернила; подделка редеет к подпоркам, бережение держится; мир не метит', () => {
@@ -4034,12 +4038,15 @@ setCtx(ctx);
     RL.noteLook(a.id); O.inscribe(a, 1);
     assert(O.fadeOf(a) === null && O.fadeOf(b).a === 0.45, 'вписанное выцвело или сосед в чернилах');
     const fakes = surf.filter(l => P.seamOf(l) && O.opisRing(l) >= 0);
-    const fake = fakes.find(l => !P.isTender(l) && O.opisRing(l) !== 3), tend = fakes.find(l => P.isTender(l) && O.opisRing(l) !== 3 && O.opisRing(l) !== O.opisRing(fake));
+    const fake = fakes.find(l => !P.isTender(l) && O.opisRing(l) > 0 && O.opisRing(l) !== 3), tend = fakes.find(l => P.isTender(l) && O.opisRing(l) > 0 && O.opisRing(l) !== 3 && O.opisRing(l) !== O.opisRing(fake));
+    const townFake = fakes.find(l => !P.isTender(l) && O.opisRing(l) === 0);
     RL.noteLook(fake.id); RL.noteLook(tend.id); O.inscribe(fake, 1); O.inscribe(tend, 1);
+    if (townFake) { RL.noteLook(townFake.id); O.inscribe(townFake, 1); }
     eq(P.revealOf(fake), 0, 'в сутки записи подделка уже редеет — метка');
     eq(O.opisLine(O.opisState(fake, 1)).text, O.opisLine(O.opisState(a, 1)).text, 'строка разная у подделки и настоящего');
-    for (let i = 0; i < 2; i++) { walk(O.opisRing(fake)); walk(O.opisRing(tend)); session(); }
+    for (let i = 0; i < 2; i++) { walk(O.opisRing(fake)); walk(O.opisRing(tend)); walk(0); session(); }
     eq(P.revealOf(fake), 0.6, 'вписанная подделка не редеет');
+    if (townFake) eq(P.revealOf(townFake), 0, 'городок вне времени, а подделка в нём редеет');
     assert(!P.seamVisible(fake), 'шов в осмотре без взгляда');
     eq(P.revealOf(tend), 0, 'бережение редеет');
     eq(O.opisLines()[O.opisRing(fake)].cur, fake.name, 'в описи не «хранить»');

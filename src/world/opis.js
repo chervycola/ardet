@@ -19,7 +19,10 @@ export const FADE = [0, 0.3, 0.45, 0.55];      // заходов в кольцо
 export const THIN = [0, 0.35, 0.6, 0.8, 0.9];   // вписанная подделка: заходов после записи → проявленность без взгляда
 export const PRESENT = 20;                     // тиков по 30 кадров в кольце (~10 с) — заход засчитан, раз за сессию
 const PERSONS = new Set(['jester', 'sol', 'elder', 'nocturnal']);   // люди не вещи: в опись не вписываются
-const WARM = new Set(['campfire', 'sol_home', 'lc_fire']);           // огонь не выцветает
+const WARM = new Set(['campfire', 'sol_home', 'lc_fire', 'gas_grate']);   // огонь не выцветает
+// огонь — по тому же признаку, что у пера (main.js warmIn): тёплый свет вещи; «фонарь, горящий днём» — без света, но горит
+const warmLit = loc => !!(loc.light && loc.light.color && loc.light.color[0] >= loc.light.color[1] + 30);
+const burns = loc => WARM.has(loc.id) || loc.streetForm === 'fire' || loc.streetSprite === 'day_lantern' || warmLit(loc);
 const TOWN_GROUND = '#2b231c';                                       // земля посёлка (render/etch.js, зона 4)
 const N = RINGS + 1;
 
@@ -69,13 +72,16 @@ const kept = (loc, ring) => { const c = st.r[ring]; return !!c && c.id === loc.i
 // вуаль к земле кольца на этот кадр (render/quiet.js drawQuiet); null — в чернилах
 export function fadeOf(loc) {
   const ring = opisRing(loc);
-  if (ring < 0 || WARM.has(loc.id) || loc.streetForm === 'fire' || kept(loc, ring)) return null;
+  if (ring < 0 || burns(loc) || kept(loc, ring)) return null;
   return veils[ring];
 }
 // вписанная подделка редеет без взгляда — по заходам после записи; бережение и настоящее держатся
+// по строке, а не по месту: рисунки городка спрашивают заглушкой { id } (sprites/locations/canon.js);
+// городок «вне времени» — вписанная там подделка не редеет (как и не бледнеет ничто)
 export function thinOf(loc) {
-  const ring = opisRing(loc);
-  if (ring < 0 || !kept(loc, ring) || !seamOf(loc) || isTender(loc)) return 0;
+  if (!loc || !loc.id || !seamOf(loc) || isTender(loc)) return 0;
+  const ring = st.r.findIndex(c => c && c.id === loc.id);
+  if (ring < 0 || (ring === 0 && !TOWN_FADES)) return 0;
   return THIN[Math.max(0, Math.min(prev[ring] - st.r[ring].v, THIN.length - 1))];
 }
 // раз в 30 кадров — кольцо под ногами; true — заход засчитан
