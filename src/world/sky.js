@@ -29,6 +29,12 @@ const MOON = Math.SQRT1_2;                     // тень от луны на 45
 export const phaseAt = step => ((step / DAY_LEN) + START) % 1;
 export const dayIndex = step => Math.floor(step / DAY_LEN + START);   // номер суток (жребий событий — раз в сутки)
 
+// следующая смена света: имя и сколько шагов до неё (world/clauses.js — залог тени, баннер)
+export function nextLight(step) {
+  const p = phaseAt(step), b = [[DAY, 'сумерки'], [DUSK, 'ночь'], [NIGHT, 'рассвет'], [1, 'день']].find(([v]) => v > p);
+  return { name: b[1], steps: Math.round((b[0] - p) * DAY_LEN) };
+}
+
 // что в небе на фазе p
 export function skyAt(p) {
   if (p < DAY) {                               // день: солнце по дуге

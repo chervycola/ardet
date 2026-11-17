@@ -28,7 +28,7 @@ function hasUseAction(loc) {
   if (loc.id === 'terminal') return true;
   if (loc.useShown && !loc.useShown()) return false;   // пасхалка: действие проявляется не сразу (пифос — после шёпота)
   const key = loc.useAction || loc.id;
-  return SPECIAL_USE.has(key) || !!useTexts[key];
+  return SPECIAL_USE.has(key) || key.startsWith('lc_') || !!useTexts[key];   // lc_ — бумаги «Последнего пункта» (world/clauses.js)
 }
 
 // ── MENU (location interaction) ──
@@ -223,7 +223,7 @@ let lookTitle = '';   // заголовок окна: имя вещи или н�
 let lookInsc = '';    // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
 let lookStamp = '';   // штамп места: «кольцо 6 · север · пар и тени» (world/placeStamp.js)
 // места, где канцелярия узнаёт руку странника: строка текста → подпись под ним
-const SIGN_SPOTS = [['Рука знакомая', 'подпись принявшего'], ['Второй ты узнаёшь', 'второй почерк']];
+const SIGN_SPOTS = [['Рука знакомая', 'подпись принявшего'], ['рука знакомая', 'подпись'], ['Подпись легла', 'подпись'], ['Второй ты узнаёшь', 'второй почерк']];
 let lookLoc = null;   // вещь, которую осматривают: F из осмотра — использовать её же
 
 // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно

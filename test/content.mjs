@@ -144,11 +144,26 @@ setCtx(fakeCtx());
     for (const l of locations) {
       if (!l.useAction) continue;
       if (specials.has(l.useAction)) continue;
+      if (l.useAction.startsWith('lc_')) continue;              // бумаги «Последнего пункта» — main.js, world/clauses.js useClause
       if (!useTexts[l.useAction]) missing.push(`${l.id}→${l.useAction}`);
     }
     assert(missing.length === 0, `unresolved useActions: ${missing.join(', ')}`);
   });
 
+  {
+    const PC = await import(new URL('../src/content/clauses.js', import.meta.url));
+    test('последний пункт: у каждой бумаги пять пунктов до 25 слов, выдающий — третьим–пятым, угол в пепле — его конец, без «не X, а Y»', () => {
+      for (const [id, P] of Object.entries(PC.PAPERS)) {
+        assert(P.clauses.length === 5, `${id}: пунктов ${P.clauses.length}`);
+        for (const c of P.clauses) assert(c.split(/\s+/).length <= 25, `${id}: пункт длиннее 25 слов: ${c}`);
+        assert(P.tell >= 3 && P.tell <= 5, `${id}: выдающий пункт ${P.tell}-м`);
+        assert(P.clauses[P.tell - 1].endsWith(P.tail), `${id}: угол в пепле — не конец выдающего пункта`);
+        for (const c of [P.first, ...P.clauses]) assert(!/(^|[\s(«])не [^.,;:]+, а /i.test(c), `${id}: «не X, а Y»: ${c}`);
+        assert(P.acc && P.copy && P.label && P.said, `${id}: нет подписи кнопки огня, строки описи или ответов`);
+        if (id !== 'banner') assert(/\d/.test(P.foot(0)), `${id}: подвал без числа`);
+      }
+    });
+  }
   test('useActions: every entry has title + text', () => {
     for (const [k, v] of Object.entries(useTexts)) {
       assert(v.title && typeof v.title === 'string', `useTexts.${k}: bad title`);

@@ -38,6 +38,12 @@ export function inventoryLines(d) {
   else L.push({ text: 'графа не заполнена', empty: true });
   L.push({ h: 'Одежда' });                                        // что на плечах, что где висит (world/garments.js)
   (d.clothes && d.clothes.length ? d.clothes : ['Пыльник — на плечах.']).forEach(c => L.push(typeof c === 'string' ? { text: c } : c));
+  // вторые экземпляры «Последнего пункта» (world/clauses.js): пока при тебе — согласие в силе;
+  // касание — перечитать целиком, экземпляр «в руке» (его и возьмёт огонь)
+  if (d.copies && d.copies.length) {
+    L.push({ h: 'Вторые экземпляры' });
+    d.copies.forEach(c => L.push({ text: c.line, copy: c }));
+  }
   return L;
 }
 
@@ -71,6 +77,10 @@ export function initInventory(getData, can = () => true) {
     else if (what === 'next') turn(1);
     else if (what === 'prev') turn(-1);
     else if (what === 'back') { detail = null; render(); }
+    else if (what.startsWith('copy:')) {
+      const c = data && (data.copies || []).find(x => x.id === what.slice(5));
+      if (c) { playClick(); if (data.hold) data.hold(c.id); detail = { title: c.title, text: c.text, copy: true }; render(); }
+    }
     else if (what.startsWith('note:')) {
       const n = data && data.notes.find(x => String(x.n) === what.slice(5));
       if (n) { playClick(); detail = n; render(); }
@@ -132,13 +142,15 @@ function render() {
   const blindOn = redNoon.k > 0.5, blind = blindOn ? smear : (x => x);
   const T = s => esc(blind(s));
   if (detail) {
-    el.innerHTML = `<div class="inv-head"><span class="inv-title">${T('Записка ' + num(detail.n))}</span></div>`
+    el.innerHTML = `<div class="inv-head"><span class="inv-title">${T(detail.copy ? detail.title : 'Записка ' + num(detail.n))}</span></div>`
       + `<div class="inv-note">${T(detail.text)}</div>`
       + `<div class="inv-nav"><span data-inv="back">← к описи</span><span data-inv="close">${close}</span></div>`;
     return;
   }
   const rows = (pages[page] || []).map(l => l.h
     ? `<div class="inv-h">${T(l.h)}</div>`
+    : l.copy
+      ? `<div class="inv-row" data-inv="copy:${l.copy.id}"><span class="inv-t">${T(l.text)}</span></div>`
     : l.note
       ? `<div class="inv-row" data-inv="note:${l.note.n}"><span class="inv-n">${T(l.n)}</span><span class="inv-t">${T(l.text)}</span></div>`
       : `<div class="inv-row${l.empty ? ' inv-empty' : ''}">${l.n ? `<span class="inv-n">${T(l.n)}</span>` : ''}<span class="inv-t">${T(l.text)}</span></div>`).join('');

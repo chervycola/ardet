@@ -11,7 +11,7 @@ const STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' 
 
 // Per-type cooldown between event STARTS (@60fps).
 // Rain is a rare, quiet event (~9 min); sandstorm is more frequent (~3 min).
-const COOLDOWN = {
+export const COOLDOWN = {
   [STATE.TOXIC_RAIN]: 32400,  // 9 min
   [STATE.SANDSTORM]: 10800,   // 3 min
 };
@@ -54,8 +54,10 @@ export const weather = {
 };
 
 // ?rain — дождь сразу и надолго (проверка руками: лужи, круги от капель)
+let forced = false;
 try {
   if (/[?&]rain\b/.test(location.search)) {
+    forced = true;
     weather.state = STATE.TOXIC_RAIN; weather.currentDuration = 36000; weather.nextCheck = 36000;
     weather.lastStartAt[STATE.TOXIC_RAIN] = 0;
   }
@@ -91,6 +93,37 @@ function rollWeather(zone) {
   if (rainReady) return { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) };
   if (sandReady) return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
   return null; // both on cooldown → sky stays clear
+}
+
+// ── что код знает о дожде наперёд (world/clauses.js, «Последний пункт»: земля на ходу
+// сообщает подписавшему). Планировщик опрашивает погоду раз в 30 с и не смотрит, что идёт
+// сейчас: пока идёт дождь, он сам на откате, и на любом опросе, где песок готов, дождь
+// сменяется песком в любой зоне. Отсюда честный конец дождя. Сверено копией планировщика
+// (723 проверки на шесть зон и смешанный маршрут, расхождений нет).
+const POLL = 1800;
+export function rainOutlook() {
+  const R = weather.lastStartAt[STATE.TOXIC_RAIN] + COOLDOWN[STATE.TOXIC_RAIN];
+  const S = weather.lastStartAt[STATE.SANDSTORM] + COOLDOWN[STATE.SANDSTORM];
+  const nc = weather.nextCheck;
+  const poll = at => nc + POLL * Math.max(0, Math.ceil((at - (t + nc)) / POLL));   // шагов до первого опроса не раньше at
+  if (weather.state === STATE.TOXIC_RAIN) return { kind: 'ends', in: Math.min(weather.currentDuration, poll(S)), R };
+  if (t < R) return { kind: 'none', in: poll(R), R };
+  if (weather.state === STATE.SANDSTORM) return { kind: 'sandThenRain', in: nc, S };
+  return { kind: 'ready', in: nc, R };
+}
+// погода переживает перезагрузку (как часы мира): что идёт, сколько ещё, откаты —
+// иначе сказанное «дождя не будет ещё 6 мин» лжёт после перезагрузки
+export function saveWeather() {
+  const left = st => Math.max(0, weather.lastStartAt[st] + COOLDOWN[st] - t);
+  return { s: weather.state, d: Math.max(0, weather.currentDuration), c: weather.nextCheck, r: left(STATE.TOXIC_RAIN), n: left(STATE.SANDSTORM) };
+}
+export function loadWeather(d) {
+  if (!d || forced) return;
+  if (d.s === STATE.TOXIC_RAIN || d.s === STATE.SANDSTORM || d.s === STATE.CLEAR) weather.state = d.s;
+  if (Number.isFinite(d.d)) weather.currentDuration = d.d;
+  if (Number.isFinite(d.c) && d.c > 0) weather.nextCheck = d.c;
+  const back = (st, rem) => { if (Number.isFinite(rem) && rem > 0) weather.lastStartAt[st] = t - (COOLDOWN[st] - Math.min(rem, COOLDOWN[st])); };
+  back(STATE.TOXIC_RAIN, d.r); back(STATE.SANDSTORM, d.n);
 }
 
 export function update(zone) {

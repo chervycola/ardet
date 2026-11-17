@@ -243,6 +243,11 @@ locations.push({
   light: { r: 105, color: [255, 90, 30], flicker: 0.2 },
 });
 
+// «Последний пункт»: шесть бумаг у своих якорей и очаг у дороги кольца 4 — когда все
+// чужие рамки уже стоят; без streetForm, поэтому проход глубины их не гасит (world/clauses.js)
+import { buildClauses } from './clauses.js';
+buildClauses(locations);
+
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)
 import { passDepth } from './depth.js';

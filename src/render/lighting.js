@@ -7,7 +7,7 @@ import { phaseAt, skyAt } from '../world/sky.js';
 
 // светит ли источник сейчас: окно, что зажигают в сумерки (render/archlights.js), днём тёмное —
 // ни ореола, ни искр, ни тёплого пятна для пера
-export const shines = L => !(L.night && skyAt(phaseAt(t)).name === 'день');
+export const shines = L => !(L.night && skyAt(phaseAt(t)).name === 'день') && !(L.when && !L.when());
 
 export const lighting = {
   sources: [],

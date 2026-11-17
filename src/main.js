@@ -64,6 +64,9 @@ import { checkLorePickup, drawLoreItems, getTotalCount, loadCollected, getCollec
 import { GATES } from './content/worldmap_db.js';
 import { mailNow, answerMail, stepMail, saveMail, loadMail, MAIL_ASK } from './world/threads.js';
 import { ask } from './ui/askbox.js';
+import { stepClauses, useClause, burnCopy, burnChoice, burnAsk, burnByNumber, fireSpeaks, isOn as clauseOn, saveClauses, loadClauses, firePlace, copyLines, setHand } from './world/clauses.js';
+import { saveWeather, loadWeather } from './render/weather.js';
+import { saveNoon, loadNoon } from './world/redNoon.js';
 import { initInventory } from './ui/inventory.js';
 import { saveGame, loadGame, startAutoSave } from './core/save.js';
 import { setPlayer, setPosOverride } from './core/playerRef.js';
@@ -255,6 +258,10 @@ if (savedData) {
   if (savedData.wardrobe) loadWardrobe(savedData.wardrobe);
   if (savedData.clock != null) setWorldClock(savedData.clock);
   if (savedData.mail) loadMail(savedData.mail);              // окно «до востребования»: выдано ли, книга запросов   // сутки и час — с того места, где ушёл
+  // «Последний пункт»: подписанное и карман; жребий полудня и погода — чтобы сказанное не солгало после перезагрузки
+  if (savedData.clauses) loadClauses(savedData.clauses);
+  if (savedData.noon) loadNoon(savedData.noon);
+  if (savedData.weather) loadWeather(savedData.weather);
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -275,6 +282,9 @@ function saveData() {
   talkedTo: Array.from(flags.talkedTo),
   clock: worldClock(t),
   mail: saveMail(),
+  clauses: saveClauses(),
+  noon: saveNoon(),
+  weather: saveWeather(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -328,6 +338,7 @@ for (const loc of locations) {
     color: loc.light.color,
     flicker: loc.light.flicker,
     bloom: loc.light.r > 50,
+    when: loc.light.when,                            // светит не всегда (очаг у дороги, world/clauses.js)
   });
 }
 
@@ -478,7 +489,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
   const hero = heroCaster((player.sit || 0) > 0.5);   // сел — и тень села
   hero.ox = player.x; hero.oy = player.y;
-  out.push(hero);
+  if (!clauseOn('pawn')) out.push(hero);             // тень в закладе у «Минервы» (world/clauses.js)
   return out;
 }
 // тёплые огни в кадре (точки кадра) — для пера: огонь всегда сплошной
@@ -557,7 +568,7 @@ function render() {
   const camY = Math.round(camera.y) + shk.y;
   drawEtchedGround(bgCtx, camX, camY, vw, vh, groundLight());
   // замок-погода: над городком, в полосе неба; буря и красный полдень его прячут
-  if (!NO_CASTLE) drawCastle(bgCtx, { x: camX, y: camY }, vw, vh, castleSeen(weather.state !== 'clear' ? weather.intensity : 0, redNoon.k));
+  if (!NO_CASTLE) drawCastle(bgCtx, { x: camX, y: camY }, vw, vh, castleSeen(weather.state !== 'clear' && !clauseOn('portik') ? weather.intensity : 0, redNoon.k));
 
   // ── BG: atmosphere ──
   ink.drawMoon(bgCtx, { x: camX, y: camY });
@@ -678,11 +689,11 @@ function render() {
   crackedGlass.draw(fxCtx);
   dyingPixels.draw(fxCtx);
   drawCatEyes(fxCtx, camX, camY, player);   // глаза кота отражают огонь странника
-  drawWeatherAdditive(fxCtx);
+  if (!clauseOn('portik')) drawWeatherAdditive(fxCtx);   // «Дейли-Портик»: не отображается то, что не во власти подписчика
   drawEdges(fxCtx);
 
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
-  drawWeatherOverlay(uiCtx);
+  if (!clauseOn('portik')) drawWeatherOverlay(uiCtx);
   setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
   dampBrainrot(beyond.hK);                          // горизонт виден — распад редеет
   drawBrainrot(uiCtx);
@@ -737,8 +748,9 @@ layers.inkPass = (ctx, main) => {
 let stormTest = /[?&]storm\b/.test(location.search);
 function plateStorm() {
   let st = 0;
-  if (weather.state !== 'clear') st += weather.intensity * (weather.state === 'sandstorm' ? 0.9 : 0.6);
-  if (weather.lightning > 28) st += 1;
+  const seen = !clauseOn('portik');                   // подписчику «Дейли-Портик» погода не видна — пластину не штормит
+  if (seen && weather.state !== 'clear') st += weather.intensity * (weather.state === 'sandstorm' ? 0.9 : 0.6);
+  if (seen && weather.lightning > 28) st += 1;
   if (isFrozen() || inBrainrotLoop()) st += 0.6;
   if (stormTest) st += 1;
   return Math.min(1, st);
@@ -1758,6 +1770,7 @@ function updateWorldSystems() {
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving, ringAt(player.x + 6, player.y + 24) >= RINGS);   // слова ленты — только у ленты
+  stepClauses(player, !redNoon.active && !inBrainrotLoop());   // «Последний пункт»: подписавшему — строка на ходу; очаг у дороги
   checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
   updateParticles();
   updateWeather(getZone(player.x, player.y));
@@ -2065,7 +2078,7 @@ function inventoryData() {
   if (under.ticket) rites.push('Билет «до колодца. туда.» — в кармане.');
   const given = (saveTownWell() || {}).g | 0;
   if (given) rites.push(`Ведро общего дна — своё отдано: ${given}.`);
-  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines() };
+  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines(), copies: copyLines(), hold: setHand };
 }
 initInventory(inventoryData, () => !loreActive() && !isMapOpen());
 
@@ -2150,6 +2163,15 @@ events.on('location.alt', (loc) => {
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
   if (a.key === 'town_well_give' && giveTownWell()) { const s = useTexts.town_well_give; showLook({ name: s.title, look: s.text }); }   // своё — в ведро общего дна
   if (a.key === 'horizon_join') beyond.lookHorizon();
+  // «Последний пункт»: второй экземпляр — в огонь городка; какой — в руке, единственный или по номеру
+  if (a.key === 'lc_burn') {
+    const done = r => { if (r) { showLook({ name: r.title, look: r.text }); saveNow(); } };
+    const id = burnChoice();
+    if (id) done(burnCopy(id));
+    else ask({ prompt: burnAsk(), ok: 'в огонь', max: 1, numeric: true }).then(v => done(burnByNumber(v)));
+  }
+  // очаг у дороги горит — сесть может всякий
+  if (a.key === 'lc_sit') { const f = firePlace(); if (f) sitOnLog({ x: f.x - 16, y: f.y, w: 12, h: f.h }); }
   // гардероб: надеть то, что висит здесь, или снова свой пыльник (world/garments.js)
   if (a.key.startsWith('wear_')) {
     const line = wear(a.key.slice(5));
@@ -2245,8 +2267,14 @@ events.on('location.use', (loc) => {
     });
     return;
   }
-  // костёр: с седьмого приношения, если странник был у мохового алтаря, говорит огонь
-  if (actionKey === 'campfire_throw' && addOffering() >= 7 && flags.visited.has('altar')) {
+  // «Последний пункт»: отметить, подписать, оторвать, принять; у очага — подложить (world/clauses.js)
+  if (actionKey.startsWith('lc_')) {
+    const r = useClause(actionKey === 'lc_feed' ? 'feed' : actionKey.slice(3));
+    if (r) { showLook({ name: r.title, look: r.text }); saveNow(); }
+    return;
+  }
+  // костёр: с седьмого приношения, если странник был у мохового алтаря и карманы пусты, говорит огонь
+  if (actionKey === 'campfire_throw' && fireSpeaks(addOffering(), flags.visited.has('altar'))) {
     const s = useTexts.campfire_sermon; showLook({ name: s.title, look: s.text }); return;
   }
   // Look-based actions

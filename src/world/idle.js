@@ -45,11 +45,38 @@ const LENTA = new Set(['скибиди', 'шесть семь', 'mid съел н
   'chronically Ardet', '💀 ушёл на пенсию', 'rizz закончился', 'sigma сам себя слышит',
   'жиза, но тихо', 'по фактам — нет фактов']);
 const QUIET_MSGS = MSGS.filter(m => !LENTA.has(m));
+export const LENTA_WORDS = [...LENTA];                 // для строки на ходу у подписавшего (world/clauses.js)
 export const _quietHasNoLenta = () => QUIET_MSGS.length > 0 && QUIET_MSGS.every(m => !LENTA.has(m)) && QUIET_MSGS.length < MSGS.length;
 
 let idleTimer = 0;
 let currentMsg = '';
 let msgLife = 0;
+let lastSaid = '', toggle = false;
+
+// видна ли сейчас строка под ногами (покоя или хода): новая ждёт её конца
+export const lineBusy = () => msgLife > 0;
+// строка на ходу (world/clauses.js «Последний пункт»): рисуется как строка покоя — «вперемешку»
+// буквально; две строки — через '\n'. Читающему без глаз — своё зеркало (общий у ленты
+// lorepopup каждый шаг пишет туда '' и стёр бы строку); повтор того же слова объявляется
+export function sayUnderfoot(text) {
+  currentMsg = text; msgLife = 240; lastSaid = text;
+  mirror(text);
+}
+let mirrorEl = null;
+function mirror(text) {
+  if (typeof document === 'undefined' || !document.body) return;
+  if (!mirrorEl) {
+    mirrorEl = document.createElement('div');
+    mirrorEl.id = 'underfoot-live';
+    if (mirrorEl.setAttribute) { mirrorEl.setAttribute('aria-live', 'polite'); mirrorEl.setAttribute('role', 'status'); }
+    if (mirrorEl.style) mirrorEl.style.cssText = 'position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden';
+    document.body.appendChild(mirrorEl);
+  }
+  toggle = !toggle;
+  mirrorEl.textContent = text.replace(/\n/g, ' ') + (toggle ? '\u200b' : '');
+}
+export const _lastUnderfoot = () => lastSaid;
+export function _resetUnderfoot() { lastSaid = ''; msgLife = 0; currentMsg = ''; idleTimer = 0; }
 
 // lentaNear: странник там, где лента (main.js: кольцо ≥ RINGS); по умолчанию — тихое место
 export function update(isMoving, lentaNear = false) {
@@ -78,7 +105,8 @@ export function draw(ctx) {
   ctx.fillStyle = '#e8dcc8';
   ctx.font = '8px "Press Start 2P","VT323",monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(currentMsg, vw / 2, y_);
+  const lines = currentMsg.split('\n');
+  for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], vw / 2, y_ + i * 10);
   ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
   msgLife--;

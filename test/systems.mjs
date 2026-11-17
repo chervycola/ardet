@@ -3761,6 +3761,184 @@ setCtx(ctx);
   });
 }
 
+// ═══ ПОСЛЕДНИЙ ПУНКТ (world/clauses.js, content/clauses.js) ═══
+{
+  const CL = await imp('world/clauses.js');
+  const ID = await imp('world/idle.js');
+  const WX = await imp('render/weather.js');
+  const RN2 = await imp('world/redNoon.js');
+  const SK = await imp('world/sky.js');
+  const TT = await imp('core/time.js');
+  const LC = await imp('world/locations.js');
+  const LT = await imp('render/lighting.js');
+  const RC = await imp('world/recount.js');
+  const D2 = await imp('world/disc.js');
+  const S0 = Math.round((SK.worldClock(TT.t) - TT.t / SK.DAY_LEN) * 1e9) / 1e9;
+  const atPhase = ph => SK.setWorldClock(((ph - TT.t / SK.DAY_LEN) % 1 + 1) % 1 + 5);   // фаза ph на нынешнем шаге
+  // ход: странник идёт по кругу (ровно 1 точка за шаг), строки считаются по шпиону idle
+  const walker = { x: 5000, y: 5000, moving: true };
+  let lines = [];
+  const frame = (moving = true) => {
+    walker.moving = moving; if (moving) walker.x += 1;
+    TT.tick(); CL.stepClauses(walker, true);
+    const said = ID._lastUnderfoot();
+    if (said) { lines.push(said); ID._resetUnderfoot(); }
+  };
+  const fresh = () => { CL._resetClauses(); ID._resetUnderfoot(); lines = []; };
+  test('последний пункт: стоящему строка хода не приходит; таблица покоя прежняя', () => {
+    fresh(); CL.useClause('gate'); CL.useClause('banner');
+    for (let i = 0; i < 10000; i++) frame(false);
+    eq(lines.length, 0, 'стоящему сказали');
+    assert(ID._quietHasNoLenta(), 'тихий словарь покоя испорчен');
+  });
+  test('последний пункт: на ходу — не чаще раза в 20 с (с баннером — в 10 с); остановка — пауза, не сброс', () => {
+    fresh(); CL.useClause('gate');
+    for (let i = 0; i < 600; i++) frame();
+    for (let i = 0; i < 5000; i++) frame(false);
+    for (let i = 0; i < 600; i++) frame();
+    eq(lines.length, 1, `строк за 600+600 шагов хода: ${lines.length}`);
+    fresh(); CL.useClause('gate');
+    for (let i = 0; i < 300 + 1200 * 5 + 5; i++) frame();
+    eq(lines.length, 6, 'ворота: строка раз в 20 с хода');
+    fresh(); CL.useClause('banner');
+    for (let i = 0; i < 300 + 600 * 5 + 5; i++) frame();
+    eq(lines.length, 6, 'баннер: строка раз в 10 с хода');
+  });
+  test('последний пункт: колода по карману — ворота 3:4, баннер 2:8, обе 5:12; квитанция — без колоды; слово ленты подряд не повторяется', () => {
+    const mix = d => [d.filter(x => x !== '-').length, d.filter(x => x === '-').length].join(':');
+    fresh(); CL.useClause('gate'); eq(mix(CL._deckNow()), '3:4', 'ворота');
+    fresh(); CL.useClause('banner'); eq(mix(CL._deckNow()), '2:8', 'баннер');
+    fresh(); CL.useClause('gate'); CL.useClause('banner'); eq(mix(CL._deckNow()), '5:12', 'обе');
+    fresh(); CL.useClause('pawn'); eq(CL._deckNow().length, 0, 'у квитанции колода');
+    fresh(); CL.useClause('gate');
+    for (let i = 0; i < 300 + 1200 * 40; i++) frame();
+    const noise = lines.filter(l => ID.LENTA_WORDS.includes(l));
+    assert(noise.length > 5, 'шума нет');
+    for (let i = 1; i < lines.length; i++) assert(!(lines[i] === lines[i - 1] && ID.LENTA_WORDS.includes(lines[i])), `слово подряд: ${lines[i]}`);
+    for (const l of lines) for (const row of l.split('\n')) assert(row.length <= 28, `строка длиннее 28: «${row}»`);
+  });
+  test('последний пункт: квитанция — смена света за минуту, один раз', () => {
+    try {
+      fresh(); CL.useClause('pawn');
+      atPhase(0.42 - 3300 / SK.DAY_LEN);                 // до сумерек 55 с
+      for (let i = 0; i < 2500; i++) frame();
+      assert(lines.length === 1 && /^сумерки через \d+ с$/.test(lines[0]), `строки: ${JSON.stringify(lines)}`);
+    } finally { SK.setWorldClock(S0); }
+  });
+  test('последний пункт: погода — сказанное о дожде сбывается (конец, «не будет ещё», «дальше дождь»)', () => {
+    let bad = 0, n = 0;
+    for (const zone of ['street', 'forest', 'toxic', 'highway', 'settlement']) {
+      const checks = [];
+      for (let i = 0; i < 60 * 60 * 40; i++) {
+        TT.tick(); WX.update(zone);
+        const st = WX.weather.state, t = TT.t;
+        for (const c of checks) {
+          if (c.done) continue;
+          if (c.kind === 'ends' && st !== 'toxicRain') { c.done = true; if (Math.abs(t - c.t0 - c.in) > 2) bad++; }
+          if (c.kind === 'none') { if (st === 'toxicRain' && WX.weather.lastStartAt.toxicRain > c.t0) { c.done = true; if (t - c.t0 < c.in - 2) bad++; } else if (t - c.t0 > c.in) c.done = true; }
+          if (c.kind === 'sandThenRain' && t - c.t0 === c.in + 1) { c.done = true; if (st !== 'toxicRain') bad++; }
+          if (c.kind === 'ready' && t - c.t0 === c.in + 1) { c.done = true; if ((zone === 'forest' || zone === 'toxic') && st !== 'toxicRain') bad++; }
+        }
+        if (i % 997 === 0) { checks.push({ ...WX.rainOutlook(), t0: TT.t }); n++; }
+      }
+    }
+    assert(n > 100, 'мало проверок');
+    eq(bad, 0, `сказанное о дожде не сбылось (${bad} из ${n})`);
+  });
+  test('последний пункт: погода и жребий полудня переживают перезагрузку', () => {
+    for (let i = 0; i < 4000; i++) { TT.tick(); WX.update('forest'); }
+    const o = WX.rainOutlook(), sv = JSON.parse(JSON.stringify(WX.saveWeather()));
+    WX.weather.lastStartAt.toxicRain = -999999; WX.weather.lastStartAt.sandstorm = -999999; WX.weather.state = 'clear'; WX.weather.nextCheck = 1800;
+    WX.loadWeather(sv);
+    const o2 = WX.rainOutlook();
+    eq(o2.kind, o.kind, 'погода после перезагрузки другая'); eq(o2.in, o.in, 'срок после перезагрузки другой');
+    RN2._reset(); RN2.stepRedNoon(0, 0.05, 30, () => 0.1);
+    eq(RN2.noonLot(30), true, 'жребий суток не брошен с начала суток');
+    const nv = RN2.saveNoon(); RN2._reset(); RN2.loadNoon(nv);
+    RN2.stepRedNoon(1, 0.06, 30, () => 0.9);
+    eq(RN2.noonLot(30), true, 'жребий переброшен после перезагрузки');
+    RN2.stepRedNoon(2, 0.43, 30, () => 0.9); eq(RN2.noonLot(31), false, 'жребий на завтра — к сумеркам');
+    RN2._reset();
+  });
+  test('последний пункт: число на бумаге не убывает — подпись +1, огонь 0, снова +1; у баннера — все бумаги и сутки', () => {
+    fresh();
+    const foot = id => (CL.paperText(id).match(/(?:Согласий получено|Подписей на листе|Подписчиков|Залогов принято|Купонов оторвано): ([\d ]+)/) || [])[1];
+    const num = id => +String(foot(id)).replace(/ /g, '');
+    const g0 = num('gate'), b0 = num('banner');
+    CL.useClause('gate'); eq(num('gate'), g0 + 1, 'подпись не прибавила');
+    CL.burnCopy('gate'); eq(num('gate'), g0 + 1, 'отзыв убавил');
+    CL.useClause('gate'); eq(num('gate'), g0 + 2, 'повторная подпись не прибавила');
+    CL.useClause('plan'); eq(num('banner'), b0 + 3, 'баннер не учёл подписи на других бумагах');
+    for (const id of ['gate', 'hearth', 'plan', 'pawn', 'portik', 'banner']) assert(!/отозвано\s*:/i.test(CL.paperText(id)), `графа «отозвано» у ${id}`);
+  });
+  test('последний пункт: огонь снимает следствие сразу, угол в пепле — конец выдающего пункта, это приношение', () => {
+    fresh();
+    const camp = LC.locations.find(l => l.id === 'campfire');
+    const before = parseInt(localStorage.getItem('ardet_v2_offerings') || '0', 10) || 0;
+    CL.useClause('portik'); CL.useClause('pawn');
+    assert(CL.isOn('portik') && CL.isOn('pawn'), 'не подписаны');
+    eq(CL.burnChoice(), null, 'при двух экземплярах огонь выбрал сам');
+    assert(/1 корешок · 2 квитанция/.test(CL.burnAsk()), `вопрос у огня: ${CL.burnAsk()}`);
+    const r = CL.burnByNumber('2');
+    assert(r && /второй экземпляр: Договор залога тени/.test(r.text), 'не сгорел');
+    assert(!CL.isOn('pawn') && CL.isOn('portik'), 'сгорел не тот');
+    assert(camp.look.includes('за минуту до сумерек, ночи, рассвета, дня.'), 'угла в пепле нет в осмотре костра');
+    eq(CL.ashTail(), 'за минуту до сумерек, ночи, рассвета, дня.', 'хвост');
+    eq((parseInt(localStorage.getItem('ardet_v2_offerings') || '0', 10) || 0), before + 1, 'не засчитано как приношение');
+    assert(camp.altNow() && camp.altNow().key === 'lc_burn', 'у костра нет второго действия при экземпляре в кармане');
+    CL.burnCopy('portik');
+    assert(!camp.altNow() || camp.altNow().key !== 'lc_burn', 'пустой карман — а огонь просит экземпляр');
+    assert(CL.fireSpeaks(7, true, false) && !CL.fireSpeaks(7, true, true), 'речь огня при листе в кармане');
+  });
+  test('последний пункт: обещание — прошёл без полена: «не исполнено» +1; с поленом — нет; полено — сутки мира, не копится; огонь гаснет в срок', () => {
+    try {
+      fresh();
+      const f = CL.firePlace(); assert(f, 'очага нет');
+      const at = (d) => { walker.x = f.x + f.w / 2 - 6 + d; walker.y = f.y + f.h - 22; };
+      const visit = (feed) => {
+        at(0); for (let i = 0; i < 60; i++) frame(false);
+        if (feed) CL.useClause('feed');
+        at(600); for (let i = 0; i < 60; i++) frame(false);
+      };
+      CL.useClause('hearth');                            // приход подписи — исполнен
+      at(600); for (let i = 0; i < 60; i++) frame(false);
+      eq(CL._state().h.x, 0, 'приход подписи засчитан как неисполненный');
+      visit(false); eq(CL._state().h.x, 1, 'прошёл без полена — пометки нет');
+      visit(true); eq(CL._state().h.x, 1, 'с поленом — пометка');
+      const u = CL._state().h.u;
+      assert(Math.abs(u - (SK.worldClock(TT.t) + 1)) < 0.01, 'полено — не сутки мира');
+      CL.useClause('feed'); assert(CL._state().h.u - u < 0.01, 'поленья копятся');
+      assert(CL.hearthLit(), 'не горит');
+      const fireLoc = LC.locations.find(l => l.id === 'lc_fire');
+      assert(fireLoc.light && fireLoc.light.when === CL.hearthLit, 'свет очага без условия');
+      SK.setWorldClock(SK.worldClock(TT.t) - TT.t / SK.DAY_LEN + 1.5);
+      assert(!CL.hearthLit(), 'горит дольше суток мира');
+      assert(!LT.shines({ when: CL.hearthLit }), 'погасший очаг светит');
+      CL.burnCopy('hearth'); visit(false); eq(CL._state().h.x, 1, 'отозвал — а проходы считают');
+    } finally { SK.setWorldClock(S0); }
+  });
+  test('последний пункт: шесть бумаг стоят у своих якорей, ни на что не наезжают; лист у Врат — в городке', () => {
+    const want = { gate: 0, hearth: 4, plan: 5, pawn: 6, portik: 8, banner: 9 };
+    for (const [id, ring] of Object.entries(want)) {
+      const l = LC.locations.find(x => x.id === `lc_${id}`);
+      assert(l, `бумаги ${id} нет`);
+      eq(D2.ringAt(l.x + l.w / 2, l.y + l.h), ring, `${id}: не в своём кольце`);
+      assert(RC.free(l, LC.locations.filter(o => o !== l)), `${id}: наезжает на соседа`);
+    }
+    assert(LC.locations.find(x => x.id === 'lc_fire'), 'очага нет');
+  });
+  test('последний пункт: сохранение — подписанное, карман, угол, очаг; неизвестное отброшено', () => {
+    fresh(); CL.useClause('gate'); CL.useClause('hearth'); CL.burnCopy('gate');
+    const sv = JSON.parse(JSON.stringify(CL.saveClauses()));
+    fresh(); CL.loadClauses({ ...sv, p: [...sv.p, 'nope', 'hearth'], n: { ...sv.n, nope: 3 } });
+    assert(CL.isOn('hearth') && !CL.isOn('gate'), 'карман не тот');
+    eq(CL.pocket().length, 1, 'повтор или неизвестное в кармане');
+    eq(CL.signedTimes('gate'), 1, 'число подписей не то');
+    eq(CL.ashTail(), sv.a ? CL.ashTail() : null, 'угол');
+    eq(CL.ashTail(), 'Между сообщениями — сообщения общего характера.', 'угол в пепле потерян');
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

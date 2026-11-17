@@ -14,6 +14,7 @@ import { getPlayer } from '../../core/playerRef.js';
 import { revealOf } from '../../world/potemkin.js';
 import { weather } from '../../render/weather.js';
 import { wasUsed } from '../../world/relook.js';
+import { ashTail } from '../../world/clauses.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', SV = '#E28A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -991,6 +992,12 @@ function campfireBody() {
     r(sx, sy, w, h, S0); r(sx, sy, w, 1, k % 3 ? K1 : S2); r(sx, sy + 1, 1, h - 1, S1); r(sx + w - 1, sy + 1, 1, h - 1, S2);   // копоть сверху
     if (hh(k, 7, 3) < 0.45) { r(sx + 1 + (k & 1), sy + 1, 2, 1, BLOOD); r(sx + 2, sy + 2, 1, 1, BLOOD); }
   }
+  // у крайнего камня, в пепле, — принесённое раньше (текст ПРИНОШЕНИЯ): пуговица, обручальное
+  // кольцо, зуб, ключ с биркой «кв. 42»; ни одно не сгорело до конца
+  r(28, 26, 2, 2, AS); r(28, 26, 1, 1, NI);                              // пуговица
+  r(26, 28, 2, 1, L2);                                                   // кольцо
+  r(30, 29, 1, 1, BO);                                                   // зуб
+  r(31, 27, 3, 1, BO); r(33, 28, 1, 1, BO); r(30, 27, 1, 1, L2);         // ключ с бородкой и биркой
   // скелет без головы: хребет поперёк огня; левая половина сгорела — уголь
   // с тлеющими трещинами, правая — кость; шея кончается позвонками
   for (let x = 6; x <= 25; x++) r(x, 20 - q((x - 6) * 0.12), 1, 1, x < 15 ? (x & 1 ? K1 : K4) : x & 1 ? L1 : L2);
@@ -1009,7 +1016,9 @@ function campfireBody() {
   pix(FACE, tx - 4, ty);
 }
 export function draw_campfire(x, y) {
-  bake('campfire2', x, y, -16, -46, 80, 90, campfireBody);
+  bake('campfire3', x, y, -16, -46, 80, 90, campfireBody);
+  // «Последний пункт»: недогоревший угол второго экземпляра — у крайнего камня (world/clauses.js)
+  if (ashTail()) { r(x + 25, y + 29, 3, 2, BO); r(x + 27, y + 30, 1, 1, SINGE); r(x + 25, y + 29, 1, 1, SEP); }
   // кровь с нижнего рога полумесяца: капля набухает, срывается, падает в огонь
   const dk = (t % 360) / 360, hx = x + MOON[0] + 5, hy = y + MOON[1] + 7;
   if (dk < 0.55) { const L = 1 + q(dk / 0.55 * 2); r(hx, hy, 1, L, BLOOD); r(hx, hy, 1, 1, KV); }

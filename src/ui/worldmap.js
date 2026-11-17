@@ -16,6 +16,7 @@ import { sideAt } from '../world/relief.js';
 import { CELL_TITLES } from '../content/cell_titles.js';
 import { SIDE_RU } from '../world/placeStamp.js';
 import { drawSignature } from './signature.js';
+import { isOn as clauseOn } from '../world/clauses.js';   // «Последний пункт»: план по подписке (кольцо 5)
 import { redNoon } from '../world/redNoon.js';
 import { reducedMotion } from '../core/prefs.js';
 import { SETTLEMENT } from '../world/physics.js';
@@ -140,8 +141,9 @@ function draw() {
     ctx.fillText('ПЛАН МЕСТНОСТИ · КАДАСТРОВЫЙ · ЛИСТ 1', 18, 25);
     ctx.save();                                 // штамп: криво, сепией
     ctx.translate(330, 21); ctx.rotate(-0.07);
-    ctx.strokeStyle = rgba(SEPIA, 0.7); ctx.lineWidth = 1; ctx.strokeRect(-4, -12, 150, 17);
-    ctx.fillStyle = rgba(SEPIA, 0.8); ctx.fillText('ОБМЕР — НОГАМИ', 6, 0);
+    const sub = clauseOn('plan');               // подписчику план выдан гравированным — обмер не его
+    ctx.strokeStyle = rgba(SEPIA, 0.7); ctx.lineWidth = 1; ctx.strokeRect(-4, -12, sub ? 200 : 150, 17);
+    ctx.fillStyle = rgba(SEPIA, 0.8); ctx.fillText(sub ? 'ОБМЕР — ПО ПОДПИСКЕ' : 'ОБМЕР — НОГАМИ', 6, 0);
     ctx.restore();
   } else {
     ctx.font = F_TITLE;
@@ -304,9 +306,12 @@ function drawLocal() {
   if (hereSide) walkedNow.add(cellKey(here, hereSide));
   knownRings = new Set([here]);
   for (const k of walkedNow) { const n = SEGMENTS.findIndex(sg => sg.id === k.split(':')[0]) + 1; if (n) knownRings.add(n); }
+  // план по подписке: имена всех колец и клеток сразу, пройденное самим не отмечается
+  const sub = clauseOn('plan');
+  if (sub) for (let n = 1; n <= RINGS; n++) knownRings.add(n);
   if (!mask) maskStep(90);
   if (mask) {
-    buildFill(walkedNow);
+    buildFill(sub ? new Set() : walkedNow);
     ctx.imageSmoothingEnabled = false;            // при приближении — чёткие ступени, а не муть
     ctx.drawImage(baseCv, MAPB.x, MAPB.y);
     ctx.drawImage(fillCv, MAPB.x, MAPB.y);
@@ -354,7 +359,7 @@ function drawLocal() {
     ctx.fillStyle = SEPIA; ctx.fillText(title, tx - tw / 2, ty);
   };
   put(1, 'городок');
-  const cells = [...walkedNow].map(k => { const [rid, side] = k.split(':'); return { k, side, n: SEGMENTS.findIndex(sg => sg.id === rid) + 1 }; })
+  const cells = [...(clauseOn('plan') ? Object.keys(CELL_TITLES) : walkedNow)].map(k => { const [rid, side] = k.split(':'); return { k, side, n: SEGMENTS.findIndex(sg => sg.id === rid) + 1 }; })
     .filter(c => c.n && CELL_TITLES[c.k]).sort((a, b) => a.n - b.n);
   for (const c of cells) put(cellId(c.n, c.side), '«' + CELL_TITLES[c.k] + '»');
 
@@ -427,7 +432,8 @@ function drawLocalSide() {
     ['ты: ' + whereName(here, hereSide), CINNABAR],
   ];
   if (hereSide && CELL_TITLES[cellKey(here, hereSide)]) L.push([`клетка «${CELL_TITLES[cellKey(here, hereSide)]}»`, SEPIA, F_PAPER_S]);
-  L.push([`граф заполнено: ${filled} из ${RINGS * 5} · мест осмотрено: ${localShown} из ${localTotal}`, rgba(SEPIA, 0.8), F_PAPER_S]);
+  const sub = clauseOn('plan');
+  L.push([sub ? `граф заполнено: ${RINGS * 5} из ${RINGS * 5} · по подписке` : `граф заполнено: ${filled} из ${RINGS * 5} · мест осмотрено: ${localShown} из ${localTotal}`, rgba(SEPIA, 0.8), F_PAPER_S]);
   L.push([null]);
   let y = sideText(L, SIDE.y + 16);
   // ведомость клеток: кольцо, эпоха, пять граф сторон
@@ -444,7 +450,7 @@ function drawLocalSide() {
     SIDES5.forEach((sd, i) => {
       const bx = gx + i * 15, by = y - 10;
       ctx.strokeStyle = rgba(SEPIA, 0.6); ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, by + 0.5, 11, 11);
-      if (walkedNow.has(cellKey(n, sd))) {
+      if (!sub && walkedNow.has(cellKey(n, sd))) {
         ctx.strokeStyle = SEPIA; ctx.lineWidth = 1.2;
         ctx.beginPath(); for (let j = -8; j <= 8; j += 4) { ctx.moveTo(bx + 1 + Math.max(0, j), by + 1 + Math.max(0, -j)); ctx.lineTo(bx + 11 + Math.min(0, j), by + 11 + Math.min(0, -j)); } ctx.stroke();
       }
@@ -457,8 +463,9 @@ function drawLocalSide() {
   // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился; в красный полдень руки нет
   const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
   ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);
-  ctx.fillText('ОБМЕР ПРОИЗВЁЛ', SIDE.x, sy);
-  if (redNoon.k > 0.5 || !drawSignature(ctx, SIDE.x + 112, sy - 17, 140, 22, '#241d18', 1.3)) {
+  if (sub) ctx.fillText('ОБМЕР ПРОИЗВЕДЁН ЗАРАНЕЕ · ПО ПОДПИСКЕ', SIDE.x, sy);   // рукой подписчика обмер не подписывается
+  else ctx.fillText('ОБМЕР ПРОИЗВЁЛ', SIDE.x, sy);
+  if (!sub && (redNoon.k > 0.5 || !drawSignature(ctx, SIDE.x + 112, sy - 17, 140, 22, '#241d18', 1.3))) {
     ctx.font = "italic 13px Literata, 'PT Serif', Georgia, serif"; ctx.fillStyle = rgba(SEPIA, 0.8);
     ctx.fillText('— от подписи уклонился', SIDE.x + 104, sy);
   }
