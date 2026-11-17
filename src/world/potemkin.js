@@ -52,14 +52,23 @@ export function update(player, locations, frozen = false) {
   }
 }
 
-export function revealOf(loc) { return reveal.get(loc.id) || 0; }
+// вписанная в опись подделка редеет и без взгляда (world/opis.js thinOf): пол — при чтении,
+// чтобы рисунок, швы canon.js и сазан сходились; шов в тексте — по-прежнему только взгляду
+let floorOf = null;
+export function setRevealFloor(fn) { floorOf = fn; }
+export function revealOf(loc) {
+  const k = reveal.get(loc.id) || 0, f = floorOf ? floorOf(loc) : 0;
+  return f > k ? f : k;
+}
+// бережение (POTEMKIN_TENDER, tender у таблички): проявляется тихо, без подкосов
+export const isTender = loc => !!(loc && ((loc.potemkinSign && loc.potemkinSign.tender) || loc.potemkinTender || POTEMKIN_TENDER.has(loc.id)));
 
 // неподвижный взгляд как таковой, 0..1: с тем же порогом и подъёмом, что шов; у подделки
 // под ним редеет фасад, у настоящей тихой вещи — на волос прибавляется (render/quiet.js)
 export function gaze() { return gazeK; }
 
 export function seamVisible(loc) {
-  if (revealOf(loc) >= SEAM_AT) return true;
+  if ((reveal.get(loc.id) || 0) >= SEAM_AT) return true;
   const at = seenAt.get(loc.id);
   return at !== undefined && t - at <= SEAM_MEMORY;
 }
@@ -145,7 +154,7 @@ function drawFlakes(ctx, loc, cx, gy, w, h, k) {
 }
 
 // drawFn(ctx) рисует объект в мировых координатах в переданный контекст
-export function drawRevealed(ctx, loc, k, drawFn, box) {
+export function drawRevealed(ctx, loc, k, drawFn, box, fade = null) {
   const doc = typeof document !== 'undefined' ? document : null;
   if (!off && doc && doc.createElement) {
     off = doc.createElement('canvas');
@@ -170,7 +179,8 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
   const img = offCtx.getImageData(0, 0, W, H);
   const d = img.data;
   // бережение не разоблачают: без подкосов и осыпи, растр лёгкий
-  const tender = !!(loc.potemkinSign && loc.potemkinSign.tender) || !!loc.potemkinTender || POTEMKIN_TENDER.has(loc.id);
+  const tender = isTender(loc);
+  const fr = fade && fade.rgb, fa = fade ? fade.a : 0;   // опись: выцветшее по заходам — к земле кольца (world/opis.js)
   const holes = k * (tender ? 0.18 : 0.4);    // вещь редеет растром, но не исчезает
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
@@ -179,6 +189,7 @@ export function drawRevealed(ctx, loc, k, drawFn, box) {
       if (d[i] === CANDLE[0] && d[i + 1] === CANDLE[1] && d[i + 2] === CANDLE[2]) continue;
       const wx = x + ox, wy = y + oy;          // растр привязан к миру, не к кадру
       if (BAYER[(wy & 3) * 4 + (wx & 3)] / 16 < holes) { d[i + 3] = 0; continue; }
+      if (fa) { d[i] += (fr[0] - d[i]) * fa; d[i + 1] += (fr[1] - d[i + 1]) * fa; d[i + 2] += (fr[2] - d[i + 2]) * fa; }
       const l = (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
       const c = tender ? ramp(l) : ramp(0.3 + 0.62 * l);   // фанера бледнеет; бережённое — только тише
       d[i] += (c[0] - d[i]) * k;

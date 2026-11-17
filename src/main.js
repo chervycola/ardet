@@ -125,7 +125,8 @@ import { noteAttention, stepAttention, forget as forgetAttention, saveAttention,
 function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.ring <= EPOCHS.length ? EPOCHS[p.ring - 1].id + ':' + p.side : null; }
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
-import { update as updatePotemkin, revealOf, drawRevealed, setRelook, gaze } from './world/potemkin.js';
+import { update as updatePotemkin, revealOf, drawRevealed, setRelook, setRevealFloor, gaze } from './world/potemkin.js';
+import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve } from './world/opis.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
@@ -263,6 +264,7 @@ if (savedData) {
   if (savedData.clauses) loadClauses(savedData.clauses);
   if (savedData.noon) loadNoon(savedData.noon);
   if (savedData.weather) loadWeather(savedData.weather);
+  if (savedData.opis) { loadOpis(savedData.opis); opisResolve(locations); }   // «В описи не значится»: строки от руки и заходы по кольцам
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -286,6 +288,7 @@ function saveData() {
   clauses: saveClauses(),
   noon: saveNoon(),
   weather: saveWeather(),
+  opis: saveOpis(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -640,7 +643,7 @@ function render() {
     }
     if (it.prop) { it.prop.draw(worldCtx); continue; }
     const loc = it.loc;
-    drawLocation(worldCtx, loc);
+    drawLocation(worldCtx, loc, true);
     if (loc.npc && npcDrawFn[loc.npc]) {
       npcDrawFn[loc.npc](loc.x, loc.y);
     }
@@ -900,40 +903,55 @@ function nearestQuietId() {
 // Location draw: real sprite if migrated, placeholder otherwise.
 // Подделка под неподвижным взглядом проявляется (потёмкинская скорость); настоящая тихая
 // вещь под тем же взглядом набирает на волос (один закон на две стороны).
-function drawLocation(ctx, loc) {
+// inWorld — кадр мира (не маска тени и не красная группа): только там опись бледнит
+function drawLocation(ctx, loc, inWorld = false) {
+  const fade = inWorld ? opisFade(loc) : null;      // «В описи не значится»: по заходам — к земле кольца; вписанное — в чернилах
   const k = revealOf(loc);
   if (k > 0.01) {
     const gy = loc.y + loc.h;
     const box = loc.streetForm
       ? { x: loc.x + 7 - 20, y: gy - 44, w: 40, h: 44 }
       : { x: loc.x - 10, y: loc.y - 24, w: loc.w + 20, h: loc.h + 24 };
-    drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box);
+    drawRevealed(ctx, loc, k, c => drawLocationPlain(c, loc), box, fade);
     return;
   }
   // глубина II (world/depth.js): в тени; подошёл — проступает
   if (loc.quiet) {
     const fx = loc.archDraw ? loc.archX : loc.x + loc.w / 2, fy = loc.archDraw ? loc.archGy : loc.y + loc.h;
-    const box = loc.archDraw ? { x: loc.archX - loc.w / 2 - 6, y: loc.archGy - loc.h - 14, w: loc.w + 12, h: loc.h + 20 }
-      : { x: loc.x + 7 - 24, y: loc.y + loc.h - 52, w: 48, h: 56 };
-    drawQuiet(ctx, box, quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? gaze() : 0), c => drawLocationPlain(c, loc));
+    drawQuiet(ctx, veilBox(loc), quietShade(Math.hypot(player.x + 6 - fx, player.y + 24 - fy), loc.id === quietGazeId ? gaze() : 0), c => drawLocationPlain(c, loc), fade);
+    return;
+  }
+  if (fade) {                                          // выцветшее: тело — под вуаль, живое (огонь, дым, птицы) — поверх
+    drawQuiet(ctx, veilBox(loc), 0, c => drawLocationPlain(c, loc, 1), fade);
+    if (loc.archDraw) drawLocationPlain(ctx, loc, 2);
     return;
   }
   drawLocationPlain(ctx, loc);
 }
+// рамка вещи для холста вуали: постройка — по телу; табличка — по стойке; прочее — как у маски тени
+function veilBox(loc) {
+  return loc.archDraw ? { x: loc.archX - loc.w / 2 - 6, y: loc.archGy - loc.h - 14, w: loc.w + 12, h: loc.h + 20 }
+    : loc.streetForm ? { x: loc.x + 7 - 24, y: loc.y + loc.h - 52, w: 48, h: 56 }
+    : { x: loc.x - 30, y: loc.y - 70, w: loc.w + 60, h: loc.h + 78 };
+}
+function archFlipped(ctx, loc, fn) {                  // повтор вида — зеркально
+  if (!loc.archFlip) { fn(); return; }
+  ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1); fn(); ctx.restore();
+}
 
-function drawLocationPlain(ctx, loc) {
+// part: 0 — целиком; 1 — тело (без живого слоя, свечи и жизни); 2 — только живое поверх
+function drawLocationPlain(ctx, loc, part = 0) {
   if (loc.archDraw) {
-    if (loc.archFlip) {                     // повтор вида — зеркально
-      ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1);
-      drawArch(ctx, loc, t, maskPass);
-      ctx.restore();
-    } else drawArch(ctx, loc, t, maskPass);  // неподвижное — запечённым холстом (render/archbake.js)
-    if (loc.archMirror) drawMirrorCandle(ctx, loc);
-    if (!maskPass) drawArchLife(ctx, loc, t, { x: player.x + 6, y: player.y + 24 });
-    drawArchChar(ctx, loc);
-    drawArchFoot(ctx, loc);
+    if (part !== 2) archFlipped(ctx, loc, () => drawArch(ctx, loc, t, maskPass || part === 1));   // неподвижное — запечённым холстом (render/archbake.js)
+    else if (loc.archDraw.live) archFlipped(ctx, loc, () => loc.archDraw.live(ctx, loc.archX, loc.archGy, t));
+    if (part !== 1) {
+      if (loc.archMirror) drawMirrorCandle(ctx, loc);
+      if (!maskPass) drawArchLife(ctx, loc, t, { x: player.x + 6, y: player.y + 24 });
+    }
+    if (part !== 2) { drawArchChar(ctx, loc); drawArchFoot(ctx, loc); }
     return;
   }
+  if (part === 2) return;
   if (loc.streetForm) { drawStreetSign(ctx, loc); return; }
   if (loc.drawSelf) { loc.drawSelf(ctx, loc, t); return; }
   const fn = locSprites['draw_' + loc.id];
@@ -1769,7 +1787,7 @@ function updateWorldSystems() {
   // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
   // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
   if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
-  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); stepMail(player.x + 6, player.y + 23); }   // обмер — ногами; врата по пройденному; створка окна
+  if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); stepMail(player.x + 6, player.y + 23); stepOpis(ringAt(player.x + 6, player.y + 23)); }   // обмер — ногами; врата по пройденному; створка окна
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
   if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
   updateMonsters(player);
@@ -2083,7 +2101,7 @@ function inventoryData() {
   if (under.ticket) rites.push('Билет «до колодца. туда.» — в кармане.');
   const given = (saveTownWell() || {}).g | 0;
   if (given) rites.push(`Ведро общего дна — своё отдано: ${given}.`);
-  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines(), copies: copyLines(), hold: setHand };
+  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines(), copies: copyLines(), hold: setHand, hand: opisLines() };
 }
 initInventory(inventoryData, () => !loreActive() && !isMapOpen());
 
@@ -2106,6 +2124,8 @@ events.on('location.use', loc => { if (loc && loc.id) { noteUse(loc.id); noteAtt
 // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
 events.on('brainrot.freeze', forgetAttention);
 setRelook(loc => relookText(loc.id, lookTags()));
+setRevealFloor(thinOf);                         // вписанная подделка редеет к подпоркам по заходам (world/opis.js)
+events.on('opis.inscribe', () => saveNow());    // строка от руки — сразу в сохранение
 
 // ═══ EVENT HANDLERS ═══
 // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)

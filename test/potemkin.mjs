@@ -129,6 +129,20 @@ test('potemkin: бережение проявляется тихо — без п
   eq(drawn, 1);
 });
 
+test('potemkin: пол проявленности (опись) — рисунку, не тексту; бережение — одной функцией', () => {
+  P._reset();
+  P.setRevealFloor(l => (l.id === fake.id ? 0.6 : 0));
+  eq(P.revealOf(fake), 0.6, 'пол не дошёл до рисунка');
+  eq(P.revealOf(real), 0, 'пол у невписанного');
+  assert(!P.seamVisible(fake) && P.lookText(fake) === fake.look, 'шов в осмотре без взгляда');
+  run(near, P.STILL_DELAY + 200); eq(P.revealOf(fake), 1, 'взгляд сильнее пола');
+  P.setRevealFloor(null); P._reset();
+  assert(P.isTender({ id: 'ruins' }) && P.isTender({ potemkinSign: { tender: true } }) && !P.isTender(fake), 'бережение');
+  let drawn = 0;
+  P.drawRevealed(fakeCtx(), fake, 0.6, () => { drawn++; }, { x: 980, y: 982, w: 40, h: 44 }, { a: 0.3, col: '#4a3a22', rgb: [74, 58, 34] });
+  eq(drawn, 1, 'с выцветанием без холста');
+});
+
 test('potemkin: у вещей бережения со швом — тихое проявление (tender)', () => {
   const care = ['побелённая стена в коридоре', 'двойной портрет над комодом', 'окно с банками', 'остановка в долине'];
   for (const name of care) {

@@ -17,9 +17,10 @@ export function quietShade(d, g = 0) {
   return Math.max(0, SEEN + (DEEP - SEEN) * k * k * (3 - 2 * k) - HAIR * Math.max(0, Math.min(1, g)));
 }
 
-// drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом
-export function drawQuiet(ctx, box, shade, drawFn) {
-  if (shade <= 0.01) { drawFn(ctx); return; }
+// drawFn(ctx) рисует вещь в мировых координатах; box — её рамка с запасом;
+// fade — выцветание по заходам ({ a, col }, world/opis.js): к земле кольца, до ночи, по тем же пикселям
+export function drawQuiet(ctx, box, shade, drawFn, fade = null) {
+  if (shade <= 0.01 && !fade) { drawFn(ctx); return; }
   const doc = typeof document !== 'undefined' ? document : null;
   if (!off && doc && doc.createElement) {
     off = doc.createElement('canvas');
@@ -40,9 +41,8 @@ export function drawQuiet(ctx, box, shade, drawFn) {
   try { drawFn(oc); } finally { setCtx(ctx); }
   oc.setTransform(1, 0, 0, 1, 0, 0);
   oc.globalCompositeOperation = 'source-atop';          // ночь — только по пикселям вещи
-  oc.globalAlpha = shade;
-  oc.fillStyle = '#0D0B0A';
-  oc.fillRect(0, 0, W, H);
+  if (fade) { oc.globalAlpha = fade.a; oc.fillStyle = fade.col; oc.fillRect(0, 0, W, H); }
+  if (shade > 0.01) { oc.globalAlpha = shade; oc.fillStyle = '#0D0B0A'; oc.fillRect(0, 0, W, H); }
   oc.globalCompositeOperation = 'source-over';
   oc.globalAlpha = 1;
   ctx.drawImage(off, 0, 0, W, H, ox, oy, W, H);

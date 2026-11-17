@@ -44,6 +44,21 @@ export function inventoryLines(d) {
     L.push({ h: 'Вторые экземпляры' });
     d.copies.forEach(c => L.push({ text: c.line, copy: c }));
   }
+  if (d.hand) handLines(d.hand).forEach(l => L.push(l));   // внизу — строки от руки (world/opis.js)
+  return L;
+}
+
+// строка от руки на кольцо: зачёркнутое читается; пустые не скрываются, подряд — одной строкой
+export function handLines(hand) {
+  const L = [{ h: 'От руки' }], name = r => (r ? `кольцо ${r}` : 'городок');
+  for (let i = 0; i < hand.length; i++) {
+    const h = hand[i];
+    if (h.cur) { L.push({ n: name(h.ring), hand: h }); continue; }
+    let j = i;
+    while (h.ring > 0 && j + 1 < hand.length && !hand[j + 1].cur) j++;
+    L.push({ n: j > i ? `кольца ${h.ring}–${hand[j].ring}` : name(h.ring), text: j > i ? 'строки пусты' : 'строка пуста', empty: true });
+    i = j;
+  }
   return L;
 }
 
@@ -155,6 +170,8 @@ function render() {
     ? `<div class="inv-h">${T(l.h)}</div>`
     : l.copy
       ? `<div class="inv-row" data-inv="copy:${l.copy.id}"><span class="inv-t">${T(l.text)}</span></div>`
+    : l.hand
+      ? `<div class="inv-row inv-hand"><span class="inv-n">${T(l.n)}</span><span class="inv-t">${l.hand.struck.map(x => `<s class="inv-x">${T(x)}</s> `).join('')}${T(`«${l.hand.cur}» — хранить`)}</span></div>`
     : l.note
       ? `<div class="inv-row" data-inv="note:${l.note.n}"><span class="inv-n">${T(l.n)}</span><span class="inv-t">${T(l.text)}</span></div>`
       : `<div class="inv-row${l.empty ? ' inv-empty' : ''}">${l.n ? `<span class="inv-n">${T(l.n)}</span>` : ''}<span class="inv-t">${T(l.text)}</span></div>`).join('');

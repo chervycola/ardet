@@ -18,6 +18,7 @@ import { STREAM } from './stream.js';
 import { placeStamp } from '../world/placeStamp.js';
 import { hasSignature, signatureSVG } from './signature.js';
 import { hasReturned } from '../core/sessionMemory.js';
+import { opisState, opisLine, inscribe } from '../world/opis.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['sit_log', 'shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -225,6 +226,7 @@ let lookStamp = '';   // штамп места: «кольцо 6 · север �
 // места, где канцелярия узнаёт руку странника: строка текста → подпись под ним
 const SIGN_SPOTS = [['Рука знакомая', 'подпись принявшего'], ['рука знакомая', 'подпись'], ['Подпись легла', 'подпись'], ['Второй ты узнаёшь', 'второй почерк']];
 let lookLoc = null;   // вещь, которую осматривают: F из осмотра — использовать её же
+let opisArm = 0;      // строка описи: первое нажатие (номер страницы + 1); второе — вписать; лист перевернул — сначала
 
 // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
 export function showLook(loc, direct = false) {
@@ -233,6 +235,7 @@ export function showLook(loc, direct = false) {
   lookStamp = placeStamp(loc);
   lookInsc = direct && loc ? menuInscriptions[loc.id] || '' : '';
   lookLoc = activeLoc && activeLoc === loc ? loc : null;
+  opisArm = 0;
 
   const lookData = lookText(loc);
   const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -324,8 +327,25 @@ function renderLookPage() {
     lt.after(stamp);
   }
 
+  // «В описи не значится» (world/opis.js): строка от руки — под штампом, не пункт меню
+  let opis = document.getElementById('look-opis');
+  if (!opis && lookEl && stamp) {
+    opis = document.createElement('div');
+    opis.id = 'look-opis';       // вид — style.css
+    stamp.after(opis);
+    opis.addEventListener('click', e => { e.stopPropagation(); if (performance.now() - lookShownAt >= 250) opisPress(); });
+  }
+
   // красный полдень: мир перестаёт быть текстом — буквы точками, строки на месте
   const noon = redNoon.k > 0.5, blind = noon ? smear : (x => x);
+  const armed = opisArm === lookPageIdx + 1;
+  const ol = lookLoc ? opisLine(opisState(lookLoc, dayIndex(t)), armed) : null;
+  if (opis) {
+    opis.textContent = ol ? blind(ol.text) : '';
+    if (ol && ol.mine && !noon && hasSignature()) opis.insertAdjacentHTML('beforeend', signatureSVG(16));
+    opis.className = !ol ? '' : noon ? 'off' : ol.act && armed ? 'act arm' : ol.cls;
+    opis.style.display = ol ? 'block' : 'none';
+  }
   lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
   lb.textContent = blind(lookPages[lookPageIdx] || '');
   lb.classList.toggle('blind', noon);
@@ -351,7 +371,7 @@ function renderLookPage() {
     // F — второе дело той же вещи: обойти знак, использовать, заговорить (клавиатура)
     const fine = !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
     const f = fine && lookLoc ? nextWord(lookLoc) : '';
-    const fHint = f ? ' · F — ' + f : '';
+    const fHint = (f ? ' · F — ' + f : '') + (fine && ol && ol.act && !noon ? (armed ? ' · K — вписать' : ' · K — в опись') : '');
     if (lookPages.length > 1) {
       const isLast = lookPageIdx >= lookPages.length - 1;
       ind.textContent = (lookPageIdx + 1) + ' / ' + lookPages.length
@@ -362,6 +382,18 @@ function renderLookPage() {
       ind.style.display = 'block';
     }
   }
+}
+
+// строка описи: первое нажатие — спросить, второе — вписать (лишний клик по окну не вписывает)
+function opisPress() {
+  if (!lookLoc || redNoon.k > 0.5) return false;
+  const today = dayIndex(t), st = opisState(lookLoc, today);
+  if (!st || st.mine || !st.open) return false;
+  playClick();
+  if (opisArm !== lookPageIdx + 1) opisArm = lookPageIdx + 1;
+  else { opisArm = 0; if (inscribe(lookLoc, today)) events.emit('opis.inscribe', lookLoc); }
+  renderLookPage();
+  return true;
 }
 
 // подпись «использовать» у вещи на кнопке меню: обойти знак, обойти постройку или своё
@@ -398,6 +430,7 @@ export function closeLook() {
   state.transition('game');
   activeLoc = null;
   lookLoc = null;
+  opisArm = 0;
   lookInsc = '';
   lookPages = [];
   lookPageIdx = 0;
@@ -572,6 +605,8 @@ export function initUI() {
       const btn = document.querySelector('#do button');     // «Продолжить…» или «Уйти»
       if (btn) { e.preventDefault(); btn.click(); }
     }
+    // K (Л) — в опись: строка под штампом (world/opis.js)
+    if (e.code === 'KeyK' && state.is('look') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && opisPress()) { e.preventDefault(); return; }
     // E — осмотреть, F — использовать (обойти, заговорить): в меню и из окна осмотра.
     // По месту клавиши, не по букве: в русской раскладке те же У и А
     const k = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;

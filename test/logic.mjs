@@ -441,6 +441,17 @@ const imp = p => import(new URL(p, base));
     const L2 = INV.inventoryLines({ ...d, clothes: ['Пыльник — при себе.', 'Пелерина — на плечах.'] });
     assert(L2.some(l => l.text === 'Пелерина — на плечах.'), 'графа одежды — из данных');
   });
+  test('опись: строки от руки — внизу, десять колец, зачёркнутое читается, пустые подряд — одной строкой', () => {
+    const hand = Array.from({ length: 10 }, (_, ring) => ({ ring, cur: null, struck: [] }));
+    hand[4] = { ring: 4, cur: 'дорический храм', struck: ['фасад театра', 'колодец'] };
+    const L = INV.inventoryLines({ notes: [], total: 3, ways: [], rooms: [], rites: [], hand });
+    const i = L.findIndex(l => l.h === 'От руки');
+    assert(i > 0 && L.slice(i + 1).every(l => !l.h), 'не внизу');
+    eq(L.slice(i + 1).map(l => l.n).join(' | '), 'городок | кольца 1–3 | кольцо 4 | кольца 5–9');
+    eq(L[i + 3].hand.struck.length, 2, 'зачёркнутое');
+    assert(!INV.inventoryLines({ notes: [], total: 3, ways: [], rooms: [], rites: [] }).some(l => l.h === 'От руки'), 'без данных — графа');
+    for (const per of [4, 5, 6]) for (const p of INV.inventoryPages(L, per)) assert(!p[p.length - 1].h, 'заголовок — последней строкой листа');
+  });
 }
 
 // ── гардероб в мире (world/garments.js) ──

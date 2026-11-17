@@ -3970,6 +3970,98 @@ setCtx(ctx);
   });
 }
 
+// ═══ В ОПИСИ НЕ ЗНАЧИТСЯ (world/opis.js) ═══
+{
+  const O = await imp('world/opis.js');
+  const RL = await imp('world/relook.js');
+  const P = await imp('world/potemkin.js');
+  const { placeOf } = await imp('world/placeStamp.js');
+  const { locations } = await imp('world/locations.js');
+  const surf = locations.filter(l => !l.under && !l.house && Number.isFinite(l.x));
+  const inRing = r => surf.filter(l => O.opisRing(l) === r && !P.seamOf(l));
+  const session = () => O.loadOpis(O.saveOpis());                       // перезагрузка — новый заход
+  const walk = r => { for (let i = 0; i < O.PRESENT; i++) O.stepOpis(r); };
+  test('в описи не значится: городок «вне времени» — строка от руки есть, выцветания нет; кольцо бледнеет', () => {
+    O._resetOpis();
+    for (let s = 0; s < 4; s++) { walk(0); walk(5); session(); }
+    const town = inRing(0).find(l => !['campfire', 'sol_home', 'lc_fire'].includes(l.id)), r5 = inRing(5)[0];
+    assert(town && r5, 'нет вещей');
+    eq(O.fadeOf(town), null, 'городок выцвел');
+    assert(O.fadeOf(r5) && O.fadeOf(r5).a === O.FADE[3], 'кольцо 5 не выцвело до предела');
+    RL.noteLook(town.id);
+    assert(O.inscribe(town, 100), 'в строку городка не вписать');
+    eq(O.opisLines()[0].cur, String(town.name), 'строка городка');
+    O._resetOpis();
+  });
+  test('в описи не значится: десять строк — городок и кольца 1–9, кольцо — по штампу; люди не вещи', () => {
+    const rings = new Set(surf.map(O.opisRing).filter(r => r >= 0));
+    eq(rings.size, 10, 'строк');
+    assert(surf.every(l => { const r = O.opisRing(l); return r < 0 || r === placeOf(l).ring; }), 'кольцо строки ≠ кольцо штампа');
+    eq(O.opisRing(locations.find(l => l.id === 'jester_home')), -1, 'Шут вписан как вещь');
+    assert(surf.filter(l => placeOf(l).ring > 9).every(l => O.opisRing(l) === -1), 'за огнём строки нет');
+  });
+  test('в описи не значится: вписать — только осмотренное; передумал — зачёркнуто и читается, новая — со следующих суток', () => {
+    O._resetOpis(); RL._resetRelook();
+    const [a, b] = inRing(3);
+    assert(!O.inscribe(a, 5), 'вписано неосмотренное');
+    RL.noteLook(a.id); RL.noteLook(b.id);
+    assert(O.inscribe(a, 5) && O.opisState(a, 5).mine, 'осмотренное не вписалось');
+    assert(!O.inscribe(b, 5) && !O.opisState(b, 5).open, 'в те же сутки — вторая строка');
+    assert(O.inscribe(b, 6), 'наутро строки нет');
+    eq(JSON.stringify(O.opisLines()[3]), JSON.stringify({ ring: 3, cur: b.name, struck: [a.name] }), 'опись');
+    assert(!O.opisState(a, 2).open && O.opisState(a, 3).open, 'часы назад (?phase=) — вечный замок');
+    O._resetOpis(); RL._resetRelook();
+  });
+  test('в описи не значится: бледнеет от захода к заходу — видно со второго, явно с третьего, предел; в сессии не меняется; отсутствие не платное', () => {
+    O._resetOpis();
+    const [a] = inRing(3), far = inRing(5)[0];
+    eq(O.fadeOf(a), null, 'первый заход');
+    walk(3); eq(O.fadeOf(a), null, 'в сессии сдвинулось');
+    session(); eq(O.fadeOf(a).a, 0.3, 'второй заход');
+    walk(3); session(); eq(O.fadeOf(a).a, 0.45, 'третий');
+    for (let i = 0; i < 6; i++) { walk(3); session(); }
+    eq(O.fadeOf(a).a, 0.55, 'предел');
+    eq(O.fadeOf(far), null, 'кольцо, где не был, выцвело');
+    for (let i = 0; i < O.PRESENT - 1; i++) O.stepOpis(5);
+    session(); eq(O.fadeOf(far), null, 'мимо прошёл — засчитан заход');
+    assert(O.fadeOf(locations.find(l => l.id === 'fire_sf')) === null, 'огонь выцвел');
+    O._resetOpis();
+  });
+  test('в описи не значится: вписанное держит чернила; подделка редеет к подпоркам, бережение держится; мир не метит', () => {
+    O._resetOpis(); RL._resetRelook(); P.setRevealFloor(O.thinOf);
+    const [a, b] = inRing(3);
+    walk(3); session(); walk(3); session();
+    RL.noteLook(a.id); O.inscribe(a, 1);
+    assert(O.fadeOf(a) === null && O.fadeOf(b).a === 0.45, 'вписанное выцвело или сосед в чернилах');
+    const fakes = surf.filter(l => P.seamOf(l) && O.opisRing(l) >= 0);
+    const fake = fakes.find(l => !P.isTender(l) && O.opisRing(l) !== 3), tend = fakes.find(l => P.isTender(l) && O.opisRing(l) !== 3 && O.opisRing(l) !== O.opisRing(fake));
+    RL.noteLook(fake.id); RL.noteLook(tend.id); O.inscribe(fake, 1); O.inscribe(tend, 1);
+    eq(P.revealOf(fake), 0, 'в сутки записи подделка уже редеет — метка');
+    eq(O.opisLine(O.opisState(fake, 1)).text, O.opisLine(O.opisState(a, 1)).text, 'строка разная у подделки и настоящего');
+    for (let i = 0; i < 2; i++) { walk(O.opisRing(fake)); walk(O.opisRing(tend)); session(); }
+    eq(P.revealOf(fake), 0.6, 'вписанная подделка не редеет');
+    assert(!P.seamVisible(fake), 'шов в осмотре без взгляда');
+    eq(P.revealOf(tend), 0, 'бережение редеет');
+    eq(O.opisLines()[O.opisRing(fake)].cur, fake.name, 'в описи не «хранить»');
+    P.setRevealFloor(null); O._resetOpis(); RL._resetRelook();
+  });
+  test('в описи не значится: строка под штампом — по состояниям; сохранение и переезд номера таблички', () => {
+    eq(O.opisLine({ ring: 4, cur: null, mine: false, open: true }).text, 'в описи не значится · вписать от руки: «хранить»');
+    eq(O.opisLine({ ring: 0, cur: null, mine: false, open: true }, true).text, 'вписать? на городок одна строка · ещё раз');
+    eq(O.opisLine({ ring: 4, cur: { name: 'колодец' }, mine: false, open: false }).act, false, 'замок нажимается');
+    eq(O.opisLine({ ring: 9, cur: { name: 'Пожар Сан-Франциско и Лос-Анджелеса' }, mine: false, open: true }).text, 'в описи от руки — «Пожар Сан-Франциско и Лос…» · вписать это вместо', 'длинное имя');
+    O._resetOpis(); RL._resetRelook();
+    const sg = surf.find(l => l.streetKey && O.opisRing(l) > 0);
+    RL.noteLook(sg.id); O.inscribe(sg, 1);
+    const sv = O.saveOpis(); sv.r[O.opisRing(sg)].id = 'st_9999';
+    O.loadOpis(sv); O.opisResolve(locations);
+    assert(O.opisState(sg, 1).mine, 'строка ушла от таблички');
+    O.loadOpis({ r: [{ id: 5 }, 'x'], v: ['a', -3, 2.7] });
+    assert(O.saveOpis().v[2] === 2 && O.saveOpis().v[1] === 0 && O.saveOpis().r[0] === null, 'порченое легло');
+    O._resetOpis(); RL._resetRelook();
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');
