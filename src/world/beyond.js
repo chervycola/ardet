@@ -108,6 +108,7 @@ export const STILL0 = 60, GRAIN = 120, BUILD = 3600, HOLD = 600;    // вста�
 const MISS = 0.13;                                                   // столько крошки не возвращается никогда
 export const HOR_LINE = 'Нашедшему горизонт просьба пользоваться на месте. Вынос не предусмотрен.';
 export const HOR_TWO = 'Горизонт выдан на двоих. Вынос не предусмотрен.';     // нов.: смотрели двое
+export const HOR_GONE = 'Второй убыл. Срок продлён однократно. Вынос не предусмотрен.';   // нов.: впереди вмятина (world/stands.js)
 export const HOR = 420, HOR_IN = 45, HOR_OUT = 60;                  // семь секунд; прорезается, уходит
 const HOR_SAY = 2700;                                                // строка — не чаще раза в сорок пять секунд
 
@@ -127,6 +128,7 @@ export const beyond = {
   dropped: false,        // ладонь опустил, шагнул — черта уходит
   shared: false,         // смотрят двое — черта держится, пока оба смотрят
   sharedEver: false,     // в этот раз смотрели вдвоём (строка после — своя)
+  lent: false,           // в этот раз черте дала срок вмятина впереди: второй стоял и убыл
   saidAt: -1e9,          // когда последний раз выходила строка про вынос
   say: null,             // строка мира — main покажет бумажкой
   // paused — меню, осмотр, разговор: взгляд не на песке, кадр ждёт как есть;
@@ -152,15 +154,17 @@ export const beyond = {
       if (moving && !this.dropped) { this.dropped = true; this.hT = Math.min(this.hT, HOR_OUT); }
       this.shared = together && !this.dropped;
       if (this.shared) { this.sharedEver = true; this.hT = Math.max(this.hT, HOR_OUT); }   // и в полную силу
-      else if (--this.hT <= 0 && t - this.saidAt > HOR_SAY) { this.say = this.sharedEver ? HOR_TWO : HOR_LINE; this.saidAt = t; }
+      else if (--this.hT <= 0 && t - this.saidAt > HOR_SAY) { this.say = this.sharedEver ? HOR_TWO : this.lent && !this.dropped ? HOR_GONE : HOR_LINE; this.saidAt = t; }
     } else this.shared = false;
     this.hK = this.hT > 0 ? Math.min(1, this.hAge / HOR_IN, this.hT / HOR_OUT) : 0;
     this.visor = this.hT > 0 && !this.dropped;
   },
-  // посмотреть из-под ладони (столб): на песчинку больше не смотришь — недосмотренный кадр уходит
-  lookHorizon() {
+  // посмотреть из-под ладони (столб): на песчинку больше не смотришь — недосмотренный кадр уходит.
+  // dent — впереди чья-то вмятина (world/stands.js dentAhead): один срок сверху, сразу и один раз,
+  // не «пока стоишь»: держать некому. Бессрочно — только с живым вторым (together)
+  lookHorizon(dent = false) {
     if (this.hT > 0) return false;
-    this.hT = HOR; this.hAge = 0; this.dropped = false; this.still = 0; this.sharedEver = false;
+    this.hT = dent ? 2 * HOR : HOR; this.hAge = 0; this.dropped = false; this.still = 0; this.sharedEver = false; this.lent = !!dent;
     const P = this.pic;
     if (P && !P.gone) { if (P.t > GRAIN) this.scatter('sigh'); else this.pic = null; }
     return true;
@@ -186,7 +190,7 @@ export const beyond = {
   },
   reset() {
     this.pic = null; this.still = 0; this.murmur = 0; this.sighSnd = false; this.seated = false; this.say = null; this.depth = -1;
-    this.hT = 0; this.hAge = 0; this.hK = 0; this.visor = false; this.dropped = false; this.shared = false; this.sharedEver = false;
+    this.hT = 0; this.hAge = 0; this.hK = 0; this.visor = false; this.dropped = false; this.shared = false; this.sharedEver = false; this.lent = false;
   },
 };
 // кадр у ног: песчинка — в середине; крошка прилетает по ветру, с наветренной стороны

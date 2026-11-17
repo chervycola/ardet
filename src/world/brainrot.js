@@ -125,10 +125,22 @@ function rasterPattern(ctx, level) {
   return p;
 }
 function rnd(n) { const v = Math.sin(n * 91.7 + 13.1) * 43758.5453; return v - Math.floor(v); }
-// окна без распада: где картинку собрали обратно (позёмка за кольцом), растр и пепел
-// расступаются. Прямоугольники в точках кадра; кладутся заново каждый кадр.
+// окна без распада: где картинку собрали обратно (позёмка за кольцом) и где вмятины
+// стоянки (world/stands.js), растр и пепел расступаются. Прямоугольники в точках кадра;
+// кладутся заново каждый кадр. Легли друг на друга — одно окно по общей рамке: иначе
+// на перекрытии два встречных контура снова дают заливку, и растр возвращается
 let holes = [];
-export function setClearings(list) { holes = list || []; }
+export function setClearings(list) {
+  const out = (list || []).map(h => ({ ...h }));
+  for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) {
+    const a = out[i], b = out[j];
+    if (a.x >= b.x + b.w || b.x >= a.x + a.w || a.y >= b.y + b.h || b.y >= a.y + a.h) continue;
+    const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+    out[i] = { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
+    out.splice(j, 1); i = -1; break;                 // выросшее могло задеть прежние — сначала
+  }
+  holes = out;
+}
 // горизонт виден (столб за кольцом) — пустыня на миг просто вечер в поле: распад редеет
 let damp = 0;
 export function dampBrainrot(v) { damp = Math.max(0, Math.min(1, v || 0)); }

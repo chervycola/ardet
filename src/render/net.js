@@ -5,11 +5,13 @@
 // шёпоты мест (world/whisper.js), только у каждого своё и вдвое быстрее: это речь.
 // Записка — листок, сложенный вчетверо, на земле; старея за 30 дней, желтеет;
 // своя — с загнутым углом; заверенная — с красной точкой печати.
+// Стоянки за огнём (world/stands.js) — одним пером, и без сети: свои прошлые заходы.
 // ═══════════════════════════════════════
 import { drawPlayer } from '../sprites/player.js';
 import { setCtx } from './context.js';
 import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
 import { net, othersIn, notesIn } from '../net/net.js';
+import { standsIn, soles, keptOf } from '../world/stands.js';
 
 const K0 = '#15100c', L1 = '#c8b89a', L2 = '#b0a284', BO = '#D9CFB8', S2 = '#33302e', KV = '#C23B2B';
 const CLEAR = 0.9;                       // смотрят вдаль вдвоём: в поле просто стоит человек
@@ -63,6 +65,23 @@ export function drawNotes(ctx, camX, camY, vw, vh) {
     if (n.mine) { ctx.fillStyle = S2; ctx.fillRect(x + 5, y, 1, 1); }                                   // свой — загнут угол
     if (n.certs > 0) { ctx.fillStyle = KV; ctx.fillRect(x + 4, y + 3, 1, 1); }                           // заверено
   }
+}
+// стоянки на земле: вмятины и цепочки — одним пером. Подошва — оттиск ночью (дальний край
+// глубже), крошка выдавлена на ближний край костью: на льду читается тень, на хламе — край.
+// Заносит — бледнеет, у обеих одинаково; ни слов, ни счёта, своя не отмечена
+const NIGHT = '#0D0B0A';
+export function drawStands(ctx, camX, camY, vw, vh, now = Date.now()) {
+  for (const s of standsIn(camX - 8, camY - 8, camX + vw + 8, camY + vh + 8, now)) {
+    const k = keptOf(s, now);
+    for (const r of soles(s)) {
+      const a = k * r.a;
+      ctx.fillStyle = NIGHT;
+      ctx.globalAlpha = 0.85 * a; ctx.fillRect(r.x, r.y, r.w, 1);
+      ctx.globalAlpha = 0.6 * a; ctx.fillRect(r.x, r.y + 1, r.w, r.h - 1);
+      ctx.fillStyle = BO; ctx.globalAlpha = 0.5 * a; ctx.fillRect(r.x, r.y + r.h, r.w, 1);
+    }
+  }
+  ctx.globalAlpha = 1;
 }
 // где записка под кликом
 export function noteAt(x, y) {

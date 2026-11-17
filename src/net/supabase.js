@@ -73,6 +73,8 @@ export function supabaseTransport(url, key, tab) {
   }
   const bc = (event, payload) => send('broadcast', { type: 'broadcast', event, payload: { ...payload, id: tab } });
   const stamp = n => ({ ...n, created: Date.parse(n.created_at) });
+  // стоянка из базы: вид, место, след, до какого часа держится (автора и счёта база не отдаёт)
+  const held = s => ({ id: s.id, kind: s.kind, x: s.x, y: s.y, path: s.path || null, exp: Date.parse(s.expires_at) });
   return {
     kind: 'supabase',
     get uid() { return session && session.user ? session.user.id : null; },
@@ -99,6 +101,24 @@ export function supabaseTransport(url, key, tab) {
       if (!r) return { error: 'net' };
       if (r.status === 409) return { error: 'twice' };
       return r.ok ? {} : { error: 'refused' };
+    },
+    // стоянки за огнём (server/stands.sql) — рамкой, как записки; пишет только stand_leave
+    async standsIn(b) {
+      const q = `select=id,kind,x,y,path,expires_at&x=gte.${b.x0 | 0}&x=lte.${b.x1 | 0}&y=gte.${b.y0 | 0}&y=lte.${b.y1 | 0}&order=expires_at.desc&limit=120`;
+      const r = await call('/rest/v1/stands?' + q, { headers: hdr() });
+      return r && r.ok ? (await r.json()).map(held) : [];
+    },
+    // рядом уже есть — база продлит её и вернёт её же; на отрезке полно — пустой ответ
+    async addStand(s) {
+      const r = await call('/rest/v1/rpc/stand_leave', { method: 'POST', headers: hdr(), body: JSON.stringify({ p_kind: s.kind, p_x: Math.round(s.x), p_y: Math.round(s.y), p_path: s.path || null }) });
+      if (!r) return { error: 'net' };
+      if (!r.ok) { let m = null; try { m = (await r.json()).message; } catch (e) {} return { error: m === 'quota' ? 'quota' : 'refused' }; }
+      const rows = await r.json();
+      return Array.isArray(rows) && rows[0] ? held(rows[0]) : { error: 'full' };
+    },
+    async standFall(at) {
+      const r = await call('/rest/v1/rpc/stand_fall', { method: 'POST', headers: { ...hdr(), Prefer: 'return=minimal' }, body: JSON.stringify({ p_x: Math.round(at.x), p_y: Math.round(at.y) }) });
+      return r && r.ok ? {} : { error: r ? 'refused' : 'net' };
     },
   };
 }

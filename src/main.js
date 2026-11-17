@@ -134,8 +134,9 @@ import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
 import { UNDER_INSC } from './content/underside.js';
-import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT, notesIn } from './net/net.js';
-import { othersToDraw, otherLights, drawNotes, drawVoices, noteAt, otherAt } from './render/net.js';
+import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT, notesIn, netLeaveStand, netStandFall } from './net/net.js';
+import { othersToDraw, otherLights, drawNotes, drawStands, drawVoices, noteAt, otherAt } from './render/net.js';
+import { stepStands, onStandFall, standBack, standClearings, dentAhead, setStandNet, saveStands, loadStands } from './world/stands.js';
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
 import { drawHouseWorld } from './render/house.js';
@@ -265,6 +266,7 @@ if (savedData) {
   if (savedData.noon) loadNoon(savedData.noon);
   if (savedData.weather) loadWeather(savedData.weather);
   if (savedData.opis) { loadOpis(savedData.opis); opisResolve(locations); }   // «В описи не значится»: строки от руки и заходы по кольцам
+  if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -289,6 +291,7 @@ function saveData() {
   noon: saveNoon(),
   weather: saveWeather(),
   opis: saveOpis(),
+  stands: saveStands(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -591,6 +594,7 @@ function render() {
   drawPuddles(worldCtx, camX, camY, vw, vh, locations, player);   // лужи после дождя, круги
   drawFootprints(worldCtx, { x: camX, y: camY });
   drawNotes(worldCtx, camX, camY, vw, vh);          // записки других странников — на земле
+  drawStands(worldCtx, camX, camY, vw, vh);         // за огнём: вмятины и цепочки — свои и чужие (world/stands.js)
   drawRavenShadows(worldCtx, camX, camY, vw, vh);   // тени летящих ворон — на земле
   stumble.drawStones(worldCtx);
   if (!NO_GRASS) drawGrass(worldCtx, { x: camX, y: camY }, player);   // трава гнётся по ветру и расступается
@@ -701,7 +705,7 @@ function render() {
 
   // ── UI (normal blend): weather overlay + moss, then HUD on top ──
   if (!clauseOn('portik')) drawWeatherOverlay(uiCtx);
-  setClearings(beyondClearings(camX, camY));        // собранный кадр позёмки — без растра распада
+  setClearings([...beyondClearings(camX, camY), ...standClearings(camX, camY, vw, vh)]);   // кадр позёмки и вмятины — без растра распада
   dampBrainrot(beyond.hK);                          // горизонт виден — распад редеет
   drawBrainrot(uiCtx);
   if (!isFrozen()) drawEdgeHud(uiCtx);              // батарейка у льда — поверх полос ленты; телефон погас — и её нет
@@ -1727,7 +1731,9 @@ function updateGame() {
     // и на льду выкатывается к краю (сверка 24.10: шесть тапов из шести — в падение)
     const v2 = player.vx * player.vx + player.vy * player.vy;
     const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
-    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, player.head || player.face, inBrainrotLoop());
+    // стоит в чужой (или своей) вмятине — тянет, как стоящего спиной к краю; покой прежний (world/stands.js)
+    const back = !steering && standBack(player.x + 6, player.y + 23);
+    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, back || player.head || player.face, inBrainrotLoop());
     // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
     // иначе сидящий у картинки позёмки съезжал и падал)
     if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }
@@ -1787,7 +1793,11 @@ function updateWorldSystems() {
   updatePets();
   // край и брейнрот — только за изгородью, а за изгородь — только с пропуском Шута (слово автора):
   // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
-  if (canLeaveSettlement()) { updateEdges(player); updateBrainrot(player); }
+  if (canLeaveSettlement()) {
+    updateEdges(player); updateBrainrot(player);
+    // «Стоянка на двоих»: простоял до покоя и шагнул назад — вмятина (calmOf только читается); легла — в сохранение
+    if (stepStands(player.x + 6, player.y + 23, { active: !isFrozen() && !inBrainrotLoop(), still: player.still === true, level: brainrotLevel(), calm: calmOf() })) saveNow();
+  }
   if (_t % 30 === 0) { const k = walkedKey({ x: player.x + 6, y: player.y + 23 }); if (k) flags.walked.add(k); checkWalkGates(); stepMail(player.x + 6, player.y + 23); stepOpis(ringAt(player.x + 6, player.y + 23)); }   // обмер — ногами; врата по пройденному; створка окна
   stepAttention(player, locations, player.still);   // постоять у вещи — тоже внимание
   if (_t % 15 === 0) quietGazeId = nearestQuietId();   // ближняя тихая вещь: ей — взгляд (render/quiet.js)
@@ -2124,6 +2134,10 @@ events.on(E.LOCATION_VISIT, noteGarment);   // дошёл до места, гд�
 events.on('location.use', loc => { if (loc && loc.id) { noteUse(loc.id); noteAttention(loc); } });
 // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)
 events.on('brainrot.freeze', forgetAttention);
+// упал за огнём: от тебя остаётся цепочка, конец съеден растром (world/stands.js); своё — в базу, если сеть есть.
+// Сохранится уже дома: сохранение посреди падения вернуло бы странника на край
+events.on('brainrot.freeze', () => { if (!inBrainrotLoop()) onStandFall(player.x + 6, player.y + 23); });
+setStandNet({ leave: netLeaveStand, fall: netStandFall });
 setRelook(loc => relookText(loc.id, lookTags()));
 setRevealFloor(thinOf);                         // вписанная подделка редеет к подпоркам по заходам (world/opis.js)
 events.on('opis.inscribe', () => saveNow());    // строка от руки — сразу в сохранение
@@ -2235,7 +2249,7 @@ events.on('location.use', (loc) => {
   // колодец у площади: тяжёлое ведро — в нём чья-то давняя потеря (world/townWell.js)
   if (actionKey === 'town_well_crank') { crankTownWell(showLore); return; }
   // столб за кольцом: посмотреть из-под ладони — черта горизонта на несколько секунд (world/beyond.js)
-  if (actionKey === 'horizon_look') { beyond.lookHorizon(); return; }
+  if (actionKey === 'horizon_look') { beyond.lookHorizon(dentAhead(player.x + 6, player.y + 23)); return; }   // вмятина впереди — один срок сверху
   // бревно у костра: сесть лицом к огню; слов нет, дыхание продолжается; шагнул — встал
   if (actionKey === 'sit_log') { sitOnLog(loc); return; }
   // The gates teleport onto the street: one road, gradient of epochs

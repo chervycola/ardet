@@ -11,12 +11,16 @@
 //  · Записка — у ног, наверху; не чаще раза в минуту (и 10 в сутки — решает база).
 //    Подгружаются в 700 точках вокруг; ушёл дальше — подгрузить заново; оставленная
 //    рядом сейчас — видна сразу.
+//  · Стоянки за огнём (world/stands.js) — так же рамкой в 700 точек, пока стоишь за огнём;
+//    своя уходит в базу (stand_leave). Отказ, лимит, «на отрезке довольно» — молча: своя
+//    остаётся в сохранении.
 // ═══════════════════════════════════════
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
-import { fromOldGeo, toOldGeo } from '../world/disc.js';
+import { fromOldGeo, toOldGeo, RINGS_D, warpedDist } from '../world/disc.js';
+import { putNetStands } from '../world/stands.js';
 import { cutOf } from '../sprites/player.js';
 import { isCut } from '../sprites/wardrobe.js';
 
@@ -49,6 +53,7 @@ export const net = {
   muted: new Set(),
   gone: new Set(),        // записки, на которые пожаловался: у себя их больше не видно
   t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false,
+  standsAt: null, standsFetching: false,   // стоянки: где подгружены, идёт ли подгрузка
 };
 
 function tabId() {
@@ -126,7 +131,25 @@ export function stepNet(p, layer) {
   }
   net.voices = net.voices.filter(v => net.t - v.t0 < VOICE_LIFE);
   if (layer === 'surface' && !net.fetching && (!net.fetched || Math.hypot(me.x - net.fetched.x, me.y - net.fetched.y) > FETCH_R / 2 || net.t - net.fetched.t > 3600)) fetchNotes(me);
+  const sa = net.standsAt;
+  if (layer === 'surface' && net.T.standsIn && !net.standsFetching && warpedDist(me.x, me.y) > RINGS_D
+    && (!sa || Math.hypot(me.x - sa.x, me.y - sa.y) > FETCH_R / 2 || net.t - sa.t > 3600)) fetchStands(me);
 }
+async function fetchStands(me) {
+  net.standsFetching = true;
+  net.standsAt = { x: me.x, y: me.y, t: net.t };
+  try { putNetStands(await net.T.standsIn({ x0: me.x - FETCH_R, x1: me.x + FETCH_R, y0: me.y - FETCH_R, y1: me.y + FETCH_R }), me, 2 * FETCH_R); } catch (e) {}
+  net.standsFetching = false;
+}
+// своя стоянка — в базу; продлённая базой — та же, с её сроком
+export async function netLeaveStand(s) {
+  if (!net.on || !net.T.addStand) return { error: 'off' };
+  const r = await net.T.addStand(s);
+  if (r && !r.error) putNetStands([r]);
+  return r || { error: 'net' };
+}
+// упал (предложение суда): база вдвое сокращает срок стоянок, где ты стоял последним, на этой стороне
+export function netStandFall(x, y) { if (net.on && net.T.standFall) net.T.standFall({ x, y }); }
 async function fetchNotes(me) {
   net.fetching = true;
   net.fetched = { x: me.x, y: me.y, t: net.t };
@@ -203,6 +226,6 @@ export const notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n
 // для проверок
 export function _resetNet() {
   if (net.T && net.on) net.T.stop();
-  Object.assign(net, { on: false, kind: null, T: null, t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false, voices: [] });
+  Object.assign(net, { on: false, kind: null, T: null, t: 0, sent: -1e9, sentPos: null, last: null, saidAt: -1e9, notedAt: -1e9, fetched: null, fetching: false, standsAt: null, standsFetching: false, voices: [] });
   net.others.clear(); net.notes.clear(); net.muted.clear(); net.gone.clear();
 }
