@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 082 574. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 082 574. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 083 439. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 083 439. из них видимых: 1 783. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -934,7 +934,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='8e1991a · 2026-11-17';console.log('[оттиск]', '8e1991a · 2026-11-17');
+<script>window.ARDET_BUILD='1f8910c · 2026-11-17';console.log('[оттиск]', '1f8910c · 2026-11-17');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -68556,6 +68556,16 @@ System.register("world/stands", ["world/disc", "world/feedPull"], function (expo
         return out;
     }
     exports_176("standClearings", standClearings);
+    // база ответила, чья стоянка (mine — положил ли её сам): копия у себя — так же. Встал в свою,
+    // а копия истекла, — снова своя; встал в чужую, о которой не знал, — чужая (ревью 17.11)
+    function markOwn(r) {
+        if (!r || typeof r.mine !== 'boolean' || !MERGE[r.kind])
+            return;
+        for (const s of stands.mine)
+            if (s.kind === r.kind && near(s, r.x, r.y, MERGE[r.kind]))
+                s.own = r.mine;
+    }
+    exports_176("markOwn", markOwn);
     function standsBox(x, y, r) {
         const [ux, uy] = feedPull_js_1.outward(x, y);
         return { x0: Math.round(x - r + Math.min(0, ux * AHEAD)), x1: Math.round(x + r + Math.max(0, ux * AHEAD)),
@@ -68731,12 +68741,12 @@ System.register("net/local", ["net/filter", "world/stands"], function (exports_1
                 acts.push({ who: me, act, at: now });
                 write(list, SKEY);
                 write(acts, SACT);
-                return { id: out.id, kind: out.kind, x: out.x, y: out.y, path: out.path, exp: out.exp };
+                return { id: out.id, kind: out.kind, x: out.x, y: out.y, path: out.path, exp: out.exp, mine: (out.by ?? out.last) === me };
             },
             async standFall(at) {
                 const now = Date.now(), side = stands_js_1.sideOf(at.x, at.y), list = read(SKEY);
                 for (const q of list)
-                    if (q.by === me && q.last === me && q.exp > now && !(now - q.at < 10e3) && stands_js_1.sideOf(q.x, q.y) === side)
+                    if ((q.by ?? q.last) === me && q.last === me && q.exp > now && !(q.kind === 'chain' && now - q.at < 10e3) && stands_js_1.sideOf(q.x, q.y) === side)
                         q.exp = now + (q.exp - now) / 2;
                 write(list, SKEY);
                 return {};
@@ -68930,7 +68940,7 @@ System.register("net/supabase", [], function (exports_178, context_178) {
                     return { error: m === 'quota' ? 'quota' : 'refused' };
                 }
                 const rows = await r.json();
-                return Array.isArray(rows) && rows[0] ? held(rows[0]) : { error: 'full' };
+                return Array.isArray(rows) && rows[0] ? { ...held(rows[0]), mine: rows[0].mine === true } : { error: 'full' };
             },
             async standFall(at) {
                 const r = await call('/rest/v1/rpc/stand_fall', { method: 'POST', headers: { ...hdr(), Prefer: 'return=minimal' }, body: JSON.stringify({ p_x: Math.round(at.x), p_y: Math.round(at.y) }) });
@@ -68956,7 +68966,7 @@ System.register("net/supabase", [], function (exports_178, context_178) {
 });
 System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filter", "world/disc", "world/stands", "sprites/player", "sprites/wardrobe"], function (exports_179, context_179) {
     "use strict";
-    var config_js_1, local_js_1, supabase_js_1, filter_js_2, disc_js_53, stands_js_2, player_js_2, wardrobe_js_3, FACES, lookOf, NOTE_X, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, fallP, notesIn;
+    var config_js_1, local_js_1, supabase_js_1, filter_js_2, disc_js_53, stands_js_2, player_js_2, wardrobe_js_3, FACES, lookOf, NOTE_X, SIGHT, HEAR, LOST, SAY_GAP, NOTE_GAP, FETCH_R, VOICE_LIFE, SEND_EVERY, IDLE_EVERY, MUTE_KEY, GONE_KEY, net, fallP, FALL_WAIT, notesIn;
     var __moduleName = context_179 && context_179.id;
     function oldBox(b) {
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -69112,11 +69122,16 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
     async function netLeaveStand(s) {
         if (!net.on || !net.T.addStand)
             return { error: 'off' };
-        if (fallP)
-            await fallP;
+        if (fallP) {
+            let t;
+            await Promise.race([fallP, new Promise(r => { t = setTimeout(r, FALL_WAIT); })]);
+            clearTimeout(t);
+        } // повисла — не ждать вечно
         const r = await net.T.addStand(s);
-        if (r && !r.error)
+        if (r && !r.error) {
             stands_js_2.putNetStands([r]);
+            stands_js_2.markOwn(r);
+        } // своя ли — по слову базы
         return r || { error: 'net' };
     }
     exports_179("netLeaveStand", netLeaveStand);
@@ -69302,6 +69317,7 @@ System.register("net/net", ["net/config", "net/local", "net/supabase", "net/filt
             // своя стоянка — в базу; продлённая базой — та же, с её сроком. После падения — когда база
             // уже убавила прежние: иначе цепочка этого падения могла лечь раньше и попасть под убыль (ревью 17.11)
             fallP = null;
+            FALL_WAIT = 8000;
             exports_179("notesIn", notesIn = (x0, y0, x1, y1) => [...net.notes.values()].filter(n => n.layer === 'surface' && n.x > x0 && n.x < x1 && n.y > y0 && n.y < y1));
         }
     };

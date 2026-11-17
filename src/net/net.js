@@ -20,7 +20,7 @@ import { localTransport } from './local.js';
 import { supabaseTransport } from './supabase.js';
 import { clean, dirty, SAY_MAX, NOTE_MAX } from './filter.js';
 import { fromOldGeo, toOldGeo, RINGS_D, warpedDist } from '../world/disc.js';
-import { putNetStands, standsBox } from '../world/stands.js';
+import { putNetStands, standsBox, markOwn } from '../world/stands.js';
 import { cutOf } from '../sprites/player.js';
 import { isCut } from '../sprites/wardrobe.js';
 
@@ -144,11 +144,12 @@ async function fetchStands(me) {
 // своя стоянка — в базу; продлённая базой — та же, с её сроком. После падения — когда база
 // уже убавила прежние: иначе цепочка этого падения могла лечь раньше и попасть под убыль (ревью 17.11)
 let fallP = null;
+const FALL_WAIT = 8000;
 export async function netLeaveStand(s) {
   if (!net.on || !net.T.addStand) return { error: 'off' };
-  if (fallP) await fallP;
+  if (fallP) { let t; await Promise.race([fallP, new Promise(r => { t = setTimeout(r, FALL_WAIT); })]); clearTimeout(t); }   // повисла — не ждать вечно
   const r = await net.T.addStand(s);
-  if (r && !r.error) putNetStands([r]);
+  if (r && !r.error) { putNetStands([r]); markOwn(r); }   // своя ли — по слову базы
   return r || { error: 'net' };
 }
 // упал (предложение суда): база вдвое сокращает срок стоянок, где ты стоял последним, на этой стороне

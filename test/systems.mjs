@@ -4381,6 +4381,14 @@ setCtx(ctx);
     eq(ST.stands.net.size >= 1 && ST.stands.net.has(7) && !ST.stands.net.has(8), true, 'из базы не легло или легло порченое');
     eq(sent.length, 2); eq(r.id, 9);
     eq(order1, 'fall,fall-done,leave', 'цепочка ушла в базу раньше убыли');
+    assert(/Promise\.race\(\[fallP, /.test(src('net/net.js')), 'убыль повисла — цепочка ждёт вечно');
+    // своя ли — по слову базы: копия у себя следует ответу stand_leave
+    const c0 = { kind: 'dent', x: f0.x + 300, y: f0.y, exp: Date.now() + DAY, path: null, own: false };
+    ST.stands.mine.push(c0);
+    ST.markOwn({ kind: 'dent', x: f0.x + 305, y: f0.y + 3, mine: true }); eq(c0.own, true, 'база сказала «своя» — копия чужая');
+    ST.markOwn({ kind: 'dent', x: f0.x + 305, y: f0.y + 3, mine: false }); eq(c0.own, false, 'база сказала «чужая» — копия своя');
+    ST.markOwn({ kind: 'dent', x: f0.x + 305, y: f0.y + 3 }); eq(c0.own, false, 'без слова базы — переписана');
+    ST.markOwn({ kind: 'chain', x: f0.x + 300, y: f0.y, mine: true }); eq(c0.own, false, 'цепочка переписала вмятину');
     // рамка — и наружу: из-за огня (глубина 0) видна вся полоса столба до 0,9 и шире взгляда
     const z = north(0.0), b = ST.standsBox(z.x, z.y, 700), far = north(0.9);
     assert(b.y0 <= far.y - 50 && b.x0 <= z.x - ST.LOOK_W && b.x1 >= z.x + ST.LOOK_W && b.y1 >= z.y + 600, `рамка не достаёт до 0,9: ${JSON.stringify(b)} ${far.y}`);

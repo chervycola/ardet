@@ -96,8 +96,11 @@ $$;
 -- оставить вмятину или цепочку. Рядом живая того же вида (вмятина — 16 точек, цепочка — 40)
 -- — продлить её срок от сегодня по её месту, вторую не класть. Отрезок полон — пустой ответ.
 -- Ошибки: 'auth' (не вошёл), 'place' (неправдоподобно), 'quota' (лимит)
-create or replace function public.stand_leave(p_kind text, p_x integer, p_y integer, p_path smallint[] default null)
-returns table (id bigint, kind text, x integer, y integer, path smallint[], expires_at timestamptz)
+-- в ответ — та же стоянка и своя ли она (положил ли её сам): клиенту — знать, что убавит падение.
+-- Прежний вид ответа был без mine: create or replace тип ответа не меняет — сначала убрать
+drop function if exists public.stand_leave(text, integer, integer, smallint[]);
+create function public.stand_leave(p_kind text, p_x integer, p_y integer, p_path smallint[] default null)
+returns table (id bigint, kind text, x integer, y integer, path smallint[], expires_at timestamptz, mine boolean)
 language plpgsql volatile security definer set search_path = public as $$
 #variable_conflict use_column
 declare
@@ -118,7 +121,7 @@ begin
     insert into public.stand_acts (actor, act) values (me, 'renew');
     return query
       update public.stands s set expires_at = greatest(s.expires_at, now() + public.stand_term(public.stand_depth(s.x, s.y))), last_by = me
-       where s.id = hit returning s.id, s.kind, s.x, s.y, s.path, s.expires_at;
+       where s.id = hit returning s.id, s.kind, s.x, s.y, s.path, s.expires_at, s.author = me;
     return;
   end if;
   if not public.stand_quota_ok('new') then raise exception 'quota' using errcode = 'P0001'; end if;
@@ -129,13 +132,13 @@ begin
   return query
     insert into public.stands as s (kind, x, y, path, expires_at, author, last_by)
     values (p_kind, p_x, p_y, p_path, now() + public.stand_term(public.stand_depth(p_x, p_y)), me, me)
-    returning s.id, s.kind, s.x, s.y, s.path, s.expires_at;
+    returning s.id, s.kind, s.x, s.y, s.path, s.expires_at, true;
 end $$;
 
 -- (предложение суда, по желанию автора) падение вдвое сокращает остаток срока своих стоянок
 -- на этой стороне — положенных падавшим, где он же стоял последним. Чужим — ничего, и
 -- продлённая чужая своей не становится (ревью 17.11: иначе продлил — и стёр падениями).
--- Цепочку этого падения не трогает (легла в последние секунды). Молча.
+-- Цепочку этого падения не трогает (цепочка, легшая в последние секунды). Молча.
 -- Не нужно — удалить эту функцию и FALL_HALVES = false в src/world/stands.js
 create or replace function public.stand_fall(p_x integer, p_y integer) returns void
 language plpgsql volatile security definer set search_path = public as $$
@@ -144,7 +147,7 @@ begin
   if me is null or public.stand_depth(p_x, p_y) <= 0 then return; end if;
   if exists (select 1 from public.stand_acts where actor = me and act = 'fall' and at > now() - interval '1 minute') then return; end if;
   update public.stands s set expires_at = now() + (s.expires_at - now()) / 2
-   where s.author = me and s.last_by = me and s.expires_at > now() and s.created_at < now() - interval '10 seconds'
+   where s.author = me and s.last_by = me and s.expires_at > now() and not (s.kind = 'chain' and s.created_at > now() - interval '10 seconds')
      and public.stand_side(s.x, s.y) = public.stand_side(p_x, p_y);
   insert into public.stand_acts (actor, act) values (me, 'fall');
 end $$;

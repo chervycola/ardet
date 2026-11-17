@@ -79,11 +79,11 @@ export function localTransport(me) {
       }
       acts.push({ who: me, act, at: now });
       write(list, SKEY); write(acts, SACT);
-      return { id: out.id, kind: out.kind, x: out.x, y: out.y, path: out.path, exp: out.exp };
+      return { id: out.id, kind: out.kind, x: out.x, y: out.y, path: out.path, exp: out.exp, mine: (out.by ?? out.last) === me };
     },
     async standFall(at) {
       const now = Date.now(), side = sideOf(at.x, at.y), list = read(SKEY);
-      for (const q of list) if (q.by === me && q.last === me && q.exp > now && !(now - q.at < 10e3) && sideOf(q.x, q.y) === side) q.exp = now + (q.exp - now) / 2;
+      for (const q of list) if ((q.by ?? q.last) === me && q.last === me && q.exp > now && !(q.kind === 'chain' && now - q.at < 10e3) && sideOf(q.x, q.y) === side) q.exp = now + (q.exp - now) / 2;
       write(list, SKEY);
       return {};
     },

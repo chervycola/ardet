@@ -162,6 +162,12 @@ export function standClearings(camX, camY, vw, vh, now = Date.now()) {
   }
   return out;
 }
+// база ответила, чья стоянка (mine — положил ли её сам): копия у себя — так же. Встал в свою,
+// а копия истекла, — снова своя; встал в чужую, о которой не знал, — чужая (ревью 17.11)
+export function markOwn(r) {
+  if (!r || typeof r.mine !== 'boolean' || !MERGE[r.kind]) return;
+  for (const s of stands.mine) if (s.kind === r.kind && near(s, r.x, r.y, MERGE[r.kind])) s.own = r.mine;
+}
 // рамка подгрузки из базы вокруг (x, y): r во все стороны и ещё AHEAD наружу — столб у 0,3
 // смотрит до 0,9 (≈ 700 точек вперёд), а подгрузка бывает и за 350 точек до столба (ревью 17.11)
 export const AHEAD = 500;

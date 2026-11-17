@@ -81,8 +81,8 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'u1', false) \gset
 \set ok false
-select id as d1, expires_at > now() + interval '1.5 days' and expires_at < now() + interval '30 days' as ok from public.stand_leave('dent', 6000, 416) \gset
-\if :ok \echo PASS вмятина: оставлена, срок по глубине \else \echo FAIL вмятина: не оставлена или срок \endif
+select id as d1, expires_at > now() + interval '1.5 days' and expires_at < now() + interval '30 days' and mine as ok from public.stand_leave('dent', 6000, 416) \gset
+\if :ok \echo PASS вмятина: оставлена, срок по глубине, в ответе — своя \else \echo FAIL вмятина: не оставлена или срок \endif
 select * from public.stand_leave('dent', 6200, 416);
 \if :ERROR \echo PASS лимит: вторая в ту же минуту — нет (:LAST_ERROR_MESSAGE) \else \echo FAIL лимит: вторая в минуту принята \endif
 select * from public.stand_leave('dent', 6000, 5000);
@@ -115,8 +115,8 @@ update public.stands set expires_at = now() + interval '1 hour' where id = :d1;
 set role authenticated;
 select set_config('request.jwt.claim.sub', :'u2', false) \gset
 \set ok false
-select id = :d1 and expires_at > now() + interval '1 day' as ok from public.stand_leave('dent', 6005, 420) \gset
-\if :ok \echo PASS продление: встал в чужую — та же вмятина, срок заново \else \echo FAIL продление \endif
+select id = :d1 and expires_at > now() + interval '1 day' and not mine as ok from public.stand_leave('dent', 6005, 420) \gset
+\if :ok \echo PASS продление: встал в чужую — та же вмятина, срок заново, в ответе — не своя \else \echo FAIL продление \endif
 \set ok false
 select count(*) = 1 and min(x) = 6000 as ok from public.stands where kind = 'dent' \gset
 \if :ok \echo PASS продление: второй не легло, место прежнее \else \echo FAIL продление: вторая вмятина или место сменено \endif
@@ -204,6 +204,17 @@ reset role;
 \set ok false
 select expires_at > now() + interval '1.9 days' as ok from public.stands where id = :cfresh \gset
 \if :ok \echo PASS падение: только что легшая цепочка — без убыли \else \echo FAIL падение: свежую цепочку убавило \endif
+-- а вмятину, легшую за секунду до падения (стоял у самого края, шагнул назад и всё же упал), — убавляет
+delete from public.stand_acts;
+insert into public.stands (kind, x, y, expires_at, author, last_by) values ('dent', 8100, 4500 - 3300 - 952, now() + interval '2 days', :'u3', :'u3');
+select id as dfresh from public.stands where x = 8100 and kind = 'dent' \gset
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'u3', false) \gset
+select public.stand_fall(6000, 4500 - 3300 - 1090);
+reset role;
+\set ok false
+select expires_at < now() + interval '1.1 days' as ok from public.stands where id = :dfresh \gset
+\if :ok \echo PASS падение: свежая своя вмятина — вдвое, как у клиента \else \echo FAIL падение: свежую вмятину пощадило \endif
 
 -- ── старость и анонимы ──
 reset role;

@@ -114,7 +114,7 @@ export function supabaseTransport(url, key, tab) {
       if (!r) return { error: 'net' };
       if (!r.ok) { let m = null; try { m = (await r.json()).message; } catch (e) {} return { error: m === 'quota' ? 'quota' : 'refused' }; }
       const rows = await r.json();
-      return Array.isArray(rows) && rows[0] ? held(rows[0]) : { error: 'full' };
+      return Array.isArray(rows) && rows[0] ? { ...held(rows[0]), mine: rows[0].mine === true } : { error: 'full' };
     },
     async standFall(at) {
       const r = await call('/rest/v1/rpc/stand_fall', { method: 'POST', headers: { ...hdr(), Prefer: 'return=minimal' }, body: JSON.stringify({ p_x: Math.round(at.x), p_y: Math.round(at.y) }) });
