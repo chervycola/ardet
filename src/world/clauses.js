@@ -37,7 +37,7 @@ const st = { n: {}, p: [], s: {}, a: null, h: { u: 0, x: 0 } };
 let hand = null;                                  // экземпляр «в руке» (открыт в описи) — только заход
 const visit = { on: false, fed: false };
 let deck = [], cnt = 0, lastLine = -1e9, lastNoise = '', said = [], last = null, tick = 0;
-let fire = null;                                  // очаг кольца 4 (место)
+let fire = null, seat = null;                     // очаг кольца 4 и место сесть у него
 
 export const isOn = id => st.p.includes(id);
 export const holdsCopies = () => st.p.length > 0;
@@ -113,15 +113,23 @@ export function burnCopy(id) {
 
 // ── опись: вторые экземпляры (ui/inventory.js) ──
 export function setHand(id) { if (isOn(id)) hand = id; }
+// экземпляр в кармане — не лист на столбе: без строки о том, где висит, и без живого числа
+function copyText(id) {
+  const P = PAPERS[id], hand = !!st.s[id];
+  const body = P.clauses.map((c, i) => `${i + 1}. ${c}`).join('\n');
+  const mark = id === 'hearth' ? (hand ? 'Подпись — рука знакомая.' : 'Вместо подписи — крест.') : P.kind === 'tear' ? '' : P.mark(1, hand);
+  let s = mark ? `${body}\n\n${mark}` : body;
+  if (id === 'hearth' && st.h.x) s += `\n\n${HEARTH.unkept(st.h.x)}`;
+  if (P.back) s += `\n\n${P.back}`;
+  return s;
+}
 export function copyLines() {
   return st.p.map(id => {
     const P = PAPERS[id];
     let line = P.copy;
+    if (hand === id) line += ' В руке.';
     if (id === 'hearth' && st.h.x) line += ` На полях: не исполнено: ${st.h.x}.`;
-    if (hand === id) line += ' — в руке';
-    let text = paperText(id);
-    if (P.back) text += `\n\n${P.back}`;
-    return { id, line, title: P.name, text };
+    return { id, line, title: P.name, text: copyText(id) };
   });
 }
 
@@ -179,7 +187,8 @@ function buildDeck() {
   return tokens;
 }
 const fresh = tr => tr && !said.includes(tr.key);
-function remember(key) { said.push(key); if (said.length > 32) said.shift(); }
+let told = false;
+function remember(key) { said.push(key); if (said.length > 32) said.shift(); told = true; }
 function noise() {
   let w;
   do { w = LENTA_WORDS[Math.floor(Math.random() * LENTA_WORDS.length)]; } while (LENTA_WORDS.length > 1 && w === lastNoise);
@@ -219,17 +228,19 @@ export function stepClauses(player, ok = true) {
       visit.on = false; visit.fed = false;
     }
   }
-  if (!ok || (!isOn('gate') && !isOn('banner') && !isOn('pawn'))) return;
+  if (!ok || (!isOn('gate') && !isOn('banner') && !isOn('pawn'))) return false;
   const walking = player.moving && step > 0.05 && step < 40;   // автоход в изгородь, перенос — не ход
-  if (!walking) return;                                         // остановка — пауза, не сброс; долга нет
+  if (!walking) return false;                                   // остановка — пауза, не сброс; долга нет
   cnt++;
-  if (cnt < gapNow() || lineBusy() || t - lastLine < MIN_BETWEEN) return;
+  if (cnt < gapNow() || lineBusy() || t - lastLine < MIN_BETWEEN) return false;
   cnt = 0;
+  told = false;
   const line = slotLine();
-  if (!line) return;
+  if (!line) return false;
   sayUnderfoot(fit(line));
   lastLine = t;
   if (isOn('banner')) playTone(1320, 0.06, 'sine', 0.02);       // принявшему все — со звуком
+  return told;                                                  // сказана правда — main.js сохраняется сразу
 }
 
 // ── места ──
@@ -275,6 +286,12 @@ export function buildClauses(locations) {
     });
     put('hearth', placeNear(locations, { x: fb.x, y: fb.y, w: fb.w, h: fb.h }, 10, 26,
       [[-24, 0], [26, 0], [-24, 14], [26, 14], [-40, 0], [42, 0], [0, 30], [0, -30]]));
+    // где сесть: сидящая фигура (15×18 у ног) не на табличке и не на листе; огонь рядом — можно
+    const gy = fb.y + fb.h, hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    for (const [dx, dy] of [[-16, 0], [-6, 8], [7, 8], [16, 6], [0, -28]]) {
+      const fig = { x: fb.x + dx, y: gy + dy - 18, w: 15, h: 18 };
+      if (!locations.some(l => l.id !== 'lc_fire' && hit(fig, l))) { seat = { x: fb.x + dx, y: gy + dy - 24, w: 12, h: 24 }; break; }
+    }
   }
   put('plan', placeNear(locations, byName(locations, 'договор при печатне', 5), 14, 22));
   put('pawn', placeNear(locations, byName(locations, 'ломбард «МИНЕРВА»', 6), 12, 24));
@@ -282,7 +299,7 @@ export function buildClauses(locations) {
   // кольцо 9, юг: растяжка поперёк южной тропы — последняя бумага перед огнём
   for (const d of [60, 80, 100, 40]) {
     const p = trailPoint('south', ringD(9, d)), b = { x: Math.round(p.x - 15), y: Math.round(p.y - 24), w: 30, h: 24 };
-    if (ringAt(p.x, p.y) === 9 && free(b, locations)) { put('banner', b); break; }
+    if (ringAt(p.x, p.y) === 9 && free(b, locations)) { put('banner', b); locations[locations.length - 1].overTrail = true; break; }
   }
   // костёр городка: второе действие — экземпляр в огонь; к осмотру — угол в пепле
   const camp = locations.find(l => l.id === 'campfire');
@@ -297,6 +314,7 @@ export function buildClauses(locations) {
   }
 }
 export const firePlace = () => fire;
+export const seatPlace = () => seat;
 
 // ── сохранение ──
 export function saveClauses() { return JSON.parse(JSON.stringify(st)); }
@@ -316,7 +334,7 @@ export function loadClauses(d) {
 // для тестов
 export function _resetClauses() {
   st.n = {}; st.p = []; st.s = {}; st.a = null; st.h = { u: 0, x: 0 };
-  hand = null; visit.on = false; visit.fed = false; deck = []; cnt = 0; lastLine = -1e9; lastNoise = ''; said = []; last = null; tick = 0;
+  hand = null; visit.on = false; visit.fed = false; deck = []; cnt = 0; lastLine = -1e9; lastNoise = ''; said = []; last = null; tick = 0; told = false;
 }
 export const _state = () => st;
 export const _visit = () => visit;

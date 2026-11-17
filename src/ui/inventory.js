@@ -59,7 +59,7 @@ export function inventoryPages(lines, per) {
   return pages;
 }
 
-let el = null, provider = null, canOpen = () => true, data = null, pages = [], page = 0, detail = null;
+let el = null, provider = null, canOpen = () => true, data = null, pages = [], page = 0, detail = null, per = 10;
 
 // getData() → { notes: [{ n, id, text }], total, ways: [строки], rooms: [имена], rites: [строки] };
 // can() — можно ли открыть сейчас (не поверх карты и бумажки)
@@ -79,7 +79,11 @@ export function initInventory(getData, can = () => true) {
     else if (what === 'back') { detail = null; render(); }
     else if (what.startsWith('copy:')) {
       const c = data && (data.copies || []).find(x => x.id === what.slice(5));
-      if (c) { playClick(); if (data.hold) data.hold(c.id); detail = { title: c.title, text: c.text, copy: true }; render(); }
+      if (c) {
+        playClick();
+        if (data.hold) { data.hold(c.id); data = provider(); pages = inventoryPages(inventoryLines(data), per); }   // «в руке» — сразу и в описи
+        detail = { title: c.title, text: c.text, copy: true }; render();
+      }
     }
     else if (what.startsWith('note:')) {
       const n = data && data.notes.find(x => String(x.n) === what.slice(5));
@@ -107,7 +111,7 @@ export function openInventory() {
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280, vh = typeof window !== 'undefined' ? window.innerHeight : 720;
   const narrow = vw <= 768;
   // телефон: бланк от 112 точек сверху до низа, шапка и подвал ~200, строка ~52
-  const per = narrow ? Math.max(5, Math.min(12, Math.floor((vh - 128 - 200) / 52)))
+  per = narrow ? Math.max(5, Math.min(12, Math.floor((vh - 128 - 200) / 52)))
     : Math.max(6, Math.min(16, Math.floor((vh * 0.84 - 230) / 36)));
   pages = inventoryPages(inventoryLines(data), per);
   page = Math.min(page, pages.length - 1);

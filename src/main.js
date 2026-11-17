@@ -64,7 +64,7 @@ import { checkLorePickup, drawLoreItems, getTotalCount, loadCollected, getCollec
 import { GATES } from './content/worldmap_db.js';
 import { mailNow, answerMail, stepMail, saveMail, loadMail, MAIL_ASK } from './world/threads.js';
 import { ask } from './ui/askbox.js';
-import { stepClauses, useClause, burnCopy, burnChoice, burnAsk, burnByNumber, fireSpeaks, isOn as clauseOn, saveClauses, loadClauses, firePlace, copyLines, setHand } from './world/clauses.js';
+import { stepClauses, useClause, burnCopy, burnChoice, burnAsk, burnByNumber, fireSpeaks, isOn as clauseOn, saveClauses, loadClauses, seatPlace, copyLines, setHand } from './world/clauses.js';
 import { saveWeather, loadWeather } from './render/weather.js';
 import { saveNoon, loadNoon } from './world/redNoon.js';
 import { initInventory } from './ui/inventory.js';
@@ -106,7 +106,7 @@ import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhis
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
-import { weather, update as updateWeather, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
+import { weather, update as updateWeather, weatherClock, drawAdditive as drawWeatherAdditive, drawOverlay as drawWeatherOverlay } from './render/weather.js';
 import { init as initCursor, show as showCursor } from './ui/cursor.js';
 import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
@@ -150,11 +150,12 @@ attachContent(looks, dialogues);
 buildHouse(locations);                         // дом пробуждения — в центре старого города (квартал); дороги и фундаменты его обходят
 prepareArchGround(archEnsembles, locations);   // земля под постройками эпох
 // артерии — дороги, река, дуги, линия неба — в обход построек, дворов, табличек и утвари
+const grounded = locations.filter(l => !l.overTrail);   // растяжка над тропой (world/clauses.js) — под ней проходят, тропа не обходит
 buildArteries([
-  ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
+  ...grounded.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
   ...archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
-], [...locations, ...archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
+], [...grounded, ...archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
   .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит (плавучее — не подножие)
 buildTown();                                   // городок по канону: высохшее русло через посёлок, мост над ним
 setReliefCarve(riverCarve);                    // река промыла себе долину
@@ -302,6 +303,9 @@ function saveData() {
   };
 }
 if (!STREAM) startAutoSave(saveData);
+// вкладку убрали — сохраниться сейчас: на телефоне выгруженная вкладка pagehide не получает,
+// а сказанное (жребий на завтра, срок дождя) не должно откатиться к прошлому автосохранению
+if (!STREAM && typeof document !== 'undefined' && document.addEventListener) document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveGame(saveData()); });
 // сразу, не дожидаясь полуминуты (переоделся — и закрыл вкладку)
 function saveNow() { if (!STREAM) saveGame(saveData()); }
 setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
@@ -763,6 +767,7 @@ function plateStorm() {
 // (вопрос кота, мох на стекле, шёпот пифоса); за бумагой их счёт ждёт
 const lookingAtWorld = () => state.is('game') && !isMapOpen();
 function stepFx() {
+  weatherClock();                                    // расписание погоды — по шагам мира везде (за бумагой, в доме, внизу): сказанное о дожде сбывается
   stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
   // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
   // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
@@ -1770,7 +1775,7 @@ function updateWorldSystems() {
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving, ringAt(player.x + 6, player.y + 24) >= RINGS);   // слова ленты — только у ленты
-  stepClauses(player, !redNoon.active && !inBrainrotLoop());   // «Последний пункт»: подписавшему — строка на ходу; очаг у дороги
+  if (stepClauses(player, !redNoon.active && !inBrainrotLoop())) saveNow();   // «Последний пункт»: строка на ходу; сказанная правда (жребий, погода) — сразу в сохранение
   checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
   updateParticles();
   updateWeather(getZone(player.x, player.y));
@@ -2171,7 +2176,7 @@ events.on('location.alt', (loc) => {
     else ask({ prompt: burnAsk(), ok: 'в огонь', max: 1, numeric: true }).then(v => done(burnByNumber(v)));
   }
   // очаг у дороги горит — сесть может всякий
-  if (a.key === 'lc_sit') { const f = firePlace(); if (f) sitOnLog({ x: f.x - 16, y: f.y, w: 12, h: f.h }); }
+  if (a.key === 'lc_sit') { const s = seatPlace(); if (s) sitOnLog(s); }
   // гардероб: надеть то, что висит здесь, или снова свой пыльник (world/garments.js)
   if (a.key.startsWith('wear_')) {
     const line = wear(a.key.slice(5));

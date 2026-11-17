@@ -126,9 +126,13 @@ export function loadWeather(d) {
   back(STATE.TOXIC_RAIN, d.r); back(STATE.SANDSTORM, d.n);
 }
 
-export function update(zone) {
-  weather.zone = zone || 'settlement';
-
+// Расписание погоды идёт по шагам мира везде — за бумагой, в доме, под землёй (main.js
+// stepFx), раз за шаг: сроки и откаты на одних часах, сказанное о дожде сбывается и после
+// паузы. Зона — последняя наверху. Рисунок, капли и молнии — только наверху (update).
+let clockedAt = -1;
+export function weatherClock() {
+  if (clockedAt === t) return;
+  clockedAt = t;
   // Scheduler — each weather type has its own cooldown (rain 9 min, sand 3 min).
   // If both are on cooldown the roll returns null and the sky stays clear.
   weather.currentDuration--;
@@ -146,6 +150,11 @@ export function update(zone) {
     // Poll again in 30s regardless (cheap) — cooldowns handle the real gating
     weather.nextCheck = 1800;
   }
+}
+
+export function update(zone) {
+  weather.zone = zone || 'settlement';
+  weatherClock();
 
   // Intensity envelope — bell-shaped so rain creeps in and trails out.
   // fadeFrames = 20% of total duration, capped at 40s.

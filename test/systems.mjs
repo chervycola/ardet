@@ -1110,7 +1110,7 @@ setCtx(ctx);
   const AP = await imp('render/arteryProps.js');
   (await imp('world/house.js')).buildHouse(M.locations);         // как в main.js: дом пробуждения — до артерий и троп
   AG.prepareArchGround(M.archEnsembles, M.locations);
-  const L = M.locations;
+  const L = M.locations.filter(l => !l.overTrail);               // как в main.js: растяжку над тропой тропа не обходит
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
   A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 }))],
     [...L, ...AG.archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
@@ -1120,6 +1120,14 @@ setCtx(ctx);
   const cross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
   const crossings = (P, Q) => { let n = 0; for (let i = 0; i < P.length - 1; i++) { if (!P[i].st) continue; for (let j = 0; j < Q.length - 1; j++) if (Q[j].st && cross(P[i], P[i + 1], Q[j], Q[j + 1])) n++; } return n; };
   const river = line('river');
+  test('последний пункт: растяжка кольца 9 — над тропой; тропа проходит между столбами, не в обход', () => {
+    const bn = M.locations.find(l => l.id === 'lc_banner');
+    assert(bn && bn.overTrail, 'растяжки нет или она не над тропой');
+    const gy = bn.y + bn.h, rs = line('road:south').pts;
+    let best = null;
+    for (const p of rs) if (!best || Math.abs(p.y - gy) < Math.abs(best.y - gy)) best = p;
+    assert(best.x > bn.x + 2 && best.x < bn.x + bn.w - 2, `тропа у подножия растяжки в ${best.x.toFixed(0)}, столбы ${bn.x}…${bn.x + bn.w}`);
+  });
   test('дороги: тропа → мостовая → брусчатка → асфальт → трасса; в огне умирают в обратном порядке', () => {
     const want = ['trail', 'paved', 'cobble', 'asphalt', 'highway', 'asphalt', 'cobble', 'trail'];
     for (const side of ['south', 'north', 'east', 'west', 'plain']) {
@@ -3830,7 +3838,8 @@ setCtx(ctx);
     for (const zone of ['street', 'forest', 'toxic', 'highway', 'settlement']) {
       const checks = [];
       for (let i = 0; i < 60 * 60 * 40; i++) {
-        TT.tick(); WX.update(zone);
+        const paused = i % 5000 >= 2500 && i % 5000 < 2500 + 600 + (Math.floor(i / 5000) % 7) * 400;   // за бумагой, в доме, внизу: расписание идёт, рисунка нет
+        TT.tick(); if (paused) WX.weatherClock(); else WX.update(zone);
         const st = WX.weather.state, t = TT.t;
         for (const c of checks) {
           if (c.done) continue;
@@ -3926,6 +3935,28 @@ setCtx(ctx);
       assert(RC.free(l, LC.locations.filter(o => o !== l)), `${id}: наезжает на соседа`);
     }
     assert(LC.locations.find(x => x.id === 'lc_fire'), 'очага нет');
+  });
+  test('последний пункт: сесть у очага — не на табличку и не на лист; в описи экземпляр без строки места и числа, «В руке.» сразу; сказанная правда — сигнал сохраниться', () => {
+    const s = CL.seatPlace(); assert(s, 'места сесть нет');
+    const fig = { x: s.x, y: s.y + s.h - 18, w: 15, h: 18 }, hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const on = LC.locations.filter(l => l.id !== 'lc_fire' && hit(fig, l)).map(l => l.name);
+    eq(on.length, 0, `сидит на: ${on.join(', ')}`);
+    fresh(); CL.useClause('banner'); CL.useClause('gate');
+    let c = CL.copyLines().find(x => x.id === 'banner');
+    assert(!c.text.includes('Растяжка над тропой') && !/Согласий получено/.test(c.text), 'экземпляр в описи повторяет лист у тропы');
+    CL.setHand('banner');
+    c = CL.copyLines().find(x => x.id === 'banner');
+    eq(c.line, 'Чек «Принять все». В руке.', 'строка описи в руке');
+    eq(CL.burnChoice(), 'banner', 'огонь берёт не тот, что в руке');
+    // сказанная правда → true (main.js сохраняется сразу); шум → false
+    fresh(); CL.useClause('gate');
+    let toldAny = false, noiseOnly = false;
+    for (let i = 0; i < 300 + 1200 * 12; i++) {
+      walker.moving = true; walker.x += 1; TT.tick();
+      const r = CL.stepClauses(walker, true), l = ID._lastUnderfoot();
+      if (l) { if (r) toldAny = true; else if (ID.LENTA_WORDS.includes(l)) noiseOnly = true; else assert(false, `правда без сигнала: ${l}`); ID._resetUnderfoot(); }
+    }
+    assert(toldAny, 'ни одной правды с сигналом сохраниться');
   });
   test('последний пункт: сохранение — подписанное, карман, угол, очаг; неизвестное отброшено', () => {
     fresh(); CL.useClause('gate'); CL.useClause('hearth'); CL.burnCopy('gate');
