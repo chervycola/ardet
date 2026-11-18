@@ -74,8 +74,7 @@ page.on('pageerror', e => log({ pageerror: e.message }));
 await page.goto(URL_);
 await page.waitForTimeout(1500);
 await page.click('#entry-btn').catch(() => {});
-await page.waitForTimeout(600);
-await page.click('#howto').catch(() => {});
+await page.waitForTimeout(600);           // табло клавиш снято (18.11): FALL IN — сразу пробуждение
 await page.waitForTimeout(17000);       // вступление идёт само; его не пропустить
 
 const DIRS = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };

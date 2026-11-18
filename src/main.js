@@ -1840,13 +1840,11 @@ function loop(now) {
   render();
 }
 
-// ═══ ENTRY → HOW-TO → GAME ═══
-// «В ПУСТОТУ» first shows a one-plate controls card; any key/click on
-// it drops into the game. Both interactions are user gestures, so
-// resumeAudio() stays autoplay-policy-safe.
+// ═══ ENTRY → GAME ═══
+// «FALL IN» — сразу пробуждение: табло клавиш перед ним снято (слово автора 18.11 — вайб).
+// Вход — жест странника, resumeAudio() остаётся в правилах автовоспроизведения. Тот же тап
+// не уходит в мир: веки пробуждения (#wakelids) лежат поверх и ловят его.
 function startGame() {
-  const howto = document.getElementById('howto');
-  if (howto) howto.classList.remove('on');
   const gw = document.getElementById('gw');
   gw.classList.add('on');
   gw.style.opacity = '1'; // force visible
@@ -1937,25 +1935,7 @@ const entryEnter = () => {
     (navigator.maxTouchPoints || 0) > 0;
   if (mob && window.ArdetFS) window.ArdetFS.enter();
   if (mob) document.documentElement.classList.add('m');
-  const howto = document.getElementById('howto');
-  if (!howto) { startGame(); return; }
-  // Swap the key list for touch devices
-  const isMobile = mob || window.innerWidth <= 768;
-  if (isMobile) {
-    const d = document.getElementById('howto-desktop');
-    const m = document.getElementById('howto-mobile');
-    if (d) d.style.display = 'none';
-    if (m) m.style.display = 'grid';
-  }
-  howto.classList.add('on');
-  const go = () => {
-    document.removeEventListener('keydown', go);
-    startGame();
-  };
-  // Отложить и клик, и клавиши: жест, открывший howto, не должен
-  // тем же синтетическим click тут же его закрыть (мобильный тап).
-  setTimeout(() => howto.addEventListener('click', go, { once: true }), 400);
-  setTimeout(() => document.addEventListener('keydown', go, { once: true }), 50);
+  startGame();
 };
 // заглавная — картина автора и «fall in» среди птиц (ui/title.js)
 initTitle({ onGo: entryEnter });
