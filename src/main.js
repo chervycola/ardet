@@ -136,6 +136,7 @@ import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderL
 import { UNDER_INSC } from './content/underside.js';
 import { startNet, stepNet, netVote, mute, net, lookingNear, SIGHT, notesIn, netLeaveStand, netStandFall } from './net/net.js';
 import { othersToDraw, otherLights, drawNotes, drawStands, drawVoices, noteAt, otherAt } from './render/net.js';
+import { nameOf, byName, isNamed, saveNames, loadNames, BLANK } from './world/names.js';
 import { stepStands, onStandFall, standBack, standClearings, dentAhead, setStandNet, saveStands, loadStands } from './world/stands.js';
 import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOTE_ERR } from './ui/netui.js';
 import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
@@ -267,6 +268,7 @@ if (savedData) {
   if (savedData.weather) loadWeather(savedData.weather);
   if (savedData.opis) { loadOpis(savedData.opis); opisResolve(locations); }   // «В описи не значится»: строки от руки и заходы по кольцам
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
+  loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
@@ -292,6 +294,7 @@ function saveData() {
   weather: saveWeather(),
   opis: saveOpis(),
   stands: saveStands(),
+  names: saveNames(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -324,7 +327,7 @@ let lockHintAt = -99999;
 function lockHint() {
   if (_t - lockHintAt < 1800) return;
   lockHintAt = _t;
-  showLore('Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт W. У костра».');
+  showLore(`Табличка на столбе: «Выход из городка — по пропуску. Пропуска выдаёт ${isNamed('jester') ? 'W' : BLANK}. У костра».`);   // имя — по знакомству
 }
 
 // Check if player can leave settlement
@@ -885,7 +888,7 @@ function drawLocationPlaceholder(ctx, loc) {
   ctx.fillStyle = '#e8dcc8';
   ctx.font = '6px "Press Start 2P","VT323",monospace';
   ctx.globalAlpha = 0.5;
-  ctx.fillText(loc.name.slice(0, 20), loc.x, loc.y - 4);
+  ctx.fillText(nameOf(loc).slice(0, 20), loc.x, loc.y - 4);
   ctx.globalAlpha = 1;
 }
 
@@ -2121,6 +2124,7 @@ setStandNet({ leave: netLeaveStand, fall: netStandFall });
 setRelook(loc => relookText(loc.id, lookTags()));
 setRevealFloor(thinOf);                         // вписанная подделка редеет к подпоркам по заходам (world/opis.js)
 events.on('opis.inscribe', () => saveNow());    // строка от руки — сразу в сохранение
+events.on('names.heard', () => saveNow());      // фигура представилась — имя записано (world/names.js)
 
 // ═══ EVENT HANDLERS ═══
 // падение в брейнрот открывает трек «брейнрот» (assets/music/brainrot.mp3)
@@ -2295,7 +2299,7 @@ events.on('location.use', (loc) => {
   }
   // костёр: с седьмого приношения, если странник был у мохового алтаря и карманы пусты, говорит огонь
   if (actionKey === 'campfire_throw' && fireSpeaks(addOffering(), flags.visited.has('altar'))) {
-    const s = useTexts.campfire_sermon; showLook({ name: s.title, look: s.text }); return;
+    const s = byName(useTexts.campfire_sermon); showLook({ name: s.title, look: s.text }); return;
   }
   // Look-based actions
   sceneOrDown(actionKey);
@@ -2303,7 +2307,7 @@ events.on('location.use', (loc) => {
 // спуск — пасхалка, не кнопка: сцена места уже показана — повторное «использовать» ведёт вниз
 function sceneOrDown(actionKey) {
   if (LOCKED[actionKey]?.()) { const l = useTexts[actionKey + '_locked']; showLook({ name: l.title, look: l.text }); return; }   // заперто до поры
-  const action = useTexts[actionKey], down = DESCENTS[actionKey];
+  const action = byName(useTexts[actionKey]), down = DESCENTS[actionKey];   // фигура не представилась — в тексте без имени
   if (down && under.seen.has(actionKey)) { goUnder(down); return; }
   if (action) {
     showLook({ name: action.title, look: action.text });

@@ -117,6 +117,9 @@ attachContent(looks, dialogues);
 const { buildHouse, THINGS } = await imp('world/house.js');
 buildHouse(locations);   // дом на перекрёстке квартала: снаружи — вещь городка, внутри — вход
 const { placeStamp } = await imp('world/placeStamp.js');
+// имена — по знакомству (world/names.js): пробник — первая встреча, у фигур пустая строка
+const { nameOf, BLANK } = await imp('world/names.js');
+const nm = l => nameOf(l) || BLANK;
 const { seamOf } = await imp('world/potemkin.js');
 const { RELOOKS } = await imp('content/relooks.js');
 const { WHISPERS } = await imp('world/whisper.js');
@@ -196,7 +199,7 @@ ${nav}
 </html>
 `;
 const nearNav = l => [...adj.get(l.id)].map(id => byId.get(id)).sort((a, b) => dist(l, a) - dist(l, b))
-  .map(b => `<p>${esc(dirOf(l, b))} — <a href="${fileOf(b.id)}">${esc(b.name)}</a></p>`).join('\n');
+  .map(b => `<p>${esc(dirOf(l, b))} — <a href="${fileOf(b.id)}">${esc(nm(b))}</a></p>`).join('\n');
 
 // со всякой страницы — ко входу: там сказано, что это за место, и стоят правила дома
 const ENTRY = `<p class="stamp" style="margin:1.6em 0 0"><a href="index.html">${FRAME.toEntry}</a></p>`;
@@ -212,18 +215,18 @@ for (const l of town) {
   st.forEach((s, i) => {
     const k = i + 1, next = fileOf(l.id, k === st.length ? 1 : k + 1);
     if (s.kind === 'seam') nSeam++; if (s.kind === 'relook') nRelook++; if (s.kind === 'whisper') nWhisper++;
-    const body = `<h1>${esc(l.name)}</h1>\n` + (s.kind === 'whisper' ? `<p class="whisper">${esc(s.text)}</p>` : paras(s.text));
+    const body = `<h1>${esc(nm(l))}</h1>\n` + (s.kind === 'whisper' ? `<p class="whisper">${esc(s.text)}</p>` : paras(s.text));
     const acts = [`<p class="act"><a href="${next}">${FRAME.look}</a></p>`];
     if (Array.isArray(l.talkLines) && l.talkLines.length) acts.push(`<p class="act"><a href="${l.id}.talk.html">${FRAME.talk}</a></p>`);
     const ray = l.id === 'gates' ? `\n<p>${FRAME.south} — <a href="${RAY[0].id}.html">${esc(RAY[0].name)}</a></p>` : '';   // от врат — луч к югу
     if (l.id === 'terminal') acts.push(`<p class="act"><a href="terminal.journal.html">&gt; journal</a></p>`);   // журнал городка
     if (l.id === 'office') acts.push(`<p class="act"><a href="office.book.html">${FRAME.toBook}</a></p>`);     // книга у окна № 3
-    put(fileOf(l.id, k), page(l.name, STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
+    put(fileOf(l.id, k), page(nm(l), STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
   });
   if (Array.isArray(l.talkLines) && l.talkLines.length) {
     nTalk++;
-    const body = `<h1>${esc(l.talkName || l.name)}</h1>\n` + l.talkLines.map(t => paras(String(t))).join('\n<p>·</p>\n');
-    put(`${l.id}.talk.html`, page(`${l.name} · ${FRAME.protocol}`, `${STAMP} · ${FRAME.protocol}`, body, `<p>${FRAME.back} — <a href="${fileOf(l.id)}">${esc(l.name)}</a></p>\n${ENTRY}`));
+    const body = `<h1>${esc(nm(l))}</h1>\n` + l.talkLines.map(t => paras(String(t))).join('\n<p>·</p>\n');
+    put(`${l.id}.talk.html`, page(`${nm(l)} · ${FRAME.protocol}`, `${STAMP} · ${FRAME.protocol}`, body, `<p>${FRAME.back} — <a href="${fileOf(l.id)}">${esc(nm(l))}</a></p>\n${ENTRY}`));
   }
 }
 

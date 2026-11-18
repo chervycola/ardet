@@ -4416,6 +4416,84 @@ setCtx(ctx);
   });
 }
 
+// ═══ ИМЕНА ПО ЗНАКОМСТВУ (world/names.js; слово автора 18.11) ═══
+{
+  const NM = await imp('world/names.js');
+  const { locations } = await imp('world/locations.js');
+  const { dialogues } = await imp('content/dialogues.js');
+  const { looks } = await imp('content/looks.js');
+  const { useTexts } = await imp('world/useActions.js');
+  const FS = await import('fs');
+  const src = p => FS.readFileSync(new URL('../src/' + p, import.meta.url), 'utf8');
+  const L = id => locations.find(l => l.id === id);
+  const NAMES = /(^|[^A-Za-zА-Яа-яЁё])W([^A-Za-zА-Яа-яЁё]|$)|Sol\b|Старец|Старц|Лунн|Шут/;
+  test('имена: до знакомства у четверых пустая строка, места — без чужого имени; прочее как было', () => {
+    NM._resetNames();
+    for (const id of ['jester_home', 'sol_home', 'elder_home', 'nocturnal_home']) {
+      eq(NM.nameOf(L(id)), '', `${id}: имя до знакомства`); assert(NM.blankName(L(id)), `${id}: нет пустой строки`);
+    }
+    eq(NM.nameOf(L('tent')), 'Палатка'); eq(NM.nameOf(L('nocturnal')), 'Равнина');
+    eq(NM.nameOf(L('campfire')), L('campfire').name, 'костёр переименован');
+    assert(!NM.blankName(L('campfire')), 'у костра пустая строка');
+  });
+  test('имена: представился сам — записано (Шут — «W.», Старец — «Меня звали по-разному»); Sol и Лунный пока не представляются', () => {
+    NM._resetNames();
+    for (const [npc, key] of [['jester', 'jester_home'], ['elder', 'elder_home']]) {
+      const lines = dialogues[key], hits = lines.filter(x => NM.INTRO[npc].test(String(x)));
+      eq(hits.length, 1, `${key}: реплик знакомства`);
+      for (const x of lines.slice(0, lines.indexOf(hits[0]))) assert(!NM.hearLine(npc, x), `${key}: записан раньше, чем представился`);
+      assert(NM.hearLine(npc, hits[0]) && !NM.hearLine(npc, hits[0]), `${key}: не записан, когда представился (или записан дважды)`);
+    }
+    eq(NM.nameOf(L('jester_home')), 'W'); eq(NM.nameOf(L('elder_home')), 'Старец'); eq(NM.nameOf(L('tent')), 'Палатка Старца');
+    eq(NM.nameOf(L('sol_home')), '', 'Sol записан, не представившись'); eq(NM.nameOf(L('nocturnal_home')), '');
+    for (const x of [...dialogues.sol_home, ...dialogues.nocturnal_home]) { assert(!NM.hearLine('sol', x) && !NM.hearLine('nocturnal', x), 'записан без знакомства'); }
+  });
+  test('имена: второй разговор без знакомства — знакомство встаёт второй репликой; знакомым — как было', () => {
+    NM._resetNames();
+    const ret = dialogues.jester_home_return, w = NM.withIntro('jester', ret, dialogues.jester_home);
+    eq(w.length, ret.length + 1); eq(w[0], ret[0]); assert(NM.INTRO.jester.test(w[1]), 'знакомство не второй');
+    NM.hearLine('jester', w[1]);
+    assert(NM.withIntro('jester', ret, dialogues.jester_home) === ret, 'знакомым — вставлено');
+    assert(NM.withIntro('sol', dialogues.sol_home, dialogues.sol_home) === dialogues.sol_home, 'Sol — вставлено из ничего');
+  });
+  test('имена: описания фигур и тексты действий до знакомства — без имён; после — прежние', () => {
+    NM._resetNames();
+    for (const id of ['jester_home', 'sol_home', 'elder_home', 'nocturnal_home']) assert(!NAMES.test(looks[id]), `${id}: в описании имя — ${(looks[id].match(NAMES) || [])[0]}`);
+    const keyed = Object.entries(useTexts).filter(([, e]) => e && e.of);
+    assert(keyed.length >= 3, 'тексты с фигурой не помечены');
+    for (const [k, e] of keyed) {
+      const a = NM.byName(e);
+      assert(!NAMES.test(a.title) && !NAMES.test(a.text), `${k}: до знакомства имя — ${((a.title + a.text).match(NAMES) || [])[0]}`);
+    }
+    for (const k of ['campfire_sermon', 'tent_tea', 'nocturnal_thread']) assert(useTexts[k].of, `${k}: называет фигуру, а не помечен`);
+    // любой текст действия, где фигура названа, — помечен
+    for (const [k, e] of Object.entries(useTexts)) if (e && e.text && /(^|\n)W[ ,]|Старец[ :]|Лунн/.test(e.title + e.text)) assert(e.of && e.anon, `${k}: имя без пометки`);
+    NM.loadNames(['jester', 'elder', 'nocturnal']);
+    eq(NM.byName(useTexts.tent_tea), useTexts.tent_tea, 'знакомым — без имени');
+  });
+  test('имена: сохранение; прежние сохранения — знакомы те, с кем говорил и кто представляется', () => {
+    NM._resetNames(); NM.hearLine('jester', 'W.\nВслух');
+    const sv = JSON.parse(JSON.stringify(NM.saveNames()));
+    NM.loadNames(sv); eq(NM.saveNames().join(), 'jester');
+    NM.loadNames(['jester', 'кто-то', 7]); eq(NM.saveNames().join(), 'jester', 'порченое легло');
+    NM.loadNames(undefined, ['jester', 'sol', 'elder']); eq(NM.saveNames().sort().join(), 'elder,jester', 'прежнее сохранение');
+    NM.loadNames(undefined, undefined); eq(NM.saveNames().length, 0);
+    NM._resetNames();
+  });
+  test('имена: проводка — окно осмотра, протокол, карта, табличка у столба, опись, сохранение', () => {
+    const U = src('ui/ui.js'), M = src('main.js'), W = src('ui/worldmap.js'), O = src('world/opis.js');
+    assert(/lookTitle = nameOf\(loc\)/.test(U) && !/activeLoc \? activeLoc\.name/.test(U), 'окно осмотра — по имени вещи');
+    assert(/hearLine\(dlgLoc\.npc, dlgLines\[dlgIndex\]\)/.test(U) && !/dlgLoc\.talkName \|\| dlgLoc\.name/.test(U), 'протокол — не по знакомству');
+    assert(/withIntro\(loc\.npc, dlgLines, loc\.talkLines\)/.test(U), 'второй разговор без знакомства');
+    assert(/nameOf\(loc\)\.slice\(0, 28\)/.test(W) && !/loc\.name \|\| loc\.id/.test(W), 'карта подписывает по имени');
+    for (const [f, t] of [['main.js', M], ['ui/worldmap.js', W]]) assert(!/Пропуска выдаёт W\./.test(t) && /isNamed\('jester'\) \? 'W' : BLANK/.test(t), `${f}: табличка называет`);
+    assert(/names: saveNames\(\)/.test(M) && /loadNames\(savedData\.names, savedData\.talkedTo\)/.test(M) && /events\.on\('names\.heard', \(\) => saveNow\(\)\)/.test(M), 'сохранение имён');
+    assert(/byName\(useTexts\[actionKey\]\)/.test(M) && /byName\(useTexts\.campfire_sermon\)/.test(M), 'тексты действий — с именем до знакомства');
+    assert(/name: String\(nameOf\(loc\)/.test(O), 'опись пишет чужое имя');
+  });
+  NM._resetNames();
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

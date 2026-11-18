@@ -14,6 +14,7 @@ import { SEGMENTS } from '../content/ulitsa_db.js';
 import { TOWN, CORE, RINGS, RINGS_D, RING_EDGE, FIRE_W, ringD, ringAt, ringOfD, warpedDist, trailPoint } from '../world/disc.js';
 import { sideAt } from '../world/relief.js';
 import { CELL_TITLES } from '../content/cell_titles.js';
+import { nameOf, isNamed, BLANK } from '../world/names.js';
 import { SIDE_RU } from '../world/placeStamp.js';
 import { drawSignature } from './signature.js';
 import { isOn as clauseOn } from '../world/clauses.js';   // «Последний пункт»: план по подписке (кольцо 5)
@@ -380,7 +381,8 @@ function drawLocal() {
     ctx.font = `${ls}px Literata, 'PT Serif', Georgia, serif`;
     const boxes = [];
     for (const [sx, sy, loc] of marks) {
-      const name = (loc.name || loc.id).slice(0, 28), tw = ctx.measureText(name).width;
+      const name = nameOf(loc).slice(0, 28), tw = ctx.measureText(name).width;   // имена — по знакомству (world/names.js)
+      if (!name) continue;                                                // не представился — без подписи
       const b = { x: sx + 4, y: sy - ls * 0.7, w: tw + 2, h: ls * 0.95 };
       if (boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)) continue;
       boxes.push(b);
@@ -459,7 +461,7 @@ function drawLocalSide() {
     y += 18;
   }
   y = sideText([[null], ['за девятым — огонь, за огнём — край', rgba(SEPIA, 0.7), F_PAPER_S]], y);
-  if (getLockedFn()) y = sideText([[null], ['Выход из городка — по пропуску. Пропуска выдаёт W. У костра.', CINNABAR, F_PAPER_S]], y);
+  if (getLockedFn()) y = sideText([[null], [`Выход из городка — по пропуску. Пропуска выдаёт ${isNamed('jester') ? 'W' : BLANK}. У костра.`, CINNABAR, F_PAPER_S]], y);
   // обмер произвёл — рука странника (ui/signature.js); не расписался — уклонился; в красный полдень руки нет
   const sy = Math.max(y + 12, SIDE.y + SIDE.h - 96);
   ctx.font = F_GRIF; ctx.fillStyle = rgba(SEPIA, 0.75);

@@ -9,6 +9,7 @@
 // Что настоящее, мир не помечает: строка одна и та же; вписанная подделка редеет к
 // подпоркам и без взгляда (world/potemkin.js setRevealFloor), бережение держится.
 // ═══════════════════════════════════════
+import { nameOf } from './names.js';
 import { placeOf } from './placeStamp.js';
 import { RINGS } from './disc.js';
 import { lookCount } from './relook.js';
@@ -65,7 +66,7 @@ export function inscribe(loc, today) {
   const s = opisState(loc, today);
   if (!s || s.mine || !s.open || lookCount(loc.id) < 1) return false;
   const x = s.cur ? [...s.cur.x, { id: s.cur.id, name: s.cur.name }] : [];
-  st.r[s.ring] = { id: loc.id, k: keyOf(loc), name: String(loc.name || ''), d: today, v: prev[s.ring], x };
+  st.r[s.ring] = { id: loc.id, k: keyOf(loc), name: String(nameOf(loc) || loc.name || ''), d: today, v: prev[s.ring], x };   // как записано сейчас (world/names.js)
   return true;
 }
 const kept = (loc, ring) => { const c = st.r[ring]; return !!c && c.id === loc.id; };

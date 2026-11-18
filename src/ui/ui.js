@@ -19,6 +19,7 @@ import { placeStamp } from '../world/placeStamp.js';
 import { hasSignature, signatureSVG } from './signature.js';
 import { hasReturned } from '../core/sessionMemory.js';
 import { opisState, opisLine, inscribe } from '../world/opis.js';
+import { nameOf, blankName, personOf, hearLine, withIntro } from '../world/names.js';
 
 // Special use-actions handled directly by main.js (not via useTexts)
 const SPECIAL_USE = new Set(['sit_log', 'shop1', 'shop2', 'shop3', 'gates_pass', 'brainrot_enter', 'branch_plain', 'branch_back', 'well_crank', 'town_well_crank', 'under_up', 'under_ticket', 'under_call', 'under_fish', 'under_sign', 'under_herb', 'under_read', 'horizon_look', 'net_cert', 'net_mute', 'house_exit', 'house_enter']);
@@ -221,6 +222,9 @@ let lookPages = [];
 let lookPageIdx = 0;
 let lookShownAt = 0;   // клик в ту же долю секунды, что открыл страницу, не листает её
 let lookTitle = '';   // заголовок окна: имя вещи или название действия («МОНЕТА», «Я НЕ РОБОТ»)
+let lookBlank = false;   // фигура, с которой не знакомы: вместо имени — пустая строка (world/names.js)
+// пустая строка под имя: в окне осмотра и в шапке протокола — линия, без букв
+const blankLine = () => { const s = document.createElement('span'); s.className = 'blank-name'; s.setAttribute('aria-label', 'имя не записано'); return s; };
 let lookInsc = '';    // надпись меню, когда меню пропущено (один клик): её не теряем — строка под заголовком
 let lookStamp = '';   // штамп места: «кольцо 6 · север · пар и тени» (world/placeStamp.js)
 // места, где канцелярия узнаёт руку странника: строка текста → подпись под ним
@@ -231,7 +235,8 @@ let opisArm = 0;      // строка описи: первое нажатие (�
 // direct — открыто мимо меню (одно действие, клавиша): надпись меню переходит в окно
 export function showLook(loc, direct = false) {
   state.transition('look');
-  lookTitle = (loc && loc.name) || '';
+  lookTitle = nameOf(loc);                        // имена — по знакомству (world/names.js)
+  lookBlank = blankName(loc);
   lookStamp = placeStamp(loc);
   lookInsc = direct && loc ? menuInscriptions[loc.id] || '' : '';
   lookLoc = activeLoc && activeLoc === loc ? loc : null;
@@ -346,7 +351,8 @@ function renderLookPage() {
     opis.className = !ol ? '' : noon ? 'off' : ol.act && armed ? 'act arm' : ol.cls;
     opis.style.display = ol ? 'block' : 'none';
   }
-  lt.textContent = blind(lookTitle || (activeLoc ? activeLoc.name : ''));
+  if (lookBlank || (!lookTitle && blankName(activeLoc))) { lt.textContent = ''; lt.append(blankLine()); }
+  else lt.textContent = blind(lookTitle || (activeLoc ? nameOf(activeLoc) : ''));
   lb.textContent = blind(lookPages[lookPageIdx] || '');
   lb.classList.toggle('blind', noon);
   if (stamp) {
@@ -450,6 +456,7 @@ export function startDialogue(loc) {
 
   dlgLoc = loc;
   dlgLines = (loc.talkLinesReturn && hasReturned()) ? loc.talkLinesReturn : loc.talkLines;
+  dlgLines = withIntro(loc.npc, dlgLines, loc.talkLines);   // не знакомы — представится и во втором разговоре
   dlgIndex = 0;
   state.transition('dialogue');
   dlgEl.classList.add('on');
@@ -505,9 +512,12 @@ function typeLine() {
   const optsEl = document.getElementById('do');
 
   if (dlgLoc) {
+    // представилась этой репликой — имя записывается в шапку сейчас же (world/names.js)
+    if (hearLine(dlgLoc.npc, dlgLines[dlgIndex])) events.emit('names.heard', dlgLoc.npc);
     nameEl.innerHTML = '';
     const who = document.createElement('span'), when = document.createElement('span');
-    who.className = 'dn-who'; who.textContent = 'Протокол беседы · ' + (dlgLoc.talkName || dlgLoc.name || '');
+    who.className = 'dn-who'; who.textContent = 'Протокол беседы · ' + (personOf(dlgLoc) ? nameOf(dlgLoc) : (dlgLoc.talkName || nameOf(dlgLoc)));
+    if (blankName(dlgLoc)) who.append(blankLine());
     when.className = 'dn-when'; when.textContent = protocolWhen(skyAt(phaseAt(t)).name, dayIndex(t) + 1);
     nameEl.append(who, when);
     drawPortrait(dlgLoc.npc);

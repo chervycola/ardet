@@ -698,6 +698,9 @@ body.noon #look-opis { color: var(--ink); }
 #dn { color: var(--sepia); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
   border-bottom: 1px dashed rgba(58,48,38,0.5); padding-bottom: 6px; }
 #dn .dn-who { letter-spacing: 1px; }
+/* пустая строка под имя (world/names.js): фигура не представилась — в графе линия, без букв */
+.blank-name { display: inline-block; width: 6.5em; height: 0.95em; vertical-align: baseline;
+  border-bottom: 1px solid currentColor; opacity: 0.55; }
 #dn .dn-when { font-family: var(--font-book); font-style: italic; font-size: 14px; letter-spacing: 0; opacity: 0.7; }
 #dt { color: var(--sepia); }
 
