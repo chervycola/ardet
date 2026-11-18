@@ -4420,6 +4420,10 @@ setCtx(ctx);
 {
   const NM = await imp('world/names.js');
   const { locations } = await imp('world/locations.js');
+  const UI = await imp('ui/ui.js');
+  const STM = await imp('core/state.js');
+  const LORE = await imp('content/lore.js');
+  const OPIS = await imp('world/opis.js');
   const { dialogues } = await imp('content/dialogues.js');
   const { looks } = await imp('content/looks.js');
   const { useTexts } = await imp('world/useActions.js');
@@ -4490,6 +4494,54 @@ setCtx(ctx);
     assert(/names: saveNames\(\)/.test(M) && /loadNames\(savedData\.names, savedData\.talkedTo\)/.test(M) && /events\.on\('names\.heard', \(\) => saveNow\(\)\)/.test(M), 'сохранение имён');
     assert(/byName\(useTexts\[actionKey\]\)/.test(M) && /byName\(useTexts\.campfire_sermon\)/.test(M), 'тексты действий — с именем до знакомства');
     assert(/name: String\(nameOf\(loc\)/.test(O), 'опись пишет чужое имя');
+  });
+  test('имена: строки под ногами и записки на земле фигур не называют', () => {
+    const I = src('world/idle.js'), msgs = I.slice(I.indexOf('const MSGS = ['), I.indexOf('];', I.indexOf('const MSGS = [')));
+    const NAMES_LC = /'[^']*(шут|старец|старц|лунн|\bsol\b)[^']*'/i;
+    assert(!NAMES_LC.test(msgs), 'строка под ногами называет фигуру: ' + (msgs.match(NAMES_LC) || [])[0]);
+    for (const it of LORE.loreItems) assert(!/Старц|Старец|Лунн|Шут|\bSol\b/.test(it.text), `записка ${it.id} называет фигуру`);
+  });
+  test('имена: разговор — шапка пустая до «W.», на этой реплике — W; ушёл раньше — не записано; осмотр — пустая строка', () => {
+    const rec = () => ({ kids: [], text: '', className: '', attrs: {}, style: {}, onclick: null,
+      classList: { add: noop, remove: noop, toggle: noop, contains: () => false },
+      set textContent(v) { this.text = String(v); this.kids = []; }, get textContent() { return this.text + this.kids.map(k => k.textContent).join(''); },
+      set innerHTML(v) { this.text = ''; this.kids = []; }, get innerHTML() { return ''; },
+      append(...k) { this.kids.push(...k); }, appendChild(k) { this.kids.push(k); return k; }, after: noop, insertAdjacentHTML: noop,
+      setAttribute(k, v) { this.attrs[k] = v; }, addEventListener: noop, remove: noop, getBoundingClientRect: () => ({ top: 0, left: 0, width: 0, height: 0 }) });
+    const D = document, own = new Map(), get0 = D.getElementById, mk0 = D.createElement;
+    D.getElementById = id => (['dn', 'dt', 'do', 'lt', 'lb'].includes(id) ? (own.has(id) || own.set(id, rec()), own.get(id)) : id === 'dpc' ? null : get0(id));
+    D.createElement = () => rec();
+    try {
+      const J = { ...locations.find(l => l.id === 'jester_home'), talkLines: dialogues.jester_home, talkName: 'W', look: looks.jester_home };
+      const who = () => own.get('dn').kids[0], blank = e => e.kids.some(k => k.className === 'blank-name');
+      NM._resetNames(); STM.state.current = 'game';
+      UI.startDialogue(J);
+      eq(who().text, 'Протокол беседы · ', 'шапка до знакомства'); assert(blank(who()), 'нет пустой строки в шапке');
+      assert(!NM.isNamed('jester'), 'записан до знакомства');
+      own.get('do').kids[0].onclick();
+      assert(NM.INTRO.jester.test(own.get('dt').text), 'вторая реплика — не знакомство');
+      eq(who().text, 'Протокол беседы · W', 'на реплике знакомства имя не записано'); assert(!blank(who()), 'пустая строка осталась');
+      UI.closeDialogue();
+      NM._resetNames(); STM.state.current = 'game';
+      UI.startDialogue(J); UI.closeDialogue();
+      assert(!NM.isNamed('jester'), 'ушёл после приветствия — записан');
+      STM.state.current = 'game';
+      UI.showLook(J);
+      const lt = own.get('lt');
+      eq(lt.text, '', 'в заголовке осмотра имя'); assert(blank(lt), 'в заголовке осмотра нет пустой строки');
+      UI.hideLook && UI.hideLook();
+    } finally { D.getElementById = get0; D.createElement = mk0; STM.state.current = 'game'; NM._resetNames(); }
+  });
+  test('имена: старое сохранение — в описи от руки чужое имя переписано на видимое сейчас', () => {
+    const OP = OPIS;
+    OP._resetOpis && OP._resetOpis();
+    OP.loadOpis({ v: [1], r: [{ id: 'tent', k: 'tent', name: 'Палатка Старца', d: 0, v: 1, x: [{ id: 'nocturnal', name: 'Равнина Лунного' }] }] });
+    NM._resetNames();
+    OP.opisRename((id, name) => { const l = locations.find(q => q.id === id); return l && name === l.name ? NM.nameOf(l) || name : name; });
+    const r0 = OP.saveOpis().r[0];
+    eq(r0.name, 'Палатка'); eq(r0.x[0].name, 'Равнина');
+    assert(/if \(!savedData\.names\) opisRename\(/.test(src('main.js')), 'перенос не вызван');
+    OP._resetOpis && OP._resetOpis();
   });
   NM._resetNames();
 }

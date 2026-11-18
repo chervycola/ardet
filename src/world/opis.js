@@ -116,6 +116,11 @@ export function opisResolve(locations) {
   }
 }
 export const saveOpis = () => JSON.parse(JSON.stringify(st));
+// переписать имена в строках от руки: fn(id, имя) → имя. Сохранения до имён по знакомству (18.11)
+// вписывали «Палатка Старца», «Равнина Лунного» — до знакомства там то, что видно сейчас
+export function opisRename(fn) {
+  for (const c of st.r) if (c) { c.name = fn(c.id, c.name); for (const e of c.x) e.name = fn(e.id, e.name); }
+}
 const int = (v, lo = 0) => (Number.isFinite(v) ? Math.max(lo, Math.floor(v)) : lo);
 const str = v => (typeof v === 'string' ? v.slice(0, 120) : '');
 export function loadOpis(d) {

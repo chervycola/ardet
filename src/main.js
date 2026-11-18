@@ -126,7 +126,7 @@ function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.r
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed, setRelook, setRevealFloor, gaze } from './world/potemkin.js';
-import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve } from './world/opis.js';
+import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve, opisRename } from './world/opis.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
@@ -269,6 +269,8 @@ if (savedData) {
   if (savedData.opis) { loadOpis(savedData.opis); opisResolve(locations); }   // «В описи не значится»: строки от руки и заходы по кольцам
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
+  // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
+  if (!savedData.names) opisRename((id, name) => { const l = locations.find(q => q.id === id); return l && name === l.name ? nameOf(l) || name : name; });
 }
 // одет в то, в чём ушёл (world/garments.js); ?cut= в адресе — на пробу, сохранённое не трогает
 if (!CUT_PINNED) player.cut = wardrobe.worn;
