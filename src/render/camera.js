@@ -10,16 +10,27 @@ export const camera = {
   targetY: 0,
   shakeT: 0,
   smoothing: 0.055,
+  // «Сел — кадр встал» (разбор KRZ, weave/KRZ_2026-11-21.md): сидящему кадр ставится вручную —
+  // камера за 2–3 с переезжает в точку и стоит, пока он сидит; встал — снова следит
+  held: null,
+  holdSmoothing: 0.025,
+  hold(worldX, worldY) { this.held = { x: worldX, y: worldY }; },
+  // встал — камера возвращается к фигуре так же плавно, как вставала в кадр (полторы секунды разгона)
+  ease: 0,
+  release() { if (this.held) this.ease = 90; this.held = null; },
 
   follow(worldX, worldY) {
-    this.targetX = worldX - scaler.vw / 2;
-    this.targetY = worldY - scaler.vh / 2;
+    const p = this.held || { x: worldX, y: worldY };
+    this.targetX = p.x - scaler.vw / 2;
+    this.targetY = p.y - scaler.vh / 2;
   },
 
   update() {
     // Smooth follow
-    this.x += (this.targetX - this.x) * this.smoothing;
-    this.y += (this.targetY - this.y) * this.smoothing;
+    const k = this.held ? this.holdSmoothing
+      : this.ease > 0 ? this.smoothing - (this.smoothing - this.holdSmoothing) * (this.ease-- / 90) : this.smoothing;
+    this.x += (this.targetX - this.x) * k;
+    this.y += (this.targetY - this.y) * k;
 
     // Screen shake
     if (this.shakeT > 0) {

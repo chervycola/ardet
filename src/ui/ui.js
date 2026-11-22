@@ -132,6 +132,10 @@ export function showMenu(loc) {
   const alt = loc.altNow ? loc.altNow() : null;
   altBtn.style.display = alt ? 'flex' : 'none';
   if (alt) altBtn.innerHTML = alt.label;
+  // сесть — своя строка меню, когда место это позволяет (сцена Театра Теней: world/stage.js)
+  const sitBtn = menuEl.querySelector('[data-a="sit"]');
+  const sit = loc.sitNow ? loc.sitNow() : null;
+  if (sitBtn) { sitBtn.style.display = sit ? 'flex' : 'none'; if (sit) sitBtn.innerHTML = sit.label; }
 
   // Position near last mouse position on desktop; mobile CSS handles centering.
   if (window.innerWidth > 768) {
@@ -161,6 +165,7 @@ export function menuActions(loc) {
   const acts = ['look'];
   if (hasUseAction(loc)) acts.push('use');
   if (loc.altNow && loc.altNow()) acts.push('alt');
+  if (loc.sitNow && loc.sitNow()) acts.push('sit');
   if (loc.npc) acts.push('talk');
   return acts;
 }
@@ -201,6 +206,10 @@ export function menuAction(action, direct = false) {
     case 'alt':
       hideMenu();
       events.emit('location.alt', loc);
+      break;
+    case 'sit':
+      hideMenu();
+      events.emit('location.sit', loc);
       break;
     case 'talk':
       if (loc.npc) {

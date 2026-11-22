@@ -4619,6 +4619,98 @@ setCtx(ctx);
   });
 }
 
+// ═══ СЦЕНА ТЕАТРА ТЕНЕЙ, шаг 1 (world/stage.js; weave/SCENE_STAGE_2026-11-22.md, «Дыхание») ═══
+{
+  const SG = await imp('world/stage.js');
+  const CAM = await imp('render/camera.js');
+  const RL = await imp('world/relook.js');
+  const LC = await imp('world/locations.js'), PH = await imp('world/physics.js');
+  const run = (n, free = true, noon = false) => { const ev = []; for (let i = 0; i < n; i++) { const e = SG.stepStage(SG.SEAT.x, SG.SEAT.y, free, noon); if (e) ev.push([i, e]); } return ev; };
+  const light = () => { const v = SG.stageView(false); return v ? v.light : 0; };
+  test('сцена: вдох — зал встаёт, задержка, выдох — оседает; после конца ничего нового', () => {
+    SG._resetStage();
+    eq(SG.sitStage(), true, 'первый приход не сыгран');
+    eq(SG.lenOf(1), 1800, 'первый приход не 30 с');
+    let ev = run(120);
+    eq(light(), 0, 'до вдоха светло');
+    ev = ev.concat(run(30));
+    assert(ev.some(([, e]) => e === 'inhale'), 'вдоха не было');
+    assert(light() > 0 && light() < 1, `на 150 кадрах не встаёт: ${light()}`);
+    run(750);
+    eq(light(), 1, 'на 900 кадрах зал не полон');
+    const ev2 = run(900);
+    assert(ev2.some(([, e]) => e === 'exhale'), 'выдоха не было');
+    eq(light(), 0, 'на 1800 кадрах зал не осел');
+    eq(SG.stage.live, false, 'сцена не кончилась');
+    const ev3 = run(1800);
+    eq(ev3.length, 0, 'после конца что-то случилось');
+    eq(light(), 0, 'на 3600 кадрах снова светло');
+  });
+  test('сцена: за бумагой и в красный полдень часы ждут; встал раньше — зал оседает быстро', () => {
+    SG._resetStage(); SG.sitStage(); run(600);
+    const c = SG.stage.clock;
+    run(300, false); eq(SG.stage.clock, c, 'за бумагой часы шли');
+    run(300, true, true); eq(SG.stage.clock, c, 'в полдень часы шли');
+    eq(SG.stageView(true).light, 0, 'в полдень фонарь поднят');
+    assert(light() > 0.5, 'зал не стоит');
+    SG.standStage();
+    assert(light() > 0, 'встал — зал пропал в один кадр');
+    run(16);
+    eq(light(), 0, 'встал — зал не осел за четверть секунды');
+  });
+  test('сцена: тот же приход — тёмный зал; отошёл дальше 420 точек — следующий приход короче, с седьмого 12 с', () => {
+    SG._resetStage(); SG.sitStage(); run(1900); SG.standStage();
+    eq(SG.sitStage(), false, 'сел снова в тот же приход — сцена с начала');
+    run(600); eq(light(), 0, 'тёмный зал светится');
+    SG.standStage();
+    SG.stepStage(SG.STAGE_C.x + 500, SG.STAGE_C.y, true, false);
+    eq(SG.sitStage(), true, 'новый приход не сыгран');
+    eq(SG.stage.n, 2, 'номер прихода');
+    assert(SG.lenOf(2) < SG.lenOf(1) && SG.lenOf(2) === 1530, `второй не короче: ${SG.lenOf(2)}`);
+    for (let n = 1; n < 12; n++) assert(SG.lenOf(n + 1) <= SG.lenOf(n), 'приход длиннее прежнего');
+    eq(SG.lenOf(7), 720, 'седьмой не 12 с'); eq(SG.lenOf(30), 720, 'пол не держится');
+    SG.loadStage(SG.saveStage());
+    eq(SG.stage.n, 2, 'номер прихода не сохранился'); eq(SG.stage.seated, false, 'из сохранения — сидит');
+  });
+  test('сцена: сиденье — не в твёрдом теле театра; севший снова не гасит идущий приход; полдень гасит зал по силе', () => {
+    for (const k of ['x', 'y']) assert(Number.isFinite(SG.SEAT[k]) && Number.isFinite(SG.STAGE_C[k]), 'сиденье без координат');
+    const th = LC.locations.find(l => l.id === 'theater');
+    SG.placeStage(th);
+    eq(PH.isBlocked(SG.SEAT.x - 6, SG.SEAT.y - 23, LC.locations), false, 'сиденье в твёрдом: не встать');
+    SG._resetStage(); SG.sitStage(); run(700);
+    eq(SG.sitStage(), true, 'севший снова погасил приход');
+    assert(light() > 0.9, 'зал погас от повторной посадки');
+    assert(Math.abs(SG.stageView(0.5).light - light() * 0.5) < 1e-9, 'полдень гасит не по силе');
+    eq(SG.stageView(1).light, 0, 'в полный полдень зал виден');
+    SG.placeStage({ x: 480, y: 200, w: 80, h: 60 });
+  });
+  test('сцена: сесть — только после прочитанной «СЦЕНЫ»', () => {
+    RL._resetRelook();
+    eq(SG.stageAlt(), null, 'сесть можно, не прочитав');
+    RL.noteUse('theater');
+    const a = SG.stageAlt();
+    assert(a && a.key === 'stage_sit' && /СЕСТЬ/.test(a.label), 'прочитал — сесть нельзя');
+    RL._resetRelook();
+  });
+  test('«Сел — кадр встал»: камера переезжает в поставленный кадр за 2–3 с и стоит; встал — снова следит', () => {
+    const c = CAM.camera; c.release(); c.x = 0; c.y = 0;
+    c.hold(1000, 800);
+    c.follow(10, 10);
+    const tx = c.targetX, ty = c.targetY;
+    let at1 = null;
+    for (let i = 0; i < 180; i++) { c.follow(10, 10); c.update(); if (i === 59) at1 = Math.hypot(c.x - tx, c.y - ty); }
+    const d0 = Math.hypot(tx, ty);
+    assert(at1 > d0 * 0.15, `за секунду кадр уже встал — рывок: осталось ${at1.toFixed(1)} из ${d0.toFixed(1)}`);
+    assert(Math.hypot(c.x - tx, c.y - ty) < d0 * 0.02, 'за 3 с кадр не встал');
+    c.release(); c.follow(10, 10);
+    assert(c.targetX !== tx && c.targetY !== ty, 'встал — камера не следит');
+    const x0 = c.x; c.update();
+    assert(Math.abs(c.x - x0) < Math.abs(c.targetX - x0) * c.holdSmoothing * 1.05, 'встал — кадр рванул к фигуре');
+    for (let i = 0; i < 400; i++) { c.follow(10, 10); c.update(); }
+    assert(Math.abs(c.x - c.targetX) < 1, 'встал — камера не вернулась к фигуре');
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

@@ -37,7 +37,9 @@ function anchor(loc) {
   return { x: loc.x + loc.w / 2, y: loc.y + loc.h };
 }
 
-export function update(player, locations, frozen = false) {
+// away — вещь, к которой странник сидит спиной (перед сценой театра, лицом к нам, world/stage.js):
+// неподвижного взгляда на неё нет — подделка не проявляется. Решение помощника 22.11, ждёт слова автора
+export function update(player, locations, frozen = false, away = null) {
   if (!fakes) fakes = locations.filter(l => seamOf(l));
   stillFrames = (player.moving || frozen) ? 0 : stillFrames + 1;
   const gt = stillFrames > STILL_DELAY ? 1 : 0;
@@ -46,7 +48,7 @@ export function update(player, locations, frozen = false) {
   for (const loc of fakes) {
     const a = anchor(loc);
     const near = Math.hypot(a.x - px, a.y - py) <= RADIUS;
-    const target = near && stillFrames > STILL_DELAY ? 1 : 0;
+    const target = near && stillFrames > STILL_DELAY && loc.id !== away ? 1 : 0;
     const k = reveal.get(loc.id) || 0;
     const nk = k < target ? Math.min(target, k + RISE) : k > target ? Math.max(target, k - FALL) : k;
     if (nk > 0) reveal.set(loc.id, nk); else reveal.delete(loc.id);
