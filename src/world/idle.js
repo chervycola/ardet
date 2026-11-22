@@ -5,6 +5,7 @@ import { t } from '../core/time.js';
 import { scaler } from '../render/scaler.js';
 import { playDistantSound } from '../audio/audio.js';
 import { isNamed } from './names.js';
+import { tremble, ghostShift, flicker, ghostSeed, GHOST_A } from '../render/ghost.js';
 
 const MSGS = [
   'вобла не горит', 'бездна моргнула первой', 'amor fati',
@@ -109,12 +110,16 @@ export function draw(ctx) {
   const a = msgLife > 200 ? ((total - msgLife) / 40) : msgLife / 200;
   // под ногами странника, а не на крыше за ним
   const y_ = vh / 2 + 40 + ((total - msgLife) * 0.06);
-  ctx.globalAlpha = a * 0.45;
   ctx.fillStyle = '#e8dcc8';
   ctx.font = '8px "Press Start 2P","VT323",monospace';
   ctx.textAlign = 'center';
   const lines = currentMsg.split('\n');
-  for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], vw / 2, y_ + i * 10);
+  // строка без носителя — призрачная (render/ghost.js): бледный двойник позади, сама подрагивает
+  const sd = ghostSeed(currentMsg), [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd);
+  ctx.globalAlpha = a * 0.45 * GHOST_A;
+  for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], vw / 2 + gx, y_ + i * 10 + gy);
+  ctx.globalAlpha = a * 0.45 * flicker(sd);
+  for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], vw / 2 + jx, y_ + i * 10 + jy);
   ctx.textAlign = 'left';
   ctx.globalAlpha = 1;
   msgLife--;

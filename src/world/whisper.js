@@ -12,6 +12,7 @@
 import { t } from '../core/time.js';
 import { scaler } from '../render/scaler.js';
 import { redNoon } from './redNoon.js';
+import { tremble, ghostShift, flicker, ghostSeed, GHOST_A } from '../render/ghost.js';
 
 export const WHISPERS = {
   church: '...lasciate ogni speranza...',
@@ -217,8 +218,14 @@ export function penDraw(ctx, P, text, cx, sy, a, wrote, fade, nib = true) {
     P.sg.drawImage(P.full, c.x * P.s, c.y * P.s, P.s, P.s, c.x * P.s, c.y * P.s, P.s, P.s);
   }
   const s = P.s;
-  const x0 = Math.round((cx - P.wl / 2) * s) / s, y0 = Math.round((sy - P.base) * s) / s;
-  ctx.globalAlpha = Math.min(1, DRY_A * fade);       // речь гуще шёпота (fade > 1) — альфа сверх единицы холст бы пропустил
+  // слова без носителя — призрачные (render/ghost.js): позади бледный двойник, оттиск подрагивает
+  if (P.seed === undefined) P.seed = ghostSeed(text);
+  const [jx, jy] = tremble(P.seed), [gx, gy] = ghostShift(P.seed);
+  const x0 = Math.round((cx - P.wl / 2) * s) / s + jx, y0 = Math.round((sy - P.base) * s) / s + jy;
+  const dry = Math.min(1, DRY_A * fade);              // речь гуще шёпота (fade > 1) — альфа сверх единицы холст бы пропустил
+  ctx.globalAlpha = dry * GHOST_A;
+  ctx.drawImage(P.sheet, x0 - jx + gx, y0 - jy + gy, P.wl, P.sheet.height / s);
+  ctx.globalAlpha = dry * flicker(P.seed);
   ctx.drawImage(P.sheet, x0, y0, P.wl, P.sheet.height / s);
   for (let i = P.next - 1; i >= 0 && a - P.times[i] < WET; i--) {
     const c = P.cells[i];

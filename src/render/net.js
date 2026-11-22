@@ -10,6 +10,7 @@
 import { drawPlayer } from '../sprites/player.js';
 import { setCtx } from './context.js';
 import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
+import { ghostSeed } from './ghost.js';
 import { net, othersIn, notesIn } from '../net/net.js';
 import { standsIn, soles, keptOf, PRINTS } from '../world/stands.js';
 
@@ -115,7 +116,8 @@ export function drawVoices(ctx, layer, me) {
   for (const v of net.voices) {
     const o = v.who === 'me' ? { x: me.x + 6, y: me.y + 23, layer } : net.others.get(v.who);
     if (!o || o.layer !== layer) continue;
-    if (!v.preps) v.preps = wrap(v.text).map(l => ({ l, P: preparePen(ctx, l) }));
+    // одно зерно призрака на всю реплику (render/ghost.js): строки одной фразы дрожат и двоятся вместе
+    if (!v.preps) { const sd = ghostSeed(v.text); v.preps = wrap(v.text).map(l => { const P = preparePen(ctx, l); P.seed = sd; return { l, P }; }); }
     const total = v.preps.reduce((s, q) => s + q.P.write, 0), a = (net.t - v.t0) * SPEED;
     if (a >= total + PEN_HOLD + PEN_FADE) { v.done = true; continue; }
     const fade = (a < total + PEN_HOLD ? 1 : 1 - (a - total - PEN_HOLD) / PEN_FADE) * READ;

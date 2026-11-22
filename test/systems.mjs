@@ -4546,6 +4546,45 @@ setCtx(ctx);
   NM._resetNames();
 }
 
+// ═══ ПРИЗРАЧНЫЙ ТЕКСТ (render/ghost.js; слово автора 22.11) ═══
+{
+  const GH = await imp('render/ghost.js');
+  const PR = await imp('core/prefs.js');
+  const TT = await imp('core/time.js');
+  test('призрачный текст: дрожь — на точку и не всегда, двойник рядом и плывёт; «меньше движения» — без дрожи', () => {
+    try {
+    PR.setPref('motion', 'как есть');
+    const sd = GH.ghostSeed('свет без лампы');
+    let prev = null;
+    eq(sd, GH.ghostSeed('свет без лампы'), 'зерно строки не постоянно');
+    let still = 0, moved = 0;
+    const shifts = new Set();
+    for (let i = 0; i < 900; i++) {
+      const [x, y] = GH.tremble(sd);
+      assert(Math.abs(x) <= 1 && Math.abs(y) <= 1 && !(x && y), `дрожь больше точки: ${x},${y}`);
+      if (prev !== null && TT.t % 3 !== 0) eq(x + ',' + y, prev, 'дрожь чаще раза в три шага — мелькание');
+      prev = x + ',' + y;
+      if (x || y) moved++; else still++;
+      const [gx, gy] = GH.ghostShift(sd);
+      assert(gx >= 0 && gx <= 4 && gy >= -3 && gy <= 1 && (gx || gy), `двойник не рядом: ${gx},${gy}`);
+      shifts.add(gx + ',' + gy);
+      const f = GH.flicker(sd);
+      assert(f >= 0.84 && f <= 1, `яркость проваливается: ${f}`);
+      TT.tick();
+    }
+    assert(moved > 150 && still > moved, `дрожь не та: на месте ${still}, сдвинута ${moved}`);
+    assert(shifts.size >= 3, 'двойник не плывёт');
+    PR.setPref('motion', 'меньше');
+    for (let i = 0; i < 60; i++) {
+      eq(GH.tremble(sd).join(), '0,0', 'меньше движения — а дрожит');
+      eq(GH.ghostShift(sd).join(), '2,-1', 'меньше движения — а двойник плывёт');
+      eq(GH.flicker(sd), 1, 'меньше движения — а мерцает');
+      TT.tick();
+    }
+    } finally { PR.setPref('motion', 'как есть'); }
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');
