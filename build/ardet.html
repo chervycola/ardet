@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 087 018. из них видимых: 1 419. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 087 018. из них видимых: 1 419. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 088 726. из них видимых: 1 419. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 088 726. из них видимых: 1 419. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -694,6 +694,16 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   font: 500 9px Montserrat, 'PT Sans', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
   color: rgba(58,48,38,0.85);
 }
+/* своя печать вещи — крупно, наискось, поверх текста осмотра: дверь дома, «выхода нет» (ui.js) */
+#look-stamp.big {
+  position: absolute; left: 50%; top: 56%; margin: 0; padding: 9px 20px 6px; z-index: 2;
+  transform: translate(-50%, -50%) rotate(-9deg); transform-origin: center;
+  border: 3px solid rgba(194,59,43,0.78); outline: 1px solid rgba(194,59,43,0.5); outline-offset: 3px;
+  font: 700 clamp(22px, 7.2vw, 38px) Montserrat, 'PT Sans', sans-serif; letter-spacing: 0.16em;
+  white-space: nowrap; line-height: 1.1; color: rgba(194,59,43,0.82);
+  mix-blend-mode: multiply; pointer-events: none;
+}
+body.noon #look-stamp.big { border-color: var(--ink); outline-color: var(--ink); color: var(--ink); }
 #li { color: rgba(58,48,38,0.7); }
 /* «В описи не значится»: строка от руки под штампом (world/opis.js) — не пункт меню */
 #look-opis { display: none; margin: -4px 0 10px; font: italic 15px/1.35 var(--font-book); color: rgba(58,48,38,0.8); }
@@ -877,7 +887,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='6d63e6c · 2026-11-22';console.log('[оттиск]', '6d63e6c · 2026-11-22');
+<script>window.ARDET_BUILD='3c2614f · 2026-11-22';console.log('[оттиск]', '3c2614f · 2026-11-22');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -6528,7 +6538,7 @@ System.register("world/arteries", ["world/disc", "world/routes", "world/relief"]
 });
 System.register("world/surface", ["world/disc", "world/arteries"], function (exports_28, context_28) {
     "use strict";
-    var disc_js_7, arteries_js_1, SURF, OUTER, MUD_IDS, mudSrc;
+    var disc_js_7, arteries_js_1, WALK, RUN, SURF, OUTER, MUD_IDS, mudSrc;
     var __moduleName = context_28 && context_28.id;
     // сектор диска — как у земли: чья кромка городка ближе
     function sector(x, y) {
@@ -6574,16 +6584,20 @@ System.register("world/surface", ["world/disc", "world/arteries"], function (exp
             }
         ],
         execute: function () {
+            // Ход вязкий (слово автора 22.11: «чуть медленнее и вязкая»): шаг набирается
+            // и гаснет не сразу — на земле и тропе разгон вдвое дольше прежнего, остановка мягче.
+            // WALK — обычный шаг в точках за тик, RUN — бег (Shift); доля поверхности — поле max.
+            exports_28("WALK", WALK = 2.1), exports_28("RUN", RUN = 4);
             exports_28("SURF", SURF = {
-                ground: { name: 'земля', accel: 0.30, decel: 0.40, max: 1.00, print: 'soft' },
-                path: { name: 'тропа', accel: 0.32, decel: 0.44, max: 1.08, print: 'soft' },
+                ground: { name: 'земля', accel: 0.13, decel: 0.22, max: 1.00, print: 'soft' },
+                path: { name: 'тропа', accel: 0.15, decel: 0.26, max: 1.08, print: 'soft' },
                 snow: { name: 'снег', accel: 0.12, decel: 0.09, max: 0.90, print: 'snow' },
                 ice: { name: 'лёд', accel: 0.045, decel: 0.03, max: 1.05, print: null },
                 sand: { name: 'зыбучий песок', accel: 0.10, decel: 0.50, max: 0.60, print: 'deep' },
                 mud: { name: 'грязь', accel: 0.14, decel: 0.55, max: 0.72, print: 'mud' },
                 swamp: { name: 'болото', accel: 0.09, decel: 0.60, max: 0.62, print: null },
-                rubble: { name: 'мусор', accel: 0.22, decel: 0.45, max: 0.82, print: null },
-                ash: { name: 'гарь', accel: 0.26, decel: 0.40, max: 0.92, print: 'ash' },
+                rubble: { name: 'мусор', accel: 0.11, decel: 0.28, max: 0.82, print: null },
+                ash: { name: 'гарь', accel: 0.12, decel: 0.22, max: 0.92, print: 'ash' },
                 water: { name: 'вброд', accel: 0.11, decel: 0.62, max: 0.55, print: null },
                 moss: { name: 'мох', accel: 0.20, decel: 0.55, max: 0.85, print: null }, // ход мха: мягко, нога вязнет и встаёт сразу
             });
@@ -33945,7 +33959,7 @@ System.register("content/clauses", [], function (exports_79, context_79) {
 });
 System.register("render/weather", ["render/scaler", "core/time", "render/draw", "world/wind"], function (exports_80, context_80) {
     "use strict";
-    var scaler_js_13, time_js_13, draw_js_2, wind_js_12, STATE, COOLDOWN, RAMP, weather, forced, MAX_RAIN, MAX_SAND, MAX_PUDDLES, POLL, clockedAt;
+    var scaler_js_13, time_js_13, draw_js_2, wind_js_12, STATE, COOLDOWN, RAMP, weather, forced, MAX_RAIN, RAIN_SLOW, MAX_SAND, MAX_PUDDLES, POLL, clockedAt;
     var __moduleName = context_80 && context_80.id;
     // Zone → preferred weather. Rain gets longer durations (2-4 min) so it can
     // ease in drop-by-drop and taper out. Sandstorm is punchier (25s-60s).
@@ -34096,7 +34110,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             // Expected drops-per-frame: tiny at low I, saturates near full I.
             // At I=0.05 → ~0.0125/frame (≈1 drop every 1.3s).
             // At I=1.0 → ~5/frame (heavy).
-            const expected = I * I * 5;
+            const expected = I * I * 5 * RAIN_SLOW;
             const whole = Math.floor(expected);
             const frac = expected - whole;
             const count = whole + (Math.random() < frac ? 1 : 0);
@@ -34106,16 +34120,16 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
                 weather.rainParts.push({
                     x: -20 + Math.random() * (vw + 40),
                     y: -8 - Math.random() * 20,
-                    vy: 4 + Math.random() * 3,
+                    vy: (4 + Math.random() * 3) * RAIN_SLOW,
                     life: vh + 40,
-                    len: 3 + Math.floor(Math.random() * 3),
+                    len: 2 + Math.floor(Math.random() * 2),
                 });
             }
         }
         for (let i = weather.rainParts.length - 1; i >= 0; i--) {
             const p = weather.rainParts[i];
             p.y += p.vy;
-            p.x += weather.windX * 1.6;
+            p.x += weather.windX * 1.6 * RAIN_SLOW;
             p.life -= p.vy;
             if (p.y > vh + 20 || p.life <= 0) {
                 // Occasional puddle
@@ -34376,6 +34390,9 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             }
             catch (e) { }
             MAX_RAIN = 90;
+            // дождь идёт замедленно (слово автора 22.11): капля падает втрое медленнее и видна каплей, а не штрихом;
+            // капель в кадре столько же — их и рождается втрое реже
+            RAIN_SLOW = 0.34;
             MAX_SAND = 140;
             MAX_PUDDLES = 30;
             // ── что код знает о дожде наперёд (world/clauses.js, «Последний пункт»: земля на ходу
@@ -50759,6 +50776,8 @@ System.register("ui/ui", ["core/state", "world/potemkin", "world/redNoon", "core
         if (stamp) {
             stamp.textContent = blind(lookStamp);
             stamp.style.display = lookStamp ? 'inline-block' : 'none';
+            // своя печать вещи (дверь дома — «выхода нет») ставится крупно, поперёк текста осмотра (слово автора 22.11)
+            stamp.className = lookLoc && lookLoc.stamp ? 'big' : '';
         }
         // где текст говорит «рука знакомая», там и стоит рука странника (нить П1, ui/signature.js)
         let sign = document.getElementById('look-sign');
@@ -62326,10 +62345,10 @@ System.register("render/puddles", ["core/time", "render/draw", "render/particles
                 ripples.splice(i, 1);
         if (raining && weather.intensity > 0.1) {
             forVisible(cam.x, cam.y, cam.vw, cam.vh, locations, (p, s) => {
-                if (Math.random() >= weather.intensity * 0.035)
-                    return;
+                if (Math.random() >= weather.intensity * 0.014)
+                    return; // дождь идёт замедленно (render/weather.js RAIN_SLOW): капли реже, круг расходится дольше
                 const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
-                ring(p.x + Math.cos(a) * r * (s.rx - 1), p.y + Math.sin(a) * r * Math.max(0, s.ry - 0.5), 2.5, 26);
+                ring(p.x + Math.cos(a) * r * (s.rx - 1), p.y + Math.sin(a) * r * Math.max(0, s.ry - 0.5), 2.5, 64);
             });
         }
         // шаги — по пройденному пути
@@ -72719,14 +72738,14 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             player.auto = false;
             player.walkTo = null;
             if (hd > 8) {
-                const spd = 2.4 * S.max;
+                const spd = surface_js_3.WALK * S.max;
                 dvx = hdx / hd * spd;
                 dvy = hdy / hd * spd;
                 steering = true;
             }
         }
         else if (move.active) {
-            const spd = (input_js_2.input.isDown('sprint') ? 4 : 2.4) * S.max;
+            const spd = (input_js_2.input.isDown('sprint') ? surface_js_3.RUN : surface_js_3.WALK) * S.max;
             dvx = move.x * spd;
             dvy = move.y * spd;
             steering = true;
@@ -72764,7 +72783,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             else {
                 // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже;
                 // на повороте пути не тормозим
-                const spd = last ? Math.min(2.4 * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15) : 2.4 * S.max;
+                const spd = last ? Math.min(surface_js_3.WALK * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15) : surface_js_3.WALK * S.max;
                 dvx = dx / dist * spd;
                 dvy = dy / dist * spd;
                 steering = true;
@@ -72802,7 +72821,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
             // стоит в чужой (или своей) вмятине — тянет, как стоящего спиной к краю; покой прежний (world/stands.js)
             const back = !steering && stands_js_4.standBack(player.x + 6, player.y + 23);
-            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_2.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), 2.4 * S.max, dvx, dvy, back || player.head || player.face, brainrot_js_1.inLoop());
+            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_2.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), surface_js_3.WALK * S.max, dvx, dvy, back || player.head || player.face, brainrot_js_1.inLoop());
             // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
             // иначе сидящий у картинки позёмки съезжал и падал)
             if (!steering) {

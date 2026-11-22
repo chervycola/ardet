@@ -358,6 +358,8 @@ function renderLookPage() {
   if (stamp) {
     stamp.textContent = blind(lookStamp);
     stamp.style.display = lookStamp ? 'inline-block' : 'none';
+    // своя печать вещи (дверь дома — «выхода нет») ставится крупно, поперёк текста осмотра (слово автора 22.11)
+    stamp.className = lookLoc && lookLoc.stamp ? 'big' : '';
   }
   // где текст говорит «рука знакомая», там и стоит рука странника (нить П1, ui/signature.js)
   let sign = document.getElementById('look-sign');

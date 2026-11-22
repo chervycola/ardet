@@ -64,6 +64,9 @@ try {
 } catch (e) {}
 
 const MAX_RAIN = 90;
+// дождь идёт замедленно (слово автора 22.11): капля падает втрое медленнее и видна каплей, а не штрихом;
+// капель в кадре столько же — их и рождается втрое реже
+const RAIN_SLOW = 0.34;
 const MAX_SAND = 140;
 const MAX_PUDDLES = 30;
 
@@ -215,7 +218,7 @@ function updateRain() {
     // Expected drops-per-frame: tiny at low I, saturates near full I.
     // At I=0.05 → ~0.0125/frame (≈1 drop every 1.3s).
     // At I=1.0 → ~5/frame (heavy).
-    const expected = I * I * 5;
+    const expected = I * I * 5 * RAIN_SLOW;
     const whole = Math.floor(expected);
     const frac = expected - whole;
     const count = whole + (Math.random() < frac ? 1 : 0);
@@ -224,16 +227,16 @@ function updateRain() {
       weather.rainParts.push({
         x: -20 + Math.random() * (vw + 40),
         y: -8 - Math.random() * 20,
-        vy: 4 + Math.random() * 3,
+        vy: (4 + Math.random() * 3) * RAIN_SLOW,
         life: vh + 40,
-        len: 3 + Math.floor(Math.random() * 3),
+        len: 2 + Math.floor(Math.random() * 2),
       });
     }
   }
   for (let i = weather.rainParts.length - 1; i >= 0; i--) {
     const p = weather.rainParts[i];
     p.y += p.vy;
-    p.x += weather.windX * 1.6;
+    p.x += weather.windX * 1.6 * RAIN_SLOW;
     p.life -= p.vy;
     if (p.y > vh + 20 || p.life <= 0) {
       // Occasional puddle

@@ -15,7 +15,7 @@ import { stepGait, shiftGait } from './world/gait.js';
 import { reducedMotion } from './core/prefs.js';
 import { updateGeiger } from './audio/geiger.js';
 import { wind } from './world/wind.js';
-import { SURF, surfaceAt } from './world/surface.js';
+import { SURF, WALK, RUN, surfaceAt } from './world/surface.js';
 import { drawGrass, stepGrass } from './render/grass.js';
 import { initBunting, drawBunting, buntingPasses } from './render/bunting.js';
 import { initMoonThread, drawMoonThread, moonThreadDepth, touchMoonThread } from './render/moonthread.js';
@@ -1683,9 +1683,9 @@ function updateGame() {
     const pos = input.screenToWorld(held.x, held.y, camera);
     const hdx = pos.x - (player.x + 6), hdy = pos.y - (player.y + 10), hd = Math.hypot(hdx, hdy);
     player.auto = false; player.walkTo = null;
-    if (hd > 8) { const spd = 2.4 * S.max; dvx = hdx / hd * spd; dvy = hdy / hd * spd; steering = true; }
+    if (hd > 8) { const spd = WALK * S.max; dvx = hdx / hd * spd; dvy = hdy / hd * spd; steering = true; }
   } else if (move.active) {
-    const spd = (input.isDown('sprint') ? 4 : 2.4) * S.max;
+    const spd = (input.isDown('sprint') ? RUN : WALK) * S.max;
     dvx = move.x * spd; dvy = move.y * spd; steering = true;
     player.auto = false; player.walkTo = null;
   } else if (player.auto) {
@@ -1713,7 +1713,7 @@ function updateGame() {
     } else {
       // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже;
       // на повороте пути не тормозим
-      const spd = last ? Math.min(2.4 * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15) : 2.4 * S.max;
+      const spd = last ? Math.min(WALK * S.max, Math.sqrt(2 * S.decel * Math.max(0, dist - 1)) + 0.15) : WALK * S.max;
       dvx = dx / dist * spd; dvy = dy / dist * spd; steering = true;
     }
   }
@@ -1738,7 +1738,7 @@ function updateGame() {
     const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
     // стоит в чужой (или своей) вмятине — тянет, как стоящего спиной к краю; покой прежний (world/stands.js)
     const back = !steering && standBack(player.x + 6, player.y + 23);
-    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), 2.4 * S.max, dvx, dvy, back || player.head || player.face, inBrainrotLoop());
+    let [pdx, pdy] = arriving ? [0, 0] : pullVector(player.x + 6, player.y + 23, brainrotLevel(), WALK * S.max, dvx, dvy, back || player.head || player.face, inBrainrotLoop());
     // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
     // иначе сидящий у картинки позёмки съезжал и падал)
     if (!steering) { const c = Math.max(0, 1 - 2 * calmOf()); pdx *= c; pdy *= c; }

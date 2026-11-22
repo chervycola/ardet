@@ -95,9 +95,9 @@ export function stepPuddles(player, surfName, weather, cam, locations) {
   for (let i = ripples.length - 1; i >= 0; i--) if (++ripples[i].age > ripples[i].life) ripples.splice(i, 1);
   if (raining && weather.intensity > 0.1) {
     forVisible(cam.x, cam.y, cam.vw, cam.vh, locations, (p, s) => {
-      if (Math.random() >= weather.intensity * 0.035) return;
+      if (Math.random() >= weather.intensity * 0.014) return;   // дождь идёт замедленно (render/weather.js RAIN_SLOW): капли реже, круг расходится дольше
       const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
-      ring(p.x + Math.cos(a) * r * (s.rx - 1), p.y + Math.sin(a) * r * Math.max(0, s.ry - 0.5), 2.5, 26);
+      ring(p.x + Math.cos(a) * r * (s.rx - 1), p.y + Math.sin(a) * r * Math.max(0, s.ry - 0.5), 2.5, 64);
     });
   }
   // шаги — по пройденному пути
