@@ -4,6 +4,7 @@
 import { t } from '../core/time.js';
 import { scaler } from '../render/scaler.js';
 import { playDistantSound } from '../audio/audio.js';
+import { isNamed } from './names.js';
 
 const MSGS = [
   'вобла не горит', 'бездна моргнула первой', 'amor fati',
@@ -38,6 +39,13 @@ const MSGS = [
   'запись продолжается', 'три грамма меди', 'свет без лампы',
   'у стихии нет меморандумов',
 ];
+// имена по знакомству (world/names.js, слово автора 18.11): строка, что называет фигуру,
+// до знакомства идёт без имени — [чьё имя, как сказано до знакомства]
+const ANON = {
+  'архивариус ставит галочку': ['elder', 'кто-то ставит галочку'],
+  'архивариус не звал': ['elder', 'никто не звал'],
+};
+export const _underfootLine = m => (Object.prototype.hasOwnProperty.call(ANON, m) && !isNamed(ANON[m][0]) ? ANON[m][1] : m);
 
 // словарь ленты: под ногами — только там, где лента есть (кольцо «сейчас», огонь и пустошь
 // за ним); в городке, древних кольцах, доме и изнанке его нет — тихое место молчит своим
@@ -85,7 +93,7 @@ export function update(isMoving, lentaNear = false) {
 
   if (idleTimer === 900) {
     const pool = lentaNear ? MSGS : QUIET_MSGS;
-    currentMsg = pool[Math.floor(Math.random() * pool.length)];
+    currentMsg = _underfootLine(pool[Math.floor(Math.random() * pool.length)]);
     msgLife = 240;
   }
 

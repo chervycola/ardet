@@ -3232,8 +3232,8 @@ setCtx(ctx);
     assert(/укрытие/.test(TX.UNDER_TEXT.u_isle_inventory.look) && /ВИД НА МОРЕ/.test(TX.UNDER_TEXT.u_isle_loungers.look), 'опись и шезлонги не по замыслу');
   });
 
-  test('изнанка в описи: витков семь (Sol: «Витков семь, все в описи»), U8 — отвод от бункера', () => {
-    eq(WW.UNDERSIDE.filter(u => !u.branch).length, 7, 'витков не семь — строка Sol разошлась с описью');
+  test('изнанка в описи: витков семь, U8 — отвод от бункера', () => {
+    eq(WW.UNDERSIDE.filter(u => !u.branch).length, 7, 'витков не семь — опись изнанки разошлась');
     assert(WW.UNDERSIDE.find(u => u.id === 'U8').branch, 'U8 записан витком');
   });
 
