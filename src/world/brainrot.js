@@ -14,6 +14,7 @@ import { edgeDepth, edgeState } from './edges.js';
 import { CORE } from './disc.js';
 import { layers } from '../render/layers.js';
 import * as feedPanels from '../render/feedPanels.js';
+import { digitalText } from '../render/digital.js';
 
 export const FALL_AT = 0.97;   // падение — только у дальнего края пустыни
 
@@ -296,7 +297,7 @@ function drawFall(ctx, kind, f) {
     ctx.fillStyle = pct > 0 ? '#C23B2B' : '#3A3026';
     ctx.font = '6px "Press Start 2P","VT323",monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(pct + '%', vw / 2, 22);
+    digitalText(ctx, pct + '%', vw / 2, 22, 5, 6);                  // экран телефона — цифровая дрожь (render/digital.js)
     if (a > 0.7) reflection(ctx, vw / 2 | 0, vh / 2 + 10 | 0, Math.min(0.6, (a - 0.7) * 2));   // отражение странника — в надетом
     ctx.textAlign = 'left';
   } else if (kind === 'lake') {
@@ -329,7 +330,7 @@ function drawFall(ctx, kind, f) {
       ctx.fillStyle = '#E8DCC3'; ctx.fillRect(x, y, w, h);
       ctx.fillStyle = i % 4 ? '#3A3026' : '#C23B2B'; ctx.fillRect(x, y, w, 6);
       ctx.fillStyle = '#E8DCC3'; ctx.fillText('✕', x + w - 7, y + 5);
-      ctx.fillStyle = '#3A3026'; ctx.fillText(POPUPS[i % POPUPS.length], x + 3, y + 14);
+      ctx.fillStyle = '#3A3026'; digitalText(ctx, POPUPS[i % POPUPS.length], x + 3, y + 14, i, 6);
     }
   } else {
     ctx.globalAlpha = 0.88; ctx.fillStyle = NIGHT; ctx.fillRect(0, 0, vw, vh);
@@ -347,7 +348,7 @@ function drawFall(ctx, kind, f) {
     ctx.fillStyle = '#C23B2B';
     ctx.font = '10px "Press Start 2P","VT323",monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('вы упали в брейнрот', vw / 2, vh / 2);
+    digitalText(ctx, 'вы упали в брейнрот', vw / 2, vh / 2, 11, 10);
     ctx.textAlign = 'left';
   }
   ctx.globalAlpha = 1;

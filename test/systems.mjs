@@ -4585,6 +4585,40 @@ setCtx(ctx);
   });
 }
 
+// ═══ ЦИФРОВАЯ ДРОЖЬ (render/digital.js; слово автора 22.11 — разделить цифровое и призрачное) ═══
+{
+  const DG = await imp('render/digital.js');
+  const PR = await imp('core/prefs.js');
+  const TT = await imp('core/time.js');
+  const IDL = await imp('world/idle.js');
+  test('цифровая дрожь: почти всегда ровно, сбой короткий и редкий, без двойника; «меньше движения» — без сбоев', () => {
+    try {
+      PR.setPref('motion', 'как есть');
+      const kinds = {}; let runs = 0, prevStill = true, longest = 0, cur = 0;
+      for (let i = 0; i < 6000; i++) {
+        const st = DG.digitalState(42, 12);
+        kinds[st.kind] = (kinds[st.kind] || 0) + 1;
+        const still = st.kind === 'still';
+        if (!still && prevStill) runs++;
+        cur = still ? 0 : cur + 1; longest = Math.max(longest, cur);
+        if (st.kind === 'jump' || st.kind === 'tear') assert(Math.abs(st.dx) >= 2 && Math.abs(st.dx) <= 4, `скачок не тот: ${st.dx}`);
+        if (st.kind === 'swap') assert(st.at >= 0 && st.at < 12, `подмена вне строки: ${st.at}`);
+        prevStill = still; TT.tick();
+      }
+      const share = 1 - kinds.still / 6000;
+      assert(share > 0.02 && share < 0.12, `сбоит не в меру: ${(share * 100).toFixed(1)}%`);
+      assert(runs >= 10 && longest <= 10, `сбои не те: ${runs} раз, самый длинный ${longest} шагов`);
+      for (const k of ['jump', 'tear', 'swap']) assert(kinds[k] > 0, 'нет вида сбоя: ' + k);
+      const calls = []; const c = { fillText: (s, x, y) => calls.push([s, x, y]) };
+      DG.digitalText(c, 'скибиди', 100, 50, 1, 8);
+      assert(calls.length <= 2, 'цифровой строке нарисован двойник');
+      assert(IDL.isLentaLine('скибиди') && IDL.isLentaLine('опись закрыта · aura 0') && !IDL.isLentaLine('свет без лампы'), 'слово ленты не узнаётся');
+      PR.setPref('motion', 'меньше');
+      for (let i = 0; i < 600; i++) { eq(DG.digitalState(42, 12).kind, 'still', 'меньше движения — а сбоит'); TT.tick(); }
+    } finally { PR.setPref('motion', 'как есть'); }
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

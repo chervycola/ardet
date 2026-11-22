@@ -10,6 +10,7 @@ import { X } from '../render/context.js';
 import { scaler } from '../render/scaler.js';
 import { reducedMotion } from '../core/prefs.js';
 import { TOWN, RINGS_D, FIRE_W, EDGE_BAND, WORLD_W, WORLD_H, warpedDist } from './disc.js';
+import { digitalText } from '../render/digital.js';
 
 const OUTER = RINGS_D + FIRE_W;   // 3300 — где кончается огонь
 
@@ -112,6 +113,6 @@ export function drawHud(ctx) {
   if (charge < 0.3 && (reducedMotion() || (t / 20 | 0) % 2 === 0)) {   // «меньше движения» — горит, не мигает
     ctx.font = '6px "Press Start 2P","VT323",monospace';
     ctx.fillStyle = '#C23B2B';
-    ctx.fillText('LOW', bx - 24, by + 9);
+    digitalText(ctx, 'LOW', bx - 24, by + 9, 3, 6);                // экран телефона — цифровая дрожь
   }
 }

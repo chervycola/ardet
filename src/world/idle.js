@@ -6,6 +6,7 @@ import { scaler } from '../render/scaler.js';
 import { playDistantSound } from '../audio/audio.js';
 import { isNamed } from './names.js';
 import { tremble, ghostShift, flicker, ghostSeed, GHOST_A } from '../render/ghost.js';
+import { digitalText } from '../render/digital.js';
 
 const MSGS = [
   'вобла не горит', 'бездна моргнула первой', 'amor fati',
@@ -54,7 +55,9 @@ const LENTA = new Set(['скибиди', 'шесть семь', 'mid съел н
   'chronically Ardet', '💀 ушёл на пенсию', 'rizz закончился', 'sigma сам себя слышит',
   'жиза, но тихо', 'по фактам — нет фактов']);
 const QUIET_MSGS = MSGS.filter(m => !LENTA.has(m));
-export const LENTA_WORDS = [...LENTA];                 // для строки на ходу у подписавшего (world/clauses.js)
+export const LENTA_WORDS = [...LENTA];
+// строка ленты: в ней есть слово ленты (строка покоя у края или шум в строке на ходу) — дрожит цифрой
+export const isLentaLine = text => [...LENTA].some(w => String(text || '').includes(w));                 // для строки на ходу у подписавшего (world/clauses.js)
 export const _quietHasNoLenta = () => QUIET_MSGS.length > 0 && QUIET_MSGS.every(m => !LENTA.has(m)) && QUIET_MSGS.length < MSGS.length;
 
 let idleTimer = 0;
@@ -114,8 +117,16 @@ export function draw(ctx) {
   ctx.font = '8px "Press Start 2P","VT323",monospace';
   ctx.textAlign = 'center';
   const lines = currentMsg.split('\n');
-  // строка без носителя — призрачная (render/ghost.js): бледный двойник позади, сама подрагивает
-  const sd = ghostSeed(currentMsg), [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd);
+  const sd = ghostSeed(currentMsg);
+  // слово ленты — цифровая дрожь (render/digital.js): ровно, а раз в несколько секунд сбой
+  if (isLentaLine(currentMsg)) {
+    ctx.globalAlpha = a * 0.45;
+    for (let i = 0; i < lines.length; i++) digitalText(ctx, lines[i], vw / 2, y_ + i * 10, sd + i, 8);
+    ctx.textAlign = 'left'; ctx.globalAlpha = 1; msgLife--;
+    return;
+  }
+  // тихая строка — призрачная (render/ghost.js): бледный двойник позади, сама подрагивает
+  const [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd);
   ctx.globalAlpha = a * 0.45 * GHOST_A;
   for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], vw / 2 + gx, y_ + i * 10 + gy);
   ctx.globalAlpha = a * 0.45 * flicker(sd);
