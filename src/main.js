@@ -133,7 +133,7 @@ import { update as updatePotemkin, revealOf, drawRevealed, setRelook, setRevealF
 import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve, opisRename, opisState } from './world/opis.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
-import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
+import { under, moss, MOSS, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
 import { stepMossway } from './world/mossway.js';
 import { crankTownWell, giveTownWell, stepTownWell, stirTownWell, wellAccess, saveTownWell, loadTownWell } from './world/townWell.js';
 import { drawUnderWorld, drawUnderThing, drawUnderFx, stepUnderLife, resetUnderLife, inhaleDust } from './render/underside.js';
@@ -146,6 +146,9 @@ import { initNetUI, refreshNetUI, open as openNetInput, noteMenu, otherMenu, VOT
 import { house, buildHouse, houseMove, houseRoute, houseThings, houseLights, AMBIENT as HOUSE_AMBIENT, HW, HH, WAKE, ENTRY, doorOutside } from './world/house.js';
 import { drawHouseWorld } from './render/house.js';
 import { wakefx, wakePass } from './render/wakefx.js';
+import { lie, startLie, startOut, stepLie, wantOut, stopLie, drawLying, isLying, sitOf, standOf } from './world/pithosLie.js';
+import { climb, startClimb, stepClimb, stopClimb, drawClimb, climbDepth } from './world/climbOut.js';
+import { drawMossDream } from './render/mindfx.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -295,7 +298,7 @@ let wokeOnce = !!(savedData && savedData.woke);
 function saveData() {
   return {
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-  player: house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
+  player: house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : climb.on ? { x: climb.end.x, y: climb.end.y } : lie.on && lie.loc ? standOf(lie.loc) : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   clock: worldClock(t),
   mail: saveMail(),
@@ -401,6 +404,28 @@ function intoHouse(fx, fy, wake) {
   clearWhisper();                                    // шёпот улицы остался на улице
   muteRedNoon(true);
   lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
+}
+// ЛЕЧЬ В ПИФОС (world/pithosLie.js): лёг — меню лежащего: «УСНУТЬ» или «ВЫЛЕЗТИ»; осмотреться —
+// тот же текст, что прежде показывало «ЛЕЧЬ». Отменил — лежит; щелчок или E/F — меню снова
+let pithosIn = null;
+function openPithosMenu() {
+  if (!lie.loc) return;
+  if (!pithosIn || pithosIn.of !== lie.loc) {
+    const p = lie.loc, tx = useTexts.pithos_lie;
+    pithosIn = { id: 'pithos_in', of: p, name: p.name, x: p.x, y: p.y, w: p.w, h: p.h, zone: p.zone,
+      look: tx ? tx.text : '', useAction: 'pithos_sleep', useLabel: '<i>☾</i>УСНУТЬ',
+      altNow: () => (lie.on && lie.phase === 'in' ? { key: 'pithos_out', label: '<i>⇡</i>ВЫЛЕЗТИ' } : null) };
+    menuInscriptions.pithos_in = 'дно мягкое';
+  }
+  showMenu(pithosIn);
+}
+function sleepInPithos() {
+  const p = lie.loc;
+  if (!p) return;
+  const s = standOf(p);
+  stopLie();
+  player.x = s.x; player.y = s.y; player.tx = s.x; player.ty = s.y; player.sit = 0;   // вернётся — у зева
+  goUnder(DESCENTS.pithos_lie);
 }
 // бревно у костра (world/locations.js firelog): фигура садится на середину бревна; любой перенос — встал
 let logSeated = false;
@@ -571,7 +596,7 @@ function shadowCasters(camX, camY, vw, vh) {
   for (const p of bridgePieces()) if (p.x + p.w > camX - pad && p.x - p.w < camX + vw + pad && p.gy > camY - 40 && p.gy - p.h < camY + vh + pad) out.push(propCaster(p));
   const hero = heroCaster((player.sit || 0) > 0.5);   // сел — и тень села
   hero.ox = player.x; hero.oy = player.y;
-  if (!clauseOn('pawn')) out.push(hero);             // тень в закладе у «Минервы» (world/clauses.js)
+  if (!clauseOn('pawn') && !isLying() && !climb.on) out.push(hero);   // тень в закладе у «Минервы» (world/clauses.js); в пифосе тени нет
   return out;
 }
 // тёплые огни в кадре (точки кадра) — для пера: огонь всегда сплошной
@@ -699,7 +724,7 @@ function render() {
   for (const b of ravensOnGround(camX, camY, vw, vh)) drawList.push({ k: ravenDepth(b), raven: b });
   for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
   for (const o of othersToDraw(worldCtx, 'surface', camX, camY, vw, vh, null, beyond.shared)) drawList.push({ k: o.k, other: o });   // другие странники — тенью
-  drawList.push({ k: player.y + 24, player: true });
+  drawList.push({ k: climbDepth(player), player: true });   // на марше подвала — поверх подвала
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
@@ -710,6 +735,8 @@ function render() {
     if (it.tree) { drawTree(worldCtx, it.tree, t); continue; }
     if (it.other) { it.other.draw(); continue; }
     if (it.player) {
+      if (drawLying(worldCtx, player, () => drawPlayer(player))) continue;   // лёг в пифос — лёжа, по венчик
+      if (drawClimb(worldCtx, player, () => drawPlayer(player))) continue;   // вылезает: из люка, из воды подвала
       // свой герой клюёт и скользит позой (sprites/player.js); сдвигом — только просел в яму
       const so = player.gait && player.gait.trip && player.gait.trip.kind !== 'pit' ? { x: 0, y: 0 } : stumble.offset();
       worldCtx.save(); worldCtx.translate(so.x, so.y);
@@ -876,6 +903,7 @@ function stepFx() {
   beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'), beyond.visor && lookingNear(player.x + 6, player.y + 23));
   if (player.moving) { logSeated = false; standStage(); }
   player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated || logSeated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть или на бревно; шагнул — встал
+  { const ls = sitOf(); if (ls !== null) player.sit = ls; }   // в пифос: присел — лёг — встал (world/pithosLie.js)
   player.visor = beyond.visor;                       // у столба: ладонь козырьком, пока черта видна
   stepPozemka(camX, camY, scaler.vw, scaler.vh);
   if (beyond.murmur) playMurmur(beyond.murmur);
@@ -1381,6 +1409,8 @@ function frontOf(l, fallback) {
 }
 function teleportWithFade(x, y, after = null) {
   logSeated = false; standStage();                   // любой перенос поднимает: с бревна и со сцены
+  if (lie.on) stopLie();                             // …и из пифоса
+  if (climb.on) stopClimb();                         // …и с лестницы наверх
   // If a fade is already running, just retarget it.
   teleportFade.target = { x, y };
   teleportFade.after = after;
@@ -1451,7 +1481,13 @@ function goUp(th) {
   if (!loc) return;
   const px_ = loc.x + loc.w / 2 - 6, py_ = loc.y + loc.h + 5;
   if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
-  teleportWithFade(px_, py_, surface);
+  // наверх — не возник у порога, а вылез (слово автора 23.11; world/climbOut.js): из подвала — по маршу
+  // из воды, из пифоса — выползает, из прочих ходов — из люка у порога
+  teleportWithFade(px_, py_, () => {
+    surface();
+    if (loc.id === 'pithos') { const s = standOf(loc); player.x = s.x; player.y = s.y; startOut(loc); }
+    else startClimb(loc, { x: px_, y: py_ }, player);
+  });
 }
 // наверх: свет и звук мира возвращаются
 function surface() {
@@ -1732,12 +1768,14 @@ function renderUnder() {
   setCtx(worldCtx);
   const lit = lighting.sources, theirs = otherLights('under', camX, camY, vw, vh, coldAt);
   if (theirs.length) lighting.sources = lit.concat(theirs);
-  lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT * (1 - 0.6 * moss.k));   // в ходе мха видно только то, что светит
+  lighting.render(lightCtx, { x: camX, y: camY }, UNDER_AMBIENT * (1 - 0.7 * moss.k));   // в ходе мха (во сне) видно только то, что светит; бока гасит сон (render/mindfx.js)
   lighting.sources = lit;
   lightParticles.draw(worldCtx, { x: camX, y: camY });
   crackedGlass.draw(fxCtx);
   dyingPixels.draw(fxCtx);
   drawUnderFx(fxCtx, vw, vh);                       // иней на стекле — в криосклепе
+  // ход мха — сон: по бокам темнота век, за ними — пятна, соты, тоннель, гиперкубы (render/mindfx.js)
+  if (moss.k > 0.01) drawMossDream(fxCtx, vw, vh, t, Math.max(0, Math.min(1, (player.x + 6 - MOSS.x0) / (MOSS.x1 - MOSS.x0))), moss.k, moss.pulse, reducedMotion());
   screenMoss.draw(uiCtx);
   drawHUD(uiCtx);
   ink.drawLabel(uiCtx);
@@ -1837,6 +1875,16 @@ function updateGame() {
       else if (turn) faceHall(turn > 0);
     }
     stopHero(); player.moving = false; player.still = true;
+    updateWorldSystems(); return;
+  }
+  // вылезает наверх (world/climbOut.js): ход заперт; шаг — сразу дойти до порога
+  if (climb.on) { stepClimb(player, input.getMove().active || !!input.getHeldTouch()); updateWorldSystems(); return; }
+  stepClimb(player);                                 // люк за вышедшим затягивается
+  // в пифосе (world/pithosLie.js): ход заперт — подходит, садится, вползает; лёжа шаг — вылезти
+  if (lie.on) {
+    if (lie.phase === 'in' && (input.getMove().active || input.getHeldTouch())) wantOut();
+    const ev = stepLie(player);
+    if (ev === 'in') openPithosMenu();
     updateWorldSystems(); return;
   }
   const fell = under.active || house.active ? false : stumble.update(player);   // полотно ровное — под землёй и дома не оступишься
@@ -2081,9 +2129,10 @@ function startGame() {
 
 // похмельная прогрузка: мир всплывает в фокус, веки моргают, тело шатает и трясёт,
 // а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения).
-// Первое пробуждение странника — целиком, пятнадцать секунд; дальше — шесть, и
-// проснуться можно сразу: клавиша или клик (weave/ROADMAP И4)
-const WAKE_FULL = 15, WAKE_SHORT = 6;
+// Первое пробуждение странника — целиком, двадцать четыре секунды (слово автора 23.11:
+// «дольше пробуждение»; было пятнадцать); дальше — девять (было шесть), и проснуться
+// можно сразу: клавиша или клик (weave/ROADMAP И4). Сроки — те же, что в style.css (#gw.wake)
+const WAKE_FULL = 24, WAKE_SHORT = 9;
 let wakeUp = null;                                   // проснуться сейчас — пока идёт короткое
 function wakeFx() {
   const gw = document.getElementById('gw');
@@ -2172,6 +2221,8 @@ input.onClick(({ clientX, clientY, originalEvent, intent }) => {
   // Lore popup eats the first click: dismiss, don't walk
   if (loreActive()) { dismissLore(); return; }   // первый клик допечатывает, второй убирает
 
+  if (lie.on) { if (lie.phase === 'in') openPithosMenu(); return; }   // в пифосе щелчок — меню лежащего
+  if (climb.on) return;                            // вылезает — щелчок подождёт
   const pos = input.screenToWorld(clientX, clientY, camera);
   player.walkIntent = intent || null;              // правая кнопка: дойти и использовать
   if (house.active) { walkHouse(pos.x, pos.y); return; }
@@ -2288,6 +2339,8 @@ document.addEventListener('keydown', e => {
   const intent = e.code === 'KeyE' ? 'look' : e.code === 'KeyF' ? 'use' : null;
   if (!intent || e.repeat || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
   if (!state.is('game') || loreActive() || isMapOpen()) return;
+  if (lie.on) { e.preventDefault(); if (lie.phase === 'in') openPithosMenu(); return; }   // в пифосе под рукой — только пифос
+  if (climb.on) { e.preventDefault(); return; }
   const hand = thingAtHand();
   if (!hand) return;
   e.preventDefault();
@@ -2436,6 +2489,7 @@ events.on('location.sit', (loc) => { if (loc && loc.id === 'theater') sitAtStage
 events.on('location.alt', (loc) => {
   const a = loc.altNow && loc.altNow();
   if (!a) return;
+  if (a.key === 'pithos_out') { wantOut(); return; }   // из пифоса — вылезти
   if (a.key === 'under_greet' && under.greet()) playBlow();
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)
@@ -2490,6 +2544,16 @@ events.on('location.use', (loc) => {
   if (actionKey === 'horizon_look') { beyond.lookHorizon(dentAhead(player.x + 6, player.y + 23)); return; }   // вмятина впереди — один срок сверху
   // бревно у костра: сесть лицом к огню; слов нет, дыхание продолжается; шагнул — встал
   if (actionKey === 'sit_log') { sitOnLog(loc); return; }
+  // пифос: лечь — сцена (world/pithosLie.js), уснуть — из меню лежащего: вниз, в ход мха
+  if (actionKey === 'pithos_lie') {
+    if (!lie.on) {
+      logSeated = false; player.path = null; player.walkTo = null; player.auto = false; stopHero();
+      under.seen.add('pithos_lie');
+      startLie(loc);
+    }
+    return;
+  }
+  if (actionKey === 'pithos_sleep') { sleepInPithos(); return; }
   // The gates teleport onto the street: one road, gradient of epochs
   if (actionKey === 'gates_pass') {
     if (!canLeaveSettlement()) { lockHint(); return; }

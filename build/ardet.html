@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 204 196. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 204 196. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 245 261. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 245 261. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -127,7 +127,7 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
 @media (prefers-reduced-motion: reduce) { #entry-canvas, #entry-glitch, #entry-btn { transition: none; } }
 
 /* ── Wake: похмельная прогрузка после Fall In ── */
-#gw.wake { animation: wakeblur 15s ease-out forwards, wakesway 15s ease-in-out forwards; }
+#gw.wake { animation: wakeblur 24s ease-out forwards, wakesway 24s ease-in-out forwards; }   /* 24 с — main.js WAKE_FULL */
 /* муть — слабее, чем была: размывает мир теперь сам кадр, блоками, как цифра после сбоя (render/wakefx.js) */
 @keyframes wakeblur {
   0%   { filter: blur(5px)   brightness(0.3) saturate(0.4); }
@@ -149,9 +149,9 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   76%  { transform: scale(1.02) rotate(-0.4deg) translate(-0.1%, 0.1%); }
   100% { transform: scale(1) rotate(0deg) translate(0, 0); }
 }
-/* второе пробуждение и дальше — та же сцена за шесть секунд (render/wakefx.js); шатает
+/* второе пробуждение и дальше — та же сцена за девять секунд (render/wakefx.js); шатает
    вдвое слабее, веки те же, только чаще; проснуться сразу — клавиша или клик (main.js) */
-#gw.wake.short { animation: wakeblur 6s ease-out forwards, wakeswayShort 6s ease-in-out forwards; }
+#gw.wake.short { animation: wakeblur 9s ease-out forwards, wakeswayShort 9s ease-in-out forwards; }
 @keyframes wakeswayShort {
   0%   { transform: scale(1.055) rotate(-1.5deg)  translate(-0.7%, 0.35%); }
   14%  { transform: scale(1.05)  rotate(1.3deg)   translate(0.55%, -0.25%); }
@@ -174,10 +174,10 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   background: var(--c-void);
 }
 #wakelids::before { top: -4%; border-radius: 0 0 50% 50% / 0 0 16% 16%;
-  transform-origin: top; animation: lidBlink 15s ease-in-out forwards; }
+  transform-origin: top; animation: lidBlink 24s ease-in-out forwards; }
 #wakelids::after { bottom: -4%; border-radius: 50% 50% 0 0 / 16% 16% 0 0;
-  transform-origin: bottom; animation: lidBlink 15s ease-in-out forwards; }
-#wakelids.short::before, #wakelids.short::after { animation-duration: 6s; }
+  transform-origin: bottom; animation: lidBlink 24s ease-in-out forwards; }
+#wakelids.short::before, #wakelids.short::after { animation-duration: 9s; }
 @keyframes lidBlink {
   0%  { transform: scaleY(1); }    8%  { transform: scaleY(0.3); }
   16% { transform: scaleY(0.95); } 28% { transform: scaleY(0.2); }
@@ -189,7 +189,7 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
   text-align: center; font-family: var(--font-pixel); font-size: 8px;
   color: var(--c-ash); letter-spacing: 3px; opacity: 0;
-  animation: wakecap 15s ease-in-out forwards;
+  animation: wakecap 24s ease-in-out forwards;
 }
 @keyframes wakecap { 0%,10%{opacity:0} 30%{opacity:0.55} 45%{opacity:0.15}
   60%{opacity:0.5} 80%{opacity:0.1} 100%{opacity:0} }
@@ -892,7 +892,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='d177b58 · 2026-11-23';console.log('[оттиск]', 'd177b58 · 2026-11-23');
+<script>window.ARDET_BUILD='a1c7472 · 2026-11-23';console.log('[оттиск]', 'a1c7472 · 2026-11-23');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -26988,6 +26988,8 @@ W, тихо: «Я не знал, что он умеет.»`,
                 'pithos_lie': { title: `ЛЕЧЬ`, text: `Ложишься на дно пифоса. Выметено.
 
 Дно мягкое.` },
+                // лёжа в пифосе — из меню лежащего (world/pithosLie.js); текст не показывается: сразу сон, вниз
+                'pithos_sleep': { title: `УСНУТЬ`, text: `Глаза закрываются сами.` },
                 'burrow_down': { title: `НОРА`, text: `Нора у самого подножия огня. Край обложен мхом — сухим и тёплым.
 
 Из глубины ни звука: мох глушит шаги начисто.` },
@@ -31658,7 +31660,8 @@ System.register("world/mossway", ["world/underside", "world/whisper", "world/dis
         if (pithos) { // у пифоса действие проявляется после шёпота
             pithos.useAction = 'pithos_lie';
             pithos.useShown = () => underside_js_2.under.seen.has('pithos_whisper');
-            Object.defineProperty(pithos, 'useLabel', { get: () => (underside_js_2.under.seen.has('pithos_lie') ? '<i>☾</i>УСНУТЬ' : '<i>☾</i>ЛЕЧЬ'), configurable: true, enumerable: true });
+            // «ЛЕЧЬ» всякий раз: фигура медленно залезает, и уже лёжа — «УСНУТЬ» (слово автора 23.11; world/pithosLie.js)
+            pithos.useLabel = '<i>☾</i>ЛЕЧЬ';
         }
         const b = burrowPlace(locations);
         burrow = { id: 'burrow', name: 'Нора у подножия огня', zone: 'street', x: b.x - 13, y: b.y - 11, w: 26, h: 11, look: LOOK, drawSelf: drawBurrow, useAction: 'burrow_down' };
@@ -72019,7 +72022,7 @@ System.register("render/house", ["world/house"], function (exports_189, context_
 });
 System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_190, context_190) {
     "use strict";
-    var time_js_50, prefs_js_7, LEN, OPEN, BO, AS, KV, FONT, reducedNow, wakefx, FIRST, AGAIN, blockAt, BURSTS, small, snap;
+    var time_js_50, prefs_js_7, LEN, K, OPEN, BO, AS, KV, FONT, reducedNow, wakefx, FIRST, BUILT, AGAIN, blockAt, BURSTS, EARLY, small, snap;
     var __moduleName = context_190 && context_190.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -72069,7 +72072,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         if (reduced || a < 0 || a >= LEN)
             return [];
         let n = 0;
-        if (a < 120)
+        if (a < EARLY)
             n = 2 + Math.floor(hh(q >> 2, 3, seed) * 4);
         for (const o of OPEN) {
             const d = a - o;
@@ -72080,7 +72083,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         for (let i = 0; i < n; i++) {
             const k = (q >> 2) * 7 + i; // полоса держится четыре кадра
             const h = 2 + Math.floor(hh(k, 5, seed) * 12), y = Math.floor(hh(k, 6, seed) * Math.max(1, vh - h));
-            const dx = Math.round((hh(k, 7, seed) * 2 - 1) * (a < 120 ? 16 : 8));
+            const dx = Math.round((hh(k, 7, seed) * 2 - 1) * (a < EARLY ? 16 : 8));
             if (dx)
                 out.push({ y, h, dx });
         }
@@ -72091,7 +72094,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
     function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
         if (reduced || a < 0 || a >= LEN)
             return [];
-        let on = a >= 10 && a < 100;
+        let on = a >= 16 && a < Math.round(100 * K);
         for (const o of OPEN) {
             const d = a - o;
             if (d >= 2 && d < 14)
@@ -72110,11 +72113,90 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         return out;
     }
     exports_190("codeAt", codeAt);
-    // ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
+    // ── битые макроблоки: квадраты кадра (8–24 точки) не на своём месте — кусок
+    //    соседнего кадра, как поток с потерей; держатся четыре кадра. Густо, пока мир
+    //    собирается, и на каждом открытии век ──
+    function macroAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+        if (reduced || a < 0 || a >= LEN)
+            return [];
+        let n = 0;
+        if (a < BUILT)
+            n = Math.round(6 * (1 - a / BUILT)) + (hh(q >> 2, 20, seed) < 0.5 ? 1 : 0);
+        for (const o of OPEN) {
+            const d = a - o;
+            if (d >= 0 && d < 40)
+                n = Math.max(n, 2 + Math.floor(hh(q >> 2, 21, seed) * 3));
+        }
+        const out = [];
+        for (let i = 0; i < n; i++) {
+            const k = (q >> 2) * 11 + i;
+            const sz = 8 * (1 + Math.floor(hh(k, 22, seed) * 3));
+            const x = Math.floor(hh(k, 23, seed) * Math.max(1, vw - sz) / 8) * 8, y = Math.floor(hh(k, 24, seed) * Math.max(1, vh - sz) / 8) * 8;
+            const sx = Math.max(0, Math.min(vw - sz, x + Math.round((hh(k, 25, seed) * 2 - 1) * 48)));
+            const sy = Math.max(0, Math.min(vh - sz, y + Math.round((hh(k, 26, seed) * 2 - 1) * 24)));
+            out.push({ x, y, sx, sy, w: sz, h: sz });
+        }
+        return out;
+    }
+    exports_190("macroAt", macroAt);
+    // ── протяжка: столбец кадра тянется вниз от одной строки (так виснет развёртка);
+    //    одна-две за раз, держится восемь кадров ──
+    function dragAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+        if (reduced || a < 0 || a >= LEN)
+            return [];
+        let on = a < EARLY * 2 && hh(q >> 3, 30, seed) < 0.45;
+        for (const o of OPEN) {
+            const d = a - o;
+            if (d >= 4 && d < 30)
+                on = true;
+        }
+        if (!on)
+            return [];
+        const k = q >> 3, n = 1 + (hh(k, 31, seed) < 0.4 ? 1 : 0), out = [];
+        for (let i = 0; i < n; i++) {
+            const w = 1 + Math.floor(hh(k + i, 32, seed) * 3), x = Math.floor(hh(k + i, 33, seed) * Math.max(1, vw - w));
+            const y = Math.floor(hh(k + i, 34, seed) * vh * 0.7), h = 12 + Math.floor(hh(k + i, 35, seed) * vh * 0.3);
+            out.push({ x, y, w, h: Math.min(h, vh - y) });
+        }
+        return out;
+    }
+    exports_190("dragAt", dragAt);
+    // ── черезстрочка: каждая вторая строка кадра притушена — сперва заметно, к концу сборки
+    //    сходит; на открытии век проступает снова. Неподвижна — годится и «меньше движения» ──
+    function interlaceAt(a) {
+        if (a < 0 || a >= LEN)
+            return 0;
+        let k = a < BUILT ? 0.28 * (1 - a / BUILT) : 0;
+        for (const o of OPEN) {
+            const d = a - o;
+            if (d >= 0 && d < 30)
+                k = Math.max(k, 0.14 * (1 - d / 30));
+        }
+        return k;
+    }
+    exports_190("interlaceAt", interlaceAt);
+    // ── колонки кода: нули и единицы столбиком, ползут вниз — пока мир не собран ──
+    function columnsAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+        if (reduced || a < 30 || a >= BUILT)
+            return [];
+        const n = 1 + Math.floor(hh(Math.floor(a / 120), 40, seed) * 3), out = [];
+        for (let i = 0; i < n; i++) {
+            const life = 120, k = Math.floor(a / life) * 5 + i, f = (a % life) / life;
+            const len = 5 + Math.floor(hh(k, 41, seed) * 9), x = 6 + Math.floor(hh(k, 42, seed) * Math.max(1, vw - 12));
+            const y0 = Math.floor(hh(k, 43, seed) * vh * 0.4) + Math.floor(f * vh * 0.5);
+            let s = '';
+            for (let j = 0; j < len; j++)
+                s += hh(k * 13 + j, (q >> 3) + 44, seed) < 0.5 ? '0' : '1';
+            out.push({ s, x, y: y0, a: 0.25 + 0.3 * Math.sin(Math.PI * f) });
+        }
+        return out;
+    }
+    exports_190("columnsAt", columnsAt);
+    // ── битые точки: сорок с небольшим (и пара мёртвых строчек), гаснут каждая в свой срок ──
     function stuckOf(vw, vh, seed) {
         const out = [];
-        for (let i = 0; i < 26; i++)
-            out.push({ x: Math.floor(hh(i, 13, seed) * vw), y: Math.floor(hh(i, 14, seed) * vh), life: 90 + Math.floor(hh(i, 15, seed) * 520), c: i % 9 === 4 ? KV : i % 3 ? BO : AS });
+        for (let i = 0; i < 44; i++)
+            out.push({ x: Math.floor(hh(i, 13, seed) * vw), y: Math.floor(hh(i, 14, seed) * vh), w: i % 11 === 6 ? 3 + Math.floor(hh(i, 16, seed) * 6) : 1, life: Math.round((90 + Math.floor(hh(i, 15, seed) * 520)) * K), c: i % 9 === 4 ? KV : i % 3 ? BO : AS });
         return out;
     }
     function canvas(w, h, old) {
@@ -72157,7 +72239,8 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
         ctx.imageSmoothingEnabled = false;
         // 1. дрожь и рывки строк — по снимку кадра (один снимок на кадр)
         const [jx, jy] = tremorAt(a, seed, red, q), sl = slicesAt(a, vh, seed, red, q);
-        if (jx || jy || sl.length) {
+        const mb = macroAt(a, vw, vh, seed, red, q), dr = dragAt(a, vw, vh, seed, red, q);
+        if (jx || jy || sl.length || mb.length || dr.length) {
             snap = canvas(W, H, snap);
             if (snap) {
                 const g = snap.getContext('2d');
@@ -72167,6 +72250,10 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                     ctx.drawImage(snap, jx * s, jy * s);
                 for (const q of sl)
                     ctx.drawImage(snap, 0, q.y * s, W, q.h * s, q.dx * s, q.y * s, W, q.h * s);
+                for (const m of mb)
+                    ctx.drawImage(snap, m.sx * s, m.sy * s, m.w * s, m.h * s, m.x * s, m.y * s, m.w * s, m.h * s);
+                for (const d of dr)
+                    ctx.drawImage(snap, d.x * s, d.y * s, d.w * s, s, d.x * s, d.y * s, d.w * s, d.h * s); // одна строка — на весь столбец
             }
         }
         // 2. мир собирается блоками — прямо с кадра: выше строки развёртки мельче, ниже ещё крупно
@@ -72184,16 +72271,30 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                 ctx.globalAlpha = 1;
             } // строка развёртки
         }
-        // 3. двоичный код и битые точки — в точках кадра
+        // 3. черезстрочка, двоичный код, колонки кода и битые точки — в точках кадра
         ctx.setTransform(s, 0, 0, s, 0, 0);
-        const code = codeAt(a, vw, vh, seed, red, q);
-        if (code.length) {
+        const il = interlaceAt(a);
+        if (il > 0.01) {
+            ctx.globalAlpha = il;
+            ctx.fillStyle = '#000';
+            for (let y = 1; y < vh; y += 2)
+                ctx.fillRect(0, y, vw, 1);
+            ctx.globalAlpha = 1;
+        }
+        const code = codeAt(a, vw, vh, seed, red, q), cols = columnsAt(a, vw, vh, seed, red, q);
+        if (code.length || cols.length) {
             ctx.font = FONT;
             ctx.textBaseline = 'top';
             ctx.fillStyle = BO;
             for (const c of code) {
                 ctx.globalAlpha = c.a;
                 ctx.fillText(c.s, c.x, c.y);
+            }
+            ctx.fillStyle = AS;
+            for (const c of cols) {
+                ctx.globalAlpha = c.a;
+                for (let j = 0; j < c.s.length; j++)
+                    ctx.fillText(c.s[j], c.x, c.y + j * 7);
             }
         }
         if (!wakefx.stuck)
@@ -72203,7 +72304,7 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                 continue;
             ctx.globalAlpha = a > p.life - 30 ? (p.life - a) / 30 * 0.85 : 0.85; // гаснет не сразу
             ctx.fillStyle = p.c;
-            ctx.fillRect(p.x, p.y, 1, 1);
+            ctx.fillRect(p.x, p.y, p.w, 1);
         }
         ctx.globalAlpha = 1;
         ctx.restore();
@@ -72219,8 +72320,9 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
             }
         ],
         execute: function () {
-            exports_190("LEN", LEN = 900); // пятнадцать секунд
-            exports_190("OPEN", OPEN = [72, 252, 522, 756]); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
+            exports_190("LEN", LEN = 1440); // двадцать четыре секунды
+            exports_190("K", K = LEN / 900); // во сколько раз длиннее прежней сцены
+            exports_190("OPEN", OPEN = [0.08, 0.28, 0.58, 0.84].map(f => Math.round(f * LEN))); // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
             BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
             FONT = '6px "Press Start 2P","VT323",monospace';
             reducedNow = prefs_js_7.reducedMotion; // система или «меньше движения» в настройках быта (core/prefs.js)
@@ -72234,25 +72336,657 @@ System.register("render/wakefx", ["core/time", "core/prefs"], function (exports_
                     this.t0 = time_js_50.t - (LEN - 30 * this.speed) / this.speed; },
                 active() { const a = this.age(); return a >= 0 && a < LEN; },
             });
-            // ── сколько точек в блоке (точки кадра): первая сборка 24 → 1 за пять с половиной
+            // ── сколько точек в блоке (точки кадра): первая сборка 24 → 1 почти за девять
             //    секунд ступенями, как прогрессивная картинка: каждая ступень проходит кадр
             //    сверху вниз строкой развёртки — выше строки уже мельче (b), ниже ещё крупно
             //    (prev), k — где строка (0..1). Веки открылись — короткая подгрузка всем кадром ──
-            FIRST = [[40, 16], [80, 12], [120, 8], [170, 6], [220, 4], [270, 3], [330, 2]];
+            FIRST = [[40, 16], [80, 12], [120, 8], [170, 6], [220, 4], [270, 3], [330, 2]].map(([e, b]) => [Math.round(e * K), b]);
+            exports_190("BUILT", BUILT = FIRST[FIRST.length - 1][0]); // с этого шага кадр собран до точки
             AGAIN = [6, 6, 4, 4, 3, 3, 2, 2];
             exports_190("blockAt", blockAt = a => decodeAt(a).b);
             // ── дрожь: всплесками, вначале крупнее и дольше, к концу реже и мельче; меняется
             //    через кадр — тридцать раз в секунду, как рука ──
-            BURSTS = [[0, 150, 2], [240, 300, 2], [400, 440, 1], [510, 560, 2], [620, 650, 1], [750, 790, 1]];
+            BURSTS = [[0, 150, 2], [240, 300, 2], [400, 440, 1], [510, 560, 2], [620, 650, 1], [750, 790, 1]].map(([s, e, A]) => [Math.round(s * K), Math.round(e * K), A]);
+            EARLY = Math.round(120 * K); // первые три секунды — рвёт густо
             // ── проход по готовому кадру (точки экрана: вся картинка в масштабе scale) ──
             small = null, snap = null;
         }
     };
 });
-System.register("content/afisha", [], function (exports_191, context_191) {
+System.register("world/pithosLie", [], function (exports_191, context_191) {
+    "use strict";
+    var WALK_V, CROUCH, CRAWL, RISE, LIE_LEN, SQUASH, lie, ease, isLying;
+    var __moduleName = context_191 && context_191.id;
+    // зев пифоса в точках мира: венчик справа (рисунок со сдвигом −1: горло — x+20..x+22, y+4..y+12)
+    function mouthOf(loc) { return { rim: loc.x + 22, cy: loc.y + 8, gy: loc.y + loc.h }; }
+    exports_191("mouthOf", mouthOf);
+    // где встать: справа от венчика, ногами перед пифосом (ступни странника — x+6, y+23)
+    function standOf(loc) { const m = mouthOf(loc); return { x: m.rim + 3, y: m.gy + 2 - 23 }; }
+    exports_191("standOf", standOf);
+    // ЛЕЧЬ: начать сцену (main.js: действие pithos_lie)
+    function startLie(loc) {
+        lie.on = true;
+        lie.phase = 'step';
+        lie.t = 0;
+        lie.loc = loc;
+    }
+    exports_191("startLie", startLie);
+    // шаг пальцем или клавишей, пока лежит, — вылезает; на ходу внутрь не перебивается
+    function wantOut() {
+        if (!lie.on || lie.phase !== 'in')
+            return false;
+        lie.phase = 'out';
+        lie.t = 0;
+        return true;
+    }
+    exports_191("wantOut", wantOut);
+    // подъём из хода мха через пифос (main.js goUp): лежит внутри — и выползает, как ложился
+    function startOut(loc) {
+        lie.on = true;
+        lie.phase = 'out';
+        lie.t = 0;
+        lie.loc = loc;
+    }
+    exports_191("startOut", startOut);
+    function stopLie() { lie.on = false; lie.phase = ''; lie.t = 0; lie.loc = null; }
+    exports_191("stopLie", stopLie);
+    function depthIn() {
+        if (!lie.on)
+            return 0;
+        if (lie.phase === 'crawl')
+            return crawlK(lie.t / CRAWL);
+        if (lie.phase === 'in')
+            return 1;
+        if (lie.phase === 'out')
+            return crawlK(1 - lie.t / CRAWL);
+        return 0;
+    }
+    exports_191("depthIn", depthIn);
+    // ползут рывками: подтянулся — замер — подтянулся (пять тяг на весь путь)
+    function crawlK(f) {
+        if (f <= 0)
+            return 0;
+        if (f >= 1)
+            return 1;
+        const n = 5, i = Math.floor(f * n), r = f * n - i;
+        return (i + ease(Math.min(1, r * 1.6))) / n;
+    }
+    // поза: сидит (0..1) — на присесть и встать
+    function sitOf() {
+        if (!lie.on)
+            return null;
+        if (lie.phase === 'crouch')
+            return ease(lie.t / CROUCH);
+        if (lie.phase === 'rise')
+            return 1 - ease(lie.t / RISE);
+        return lie.phase === 'step' ? 0 : null;
+    }
+    exports_191("sitOf", sitOf);
+    // шаг сцены; player — странник (x, y — угол рамки). Возвращает событие: 'in' — лёг (открыть
+    // меню), 'done' — встал (сцена кончилась), иначе null
+    function stepLie(player) {
+        if (!lie.on)
+            return null;
+        lie.t++;
+        if (lie.phase === 'step') {
+            const s = standOf(lie.loc), dx = s.x - player.x, dy = s.y - player.y, d = Math.hypot(dx, dy);
+            if (d <= WALK_V) {
+                player.x = s.x;
+                player.y = s.y;
+                player.moving = false;
+                player.still = true;
+                player.dir = -1;
+                player.face = 'S';
+                lie.phase = 'crouch';
+                lie.t = 0;
+            }
+            else {
+                player.x += dx / d * WALK_V;
+                player.y += dy / d * WALK_V;
+                player.moving = true;
+                player.still = false;
+                if (Math.abs(dx) > 0.3)
+                    player.dir = dx > 0 ? 1 : -1;
+            }
+            return null;
+        }
+        player.moving = false;
+        player.still = true;
+        player.vx = 0;
+        player.vy = 0;
+        if (lie.phase === 'crouch' && lie.t >= CROUCH) {
+            lie.phase = 'crawl';
+            lie.t = 0;
+        }
+        else if (lie.phase === 'crawl' && lie.t >= CRAWL) {
+            lie.phase = 'in';
+            lie.t = 0;
+            return 'in';
+        }
+        else if (lie.phase === 'out' && lie.t >= CRAWL) {
+            lie.phase = 'rise';
+            lie.t = 0;
+        }
+        else if (lie.phase === 'rise' && lie.t >= RISE) {
+            stopLie();
+            return 'done';
+        }
+        return null;
+    }
+    exports_191("stepLie", stepLie);
+    // где на кадре лежащий: середина фигуры и срез у венчика (для рисунка и проверок)
+    function lyingFrame() {
+        const m = mouthOf(lie.loc), k = depthIn();
+        const x0 = m.rim + LIE_LEN / 2 + 1, x1 = m.rim - LIE_LEN / 2 + 4; // голова у венчика → снаружи одни подошвы
+        return { cx: Math.round(x0 + (x1 - x0) * k), cy: m.cy + 1, clipX: m.rim + 1, m };
+    }
+    exports_191("lyingFrame", lyingFrame);
+    // нарисовать лежащего: draw() рисует стоящего на player.x, y — его поворачиваем на четверть
+    // (голова — к зеву, влево), сжимаем по глубине и режем по венчику: что внутри, того не видно
+    function drawLying(ctx, player, draw) {
+        if (!isLying())
+            return false;
+        const f = lyingFrame();
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(f.clipX, f.cy - 14, LIE_LEN + 16, 28);
+        ctx.clip();
+        ctx.translate(f.cx, f.cy);
+        ctx.scale(1, SQUASH);
+        ctx.rotate(-Math.PI / 2);
+        ctx.translate(-(Math.floor(player.x) + 6), -(Math.floor(player.y) + 11));
+        draw();
+        ctx.restore();
+        return true;
+    }
+    exports_191("drawLying", drawLying);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // ЛЕЧЬ В ПИФОС — слово автора 23.11: «когда ложишься в бочку от Диогена, всё ещё можно
+            // ходить, а фигурка должна медленно залезть в бочку и потом уже окно с вариантом
+            // "заснуть"». Прежде «ЛЕЧЬ» только показывало текст, а странник стоял где стоял.
+            // Теперь — сцена без слов, ход заперт:
+            //   шаг     — медленно, вразвалку, к зеву (он справа: sprites/locations/canon.js pithosBody);
+            //   присесть — колени, потом сидит, лицом к зеву;
+            //   вползти — лёг головой в зев и уходит внутрь рывками, как ползут; видно только то,
+            //             что снаружи венчика; внутри остаются торчать подошвы;
+            //   внутри  — меню пифоса: «УСНУТЬ» (вниз, в ход мха — world/mossway.js) или «ВЫЛЕЗТИ»;
+            //             отменил меню — лежит дальше, шаг (клавиша, палец) — вылезает;
+            //   вылезти — то же назад: выползает, садится, встаёт.
+            // Лёжа фигура повёрнута на четверть оборота и сжата по глубине (вид сверху-сбоку: лежащий
+            // короче стоящего) — ровно в зев высотой семь точек.
+            // ═══════════════════════════════════════
+            exports_191("WALK_V", WALK_V = 0.45); // шаг к зеву — медленнее обычного (точек за кадр)
+            exports_191("CROUCH", CROUCH = 70), exports_191("CRAWL", CRAWL = 240), exports_191("RISE", RISE = 60); // кадры: присесть, вползти (и выползти), встать
+            exports_191("LIE_LEN", LIE_LEN = 26); // длина лежащей фигуры (точки кадра)
+            SQUASH = 0.6; // по глубине лежащий сжат: 12 → 7 точек, как зев
+            exports_191("lie", lie = { on: false, phase: '', t: 0, loc: null });
+            // лежит — сколько ушёл внутрь: 0 — голова у венчика, 1 — снаружи одни подошвы
+            ease = f => f < 0 ? 0 : f > 1 ? 1 : f * f * (3 - 2 * f);
+            exports_191("isLying", isLying = () => lie.on && (lie.phase === 'crawl' || lie.phase === 'in' || lie.phase === 'out'));
+        }
+    };
+});
+System.register("world/climbOut", [], function (exports_192, context_192) {
+    "use strict";
+    var RUNG, RUNGS, RUNG_UP, STEP_OUT, HOLE_FADE, STAIR, WALK_V, BS_WATER, climb;
+    var __moduleName = context_192 && context_192.id;
+    // путь из подвала в точках мира: ступни (x, y) — от затопленной ступени вверх по маршу, на площадку,
+    // на плиту слева от проёма, вниз вдоль левой кромки и к порогу; f — кадров на отрезок
+    function basementPath(loc, end) {
+        const L = (x, y) => ({ x: loc.x + x, y: loc.y + y });
+        const pts = [];
+        for (let k = 8; k >= 0; k--)
+            pts.push({ ...L(12 + 3 * k, 11 + 2 * k), f: STAIR, stair: true }); // ступни — на середине ступени
+        pts.push({ ...L(9, 10), f: STAIR, stair: true }); // площадка наверху
+        pts.push({ ...L(4, 8), f: 0 }); // на плиту
+        pts.push({ ...L(-4, loc.h + 2), f: 0 }); // вниз вдоль левой кромки
+        pts.push({ x: end.x + 6, y: end.y + 23, f: 0 }); // к порогу
+        for (let i = 1; i < pts.length; i++)
+            if (!pts[i].f)
+                pts[i].f = Math.max(8, Math.round(Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y) / WALK_V));
+        pts[0].f = 0;
+        return pts;
+    }
+    exports_192("basementPath", basementPath);
+    // начать: end — порог (угол рамки странника), куда он придёт
+    function startClimb(loc, end, player) {
+        climb.on = true;
+        climb.t = 0;
+        climb.loc = loc;
+        climb.end = { x: end.x, y: end.y };
+        climb.seg = 1;
+        climb.segT = 0;
+        climb.hole = null;
+        climb.holeT = 0;
+        if (loc && loc.id === 'basement') {
+            climb.kind = 'stairs';
+            climb.path = basementPath(loc, end);
+            climb.clipY = loc.y + BS_WATER;
+            const p0 = climb.path[0];
+            player.x = p0.x - 6;
+            player.y = p0.y - 23;
+        }
+        else {
+            climb.kind = 'hatch';
+            climb.path = null;
+            climb.clipY = null;
+            climb.hole = { x: end.x + 6, y: end.y + 23 - 6 }; // люк — на шаг глубже порога
+            player.x = end.x;
+            player.y = end.y - 6;
+        }
+        player.face = 'N';
+        player.moving = true;
+        player.still = false;
+    }
+    exports_192("startClimb", startClimb);
+    function stopClimb() { climb.on = false; climb.kind = ''; climb.path = null; climb.clipY = null; }
+    exports_192("stopClimb", stopClimb);
+    // насколько фигура ещё в люке (точки вниз от земли): рывками, скоба за скобой
+    function hatchDepth(t) {
+        const total = RUNG * RUNGS;
+        if (t >= total)
+            return 0;
+        const i = Math.floor(t / RUNG), r = t - i * RUNG, k = Math.min(1, r / 6);
+        const risen = (i + k * k * (3 - 2 * k)) * RUNG_UP;
+        return Math.max(0, Math.round(RUNGS * RUNG_UP - risen));
+    }
+    exports_192("hatchDepth", hatchDepth);
+    // шаг сцены; skip — игрок шагнул: сразу к порогу. Возвращает 'done', когда вышел
+    function stepClimb(player, skip = false) {
+        if (!climb.on) {
+            stepHole();
+            return null;
+        }
+        climb.t++;
+        if (skip && climb.t > 20)
+            return finish(player);
+        if (climb.kind === 'hatch') {
+            const total = RUNG * RUNGS;
+            if (climb.t <= total) {
+                player.moving = true;
+                player.still = false;
+                player.face = 'N';
+                return null;
+            }
+            const f = Math.min(1, (climb.t - total) / STEP_OUT);
+            player.face = 'S';
+            player.y = climb.end.y - 6 + 6 * f;
+            if (f >= 1)
+                return finish(player);
+            return null;
+        }
+        // подвал: по точкам пути
+        const P = climb.path, a = P[climb.seg - 1], b = P[climb.seg];
+        climb.segT++;
+        const f = Math.min(1, climb.segT / b.f);
+        // по ступени — шаг с подъёмом: сперва нога вверх, потом вперёд; по плите — ровно
+        const g = b.stair ? Math.min(1, f * 1.4) : f;
+        const fx = a.x + (b.x - a.x) * g, fy = a.y + (b.y - a.y) * (b.stair ? Math.min(1, f * 2) : f);
+        player.x = fx - 6;
+        player.y = fy - 23;
+        player.moving = true;
+        player.still = false;
+        if (Math.abs(b.x - a.x) > 0.5)
+            player.dir = b.x > a.x ? 1 : -1;
+        player.face = b.y < a.y - 0.5 ? 'N' : b.y > a.y + 0.5 ? 'S' : player.face;
+        if (fy <= climb.clipY - 2)
+            climb.clipY = null; // вышел из воды — резать нечего
+        if (f >= 1) {
+            climb.seg++;
+            climb.segT = 0;
+            if (climb.seg >= P.length)
+                return finish(player);
+        }
+        return null;
+    }
+    exports_192("stepClimb", stepClimb);
+    function finish(player) {
+        player.x = climb.end.x;
+        player.y = climb.end.y;
+        player.tx = player.x;
+        player.ty = player.y;
+        player.moving = false;
+        player.still = true;
+        player.vx = 0;
+        player.vy = 0;
+        player.face = 'S';
+        if (climb.hole)
+            climb.holeT = 1; // люк остаётся и затягивается
+        climb.on = false;
+        climb.path = null;
+        climb.clipY = null;
+        return 'done';
+    }
+    function stepHole() {
+        if (!climb.hole || !climb.holeT)
+            return;
+        if (++climb.holeT > HOLE_FADE) {
+            climb.hole = null;
+            climb.holeT = 0;
+        }
+    }
+    // поверх рисунка мира: фигура в рамке выхода. Возвращает true, если нарисовал сам
+    function drawClimb(ctx, player, draw) {
+        drawHole(ctx);
+        if (!climb.on)
+            return false;
+        if (climb.kind === 'hatch') {
+            const dy = climb.t <= RUNG * RUNGS ? hatchDepth(climb.t) : 0;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(player.x - 20, player.y - 30, 52, climb.hole.y - (player.y - 30));
+            ctx.clip(); // ниже края люка — не видно
+            ctx.translate(0, dy);
+            draw();
+            ctx.restore();
+            return true;
+        }
+        if (climb.clipY !== null) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(player.x - 20, player.y - 30, 52, climb.clipY - (player.y - 30));
+            ctx.clip(); // под водой — не видно
+            draw();
+            ctx.restore();
+            return true;
+        }
+        draw();
+        return true;
+    }
+    exports_192("drawClimb", drawClimb);
+    // люк: тёмный зев с кромкой; вышел — затягивается к точке
+    function drawHole(ctx) {
+        const h = climb.hole;
+        if (!h)
+            return;
+        const k = climb.holeT ? Math.max(0, 1 - climb.holeT / HOLE_FADE) : 1;
+        const rx = Math.max(0, Math.round(8 * k)), ry = Math.max(0, Math.round(3 * k));
+        if (!rx)
+            return;
+        for (let dy = -ry; dy <= ry; dy++) {
+            const w = Math.round(rx * Math.sqrt(1 - (dy / (ry + 0.5)) ** 2));
+            ctx.fillStyle = dy === -ry ? '#2a2620' : '#0D0B0A';
+            ctx.fillRect(h.x - w, h.y + dy, w * 2 + 1, 1);
+        }
+        ctx.fillStyle = '#8A8D8F';
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(h.x - rx, h.y + ry + 1, rx * 2 + 1, 1); // кромка к нам — пеплом
+        ctx.globalAlpha = 1;
+    }
+    // для порядка рисунка: пока странник на марше подвала — поверх рисунка подвала
+    function climbDepth(player) {
+        if (climb.on && climb.kind === 'stairs' && climb.loc)
+            return Math.max(player.y + 24, climb.loc.y + climb.loc.h + 1);
+        return player.y + 24;
+    }
+    exports_192("climbDepth", climbDepth);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // ВЫЛЕЗТИ НАВЕРХ — слово автора 23.11: «нужна анимация вылезания из подвала». Прежде
+            // подъём из изнанки был затемнением: темно — и странник уже стоит у порога. Теперь
+            // после затемнения он выходит сам, ход заперт (шаг — сразу дойти до конца):
+            //   затопленный подвал — по бетонному маршу из воды (что ниже воды — не видно), ступень
+            //     за ступенью, на площадку, на плиту и вокруг проёма — к порогу (sprites/locations/
+            //     canon.js basementBody: марш вдоль задней стены, площадка наверху слева);
+            //   прочие ходы — из тёмного люка у порога: поднимается рывками, как по скобам, шагает
+            //     вперёд, люк за ним затягивается.
+            // (пифос — свой: выползает, как ложился, — world/pithosLie.js)
+            // ═══════════════════════════════════════
+            exports_192("RUNG", RUNG = 16), exports_192("RUNGS", RUNGS = 6), exports_192("RUNG_UP", RUNG_UP = 4); // люк: шесть скоб по четыре точки, ступень — 16 кадров
+            exports_192("STEP_OUT", STEP_OUT = 36), exports_192("HOLE_FADE", HOLE_FADE = 50); // шаг из люка; люк затягивается
+            exports_192("STAIR", STAIR = 14), exports_192("WALK_V", WALK_V = 0.55); // подвал: ступень марша — 14 кадров; по плите — медленно
+            BS_WATER = 24; // уровень воды у задней стены подвала (рисунок: BS_WL)
+            exports_192("climb", climb = { on: false, kind: '', t: 0, loc: null, path: null, seg: 0, segT: 0, hole: null, holeT: 0, end: null, clipY: null });
+        }
+    };
+});
+System.register("render/mindfx", [], function (exports_193, context_193) {
+    "use strict";
+    var BO, AS, MP, KV, rgba, sm, win, SIDE, TESS_V, TESS_E;
+    var __moduleName = context_193 && context_193.id;
+    function hh(a, b, s) {
+        let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
+    // сколько каждого этапа на ходу p (0..1); k — насколько внутри хода
+    function stagesAt(p, k = 1) {
+        const wake = 1 - sm(0.88, 0.98, p); // у норы — просыпаешься
+        return {
+            sides: k, // темнота по бокам — всё время сна
+            specks: k * wake * (0.35 + 0.65 * (1 - sm(0.2, 0.6, p))),
+            lattice: k * wake * win(p, 0.15, 0.55),
+            tunnel: k * wake * win(p, 0.4, 0.8),
+            cubes: k * wake * win(p, 0.55, 0.95),
+        };
+    }
+    exports_193("stagesAt", stagesAt);
+    function sideAlpha(x, vw, k) {
+        const d = Math.min(x, vw - x) / vw; // 0 — край, 0,5 — середина
+        return k * 0.92 * (1 - sm(0, SIDE, d));
+    }
+    exports_193("sideAlpha", sideAlpha);
+    function drawSides(g, vw, vh, k) {
+        if (k < 0.01)
+            return;
+        for (let x = 0; x < vw * SIDE; x += 2) {
+            const a = sideAlpha(x, vw, k);
+            if (a < 0.01)
+                continue;
+            g.fillStyle = `rgba(13,11,10,${a.toFixed(3)})`;
+            g.fillRect(x, 0, 2, vh);
+            g.fillRect(vw - x - 2, 0, 2, vh);
+        }
+        for (let y = 0; y < vh * 0.18; y += 2) { // сверху и снизу — чуть
+            const a = k * 0.5 * (1 - y / (vh * 0.18));
+            g.fillStyle = `rgba(13,11,10,${a.toFixed(3)})`;
+            g.fillRect(0, y, vw, 2);
+            g.fillRect(0, vh - y - 2, vw, 2);
+        }
+    }
+    // ── пятна и фосфены: искры за веками плывут по кругу, гаснут и загораются ──
+    function specksAt(t, vw, vh, n = 46, reduced = false) {
+        const out = [], cx = vw / 2, cy = vh / 2, sp = reduced ? 0.15 : 1;
+        for (let i = 0; i < n; i++) {
+            const r0 = 30 + hh(i, 1, 51) * Math.max(vw, vh) * 0.55, a0 = hh(i, 2, 51) * Math.PI * 2;
+            const w = (0.0006 + hh(i, 3, 51) * 0.0012) * (i & 1 ? 1 : -1) * sp;
+            const a = a0 + t * w, r = r0 * (1 + 0.06 * Math.sin(t * 0.004 * sp + i));
+            const life = 0.5 + 0.5 * Math.sin(t * (0.01 + hh(i, 4, 51) * 0.02) * sp + i * 1.7);
+            out.push({ x: Math.round(cx + Math.cos(a) * r * 1.4), y: Math.round(cy + Math.sin(a) * r * 0.8), a: life * life, c: i % 13 === 5 ? KV : i % 3 ? BO : MP, s: hh(i, 5, 51) < 0.2 ? 2 : 1 });
+        }
+        return out;
+    }
+    exports_193("specksAt", specksAt);
+    function drawSpecks(g, t, vw, vh, w, reduced) {
+        if (w < 0.01)
+            return;
+        for (const s of specksAt(t, vw, vh, 46, reduced)) {
+            g.fillStyle = rgba(s.c, s.a * w * (s.c === KV ? 0.35 : 0.55));
+            g.fillRect(s.x, s.y, s.s, s.s);
+        }
+    }
+    // облака за веками: большие мягкие пятна, медленно переливаются
+    function drawClouds(g, t, vw, vh, w, reduced) {
+        if (w < 0.01 || !g.createRadialGradient)
+            return;
+        const sp = reduced ? 0.2 : 1;
+        for (let i = 0; i < 4; i++) {
+            const x = vw * (0.3 + 0.4 * hh(i, 6, 53)) + Math.sin(t * 0.002 * sp + i * 2) * vw * 0.12;
+            const y = vh * (0.3 + 0.4 * hh(i, 7, 53)) + Math.cos(t * 0.0017 * sp + i) * vh * 0.1;
+            const R = Math.min(vw, vh) * (0.25 + 0.15 * hh(i, 8, 53));
+            const gr = g.createRadialGradient(x, y, 0, x, y, R);
+            const c = i === 2 ? AS : i === 3 ? BO : MP;
+            gr.addColorStop(0, rgba(c, 0.07 * w));
+            gr.addColorStop(1, rgba(c, 0));
+            g.fillStyle = gr;
+            g.fillRect(x - R, y - R, R * 2, R * 2);
+        }
+    }
+    // ── решётка: соты, что дышат в такт сердцу и чуть плывут от середины ──
+    function drawLattice(g, t, vw, vh, w, pulse, reduced) {
+        if (w < 0.01)
+            return;
+        const cx = vw / 2, cy = vh / 2, S = 22, h = S * Math.sqrt(3) / 2, sp = reduced ? 0.1 : 1;
+        const warp = (x, y) => {
+            const dx = x - cx, dy = y - cy, r = Math.hypot(dx, dy) || 1;
+            const k = 1 + (0.03 + 0.05 * pulse) * Math.sin(r / 26 - t * 0.03 * sp);
+            return [cx + dx * k, cy + dy * k];
+        };
+        g.strokeStyle = rgba(BO, 0.13 * w);
+        g.lineWidth = 1;
+        g.beginPath();
+        const ox = (t * 0.05 * sp) % (S * 3);
+        for (let row = -1; row * h < vh + h; row++) {
+            for (let col = -2; col * S * 3 < vw + S * 3; col++) {
+                const x0 = col * S * 3 + (row & 1 ? S * 1.5 : 0) - ox, y0 = row * h;
+                const pts = [];
+                for (let k = 0; k <= 6; k++) {
+                    const a = Math.PI / 3 * k;
+                    pts.push(warp(x0 + S * Math.cos(a), y0 + S * Math.sin(a)));
+                }
+                g.moveTo(pts[0][0], pts[0][1]);
+                for (let k = 1; k < pts.length; k++)
+                    g.lineTo(pts[k][0], pts[k][1]);
+            }
+        }
+        g.stroke();
+    }
+    // ── тоннель и спираль: кольца идут навстречу (туда, куда идёшь), рукава поворачиваются ──
+    function drawTunnel(g, t, vw, vh, w, reduced) {
+        if (w < 0.01)
+            return;
+        const cx = vw * 0.58, cy = vh * 0.5, M = Math.max(vw, vh) * 0.75, sp = reduced ? 0.1 : 1;
+        g.lineWidth = 1;
+        const ph = (t * 0.004 * sp) % 1;
+        for (let i = 0; i < 9; i++) { // кольца: от точки схода — наружу (идёшь вглубь)
+            const f = (i + ph) / 9, r = M * f * f;
+            if (r < 3)
+                continue;
+            g.strokeStyle = rgba(i & 1 ? AS : BO, 0.16 * w * Math.sin(Math.PI * f));
+            g.beginPath();
+            g.ellipse ? g.ellipse(cx, cy, r, r * 0.62, 0, 0, Math.PI * 2) : g.arc(cx, cy, r, 0, Math.PI * 2);
+            g.stroke();
+        }
+        const rot = t * 0.006 * sp;
+        for (let arm = 0; arm < 5; arm++) { // рукава спирали — логарифмической
+            g.strokeStyle = rgba(arm === 2 ? KV : MP, (arm === 2 ? 0.08 : 0.12) * w);
+            g.beginPath();
+            for (let s = 0; s <= 40; s++) {
+                const a = rot + arm * Math.PI * 2 / 5 + s * 0.16, r = 4 * Math.exp(s * 0.11);
+                const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * 0.62;
+                if (!s)
+                    g.moveTo(x, y);
+                else
+                    g.lineTo(x, y);
+            }
+            g.stroke();
+        }
+    }
+    function tesseract(a1, a2, a3, size, cx, cy) {
+        const c1 = Math.cos(a1), s1 = Math.sin(a1), c2 = Math.cos(a2), s2 = Math.sin(a2), c3 = Math.cos(a3), s3 = Math.sin(a3);
+        return TESS_V.map(([x, y, z, w]) => {
+            [x, w] = [x * c1 - w * s1, x * s1 + w * c1]; // XW
+            [y, z] = [y * c2 - z * s2, y * s2 + z * c2]; // YZ
+            [z, w] = [z * c3 - w * s3, z * s3 + w * c3]; // ZW
+            const f = 1 / (2.6 - w), X = x * f, Y = y * f, Z = z * f;
+            const g = 1 / (3.2 - Z);
+            return [cx + X * g * size, cy + Y * g * size, w];
+        });
+    }
+    exports_193("tesseract", tesseract);
+    function drawCube(g, P, alpha, inner) {
+        for (const [i, j] of TESS_E) {
+            const ww = (P[i][2] + P[j][2]) / 2; // ближнее в четвёртом — ярче
+            const inn = inner && TESS_V[i][3] < 0 && TESS_V[j][3] < 0;
+            g.strokeStyle = rgba(inn ? KV : BO, alpha * (inn ? 0.6 : 0.55 + 0.45 * (ww + 1.5) / 3));
+            g.beginPath();
+            g.moveTo(Math.round(P[i][0]) + 0.5, Math.round(P[i][1]) + 0.5);
+            g.lineTo(Math.round(P[j][0]) + 0.5, Math.round(P[j][1]) + 0.5);
+            g.stroke();
+        }
+    }
+    function drawCubes(g, t, vw, vh, w, pulse, reduced) {
+        if (w < 0.01)
+            return;
+        const sp = reduced ? 0.08 : 1;
+        g.lineWidth = 1;
+        const m = Math.min(vw, vh);
+        // большой — посередине, бледный, сквозь него идёшь
+        drawCube(g, tesseract(t * 0.007 * sp, t * 0.0043 * sp, t * 0.0029 * sp, m * (1.05 + 0.04 * pulse), vw / 2, vh * 0.48), 0.12 * w, true);
+        // малые — по бокам, в темноте век
+        for (let i = 0; i < 4; i++) {
+            const side = i & 1 ? 1 : -1, x = vw / 2 + side * vw * (0.33 + 0.08 * hh(i, 9, 57)), y = vh * (0.25 + 0.5 * hh(i, 10, 57)) + Math.sin(t * 0.003 * sp + i) * 10;
+            drawCube(g, tesseract(t * (0.011 + 0.004 * i) * sp + i, t * 0.006 * sp * side, t * 0.004 * sp + i * 0.7, m * (0.22 + 0.06 * hh(i, 11, 57)), x, y), 0.26 * w, false);
+        }
+    }
+    // ── всё вместе: fx — слой эффектов поверх света (main.js renderUnder); p — ход 0..1;
+    //    k — насколько внутри хода; pulse — удар сердца 0..1 ──
+    function drawMossDream(g, vw, vh, t, p, k, pulse = 0, reduced = false) {
+        if (k < 0.01 || !g)
+            return;
+        const S = stagesAt(p, k);
+        g.save();
+        drawSides(g, vw, vh, S.sides);
+        drawClouds(g, t, vw, vh, S.specks, reduced);
+        drawSpecks(g, t, vw, vh, S.specks, reduced);
+        drawLattice(g, t, vw, vh, S.lattice, pulse, reduced);
+        drawTunnel(g, t, vw, vh, S.tunnel, reduced);
+        drawCubes(g, t, vw, vh, S.cubes, pulse, reduced);
+        g.restore();
+    }
+    exports_193("drawMossDream", drawMossDream);
+    return {
+        setters: [],
+        execute: function () {
+            // ═══════════════════════════════════════
+            // СОН В ХОДЕ МХА — путешествие по границам рассудка (слово автора 23.11: «во время сна нам
+            // нужно сделать меньше освещения по бокам и добавить эффектов в стиле гиперкубов и closed eye
+            // hallucinations. преврати эту кишку в путешествие по границам рассудка»).
+            // Уснул в пифосе — и идёшь ходом мха от пифоса к норе у огня. По бокам кадра — темнота
+            // закрытых век: свет остаётся посередине, где идёшь. В темноте — то, что видят за веками,
+            // по порядку, как засыпают (формы Клювера: пятна, решётки, тоннель, спираль), и дальше — за
+            // край: гиперкубы, четырёхмерные кубы на проволоке, поворачиваются сквозь себя. У сухого мха,
+            // у норы, всё сходит — просыпаешься к огню.
+            //   этап по ходу (0 — пифос, 1 — нора):
+            //     пятна и фосфены     — с самого начала, к середине тише;
+            //     решётка (соты)      — 0,15…0,55, дышит в такт сердцу;
+            //     тоннель и спираль   — 0,4…0,8, кольца идут навстречу — туда, куда идёшь;
+            //     гиперкубы           — 0,55…0,95: большой посередине, малые по бокам, в темноте;
+            //     у норы (за 0,9)     — сходит.
+            // Краски — свои: кость, пепел, бледный мох, редкая киноварь; неона нет, вспышек нет: всё
+            // медленное, яркость — доли. «Меньше движения» — те же формы, почти неподвижные и тише.
+            // ═══════════════════════════════════════
+            BO = [217, 207, 184], AS = [138, 141, 143], MP = [157, 176, 138], KV = [194, 59, 43];
+            rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
+            sm = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
+            // окно этапа: нарастает от a до a+r, держится, сходит от b−r до b
+            win = (p, a, b, r = 0.1) => sm(a, a + r, p) * (1 - sm(b - r, b, p));
+            // ── темнота по бокам: от краёв кадра к середине — веки ──
+            exports_193("SIDE", SIDE = 0.36); // доля ширины с каждой стороны, где темнеет
+            // ── гиперкуб: шестнадцать вершин (±1)⁴, поворот в плоскостях XW, YZ, ZW; четыре измерения —
+            //    в три перспективой по w, три — в два перспективой по z; тридцать два ребра ──
+            exports_193("TESS_V", TESS_V = []);
+            for (let i = 0; i < 16; i++)
+                TESS_V.push([i & 1 ? 1 : -1, i & 2 ? 1 : -1, i & 4 ? 1 : -1, i & 8 ? 1 : -1]);
+            exports_193("TESS_E", TESS_E = []);
+            for (let i = 0; i < 16; i++)
+                for (let b = 0; b < 4; b++) {
+                    const j = i ^ (1 << b);
+                    if (j > i)
+                        TESS_E.push([i, j]);
+                }
+        }
+    };
+});
+System.register("content/afisha", [], function (exports_194, context_194) {
     "use strict";
     var SHOWS;
-    var __moduleName = context_191 && context_191.id;
+    var __moduleName = context_194 && context_194.id;
     return {
         setters: [],
         execute: function () {
@@ -72262,14 +72996,14 @@ System.register("content/afisha", [], function (exports_191, context_191) {
             // помещается четыре-пять строк.
             // Пример: { date: '12.11', place: 'Москва · клуб «Х»' }
             // ═══════════════════════════════════════
-            exports_191("SHOWS", SHOWS = []);
+            exports_194("SHOWS", SHOWS = []);
         }
     };
 });
-System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context_192) {
+System.register("ui/titleglitch", ["core/prefs"], function (exports_195, context_195) {
     "use strict";
     var prefs_js_8, BO, AS, KV, FONT, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
-    var __moduleName = context_192 && context_192.id;
+    var __moduleName = context_195 && context_195.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -72295,7 +73029,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context
         const j = Math.floor(y / STRIPE), d = hh(j, 1, L.seed);
         return w + (d - 0.5) * 0.36 + (hh(j, 2, L.seed) < 0.12 ? 0.3 : 0); // полоса глубже или мельче соседних
     }
-    exports_192("weightAt", weightAt);
+    exports_195("weightAt", weightAt);
     // полоса сбоя на строках y..y+h: слева — от края до a, справа — от b до края (по весу,
     // у всех строк сразу — сорванная строка не заедет на щит)
     function band(L, y, h) {
@@ -72486,7 +73220,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context
         face(1, L, faceRaster);
         show(cv, 0);
     }
-    exports_192("bake", bake);
+    exports_195("bake", bake);
     function show(cv, i) {
         const g = cv.getContext('2d');
         g.save();
@@ -72501,7 +73235,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context
         if (layer)
             layer.getContext('2d').clearRect(0, 0, layer.width, layer.height);
     }
-    exports_192("stop", stop);
+    exports_195("stop", stop);
     function run(cv, over, L, shown) {
         stop();
         layer = over;
@@ -72630,7 +73364,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context
         };
         raf = requestAnimationFrame(frame);
     }
-    exports_192("run", run);
+    exports_195("run", run);
     return {
         setters: [
             function (prefs_js_8_1) {
@@ -72663,10 +73397,10 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_192, context
         }
     };
 });
-System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_193, context_193) {
+System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_196, context_196) {
     "use strict";
     var loader_js_2, manifest_js_3, afisha_js_1, titleglitch_js_1, esc, entry, busy, shown, KEY;
-    var __moduleName = context_193 && context_193.id;
+    var __moduleName = context_196 && context_196.id;
     // щит: даты выступлений; нет их — «скоро»
     function fillAfisha(el) {
         if (!el)
@@ -72814,7 +73548,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
                 go();
         });
     }
-    exports_193("initTitle", initTitle);
+    exports_196("initTitle", initTitle);
     return {
         setters: [
             function (loader_js_2_1) {
@@ -72843,10 +73577,10 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_194, context_194) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "world/pithosLie", "world/climbOut", "render/mindfx", "ui/title", "assets/loader"], function (exports_197, context_197) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
-    var __moduleName = context_194 && context_194.id;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, pithosLie_js_1, climbOut_js_1, mindfx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, pithosIn, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var __moduleName = context_197 && context_197.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_4.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_16.SEGMENTS.length ? ulitsa_db_js_16.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
@@ -72858,7 +73592,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function saveData() {
         return {
             // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-            player: house_js_2.house.active ? house_js_2.doorOutside() : stage_js_3.stage.active ? { x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y } : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : { x: player.x, y: player.y }, off: disc_js_54.OFF, geo: disc_js_54.GEO,
+            player: house_js_2.house.active ? house_js_2.doorOutside() : stage_js_3.stage.active ? { x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y } : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : climbOut_js_1.climb.on ? { x: climbOut_js_1.climb.end.x, y: climbOut_js_1.climb.end.y } : pithosLie_js_1.lie.on && pithosLie_js_1.lie.loc ? pithosLie_js_1.standOf(pithosLie_js_1.lie.loc) : { x: player.x, y: player.y }, off: disc_js_54.OFF, geo: disc_js_54.GEO,
             talkedTo: Array.from(flags.talkedTo),
             clock: sky_js_16.worldClock(time_js_52.t),
             mail: threads_js_2.saveMail(),
@@ -72924,6 +73658,31 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         whisper_js_6.clear(); // шёпот улицы остался на улице
         redNoon_js_10.muteRedNoon(true);
         lighting_js_1.lighting.sources = house_js_2.houseLights(player.x + 7, player.y + 10, sky_js_16.skyAt(sky_js_16.phaseAt(time_js_52.t)));
+    }
+    function openPithosMenu() {
+        if (!pithosLie_js_1.lie.loc)
+            return;
+        if (!pithosIn || pithosIn.of !== pithosLie_js_1.lie.loc) {
+            const p = pithosLie_js_1.lie.loc, tx = useActions_js_6.useTexts.pithos_lie;
+            pithosIn = { id: 'pithos_in', of: p, name: p.name, x: p.x, y: p.y, w: p.w, h: p.h, zone: p.zone,
+                look: tx ? tx.text : '', useAction: 'pithos_sleep', useLabel: '<i>☾</i>УСНУТЬ',
+                altNow: () => (pithosLie_js_1.lie.on && pithosLie_js_1.lie.phase === 'in' ? { key: 'pithos_out', label: '<i>⇡</i>ВЫЛЕЗТИ' } : null) };
+            ui_js_2.menuInscriptions.pithos_in = 'дно мягкое';
+        }
+        ui_js_2.showMenu(pithosIn);
+    }
+    function sleepInPithos() {
+        const p = pithosLie_js_1.lie.loc;
+        if (!p)
+            return;
+        const s = pithosLie_js_1.standOf(p);
+        pithosLie_js_1.stopLie();
+        player.x = s.x;
+        player.y = s.y;
+        player.tx = s.x;
+        player.ty = s.y;
+        player.sit = 0; // вернётся — у зева
+        goUnder(underside_js_4.DESCENTS.pithos_lie);
     }
     function sitOnLog(loc) {
         player.x = loc.x + loc.w / 2 - 6;
@@ -73130,8 +73889,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const hero = heroCaster((player.sit || 0) > 0.5); // сел — и тень села
         hero.ox = player.x;
         hero.oy = player.y;
-        if (!clauses_js_5.isOn('pawn'))
-            out.push(hero); // тень в закладе у «Минервы» (world/clauses.js)
+        if (!clauses_js_5.isOn('pawn') && !pithosLie_js_1.isLying() && !climbOut_js_1.climb.on)
+            out.push(hero); // тень в закладе у «Минервы» (world/clauses.js); в пифосе тени нет
         return out;
     }
     function warmIn(camX, camY, vw, vh) {
@@ -73280,7 +74039,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             drawList.push({ k: f.y, fire: f }); // костры кольца огня
         for (const o of net_js_4.othersToDraw(worldCtx, 'surface', camX, camY, vw, vh, null, beyond_js_2.beyond.shared))
             drawList.push({ k: o.k, other: o }); // другие странники — тенью
-        drawList.push({ k: player.y + 24, player: true });
+        drawList.push({ k: climbOut_js_1.climbDepth(player), player: true }); // на марше подвала — поверх подвала
         drawList.sort((p, q) => p.k - q.k);
         for (const it of drawList) {
             if (it.bunting) {
@@ -73312,6 +74071,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 continue;
             }
             if (it.player) {
+                if (pithosLie_js_1.drawLying(worldCtx, player, () => player_js_4.drawPlayer(player)))
+                    continue; // лёг в пифос — лёжа, по венчик
+                if (climbOut_js_1.drawClimb(worldCtx, player, () => player_js_4.drawPlayer(player)))
+                    continue; // вылезает: из люка, из воды подвала
                 // свой герой клюёт и скользит позой (sprites/player.js); сдвигом — только просел в яму
                 const so = player.gait && player.gait.trip && player.gait.trip.kind !== 'pit' ? { x: 0, y: 0 } : stumble_js_1.stumble.offset();
                 worldCtx.save();
@@ -73455,6 +74218,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             stage_js_3.standStage();
         }
         player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond_js_2.beyond.seated || logSeated ? 1 : 0) - (player.sit || 0)) * 0.12; // садится смотреть или на бревно; шагнул — встал
+        {
+            const ls = pithosLie_js_1.sitOf();
+            if (ls !== null)
+                player.sit = ls;
+        } // в пифос: присел — лёг — встал (world/pithosLie.js)
         player.visor = beyond_js_2.beyond.visor; // у столба: ладонь козырьком, пока черта видна
         beyond_js_2.stepPozemka(camX, camY, scaler_js_27.scaler.vw, scaler_js_27.scaler.vh);
         if (beyond_js_2.beyond.murmur)
@@ -74068,6 +74836,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function teleportWithFade(x, y, after = null) {
         logSeated = false;
         stage_js_3.standStage(); // любой перенос поднимает: с бревна и со сцены
+        if (pithosLie_js_1.lie.on)
+            pithosLie_js_1.stopLie(); // …и из пифоса
+        if (climbOut_js_1.climb.on)
+            climbOut_js_1.stopClimb(); // …и с лестницы наверх
         // If a fade is already running, just retarget it.
         teleportFade.target = { x, y };
         teleportFade.after = after;
@@ -74145,7 +74917,19 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lockHint();
             return;
         }
-        teleportWithFade(px_, py_, surface);
+        // наверх — не возник у порога, а вылез (слово автора 23.11; world/climbOut.js): из подвала — по маршу
+        // из воды, из пифоса — выползает, из прочих ходов — из люка у порога
+        teleportWithFade(px_, py_, () => {
+            surface();
+            if (loc.id === 'pithos') {
+                const s = pithosLie_js_1.standOf(loc);
+                player.x = s.x;
+                player.y = s.y;
+                pithosLie_js_1.startOut(loc);
+            }
+            else
+                climbOut_js_1.startClimb(loc, { x: px_, y: py_ }, player);
+        });
     }
     // наверх: свет и звук мира возвращаются
     function surface() {
@@ -74518,12 +75302,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const lit = lighting_js_1.lighting.sources, theirs = net_js_4.otherLights('under', camX, camY, vw, vh, underside_js_4.coldAt);
         if (theirs.length)
             lighting_js_1.lighting.sources = lit.concat(theirs);
-        lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, underside_js_4.UNDER_AMBIENT * (1 - 0.6 * underside_js_4.moss.k)); // в ходе мха видно только то, что светит
+        lighting_js_1.lighting.render(lightCtx, { x: camX, y: camY }, underside_js_4.UNDER_AMBIENT * (1 - 0.7 * underside_js_4.moss.k)); // в ходе мха (во сне) видно только то, что светит; бока гасит сон (render/mindfx.js)
         lighting_js_1.lighting.sources = lit;
         lighting_js_1.lightParticles.draw(worldCtx, { x: camX, y: camY });
         metaFx_js_2.crackedGlass.draw(fxCtx);
         metaFx_js_2.dyingPixels.draw(fxCtx);
         underside_js_5.drawUnderFx(fxCtx, vw, vh); // иней на стекле — в криосклепе
+        // ход мха — сон: по бокам темнота век, за ними — пятна, соты, тоннель, гиперкубы (render/mindfx.js)
+        if (underside_js_4.moss.k > 0.01)
+            mindfx_js_1.drawMossDream(fxCtx, vw, vh, time_js_52.t, Math.max(0, Math.min(1, (player.x + 6 - underside_js_4.MOSS.x0) / (underside_js_4.MOSS.x1 - underside_js_4.MOSS.x0))), underside_js_4.moss.k, underside_js_4.moss.pulse, prefs_js_9.reducedMotion());
         metaFx_js_2.screenMoss.draw(uiCtx);
         drawHUD(uiCtx);
         ink_js_2.ink.drawLabel(uiCtx);
@@ -74648,6 +75435,23 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             stopHero();
             player.moving = false;
             player.still = true;
+            updateWorldSystems();
+            return;
+        }
+        // вылезает наверх (world/climbOut.js): ход заперт; шаг — сразу дойти до порога
+        if (climbOut_js_1.climb.on) {
+            climbOut_js_1.stepClimb(player, input_js_2.input.getMove().active || !!input_js_2.input.getHeldTouch());
+            updateWorldSystems();
+            return;
+        }
+        climbOut_js_1.stepClimb(player); // люк за вышедшим затягивается
+        // в пифосе (world/pithosLie.js): ход заперт — подходит, садится, вползает; лёжа шаг — вылезти
+        if (pithosLie_js_1.lie.on) {
+            if (pithosLie_js_1.lie.phase === 'in' && (input_js_2.input.getMove().active || input_js_2.input.getHeldTouch()))
+                pithosLie_js_1.wantOut();
+            const ev = pithosLie_js_1.stepLie(player);
+            if (ev === 'in')
+                openPithosMenu();
             updateWorldSystems();
             return;
         }
@@ -75585,6 +76389,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (wakefx_js_1_1) {
                 wakefx_js_1 = wakefx_js_1_1;
             },
+            function (pithosLie_js_1_1) {
+                pithosLie_js_1 = pithosLie_js_1_1;
+            },
+            function (climbOut_js_1_1) {
+                climbOut_js_1 = climbOut_js_1_1;
+            },
+            function (mindfx_js_1_1) {
+                mindfx_js_1 = mindfx_js_1_1;
+            },
             function (title_js_1_1) {
                 title_js_1 = title_js_1_1;
             },
@@ -75816,6 +76629,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // кровати; упал за краем — тоже сюда. ?nohouse и ?under — проверка руками: с места.
             NO_HOUSE = /[?&](?:nohouse|under)\b/.test(location.search);
             houseKeep = null; // свет мира, пока в доме
+            // ЛЕЧЬ В ПИФОС (world/pithosLie.js): лёг — меню лежащего: «УСНУТЬ» или «ВЫЛЕЗТИ»; осмотреться —
+            // тот же текст, что прежде показывало «ЛЕЧЬ». Отменил — лежит; щелчок или E/F — меню снова
+            pithosIn = null;
             // бревно у костра (world/locations.js firelog): фигура садится на середину бревна; любой перенос — встал
             logSeated = false;
             // сцена Театра Теней (world/stage.js, render/stage.js): «СЕСТЬ» — шторка, и странник сидит на трещине
@@ -75951,9 +76767,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lastNow = 0, acc = 0;
             // похмельная прогрузка: мир всплывает в фокус, веки моргают, тело шатает и трясёт,
             // а мир собирается, как цифра после сбоя (вход в мир и пробуждение после падения).
-            // Первое пробуждение странника — целиком, пятнадцать секунд; дальше — шесть, и
-            // проснуться можно сразу: клавиша или клик (weave/ROADMAP И4)
-            WAKE_FULL = 15, WAKE_SHORT = 6;
+            // Первое пробуждение странника — целиком, двадцать четыре секунды (слово автора 23.11:
+            // «дольше пробуждение»; было пятнадцать); дальше — девять (было шесть), и проснуться
+            // можно сразу: клавиша или клик (weave/ROADMAP И4). Сроки — те же, что в style.css (#gw.wake)
+            WAKE_FULL = 24, WAKE_SHORT = 9;
             wakeUp = null; // проснуться сейчас — пока идёт короткое
             // клавиша будит (сама клавиша — шаг, карта — делает своё: проснулся и пошёл)
             document.addEventListener('keydown', e => {
@@ -76022,6 +76839,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     lorepopup_js_1.skipOrDismiss();
                     return;
                 } // первый клик допечатывает, второй убирает
+                if (pithosLie_js_1.lie.on) {
+                    if (pithosLie_js_1.lie.phase === 'in')
+                        openPithosMenu();
+                    return;
+                } // в пифосе щелчок — меню лежащего
+                if (climbOut_js_1.climb.on)
+                    return; // вылезает — щелчок подождёт
                 const pos = input_js_2.input.screenToWorld(clientX, clientY, camera_js_1.camera);
                 player.walkIntent = intent || null; // правая кнопка: дойти и использовать
                 if (house_js_2.house.active) {
@@ -76081,6 +76905,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 if (!state_js_9.state.is('game') || lorepopup_js_1.isActive() || worldmap_js_1.isOpen())
                     return;
+                if (pithosLie_js_1.lie.on) {
+                    e.preventDefault();
+                    if (pithosLie_js_1.lie.phase === 'in')
+                        openPithosMenu();
+                    return;
+                } // в пифосе под рукой — только пифос
+                if (climbOut_js_1.climb.on) {
+                    e.preventDefault();
+                    return;
+                }
                 const hand = thingAtHand();
                 if (!hand)
                     return;
@@ -76207,6 +77041,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 const a = loc.altNow && loc.altNow();
                 if (!a)
                     return;
+                if (a.key === 'pithos_out') {
+                    pithosLie_js_1.wantOut();
+                    return;
+                } // из пифоса — вылезти
                 if (a.key === 'under_greet' && underside_js_4.under.greet())
                     audio_js_13.playBlow();
                 if (a.key === 'under_lay')
@@ -76335,6 +77173,23 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 // бревно у костра: сесть лицом к огню; слов нет, дыхание продолжается; шагнул — встал
                 if (actionKey === 'sit_log') {
                     sitOnLog(loc);
+                    return;
+                }
+                // пифос: лечь — сцена (world/pithosLie.js), уснуть — из меню лежащего: вниз, в ход мха
+                if (actionKey === 'pithos_lie') {
+                    if (!pithosLie_js_1.lie.on) {
+                        logSeated = false;
+                        player.path = null;
+                        player.walkTo = null;
+                        player.auto = false;
+                        stopHero();
+                        underside_js_4.under.seen.add('pithos_lie');
+                        pithosLie_js_1.startLie(loc);
+                    }
+                    return;
+                }
+                if (actionKey === 'pithos_sleep') {
+                    sleepInPithos();
                     return;
                 }
                 // The gates teleport onto the street: one road, gradient of epochs

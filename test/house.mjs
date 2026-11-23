@@ -110,34 +110,39 @@ await test('дом: кадр ночью и днём, с ботинками и б
 
 // ── пробуждение в мире цифры (render/wakefx.js) ──
 const WF = await imp('render/wakefx.js');
-await test('пробуждение: пятнадцать секунд, как муть и веки; подгрузки — на открытии век (lidBlink 8, 28, 58, 84%)', () => {
-  eq(WF.LEN, 900, '15 с по 60 шагов');
-  eq(JSON.stringify(WF.OPEN), JSON.stringify([0.08, 0.28, 0.58, 0.84].map(k => Math.round(k * 900))));
+await test('пробуждение: двадцать четыре секунды, как муть и веки (слово автора 23.11: дольше); подгрузки — на открытии век (lidBlink 8, 28, 58, 84%)', async () => {
+  eq(WF.LEN, 1440, '24 с по 60 шагов');
+  eq(JSON.stringify(WF.OPEN), JSON.stringify([0.08, 0.28, 0.58, 0.84].map(k => Math.round(k * 1440))));
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('style.css', base), 'utf8'), main = readFileSync(new URL('main.js', base), 'utf8');
+  assert(/WAKE_FULL = 24, WAKE_SHORT = 9/.test(main), 'сроки в main.js');
+  assert(/#gw\.wake \{ animation: wakeblur 24s[^}]*wakesway 24s/.test(css) && /lidBlink 24s/.test(css) && /#gw\.wake\.short \{ animation: wakeblur 9s/.test(css), 'сроки в style.css');
 });
 await test('пробуждение: мир собирается блоками — крупно, мельче, до точки; строка развёртки идёт сверху вниз', () => {
   let last = 99;
-  for (let a = 0; a < 330; a += 5) {
+  for (let a = 0; a < WF.BUILT; a += 5) {
     const D = WF.decodeAt(a);
     if (WF.OPEN.some(o => a >= o && a < o + 16)) continue;
     assert(D.b <= last, 'не крупнее прежнего: ' + a);
     assert(D.prev >= D.b && D.k >= 0 && D.k <= 1, 'ниже строки — крупнее');
     last = D.b;
   }
-  eq(WF.decodeAt(0).b, 16); eq(WF.decodeAt(340).b, 1); eq(WF.decodeAt(900).b, 1, 'после — чисто');
-  for (const o of WF.OPEN) { assert(WF.decodeAt(o + 1).b >= 2, 'веки открылись — подгрузка'); eq(WF.decodeAt(o + 20).b, o + 20 < 330 ? WF.decodeAt(o + 20).b : 1); }
+  eq(WF.decodeAt(0).b, 16); eq(WF.decodeAt(WF.BUILT + 10).b, 1); eq(WF.decodeAt(WF.LEN).b, 1, 'после — чисто');
+  for (const o of WF.OPEN) { assert(WF.decodeAt(o + 1).b >= 2, 'веки открылись — подгрузка'); eq(WF.decodeAt(o + 20).b, o + 20 < WF.BUILT ? WF.decodeAt(o + 20).b : 1); }
   assert(WF.decodeAt(100).k > WF.decodeAt(85).k, 'строка движется вниз');
 });
 await test('пробуждение: дрожь всплесками целыми точками; рывки строк и код — в начале и на открытии век; «меньше движения» — без них', () => {
   let shaken = 0, still = 0;
-  for (let a = 0; a < 900; a++) { const [x, y] = WF.tremorAt(a, 7); assert(Math.abs(x) <= 2 && Math.abs(y) <= 2 && Number.isInteger(x) && Number.isInteger(y)); if (x || y) shaken++; else still++; }
-  assert(shaken > 50 && still > 300, 'всплесками: ' + shaken + '/' + still);
+  for (let a = 0; a < WF.LEN; a++) { const [x, y] = WF.tremorAt(a, 7); assert(Math.abs(x) <= 2 && Math.abs(y) <= 2 && Number.isInteger(x) && Number.isInteger(y)); if (x || y) shaken++; else still++; }
+  assert(shaken > 80 && still > 480, 'всплесками: ' + shaken + '/' + still);
   assert(WF.slicesAt(30, 360, 7).length >= 1, 'в начале рвёт');
-  eq(WF.slicesAt(400, 360, 7).length, 0, 'между — тихо');
+  eq(WF.slicesAt(640, 360, 7).length, 0, 'между — тихо');
   assert(WF.slicesAt(WF.OPEN[2] + 2, 360, 7).length >= 1, 'на открытии век — рвёт');
   const code = WF.codeAt(40, 640, 360, 7);
   assert(code.length >= 1 && code.every(c => /^[01]+$/.test(c.s) && c.x >= 0 && c.y >= 0 && c.y < 360), 'двоичный код в кадре');
-  eq(WF.codeAt(400, 640, 360, 7).length, 0);
-  for (const a of [10, 40, WF.OPEN[1] + 3]) { eq(WF.tremorAt(a, 7, true).join(), '0,0'); eq(WF.slicesAt(a, 360, 7, true).length, 0); eq(WF.codeAt(a, 640, 360, 7, true).length, 0); }
+  eq(WF.codeAt(640, 640, 360, 7).length, 0);
+  for (const a of [10, 40, WF.OPEN[1] + 3]) { eq(WF.tremorAt(a, 7, true).join(), '0,0'); eq(WF.slicesAt(a, 360, 7, true).length, 0); eq(WF.codeAt(a, 640, 360, 7, true).length, 0);
+    eq(WF.macroAt(a, 640, 360, 7, true).length, 0); eq(WF.dragAt(a, 640, 360, 7, true).length, 0); eq(WF.columnsAt(a, 640, 360, 7, true).length, 0); }
   let flips = 0, prev = '';
   for (let a = 0; a < 60; a++) { const k = JSON.stringify(WF.codeAt(a, 640, 360, 7)); if (k !== prev) flips++; prev = k; }
   assert(flips <= 9, 'код меняется не чаще раза в восемь кадров: ' + flips);
@@ -149,7 +154,7 @@ await test('сбой — двоичным кодом, без слов; до от
   const said0 = [];
   const c = fakeCtx(); c.fillText = c.strokeText = s => said0.push(String(s));
   WF.wakefx.start();
-  for (let n = 0; n < 900; n++) { TM.tick(); if (n % 3 === 0) WF.wakePass(c, { width: 1280, height: 720 }, 2); }
+  for (let n = 0; n < WF.LEN; n++) { TM.tick(); if (n % 3 === 0) WF.wakePass(c, { width: 1280, height: 720 }, 2); }
   assert(said0.length > 0, 'двоичного кода в пробуждении нет');
   assert(said0.every(s => /^[01]+$/.test(s)), 'в сбое пробуждения — не только код: ' + said0.find(s => !/^[01]+$/.test(s)));
   const tg = readFileSync(new URL('ui/titleglitch.js', base), 'utf8');
@@ -175,13 +180,13 @@ await test('сбой — двоичным кодом, без слов; до от
   assert(!/crackedGlass\.clear/.test(rec), 'следы падения стёрты');
   assert(!/renderHouse[\s\S]{0,1500}drawBrainrot/.test(main.slice(main.indexOf('function renderHouse'), main.indexOf('function renderUnder'))), 'в доме рисуется оверлей падения');
 });
-await test('пробуждение: второе — та же сцена за шесть секунд, мигание по настоящим кадрам; проснуться — за полсекунды', async () => {
+await test('пробуждение: второе — та же сцена за девять секунд, мигание по настоящим кадрам; проснуться — за полсекунды', async () => {
   const TM = await imp('core/time.js');
-  WF.wakefx.start(15 / 6);
-  for (let i = 0; i < 100; i++) TM.tick();
-  eq(WF.wakefx.frame(), 100); eq(WF.wakefx.age(), 250, 'ход сцены в шагах полной');
-  for (let i = 0; i < 260; i++) TM.tick();
-  assert(!WF.wakefx.active(), 'шесть секунд — и всё');
+  WF.wakefx.start(24 / 9);
+  for (let i = 0; i < 90; i++) TM.tick();
+  eq(WF.wakefx.frame(), 90); eq(Math.round(WF.wakefx.age()), 240, 'ход сцены в шагах полной');
+  for (let i = 0; i < 450; i++) TM.tick();
+  assert(!WF.wakefx.active(), 'девять секунд — и всё');
   // дрожь меняется не чаще раза в два кадра, рывки строк — раз в четыре, код — раз в восемь: как в полной
   let flips = 0, prev = '';
   for (let q = 0; q < 60; q++) { const k = WF.tremorAt(q * 2.5, 7, false, q).join(); if (k !== prev) flips++; prev = k; }
@@ -192,13 +197,30 @@ await test('пробуждение: второе — та же сцена за �
   flips = 0; prev = '';
   for (let q = 0; q < 40; q++) { const k = JSON.stringify(WF.slicesAt(q * 2.5, 360, 7, false, q)); if (k !== prev) flips++; prev = k; }
   assert(flips <= 11, 'рывки — не чаще раза в четыре кадра: ' + flips);
-  WF.wakefx.start(15 / 6);
+  WF.wakefx.start(24 / 9);
   for (let i = 0; i < 30; i++) TM.tick();
   WF.wakefx.skip();
   let n = 0;
   while (WF.wakefx.active() && n < 200) { TM.tick(); n++; }
   assert(n <= 31, 'проснулся за полсекунды: ' + n);
-  eq(WF.decodeAt(WF.LEN - 30 * 2.5).b, 1, 'последние полсекунды — чистый кадр');
+  eq(WF.decodeAt(WF.LEN - 30 * 24 / 9).b, 1, 'последние полсекунды — чистый кадр');
+  for (const f of [WF.macroAt, WF.dragAt, WF.columnsAt]) eq(f(WF.LEN - 30 * 24 / 9, 640, 360, 7).length, 0, 'последние полсекунды — без сбоев');
+  eq(WF.interlaceAt(WF.LEN - 30 * 24 / 9), 0);
+});
+await test('пробуждение: цифры больше — битые макроблоки, протяжки, черезстрочка, колонки кода; пока мир собирается и на открытии век; между — тихо', () => {
+  const mb = WF.macroAt(60, 640, 360, 7);
+  assert(mb.length >= 2 && mb.every(m => m.x % 8 === 0 && m.y % 8 === 0 && m.w >= 8 && m.w <= 24 && m.sx >= 0 && m.sx + m.w <= 640 && m.sy >= 0 && m.sy + m.h <= 360), 'макроблоки в кадре, по сетке 8');
+  assert(WF.macroAt(WF.OPEN[2] + 5, 640, 360, 7).length >= 2, 'на открытии век — макроблоки');
+  eq(WF.macroAt(WF.OPEN[2] + 60, 640, 360, 7).length, 0, 'между — тихо');
+  assert(WF.dragAt(WF.OPEN[1] + 10, 640, 360, 7).length >= 1, 'на открытии век — протяжка');
+  eq(WF.dragAt(WF.OPEN[2] + 60, 640, 360, 7).length, 0);
+  assert(WF.interlaceAt(10) > 0.2 && WF.interlaceAt(WF.BUILT + 1) === 0 && WF.interlaceAt(WF.OPEN[3] + 2) > 0, 'черезстрочка сходит к сборке, на веках — снова');
+  const cols = WF.columnsAt(200, 640, 360, 7);
+  assert(cols.length >= 1 && cols.every(c => /^[01]+$/.test(c.s)), 'колонки — только нули и единицы');
+  eq(WF.columnsAt(WF.BUILT + 1, 640, 360, 7).length, 0, 'собран — колонок нет');
+  let flips = 0, prev = '';
+  for (let a = 0; a < 60; a++) { const k = JSON.stringify(WF.macroAt(a, 640, 360, 7)); if (k !== prev) flips++; prev = k; }
+  assert(flips <= 16, 'макроблоки держатся четыре кадра: ' + flips);
 });
 await test('пробуждение: проход без холста (проверки) — без ошибок', () => {
   WF.wakefx.start();

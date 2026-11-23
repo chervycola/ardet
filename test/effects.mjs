@@ -170,6 +170,43 @@ setCtx(fakeCtx());
   });
 }
 
+// ═══ СОН В ХОДЕ МХА — путешествие по границам рассудка (render/mindfx.js, слово автора 23.11) ═══
+{
+  const MF = await imp('render/mindfx.js');
+  test('сон в ходе мха: по бокам темнее, посередине — свет; этапы по ходу: пятна → соты → тоннель → гиперкубы, у норы сходит', () => {
+    assert(MF.sideAlpha(0, 640, 1) > 0.85 && MF.sideAlpha(320, 640, 1) === 0 && MF.sideAlpha(200, 640, 1) < MF.sideAlpha(60, 640, 1), 'бока темнее середины');
+    eq(MF.sideAlpha(0, 640, 0), 0, 'не во сне — не темнеет');
+    const at = p => MF.stagesAt(p, 1);
+    assert(at(0.05).specks > 0.9 && at(0.05).lattice < 0.05 && at(0.05).cubes === 0, 'вначале — пятна');
+    assert(at(0.35).lattice > 0.9, 'потом — соты');
+    assert(at(0.6).tunnel > 0.9, 'потом — тоннель');
+    assert(at(0.8).cubes > 0.9, 'потом — гиперкубы');
+    const end = at(0.99);
+    assert(end.specks + end.lattice + end.tunnel + end.cubes < 0.02, 'у норы — проснулся');
+    eq(MF.TESS_V.length, 16); eq(MF.TESS_E.length, 32, 'тридцать два ребра');
+    for (const [i, j] of MF.TESS_E) { let d = 0; for (let k = 0; k < 4; k++) if (MF.TESS_V[i][k] !== MF.TESS_V[j][k]) d++; eq(d, 1, 'ребро — по одной оси'); }
+    const P = MF.tesseract(0.3, 0.7, 1.1, 200, 320, 180);
+    assert(P.every(([x, y]) => isFinite(x) && isFinite(y) && Math.abs(x - 320) < 200 && Math.abs(y - 180) < 200), 'гиперкуб в кадре');
+    const sp = MF.specksAt(100, 640, 360);
+    assert(sp.length > 20 && sp.every(s => s.a >= 0 && s.a <= 1), 'фосфены');
+  });
+  test('сон в ходе мха: краски — кость, пепел, бледный мох, редкая киноварь; без неона; рисуется без ошибок и в «меньше движения»', () => {
+    const cols = new Set();
+    const g = new Proxy({}, { get(t, k) {
+      if (k === 'createRadialGradient') return () => ({ addColorStop: (o, c) => cols.add(c) });
+      return () => {};
+    }, set(t, k, v) { if ((k === 'fillStyle' || k === 'strokeStyle') && typeof v === 'string') cols.add(v); return true; } });
+    for (const p of [0.05, 0.3, 0.6, 0.8]) { MF.drawMossDream(g, 640, 360, 500, p, 1, 0.5, false); MF.drawMossDream(g, 640, 360, 500, p, 1, 0.5, true); }
+    assert(cols.size > 3, 'ничего не нарисовано');
+    for (const c of cols) {
+      const m = /rgba\((\d+),(\d+),(\d+)/.exec(c);
+      if (!m) continue;
+      const [r, gg, b] = [+m[1], +m[2], +m[3]];
+      assert(gg - Math.max(r, b) < 40 && !(b > r + 30 && b > gg + 30), 'неон или синий во сне: ' + c);
+    }
+  });
+}
+
 // ═══ DYING PIXELS EVOLUTION ═══
 {
   const { dyingPixels } = await imp('render/metaFx.js');

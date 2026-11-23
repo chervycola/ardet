@@ -5,7 +5,7 @@
 // делает то же, что игрок. Модель — любая: харнесс говорит построчным
 // JSON (stdin → stdout) и ничего не знает о том, кто им управляет.
 //
-//   node hunt/harness.mjs [--url <адрес игры>] [--out <папка прогона>] [--headed] [--serve <порт>]
+//   node hunt/harness.mjs [--url <адрес игры>] [--query <ещё в адрес>] [--out <папка прогона>] [--headed] [--serve <порт>]
 //   (--serve: вместо stdin — HTTP на 127.0.0.1, одно действие на запрос; клиент — hunt/act.mjs)
 //
 // По умолчанию — локальная сборка build/index.html в режиме ?stream.
@@ -46,7 +46,8 @@ async function localUrl() {
     catch { res.statusCode = 404; res.end(); }
   });
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
-  return `http://127.0.0.1:${srv.address().port}/build/index.html?stream`;
+  const extra = arg('--query', '');               // проверка сборки руками: --query under=moss — сразу в ход мха
+  return `http://127.0.0.1:${srv.address().port}/build/index.html?stream${extra ? '&' + extra : ''}`;
 }
 const URL_ = arg('--url', null) || await localUrl();
 const OUT = resolve(arg('--out', join('hunt-runs', new Date().toISOString().replace(/[:.]/g, '-'))));

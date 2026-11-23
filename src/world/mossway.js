@@ -4,7 +4,7 @@
 // пифосе»). Вход — пасхалка, не кнопка: ночью, если задержаться у пифоса дольше,
 // чем нужно, чтобы просто пройти мимо, он шепчет «...я мягче, чем числюсь...» —
 // раз за ночь; кто понял — ложится, кто не понял — узнает в другую ночь. После
-// шёпота у пифоса проявляется «ЛЕЧЬ», потом «УСНУТЬ» — вниз, в ход мха. Выход —
+// шёпота у пифоса проявляется «ЛЕЧЬ»: странник залезает, и лёжа — «УСНУТЬ» — вниз, в ход мха. Выход —
 // нора у подножия огня: кольцо «сейчас», юг, в шаге от кромки огня; она же спуск
 // (сцена, потом вниз). Сам ход и шаг по стуку сердца — world/underside.js.
 // ═══════════════════════════════════════
@@ -66,7 +66,8 @@ export function buildMossway(locations) {
   if (pithos) {                                                         // у пифоса действие проявляется после шёпота
     pithos.useAction = 'pithos_lie';
     pithos.useShown = () => under.seen.has('pithos_whisper');
-    Object.defineProperty(pithos, 'useLabel', { get: () => (under.seen.has('pithos_lie') ? '<i>☾</i>УСНУТЬ' : '<i>☾</i>ЛЕЧЬ'), configurable: true, enumerable: true });
+    // «ЛЕЧЬ» всякий раз: фигура медленно залезает, и уже лёжа — «УСНУТЬ» (слово автора 23.11; world/pithosLie.js)
+    pithos.useLabel = '<i>☾</i>ЛЕЧЬ';
   }
   const b = burrowPlace(locations);
   burrow = { id: 'burrow', name: 'Нора у подножия огня', zone: 'street', x: b.x - 13, y: b.y - 11, w: 26, h: 11, look: LOOK, drawSelf: drawBurrow, useAction: 'burrow_down' };

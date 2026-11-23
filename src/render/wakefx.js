@@ -5,9 +5,12 @@
 // целыми точками кадра. Мир — цифра после сбоя: собирается заново, сперва крупными
 // блоками, потом мельче; строки срывает и сдвигает вбок; на миг проступает двоичный
 // код; по кадру — битые точки, гаснут не сразу. Каждый раз, как веки открываются,
-// мир чуть заново подгружается. Пятнадцать секунд, как муть и веки (style.css).
-// Первое пробуждение странника — целиком; дальше — та же сцена за шесть секунд
-// (speed 2,5) и проснуться можно сразу (skip). Ускоряется ход сцены, не мигание:
+// мир чуть заново подгружается. Двадцать четыре секунды, как муть и веки (style.css):
+// слово автора 23.11 — «дольше пробуждение и чуть больше цифровых эффектов»: прежние
+// пятнадцать растянуты в 1,6 раза, и к сбою добавлены битые макроблоки (куски кадра
+// не на своём месте), черезстрочка, протяжки столбцов и колонки кода.
+// Первое пробуждение странника — целиком; дальше — та же сцена за девять секунд
+// (speed 24/9) и проснуться можно сразу (skip). Ускоряется ход сцены, не мигание:
 // дрожь, рывки и код меняются по настоящим кадрам, как в полной.
 // Краски свои: дробится и рвётся сам кадр, сверху — только кость, пепел и редкая
 // киноварь. Вспышек не больше трёх в секунду; «меньше движения» в системе — только
@@ -17,8 +20,9 @@
 import { t } from '../core/time.js';
 import { reducedMotion } from '../core/prefs.js';
 
-export const LEN = 900;                                    // пятнадцать секунд
-export const OPEN = [72, 252, 522, 756];                   // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
+export const LEN = 1440;                                   // двадцать четыре секунды
+export const K = LEN / 900;                                // во сколько раз длиннее прежней сцены
+export const OPEN = [0.08, 0.28, 0.58, 0.84].map(f => Math.round(f * LEN));   // веки открываются (lidBlink: 8%, 28%, 58%, 84%)
 const BO = '#D9CFB8', AS = '#8A8D8F', KV = '#C23B2B';
 const FONT = '6px "Press Start 2P","VT323",monospace';
 function hh(a, b, s) {
@@ -38,11 +42,12 @@ export const wakefx = {
   active() { const a = this.age(); return a >= 0 && a < LEN; },
 };
 
-// ── сколько точек в блоке (точки кадра): первая сборка 24 → 1 за пять с половиной
+// ── сколько точек в блоке (точки кадра): первая сборка 24 → 1 почти за девять
 //    секунд ступенями, как прогрессивная картинка: каждая ступень проходит кадр
 //    сверху вниз строкой развёртки — выше строки уже мельче (b), ниже ещё крупно
 //    (prev), k — где строка (0..1). Веки открылись — короткая подгрузка всем кадром ──
-const FIRST = [[40, 16], [80, 12], [120, 8], [170, 6], [220, 4], [270, 3], [330, 2]];
+const FIRST = [[40, 16], [80, 12], [120, 8], [170, 6], [220, 4], [270, 3], [330, 2]].map(([e, b]) => [Math.round(e * K), b]);
+export const BUILT = FIRST[FIRST.length - 1][0];          // с этого шага кадр собран до точки
 const AGAIN = [6, 6, 4, 4, 3, 3, 2, 2];
 export function decodeAt(a) {
   if (a < 0 || a >= LEN) return { b: 1, prev: 1, k: 1 };
@@ -60,7 +65,8 @@ export function decodeAt(a) {
 export const blockAt = a => decodeAt(a).b;
 // ── дрожь: всплесками, вначале крупнее и дольше, к концу реже и мельче; меняется
 //    через кадр — тридцать раз в секунду, как рука ──
-const BURSTS = [[0, 150, 2], [240, 300, 2], [400, 440, 1], [510, 560, 2], [620, 650, 1], [750, 790, 1]];
+const BURSTS = [[0, 150, 2], [240, 300, 2], [400, 440, 1], [510, 560, 2], [620, 650, 1], [750, 790, 1]].map(([s, e, A]) => [Math.round(s * K), Math.round(e * K), A]);
+const EARLY = Math.round(120 * K);                         // первые три секунды — рвёт густо
 // q — настоящий кадр (в полной сцене совпадает с a): по нему меняется картинка мигания
 export function tremorAt(a, seed = 1, reduced = false, q = a) {
   if (reduced || a < 0 || a >= LEN) return [0, 0];
@@ -77,13 +83,13 @@ export function tremorAt(a, seed = 1, reduced = false, q = a) {
 export function slicesAt(a, vh, seed = 1, reduced = false, q = a) {
   if (reduced || a < 0 || a >= LEN) return [];
   let n = 0;
-  if (a < 120) n = 2 + Math.floor(hh(q >> 2, 3, seed) * 4);
+  if (a < EARLY) n = 2 + Math.floor(hh(q >> 2, 3, seed) * 4);
   for (const o of OPEN) { const d = a - o; if (d >= 0 && d < 20) n = Math.max(n, 1 + Math.floor(hh(q >> 2, 4, seed) * 3)); }
   const out = [];
   for (let i = 0; i < n; i++) {
     const k = (q >> 2) * 7 + i;                                   // полоса держится четыре кадра
     const h = 2 + Math.floor(hh(k, 5, seed) * 12), y = Math.floor(hh(k, 6, seed) * Math.max(1, vh - h));
-    const dx = Math.round((hh(k, 7, seed) * 2 - 1) * (a < 120 ? 16 : 8));
+    const dx = Math.round((hh(k, 7, seed) * 2 - 1) * (a < EARLY ? 16 : 8));
     if (dx) out.push({ y, h, dx });
   }
   return out;
@@ -91,7 +97,7 @@ export function slicesAt(a, vh, seed = 1, reduced = false, q = a) {
 // ── двоичный код проступает строкой: не чаще раза в восемь кадров ──
 export function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
   if (reduced || a < 0 || a >= LEN) return [];
-  let on = a >= 10 && a < 100;
+  let on = a >= 16 && a < Math.round(100 * K);
   for (const o of OPEN) { const d = a - o; if (d >= 2 && d < 14) on = true; }
   if (!on) return [];
   const k = q >> 3, n = 1 + Math.floor(hh(k, 8, seed) * 3), out = [];
@@ -103,10 +109,66 @@ export function codeAt(a, vw, vh, seed = 1, reduced = false, q = a) {
   }
   return out;
 }
-// ── битые точки: двадцать с небольшим, гаснут каждая в свой срок ──
+// ── битые макроблоки: квадраты кадра (8–24 точки) не на своём месте — кусок
+//    соседнего кадра, как поток с потерей; держатся четыре кадра. Густо, пока мир
+//    собирается, и на каждом открытии век ──
+export function macroAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+  if (reduced || a < 0 || a >= LEN) return [];
+  let n = 0;
+  if (a < BUILT) n = Math.round(6 * (1 - a / BUILT)) + (hh(q >> 2, 20, seed) < 0.5 ? 1 : 0);
+  for (const o of OPEN) { const d = a - o; if (d >= 0 && d < 40) n = Math.max(n, 2 + Math.floor(hh(q >> 2, 21, seed) * 3)); }
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const k = (q >> 2) * 11 + i;
+    const sz = 8 * (1 + Math.floor(hh(k, 22, seed) * 3));
+    const x = Math.floor(hh(k, 23, seed) * Math.max(1, vw - sz) / 8) * 8, y = Math.floor(hh(k, 24, seed) * Math.max(1, vh - sz) / 8) * 8;
+    const sx = Math.max(0, Math.min(vw - sz, x + Math.round((hh(k, 25, seed) * 2 - 1) * 48)));
+    const sy = Math.max(0, Math.min(vh - sz, y + Math.round((hh(k, 26, seed) * 2 - 1) * 24)));
+    out.push({ x, y, sx, sy, w: sz, h: sz });
+  }
+  return out;
+}
+// ── протяжка: столбец кадра тянется вниз от одной строки (так виснет развёртка);
+//    одна-две за раз, держится восемь кадров ──
+export function dragAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+  if (reduced || a < 0 || a >= LEN) return [];
+  let on = a < EARLY * 2 && hh(q >> 3, 30, seed) < 0.45;
+  for (const o of OPEN) { const d = a - o; if (d >= 4 && d < 30) on = true; }
+  if (!on) return [];
+  const k = q >> 3, n = 1 + (hh(k, 31, seed) < 0.4 ? 1 : 0), out = [];
+  for (let i = 0; i < n; i++) {
+    const w = 1 + Math.floor(hh(k + i, 32, seed) * 3), x = Math.floor(hh(k + i, 33, seed) * Math.max(1, vw - w));
+    const y = Math.floor(hh(k + i, 34, seed) * vh * 0.7), h = 12 + Math.floor(hh(k + i, 35, seed) * vh * 0.3);
+    out.push({ x, y, w, h: Math.min(h, vh - y) });
+  }
+  return out;
+}
+// ── черезстрочка: каждая вторая строка кадра притушена — сперва заметно, к концу сборки
+//    сходит; на открытии век проступает снова. Неподвижна — годится и «меньше движения» ──
+export function interlaceAt(a) {
+  if (a < 0 || a >= LEN) return 0;
+  let k = a < BUILT ? 0.28 * (1 - a / BUILT) : 0;
+  for (const o of OPEN) { const d = a - o; if (d >= 0 && d < 30) k = Math.max(k, 0.14 * (1 - d / 30)); }
+  return k;
+}
+// ── колонки кода: нули и единицы столбиком, ползут вниз — пока мир не собран ──
+export function columnsAt(a, vw, vh, seed = 1, reduced = false, q = a) {
+  if (reduced || a < 30 || a >= BUILT) return [];
+  const n = 1 + Math.floor(hh(Math.floor(a / 120), 40, seed) * 3), out = [];
+  for (let i = 0; i < n; i++) {
+    const life = 120, k = Math.floor(a / life) * 5 + i, f = (a % life) / life;
+    const len = 5 + Math.floor(hh(k, 41, seed) * 9), x = 6 + Math.floor(hh(k, 42, seed) * Math.max(1, vw - 12));
+    const y0 = Math.floor(hh(k, 43, seed) * vh * 0.4) + Math.floor(f * vh * 0.5);
+    let s = '';
+    for (let j = 0; j < len; j++) s += hh(k * 13 + j, (q >> 3) + 44, seed) < 0.5 ? '0' : '1';
+    out.push({ s, x, y: y0, a: 0.25 + 0.3 * Math.sin(Math.PI * f) });
+  }
+  return out;
+}
+// ── битые точки: сорок с небольшим (и пара мёртвых строчек), гаснут каждая в свой срок ──
 function stuckOf(vw, vh, seed) {
   const out = [];
-  for (let i = 0; i < 26; i++) out.push({ x: Math.floor(hh(i, 13, seed) * vw), y: Math.floor(hh(i, 14, seed) * vh), life: 90 + Math.floor(hh(i, 15, seed) * 520), c: i % 9 === 4 ? KV : i % 3 ? BO : AS });
+  for (let i = 0; i < 44; i++) out.push({ x: Math.floor(hh(i, 13, seed) * vw), y: Math.floor(hh(i, 14, seed) * vh), w: i % 11 === 6 ? 3 + Math.floor(hh(i, 16, seed) * 6) : 1, life: Math.round((90 + Math.floor(hh(i, 15, seed) * 520)) * K), c: i % 9 === 4 ? KV : i % 3 ? BO : AS });
   return out;
 }
 
@@ -144,7 +206,8 @@ export function wakePass(ctx, main, scale = 1) {
   ctx.imageSmoothingEnabled = false;
   // 1. дрожь и рывки строк — по снимку кадра (один снимок на кадр)
   const [jx, jy] = tremorAt(a, seed, red, q), sl = slicesAt(a, vh, seed, red, q);
-  if (jx || jy || sl.length) {
+  const mb = macroAt(a, vw, vh, seed, red, q), dr = dragAt(a, vw, vh, seed, red, q);
+  if (jx || jy || sl.length || mb.length || dr.length) {
     snap = canvas(W, H, snap);
     if (snap) {
       const g = snap.getContext('2d');
@@ -152,6 +215,8 @@ export function wakePass(ctx, main, scale = 1) {
       g.drawImage(main, 0, 0);
       if (jx || jy) ctx.drawImage(snap, jx * s, jy * s);
       for (const q of sl) ctx.drawImage(snap, 0, q.y * s, W, q.h * s, q.dx * s, q.y * s, W, q.h * s);
+      for (const m of mb) ctx.drawImage(snap, m.sx * s, m.sy * s, m.w * s, m.h * s, m.x * s, m.y * s, m.w * s, m.h * s);
+      for (const d of dr) ctx.drawImage(snap, d.x * s, d.y * s, d.w * s, s, d.x * s, d.y * s, d.w * s, d.h * s);   // одна строка — на весь столбец
     }
   }
   // 2. мир собирается блоками — прямо с кадра: выше строки развёртки мельче, ниже ещё крупно
@@ -162,18 +227,26 @@ export function wakePass(ctx, main, scale = 1) {
     if (sy < H) blocks(ctx, main, W, H, D.prev * s, sy, H);
     if (sy < H) { ctx.globalAlpha = 0.35; ctx.fillStyle = BO; ctx.fillRect(0, sy, W, s); ctx.globalAlpha = 1; }   // строка развёртки
   }
-  // 3. двоичный код и битые точки — в точках кадра
+  // 3. черезстрочка, двоичный код, колонки кода и битые точки — в точках кадра
   ctx.setTransform(s, 0, 0, s, 0, 0);
-  const code = codeAt(a, vw, vh, seed, red, q);
-  if (code.length) {
+  const il = interlaceAt(a);
+  if (il > 0.01) {
+    ctx.globalAlpha = il; ctx.fillStyle = '#000';
+    for (let y = 1; y < vh; y += 2) ctx.fillRect(0, y, vw, 1);
+    ctx.globalAlpha = 1;
+  }
+  const code = codeAt(a, vw, vh, seed, red, q), cols = columnsAt(a, vw, vh, seed, red, q);
+  if (code.length || cols.length) {
     ctx.font = FONT; ctx.textBaseline = 'top'; ctx.fillStyle = BO;
     for (const c of code) { ctx.globalAlpha = c.a; ctx.fillText(c.s, c.x, c.y); }
+    ctx.fillStyle = AS;
+    for (const c of cols) { ctx.globalAlpha = c.a; for (let j = 0; j < c.s.length; j++) ctx.fillText(c.s[j], c.x, c.y + j * 7); }
   }
   if (!wakefx.stuck) wakefx.stuck = stuckOf(vw, vh, seed);
   for (const p of wakefx.stuck) {
     if (a >= p.life) continue;
     ctx.globalAlpha = a > p.life - 30 ? (p.life - a) / 30 * 0.85 : 0.85;   // гаснет не сразу
-    ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 1, 1);
+    ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.w, 1);
   }
   ctx.globalAlpha = 1;
   ctx.restore();

@@ -2084,6 +2084,77 @@ setCtx(ctx);
     W.leave();
     eq(Mo.k, 0, 'наверху — ход мха'); eq(Mo.glows.length, 0, 'вспышки остались');
   });
+  test('пифос: «ЛЕЧЬ» — подходит медленно, садится, вползает рывками; видно только то, что снаружи венчика; лёжа — меню, шаг — вылезает', async () => {
+    const PL = await imp('world/pithosLie.js');
+    const p = M.locations.find(l => l.id === 'pithos');
+    const pl = { x: p.x + p.w / 2 - 6, y: p.y + p.h + 5, moving: false, still: true };
+    PL.stopLie(); PL.startLie(p);
+    const st = PL.standOf(p);
+    let n = 0, ev = null, sawWalk = false, sits = [], depths = [];
+    while (PL.lie.phase === 'step' && n < 400) { PL.stepLie(pl); sawWalk = sawWalk || pl.moving; n++; }
+    assert(sawWalk && pl.x === st.x && pl.y === st.y && pl.dir === -1, 'подошёл к зеву и повернулся к нему');
+    assert(n >= 10, 'шаг к зеву — не мгновенно');
+    while (PL.lie.phase === 'crouch') { PL.stepLie(pl); sits.push(PL.sitOf()); }
+    assert(sits[sits.length - 1] > 0.95 && sits.every((v, i) => !i || v >= sits[i - 1]), 'присел — постепенно');
+    while (PL.lie.on && PL.lie.phase === 'crawl') { ev = PL.stepLie(pl); depths.push(PL.depthIn()); }
+    eq(ev, 'in', 'лёг — меню'); eq(depths.length, PL.CRAWL, 'вползает четыре секунды');
+    assert(depths.every((v, i) => !i || v >= depths[i - 1] - 1e-9), 'внутрь — без попятных');
+    let holds = 0; for (let i = 1; i < depths.length; i++) if (Math.abs(depths[i] - depths[i - 1]) < 1e-6) holds++;
+    assert(holds > PL.CRAWL * 0.2, 'рывками: подтянулся — замер');
+    assert(PL.isLying() && PL.depthIn() === 1, 'лежит внутри');
+    const f = PL.lyingFrame(), m = PL.mouthOf(p);
+    assert(f.cx + PL.LIE_LEN / 2 > f.clipX && f.cx + PL.LIE_LEN / 2 - f.clipX <= 5, 'снаружи — одни подошвы');
+    // рисунок лежащего — только справа от венчика, на высоте зева
+    const clip = []; const ctx = new Proxy({}, { get(t, k) { return k === 'rect' ? (x, y, w, h) => clip.push([x, y, w, h]) : () => {}; } });
+    let drew = 0; PL.drawLying(ctx, pl, () => drew++);
+    assert(drew === 1 && clip.length === 1 && clip[0][0] === m.rim + 1, 'срез — по венчику');
+    // шаг — вылезает; на ходу внутрь не перебивается
+    PL.stopLie(); PL.startLie(p); assert(!PL.wantOut(), 'шаг, пока идёт к зеву, — не «вылезти»');
+    PL.lie.phase = 'in'; assert(PL.wantOut() && PL.lie.phase === 'out', 'лёжа шаг — вылезает');
+    n = 0; while (PL.lie.on && n < 1000) { ev = PL.stepLie(pl); n++; }
+    eq(ev, 'done'); assert(!PL.lie.on && n >= PL.CRAWL + PL.RISE, 'вылез — и встал');
+    const M2 = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+    assert(/actionKey === 'pithos_lie'[\s\S]{0,260}startLie\(loc\)/.test(M2) && /if \(lie\.on\) \{[\s\S]{0,200}stepLie\(player\)/.test(M2), 'ход заперт, пока в пифосе');
+    assert(/actionKey === 'pithos_sleep'\) \{ sleepInPithos\(\)/.test(M2) && /a\.key === 'pithos_out'/.test(M2), 'лёжа — «уснуть» и «вылезти»');
+  });
+  test('наверх — вылезает: из подвала по маршу из воды и вокруг проёма к порогу; из люка — скоба за скобой, люк затягивается; шаг — сразу к порогу', async () => {
+    const CO = await imp('world/climbOut.js');
+    const b = M.locations.find(l => l.id === 'basement');
+    const end = { x: b.x + b.w / 2 - 6, y: b.y + b.h + 5 };
+    const pl = { x: 0, y: 0 };
+    CO.startClimb(b, end, pl);
+    eq(CO.climb.kind, 'stairs');
+    assert(pl.y + 23 > b.y + 24 && pl.x > b.x && pl.x + 12 < b.x + b.w, 'начинает в воде подвала');
+    assert(CO.climbDepth(pl) > b.y + b.h, 'на марше — поверх рисунка подвала');
+    let n = 0, ev = null, ys = [], wet = 0;
+    while (CO.climb.on && n < 2000) { ev = CO.stepClimb(pl); ys.push(pl.y); if (CO.climb.clipY !== null) wet++; n++; }
+    eq(ev, 'done'); eq(pl.x, end.x); eq(pl.y, end.y, 'пришёл к порогу');
+    assert(n > 160 && n < 600, 'не мгновенно и не вечно: ' + n);
+    assert(wet > 0 && wet < n / 2, 'из воды выходит в начале');
+    const top = Math.min(...ys);
+    assert(top + 23 <= b.y + 12, 'поднялся на площадку наверху');
+    // путь вокруг проёма: ни одна точка спуска к порогу не проходит над водой проёма
+    for (const p of CO.basementPath(b, end).slice(11)) assert(p.x < b.x + 6 || p.y > b.y + b.h, 'обходит проём: ' + p.x + ',' + p.y);
+    // люк
+    const loc = M.locations.find(l => l.id === 'crypt');
+    const e2 = { x: loc.x + loc.w / 2 - 6, y: loc.y + loc.h + 5 };
+    CO.startClimb(loc, e2, pl);
+    eq(CO.climb.kind, 'hatch'); assert(CO.climb.hole && CO.hatchDepth(0) === CO.RUNGS * CO.RUNG_UP, 'начинает в люке по макушку');
+    const ds = []; for (let t = 0; t < CO.RUNG * CO.RUNGS; t++) ds.push(CO.hatchDepth(t));
+    assert(ds.every((v, i) => !i || v <= ds[i - 1]), 'только вверх');
+    let holds = 0; for (let i = 1; i < ds.length; i++) if (ds[i] === ds[i - 1]) holds++;
+    assert(holds > ds.length / 3, 'скоба за скобой — рывками');
+    n = 0; while (CO.climb.on && n < 400) { ev = CO.stepClimb(pl); n++; }
+    eq(ev, 'done'); eq(pl.y, e2.y); assert(CO.climb.hole && CO.climb.holeT > 0, 'люк остался — затягивается');
+    for (let i = 0; i < CO.HOLE_FADE + 2; i++) CO.stepClimb(pl);
+    eq(CO.climb.hole, null, 'люк затянулся');
+    // шаг — сразу к порогу
+    CO.startClimb(b, end, pl);
+    for (let i = 0; i < 30; i++) CO.stepClimb(pl, true);
+    assert(!CO.climb.on && pl.x === end.x && pl.y === end.y, 'шагнул — дошёл');
+    const M3 = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+    assert(/teleportWithFade\(px_, py_, \(\) => \{\s*surface\(\);[\s\S]{0,200}startOut\(loc\)[\s\S]{0,80}startClimb\(loc/.test(M3), 'подъём — вылезает, а не возникает');
+  });
   test('ход мха: пифос шепчет ночью тому, кто задержался, — раз за ночь; потом у пифоса «ЛЕЧЬ» и «УСНУТЬ»; нора у подножия огня', () => {
     const p = M.locations.find(l => l.id === 'pithos'), b = M.locations.find(l => l.id === 'burrow');
     U.under.seen.delete('pithos_whisper'); U.under.seen.delete('pithos_lie'); MW._resetMossway(); WH._reset();
@@ -2103,7 +2174,7 @@ setCtx(ctx);
     eq(WH.whisperText(), '', 'шёпот повторился за ночь');
     for (let i = 0; i < 400; i++) MW.stepMossway(pl, true, 2);
     eq(WH.whisperText(), MW.MOSS_WHISPER, 'другой ночью — снова');
-    U.under.seen.add('pithos_lie'); assert(/УСНУТЬ/.test(p.useLabel), 'второй раз — не «уснуть»');
+    U.under.seen.add('pithos_lie'); assert(/ЛЕЧЬ/.test(p.useLabel), 'второй раз — тоже «лечь»: «уснуть» — лёжа, в меню пифоса (world/pithosLie.js)');
     const bx = b.x + b.w / 2, by = b.y + b.h, R9 = D.RINGS;
     assert(D.ringAt(bx, by) === R9 && D.ringAt(bx, by + 28) === R9 && D.ringAt(bx, by + 70) === R9 + 1, 'нора не у подножия огня');
     assert(b.useAction === 'burrow_down' && b.look && b.drawSelf, 'нора без спуска');
