@@ -42,7 +42,12 @@ function hits(x, y, b) {
   const py1 = y + PLAYER_MY - PLAYER_H / 2;
   return px1 < b.x + b.w && px1 + PLAYER_W > b.x && py1 < b.y + b.h && py1 + PLAYER_H > b.y;
 }
+// глубокая вода пруда (world/landforms.js) — не держит: ступни (x+6, y+23) в неё не ставятся;
+// кто уже в ней (сохранение, перенос), тому шаг — можно: выйти
+let terrainBlock = null;
+export function setTerrainBlock(fn) { terrainBlock = typeof fn === 'function' ? fn : null; }
 export function isBlocked(nx, ny, locations, cur = null) {
+  if (terrainBlock && terrainBlock(nx + 6, ny + 23) && !(cur && terrainBlock(cur.x + 6, cur.y + 23))) return true;
   for (const l of locations) {
     if (!l.solid && !l.solidBox) continue;
     const b = l.solidBox || l;

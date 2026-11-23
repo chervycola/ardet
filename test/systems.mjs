@@ -1112,7 +1112,8 @@ setCtx(ctx);
   AG.prepareArchGround(M.archEnsembles, M.locations);
   const L = M.locations.filter(l => !l.overTrail);               // как в main.js: растяжку над тропой тропа не обходит
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
-  A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 }))],
+  const LF = await imp('world/landforms.js');
+  A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })), ...LF.LAKES.map(L => LF.lakeBox(L, 14))],
     [...L, ...AG.archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
   (await imp('world/town.js')).buildTown();                       // как в main.js: русло, тропы и улицы городка — сразу за артериями
   const line = id => A.lines.find(l => l.id === id);
@@ -1120,6 +1121,55 @@ setCtx(ctx);
   const cross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
   const crossings = (P, Q) => { let n = 0; for (let i = 0; i < P.length - 1; i++) { if (!P[i].st) continue; for (let j = 0; j < Q.length - 1; j++) if (Q[j].st && cross(P[i], P[i + 1], Q[j], Q[j + 1])) n++; } return n; };
   const river = line('river');
+  test('горы, каньоны, пруд (слово автора 23.11): места посчитаны — ни дорог, ни мест, ни дворов не задевают; пруд у градирни', async () => {
+    const BT = await imp('world/boat.js');
+    eq(LF.LAKES.length, 1, 'пруд один');
+    const L = LF.LAKES[0];
+    const works = M.locations.find(l => l.archDraw && l.archRing === 7 && l.archSide === 'plain' && l.name === 'градирня и цех');
+    assert(works && Math.hypot(L.cx - (works.archX ?? works.x), L.cy - (works.archGy ?? works.y + works.h)) < 320, 'пруд не у градирни');
+    eq(D.ringAt(L.cx, L.cy), 7, 'пруд — в кольце 7');
+    const pond = new Set(['cooling_pier', 'isle_pier', 'isle_pumphouse']);
+    const hit = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+    const box = LF.lakeBox(L, 4);
+    for (const l of M.locations) if (!pond.has(l.id)) assert(!hit(box, { x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }), `пруд налез на «${l.name}»`);
+    for (const r of AG.archGroundRects()) assert(!hit(box, r), 'пруд налез на двор');
+    for (const ln of A.lines) for (const p of ln.pts) if (p.st) assert(LF.waterAt(p.x, p.y) === 0, `${ln.id} идёт по пруду`);
+    // мостки и остров: стоят на суше своей стороны; лодка у мостков и весь путь — по глубокой воде
+    const P = L.pier, IP = L.ipier, H = M.locations.find(l => l.id === 'isle_pumphouse');
+    assert(!LF.onIsle(P.stand.x + 6, P.stand.y + 23) && LF.waterAt(P.stand.x + 6, P.stand.y + 23) === 0, 'у мостков берега — не берег');
+    for (const t of [IP, H]) assert(LF.waterAt(t.stand.x + 6, t.stand.y + 23) === 3, `${t.name}: стоят не на острове`);
+    for (const to of [true, false]) {
+      const r = BT.routeOf(L, to), len = BT.routeLen(r);
+      for (let s = 0; s <= len; s += 3) { const q = BT.pointAt(r, s); assert(LF.deepAt(q.x, q.y), `лодка идёт не по воде (${to ? 'туда' : 'назад'}): ${q.x | 0},${q.y | 0}`); }
+      assert(to ? len > 250 : len < 120, 'к острову — вокруг, назад — коротко: ' + len);
+    }
+    // в глубину не войти, вброд — можно
+    const Ph = await imp('world/physics.js');
+    Ph.setTerrainBlock(LF.deepAt);
+    assert(Ph.isBlocked(L.cx - 70 - 6, L.cy - 23, []), 'в глубину пруда вошёл');
+    assert(!Ph.isBlocked(P.stand.x, P.stand.y, []), 'у мостков стоять нельзя');
+    Ph.setTerrainBlock(null);
+    // каньоны: ни мест, ни дворов, ни дорог в их ширине
+    for (const c of LF.CANYONS) {
+      const W = c.floor + c.wall + 6;
+      for (const l of M.locations) {
+        const cx = l.x + l.w / 2, gy = l.y + l.h;
+        assert(LF.canyonDist(c, cx, gy) > W && LF.canyonDist(c, l.x, gy) > W && LF.canyonDist(c, l.x + l.w, gy) > W, `${c.name}: в каньоне «${l.name}»`);
+      }
+      for (const r of AG.archGroundRects()) for (const [x, y] of [[r.x0, r.y0], [r.x1, r.y1], [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2]]) assert(LF.canyonDist(c, x, y) > W, `${c.name}: двор в каньоне`);
+      for (const ln of A.lines) for (const p of ln.pts) if (p.st) assert(LF.canyonDist(c, p.x, p.y) > W, `${c.name}: ${ln.id} по дну`);
+      const mid = c.pts[Math.floor(c.pts.length / 2)];
+      assert(LF.canyonC(c, mid[0], mid[1]) === c.depth, `${c.name}: дно не на месте`);
+    }
+    eq(D.ringAt(LF.CANYONS[0].pts[3][0], LF.CANYONS[0].pts[3][1]), 7, '«Бездна» — у гранд-отеля, кольцо 7');
+    // массивы: высокие, с острыми гребнями; вне эллипса — ни точки
+    for (const m of LF.MASSIFS) {
+      let top = 0;
+      for (let i = 0; i < 400; i++) { const a = i * 2.4, r = Math.sqrt(i / 400) * 0.9; top = Math.max(top, LF.massifH(m, m.cx + Math.cos(a) * r * m.rx, m.cy + Math.sin(a) * r * m.ry)); }
+      assert(top > m.H * 0.6, `${m.name}: не горы — ${top | 0}`);
+      eq(LF.massifH(m, m.cx + m.rx * 1.2, m.cy), 0, 'за краем массива — равнина');
+    }
+  });
   test('последний пункт: растяжка кольца 9 — над тропой; тропа проходит между столбами, не в обход', () => {
     const bn = M.locations.find(l => l.id === 'lc_banner');
     assert(bn && bn.overTrail, 'растяжки нет или она не над тропой');

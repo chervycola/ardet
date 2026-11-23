@@ -139,6 +139,7 @@ export function bakeData(tx, ty) {
           const hs = ih(x >> 1, y >> 1, 5);
           if (hs < 0.012) bits |= 8;                                       // пылинка 2×2
           else if (MATS[mt].snow && hs > 1 - (0.008 + 0.004 * (r - 2))) bits |= 16;   // снег севера гуще к краю
+          else if (h > 130 && hs > 1 - Math.min(0.07, (h - 130) / 500)) bits |= 16;   // снег на вершинах массивов (world/landforms.js)
         } else if (r === RINGS + 1) {
           mt = 56;
           if ((x + 2 * y) % 6 === 0 && ih(x >> 2, y, 7) < 0.7) bits |= 4;   // гарь — штрих наискось

@@ -248,10 +248,16 @@ locations.push({
 import { buildClauses } from './clauses.js';
 buildClauses(locations);
 
+// пруд-охладитель у градирни: мостки, остров с водозабором (world/landforms.js) — до прохода
+// глубины: клетка держит свои пятнадцать позиций, в тень уходит дальняя табличка, а не вода
+import { buildLandforms } from './landforms.js';
+locations.push(...buildLandforms(locations));
+
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)
 import { passDepth } from './depth.js';
 export const depthPass = passDepth(locations, ARCH.ensembles);
+
 
 // Quick lookup by id
 export const locationById = {};

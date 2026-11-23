@@ -13,6 +13,7 @@
 import { segmentsIn, segDist, nodes, skyRun, RAISED, fordAt } from '../world/arteries.js';
 import { fieldsIn, inField } from '../world/fields.js';
 import { RINGS_D } from '../world/disc.js';
+import { lakesIn, lakeShape, DEEP, ISLE_WADE } from '../world/landforms.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
@@ -55,7 +56,25 @@ const O = {
   mweed: ov(mixc(MGLA, NIGHT, 0.3), 1), mrim: ov(mixc(NIGHT, ASH, 0.1), 1), mline: ov(mixc(BONE, NIGHT, 0.55), 1),
   mshoulder: ov(mixc(mixc(ASH, SEPIA, 0.5), NIGHT, 0.45), 1),
   path: ov(BONE, 0.2),                                                // тропинка городка
+  // пруд-охладитель у градирни (world/landforms.js): вода с рыжиной — «красная вода уходит в трубу»
+  pdeep: ov(mixc(mixc(MGLA, NIGHT, 0.55), hex('#5a3420'), 0.2), 1), pshallow: ov(mixc(mixc(MGLA, NIGHT, 0.32), hex('#5a3420'), 0.16), 1),
 };
+// пруд: глубь с бликами строками, у берега — вброд светлее, кромка, камыш; остров — суша с тёмным берегом
+function lake(x, y) {
+  const sh = lakeShape(x, y);
+  if (!sh) return 0;
+  const { e, ie } = sh;
+  if (ie < 1) return ie > 0.84 && ih(x >> 1, y, 91) < 0.55 ? O.bank : 0;
+  if (e >= 1.07) return 0;
+  if (e >= 1) return ih(x >> 1, y, 92) < 0.5 ? O.bank : 0;          // сырой берег
+  if (e > 0.965 || ie < 1.05) return O.wetEdge;                      // кромка воды
+  if (e > DEEP || ie < ISLE_WADE) {                                   // вброд: камыш куртинами
+    if (ih(x >> 2, y >> 1, 93) < 0.3 && ih(x, y, 95) < 0.5) return O.reed;
+    return O.pshallow;
+  }
+  if ((y * 5 + (x >> 3) * 3) % 13 === 0 && ih(x >> 3, y, 94) < 0.5) return O.glint;   // блики строками
+  return O.pdeep;
+}
 
 function ih(x, y, s) {
   let h = (x * 374761393 + y * 668265263 + s * 2246822519) | 0;
@@ -257,7 +276,8 @@ export function stampPaths(x0, y0, T, out, cls) {
   const segs = segmentsIn(x0 - 12, y0 - 12, x0 + T + 12, y0 + T + 12);
   const pads = nodes.filter(n => n.x > x0 - 20 && n.x < x0 + T + 20 && n.y > y0 - 14 && n.y < y0 + T + 14);
   const flds = fieldsIn(x0, y0, x0 + T, y0 + T);
-  if (!segs.length && !pads.length && !flds.length) return false;
+  const lks = lakesIn(x0, y0, x0 + T, y0 + T);
+  if (!segs.length && !pads.length && !flds.length && !lks.length) return false;
   if (N !== T * T) {
     N = T * T;
     bD = new Float32Array(N * 4); bU = new Float32Array(N * 4); bV = new Float32Array(N * 4);
@@ -304,6 +324,7 @@ export function stampPaths(x0, y0, T, out, cls) {
       const e = inField(f, x, y) + wob(x, y, f.seed);                  // межа гуляет: поле не по линейке
       if (e >= 0) { fo = field(f, x, y, e); break; }
     }
+    if (lks.length) o = lake(x, y) || o;                              // пруд — под артериями (их у него нет)
     if (bD[k] < Infinity && bS[k]) o = river(STAGES[bS[k]], bU[k], bV[k], bH[k], x, y, (bF[k] & 2) !== 0) || o;
     const st0 = bD[k] < Infinity ? STAGES[bS[k]] : null;
     const wet = (st0 === 'stream' || st0 === 'canal') && Math.abs(bV[k]) <= bH[k] + 1;

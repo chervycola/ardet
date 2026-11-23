@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════
 import { TOWN, RINGS_D, FIRE_W, warpedDist, ringOfD } from './disc.js';
 import { surfaceOf } from './arteries.js';
+import { waterAt } from './landforms.js';
 
 // Ход вязкий (слово автора 22.11: «чуть медленнее и вязкая»): шаг набирается
 // и гаснет не сразу — на земле и тропе разгон вдвое дольше прежнего, остановка мягче.
@@ -46,6 +47,7 @@ function sector(x, y) {
 
 // имя материала в точке мира (ноги странника — x+6, y+24)
 export function surfaceAt(x, y, locations) {
+  if (waterAt(x, y) === 1) return 'water';                 // у берега пруда — вброд (world/landforms.js)
   const d = warpedDist(x, y);
   if (d <= 0) {
     // городок: у ядовитых мест земля раскисла
