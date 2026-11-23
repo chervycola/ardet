@@ -3577,6 +3577,7 @@ setCtx(ctx);
   const GT = await imp('world/gait.js');
   const PL = await imp('sprites/player.js');
   const FS = await import('fs');
+  const { SHORT } = await imp('sprites/wardrobe.js');             // рост короче на столько строк (слово автора 23.11)
   const mk = face => ({ x: 1000, y: 1000, vx: 0, vy: 0, face, dir: 1, still: true, sit: 0 });
   const go = (p, n, dx, dy = 0, o = {}) => { for (let i = 0; i < n; i++) { p.vx = dx; p.vy = dy; p.x += dx; p.y += dy; p.still = false; tick(); GT.stepGait(p, { stepping: true, surf: 'ground', ...o }); } };
   const idle = (p, n, o = {}) => { for (let i = 0; i < n; i++) { p.still = true; tick(); GT.stepGait(p, o); } };
@@ -3657,8 +3658,8 @@ setCtx(ctx);
     const s = mk('S'); idle(s, 30);
     eq(toes(rec(s), s).length, 0, 'стоит лицом — у пыльника носки');
     for (const [dx, dy] of [[0, 2.4], [2.6, 0]]) { const w = mk('S'); idle(w, 2); for (let i = 0; i < 40; i++) { go(w, 1, dx, dy); eq(toes(rec(w), w).length, 0, 'в шаге у пыльника ноги'); } }
-    // огонёк: сердцевина — на оси фигуры (x+7), в центре груди (y+7), точкой
-    const x = Math.floor(s.x), y = Math.floor(s.y);
+    // огонёк: сердцевина — на оси фигуры (x+7), в центре груди (y+7; фигура короче на SHORT — грудь ниже), точкой
+    const x = Math.floor(s.x), y = Math.floor(s.y) + SHORT;
     assert(rec(s).some(([c, X, Y, W, H]) => c === '#E28A3A' && X === x + 7 && Y >= y + 6 && Y <= y + 8 && W === 1 && H === 1), 'огонёк не на оси груди');
     const n = mk('N'); idle(n, 30);
     assert(!rec(n).some(([c]) => c === '#E28A3A'), 'спиной огонёк виден');
@@ -3764,7 +3765,7 @@ setCtx(ctx);
       const n = mk('N'); n.cut = cut; idle(n, 30);
       assert(!rec(n).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && Wd * H >= 2), `${cut}: спиной огонёк виден`);
       const s = mk('S'); s.cut = cut; idle(s, 30);
-      assert(rec(s).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && X === Math.floor(s.x) + 7 && Y >= Math.floor(s.y) + 6 && Y <= Math.floor(s.y) + 8), `${cut}: лицом огонька в центре груди нет`);
+      assert(rec(s).some(([c, X, Y, Wd, H]) => c === '#E28A3A' && X === Math.floor(s.x) + 7 && Y >= Math.floor(s.y) + SHORT + 6 && Y <= Math.floor(s.y) + SHORT + 8), `${cut}: лицом огонька в центре груди нет`);
     }
   });
 }

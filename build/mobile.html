@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 179 227. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 179 227. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 179 782. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 179 782. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -888,7 +888,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='cbe77c4 · 2026-11-23';console.log('[оттиск]', 'cbe77c4 · 2026-11-23');
+<script>window.ARDET_BUILD='118cf39 · 2026-11-23';console.log('[оттиск]', '118cf39 · 2026-11-23');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -33235,14 +33235,15 @@ System.register("world/oldways", ["world/disc", "world/relief", "world/geoplace"
 });
 System.register("sprites/wardrobe", ["render/context", "core/time"], function (exports_78, context_78) {
     "use strict";
-    var context_js_3, time_js_13, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, BT, GL, MG, MGL, MGD, q, CL, CD, DP, TR, BO, HD, FC, RP, BG, ST, SH, TO, LT, HN, HR, BK, MAT, OU, GW, OV, GH, M, inG, at, BY, HY, CLIP, SEAT, run, PX, PY, EYES, CUTS, hemPush, backOf, own, isCut, pick, pinned, CUT, CUT_PINNED;
+    var context_js_3, time_js_13, NI, AS, SV, KV, L1, K0, K1, K2, K4, S2, BT, GL, MG, MGL, MGD, q, CL, CD, DP, TR, BO, HD, FC, RP, BG, ST, SH, TO, LT, HN, HR, BK, MAT, OU, GW, OV, GH, M, inG, at, BY, HY, CLIP, SEAT, STAND, SHORT, short, run, PX, PY, EYES, CUTS, hemPush, backOf, own, isCut, pick, pinned, CUT, CUT_PINNED;
     var __moduleName = context_78 && context_78.id;
     function shift(v) {
+        const s = short(v);
         if (v <= -19)
-            return [0, BY + HY];
+            return [0, BY + HY + s];
         if (v <= -11 || SEAT)
-            return [0, BY]; // сидя опускается вся фигура
-        return [0, 0];
+            return [0, BY + s]; // сидя опускается вся фигура
+        return [0, s];
     }
     function put(u, v, m) {
         u = q(u);
@@ -33254,7 +33255,8 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         if (inG(pu, pv))
             M[(pv + OV) * GW + pu + OU] = m;
         // верх приподнялся (вдох): нижний ряд области тянется до соседней снизу — без щели у пояса и шеи
-        if (dv < 0 && (v === -11 || v === -19)) {
+        // (подъём — сдвиг без укорочения роста)
+        if (dv - short(v) < 0 && (v === -11 || v === -19)) {
             const lo = v + shift(v + 1)[1];
             for (let y = pv + 1; y <= lo; y++)
                 if (inG(pu, y) && !M[(y + OV) * GW + pu + OU])
@@ -33427,6 +33429,7 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         BY = P.dip - P.bSh + sitD + peck;
         HY = -P.bHd + down + P.dipH;
         SEAT = seated ? 1 : 0;
+        STAND = seated ? 0 : 1;
         // яма — проседает; вброд, в зыби, снегу и мху — низа не видно
         CLIP = P.kind === 'pit' ? -q(2 * P.tp) : !P.feet && P.sit < 0.5 ? -2 : 99;
         const PP = Object.assign({}, P);
@@ -33568,7 +33571,12 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             inG = (u, v) => u >= -OU && u < GW - OU && v >= -OV && v < GH - OV;
             at = (u, v) => (inG(u, v) ? M[(v + OV) * GW + u + OU] : 0);
             // поза: верх (выше пояса) садится на опоре и дышит; голова — своё
-            BY = 0, HY = 0, CLIP = 99, SEAT = 0;
+            BY = 0, HY = 0, CLIP = 99, SEAT = 0, STAND = 1;
+            // рост: крои кладут подол в ряды −10…0, стоя он на две строки короче — ряды −5 и −8 сливаются с
+            // соседними, всё выше опускается на две (слово автора 23.11: «чуть менее длинным»). Сидя низ
+            // рисует seat(), там укорачивать нечего
+            exports_78("SHORT", SHORT = 2);
+            short = v => (!STAND || v >= -4 ? 0 : v === -5 ? 1 : v >= -7 ? 1 : 2);
             run = (u0, u1, v, m) => { for (let u = q(u0); u <= q(u1); u++)
                 put(u, v, m); };
             // куда клетка попала на экране (для угольков и огонька — поверх сетки)
