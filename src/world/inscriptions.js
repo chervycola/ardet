@@ -36,6 +36,10 @@ const locOf = (locations, id) => {
   return byId.get(id);
 };
 
+// проступившее (world/heard.js — мысли на сцене театра): ловушку ставит main.js
+let revealHook = null;
+export function setRevealHook(fn) { revealHook = typeof fn === 'function' ? fn : null; }
+
 export function updateProximity(player, locations) {
   for (const locId of Object.keys(hiddenInscriptions)) {
     const l = locOf(locations, locId);
@@ -45,6 +49,7 @@ export function updateProximity(player, locations) {
     const d = Math.sqrt(dx * dx + dy * dy);
     if (d < 60 && !player.moving && (wallProx[locId] || 0) < SHOW_AT + 120) {   // счёт до проявления, дальше не растёт
       wallProx[locId] = (wallProx[locId] || 0) + 1;
+      if (wallProx[locId] === SHOW_AT && revealHook) revealHook('i', locId, l);   // проступила при нём
     }
   }
 }

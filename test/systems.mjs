@@ -4830,6 +4830,226 @@ setCtx(ctx);
   });
 }
 
+// ═══ СЦЕНА ТЕАТРА ТЕНЕЙ, шаг 3 (world/stage.js planVisit, world/heard.js, render/stage.js: четыре вида) ═══
+{
+  const SG = await imp('world/stage.js');
+  const RS = await imp('render/stage.js');
+  const HD = await imp('world/heard.js');
+  const WH = await imp('world/whisper.js');
+  const IN = await imp('world/inscriptions.js');
+  const LC = await imp('world/locations.js');
+  const PR = await imp('core/prefs.js');
+  const RL = await imp('world/relook.js');
+  const kinds = ev => ev.reduce((m, e) => { m[e.kind] = (m[e.kind] || 0) + 1; return m; }, {});
+  const step = (n = 1) => { for (let i = 0; i < n; i++) SG.stepStage(SG.STAGE_C.x, SG.STAGE_C.y, true, false); };
+  test('сцена, шаг 3: первый приход — по два шёпота зала, мысли и задника, дальше по одному; рамка всегда 8 с, в свете фонаря', () => {
+    SG._resetStage();
+    const th = [{ text: 'а', ring: 0 }, { text: 'б', ring: 3 }], bd = [{ id: 'gates', solid: true }, { id: 'train', solid: false }];
+    for (let n = 1; n <= 12; n++) {
+      const ev = SG.planVisit(n, th, bd), k = kinds(ev), L = SG.lenOf(n), m = n === 1 ? 2 : 1;
+      eq(k.hall, m, `приход ${n}: шёпотов зала`); eq(k.thought, m, `приход ${n}: мыслей`); eq(k.board, m, `приход ${n}: задников`);
+      eq(k.rama, 1, `приход ${n}: рамок`); eq(k.clap, 1, `приход ${n}: хлопков`);
+      const r = ev.find(e => e.kind === 'rama');
+      eq(r.dur, SG.RAMA, 'рамка не 8 с'); eq(SG.RAMA, 480, 'рамка не 8 с');
+      assert(r.at >= 120 && r.at + r.dur <= L - 120, `приход ${n}: рамка вне фонаря: ${r.at}..${r.at + r.dur} при ${L}`);
+      const full = 120 + Math.round(L * 0.2), exhale = L - 120 - Math.round(L * 0.2);
+      for (const e of ev) {
+        assert(e.at < L, `приход ${n}: ${e.kind} после конца`);
+        if (e.kind === 'hall') assert(e.at >= 120 + Math.round(L * 0.1) && e.due <= exhale + Math.round(L * 0.1) + 1, `приход ${n}: шёпот зала, когда зала нет`);
+        if (e.kind === 'board') assert(e.at + e.dur <= L, `приход ${n}: задник не ушёл за кулису до конца`);
+      }
+    }
+    const r7 = SG.planVisit(7, th, bd).find(e => e.kind === 'rama');
+    eq(r7.at, 120, 'на 12 с рамка встаёт не вместе с залом'); eq(r7.at + r7.dur, SG.lenOf(7) - 120, 'на 12 с рамка рвётся не тогда, когда фонарь опущен');
+  });
+  test('сцена, шаг 3: всё решено при посадке, без жребия; нечего нести — мыслей нет; не осмотрено — задников нет; шёпоты зала по кругу', () => {
+    SG._resetStage(); const a = JSON.stringify(SG.planVisit(1));
+    SG._resetStage(); const b = JSON.stringify(SG.planVisit(1));
+    eq(a, b, 'расписание со жребием');
+    const k = kinds(JSON.parse(a));
+    eq(k.thought, undefined, 'мысли без услышанного'); eq(k.board, undefined, 'задники без осмотренного'); eq(k.hall, 2, 'зал не шепчет');
+    SG._resetStage();
+    const texts = [];
+    for (let n = 1; n <= 6; n++) for (const e of SG.planVisit(n)) if (e.kind === 'hall') texts.push(e.text);
+    eq(texts.slice(0, 2).join('|'), SG.HALL_LINES.slice(0, 2).join('|'), 'первый приход — не первые два шёпота');
+    eq(texts[2], '...в прошлый раз было длиннее...', 'третий шёпот не на втором приходе');
+    eq(texts[5], SG.HALL_LINES[0], 'шёпоты зала не идут по кругу');
+    SG._resetStage();
+  });
+  test('мысли: что странник носит — шёпот начался рядом, надпись проступила при нём; «ты», «вы» и обрывки не идут', () => {
+    for (const [line, ok] of [['стены читают тебя', false], ['вы здесь', false], ['...тебе не обязательно сегодня...', false], ['МИСЮСЬ, ГДЕ ТЫ?', false],
+      ['«что я думаю о западной цивилизации?', false], ['ЧУДИЩЕ ОБЛО, ОЗОРНО,', false], ['█████', false], ['↓', false],
+      ['...ведро не забудь... пустое тоже нести...', true], ['счётчик остановился в среду', true], ['ЗДЕСЬ БЫЛ ВАСЯ', true]]) eq(HD.thoughtOk(line), ok, `строка «${line}»`);
+    HD._resetHeard();
+    const got = [];
+    WH.setHeardHook((k, id) => { got.push(k + ':' + id); HD.noteHeard(k, id, 0); });
+    IN.setRevealHook((k, id) => { got.push(k + ':' + id); HD.noteHeard(k, id, 0); });
+    try {
+      WH._reset();
+      const lake = LC.locations.find(l => l.id === 'lake'), ruins = LC.locations.find(l => l.id === 'ruins');
+      WH.check({ x: lake.x + lake.w / 2, y: lake.y + lake.h / 2, moving: false }, [lake]);
+      eq(got.join(','), 'w:lake', 'шёпот у озера не услышан');
+      const at = { x: ruins.x + ruins.w / 2, y: ruins.y + ruins.h / 2, moving: false };
+      for (let i = 0; i < 200; i++) IN.updateProximity(at, [ruins]);
+      eq(got.join(','), 'w:lake,i:ruins', 'стена дома №7 не проступила — или проступила дважды');
+    } finally { WH.setHeardHook(null); IN.setRevealHook(null); WH._reset(); }
+    HD.noteHeard('w', 'overpass', 0);                     // шёпот на «ты» — помнится, но мыслью не встаёт
+    HD.noteHeard('w', 'lake', 0);                         // второй раз — та же запись
+    eq(HD.heardCount(), 2, 'память: озеро и дом №7');
+    const one = HD.takeThoughts(2);
+    // шёпот дома №7 не слышан — первая строка его стены идёт мыслью (слышан бы — со стены второй раз не шла)
+    eq(one.map(q => q.text).join('|'), '...удочку оставь... всё равно запрещено...|жильцы съехали раньше пожара', 'мысли не по порядку услышанного');
+    const two = HD.takeThoughts(1);
+    eq(two[0].text, '...удочку оставь... всё равно запрещено...', 'круг сыгран — не начался сначала');
+    const three = HD.takeThoughts(1);
+    eq(three[0].text, 'счётчик остановился в среду', 'стена во второй черёд — не следующая строка');
+    const d = JSON.parse(JSON.stringify(HD.saveHeard()));
+    HD._resetHeard(); eq(HD.takeThoughts(2).length, 0, 'новичок с мыслями');
+    HD.loadHeard(d);
+    eq(JSON.stringify(HD.saveHeard()), JSON.stringify(d), 'память не сохранилась');
+    HD.loadHeard({ e: [['x:bad', 1], [7], ['w:lake', 99, -3]], p: ['nope'] });
+    eq(JSON.stringify(HD.saveHeard()), JSON.stringify({ e: [['w:lake', 9, 0]], p: [] }), 'плохое сохранение не отсеяно');
+    HD._resetHeard();
+  });
+  test('задники: последние осмотренные места с вклейкой, по порядку от старшего; театр и места без вклейки не в счёт; круг; сохранение', () => {
+    SG._resetStage();
+    for (const id of ['gates', 'theater', 'office', 'terminal', 'train', 'gates']) SG.noteLookedPlace(id);
+    eq(SG.stage.looked.join(','), 'office,train,gates', 'список осмотренных');
+    eq(SG.takeBackdrops(2).join(','), 'train,gates', 'не последние два');
+    eq(SG.takeBackdrops(1).join(','), 'office', 'не следующий по давности');
+    eq(SG.takeBackdrops(1).join(','), 'gates', 'круг не начался с недавнего');
+    const d = JSON.parse(JSON.stringify(SG.saveStage()));
+    SG._resetStage(); SG.loadStage(d);
+    eq(SG.stage.looked.join(','), 'office,train,gates', 'осмотренные не сохранились'); eq(SG.stage.bd.join(','), 'gates', 'проехавшие не сохранились');
+    SG.loadStage({ n: 2, looked: ['theater', 'gates', 'gates', 5], bd: ['train'], wi: 99 });
+    eq(SG.stage.looked.join(','), 'gates', 'плохой список не отсеян'); eq(SG.stage.bd.length, 0, 'проехавшее вне списка'); assert(SG.stage.wi < SG.HALL_LINES.length, 'место в пуле вне пула');
+    SG._resetStage();
+  });
+  test('сцена, шаг 3: после конца прихода часы идут хвост — дописать начатое; встал — всё сыгранное гаснет, тот же приход — пусто', () => {
+    SG._resetStage(); SG.enterStage(); SG.stage.ev = SG.planVisit(SG.stage.n, [{ text: 'x', ring: 0 }], []);
+    const L = SG.lenOf(1);
+    step(L + 100);
+    eq(SG.stage.live, false, 'приход не кончился'); eq(SG.stage.clock, L + 100, 'хвост не идёт'); assert(SG.stage.ev, 'хвост оборван');
+    step(SG.TAIL);
+    eq(SG.stage.ev, null, 'хвост не кончился');
+    const c = SG.stage.clock; step(50); eq(SG.stage.clock, c, 'часы идут после хвоста');
+    SG._resetStage(); SG.enterStage(); SG.stage.ev = SG.planVisit(1); step(600);
+    SG.exitStage(); eq(SG.stage.ev, null, 'встал — сыгранное осталось');
+    eq(SG.enterStage(), false, 'тот же приход — сцена с начала'); eq(SG.stage.ev, null, 'тот же приход — события');
+    SG._resetStage();
+  });
+  test('звуки прихода: рамка щёлкает, встав и порвавшись, тикает между; шорох программки с места шепчущего; скрип каната от кулисы к кулисе', () => {
+    SG._resetStage();
+    const ev = SG.planVisit(1, [], [{ id: 'gates', solid: true }]);
+    const r = ev.find(e => e.kind === 'rama'), h = ev.find(e => e.kind === 'hall'), b = ev.find(e => e.kind === 'board');
+    const has = (c, s) => SG.cuesAt(c, ev).some(q => q.s === s);
+    assert(has(r.at, 'click') && has(r.at + r.dur, 'click'), 'рамка не щёлкает'); assert(has(r.at + 40, 'tick') && !has(r.at + 41, 'tick'), 'тик не на пороге');
+    const ru = SG.cuesAt(h.at, ev).find(q => q.s === 'rustle'); assert(ru && Number.isFinite(RS.hallSeatPan(ru.seat)), 'шорох без места');
+    const c0 = SG.cuesAt(b.at, ev).find(q => q.s === 'creak'), c3 = SG.cuesAt(b.at + 270, ev).find(q => q.s === 'creak');
+    assert(c0 && c3 && c0.pan > 0.8 && c3.pan < 0, 'скрип не едет от правой кулисы к левой');
+    eq(SG.cuesAt(r.at, null).length, 0, 'без прихода — звуки');
+    SG._resetStage();
+  });
+
+  test('сцена, шаг 3: перо пишет в своё окно — окна одного вида не пересекаются; шёпот зала — пока зал стоит; последняя мысль доплывает, пока фонарь поднят', () => {
+    for (let n = 1; n <= 12; n++) {
+      SG._resetStage();
+      const L = SG.lenOf(n), I = Math.round(L * 0.2), exhale = L - 120 - I;
+      const ev = SG.planVisit(n, [{ text: 'а', ring: 0 }, { text: 'б', ring: 9 }], []);
+      for (const kind of ['hall', 'thought']) {
+        const w = ev.filter(e => e.kind === kind).sort((x, y) => x.at - y.at);
+        for (let i = 0; i < w.length; i++) {
+          assert(w[i].due > w[i].at && w[i].due - w[i].at >= 240, `приход ${n}: окно ${kind} короче 4 с`);
+          if (i) assert(w[i].at >= w[i - 1].due, `приход ${n}: окна ${kind} пересекаются`);
+        }
+        if (kind === 'hall') for (const e of w) assert(e.at >= 120 + I / 2 - 1 && e.due <= exhale + I / 2 + 1, `приход ${n}: шёпот зала вне зала`);
+        if (kind === 'thought' && w.length) assert(w[w.length - 1].due <= L - 120 && w[0].at >= 120, `приход ${n}: мысль вне фонаря`);
+      }
+    }
+    SG._resetStage();
+  });
+  test('мысли со всех стен: разбитая фраза — целиком, обрывков нет; Беккета нет; на «ты» нет; шёпот места и его стена не повторяют друг друга', () => {
+    const all = [];
+    for (const id of Object.keys(IN.hiddenInscriptions)) {
+      HD._resetHeard(); HD.noteHeard('i', id, 0);
+      for (let k = 0; k < 20; k++) { const q = HD.takeThoughts(1); if (!q.length) break; all.push(q[0].text); }
+    }
+    assert(Object.keys(IN.hiddenInscriptions).length > 90, 'стены колец не подгружены');
+    for (const bad of ['LA PLAGE', 'И ЛАЯЙ', 'ОГРОМНО, СТОЗЕВНО', 'RUINIS', 'FECERUNT BARBERINI', 'HIC BENE MANEBIS', 'TE NON CECIDISSE',
+      'LINNAEUS DISPOSUIT', 'не могу продолжать', 'продолжаю', 'стены читают тебя', 'вы здесь', 'колец, по краю зубцы; трещина поперёк', 'AT THU GAKK HEIM',
+      'QUAN JUN GENG JIN YI BEI JIU', 'ADMIROR, PARIES, TE NON CECIDISSE RUINIS', 'CACATOR CAVE MALUM', 'ГОСПОДИ ПОМОЗИ РАБУ СВОЕМУ ИВАНУ СКЛАД № 2', 'RYNSTR FYRIR VESTAN HAF'])
+      assert(!all.includes(bad), `обрывок или запретное мыслью: «${bad}»`);
+    assert(all.includes('SOUS LES PAVÉS, LA PLAGE') && all.includes('MENE MENE TEKEL UPHARSIN'), 'разбитая фраза не собрана');
+    for (const t of all) assert(HD.thoughtOk(t) && Array.from(t).length <= HD.THOUGHT_MAX, `мысль мимо фильтра: «${t}»`);
+    assert(all.includes('ГОСПОДИ ПОМОЗИ РАБУ СВОЕМУ ИВАНУ') && all.includes('СКЛАД № 2'), 'молитва и трафарет склада не разведены');
+    HD._resetHeard(); HD.noteHeard('w', 'church', 0); HD.noteHeard('i', 'church', 0);
+    const two = HD.takeThoughts(2).map(q => q.text.toLowerCase().replace(/[^а-яёa-z]/g, ''));
+    eq(two.length, 2, 'церковь: две мысли'); assert(two[0] !== two[1], 'шёпот церкви и её стена — одна фраза дважды');
+    HD._resetHeard();
+  });
+  test('задники из сохранения до шага 3: осмотренное берётся из памяти осмотров', () => {
+    const RL2 = RL;
+    RL2._resetRelook(); RL2.loadRelook({ n: { gates: 1, train: 2, terminal: 3 } });
+    SG.loadStage({ n: 4 });
+    eq(SG.stage.looked.slice().sort().join(','), 'gates,train', 'осмотренное не взялось');
+    assert(SG.takeBackdrops(1).length === 1, 'задника нет');
+    RL2._resetRelook(); SG._resetStage();
+  });
+  test('задник в три тона: пусто — ночь, тёмное тело — пепел через точку, светлое — кость; силуэт не тонет в ночи', () => {
+    const px = new Uint8ClampedArray([0, 0, 0, 0, 40, 36, 30, 255, 40, 36, 30, 255, 90, 90, 90, 255, 220, 210, 190, 255, 220, 210, 190, 10]);
+    RS.toneMap(px, 6);
+    const tone = i => [px[i * 4], px[i * 4 + 1], px[i * 4 + 2]].join(',');
+    eq(tone(0), '13,11,10', 'пусто — не ночь'); eq(tone(5), '13,11,10', 'почти прозрачное — не ночь');
+    assert(tone(1) !== tone(2) && [tone(1), tone(2)].includes('138,141,143'), 'тёмное тело не пеплом через точку');
+    eq(tone(3), '138,141,143', 'середина — не пепел'); eq(tone(4), '217,207,184', 'светлое — не кость');
+  });
+  test('подпись рамки — слева от рамки: не на руках зрителя, не на светящемся и не на шёпотах зала', () => {
+    const C = RS.CAPTION_BOX, R = RS.RAMA_BOX, sx = Math.round(RS.tierX(3, 0.3)), sy = Math.round(RS.tierY(3, 0.3));
+    const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    assert(!hit(C, { x: sx - 3, y: sy - 11, w: 7, h: 12 }), 'подпись на руках зрителя');
+    assert(!hit(C, R), 'подпись на рамке'); assert(C.x >= 12 && C.y >= 0, 'подпись за кулисой или за краем');
+    const H = RS.BANDS.hall, T = RS.BANDS.thought, sp = { x: sx - 3, y: sy - 11, w: 7, h: 12 };
+    assert(H.top > C.y + C.h, 'полоса шёпотов заходит на подпись'); assert(H.x1 < sp.x && H.x1 < R.x, 'полоса шёпотов заходит на зрителя и рамку');
+    assert(T.top > H.bottom && T.top > sp.y + sp.h, 'полоса мыслей заходит на шёпоты или зрителя');
+    for (let i = 0; i < 5; i++) { const s = RS.hallSeat(i); assert(s.k === 2 && s.x < H.x1, `шёпот зала ${i} не с третьего ряда слева`); }
+  });
+  test('рисунок шага 3: рамка с подписью машины, шёпот зала и мысль пером, задник; прозрачность возвращается; встал — пусто; тёплых пятен два', () => {
+    const rec = { texts: [], globalAlpha: 1, fillStyle: '', font: '', textAlign: 'left', n: 0,
+      fillRect() { this.n++; }, drawImage() {}, fillText(s) { this.texts.push(String(s)); }, measureText: s => ({ width: String(s).length * 6 }),
+      save() {}, restore() {}, beginPath() {}, rect() {}, clip() {} };
+    PR.setPref('motion', 'меньше');
+    try {
+      SG._resetStage(); RS._resetStageArt(); SG.enterStage();
+      SG.stage.ev = SG.planVisit(1, [{ text: '...ведро не забудь... пустое тоже нести...', ring: 7 }], [{ id: 'gates', solid: false }]);
+      const at = k => SG.stage.ev.find(e => e.kind === k).at;
+      step(at('rama') + SG.CAPTION_AT + 5 - SG.stage.clock);
+      rec.texts = []; RS.drawStageWorld(rec, () => {}, SG.SEAT_D.y);
+      assert(rec.texts.includes('автоповтор:') && rec.texts.includes('вкл.'), 'нет подписи «автоповтор: вкл.»');
+      const L = RS.stageLights(SG.SEAT_D.x + 1, SG.SEAT_D.y - 13);
+      eq(L.filter(l => l.color[0] >= l.color[1] + 30).length, 2, 'тёплых пятен не два');
+      assert(L.some(l => l.color[1] > l.color[0] + 30), 'рамка не светит третьей краской');
+      step(at('hall') + 60 - SG.stage.clock);
+      rec.texts = []; RS.drawStageWorld(rec, () => {}, SG.SEAT_D.y);
+      assert(rec.texts.some(s => s.startsWith('...')), 'шёпот зала не пишется');
+      step(at('thought') + 60 - SG.stage.clock);
+      rec.texts = []; RS.drawStageWorld(rec, () => {}, SG.SEAT_D.y);
+      assert(rec.texts.some(s => s.startsWith('...ведро')), 'мысль не пишется');
+      step(at('board') + 100 - SG.stage.clock);
+      const rects = []; rec.fillRect = (x, y, w, h) => rects.push([x, y, w, h]);
+      RS.drawStageWorld(rec, () => {}, SG.SEAT_D.y);
+      const bx = Math.round(RS.boardX(100)) - RS.BOARD.w / 2;
+      assert(rects.some(r => r[0] === bx && r[1] === RS.BOARD.top && r[2] === RS.BOARD.w && r[3] === RS.BOARD.h), 'доски задника нет на её месте');
+      rec.fillRect = function () { this.n++; };
+      eq(rec.globalAlpha, 1, 'прозрачность осталась после рисунка');
+      assert(RS.thoughtTop(0) > RS.thoughtTop(9), 'дальнее кольцо — не выше городка');
+      assert(RS.thoughtTop(9) - 6 >= RS.BANDS.thought.top && RS.thoughtTop(0) <= RS.BANDS.thought.bottom, 'мысль вне своей полосы');
+      SG.exitStage();                                     // встал — ни рамки, ни пера
+      rec.texts = []; RS.drawStageWorld(rec, () => {}, SG.SEAT_D.y);
+      eq(rec.texts.length, 0, 'встал — пером пишется дальше');
+    } finally { PR.setPref('motion', 'как есть'); SG._resetStage(); RS._resetStageArt(); }
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

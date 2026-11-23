@@ -17,7 +17,8 @@
 // вместо стука — шарканье.
 // Встать: шаг (клавиши, палец) или щелчок по самому страннику — шторка, и он у порога театра.
 // ═══════════════════════════════════════
-import { wasUsed } from './relook.js';
+import { wasUsed, lookCount } from './relook.js';
+import { PLACES } from '../assets/manifest.js';
 
 // ── в городке: середина сцены (место театра в мировых координатах + sprites canon TH cx 40, cy 50)
 // и порог, куда приводит подход к театру (там странник встаёт, выйдя из декорации)
@@ -42,7 +43,11 @@ const SETTLE = 15;             // встал раньше — зал оседа�
 export const lenOf = n => Math.max(720, Math.round(1800 * Math.pow(0.85, Math.max(1, n) - 1)));
 export const QUAD2_FROM = 7;   // с какого прихода — второй вариант «Квадрата»
 
-export const stage = { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0 };
+// ev — что сыграет этот приход (шаг 3: шёпоты зала, рамка, мысли, задники; planVisit), adv —
+// часы сцены шагнули в этот шаг; wi — место в пуле шёпотов зала; looked — осмотренные места с
+// вклейкой, от давнего к недавнему; bd — какие из них уже проехали задником в этом круге
+export const stage = { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
+  ev: null, adv: false, wi: 0, looked: [], bd: [] };
 
 // сесть у театра (строка меню «СЕСТЬ», ui.js sitNow) — когда «СЦЕНА» прочитана хоть раз
 export const stageAlt = () => (wasUsed('theater') ? { key: 'stage_sit', label: '<i>⌂</i>СЕСТЬ' } : null);
@@ -60,6 +65,7 @@ export function standStage() {
   if (!stage.seated) return;
   const l = lightOf();
   stage.seated = false; stage.live = false;
+  stage.ev = null;                               // рамку сорвало, мысль погасла недописанной, задник за кулисой
   if (l > 0.01) { stage.settle = SETTLE; stage.from = l; }
 }
 // в декорацию и из неё (main.js: шторкой, как дом)
@@ -79,23 +85,116 @@ function phase() {
 function lightOf() { return stage.seated && stage.live ? phase().light : stage.settle > 0 ? stage.from * stage.settle / SETTLE : 0; }
 
 // шаг мира; fx, fy — где странник в городке (в декорации — середина сцены); free — на мир смотрят
-// (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает
+// (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает.
+// После конца прихода часы идут ещё хвост (TAIL) — дописать начатое пером; нового не начинается
+export const TAIL = 600;
 export function stepStage(fx, fy, free = true, noon = false) {
   if (stage.settle > 0) stage.settle--;
+  stage.adv = false;
   stage.near = Math.hypot(fx - STAGE_C.x, fy - STAGE_C.y) <= AWAY;
   if (!stage.seated) {
     if (!stage.near) stage.away = true;
     return null;
   }
-  if (!stage.live || !free || noon) return null;                 // за бумагой и в полдень часы ждут
+  if ((!stage.live && !stage.ev) || !free || noon) return null;   // за бумагой и в полдень часы ждут
   const L = lenOf(stage.n), E = Math.round(L * 0.2);
-  stage.clock++;
+  if (!stage.live && stage.clock >= L + TAIL) { stage.ev = null; return null; }   // хвосты дописаны
+  stage.clock++; stage.adv = true;
   const c = stage.clock;
-  if (c >= L) { stage.live = false; return null; }               // отыграно: дальше ничего нового
+  if (stage.live && c >= L) stage.live = false;                 // отыграно: дальше ничего нового
+  if (!stage.live) return null;
   if (c === LEAD) return 'inhale';
   if (c === L - LEAD - E) return 'exhale';
   return null;
 }
+
+// ═══ ЧТО ИГРАЕТ ПРИХОД (шаг 3; weave/SCENE_STAGE §2.4–§2.5) ═══
+// Первый приход самый плотный: два шёпота зала, две мысли, два задника; дальше — по одному.
+// Рамка над живым зрителем — всегда 8 с: встаёт, как только встал зал (на коротком приходе —
+// вместе с залом) и рвётся не позже, чем фонарь опущен. Расписание сжимается вместе с длиной.
+// «Будет ли» решено при посадке: зал есть всегда, мысли — если что-то услышано, задники — если
+// что-то осмотрено. Пулы идут по кругу, без жребия.
+export const RAMA = 480;                 // рамка: восемь секунд
+export const CAPTION_AT = 180;           // подпись — через три секунды
+export const BOARD_RUN = 360;            // задник проходит сцену за шесть секунд
+export const THINK_HOLD = 60, THINK_RISE = 240;   // мысль дописана — постоит у капюшона и плывёт к ярусу
+export const HALL_HOLD = 60, HALL_FADE = 150;     // шёпот зала дописан — постоит и гаснет на месте
+// Перо на сцене пишет в своё окно [at, due]: сколько пишется строка, знает только рисунок (шрифт,
+// масштаб — world/whisper.js preparePen), поэтому расписание отводит окна, а рисунок ускоряет перо
+// ровно настолько, чтобы успеть (render/stage.js). Окна одного вида не пересекаются.
+// шёпоты зала: быт зрителей, сказанный мимо огня (пул по порядку и по кругу)
+export const HALL_LINES = [
+  '...тише... начинается...',
+  '...пальто сдай... потом заберём...',
+  '...в прошлый раз было длиннее...',
+  '...номерок не потеряй...',
+  '...буфет до третьего звонка...',
+];
+// места, у которых есть вклейка (assets/manifest.js PLACES); театр не в счёт
+export const BOARD_IDS = Object.keys(PLACES).filter(id => id !== 'theater');
+// осмотрел место: в конец списка (самое недавнее)
+export function noteLookedPlace(id) {
+  if (!BOARD_IDS.includes(id)) return;
+  const i = stage.looked.indexOf(id);
+  if (i >= 0) stage.looked.splice(i, 1);
+  stage.looked.push(id);
+}
+// m задников на приход: последние осмотренные, ещё не проехавшие в этом круге; по порядку от
+// старшего из выбранных. Круг проехал весь — сначала
+export function takeBackdrops(m) {
+  if (!stage.looked.length || m <= 0) return [];
+  let fresh = stage.looked.filter(id => !stage.bd.includes(id));
+  if (!fresh.length) { stage.bd = []; fresh = stage.looked.slice(); }
+  const pick = fresh.slice(-m);
+  stage.bd.push(...pick);
+  return pick;
+}
+// расписание прихода n (номер уже вырос при посадке). thoughts — [{ text, ring }], boards —
+// [{ id, solid }]; лишнее сверх нормы прихода не играется
+export function planVisit(n, thoughts = [], boards = []) {
+  const L = lenOf(n), I = Math.round(L * 0.2), full = LEAD + I, exhale = L - LEAD - Math.round(L * 0.2), endBy = L - LEAD;
+  const first = n <= 1, m = first ? 2 : 1;
+  const ev = [];
+  ev.push({ kind: 'rama', at: Math.max(LEAD, Math.min(full, L - LEAD - RAMA)), dur: RAMA });
+  ev.push({ kind: 'clap', at: full + 30, dur: 90 });
+  // окна: [a, b) на k штук подряд, без пересечений
+  const wins = (a, b, k) => Array.from({ length: k }, (_, i) => [Math.round(a + (b - a) * i / k), Math.round(a + (b - a) * (i + 1) / k)]);
+  // шёпот зала — пока зал стоит: с середины вдоха до середины выдоха (гаснет вместе с ним)
+  for (const [a, b] of wins(LEAD + Math.round(I / 2), exhale + Math.round(I / 2), first ? 2 : 1)) {
+    const text = HALL_LINES[stage.wi % HALL_LINES.length];
+    ev.push({ kind: 'hall', at: a, due: b, text, seat: stage.wi });
+    stage.wi = (stage.wi + 1) % HALL_LINES.length;
+  }
+  // мысли — одна за другой, каждая в своём окне: пишется у капюшона и доплывает до своего ряда к концу
+  // окна; последняя — пока фонарь поднят. Первый приход — с шестой секунды, дальше — так, чтобы на
+  // мысль было не меньше восьми секунд
+  const ths = thoughts.slice(0, m);
+  if (ths.length) {
+    const a0 = Math.max(LEAD, Math.min(Math.round(L * (first ? 0.2 : 0.42)), endBy - 480 * ths.length));
+    wins(a0, endBy, ths.length).forEach(([a, b], i) => ev.push({ kind: 'thought', at: a, due: b, text: ths[i].text, ring: ths[i].ring, side: i % 2 }));
+  }
+  const bdAt = first ? [0.40, 0.66] : [0.45];
+  boards.slice(0, m).forEach((b, i) => ev.push({ kind: 'board', at: Math.min(Math.round(L * bdAt[i]), L - BOARD_RUN - 30), dur: BOARD_RUN, id: b.id, solid: !!b.solid }));
+  ev.sort((a, b) => a.at - b.at);
+  return ev;
+}
+// звуковые метки на шаг часов c: рамка щёлкает, встав и порвавшись, между — тик на пороге
+// слышимости; шёпот зала — шорох программки с места; задник — скрип блока и каната
+export function cuesAt(c, ev = stage.ev) {
+  const out = [];
+  if (!ev) return out;
+  for (const e of ev) {
+    const a = c - e.at;
+    if (e.kind === 'rama') {
+      if (a === 0 || a === e.dur) out.push({ s: 'click' });
+      else if (a > 0 && a < e.dur && a % 40 === 0) out.push({ s: 'tick' });
+    } else if (e.kind === 'hall' && a === 0) out.push({ s: 'rustle', seat: e.seat });
+    else if (e.kind === 'board' && a >= 0 && a < e.dur && a % 90 === 0) out.push({ s: 'creak', pan: 0.9 - 1.8 * a / e.dur });
+  }
+  return out;
+}
+// событие прихода, идущее сейчас: возраст по часам сцены (null — не идёт)
+export const ageOf = (e, c = stage.clock) => (c >= e.at && (e.dur === undefined || c < e.at + e.dur) ? c - e.at : null);
 
 // что рисовать. noon — сила красного полудня 0..1: фонарь опускают и зал гаснет вместе с ним.
 // В городке (sprites canon draw_theater) человек с фонарём стоит у края, пока странник рядом и
@@ -186,6 +285,17 @@ export function quadSteps(T, slow = false) {
 }
 
 // сохранение: номер прихода, в котором садились (по нему — длина следующего)
-export const saveStage = () => ({ n: stage.n });
-export function loadStage(d) { stage.n = d && Number.isFinite(d.n) ? Math.max(0, d.n | 0) : 0; stage.away = true; stage.seated = false; stage.live = false; stage.active = false; }
-export function _resetStage() { Object.assign(stage, { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0 }); }
+export const saveStage = () => ({ n: stage.n, wi: stage.wi, looked: stage.looked.slice(), bd: stage.bd.slice() });
+export function loadStage(d) {
+  stage.n = d && Number.isFinite(d.n) ? Math.max(0, d.n | 0) : 0;
+  stage.wi = d && Number.isFinite(d.wi) ? Math.max(0, d.wi | 0) % HALL_LINES.length : 0;
+  const ids = a => (Array.isArray(a) ? [...new Set(a.filter(id => BOARD_IDS.includes(id)))] : []);
+  // сохранение до шага 3 списка не знает: осмотренное помнит world/relook.js (main.js грузит его раньше)
+  stage.looked = d && Array.isArray(d.looked) ? ids(d.looked) : BOARD_IDS.filter(id => lookCount(id) > 0);
+  stage.bd = ids(d && d.bd).filter(id => stage.looked.includes(id));
+  stage.away = true; stage.seated = false; stage.live = false; stage.active = false; stage.ev = null; stage.adv = false;
+}
+export function _resetStage() {
+  Object.assign(stage, { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
+    ev: null, adv: false, wi: 0, looked: [], bd: [] });
+}

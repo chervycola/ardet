@@ -9,7 +9,7 @@
 // (сцена, потом вниз). Сам ход и шаг по стуку сердца — world/underside.js.
 // ═══════════════════════════════════════
 import { under } from './underside.js';
-import { sayAt, hush } from './whisper.js';
+import { sayAt, hush, noteWhisperHeard } from './whisper.js';
 import { TOWN, RINGS, RINGS_D, ringD, ringAt } from './disc.js';
 
 const NI = '#0D0B0A', AS = '#8A8D8F', MG = '#3D4A3A';
@@ -88,6 +88,7 @@ export function stepMossway(p, isNight, day, looking = true) {
   if (linger > 240 && night !== day && sayAt(MOSS_WHISPER, pithos.x + pithos.w / 2, pithos.y - 10)) {
     night = day;
     under.seen.add('pithos_whisper');
+    noteWhisperHeard('pithos_night', pithos);
   }
 }
 export function _resetMossway() { linger = 0; night = -1; }

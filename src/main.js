@@ -39,7 +39,7 @@ import { stepHangs } from './world/hang.js';
 import { stepMechs, crankWell } from './world/mechanisms.js';
 import { rect, clamp } from './render/draw.js';
 import { MW, MH } from './world/terrain.js';
-import { locations, attachContent, archEnsembles } from './world/locations.js';
+import { locations, attachContent, archEnsembles, locationById } from './world/locations.js';
 import { tryMove, findLocationAt, isInSettlement } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
@@ -100,11 +100,13 @@ import { archWindowLights } from './render/archlights.js';
 import { update as updateEdges, draw as drawEdges, drawHud as drawEdgeHud, slowFactor } from './world/edges.js';
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
-import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
+import { updateProximity, draw as drawInscriptions, setRevealHook } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
-import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D } from './world/stage.js';
-import { drawStageWorld, stageLights, STAGE_AMBIENT } from './render/stage.js';
-import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper, whisperText } from './world/whisper.js';
+import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D,
+  planVisit, takeBackdrops, noteLookedPlace, cuesAt } from './world/stage.js';
+import { drawStageWorld, stageLights, STAGE_AMBIENT, hallSeatPan } from './render/stage.js';
+import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper, whisperText, setHeardHook } from './world/whisper.js';
+import { noteHeard, takeThoughts, saveHeard, loadHeard } from './world/heard.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
 import { addFootprint, drawFootprints, drawSmokeClouds, drawBloodMoon } from './render/atmosphere.js';
@@ -128,7 +130,7 @@ function walkedKey(loc) { const p = placeOf(loc); return p && p.ring >= 1 && p.r
 import { trigger as triggerEnding, isActive as isEndingActive, draw as drawEnding } from './world/ending.js';
 import { update as updateMonsters, draw as drawMonsters } from './world/monsters.js';
 import { update as updatePotemkin, revealOf, drawRevealed, setRelook, setRevealFloor, gaze } from './world/potemkin.js';
-import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve, opisRename } from './world/opis.js';
+import { fadeOf as opisFade, thinOf, stepOpis, opisLines, saveOpis, loadOpis, opisResolve, opisRename, opisState } from './world/opis.js';
 import { drawQuiet, quietShade } from './render/quiet.js';
 import { signFacade } from './world/architecture.js';
 import { under, moss, UW, UH, thingsNow, DESCENTS, LOCKED, thingById, accessOf, underMove, pathTo, surfaceUnder, underLights, UNDER_AMBIENT, wallSpot, FLEET_TEXT, JOURNAL_TEXT, FROST_FOREIGN, coldAt, ROOMS } from './world/underside.js';
@@ -271,7 +273,8 @@ if (savedData) {
   if (savedData.opis) { loadOpis(savedData.opis); opisResolve(locations); }   // «В описи не значится»: строки от руки и заходы по кольцам
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
-  loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода (world/stage.js)
+  loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода, пулы (world/stage.js)
+  loadHeard(savedData.heard);                                // что странник носит при себе — мысли на сцене (world/heard.js)
   // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
   if (!savedData.names) opisRename((id, name) => { const l = locations.find(q => q.id === id); return l && name === l.name ? nameOf(l) || name : name; });
 }
@@ -301,6 +304,7 @@ function saveData() {
   stands: saveStands(),
   names: saveNames(),
   stage: saveStage(),
+  heard: saveHeard(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
   attn: saveAttention(),
@@ -417,7 +421,11 @@ function intoStage() {
   player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
   player.sit = 1; player.visor = false; player.face = 'S';
   clearWhisper();                                    // шёпот улицы остался на улице
-  enterStage();
+  if (enterStage()) {                                // новый приход: что он сыграет, решено при посадке
+    const m = stage.n <= 1 ? 2 : 1, today = dayIndex(t);
+    const boards = takeBackdrops(m).map(id => { const l = locationById[id], st = l ? opisState(l, today) : null; return { id, solid: !!(st && st.mine) }; });
+    stage.ev = planVisit(stage.n, takeThoughts(m), boards);
+  }
 }
 function outOfStage() {
   exitStage();
@@ -1502,6 +1510,10 @@ function stepFxStage(free) {
   // «Дыхание»: вдох — фонарь поднимают, выдох — опускают; «Квадрат»: шаги теней — стук, во втором варианте шарканье
   const sg = stepStage(STAGE_C.x, STAGE_C.y, free, redNoon.active);
   if (sg === 'inhale') playInhale(); else if (sg === 'exhale') playSigh();
+  if (stage.adv) for (const q of cuesAt(stage.clock)) {   // рамка щёлкает и тикает, шорох программки, скрип каната
+    if (q.s === 'click') playClick(); else if (q.s === 'tick') playTick(0.06);
+    else if (q.s === 'rustle') playRustle(0.18, hallSeatPan(q.seat)); else if (q.s === 'creak') playCreak(0.5, q.pan, 1.7);
+  }
   if (free && stage.seated) for (const [pan, kind] of quadSteps(t, stage.n >= QUAD2_FROM)) { if (kind === 'tap') playTick(0.25); else playRustle(0.12, pan); }
   const sv = stageView(redNoon.k);                   // фитиль тихо трещит, у поднятого фонаря чуть громче
   if (sv && !redNoon.active && Math.random() < 0.012 + 0.02 * Math.min(1, sv.lift)) playCrackle(0.2 + 0.25 * Math.min(1, sv.lift));
@@ -2249,7 +2261,13 @@ function lookTags() {
   if (wind.s > 0.45) tags.add('wind');
   return tags;
 }
-events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) { noteLook(loc.id); noteAttention(loc); } });
+events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) { noteLook(loc.id); noteAttention(loc); noteLookedPlace(loc.id); } });
+// что странник носит при себе (world/heard.js): шёпот места начался рядом, надпись проступила при нём
+{
+  const ringOfLoc = loc => { const p = placeOf(loc); return p && p.ring >= 0 && p.ring <= RINGS ? p.ring : 0; };
+  setHeardHook((kind, id, loc) => noteHeard(kind, id, ringOfLoc(loc)));
+  setRevealHook((kind, id, loc) => noteHeard(kind, id, ringOfLoc(loc)));
+}
 events.on(E.LOCATION_VISIT, noteGarment);   // дошёл до места, где висит крой, — в опись
 events.on('location.use', loc => { if (loc && loc.id) { noteUse(loc.id); noteAttention(loc); } });
 // лента отнимает внимание: после падения механизмы забывают половину (world/attention.js)

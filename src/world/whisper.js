@@ -111,6 +111,11 @@ export function clear() {
   lastWhisperEnd = t;
 }
 
+// услышанное (world/heard.js — мысли на сцене театра): ловушку ставит main.js
+let heardHook = null;
+export function setHeardHook(fn) { heardHook = typeof fn === 'function' ? fn : null; }
+export function noteWhisperHeard(id, loc) { if (heardHook) heardHook('w', id, loc); }
+
 // litAt(x, y) — ночью: светит ли тут чужой свет (уголь в груди не в счёт);
 // null — день, свет не нужен
 export function check(player, locations, litAt = null) {
@@ -126,6 +131,7 @@ export function check(player, locations, litAt = null) {
       // ночью шёпоты живут только у света: в темноте мир не отвечает
       if (litAt && !l.light && !litAt(l.x + l.w / 2, l.y + l.h / 2)) continue;
       whisper = { text: WHISPERS[l.id], x: l.x + l.w / 2, y: l.y - 10, t0: t, prep: null };
+      noteWhisperHeard(l.id, l);                 // начался рядом — услышан
       break;
     }
   }

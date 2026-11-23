@@ -10,11 +10,16 @@
 // тени труппы «Квадратом», человек с фонарём (три позы), странник на трещине.
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
-import { DW, DH, PLATE, LANTERN, CENTER, quadAt, stageView } from '../world/stage.js';
-import { tremble, ghostShift, flicker, GHOST_A } from './ghost.js';
+import { DW, DH, PLATE, LANTERN, CENTER, SEAT_D, quadAt, stageView, stage, ageOf, CAPTION_AT, THINK_HOLD, THINK_RISE, HALL_HOLD, HALL_FADE } from '../world/stage.js';
+import { tremble, ghostShift, flicker, ghostSeed, GHOST_A } from './ghost.js';
+import { digitalState, digitalText } from './digital.js';
 import { redNoon } from '../world/redNoon.js';
+import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
+import { X, setCtx } from './context.js';
+import * as locSprites from '../sprites/locations/index.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', SV = '#E28A3A';
+const TI = '#8CC63F';                             // третья краска: свечение экрана
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
 const L1 = '#c8b89a', L2 = '#b0a284', SEP = '#3A3026';
 const S0 = '#474442', S1 = '#5e5e5d', S2 = '#33302e';
@@ -150,10 +155,17 @@ function dustHall(c, light, day) {
   c.globalAlpha = 1;
 }
 
-// ── живой зритель: на четвёртом ярусе у прохода; моргает; иногда светящееся у глаз
-function spectator(c) {
+// ── живой зритель: на четвёртом ярусе у прохода; моргает; иногда светящееся у глаз.
+// raised — поднял светящееся над головой (рамка, шаг 3): во всём зале он один смотрит не на сцену
+function spectator(c, raised = false) {
   const x = Math.round(tierX(SPEC.k, SPEC.th)), y = Math.round(tierY(SPEC.k, SPEC.th));
   R(c, x - 2, y - 4, 5, 3, NI); R(c, x - 1, y - 7, 3, 3, NI);
+  if (raised) {                                                       // руки вверх, светящееся в ладонях
+    R(c, x - 2, y - 10, 1, 4, NI); R(c, x + 2, y - 10, 1, 4, NI);
+    c.globalAlpha = 0.5; R(c, x - 1, y - 11, 3, 2, TI); c.globalAlpha = 1;
+    if (t % 230 >= 7) { R(c, x - 1, y - 7, 1, 1, L2); R(c, x + 1, y - 7, 1, 1, L2); }   // глаза вверх, к светящемуся
+    return;
+  }
   const glow = t % 7200 < 480, blink = glow ? t % 50 < 6 : t % 230 < 7;
   if (!blink) { R(c, x - 1, y - 6, 1, 1, L2); R(c, x + 1, y - 6, 1, 1, L2); }
   if (glow) { c.globalAlpha = 0.22; R(c, x - 2, y - 9, 5, 4, '#8CC63F'); c.globalAlpha = 1; R(c, x, y - 5, 1, 2, '#8CC63F'); }
@@ -196,6 +208,223 @@ function lanternMan(c, lift) {
   c.globalAlpha = 0.14 + 0.12 * Math.min(1, lift); R(c, lx - 2, ly - 3, 7, 8, SV); c.globalAlpha = 1;
 }
 
+// ═══ ЧЕТЫРЕ ВИДА (шаг 3; weave/SCENE_STAGE §2.4): события прихода из stage.ev по часам сцены ═══
+const evNow = kind => (stage.ev ? stage.ev.filter(e => e.kind === kind && ageOf(e) !== null) : []);
+const lerp = (a, b, k) => a + (b - a) * k;
+// строка по словам, не длиннее n знаков (как render/net.js wrap)
+function wrap(text, n = 24) {
+  const out = [];
+  let cur = '';
+  for (const w of String(text).split(' ')) {
+    if (cur && (cur + ' ' + w).length > n) { out.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+// перо в несколько строк: пишет строку за строкой, одно зерно призрака на всю фразу (world/whisper.js)
+function penLines(c, e, text, n = 24) {
+  if (!e.preps) { const sd = ghostSeed(text); e.preps = wrap(text, n).map(l => { const P = preparePen(c, l); P.seed = sd; return { l, P }; }); }
+  return e.preps;
+}
+// x0, x1 — в каких границах держать строку (между кулисами, а для шёпота зала — левее зрителя)
+function drawPen(c, preps, cx, top, a, fade, x0 = 14, x1 = DW - 14) {
+  let start = 0;
+  const w = Math.max(0, ...preps.map(q => q.P.wl || 0));
+  const x = Math.max(x0 + w / 2, Math.min(x1 - w / 2, cx));
+  preps.forEach((q, i) => {
+    const wr = a - start;
+    if (wr > 0) penDraw(c, q.P, q.l, x, top + i * 8, wr, wr, fade, true);
+    start += q.P.write;
+  });
+}
+const penTotal = preps => preps.reduce((s, q) => s + q.P.write, 0);
+
+// ── ПОЛОСЫ ПЕРА. Чтобы слова не ложились друг на друга и на зрителя, у каждого вида — своя полоса:
+// рамка и подпись — наверху (строки 3–24); шёпот зала — ниже, только левее живого зрителя (строки
+// 22–39, правый край не дальше 160); мысль — ещё ниже, от капюшона до третьего ряда (строки 41–68).
+// Перо успевает в своё окно расписания (world/stage.js): рисунок знает, сколько пишется строка, и
+// ускоряет перо ровно настолько, насколько нужно (k ≥ 1)
+export const BANDS = { hall: { top: 22, bottom: 39, x1: 160 }, thought: { top: 41, bottom: 68 } };
+const speedOf = (e, need) => (e.k ??= Math.max(1, need / Math.max(1, (e.due ?? e.at + need) - e.at)));
+
+// ── шёпот зала: пером над шепчущим пылевым зрителем третьего ряда, левее середины (правее — живой
+// зритель и рамка), быт мимо огня; гаснет на месте
+function hallSeats() { return seatList().filter(s => s.k === 2 && s.x < 110 && s.y >= 38 && s.y <= 52); }
+export function hallSeat(i) { const S = hallSeats(); return S.length ? S[((i | 0) * 3 + 1) % S.length] : { x: 90, y: 46, k: 2 }; }
+export const hallSeatPan = i => Math.max(-1, Math.min(1, (hallSeat(i).x - CENTER.x) / CENTER.x));
+const READ = 1.8;                                  // перо на сцене читаемее, чем шёпот улицы (свет фонаря множит)
+function drawHall(c, e, a) {
+  const preps = penLines(c, e, e.text, 22), total = penTotal(preps), need = total + HALL_HOLD + HALL_FADE;
+  a *= speedOf(e, need);
+  if (a >= need) return;
+  const fade = (a < total + HALL_HOLD ? 1 : 1 - (a - total - HALL_HOLD) / HALL_FADE) * READ;
+  const B = BANDS.hall, n = preps.length;
+  const bottom = Math.max(B.top + 6 + (n - 1) * 8, Math.min(B.bottom, hallSeat(e.seat).y - 10));
+  drawPen(c, preps, hallSeat(e.seat).x, bottom - (n - 1) * 8, a, fade, 14, B.x1);
+}
+
+// ── мысль: пишется пером над капюшоном, медленно плывёт к залу — направо или налево — и выцветает у
+// нижних рядов: городок — у первого ряда, дальше от центра — выше, девятое кольцо — у третьего
+// (радиус — время). Выше третьего ряда не поднимается: там шёпоты зала, зритель и рамка
+export const thoughtTop = r => Math.round(56 - Math.max(0, Math.min(9, r || 0)));     // строка верха мысли у её ряда
+function drawThought(c, e, a) {
+  const preps = penLines(c, e, e.text), total = penTotal(preps), need = total + THINK_HOLD + THINK_RISE;
+  a *= speedOf(e, need);
+  if (a >= need) return;
+  const n = preps.length, B = BANDS.thought;
+  const x0 = SEAT_D.x + 1, y0 = B.bottom - (n - 1) * 8;                            // над капюшоном
+  const x1 = e.side ? 82 : 150, y1 = Math.max(B.top + 6, Math.min(y0, thoughtTop(e.ring)));
+  const p = Math.max(0, Math.min(1, (a - total - THINK_HOLD) / THINK_RISE)), q = p * p * (3 - 2 * p);
+  drawPen(c, preps, lerp(x0, x1, q), lerp(y0, y1, q), a, (1 - p) * 2);
+}
+
+// ── хлопок в третьем ряду: беззвучно, с ладоней сходит облачко пыли (призрачной)
+function drawClap(c, e, a) {
+  const S = seatList().filter(s => s.k === 2);
+  if (!S.length) return;
+  const s = S[(stage.n * 5 + 2) % S.length], [jx, jy] = tremble(47);
+  for (let j = 0; j < 5; j++) {
+    c.globalAlpha = 0.34 * (1 - a / e.dur) * flicker(47);
+    R(c, s.x - 2 + j + jx + (j - 2) * a * 0.03, s.y - 9 - a * 0.07 - (j % 2) + jy, 1, 1, j % 2 ? AS : BO);
+  }
+  c.globalAlpha = 1;
+}
+
+// ── рамка над живым зрителем: 9:16, растр через строку, третья краска; в ней четыре тени-точки
+// играют тот же спектакль за 4 с. Почти всё время стоит ровно, раз в 2–3 с сбоит (render/digital.js):
+// нижнюю половину рвёт вбок, рамка прыгает без двойника, одна тень на кадр — чёрточка, рамка на
+// кадр пропадает. Через 3 с у рамки, слева, — «автоповтор: вкл.» (решение помощника по вопросу 4:
+// подпись Б; слева, а не под рамкой: под ней руки зрителя и светящееся). Через 8 с рамку рвёт по
+// горизонтали — и её нет
+export const RAMA_BOX = { x: 166, y: 3, w: 12, h: 21 };
+export const CAPTION = 'автоповтор: вкл.';
+const CAP_LINES = ['автоповтор:', 'вкл.'];
+// где подпись: две строки по 6 точек, выровнены вправо к рамке (для проверки — коробка)
+export const CAPTION_BOX = { x: RAMA_BOX.x - 3 - 11 * 6, y: RAMA_BOX.y + 3, w: 11 * 6, h: 15 };   // знаки 6 точек над строками 12 и 20
+function drawRama(c, e, a) {
+  const { x: rx, y: ry, w, h } = RAMA_BOX, mid = ry + Math.round(h / 2);
+  const rip = a >= e.dur - 3;
+  const st = rip ? { kind: 'tear', dx: 6 } : digitalState(1889, 4);
+  if (st.kind !== 'drop') {
+    const jx = st.kind === 'jump' ? st.dx : 0;
+    const G = (x, y, ww, hh, col, al) => {                         // рвёт — нижняя половина уехала вбок
+      const dx = jx + (st.kind === 'tear' && y >= mid ? st.dx : 0) - (rip && y < mid ? 5 : 0);
+      c.globalAlpha = al; R(c, x + dx, y, ww, hh, col);
+    };
+    for (let y = ry + 1; y < ry + h - 1; y += 2) G(rx + 1, y, w - 2, 1, TI, 0.32);      // растр через строку
+    G(rx, ry, w, 1, TI, 0.8); G(rx, ry + h - 1, w, 1, TI, 0.8); G(rx, ry, 1, h, TI, 0.8); G(rx + w - 1, ry, 1, h, TI, 0.8);
+    // спектакль за 4 с: четыре точки на дне рамки, жест — в свой черёд (смех, огонь, сидит, тишина)
+    const turn = Math.floor((a % 240) / 60), fy = ry + h - 3;
+    for (let i = 0; i < 4; i++) {
+      const x = rx + 2 + i * 2 + (i > 1 ? 1 : 0), mine = turn === i;
+      if (st.kind === 'swap' && st.at === i) { G(x - 1, fy, 2, 1, NI, 0.9); continue; }   // тень на кадр — чёрточка
+      const hop = i === 0 && mine && (a >> 3) & 1 ? 1 : 0, low = i === 2 && mine ? 1 : 0;
+      G(x, fy - 1 + low, 1, 2 - low, NI, 0.9); G(x, fy - 2 - hop + low, 1, 1, NI, 0.9);
+      if (i === 1 && mine) G(x, fy - 4 - ((a >> 2) & 1), 1, 1, NI, 0.9);                 // огонь — тенью
+      if (i === 3 && mine) G(x + 1, fy - 2, 1, 1, NI, 0.9);                                // рука у рта
+    }
+    c.globalAlpha = 1;
+  }
+  if (a >= CAPTION_AT && !rip && c.fillText) {                      // подпись машины — цифровой дрожью
+    c.globalAlpha = 0.85; c.fillStyle = TI;
+    c.font = '6px "Press Start 2P","VT323",monospace'; c.textAlign = 'right';    // мельче 6 точек знаки ломаются
+    CAP_LINES.forEach((l, i) => digitalText(c, l, rx - 3, ry + 9 + i * 8, 1890 + i, 6));
+    c.textAlign = 'left'; c.globalAlpha = 1;
+  }
+}
+
+// ── задник на канате: из-за правой кулисы по дальнему краю сцены за левую, за шесть секунд.
+// Расписная сторона к нам. Изображение — рисунок места из городка, сведённый в три тона (ночь,
+// пепел, кость: в памяти тепла нет, огонь выходит пеплом). Рама, рейки и канат стоят твёрдо;
+// изображение твёрдо, если место вписано в опись, иначе призрачно — оттиск, двойник, дрожь.
+// Вклеек мест (assets/places) в ветке нет — пока рисунок места (решение документа §2.4)
+export const BOARD = { w: 22, h: 30, top: 52, rope: 48, x0: DW + 14, x1: -14 };
+const BOX = {                                     // запечённый лист места: x0, y0, w, h от loc.x, loc.y (canon.js bake)
+  campfire: [-16, -46, 80, 90], office: [-6, -16, 80, 64], lantern1: [-1, 0, 13, 46], gates: [-16, -2, 80, 61],
+  library: [-4, 1, 112, 83], church: [-2, -28, 110, 122], train: [-10, -1, 136, 56], pizzeria: [0, 5, 146, 84],
+  lake: [-10, -4, 123, 69], crater: [-1, 4, 53, 34], ruins: [0, 0, 110, 91],
+};
+const TONES = [[13, 11, 10], [138, 141, 143], [217, 207, 184]];
+// три тона: где рисунка нет — ночь; тёмное тело места — пепел через точку с ночью, середина — пепел,
+// светлое — кость. Так силуэт не тонет в ночи доски (тело построек в городке тёмное)
+export function toneMap(px, w) {
+  for (let i = 0; i < px.length; i += 4) {
+    const L = 0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2], p = i >> 2, x = p % w, y = (p / w) | 0;
+    const tone = px[i + 3] < 60 ? 0 : L < 45 ? ((x + y) & 1 ? 1 : 0) : L < 110 ? 1 : 2;
+    px[i] = TONES[tone][0]; px[i + 1] = TONES[tone][1]; px[i + 2] = TONES[tone][2]; px[i + 3] = 255;
+  }
+  return px;
+}
+const art = new Map();
+function boardArt(id) {
+  if (art.has(id)) return art.get(id);
+  let out = null;
+  try {
+    const box = BOX[id], fn = locSprites['draw_' + id];
+    if (box && fn && typeof document !== 'undefined' && document.createElement) {
+      const src = document.createElement('canvas');
+      const g = src && src.getContext ? (src.width = box[2], src.height = box[3], src.getContext('2d')) : null;
+      if (g) {
+        const prev = X; setCtx(g);
+        try { fn(-box[0], -box[1]); } finally { setCtx(prev); }
+        // по непрозрачному: где рисунок, а где пусто вокруг
+        const sp = g.getImageData(0, 0, box[2], box[3]).data;
+        let x0 = box[2], y0 = box[3], x1 = -1, y1 = -1;
+        for (let y = 0; y < box[3]; y++) for (let x = 0; x < box[2]; x++) if (sp[(y * box[2] + x) * 4 + 3] > 40) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        if (x1 >= x0 && y1 >= y0) {
+          const bw = x1 - x0 + 1, bh = y1 - y0 + 1, iw = BOARD.w - 2, ih = BOARD.h - 2, dst = document.createElement('canvas');
+          dst.width = iw; dst.height = ih;
+          const d = dst.getContext('2d');
+          const sc = Math.min(iw / bw, (ih - 1) / bh), w = Math.max(1, bw * sc), h = Math.max(1, bh * sc);
+          d.imageSmoothingEnabled = true;
+          d.drawImage(src, x0, y0, bw, bh, Math.round((iw - w) / 2), Math.round(ih - h - 1), w, h);   // стоит на нижней рейке
+          const im = d.getImageData(0, 0, iw, ih);
+          toneMap(im.data, iw);
+          d.putImageData(im, 0, 0);
+          out = dst;
+        }
+      }
+    }
+  } catch (err) { out = null; }
+  art.set(id, out);
+  return out;
+}
+export const boardX = a => BOARD.x0 + (BOARD.x1 - BOARD.x0) * Math.max(0, Math.min(1, a / 360));
+function clipX(c, f) {                            // за кулисами не видно: только между ними
+  const can = c.save && c.clip && c.rect && c.beginPath;
+  if (can) { c.save(); c.beginPath(); c.rect(12, 0, DW - 24, DH); c.clip(); }
+  try { f(); } finally { if (can) c.restore(); }
+}
+function drawBoard(c, e, a, light) {
+  const bx = Math.round(boardX(a)), L = bx - BOARD.w / 2, T = BOARD.top;
+  clipX(c, () => {
+    R(c, 12, BOARD.rope, DW - 24, 1, K3);                                     // канат через всю сцену
+    R(c, L + 2, BOARD.rope, 1, T - BOARD.rope, K3); R(c, L + BOARD.w - 3, BOARD.rope, 1, T - BOARD.rope, K3);   // подвесы
+    R(c, L, T, BOARD.w, BOARD.h, K1);                                         // доска
+    const img = boardArt(e.id);
+    if (img && c.drawImage) {
+      if (e.solid) c.drawImage(img, L + 1, T + 1);
+      else {                                                                  // не в описи — призрачно
+        const sd = 31 + e.id.length, [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd);
+        c.globalAlpha = GHOST_A * 0.8; c.drawImage(img, L + 1 + gx, T + 1 + gy);
+        c.globalAlpha = 0.8 * flicker(sd); c.drawImage(img, L + 1 + jx, T + 1 + jy);
+        c.globalAlpha = 1;
+      }
+    }
+    R(c, L, T, BOARD.w, 1, K3); R(c, L, T + BOARD.h - 1, BOARD.w, 1, K3);       // рейки — твёрдо
+    R(c, L, T, 1, BOARD.h, K3); R(c, L + BOARD.w - 1, T, 1, BOARD.h, K3);
+  });
+  // проходя мимо поднятого фонаря — на миг закрывает его, по плитам идёт тень рамы
+  const near = 1 - Math.abs(bx - LANTERN.x) / 30;
+  if (near > 0 && light > 0.05) {
+    c.globalAlpha = 0.35 * light * near;
+    R(c, Math.round(bx - BOARD.w / 2 - (LANTERN.x - bx) * 0.5 - 6), BOARD.top + BOARD.h + 2, BOARD.w, 6, NI);
+    c.globalAlpha = 1;
+  }
+}
+// задник, что сейчас едет (для света: закрывает фонарь)
+export function boardNow() { const e = evNow('board')[0]; return e ? boardX(ageOf(e)) : null; }
+
 // весь мир сцены; drawHero — нарисовать странника (сидит на трещине); day — в мире день
 export function drawStageWorld(c, drawHero, heroY, day = false) {
   const key = day ? 'day' : 'night';
@@ -204,15 +433,25 @@ export function drawStageWorld(c, drawHero, heroY, day = false) {
   if (sheet) c.drawImage(sheet, 0, 0);
   else R(c, 0, 0, DW, DH, day ? K2 : NI);
   const sv = stageView(redNoon.k) || { light: 0, lift: 0, quad2: false };
+  const shows = redNoon.k <= 0.5 && !!stage.ev;                      // в полдень мир молчит
   if (sv.light > 0.01) dustHall(c, sv.light, day);
-  spectator(c);
+  if (shows) for (const e of evNow('clap')) drawClap(c, e, ageOf(e));
+  const rama = shows ? evNow('rama')[0] : null;
+  spectator(c, !!rama);
+  if (rama) drawRama(c, rama, ageOf(rama));
   // тени и странник — по глубине (ступни)
   const qs = [0, 1, 2, 3].map(i => quadAt(i, t, sv.quad2));
   const drawn = qs.map(q => ({ y: q.y, f: () => shadow(c, q, sv.quad2) }));
   drawn.push({ y: heroY, f: drawHero });
   drawn.push({ y: LANTERN.y, f: () => lanternMan(c, sv.lift) });
+  if (shows) for (const e of evNow('board')) drawn.push({ y: BOARD.top + BOARD.h, f: () => drawBoard(c, e, ageOf(e), sv.light) });
   drawn.sort((a, b) => a.y - b.y);
   for (const d of drawn) d.f();
+  if (shows && c.fillText) {                                         // перо — поверх: шёпоты зала, мысли
+    for (const e of evNow('hall')) drawHall(c, e, ageOf(e));
+    for (const e of evNow('thought')) drawThought(c, e, ageOf(e));
+    c.globalAlpha = 1;
+  }
 }
 
 // свет сцены: фонарь (растёт с подъёмом) и огонёк у сердца сидящего
@@ -220,10 +459,15 @@ export const STAGE_AMBIENT = { night: 0.14, day: 0.26 };
 export function stageLights(px, py) {
   const sv = stageView(redNoon.k) || { light: 0, lift: 0 };
   const lx = LANTERN.x - 4, ly = LANTERN.y - 5 - sv.lift * 11;
-  return [
+  const bx = redNoon.k <= 0.5 && stage.ev ? boardNow() : null;
+  const hid = bx !== null && Math.abs(bx - lx) < BOARD.w / 2 ? 0.4 : 1;   // задник на миг закрыл фонарь
+  const out = [
     { x: px, y: py, r: 40, color: [226, 138, 58], flicker: 0.1, candle: true, intensity: 1 },
-    { x: lx, y: ly, r: 34 + 190 * sv.light, color: [226, 150, 80], flicker: 0.08, candle: true, intensity: 0.7 + 0.9 * sv.light },
+    { x: lx, y: ly, r: (34 + 190 * sv.light) * (hid < 1 ? 0.7 : 1), color: [226, 150, 80], flicker: 0.08, candle: true, intensity: (0.7 + 0.9 * sv.light) * hid },
     { x: CENTER.x, y: CENTER.y - 30, r: 150, color: [200, 192, 176], flicker: 0, intensity: 0.25 + 0.8 * sv.light },
   ];
+  // рамка светит третьей краской: свечение, не тепло — третьего тёплого пятна нет
+  if (redNoon.k <= 0.5 && stage.ev && evNow('rama').length) out.push({ x: RAMA_BOX.x + RAMA_BOX.w / 2, y: RAMA_BOX.y + RAMA_BOX.h / 2 + 4, r: 30, color: [140, 198, 63], flicker: 0.05, intensity: 0.9 });
+  return out;
 }
-export function _resetStageArt() { for (const k in sheets) delete sheets[k]; seats = null; }
+export function _resetStageArt() { for (const k in sheets) delete sheets[k]; seats = null; art.clear(); }
