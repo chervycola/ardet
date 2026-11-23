@@ -5051,6 +5051,122 @@ setCtx(ctx);
   });
 }
 
+// ═══ СЦЕНА ТЕАТРА ТЕНЕЙ, шаг 4 (поворот к залу, взгляд в упор, угольки, зал на слух, «пыль стёрта», чтец) ═══
+{
+  const SG = await imp('world/stage.js');
+  const RS = await imp('render/stage.js');
+  const GT = await imp('world/gait.js');
+  const PL = await imp('sprites/player.js');
+  const WR = await imp('sprites/wardrobe.js');
+  const GH = await imp('render/ghost.js');
+  const DG = await imp('render/digital.js');
+  const RL = await imp('world/relook.js');
+  const AU = await imp('audio/audio.js');
+  const FS = await import('fs');
+  const mk = (o = {}) => ({ x: 1000, y: 1000, vx: 0, vy: 0, face: 'S', dir: 1, still: true, sit: 0, ...o });
+  const idle = (p, n) => { for (let i = 0; i < n; i++) { p.still = true; tick(); GT.stepGait(p, {}); } };
+  const rec = p => { const L = []; let col = null; const g = new Proxy({}, { get(t, k) { return k === 'fillRect' ? (...a) => L.push([col, ...a]) : noop; }, set(t, k, v) { if (k === 'fillStyle') col = v; return true; } }); setCtx(g); PL.drawPlayer(p); setCtx(ctx); return L; };
+  test('сидит спиной: на сцене, повернувшись к залу, — видом «спиной» (каждый крой), огонька и угольков нет, ткань легла на землю; без поворота сидя — лицом', () => {
+    for (const cut of Object.keys(WR.CUTS)) {
+      const f = mk({ cut, sit: 1 }); idle(f, 40);
+      eq(f.gait.view, 'S', `${cut}: сидя без поворота — не лицом`);
+      f.sitBack = true; idle(f, GT.TURN_LAST + 2);
+      eq(f.gait.view, 'N', `${cut}: повернулся к залу — не спиной`);
+      const L = rec(f), x = Math.floor(f.x), y = Math.floor(f.y);
+      assert(!L.some(([c]) => c === '#E28A3A'), `${cut}: спиной видно огонёк или угольки`);
+      assert(L.some(([c, X, Y]) => c !== '#0D0B0A' && Y >= y + 21 && Y <= y + 22), `${cut}: сидя спиной ткань не легла на землю`);
+      assert(L.every(([, X, Y]) => X >= x - 6 && X <= x + 20 && Y >= y - 10 && Y <= y + 24), `${cut}: сидящий спиной вне рамки маски`);
+      f.sitBack = false; idle(f, GT.TURN_LAST + 2);
+      eq(f.gait.view, 'S', `${cut}: повернулся обратно — не лицом`);
+    }
+  });
+  test('угольки за взглядом: на точку к тому, куда смотрит сидящий, не выходя из тьмы капюшона', () => {
+    eq(WR.lookStep(100, 100, { x: 130, y: 100 }).join(), '1,0', 'вправо'); eq(WR.lookStep(100, 100, { x: 70, y: 80 }).join(), '-1,-1', 'влево вверх');
+    eq(WR.lookStep(100, 100, { x: 104, y: 105 }).join(), '0,0', 'рядом — прямо'); eq(WR.lookStep(100, 100, null).join(), '0,0', 'некуда — прямо');
+    // угольки — в строке капюшона (огонёк того же цвета ниже, в груди)
+    const eyesOf = f => rec(f).filter(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(f.y) + 10).map(([, X, Y]) => [X, Y]);
+    const f = mk({ sit: 1 }); idle(f, 40);
+    let base = null, right = null;
+    for (let k = 0; k < 400 && (!base || !right); k++) {         // мимо моргания
+      tick(); f.lookAt = null; const a = eyesOf(f); f.lookAt = { x: f.x + 60, y: f.y + 7 }; const b = eyesOf(f);
+      if (a.length >= 2 && b.length >= 2) { base = a; right = b; }
+    }
+    assert(base && right, 'угольков не видно');
+    const xs = L => L.map(p => p[0]).sort((a, b) => a - b).slice(-2);
+    assert(xs(right)[0] >= xs(base)[0] && xs(right)[1] <= xs(base)[1] && xs(right).join() !== xs(base).join(), `угольки не сдвинулись вправо в пределах тьмы: ${xs(base)} → ${xs(right)}`);
+    // у каждого кроя, куда бы ни смотрел, — уголёк на тёмной клетке капюшона (у номада — в прорези)
+    for (const cut of Object.keys(WR.CUTS)) for (const [lx, ly] of [[0, -40], [40, -40], [-40, -40], [0, 40], [40, 0], [-40, 0]]) {
+      const g = mk({ cut, sit: 1 }); idle(g, 40);
+      let L = null;
+      for (let k = 0; k < 400; k++) { tick(); g.lookAt = { x: g.x + 7 + lx, y: g.y + 7 + ly }; const R = rec(g); if (R.filter(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(g.y) + 10).length >= 2) { L = R; break; } }
+      assert(L, `${cut}: угольков не видно`);
+      const dark = (X, Y) => L.some(([c, x0, y0, w, h]) => c === '#0D0B0A' && X >= x0 && X < x0 + w && Y >= y0 && Y < y0 + h);
+      for (const [, X, Y] of L.filter(([c, X, Y, W, H]) => c === '#E28A3A' && W === 1 && H === 1 && Y < Math.floor(g.y) + 10))
+        assert(dark(X, Y), `${cut}: уголёк вне тьмы, взгляд ${lx},${ly}`);
+    }
+  });
+  test('взгляд в упор: призрачное до трети, дрожь стихает, двойник встаёт рядом и не плывёт, передача не сбоит; после рисунка сцены — снято', () => {
+    try {
+      GH.setGaze(1);
+      eq(GH.gazeFade().toFixed(3), (1 / 3).toFixed(3), 'не до трети');
+      for (let i = 0; i < 300; i++) { tick(); eq(GH.ghostShift(i).join(), '1,0', 'двойник плывёт'); eq(GH.tremble(i).join(), '0,0', 'дрожит'); eq(GH.flicker(i), 1, 'дышит'); }
+      DG.setStill(true);
+      for (let i = 0; i < 600; i++) { tick(); eq(DG.digitalState(1889, 4).kind, 'still', 'передача сбоит в упор'); }
+    } finally { GH.setGaze(0); DG.setStill(false); }
+    eq(GH.gazeFade(), 1, 'взгляд не снят');
+    SG._resetStage(); SG.enterStage(); SG.stage.back = true; SG.stage.gaze = 1;
+    RS.drawStageWorld(fakeCtx(), () => {}, SG.SEAT_D.y);
+    eq(GH.gazeOf(), 0, 'после рисунка сцены взгляд остался');
+    SG._resetStage();
+  });
+  test('поворот: только сидящему на сцене; взгляд догоняет поворот, когда фигура обернулась; встал — снова лицом, взгляда нет', () => {
+    SG._resetStage(); SG.faceHall(true); eq(SG.stage.back, false, 'повернулся, не сидя');
+    SG.enterStage(); SG.faceHall(true); eq(SG.stage.back, true, 'сидя не повернулся');
+    SG.stepGaze(false); eq(SG.stage.gaze, 0, 'смотрит в упор, ещё не обернувшись');
+    for (let i = 0; i < 90; i++) SG.stepGaze(true);
+    assert(SG.stage.gaze > 0.99, `взгляд не догнал: ${SG.stage.gaze}`);
+    SG.stepGaze(true, true); eq(SG.stage.gaze, 1, '«меньше движения» — не сразу');
+    SG.exitStage(); eq(SG.stage.back, false, 'встал — спиной'); eq(SG.stage.gaze, 0, 'встал — в упор');
+    SG._resetStage();
+  });
+  test('зал на слух — раз за приход; фонарь — ремарками для чтеца: поднимает, всматривается, опускает', () => {
+    SG._resetStage(); SG.enterStage();
+    eq(SG.hearHall(), true, 'зал не слышен'); eq(SG.hearHall(), false, 'зал слышен дважды за приход');
+    SG.exitStage(); SG.enterStage(); eq(SG.hearHall(), false, 'тот же приход — снова слышен');
+    SG.exitStage(); SG.stepStage(SG.STAGE_C.x + 600, SG.STAGE_C.y); SG.enterStage();
+    eq(SG.hearHall(), true, 'новый приход — не слышен');
+    SG._resetStage(); SG.enterStage();
+    const ev = [];
+    for (let i = 0; i < SG.lenOf(1); i++) { const e = SG.stepStage(SG.STAGE_C.x, SG.STAGE_C.y, true, false); if (e) ev.push(e); }
+    eq(ev.join(), 'inhale,peer,exhale', 'фонарь не по порядку');
+    for (const e of ev) assert(/^\(.+\)$/.test(SG.REMARKS[e]), `нет ремарки на ${e}`);
+    eq(typeof AU.playCough, 'function', 'нет кашля'); AU.playCough(1, -0.3);
+    SG._resetStage();
+  });
+  test('«пыль стёрта»: до утра мира у театра — повторный осмотр по событию; новая посадка — снова свежая; вне события — свой текст', () => {
+    RL._resetRelook();
+    RL.noteLook('theater'); RL.noteLook('theater');
+    const dust = RL.relookText('theater', new Set(['stage']));
+    assert(/пыль стёрта/.test(dust || ''), 'нет «пыль стёрта»');
+    eq(RL.relookText('theater', new Set()), null, 'вне события — не свой текст');
+    eq(RL.relookText('theater', new Set(['stage'])), null, 'круг: после подробности — свой текст');
+    RL.relookText('theater', new Set(['stage']));                 // снова подробность — и видана
+    RL.forgetTag('theater', 'stage');
+    assert(/пыль стёрта/.test(RL.relookText('theater', new Set(['stage'])) || ''), 'новая посадка — подробность не свежая');
+    RL._resetRelook();
+    const d = SG.saveStage(); SG._resetStage(); SG.stage.dust = 12; const s2 = JSON.parse(JSON.stringify(SG.saveStage()));
+    SG._resetStage(); SG.loadStage(s2); eq(SG.stage.dust, 12, 'сутки пыли не сохранились'); void d;
+    SG._resetStage();
+  });
+  test('мир текстом: «СЦЕНА» страницей, «сесть» — ремарки фонаря и два шёпота зала; в шапке сказано, чего без глаз не получить', () => {
+    const W = p => FS.readFileSync(new URL('../prototype/walk/' + p, import.meta.url), 'utf8');
+    const st = W('town/theater.stage.html');
+    for (const s of [SG.REMARKS.inhale, SG.REMARKS.peer, SG.REMARKS.exhale, SG.HALL_LINES[0], SG.HALL_LINES[1]]) assert(st.includes(s.replace(/&/g, '&amp;')), `на странице сцены нет «${s}»`);
+    assert(W('town/theater.use.html').includes('theater.stage.html') && W('town/theater.html').includes('theater.use.html'), 'к сцене не ведёт ссылка');
+    assert(/рамки над живым зрителем, задников/.test(W('gen.mjs')), 'в шапке не сказано, чего без глаз не получить');
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

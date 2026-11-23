@@ -565,10 +565,12 @@ const imp = p => import(new URL(p, base));
     RL.noteLook(id); eq(RL.relookText(id, all), seen[0], 'дальше — снова первая подробность');
     RL._resetRelook();
   });
-  test('повторный осмотр: у каждой вещи есть вариант без условий; метки — из известных; тексты не пустые', () => {
-    const TAGS = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind', 'used', 'n3']);
+  test('повторный осмотр: у каждой вещи есть вариант без условий (или только варианты по событию); метки — из известных; тексты не пустые', () => {
+    const TAGS = new Set(['day', 'dusk', 'night', 'dawn', 'rain', 'sand', 'wind', 'used', 'n3', 'stage']);
+    const EVENT = new Set(['stage']);                     // событие, а не обстановка: вне его — свой текст вещи
     for (const [id, list] of Object.entries(RELOOKS)) {
-      assert(list.some(v => !v.if || !v.if.length), `${id}: нет варианта на любую обстановку`);
+      const onlyEvent = list.every(v => (v.if || []).some(tg => EVENT.has(tg)));
+      assert(onlyEvent || list.some(v => !v.if || !v.if.length), `${id}: нет варианта на любую обстановку`);
       for (const v of list) {
         assert(typeof v.text === 'string' && v.text.length > 20, `${id}: пустой текст`);
         for (const tg of v.if || []) assert(TAGS.has(tg), `${id}: неизвестная метка ${tg}`);

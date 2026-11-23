@@ -15,7 +15,8 @@
 // сворачивают. Свой жест — в свой черёд, на ходу; та, что сидит, в свой черёд садится там, где
 // застала очередь. С седьмого прихода — второй вариант: вдвое медленнее, огонь не вспыхивает,
 // вместо стука — шарканье.
-// Встать: шаг (клавиши, палец) или щелчок по самому страннику — шторка, и он у порога театра.
+// Встать: ← → (A D), шаг пальцем или щелчок по самому страннику — шторка, и он у порога театра.
+// ↑ ↓ (тап над и под фигурой) — повернуться к залу и обратно (шаг 4).
 // ═══════════════════════════════════════
 import { wasUsed, lookCount } from './relook.js';
 import { PLACES } from '../assets/manifest.js';
@@ -46,8 +47,11 @@ export const QUAD2_FROM = 7;   // с какого прихода — второ�
 // ev — что сыграет этот приход (шаг 3: шёпоты зала, рамка, мысли, задники; planVisit), adv —
 // часы сцены шагнули в этот шаг; wi — место в пуле шёпотов зала; looked — осмотренные места с
 // вклейкой, от давнего к недавнему; bd — какие из них уже проехали задником в этом круге
+// шаг 4: back — сидящий повернулся к залу (↑, тап выше фигуры), gaze — насколько он смотрит в упор
+// (0…1, догоняет поворот), heard — в каком приходе зал уже был слышен за веками, dust — номер суток,
+// когда пыль у трещины стёрта (повторный осмотр театра до утра мира)
 export const stage = { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
-  ev: null, adv: false, wi: 0, looked: [], bd: [] };
+  ev: null, adv: false, wi: 0, looked: [], bd: [], back: false, gaze: 0, heard: -1, dust: -1 };
 
 // сесть у театра (строка меню «СЕСТЬ», ui.js sitNow) — когда «СЦЕНА» прочитана хоть раз
 export const stageAlt = () => (wasUsed('theater') ? { key: 'stage_sit', label: '<i>⌂</i>СЕСТЬ' } : null);
@@ -66,6 +70,7 @@ export function standStage() {
   const l = lightOf();
   stage.seated = false; stage.live = false;
   stage.ev = null;                               // рамку сорвало, мысль погасла недописанной, задник за кулисой
+  stage.back = false; stage.gaze = 0;            // встал — снова лицом к нам
   if (l > 0.01) { stage.settle = SETTLE; stage.from = l; }
 }
 // в декорацию и из неё (main.js: шторкой, как дом)
@@ -85,7 +90,8 @@ function phase() {
 function lightOf() { return stage.seated && stage.live ? phase().light : stage.settle > 0 ? stage.from * stage.settle / SETTLE : 0; }
 
 // шаг мира; fx, fy — где странник в городке (в декорации — середина сцены); free — на мир смотрят
-// (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает.
+// (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает,
+// и 'peer', когда фонарь подняли выше — всматривается.
 // После конца прихода часы идут ещё хвост (TAIL) — дописать начатое пером; нового не начинается
 export const TAIL = 600;
 export function stepStage(fx, fy, free = true, noon = false) {
@@ -104,8 +110,25 @@ export function stepStage(fx, fy, free = true, noon = false) {
   if (stage.live && c >= L) stage.live = false;                 // отыграно: дальше ничего нового
   if (!stage.live) return null;
   if (c === LEAD) return 'inhale';
+  if (c === L - 2 * LEAD - E) return 'peer';                       // фонарь выше: всматривается
   if (c === L - LEAD - E) return 'exhale';
   return null;
+}
+// ремарки для читающего без глаз (main.js — в строку для чтеца, как строку под ногами; §3)
+export const REMARKS = { inhale: '(поднимает фонарь)', peer: '(всматривается)', exhale: '(опускает)' };
+
+// повернуться к залу и обратно (только сидящему на сцене); взгляд догоняет поворот
+export function faceHall(on) { if (stage.active && stage.seated) stage.back = !!on; }
+export function stepGaze(viewBack, reduced = false) {
+  const want = stage.seated && stage.back && viewBack ? 1 : 0;
+  stage.gaze = reduced ? want : stage.gaze + (want - stage.gaze) * 0.08;
+  if (Math.abs(stage.gaze - want) < 0.002) stage.gaze = want;
+}
+// закрыл глаза на сцене: раз за приход — зал на слух (main.js считает, сколько глаза закрыты)
+export function hearHall() {
+  if (!stage.seated || stage.heard === stage.n) return false;
+  stage.heard = stage.n;
+  return true;
 }
 
 // ═══ ЧТО ИГРАЕТ ПРИХОД (шаг 3; weave/SCENE_STAGE §2.4–§2.5) ═══
@@ -188,7 +211,7 @@ export function cuesAt(c, ev = stage.ev) {
     if (e.kind === 'rama') {
       if (a === 0 || a === e.dur) out.push({ s: 'click' });
       else if (a > 0 && a < e.dur && a % 40 === 0) out.push({ s: 'tick' });
-    } else if (e.kind === 'hall' && a === 0) out.push({ s: 'rustle', seat: e.seat });
+    } else if (e.kind === 'hall' && a === 0) out.push({ s: 'rustle', seat: e.seat, text: e.text });
     else if (e.kind === 'board' && a >= 0 && a < e.dur && a % 90 === 0) out.push({ s: 'creak', pan: 0.9 - 1.8 * a / e.dur });
   }
   return out;
@@ -285,7 +308,7 @@ export function quadSteps(T, slow = false) {
 }
 
 // сохранение: номер прихода, в котором садились (по нему — длина следующего)
-export const saveStage = () => ({ n: stage.n, wi: stage.wi, looked: stage.looked.slice(), bd: stage.bd.slice() });
+export const saveStage = () => ({ n: stage.n, wi: stage.wi, looked: stage.looked.slice(), bd: stage.bd.slice(), dust: stage.dust });
 export function loadStage(d) {
   stage.n = d && Number.isFinite(d.n) ? Math.max(0, d.n | 0) : 0;
   stage.wi = d && Number.isFinite(d.wi) ? Math.max(0, d.wi | 0) % HALL_LINES.length : 0;
@@ -293,9 +316,11 @@ export function loadStage(d) {
   // сохранение до шага 3 списка не знает: осмотренное помнит world/relook.js (main.js грузит его раньше)
   stage.looked = d && Array.isArray(d.looked) ? ids(d.looked) : BOARD_IDS.filter(id => lookCount(id) > 0);
   stage.bd = ids(d && d.bd).filter(id => stage.looked.includes(id));
+  stage.dust = d && Number.isFinite(d.dust) ? d.dust | 0 : -1;
   stage.away = true; stage.seated = false; stage.live = false; stage.active = false; stage.ev = null; stage.adv = false;
+  stage.back = false; stage.gaze = 0; stage.heard = -1;
 }
 export function _resetStage() {
   Object.assign(stage, { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
-    ev: null, adv: false, wi: 0, looked: [], bd: [] });
+    ev: null, adv: false, wi: 0, looked: [], bd: [], back: false, gaze: 0, heard: -1, dust: -1 });
 }

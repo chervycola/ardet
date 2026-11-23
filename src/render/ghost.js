@@ -13,6 +13,14 @@ import { reducedMotion } from '../core/prefs.js';
 // двойник — доля яркости основного оттиска
 export const GHOST_A = 0.5;
 
+// ВЗГЛЯД В УПОР (weave/SCENE_STAGE §2.1, §2.6): сидящий на сцене театра повернулся к залу и смотрит
+// прямо — призрачное бледнеет до трети, дрожь стихает, двойник встаёт рядом, на точку, и не плывёт.
+// Ставит render/stage.js на время своего рисунка и снимает после; k — 0…1 (поворот плавный)
+let gaze = 0;
+export function setGaze(k) { gaze = k > 0 ? Math.min(1, k) : 0; }
+export const gazeOf = () => gaze;
+export const gazeFade = () => 1 - gaze * 2 / 3;              // ×1 → ×⅓
+
 const hash = n => {
   n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4;
   n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15;
@@ -27,7 +35,7 @@ export function ghostSeed(text) {
 
 // дрожь: раз в три шага — новое положение; чаще на месте, иногда на точку вбок или по высоте
 export function tremble(seed = 0) {
-  if (reducedMotion()) return [0, 0];
+  if (reducedMotion() || gaze > 0.5) return [0, 0];
   const k = (t / 3) | 0, r = hash(k * 977 + seed * 131);
   if (r < 0.6) return [0, 0];
   const s = hash(k * 389 + seed * 71 + 7) < 0.5 ? -1 : 1;
@@ -36,13 +44,12 @@ export function tremble(seed = 0) {
 
 // двойник: отстаёт на одну-три точки и медленно плывёт
 export function ghostShift(seed = 0) {
-  if (reducedMotion()) return [2, -1];
-  const ph = t * 0.021 + (seed % 97) * 0.37;
-  return [Math.round(2 + Math.sin(ph) * 1.4), Math.round(-1 + Math.sin(ph * 0.63 + 1) * 1.1)];
+  const [x, y] = reducedMotion() ? [2, -1] : (ph => [2 + Math.sin(ph) * 1.4, -1 + Math.sin(ph * 0.63 + 1) * 1.1])(t * 0.021 + (seed % 97) * 0.37);
+  return [Math.round(x + (1 - x) * gaze), Math.round(y * (1 - gaze))];   // в упор — встаёт рядом, на точку
 }
 
 // дыхание яркости: медленно, без провалов (полный вдох — секунды за две с половиной)
 export function flicker(seed = 0) {
-  if (reducedMotion()) return 1;
+  if (reducedMotion() || gaze > 0.5) return 1;
   return 0.92 + 0.08 * Math.sin(t * 0.042 + (seed % 89) * 0.53);
 }

@@ -56,7 +56,7 @@ import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
 import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing } from './ui/ui.js';
-import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount } from './world/relook.js';
+import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount, forgetTag } from './world/relook.js';
 import { quietVoice } from './world/quietSound.js';
 import { looks } from './content/looks.js';
 import { dialogues } from './content/dialogues.js';
@@ -81,7 +81,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak, setPurr } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak, playCough, setPurr } from './audio/audio.js';
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
@@ -101,10 +101,10 @@ import { update as updateEdges, draw as drawEdges, drawHud as drawEdgeHud, slowF
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions, setRevealHook } from './world/inscriptions.js';
-import { update as updateIdle, draw as drawIdle } from './world/idle.js';
+import { update as updateIdle, draw as drawIdle, announce } from './world/idle.js';
 import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D,
-  planVisit, takeBackdrops, noteLookedPlace, cuesAt } from './world/stage.js';
-import { drawStageWorld, stageLights, STAGE_AMBIENT, hallSeatPan } from './render/stage.js';
+  planVisit, takeBackdrops, noteLookedPlace, cuesAt, faceHall, stepGaze, hearHall, REMARKS } from './world/stage.js';
+import { drawStageWorld, stageLights, STAGE_AMBIENT, hallSeatPan, lastAppeared } from './render/stage.js';
 import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper, whisperText, setHeardHook } from './world/whisper.js';
 import { noteHeard, takeThoughts, saveHeard, loadHeard } from './world/heard.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
@@ -116,7 +116,7 @@ import { update as updatePets, draw as drawPets } from './world/pets.js';
 // Achievements removed entirely by design law #1 («глубина не геймифицируется»):
 // no toasts, no counters, no ledger. The only permitted trace is the walk itself.
 import { stepRavens, startleRavens, ravensOnGround, ravenDepth, drawRaven, drawRavenShadows, drawRavensAir, ravenNews, ravenHush } from './world/ravens.js';
-import { stepEyes } from './world/eyes.js';
+import { stepEyes, eyesShut } from './world/eyes.js';
 import { stepCats, catsInView, catDepth, drawCat, drawCatEyes, catPurr, getSightings, loadSightings, isUnlocked as catUnlocked, setUnlocked as setCatUnlocked } from './world/silentCat.js';
 import { incrementSession, getShiftConfig, maybeShowBlankScreen, markReturned, addOffering } from './core/sessionMemory.js';
 import { useTexts } from './world/useActions.js';
@@ -408,7 +408,8 @@ function sitOnLog(loc) {
   logSeated = true;
 }
 // сцена Театра Теней (world/stage.js, render/stage.js): «СЕСТЬ» — шторка, и странник сидит на трещине
-// посреди сцены, в своей декорации; шаг или щелчок по нему — шторка, и он у порога театра
+// посреди сцены, в своей декорации; ← →, шаг пальцем или щелчок по нему — шторка, и он у порога театра;
+// ↑ ↓ (тап над и под фигурой) — повернуться к залу и обратно
 let stageKeep = null;                                // свет мира, пока на сцене
 let stageQuiet = 0;                                  // сколько сидит: на 30 с — дальний звук, как везде
 let stageArmed = false;                              // отпустил ли шаг с тех пор, как сел
@@ -419,8 +420,10 @@ function intoStage() {
   if (!stageKeep) stageKeep = lighting.sources;
   player.x = SEAT_D.x - 6; player.y = SEAT_D.y - 23; player.tx = player.x; player.ty = player.y;
   player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
-  player.sit = 1; player.visor = false; player.face = 'S';
+  player.sit = 1; player.visor = false; player.face = 'S'; player.sitBack = false;
   clearWhisper();                                    // шёпот улицы остался на улице
+  stage.dust = dayIndex(t); forgetTag('theater', 'stage');   // пыль у трещины стёрта — до утра мира (повторный осмотр)
+  stageEar = -1; stageShut = 0; lookClick = null;
   if (enterStage()) {                                // новый приход: что он сыграет, решено при посадке
     const m = stage.n <= 1 ? 2 : 1, today = dayIndex(t);
     const boards = takeBackdrops(m).map(id => { const l = locationById[id], st = l ? opisState(l, today) : null; return { id, solid: !!(st && st.mine) }; });
@@ -431,7 +434,20 @@ function outOfStage() {
   exitStage();
   if (stageKeep) lighting.sources = stageKeep;
   stageKeep = null;
-  player.sit = 0; player.path = null; player.walkTo = null;
+  player.sit = 0; player.path = null; player.walkTo = null; player.sitBack = false;
+  stageEar = -1; stageShut = 0; lookClick = null;       // точка щелчка — в координатах декорации, в городке не годится
+}
+// на сцене: сколько шагов глаза закрыты, и где идёт зал на слух (−1 — не идёт)
+let stageShut = 0, stageEar = -1;
+// куда смотрит сидящий (у бревна, за кольцом, на сцене — weave/SCENE_STAGE §2.6, §6 вопрос 9):
+// живая мышь — на курсор; иначе на сцене — куда щёлкнули недавно, без щелчка — на последнее, что
+// появилось. Угольки только смещаются на точку: ничего не открывают и ничего не считают
+let lookClick = null;
+function lookTarget() {
+  if (!(logSeated || beyond.seated || stage.seated || (house.active && (player.sit || 0) > 0.5))) return null;   // и на краю кровати
+  if (Date.now() - (input.lastMouseT || 0) < 4000) return input.screenToWorld(input.mouseX, input.mouseY, camera);
+  if (lookClick && t - lookClick.t < 600) return lookClick;
+  return stage.active ? lastAppeared() : null;
 }
 function sitAtStage() { if (stage.active || teleportFade.dir) return; teleportWithFade(SEAT_D.x - 6, SEAT_D.y - 23, intoStage); }   // уже идёт шторка — второй «СЕСТЬ» не в счёт
 function leaveStage() { if (stage.active && !teleportFade.dir) teleportWithFade(STAGE_DOOR.x, STAGE_DOOR.y, outOfStage); }
@@ -831,12 +847,13 @@ const lookingAtWorld = () => state.is('game') && !isMapOpen();
 function stepFx() {
   weatherClock();                                    // расписание погоды — по шагам мира везде (за бумагой, в доме, внизу): сказанное о дожде сбывается
   // на сцене другие видят странника сидящим у театра в городке (зала у каждого свой)
-  stepNet(stage.active ? { ...player, x: STAGE_DOOR.x, y: STAGE_DOOR.y - 10, moving: false, sit: 1 } : player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+  stepNet(stage.active ? { ...player, x: STAGE_DOOR.x, y: STAGE_DOOR.y - 10, moving: false, sit: 1, face: 'S', sitBack: false } : player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
   // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
   // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
   const free = lookingAtWorld();
   stepEyes(free && input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05,
     !house.active && !under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
+  player.lookAt = lookTarget();                      // сидящий осматривается — угольки за курсором
   if (t % 10 === 0) setPurr(house.active || under.active || stage.active ? 0 : catPurr(player.x + 6, player.y + 22));
   if (house.active) { stepFxHouse(); return; }
   if (stage.active) { stepFxStage(free); return; }
@@ -1510,9 +1527,24 @@ function stepFxStage(free) {
   // «Дыхание»: вдох — фонарь поднимают, выдох — опускают; «Квадрат»: шаги теней — стук, во втором варианте шарканье
   const sg = stepStage(STAGE_C.x, STAGE_C.y, free, redNoon.active);
   if (sg === 'inhale') playInhale(); else if (sg === 'exhale') playSigh();
+  if (sg && REMARKS[sg]) announce(REMARKS[sg]);       // читающему без глаз — ремаркой (weave/SCENE_STAGE §3)
   if (stage.adv) for (const q of cuesAt(stage.clock)) {   // рамка щёлкает и тикает, шорох программки, скрип каната
     if (q.s === 'click') playClick(); else if (q.s === 'tick') playTick(0.06);
-    else if (q.s === 'rustle') playRustle(0.18, hallSeatPan(q.seat)); else if (q.s === 'creak') playCreak(0.5, q.pan, 1.7);
+    else if (q.s === 'rustle') { playRustle(0.18, hallSeatPan(q.seat)); announce(q.text); }
+    else if (q.s === 'creak') playCreak(0.5, q.pan, 1.7);
+  }
+  // повернулся к залу — смотрит в упор, когда фигура уже обернулась (world/gait.js: доворот)
+  player.sitBack = stage.seated && stage.back;
+  stepGaze(!!(player.gait && player.gait.view === 'N'), reducedMotion());
+  // закрыл глаза на две секунды — раз за приход слышен полный зал: общий вдох, скрип рядов слева
+  // направо, чей-то кашель (§2.6); слышно и после того, как фонарь опущен
+  stageShut = free && stage.seated && eyesShut() ? stageShut + 1 : 0;
+  if (stageShut === 120 && !redNoon.active && hearHall()) stageEar = 0;
+  if (stageEar >= 0) {
+    if (stageEar === 0) playInhale();
+    if (stageEar >= 50 && stageEar <= 150 && (stageEar - 50) % 25 === 0) playCreak(0.3, -0.7 + 1.4 * (stageEar - 50) / 100, 1.25);
+    if (stageEar === 190) playCough(0.8, -0.3);
+    stageEar = stageEar >= 200 ? -1 : stageEar + 1;
   }
   if (free && stage.seated) for (const [pan, kind] of quadSteps(t, stage.n >= QUAD2_FROM)) { if (kind === 'tap') playTick(0.25); else playRustle(0.12, pan); }
   const sv = stageView(redNoon.k);                   // фитиль тихо трещит, у поднятого фонаря чуть громче
@@ -1791,10 +1823,17 @@ function updateGame() {
   if (isFrozen()) { if (stage.active) stageArmed = false; stopHero(); updateBrainrot(player); return; }
   if (!state.is('game')) { if (stage.active) stageArmed = false; stopHero(); return; }
   if (isMapOpen()) { if (stage.active) stageArmed = false; stopHero(); return; }   // карта открыта — стрелки двигают лист, не героя
-  if (stage.active) {                                         // на сцене не ходят: шаг — встать и уйти
-    const step = input.getMove().active || input.getHeldTouch();
-    if (!step) stageArmed = true;                             // клавиша, зажатая ещё в городке или над бумагой, не уводит: нужен новый шаг
-    else if (stageArmed && !teleportFade.dir) leaveStage();
+  if (stage.active) {
+    // на сцене не ходят: ← → (A D), шаг пальцем — встать и уйти; ↑ (W) — повернуться к залу, ↓ (S) —
+    // снова к нам. Тап — не шаг: тап выше и ниже фигуры поворачивает (щелчок — ниже, onClick)
+    const mv = input.getMove(), tc = input.touch;
+    const drag = !!(tc && (tc.moved || Date.now() - tc.startT > 280));
+    const side = mv.active && Math.abs(mv.x) > 0.01, turn = mv.active && !side ? (mv.y < 0 ? 1 : -1) : 0;
+    if (!mv.active && !drag) stageArmed = true;               // клавиша, зажатая ещё в городке или над бумагой, не действует: нужен новый шаг
+    else if (stageArmed && !teleportFade.dir) {
+      if (side || drag) leaveStage();
+      else if (turn) faceHall(turn > 0);
+    }
     stopHero(); player.moving = false; player.still = true;
     updateWorldSystems(); return;
   }
@@ -2119,7 +2158,16 @@ input.onClick(({ clientX, clientY, originalEvent, intent }) => {
   const pos = input.screenToWorld(clientX, clientY, camera);
   player.walkIntent = intent || null;              // правая кнопка: дойти и использовать
   if (house.active) { walkHouse(pos.x, pos.y); return; }
-  if (stage.active) { if (Math.abs(pos.x - (player.x + 6)) < 9 && pos.y > player.y - 2 && pos.y < player.y + 26) leaveStage(); return; }   // встать — щелчок по самому страннику
+  if (stage.active) {
+    // щелчок по самому страннику — встать; прямо над ним — повернуться к залу, прямо под ним — к нам;
+    // по зрителю, задникам, мыслям и прочему — только перевести угольки
+    const col = Math.abs(pos.x - (player.x + 6)) < 12;
+    if (col && Math.abs(pos.x - (player.x + 6)) < 9 && pos.y > player.y - 2 && pos.y < player.y + 26) leaveStage();
+    else if (col && pos.y <= player.y - 2) faceHall(true);
+    else if (col && pos.y >= player.y + 26) faceHall(false);
+    else lookClick = { x: pos.x, y: pos.y, t };
+    return;
+  }
   if (under.active) { walkUnder(pos.x, pos.y); return; }
   player.path = null;
   if (netClick(pos.x, pos.y, 'surface')) return;   // другой странник, записка на земле
@@ -2259,6 +2307,7 @@ function lookTags() {
   if (weather.intensity > 0.3 && weather.state === 'toxicRain') tags.add('rain');
   if (weather.intensity > 0.3 && weather.state === 'sandstorm') tags.add('sand');
   if (wind.s > 0.45) tags.add('wind');
+  if (stage.dust === dayIndex(t)) tags.add('stage');               // сегодня сидел на сцене театра — пыль у трещины стёрта
   return tags;
 }
 events.on(E.LOCATION_LOOK, loc => { if (loc && loc.id) { noteLook(loc.id); noteAttention(loc); noteLookedPlace(loc.id); } });

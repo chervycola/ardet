@@ -20,9 +20,13 @@ const WINDOW = 40;          // окно в 40 шагов (две трети се
 const BURST = 10;           // сбой — первые 10 шагов окна
 const STEP = 2;             // внутри сбоя — новое положение раз в два шага
 
+// взгляд в упор (render/ghost.js setGaze — сцена театра): под прямым взглядом передача не сбоит
+let still = false;
+export function setStill(v) { still = !!v; }
+
 // что со строкой сейчас: { kind: 'still'|'jump'|'tear'|'swap'|'drop', dx, at }
 export function digitalState(seed = 0, len = 1) {
-  if (reducedMotion()) return { kind: 'still', dx: 0, at: -1 };
+  if (reducedMotion() || still) return { kind: 'still', dx: 0, at: -1 };
   const w = (t / WINDOW) | 0, inW = t - w * WINDOW;
   if (inW >= BURST || hash(w * 733 + seed * 17) >= 0.27) return { kind: 'still', dx: 0, at: -1 };
   const k = (t / STEP) | 0, r = hash(k * 911 + seed * 53 + 3), s = hash(k * 157 + seed * 29) < 0.5 ? -1 : 1;

@@ -44,6 +44,15 @@ export function relookText(id, tags = new Set()) {
   return list[i].text;
 }
 
+// метка снова свежая (сцена театра: новая посадка — пыль у трещины стёрта заново): варианты с этой
+// меткой — как не виденные, иначе цикл «всё видано — первый текст» съест новую подробность
+export function forgetTag(id, tag) {
+  const list = RELOOKS[id], seen = shown.get(id);
+  if (!list || !seen) return;
+  list.forEach((v, i) => { if ((v.if || []).includes(tag)) seen.delete(i); });
+  if (!seen.size) shown.delete(id);
+}
+
 export function saveRelook() {
   return {
     n: Object.fromEntries(counts),

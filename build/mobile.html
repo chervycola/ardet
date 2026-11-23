@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 179 782. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 179 782. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 193 374. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 193 374. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -888,7 +888,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='118cf39 · 2026-11-23';console.log('[оттиск]', '118cf39 · 2026-11-23');
+<script>window.ARDET_BUILD='09551a7 · 2026-11-23';console.log('[оттиск]', '09551a7 · 2026-11-23');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -4524,6 +4524,33 @@ System.register("audio/audio", [], function (exports_20, context_20) {
         s.stop(t0 + dur);
     }
     exports_20("playSigh", playSigh);
+    // чей-то кашель в зале (сцена Театра Теней, слышно только за веками — weave/SCENE_STAGE §2.7): два
+    // коротких сухих толчка шума сквозь полосу, второй тише; pan — откуда, слева или справа
+    function playCough(v = 1, pan = 0) {
+        if (!ctx || v <= 0.02)
+            return;
+        const t0 = ctx.currentTime;
+        for (const [at, k] of [[0, 1], [0.24, 0.6]]) {
+            const dur = 0.16, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+            for (let i = 0; i < n; i++)
+                d[i] = Math.random() * 2 - 1;
+            const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), a0 = t0 + at;
+            s.buffer = b;
+            f.type = 'bandpass';
+            f.Q.value = 1.4;
+            f.frequency.setValueAtTime(700, a0);
+            f.frequency.exponentialRampToValueAtTime(320, a0 + dur);
+            g.gain.setValueAtTime(0.0001, a0);
+            g.gain.linearRampToValueAtTime(0.05 * v * k, a0 + 0.012);
+            g.gain.exponentialRampToValueAtTime(0.0001, a0 + dur);
+            s.connect(f);
+            f.connect(g);
+            toOut(g, pan);
+            s.start(a0);
+            s.stop(a0 + dur);
+        }
+    }
+    exports_20("playCough", playCough);
     // Каптёрка Дежурного: печка трещит — щелчок полена, глухой, рядом громче (v 0..1)
     function playCrackle(v) {
         if (!ctx || v <= 0.02)
@@ -5238,12 +5265,12 @@ System.register("world/gait", ["world/wind"], function (exports_23, context_23) 
                 g.hold = 0;
             }
         }
-        // сесть — когда уже лицом к зрителю, за ~18 тиков; встать — за ~12
+        // сесть — когда уже лицом к зрителю (или спиной, если садится к залу), за ~18 тиков; встать — за ~12
         const s = p.sit || 0;
         if (red)
             g.sitV = s;
         else if (s > g.sitV) {
-            if (g.view === 'S')
+            if (g.view === (p.sitBack ? 'N' : 'S'))
                 g.sitV = Math.min(s, g.sitV + 0.06);
         }
         else
@@ -5267,9 +5294,10 @@ System.register("world/gait", ["world/wind"], function (exports_23, context_23) 
             TELEPORT = 12; // дальше — перенос, не шаг
             HEAVY = { sand: 1, mud: 1, swamp: 1, water: 1, snow: 1 }; // нога вязнет — шаг тяжелее
             SUNK = { water: 1, swamp: 1, sand: 1, snow: 1, moss: 1 }; // ноги не видно: вброд, в зыби, в снегу, во мху
-            // куда смотрит фигура в игре (sprites/player.js: сидя и с ладонью — лицом к зрителю); всё, что
-            // «на север», — спиной, прочее — лицом
-            wantView = p => (p.visor || (p.sit || 0) > 0.5 ? 'S' : (typeof p.face === 'string' && p.face.includes('N') ? 'N' : 'S'));
+            // куда смотрит фигура в игре (sprites/player.js: с ладонью — лицом к зрителю; сидя — лицом, кроме
+            // сидящего на сцене театра, повернувшегося к залу: p.sitBack, world/stage.js); всё, что «на север»,
+            // — спиной, прочее — лицом
+            wantView = p => (p.visor ? 'S' : (p.sit || 0) > 0.5 ? (p.sitBack ? 'N' : 'S') : (typeof p.face === 'string' && p.face.includes('N') ? 'N' : 'S'));
         }
     };
 });
@@ -31092,8 +31120,10 @@ System.register("world/underside", ["content/underside", "core/time"], function 
 });
 System.register("render/ghost", ["core/time", "core/prefs"], function (exports_71, context_71) {
     "use strict";
-    var time_js_9, prefs_js_2, GHOST_A, hash;
+    var time_js_9, prefs_js_2, GHOST_A, gaze, gazeOf, gazeFade, hash;
     var __moduleName = context_71 && context_71.id;
+    function setGaze(k) { gaze = k > 0 ? Math.min(1, k) : 0; }
+    exports_71("setGaze", setGaze);
     // своё зерно у каждой строки: дрожат не в такт
     function ghostSeed(text) {
         let h = 7;
@@ -31104,7 +31134,7 @@ System.register("render/ghost", ["core/time", "core/prefs"], function (exports_7
     exports_71("ghostSeed", ghostSeed);
     // дрожь: раз в три шага — новое положение; чаще на месте, иногда на точку вбок или по высоте
     function tremble(seed = 0) {
-        if (prefs_js_2.reducedMotion())
+        if (prefs_js_2.reducedMotion() || gaze > 0.5)
             return [0, 0];
         const k = (time_js_9.t / 3) | 0, r = hash(k * 977 + seed * 131);
         if (r < 0.6)
@@ -31115,15 +31145,13 @@ System.register("render/ghost", ["core/time", "core/prefs"], function (exports_7
     exports_71("tremble", tremble);
     // двойник: отстаёт на одну-три точки и медленно плывёт
     function ghostShift(seed = 0) {
-        if (prefs_js_2.reducedMotion())
-            return [2, -1];
-        const ph = time_js_9.t * 0.021 + (seed % 97) * 0.37;
-        return [Math.round(2 + Math.sin(ph) * 1.4), Math.round(-1 + Math.sin(ph * 0.63 + 1) * 1.1)];
+        const [x, y] = prefs_js_2.reducedMotion() ? [2, -1] : (ph => [2 + Math.sin(ph) * 1.4, -1 + Math.sin(ph * 0.63 + 1) * 1.1])(time_js_9.t * 0.021 + (seed % 97) * 0.37);
+        return [Math.round(x + (1 - x) * gaze), Math.round(y * (1 - gaze))]; // в упор — встаёт рядом, на точку
     }
     exports_71("ghostShift", ghostShift);
     // дыхание яркости: медленно, без провалов (полный вдох — секунды за две с половиной)
     function flicker(seed = 0) {
-        if (prefs_js_2.reducedMotion())
+        if (prefs_js_2.reducedMotion() || gaze > 0.5)
             return 1;
         return 0.92 + 0.08 * Math.sin(time_js_9.t * 0.042 + (seed % 89) * 0.53);
     }
@@ -31140,6 +31168,12 @@ System.register("render/ghost", ["core/time", "core/prefs"], function (exports_7
         execute: function () {
             // двойник — доля яркости основного оттиска
             exports_71("GHOST_A", GHOST_A = 0.5);
+            // ВЗГЛЯД В УПОР (weave/SCENE_STAGE §2.1, §2.6): сидящий на сцене театра повернулся к залу и смотрит
+            // прямо — призрачное бледнеет до трети, дрожь стихает, двойник встаёт рядом, на точку, и не плывёт.
+            // Ставит render/stage.js на время своего рисунка и снимает после; k — 0…1 (поворот плавный)
+            gaze = 0;
+            exports_71("gazeOf", gazeOf = () => gaze);
+            exports_71("gazeFade", gazeFade = () => 1 - gaze * 2 / 3); // ×1 → ×⅓
             hash = n => {
                 n = (n ^ 61) ^ (n >>> 16);
                 n = (n + (n << 3)) | 0;
@@ -33304,17 +33338,25 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             put(0, -24, FC);
         }
     }
-    function eyes(P, cold) {
+    function eyes(P, cold, du = 0, dv = 0) {
         if (time_js_13.t % 260 < 6 || P.tp >= 0.4)
             return;
         context_js_3.X.fillStyle = cold ? AS : SV;
         context_js_3.X.globalAlpha = 0.55 + 0.25 * Math.sin(time_js_13.t * 0.12);
         for (const [u, v] of EYES) {
-            const [px, py] = scr(u, v);
+            const [px, py] = scr(Math.max(-1, Math.min(1, u + du)), v + dv);
             context_js_3.X.fillRect(px, py, 1, 1);
         }
         context_js_3.X.globalAlpha = 1;
     }
+    // куда сдвинуть угольки: к точке look (в тех же координатах, что рисунок), если она дальше полушага
+    function lookStep(hx, hy, look) {
+        if (!look || !Number.isFinite(look.x) || !Number.isFinite(look.y))
+            return [0, 0];
+        const dx = look.x - hx, dy = look.y - hy;
+        return [Math.abs(dx) > 6 ? Math.sign(dx) : 0, Math.abs(dy) > 8 ? Math.sign(dy) : 0];
+    }
+    exports_78("lookStep", lookStep);
     // голова номада: обмотка витками, прорезь для угольков, край обмотки закрывает рот; спиной — узел
     function wrap(back) {
         run(-2, 2, -25, HR);
@@ -33355,6 +33397,20 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         }
         else
             put(r, 0, 0);
+    }
+    // сидя спиной к зрителю (на сцене театра — лицом к залу): колен не видно — спина ткани до земли,
+    // ткань легла кругом; у пелерины — подол рубахи и каблуки по бокам
+    function seatBack(how, m) {
+        const legs = how === 'legs';
+        trap(-3, 0, -6, 6, -8, 8, m); // ткань на земле
+        trap(-6, -3, -4, 4, -5, 5, legs ? TR : m); // спина до земли
+        for (let v = -6; v <= -2; v++)
+            put(0, v, DP); // шов, шлица — тенью вниз
+        if (legs) {
+            run(-6, 6, -3, TR);
+            put(-6, -1, TO);
+            put(6, -1, TO);
+        } // подол рубахи, каблуки — на ткани, видно
     }
     // сидя (лицом к зрителю): колени подтянуты, ткань легла на землю, кисти — на земле по бокам.
     // how: 'coat' — колени под полами, между ними разрез; 'robe' — колени под тканью; 'legs' — рубаха,
@@ -33460,7 +33516,7 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
         }
         SEAT = 0; // низ сидящего — на месте, без сдвига
         if (seated)
-            seat(C.seat || 'robe', C.cloth || CL);
+            (back ? seatBack : seat)(C.seat || 'robe', C.cloth || CL);
         if (seated && C.staff)
             for (let v = -2; v <= 0; v++)
                 put(back ? 8 : -8, v, ST); // посох сидящего — до земли
@@ -33527,8 +33583,10 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
             const [fx, fy] = scr(heart[0], heart[1]);
             ember(player, P, fx, fy);
         }
-        if (!back && P.visorK < 1)
-            eyes(P, cold);
+        if (!back && P.visorK < 1) {
+            const [hx, hy] = scr(0, -22), [du, dv] = lookStep(hx, hy, player.lookAt);
+            eyes(P, cold, du, C.head === 'wrap' ? Math.max(0, dv) : dv); // у номада прорезь — две строки, выше обмотка
+        }
     }
     exports_78("drawCut", drawCut);
     return {
@@ -33581,7 +33639,9 @@ System.register("sprites/wardrobe", ["render/context", "core/time"], function (e
                 put(u, v, m); };
             // куда клетка попала на экране (для угольков и огонька — поверх сетки)
             PX = 0, PY = 0;
-            // угольки: тлеют, раз в четыре с лишним секунды моргают; оступился — зажмурился
+            // угольки: тлеют, раз в четыре с лишним секунды моргают; оступился — зажмурился.
+            // Сидящий осматривается (weave/SCENE_STAGE §2.6, у всякого сидящего — §6 вопрос 9): угольки
+            // сдвигаются на точку к тому, на что он смотрит (du, dv ∈ −1…1), не выходя из тьмы капюшона
             EYES = [[-1, -22], [1, -22]];
             // ── крои: вид к зрителю или спиной (back); возвращают огонёк на груди [u, v] (null — не видно);
             // sleeve — рукав для ладони козырьком
@@ -34598,11 +34658,13 @@ System.register("world/names", [], function (exports_82, context_82) {
 });
 System.register("render/digital", ["core/time", "core/prefs"], function (exports_83, context_83) {
     "use strict";
-    var time_js_15, prefs_js_3, hash, SUBST, WINDOW, BURST, STEP;
+    var time_js_15, prefs_js_3, hash, SUBST, WINDOW, BURST, STEP, still;
     var __moduleName = context_83 && context_83.id;
+    function setStill(v) { still = !!v; }
+    exports_83("setStill", setStill);
     // что со строкой сейчас: { kind: 'still'|'jump'|'tear'|'swap'|'drop', dx, at }
     function digitalState(seed = 0, len = 1) {
-        if (prefs_js_3.reducedMotion())
+        if (prefs_js_3.reducedMotion() || still)
             return { kind: 'still', dx: 0, at: -1 };
         const w = (time_js_15.t / WINDOW) | 0, inW = time_js_15.t - w * WINDOW;
         if (inW >= BURST || hash(w * 733 + seed * 17) >= 0.27)
@@ -34681,6 +34743,8 @@ System.register("render/digital", ["core/time", "core/prefs"], function (exports
             WINDOW = 40; // окно в 40 шагов (две трети секунды); сбоит примерно каждое четвёртое
             BURST = 10; // сбой — первые 10 шагов окна
             STEP = 2; // внутри сбоя — новое положение раз в два шага
+            // взгляд в упор (render/ghost.js setGaze — сцена театра): под прямым взглядом передача не сбоит
+            still = false;
         }
     };
 });
@@ -34715,6 +34779,10 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio", "wor
         toggle = !toggle;
         mirrorEl.textContent = text.replace(/\n/g, ' ') + (toggle ? '\u200b' : '');
     }
+    // только для чтеца, без строки на экране (сцена театра: ремарки фонаря, шёпоты зала — weave/SCENE_STAGE §3)
+    function announce(text) { if (text)
+        mirror(String(text)); }
+    exports_84("announce", announce);
     function _resetUnderfoot() { lastSaid = ''; msgLife = 0; currentMsg = ''; idleTimer = 0; }
     exports_84("_resetUnderfoot", _resetUnderfoot);
     // lentaNear: странник там, где лента (main.js: кольцо ≥ RINGS); по умолчанию — тихое место
@@ -42651,6 +42719,7 @@ System.register("core/input", ["render/scaler"], function (exports_115, context_
                     this.touchHandlers = [];
                     this.touch = null; // { x, y, startX, startY, startT, moved }
                     this.lastTouchT = 0;
+                    this.lastMouseT = 0; // когда в последний раз двигалась живая мышь (угольки сидящего — за курсором)
                     this.twoFingers = false; // два пальца на экране — закрыть глаза (world/eyes.js)
                 }
                 init(canvas) {
@@ -42679,6 +42748,9 @@ System.register("core/input", ["render/scaler"], function (exports_115, context_
                     window.addEventListener('mousemove', e => {
                         this.mouseX = e.clientX;
                         this.mouseY = e.clientY;
+                        // живая мышь, а не отзвук касания (браузер шлёт мышиное событие после тапа)
+                        if (Date.now() - this.lastTouchT > 800)
+                            this.lastMouseT = Date.now();
                     });
                     canvas.addEventListener('click', e => {
                         this._dispatchClick(e.clientX, e.clientY, 'mouse', e);
@@ -42817,7 +42889,7 @@ System.register("sprites/player", ["core/time", "world/wind", "sprites/wardrobe"
         const fr = phase - Math.floor(phase), foot = Math.floor(phase) & 1 ? 1 : -1;
         const sit = g ? g.sitV : (player.sit || 0);
         // две плоскости: всё, что «на север», — спиной; прочее (и чужой старый клиент с E/W) — лицом
-        const want = g ? g.view : (player.visor || sit > 0.5 ? 'S' : player.face);
+        const want = g ? g.view : (player.visor ? 'S' : sit > 0.5 ? (player.sitBack ? 'N' : 'S') : player.face);
         const back = wardrobe_js_2.backOf(want), view = back ? 'N' : 'S';
         const visorK = g ? g.visorK : (player.visor ? 1 : 0);
         const trip = g && g.trip, tp = trip ? trip.p : 0, kind = trip ? trip.kind : '';
@@ -43800,11 +43872,17 @@ System.register("content/relooks", [], function (exports_122, context_122) {
             // пуант не повторяет. Вариант — по обстановке: if — все метки должны совпасть;
             // из подходящих — сперва ещё не виденный, по порядку списка (world/relook.js).
             // Метки: day · dusk · night · dawn — сутки; rain · sand · wind — погода и ветер;
-            // used — странник уже что-то делал с вещью; n3 — третий осмотр и дальше.
+            // used — странник уже что-то делал с вещью; n3 — третий осмотр и дальше;
+            // stage — событие: сегодня (до утра мира) он сидел на сцене театра. Вещь, у которой есть только
+            // вариант по событию, вне события показывает свой текст (так у театра: повторных осмотров у него нет).
+            // Театр — weave/SCENE_STAGE_2026-11-22.md §2.8, слово (4) — «пыль стёрта».
             // Всё ниже — нов. (пробник на двенадцати вещах городка, на приёмку автору);
             // опоры — осмотры вещей, ART_BIBLE §04–05, weave/FIGURES.md.
             // ═══════════════════════════════════════
             exports_122("RELOOKS", RELOOKS = {
+                theater: [
+                    { if: ['stage'], text: 'У трещины поперёк сцены пыль стёрта на ширину одного сидящего.' },
+                ],
                 campfire: [
                     { if: ['used'], text: 'То, что ты принёс, уже не найти: огонь берёт без описи и без расписки. Камни те же. Пепла прибавилось на щепоть.' },
                     { if: ['rain'], text: 'Дождь до огня не долетает: капли кончаются над камнями, в кольце сухо. Мокнут только кости вокруг.' },
@@ -43912,6 +43990,18 @@ System.register("world/relook", ["content/relooks"], function (exports_123, cont
         return list[i].text;
     }
     exports_123("relookText", relookText);
+    // метка снова свежая (сцена театра: новая посадка — пыль у трещины стёрта заново): варианты с этой
+    // меткой — как не виденные, иначе цикл «всё видано — первый текст» съест новую подробность
+    function forgetTag(id, tag) {
+        const list = relooks_js_1.RELOOKS[id], seen = shown.get(id);
+        if (!list || !seen)
+            return;
+        list.forEach((v, i) => { if ((v.if || []).includes(tag))
+            seen.delete(i); });
+        if (!seen.size)
+            shown.delete(id);
+    }
+    exports_123("forgetTag", forgetTag);
     function saveRelook() {
         return {
             n: Object.fromEntries(counts),
@@ -44018,7 +44108,7 @@ System.register("assets/manifest", [], function (exports_124, context_124) {
 });
 System.register("world/stage", ["world/relook", "assets/manifest"], function (exports_125, context_125) {
     "use strict";
-    var relook_js_1, manifest_js_1, STAGE_C, DOOR, DW, DH, CENTER, SEAT_D, PLATE, LANTERN, AWAY, LEAD, SETTLE, lenOf, QUAD2_FROM, stage, stageAlt, TAIL, RAMA, CAPTION_AT, BOARD_RUN, THINK_HOLD, THINK_RISE, HALL_HOLD, HALL_FADE, HALL_LINES, BOARD_IDS, ageOf, QUAD, CORNER, LOOP, KINDS, TURN, PATH, SPEED, PHASE, OFF, toD, SIT, saveStage;
+    var relook_js_1, manifest_js_1, STAGE_C, DOOR, DW, DH, CENTER, SEAT_D, PLATE, LANTERN, AWAY, LEAD, SETTLE, lenOf, QUAD2_FROM, stage, stageAlt, TAIL, REMARKS, RAMA, CAPTION_AT, BOARD_RUN, THINK_HOLD, THINK_RISE, HALL_HOLD, HALL_FADE, HALL_LINES, BOARD_IDS, ageOf, QUAD, CORNER, LOOP, KINDS, TURN, PATH, SPEED, PHASE, OFF, toD, SIT, saveStage;
     var __moduleName = context_125 && context_125.id;
     function placeStage(loc) {
         STAGE_C.x = loc.x + 40;
@@ -44052,6 +44142,8 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
         stage.seated = false;
         stage.live = false;
         stage.ev = null; // рамку сорвало, мысль погасла недописанной, задник за кулисой
+        stage.back = false;
+        stage.gaze = 0; // встал — снова лицом к нам
         if (l > 0.01) {
             stage.settle = SETTLE;
             stage.from = l;
@@ -44108,11 +44200,32 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
             return null;
         if (c === LEAD)
             return 'inhale';
+        if (c === L - 2 * LEAD - E)
+            return 'peer'; // фонарь выше: всматривается
         if (c === L - LEAD - E)
             return 'exhale';
         return null;
     }
     exports_125("stepStage", stepStage);
+    // повернуться к залу и обратно (только сидящему на сцене); взгляд догоняет поворот
+    function faceHall(on) { if (stage.active && stage.seated)
+        stage.back = !!on; }
+    exports_125("faceHall", faceHall);
+    function stepGaze(viewBack, reduced = false) {
+        const want = stage.seated && stage.back && viewBack ? 1 : 0;
+        stage.gaze = reduced ? want : stage.gaze + (want - stage.gaze) * 0.08;
+        if (Math.abs(stage.gaze - want) < 0.002)
+            stage.gaze = want;
+    }
+    exports_125("stepGaze", stepGaze);
+    // закрыл глаза на сцене: раз за приход — зал на слух (main.js считает, сколько глаза закрыты)
+    function hearHall() {
+        if (!stage.seated || stage.heard === stage.n)
+            return false;
+        stage.heard = stage.n;
+        return true;
+    }
+    exports_125("hearHall", hearHall);
     // осмотрел место: в конец списка (самое недавнее)
     function noteLookedPlace(id) {
         if (!BOARD_IDS.includes(id))
@@ -44183,7 +44296,7 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
                     out.push({ s: 'tick' });
             }
             else if (e.kind === 'hall' && a === 0)
-                out.push({ s: 'rustle', seat: e.seat });
+                out.push({ s: 'rustle', seat: e.seat, text: e.text });
             else if (e.kind === 'board' && a >= 0 && a < e.dur && a % 90 === 0)
                 out.push({ s: 'creak', pan: 0.9 - 1.8 * a / e.dur });
         }
@@ -44258,17 +44371,21 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
         // сохранение до шага 3 списка не знает: осмотренное помнит world/relook.js (main.js грузит его раньше)
         stage.looked = d && Array.isArray(d.looked) ? ids(d.looked) : BOARD_IDS.filter(id => relook_js_1.lookCount(id) > 0);
         stage.bd = ids(d && d.bd).filter(id => stage.looked.includes(id));
+        stage.dust = d && Number.isFinite(d.dust) ? d.dust | 0 : -1;
         stage.away = true;
         stage.seated = false;
         stage.live = false;
         stage.active = false;
         stage.ev = null;
         stage.adv = false;
+        stage.back = false;
+        stage.gaze = 0;
+        stage.heard = -1;
     }
     exports_125("loadStage", loadStage);
     function _resetStage() {
         Object.assign(stage, { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
-            ev: null, adv: false, wi: 0, looked: [], bd: [] });
+            ev: null, adv: false, wi: 0, looked: [], bd: [], back: false, gaze: 0, heard: -1, dust: -1 });
     }
     exports_125("_resetStage", _resetStage);
     return {
@@ -44300,14 +44417,20 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
             // ev — что сыграет этот приход (шаг 3: шёпоты зала, рамка, мысли, задники; planVisit), adv —
             // часы сцены шагнули в этот шаг; wi — место в пуле шёпотов зала; looked — осмотренные места с
             // вклейкой, от давнего к недавнему; bd — какие из них уже проехали задником в этом круге
+            // шаг 4: back — сидящий повернулся к залу (↑, тап выше фигуры), gaze — насколько он смотрит в упор
+            // (0…1, догоняет поворот), heard — в каком приходе зал уже был слышен за веками, dust — номер суток,
+            // когда пыль у трещины стёрта (повторный осмотр театра до утра мира)
             exports_125("stage", stage = { active: false, seated: false, n: 0, clock: 0, live: false, away: true, near: false, settle: 0, from: 0,
-                ev: null, adv: false, wi: 0, looked: [], bd: [] });
+                ev: null, adv: false, wi: 0, looked: [], bd: [], back: false, gaze: 0, heard: -1, dust: -1 });
             // сесть у театра (строка меню «СЕСТЬ», ui.js sitNow) — когда «СЦЕНА» прочитана хоть раз
             exports_125("stageAlt", stageAlt = () => (relook_js_1.wasUsed('theater') ? { key: 'stage_sit', label: '<i>⌂</i>СЕСТЬ' } : null));
             // шаг мира; fx, fy — где странник в городке (в декорации — середина сцены); free — на мир смотрят
-            // (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает.
+            // (не за бумагой), noon — красный полдень. Возвращает 'inhale' / 'exhale', когда сцена вдыхает и выдыхает,
+            // и 'peer', когда фонарь подняли выше — всматривается.
             // После конца прихода часы идут ещё хвост (TAIL) — дописать начатое пером; нового не начинается
             exports_125("TAIL", TAIL = 600);
+            // ремарки для читающего без глаз (main.js — в строку для чтеца, как строку под ногами; §3)
+            exports_125("REMARKS", REMARKS = { inhale: '(поднимает фонарь)', peer: '(всматривается)', exhale: '(опускает)' });
             // ═══ ЧТО ИГРАЕТ ПРИХОД (шаг 3; weave/SCENE_STAGE §2.4–§2.5) ═══
             // Первый приход самый плотный: два шёпота зала, две мысли, два задника; дальше — по одному.
             // Рамка над живым зрителем — всегда 8 с: встаёт, как только встал зал (на коротком приходе —
@@ -44368,7 +44491,7 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
             // по петле и не сходятся на общей четверти обхода (решение помощника 23.11)
             SIT = KINDS.indexOf('sit');
             // сохранение: номер прихода, в котором садились (по нему — длина следующего)
-            exports_125("saveStage", saveStage = () => ({ n: stage.n, wi: stage.wi, looked: stage.looked.slice(), bd: stage.bd.slice() }));
+            exports_125("saveStage", saveStage = () => ({ n: stage.n, wi: stage.wi, looked: stage.looked.slice(), bd: stage.bd.slice(), dust: stage.dust }));
         }
     };
 });
@@ -63054,7 +63177,7 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
                 if (a <= 0)
                     continue;
                 const to = s.x < stage_js_2.CENTER.x - 2 ? 1 : s.x > stage_js_2.CENTER.x + 2 ? -1 : 0;
-                c.globalAlpha = a * (day ? 0.24 : 0.34) * am;
+                c.globalAlpha = a * (day ? 0.24 : 0.34) * am * ghost_js_3.gazeFade(); // в упор — до трети
                 R(c, s.x - 2 + ox, s.y - 4 + oy, 5, 3, AS); // плечи пеплом
                 R(c, s.x - 1 + to + ox, s.y - 7 + oy, 3, 3, AS); // голова — к сцене
                 R(c, s.x - 1 + to + ox, s.y - 7 + oy, 3, 1, BO); // костяная кромка
@@ -63189,7 +63312,7 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
         a *= speedOf(e, need);
         if (a >= need)
             return;
-        const fade = (a < total + stage_js_2.HALL_HOLD ? 1 : 1 - (a - total - stage_js_2.HALL_HOLD) / stage_js_2.HALL_FADE) * READ;
+        const fade = (a < total + stage_js_2.HALL_HOLD ? 1 : 1 - (a - total - stage_js_2.HALL_HOLD) / stage_js_2.HALL_FADE) * READ * ghost_js_3.gazeFade();
         const B = BANDS.hall, n = preps.length;
         const bottom = Math.max(B.top + 6 + (n - 1) * 8, Math.min(B.bottom, hallSeat(e.seat).y - 10));
         drawPen(c, preps, hallSeat(e.seat).x, bottom - (n - 1) * 8, a, fade, 14, B.x1);
@@ -63203,7 +63326,7 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
         const x0 = stage_js_2.SEAT_D.x + 1, y0 = B.bottom - (n - 1) * 8; // над капюшоном
         const x1 = e.side ? 82 : 150, y1 = Math.max(B.top + 6, Math.min(y0, thoughtTop(e.ring)));
         const p = Math.max(0, Math.min(1, (a - total - stage_js_2.THINK_HOLD) / stage_js_2.THINK_RISE)), q = p * p * (3 - 2 * p);
-        drawPen(c, preps, lerp(x0, x1, q), lerp(y0, y1, q), a, (1 - p) * 2);
+        drawPen(c, preps, lerp(x0, x1, q), lerp(y0, y1, q), a, (1 - p) * 2 * ghost_js_3.gazeFade());
     }
     // ── хлопок в третьем ряду: беззвучно, с ладоней сходит облачко пыли (призрачной)
     function drawClap(c, e, a) {
@@ -63212,7 +63335,7 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
             return;
         const s = S[(stage_js_2.stage.n * 5 + 2) % S.length], [jx, jy] = ghost_js_3.tremble(47);
         for (let j = 0; j < 5; j++) {
-            c.globalAlpha = 0.34 * (1 - a / e.dur) * ghost_js_3.flicker(47);
+            c.globalAlpha = 0.34 * (1 - a / e.dur) * ghost_js_3.flicker(47) * ghost_js_3.gazeFade();
             R(c, s.x - 2 + j + jx + (j - 2) * a * 0.03, s.y - 9 - a * 0.07 - (j % 2) + jy, 1, 1, j % 2 ? AS : BO);
         }
         c.globalAlpha = 1;
@@ -63356,9 +63479,9 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
                     c.drawImage(img, L + 1, T + 1);
                 else { // не в описи — призрачно
                     const sd = 31 + e.id.length, [gx, gy] = ghost_js_3.ghostShift(sd), [jx, jy] = ghost_js_3.tremble(sd);
-                    c.globalAlpha = ghost_js_3.GHOST_A * 0.8;
+                    c.globalAlpha = ghost_js_3.GHOST_A * 0.8 * ghost_js_3.gazeFade();
                     c.drawImage(img, L + 1 + gx, T + 1 + gy);
-                    c.globalAlpha = 0.8 * ghost_js_3.flicker(sd);
+                    c.globalAlpha = 0.8 * ghost_js_3.flicker(sd) * ghost_js_3.gazeFade();
                     c.drawImage(img, L + 1 + jx, T + 1 + jy);
                     c.globalAlpha = 1;
                 }
@@ -63380,7 +63503,21 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
     function boardNow() { const e = evNow('board')[0]; return e ? boardX(stage_js_2.ageOf(e)) : null; }
     exports_164("boardNow", boardNow);
     // весь мир сцены; drawHero — нарисовать странника (сидит на трещине); day — в мире день
+    // весь мир сцены — под взглядом сидящего: повернулся к залу — призрачное до трети, двойники встают
+    // рядом, рамка не сбоит (render/ghost.js setGaze, render/digital.js setStill); твёрдое не меняется
     function drawStageWorld(c, drawHero, heroY, day = false) {
+        ghost_js_3.setGaze(stage_js_2.stage.gaze || 0);
+        digital_js_3.setStill((stage_js_2.stage.gaze || 0) > 0.5);
+        try {
+            drawStage(c, drawHero, heroY, day);
+        }
+        finally {
+            ghost_js_3.setGaze(0);
+            digital_js_3.setStill(false);
+        }
+    }
+    exports_164("drawStageWorld", drawStageWorld);
+    function drawStage(c, drawHero, heroY, day) {
         const key = day ? 'day' : 'night';
         if (!(key in sheets))
             sheets[key] = bakeBody(day);
@@ -63419,7 +63556,30 @@ System.register("render/stage", ["core/time", "world/stage", "render/ghost", "re
             c.globalAlpha = 1;
         }
     }
-    exports_164("drawStageWorld", drawStageWorld);
+    // куда смотрит сидящий, когда курсора нет (телефон): на последнее, что появилось — рамку, шёпот
+    // зала, мысль, задник (§2.6); null — ничего не идёт
+    function lastAppeared() {
+        if (!stage_js_2.stage.ev || redNoon_js_9.redNoon.k > 0.5)
+            return null;
+        let best = null;
+        for (const e of stage_js_2.stage.ev) {
+            const a = stage_js_2.ageOf(e);
+            if (a === null || (best && e.at < best.at))
+                continue;
+            if (e.kind === 'rama')
+                best = { at: e.at, x: RAMA_BOX.x + RAMA_BOX.w / 2, y: RAMA_BOX.y + RAMA_BOX.h / 2 };
+            else if (e.kind === 'hall') {
+                const s = hallSeat(e.seat);
+                best = { at: e.at, x: s.x, y: s.y - 12 };
+            }
+            else if (e.kind === 'thought')
+                best = { at: e.at, x: e.side ? 82 : 150, y: 52 };
+            else if (e.kind === 'board')
+                best = { at: e.at, x: boardX(a), y: BOARD.top + BOARD.h / 2 };
+        }
+        return best ? { x: best.x, y: best.y } : null;
+    }
+    exports_164("lastAppeared", lastAppeared);
     function stageLights(px, py) {
         const sv = stage_js_2.stageView(redNoon_js_9.redNoon.k) || { light: 0, lift: 0 };
         const lx = stage_js_2.LANTERN.x - 4, ly = stage_js_2.LANTERN.y - 5 - sv.lift * 11;
@@ -72588,7 +72748,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_194, context_194) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, stageKeep, stageQuiet, stageArmed, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
     var __moduleName = context_194 && context_194.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_4.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_16.SEGMENTS.length ? ulitsa_db_js_16.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -72705,7 +72865,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.sit = 1;
         player.visor = false;
         player.face = 'S';
+        player.sitBack = false;
         whisper_js_6.clear(); // шёпот улицы остался на улице
+        stage_js_3.stage.dust = sky_js_16.dayIndex(time_js_52.t);
+        relook_js_4.forgetTag('theater', 'stage'); // пыль у трещины стёрта — до утра мира (повторный осмотр)
+        stageEar = -1;
+        stageShut = 0;
+        lookClick = null;
         if (stage_js_3.enterStage()) { // новый приход: что он сыграет, решено при посадке
             const m = stage_js_3.stage.n <= 1 ? 2 : 1, today = sky_js_16.dayIndex(time_js_52.t);
             const boards = stage_js_3.takeBackdrops(m).map(id => { const l = locations_js_6.locationById[id], st = l ? opis_js_2.opisState(l, today) : null; return { id, solid: !!(st && st.mine) }; });
@@ -72720,6 +72886,19 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         player.sit = 0;
         player.path = null;
         player.walkTo = null;
+        player.sitBack = false;
+        stageEar = -1;
+        stageShut = 0;
+        lookClick = null; // точка щелчка — в координатах декорации, в городке не годится
+    }
+    function lookTarget() {
+        if (!(logSeated || beyond_js_2.beyond.seated || stage_js_3.stage.seated || (house_js_2.house.active && (player.sit || 0) > 0.5)))
+            return null; // и на краю кровати
+        if (Date.now() - (input_js_2.input.lastMouseT || 0) < 4000)
+            return input_js_2.input.screenToWorld(input_js_2.input.mouseX, input_js_2.input.mouseY, camera_js_1.camera);
+        if (lookClick && time_js_52.t - lookClick.t < 600)
+            return lookClick;
+        return stage_js_3.stage.active ? stage_js_4.lastAppeared() : null;
     }
     function sitAtStage() { if (stage_js_3.stage.active || teleportFade.dir)
         return; teleportWithFade(stage_js_3.SEAT_D.x - 6, stage_js_3.SEAT_D.y - 23, intoStage); } // уже идёт шторка — второй «СЕСТЬ» не в счёт
@@ -73140,11 +73319,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function stepFx() {
         weather_js_4.weatherClock(); // расписание погоды — по шагам мира везде (за бумагой, в доме, внизу): сказанное о дожде сбывается
         // на сцене другие видят странника сидящим у театра в городке (зала у каждого свой)
-        net_js_3.stepNet(stage_js_3.stage.active ? { ...player, x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y - 10, moving: false, sit: 1 } : player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+        net_js_3.stepNet(stage_js_3.stage.active ? { ...player, x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y - 10, moving: false, sit: 1, face: 'S', sitBack: false } : player, house_js_2.house.active ? 'house' : underside_js_4.under.active ? 'under' : 'surface'); // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
         // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
         // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
         const free = lookingAtWorld();
         eyes_js_2.stepEyes(free && input_js_2.input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05, !house_js_2.house.active && !underside_js_4.under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
+        player.lookAt = lookTarget(); // сидящий осматривается — угольки за курсором
         if (time_js_52.t % 10 === 0)
             audio_js_13.setPurr(house_js_2.house.active || underside_js_4.under.active || stage_js_3.stage.active ? 0 : silentCat_js_1.catPurr(player.x + 6, player.y + 22));
         if (house_js_2.house.active) {
@@ -73984,17 +74164,38 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             audio_js_13.playInhale();
         else if (sg === 'exhale')
             audio_js_13.playSigh();
+        if (sg && stage_js_3.REMARKS[sg])
+            idle_js_2.announce(stage_js_3.REMARKS[sg]); // читающему без глаз — ремаркой (weave/SCENE_STAGE §3)
         if (stage_js_3.stage.adv)
             for (const q of stage_js_3.cuesAt(stage_js_3.stage.clock)) { // рамка щёлкает и тикает, шорох программки, скрип каната
                 if (q.s === 'click')
                     audio_js_13.playClick();
                 else if (q.s === 'tick')
                     audio_js_13.playTick(0.06);
-                else if (q.s === 'rustle')
+                else if (q.s === 'rustle') {
                     audio_js_13.playRustle(0.18, stage_js_4.hallSeatPan(q.seat));
+                    idle_js_2.announce(q.text);
+                }
                 else if (q.s === 'creak')
                     audio_js_13.playCreak(0.5, q.pan, 1.7);
             }
+        // повернулся к залу — смотрит в упор, когда фигура уже обернулась (world/gait.js: доворот)
+        player.sitBack = stage_js_3.stage.seated && stage_js_3.stage.back;
+        stage_js_3.stepGaze(!!(player.gait && player.gait.view === 'N'), prefs_js_9.reducedMotion());
+        // закрыл глаза на две секунды — раз за приход слышен полный зал: общий вдох, скрип рядов слева
+        // направо, чей-то кашель (§2.6); слышно и после того, как фонарь опущен
+        stageShut = free && stage_js_3.stage.seated && eyes_js_2.eyesShut() ? stageShut + 1 : 0;
+        if (stageShut === 120 && !redNoon_js_10.redNoon.active && stage_js_3.hearHall())
+            stageEar = 0;
+        if (stageEar >= 0) {
+            if (stageEar === 0)
+                audio_js_13.playInhale();
+            if (stageEar >= 50 && stageEar <= 150 && (stageEar - 50) % 25 === 0)
+                audio_js_13.playCreak(0.3, -0.7 + 1.4 * (stageEar - 50) / 100, 1.25);
+            if (stageEar === 190)
+                audio_js_13.playCough(0.8, -0.3);
+            stageEar = stageEar >= 200 ? -1 : stageEar + 1;
+        }
         if (free && stage_js_3.stage.seated)
             for (const [pan, kind] of stage_js_3.quadSteps(time_js_52.t, stage_js_3.stage.n >= stage_js_3.QUAD2_FROM)) {
                 if (kind === 'tap')
@@ -74333,12 +74534,20 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             stopHero();
             return;
         } // карта открыта — стрелки двигают лист, не героя
-        if (stage_js_3.stage.active) { // на сцене не ходят: шаг — встать и уйти
-            const step = input_js_2.input.getMove().active || input_js_2.input.getHeldTouch();
-            if (!step)
-                stageArmed = true; // клавиша, зажатая ещё в городке или над бумагой, не уводит: нужен новый шаг
-            else if (stageArmed && !teleportFade.dir)
-                leaveStage();
+        if (stage_js_3.stage.active) {
+            // на сцене не ходят: ← → (A D), шаг пальцем — встать и уйти; ↑ (W) — повернуться к залу, ↓ (S) —
+            // снова к нам. Тап — не шаг: тап выше и ниже фигуры поворачивает (щелчок — ниже, onClick)
+            const mv = input_js_2.input.getMove(), tc = input_js_2.input.touch;
+            const drag = !!(tc && (tc.moved || Date.now() - tc.startT > 280));
+            const side = mv.active && Math.abs(mv.x) > 0.01, turn = mv.active && !side ? (mv.y < 0 ? 1 : -1) : 0;
+            if (!mv.active && !drag)
+                stageArmed = true; // клавиша, зажатая ещё в городке или над бумагой, не действует: нужен новый шаг
+            else if (stageArmed && !teleportFade.dir) {
+                if (side || drag)
+                    leaveStage();
+                else if (turn)
+                    stage_js_3.faceHall(turn > 0);
+            }
             stopHero();
             player.moving = false;
             player.still = true;
@@ -74791,6 +75000,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             tags.add('sand');
         if (wind_js_26.wind.s > 0.45)
             tags.add('wind');
+        if (stage_js_3.stage.dust === sky_js_16.dayIndex(time_js_52.t))
+            tags.add('stage'); // сегодня сидел на сцене театра — пыль у трещины стёрта
         return tags;
     }
     // врата пожаров и Шёлдена открываются, когда странник прошёл ногами южную сторону кольца,
@@ -75459,10 +75670,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // бревно у костра (world/locations.js firelog): фигура садится на середину бревна; любой перенос — встал
             logSeated = false;
             // сцена Театра Теней (world/stage.js, render/stage.js): «СЕСТЬ» — шторка, и странник сидит на трещине
-            // посреди сцены, в своей декорации; шаг или щелчок по нему — шторка, и он у порога театра
+            // посреди сцены, в своей декорации; ← →, шаг пальцем или щелчок по нему — шторка, и он у порога театра;
+            // ↑ ↓ (тап над и под фигурой) — повернуться к залу и обратно
             stageKeep = null; // свет мира, пока на сцене
             stageQuiet = 0; // сколько сидит: на 30 с — дальний звук, как везде
             stageArmed = false; // отпустил ли шаг с тех пор, как сел
+            // на сцене: сколько шагов глаза закрыты, и где идёт зал на слух (−1 — не идёт)
+            stageShut = 0, stageEar = -1;
+            // куда смотрит сидящий (у бревна, за кольцом, на сцене — weave/SCENE_STAGE §2.6, §6 вопрос 9):
+            // живая мышь — на курсор; иначе на сцене — куда щёлкнули недавно, без щелчка — на последнее, что
+            // появилось. Угольки только смещаются на точку: ничего не открывают и ничего не считают
+            lookClick = null;
             if (!NO_HOUSE)
                 intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true);
             // Сутки — по канону v3.3 (world/sky.js): день 42% → сумерки 13% → ночь 37% →
@@ -75662,10 +75880,19 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 if (stage_js_3.stage.active) {
-                    if (Math.abs(pos.x - (player.x + 6)) < 9 && pos.y > player.y - 2 && pos.y < player.y + 26)
+                    // щелчок по самому страннику — встать; прямо над ним — повернуться к залу, прямо под ним — к нам;
+                    // по зрителю, задникам, мыслям и прочему — только перевести угольки
+                    const col = Math.abs(pos.x - (player.x + 6)) < 12;
+                    if (col && Math.abs(pos.x - (player.x + 6)) < 9 && pos.y > player.y - 2 && pos.y < player.y + 26)
                         leaveStage();
+                    else if (col && pos.y <= player.y - 2)
+                        stage_js_3.faceHall(true);
+                    else if (col && pos.y >= player.y + 26)
+                        stage_js_3.faceHall(false);
+                    else
+                        lookClick = { x: pos.x, y: pos.y, t: time_js_52.t };
                     return;
-                } // встать — щелчок по самому страннику
+                }
                 if (underside_js_4.under.active) {
                     walkUnder(pos.x, pos.y);
                     return;

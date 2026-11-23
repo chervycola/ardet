@@ -11,8 +11,8 @@
 // ═══════════════════════════════════════
 import { t } from '../core/time.js';
 import { DW, DH, PLATE, LANTERN, CENTER, SEAT_D, quadAt, stageView, stage, ageOf, CAPTION_AT, THINK_HOLD, THINK_RISE, HALL_HOLD, HALL_FADE } from '../world/stage.js';
-import { tremble, ghostShift, flicker, ghostSeed, GHOST_A } from './ghost.js';
-import { digitalState, digitalText } from './digital.js';
+import { tremble, ghostShift, flicker, ghostSeed, GHOST_A, setGaze, gazeFade } from './ghost.js';
+import { digitalState, digitalText, setStill } from './digital.js';
 import { redNoon } from '../world/redNoon.js';
 import { preparePen, penDraw, PEN_HOLD, PEN_FADE } from '../world/whisper.js';
 import { X, setCtx } from './context.js';
@@ -146,7 +146,7 @@ function dustHall(c, light, day) {
       const a = Math.max(0, Math.min(1, light * TIERS - s.k));        // свет идёт вверх по ярусам
       if (a <= 0) continue;
       const to = s.x < CENTER.x - 2 ? 1 : s.x > CENTER.x + 2 ? -1 : 0;
-      c.globalAlpha = a * (day ? 0.24 : 0.34) * am;
+      c.globalAlpha = a * (day ? 0.24 : 0.34) * am * gazeFade();      // в упор — до трети
       R(c, s.x - 2 + ox, s.y - 4 + oy, 5, 3, AS);                     // плечи пеплом
       R(c, s.x - 1 + to + ox, s.y - 7 + oy, 3, 3, AS);                // голова — к сцене
       R(c, s.x - 1 + to + ox, s.y - 7 + oy, 3, 1, BO);                // костяная кромка
@@ -257,7 +257,7 @@ function drawHall(c, e, a) {
   const preps = penLines(c, e, e.text, 22), total = penTotal(preps), need = total + HALL_HOLD + HALL_FADE;
   a *= speedOf(e, need);
   if (a >= need) return;
-  const fade = (a < total + HALL_HOLD ? 1 : 1 - (a - total - HALL_HOLD) / HALL_FADE) * READ;
+  const fade = (a < total + HALL_HOLD ? 1 : 1 - (a - total - HALL_HOLD) / HALL_FADE) * READ * gazeFade();
   const B = BANDS.hall, n = preps.length;
   const bottom = Math.max(B.top + 6 + (n - 1) * 8, Math.min(B.bottom, hallSeat(e.seat).y - 10));
   drawPen(c, preps, hallSeat(e.seat).x, bottom - (n - 1) * 8, a, fade, 14, B.x1);
@@ -275,7 +275,7 @@ function drawThought(c, e, a) {
   const x0 = SEAT_D.x + 1, y0 = B.bottom - (n - 1) * 8;                            // над капюшоном
   const x1 = e.side ? 82 : 150, y1 = Math.max(B.top + 6, Math.min(y0, thoughtTop(e.ring)));
   const p = Math.max(0, Math.min(1, (a - total - THINK_HOLD) / THINK_RISE)), q = p * p * (3 - 2 * p);
-  drawPen(c, preps, lerp(x0, x1, q), lerp(y0, y1, q), a, (1 - p) * 2);
+  drawPen(c, preps, lerp(x0, x1, q), lerp(y0, y1, q), a, (1 - p) * 2 * gazeFade());
 }
 
 // ── хлопок в третьем ряду: беззвучно, с ладоней сходит облачко пыли (призрачной)
@@ -284,7 +284,7 @@ function drawClap(c, e, a) {
   if (!S.length) return;
   const s = S[(stage.n * 5 + 2) % S.length], [jx, jy] = tremble(47);
   for (let j = 0; j < 5; j++) {
-    c.globalAlpha = 0.34 * (1 - a / e.dur) * flicker(47);
+    c.globalAlpha = 0.34 * (1 - a / e.dur) * flicker(47) * gazeFade();
     R(c, s.x - 2 + j + jx + (j - 2) * a * 0.03, s.y - 9 - a * 0.07 - (j % 2) + jy, 1, 1, j % 2 ? AS : BO);
   }
   c.globalAlpha = 1;
@@ -406,8 +406,8 @@ function drawBoard(c, e, a, light) {
       if (e.solid) c.drawImage(img, L + 1, T + 1);
       else {                                                                  // не в описи — призрачно
         const sd = 31 + e.id.length, [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd);
-        c.globalAlpha = GHOST_A * 0.8; c.drawImage(img, L + 1 + gx, T + 1 + gy);
-        c.globalAlpha = 0.8 * flicker(sd); c.drawImage(img, L + 1 + jx, T + 1 + jy);
+        c.globalAlpha = GHOST_A * 0.8 * gazeFade(); c.drawImage(img, L + 1 + gx, T + 1 + gy);
+        c.globalAlpha = 0.8 * flicker(sd) * gazeFade(); c.drawImage(img, L + 1 + jx, T + 1 + jy);
         c.globalAlpha = 1;
       }
     }
@@ -426,7 +426,13 @@ function drawBoard(c, e, a, light) {
 export function boardNow() { const e = evNow('board')[0]; return e ? boardX(ageOf(e)) : null; }
 
 // весь мир сцены; drawHero — нарисовать странника (сидит на трещине); day — в мире день
+// весь мир сцены — под взглядом сидящего: повернулся к залу — призрачное до трети, двойники встают
+// рядом, рамка не сбоит (render/ghost.js setGaze, render/digital.js setStill); твёрдое не меняется
 export function drawStageWorld(c, drawHero, heroY, day = false) {
+  setGaze(stage.gaze || 0); setStill((stage.gaze || 0) > 0.5);
+  try { drawStage(c, drawHero, heroY, day); } finally { setGaze(0); setStill(false); }
+}
+function drawStage(c, drawHero, heroY, day) {
   const key = day ? 'day' : 'night';
   if (!(key in sheets)) sheets[key] = bakeBody(day);
   const sheet = sheets[key];
@@ -452,6 +458,22 @@ export function drawStageWorld(c, drawHero, heroY, day = false) {
     for (const e of evNow('thought')) drawThought(c, e, ageOf(e));
     c.globalAlpha = 1;
   }
+}
+
+// куда смотрит сидящий, когда курсора нет (телефон): на последнее, что появилось — рамку, шёпот
+// зала, мысль, задник (§2.6); null — ничего не идёт
+export function lastAppeared() {
+  if (!stage.ev || redNoon.k > 0.5) return null;
+  let best = null;
+  for (const e of stage.ev) {
+    const a = ageOf(e);
+    if (a === null || (best && e.at < best.at)) continue;
+    if (e.kind === 'rama') best = { at: e.at, x: RAMA_BOX.x + RAMA_BOX.w / 2, y: RAMA_BOX.y + RAMA_BOX.h / 2 };
+    else if (e.kind === 'hall') { const s = hallSeat(e.seat); best = { at: e.at, x: s.x, y: s.y - 12 }; }
+    else if (e.kind === 'thought') best = { at: e.at, x: e.side ? 82 : 150, y: 52 };
+    else if (e.kind === 'board') best = { at: e.at, x: boardX(a), y: BOARD.top + BOARD.h / 2 };
+  }
+  return best ? { x: best.x, y: best.y } : null;
 }
 
 // свет сцены: фонарь (растёт с подъёмом) и огонёк у сердца сидящего

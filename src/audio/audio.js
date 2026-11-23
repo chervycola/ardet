@@ -149,6 +149,22 @@ export function playSigh() {
   s.connect(f); f.connect(g); g.connect(masterGain); s.start(t0); s.stop(t0 + dur);
 }
 
+// чей-то кашель в зале (сцена Театра Теней, слышно только за веками — weave/SCENE_STAGE §2.7): два
+// коротких сухих толчка шума сквозь полосу, второй тише; pan — откуда, слева или справа
+export function playCough(v = 1, pan = 0) {
+  if (!ctx || v <= 0.02) return;
+  const t0 = ctx.currentTime;
+  for (const [at, k] of [[0, 1], [0.24, 0.6]]) {
+    const dur = 0.16, n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), a0 = t0 + at;
+    s.buffer = b; f.type = 'bandpass'; f.Q.value = 1.4;
+    f.frequency.setValueAtTime(700, a0); f.frequency.exponentialRampToValueAtTime(320, a0 + dur);
+    g.gain.setValueAtTime(0.0001, a0); g.gain.linearRampToValueAtTime(0.05 * v * k, a0 + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, a0 + dur);
+    s.connect(f); f.connect(g); toOut(g, pan); s.start(a0); s.stop(a0 + dur);
+  }
+}
+
 // Каптёрка Дежурного: печка трещит — щелчок полена, глухой, рядом громче (v 0..1)
 export function playCrackle(v) {
   if (!ctx || v <= 0.02) return;

@@ -114,14 +114,22 @@ function hood(back) {
   if (back) for (let v = -25; v <= -20; v++) put(0, v, DP);
   else { run(-1, 1, -23, FC); trap(-22, -20, -1, 1, -1, 1, FC); put(0, -24, FC); }
 }
-// угольки: тлеют, раз в четыре с лишним секунды моргают; оступился — зажмурился
+// угольки: тлеют, раз в четыре с лишним секунды моргают; оступился — зажмурился.
+// Сидящий осматривается (weave/SCENE_STAGE §2.6, у всякого сидящего — §6 вопрос 9): угольки
+// сдвигаются на точку к тому, на что он смотрит (du, dv ∈ −1…1), не выходя из тьмы капюшона
 const EYES = [[-1, -22], [1, -22]];
-function eyes(P, cold) {
+function eyes(P, cold, du = 0, dv = 0) {
   if (t % 260 < 6 || P.tp >= 0.4) return;
   X.fillStyle = cold ? AS : SV;
   X.globalAlpha = 0.55 + 0.25 * Math.sin(t * 0.12);
-  for (const [u, v] of EYES) { const [px, py] = scr(u, v); X.fillRect(px, py, 1, 1); }
+  for (const [u, v] of EYES) { const [px, py] = scr(Math.max(-1, Math.min(1, u + du)), v + dv); X.fillRect(px, py, 1, 1); }
   X.globalAlpha = 1;
+}
+// куда сдвинуть угольки: к точке look (в тех же координатах, что рисунок), если она дальше полушага
+export function lookStep(hx, hy, look) {
+  if (!look || !Number.isFinite(look.x) || !Number.isFinite(look.y)) return [0, 0];
+  const dx = look.x - hx, dy = look.y - hy;
+  return [Math.abs(dx) > 6 ? Math.sign(dx) : 0, Math.abs(dy) > 8 ? Math.sign(dy) : 0];
 }
 // голова номада: обмотка витками, прорезь для угольков, край обмотки закрывает рот; спиной — узел
 function wrap(back) {
@@ -143,6 +151,16 @@ function hem(P, l, r, m) {
   const pl = hemPush(P), lp = P.foot > 0 ? pl : 0, rp = P.foot < 0 ? pl : 0;
   if (lp) { put(l - 1, -1, m); put(l - 1, 0, m); } else put(l, 0, 0);
   if (rp) { put(r + 1, -1, m); put(r + 1, 0, m); } else put(r, 0, 0);
+}
+
+// сидя спиной к зрителю (на сцене театра — лицом к залу): колен не видно — спина ткани до земли,
+// ткань легла кругом; у пелерины — подол рубахи и каблуки по бокам
+function seatBack(how, m) {
+  const legs = how === 'legs';
+  trap(-3, 0, -6, 6, -8, 8, m);                                   // ткань на земле
+  trap(-6, -3, -4, 4, -5, 5, legs ? TR : m);                       // спина до земли
+  for (let v = -6; v <= -2; v++) put(0, v, DP);                    // шов, шлица — тенью вниз
+  if (legs) { run(-6, 6, -3, TR); put(-6, -1, TO); put(6, -1, TO); }   // подол рубахи, каблуки — на ткани, видно
 }
 
 // сидя (лицом к зрителю): колени подтянуты, ткань легла на землю, кисти — на земле по бокам.
@@ -325,7 +343,7 @@ export function drawCut(player, P, name) {
     }
   }
   SEAT = 0;                                                       // низ сидящего — на месте, без сдвига
-  if (seated) seat(C.seat || 'robe', C.cloth || CL);
+  if (seated) (back ? seatBack : seat)(C.seat || 'robe', C.cloth || CL);
   if (seated && C.staff) for (let v = -2; v <= 0; v++) put(back ? 8 : -8, v, ST);   // посох сидящего — до земли
   if (seated && C.bag) { trapD(-3, 0, 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), 6 * (back ? -1 : 1), 9 * (back ? -1 : 1), BG); }   // котомка — рядом на земле
   // тень у земли
@@ -359,7 +377,10 @@ export function drawCut(player, P, name) {
     for (const sg of [-1, 1]) { let u = 6 * sg; while (u && !at(u, gv)) u -= sg; if (u) X.fillRect(PX + u, ly, 1, gh); }
   }
   if (heart) { const [fx, fy] = scr(heart[0], heart[1]); ember(player, P, fx, fy); }
-  if (!back && P.visorK < 1) eyes(P, cold);
+  if (!back && P.visorK < 1) {
+    const [hx, hy] = scr(0, -22), [du, dv] = lookStep(hx, hy, player.lookAt);
+    eyes(P, cold, du, C.head === 'wrap' ? Math.max(0, dv) : dv);   // у номада прорезь — две строки, выше обмотка
+  }
 }
 
 // есть ли такой крой: своё поле, не ключ прототипа; без Object.hasOwn — старые Safari и WebView

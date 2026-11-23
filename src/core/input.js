@@ -30,6 +30,7 @@ class Input {
     this.touchHandlers = [];
     this.touch = null; // { x, y, startX, startY, startT, moved }
     this.lastTouchT = 0;
+    this.lastMouseT = 0;                 // когда в последний раз двигалась живая мышь (угольки сидящего — за курсором)
     this.twoFingers = false;   // два пальца на экране — закрыть глаза (world/eyes.js)
   }
 
@@ -54,6 +55,8 @@ class Input {
     window.addEventListener('mousemove', e => {
       this.mouseX = e.clientX;
       this.mouseY = e.clientY;
+      // живая мышь, а не отзвук касания (браузер шлёт мышиное событие после тапа)
+      if (Date.now() - this.lastTouchT > 800) this.lastMouseT = Date.now();
     });
 
     canvas.addEventListener('click', e => {

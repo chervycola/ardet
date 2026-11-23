@@ -37,7 +37,7 @@ export function pose(player) {
   const fr = phase - Math.floor(phase), foot = Math.floor(phase) & 1 ? 1 : -1;
   const sit = g ? g.sitV : (player.sit || 0);
   // две плоскости: всё, что «на север», — спиной; прочее (и чужой старый клиент с E/W) — лицом
-  const want = g ? g.view : (player.visor || sit > 0.5 ? 'S' : player.face);
+  const want = g ? g.view : (player.visor ? 'S' : sit > 0.5 ? (player.sitBack ? 'N' : 'S') : player.face);
   const back = backOf(want), view = back ? 'N' : 'S';
   const visorK = g ? g.visorK : (player.visor ? 1 : 0);
   const trip = g && g.trip, tp = trip ? trip.p : 0, kind = trip ? trip.kind : '';

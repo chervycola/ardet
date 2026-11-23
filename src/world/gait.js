@@ -29,9 +29,10 @@ const TELEPORT = 12;                                               // дальш
 const HEAVY = { sand: 1, mud: 1, swamp: 1, water: 1, snow: 1 };    // нога вязнет — шаг тяжелее
 const SUNK = { water: 1, swamp: 1, sand: 1, snow: 1, moss: 1 };    // ноги не видно: вброд, в зыби, в снегу, во мху
 
-// куда смотрит фигура в игре (sprites/player.js: сидя и с ладонью — лицом к зрителю); всё, что
-// «на север», — спиной, прочее — лицом
-const wantView = p => (p.visor || (p.sit || 0) > 0.5 ? 'S' : (typeof p.face === 'string' && p.face.includes('N') ? 'N' : 'S'));
+// куда смотрит фигура в игре (sprites/player.js: с ладонью — лицом к зрителю; сидя — лицом, кроме
+// сидящего на сцене театра, повернувшегося к залу: p.sitBack, world/stage.js); всё, что «на север»,
+// — спиной, прочее — лицом
+const wantView = p => (p.visor ? 'S' : (p.sit || 0) > 0.5 ? (p.sitBack ? 'N' : 'S') : (typeof p.face === 'string' && p.face.includes('N') ? 'N' : 'S'));
 export function gaitOf(p) {
   if (!p.gait) p.gait = { phase: 0, amp: 0, hem: 0, vx: 0, settle: 0, calm: 0, view: wantView(p), path: [], hold: 0, lx: null, ly: null, sitV: p.sit || 0, visorK: p.visor ? 1 : 0, trip: null, heavy: 0, feet: true, run: 0, glide: 0, red: false };
   return p.gait;
@@ -97,10 +98,10 @@ export function stepGait(p, o = {}) {
     if (tail !== want) { g.path = turnPath(g.view, want); g.hold = 0; }
     if (g.path.length && ++g.hold >= TURN_LAST) { g.view = g.path.shift(); g.hold = 0; }
   }
-  // сесть — когда уже лицом к зрителю, за ~18 тиков; встать — за ~12
+  // сесть — когда уже лицом к зрителю (или спиной, если садится к залу), за ~18 тиков; встать — за ~12
   const s = p.sit || 0;
   if (red) g.sitV = s;
-  else if (s > g.sitV) { if (g.view === 'S') g.sitV = Math.min(s, g.sitV + 0.06); }
+  else if (s > g.sitV) { if (g.view === (p.sitBack ? 'N' : 'S')) g.sitV = Math.min(s, g.sitV + 0.06); }
   else g.sitV = Math.max(s, g.sitV - 0.085);
   // ладонь козырьком: поднимается, когда обернулся к зрителю, за восемь тиков; опускается сразу же
   const up = p.visor && g.view === 'S';

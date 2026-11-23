@@ -87,6 +87,8 @@ function mirror(text) {
   toggle = !toggle;
   mirrorEl.textContent = text.replace(/\n/g, ' ') + (toggle ? '\u200b' : '');
 }
+// только для чтеца, без строки на экране (сцена театра: ремарки фонаря, шёпоты зала — weave/SCENE_STAGE §3)
+export function announce(text) { if (text) mirror(String(text)); }
 export const _lastUnderfoot = () => lastSaid;
 export function _resetUnderfoot() { lastSaid = ''; msgLife = 0; currentMsg = ''; idleTimer = 0; }
 

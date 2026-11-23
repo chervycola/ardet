@@ -21,6 +21,11 @@
 //   · «рядом» — ближние вещи по карте городка: видно только соседей.
 // Что не перенесено: действия с вещами (у них состояние), терминал,
 // изнанка, кольца эпох, погода и сутки.
+// Исключение — сцена Театра Теней (weave/SCENE_STAGE_2026-11-22.md §3): «СЦЕНА» страницей и «сесть»
+// — первый приход словами: ремарки фонаря «(поднимает фонарь)», «(всматривается)», «(опускает)» и
+// два шёпота зала, по порядку. Чего читающий без глаз здесь не получит — и в игре не получил бы,
+// кроме как глазами: рамки над живым зрителем, задников на канате, мыслей из-под капюшона, теней
+// «Квадрата» и зала из пыли. Следующие приходы короче — их здесь нет: состояния у страниц нет.
 // Вход — дом (первая из двенадцати сцен: не заперто, в журнале ни строки);
 // 404 с телом мира ведёт в дом возвращения с бланком под дверью (TROPA §8).
 // Южный луч до огня — две станции и падение: от врат к югу колодец (второй взгляд —
@@ -65,6 +70,10 @@ const FRAME = {
   intake: 'приём входящих: окно № 3, с нарочным. бланк —',
   blankUrl: 'https://github.com/chervycola/ardet/issues/new?template=vh.md',
   look: '§ ОСМОТРЕТЬ',          // подпись действия — как в меню игры
+  use: '✦ ИСПОЛЬЗОВАТЬ',        // то же
+  sit: '⌂ СЕСТЬ',               // то же
+  stand: 'встать',
+  stage: 'сцена театра теней',
   talk: '❦ ГОВОРИТЬ',           // то же
   protocol: 'протокол беседы',  // ART_BIBLE: разговор — протокол
   back: 'к вещи',
@@ -123,6 +132,8 @@ const nm = l => nameOf(l) || BLANK;
 const { seamOf } = await imp('world/potemkin.js');
 const { RELOOKS } = await imp('content/relooks.js');
 const { WHISPERS } = await imp('world/whisper.js');
+const { useTexts } = await imp('world/useActions.js');
+const { HALL_LINES, REMARKS } = await imp('world/stage.js');
 
 // ── городок ──
 const STAMP = 'городок · вне времени';
@@ -154,8 +165,9 @@ for (const a of town) for (const b of town.filter(x => x !== a).sort((x, y) => d
 // подделка под взглядом теряет; у вещи с одним взглядом второй запрос отдаёт те же байты)
 function relookOrder(list) {
   // у стоящего на месте нет ни погоды, ни «дела с вещью»: сперва безусловные, потом по обстановке;
-  // помеченные n3 — не раньше третьего взгляда; требующие used — пропускаем (действий здесь нет)
-  const left = list.filter(v => !(v.if || []).includes('used')).map((v, i) => ({ v, i, cls: !v.if ? 0 : v.if.every(t => t === 'n3') ? 1 : 2 })).sort((a, b) => a.cls - b.cls || a.i - b.i);
+  // помеченные n3 — не раньше третьего взгляда; требующие used и события (stage — сидел на сцене
+  // сегодня) — пропускаем: действий и суток здесь нет
+  const left = list.filter(v => !(v.if || []).some(tg => tg === 'used' || tg === 'stage')).map((v, i) => ({ v, i, cls: !v.if ? 0 : v.if.every(t => t === 'n3') ? 1 : 2 })).sort((a, b) => a.cls - b.cls || a.i - b.i);
   const out = [];
   let n = 2;
   while (left.length) {
@@ -221,12 +233,27 @@ for (const l of town) {
     const ray = l.id === 'gates' ? `\n<p>${FRAME.south} — <a href="${RAY[0].id}.html">${esc(RAY[0].name)}</a></p>` : '';   // от врат — луч к югу
     if (l.id === 'terminal') acts.push(`<p class="act"><a href="terminal.journal.html">&gt; journal</a></p>`);   // журнал городка
     if (l.id === 'office') acts.push(`<p class="act"><a href="office.book.html">${FRAME.toBook}</a></p>`);     // книга у окна № 3
+    if (l.id === 'theater') acts.push(`<p class="act"><a href="theater.use.html">${FRAME.use}</a></p>`);       // «СЦЕНА», оттуда — сесть
     put(fileOf(l.id, k), page(nm(l), STAMP, body, `${acts.join('\n')}\n<p class="stamp" style="margin:1.2em 0 .6em">${FRAME.near}</p>\n${nearNav(l)}${ray}\n${ENTRY}`));
   });
   if (Array.isArray(l.talkLines) && l.talkLines.length) {
     nTalk++;
     const body = `<h1>${esc(nm(l))}</h1>\n` + l.talkLines.map(t => paras(String(t))).join('\n<p>·</p>\n');
     put(`${l.id}.talk.html`, page(`${nm(l)} · ${FRAME.protocol}`, `${STAMP} · ${FRAME.protocol}`, body, `<p>${FRAME.back} — <a href="${fileOf(l.id)}">${esc(nm(l))}</a></p>\n${ENTRY}`));
+  }
+}
+
+// сцена Театра Теней: «СЦЕНА» — страницей; «сесть» — первый приход словами (ремарки фонаря и шёпоты зала)
+{
+  const th = byId.get('theater'), U = useTexts.theater_stage;
+  if (th && U) {
+    const back = `<p>${FRAME.back} — <a href="${fileOf('theater')}">${esc(nm(th))}</a></p>\n${ENTRY}`;
+    put('theater.use.html', page(`${nm(th)} · ${U.title}`, STAMP, `<h1>${esc(U.title)}</h1>\n${paras(U.text)}`,
+      `<p class="act"><a href="theater.stage.html">${FRAME.sit}</a></p>\n${back}`));
+    const beats = [REMARKS.inhale, HALL_LINES[0], HALL_LINES[1], REMARKS.peer, REMARKS.exhale];
+    const body = beats.map(b => (b.startsWith('(') ? `<p>${esc(b)}</p>` : `<p class="whisper">${esc(b)}</p>`)).join('\n');
+    put('theater.stage.html', page(`${nm(th)} · ${FRAME.stage}`, `${STAMP} · ${FRAME.stage}`, body,
+      `<p class="act"><a href="${fileOf('theater')}">${FRAME.stand}</a></p>\n${ENTRY}`));
   }
 }
 
