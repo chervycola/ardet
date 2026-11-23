@@ -4625,7 +4625,7 @@ setCtx(ctx);
   const CAM = await imp('render/camera.js');
   const RL = await imp('world/relook.js');
   const LC = await imp('world/locations.js'), PH = await imp('world/physics.js');
-  const run = (n, free = true, noon = false) => { const ev = []; for (let i = 0; i < n; i++) { const e = SG.stepStage(SG.SEAT.x, SG.SEAT.y, free, noon); if (e) ev.push([i, e]); } return ev; };
+  const run = (n, free = true, noon = false) => { const ev = []; for (let i = 0; i < n; i++) { const e = SG.stepStage(SG.STAGE_C.x, SG.STAGE_C.y, free, noon); if (e) ev.push([i, e]); } return ev; };
   const light = () => { const v = SG.stageView(false); return v ? v.light : 0; };
   test('сцена: вдох — зал встаёт, задержка, выдох — оседает; после конца ничего нового', () => {
     SG._resetStage();
@@ -4672,11 +4672,11 @@ setCtx(ctx);
     SG.loadStage(SG.saveStage());
     eq(SG.stage.n, 2, 'номер прихода не сохранился'); eq(SG.stage.seated, false, 'из сохранения — сидит');
   });
-  test('сцена: сиденье — не в твёрдом теле театра; севший снова не гасит идущий приход; полдень гасит зал по силе', () => {
-    for (const k of ['x', 'y']) assert(Number.isFinite(SG.SEAT[k]) && Number.isFinite(SG.STAGE_C[k]), 'сиденье без координат');
+  test('сцена: порог, куда встаёт вышедший из декорации, — не в твёрдом теле театра; севший снова не гасит идущий приход; полдень гасит зал по силе', () => {
+    for (const k of ['x', 'y']) assert(Number.isFinite(SG.DOOR[k]) && Number.isFinite(SG.STAGE_C[k]), 'порог без координат');
     const th = LC.locations.find(l => l.id === 'theater');
     SG.placeStage(th);
-    eq(PH.isBlocked(SG.SEAT.x - 6, SG.SEAT.y - 23, LC.locations), false, 'сиденье в твёрдом: не встать');
+    eq(PH.isBlocked(SG.DOOR.x, SG.DOOR.y, LC.locations), false, 'порог в твёрдом: вышел со сцены — и застрял');
     SG._resetStage(); SG.sitStage(); run(700);
     eq(SG.sitStage(), true, 'севший снова погасил приход');
     assert(light() > 0.9, 'зал погас от повторной посадки');
@@ -4708,6 +4708,125 @@ setCtx(ctx);
     assert(Math.abs(c.x - x0) < Math.abs(c.targetX - x0) * c.holdSmoothing * 1.05, 'встал — кадр рванул к фигуре');
     for (let i = 0; i < 400; i++) { c.follow(10, 10); c.update(); }
     assert(Math.abs(c.x - c.targetX) < 1, 'встал — камера не вернулась к фигуре');
+  });
+}
+
+// ═══ СЦЕНА ТЕАТРА ТЕНЕЙ, шаг 2 (world/stage.js, render/stage.js; «Квадрат» и декорация) ═══
+{
+  const SG = await imp('world/stage.js');
+  const RS = await imp('render/stage.js');
+  const inPlate = (x, y) => ((x - SG.PLATE.cx) / SG.PLATE.rx) ** 2 + ((y - SG.PLATE.cy) / SG.PLATE.ry) ** 2 <= 1.0001;
+  test('«Квадрат»: четыре тени ходят по плитам и обходят сидящего за спиной; ни одна не встаёт в середину и не идёт сквозь него', () => {
+    let minR = 9, out = 0, front = 0, behind = 0;
+    for (const slow of [false, true]) for (let i = 0; i < 4; i++) for (let T = 0; T < SG.TURN * 4 * 6; T += 3) {
+      const q = SG.quadAt(i, T, slow);
+      minR = Math.min(minR, Math.hypot(q.u, q.v));
+      if (!inPlate(q.x, q.y)) out++;
+      assert(Number.isFinite(q.x) && Number.isFinite(q.y), `тень ${i} без места на шаге ${T}`);
+      eq(q.kind, SG.KINDS[i], 'тень сменила роль');
+      if (Math.hypot(q.u, q.v) < 0.5 && Math.abs(q.x - SG.SEAT_D.x) < 8) { if (q.y > SG.SEAT_D.y) front++; else behind++; }
+    }
+    assert(minR >= SG.QUAD.avoid - 0.01, `тень подошла к сидящему ближе обхода: ${minR.toFixed(3)}`);
+    eq(out, 0, 'тень сошла с плит');
+    eq(front, 0, 'обход идёт перед сидящим — тень рисуется поверх него');
+    assert(behind > 0, 'обхода за спиной не было');
+  });
+  test('«Квадрат»: тени на одной петле порознь — в одном столбце только мимоходом; в живой картине — четыре столбца, никто не за спиной сидящего; каждая проходит все четыре угла', () => {
+    // чёрное без контура: две тени в одном столбце (ближе 6 точек по x) читаются одной длинной фигурой
+    for (const [slow, most] of [[false, 40], [true, 80]]) {
+      const run = {}; let worst = 0, still = 99, hid = 0;
+      for (let T = 0; T < SG.TURN * 4 * 12 * (slow ? 2 : 1); T++) {
+        const qs = [0, 1, 2, 3].map(i => SG.quadAt(i, T, slow)), frozen = !qs[0].walking;
+        for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) {
+          const k = a * 4 + b, dx = Math.abs(qs[a].x - qs[b].x);
+          if (frozen) still = Math.min(still, dx);
+          run[k] = dx < 6 && !frozen ? (run[k] || 0) + 1 : 0;
+          worst = Math.max(worst, run[k]);
+        }
+        if (frozen) for (const q of qs) if (Math.abs(q.x - SG.SEAT_D.x) < 11) hid++;
+      }
+      const v = slow ? 'второй вариант: ' : '';
+      assert(worst <= most, `${v}две тени идут в одном столбце ${worst} шагов`);
+      assert(still >= 12, `${v}в живой картине две тени в одном столбце: ${still.toFixed(1)} точек`);
+      eq(hid, 0, `${v}замершая тень спрятана за спиной сидящего`);
+    }
+    for (let i = 0; i < 4; i++) {
+      const seen = new Set();
+      for (let T = 0; T < 12000; T += 2) { const q = SG.quadAt(i, T); if (Math.abs(q.u) > 0.97 && Math.abs(q.v) > 0.97) seen.add(Math.sign(q.u) + ',' + Math.sign(q.v)); }
+      eq(seen.size, 4, `тень ${i} не обошла все углы: ${[...seen]}`);
+    }
+  });
+  test('«Квадрат»: жест — в свой черёд; в очередь той, что сидит, замирают все — живая картина, потом идут дальше', () => {
+    for (let i = 0; i < 4; i++) for (let k = 0; k < 4; k++) eq(SG.quadAt(i, SG.TURN * k + 5).mine, i === k, `очередь тени ${i} в ${k}-й черёд`);
+    const s = SG.KINDS.indexOf('sit');
+    for (const cyc of [0, 3]) {
+      const T0 = SG.TURN * 4 * cyc + SG.TURN * s + 3;
+      for (let i = 0; i < 4; i++) {
+        const a = SG.quadAt(i, T0), b = SG.quadAt(i, T0 + SG.TURN - 10), c = SG.quadAt(i, T0 + SG.TURN + 60);
+        eq(a.walking, false, `в очередь сидящей тень ${i} идёт`);
+        assert(Math.hypot(a.x - b.x, a.y - b.y) < 1e-9, `в очередь сидящей тень ${i} сдвинулась`);
+        assert(c.walking && Math.hypot(c.x - b.x, c.y - b.y) > 0.5, `очередь прошла — тень ${i} не пошла`);
+      }
+      for (const k of [0, 1, 3]) {
+        const T1 = SG.TURN * 4 * cyc + SG.TURN * k + 3, p = SG.quadAt(k, T1), r = SG.quadAt(k, T1 + 60);
+        assert(p.walking && Math.hypot(p.x - r.x, p.y - r.y) > 0.5, `в свой черёд тень ${k} стоит`);
+      }
+    }
+  });
+  test('«Квадрат», второй вариант: вдвое медленнее; вместо стука — шарканье, реже', () => {
+    for (const i of [0, 1, 2, 3]) {
+      const T = 3000, f = SG.quadAt(i, T), g = SG.quadAt(i, T * 2, true);
+      assert(Math.hypot(f.u - g.u, f.v - g.v) < 1e-6, `тень ${i}: второй вариант не вдвое медленнее`);
+    }
+    let tap = 0, sh = 0, kinds = new Set();
+    for (let T = 0; T < 6300; T++) { for (const [pan, k] of SG.quadSteps(T)) { tap++; kinds.add(k); assert(pan >= -1 && pan <= 1, 'панорама вне ±1'); } for (const [, k] of SG.quadSteps(T, true)) { sh++; kinds.add(k); } }
+    assert(kinds.has('tap') && kinds.has('shuffle') && kinds.size === 2, `звуки шагов: ${[...kinds]}`);
+    assert(sh < tap * 0.75, `шарканье не реже стука: ${sh} против ${tap}`);
+    eq(SG.QUAD2_FROM, 7, 'второй вариант не с седьмого прихода');
+  });
+  test('декорация: вошёл — сидит на трещине, сцена идёт; вышел — стоит, декорации нет; сидящий в середине плит', () => {
+    SG._resetStage();
+    eq(SG.enterStage(), true, 'вошёл — приход не начался');
+    eq(SG.stage.active, true, 'не в декорации'); eq(SG.stage.seated, true, 'в декорации — не сидит');
+    const v = SG.stageView(0);
+    assert(v && v.quad2 === false, 'первый приход — второй вариант');
+    SG.exitStage();
+    eq(SG.stage.active, false, 'вышел — а декорация'); eq(SG.stage.seated, false, 'вышел — сидит');
+    assert(inPlate(SG.SEAT_D.x, SG.SEAT_D.y) && Math.hypot(SG.SEAT_D.x - SG.CENTER.x, SG.SEAT_D.y - SG.CENTER.y) < 5, 'сидящий не в середине');
+    assert(SG.LANTERN.x > SG.CENTER.x && SG.LANTERN.y < SG.CENTER.y && inPlate(SG.LANTERN.x, SG.LANTERN.y), 'человек с фонарём не у дальнего правого края');
+    for (let n = 0; n < 7; n++) { SG.stage.away = true; SG.enterStage(); SG.exitStage(); }
+    SG.enterStage();
+    eq(SG.stageView(0).quad2, true, 'с седьмого прихода — не второй вариант');
+    SG.loadStage(SG.saveStage());
+    eq(SG.stage.active, false, 'из сохранения — в декорации');
+    SG._resetStage();
+  });
+  test('декорация: зал из пыли — на ярусах, над сценой, в пределах карты; проходы и место зрителя свободны', () => {
+    for (let k = 0; k < RS.TIERS; k++) {
+      for (const th of [0.05, 0.5, 0.95]) {
+        const x = RS.tierX(k, th), y = RS.tierY(k, th);
+        assert(x >= 0 && x < SG.DW && y >= 0 && y < SG.DH, `ярус ${k} вне карты: ${x.toFixed(0)},${y.toFixed(0)}`);
+        assert(y < SG.PLATE.cy - SG.PLATE.ry + 2 || Math.abs(x - SG.CENTER.x) > SG.PLATE.rx, `ярус ${k} — на плитах`);
+      }
+      if (k) assert(RS.tierY(k, 0.5) < RS.tierY(k - 1, 0.5), 'ярусы не поднимаются');
+    }
+    const ctx = { fillStyle: '', globalAlpha: 1, n: 0, fillRect() { this.n++; }, drawImage() {} };
+    RS._resetStageArt();
+    SG._resetStage(); SG.enterStage();
+    RS.drawStageWorld(ctx, () => {}, SG.SEAT_D.y);
+    assert(ctx.n > 30, 'декорация пустая');
+    eq(ctx.globalAlpha, 1, 'прозрачность осталась после рисунка');
+    RS.drawStageWorld(ctx, () => {}, SG.SEAT_D.y, true);
+    eq(ctx.globalAlpha, 1, 'днём прозрачность осталась после рисунка');
+    for (const st of RS._seats()) {
+      assert(st.x - 3 > 11 && st.x + 5 < SG.DW - 12, `пыльный зритель (с двойником) на кулисе: ${st.x},${st.y}`);
+      for (let dx = -2; dx <= 2; dx++) assert(!RS.goneAt(st.k, st.x + dx), `пыльный зритель над выпавшим блоком: ${st.k}/${st.x}`);
+    }
+    const sx = Math.round(RS.tierX(3, 0.3));
+    for (let dx = -2; dx <= 2; dx++) assert(!RS.goneAt(3, sx + dx), 'живой зритель над выпавшим блоком');
+    const L = RS.stageLights(SG.SEAT_D.x, SG.SEAT_D.y - 13);
+    assert(L.length >= 2 && L.every(l => Number.isFinite(l.x) && Number.isFinite(l.r) && l.r > 0), 'свет сцены без места');
+    SG._resetStage();
   });
 }
 

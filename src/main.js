@@ -102,7 +102,8 @@ import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions } from './world/inscriptions.js';
 import { update as updateIdle, draw as drawIdle } from './world/idle.js';
-import { stage, sitStage, standStage, stepStage, stageAlt, saveStage, loadStage, placeStage, SEAT, STAGE_C } from './world/stage.js';
+import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D } from './world/stage.js';
+import { drawStageWorld, stageLights, STAGE_AMBIENT } from './render/stage.js';
 import { check as checkWhisper, draw as drawWhisper, sayAt, quench as quenchWhisper, clear as clearWhisper, stepWhisper, drift as driftWhisper, whisperText } from './world/whisper.js';
 import { update as updateParticles, draw as drawParticles, footstepDust, ashPuff, pickupSparkle, fireEmber } from './render/particles.js';
 import { stepPuddles, drawPuddles, wetKind, usedWet } from './render/puddles.js';
@@ -289,7 +290,7 @@ let wokeOnce = !!(savedData && savedData.woke);
 function saveData() {
   return {
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-  player: house.active ? doorOutside() : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
+  player: house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   clock: worldClock(t),
   mail: saveMail(),
@@ -322,7 +323,7 @@ if (!STREAM) startAutoSave(saveData);
 if (!STREAM && typeof document !== 'undefined' && document.addEventListener) document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveGame(saveData()); });
 // сразу, не дожидаясь полуминуты (переоделся — и закрыл вкладку)
 function saveNow() { if (!STREAM) saveGame(saveData()); }
-setPosOverride(() => (house.active ? doorOutside() : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
+setPosOverride(() => (house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
 
 initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
@@ -341,7 +342,7 @@ function canLeaveSettlement() {
 }
 
 const FIRE = locations.find(l => l.id === 'campfire');   // искры над костром (stepWorld)
-// сцена Театра Теней: прочитавший «СЦЕНУ» может сесть перед сценой (world/stage.js)
+// сцена Театра Теней: прочитавший «СЦЕНУ» садится на сцену — в декорации (world/stage.js, render/stage.js)
 { const th = locations.find(l => l.id === 'theater'); if (th) { placeStage(th); th.sitNow = stageAlt; } }   // своя строка меню: второе действие у театра — пелерина из гардероба
 
 // ═══ LIGHTING SETUP from locations ═══
@@ -402,17 +403,33 @@ function sitOnLog(loc) {
   player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
   logSeated = true;
 }
-// сцена Театра Теней (world/stage.js): сел перед сценой — лицом к нам, спиной к ярусам
-function sitAtStage() {
-  player.x = SEAT.x - 6; player.y = SEAT.y - 23; player.tx = player.x; player.ty = player.y;
+// сцена Театра Теней (world/stage.js, render/stage.js): «СЕСТЬ» — шторка, и странник сидит на трещине
+// посреди сцены, в своей декорации; шаг или щелчок по нему — шторка, и он у порога театра
+let stageKeep = null;                                // свет мира, пока на сцене
+let stageQuiet = 0;                                  // сколько сидит: на 30 с — дальний звук, как везде
+let stageArmed = false;                              // отпустил ли шаг с тех пор, как сел
+function intoStage() {
+  if (state.is('menu')) hideMenu(); else if (state.is('look')) closeLook();   // меню городка за шторкой не остаётся
+  logSeated = false; stageQuiet = 0; stageArmed = false;
+  stumble.cancel();
+  if (!stageKeep) stageKeep = lighting.sources;
+  player.x = SEAT_D.x - 6; player.y = SEAT_D.y - 23; player.tx = player.x; player.ty = player.y;
   player.path = null; player.walkTo = null; player.auto = false; player.moving = false; player.vx = 0; player.vy = 0;
-  logSeated = false;
-  sitStage();
+  player.sit = 1; player.visor = false; player.face = 'S';
+  clearWhisper();                                    // шёпот улицы остался на улице
+  enterStage();
 }
+function outOfStage() {
+  exitStage();
+  if (stageKeep) lighting.sources = stageKeep;
+  stageKeep = null;
+  player.sit = 0; player.path = null; player.walkTo = null;
+}
+function sitAtStage() { if (stage.active || teleportFade.dir) return; teleportWithFade(SEAT_D.x - 6, SEAT_D.y - 23, intoStage); }   // уже идёт шторка — второй «СЕСТЬ» не в счёт
+function leaveStage() { if (stage.active && !teleportFade.dir) teleportWithFade(STAGE_DOOR.x, STAGE_DOOR.y, outOfStage); }
 // «Сел — кадр встал»: куда встаёт кадр сидящему; null — камера следит
 function seatFrame() {
   const px = player.x + 6, py = player.y + 10, vh = scaler.vh;
-  if (stage.seated) return { x: STAGE_C.x, y: STAGE_C.y + 8 };                 // театр и сидящий перед сценой
   if (logSeated) {                                                              // у огня: огонь и сидящий, фигура ниже середины
     if (fireLoc === undefined) fireLoc = locations.find(l => l.id === 'campfire') || null;
     const fx = fireLoc ? fireLoc.x + fireLoc.w / 2 : px, near = fireLoc && Math.hypot(fx - px, fireLoc.y + fireLoc.h - py) < 160;
@@ -591,6 +608,7 @@ const npcDrawFn = {
 // ═══ RENDER ═══
 function render() {
   if (house.active) { renderHouse(); return; }
+  if (stage.active) { renderStage(); return; }
   if (under.active) { renderUnder(); return; }
   const vw = scaler.vw, vh = scaler.vh;
   layers.clearAll();
@@ -769,7 +787,7 @@ const NO_CASTLE = /[?&]nocastle\b/.test(location.search); // замок-пого
 // полосы ленты (render/feedPanels.js) — в сборке до печати: зерно, яд, заливки и интерфейс ложатся поверх,
 // растр распада (слой ui) ест и ленту; в красный полдень, дома и под землёй лент нет
 layers.feedPass = ctx => {
-  const k = feedK(), off = k <= 0 || redNoon.k > 0.5 || house.active || under.active;
+  const k = feedK(), off = k <= 0 || redNoon.k > 0.5 || house.active || under.active || stage.active;
   ctx.save();
   ctx.setTransform(scaler.scale, 0, 0, scaler.scale, 0, 0);
   ctx.imageSmoothingEnabled = false;
@@ -804,18 +822,19 @@ function plateStorm() {
 const lookingAtWorld = () => state.is('game') && !isMapOpen();
 function stepFx() {
   weatherClock();                                    // расписание погоды — по шагам мира везде (за бумагой, в доме, внизу): сказанное о дожде сбывается
-  stepNet(player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
+  // на сцене другие видят странника сидящим у театра в городке (зала у каждого свой)
+  stepNet(stage.active ? { ...player, x: STAGE_DOOR.x, y: STAGE_DOOR.y - 10, moving: false, sit: 1 } : player, house.active ? 'house' : under.active ? 'under' : 'surface');   // другие странники: шаги, слова, записки вокруг (в доме тебя не видно)
   // закрыть глаза (world/eyes.js): держишь C или два пальца — веки; у огня они теплее.
   // Глаза открывает настоящий шаг: упёрся в изгородь на автоходе — уже стоишь
   const free = lookingAtWorld();
   stepEyes(free && input.eyesWanted(), player.moving && Math.hypot(player.vx || 0, player.vy || 0) > 0.05,
     !house.active && !under.active && !!FIRE && Math.hypot(player.x + 6 - (FIRE.x + 18), player.y + 22 - (FIRE.y + 20)) < 90);
-  if (t % 10 === 0) setPurr(house.active || under.active ? 0 : catPurr(player.x + 6, player.y + 22));
+  if (t % 10 === 0) setPurr(house.active || under.active || stage.active ? 0 : catPurr(player.x + 6, player.y + 22));
   if (house.active) { stepFxHouse(); return; }
+  if (stage.active) { stepFxStage(free); return; }
   if (under.active) { stepFxUnder(); return; }
-  // сцена Театра Теней: вдох — фонарь поднимают, выдох — опускают (world/stage.js; «Дыхание»)
-  const sg = stepStage(player.x + 6, player.y + 23, free, redNoon.active);
-  if (sg === 'inhale') playInhale(); else if (sg === 'exhale') playSigh();
+  // сцена Театра Теней: далеко ли от театра — новый ли приход (world/stage.js; сидят — в декорации)
+  stepStage(player.x + 6, player.y + 23, free, redNoon.active);
   const camX = Math.round(camera.x), camY = Math.round(camera.y);
   const ring = ringAt(player.x + 6, player.y + 24);
   wind.update(weather.state, weather.intensity, ring, inCore(player.x + 6, player.y + 24));
@@ -829,7 +848,7 @@ function stepFx() {
   // …и если рядом кто-то смотрит из-под ладони туда же — черта видна двоим и держится
   beyond.step(player.x + 6, player.y + 23, player.moving, !state.is('game'), beyond.visor && lookingNear(player.x + 6, player.y + 23));
   if (player.moving) { logSeated = false; standStage(); }
-  player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated || logSeated || stage.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть или на бревно; шагнул — встал
+  player.sit = player.moving ? 0 : (player.sit || 0) + ((beyond.seated || logSeated ? 1 : 0) - (player.sit || 0)) * 0.12;   // садится смотреть или на бревно; шагнул — встал
   player.visor = beyond.visor;                       // у столба: ладонь козырьком, пока черта видна
   stepPozemka(camX, camY, scaler.vw, scaler.vh);
   if (beyond.murmur) playMurmur(beyond.murmur);
@@ -1459,6 +1478,39 @@ function netClick(x, y, layer) {
   player.walkTo = nm;
   return true;
 }
+// шаг эффектов сцены театра: ночь своей декорации, свет — фонарь и огонёк у сердца; яда нет
+function stepFxStage(free) {
+  const camX = Math.round(camera.x), camY = Math.round(camera.y);
+  wind.update('clear', 0, 0, true);
+  updateWindSound(0.02);
+  setPress(pressAt(phaseAt(t)));
+  stepRedNoon(t, phaseAt(t), dayIndex(t));
+  ink.noon(redNoon.k);
+  ink.sky(false);
+  ink.beginFrame();
+  ink.want(0, 'сцена');
+  if (isEndingActive()) ink.want(3, 'финал');
+  if (getActiveLoc()) ink.want(2, 'осмотр');
+  ink.setGroup([]);
+  ink.update();
+  plate.update(STAGE_C.x, STAGE_C.y, 0);             // зерно — того места, где театр
+  toxic.hush();
+  updateGeiger(toxic.level());
+  lofi.update(0);
+  player.sit = (player.sit || 0) + ((stage.seated ? 1 : 0) - (player.sit || 0)) * 0.12;   // встал — поднимается, пока шторка
+  player.visor = false;
+  // «Дыхание»: вдох — фонарь поднимают, выдох — опускают; «Квадрат»: шаги теней — стук, во втором варианте шарканье
+  const sg = stepStage(STAGE_C.x, STAGE_C.y, free, redNoon.active);
+  if (sg === 'inhale') playInhale(); else if (sg === 'exhale') playSigh();
+  if (free && stage.seated) for (const [pan, kind] of quadSteps(t, stage.n >= QUAD2_FROM)) { if (kind === 'tap') playTick(0.25); else playRustle(0.12, pan); }
+  const sv = stageView(redNoon.k);                   // фитиль тихо трещит, у поднятого фонаря чуть громче
+  if (sv && !redNoon.active && Math.random() < 0.012 + 0.02 * Math.min(1, sv.lift)) playCrackle(0.2 + 0.25 * Math.min(1, sv.lift));
+  if (free && stage.seated && ++stageQuiet === 1800) playDistantSound();
+  lighting.sources = stageLights(player.x + 7, player.y + 10);
+  lightParticles.update({ x: camX, y: camY }, lighting.sources);
+  dyingPixels.update();
+  screenMoss.update(player.moving, !lookingAtWorld());   // за бумагой мох ждёт
+}
 // шаг эффектов дома: за стеной ветер глухо, неба не видно (только в окне), яда нет;
 // проснулся сидя — сидит, пока не шагнул
 function stepFxHouse() {
@@ -1547,6 +1599,36 @@ function stepFxUnder() {
   lightParticles.update({ x: camX, y: camY }, lighting.sources);
   dyingPixels.update();
   screenMoss.update(player.moving, !lookingAtWorld());   // за бумагой мох ждёт
+}
+function renderStage() {
+  const vw = scaler.vw, vh = scaler.vh;
+  layers.clearAll();
+  const bgCtx = layers.ctx('bg'), worldCtx = layers.ctx('world'), lightCtx = layers.ctx('light');
+  const fxCtx = layers.ctx('fx'), uiCtx = layers.ctx('ui'), postCtx = layers.ctx('post');
+  const camX = Math.round(camera.x), camY = Math.round(camera.y), sky = skyAt(phaseAt(t));
+  bgCtx.fillStyle = '#0D0B0A';
+  bgCtx.fillRect(0, 0, vw, vh);
+  worldCtx.save();
+  worldCtx.translate(-camX, -camY);
+  setCtx(worldCtx);
+  drawStageWorld(worldCtx, () => { setCtx(worldCtx); drawPlayer(player); }, player.y + 23, !!sky.sun);
+  drawParticles(worldCtx, { x: camX, y: camY });
+  drawVoices(worldCtx, 'stage', player);            // своё слово — и на сцене; чужих здесь нет
+  worldCtx.restore();
+  hazeOff();
+  warmSpots = warmIn(camX, camY, vw, vh);
+  setCtx(worldCtx);
+  lighting.render(lightCtx, { x: camX, y: camY }, sky.sun ? STAGE_AMBIENT.day : STAGE_AMBIENT.night);
+  lightParticles.draw(worldCtx, { x: camX, y: camY });
+  crackedGlass.draw(fxCtx);
+  dyingPixels.draw(fxCtx);
+  screenMoss.draw(uiCtx);
+  drawHUD(uiCtx);
+  ink.drawLabel(uiCtx);
+  postfx.apply(postCtx);
+  drawTeleportFade(postCtx);
+  if (isEndingActive()) drawEnding(postCtx);
+  layers.composite();
 }
 function renderHouse() {
   const vw = scaler.vw, vh = scaler.vh;
@@ -1693,9 +1775,17 @@ function updateGame() {
   // походка (world/gait.js): шаг — по пройденному за прошлый тик пути, только когда правят;
   // остановка, оборот к player.face, оступился — позой (sprites/player.js)
   stepGait(player, { stepping: !player.still, surf: surfName, trip: house.active || under.active ? null : stumble.pose(), reduced: reducedMotion() });
-  if (isFrozen()) { stopHero(); updateBrainrot(player); return; }
-  if (!state.is('game')) { stopHero(); return; }
-  if (isMapOpen()) { stopHero(); return; }                    // карта открыта — стрелки двигают лист, не героя
+  // на сцене: всё, что перехватило клавиши (бумага, карта, опись), требует нового шага, чтобы встать
+  if (isFrozen()) { if (stage.active) stageArmed = false; stopHero(); updateBrainrot(player); return; }
+  if (!state.is('game')) { if (stage.active) stageArmed = false; stopHero(); return; }
+  if (isMapOpen()) { if (stage.active) stageArmed = false; stopHero(); return; }   // карта открыта — стрелки двигают лист, не героя
+  if (stage.active) {                                         // на сцене не ходят: шаг — встать и уйти
+    const step = input.getMove().active || input.getHeldTouch();
+    if (!step) stageArmed = true;                             // клавиша, зажатая ещё в городке или над бумагой, не уводит: нужен новый шаг
+    else if (stageArmed && !teleportFade.dir) leaveStage();
+    stopHero(); player.moving = false; player.still = true;
+    updateWorldSystems(); return;
+  }
   const fell = under.active || house.active ? false : stumble.update(player);   // полотно ровное — под землёй и дома не оступишься
   if (fell && !stumbling) startleRavens(player.x + 6, player.y + 22, 150);   // упал — вороны в округе взлетают
   stumbling = fell;
@@ -1783,6 +1873,17 @@ function updateGame() {
 // Camera + all per-frame world systems. Shared by the normal movement
 // path and the held-finger walk branch above.
 function updateWorldSystems() {
+  if (stage.active) {                       // сцена: своя декорация; меньше кадра — посередине
+    camera.release();
+    camera.follow(player.x + 6, player.y + 10);
+    camera.update();
+    const vw = scaler.vw, vh = scaler.vh;
+    camera.x = DW <= vw ? (DW - vw) / 2 : Math.max(0, Math.min(camera.x, DW - vw));
+    camera.y = DH <= vh ? (DH - vh) / 2 : Math.max(0, Math.min(camera.y, DH - vh));
+    updateZone('house');                    // тихо, как в комнате: улица осталась за шторкой
+    updateParticles();
+    return;
+  }
   if (house.active) {                       // дом: своя карта; меньше кадра — посередине
     camera.release();
     camera.follow(player.x + 6, player.y + 10);
@@ -1846,7 +1947,7 @@ function updateWorldSystems() {
   updateParticles();
   updateWeather(getZone(player.x, player.y));
   updateCrackTriggers(player);
-  updatePotemkin(player, locations, isFrozen(), stage.seated ? 'theater' : null);   // сидит перед сценой спиной к ней — театр не редеет
+  updatePotemkin(player, locations, isFrozen());
 
   if (t % 3 === 0 && FIRE) fireEmber(FIRE.x + 25, FIRE.y + 15);
 }
@@ -2006,6 +2107,7 @@ input.onClick(({ clientX, clientY, originalEvent, intent }) => {
   const pos = input.screenToWorld(clientX, clientY, camera);
   player.walkIntent = intent || null;              // правая кнопка: дойти и использовать
   if (house.active) { walkHouse(pos.x, pos.y); return; }
+  if (stage.active) { if (Math.abs(pos.x - (player.x + 6)) < 9 && pos.y > player.y - 2 && pos.y < player.y + 26) leaveStage(); return; }   // встать — щелчок по самому страннику
   if (under.active) { walkUnder(pos.x, pos.y); return; }
   player.path = null;
   if (netClick(pos.x, pos.y, 'surface')) return;   // другой странник, записка на земле
@@ -2052,6 +2154,7 @@ function arriveAt(loc, intent = null) {
 // своего полотна, наверху — места и записки на земле)
 const HAND = 60;
 function thingAtHand() {
+  if (stage.active) return null;                     // на сцене руки пусты: встать — шагом
   const fx = player.x + 6, fy = player.y + 23;
   // от ног до вещи: до её прямоугольника вместе с местом, где у неё стоят
   const reach = (l, ax, ay) => {
@@ -2200,7 +2303,7 @@ events.on('gate.use', (gate) => {
   if (!canLeaveSettlement()) { lockHint(); return; }
   // из дома и из-под земли врата не ведут: иначе странник оказался бы на поверхности,
   // а ноги — в доме или в изнанке (сверка обходов, 24.10)
-  if (house.active || under.active) { showLore('Переход через врата — с поверхности. Отсюда сначала наверх.'); return; }
+  if (house.active || under.active || stage.active) { showLore('Переход через врата — с поверхности. Отсюда сначала наверх.'); return; }
   // цель — южная тропа кольца врат
   const seg = gateRing(gate);
   const p = trailPoint('south', ringD(Math.max(1, seg.n), 100));

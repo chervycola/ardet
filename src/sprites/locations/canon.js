@@ -17,7 +17,6 @@ import { wasUsed } from '../../world/relook.js';
 import { ashTail } from '../../world/clauses.js';
 import { stageView } from '../../world/stage.js';
 import { redNoon } from '../../world/redNoon.js';
-import { tremble, ghostShift, flicker, GHOST_A } from '../../render/ghost.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', SV = '#E28A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -622,9 +621,9 @@ const THEATER = { id: 'theater' };
 export function draw_theater(x, y) {
   const seam = revealOf(THEATER) > 0.25;
   bake(seam ? 'theater3s' : 'theater3', x, y, -4, 0, 90, 61, () => theaterBody(seam));
-  // сидящему перед сценой (world/stage.js): зал из пыли на ярусах — за сценой, раньше труппы и зрителя
+  // человек с фонарём у края, пока странник рядом и «СЦЕНА» прочитана (world/stage.js); сам сидящий
+  // и зал из пыли — в декорации (render/stage.js)
   const sv = stageView(redNoon.k);
-  if (sv && sv.light > 0.01) dustHall(x, y, sv.light);
   while (t - SHOW.t0 >= showLen(SHOW.k)) { SHOW.t0 += showLen(SHOW.k); SHOW.k++; }
   const ph = (t - SHOW.t0) / showLen(SHOW.k), turn = Math.floor(ph * 4);   // смех, огонь, сидит, тишина — все замирают
   const fy = y + TH.cy + 1;
@@ -641,47 +640,19 @@ export function draw_theater(x, y) {
     X.globalAlpha = 0.22; r(zx - 1, zy - 7, 5, 3, '#8CC63F'); X.globalAlpha = 1;
     r(zx + 1, zy - 4, 1, 2, '#8CC63F');
   }
-  if (sv) lanternMan(x, y, sv.lift);                                   // живой — поверх пыли
+  if (sv) lanternMan(x, y);                                            // живой — поверх труппы
 }
-// ── СЦЕНА ДЛЯ СИДЯЩЕГО (world/stage.js; weave/SCENE_STAGE_2026-11-22.md, §1а «Дыхание») ──
-// «У дальнего края — человек с зажжённым фонарём... поднимает фонарь. Всматривается. Опускает.»
-// Человек — живой, не тень: тёмный, лицо светлеет, когда фонарь поднят. Фонарь — единственный
-// настоящий огонь на этой пустоши: одно тёплое пятно (с огоньком у сердца сидящего — два).
-function lanternMan(x, y, lift) {
+// ── ЧЕЛОВЕК С ФОНАРЁМ (world/stage.js; weave/SCENE_STAGE_2026-11-22.md, §1а «Дыхание») ──
+// «У дальнего края — человек с зажжённым фонарём...» В городке он только стоит, фонарь у ног:
+// поднимает его он для сидящего на сцене, в декорации (render/stage.js). Человек — живой, не тень.
+function lanternMan(x, y) {
   const mx = x + TH.cx + 12, fy = y + TH.cy - 3;                     // правый дальний край плит
   r(mx + 1, fy - 7, 1, 1, K1); r(mx, fy - 6, 3, 3, K1); r(mx + 1, fy - 3, 1, 1, K1);
   r(mx, fy - 2, 1, 2, K1); r(mx + 2, fy - 2, 1, 2, K1); r(mx, fy - 6, 1, 3, K3);
-  const ly = fy - 3 - q(lift * 4), lx = mx - 1;                      // фонарь в левой руке: у ног — поднят — выше
-  if (lift > 0.5) r(mx + 1, fy - 7, 1, 1, L2);                       // лицо в свете
+  const ly = fy - 3, lx = mx - 1;                                    // фонарь в левой руке, у ног
   r(lx, ly - 1, 1, 1, K3); r(lx, ly, 1, 2, SV);
-  X.globalAlpha = 0.16 + 0.14 * Math.min(1, lift); r(lx - 1, ly - 1, 3, 4, SV); X.globalAlpha = 1;
+  X.globalAlpha = 0.16; r(lx - 1, ly - 1, 3, 4, SV); X.globalAlpha = 1;
 }
-// зал из пыли: следы от тел встают в свете фонаря снизу вверх — полный, все головы на точку к середине
-// сцены, туда, где сидит странник. Пыль — призрачная (render/ghost.js), одно зерно на весь зал.
-function dustHall(x, y, light) {
-  const sd = 47, [gx, gy] = ghostShift(sd), [jx, jy] = tremble(sd), f = flicker(sd);
-  const mid = x + TH.cx;
-  for (const pass of [0, 1]) {                                       // сначала двойник, потом оттиск
-    const ox = pass ? jx : gx, oy = pass ? jy : gy, am = pass ? f : GHOST_A;
-    for (let k = 0; k < TH.tiers; k++) {
-      const a = Math.max(0, Math.min(1, light * TH.tiers - k));      // свет идёт вверх по ярусам
-      if (a <= 0) continue;
-      const { rx, ry, h } = tierOf(k), n = q((rx + ry) * 0.75);
-      for (let i = 0; i < n; i++) {
-        const th = 0.06 + 0.88 * (i + 0.5) / n;
-        if (Math.abs(th - 0.36) < 0.035 || Math.abs(th - 0.64) < 0.035) continue;   // проходы свободны
-        if (k === 3 && Math.abs(th - 0.3) < 0.04) continue;          // место живого зрителя
-        const sx = q(mid + rx * Math.cos(th * Math.PI)), y0 = q(y + TH.cy - h - ry * Math.sin(th * Math.PI));
-        const toward = sx < mid - 1 ? 1 : sx > mid + 1 ? -1 : 0;
-        X.globalAlpha = a * 0.36 * am;
-        r(sx - 1 + ox, y0 - 3 + oy, 3, 2, AS);                       // плечи пеплом
-        r(sx + toward + ox, y0 - 4 + oy, 1, 1, BO);                   // голова — к сцене
-      }
-    }
-  }
-  X.globalAlpha = 1;
-}
-
 // ── РЖАВЫЙ ТЕРМИНАЛ ──
 // «Древний монитор мерцает зелёным. На экране — мигающий курсор и строка...
 // Ниже, единственной записью сессии... Курсор мигает. Монитор не подключён
