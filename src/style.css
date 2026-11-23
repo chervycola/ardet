@@ -687,6 +687,10 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   mix-blend-mode: multiply; pointer-events: none;
 }
 body.noon #look-stamp.big { border-color: var(--ink); outline-color: var(--ink); color: var(--ink); }
+/* на телефоне печать «выхода нет» мельче — не на пол-экрана (слово автора 23.11) */
+@media (max-width: 768px), (pointer: coarse) {
+  #look-stamp.big { padding: 6px 13px 4px; border-width: 2px; outline-offset: 2px; font-size: clamp(16px, 5vw, 24px); letter-spacing: 0.12em; }
+}
 #li { color: rgba(58,48,38,0.7); }
 /* «В описи не значится»: строка от руки под штампом (world/opis.js) — не пункт меню */
 #look-opis { display: none; margin: -4px 0 10px; font: italic 15px/1.35 var(--font-book); color: rgba(58,48,38,0.8); }

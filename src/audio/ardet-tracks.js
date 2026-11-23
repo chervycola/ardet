@@ -38,6 +38,11 @@
   const LS_KEY='ardet_tracks_unlocked';
 
   let ctx=null, master=null, unlocked=false, volMul=1;   // volMul — «звук мира» из формы 0
+  // ползунок «музыка» в меню ♫ (слово автора 23.11): 0…1,5 от задуманного, помнится в браузере
+  const MUS_KEY='ardet_vol_music';
+  let musMul=1;
+  try{ const v=parseFloat(localStorage.getItem(MUS_KEY)); if(isFinite(v)) musMul=Math.max(0,Math.min(1.5,v)); }catch(e){}
+  const gainNow=()=>VOL*volMul*musMul;
   let current=null;              // {id, stop(), isDrone}
   let loadingId=null;            // трек в декодировании — эфир ждёт
   let locationId=null;           // эфир: чей трек играть следующим
@@ -52,7 +57,7 @@
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC) return;
     ctx=new AC();
-    master=ctx.createGain(); master.gain.value=VOL*volMul; master.connect(ctx.destination);
+    master=ctx.createGain(); master.gain.value=gainNow(); master.connect(ctx.destination);
   }
 
   // музыка может лежать по-разному относительно страницы — пробуем базы
@@ -136,7 +141,7 @@
   // Один значок (слово автора 28.10: «замени „стоп" и „радио" одним значком музыки»):
   // нажал — раскрывается опись эфира — пауза и открытые треки; нажал ещё раз — свернулась.
   const ui=(function(){
-    let btn=null,panel=null,open=false;
+    let btn=null,panel=null,list=null,open=false,syncVol=null;
     const paused=()=>!!ctx&&ctx.state!=='running';
     function build(){
       if(btn||!document.body) return;
@@ -154,7 +159,8 @@
       #ardetRadioPanel{position:fixed;top:calc(${top} + 38px);right:${right};z-index:31;min-width:210px;
         background:rgba(238,227,203,0.82);color:#3A3026;
         backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-        padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none}
+        padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none;
+        max-height:calc(100vh - ${top} - 52px);overflow-y:auto;overscroll-behavior:contain}
       #ardetRadioPanel .hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 7px}
       #ardetRadioPanel h4{margin:0;font:500 8px Montserrat,sans-serif;
         letter-spacing:3px;color:#C23B2B;text-transform:uppercase}
@@ -165,13 +171,36 @@
       #ardetRadioPanel button.now::before{content:'\u25c9 ';color:#C23B2B}
       #ardetRadioPanel button.pause{display:inline-block;width:auto;border:none;padding:2px 4px;
         font:normal 12px Georgia,serif;letter-spacing:0;color:#3A3026}
-      #ardetRadioPanel .off{opacity:.45;font-style:normal;font-size:12px}`;
+      #ardetRadioPanel .off{opacity:.45;font-style:normal;font-size:12px}
+      #ardetRadioPanel .none{border-top:1px solid rgba(58,48,38,.18);padding:6px 2px;
+        font:italic 15px 'Cormorant Garamond',Georgia,serif;color:rgba(58,48,38,.38)}
+      #ardetRadioPanel .vol{border-top:1px solid rgba(58,48,38,.32);margin-top:4px;padding-top:6px}
+      #ardetRadioPanel .vol label{display:flex;align-items:center;gap:8px;padding:3px 2px;
+        font:italic 14px 'Cormorant Garamond',Georgia,serif;color:#3A3026}
+      #ardetRadioPanel .vol span{flex:0 0 72px}
+      #ardetRadioPanel .vol input{flex:1;min-width:0;accent-color:#C23B2B;height:18px;margin:0}`;
       document.head.appendChild(css);
       const wrap=document.createElement('div'); wrap.id='ardetRadioWrap';
       btn=document.createElement('button'); btn.id='ardetRadioBtn';
       btn.innerHTML='<b>\u266b</b>'; btn.title='музыка';
       panel=document.createElement('div'); panel.id='ardetRadioPanel';
-      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; btn.classList.toggle('on',open); refresh(); });
+      list=document.createElement('div'); panel.appendChild(list);
+      // громкость: два ползунка, строятся раз — перерисовка описи их не трогает (тянешь — не сбросит)
+      const vol=document.createElement('div'); vol.className='vol';
+      vol.innerHTML=`<label><span>музыка</span><input type="range" min="0" max="150" step="5" data-v="mus" aria-label="громкость музыки"></label>`
+        +`<label><span>атмосфера</span><input type="range" min="0" max="150" step="5" data-v="amb" aria-label="громкость атмосферы"></label>`;
+      const [im,ia]=vol.querySelectorAll('input');
+      // значения — при каждом открытии: модуль звука мира мог подняться позже описи
+      syncVol=()=>{
+        im.value=String(Math.round(musMul*100));
+        let a=1; try{ a=window.ArdetAmb?window.ArdetAmb.get():parseFloat(localStorage.getItem('ardet_vol_amb')); }catch(e){}
+        ia.value=String(Math.round((isFinite(a)?a:1)*100));
+      };
+      syncVol();
+      im.addEventListener('input',()=>window.ArdetAudio.setMusic(+im.value/100));
+      ia.addEventListener('input',()=>{ if(window.ArdetAmb) window.ArdetAmb.set(+ia.value/100); });
+      panel.appendChild(vol);
+      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; btn.classList.toggle('on',open); if(open&&syncVol) syncVol(); refresh(); });
       wrap.appendChild(btn);
       document.body.appendChild(wrap); document.body.appendChild(panel);
     }
@@ -180,13 +209,13 @@
       const pz=paused();
       let h=`<div class="hd"><h4>опись эфира</h4><button class="pause" data-id="__pause" title="${pz?'продолжить':'пауза'}">${pz?'\u25ba':'\u275a\u275a'}</button></div>`;
       h+=`<button data-id="__auto"${(!radioPick&&current&&current.id===locationId)?' class="now"':''}>эфир локации</button>`;
-      for(const id of collection){
-        if(!TRACKS[id]) continue;
-        h+=`<button data-id="${id}"${current&&current.id===id?' class="now"':''}>${TRACKS[id].name}</button>`;
+      // весь эфир на своих местах: найденное — названием, ненайденное — прочерком (место занято)
+      for(const id of Object.keys(TRACKS)){
+        if(collection.has(id)) h+=`<button data-id="${id}"${current&&current.id===id?' class="now"':''}>${TRACKS[id].name}</button>`;
+        else h+='<div class="none">\u2014</div>';
       }
-      h+='<div class="off">трек доигрывает до конца.<br>новые — находишь в локациях.</div>';
-      panel.innerHTML=h;
-      panel.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      list.innerHTML=h;
+      list.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
         const id=b.dataset.id;
         if(id==='__pause'){                                  // пауза всего эфира
           if(ctx){ if(ctx.state==='running') ctx.suspend().then(refresh,refresh); else ctx.resume().then(refresh,refresh); }
@@ -230,8 +259,14 @@
     },
     setVolume(f){                       // звук мира: 1 — как задумано, 0.4 — тихо, 0 — без звука
       volMul=Math.max(0,Math.min(1,+f||0));
-      if(master) master.gain.value=VOL*volMul;
+      if(master) master.gain.value=gainNow();
     },
+    setMusic(f){                        // ползунок «музыка»: 0 — тихо, 1 — как задумано, 1,5 — громче
+      musMul=Math.max(0,Math.min(1.5,+f||0));
+      if(master) master.gain.value=gainNow();
+      try{ localStorage.setItem(MUS_KEY,String(musMul)); }catch(e){}
+    },
+    get music(){ return musMul; },
     get unlocked(){ return unlocked; },
     get nowPlaying(){ return current?current.id:null; },
   };

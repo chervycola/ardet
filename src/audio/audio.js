@@ -11,10 +11,10 @@ export function initAudio() {
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = ctx.createGain();
-    masterGain.gain.value = 0.5 * volMul;
+    masterGain.gain.value = 0.5 * volMul * ambMul;
     masterGain.connect(ctx.destination);
     sfxOut = ctx.createGain();
-    sfxOut.gain.value = volMul;
+    sfxOut.gain.value = volMul * ambMul;
     sfxOut.connect(ctx.destination);
   } catch (e) {
     console.warn('[audio] not supported');
@@ -27,9 +27,25 @@ export function getCtx() { return ctx; }
 let volMul = 1;
 export function setVolume(f) {
   volMul = Math.max(0, Math.min(1, +f || 0));
-  if (masterGain) masterGain.gain.value = 0.5 * volMul;
-  if (sfxOut) sfxOut.gain.value = volMul;
+  applyGain();
 }
+// АТМОСФЕРА — ползунок в меню ♫ (слово автора 23.11: «возможность делать громче и тише музыку и звуки
+// атмосферы»): всё, что звучит в мире, кроме музыки (ветер, гул мест, шаги, вороны, гудение…), — от 0 до 1,5;
+// помнится в браузере. Музыка — свой ползунок (audio/ardet-tracks.js)
+export const AMB_KEY = 'ardet_vol_amb';
+let ambMul = 1;
+try { const v = parseFloat(localStorage.getItem(AMB_KEY)); if (isFinite(v)) ambMul = Math.max(0, Math.min(1.5, v)); } catch (e) {}
+function applyGain() {
+  if (masterGain) masterGain.gain.value = 0.5 * volMul * ambMul;
+  if (sfxOut) sfxOut.gain.value = volMul * ambMul;
+}
+export function setAmbience(f) {
+  ambMul = Math.max(0, Math.min(1.5, +f || 0));
+  applyGain();
+  try { localStorage.setItem(AMB_KEY, String(ambMul)); } catch (e) {}
+}
+export const getAmbience = () => ambMul;
+if (typeof window !== 'undefined') window.ArdetAmb = { set: setAmbience, get: getAmbience };
 // куда подключать звуки мира, что идут мимо мастера: громкость — как задана, без деления на мастер
 export const getOut = () => sfxOut || (ctx && ctx.destination);
 

@@ -346,6 +346,26 @@ const imp = p => import(new URL(p, base));
     idle.update(true);
   });
 
+  test('idle: строка о месте — только виденному; строка покоя — после полуминуты (вполовину реже)', () => {
+    if (idle.LINE_AT !== 1800 || idle.SOUND_AT !== 3600) throw new Error(`сроки покоя: ${idle.LINE_AT}/${idle.SOUND_AT}`);
+    const pl = idle._placeLines();
+    if (!pl.includes('углов стало пять')) throw new Error('«углов стало пять» не привязана к подвалу');
+    idle.setSeen(() => false);
+    for (const m of pl) if (idle.lineOpen(m)) throw new Error(`«${m}» выходит до места`);
+    if (!idle.lineOpen('amor fati')) throw new Error('строка без места закрыта');
+    idle.setSeen(id => id === 'basement');
+    if (!idle.lineOpen('углов стало пять') || idle.lineOpen('47 столов')) throw new Error('подвал открыл не то');
+    // ничего не видел — за много покоев ни одной строки о месте
+    idle.setSeen(() => false);
+    for (let k = 0; k < 200; k++) {
+      idle._resetUnderfoot();
+      for (let i = 0; i < idle.LINE_AT; i++) idle.update(false, true);
+      const said = idle._currentLine();
+      if (pl.includes(said)) throw new Error(`«${said}» до места`);
+    }
+    idle.setSeen(null);
+  });
+
   test('idle.update: does not crash on flip-flop input', () => {
     for (let i = 0; i < 5000; i++) {
       tick();

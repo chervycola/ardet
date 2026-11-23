@@ -47,6 +47,30 @@ const ANON = {
   'архивариус ставит галочку': ['elder', 'кто-то ставит галочку'],
   'архивариус не звал': ['elder', 'никто не звал'],
 };
+// СТРОКА О МЕСТЕ — только тому, кто там был (слово автора 23.11: «"углов стало пять" и некоторые
+// связные с локациями пасхалки раньше времени не выпускай. и в целом пусть их будет вполовину реже»).
+// Строка помнит место (или кота, или записку) — пока странник его не видел, она молчит; хватит любого
+// из списка. Что видел — спрашивает main.js (setSeen): места — по осмотру, кот — по встрече,
+// записка — по найденному ('lore:id').
+const PLACE = {
+  'углов стало пять': ['basement'], 'iä! iä!': ['basement'],
+  '47 столов': ['pizzeria'], 'wifi есть, гостей нет': ['pizzeria'],
+  'котлован глубже, чем кажется': ['kotlovan_well', 'kotlovan_notice', 'st_136'],
+  'лёд тает в девятом круге': ['crypt'],
+  'братишка принёс': ['pit'],
+  'автопилот всё ещё едет': ['junkyard'],
+  'врата открыты': ['gates'], 'привратник ждёт': ['gates'],
+  'две мусорки': ['dumpster'],
+  'вобла не горит': ['church'],
+  'кот наливает': ['cat'], 'кот принимает': ['cat'], 'кот расставляет блюдца': ['cat'], 'чаша с молоком — на месте': ['cat'],
+  'реактор стабилен': ['lore:l67'], 'бисер катится': ['lore:l21'],
+};
+let seen = () => false;
+export function setSeen(fn) { seen = typeof fn === 'function' ? fn : () => false; }
+export const lineOpen = m => !Object.prototype.hasOwnProperty.call(PLACE, m) || PLACE[m].some(id => seen(id));
+export const _placeLines = () => Object.keys(PLACE);
+// вполовину реже: строка — после полуминуты покоя (было четверть), дальний звук — после минуты
+export const LINE_AT = 1800, SOUND_AT = 3600;
 export const _underfootLine = m => (Object.prototype.hasOwnProperty.call(ANON, m) && !isNamed(ANON[m][0]) ? ANON[m][1] : m);
 
 // словарь ленты: под ногами — только там, где лента есть (кольцо «сейчас», огонь и пустошь
@@ -90,6 +114,7 @@ function mirror(text) {
 // только для чтеца, без строки на экране (сцена театра: ремарки фонаря, шёпоты зала — weave/SCENE_STAGE §3)
 export function announce(text) { if (text) mirror(String(text)); }
 export const _lastUnderfoot = () => lastSaid;
+export const _currentLine = () => currentMsg;
 export function _resetUnderfoot() { lastSaid = ''; msgLife = 0; currentMsg = ''; idleTimer = 0; }
 
 // lentaNear: странник там, где лента (main.js: кольцо ≥ RINGS); по умолчанию — тихое место
@@ -97,13 +122,15 @@ export function update(isMoving, lentaNear = false) {
   if (isMoving) { idleTimer = 0; return; }
   idleTimer++;
 
-  if (idleTimer === 900) {
-    const pool = lentaNear ? MSGS : QUIET_MSGS;
-    currentMsg = _underfootLine(pool[Math.floor(Math.random() * pool.length)]);
-    msgLife = 240;
+  if (idleTimer === LINE_AT) {
+    const pool = (lentaNear ? MSGS : QUIET_MSGS).filter(lineOpen);
+    if (pool.length) {
+      currentMsg = _underfootLine(pool[Math.floor(Math.random() * pool.length)]);
+      msgLife = 240;
+    }
   }
 
-  if (idleTimer === 1800) {
+  if (idleTimer === SOUND_AT) {
     playDistantSound();
   }
 }

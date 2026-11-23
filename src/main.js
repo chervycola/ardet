@@ -25,7 +25,7 @@ import { phaseAt, skyAt, shadowAt, dayIndex, worldClock, setWorldClock } from '.
 import { redNoon, stepRedNoon, triggerRedNoon, muteRedNoon } from './world/redNoon.js';
 import { pressAt, setPress, getPress, installPen, penComposite } from './render/pen.js';
 import { drawEtchedGround } from './render/etch.js';
-import { setReliefFlats, setReliefCarve } from './world/relief.js';
+import { setReliefFlats, setReliefCarve, heightAt } from './world/relief.js';
 import { fireLights, fireSitesInView, drawFireSite, fireSitesAvoid } from './render/fireRing.js';
 import { buildArteries, riverCarve, onArtery } from './world/arteries.js';
 import { buildArteryProps, arteryPropsIn } from './render/arteryProps.js';
@@ -40,7 +40,7 @@ import { stepMechs, crankWell } from './world/mechanisms.js';
 import { rect, clamp } from './render/draw.js';
 import { MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles, locationById } from './world/locations.js';
-import { tryMove, findLocationAt, isInSettlement } from './world/physics.js';
+import { tryMove, findLocationAt, isInSettlement, isBlocked } from './world/physics.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
 import { input } from './core/input.js';
@@ -101,7 +101,7 @@ import { update as updateEdges, draw as drawEdges, drawHud as drawEdgeHud, slowF
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions, setRevealHook } from './world/inscriptions.js';
-import { update as updateIdle, draw as drawIdle, announce } from './world/idle.js';
+import { update as updateIdle, draw as drawIdle, announce, setSeen as setIdleSeen } from './world/idle.js';
 import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D,
   planVisit, takeBackdrops, noteLookedPlace, cuesAt, faceHall, stepGaze, hearHall, REMARKS } from './world/stage.js';
 import { drawStageWorld, stageLights, STAGE_AMBIENT, hallSeatPan, lastAppeared } from './render/stage.js';
@@ -186,6 +186,8 @@ initMetaFx();
 initTerminal();
 initShop();
 initWorldMap({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement(), getWalked: () => flags.walked });
+// строки под ногами о местах — только виденным (world/idle.js PLACE): место — осмотрено, кот — встречен, записка — найдена
+setIdleSeen(id => id === 'cat' ? getSightings().length > 0 : id.startsWith('lore:') ? getCollectedIds().includes(id.slice(5)) : flags.visited.has(id));
 
 initCursor();
 initAudio();
@@ -1874,10 +1876,10 @@ function updateGame() {
       player.walkTo = null; player.walkIntent = null;
       if (want && (want.under || want.net || want.house)) openThing(want, intent);   // вещь изнанки, дома, записка: путь вёл к ней
       else {
-        const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
-          && Math.abs(player.y - (want.y + want.h + 5)) < 4;
+        const spot = want && lookSpot(want);
+        const atWant = want && Math.abs(player.x - spot.x) < 4 && Math.abs(player.y - spot.y) < 4;
         const loc = atWant ? want : (want ? findLocationAt(player.x, player.y, locations) : null);
-        if (loc) arriveAt(loc, intent);
+        if (loc) lookAfterPause(loc, intent);
       }
     } else {
       // подход с торможением: успеть встать там, куда шли (v² = 2·a·s), и на льду тоже;
@@ -1894,6 +1896,7 @@ function updateGame() {
     if (player.auto && !house.active && !under.active) { player.auto = false; player.walkTo = null; player.path = null; dvx = 0; dvy = 0; steering = false; }
   }
   if (steering && !house.active && !under.active) { const k = ravenHush(player.x + 6, player.y + 22, dvx, dvy, player.running); dvx *= k; dvy *= k; }
+  if (steering && !house.active && !under.active && !stage.active) { const k = slopeK(player.x + 6, player.y + 23, dvx, dvy); dvx *= k; dvy *= k; }
   // ЛЕНТА ТЯНЕТ (world/feedPull.js): у края брейнрот сносит наружу — тем слабее, чем меньше
   // подыгрываешь; всегда медленнее шага. Покой лечит (brainrot.js). Только за изгородью,
   // а за изгородь — только с пропуском Шута.
@@ -1917,8 +1920,22 @@ function updateGame() {
   const sp = heroStep(dvx, dvy, drift);
   player.moving = steering || (sp > 0.05 && !drift);   // снос лентой — не ходьба: стоящий стоит
   player.still = !steering;
+  stepApproach(steering, sp);
 
   updateWorldSystems();
+}
+
+// УКЛОН (слово автора 23.11: походка «более относительно к местности»): шаг по рельефу —
+// в гору медленнее (крутой склон — почти вдвое), под гору чуть легче. Высота — та же, что рисует
+// штрих (world/relief.js heightAt); уклон берётся вдоль желаемого хода, на ±6 точек. Автоход под
+// гору не разгоняется — иначе торможение к цели (v² = 2·a·s) не успевает.
+function slopeK(x, y, dvx, dvy) {
+  const v = Math.hypot(dvx, dvy);
+  if (v < 0.01) return 1;
+  const ux = dvx / v, uy = dvy / v;
+  const g = (heightAt(x + ux * 6, y + uy * 6) - heightAt(x - ux * 6, y - uy * 6)) / 12;
+  const k = g > 0 ? Math.max(0.55, 1 - 0.6 * g) : Math.min(1.12, 1 - 0.25 * g);
+  return player.auto ? Math.min(1, k) : k;
 }
 
 // Camera + all per-frame world systems. Shared by the normal movement
@@ -2182,8 +2199,38 @@ input.onClick(({ clientX, clientY, originalEvent, intent }) => {
   }
 });
 
-// к вещи: близко — шаг-мигание к её порогу, далеко — дойти; у порога — её дело
+// к вещи: дойти пешком (см. «ПОДОЙТИ И ПОСМОТРЕТЬ» выше); у неё — её дело
 // (одно действие — сразу, больше — меню; ui.js openThing)
+// ПОДОЙТИ И ПОСМОТРЕТЬ (слово автора 23.11: «нужно, чтобы путник подходил ближе во время осмотра
+// для умиротворяющего эффекта. сейчас диалоговое окно появляется издалека»). Прежде близкий клик
+// мигал к порогу и сразу открывал окно; теперь странник всегда идёт сам — к месту чуть ближе
+// порога (до 14 точек к вещи, пока не упрётся в твёрдое), встаёт, поднимает голову к вещи и
+// только через полсекунды покоя открывается окно. Тронулся за это время — окно не откроется.
+// Упёрся по дороге (вещь за спиной, обходить нечем) — тогда, как прежде, шаг-мигание к порогу.
+const LOOK_PAUSE = 32, STUCK_T = 40;
+let lookWait = null, stuckT = 0;
+function lookSpot(loc) {
+  const x = loc.x + loc.w / 2 - 6, y = loc.y + loc.h + 5;
+  let d = 0;
+  while (d < 14 && !isBlocked(x, y - d - 2, locations)) d += 2;
+  return { x, y: y - d };
+}
+function lookAfterPause(loc, intent) {
+  stopHero();
+  if (loc.y + loc.h <= player.y + 23) player.face = 'N';   // вещь впереди-выше — лицом к ней, спиной к нам
+  lookWait = { loc, intent, until: t + LOOK_PAUSE };
+}
+function stepApproach(steering, sp) {
+  if (lookWait && (steering || player.auto)) lookWait = null;   // пошёл дальше — смотреть раздумал
+  if (lookWait && t >= lookWait.until) { const w = lookWait; lookWait = null; arriveAt(w.loc, w.intent); }
+  // автоход к вещи упёрся (стена между ним и порогом) — шаг-мигание, как прежде
+  stuckT = player.auto && player.walkTo && !player.walkTo.under && !player.walkTo.net && !player.walkTo.house && steering && sp < 0.05 ? stuckT + 1 : 0;
+  if (stuckT > STUCK_T) {
+    const loc = player.walkTo, intent = player.walkIntent;
+    stuckT = 0; player.auto = false; player.walkTo = null; player.walkIntent = null; stopHero();
+    teleportWithFade(loc.x + loc.w / 2 - 6, loc.y + loc.h + 5, () => arriveAt(loc, intent));
+  }
+}
 function approach(loc) {
   const px_ = loc.x + loc.w / 2 - 6;
   const py_ = loc.y + loc.h + 5;
@@ -2192,13 +2239,14 @@ function approach(loc) {
   // Otherwise a near-click would teleport the player out of the zone
   // and movement would jam against the boundary.
   if (!canLeaveSettlement() && !isInSettlement(px_, py_)) { lockHint(); return; }
-  const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+  const spot = lookSpot(loc);
+  const dist = Math.hypot(player.x - spot.x, player.y - spot.y);
   const intent = player.walkIntent;
-  if (dist < 3) arriveAt(loc, intent);              // уже стоишь у порога — мигать некуда
-  else if (dist < 85) teleportWithFade(px_, py_, () => arriveAt(loc, intent));
+  lookWait = null;
+  if (dist < 3) arriveAt(loc, intent);              // уже стоишь у вещи — сразу её дело
   else {
-    player.tx = px_;
-    player.ty = py_;
+    player.tx = spot.x;
+    player.ty = spot.y;
     player.moving = true;
     player.auto = true;
     player.walkTo = loc;

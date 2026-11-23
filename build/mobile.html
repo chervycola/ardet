@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 193 374. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 193 374. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 204 218. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 204 218. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -704,6 +704,10 @@ html.rm #entry-canvas, html.rm #entry-glitch, html.rm #entry-btn { transition: n
   mix-blend-mode: multiply; pointer-events: none;
 }
 body.noon #look-stamp.big { border-color: var(--ink); outline-color: var(--ink); color: var(--ink); }
+/* на телефоне печать «выхода нет» мельче — не на пол-экрана (слово автора 23.11) */
+@media (max-width: 768px), (pointer: coarse) {
+  #look-stamp.big { padding: 6px 13px 4px; border-width: 2px; outline-offset: 2px; font-size: clamp(16px, 5vw, 24px); letter-spacing: 0.12em; }
+}
 #li { color: rgba(58,48,38,0.7); }
 /* «В описи не значится»: строка от руки под штампом (world/opis.js) — не пункт меню */
 #look-opis { display: none; margin: -4px 0 10px; font: italic 15px/1.35 var(--font-book); color: rgba(58,48,38,0.8); }
@@ -888,7 +892,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='09551a7 · 2026-11-23';console.log('[оттиск]', '09551a7 · 2026-11-23');
+<script>window.ARDET_BUILD='d177b58 · 2026-11-23';console.log('[оттиск]', 'd177b58 · 2026-11-23');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -933,6 +937,11 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
   const LS_KEY='ardet_tracks_unlocked';
 
   let ctx=null, master=null, unlocked=false, volMul=1;   // volMul — «звук мира» из формы 0
+  // ползунок «музыка» в меню ♫ (слово автора 23.11): 0…1,5 от задуманного, помнится в браузере
+  const MUS_KEY='ardet_vol_music';
+  let musMul=1;
+  try{ const v=parseFloat(localStorage.getItem(MUS_KEY)); if(isFinite(v)) musMul=Math.max(0,Math.min(1.5,v)); }catch(e){}
+  const gainNow=()=>VOL*volMul*musMul;
   let current=null;              // {id, stop(), isDrone}
   let loadingId=null;            // трек в декодировании — эфир ждёт
   let locationId=null;           // эфир: чей трек играть следующим
@@ -947,7 +956,7 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC) return;
     ctx=new AC();
-    master=ctx.createGain(); master.gain.value=VOL*volMul; master.connect(ctx.destination);
+    master=ctx.createGain(); master.gain.value=gainNow(); master.connect(ctx.destination);
   }
 
   // музыка может лежать по-разному относительно страницы — пробуем базы
@@ -1031,7 +1040,7 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
   // Один значок (слово автора 28.10: «замени „стоп" и „радио" одним значком музыки»):
   // нажал — раскрывается опись эфира — пауза и открытые треки; нажал ещё раз — свернулась.
   const ui=(function(){
-    let btn=null,panel=null,open=false;
+    let btn=null,panel=null,list=null,open=false,syncVol=null;
     const paused=()=>!!ctx&&ctx.state!=='running';
     function build(){
       if(btn||!document.body) return;
@@ -1049,7 +1058,8 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
       #ardetRadioPanel{position:fixed;top:calc(${top} + 38px);right:${right};z-index:31;min-width:210px;
         background:rgba(238,227,203,0.82);color:#3A3026;
         backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-        padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none}
+        padding:10px 12px;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none;
+        max-height:calc(100vh - ${top} - 52px);overflow-y:auto;overscroll-behavior:contain}
       #ardetRadioPanel .hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 7px}
       #ardetRadioPanel h4{margin:0;font:500 8px Montserrat,sans-serif;
         letter-spacing:3px;color:#C23B2B;text-transform:uppercase}
@@ -1060,13 +1070,36 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
       #ardetRadioPanel button.now::before{content:'\u25c9 ';color:#C23B2B}
       #ardetRadioPanel button.pause{display:inline-block;width:auto;border:none;padding:2px 4px;
         font:normal 12px Georgia,serif;letter-spacing:0;color:#3A3026}
-      #ardetRadioPanel .off{opacity:.45;font-style:normal;font-size:12px}`;
+      #ardetRadioPanel .off{opacity:.45;font-style:normal;font-size:12px}
+      #ardetRadioPanel .none{border-top:1px solid rgba(58,48,38,.18);padding:6px 2px;
+        font:italic 15px 'Cormorant Garamond',Georgia,serif;color:rgba(58,48,38,.38)}
+      #ardetRadioPanel .vol{border-top:1px solid rgba(58,48,38,.32);margin-top:4px;padding-top:6px}
+      #ardetRadioPanel .vol label{display:flex;align-items:center;gap:8px;padding:3px 2px;
+        font:italic 14px 'Cormorant Garamond',Georgia,serif;color:#3A3026}
+      #ardetRadioPanel .vol span{flex:0 0 72px}
+      #ardetRadioPanel .vol input{flex:1;min-width:0;accent-color:#C23B2B;height:18px;margin:0}`;
       document.head.appendChild(css);
       const wrap=document.createElement('div'); wrap.id='ardetRadioWrap';
       btn=document.createElement('button'); btn.id='ardetRadioBtn';
       btn.innerHTML='<b>\u266b</b>'; btn.title='музыка';
       panel=document.createElement('div'); panel.id='ardetRadioPanel';
-      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; btn.classList.toggle('on',open); refresh(); });
+      list=document.createElement('div'); panel.appendChild(list);
+      // громкость: два ползунка, строятся раз — перерисовка описи их не трогает (тянешь — не сбросит)
+      const vol=document.createElement('div'); vol.className='vol';
+      vol.innerHTML=`<label><span>музыка</span><input type="range" min="0" max="150" step="5" data-v="mus" aria-label="громкость музыки"></label>`
+        +`<label><span>атмосфера</span><input type="range" min="0" max="150" step="5" data-v="amb" aria-label="громкость атмосферы"></label>`;
+      const [im,ia]=vol.querySelectorAll('input');
+      // значения — при каждом открытии: модуль звука мира мог подняться позже описи
+      syncVol=()=>{
+        im.value=String(Math.round(musMul*100));
+        let a=1; try{ a=window.ArdetAmb?window.ArdetAmb.get():parseFloat(localStorage.getItem('ardet_vol_amb')); }catch(e){}
+        ia.value=String(Math.round((isFinite(a)?a:1)*100));
+      };
+      syncVol();
+      im.addEventListener('input',()=>window.ArdetAudio.setMusic(+im.value/100));
+      ia.addEventListener('input',()=>{ if(window.ArdetAmb) window.ArdetAmb.set(+ia.value/100); });
+      panel.appendChild(vol);
+      btn.addEventListener('click',()=>{ open=!open; panel.style.display=open?'block':'none'; btn.classList.toggle('on',open); if(open&&syncVol) syncVol(); refresh(); });
       wrap.appendChild(btn);
       document.body.appendChild(wrap); document.body.appendChild(panel);
     }
@@ -1075,13 +1108,13 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
       const pz=paused();
       let h=`<div class="hd"><h4>опись эфира</h4><button class="pause" data-id="__pause" title="${pz?'продолжить':'пауза'}">${pz?'\u25ba':'\u275a\u275a'}</button></div>`;
       h+=`<button data-id="__auto"${(!radioPick&&current&&current.id===locationId)?' class="now"':''}>эфир локации</button>`;
-      for(const id of collection){
-        if(!TRACKS[id]) continue;
-        h+=`<button data-id="${id}"${current&&current.id===id?' class="now"':''}>${TRACKS[id].name}</button>`;
+      // весь эфир на своих местах: найденное — названием, ненайденное — прочерком (место занято)
+      for(const id of Object.keys(TRACKS)){
+        if(collection.has(id)) h+=`<button data-id="${id}"${current&&current.id===id?' class="now"':''}>${TRACKS[id].name}</button>`;
+        else h+='<div class="none">\u2014</div>';
       }
-      h+='<div class="off">трек доигрывает до конца.<br>новые — находишь в локациях.</div>';
-      panel.innerHTML=h;
-      panel.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      list.innerHTML=h;
+      list.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
         const id=b.dataset.id;
         if(id==='__pause'){                                  // пауза всего эфира
           if(ctx){ if(ctx.state==='running') ctx.suspend().then(refresh,refresh); else ctx.resume().then(refresh,refresh); }
@@ -1125,8 +1158,14 @@ if ('ontouchstart' in window || (navigator.maxTouchPoints||0) > 0) window.ARDET_
     },
     setVolume(f){                       // звук мира: 1 — как задумано, 0.4 — тихо, 0 — без звука
       volMul=Math.max(0,Math.min(1,+f||0));
-      if(master) master.gain.value=VOL*volMul;
+      if(master) master.gain.value=gainNow();
     },
+    setMusic(f){                        // ползунок «музыка»: 0 — тихо, 1 — как задумано, 1,5 — громче
+      musMul=Math.max(0,Math.min(1.5,+f||0));
+      if(master) master.gain.value=gainNow();
+      try{ localStorage.setItem(MUS_KEY,String(musMul)); }catch(e){}
+    },
+    get music(){ return musMul; },
     get unlocked(){ return unlocked; },
     get nowPlaying(){ return current?current.id:null; },
   };
@@ -4328,7 +4367,7 @@ System.register("world/toxic", ["world/disc", "render/scaler", "render/backstage
 // ═══════════════════════════════════════
 System.register("audio/audio", [], function (exports_20, context_20) {
     "use strict";
-    var ctx, masterGain, sfxOut, volMul, getOut, tock, purr, ambientNode;
+    var ctx, masterGain, sfxOut, volMul, AMB_KEY, ambMul, getAmbience, getOut, tock, purr, ambientNode;
     var __moduleName = context_20 && context_20.id;
     function initAudio() {
         if (ctx)
@@ -4336,10 +4375,10 @@ System.register("audio/audio", [], function (exports_20, context_20) {
         try {
             ctx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = ctx.createGain();
-            masterGain.gain.value = 0.5 * volMul;
+            masterGain.gain.value = 0.5 * volMul * ambMul;
             masterGain.connect(ctx.destination);
             sfxOut = ctx.createGain();
-            sfxOut.gain.value = volMul;
+            sfxOut.gain.value = volMul * ambMul;
             sfxOut.connect(ctx.destination);
         }
         catch (e) {
@@ -4351,12 +4390,24 @@ System.register("audio/audio", [], function (exports_20, context_20) {
     exports_20("getCtx", getCtx);
     function setVolume(f) {
         volMul = Math.max(0, Math.min(1, +f || 0));
-        if (masterGain)
-            masterGain.gain.value = 0.5 * volMul;
-        if (sfxOut)
-            sfxOut.gain.value = volMul;
+        applyGain();
     }
     exports_20("setVolume", setVolume);
+    function applyGain() {
+        if (masterGain)
+            masterGain.gain.value = 0.5 * volMul * ambMul;
+        if (sfxOut)
+            sfxOut.gain.value = volMul * ambMul;
+    }
+    function setAmbience(f) {
+        ambMul = Math.max(0, Math.min(1.5, +f || 0));
+        applyGain();
+        try {
+            localStorage.setItem(AMB_KEY, String(ambMul));
+        }
+        catch (e) { }
+    }
+    exports_20("setAmbience", setAmbience);
     // Resume on user gesture (autoplay policies)
     function resumeAudio() {
         if (ctx && ctx.state === 'suspended')
@@ -4812,6 +4863,20 @@ System.register("audio/audio", [], function (exports_20, context_20) {
             sfxOut = null; // шина звуков мира мимо мастера (ветер, гул зон, вороны, колокола…) — тоже под «звуком мира»
             // звук мира из настроек быта (core/prefs.js): 1 — как задумано, 0.4 — тихо, 0 — без звука
             volMul = 1;
+            // АТМОСФЕРА — ползунок в меню ♫ (слово автора 23.11: «возможность делать громче и тише музыку и звуки
+            // атмосферы»): всё, что звучит в мире, кроме музыки (ветер, гул мест, шаги, вороны, гудение…), — от 0 до 1,5;
+            // помнится в браузере. Музыка — свой ползунок (audio/ardet-tracks.js)
+            exports_20("AMB_KEY", AMB_KEY = 'ardet_vol_amb');
+            ambMul = 1;
+            try {
+                const v = parseFloat(localStorage.getItem(AMB_KEY));
+                if (isFinite(v))
+                    ambMul = Math.max(0, Math.min(1.5, v));
+            }
+            catch (e) { }
+            exports_20("getAmbience", getAmbience = () => ambMul);
+            if (typeof window !== 'undefined')
+                window.ArdetAmb = { set: setAmbience, get: getAmbience };
             // куда подключать звуки мира, что идут мимо мастера: громкость — как задана, без деления на мастер
             exports_20("getOut", getOut = () => sfxOut || (ctx && ctx.destination));
             // Криосклеп: уголёк тикает у сердца — тихо, как часы под подушкой; v — громкость 0..1
@@ -6628,18 +6693,21 @@ System.register("world/surface", ["world/disc", "world/arteries"], function (exp
             // Ход вязкий (слово автора 22.11: «чуть медленнее и вязкая»): шаг набирается
             // и гаснет не сразу — на земле и тропе разгон вдвое дольше прежнего, остановка мягче.
             // WALK — обычный шаг в точках за тик, RUN — бег (Shift); доля поверхности — поле max.
-            exports_28("WALK", WALK = 2.1), exports_28("RUN", RUN = 4);
+            // Слово автора 23.11: «ещё медленнее и более относительно к местности» — шаг тише (2,1 → 1,7),
+            // разброс по земле шире: тропа заметно легче, песок, топь, брод и снег — заметно тяжелее.
+            // Уклон — в main.js (slopeK): в гору медленнее, под гору чуть легче.
+            exports_28("WALK", WALK = 1.7), exports_28("RUN", RUN = 3.3);
             exports_28("SURF", SURF = {
                 ground: { name: 'земля', accel: 0.13, decel: 0.22, max: 1.00, print: 'soft' },
-                path: { name: 'тропа', accel: 0.15, decel: 0.26, max: 1.08, print: 'soft' },
-                snow: { name: 'снег', accel: 0.12, decel: 0.09, max: 0.90, print: 'snow' },
+                path: { name: 'тропа', accel: 0.15, decel: 0.26, max: 1.14, print: 'soft' },
+                snow: { name: 'снег', accel: 0.12, decel: 0.09, max: 0.80, print: 'snow' },
                 ice: { name: 'лёд', accel: 0.045, decel: 0.03, max: 1.05, print: null },
-                sand: { name: 'зыбучий песок', accel: 0.10, decel: 0.50, max: 0.60, print: 'deep' },
-                mud: { name: 'грязь', accel: 0.14, decel: 0.55, max: 0.72, print: 'mud' },
-                swamp: { name: 'болото', accel: 0.09, decel: 0.60, max: 0.62, print: null },
-                rubble: { name: 'мусор', accel: 0.11, decel: 0.28, max: 0.82, print: null },
-                ash: { name: 'гарь', accel: 0.12, decel: 0.22, max: 0.92, print: 'ash' },
-                water: { name: 'вброд', accel: 0.11, decel: 0.62, max: 0.55, print: null },
+                sand: { name: 'зыбучий песок', accel: 0.10, decel: 0.50, max: 0.50, print: 'deep' },
+                mud: { name: 'грязь', accel: 0.14, decel: 0.55, max: 0.62, print: 'mud' },
+                swamp: { name: 'болото', accel: 0.09, decel: 0.60, max: 0.52, print: null },
+                rubble: { name: 'мусор', accel: 0.11, decel: 0.28, max: 0.76, print: null },
+                ash: { name: 'гарь', accel: 0.12, decel: 0.22, max: 0.88, print: 'ash' },
+                water: { name: 'вброд', accel: 0.11, decel: 0.62, max: 0.45, print: null },
                 moss: { name: 'мох', accel: 0.20, decel: 0.55, max: 0.85, print: null }, // ход мха: мягко, нога вязнет и встаёт сразу
             });
             OUTER = disc_js_7.RINGS_D + disc_js_7.FIRE_W;
@@ -31515,7 +31583,7 @@ System.register("world/whisper", ["core/time", "render/scaler", "world/redNoon",
             QUENCH = 80; // погашенный — выцветает за полторы
             WET = 12; // сколько шагов сохнут свежие чернила
             DRY_A = 0.35, WET_A = 0.3, NIB_A = 0.75; // сухое, свежее сверху, кончик
-            COOLDOWN = 10800; // ~3 минуты между шёпотами
+            COOLDOWN = 21600; // ~6 минут между шёпотами (слово автора 23.11: пасхалки вполовину реже)
             whisper = { text: '', x: 0, y: 0, t0: 0, prep: null };
             lastWhisperEnd = 0;
             try {
@@ -34126,33 +34194,25 @@ System.register("content/clauses", [], function (exports_80, context_80) {
 });
 System.register("render/weather", ["render/scaler", "core/time", "render/draw", "world/wind"], function (exports_81, context_81) {
     "use strict";
-    var scaler_js_13, time_js_14, draw_js_2, wind_js_12, STATE, COOLDOWN, RAMP, weather, forced, MAX_RAIN, RAIN_SLOW, MAX_SAND, MAX_PUDDLES, POLL, clockedAt;
+    var scaler_js_13, time_js_14, draw_js_2, wind_js_12, STATE, COOLDOWN, RISE, FALL, STORM_P, weather, forced, MAX_RAIN, RAIN_SLOW, MAX_SAND, MAX_PUDDLES, rainOf, sandOf, POLL, clockedAt;
     var __moduleName = context_81 && context_81.id;
-    // Zone → preferred weather. Rain gets longer durations (2-4 min) so it can
-    // ease in drop-by-drop and taper out. Sandstorm is punchier (25s-60s).
-    // Returns null if the chosen type is still on cooldown.
     function rollWeather(zone) {
         const onCooldown = (st) => (time_js_14.t - weather.lastStartAt[st]) < COOLDOWN[st];
         const wantRain = zone === 'toxic' || zone === 'forest';
         const wantSand = zone === 'highway' || zone === 'quarter';
-        if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) {
-            return { state: STATE.TOXIC_RAIN, duration: 7200 + Math.floor(Math.random() * 7200) };
-        }
-        if (wantSand && !onCooldown(STATE.SANDSTORM)) {
-            return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
-        }
+        if (wantRain && !onCooldown(STATE.TOXIC_RAIN))
+            return rainOf();
+        if (wantSand && !onCooldown(STATE.SANDSTORM))
+            return sandOf();
         // Settlement / fallback: pick whichever is off cooldown
         const rainReady = !onCooldown(STATE.TOXIC_RAIN);
         const sandReady = !onCooldown(STATE.SANDSTORM);
-        if (rainReady && sandReady) {
-            return Math.random() < 0.4
-                ? { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) }
-                : { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
-        }
+        if (rainReady && sandReady)
+            return Math.random() < 0.4 ? rainOf() : sandOf();
         if (rainReady)
-            return { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) };
+            return rainOf();
         if (sandReady)
-            return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+            return sandOf();
         return null; // both on cooldown → sky stays clear
     }
     function rainOutlook() {
@@ -34161,11 +34221,13 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         const nc = weather.nextCheck;
         const poll = at => nc + POLL * Math.max(0, Math.ceil((at - (time_js_14.t + nc)) / POLL)); // шагов до первого опроса не раньше at
         if (weather.state === STATE.TOXIC_RAIN)
-            return { kind: 'ends', in: Math.min(weather.currentDuration, poll(S)), R };
+            return { kind: 'ends', in: weather.currentDuration, R };
+        if (weather.state === STATE.SANDSTORM) {
+            const P = poll(Math.max(time_js_14.t + weather.currentDuration, R));
+            return time_js_14.t + P < S ? { kind: 'sandThenRain', in: P, S } : { kind: 'none', in: P, R };
+        }
         if (time_js_14.t < R)
             return { kind: 'none', in: poll(R), R };
-        if (weather.state === STATE.SANDSTORM)
-            return { kind: 'sandThenRain', in: nc, S };
         return { kind: 'ready', in: nc, R };
     }
     exports_81("rainOutlook", rainOutlook);
@@ -34173,7 +34235,8 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
     // иначе сказанное «дождя не будет ещё 6 мин» лжёт после перезагрузки
     function saveWeather() {
         const left = st => Math.max(0, weather.lastStartAt[st] + COOLDOWN[st] - time_js_14.t);
-        return { s: weather.state, d: Math.max(0, weather.currentDuration), c: weather.nextCheck, r: left(STATE.TOXIC_RAIN), n: left(STATE.SANDSTORM) };
+        return { s: weather.state, d: Math.max(0, weather.currentDuration), c: weather.nextCheck, r: left(STATE.TOXIC_RAIN), n: left(STATE.SANDSTORM),
+            g: weather.storm ? 1 : 0, T: weather.total };
     }
     exports_81("saveWeather", saveWeather);
     function loadWeather(d) {
@@ -34183,6 +34246,9 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             weather.state = d.s;
         if (Number.isFinite(d.d))
             weather.currentDuration = d.d;
+        weather.storm = d.g === 1;
+        // до огибающей событие было уже в силе: считаем, что подъём прошёл
+        weather.total = Number.isFinite(d.T) && d.T >= weather.currentDuration ? d.T : weather.currentDuration + (weather.storm ? RISE.storm : RISE.rain);
         if (Number.isFinite(d.c) && d.c > 0)
             weather.nextCheck = d.c;
         const back = (st, rem) => { if (Number.isFinite(rem) && rem > 0)
@@ -34201,12 +34267,15 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         weather.nextCheck--;
         if (weather.currentDuration <= 0 && weather.state !== STATE.CLEAR) {
             weather.state = STATE.CLEAR;
+            weather.storm = false;
         }
         if (weather.nextCheck <= 0) {
-            const r = rollWeather(weather.zone);
+            const r = weather.state === STATE.CLEAR ? rollWeather(weather.zone) : null; // погода не перебивает погоду
             if (r) {
                 weather.state = r.state;
+                weather.storm = !!r.storm;
                 weather.currentDuration = r.duration;
+                weather.total = r.duration;
                 weather.lastStartAt[r.state] = time_js_14.t;
             }
             // Poll again in 30s regardless (cheap) — cooldowns handle the real gating
@@ -34214,28 +34283,22 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         }
     }
     exports_81("weatherClock", weatherClock);
+    // сила погоды по огибающей события: подъём, держится, спад (0…1)
+    function envelope() {
+        if (weather.state === STATE.CLEAR || weather.currentDuration <= 0)
+            return 0;
+        const kind = weather.state === STATE.SANDSTORM ? 'sand' : weather.storm ? 'storm' : 'rain';
+        const total = Math.max(weather.total, weather.currentDuration), done = total - weather.currentDuration;
+        return Math.max(0, Math.min(1, done / RISE[kind], weather.currentDuration / FALL[kind]));
+    }
+    exports_81("envelope", envelope);
     function update(zone) {
         weather.zone = zone || 'settlement';
         weatherClock();
-        // Intensity envelope — bell-shaped so rain creeps in and trails out.
-        // fadeFrames = 20% of total duration, capped at 40s.
-        const fadeFrames = Math.min(2400, Math.floor((weather.currentDuration > 0 ? weather.currentDuration : 1) * 0.2));
-        let target = 0;
-        if (weather.state !== STATE.CLEAR && weather.currentDuration > 0) {
-            // Use currentDuration and the event's starting duration to find phase.
-            // We don't store the original duration, so approximate: taper near the end.
-            target = weather.currentDuration < fadeFrames
-                ? weather.currentDuration / fadeFrames
-                : 1;
-        }
-        weather.targetIntensity = target;
-        const ramp = RAMP[weather.state] || 0.003;
-        if (weather.intensity < weather.targetIntensity) {
-            weather.intensity = Math.min(weather.targetIntensity, weather.intensity + ramp);
-        }
-        else if (weather.intensity > weather.targetIntensity) {
-            weather.intensity = Math.max(weather.targetIntensity, weather.intensity - ramp * 0.7);
-        }
+        // сила — по огибающей события (envelope): дождь пять минут набирает силу от первой капли,
+        // спокойно стихает; резко — только гроза
+        weather.targetIntensity = envelope();
+        weather.intensity = weather.targetIntensity;
         // ветер один на весь мир (world/wind.js): дождь косит и песок несёт по нему
         weather.windX = wind_js_12.wind.x * 1.6;
         // Update particles based on state + intensity
@@ -34243,8 +34306,8 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             updateRain();
         if (weather.state === STATE.SANDSTORM || weather.intensity > 0)
             updateSand();
-        // Lightning only during toxic rain when heavy
-        if (weather.state === STATE.TOXIC_RAIN && weather.intensity > 0.6) {
+        // молнии — только в грозу (внезапную), когда она в силе; обычный дождь идёт спокойно
+        if (weather.state === STATE.TOXIC_RAIN && weather.storm && weather.intensity > 0.6) {
             if (weather.lightning > 0)
                 weather.lightning--;
             if (weather.lightning <= 0 && --weather.nextStrike <= 0) {
@@ -34270,14 +34333,11 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
     function updateRain() {
         const vw = scaler_js_13.scaler.vw, vh = scaler_js_13.scaler.vh;
         const spawning = weather.state === STATE.TOXIC_RAIN;
-        // Drop-by-drop intro: spawn rate ~ intensity² so the first drops are
-        // several seconds apart, thickening only as the rain takes hold.
+        // от одной капли: капель — как куб силы. Сила растёт пять минут (envelope): первая минута —
+        // капля в секунду-две, к середине — редкий дождь, к пятой — дождь
         if (spawning && weather.rainParts.length < MAX_RAIN) {
             const I = weather.intensity;
-            // Expected drops-per-frame: tiny at low I, saturates near full I.
-            // At I=0.05 → ~0.0125/frame (≈1 drop every 1.3s).
-            // At I=1.0 → ~5/frame (heavy).
-            const expected = I * I * 5 * RAIN_SLOW;
+            const expected = I * I * I * 5 * RAIN_SLOW;
             const whole = Math.floor(expected);
             const frac = expected - whole;
             const count = whole + (Math.random() < frac ? 1 : 0);
@@ -34506,20 +34566,22 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
         execute: function () {
             STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' };
             exports_81("WEATHER_STATE", STATE);
-            // Per-type cooldown between event STARTS (@60fps).
-            // Rain is a rare, quiet event (~9 min); sandstorm is more frequent (~3 min).
+            // Погода меняется медленно, спокойно и по нарастающей (слово автора 23.11): от одной капли до
+            // дождя — пять минут; никаких резких переходов, кроме внезапных гроз. Погода не перебивает погоду:
+            // новая начинается только при ясном небе. У каждой — своя огибающая: подъём, держится, спад.
+            // Откат — между НАЧАЛАМИ событий одного рода (@60 кадров в секунду), длиннее самого события.
             exports_81("COOLDOWN", COOLDOWN = {
-                [STATE.TOXIC_RAIN]: 32400, // 9 min
-                [STATE.SANDSTORM]: 10800, // 3 min
+                [STATE.TOXIC_RAIN]: 72000, // 20 мин
+                [STATE.SANDSTORM]: 45000, // 12,5 мин
             });
-            // Intensity ramp speed per state (fraction added/subtracted per frame).
-            // Rain creeps in drop-by-drop; sandstorm rolls in faster.
-            RAMP = {
-                [STATE.TOXIC_RAIN]: 0.0012, // ~14s to reach full
-                [STATE.SANDSTORM]: 0.004, // ~4s to reach full
-            };
+            // подъём и спад (кадров): дождь — капля за каплей пять минут, гроза налетает за 15 с, песок — за полторы минуты
+            exports_81("RISE", RISE = { rain: 18000, storm: 900, sand: 5400 });
+            exports_81("FALL", FALL = { rain: 7200, storm: 3600, sand: 3600 });
+            exports_81("STORM_P", STORM_P = 0.2); // каждый пятый дождь — внезапная гроза: с молниями
             exports_81("weather", weather = {
                 state: STATE.CLEAR,
+                storm: false, // этот дождь — внезапная гроза
+                total: 0, // сколько кадров длится событие целиком (для огибающей)
                 // Transition: 0..1 fade-in/fade-out envelope for overlays
                 intensity: 0,
                 targetIntensity: 0,
@@ -34552,6 +34614,7 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
                     weather.state = STATE.TOXIC_RAIN;
                     weather.currentDuration = 36000;
                     weather.nextCheck = 36000;
+                    weather.total = 36000 + RISE.rain; // уже в полную силу
                     weather.lastStartAt[STATE.TOXIC_RAIN] = 0;
                 }
             }
@@ -34562,11 +34625,17 @@ System.register("render/weather", ["render/scaler", "core/time", "render/draw", 
             RAIN_SLOW = 0.34;
             MAX_SAND = 140;
             MAX_PUDDLES = 30;
+            // Зона → какая погода охотнее. Дождь — 7,5–11 мин (пять минут набирает силу, две — стихает),
+            // гроза — 2–3,5 мин, песок — 3,5–5,5 мин. null — оба рода на откате, небо ясное.
+            rainOf = () => (Math.random() < STORM_P
+                ? { state: STATE.TOXIC_RAIN, storm: true, duration: 7200 + Math.floor(Math.random() * 5400) }
+                : { state: STATE.TOXIC_RAIN, storm: false, duration: 27000 + Math.floor(Math.random() * 12600) });
+            sandOf = () => ({ state: STATE.SANDSTORM, storm: false, duration: 12600 + Math.floor(Math.random() * 7200) });
             // ── что код знает о дожде наперёд (world/clauses.js, «Последний пункт»: земля на ходу
-            // сообщает подписавшему). Планировщик опрашивает погоду раз в 30 с и не смотрит, что идёт
-            // сейчас: пока идёт дождь, он сам на откате, и на любом опросе, где песок готов, дождь
-            // сменяется песком в любой зоне. Отсюда честный конец дождя. Сверено копией планировщика
-            // (723 проверки на шесть зон и смешанный маршрут, расхождений нет).
+            // сообщает подписавшему). Планировщик опрашивает погоду раз в 30 с и только при ясном небе:
+            // погода не перебивает погоду. Дождь кончается, когда кончается; после песка дождь начнётся на
+            // первом опросе, где небо ясное и откат дождя прошёл, — если песок к тому опросу ещё на откате
+            // (иначе в песчаной зоне снова может прийти песок, и сказать можно только «не будет ещё»).
             POLL = 1800;
             // Расписание погоды идёт по шагам мира везде — за бумагой, в доме, под землёй (main.js
             // stepFx), раз за шаг: сроки и откаты на одних часах, сказанное о дожде сбывается и после
@@ -34750,8 +34819,10 @@ System.register("render/digital", ["core/time", "core/prefs"], function (exports
 });
 System.register("world/idle", ["core/time", "render/scaler", "audio/audio", "world/names", "render/ghost", "render/digital"], function (exports_84, context_84) {
     "use strict";
-    var time_js_16, scaler_js_14, audio_js_5, names_js_1, ghost_js_2, digital_js_1, MSGS, ANON, _underfootLine, LENTA, QUIET_MSGS, LENTA_WORDS, isLentaLine, _quietHasNoLenta, idleTimer, currentMsg, msgLife, lastSaid, toggle, lineBusy, mirrorEl, _lastUnderfoot;
+    var time_js_16, scaler_js_14, audio_js_5, names_js_1, ghost_js_2, digital_js_1, MSGS, ANON, PLACE, seen, lineOpen, _placeLines, LINE_AT, SOUND_AT, _underfootLine, LENTA, QUIET_MSGS, LENTA_WORDS, isLentaLine, _quietHasNoLenta, idleTimer, currentMsg, msgLife, lastSaid, toggle, lineBusy, mirrorEl, _lastUnderfoot, _currentLine;
     var __moduleName = context_84 && context_84.id;
+    function setSeen(fn) { seen = typeof fn === 'function' ? fn : () => false; }
+    exports_84("setSeen", setSeen);
     // строка на ходу (world/clauses.js «Последний пункт»): рисуется как строка покоя — «вперемешку»
     // буквально; две строки — через '\n'. Читающему без глаз — своё зеркало (общий у ленты
     // lorepopup каждый шаг пишет туда '' и стёр бы строку); повтор того же слова объявляется
@@ -34792,12 +34863,14 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio", "wor
             return;
         }
         idleTimer++;
-        if (idleTimer === 900) {
-            const pool = lentaNear ? MSGS : QUIET_MSGS;
-            currentMsg = _underfootLine(pool[Math.floor(Math.random() * pool.length)]);
-            msgLife = 240;
+        if (idleTimer === LINE_AT) {
+            const pool = (lentaNear ? MSGS : QUIET_MSGS).filter(lineOpen);
+            if (pool.length) {
+                currentMsg = _underfootLine(pool[Math.floor(Math.random() * pool.length)]);
+                msgLife = 240;
+            }
         }
-        if (idleTimer === 1800) {
+        if (idleTimer === SOUND_AT) {
             audio_js_5.playDistantSound();
         }
     }
@@ -34904,6 +34977,29 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio", "wor
                 'архивариус ставит галочку': ['elder', 'кто-то ставит галочку'],
                 'архивариус не звал': ['elder', 'никто не звал'],
             };
+            // СТРОКА О МЕСТЕ — только тому, кто там был (слово автора 23.11: «"углов стало пять" и некоторые
+            // связные с локациями пасхалки раньше времени не выпускай. и в целом пусть их будет вполовину реже»).
+            // Строка помнит место (или кота, или записку) — пока странник его не видел, она молчит; хватит любого
+            // из списка. Что видел — спрашивает main.js (setSeen): места — по осмотру, кот — по встрече,
+            // записка — по найденному ('lore:id').
+            PLACE = {
+                'углов стало пять': ['basement'], 'iä! iä!': ['basement'],
+                '47 столов': ['pizzeria'], 'wifi есть, гостей нет': ['pizzeria'],
+                'котлован глубже, чем кажется': ['kotlovan_well', 'kotlovan_notice', 'st_136'],
+                'лёд тает в девятом круге': ['crypt'],
+                'братишка принёс': ['pit'],
+                'автопилот всё ещё едет': ['junkyard'],
+                'врата открыты': ['gates'], 'привратник ждёт': ['gates'],
+                'две мусорки': ['dumpster'],
+                'вобла не горит': ['church'],
+                'кот наливает': ['cat'], 'кот принимает': ['cat'], 'кот расставляет блюдца': ['cat'], 'чаша с молоком — на месте': ['cat'],
+                'реактор стабилен': ['lore:l67'], 'бисер катится': ['lore:l21'],
+            };
+            seen = () => false;
+            exports_84("lineOpen", lineOpen = m => !Object.prototype.hasOwnProperty.call(PLACE, m) || PLACE[m].some(id => seen(id)));
+            exports_84("_placeLines", _placeLines = () => Object.keys(PLACE));
+            // вполовину реже: строка — после полуминуты покоя (было четверть), дальний звук — после минуты
+            exports_84("LINE_AT", LINE_AT = 1800), exports_84("SOUND_AT", SOUND_AT = 3600);
             exports_84("_underfootLine", _underfootLine = m => (Object.prototype.hasOwnProperty.call(ANON, m) && !names_js_1.isNamed(ANON[m][0]) ? ANON[m][1] : m));
             // словарь ленты: под ногами — только там, где лента есть (кольцо «сейчас», огонь и пустошь
             // за ним); в городке, древних кольцах, доме и изнанке его нет — тихое место молчит своим
@@ -34923,6 +35019,7 @@ System.register("world/idle", ["core/time", "render/scaler", "audio/audio", "wor
             exports_84("lineBusy", lineBusy = () => msgLife > 0);
             mirrorEl = null;
             exports_84("_lastUnderfoot", _lastUnderfoot = () => lastSaid);
+            exports_84("_currentLine", _currentLine = () => currentMsg);
         }
     };
 });
@@ -72748,7 +72845,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "ui/title", "assets/loader"], function (exports_194, context_194) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_2, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
     var __moduleName = context_194 && context_194.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_4.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_16.SEGMENTS.length ? ulitsa_db_js_16.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -74610,11 +74707,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (want && (want.under || want.net || want.house))
                     ui_js_2.openThing(want, intent); // вещь изнанки, дома, записка: путь вёл к ней
                 else {
-                    const atWant = want && Math.abs(player.x - (want.x + want.w / 2 - 6)) < 4
-                        && Math.abs(player.y - (want.y + want.h + 5)) < 4;
+                    const spot = want && lookSpot(want);
+                    const atWant = want && Math.abs(player.x - spot.x) < 4 && Math.abs(player.y - spot.y) < 4;
                     const loc = atWant ? want : (want ? physics_js_2.findLocationAt(player.x, player.y, locations_js_6.locations) : null);
                     if (loc)
-                        arriveAt(loc, intent);
+                        lookAfterPause(loc, intent);
                 }
             }
             else {
@@ -74642,6 +74739,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         if (steering && !house_js_2.house.active && !underside_js_4.under.active) {
             const k = ravens_js_2.ravenHush(player.x + 6, player.y + 22, dvx, dvy, player.running);
+            dvx *= k;
+            dvy *= k;
+        }
+        if (steering && !house_js_2.house.active && !underside_js_4.under.active && !stage_js_3.stage.active) {
+            const k = slopeK(player.x + 6, player.y + 23, dvx, dvy);
             dvx *= k;
             dvy *= k;
         }
@@ -74676,7 +74778,21 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const sp = heroStep(dvx, dvy, drift);
         player.moving = steering || (sp > 0.05 && !drift); // снос лентой — не ходьба: стоящий стоит
         player.still = !steering;
+        stepApproach(steering, sp);
         updateWorldSystems();
+    }
+    // УКЛОН (слово автора 23.11: походка «более относительно к местности»): шаг по рельефу —
+    // в гору медленнее (крутой склон — почти вдвое), под гору чуть легче. Высота — та же, что рисует
+    // штрих (world/relief.js heightAt); уклон берётся вдоль желаемого хода, на ±6 точек. Автоход под
+    // гору не разгоняется — иначе торможение к цели (v² = 2·a·s) не успевает.
+    function slopeK(x, y, dvx, dvy) {
+        const v = Math.hypot(dvx, dvy);
+        if (v < 0.01)
+            return 1;
+        const ux = dvx / v, uy = dvy / v;
+        const g = (relief_js_14.heightAt(x + ux * 6, y + uy * 6) - relief_js_14.heightAt(x - ux * 6, y - uy * 6)) / 12;
+        const k = g > 0 ? Math.max(0.55, 1 - 0.6 * g) : Math.min(1.12, 1 - 0.25 * g);
+        return player.auto ? Math.min(1, k) : k;
     }
     // Camera + all per-frame world systems. Shared by the normal movement
     // path and the held-finger walk branch above.
@@ -74881,8 +74997,39 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         };
         lids.addEventListener('pointerdown', () => wakeUp && wakeUp());
     }
-    // к вещи: близко — шаг-мигание к её порогу, далеко — дойти; у порога — её дело
-    // (одно действие — сразу, больше — меню; ui.js openThing)
+    function lookSpot(loc) {
+        const x = loc.x + loc.w / 2 - 6, y = loc.y + loc.h + 5;
+        let d = 0;
+        while (d < 14 && !physics_js_2.isBlocked(x, y - d - 2, locations_js_6.locations))
+            d += 2;
+        return { x, y: y - d };
+    }
+    function lookAfterPause(loc, intent) {
+        stopHero();
+        if (loc.y + loc.h <= player.y + 23)
+            player.face = 'N'; // вещь впереди-выше — лицом к ней, спиной к нам
+        lookWait = { loc, intent, until: time_js_52.t + LOOK_PAUSE };
+    }
+    function stepApproach(steering, sp) {
+        if (lookWait && (steering || player.auto))
+            lookWait = null; // пошёл дальше — смотреть раздумал
+        if (lookWait && time_js_52.t >= lookWait.until) {
+            const w = lookWait;
+            lookWait = null;
+            arriveAt(w.loc, w.intent);
+        }
+        // автоход к вещи упёрся (стена между ним и порогом) — шаг-мигание, как прежде
+        stuckT = player.auto && player.walkTo && !player.walkTo.under && !player.walkTo.net && !player.walkTo.house && steering && sp < 0.05 ? stuckT + 1 : 0;
+        if (stuckT > STUCK_T) {
+            const loc = player.walkTo, intent = player.walkIntent;
+            stuckT = 0;
+            player.auto = false;
+            player.walkTo = null;
+            player.walkIntent = null;
+            stopHero();
+            teleportWithFade(loc.x + loc.w / 2 - 6, loc.y + loc.h + 5, () => arriveAt(loc, intent));
+        }
+    }
     function approach(loc) {
         const px_ = loc.x + loc.w / 2 - 6;
         const py_ = loc.y + loc.h + 5;
@@ -74894,15 +75041,15 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lockHint();
             return;
         }
-        const dist = Math.sqrt((player.x - px_) ** 2 + (player.y - py_) ** 2);
+        const spot = lookSpot(loc);
+        const dist = Math.hypot(player.x - spot.x, player.y - spot.y);
         const intent = player.walkIntent;
+        lookWait = null;
         if (dist < 3)
-            arriveAt(loc, intent); // уже стоишь у порога — мигать некуда
-        else if (dist < 85)
-            teleportWithFade(px_, py_, () => arriveAt(loc, intent));
+            arriveAt(loc, intent); // уже стоишь у вещи — сразу её дело
         else {
-            player.tx = px_;
-            player.ty = py_;
+            player.tx = spot.x;
+            player.ty = spot.y;
             player.moving = true;
             player.auto = true;
             player.walkTo = loc;
@@ -75486,6 +75633,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             terminal_js_1.init();
             shop_js_1.initShop();
             worldmap_js_1.init({ getVisited: () => flags.visited, getLocked: () => !canLeaveSettlement(), getWalked: () => flags.walked });
+            // строки под ногами о местах — только виденным (world/idle.js PLACE): место — осмотрено, кот — встречен, записка — найдена
+            idle_js_2.setSeen(id => id === 'cat' ? silentCat_js_1.getSightings().length > 0 : id.startsWith('lore:') ? lore_js_3.getCollectedIds().includes(id.slice(5)) : flags.visited.has(id));
             cursor_js_1.init();
             audio_js_13.initAudio();
             applyByt();
@@ -75911,6 +76060,16 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     player.walkTo = null;
                 }
             });
+            // к вещи: дойти пешком (см. «ПОДОЙТИ И ПОСМОТРЕТЬ» выше); у неё — её дело
+            // (одно действие — сразу, больше — меню; ui.js openThing)
+            // ПОДОЙТИ И ПОСМОТРЕТЬ (слово автора 23.11: «нужно, чтобы путник подходил ближе во время осмотра
+            // для умиротворяющего эффекта. сейчас диалоговое окно появляется издалека»). Прежде близкий клик
+            // мигал к порогу и сразу открывал окно; теперь странник всегда идёт сам — к месту чуть ближе
+            // порога (до 14 точек к вещи, пока не упрётся в твёрдое), встаёт, поднимает голову к вещи и
+            // только через полсекунды покоя открывается окно. Тронулся за это время — окно не откроется.
+            // Упёрся по дороге (вещь за спиной, обходить нечем) — тогда, как прежде, шаг-мигание к порогу.
+            LOOK_PAUSE = 32, STUCK_T = 40;
+            lookWait = null, stuckT = 0;
             // вещь под рукой — для E и F: ближняя, не дальше пары шагов (дома и в изнанке — вещи
             // своего полотна, наверху — места и записки на земле)
             HAND = 60;

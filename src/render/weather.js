@@ -9,22 +9,23 @@ import { wind } from '../world/wind.js';
 
 const STATE = { CLEAR: 'clear', TOXIC_RAIN: 'toxicRain', SANDSTORM: 'sandstorm' };
 
-// Per-type cooldown between event STARTS (@60fps).
-// Rain is a rare, quiet event (~9 min); sandstorm is more frequent (~3 min).
+// Погода меняется медленно, спокойно и по нарастающей (слово автора 23.11): от одной капли до
+// дождя — пять минут; никаких резких переходов, кроме внезапных гроз. Погода не перебивает погоду:
+// новая начинается только при ясном небе. У каждой — своя огибающая: подъём, держится, спад.
+// Откат — между НАЧАЛАМИ событий одного рода (@60 кадров в секунду), длиннее самого события.
 export const COOLDOWN = {
-  [STATE.TOXIC_RAIN]: 32400,  // 9 min
-  [STATE.SANDSTORM]: 10800,   // 3 min
+  [STATE.TOXIC_RAIN]: 72000,  // 20 мин
+  [STATE.SANDSTORM]: 45000,   // 12,5 мин
 };
-
-// Intensity ramp speed per state (fraction added/subtracted per frame).
-// Rain creeps in drop-by-drop; sandstorm rolls in faster.
-const RAMP = {
-  [STATE.TOXIC_RAIN]: 0.0012,   // ~14s to reach full
-  [STATE.SANDSTORM]: 0.004,     // ~4s to reach full
-};
+// подъём и спад (кадров): дождь — капля за каплей пять минут, гроза налетает за 15 с, песок — за полторы минуты
+export const RISE = { rain: 18000, storm: 900, sand: 5400 };
+export const FALL = { rain: 7200, storm: 3600, sand: 3600 };
+export const STORM_P = 0.2;    // каждый пятый дождь — внезапная гроза: с молниями
 
 export const weather = {
   state: STATE.CLEAR,
+  storm: false,         // этот дождь — внезапная гроза
+  total: 0,             // сколько кадров длится событие целиком (для огибающей)
   // Transition: 0..1 fade-in/fade-out envelope for overlays
   intensity: 0,
   targetIntensity: 0,
@@ -59,6 +60,7 @@ try {
   if (/[?&]rain\b/.test(location.search)) {
     forced = true;
     weather.state = STATE.TOXIC_RAIN; weather.currentDuration = 36000; weather.nextCheck = 36000;
+    weather.total = 36000 + RISE.rain;                              // уже в полную силу
     weather.lastStartAt[STATE.TOXIC_RAIN] = 0;
   }
 } catch (e) {}
@@ -70,60 +72,62 @@ const RAIN_SLOW = 0.34;
 const MAX_SAND = 140;
 const MAX_PUDDLES = 30;
 
-// Zone → preferred weather. Rain gets longer durations (2-4 min) so it can
-// ease in drop-by-drop and taper out. Sandstorm is punchier (25s-60s).
-// Returns null if the chosen type is still on cooldown.
+// Зона → какая погода охотнее. Дождь — 7,5–11 мин (пять минут набирает силу, две — стихает),
+// гроза — 2–3,5 мин, песок — 3,5–5,5 мин. null — оба рода на откате, небо ясное.
+const rainOf = () => (Math.random() < STORM_P
+  ? { state: STATE.TOXIC_RAIN, storm: true, duration: 7200 + Math.floor(Math.random() * 5400) }
+  : { state: STATE.TOXIC_RAIN, storm: false, duration: 27000 + Math.floor(Math.random() * 12600) });
+const sandOf = () => ({ state: STATE.SANDSTORM, storm: false, duration: 12600 + Math.floor(Math.random() * 7200) });
 function rollWeather(zone) {
   const onCooldown = (st) => (t - weather.lastStartAt[st]) < COOLDOWN[st];
 
   const wantRain = zone === 'toxic' || zone === 'forest';
   const wantSand = zone === 'highway' || zone === 'quarter';
 
-  if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) {
-    return { state: STATE.TOXIC_RAIN, duration: 7200 + Math.floor(Math.random() * 7200) };
-  }
-  if (wantSand && !onCooldown(STATE.SANDSTORM)) {
-    return { state: STATE.SANDSTORM, duration: 1500 + Math.floor(Math.random() * 2100) };
-  }
+  if (wantRain && !onCooldown(STATE.TOXIC_RAIN)) return rainOf();
+  if (wantSand && !onCooldown(STATE.SANDSTORM)) return sandOf();
   // Settlement / fallback: pick whichever is off cooldown
   const rainReady = !onCooldown(STATE.TOXIC_RAIN);
   const sandReady = !onCooldown(STATE.SANDSTORM);
-  if (rainReady && sandReady) {
-    return Math.random() < 0.4
-      ? { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) }
-      : { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
-  }
-  if (rainReady) return { state: STATE.TOXIC_RAIN, duration: 6000 + Math.floor(Math.random() * 6000) };
-  if (sandReady) return { state: STATE.SANDSTORM, duration: 1200 + Math.floor(Math.random() * 1800) };
+  if (rainReady && sandReady) return Math.random() < 0.4 ? rainOf() : sandOf();
+  if (rainReady) return rainOf();
+  if (sandReady) return sandOf();
   return null; // both on cooldown → sky stays clear
 }
 
 // ── что код знает о дожде наперёд (world/clauses.js, «Последний пункт»: земля на ходу
-// сообщает подписавшему). Планировщик опрашивает погоду раз в 30 с и не смотрит, что идёт
-// сейчас: пока идёт дождь, он сам на откате, и на любом опросе, где песок готов, дождь
-// сменяется песком в любой зоне. Отсюда честный конец дождя. Сверено копией планировщика
-// (723 проверки на шесть зон и смешанный маршрут, расхождений нет).
+// сообщает подписавшему). Планировщик опрашивает погоду раз в 30 с и только при ясном небе:
+// погода не перебивает погоду. Дождь кончается, когда кончается; после песка дождь начнётся на
+// первом опросе, где небо ясное и откат дождя прошёл, — если песок к тому опросу ещё на откате
+// (иначе в песчаной зоне снова может прийти песок, и сказать можно только «не будет ещё»).
 const POLL = 1800;
 export function rainOutlook() {
   const R = weather.lastStartAt[STATE.TOXIC_RAIN] + COOLDOWN[STATE.TOXIC_RAIN];
   const S = weather.lastStartAt[STATE.SANDSTORM] + COOLDOWN[STATE.SANDSTORM];
   const nc = weather.nextCheck;
   const poll = at => nc + POLL * Math.max(0, Math.ceil((at - (t + nc)) / POLL));   // шагов до первого опроса не раньше at
-  if (weather.state === STATE.TOXIC_RAIN) return { kind: 'ends', in: Math.min(weather.currentDuration, poll(S)), R };
+  if (weather.state === STATE.TOXIC_RAIN) return { kind: 'ends', in: weather.currentDuration, R };
+  if (weather.state === STATE.SANDSTORM) {
+    const P = poll(Math.max(t + weather.currentDuration, R));
+    return t + P < S ? { kind: 'sandThenRain', in: P, S } : { kind: 'none', in: P, R };
+  }
   if (t < R) return { kind: 'none', in: poll(R), R };
-  if (weather.state === STATE.SANDSTORM) return { kind: 'sandThenRain', in: nc, S };
   return { kind: 'ready', in: nc, R };
 }
 // погода переживает перезагрузку (как часы мира): что идёт, сколько ещё, откаты —
 // иначе сказанное «дождя не будет ещё 6 мин» лжёт после перезагрузки
 export function saveWeather() {
   const left = st => Math.max(0, weather.lastStartAt[st] + COOLDOWN[st] - t);
-  return { s: weather.state, d: Math.max(0, weather.currentDuration), c: weather.nextCheck, r: left(STATE.TOXIC_RAIN), n: left(STATE.SANDSTORM) };
+  return { s: weather.state, d: Math.max(0, weather.currentDuration), c: weather.nextCheck, r: left(STATE.TOXIC_RAIN), n: left(STATE.SANDSTORM),
+    g: weather.storm ? 1 : 0, T: weather.total };
 }
 export function loadWeather(d) {
   if (!d || forced) return;
   if (d.s === STATE.TOXIC_RAIN || d.s === STATE.SANDSTORM || d.s === STATE.CLEAR) weather.state = d.s;
   if (Number.isFinite(d.d)) weather.currentDuration = d.d;
+  weather.storm = d.g === 1;
+  // до огибающей событие было уже в силе: считаем, что подъём прошёл
+  weather.total = Number.isFinite(d.T) && d.T >= weather.currentDuration ? d.T : weather.currentDuration + (weather.storm ? RISE.storm : RISE.rain);
   if (Number.isFinite(d.c) && d.c > 0) weather.nextCheck = d.c;
   const back = (st, rem) => { if (Number.isFinite(rem) && rem > 0) weather.lastStartAt[st] = t - (COOLDOWN[st] - Math.min(rem, COOLDOWN[st])); };
   back(STATE.TOXIC_RAIN, d.r); back(STATE.SANDSTORM, d.n);
@@ -141,43 +145,37 @@ export function weatherClock() {
   weather.currentDuration--;
   weather.nextCheck--;
   if (weather.currentDuration <= 0 && weather.state !== STATE.CLEAR) {
-    weather.state = STATE.CLEAR;
+    weather.state = STATE.CLEAR; weather.storm = false;
   }
   if (weather.nextCheck <= 0) {
-    const r = rollWeather(weather.zone);
+    const r = weather.state === STATE.CLEAR ? rollWeather(weather.zone) : null;   // погода не перебивает погоду
     if (r) {
       weather.state = r.state;
+      weather.storm = !!r.storm;
       weather.currentDuration = r.duration;
+      weather.total = r.duration;
       weather.lastStartAt[r.state] = t;
     }
     // Poll again in 30s regardless (cheap) — cooldowns handle the real gating
     weather.nextCheck = 1800;
   }
 }
+// сила погоды по огибающей события: подъём, держится, спад (0…1)
+export function envelope() {
+  if (weather.state === STATE.CLEAR || weather.currentDuration <= 0) return 0;
+  const kind = weather.state === STATE.SANDSTORM ? 'sand' : weather.storm ? 'storm' : 'rain';
+  const total = Math.max(weather.total, weather.currentDuration), done = total - weather.currentDuration;
+  return Math.max(0, Math.min(1, done / RISE[kind], weather.currentDuration / FALL[kind]));
+}
 
 export function update(zone) {
   weather.zone = zone || 'settlement';
   weatherClock();
 
-  // Intensity envelope — bell-shaped so rain creeps in and trails out.
-  // fadeFrames = 20% of total duration, capped at 40s.
-  const fadeFrames = Math.min(2400, Math.floor((weather.currentDuration > 0 ? weather.currentDuration : 1) * 0.2));
-  let target = 0;
-  if (weather.state !== STATE.CLEAR && weather.currentDuration > 0) {
-    // Use currentDuration and the event's starting duration to find phase.
-    // We don't store the original duration, so approximate: taper near the end.
-    target = weather.currentDuration < fadeFrames
-      ? weather.currentDuration / fadeFrames
-      : 1;
-  }
-  weather.targetIntensity = target;
-
-  const ramp = RAMP[weather.state] || 0.003;
-  if (weather.intensity < weather.targetIntensity) {
-    weather.intensity = Math.min(weather.targetIntensity, weather.intensity + ramp);
-  } else if (weather.intensity > weather.targetIntensity) {
-    weather.intensity = Math.max(weather.targetIntensity, weather.intensity - ramp * 0.7);
-  }
+  // сила — по огибающей события (envelope): дождь пять минут набирает силу от первой капли,
+  // спокойно стихает; резко — только гроза
+  weather.targetIntensity = envelope();
+  weather.intensity = weather.targetIntensity;
 
   // ветер один на весь мир (world/wind.js): дождь косит и песок несёт по нему
   weather.windX = wind.x * 1.6;
@@ -186,8 +184,8 @@ export function update(zone) {
   if (weather.state === STATE.TOXIC_RAIN || weather.intensity > 0) updateRain();
   if (weather.state === STATE.SANDSTORM || weather.intensity > 0) updateSand();
 
-  // Lightning only during toxic rain when heavy
-  if (weather.state === STATE.TOXIC_RAIN && weather.intensity > 0.6) {
+  // молнии — только в грозу (внезапную), когда она в силе; обычный дождь идёт спокойно
+  if (weather.state === STATE.TOXIC_RAIN && weather.storm && weather.intensity > 0.6) {
     if (weather.lightning > 0) weather.lightning--;
     if (weather.lightning <= 0 && --weather.nextStrike <= 0) {
       weather.lightning = 40;
@@ -211,14 +209,11 @@ function updateRain() {
   const vw = scaler.vw, vh = scaler.vh;
   const spawning = weather.state === STATE.TOXIC_RAIN;
 
-  // Drop-by-drop intro: spawn rate ~ intensity² so the first drops are
-  // several seconds apart, thickening only as the rain takes hold.
+  // от одной капли: капель — как куб силы. Сила растёт пять минут (envelope): первая минута —
+  // капля в секунду-две, к середине — редкий дождь, к пятой — дождь
   if (spawning && weather.rainParts.length < MAX_RAIN) {
     const I = weather.intensity;
-    // Expected drops-per-frame: tiny at low I, saturates near full I.
-    // At I=0.05 → ~0.0125/frame (≈1 drop every 1.3s).
-    // At I=1.0 → ~5/frame (heavy).
-    const expected = I * I * 5 * RAIN_SLOW;
+    const expected = I * I * I * 5 * RAIN_SLOW;
     const whole = Math.floor(expected);
     const frac = expected - whole;
     const count = whole + (Math.random() < frac ? 1 : 0);

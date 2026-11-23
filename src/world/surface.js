@@ -15,18 +15,21 @@ import { surfaceOf } from './arteries.js';
 // Ход вязкий (слово автора 22.11: «чуть медленнее и вязкая»): шаг набирается
 // и гаснет не сразу — на земле и тропе разгон вдвое дольше прежнего, остановка мягче.
 // WALK — обычный шаг в точках за тик, RUN — бег (Shift); доля поверхности — поле max.
-export const WALK = 2.1, RUN = 4;
+// Слово автора 23.11: «ещё медленнее и более относительно к местности» — шаг тише (2,1 → 1,7),
+// разброс по земле шире: тропа заметно легче, песок, топь, брод и снег — заметно тяжелее.
+// Уклон — в main.js (slopeK): в гору медленнее, под гору чуть легче.
+export const WALK = 1.7, RUN = 3.3;
 export const SURF = {
   ground: { name: 'земля',   accel: 0.13, decel: 0.22, max: 1.00, print: 'soft' },
-  path:   { name: 'тропа',   accel: 0.15, decel: 0.26, max: 1.08, print: 'soft' },
-  snow:   { name: 'снег',    accel: 0.12, decel: 0.09, max: 0.90, print: 'snow' },
+  path:   { name: 'тропа',   accel: 0.15, decel: 0.26, max: 1.14, print: 'soft' },
+  snow:   { name: 'снег',    accel: 0.12, decel: 0.09, max: 0.80, print: 'snow' },
   ice:    { name: 'лёд',     accel: 0.045, decel: 0.03, max: 1.05, print: null },
-  sand:   { name: 'зыбучий песок', accel: 0.10, decel: 0.50, max: 0.60, print: 'deep' },
-  mud:    { name: 'грязь',   accel: 0.14, decel: 0.55, max: 0.72, print: 'mud' },
-  swamp:  { name: 'болото',  accel: 0.09, decel: 0.60, max: 0.62, print: null },
-  rubble: { name: 'мусор',   accel: 0.11, decel: 0.28, max: 0.82, print: null },
-  ash:    { name: 'гарь',    accel: 0.12, decel: 0.22, max: 0.92, print: 'ash' },
-  water:  { name: 'вброд',   accel: 0.11, decel: 0.62, max: 0.55, print: null },
+  sand:   { name: 'зыбучий песок', accel: 0.10, decel: 0.50, max: 0.50, print: 'deep' },
+  mud:    { name: 'грязь',   accel: 0.14, decel: 0.55, max: 0.62, print: 'mud' },
+  swamp:  { name: 'болото',  accel: 0.09, decel: 0.60, max: 0.52, print: null },
+  rubble: { name: 'мусор',   accel: 0.11, decel: 0.28, max: 0.76, print: null },
+  ash:    { name: 'гарь',    accel: 0.12, decel: 0.22, max: 0.88, print: 'ash' },
+  water:  { name: 'вброд',   accel: 0.11, decel: 0.62, max: 0.45, print: null },
   moss:   { name: 'мох',     accel: 0.20, decel: 0.55, max: 0.85, print: null },   // ход мха: мягко, нога вязнет и встаёт сразу
 };
 
