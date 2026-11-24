@@ -19,6 +19,7 @@ import { sideAt, heightAt, kurgansIn } from './relief.js';
 import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
 import { fieldAt } from './fields.js';
+import { waterNear } from './lake.js';
 
 export const landmarks = [];      // { kind, x, gy, ring, side, seed, w, h, dir? }
 
@@ -39,6 +40,7 @@ function freeFor(kind, x, gy, extra = 0, skip = null) {
   const [w] = LM_SIZE[kind], r = w / 2 + 4 + extra;
   if (artBlock) for (const dx of [-r, 0, r]) for (const dy of [-6, 0, 3]) if (blockedAt(artBlock, x + dx, gy + dy)) return false;
   if (onArtery(x, gy, r, skip)) return false;
+  if (waterNear(x, gy, r)) return false;                                 // не в озере и не в ручье (world/lake.js)
   const f = fieldAt(x, gy);
   if (f && f.kind !== 'fallow') return false;
   for (const l of landmarks) if (Math.abs(l.x - x) < (LM_SIZE[l.kind][0] + w) / 2 + 30 && Math.abs(l.gy - gy) < 40) return false;

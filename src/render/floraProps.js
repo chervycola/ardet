@@ -139,6 +139,18 @@ const DRAW = {
       R(c, k < -3 ? FL : FB, x + k, top, 1, len);
     }
   },
+  // плакучая ива у Тёплого озера: ствол с развилкой, широкий низкий купол; пряди до воды —
+  // каждый кадр, по ветру (drawWeeperStrands)
+  weeper(c, x, g, v, snow) {
+    const lean = v % 2 ? 1 : -1;
+    for (let y = 0; y < 16; y++) R(c, BARK, x - 1 + q(lean * y * y / 140), g - y - 1, 3, 1);
+    R(c, K1, x - 3, g - 1, 7, 1); R(c, P, x - 1, g - 14, 1, 10);
+    for (let k = 0; k < 7; k++) { R(c, BARK, x - 1 - k, g - 15 - q(k * 0.8), 1, 1); R(c, BARK, x + 2 + k, g - 15 - q(k * 0.7), 1, 1); }   // развилка
+    blob(c, x - 9, g - 22, 8, 4, v, LEAF, snow);
+    blob(c, x + 9, g - 22, 8, 4, v + 1, LEAF, snow);
+    blob(c, x, g - 26, 14, 5, v + 2, LEAF, snow);
+    for (let k = -13; k <= 13; k += 3) R(c, FD, x + k, g - 21 + q(Math.abs(k) * 0.2), 1, 5 + q(hh(v, k, 4) * 4));   // пряди в тени купола
+  },
   poplar(c, x, g, v, snow) {
     const h = 34 + (v % 3) * 2;
     R(c, BARK, x, g - 5, 1, 5);
@@ -221,8 +233,8 @@ const DRAW = {
     blob(c, x, g - 4, 5, 3, v, v % 2 ? LEAF : DRY, snow);
   },
 };
-const FLEX = { oak: 0.25, birch: 0.6, spruce: 0.2, pine: 0.35, cypress: 0.3, palm: 0.55, olive: 0.2, bamboo: 0.9, willow: 0.5, poplar: 0.45, fruit: 0.3, street: 0.3, dead: 0.05, stump: 0, bush: 0.25, deadspruce: 0.04, snag: 0, log: 0, deadreed: 0.5 };
-const CROWN = { oak: 12, birch: 10, spruce: 8, pine: 10, cypress: 6, palm: 14, olive: 5, bamboo: 12, willow: 8, poplar: 8, fruit: 5, street: 9, dead: 99, stump: 99, bush: 99, deadspruce: 99, snag: 99, log: 99, deadreed: 4 };   // где кончается ствол (снизу)
+const FLEX = { weeper: 0.55, oak: 0.25, birch: 0.6, spruce: 0.2, pine: 0.35, cypress: 0.3, palm: 0.55, olive: 0.2, bamboo: 0.9, willow: 0.5, poplar: 0.45, fruit: 0.3, street: 0.3, dead: 0.05, stump: 0, bush: 0.25, deadspruce: 0.04, snag: 0, log: 0, deadreed: 0.5 };
+const CROWN = { weeper: 14, oak: 12, birch: 10, spruce: 8, pine: 10, cypress: 6, palm: 14, olive: 5, bamboo: 12, willow: 8, poplar: 8, fruit: 5, street: 9, dead: 99, stump: 99, bush: 99, deadspruce: 99, snag: 99, log: 99, deadreed: 4 };   // где кончается ствол (снизу)
 
 // холст вида и варианта
 const cache = new Map();
@@ -253,9 +265,29 @@ export function drawTree(ctx, t, step) {
     const w = wind.at(t.x, t.gy);
     sx = q(w.x * 2.2 * flex + Math.sin(step * 0.035 + t.x * 0.07) * w.s * 1.4 * flex);
   }
-  if (!sx || e.crown >= e.H) { ctx.drawImage(e.cv, x0, y0); return; }
-  ctx.drawImage(e.cv, 0, e.crown, e.W, e.H - e.crown, x0, y0 + e.crown, e.W, e.H - e.crown);   // ствол
-  ctx.drawImage(e.cv, 0, 0, e.W, e.crown, x0 + sx, y0, e.W, e.crown);                         // крона
+  if (!sx || e.crown >= e.H) ctx.drawImage(e.cv, x0, y0);
+  else {
+    ctx.drawImage(e.cv, 0, e.crown, e.W, e.H - e.crown, x0, y0 + e.crown, e.W, e.H - e.crown);   // ствол
+    ctx.drawImage(e.cv, 0, 0, e.W, e.crown, x0 + sx, y0, e.W, e.crown);                         // крона
+  }
+  if (t.sp === 'weeper') drawWeeperStrands(ctx, t, step, sx);
+}
+// пряди плакучей ивы: от кромки купола почти до земли (у воды — до воды); низ гуляет по ветру,
+// верх держится за купол. Свет слева — кромкой, справа — в тени
+export function weeperStrands(t, step, sx = 0) {
+  const w = wind.at(t.x, t.gy), out = [];
+  for (let k = -18; k <= 18; k += 2) {
+    const top = t.gy - 22 + q(Math.abs(k) * 0.18), len = 12 + q(hh(t.v, k, 11) * 7) + (Math.abs(k) > 12 ? 3 : 0);
+    const tip = w.x * 3 * 0.55 + Math.sin(step * 0.03 + t.x * 0.05 + k * 0.4) * (0.8 + w.s * 1.6);
+    out.push({ x: t.x + k + sx, top, len, tip, col: k < -9 ? FL : k > 8 ? FD : (k & 2 ? FB : FM) });
+  }
+  return out;
+}
+function drawWeeperStrands(ctx, t, step, sx) {
+  for (const s of weeperStrands(t, step, sx)) {
+    ctx.fillStyle = s.col;
+    for (let y = 0; y < s.len; y++) ctx.fillRect(s.x + q(s.tip * (y / s.len) ** 2), s.top + y, 1, 1);
+  }
 }
 // камыш: 4–6 стеблей, у двух — початки; гнётся по ветру
 function drawReed(ctx, t, step) {

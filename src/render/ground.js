@@ -59,6 +59,7 @@ import { floraIn } from '../world/flora.js';
 import { landmarkBoxes } from '../world/landmarks.js';
 import { thing, wearOf, warmKind } from './things.js';
 import { FRAGMENTS } from '../sprites/fragments.js';
+import { waterNear } from '../world/lake.js';
 const CELL = 150;
 const FRAME_X = 640, FRAME_Y = 360;   // «один кадр»: ближе — повтор видно
 // ткань не ложится на постройки, таблички и дворы
@@ -79,6 +80,7 @@ export function setTissueBlockers(boxes) {
 // занято ли место постройкой, табличкой, двором (для травы и ткани)
 export function groundBlocked(x0, y0, x1, y1) { return tissueBlocked(x0, y0, x1, y1); }
 function tissueBlocked(x0, y0, x1, y1) {
+  if (waterNear((x0 + x1) / 2, (y0 + y1) / 2, Math.max(x1 - x0, y1 - y0) / 2)) return true;   // в озере и ручьях — ни травы, ни утвари
   if (!blockGrid) return false;
   for (let gx = Math.floor(x0 / CELL); gx <= Math.floor(x1 / CELL); gx++) {
     for (let gy = Math.floor(y0 / CELL); gy <= Math.floor(y1 / CELL); gy++) {

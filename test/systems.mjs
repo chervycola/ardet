@@ -1113,7 +1113,8 @@ setCtx(ctx);
   const L = M.locations.filter(l => !l.overTrail);               // как в main.js: растяжку над тропой тропа не обходит
   const locBoxes = L.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 }));
   const LF = await imp('world/landforms.js');
-  A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })), ...LF.LAKES.map(L => LF.lakeBox(L, 14))],
+  const LK = await imp('world/lake.js');
+  A.buildArteries([...locBoxes, ...AG.archGroundRects(), ...AG.archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })), ...LK.basinCores()],
     [...L, ...AG.archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))].map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));
   (await imp('world/town.js')).buildTown();                       // как в main.js: русло, тропы и улицы городка — сразу за артериями
   const line = id => A.lines.find(l => l.id === id);
@@ -1121,34 +1122,78 @@ setCtx(ctx);
   const cross = (a, b, c, d) => { const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)); return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b); };
   const crossings = (P, Q) => { let n = 0; for (let i = 0; i < P.length - 1; i++) { if (!P[i].st) continue; for (let j = 0; j < Q.length - 1; j++) if (Q[j].st && cross(P[i], P[i + 1], Q[j], Q[j + 1])) n++; } return n; };
   const river = line('river');
-  test('горы, каньоны, пруд (слово автора 23.11): места посчитаны — ни дорог, ни мест, ни дворов не задевают; пруд у градирни', async () => {
+  test('Тёплое озеро (слово автора 24.11): большое, с островами и ручьями; ни дорог, ни мест, ни дворов не задевает; ручей тёплой воды — от завода', async () => {
     const BT = await imp('world/boat.js');
-    eq(LF.LAKES.length, 1, 'пруд один');
-    const L = LF.LAKES[0];
-    const works = M.locations.find(l => l.archDraw && l.archRing === 7 && l.archSide === 'plain' && l.name === 'градирня и цех');
-    assert(works && Math.hypot(L.cx - (works.archX ?? works.x), L.cy - (works.archGy ?? works.y + works.h)) < 320, 'пруд не у градирни');
-    eq(D.ringAt(L.cx, L.cy), 7, 'пруд — в кольце 7');
-    const pond = new Set(['cooling_pier', 'isle_pier', 'isle_pumphouse']);
-    const hit = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
-    const box = LF.lakeBox(L, 4);
-    for (const l of M.locations) if (!pond.has(l.id)) assert(!hit(box, { x0: l.x, y0: l.y, x1: l.x + l.w, y1: l.y + l.h }), `пруд налез на «${l.name}»`);
-    for (const r of AG.archGroundRects()) assert(!hit(box, r), 'пруд налез на двор');
-    for (const ln of A.lines) for (const p of ln.pts) if (p.st) assert(LF.waterAt(p.x, p.y) === 0, `${ln.id} идёт по пруду`);
-    // мостки и остров: стоят на суше своей стороны; лодка у мостков и весь путь — по глубокой воде
-    const P = L.pier, IP = L.ipier, H = M.locations.find(l => l.id === 'isle_pumphouse');
-    assert(!LF.onIsle(P.stand.x + 6, P.stand.y + 23) && LF.waterAt(P.stand.x + 6, P.stand.y + 23) === 0, 'у мостков берега — не берег');
-    for (const t of [IP, H]) assert(LF.waterAt(t.stand.x + 6, t.stand.y + 23) === 3, `${t.name}: стоят не на острове`);
-    for (const to of [true, false]) {
-      const r = BT.routeOf(L, to), len = BT.routeLen(r);
-      for (let s = 0; s <= len; s += 3) { const q = BT.pointAt(r, s); assert(LF.deepAt(q.x, q.y), `лодка идёт не по воде (${to ? 'туда' : 'назад'}): ${q.x | 0},${q.y | 0}`); }
-      assert(to ? len > 250 : len < 120, 'к острову — вокруг, назад — коротко: ' + len);
+    // большое: с востока на запад — не меньше двух тысяч точек воды
+    let x0 = 1e9, x1 = -1e9;
+    for (let x = LK.BOX.x0; x <= LK.BOX.x1; x += 4) for (let y = LK.BOX.y0; y <= LK.BOX.y1; y += 4) if (LK.lakeE(x, y) < 1) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+    assert(x1 - x0 > 1900, 'озеро не большое: ' + (x1 - x0));
+    for (let x = LK.BOX.x0; x <= LK.BOX.x1; x += 16) for (let y = LK.BOX.y0; y <= LK.BOX.y1; y += 16) if (LK.lakeE(x, y) < 1) { const r = D.ringAt(x, y); assert(r >= 1 && r <= 9, 'вода за кольцами'); }
+    // ничего не задевает: места (кроме своих), дворы, дороги, дуги, реку; ручьи — тоже (их переходят по трубе)
+    const own = new Set(['lake_pier_east', 'lake_pier_west', 'lake_pier_isle', 'lake_pump', 'lake_outlet', 'lake_sign', 'lake_spring']);
+    const wet = (x0, y0, x1, y1) => { for (let x = x0; x <= x1; x += 3) for (let y = y0; y <= y1; y += 3) if (LK.waterAt(x, y)) return true; return false; };
+    for (const l of M.locations) if (!own.has(l.id)) assert(!wet(l.x, l.y, l.x + l.w, l.y + l.h), `в воде «${l.name}»`);
+    for (const r of AG.archGroundRects()) assert(!wet(r.x0, r.y0, r.x1, r.y1), 'в воде двор');
+    for (const ln of A.lines) for (let i = 0; i < ln.pts.length - 1; i++) {
+      const a = ln.pts[i], b = ln.pts[i + 1];
+      if (!a.st && !b.st) continue;
+      for (let k = 0; k <= 8; k++) { const x = a.x + (b.x - a.x) * k / 8, y = a.y + (b.y - a.y) * k / 8; assert(LK.lakeE(x, y) >= 1.05 && LK.isleAt(x, y).e > 1.3, `${ln.id} идёт по озеру`); }
     }
-    // в глубину не войти, вброд — можно
+    // ручьи: тёплый — от завода (исток у градирни и цеха), все впадают в озеро (сток — из озера в реку)
+    const works = M.locations.find(l => l.archDraw && l.archRing === 7 && l.archSide === 'plain' && l.name === 'градирня и цех');
+    const warm = LK.BROOKS.find(b => b.warm), w0 = warm.line[0];
+    assert(works && Math.hypot(w0.x - (works.archX ?? works.x), w0.y - (works.archGy ?? works.y + works.h)) < 200, 'тёплый сброс не у завода');
+    eq(LK.BROOKS.length, 4, 'ручьёв четыре');
+    for (const b of LK.BROOKS) {
+      const end = b.out ? b.line[0] : b.line[b.line.length - 1];
+      assert(LK.lakeE(end.x, end.y) < 1.02, `${b.name}: не у озера`);
+      assert(b.len > 150, `${b.name}: не ручей, а лужа`);
+    }
+    const out = LK.BROOKS.find(b => b.out), oe = out.line[out.line.length - 1];
+    assert(A.lines.some(l => l.kind === 'river' && l.pts.some(p => Math.hypot(p.x - oe.x, p.y - oe.y) < 40)), 'сток не доходит до реки');
+    // мостки: стоят на суше своей стороны; лодки у мостков на воде; остров водозабора — только лодкой
+    const P = LK.PIERS;
+    for (const k of ['east', 'west']) assert(LK.waterAt(P[k].stand.x + 6, P[k].stand.y + 23) === 0 && !LK.onIsle(P[k].stand.x + 6, P[k].stand.y + 23), `${k}: стоят не на берегу`);
+    assert(LK.waterAt(P.isle.stand.x + 6, P.isle.stand.y + 23) === 3, 'у мостков острова — не остров');
+    for (const k of ['east', 'west', 'isle']) assert([1, 2].includes(LK.waterAt(P[k].dock.x, P[k].dock.y)), `${k}: лодка не на воде`);
+    const pump = M.locations.find(l => l.id === 'lake_pump');
+    eq(LK.waterAt(pump.stand.x + 6, pump.stand.y + 23), 3, 'у водозабора — не остров');
+    // переправа: с берега на противоположный — не меньше трёх минут; путь — по воде, в стороне от островов
+    for (const [a, b] of [['east', 'west'], ['west', 'east'], ['east', 'isle'], ['isle', 'east'], ['west', 'isle'], ['isle', 'west']]) {
+      const r = BT.routeOf(a, b), len = BT.routeLen(r);
+      for (let s = 0; s <= len; s += 3) {
+        const q = BT.pointAt(r, s), w = LK.waterAt(q.x, q.y);
+        assert(w === 1 || w === 2, `лодка ${a}→${b} идёт по суше: ${q.x | 0},${q.y | 0}`);
+        for (const I of LK.ISLES) assert(LK.isleE(I, q.x, q.y) > 1.5, `лодка ${a}→${b} задела «${I.name}»`);
+      }
+      if (a !== 'isle' && b !== 'isle') assert(BT.rideFrames(r) >= 180 * 60, `${a}→${b}: меньше трёх минут — ${(BT.rideFrames(r) / 60).toFixed(0)} с`);
+    }
+    assert(BT.rideFrames(BT.routeOf('east', 'isle')) < 40 * 60, 'к острову — коротко');
+    // в глубину не войти, вброд и в ручье — можно
     const Ph = await imp('world/physics.js');
-    Ph.setTerrainBlock(LF.deepAt);
-    assert(Ph.isBlocked(L.cx - 70 - 6, L.cy - 23, []), 'в глубину пруда вошёл');
-    assert(!Ph.isBlocked(P.stand.x, P.stand.y, []), 'у мостков стоять нельзя');
+    Ph.setTerrainBlock(LK.deepAt);
+    assert(Ph.isBlocked(LK.BASINS[0].cx - 6, LK.BASINS[0].cy - 23, []), 'в глубину озера вошёл');
+    assert(!Ph.isBlocked(P.east.stand.x, P.east.stand.y, []), 'у мостков стоять нельзя');
+    const mid = warm.line[Math.floor(warm.line.length / 2)];
+    eq(LK.waterAt(mid.x, mid.y), 1, 'ручей — не вброд');
     Ph.setTerrainBlock(null);
+    // у воды: плакучие ивы по берегу и на ивовом острове, камыш; строительный мусор
+    const pl = LK.shorePlants(), W = LK.ISLES.find(I => I.id === 'willow');
+    assert(pl.filter(p => p.sp === 'weeper').length >= 16, 'ив мало');
+    assert(pl.some(p => p.sp === 'weeper' && LK.isleE(W, p.x, p.gy) < 1), 'на ивовом острове ив нет');
+    assert(pl.filter(p => p.sp === 'reed').length >= 80, 'камыша мало');
+    for (const p of pl) if (p.sp === 'weeper') assert(LK.waterAt(p.x, p.gy) === 0 || LK.waterAt(p.x, p.gy) === 3, 'ива в воде');
+    const junk = LK.PROPS.filter(p => ['slabs', 'slabwet', 'rebar', 'bricks', 'pipe', 'blocks', 'mixer'].includes(p.kind));
+    assert(junk.length >= 12 && new Set(junk.map(p => p.kind)).size >= 6, 'строительного мусора мало');
+    for (const p of LK.PROPS) assert(LK.waterAt(p.x, p.gy) !== 2, `«${p.kind}» в глубине`);
+    for (const p of LK.PROPS) for (const k of ['east', 'west', 'isle']) assert(Math.hypot(p.x - (P[k].stand.x + 6), p.gy - (P[k].stand.y + 23)) > 14, `«${p.kind}» у мостков на дороге`);
+    const R = LK.ISLES.find(I => I.id === 'rubble');
+    assert(junk.filter(p => LK.isleE(R, p.x, p.gy) < 1).length >= 4, 'насыпь — не из мусора');
+    // рисуется без ошибок
+    const cx = new Proxy({}, { get: () => () => {}, set: () => true });
+    for (const p of LK.PROPS) LK.drawProp(cx, p, 100);
+  });
+  test('горы и каньоны (слово автора 23.11): места посчитаны — ни дорог, ни мест, ни дворов не задевают', () => {
     // каньоны: ни мест, ни дворов, ни дорог в их ширине
     for (const c of LF.CANYONS) {
       const W = c.floor + c.wall + 6;
@@ -1291,7 +1336,7 @@ setCtx(ctx);
   test('растительность: вид по стороне и эпохе; не на постройках, дорогах и реке', () => {
     assert(F.flora.length > 800, `растений ${F.flora.length}`);
     for (const t of F.flora) {
-      if (t.sp === 'reed' || t.town) continue;                     // Мёртвый лес городка — своим тестом
+      if (t.sp === 'reed' || t.town || t.shore) continue;          // Мёртвый лес городка, берег Тёплого озера — своими тестами
       assert(!RT.blockedAt(A.artBlock, t.x, t.gy), `${t.sp} на постройке или во дворе (${t.x},${t.gy})`);
       assert(!A.onArtery(t.x, t.gy, 2), `${t.sp} на дороге или в реке (${t.x},${t.gy})`);
       const ok = F.KINDS[t.side].rows[t.ring - 1].some(e => e.sp === t.sp) || ALLEYS.has(t.sp);
@@ -1308,7 +1353,7 @@ setCtx(ctx);
     assert(F.flora.filter(t => t.ring === 9).length < F.flora.filter(t => t.ring === 2).length / 3, 'к огню не редеет');
   });
   test('камыш — по берегу ручья, не на льду', () => {
-    const reeds = F.flora.filter(t => t.sp === 'reed');
+    const reeds = F.flora.filter(t => t.sp === 'reed' && !t.shore);   // у Тёплого озера — свой камыш (world/lake.js)
     assert(reeds.length > 10, `камыша ${reeds.length}`);
     for (const r of reeds) {
       let best = Infinity, near = null;

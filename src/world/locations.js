@@ -248,10 +248,11 @@ locations.push({
 import { buildClauses } from './clauses.js';
 buildClauses(locations);
 
-// пруд-охладитель у градирни: мостки, остров с водозабором (world/landforms.js) — до прохода
-// глубины: клетка держит свои пятнадцать позиций, в тень уходит дальняя табличка, а не вода
-import { buildLandforms } from './landforms.js';
-locations.push(...buildLandforms(locations));
+// Тёплое озеро (world/lake.js): мостки, водозабор на острове, сброс у завода, щит, родник — до
+// прохода глубины: клетка держит свои пятнадцать позиций, в тень уходит дальняя табличка, а не вода
+import { buildLake, buildProps } from './lake.js';
+locations.push(...buildLake());
+buildProps();
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)

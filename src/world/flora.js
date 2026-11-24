@@ -18,6 +18,7 @@ import { lines, onArtery, artBlock } from './arteries.js';
 import { blockedAt } from './routes.js';
 import { fieldAt } from './fields.js';
 import { buildSites } from './sites.js';
+import { waterNear, shorePlants } from './lake.js';
 
 // виды: дуб, берёза, ель, сосна, кипарис, пальма, олива, бамбук, ива,
 // тополь, плодовое, городское (в решётке), сухое, пень, куст
@@ -82,6 +83,7 @@ export const SIZE = {
   dead: [18, 26], stump: [8, 5], bush: [12, 8], reed: [8, 12],
   deadspruce: [16, 34], snag: [8, 18], log: [36, 11],          // Мёртвый лес городка: сухая ель, обломанный ствол, бурелом
   deadreed: [12, 15],                                            // мёртвый камыш у отравы
+  weeper: [40, 36],                                              // плакучая ива у Тёплого озера: пряди до воды (world/lake.js)
 };
 // аллеи вдоль дорог: в каких кольцах какой стороны дорогу обсаживали
 const ALLEY = { west: { 5: 'poplar', 6: 'poplar' }, plain: { 5: 'poplar', 6: 'birch', 8: 'poplar' }, south: { 6: 'palm' }, east: {}, north: {} };
@@ -142,6 +144,7 @@ function pick(list, r) {
 // свободно ли место под дерево: не постройка, не двор, не дорога, не опора
 function freeAt(x, y, r) {
   if (artBlock && (blockedAt(artBlock, x, y) || blockedAt(artBlock, x - r, y) || blockedAt(artBlock, x + r, y))) return false;
+  if (waterNear(x, y, r)) return false;                                  // не в озере и не в ручье (world/lake.js)
   return !onArtery(x, y, r + 3);
 }
 function taken(grid, x, y, r) {
@@ -175,6 +178,13 @@ export function buildFlora(skip = [], oases = []) {
     put(grid, { sp, x: Math.round(x), gy: Math.round(gy), v: Math.floor(seed * 6), ring, side, snow: side === 'north' && ring >= 3 }, r);
     return true;
   };
+  // 0) у Тёплого озера: плакучие ивы по берегу и на ивовом острове, камыш на мелком и по ручьям
+  //    (world/lake.js) — раньше прочего: берег их, рощи встают вокруг
+  for (const p of shorePlants()) {
+    const r = Math.max(3, SIZE[p.sp][0] * 0.32);
+    if (onArtery(p.x, p.gy, r) || taken(grid, p.x, p.gy, r)) continue;
+    put(grid, { sp: p.sp, x: p.x, gy: p.gy, v: p.v, ring: ringOfD(warpedDist(p.x, p.gy)), side: sideAt(p.x, p.gy), snow: false, shore: true }, r);
+  }
   // 0) у колодца оазиса — пальмы кругом
   for (const o of oases) {
     let k = 0;

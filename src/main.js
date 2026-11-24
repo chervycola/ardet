@@ -41,8 +41,9 @@ import { rect, clamp } from './render/draw.js';
 import { MW, MH } from './world/terrain.js';
 import { locations, attachContent, archEnsembles, locationById } from './world/locations.js';
 import { tryMove, findLocationAt, isInSettlement, isBlocked, setTerrainBlock } from './world/physics.js';
-import { LAKES, landCarve, lakeBox, deepAt, onIsle } from './world/landforms.js';
-import { boat, startRide, stepRide, riding, boatRest, drawBoatBack, drawBoatFront } from './world/boat.js';
+import { landCarve } from './world/landforms.js';
+import { basinCores, deepAt, onIsle, PIERS, propsIn, drawProp } from './world/lake.js';
+import { boat, startRide, stepRide, riding, boatsAtRest, drawBoatBack, drawBoatFront, drawRings } from './world/boat.js';
 import { state } from './core/state.js';
 import { events, E } from './core/events.js';
 import { input } from './core/input.js';
@@ -167,24 +168,23 @@ buildArteries([
   ...grounded.map(l => ({ x0: l.x - 4, y0: l.y - 12, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
   ...archProps.map(p => ({ x0: p.x - p.w / 2 - 2, y0: p.gy - 8, x1: p.x + p.w / 2 + 2, y1: p.gy + 3 })),
-  ...LAKES.map(L => lakeBox(L, 14)),             // пруд-охладитель: дороги, поля, рощи и приметы — в обход (world/landforms.js)
+  ...basinCores(),                               // Тёплое озеро: дороги — в обход воды (world/lake.js)
 ], [...grounded, ...archProps.filter(p => p.name && !p.wet).map(p => ({ x: p.x - p.w / 2, y: p.gy - p.h, w: p.w, h: p.h }))]
   .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит (плавучее — не подножие)
 buildTown();                                   // городок по канону: высохшее русло через посёлок, мост над ним
 setReliefCarve((x, y) => riverCarve(x, y) + landCarve(x, y));   // река промыла себе долину; горы, каньоны и чаша пруда (world/landforms.js)
-setTerrainBlock(deepAt);                       // в глубокую воду пруда не войти — только лодкой
+setTerrainBlock(deepAt);                       // в глубокую воду озера не войти — только лодкой
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
 buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
 buildFields(archGroundRects());                // поля у дворов и вдоль дорог — бороздами в землю
 buildLandmarks(); buildLandmarkProps();        // приметы: у реки, на вершинах, где дуга примыкает к дороге
-buildFlora([...landmarkBoxes(), ...locations.map(l => ({ x0: l.x - 10, y0: l.y - 8, x1: l.x + l.w + 10, y1: l.y + l.h + 10 })), ...LAKES.map(L => lakeBox(L, 6))],
+buildFlora([...landmarkBoxes(), ...locations.map(l => ({ x0: l.x - 10, y0: l.y - 8, x1: l.x + l.w + 10, y1: l.y + l.h + 10 }))],
   landmarks.filter(l => l.kind === 'oasis'));   // рощи, аллеи, камыш, пальмы оазисов; у мест — поляны
 fireSitesAvoid((x, y) => onArtery(x, y, 18));  // дорога проходит огонь насквозь
 // ткань застройки не ложится на локации (с запасом над крышей) и дворы
 setTissueBlockers([
   ...locations.map(l => ({ x0: l.x - 4, y0: l.y - 20, x1: l.x + l.w + 4, y1: l.y + l.h + 6 })),
   ...archGroundRects(),
-  ...LAKES.map(L => lakeBox(L, 8)),
 ]);
 buildTissue(archProps.filter(p => p.name));    // утварь эпох в поле: не повторяет соседей и ближние дворы
 initBunting(locations);                        // флаги Шута: гирлянда от фонаря к шесту
@@ -303,7 +303,7 @@ let wokeOnce = !!(savedData && savedData.woke);
 function saveData() {
   return {
   // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-  player: house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : climb.on ? { x: climb.end.x, y: climb.end.y } : lie.on && lie.loc ? standOf(lie.loc) : boat.ride ? { ...(boat.ride.toIsle ? boat.ride.L.pier.stand : boat.ride.L.ipier.stand) } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
+  player: house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active && under.ret ? { x: under.ret.x, y: under.ret.y } : climb.on ? { x: climb.end.x, y: climb.end.y } : lie.on && lie.loc ? standOf(lie.loc) : boat.ride && PIERS[boat.ride.from] ? { ...PIERS[boat.ride.from].stand } : { x: player.x, y: player.y }, off: OFF, geo: GEO,
   talkedTo: Array.from(flags.talkedTo),
   clock: worldClock(t),
   mail: saveMail(),
@@ -396,7 +396,7 @@ for (const L of fireLights()) lighting.add(L);
 // ═══ ДОМ ПРОБУЖДЕНИЯ (world/house.js) ═══
 // Канон: «здесь всегда просыпаются». Каждый вход в мир — в доме, на краю своей
 // кровати; упал за краем — тоже сюда. ?nohouse и ?under — проверка руками: с места.
-const NO_HOUSE = /[?&](?:nohouse|under|pond)\b/.test(location.search);
+const NO_HOUSE = /[?&](?:nohouse|under|pond|lake)\b/.test(location.search);
 let houseKeep = null;                                // свет мира, пока в доме
 function intoHouse(fx, fy, wake) {
   if (wake) house.wake(); else house.enter();
@@ -410,20 +410,26 @@ function intoHouse(fx, fy, wake) {
   muteRedNoon(true);
   lighting.sources = houseLights(player.x + 7, player.y + 10, skyAt(phaseAt(t)));
 }
-// ЛОДКА (world/boat.js): сесть у мостков — плывёт сама; причалила — странник на мостках той стороны
-let boatTold = false;
-function rideBoat(loc) {
-  const L = LAKES.find(l => l.id === loc.lake);
-  if (!L || riding()) return;
+// ЛОДКА (world/boat.js): сесть у мостков — плывёт сама (alt — ко второй стороне); причалила —
+// странник на мостках той стороны
+const boatTold = new Set();
+function rideBoat(loc, alt = false) {
+  const to = alt ? loc.altTo : loc.boatTo;
+  if (!loc.pier || !to || !PIERS[to] || riding()) return;
   logSeated = false; player.path = null; player.walkTo = null; player.auto = false; stopHero();
-  startRide(L, !loc.isle);
+  startRide(loc.pier, to);
 }
+const BOAT_LINES = {
+  isle: 'Вода тёплая. Лодку несёт от сброса — грести почти не надо.',
+  west: 'Три минуты воды. Завода отсюда не видно — только пар над ручьём.',
+  east: 'Три минуты воды. Берег тот же, только с другой стороны.',
+};
 function landBoat() {
-  const R = boat.last, L = R ? R.L : LAKES[0];
-  if (!L) return;
-  const P = R && R.toIsle ? L.ipier : L.pier;
+  const R = boat.last, P = R && PIERS[R.to];
+  if (!P) return;
   player.x = P.stand.x; player.y = P.stand.y; player.tx = player.x; player.ty = player.y; player.face = 'S';
-  if (!boatTold && P === L.ipier) { boatTold = true; showLore('Вода тёплая. Лодку несёт от трубы — грести почти не надо.'); }
+  const key = R.from !== 'isle' && R.to !== 'isle' ? R.to : R.to === 'isle' ? 'isle' : null;
+  if (key && !boatTold.has(key)) { boatTold.add(key); showLore(BOAT_LINES[key]); }
 }
 // ЛЕЧЬ В ПИФОС (world/pithosLie.js): лёг — меню лежащего: «УСНУТЬ» или «ВЫЛЕЗТИ»; осмотреться —
 // тот же текст, что прежде показывало «ЛЕЧЬ». Отменил — лежит; щелчок или E/F — меню снова
@@ -539,10 +545,10 @@ import { t } from './core/time.js';
 // ═══ ТЕНИ ═══
 // кто отбрасывает: локации (кроме плоского), утварь эпох, странник. Маска —
 // один раз из рисунка вещи (render/shadows.js); здесь — как её нарисовать.
-const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle', 'cooling_pier', 'isle_pier']);
+const FLAT = new Set(['riverbed', 'crater', 'lake', 'pit', 'basement', 'nocturnal', 'billboard', 'trap_puddle', 'lake_pier_east', 'lake_pier_west', 'lake_pier_isle', 'lake_spring']);
 // лежат в земле — рисуются под всем, что стоит (иначе песок равнины Лунного
 // ложится поверх самого Лунного: его место ниже по глубине, чем край равнины)
-const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'billboard', 'trap_puddle', 'cooling_pier', 'isle_pier']);
+const GROUND = new Set(['riverbed', 'crater', 'lake', 'pit', 'nocturnal', 'billboard', 'trap_puddle', 'lake_pier_east', 'lake_pier_west', 'lake_pier_isle', 'lake_spring']);
 // сидят внутри другого места — рисуются сразу после него (Старец — в палатке;
 // кот на стопке книг — ещё позже: сидящий на вещи берёт её глубину +0,5, world/silentCat.js)
 const INSIDE = { elder_home: 'tent' }, insideHost = new Map();
@@ -745,13 +751,15 @@ function render() {
   for (const f of fireSitesInView(camX, camY, vw, vh)) drawList.push({ k: f.y, fire: f });   // костры кольца огня
   for (const o of othersToDraw(worldCtx, 'surface', camX, camY, vw, vh, null, beyond.shared)) drawList.push({ k: o.k, other: o });   // другие странники — тенью
   drawList.push({ k: climbDepth(player), player: true });   // на марше подвала — поверх подвала
-  for (const L of LAKES) {                                   // лодка: корпус — за странником, ближний борт — перед ним
-    const R = boat.ride && boat.ride.L === L ? boat.ride : null;
-    const b = R ? { x: R.x, y: R.y, dir: R.dir } : boatRest(L, onIsle(player.x + 6, player.y + 23));
+  // лодки Тёплого озера: у мостков и та, в которой плывёшь; корпус — за странником, ближний борт — перед ним
+  const boats = boatsAtRest();
+  if (boat.ride) boats.push({ x: boat.ride.x, y: boat.ride.y, dir: boat.ride.dir, ride: true });
+  for (const b of boats) {
     if (!camera.isVisible(b.x - 24, b.y - 12, 48, 24)) continue;
-    drawList.push({ k: b.y - 0.5, prop: { draw: c => drawBoatBack(c, b.x, b.y, b.dir, t) } });
+    drawList.push({ k: b.y - 0.5, prop: { draw: c => { if (b.ride) drawRings(c); drawBoatBack(c, b.x, b.y, b.dir, t); } } });
     drawList.push({ k: b.y + 2.5, prop: { draw: c => drawBoatFront(c, b.x, b.y, b.dir, t) } });
   }
+  for (const p of propsIn(camX, camY, camX + vw, camY + vh)) drawList.push({ k: p.gy, prop: { draw: c => drawProp(c, p, t) } });   // мусор, рыбацкое место, пар
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
@@ -1812,9 +1820,15 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
-// ?pond — проверка руками: сразу к мосткам пруда-охладителя (world/landforms.js), изгородь открыта
-if (/[?&]pond\b/.test(location.search) && LAKES[0]) {
-  setTimeout(() => { flags.talkedTo.add('jester'); const s = LAKES[0].pier.stand; teleportWithFade(s.x, s.y); }, 0);
+// ?lake (или ?pond) — проверка руками: сразу к восточным мосткам Тёплого озера (world/lake.js), изгородь открыта;
+// ?lake=west|isle — к западным мосткам или на остров, ?lake=outlet — к сбросу у завода
+{
+  const m = /[?&](?:lake|pond)(?:=(\w+))?/.exec(location.search);
+  if (m && PIERS.east) setTimeout(() => {
+    flags.talkedTo.add('jester');
+    const at = m[1] === 'outlet' ? locations.find(l => l.id === 'lake_outlet')?.stand : (PIERS[m[1]] || PIERS.east).stand;
+    if (at) teleportWithFade(at.x, at.y);
+  }, 0);
 }
 // ?under — проверка руками: сразу вниз (подвал «Вавилона»; ?under=crypt|church|pit|basement|wd|godot|station|onkalo|kola|bunker|cloud|metro|moss|burrow|kapt|stave|nilometer|colonnade|cathedral|gaslamp|hatch|cellar|carriage|escalator|freezer|isle)
 {
@@ -2319,13 +2333,15 @@ function stepApproach(steering, sp) {
     teleportWithFade(s.x, s.y, () => arriveAt(loc, intent));
   }
 }
-// через пруд — только лодкой: с острова к берегу (и наоборот) путь ведёт к своим мосткам
+// через озеро — только лодкой: с острова водозабора к берегу (и наоборот) путь ведёт к своим мосткам
 function acrossWater(loc) {
-  const L = LAKES[0];
-  if (!L) return loc;
+  if (!PIERS.isle) return loc;
   const here = onIsle(player.x + 6, player.y + 23);
-  if (here && !loc.isle) return L.ipier;
-  if (!here && loc.isle) return L.pier;
+  if (here && !loc.isle) return PIERS.isle.loc;
+  if (!here && loc.isle) {
+    const fx = player.x, fy = player.y, d = P => Math.hypot(P.stand.x - fx, P.stand.y - fy);
+    return (d(PIERS.east) <= d(PIERS.west) ? PIERS.east : PIERS.west).loc;
+  }
   return loc;
 }
 function approach(loc) {
@@ -2537,6 +2553,7 @@ events.on('location.alt', (loc) => {
   const a = loc.altNow && loc.altNow();
   if (!a) return;
   if (a.key === 'pithos_out') { wantOut(); return; }   // из пифоса — вылезти
+  if (a.key === 'boat_alt') { rideBoat(loc, true); return; }   // мостки: плыть ко второй стороне
   if (a.key === 'under_greet' && under.greet()) playBlow();
   if (a.key === 'under_lay') under.lay(loc);
   if (DESCENTS[a.key]) sceneOrDown(a.key);           // ходы с колец: спуск на втором действии постройки (за алтарь, в крипту)

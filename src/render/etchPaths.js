@@ -13,7 +13,7 @@
 import { segmentsIn, segDist, nodes, skyRun, RAISED, fordAt } from '../world/arteries.js';
 import { fieldsIn, inField } from '../world/fields.js';
 import { RINGS_D } from '../world/disc.js';
-import { lakesIn, lakeShape, DEEP, ISLE_WADE } from '../world/landforms.js';
+import { lakeIn, shapeAt, DEEP, ISLE_WADE } from '../world/lake.js';
 
 const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const NIGHT = hex('#0D0B0A'), BONE = hex('#D9CFB8'), ASH = hex('#8A8D8F'), MGLA = hex('#3D4A3A'), SEPIA = hex('#3A3026');
@@ -56,24 +56,46 @@ const O = {
   mweed: ov(mixc(MGLA, NIGHT, 0.3), 1), mrim: ov(mixc(NIGHT, ASH, 0.1), 1), mline: ov(mixc(BONE, NIGHT, 0.55), 1),
   mshoulder: ov(mixc(mixc(ASH, SEPIA, 0.5), NIGHT, 0.45), 1),
   path: ov(BONE, 0.2),                                                // тропинка городка
-  // пруд-охладитель у градирни (world/landforms.js): вода с рыжиной — «красная вода уходит в трубу»
+  // Тёплое озеро (world/lake.js): вода с рыжиной — «красная вода уходит в трубу»
   pdeep: ov(mixc(mixc(MGLA, NIGHT, 0.55), hex('#5a3420'), 0.2), 1), pshallow: ov(mixc(mixc(MGLA, NIGHT, 0.32), hex('#5a3420'), 0.16), 1),
+  pwarm: ov(mixc(mixc(MGLA, NIGHT, 0.3), hex('#6b3a20'), 0.38), 1),                      // тёплый сброс — рыжий
+  lily: ov(mixc(MGLA, hex('#5d675a'), 0.6), 1), lilyLit: ov(mixc(MGLA, BONE, 0.35), 1), lilyFlower: ov(BONE, 0.9),
 };
-// пруд: глубь с бликами строками, у берега — вброд светлее, кромка, камыш; остров — суша с тёмным берегом
+// озеро: глубь с бликами строками, у берега — вброд светлее, кромка, камыш, кувшинки; остров — суша
+// с тёмным берегом; ручьи — вода с кромкой, тёплый сброс — рыжий
+function lily(x, y) {                                                // кувшинки: листья кучками на мелком и у кромки глуби
+  const cx = x >> 3, cy = y >> 2;
+  if (ih(cx, cy, 101) > 0.16) return 0;
+  const ox = (cx << 3) + 2 + ((ih(cx, cy, 102) * 4) | 0), oy = (cy << 2) + 1;
+  const dx = x - ox, dy = y - oy;
+  if (dx < 0 || dx > 3 || dy < 0 || dy > 1) return 0;
+  if (dx === 2 && dy === 0 && ih(cx, cy, 103) < 0.25) return O.lilyFlower;
+  if (dx === 3 && dy === 1) return 0;                                // вырез листа
+  return dy === 0 ? O.lilyLit : O.lily;
+}
 function lake(x, y) {
-  const sh = lakeShape(x, y);
+  const sh = shapeAt(x, y);
   if (!sh) return 0;
-  const { e, ie } = sh;
+  const { e, ie, b } = sh;
   if (ie < 1) return ie > 0.84 && ih(x >> 1, y, 91) < 0.55 ? O.bank : 0;
-  if (e >= 1.07) return 0;
-  if (e >= 1) return ih(x >> 1, y, 92) < 0.5 ? O.bank : 0;          // сырой берег
-  if (e > 0.965 || ie < 1.05) return O.wetEdge;                      // кромка воды
-  if (e > DEEP || ie < ISLE_WADE) {                                   // вброд: камыш куртинами
-    if (ih(x >> 2, y >> 1, 93) < 0.3 && ih(x, y, 95) < 0.5) return O.reed;
-    return O.pshallow;
+  if (e < 1) {
+    if (e > 0.988 || ie < 1.035) return O.wetEdge;                  // кромка воды — в точку-две
+    if (e > DEEP || ie < ISLE_WADE) {                                 // вброд: камыш куртинами, кувшинки
+      if (ih(x >> 2, y >> 1, 93) < 0.3 && ih(x, y, 95) < 0.5) return O.reed;
+      return lily(x, y) || O.pshallow;
+    }
+    if (e > DEEP - 0.08) { const l = lily(x, y); if (l) return l; }
+    if ((y * 5 + (x >> 3) * 3) % 13 === 0 && ih(x >> 3, y, 94) < 0.5) return O.glint;   // блики строками
+    return O.pdeep;
   }
-  if ((y * 5 + (x >> 3) * 3) % 13 === 0 && ih(x >> 3, y, 94) < 0.5) return O.glint;   // блики строками
-  return O.pdeep;
+  if (b && b.d <= b.hw + 2) {                                         // ручей: вода, кромка, сырой берег
+    if (b.d > b.hw + 1) return ih(x >> 1, y, 104) < 0.5 ? O.bank : 0;
+    if (b.d > b.hw - 0.8) return ih(x, y, 106) < 0.25 ? O.wetEdge : O.bank;   // кромка русла — тёмная, блик редко
+    if (ih(x, y >> 1, 105) < 0.07) return O.glint;
+    return b.B.warm ? O.pwarm : O.pshallow;
+  }
+  if (e >= 1.04) return 0;
+  return ih(x >> 1, y, 92) < 0.5 ? O.bank : 0;                        // сырой берег
 }
 
 function ih(x, y, s) {
@@ -276,8 +298,8 @@ export function stampPaths(x0, y0, T, out, cls) {
   const segs = segmentsIn(x0 - 12, y0 - 12, x0 + T + 12, y0 + T + 12);
   const pads = nodes.filter(n => n.x > x0 - 20 && n.x < x0 + T + 20 && n.y > y0 - 14 && n.y < y0 + T + 14);
   const flds = fieldsIn(x0, y0, x0 + T, y0 + T);
-  const lks = lakesIn(x0, y0, x0 + T, y0 + T);
-  if (!segs.length && !pads.length && !flds.length && !lks.length) return false;
+  const lks = lakeIn(x0, y0, x0 + T, y0 + T);
+  if (!segs.length && !pads.length && !flds.length && !lks) return false;
   if (N !== T * T) {
     N = T * T;
     bD = new Float32Array(N * 4); bU = new Float32Array(N * 4); bV = new Float32Array(N * 4);
@@ -324,7 +346,7 @@ export function stampPaths(x0, y0, T, out, cls) {
       const e = inField(f, x, y) + wob(x, y, f.seed);                  // межа гуляет: поле не по линейке
       if (e >= 0) { fo = field(f, x, y, e); break; }
     }
-    if (lks.length) o = lake(x, y) || o;                              // пруд — под артериями (их у него нет)
+    if (lks) o = lake(x, y) || o;                                     // озеро и ручьи — под артериями: дорога над ручьём — по трубе
     if (bD[k] < Infinity && bS[k]) o = river(STAGES[bS[k]], bU[k], bV[k], bH[k], x, y, (bF[k] & 2) !== 0) || o;
     const st0 = bD[k] < Infinity ? STAGES[bS[k]] : null;
     const wet = (st0 === 'stream' || st0 === 'canal') && Math.abs(bV[k]) <= bH[k] + 1;

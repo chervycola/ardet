@@ -11,15 +11,14 @@
 //   «Бездна» — у гранд-отеля «Бездна», кольцо 7, запад («номера с видом на пропасть»);
 //   ущелье востока — кольца 2–3, восток («камень и тушь»: свитки гор и ущелий), в пустом
 //     месте за заставой на перевале.
-// Пруд-охладитель — в двухстах пятидесяти точках от градирни и цеха (кольцо 7, равнина:
-// «котлован и цепи», «красная вода уходит в трубу»): ничего не пересекает — ни дороги, ни
-// дуги, ни реки. На пруду — насыпной остров с будкой водозабора; к нему — лодка от мостков
-// (world/boat.js). Глубокая вода не держит: туда не войти; у берега — вброд.
+// Вода — большое Тёплое озеро с островами, ручьями и лодками: world/lake.js (слово автора 24.11;
+// прежде — пруд-охладитель у градирни, 23.11).
 // Всё это — поздний крючок рельефа (world/relief.js setReliefCarve): раскладка мест не
-// сдвигается, горизонтали и штриховка ложатся на новые склоны сами (render/etch.js), вода
-// пруда — накладкой на землю (render/etchPaths.js). Высота — та же, что берёт шаг
+// сдвигается, горизонтали и штриховка ложатся на новые склоны сами (render/etch.js). Высота — та же, что берёт шаг
 // (main.js slopeK): в гору медленнее.
 // ═══════════════════════════════════════
+import { lakeCarve } from './lake.js';
+
 function gh(ix, iy, s) { const n = Math.sin(ix * 127.1 + iy * 311.7 + s * 74.7) * 43758.5453; return n - Math.floor(n); }
 function vn(x, y, s) {
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
@@ -85,114 +84,11 @@ export function canyonC(c, x, y) {
   return D * ((Math.floor(st) + sm(0.55, 1, f)) / 3);
 }
 
-// ── пруд-охладитель: эллипс с неровным берегом; остров посреди ──
-export const LAKES = [];
-const lakeE = (L, x, y) => (((x - L.cx) / L.rx) ** 2 + ((y - L.cy) / L.ry) ** 2) * (1 + 0.14 * (vn(x / 26, y / 13, 71) - 0.5));
-const isleE = (I, x, y) => (((x - I.cx) / I.rx) ** 2 + ((y - I.cy) / I.ry) ** 2) * (1 + 0.16 * (vn(x / 12, y / 6, 73) - 0.5));
-export const DEEP = 0.8, ISLE_WADE = 1.22;
-// вода в точке: 0 — суша, 1 — вброд (у берега), 2 — глубоко (не войти), 3 — суша острова
-export function waterAt(x, y) {
-  for (const L of LAKES) {
-    if (x < L.cx - L.rx * 1.1 || x > L.cx + L.rx * 1.1 || y < L.cy - L.ry * 1.1 || y > L.cy + L.ry * 1.1) continue;
-    const e = lakeE(L, x, y);
-    if (e >= 1) continue;
-    const ie = isleE(L.isle, x, y);
-    if (ie < 1) return 3;
-    if (ie < ISLE_WADE) return 1;
-    return e < DEEP ? 2 : 1;
-  }
-  return 0;
-}
-export const deepAt = (x, y) => waterAt(x, y) === 2;
-export const onIsle = (x, y) => waterAt(x, y) === 3 || (waterAt(x, y) === 1 && LAKES.some(L => isleE(L.isle, x, y) < ISLE_WADE));
-export function lakeBox(L, pad = 0) { return { x0: L.cx - L.rx - pad, y0: L.cy - L.ry - pad, x1: L.cx + L.rx + pad, y1: L.cy + L.ry + pad }; }
-// для штриха земли (render/etchPaths.js): e берега и острова в точке
-export function lakeShape(x, y) {
-  for (const L of LAKES) {
-    if (x < L.cx - L.rx * 1.2 || x > L.cx + L.rx * 1.2 || y < L.cy - L.ry * 1.2 || y > L.cy + L.ry * 1.2) continue;
-    return { L, e: lakeE(L, x, y), ie: isleE(L.isle, x, y) };
-  }
-  return null;
-}
-export const lakesIn = (x0, y0, x1, y1) => LAKES.filter(L => L.cx + L.rx * 1.2 > x0 && L.cx - L.rx * 1.2 < x1 && L.cy + L.ry * 1.2 > y0 && L.cy - L.ry * 1.2 < y1);
-
-// ── поздний крючок рельефа: что вычесть из высоты (каньон — вниз, гора — вверх, пруд — чаша) ──
+// ── поздний крючок рельефа: что вычесть из высоты (каньон — вниз, гора — вверх; озеро — чаша,
+//    острова, русла ручьёв — world/lake.js) ──
 export function landCarve(x, y) {
-  let c = 0;
+  let c = lakeCarve(x, y);
   for (const m of MASSIFS) if (Math.abs(x - m.cx) < m.rx * 1.15 && Math.abs(y - m.cy) < m.ry * 1.15) c -= massifH(m, x, y);
   for (const k of CANYONS) c += canyonC(k, x, y);
-  for (const L of LAKES) {
-    if (Math.abs(x - L.cx) > L.rx * 1.4 || Math.abs(y - L.cy) > L.ry * 1.4) continue;
-    const e = lakeE(L, x, y);
-    c += 14 * (1 - sm(0.7, 1.25, e));                                   // чаша пруда
-    const ie = isleE(L.isle, x, y);
-    if (ie < 1.6) c -= 22 * (1 - sm(0.2, 1.6, ie));                     // остров — насыпь
-  }
   return c;
-}
-
-// ── места у воды: мостки на южном берегу, остров, мостки острова (лодка — world/boat.js) ──
-const PIER_LOOK = `Мостки на сваях, доски в ржавых скобах. К последней свае привязана плоскодонка, весло одно.
-
-На корме выжжено: «ВОЗВРАТ — СЮДА ЖЕ».
-
-Вода тёплая на вид: над ней стоит пар — и зимой стоял бы.`;
-const ISLE_LOOK = `Насыпной остров: бетонные плиты, между ними камыш. Будка водозабора, дверь на одной петле.
-
-Внутри — щит с рубильниками, все в положении «ВКЛ», и журнал смены. Последняя запись: «уровень в норме». Дальше страницы чистые, но разлинованы до конца тетради.
-
-У плит в воде ходит кто-то длинный и медленный. Больше лодки. Не всплывает.`;
-const ISLE_PIER_LOOK = `Три доски на сваях. Лодка ждёт здесь, нос к берегу.
-
-«ВОЗВРАТ — СЮДА ЖЕ».`;
-
-// фабрика: градирня и цех кольца 7, равнина (content/arch_ids.js); пруд — к югу-юго-востоку
-export function buildLandforms(locations) {
-  LAKES.length = 0;
-  const works = locations.filter(l => l.archDraw && l.archRing === 7 && l.archSide === 'plain' && l.name === 'градирня и цех')
-    .sort((a, b) => (a.archNth || 1) - (b.archNth || 1))[0];
-  const fx = works ? (works.archX ?? works.x + works.w / 2) : 10392, fy = works ? (works.archGy ?? works.y + works.h) : 3038;
-  const L = { id: 'cooling_pond', name: 'Пруд-охладитель', cx: Math.round(fx + 88), cy: Math.round(fy + 242), rx: 118, ry: 58 };
-  L.isle = { cx: L.cx + 6, cy: L.cy - 4, rx: 40, ry: 20 };
-  LAKES.push(L);
-  // мостки берега: на юге, чуть западнее середины; уходят на север, в воду. Стоят у них — на берегу
-  const sx = L.cx - 22, sy = L.cy + L.ry - 2;
-  const pier = { id: 'cooling_pier', name: 'Мостки у пруда', zone: 'street', x: sx - 5, y: sy - 20, w: 10, h: 24,
-    look: PIER_LOOK, useAction: 'boat_ride', useLabel: '<i>≈</i>ПЛЫТЬ К ОСТРОВУ', drawSelf: drawPier, pierDir: -1,
-    stand: { x: sx - 6, y: sy + 9 - 23 }, dock: { x: sx + 1, y: sy - 15 }, lake: L.id };
-  // мостки острова: на южной кромке острова, восточнее; уходят на юг, в воду. Стоят — на острове
-  const I = L.isle, ix = I.cx + 14, iy = I.cy + I.ry - 3;
-  const ipier = { id: 'isle_pier', name: 'Мостки острова', zone: 'street', x: ix - 5, y: iy - 4, w: 10, h: 16,
-    look: ISLE_PIER_LOOK, useAction: 'boat_ride', useLabel: '<i>≈</i>ПЛЫТЬ НАЗАД', drawSelf: drawPier, pierDir: 1,
-    stand: { x: ix - 6, y: iy - 5 - 23 }, dock: { x: ix + 1, y: iy + 10 }, lake: L.id, isle: true };
-  // будка водозабора — посреди острова; стоят перед ней
-  const hx = I.cx - 12, hy = I.cy + 2;
-  const house = { id: 'isle_pumphouse', name: 'Водозабор на острове', zone: 'street', x: hx - 9, y: hy - 18, w: 18, h: 18,
-    look: ISLE_LOOK, drawSelf: drawPumphouse,
-    stand: { x: hx - 6, y: hy + 6 - 23 }, isle: true };
-  L.pier = pier; L.ipier = ipier;
-  return [pier, ipier, house];
-}
-
-// ── рисунок: мостки (доски поперёк, сваи), будка водозабора ──
-const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
-function drawPier(ctx, loc) {
-  const x = loc.x, y = loc.y, n = Math.floor(loc.h / 3);
-  for (let i = 0; i < n; i++) {                                     // доски поперёк, через щель
-    const yy = y + i * 3, c = (i * 7 + loc.x) % 5 === 0 ? '#3f3020' : '#5c4229';
-    R(ctx, x + 1, yy, loc.w - 2, 2, c);
-    R(ctx, x + 1, yy, 1, 2, '#7a6040');                               // торец к свету — слева
-  }
-  for (const yy of [y + 2, y + loc.h - 4]) { R(ctx, x, yy, 1, 4, '#2a1c10'); R(ctx, x + loc.w - 1, yy, 1, 4, '#2a1c10'); }   // сваи
-}
-function drawPumphouse(ctx, loc) {
-  const x = loc.x, y = loc.y;
-  R(ctx, x + 1, y + 6, 16, 12, '#57534c');                          // бетон
-  R(ctx, x + 1, y + 6, 1, 12, '#6e6a60');                           // к свету — слева
-  R(ctx, x + 16, y + 6, 1, 12, '#3a3836');
-  R(ctx, x, y + 4, 18, 2, '#4a3a2a'); R(ctx, x, y + 3, 18, 1, '#6b4a2c');   // крыша — ржавый лист
-  R(ctx, x + 7, y + 10, 4, 8, '#1a1612'); R(ctx, x + 10, y + 10, 1, 8, '#2a1c10');   // дверь приоткрыта, на одной петле
-  R(ctx, x + 3, y + 8, 2, 2, '#2a2622');                            // окошко
-  R(ctx, x + 13, y + 1, 1, 3, '#8A8D8F');                           // труба вытяжки
-  ctx.globalAlpha = 0.45; R(ctx, x + 1, y + 18, 17, 1, '#0D0B0A'); ctx.globalAlpha = 1;
 }
