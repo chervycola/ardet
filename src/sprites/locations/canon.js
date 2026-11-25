@@ -785,12 +785,15 @@ function craterBody() {
     if (eo > 1) continue;
     const ei = E(x, y, 18, 10), eg = E(x, y, 11, 6), d = Math.hypot((x - cx) / 24, (y - cy) / 13.5) || 1;
     const nx = (x - cx) / 24 / d, ny = (y - cy) / 13.5 / d, lit = nx * LX + ny * LY;   // нормаль наружу и свет
-    let c;
-    if (ei > 1.32) c = lit > 0.35 ? S1 : lit > -0.2 ? K4 : K2;          // наружный скат вала
-    else if (ei > 1) c = lit > 0.62 ? L2 : lit > 0.1 ? S1 : lit > -0.4 ? S0 : K3;   // гребень вала
-    else if (eg > 1) c = -lit > 0.3 ? K4 : -lit > -0.3 ? K3 : K2;       // склон чаши: светит напротив света
-    else c = K1;                                                        // дно — спеклось в стекло
-    r(x, y, 1, 1, c);
+    // ступень тона бута набора (0 — глубь … 5 — блик) и зерно в точку — песок, спёкшийся крупкой
+    let st;
+    if (ei > 1.32) st = lit > 0.35 ? 3 : lit > -0.2 ? 2 : 1;            // наружный скат вала
+    else if (ei > 1) st = lit > 0.62 ? 5 : lit > 0.1 ? 4 : lit > -0.4 ? 3 : 1;   // гребень вала
+    else if (eg > 1) st = -lit > 0.3 ? 2 : -lit > -0.3 ? 1 : 0;         // склон чаши: светит напротив света
+    else { r(x, y, 1, 1, K1); continue; }                               // дно — спеклось в стекло
+    const g = hh(x, y, 117);
+    if (g < 0.1) st--; else if (g > 0.93) st++;
+    r(x, y, 1, 1, tone(MAT.RUBBLE, Math.max(0, Math.min(5, st))));
   }
   // стекло: блик полосой наискось, искры неба, трещины лучами
   for (let k = 0; k < 8; k++) r(cx - 8 + k, cy - 3 + q(k * 0.4), k > 2 && k < 6 ? 2 : 1, 1, k > 1 && k < 6 ? S1 : S0);
@@ -807,7 +810,7 @@ function craterBody() {
   r(cx - 2, cy, 1, 1, BO); r(cx - 2, cy + 2, 5, 1, K0);
 }
 export function draw_crater(x, y) {
-  bake('crater', x, y, -1, 4, 53, 34, craterBody);
+  bake('crater2', x, y, -1, 4, 53, 34, craterBody);
 }
 
 // ── РАВНИНА ЛУННОГО ──
@@ -1635,7 +1638,8 @@ function tentBody() {
     const ridge = 3 + q(Math.abs(u - 0.45) * 4) + q(sag * 1.2), eave = 15 + q(u * 2) + q(sag * 1.4);
     for (let y = ridge; y <= eave; y++) {
       const base = u < 0.3 ? MG_L : u > 0.85 ? MG_D : MG, deep = sag > 0.8 && y > ridge + 3;   // провис меж дуг — в тени
-      r(x, y, 1, 1, deep ? (u < 0.3 ? MG : MG_D) : base);
+      const g = hh(x, y, 371);                                           // брезент зерном, нитью по ходу
+      r(x, y, 1, 1, g < 0.08 ? MG_D : g > 0.95 && !deep ? MG_L : deep ? (u < 0.3 ? MG : MG_D) : base);
     }
     r(x, ridge, 1, 1, u < 0.5 ? L2 : MG_L); r(x, eave + 1, 1, 1, K0);
     if (TENT_RIB.includes(x)) { r(x, ridge, 1, eave - ridge + 1, MG_L); r(x + 1, ridge + 1, 1, eave - ridge, MG_D); r(x, ridge, 1, 1, RUST_L); }   // дуга под брезентом — ребро: брезент на ней светлее, за ней тень
@@ -1658,15 +1662,16 @@ function tentBody() {
   // полог откинут, привязан к левой стойке — складками
   for (let y = 16; y <= 38; y++) { const w = 1 + q((38 - y) * 0.25); r(5, y, w, 1, MG); r(5, y, 1, 1, MG_L); if (w > 2 && y % 3 === 0) r(6, y, 1, 1, MG_D); }
   r(4, 30, 4, 1, L2); r(7, 31, 1, 2, L2);                                // завязка
-  // передние стойки и растяжки к колышкам
-  for (const [px, y0] of [[3, 14], [60, 16]]) { r(px, y0, 2, 55 - y0, K3); r(px, y0, 1, 55 - y0, S0); for (let y = y0; y < 55; y += 6) r(px + 1, y + 3, 1, 1, RUST); }
+  // передние стойки — арматура бурым железом набора; растяжки к колышкам
+  kitPaint('tent', 66, 56, (P, M) => { P.box(3, 14, 2, 41, M.WROUGHT); P.box(60, 16, 2, 39, M.WROUGHT); }, { seed: 113, chip: 0, ao: 1 });
+  for (const [px, y0] of [[3, 14], [60, 16]]) for (let y = y0; y < 55; y += 6) r(px + 1, y + 3, 1, 1, RUST);
   for (const [ax, bx] of [[3, -6], [61, 70]]) { for (let k = 0; k <= 10; k++) r(ax + (bx - ax) * k / 10, 15 + k * 3.8, 1, 1, L2); r(bx - 1, 53, 2, 3, K3); r(bx - 1, 53, 1, 1, S0); }   // колышки
   // блюдце у входа — молоко свежее
   r(45, 51, 5, 2, AS); r(46, 51, 3, 1, BO); r(45, 53, 5, 1, K0); r(46, 51, 1, 1, L1);   // у входа, справа — Старец с книгами его не закрывает
   X.globalAlpha = 0.45; r(0, 55, 66, 1, K0); X.globalAlpha = 1;
 }
 export function draw_tent(x, y) {
-  bake('tent4', x, y, -8, 1, 80, 60, tentBody);
+  bake('tent5', x, y, -8, 1, 80, 60, tentBody);
 }
 
 // ── ПИЦЦЕРИЯ «ВАВИЛОН» ──
@@ -2182,14 +2187,20 @@ function billboardBody(torn) {
   for (let i = 0; i < 5; i++) r(78 + i, 5, 1, 3, i === 0 ? S1 : i === 4 ? K1 : S2);   // правый: стоит…
   for (let k = 0; k < 6; k++) for (let i = 0; i < 4; i++) r(79 + i + k, 4 - q(k * 0.5) + (i === 3 ? 1 : 0), 1, 2, i === 0 ? S1 : i === 3 ? K1 : S2);   // …и сложился вбок
   r(84, 0, 1, 2, S2); r(86, 1, 1, 1, K3); r(80, 6, 1, 1, RUST);
-  // ── жесть: краска рекламы чёрная, облезла пятнами к кромкам; под ней цинк и ржа ──
+  // ── жесть набором: тёмная клёпаная сталь (краска рекламы чёрная), щит лёг наискось — многоугольником;
+  // свет слева и сверху, кромка пеплом справа; угол отогнут — вырезом ──
+  kitPaint('billboard', 108, 52, (P, M) => {
+    const c = (u, v) => [sx(u, v), sy(u, v)];
+    P.poly([c(0, 0), c(BB_W - 7, 0), c(BB_W, 7), c(BB_W, BB_H), c(0, BB_H)], M.PLATE);
+  }, { seed: 83, chip: 0.03, ao: 0 });
+  // облезла пятнами к кромкам: под краской цинк и ржа
   for (let v = 0; v < BB_H; v++) for (let u = 0; u < BB_W; u++) {
     if (v < 6 && u > BB_W - 7 + v) continue;                                          // угол отогнут — там пусто
     const e = Math.min(u, BB_W - 1 - u, v * 1.6, (BB_H - 1 - v) * 1.2), n = nz(u, v) + (e < 5 ? (5 - e) * 0.05 : 0) + (hh(u, v, 343) - 0.5) * 0.08;
-    R(u, v, 1, 1, n > 0.86 ? RUST : n > 0.72 ? (u < BB_W * 0.4 ? S1 : S0) : n > 0.68 ? RUST : (u + v * 3) % 23 === 0 ? K3 : K2);
+    if (n > 0.68) R(u, v, 1, 1, n > 0.86 ? RUST : n > 0.72 ? (u < BB_W * 0.4 ? S1 : S0) : RUST);
   }
   for (let u = 16; u < BB_W - 4; u += 16) { R(u, 0, 1, BB_H, K1); R(u + 1, 0, 1, BB_H, S2); for (let v = 2; v < BB_H; v += 6) R(u + 1, v, 1, 1, S1); }   // швы, заклёпки
-  R(0, 0, BB_W - 6, 1, S1); R(0, 1, 1, BB_H - 1, S1); R(0, BB_H - 1, BB_W, 1, K1); R(BB_W - 1, 6, 1, BB_H - 6, AS);   // рама: к свету слева, кромка пеплом
+  R(0, BB_H - 1, BB_W, 1, K1);                                                       // низ рамы — в тени
   for (let k = 0; k < 16; k++) { const u = 2 + q(hh(k, 1, 313) * 93), L = 2 + q(hh(k, 1, 315) * 9); R(u, 1, 1, L, RUST); R(u, 1 + L, 1, 1, RUST_L); }   // ржа потёками от верха
   for (let j = 0; j < 6; j++) for (let i = 0; i <= j; i++) R(BB_W - 6 + i, j, 1, 1, i === j ? K1 : i === 0 ? S1 : AS);   // отогнутый угол — изнанкой, цинком
   // «JUST DO IT.» — уцелело, облезло; продукта нет — от его щита пустая рамка на болтах
@@ -2246,8 +2257,8 @@ function billboardBody(torn) {
   X.globalAlpha = 0.5; r(2, 50, 102, 1, K0); X.globalAlpha = 1;
 }
 export function draw_billboard(x, y) {
-  if (wasUsed('billboard')) bake('billboard4t', x, y, 0, -3, 108, 55, () => billboardBody(true));
-  else bake('billboard4', x, y, 0, -3, 108, 55, () => billboardBody(false));
+  if (wasUsed('billboard')) bake('billboard5t', x, y, 0, -3, 108, 55, () => billboardBody(true));
+  else bake('billboard5', x, y, 0, -3, 108, 55, () => billboardBody(false));
 }
 
 // ── СТЕНА АФИШ ──
@@ -2268,18 +2279,20 @@ export function draw_billboard(x, y) {
 // пеплом справа.
 const PW_X0 = 2, PW_X1 = 64, PW_G = 48, PW_C = 50;                       // подножие стены — у основания места; свечи стоят на y 50
 const pwTop = x => x < 50 ? 2 + (hh(x >> 2, 0, 371) < 0.3 ? 1 : 0) : 2 + q((x - 50) * 0.5) + (hh(x, 0, 373) < 0.4 ? 1 : 0);
+// плита бетона — набором колец: опалубка, поры, потёки, свет слева, кромка; верх справа обломан, торец в тени
+function slabKit(x0, x1, g, top, endW) {
+  return (P, M) => {
+    const pts = [];
+    for (let x = x0; x <= x1 + 1; x++) pts.push([x, top(Math.min(x1, x))]);
+    P.poly([[x0, g], ...pts, [x1 + 1, g]], M.CONCRETE);
+    if (endW) P.box(x1 + 1, top(x1) + 1, endW, g - top(x1) - 1, M.CONCRETE).shade(2);   // торец — от слома
+  };
+}
+const PW_DRIPS = [];
+for (let k = 0; k < 9; k++) { const x = 4 + q(hh(k, 1, 377) * 58); PW_DRIPS.push([x, pwTop(x) + 1, 4 + q(hh(k, 2, 379) * 14)]); }
 function posterwallBody() {
-  // ── плита: опалубка полосами, поры, потёки сверху; торец справа ──
-  for (let x = PW_X0; x <= PW_X1; x++) {
-    const top = pwTop(x);
-    for (let y = top; y < PW_G; y++) {
-      const h = hh(x, y, 375), board = (y - 2) % 7 === 0;
-      r(x, y, 1, 1, x < PW_X0 + 2 ? OV_L : board ? OV_D : h < 0.06 ? OV_D : h > 0.97 ? OV_L : OV_C);
-    }
-    r(x, top, 1, 1, x < 50 ? OV_L : S1);
-  }
-  for (let k = 0; k < 9; k++) { const x = 4 + q(hh(k, 1, 377) * 58); for (let y = pwTop(x) + 1, L = 4 + q(hh(k, 2, 379) * 14); L > 0; L--, y++) r(x, y, 1, 1, OV_D); }
-  for (let i = 0; i < 3; i++) for (let y = pwTop(PW_X1) + i; y < PW_G; y++) r(PW_X1 + 1 + i, y, 1, 1, i < 2 ? OV_D : AS);   // торец — от слома, ступенькой
+  // ── плита: набором; арматура из слома ──
+  kitPaint('posterwall', 70, 50, slabKit(PW_X0, PW_X1, PW_G, pwTop, 3), { seed: 71, chip: 0.05, cracks: 3, ao: 2, drips: PW_DRIPS });
   for (let k = 0; k < 4; k++) { r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 3 + (k & 1), RUST); r(52 + k * 3, pwTop(52 + k * 3) - 2 - (k & 1), 1, 1, RUST_L); }   // арматура из слома
   // бумага: рваные верх и низ; low — у земли: низ обуглен, кромка крошится
   const paper = (x0, y0, w, h, c, seed, low) => {
@@ -2362,7 +2375,7 @@ function posterwallBody() {
   X.globalAlpha = 0.5; r(PW_X0, PW_C + 2, PW_X1 - PW_X0 + 3, 1, K0); X.globalAlpha = 1;
 }
 export function draw_posterwall(x, y) {
-  bake('posterwall3', x, y, 0, -1, 70, 55, posterwallBody);
+  bake('posterwall4', x, y, 0, -1, 70, 55, posterwallBody);
 }
 
 // ── СТЕНА ГРАФФИТИ ──
@@ -2401,15 +2414,11 @@ function grafWord(set, word, x, y, c, drip, sd) {
   }
   return x;
 }
+const grTop = x => 1 + (hh(x >> 2, 0, 375) < 0.25 ? 1 : 0) + (x > 49 ? q((x - 49) * 0.4) : 0);
 function graffitiBody(tagged) {
   const G = 44;                                                           // подножие — у основания места
-  // ── плита: опалубка, поры, трещины, скол по верху; торец пеплом ──
-  for (let x = 1; x < 58; x++) {
-    const top = 1 + (hh(x >> 2, 0, 375) < 0.25 ? 1 : 0) + (x > 49 ? q((x - 49) * 0.4) : 0);
-    for (let y = top; y < G; y++) { const h = hh(x, y, 377); r(x, y, 1, 1, x < 3 ? OV_L : (y - 1) % 8 === 0 ? OV_D : h < 0.05 ? OV_D : h > 0.97 ? OV_L : OV_C); }
-    r(x, top, 1, 1, x < 40 ? OV_L : S1);
-  }
-  for (let y = 4; y < G; y++) { r(58, y, 2, 1, OV_D); r(59, y, 1, 1, AS); }
+  // ── плита набором: опалубка, поры, скол по верху; торец в тени ──
+  kitPaint('graffiti', 61, 46, slabKit(1, 57, G, grTop, 2), { seed: 73, chip: 0.05, cracks: 0, ao: 2, drips: [[8, 3, 9], [33, 2, 6], [47, 2, 12]] });
   for (const [cx, cy, n] of [[12, 2, 7], [52, 24, 9], [53, 10, 6]]) for (let k = 0; k < n; k++) r(cx + q(Math.sin(k * 1.7) * 1.2), cy + k, 1, 1, K2);   // трещины
   // ── старая реклама: выцветшие поля, строки проступают штрихами ──
   X.globalAlpha = 0.35; r(3, 3, 52, 15, L2); r(5, 19, 48, 10, AS); X.globalAlpha = 1;
@@ -2445,8 +2454,8 @@ function graffitiBody(tagged) {
   X.globalAlpha = 0.5; r(1, G + 2, 59, 1, K0); X.globalAlpha = 1;
 }
 export function draw_graffiti(x, y) {
-  if (wasUsed('graffiti')) bake('graffiti4t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
-  else bake('graffiti3', x, y, 0, 0, 61, 48, () => graffitiBody(false));
+  if (wasUsed('graffiti')) bake('graffiti5t', x, y, 0, 0, 61, 48, () => graffitiBody(true));
+  else bake('graffiti5', x, y, 0, 0, 61, 48, () => graffitiBody(false));
 }
 
 // ── РЖАВЫЙ ТРУБОПРОВОД ──
@@ -2613,22 +2622,29 @@ function altarBody() {
     const a = k / 11 * Math.PI * 2 + 0.2, L = 16 + q(hh(k, 1, 3) * 14);
     for (let s = 9; s < L; s++) r(cx + Math.cos(a) * s * 1.6 + Math.sin(s * 0.7 + k) * 0.8, cy + 3 + Math.sin(a) * s * 0.8, 1, 1, s % 4 ? MG_D : MG);
   }
-  // камни вокруг — меж ними пустота
-  for (const [sx, sy] of [[8, 30], [44, 28], [14, 18], [40, 17]]) { r(sx, sy, 4, 3, S0); r(sx, sy, 4, 1, S1); r(sx + 3, sy + 1, 1, 2, S2); }
-  // камень: бок к нам, верх — весь во мху ярусами
-  for (let x = cx - 13; x <= cx + 13; x++) { const u = (x - cx) / 13, s = Math.sqrt(Math.max(0, 1 - u * u)); r(x, q(cy + 5 * s), 1, 4, x < cx - 4 ? S0 : S2); r(x, q(cy + 5 * s) + 4, 1, 1, K0); }
-  for (let y = cy - 6; y <= cy + 6; y++) for (let x = cx - 14; x <= cx + 14; x++) {
+  // камень, валуны и мох — набором колец: гранит в крапину, мох с кромкой; свет слева, кромка пеплом
+  kitPaint('altar', 60, 44, (P, M) => {
+    for (const [sx, sy] of [[8, 30], [44, 28], [14, 18], [40, 17]]) P.round(sx + 2, sy, sy + 3, 5, M.GRANITE);   // камни вокруг
+    const side = [], top = [];
+    for (let x = cx - 13; x <= cx + 14; x++) { const u = (x - cx) / 13.5, sq = Math.sqrt(Math.max(0, 1 - u * u)); side.push([x, cy + 5 * sq + 4.5]); top.push([x, cy + 5 * sq]); }
+    P.poly([...top, ...side.reverse()], M.GRANITE).shade(1);              // бок к нам — в тени
+    const moss = [];
+    for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2; moss.push([cx + 0.5 + Math.cos(a) * 14.5, cy + 0.5 + Math.sin(a) * 6.5]); }
+    P.poly(moss, M.MOSS);                                                 // верх — весь во мху
+  }, { seed: 107, chip: 0, ao: 0 });
+  for (let y = cy - 6; y <= cy + 6; y++) for (let x = cx - 14; x <= cx + 14; x++) {   // ярусы мха — кромками
     const e = ((x - cx) / 14) ** 2 + ((y - cy) / 6) ** 2;
-    if (e > 1) continue;
-    const ring = Math.floor(e * 4);                                       // ярусы мха
-    r(x, y, 1, 1, ring === 3 ? MG_D : ring === 0 ? MG_L : (x + y + ring) % 5 === 0 ? MG_D : MG);
+    if (e > 0.95) continue;
+    const ring = Math.floor(e * 4), up = Math.floor((((x - cx) / 14) ** 2 + ((y - 1 - cy) / 6) ** 2) * 4);
+    if (ring !== up) r(x, y, 1, 1, ring > up ? MG_D : MG_L);
+    else if (ring === 0 && hh(x, y, 109) < 0.3) r(x, y, 1, 1, MG_L);
   }
   for (let k = 0; k < 9; k++) r(cx - 10 + k * 2, cy - 1 + q(Math.sin(k) * 1.5), 1, 1, K1);   // трещина в мхе — тоже форма
 }
 const MOSS_MARKS = [[[0, 0], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [2, -1]], [[0, 0]], [[0, 0], [1, 0], [2, 0], [1, -1], [1, 1]]];   // спираль, точка, стрелка
 let mossReach = 0;
 export function draw_altar(x, y) {
-  bake('altar', x, y, -4, 4, 64, 42, altarBody);
+  bake('altar2', x, y, -4, 4, 64, 42, altarBody);
   const { cx, cy } = ALT;
   // мох дышит: кайма поднимается и опадает
   if (Math.sin(t * 0.012) > 0.2) for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2; r(x + cx + Math.cos(a) * 13, y + cy - 1 + Math.sin(a) * 5, 1, 1, MG_L); }
@@ -2709,10 +2725,13 @@ function dumpsterBody() {
     const v = hh(x >> 1, y >> 1, 3);
     r(x, y, 1, 1, e > 0.86 ? (v < 0.5 ? K1 : K0) : v < 0.04 ? L2 : v < 0.08 ? AS : v < 0.4 ? K4 : v < 0.75 ? K1 : K2);
   }
-  // крышка откинута назад
-  r(8, 3, 32, 3, K2); r(8, 3, 32, 1, S2); for (let k = 0; k < 4; k++) r(8 + k * 9, 6, 2, 6, K1);
-  // корпус: шире кверху; краска вспучена жаром, ржа
-  for (let y = 12; y < 40; y++) { const w = 20 - q((y - 12) * 0.08); r(24 - w, y, 2 * w, 1, K3); r(24 - w, y, 1, 1, S2); r(24 + w - 1, y, 1, 1, AS); }
+  // бак и откинутая крышка — клёпаной сталью набора: шире кверху, свет слева, кромка; копоть от огня по верху
+  kitPaint('dumpster', 48, 42, (P, M) => {
+    P.box(8, 3, 32, 3, M.PLATE);                                         // крышка откинута назад
+    for (let k = 0; k < 4; k++) P.box(8 + k * 9, 6, 2, 6, M.PLATE).shade(2);   // её рёбра — в тени
+    P.trap(6, 41, 4, 43, 12, 39, M.PLATE);                               // корпус
+  }, { seed: 97, chip: 0.04, ao: 0, soot: [[4, 30, 40, 18]] });
+  // краска вспучена жаром, ржа
   for (let k = 0; k < 26; k++) r(6 + q(hh(k, 1, 3) * 36), 14 + q(hh(k, 1, 5) * 24), 1 + (k & 1), 1, hh(k, 1, 7) < 0.5 ? RUST : K1);
   for (let x = 8; x < 41; x += 8) r(x, 13, 1, 26, K2);                    // рёбра жёсткости
   r(4, 11, 40, 2, K1);                                                    // край — раскалён (живьём)
@@ -2739,7 +2758,7 @@ function dumpsterBody() {
   X.globalAlpha = 0.5; r(-24, 47, 98, 1, K0); X.globalAlpha = 1;
 }
 export function draw_dumpster(x, y) {
-  bake('dumpster2', x, y, -26, 2, 102, 47, dumpsterBody);
+  bake('dumpster3', x, y, -26, 2, 102, 47, dumpsterBody);
   // раскалённый край: тлеет пятнами
   for (let k = 0; k < 40; k += 2) if (hh(k, (t >> 4) & 7, 3) < 0.6) r(x + 4 + k, y + 11 + (k % 4 === 0 ? 1 : 0), 2, 1, hh(k, t >> 4, 5) < 0.3 ? SV : KV);
   // огонь из бака — языками одним силуэтом; очаги по куче
@@ -2891,23 +2910,26 @@ function tarpBody(seam) {
   });
 }
 // столбы, растяжки, башмаки — неподвижное
+// столбы набором: трубы — бурым железом цилиндром (свет слева, кромка), хомуты и шапки — клёпаной
+// сталью, башмаки — бетоном; план от угла (BN_L − 8, BN_TOP − 3)
+const BN_OX = BN_L - 8, BN_OY = BN_TOP - 3;
+function bannerKit(P, M) {
+  for (const px0 of [BN_L, BN_R]) {
+    const px = px0 - BN_OX, Y = y => y - BN_OY;
+    P.box(px - 6, Y(BN_G - 3), 18, 4, M.CONCRETE);                         // башмак, вросший
+    P.box(px - 3, Y(BN_G - 5), 12, 2, M.PLATE);                            // плита на болтах
+    P.box(px, Y(BN_TOP), 6, BN_G - 5 - BN_TOP, M.WROUGHT, FORM.CYL);       // труба
+    for (const cy of [-16, 100]) P.box(px - 1, Y(cy), 8, 2, M.PLATE);      // хомуты
+    P.box(px - 1, Y(BN_TOP - 2), 8, 2, M.PLATE);                           // шапка
+  }
+}
 function bannerPoles() {
+  kitPaint('banner', BN_R - BN_OX + 16, BN_G - BN_OY + 2, bannerKit, { seed: 91, chip: 0.04, ao: 2 }, BN_OX, BN_OY);
   for (const px of [BN_L, BN_R]) {
-    // бетонный башмак, вросший; плита на болтах
-    r(px - 6, BN_G - 3, 18, 4, S2); r(px - 6, BN_G - 3, 18, 1, S0); r(px - 6, BN_G - 3, 1, 4, S1);
-    r(px - 3, BN_G - 5, 12, 2, K3); r(px - 3, BN_G - 5, 12, 1, S0); r(px - 2, BN_G - 5, 1, 1, AS); r(px + 7, BN_G - 5, 1, 1, AS);
-    // труба: свет слева, к тени — темнее, кромка
-    for (let y = BN_TOP; y < BN_G - 5; y++) {
-      r(px, y, 1, 1, S1); r(px + 1, y, 2, 1, S0); r(px + 3, y, 1, 1, K3); r(px + 4, y, 1, 1, K2); r(px + 5, y, 1, 1, K1);
-      if (hh(px, y, 81) < 0.12) r(px + 1 + q(hh(px, y, 83) * 3), y, 1 + (hh(px, y, 85) < 0.4 ? 1 : 0), 1, hh(px, y, 87) < 0.5 ? RUST : RUST_L);
-    }
+    r(px - 2, BN_G - 5, 1, 1, AS); r(px + 7, BN_G - 5, 1, 1, AS);          // болты
+    for (let y = BN_TOP; y < BN_G - 5; y++) if (hh(px, y, 81) < 0.12) r(px + 1 + q(hh(px, y, 83) * 3), y, 1 + (hh(px, y, 85) < 0.4 ? 1 : 0), 1, hh(px, y, 87) < 0.5 ? RUST : RUST_L);
     // ржа потёками от хомутов вниз
-    for (const cy of [-16, 100]) {
-      r(px - 1, cy, 8, 2, K3); r(px - 1, cy, 8, 1, S0); r(px - 1, cy, 1, 2, AS);
-      for (let k = 0; k < 6; k++) if (hh(px, k + cy, 89) < 0.6) r(px + k, cy + 2, 1, 3 + q(hh(px, k, 91) * 9), hh(k, px, 93) < 0.5 ? RUST : RUST_L);
-    }
-    // шапка
-    r(px - 1, BN_TOP - 2, 8, 2, K3); r(px - 1, BN_TOP - 2, 8, 1, S1);
+    for (const cy of [-16, 100]) for (let k = 0; k < 6; k++) if (hh(px, k + cy, 89) < 0.6) r(px + k, cy + 2, 1, 3 + q(hh(px, k, 91) * 9), hh(k, px, 93) < 0.5 ? RUST : RUST_L);
   }
   // растяжки — от верха наружу к колышкам
   const guy = (ax, ay, bx, by) => { const n = Math.max(Math.abs(bx - ax), Math.abs(by - ay)); for (let k = 0; k <= n; k++) r(ax + (bx - ax) * k / n, ay + (by - ay) * k / n, 1, 1, k % 7 === 3 ? RUST_L : K3); };
@@ -2919,7 +2941,7 @@ const TARPS = [null, null];                                              // хо
 const BANNER = { id: 'banner' };
 let BN_T = -1, BN_PH = 0, BN_FL = 0;                                    // фаза волны и клока: копятся по шагам (не t × скорость — та гуляет с ветром)
 export function draw_banner(x, y) {
-  bake('banner_poles', x, y, -18, -24, 314, 146, bannerPoles);
+  bake('banner_poles2', x, y, -18, -24, 314, 146, bannerPoles);
   const seam = revealOf(BANNER) > 0.25 ? 1 : 0;
   if (TARPS[seam] === null) {
     let c = typeof document !== 'undefined' && document.createElement ? document.createElement('canvas') : false;
@@ -3062,22 +3084,18 @@ export function draw_overpass(x, y) {
 const VM_FX = 10, VM_FW = 25, VM_G = 56;                                  // лицо: x, ширина; подножие
 function vendBody() {
   const F0 = VM_FX, F1 = VM_FX + VM_FW - 1, G = VM_G;
-  // ── крыша: копоть, к свету светлее; торец уходит вверх-вправо ──
-  for (let j = 0; j < 3; j++) for (let x = F0 + 2 - j; x <= F1 + 4 - 2 * j; x++) { const h = hh(x, j, 501); r(x, 4 + j, 1, 1, h < 0.35 ? K2 : x < F0 + 8 ? S1 : S0); }
-  for (let i = 0; i < 5; i++) {
-    const cx = F1 + 1 + i, top = 6 - (i >> 1) - (i > 3 ? 0 : 0), bot = G - 2 - (i >> 1);
-    for (let y = top; y <= bot; y++) { const h = hh(cx, y, 503); r(cx, y, 1, 1, i === 4 ? (h < 0.12 ? AS : S1) : h < 0.08 ? RUST : h < 0.14 ? K2 : S2); }
-  }
+  // ── короб набором: лицо, торец (уходит вверх-вправо, в тени), крыша в копоти — серой краской по стали ──
+  kitPaint('vending', 46, VM_G, (P, M) => {
+    P.poly([[F0 + 2, 4], [F1 + 6, 4], [F1 + 1, 7], [F0, 7]], M.WARSHIP);                  // крыша
+    P.poly([[F1 + 1, 7], [F1 + 6, 4], [F1 + 6, G - 3], [F1 + 1, G]], M.WARSHIP).shade(2); // торец
+    P.box(F0, 7, VM_FW, G - 7, M.WARSHIP);                                               // лицо
+  }, { seed: 101, chip: 0.03, ao: 3, soot: [[F0, 8, VM_FW + 6, 6]], drips: [[F0 + 1, 9, 4], [F1 - 1, 9, 6]] });
   for (let y = 9; y < G - 6; y += 4) r(F1 + 2, y, 2, 1, K1);              // жалюзи вентиляции на торце
-  // ── лицо: крашеная сталь, слева на свету, ржа по углам и потёками от болтов ──
+  // ржа по углам лица, гуще к низу
   for (let x = F0; x <= F1; x++) for (let y = 7; y < G; y++) {
     const h = hh(x, y, 505), low = y > G - 14 ? (y - (G - 14)) / 14 : 0;
-    let c = x === F0 ? S1 : S0;
-    if (h < 0.05 + low * 0.25 && (x < F0 + 5 || x > F1 - 4)) c = h < 0.03 + low * 0.1 ? RUST_L : RUST;
-    else if (h > 0.985) c = S2;
-    r(x, y, 1, 1, c);
+    if (h < 0.05 + low * 0.25 && (x < F0 + 5 || x > F1 - 4)) r(x, y, 1, 1, h < 0.03 + low * 0.1 ? RUST_L : RUST);
   }
-  r(F0, 7, VM_FW, 1, L2); r(F0, 7, 1, G - 7, L2);                       // ребро к свету
   for (const bx of [F0 + 1, F1 - 1]) { r(bx, 8, 1, 1, K0); for (let k = 1; k < 4 + (bx & 3); k++) r(bx, 8 + k, 1, 1, RUST); }   // болты, потёки
   // ── шапка: «ОБМЕН» под копотью — буквы штрихами, копоть съела половину ──
   r(F0 + 2, 9, VM_FW - 4, 5, K1); r(F0 + 2, 9, VM_FW - 4, 1, K0); r(F0 + 2, 13, VM_FW - 4, 1, K2);
@@ -3172,7 +3190,7 @@ function vendBody() {
 }
 let VM_T = -1, VM_PH = 0;
 export function draw_vending(x, y) {
-  bake('vend1', x, y, -1, 0, 46, VM_G, vendBody);
+  bake('vend2', x, y, -1, 0, 46, VM_G, vendBody);
   // экран: колесо крутится, мериты набираются столбиком — и сгорают; редкий провал
   const dt = VM_T < 0 ? 0 : Math.min(240, Math.max(0, t - VM_T)); VM_T = t; VM_PH += dt;
   const ox = q(x) + VM_FX + 3, oy = q(y) + 16;
