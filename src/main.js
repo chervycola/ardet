@@ -152,7 +152,7 @@ import { wakefx, wakePass } from './render/wakefx.js';
 import { lie, startLie, startOut, stepLie, wantOut, stopLie, drawLying, isLying, sitOf, standOf } from './world/pithosLie.js';
 import { climb, startClimb, stepClimb, stopClimb, drawClimb, climbDepth } from './world/climbOut.js';
 import { drawMossDream } from './render/mindfx.js';
-import { stepDispatch, skipLine, noteTalkedOut, noteBrake, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
+import { stepDispatch, skipLine, noteTalkedOut, noteBrake, noteLie, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
 import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
 import { SCENES } from './content/dispatch_scenes.js';
 
@@ -446,7 +446,7 @@ function landBoat() {
 }
 // ЛЕЧЬ В ПИФОС (world/pithosLie.js): лёг — меню лежащего: «УСНУТЬ» или «ВЫЛЕЗТИ»; осмотреться —
 // тот же текст, что прежде показывало «ЛЕЧЬ». Отменил — лежит; щелчок или E/F — меню снова
-let pithosIn = null;
+let pithosIn = null, pithosMenuWait = false;
 function openPithosMenu() {
   if (!lie.loc) return;
   if (!pithosIn || pithosIn.of !== lie.loc) {
@@ -1956,7 +1956,7 @@ function updateGame() {
   if (lie.on) {
     if (lie.phase === 'in' && (input.getMove().active || input.getHeldTouch())) wantOut();
     const ev = stepLie(player);
-    if (ev === 'in') openPithosMenu();
+    if (ev === 'in') { if (dispatchPlaying()) pithosMenuWait = true; else openPithosMenu(); }   // обмен ещё идёт — меню после него
     updateWorldSystems(); return;
   }
   const fell = under.active || house.active ? false : stumble.update(player);   // полотно ровное — под землёй и дома не оступишься
@@ -2131,8 +2131,8 @@ function updateWorldSystems() {
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving, ringAt(player.x + 6, player.y + 24) >= RINGS);   // слова ленты — только у ленты
   // канал «странник — терминал»: у поезда и у вехи (world/dispatch.js); сыграна сцена — сохранить
-  { const ev = stepDispatch({ x: player.x + 6, y: player.y + 23 }, locations, isMapOpen());
-    if (ev) { dispatchEvent(ev, announce); if (ev.end) saveNow(); } }
+  { const ev = stepDispatch({ x: player.x + 6, y: player.y + 23 }, locations, isMapOpen(), !player.moving && player.still !== false);
+    if (ev) { dispatchEvent(ev, announce); if (ev.end) { saveNow(); if (pithosMenuWait && lie.on && lie.phase === 'in') { pithosMenuWait = false; openPithosMenu(); } } } }
   stepDispatchStrip();
   if (stepClauses(player, !redNoon.active && !inBrainrotLoop())) saveNow();   // «Последний пункт»: строка на ходу; сказанная правда (жребий, погода) — сразу в сохранение
   checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
@@ -2641,6 +2641,7 @@ events.on('location.use', (loc) => {
       logSeated = false; player.path = null; player.walkTo = null; player.auto = false; stopHero();
       under.seen.add('pithos_lie');
       startLie(loc);
+      noteLie();                                     // «Пифос»: пока залезает — обмен с терминалом (world/dispatch.js)
     }
     return;
   }

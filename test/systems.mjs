@@ -5390,6 +5390,28 @@ setCtx(ctx);
     DP.loadDispatch(saved); eq(DP.journalLines().length, 1, 'сохранение потеряло «Заочно»');
     DP._resetDispatch();
   });
+  test('канал: серия обменов — «Пифос», когда ложишься; «Пойду», если постоять у выхода; «Развилка» у камня, и ответа на «ты тут?» нет', () => {
+    DP._resetDispatch(); DP._resetAnchors();
+    const L = LC.locations, at = id => { const l = L.find(q => q.id === id); return { x: l.x + l.w / 2, y: l.y + l.h + 20 }; };
+    const far = { x: 100, y: 100 };
+    const startAt = (here, still = false, n = 400) => { let ev = null; for (let i = 0; i < n; i++) { ev = DP.stepDispatch(here, L, false, still); if (ev && ev.start) return ev.start.id; } return null; };
+    const finish = here => { let n = 0; while (DP.isPlaying() && n++ < 30000) DP.stepDispatch(here, L); };
+    DP.stepDispatch(far, L);
+    eq(startAt(at('pithos'), false, 5), null, 'у пифоса без «лечь» — тихо');
+    DP.noteLie(); eq(startAt(at('pithos'), false, 5), 'p1', 'лёг — «Пифос»'); finish(at('pithos'));
+    DP.noteLie(); DP.stepDispatch(far, L); eq(startAt(at('pithos'), false, 5), null, '«Пифос» — раз');
+    DP.stepDispatch(far, L);
+    eq(startAt(at('exit'), false, 400), null, 'у выхода на ходу — тихо');
+    eq(startAt(at('exit'), true, 400), 'g1', 'постоял — «Пойду»'); finish(at('exit'));
+    DP.stepDispatch(far, L);
+    eq(startAt(at('fork_stone'), false, 5), 'f1', 'у камня — «Развилка»');
+    eq(DP.dispatch.playing.scene.lines.slice(-1)[0].join(':'), 's:иду.\n...\nты тут?', 'последнее слово — «ты тут?», ответа нет');
+    finish(at('fork_stone'));
+    assert(['p1', 'g1', 'f1'].every(id => DP.dispatch.done.has(id)));
+    const M = FSd.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+    assert(/dispatchPlaying\(\)\) pithosMenuWait = true/.test(M), 'меню пифоса не ждёт конца обмена');
+    DP._resetDispatch();
+  });
   test('канал: щелчок — допечатать реплику терминала, ещё щелчок — дальше; Enter перехвачен до «осмотреть»; журнал терминала читает канал', () => {
     DP._resetDispatch(); DP._resetAnchors();
     const L = LC.locations, vh = L.find(l => l.id === 'dispatch_post'), atV = { x: vh.x + vh.w / 2, y: vh.y + vh.h + 20 };

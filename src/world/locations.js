@@ -254,9 +254,10 @@ import { buildLake, buildProps } from './lake.js';
 locations.push(...buildLake());
 buildProps();
 // путевая веха канала «странник — терминал» (world/dispatch.js): к востоку от поезда, за изгородью
-import { buildDispatchPost } from './dispatch.js';
+import { buildDispatchPost, buildForkStone } from './dispatch.js';
 import { isInSettlement } from './physics.js';
 locations.push(...buildDispatchPost(locations, isInSettlement));
+locations.push(...buildForkStone(locations));                   // камень на развилке — «Развилка»
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)

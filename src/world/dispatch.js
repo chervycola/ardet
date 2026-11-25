@@ -16,14 +16,17 @@
 // ═══════════════════════════════════════
 import { SCENES, JOURNAL_ZAOCHNO } from '../content/dispatch_scenes.js';
 
-export const ANCHORS = { train: 'train', veha: 'dispatch_post' };   // id мест
-export const NEAR = { train: 46, veha: 70 };                    // «пришёл»: ступни не дальше стольких точек от места
+// места канала: поезд, путевая веха; серия обменов — пифос, «Выход в Пустошь», камень на развилке
+export const ANCHORS = { train: 'train', veha: 'dispatch_post', pithos: 'pithos', exit: 'exit', fork: 'fork_stone' };   // id мест
+export const NEAR = { train: 46, veha: 70, pithos: 50, exit: 60, fork: 60 };   // «пришёл»: ступни не дальше стольких точек от места
+export const IDLE_AT = 240;                                     // «постоял»: четыре секунды покоя у места
 export const LEAVE = 140;                                       // «ушёл»: дальше стольких
 
 export const dispatch = {
   done: new Set(),          // сыгранные сцены
   flags: new Set(),         // talkedOut — машинист выговорен; brake — стоп-кран после заявки; z2a.train — сходил к кабине
-  inside: { train: false, veha: false },
+  inside: {},
+  still: {},                // сколько стоит у места (кадры)
   playing: null,            // { scene, i, t, typed }
 };
 export const sceneById = id => SCENES.find(s => s.id === id) || null;
@@ -33,6 +36,8 @@ export const sceneById = id => SCENES.find(s => s.id === id) || null;
 export function noteTalkedOut(npc) { if (npc === 'machinist') dispatch.flags.add('talkedOut'); }
 // стоп-кран дёрнули (сцена СТОП-КРАН): считается, когда заявка уже подана
 export function noteBrake() { if (dispatch.done.has('z2b')) dispatch.flags.add('brake'); }
+// лёг в пифос («Пифос» — пока залезает)
+export function noteLie() { if (!dispatch.done.has('p1')) dispatch.flags.add('lie'); }
 
 // доступна ли сцена (без места): всё нужное сыграно, своё условие есть
 function ready(s) {
@@ -42,6 +47,7 @@ function ready(s) {
   if (s.flag && !dispatch.flags.has(s.flag)) return false;
   if (s.on === 'talkedOut' && !dispatch.flags.has('talkedOut')) return false;
   if (s.on === 'brake' && !dispatch.flags.has('brake')) return false;
+  if (s.on === 'lie' && !dispatch.flags.has('lie')) return false;
   return true;
 }
 // следующая сцена у места: по порядку списка
@@ -73,7 +79,7 @@ export function typedOf(p) {
 
 // шаг: here — ступни (x, y) наверху или null (дом, изнанка, сцена театра); paused — бумага,
 // меню, карта: строка стоит. Вернёт событие: { start: scene } | { line: [who, text] } | { end: scene } | null
-export function stepDispatch(here, locations, paused = false) {
+export function stepDispatch(here, locations, paused = false, still = false) {
   const p = dispatch.playing;
   if (p) {
     if (!here) { dispatch.playing = null; return { abort: p.scene }; }   // ушёл в дом или вниз — сцена брошена
@@ -83,18 +89,20 @@ export function stepDispatch(here, locations, paused = false) {
     return null;
   }
   if (!here || paused) return null;
-  for (const key of ['train', 'veha']) {
+  for (const key of Object.keys(ANCHORS)) {
     const l = anchorOf(key, locations);
     if (!l) continue;
-    const d = distTo(l, here.x, here.y), was = dispatch.inside[key];
+    const d = distTo(l, here.x, here.y), was = !!dispatch.inside[key];
     if (d <= NEAR[key]) dispatch.inside[key] = true;
     else if (d > LEAVE) dispatch.inside[key] = false;
     const arrived = !was && dispatch.inside[key];
+    dispatch.still[key] = dispatch.inside[key] && still && d <= NEAR[key] ? (dispatch.still[key] || 0) + 1 : 0;
     if (key === 'train' && arrived && dispatch.done.has('z2a') && !dispatch.done.has('z2b')) dispatch.flags.add('z2a.train');
     const s = nextAt(key);
     if (!s || !dispatch.inside[key]) continue;
-    // по приходу; «выговорен» и «стоп-кран» — сразу, пока стоит рядом
-    if (arrived || s.on === 'talkedOut' || s.on === 'brake') return start(s);
+    // по приходу; «выговорен», «стоп-кран», «лёг» — сразу, пока рядом; «постоял» — после покоя у места
+    if (s.on === 'idle') { if (dispatch.still[key] >= IDLE_AT) return start(s); continue; }
+    if (arrived || s.on === 'talkedOut' || s.on === 'brake' || s.on === 'lie') return start(s);
   }
   return null;
 }
@@ -109,6 +117,7 @@ function advance() {
     dispatch.playing = null;
     dispatch.done.add(p.scene.id);
     if (p.scene.on === 'brake') dispatch.flags.delete('brake');
+    if (p.scene.on === 'lie') dispatch.flags.delete('lie');
     return { end: p.scene };
   }
   return { line: p.scene.lines[p.i] };
@@ -146,6 +155,27 @@ export function buildDispatchPost(locations, fence = null) {
   return [{ id: 'dispatch_post', name: 'путевая веха', zone: 'street', x: at.x - W / 2, y: at.y - H, w: W, h: H,
     look: POST_LOOK, drawSelf: drawPost }];
 }
+// камень на развилке («Развилка»): у кольцевой вехи юга — развилки на кольцевую дугу (content/places.js)
+const STONE_LOOK = `Камень на развилке. Буквы высечены глубоко и забиты мхом. Читается.`;
+export function buildForkStone(locations) {
+  const sign = locations.find(l => l.name === 'кольцевая веха' && l.streetSide === 'south') || locations.find(l => l.name === 'кольцевая веха' && l.id !== 'br_back');
+  if (!sign) return [];
+  const W = 18, H = 14, busy = (x, y) => locations.some(l => x + W > l.x - 30 && x < l.x + l.w + 30 && y > l.y - 20 && y - H < l.y + l.h + 34);
+  const gy0 = sign.y + sign.h;
+  for (const dx of [46, -46, 70, -70, 96, -96, 124, -124]) for (const dy of [0, 16, -16, 30]) {
+    const x = Math.round(sign.x + sign.w / 2 + dx), y = Math.round(gy0 + dy);
+    if (!busy(x - W / 2, y)) return [{ id: 'fork_stone', name: 'камень на развилке', zone: 'street', x: x - W / 2, y: y - H, w: W, h: H, look: STONE_LOOK, drawSelf: drawStone }];
+  }
+  return [];
+}
+function drawStone(ctx, loc) {
+  const x = loc.x, g = loc.y + loc.h;
+  for (let k = 0; k < 12; k++) { const w = Math.round(8 * Math.sqrt(1 - ((k - 7) / 8) ** 2)); Rp(ctx, x + 9 - w, g - 1 - k, w * 2, 1, k > 9 ? '#8a8477' : k > 3 ? '#6e6a60' : '#57534c'); }
+  Rp(ctx, x + 3, g - 10, 1, 7, '#bdb5a4');                            // к свету — слева
+  for (const [dx, dy] of [[5, 8], [9, 8], [12, 8], [5, 6], [8, 6], [11, 6], [6, 4], [10, 4]]) Rp(ctx, x + dx, g - dy - 1, 2, 1, '#3a3836');   // строки высечены
+  for (const [dx, dy] of [[4, 7], [12, 5], [8, 3]]) Rp(ctx, x + dx, g - dy - 1, 1, 1, '#3D4A3A');   // мох в буквах
+  ctx.globalAlpha = 0.4; Rp(ctx, x + 1, g, 17, 1, '#0D0B0A'); ctx.globalAlpha = 1;
+}
 const Rp = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 function drawPost(ctx, loc, t = 0) {
   const x = loc.x + 4, g = loc.y + loc.h;
@@ -160,11 +190,11 @@ function drawPost(ctx, loc, t = 0) {
 }
 
 // ── сохранение ──
-export const saveDispatch = () => ({ done: [...dispatch.done], flags: [...dispatch.flags].filter(f => f !== 'brake') });
+export const saveDispatch = () => ({ done: [...dispatch.done], flags: [...dispatch.flags].filter(f => f !== 'brake' && f !== 'lie') });
 export function loadDispatch(d) {
   if (!d) return;                                                  // сохранения нет — что есть, то и есть (новая игра и так пуста)
   dispatch.done = new Set(Array.isArray(d.done) ? d.done.filter(id => sceneById(id)) : []);
   dispatch.flags = new Set(Array.isArray(d.flags) ? d.flags : []);
-  dispatch.playing = null; dispatch.inside = { train: false, veha: false };
+  dispatch.playing = null; dispatch.inside = {}; dispatch.still = {};
 }
 export function _resetDispatch() { loadDispatch({ done: [], flags: [] }); }
