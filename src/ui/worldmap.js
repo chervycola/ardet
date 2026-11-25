@@ -24,6 +24,8 @@ import { SETTLEMENT } from '../world/physics.js';
 import { getPlayerPos } from '../core/playerRef.js';
 import { events } from '../core/events.js';
 import { locations } from '../world/locations.js';
+import { MASSIFS, CANYONS, massifH } from '../world/landforms.js';
+import { LAKE, BOX as LAKE_BOX, BASINS, ISLES, BROOKS, lakeE, isleE } from '../world/lake.js';
 
 // ── Gate discovery state (persistable) ──
 const discovered = new Set(['gate_townlet']);
@@ -296,6 +298,89 @@ function buildFill(walked) {
 }
 
 let localShown = 0, localTotal = 0, knownRings = new Set(), here = 0, hereSide = null, walkedNow = new Set();
+
+// ── РЕЛЬЕФ И ВОДА НА ПЛАНЕ (слово автора 25.11: «карта делай») — горы штрихами по склону и знаком
+//    вершины, каньоны бороздой, Тёплое озеро размывом с контуром (острова — бумагой), ручьи линией.
+//    Рисунок — всегда (это план местности, как границы колец); подпись — когда клетка пройдена ногами
+//    (или план по подписке). Геометрия считается раз, при первом открытии ──
+let terrain = null;
+function buildTerrain() {
+  const T = { hatch: [], peaks: [], lake: null };
+  for (const m of MASSIFS) {                                   // штрихи по склону: от гребня вниз, длиннее — где круче
+    let top = null;
+    for (let y = m.cy - m.ry; y <= m.cy + m.ry; y += 46) for (let x = m.cx - m.rx; x <= m.cx + m.rx; x += 70) {
+      const h = massifH(m, x, y);
+      if (h < 18) continue;
+      if (!top || h > top.h) top = { x, y, h };
+      const gx = (massifH(m, x + 12, y) - massifH(m, x - 12, y)) / 24, gy = (massifH(m, x, y + 6) - massifH(m, x, y - 6)) / 12;
+      const g = Math.hypot(gx, gy);
+      if (g < 0.05) continue;
+      T.hatch.push({ x, y, ux: -gx / g, uy: -gy / g, k: Math.min(1, g / 0.6), a: Math.min(1, h / m.H) });
+    }
+    if (top) T.peaks.push({ x: top.x, y: top.y, name: m.name });
+  }
+  // озеро: размыв в своём холсте (вчетверо мельче точки листа), контур — по краю
+  const K = 5, x0 = LAKE_BOX.x0, y0 = LAKE_BOX.y0, w = Math.ceil((LAKE_BOX.x1 - x0) * LS * K), h = Math.ceil((LAKE_BOX.y1 - y0) * LS * K);
+  if (typeof document !== 'undefined' && document.createElement && w > 0 && h > 0) {
+    const cv = plainCanvas(w, h), g = cv.getContext && cv.getContext('2d');
+    if (g) {
+      const wet = new Uint8Array(w * h), step = 1 / (LS * K);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const wx = x0 + (i + 0.5) * step, wy = y0 + (j + 0.5) * step;
+        wet[j * w + i] = lakeE(wx, wy) < 1 && !ISLES.some(I => isleE(I, wx, wy) < 1) ? 1 : 0;
+      }
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const k = j * w + i;
+        if (!wet[k]) continue;
+        const edge = !wet[k - 1] || !wet[k + 1] || !wet[k - w] || !wet[k + w];
+        g.fillStyle = edge ? rgba(SEPIA, 0.85) : (j % 3 === 0 ? rgba(SEPIA, 0.2) : rgba(MIST, 0.16));   // штриховка воды строками
+        g.fillRect(i, j, 1, 1);
+      }
+      T.lake = { cv, x: lx(x0), y: ly(y0), w: w / K, h: h / K };
+    }
+  }
+  return T;
+}
+function drawTerrain(known) {
+  if (!terrain) terrain = buildTerrain();
+  const q = 1 / Math.sqrt(zscale);
+  // горы
+  ctx.lineWidth = 0.7 * q;
+  for (const s of terrain.hatch) {
+    const L = (2 + 3.5 * s.k) * q, x = lx(s.x), y = ly(s.y);
+    ctx.strokeStyle = rgba(SEPIA, 0.25 + 0.45 * s.a);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + s.ux * L, y + s.uy * L * 0.6); ctx.stroke();
+  }
+  for (const pk of terrain.peaks) {                            // вершина — треугольник
+    const x = lx(pk.x), y = ly(pk.y), r = 3 * q;
+    ctx.fillStyle = SEPIA; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y + r * 0.7); ctx.lineTo(x - r, y + r * 0.7); ctx.closePath(); ctx.fill();
+  }
+  // каньоны: борозда, дно светлее
+  for (const c of CANYONS) {
+    const path = () => { ctx.beginPath(); c.pts.forEach(([x, y], i) => (i ? ctx.lineTo(lx(x), ly(y)) : ctx.moveTo(lx(x), ly(y)))); };
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = rgba(SEPIA, 0.75); ctx.lineWidth = Math.max(1.2, (c.floor + c.wall) * 2 * LS); path(); ctx.stroke();
+    ctx.strokeStyle = rgba(PAPER, 0.9); ctx.lineWidth = Math.max(0.5, c.floor * LS); path(); ctx.stroke();
+  }
+  // ручьи — тонкой линией, тёплый сброс чуть толще
+  for (const B of BROOKS) {
+    ctx.strokeStyle = rgba(SEPIA, 0.7); ctx.lineWidth = (B.warm ? 1 : 0.7) * q;
+    ctx.beginPath(); B.line.forEach((p, i) => (i ? ctx.lineTo(lx(p.x), ly(p.y)) : ctx.moveTo(lx(p.x), ly(p.y)))); ctx.stroke();
+  }
+  // озеро
+  if (terrain.lake) { const L = terrain.lake; ctx.imageSmoothingEnabled = true; ctx.drawImage(L.cv, L.x, L.y, L.w, L.h); }
+  // подписи — от руки, когда клетка пройдена
+  ctx.font = `italic ${11 / Math.sqrt(zscale)}px Literata, 'PT Serif', Georgia, serif`;
+  const label = (txt, wx, wy, dy = 0) => {
+    if (!known(wx, wy)) return;
+    const tw = ctx.measureText(txt).width, x = lx(wx) - tw / 2, y = ly(wy) + dy * q;
+    ctx.fillStyle = rgba(PAPER, 0.8); ctx.fillRect(x - 2, y - 9 * q, tw + 4, 11 * q);
+    ctx.fillStyle = SEPIA; ctx.fillText(txt, x, y);
+  };
+  for (const pk of terrain.peaks) label(pk.name, pk.x, pk.y, -6);
+  for (const c of CANYONS) { const m = c.pts[Math.floor(c.pts.length / 2)]; label('«' + c.name + '»', m[0], m[1], -6); }
+  const E = BASINS[0]; label(LAKE.name, E.cx, E.cy, 4);
+}
 function drawLocal() {
   const visited = getVisitedFn() || new Set();
   const walked = getWalkedFn() || new Set();
@@ -332,6 +417,8 @@ function drawLocal() {
       const t = trailPoint(side, d);
       ctx.fillRect(lx(t.x) - 0.6, ly(t.y) - 0.6, 1.2, 1.2);
     }
+  // рельеф и вода
+  drawTerrain((x, y) => { const r = ringAt(x, y); return sub || (r >= 1 && r <= RINGS && walkedNow.has(cellKey(r, sideAt(x, y)))); });
   // ядро вне времени и костёр — единственное тёплое на листе
   ctx.strokeStyle = rgba(SEPIA, 0.45); ctx.lineWidth = 0.8;
   ctx.beginPath(); ctx.arc(lx(CORE.x), ly(CORE.y), CORE.r * LS, 0, Math.PI * 2); ctx.stroke();

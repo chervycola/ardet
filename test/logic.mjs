@@ -366,6 +366,28 @@ const imp = p => import(new URL(p, base));
     idle.setSeen(null);
   });
 
+  const { input } = await imp('core/input.js');
+  test('клавиши: WASD в русской раскладке (ц ы ф в) — тоже ход; отпустил — стоит; Cmd+буква — не шаг', () => {
+    input.keys = {};
+    const ev = (key, code, extra = {}) => ({ key, code, metaKey: false, ctrlKey: false, ...extra });
+    input.press(ev('ц', 'KeyW'), true);
+    if (!input.getMove().active || input.getMove().y >= 0) throw new Error('ц (место W) — не шаг вверх');
+    input.press(ev('ф', 'KeyA'), true);
+    if (input.getMove().x >= 0) throw new Error('ф (место A) — не шаг влево');
+    input.press(ev('ц', 'KeyW'), false); input.press(ev('ф', 'KeyA'), false);
+    if (input.getMove().active) throw new Error('отпустил — а идёт');
+    input.press(ev('ы', 'KeyS'), true); input.press(ev('S', 'KeyS'), false);   // раскладку сменили, держа клавишу
+    if (input.getMove().active) throw new Error('сменил раскладку, держа клавишу, — залипло');
+    input.press(ev('w', 'KeyW'), true);
+    if (input.getMove().y >= 0) throw new Error('латинская W — не шаг');
+    input.press(ev('w', 'KeyW'), false);
+    input.press(ev('в', 'KeyD', { metaKey: true }), true);
+    if (input.getMove().active) throw new Error('Cmd+буква — шаг');
+    input.press(ev('с', 'KeyC'), true);
+    if (!input.isDown('eyes')) throw new Error('С — не веки');
+    input.keys = {};
+  });
+
   test('idle.update: does not crash on flip-flop input', () => {
     for (let i = 0; i < 5000; i++) {
       tick();

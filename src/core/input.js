@@ -36,14 +36,9 @@ class Input {
 
   init(canvas) {
     // Keyboard
-    window.addEventListener('keydown', e => {
-      // Cmd/Ctrl + буква — команда (копировать в терминале), не шаг и не веки; на маке keyup
-      // буквы при зажатом Cmd не приходит — клавиша залипла бы
-      if ((e.metaKey || e.ctrlKey) && e.key.length === 1) return;
-      this.keys[e.key.toLowerCase()] = true;
-    });
+    window.addEventListener('keydown', e => this.press(e, true));
     window.addEventListener('keyup', e => {
-      this.keys[e.key.toLowerCase()] = false;
+      this.press(e, false);
       if (e.key === 'Shift') this.keys['shift'] = false;
       if (e.key === 'Meta') this.keys = {};                        // отпустил Cmd — всё, что держал при нём, отпущено
       if (e.code === 'KeyC') { this.keys['c'] = false; this.keys['с'] = false; }   // раскладку сменили, держа C
@@ -119,6 +114,18 @@ class Input {
     const t = this.touch;
     if (!t || (!t.moved && Date.now() - t.startT < 100)) return null;
     return { x: t.x, y: t.y };
+  }
+
+  // клавиша: по букве и по месту (слово автора 25.11: WASD в русской раскладке — ц ы ф в — тоже ход).
+  // Буквенные клавиши пишутся и латинской буквой своего места (e.code KeyW → 'w'): шаг, веки (C) и
+  // «осмотреть» (E) работают в любой раскладке
+  press(e, down) {
+    // Cmd/Ctrl + буква — команда (копировать в терминале), не шаг и не веки; на маке keyup
+    // буквы при зажатом Cmd не приходит — клавиша залипла бы
+    if (down && (e.metaKey || e.ctrlKey) && e.key && e.key.length === 1) return;
+    if (e.key) this.keys[e.key.toLowerCase()] = down;
+    const m = /^Key([A-Z])$/.exec(e.code || '');
+    if (m) this.keys[m[1].toLowerCase()] = down;
   }
 
   isDown(action) {
