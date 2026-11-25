@@ -806,3 +806,27 @@ svg.sign { display: inline-block; vertical-align: middle; overflow: visible; }
 #look-sign svg.sign { margin-left: 8px; }
 .inv-foot svg.sign { margin-left: 6px; }
 html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
+
+/* ── Канал «странник — терминал» (world/dispatch.js, ui/dispatchStrip.js): строка внизу кадра.
+   Терминал — зелёным, печатается; живые — костью, твёрдо; ремарка — курсивом, без метки ── */
+#dispatch { position: fixed; left: 50%; bottom: 16vh; transform: translateX(-50%); width: min(620px, 92vw);
+  z-index: 60; display: none; pointer-events: auto; cursor: pointer; }
+#dispatch.on { display: block; }
+#dispatch .ln { display: flex; gap: 12px; align-items: baseline; margin-top: 2px; padding: 4px 14px 5px;
+  background: rgba(13, 11, 10, 0.8); color: #D9CFB8; white-space: pre-line; transition: opacity .35s; }
+#dispatch .ln.old { opacity: 0.4; }
+#dispatch .who { flex: 0 0 82px; text-align: right; font: 7px var(--font-pixel); letter-spacing: 1px;
+  color: #8A8D8F; text-transform: uppercase; }
+#dispatch .tx { flex: 1; font: 16px/1.32 Literata, 'PT Serif', Georgia, serif; }
+#dispatch .ln.t .tx { font: 21px/1.05 'VT323', monospace; color: #3fae3f; letter-spacing: 0.02em; }
+#dispatch .ln.t .who { color: #3fae3f; }
+#dispatch .ln.r .tx { font-style: italic; color: #b0a284; font-size: 15px; }
+#dispatch .tx.typing::after { content: '▌'; animation: dispatchCaret 1s steps(1) infinite; }
+@keyframes dispatchCaret { 50% { opacity: 0; } }
+@media (max-width: 768px), (pointer: coarse) {
+  #dispatch { bottom: 20vh; }
+  #dispatch .who { flex-basis: 58px; font-size: 6px; }
+  #dispatch .tx { font-size: 14px; }
+  #dispatch .ln.t .tx { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { #dispatch .tx.typing::after { animation: none; } }

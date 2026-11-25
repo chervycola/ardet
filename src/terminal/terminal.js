@@ -6,6 +6,7 @@ import { events } from '../core/events.js';
 import { termDb } from '../content/terminal_db.js';
 import { getSessionAge, hasDash88, markDash88 } from '../core/sessionMemory.js';
 import { t } from '../core/time.js';
+import { journalLines } from '../world/dispatch.js';
 
 const termEl = document.getElementById('term');
 const inputEl = document.getElementById('ti');
@@ -22,9 +23,11 @@ const FILE_ALIASES = { demon: 'demon_descartes', moss: 'moss_file', ardet: 'arde
 // предъявитель сам, без условий и без подписи (BOOK §5: «движение V не существует»)
 function journalText() {
   const base = termDb['archivist_log'].text;
-  return hasDash88()
+  const body = hasDash88()
     ? base + '—\n> поставлен лично. подписи нет.'
     : base + '\n> [строка пуста. ждёт. условий нет:\n>  journal 88]';
+  const more = journalLines();                                     // канал «странник — терминал»: «Заочно» (world/dispatch.js)
+  return more.length ? body + '\n' + more.join('\n') : body;
 }
 function fileEntry(rawName) {
   const stripped = rawName.replace(/^\./, '');

@@ -152,6 +152,9 @@ import { wakefx, wakePass } from './render/wakefx.js';
 import { lie, startLie, startOut, stepLie, wantOut, stopLie, drawLying, isLying, sitOf, standOf } from './world/pithosLie.js';
 import { climb, startClimb, stepClimb, stopClimb, drawClimb, climbDepth } from './world/climbOut.js';
 import { drawMossDream } from './render/mindfx.js';
+import { stepDispatch, skipLine, noteTalkedOut, noteBrake, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
+import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
+import { SCENES } from './content/dispatch_scenes.js';
 
 // ═══ INIT ═══
 const mainCanvas = document.getElementById('game');
@@ -190,6 +193,14 @@ buildTissue(archProps.filter(p => p.name));    // утварь эпох в по�
 initBunting(locations);                        // флаги Шута: гирлянда от фонаря к шесту
 initMoonThread(locations);                     // нить Лунного: от его руки по песку к палатке Старца
 initUI();
+// канал «странник — терминал» (world/dispatch.js): строка внизу; щелчок по ней или Enter — дальше
+initDispatchStrip(() => dispatchEvent(skipLine(), announce));
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !dispatchPlaying() || !state.is('game') || e.repeat) return;
+  e.preventDefault(); e.stopPropagation();                         // Enter — дальше по строке, не «осмотреть»
+  dispatchEvent(skipLine(), announce);
+}, true);
+events.on('dialogue.done', npc => noteTalkedOut(npc));           // машинист выговорен — он попросит доложить
 initMetaFx();
 initTerminal();
 initShop();
@@ -284,6 +295,7 @@ if (savedData) {
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
   loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода, пулы (world/stage.js)
+  loadDispatch(savedData.dispatch);                          // канал машиниста: сыгранные сцены «Ничего» и «Заочно»
   loadHeard(savedData.heard);                                // что странник носит при себе — мысли на сцене (world/heard.js)
   // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
   if (!savedData.names) opisRename((id, name) => { const l = locations.find(q => q.id === id); return l && name === l.name ? nameOf(l) || name : name; });
@@ -314,6 +326,7 @@ function saveData() {
   stands: saveStands(),
   names: saveNames(),
   stage: saveStage(),
+  dispatch: saveDispatch(),
   heard: saveHeard(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
@@ -396,7 +409,7 @@ for (const L of fireLights()) lighting.add(L);
 // ═══ ДОМ ПРОБУЖДЕНИЯ (world/house.js) ═══
 // Канон: «здесь всегда просыпаются». Каждый вход в мир — в доме, на краю своей
 // кровати; упал за краем — тоже сюда. ?nohouse и ?under — проверка руками: с места.
-const NO_HOUSE = /[?&](?:nohouse|under|pond|lake)\b/.test(location.search);
+const NO_HOUSE = /[?&](?:nohouse|under|pond|lake|at)\b/.test(location.search);
 let houseKeep = null;                                // свет мира, пока в доме
 function intoHouse(fx, fy, wake) {
   if (wake) house.wake(); else house.enter();
@@ -1820,6 +1833,16 @@ function renderUnder() {
   if (isEndingActive()) drawEnding(postCtx);
   layers.composite();
 }
+// ?dispatch=<id сцены> — проверка руками: канал машиниста — всё по эту сцену сыграно (world/dispatch.js)
+{
+  const m = /[?&]dispatch=(\w+)/.exec(location.search);
+  if (m) { const ids = SCENES.map(s => s.id), k = ids.indexOf(m[1]); if (k >= 0) loadDispatch({ done: ids.slice(0, k + 1), flags: ['talkedOut'] }); }
+}
+// ?at=<id места> — проверка руками: сразу к порогу места (поезд — ?at=train, веха — ?at=br_back), изгородь открыта
+{
+  const m = /[?&]at=([\w-]+)/.exec(location.search), l = m && locations.find(q => q.id === m[1]);
+  if (l) setTimeout(() => { flags.talkedTo.add('jester'); teleportWithFade(l.x + l.w / 2 - 6, l.y + l.h + 5); }, 0);
+}
 // ?lake (или ?pond) — проверка руками: сразу к восточным мосткам Тёплого озера (world/lake.js), изгородь открыта;
 // ?lake=west|isle — к западным мосткам или на остров, ?lake=outlet — к сбросу у завода
 {
@@ -2107,6 +2130,10 @@ function updateWorldSystems() {
   updateMonsters(player);
   updateZone(getZone(player.x, player.y));
   if (!redNoon.active) updateIdle(player.moving, ringAt(player.x + 6, player.y + 24) >= RINGS);   // слова ленты — только у ленты
+  // канал «странник — терминал»: у поезда и у вехи (world/dispatch.js); сыграна сцена — сохранить
+  { const ev = stepDispatch({ x: player.x + 6, y: player.y + 23 }, locations, isMapOpen());
+    if (ev) { dispatchEvent(ev, announce); if (ev.end) saveNow(); } }
+  stepDispatchStrip();
   if (stepClauses(player, !redNoon.active && !inBrainrotLoop())) saveNow();   // «Последний пункт»: строка на ходу; сказанная правда (жребий, погода) — сразу в сохранение
   checkWhisper(player, locations, skyAt(phaseAt(t)).moon > 0.5 ? litAt : null);   // ночью — только у света
   updateParticles();
@@ -2685,6 +2712,8 @@ events.on('location.use', (loc) => {
   if (actionKey === 'campfire_throw' && fireSpeaks(addOffering(), flags.visited.has('altar'))) {
     const s = byName(useTexts.campfire_sermon); showLook({ name: s.title, look: s.text }); return;
   }
+  // стоп-кран: сцена та же; после заявки «Заочно» её считает терминал (world/dispatch.js)
+  if (actionKey === 'train_brake') noteBrake();
   // Look-based actions
   sceneOrDown(actionKey);
 });

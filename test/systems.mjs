@@ -5333,6 +5333,81 @@ setCtx(ctx);
   });
 }
 
+// ═══ КАНАЛ «СТРАННИК — ТЕРМИНАЛ»: «Ничего» и «Заочно» (world/dispatch.js, слово автора 25.11) ═══
+{
+  const DP = await imp('world/dispatch.js');
+  const SC = await imp('content/dispatch_scenes.js');
+  const LC = await imp('world/locations.js');
+  const FSd = await import('fs');
+  test('канал: тексты — по принятым редакциям; метки верные; Беккета в тексте нет; «Ничего» кончается руками', () => {
+    for (const sc of SC.SCENES) for (const [who, text] of sc.lines) {
+      assert(['s', 't', 'm', 'r'].includes(who) && text && text.trim(), `${sc.id}: пустая или чужая реплика`);
+      assert(!/беккет|beckett|годо|godot/i.test(text), `${sc.id}: имя в тексте`);
+      if (who === 's' || who === 't') assert(text === text.toLowerCase() || /[«»]/.test(text) || text === '...', `${sc.id}: в канале — строчными: ${text}`);
+    }
+    const n4 = SC.SCENES.find(s => s.id === 'n4').lines.slice(-3).map(l => l.join(':')).join('|');
+    eq(n4, 't:руки?|s:пустые.|t:ну вот.', 'концовка «Ничего»');
+    const z6 = SC.SCENES.find(s => s.id === 'z6b').lines.slice(-1)[0][1];
+    assert(/передача смены состоялась/.test(z6), 'шестая сцена «Заочно» — не журнал');
+    eq(SC.SCENES.filter(s => s.story === 'заочно').length, 8, 'в «Заочно» шесть сцен (заявка и смена — по две остановки)');
+  });
+  const PH = await imp('world/physics.js');
+  test('канал: обе истории по порядку — поезд, веха, поезд, веха…; приход, стоп-кран, пауза; журнал после «Заочно»; сохранение', () => {
+    DP._resetDispatch(); DP._resetAnchors();
+    const L = LC.locations, tr = L.find(l => l.id === 'train'), vh = L.find(l => l.id === 'dispatch_post');
+    assert(vh && !PH.isInSettlement(vh.x, vh.y) && !vh.quiet, 'путевая веха — в городке или в тени');
+    for (const l of L) if (l !== vh) assert(!(l.x < vh.x + vh.w + 40 && l.x + l.w > vh.x - 40 && l.y < vh.y + vh.h + 30 && l.y + l.h > vh.y - 30), `веха налезла на «${l.name}»`);
+    assert(tr && vh, 'нет поезда или вехи');
+    const atT = { x: tr.x + tr.w / 2, y: tr.y + tr.h + 20 }, atV = { x: vh.x + vh.w / 2, y: vh.y + vh.h + 20 }, away = { x: (tr.x + vh.x) / 2, y: tr.y - 400 };
+    assert(Math.hypot(atV.x - atT.x, atV.y - atT.y) > 1000, 'веха — не «день пути» от поезда');
+    const played = [];
+    const go = (here, frames = 4) => { let ev = null; for (let i = 0; i < frames; i++) { ev = DP.stepDispatch(here, L) || ev; if (ev && ev.start) break; } return ev; };
+    const finish = here => { let n = 0, ev; while (DP.isPlaying() && n++ < 30000) { ev = DP.stepDispatch(here, L); if (ev && ev.end) played.push(ev.end.id); } assert(!DP.isPlaying(), 'сцена не кончается'); };
+    const visit = here => { go(away); const ev = go(here); if (ev && ev.start) finish(here); return ev && ev.start ? ev.start.id : null; };
+    eq(visit(atT), null, 'машинист не выговорен — у поезда тихо');
+    DP.noteTalkedOut('machinist');
+    eq(go(atT) && DP.dispatch.playing && DP.dispatch.playing.scene.id, 'n1', 'выговорен — просит доложить');
+    // пауза: бумага открыта — строка стоит
+    const t0 = DP.dispatch.playing.t; for (let i = 0; i < 50; i++) DP.stepDispatch(atT, L, true); eq(DP.dispatch.playing.t, t0, 'на паузе строка идёт');
+    finish(atT);
+    eq(visit(atT), null, 'у поезда второй раз — не то');
+    eq(visit(atV), 'n2'); eq(visit(atT), 'n3'); eq(visit(atV), 'n4');
+    eq(visit(atV), 'n5', 'короткий вариант — следующим приходом к вехе');
+    eq(visit(atT), 'z1'); eq(visit(atV), 'z2a');
+    eq(visit(atV), null, 'не сходил к кабине — второй заявки нет');
+    eq(visit(atT), null, 'у кабины — молча');
+    eq(visit(atV), 'z2b');
+    eq(visit(atT), null, 'стоп-кран не дёрнут');
+    DP.noteBrake(); eq(go(atT) && DP.dispatch.playing.scene.id, 'z3', 'после стоп-крана — терминал считает'); finish(atT);
+    eq(visit(atV), 'z4'); eq(visit(atT), 'z5'); eq(visit(atT), 'z6a'); eq(DP.journalLines().length, 0, 'журнал раньше срока');
+    eq(visit(atV), 'z6b');
+    eq(DP.journalLines()[0], SC.JOURNAL_ZAOCHNO, 'строки журнала нет');
+    eq(visit(atV), null); eq(visit(atT), null, 'после — тишина');
+    eq(played.join(), 'n1,n2,n3,n4,n5,z1,z2a,z2b,z3,z4,z5,z6a,z6b');
+    // сохранение
+    const saved = JSON.parse(JSON.stringify(DP.saveDispatch()));
+    DP._resetDispatch(); eq(DP.journalLines().length, 0);
+    DP.loadDispatch(saved); eq(DP.journalLines().length, 1, 'сохранение потеряло «Заочно»');
+    DP._resetDispatch();
+  });
+  test('канал: щелчок — допечатать реплику терминала, ещё щелчок — дальше; Enter перехвачен до «осмотреть»; журнал терминала читает канал', () => {
+    DP._resetDispatch(); DP._resetAnchors();
+    const L = LC.locations, vh = L.find(l => l.id === 'dispatch_post'), atV = { x: vh.x + vh.w / 2, y: vh.y + vh.h + 20 };
+    DP.loadDispatch({ done: ['n1'], flags: ['talkedOut'] });
+    let ev = null; for (let i = 0; i < 3 && !(ev && ev.start); i++) ev = DP.stepDispatch(atV, L);
+    eq(ev.start.id, 'n2');
+    DP.skipLine();                                     // «машинист велел доложить» → «говори.»
+    eq(DP.dispatch.playing.i, 1); eq(DP.typedOf(DP.dispatch.playing), 0, 'терминал не печатается');
+    DP.skipLine(); eq(DP.dispatch.playing.i, 1, 'первый щелчок — допечатать'); eq(DP.typedOf(DP.dispatch.playing), 'говори.'.length);
+    DP.skipLine(); eq(DP.dispatch.playing.i, 2, 'второй — дальше');
+    DP._resetDispatch();
+    const M = FSd.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8'), T = FSd.readFileSync(new URL('../src/terminal/terminal.js', import.meta.url), 'utf8');
+    assert(/e\.key !== 'Enter'[\s\S]{0,200}stopPropagation\(\)[\s\S]{0,120}\}, true\)/.test(M), 'Enter не перехвачен');
+    assert(/journalLines\(\)/.test(T), 'журнал терминала не читает канал');
+    assert(/actionKey === 'train_brake'\) noteBrake\(\)/.test(M) && /'dialogue\.done'/.test(M), 'стоп-кран и конец беседы не слышны');
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

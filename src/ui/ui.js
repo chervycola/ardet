@@ -561,6 +561,7 @@ export function closeDialogue() {
   state.transition('game');
   if (dlgLoc && dlgLoc.npc) {
     events.emit(E.NPC_TALK, dlgLoc.npc, dlgLoc);
+    if (dlgLines.length && dlgIndex >= dlgLines.length - 1) events.emit('dialogue.done', dlgLoc.npc);   // дочитан до конца (канал машиниста — world/dispatch.js)
   }
   dlgLoc = null;
   dlgLines = [];
