@@ -25,6 +25,25 @@ export const camera = {
     this.targetY = p.y - scaler.vh / 2;
   },
 
+  // взгляд вверх у доминанты (слово автора 25.11: «сделай объекты больше»): доминанта выше кадра, и
+  // у подножия кадр поднимается — насколько можно, не выпуская странника из нижней части кадра;
+  // отошёл вбок или вглубь — опускается. boxes — { archX, archGy, w, h }; ноги — feetX, feetY
+  lookUp(boxes, feetX, feetY) {
+    if (this.held) return;
+    const vh = scaler.vh;
+    let best = this.targetY;
+    for (const b of boxes) {
+      const d = feetY - b.archGy;                                   // >0 — странник перед подножием
+      if (d < -6 || d > 220) continue;
+      const side = Math.abs(feetX - b.archX) - b.w / 2;
+      const k = side <= 0 ? 1 : side >= 120 ? 0 : 1 - side / 120;   // вбок — плавно на нет
+      const k2 = d <= 60 ? 1 : 1 - (d - 60) / 160;                  // вглубь — тоже
+      const want = Math.max(feetY - vh + 34, Math.min(this.targetY, b.archGy - b.h - 10));
+      best = Math.min(best, this.targetY + (want - this.targetY) * k * k2);
+    }
+    this.targetY = best;
+  },
+
   update() {
     // Smooth follow
     const k = this.held ? this.holdSmoothing

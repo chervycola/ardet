@@ -17,6 +17,7 @@ import { wasUsed } from '../../world/relook.js';
 import { ashTail } from '../../world/clauses.js';
 import { stageView } from '../../world/stage.js';
 import { redNoon } from '../../world/redNoon.js';
+import { plan, paint, MAT, FORM, tone } from '../arch/kit.js';
 
 const NI = '#0D0B0A', BO = '#D9CFB8', AS = '#8A8D8F', MG = '#3D4A3A', SV = '#E28A3A', KV = '#C23B2B';
 const K0 = '#15100c', K1 = '#241c14', K2 = '#2a2620', K3 = '#34302a', K4 = '#3a3328';
@@ -49,6 +50,17 @@ function bake(key, x, y, x0, y0, w, h, fn) {
   if (c) { X.drawImage(c, q(x) + x0, q(y) + y0); return; }
   X.translate(q(x), q(y));
   try { fn(); } finally { X.translate(-q(x), -q(y)); }
+}
+
+// набор колец (sprites/arch/kit.js) для первых рисунков мест (ROADMAP, графика п. 3: «в штрих эпох»):
+// масса — планом материалов (кладка, штукатурка, железо, бетон — свет слева, кромка пеплом справа,
+// копоть, сколы), опись места — рисунком поверх, как было. План строится раз, краска — при запекании
+const PLANS = new Map();
+function kitPaint(key, w, h, build, opt, ox = 0, oy = 0) {
+  let P = PLANS.get(key);
+  if (!P) { P = plan(w, h); build(P, MAT); PLANS.set(key, P); }
+  paint(X, ox, oy, P, opt);
+  return P;
 }
 
 // ── КАНЦЕЛЯРИЯ ──
@@ -1522,25 +1534,42 @@ export function draw_cross(x, y) {
 // Последний — прозрачный.» Сцена: у основания телефон, лента едет сама.
 // Решётчатая мачта сужается к верху, раскосы крестом, ржа; на ней две панели
 // и лестница; у подножия — шкаф с решёткой динамика; растяжки — в землю.
+// Перерисовано набором колец: мачта выше (около ста тридцати точек — «радиовышка», а не столб),
+// ноги и пояса — бурым железом с заклёпкой (тем же, что Эйфелева башня), раскосы крестом — к свету
+// и в тень, растяжки в землю; шкаф — клёпаная сталь. Огонь — на верхушке (RADIO_TOP).
+const RADIO_TOP = -46;                                                   // верх мачты (от угла места)
+const RD_OX = -8, RD_OY = -52, RD_CX = 20;                                // план: угол и середина мачты
+const rdHalf = y => 3 + (y - RADIO_TOP) / (79 - RADIO_TOP) * 13;          // полуширина мачты на высоте y
+function radioKit(P, M) {
+  const g = 79, xc = RD_CX - RD_OX, Y = y => y - RD_OY;
+  P.poly([[xc - 3, Y(RADIO_TOP)], [xc - 1, Y(RADIO_TOP)], [xc - 14, Y(g)], [xc - 16 - 1, Y(g)]], M.WROUGHT);   // ноги
+  P.poly([[xc + 1, Y(RADIO_TOP)], [xc + 3 + 1, Y(RADIO_TOP)], [xc + 16 + 1, Y(g)], [xc + 14, Y(g)]], M.WROUGHT).shade(1);
+  for (let y = RADIO_TOP + 10; y < g - 4; y += 12) { const w = rdHalf(y); P.box(xc - w, Y(y), 2 * w + 1, 2, M.WROUGHT); }   // пояса
+  P.box(xc + 2, Y(-30), 4, 9, M.STEEL); P.box(xc + 5, Y(-29), 1, 8, M.STEEL).shade(2);   // панели антенн
+  P.box(xc - 8, Y(-6), 4, 8, M.STEEL); P.box(xc - 5, Y(-5), 1, 7, M.STEEL).shade(2);
+  P.box(xc + 3, Y(22), 4, 7, M.STEEL);
+  P.box(xc - 2, Y(RADIO_TOP - 4), 5, 4, M.PLATE);                         // колпак огня
+  P.box(xc, Y(RADIO_TOP - 8), 1, 4, M.STEEL);                             // громоотвод
+  P.box(26 - RD_OX, Y(66), 11, 13, M.PLATE);                               // шкаф у подножия
+  P.box(xc - 18, Y(g - 2), 6, 2, M.CONCRETE); P.box(xc + 13, Y(g - 2), 6, 2, M.CONCRETE);   // башмаки ног
+}
 function radioBody() {
-  const g = 79, top = 6;
-  // растяжки
-  for (const [ax, bx] of [[-6, 14], [46, 26]]) { const n = Math.abs(bx - ax) + 40; for (let k = 0; k < n; k++) { const u = k / n; r(ax + (bx - ax) * u, g - 1 - (g - 1 - 24) * u, 1, 1, K2); } }
-  // мачта: две ноги к вершине, раскосы крестом
-  const half = y => 3 + (y - top) / (g - top) * 13;
-  for (let y = top; y < g; y++) { const w = half(y); r(20 - w, y, 1, 1, y & 1 ? RUST : RUST_L); r(20 + w, y, 1, 1, y & 1 ? K1 : RUST); }
-  for (let y0 = top + 2; y0 < g - 4; y0 += 8) {
-    const y1 = y0 + 8, w0 = half(y0), w1 = half(Math.min(g - 1, y1));
-    for (let k = 0; k <= 8; k++) { const u = k / 8, yy = y0 + k, wl = w0 + (w1 - w0) * u; r(20 - wl + 2 * wl * u, yy, 1, 1, RUST); r(20 + wl - 2 * wl * u, yy, 1, 1, K1); }
-    r(20 - w0, y0, 2 * w0 + 1, 1, K1);                                  // пояс
+  const g = 79;
+  // растяжки: от второго пояса — в землю, далеко
+  for (const [ax, by] of [[-22, RADIO_TOP + 22], [62, RADIO_TOP + 22], [-10, RADIO_TOP + 58], [50, RADIO_TOP + 58]]) {
+    const bx = ax < RD_CX ? RD_CX - q(rdHalf(by)) : RD_CX + q(rdHalf(by)), n = Math.abs(bx - ax) + (g - by);
+    for (let k = 0; k < n; k++) { const u = k / n; r(ax + (bx - ax) * u, g - 1 - (g - 1 - by) * u, 1, 1, K2); }
+    r(ax - 1, g - 1, 3, 1, K1);                                           // якорь
   }
-  for (let y = top + 6; y < g; y += 3) r(18 - q(half(y) * 0.2), y, 3, 1, K3);   // лестница
-  // панели антенн и вершина под огнём
-  r(22, 14, 4, 7, S0); r(22, 14, 1, 7, S1); r(25, 15, 1, 6, S2);
-  r(13, 22, 4, 6, S0); r(13, 22, 1, 6, S1);
-  r(19, 2, 3, 4, K1); r(20, 0, 1, 2, K1);                               // колпак огня, громоотвод
+  kitPaint('radio', 56, 132, radioKit, { seed: 29, chip: 0.06, ao: 2, drips: [[11, 70, 10], [39, 90, 12]] }, RD_OX, RD_OY);
+  // раскосы крестом: к свету — с левой ноги вниз направо, в тень — обратно
+  const LIT = tone(MAT.WROUGHT, 4), DIM = tone(MAT.WROUGHT, 1);
+  for (let y0 = RADIO_TOP + 10; y0 < g - 14; y0 += 12) {
+    const y1 = y0 + 12, w0 = rdHalf(y0), w1 = rdHalf(y1);
+    for (let k = 1; k < 12; k++) { const u = k / 12, yy = y0 + 1 + k, wl = w0 + (w1 - w0) * u; r(RD_CX - wl + 2 * wl * u, yy, 1, 1, LIT); r(RD_CX + wl - 2 * wl * u, yy, 1, 1, DIM); }
+  }
+  for (let y = RADIO_TOP + 6; y < g; y += 3) r(RD_CX - 2 - q(rdHalf(y) * 0.2), y, 3, 1, K3);   // лестница
   // шкаф у подножия: решётка динамика
-  r(26, 66, 11, 13, K3); r(26, 66, 11, 1, S0); r(26, 66, 1, 13, S0); r(36, 67, 1, 12, AS);
   for (let k = 0; k < 12; k++) r(28 + (k % 4) * 2, 69 + (k >> 2) * 2, 1, 1, K0);
   r(29, 76, 5, 1, K1);
   // стопка дисков: каждый тоньше, последний — прозрачный
@@ -1552,13 +1581,14 @@ function radioBody() {
   r(sx, sy - 5, 1, 1, AS); r(sx + 8, sy - 5, 1, 1, AS);                // прозрачный — одна кромка
   X.globalAlpha = 0.3; r(sx + 1, sy - 5, 7, 1, AS); X.globalAlpha = 1;
   r(sx + 4, sy - 5, 1, 1, BO);                                          // отверстие ловит свет
-  X.globalAlpha = 0.5; r(-2, g, 44, 1, K0); X.globalAlpha = 1;
+  X.globalAlpha = 0.5; r(-22, g, 86, 1, K0); X.globalAlpha = 1;
 }
 export function draw_radio(x, y) {
-  bake('radio', x, y, -8, -1, 56, 82, radioBody);
+  bake('radio2', x, y, -24, -56, 90, 137, radioBody);
   // красный огонь на верхушке — мигает одиннадцать лет подряд
-  if (t % 120 < 50) { r(x + 19, y + 3, 3, 2, KV); r(x + 20, y + 2, 1, 1, KV); X.globalAlpha = 0.25; r(x + 17, y + 1, 7, 6, KV); X.globalAlpha = 1; }
-  else r(x + 20, y + 3, 1, 2, BLOOD);
+  const ty = y + RADIO_TOP - 3;
+  if (t % 120 < 50) { r(x + 19, ty, 3, 2, KV); r(x + 20, ty - 1, 1, 1, KV); X.globalAlpha = 0.25; r(x + 17, ty - 2, 7, 6, KV); X.globalAlpha = 1; }
+  else r(x + 20, ty, 1, 2, BLOOD);
   // телефон у основания: лента едет сама
   r(x + 15, y + 77, 4, 2, K0); r(x + 16, y + 77, 2, 1, (t >> 4) & 1 ? '#8CC63F' : TD);
 }
@@ -1664,39 +1694,45 @@ function glyph(ch, x0, y0, c, c2, broken) {
   GLYPH[ch].forEach((row, j) => { for (let i = 0; i < 4; i++) if (row[i] === 'X' && !(broken && hh(x0 + i, y0 + j, 221) < broken)) r(x0 + i, y0 + j, 1, 1, j === 0 && c2 ? c2 : c); });
 }
 const pzTop = x => x > 84 ? 8 + q(hh(x, 3, 223) * 4) + q((x - 84) * 0.42) : 8 + q(hh(x, 3, 223) * 2);   // рваный верх; справа пролом
-function pzBrick(x, y) {                                                // кирпич: ряд в 3, кирпич в 6, тон по кирпичу
-  const row = Math.floor(y / 3), sh = (row & 1) * 3, bi = Math.floor((x + sh) / 6);
-  if (y % 3 === 0 || (x + sh) % 6 === 0) return x < 40 ? S2 : K3;
-  const v = hh(bi, row, 225) + (x < 36 ? 0.12 : x > 104 ? -0.12 : 0);
-  return v > 0.88 ? S1 : v < 0.14 ? S2 : S0;
+// окна верхних этажей: [x, y, этаж]; третий — до пролома
+const PZ_WIN = [];
+for (const [wy, fl] of [[13, 3], [35, 2]]) for (let k = 0; k < 7; k++) { const wx = 10 + k * 18; if (!(fl === 3 && wx + 11 > 85)) PZ_WIN.push([wx, wy, fl, k]); }
+function pizzeriaKit(P, M) {
+  // второй и третий этажи — кирпич; верх рваный, справа пролом
+  const top = [];
+  for (let x = 4; x <= 136; x += 2) top.push([x, pzTop(Math.min(135, x))]);
+  P.poly([[4, 56], ...top, [136, 56]], M.BRICK);
+  for (const [wx, wy] of PZ_WIN) P.cut(wx - 1, wy - 1, 12, 14);
+  P.box(2, 29, 136, 3, M.CONCRETE);                                        // карниз между этажами
+  for (const [wx, wy] of PZ_WIN) P.box(wx - 2, wy + 12, 14, 2, M.CONCRETE);   // подоконники
+  // первый этаж: штукатурка по кирпичу, фриз под вывеской; проёмы витрины, двери, заколоченного окна
+  P.box(2, 55, 136, 33, M.PLASTER);
+  P.box(2, 55, 136, 4, M.CONCRETE);
+  P.cut(9, 61, 60, 24); P.cut(74, 61, 20, 27); P.cut(99, 61, 30, 22);
+  // где штукатурка осыпалась — кирпич
+  P.poly([[104, 84], [112, 83], [116, 88], [102, 88]], M.BRICK);
+  P.poly([[2, 70], [6, 68], [8, 75], [5, 80], [2, 79]], M.BRICK);
 }
+const PZ_OPT = {
+  seed: 41, chip: 0.05, cracks: 4, ao: 2,
+  soot: PZ_WIN.map(([wx, wy]) => [wx - 2, wy - 1, 14, 15]),                // был пожар: копоть языками над окнами
+  drips: [[20, 32, 9], [61, 32, 7], [118, 32, 11], [33, 59, 5], [96, 59, 8]],
+};
 function pizzeriaBody() {
   const g = 88;
-  // ── второй и третий этажи: кирпич, рваный верх, справа пролом ──
-  for (let x = 4; x < 136; x++) { const top = pzTop(x); for (let y = top; y < 55; y++) r(x, y, 1, 1, y === top ? (x < 70 ? S1 : S0) : pzBrick(x, y)); }
-  r(4, 9, 1, 46, S1); r(135, pzTop(135), 1, 55 - pzTop(135), AS);
+  kitPaint('pizzeria', 140, 88, pizzeriaKit, PZ_OPT);
   for (let k = 0; k < 7; k++) { const ax = 90 + k * 6, ay = pzTop(ax); r(ax, ay - 3 - (k & 1) * 2, 1, 3 + (k & 1) * 2, RUST); r(ax + 1, ay - 1, 1, 1, K1); }   // арматура из пролома
-  for (let x = 86; x < 136; x++) if (hh(x, 1, 227) < 0.4) r(x, pzTop(x) + 1, 1, 1, K1);   // скол по кромке
-  r(4, 30, 132, 1, S1); r(4, 31, 132, 1, K3);                              // карниз между этажами
-  // окна: рама, темнота комнаты, осколки, кое-где занавеска; над ними — копоть языками
-  for (const [wy, fl] of [[13, 3], [35, 2]]) for (let k = 0; k < 7; k++) {
-    const wx = 10 + k * 18; if (fl === 3 && wx + 11 > 85) continue;          // третий этаж — до пролома
-    for (let dy = 0; dy <= 9; dy++) {                                      // копоть: языком вверх от окна, шире и реже
-      const w = 3 + q(dy * 0.5), yy = wy - 2 - dy;
-      for (let dx = -w; dx <= w; dx++) if (yy >= pzTop(wx + 5 + dx) + 1 && hh(wx + 5 + dx, yy, 229) < 0.95 - dy * 0.08 - Math.abs(dx) * 0.06) r(wx + 5 + dx, yy, 1, 1, dy < 3 ? NI : dy < 6 ? K1 : K3);
-    }
-    r(wx - 1, wy - 1, 12, 14, K3); r(wx - 1, wy - 1, 12, 1, S1); r(wx - 1, wy - 1, 1, 14, S1);   // рама: свет слева-сверху
+  // окна: рама, темнота комнаты, осколки, кое-где занавеска
+  for (const [wx, wy, fl, k] of PZ_WIN) {
+    r(wx - 1, wy - 1, 12, 1, K3); r(wx - 1, wy - 1, 1, 14, K3); r(wx + 10, wy - 1, 1, 13, K2);   // рама: дерево потемнело
     r(wx, wy, 10, 12, K0); r(wx, wy + 9, 10, 3, K1);                       // комната: в глубине пол светлее
     r(wx + 4, wy, 1, 12, K3); r(wx, wy + 5, 10, 1, K3);                    // переплёт
     if (hh(k, fl, 231) < 0.6) { r(wx, wy, 2, 2, AS); r(wx, wy, 1, 1, L2); r(wx + 8, wy + 10, 2, 2, AS); }   // осколки по углам
     if (hh(k, fl, 233) < 0.3) { r(wx + 6, wy, 3, 7 + (k & 1) * 2, SEP); r(wx + 6, wy, 1, 7 + (k & 1) * 2, BR2); }   // обрывок занавески
-    r(wx - 2, wy + 12, 14, 1, S1); r(wx - 2, wy + 13, 14, 1, K3);          // подоконник
   }
-  // ── первый этаж «Вавилон»: фриз, витрина, дверь, заколоченное окно ──
-  r(2, 55, 136, 33, K3); r(2, 55, 136, 1, S1); r(2, 55, 1, 33, S0); r(137, 56, 1, 32, AS);
-  r(2, 56, 136, 3, K2); r(2, 58, 136, 1, K1);                             // фриз под вывеской
+  // ── первый этаж «Вавилон»: витрина, дверь, заколоченное окно ──
   // витрина: стекла нет, в глубине столы рядами (дальние мельче), меню под стеклом — бликом
-  r(9, 61, 60, 24, S1); r(10, 62, 58, 22, K0);
+  r(9, 61, 60, 1, K3); r(9, 61, 1, 24, K3); r(68, 62, 1, 23, K2); r(10, 62, 58, 22, K0);
   r(10, 62, 58, 6, K1);                                                   // дальняя стена
   r(48, 63, 12, 6, S2); r(49, 62, 10, 1, S2); r(48, 63, 1, 6, S0);        // печь куполом — разбита
   r(52, 65, 4, 3, K0); r(53, 66, 2, 1, BLOOD); r(57, 62, 2, 3, K0);       // зев, тепло; пролом в куполе
@@ -1711,7 +1747,7 @@ function pizzeriaBody() {
   for (const [sx, sy] of [[10, 62], [11, 63], [67, 62], [66, 83], [10, 82], [39, 62]]) r(sx, sy, 1, 1, AS);   // стекло по краям
   r(10, 84, 58, 1, S0);
   // дверь; косяки светлые — на них счёт карандашом; коврик
-  r(74, 61, 20, 27, S1); r(77, 62, 14, 26, K1); r(91, 62, 3, 26, S0); r(93, 62, 1, 26, S2);
+  r(74, 61, 3, 27, L2); r(74, 61, 20, 1, L2); r(77, 62, 14, 26, K1); r(91, 62, 3, 26, S1); r(93, 62, 1, 26, S2);
   r(78, 64, 12, 24, BR2); r(78, 64, 1, 24, K4); r(89, 64, 1, 24, K1); r(88, 75, 1, 2, AS);   // дверь, ручка
   r(79, 66, 10, 7, K4); r(80, 67, 8, 5, K1);                               // окошко двери — темно
   for (let k = 0; k < 9; k++) {                                           // счёт: девять пятёрок — четыре черты и пятая поперёк, гроздь за гроздью
@@ -1721,7 +1757,7 @@ function pizzeriaBody() {
   r(91, 80, 1, 2, K1); r(93, 80, 1, 2, K1);                                // и ещё две — сорок семь
   r(74, 86, 20, 2, BR2); r(74, 86, 20, 1, SEP); for (let k = 0; k < 7; k++) r(76 + k * 2 + (k > 3 ? 1 : 0), 86, 1, 1, L2);   // «Welcome» — штрихами; ключ под ним не видно
   // заколоченное окно: доски поперёк и крест-накрест
-  r(99, 61, 30, 22, S1); r(100, 62, 28, 20, K1);
+  r(100, 62, 28, 20, K1);
   for (let k = 0; k < 4; k++) { r(99, 64 + k * 5, 30, 2, BR2); r(99, 64 + k * 5, 30, 1, K4); r(101 + (k & 1) * 24, 64 + k * 5, 1, 1, AS); }   // доски, гвозди
   for (let k = 0; k < 30; k++) { const d = q(k * 18 / 29); r(99 + k, 62 + d, 1, 2, BR2); r(99 + k, 62 + d, 1, 1, SEP); r(128 - k, 62 + d, 1, 2, BR2); r(128 - k, 62 + d, 1, 1, K4); }   // крестом
   // ── справа в кустах — пирамида коробок от пиццы; на верхней — чек ──
@@ -1740,7 +1776,7 @@ function pizzeriaBody() {
   X.globalAlpha = 0.5; r(0, g, 140, 1, K0); X.globalAlpha = 1;
 }
 export function draw_pizzeria(x, y) {
-  bake('pizzeria4', x, y, 0, 5, 146, 84, pizzeriaBody);
+  bake('pizzeria5', x, y, 0, 5, 146, 84, pizzeriaBody);
   // «В» мигает одиннадцать лет; мёртвые по очереди искрят
   const m = t % 150, on = m < 96 || (m > 104 && m < 112);
   if (on) { X.globalAlpha = 0.16; r(x + SIGN_X - 2, y + SIGN_Y - 2, 8, 9, KV); X.globalAlpha = 1; glyph('В', x + SIGN_X, y + SIGN_Y, KV, L1); }
@@ -1862,16 +1898,20 @@ export function draw_ruins(x, y) {
 // термос с паром, раскрытый журнал, телефон экраном вниз.
 function towerBody() {
   const g = 60;
-  for (const [lx, top, c, e] of [[7, 18, K4, K1], [22, 18, K4, K1]]) { r(lx, top, 2, g - 8 - top, c); r(lx + 1, top, 1, g - 8 - top, e); }   // задние ноги
-  for (const lx of [3, 25]) { r(lx, 20, 2, g - 20, BR2); r(lx, 20, 1, g - 20, RUST_L); r(lx + 1, 21, 1, g - 21, K1); }   // передние ноги
-  for (const [ya, yb] of [[24, 40], [40, 56]]) for (let k = 0; k <= 20; k++) { const u = k / 20; r(5 + u * 20, ya + (yb - ya) * u, 1, 1, BR2); r(25 - u * 20, ya + (yb - ya) * u, 1, 1, K1); }   // раскосы
-  r(5, 40, 20, 1, BR2);
+  // брус и доски — набором колец: свет слева, кромка; задние ноги — в тени
+  kitPaint('watchtower', 31, 61, (P, M) => {
+    P.box(7, 18, 2, g - 26, M.TIMBER).shade(2); P.box(22, 18, 2, g - 26, M.TIMBER).shade(2);   // задние ноги
+    for (const lx of [3, 25]) P.box(lx, 20, 2, g - 20, M.TIMBER);        // передние ноги
+    P.box(5, 40, 20, 1, M.TIMBER);                                       // схватка
+    P.box(1, 16, 29, 4, M.BOARD);                                        // платформа
+    for (const px of [2, 15, 28]) P.box(px, 7, 1, 9, M.TIMBER);          // стойки перил
+    P.box(2, 7, 27, 1, M.TIMBER); P.box(2, 11, 27, 1, M.TIMBER);         // перила
+  }, { seed: 19, chip: 0.04, ao: 1, moss: 0.12 });
+  const LIT = tone(MAT.TIMBER, 4), DIM = tone(MAT.TIMBER, 1);
+  for (const [ya, yb] of [[24, 40], [40, 56]]) for (let k = 0; k <= 20; k++) { const u = k / 20; r(5 + u * 20, ya + (yb - ya) * u, 1, 1, LIT); r(25 - u * 20, ya + (yb - ya) * u, 1, 1, DIM); }   // раскосы
   // лестница
-  r(12, 20, 1, g - 20, BR2); r(17, 20, 1, g - 20, BR2); for (let y = 23; y < g; y += 4) { r(12, y, 6, 1, L2); r(13, y + 1, 4, 1, K1); }
-  // платформа и перила
-  r(1, 16, 29, 4, BR2); r(1, 16, 29, 1, L2); for (let x = 3; x < 29; x += 4) r(x, 17, 1, 3, K1); r(1, 19, 29, 1, K1);
-  for (const px of [2, 15, 28]) r(px, 7, 1, 9, BR2);
-  r(2, 7, 27, 1, L2); r(2, 11, 27, 1, BR2);
+  r(12, 20, 1, g - 20, DIM); r(17, 20, 1, g - 20, DIM); for (let y = 23; y < g; y += 4) { r(12, y, 6, 1, LIT); r(13, y + 1, 4, 1, K1); }
+  for (let x = 3; x < 29; x += 4) r(x, 17, 1, 3, K1);                   // торцы досок настила
   // бинокль на треноге — внутрь поселения
   r(9, 12, 1, 4, K1); r(7, 14, 1, 2, K1); r(11, 14, 1, 2, K1);
   r(6, 9, 6, 3, K1); r(6, 9, 6, 1, S2); r(5, 11, 2, 2, AS); r(5, 12, 1, 1, L1); r(8, 11, 2, 2, AS);   // окуляры — вниз-влево
@@ -1882,7 +1922,7 @@ function towerBody() {
   X.globalAlpha = 0.45; r(0, g, 31, 1, K0); X.globalAlpha = 1;
 }
 export function draw_watchtower(x, y) {
-  bake('watchtower', x, y, 0, 6, 31, 55, towerBody);
+  bake('watchtower2', x, y, 0, 6, 31, 55, towerBody);
   for (let i = 0; i < 3; i++) {                                         // термос ещё тёплый
     const u = ((t * 0.3 + i * 22) % 66) / 66;
     X.globalAlpha = 0.4 * (1 - u); r(x + 20 + q(Math.sin(u * 5 + i) + u * wind.x * 6), y + 9 - q(u * 10), 1, 1, BO);
@@ -1924,13 +1964,18 @@ function junkBody() {
     if (cx > 82 || (tier === 2 && (k === 0 || k > 3))) continue;           // верхний ряд неполный — силуэт ступенькой
     jCube(cx, cy, 20 + tier * 7 + k, true);
   }
-  // ── фура без тягача: короб, рёбра, ржа, рама, колёса, опоры ──
-  r(44, 16, 50, 34, K3); r(44, 16, 50, 1, S0); r(44, 16, 1, 34, S0); r(93, 17, 1, 33, AS);
-  for (let x = 47; x < 92; x += 4) { r(x, 18, 1, 31, K2); r(x + 1, 18, 1, 31, K4); }       // гофра
-  r(44, 20, 50, 1, K2); r(44, 46, 50, 1, K2);
+  // ── фура без тягача, пресс с воронкой — набором (гофра с ржой, клёпаная сталь); опись — поверх ──
+  kitPaint('junkyard', 96, 72, (P, M) => {
+    P.box(44, 16, 50, 34, M.IRON);                                        // короб фуры: гофра
+    P.box(44, 50, 50, 3, M.PLATE);                                        // рама
+    P.box(49, 53, 1, 12, M.STEEL); P.box(52, 53, 1, 12, M.STEEL); P.box(47, 64, 8, 2, M.PLATE);   // опоры — тягача нет
+    P.trap(5, 22, 0, 28, 7, 23, M.PLATE);                                 // воронка: шире кверху
+    P.box(0, 5, 29, 2, M.STEEL);                                          // обод
+    P.box(2, 24, 24, 46, M.PLATE);                                        // короб унификатора
+    P.box(13, 52, 13, 14, M.PLATE).shade(1);                              // жёлоб
+  }, { seed: 77, chip: 0.03, drips: [[50, 21, 14], [61, 21, 9], [70, 21, 18], [83, 21, 11], [90, 21, 16], [8, 47, 9], [20, 31, 12]], cracks: 0, ao: 2 });
   for (let k = 0; k < 14; k++) r(46 + q(hh(k, 7, 145) * 44), 22 + q(hh(k, 8, 147) * 22), 1 + (k & 1), 2 + q(hh(k, 9, 149) * 5), k % 3 ? RUST : RUST_L);   // ржа потёками
-  r(44, 50, 50, 3, K1); r(44, 50, 50, 1, K2);                             // рама
-  for (const lx of [49, 52]) { r(lx, 53, 1, 12, K2); } r(47, 64, 8, 1, S0); r(47, 65, 8, 1, K1);   // опоры — тягача нет
+  r(44, 20, 50, 1, K2); r(44, 46, 50, 1, K2);                             // пояса короба
   for (const wx of [80, 87]) { r(wx, 53, 6, 6, K0); r(wx + 1, 54, 4, 4, K1); r(wx + 2, 55, 2, 2, S0); r(wx + 1, 54, 1, 1, S2); }
   // пробоина в борту: тёмная дыра, рваные кромки блеском, борт вдавлен вокруг
   for (let x = 57; x <= 83; x++) {
@@ -1940,18 +1985,13 @@ function junkBody() {
     if (hh(x, 3, 155) < 0.4) r(x, top - 2 - q(hh(x, 4, 157) * 3), 1, 1, K1);
   }
   for (let k = 0; k < 6; k++) { const a = 56 + k * 5; r(a, 34 - (k & 1), 1, 2, K1); }   // вмятина волной
-  // ── унификатор 3000: воронка с разным, короб, поршни, щит, жёлоб, рольганг ──
-  for (let y = 6; y < 24; y++) {                                          // воронка: шире кверху
-    const k = (y - 6) / 18, lx = q(0 + k * 5), rx = q(28 - k * 6);
-    r(lx, y, rx - lx + 1, 1, K2); r(lx, y, 1, 1, S1); r(rx, y, 1, 1, AS);
-  }
-  r(0, 5, 29, 2, S0); r(0, 5, 29, 1, S1); r(28, 6, 1, 1, AS);             // обод
+  // ── унификатор 3000: разное в воронке, щит, жёлоб, рольганг ──
+  for (let y = 7; y < 12; y++) r(2 + q((y - 6) * 0.3), y, 25 - q((y - 6) * 0.6), 1, y < 9 ? K0 : K1);   // пасть воронки — темно
   // разное в воронке: дверь с окном, колесо, бампер, труба
   r(3, 2, 8, 5, L2); r(4, 3, 4, 2, K1); r(3, 2, 8, 1, BO); r(10, 3, 1, 4, S2);
   r(14, 0, 1, 1, K1); r(13, 1, 3, 1, K1); r(12, 2, 1, 3, K1); r(16, 2, 1, 3, K1); r(13, 5, 3, 1, K1); r(14, 3, 1, 1, S1);   // колесо
   r(18, 3, 9, 2, S0); r(18, 3, 9, 1, S1); r(26, 4, 1, 1, AS);             // бампер
   r(21, -3, 2, 7, RUST); r(21, -3, 1, 7, RUST_L);                         // труба
-  r(2, 24, 24, 46, K3); r(2, 24, 24, 1, S0); r(2, 24, 1, 46, S1); r(25, 25, 1, 45, AS);   // короб
   for (const ry of [30, 46, 58]) for (let x = 4; x < 24; x += 3) r(x, ry, 1, 1, K1);    // клёпка
   // щит: трафарет «УНИФИКАТОР» штрихами, «3000» читается; полосы опасности — у пасти
   r(5, 33, 18, 10, K2); r(5, 33, 18, 1, K1);
@@ -1959,7 +1999,7 @@ function junkBody() {
   let dx = 7; for (const d of [3, 0, 0, 0]) { const m = JK_DIGIT[d]; for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 3; xx++) if (m[yy][xx] === '#') r(dx + xx, 37 + yy, 1, 1, S1); dx += 4; }
   for (let k = 0; k < 8; k++) r(5 + k * 2, 25, 1, 2, k & 1 ? KV : NI);                   // полосы у пасти — киноварь, мало
   // жёлоб и рольганг: оттуда выходит куб
-  r(14, 52, 12, 14, K0); r(14, 52, 12, 1, K2); r(13, 52, 1, 14, K1);
+  r(15, 54, 10, 12, K0); r(15, 54, 10, 1, K1);
   r(24, 64, 14, 2, K1); for (let x = 25; x < 38; x += 3) r(x, 64, 1, 1, S1);           // рольганг
   r(26, 66, 1, 4, K2); r(36, 66, 1, 4, K2);
   // ── штабеля спереди ──
@@ -1985,7 +2025,7 @@ function junkBody() {
   X.globalAlpha = 0.5; r(0, g, 94, 1, K0); X.globalAlpha = 1;
 }
 export function draw_junkyard(x, y) {
-  bake('junkyard2', x, y, -1, -17, 97, 89, junkBody);
+  bake('junkyard3', x, y, -1, -17, 97, 89, junkBody);
   // гудит: траверса с плитой ходит медленно (цикл 6 с), поршни выдвигаются; после
   // удара — из жёлоба на рольганг выезжает свежий куб и стоит до следующего
   const c = t % 360, down = c < 150 ? c / 150 : c < 170 ? 1 : c < 280 ? 1 - (c - 170) / 110 : 0, d = q(down * 7);
@@ -2013,20 +2053,21 @@ export function draw_junkyard(x, y) {
 const BUS_G = 40;
 function busBody() {
   const G = BUS_G, X0 = 11, X1 = 67, TOP = 8, BOT = 33;
-  // ── крыша: светлая, рёбра, углы скруглены уступом; люк приоткрыт ──
-  for (let x = X0 + 1; x <= X1 - 1; x++) { const e = x < X0 + 3 || x > X1 - 3; r(x, TOP - 3 + (e ? 1 : 0), 1, 1, x < X0 + 20 ? L1 : L2); r(x, TOP - 2, 1, 2, (x - X0) % 7 === 0 ? S1 : x < X0 + 20 ? L2 : S1); }
-  r(X1 - 1, TOP - 2, 1, 2, AS);
+  // ── корпус набором: крыша — светлая сталь, борт и капот — охра (жёлтое выцвело), свет слева, кромка ──
+  kitPaint('bus', 70, 40, (P, M) => {
+    P.box(X0 + 1, TOP - 3, X1 - X0 - 1, 3, M.STEEL);                       // крыша
+    P.box(X0, TOP, X1 - X0 + 1, BOT - TOP + 1, M.OCHRE);                   // борт: жёлтая краска выцвела в охру
+    P.box(1, TOP + 9, X0 - 1, BOT - TOP - 8, M.OCHRE);                     // капот
+  }, { seed: 58, chip: 0.05, ao: 2, drips: [[30, TOP + 11, 6], [44, TOP + 11, 9], [58, TOP + 11, 5]] });
+  for (let x = X0 + 1; x <= X1 - 1; x += 7) r(x, TOP - 2, 1, 2, S1);     // рёбра крыши
   r(36, TOP - 4, 8, 1, S1); r(36, TOP - 4, 1, 1, L2); r(37, TOP - 3, 6, 1, K1);   // люк — щель
-  // ── борт: краска песком поверх ржи; ржа к низу, у арок, по кромкам ──
+  // ── ржа поверх краски: к низу, у арок, по кромкам ──
   for (let x = X0; x <= X1; x++) for (let y = TOP; y <= BOT; y++) {
     const h = hh(x >> 1, y >> 1, 581), h2 = hh(x, y, 583), low = (y - TOP) / (BOT - TOP);
     const nearArch = (x > 13 && x < 25) || (x > 51 && x < 63);
-    const rust = h < 0.22 + low * 0.45 + (nearArch && y > 25 ? 0.35 : 0) || x === X1;
-    let c = rust ? (h2 < 0.4 ? RUST : h2 < 0.75 ? RUST_L : BR2) : x < X0 + 12 ? (h2 < 0.7 ? L2 : L1) : h2 < 0.12 ? S1 : h2 < 0.9 ? L2 : CLAY_L;
-    r(x, y, 1, 1, c);
+    if (h < 0.12 + low * 0.42 + (nearArch && y > 25 ? 0.35 : 0)) r(x, y, 1, 1, h2 < 0.4 ? RUST : h2 < 0.75 ? RUST_L : BR2);
   }
   for (let k = 0; k < 10; k++) { const sx = X0 + 2 + q(hh(k, 3, 585) * 52), sy = 20 + q(hh(k, 4, 587) * 3); for (let i = 0; i < 2 + (k % 3); i++) r(sx, sy + i, 1, 1, BR2); }   // потёки из-под окон
-  r(X0, TOP, 1, BOT - TOP + 1, L1); r(X1, TOP, 1, BOT - TOP + 1, AS);
   // ── окна в чёрных рамах; спинки и ранцы; два стекла выбиты ──
   const BAGS = [BR2, MG_D, BLOOD, S0, K4];
   for (let k = 0; k < 5; k++) {
@@ -2051,7 +2092,7 @@ function busBody() {
   r(X0 + 2, TOP + 5, 3, 3, S0); r(X0 + 2, TOP + 5, 3, 1, S1); r(X0 + 2, TOP + 6, 1, 1, AS); r(X0 + 4, TOP + 6, 1, 1, AS); r(X0 + 3, TOP + 8, 1, 2, MG_D);   // ГП-5 на спинке: стёкла, коробка
   // капот: ниже кабины, решётка, фара, бампер у носа
   const HX = 1;
-  for (let x = HX; x < X0; x++) { const top = TOP + 9 + (x < HX + 2 ? 1 : 0); for (let y = top; y <= BOT; y++) { const h = hh(x, y, 591); r(x, y, 1, 1, y === top ? L1 : y === top + 1 ? L2 : h < 0.08 + Math.max(0, y - BOT + 7) * 0.12 ? RUST : x < HX + 5 ? L2 : S1); } }
+  for (let x = HX; x < X0; x++) for (let y = TOP + 11; y <= BOT; y++) if (hh(x, y, 591) < 0.06 + Math.max(0, y - BOT + 7) * 0.12) r(x, y, 1, 1, RUST);   // ржа на капоте — снизу
   r(HX, TOP + 12, X0 - HX, 1, K2);                                        // шов капота
   for (let y = TOP + 13; y < BOT - 7; y++) for (let x = HX; x < HX + 4; x++) r(x, y, 1, 1, (x - HX) & 1 ? K3 : K1);   // решётка
   r(HX + 4, TOP + 13, 2, 2, S2); r(HX + 4, TOP + 13, 1, 1, AS);          // фара — мёртвая
@@ -2082,7 +2123,7 @@ function busBody() {
 }
 let BUS_T = -1, BUS_PH = 0;
 export function draw_bus(x, y) {
-  bake('bus6', x, y, 0, -1, 70, BUS_G + 1, busBody);
+  bake('bus7', x, y, 0, -1, 70, BUS_G + 1, busBody);
   // раз в одиннадцать секунд — «учебная тревога»: рупор дрожит
   const dt = BUS_T < 0 ? 0 : Math.min(240, Math.max(0, t - BUS_T)); BUS_T = t; BUS_PH += dt;
   if (BUS_PH % 660 < 50 && Math.floor(BUS_PH / 8) & 1) { X.globalAlpha = 0.58; r(q(x) + 60, q(y) + 0, 1, 5, AS); r(q(x) + 61, q(y) + 1, 1, 3, S2); X.globalAlpha = 1; }
@@ -2424,8 +2465,12 @@ function pipelineBody() {
   for (const wx of [18, 38, 58]) { r(wx, ax - R, 1, 2 * R + 1, K1); r(wx + 1, ax - R, 1, 2 * R + 1, S1); }   // сварные кольца
   r(0, ax - R - 1, 2, 2 * R + 3, S1); r(0, ax - R - 1, 1, 2 * R + 3, L2);   // глухой фланец слева
   for (let k = 0; k <= 6; k++) { const rr = R - q(k * 0.55); r(74 + k, ax - rr - 1 + (k > 3 ? 1 : 0), 1, 2 * rr + 1, k < 3 ? S0 : RUST); r(74 + k, ax - rr - 1 + (k > 3 ? 1 : 0), 1, 1, L2); }   // переход на малую
-  // ложементы
-  for (const sx of [8, 36, 64]) { r(sx, 16, 8, 8, S0); r(sx, 16, 8, 1, S1); r(sx, 16, 1, 8, S1); r(sx + 7, 17, 1, 7, S2); r(sx + 1, 15, 6, 1, K1); }
+  // ложементы и плита под мелом — бетоном набора (опалубка, поры, свет слева, кромка)
+  kitPaint('pipeline', 82, 26, (P, M) => {
+    for (const sx of [8, 36, 64]) P.box(sx, 16, 8, 8, M.CONCRETE);
+    P.box(30, 19, 30, 6, M.CONCRETE);
+  }, { seed: 31, chip: 0.06, ao: 1, moss: 0.1 });
+  for (const sx of [8, 36, 64]) r(sx + 1, 15, 6, 1, K1);                // тень трубы на ложементе
   // уцелевшая этикетка, обрывки
   r(24, 8, 6, 4, L1); r(24, 8, 6, 1, BO); r(25, 10, 4, 1, K2);
   for (const [lx, ly] of [[44, 7], [52, 9], [10, 9]]) r(lx, ly, 2, 1, L2);
@@ -2436,13 +2481,12 @@ function pipelineBody() {
   // вентиль: шток и красное колесо, ржа
   r(30, 2, 1, 4, K1); r(27, 1, 7, 2, KV); r(27, 1, 7, 1, KV); r(28, 1, 1, 2, RUST); r(32, 2, 1, 1, RUST); r(30, 1, 1, 2, K1); r(26, 2, 1, 1, KV); r(34, 2, 1, 1, KV);
   // на бетоне мелом: три строки, черта, четыре версии перечёркнуты, пятая пуста
-  r(30, 19, 30, 6, S1); r(30, 19, 30, 1, L2); r(59, 20, 1, 5, S2);
   for (const [ly, n] of [[20, 7], [21, 4], [22, 9]]) for (let k = 0; k < n; k++) if (hh(k, ly, 3) > 0.2) r(32 + k * 2, ly, 1, 1, BO);
   r(32, 23, 20, 1, L1);
   for (let k = 0; k < 4; k++) { r(32 + k * 6, 24, 4, 1, L1); r(33 + k * 6, 25, 1, 1, K1); r(34 + k * 6, 24, 1, 1, K1); r(35 + k * 6, 23, 1, 1, K1); }   // четыре версии — перечёркнуты; пятая строка пуста
 }
 export function draw_pipeline(x, y) {
-  bake('pipeline', x, y, 0, 0, 82, 26, pipelineBody);
+  bake('pipeline2', x, y, 0, 0, 82, 26, pipelineBody);
 }
 
 // ── ТОКСИЧНОЕ ОЗЕРО ──
@@ -2468,22 +2512,27 @@ function fishBones(hx, hy, ux, uy, n) {
   r(hx + ux, hy + uy, 1, 1, L1); r(hx + px * 0.6, hy + py * 0.6, 1, 1, BO); r(hx - px * 0.6, hy - py * 0.6, 1, 1, BO); r(hx + ux * 0.5 + px * 0.5, hy + uy * 0.5 + py * 0.5, 1, 1, K1);   // череп, глазница
   r(hx - ux * (n + 1) + px, hy - uy * (n + 1) + py, 1, 1, L2); r(hx - ux * (n + 1) - px, hy - uy * (n + 1) - py, 1, 1, L2);   // хвост вилкой
 }
+// гладь — штрихом Тёплого озера (render/etchPaths.js lake): глубь тёмная, у берега светлее, блики
+// строками — длинными, ровными (гладь не рябит); кромка в точку-две белёсой коркой; ил — плитами намёком
+const LK_W0 = '#272e24', LK_W1 = '#2f372c', LK_W2 = '#3d4a3a', LK_GL = '#838672', LK_CR = '#6c7260';
 function lakeBody(night) {
   for (let y = -4; y < 65; y++) for (let x = -10; x < 113; x++) {   // ил не заходит на тропу (юг y+65, восток x+112)
     const e = lkE(x, y);
     if (e > 1.18 || y > 63 || x > 111) continue;
-    if (e > 1.02) {                                                     // ил плитами неровно, трещины по краям плит
-      const id = lkCell(x, y), seam = id !== lkCell(x + 1, y) || id !== lkCell(x, y + 1), v = hh(id, 3, 191);
-      r(x, y, 1, 1, seam ? (hh(x, y, 193) < 0.8 ? K1 : K4) : v < 0.3 ? K4 : v > 0.85 ? '#4a3f33' : SEP);
+    if (e > 1.035) {                                                    // сырой берег: ил плитами, швы темнее, к краю реже
+      const id = lkCell(x, y), seam = id !== lkCell(x + 1, y) || id !== lkCell(x, y + 1), fade = (1.18 - e) / 0.145;
+      if (seam && hh(x, y, 193) < 0.75 * fade) { X.globalAlpha = 0.5; r(x, y, 1, 1, NI); }
+      else if (hh(x >> 1, y, 192) < 0.5 * fade) { X.globalAlpha = 0.3; r(x, y, 1, 1, hh(id, 3, 191) < 0.3 ? SEP : NI); }
+      X.globalAlpha = 1;
       continue;
     }
-    if (e > 0.96) { r(x, y, 1, 1, hh(x, y, 195) < 0.3 ? L2 : hh(x, y, 196) < 0.5 ? K4 : MG_D); continue; }   // корка у воды — белёсыми пятнами
-    r(x, y, 1, 1, e > 0.88 ? MG_D : e < 0.45 ? LK_DEEP : (hh(x >> 3, y >> 1, 197) < 0.15 ? LK_DEEP : MG));
+    if (e > 0.985) { if (hh(x, y, 197) < 0.8) r(x, y, 1, 1, hh(x, y, 195) < 0.12 ? L2 : LK_CR); continue; }   // корка у воды — белёсая, в точку, с прорехами
+    if (e > 0.86) { r(x, y, 1, 1, hh(x >> 2, y >> 1, 196) < 0.25 && hh(x, y, 198) < 0.5 ? MG_D : LK_W2); continue; }   // у берега — светлее, муть пятнами
+    const row = (y * 5 + (x >> 4) * 3) % 11 === 0 && hh(x >> 4, y, 194) < 0.45;      // блик — строкой, длинно
+    r(x, y, 1, 1, row ? LK_GL : e < 0.5 ? LK_W0 : LK_W1);
   }
-  // гладь не шелохнётся: ровные светлые полосы неба, не рябь
-  for (const [y, x0, x1] of [[14, 30, 62], [22, 18, 44], [39, 50, 74]]) { X.globalAlpha = 0.18; r(x0, y, x1 - x0, 1, MG_L); X.globalAlpha = 1; }
   // пена у берега — тусклыми клочьями
-  for (let k = 0; k < 26; k++) { const a = hh(k, 3, 199) * Math.PI * 2, d = 0.86 + hh(k, 4, 201) * 0.08, x = LK_CX + Math.cos(a) * 46 * d, y = LK_CY + Math.sin(a) * 26 * d; X.globalAlpha = 0.45; r(x, y, 1 + q(hh(k, 5, 203) * 3), 1, k & 1 ? L2 : AS); X.globalAlpha = 1; }
+  for (let k = 0; k < 26; k++) { const a = hh(k, 3, 199) * Math.PI * 2, d = 0.86 + hh(k, 4, 201) * 0.08, x = LK_CX + Math.cos(a) * 46 * d, y = LK_CY + Math.sin(a) * 26 * d; X.globalAlpha = 0.35; r(x, y, 1 + q(hh(k, 5, 203) * 3), 1, k & 1 ? L2 : AS); X.globalAlpha = 1; }
   // радуга нефти — днём: разводы, краска переходит одна в другую по ходу струи
   if (!night) {
     const film = [KV, L2, AS, MG_L, SEP, L2];
@@ -2492,10 +2541,17 @@ function lakeBody(night) {
       for (let k = 0; k < 26; k++) {
         const u = k / 26 * Math.PI * 1.6 + s * 1.3, rr = R0 + k * 0.12, x = ox + Math.cos(u) * rr * 1.6, y = oy + Math.sin(u) * rr * 0.6;
         if (lkE(x, y) > 0.86) continue;
-        const c = film[Math.floor(k / 4 + s) % film.length]; X.globalAlpha = c === KV ? 0.22 : 0.3; r(x, y, 2, 1, c); X.globalAlpha = 1;
+        const c = film[Math.floor(k / 4 + s) % film.length]; X.globalAlpha = c === KV ? 0.2 : 0.26; r(x, y, 2, 1, c); X.globalAlpha = 1;
       }
     }
   }
+  // гладь — зеркало: столб с табличкой вниз головой, темнее воды
+  X.globalAlpha = 0.5;
+  for (let yy = 49; yy < 62; yy++) for (let xx = 76; xx < 91; xx++) {
+    const post = xx >= 83 && xx <= 84 && yy < 58, board = yy >= 58;
+    if ((post || board) && lkE(xx, yy) < 0.96) r(xx, yy, 1, 1, NI);
+  }
+  X.globalAlpha = 1;
   // скелеты на берегу — головами к воде
   for (const a of [2.5, 1.9, 1.2, 0.35, -0.5, 3.6]) {                     // голова у кромки, тело на иле
     let k = 0.94, fx, fy;
@@ -2503,17 +2559,18 @@ function lakeBody(night) {
     const dx = LK_CX - fx, dy = (LK_CY - fy) * 1.8, d = Math.hypot(dx, dy);
     fishBones(fx, fy, Math.round(dx / d), Math.round(dy / d), 6);
   }
-  // столб у воды: в мелкой воде, кольцо мути у основания; табличка — строки штрихами,
-  // знак «лов запрещён»: рыба под киноварной чертой
-  r(83, 37, 2, 12, BR2); r(83, 37, 1, 12, SINGE); r(82, 48, 4, 1, MG_D); r(81, 49, 6, 1, K4);
-  r(76, 30, 15, 8, K2); r(77, 31, 13, 6, L1); r(77, 31, 13, 1, BO); r(89, 32, 1, 5, L2);
+  // столб у воды — набором (брус, доска); в мелкой воде, кольцо мути у основания; табличка —
+  // строки штрихами, знак «лов запрещён»: рыба под киноварной чертой
+  kitPaint('lakesign', 16, 20, (P, M) => { P.box(7, 7, 2, 12, M.TIMBER); P.box(0, 0, 15, 8, M.BOARD); }, { seed: 13, chip: 0.04, ao: 0 }, 76, 30);
+  r(82, 48, 4, 1, MG_D); r(81, 49, 6, 1, K4);
+  r(77, 31, 13, 6, L1); r(77, 31, 13, 1, BO);
   r(78, 33, 4, 2, NI); r(77, 33, 1, 1, NI); r(82, 34, 1, 1, NI);         // рыба
   for (let k = 0; k < 6; k++) r(77 + k, 36 - k, 1, 1, KV);               // черта
   for (let x = 84; x < 89; x++) { if (hh(x, 1, 205) < 0.8) r(x, 32, 1, 1, K2); if (hh(x, 2, 207) < 0.7) r(x, 34, 1, 1, K2); }
 }
 export function draw_lake(x, y) {
   const night = skyAt(phaseAt(t)).name === 'ночь';
-  bake(night ? 'lake2n' : 'lake2', x, y, -10, -4, 123, 69, () => lakeBody(night));
+  bake(night ? 'lake3n' : 'lake3', x, y, -10, -4, 123, 69, () => lakeBody(night));
   // дождь: капли ложатся шариками и не тонут — копятся, пока идёт
   if (weather.state === 'toxicRain' && weather.intensity > 0.15) {
     const n = q(weather.intensity * 28);
@@ -2931,45 +2988,24 @@ function ovBody(ox, oy) {
   const g = 60, top = 30;                                                // земля, верх настила
   // тени на земле под пролётами
   X.globalAlpha = 0.3; R(1, g - 1, 44, 2, NI); R(77, g - 1, 22, 2, NI); X.globalAlpha = 1;
-  // ── рухнувший пролёт: плита надвое — одна лежит, другая легла на восточную опору ──
-  for (let x = 44; x <= 60; x++) {                                       // лежит, чуть наклонно
-    const yy = q(52 + (x - 44) * 0.15);
-    R(x, yy, 1, 5, OV_D); R(x, yy, 1, 1, OV_L); R(x, yy + 4, 1, 1, NI);
-    if (x % 4 === 1) R(x, yy - 2, 1, 2, OV_L);                           // отбойник набок
-  }
-  for (let x = 61; x <= 75; x++) {                                       // легла на опору
-    const yy = q(56 - (x - 61) * 0.95);
-    R(x, yy, 1, 6, OV_D); R(x, yy, 1, 1, OV_L); R(x, yy + 5, 1, 1, NI);
-    if (x % 3 === 0) R(x, yy + 2, 1, 1, OV_C);
-  }
+  // ── бетон набором: устой, опоры с оголовками, настилы с отбойником, рухнувший пролёт надвое —
+  // одна плита лежит, другая легла на восточную опору (свет слева, кромка, опалубка, потёки, мох) ──
+  kitPaint('overpass', 104, 62, (P, M) => {
+    P.poly([[44, 52], [61, 54], [61, 59], [44, 57]], M.CONCRETE);          // лежит, чуть наклонно
+    P.poly([[61, 56], [76, 42], [76, 48], [61, 61]], M.CONCRETE).shade(1); // легла на опору
+    P.box(0, top, 7, g - top, M.CONCRETE);                                // устой
+    P.box(31, top + 6, 12, g - top - 6, M.CONCRETE); P.box(30, top + 6, 14, 2, M.CONCRETE);   // западная опора, оголовок
+    P.box(78, top + 6, 8, g - top - 6, M.CONCRETE); P.box(77, top + 6, 10, 2, M.CONCRETE);    // восточная
+    P.box(0, top, 43, 6, M.CONCRETE); P.box(77, top, 23, 6, M.CONCRETE);  // настил
+    P.box(0, top - 2, 43, 2, M.CONCRETE); P.box(77, top - 2, 23, 2, M.CONCRETE);   // отбойник
+  }, { seed: 61, chip: 0.06, cracks: 3, ao: 2, moss: 0.12, drips: [[33, 38, 9], [37, 38, 13], [40, 38, 6], [80, 38, 10], [83, 38, 7]] }, ox, oy);
+  for (const x of [4, 13, 22, 31, 40, 85, 94]) R(x, top + 1, 1, 4, OV_D);   // швы плит настила
   R(60, 52, 1, 6, NI); R(61, 55, 1, 1, NI);                              // излом
   for (const [ax, ay, dx, dy] of [[60, 54, 2, -3], [59, 56, 1, -4], [44, 53, -2, -2], [76, 42, 2, -3]]) for (let k = 0; k < 4; k++) R(ax + q(dx * k / 3), ay + q(dy * k / 3), 1, 1, RUST);   // арматура из излома
   for (const [sx, sy, w] of [[46, 58, 3], [53, 59, 2], [58, 58, 2], [66, 58, 3], [71, 59, 2], [42, 59, 2]]) { R(sx, sy, w, 1, OV_D); R(sx, sy, 1, 1, OV_L); }   // крошка
-  // ── опоры: устой слева, западная — у провала, восточная — под обломком ──
-  const pier = (x0, w) => {
-    for (let y = top + 6; y < g; y++) {
-      R(x0, y, 1, 1, OV_L); R(x0 + 1, y, w - 3, 1, OV_C); R(x0 + w - 2, y, 1, 1, OV_D); R(x0 + w - 1, y, 1, 1, NI);
-      if ((y & 3) === 0) for (let k = 2; k < w - 3; k += 3) R(x0 + k, y, 1, 1, OV_D);   // следы опалубки
-    }
-    R(x0 - 1, top + 6, w + 2, 2, OV_D); R(x0 - 1, top + 6, w + 2, 1, OV_L);  // оголовок
-    for (let k = 1; k < w - 2; k++) if (hh(x0, k, 171) < 0.35) R(x0 + k, top + 9, 1, 3 + q(hh(k, x0, 173) * 10), OV_D);   // потёки
-    R(x0, g - 2, w, 2, OV_D); R(x0 + 1, g - 3, 1, 1, MG); R(x0 + w - 3, g - 3, 2, 1, MG);   // мох у подошвы
-  };
-  for (let y = top; y < g; y++) { R(0, y, 7, 1, y === top ? OV_L : OV_C); R(0, y, 1, 1, OV_L); R(6, y, 1, 1, OV_D); }   // устой
-  for (let y = top + 8; y < g; y += 7) R(0, y, 7, 1, OV_D);
-  pier(31, 12); pier(78, 8);
-  // ── настил: западный пролёт до провала и восточный — к эстакаде; кромки обломаны ──
-  const deck = (a, b) => {
-    for (let x = a; x <= b; x++) {
-      R(x, top, 1, 6, OV_D); R(x, top, 1, 1, OV_L); R(x, top + 5, 1, 1, NI);   // настил, верх на свету, низ в тени
-      R(x, top - 2, 1, 2, OV_L);                                         // отбойник
-      R(x, top + 6, 1, 1, NI);                                           // тень под настилом
-      if (x % 9 === 4) R(x, top + 1, 1, 4, OV_C);                        // шов плит
-    }
-  };
-  deck(0, 42); deck(77, 99);
-  for (let k = 0; k < 6; k++) { R(43, top + k, 1 + (hh(k, 1, 175) < 0.5 ? 1 : 0), 1, k & 1 ? OV_C : OV_D); R(76 - (hh(k, 2, 177) < 0.5 ? 1 : 0), top + k, 1, 1, k & 1 ? OV_D : OV_C); }
+  for (let k = 0; k < 6; k++) { R(43, top + k, 1 + (hh(k, 1, 175) < 0.5 ? 1 : 0), 1, k & 1 ? OV_C : OV_D); R(76 - (hh(k, 2, 177) < 0.5 ? 1 : 0), top + k, 1, 1, k & 1 ? OV_D : OV_C); }   // кромки обломаны
   R(42, top - 2, 1, 1, NI); R(77, top - 1, 1, 1, NI);                    // отбойник оборван
+  R(0, top + 6, 43, 1, NI); R(77, top + 6, 23, 1, NI);                   // тень под настилом
   // ── столб со щитом на краю пролёта; ниже — отдельная табличка, новее ──
   R(34, 17, 2, 11, S2); R(34, 17, 1, 11, S1); R(33, 27, 4, 1, K3);
   R(27, 8, 16, 9, K2); R(28, 9, 14, 7, L2); R(28, 9, 14, 1, L1); R(41, 10, 1, 6, S2);

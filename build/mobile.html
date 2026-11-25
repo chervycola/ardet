@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 348 128. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 348 128. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 360 175. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 360 175. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -916,7 +916,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='2bd8cf6 · 2026-11-25';console.log('[оттиск]', '2bd8cf6 · 2026-11-25');
+<script>window.ARDET_BUILD='a0495c8 · 2026-11-25';console.log('[оттиск]', 'a0495c8 · 2026-11-25');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -1455,6 +1455,26 @@ System.register("render/camera", ["render/scaler"], function (exports_3, context
                     const p = this.held || { x: worldX, y: worldY };
                     this.targetX = p.x - scaler_js_2.scaler.vw / 2;
                     this.targetY = p.y - scaler_js_2.scaler.vh / 2;
+                },
+                // взгляд вверх у доминанты (слово автора 25.11: «сделай объекты больше»): доминанта выше кадра, и
+                // у подножия кадр поднимается — насколько можно, не выпуская странника из нижней части кадра;
+                // отошёл вбок или вглубь — опускается. boxes — { archX, archGy, w, h }; ноги — feetX, feetY
+                lookUp(boxes, feetX, feetY) {
+                    if (this.held)
+                        return;
+                    const vh = scaler_js_2.scaler.vh;
+                    let best = this.targetY;
+                    for (const b of boxes) {
+                        const d = feetY - b.archGy; // >0 — странник перед подножием
+                        if (d < -6 || d > 220)
+                            continue;
+                        const side = Math.abs(feetX - b.archX) - b.w / 2;
+                        const k = side <= 0 ? 1 : side >= 120 ? 0 : 1 - side / 120; // вбок — плавно на нет
+                        const k2 = d <= 60 ? 1 : 1 - (d - 60) / 160; // вглубь — тоже
+                        const want = Math.max(feetY - vh + 34, Math.min(this.targetY, b.archGy - b.h - 10));
+                        best = Math.min(best, this.targetY + (want - this.targetY) * k * k2);
+                    }
+                    this.targetY = best;
                 },
                 update() {
                     // Smooth follow
@@ -8054,6 +8074,52 @@ System.register("sprites/arch/kit", [], function (exports_33, context_33) {
     }
     // ── план постройки: w×h, (0,0) — левый верх рамки, низ — земля ──
     function plan(w, h) {
+        const P = rawPlan(w, h), log = [], cache = new Map();
+        // каждый шаг плана записан: тот же план можно построить крупнее (доминанты — grandKind)
+        for (const k of ['box', 'wedge', 'trap', 'round', 'cut', 'poly', 'clear', 'shade']) {
+            const f = P[k];
+            P[k] = (...a) => { log.push([k, a]); f(...a); return P; };
+        }
+        P.scaled = k => {
+            if (k === 1)
+                return P;
+            let Q = cache.get(k);
+            if (!Q)
+                cache.set(k, Q = replay(log, w, h, k));
+            return Q;
+        };
+        return P;
+    }
+    exports_33("plan", plan);
+    // план в k раз крупнее: те же шаги, углы — по масштабу; фактура материала остаётся в точку
+    function replay(log, w, h, k) {
+        const Q = rawPlan(Math.round(w * k), Math.round(h * k)), S = v => Math.round(v * k);
+        for (const [op, a] of log) {
+            if (op === 'box' || op === 'cut' || op === 'clear') {
+                const x = Math.round(a[0]), y = Math.round(a[1]), x0 = S(x), y0 = S(y);
+                Q[op](x0, y0, Math.max(1, S(x + a[2]) - x0), Math.max(1, S(y + a[3]) - y0), ...a.slice(4));
+            }
+            else if (op === 'wedge') {
+                const [cx, yT, yB, wT, wB, mat] = a;
+                Q.wedge(cx * k, S(yT), S(yB + 1) - 1, wT * k, wB * k, mat);
+            }
+            else if (op === 'trap') {
+                const [xl0, xr0, xl1, xr1, yT, yB, mat, form] = a;
+                Q.trap(xl0 * k, (xr0 + 1) * k - 1, xl1 * k, (xr1 + 1) * k - 1, S(yT), S(yB + 1) - 1, mat, form);
+            }
+            else if (op === 'round') {
+                const [cx, yT, yB, ww, mat] = a;
+                Q.round(cx * k, S(yT), S(yB + 1) - 1, ww * k, mat);
+            }
+            else if (op === 'poly')
+                Q.poly(a[0].map(([x, y]) => [x * k, y * k]), a[1], a[2]);
+            else if (op === 'shade')
+                Q.shade(...a);
+        }
+        Q.k = k;
+        return Q;
+    }
+    function rawPlan(w, h) {
         const m = new Uint8Array(w * h), part = new Uint16Array(w * h), info = [null];
         let pid = 0;
         const put = (x, y, mat, p) => { if (x >= 0 && y >= 0 && x < w && y < h) {
@@ -8133,10 +8199,15 @@ System.register("sprites/arch/kit", [], function (exports_33, context_33) {
         };
         return P;
     }
-    exports_33("plan", plan);
     // ── краска: свет по соседям, фактура, износ ──
     // o: { seed, snow: 0..1, moss: 0..1, soot: [[x,y,w,h]], drips: [[x,y,len]], cracks: n, chip: 0..1, ao: 2 }
     function paint(ctx, X0, Y0, P, o = {}) {
+        if (ctx && ctx.__grand === true) { // крупно: план строится заново в k раз больше, краска — в точку
+            const k = ctx.__k, [rx, ry] = ctx.__map(X0, Y0), S = v => Math.round(v * k);
+            const o2 = { ...o, k, cracks: o.cracks ? Math.round(o.cracks * k) : 0,
+                soot: (o.soot || []).map(([x, y, w, l]) => [S(x), S(y), S(w), S(l)]), drips: (o.drips || []).map(([x, y, l]) => [S(x), S(y), S(l)]) };
+            return paint(ctx.__real, rx, ry, P.scaled ? P.scaled(k) : P, o2);
+        }
         const { w, h, m } = P, s = o.seed || 0;
         const adj = new Int8Array(w * h), over = new Uint8Array(w * h);
         const top = (x, y) => P.at(x, y - 1) === 0;
@@ -8179,7 +8250,9 @@ System.register("sprites/arch/kit", [], function (exports_33, context_33) {
                 else if (o.moss && (top(x, y) || y >= h - 3) && hh(x, y, s + 23) < o.moss)
                     over[i] = MAT.MOSS;
             }
-        const chip = (x, y) => o.chip && hh(x, y, s + 31) < o.chip && (top(x, y) || P.at(x + 1, y) === 0 || P.at(x - 1, y) === 0);
+        // сколы — по зерну исходного плана (у крупного — те же места, что у малого: где кромка цела, там цела)
+        const ck = o.k || 1;
+        const chip = (x, y) => o.chip && hh(Math.floor(x / ck), Math.floor(y / ck), s + 31) < o.chip && (top(x, y) || P.at(x + 1, y) === 0 || P.at(x - 1, y) === 0);
         const ao = o.ao ?? 2;
         for (let y = 0; y < h; y++) {
             let runC = null, runX = 0;
@@ -8256,6 +8329,85 @@ System.register("sprites/arch/kit", [], function (exports_33, context_33) {
                 P.clear(x0 + i, y0 + j, 1, 1); });
     }
     exports_33("carve", carve);
+    // ── КРУПНО: доминанта в k раз больше (слово автора 25.11: «сделай объекты больше — пирамиды и т. д.»).
+    // Не растяжка картинки: план набора строится заново крупнее (шаги плана — по масштабу, кладка,
+    // черепица и зерно — по-прежнему в точку, рядов больше); рисунок поверх набора и живое (огонь, фонарь,
+    // пар) — через холст-посредник, который переводит координаты от середины и земли в k раз дальше.
+    // Огонь, флаг, птицы, зеркало вида — туда же, по масштабу (life, light, mirror).
+    function grandCtx(c, ax, ay, k) {
+        let tx = 0, ty = 0;
+        const st = [];
+        const map = (x, y) => [ax + Math.round((x + tx - ax) * k), ay + Math.round((y + ty - ay) * k)];
+        const rect = (f, x, y, w, h) => {
+            const [x0, y0] = map(x, y), [x1, y1] = map(x + w, y + h);
+            c[f](Math.min(x0, x1), Math.min(y0, y1), Math.max(1, Math.abs(x1 - x0)), Math.max(1, Math.abs(y1 - y0)));
+        };
+        const T = {
+            __grand: true, __k: k, __real: c, __map: map,
+            fillRect: (x, y, w, h) => rect('fillRect', x, y, w, h),
+            clearRect: (x, y, w, h) => rect('clearRect', x, y, w, h),
+            strokeRect: (x, y, w, h) => rect('strokeRect', x, y, w, h),
+            save: () => { st.push([tx, ty]); c.save(); },
+            restore: () => { const v = st.pop(); if (v)
+                [tx, ty] = v; c.restore(); },
+            translate: (x, y) => { tx += x; ty += y; },
+            drawImage: (img, ...a) => {
+                if (a.length === 2) {
+                    const [x, y] = map(a[0], a[1]);
+                    return c.drawImage(img, x, y, Math.round((img.width || 0) * k), Math.round((img.height || 0) * k));
+                }
+                if (a.length === 4) {
+                    const [x, y] = map(a[0], a[1]);
+                    return c.drawImage(img, x, y, Math.round(a[2] * k), Math.round(a[3] * k));
+                }
+                const [x, y] = map(a[4], a[5]);
+                return c.drawImage(img, a[0], a[1], a[2], a[3], x, y, Math.round(a[6] * k), Math.round(a[7] * k));
+            },
+        };
+        return new Proxy(T, {
+            get(o, key) { if (key in o)
+                return o[key]; const v = c[key]; return typeof v === 'function' ? v.bind(c) : v; },
+            set(o, key, v) { c[key] = v; return true; },
+        });
+    }
+    exports_33("grandCtx", grandCtx);
+    function grandDraw(d, k) {
+        const wrap = f => (c, x, gy, t) => f(grandCtx(c, Math.round(x), Math.round(gy), k), x, gy, t);
+        if (d.body && d.live) {
+            const body = wrap(d.body), live = wrap(d.live);
+            body.static = d.body.static;
+            const g = split(body, live);
+            g.grand = k;
+            return g;
+        }
+        const g = wrap(d);
+        if (d.static)
+            g.static = d.static;
+        g.grand = k;
+        return g;
+    }
+    exports_33("grandDraw", grandDraw);
+    // вид доминанты крупнее: рамка, огонь, жизнь, зеркало — по тому же масштабу
+    function grandKind(K, k) {
+        const S = v => Math.round(v * k);
+        const life = L => L && {
+            ...L,
+            ...(L.smoke ? { smoke: L.smoke.map(([x, y, ...r]) => [S(x), S(y), ...r]) } : {}),
+            ...(L.flag ? { flag: L.flag.map(([x, y, len, ...r]) => [S(x), S(y), Math.min(16, S(len)), ...r]) } : {}),
+            ...(L.blink ? { blink: L.blink.map(([x, y, ...r]) => [S(x), S(y), ...r]) } : {}),
+            // птицы сидят на кромке: опора — строка под ними (gy + dy − 1), её место по масштабу; птицы
+            // не растут — стая той же длины, серединой туда, куда ушла середина кромки
+            ...(L.birds ? { birds: L.birds.map(([x0, x1, y, ...r]) => { const m = S((x0 + x1) / 2) - Math.floor((x1 - x0) / 2); return [m, m + x1 - x0, S(y - 1) + 1, ...r]; }) } : {}),
+        };
+        return {
+            // рамка: середина и земля на месте, края — как их переводит посредник (grandCtx)
+            ...K, grand: k, w: 2 * Math.round(K.w / 2 * k), h: -Math.round(-K.h * k), draw: grandDraw(K.draw, k),
+            ...(K.light ? { light: { ...K.light, dx: S(K.light.dx || 0), dy: S(K.light.dy) } } : {}),
+            ...(K.mirror ? { mirror: { x0: S(K.mirror.x0), x1: S(K.mirror.x1), y0: S(K.mirror.y0), y1: S(K.mirror.y1) } } : {}),
+            ...(K.life ? { life: life(K.life) } : {}),
+        };
+    }
+    exports_33("grandKind", grandKind);
     return {
         setters: [],
         execute: function () {
@@ -25761,9 +25913,9 @@ System.register("sprites/arch/now", ["world/hang", "world/mechanisms", "sprites/
         }
     };
 });
-System.register("sprites/arch/index", ["sprites/arch/axial", "sprites/arch/porticoes", "sprites/arch/lightgarden", "sprites/arch/twohearths", "sprites/arch/enlightenment", "sprites/arch/steamshadows", "sprites/arch/catastrophes", "sprites/arch/neon", "sprites/arch/now"], function (exports_48, context_48) {
+System.register("sprites/arch/index", ["sprites/arch/axial", "sprites/arch/porticoes", "sprites/arch/lightgarden", "sprites/arch/twohearths", "sprites/arch/enlightenment", "sprites/arch/steamshadows", "sprites/arch/catastrophes", "sprites/arch/neon", "sprites/arch/now", "sprites/arch/kit"], function (exports_48, context_48) {
     "use strict";
-    var axial_js_1, porticoes_js_1, lightgarden_js_1, twohearths_js_1, enlightenment_js_1, steamshadows_js_1, catastrophes_js_1, neon_js_1, now_js_1, ARCH_BY_RING;
+    var axial_js_1, porticoes_js_1, lightgarden_js_1, twohearths_js_1, enlightenment_js_1, steamshadows_js_1, catastrophes_js_1, neon_js_1, now_js_1, kit_js_10, ARCH_BY_RING, GRAND_H, grandOf;
     var __moduleName = context_48 && context_48.id;
     return {
         setters: [
@@ -25793,12 +25945,25 @@ System.register("sprites/arch/index", ["sprites/arch/axial", "sprites/arch/porti
             },
             function (now_js_1_1) {
                 now_js_1 = now_js_1_1;
+            },
+            function (kit_js_10_1) {
+                kit_js_10 = kit_js_10_1;
             }
         ],
         execute: function () {
             exports_48("ARCH_BY_RING", ARCH_BY_RING = {
                 axial: axial_js_1.ARCH, porticoes: porticoes_js_1.ARCH, lightgarden: lightgarden_js_1.ARCH, twohearths: twohearths_js_1.ARCH, enlightenment: enlightenment_js_1.ARCH, steamshadows: steamshadows_js_1.ARCH, catastrophes: catastrophes_js_1.ARCH, neon: neon_js_1.ARCH, now: now_js_1.ARCH,
             });
+            // доминанты — крупнее (слово автора 25.11: «сделай объекты больше — пирамиды и т. д.»): до трёхсот
+            // точек ростом, но не больше чем вдвое; план набора строится заново крупнее (kit.js grandKind)
+            exports_48("GRAND_H", GRAND_H = 300);
+            exports_48("grandOf", grandOf = h => Math.min(2, Math.round(GRAND_H / h * 20) / 20));
+            for (const A of Object.values(ARCH_BY_RING)) {
+                if (Array.isArray(A.landmark))
+                    A.landmark = A.landmark.map(L => kit_js_10.grandKind(L, grandOf(L.h)));
+                else if (A.landmark)
+                    A.landmark = kit_js_10.grandKind(A.landmark, grandOf(A.landmark.h));
+            }
         }
     };
 });
@@ -38054,7 +38219,7 @@ System.register("world/locations", ["world/disc", "world/street", "world/archite
                 // ── DEAD FOREST ──
                 { id: 'radio', name: 'Радиовышка', x: 350, y: 250, w: 40, h: 80, zone: 'forest',
                     useAction: 'radio_tune',
-                    solid: true, light: { r: 22, color: [194, 59, 43], flicker: 0.3 } },
+                    solid: true, light: { dx: 20, dy: -48, r: 22, color: [194, 59, 43], flicker: 0.3 } }, // огонь — на верхушке мачты (canon.js RADIO_TOP)
                 { id: 'cross', name: 'Крест на холме', x: 700, y: 300, w: 30, h: 50, zone: 'forest',
                     useAction: 'cross_push',
                     light: { r: 14, color: [217, 207, 184], flicker: 0.02 } },
@@ -46134,9 +46299,9 @@ System.register("world/stage", ["world/relook", "assets/manifest"], function (ex
         }
     };
 });
-System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook", "world/clauses", "world/stage", "world/redNoon"], function (exports_131, context_131) {
+System.register("sprites/locations/canon", ["render/context", "core/time", "world/sky", "world/wind", "core/playerRef", "world/potemkin", "render/weather", "world/relook", "world/clauses", "world/stage", "world/redNoon", "sprites/arch/kit"], function (exports_131, context_131) {
     "use strict";
-    var context_js_9, time_js_29, sky_js_11, wind_js_21, playerRef_js_4, potemkin_js_3, weather_js_2, relook_js_2, clauses_js_3, stage_js_1, redNoon_js_5, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BUS_G, BUS_T, BUS_PH, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH, BS_WL, EX_G, EX_T, EX_PH, RV_G, RV_T, RV_PH;
+    var context_js_9, time_js_29, sky_js_11, wind_js_21, playerRef_js_4, potemkin_js_3, weather_js_2, relook_js_2, clauses_js_3, stage_js_1, redNoon_js_5, kit_js_11, NI, BO, AS, MG, SV, KV, K0, K1, K2, K3, K4, BR2, L1, L2, SEP, S0, S1, S2, q, r, BAKED, PLANS, RUST, RUST_L, MG_L, MG_D, lean, BOIL, TR_T, TR_PH, CR_CX, CR_SPR, CR_R, crInArch, CRYPT, TH, tierOf, SHOW, showLen, THEATER, TD, TI, POLE, POLE_L, HUNG, BLOOD, SINGE, FX, FY, MOON, SPEAR, SKX, SKY, PIKE, SKIN, SKIN_S, PAL, SKULL_HALF, SKULL, BLADE, FACE, CLAY, CLAY_L, CH_CX, CH_G, inArch, CH_BRK, chGable, COLS, FALLEN, COL_SH, LB_T, LB_PH, LB_F, LB_A, LB_D, RADIO_TOP, RD_OX, RD_OY, RD_CX, rdHalf, TENT_RIB, GLYPH, SIGN, SIGN_X, SIGN_Y, pzTop, PZ_WIN, PZ_OPT, RU_G, RU_X0, RU_X1, RU_FL, ruTop, ruPlaster, RUINS, JK_DIGIT, BUS_G, BUS_T, BUS_PH, BB_W, BB_H, BB_Y, BB_GLYPH, APE, PW_X0, PW_X1, PW_G, PW_C, pwTop, GRAF, ARDET, LK_CX, LK_CY, lkE, LK_DEEP, lkCell, LK_W0, LK_W1, LK_W2, LK_GL, LK_CR, ALT, MOSS_MARKS, mossReach, STENCIL, TV, TIRE, BAG_W, BAG_K, TARP_L, TARP_D, TARP_DD, BN_L, BN_R, BN_G, BN_TOP, TRP_W, TRP_H, TRP_X, TRP_Y, TIES, tarpTop, tarpBot, tarpTorn, tarpBurnt, TARP_RUNS, tarpRuns, BRUSH_GLYPH, FINE, FINE_LINES, fineW, brushWordW, TARPS, BANNER, BN_T, BN_PH, BN_FL, OV_C, OV_D, OV_L, OV_X0, OV_Y0, OV_W, OV_H, OV_CANVAS, VM_FX, VM_FW, VM_G, VM_T, VM_PH, BS_WL, EX_G, EX_T, EX_PH, RV_G, RV_T, RV_PH;
     var __moduleName = context_131 && context_131.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
@@ -46175,6 +46340,16 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         finally {
             context_js_9.X.translate(-q(x), -q(y));
         }
+    }
+    function kitPaint(key, w, h, build, opt, ox = 0, oy = 0) {
+        let P = PLANS.get(key);
+        if (!P) {
+            P = kit_js_11.plan(w, h);
+            build(P, kit_js_11.MAT);
+            PLANS.set(key, P);
+        }
+        kit_js_11.paint(context_js_9.X, ox, oy, P, opt);
+        return P;
     }
     // ── КАНЦЕЛЯРИЯ ──
     // «Окно №3. Других окон нет.» Торжественный фасад верит в себя: пилястры,
@@ -48352,53 +48527,50 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         bake('cross', x, y, -7, 0, 44, 52, crossBody);
     }
     exports_131("draw_cross", draw_cross);
-    // ── РАДИОВЫШКА ──
-    // «Ржавая конструкция. Красный огонь на верхушке мигает одиннадцать лет
-    // подряд. У основания — стопка дисков. Каждый следующий тоньше предыдущего.
-    // Последний — прозрачный.» Сцена: у основания телефон, лента едет сама.
-    // Решётчатая мачта сужается к верху, раскосы крестом, ржа; на ней две панели
-    // и лестница; у подножия — шкаф с решёткой динамика; растяжки — в землю.
+    function radioKit(P, M) {
+        const g = 79, xc = RD_CX - RD_OX, Y = y => y - RD_OY;
+        P.poly([[xc - 3, Y(RADIO_TOP)], [xc - 1, Y(RADIO_TOP)], [xc - 14, Y(g)], [xc - 16 - 1, Y(g)]], M.WROUGHT); // ноги
+        P.poly([[xc + 1, Y(RADIO_TOP)], [xc + 3 + 1, Y(RADIO_TOP)], [xc + 16 + 1, Y(g)], [xc + 14, Y(g)]], M.WROUGHT).shade(1);
+        for (let y = RADIO_TOP + 10; y < g - 4; y += 12) {
+            const w = rdHalf(y);
+            P.box(xc - w, Y(y), 2 * w + 1, 2, M.WROUGHT);
+        } // пояса
+        P.box(xc + 2, Y(-30), 4, 9, M.STEEL);
+        P.box(xc + 5, Y(-29), 1, 8, M.STEEL).shade(2); // панели антенн
+        P.box(xc - 8, Y(-6), 4, 8, M.STEEL);
+        P.box(xc - 5, Y(-5), 1, 7, M.STEEL).shade(2);
+        P.box(xc + 3, Y(22), 4, 7, M.STEEL);
+        P.box(xc - 2, Y(RADIO_TOP - 4), 5, 4, M.PLATE); // колпак огня
+        P.box(xc, Y(RADIO_TOP - 8), 1, 4, M.STEEL); // громоотвод
+        P.box(26 - RD_OX, Y(66), 11, 13, M.PLATE); // шкаф у подножия
+        P.box(xc - 18, Y(g - 2), 6, 2, M.CONCRETE);
+        P.box(xc + 13, Y(g - 2), 6, 2, M.CONCRETE); // башмаки ног
+    }
     function radioBody() {
-        const g = 79, top = 6;
-        // растяжки
-        for (const [ax, bx] of [[-6, 14], [46, 26]]) {
-            const n = Math.abs(bx - ax) + 40;
+        const g = 79;
+        // растяжки: от второго пояса — в землю, далеко
+        for (const [ax, by] of [[-22, RADIO_TOP + 22], [62, RADIO_TOP + 22], [-10, RADIO_TOP + 58], [50, RADIO_TOP + 58]]) {
+            const bx = ax < RD_CX ? RD_CX - q(rdHalf(by)) : RD_CX + q(rdHalf(by)), n = Math.abs(bx - ax) + (g - by);
             for (let k = 0; k < n; k++) {
                 const u = k / n;
-                r(ax + (bx - ax) * u, g - 1 - (g - 1 - 24) * u, 1, 1, K2);
+                r(ax + (bx - ax) * u, g - 1 - (g - 1 - by) * u, 1, 1, K2);
+            }
+            r(ax - 1, g - 1, 3, 1, K1); // якорь
+        }
+        kitPaint('radio', 56, 132, radioKit, { seed: 29, chip: 0.06, ao: 2, drips: [[11, 70, 10], [39, 90, 12]] }, RD_OX, RD_OY);
+        // раскосы крестом: к свету — с левой ноги вниз направо, в тень — обратно
+        const LIT = kit_js_11.tone(kit_js_11.MAT.WROUGHT, 4), DIM = kit_js_11.tone(kit_js_11.MAT.WROUGHT, 1);
+        for (let y0 = RADIO_TOP + 10; y0 < g - 14; y0 += 12) {
+            const y1 = y0 + 12, w0 = rdHalf(y0), w1 = rdHalf(y1);
+            for (let k = 1; k < 12; k++) {
+                const u = k / 12, yy = y0 + 1 + k, wl = w0 + (w1 - w0) * u;
+                r(RD_CX - wl + 2 * wl * u, yy, 1, 1, LIT);
+                r(RD_CX + wl - 2 * wl * u, yy, 1, 1, DIM);
             }
         }
-        // мачта: две ноги к вершине, раскосы крестом
-        const half = y => 3 + (y - top) / (g - top) * 13;
-        for (let y = top; y < g; y++) {
-            const w = half(y);
-            r(20 - w, y, 1, 1, y & 1 ? RUST : RUST_L);
-            r(20 + w, y, 1, 1, y & 1 ? K1 : RUST);
-        }
-        for (let y0 = top + 2; y0 < g - 4; y0 += 8) {
-            const y1 = y0 + 8, w0 = half(y0), w1 = half(Math.min(g - 1, y1));
-            for (let k = 0; k <= 8; k++) {
-                const u = k / 8, yy = y0 + k, wl = w0 + (w1 - w0) * u;
-                r(20 - wl + 2 * wl * u, yy, 1, 1, RUST);
-                r(20 + wl - 2 * wl * u, yy, 1, 1, K1);
-            }
-            r(20 - w0, y0, 2 * w0 + 1, 1, K1); // пояс
-        }
-        for (let y = top + 6; y < g; y += 3)
-            r(18 - q(half(y) * 0.2), y, 3, 1, K3); // лестница
-        // панели антенн и вершина под огнём
-        r(22, 14, 4, 7, S0);
-        r(22, 14, 1, 7, S1);
-        r(25, 15, 1, 6, S2);
-        r(13, 22, 4, 6, S0);
-        r(13, 22, 1, 6, S1);
-        r(19, 2, 3, 4, K1);
-        r(20, 0, 1, 2, K1); // колпак огня, громоотвод
+        for (let y = RADIO_TOP + 6; y < g; y += 3)
+            r(RD_CX - 2 - q(rdHalf(y) * 0.2), y, 3, 1, K3); // лестница
         // шкаф у подножия: решётка динамика
-        r(26, 66, 11, 13, K3);
-        r(26, 66, 11, 1, S0);
-        r(26, 66, 1, 13, S0);
-        r(36, 67, 1, 12, AS);
         for (let k = 0; k < 12; k++)
             r(28 + (k % 4) * 2, 69 + (k >> 2) * 2, 1, 1, K0);
         r(29, 76, 5, 1, K1);
@@ -48417,21 +48589,22 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
         r(sx + 4, sy - 5, 1, 1, BO); // отверстие ловит свет
         context_js_9.X.globalAlpha = 0.5;
-        r(-2, g, 44, 1, K0);
+        r(-22, g, 86, 1, K0);
         context_js_9.X.globalAlpha = 1;
     }
     function draw_radio(x, y) {
-        bake('radio', x, y, -8, -1, 56, 82, radioBody);
+        bake('radio2', x, y, -24, -56, 90, 137, radioBody);
         // красный огонь на верхушке — мигает одиннадцать лет подряд
+        const ty = y + RADIO_TOP - 3;
         if (time_js_29.t % 120 < 50) {
-            r(x + 19, y + 3, 3, 2, KV);
-            r(x + 20, y + 2, 1, 1, KV);
+            r(x + 19, ty, 3, 2, KV);
+            r(x + 20, ty - 1, 1, 1, KV);
             context_js_9.X.globalAlpha = 0.25;
-            r(x + 17, y + 1, 7, 6, KV);
+            r(x + 17, ty - 2, 7, 6, KV);
             context_js_9.X.globalAlpha = 1;
         }
         else
-            r(x + 20, y + 3, 1, 2, BLOOD);
+            r(x + 20, ty, 1, 2, BLOOD);
         // телефон у основания: лента едет сама
         r(x + 15, y + 77, 4, 2, K0);
         r(x + 16, y + 77, 2, 1, (time_js_29.t >> 4) & 1 ? '#8CC63F' : TD);
@@ -48581,73 +48754,59 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             if (row[i] === 'X' && !(broken && hh(x0 + i, y0 + j, 221) < broken))
                 r(x0 + i, y0 + j, 1, 1, j === 0 && c2 ? c2 : c); });
     }
-    function pzBrick(x, y) {
-        const row = Math.floor(y / 3), sh = (row & 1) * 3, bi = Math.floor((x + sh) / 6);
-        if (y % 3 === 0 || (x + sh) % 6 === 0)
-            return x < 40 ? S2 : K3;
-        const v = hh(bi, row, 225) + (x < 36 ? 0.12 : x > 104 ? -0.12 : 0);
-        return v > 0.88 ? S1 : v < 0.14 ? S2 : S0;
+    function pizzeriaKit(P, M) {
+        // второй и третий этажи — кирпич; верх рваный, справа пролом
+        const top = [];
+        for (let x = 4; x <= 136; x += 2)
+            top.push([x, pzTop(Math.min(135, x))]);
+        P.poly([[4, 56], ...top, [136, 56]], M.BRICK);
+        for (const [wx, wy] of PZ_WIN)
+            P.cut(wx - 1, wy - 1, 12, 14);
+        P.box(2, 29, 136, 3, M.CONCRETE); // карниз между этажами
+        for (const [wx, wy] of PZ_WIN)
+            P.box(wx - 2, wy + 12, 14, 2, M.CONCRETE); // подоконники
+        // первый этаж: штукатурка по кирпичу, фриз под вывеской; проёмы витрины, двери, заколоченного окна
+        P.box(2, 55, 136, 33, M.PLASTER);
+        P.box(2, 55, 136, 4, M.CONCRETE);
+        P.cut(9, 61, 60, 24);
+        P.cut(74, 61, 20, 27);
+        P.cut(99, 61, 30, 22);
+        // где штукатурка осыпалась — кирпич
+        P.poly([[104, 84], [112, 83], [116, 88], [102, 88]], M.BRICK);
+        P.poly([[2, 70], [6, 68], [8, 75], [5, 80], [2, 79]], M.BRICK);
     }
     function pizzeriaBody() {
         const g = 88;
-        // ── второй и третий этажи: кирпич, рваный верх, справа пролом ──
-        for (let x = 4; x < 136; x++) {
-            const top = pzTop(x);
-            for (let y = top; y < 55; y++)
-                r(x, y, 1, 1, y === top ? (x < 70 ? S1 : S0) : pzBrick(x, y));
-        }
-        r(4, 9, 1, 46, S1);
-        r(135, pzTop(135), 1, 55 - pzTop(135), AS);
+        kitPaint('pizzeria', 140, 88, pizzeriaKit, PZ_OPT);
         for (let k = 0; k < 7; k++) {
             const ax = 90 + k * 6, ay = pzTop(ax);
             r(ax, ay - 3 - (k & 1) * 2, 1, 3 + (k & 1) * 2, RUST);
             r(ax + 1, ay - 1, 1, 1, K1);
         } // арматура из пролома
-        for (let x = 86; x < 136; x++)
-            if (hh(x, 1, 227) < 0.4)
-                r(x, pzTop(x) + 1, 1, 1, K1); // скол по кромке
-        r(4, 30, 132, 1, S1);
-        r(4, 31, 132, 1, K3); // карниз между этажами
-        // окна: рама, темнота комнаты, осколки, кое-где занавеска; над ними — копоть языками
-        for (const [wy, fl] of [[13, 3], [35, 2]])
-            for (let k = 0; k < 7; k++) {
-                const wx = 10 + k * 18;
-                if (fl === 3 && wx + 11 > 85)
-                    continue; // третий этаж — до пролома
-                for (let dy = 0; dy <= 9; dy++) { // копоть: языком вверх от окна, шире и реже
-                    const w = 3 + q(dy * 0.5), yy = wy - 2 - dy;
-                    for (let dx = -w; dx <= w; dx++)
-                        if (yy >= pzTop(wx + 5 + dx) + 1 && hh(wx + 5 + dx, yy, 229) < 0.95 - dy * 0.08 - Math.abs(dx) * 0.06)
-                            r(wx + 5 + dx, yy, 1, 1, dy < 3 ? NI : dy < 6 ? K1 : K3);
-                }
-                r(wx - 1, wy - 1, 12, 14, K3);
-                r(wx - 1, wy - 1, 12, 1, S1);
-                r(wx - 1, wy - 1, 1, 14, S1); // рама: свет слева-сверху
-                r(wx, wy, 10, 12, K0);
-                r(wx, wy + 9, 10, 3, K1); // комната: в глубине пол светлее
-                r(wx + 4, wy, 1, 12, K3);
-                r(wx, wy + 5, 10, 1, K3); // переплёт
-                if (hh(k, fl, 231) < 0.6) {
-                    r(wx, wy, 2, 2, AS);
-                    r(wx, wy, 1, 1, L2);
-                    r(wx + 8, wy + 10, 2, 2, AS);
-                } // осколки по углам
-                if (hh(k, fl, 233) < 0.3) {
-                    r(wx + 6, wy, 3, 7 + (k & 1) * 2, SEP);
-                    r(wx + 6, wy, 1, 7 + (k & 1) * 2, BR2);
-                } // обрывок занавески
-                r(wx - 2, wy + 12, 14, 1, S1);
-                r(wx - 2, wy + 13, 14, 1, K3); // подоконник
-            }
-        // ── первый этаж «Вавилон»: фриз, витрина, дверь, заколоченное окно ──
-        r(2, 55, 136, 33, K3);
-        r(2, 55, 136, 1, S1);
-        r(2, 55, 1, 33, S0);
-        r(137, 56, 1, 32, AS);
-        r(2, 56, 136, 3, K2);
-        r(2, 58, 136, 1, K1); // фриз под вывеской
+        // окна: рама, темнота комнаты, осколки, кое-где занавеска
+        for (const [wx, wy, fl, k] of PZ_WIN) {
+            r(wx - 1, wy - 1, 12, 1, K3);
+            r(wx - 1, wy - 1, 1, 14, K3);
+            r(wx + 10, wy - 1, 1, 13, K2); // рама: дерево потемнело
+            r(wx, wy, 10, 12, K0);
+            r(wx, wy + 9, 10, 3, K1); // комната: в глубине пол светлее
+            r(wx + 4, wy, 1, 12, K3);
+            r(wx, wy + 5, 10, 1, K3); // переплёт
+            if (hh(k, fl, 231) < 0.6) {
+                r(wx, wy, 2, 2, AS);
+                r(wx, wy, 1, 1, L2);
+                r(wx + 8, wy + 10, 2, 2, AS);
+            } // осколки по углам
+            if (hh(k, fl, 233) < 0.3) {
+                r(wx + 6, wy, 3, 7 + (k & 1) * 2, SEP);
+                r(wx + 6, wy, 1, 7 + (k & 1) * 2, BR2);
+            } // обрывок занавески
+        }
+        // ── первый этаж «Вавилон»: витрина, дверь, заколоченное окно ──
         // витрина: стекла нет, в глубине столы рядами (дальние мельче), меню под стеклом — бликом
-        r(9, 61, 60, 24, S1);
+        r(9, 61, 60, 1, K3);
+        r(9, 61, 1, 24, K3);
+        r(68, 62, 1, 23, K2);
         r(10, 62, 58, 22, K0);
         r(10, 62, 58, 6, K1); // дальняя стена
         r(48, 63, 12, 6, S2);
@@ -48674,9 +48833,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(sx, sy, 1, 1, AS); // стекло по краям
         r(10, 84, 58, 1, S0);
         // дверь; косяки светлые — на них счёт карандашом; коврик
-        r(74, 61, 20, 27, S1);
+        r(74, 61, 3, 27, L2);
+        r(74, 61, 20, 1, L2);
         r(77, 62, 14, 26, K1);
-        r(91, 62, 3, 26, S0);
+        r(91, 62, 3, 26, S1);
         r(93, 62, 1, 26, S2);
         r(78, 64, 12, 24, BR2);
         r(78, 64, 1, 24, K4);
@@ -48697,7 +48857,6 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         for (let k = 0; k < 7; k++)
             r(76 + k * 2 + (k > 3 ? 1 : 0), 86, 1, 1, L2); // «Welcome» — штрихами; ключ под ним не видно
         // заколоченное окно: доски поперёк и крест-накрест
-        r(99, 61, 30, 22, S1);
         r(100, 62, 28, 20, K1);
         for (let k = 0; k < 4; k++) {
             r(99, 64 + k * 5, 30, 2, BR2);
@@ -48746,7 +48905,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     function draw_pizzeria(x, y) {
-        bake('pizzeria4', x, y, 0, 5, 146, 84, pizzeriaBody);
+        bake('pizzeria5', x, y, 0, 5, 146, 84, pizzeriaBody);
         // «В» мигает одиннадцать лет; мёртвые по очереди искрят
         const m = time_js_29.t % 150, on = m < 96 || (m > 104 && m < 112);
         if (on) {
@@ -48954,39 +49113,35 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     // термос с паром, раскрытый журнал, телефон экраном вниз.
     function towerBody() {
         const g = 60;
-        for (const [lx, top, c, e] of [[7, 18, K4, K1], [22, 18, K4, K1]]) {
-            r(lx, top, 2, g - 8 - top, c);
-            r(lx + 1, top, 1, g - 8 - top, e);
-        } // задние ноги
-        for (const lx of [3, 25]) {
-            r(lx, 20, 2, g - 20, BR2);
-            r(lx, 20, 1, g - 20, RUST_L);
-            r(lx + 1, 21, 1, g - 21, K1);
-        } // передние ноги
+        // брус и доски — набором колец: свет слева, кромка; задние ноги — в тени
+        kitPaint('watchtower', 31, 61, (P, M) => {
+            P.box(7, 18, 2, g - 26, M.TIMBER).shade(2);
+            P.box(22, 18, 2, g - 26, M.TIMBER).shade(2); // задние ноги
+            for (const lx of [3, 25])
+                P.box(lx, 20, 2, g - 20, M.TIMBER); // передние ноги
+            P.box(5, 40, 20, 1, M.TIMBER); // схватка
+            P.box(1, 16, 29, 4, M.BOARD); // платформа
+            for (const px of [2, 15, 28])
+                P.box(px, 7, 1, 9, M.TIMBER); // стойки перил
+            P.box(2, 7, 27, 1, M.TIMBER);
+            P.box(2, 11, 27, 1, M.TIMBER); // перила
+        }, { seed: 19, chip: 0.04, ao: 1, moss: 0.12 });
+        const LIT = kit_js_11.tone(kit_js_11.MAT.TIMBER, 4), DIM = kit_js_11.tone(kit_js_11.MAT.TIMBER, 1);
         for (const [ya, yb] of [[24, 40], [40, 56]])
             for (let k = 0; k <= 20; k++) {
                 const u = k / 20;
-                r(5 + u * 20, ya + (yb - ya) * u, 1, 1, BR2);
-                r(25 - u * 20, ya + (yb - ya) * u, 1, 1, K1);
+                r(5 + u * 20, ya + (yb - ya) * u, 1, 1, LIT);
+                r(25 - u * 20, ya + (yb - ya) * u, 1, 1, DIM);
             } // раскосы
-        r(5, 40, 20, 1, BR2);
         // лестница
-        r(12, 20, 1, g - 20, BR2);
-        r(17, 20, 1, g - 20, BR2);
+        r(12, 20, 1, g - 20, DIM);
+        r(17, 20, 1, g - 20, DIM);
         for (let y = 23; y < g; y += 4) {
-            r(12, y, 6, 1, L2);
+            r(12, y, 6, 1, LIT);
             r(13, y + 1, 4, 1, K1);
         }
-        // платформа и перила
-        r(1, 16, 29, 4, BR2);
-        r(1, 16, 29, 1, L2);
         for (let x = 3; x < 29; x += 4)
-            r(x, 17, 1, 3, K1);
-        r(1, 19, 29, 1, K1);
-        for (const px of [2, 15, 28])
-            r(px, 7, 1, 9, BR2);
-        r(2, 7, 27, 1, L2);
-        r(2, 11, 27, 1, BR2);
+            r(x, 17, 1, 3, K1); // торцы досок настила
         // бинокль на треноге — внутрь поселения
         r(9, 12, 1, 4, K1);
         r(7, 14, 1, 2, K1);
@@ -49010,7 +49165,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     function draw_watchtower(x, y) {
-        bake('watchtower', x, y, 0, 6, 31, 55, towerBody);
+        bake('watchtower2', x, y, 0, 6, 31, 55, towerBody);
         for (let i = 0; i < 3; i++) { // термос ещё тёплый
             const u = ((time_js_29.t * 0.3 + i * 22) % 66) / 66;
             context_js_9.X.globalAlpha = 0.4 * (1 - u);
@@ -49070,26 +49225,22 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                     continue; // верхний ряд неполный — силуэт ступенькой
                 jCube(cx, cy, 20 + tier * 7 + k, true);
             }
-        // ── фура без тягача: короб, рёбра, ржа, рама, колёса, опоры ──
-        r(44, 16, 50, 34, K3);
-        r(44, 16, 50, 1, S0);
-        r(44, 16, 1, 34, S0);
-        r(93, 17, 1, 33, AS);
-        for (let x = 47; x < 92; x += 4) {
-            r(x, 18, 1, 31, K2);
-            r(x + 1, 18, 1, 31, K4);
-        } // гофра
-        r(44, 20, 50, 1, K2);
-        r(44, 46, 50, 1, K2);
+        // ── фура без тягача, пресс с воронкой — набором (гофра с ржой, клёпаная сталь); опись — поверх ──
+        kitPaint('junkyard', 96, 72, (P, M) => {
+            P.box(44, 16, 50, 34, M.IRON); // короб фуры: гофра
+            P.box(44, 50, 50, 3, M.PLATE); // рама
+            P.box(49, 53, 1, 12, M.STEEL);
+            P.box(52, 53, 1, 12, M.STEEL);
+            P.box(47, 64, 8, 2, M.PLATE); // опоры — тягача нет
+            P.trap(5, 22, 0, 28, 7, 23, M.PLATE); // воронка: шире кверху
+            P.box(0, 5, 29, 2, M.STEEL); // обод
+            P.box(2, 24, 24, 46, M.PLATE); // короб унификатора
+            P.box(13, 52, 13, 14, M.PLATE).shade(1); // жёлоб
+        }, { seed: 77, chip: 0.03, drips: [[50, 21, 14], [61, 21, 9], [70, 21, 18], [83, 21, 11], [90, 21, 16], [8, 47, 9], [20, 31, 12]], cracks: 0, ao: 2 });
         for (let k = 0; k < 14; k++)
             r(46 + q(hh(k, 7, 145) * 44), 22 + q(hh(k, 8, 147) * 22), 1 + (k & 1), 2 + q(hh(k, 9, 149) * 5), k % 3 ? RUST : RUST_L); // ржа потёками
-        r(44, 50, 50, 3, K1);
-        r(44, 50, 50, 1, K2); // рама
-        for (const lx of [49, 52]) {
-            r(lx, 53, 1, 12, K2);
-        }
-        r(47, 64, 8, 1, S0);
-        r(47, 65, 8, 1, K1); // опоры — тягача нет
+        r(44, 20, 50, 1, K2);
+        r(44, 46, 50, 1, K2); // пояса короба
         for (const wx of [80, 87]) {
             r(wx, 53, 6, 6, K0);
             r(wx + 1, 54, 4, 4, K1);
@@ -49109,16 +49260,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             const a = 56 + k * 5;
             r(a, 34 - (k & 1), 1, 2, K1);
         } // вмятина волной
-        // ── унификатор 3000: воронка с разным, короб, поршни, щит, жёлоб, рольганг ──
-        for (let y = 6; y < 24; y++) { // воронка: шире кверху
-            const k = (y - 6) / 18, lx = q(0 + k * 5), rx = q(28 - k * 6);
-            r(lx, y, rx - lx + 1, 1, K2);
-            r(lx, y, 1, 1, S1);
-            r(rx, y, 1, 1, AS);
-        }
-        r(0, 5, 29, 2, S0);
-        r(0, 5, 29, 1, S1);
-        r(28, 6, 1, 1, AS); // обод
+        // ── унификатор 3000: разное в воронке, щит, жёлоб, рольганг ──
+        for (let y = 7; y < 12; y++)
+            r(2 + q((y - 6) * 0.3), y, 25 - q((y - 6) * 0.6), 1, y < 9 ? K0 : K1); // пасть воронки — темно
         // разное в воронке: дверь с окном, колесо, бампер, труба
         r(3, 2, 8, 5, L2);
         r(4, 3, 4, 2, K1);
@@ -49135,10 +49279,6 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(26, 4, 1, 1, AS); // бампер
         r(21, -3, 2, 7, RUST);
         r(21, -3, 1, 7, RUST_L); // труба
-        r(2, 24, 24, 46, K3);
-        r(2, 24, 24, 1, S0);
-        r(2, 24, 1, 46, S1);
-        r(25, 25, 1, 45, AS); // короб
         for (const ry of [30, 46, 58])
             for (let x = 4; x < 24; x += 3)
                 r(x, ry, 1, 1, K1); // клёпка
@@ -49160,9 +49300,8 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         for (let k = 0; k < 8; k++)
             r(5 + k * 2, 25, 1, 2, k & 1 ? KV : NI); // полосы у пасти — киноварь, мало
         // жёлоб и рольганг: оттуда выходит куб
-        r(14, 52, 12, 14, K0);
-        r(14, 52, 12, 1, K2);
-        r(13, 52, 1, 14, K1);
+        r(15, 54, 10, 12, K0);
+        r(15, 54, 10, 1, K1);
         r(24, 64, 14, 2, K1);
         for (let x = 25; x < 38; x += 3)
             r(x, 64, 1, 1, S1); // рольганг
@@ -49221,7 +49360,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         context_js_9.X.globalAlpha = 1;
     }
     function draw_junkyard(x, y) {
-        bake('junkyard2', x, y, -1, -17, 97, 89, junkBody);
+        bake('junkyard3', x, y, -1, -17, 97, 89, junkBody);
         // гудит: траверса с плитой ходит медленно (цикл 6 с), поршни выдвигаются; после
         // удара — из жёлоба на рольганг выезжает свежий куб и стоит до следующего
         const c = time_js_29.t % 360, down = c < 150 ? c / 150 : c < 170 ? 1 : c < 280 ? 1 - (c - 170) / 110 : 0, d = q(down * 7);
@@ -49239,32 +49378,30 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     exports_131("draw_junkyard", draw_junkyard);
     function busBody() {
         const G = BUS_G, X0 = 11, X1 = 67, TOP = 8, BOT = 33;
-        // ── крыша: светлая, рёбра, углы скруглены уступом; люк приоткрыт ──
-        for (let x = X0 + 1; x <= X1 - 1; x++) {
-            const e = x < X0 + 3 || x > X1 - 3;
-            r(x, TOP - 3 + (e ? 1 : 0), 1, 1, x < X0 + 20 ? L1 : L2);
-            r(x, TOP - 2, 1, 2, (x - X0) % 7 === 0 ? S1 : x < X0 + 20 ? L2 : S1);
-        }
-        r(X1 - 1, TOP - 2, 1, 2, AS);
+        // ── корпус набором: крыша — светлая сталь, борт и капот — охра (жёлтое выцвело), свет слева, кромка ──
+        kitPaint('bus', 70, 40, (P, M) => {
+            P.box(X0 + 1, TOP - 3, X1 - X0 - 1, 3, M.STEEL); // крыша
+            P.box(X0, TOP, X1 - X0 + 1, BOT - TOP + 1, M.OCHRE); // борт: жёлтая краска выцвела в охру
+            P.box(1, TOP + 9, X0 - 1, BOT - TOP - 8, M.OCHRE); // капот
+        }, { seed: 58, chip: 0.05, ao: 2, drips: [[30, TOP + 11, 6], [44, TOP + 11, 9], [58, TOP + 11, 5]] });
+        for (let x = X0 + 1; x <= X1 - 1; x += 7)
+            r(x, TOP - 2, 1, 2, S1); // рёбра крыши
         r(36, TOP - 4, 8, 1, S1);
         r(36, TOP - 4, 1, 1, L2);
         r(37, TOP - 3, 6, 1, K1); // люк — щель
-        // ── борт: краска песком поверх ржи; ржа к низу, у арок, по кромкам ──
+        // ── ржа поверх краски: к низу, у арок, по кромкам ──
         for (let x = X0; x <= X1; x++)
             for (let y = TOP; y <= BOT; y++) {
                 const h = hh(x >> 1, y >> 1, 581), h2 = hh(x, y, 583), low = (y - TOP) / (BOT - TOP);
                 const nearArch = (x > 13 && x < 25) || (x > 51 && x < 63);
-                const rust = h < 0.22 + low * 0.45 + (nearArch && y > 25 ? 0.35 : 0) || x === X1;
-                let c = rust ? (h2 < 0.4 ? RUST : h2 < 0.75 ? RUST_L : BR2) : x < X0 + 12 ? (h2 < 0.7 ? L2 : L1) : h2 < 0.12 ? S1 : h2 < 0.9 ? L2 : CLAY_L;
-                r(x, y, 1, 1, c);
+                if (h < 0.12 + low * 0.42 + (nearArch && y > 25 ? 0.35 : 0))
+                    r(x, y, 1, 1, h2 < 0.4 ? RUST : h2 < 0.75 ? RUST_L : BR2);
             }
         for (let k = 0; k < 10; k++) {
             const sx = X0 + 2 + q(hh(k, 3, 585) * 52), sy = 20 + q(hh(k, 4, 587) * 3);
             for (let i = 0; i < 2 + (k % 3); i++)
                 r(sx, sy + i, 1, 1, BR2);
         } // потёки из-под окон
-        r(X0, TOP, 1, BOT - TOP + 1, L1);
-        r(X1, TOP, 1, BOT - TOP + 1, AS);
         // ── окна в чёрных рамах; спинки и ранцы; два стекла выбиты ──
         const BAGS = [BR2, MG_D, BLOOD, S0, K4];
         for (let k = 0; k < 5; k++) {
@@ -49317,13 +49454,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(X0 + 3, TOP + 8, 1, 2, MG_D); // ГП-5 на спинке: стёкла, коробка
         // капот: ниже кабины, решётка, фара, бампер у носа
         const HX = 1;
-        for (let x = HX; x < X0; x++) {
-            const top = TOP + 9 + (x < HX + 2 ? 1 : 0);
-            for (let y = top; y <= BOT; y++) {
-                const h = hh(x, y, 591);
-                r(x, y, 1, 1, y === top ? L1 : y === top + 1 ? L2 : h < 0.08 + Math.max(0, y - BOT + 7) * 0.12 ? RUST : x < HX + 5 ? L2 : S1);
-            }
-        }
+        for (let x = HX; x < X0; x++)
+            for (let y = TOP + 11; y <= BOT; y++)
+                if (hh(x, y, 591) < 0.06 + Math.max(0, y - BOT + 7) * 0.12)
+                    r(x, y, 1, 1, RUST); // ржа на капоте — снизу
         r(HX, TOP + 12, X0 - HX, 1, K2); // шов капота
         for (let y = TOP + 13; y < BOT - 7; y++)
             for (let x = HX; x < HX + 4; x++)
@@ -49397,7 +49531,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(0, G - 1, 70, 1, K1);
     }
     function draw_bus(x, y) {
-        bake('bus6', x, y, 0, -1, 70, BUS_G + 1, busBody);
+        bake('bus7', x, y, 0, -1, 70, BUS_G + 1, busBody);
         // раз в одиннадцать секунд — «учебная тревога»: рупор дрожит
         const dt = BUS_T < 0 ? 0 : Math.min(240, Math.max(0, time_js_29.t - BUS_T));
         BUS_T = time_js_29.t;
@@ -49967,14 +50101,14 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             r(74 + k, ax - rr - 1 + (k > 3 ? 1 : 0), 1, 2 * rr + 1, k < 3 ? S0 : RUST);
             r(74 + k, ax - rr - 1 + (k > 3 ? 1 : 0), 1, 1, L2);
         } // переход на малую
-        // ложементы
-        for (const sx of [8, 36, 64]) {
-            r(sx, 16, 8, 8, S0);
-            r(sx, 16, 8, 1, S1);
-            r(sx, 16, 1, 8, S1);
-            r(sx + 7, 17, 1, 7, S2);
-            r(sx + 1, 15, 6, 1, K1);
-        }
+        // ложементы и плита под мелом — бетоном набора (опалубка, поры, свет слева, кромка)
+        kitPaint('pipeline', 82, 26, (P, M) => {
+            for (const sx of [8, 36, 64])
+                P.box(sx, 16, 8, 8, M.CONCRETE);
+            P.box(30, 19, 30, 6, M.CONCRETE);
+        }, { seed: 31, chip: 0.06, ao: 1, moss: 0.1 });
+        for (const sx of [8, 36, 64])
+            r(sx + 1, 15, 6, 1, K1); // тень трубы на ложементе
         // уцелевшая этикетка, обрывки
         r(24, 8, 6, 4, L1);
         r(24, 8, 6, 1, BO);
@@ -49998,9 +50132,6 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         r(26, 2, 1, 1, KV);
         r(34, 2, 1, 1, KV);
         // на бетоне мелом: три строки, черта, четыре версии перечёркнуты, пятая пуста
-        r(30, 19, 30, 6, S1);
-        r(30, 19, 30, 1, L2);
-        r(59, 20, 1, 5, S2);
         for (const [ly, n] of [[20, 7], [21, 4], [22, 9]])
             for (let k = 0; k < n; k++)
                 if (hh(k, ly, 3) > 0.2)
@@ -50014,7 +50145,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         } // четыре версии — перечёркнуты; пятая строка пуста
     }
     function draw_pipeline(x, y) {
-        bake('pipeline', x, y, 0, 0, 82, 26, pipelineBody);
+        bake('pipeline2', x, y, 0, 0, 82, 26, pipelineBody);
     }
     exports_131("draw_pipeline", draw_pipeline);
     // скелет рыбы по направлению (ux, uy) — головой туда: хребет, рёбра, череп, хвост
@@ -50039,27 +50170,35 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                 const e = lkE(x, y);
                 if (e > 1.18 || y > 63 || x > 111)
                     continue;
-                if (e > 1.02) { // ил плитами неровно, трещины по краям плит
-                    const id = lkCell(x, y), seam = id !== lkCell(x + 1, y) || id !== lkCell(x, y + 1), v = hh(id, 3, 191);
-                    r(x, y, 1, 1, seam ? (hh(x, y, 193) < 0.8 ? K1 : K4) : v < 0.3 ? K4 : v > 0.85 ? '#4a3f33' : SEP);
+                if (e > 1.035) { // сырой берег: ил плитами, швы темнее, к краю реже
+                    const id = lkCell(x, y), seam = id !== lkCell(x + 1, y) || id !== lkCell(x, y + 1), fade = (1.18 - e) / 0.145;
+                    if (seam && hh(x, y, 193) < 0.75 * fade) {
+                        context_js_9.X.globalAlpha = 0.5;
+                        r(x, y, 1, 1, NI);
+                    }
+                    else if (hh(x >> 1, y, 192) < 0.5 * fade) {
+                        context_js_9.X.globalAlpha = 0.3;
+                        r(x, y, 1, 1, hh(id, 3, 191) < 0.3 ? SEP : NI);
+                    }
+                    context_js_9.X.globalAlpha = 1;
                     continue;
                 }
-                if (e > 0.96) {
-                    r(x, y, 1, 1, hh(x, y, 195) < 0.3 ? L2 : hh(x, y, 196) < 0.5 ? K4 : MG_D);
+                if (e > 0.985) {
+                    if (hh(x, y, 197) < 0.8)
+                        r(x, y, 1, 1, hh(x, y, 195) < 0.12 ? L2 : LK_CR);
                     continue;
-                } // корка у воды — белёсыми пятнами
-                r(x, y, 1, 1, e > 0.88 ? MG_D : e < 0.45 ? LK_DEEP : (hh(x >> 3, y >> 1, 197) < 0.15 ? LK_DEEP : MG));
+                } // корка у воды — белёсая, в точку, с прорехами
+                if (e > 0.86) {
+                    r(x, y, 1, 1, hh(x >> 2, y >> 1, 196) < 0.25 && hh(x, y, 198) < 0.5 ? MG_D : LK_W2);
+                    continue;
+                } // у берега — светлее, муть пятнами
+                const row = (y * 5 + (x >> 4) * 3) % 11 === 0 && hh(x >> 4, y, 194) < 0.45; // блик — строкой, длинно
+                r(x, y, 1, 1, row ? LK_GL : e < 0.5 ? LK_W0 : LK_W1);
             }
-        // гладь не шелохнётся: ровные светлые полосы неба, не рябь
-        for (const [y, x0, x1] of [[14, 30, 62], [22, 18, 44], [39, 50, 74]]) {
-            context_js_9.X.globalAlpha = 0.18;
-            r(x0, y, x1 - x0, 1, MG_L);
-            context_js_9.X.globalAlpha = 1;
-        }
         // пена у берега — тусклыми клочьями
         for (let k = 0; k < 26; k++) {
             const a = hh(k, 3, 199) * Math.PI * 2, d = 0.86 + hh(k, 4, 201) * 0.08, x = LK_CX + Math.cos(a) * 46 * d, y = LK_CY + Math.sin(a) * 26 * d;
-            context_js_9.X.globalAlpha = 0.45;
+            context_js_9.X.globalAlpha = 0.35;
             r(x, y, 1 + q(hh(k, 5, 203) * 3), 1, k & 1 ? L2 : AS);
             context_js_9.X.globalAlpha = 1;
         }
@@ -50073,12 +50212,21 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
                     if (lkE(x, y) > 0.86)
                         continue;
                     const c = film[Math.floor(k / 4 + s) % film.length];
-                    context_js_9.X.globalAlpha = c === KV ? 0.22 : 0.3;
+                    context_js_9.X.globalAlpha = c === KV ? 0.2 : 0.26;
                     r(x, y, 2, 1, c);
                     context_js_9.X.globalAlpha = 1;
                 }
             }
         }
+        // гладь — зеркало: столб с табличкой вниз головой, темнее воды
+        context_js_9.X.globalAlpha = 0.5;
+        for (let yy = 49; yy < 62; yy++)
+            for (let xx = 76; xx < 91; xx++) {
+                const post = xx >= 83 && xx <= 84 && yy < 58, board = yy >= 58;
+                if ((post || board) && lkE(xx, yy) < 0.96)
+                    r(xx, yy, 1, 1, NI);
+            }
+        context_js_9.X.globalAlpha = 1;
         // скелеты на берегу — головами к воде
         for (const a of [2.5, 1.9, 1.2, 0.35, -0.5, 3.6]) { // голова у кромки, тело на иле
             let k = 0.94, fx, fy;
@@ -50090,16 +50238,13 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             const dx = LK_CX - fx, dy = (LK_CY - fy) * 1.8, d = Math.hypot(dx, dy);
             fishBones(fx, fy, Math.round(dx / d), Math.round(dy / d), 6);
         }
-        // столб у воды: в мелкой воде, кольцо мути у основания; табличка — строки штрихами,
-        // знак «лов запрещён»: рыба под киноварной чертой
-        r(83, 37, 2, 12, BR2);
-        r(83, 37, 1, 12, SINGE);
+        // столб у воды — набором (брус, доска); в мелкой воде, кольцо мути у основания; табличка —
+        // строки штрихами, знак «лов запрещён»: рыба под киноварной чертой
+        kitPaint('lakesign', 16, 20, (P, M) => { P.box(7, 7, 2, 12, M.TIMBER); P.box(0, 0, 15, 8, M.BOARD); }, { seed: 13, chip: 0.04, ao: 0 }, 76, 30);
         r(82, 48, 4, 1, MG_D);
         r(81, 49, 6, 1, K4);
-        r(76, 30, 15, 8, K2);
         r(77, 31, 13, 6, L1);
         r(77, 31, 13, 1, BO);
-        r(89, 32, 1, 5, L2);
         r(78, 33, 4, 2, NI);
         r(77, 33, 1, 1, NI);
         r(82, 34, 1, 1, NI); // рыба
@@ -50114,7 +50259,7 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
     }
     function draw_lake(x, y) {
         const night = sky_js_11.skyAt(sky_js_11.phaseAt(time_js_29.t)).name === 'ночь';
-        bake(night ? 'lake2n' : 'lake2', x, y, -10, -4, 123, 69, () => lakeBody(night));
+        bake(night ? 'lake3n' : 'lake3', x, y, -10, -4, 123, 69, () => lakeBody(night));
         // дождь: капли ложатся шариками и не тонут — копятся, пока идёт
         if (weather_js_2.weather.state === 'toxicRain' && weather_js_2.weather.intensity > 0.15) {
             const n = q(weather_js_2.weather.intensity * 28);
@@ -50598,23 +50743,23 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
         R(1, g - 1, 44, 2, NI);
         R(77, g - 1, 22, 2, NI);
         context_js_9.X.globalAlpha = 1;
-        // ── рухнувший пролёт: плита надвое — одна лежит, другая легла на восточную опору ──
-        for (let x = 44; x <= 60; x++) { // лежит, чуть наклонно
-            const yy = q(52 + (x - 44) * 0.15);
-            R(x, yy, 1, 5, OV_D);
-            R(x, yy, 1, 1, OV_L);
-            R(x, yy + 4, 1, 1, NI);
-            if (x % 4 === 1)
-                R(x, yy - 2, 1, 2, OV_L); // отбойник набок
-        }
-        for (let x = 61; x <= 75; x++) { // легла на опору
-            const yy = q(56 - (x - 61) * 0.95);
-            R(x, yy, 1, 6, OV_D);
-            R(x, yy, 1, 1, OV_L);
-            R(x, yy + 5, 1, 1, NI);
-            if (x % 3 === 0)
-                R(x, yy + 2, 1, 1, OV_C);
-        }
+        // ── бетон набором: устой, опоры с оголовками, настилы с отбойником, рухнувший пролёт надвое —
+        // одна плита лежит, другая легла на восточную опору (свет слева, кромка, опалубка, потёки, мох) ──
+        kitPaint('overpass', 104, 62, (P, M) => {
+            P.poly([[44, 52], [61, 54], [61, 59], [44, 57]], M.CONCRETE); // лежит, чуть наклонно
+            P.poly([[61, 56], [76, 42], [76, 48], [61, 61]], M.CONCRETE).shade(1); // легла на опору
+            P.box(0, top, 7, g - top, M.CONCRETE); // устой
+            P.box(31, top + 6, 12, g - top - 6, M.CONCRETE);
+            P.box(30, top + 6, 14, 2, M.CONCRETE); // западная опора, оголовок
+            P.box(78, top + 6, 8, g - top - 6, M.CONCRETE);
+            P.box(77, top + 6, 10, 2, M.CONCRETE); // восточная
+            P.box(0, top, 43, 6, M.CONCRETE);
+            P.box(77, top, 23, 6, M.CONCRETE); // настил
+            P.box(0, top - 2, 43, 2, M.CONCRETE);
+            P.box(77, top - 2, 23, 2, M.CONCRETE); // отбойник
+        }, { seed: 61, chip: 0.06, cracks: 3, ao: 2, moss: 0.12, drips: [[33, 38, 9], [37, 38, 13], [40, 38, 6], [80, 38, 10], [83, 38, 7]] }, ox, oy);
+        for (const x of [4, 13, 22, 31, 40, 85, 94])
+            R(x, top + 1, 1, 4, OV_D); // швы плит настила
         R(60, 52, 1, 6, NI);
         R(61, 55, 1, 1, NI); // излом
         for (const [ax, ay, dx, dy] of [[60, 54, 2, -3], [59, 56, 1, -4], [44, 53, -2, -2], [76, 42, 2, -3]])
@@ -50624,55 +50769,14 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             R(sx, sy, w, 1, OV_D);
             R(sx, sy, 1, 1, OV_L);
         } // крошка
-        // ── опоры: устой слева, западная — у провала, восточная — под обломком ──
-        const pier = (x0, w) => {
-            for (let y = top + 6; y < g; y++) {
-                R(x0, y, 1, 1, OV_L);
-                R(x0 + 1, y, w - 3, 1, OV_C);
-                R(x0 + w - 2, y, 1, 1, OV_D);
-                R(x0 + w - 1, y, 1, 1, NI);
-                if ((y & 3) === 0)
-                    for (let k = 2; k < w - 3; k += 3)
-                        R(x0 + k, y, 1, 1, OV_D); // следы опалубки
-            }
-            R(x0 - 1, top + 6, w + 2, 2, OV_D);
-            R(x0 - 1, top + 6, w + 2, 1, OV_L); // оголовок
-            for (let k = 1; k < w - 2; k++)
-                if (hh(x0, k, 171) < 0.35)
-                    R(x0 + k, top + 9, 1, 3 + q(hh(k, x0, 173) * 10), OV_D); // потёки
-            R(x0, g - 2, w, 2, OV_D);
-            R(x0 + 1, g - 3, 1, 1, MG);
-            R(x0 + w - 3, g - 3, 2, 1, MG); // мох у подошвы
-        };
-        for (let y = top; y < g; y++) {
-            R(0, y, 7, 1, y === top ? OV_L : OV_C);
-            R(0, y, 1, 1, OV_L);
-            R(6, y, 1, 1, OV_D);
-        } // устой
-        for (let y = top + 8; y < g; y += 7)
-            R(0, y, 7, 1, OV_D);
-        pier(31, 12);
-        pier(78, 8);
-        // ── настил: западный пролёт до провала и восточный — к эстакаде; кромки обломаны ──
-        const deck = (a, b) => {
-            for (let x = a; x <= b; x++) {
-                R(x, top, 1, 6, OV_D);
-                R(x, top, 1, 1, OV_L);
-                R(x, top + 5, 1, 1, NI); // настил, верх на свету, низ в тени
-                R(x, top - 2, 1, 2, OV_L); // отбойник
-                R(x, top + 6, 1, 1, NI); // тень под настилом
-                if (x % 9 === 4)
-                    R(x, top + 1, 1, 4, OV_C); // шов плит
-            }
-        };
-        deck(0, 42);
-        deck(77, 99);
         for (let k = 0; k < 6; k++) {
             R(43, top + k, 1 + (hh(k, 1, 175) < 0.5 ? 1 : 0), 1, k & 1 ? OV_C : OV_D);
             R(76 - (hh(k, 2, 177) < 0.5 ? 1 : 0), top + k, 1, 1, k & 1 ? OV_D : OV_C);
-        }
+        } // кромки обломаны
         R(42, top - 2, 1, 1, NI);
         R(77, top - 1, 1, 1, NI); // отбойник оборван
+        R(0, top + 6, 43, 1, NI);
+        R(77, top + 6, 23, 1, NI); // тень под настилом
         // ── столб со щитом на краю пролёта; ниже — отдельная табличка, новее ──
         R(34, 17, 2, 11, S2);
         R(34, 17, 1, 11, S1);
@@ -51499,6 +51603,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             },
             function (redNoon_js_5_1) {
                 redNoon_js_5 = redNoon_js_5_1;
+            },
+            function (kit_js_11_1) {
+                kit_js_11 = kit_js_11_1;
             }
         ],
         execute: function () {
@@ -51513,6 +51620,10 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             // только блит; живое (свет окна, пар) — поверх, каждый кадр
             // (нет холста — тесты, записывающий контекст: рисует прямо, сдвигом к месту)
             BAKED = new Map();
+            // набор колец (sprites/arch/kit.js) для первых рисунков мест (ROADMAP, графика п. 3: «в штрих эпох»):
+            // масса — планом материалов (кладка, штукатурка, железо, бетон — свет слева, кромка пеплом справа,
+            // копоть, сколы), опись места — рисунком поверх, как было. План строится раз, краска — при запекании
+            PLANS = new Map();
             // ── РЖАВЫЙ ПОЕЗД ──
             // «Два вагона на боку. Паровоз с ними, набекрень. Машинист в кабине, на своём
             // месте. Сидит так долго, что трава у колёс не растёт — боится потревожить. На боку
@@ -51751,6 +51862,18 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             COLS = [10, 26, 42, 58, 74, 90], FALLEN = 74;
             COL_SH = [L2, S1, S1, S0, S0, S2, K3]; // ствол колонны слева направо: свет → тень
             LB_T = -1, LB_PH = 0, LB_F = 99, LB_A = 0, LB_D = 1; // фаза листания копится по шагам; LB_F — кадры текущего листа, LB_D — куда
+            // ── РАДИОВЫШКА ──
+            // «Ржавая конструкция. Красный огонь на верхушке мигает одиннадцать лет
+            // подряд. У основания — стопка дисков. Каждый следующий тоньше предыдущего.
+            // Последний — прозрачный.» Сцена: у основания телефон, лента едет сама.
+            // Решётчатая мачта сужается к верху, раскосы крестом, ржа; на ней две панели
+            // и лестница; у подножия — шкаф с решёткой динамика; растяжки — в землю.
+            // Перерисовано набором колец: мачта выше (около ста тридцати точек — «радиовышка», а не столб),
+            // ноги и пояса — бурым железом с заклёпкой (тем же, что Эйфелева башня), раскосы крестом — к свету
+            // и в тень, растяжки в землю; шкаф — клёпаная сталь. Огонь — на верхушке (RADIO_TOP).
+            RADIO_TOP = -46; // верх мачты (от угла места)
+            RD_OX = -8, RD_OY = -52, RD_CX = 20; // план: угол и середина мачты
+            rdHalf = y => 3 + (y - RADIO_TOP) / (79 - RADIO_TOP) * 13; // полуширина мачты на высоте y
             // ── ПАЛАТКА СТАРЦА ──
             // «Брезент на арматуре. Пахнет сушёными травами и мокрой шерстью. На полу —
             // 9 жизней кота, записанных столбиком. 8 зачёркнуты. У входа — блюдце. Молоко
@@ -51789,6 +51912,19 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             };
             SIGN = 'ВАВИЛОН', SIGN_X = 50, SIGN_Y = 50;
             pzTop = x => x > 84 ? 8 + q(hh(x, 3, 223) * 4) + q((x - 84) * 0.42) : 8 + q(hh(x, 3, 223) * 2); // рваный верх; справа пролом
+            // окна верхних этажей: [x, y, этаж]; третий — до пролома
+            PZ_WIN = [];
+            for (const [wy, fl] of [[13, 3], [35, 2]])
+                for (let k = 0; k < 7; k++) {
+                    const wx = 10 + k * 18;
+                    if (!(fl === 3 && wx + 11 > 85))
+                        PZ_WIN.push([wx, wy, fl, k]);
+                }
+            PZ_OPT = {
+                seed: 41, chip: 0.05, cracks: 4, ao: 2,
+                soot: PZ_WIN.map(([wx, wy]) => [wx - 2, wy - 1, 14, 15]), // был пожар: копоть языками над окнами
+                drips: [[20, 32, 9], [61, 32, 7], [118, 32, 11], [33, 59, 5], [96, 59, 8]],
+            };
             // ── ДВЕНАДЦАТИЭТАЖКА В РУИНАХ (Жилой дом №7) ──
             // «Двенадцать этажей. Три верхних — обрушены во двор. На стене подъезда, белой
             // краской по кирпичу: „ЖИЛЬЦЫ СЪЕХАЛИ РАНЬШЕ ПОЖАРА". Квартира 42 — третий этаж,
@@ -51910,6 +52046,9 @@ System.register("sprites/locations/canon", ["render/context", "core/time", "worl
             lkE = (x, y) => { const a = Math.atan2(y - LK_CY, x - LK_CX), k = 1 + 0.05 * Math.sin(a * 3 + 0.4) + 0.03 * Math.sin(a * 5 + 2) + 0.02 * Math.sin(a * 9 + 1); return Math.hypot((x - LK_CX) / 46, (y - LK_CY) / 26) / k; };
             LK_DEEP = '#36432f';
             lkCell = (x, y) => Math.floor((x + 3 * Math.sin(y * 0.7)) / 7) * 131 + Math.floor((y + 2 * Math.sin(x * 0.5)) / 4); // плита ила
+            // гладь — штрихом Тёплого озера (render/etchPaths.js lake): глубь тёмная, у берега светлее, блики
+            // строками — длинными, ровными (гладь не рябит); кромка в точку-две белёсой коркой; ил — плитами намёком
+            LK_W0 = '#272e24', LK_W1 = '#2f372c', LK_W2 = '#3d4a3a', LK_GL = '#838672', LK_CR = '#6c7260';
             // ── АЛТАРЬ ──
             // «Поляна в мёртвом лесу. В центре — низкий плоский камень, метра полтора в
             // поперечнике. Мох покрыл его полностью и тихо дышит — толстый, многослойный,
@@ -75348,7 +75487,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
 });
 System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "world/landforms", "world/lake", "world/boat", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "world/pithosLie", "world/climbOut", "render/mindfx", "world/dispatch", "ui/dispatchStrip", "content/dispatch_scenes", "ui/title", "assets/loader"], function (exports_203, context_203) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_3, landforms_js_2, lake_js_10, boat_js_1, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, pithosLie_js_1, climbOut_js_1, mindfx_js_1, dispatch_js_4, dispatchStrip_js_1, dispatch_scenes_js_3, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, boatTold, BOAT_LINES, pithosIn, pithosMenuWait, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_26, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_16, redNoon_js_10, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_3, landforms_js_2, lake_js_10, boat_js_1, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_11, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_54, ulitsa_db_js_16, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_6, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_4, useActions_js_6, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_4, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_5, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, pithosLie_js_1, climbOut_js_1, mindfx_js_1, dispatch_js_4, dispatchStrip_js_1, dispatch_scenes_js_3, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, boatTold, BOAT_LINES, pithosIn, pithosMenuWait, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, LANDMARKS, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
     var __moduleName = context_203 && context_203.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_4.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_16.SEGMENTS.length ? ulitsa_db_js_16.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
@@ -77479,6 +77618,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         else
             camera_js_1.camera.release();
         camera_js_1.camera.follow(player.x + 6, player.y + 10);
+        camera_js_1.camera.lookUp(LANDMARKS || (LANDMARKS = locations_js_6.locations.filter(l => l.archLandmark)), player.x + 6, player.y + 24); // у доминанты — взгляд вверх
         camera_js_1.camera.update();
         camera_js_1.camera.clampToWorld(terrain_js_5.MW, terrain_js_5.MH);
         // Check for lore pickup
@@ -78611,6 +78751,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // Взгляд тихой вещи шире, чем у подделки (72): тихие стоят в тени дальше от дороги
             GAZE_R = 150;
             quietGazeId = null;
+            LANDMARKS = null; // доминанты колец — для взгляда камеры вверх (render/camera.js lookUp)
             // Dev overlay only with ?debug in the URL — players shouldn't see
             // coordinates and state internals.
             DEBUG_HUD = typeof location !== 'undefined' && /[?&]debug\b/.test(location.search);

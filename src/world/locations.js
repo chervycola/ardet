@@ -58,7 +58,7 @@ export const locations = [
   // ── DEAD FOREST ──
   { id: 'radio', name: 'Радиовышка', x: 350, y: 250, w: 40, h: 80, zone: 'forest',
     useAction: 'radio_tune',
-    solid: true, light: { r: 22, color: [194, 59, 43], flicker: 0.3 } },
+    solid: true, light: { dx: 20, dy: -48, r: 22, color: [194, 59, 43], flicker: 0.3 } },   // огонь — на верхушке мачты (canon.js RADIO_TOP)
   { id: 'cross', name: 'Крест на холме', x: 700, y: 300, w: 30, h: 50, zone: 'forest',
     useAction: 'cross_push',
     light: { r: 14, color: [217, 207, 184], flicker: 0.02 } },
