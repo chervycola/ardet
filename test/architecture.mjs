@@ -102,7 +102,8 @@ test('доминанты: по контракту, каждая — одна, н
     const LS = [].concat(A.landmark || [], A.landmarks || []);
     for (const L of LS) {
       assert(SIDES.includes(L.side), `${seg.id}: доминанта без стороны`);
-      assert(L.w >= 40 && L.w <= 170 && L.h >= 100 && L.h <= 220, `${seg.id}/${L.name}: размер ${L.w}×${L.h}`);
+      // доминанты крупнее (слово автора 25.11): до трёхсот точек ростом, не больше чем вдвое (arch/index.js grandOf)
+      assert(L.w >= 40 && L.w <= 340 && L.h >= 180 && L.h <= 320 && L.grand >= 1 && L.grand <= 2, `${seg.id}/${L.name}: размер ${L.w}×${L.h}`);
       assert(L.light && typeof L.light.dy === 'number', `${seg.id}/${L.name}: нет огня`);
       L.draw(ctx, 500, 500, 100);
       const placed = locations.filter(l => l.archLandmark && l.archRing === seg.n && l.name === L.name);
@@ -628,11 +629,12 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     const rects = [], c = fakeCtx();
     c.fillRect = (x, y, ww, hh) => { if (String(c.fillStyle).toLowerCase() === CANDLE && c.globalAlpha > 0.78) rects.push([x, y, ww, hh]); };
     for (const t of [0, 37, 100, 211, NIGHT_T]) { try { draw(c, 0, 0, t); } catch (e) { break; } }   // окно, что горит только ночью, — тоже пятно
-    // склейка по касанию (в 3 точках — одно пятно), центр — по площади
+    // склейка по касанию (в 3 точках — одно пятно; у крупной доминанты — в 3 точках исходного рисунка), центр — по площади
     let cl = [];
+    const G = 3 * (draw.grand || 1);
     for (const [x, y, ww, hh] of rects) {
       const k = { x0: x, y0: y, x1: x + ww, y1: y + hh, sx: (x + ww / 2) * ww * hh, sy: (y + hh / 2) * ww * hh, a: ww * hh };
-      const near = cl.filter(q => q.x0 - 3 <= k.x1 && k.x0 <= q.x1 + 3 && q.y0 - 3 <= k.y1 && k.y0 <= q.y1 + 3);
+      const near = cl.filter(q => q.x0 - G <= k.x1 && k.x0 <= q.x1 + G && q.y0 - G <= k.y1 && k.y0 <= q.y1 + G);
       for (const q of near) { k.x0 = Math.min(k.x0, q.x0); k.y0 = Math.min(k.y0, q.y0); k.x1 = Math.max(k.x1, q.x1); k.y1 = Math.max(k.y1, q.y1); k.sx += q.sx; k.sy += q.sy; k.a += q.a; }
       cl = cl.filter(q => !near.includes(q)).concat(k);
     }
@@ -768,7 +770,7 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
     const lines = IN.hiddenInscriptions[l.id];
     eq(IN.wallLines(l.id).length, 0, 'проступило, не постояв');
     assert(!PT.lookText(l).includes(lines[0]), 'в осмотре прежде, чем проступила');
-    const pl = { x: l.x + l.w / 2, y: l.y + l.h / 2, moving: false };
+    const pl = { x: l.x + l.w / 2, y: l.archDraw ? l.archGy - 30 : l.y + l.h / 2, moving: false };   // стоит у подножия
     for (let i = 0; i < 70; i++) IN.updateProximity(pl, locations);
     eq(IN.wallLines(l.id).length, 0, 'проступило раньше 2,5 с');
     for (let i = 0; i < 90; i++) IN.updateProximity(pl, locations);
