@@ -1098,7 +1098,7 @@ function archFlipped(ctx, loc, fn) {                  // повтор вида �
   ctx.save(); ctx.translate(2 * loc.archX, 0); ctx.scale(-1, 1); fn(); ctx.restore();
 }
 
-let LANDMARKS = null;                       // доминанты колец — для взгляда камеры вверх (render/camera.js lookUp)
+let LANDMARKS = null;                       // доминанты и высокие постройки колец — для взгляда камеры вверх (render/camera.js lookUp)
 // part: 0 — целиком; 1 — тело (без живого слоя, свечи и жизни); 2 — только живое поверх
 function drawLocationPlain(ctx, loc, part = 0) {
   if (loc.archDraw) {
@@ -2105,7 +2105,7 @@ function updateWorldSystems() {
   const held = seatFrame();                 // «Сел — кадр встал»: сидящему кадр ставится, встал — следит
   if (held) camera.hold(held.x, held.y); else camera.release();
   camera.follow(player.x + 6, player.y + 10);
-  camera.lookUp(LANDMARKS || (LANDMARKS = locations.filter(l => l.archLandmark)), player.x + 6, player.y + 24);   // у доминанты — взгляд вверх
+  camera.lookUp(LANDMARKS || (LANDMARKS = locations.filter(l => l.archDraw && (l.archLandmark || l.h > 150))), player.x + 6, player.y + 24);   // у доминанты и высокой постройки — взгляд вверх
   camera.update();
   camera.clampToWorld(MW, MH);
 

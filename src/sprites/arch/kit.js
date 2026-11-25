@@ -381,31 +381,35 @@ export function plan(w, h) {
     const f = P[k];
     P[k] = (...a) => { log.push([k, a]); f(...a); return P; };
   }
-  P.scaled = k => {
+  // ox, oy — где угол плана от точки привязки (середина и земля): крупный план считается от неё,
+  // как и рисунок поверх (grandCtx), — точка в точку, без расхождения на половинках
+  P.scaled = (k, ox = 0, oy = 0) => {
     if (k === 1) return P;
-    let Q = cache.get(k);
-    if (!Q) cache.set(k, Q = replay(log, w, h, k));
+    const key = k + ':' + ox + ':' + oy;
+    let Q = cache.get(key);
+    if (!Q) cache.set(key, Q = replay(log, w, h, k, ox, oy));
     return Q;
   };
   return P;
 }
 // план в k раз крупнее: те же шаги, углы — по масштабу; фактура материала остаётся в точку
-function replay(log, w, h, k) {
-  const Q = rawPlan(Math.round(w * k), Math.round(h * k)), S = v => Math.round(v * k);
+function replay(log, w, h, k, ox, oy) {
+  const X = v => Math.round((v + ox) * k) - Math.round(ox * k), Y = v => Math.round((v + oy) * k) - Math.round(oy * k);
+  const Q = rawPlan(X(w), Y(h));
   for (const [op, a] of log) {
     if (op === 'box' || op === 'cut' || op === 'clear') {
-      const x = Math.round(a[0]), y = Math.round(a[1]), x0 = S(x), y0 = S(y);
-      Q[op](x0, y0, Math.max(1, S(x + a[2]) - x0), Math.max(1, S(y + a[3]) - y0), ...a.slice(4));
+      const x = Math.round(a[0]), y = Math.round(a[1]), x0 = X(x), y0 = Y(y);
+      Q[op](x0, y0, Math.max(1, X(x + a[2]) - x0), Math.max(1, Y(y + a[3]) - y0), ...a.slice(4));
     } else if (op === 'wedge') {
       const [cx, yT, yB, wT, wB, mat] = a;
-      Q.wedge(cx * k, S(yT), S(yB + 1) - 1, wT * k, wB * k, mat);
+      Q.wedge(X(cx), Y(yT), Y(yB + 1) - 1, wT * k, wB * k, mat);
     } else if (op === 'trap') {
       const [xl0, xr0, xl1, xr1, yT, yB, mat, form] = a;
-      Q.trap(xl0 * k, (xr0 + 1) * k - 1, xl1 * k, (xr1 + 1) * k - 1, S(yT), S(yB + 1) - 1, mat, form);
+      Q.trap(X(xl0), X(xr0 + 1) - 1, X(xl1), X(xr1 + 1) - 1, Y(yT), Y(yB + 1) - 1, mat, form);
     } else if (op === 'round') {
       const [cx, yT, yB, ww, mat] = a;
-      Q.round(cx * k, S(yT), S(yB + 1) - 1, ww * k, mat);
-    } else if (op === 'poly') Q.poly(a[0].map(([x, y]) => [x * k, y * k]), a[1], a[2]);
+      Q.round(X(cx), Y(yT), Y(yB + 1) - 1, ww * k, mat);
+    } else if (op === 'poly') Q.poly(a[0].map(([x, y]) => [X(x), Y(y)]), a[1], a[2]);
     else if (op === 'shade') Q.shade(...a);
   }
   Q.k = k;
@@ -480,10 +484,10 @@ function rawPlan(w, h) {
 // o: { seed, snow: 0..1, moss: 0..1, soot: [[x,y,w,h]], drips: [[x,y,len]], cracks: n, chip: 0..1, ao: 2 }
 export function paint(ctx, X0, Y0, P, o = {}) {
   if (ctx && ctx.__grand === true) {                  // крупно: план строится заново в k раз больше, краска — в точку
-    const k = ctx.__k, [rx, ry] = ctx.__map(X0, Y0), S = v => Math.round(v * k);
+    const k = ctx.__k, [rx, ry] = ctx.__map(X0, Y0), [ox, oy] = ctx.__off(X0, Y0), S = v => Math.round(v * k);
     const o2 = { ...o, k, cracks: o.cracks ? Math.round(o.cracks * k) : 0,
       soot: (o.soot || []).map(([x, y, w, l]) => [S(x), S(y), S(w), S(l)]), drips: (o.drips || []).map(([x, y, l]) => [S(x), S(y), S(l)]) };
-    return paint(ctx.__real, rx, ry, P.scaled ? P.scaled(k) : P, o2);
+    return paint(ctx.__real, rx, ry, P.scaled ? P.scaled(k, ox, oy) : P, o2);
   }
   const { w, h, m } = P, s = o.seed || 0;
   const adj = new Int8Array(w * h), over = new Uint8Array(w * h);
@@ -511,6 +515,9 @@ export function paint(ctx, X0, Y0, P, o = {}) {
   }
   // сколы — по зерну исходного плана (у крупного — те же места, что у малого: где кромка цела, там цела)
   const ck = o.k || 1;
+  // часть спереди: нарисована в плане позже (лежит поверх) и твёрдая — она и тенит соседей справа и снизу
+  // (свет слева-сверху); проём и стекло — заподлицо, не тенят
+  const front = (x, y, pid) => { const q = P.partAt(x, y), mq = P.at(x, y); return q > pid && mq !== 0 && mq !== MAT.DARK && mq !== MAT.GLASS; };
   const chip = (x, y) => o.chip && hh(Math.floor(x / ck), Math.floor(y / ck), s + 31) < o.chip && (top(x, y) || P.at(x + 1, y) === 0 || P.at(x - 1, y) === 0);
   const ao = o.ao ?? 2;
   for (let y = 0; y < h; y++) {
@@ -524,9 +531,12 @@ export function paint(ctx, X0, Y0, P, o = {}) {
           let st = 2 + tex(mat, x, y, s) + adj[i];
           const L = P.at(x - 1, y), R = P.at(x + 1, y), U = P.at(x, y - 1);
           if (mat0 === MAT.DARK) st = (U !== MAT.DARK ? 0 : 1) + (P.at(x, y + 1) !== MAT.DARK ? 2 : 0);   // у притолоки темнее, низ — отсвет порога
+          else if (front(x, y - 1, pid)) st -= 1;                                           // под выступом (карниз, свес, подоконник) — тень
           else if (!U || (P.partAt(x, y - 1) !== pid && U !== MAT.DARK)) st += 2;            // верх — к свету
+          else if (front(x - 1, y, pid)) st -= 1;                                           // справа от выступа (пилястра, контрфорс, труба) — тень
           else if (!L || P.partAt(x - 1, y) !== pid) st += 1;                               // слева — к свету
           else if (P.partAt(x + 1, y) !== pid && R) st -= 1;                                // шов справа — в тень
+          else if ((front(x, y - 2, pid) || front(x - 2, y, pid) || front(x - 1, y - 1, pid)) && hh(x, y, s + 43) < 0.6) st -= 1;   // тень во вторую точку — штрихом
           const f = P.info[pid];
           if (f && f.dim) st -= f.dim;
           if (f && f.form && mat0 !== MAT.DARK) {                                            // цилиндр: свет по ширине
@@ -587,7 +597,7 @@ export function grandCtx(c, ax, ay, k) {
     c[f](Math.min(x0, x1), Math.min(y0, y1), Math.max(1, Math.abs(x1 - x0)), Math.max(1, Math.abs(y1 - y0)));
   };
   const T = {
-    __grand: true, __k: k, __real: c, __map: map,
+    __grand: true, __k: k, __real: c, __map: map, __off: (x, y) => [x + tx - ax, y + ty - ay],
     fillRect: (x, y, w, h) => rect('fillRect', x, y, w, h),
     clearRect: (x, y, w, h) => rect('clearRect', x, y, w, h),
     strokeRect: (x, y, w, h) => rect('strokeRect', x, y, w, h),
@@ -623,6 +633,16 @@ export function grandDraw(d, k) {
 // вид доминанты крупнее: рамка, огонь, жизнь, зеркало — по тому же масштабу
 export function grandKind(K, k) {
   const S = v => Math.round(v * k);
+  const w2 = 2 * Math.max(Math.round(Math.ceil(K.w / 2) * k), -Math.round(-(K.w >> 1) * k)), h2 = -Math.round(-K.h * k);
+  // свойства рисунка — тоже по масштабу: где у него вода (seaSide, seaFrom — от середины), полоса для надписей
+  // (wall — в рамке: от левого верха, переводится через середину и землю, как всё)
+  const gd = d => {
+    const g = grandDraw(d, k);
+    if (d.seaSide !== undefined) g.seaSide = d.seaSide;
+    if (d.seaFrom !== undefined) g.seaFrom = S(d.seaFrom);
+    if (d.wall) { const [x0, y0, x1, y1] = d.wall; g.wall = [S(x0 - K.w / 2) + w2 / 2, S(y0 - K.h) + h2, S(x1 - K.w / 2) + w2 / 2, S(y1 - K.h) + h2]; }
+    return g;
+  };
   const life = L => L && {
     ...L,
     ...(L.smoke ? { smoke: L.smoke.map(([x, y, ...r]) => [S(x), S(y), ...r]) } : {}),
@@ -634,7 +654,9 @@ export function grandKind(K, k) {
   };
   return {
     // рамка: середина и земля на месте, края — как их переводит посредник (grandCtx)
-    ...K, grand: k, w: 2 * Math.round(K.w / 2 * k), h: -Math.round(-K.h * k), draw: grandDraw(K.draw, k),
+    ...K, grand: k, w: w2, h: h2, draw: gd(K.draw),
+    ...(K.draw2 ? { draw2: gd(K.draw2) } : {}), ...(K.draw3 ? { draw3: gd(K.draw3) } : {}),
+    ...(K.life2 ? { life2: life(K.life2) } : {}), ...(K.life3 ? { life3: life(K.life3) } : {}),
     ...(K.light ? { light: { ...K.light, dx: S(K.light.dx || 0), dy: S(K.light.dy) } } : {}),
     ...(K.mirror ? { mirror: { x0: S(K.mirror.x0), x1: S(K.mirror.x1), y0: S(K.mirror.y0), y1: S(K.mirror.y1) } } : {}),
     ...(K.life ? { life: life(K.life) } : {}),

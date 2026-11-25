@@ -153,8 +153,10 @@ function placeLines(l, lines) {
   for (let i = 0; i < lines.length; i++) {
     const need = strokeW(lines[i], i + l.id.length * 7);
     let best = null;
-    for (const lo of [2, 1, 0]) {                                  // светлая стена, тёмное тело, хоть что-то, но не воздух
-      const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++) { const v = M[j * W + x]; if (v === -2) return false; if (v >= lo) n++; } return n >= 3; };
+    // сперва — где стена во всех четырёх рядах, потом — хотя бы в трёх (у крупной постройки край перрона
+    // или карниза ложится через ряд: строка там висела бы в воздухе)
+    for (const [lo, rows] of [[2, 4], [1, 4], [0, 4], [2, 3], [1, 3], [0, 3]]) {   // светлая стена, тёмное тело, хоть что-то, но не воздух
+      const ok = (x, b) => { let n = 0; for (let j = b; j < b + 4; j++) { const v = M[j * W + x]; if (v === -2) return false; if (v >= lo) n++; } return n >= rows; };
       if (best && best.take >= Math.min(need, 24)) break;
     for (let b = H - 5; b >= 0; b--) {
       let clash = false;

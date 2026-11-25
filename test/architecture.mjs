@@ -72,7 +72,8 @@ test('arch: постройки по контракту и рисуются бе�
   for (const [id, A] of Object.entries(ARCH_BY_RING)) {
     for (const s of SIDES) for (const it of A[s]) {
       assert(typeof it.name === 'string' && it.name, `${id}/${s}: без имени`);
-      assert(it.w >= 16 && it.w <= 130 && it.h >= 16 && it.h <= 130, `${id}/${s}/${it.name}: размер ${it.w}×${it.h}`);
+      // постройки крупнее (слово автора 25.11): в полтора раза, не выше двухсот (arch/index.js buildOf)
+      assert(it.w >= 24 && it.w <= 210 && it.h >= 24 && it.h <= 200, `${id}/${s}/${it.name}: размер ${it.w}×${it.h}`);
       it.draw(ctx, 500, 500, 100);
     }
     for (const fn of Object.values(A.sign)) fn(ctx, 500, 500, 100);
@@ -894,8 +895,10 @@ test('пожары §9 (Сан-Франциско, Лос-Анджелес) — 
       }
     }
     for (const k of two) for (const l of locations.filter(l => l.archRing === +ringN && l.name === k.name)) {
-      eq(l.archDraw, (l.archNth > 2 && k.draw3) || (l.archNth > 1 && k.draw2) || k.draw, `${k.name} №${l.archNth}: не свой рисунок`);
-      eq(l.archLife, (l.archNth > 2 && k.life3) || (l.archNth > 1 && k.life2) || k.life || null, `${k.name} №${l.archNth}: не своя жизнь`);
+      // крупной негде встать — встаёт она же поменьше (arch/index.js smaller): рисунок и жизнь — того же номера
+      const K = [k, ...(k.smaller || [])].find(v => l.archDraw === ((l.archNth > 2 && v.draw3) || (l.archNth > 1 && v.draw2) || v.draw)) || k;
+      eq(l.archDraw, (l.archNth > 2 && K.draw3) || (l.archNth > 1 && K.draw2) || K.draw, `${k.name} №${l.archNth}: не свой рисунок`);
+      eq(l.archLife, (l.archNth > 2 && K.life3) || (l.archNth > 1 && K.life2) || K.life || null, `${k.name} №${l.archNth}: не своя жизнь`);
     }
    }
     const v2 = locations.find(l => l.archRing === 1 && l.name === 'вежа с бубном' && l.archNth > 1);

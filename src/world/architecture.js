@@ -124,8 +124,9 @@ function nearSigns(signs, x, y) {
 // одинаковые постройки в один кадр (640×360 мира) не попадают даже краем:
 // пустой перегон лучше двойника
 const FRAME_W = 640, FRAME_H = 360;
+const kindOf = K => K.base || K;                                       // вид поменьше (smaller) — тот же вид
 function sameNear(b, placed) {
-  return placed.some(o => o.kind === b.kind
+  return placed.some(o => kindOf(o.kind) === kindOf(b.kind)
     && Math.abs(o.x - b.x) < FRAME_W + (o.w + b.w) / 2 - 30
     && Math.abs(o.gy - b.gy) < FRAME_H + (o.h + b.h) / 2 - 30);
 }
@@ -139,9 +140,11 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
   for (const C of copies) {
     const K = C.kind, others = [...placed, ...out];
     // для правила кадра — только такие же (свои пары места — не в счёт); для табличек — ближние к поиску
-    const all = others.filter(o => o.kind === K && !(pair.has(K.name) && out.includes(o)));
+    const all = others.filter(o => kindOf(o.kind) === K && !(pair.has(K.name) && out.includes(o)));
     const k = K.landmark ? 2.6 : 1, kx = K.landmark ? 6 : 1;
     let got = null;
+    // у двора: крупная, а негде — она же поменьше (arch/index.js: smaller); по всей клетке — только потом
+    for (const KK of [K, ...(K.smaller || [])]) {
     for (let grow = 1; grow <= 4 && !got; grow++) {
       const cands = [];
       const prev0 = out[out.length - 1];
@@ -151,7 +154,7 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
       if (prev && grow === 1) {
         // рядом с предыдущей — слева или справа, чуть вглубь или вперёд
         for (const dir of [1, -1]) for (const gap of [GAP + 2, GAP + 12, GAP + 26]) for (const dy of [0, -10, 10, -22, 18]) {
-          const dx = dir * (prev.w / 2 + gap + K.w / 2);
+          const dx = dir * (prev.w / 2 + gap + KK.w / 2);
           cands.push({ x: prev.x + dx, gy: prev.gy + dy, s: gap + Math.abs(dy) + (dir < 0 ? 4 : 0) });
         }
       }
@@ -163,10 +166,12 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
       }
       cands.sort((p, q) => p.s - q.s);
       for (const c of cands) {
-        const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
+        const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: KK.w, h: KK.h, kind: KK, copy: C };
         if (!twins && sameNear(b, all)) continue;
         if (fits(n, side, b, K.landmark || grow > 1 ? pool : nearSigns(pool, b.x, b.gy), others)) { got = b; break; }
       }
+    }
+    if (got) break;
     }
     if (!got) {
       // совсем негде — по всей клетке, ближе к якорю
@@ -176,12 +181,16 @@ function placeCopies(n, side, copies, anchor, signs, placed, twins = false) {
         cands.push({ x: p.x, gy: p.y, s: Math.hypot(p.x - anchor.x, p.y - anchor.gy) });
       }
       cands.sort((p, q) => p.s - q.s);
-      // сначала — не в кадр с таким же; совсем никак — хоть рядом (лучше, чем потерять постройку)
-      for (const strict of twins ? [false] : [true, false]) {
-        for (const c of cands) {
-          const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: K.w, h: K.h, kind: K, copy: C };
-          if (strict && sameNear(b, all)) continue;
-          if (fits(n, side, b, signs, others)) { got = b; break; }
+      // сначала — не в кадр с таким же; совсем никак — хоть рядом (лучше, чем потерять постройку);
+      // крупной совсем негде — она же поменьше (arch/index.js: smaller)
+      for (const KK of [K, ...(K.smaller || [])]) {
+        for (const strict of twins ? [false] : [true, false]) {
+          for (const c of cands) {
+            const b = { x: Math.round(c.x), gy: Math.round(c.gy), w: KK.w, h: KK.h, kind: KK, copy: C };
+            if (strict && sameNear(b, all)) continue;
+            if (fits(n, side, b, signs, others)) { got = b; break; }
+          }
+          if (got) break;
         }
         if (got) break;
       }
