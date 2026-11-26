@@ -50,7 +50,17 @@ const STILL = 90, NEAR = 60, AWAY = 130, AGAIN = 60 * 60 * 10;   // постоя
 export const folk = { voices: [], said: new Set(), cur: null, still: 0 };
 
 // фразы голоса: по предложению, многоточия и кавычки — целиком
-const sentences = s => s.replace(/\s+/g, ' ').trim().split(/(?<=[.!?…»])\s+(?=[А-ЯЁA-Z«(.])/).filter(Boolean);
+// (без lookbehind в выражениях: старые Safari и iOS такую игру не загрузят — build.js проверяет)
+function sentences(s) {
+  const t = s.replace(/\s+/g, ' ').trim(), out = [];
+  let cur = '';
+  for (let i = 0; i < t.length; i++) {
+    cur += t[i];
+    if ('.!?…»'.includes(t[i]) && t[i + 1] === ' ' && /[А-ЯЁA-Z«(.]/.test(t[i + 2] || '')) { out.push(cur.trim()); cur = ''; i++; }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
 
 function anchorOf(V, locations) {
   if (V.town) return locations.find(l => l.id === V.town) || null;
